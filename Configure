@@ -20,7 +20,7 @@
 
 # $Id$
 #
-# Generated on Thu Feb 15 10:20:32 PST 2001 [metaconfig 3.0 PL70]
+# Generated on Thu Feb 22 11:16:38 PST 2001 [metaconfig 3.0 PL70]
 # (with additional metaconfig patches by trn-workers@lists.sourceforge.net)
 
 cat >/tmp/c1$$ <<EOF
@@ -323,6 +323,7 @@ i_termios=''
 i_systime=''
 i_time=''
 i_unistd=''
+i_utime=''
 i_vfork=''
 ispell_options=''
 ispell_prg=''
@@ -6141,6 +6142,10 @@ eval $inhdr
 set unistd.h i_unistd
 eval $inhdr
 
+: see if this is an utime system
+set utime.h i_utime
+eval $inhdr
+
 : see if this is a vfork system
 case "$d_vfork" in
 "$define")
@@ -6335,6 +6340,7 @@ i_termio='$i_termio'
 i_termios='$i_termios'
 i_time='$i_time'
 i_unistd='$i_unistd'
+i_utime='$i_utime'
 i_vfork='$i_vfork'
 incpath='$incpath'
 inews='$inews'
