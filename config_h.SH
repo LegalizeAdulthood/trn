@@ -355,7 +355,7 @@ sed <<!GROK!THIS! >config.h -e 's!^#undef\(.*\)/\*!/\*#define\1\*//\*!' -e 's!^#
  */
 /* HAS_GETCWD:
  *	This symbol, if defined, indicates that the getcwd routine is
- *	available.  This is never defined if getwd is found first.
+ *	available to get the working directory.
  */
 #$d_getwd HAS_GETWD		/**/
 #$d_getcwd HAS_GETCWD		/**/
