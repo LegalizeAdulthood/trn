@@ -1,8 +1,14 @@
 case $CONFIG in
     '') . ./config.sh ;;
 esac
-echo "Extracting environment (with variable substitutions)"
-$spitshell >$src/HelpFiles/config/environment <<!GROK!THIS!
+echo "Extracting HelpFiles/config/environment (with variable substitutions)"
+if test "X$src" != "X." ; then
+    for ff in `$grep '^HelpFiles/' $src/MANIFEST | sed -e 's/[	 ].*//'`; do
+	./makedir $ff 1
+	cp $src/$ff $ff
+    done
+fi
+$spitshell >HelpFiles/config/environment <<!GROK!THIS!
 In this list, variables marked with (%) are subject to percent interpolation,
 and variables marked with (~) are subject to both percent and home-directory
 interpolation.
