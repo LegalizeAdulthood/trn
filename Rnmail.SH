@@ -443,6 +443,9 @@ EOH
 	*sendmail|*premail)
 	    $mailer -t <$tmpart
 	    ;;
+	*qmail-inject)
+	    $mailer <$tmpart
+	    ;;
 # but recmail does not know about Bcc, alas
 	*recmail)
 	    $mailer <$tmpart
