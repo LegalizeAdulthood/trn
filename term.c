@@ -74,7 +74,7 @@ term_init()
     outspeed = _tty.c_cflag & CBAUD;	/* for tputs() */
     ERASECH = _tty.c_cc[VERASE];	/* for finish_command() */
     KILLCH = _tty.c_cc[VKILL];		/* for finish_command() */
-    if (GT = ((_tty.c_oflag & TABDLY) != TAB3))
+    if (tc_GT = ((_tty.c_oflag & TABDLY) != TAB3))
 	/* we have tabs, so that's OK */;
     else
 	_tty.c_oflag &= ~TAB3;	/* turn off kernel tabbing -- done in rn */
@@ -91,7 +91,7 @@ term_init()
     outspeed = _tty.sg_ospeed;		/* for tputs() */
     ERASECH = _tty.sg_erase;		/* for finish_command() */
     KILLCH = _tty.sg_kill;		/* for finish_command() */
-    if (GT = ((_tty.sg_flags & XTABS) != XTABS))
+    if (tc_GT = ((_tty.sg_flags & XTABS) != XTABS))
 	/* we have tabs, so that's OK */;
     else
 	_tty.sg_flags &= ~XTABS;
@@ -100,7 +100,7 @@ term_init()
     outspeed = B19200;
     ERASECH = '\b';
     KILLCH = Ctl('u');
-    GT = 1;
+    tc_GT = 1;
 #   else
     ..."Don't know how to initialize the terminal!"
 #   endif /* !MSDOS */
@@ -178,27 +178,27 @@ char* tcbuf;		/* temp area for "uncompiled" termcap entry */
 
 #ifdef HAS_TERMLIB
 #ifdef MSDOS
-    BC = "\b";
-    UP = "\033[A";
-    CR = "\r";
-    VB = nullstr;
-    CL = "\033[H\033[2J";
-    CE = "\033[K";
-    TI = nullstr;
-    TE = nullstr;
-    KS = nullstr;
-    KE = nullstr;
-    CM = "\033[%d;%dH";
-    HO = "\033[H";
-    IL = nullstr; /*$$*/
-    CD = nullstr; /*$$*/
-    SO = "\033[7m";
-    SE = "\033[m";
-    US = "\033[7m";
-    UE = "\033[m";
-    UC = nullstr;
+    tc_BC = "\b";
+    tc_UP = "\033[A";
+    tc_CR = "\r";
+    tc_VB = nullstr;
+    tc_CL = "\033[H\033[2J";
+    tc_CE = "\033[K";
+    tc_TI = nullstr;
+    tc_TE = nullstr;
+    tc_KS = nullstr;
+    tc_KE = nullstr;
+    tc_CM = "\033[%d;%dH";
+    tc_HO = "\033[H";
+    tc_IL = nullstr; /*$$*/
+    tc_CD = nullstr; /*$$*/
+    tc_SO = "\033[7m";
+    tc_SE = "\033[m";
+    tc_US = "\033[7m";
+    tc_UE = "\033[m";
+    tc_UC = nullstr;
     set_lines_and_cols();
-    AM = TRUE;
+    tc_AM = TRUE;
 #else
     s = getenv("TERM");
     status = tgetent(tcbuf,s? s : "dumb");	/* get termcap entry */
@@ -208,91 +208,91 @@ char* tcbuf;		/* temp area for "uncompiled" termcap entry */
     }
     tmpaddr = tcarea;			/* set up strange tgetstr pointer */
     s = Tgetstr("pc");			/* get pad character */
-    PC = *s;				/* get it where tputs wants it */
+    tc_PC = *s;				/* get it where tputs wants it */
     if (!tgetflag("bs")) {		/* is backspace not used? */
-	BC = Tgetstr("bc");		/* find out what is */
-	if (BC == nullstr) {		/* terminfo grok's 'bs' but not 'bc' */
-	    BC = Tgetstr("le");
-	    if (BC == nullstr)
-		BC = "\b";		/* better than nothing... */
+	tc_BC = Tgetstr("bc");		/* find out what is */
+	if (tc_BC == nullstr) {		/* terminfo grok's 'bs' but not 'bc' */
+	    tc_BC = Tgetstr("le");
+	    if (tc_BC == nullstr)
+		tc_BC = "\b";		/* better than nothing... */
 	}
     } else
-	BC = "\b";			/* make a backspace handy */
-    UP = Tgetstr("up");			/* move up a line */
-    CL = Tgetstr("cl");			/* get clear string */
-    CE = Tgetstr("ce");			/* clear to end of line string */
-    TI = Tgetstr("ti");			/* initialize display */
-    TE = Tgetstr("te");			/* reset display */
-    KS = Tgetstr("ks");			/* enter `keypad transmit' mode */
-    KE = Tgetstr("ke");			/* exit `keypad transmit' mode */
-    HO = Tgetstr("ho");			/* home cursor */
-    IL = Tgetstr("al");			/* insert (add) line */
-    CM = Tgetstr("cm");			/* cursor motion */
-    CD = Tgetstr("cd");			/* clear to end of display */
-    if (!*CE)
-	CE = CD;
-    SO = Tgetstr("so");			/* begin standout */
-    SE = Tgetstr("se");			/* end standout */
-    if ((SG = tgetnum("sg"))<0)
-	SG = 0;				/* blanks left by SG, SE */
-    US = Tgetstr("us");			/* start underline */
-    UE = Tgetstr("ue");			/* end underline */
-    if ((UG = tgetnum("ug"))<0)
-	UG = 0;				/* blanks left by US, UE */
-    if (*US)
-	UC = nullstr;			/* UC must not be NULL */
+	tc_BC = "\b";			/* make a backspace handy */
+    tc_UP = Tgetstr("up");		/* move up a line */
+    tc_CL = Tgetstr("cl");		/* get clear string */
+    tc_CE = Tgetstr("ce");		/* clear to end of line string */
+    tc_TI = Tgetstr("ti");		/* initialize display */
+    tc_TE = Tgetstr("te");		/* reset display */
+    tc_KS = Tgetstr("ks");		/* enter `keypad transmit' mode */
+    tc_KE = Tgetstr("ke");		/* exit `keypad transmit' mode */
+    tc_HO = Tgetstr("ho");		/* home cursor */
+    tc_IL = Tgetstr("al");		/* insert (add) line */
+    tc_CM = Tgetstr("cm");		/* cursor motion */
+    tc_CD = Tgetstr("cd");		/* clear to end of display */
+    if (!*tc_CE)
+	tc_CE = tc_CD;
+    tc_SO = Tgetstr("so");		/* begin standout */
+    tc_SE = Tgetstr("se");		/* end standout */
+    if ((tc_SG = tgetnum("sg"))<0)
+	tc_SG = 0;			/* blanks left by SG, SE */
+    tc_US = Tgetstr("us");		/* start underline */
+    tc_UE = Tgetstr("ue");		/* end underline */
+    if ((tc_UG = tgetnum("ug"))<0)
+	tc_UG = 0;			/* blanks left by US, UE */
+    if (*tc_US)
+	tc_UC = nullstr;		/* UC must not be NULL */
     else
-	UC = Tgetstr("uc");		/* underline a character */
-    if (!*US && !*UC) {			/* no underline mode? */
-	US = SO;			/* substitute standout mode */
-	UE = SE;
-	UG = SG;
+	tc_UC = Tgetstr("uc");		/* underline a character */
+    if (!*tc_US && !*tc_UC) {		/* no underline mode? */
+	tc_US = tc_SO;			/* substitute standout mode */
+	tc_UE = tc_SE;
+	tc_UG = tc_SG;
     }
-    LINES = tgetnum("li");		/* lines per page */
-    COLS = tgetnum("co");		/* columns on page */
+    tc_LINES = tgetnum("li");		/* lines per page */
+    tc_COLS = tgetnum("co");		/* columns on page */
 
 #ifdef TIOCGWINSZ
     { struct winsize ws;
 	if (ioctl(0, TIOCGWINSZ, &ws) >= 0 && ws.ws_row > 0 && ws.ws_col > 0) {
-	    LINES = ws.ws_row;
-	    COLS = ws.ws_col;
+	    tc_LINES = ws.ws_row;
+	    tc_COLS = ws.ws_col;
 	}
     }
 #endif
 	
-    AM = tgetflag("am");		/* terminal wraps automatically? */
-    XN = tgetflag("xn");		/* then eats next newline? */
-    VB = Tgetstr("vb");
-    if (!*VB)
-	VB = "\007";
-    CR = Tgetstr("cr");
-    if (!*CR) {
-	if (tgetflag("nc") && *UP) {
-	    CR = safemalloc((MEM_SIZE)strlen(UP)+2);
-	    sprintf(CR,"%s\r",UP);
+    tc_AM = tgetflag("am");		/* terminal wraps automatically? */
+    tc_XN = tgetflag("xn");		/* then eats next newline? */
+    tc_VB = Tgetstr("vb");
+    if (!*tc_VB)
+	tc_VB = "\007";
+    tc_CR = Tgetstr("cr");
+    if (!*tc_CR) {
+	if (tgetflag("nc") && *tc_UP) {
+	    tc_CR = safemalloc((MEM_SIZE)strlen(tc_UP)+2);
+	    sprintf(tc_CR,"%s\r",tc_UP);
 	}
 	else
-	    CR = "\r";
+	    tc_CR = "\r";
     }
 #ifdef TIOCGWINSZ
 	if (ioctl(1, TIOCGWINSZ, &winsize) >= 0) {
 		if (winsize.ws_row > 0)
-		    LINES = winsize.ws_row;
+		    tc_LINES = winsize.ws_row;
 		if (winsize.ws_col > 0)
-		    COLS = winsize.ws_col;
+		    tc_COLS = winsize.ws_col;
 	}
 # endif
 #endif
-    if (!*UP)				/* no UP string? */
+    if (!*tc_UP)			/* no UP string? */
 	marking = 0;			/* disable any marking */
-    if (*CM || *HO)
+    if (*tc_CM || *tc_HO)
 	can_home = TRUE;
-    if (!*CD || !can_home)		/* can we CE, CD, and home? */
+    if (!*tc_CD || !can_home)		/* can we CE, CD, and home? */
 	erase_each_line = FALSE;	/*  no, so disable use of clear eol */
     if (muck_up_clear)			/* this is for weird HPs */
-	CL = "\n\n\n\n";
-    leftcost = strlen(BC);
-    upcost = strlen(UP);
+	tc_CL = NULL;
+    leftcost = strlen(tc_BC);
+    upcost = strlen(tc_UP);
 #else /* !HAS_TERMLIB */
     ..."Don't know how to set the terminal!"
 #endif /* !HAS_TERMLIB */
@@ -300,9 +300,9 @@ char* tcbuf;		/* temp area for "uncompiled" termcap entry */
     line_col_calcs();
     noecho();				/* turn off echo */
     crmode();				/* enter cbreak mode */
-    sprintf(buf, "%d", LINES);
+    sprintf(buf, "%d", tc_LINES);
     lines_export = export("LINES",buf);
-    sprintf(buf, "%d", COLS);
+    sprintf(buf, "%d", tc_COLS);
     cols_export = export("COLUMNS",buf);
 
     mac_init(tcbuf);
@@ -314,18 +314,18 @@ set_lines_and_cols()
 {
     gotoxy(132,1);
     if (wherex() == 132)
-	COLS = 132;
+	tc_COLS = 132;
     else
-	COLS = 80;
+	tc_COLS = 80;
     gotoxy(1,50);
     if (wherey() == 50)
-	LINES = 50;
+	tc_LINES = 50;
     else {
 	gotoxy(1,43);
 	if (wherey() == 50)
-	    LINES = 50;
+	    tc_LINES = 50;
 	else
-	    LINES = 25;
+	    tc_LINES = 25;
     }
 }
 #endif
@@ -1068,8 +1068,8 @@ void
 underprint(s)
 register char* s;
 {
-    assert(UC);
-    if (*UC) {		/* char by char underline? */
+    assert(tc_UC);
+    if (*tc_UC) {	/* char by char underline? */
 	while (*s) {
 	    if (!AT_NORM_CHAR(s)) {
 		putchar('^');
@@ -1102,7 +1102,7 @@ void
 no_sofire()
 {
     /* should we disable fireworks? */
-    if (!(fire_is_out & STANDOUT) && (term_line|term_col)==0 && *UP && *SE) {
+    if (!(fire_is_out & STANDOUT) && (term_line|term_col)==0 && *tc_UP && *tc_SE) {
 	newline();
 	un_standout();
 	up_line();
@@ -1116,7 +1116,7 @@ void
 no_ulfire()
 {
     /* should we disable fireworks? */
-    if (!(fire_is_out & UNDERLINE) && (term_line|term_col)==0 && *UP && *US) {
+    if (!(fire_is_out & UNDERLINE) && (term_line|term_col)==0 && *tc_UP && *tc_US) {
 	newline();
 	un_underline();
 	up_line();
@@ -1282,7 +1282,7 @@ reask_anything:
 	return *tmpbuf == 'q' ? -1 : *tmpbuf;
     }
     if (*tmpbuf == '\n') {
-	page_line = LINES - 1;
+	page_line = tc_LINES - 1;
 	erase_line(0);
     }
     else {
@@ -1522,7 +1522,7 @@ reask_in_choice:
     number_was = -1;
 
 reinp_in_choice:
-    if ((s-buf) + len >= COLS)
+    if ((s-buf) + len >= tc_COLS)
 	screen_is_dirty = TRUE;
     fflush(stdout);
     getcmd(s);
@@ -1600,7 +1600,7 @@ int hilite;
 #endif
 	    underline();
 	}
-	for (i = 0; i < COLS; i++) {
+	for (i = 0; i < tc_COLS; i++) {
 	    if (!*s)
 		break;
 	    if (AT_NORM_CHAR(s))
@@ -1624,7 +1624,7 @@ int hilite;
 		un_standout();
 	    else if (hilite == UNDERLINE)
 		un_underline();
-	    if (AM && i == COLS)
+	    if (tc_AM && i == tc_COLS)
 		fflush(stdout);
 	    else
 		newline();
@@ -1638,7 +1638,7 @@ check_page_line()
 {
     if (page_line < 0)
 	return -1;
-    if (page_line >= LINES || int_count) {
+    if (page_line >= tc_LINES || int_count) {
 	register int cmd = -1;
 	if (int_count || (cmd = get_anything())) {
 	    page_line = -1;		/* disable further printing */
@@ -1694,7 +1694,7 @@ int num;
     register int i;
 
     for (i = num; i; i--)
-	putchar(PC);
+	putchar(tc_PC);
     fflush(stdout);
 }
 
@@ -1754,20 +1754,39 @@ bool_int to_eos;
 }
 
 void
+clear()
+{
+    term_line = term_col = fire_is_out = 0;
+    if (tc_CL)
+	tputs(tc_CL,tc_LINES,putchr);
+    else if (tc_CD) {
+	home_cursor();
+	tputs(tc_CD,tc_LINES,putchr);
+    }
+    else {
+	int i;
+	for (i = 0; i < tc_LINES; i++)
+	    putchr('\n');
+	home_cursor();
+    }
+    tputs(tc_CR,1,putchr) FLUSH;
+}
+
+void
 home_cursor()
 {
     char* tgoto();
 
-    if (!*HO) {			/* no home sequence? */
-	if (!*CM) {		/* no cursor motion either? */
+    if (!*tc_HO) {		/* no home sequence? */
+	if (!*tc_CM) {		/* no cursor motion either? */
 	    fputs("\n\n\n", stdout);
 	    termdown(3);
 	    return;		/* forget it. */
 	}
-	tputs(tgoto(CM, 0, 0), 1, putchr);	/* go to home via CM */
+	tputs(tgoto(tc_CM, 0, 0), 1, putchr);	/* go to home via CM */
     }
     else {			/* we have home sequence */
-	tputs(HO, 1, putchr);	/* home via HO */
+	tputs(tc_HO, 1, putchr);/* home via HO */
     }
     carriage_return();	/* Resets kernel's tab column counter to 0 */
     term_line = term_col = 0;
@@ -1784,8 +1803,8 @@ int to_line;
 
     if (term_col == to_col && term_line == to_line)
 	return;
-    if (*CM && !muck_up_clear) {
-	str = tgoto(CM,to_col,to_line);
+    if (*tc_CM && !muck_up_clear) {
+	str = tgoto(tc_CM,to_col,to_line);
 	cmcost = strlen(str);
     } else {
 	str = NULL;
@@ -1832,28 +1851,28 @@ int to_line;
 static void
 line_col_calcs()
 {
-    if (LINES > 0) {			/* is this a crt? */
+    if (tc_LINES > 0) {		/* is this a crt? */
 	if (!initlines || !option_def_vals[OI_INITIAL_ARTICLE_LINES]) {
 	    /* no -i or unreasonable value for initlines */
 	    if (outspeed >= B9600) 	/* whole page at >= 9600 baud */
-		initlines = LINES;
+		initlines = tc_LINES;
 	    else if (outspeed >= B4800)	/* 16 lines at 4800 */
 		initlines = 16;
 	    else			/* otherwise just header */
 		initlines = 8;
 	}
 	/* Check for initlines bigger than the screen and fix it! */
-	if (initlines > LINES)
-	    initlines = LINES;
+	if (initlines > tc_LINES)
+	    initlines = tc_LINES;
     }
     else {				/* not a crt */
-	LINES = 30000;			/* so don't page */
-	CL = "\n\n";			/* put a couple of lines between */
+	tc_LINES = 30000;		/* so don't page */
+	tc_CL = "\n\n";			/* put a couple of lines between */
 	if (!initlines || !option_def_vals[OI_INITIAL_ARTICLE_LINES])
 	    initlines = 8;		/* make initlines reasonable */
     }
-    if (COLS <= 0)
-	COLS = 80;
+    if (tc_COLS <= 0)
+	tc_COLS = 80;
 #ifdef SCAN
     s_resize_win();	/* let various parts know */
 #endif
@@ -1871,12 +1890,12 @@ int dummy;
 #ifdef TIOCGWINSZ
     {	struct winsize ws;
 	if (ioctl(0, TIOCGWINSZ, &ws) >= 0 && ws.ws_row > 0 && ws.ws_col > 0) {
-	    if (LINES != ws.ws_row || COLS != ws.ws_col) {
-		LINES = ws.ws_row;
-		COLS = ws.ws_col;
+	    if (tc_LINES != ws.ws_row || tc_COLS != ws.ws_col) {
+		tc_LINES = ws.ws_row;
+		tc_COLS = ws.ws_col;
 		line_col_calcs();
-		sprintf(lines_export, "%d", LINES);
-		sprintf(cols_export, "%d", COLS);
+		sprintf(lines_export, "%d", tc_LINES);
+		sprintf(cols_export, "%d", tc_COLS);
 		if (gmode == 's' || mode == 'a' || mode == 'p') {
 		    forceme("\f");	/* cause a refresh */
 					/* (defined only if TIOCSTI defined) */
@@ -1897,34 +1916,34 @@ void
 termlib_init()
 {
 #ifdef USETITE
-    if (TI && *TI) {
-	tputs(TI,1,putchr);
+    if (tc_TI && *tc_TI) {
+	tputs(tc_TI,1,putchr);
 	fflush(stdout);
     }
 #endif
 #ifdef USEKSKE
-    if (KS && *KS) {
-	tputs(KS,1,putchr);
+    if (tc_KS && *tc_KS) {
+	tputs(tc_KS,1,putchr);
 	fflush(stdout);
     }
 #endif
-    term_line = LINES-1;
+    term_line = tc_LINES-1;
     term_col = 0;
-    term_scrolled = LINES;
+    term_scrolled = tc_LINES;
 }
 
 void
 termlib_reset()
 {
 #ifdef USETITE
-    if (TE && *TE) {
-	tputs(TE,1,putchr);
+    if (tc_TE && *tc_TE) {
+	tputs(tc_TE,1,putchr);
 	fflush(stdout);
     }
 #endif
 #ifdef USEKSKE
-    if (KE && *KE) {
-	tputs(KE,1,putchr);
+    if (tc_KE && *tc_KE) {
+	tputs(tc_KE,1,putchr);
 	fflush(stdout);
     }
 #endif
@@ -2306,13 +2325,13 @@ bool_int restore_cursor;
 	mousebar_start++;
     }
 
-    goto_xy(COLS - mousebar_width - 1, LINES-1);
+    goto_xy(tc_COLS - mousebar_width - 1, tc_LINES-1);
     for (i = mousebar_start; i < mousebar_cnt; i++) {
 	putchar(' ');
 	color_string(COLOR_MOUSE,s);
 	s += strlen(s) + 1;
     }
-    term_col = COLS-1;
+    term_col = tc_COLS-1;
     if (restore_cursor)
 	goto_xy(save_col, save_line);
 }
@@ -2370,9 +2389,9 @@ int x_clk, y_clk;
     char* s = mousebar_btns;
     char* t;
     int i, j;
-    int col = COLS - mousebar_width;
+    int col = tc_COLS - mousebar_width;
 
-    if (mousebar_width != 0 && btn_clk == 0 && y_clk == LINES-1
+    if (mousebar_width != 0 && btn_clk == 0 && y_clk == tc_LINES-1
      && (x_clk -= col-1) > 0) {
 	x -= col-1;
 	for (i = 0; i < mousebar_start; i++) {
@@ -2399,7 +2418,7 @@ int x_clk, y_clk;
 	    if (x_clk < i) {
 		int tcol = term_col;
 		int tline = term_line;
-		goto_xy(col+j,LINES-1);
+		goto_xy(col+j,tc_LINES-1);
 		if (btn == 3)
 		    color_object(COLOR_MOUSE, 1);
 		if (s == t) {

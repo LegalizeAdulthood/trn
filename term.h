@@ -108,34 +108,34 @@ EXT int lflusho INIT(LFLUSHO);
  */
 
 #ifdef HAS_TERMLIB
-EXT int GT;				/* hardware tabs */
-EXT char* BC INIT(NULL);		/* backspace character */
-EXT char* UP INIT(NULL);		/* move cursor up one line */
-EXT char* CR INIT(NULL);		/* get to left margin, somehow */
-EXT char* VB INIT(NULL);		/* visible bell */
-EXT char* CL INIT(NULL);		/* home and clear screen */
-EXT char* CE INIT(NULL);		/* clear to end of line */
-EXT char* TI INIT(NULL);		/* initialize terminal */
-EXT char* TE INIT(NULL);		/* reset terminal */
-EXT char* KS INIT(NULL);		/* enter `keypad transmit' mode */
-EXT char* KE INIT(NULL);		/* exit `keypad transmit' mode */
-EXT char* CM INIT(NULL);		/* cursor motion */
-EXT char* HO INIT(NULL);		/* home cursor */
-EXT char* IL INIT(NULL);		/* insert line */
-EXT char* CD INIT(NULL);		/* clear to end of display */
-EXT char* SO INIT(NULL);		/* begin standout mode */
-EXT char* SE INIT(NULL);		/* end standout mode */
-EXT int SG INIT(0);			/* blanks left by SO and SE */
-EXT char* US INIT(NULL);		/* start underline mode */
-EXT char* UE INIT(NULL);		/* end underline mode */
-EXT char* UC INIT(NULL);		/* underline a character,
+EXT int tc_GT;				/* hardware tabs */
+EXT char* tc_BC INIT(NULL);		/* backspace character */
+EXT char* tc_UP INIT(NULL);		/* move cursor up one line */
+EXT char* tc_CR INIT(NULL);		/* get to left margin, somehow */
+EXT char* tc_VB INIT(NULL);		/* visible bell */
+EXT char* tc_CL INIT(NULL);		/* home and clear screen */
+EXT char* tc_CE INIT(NULL);		/* clear to end of line */
+EXT char* tc_TI INIT(NULL);		/* initialize terminal */
+EXT char* tc_TE INIT(NULL);		/* reset terminal */
+EXT char* tc_KS INIT(NULL);		/* enter `keypad transmit' mode */
+EXT char* tc_KE INIT(NULL);		/* exit `keypad transmit' mode */
+EXT char* tc_CM INIT(NULL);		/* cursor motion */
+EXT char* tc_HO INIT(NULL);		/* home cursor */
+EXT char* tc_IL INIT(NULL);		/* insert line */
+EXT char* tc_CD INIT(NULL);		/* clear to end of display */
+EXT char* tc_SO INIT(NULL);		/* begin standout mode */
+EXT char* tc_SE INIT(NULL);		/* end standout mode */
+EXT int tc_SG INIT(0);			/* blanks left by SO and SE */
+EXT char* tc_US INIT(NULL);		/* start underline mode */
+EXT char* tc_UE INIT(NULL);		/* end underline mode */
+EXT char* tc_UC INIT(NULL);		/* underline a character,
 						 if that's how it's done */
-EXT int UG INIT(0);			/* blanks left by US and UE */
-EXT bool AM INIT(FALSE);		/* does terminal have automatic
+EXT int tc_UG INIT(0);			/* blanks left by US and UE */
+EXT bool tc_AM INIT(FALSE);		/* does terminal have automatic
 								 margins? */
-EXT bool XN INIT(FALSE);		/* does it eat 1st newline after
+EXT bool tc_XN INIT(FALSE);		/* does it eat 1st newline after
 							 automatic wrap? */
-EXT char PC INIT(0);			/* pad character for use by tputs() */
+EXT char tc_PC INIT(0);			/* pad character for use by tputs() */
 
 #ifdef _POSIX_SOURCE
 EXT speed_t outspeed INIT(0);		/* terminal output speed, */
@@ -144,7 +144,7 @@ EXT long outspeed INIT(0);		/* 	for use by tputs() */
 #endif
 
 EXT int fire_is_out INIT(1);
-EXT int LINES INIT(0), COLS INIT(0);	/* size of screen */
+EXT int tc_LINES INIT(0), tc_COLS INIT(0);/* size of screen */
 EXT int term_line, term_col;		/* position of cursor */
 EXT int term_scrolled;			/* how many lines scrolled away */
 EXT int just_a_sec INIT(960);		/* 1 sec at current baud rate */
@@ -154,20 +154,19 @@ EXT int just_a_sec INIT(960);		/* 1 sec at current baud rate */
 
 #define termdown(x) term_line+=(x), term_col=0
 #define newline() term_line++, term_col=0, putchar('\n') FLUSH
-#define backspace() tputs(BC,0,putchr) FLUSH
-#define clear() term_line=term_col=fire_is_out=0, tputs(CL,LINES,putchr), tputs(CR,1,putchr) FLUSH
-#define erase_eol() tputs(CE,1,putchr) FLUSH
-#define clear_rest() tputs(CD,LINES,putchr) FLUSH
-#define maybe_eol() if(erase_screen&&erase_each_line)tputs(CE,1,putchr) FLUSH
-#define underline() tputs(US,1,putchr) FLUSH
-#define un_underline() fire_is_out|=UNDERLINE, tputs(UE,1,putchr) FLUSH
-#define underchar() tputs(UC,0,putchr) FLUSH
-#define standout() tputs(SO,1,putchr) FLUSH
-#define un_standout() fire_is_out|=STANDOUT, tputs(SE,1,putchr) FLUSH
-#define up_line() term_line--, tputs(UP,1,putchr) FLUSH
-#define insert_line() tputs(IL,1,putchr) FLUSH
-#define carriage_return() term_col=0, tputs(CR,1,putchr) FLUSH
-#define dingaling() tputs(VB,1,putchr) FLUSH
+#define backspace() tputs(tc_BC,0,putchr) FLUSH
+#define erase_eol() tputs(tc_CE,1,putchr) FLUSH
+#define clear_rest() tputs(tc_CD,tc_LINES,putchr) FLUSH
+#define maybe_eol() if(erase_screen&&erase_each_line)tputs(tc_CE,1,putchr) FLUSH
+#define underline() tputs(tc_US,1,putchr) FLUSH
+#define un_underline() fire_is_out|=UNDERLINE, tputs(tc_UE,1,putchr) FLUSH
+#define underchar() tputs(tc_UC,0,putchr) FLUSH
+#define standout() tputs(tc_SO,1,putchr) FLUSH
+#define un_standout() fire_is_out|=STANDOUT, tputs(tc_SE,1,putchr) FLUSH
+#define up_line() term_line--, tputs(tc_UP,1,putchr) FLUSH
+#define insert_line() tputs(tc_IL,1,putchr) FLUSH
+#define carriage_return() term_col=0, tputs(tc_CR,1,putchr) FLUSH
+#define dingaling() tputs(tc_VB,1,putchr) FLUSH
 #else /* !HAS_TERMLIB */
 ..."Don't know how to define the term macros!"
 #endif /* !HAS_TERMLIB */
@@ -234,6 +233,7 @@ void printcmd _((void));
 void rubout _((void));
 void reprint _((void));
 void erase_line _((bool_int));
+void clear _((void));
 void home_cursor _((void));
 void goto_xy _((int,int));
 #ifdef SIGWINCH
