@@ -645,7 +645,7 @@ NEWSRC* rp;
     }
     rp->datasrc->lastnewgrp = lastnewtime;
 
-    if (paranoid)
+    if (paranoid && !checkflag)
 	cleanup_newsrc(rp);
     return TRUE;
 }
