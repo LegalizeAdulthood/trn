@@ -30,6 +30,7 @@
 #define AFFECT_UNSEL	0
 #define AFFECT_ALL	0x0001
 #define ALSO_ECHO	0x0002	/* only works with [un]select_article() */
+#define SET_TORETURN	0x0004	/* only works with kill_*() */
 
 #define KF_AGE_MASK	0x003F
 #define KF_DAYNUM(x)	((long)time((time_t*)NULL) / 86400 - 10490 - (x))
