@@ -1,0 +1,33 @@
+/* search.ih
+*/
+
+
+/* Low-order four bits determine the pattern syntax.  Those values are in search.h. */
+#define SRCH_SYN_MASK	0xF0	/* Everything but the SYN bits */
+
+/* Other flags */
+#define SRCH_FOLD	0x10	/* Case-insensitive matching */
+#define SRCH_INVERT	0x20	/* Invert match/nomatch */
+
+
+/* Error values */
+#define ERR_MPFLAG_UNKNOWN	(-1)
+#define ERR_MPSYN_UNKNOWN	(-2)
+#define ERR_MPSYN_WILD_UNSUPP	(-3)
+#define ERR_MP_INTERNAL		(-4)
+
+/* Error Strings.  Matches error values above */
+char* mp_errors[] = {
+	NULL,
+	"Unrecognized metapattern flag",
+	"Unrecognized syntax",
+	"Wildcard syntax unsupported",
+	"Regular expression library internal error",
+};
+
+/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
+
+static int pattern_flags _((char*,int*));
+static void cvt_str2pcre _((char*,char*));
+static char* cvt_trn2pcre_cclass _((char*,char*));
+static void cvt_trn2pcre _((char*,char*));
