@@ -6,8 +6,8 @@ static int addgroup_cnt;
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
-static int addng_cmp _((char,int,HASHDATUM));
-static int build_addgroup_list _((int,HASHDATUM,int));
+static int addng_cmp _((char*,int,HASHDATUM));
+static int build_addgroup_list _((int,HASHDATUM*,int));
 static void process_list _((int));
 #ifdef SUPPORT_NNTP
 static void new_nntp_groups _((DATASRC*));

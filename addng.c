@@ -28,7 +28,7 @@
 
 static int
 addng_cmp(key, keylen, data)
-char *key;
+char* key;
 int keylen;
 HASHDATUM data;
 {
@@ -38,7 +38,7 @@ HASHDATUM data;
 static int
 build_addgroup_list(keylen, data, extra)
 int keylen;
-HASHDATUM *data;
+HASHDATUM* data;
 int extra;
 {
     ADDGROUP* node = (ADDGROUP*)data->dat_ptr;
