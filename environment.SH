@@ -2,7 +2,7 @@ case $CONFIG in
     '') . ./config.sh ;;
 esac
 echo "Extracting environment (with variable substitutions)"
-$spitshell >HelpFiles/config/environment <<!GROK!THIS!
+$spitshell >$src/HelpFiles/config/environment <<!GROK!THIS!
 In this list, variables marked with (%) are subject to percent interpolation,
 and variables marked with (~) are subject to both percent and home-directory
 interpolation.
