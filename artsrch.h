@@ -3,10 +3,6 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 
-#ifndef NBRA
-#include "search.h"
-#endif
-
 #ifdef ARTSEARCH
 
 #define SRCH_ABORT 0
