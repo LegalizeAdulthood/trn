@@ -184,6 +184,8 @@ int entering;
 
 	if (*bp == '&') {
 	    mention(bp);
+	    if (bp > buf)
+		strcpy(buf, bp);
 	    switcheroo();
 	}
 	else if (*bp == '/') {
