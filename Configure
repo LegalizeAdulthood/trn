@@ -20,7 +20,7 @@
 
 # $Id$
 #
-# Generated on Thu Dec 28 13:38:50 PST 2000 [metaconfig 3.0 PL70]
+# Generated on Thu Feb 15 10:20:32 PST 2001 [metaconfig 3.0 PL70]
 # (with additional metaconfig patches by trn-workers@lists.sourceforge.net)
 
 cat >/tmp/c1$$ <<EOF
@@ -405,6 +405,8 @@ incpath=''
 mips=''
 mips_type=''
 usrinc=''
+yacc=''
+yaccflags=''
 d_whoami=''
 CONFIG=''
 
@@ -1269,6 +1271,8 @@ Mcc
 ar
 basename
 bash
+bison
+byacc
 cpp
 csh
 date
@@ -5790,6 +5794,37 @@ case "$d_voidsig" in
 esac
 $rm -f $$.tmp
 
+: determine compiler compiler
+case "$yacc" in
+'')
+	dflt=yacc;;
+*)
+	dflt="$yacc";;
+esac
+echo " "
+comp='yacc'
+if $test -f "$byacc"; then
+	dflt="$byacc"
+	comp="byacc or $comp"
+fi
+if $test -f "$bison"; then
+	comp="$comp or bison -y"
+fi
+rp="Which compiler compiler ($comp) shall I use?"
+. ./myread
+yacc="$ans"
+case "$yacc" in
+*bis*)
+	case "$yacc" in
+	*-y*) ;;
+	*)
+		yacc="$yacc -y"
+		echo "(Adding -y option to bison to get yacc-compatible behaviour.)"
+		;;
+	esac
+	;;
+esac
+
 : see if ptem.h exists
 if $test -r /usr/include/sys/ptem.h ; then
     $echo "sys/ptem.h found."
@@ -6425,6 +6460,8 @@ void='$void'
 vspell='$vspell'
 who='$who'
 xlibpth='$xlibpth'
+yacc='$yacc'
+yaccflags='$yaccflags'
 EOT
 
 : add special variables
