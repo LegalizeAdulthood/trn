@@ -359,6 +359,17 @@ if $test -n "$cmdlist"; then
     ( eval $cmdlist ) >/dev/null 2>&1 &
 fi
 
+# check for addresses in the .invalid TLD
+if $egrep -i '^Cc: .*\.invalid([][()<>@,;:\\". ]|$)' $tmpart >/dev/null 2>&1; then
+    $cat <<'EOM'
+
+At least one of the addresses to which you are copying this article is
+marked as an invalid address, so you will not be able to send mail to it
+directly.  You should look for clues in the previous article to find an
+address where the poster can receive mail.
+EOM
+fi
+
 case "$FAST_PNEWS" in
 y*) file=''
     $echo "" >> $tmpart
