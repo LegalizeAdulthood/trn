@@ -354,48 +354,71 @@ int mod;
 /*
  * Get working directory
  */
-#ifndef HAS_GETWD
-#ifdef HAS_GETCWD
-/*=-=-=-=*/
+#ifndef HAS_GETCWD
+static char*
+_trn_getwd(buf, len)
+char* buf;
+int len;
+{
+    char* ret;
+#ifdef HAS_GETWD
+    buf[len-1] = 0;
+    ret = getwd(buf);
+    if (buf[len-1]) {
+	/* getwd() overwrote the end of the buffer */
+	printf("getwd() buffer overrun!\n") FLUSH;
+	finalize(1);
+    }
+#else
+    FILE* popen();
+    FILE* pipefp;
+    char* nl;
+
+    if ((pipefp = popen("/bin/pwd","r")) == NULL) {
+	printf("Can't popen /bin/pwd\n") FLUSH;
+	return NULL;
+    }
+    buf[0] = 0;
+    fgets(ret = buf, len, pipefp);
+    if (pclose(pipefp) == EOF) {
+	printf("Failed to run /bin/pwd\n") FLUSH;
+	return NULL;
+    }
+    if (!buf[0]) {
+	printf("/bin/pwd didn't output anything\n") FLUSH;
+    	return NULL;
+    }
+    if ((nl = index(buf, '\n')) != NULL)
+	*nl = '\0';
+#endif
+    return ret;
+}
+
+#else
+
+#define _trn_getwd(buf, len) getcwd(buf, len)
+
+#endif
+
 char*
-getwd(np)
-char* np;
+trn_getwd(buf, buflen)
+char* buf;
+int buflen;
 {
     char* ret;
 
-    if ((ret = getcwd(np,512)) == NULL) {
+    ret = _trn_getwd(buf, buflen);
+    if (!ret) {
 	printf("Cannot determine current working directory!\n") FLUSH;
 	finalize(1);
     }
 #ifdef MSDOS
-    strlwr(np);
-    while ((np = index(np,'\\')) != NULL)
-	*np = '/';
+    strlwr(buf);
+    while ((buf = index(buf,'\\')) != NULL)
+	*buf++ = '/';
 #endif
     return ret;
 }
-#else
-char*
-getwd(np)
-char* np;
-{
-    FILE* popen();
-    FILE* pipefp;
-
-    if ((pipefp = popen("/bin/pwd","r")) == NULL) {
-	printf("Can't run /bin/pwd\n") FLUSH;
-	finalize(1);
-    }
-    fgets(np,512,pipefp);
-    np[strlen(np)-1] = '\0';	/* wipe out newline */
-    if (pclose(pipefp) == EOF) {
-	printf("Failed to run /bin/pwd\n") FLUSH;
-	finalize(1);
-    }
-    return np;
-}
-#endif
-#endif
 
 /* just like fgets but will make bigger buffer as necessary */
 
