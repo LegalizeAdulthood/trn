@@ -18,7 +18,7 @@ mailagent='false'
 changelog=' '
 changercs=0
 : File lookup extensions
-cext=''
+cext='.ih'
 shext=''
 : Mailing list variables
 list_users='false'
