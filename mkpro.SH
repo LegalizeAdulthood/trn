@@ -14,7 +14,6 @@ $spitshell >>mkpro <<'!NO!SUBS!'
 
 $dont_line="/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */\n";
 
-@names = `ls *.c`;
 $changes = 0;
 
 # We're looking for the following limited format:
@@ -35,9 +34,8 @@ $changes = 0;
 # different from the original.  If a file is different, the original
 # is moved into the directory "sanity", and the new file renamed.
 
-foreach $file (@names) {
-    chop $file;
-    next if (($file eq 'ndir.c') || ($file eq 'parsedate.c'));
+foreach $file (<*.c>) {
+    next if $file eq 'ndir.c' || $file eq 'parsedate.c';
     next unless $file =~ s/\.c$//;
     open(IN_C, "$file.c") || die "Can't open $file.c for input: $!\n";
 
