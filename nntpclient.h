@@ -14,6 +14,7 @@ struct nntplink {
 #ifdef USE_GENAUTH
     int		cookiefd;
 #endif
+    bool	trailing_CR;
 };
 
 #define NNTP_NEW_CMD_OK		0x0001
