@@ -645,7 +645,7 @@ art_switch()
 #ifdef TERSE
 		u_prompt = "\nUnkill?";
 #endif
-	    dfltcmd = "+an";
+	    dfltcmd = "+anq";
 	}
 	else {
 #ifdef VERBOSE
@@ -666,7 +666,7 @@ t or SP to mark thread unread.\n\
 s to mark subthread unread.\n";
 	    }
 #endif
-	    dfltcmd = "+tsan";
+	    dfltcmd = "+tsanq";
 	}
       reask_unread:
 	in_char(u_prompt,'u',dfltcmd);
@@ -685,7 +685,7 @@ Type + to enter select thread mode using all the already-read articles.\n\
 		fputs(u_help_thread,stdout);
 		fputs("\
 Type a to mark all articles in this group as unread.\n\
-Type n to change nothing.\n\
+Type n or q to change nothing.\n\
 ",stdout) FLUSH;
 		termdown(6);
 	    }
@@ -699,7 +699,7 @@ Type n to change nothing.\n\
 		fputs(u_help_thread,stdout);
 		fputs("\
 a to mark all articles unread.\n\
-n to change nothing.\n\
+n or q to change nothing.\n\
 ",stdout) FLUSH;
 		termdown(5);
 	    }
