@@ -442,9 +442,9 @@ reask_article:
 	setdfltcmd();
 	if (erase_screen && erase_each_line)
 	    erase_line(1);
-	if (term_line >= LINES) {
-	    term_scrolled += term_line - LINES + 1;
-	    term_line = LINES-1;
+	if (term_line >= tc_LINES) {
+	    term_scrolled += term_line - tc_LINES + 1;
+	    term_line = tc_LINES-1;
 	}
 	unflush_output();		/* disable any ^O in effect */
 	/* print prompt, whatever it is */
@@ -456,7 +456,7 @@ reask_article:
 		nullstr,
 #endif
 		dfltcmd);
-	draw_mousebar(COLS - (term_line == LINES-1? strlen(buf)+5 : 0), 1);
+	draw_mousebar(tc_COLS - (term_line == tc_LINES-1? strlen(buf)+5 : 0), 1);
 	color_string(COLOR_CMD,buf);
 	putchar(' ');
 	fflush(stdout);
@@ -473,7 +473,7 @@ reinp_article:
 	artp = curr_artp;
 	getcmd(buf);
 	if (errno || *buf == '\f') {
-	    if (LINES < 100 && !int_count)
+	    if (tc_LINES < 100 && !int_count)
 		*buf = '\f';		/* on CONT fake up refresh */
 	    else {
 		newline();		/* but only on a crt */
@@ -1311,8 +1311,8 @@ run_the_selector:
 	switch (*buf) {
 	  case '+':
 	    newline();
-	    term_scrolled = LINES;
-	    term_line = LINES-1;
+	    term_scrolled = tc_LINES;
+	    term_line = tc_LINES-1;
 	    return AS_ASK;
 	  case 'Q':
 	    exit_code = NG_ASK;
@@ -1442,7 +1442,7 @@ run_the_selector:
 	    if (*buf == 'B')
 		target = topline - 1;
 	    else {
-		target = topline - (LINES - 2);
+		target = topline - (tc_LINES - 2);
 		if (marking && (marking_areas & BACKPAGE_MARKING)) {
 		    highlight = topline;
 		}

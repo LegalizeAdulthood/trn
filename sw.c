@@ -347,8 +347,8 @@ register char* s;
 	    break;
 	case 'V':
 	    if (mode == 'i') {
-		LINES = 1000;
-		COLS = 1000;
+		tc_LINES = 1000;
+		tc_COLS = 1000;
 		erase_screen = FALSE;
 	    }
 	    trn_version();

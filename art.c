@@ -207,7 +207,7 @@ do_article()
 	  innersearch? (in_header || innermore())
 	   : special? (linenum < slines)
 	   : (firstpage && !in_header)? (linenum < initlines)
-	   : (linenum < LINES);
+	   : (linenum < tc_LINES);
 	     linenum++) {		/* for each line on page */
 	    if (int_count) {	/* exit via interrupt? */
 		newline();	/* get to left margin */
@@ -359,7 +359,7 @@ do_article()
 		if (pagestop && !continuation && execute(&page_compex,bufptr))
 		    linenum = 32700;
 #endif
-		for (outpos = 0; outpos < COLS; ) { /* while line has room */
+		for (outpos = 0; outpos < tc_COLS; ) { /* while line has room */
 		    if (AT_NORM_CHAR(bufptr)) {	    /* normal char? */
 #ifdef ULSMARTS
 			if (*bufptr == '_') {
@@ -367,7 +367,7 @@ do_article()
 				if (outputok && !under_lining
 				 && highlight != artline) {
 				    under_lining++;
-				    if (UG) {
+				    if (tc_UG) {
 					if (bufptr != buf && bufptr[-1]==' ') {
 					    outpos--;
 					    backspace();
@@ -382,7 +382,7 @@ do_article()
 			    if (under_lining) {
 				under_lining = 0;
 				un_underline();
-				if (UG) {
+				if (tc_UG) {
 				    outpos++;
 				    if (*bufptr == ' ')
 					goto skip_put;
@@ -403,7 +403,7 @@ do_article()
 			else {
 #ifdef CHARSUBST
 			    register int i;
-			    i = putsubstchar(*bufptr, COLS - outpos, outputok);
+			    i = putsubstchar(*bufptr, tc_COLS - outpos, outputok);
 			    if (i < 0) {
 				outpos += -i - 1;
 				break;
@@ -415,7 +415,7 @@ do_article()
 			    outpos++;
 #endif /* CHARSUBST */
 			}
-			if (*UC && ((highlight==artline && marking == STANDOUT)
+			if (*tc_UC && ((highlight==artline && marking == STANDOUT)
 #ifdef ULSMARTS
 			    || under_lining
 #endif
@@ -434,7 +434,7 @@ do_article()
 			}
 #endif
 #ifdef DEBUG
-			if (debug & DEB_INNERSRCH && outpos < COLS - 6) {
+			if (debug & DEB_INNERSRCH && outpos < tc_COLS - 6) {
 			    standout();
 			    printf("%4d",artline); 
 			    un_standout();
@@ -448,7 +448,7 @@ do_article()
 		    else if (*bufptr == '\t') {	/* tab? */
 			int incpos =  8 - outpos % 8;
 			if (outputok) {
-			    if (GT)
+			    if (tc_GT)
 				putchar(*bufptr);
 			    else
 				while (incpos--) putchar(' ');
@@ -457,7 +457,7 @@ do_article()
 			outpos += 8 - outpos % 8;
 		    }
 		    else if (*bufptr == '\f') {	/* form feed? */
-			if (outpos+2 > COLS)
+			if (outpos+2 > tc_COLS)
 			    break;
 			if (outputok)
 			    fputs("^L",stdout);
@@ -474,11 +474,11 @@ do_article()
 			    outpos++;
 			}
 			else if (*bufptr != '\r' || bufptr[1] != '\n') {
-			    if (outpos+2 > COLS)
+			    if (outpos+2 > tc_COLS)
 				break;
 			    if (outputok) {
 				putchar('^');
-				if (highlight == artline && *UC
+				if (highlight == artline && *tc_UC
 				 && marking == STANDOUT) {
 				    backspace();
 				    underchar();
@@ -499,7 +499,7 @@ do_article()
 		if (outpos < 1000) {	/* did line overflow? */
 		    restart = LINE_OFFSET(bufptr);/* restart here next time */
 		    if (outputok) {
-			if (!AM || XN || outpos < COLS)
+			if (!tc_AM || tc_XN || outpos < tc_COLS)
 			    newline();
 			else
 			    term_line++;
@@ -524,9 +524,9 @@ do_article()
 			erase_eol();
 		}
 		artline++;	/* count the line just printed */
-		if (artline - LINES + 1 > topline)
+		if (artline - tc_LINES + 1 > topline)
 			    /* did we just scroll top line off? */
-		    topline = artline - LINES + 1;
+		    topline = artline - tc_LINES + 1;
 			    /* then recompute top line # */
 	    }
 
@@ -580,9 +580,9 @@ recheck_pager:
 /* not done with this article, so pretend we are a pager */
 
 reask_pager:		    
-	if (term_line >= LINES) {
-	    term_scrolled += term_line - LINES + 1;
-	    term_line = LINES-1;
+	if (term_line >= tc_LINES) {
+	    term_scrolled += term_line - tc_LINES + 1;
+	    term_line = tc_LINES-1;
 	}
 	more_prompt_col = term_col;
 
@@ -601,7 +601,7 @@ reask_pager:
 	sprintf(buf,"--MORE--(%s%%)",cmd_buf);
 #endif
 	outpos = term_col + strlen(buf);
-	draw_mousebar(COLS - (term_line == LINES-1? outpos+5 : 0), 1);
+	draw_mousebar(tc_COLS - (term_line == tc_LINES-1? outpos+5 : 0), 1);
 	color_string(COLOR_MORE,buf);
 	fflush(stdout);
 	term_col = outpos;
@@ -612,7 +612,7 @@ reask_pager:
 	    fflush(stdout);
 	}
 #endif
-	if (checkcount >= docheckwhen && linenum == LINES
+	if (checkcount >= docheckwhen && linenum == tc_LINES
 	 && (artline > 40 || checkcount >= docheckwhen+10)) {
 			    /* while he is reading a whole page */
 			    /* in an article he is interested in */
@@ -633,7 +633,7 @@ reask_pager:
 	set_mode(gmode,'p');
 	getcmd(buf);
 	if (errno) {
-	    if (LINES < 100 && !int_count)
+	    if (tc_LINES < 100 && !int_count)
 		*buf = '\f';/* on CONT fake up refresh */
 	    else {
 		*buf = 'q';	/* on INTR or paper just quit */
@@ -748,8 +748,8 @@ page_switch()
 	char* nlptr;
 	char ch;
 
-	if (gline < 0 || gline > LINES-2)
-	    gline = LINES-2;
+	if (gline < 0 || gline > tc_LINES-2)
+	    gline = tc_LINES-2;
 #ifdef DEBUG
 	if (debug & DEB_INNERSRCH) {
 	    printf("Start here? %d  >=? %d\n",topline + gline + 1,artline)
@@ -878,7 +878,7 @@ page_switch()
       case 'B':		/* one line up */
 	if (topline < 0)
 	    break;
-	if (*IL && *HO) {
+	if (*tc_IL && *tc_HO) {
 	    ART_POS pos;
 	    home_cursor();
 	    insert_line();
@@ -925,7 +925,7 @@ page_switch()
 	if (*buf == 'B')
 	    target = topline - 1;
 	else {
-	    target = topline - (LINES - 2);
+	    target = topline - (tc_LINES - 2);
 	    if (marking && (marking_areas & BACKPAGE_MARKING))
 		highlight = topline;
 	}
@@ -1042,9 +1042,9 @@ leave_pager:
       case 'd':		/* half page */
       case Ctl('d'):
 	special = TRUE;
-	slines = LINES / 2 + 1;
+	slines = tc_LINES / 2 + 1;
 	/* no divide-by-zero, thank you */
-	if (LINES > 2 && (LINES & 1) && artline % (LINES-2) >= LINES/2 - 1)
+	if (tc_LINES > 2 && (tc_LINES & 1) && artline % (tc_LINES-2) >= tc_LINES/2 - 1)
 	    slines++;
 	goto go_forward;
       case 'y':
@@ -1058,7 +1058,7 @@ leave_pager:
 	}
 	else {
 	    special = TRUE;
-	    slines = LINES;
+	    slines = tc_LINES;
 	}
       go_forward:
 	if (*LINE_PTR(alinebeg) != '\f'
@@ -1144,7 +1144,7 @@ innermore()
 
 /* On click:
  *    btn = 0 (left), 1 (middle), or 2 (right) + 4 if double-clicked;
- *    x = 0 to COLS-1; y = 0 to LINES-1;
+ *    x = 0 to tc_COLS-1; y = 0 to tc_LINES-1;
  *    btn_clk = 0, 1, or 2 (no 4); x_clk = x; y_clk = y.
  * On release:
  *    btn = 3; x = released x; y = released y;
@@ -1179,7 +1179,7 @@ int x_clk, y_clk;
 	    reread = TRUE;
 	    pushchar(Ctl('r'));
 	}
-	else if (y > LINES/2)
+	else if (y > tc_LINES/2)
 	    pushchar(' ');
 	else if (topline != -1)
 	    pushchar('b');
@@ -1191,7 +1191,7 @@ int x_clk, y_clk;
 	    slines = 1;
 	    pushchar(Ctl('r'));
 	}
-	else if (y > LINES/2)
+	else if (y > tc_LINES/2)
 	    pushchar('\n');
 	else if (topline != -1)
 	    pushchar('B');
@@ -1203,7 +1203,7 @@ int x_clk, y_clk;
 	    slines = 1;
 	    pushchar(Ctl('r'));
 	}
-	else if (y > LINES/2)
+	else if (y > tc_LINES/2)
 	    pushchar('n');
 	else
 	    pushchar(Ctl('r'));

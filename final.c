@@ -292,7 +292,7 @@ int signo;
 	xmouse_off();
 	checkpoint_newsrcs();	/* good chance of crash while stopped */
 	if (bos_on_stop) {
-	    goto_xy(0, LINES-1);
+	    goto_xy(0, tc_LINES-1);
 	    putchar('\n') FLUSH;
 	}
 	termlib_reset();

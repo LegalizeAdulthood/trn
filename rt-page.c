@@ -278,7 +278,7 @@ int ssort;
 static void
 sel_page_init()
 {
-    sel_max_line_cnt = LINES - (COLS - mousebar_width < 50? 6 : 5);
+    sel_max_line_cnt = tc_LINES - (tc_COLS - mousebar_width < 50? 6 : 5);
     sel_chars = getval("SELECTCHARS", SELECTCHARS);
     /* The numeric option of up to 99 lines will require many adaptations
      * to be able to switch from a large numeric page (more than
@@ -1779,9 +1779,9 @@ register ARTICLE* ap;
 int ix;
 int sel;
 {
-    int subj_width = COLS - 5 - UseSelNum;
-    int from_width = COLS / 5;
-    int date_width = COLS / 5;
+    int subj_width = tc_COLS - 5 - UseSelNum;
+    int from_width = tc_COLS / 5;
+    int date_width = tc_COLS / 5;
 
     maybe_eol();
     if (subj_width < 32)
@@ -1812,9 +1812,9 @@ int sel;
 {
     register ARTICLE* ap;
     register int j, i;
-    int subj_width = COLS - 8 - UseSelNum;
-    int from_width = COLS / 5;
-    int date_width = COLS / 5;
+    int subj_width = tc_COLS - 8 - UseSelNum;
+    int from_width = tc_COLS / 5;
+    int date_width = tc_COLS / 5;
 
     maybe_eol();
     if (subj_width < 32)
@@ -1987,8 +1987,8 @@ int max_len;
 	if (*cp != '?' && (end = index(cp, '\n')) != NULL
 	 && end != cp) {
 	    char ch;
-	    if (end - cp > COLS - max_len - 8 - 1 - UseSelNum)
-		end = cp + COLS - max_len - 8 - 1 - UseSelNum;
+	    if (end - cp > tc_COLS - max_len - 8 - 1 - UseSelNum)
+		end = cp + tc_COLS - max_len - 8 - 1 - UseSelNum;
 	    ch = *end;
 	    *end = '\0';
 	    if (*sel_grp_dmode == 'm')

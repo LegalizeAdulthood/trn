@@ -262,7 +262,7 @@ char* str;
 	str = msg;
 	len = 0;
     }
-    if (!use_colors && *UC && objects[object].attr == UNDERLINE)
+    if (!use_colors && *tc_UC && objects[object].attr == UNDERLINE)
 	underprint(str);	/* hack for stupid terminals */
     else {
 	color_object(object, 1);

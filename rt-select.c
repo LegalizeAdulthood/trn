@@ -862,7 +862,7 @@ sel_input()
     got_dash = got_goto = 0;
     force_sel_pos = -1;
     if (removed_prompt & 1) {
-	draw_mousebar(COLS,0);
+	draw_mousebar(tc_COLS,0);
 	removed_prompt &= ~1;
     }
     if (can_home)
@@ -912,7 +912,7 @@ reinp_selector:
 	if (can_home) {
 	    goto_xy(0,sel_last_line+1);
 	    erase_line(0);
-	    if (term_line == LINES-1)
+	    if (term_line == tc_LINES-1)
 		removed_prompt |= 1;
 	}
 	disp_status_line = 0;
@@ -946,7 +946,7 @@ reinp_selector:
 	    if (can_home) {
 		goto_xy(0,sel_last_line+1);
 		erase_line(0);
-		if (term_line == LINES-1)
+		if (term_line == tc_LINES-1)
 		    removed_prompt |= 1;
 	    }
 	    disp_status_line = 0;
@@ -995,7 +995,7 @@ reinp_selector:
 	    if (can_home) {
 		goto_xy(0,sel_last_line+1);
 		erase_line(0);
-		if (term_line == LINES-1)
+		if (term_line == tc_LINES-1)
 		    removed_prompt |= 1;
 	    }
 	    disp_status_line = 0;
@@ -1134,7 +1134,7 @@ reinp_selector:
 		fputs(msg,stdout);
 		term_col = strlen(msg);
 		if (removed_prompt & 1) {
-		    draw_mousebar(COLS,0);
+		    draw_mousebar(tc_COLS,0);
 		    removed_prompt &= ~1;
 		}
 		disp_status_line = 2;
@@ -1237,7 +1237,7 @@ reinp_selector:
 static void
 sel_prompt()
 {
-    draw_mousebar(COLS,0);
+    draw_mousebar(tc_COLS,0);
     if (can_home)
 	goto_xy(0,sel_last_line);
 #ifdef MAILCALL
@@ -2908,7 +2908,7 @@ int y;
 
 /* On click:
  *    btn = 0 (left), 1 (middle), or 2 (right) + 4 if double-clicked;
- *    x = 0 to COLS-1; y = 0 to LINES-1;
+ *    x = 0 to tc_COLS-1; y = 0 to tc_LINES-1;
  *    btn_clk = 0, 1, or 2 (no 4); x_clk = x; y_clk = y.
  * On release:
  *    btn = 3; x = release's x; y = release's y;
@@ -2984,7 +2984,7 @@ int x_clk, y_clk;
 	     *   if cursor in top half: backwards
 	     *   if cursor in bottom half: forwards
 	     */
-	    if (y < LINES/2)
+	    if (y < tc_LINES/2)
 		pushchar('<' | 0200);
 	    else
 		pushchar('>' | 0200);

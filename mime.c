@@ -1121,11 +1121,11 @@ char* f;
     char* cp;
 
     if (word_wrap_offset < 0) {
-	normal_word_wrap = COLS - 8;
+	normal_word_wrap = tc_COLS - 8;
 	word_wrap_in_pre = 0;
     }
     else
-	word_wrap_in_pre = normal_word_wrap = COLS - word_wrap_offset;
+	word_wrap_in_pre = normal_word_wrap = tc_COLS - word_wrap_offset;
 
     if (normal_word_wrap <= 20)
 	normal_word_wrap = 0;
@@ -1231,17 +1231,17 @@ char* f;
 	    mime_section->html |= HF_NL_OK|HF_P_OK|HF_SPACE_OK;
 	}
 
-	if (word_wrap && t - artbuf - mime_section->html_line_start > COLS) {
+	if (word_wrap && t - artbuf - mime_section->html_line_start > tc_COLS) {
 	    char* line_start = mime_section->html_line_start + artbuf;
 	    for (cp = line_start + word_wrap;
 		 cp > line_start && *cp != ' ' && *cp != '\t';
 		 cp--) ;
 	    if (cp == line_start) {
 		for (cp = line_start + word_wrap;
-		     cp - line_start <= COLS && *cp != ' ' && *cp != '\t';
+		     cp - line_start <= tc_COLS && *cp != ' ' && *cp != '\t';
 		     cp++) ;
-		if (cp - line_start > COLS) {
-		    mime_section->html_line_start += COLS;
+		if (cp - line_start > tc_COLS) {
+		    mime_section->html_line_start += tc_COLS;
 		    cp = NULL;
 		}
 	    }

@@ -244,7 +244,7 @@ int y;
     if (!tree_article || !tree_article->subj)
 	return NULL;
     ap = tree_article->subj->thread;
-    x -= COLS-1 - max_depth;
+    x -= tc_COLS-1 - max_depth;
     if (x < 0 || y > max_line || !ap)
 	return NULL;
     x = (x-(x==max_depth))/5 + first_depth;
@@ -376,11 +376,11 @@ int is_subject;
 		putchar(' ');
 	}
 	term_col = header_indent;
-	/* If no (more) tree lines, wrap at COLS-1 */
+	/* If no (more) tree lines, wrap at tc_COLS-1 */
 	if (max_line < 0 || header_line > max_line+1)
-	    wrap_at = COLS-1;
+	    wrap_at = tc_COLS-1;
 	else
-	    wrap_at = COLS - max_depth - 3;
+	    wrap_at = tc_COLS - max_depth - 3;
 	/* Figure padding between header and tree output, wrapping long lines */
 	pad_cnt = wrap_at - (end - line + header_indent);
 	if (pad_cnt <= 0) {
@@ -418,7 +418,7 @@ int is_subject;
 	    cp++;
 	line = cp;
 	/* Check if we've got any tree lines to output */
-	if (wrap_at != COLS-1 && header_line <= max_line) {
+	if (wrap_at != tc_COLS-1 && header_line <= max_line) {
 	    char* cp1;
 	    char* cp2;
 
@@ -563,7 +563,7 @@ display_tree(article, cp)
 ARTICLE* article;
 char* cp;
 {
-    if (cp - tree_indent > COLS || page_line < 0)
+    if (cp - tree_indent > tc_COLS || page_line < 0)
 	return;
     cp[1] = ' ';
     cp += 5;
