@@ -223,7 +223,9 @@ s_docmd()
 	  s_ref_all = TRUE;
 	break;
       case Ctl('f'):	/* refresh (mail) display */
+#ifdef MAILCALL
 	setmail(TRUE);
+#endif
 	s_ref_bot = TRUE;
 	break;
       case 'h': /* universal help */
