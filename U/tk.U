@@ -1,0 +1,28 @@
+?RCS: $Id$
+?RCS:
+?MAKE:tk tklibs tkinc: cat Myread Oldconfig package spackage
+?MAKE:	-pick add $@ %<
+?Y:TOP
+?S:tk:
+?S:	This variable determines if we want to set USE_TK.
+?S:.
+?S:tklibs:
+?S:	This variable contains the needed libraries to link with Tk.
+?S:.
+?S:tkinc:
+?S:	This variable contains any -I/dir flags needed for compiling.
+?S:.
+?C:USE_TK:
+?C:	This is defined if you want to link trn with Tk.
+?C:.
+?H:#$tk USE_TK		/**/
+?H:.
+: see if they want to link with tk
+case "$tk" in
+"$define") ;;
+*)	tk=$undef
+	tklibs=
+	tkinc=
+	;;
+esac
+

@@ -1,0 +1,35 @@
+?RCS: $Id$
+?RCS:
+?RCS: Copyright (c) 1991-1993, Raphael Manfredi
+?RCS: 
+?RCS: You may redistribute only under the terms of the Artistic Licence,
+?RCS: as specified in the README file that comes with the distribution.
+?RCS: You may reuse parts of this distribution only within the terms of
+?RCS: that same Artistic Licence; a copy of which may be found at the root
+?RCS: of the source tree for dist 3.0.
+?RCS:
+?RCS: $Log$
+?RCS: Revision 1.1  2000/05/25 15:40:49  wayned
+?RCS: Custom metaconfig modules used to make Configure.
+?RCS:
+?RCS: Revision 3.0.1.3  1997/02/28  16:15:55  ram
+?RCS: patch61: improved hostname lookup by using ypmatch when NIS is used
+?RCS:
+?RCS: Revision 3.0.1.2  1994/10/29  16:25:43  ram
+?RCS: patch36: call ./xenix explicitely instead of relying on PATH
+?RCS: patch36: now uses new Tr unit to convert to/from lowercase
+?RCS:
+?RCS: Revision 3.0.1.1  1994/06/20  07:06:20  ram
+?RCS: patch30: now a little more clever for domain name guessing
+?RCS:
+?RCS: Revision 3.0  1993/08/18  12:09:18  ram
+?RCS: Baseline for dist 3.0 netwide release.
+?RCS:
+?MAKE:blurfleguck: Guess
+?MAKE:	-pick add $@ %<
+?S:blurfleguck:
+?S:	This variable contains the eventual value of the MYHOSTNAME symbol,
+?S:	which is the name of the host the program is going to run on.
+?S:	The domain is not kept with hostname, but must be gotten from mydomain.
+?S:	The dot comes with mydomain, and need not be supplied by the program.
+?S:.

@@ -1,0 +1,35 @@
+?RCS: $Id$
+?RCS:
+?RCS: Copyright (c) 1991-1993, Raphael Manfredi
+?RCS: 
+?RCS: You may redistribute only under the terms of the Artistic Licence,
+?RCS: as specified in the README file that comes with the distribution.
+?RCS: You may reuse parts of this distribution only within the terms of
+?RCS: that same Artistic Licence; a copy of which may be found at the root
+?RCS: of the source tree for dist 3.0.
+?RCS:
+?RCS: $Log$
+?RCS: Revision 1.1  2000/05/25 15:40:49  wayned
+?RCS: Custom metaconfig modules used to make Configure.
+?RCS:
+?RCS: Revision 3.0.1.1  1994/10/29  16:15:51  ram
+?RCS: patch36: call ./Cppsym explicitely instead of relying on PATH
+?RCS:
+?RCS: Revision 3.0  1993/08/18  12:07:27  ram
+?RCS: Baseline for dist 3.0 netwide release.
+?RCS:
+?MAKE:d_speedopt: Setvar
+?MAKE:	-pick add $@ %<
+?S:d_speedopt:
+?S:	This variable conditionally defines the SPEED_OVER_MEM symbol, which
+?S:	indicates to the C program that it can burn memory in order to save
+?S:	CPU time.
+?S:.
+?C:SPEED_OVER_MEM (SPEEDOVERMEM):
+?C:	This symbol, if defined, indicates that the program can use more
+?C:	memory in order to reduce CPU time.  The symbol doesn't say whether
+?C:	we are more interested in saving text space or data space.
+?C:.
+?H:?%<:#define SPEED_OVER_MEM	/**/
+?H:.
+?LINT:set d_speedopt

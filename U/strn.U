@@ -1,0 +1,37 @@
+?RCS: $Id$
+?RCS:
+?MAKE:strn: cat Myread Oldconfig spackage
+?MAKE:	-pick add $@ %<
+?Y:TOP
+?S:strn:
+?S:	This variable determines if we want to set the SCAN and SCORE
+?S:	defines.
+?S:.
+?C:SCAN:
+?C:	This is defined if you want strn's scan mode.
+?C:.
+?C:SCORE:
+?C:	This is defined if you want strn's article scoring.
+?C:.
+?H:#$strn SCAN		/**/
+?H:#$strn SCORE		/**/
+?H:.
+: see if they want the strn extensions
+case "$strn" in
+"$undef") dflt=n;;
+*) dflt=y;;
+esac
+$cat <<EOM
+
+$spackage has integrated strn's score files and its scan mode as
+an optional feature.  You might not want to include it if you are
+concerned about trn's size or have no interest in score files.
+
+EOM
+rp="Do you want to include strn's scan and score features?"
+. ./myread
+case "$ans" in
+y|Y) strn=$define;;
+*)   strn=$undef;;
+esac
+

@@ -1,0 +1,28 @@
+?MAKE:libextract:
+?S:libextract:
+?S:.
+?T:xxx
+: Extract one or more libraries to a temp file
+tmpfile=$1
+shift
+xxx=files
+case $# in 1) xxx=file; esac
+echo "Extracting names from the following $xxx for later perusal:" >&4
+echo " "
+echo $* | tr ' ' '\012' | $sed 's/^/	/' >&4
+echo " "
+$echo $n "This may take a while...$c" >&4
+
+?X:
+?X: Linux may need the special Dynamic option to nm for shared libraries.
+?X: In general, this is stored in the nm_so_opt variable.
+?X: Unfortunately, that option may be fatal on non-shared libraries.
+?X:
+for file in $*; do
+	case $file in
+	*.$so*) nm $nm_so_opt $nm_opt $file 2>/dev/null;;
+	*) nm $nm_opt $file 2>/dev/null;;
+	esac
+done >libc.tmp
+
+$echo $n ".$c"

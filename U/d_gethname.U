@@ -1,0 +1,162 @@
+?RCS: $Id$
+?RCS:
+?RCS: Copyright (c) 1991-1993, Raphael Manfredi
+?RCS: 
+?RCS: You may redistribute only under the terms of the Artistic Licence,
+?RCS: as specified in the README file that comes with the distribution.
+?RCS: You may reuse parts of this distribution only within the terms of
+?RCS: that same Artistic Licence; a copy of which may be found at the root
+?RCS: of the source tree for dist 3.0.
+?RCS:
+?RCS: $Log$
+?RCS: Revision 1.1  2000/05/25 15:40:49  wayned
+?RCS: Custom metaconfig modules used to make Configure.
+?RCS:
+?RCS: Revision 3.0.1.1  1994/10/29  16:13:00  ram
+?RCS: patch36: call ./xenix explicitely instead of relying on PATH
+?RCS:
+?RCS: Revision 3.0  1993/08/18  12:06:11  ram
+?RCS: Baseline for dist 3.0 netwide release.
+?RCS:
+?MAKE:d_gethname d_uname d_phostcmd aphostcmd d_resinit d_getdname: phostcmd \
+	cat d_portable Loc libc echo n c +d_whoami +usrinc \
+	Myread Guess Oldconfig Csym test
+?MAKE:	-pick add $@ %<
+?S:d_gethname:
+?S:	This variable conditionally defines the HAS_GETHOSTNAME symbol, which
+?S:	indicates to the C program that the gethostname() routine may be
+?S:	used to derive the host name.
+?S:.
+?S:d_uname:
+?S:	This variable conditionally defines the HAS_UNAME symbol, which
+?S:	indicates to the C program that the uname() routine may be
+?S:	used to derive the host name.
+?S:.
+?S:d_phostcmd:
+?S:	This variable conditionally defines the PHOSTCMD symbol, which
+?S:	contains the shell command which, when fed to popen(), may be
+?S:	used to derive the host name.
+?S:.
+?S:aphostcmd:
+?S:	This variable contains the command which can be used to compute the
+?S:	host name. The command is fully qualified by its absolute path, to make
+?S:	it safe when used by a process with super-user privileges.
+?S:.
+?S:d_resinit:
+?S:	This variable conditionally defines the HAS_RES_INIT symbol.
+?S:.
+?S:d_getdname:
+?S:	This variable conditionally defines the HAS_GETDOMAINNAME symbol.
+?S:.
+?C:HAS_GETHOSTNAME (GETHOSTNAME):
+?C:	This symbol, if defined, indicates that the C program may use the
+?C:	gethostname() routine to derive the host name.
+?C:.
+?C:HAS_UNAME (DOUNAME):
+?C:	This symbol, if defined, indicates that the C program may use the
+?C:	uname() routine to derive the host name.
+?C:.
+?C:PHOSTCMD:
+?C:	This symbol, if defined, indicates that the C program may use the
+?C:	contents of PHOSTCMD as a command to feed to the popen() routine
+?C:	to derive the host name.
+?C:	Note that the command uses a fully qualified path, so that it is safe
+?C:	even if used by a process with super-user privileges.
+?C:.
+?C:HAS_RES_INIT:
+?C:	This symbol, if defined, indicates that the C program may use the
+?C:	res_init() routine to derive the domain.
+?C:.
+?C:HAS_GETDOMAINNAME:
+?C:	This symbol, if defined, indicates that the C program may use the
+?C:	getdomainname() routine to derive the domain.
+?C:.
+?H:#$d_gethname HAS_GETHOSTNAME	/**/
+?H:#$d_uname HAS_UNAME		/**/
+?H:#$d_phostcmd PHOSTCMD "$aphostcmd"	/* How to get the host name */
+?H:#$d_resinit HAS_RES_INIT	/**/
+?H:#$d_getdname HAS_GETDOMAINNAME	/**/
+?H:.
+?T:file val
+: see how we will look up the hostname, if needed
+echo " "
+if $test "X$phostcmd" = "X"; then
+	: host name is static
+	d_gethname="$undef"
+	d_uname="$undef"
+elif set gethostname val -f d_gethname; eval $csym; $val; then
+	echo 'gethostname() found.' >&4
+	d_gethname="$define"
+	d_uname="$undef"
+	ans=gethostname
+elif set uname val -f d_uname; eval $csym; $val; then
+	d_gethname="$undef"
+	if ./xenix; then
+		$cat <<'EOM'
+uname() was found, but you're running xenix, and older versions of xenix
+have a broken uname(). If you don't really know whether your xenix is old
+enough to have a broken system call, use the default answer.
+
+EOM
+		dflt=y
+		case "$d_uname" in
+		"$define") dflt=n;;
+		esac
+		rp='Is your uname() broken?'
+		. ./myread
+		case "$ans" in
+		n*) d_uname="$define" ;;
+		*) d_uname="$undef" ;;
+		esac
+	else
+		echo 'uname() found.' >&4
+		d_uname="$define"
+	fi
+else
+	d_gethname="$undef"
+	d_uname="$undef"
+fi
+?X: Compute the full path name for the command
+case "$phostcmd" in
+'') aphostcmd='';;
+*) case "$aphostcmd" in
+	/*) ;;
+	*) set X $phostcmd
+		shift
+		file=$1
+		shift
+		file=`loc $file $file $pth`
+		aphostcmd=`echo $file $*`
+		;;
+	esac
+	;;
+esac
+case "$aphostcmd" in
+'') d_phostcmd="$undef";;
+*) d_phostcmd="$define";;
+esac
+
+: see how we will look up the domain, if needed
+echo " "
+case "$phost" in
+.|/*|~*)
+	if set res_init val -f d_resinit; eval $csym; $val; then
+		echo 'res_init() found.' >&4
+		d_resinit="$define"
+		d_getdname="$undef"
+	elif set getdomainname val -f d_getdname; eval $csym; $val; then
+		echo 'getdomainname() found.' >&4
+		d_getdname="$define"
+		d_resinit="$undef"
+	else
+		echo 'Neither res_init() nor getdomainname() found.' >&4
+		d_getdname="$undef"
+		d_resinit="$undef"
+	fi
+	;;
+*)
+	d_resinit="$undef"
+	d_getdname="$undef"
+	;;
+esac
+

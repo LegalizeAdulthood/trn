@@ -1,0 +1,85 @@
+?RCS: $Id$
+?RCS:
+?RCS: Copyright (c) 1991-1993, Raphael Manfredi
+?RCS: 
+?RCS: You may redistribute only under the terms of the Artistic Licence,
+?RCS: as specified in the README file that comes with the distribution.
+?RCS: You may reuse parts of this distribution only within the terms of
+?RCS: that same Artistic Licence; a copy of which may be found at the root
+?RCS: of the source tree for dist 3.0.
+?RCS:
+?RCS: $Log$
+?RCS: Revision 1.1  2000/05/25 15:40:49  wayned
+?RCS: Custom metaconfig modules used to make Configure.
+?RCS:
+?RCS: Revision 3.0  1993/08/18  12:05:21  ram
+?RCS: Baseline for dist 3.0 netwide release.
+?RCS:
+?MAKE:active myactive acttimes d_acttimes: newslib Oldconfig Getfile Filexp \
+ d_nntp servername overviewdir
+?MAKE:	-pick add $@ %<
+?Y:TOP
+?S:active:
+?S:	The name of the active file for the news system.  This file contains
+?S:	the list of active newsgroups.  The name may have ~ on the front.
+?S:	The variable myactive is the expanded form.
+?S:.
+?S:myactive:
+?S:	This is the same as the active variable, but is filename expanded
+?S:	so that later Configure units can look at the active file if desired.
+?S:.
+?S:acttimes:
+?S:	The name of the active.times file for the news system.
+?S:.
+?C:ACTIVE:
+?C:	The name of the active file for the news system.  This file contains
+?C:	the list of active newsgroups.  The name may have ~ on the front.
+?C:.
+?C:ACTIVE_TIMES:
+?C:	The name of the active.times file for the news system.
+?C:.
+?H:#define ACTIVE "$active"		/**/
+?H:#$d_acttimes ACTIVE_TIMES "$acttimes"		/**/
+?H:.
+: locate active file and active.times file
+$echo " "
+case "$servername" in
+local)
+	case "$active" in
+	'') dflt=$newslib/active ;;
+	*)  dflt="$active";;
+	esac
+	fn=l~:active
+	rp='Where is the active file for local news?'
+	. ./getfile
+	active="$ans"
+	myactive="$ansexp"
+	: check for active.times
+	case "$acttimes" in
+	''|nntp) dflt="${active}.times";;
+	*)       dflt="$acttimes";;
+	esac
+	$cat <<EOM
+
+Your news system should also maintain an "active.times" file which lists
+the new newsgroups and the time of their creation.  If it's not around,
+answer "none" and you won't ever receive notification of new local
+newsgroups.
+
+EOM
+	fn=ln~:active.times
+	rp='Where is active.times? ("none" ok)'
+	. ./getfile
+	acttimes="$ans"
+	case "$acttimes" in
+	'') acttimes=none d_acttimes="$undef";;
+	*) d_acttimes="$define";;
+	esac
+	;;
+*)	active=remote
+	myactive=.falseactive
+	acttimes=remote
+	d_acttimes="$define"
+	;;
+esac
+

@@ -1,0 +1,74 @@
+?RCS:$Id$
+?RCS: 
+?MAKE:ispell_prg ispell_options: cat test echo Oldconfig Myread Loc
+?MAKE:	-pick add $@ %<
+?Y:TOP
+?S:ispell_prg:
+?S:	This variable contains the name of the interactive spelling checker
+?S:	on the system.
+?S:.
+?S:ispell_options:
+?S:	This variable contains the options to pass to the spell program.
+?S:.
+: check for the preferred interactive spelling checker
+case "$ispell_prg" in
+none)	dflt=none
+	dflt_options="$ispell_options"
+	;;
+'')	case "$ispell $vspell" in
+	*/ispell*)
+	    dflt=$ispell
+	    dflt_options='-x'
+	    ;;
+	*/vspell*)
+	    dflt=$vspell
+	    dflt_options=''
+	    ;;   
+	*)
+	    dflt=none
+	    dflt_options=''
+	    ;;
+	esac
+	;;
+*)	dflt=$ispell_prg
+	dflt_options="$ispell_options"
+	;;
+esac
+$cat <<EOM
+
+Pnews has a "Check spelling" option that will allow you to correct spelling
+errors if you have ispell or vspell, or will simply list possible spelling
+errors via spell if you don't (assuming you have a spell program!).  If
+you enter "none" it will default to the non-interactive "spell".
+
+EOM
+rp='Which interactive speller should we use? ("none" ok)'
+. ./myread
+case "$ans" in
+'')	ispell_prg='none'
+	rp="What options should be used with spell?"
+	;;
+*)	ispell_prg=$ans
+	case "$ispell_prg" in
+	*/ispell*|ispell*)
+	    $cat <<EOM
+
+Note that old versions of GNU ispell didn't understand -x.
+Enter "none" if you want to specify no options.
+
+EOM
+	    ;;
+	esac
+	rp='What options should be used? ("none" ok)'
+	;;
+esac
+case "$dflt_options" in
+'') dflt=none;;
+*) dflt="$dflt_options";;
+esac
+. ./myread
+case "$ans" in
+none)	ispell_options='';;
+*)	ispell_options="$ans";;
+esac
+

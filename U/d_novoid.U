@@ -1,0 +1,31 @@
+?RCS:$Id$
+?RCS: 
+?MAKE:d_novoid void: echo cc Myread rm
+?MAKE:	-pick add $@ %<
+?S:d_novoid:
+?S:	If the void keyword is found in your code, we'll make sure the compiler
+?S:	can handle it.  If not, we'll remap "void" to "int".
+?S:.
+?C:void:
+?C:	This symbol is used for void functions.  On implementations which
+?C:	support void appropriately, its value is "void".  Otherwise, its
+?C:	value should be set to "int".
+?C:.
+?H:#$d_novoid void int	/**/
+?H:.
+?LINT:set d_novoid
+: check for void type
+echo " "
+$echo "Checking to see if your C compiler groks the void type..."
+$cat >void.c <<'EOCP'
+void main(){;}
+EOCP
+if $cc -c void.c >/dev/null 2>&1 ; then
+    d_novoid="$undef"
+    $echo "Yup, it does."
+else
+    d_novoid="$define"
+    $echo "Nope, it doesn't (boo hiss).  I will substitute int."
+fi
+$rm void.*
+

@@ -1,0 +1,43 @@
+?RCS:
+?MAKE:mimecap: Myread Oldconfig Filexp Loc prefix spackage
+?MAKE:	-pick add $@ %<
+?Y:TOP
+?S:mimecap:
+?S:	This variable contains the eventual value of the MIMECAP symbol,
+?S:	which is the global mimecap file.
+?S:.
+?C:MIMECAP:
+?C:	This symbol contains the pathname of mimecap file, which controls
+?C:	what programs get run when handling mime articles.  It is often
+?C:	metamail's "mailcap" file, and is the same format.
+?C:.
+?H:#define MIMECAP "%./.mimecap:~/.mailcap:$mimecap"		/**/
+?H:.
+: locate the mimecap or mailcap file
+case "$mimecap" in
+'')	dflt=`./loc mimecap XXX $prefix/etc /local/etc /usr/etc /etc`
+	case "$dflt" in
+	XXX)	dflt=`./loc mailcap XXX $prefix/etc /local/etc /usr/etc /etc /etc/mail`
+		case "$dflt" in
+		XXX) dflt="$prefix/etc/mimecap";;
+		esac
+		;;
+	esac
+	;;
+*)	dflt="$mimecap"
+	;;
+esac
+cat <<EOM
+
+$spackage can use a global mime capabilites file to determine what program
+to run to handle various mime parts.  The recommended file is mimecap
+in /usr/local/etc, but if you have metamail installed, you can use its
+mailcap file instead.  Trn has a sample mimecap file, if you need to
+install one.  If you reply "none" there will be no global defaults.
+
+EOM
+fn=l~n:mimecap
+rp='What global mimecap file should trn use? ("none" ok)'
+. ./getfile
+mimecap="$ans"
+

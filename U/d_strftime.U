@@ -1,0 +1,76 @@
+?RCS: $Id$
+?RCS:
+?RCS: Copyright (c) 1991-1993, Raphael Manfredi
+?RCS: 
+?RCS: You may redistribute only under the terms of the Artistic Licence,
+?RCS: as specified in the README file that comes with the distribution.
+?RCS: You may reuse parts of this distribution only within the terms of
+?RCS: that same Artistic Licence; a copy of which may be found at the root
+?RCS: of the source tree for dist 3.0.
+?RCS:
+?RCS: $Log$
+?RCS: Revision 1.1  2000/05/25 15:40:49  wayned
+?RCS: Custom metaconfig modules used to make Configure.
+?RCS:
+?RCS: Revision 3.0  1993/08/18  12:07:36  ram
+?RCS: Baseline for dist 3.0 netwide release.
+?RCS:
+?MAKE:d_strftime strftimec strftimeo: Inlibc spackage package rsrc _o
+?MAKE:	-pick add $@ %<
+?S:d_strftime:
+?S:	This variable conditionally defines HAS_STRFTIME if strftime() is
+?S:	available to format locale-specific times.
+?S:.
+?S:strftimec:
+?S:	This variable contains the name of the C file to compile to provide
+?S:	the strftime function on this machine (can be empty).
+?S:.
+?S:strftimeo:
+?S:	This variable contains the name of the obj file to link with to
+?S:	provide the strftime function on this machine (can be empty).
+?S:.
+?C:HAS_STRFTIME:
+?C:	This symbol, if defined, indicates that the strftime routine is
+?C:	available to format locale-specific times.
+?C:.
+?H:#$d_strftime HAS_STRFTIME		/**/
+?H:.
+?LINT:set d_strftime
+: see if strftime exists
+case "$strftimec" in
+'') ;;
+*) d_strftime="$undef";;
+esac
+set strftime d_strftime
+eval $inlibc
+case "$d_strftime" in
+"$undef")
+	case "$strftimec" in
+	' ') dflt='none';;
+	'') dflt="$rsrc/strftime.c";;
+	*)  dflt="$strftimec";;
+	esac
+	$cat <<EOM
+$spackage would like to use a strftime(3) routine.  If you have source for a
+fully POSIX.1 compliant version, you may use it, otherwise you can try
+using the one supplied with $package (strftime.c) or answering "none".
+
+EOM
+	fn=fn
+	rp="Where does the source for strftime(3) reside?"
+	. ./getfile
+	case "$ans" in
+	'')	strftimec=' '
+		strftimeo=''
+		;;
+	*)	strftimec="$ans"
+		strftimeo="`basename $ans .c`$_o"
+		d_strftime="$define"
+		;;
+	esac
+	;;
+*)	strftimec=''
+	strftimeo=''
+	;;
+esac
+

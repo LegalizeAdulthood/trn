@@ -1,0 +1,198 @@
+?RCS:$Id$
+?RCS: 
+?MAKE:phost phostcmd hostbits: echo contains sed d_inews useinews extrainews \
+	test Myread Oldconfig Guess expr uname uuname +usrinc Tr \
+	spackage package
+?MAKE:	-pick add $@ %<
+?Y:TOP
+?S:phost:
+?S:	This variable contains the hostname that appears in postings.
+?S:.
+?S:phostcmd:
+?S:	This variable contains the command to execute to determine the
+?S:	local hostname portion of the posting host or ''.
+?S:.
+?S:hostbits:
+?S:	Set to TRUE if we should compare only the domain portion of the
+?S:	hostname when looking for local articles.
+?S:.
+?C:PHOSTNAME:
+?C:	This symbol contains the posting host's name or a file from which
+?C:	to read its name.
+?C:.
+?C:HOSTBITS:
+?C:	Set to TRUE if we should compare only the domain portion of the
+?C:	hostname when looking for local articles.
+?C:.
+?H:#define PHOSTNAME "$phost"		/**/
+?H:#define HOSTBITS $hostbits	/**/
+?H:.
+?T:cont thishost
+?LINT:set phost
+: now get the hostname that appears in news articles
+$echo " "
+$echo "Figuring out local hostname..."
+cont=true
+$echo 'Maybe "hostname" will work...'
+if ans=`sh -c hostname 2>&1` ; then
+	thishost=$ans
+	phostcmd=hostname
+	cont=''
+fi
+if $test "$cont"; then
+	if xenix; then
+		$echo 'Oh, dear.  Maybe "/etc/systemid" is the key...'
+		if ans=`cat /etc/systemid 2>&1` ; then
+			thishost=$ans
+			phostcmd='cat /etc/systemid'
+			$echo "Whadyaknow.  Xenix always was a bit strange..."
+			cont=''
+		fi
+	elif $test -r /etc/systemid; then
+		$echo "(What is a non-Xenix system doing with /etc/systemid?)"
+	fi
+fi
+if $test "$cont"; then
+	$echo 'No, maybe "uuname -l" will work...'
+	if ans=`sh -c 'uuname -l' 2>&1` ; then
+		thishost=$ans
+		phostcmd='uuname -l'
+	else
+		$echo 'Strange.  Maybe "uname -n" will work...'
+		if ans=`sh -c 'uname -n' 2>&1` ; then
+			thishost=$ans
+			phostcmd='uname -n'
+		else
+			$echo 'Oh well, maybe I can mine it out of whoami.h...'
+			if ans=`sh -c $contains' sysname $usrinc/whoami.h' 2>&1` ; then
+				thishost=`$echo "$ans" | $sed 's/^.*"\(.*\)"/\1/'`
+				phostcmd="sed -n -e '"'/sysname/s/^.*\"\\(.*\\)\"/\1/{'"' -e p -e q -e '}' <$usrinc/whoami.h"
+			else
+				phostcmd=''
+				case "$phost" in
+				'') $echo "Does this machine have an identity crisis or something?" ;;
+				*)  $echo "Well, you said $phost before..."
+				    thishost=$phost
+				    ;;
+				esac
+			fi
+		fi
+	fi
+fi
+: you do not want to know about this
+set $thishost
+thishost=$1
+echo "Your local hostname was computed to be '$thishost'."
+
+: translate upper to lower if necessary
+case "$thishost" in
+*[A-Z]*) thishost=`$echo $thishost | ./tr '[A-Z]' '[a-z]'` ;;
+esac
+case "$phost" in
+'')	dflt="$thishost"
+	case "$dflt" in
+	*.*) ;;
+	*) dflt="$dflt.UUCP";;
+	esac
+	;;
+*) dflt="$phost";;
+esac
+if test "$d_inews" = "$define"; then
+	$cat <<EOM
+
+Since you are installing inews, you need to choose a hostname to be used
+on the From line of articles posted from this machine.
+EOM
+rp="What hostname goes on the From line of this machine's postings?"
+else
+	$cat <<EOM
+
+$spackage wants to know what hostname your news software (usually inews) puts
+into the "From" line of news articles posted from this machine.  If you
+get this wrong the ownership checks done for Cancel, Supersede and
+automatic followup-selection (the -p option) will fail to recognize
+articles as belonging to the poster.
+
+(NOTE: $package does NOT create "From" lines when posting news or sending mail
+as this is the job of your news/mail software, not $package.)
+EOM
+rp="What hostname appears on the From line of this machine's postings?"
+fi
+$cat <<EOM
+
+Your options:
+
+   1.  Choose a static hostname, such as your domain (which will match
+       your sub-domain machines as well) and enter it here.
+   2.  Specify just the domain portion (by starting the name with a '.')
+       and your machine name will be computed at runtime and this domain
+       appended to the end.
+   3.  Enter just a '.' to have the machine AND domain computed at runtime.
+   4.  Specify a filename (by starting the name with '/' or '~') and the
+       name will be read from the file and processed using the above rules.
+       If the file read fails, the machine and domain will be computed at
+       runtime.
+
+EOM
+. ./myread
+case "$ans" in
+~*) ansexp=`./filexp $ans`;;
+*)  ansexp="$ans";;
+esac
+case "$ansexp" in
+/*)
+    $echo "Reading the hostname from $ans."
+    if $test ! -f $ansexp ; then
+	$echo "(You'll need to create $ans on this machine.)"
+    fi
+    phost="$ans"
+    dflt=y
+    ;;
+.)
+    phost='.'
+    $echo "Using a dynamic hostname and domain."
+    dflt=y
+    ;;
+.*)
+    phost="$ans"
+    $echo "Using a dynamic hostname and static domain ($phost)."
+    dflt=y
+    ;;
+*)
+    phost="$ans"
+    $echo "Using a static hostname ($phost)."
+    case "$phost" in
+    *.*.*) dflt=y;;
+    *) dflt=n;;
+    esac
+    ;;
+esac
+
+if test "$dflt" = n -o "$d_inews" != "$define"; then
+	hostbits=0
+else
+	$cat <<EOM
+
+By default, $package will look for the same hostname that inews inserts
+when canceling, superseding, or finding user-owned articles.  However,
+it is sometimes useful in a multi-machine setup to check for just a
+portion of the hostname of your system to allow people to read news
+from the same login name on multiple machines.  If you want to do this,
+specify a digit of how many dot-separated words at the end we should
+use (i.e. "2"), otherwise choose to use "all" of the hostname.
+
+EOM
+
+	case "$hostbits" in
+	'')	dflt=2;;
+	0)	dflt=all;;
+	*)	dflt="$hostbits";;
+	esac
+	rp="Compare how many dot-separated words from the end of the hostname?"
+	. ./myread
+	case $ans in
+	a*|A*)	hostbits='0';;
+	*)	hostbits="$ans";;
+	esac
+fi
+

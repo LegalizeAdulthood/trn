@@ -1,0 +1,175 @@
+?RCS:$Id$
+?RCS: 
+?MAKE:d_nntp d_local d_xthread d_genauth servername: echo cat \
+	Myread Oldconfig spackage package
+?MAKE:	-pick add $@ %<
+?Y:TOP
+?S:d_nntp:
+?S:	This variable conditionally defines the SUPPORT_NNTP symbol.
+?S:.
+?S:d_local:
+?S:	This variable conditionally defines the HAS_LOCAL_SPOOL symbol.
+?S:.
+?S:d_xthread:
+?S:	This variable conditionally defines SUPPORT_XTHREAD.
+?S:.
+?S:d_genauth:
+?S:	This variable conditionally defines the USE_GENAUTH symbol.
+?S:.
+?S:servername:
+?S:	This variable conditionally defines the SERVER_NAME symbol.
+?S:.
+?C:SUPPORT_NNTP:
+?C:	This symbol, if defined, indicates that NNTP support is possible.
+?C:.
+?C:USE_GENAUTH:
+?C:	This symbol, if defined, indicates that authinfo generic
+?C:	authentication is to be supported.
+?C:.
+?C:SERVER_NAME:
+?C:	When using NNTP, this symbol indicates the server name or a
+?C:	file to open to read the server name.
+?C:.
+?C:SUPPORT_XTHREAD:
+?C:	This symbol, if defined, indicates that .thread files can be
+?C:	grabbed via NNTP.
+?C:.
+?C:HAS_LOCAL_SPOOL:
+?C:	This symbol, if defined, indicates that there's a local spool
+?C:	directory configured into trn.
+?C:.
+?H:#$d_nntp SUPPORT_NNTP	/**/
+?H:#$d_genauth USE_GENAUTH	/**/
+?H:#define SERVER_NAME "$servername"  	/**/
+?H:#$d_xthread SUPPORT_XTHREAD  	/**/
+?H:#$d_local HAS_LOCAL_SPOOL	/**/
+?H:.
+?LINT:set d_nntp servername d_xthread d_genauth
+: check if NNTP is to be used
+case "$d_nntp" in
+"$undef") dflt="local";;
+*)  case "$d_local" in
+    "$undef") dflt="nntp";;
+    *) dflt="both";;
+    esac
+esac
+$cat <<EOM
+
+$spackage is capable of accessing both local and remote news sources at the
+same time, including multiple servers and private local directories.
+
+NOTE: if your system doesn't have a local news spool, choose "nntp" to
+make the Configuration easier -- it won't affect the access of private
+local directories.
+
+EOM
+rp='Select the news spool support ("local", "nntp", or "both"):'
+. ./myread
+case "$ans" in
+l*|L*) ans=local;;
+n*|N*) ans=nntp;;
+*) ans=both;;
+esac
+if test "X$ans" != "X$dflt"; then
+	servername=''
+fi
+case "$ans" in
+nntp|both)
+    d_nntp="$define"
+    case "$ans" in
+    both) d_local="$define";;
+    *)    d_local="$undef";;
+    esac
+    case "$d_genauth" in
+    define) dflt="y";;
+    *)	dflt="n";;
+    esac
+    $cat <<EOM
+
+$spackage supports the new generic user-authentication extension to NNTP
+that is available in INN 1.5 and NNTP 1.5.12.
+
+EOM
+    rp="Do you want to use generic user-authentication?"
+    . ./myread
+    case "$ans" in
+    y*) d_genauth="$define" ;;
+    *)  d_genauth="$undef" ;;
+    esac
+    $echo "net.foobar 00001 00001 y" > .falseactive
+
+    case "$d_local" in
+    "$define")
+	case "$servername" in
+	'') dflt="local";;
+	*)  dflt="$servername";;
+	esac
+
+	$cat <<EOM
+
+$spackage needs a default news source to access when it is started without
+a custom list.  This can either be the word "local", for the news spool
+accessed directly from disk (which we'll configure in a moment), or the
+name of a server.  You can also specify a filename from which to read
+the server's name.
+
+EOM
+
+	rp='Enter "local", a server name, or a file name (~name ok):'
+	;;
+    *)  case "$servername" in
+	'') dflt="no default";;
+	*)  dflt="$servername";;
+	esac
+
+	$cat <<EOM
+
+$spackage needs a default news source to access when it is started without
+a custom list.  This can either be the name of a server or a filename from
+which to read the server's name.
+
+EOM
+
+	rp='Enter your news server name or a file name (~name ok):'
+	;;
+    esac
+    . ./myread
+    case "$ans" in
+    ~*) ansexp=`./filexp $ans`;;
+    *)  ansexp="$ans";;
+    esac
+    case "$ansexp" in
+    local)
+ 	case "$d_local" in
+	"$undef") ans=Local;;
+	esac
+	;;
+    /*) if $test ! -f $ansexp; then
+	    $echo "(You'll need to create $ans before $package will work.)"
+	fi
+	;;
+    esac
+    servername="$ans"
+    ;;
+*)  d_nntp="$undef"
+    d_local="$define"
+    d_genauth="$undef"
+    servername=local
+    ;;
+esac
+if test "X$ans" != "X$dflt"; then
+	newslib=''
+	d_inews=''
+	installinews=''
+	useinews=''
+	groupdesc=''
+	subscriptions=''
+	newsspool=''
+	threaddir=''
+	overviewdir=''
+	overviewfmt=''
+	active=''
+	acttimes=''
+fi
+d_xthread="$d_nntp"
+

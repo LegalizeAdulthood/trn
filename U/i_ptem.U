@@ -1,0 +1,23 @@
+?RCS:$Id$
+?RCS: 
+?MAKE:i_ptem: test echo
+?MAKE:	-pick add $@ %<
+?S:i_ptem:
+?S:	This variable conditionally defines the I_PTEM symbol, and indicates
+?S:	whether a C program should include ptem.h.
+?S:.
+?C:I_PTEM:
+?C:	This symbol, if defined, indicates to the C program that it should
+?C:	include ptem.h.
+?C:.
+?H:#$i_ptem I_PTEM		/**/
+?H:.
+?LINT:set i_ptem
+: see if ptem.h exists
+if $test -r /usr/include/sys/ptem.h ; then
+    $echo "sys/ptem.h found."
+    i_ptem="$define"
+else
+    i_ptem="$undef"
+fi
+
