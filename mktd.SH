@@ -39,9 +39,7 @@ while (<IN>) {
 close IN;
 
 # Scan through all the .h and .ih files
-@names = `ls *.h *.ih`;
-foreach $file (@names) {
-    chop $file;
+foreach $file (sort(<*.h>, <*.ih>)) {
     open(IN, $file) || die "Can't open $file for input\n";
     # The first typedef from this file needs a preceding comment.
     $need_comment = 1;
