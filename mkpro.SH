@@ -37,16 +37,16 @@ $changes = 0;
 
 foreach $file (@names) {
     chop $file;
-    next if $file eq "ndir.c";
+    next if (($file eq 'ndir.c') || ($file eq 'parsedate.c'));
     next unless $file =~ s/\.c$//;
-    open(IN_C, "$file.c") || die "Can't open $file.c for input\n";
+    open(IN_C, "$file.c") || die "Can't open $file.c for input: $!\n";
 
     # Copy everything in foo.h up to the "DON'T EDIT" line to foo.nh
     if (!open(IN, "$file.h")) {
 	#print STDERR "Can't open $file.h -- skipping $file.c.\n";
 	next;
     }
-    open(OUT_H, ">$file.nh") || die "Can't open $file.nh for output\n";
+    open(OUT_H, ">$file.nh") || die "Can't open $file.nh for output: $!\n";
     while (<IN>) {
 	last if /DON'T EDIT BELOW/;
 	print OUT_H $_;
@@ -55,7 +55,7 @@ foreach $file (@names) {
     close IN;
 
     # Copy everything in foo.ih up to the "DON'T EDIT" line to foo.nih
-    open(OUT_I, ">$file.nih") || die "Can't open $file.nih for output\n";
+    open(OUT_I, ">$file.nih") || die "Can't open $file.nih for output: $!\n";
     if (open(IN, "$file.ih")) {
 	while (<IN>) {
 	    last if /DON'T EDIT BELOW/;
