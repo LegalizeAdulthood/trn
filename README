@@ -77,7 +77,7 @@ you want trn to check its name on startup.
 
 Where to send bug reports
 -------------------------
-Mail your bug reports to Wayne Davison <trn@blorf.net>.  Use the 'v'ersion
-command from the newsgroup selection level of trn to be reminded of this
-address and see some configuration information to send along with your
-bug report.
+Mail your bug reports to trn-workers@lists.sourceforge.net.  Use the
+'v'ersion command from the newsgroup selection level of trn to be
+reminded of this address and see some configuration information to
+send along with your bug report.
