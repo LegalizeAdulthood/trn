@@ -191,7 +191,7 @@ foreach $file (<*.c>) {
     close OUT_I;
 
     # Check for any differences and update if changed.
-    if (system "diff -q $file.h $file.nh >/dev/null") {
+    if (system "diff $file.h $file.nh >/dev/null") {
 	print "Updating $file.h\n";
 	mkdir("sanity",0755) unless -d "sanity";
 	rename("$file.h","sanity/$file.h");
@@ -206,7 +206,7 @@ foreach $file (<*.c>) {
 	if ($new_I ne '') {
 	    system "touch $file.ih";
 	}
-	if (system "diff -q $file.ih $file.nih >/dev/null") {
+	if (system "diff $file.ih $file.nih >/dev/null") {
 	    print "Updating $file.ih$new_I\n";
 	    mkdir("sanity",0755) unless -d "sanity";
 	    rename("$file.ih","sanity/$file.ih");
