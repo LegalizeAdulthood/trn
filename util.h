@@ -47,7 +47,7 @@ char* safecat _((char*,char*,int));
 #ifdef SETUIDGID
 int eaccess _((char*,int));
 #endif
-char* getwd _((char*));
+char* trn_getwd _((char*,int));
 char* get_a_line _((char*,int,bool_int,FILE*));
 int makedir _((char*,int));
 void notincl _((char*));
