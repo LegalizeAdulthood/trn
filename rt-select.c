@@ -1730,6 +1730,12 @@ char* obj_type;
     return FALSE;
 }
 
+#ifdef SCAN_ART
+#define SPECIAL_CMD_LETTERS "<+>^$!?&:/\\hDEJLNOPqQRSUXYZ\n\r\t\033;"
+#else
+#define SPECIAL_CMD_LETTERS "<+>^$!?&:/\\hDEJLNOPqQRSUXYZ\n\r\t\033"
+#endif
+
 static char
 another_command(ch)
 char_int ch;
@@ -1747,12 +1753,7 @@ char_int ch;
 	if (ch > 0) {
 	    /* try to optimize the screen update for some commands. */
 	    if (!index(sel_chars, ch)
-#ifdef SCAN_ART
-	     && (index(";<+>^$!?&:/\\hDEJLNOPqQRSUXYZ\n\r\t\033", ch)
-#else
-	     && (index("<+>^$!?&:/\\hDEJLNOPqQRSUXYZ\n\r\t\033", ch)
-#endif
-	      || ch == Ctl('k'))) {
+	     && (index(SPECIAL_CMD_LETTERS, ch) || ch == Ctl('k'))) {
 		sel_ret = ch;
 		return ch;
 	    }
