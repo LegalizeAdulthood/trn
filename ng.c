@@ -1569,6 +1569,16 @@ run_the_selector:
 	  case 'a':  case 's':  case 't':  case 'T':
 	    *buf = buf[1];
 	    goto run_the_selector;
+	  case 'm':
+	    if (!artp)
+		goto not_threaded;
+	    kill_subthread(artp, SET_TORETURN | AFFECT_ALL);
+	    return AS_NORM;
+	  case 'M':
+	    if (!artp)
+		goto not_threaded;
+	    kill_arts_thread(artp, SET_TORETURN | AFFECT_ALL);
+	    return AS_NORM;
 	}
 	/* FALL THROUGH */
       default:
