@@ -1830,7 +1830,7 @@ wildmat.$(o): wildmat.h
 wildmat.$(o): wildmat.ih
 access.def: access_def.SH config.sh ; /bin/sh $(srcdir)/access_def.SH
 config.h: config_h.SH config.sh ; /bin/sh $(srcdir)/config_h.SH
-HelpFiles/config/environment: environment.SH config.sh ; /bin/sh $(srcdir)/environment.SH
+HelpFiles/config/environment: environment.SH config.sh makedir ; /bin/sh $(srcdir)/environment.SH
 filexp: filexp.SH config.sh ; /bin/sh $(srcdir)/filexp.SH
 makedepend: makedepend.SH config.sh ; /bin/sh $(srcdir)/makedepend.SH
 makedir: makedir.SH config.sh ; /bin/sh $(srcdir)/makedir.SH
