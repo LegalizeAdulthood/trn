@@ -527,9 +527,7 @@ NEWSRC* rp;
 	newsgroup_cnt++;
 	if (some_buf[length-1] == '\n')
 	    some_buf[--length] = '\0';	/* wipe out newline */
-	if (checkflag)			/* no extra mallocs for -c */
-	    np->rcline = some_buf;
-	else if (some_buf == buf)
+	if (some_buf == buf)
 	    np->rcline = savestr(some_buf);  /* make semipermanent copy */
 	else {
 	    /*NOSTRICT*/
