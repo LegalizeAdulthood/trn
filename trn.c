@@ -2,6 +2,9 @@
 
 /*  trn -- threaded readnews program based on rn 4.4
  *
+ *  You can request help from:  trn-users@lists.sourceforge.net
+ *  Send bugs, suggestions, etc. to:  trn-workers@lists.sourceforge.net
+ *
  *  Author/Maintainer of trn: trn@blorf.net (Wayne Davison)
  *  Maintainer of rn: sob@bcm.tmc.edu (Stan Barber)
  *  Original Author: lwall@sdcrdcf.UUCP (Larry Wall)
@@ -913,7 +916,9 @@ trn_version()
 	}
     }
 
-    print_lines("Send bug reports, suggestions, etc. to: trn@blorf.net\n",
+    print_lines("\
+You can request help from:  trn-users@lists.sourceforge.net\n\
+Send bug reports, suggestions, etc. to:  trn-workers@lists.sourceforge.net\n",
 		NOMARKING);
 }
 
