@@ -314,6 +314,18 @@ Makefile: Makefile.SH config.sh dependencies
 Pnews: patchlevel.h
 newsnews: patchlevel.h
 
+tar: MANIFEST patchlevel.h
+	export PATH || false # stop the make unless we are compatible
+	@(ver=trn-`awk '{print $$4}' $(srcdir)/patchlevel.h` ; \
+	 cd $(srcdir)/.. ; \
+	 echo Creating $$ver.tar.gz ; \
+	 ln -s trn4 $$ver ; \
+	 tar cvzf $$ver.tar.gz \
+		`ls -1d trn4/hints/* | fgrep -v /CVS | \
+		 cat trn4/MANIFEST - | \
+		 sed -e "s:^\(trn4/\)*\([^ 	]*\).*:$$ver/\2:"` ; \
+	 rm $$ver )
+
 # AUTOMATICALLY GENERATED MAKE DEPENDENCIES--PUT NOTHING BELOW THIS LINE
 !NO!SUBS!
 if test -f dependencies; then
