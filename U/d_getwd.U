@@ -1,0 +1,46 @@
+?RCS: $Id$
+?RCS:
+?RCS: Copyright (c) 1991-1993, Raphael Manfredi
+?RCS: 
+?RCS: You may redistribute only under the terms of the Artistic Licence,
+?RCS: as specified in the README file that comes with the distribution.
+?RCS: You may reuse parts of this distribution only within the terms of
+?RCS: that same Artistic Licence; a copy of which may be found at the root
+?RCS: of the source tree for dist 3.0.
+?RCS:
+?RCS: $Log$
+?RCS: Revision 1.1  2000/05/25 15:40:49  wayned
+?RCS: Custom metaconfig modules used to make Configure.
+?RCS:
+?RCS: Revision 3.0  1993/08/18  12:06:18  ram
+?RCS: Baseline for dist 3.0 netwide release.
+?RCS:
+?MAKE:d_getwd d_getcwd: Inlibc Setvar
+?MAKE:	-pick add $@ %<
+?S:d_getwd:
+?S:	This variable conditionally defines HAS_GETWD if getwd() is
+?S:	available to get working directory.
+?S:.
+?S:d_getcwd:
+?S:	This variable conditionally defines the HAS_GETCWD symbol to
+?S:	indicate that getcwd() is available.
+?S:.
+?C:HAS_GETWD (GETWD):
+?C:	This symbol, if defined, indicates that the getwd routine is
+?C:	available to get the working directory.
+?C:.
+?C:HAS_GETCWD:
+?C:	This symbol, if defined, indicates that the getcwd routine is
+?C:	available.  This is never defined if getwd is found first.
+?C:.
+?H:#$d_getwd HAS_GETWD		/**/
+?H:#$d_getcwd HAS_GETCWD		/**/
+?H:.
+?LINT:set d_getwd d_getcwd
+: see if getwd or getcwd exists
+set getwd d_getwd; eval $inlibc
+case "$d_getwd" in
+$define) val=$undef; set d_getcwd; eval $setvar ;;
+*) set getcwd d_getcwd; eval $inlibc ;;
+esac
+
