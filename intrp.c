@@ -47,8 +47,9 @@ struct utsname utsn;
 COMPEX cond_compex;
 
 void
-intrp_init(tcbuf)
+intrp_init(tcbuf, tcbuf_len)
 char* tcbuf;
+int tcbuf_len;
 {
 #if HOSTBITS != 0
     int i;
@@ -85,7 +86,7 @@ char* tcbuf;
 
     if (checkflag)			/* that getwd below takes ~1/3 sec. */
 	return;				/* and we do not need it for -c */
-    getwd(tcbuf);			/* find working directory name */
+    trn_getwd(tcbuf, tcbuf_len);	/* find working directory name */
     origdir = savestr(tcbuf);		/* and remember it */
 
     /* name of header file (%h) */
