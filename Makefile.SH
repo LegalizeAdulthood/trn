@@ -6,6 +6,7 @@ if test "X$src" = "X." ; then
 	vpath=''
 	vincludes=''
 	srcdir=`pwd`
+	extra_cleanup=
 else
 	vpath="$src"
 	vincludes="-I. -I$src"
@@ -13,6 +14,7 @@ else
 	/*) srcdir="$src";;
 	*) srcdir=`pwd`/$src ;;
 	esac
+	extra_cleanup=HelpFiles
 fi
 $cat >Makefile <<!GROK!THIS!
 # Makefile.SH
@@ -36,6 +38,7 @@ $cat >Makefile <<!GROK!THIS!
 
 srcdir = $srcdir
 VPATH = $vpath
+extra_cleanup = $extra_cleanup
 
 CC = $cc
 #MSDOSLINK = tlink
@@ -271,7 +274,7 @@ installclean:
 clean:
 	@echo 'Use "make realclean" to also remove the Makefile.'
 	@echo 'Use "make spotless" to even remove config.sh, Policy.sh, and .config.'
-	rm -rf UU
+	rm -rf UU $(extra_cleanup)
 	rm -f *.$(o) core $(addedbymake)
 
 realclean:
