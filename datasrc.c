@@ -170,11 +170,7 @@ char** vals;
     if ((v = vals[DI_NNTP_SERVER]) != NULL) {
 	char* cp;
 	dp->newsid = savestr(v);
-	if ((cp = index(dp->newsid, ';')) != NULL
-#ifndef DECNET
-	 || (cp = index(dp->newsid, ':')) != NULL
-#endif
-	) {
+	if ((cp = index(dp->newsid, ';')) != NULL) {
 	    *cp = '\0';
 	    dp->nntplink.port_number = atoi(cp+1);
 	}
