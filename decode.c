@@ -127,9 +127,10 @@ int* totalp;
 	     || *s == ':' || *s == '-'; s++);
     }
 
-    /* Replies aren't usually data */
-    if (strncaseEQ(s, "re:", 3))
-	return NULL;
+    while (strncaseEQ(s, "re:", 3)) {
+	s += 3;
+	while (isspace(*s)) s++;
+    }
 
     /* Get filename */
 
