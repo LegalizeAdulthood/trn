@@ -285,6 +285,8 @@ find_existing_articles()
 		if (nntp_at_list_end(ser_line))
 		    break;
 		an = (ART_NUM)atol(ser_line);
+		if (an < absfirst)
+		    continue;	/* Ignore some wacked-out NNTP servers */
 		ap = article_ptr(an);
 		if (!(ap->flags2 & AF2_BOGUS))
 		    ap->flags |= AF_EXISTS;
