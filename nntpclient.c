@@ -190,7 +190,7 @@ nntp_check()
     if (ret < 0) {
 	if (errno == EINTR)
 	    goto read_it;
-	strcpy(ser_line, "503 Server closed connecton.");
+	strcpy(ser_line, "503 Server closed connection.");
     }
 #ifdef NNTP_HANDLE_TIMEOUT
     if (len == 0 && atoi(ser_line) == NNTP_TMPERR_VAL
