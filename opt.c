@@ -1284,7 +1284,7 @@ Can't make %s--\n\
 	}
     }
     free(cwd);
-    getwd(tmpbuf);
+    trn_getwd(tmpbuf, sizeof(tmpbuf));
     if (eaccess(tmpbuf,2)) {
 #ifdef VERBOSE
 	IF(verbose)

@@ -61,7 +61,7 @@ escapade()
 	s++;
     }
     else {
-	getwd(whereiam);
+	trn_getwd(whereiam, sizeof(whereiam));
 	if (chdir(cwd)) {
 	    printf(nocd,cwd) FLUSH;
 	    sig_catcher(0);
@@ -126,7 +126,7 @@ switcheroo()
 	char tmpbuf[LBUFLEN+16];
 
 	if (docd)
-	    getwd(whereami);
+	    trn_getwd(whereami, sizeof(whereami));
 	if (buf[1] == '-' || buf[1] == '+') {
 	    strcpy(tmpbuf,buf+1);
 	    sw_list(tmpbuf);
