@@ -9,8 +9,8 @@
 ?RCS: of the source tree for dist 3.0.
 ?RCS:
 ?RCS: $Log$
-?RCS: Revision 1.1  2000/05/25 15:40:49  wayned
-?RCS: Custom metaconfig modules used to make Configure.
+?RCS: Revision 1.2  2000/06/04 08:32:07  wayned
+?RCS: Changes to work with the most recent dist release.
 ?RCS:
 ?RCS: Revision 3.0.1.10  1997/02/28  15:56:48  ram
 ?RCS: patch61: replaced .a with $_a all over the place
@@ -52,7 +52,8 @@
 ?RCS: Baseline for dist 3.0 netwide release.
 ?RCS:
 ?MAKE:libc +nm_extract: echo n c rm test grep Getfile Myread Oldconfig Loc \
-	sed libs incpath libpth runnm nm_opt nm_so_opt contains xlibpth so _a _o
+	sed libs incpath libpth ar runnm nm nm_opt nm_so_opt contains xlibpth \
+	so _a _o osname trnl
 ?MAKE:	-pick add $@ %<
 ?S:libc:
 ?S:	This variable contains the location of the C library.
@@ -136,9 +137,10 @@ unknown)
 	set /lib/libc.$so
 	for xxx in $libpth; do
 		$test -r $1 || set $xxx/libc.$so
+		: The messy sed command sorts on library version numbers.
 		$test -r $1 || \
-			set `echo blurfl; echo /usr/lib/libc.$so.[0-9]* | \
-			tr ' ' '\012' | egrep -v '\.[A-Za-z]*$' | $sed -e '
+			set `echo blurfl; echo $xxx/libc.$so.[0-9]* | \
+			tr ' ' $trnl | egrep -v '\.[A-Za-z]*$' | $sed -e '
 				h
 				s/[0-9][0-9]*/0000&/g
 				s/0*\([0-9][0-9][0-9][0-9][0-9]\)/\1/g
@@ -211,7 +213,7 @@ compiler, or your machine supports multiple models), you can override it here.
 EOM
 else
 	dflt=''
-	echo $libpth | tr ' ' '\012' | sort | uniq > libpath
+	echo $libpth | tr ' ' $trnl | sort | uniq > libpath
 	cat >&4 <<EOM
 I can't seem to find your C library.  I've looked in the following places:
 
@@ -229,7 +231,7 @@ rp='Where is your C library?'
 libc="$ans"
 
 echo " "
-echo $libc $libnames | tr ' ' '\012' | sort | uniq > libnames
+echo $libc $libnames | tr ' ' $trnl | sort | uniq > libnames
 set X `cat libnames`
 shift
 xxx=files
@@ -247,8 +249,8 @@ $echo $n "This may take a while...$c" >&4
 ?X:
 for file in $*; do
 	case $file in
-	*.$so*) nm $nm_so_opt $nm_opt $file 2>/dev/null;;
-	*) nm $nm_opt $file 2>/dev/null;;
+	*.$so*) $nm $nm_so_opt $nm_opt $file 2>/dev/null;;
+	*) $nm $nm_opt $file 2>/dev/null;;
 	esac
 done >libc.tmp
 
@@ -309,6 +311,10 @@ elif com="$sed -n -e 's/^__//' -e '/|Undef/d' -e '/|Proc/s/ .*//p'";\
 	eval $xscan;\
 	$contains '^fprintf$' libc.list >/dev/null 2>&1; then
 		eval $xrun
+elif com="$sed -n -e 's/^.*|Proc .*|Text *| *//p'";\
+	eval $xscan;\
+	$contains '^fprintf$' libc.list >/dev/null 2>&1; then
+		eval $xrun
 elif com="$sed -n -e '/Def. Text/s/.* \([^ ]*\)\$/\1/p'";\
 	eval $xscan;\
 	$contains '^fprintf$' libc.list >/dev/null 2>&1; then
@@ -328,7 +334,7 @@ elif com="$sed -n -e 's/^\.\([A-z][a-z]*\)  *T .*/\1/p'";\
 	$contains '^fprintf$' libc.list >/dev/null 2>&1; then
 		eval $xrun
 else
-	nm -p $* 2>/dev/null >libc.tmp
+	$nm -p $* 2>/dev/null >libc.tmp
 	$grep fprintf libc.tmp > libc.ptf
 	if com="$sed -n -e 's/^.* [ADTSIW]  *_[_.]*//p' -e 's/^.* [ADTSIW] //p'";\
 		eval $xscan; $contains '^fprintf$' libc.list >/dev/null 2>&1
@@ -337,23 +343,38 @@ else
 		eval $xrun
 	else
 		echo " "
-		echo "nm didn't seem to work right. Trying ar instead..." >&4
+		echo "$nm didn't seem to work right. Trying $ar instead..." >&4
 		com=''
-		if ar t $libc > libc.tmp; then
-			for thisname in $libnames; do
-				ar t $thisname >>libc.tmp
+		if $ar t $libc > libc.tmp && $contains '^fprintf$' libc.tmp >/dev/null 2>&1; then
+			for thisname in $libnames $libc; do
+				$ar t $thisname >>libc.tmp
 			done
 			$sed -e "s/\\$_o\$//" < libc.tmp > libc.list
 			echo "Ok." >&4
+		elif test "X$osname" = "Xos2" && $ar tv $libc > libc.tmp; then
+			# Repeat libc to extract forwarders to DLL entries too
+			for thisname in $libnames $libc; do
+				$ar tv $thisname >>libc.tmp
+				# Revision 50 of EMX has bug in $ar.
+				# it will not extract forwarders to DLL entries
+				# Use emximp which will extract exactly them.
+				emximp -o tmp.imp $thisname \
+				    2>/dev/null && \
+				    $sed -e 's/^\([_a-zA-Z0-9]*\) .*$/\1/p' \
+				    < tmp.imp >>libc.tmp
+				$rm tmp.imp
+			done
+			$sed -e "s/\\$_o\$//" -e 's/^ \+//' < libc.tmp > libc.list
+			echo "Ok." >&4
 		else
-			echo "ar didn't seem to work right." >&4
+			echo "$ar didn't seem to work right." >&4
 			echo "Maybe this is a Cray...trying bld instead..." >&4
 			if bld t $libc | $sed -e 's/.*\///' -e "s/\\$_o:.*\$//" > libc.list
 			then
 				for thisname in $libnames; do
 					bld t $libnames | \
 					$sed -e 's/.*\///' -e "s/\\$_o:.*\$//" >>libc.list
-					ar t $thisname >>libc.tmp
+					$ar t $thisname >>libc.tmp
 				done
 				echo "Ok." >&4
 			else

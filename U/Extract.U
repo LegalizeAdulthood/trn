@@ -9,8 +9,8 @@
 ?RCS: of the source tree for dist 3.0.
 ?RCS:
 ?RCS: $Log$
-?RCS: Revision 1.1  2000/05/25 15:40:49  wayned
-?RCS: Custom metaconfig modules used to make Configure.
+?RCS: Revision 1.2  2000/06/04 08:32:07  wayned
+?RCS: Changes to work with the most recent dist release.
 ?RCS:
 ?RCS: Revision 3.0.1.2  1997/02/28  14:58:52  ram
 ?RCS: patch61: added support for src.U
@@ -36,19 +36,7 @@
 cat >extract <<'EOS'
 CONFIG=true
 echo "Doing variable substitutions on .SH files..."
-if test -f $src/MANIFEST; then
-	set x `awk '$1 ~ /.SH$/ {print $1}' $src/MANIFEST | fgrep -v newsnews`
-else
-	echo "(Looking for .SH files under the source directory.)"
-	set x `(cd $src; find . -name "*.SH" -print)`
-fi
-shift
-case $# in
-0) set x `(cd $src; echo *.SH)`; shift;;
-esac
-if test ! -f $src/$1; then
-	shift
-fi
+set makedir.SH `awk '$1 ~ /.SH$/ {print $1}' $src/MANIFEST | egrep -v 'newsnews|makedir'`
 for file in $*; do
 	. $src/$file
 done

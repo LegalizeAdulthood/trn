@@ -32,7 +32,6 @@
 ?H:?%<:
 ?H:?%<:#$d_msdos MSDOS	/**/
 ?H:.
-?INIT:libswanted='malloc resolv socket net hdb bbn str nls nsl intl x ucb'
 ?LINT:set trn_init trn_select
 d_msdos="$undef"
 : check if they want threads by default

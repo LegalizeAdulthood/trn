@@ -9,8 +9,8 @@
 ?RCS: of the source tree for dist 3.0.
 ?RCS:
 ?RCS: $Log$
-?RCS: Revision 1.1  2000/05/25 15:40:49  wayned
-?RCS: Custom metaconfig modules used to make Configure.
+?RCS: Revision 1.2  2000/06/04 08:32:07  wayned
+?RCS: Changes to work with the most recent dist release.
 ?RCS:
 ?RCS: Revision 3.0.1.9  1997/02/28  15:27:07  ram
 ?RCS: patch61: removed support for NO_PROTOTYPE detection on SCO
@@ -51,7 +51,7 @@
 ?MAKE:ccflags ldflags lkflags cppflags optimize locincpth: test cat \
 	Myread Guess Options Oldconfig +gccversion mips_type +usrinc \
 	package contains rm +cc cppstdin cppminus cpprun cpplast libpth \
-	loclibpth hint
+	libs loclibpth hint
 ?MAKE:	-pick add $@ %<
 ?S:ccflags:
 ?S:	This variable contains any additional C compiler flags desired by
@@ -75,7 +75,7 @@
 ?S:.
 ?S:locincpth:
 ?S:	This variable contains a list of additional directories to be
-?S:	searched by the compiler.  The appropriate -I directives will
+?S:	searched by the compiler.  The appropriate '-I' directives will
 ?S:	be added to ccflags.  This is intended to simplify setting
 ?S:	local directories from the Configure command line.
 ?S:	It's not much, but it parallels the loclibpth stuff in libpth.U.
@@ -85,6 +85,7 @@
 ?D:ccflags=''
 ?D:ldflags=''
 ?D:optimize=''
+?F:!try
 ?INIT:: Possible local include directories to search.
 ?INIT:: Set locincpth to "" in a hint file to defeat local include searches.
 ?INIT:locincpth="/usr/local/include /opt/local/include /usr/gnu/include"
@@ -94,8 +95,10 @@
 ?INIT:inclwanted=''
 ?INIT:
 : determine optimize, if desired, or use for debug flag also
+?X: Allow for Configure -Uoptimize -- it's not strictly sensible, but
+?X: it has happened and we know what they mean.   AD  2/16/98
 case "$optimize" in
-' ') dflt='none';;
+' '|$undef) dflt='none';;
 '') dflt='-O';;
 *) dflt="$optimize";;
 esac
@@ -241,9 +244,9 @@ EOM
 		-*) ftry="$flag";;
 		*) ftry="$previous $flag";;
 		esac
-		if $cppstdin -DLFRULB=bar $ftry $cppminus <cpp.c \
+		if $cppstdin -DLFRULB=bar $cppflags $ftry $cppminus <cpp.c \
 			>cpp1.out 2>/dev/null && \
-			$cpprun -DLFRULB=bar $ftry $cpplast <cpp.c \
+			$cpprun -DLFRULB=bar $cppflags $ftry $cpplast <cpp.c \
 			>cpp2.out 2>/dev/null && \
 			$contains 'foo.*xx.*bar' cpp1.out >/dev/null 2>&1 && \
 			$contains 'foo.*xx.*bar' cpp2.out >/dev/null 2>&1
@@ -339,15 +342,31 @@ esac
 ?X: possible that the suggested ccflags/ldflags will be wrong.  Try to
 ?X: compile and run a simple test program.  Let the user see all the
 ?X: error messages. -- ADO and RAM
+?X: Sometimes, particularly on Linux systems, there is a bad library 
+?X: (e.g. a dangling symlink or incompatible library or a "run-time"
+?X: version but not a "development" version of a library).  This test
+?X: will catch those sorts of problems too, though how to fix them
+?X: may not be obvious.
 ?X:
 : coherency check
 echo " "
 echo "Checking your choice of C compiler and flags for coherency..." >&4
+$cat > try.c <<'EOF'
+#include <stdio.h>
+main() { printf("Ok\n"); exit(0); }
+EOF
 ?X: Strip extra blanks in case some of the following variables are empty
-set X $cc $optimize $ccflags $ldflags try.c -o try
+set X $cc $optimize $ccflags -o try $ldflags try.c $libs
 shift
-$cat >try.msg <<EOM
-I've tried to compile and run a simple program with:
+$cat >try.msg <<'EOM'
+I've tried to compile and run the following simple program:
+
+EOM
+$cat try.c
+
+$cat >> try.msg <<EOM
+
+I used the command:
 
 	$*
 	./try
@@ -355,18 +374,37 @@ I've tried to compile and run a simple program with:
 and I got the following output:
 
 EOM
-$cat > try.c <<'EOF'
-#include <stdio.h>
-main() { exit(0); }
-EOF
 dflt=y
 ?X: Use "sh -c" to avoid error messages tagged with leading "Configure:".
 ?X: We need to try the resulting executable, because cc might yield a 0 status
 ?X: even when ld failed, in which case the executable will not run properly,
 ?X: if its x bit is set at all...
-if sh -c "$cc $optimize $ccflags try.c -o try $ldflags" >>try.msg 2>&1; then
+?X:
+?X: Also check the xxx=`./try` output to check for misconfigured -lsfio.
+?X: If sfio's iffe goofed and it uses _exit instead of exit, then the
+?X: output buffers don't get flushed and we don't see any output
+?X: when run from within `backticks`.  What fun.  
+?X: --Andy Dougherty 2/13/1998
+if sh -c "$cc $optimize $ccflags -o try $ldflags try.c $libs" >>try.msg 2>&1; then
 	if sh -c './try' >>try.msg 2>&1; then
-		dflt=n
+		xxx=`./try`
+		case "$xxx" in
+		"Ok") dflt=n ;;
+		*)	echo 'The program compiled OK, but produced no output.' >> try.msg
+			case " $libs " in
+			*" -lsfio "*)
+				cat >> try.msg <<'EOQS'
+If $libs contains -lsfio, and sfio is mis-configured, then it
+sometimes (apparently) runs and exits with a 0 status, but with no
+output!  It may have to do with sfio's use of _exit vs. exit.
+
+EOQS
+				rp="You have a big problem.  Shall I abort Configure"
+				dflt=y
+				;;
+			esac
+			;;
+		esac
 	else
 		echo "The program compiled OK, but exited with status $?." >>try.msg
 		rp="You have a problem.  Shall I abort Configure"
@@ -379,11 +417,11 @@ else
 fi
 case "$dflt" in
 y)
-	$cat try.msg
+	$cat try.msg >&4
 ?X: using -K will prevent default aborting--maybe they're cross compiling?
 	case "$knowitall" in
 	'')
-		echo "(The supplied flags might be incorrect with this C compiler.)"
+		echo "(The supplied flags or libraries might be incorrect.)"
 		;;
 	*) dflt=n;;
 	esac
