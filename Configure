@@ -20,7 +20,7 @@
 
 # $Id$
 #
-# Generated on Sun Jul 30 22:19:17 PDT 2000 [metaconfig 3.0 PL70]
+# Generated on Thu Dec 28 13:38:50 PST 2000 [metaconfig 3.0 PL70]
 # (with additional metaconfig patches by trn-workers@lists.sourceforge.net)
 
 cat >/tmp/c1$$ <<EOF
@@ -4760,12 +4760,9 @@ eval $inlibc
 set ftime d_ftime 
 eval $inlibc
 
-: see if getwd or getcwd exists
+: see if getwd and getcwd exist
 set getwd d_getwd; eval $inlibc
-case "$d_getwd" in
-$define) val=$undef; set d_getcwd; eval $setvar ;;
-*) set getcwd d_getcwd; eval $inlibc ;;
-esac
+set getcwd d_getcwd; eval $inlibc
 
 : see how we will look up the hostname, if needed
 echo " "
