@@ -120,7 +120,8 @@ int status;
     fflush(stdout);
 
     chdir(tmpdir);
-    unuse_multirc(multirc);
+    if (!checkflag)
+	unuse_multirc(multirc);
     if (datasrc_list) {
 	DATASRC* dp;
 	for (dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp))
