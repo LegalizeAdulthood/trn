@@ -12,7 +12,7 @@ is also supplied.  It's important to note, however, that using a
 different language to filter articles is a very simple matter, and
 requires no additional changes to the trn source.  Technical
 details on how trn communicates with an external filtering process
-are at <URL:http://http.bsd.uchicago.edu/~t-pierce/news/filter.html>.
+are at <URL:http://www.newsreaders.com/misc/twpierce/news/filter.html>.
 
   1. Before compiling, make sure that USE_FILTER is #defined in
      common.h and that you've told Configure that you want strn's
