@@ -513,14 +513,14 @@ cancel_article()
     reply_buf = fetchlines(art,REPLY_LINE);
     from_buf = fetchlines(art,FROM_LINE);
     ngs_buf = fetchlines(art,NGS_LINE);
-    if ((!instr(from_buf,hostname,FALSE)
-      && strcaseNE(getval("FROM",""),from_buf))
-     || (!instr(from_buf,loginName,TRUE)
-      && !instr(reply_buf,loginName,TRUE)
+    if (strcaseNE(getval("FROM",""),from_buf)
+     && (!instr(from_buf,hostname,FALSE)
+      || (!instr(from_buf,loginName,TRUE)
+       && !instr(reply_buf,loginName,TRUE)
 #ifdef NEWS_ADMIN
-      && myuid != newsuid
+       && myuid != newsuid
 #endif
-      && myuid != ROOTID)) {
+       && myuid != ROOTID))) {
 #ifdef DEBUG
 	if (debug) {
 	    printf("\n%s@%s != %s\n",loginName,hostname,from_buf) FLUSH;
@@ -587,14 +587,14 @@ supersede_article()		/* Supersedes: */
     reply_buf = fetchlines(art,REPLY_LINE);
     from_buf = fetchlines(art,FROM_LINE);
     ngs_buf = fetchlines(art,NGS_LINE);
-    if ((!instr(from_buf,hostname,FALSE)
-      && strcaseNE(getval("FROM",""),from_buf))
-     || (!instr(from_buf,loginName,TRUE)
-      && !instr(reply_buf,loginName,TRUE)
+    if (strcaseNE(getval("FROM",""),from_buf)
+     && (!instr(from_buf,hostname,FALSE)
+      || (!instr(from_buf,loginName,TRUE)
+       && !instr(reply_buf,loginName,TRUE)
 #ifdef NEWS_ADMIN
-      && myuid != newsuid
+       && myuid != newsuid
 #endif
-      && myuid != ROOTID)) {
+       && myuid != ROOTID))) {
 #ifdef DEBUG
 	if (debug) {
 	    printf("\n%s@%s != %s\n",loginName,hostname,from_buf) FLUSH;
