@@ -9,8 +9,9 @@
 ?RCS: of the source tree for dist 3.0.
 ?RCS:
 ?RCS: $Log$
-?RCS: Revision 1.1  2000/05/25 15:40:49  wayned
-?RCS: Custom metaconfig modules used to make Configure.
+?RCS: Revision 1.2  2000/12/28 21:59:01  wayned
+?RCS: + Tweaked the description of HAS_GETCWD.
+?RCS: + Set both getcwd and getwd.
 ?RCS:
 ?RCS: Revision 3.0  1993/08/18  12:06:18  ram
 ?RCS: Baseline for dist 3.0 netwide release.
@@ -31,16 +32,13 @@
 ?C:.
 ?C:HAS_GETCWD:
 ?C:	This symbol, if defined, indicates that the getcwd routine is
-?C:	available.  This is never defined if getwd is found first.
+?C:	available to get the working directory.
 ?C:.
 ?H:#$d_getwd HAS_GETWD		/**/
 ?H:#$d_getcwd HAS_GETCWD		/**/
 ?H:.
 ?LINT:set d_getwd d_getcwd
-: see if getwd or getcwd exists
+: see if getwd and getcwd exist
 set getwd d_getwd; eval $inlibc
-case "$d_getwd" in
-$define) val=$undef; set d_getcwd; eval $setvar ;;
-*) set getcwd d_getcwd; eval $inlibc ;;
-esac
+set getcwd d_getcwd; eval $inlibc
 
