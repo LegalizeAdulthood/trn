@@ -516,10 +516,8 @@ int mode;
 		fflush(stdout);
 	    }
 	    spin_pos = 0;
-	    spinchars = "o-oO";
 	}
-	else
-	    spinchars = "|/-\\";
+	spinchars = "|/-\\";
 	spin_mode = mode;
 	break;
       case SPIN_POP:
