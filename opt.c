@@ -1121,7 +1121,8 @@ bool_int setit;
 	    }
 	}
 	if (killed) {
-	    while (user_htype[killed].name != NULL) killed++;
+	    while (killed < user_htype_cnt && user_htype[killed].name != NULL)
+		killed++;
 	    for (i = killed+1; i < user_htype_cnt; i++) {
 		if (user_htype[i].name != NULL)
 		    user_htype[killed++] = user_htype[i];
