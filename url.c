@@ -43,134 +43,6 @@ static char url_host[256];
 static int  url_port;
 static char url_path[1024];
 
-static int
-get_url_socket(machine,port)
-char* machine;
-int port;
-{
-    int s;
-    struct sockaddr_in sin;
-#ifdef __hpux
-    int socksize = 0;
-    int socksizelen = sizeof socksize;
-#endif
-    struct servent* sp;
-    struct hostent* hp;
-#ifdef h_addr
-    int x = 0;
-    register char** cp;
-    static char* alist[1];
-#endif /* h_addr */
-    static struct hostent def;
-    static struct in_addr defaddr;
-    static char namebuf[256];
-
-    if (port) {
-	if ((sp = getservbyport(htons(port),"tcp")) == NULL) {
-	    fprintf(stderr, "port %d/tcp: Unknown service.\n", port);
-	    return -1;
-	}
-    }
-    else {
-	if ((sp = getservbyname("www", "tcp")) == NULL) {
-	    fprintf(stderr, "www/tcp: Unknown service.\n");
-	    return -1;
-	}
-    }
-    /* If not a raw ip address, try nameserver */
-    if (!isdigit(*machine)
-#ifdef INADDR_NONE
-     || (defaddr.s_addr = inet_addr(machine)) == INADDR_NONE)
-#else
-     || (long)(defaddr.s_addr = inet_addr(machine)) == -1)
-#endif
-	hp = gethostbyname(machine);
-    else {
-	/* Raw ip address, fake  */
-	(void) strcpy(namebuf, machine);
-	def.h_name = namebuf;
-#ifdef h_addr
-	def.h_addr_list = alist;
-#endif
-	def.h_addr = (char*)&defaddr;
-	def.h_length = sizeof(struct in_addr);
-	def.h_addrtype = AF_INET;
-	def.h_aliases = 0;
-	hp = &def;
-    }
-    if (hp == NULL) {
-	fprintf(stderr, "%s: Unknown host.\n", machine);
-	return -1;
-    }
-
-    bzero((char*)&sin, sizeof sin);
-    sin.sin_family = hp->h_addrtype;
-    sin.sin_port = sp->s_port;
-
-    /* The following is kinda gross.  The name server under 4.3
-    ** returns a list of addresses, each of which should be tried
-    ** in turn if the previous one fails.  However, 4.2 hostent
-    ** structure doesn't have this list of addresses.
-    ** Under 4.3, h_addr is a #define to h_addr_list[0].
-    ** We use this to figure out whether to include the NS specific
-    ** code... */
-#ifdef h_addr
-    /* get a socket and initiate connection -- use multiple addresses */
-    for (cp = hp->h_addr_list; cp && *cp; cp++) {
-	extern char* inet_ntoa _((const struct in_addr));
-	s = socket(hp->h_addrtype, SOCK_STREAM, 0);
-	if (s < 0) {
-	    perror("socket");
-	    return -1;
-	}
-        bcopy(*cp, (char*)&sin.sin_addr, hp->h_length);
-		
-	if (x < 0)
-	    fprintf(stderr, "trying %s\n", inet_ntoa(sin.sin_addr));
-	x = connect(s, (struct sockaddr*)&sin, sizeof (sin));
-	if (x == 0)
-	    break;
-        fprintf(stderr, "connection to %s: ", inet_ntoa(sin.sin_addr));
-	perror("");
-	(void) close(s);
-    }
-    if (x < 0) {
-	fprintf(stderr, "giving up...\n");
-	return -1;
-    }
-#else /* no name server */
-    if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-	perror("socket");
-	return -1;
-    }
-
-    /* And then connect */
-
-    bcopy(hp->h_addr, (char*)&sin.sin_addr, hp->h_length);
-    if (connect(s, (struct sockaddr*)&sin, sizeof sin) < 0) {
-	perror("connect");
-	(void) close(s);
-	return -1;
-    }
-#endif /* !h_addr */
-#ifdef __hpux	/* recommended by raj@cup.hp.com */
-#define	HPSOCKSIZE 0x8000
-    getsockopt(s, SOL_SOCKET, SO_SNDBUF, (caddr_t)&socksize, (caddr_t)&socksizelen);
-    if (socksize < HPSOCKSIZE) {
-	socksize = HPSOCKSIZE;
-	setsockopt(s, SOL_SOCKET, SO_SNDBUF, (caddr_t)&socksize, sizeof(socksize));
-    }
-    socksize = 0;
-    socksizelen = sizeof(socksize);
-    getsockopt(s, SOL_SOCKET, SO_RCVBUF, (caddr_t)&socksize, (caddr_t)&socksizelen);
-    if (socksize < HPSOCKSIZE) {
-	socksize = HPSOCKSIZE;
-	setsockopt(s, SOL_SOCKET, SO_RCVBUF, (caddr_t)&socksize, sizeof(socksize));
-    }
-#endif
-    return s;
-}
-
 /* returns TRUE if successful */
 bool
 fetch_http(host,port,path,outname)
@@ -183,7 +55,7 @@ char* outname;
     FILE* fp_out;
     int len;
 
-    sock = get_url_socket(host,port);
+    sock = get_tcp_socket(host,port,"http");
 
     /* XXX length check */
     /* XXX later consider using HTTP/1.0 format (and user-agent) */
