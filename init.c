@@ -107,7 +107,7 @@ char* argv[];
 
     /* start up file expansion and the % interpreter */
 
-    intrp_init(tcbuf);
+    intrp_init(tcbuf, TCBUF_SIZE);
 
     /* now make sure we have a current working directory */
 
