@@ -75,9 +75,18 @@ and have it act as both newsreaders, thus saving you the hassle of maint-
 aining two separate newsreaders.  A Configuration question will ask you if
 you want trn to check its name on startup.
 
+
+Regular Expression Support
+--------------------------
+Regular expression support is provided by the PCRE library package,
+which is open source software, written by Philip Hazel, and copyright
+by the University of Cambridge, England.  The PCRE source shipped with
+trn is not the full PCRE distribution; it has been modified to match
+trn's needs.  See pcre/README for further information on this package.
+
 Where to send bug reports
 -------------------------
-Mail your bug reports to Wayne Davison <trn@clari.net>.  Use the 'v'ersion
-command from the newsgroup selection level of trn to be reminded of this
-address and see some configuration information to send along with your
-bug report.
+Mail your bug reports to trn-workers@lists.sourceforge.net.  Use the
+'v'ersion command from the newsgroup selection level of trn to be
+reminded of this address and see some configuration information to
+send along with your bug report.
