@@ -2181,6 +2181,19 @@ is a function of the program referenced by FORWARDPOSTER.
 See also FORWARDHEADER and MAILPOSTER.
 .Sp
 Default: Rnmail \-h %h
+.Ip "FROM (%)" 8
+What to put in the From: header of your posts, email replies,
+and email forwards, instead of whatever the default name and
+address are for your system.
+This will only work if you use the default settings for the
+NEWSHEADER, MAILHEADER, and FORWARDHEADER variables, or if
+your custom ones use FROM to set the From: header.
+.Sp
+Regardless of the settings of NEWSHEADER, MAILHEADER, and
+FORWARDHEADER, the setting of FROM is used to determine which
+articles may be cancelled or superseded.
+.Sp
+Default: undefined
 .Ip HIDELINE 8
 If defined, contains a regular expression which matches article lines to
 be hidden, in order, for instance, to suppress quoted material.

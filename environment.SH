@@ -261,6 +261,10 @@ The variables:
       FORWARDHEADER variables, or if your custom ones use FROM to
       set the From: header.
 
+      Regardless of the settings of NEWSHEADER, MAILHEADER, and
+      FORWARDHEADER, the setting of FROM is used to determine which
+      articles may be cancelled or superseded.
+
       Default: undefined
 
  HELPPAGER
