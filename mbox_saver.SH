@@ -40,7 +40,7 @@ case $mboxchar in
   if $test "\$5" = 0 -a ! "\$4" = 0 ; then
     $echo "Article: \$4 of \$6"
   fi
-  $tail +\$5c \$1 | $sed "s/^[Ff]rom />& /"
+  $tail +\$5c \$1 | $sed "s/^[Ff]rom />&/"
   $echo ""
   $echo "" ) >> \$7
 !GROK!THIS!
