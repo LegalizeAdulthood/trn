@@ -9,8 +9,8 @@
 ?RCS: of the source tree for dist 3.0.
 ?RCS:
 ?RCS: $Log$
-?RCS: Revision 1.1  2000/05/25 15:40:49  wayned
-?RCS: Custom metaconfig modules used to make Configure.
+?RCS: Revision 1.2  2000/06/01 02:05:54  wayned
+?RCS: Fixed dec_osf -> dec_osf1.
 ?RCS:
 ?RCS: Revision 3.0.1.10  1997/02/28  15:06:39  ram
 ?RCS: patch61: added support for src.U
@@ -330,7 +330,7 @@ EOM
 				alpha)
 ?X: DEC OSF/1 myuname -a output looks like:  osf1 xxxx t3.2 123.4 alpha
 ?X: where the version number can be either vn.n or tn.n.
-					osname=dec_osf
+					osname=dec_osf1
 					osvers=`echo "$3" | sed 's/^[vt]//'`
 					;;
 			hp*)	osname=hp_osf1	;;
