@@ -82,9 +82,9 @@ char* machine;
 	*cp = '\0';
 	sockt_rd = get_dnet_socket(machine);
     } else
-	sockt_rd = get_tcp_socket(machine);
+	sockt_rd = get_tcp_socket(machine, nntplink.port_number, "nntp");
 #else /* !DECNET */
-    sockt_rd = get_tcp_socket(machine);
+    sockt_rd = get_tcp_socket(machine, nntplink.port_number, "nntp");
 #endif
 
     if (sockt_rd < 0)
@@ -130,9 +130,11 @@ cleanup_nntp()
 #endif
 }
 
-static int
-get_tcp_socket(machine)
+int
+get_tcp_socket(machine, port, service)
 char* machine;
+int port;
+char* service;
 {
     int s;
     struct sockaddr_in sin;
@@ -156,12 +158,12 @@ char* machine;
 
     bzero((char*)&sin, sizeof sin);
 
-    if (nntplink.port_number)
-	sin.sin_port = htons(nntplink.port_number);
+    if (port)
+	sin.sin_port = htons(port);
     else {
 	struct servent* sp;
-	if ((sp = getservbyname("nntp", "tcp")) == NULL) {
-	    fprintf(stderr, "nntp/tcp: Unknown service.\n");
+	if ((sp = getservbyname(service, "tcp")) == NULL) {
+	    fprintf(stderr, "%s/tcp: Unknown service.\n", service);
 	    return -1;
 	}
 	sin.sin_port = sp->s_port;
@@ -236,8 +238,7 @@ char* machine;
     }
     bzero((char*)&sin, sizeof sin);
     sin.sin_family = AF_INET;
-    sin.sin_port = htons(nntplink.port_number? nntplink.port_number
-			 		     : IPPORT_NNTP);
+    sin.sin_port = htons(port? port : *service == 'n'? IPPORT_NNTP : 80);
 
     /* set up addr for the connect */
     if ((sin.sin_addr.s_addr = rhost(&machine)) == -1) {
