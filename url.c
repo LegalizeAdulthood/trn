@@ -188,7 +188,17 @@ char* url;
 	/* normal URL type, will have host (optional portnum) */
 	s += 2;
 	p = url_host;
-	while (*s && *s != '/' && *s != ':') *p++ = *s++;
+	/* check for address literal: news://[ip:v6:address]:port/ */
+	if (*s == '[') {
+	    while (*s && *s != ']')
+		*p++ = *s++;
+	    if (!*s) {
+		printf("Bad address literal: %s\n",url) FLUSH;
+		return FALSE;
+	    }
+	    s++;	/* skip ] */
+	} else
+	    while (*s && *s != '/' && *s != ':') *p++ = *s++;
 	*p = '\0';
 	if (!*s) {
 	    printf("Incomplete URL: %s\n",url) FLUSH;
