@@ -4,5 +4,5 @@
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
 #ifndef HAS_GETCWD
-static char* _trn_getwd _((char*,int));
+static char* trn_getcwd _((char*,int));
 #endif
