@@ -87,6 +87,9 @@ Changes from trn 3.6 to trn 4.0:
 	sequence (such as a keypad key or a mouse click).
    o	Trn now use X-Newsgroups instead of Newsgroups in mailed replies.
 	It also uses X-Also-Posted-To when Cc'ing people while posting.
+   o	In-Reply-To lines are now used for threading as well as
+	References lines, which makes reading gatewayed mailing lists a
+	lot easier.
 
 Changes from trn 3.5 to trn 3.6:
 

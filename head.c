@@ -269,12 +269,20 @@ end_header()
 #endif
 	htype[PAST_HEADER].minpos = tellart();
 
-    if (ThreadedGroup && !(ap->flags & AF_THREADED)) {
+    /* If there's no References: line, then the In-Reply-To: line may give us
+    ** more information.
+    */
+    if (ThreadedGroup
+     && (!(ap->flags & AF_THREADED) || htype[INREPLY_LINE].minpos >= 0)) {
 	if (valid_article(ap)) {
 	    ARTICLE* artp_hold = artp;
-	    char* references = fetchlines(parsed_art,
-		    htype[REFS_LINE].minpos >= 0? REFS_LINE : INREPLY_LINE);
+	    char* references = fetchlines(parsed_art, REFS_LINE);
+	    char* inreply = fetchlines(parsed_art, INREPLY_LINE);
+	    int reflen = strlen(references) + 1;
+	    growstr(&references, &reflen, reflen + strlen(inreply) + 1);
+	    safecat(references, inreply, reflen);
 	    thread_article(ap, references);
+	    free(inreply);
 	    free(references);
 	    artp = artp_hold;
 	    check_poster(ap);

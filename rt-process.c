@@ -223,6 +223,7 @@ char* references;
     int chain_autofl = (article->autofl
 	| (article->subj->articles? article->subj->articles->autofl : 0));
     int thread_autofl, subj_autofl = 0;
+    int rethreading = article->flags & AF_THREADED;
 
     /* We're definitely not a fake anymore */
     article->flags = (article->flags & ~AF_FAKE) | AF_THREADED;
@@ -297,6 +298,12 @@ char* references;
 		    ap = NULL;
 		goto next;
 	    }
+
+	    /* When we're doing late processing of In-Reply-To: lines, we may
+	    ** have to move an article from an old position.
+	    */
+	    if (rethreading && prev->subj)
+		unlink_child(prev);
 	    prev->parent = ap;
 	    link_child(prev);
 	    if (ap->subj)
@@ -352,9 +359,11 @@ char* references;
     } else {
       no_references:
 	/* The article has no references.  Either turn it into a new thread
-	** or re-attach the fleshed-out article to its old thread.
+	** or re-attach the fleshed-out article to its old thread.  Don't
+	** touch it at all unless this is the first attempt at threading it.
 	*/
-	link_child(article);
+	if (!rethreading)
+	    link_child(article);
     }
     if (!(article->flags & AF_CACHED))
 	cache_article(article);
@@ -460,9 +469,10 @@ register ARTICLE* child;
 	else {
 	    last = last->child1;
 	  sibling_search:
-	    while (last->sibling != child)
+	    while (last && last->sibling != child)
 		last = last->sibling;
-	    last->sibling = child->sibling;
+	    if (last)
+		last->sibling = child->sibling;
 	}
     }
 }
