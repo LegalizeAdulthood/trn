@@ -195,9 +195,9 @@ int* totalp;
 	    for (t = s; isdigit(t[-1]); t--) ;
 	    part = atoi(t);
 	    while (*++s != '\0' && *s != '\n' && !isdigit(*s)) ;
-	    if (isdigit(*s))
-		total = atoi(s);
-	    break;
+	    total = isdigit(*s)? atoi(s) : 0;
+	    while (isdigit(*s)) s++;
+	    /* We don't break here because we want the last item on the line */
 	}
 
 	/* look for "6 parts" or "part 1" */
