@@ -4,7 +4,6 @@
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
-static int get_tcp_socket _((char*));
 #ifdef DECNET
 static int get_dnet_socket _((char*));
 #endif

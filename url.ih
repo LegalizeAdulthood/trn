@@ -4,4 +4,3 @@
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
-static int get_url_socket _((char*,int));
