@@ -242,6 +242,12 @@ sed <<!GROK!THIS! >config.h -e 's!^#undef\(.*\)/\*!/\*#define\1\*//\*!' -e 's!^#
  */
 #$i_unistd I_UNISTD		/**/
 
+/* I_UTIME:
+ *	This symbol, if defined, indicates to the C program that it should
+ *	include <utime.h>.
+ */
+#$i_utime I_UTIME		/**/
+
 /* I_VFORK:
  *	This symbol, if defined, indicates to the C program that it should
  *	include vfork.h.
