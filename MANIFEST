@@ -229,6 +229,7 @@ url.h              Public info regarding url.c
 url.ih             Private info regarding url.c
 util.c             Utility routines.
 util.h             Public info regarding util.c.
+util.ih            Private info regarding util.c.
 util2.c            Utility routines common to trn and nntplist.
 util2.h            Public info regarding util2.c.
 util3.c            Utility routines exclusive to accessories.
