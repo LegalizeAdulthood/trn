@@ -77,7 +77,7 @@ private_preserve = access.def
 private_diff = newsnews Speller Pnews.header
 private_blast = norm.saver mbox.saver makedir filexp
 private = $(private_preserve) $(private_diff) $(private_blast)
-util = makedepend mkpro mktd
+util = makedepend mkpro mktd HelpFiles/config/environment
 manpages = trn.1 Pnews.1 Rnmail.1
 #INEWSinewsexe=inews$(exe)
 #NNTPnntpexe=nntplist$(exe)
@@ -249,7 +249,7 @@ install: $(public) $(inewsexe) $(private) $(manpages) myinstall
  fi
 	./myinstall -dor `./filexp $(rnlib)` $(private_diff)
 	./myinstall -dnr `./filexp $(rnlib)` $(srcdir)/INIT $(private_preserve)
-	./myinstall -oR `./filexp $(rnlib)` $(srcdir)/HelpFiles
+	./myinstall -oR `./filexp $(rnlib)` `pwd`/HelpFiles
 	@echo ' '
 	@echo 'Use "make installclean" to remove any .old or .new files that'
 	@echo 'were just created, but only after you are sure that the files'
