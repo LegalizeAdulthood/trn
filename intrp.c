@@ -72,7 +72,7 @@ char* tcbuf;
 	strcat(tildenews, NEWS_ADMIN);
 	(void) filexp(tildenews);
 #else
-	??? "Define either HAS_GETPWENT or TILDENAME to get NEWS_ADMIN"
+	... "Define either HAS_GETPWENT or TILDENAME to get NEWS_ADMIN"
 #endif  /* TILDENAME */
 #endif	/* HAS_GETPWENT */
     }
