@@ -6,6 +6,7 @@ if test "X$src" = "X." ; then
 	vpath=''
 	vincludes=''
 	srcdir=`pwd`
+	extra_cleanup=
 else
 	vpath="$src"
 	vincludes="-I. -I$src"
@@ -13,21 +14,12 @@ else
 	/*) srcdir="$src";;
 	*) srcdir=`pwd`/$src ;;
 	esac
+	extra_cleanup=HelpFiles
 fi
 $cat >Makefile <<!GROK!THIS!
 # Makefile.SH
 #
-# This software is Copyright 1991 by Stan Barber. 
-#
-# Permission is hereby granted to copy, reproduce, redistribute or otherwise
-# use this software as long as: there is no monetary profit gained
-# specifically from the use or reproduction of this software, it is not
-# sold, rented, traded or otherwise marketed, and this copyright notice is
-# included prominently in any copy made. 
-#
-# The author make no claims as to the fitness or correctness of this software
-# for any use whatsoever, and it is provided as is. Any use of this software
-# is at the user's own risk. 
+# This software is copyrighted as detailed in the LICENSE file.
 # 
 # optional defines you can add to the CFLAGS
 #    -DDEBUG                      compile in support for the -D option
@@ -36,11 +28,12 @@ $cat >Makefile <<!GROK!THIS!
 
 srcdir = $srcdir
 VPATH = $vpath
+extra_cleanup = $extra_cleanup
 
 CC = $cc
 #MSDOSLINK = tlink
 TOUCH = touch
-#YACC = yacc
+YACC = $yacc
 #LINT = lint
 lintflags = -phbvxac $vincludes
 
@@ -77,7 +70,7 @@ private_preserve = access.def
 private_diff = newsnews Speller Pnews.header
 private_blast = norm.saver mbox.saver makedir filexp
 private = $(private_preserve) $(private_diff) $(private_blast)
-util = makedepend mkpro mktd
+util = makedepend mkpro mktd HelpFiles/config/environment
 manpages = trn.1 Pnews.1 Rnmail.1
 #INEWSinewsexe=inews$(exe)
 #NNTPnntpexe=nntplist$(exe)
@@ -135,8 +128,10 @@ obj11all = $(obj11a) $(obj11b) $(obj11c)
 obj12 = score.$(o) scorefile.$(o) scoresave.$(o) score-easy.$(o)
 obj13 = tkstuff.$(o) tktree.$(o)
 
+pcreo = pcre/get.$(o) pcre/maketables.$(o) pcre/pcre.$(o) pcre/study.$(o)
+
 obj = $(obj1) $(obj2) $(obj3) $(obj4) $(obj5) $(obj6) $(obj7) $(obj8) \
-	$(obj9) $(obj10) $(obj11all) $(obj12) $(obj13)
+	$(obj9) $(obj10) $(obj11all) $(obj12) $(obj13) $(pcreo)
 
 addedbymake = $(public) $(inewsexe) $(private) $(util)\
 	Makefile.old config.h parsedate.c cppstdin myinstall all
@@ -152,7 +147,7 @@ all: Makefile $(public) $(inewsexe) $(private) $(util) Policy.sh
 #MSDOS
 #MSDOStrn: trn.exe
 
-trn$(exe): $(obj)
+trn$(exe): $(obj) pcre/tests_ok
 #MSDOS	$(LINK) $(LINKFLAGS) @trn.lnk
 #MSDOS
 #MSDOSjunk1:
@@ -221,6 +216,45 @@ unipatch$(exe): support/unipatch.$(o)
 #MSDOSjunk5:
 	$(CC) $(LDFLAGS) support/unipatch.$(o) -o unipatch$(exe)
 
+
+pcreok = pcre/tests_ok
+
+pcre/chartables.c: pcre/dftables
+	pcre/dftables > pcre/chartables.c
+
+pcre/dftables: pcre/internal.h pcre/pcre.h pcre/dftables.c pcre/maketables.c
+	cd pcre && $(CC) $(CFLAGS) $(LDFLAGS) -o dftables dftables.c $(libs)
+	# $(CC) -o pcre/dftables $(CFLAGS) -Ipcre pcre/dftables.c
+
+pcre/get.$(o): pcre/internal.h pcre/pcre.h pcre/get.c
+	cd pcre && $(CC) -c $(CFLAGS) get.c
+
+pcre/maketables.$(o): pcre/internal.h pcre/pcre.h pcre/maketables.c
+	cd pcre && $(CC) -c $(CFLAGS) maketables.c
+
+pcre/pcre.$(o): pcre/internal.h pcre/pcre.h pcre/pcre.c pcre/chartables.c
+	cd pcre && $(CC) -c $(CFLAGS) -UDEBUG pcre.c
+
+pcre/study.$(o): pcre/internal.h pcre/pcre.h pcre/study.c
+	cd pcre && $(CC) -c $(CFLAGS) study.c
+
+pcre/pcretest.$(o): pcre/internal.h pcre/pcre.h pcre/pcretest.c
+	cd pcre && $(CC) -c $(CFLAGS) -DNOPOSIX pcretest.c
+
+pcre/pcretest: pcre/internal.h pcre/pcre.h pcre/pcretest.$(o) \
+	pcre/pcre.$(o) pcre/get.$(o) pcre/study.$(o) pcre/maketables.$(o)
+	cd pcre && $(CC) $(LDFLAGS) -o pcretest pcretest.$(o) \
+		pcre.$(o) get.$(o) study.$(o) maketables.$(o) $(libs)
+
+$(pcreok): pcre/pcretest pcre/RunTest
+	cd pcre && ./RunTest 1 3 > tests.log
+	touch $(pcreok)
+	rm pcre/testtry
+
+clean_pcre:
+	rm -f $(pcreo) $(pcreok) pcre/pcretest pcre/pcretest.o \
+		pcre/testtry pcre/tests.log pcre/dftables
+
 Pnews.header: Pnews
 
 # if a .h file depends on another .h file...
@@ -249,7 +283,7 @@ install: $(public) $(inewsexe) $(private) $(manpages) myinstall
  fi
 	./myinstall -dor `./filexp $(rnlib)` $(private_diff)
 	./myinstall -dnr `./filexp $(rnlib)` $(srcdir)/INIT $(private_preserve)
-	./myinstall -oR `./filexp $(rnlib)` $(srcdir)/HelpFiles
+	./myinstall -oR `./filexp $(rnlib)` `pwd`/HelpFiles
 	@echo ' '
 	@echo 'Use "make installclean" to remove any .old or .new files that'
 	@echo 'were just created, but only after you are sure that the files'
@@ -268,10 +302,10 @@ installclean:
  done)
 #INEWS	- (cd `./filexp $(inewsbin)` ; rm -f inews$(exe).old)
 
-clean:
+clean: pcre_clean
 	@echo 'Use "make realclean" to also remove the Makefile.'
 	@echo 'Use "make spotless" to even remove config.sh, Policy.sh, and .config.'
-	rm -rf UU
+	rm -rf UU $(extra_cleanup)
 	rm -f *.$(o) core $(addedbymake)
 
 realclean:
@@ -310,6 +344,18 @@ Makefile: Makefile.SH config.sh dependencies
 
 Pnews: patchlevel.h
 newsnews: patchlevel.h
+
+tar: MANIFEST patchlevel.h
+	export PATH || false # stop the make unless we are compatible
+	@(ver=trn-`awk '{print $$4}' $(srcdir)/patchlevel.h` ; \
+	 cd $(srcdir)/.. ; \
+	 echo Creating $$ver.tar.gz ; \
+	 ln -s trn4 $$ver ; \
+	 tar cvzf $$ver.tar.gz \
+		`ls -1d trn4/hints/* | fgrep -v /CVS | \
+		 cat trn4/MANIFEST - | \
+		 sed -e "s:^\(trn4/\)*\([^ 	]*\).*:$$ver/\2:"` ; \
+	 rm $$ver )
 
 # AUTOMATICALLY GENERATED MAKE DEPENDENCIES--PUT NOTHING BELOW THIS LINE
 !NO!SUBS!
