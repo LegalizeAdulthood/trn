@@ -54,7 +54,7 @@ static char* nntpfds_export = null_export + 2;
 #ifdef USE_GENAUTH
 static char* nntpauth_export = null_export + 2;
 #endif
-static char* nntpforce_export;
+static char* nntpforce_export = null_export + 2;
 #endif
 
 void
