@@ -255,7 +255,7 @@ ART_POS pos;
     int found_nl;
 
     while (pos > body_end || !had_nl) {
-	found_nl = nntp_gets(s, limit-1);
+	found_nl = nntp_gets(s, limit);
 	if (found_nl < 0)
 	    strcpy(s,"."); /*$$*/
 	if (had_nl) {
