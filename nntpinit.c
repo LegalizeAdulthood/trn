@@ -137,6 +137,52 @@ int port;
 char* service;
 {
     int s;
+#if INET6
+    struct addrinfo hints;
+    struct addrinfo* res;
+    struct addrinfo* res0;
+    char portstr[8];
+    char* cause = NULL;
+    int error;
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = PF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = 0;
+    if (port)
+	sprintf(service = portstr, "%d", port);
+    error = getaddrinfo(machine, service, &hints, &res0);
+    if (error) {
+	fprintf(stderr, "%s", gai_strerror(error));
+	return -1;
+    }
+    for (res = res0; res; res = res->ai_next) {
+	char buf[64] = "";
+	s = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+	if (s < 0) {
+	    cause = "socket";
+	    continue;
+	}
+
+	inet_ntop(res->ai_family, res->ai_addr, buf, sizeof buf);
+	if (res != res0)
+	    fprintf(stderr, "trying %s...", buf);
+
+	if (connect(s, res->ai_addr, res->ai_addrlen) >= 0)
+	    break;  /* okay we got one */
+
+	fprintf(stderr, "connection to %s: ", buf);
+	perror("");
+	cause = "connect";
+	close(s);
+	s = -1;
+    }
+    if (s < 0) {
+	fprintf(stderr, "giving up... ");
+	perror(cause);
+    }
+    freeaddrinfo(res0);
+#else	/* !INET6 */
     struct sockaddr_in sin;
 #ifdef __hpux
     int socksize = 0;
@@ -184,7 +230,7 @@ char* service;
 	def.h_addr_list = alist;
 #endif
 	def.h_addr = (char*)&defaddr;
-	def.h_length = sizeof(struct in_addr);
+	def.h_length = sizeof (struct in_addr);
 	def.h_addrtype = AF_INET;
 	def.h_aliases = 0;
 	hp = &def;
@@ -269,19 +315,20 @@ char* service;
 
 #endif /* !EXCELAN */
 #endif /* !h_addr */
+#endif /* !INET6 */
 #ifdef __hpux	/* recommended by raj@cup.hp.com */
 #define	HPSOCKSIZE 0x8000
     getsockopt(s, SOL_SOCKET, SO_SNDBUF, (caddr_t)&socksize, (caddr_t)&socksizelen);
     if (socksize < HPSOCKSIZE) {
 	socksize = HPSOCKSIZE;
-	setsockopt(s, SOL_SOCKET, SO_SNDBUF, (caddr_t)&socksize, sizeof(socksize));
+	setsockopt(s, SOL_SOCKET, SO_SNDBUF, (caddr_t)&socksize, sizeof (socksize));
     }
     socksize = 0;
-    socksizelen = sizeof(socksize);
+    socksizelen = sizeof (socksize);
     getsockopt(s, SOL_SOCKET, SO_RCVBUF, (caddr_t)&socksize, (caddr_t)&socksizelen);
     if (socksize < HPSOCKSIZE) {
 	socksize = HPSOCKSIZE;
-	setsockopt(s, SOL_SOCKET, SO_RCVBUF, (caddr_t)&socksize, sizeof(socksize));
+	setsockopt(s, SOL_SOCKET, SO_RCVBUF, (caddr_t)&socksize, sizeof (socksize));
     }
 #endif
     return s;
@@ -313,11 +360,10 @@ char* machine;
 	if ((np = getnodebyname(machine)) == NULL) {
 	    fprintf(stderr, "%s: Unknown host.\n", machine);
 	    return -1;
-	} else {
-	    bcopy(np->n_addr, (char*)sdn.sdn_add.a_addr, np->n_length);
-	    sdn.sdn_add.a_len = np->n_length;
-	    sdn.sdn_family = np->n_addrtype;
 	}
+	bcopy(np->n_addr, (char*)sdn.sdn_add.a_addr, np->n_length);
+	sdn.sdn_add.a_len = np->n_length;
+	sdn.sdn_family = np->n_addrtype;
 	break;
     }
     sdn.sdn_objnum = 0;
