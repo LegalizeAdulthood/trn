@@ -333,8 +333,8 @@
 #   ifndef TERSE
 #	define TERSE
 #   endif
-#   define IF(c) "IF" outside of VERBOSE???
-#   define ELSE "ELSE" outside of VERBOSE???
+#   define IF(c) ..."IF" outside of VERBOSE
+#   define ELSE ..."ELSE" outside of VERBOSE
 #endif
 
 #ifdef SUPPORT_NNTP

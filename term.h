@@ -87,7 +87,7 @@ EXT int lflusho INIT(LFLUSHO);
 #define	resetty() (bizarre=0)
 #define unflush_output()
 #   else /* !MSDOS */
-????????????
+..."Don't know how to define the term macros!"
 #   endif /* !MSDOS */
 #  endif /* !I_SGTTY */
 # endif /* !I_TERMIOS */
@@ -169,7 +169,7 @@ EXT int just_a_sec INIT(960);		/* 1 sec at current baud rate */
 #define carriage_return() term_col=0, tputs(CR,1,putchr) FLUSH
 #define dingaling() tputs(VB,1,putchr) FLUSH
 #else /* !HAS_TERMLIB */
-  ????????		/* up to you */
+..."Don't know how to define the term macros!"
 #endif /* !HAS_TERMLIB */
 
 #define input_pending() finput_pending(TRUE)

@@ -102,7 +102,7 @@ term_init()
     KILLCH = Ctl('u');
     GT = 1;
 #   else
-    ????????
+    ..."Don't know how to initialize the terminal!"
 #   endif /* !MSDOS */
 #  endif /* !I_SGTTY */
 # endif /* !I_TERMIOS */
@@ -294,7 +294,7 @@ char* tcbuf;		/* temp area for "uncompiled" termcap entry */
     leftcost = strlen(BC);
     upcost = strlen(UP);
 #else /* !HAS_TERMLIB */
-    ??????				/* Roll your own... */
+    ..."Don't know how to set the terminal!"
 #endif /* !HAS_TERMLIB */
     termlib_init();
     line_col_calcs();
@@ -933,7 +933,7 @@ eat_typeahead()
 #   ifdef I_TERMIOS
 	tcsetattr(_tty_ch,TCSAFLUSH,&_tty);
 #   else
-	?????????
+	..."Don't know how to eat typeahead!"
 #   endif
 #  endif
 # endif
