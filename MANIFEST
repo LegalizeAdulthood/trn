@@ -50,6 +50,7 @@ datasrc.ih         Private info regarding datasrc.c.
 decode.c           Routines common to the binary decoders
 decode.h           Public info regarding decode.c.
 decode.ih          Private info regarding decode.c.
+default_topic      A sample file that should really go in the samples dir?
 dependencies       A pre-made list of the source's dependencies.
 edit_dist.c        Routines to find the edit distance between two strings.
 edit_dist.h        Public info for the edit distance routines.
@@ -63,6 +64,7 @@ filter.h           Public info for filter.c.
 filter.ih          Private info for filter.c.
 final.c            Finalization (exit) routines.
 final.h            Public info regarding final.c.
+ftpgrab            An obscure sample shell script.
 hash.c             Hashing routines.
 hash.h             Public/private info for hashing routines.
 hash.ih            Private info regarding hash.c.
@@ -224,7 +226,7 @@ univ.h             Public info regarding univ.c.
 univ.ih            Private info regarding univ.c.
 url.c              Fetches strn files given a Uniform Resource Locator
 url.h              Public info regarding url.c
-url.h              Private info regarding url.c
+url.ih             Private info regarding url.c
 util.c             Utility routines.
 util.h             Public info regarding util.c.
 util2.c            Utility routines common to trn and nntplist.
