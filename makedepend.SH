@@ -77,7 +77,7 @@ for file in *.SH; do
 	$echo `$basename $file .SH | $sed -e 's/_/./'`: $file \; /bin/sh "\$(srcdir)/$file" >>$deptmp
 	;;
     environment.SH)
-	$echo HelpFiles/config/environment: $file config.sh \; /bin/sh "\$(srcdir)/$file" >>$deptmp
+	$echo HelpFiles/config/environment: $file config.sh makedir \; /bin/sh "\$(srcdir)/$file" >>$deptmp
 	;;
     *)
 	$echo `$basename $file .SH | $sed -e 's/_/./'`: $file config.sh \; /bin/sh "\$(srcdir)/$file" >>$deptmp
