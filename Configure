@@ -20,7 +20,7 @@
 
 # $Id$
 #
-# Generated on Thu Feb 22 11:16:38 PST 2001 [metaconfig 3.0 PL70]
+# Generated on Sun Aug 10 11:58:23 PDT 2003 [metaconfig 3.0 PL70]
 # (with additional metaconfig patches by trn-workers@lists.sourceforge.net)
 
 cat >/tmp/c1$$ <<EOF
@@ -943,7 +943,7 @@ rm -f .echotmp
 echo " "
 if test -f $rsrc/MANIFEST; then
 	echo "First let's make sure your kit is complete.  Checking..." >&4
-	awk '$1 !~ /PACK[A-Z]+/ {print $1}' $rsrc/MANIFEST | split -50
+	awk '$1 !~ /PACK[A-Z]+/ {print $1}' $rsrc/MANIFEST | split -l50
 	rm -f missing
 	tmppwd=`pwd`
 	for filelist in x??; do
