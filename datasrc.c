@@ -755,6 +755,7 @@ char* server;
     if (!filename) {
 	(void) listnum2listitem(sfp->lp, 0);
 	sfp->lp->high = -1;
+	setspin(SPIN_OFF);
 	return 1;
     }
 #endif
@@ -771,6 +772,7 @@ char* server;
 		printf("\nError getting %s file.\n", fetchcmd) FLUSH;
 		termdown(2);
 		srcfile_close(sfp);
+		setspin(SPIN_OFF);
 		return 0;
 	    }
 	    if (nntp_at_list_end(buf))
