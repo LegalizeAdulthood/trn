@@ -28,7 +28,7 @@ s_goxy(x,y)
 int x,y;
 {
     char* tgoto();
-    tputs(tgoto(CM, x, y), 1, putchr);
+    tputs(tgoto(tc_CM, x, y), 1, putchr);
 }
 
 /* Print a string with the placing of the page and mail status.
@@ -75,7 +75,7 @@ void
 s_refresh_bot()
 {
     /* if bottom bar exists, then it is at least one character high... */
-    s_goxy(0,LINES-s_bot_lines);
+    s_goxy(0,tc_LINES-s_bot_lines);
     switch (s_cur_type) {
 #ifdef SCAN_ART
       case S_ART:
@@ -243,8 +243,8 @@ s_initscreen()
     /* set scr_{height,width} */
     /* return 0 if all went well */
 
-    scr_height = LINES;
-    scr_width = COLS;
+    scr_height = tc_LINES;
+    scr_width = tc_COLS;
     if (scr_height > 2 && scr_width > 1)	/* current dependencies */
 	return 0;	/* everything is OK. */
     return 1;	/* we can't play with this... */

@@ -40,9 +40,9 @@ void
 s_go_bot()
 {
     s_ref_bot = TRUE;			/* help uses whole screen */
-    s_goxy(0,LINES-s_bot_lines);	/* go to bottom bar */
+    s_goxy(0,tc_LINES-s_bot_lines);	/* go to bottom bar */
     erase_eol();			/* erase to end of line */
-    s_goxy(0,LINES-s_bot_lines);	/* go (back?) to bottom bar */
+    s_goxy(0,tc_LINES-s_bot_lines);	/* go (back?) to bottom bar */
 }
 
 /* finishes a command on the bottom line... */

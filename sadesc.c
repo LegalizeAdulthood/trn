@@ -187,7 +187,7 @@ bool_int trunc;		/* should it be truncated? */
 	    while (i--) *s2++ = ' ';
 #ifdef HAS_TERMLIB
 	    if (use_standout)
-		sprintf(s2,"Summary: %s%s",SO,s);
+		sprintf(s2,"Summary: %s%s",tc_SO,s);
 	    else
 #endif
 		sprintf(s2,"Summary: %s",s);
@@ -218,7 +218,7 @@ bool_int trunc;		/* should it be truncated? */
 	    while (i--) *s2++ = ' ';
 #ifdef HAS_TERMLIB
 	    if (use_standout)
-		sprintf(s2,"Keys: %s%s",SO,s);
+		sprintf(s2,"Keys: %s%s",tc_SO,s);
 	    else
 #endif
 		sprintf(s2,"Keys: %s",s);
@@ -234,7 +234,7 @@ bool_int trunc;		/* should it be truncated? */
 	desc_buf[s_desc_cols] = '\0';	/* make sure it's not too long */
 #ifdef HAS_TERMLIB
     if (use_standout)
-	strcat(desc_buf,SE);	/* end standout mode */
+	strcat(desc_buf,tc_SE);	/* end standout mode */
 #endif
     /* take out bad characters (replace with one space) */
     for (s = desc_buf; *s; s++)
