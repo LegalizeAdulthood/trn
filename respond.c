@@ -78,9 +78,21 @@ save_article()
     if (cmd == 'e') {		/* is this an extract command? */
 	static bool custom_extract = FALSE;
 	char* cmdstr;
+	int partOpt = 0, totalOpt = 0;
 
 	s = buf+1;		/* skip e */
 	while (*s == ' ') s++;	/* skip leading spaces */
+	if (*s == '-' && isdigit(s[1])) {
+	    partOpt = atoi(s+1);
+	    do s++; while (isdigit(*s));
+	    if (*s == '/') {
+		totalOpt = atoi(s+1);
+		do s++; while (isdigit(*s));
+		while (*s == ' ') s++;
+	    }
+	    else
+		totalOpt = partOpt;
+	}
 	safecpy(altbuf,filexp(s),sizeof altbuf);
 	s = altbuf;
 	if (*s) {
@@ -159,6 +171,10 @@ save_article()
 
 	    /* Scan subject for filename and part number information */
 	    filename = decode_subject(art, &part, &total);
+	    if (partOpt)
+		part = partOpt;
+	    if (totalOpt)
+		total = totalOpt;
 	    for (artpos = savefrom;
 		 readart(art_line,sizeof art_line) != NULL;
 		 artpos = tellart())
