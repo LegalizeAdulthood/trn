@@ -248,42 +248,60 @@ char* s;
     return 0;
 }
 
+/* This returns 1 when it reads a full line, 0 if it reads a partial
+ * line, and -2 on EOF/error.  The maximum length includes a spot for
+ * the null-terminator, and we need room for our "\r\n"-stripping code
+ * to work right, so "len" MUST be at least 3.
+ */
 int
 nntp_gets(bp, len)
 char* bp;
 int  len;
 {
-    int n;
+    int ch, n = 0;
+    char* cp = bp;
 
- read_it:
 #ifdef HAS_SIGHOLD
     sighold(SIGINT);
 #endif
-    errno = 0;
-    n = (fgets(bp, len, nntplink.rd_fp) == NULL)? -2 : 0;
+    if (nntplink.trailing_CR) {
+	*cp++ = '\r';
+	len--;
+	nntplink.trailing_CR = 0;
+    }
+    while (1) {
+	if (len == 1) {
+	    if (cp[-1] == '\r') {
+		/* Hold a trailing CR until next time because we may need
+		 * to strip it if it is followed by a newline. */
+		cp--;
+		nntplink.trailing_CR = 1;
+	    }
+	    break;
+	}
+	do {
+	    errno = 0;
+	    ch = fgetc(nntplink.rd_fp);
+	} while (errno == EINTR);
+	if (ch == EOF) {
+	    nntplink.flags |= NNTP_NEW_CMD_OK;
+	    n = -2;
+	    break;
+	}
+	if (ch == '\n') {
+	    if (cp != bp && cp[-1] == '\r')
+		cp--;
+	    n = 1;
+	    break;
+	}
+	*cp++ = ch;
+	len--;
+    }
+    *cp = '\0';
 #ifdef HAS_SIGHOLD
     sigrelse(SIGINT);
 #endif
-    if (n < 0) {
-	if (errno == EINTR)
-	    goto read_it;
-	nntplink.flags |= NNTP_NEW_CMD_OK;
-	return n;
-    }
-    n = strlen(bp);
-    if (n > 0) {
-	/* check for CR/LF split across the buffer boundry */
-	if (bp[n-1] == '\r')
-	    bp[n-1] = '\0';
-	else if (bp[n-1] == '\n') {
-	    if (n > 1 && bp[n-2] == '\r')
-		bp[n-2] = '\0';
-	    else
-		bp[n-1] = '\0';
-	    return 1;
-	}
-    }
-    return 0;
+    return n;
 }
 
 void
