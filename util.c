@@ -31,6 +31,7 @@
 #endif
 #include "univ.h"
 #include "INTERN.h"
+#include "util.ih"
 #include "util.h"
 
 #ifdef UNION_WAIT
@@ -354,9 +355,33 @@ int mod;
 /*
  * Get working directory
  */
+char*
+trn_getwd(buf, buflen)
+char* buf;
+int buflen;
+{
+    char* ret;
+
+#ifdef HAS_GETCWD
+    ret = getcwd(buf, buflen);
+#else
+    ret = trn_getcwd(buf, buflen);
+#endif
+    if (!ret) {
+	printf("Cannot determine current working directory!\n") FLUSH;
+	finalize(1);
+    }
+#ifdef MSDOS
+    strlwr(buf);
+    while ((buf = index(buf,'\\')) != NULL)
+	*buf++ = '/';
+#endif
+    return ret;
+}
+
 #ifndef HAS_GETCWD
 static char*
-_trn_getwd(buf, len)
+trn_getcwd(buf, len)
 char* buf;
 int len;
 {
@@ -393,32 +418,7 @@ int len;
 #endif
     return ret;
 }
-
-#else
-
-#define _trn_getwd(buf, len) getcwd(buf, len)
-
 #endif
-
-char*
-trn_getwd(buf, buflen)
-char* buf;
-int buflen;
-{
-    char* ret;
-
-    ret = _trn_getwd(buf, buflen);
-    if (!ret) {
-	printf("Cannot determine current working directory!\n") FLUSH;
-	finalize(1);
-    }
-#ifdef MSDOS
-    strlwr(buf);
-    while ((buf = index(buf,'\\')) != NULL)
-	*buf++ = '/';
-#endif
-    return ret;
-}
 
 /* just like fgets but will make bigger buffer as necessary */
 
