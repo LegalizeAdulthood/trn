@@ -15,7 +15,7 @@ is usually available by typing 'H' as well.
 This message will not be displayed again unless it is updated with new
 information.
 
-Wayne Davison  <wayne@clari.net>
+Wayne Davison  <trn@blorf.net>
 !GROK!THIS!
 #
 # This software is Copyright (C) 1991-1997 by Wayne Davison.
