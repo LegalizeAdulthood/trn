@@ -29,7 +29,7 @@ objdir=`pwd`
 objext='.\\$\(o\)'
 
 cc_cmd="$cppstdin -I\$objdir -I$usrinc $vincludes $tkinc $cppminus"
-ignorefiles="$usrinc|typedef.h"
+ignorefiles="$usrinc|typedef\.h|/lib/gcc-lib/"
 
 test=${test-test}
 sed=${sed-sed}
@@ -75,6 +75,9 @@ for file in *.SH; do
     Makefile.SH) ;;
     newsnews.SH)
 	$echo `$basename $file .SH | $sed -e 's/_/./'`: $file \; /bin/sh "\$(srcdir)/$file" >>$deptmp
+	;;
+    environment.SH)
+	$echo HelpFiles/config/environment: $file config.sh \; /bin/sh "\$(srcdir)/$file" >>$deptmp
 	;;
     *)
 	$echo `$basename $file .SH | $sed -e 's/_/./'`: $file config.sh \; /bin/sh "\$(srcdir)/$file" >>$deptmp
