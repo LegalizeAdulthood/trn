@@ -33,7 +33,7 @@ extra_cleanup = $extra_cleanup
 CC = $cc
 #MSDOSLINK = tlink
 TOUCH = touch
-#YACC = yacc
+YACC = $yacc
 #LINT = lint
 lintflags = -phbvxac $vincludes
 
