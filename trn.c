@@ -2,7 +2,7 @@
 
 /*  trn -- threaded readnews program based on rn 4.4
  *
- *  Author/Maintainer of trn: wayne@clari.net (Wayne Davison)
+ *  Author/Maintainer of trn: trn@blorf.net (Wayne Davison)
  *  Maintainer of rn: sob@bcm.tmc.edu (Stan Barber)
  *  Original Author: lwall@sdcrdcf.UUCP (Larry Wall)
  *
@@ -913,7 +913,7 @@ trn_version()
 	}
     }
 
-    print_lines("Send bug reports, suggestions, etc. to: trn@clari.net\n",
+    print_lines("Send bug reports, suggestions, etc. to: trn@blorf.net\n",
 		NOMARKING);
 }
 
