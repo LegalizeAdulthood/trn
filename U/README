@@ -10,7 +10,9 @@ most recent release of dist with some units from the perl project and
 placed it in the ftp directory for trn (on trn.sourceforge.net).  You
 should use this version in preference to the last released "dist"
 distribution until (and unless) the official release gets updated with
-the relevant changes.
+the relevant changes.  The ftp site is:
+
+    ftp://trn.sourceforge.net/pub/trn/
 
 After installing "dist", here's what you need to do:
 
