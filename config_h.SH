@@ -45,10 +45,11 @@ sed <<!GROK!THIS! >config.h -e 's!^#undef\(.*\)/\*!/\*#define\1\*//\*!' -e 's!^#
 #endif
 
 /* HAS_GETPWENT:
- *	This symbol, if defined, indicates that the getpwent() routine
- *	should be used instead of the getpw() routine.
+ *	This symbol, if defined, indicates that the getpwent routine is
+ *	available for sequential access of the passwd database.
+ *	If this is not available, the older getpw() function may be available.
  */
-#$d_getpwent HAS_GETPWENT	/**/
+#$d_getpwent HAS_GETPWENT		/**/
 
 /* INTERNET:
  *	This symbol, if defined, indicates that there is a mailer available
@@ -240,12 +241,6 @@ sed <<!GROK!THIS! >config.h -e 's!^#undef\(.*\)/\*!/\*#define\1\*//\*!' -e 's!^#
  *	include <unistd.h>.
  */
 #$i_unistd I_UNISTD		/**/
-
-/* I_UTIME:
- *	This symbol, if defined, indicates to the C program that it should
- *	include <utime.h>.
- */
-#$i_utime I_UTIME		/**/
 
 /* I_VFORK:
  *	This symbol, if defined, indicates to the C program that it should
