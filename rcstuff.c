@@ -201,6 +201,7 @@ MULTIRC* mptr;
 	rp->datasrc->flags &= ~DF_ACTIVE;
     }
     if (ngdata_list) {
+	close_cache();
 	hashdestroy(newsrc_hash);
 	walk_list(ngdata_list, clear_ngitem, 0);
 	delete_list(ngdata_list);
