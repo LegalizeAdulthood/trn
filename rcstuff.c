@@ -283,7 +283,8 @@ int arg;
     NGDATA* ncp = (NGDATA*)cp;
 
     if (ncp->rcline != NULL) {
-	free(ncp->rcline);
+	if (!checkflag)
+	    free(ncp->rcline);
 	ncp->rcline = NULL;
     }
     return 0;
