@@ -139,7 +139,7 @@ save_article()
 	    printf(nocd,s) FLUSH;
 	    sig_catcher(0);
 	}
-	c = getwd(buf);		/* simplify path for output */
+	c = trn_getwd(buf, sizeof(buf));	/* simplify path for output */
 	if (custom_extract) {
 	    printf("Extracting article into %s using %s\n",c,extractprog) FLUSH;
 	    termdown(1);
