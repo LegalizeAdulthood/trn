@@ -138,6 +138,7 @@ close_cache()
     if (article_list) {
 	walk_list(article_list, clear_artitem, 0);
 	delete_list(article_list);
+	article_list = NULL;
     }
     cached_ng = NULL;
 }
