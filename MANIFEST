@@ -4,6 +4,7 @@ HACKERSGUIDE       A brief guide to the contorted innards of [t]rn.
 INIT               Sample system-wide switch file.
 INSTALL            Installation instructions.
 INTERN.h           When included, makes other includes belong to me.
+LICENSE            The license details for most of the source files.
 MANIFEST           This list of files.
 Makefile.SH        Shell script to generate the makefile.
 Pnews.1            Manual page for Pnews.
