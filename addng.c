@@ -301,6 +301,7 @@ char_int ch;
 	break;
     }
     node->toread = (toread < 0)? 0 : toread;
+    node->num = addgroup_cnt++;
     strcpy(node->name, name);
     node->datasrc = datasrc;
     node->next = NULL;
