@@ -883,6 +883,8 @@ int auto_flags;
     if (ap->subj && ap->subj->articles)
 	kill_subject(ap->subj, auto_flags);
     else {
+	if (auto_flags & SET_TORETURN)
+	    delay_unmark(ap);
 	set_read(ap);
 	auto_flags &= AUTO_KILLS;
 	if (auto_flags)
@@ -899,9 +901,12 @@ int auto_flags;
 {
     register ARTICLE* ap;
     register int killmask = (auto_flags & AFFECT_ALL)? 0 : sel_mask;
+    char toreturn = (auto_flags & SET_TORETURN) != 0;
 
     auto_flags &= AUTO_KILLS;
     for (ap = subj->articles; ap; ap = ap->subj_next) {
+	if (toreturn)
+	    delay_unmark(ap);
 	if ((ap->flags & (AF_UNREAD|killmask)) == AF_UNREAD)
 	    set_read(ap);
 	if (auto_flags)
@@ -947,6 +952,7 @@ register ARTICLE* ap;
 int auto_flags;
 {
     register ARTICLE* limit;
+    char toreturn = (auto_flags & SET_TORETURN) != 0;
 
     if (!ap)
 	return;
@@ -959,6 +965,8 @@ int auto_flags;
 
     auto_flags &= AUTO_KILLS;
     for (; ap != limit; ap = bump_art(ap)) {
+	if (toreturn)
+	    delay_unmark(ap);
 	if (ALLBITS(ap->flags, AF_EXISTS | AF_UNREAD))
 	    set_read(ap);
 	if (auto_flags)
