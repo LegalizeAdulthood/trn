@@ -534,7 +534,7 @@ EOH
 	if test "X$ans" = X; then
 	    $echo ""
 	    $echo $n "Sign [user], Unsign, Test, or <Return>? $c"
-	    read ans
+	    read ans || state=rescue	# exits on EOF
 	fi
 	case "$ans" in
 	[sS]*)
