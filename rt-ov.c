@@ -483,7 +483,7 @@ char* group;
 void
 ov_close()
 {
-    if (datasrc->ov_opened) {
+    if (datasrc && datasrc->ov_opened) {
 	if (datasrc->ov_in) {
 	    (void) fclose(datasrc->ov_in);
 	    datasrc->ov_in = NULL;
