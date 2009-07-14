@@ -48,6 +48,9 @@ datasrc_init()
 	vals[DI_NNTP_SERVER] = machine;
 	vals[DI_AUTH_USER] = read_auth_file(nntp_auth_file,
 					    &vals[DI_AUTH_PASS]);
+#ifdef USE_GENAUTH
+	vals[DI_AUTH_COMMAND] = getenv("NNTPAUTH");
+#endif
 	vals[DI_FORCE_AUTH] = getenv("NNTP_FORCE_AUTH");
 	new_datasrc("default",vals);
     }
@@ -86,6 +89,9 @@ datasrc_init()
 	if (machine) {
 	    vals[DI_AUTH_USER] = read_auth_file(nntp_auth_file,
 						&vals[DI_AUTH_PASS]);
+#ifdef USE_GENAUTH
+	    vals[DI_AUTH_COMMAND] = getenv("NNTPAUTH");
+#endif
 	    vals[DI_FORCE_AUTH] = getenv("NNTP_FORCE_AUTH");
 	}
 #endif
