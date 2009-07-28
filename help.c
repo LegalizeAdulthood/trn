@@ -138,7 +138,7 @@ range{,range}:command{:command}\n\
 	the current article, and $ for the last article.\n\
 ",NOMARKING)) ||
     (cmd = print_lines("\
- 	Valid commands are: e, j, m, M, s, S, t, T, |, +, ++, -, and --.\n\
+ 	Valid commands are: a, e, j, m, M, s, S, t, T, |, +, ++, -, and --.\n\
 :cmd	Perform a command on all the selected articles.\n\
 ::cmd	Perform a command on all non-selected articles.\n\
 :.cmd	Perform a command on the current thread or its selected articles.\n\
@@ -168,6 +168,7 @@ s ...	Save to file or pipe via sh.\n\
 S ...	Save via preferred shell.\n\
 w,W	Like s and S but save without the header.\n\
 | ...	Same as s|...\n\
+a	View article attachments.\n\
 ",NOMARKING)) ||
     (cmd = print_lines("\
 C	Cancel this article, if yours.\n\
