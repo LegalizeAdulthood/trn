@@ -12,18 +12,24 @@
 ?RCS: Revision 1.1  2000/05/25 15:40:49  wayned
 ?RCS: Custom metaconfig modules used to make Configure.
 ?RCS:
-?RCS: Revision 3.0  1993/08/18  12:08:08  ram
+?RCS: Revision 3.0.1.2  1994/10/29  15:52:53  ram
+?RCS: patch36: added ?F: line for metalint file checking
+?RCS: patch36: added HOME to the ?T: line since metalint now checks ${HOME}
+?RCS:
+?RCS: Revision 3.0.1.1  1994/05/06  14:03:00  ram
+?RCS: patch23: made sure error status from csh is propagated (WED)
+?RCS:
+?RCS: Revision 3.0  1993/08/18  12:04:53  ram
 ?RCS: Baseline for dist 3.0 netwide release.
 ?RCS:
-?MAKE:filexp: privlib
+?X: 
+?X: This unit produces a shell script which will expand filenames beginning
+?X: with tildes.  The script is deleted at the end of Configure.
+?X: 
+?MAKE:Filexp: startsh sed test expr eunicefix rsrc
 ?MAKE:	-pick add $@ %<
-?S:filexp:
-?S:	This symbol contains the full pathname of the filexp script, in case we
-?S:	are saving the script for posterity.
-?S:.
-: must not allow self reference
-case "$privlib" in
-/*)	filexp=$privlib/filexp ;;
-*)	filexp=Rnfilexp ;;
-esac
+?F:./filexp
+?T:HOME LOGDIR dir me name failed
+: set up shell script to do ~ expansion
+(CONFIG=true ; . $rsrc/filexp.SH) >/dev/null
 
