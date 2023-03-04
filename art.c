@@ -56,6 +56,8 @@
 #include "art.h"
 #include "artstate.h"			/* somebody has to do it */
 
+#include <time.h>
+
 #define LINE_PTR(pos) (artbuf + (pos) - htype[PAST_HEADER].minpos)
 #define LINE_OFFSET(ptr) ((ptr) - artbuf + htype[PAST_HEADER].minpos)
 
@@ -298,7 +300,6 @@ do_article()
 			bufptr = art_line;
 		    }
 		    break;
-#ifdef HAS_STRFTIME
 		  case DATE_LINE:
 		    if (curr_artp->date != -1) {
 			strncpy(art_line,bufptr,6);
@@ -308,7 +309,6 @@ do_article()
 			bufptr = art_line;
 		    }
 		    break;
-#endif
 		}
 	    }
 	    if (in_header == SUBJ_LINE && do_hiding

@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.22)
 project(trn)
 
 set(I_STRING ON)
+set(I_TIME ON)
+set(MSDOS ON)
+set(SIGNAL_T "void")
 add_executable(trn
     addng.c
     addng.h
@@ -177,6 +180,9 @@ add_executable(trn
     wildmat.h
     config.h.in
 )
+if(WIN32)
+    target_compile_options(trn PUBLIC /Za)
+endif()
 target_include_directories(trn PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 configure_file(config.h.in config.h)

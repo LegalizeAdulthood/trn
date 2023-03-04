@@ -73,12 +73,7 @@
 #   define PENDING
 #endif
 
-#ifdef EUNICE
-#   define LINKART		/* add 1 level of possible indirection */
-#   define UNLINK(victim) while (!unlink(victim))
-#else
-#   define UNLINK(victim) unlink(victim)
-#endif
+#define UNLINK(victim) unlink(victim)
 
 #ifdef HAS_RENAME
 #   define RENAME(from,to) rename(from,to)
@@ -86,11 +81,7 @@
 #   define RENAME(from,to) safelink(from,to), UNLINK(from)
 #endif
 
-#ifdef HAS_STRSTR
-#   define STRSTR(s1,s2) strstr((s1),(s2))
-#else
-#   define STRSTR(s1,s2) trn_strstr((s1),(s2))
-#endif
+#define STRSTR(s1,s2) strstr((s1),(s2))
 
 /* Valid substitutions for strings marked with % comment are:
  *	%a	Current article number
@@ -602,14 +593,19 @@
 #   define MAILPOSTER "Rnmail -h %h"
 #endif
 
-#ifdef INTERNET
-#   ifndef MAILHEADER		/* % */
-#	define MAILHEADER "To: %t\nSubject: %(%i=^$?:Re: %S\nX-Newsgroups: %n\nIn-Reply-To: %i)\n%(%{FROM}=^$?:From: %{FROM}\n)%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\n)%(%[references]=^$?:References: %[references]\n)Organization: %o\nCc: \nBcc: \n\n"
-#   endif
-#else
-#   ifndef MAILHEADER		/* % */
-#	define MAILHEADER "To: %T\nSubject: %(%i=^$?:Re: %S\n%(%{FROM}=^$?:From: %{FROM}\n)%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\n)X-Newsgroups: %n\nIn-Reply-To: %i)\n%(%[references]=^$?:References: %[references]\n)Organization: %o\nCc: \nBcc: \n\n"
-#   endif
+#ifndef MAILHEADER		/* % */
+#   define MAILHEADER \
+        "To: %t\n" \
+        "Subject: %(%i=^$?:Re: %S\n" \
+        "X-Newsgroups: %n\n" \
+        "In-Reply-To: %i)\n" \
+        "%(%{FROM}=^$?:From: %{FROM}\n)" \
+        "%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\n)" \
+        "%(%[references]=^$?:References: %[references]\n)" \
+        "Organization: %o\n" \
+        "Cc: \n" \
+        "Bcc: \n" \
+        "\n"
 #endif
 
 #ifndef YOUSAID			/* % */
@@ -619,14 +615,8 @@
 /* command to forward an article */
 #define FORWARDPOSTER MAILPOSTER
 
-#ifdef INTERNET
-#   ifndef FORWARDHEADER	/* % */
-#	define FORWARDHEADER "To: %\"\n\nTo: \"\nSubject: %(%i=^$?:%[subject] (fwd\\)\n%(%{FROM}=^$?:From: %{FROM}\n)%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\n)X-Newsgroups: %n\nIn-Reply-To: %i)\n%(%[references]=^$?:References: %[references]\n)Organization: %o\nMime-Version: 1.0\nContent-Type: multipart/mixed; boundary=\"=%$%^#=--\"\nCc: \nBcc: \n\n"
-#   endif
-#else
-#   ifndef FORWARDHEADER	/* % */
-#	define FORWARDHEADER "To: %\"\n\nTo: \"\nSubject: %(%i=^$?:%[subject] (fwd\\)\n%(%{FROM}=^$?:From: %{FROM}\n)%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\n)X-Newsgroups: %n\nIn-Reply-To: %i)\n%(%[references]=^$?:References: %[references]\n)Organization: %o\nMime-Version: 1.0\nContent-Type: multipart/mixed; boundary=\"=%$%^#=--\"\nCc: \nBcc: \n\n"
-#   endif
+#ifndef FORWARDHEADER	/* % */
+#   define FORWARDHEADER "To: %\"\n\nTo: \"\nSubject: %(%i=^$?:%[subject] (fwd\\)\n%(%{FROM}=^$?:From: %{FROM}\n)%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\n)X-Newsgroups: %n\nIn-Reply-To: %i)\n%(%[references]=^$?:References: %[references]\n)Organization: %o\nMime-Version: 1.0\nContent-Type: multipart/mixed; boundary=\"=%$%^#=--\"\nCc: \nBcc: \n\n"
 #endif
 
 #ifndef FORWARDMSG		/* % */

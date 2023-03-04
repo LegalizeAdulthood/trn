@@ -3,11 +3,12 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 
-#include <io.h>
-#include <dos.h>
-#include <dir.h>
-#include <conio.h>
-#include <process.h>
+//#include <io.h>
+//#include <dos.h>
+//#include <dir.h>
+//#include <conio.h>
+//#include <process.h>
+#include <stdio.h>
 
 FILE*	popen(char*,char*);
 int	pclose(FILE*);

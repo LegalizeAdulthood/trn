@@ -1,14 +1,5 @@
-#ifndef _config_h_
-#define _config_h_
-
-/* EUNICE:
- *	This symbol, if defined, indicates that the program is being compiled
- *	under the EUNICE package under VMS.  The program will need to handle
- *	things like files that don't go away the first time you unlink them,
- *	due to version numbering.  It will also need to compensate for lack
- *	of a respectable link() command.
- */
-#cmakedefine EUNICE
+#ifndef CONFIG_H
+#define CONFIG_H
 
 /* HASATTRIBUTE:
  *	This symbol indicates the C compiler can check for function attributes,
@@ -26,30 +17,6 @@
  */
 #cmakedefine HAS_GETPWENT
 
-/* INTERNET:
- *	This symbol, if defined, indicates that there is a mailer available
- *	which supports internet-style addresses (user@site.domain).
- */
-#cmakedefine INTERNET
-
-/* HAS_MEMCMP:
- *	This symbol, if defined, indicates that the memcmp routine is available
- *	to compare blocks of memory.
- */
-#cmakedefine HAS_MEMCMP
-
-/* HAS_MEMCPY:
- *	This symbol, if defined, indicates that the memcpy routine is available
- *	to copy blocks of memory.
- */
-#cmakedefine HAS_MEMCPY
-
-/* HAS_MEMSET:
- *	This symbol, if defined, indicates that the memset routine is available
- *	to set blocks of memory.
- */
-#cmakedefine HAS_MEMSET
-
 /* HAS_MKDIR:
  *	This symbol, if defined, indicates that the mkdir routine is available
  *	to create directories.  Otherwise you should fork off a new process to
@@ -61,7 +28,7 @@
  *	This symbol, if defined, contains the login name of the news
  *	administrator.
  */
-#define NEWS_ADMIN "@NEW_SADMIN"
+#define NEWS_ADMIN "@NEW_SADMIN@"
 
 /* NOLINEBUF:
  *	This symbol, if defined, indicates that stdout is not buffered, so that
@@ -119,7 +86,7 @@
  *	a signal handler using "Signal_t (*handler)()", and define the
  *	handler using "Signal_t handler(sig)".
  */
-#define Signal_t @SIGNAL_T	/* Signal handler's return type */
+#define Signal_t @SIGNAL_T@	/* Signal handler's return type */
 
 /* USE_WIFSTAT:
  *	This symbol, if defined, indicates to the C program that the argument
@@ -134,7 +101,7 @@
 /* DEFEDITOR:
  *	This symbol contains the full pathname of the default editor.
  */
-#define DEFEDITOR "@DEFAULT_EDITOR"
+#define DEFEDITOR "@DEFAULT_EDITOR@"
 
 /* I_DIRENT:
  *	This symbol, if defined, indicates to the C program that it should
@@ -148,7 +115,7 @@
  *	portably declare your directory entries.
  */
 #cmakedefine I_DIRENT
-#define Direntry_t @DIRENTRYTYPE
+#define Direntry_t @DIRENTRYTYPE@
 
 /* I_STDLIB:
  *	This symbol, if defined, indicates that <stdlib.h> exists and should
@@ -234,13 +201,13 @@
  *	for the current user.  The program must be prepared to substitute
  *	the HOME directory for %~, and the login id for %L.
  */
-#define MAILFILE "@MAIL_FILE"
+#define MAILFILE "@MAIL_FILE@"
 
 /* MBOXCHAR:
  *	This symbol contains a character which will match the beginning
  *	of a mailbox file.
  */
-#define MBOXCHAR '@MBOX_CHAR'
+#define MBOXCHAR '@MBOX_CHAR@'
 
 /* PASSNAMES:
  *	This symbol, if defined, indicates that full names are stored in
@@ -257,18 +224,18 @@
 /* INSTALLPREFIX:
  *	This symbol contains the name of the install prefix for this package.
  */
-#define INSTALLPREFIX "@INSTALL_PREFIX"
+#define INSTALLPREFIX "@INSTALL_PREFIX@"
 
 /* PREFSHELL:
  *	This symbol contains the full name of the preferred user shell on this
  *	system.  Usual values are /bin/csh, /bin/ksh, /bin/sh.
  */
-#define PREFSHELL "@PREF_SHELL"
+#define PREFSHELL "@PREF_SHELL@"
 
 /* ROOTID:
  *	This symbol contains the uid of root, normally 0.
  */
-#define ROOTID @ROOT_ID
+#define ROOTID @ROOT_ID@
 
 /* ACTIVE:
  *	The name of the active file for the news system.  This file contains
@@ -277,8 +244,8 @@
 /* ACTIVE_TIMES:
  *	The name of the active.times file for the news system.
  */
-#define ACTIVE "@ACTIVE"
-#define ACTIVE_TIMES "@ACT_TIMES"
+#define ACTIVE "@ACTIVE@"
+#define ACTIVE_TIMES "@ACT_TIMES@"
 
 /* HAS_FTIME:
  *	This symbol, if defined, indicates that the ftime() routine exists.
@@ -326,7 +293,7 @@
  */
 #cmakedefine HAS_GETHOSTNAME	/**/
 #cmakedefine HAS_UNAME		/**/
-#cmakedefine PHOSTCMD "@APHOSTCMD"	/* How to get the host name */
+#cmakedefine PHOSTCMD "@APHOSTCMD@"	/* How to get the host name */
 #cmakedefine HAS_RES_INIT	/**/
 #cmakedefine HAS_GETDOMAINNAME	/**/
 
@@ -374,7 +341,7 @@
  */
 #cmakedefine SUPPORT_NNTP	/**/
 #cmakedefine USE_GENAUTH	/**/
-#define SERVER_NAME "@SERVER_NAME"  	/**/
+#define SERVER_NAME "@SERVER_NAME@"  	/**/
 #cmakedefine SUPPORT_XTHREAD  	/**/
 #cmakedefine HAS_LOCAL_SPOOL	/**/
 
@@ -396,25 +363,6 @@
  *	This symbol is defined as an int if no size_t definition exists.
  */
 #cmakedefine size_t int		/**/
-
-/* HAS_STRCHR:
- *	This symbol is defined to indicate that the strchr()/strrchr()
- *	functions are available for string searching. If not, try the
- *	index()/rindex() pair.
- */
-#cmakedefine HAS_STRCHR	/**/
-
-/* HAS_STRFTIME:
- *	This symbol, if defined, indicates that the strftime routine is
- *	available to format locale-specific times.
- */
-#cmakedefine HAS_STRFTIME		/**/
-
-/* HAS_STRSTR:
- *	This symbol, if defined, indicates that the strstr routine is
- *	available to find substrings.
- */
-#cmakedefine HAS_STRSTR	/**/
 
 /* EMULATE_NDIR:
  *	This symbol, if defined, indicates that the program should compile
@@ -449,7 +397,7 @@
  *	what programs get run when handling mime articles.  It is often
  *	metamail's "mailcap" file, and is the same format.
  */
-#define MIMECAP "%./.mimecap:~/.mailcap:@MIMECAP"		/**/
+#define MIMECAP "%./.mimecap:~/.mailcap:@MIMECAP@"		/**/
 
 /* NEWSLIB:
  *	This symbol contains the name of the directory serving as the news
@@ -467,23 +415,23 @@
  *	Contains the full path and filename of the list of default
  *	subscriptions, or nothing.
  */
-#define NEWSLIB "@NEWSLIB"		/**/
-#define EXTRAINEWS "@EXTRAINEWS"	/**/
-#define GROUPDESC "@GROUPDESC"	/**/
-#define SUBSCRIPTIONS "@SUBSCRIPTIONS"	/**/
+#define NEWSLIB "@NEWSLIB@"		/**/
+#define EXTRAINEWS "@EXTRAINEWS@"	/**/
+#define GROUPDESC "@GROUPDESC@"	/**/
+#define SUBSCRIPTIONS "@SUBSCRIPTIONS@"	/**/
 
 /* NEWSSPOOL:
  *	This symbol contains the directory name where news articles are
  *	spooled.  The program must be prepared to do ~ expansion on it.
  */
-#define NEWSSPOOL "@NEWSSPOOL"		/**/
+#define NEWSSPOOL "@NEWSSPOOL@"		/**/
 
 /* ORGNAME:
  *	This symbol contains either the organizaton name or the full pathname
  *	of a file containing the organization name, which the program must
  *	be prepared to open and substitute the contents of.
  */
-#define ORGNAME "@ORGNAME"		/**/
+#define ORGNAME "@ORGNAME@"		/**/
 
 /* PHOSTNAME:
  *	This symbol contains the posting host's name or a file from which
@@ -493,8 +441,8 @@
  *	Set to TRUE if we should compare only the domain portion of the
  *	hostname when looking for local articles.
  */
-#define PHOSTNAME "@PHOST"		/**/
-#define HOSTBITS @HOSTBITS	/**/
+#define PHOSTNAME "@PHOST@"		/**/
+#define HOSTBITS @HOSTBITS@	/**/
 
 /* PRIVLIB:
  *	This symbol contains the name of the private library for this package.
@@ -502,7 +450,7 @@
  *	execution path, but it should be accessible by the world.  The program
  *	should be prepared to do ~ expansion.
  */
-#define PRIVLIB "@PRIVLIB"		/**/
+#define PRIVLIB "@PRIVLIB@"		/**/
 
 /* SCAN:
  *	This is defined if you want strn's scan mode.
@@ -522,9 +470,9 @@
 /* OVERVIEW_FMT:
  *	The overview.fmt file.
  */
-#define THREAD_DIR	"@THREADDIR"		/**/
-#define OVERVIEW_DIR	"@OVERVIEWDIR"		/**/
-#define OVERVIEW_FMT	"@OVERVIEWFMT"		/**/
+#define THREAD_DIR	"@THREADDIR@"		/**/
+#define OVERVIEW_DIR	"@OVERVIEWDIR@"		/**/
+#define OVERVIEW_FMT	"@OVERVIEWFMT@"		/**/
 
 /* USE_TK:
  *	This is defined if you want to link trn with Tk.
@@ -540,13 +488,12 @@
 /* MSDOS:
  *	This is defined if this is an MSDOS system.
  */
-#define THREAD_INIT	@TRN_INIT
-#define SELECT_INIT	@TRN_SELECT
+#define THREAD_INIT	@TRN_INIT@
+#define SELECT_INIT	@TRN_SELECT@
 
-#define CALL_INEWS "@USEINEWS -h <%h"
-#define NEWSPOSTER "@BIN/Pnews -h %h"
-#define MAILPOSTER "@BIN/Rnmail -h %h"
-/*#define ANCIENT_NEWS	*//* if your B news system is <= 2.10.1 */
+#define CALL_INEWS "@USEINEWS@ -h <%h"
+#define NEWSPOSTER "@BIN@/Pnews -h %h"
+#define MAILPOSTER "@BIN@/Rnmail -h %h"
 
 #cmakedefine MSDOS	/**/
 

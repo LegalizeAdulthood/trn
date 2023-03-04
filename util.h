@@ -59,9 +59,6 @@ void setdef _((char*,char*));
 #ifndef NO_FILELINKS
 void safelink _((char*,char*));
 #endif
-#ifndef HAS_STRSTR
-char* trn_strstr _((char*,char*));
-#endif
 void verify_sig _((void));
 double current_time _((void));
 time_t text2secs _((char*,time_t));

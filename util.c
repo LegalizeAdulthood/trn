@@ -594,22 +594,6 @@ char* new;
 }
 #endif
 
-#ifndef HAS_STRSTR
-char*
-trn_strstr(s1, s2)
-char* s1;
-char* s2;
-{
-    register char* p = s1;
-    register int len = strlen(s2);
-
-    for ( ; (p = index(p, *s2)) != NULL; p++)
-	if (strnEQ(p, s2, len))
-	    return p;
-    return NULL;
-}
-#endif /* !HAS_STRSTR */
-
 /* attempts to verify a cryptographic signature. */
 void
 verify_sig()

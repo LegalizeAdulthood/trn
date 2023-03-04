@@ -52,17 +52,10 @@ char*	getenv();
 
 /* what to do with ansi prototypes -- '()' == ignore, 'x' == use */
 #ifndef _
-#   if defined(__STDC__) || defined (MSDOS)
 #	define _(x) x
 #	ifndef CONST
 #	    define CONST const
 #	endif
-#   else
-#	define _(x) ()
-#	ifndef CONST
-#	    define CONST
-#	endif
-#   endif
 #endif
 
 /* some handy defs */
@@ -102,28 +95,20 @@ char*	getenv();
 
 /* some slight-of-hand for compatibility issues */
 
-#ifdef HAS_STRCHR
-# ifndef index
-#   define index strchr
-# endif
-# ifndef rindex
-#   define rindex strrchr
-# endif
+#ifndef index
+#  define index strchr
 #endif
-#ifdef HAS_MEMCMP
-# ifndef bcmp
-#   define bcmp(s,d,l) memcmp((s),(d),(l))
-# endif
+#ifndef rindex
+#  define rindex strrchr
 #endif
-#ifdef HAS_MEMCPY
-# ifndef bcopy
-#   define bcopy(s,d,l) memcpy((d),(s),(l))
-# endif
+#ifndef bcmp
+#  define bcmp(s,d,l) memcmp((s),(d),(l))
 #endif
-#ifdef HAS_MEMSET
-# ifndef bzero
-#   define bzero(s,l) memset((s),0,(l))
-# endif
+#ifndef bcopy
+#  define bcopy(s,d,l) memcpy((d),(s),(l))
+#endif
+#ifndef bzero
+#  define bzero(s,l) memset((s),0,(l))
 #endif
 
 #ifdef SUPPLEMENT_STRING_H
