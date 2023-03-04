@@ -2,10 +2,19 @@ cmake_minimum_required(VERSION 3.22)
 
 project(trn)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+if(WIN32)
+    find_package(pdcurses REQUIRED)
+    add_library(curses ALIAS pdcurses)
+endif()
+
 set(I_STRING ON)
 set(I_TIME ON)
 set(MSDOS ON)
 set(SIGNAL_T "void")
+configure_file(config.h.in config.h)
+
 add_executable(trn
     addng.c
     addng.h
@@ -184,8 +193,7 @@ if(WIN32)
     target_compile_options(trn PUBLIC /Za)
 endif()
 target_include_directories(trn PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
-
-configure_file(config.h.in config.h)
+target_link_libraries(trn PUBLIC curses)
 
 # case $CONFIG in
 #     '') . ./config.sh ;;
