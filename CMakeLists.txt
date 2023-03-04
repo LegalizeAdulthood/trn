@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 
 project(trn)
 
+set(I_STRING ON)
 add_executable(trn
     addng.c
     addng.h
@@ -174,7 +175,11 @@ add_executable(trn
     uudecode.h
     wildmat.c
     wildmat.h
+    config.h.in
 )
+target_include_directories(trn PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+
+configure_file(config.h.in config.h)
 
 # case $CONFIG in
 #     '') . ./config.sh ;;
