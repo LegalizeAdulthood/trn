@@ -30,7 +30,6 @@
 #define B75	75
 #define B50	50
 
-#define LIMITED_FILENAMES
 #define RESTORE_ORIGDIR
 #define NO_FILELINKS
 #define WINSOCK
