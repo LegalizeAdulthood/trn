@@ -12,6 +12,8 @@
 #include "nntpclient.h"
 #include "nntpinit.h"
 
+#include <stdio.h>
+
 #define	MAX_SIGNATURE	4
 
 int	debug = 0;
@@ -174,7 +176,7 @@ char* argv[];
     }
     else {
 	sprintf(buf, "%s -h", EXTRAINEWS);
-	nntplink.wr_fp = popen(buf,"w");
+	nntplink.wr_fp = _popen(buf,"w");
 	if (!nntplink.wr_fp) {
 	    fprintf(stderr,"Unable to execute inews for local posting.\n");
 	    exit(1);
@@ -213,7 +215,7 @@ char* argv[];
     }
 
     if (!server_name)
-	return pclose(nntplink.wr_fp);
+	return _pclose(nntplink.wr_fp);
 
     if (!had_nl)
         fputs(line_end, nntplink.wr_fp);

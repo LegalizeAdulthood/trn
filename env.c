@@ -115,7 +115,8 @@ char* tmpbuf;
     if (!homedir)
 	homedir = savestr(pwd->pw_dir);
     s = pwd->pw_gecos;
-#else /* !HAS_GETPWENT */
+#endif
+#if HAS_GETPW
     int i;
 
     if (getpw(getuid(), tmpbuf+1) != 0)
@@ -136,7 +137,7 @@ char* tmpbuf;
 	homedir = savestr(buf);
     }
     s = tmpbuf;
-#endif /* !HAS_GETPWENT */
+#endif
 #ifdef PASSNAMES
 #ifdef BERKNAMES
 #ifdef BERKJUNK

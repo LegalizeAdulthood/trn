@@ -33,6 +33,9 @@ set(USE_GENAUTH ON)
 configure_file(config.h.in config.h)
 
 add_executable(trn
+    ${CMAKE_CURRENT_BINARY_DIR}/config.h
+    EXTERN.h
+    INTERN.h
     addng.c addng.h addng.ih
     art.c art.h
     artio.c artio.h
@@ -50,15 +53,12 @@ add_executable(trn
     decode.c decode.h decode.ih
     edit_dist.c edit_dist.h
     env.c env.h env.ih
-    EXTERN.h
     filter.c filter.h filter.ih
     final.c final.h
     hash.c hash.h hash.ih
     head.c head.h
     help.c help.h
-    inews.c
     init.c init.h
-    INTERN.h
     intrp.c intrp.h intrp.ih
     kfile.c kfile.h kfile.ih
     last.c last.h
@@ -134,6 +134,23 @@ if(WIN32)
 endif()
 target_include_directories(trn PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(trn PUBLIC curses)
+
+add_executable(inews
+    ${CMAKE_CURRENT_BINARY_DIR}/config.h
+    EXTERN.h
+    INTERN.h
+    inews.c
+    env.c env.h env.ih
+    nntpauth.c nntpauth.h
+    nntpclient.c nntpclient.h
+    nntpinit.c nntpinit.h nntpinit.ih
+    util2.c util2.h
+    util3.c util3.h
+)
+target_include_directories(inews PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+if(WIN32)
+    target_compile_definitions(inews PUBLIC _CRT_DECLARE_NONSTDC_NAMES=1 _CRT_INTERNAL_NONSTDC_NAMES=1)
+endif()
 
 # case $CONFIG in
 #     '') . ./config.sh ;;

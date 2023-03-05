@@ -5,6 +5,7 @@
 
 #include "EXTERN.h"
 #include "common.h"
+#include "env.h"
 #include "list.h"
 #include "hash.h"
 #include "ngdata.h"
@@ -22,6 +23,9 @@ static char* tildename = NULL;
 static char* tildedir = NULL;
 #endif
 
+#ifdef MSDOS
+#include <direct.h>
+#endif
 /* copy a string to a safe spot */
 
 char*
@@ -352,8 +356,7 @@ char** pass_ptr;
 
 #ifdef MSDOS
 int
-ChDir(path)
-char* path;
+ChDir(const char *path)
 {
     if (isalpha(*path) && path[1] == ':') {
 	setdisk(path[0]&0x1f);

@@ -17,6 +17,13 @@
  */
 #cmakedefine HAS_GETPWENT
 
+/* HAS_GETPW:
+ *	This symbol, if defined, indicates that the getpw routine is
+ *	available for sequential access of the passwd database.
+ *	If this is not available, the older getpw() function may be available.
+ */
+#cmakedefine HAS_GETPW
+
 /* HAS_MKDIR:
  *	This symbol, if defined, indicates that the mkdir routine is available
  *	to create directories.  Otherwise you should fork off a new process to

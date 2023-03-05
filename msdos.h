@@ -10,13 +10,10 @@
 //#include <process.h>
 #include <stdio.h>
 
-FILE*	popen(char*,char*);
-int	pclose(FILE*);
-
 #define FILE_REF(s) (*(s)=='/'?'/':(isalpha(*s)&&(s)[1]==':'?(s)[2]:0))
 
-#define chdir ChDir
-#define getenv GetEnv
+#define chdir(p) ChDir(p)
+#define getenv(p) GetEnv(p)
 
 #define FOPEN_RB "rb"
 #define FOPEN_WB "wb"
