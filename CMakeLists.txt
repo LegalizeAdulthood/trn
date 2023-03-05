@@ -42,7 +42,9 @@ add_library(util
     env.c env.h env.ih
     util2.c util2.h
     wildmat.c wildmat.h wildmat.ih
+    config.h.in
 )
+source_group("Template Files" REGULAR_EXPRESSION "^.*\.in$")
 if(WIN32)
     target_compile_definitions(util PUBLIC _CRT_DECLARE_NONSTDC_NAMES=1 _CRT_INTERNAL_NONSTDC_NAMES=1)
 endif()
@@ -146,9 +148,7 @@ add_executable(trn
     url.c url.h url.ih
     util.c util.h util.ih
     uudecode.c uudecode.h uudecode.ih
-    config.h.in
 )
-source_group("Template Files" REGULAR_EXPRESSION "^.*\.in$")
 source_group("Header Files" REGULAR_EXPRESSION "^.*\.(h|ih)$")
 target_link_libraries(trn PUBLIC curses nntp)
 
