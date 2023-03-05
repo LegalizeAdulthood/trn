@@ -19,10 +19,7 @@
 #include <resolv.h>
 #endif
 
-bool
-env_init(tcbuf, lax)
-char* tcbuf;
-bool_int lax;
+bool env_init(char *tcbuf, bool_int lax)
 {
     bool fully_successful = TRUE;
 
@@ -30,7 +27,7 @@ bool_int lax;
 	g_home_dir = getenv("LOGDIR");
 
     if ((g_tmp_dir = getenv("TMPDIR")) == NULL)
-	g_tmp_dir = getval("TMP","/tmp");
+	g_tmp_dir = get_val("TMP","/tmp");
 
     /* try to set loginName */
     if (lax) {
@@ -47,7 +44,7 @@ bool_int lax;
 #endif
 
     /* Set realName, and maybe set loginName and homedir (if NULL). */
-    if (!setusername(tcbuf)) {
+    if (!set_user_name(tcbuf)) {
 	if (!g_login_name)
 	    g_login_name = nullstr;
 	if (!g_real_name)
@@ -57,12 +54,12 @@ bool_int lax;
     env_init2();
 
     /* set phostname to the hostname of our local machine */
-    if (!setphostname(tcbuf))
+    if (!set_p_host_name(tcbuf))
 	fully_successful = FALSE;
 
 #ifdef SUPPORT_NNTP
     {
-	char* cp = getval("NETSPEED","5");
+	char* cp = get_val("NETSPEED","5");
 	if (*cp == 'f')
 	    g_net_speed = 10;
 	else if (*cp == 's')
@@ -78,15 +75,14 @@ bool_int lax;
     return fully_successful;
 }
 
-static void
-env_init2()
+static void env_init2(void)
 {
     if (g_dot_dir)		/* Avoid running multiple times. */
 	return;
     if (!g_home_dir)
 	g_home_dir = "/";
-    g_dot_dir = getval("DOTDIR",g_home_dir);
-    g_trn_dir = savestr(filexp(getval("TRNDIR",TRNDIR)));
+    g_dot_dir = get_val("DOTDIR",g_home_dir);
+    g_trn_dir = savestr(filexp(get_val("TRNDIR",TRNDIR)));
     g_lib = savestr(filexp(NEWSLIB));
     g_rn_lib = savestr(filexp(PRIVLIB));
 }
@@ -94,9 +90,7 @@ env_init2()
 /* Set loginName to the user's login name and realName to the user's
 ** real name.
 */
-bool
-setusername(tmpbuf)
-char* tmpbuf;
+bool set_user_name(char *tmpbuf)
 {
     char* s;
     char* c;
@@ -183,9 +177,7 @@ char* tmpbuf;
     return 1;
 }
 
-bool
-setphostname(tmpbuf)
-char* tmpbuf;
+bool set_p_host_name(char *tmpbuf)
 {
     FILE* fp;
     bool hostname_ok = TRUE;
@@ -271,10 +263,7 @@ char* tmpbuf;
     return hostname_ok;
 }
 
-char*
-getval(nam,def)
-char* nam;
-char* def;
+char *get_val(char *nam, char *def)
 {
     char* val;
 
@@ -286,8 +275,7 @@ char* def;
 static bool firstexport = TRUE;
 extern char** environ;
 
-char*
-export(const char *nam, const char *val)
+char *export(const char *nam, const char *val)
 {
     int namlen = strlen(nam);
     register int i=envix(nam,namlen);	/* where does it go? */
@@ -322,9 +310,7 @@ export(const char *nam, const char *val)
     return environ[i] + namlen + 1;
 }
 
-void
-un_export(export_val)
-char* export_val;
+void un_export(char *export_val)
 {
     if (export_val[-1] == '=' && export_val[-2] != '_') {
 	export_val[0] = export_val[-2];
@@ -333,11 +319,7 @@ char* export_val;
     }
 }
 
-void
-re_export(export_val, new_val, limit)
-char* export_val;
-char* new_val;
-int limit;
+void re_export(char *export_val, char *new_val, int limit)
 {
     if (export_val[-1] == '=' && export_val[-2] == '_' && !export_val[1])
 	export_val[-2] = export_val[0];

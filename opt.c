@@ -83,9 +83,9 @@ char** tcbufptr;
     set_header_list(HT_DEFMAGIC,HT_MAGIC,nullstr);
 
     if (use_threads)
-	s = getval("TRNRC","%+/trnrc");
+	s = get_val("TRNRC","%+/trnrc");
     else
-	s = getval("RNRC","%+/rnrc");
+	s = get_val("RNRC","%+/rnrc");
     ini_file = savestr(filexp(s));
 
     s = filexp("%+");
@@ -337,8 +337,8 @@ char* s;
 		export("SAVEDIR",  "%p/%c");
 		export("SAVENAME", "%a");
 	    }
-	    else if (strEQ(getval("SAVEDIR",nullstr),"%p/%c")
-		  && strEQ(getval("SAVENAME",nullstr),"%a")) {
+	    else if (strEQ(get_val("SAVEDIR",nullstr),"%p/%c")
+		  && strEQ(get_val("SAVENAME",nullstr),"%a")) {
 		export("SAVEDIR", "%p");
 		export("SAVENAME", "%^C");
 	    }
@@ -801,7 +801,7 @@ int num;
       case OI_OPTION_SEL_BTNS:
 	return expand_mouse_buttons(OptionSelBtns,OptionSelBtnCnt);
       case OI_AUTO_SAVE_NAME:
-	return YESorNO(strEQ(getval("SAVEDIR",SAVEDIR),"%p/%c"));
+	return YESorNO(strEQ(get_val("SAVEDIR",SAVEDIR),"%p/%c"));
       case OI_BKGND_THREADING:
 	return YESorNO(!thread_always);
       case OI_AUTO_ARROW_MACROS:

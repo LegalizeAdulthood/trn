@@ -126,7 +126,7 @@ save_article()
 
 	if (FILE_REF(s) != '/') {	/* relative path? */
 	    c = (s==buf ? altbuf : buf);
-	    interp(c, (sizeof buf), getval("SAVEDIR",SAVEDIR));
+	    interp(c, (sizeof buf), get_val("SAVEDIR",SAVEDIR));
 	    if (makedir(c,MD_DIR))	/* ensure directory exists */
 		strcpy(c,cwd);
 	    if (*s) {
@@ -155,7 +155,7 @@ save_article()
 	if (custom_extract) {
 	    printf("Extracting article into %s using %s\n",c,extractprog) FLUSH;
 	    termdown(1);
-	    interp(cmd_buf, sizeof cmd_buf, getval("CUSTOMSAVER",CUSTOMSAVER));
+	    interp(cmd_buf, sizeof cmd_buf, get_val("CUSTOMSAVER",CUSTOMSAVER));
 	    invoke(cmd_buf, (char*)NULL);
 	}
 	else if (is_mime) {
@@ -208,7 +208,7 @@ save_article()
 	      case 1:
 		printf("Extracting shar into %s:\n", c) FLUSH;
 		termdown(1);
-		interp(cmd_buf,(sizeof cmd_buf),getval("SHARSAVER",SHARSAVER));
+		interp(cmd_buf,(sizeof cmd_buf),get_val("SHARSAVER",SHARSAVER));
 		invoke(cmd_buf, (char*)NULL);
 		break;
 	      case 2:
@@ -243,7 +243,7 @@ save_article()
 	if (datasrc->flags & DF_REMOTE)
 	    nntp_finishbody(FB_SILENT);
 #endif
-	interp(cmd_buf, (sizeof cmd_buf), getval("PIPESAVER",PIPESAVER));
+	interp(cmd_buf, (sizeof cmd_buf), get_val("PIPESAVER",PIPESAVER));
 				/* then set up for command */
 	termlib_reset();
 	resetty();		/* restore tty state */
@@ -258,7 +258,7 @@ save_article()
     }
     else {			/* normal save */
 	bool there, mailbox;
-	char* savename = getval("SAVENAME",SAVENAME);
+	char* savename = get_val("SAVENAME",SAVENAME);
 
 	s = buf+1;		/* skip s or S */
 	if (*s == '-') {	/* if they are confused, skip - also */
@@ -278,7 +278,7 @@ save_article()
 	safecpy(altbuf,filexp(s),sizeof altbuf);
 	s = altbuf;
 	if (!FILE_REF(s)) {
-	    interp(buf, (sizeof buf), getval("SAVEDIR",SAVEDIR));
+	    interp(buf, (sizeof buf), get_val("SAVEDIR",SAVEDIR));
 	    if (makedir(buf,MD_DIR))	/* ensure directory exists */
 		strcpy(buf,cwd);
 	    if (*s) {
@@ -529,7 +529,7 @@ cancel_article()
     reply_buf = fetchlines(art,REPLY_LINE);
     from_buf = fetchlines(art,FROM_LINE);
     ngs_buf = fetchlines(art,NGS_LINE);
-    if (strcaseNE(getval("FROM",""),from_buf)
+    if (strcaseNE(get_val("FROM",""),from_buf)
      && (!in_string(from_buf,hostname,FALSE)
       || (!in_string(from_buf,g_login_name,TRUE)
        && !in_string(reply_buf,g_login_name,TRUE)
@@ -540,7 +540,7 @@ cancel_article()
 #ifdef DEBUG
 	if (debug) {
 	    printf("\n%s@%s != %s\n",loginName,hostname,from_buf) FLUSH;
-	    printf("%s != %s\n",getval("FROM",""),from_buf) FLUSH;
+	    printf("%s != %s\n",get_val("FROM",""),from_buf) FLUSH;
 	    termdown(3);
 	}
 #endif
@@ -561,13 +561,13 @@ cancel_article()
 	    termdown(1);
 	    goto done;
 	}
-	interp(hbuf, sizeof hbuf, getval("CANCELHEADER",CANCELHEADER));
+	interp(hbuf, sizeof hbuf, get_val("CANCELHEADER",CANCELHEADER));
 	fputs(hbuf,tmpfp);
 	fclose(tmpfp);
 	fputs("\nCanceling...\n",stdout) FLUSH;
 	termdown(2);
 	export_nntp_fds = TRUE;
-	r = doshell(sh,filexp(getval("CANCEL",CALL_INEWS)));
+	r = doshell(sh,filexp(get_val("CANCEL",CALL_INEWS)));
 	export_nntp_fds = FALSE;
     }
 done:
@@ -603,7 +603,7 @@ supersede_article()		/* Supersedes: */
     reply_buf = fetchlines(art,REPLY_LINE);
     from_buf = fetchlines(art,FROM_LINE);
     ngs_buf = fetchlines(art,NGS_LINE);
-    if (strcaseNE(getval("FROM",""),from_buf)
+    if (strcaseNE(get_val("FROM",""),from_buf)
      && (!in_string(from_buf,hostname,FALSE)
       || (!in_string(from_buf,g_login_name,TRUE)
        && !in_string(reply_buf,g_login_name,TRUE)
@@ -614,7 +614,7 @@ supersede_article()		/* Supersedes: */
 #ifdef DEBUG
 	if (debug) {
 	    printf("\n%s@%s != %s\n",loginName,hostname,from_buf) FLUSH;
-	    printf("%s != %s\n",getval("FROM",""),from_buf) FLUSH;
+	    printf("%s != %s\n",get_val("FROM",""),from_buf) FLUSH;
 	    termdown(3);
 	}
 #endif
@@ -635,7 +635,7 @@ supersede_article()		/* Supersedes: */
 	    termdown(1);
 	    goto done;
 	}
-	interp(hbuf, sizeof hbuf, getval("SUPERSEDEHEADER",SUPERSEDEHEADER));
+	interp(hbuf, sizeof hbuf, get_val("SUPERSEDEHEADER",SUPERSEDEHEADER));
 	fputs(hbuf,tmpfp);
 	if (incl_body && artfp != NULL) {
 	    parseheader(art);
@@ -657,7 +657,7 @@ done:
 static void
 follow_it_up()
 {
-    safecpy(cmd_buf,filexp(getval("NEWSPOSTER",NEWSPOSTER)), sizeof cmd_buf);
+    safecpy(cmd_buf,filexp(get_val("NEWSPOSTER",NEWSPOSTER)), sizeof cmd_buf);
     if (invoke(cmd_buf,origdir) == 42) {
 	int ret;
 #ifdef SUPPORT_NNTP
@@ -699,7 +699,7 @@ reply()
 {
     char hbuf[5*LBUFLEN];
     bool incl_body = (*buf == 'R' && art);
-    char* maildoer = savestr(getval("MAILPOSTER",MAILPOSTER));
+    char* maildoer = savestr(get_val("MAILPOSTER",MAILPOSTER));
 
     artopen(art,(ART_POS)0);
     tmpfp = fopen(headname,"w");	/* open header file */
@@ -708,7 +708,7 @@ reply()
 	termdown(1);
 	goto done;
     }
-    interp(hbuf, sizeof hbuf, getval("MAILHEADER",MAILHEADER));
+    interp(hbuf, sizeof hbuf, get_val("MAILHEADER",MAILHEADER));
     fputs(hbuf,tmpfp);
     if (!in_string(maildoer,"%h",TRUE)) {
 #ifdef VERBOSE
@@ -725,7 +725,7 @@ reply()
     if (incl_body && artfp != NULL) {
 	char* s;
 	char* t;
-	interp(buf, (sizeof buf), getval("YOUSAID",YOUSAID));
+	interp(buf, (sizeof buf), get_val("YOUSAID",YOUSAID));
 	fprintf(tmpfp,"%s\n",buf);
 	parseheader(art);
 	mime_SetArticle();
@@ -758,7 +758,7 @@ void
 forward()
 {
     char hbuf[5*LBUFLEN];
-    char* maildoer = savestr(getval("FORWARDPOSTER",FORWARDPOSTER));
+    char* maildoer = savestr(get_val("FORWARDPOSTER",FORWARDPOSTER));
 #ifdef REGEX_WORKS_RIGHT
     COMPEX mime_compex;
 #else
@@ -777,7 +777,7 @@ forward()
 	termdown(1);
 	goto done;
     }
-    interp(hbuf, sizeof hbuf, getval("FORWARDHEADER",FORWARDHEADER));
+    interp(hbuf, sizeof hbuf, get_val("FORWARDHEADER",FORWARDHEADER));
     fputs(hbuf,tmpfp);
 #ifdef REGEX_WORKS_RIGHT
     if (!compile(&mime_compex,"Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"",TRUE,TRUE)
@@ -827,7 +827,7 @@ forward()
 	termdown(3);
     }
     if (artfp != NULL) {
-	interp(buf, sizeof buf, getval("FORWARDMSG",FORWARDMSG));
+	interp(buf, sizeof buf, get_val("FORWARDMSG",FORWARDMSG));
 	if (mime_boundary) {
 	    if (*buf && strncaseNE(buf, "Content-", 8))
 		strcpy(buf, "Content-Type: text/plain\n");
@@ -848,7 +848,7 @@ forward()
 	if (mime_boundary)
 	    fprintf(tmpfp,"\n--%s--\n",mime_boundary);
 	else {
-	    interp(buf, (sizeof buf), getval("FORWARDMSGEND",FORWARDMSGEND));
+	    interp(buf, (sizeof buf), get_val("FORWARDMSGEND",FORWARDMSGEND));
 	    if (*buf)
 		fprintf(tmpfp,"%s\n",buf);
 	}
@@ -889,7 +889,7 @@ followup()
 	art = oldart;
 	return;
     }
-    interp(hbuf, sizeof hbuf, getval("NEWSHEADER",NEWSHEADER));
+    interp(hbuf, sizeof hbuf, get_val("NEWSHEADER",NEWSHEADER));
     fputs(hbuf,tmpfp);
     if (incl_body && artfp != NULL) {
 	char* s;
@@ -901,7 +901,7 @@ followup()
 trim the quoted article down as much as possible.)\n\
 ",stdout) FLUSH;
 #endif
-	interp(buf, (sizeof buf), getval("ATTRIBUTION",ATTRIBUTION));
+	interp(buf, (sizeof buf), get_val("ATTRIBUTION",ATTRIBUTION));
 	fprintf(tmpfp,"%s\n",buf);
 	parseheader(art);
 	mime_SetArticle();

@@ -161,7 +161,7 @@ int entering;
 	    cp = filexp(cp);
 	    if (!index(cp,'/')) {
 		set_ngname(cp);
-		cp = filexp(getval("KILLLOCAL",killlocal));
+		cp = filexp(get_val("KILLLOCAL",killlocal));
 		set_ngname(ngptr->rcline);
 	    }
 	    if ((incfile = fopen(cp, "r")) != NULL) {
@@ -421,7 +421,7 @@ ART_NUM thru;
 				 == KFS_THREAD_LINES;
     bool has_star_commands = FALSE;
     bool needs_newline = FALSE;
-    char* killname = filexp(getval("KILLLOCAL",killlocal));
+    char* killname = filexp(get_val("KILLLOCAL",killlocal));
     char* bp;
 
     if (localkfp)
@@ -571,7 +571,7 @@ update_thread_kfile()
     if (!(kf_state & KFS_THREAD_CHANGES))
 	return;
 
-    cp = filexp(getval("KILLTHREADS", killthreads));
+    cp = filexp(get_val("KILLTHREADS", killthreads));
     makedir(cp,MD_FILE);
     if (kf_changethd_cnt*5 > kf_thread_cnt) {
 	UNLINK(cp);			/* to prevent file reuse */
@@ -676,12 +676,12 @@ edit_kfile()
 	    for (sp = first_subject; sp; sp = sp->next)
 		clear_subject(sp);
 	}
-	strcpy(buf,filexp(getval("KILLLOCAL",killlocal)));
+	strcpy(buf,filexp(get_val("KILLLOCAL",killlocal)));
     } else
-	strcpy(buf,filexp(getval("KILLGLOBAL",killglobal)));
+	strcpy(buf,filexp(get_val("KILLGLOBAL",killglobal)));
     if ((r = makedir(buf,MD_FILE)) == 0) {
 	sprintf(cmd_buf,"%s %s",
-	    filexp(getval("VISUAL",getval("EDITOR",defeditor))),buf);
+	    filexp(get_val("VISUAL",get_val("EDITOR",defeditor))),buf);
 	printf("\nEditing %s KILL file:\n%s\n",
 	    (in_ng?"local":"global"),cmd_buf) FLUSH;
 	termdown(3);
@@ -731,8 +731,8 @@ open_kfile(local)
 int local;
 {
     char* kname = filexp(local ?
-	getval("KILLLOCAL",killlocal) :
-	getval("KILLGLOBAL",killglobal)
+	get_val("KILLLOCAL",killlocal) :
+	get_val("KILLGLOBAL",killglobal)
 	);
 
     /* delete the file if it is empty */
@@ -755,8 +755,8 @@ kf_append(cmd, local)
 char* cmd;
 bool_int local;
 {
-    strcpy(cmd_buf, filexp(local? getval("KILLLOCAL",killlocal)
-				: getval("KILLGLOBAL",killglobal)));
+    strcpy(cmd_buf, filexp(local? get_val("KILLLOCAL",killlocal)
+				: get_val("KILLGLOBAL",killglobal)));
     if (makedir(cmd_buf,MD_FILE) == 0) {
 #ifdef VERBOSE
 	IF(verbose)

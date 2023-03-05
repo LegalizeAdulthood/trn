@@ -57,7 +57,7 @@ filter_restart()
 	return;
     recursing = 1;
 
-    filter = filexp(getval("FILTER", FILTERPROG));
+    filter = filexp(get_val("FILTER", FILTERPROG));
 
     want_filter = (strNE(filter,"NOFILTER") && stat(filter, &f_inode) == 0);
     if (!want_filter) {

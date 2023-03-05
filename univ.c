@@ -978,7 +978,7 @@ char* fname;
 	return;
 
     sprintf(cmd_buf,"%s ",
-	    filexp(getval("HELPPAGER",getval("PAGER","more"))));
+	    filexp(get_val("HELPPAGER",get_val("PAGER","more"))));
     strcat(cmd_buf, filexp(fname));
     termdown(3);
     resetty();			/* make sure tty is friendly */

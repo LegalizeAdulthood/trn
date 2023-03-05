@@ -316,7 +316,7 @@ char* cmd;
 			*s++ = '\0';
 		    else
 			s = nullstr;
-		    s = getval(scrbuf,s);
+		    s = get_val(scrbuf,s);
 		    break;
 		case '<':
 		    pattern = cpytill(scrbuf,pattern+1,'>');
@@ -324,7 +324,7 @@ char* cmd;
 			*s++ = '\0';
 		    else
 			s = nullstr;
-		    interp(scrbuf, 8192, getval(scrbuf,s));
+		    interp(scrbuf, 8192, get_val(scrbuf,s));
 		    s = scrbuf;
 		    break;
 		case '[':
@@ -628,15 +628,15 @@ char* cmd;
 			s = nullstr;
 		    break;
 		case 'N':			/* full name */
-		    s = getval("NAME",g_real_name);
+		    s = get_val("NAME",g_real_name);
 		    break;
 		case 'o':			/* organization */
 #ifdef IGNOREORG
-		    s = getval("NEWSORG",orgname); 
+		    s = get_val("NEWSORG",orgname); 
 #else
-		    s = getval("NEWSORG",NULL);
+		    s = get_val("NEWSORG",NULL);
 		    if (s == NULL) 
-			s = getval("ORGANIZATION",orgname); 
+			s = get_val("ORGANIZATION",orgname); 
 #endif
 		    s = filexp(s);
 #ifdef ORGFILE

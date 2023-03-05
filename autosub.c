@@ -26,9 +26,9 @@ char* name;
 {
     char* s;
 
-    if((s = getval("AUTOSUBSCRIBE", (char*)NULL)) && matchlist(s, name))
+    if((s = get_val("AUTOSUBSCRIBE", (char*)NULL)) && matchlist(s, name))
 	return ':';
-    if((s = getval("AUTOUNSUBSCRIBE", (char*)NULL)) && matchlist(s, name))
+    if((s = get_val("AUTOUNSUBSCRIBE", (char*)NULL)) && matchlist(s, name))
 	return '!';
     return 0;
 }

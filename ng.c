@@ -207,14 +207,14 @@ char* start_command;			/* command to fake up first */
 
     /* do they want a special top line? */
 
-    firstline = getval("FIRSTLINE",(char*)NULL);
+    firstline = get_val("FIRSTLINE",(char*)NULL);
 
     /* custom line suppression, custom page ending */
 
 #ifdef CUSTOMLINES
-    if ((hideline = getval("HIDELINE",(char*)NULL)) != NULL)
+    if ((hideline = get_val("HIDELINE",(char*)NULL)) != NULL)
 	compile(&hide_compex,hideline,TRUE,TRUE);
-    if ((pagestop = getval("PAGESTOP",(char*)NULL)) != NULL)
+    if ((pagestop = get_val("PAGESTOP",(char*)NULL)) != NULL)
 	compile(&page_compex,pagestop,TRUE,TRUE);
 #endif
 
@@ -1600,13 +1600,13 @@ bool_int force;
     if (force)
 	mailcount = 0;
     if (!(mailcount++)) {
-	char* mailfile = filexp(getval("MAILFILE",MAILFILE));
+	char* mailfile = filexp(get_val("MAILFILE",MAILFILE));
 	
 	if (stat(mailfile,&filestat) < 0 || !filestat.st_size
 	    || filestat.st_atime > filestat.st_mtime)
 	    mailcall = nullstr;
 	else
-	    mailcall = getval("MAILCALL","(Mail) ");
+	    mailcall = get_val("MAILCALL","(Mail) ");
     }
     mailcount %= 5;			/* check every 5 articles */
 }
@@ -1795,7 +1795,7 @@ int flag;
 	return 1;
 
     if (!subjline) {
-	subjline = getval("SUBJLINE",(char*)NULL);
+	subjline = get_val("SUBJLINE",(char*)NULL);
 	if (!subjline)
 	    subjline = nullstr;
     }

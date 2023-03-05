@@ -45,7 +45,7 @@ mime_init()
     mimecap_list = new_list(0,-1,sizeof(MIMECAP_ENTRY),40,LF_ZERO_MEM,NULL);
 
     if ((mcname = getenv("MIMECAPS")) == NULL)
-	mcname = getval("MAILCAPS", MIMECAP);
+	mcname = get_val("MAILCAPS", MIMECAP);
     mcname = s = savestr(mcname);
     do {
 	if ((t = index(s, ':')) != NULL)

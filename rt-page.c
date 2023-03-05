@@ -281,7 +281,7 @@ static void
 sel_page_init()
 {
     sel_max_line_cnt = tc_LINES - (tc_COLS - mousebar_width < 50? 6 : 5);
-    sel_chars = getval("SELECTCHARS", SELECTCHARS);
+    sel_chars = get_val("SELECTCHARS", SELECTCHARS);
     /* The numeric option of up to 99 lines will require many adaptations
      * to be able to switch from a large numeric page (more than
      * strlen(sel_chars) lines) to an alphanumeric page. XXX

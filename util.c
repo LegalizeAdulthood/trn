@@ -190,7 +190,7 @@ char* s;
     interp(buf,64-1+2,"%I");
     buf[strlen(buf)-1] = '\0';
     re_export(quotechars_export, buf+1, 64);
-    if (shell == NULL && (shell = getval("SHELL",NULL)) == NULL)
+    if (shell == NULL && (shell = get_val("SHELL",NULL)) == NULL)
 	shell = PREFSHELL;
     termlib_reset();
 #ifdef MSDOS
@@ -611,14 +611,14 @@ verify_sig()
     /* RIPEM */
     i = doshell(sh,filexp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
     if (!i) {	/* found RIPEM */
-	i = doshell(sh,filexp(getval("VERIFY_RIPEM",VERIFY_RIPEM)));
+	i = doshell(sh,filexp(get_val("VERIFY_RIPEM",VERIFY_RIPEM)));
 	printf("\nReturned value: %d\n",i) FLUSH;
 	return;
     }
     /* PGP */
     i = doshell(sh,filexp("grep -s \"BEGIN PGP\" %A"));
     if (!i) {	/* found PGP */
-	i = doshell(sh,filexp(getval("VERIFY_PGP",VERIFY_PGP)));
+	i = doshell(sh,filexp(get_val("VERIFY_PGP",VERIFY_PGP)));
 	printf("\nReturned value: %d\n",i) FLUSH;
 	return;
     }
@@ -1055,7 +1055,7 @@ char* fname;
 
     /* XXX paranoia check on length */
     sprintf(cmd_buf,"%s ",
-	    filexp(getval("VISUAL",getval("EDITOR",defeditor))));
+	    filexp(get_val("VISUAL",get_val("EDITOR",defeditor))));
     strcat(cmd_buf, filexp(fname));
     termdown(3);
     resetty();			/* make sure tty is friendly */

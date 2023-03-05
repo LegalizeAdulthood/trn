@@ -358,10 +358,10 @@ register NGDATA* gp;
 	}
 	switch (ch) {
 	case 'n':
-	    moderated = getval("NOPOSTRING"," (no posting)");
+	    moderated = get_val("NOPOSTRING"," (no posting)");
 	    break;
 	case 'm':
-	    moderated = getval("MODSTRING", " (moderated)");
+	    moderated = get_val("MODSTRING", " (moderated)");
 	    break;
 	case 'x':
 	    redirected = nullstr;

@@ -425,8 +425,8 @@ char* tcbuf;
     if (auto_arrow_macros)
 	arrow_macros(tmpbuf);
     if (!use_threads
-     || (tmpfp = fopen(filexp(getval("TRNMACRO",TRNMACRO)),"r")) == NULL)
-	tmpfp = fopen(filexp(getval("RNMACRO",RNMACRO)),"r");
+     || (tmpfp = fopen(filexp(get_val("TRNMACRO",TRNMACRO)),"r")) == NULL)
+	tmpfp = fopen(filexp(get_val("RNMACRO",RNMACRO)),"r");
     if (tmpfp) {
 	while (fgets(tcbuf,TCBUF_SIZE,tmpfp) != NULL)
 	    mac_line(tcbuf,tmpbuf,sizeof tmpbuf);

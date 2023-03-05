@@ -16,7 +16,7 @@
 #include "ngdata.h"
 #include "util.h"		/* several */
 #include "util2.h"
-#include "env.h"		/* getval */
+#include "env.h"		/* get_val */
 #ifdef SCAN
 #include "scan.h"
 #endif
@@ -96,7 +96,7 @@ sc_sv_getfile()
     num_lines = lines_alloc = 0;
     lines = NULL;
 
-    s = getval("SAVESCOREFILE","%+/savedscores");
+    s = get_val("SAVESCOREFILE","%+/savedscores");
     fp = fopen(filexp(s),"r");
     if (!fp) {
 #if 0
@@ -123,7 +123,7 @@ sc_sv_savefile()
     if (num_lines == 0)
 	return;
     waiting = TRUE;	/* don't interrupt */
-    s = getval("SAVESCOREFILE","%+/savedscores");
+    s = get_val("SAVESCOREFILE","%+/savedscores");
     savename = savestr(filexp(s));
     strcpy(lbuf,savename);
     strcat(lbuf,".tmp");

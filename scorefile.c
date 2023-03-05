@@ -20,7 +20,7 @@
 #include "term.h"		/* finish_command() */
 #include "util.h"
 #include "util2.h"
-#include "env.h"		/* getval */
+#include "env.h"		/* get_val */
 #include "rt-util.h"
 #include "mempool.h"
 #include "score.h"		/* shared stuff... */
@@ -308,7 +308,7 @@ int level;
 {
     char* s;
 
-    strcpy(sf_file,filexp(getval("SCOREDIR",DEFAULT_SCOREDIR)));
+    strcpy(sf_file,filexp(get_val("SCOREDIR",DEFAULT_SCOREDIR)));
     strcat(sf_file,"/");
 #ifdef SHORTSCORENAMES
     strcat(sf_file,filexp("%C"));
@@ -358,7 +358,7 @@ char* s;
     if (s1)
 	return s;
     /* no slashes in this filename */
-    strcpy(lbuf,getval("SCOREDIR",DEFAULT_SCOREDIR));
+    strcpy(lbuf,get_val("SCOREDIR",DEFAULT_SCOREDIR));
     strcat(lbuf,"/");
     strcat(lbuf,s);
     return lbuf;
@@ -1001,7 +1001,7 @@ char* line;
 	return;		/* don't actually append to file */
     if (filechar == '"') {	/* do local group */
 /* Note: should probably be changed to use sf_ file functions */
-	strcpy(filebuf,getval("SCOREDIR",DEFAULT_SCOREDIR));
+	strcpy(filebuf,get_val("SCOREDIR",DEFAULT_SCOREDIR));
 #ifdef SHORTSCORENAMES
 	strcat(filebuf,"/%c/SCORE");
 #else
@@ -1011,7 +1011,7 @@ char* line;
     }
     else if (filechar == '*') {	/* do global scorefile */
 /* Note: should probably be changed to use sf_ file functions */
-	strcpy(filebuf,getval("SCOREDIR",DEFAULT_SCOREDIR));
+	strcpy(filebuf,get_val("SCOREDIR",DEFAULT_SCOREDIR));
 	strcat(filebuf,"/global");
 	filename = filebuf;
     }
@@ -1198,7 +1198,7 @@ char* filespec;		/* file abbrev. or name */
 	strcpy(filebuf,filespec);
     else if (filechar == '"') {	/* edit local group */
 /* Note: should probably be changed to use sf_ file functions */
-	strcpy(filebuf,getval("SCOREDIR",DEFAULT_SCOREDIR));
+	strcpy(filebuf,get_val("SCOREDIR",DEFAULT_SCOREDIR));
 #ifdef SHORTSCORENAMES
 	strcat(filebuf,"/%c/SCORE");
 #else
@@ -1207,7 +1207,7 @@ char* filespec;		/* file abbrev. or name */
     }
     else if (filechar == '*') {	/* edit global scorefile */
 /* Note: should probably be changed to use sf_ file functions */
-	strcpy(filebuf,getval("SCOREDIR",DEFAULT_SCOREDIR));
+	strcpy(filebuf,get_val("SCOREDIR",DEFAULT_SCOREDIR));
 	strcat(filebuf,"/global");
     }
     else {	/* abbreviation */
