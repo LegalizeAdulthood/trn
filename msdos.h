@@ -32,7 +32,6 @@
 
 #define RESTORE_ORIGDIR
 #define NO_FILELINKS
-#define WINSOCK
 #define LAX_INEWS
 
 #define sleep(secs_) _sleep(secs_)

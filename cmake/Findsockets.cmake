@@ -7,6 +7,7 @@ find_package_handle_standard_args(sockets REQUIRED_VARS SOCKETS_LIB SOCKETS_INCL
 
 if(sockets_FOUND)
     add_library(sockets STATIC IMPORTED)
+    target_compile_definitions(sockets INTERFACE WINSOCK)
     target_include_directories(sockets INTERFACE ${SOCKETS_INCLUDE})
     set_target_properties(sockets PROPERTIES IMPORTED_LOCATION ${SOCKETS_LIB})
 endif()
