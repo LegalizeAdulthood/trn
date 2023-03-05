@@ -14,7 +14,10 @@
 
 #include <stdio.h>
 
-#define	MAX_SIGNATURE	4
+enum
+{
+    MAX_SIGNATURE = 4
+};
 
 int	debug = 0;
 int	new_connection = FALSE;
