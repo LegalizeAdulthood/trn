@@ -680,7 +680,7 @@ reask_abandon:
 	*msg = '\0';
 	end_only();
 	if (buf[1]) {
-	    bool minusd = instr(buf+1,"-d", TRUE) != NULL;
+	    bool minusd = in_string(buf+1,"-d", TRUE) != NULL;
 	    sw_list(buf+1);
 	    if (minusd)
 		cwd_check();

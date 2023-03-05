@@ -740,7 +740,7 @@ char* cmd;
 			str = subj_buf = fetchsubj(art,TRUE);
 		    subject_has_Re(str,&str);
 		    if (*pattern == 's'
-		     && (h = instr(str,"- (nf", TRUE)) != NULL)
+		     && (h = in_string(str,"- (nf", TRUE)) != NULL)
 			*h = '\0';
 		    s = str;
 		    break;

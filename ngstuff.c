@@ -121,7 +121,7 @@ switcheroo()
 	}
     }
     else {
-	bool docd = (instr(buf,"-d", TRUE) != NULL);
+	bool docd = (in_string(buf,"-d", TRUE) != NULL);
  	char whereami[1024];
 	char tmpbuf[LBUFLEN+16];
 

@@ -289,7 +289,7 @@ register ARTICLE* ap;
 	    } else
 		h = u = s;
 	    if (strEQ(u,loginName)) {
-		if (instr(h,hostname,FALSE)) {
+		if (in_string(h,hostname,FALSE)) {
 		    switch (auto_select_postings) {
 		      case '.':
 			select_subthread(ap,AUTO_SEL_FOL);

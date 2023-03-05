@@ -228,10 +228,7 @@ register char* s;
 /* return ptr to little string in big string, NULL if not found */
 
 char*
-instr(big, little, case_matters)
-char* big;
-char* little;
-bool_int case_matters;
+in_string(const char *big, const char *little, bool_int case_matters)
 {
     register char* t;
     register char* s;
