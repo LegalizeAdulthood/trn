@@ -3,10 +3,7 @@
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
-int init_nntp _((void));
-int server_init _((char*));
-void cleanup_nntp _((void));
-int get_tcp_socket _((char*,int,char*));
-#ifdef NONETDB
-unsigned long inet_addr _((char*));
-#endif
+int init_nntp(void);
+int server_init(const char *machine);
+void cleanup_nntp(void);
+int get_tcp_socket(const char *machine, int port, const char *service);

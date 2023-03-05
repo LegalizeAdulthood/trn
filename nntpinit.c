@@ -14,6 +14,10 @@
 #include "nntpinit.h"
 #include "nntpinit.ih"
 
+#ifdef WIN32
+#include <io.h>
+#endif
+
 #ifdef SUPPORT_NNTP
 
 #ifdef WINSOCK
@@ -22,11 +26,7 @@ WSADATA wsaData;
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
-#ifdef NONETDB
-# define IPPORT_NNTP	((unsigned short) 119)
-#else
-# include <netdb.h>
-#endif
+#include <netdb.h>
 #endif
 
 #ifdef EXCELAN
@@ -44,14 +44,11 @@ int socket _((int, struct sockproto *, struct sockaddr_in *, int));
 
 #ifndef WINSOCK
 unsigned long inet_addr _((char*));
-#ifndef NONETDB
 struct servent* getservbyname();
 struct hostent* gethostbyname();
 #endif
-#endif
 
-int
-init_nntp()
+int init_nntp(void)
 {
 #ifdef WINSOCK
     if (WSAStartup(0x0101,&wsaData) == 0) {
@@ -66,9 +63,7 @@ init_nntp()
 #endif
 }
 
-int
-server_init(machine)
-char* machine;
+int server_init(const char *machine)
 {
     int sockt_rd, sockt_wr;
 #ifdef DECNET
@@ -122,19 +117,14 @@ char* machine;
     return atoi(ser_line);
 }
 
-void
-cleanup_nntp()
+void cleanup_nntp(void)
 {
 #ifdef WINSOCK
     WSACleanup();
 #endif
 }
 
-int
-get_tcp_socket(machine, port, service)
-char* machine;
-int port;
-char* service;
+int get_tcp_socket(const char *machine, int port, const char *service)
 {
     int s;
 #if INET6
@@ -188,10 +178,6 @@ char* service;
     int socksize = 0;
     int socksizelen = sizeof socksize;
 #endif
-#ifdef NONETDB
-    bzero((char*)&sin, sizeof sin);
-    sin.sin_family = AF_INET;
-#else
     struct hostent* hp;
 #ifdef h_addr
     int x = 0;
@@ -241,7 +227,6 @@ char* service;
     }
 
     sin.sin_family = hp->h_addrtype;
-#endif /* !NONETDB */
 
     /* The following is kinda gross.  The name server under 4.3
     ** returns a list of addresses, each of which should be tried
@@ -385,80 +370,5 @@ char* machine;
     return s;
 }
 #endif /* DECNET */
-
-/*
- * inet_addr for EXCELAN (which does not have it!)
- */
-#ifdef NONETDB
-unsigned long
-inet_addr(cp)
-register char* cp;
-{
-    unsigned long val, base, n;
-    register char c;
-    unsigned long octet[4], *octetptr = octet;
-#ifndef htonl
-    extern  unsigned long   htonl();
-#endif  /* htonl */
-again:
-    /* Collect number up to ``.''.
-     * Values are specified as for C:
-     * 0x=hex, 0=octal, other=decimal. */
-    val = 0; base = 10;
-    if (*cp == '0')
-	base = 8, cp++;
-    if (*cp == 'x' || *cp == 'X')
-	base = 16, cp++;
-    while (c = *cp) {
-	if (isdigit(c)) {
-	    val = (val * base) + (c - '0');
-	    cp++;
-	    continue;
-	}
-	if (base == 16 && isxdigit(c)) {
-	    val = (val << 4) + (c + 10 - (islower(c) ? 'a' : 'A'));
-	    cp++;
-	    continue;
-	}
-	break;
-    }
-    if (*cp == '.') {
-	/* Internet format:
-	 *      a.b.c.d
-	 *      a.b.c   (with c treated as 16-bits)
-	 *      a.b     (with b treated as 24 bits) */
-	if (octetptr >= octet + 4)
-	    return -1;
-	*octetptr++ = val, cp++;
-	goto again;
-    }
-    /* Check for trailing characters. */
-    if (*cp && !isspace(*cp))
-	return -1;
-    *octetptr++ = val;
-    /* Concoct the address according to the number of octet specified. */
-    n = octetptr - octet;
-    switch (n) {
-    case 1:    			/* a -- 32 bits */
-	val = octet[0];
-	break;
-    case 2:			/* a.b -- 8.24 bits */
-	val = (octet[0] << 24) | (octet[1] & 0xffffff);
-	break;
-    case 3:			/* a.b.c -- 8.8.16 bits */
-	val = (octet[0] << 24) | ((octet[1] & 0xff) << 16) |
-	    (octet[2] & 0xffff);
-	break;
-    case 4:			/* a.b.c.d -- 8.8.8.8 bits */
-	val = (octet[0] << 24) | ((octet[1] & 0xff) << 16) |
-	    ((octet[2] & 0xff) << 8) | (octet[3] & 0xff);
-	break;
-    default:
-	return -1;
-    }
-    val = htonl(val);
-    return val;
-}
-#endif /* NONETDB */
 
 #endif /* SUPPORT_NNTP */
