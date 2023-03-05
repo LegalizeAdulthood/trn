@@ -355,30 +355,3 @@ envix(const char *nam, int len)
     }					/* potential SEGV's */
     return i;
 }
-
-#ifdef MSDOS
-enum
-{
-    MAXDIR = 512
-};
-
-char*
-GetEnv(const char* var)
-{
-#undef getenv
-    char* s = getenv(var);
-    if (s && isalpha(*s) && s[1] == ':') {
-	char* t = index(s,'\\');
-	if (t) {
-	    char ebuf[MAXDIR+32];
-	    strcpy(ebuf,s);
-	    t = ebuf + (t-s);
-	    do {
-		*t = '/';
-	    } while ((t = index(t,'\\')) != NULL);
-	    s = export(var,ebuf);
-	}
-    }
-    return s;
-}
-#endif

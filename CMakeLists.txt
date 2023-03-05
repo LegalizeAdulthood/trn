@@ -8,6 +8,7 @@ if(WIN32)
     find_package(pdcurses REQUIRED)
     add_library(curses ALIAS pdcurses)
 endif()
+find_package(sockets REQUIRED)
 
 set(DIRENTRYTYPE "struct dirent")
 set(EMULATE_NDIR ON)
@@ -133,7 +134,7 @@ if(WIN32)
     target_compile_definitions(trn PUBLIC _CRT_DECLARE_NONSTDC_NAMES=1 _CRT_INTERNAL_NONSTDC_NAMES=1)
 endif()
 target_include_directories(trn PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(trn PUBLIC curses)
+target_link_libraries(trn PUBLIC curses sockets)
 
 add_executable(inews
     ${CMAKE_CURRENT_BINARY_DIR}/config.h
@@ -151,6 +152,7 @@ target_include_directories(inews PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 if(WIN32)
     target_compile_definitions(inews PUBLIC _CRT_DECLARE_NONSTDC_NAMES=1 _CRT_INTERNAL_NONSTDC_NAMES=1)
 endif()
+target_link_libraries(inews PUBLIC sockets)
 
 # case $CONFIG in
 #     '') . ./config.sh ;;

@@ -14,9 +14,6 @@ int	pclose(FILE*);
 
 #define FILE_REF(s) (*(s)=='/'?'/':(isalpha(*s)&&(s)[1]==':'?(s)[2]:0))
 
-#define chdir ChDir
-#define getenv GetEnv
-
 #define FOPEN_RB "rb"
 #define FOPEN_WB "wb"
 

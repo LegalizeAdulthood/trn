@@ -356,19 +356,6 @@ char** pass_ptr;
 
 #ifdef MSDOS
 int
-ChDir(const char *path)
-{
-    if (isalpha(*path) && path[1] == ':') {
-	setdisk(path[0]&0x1f);
-	path += 2;
-    }
-#undef chdir
-    return chdir(path);
-} 
-#endif
-
-#ifdef MSDOS
-int
 getuid()
 {
     return 2;
