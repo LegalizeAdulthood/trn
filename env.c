@@ -304,7 +304,6 @@ char *get_val(char *nam, char *def)
 }
 
 static bool firstexport = TRUE;
-extern char** environ;
 
 char *export(const char *nam, const char *val)
 {
