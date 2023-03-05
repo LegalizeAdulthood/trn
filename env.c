@@ -116,7 +116,7 @@ char* tmpbuf;
 	homedir = savestr(pwd->pw_dir);
     s = pwd->pw_gecos;
 #endif
-#if HAS_GETPW
+#ifdef HAS_GETPW
     int i;
 
     if (getpw(getuid(), tmpbuf+1) != 0)
