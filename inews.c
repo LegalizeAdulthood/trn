@@ -30,10 +30,7 @@ char	buf[LBUFLEN+1];
 int valid_header _((char*));
 void append_signature _((void));
 
-int
-main(argc, argv)
-int argc;
-char* argv[];
+int main(int argc, char *argv[])
 {
     bool has_fromline, in_header, has_pathline;
     bool found_nl, had_nl;

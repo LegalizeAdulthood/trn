@@ -194,7 +194,7 @@ char* argv[];
 }
 
 void
-newsnews_check()
+newsnews_check(void)
 {
     char* newsnewsname = filexp(NEWSNEWSNAME);
 

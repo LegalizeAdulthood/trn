@@ -43,8 +43,8 @@ struct ini_words {
 void util_init _((void));
 int doshell _((char*,char*));
 #ifndef USE_DEBUGGING_MALLOC
-char* safemalloc _((MEM_SIZE));
-char* saferealloc _((char*,MEM_SIZE));
+char *safemalloc(MEM_SIZE);
+char *saferealloc(char *, MEM_SIZE);
 #endif
 char* safecat _((char*,char*,int));
 #ifdef SETUIDGID

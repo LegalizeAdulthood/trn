@@ -269,9 +269,7 @@ char* s;
 /* paranoid version of malloc */
 
 #ifndef USE_DEBUGGING_MALLOC
-char*
-safemalloc(size)
-MEM_SIZE size;
+char *safemalloc(MEM_SIZE size)
 {
     char* ptr;
 
