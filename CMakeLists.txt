@@ -9,6 +9,7 @@ if(WIN32)
     add_library(curses ALIAS pdcurses)
 endif()
 find_package(sockets REQUIRED)
+find_package(BISON REQUIRED)
 
 set(DIRENTRYTYPE "struct dirent")
 set(EMULATE_NDIR ON)
@@ -33,6 +34,29 @@ set(TRN_SELECT ON)
 set(USE_GENAUTH ON)
 configure_file(config.h.in config.h)
 
+add_library(util
+    ${CMAKE_CURRENT_BINARY_DIR}/config.h
+    EXTERN.h
+    INTERN.h
+    env.c env.h env.ih
+    util2.c util2.h
+    util3.c util3.h
+    wildmat.c wildmat.h wildmat.ih
+)
+if(WIN32)
+    target_compile_definitions(util PUBLIC _CRT_DECLARE_NONSTDC_NAMES=1 _CRT_INTERNAL_NONSTDC_NAMES=1)
+endif()
+target_include_directories(util PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+
+add_library(nntp
+    nntpauth.c nntpauth.h
+    nntpclient.c nntpclient.h
+    nntpinit.c nntpinit.h nntpinit.ih
+)
+target_link_libraries(nntp PUBLIC sockets util)
+
+bison_target(parsedate parsedate.y ${CMAKE_CURRENT_BINARY_DIR}/parsedate.c)
+
 add_executable(trn
     ${CMAKE_CURRENT_BINARY_DIR}/config.h
     EXTERN.h
@@ -53,7 +77,6 @@ add_executable(trn
     datasrc.c datasrc.h datasrc.ih
     decode.c decode.h decode.ih
     edit_dist.c edit_dist.h
-    env.c env.h env.ih
     filter.c filter.h filter.ih
     final.c final.h
     hash.c hash.h hash.ih
@@ -73,14 +96,10 @@ add_executable(trn
     ngsrch.c ngsrch.h
     ngstuff.c ngstuff.h
     nntp.c nntp.h nntp.ih
-    nntpauth.c nntpauth.h
-    nntpclient.c nntpclient.h
-    nntpinit.c nntpinit.h nntpinit.ih
-    nntplist.c
     only.c only.h
     opt.c opt.h opt.ih
     os2.h
-    parsedate.h
+    ${BISON_parsedate_OUTPUTS} parsedate.h
     patchlevel.h
     popen.c
     rcln.c rcln.h
@@ -116,43 +135,26 @@ add_executable(trn
     term.c term.h term.ih
     tkstuff.c tkstuff.h tkstuff.ih
     tktree.c tktree.h tktree.ih
-    trn-artchk.c
     trn.c trn.h
     typedef.h
     univ.c univ.h univ.ih
     url.c url.h url.ih
     util.c util.h util.ih
-    util2.c util2.h
-    util3.c util3.h
     uudecode.c uudecode.h uudecode.ih
-    wildmat.c wildmat.h wildmat.ih
     config.h.in
 )
 source_group("Template Files" REGULAR_EXPRESSION "^.*\.in$")
 source_group("Header Files" REGULAR_EXPRESSION "^.*\.(h|ih)$")
-if(WIN32)
-    target_compile_definitions(trn PUBLIC _CRT_DECLARE_NONSTDC_NAMES=1 _CRT_INTERNAL_NONSTDC_NAMES=1)
-endif()
-target_include_directories(trn PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(trn PUBLIC curses sockets)
+target_link_libraries(trn PUBLIC curses nntp)
 
-add_executable(inews
-    ${CMAKE_CURRENT_BINARY_DIR}/config.h
-    EXTERN.h
-    INTERN.h
-    inews.c
-    env.c env.h env.ih
-    nntpauth.c nntpauth.h
-    nntpclient.c nntpclient.h
-    nntpinit.c nntpinit.h nntpinit.ih
-    util2.c util2.h
-    util3.c util3.h
-)
-target_include_directories(inews PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
-if(WIN32)
-    target_compile_definitions(inews PUBLIC _CRT_DECLARE_NONSTDC_NAMES=1 _CRT_INTERNAL_NONSTDC_NAMES=1)
-endif()
-target_link_libraries(inews PUBLIC sockets)
+add_executable(inews inews.c)
+target_link_libraries(inews PUBLIC nntp)
+
+add_executable(nntplist nntplist.c)
+target_link_libraries(nntplist PUBLIC nntp)
+
+add_executable(trn-artchk trn-artchk.c)
+target_link_libraries(trn-artchk PUBLIC nntp)
 
 # case $CONFIG in
 #     '') . ./config.sh ;;
