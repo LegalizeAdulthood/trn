@@ -60,10 +60,11 @@
 #include "filter.h"
 #endif
 
-bool
-initialize(argc,argv)
-int argc;
-char* argv[];
+#ifdef _WIN32
+#include <process.h>
+#endif
+
+bool initialize(int argc, char *argv[])
 {
     char* tcbuf;
     bool foundany = FALSE;

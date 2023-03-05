@@ -93,10 +93,7 @@ trn_init()
 static bool restore_old_newsrc = FALSE;
 static bool go_forward = TRUE;
 
-int
-main(argc,argv)
-int argc;
-char* argv[];
+int main(int argc, char *argv[])
 {
     bool foundany;
     char* s;

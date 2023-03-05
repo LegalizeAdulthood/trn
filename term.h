@@ -187,7 +187,7 @@ EXT bool mouse_is_down INIT(FALSE);
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
-void term_init _((void));
+void term_init(void);
 void term_set _((char*));
 void set_macro _((char*,char*));
 void arrow_macros _((char*));

@@ -67,8 +67,7 @@ char* tgetstr();
 
 /* terminal initialization */
 
-void
-term_init()
+void term_init(void)
 {
     savetty();				/* remember current tty state */
 
