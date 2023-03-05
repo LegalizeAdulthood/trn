@@ -25,6 +25,7 @@
 #define SECURITY_WIN32
 #include <security.h>
 #pragma comment(lib, "Secur32")
+#include <winsock2.h>
 #endif
 
 bool env_init(char *tcbuf, bool_int lax)
@@ -216,6 +217,11 @@ bool set_p_host_name(char *tmpbuf)
     /* Find the local hostname */
 
 #ifdef HAS_GETHOSTNAME
+#ifdef WIN32
+    const WORD version = MAKEWORD(2, 2);
+    WSADATA data;
+    WSAStartup(version, &data);
+#endif
     gethostname(tmpbuf,TCBUF_SIZE);
 #else
 # ifdef HAS_UNAME
