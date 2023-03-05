@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 #else
     if (!env_init(headbuf, 0)) {
 	fprintf(stderr,"Can't get %s information. Please contact your system adminstrator.\n",
-		(*loginName || !*realName)? "user" : "host");
+		(*g_login_name || !*g_real_name)? "user" : "host");
 	exit(1);
     }
 #endif
@@ -288,7 +288,7 @@ append_signature()
     int count = 0;
 
 #ifdef NO_INEWS_DOTDIR
-    dotdir = homedir;
+    g_dot_dir = g_home_dir;
 #endif
     if (g_dot_dir == NULL)
 	return;

@@ -75,8 +75,8 @@ char* argv[];
     if (g_login_name == NULL) {
 	g_login_name = getenv("LOGNAME");
 #ifdef GETLOGIN
-	if (loginName == NULL)
-	    loginName = getlogin();
+	if (g_login_name == NULL)
+	    g_login_name = getlogin();
 #endif
     }
 #endif

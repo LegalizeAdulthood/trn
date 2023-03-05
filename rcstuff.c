@@ -338,18 +338,18 @@ NEWSRC* rp;
 	    printf("\nNewsrc locked by %ld on host %s.\n",processnum,runninghost) FLUSH;
 #endif
 	termdown(2);
-	if (strNE(runninghost,localhost)) {
+	if (strNE(runninghost,g_local_host)) {
 #ifdef VERBOSE
 	    IF(verbose)
 		printf("\n\
 Since that's not the same host as this one (%s), we must\n\
 assume that process still exists.  To override this check, remove\n\
-the lock file: %s\n", localhost, rp->lockname) FLUSH;
+the lock file: %s\n", g_local_host, rp->lockname) FLUSH;
 	    ELSE
 #endif
 #ifdef TERSE
 		printf("\nThis host (%s) doesn't match.\nCan't unlock %s.\n",
-		       localhost, rp->lockname) FLUSH;
+		       g_local_host, rp->lockname) FLUSH;
 #endif
 	    termdown(2);
 	    if (bizarre)

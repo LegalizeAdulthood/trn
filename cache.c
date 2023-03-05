@@ -307,7 +307,7 @@ register ARTICLE* ap;
 		} else {
 #ifdef REPLYTO_POSTER_CHECKING
 		    char* reply_buf = fetchlines(article_num(ap),REPLY_LINE);
-		    if (instr(reply_buf,loginName,TRUE))
+		    if (instr(reply_buf,g_login_name,TRUE))
 			select_subthread(ap,AUTO_SEL_FOL);
 		    free(reply_buf);
 #endif

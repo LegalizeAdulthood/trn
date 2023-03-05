@@ -29,21 +29,32 @@ bool env_init(char *tcbuf, bool_int lax)
     if ((g_tmp_dir = getenv("TMPDIR")) == NULL)
 	g_tmp_dir = get_val("TMP","/tmp");
 
-    /* try to set loginName */
+    /* try to set g_login_name */
     if (lax) {
 	g_login_name = getenv("USER");
 	if (!g_login_name)
 	    g_login_name = getenv("LOGNAME");
     }
 #ifndef MSDOS
-    if (!lax || !loginName) {
-	loginName = getlogin();
-	if (loginName)
-	    loginName = savestr(loginName);
+    if (!lax || !g_login_name) {
+	g_login_name = getlogin();
+	if (g_login_name)
+	    g_login_name = savestr(g_login_name);
+    }
+#endif
+#ifdef MSDOS
+    g_login_name = getenv("USERNAME");
+    char *home_drive = getenv("HOMEDRIVE");
+    char *home_path = getenv("HOMEPATH");
+    if (home_drive != NULL && home_path != NULL)
+    {
+	strcpy(tcbuf, home_drive);
+	strcat(tcbuf, home_path);
+	g_home_dir = savestr(tcbuf);
     }
 #endif
 
-    /* Set realName, and maybe set loginName and homedir (if NULL). */
+    /* Set g_real_name, and maybe set g_login_name and g_home_dir (if NULL). */
     if (!set_user_name(tcbuf)) {
 	if (!g_login_name)
 	    g_login_name = nullstr;
@@ -53,7 +64,7 @@ bool env_init(char *tcbuf, bool_int lax)
     }
     env_init2();
 
-    /* set phostname to the hostname of our local machine */
+    /* set g_p_host_name to the hostname of our local machine */
     if (!set_p_host_name(tcbuf))
 	fully_successful = FALSE;
 
@@ -87,7 +98,7 @@ static void env_init2(void)
     g_rn_lib = savestr(filexp(PRIVLIB));
 }
 
-/* Set loginName to the user's login name and realName to the user's
+/* Set g_login_name to the user's login name and g_real_name to the user's
 ** real name.
 */
 bool set_user_name(char *tmpbuf)
@@ -98,16 +109,16 @@ bool set_user_name(char *tmpbuf)
 #ifdef HAS_GETPWENT
     struct passwd* pwd;
 
-    if (loginName == NULL)
+    if (g_login_name == NULL)
 	pwd = getpwuid(getuid());
     else
-	pwd = getpwnam(loginName);
+	pwd = getpwnam(g_login_name);
     if (!pwd)
 	return 0;
-    if (!loginName)
-	loginName = savestr(pwd->pw_name);
-    if (!homedir)
-	homedir = savestr(pwd->pw_dir);
+    if (!g_login_name)
+	g_login_name = savestr(pwd->pw_name);
+    if (!g_home_dir)
+	g_home_dir = savestr(pwd->pw_dir);
     s = pwd->pw_gecos;
 #endif
 #ifdef HAS_GETPW
@@ -115,9 +126,9 @@ bool set_user_name(char *tmpbuf)
 
     if (getpw(getuid(), tmpbuf+1) != 0)
 	return 0;
-    if (!loginName) {
+    if (!g_login_name) {
 	cpytill(buf,tmpbuf+1,':');
-	loginName = savestr(buf);
+	g_login_name = savestr(buf);
     }
     for (s = tmpbuf, i = GCOSFIELD-1; i; i--) {
 	if (s)
@@ -126,9 +137,9 @@ bool set_user_name(char *tmpbuf)
     if (!s)
 	return 0;
     s = cpytill(tmpbuf,s+1,':');
-    if (!homedir) {
+    if (!g_home_dir) {
 	cpytill(buf,s+1,':');
-	homedir = savestr(buf);
+	g_home_dir = savestr(buf);
     }
     s = tmpbuf;
 #endif
@@ -144,23 +155,26 @@ bool set_user_name(char *tmpbuf)
     s = cpytill(buf,s,'&');
     if (*s == '&') {			/* whoever thought this one up was */
 	c = buf + strlen(buf);		/* in the middle of the night */
-	strcat(c,loginName);		/* before the morning after */
+	strcat(c,g_login_name);		/* before the morning after */
 	strcat(c,s+1);
 	if (islower(*c))
 	    *c = toupper(*c);		/* gack and double gack */
     }
-    realName = savestr(buf);
+    g_real_name = savestr(buf);
 #else /* !BERKNAMES */
     if ((c = index(s, '(')) != NULL)
 	*c = '\0';
     if ((c = index(s, '-')) != NULL)
 	s = c;
-    realName = savestr(s);
+    g_real_name = savestr(s);
 #endif /* !BERKNAMES */
-#else /* !PASSNAMES */
+#endif
+#ifndef PASSNAMES
+#ifdef WIN32
+#endif
     {
 	FILE* fp;
-	env_init2(); /* Make sure homedir/dotdir/etc. are set. */
+	env_init2(); /* Make sure g_home_dir/g_dot_dir/etc. are set. */
 	if ((fp = fopen(filexp(FULLNAMEFILE),"r")) != NULL) {
 	    fgets(buf,sizeof buf,fp);
 	    fclose(fp);

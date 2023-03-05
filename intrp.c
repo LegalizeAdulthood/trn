@@ -96,8 +96,8 @@ int tcbuf_len;
     /* the hostname to use in local-article comparisons */
 #if HOSTBITS != 0
     i = (HOSTBITS < 2? 2 : HOSTBITS);
-    hostname = phostname+strlen(phostname)-1;
-    while (i && hostname != phostname) {
+    hostname = g_p_host_name+strlen(g_p_host_name)-1;
+    while (i && hostname != g_p_host_name) {
 	if (*--hostname == '.')
 	    i--;
     }

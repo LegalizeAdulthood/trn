@@ -91,7 +91,7 @@ bool initialize(int argc, char *argv[])
 
     search_init();
 
-    /* we have to know rnlib to look up global switches in %X/INIT */
+    /* we have to know g_rn_lib to look up global switches in %X/INIT */
 
     env_init(tcbuf, 1);
     head_init();
