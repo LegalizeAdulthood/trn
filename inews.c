@@ -225,11 +225,11 @@ int main(int argc, char *argv[])
     fputs(".\r\n",nntplink.wr_fp);
     (void) fflush(nntplink.wr_fp);
 
-    if (nntp_gets(ser_line, sizeof ser_line) < 0
-     || *ser_line != NNTP_CLASS_OK) {
-	if (atoi(ser_line) == NNTP_POSTFAIL_VAL) {
+    if (nntp_gets(g_ser_line, sizeof g_ser_line) < 0
+     || *g_ser_line != NNTP_CLASS_OK) {
+	if (atoi(g_ser_line) == NNTP_POSTFAIL_VAL) {
 	    fprintf(stderr,"Article not accepted by server; not posted:\n");
-	    for (cp = ser_line + 4; *cp && *cp != '\r'; cp++) {
+	    for (cp = g_ser_line + 4; *cp && *cp != '\r'; cp++) {
 		if (*cp == '\\')
 		    fputc('\n',stderr);
 		else
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
 	    fputc('\n', stderr);
 	}
 	else
-	    fprintf(stderr, "Remote error: %s\n", ser_line);
+	    fprintf(stderr, "Remote error: %s\n", g_ser_line);
 	if (new_connection)
 	    nntp_close(TRUE);
 	exit(1);
@@ -298,7 +298,7 @@ append_signature()
 	return;
 
     fprintf(nntplink.wr_fp, "-- \r\n");
-    while (fgets(ser_line, sizeof ser_line, fp)) {
+    while (fgets(g_ser_line, sizeof g_ser_line, fp)) {
 	count++;
 	if (count > MAX_SIGNATURE) {
 	    fprintf(stderr,"Warning: .signature files should be no longer than %d lines.\n",
@@ -308,10 +308,10 @@ append_signature()
 	    break;
 	}
 	/* Strip trailing newline */
-	cp = ser_line + strlen(ser_line) - 1;
-	if (cp >= ser_line && *cp == '\n')
+	cp = g_ser_line + strlen(g_ser_line) - 1;
+	if (cp >= g_ser_line && *cp == '\n')
 	    *cp = '\0';
-	fprintf(nntplink.wr_fp, "%s\r\n", ser_line);
+	fprintf(nntplink.wr_fp, "%s\r\n", g_ser_line);
     }
     (void) fclose(fp);
 }
@@ -324,12 +324,12 @@ nntp_handle_timeout()
 	static bool handling_timeout = FALSE;
 	char last_command_save[NNTP_STRLEN];
 
-	if (strcaseEQ(last_command,"quit"))
+	if (strcaseEQ(g_last_command,"quit"))
 	    return 0;
 	if (handling_timeout)
 	    return -1;
 	handling_timeout = TRUE;
-	strcpy(last_command_save, last_command);
+	strcpy(last_command_save, g_last_command);
 	nntp_close(FALSE);
 	if (init_nntp() < 0 || nntp_connect(server_name,0) <= 0)
 	    exit(1);

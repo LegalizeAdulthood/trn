@@ -223,24 +223,24 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 	    int listactive_works = 1;
 	    for (i = 0; i < ngcnt; i++) {
 		if (listactive_works) {
-		    sprintf(ser_line, "list active %s", ngptrs[i]);
-		    if (nntp_command(ser_line) <= 0)
+		    sprintf(g_ser_line, "list active %s", ngptrs[i]);
+		    if (nntp_command(g_ser_line) <= 0)
 			break;
 		    if (nntp_check() > 0) {
-			while (nntp_gets(ser_line, sizeof ser_line) >= 0) {
-			    if (nntp_at_list_end(ser_line))
+			while (nntp_gets(g_ser_line, sizeof g_ser_line) >= 0) {
+			    if (nntp_at_list_end(g_ser_line))
 				break;
 			    foundactive[i] = 1;
 			}
 		    }
-		    else if (*ser_line == NNTP_CLASS_FATAL) {
+		    else if (*g_ser_line == NNTP_CLASS_FATAL) {
 			listactive_works = FALSE;
 			i--;
 		    }
 		}
 		else {
-		    sprintf(ser_line, "GROUP %s", ngptrs[i]);
-		    if (nntp_command(ser_line) <= 0)
+		    sprintf(g_ser_line, "GROUP %s", ngptrs[i]);
+		    if (nntp_command(g_ser_line) <= 0)
 			break;
 		    if (nntp_check() > 0)
 			foundactive[i] = 1;
@@ -253,16 +253,16 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 	    if (fp_ng != NULL) {
 		for (i = 0; i < ngcnt; i++) {
 		    /* issue a description list command */
-		    sprintf(ser_line, "XGTITLE %s", ngptrs[i]);
-		    if (nntp_command(ser_line) <= 0)
+		    sprintf(g_ser_line, "XGTITLE %s", ngptrs[i]);
+		    if (nntp_command(g_ser_line) <= 0)
 			break;
 		    /*$$ use list newsgroups if this fails...? */
 		    if (nntp_check() > 0) {
 			/* write results to fp_ng */
-			while (nntp_gets(ser_line, sizeof ser_line) >= 0) {
-			    if (nntp_at_list_end(ser_line))
+			while (nntp_gets(g_ser_line, sizeof g_ser_line) >= 0) {
+			    if (nntp_at_list_end(g_ser_line))
 				break;
-			    fprintf(fp_ng, "%s\n", ser_line);
+			    fprintf(fp_ng, "%s\n", g_ser_line);
 			}
 		    }
 		}

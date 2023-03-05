@@ -27,13 +27,13 @@ nntp_handle_auth_err()
 #endif
 
     /* save previous command */
-    strcpy(last_command_save, last_command);
+    strcpy(last_command_save, g_last_command);
 
 #ifdef USE_GENAUTH
     if ((auth_command = get_auth_command()) != NULL) {
 	/* issue authentication request */
-	sprintf(ser_line, "AUTHINFO GENERIC %s", auth_command);
-	if (nntp_command(ser_line) <= 0
+	sprintf(g_ser_line, "AUTHINFO GENERIC %s", auth_command);
+	if (nntp_command(g_ser_line) <= 0
 	 || nntp_auth(auth_command) <= 0)
 	    return -2;
     }
@@ -44,11 +44,11 @@ nntp_handle_auth_err()
 	char* auth_pass = get_auth_pass();
 	if (!auth_user || !auth_pass)
 	    return -2;
-	sprintf(ser_line, "AUTHINFO USER %s", auth_user);
-	if (nntp_command(ser_line) <= 0 || nntp_check() <= 0)
+	sprintf(g_ser_line, "AUTHINFO USER %s", auth_user);
+	if (nntp_command(g_ser_line) <= 0 || nntp_check() <= 0)
 	    return -2;
-	sprintf(ser_line, "AUTHINFO PASS %s", auth_pass);
-	if (nntp_command(ser_line) <= 0 || nntp_check() <= 0)
+	sprintf(g_ser_line, "AUTHINFO PASS %s", auth_pass);
+	if (nntp_command(g_ser_line) <= 0 || nntp_check() <= 0)
 	    return -2;
     }
 
@@ -84,10 +84,10 @@ char* authc;
     /*termlib_init();*/
 #endif
     if (ret) {
-	strcpy(ser_line, "502 Authentication failed");
+	strcpy(g_ser_line, "502 Authentication failed");
 	return -1;
     }
-    strcpy(ser_line, "281 Ok");
+    strcpy(g_ser_line, "281 Ok");
     return 1;
 }
 #endif /* USE_GENAUTH */

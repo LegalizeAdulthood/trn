@@ -464,11 +464,11 @@ NEWSRC* rp;
 	if ((rp->datasrc->flags & DF_REMOTE)
 	 && nntp_list("SUBSCRIPTIONS",nullstr,0) == 1) {
 	    do {
-		fputs(ser_line,rcfp);
+		fputs(g_ser_line,rcfp);
 		fputc('\n',rcfp);
-		if (nntp_gets(ser_line, sizeof ser_line) < 0)
+		if (nntp_gets(g_ser_line, sizeof g_ser_line) < 0)
 		    break;
-	    } while (!nntp_at_list_end(ser_line));
+	    } while (!nntp_at_list_end(g_ser_line));
 	}
 #endif
 	ElseIf (*some_buf && (tmpfp = fopen(filexp(some_buf),"r")) != NULL) {

@@ -139,28 +139,28 @@ DATASRC* dp;
     if (server_time == -2)
 	return; /*$$*/
     if (nntp_newgroups(dp->lastnewgrp) < 1) { /*$$*/
-	printf("Can't get new groups from server:\n%s\n", ser_line);
+	printf("Can't get new groups from server:\n%s\n", g_ser_line);
 	return;
     }
     newngs = hashcreate(33, addng_cmp);
 
     while (1) {
 	high = 0, low = 1;
-	if (nntp_gets(ser_line, sizeof ser_line) < 0)
+	if (nntp_gets(g_ser_line, sizeof g_ser_line) < 0)
 	    break;
 #ifdef DEBUG
 	if (debug & DEB_NNTP)
-	    printf("<%s\n", ser_line) FLUSH;
+	    printf("<%s\n", g_ser_line) FLUSH;
 #endif
-	if (nntp_at_list_end(ser_line))
+	if (nntp_at_list_end(g_ser_line))
 	    break;
 	foundSomething = TRUE;
-	if ((s = index(ser_line, ' ')) != NULL)
-	    len = s - ser_line;
+	if ((s = index(g_ser_line, ' ')) != NULL)
+	    len = s - g_ser_line;
 	else
-	    len = strlen(ser_line);
+	    len = strlen(g_ser_line);
 	if (dp->act_sf.fp) {
-	    if (find_actgrp(dp, buf, ser_line, len, (ART_NUM)0)) {
+	    if (find_actgrp(dp, buf, g_ser_line, len, (ART_NUM)0)) {
 		if (!s)
 		    s = buf + len + 1;
 	    }
@@ -169,9 +169,9 @@ DATASRC* dp;
 		if (s)
 		    sscanf(s+1, "%ld %ld %c", &high, &low, &ch);
 		else
-		    s = ser_line + len;
+		    s = g_ser_line + len;
 		sprintf(s, " %010ld %05ld %c\n", high, low, ch);
-		(void) srcfile_append(&dp->act_sf, ser_line, len);
+		(void) srcfile_append(&dp->act_sf, g_ser_line, len);
 	    }
 	}
 	if (s) {
@@ -180,9 +180,9 @@ DATASRC* dp;
 	    if (*s == 'x' || *s == '=')
 		continue;
 	}
-	if ((np = find_ng(ser_line)) != NULL && np->toread > TR_UNSUB)
+	if ((np = find_ng(g_ser_line)) != NULL && np->toread > TR_UNSUB)
 	    continue;
-	add_to_hash(newngs, ser_line, high-low, auto_subscribe(ser_line));
+	add_to_hash(newngs, g_ser_line, high-low, auto_subscribe(g_ser_line));
     }
     if (foundSomething) {
 	hashwalk(newngs, build_addgroup_list, 0);
@@ -344,9 +344,9 @@ bool_int add_matching;
 		    buf[strlen(buf)-2] = '\0';
 	    }
 	    if (nntp_list("active", buf, strlen(buf)) == 1) {
-		while (!nntp_at_list_end(ser_line)) {
-		    scanline(ser_line,add_matching);
-		    if (nntp_gets(ser_line, sizeof ser_line) < 0)
+		while (!nntp_at_list_end(g_ser_line)) {
+		    scanline(g_ser_line,add_matching);
+		    if (nntp_gets(g_ser_line, sizeof g_ser_line) < 0)
 			break; /*$$*/
 		}
 	    }

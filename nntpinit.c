@@ -104,17 +104,17 @@ int server_init(const char *machine)
     /* Now get the server's signon message */
     nntp_check();
 
-    if (*ser_line == NNTP_CLASS_OK) {
+    if (*g_ser_line == NNTP_CLASS_OK) {
 	char save_line[NNTP_STRLEN];
-	strcpy(save_line, ser_line);
+	strcpy(save_line, g_ser_line);
 	/* Try MODE READER just in case we're talking to innd.
 	** If it is not an invalid command, use the new reply. */
 	if (nntp_command("MODE READER") <= 0)
-	    sprintf(ser_line, "%d failed to send MODE READER\n", NNTP_ACCESS_VAL);
-	else if (nntp_check() <= 0 && atoi(ser_line) == NNTP_BAD_COMMAND_VAL)
-	    strcpy(ser_line, save_line);
+	    sprintf(g_ser_line, "%d failed to send MODE READER\n", NNTP_ACCESS_VAL);
+	else if (nntp_check() <= 0 && atoi(g_ser_line) == NNTP_BAD_COMMAND_VAL)
+	    strcpy(g_ser_line, save_line);
     }
-    return atoi(ser_line);
+    return atoi(g_ser_line);
 }
 
 void cleanup_nntp(void)

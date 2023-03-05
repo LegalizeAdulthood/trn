@@ -321,8 +321,8 @@ DATASRC* dp;
 	if (dp->act_sf.refetch_secs) {
 	    switch (nntp_list("active", "control", 7)) {
 	    case 1:
-		if (strnNE(ser_line, "control ", 8)) {
-		    strcpy(buf, ser_line);
+		if (strnNE(g_ser_line, "control ", 8)) {
+		    strcpy(buf, g_ser_line);
 		    dp->act_sf.lastfetch = 0;
 		    success = actfile_hash(dp);
 		    break;
@@ -348,7 +348,7 @@ DATASRC* dp;
 		    success = actfile_hash(dp);
 		break;
 	    case -2:
-		printf("Failed to open news server %s:\n%s\n", dp->newsid, ser_line);
+		printf("Failed to open news server %s:\n%s\n", dp->newsid, g_ser_line);
 		termdown(2);
 		success = FALSE;
 		break;
@@ -515,7 +515,7 @@ ART_NUM high;
 	    set_datasrc(save_datasrc);
 	    return 0;
 	case 1:
-	    sprintf(outbuf, "%s\n", ser_line);
+	    sprintf(outbuf, "%s\n", g_ser_line);
 	    nntp_finish_list();
 	    break;
 	case -2:
@@ -653,8 +653,8 @@ char* groupname;
 
     if ((dp->flags & (DF_REMOTE|DF_NOXGTITLE)) == DF_REMOTE) {
 	set_datasrc(dp);
-	sprintf(ser_line, "XGTITLE %s", groupname);
-	if (nntp_command(ser_line) > 0 && nntp_check() > 0) {
+	sprintf(g_ser_line, "XGTITLE %s", groupname);
+	if (nntp_command(g_ser_line) > 0 && nntp_check() > 0) {
 	    nntp_gets(buf, sizeof buf - 1);
 	    if (nntp_at_list_end(buf))
 		sprintf(buf, "%s \n", groupname);
@@ -740,7 +740,7 @@ char* server;
 		    use_buffered_nntp_gets = 1;
 		else if (nntp_list(fetchcmd, nullstr, 0) < 0) {
 		    printf("\nCan't get %s file from server: \n%s\n",
-			   fetchcmd, ser_line) FLUSH;
+			   fetchcmd, g_ser_line) FLUSH;
 		    termdown(2);
 		    fclose(fp);
 		    return 0;

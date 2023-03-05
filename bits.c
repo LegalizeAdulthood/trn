@@ -280,18 +280,18 @@ find_existing_articles()
 		 ap = article_nextp(ap))
 		ap->flags &= ~AF_EXISTS;
 	    for (;;) {
-		if (nntp_gets(ser_line, sizeof ser_line) < 0)
+		if (nntp_gets(g_ser_line, sizeof g_ser_line) < 0)
 		    break; /*$$*/
-		if (nntp_at_list_end(ser_line))
+		if (nntp_at_list_end(g_ser_line))
 		    break;
-		an = (ART_NUM)atol(ser_line);
+		an = (ART_NUM)atol(g_ser_line);
 		if (an < absfirst)
 		    continue;	/* Ignore some wacked-out NNTP servers */
 		ap = article_ptr(an);
 		if (!(ap->flags2 & AF2_BOGUS))
 		    ap->flags |= AF_EXISTS;
 #if 0
-		s = index(ser_line, ' ');
+		s = index(g_ser_line, ' ');
 		if (s)
 		    rover_thread(article_ptr(an), s);
 #endif

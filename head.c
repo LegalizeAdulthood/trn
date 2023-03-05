@@ -495,20 +495,20 @@ bool_int copy;				/* do you want it savestr()ed? */
 	    lastnum = artnum + PREFETCH_SIZE - 1;
 	    if (lastnum > lastart)
 		lastnum = lastart;
-	    sprintf(ser_line,"XHDR %s %ld-%ld",htype[which_line].name,
+	    sprintf(g_ser_line,"XHDR %s %ld-%ld",htype[which_line].name,
 		artnum,lastnum);
 	} else {
 	    lastnum = artnum;
-	    sprintf(ser_line,"XHDR %s %ld",htype[which_line].name,artnum);
+	    sprintf(g_ser_line,"XHDR %s %ld",htype[which_line].name,artnum);
 	}
-	if (nntp_command(ser_line) <= 0)
+	if (nntp_command(g_ser_line) <= 0)
 	    finalize(1); /*$$*/
 	if (nntp_check() > 0) {
 	    char* line;
-	    char* last_buf = ser_line;
-	    MEM_SIZE last_buflen = sizeof ser_line;
+	    char* last_buf = g_ser_line;
+	    MEM_SIZE last_buflen = sizeof g_ser_line;
 	    for (;;) {
-		line = nntp_get_a_line(last_buf,last_buflen,last_buf!=ser_line);
+		line = nntp_get_a_line(last_buf,last_buflen,last_buf!=g_ser_line);
 # ifdef DEBUG
 		if (debug & DEB_NNTP)
 		    printf("<%s", line? line : "<EOF>") FLUSH;
@@ -537,7 +537,7 @@ bool_int copy;				/* do you want it savestr()ed? */
 		if (num == artnum)
 		    safecat(s,t,size);
 	    }
-	    if (last_buf != ser_line)
+	    if (last_buf != g_ser_line)
 		free(last_buf);
 	} else {
 	    hasxhdr = FALSE;

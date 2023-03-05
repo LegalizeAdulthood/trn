@@ -128,13 +128,13 @@ char* argv[];
 #endif
 	if (nntp_check() <= 0) {
 	    fprintf(stderr,"nntplist: Can't get %s file from server.\n",action? action : "active");
-	    fprintf(stderr, "Server said: %s\n", ser_line);
+	    fprintf(stderr, "Server said: %s\n", g_ser_line);
 	    finalize(1);
 	}
-	while (nntp_gets(ser_line, sizeof ser_line) == 1) {
-	    if (nntp_at_list_end(ser_line))
+	while (nntp_gets(g_ser_line, sizeof g_ser_line) == 1) {
+	    if (nntp_at_list_end(g_ser_line))
 		break;
-	    fputs(ser_line, out_fp);
+	    fputs(g_ser_line, out_fp);
 	    putc('\n', out_fp);
 	}
 
@@ -165,17 +165,17 @@ char* argv[];
 	    fprintf(stderr,"Unable to open `%s'.\n", cp);
 	    exit(1);
 	}
-	while (fgets(ser_line, sizeof ser_line, in_fp)) {
+	while (fgets(g_ser_line, sizeof g_ser_line, in_fp)) {
 	    if (wildarg) {
-		for (cp = ser_line; *cp && !isspace(*cp); cp++) ;
+		for (cp = g_ser_line; *cp && !isspace(*cp); cp++) ;
 		if (!cp)
 		    continue;
 		*cp = '\0';
-		if (!wildmat(ser_line, wildarg))
+		if (!wildmat(g_ser_line, wildarg))
 		    continue;
 		*cp = ' ';
 	    }
-	    fputs(ser_line, out_fp);
+	    fputs(g_ser_line, out_fp);
 	}
     }
     return 0;

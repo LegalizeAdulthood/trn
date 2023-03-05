@@ -530,9 +530,9 @@ cancel_article()
     from_buf = fetchlines(art,FROM_LINE);
     ngs_buf = fetchlines(art,NGS_LINE);
     if (strcaseNE(get_val("FROM",""),from_buf)
-     && (!in_string(from_buf,hostname,FALSE)
-      || (!in_string(from_buf,g_login_name,TRUE)
-       && !in_string(reply_buf,g_login_name,TRUE)
+     && (!in_string(from_buf,hostname, FALSE)
+      || (!in_string(from_buf,g_login_name, TRUE)
+       && !in_string(reply_buf,g_login_name, TRUE)
 #ifdef NEWS_ADMIN
        && myuid != newsuid
 #endif
@@ -604,9 +604,9 @@ supersede_article()		/* Supersedes: */
     from_buf = fetchlines(art,FROM_LINE);
     ngs_buf = fetchlines(art,NGS_LINE);
     if (strcaseNE(get_val("FROM",""),from_buf)
-     && (!in_string(from_buf,hostname,FALSE)
-      || (!in_string(from_buf,g_login_name,TRUE)
-       && !in_string(reply_buf,g_login_name,TRUE)
+     && (!in_string(from_buf,hostname, FALSE)
+      || (!in_string(from_buf,g_login_name, TRUE)
+       && !in_string(reply_buf,g_login_name, TRUE)
 #ifdef NEWS_ADMIN
        && myuid != newsuid
 #endif
@@ -663,7 +663,7 @@ follow_it_up()
 #ifdef SUPPORT_NNTP
 	if ((datasrc->flags & DF_REMOTE)
 	 && (nntp_command("DATE") <= 0
-	  || (nntp_check() < 0 && atoi(ser_line) != NNTP_BAD_COMMAND_VAL)))
+	  || (nntp_check() < 0 && atoi(g_ser_line) != NNTP_BAD_COMMAND_VAL)))
 	    ret = 1;
 	else
 #endif
@@ -710,7 +710,7 @@ reply()
     }
     interp(hbuf, sizeof hbuf, get_val("MAILHEADER",MAILHEADER));
     fputs(hbuf,tmpfp);
-    if (!in_string(maildoer,"%h",TRUE)) {
+    if (!in_string(maildoer,"%h", TRUE)) {
 #ifdef VERBOSE
 	IF(verbose)
 	    printf("\n%s\n(Above lines saved in file %s)\n",buf,headname)
@@ -814,7 +814,7 @@ forward()
 	}
     }
 #endif
-    if (!in_string(maildoer,"%h",TRUE)) {
+    if (!in_string(maildoer,"%h", TRUE)) {
 #ifdef VERBOSE
 	IF(verbose)
 	    printf("\n%s\n(Above lines saved in file %s)\n",hbuf,headname)

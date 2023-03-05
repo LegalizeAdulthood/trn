@@ -28,10 +28,7 @@ int nntp_handle_nested_lists _((void));
 int nntp_handle_auth_err _((void));
 #endif
 
-int
-nntp_connect(machine,verbose)
-char* machine;
-bool_int verbose;
+int nntp_connect(const char *machine, bool_int verbose)
 {
     int response;
 
@@ -50,13 +47,13 @@ bool_int verbose;
     }
     switch (response = server_init(machine)) {
     case NNTP_GOODBYE_VAL:
-	if (atoi(ser_line) == response) {
+	if (atoi(g_ser_line) == response) {
 	    char tmpbuf[LBUFLEN];
 	    if (verbose)
-		printf("failed: %s\n",&ser_line[4]);
+		printf("failed: %s\n",&g_ser_line[4]);
 	    else {
 		sprintf(tmpbuf,"News server \"%s\" is unavailable: %s\n",
-			machine,&ser_line[4]);
+			machine,&g_ser_line[4]);
 		nntp_init_error(tmpbuf);
 	    }
 	    response = 0;
@@ -66,8 +63,8 @@ bool_int verbose;
 	if (verbose)
 	    printf("failed.\n");
 	else {
-	    sprintf(ser_line,"News server \"%s\" is unavailable.\n",machine);
-	    nntp_init_error(ser_line);
+	    sprintf(g_ser_line,"News server \"%s\" is unavailable.\n",machine);
+	    nntp_init_error(g_ser_line);
 	}
 	response = 0;
 	break;
@@ -75,10 +72,10 @@ bool_int verbose;
 	if (verbose)
 	    printf("access denied.\n");
 	else {
-	    sprintf(ser_line,
+	    sprintf(g_ser_line,
 		    "This machine does not have permission to use the %s news server.\n\n",
 		    machine);
-	    nntp_init_error(ser_line);
+	    nntp_init_error(g_ser_line);
 	}
 	response = -1;
 	break;
@@ -96,9 +93,9 @@ bool_int verbose;
 	if (verbose)
 	    printf("unknown response: %d.\n",response);
 	else {
-	    sprintf(ser_line,"\nUnknown response code %d from %s.\n",
+	    sprintf(g_ser_line,"\nUnknown response code %d from %s.\n",
 		    response,machine);
-	    nntp_init_error(ser_line);
+	    nntp_init_error(g_ser_line);
 	}
 	response = 0;
 	break;
@@ -112,19 +109,17 @@ bool_int verbose;
     return response;
 }
 
-char*
-nntp_servername(name)
-char* name;
+char *nntp_servername(char *name)
 {
     FILE* fp;
 
     if (FILE_REF(name) && (fp = fopen(name, "r")) != NULL) {
-	while (fgets(ser_line, sizeof ser_line, fp) != NULL) {
-	    if (*ser_line == '\n' || *ser_line == '#')
+	while (fgets(g_ser_line, sizeof g_ser_line, fp) != NULL) {
+	    if (*g_ser_line == '\n' || *g_ser_line == '#')
 		continue;
-	    if ((name = index(ser_line, '\n')) != NULL)
+	    if ((name = index(g_ser_line, '\n')) != NULL)
 		*name = '\0';
-	    name = ser_line;
+	    name = g_ser_line;
 	    break;
 	}
 	fclose(fp);
@@ -132,9 +127,7 @@ char* name;
     return name;
 }
 
-int
-nntp_command(bp)
-char* bp;
+int nntp_command(const char *bp)
 {
     time_t now;
 #if defined(DEBUG) && defined(FLUSH)
@@ -142,7 +135,7 @@ char* bp;
 	printf(">%s\n", bp) FLUSH;
 #endif
 #if defined(NNTP_HANDLE_TIMEOUT) || defined(NNTP_HANDLE_AUTH_ERR)
-    strcpy(last_command, bp);
+    strcpy(g_last_command, bp);
 # ifdef NNTP_HANDLE_TIMEOUT
     if (!nntplink.rd_fp)
 	return nntp_handle_timeout();
@@ -172,8 +165,7 @@ char* bp;
     return 1;
 }
 
-int
-nntp_check()
+int nntp_check(void)
 {
     int ret;
     int len = 0;
@@ -183,17 +175,17 @@ nntp_check()
     sighold(SIGINT);
 #endif
     errno = 0;
-    ret = (fgets(ser_line, sizeof ser_line, nntplink.rd_fp) == NULL)? -2 : 0;
+    ret = (fgets(g_ser_line, sizeof g_ser_line, nntplink.rd_fp) == NULL)? -2 : 0;
 #ifdef HAS_SIGHOLD
     sigrelse(SIGINT);
 #endif
     if (ret < 0) {
 	if (errno == EINTR)
 	    goto read_it;
-	strcpy(ser_line, "503 Server closed connection.");
+	strcpy(g_ser_line, "503 Server closed connection.");
     }
 #ifdef NNTP_HANDLE_TIMEOUT
-    if (len == 0 && atoi(ser_line) == NNTP_TMPERR_VAL
+    if (len == 0 && atoi(g_ser_line) == NNTP_TMPERR_VAL
      && nntp_allow_timeout && last_command_diff > 60) {
 	ret = nntp_handle_timeout();
 	switch (ret) {
@@ -201,7 +193,7 @@ nntp_check()
 	    len = 1;
 	    goto read_it;
 	case 0:		/* We're quitting, so pretend it's OK */
-	    strcpy(ser_line, "205 Ok");
+	    strcpy(g_ser_line, "205 Ok");
 	    break;
 	default:
 	    break;
@@ -209,25 +201,25 @@ nntp_check()
     }
     else
 #endif
-    if (*ser_line <= NNTP_CLASS_CONT && *ser_line >= NNTP_CLASS_INF)
+    if (*g_ser_line <= NNTP_CLASS_CONT && *g_ser_line >= NNTP_CLASS_INF)
 	ret = 1;			/* (this includes NNTP_CLASS_OK) */
-    else if (*ser_line == NNTP_CLASS_FATAL)
+    else if (*g_ser_line == NNTP_CLASS_FATAL)
 	ret = -1;
     /* Even though the following check doesn't catch all possible lists, the
      * bit will get set right when the caller checks nntp_at_list_end(). */
-    if (atoi(ser_line) == NNTP_LIST_FOLLOWS_VAL)
+    if (atoi(g_ser_line) == NNTP_LIST_FOLLOWS_VAL)
 	nntplink.flags &= ~NNTP_NEW_CMD_OK;
     else
 	nntplink.flags |= NNTP_NEW_CMD_OK;
-    len = strlen(ser_line);
-    if (len >= 2 && ser_line[len-1] == '\n' && ser_line[len-2] == '\r')
-	ser_line[len-2] = '\0';
+    len = strlen(g_ser_line);
+    if (len >= 2 && g_ser_line[len-1] == '\n' && g_ser_line[len-2] == '\r')
+	g_ser_line[len-2] = '\0';
 #if defined(DEBUG) && defined(FLUSH)
     if (debug & DEB_NNTP)
-	printf("<%s\n", ser_line) FLUSH;
+	printf("<%s\n", g_ser_line) FLUSH;
 #endif
 #ifdef NNTP_HANDLE_AUTH_ERR
-    if (atoi(ser_line) == NNTP_AUTH_NEEDED_VAL) {
+    if (atoi(g_ser_line) == NNTP_AUTH_NEEDED_VAL) {
 	ret = nntp_handle_auth_err();
 	if (ret > 0)
 	    goto read_it;
@@ -236,9 +228,7 @@ nntp_check()
     return ret;
 }
 
-bool
-nntp_at_list_end(s)
-char* s;
+bool nntp_at_list_end(const char *s)
 {
     if (!s || (*s == '.' && (s[1] == '\0' || s[1] == '\r'))) {
 	nntplink.flags |= NNTP_NEW_CMD_OK;
@@ -253,10 +243,7 @@ char* s;
  * the null-terminator, and we need room for our "\r\n"-stripping code
  * to work right, so "len" MUST be at least 3.
  */
-int
-nntp_gets(bp, len)
-char* bp;
-int  len;
+int nntp_gets(char *bp, int len)
 {
     int ch, n = 0;
     char* cp = bp;
@@ -304,9 +291,7 @@ int  len;
     return n;
 }
 
-void
-nntp_close(send_quit)
-bool_int send_quit;
+void nntp_close(bool_int send_quit)
 {
     if (send_quit && nntplink.wr_fp != NULL && nntplink.rd_fp != NULL) {
 	if (nntp_command("QUIT") > 0)

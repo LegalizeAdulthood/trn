@@ -41,24 +41,24 @@ int len;
 	return -1;
 #endif
     if (len)
-	sprintf(ser_line, "LIST %s %.*s", type, len, arg);
+	sprintf(g_ser_line, "LIST %s %.*s", type, len, arg);
     else if (strcaseEQ(type,"active"))
-	strcpy(ser_line, "LIST");
+	strcpy(g_ser_line, "LIST");
     else
-	sprintf(ser_line, "LIST %s", type);
-    if (nntp_command(ser_line) <= 0)
+	sprintf(g_ser_line, "LIST %s", type);
+    if (nntp_command(g_ser_line) <= 0)
 	return -2;
     if ((ret = nntp_check()) <= 0)
 	return ret? ret : -1;
     if (!len)
 	return 1;
-    if ((ret = nntp_gets(ser_line, sizeof ser_line)) < 0)
+    if ((ret = nntp_gets(g_ser_line, sizeof g_ser_line)) < 0)
 	return ret;
 #if defined(DEBUG) && defined(FLUSH)
     if (debug & DEB_NNTP)
-	printf("<%s\n", ser_line) FLUSH;
+	printf("<%s\n", g_ser_line) FLUSH;
 #endif
-    if (nntp_at_list_end(ser_line))
+    if (nntp_at_list_end(g_ser_line))
 	return 0;
     return 1;
 }
@@ -68,15 +68,15 @@ nntp_finish_list()
 {
     int ret;
     do {
-	while ((ret = nntp_gets(ser_line, sizeof ser_line)) == 0) {
+	while ((ret = nntp_gets(g_ser_line, sizeof g_ser_line)) == 0) {
 	    /* A line w/o a newline is too long to be the end of the
 	    ** list, so grab the rest of this line and try again. */
-	    while ((ret = nntp_gets(ser_line, sizeof ser_line)) == 0)
+	    while ((ret = nntp_gets(g_ser_line, sizeof g_ser_line)) == 0)
 		;
 	    if (ret < 0)
 		return;
 	}
-    } while (ret > 0 && !nntp_at_list_end(ser_line));
+    } while (ret > 0 && !nntp_at_list_end(g_ser_line));
 }
 
 /* try to access the specified group */
@@ -86,21 +86,21 @@ nntp_group(group, gp)
 char* group;
 NGDATA* gp;
 {
-    sprintf(ser_line, "GROUP %s", group);
-    if (nntp_command(ser_line) <= 0)
+    sprintf(g_ser_line, "GROUP %s", group);
+    if (nntp_command(g_ser_line) <= 0)
 	return -2;
     switch (nntp_check()) {
       case -2:
 	return -2;
       case -1:
       case 0: {
-	int ser_int = atoi(ser_line);
+	int ser_int = atoi(g_ser_line);
 	if (ser_int != NNTP_NOSUCHGROUP_VAL
 	 && ser_int != NNTP_SYNTAX_VAL) {
 	    if (ser_int != NNTP_AUTH_NEEDED_VAL && ser_int != NNTP_ACCESS_VAL
 	     && ser_int != NNTP_AUTH_REJECT_VAL) {
 		fprintf(stderr, "\nServer's response to GROUP %s:\n%s\n",
-			group, ser_line);
+			group, g_ser_line);
 		return -1;
 	    }
 	}
@@ -110,7 +110,7 @@ NGDATA* gp;
     if (gp) {
 	long count, first, last;
 
-	(void) sscanf(ser_line,"%*d%ld%ld%ld",&count,&first,&last);
+	(void) sscanf(g_ser_line,"%*d%ld%ld%ld",&count,&first,&last);
 	/* NNTP mangles the high/low values when no articles are present. */
 	if (!count)
 	    gp->abs1st = gp->ngmax+1;
@@ -128,8 +128,8 @@ int
 nntp_stat(artnum)
 ART_NUM artnum;
 {
-    sprintf(ser_line, "STAT %ld", (long)artnum);
-    if (nntp_command(ser_line) <= 0)
+    sprintf(g_ser_line, "STAT %ld", (long)artnum);
+    if (nntp_command(g_ser_line) <= 0)
 	return -2;
     return nntp_check();
 }
@@ -142,11 +142,11 @@ char* msgid;
 {
     long artnum;
 
-    sprintf(ser_line, "STAT %s", msgid);
-    if (nntp_command(ser_line) <= 0)
+    sprintf(g_ser_line, "STAT %s", msgid);
+    if (nntp_command(g_ser_line) <= 0)
 	return -2;
     artnum = nntp_check();
-    if (artnum > 0 && sscanf(ser_line, "%*d%ld", &artnum) != 1)
+    if (artnum > 0 && sscanf(g_ser_line, "%*d%ld", &artnum) != 1)
 	artnum = 0;
     return (ART_NUM)artnum;
 }
@@ -159,7 +159,7 @@ nntp_next_art()
     if (nntp_command("NEXT") <= 0)
 	return -2;
     artnum = nntp_check();
-    if (artnum > 0 && sscanf(ser_line, "%*d %ld", &artnum) != 1)
+    if (artnum > 0 && sscanf(g_ser_line, "%*d %ld", &artnum) != 1)
 	artnum = 0;
     return (ART_NUM)artnum;
 }
@@ -170,8 +170,8 @@ int
 nntp_header(artnum)
 ART_NUM artnum;
 {
-    sprintf(ser_line, "HEAD %ld", (long)artnum);
-    if (nntp_command(ser_line) <= 0)
+    sprintf(g_ser_line, "HEAD %ld", (long)artnum);
+    if (nntp_command(g_ser_line) <= 0)
 	return -2;
     return nntp_check();
 }
@@ -205,10 +205,10 @@ ART_NUM artnum;
 #endif
     /*artio_setbuf(artfp);$$*/
     if (parsed_art == artnum)
-	sprintf(ser_line, "BODY %ld", (long)artnum);
+	sprintf(g_ser_line, "BODY %ld", (long)artnum);
     else
-	sprintf(ser_line, "ARTICLE %ld", (long)artnum);
-    if (nntp_command(ser_line) <= 0)
+	sprintf(g_ser_line, "ARTICLE %ld", (long)artnum);
+    if (nntp_command(g_ser_line) <= 0)
 	finalize(1); /*$$*/
     switch (nntp_check()) {
       case -2:
@@ -383,7 +383,7 @@ nntp_time()
     if (nntp_check() <= 0)
 	return time((time_t*)NULL);
 
-    s = rindex(ser_line, ' ') + 1;
+    s = rindex(g_ser_line, ' ') + 1;
     month = (s[4] - '0') * 10 + (s[5] - '0');
     day = (s[6] - '0') * 10 + (s[7] - '0');
     hh = (s[8] - '0') * 10 + (s[9] - '0');
@@ -418,10 +418,10 @@ time_t t;
     struct tm *ts;
 
     ts = gmtime(&t);
-    sprintf(ser_line, "NEWGROUPS %02d%02d%02d %02d%02d%02d GMT",
+    sprintf(g_ser_line, "NEWGROUPS %02d%02d%02d %02d%02d%02d GMT",
 	ts->tm_year % 100, ts->tm_mon+1, ts->tm_mday,
 	ts->tm_hour, ts->tm_min, ts->tm_sec);
-    if (nntp_command(ser_line) <= 0)
+    if (nntp_command(g_ser_line) <= 0)
 	return -2;
     return nntp_check();
 }
@@ -528,7 +528,7 @@ int ndx;
 int
 nntp_handle_nested_lists()
 {
-    if (strcaseEQ(last_command,"quit"))
+    if (strcaseEQ(g_last_command,"quit"))
 	return 0; /*$$ flush data needed? */
     if (nntp_finishbody(FB_DISCARD))
 	return 1;
@@ -542,12 +542,12 @@ nntp_handle_timeout()
     static bool handling_timeout = FALSE;
     char last_command_save[NNTP_STRLEN];
 
-    if (strcaseEQ(last_command,"quit"))
+    if (strcaseEQ(g_last_command,"quit"))
 	return 0;
     if (handling_timeout)
 	return -1;
     handling_timeout = TRUE;
-    strcpy(last_command_save, last_command);
+    strcpy(last_command_save, g_last_command);
     nntp_close(FALSE);
     datasrc->nntplink = nntplink;
     if (nntp_connect(datasrc->newsid, 0) <= 0)
@@ -557,7 +557,7 @@ nntp_handle_timeout()
 	return -2;
     if (nntp_command(last_command_save) <= 0)
 	return -1;
-    strcpy(last_command, last_command_save); /*$$ Is this really needed? */
+    strcpy(g_last_command, last_command_save); /*$$ Is this really needed? */
     handling_timeout = FALSE;
     return 1;
 }
@@ -572,7 +572,7 @@ DATASRC* dp;
     unuse_multirc(mp);
     if (!use_multirc(mp))
 	multirc = NULL;
-    fprintf(stderr,"\n%s\n", ser_line);
+    fprintf(stderr,"\n%s\n", g_ser_line);
     get_anything();
 }
 
@@ -594,7 +594,7 @@ nntp_readcheck()
     }
 
     /* try to get the number of bytes being transfered */
-    if (sscanf(ser_line, "%*d%ld", &rawbytes) != 1)
+    if (sscanf(g_ser_line, "%*d%ld", &rawbytes) != 1)
 	return rawbytes = -1;
     return rawbytes;
 }

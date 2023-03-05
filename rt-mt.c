@@ -91,7 +91,7 @@ mt_init()
 	success = FALSE;
 #ifdef SUPPORT_XTHREAD
     if (!datasrc->thread_dir) {
-	while (nntp_read(ser_line, (long)sizeof ser_line))
+	while (nntp_read(g_ser_line, (long)sizeof g_ser_line))
 	    ;		/* trash any extraneous bytes */
     }
     else
@@ -183,7 +183,7 @@ mt_data()
 exit:
 #ifdef SUPPORT_XTHREAD
     if (!datasrc->thread_dir) {
-	while (nntp_read(ser_line, (long)sizeof ser_line))
+	while (nntp_read(g_ser_line, (long)sizeof g_ser_line))
 	    ;		/* trash any extraneous bytes */
     }
     else

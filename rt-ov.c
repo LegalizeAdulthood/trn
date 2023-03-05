@@ -45,10 +45,10 @@ ov_init()
 	    return FALSE;
 	if (nntp_check() < 0)
 	    return FALSE;/*$$*/
-	if (atoi(ser_line) == NNTP_BAD_COMMAND_VAL)
+	if (atoi(g_ser_line) == NNTP_BAD_COMMAND_VAL)
 	    return FALSE;
 	/* Just in case... */
-	if (*ser_line == NNTP_CLASS_OK)
+	if (*g_ser_line == NNTP_CLASS_OK)
 	    nntp_finish_list();
 	if ((ret = nntp_list("overview.fmt",nullstr,0)) < -1)
 	    return FALSE;
@@ -195,8 +195,8 @@ beginning:
 
 #ifdef SUPPORT_NNTP
     if (remote) {
-	sprintf(ser_line, "XOVER %ld-%ld", (long)first, (long)last);
-	if (nntp_command(ser_line) <= 0 || nntp_check() <= 0) {
+	sprintf(g_ser_line, "XOVER %ld-%ld", (long)first, (long)last);
+	if (nntp_command(g_ser_line) <= 0 || nntp_check() <= 0) {
 	    success = FALSE;
 	    goto exit;
 	}
