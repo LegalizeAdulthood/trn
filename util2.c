@@ -299,9 +299,7 @@ static Uchar casemap[256] = {
 
 #ifndef HAS_STRCASECMP
 int
-trn_casecmp(s1, s2)
-register char* s1;
-register char* s2;
+trn_casecmp(const char *s1, const char *s2)
 {
     do {
 	if (casemap[(Uchar)*s1++] != casemap[(Uchar)*s2])
@@ -313,10 +311,7 @@ register char* s2;
 
 #ifndef HAS_STRCASECMP
 int
-trn_ncasecmp(s1, s2, len)
-register char* s1;
-register char* s2;
-register int len;
+trn_ncasecmp(const char *s1, const char *s2, int len)
 {
     while (len--) {
 	if (casemap[(Uchar)*s1++] != casemap[(Uchar)*s2])

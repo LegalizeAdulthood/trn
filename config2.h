@@ -125,14 +125,6 @@ struct passwd* getpwnam _((char*));
 # endif
 #endif
 
-#ifndef __STDC__
-char* getcwd();
-char* getlogin();
-int fseek();
-long atol(), ftell();
-extern int errno;
-#endif
-
 #ifndef FILE_REF
 #   define FILE_REF(s) (*(s) == '/' ? '/' : 0)
 #endif

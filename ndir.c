@@ -8,6 +8,8 @@
 #include "INTERN.h"
 #include "ndir.h"
 
+#include <io.h>
+
 #ifdef EMULATE_NDIR
 /*
  * support for Berkeley directory reading routine on a V7 file system
@@ -22,7 +24,6 @@ char* name;
 {
 	register DIR* dirp;
 	register int fd;
-	char* malloc();
 
 	if ((fd = open(name, 0)) == -1)
 		return NULL;

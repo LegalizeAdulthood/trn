@@ -7,27 +7,27 @@
 static int cleanup_msgid_hash _((int,HASHDATUM*,int));
 static ARTICLE* first_sib _((ARTICLE*,int));
 static ARTICLE* last_sib _((ARTICLE*,int,ARTICLE*));
-static int subjorder_subject _((SUBJECT**,SUBJECT**));
-static int subjorder_date _((SUBJECT**,SUBJECT**));
-static int subjorder_count _((SUBJECT**,SUBJECT**));
-static int subjorder_lines _((SUBJECT**,SUBJECT**));
+static int subjorder_subject(const SUBJECT **spp1, const SUBJECT**spp2);
+static int subjorder_date(const SUBJECT **spp1, const SUBJECT**spp2);
+static int subjorder_count(const SUBJECT **spp1, const SUBJECT**spp2);
+static int subjorder_lines(const SUBJECT **spp1, const SUBJECT**spp2);
 static int subject_score_high _((SUBJECT*));
-static int subjorder_score _((SUBJECT**,SUBJECT**));
-static int threadorder_subject _((SUBJECT**,SUBJECT**));
-static int threadorder_date _((SUBJECT**,SUBJECT**));
-static int threadorder_count _((SUBJECT**,SUBJECT**));
-static int threadorder_lines _((SUBJECT**,SUBJECT**));
+static int subjorder_score(const SUBJECT **spp1, const SUBJECT**spp2);
+static int threadorder_subject(const SUBJECT **spp1, const SUBJECT**spp2);
+static int threadorder_date(const SUBJECT **spp1, const SUBJECT**spp2);
+static int threadorder_count(const SUBJECT **spp1, const SUBJECT**spp2);
+static int threadorder_lines(const SUBJECT **spp1, const SUBJECT**spp2);
 #ifdef SCORE
 static int thread_score_high _((SUBJECT*));
 #endif
-static int threadorder_score _((SUBJECT**,SUBJECT**));
-static int artorder_date _((ARTICLE**,ARTICLE**));
-static int artorder_subject _((ARTICLE**,ARTICLE**));
-static int artorder_author _((ARTICLE**,ARTICLE**));
-static int artorder_number _((ARTICLE**,ARTICLE**));
-static int artorder_groups _((ARTICLE**,ARTICLE**));
-static int artorder_lines _((ARTICLE**,ARTICLE**));
+static int threadorder_score(const SUBJECT **spp1, const SUBJECT**spp2);
+static int artorder_date(const ARTICLE **art1, const ARTICLE **art2);
+static int artorder_subject(const ARTICLE **art1, const ARTICLE **art2);
+static int artorder_author(const ARTICLE **art1, const ARTICLE **art2);
+static int artorder_number(const ARTICLE **art1, const ARTICLE **art2);
+static int artorder_groups(const ARTICLE **art1, const ARTICLE **art2);
+static int artorder_lines(const ARTICLE **art1, const ARTICLE **art2);
 #ifdef SCORE
-static int artorder_score _((ARTICLE**,ARTICLE**));
+static int artorder_score(const ARTICLE **art1, const ARTICLE **art2);
 #endif
 static void build_artptrs _((void));

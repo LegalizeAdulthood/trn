@@ -218,7 +218,7 @@
 
 /* Undefine any of the following features to save both I and D space */
 /* In general, earlier ones are easier to get along without */
-#define USE_FILTER	/* external kill/score filter */
+/*#define USE_FILTER	*//* external kill/score filter */
 #define CUSTOMLINES	/* include code for HIDELINE and PAGESTOP */
 #define WORDERASE	/* enable ^W to erase a word */
 #define MAILCALL	/* check periodically for mail */
@@ -765,7 +765,6 @@
 /* GLOBAL THINGS */
 
 /* file statistics area */
-
 EXT struct stat filestat;
 
 /* various things of type char */

@@ -59,7 +59,9 @@ final_init()
     sigset(SIGWINCH, winch_catcher);
 #endif
 #ifdef SUPPORT_NNTP
+#ifdef SIGPIPE
     sigset(SIGPIPE,pipe_catcher);
+#endif
 #endif
 
 #ifndef lint
@@ -276,8 +278,10 @@ Signal_t
 pipe_catcher(signo)
 int signo;
 {
+#ifdef SIGPIPE
     ;/*$$ we lost the current nntp connection */
     sigset(SIGPIPE,pipe_catcher);
+#endif
 }
 #endif
 

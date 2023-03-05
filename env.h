@@ -24,9 +24,9 @@ bool env_init _((char*,bool_int));
 bool setusername _((char*));
 bool setphostname _((char*));
 char* getval _((char*,char*));
-char* export _((char*,char*));
+char* export(const char*,const char*);
 void un_export _((char*));
 void re_export _((char*,char*,int));
 #ifdef MSDOS
-char* GetEnv _((char*));
+char* GetEnv _((const char*));
 #endif

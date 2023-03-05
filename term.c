@@ -973,6 +973,7 @@ settle_down()
 #ifdef SUPPORT_NNTP
 bool ignore_EINTR = FALSE;
 
+#ifdef SIGALRM
 Signal_t
 alarm_catcher(signo)
 int signo;
@@ -983,6 +984,7 @@ int signo;
     sigset(SIGALRM,alarm_catcher);
     (void) alarm(DATASRC_ALARM_SECS);
 }
+#endif
 #endif
 
 /* read a character from the terminal, with multi-character pushback */
@@ -1140,8 +1142,10 @@ register char* whatbuf;
 
 #ifdef SUPPORT_NNTP
     if (!input_pending()) {
+#ifdef SIGALRM
 	sigset(SIGALRM,alarm_catcher);
 	(void) alarm(DATASRC_ALARM_SECS);
+#endif
     }
 #endif
 

@@ -34,6 +34,13 @@
 #include "util.ih"
 #include "util.h"
 
+#ifdef _WIN32
+#include <direct.h>
+#include <io.h>
+#include <sys/timeb.h>
+#include <sys/types.h>
+#endif
+
 #ifdef UNION_WAIT
 typedef union wait WAIT_STATUS;
 #else
@@ -98,7 +105,7 @@ char* s;
     WAIT_STATUS status;
     pid_t pid, w;
 #endif
-    int ret;
+    int ret = 0;
 
     xmouse_off();
 
@@ -187,7 +194,7 @@ char* s;
 	shell = PREFSHELL;
     termlib_reset();
 #ifdef MSDOS
-    status = spawnl(P_WAIT, shell, shell, "/c", s, (char*)NULL);
+    intptr_t status = spawnl(P_WAIT, shell, shell, "/c", s, (char*)NULL);
 #else
     if ((pid = vfork()) == 0) {
 #ifdef SUPPORT_NNTP
@@ -356,9 +363,7 @@ int mod;
  * Get working directory
  */
 char*
-trn_getwd(buf, buflen)
-char* buf;
-int buflen;
+trn_getwd(char *buf, int buflen)
 {
     char* ret;
 
@@ -500,7 +505,11 @@ int nametype;
     for (s=dirname; s <= end; s++) {	/* this is grody but efficient */
 	if (!*s) {			/* something to make? */
 # ifdef HAS_MKDIR
+#ifdef _WIN32
+	    status = status || mkdir(dirname);
+#else
 	    status = status || mkdir(dirname,0777);
+#endif
 # else
 	    sprintf(tbptr," %s",dirname);
 	    tbptr += strlen(tbptr);	/* make it, sort of */

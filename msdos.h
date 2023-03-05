@@ -41,4 +41,4 @@ int	pclose(FILE*);
 #define NO_FILELINKS
 #define WINSOCK
 #define LAX_INEWS
-#define mkdir(dir,mode) mkdir(dir)
+//#define mkdir(dir,mode) mkdir(dir)

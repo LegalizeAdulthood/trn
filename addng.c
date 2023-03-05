@@ -26,6 +26,8 @@
 #include "addng.h"
 #include "addng.ih"
 
+#include <stdlib.h>
+
 static int
 addng_cmp(key, keylen, data)
 char* key;
@@ -406,26 +408,20 @@ bool_int add_matching;
 }
 
 static int
-agorder_number(app1, app2)
-register ADDGROUP** app1;
-register ADDGROUP** app2;
+agorder_number(const ADDGROUP **app1, const ADDGROUP **app2)
 {
     ART_NUM eq = (*app1)->num - (*app2)->num;
     return eq > 0? sel_direction : -sel_direction;
 }
 
 static int
-agorder_groupname(app1, app2)
-register ADDGROUP** app1;
-register ADDGROUP** app2;
+agorder_groupname(const ADDGROUP **app1, const ADDGROUP **app2)
 {
     return strcaseCMP((*app1)->name, (*app2)->name) * sel_direction;
 }
 
 static int
-agorder_count(app1, app2)
-register ADDGROUP** app1;
-register ADDGROUP** app2;
+agorder_count(const ADDGROUP **app1, const ADDGROUP **app2)
 {
     long eq = (*app1)->toread - (*app2)->toread;
     if (eq)
@@ -442,7 +438,7 @@ sort_addgroups()
     register int i;
     ADDGROUP** lp;
     ADDGROUP** ag_list;
-    int (*sort_procedure)();
+    int (*sort_procedure)(const ADDGROUP**, const ADDGROUP**);
 
     switch (sel_sort) {
       case SS_NATURAL:
@@ -457,12 +453,12 @@ sort_addgroups()
 	break;
     }
 
-    ag_list = (ADDGROUP**)safemalloc(addgroup_cnt * sizeof *ag_list);
+    ag_list = (ADDGROUP**)safemalloc(addgroup_cnt * sizeof(ADDGROUP*));
     for (lp = ag_list, ap = first_addgroup; ap; ap = ap->next)
 	*lp++ = ap;
     assert(lp - ag_list == addgroup_cnt);
 
-    qsort(ag_list, addgroup_cnt, sizeof *ag_list, sort_procedure);
+    qsort(ag_list, addgroup_cnt, sizeof(ADDGROUP*), (int(*)(void const *, void const *)) sort_procedure);
 
     first_addgroup = ap = ag_list[0];
     ap->prev = NULL;

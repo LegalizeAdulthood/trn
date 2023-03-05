@@ -11,13 +11,12 @@ char* cpytill _((char*,char*,int));
 char* filexp _((char*));
 char* instr _((char*,char*,bool_int));
 #ifndef HAS_STRCASECMP
-int trn_casecmp _((char*,char*));
-int trn_ncasecmp _((char*,char*,int));
+int trn_casecmp(const char*,const char*);
+int trn_ncasecmp(const char*,const char*,int);
 #endif
 #ifdef SUPPORT_NNTP
 char* read_auth_file _((char*,char**));
 #endif
 #ifdef MSDOS
-int ChDir _((char*));
 int getuid _((void));
 #endif

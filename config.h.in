@@ -121,13 +121,13 @@
  *	This symbol, if defined, indicates that <stdlib.h> exists and should
  *	be included.
  */
-#cmakedefine I_STDLIB
+#define I_STDLIB
 
 /* I_STRING:
  *	This symbol, if defined, indicates to the C program that it should
  *	include <string.h> (USG systems) instead of <strings.h> (BSD systems).
  */
-#cmakedefine I_STRING
+#define I_STRING
 
 /* I_SYS_DIR:
  *	This symbol, if defined, indicates to the C program that it should
@@ -441,8 +441,8 @@
  *	Set to TRUE if we should compare only the domain portion of the
  *	hostname when looking for local articles.
  */
-#define PHOSTNAME "@PHOST@"		/**/
-#define HOSTBITS @HOSTBITS@	/**/
+#define PHOSTNAME "@PHOST@"
+#cmakedefine01 HOSTBITS
 
 /* PRIVLIB:
  *	This symbol contains the name of the private library for this package.
@@ -485,16 +485,16 @@
 /* SELECT_INIT:
  *	This symbol indicates we default to the selector for group entry.
  */
-/* MSDOS:
- *	This is defined if this is an MSDOS system.
- */
-#define THREAD_INIT	@TRN_INIT@
-#define SELECT_INIT	@TRN_SELECT@
+#cmakedefine01 THREAD_INIT
+#cmakedefine01 SELECT_INIT
 
 #define CALL_INEWS "@USEINEWS@ -h <%h"
 #define NEWSPOSTER "@BIN@/Pnews -h %h"
 #define MAILPOSTER "@BIN@/Rnmail -h %h"
 
+/* MSDOS:
+ *	This is defined if this is an MSDOS system.
+ */
 #cmakedefine MSDOS	/**/
 
 #endif

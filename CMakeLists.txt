@@ -9,188 +9,128 @@ if(WIN32)
     add_library(curses ALIAS pdcurses)
 endif()
 
-set(I_STRING ON)
+set(DIRENTRYTYPE "struct dirent")
+set(EMULATE_NDIR ON)
+set(HAS_FTIME ON)
+set(HAS_GETCWD ON)
+set(HAS_MKDIR ON)
+set(HAS_RENAME ON)
+set(HAS_TERMLIB ON)
 set(I_TIME ON)
+set(MBOX_CHAR "F")
 set(MSDOS ON)
+set(NEWS_ADMIN "root")
+set(NORMSIG ON)
+set(ROOT_ID "0")
+set(SCAN ON)
+set(SCORE ON)
 set(SIGNAL_T "void")
+set(SUPPORT_NNTP ON)
+set(SUPPORT_XTHREAD ON)
+set(TRN_INIT OFF)
+set(TRN_SELECT ON)
+set(USE_GENAUTH ON)
 configure_file(config.h.in config.h)
 
 add_executable(trn
-    addng.c
-    addng.h
-    art.c
-    art.h
-    artio.c
-    artio.h
-    artsrch.c
-    artsrch.h
+    addng.c addng.h addng.ih
+    art.c art.h
+    artio.c artio.h
+    artsrch.c artsrch.h
     artstate.h
-    autosub.c
-    autosub.h
-    backpage.c
-    backpage.h
-    bits.c
-    bits.h
-    cache.c
-    cache.h
-    charsubst.c
-    charsubst.h
-    color.c
-    color.h
+    autosub.c autosub.h
+    backpage.c backpage.h
+    bits.c bits.h bits.ih
+    cache.c cache.h cache.ih
+    charsubst.c charsubst.h charsubst.ih
+    color.c color.h color.ih
     common.h
     config2.h
-    datasrc.c
-    datasrc.h
-    decode.c
-    decode.h
-    edit_dist.c
-    edit_dist.h
-    env.c
-    env.h
+    datasrc.c datasrc.h datasrc.ih
+    decode.c decode.h decode.ih
+    edit_dist.c edit_dist.h
+    env.c env.h env.ih
     EXTERN.h
-    filter.c
-    filter.h
-    final.c
-    final.h
-    hash.c
-    hash.h
-    head.c
-    head.h
-    help.c
-    help.h
+    filter.c filter.h filter.ih
+    final.c final.h
+    hash.c hash.h hash.ih
+    head.c head.h
+    help.c help.h
     inews.c
-    init.c
-    init.h
+    init.c init.h
     INTERN.h
-    intrp.c
-    intrp.h
-    kfile.c
-    kfile.h
-    last.c
-    last.h
-    list.c
-    list.h
-    mempool.c
-    mempool.h
-    mime.c
-    mime.h
+    intrp.c intrp.h intrp.ih
+    kfile.c kfile.h kfile.ih
+    last.c last.h
+    list.c list.h list.ih
+    mempool.c mempool.h mempool.ih
+    mime.c mime.h mime.ih
     msdos.h
-    ndir.c
-    ndir.h
-    ng.c
-    ng.h
-    ngdata.c
-    ngdata.h
-    ngsrch.c
-    ngsrch.h
-    ngstuff.c
-    ngstuff.h
-    nntp.c
-    nntp.h
-    nntpauth.c
-    nntpauth.h
-    nntpclient.c
-    nntpclient.h
-    nntpinit.c
-    nntpinit.h
+    ndir.c ndir.h
+    ng.c ng.h ng.ih
+    ngdata.c ngdata.h ngdata.ih
+    ngsrch.c ngsrch.h
+    ngstuff.c ngstuff.h
+    nntp.c nntp.h nntp.ih
+    nntpauth.c nntpauth.h
+    nntpclient.c nntpclient.h
+    nntpinit.c nntpinit.h nntpinit.ih
     nntplist.c
-    only.c
-    only.h
-    opt.c
-    opt.h
+    only.c only.h
+    opt.c opt.h opt.ih
     os2.h
     parsedate.h
     patchlevel.h
     popen.c
-    rcln.c
-    rcln.h
-    rcstuff.c
-    rcstuff.h
-    respond.c
-    respond.h
-    rt-mt.c
-    rt-mt.h
-    rt-ov.c
-    rt-ov.h
-    rt-page.c
-    rt-page.h
-    rt-process.c
-    rt-process.h
-    rt-select.c
-    rt-select.h
-    rt-util.c
-    rt-util.h
-    rt-wumpus.c
-    rt-wumpus.h
-    rthread.c
-    rthread.h
-    sacmd.c
-    sacmd.h
-    sadesc.c
-    sadesc.h
-    sadisp.c
-    sadisp.h
-    samain.c
-    samain.h
-    samisc.c
-    samisc.h
-    sathread.c
-    sathread.h
-    scan.c
-    scan.h
-    scanart.c
-    scanart.h
-    scmd.c
-    scmd.h
-    score-easy.c
-    score-easy.h
-    score.c
-    score.h
-    scorefile.c
-    scorefile.h
-    scoresave.c
-    scoresave.h
-    sdisp.c
-    sdisp.h
-    search.c
-    search.h
-    smisc.c
-    smisc.h
-    sorder.c
-    sorder.h
-    spage.c
-    spage.h
-    strftime.c
-    sw.c
-    sw.h
-    term.c
-    term.h
-    tkstuff.c
-    tkstuff.h
-    tktree.c
-    tktree.h
+    rcln.c rcln.h
+    rcstuff.c rcstuff.h rcstuff.ih
+    respond.c respond.h respond.ih
+    rt-mt.c rt-mt.h rt-mt.ih
+    rt-ov.c rt-ov.h rt-ov.ih
+    rt-page.c rt-page.h rt-page.ih
+    rt-process.c rt-process.h rt-process.ih
+    rt-select.c rt-select.h rt-select.ih
+    rt-util.c rt-util.h rt-util.ih
+    rt-wumpus.c rt-wumpus.h rt-wumpus.ih
+    rthread.c rthread.h rthread.ih
+    sacmd.c sacmd.h
+    sadesc.c sadesc.h
+    sadisp.c sadisp.h
+    samain.c samain.h
+    samisc.c samisc.h
+    sathread.c sathread.h
+    scan.c scan.h
+    scanart.c scanart.h
+    scmd.c scmd.h
+    score-easy.c score-easy.h
+    score.c score.h
+    scorefile.c scorefile.h scorefile.ih
+    scoresave.c scoresave.h
+    sdisp.c sdisp.h
+    search.c search.h
+    smisc.c smisc.h
+    sorder.c sorder.h
+    spage.c spage.h
+    sw.c sw.h
+    term.c term.h term.ih
+    tkstuff.c tkstuff.h tkstuff.ih
+    tktree.c tktree.h tktree.ih
     trn-artchk.c
-    trn.c
-    trn.h
+    trn.c trn.h
     typedef.h
-    univ.c
-    univ.h
-    url.c
-    url.h
-    util.c
-    util.h
-    util2.c
-    util2.h
-    util3.c
-    util3.h
-    uudecode.c
-    uudecode.h
-    wildmat.c
-    wildmat.h
+    univ.c univ.h univ.ih
+    url.c url.h url.ih
+    util.c util.h util.ih
+    util2.c util2.h
+    util3.c util3.h
+    uudecode.c uudecode.h uudecode.ih
+    wildmat.c wildmat.h wildmat.ih
     config.h.in
 )
+source_group("Template Files" REGULAR_EXPRESSION "^.*\.in$")
+source_group("Header Files" REGULAR_EXPRESSION "^.*\.(h|ih)$")
 if(WIN32)
-    target_compile_options(trn PUBLIC /Za)
+    target_compile_definitions(trn PUBLIC _CRT_DECLARE_NONSTDC_NAMES=1 _CRT_INTERNAL_NONSTDC_NAMES=1)
 endif()
 target_include_directories(trn PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(trn PUBLIC curses)

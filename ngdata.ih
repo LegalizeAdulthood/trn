@@ -4,6 +4,6 @@
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
-static int ngorder_number _((NGDATA**,NGDATA**));
-static int ngorder_groupname _((NGDATA**,NGDATA**));
-static int ngorder_count _((NGDATA**,NGDATA**));
+static int ngorder_number(const NGDATA**,const NGDATA**);
+static int ngorder_groupname(const NGDATA**,const NGDATA**);
+static int ngorder_count(const NGDATA**,const NGDATA**);

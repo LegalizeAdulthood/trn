@@ -5,9 +5,13 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include <setjmp.h>
+#include "env.h"
 #include "util2.h"
 #include "util3.h"
+
+#include <io.h>
+#include <process.h>
+#include <setjmp.h>
 
 #ifndef	_NFILE
 # define _NFILE 5			/* Number of open files */
@@ -178,7 +182,7 @@ char* type;			/* "w" or "r" */
 	}
     } else {
 	/* screwy call or unsupported type */
-	errno = EINVFNC;
+	errno = EINVAL;
 	longjmp(panic, __LINE__);
     }
     return p;
@@ -229,7 +233,7 @@ FILE* p;
 	resetpipe(pipefd);
 	break;
     default:
-	errno = EINVFNC;
+	errno = EINVAL;
 	longjmp(panic, __LINE__);
 	/*NOTREACHED*/
     }

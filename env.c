@@ -286,9 +286,7 @@ static bool firstexport = TRUE;
 extern char** environ;
 
 char*
-export(nam,val)
-char* nam;
-char* val;
+export(const char *nam, const char *val)
 {
     int namlen = strlen(nam);
     register int i=envix(nam,namlen);	/* where does it go? */
@@ -346,9 +344,7 @@ int limit;
 }
 
 static int
-envix(nam, len)
-char* nam;
-int len;
+envix(const char *nam, int len)
 {
     register int i;
 
@@ -360,10 +356,13 @@ int len;
 }
 
 #ifdef MSDOS
+enum
+{
+    MAXDIR = 512
+};
 
 char*
-GetEnv(var)
-char* var;
+GetEnv(const char* var)
 {
 #undef getenv
     char* s = getenv(var);

@@ -191,25 +191,19 @@ ART_NUM newlast;
 }
 
 static int
-ngorder_number(npp1, npp2)
-register NGDATA** npp1;
-register NGDATA** npp2;
+ngorder_number(const NGDATA **npp1,const NGDATA **npp2)
 {
     return (int)((*npp1)->num - (*npp2)->num) * sel_direction;
 }
 
 static int
-ngorder_groupname(npp1, npp2)
-register NGDATA** npp1;
-register NGDATA** npp2;
+ngorder_groupname(const NGDATA **npp1,const NGDATA **npp2)
 {
     return strcaseCMP((*npp1)->rcline, (*npp2)->rcline) * sel_direction;
 }
 
 static int
-ngorder_count(npp1, npp2)
-register NGDATA** npp1;
-register NGDATA** npp2;
+ngorder_count(const NGDATA **npp1,const NGDATA **npp2)
 {
     int eq;
     if ((eq = (int)((*npp1)->toread - (*npp2)->toread)) != 0)
@@ -226,7 +220,7 @@ sort_newsgroups()
     register int i;
     NGDATA** lp;
     NGDATA** ng_list;
-    int (*sort_procedure)();
+    int (*sort_procedure)(const NGDATA **npp1,const NGDATA **npp2);
 
     /* If we don't have at least two newsgroups, we're done! */
     if (!first_ng || !first_ng->next)
@@ -250,7 +244,7 @@ sort_newsgroups()
 	*lp++ = np;
     assert(lp - ng_list == newsgroup_cnt);
 
-    qsort(ng_list, newsgroup_cnt, sizeof (NGDATA*), sort_procedure);
+    qsort(ng_list, newsgroup_cnt, sizeof (NGDATA*), (int(*)(void const *, void const *))sort_procedure);
 
     first_ng = np = ng_list[0];
     np->prev = NULL;

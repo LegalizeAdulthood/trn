@@ -1428,35 +1428,27 @@ int cmode;
 }
 
 static int
-subjorder_subject(spp1, spp2)
-register SUBJECT** spp1;
-register SUBJECT** spp2;
+subjorder_subject(const SUBJECT **spp1, const SUBJECT**spp2)
 {
     return strcaseCMP((*spp1)->str+4, (*spp2)->str+4) * sel_direction;
 }
 
 static int
-subjorder_date(spp1, spp2)
-register SUBJECT** spp1;
-register SUBJECT** spp2;
+subjorder_date(const SUBJECT **spp1, const SUBJECT**spp2)
 {
     time_t eq = (*spp1)->date - (*spp2)->date;
     return eq? eq > 0? sel_direction : -sel_direction : 0;
 }
 
 static int
-subjorder_count(spp1, spp2)
-register SUBJECT** spp1;
-register SUBJECT** spp2;
+subjorder_count(const SUBJECT **spp1, const SUBJECT**spp2)
 {
     short eq = (*spp1)->misc - (*spp2)->misc;
     return eq? eq > 0? sel_direction : -sel_direction : subjorder_date(spp1,spp2);
 }
 
 static int
-subjorder_lines(spp1, spp2)
-register SUBJECT** spp1;
-register SUBJECT** spp2;
+subjorder_lines(const SUBJECT **spp1, const SUBJECT**spp2)
 {
     long eq, l1, l2;
     l1 = (*spp1)->articles? (*spp1)->articles->lines : 0;
@@ -1508,9 +1500,7 @@ register SUBJECT** spp2;
 #endif
 
 static int
-threadorder_subject(spp1, spp2)
-SUBJECT** spp1;
-SUBJECT** spp2;
+threadorder_subject(const SUBJECT **spp1, const SUBJECT**spp2)
 {
     register ARTICLE* t1 = (*spp1)->thread;
     register ARTICLE* t2 = (*spp2)->thread;
@@ -1520,9 +1510,7 @@ SUBJECT** spp2;
 }
 
 static int
-threadorder_date(spp1, spp2)
-SUBJECT** spp1;
-SUBJECT** spp2;
+threadorder_date(const SUBJECT **spp1, const SUBJECT**spp2)
 {
     register ARTICLE* t1 = (*spp1)->thread;
     register ARTICLE* t2 = (*spp2)->thread;
@@ -1546,9 +1534,7 @@ SUBJECT** spp2;
 }
 
 static int
-threadorder_count(spp1, spp2)
-SUBJECT** spp1;
-SUBJECT** spp2;
+threadorder_count(const SUBJECT **spp1, const SUBJECT**spp2)
 {
     register int size1 = (*spp1)->misc;
     register int size2 = (*spp2)->misc;
@@ -1565,9 +1551,7 @@ SUBJECT** spp2;
 }
 
 static int
-threadorder_lines(spp1, spp2)
-SUBJECT** spp1;
-SUBJECT** spp2;
+threadorder_lines(const SUBJECT **spp1, const SUBJECT**spp2)
 {
     register ARTICLE* t1 = (*spp1)->thread;
     register ARTICLE* t2 = (*spp2)->thread;
@@ -1649,7 +1633,7 @@ sort_subjects()
     register int i;
     SUBJECT** lp;
     SUBJECT** subj_list;
-    int (*sort_procedure)();
+    int (*sort_procedure)(const SUBJECT **spp1, const SUBJECT**spp2);
 
     /* If we don't have at least two subjects, we're done! */
     if (!first_subject || !first_subject->next)
@@ -1687,7 +1671,7 @@ sort_subjects()
 	*lp++ = sp;
     assert(lp - subj_list == subject_count);
 
-    qsort(subj_list, subject_count, sizeof (SUBJECT*), sort_procedure);
+    qsort(subj_list, subject_count, sizeof (SUBJECT*), ((int(*)(void const *, void const *))sort_procedure));
 
     first_subject = sp = subj_list[0];
     sp->prev = NULL;
@@ -1711,18 +1695,14 @@ sort_subjects()
 }
 
 static int
-artorder_date(art1, art2)
-register ARTICLE** art1;
-register ARTICLE** art2;
+artorder_date(const ARTICLE **art1, const ARTICLE **art2)
 {
     long eq = (*art1)->date - (*art2)->date;
     return eq? eq > 0? sel_direction : -sel_direction : 0;
 }
 
 static int
-artorder_subject(art1, art2)
-register ARTICLE** art1;
-register ARTICLE** art2;
+artorder_subject(const ARTICLE **art1, const ARTICLE **art2)
 {
     if ((*art1)->subj == (*art2)->subj)
 	return artorder_date(art1, art2);
@@ -1731,27 +1711,21 @@ register ARTICLE** art2;
 }
 
 static int
-artorder_author(art1, art2)
-register ARTICLE** art1;
-register ARTICLE** art2;
+artorder_author(const ARTICLE **art1, const ARTICLE **art2)
 {
     int eq = strcaseCMP((*art1)->from, (*art2)->from);
     return eq? eq * sel_direction : artorder_date(art1, art2);
 }
 
 static int
-artorder_number(art1, art2)
-register ARTICLE** art1;
-register ARTICLE** art2;
+artorder_number(const ARTICLE **art1, const ARTICLE **art2)
 {
     ART_NUM eq = article_num(*art1) - article_num(*art2);
     return eq > 0? sel_direction : -sel_direction;
 }
 
 static int
-artorder_groups(art1, art2)
-register ARTICLE** art1;
-register ARTICLE** art2;
+artorder_groups(const ARTICLE **art1, const ARTICLE **art2)
 {
     long eq;
 #ifdef DEBUG
@@ -1765,9 +1739,7 @@ register ARTICLE** art2;
 }
 
 static int
-artorder_lines(art1, art2)
-register ARTICLE** art1;
-register ARTICLE** art2;
+artorder_lines(const ARTICLE **art1, const ARTICLE **art2)
 {
     long eq = (*art1)->lines - (*art2)->lines;
     return eq? eq > 0? sel_direction : -sel_direction : artorder_date(art1,art2);
@@ -1775,9 +1747,7 @@ register ARTICLE** art2;
 
 #ifdef SCORE
 static int
-artorder_score(art1, art2)
-register ARTICLE** art1;
-register ARTICLE** art2;
+artorder_score(const ARTICLE **art1, const ARTICLE **art2)
 {
     int eq = sc_score_art(article_num(*art2),FALSE)
 	   - sc_score_art(article_num(*art1),FALSE);
@@ -1790,7 +1760,7 @@ register ARTICLE** art2;
 void
 sort_articles()
 {
-    int (*sort_procedure)();
+    int (*sort_procedure)(const ARTICLE **art1, const ARTICLE **art2);
 
     build_artptrs();
 
@@ -1825,7 +1795,7 @@ sort_articles()
 #endif
     }
     sel_page_app = 0;
-    qsort(artptr_list, artptr_list_size, sizeof (ARTICLE*), sort_procedure);
+    qsort(artptr_list, artptr_list_size, sizeof (ARTICLE*), ((int(*)(void const *, void const *))sort_procedure));
 }
 
 static void

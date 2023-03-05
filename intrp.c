@@ -33,7 +33,7 @@
 #include "INTERN.h"
 #include "intrp.h"
 #include "intrp.ih"
-#include <netdb.h>
+//#include <netdb.h>
 
 static char* regexp_specials = "^$.*[\\/?%";
 
