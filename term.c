@@ -199,7 +199,6 @@ char* tcbuf;		/* temp area for "uncompiled" termcap entry */
     tc_US = "\033[7m";
     tc_UE = "\033[m";
     tc_UC = nullstr;
-    set_lines_and_cols();
     tc_AM = TRUE;
 #else
     s = getenv("TERM");
@@ -309,28 +308,6 @@ char* tcbuf;		/* temp area for "uncompiled" termcap entry */
 
     mac_init(tcbuf);
 }
-
-#ifdef MSDOS
-static void
-set_lines_and_cols()
-{
-    gotoxy(132,1);
-    if (wherex() == 132)
-	tc_COLS = 132;
-    else
-	tc_COLS = 80;
-    gotoxy(1,50);
-    if (wherey() == 50)
-	tc_LINES = 50;
-    else {
-	gotoxy(1,43);
-	if (wherey() == 50)
-	    tc_LINES = 50;
-	else
-	    tc_LINES = 25;
-    }
-}
-#endif
 
 void
 set_macro(seq,def)
@@ -1132,8 +1109,7 @@ no_ulfire()
 /* get a character into a buffer */
 
 void
-getcmd(whatbuf)
-register char* whatbuf;
+getcmd(char *whatbuf)
 {
     register KEYMAP* curmap;
     register int i;
@@ -1169,7 +1145,9 @@ tryagain:
 #ifdef SUPPORT_NNTP
 		if (ignore_EINTR)
 		    continue;
+#ifdef SIGALRM
 		(void) alarm(0);
+#endif
 #endif
 		return;
 	    }
@@ -1222,7 +1200,9 @@ got_canonical:
     if (whatbuf == buf)
 	whatbuf[1] = FINISHCMD;		/* tell finish_command to work */
 #ifdef SUPPORT_NNTP
+#ifdef SIGALRM
     (void) alarm(0);
+#endif
 #endif
 }
 

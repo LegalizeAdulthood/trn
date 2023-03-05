@@ -23,9 +23,6 @@ struct keymap {
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
-#ifdef MSDOS
-static void set_lines_and_cols _((void));
-#endif
 static void mac_init _((char*));
 static KEYMAP* newkeymap _((void));
 static void show_keymap _((KEYMAP*,char*));
