@@ -422,7 +422,7 @@ the lock file: %s\n", rp->lockname) FLUSH;
 	printf(cantcreate,rp->lockname) FLUSH;
 	sig_catcher(0);
     }
-    fprintf(tmpfp,"%ld\n%s\n",our_pid,localhost);
+    fprintf(tmpfp,"%ld\n%s\n",our_pid,g_local_host);
     fclose(tmpfp);
     return TRUE;
 }

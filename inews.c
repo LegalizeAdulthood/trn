@@ -187,12 +187,12 @@ int main(int argc, char *argv[])
     if (!has_pathline)
 	fprintf(nntplink.wr_fp,"Path: not-for-mail%s",line_end);
     if (!has_fromline) {
-	fprintf(nntplink.wr_fp,"From: %s@%s (%s)%s",loginName,phostname,
-		getval("NAME",realName),line_end);
+	fprintf(nntplink.wr_fp,"From: %s@%s (%s)%s",g_login_name,g_p_host_name,
+		getval("NAME",g_real_name),line_end);
     }
     if (!getenv("NO_ORIGINATOR")) {
-	fprintf(nntplink.wr_fp,"Originator: %s@%s (%s)%s",loginName,phostname,
-		getval("NAME",realName),line_end);
+	fprintf(nntplink.wr_fp,"Originator: %s@%s (%s)%s",g_login_name,g_p_host_name,
+		getval("NAME",g_real_name),line_end);
     }
     fprintf(nntplink.wr_fp,"%s",line_end);
 
@@ -290,7 +290,7 @@ append_signature()
 #ifdef NO_INEWS_DOTDIR
     dotdir = homedir;
 #endif
-    if (dotdir == NULL)
+    if (g_dot_dir == NULL)
 	return;
 
     fp = fopen(filexp(SIGNATURE_FILE), "r");

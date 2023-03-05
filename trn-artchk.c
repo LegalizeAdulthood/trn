@@ -31,8 +31,8 @@ char* nntp_auth_file;
 
 int debug = 0;
 
-char* homedir;
-char* dotdir;
+char* g_home_dir;
+char* g_dot_dir;
 
 char nullstr[1] = "";
 char ess[2] = "s";
@@ -56,12 +56,12 @@ char* argv[];
     int i, col, max_col_len, line_num = 0, ngcnt = 0, ngleft;
     int found_newsgroups = 0;
 
-    homedir = getenv("HOME");
-    if (homedir == NULL)
-	homedir = getenv("LOGDIR");
-    dotdir = getenv("DOTDIR");
-    if (!dotdir)
-	dotdir = homedir;
+    g_home_dir = getenv("HOME");
+    if (g_home_dir == NULL)
+	g_home_dir = getenv("LOGDIR");
+    g_dot_dir = getenv("DOTDIR");
+    if (!g_dot_dir)
+	g_dot_dir = g_home_dir;
 
     if (argc != 5 || !(max_col_len = atoi(argv[2]))) {
 	fprintf(stderr, "\

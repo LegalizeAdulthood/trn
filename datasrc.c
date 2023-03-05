@@ -192,7 +192,7 @@ char** vals;
 	dp->newsid = savestr(filexp(vals[DI_ACTIVE_FILE]));
 
     if (!(dp->spool_dir = file_or_none(vals[DI_SPOOL_DIR])))
-	dp->spool_dir = savestr(tmpdir);
+	dp->spool_dir = savestr(g_tmp_dir);
 
     dp->over_dir = dir_or_none(dp,vals[DI_OVERVIEW_DIR],DF_TRY_OVERVIEW);
     dp->over_fmt = file_or_none(vals[DI_OVERVIEW_FMT]);
@@ -606,7 +606,7 @@ char* groupname;
 	    /*DATASRC* save_datasrc = datasrc;*/
 	    set_datasrc(dp);
 	    if ((dp->flags & (DF_TMPGRPDESC|DF_NOXGTITLE)) == DF_TMPGRPDESC
-	     && netspeed < 5) {
+	     && g_net_speed < 5) {
 		(void)srcfile_open(&dp->desc_sf,(char*)NULL,/*$$check return?*/
 				   (char*)NULL,(char*)NULL);
 		grouplen = strlen(groupname);
@@ -746,7 +746,7 @@ char* server;
 		    return 0;
 		}
 		sfp->lastfetch = now;
-		if (netspeed > 8)
+		if (g_net_speed > 8)
 		    spin_todo = 0;
 	    }
 	}
@@ -811,7 +811,7 @@ char* server;
 		break;
 	    strcat(buf,"\n");
 	    fputs(buf, fp);
-	    spin(200 * netspeed);
+	    spin(200 * g_net_speed);
 	}
 #endif
 	ElseIf (!fgets(buf, sizeof buf, fp))

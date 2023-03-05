@@ -80,7 +80,7 @@ int tcbuf_len;
 
     /* if this is the news admin then load his UID into newsuid */
 
-    if (strEQ(loginName,NEWS_ADMIN))
+    if (strEQ(g_login_name,NEWS_ADMIN))
 	newsuid = getuid();
 #endif
 
@@ -104,7 +104,7 @@ int tcbuf_len;
     if (*hostname == '.')
 	hostname++;
 #else
-    hostname = phostname;
+    hostname = g_p_host_name;
 #endif
 }
 
@@ -451,13 +451,13 @@ char* cmd;
 		    break;
 #endif
 		case '~':
-		    s = homedir;
+		    s = g_home_dir;
 		    break;
 		case '.':
-		    s = dotdir;
+		    s = g_dot_dir;
 		    break;
 		case '+':
-		    s = trndir;
+		    s = g_trn_dir;
 		    break;
 		case '$':
 		    s = scrbuf;
@@ -580,7 +580,7 @@ char* cmd;
 		    s = headname;
 		    break;
 		case 'H':			/* host name in postings */
-		    s = phostname;
+		    s = g_p_host_name;
 		    break;
 		case 'i':
 		    if (in_ng) {
@@ -610,7 +610,7 @@ char* cmd;
 #endif
 		    break;
 		case 'L':			/* login id */
-		    s = loginName;
+		    s = g_login_name;
 		    break;
 		case 'm':		/* current mode */
 		    s = scrbuf;
@@ -628,7 +628,7 @@ char* cmd;
 			s = nullstr;
 		    break;
 		case 'N':			/* full name */
-		    s = getval("NAME",realName);
+		    s = getval("NAME",g_real_name);
 		    break;
 		case 'o':			/* organization */
 #ifdef IGNOREORG
@@ -766,8 +766,8 @@ char* cmd;
 					/* should we substitute path? */
 			    s = path_buf = fetchlines(art,PATH_LINE);
 			}
-			i = strlen(phostname);
-			if (strnEQ(phostname,s,i) && s[i] == '!')
+			i = strlen(g_p_host_name);
+			if (strnEQ(g_p_host_name,s,i) && s[i] == '!')
 			    s += i + 1;
 		    }
 		    address_parse = TRUE;	/* just the good part */
@@ -821,10 +821,10 @@ char* cmd;
 		    s = datasrc? datasrc->thread_dir : nullstr;
 		    break;
 		case 'x':			/* news library */
-		    s = lib;
+		    s = g_lib;
 		    break;
 		case 'X':			/* rn library */
-		    s = rnlib;
+		    s = g_rn_lib;
 		    break;
 #ifdef SCORE
 		case 'y':	/* from line with *-shortening */
@@ -876,7 +876,7 @@ char* cmd;
 		    break;
 #endif /* SCORE */
 		case 'Y':
-		    s = tmpdir;
+		    s = g_tmp_dir;
 		    break;
 		case 'z':
 		    if (!in_ng) {

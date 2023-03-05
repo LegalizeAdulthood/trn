@@ -26,17 +26,17 @@ bool_int lax;
 {
     bool fully_successful = TRUE;
 
-    if ((homedir = getenv("HOME")) == NULL)
-	homedir = getenv("LOGDIR");
+    if ((g_home_dir = getenv("HOME")) == NULL)
+	g_home_dir = getenv("LOGDIR");
 
-    if ((tmpdir = getenv("TMPDIR")) == NULL)
-	tmpdir = getval("TMP","/tmp");
+    if ((g_tmp_dir = getenv("TMPDIR")) == NULL)
+	g_tmp_dir = getval("TMP","/tmp");
 
     /* try to set loginName */
     if (lax) {
-	loginName = getenv("USER");
-	if (!loginName)
-	    loginName = getenv("LOGNAME");
+	g_login_name = getenv("USER");
+	if (!g_login_name)
+	    g_login_name = getenv("LOGNAME");
     }
 #ifndef MSDOS
     if (!lax || !loginName) {
@@ -48,10 +48,10 @@ bool_int lax;
 
     /* Set realName, and maybe set loginName and homedir (if NULL). */
     if (!setusername(tcbuf)) {
-	if (!loginName)
-	    loginName = nullstr;
-	if (!realName)
-	    realName = nullstr;
+	if (!g_login_name)
+	    g_login_name = nullstr;
+	if (!g_real_name)
+	    g_real_name = nullstr;
 	fully_successful = FALSE;
     }
     env_init2();
@@ -64,13 +64,13 @@ bool_int lax;
     {
 	char* cp = getval("NETSPEED","5");
 	if (*cp == 'f')
-	    netspeed = 10;
+	    g_net_speed = 10;
 	else if (*cp == 's')
-	    netspeed = 1;
+	    g_net_speed = 1;
 	else {
-	    netspeed = atoi(cp);
-	    if (netspeed < 1)
-		netspeed = 1;
+	    g_net_speed = atoi(cp);
+	    if (g_net_speed < 1)
+		g_net_speed = 1;
 	}
     }
 #endif
@@ -81,14 +81,14 @@ bool_int lax;
 static void
 env_init2()
 {
-    if (dotdir)		/* Avoid running multiple times. */
+    if (g_dot_dir)		/* Avoid running multiple times. */
 	return;
-    if (!homedir)
-	homedir = "/";
-    dotdir = getval("DOTDIR",homedir);
-    trndir = savestr(filexp(getval("TRNDIR",TRNDIR)));
-    lib = savestr(filexp(NEWSLIB));
-    rnlib = savestr(filexp(PRIVLIB));
+    if (!g_home_dir)
+	g_home_dir = "/";
+    g_dot_dir = getval("DOTDIR",g_home_dir);
+    g_trn_dir = savestr(filexp(getval("TRNDIR",TRNDIR)));
+    g_lib = savestr(filexp(NEWSLIB));
+    g_rn_lib = savestr(filexp(PRIVLIB));
 }
 
 /* Set loginName to the user's login name and realName to the user's
@@ -171,7 +171,7 @@ char* tmpbuf;
 	    fgets(buf,sizeof buf,fp);
 	    fclose(fp);
 	    buf[strlen(buf)-1] = '\0';
-	    realName = savestr(buf);
+	    g_real_name = savestr(buf);
 	}
 	else
 	    s = "PUT_YOUR_NAME_HERE";
@@ -218,32 +218,32 @@ char* tmpbuf;
 #  endif /* PHOSTCMD */
 # endif /* HAS_UNAME */
 #endif /* HAS_GETHOSTNAME */
-    localhost = savestr(tmpbuf);
+    g_local_host = savestr(tmpbuf);
 
     /* Build the host name that goes in postings */
 
-    phostname = PHOSTNAME;
-    if (FILE_REF(phostname) || *phostname == '~') {
-	phostname = filexp(phostname);
-	if ((fp = fopen(phostname,"r")) == NULL)
+    g_p_host_name = PHOSTNAME;
+    if (FILE_REF(g_p_host_name) || *g_p_host_name == '~') {
+	g_p_host_name = filexp(g_p_host_name);
+	if ((fp = fopen(g_p_host_name,"r")) == NULL)
 	    strcpy(tmpbuf,".");
 	else {
 	    fgets(tmpbuf,TCBUF_SIZE,fp);
 	    fclose(fp);
-	    phostname = tmpbuf + strlen(tmpbuf) - 1;
-	    if (*phostname == '\n')
-		*phostname = '\0';
+	    g_p_host_name = tmpbuf + strlen(tmpbuf) - 1;
+	    if (*g_p_host_name == '\n')
+		*g_p_host_name = '\0';
 	}
     }
     else
-	strcpy(tmpbuf,phostname);
+	strcpy(tmpbuf,g_p_host_name);
 
     if (*tmpbuf == '.') {
 	if (tmpbuf[1] != '\0')
 	    strcpy(buf,tmpbuf);
 	else
 	    *buf = '\0';
-	strcpy(tmpbuf,localhost);
+	strcpy(tmpbuf,g_local_host);
 	strcat(tmpbuf,buf);
     }
 
@@ -267,7 +267,7 @@ char* tmpbuf;
 	    hostname_ok = FALSE;
 	}
     }
-    phostname = savestr(tmpbuf);
+    g_p_host_name = savestr(tmpbuf);
     return hostname_ok;
 }
 

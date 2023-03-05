@@ -220,7 +220,7 @@ beginning:
 	    setspin(SPIN_BACKGROUND);
 	else {
 #ifdef SUPPORT_NNTP
-	    int lots2do = ((datasrc->flags & DF_REMOTE)? netspeed : 20) * 100;
+	    int lots2do = ((datasrc->flags & DF_REMOTE)? g_net_speed : 20) * 100;
 #else
 	    int lots2do = 20 * 100;
 #endif

@@ -3,7 +3,7 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 
-extern char* homedir;
+extern char* g_home_dir;
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 

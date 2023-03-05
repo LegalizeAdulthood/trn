@@ -18,11 +18,11 @@ char* server_name;
 char* nntp_auth_file;
 
 int debug = 0;			/* make nntpclient.c happy */
-char* homedir;
-char* dotdir;
+char* g_home_dir;
+char* g_dot_dir;
 
 #ifdef USE_GENAUTH
-char* loginName;
+char* g_login_name;
 #endif
 
 int
@@ -71,9 +71,9 @@ char* argv[];
 
 #ifdef USE_GENAUTH
     /* get login name */
-    loginName = getenv("USER");
-    if (loginName == NULL) {
-	loginName = getenv("LOGNAME");
+    g_login_name = getenv("USER");
+    if (g_login_name == NULL) {
+	g_login_name = getenv("LOGNAME");
 #ifdef GETLOGIN
 	if (loginName == NULL)
 	    loginName = getlogin();
@@ -81,12 +81,12 @@ char* argv[];
     }
 #endif
 
-    homedir = getenv("HOME");
-    if (homedir == NULL)
-	homedir = getenv("LOGDIR");
-    dotdir = getenv("DOTDIR");
-    if (!dotdir)
-	dotdir = homedir;
+    g_home_dir = getenv("HOME");
+    if (g_home_dir == NULL)
+	g_home_dir = getenv("LOGDIR");
+    g_dot_dir = getenv("DOTDIR");
+    if (!g_dot_dir)
+	g_dot_dir = g_home_dir;
 
     cp = getenv("NNTPSERVER");
     if (!cp) {

@@ -1262,7 +1262,7 @@ cwd_check()
 	if (makedir(tmpbuf,MD_DIR) != 0 || chdir(tmpbuf) != 0) {
 	    interp(cmd_buf, (sizeof cmd_buf), "%~/News");
 	    if (makedir(cmd_buf,MD_DIR) != 0)
-		strcpy(tmpbuf,homedir);
+		strcpy(tmpbuf,g_home_dir);
 	    else
 		strcpy(tmpbuf,cmd_buf);
 	    chdir(tmpbuf);
@@ -1298,7 +1298,7 @@ Current directory %s is not writeable--\n\
 #ifdef TERSE
 	    printf("%s not writeable--using ~\n\n",tmpbuf) FLUSH;
 #endif
-	strcpy(tmpbuf,homedir);
+	strcpy(tmpbuf,g_home_dir);
     }
     cwd = savestr(tmpbuf);
 }

@@ -101,7 +101,7 @@ register char* s;
     s = filename;
     if (*s == '~') {	/* does destination start with ~? */
 	if (!*(++s) || *s == '/') {
-	    sprintf(scrbuf,"%s%s",homedir,s);
+	    sprintf(scrbuf,"%s%s",g_home_dir,s);
 				/* swap $HOME for it */
 #ifdef DEBUG
 	    if (debug & DEB_FILEXP)

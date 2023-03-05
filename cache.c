@@ -259,7 +259,7 @@ register ARTICLE* ap;
 {
     if (auto_select_postings && (ap->flags & AF_EXISTS) && ap->from) {
 	if (ap->flags & AF_FROMTRUNCED) {
-	    strcpy(cmd_buf,realName);
+	    strcpy(cmd_buf,g_real_name);
 	    if (strEQ(ap->from,compress_name(cmd_buf,16))) {
 		untrim_cache = TRUE;
 		fetchfrom(article_num(ap),FALSE);
@@ -288,7 +288,7 @@ register ARTICLE* ap;
 		h = s;
 	    } else
 		h = u = s;
-	    if (strEQ(u,loginName)) {
+	    if (strEQ(u,g_login_name)) {
 		if (in_string(h,hostname,FALSE)) {
 		    switch (auto_select_postings) {
 		      case '.':
@@ -942,7 +942,7 @@ bool_int all_articles;
 	setspin(SPIN_BACKGROUND);
     else {
 #ifdef SUPPORT_NNTP
-	int lots2do = ((datasrc->flags & DF_REMOTE)? netspeed : 20) * 25;
+	int lots2do = ((datasrc->flags & DF_REMOTE)? g_net_speed : 20) * 25;
 #else
 	int lots2do = 20 * 25;
 #endif

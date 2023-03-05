@@ -531,8 +531,8 @@ cancel_article()
     ngs_buf = fetchlines(art,NGS_LINE);
     if (strcaseNE(getval("FROM",""),from_buf)
      && (!in_string(from_buf,hostname,FALSE)
-      || (!in_string(from_buf,loginName,TRUE)
-       && !in_string(reply_buf,loginName,TRUE)
+      || (!in_string(from_buf,g_login_name,TRUE)
+       && !in_string(reply_buf,g_login_name,TRUE)
 #ifdef NEWS_ADMIN
        && myuid != newsuid
 #endif
@@ -605,8 +605,8 @@ supersede_article()		/* Supersedes: */
     ngs_buf = fetchlines(art,NGS_LINE);
     if (strcaseNE(getval("FROM",""),from_buf)
      && (!in_string(from_buf,hostname,FALSE)
-      || (!in_string(from_buf,loginName,TRUE)
-       && !in_string(reply_buf,loginName,TRUE)
+      || (!in_string(from_buf,g_login_name,TRUE)
+       && !in_string(reply_buf,g_login_name,TRUE)
 #ifdef NEWS_ADMIN
        && myuid != newsuid
 #endif

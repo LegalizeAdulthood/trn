@@ -87,10 +87,10 @@ char* pattern;
 char* stoppers;
 char* cmd;
 {
-    extern char* dotdir;
+    extern char* g_dot_dir;
     if (*pattern == '%' && pattern[1] == '.') {
-	int len = strlen(dotdir);
-	safecpy(dest, dotdir, destsize);
+	int len = strlen(g_dot_dir);
+	safecpy(dest, g_dot_dir, destsize);
 	if (len < destsize)
 	    safecpy(dest+len, pattern+2, destsize - len);
     }
