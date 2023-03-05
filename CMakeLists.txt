@@ -40,7 +40,6 @@ add_library(util
     INTERN.h
     env.c env.h env.ih
     util2.c util2.h
-    util3.c util3.h
     wildmat.c wildmat.h wildmat.ih
 )
 if(WIN32)
@@ -54,6 +53,11 @@ add_library(nntp
     nntpinit.c nntpinit.h nntpinit.ih
 )
 target_link_libraries(nntp PUBLIC sockets util)
+
+add_library(tool
+    util3.c util3.h
+)
+target_link_libraries(tool PUBLIC nntp)
 
 bison_target(parsedate parsedate.y ${CMAKE_CURRENT_BINARY_DIR}/parsedate.c)
 
@@ -148,13 +152,13 @@ source_group("Header Files" REGULAR_EXPRESSION "^.*\.(h|ih)$")
 target_link_libraries(trn PUBLIC curses nntp)
 
 add_executable(inews inews.c)
-target_link_libraries(inews PUBLIC nntp)
+target_link_libraries(inews PUBLIC nntp tool)
 
 add_executable(nntplist nntplist.c)
-target_link_libraries(nntplist PUBLIC nntp)
+target_link_libraries(nntplist PUBLIC nntp tool)
 
 add_executable(trn-artchk trn-artchk.c)
-target_link_libraries(trn-artchk PUBLIC nntp)
+target_link_libraries(trn-artchk PUBLIC nntp tool)
 
 # case $CONFIG in
 #     '') . ./config.sh ;;
