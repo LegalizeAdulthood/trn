@@ -19,6 +19,14 @@
 #include <resolv.h>
 #endif
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#define SECURITY_WIN32
+#include <security.h>
+#pragma comment(lib, "Secur32")
+#endif
+
 bool env_init(char *tcbuf, bool_int lax)
 {
     bool fully_successful = TRUE;
@@ -170,8 +178,6 @@ bool set_user_name(char *tmpbuf)
 #endif /* !BERKNAMES */
 #endif
 #ifndef PASSNAMES
-#ifdef WIN32
-#endif
     {
 	FILE* fp;
 	env_init2(); /* Make sure g_home_dir/g_dot_dir/etc. are set. */
@@ -181,13 +187,24 @@ bool set_user_name(char *tmpbuf)
 	    buf[strlen(buf)-1] = '\0';
 	    g_real_name = savestr(buf);
 	}
-	else
-	    s = "PUT_YOUR_NAME_HERE";
     }
+#ifdef WIN32
+    if (g_real_name == NULL)
+    {
+	DWORD size = 0;
+        GetUserNameExA(NameDisplay, NULL, &size);
+	g_real_name = safemalloc(size);
+	GetUserNameExA(NameDisplay, g_real_name, &size);
+    }
+#endif
 #endif /* !PASSNAMES */
 #ifdef HAS_GETPWENT
     endpwent();
 #endif
+    if (g_real_name == NULL)
+    {
+        g_real_name = savestr("PUT_YOUR_NAME_HERE");
+    }
     return 1;
 }
 
