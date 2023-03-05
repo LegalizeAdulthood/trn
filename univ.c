@@ -1149,18 +1149,14 @@ univ_virt_pass()
 }
 
 static int
-univ_order_number(ui1, ui2)
-register UNIV_ITEM** ui1;
-register UNIV_ITEM** ui2;
+univ_order_number(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2)
 {
     return (int)((*ui1)->num - (*ui2)->num) * sel_direction;
 }
 
 #ifdef SCORE
 static int
-univ_order_score(ui1, ui2)
-register UNIV_ITEM** ui1;
-register UNIV_ITEM** ui2;
+univ_order_score(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2)
 {
     if ((*ui1)->score != (*ui2)->score)
 	return (int)((*ui2)->score - (*ui1)->score) * sel_direction;
@@ -1176,7 +1172,7 @@ sort_univ()
     UNIV_ITEM* ui;
     UNIV_ITEM** lp;
     UNIV_ITEM** univ_sort_list;
-    int (*sort_procedure)();
+    int (*sort_procedure)(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2);
 
     cnt = 0;
     for (ui = first_univ; ui; ui = ui->next) {
@@ -1203,7 +1199,7 @@ sort_univ()
 	*lp++ = ui;
     assert(lp - univ_sort_list == cnt);
 
-    qsort(univ_sort_list, cnt, sizeof (UNIV_ITEM*), sort_procedure);
+    qsort(univ_sort_list, cnt, sizeof(UNIV_ITEM *), (int(*)(void const *, void const *))sort_procedure);
 
     first_univ = ui = univ_sort_list[0];
     for (i = cnt, lp = univ_sort_list; --i; lp++) {
