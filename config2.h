@@ -11,15 +11,7 @@
 #   include <unistd.h>
 #endif
 
-#ifdef I_STDLIB
-#   include <stdlib.h>
-#else
-# ifndef USE_DEBUGGING_MALLOC
-char*	malloc();
-char*	realloc();
-char*	getenv();
-# endif
-#endif
+#include <stdlib.h>
 
 #ifdef USE_DEBUGGING_MALLOC
 #   include "malloc.h"
@@ -27,11 +19,7 @@ char*	getenv();
 #   define saferealloc realloc
 #endif
 
-#ifdef I_STRING
-#   include <string.h>
-#else
-#   include <strings.h>
-#endif
+#include <string.h>
 
 #ifndef S_ISDIR
 #   define S_ISDIR(m)  ( ((m) & S_IFMT) == S_IFDIR )
