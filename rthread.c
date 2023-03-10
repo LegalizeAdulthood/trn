@@ -1484,10 +1484,7 @@ SUBJECT* sp;
 }
 
 /* later make a subject-thread score routine */
-static int
-subjorder_score(spp1, spp2)
-register SUBJECT** spp1;
-register SUBJECT** spp2;
+static int subjorder_score(const SUBJECT** spp1, const SUBJECT** spp2)
 {
     int sc1, sc2;
     sc1 = subject_score_high(*spp1);
@@ -1606,9 +1603,7 @@ SUBJECT* tp;
 }
 
 static int
-threadorder_score(spp1, spp2)
-SUBJECT** spp1;
-SUBJECT** spp2;
+threadorder_score(const SUBJECT** spp1, const SUBJECT** spp2)
 {
     int sc1, sc2;
 
