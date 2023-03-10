@@ -1,13 +1,20 @@
 include(FindPackageHandleStandardArgs)
 
-find_library(SOCKETS_LIB ws2_32.lib)
-find_path(SOCKETS_INCLUDE winsock.h)
+if(WIN32)
+    find_library(SOCKETS_LIB ws2_32.lib)
+    find_path(SOCKETS_INCLUDE winsock.h)
+else()
+    find_library(SOCKETS_LIB libc.a)
+    find_path(SOCKETS_INCLUDE sys/socket.h)
+endif()
 
 find_package_handle_standard_args(sockets REQUIRED_VARS SOCKETS_LIB SOCKETS_INCLUDE)
 
 if(sockets_FOUND)
     add_library(sockets STATIC IMPORTED)
-    target_compile_definitions(sockets INTERFACE WINSOCK)
+    if(WIN32)
+        target_compile_definitions(sockets INTERFACE WINSOCK)
+    endif()
     target_include_directories(sockets INTERFACE ${SOCKETS_INCLUDE})
     set_target_properties(sockets PROPERTIES IMPORTED_LOCATION ${SOCKETS_LIB})
 endif()
