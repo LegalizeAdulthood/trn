@@ -8,9 +8,9 @@
 #include "INTERN.h"
 #include "ndir.h"
 
+#ifdef EMULATE_NDIR
 #include <io.h>
 
-#ifdef EMULATE_NDIR
 /*
  * support for Berkeley directory reading routine on a V7 file system
  */

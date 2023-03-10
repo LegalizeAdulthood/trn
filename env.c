@@ -311,6 +311,10 @@ char *get_val(char *nam, char *def)
 
 static bool firstexport = TRUE;
 
+#ifndef WIN32
+extern char **environ;
+#endif
+
 char *export(const char *nam, const char *val)
 {
     int namlen = strlen(nam);

@@ -19,6 +19,9 @@
 #include "util2.h"
 #include "only.h"
 #include "search.h"
+#ifdef I_SYS_TIMEB
+#include <sys/timeb.h>
+#endif
 #ifdef I_SYS_WAIT
 #include <sys/wait.h>
 #endif
@@ -37,7 +40,6 @@
 #ifdef _WIN32
 #include <direct.h>
 #include <io.h>
-#include <sys/timeb.h>
 #include <sys/types.h>
 #endif
 
