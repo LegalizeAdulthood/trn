@@ -89,7 +89,6 @@ add_executable(trn
     os2.h
     ${BISON_parsedate_OUTPUTS} parsedate.h
     patchlevel.h
-    popen.c
     rcln.c rcln.h
     rcstuff.c rcstuff.h rcstuff.ih
     respond.c respond.h respond.ih
@@ -130,6 +129,9 @@ add_executable(trn
     util.c util.h util.ih
     uudecode.c uudecode.h uudecode.ih
 )
+if(WIN32)
+    target_sources(trn PUBLIC popen.c)
+endif()
 source_group("Header Files" REGULAR_EXPRESSION "^.*\.(h|ih)$")
 target_link_libraries(trn PUBLIC curses nntp)
 
