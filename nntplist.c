@@ -11,6 +11,8 @@
 #include "wildmat.h"
 #include "nntpclient.h"
 #include "nntpinit.h"
+#include "INTERN.h"
+#include "common.h"
 
 void Usage _((void));
 
@@ -69,24 +71,9 @@ char* argv[];
     if (!out_fp)
 	out_fp = stdout;
 
-#ifdef USE_GENAUTH
-    /* get login name */
-    g_login_name = getenv("USER");
-    if (g_login_name == NULL) {
-	g_login_name = getenv("LOGNAME");
-#ifdef GETLOGIN
-	if (g_login_name == NULL)
-	    g_login_name = getlogin();
-#endif
-    }
-#endif
-
-    g_home_dir = getenv("HOME");
-    if (g_home_dir == NULL)
-	g_home_dir = getenv("LOGDIR");
-    g_dot_dir = getenv("DOTDIR");
-    if (!g_dot_dir)
-	g_dot_dir = g_home_dir;
+    char tcbuf[1024];
+    tcbuf[0] = 0;
+    env_init(tcbuf, 1);
 
     cp = getenv("NNTPSERVER");
     if (!cp) {
@@ -184,8 +171,8 @@ char* argv[];
 void
 Usage()
 {
-    fprintf(stderr, "Usage: nntplist [-x WildSpec] [-o OutputFile] [type]\n\
-\nWhere type is any of the LIST command arguments your server accepts.\n");
+    fprintf(stderr, "Usage: nntplist [-x WildSpec] [-o OutputFile] [type]\n\n"
+                    "Where type is any of the LIST command arguments your server accepts.\n");
     exit(1);
 }
 

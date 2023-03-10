@@ -18,6 +18,8 @@
 #include "nntpclient.h"
 #include "nntpinit.h"
 #endif
+#include "INTERN.h"
+#include "common.h"
 
 #define MAXNGS 100
 
@@ -33,9 +35,6 @@ int debug = 0;
 
 char* g_home_dir;
 char* g_dot_dir;
-
-char nullstr[1] = "";
-char ess[2] = "s";
 
 int
 main(argc, argv)

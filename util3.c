@@ -15,7 +15,6 @@
 #include "INTERN.h"
 #include "util3.h"
 
-char* sh = NULL;
 bool export_nntp_fds = FALSE;
 
 #ifdef SUPPORT_NNTP

@@ -11,6 +11,8 @@
 #include "util3.h"
 #include "nntpclient.h"
 #include "nntpinit.h"
+#include "INTERN.h"
+#include "common.h"
 
 #include <stdio.h>
 
@@ -23,7 +25,6 @@ int	debug = 0;
 int	new_connection = FALSE;
 char*	server_name;
 char*	nntp_auth_file;
-char	nullstr[1];
 
 char	buf[LBUFLEN+1];
 
