@@ -18,8 +18,6 @@
 #include "INTERN.h"
 #include "rcln.h"
 
-EXTERN_C_BEGIN
-
 #define MAX_DIGITS 7
 
 void rcln_init(void)
@@ -569,5 +567,3 @@ bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
     /* we have not read it, so return FALSE */
     return FALSE;
 }
-
-EXTERN_C_END

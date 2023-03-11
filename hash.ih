@@ -1,8 +1,6 @@
 /* hash.ih
  */
 
-EXTERN_C_BEGIN
-
 #define BADTBL(tbl)	((tbl) == NULL || (tbl)->ht_magic != HASHMAG)
 
 #define HASHMAG  ((char)0257)
@@ -27,5 +25,3 @@ static unsigned hash _((char*,int));
 static int default_cmp _((char*,int,HASHDATUM));
 static HASHENT* healloc _((void));
 static void hefree _((HASHENT*));
-
-EXTERN_C_END

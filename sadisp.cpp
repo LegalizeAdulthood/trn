@@ -31,8 +31,6 @@
 #include "INTERN.h"
 #include "sadisp.h"
 
-EXTERN_C_BEGIN
-
 void sa_refresh_top(void)
 {
     color_object(COLOR_SCORE, 1);
@@ -106,5 +104,3 @@ void sa_set_screen(void)
     s_desc_cols = (scr_width-1) -s_status_cols -s_cursor_cols -s_itemnum_cols;
 }
 #endif /* SCAN */
-
-EXTERN_C_END

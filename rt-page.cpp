@@ -33,8 +33,6 @@
 #include "rt-page.h"
 #include "rt-page.ih"
 
-EXTERN_C_BEGIN
-
 bool set_sel_mode(char_int ch)
 {
     switch (ch) {
@@ -1961,5 +1959,3 @@ static void display_group(DATASRC *dp, char *group, int len, int max_len)
     }
     newline();
 }
-
-EXTERN_C_END

@@ -2,8 +2,6 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 #define PRESERVE_PAGE     0
 #define FILL_LAST_PAGE    1
 
@@ -63,5 +61,3 @@ void display_page _((void));
 void update_page _((void));
 void output_sel _((int,int,bool_int));
 void display_option _((int,int));
-
-EXTERN_C_END

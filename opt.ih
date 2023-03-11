@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 static char yes_or_no[] = "yes/no";
 static char selector_commands[] = "<Last-page-cmd><Other-page-cmd>";
 
@@ -132,5 +130,3 @@ static char* magic_list _((void));
 static void set_header_list _((int,int,char*));
 static int parse_mouse_buttons _((char**,char*));
 static char* expand_mouse_buttons _((char*,int));
-
-EXTERN_C_END

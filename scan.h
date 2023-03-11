@@ -4,8 +4,6 @@
  * (Mostly scan context declarations.)
  */
 
-EXTERN_C_BEGIN
-
 /* return codes.  First two should be the same as article scan codes */
 #define S_QUIT (-1)
 #define S_ERR (-2)
@@ -119,5 +117,3 @@ void s_save_context _((void));
 void s_change_context _((int));
 void s_clean_contexts _((void));
 void s_delete_context _((int));
-
-EXTERN_C_END

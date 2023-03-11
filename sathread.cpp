@@ -22,8 +22,6 @@
 #include "INTERN.h"
 #include "sathread.h"
 
-EXTERN_C_BEGIN
-
 static long sa_num_threads = 0;
 static HASHTABLE* sa_thread_hash = 0;
 
@@ -125,5 +123,3 @@ long sa_subj_thread_next(long a)
 }
 
 #endif /* SCAN */
-
-EXTERN_C_END

@@ -28,8 +28,6 @@
 #include "INTERN.h"
 #include "head.h"
 
-EXTERN_C_BEGIN
-
 bool first_one;		/* is this the 1st occurance of this header line? */
 #ifdef SUPPORT_NNTP
 bool reading_nntp_header;
@@ -567,5 +565,3 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool_int copy)
     safecpy(s,t,size);
     return s;
 }
-
-EXTERN_C_END

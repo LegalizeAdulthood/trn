@@ -61,8 +61,6 @@
 #include <process.h>
 #endif
 
-EXTERN_C_BEGIN
-
 bool initialize(int argc, char *argv[])
 {
     char* tcbuf;
@@ -198,5 +196,3 @@ void newsnews_check(void)
 	fclose(tmpfp);
     }
 }
-
-EXTERN_C_END

@@ -2,12 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 #ifdef SCOREFILE_CACHE
 static int sf_open_file _((char*));
 static void sf_file_clear _((void));
 static char* sf_file_getline _((int));
 #endif
-
-EXTERN_C_END

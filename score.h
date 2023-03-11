@@ -3,8 +3,6 @@
  *
  */
 
-EXTERN_C_BEGIN
-
 /* RETHINK LOWSCORE: (especially for 16-bit scores?) */
 /* score given to unavailable articles */
 #define LOWSCORE (-999999)
@@ -62,5 +60,3 @@ void sc_append _((char*));
 void sc_rescore _((void));
 void sc_score_cmd _((char*));
 void sc_kill_threshold _((int));
-
-EXTERN_C_END

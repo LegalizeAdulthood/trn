@@ -30,8 +30,7 @@ static char* pipename[_NFILE];		/* pipe file name */
  *------------------------------------------------------------------------
  */
 
-static int
-run(char* command)
+static int run(char* command)
 {
     jmp_buf panic;			/* How to recover from errors */
     char* shell;			/* Command processor */
@@ -84,8 +83,7 @@ run(char* command)
  *------------------------------------------------------------------------
  */
 
-static char*
-uniquepipe(void)
+static char *uniquepipe(void)
 { 
     static char name[14];
     static short int num = 0;
@@ -98,8 +96,7 @@ uniquepipe(void)
  * resetpipe: Private routine to cancel a pipe
  *------------------------------------------------------------------------
  */
-static void
-resetpipe(int fd)
+static void resetpipe(int fd)
 {
     char* bp;
     if (fd >= 0 && fd < _NFILE) {
@@ -121,9 +118,9 @@ resetpipe(int fd)
  * popen: open a pipe 
  *------------------------------------------------------------------------
  */
-FILE* popen(prg, type)
-char* prg;			/* The command to be run */
-char* type;			/* "w" or "r" */
+//char* prg;			/* The command to be run */
+//char* type;			/* "w" or "r" */
+FILE *popen(char *prg, char *type)
 { 
     FILE* p = NULL;		/* Where we open the pipe */
     int ostdin;			/* Where our stdin is now */
@@ -189,9 +186,7 @@ char* type;			/* "w" or "r" */
 }
 
 /* close a pipe */
-int
-pclose(p)
-FILE* p;
+int pclose(FILE *p)
 {
     int pipefd = -1;		/* Fildes where pipe is opened */
     int ostdout;		/* Where our stdout points now */

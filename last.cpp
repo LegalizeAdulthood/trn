@@ -14,8 +14,6 @@
 #include "INTERN.h"
 #include "last.h"
 
-EXTERN_C_BEGIN
-
 static char* lastfile = NULL;	/* path name of .rnlast file */
 static long starttime;
 
@@ -68,5 +66,3 @@ void writelast(void)
 	/*termdown(1);*/
     }
 }
-
-EXTERN_C_END

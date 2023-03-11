@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 EXT char ERASECH;		/* rubout character */
 EXT char KILLCH;		/* line delete character */
 EXT char circlebuf[PUSHSIZE];
@@ -258,5 +256,3 @@ char* tc_color_capability _((char*));
 int tputs _((char*,int,int(*) _((char_int))));
 char* tgoto _((char*,int,int));
 #endif
-
-EXTERN_C_END

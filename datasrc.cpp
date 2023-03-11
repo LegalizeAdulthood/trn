@@ -33,8 +33,6 @@
 #include <io.h>
 #endif
 
-EXTERN_C_BEGIN
-
 void datasrc_init(void)
 {
     char** vals = prep_ini_words(datasrc_ini);
@@ -1136,5 +1134,3 @@ reask:
 }
 
 #endif /* EDIT_DISTANCE */
-
-EXTERN_C_END

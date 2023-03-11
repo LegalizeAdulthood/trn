@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 EXT char* savedest INIT(NULL);		/* value of %b */
 EXT char* extractdest INIT(NULL);	/* value of %E */
 EXT char* extractprog INIT(NULL);	/* value of %e */
@@ -23,5 +21,3 @@ void reply _((void));
 void forward _((void));
 void followup _((void));
 int invoke _((char*,char*));
-
-EXTERN_C_END

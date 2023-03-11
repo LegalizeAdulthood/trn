@@ -24,10 +24,7 @@ enum
 int	debug = 0;
 int	new_connection = FALSE;
 char*	server_name;
-extern "C"
-{
-    char*	nntp_auth_file;
-}
+char*	nntp_auth_file;
 
 int valid_header(char *);
 void append_signature(void);
@@ -316,7 +313,7 @@ void append_signature(void)
 }
 
 #ifdef SUPPORT_NNTP
-extern "C" int nntp_handle_timeout(void)
+int nntp_handle_timeout(void)
 {
     if (!new_connection) {
 	static bool handling_timeout = FALSE;

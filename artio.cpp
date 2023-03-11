@@ -29,8 +29,6 @@
 #include "INTERN.h"
 #include "artio.h"
 
-EXTERN_C_BEGIN
-
 void artio_init(void)
 {
     artbuf_size = 8 * 1024;
@@ -449,5 +447,3 @@ char *readartbuf(bool_int view_inline)
 
     return bp;
 }
-
-EXTERN_C_END

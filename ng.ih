@@ -2,13 +2,9 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 static bool count_unCACHED_article _((char*,int));
 static bool mark_all_READ _((char*,int));
 static bool mark_all_unREAD _((char*,int));
 #ifdef DEBUG
 static bool debug_article_output _((char*,int));
 #endif
-
-EXTERN_C_END

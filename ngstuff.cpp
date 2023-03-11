@@ -40,8 +40,6 @@
 #include <direct.h>
 #endif
 
-EXTERN_C_BEGIN
-
 void ngstuff_init(void) {
     ;
 }
@@ -782,5 +780,3 @@ int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level)
     }
     return 1;
 }
-
-EXTERN_C_END

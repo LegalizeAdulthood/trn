@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 /* do_article() return values */
 
 #define DA_NORM 0
@@ -31,5 +29,3 @@ int maybe_set_color _((char*,bool_int));
 int page_switch _((void));
 bool innermore _((void));
 void pager_mouse _((int,int,int,int,int,int));
-
-EXTERN_C_END

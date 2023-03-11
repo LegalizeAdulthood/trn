@@ -27,8 +27,6 @@
 #include "mime.h"
 #include "mime.ih"
 
-EXTERN_C_BEGIN
-
 static char text_plain[] = "text/plain";
 
 #ifdef USE_UTF_HACK
@@ -1654,5 +1652,3 @@ static char *find_attr(char *str, char *attr)
     }
     return NULL;
 }
-
-EXTERN_C_END

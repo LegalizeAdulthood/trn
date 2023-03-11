@@ -33,8 +33,6 @@
 #include "scorefile.h"
 #include "scorefile.ih"
 
-EXTERN_C_BEGIN
-
 /* list of score array markers (in htype field of score entry) */
     /* entry is a file marker.  Score is the file level */
 #define SF_FILE_MARK_START (-1)
@@ -1301,5 +1299,3 @@ static char *sf_file_getline(int fnum)
 }
 #endif /* SCOREFILE_CACHE */
 #endif /* SCORE */
-
-EXTERN_C_END

@@ -29,8 +29,6 @@
 #include "INTERN.h"
 #include "search.h"
 
-EXTERN_C_BEGIN
-
 #ifndef BITSPERBYTE
 #define BITSPERBYTE 8
 #endif
@@ -570,5 +568,3 @@ bool cclass(char *set, int c, int af)
 	return af;
     return !af;
 }
-
-EXTERN_C_END

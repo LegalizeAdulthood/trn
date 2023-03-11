@@ -2,8 +2,6 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 EXT bool sel_rereading INIT(0);
 EXT char sel_disp_char[] INIT(" +-*");
 
@@ -80,5 +78,3 @@ char universal_selector _((void));
 void selector_mouse _((int,int,int,int,int,int));
 int univ_visit_group _((char*));
 void univ_visit_help _((int));
-
-EXTERN_C_END

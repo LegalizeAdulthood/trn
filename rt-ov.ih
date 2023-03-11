@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 /* The usual order for the overview data fields. */
 #define OV_NUM  	0
 #define OV_SUBJ 	1
@@ -27,5 +25,3 @@ static int hdrnum[] = {
 
 static void ov_parse _((char*,ART_NUM,bool_int));
 static char* ov_name _((char*));
-
-EXTERN_C_END

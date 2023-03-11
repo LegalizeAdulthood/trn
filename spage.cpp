@@ -25,8 +25,6 @@
 #include "INTERN.h"
 #include "spage.h"
 
-EXTERN_C_BEGIN
-
 /* returns TRUE if sucessful */
 //long end;		/* entry number to be last on page */
 bool s_fillpage_backward(long end)
@@ -422,5 +420,3 @@ void s_go_prev_page(void)
     s_ptr_page_line = 0;	/* top of page */
 }
 #endif /* SCAN */
-
-EXTERN_C_END

@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 static void sel_dogroups _((void));
 static int univ_read _((UNIV_ITEM*));
 static void sel_display _((void));
@@ -27,5 +25,3 @@ static int option_commands _((char_int));
 static int universal_commands _((char_int));
 static void switch_dmode _((char**));
 static int find_line _((int));
-
-EXTERN_C_END

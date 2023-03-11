@@ -4,8 +4,6 @@
  * scan ordering
  */
 
-EXTERN_C_BEGIN
-
 /* If true, resort next time order is considered */
 EXT bool s_order_changed INIT(FALSE);
 
@@ -22,5 +20,3 @@ long s_prev_elig _((long));
 long s_next_elig _((long));
 long s_first _((void));
 long s_last _((void));
-
-EXTERN_C_END

@@ -11,8 +11,6 @@
 #ifdef EMULATE_NDIR
 #include <io.h>
 
-EXTERN_C_BEGIN
-
 /*
  * support for Berkeley directory reading routine on a V7 file system
  */
@@ -98,7 +96,5 @@ void closedir(DIR *dirp)
 	dirp->dd_loc = 0;
 	free(dirp);
 }
-
-EXTERN_C_END
 
 #endif /* EMULATE_NDIR */

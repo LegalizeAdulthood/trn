@@ -3,8 +3,6 @@
  *
  */
 
-EXTERN_C_BEGIN
-
 #define DEFAULT_SCOREDIR "%+/scores"
 
 struct sf_entry {
@@ -83,5 +81,3 @@ char* sf_get_line _((ART_NUM,int));
 void sf_print_match _((int));
 void sf_exclude_file _((char*));
 void sf_edit_file _((char*));
-
-EXTERN_C_END

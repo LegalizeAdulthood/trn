@@ -27,8 +27,6 @@ WSADATA wsaData;
 #include <netdb.h>
 #endif
 
-EXTERN_C_BEGIN
-
 #ifdef EXCELAN
 int connect(int, struct sockaddr *);
 unsigned short htons(unsigned short);
@@ -302,5 +300,3 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 }
 
 #endif /* SUPPORT_NNTP */
-
-EXTERN_C_END

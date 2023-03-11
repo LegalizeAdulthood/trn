@@ -11,8 +11,6 @@
 #include "mempool.h"
 #include "mempool.ih"
 
-EXTERN_C_BEGIN
-
 /* any of these defines can be increased arbitrarily */
 #define MAX_MEM_POOLS 16
 #define MAX_MEM_FRAGS 4000
@@ -166,5 +164,3 @@ void mp_free(int pool)
     }
     mpheads[pool].current = 0;
 }
-
-EXTERN_C_END

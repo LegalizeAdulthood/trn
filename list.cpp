@@ -9,8 +9,6 @@
 #include "list.h"
 #include "list.ih"
 
-EXTERN_C_BEGIN
-
 void list_init(void) {
     ;
 }
@@ -225,5 +223,3 @@ void delete_list(LIST *list)
     }
     free((char*)list);
 }
-
-EXTERN_C_END

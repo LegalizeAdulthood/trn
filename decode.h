@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 EXT char* decode_filename INIT(NULL);
 
 #define DECODE_DONE	 0
@@ -34,5 +32,3 @@ int decode_piece _((MIMECAP_ENTRY*,char*));
 DECODE_FUNC decode_function _((int));
 char* decode_mkdir _((char*));
 void decode_rmdir _((char*));
-
-EXTERN_C_END

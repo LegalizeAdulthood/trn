@@ -4,8 +4,6 @@
  * Interface to rest of [t]rn
  */
 
-EXTERN_C_BEGIN
-
 /* return codes for sa_main */
 	/* read article pointed to by art (always) */
 #define SA_READ (-7)
@@ -101,5 +99,3 @@ EXT bool sa_mode_desc_keyw INIT(FALSE);
 int sa_main _((void));
 void sa_grow _((ART_NUM,ART_NUM));
 void sa_cleanup _((void));
-
-EXTERN_C_END

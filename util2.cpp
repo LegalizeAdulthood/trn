@@ -22,8 +22,6 @@
 #include <direct.h>
 #endif
 
-EXTERN_C_BEGIN
-
 #ifdef TILDENAME
 static char* tildename = NULL;
 static char* tildedir = NULL;
@@ -339,5 +337,3 @@ int getuid() {
     return 2;
 }
 #endif
-
-EXTERN_C_END

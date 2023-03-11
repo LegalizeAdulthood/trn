@@ -12,8 +12,6 @@
 #include "INTERN.h"
 #include "nntpclient.h"
 
-EXTERN_C_BEGIN
-
 time_t last_command_diff;
 
 char *savestr(char *);
@@ -312,5 +310,3 @@ void nntp_close(bool_int send_quit)
 }
 
 #endif /* SUPPORT_NNTP */
-
-EXTERN_C_END

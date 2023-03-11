@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 EXT char* ini_file;
 EXT char* yesorno[2]
 #ifdef DOINIT
@@ -155,5 +153,3 @@ char* option_value _((int));
 void set_header _((char*,int,bool_int));
 char* quote_string _((char*));
 void cwd_check _((void));
-
-EXTERN_C_END

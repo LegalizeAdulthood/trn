@@ -24,8 +24,6 @@
 #include "INTERN.h"
 #include "smisc.h"
 
-EXTERN_C_BEGIN
-
 bool s_eligible(long ent)
 {
     switch (s_cur_type) {
@@ -83,5 +81,3 @@ int s_ent_lines(long ent)
     }
 }
 #endif /* SCAN */
-
-EXTERN_C_END

@@ -23,8 +23,6 @@
 #include "INTERN.h"
 #include "sdisp.h"
 
-EXTERN_C_BEGIN
-
 void s_goxy(int x, int y)
 {
     tputs(tgoto(tc_CM, x, y), 1, putchr);
@@ -257,5 +255,3 @@ void s_resize_win(void)
     ;	/* don't have an empty function */
 }
 #endif /* SCAN */
-
-EXTERN_C_END

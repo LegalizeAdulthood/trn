@@ -32,8 +32,6 @@
 #include "INTERN.h"
 #include "samisc.h"
 
-EXTERN_C_BEGIN
-
 #ifdef UNDEF	/* use function for breakpoint debugging */
 int check_article(long a)
 {
@@ -223,5 +221,3 @@ int sa_compare(long a, long b)
     return 1;
 }
 #endif /* SCAN */
-
-EXTERN_C_END

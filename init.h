@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 #define TCBUF_SIZE 1024
 
 EXT long our_pid;
@@ -16,5 +14,3 @@ EXT char *group_default INIT(nullstr);
 
 bool initialize _((int,char**));
 void newsnews_check _((void));
-
-EXTERN_C_END

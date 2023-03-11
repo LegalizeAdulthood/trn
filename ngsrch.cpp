@@ -27,8 +27,6 @@
 #include "INTERN.h"
 #include "ngsrch.h"
 
-EXTERN_C_BEGIN
-
 #ifdef NGSEARCH
 COMPEX ngcompex;
 #endif
@@ -216,5 +214,3 @@ char *ng_comp(COMPEX *compex, char *pattern, bool_int RE, bool_int fold)
     *d = '\0';
     return compile(compex,ng_pattern,RE,fold);
 }
-
-EXTERN_C_END

@@ -31,8 +31,6 @@
 #include "INTERN.h"
 #include "artsrch.h"
 
-EXTERN_C_BEGIN
-
 void artsrch_init(void)
 {
 #ifdef ARTSEARCH
@@ -444,5 +442,3 @@ bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
     return execute(compex,buf) != NULL;
 }
 #endif /* ARTSEARCH */
-
-EXTERN_C_END

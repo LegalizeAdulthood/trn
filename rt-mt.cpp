@@ -26,8 +26,6 @@
 #include "rt-mt.h"
 #include "rt-mt.ih"
 
-EXTERN_C_BEGIN
-
 static FILE* fp;
 static bool word_same, long_same;
 static BMAP my_bmap, mt_bmap;
@@ -744,5 +742,3 @@ static void lp_bmap(LONG *buf, int len)
 	*buf++ = out.l;
     }
 }
-
-EXTERN_C_END

@@ -33,8 +33,6 @@
 #include "kfile.h"
 #include "kfile.ih"
 
-EXTERN_C_BEGIN
-
 #ifdef KILLFILES
 
 static bool exitcmds = FALSE;
@@ -749,5 +747,3 @@ void kf_append(char *cmd, bool_int local)
     kf_state |= KFS_NORMAL_LINES;
 }
 #endif /* KILLFILES */
-
-EXTERN_C_END

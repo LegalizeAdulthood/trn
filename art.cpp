@@ -54,8 +54,6 @@
 
 #include <time.h>
 
-EXTERN_C_BEGIN
-
 #define LINE_PTR(pos) (artbuf + (pos) - htype[PAST_HEADER].minpos)
 #define LINE_OFFSET(ptr) ((ptr) - artbuf + htype[PAST_HEADER].minpos)
 
@@ -1208,5 +1206,3 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 	break;
     }
 }
-
-EXTERN_C_END

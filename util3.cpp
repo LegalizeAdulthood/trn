@@ -21,17 +21,12 @@ bool export_nntp_fds = FALSE;
 char* nntp_password;
 #endif
 
-int
-doshell(sh,cmd)
-char* sh;
-char* cmd;
+int doshell(char *sh, char *cmd)
 {
     return system(cmd);
 }
 
-void
-finalize(num)
-int num;
+void finalize(int num)
 {
 #ifdef SUPPORT_NNTP
     nntp_close(TRUE);
@@ -44,13 +39,11 @@ static char nomem[] = "trn: out of memory!\n";
 /* paranoid version of malloc */
 
 #ifndef USE_DEBUGGING_MALLOC
-char*
-safemalloc(size)
-MEM_SIZE size;
+char *safemalloc(MEM_SIZE size)
 {
     char* ptr;
 
-    ptr = malloc(size ? size : (MEM_SIZE)1);
+    ptr = (char*) malloc(size ? size : (MEM_SIZE)1);
     if (!ptr) {
 	fputs(nomem,stdout);
 	finalize(1);
@@ -62,14 +55,11 @@ MEM_SIZE size;
 /* paranoid version of realloc.  If where is NULL, call malloc */
 
 #ifndef USE_DEBUGGING_MALLOC
-char*
-saferealloc(where,size)
-char* where;
-MEM_SIZE size;
+char *saferealloc(char *where, MEM_SIZE size)
 {
     char* ptr;
 
-    ptr = realloc(where, size ? size : (MEM_SIZE)1);
+    ptr = (char*) realloc(where, size ? size : (MEM_SIZE)1);
     if (!ptr) {
 	fputs(nomem,stdout);
 	finalize(1);
@@ -78,13 +68,7 @@ MEM_SIZE size;
 }
 #endif
 
-char*
-dointerp(dest, destsize, pattern, stoppers, cmd)
-char* dest;
-int destsize;
-char* pattern;
-char* stoppers;
-char* cmd;
+char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cmd)
 {
     extern char* g_dot_dir;
     if (*pattern == '%' && pattern[1] == '.') {
@@ -99,8 +83,7 @@ char* cmd;
 }
 
 #ifdef SUPPORT_NNTP
-int
-nntp_handle_nested_lists()
+int nntp_handle_nested_lists(void)
 {
     fputs("Programming error! Nested NNTP calls detected.\n",stderr);
     return -1;
@@ -108,8 +91,7 @@ nntp_handle_nested_lists()
 #endif
 
 #ifdef SUPPORT_NNTP
-char*
-get_auth_user()
+char *get_auth_user(void)
 {
     extern char* nntp_auth_file;
     return read_auth_file(nntp_auth_file, &nntp_password);
@@ -117,16 +99,14 @@ get_auth_user()
 #endif
 
 #ifdef SUPPORT_NNTP
-char*
-get_auth_pass()
+char *get_auth_pass(void)
 {
     return nntp_password;
 }
 #endif
 
 #if defined(USE_GENAUTH) && defined(SUPPORT_NNTP)
-char*
-get_auth_command()
+char *get_auth_command(void)
 {
     return NULL;
 }

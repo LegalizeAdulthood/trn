@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 static void univ_free_data _((UNIV_ITEM*));
 static int univ_DoMatch _((char*,char*));
 static bool univ_use_file _((char*,char*,char*));
@@ -17,5 +15,3 @@ static int univ_order_number(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2);
 #ifdef SCORE
 static int univ_order_score(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2);
 #endif
-
-EXTERN_C_END

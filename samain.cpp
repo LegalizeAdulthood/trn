@@ -32,8 +32,6 @@
 #include "INTERN.h"
 #include "samain.h"
 
-EXTERN_C_BEGIN
-
 void sa_init(void)
 {
     sa_init_context();
@@ -228,5 +226,3 @@ long sa_readmarked_elig(void)
     return 0;
 }
 #endif /* SCAN */
-
-EXTERN_C_END

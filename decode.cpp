@@ -27,8 +27,6 @@
 #include <direct.h>
 #endif
 
-EXTERN_C_BEGIN
-
 void decode_init(void)
 {
 }
@@ -443,5 +441,3 @@ void decode_rmdir(char *dir)
     /*$$ conditionalize this */
     rmdir(dir);
 }
-
-EXTERN_C_END

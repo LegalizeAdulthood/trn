@@ -7,12 +7,12 @@
 #include "EXTERN.h"
 #include "common.h"
 #ifdef USEURL
+#include "nntpinit.h"
 #include "term.h"
 #include "util.h"
 #include "util2.h"
 #include "INTERN.h"
 #include "url.h"
-#include "url.ih"
 
 /* Lower-level net routines grabbed from nntpinit.c.
  * The special cases (EXCELAN, and NONETD) are not supported.
@@ -23,11 +23,13 @@
  */
 #ifdef WINSOCK
 #include <winsock.h>
-WSADATA wsaData;
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#endif
+#ifdef MSDOS
+#include <io.h>
 #endif
 
 #ifndef WINSOCK
@@ -44,12 +46,7 @@ static int  url_port;
 static char url_path[1024];
 
 /* returns TRUE if successful */
-bool
-fetch_http(host,port,path,outname)
-char* host;
-int port;
-char* path;
-char* outname;
+bool fetch_http(char *host, int port, char *path, char *outname)
 {
     int sock;
     FILE* fp_out;
@@ -91,11 +88,7 @@ char* outname;
 }
 
 /* add port support later? */
-bool
-fetch_ftp(host,origpath,outname)
-char* host;
-char* origpath;
-char* outname;
+bool fetch_ftp(char *host, char *origpath, char *outname)
 {
 #ifdef USEFTP
     static char cmdline[1024];
@@ -163,9 +156,7 @@ char* outname;
 /* right now only full, absolute URLs are allowed. */
 /* use relative URLs later? */
 /* later: pay more attention to long URLs */
-bool
-parse_url(url)
-char* url;
+bool parse_url(char *url)
 {
     char* s;
     char* p;
@@ -230,10 +221,7 @@ char* url;
     return TRUE;
 }
 
-bool
-url_get(url,outfile)
-char* url;
-char* outfile;
+bool url_get(char *url, char *outfile)
 {
     bool flag;
     

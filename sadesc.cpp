@@ -28,8 +28,6 @@
 #include "INTERN.h"
 #include "sadesc.h"
 
-EXTERN_C_BEGIN
-
 /* returns statchars in temp space... */
 // int line;		/* which status line (1 = first) */
 char *sa_get_statchars(long a, int line)
@@ -270,5 +268,3 @@ int sa_ent_lines(long e)
 }
 
 #endif /* SCAN */
-
-EXTERN_C_END

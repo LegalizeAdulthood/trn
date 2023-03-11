@@ -2,9 +2,5 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 static char* skipinterp _((char*,char*));
 static void abort_interp _((void));
-
-EXTERN_C_END

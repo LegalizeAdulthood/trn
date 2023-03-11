@@ -5,8 +5,6 @@
 
 #ifdef SUPPORT_NNTP
 
-EXTERN_C_BEGIN
-
 struct nntplink {
     FILE*	rd_fp;
     FILE*	wr_fp;
@@ -90,5 +88,3 @@ int nntp_check(void);
 bool nntp_at_list_end(const char *s);
 int nntp_gets(char *bp, int len);
 void nntp_close(bool_int send_quit);
-
-EXTERN_C_END

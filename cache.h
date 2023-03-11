@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 /* Subjects get their own structure */
 
 struct subject {
@@ -163,5 +161,3 @@ bool cache_unread_arts _((void));
 bool art_data _((ART_NUM,ART_NUM,bool_int,bool_int));
 bool cache_range _((ART_NUM,ART_NUM));
 void clear_article _((ARTICLE*));
-
-EXTERN_C_END

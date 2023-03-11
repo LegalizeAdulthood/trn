@@ -2,9 +2,5 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 static int mp_alloc_frag _((void));
 static void mp_free_frag _((int));
-
-EXTERN_C_END

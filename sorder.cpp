@@ -17,8 +17,6 @@
 #include "INTERN.h"
 #include "sorder.h"
 
-EXTERN_C_BEGIN
-
 #ifdef UNDEF
 /* pointers to the two entries to be compared */
 int s_compare(long *a, long *b)
@@ -241,5 +239,3 @@ long s_last(void)
     return s_ent_sort[s_ent_sorted_max];
 }
 #endif /* SCAN */
-
-EXTERN_C_END

@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 struct keymap {
     char km_type[128];
     union km_union {
@@ -31,5 +29,3 @@ static void show_keymap _((KEYMAP*,char*));
 static int echo_char _((char_int));
 static void line_col_calcs _((void));
 static void mouse_input _((char*));
-
-EXTERN_C_END

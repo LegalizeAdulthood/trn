@@ -31,8 +31,6 @@
 #include "univ.h"
 #include "univ.ih"
 
-EXTERN_C_BEGIN
-
 /* TODO:
  *
  * Be friendlier when a file has no contents.
@@ -1251,5 +1249,3 @@ char *univ_keyhelp_modestr(UNIV_ITEM *ui)
 	return 0;
     }
 }
-
-EXTERN_C_END

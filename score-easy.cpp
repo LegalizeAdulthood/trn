@@ -15,8 +15,6 @@
 #include "INTERN.h"
 #include "score-easy.h"
 
-EXTERN_C_BEGIN
-
 /* new line to return to the caller. */
 static char sc_e_newline[LBUFLEN];
 
@@ -218,5 +216,3 @@ char *sc_easy_command(void)
     return NULL;
 }
 #endif /* SCORE */
-
-EXTERN_C_END

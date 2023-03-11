@@ -16,8 +16,6 @@
 #include "INTERN.h"
 #include "only.h"
 
-EXTERN_C_BEGIN
-
 static int save_maxngtodo = 0;
 
 void only_init(void)
@@ -105,5 +103,3 @@ void pop_only(void)
 
     ng_min_toread = save_ng_min_toread;
 }
-
-EXTERN_C_END

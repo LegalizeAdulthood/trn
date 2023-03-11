@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 /* help locations */
 #define UHELP_PAGE 1
 #define UHELP_ART 2
@@ -41,5 +39,3 @@ int help_scanart _((void));
 #endif
 int help_univ _((void));
 int univ_key_help _((int));
-
-EXTERN_C_END

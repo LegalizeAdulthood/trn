@@ -1,8 +1,6 @@
 /* mime.h
  */
 
-EXTERN_C_BEGIN
-
 struct hblk {
     int	    tnum;
     short   cnt;
@@ -187,5 +185,3 @@ int b64_decodestring _((char*,char*));
 int b64_decode _((FILE*,int));
 int cat_decode _((FILE*,int));
 int filter_html _((char*,char*));
-
-EXTERN_C_END

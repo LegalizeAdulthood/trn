@@ -31,8 +31,6 @@
 #include "rcstuff.h"
 #include "rcstuff.ih"
 
-EXTERN_C_BEGIN
-
 static bool foundany;
 
 bool rcstuff_init(void)
@@ -1481,5 +1479,3 @@ void get_old_newsrcs(MULTIRC *mptr)
 	}
     }
 }
-
-EXTERN_C_END

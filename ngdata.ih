@@ -2,10 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 static int ngorder_number(const NGDATA**,const NGDATA**);
 static int ngorder_groupname(const NGDATA**,const NGDATA**);
 static int ngorder_count(const NGDATA**,const NGDATA**);
-
-EXTERN_C_END

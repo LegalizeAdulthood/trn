@@ -11,8 +11,6 @@
 #include "INTERN.h"
 #include "edit_dist.h"
 
-EXTERN_C_BEGIN
-
 #ifdef EDIT_DISTANCE
 
 /* edit_dist -- returns the minimum edit distance between two strings
@@ -253,5 +251,3 @@ int edit_distn(char *from, int from_len, char *to, int to_len)
 } /* edit_distn */
 
 #endif /* EDIT_DISTANCE */
-
-EXTERN_C_END

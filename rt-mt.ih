@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 #define DB_VERSION	2
 
 typedef unsigned char BYTE;
@@ -72,5 +70,3 @@ static int read_item _((char**,MEM_SIZE));
 static void mybytemap _((BMAP*));
 static void wp_bmap _((WORD*,int));
 static void lp_bmap _((LONG*,int));
-
-EXTERN_C_END

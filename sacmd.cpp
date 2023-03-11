@@ -44,8 +44,6 @@
 #include "INTERN.h"
 #include "sacmd.h"
 
-EXTERN_C_BEGIN
-
 bool sa_extract_start(void);
 
 /* use this command on an extracted file */
@@ -699,5 +697,3 @@ long sa_wrap_next_author(long a)
 #endif
 }
 #endif /* SCAN */
-
-EXTERN_C_END

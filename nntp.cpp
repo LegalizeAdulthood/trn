@@ -26,8 +26,6 @@
 #include "nntp.h"
 #include "nntp.ih"
 
-EXTERN_C_BEGIN
-
 #ifdef SUPPORT_NNTP
 
 int nntp_list(char *type, char *arg, int len)
@@ -590,5 +588,3 @@ long nntp_read(char *buf, long n)
 #endif /* SUPPORT_XTHREAD */
 
 #endif /* SUPPORT_NNTP */
-
-EXTERN_C_END

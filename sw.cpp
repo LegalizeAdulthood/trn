@@ -27,8 +27,6 @@
 #include <io.h>
 #endif
 
-EXTERN_C_BEGIN
-
 void sw_file(char **tcbufptr)
 {
     int initfd = open(*tcbufptr,0);
@@ -423,5 +421,3 @@ void write_init_environment(FILE *fp)
     free((char*)init_environment_strings);
     init_environment_strings = NULL;
 }
-
-EXTERN_C_END

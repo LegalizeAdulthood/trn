@@ -14,12 +14,7 @@
 #include "uudecode.h"
 #include "uudecode.ih"
 
-int
-uue_prescan(bp, filenamep, partp, totalp)
-char* bp;
-char** filenamep;
-int* partp;
-int* totalp;
+int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 {
     char* s;
     char* tmpfilename;
@@ -174,10 +169,7 @@ int* totalp;
     return 0;
 }
 
-int
-uudecode(ifp, state)
-FILE* ifp;
-int state;
+int uudecode(FILE *ifp, int state)
 {
     static FILE* ofp = NULL;
     static int line_length;
@@ -292,10 +284,7 @@ end:		if (ofp) {
 #define DEC(c)	(((c) - ' ') & 077)
 
 /* Decode a uuencoded line to 'ofp' */
-static void
-uudecodeline(line, ofp)
-char* line;
-FILE* ofp;
+static void uudecodeline(char *line, FILE *ofp)
 {
     int c, len;
 

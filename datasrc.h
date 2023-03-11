@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 struct srcfile {
     FILE*	fp;		/* the file pointer to read the data */
     HASHTABLE*	hp;		/* the hash table for the data */
@@ -86,7 +84,7 @@ EXT int datasrc_cnt INIT(0);
 EXT char* trnaccess_mem INIT(NULL);
 
 #ifdef SUPPORT_NNTP
-EXT char* nntp_auth_file;
+EXT char* nntp_auth_file INIT(NULL);
 #endif
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
@@ -109,5 +107,3 @@ void srcfile_end_append _((SRCFILE*,char*));
 #endif
 void srcfile_close _((SRCFILE*));
 int find_close_match _((void));
-
-EXTERN_C_END

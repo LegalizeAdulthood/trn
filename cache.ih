@@ -2,9 +2,5 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 static void init_artnode _((LIST*,LISTNODE*));
 static bool clear_artitem _((char*,int));
-
-EXTERN_C_END

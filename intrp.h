@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 EXT char* origdir INIT(NULL);		/* cwd when rn invoked */
 EXT char* hostname INIT(NULL);		/* host name to match local postings */
 EXT char* headname INIT(NULL);
@@ -22,5 +20,3 @@ char* interp_backslash _((char*,char*));
 char* interp _((char*,int,char*));
 char* interpsearch _((char*,int,char*,char*));
 void normalize_refs _((char*));
-
-EXTERN_C_END

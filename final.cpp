@@ -43,8 +43,6 @@
 #define sigmask(m)	(1 << ((m)-1))
 #endif
 
-EXTERN_C_BEGIN
-
 void final_init(void)
 {
 #ifdef SIGTSTP
@@ -318,5 +316,3 @@ Signal_t stop_catcher(int signo)
     sigset(signo,stop_catcher);	/* unenable the stop */
 }
 #endif
-
-EXTERN_C_END

@@ -2,10 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 static void filter_restart _((void));
 static int filter_send _((char*));
 static char* filter_recv _((char*));
-
-EXTERN_C_END

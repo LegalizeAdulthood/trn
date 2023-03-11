@@ -79,8 +79,6 @@
 #include "common.h"
 #include "trn.h"
 
-EXTERN_C_BEGIN
-
 void trn_init(void)
 {
 }
@@ -936,5 +934,3 @@ char *getngdir(char *ngnam)
 	    *s = '/';
     return myngdir;
 }
-
-EXTERN_C_END

@@ -12,8 +12,6 @@
 #include "hash.h"
 #include "hash.ih"
 
-EXTERN_C_BEGIN
-
 /* CAA: In the future it might be a good idea to preallocate a region
  *      of hashents, since allocation overhead on some systems will be as
  *      large as the structure itself.
@@ -295,5 +293,3 @@ static void hefree(HASHENT *hp)
  *
  * 4. This notice may not be removed or altered.
  */
-
-EXTERN_C_END

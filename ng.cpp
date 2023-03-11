@@ -63,8 +63,6 @@
 #include <direct.h>
 #endif
 
-EXTERN_C_BEGIN
-
 /* art_switch() return values */
 
 #define AS_NORM 0
@@ -2029,5 +2027,3 @@ g toggles global memorization.\n");
 	newline();
     return ch;
 }
-
-EXTERN_C_END

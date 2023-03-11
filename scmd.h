@@ -4,8 +4,6 @@
  * Scan command interpreter/router
  */
 
-EXTERN_C_BEGIN
-
 void s_go_bot _((void));
 int s_finish_cmd _((char*));
 int s_cmdloop _((void));
@@ -16,5 +14,3 @@ long s_forward_search _((long));
 long s_backward_search _((long));
 void s_search _((void));
 void s_jumpnum _((char_int));
-
-EXTERN_C_END

@@ -34,8 +34,6 @@
 #include "INTERN.h"
 #include "scmd.h"
 
-EXTERN_C_BEGIN
-
 void s_search(void);
 
 void s_go_bot(void)
@@ -479,5 +477,3 @@ void s_jumpnum(char_int firstchar)
     s_ptr_page_line = value-1;
 }
 #endif /* SCAN */
-
-EXTERN_C_END

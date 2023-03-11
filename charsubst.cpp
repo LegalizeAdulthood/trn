@@ -23,8 +23,6 @@
 #include "charsubst.h"
 #include "charsubst.ih"
 
-EXTERN_C_BEGIN
-
 #ifdef CHARSUBST
 
 /* TeX encoding table - gives ISO char for "x (x=32..127) */
@@ -273,5 +271,3 @@ static int Latin1toASCII(Uchar *asc, Uchar *iso, int limit, int t)
 }
 
 #endif
-
-EXTERN_C_END

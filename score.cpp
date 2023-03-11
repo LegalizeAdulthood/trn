@@ -41,8 +41,6 @@
 #include "INTERN.h"
 #include "score.h"
 
-EXTERN_C_BEGIN
-
 #if defined(USE_FILTER) && defined(FILTER_DEBUG)
 FILE* filter_error_file;
 #endif
@@ -569,5 +567,3 @@ void sc_kill_threshold(int thresh)
     }
 }
 #endif /* SCORE */
-
-EXTERN_C_END

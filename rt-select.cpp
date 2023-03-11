@@ -40,8 +40,6 @@
 #include "rt-select.h"
 #include "rt-select.ih"
 
-EXTERN_C_BEGIN
-
 static char sel_ret;
 static char page_char, end_char;
 static int disp_status_line;
@@ -2935,5 +2933,3 @@ void univ_visit_help(int where)
     POP_UNIV_SELECTOR();
     POP_SELECTOR();
 }
-
-EXTERN_C_END

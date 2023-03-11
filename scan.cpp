@@ -15,8 +15,6 @@
 #include "INTERN.h"
 #include "scan.h"
 
-EXTERN_C_BEGIN
-
 void s_init_context(int cnum, int type)
 {
     SCONTEXT *p;
@@ -186,5 +184,3 @@ void s_delete_context(int cnum)
     s_contexts[cnum].type = 0;
 }
 #endif /* SCAN */
-
-EXTERN_C_END

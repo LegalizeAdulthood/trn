@@ -45,8 +45,6 @@ struct utsname utsn;
 #define pclose(f) _pclose(f)
 #endif
 
-EXTERN_C_BEGIN
-
 static char* regexp_specials = "^$.*[\\/?%";
 
 char orgname[] = ORGNAME;
@@ -1138,5 +1136,3 @@ static void abort_interp(void)
     fputs("\n% interp buffer overflow!\n",stdout) FLUSH;
     sig_catcher(0);
 }
-
-EXTERN_C_END

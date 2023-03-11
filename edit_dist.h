@@ -5,8 +5,4 @@
  * is at the user's own risk. 
  */
 
-EXTERN_C_BEGIN
-
 int edit_distn _((char*,int,char*,int));
-
-EXTERN_C_END

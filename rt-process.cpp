@@ -27,8 +27,6 @@
 #include "rt-process.h"
 #include "rt-process.ih"
 
-EXTERN_C_BEGIN
-
 /* This depends on art being set to the current article number.
 */
 ARTICLE *allocate_article(ART_NUM artnum)
@@ -550,5 +548,3 @@ void merge_threads(SUBJECT *s1, SUBJECT *s2)
 	link_child(t1);      /* parent is null, thread is newly set */
     }
 }
-
-EXTERN_C_END

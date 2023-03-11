@@ -15,8 +15,6 @@
 #include <io.h>
 #endif
 
-EXTERN_C_BEGIN
-
 ART_LINE maxindx = -1;
 
 void backpage_init(void)
@@ -101,5 +99,3 @@ void vwtary(ART_LINE indx, ART_POS newvalue)
     }
     varybuf[subindx] = newvalue;
 }
-
-EXTERN_C_END

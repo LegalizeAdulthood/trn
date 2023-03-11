@@ -2,8 +2,6 @@
 */ 
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 #ifdef SUPPORT_NNTP
 
 #define FB_BACKGROUND	0
@@ -48,5 +46,3 @@ void nntp_server_died _((DATASRC*));
 long nntp_readcheck _((void));
 long nntp_read _((char*,long));
 #endif
-
-EXTERN_C_END

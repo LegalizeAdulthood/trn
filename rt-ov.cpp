@@ -30,8 +30,6 @@
 #include "rt-ov.h"
 #include "rt-ov.ih"
 
-EXTERN_C_BEGIN
-
 bool ov_init(void)
 {
     bool has_overview_fmt;
@@ -507,5 +505,3 @@ char *ov_field(ARTICLE *ap, int num)
     s = get_cached_line(ap, hdrnum[fn], TRUE);
     return s? s : nullstr;
 }
-
-EXTERN_C_END

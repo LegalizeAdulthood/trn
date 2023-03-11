@@ -12,8 +12,6 @@
  * is at the user's own risk. 
  */
 
-EXTERN_C_BEGIN
-
 #ifdef CHARSUBST
 
 /* Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced */
@@ -29,5 +27,3 @@ EXT char* charsubst;
 int putsubstchar _((int,int,bool_int));
 char* current_charsubst _((void));
 int strcharsubst _((char*,char*,int,char_int));
-
-EXTERN_C_END

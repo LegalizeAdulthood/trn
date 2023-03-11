@@ -39,7 +39,7 @@ add_library(nntp
 target_link_libraries(nntp PUBLIC sockets util)
 
 add_library(tool
-    util3.c util3.h
+    util3.cpp util3.h
 )
 target_link_libraries(tool PUBLIC nntp)
 
@@ -123,12 +123,12 @@ add_executable(trn
     typedef.h
     utf.c utf.h
     univ.cpp univ.h univ.ih
-    url.c url.h url.ih
-    util.c util.h util.ih
-    uudecode.c uudecode.h uudecode.ih
+    url.cpp url.h
+    util.cpp util.h util.ih
+    uudecode.cpp uudecode.h uudecode.ih
 )
 if(WIN32)
-    target_sources(trn PUBLIC popen.c)
+    target_sources(trn PUBLIC popen.cpp)
 endif()
 source_group("Header Files" REGULAR_EXPRESSION "^.*\.(h|ih)$")
 target_link_libraries(trn PUBLIC curses nntp)

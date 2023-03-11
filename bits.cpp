@@ -40,8 +40,6 @@
 #    include <dbm.h>
 #endif
 
-EXTERN_C_BEGIN
-
 static long chase_count = 0;
 
 void bits_init(void) {
@@ -830,5 +828,3 @@ static int chase_xref(art_num artnum, INT markread)
     return 0;
 }
 #endif /* DBM_XREFS */
-
-EXTERN_C_END

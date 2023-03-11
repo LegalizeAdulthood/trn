@@ -14,8 +14,6 @@
 #include "INTERN.h"
 #include "common.h"
 
-EXTERN_C_BEGIN
-
 void Usage(void);
 
 char* server_name;
@@ -173,5 +171,3 @@ int nntp_handle_timeout(void)
     return -2;
 }
 #endif
-
-EXTERN_C_END

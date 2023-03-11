@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 static ART_POS body_pos = -1;
 static ART_POS body_end = 0;
 
@@ -14,5 +12,3 @@ static long rawbytes = -1;	/* bytes remaining to be transfered */
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
 static int nntp_copybody _((char*,int,ART_POS));
-
-EXTERN_C_END

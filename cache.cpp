@@ -41,8 +41,6 @@
 #include "cache.h"
 #include "cache.ih"
 
-EXTERN_C_BEGIN
-
 #ifdef PENDING
 #   ifdef ARTSEARCH
 	COMPEX srchcompex;		/* compiled regex for searchahead */
@@ -1000,5 +998,3 @@ void clear_article(ARTICLE *ap)
         free(ap->refs);
 #endif
 }
-
-EXTERN_C_END

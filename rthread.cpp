@@ -39,8 +39,6 @@
 #include "rthread.h"
 #include "rthread.ih"
 
-EXTERN_C_BEGIN
-
 void thread_init(void)
 {
 }
@@ -1688,5 +1686,3 @@ static void build_artptrs(void)
 	}
     }
 }
-
-EXTERN_C_END

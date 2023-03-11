@@ -2,8 +2,4 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 static void def_init_node _((LIST*,LISTNODE*));
-
-EXTERN_C_END

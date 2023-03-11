@@ -21,8 +21,6 @@
 #include "filter.h"
 #include "filter.ih"
 
-EXTERN_C_BEGIN
-
 static FILE* filt_wr;
 static FILE* filt_rd;
 static int pipe_1[2], pipe_2[2];
@@ -274,7 +272,5 @@ void filter_cleanup(void)
     pipe_1[0] = pipe_1[1] = 0;
     pipe_2[0] = pipe_2[1] = 0;
 }
-
-EXTERN_C_END
 
 #endif /* USE_FILTER */

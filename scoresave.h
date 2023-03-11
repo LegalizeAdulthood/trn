@@ -3,8 +3,6 @@
  *
  */
 
-EXTERN_C_BEGIN
-
 EXT long sc_save_new INIT(0);	/* new articles (unloaded) */
 
 EXT int sc_loaded_count INIT(0);	/* how many articles were loaded? */
@@ -19,5 +17,3 @@ ART_NUM sc_sv_use_line _((char*,ART_NUM));
 ART_NUM sc_sv_make_line _((ART_NUM));
 void sc_load_scores _((void));
 void sc_save_scores _((void));
-
-EXTERN_C_END

@@ -46,8 +46,6 @@
 #include <io.h>
 #endif
 
-EXTERN_C_BEGIN
-
 COMPEX optcompex;
 
 void opt_init(int argc, char *argv[], char **tcbufptr)
@@ -1272,5 +1270,3 @@ Current directory %s is not writeable--\n\
     }
     cwd = savestr(tmpbuf);
 }
-
-EXTERN_C_END

@@ -16,8 +16,6 @@
 #include "INTERN.h"
 #include "autosub.h"
 
-EXTERN_C_BEGIN
-
 /* Consider the newsgroup specified, and return:	*/
 /* : if we should autosubscribe to it			*/
 /* ! if we should autounsubscribe to it			*/
@@ -69,5 +67,3 @@ bool matchlist(char *patlist, char *s)
     free_compex(&ilcompex);
     return result;
 }
-
-EXTERN_C_END

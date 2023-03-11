@@ -29,8 +29,6 @@
 #include "INTERN.h"
 #include "scoresave.h"
 
-EXTERN_C_BEGIN
-
 static int num_lines = 0;
 static int lines_alloc = 0;
 static char** lines = NULL;
@@ -444,5 +442,3 @@ void sc_save_scores(void)
     waiting = FALSE;
 }
 #endif /* SCORE */
-
-EXTERN_C_END

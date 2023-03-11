@@ -26,8 +26,6 @@
 #include "rt-wumpus.h"
 #include "rt-wumpus.ih"
 
-EXTERN_C_BEGIN
-
 static char tree_indent[] = {
     ' ', 0,
     ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
@@ -611,5 +609,3 @@ char thread_letter(ARTICLE *ap)
 	return ' ';
     return letters[subj > 9+26+26 ? 9+26+26 : subj];
 }
-
-EXTERN_C_END

@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 /* if TRUE, silence is golden (universal scan mode) */
 EXT bool toread_quiet INIT(FALSE);
 
@@ -24,5 +22,3 @@ void prange _((char*,ART_NUM,ART_NUM));
 void set_toread _((NGDATA*,bool_int));
 void checkexpired _((NGDATA*,ART_NUM));
 bool was_read_group _((DATASRC*,ART_NUM,char*));
-
-EXTERN_C_END

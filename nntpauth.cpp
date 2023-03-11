@@ -16,8 +16,6 @@
 #include "INTERN.h"
 #include "nntpauth.h"
 
-EXTERN_C_BEGIN
-
 #ifdef SUPPORT_NNTP
 
 int nntp_handle_auth_err(void)
@@ -92,5 +90,3 @@ int nntp_auth(char *authc)
 #endif /* USE_GENAUTH */
 
 #endif /* SUPPORT_NNTP */
-
-EXTERN_C_END

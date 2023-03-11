@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 EXT char* ngname INIT(NULL);	/* name of current newsgroup */
 EXT int ngnlen INIT(0);		/* current malloced size of ngname */
 EXT int ngname_len;		/* length of current ngname */
@@ -49,5 +47,3 @@ void check_active_refetch _((bool_int));
 void trn_version _((void));
 void set_ngname _((char*));
 char* getngdir _((char*));
-
-EXTERN_C_END

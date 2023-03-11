@@ -28,8 +28,6 @@
 #include <winsock2.h>
 #endif
 
-EXTERN_C_BEGIN
-
 bool env_init(char *tcbuf, bool_int lax)
 {
     bool fully_successful = TRUE;
@@ -378,5 +376,3 @@ static int envix(const char *nam, int len)
     }					/* potential SEGV's */
     return i;
 }
-
-EXTERN_C_END

@@ -49,8 +49,6 @@
 #undef	USETITE		/* use terminal init/exit seqences (not recommended) */
 #undef	USEKSKE		/* use keypad start/end sequences */
 
-EXTERN_C_BEGIN
-
 char tcarea[TCSIZE];	/* area for "compiled" termcap strings */
 
 static KEYMAP*	topmap INIT(NULL);
@@ -2366,5 +2364,3 @@ char *tgoto(char *str, int x, int y)
     return gbuf;
 }
 #endif
-
-EXTERN_C_END

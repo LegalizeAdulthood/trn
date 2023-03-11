@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 EXT int dmcount INIT(0);
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
@@ -25,5 +23,3 @@ void mark_missing_articles _((void));
 void check_first _((ART_NUM));
 void yankback _((void));
 int chase_xrefs _((bool_int));
-
-EXTERN_C_END

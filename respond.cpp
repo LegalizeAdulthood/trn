@@ -36,8 +36,6 @@
 #include <direct.h>
 #endif
 
-EXTERN_C_BEGIN
-
 static char nullart[] = "\nEmpty article.\n";
 
 void respond_init(void)
@@ -1056,5 +1054,3 @@ static bool cut_line(char *str)
     return FALSE;
 }
 #endif
-
-EXTERN_C_END

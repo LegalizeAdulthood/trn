@@ -2,14 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#ifdef __cplusplus
-#define EXTERN_C_BEGIN extern "C" {
-#define EXTERN_C_END }
-#else
-#define EXTERN_C_BEGIN
-#define EXTERN_C_END
-#endif
-
 #ifdef HAS_GETPWENT
 #   include <pwd.h>
 #endif
@@ -104,15 +96,6 @@
 #endif
 #ifndef bzero
 #  define bzero(s,l) memset((s),0,(l))
-#endif
-
-#ifdef HAS_GETPWENT
-# ifndef __STDC__
-EXTERN_C_BEGIN
-struct passwd* getpwuid(uid_t);
-struct passwd* getpwnam(char*);
-EXTERN_C_END
-# endif
 #endif
 
 #ifndef FILE_REF

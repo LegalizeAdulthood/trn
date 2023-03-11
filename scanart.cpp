@@ -27,8 +27,6 @@
 #include "samain.h"
 #include "samisc.h"
 
-EXTERN_C_BEGIN
-
 int sa_main(void)
 {
     char sa_oldmode;	/* keep mode of caller */
@@ -114,5 +112,3 @@ void sa_cleanup(void)
     sa_initialized = FALSE;		/* goodbye... */
 }
 #endif /* SCAN */
-
-EXTERN_C_END

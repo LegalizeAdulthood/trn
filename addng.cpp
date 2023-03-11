@@ -27,8 +27,6 @@
 
 #include <stdlib.h>
 
-EXTERN_C_BEGIN
-
 static int addng_cmp(char *key, int keylen, HASHDATUM data)
 {
 	return bcmp(key, ((ADDGROUP*)data.dat_ptr)->name, keylen);
@@ -433,5 +431,3 @@ void sort_addgroups(void)
     last_addgroup->next = NULL;
     free((char*)ag_list);
 }
-
-EXTERN_C_END

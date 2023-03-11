@@ -3,8 +3,6 @@
 /* This software is copyrighted as detailed in the LICENSE file, and
  * this file is also Copyright 1995 by Gran Larsson <hoh@approve.se>. */
 
-EXTERN_C_BEGIN
-
 struct color_obj {
     char* name;
     char* fg;
@@ -17,5 +15,3 @@ struct color_obj {
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
 static void output_color _((void));
-
-EXTERN_C_END

@@ -42,8 +42,6 @@
 #include <io.h>
 #endif
 
-EXTERN_C_BEGIN
-
 void ngdata_init(void) {
     ;
 }
@@ -373,5 +371,3 @@ ART_NUM getngsize(NGDATA *gp)
 	return gp->ngmax;
     return gp->ngmax = (ART_NUM)last;
 }
-
-EXTERN_C_END

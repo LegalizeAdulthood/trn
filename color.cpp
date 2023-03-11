@@ -35,8 +35,6 @@
 #include "color.h"
 #include "color.ih"
 
-EXTERN_C_BEGIN
-
 /*
 ** Object properties.
 **
@@ -327,5 +325,3 @@ static void output_color(void)
 	break;
     }
 }
-
-EXTERN_C_END

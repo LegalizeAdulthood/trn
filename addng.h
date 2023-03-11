@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXTERN_C_BEGIN
-
 struct addgroup {
     ADDGROUP* next;
     ADDGROUP* prev;
@@ -33,5 +31,3 @@ void addng_init _((void));
 bool find_new_groups _((void));
 bool scanactive _((bool_int));
 void sort_addgroups _((void));
-
-EXTERN_C_END

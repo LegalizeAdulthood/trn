@@ -27,8 +27,6 @@
 #include "rt-util.h"
 #include "rt-util.ih"
 
-EXTERN_C_BEGIN
-
 /* Name-munging routines written by Ross Ridge.
 ** Enhanced by Wayne Davison.
 */
@@ -873,5 +871,3 @@ int perform_status_end(long cnt, char *obj_type)
     /* If we only selected/deselected things, return 1, else 2 */
     return (kills | missing) == 0? 1 : 2;
 }
-
-EXTERN_C_END

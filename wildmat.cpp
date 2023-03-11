@@ -42,8 +42,6 @@
 #include "wildmat.h"
 #include "wildmat.ih"
 
-EXTERN_C_BEGIN
-
 #define ABORT			-1
 
     /* What character marks an inverted character class? */
@@ -160,5 +158,3 @@ main()
     return 0;
 }
 #endif	/* TEST */
-
-EXTERN_C_END

@@ -21,8 +21,6 @@
 #include "INTERN.h"
 #include "common.h"
 
-EXTERN_C_BEGIN
-
 #define MAXNGS 100
 
 #ifdef SUPPORT_NNTP
@@ -334,5 +332,3 @@ int nntp_handle_timeout(void)
     return -2;
 }
 #endif
-
-EXTERN_C_END

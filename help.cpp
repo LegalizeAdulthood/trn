@@ -11,8 +11,6 @@
 #include "INTERN.h"
 #include "help.h"
 
-EXTERN_C_BEGIN
-
 void help_init(void)
 {
     ;
@@ -1044,5 +1042,3 @@ int univ_key_help(int where)
 	return 0;
     }
 }
-
-EXTERN_C_END
