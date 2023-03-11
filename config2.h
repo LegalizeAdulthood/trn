@@ -99,13 +99,6 @@
 #  define bzero(s,l) memset((s),0,(l))
 #endif
 
-#ifdef SUPPLEMENT_STRING_H
-char*	index();
-char*	rindex();
-char*	strcat();
-char*	strcpy();
-#endif
-
 #ifdef HAS_GETPWENT
 # ifndef __STDC__
 struct passwd* getpwuid _((uid_t));
