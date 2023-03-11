@@ -161,10 +161,8 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
     if (strNE(cp,"local")) {
 	server_name = savestr(cp);
 	cp = index(server_name, ';');
-#ifndef DECNET
 	if (!cp)
 	    cp = index(server_name, ':');
-#endif
 	if (cp) {
 	    *cp = '\0';
 	    nntplink.port_number = atoi(cp+1);

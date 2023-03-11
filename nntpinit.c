@@ -3,7 +3,6 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 
-/*#define DECNET	*//* If you want decnet support */
 /*#define EXCELAN	*//* Excelan EXOS 205 support */
 /*#define NONETD	*//* Define if you're missing netdb.h */
 
@@ -12,7 +11,6 @@
 #include "nntpclient.h"
 #include "INTERN.h"
 #include "nntpinit.h"
-#include "nntpinit.ih"
 
 #ifdef WIN32
 #include <io.h>
@@ -30,17 +28,12 @@ WSADATA wsaData;
 #endif
 
 #ifdef EXCELAN
-int connect _((int, struct sockaddr*));
-unsigned short htons _((unsigned short));
-unsigned long rhost _((char**));
+int connect(int, struct sockaddr *);
+unsigned short htons(unsigned short);
+unsigned long rhost(char **);
 int rresvport p((int));
-int socket _((int, struct sockproto *, struct sockaddr_in *, int));
+int socket(int, struct sockproto *, struct sockaddr_in *, int);
 #endif /* EXCELAN */
-
-#ifdef DECNET
-#include <netdnet/dn.h>
-#include <netdnet/dnetdb.h>
-#endif /* DECNET */
 
 #ifndef WINSOCK
 unsigned long inet_addr(char *);
@@ -66,21 +59,8 @@ int init_nntp(void)
 int server_init(const char *machine)
 {
     int sockt_rd, sockt_wr;
-#ifdef DECNET
-    char* cp;
-#endif
 
-#ifdef DECNET
-    cp = index(machine, ':');
-
-    if (cp && cp[1] == ':') {
-	*cp = '\0';
-	sockt_rd = get_dnet_socket(machine);
-    } else
-	sockt_rd = get_tcp_socket(machine, nntplink.port_number, "nntp");
-#else /* !DECNET */
     sockt_rd = get_tcp_socket(machine, nntplink.port_number, "nntp");
-#endif
 
     if (sockt_rd < 0)
 	return -1;
@@ -318,57 +298,5 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 #endif
     return s;
 }
-
-#ifdef DECNET
-static int
-get_dnet_socket(machine)
-char* machine;
-{
-    int s, area, node;
-    struct sockaddr_dn sdn;
-    struct nodeent *getnodebyname(), *np;
-
-    bzero((char*)&sdn, sizeof sdn);
-
-    switch (s = sscanf(machine, "%d%*[.]%d", &area, &node)) {
-    case 1: 
-	node = area;
-	area = 0;
-    case 2: 
-	node += area*1024;
-	sdn.sdn_add.a_len = 2;
-	sdn.sdn_family = AF_DECnet;
-	sdn.sdn_add.a_addr[0] = node % 256;
-	sdn.sdn_add.a_addr[1] = node / 256;
-	break;
-    default:
-	if ((np = getnodebyname(machine)) == NULL) {
-	    fprintf(stderr, "%s: Unknown host.\n", machine);
-	    return -1;
-	}
-	bcopy(np->n_addr, (char*)sdn.sdn_add.a_addr, np->n_length);
-	sdn.sdn_add.a_len = np->n_length;
-	sdn.sdn_family = np->n_addrtype;
-	break;
-    }
-    sdn.sdn_objnum = 0;
-    sdn.sdn_flags = 0;
-    sdn.sdn_objnamel = strlen("NNTP");
-    bcopy("NNTP", &sdn.sdn_objname[0], sdn.sdn_objnamel);
-
-    if ((s = socket(AF_DECnet, SOCK_STREAM, 0)) < 0) {
-	nerror("socket");
-	return -1;
-    }
-
-    /* And then connect */
-    if (connect(s, (struct sockaddr*)&sdn, sizeof sdn) < 0) {
-	nerror("connect");
-	close(s);
-	return -1;
-    }
-    return s;
-}
-#endif /* DECNET */
 
 #endif /* SUPPORT_NNTP */

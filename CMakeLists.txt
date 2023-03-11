@@ -34,7 +34,7 @@ target_include_directories(util PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 add_library(nntp
     nntpauth.c nntpauth.h
     nntpclient.c nntpclient.h
-    nntpinit.c nntpinit.h nntpinit.ih
+    nntpinit.c nntpinit.h
 )
 target_link_libraries(nntp PUBLIC sockets util)
 
