@@ -119,10 +119,10 @@ add_executable(trn
     spage.cpp spage.h
     sw.cpp sw.h
     term.cpp term.h term.ih
-    trn.c trn.h
+    trn.cpp trn.h
     typedef.h
     utf.c utf.h
-    univ.c univ.h univ.ih
+    univ.cpp univ.h univ.ih
     url.c url.h url.ih
     util.c util.h util.ih
     uudecode.c uudecode.h uudecode.ih

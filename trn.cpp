@@ -39,24 +39,16 @@
  *
  */
 
-#include "patchlevel.h"
-#include "INTERN.h"
-#include "common.h"
 #include "EXTERN.h"
+#include "patchlevel.h"
+#include "common.h"
 #include "list.h"
 #include "hash.h"
 #include "ngdata.h"
 #include "nntpclient.h"
 #include "datasrc.h"
 #include "nntp.h"
-#include "INTERN.h"
 #include "utf.h"
-#ifdef USE_UTF_HACK
-#undef PATCHLEVEL
-#include "patchlevel2.h"
-#endif
-#include "trn.h"
-#include "EXTERN.h"
 #include "term.h"
 #include "final.h"
 #include "search.h"
@@ -83,11 +75,14 @@
 #include "scan.h"
 #endif /* SCAN */
 #include "univ.h"
+#include "INTERN.h"
+#include "common.h"
+#include "trn.h"
 
-void
-trn_init()
+EXTERN_C_BEGIN
+
+void trn_init(void)
 {
-    ;
 }
 
 static bool restore_old_newsrc = FALSE;
@@ -153,8 +148,7 @@ newsgroup use the g<newsgroup> command.\n\
     return 0;
 }
 
-void
-do_multirc()
+void do_multirc(void)
 {
     bool special = FALSE;	/* allow newsgroup with no unread news? */
     char mode_save = mode;
@@ -375,8 +369,7 @@ bug_out:
     set_mode(gmode_save,mode_save);
 }
 
-int
-input_newsgroup()
+int input_newsgroup(void)
 {
     register char* s;
 
@@ -810,9 +803,7 @@ reask_abandon:
 }
 
 #ifdef SUPPORT_NNTP
-void
-check_active_refetch(force)
-bool_int force;
+void check_active_refetch(bool_int force)
 {
     DATASRC* dp;
     time_t now = time((time_t*)NULL);
@@ -827,8 +818,7 @@ bool_int force;
 }
 #endif
 
-void
-trn_version()
+void trn_version(void)
 {
     page_start();
     sprintf(msg,"Trn version:%s.\nConfigured for ",patchlevel);
@@ -921,9 +911,7 @@ Send bug reports, suggestions, etc. to:  trn-workers@lists.sourceforge.net\n",
 		NOMARKING);
 }
 
-void
-set_ngname(what)
-char* what;
+void set_ngname(char *what)
 {
     if (ngname != what) {
 	ngname_len = strlen(what);
@@ -937,9 +925,7 @@ char* what;
 static char* myngdir;
 static int ngdirlen = 0;
 
-char*
-getngdir(ngnam)
-char* ngnam;
+char *getngdir(char *ngnam)
 {
     register char* s;
 
@@ -950,3 +936,5 @@ char* ngnam;
 	    *s = '/';
     return myngdir;
 }
+
+EXTERN_C_END
