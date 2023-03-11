@@ -50,9 +50,6 @@
 #ifdef SCORE
 #include "score.h"
 #endif
-#ifdef USE_TK
-#include "tkstuff.h"
-#endif
 #include "univ.h"
 #include "artstate.h"
 #include "color.h"
@@ -550,10 +547,6 @@ cleanup:
 #endif
     chase_xrefs(FALSE);
     if (!univ_ng_virtflag) {
-#ifdef USE_TK
-	if (ttcl_running)
-	    ttcl_eval("endgroup");
-#endif
     }
 
     in_ng = FALSE;			/* leave newsgroup state */

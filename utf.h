@@ -21,6 +21,10 @@
 #define TAG_ISO8859_15		"Latin9"
 #define TAG_WINDOWS_1252	"CP1252"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef unsigned long CODE_POINT;
 
 int utf_init(const char *, const char *);
@@ -43,5 +47,9 @@ int put_char_adv(char **, bool_int);
 char *create_utf8_copy(char *);
 
 void terminate_string_at_visual_index(char *, int);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -23,9 +23,6 @@
 #include "util.h"
 #include "util2.h"
 #include "utf.h"
-#ifdef USE_TK
-#include "tkstuff.h"
-#endif
 #include "INTERN.h"
 #include "rt-util.h"
 #include "rt-util.ih"
@@ -373,7 +370,7 @@ try_again:
 #endif
     return name;
 }
-#undef vis_len;
+#undef vis_len
 #undef vis_namelen
 #undef vis_midlen
 
@@ -686,20 +683,12 @@ void spin(int count)
 	    putchar(spinchars[++spin_place % 4]);
 	    backspace();
 	    fflush(stdout);
-#ifdef USE_TK
-	    if (ttk_running)
-		ttk_do_waiting_events();
-#endif
 	}
 	break;
       case SPIN_FOREGROUND:
 	if (!(++spin_count % count)) {
 	    putchar('.');
 	    fflush(stdout);
-#ifdef USE_TK
-	    if (ttk_running)
-		ttk_do_waiting_events();
-#endif
 	}
 	break;
       case SPIN_BARGRAPH: {
@@ -714,19 +703,11 @@ void spin(int count)
 	    } while (++spin_pos < new_pos);
 	    spin_place = 0;
 	    fflush(stdout);
-#ifdef USE_TK
-	    if (ttk_running)
-		ttk_do_waiting_events();
-#endif
 	}
 	else if (!(spin_count % count)) {
 	    putchar(spinchars[++spin_place % 4]);
 	    backspace();
 	    fflush(stdout);
-#ifdef USE_TK
-	    if (ttk_running)
-		ttk_do_waiting_events();
-#endif
 	}
 	break;
       }

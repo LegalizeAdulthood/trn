@@ -117,12 +117,6 @@ int main(int argc, char *argv[])
 #endif
     if (*s == 's')
 	is_strn = TRUE;
-#ifdef USE_TK /*XXX remove this?*/
-    if (s[1] == 'k')
-	UseTk = 1;
-    else
-	UseTk = 0;
-#endif
     foundany = initialize(argc,argv);
 
     if (UseNewsrcSelector) {

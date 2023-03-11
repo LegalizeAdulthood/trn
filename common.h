@@ -753,13 +753,6 @@
 # endif
 #endif
 
-/* TK requires TCL */
-#ifdef USE_TK
-# ifndef USE_TCL
-#  define USE_TCL
-# endif
-#endif
-
 /* *** end of the machine dependent stuff *** */
 
 EXTERN_C_BEGIN

@@ -476,11 +476,6 @@ typedef struct timeb Timeval; /* Structure used by ftime() */
 #define OVERVIEW_DIR	"@OVERVIEWDIR@"		/**/
 #define OVERVIEW_FMT	"@OVERVIEWFMT@"		/**/
 
-/* USE_TK:
- *	This is defined if you want to link trn with Tk.
- */
-#cmakedefine USE_TK		/**/
-
 /* THREAD_INIT:
  *	This symbol indicates we act like trn no matter what our name is.
  */

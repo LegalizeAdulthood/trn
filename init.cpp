@@ -53,9 +53,6 @@
 #endif
 #include "mempool.h"
 #include "color.h"
-#ifdef USE_TCL
-#include "tkstuff.h"
-#endif
 #include "univ.h"
 #include "INTERN.h"
 #include "init.h"
@@ -132,16 +129,6 @@ bool initialize(int argc, char *argv[])
     last_init();
 
     free(tcbuf);			/* recover 1024 bytes */
-
-#ifdef USE_TCL
-    if (UseTcl
-#ifdef USE_TK
- || UseTk
-#endif
-       ) {
-	ttcl_init();
-    }
-#endif
 
     univ_init();
 

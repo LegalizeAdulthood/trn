@@ -47,10 +47,6 @@
 #ifdef SCORE
 #include "score.h"		/* for sc_lookahead() */
 #endif
-#ifdef USE_TK
-#include "tkstuff.h"
-#include "tktree.h"
-#endif
 #include "color.h"
 #include "INTERN.h"
 #include "art.h"
@@ -123,12 +119,6 @@ int do_article(void)
 	    return DA_NORM;
 	artsize = raw_artsize = filestat.st_size;
     }
-#ifdef SCORE
-#ifdef USE_TK
-    if (ttcl_running)
-	ttcl_set_int("score_curvar",sc_score_art((int)art,TRUE));
-#endif
-#endif
     sprintf(prompt_buf, mousebar_cnt>3? "%%sEnd of art %ld (of %ld) %%s[%%s]"
 	: "%%sEnd of article %ld (of %ld) %%s-- what next? [%%s]",
 	(long)art,(long)lastart);	/* format prompt string */
@@ -141,10 +131,6 @@ int do_article(void)
 	seekart(artbuf_seek = htype[PAST_HEADER].minpos);
     }
     term_scrolled = 0;
-#ifdef USE_TK
-    if (ThreadedGroup && ttk_running)
-        ttk_draw_tree(curr_artp, 0, 0);
-#endif
 
     for (;;) {			/* for each page */
 	if (ThreadedGroup && max_tree_lines)

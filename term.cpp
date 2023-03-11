@@ -32,9 +32,6 @@
 #ifdef SCAN_ART
 #include "scanart.h"
 #endif
-#ifdef USE_TK
-#include "tkstuff.h"
-#endif
 #include "univ.h"
 #include "color.h"
 #include "INTERN.h"
@@ -613,13 +610,6 @@ bool finput_pending(bool_int check_term)
 	}
     }
 #ifdef PENDING
-#ifdef USE_TK
-    if (check_term && ttk_running) {
-	ttk_do_waiting_events();	/* Update screen, process events. */
-	if (ttk_keys && *ttk_keys)
-	    return 1;
-    }
-#endif
     if (check_term) {
 # ifdef FIONREAD
 	long iocount;
@@ -941,23 +931,6 @@ int read_tty(char *addr, int size)
 	nextout %= PUSHSIZE;
 	return 1;
     }
-#ifdef USE_TK
-    if (ttk_running) {
-	ttk_wait_for_input();    /* handle events until input is available */
-	if (ttk_keys && *ttk_keys) {
-	    int len = strlen(ttk_keys);
-	    if (size > len)
-		size = len;
-	    strncpy(addr, ttk_keys, size);      /* return the first bit */
-	    if (len > size)
-		pushstring(ttk_keys+size,0);	/* and push the rest */
-	    free(ttk_keys);			/* every byte counts... */
-	    /* A plain NULL pointer will not work -- it is "\0" in TCL */
-	    ttk_keys = savestr(nullstr);
-	    return size;
-	}
-    }
-#endif
 #ifdef MSDOS
     *addr = getch();
     if (*addr == '\0')

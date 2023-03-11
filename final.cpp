@@ -29,9 +29,6 @@
 #include "score.h"
 #include "scoresave.h"
 #endif
-#ifdef USE_TCL
-#include "tkstuff.h"
-#endif
 #ifdef USE_FILTER
 #include "filter.h"
 #endif
@@ -141,10 +138,6 @@ void finalize(int status)
 #endif
     if (headname)
 	UNLINK(headname);
-#ifdef USE_TCL
-    if (ttcl_running)
-	ttcl_finalize(status);
-#endif
     if (status < 0) {
 	sigset(SIGILL,SIG_DFL);
 #ifdef HAS_SIGBLOCK

@@ -132,7 +132,7 @@ charset_desc_t *
 find_charset_desc(id)
 int id;
 {
-    const char *it = NULL;
+    charset_desc_t *it = NULL;
     int i;
     for (i = 0; ; i += 1) {
 	charset_desc_t *node = &charset_descs[i];

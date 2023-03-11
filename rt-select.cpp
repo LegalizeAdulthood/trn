@@ -36,10 +36,6 @@
 #include "rt-util.h"
 #include "color.h"
 #include "only.h"
-#ifdef USE_TK
-#include "tkstuff.h"
-#include "tktree.h"
-#endif
 #include "INTERN.h"
 #include "rt-select.h"
 #include "rt-select.ih"
@@ -854,30 +850,7 @@ static char sel_input(void)
     }
     if (can_home)
 	goto_xy(0,sel_items[sel_item_index].line);
-#ifdef USE_TK
-    /* Allow Tk to do something with the current positioning */
-    if (ttk_running) {
-	SEL_UNION u;
 
-	u = sel_items[sel_item_index].u;
-	switch (sel_mode) {
-	  case SM_THREAD:
-	  case SM_SUBJECT:
-	    ttcl_eval("wipetree");
-	    if (sel_page_item_cnt != 0)
-                ttk_draw_tree(u.sp->thread, 0, 0);
-	    break;
-	  case SM_ARTICLE:
-	  case SM_MULTIRC:
-	  case SM_ADDGROUP:
-	  case SM_NEWSGROUP:
-	  case SM_OPTIONS:
-	  case SM_UNIVERSAL:
-	  default:
-	    break;
-	}
-    }
-#endif
 reinp_selector:
     if (removed_prompt & 1)
 	goto position_selector;	/* (CAA: TRN considered harmful? :-) */
