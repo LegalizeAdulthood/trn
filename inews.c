@@ -28,8 +28,8 @@ char*	nntp_auth_file;
 
 char	buf[LBUFLEN+1];
 
-int valid_header _((char*));
-void append_signature _((void));
+int valid_header(char *);
+void append_signature(void);
 
 int main(int argc, char *argv[])
 {
@@ -253,9 +253,7 @@ int main(int argc, char *argv[])
 }
 
 /* valid_header -- determine if a line is a valid header line */
-int
-valid_header(h)
-register char* h;
+int valid_header(char *h)
 {
     char* colon;
     char* space;
@@ -281,8 +279,7 @@ register char* h;
  * they have one.  Limit .signature to MAX_SIGNATURE lines.
  * The rn-style DOTDIR environmental variable is used if present.
  */
-void
-append_signature()
+void append_signature(void)
 {
     char* cp;
     FILE* fp;
@@ -318,8 +315,7 @@ append_signature()
 }
 
 #ifdef SUPPORT_NNTP
-int
-nntp_handle_timeout()
+int nntp_handle_timeout(void)
 {
     if (!new_connection) {
 	static bool handling_timeout = FALSE;

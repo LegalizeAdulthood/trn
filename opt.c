@@ -154,7 +154,7 @@ bool_int bleat;
 		    while (*s && *s != '[') {
 			section = s;
 			s += strlen(s) + 1;
-			export(section,s);
+			export_var(section,s);
 			s += strlen(s) + 1;
 		    }
 		}
@@ -334,13 +334,13 @@ char* s;
       case OI_AUTO_SAVE_NAME:
 	if (!checkflag) {
 	    if (YES(s)) {
-		export("SAVEDIR",  "%p/%c");
-		export("SAVENAME", "%a");
+		export_var("SAVEDIR",  "%p/%c");
+		export_var("SAVENAME", "%a");
 	    }
 	    else if (strEQ(get_val("SAVEDIR",nullstr),"%p/%c")
 		  && strEQ(get_val("SAVENAME",nullstr),"%a")) {
-		export("SAVEDIR", "%p");
-		export("SAVENAME", "%^C");
+		export_var("SAVEDIR", "%p");
+		export_var("SAVENAME", "%^C");
 	    }
 	}
 	break;

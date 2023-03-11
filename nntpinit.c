@@ -43,9 +43,9 @@ int socket _((int, struct sockproto *, struct sockaddr_in *, int));
 #endif /* DECNET */
 
 #ifndef WINSOCK
-unsigned long inet_addr _((char*));
-struct servent* getservbyname();
-struct hostent* gethostbyname();
+unsigned long inet_addr(char *);
+struct servent *getservbyname(void);
+struct hostent *gethostbyname(void);
 #endif
 
 int init_nntp(void)

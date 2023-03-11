@@ -14,18 +14,18 @@
 
 time_t last_command_diff;
 
-char* savestr _((char*));
+char *savestr(char *);
 #ifndef USE_DEBUGGING_MALLOC
-char* safemalloc _((MEM_SIZE));
+char *safemalloc(MEM_SIZE);
 #endif
 #ifdef NNTP_HANDLE_TIMEOUT
-int nntp_handle_timeout _((void));
+int nntp_handle_timeout(void);
 #endif
 
-int nntp_handle_nested_lists _((void));
+int nntp_handle_nested_lists(void);
 
 #ifdef NNTP_HANDLE_AUTH_ERR
-int nntp_handle_auth_err _((void));
+int nntp_handle_auth_err(void);
 #endif
 
 int nntp_connect(const char *machine, bool_int verbose)

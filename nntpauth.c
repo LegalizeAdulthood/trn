@@ -18,8 +18,7 @@
 
 #ifdef SUPPORT_NNTP
 
-int
-nntp_handle_auth_err()
+int nntp_handle_auth_err(void)
 {
     char last_command_save[NNTP_STRLEN];
 #ifdef USE_GENAUTH
@@ -59,9 +58,7 @@ nntp_handle_auth_err()
 }
 
 #ifdef USE_GENAUTH
-int
-nntp_auth(authc)
-char* authc;
+int nntp_auth(char *authc)
 {
     int ret;
 

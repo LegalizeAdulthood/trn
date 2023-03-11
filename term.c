@@ -301,9 +301,9 @@ char* tcbuf;		/* temp area for "uncompiled" termcap entry */
     noecho();				/* turn off echo */
     crmode();				/* enter cbreak mode */
     sprintf(buf, "%d", tc_LINES);
-    lines_export = export("LINES",buf);
+    lines_export = export_var("LINES",buf);
     sprintf(buf, "%d", tc_COLS);
-    cols_export = export("COLUMNS",buf);
+    cols_export = export_var("COLUMNS",buf);
 
     mac_init(tcbuf);
 }

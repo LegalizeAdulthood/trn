@@ -76,24 +76,24 @@ util_init()
     for (i = 0, cp = buf; i < 512; i++)
 	*cp++ = 'X';
     *cp = '\0';
-    newsactive_export = export("NEWSACTIVE", buf);
-    grpdesc_export = export("NEWSDESCRIPTIONS", buf);
+    newsactive_export = export_var("NEWSACTIVE", buf);
+    grpdesc_export = export_var("NEWSDESCRIPTIONS", buf);
 #ifdef SUPPORT_NNTP
-    nntpserver_export = export("NNTPSERVER", buf);
+    nntpserver_export = export_var("NNTPSERVER", buf);
 #endif
     buf[64] = '\0';
-    quotechars_export = export("QUOTECHARS",buf);
+    quotechars_export = export_var("QUOTECHARS",buf);
 #ifdef SUPPORT_NNTP
-    nntpfds_export = export("NNTPFDS", buf);
+    nntpfds_export = export_var("NNTPFDS", buf);
 #ifdef USE_GENAUTH
-    nntpauth_export = export("NNTP_AUTH_FDS", buf);
+    nntpauth_export = export_var("NNTP_AUTH_FDS", buf);
 #endif
     buf[3] = '\0';
-    nntpforce_export = export("NNTP_FORCE_AUTH", buf);
+    nntpforce_export = export_var("NNTP_FORCE_AUTH", buf);
 #endif
 
     for (cp = patchlevel; isspace(*cp); cp++) ;
-    export("TRN_VERSION", cp);
+    export_var("TRN_VERSION", cp);
 }
     
 /* fork and exec a shell command */

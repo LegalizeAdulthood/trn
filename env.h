@@ -22,6 +22,6 @@ bool env_init(char *tcbuf, bool_int lax);
 bool set_user_name(char *tmpbuf);
 bool set_p_host_name(char *tmpbuf);
 char *get_val(char *nam, char *def);
-char *export(const char *nam, const char *val);
+char *export_var(const char *nam, const char *val);
 void un_export(char *export_val);
 void re_export(char *export_val, char *new_val, int limit);

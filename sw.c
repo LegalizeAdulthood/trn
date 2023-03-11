@@ -195,12 +195,12 @@ register char* s;
 	    s = index(tmpbuf,'=');
 	    if (s) {
 		*s++ = '\0';
-		s = export(tmpbuf,s) - (s-tmpbuf);
+		s = export_var(tmpbuf,s) - (s-tmpbuf);
 		if (mode == 'i')
 		    save_init_environment(s);
 	    }
 	    else {
-		s = export(tmpbuf,nullstr) - strlen(tmpbuf) - 1;
+		s = export_var(tmpbuf,nullstr) - strlen(tmpbuf) - 1;
 		if (mode == 'i')
 		    save_init_environment(s);
 	    }

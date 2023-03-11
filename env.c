@@ -315,7 +315,7 @@ static bool firstexport = TRUE;
 extern char **environ;
 #endif
 
-char *export(const char *nam, const char *val)
+char *export_var(const char *nam, const char *val)
 {
     int namlen = strlen(nam);
     register int i=envix(nam,namlen);	/* where does it go? */
