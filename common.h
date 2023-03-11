@@ -263,13 +263,13 @@
 /*#define LONG_THREAD_NAMES	*//**/
 
 /* USEURL may soon become a Configure script option */
-/*#define USEURL  *//* allow trn to fetch/use WWW URLs */
+#define USEURL  /* allow trn to fetch/use WWW URLs */
 
 /* if USEFTP is defined, trn will use the ftpgrab script for ftp: URLs
  * USEFTP is not very well tested, and the ftpgrab script is not
  * installed with make install.  May go away later
  */
-/*#define USEFTP  *//**/
+#define USEFTP  /**/
 
 /* The NICEBG functions are probably only useful now for *slow* systems */
 /*#define NICEBG  *//* use some kind of nice-background call */
@@ -742,15 +742,6 @@
 
 #ifndef HAS_VFORK
 #   define vfork fork
-#endif
-
-/* Winsock is only initialized if NNTP_SUPPORT is defined */
-#ifdef WINSOCK
-# ifndef NNTP_SUPPORT
-#  ifdef USEURL
-#   undef USEURL
-#  endif
-# endif
 #endif
 
 /* *** end of the machine dependent stuff *** */
