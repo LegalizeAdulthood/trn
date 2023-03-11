@@ -2,6 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
+
 #define RI_ID		1
 #define RI_NEWSRC	2
 #define RI_ADDGROUPS	3
@@ -24,3 +26,5 @@ static void init_ngnode _((LIST*,LISTNODE*));
 static void parse_rcline _((NGDATA*));
 static NGDATA* add_newsgroup _((NEWSRC*,char*,char_int));
 static int rcline_cmp _((char*,int,HASHDATUM));
+
+EXTERN_C_END

@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 EXT char *g_home_dir INIT(NULL);	/* login directory */
 EXT char *g_dot_dir INIT(NULL);		/* where . files go */
@@ -25,3 +26,5 @@ char *get_val(char *nam, char *def);
 char *export_var(const char *nam, const char *val);
 void un_export(char *export_val);
 void re_export(char *export_val, char *new_val, int limit);
+
+EXTERN_C_END

@@ -2,6 +2,8 @@
  * mempool.h
  */
 
+EXTERN_C_BEGIN
+
 /* memory pool numbers */
 /* scoring rule text */
 #define MP_SCORE1 0
@@ -18,3 +20,5 @@ void mp_init _((void));
 char* mp_savestr _((char*,int));
 char* mp_malloc _((int,int));
 void mp_free _((int));
+
+EXTERN_C_END

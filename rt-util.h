@@ -2,6 +2,7 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 EXT char spin_char INIT(' ');	/* char to put back when we're done spinning */
 EXT long spin_estimate;		/* best guess of how much work there is */
@@ -32,3 +33,5 @@ bool inbackground _((void));
 void perform_status_init _((long));
 void perform_status _((long,int));
 int perform_status_end _((long,char*));
+
+EXTERN_C_END

@@ -3,15 +3,26 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #ifdef SUPPORT_NNTP
-# ifdef I_UTIME
-#   include <utime.h>
-# else
+
+#ifdef I_UTIME
+#include <utime.h>
+#endif
+#ifdef I_SYS_UTIME
+#include <sys/utime.h>
+#endif
+#if !defined(I_UTIME) && !defined(I_SYS_UTIME)
+EXTERN_C_BEGIN
+
   struct utimbuf {
       time_t actime;
       time_t modtime;
   };
-# endif
+
+EXTERN_C_END
 #endif
+#endif
+
+EXTERN_C_BEGIN
 
 #define SRCFILE_CHUNK_SIZE (32*1024)
 
@@ -60,3 +71,5 @@ static char* file_or_none _((char*));
 static int srcfile_cmp _((char*,int,HASHDATUM));
 static int check_distance _((int,HASHDATUM*,int));
 static int get_near_miss _((void));
+
+EXTERN_C_END

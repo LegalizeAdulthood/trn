@@ -2,6 +2,7 @@
 */ 
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 #ifdef SUPPORT_NNTP
 
@@ -40,10 +41,12 @@ int nntp_rover _((void));
 ART_NUM nntp_find_real_art _((ART_NUM));
 char* nntp_artname _((ART_NUM,bool_int));
 char* nntp_tmpname _((int));
-int nntp_handle_nested_lists _((void));
+int nntp_handle_nested_lists(void);
 int nntp_handle_timeout _((void));
 void nntp_server_died _((DATASRC*));
 #ifdef SUPPORT_XTHREAD
 long nntp_readcheck _((void));
 long nntp_read _((char*,long));
 #endif
+
+EXTERN_C_END

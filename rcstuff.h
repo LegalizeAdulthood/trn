@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 #define TR_ONE ((ART_UNREAD) 1)
 #define TR_NONE ((ART_UNREAD) 0)
@@ -88,3 +89,5 @@ void sethash _((NGDATA*));
 void checkpoint_newsrcs _((void));
 bool write_newsrcs _((MULTIRC*));
 void get_old_newsrcs _((MULTIRC*));
+
+EXTERN_C_END

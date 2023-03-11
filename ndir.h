@@ -16,6 +16,8 @@
 #include <sys/dir.h>
 #else
 
+EXTERN_C_BEGIN
+
 #ifndef DEV_BSIZE
 #define	DEV_BSIZE	512
 #endif
@@ -47,15 +49,15 @@ typedef struct _dirdesc {
 	long	dd_size;
 	char	dd_buf[DIRBLKSIZ];
 } DIR;
-#ifndef NULL
-#define NULL 0
-#endif
+
 DIR* opendir _((char*));
 Direntry_t* readdir _((DIR*));
 long telldir _((DIR*));
 void seekdir _((DIR*));
 #define rewinddir(dirp)	seekdir((dirp), (long)0)
 void closedir _((DIR*));
+
+EXTERN_C_END
 
 #endif
 #endif

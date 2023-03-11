@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 #define KF_GLOBAL 0
 #define KF_LOCAL 1
@@ -64,3 +65,5 @@ int edit_kfile _((void));
 void open_kfile _((int));
 #endif
 void kf_append _((char*,bool_int));
+
+EXTERN_C_END

@@ -4,6 +4,8 @@
  *
  */
 
+EXTERN_C_BEGIN
+
 #define UN_NONE		0
 /* textual placeholder */
 #define UN_TXT		1
@@ -170,3 +172,5 @@ char* univ_article_desc _((UNIV_ITEM*));
 void univ_help_main _((int));
 void univ_help _((int));
 char* univ_keyhelp_modestr _((UNIV_ITEM*));
+
+EXTERN_C_END

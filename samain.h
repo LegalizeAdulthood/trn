@@ -4,6 +4,8 @@
  * Main routines for article-scan mode.
  */
 
+EXTERN_C_BEGIN
+
 /* sa_flags character bitmap:
  * 0: If set, the article is "marked" (for reading).
  * 1: If set, the article is "selected" (for zoom mode display).
@@ -53,3 +55,5 @@ void sa_initmode _((void));
 int sa_mainloop _((void));
 void sa_lookahead _((void));
 long sa_readmarked_elig _((void));
+
+EXTERN_C_END

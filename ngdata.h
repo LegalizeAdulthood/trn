@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 struct ngdata {
     NGDATA* prev;
@@ -62,3 +63,5 @@ void grow_ng _((ART_NUM));
 void sort_newsgroups _((void));
 void ng_skip _((void));
 ART_NUM getngsize _((NGDATA*));
+
+EXTERN_C_END

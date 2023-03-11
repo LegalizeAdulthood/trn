@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 EXT ART_POS artpos INIT(0);	/* byte position in article file */
 
@@ -35,3 +36,5 @@ char* readart _((char*,int));
 void clear_artbuf _((void));
 int seekartbuf _((ART_POS));
 char* readartbuf _((bool_int));
+
+EXTERN_C_END

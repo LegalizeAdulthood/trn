@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 #ifdef NGSEARCH
 #define NGS_ABORT 0
@@ -22,3 +23,5 @@ int ng_search _((char*,int));
 bool ng_wanted _((NGDATA*));
 #endif
 char* ng_comp _((COMPEX*,char*,bool_int,bool_int));
+
+EXTERN_C_END

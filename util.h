@@ -3,6 +3,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 #include "utf.h"
 
@@ -80,3 +81,5 @@ char* parse_ini_section _((char*,INI_WORDS*));
 bool check_ini_cond _((char*));
 char menu_get_char _((void));
 int edit_file _((char*));
+
+EXTERN_C_END

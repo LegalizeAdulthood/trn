@@ -1,6 +1,8 @@
 /* parsedate.h
  */
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
+EXTERN_C_BEGIN
 
 time_t parsedate _((char*));
+
+EXTERN_C_END

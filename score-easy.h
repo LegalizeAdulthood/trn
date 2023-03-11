@@ -3,7 +3,9 @@
  *
  */
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
+EXTERN_C_BEGIN
 
 char* sc_easy_append _((void));
 char* sc_easy_command _((void));
+
+EXTERN_C_END

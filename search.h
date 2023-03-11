@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 #ifndef NBRA
 #define	NBRA	10		/* the maximum number of meta-brackets in an
@@ -33,4 +34,6 @@ char* grow_eb _((COMPEX*,char*,char**));
 char* execute _((COMPEX*,char*));
 bool advance _((COMPEX*,char*,char*));
 bool backref _((COMPEX*,int,char*));
-bool cclass _((char*,int,int));
+bool cclass (char*,int,int);
+
+EXTERN_C_END

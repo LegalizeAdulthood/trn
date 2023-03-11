@@ -4,7 +4,7 @@
  * smaller functions
  */
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
+EXTERN_C_BEGIN
 
 #ifdef UNDEF
 int check_article _((long));
@@ -16,3 +16,5 @@ void sa_selthreads _((void));
 int sa_number_arts _((void));
 void sa_go_art _((long));
 int sa_compare _((long,long));
+
+EXTERN_C_END

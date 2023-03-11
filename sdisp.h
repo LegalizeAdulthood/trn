@@ -4,6 +4,8 @@
  * scan display functions
  */
 
+EXTERN_C_BEGIN
+
 	/* height of screen in characters */
 EXT int scr_height INIT(0);
 	/* width of screen in characters */
@@ -28,3 +30,5 @@ void s_refresh _((void));
 int s_initscreen _((void));
 void s_ref_status_onpage _((long));
 void s_resize_win _((void));
+
+EXTERN_C_END

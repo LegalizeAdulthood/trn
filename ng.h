@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 EXT ART_NUM art INIT(0);	/* current or prospective article # */
 
@@ -47,3 +48,5 @@ void setdfltcmd _((void));
 char ask_catchup _((void));
 bool output_subject _((char*,int));
 char ask_memorize _((char_int));
+
+EXTERN_C_END

@@ -4,7 +4,7 @@
  * Scan command interpreter/router
  */
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
+EXTERN_C_BEGIN
 
 void s_go_bot _((void));
 int s_finish_cmd _((char*));
@@ -16,3 +16,5 @@ long s_forward_search _((long));
 long s_backward_search _((long));
 void s_search _((void));
 void s_jumpnum _((char_int));
+
+EXTERN_C_END

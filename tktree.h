@@ -1,6 +1,8 @@
 /* tktree.h
  */
 
+EXTERN_C_BEGIN
+
 /*
  * The authors make no claims as to the fitness or correctness of this software
  * for any use whatsoever, and it is provided as is. Any use of this software
@@ -11,3 +13,5 @@
 
 void ttk_draw_tree _((ARTICLE*,int,int));
 int ttk_tree_init _((void));
+
+EXTERN_C_END

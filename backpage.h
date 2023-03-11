@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 /* things for doing the 'back page' command */
 
@@ -16,3 +17,5 @@ EXT long oldoffset INIT(-1);		/* offset to block currently in window */
 void backpage_init _((void));
 ART_POS vrdary _((ART_LINE));
 void vwtary _((ART_LINE,ART_POS));
+
+EXTERN_C_END

@@ -4,6 +4,8 @@
  * main command loop
  */
 
+EXTERN_C_BEGIN
+
 #define SA_KILL 1
 #define SA_MARK 2
 #define SA_SELECT 3
@@ -18,3 +20,5 @@ bool sa_extract_start _((void));
 void sa_art_cmd_prim _((int,long));
 int sa_art_cmd _((int,int,long));
 long sa_wrap_next_author _((long));
+
+EXTERN_C_END

@@ -7,6 +7,8 @@
 #include "search.h"
 #endif
 
+EXTERN_C_BEGIN
+
 EXT char* ngtodo[MAXNGTODO];		/* restrictions in effect */
 EXT COMPEX* compextodo[MAXNGTODO];	/* restrictions in compiled form */
 
@@ -23,3 +25,5 @@ bool inlist _((char*));
 void end_only _((void));
 void push_only _((void));
 void pop_only _((void));
+
+EXTERN_C_END

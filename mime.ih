@@ -2,7 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
+EXTERN_C_BEGIN
 
 static char* mime_ParseEntryArg _((char**));
 static int mime_getc _((FILE*));
@@ -11,3 +11,5 @@ static char* output_prep _((char*));
 static char* do_newline _((char*,int));
 static int do_indent _((char*));
 static char* find_attr _((char*,char*));
+
+EXTERN_C_END

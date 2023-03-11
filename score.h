@@ -3,6 +3,8 @@
  *
  */
 
+EXTERN_C_BEGIN
+
 /* RETHINK LOWSCORE: (especially for 16-bit scores?) */
 /* score given to unavailable articles */
 #define LOWSCORE (-999999)
@@ -47,7 +49,7 @@ EXT bool sc_sf_force_init INIT(FALSE);	/* If true, always sf_init() */
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
-void sc_init _((bool_int));
+void sc_init(bool_int);
 void sc_cleanup _((void));
 void sc_set_score _((ART_NUM,int));
 void sc_score_art_basic _((ART_NUM));
@@ -60,3 +62,5 @@ void sc_append _((char*));
 void sc_rescore _((void));
 void sc_score_cmd _((char*));
 void sc_kill_threshold _((int));
+
+EXTERN_C_END

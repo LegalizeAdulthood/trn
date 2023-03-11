@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 extern char* g_home_dir;
 
@@ -26,3 +27,5 @@ char* get_auth_pass _((void));
 #if defined(USE_GENAUTH) && defined(SUPPORT_NNTP)
 char* get_auth_command _((void));
 #endif
+
+EXTERN_C_END

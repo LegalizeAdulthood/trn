@@ -2,6 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
+
 struct listnode {
     LISTNODE* next;
     /*LISTNODE* mid;*/
@@ -36,3 +38,5 @@ long existing_listnum _((LIST*,long,int));
 char* next_listitem _((LIST*,char*));
 char* prev_listitem _((LIST*,char*));
 void delete_list _((LIST*));
+
+EXTERN_C_END

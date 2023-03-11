@@ -5,6 +5,8 @@
  * is at the user's own risk. 
  */
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
+EXTERN_C_BEGIN
 
 int edit_distn _((char*,int,char*,int));
+
+EXTERN_C_END

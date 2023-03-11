@@ -1,6 +1,8 @@
 /* tkstuff.h
  */
 
+EXTERN_C_BEGIN
+
 #ifdef USE_TK
 EXT char* ttk_keys;
 
@@ -29,3 +31,5 @@ void ttcl_set_str _((char*,char*));
 int ttcl_get_int _((char*));
 char* ttcl_get_str _((char*));
 void ttcl_eval _((char*));
+
+EXTERN_C_END

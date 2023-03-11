@@ -762,6 +762,8 @@
 
 /* *** end of the machine dependent stuff *** */
 
+EXTERN_C_BEGIN
+
 /* GLOBAL THINGS */
 
 /* file statistics area */
@@ -952,3 +954,5 @@ Perhaps you are near or over quota?\n");
 #define NNTP_ERROR_IS_FATAL
 #define NNTP_HANDLE_TIMEOUT
 #define NNTP_HANDLE_AUTH_ERR
+
+EXTERN_C_END

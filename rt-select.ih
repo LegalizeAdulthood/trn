@@ -2,7 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
+EXTERN_C_BEGIN
 
 static void sel_dogroups _((void));
 static int univ_read _((UNIV_ITEM*));
@@ -27,3 +27,5 @@ static int option_commands _((char_int));
 static int universal_commands _((char_int));
 static void switch_dmode _((char**));
 static int find_line _((int));
+
+EXTERN_C_END

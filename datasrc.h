@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 struct srcfile {
     FILE*	fp;		/* the file pointer to read the data */
@@ -108,3 +109,5 @@ void srcfile_end_append _((SRCFILE*,char*));
 #endif
 void srcfile_close _((SRCFILE*));
 int find_close_match _((void));
+
+EXTERN_C_END

@@ -7,6 +7,8 @@
 #include "search.h"
 #endif
 
+EXTERN_C_BEGIN
+
 #ifdef ARTSEARCH
 
 #define SRCH_ABORT 0
@@ -45,3 +47,5 @@ void artsrch_init _((void));
 int art_search _((char*,int,int));
 bool wanted _((COMPEX*,ART_NUM,char_int));
 #endif
+
+EXTERN_C_END

@@ -2,6 +2,7 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 EXT ART_NUM obj_count INIT(0);
 EXT int subject_count INIT(0);
@@ -67,3 +68,5 @@ bool find_prev_sib _((void));
 void count_subjects _((int));
 void sort_subjects _((void));
 void sort_articles _((void));
+
+EXTERN_C_END

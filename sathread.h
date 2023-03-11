@@ -3,6 +3,8 @@
  *
  */
 
+EXTERN_C_BEGIN
+
 /* this define will save a *lot* of function calls. */
 #define sa_subj_thread(e) \
  (sa_ents[e].subj_thread_num? sa_ents[e].subj_thread_num : \
@@ -15,3 +17,5 @@ long sa_get_subj_thread _((long));
 int sa_subj_thread_count _((long));
 long sa_subj_thread_prev _((long));
 long sa_subj_thread_next _((long));
+
+EXTERN_C_END

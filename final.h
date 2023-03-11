@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 /* cleanup status for fast exits */
 
@@ -31,3 +32,5 @@ Signal_t pipe_catcher _((int));
 #ifdef SIGTSTP
 Signal_t stop_catcher _((int));
 #endif
+
+EXTERN_C_END

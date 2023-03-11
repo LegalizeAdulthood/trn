@@ -3,7 +3,7 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
+EXTERN_C_BEGIN
 
 char* savestr _((char*));
 char* safecpy _((char*,char*,int));
@@ -20,3 +20,5 @@ char* read_auth_file _((char*,char**));
 #ifdef MSDOS
 int getuid _((void));
 #endif
+
+EXTERN_C_END

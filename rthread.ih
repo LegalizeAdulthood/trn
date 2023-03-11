@@ -2,25 +2,25 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
+EXTERN_C_BEGIN
 
-static int cleanup_msgid_hash _((int,HASHDATUM*,int));
-static ARTICLE* first_sib _((ARTICLE*,int));
-static ARTICLE* last_sib _((ARTICLE*,int,ARTICLE*));
-static int subjorder_subject(const SUBJECT **spp1, const SUBJECT**spp2);
-static int subjorder_date(const SUBJECT **spp1, const SUBJECT**spp2);
-static int subjorder_count(const SUBJECT **spp1, const SUBJECT**spp2);
-static int subjorder_lines(const SUBJECT **spp1, const SUBJECT**spp2);
-static int subject_score_high _((SUBJECT*));
-static int subjorder_score(const SUBJECT **spp1, const SUBJECT**spp2);
-static int threadorder_subject(const SUBJECT **spp1, const SUBJECT**spp2);
-static int threadorder_date(const SUBJECT **spp1, const SUBJECT**spp2);
-static int threadorder_count(const SUBJECT **spp1, const SUBJECT**spp2);
-static int threadorder_lines(const SUBJECT **spp1, const SUBJECT**spp2);
+static int cleanup_msgid_hash(int, HASHDATUM *, int);
+static ARTICLE *first_sib(ARTICLE *, int);
+static ARTICLE *last_sib(ARTICLE *, int, ARTICLE *);
+static int subjorder_subject(const SUBJECT **spp1, const SUBJECT **spp2);
+static int subjorder_date(const SUBJECT **spp1, const SUBJECT **spp2);
+static int subjorder_count(const SUBJECT **spp1, const SUBJECT **spp2);
+static int subjorder_lines(const SUBJECT **spp1, const SUBJECT **spp2);
+static int subject_score_high(const SUBJECT *);
+static int subjorder_score(const SUBJECT **spp1, const SUBJECT **spp2);
+static int threadorder_subject(const SUBJECT **spp1, const SUBJECT **spp2);
+static int threadorder_date(const SUBJECT **spp1, const SUBJECT **spp2);
+static int threadorder_count(const SUBJECT **spp1, const SUBJECT **spp2);
+static int threadorder_lines(const SUBJECT **spp1, const SUBJECT **spp2);
 #ifdef SCORE
-static int thread_score_high _((SUBJECT*));
+static int thread_score_high(const SUBJECT *);
 #endif
-static int threadorder_score(const SUBJECT **spp1, const SUBJECT**spp2);
+static int threadorder_score(const SUBJECT **spp1, const SUBJECT **spp2);
 static int artorder_date(const ARTICLE **art1, const ARTICLE **art2);
 static int artorder_subject(const ARTICLE **art1, const ARTICLE **art2);
 static int artorder_author(const ARTICLE **art1, const ARTICLE **art2);
@@ -30,4 +30,6 @@ static int artorder_lines(const ARTICLE **art1, const ARTICLE **art2);
 #ifdef SCORE
 static int artorder_score(const ARTICLE **art1, const ARTICLE **art2);
 #endif
-static void build_artptrs _((void));
+static void build_artptrs(void);
+
+EXTERN_C_END

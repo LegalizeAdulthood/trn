@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 #define HEAD_FIRST SOME_LINE
 
@@ -169,3 +170,5 @@ char* fetchlines _((ART_NUM,int));
 char* mp_fetchlines _((ART_NUM,int,int));
 #endif
 char* prefetchlines _((ART_NUM,int,bool_int));
+
+EXTERN_C_END

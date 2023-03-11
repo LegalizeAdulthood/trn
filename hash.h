@@ -5,6 +5,8 @@
  * Geoffrey Collyer.  See hash.c for his copyright.
  */
 
+EXTERN_C_BEGIN
+
 struct hashdatum {
     char* dat_ptr;
     unsigned dat_len;
@@ -21,3 +23,5 @@ void hashdelete _((HASHTABLE*,char*,int));
 HASHDATUM hashfetch _((HASHTABLE*,char*,int));
 void hashstorelast _((HASHDATUM));
 void hashwalk _((HASHTABLE*,int(*) _((int,HASHDATUM*,int)),int));
+
+EXTERN_C_END

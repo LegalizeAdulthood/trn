@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 EXT char* lastngname INIT(NULL);	/* last newsgroup read */
 EXT long lasttime INIT(0);		/* time last we ran */
@@ -14,3 +15,5 @@ EXT long lastextranum INIT(0);
 void last_init _((void));
 void readlast _((void));
 void writelast _((void));
+
+EXTERN_C_END

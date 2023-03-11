@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 EXT bool reread INIT(FALSE);		/* consider current art temporarily */
 					/* unread? */
@@ -23,3 +24,5 @@ EXT char* pagestop INIT(NULL);		/* custom page terminator? */
 EXT COMPEX hide_compex;
 EXT COMPEX page_compex;
 #endif
+
+EXTERN_C_END

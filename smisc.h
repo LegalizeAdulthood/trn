@@ -2,6 +2,8 @@
 /* smisc.h
  */
 
+EXTERN_C_BEGIN
+
 /* TRUE if the last command (run through setdef()) was the default */
 EXT bool s_default_cmd INIT(FALSE);
 
@@ -15,3 +17,5 @@ void s_beep _((void));
 char* s_get_statchars _((long,int));
 char* s_get_desc _((long,int,bool_int));
 int s_ent_lines _((long));
+
+EXTERN_C_END

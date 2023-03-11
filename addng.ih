@@ -2,6 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
+
 static int addgroup_cnt;
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
@@ -20,3 +22,5 @@ static void scanline _((char*,bool_int));
 static int agorder_number(const ADDGROUP**,const ADDGROUP**);
 static int agorder_groupname _((const ADDGROUP**,const ADDGROUP**));
 static int agorder_count _((const ADDGROUP**,const ADDGROUP**));
+
+EXTERN_C_END

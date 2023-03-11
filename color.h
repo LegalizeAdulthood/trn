@@ -3,6 +3,8 @@
 /* This software is copyrighted as detailed in the LICENSE file, and
  * this file is also Copyright 1995 by Gran Larsson <hoh@approve.se>. */
 
+EXTERN_C_BEGIN
+
 /*
 ** Object numbers.
 */
@@ -37,3 +39,5 @@ void color_object _((int,bool_int));
 void color_pop _((void));
 void color_string _((int,char*));
 void color_default _((void));
+
+EXTERN_C_END

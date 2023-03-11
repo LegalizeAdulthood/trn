@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 EXT char** init_environment_strings INIT(NULL);
 EXT int init_environment_cnt INIT(0);
@@ -14,3 +15,5 @@ void sw_list _((char*));
 void decode_switch _((char*));
 void save_init_environment _((char*));
 void write_init_environment _((FILE*));
+
+EXTERN_C_END

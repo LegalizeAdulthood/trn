@@ -4,7 +4,7 @@
  * functions to manage a page of entries.
  */
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
+EXTERN_C_BEGIN
 
 bool s_fillpage_backward _((long));
 bool s_fillpage_forward _((long));
@@ -17,3 +17,5 @@ bool s_go_top_ents _((void));
 bool s_go_bot_ents _((void));
 void s_go_next_page _((void));
 void s_go_prev_page _((void));
+
+EXTERN_C_END

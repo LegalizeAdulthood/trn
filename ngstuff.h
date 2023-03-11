@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+EXTERN_C_BEGIN
 
 #define NN_NORM 0
 #define NN_INP 1
@@ -28,3 +29,5 @@ int ngsel_perform _((void));
 int ng_perform _((char*,int));
 int addgrp_sel_perform _((void));
 int addgrp_perform _((ADDGROUP*,char*,int));
+
+EXTERN_C_END

@@ -185,6 +185,12 @@
  */
 #cmakedefine I_UTIME
 
+/* I_SYS_UTIME:
+ *	This symbol, if defined, indicates to the C program that it should
+ *	include <sys/utime.h>.
+ */
+#cmakedefine I_SYS_UTIME
+
 /* I_VFORK:
  *	This symbol, if defined, indicates to the C program that it should
  *	include vfork.h.

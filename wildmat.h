@@ -1,9 +1,11 @@
 /* wildmat.h
  */
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
+EXTERN_C_BEGIN
 
-int wildmat _((char*,char*));
+int wildmat(char*,char*);
 #ifdef	TEST
-int main _((void));
+int main(void);
 #endif
+
+EXTERN_C_END

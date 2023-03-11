@@ -20,9 +20,9 @@ add_library(util
     ${CMAKE_CURRENT_BINARY_DIR}/config.h
     EXTERN.h
     INTERN.h
-    env.c env.h env.ih
-    util2.c util2.h
-    wildmat.c wildmat.h wildmat.ih
+    env.cpp env.h env.ih
+    util2.cpp util2.h
+    wildmat.cpp wildmat.h wildmat.ih
     config.h.in
 )
 source_group("Template Files" REGULAR_EXPRESSION "^.*\.in$")
@@ -32,9 +32,9 @@ endif()
 target_include_directories(util PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(nntp
-    nntpauth.c nntpauth.h
-    nntpclient.c nntpclient.h
-    nntpinit.c nntpinit.h
+    nntpauth.cpp nntpauth.h
+    nntpclient.cpp nntpclient.h
+    nntpinit.cpp nntpinit.h
 )
 target_link_libraries(nntp PUBLIC sockets util)
 
@@ -49,77 +49,76 @@ add_executable(trn
     ${CMAKE_CURRENT_BINARY_DIR}/config.h
     EXTERN.h
     INTERN.h
-    addng.c addng.h addng.ih
-    art.c art.h
-    artio.c artio.h
-    artsrch.c artsrch.h
+    addng.cpp addng.h addng.ih
+    art.cpp art.h
+    artio.cpp artio.h
+    artsrch.cpp artsrch.h
     artstate.h
-    autosub.c autosub.h
-    backpage.c backpage.h
-    bits.c bits.h bits.ih
-    cache.c cache.h cache.ih
-    charsubst.c charsubst.h charsubst.ih
-    color.c color.h color.ih
+    autosub.cpp autosub.h
+    backpage.cpp backpage.h
+    bits.cpp bits.h bits.ih
+    cache.cpp cache.h cache.ih
+    charsubst.cpp charsubst.h charsubst.ih
+    color.cpp color.h color.ih
     common.h
     config2.h
-    datasrc.c datasrc.h datasrc.ih
-    decode.c decode.h decode.ih
-    edit_dist.c edit_dist.h
-    filter.c filter.h filter.ih
-    final.c final.h
-    hash.c hash.h hash.ih
-    head.c head.h
-    help.c help.h
-    init.c init.h
-    intrp.c intrp.h intrp.ih
-    kfile.c kfile.h kfile.ih
-    last.c last.h
-    list.c list.h list.ih
-    mempool.c mempool.h mempool.ih
-    mime.c mime.h mime.ih
+    datasrc.cpp datasrc.h datasrc.ih
+    decode.cpp decode.h decode.ih
+    edit_dist.cpp edit_dist.h
+    filter.cpp filter.h filter.ih
+    final.cpp final.h
+    hash.cpp hash.h hash.ih
+    head.cpp head.h
+    help.cpp help.h
+    init.cpp init.h
+    intrp.cpp intrp.h intrp.ih
+    kfile.cpp kfile.h kfile.ih
+    last.cpp last.h
+    list.cpp list.h list.ih
+    mempool.cpp mempool.h mempool.ih
+    mime.cpp mime.h mime.ih
     msdos.h
-    ndir.c ndir.h
-    ng.c ng.h ng.ih
-    ngdata.c ngdata.h ngdata.ih
-    ngsrch.c ngsrch.h
-    ngstuff.c ngstuff.h
-    nntp.c nntp.h nntp.ih
-    only.c only.h
-    opt.c opt.h opt.ih
-    os2.h
+    ndir.cpp ndir.h
+    ng.cpp ng.h ng.ih
+    ngdata.cpp ngdata.h ngdata.ih
+    ngsrch.cpp ngsrch.h
+    ngstuff.cpp ngstuff.h
+    nntp.cpp nntp.h nntp.ih
+    only.cpp only.h
+    opt.cpp opt.h opt.ih
     ${BISON_parsedate_OUTPUTS} parsedate.h
     patchlevel.h
-    rcln.c rcln.h
-    rcstuff.c rcstuff.h rcstuff.ih
-    respond.c respond.h respond.ih
-    rt-mt.c rt-mt.h rt-mt.ih
-    rt-ov.c rt-ov.h rt-ov.ih
-    rt-page.c rt-page.h rt-page.ih
-    rt-process.c rt-process.h rt-process.ih
-    rt-select.c rt-select.h rt-select.ih
-    rt-util.c rt-util.h rt-util.ih
-    rt-wumpus.c rt-wumpus.h rt-wumpus.ih
-    rthread.c rthread.h rthread.ih
-    sacmd.c sacmd.h
-    sadesc.c sadesc.h
-    sadisp.c sadisp.h
-    samain.c samain.h
-    samisc.c samisc.h
-    sathread.c sathread.h
-    scan.c scan.h
-    scanart.c scanart.h
-    scmd.c scmd.h
-    score-easy.c score-easy.h
-    score.c score.h
-    scorefile.c scorefile.h scorefile.ih
-    scoresave.c scoresave.h
-    sdisp.c sdisp.h
-    search.c search.h
-    smisc.c smisc.h
-    sorder.c sorder.h
-    spage.c spage.h
-    sw.c sw.h
-    term.c term.h term.ih
+    rcln.cpp rcln.h
+    rcstuff.cpp rcstuff.h rcstuff.ih
+    respond.cpp respond.h respond.ih
+    rt-mt.cpp rt-mt.h rt-mt.ih
+    rt-ov.cpp rt-ov.h rt-ov.ih
+    rt-page.cpp rt-page.h rt-page.ih
+    rt-process.cpp rt-process.h rt-process.ih
+    rt-select.cpp rt-select.h rt-select.ih
+    rt-util.cpp rt-util.h rt-util.ih
+    rt-wumpus.cpp rt-wumpus.h rt-wumpus.ih
+    rthread.cpp rthread.h rthread.ih
+    sacmd.cpp sacmd.h
+    sadesc.cpp sadesc.h
+    sadisp.cpp sadisp.h
+    samain.cpp samain.h
+    samisc.cpp samisc.h
+    sathread.cpp sathread.h
+    scan.cpp scan.h
+    scanart.cpp scanart.h
+    scmd.cpp scmd.h
+    score-easy.cpp score-easy.h
+    score.cpp score.h
+    scorefile.cpp scorefile.h scorefile.ih
+    scoresave.cpp scoresave.h
+    sdisp.cpp sdisp.h
+    search.cpp search.h
+    smisc.cpp smisc.h
+    sorder.cpp sorder.h
+    spage.cpp spage.h
+    sw.cpp sw.h
+    term.cpp term.h term.ih
     tkstuff.c tkstuff.h tkstuff.ih
     tktree.c tktree.h tktree.ih
     trn.c trn.h
@@ -135,13 +134,13 @@ endif()
 source_group("Header Files" REGULAR_EXPRESSION "^.*\.(h|ih)$")
 target_link_libraries(trn PUBLIC curses nntp)
 
-add_executable(inews inews.c)
+add_executable(inews inews.cpp)
 target_link_libraries(inews PUBLIC nntp tool)
 
-add_executable(nntplist nntplist.c)
+add_executable(nntplist nntplist.cpp)
 target_link_libraries(nntplist PUBLIC nntp tool)
 
-add_executable(trn-artchk trn-artchk.c)
+add_executable(trn-artchk trn-artchk.cpp)
 target_link_libraries(trn-artchk PUBLIC nntp tool)
 
 # case $CONFIG in
