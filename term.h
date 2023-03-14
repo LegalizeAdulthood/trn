@@ -150,8 +150,12 @@ EXT int just_a_sec INIT(960);		/* 1 sec at current baud rate */
 					/* (number of nulls) */
 
 /* define a few handy macros */
+inline void termdown(int x)
+{
+    g_term_line += x;
+    g_term_col = 0;
+}
 
-#define termdown(x) g_term_line+=(x), g_term_col=0
 #define newline() g_term_line++, g_term_col=0, putchar('\n') FLUSH
 #define backspace() tputs(tc_BC,0,putchr) FLUSH
 #define erase_eol() tputs(tc_CE,1,putchr) FLUSH
