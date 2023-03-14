@@ -801,7 +801,7 @@ static void sel_display(void)
     if (disp_status_line == 1) {
 	newline();
 	fputs(msg, stdout);
-	term_col = strlen(msg);
+	g_term_col = strlen(msg);
 	disp_status_line = 2;
     }
 }
@@ -813,7 +813,7 @@ static void sel_status_msg(char *cp)
     else
 	newline();
     fputs(cp, stdout);
-    term_col = strlen(cp);
+    g_term_col = strlen(cp);
     goto_xy(0,sel_items[sel_item_index].line);
     fflush(stdout);	/* CAA: otherwise may not be visible */
     disp_status_line = 2;
@@ -870,7 +870,7 @@ reinp_selector:
 	if (can_home) {
 	    goto_xy(0,sel_last_line+1);
 	    erase_line(0);
-	    if (term_line == tc_LINES-1)
+	    if (g_term_line == tc_LINES-1)
 		removed_prompt |= 1;
 	}
 	disp_status_line = 0;
@@ -904,7 +904,7 @@ reinp_selector:
 	    if (can_home) {
 		goto_xy(0,sel_last_line+1);
 		erase_line(0);
-		if (term_line == tc_LINES-1)
+		if (g_term_line == tc_LINES-1)
 		    removed_prompt |= 1;
 	    }
 	    disp_status_line = 0;
@@ -953,7 +953,7 @@ reinp_selector:
 	    if (can_home) {
 		goto_xy(0,sel_last_line+1);
 		erase_line(0);
-		if (term_line == tc_LINES-1)
+		if (g_term_line == tc_LINES-1)
 		    removed_prompt |= 1;
 	    }
 	    disp_status_line = 0;
@@ -1090,7 +1090,7 @@ reinp_selector:
 	    if (disp_status_line == 1) {
 		newline();
 		fputs(msg,stdout);
-		term_col = strlen(msg);
+		g_term_col = strlen(msg);
 		if (removed_prompt & 1) {
 		    draw_mousebar(tc_COLS,0);
 		    removed_prompt &= ~1;
@@ -1158,7 +1158,7 @@ reinp_selector:
 	  case '+':
 	    if (select_item(sel_items[sel_item_index].u))
 		output_sel(sel_item_index, 1, TRUE);
-	    if (term_line >= sel_last_line) {
+	    if (g_term_line >= sel_last_line) {
 		sel_display();
 		goto reask_selector;
 	    }
@@ -1174,7 +1174,7 @@ reinp_selector:
 	    if (deselect_item(sel_items[sel_item_index].u))
 		output_sel(sel_item_index, ch == '-' ? 0 : 2, TRUE);
 	    sel_rereading = sel_reread_save;
-	    if (term_line >= sel_last_line) {
+	    if (g_term_line >= sel_last_line) {
 		sel_display();
 		goto reask_selector;
 	    }
@@ -1213,7 +1213,7 @@ static void sel_prompt(void)
 	    sel_exclusive && in_ng? "SELECTED" : "Select", sel_mode_string,
 	    sel_direction<0? "reverse " : nullstr, sel_sort_string, cmd_buf);
     color_string(COLOR_CMD,msg);
-    term_col = strlen(msg);
+    g_term_col = strlen(msg);
     removed_prompt = 0;
 }
 
@@ -1350,7 +1350,7 @@ static bool select_option(int i)
     if (*options_ini[i].item == '*') {
 	option_flags[i] ^= OF_SEL;
 	init_pages(FILL_LAST_PAGE);
-	term_line = sel_last_line;
+	g_term_line = sel_last_line;
 	return FALSE;
     }
 
@@ -1568,7 +1568,7 @@ static int sel_command(char_int ch)
 	    one_command = TRUE;
 	    perform(buf, FALSE);
 	    one_command = FALSE;
-	    if (term_line != sel_last_line+1 || term_scrolled)
+	    if (g_term_line != sel_last_line+1 || term_scrolled)
 		clean_screen = FALSE;
 	    POP_SELECTOR();
 	    if (!save_sel_mode)
@@ -1640,7 +1640,7 @@ static bool sel_perform_change(long cnt, char *obj_type)
     carriage_return();
     if (page_line == 1) {
 	disp_status_line = 1;
-	if (term_line != sel_last_line+1 || term_scrolled)
+	if (g_term_line != sel_last_line+1 || term_scrolled)
 	    clean_screen = FALSE;
     }
     else
@@ -2380,9 +2380,9 @@ q does nothing.\n\n\
 	  default:
 	    if (!save_sel_mode)
 		return DS_RESTART;
-	    if (term_line == sel_last_line)
+	    if (g_term_line == sel_last_line)
 		newline();
-	    if (term_line != sel_last_line+1 || term_scrolled)
+	    if (g_term_line != sel_last_line+1 || term_scrolled)
 		clean_screen = FALSE;
 	    break;
 	}
@@ -2878,7 +2878,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 		pushchar(' ');
 	    else {
 		int i = find_line(y);
-		if (sel_items[i].line != term_line) {
+		if (sel_items[i].line != g_term_line) {
 		    if (UseSelNum) {
 			pushchar(('0' + (i+1) % 10) | 0200);
 			pushchar(('0' + (i+1) / 10) | 0200);

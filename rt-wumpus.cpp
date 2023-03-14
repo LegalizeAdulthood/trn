@@ -357,7 +357,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	    while (--i)
 		putchar(' ');
 	}
-	term_col = header_indent;
+	g_term_col = header_indent;
 	/* If no (more) tree lines, wrap at tc_COLS-1 */
 	if (max_line < 0 || header_line > max_line+1)
 	    wrap_at = tc_COLS-1;
@@ -407,7 +407,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	    do {
 		putchar(' ');
 	    } while (pad_cnt--);
-	    term_col = wrap_at;
+	    g_term_col = wrap_at;
 	    /* Check string for the '*' flagging our current node
 	    ** and the '@' flagging our prior node.
 	    */

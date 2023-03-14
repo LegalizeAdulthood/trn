@@ -144,15 +144,15 @@ EXT long outspeed INIT(0);		/* 	for use by tputs() */
 
 EXT int fire_is_out INIT(1);
 EXT int tc_LINES INIT(0), tc_COLS INIT(0);/* size of screen */
-EXT int term_line, term_col;		/* position of cursor */
+EXT int g_term_line, g_term_col;	/* position of cursor */
 EXT int term_scrolled;			/* how many lines scrolled away */
 EXT int just_a_sec INIT(960);		/* 1 sec at current baud rate */
 					/* (number of nulls) */
 
 /* define a few handy macros */
 
-#define termdown(x) term_line+=(x), term_col=0
-#define newline() term_line++, term_col=0, putchar('\n') FLUSH
+#define termdown(x) g_term_line+=(x), g_term_col=0
+#define newline() g_term_line++, g_term_col=0, putchar('\n') FLUSH
 #define backspace() tputs(tc_BC,0,putchr) FLUSH
 #define erase_eol() tputs(tc_CE,1,putchr) FLUSH
 #define clear_rest() tputs(tc_CD,tc_LINES,putchr) FLUSH
@@ -162,9 +162,9 @@ EXT int just_a_sec INIT(960);		/* 1 sec at current baud rate */
 #define underchar() tputs(tc_UC,0,putchr) FLUSH
 #define standout() tputs(tc_SO,1,putchr) FLUSH
 #define un_standout() fire_is_out|=STANDOUT, tputs(tc_SE,1,putchr) FLUSH
-#define up_line() term_line--, tputs(tc_UP,1,putchr) FLUSH
+#define up_line() g_term_line--, tputs(tc_UP,1,putchr) FLUSH
 #define insert_line() tputs(tc_IL,1,putchr) FLUSH
-#define carriage_return() term_col=0, tputs(tc_CR,1,putchr) FLUSH
+#define carriage_return() g_term_col=0, tputs(tc_CR,1,putchr) FLUSH
 #define dingaling() tputs(tc_VB,1,putchr) FLUSH
 #else /* !HAS_TERMLIB */
 //..."Don't know how to define the term macros!"

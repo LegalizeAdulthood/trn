@@ -508,7 +508,7 @@ int do_article(void)
 			if (!tc_AM || tc_XN || outpos < tc_COLS)
 			    newline();
 			else
-			    term_line++;
+			    g_term_line++;
 		    }
 		    if (AT_NL(*bufptr))		/* skip the newline */
 			restart = 0;
@@ -586,11 +586,11 @@ recheck_pager:
 /* not done with this article, so pretend we are a pager */
 
 reask_pager:		    
-	if (term_line >= tc_LINES) {
-	    term_scrolled += term_line - tc_LINES + 1;
-	    term_line = tc_LINES-1;
+	if (g_term_line >= tc_LINES) {
+	    term_scrolled += g_term_line - tc_LINES + 1;
+	    g_term_line = tc_LINES-1;
 	}
-	more_prompt_col = term_col;
+	more_prompt_col = g_term_col;
 
 	unflush_output();	/* disable any ^O in effect */
  	maybe_eol();
@@ -606,11 +606,11 @@ reask_pager:
 #else
 	sprintf(buf,"--MORE--(%s%%)",cmd_buf);
 #endif
-	outpos = term_col + strlen(buf);
-	draw_mousebar(tc_COLS - (term_line == tc_LINES-1? outpos+5 : 0), 1);
+	outpos = g_term_col + strlen(buf);
+	draw_mousebar(tc_COLS - (g_term_line == tc_LINES-1? outpos+5 : 0), 1);
 	color_string(COLOR_MORE,buf);
 	fflush(stdout);
-	term_col = outpos;
+	g_term_col = outpos;
 	eat_typeahead();
 #ifdef DEBUG
 	if (debug & DEB_CHECKPOINTING) {
@@ -632,7 +632,7 @@ reask_pager:
 #ifdef SUPPORT_NNTP
 	if (artsize < 0 && (raw_artsize = nntp_artsize()) >= 0) {
 	    artsize = raw_artsize-artbuf_seek+artbuf_len+htype[PAST_HEADER].minpos;
-	    goto_xy(more_prompt_col,term_line);
+	    goto_xy(more_prompt_col,g_term_line);
 	    goto recheck_pager;
 	}
 #endif
@@ -792,7 +792,7 @@ int page_switch(void)
 	if (!innersearch) {
 	    seekartbuf(artpos);
 	    fputs("(Not found)",stdout) FLUSH;
-	    term_col = 11;
+	    g_term_col = 11;
 	    return PS_ASK;
 	}
 #ifdef DEBUG

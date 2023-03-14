@@ -304,7 +304,7 @@ char *readartbuf(bool_int view_inline)
 	mcp = mime_FindMimecapEntry(mime_section->type_name,
 				    MCF_NEEDSTERMINAL|MCF_COPIOUSOUTPUT);
 	if (mcp) {
-	    int save_term_line = term_line;
+	    int save_term_line = g_term_line;
 	    nowait_fork = TRUE;
 	    color_object(COLOR_MIMEDESC, 1);
 	    if (decode_piece(mcp,bp) != 0) {
@@ -320,7 +320,7 @@ char *readartbuf(bool_int view_inline)
 	    erase_line(FALSE);
 	    nowait_fork = FALSE;
 	    first_view = artline;
-	    term_line = save_term_line;
+	    g_term_line = save_term_line;
 	    if (mime_state != SKIP_MIME)
 		goto mime_switch;
 	}

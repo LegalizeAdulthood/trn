@@ -440,9 +440,9 @@ reask_article:
 	setdfltcmd();
 	if (erase_screen && erase_each_line)
 	    erase_line(1);
-	if (term_line >= tc_LINES) {
-	    term_scrolled += term_line - tc_LINES + 1;
-	    term_line = tc_LINES-1;
+	if (g_term_line >= tc_LINES) {
+	    term_scrolled += g_term_line - tc_LINES + 1;
+	    g_term_line = tc_LINES-1;
 	}
 	unflush_output();		/* disable any ^O in effect */
 	/* print prompt, whatever it is */
@@ -454,11 +454,11 @@ reask_article:
 		nullstr,
 #endif
 		dfltcmd);
-	draw_mousebar(tc_COLS - (term_line == tc_LINES-1? strlen(buf)+5 : 0), 1);
+	draw_mousebar(tc_COLS - (g_term_line == tc_LINES-1? strlen(buf)+5 : 0), 1);
 	color_string(COLOR_CMD,buf);
 	putchar(' ');
 	fflush(stdout);
-	term_col = strlen(buf) + 1;
+	g_term_col = strlen(buf) + 1;
 reinp_article:
 	reread = FALSE;
 	forcelast = FALSE;
@@ -1305,7 +1305,7 @@ run_the_selector:
 	  case '+':
 	    newline();
 	    term_scrolled = tc_LINES;
-	    term_line = tc_LINES-1;
+	    g_term_line = tc_LINES-1;
 	    return AS_ASK;
 	  case 'Q':
 	    exit_code = NG_ASK;

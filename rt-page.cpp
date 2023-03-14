@@ -1073,7 +1073,7 @@ bool calc_page(SEL_UNION u)
 try_again:
     sel_page_obj_cnt = 0;
     sel_page_item_cnt = 0;
-    term_line = 2;
+    g_term_line = 2;
 
     switch (sel_mode) {
       case SM_MULTIRC: {
@@ -1165,7 +1165,7 @@ try_again:
 		if (line_cnt) {
 		    if (line_cnt > sel_max_line_cnt)
 			line_cnt = sel_max_line_cnt;
-		    if (term_line + line_cnt > sel_max_line_cnt+2)
+		    if (g_term_line + line_cnt > sel_max_line_cnt+2)
 			break;
 		    sel_page_obj_cnt += sp->misc;
 		    sel_page_item_cnt++;
@@ -1299,7 +1299,7 @@ try_again:
 
 	    sel = !!(mp->flags & sel_mask);
 	    sel_items[sel_page_item_cnt].u.mp = mp;
-	    sel_items[sel_page_item_cnt].line = term_line;
+	    sel_items[sel_page_item_cnt].line = g_term_line;
 	    sel_items[sel_page_item_cnt].sel = sel;
 	    sel_page_obj_cnt++;
 
@@ -1360,7 +1360,7 @@ try_again:
 	    if (outputting) {
 		sel = !!(np->flags & sel_mask) + (np->flags & NF_DEL);
 		sel_items[sel_page_item_cnt].u.np = np;
-		sel_items[sel_page_item_cnt].line = term_line;
+		sel_items[sel_page_item_cnt].line = g_term_line;
 		sel_items[sel_page_item_cnt].sel = sel;
 		sel_page_obj_cnt++;
 
@@ -1389,7 +1389,7 @@ try_again:
 		    break;
 	    }
 	    if (!np) {
-		int line = term_line;
+		int line = g_term_line;
 		group_init_done = TRUE;
 		display_page_title(TRUE);
 		goto_xy(0,line);
@@ -1423,7 +1423,7 @@ try_again:
 
 	    sel = !!(gp->flags & sel_mask) + (gp->flags & AGF_DEL);
 	    sel_items[sel_page_item_cnt].u.gp = gp;
-	    sel_items[sel_page_item_cnt].line = term_line;
+	    sel_items[sel_page_item_cnt].line = g_term_line;
 	    sel_items[sel_page_item_cnt].sel = sel;
 	    sel_page_obj_cnt++;
 
@@ -1452,7 +1452,7 @@ try_again:
 
 	    sel = !!(ui->flags & sel_mask) + (ui->flags & UF_DEL);
 	    sel_items[sel_page_item_cnt].u.un = ui;
-	    sel_items[sel_page_item_cnt].line = term_line;
+	    sel_items[sel_page_item_cnt].line = g_term_line;
 	    sel_items[sel_page_item_cnt].sel = sel;
 	    sel_page_obj_cnt++;
 
@@ -1486,7 +1486,7 @@ try_again:
 		       (option_saved_vals[op]? 3 :
 			(option_def_vals[op]? 0 : 2)));
 	    sel_items[sel_page_item_cnt].u.op = op;
-	    sel_items[sel_page_item_cnt].line = term_line;
+	    sel_items[sel_page_item_cnt].line = g_term_line;
 	    sel_items[sel_page_item_cnt].sel = sel;
 	    sel_page_obj_cnt++;
 
@@ -1515,7 +1515,7 @@ try_again:
 		continue;
 	    sel = !!(ap->flags & sel_mask) + (ap->flags & AF_DEL);
 	    sel_items[sel_page_item_cnt].u.ap = ap;
-	    sel_items[sel_page_item_cnt].line = term_line;
+	    sel_items[sel_page_item_cnt].line = g_term_line;
 	    sel_items[sel_page_item_cnt].sel = sel;
 	    sel_page_obj_cnt++;
 	    /* Output the article, with optional author */
@@ -1554,10 +1554,10 @@ try_again:
 			line_cnt = sel_max_line_cnt;
 		    }
 		    /* If it doesn't fit, save it for the next page */
-		    if (term_line + line_cnt > sel_max_line_cnt + 2)
+		    if (g_term_line + line_cnt > sel_max_line_cnt + 2)
 			break;
 		    sel_items[sel_page_item_cnt].u.sp = sp;
-		    sel_items[sel_page_item_cnt].line = term_line;
+		    sel_items[sel_page_item_cnt].line = g_term_line;
 		    sel_items[sel_page_item_cnt].sel = sel;
 		    sel_page_obj_cnt += sp->misc;
 
@@ -1576,7 +1576,7 @@ try_again:
 		    sp = sp->next;
 		    if (!line_cnt || !sp->misc)
 			continue;
-		    if (term_line < sel_max_line_cnt + 2)
+		    if (g_term_line < sel_max_line_cnt + 2)
 			display_subject(sp, ix, sel);
 		    ix = -1;
 		    sel_page_obj_cnt += sp->misc;
@@ -1596,7 +1596,7 @@ try_again:
     sel_at_end = (sel_prior_obj_cnt + sel_page_obj_cnt == sel_total_obj_cnt);
     maybe_eol();
     newline();
-    sel_last_line = term_line;
+    sel_last_line = g_term_line;
 }
 
 void update_page(void)
@@ -1829,7 +1829,7 @@ static void display_subject(SUBJECT *subj, int ix, int sel)
 			if (i == 3 || !i) {
 			    if (i)
 				newline();
-			    if (term_line >= sel_max_line_cnt + 2)
+			    if (g_term_line >= sel_max_line_cnt + 2)
 				return;
 			    maybe_eol();
 			    i = 1;
@@ -1842,7 +1842,7 @@ static void display_subject(SUBJECT *subj, int ix, int sel)
 			continue;
 		    }
 		}
-		if (term_line >= sel_max_line_cnt + 2)
+		if (g_term_line >= sel_max_line_cnt + 2)
 		    return;
 		maybe_eol();
 		if (UseSelNum)

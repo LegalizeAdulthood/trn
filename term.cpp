@@ -1014,7 +1014,7 @@ void underprint(char *s)
 void no_sofire(void)
 {
     /* should we disable fireworks? */
-    if (!(fire_is_out & STANDOUT) && (term_line|term_col)==0 && *tc_UP && *tc_SE) {
+    if (!(fire_is_out & STANDOUT) && (g_term_line|g_term_col)==0 && *tc_UP && *tc_SE) {
 	newline();
 	un_standout();
 	up_line();
@@ -1027,7 +1027,7 @@ void no_sofire(void)
 void no_ulfire(void)
 {
     /* should we disable fireworks? */
-    if (!(fire_is_out & UNDERLINE) && (term_line|term_col)==0 && *tc_UP && *tc_US) {
+    if (!(fire_is_out & UNDERLINE) && (g_term_line|g_term_col)==0 && *tc_UP && *tc_US) {
 	newline();
 	un_underline();
 	up_line();
@@ -1638,7 +1638,7 @@ void erase_line(bool_int to_eos)
 
 void clear(void)
 {
-    term_line = term_col = fire_is_out = 0;
+    g_term_line = g_term_col = fire_is_out = 0;
     if (tc_CL)
 	tputs(tc_CL,tc_LINES,putchr);
     else if (tc_CD) {
@@ -1668,7 +1668,7 @@ void home_cursor(void)
 	tputs(tc_HO, 1, putchr);/* home via HO */
     }
     carriage_return();	/* Resets kernel's tab column counter to 0 */
-    term_line = term_col = 0;
+    g_term_line = g_term_col = 0;
 }
 
 void goto_xy(int to_col, int to_line)
@@ -1676,7 +1676,7 @@ void goto_xy(int to_col, int to_line)
     char* str;
     int cmcost, xcost, ycost;
 
-    if (term_col == to_col && term_line == to_line)
+    if (g_term_col == to_col && g_term_line == to_line)
 	return;
     if (*tc_CM && !muck_up_clear) {
 	str = tgoto(tc_CM,to_col,to_line);
@@ -1686,12 +1686,12 @@ void goto_xy(int to_col, int to_line)
 	cmcost = 9999;
     }
 
-    if ((ycost = (to_line - term_line)) < 0)
+    if ((ycost = (to_line - g_term_line)) < 0)
 	ycost = (upcost? -ycost * upcost : 7777);
     else if (ycost > 0)
-	term_col = 0;
+	g_term_col = 0;
 
-    if ((xcost = (to_col - term_col)) < 0) {
+    if ((xcost = (to_col - g_term_col)) < 0) {
 	if (!to_col && ycost+1 < cmcost) {
 	    carriage_return();
 	    xcost = 0;
@@ -1704,23 +1704,23 @@ void goto_xy(int to_col, int to_line)
 
     if (cmcost <= xcost + ycost) {
 	tputs(str,1,putchr);
-	term_line = to_line;
-	term_col = to_col;
+	g_term_line = to_line;
+	g_term_col = to_col;
 	return;
     }
 
     if (ycost == 7777)
 	home_cursor();
 
-    if (to_line >= term_line)
-	while(term_line < to_line) newline();
+    if (to_line >= g_term_line)
+	while(g_term_line < to_line) newline();
     else
-	while(term_line > to_line) up_line();
+	while(g_term_line > to_line) up_line();
 
-    if (to_col >= term_col)
-	while(term_col < to_col) term_col++, putchar(' ');
+    if (to_col >= g_term_col)
+	while(g_term_col < to_col) g_term_col++, putchar(' ');
     else
-	while(term_col > to_col) term_col--, backspace();
+	while(g_term_col > to_col) g_term_col--, backspace();
 }
 
 static void line_col_calcs(void)
@@ -1800,8 +1800,8 @@ void termlib_init(void)
 	fflush(stdout);
     }
 #endif
-    term_line = tc_LINES-1;
-    term_col = 0;
+    g_term_line = tc_LINES-1;
+    g_term_col = 0;
     term_scrolled = tc_LINES;
 }
 
@@ -2142,8 +2142,8 @@ void draw_mousebar(int limit, bool_int restore_cursor)
     int i;
     char* s;
     char* t;
-    int save_col = term_col;
-    int save_line = term_line;
+    int save_col = g_term_col;
+    int save_line = g_term_line;
 
     mousebar_width = 0;
     if (mousebar_cnt == 0)
@@ -2195,7 +2195,7 @@ void draw_mousebar(int limit, bool_int restore_cursor)
 	color_string(COLOR_MOUSE,s);
 	s += strlen(s) + 1;
     }
-    term_col = tc_COLS-1;
+    g_term_col = tc_COLS-1;
     if (restore_cursor)
 	goto_xy(save_col, save_line);
 }
@@ -2273,18 +2273,18 @@ bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 		j = 0;
 	    }
 	    if (x_clk < i) {
-		int tcol = term_col;
-		int tline = term_line;
+		int tcol = g_term_col;
+		int tline = g_term_line;
 		goto_xy(col+j,tc_LINES-1);
 		if (btn == 3)
 		    color_object(COLOR_MOUSE, 1);
 		if (s == t) {
 		    for (j = 0; j < 5 && *t; j++, t++)
-			term_col++, putchar(*t);
+			g_term_col++, putchar(*t);
 		}
 		else {
 		    for (; *t && *t != ' '; t++)
-			term_col++, putchar(*t);
+			g_term_col++, putchar(*t);
 		}
 		if (btn == 3)
 		    color_pop();	/* of COLOR_MOUSE */
