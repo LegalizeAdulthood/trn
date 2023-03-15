@@ -33,4 +33,4 @@ ART_POS tellart _((void));
 char* readart _((char*,int));
 void clear_artbuf _((void));
 int seekartbuf _((ART_POS));
-char* readartbuf _((bool_int));
+char *readartbuf(bool view_inline);

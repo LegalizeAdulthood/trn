@@ -224,12 +224,12 @@ Signal_t sig_catcher(int signo)
 	abort();
     }
     (void) sigset(SIGILL,SIG_DFL);
-    panic = TRUE;			/* disable terminal I/O */
+    panic = true;			/* disable terminal I/O */
     if (doing_ng) {			/* need we reconstitute rc line? */
 	yankback();
 	bits_to_rc();			/* then do so (hope this works) */
     }
-    doing_ng = FALSE;
+    doing_ng = false;
     if (!write_newsrcs(multirc)) {	/* write anything that's changed */
 	/*$$ get_old_newsrcs(multirc);  ?? */
     }

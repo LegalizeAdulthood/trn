@@ -41,8 +41,8 @@ int main(int argc, char *argv[])
     FILE* fp;
     FILE* fp_active = NULL;
     FILE* fp_ng = NULL;
-    bool check_active = FALSE;
-    bool check_ng = FALSE;
+    bool check_active = false;
+    bool check_ng = false;
     char buff[LBUFLEN];
     char* cp;
     char* cp2;
@@ -178,13 +178,13 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 	    check_ng = st.st_size > 0 && (fp_ng = fopen(argv[3], "r")) != NULL;
 #ifdef SUPPORT_NNTP
 	else if (server_name && server_connection())
-	    check_ng = TRUE;
+	    check_ng = true;
 #endif
 	if (stat(argv[4], &st) != -1)
 	    check_active = st.st_size > 0 && (fp_active = fopen(argv[4], "r")) != NULL;
 #ifdef SUPPORT_NNTP
 	else if (server_name && server_connection())
-	    check_active = TRUE;
+	    check_active = true;
 #endif
     }
     if (ngcnt && (check_ng || check_active)) {
@@ -228,7 +228,7 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 			}
 		    }
 		    else if (*g_ser_line == NNTP_CLASS_FATAL) {
-			listactive_works = FALSE;
+			listactive_works = false;
 			i--;
 		    }
 		}
@@ -303,7 +303,7 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
     }
 
 #ifdef SUPPORT_NNTP
-    nntp_close(TRUE);
+    nntp_close(true);
     if (server_name)
 	cleanup_nntp();
 #endif
@@ -316,7 +316,7 @@ int server_connection(void)
 {
     static int server_stat = 0;
     if (!server_stat) {
-	if (nntp_connect(server_name,0) > 0)
+	if (nntp_connect(server_name,false) > 0)
 	    server_stat = 1;
 	else
 	    server_stat = -1;

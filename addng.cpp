@@ -59,7 +59,8 @@ bool find_new_groups(void)
 
     /* Skip this check if the -q flag was given. */
     if (quickstart)
-	return FALSE;
+	return false
+	;
 
     for (rp = multirc->first; rp; rp = rp->next) {
 	if (ALLBITS(rp->flags, RF_ADD_NEWGROUPS | RF_ACTIVE)) {
@@ -114,7 +115,7 @@ static void new_nntp_groups(DATASRC *dp)
     int len;
     time_t server_time;
     NGDATA* np;
-    bool foundSomething = FALSE;
+    bool foundSomething = false;
     long high, low;
     HASHTABLE* newngs;
 
@@ -139,7 +140,7 @@ static void new_nntp_groups(DATASRC *dp)
 #endif
 	if (nntp_at_list_end(g_ser_line))
 	    break;
-	foundSomething = TRUE;
+	foundSomething = true;
 	if ((s = index(g_ser_line, ' ')) != NULL)
 	    len = s - g_ser_line;
 	else
@@ -289,7 +290,7 @@ static void add_to_list(char *name, int toread, char_int ch)
     last_addgroup = node;
 }
 
-bool scanactive(bool_int add_matching)
+bool scanactive(bool add_matching)
 {
     DATASRC* dp;
     NG_NUM oldcnt = newsgroup_cnt;	/* remember # of newsgroups */
@@ -344,7 +345,7 @@ static int list_groups(int keylen, HASHDATUM *data, int add_matching)
     return 0;
 }
 
-static void scanline(char *actline, bool_int add_matching)
+static void scanline(char *actline, bool add_matching)
 {
     register char* s;
     NGDATA* np;

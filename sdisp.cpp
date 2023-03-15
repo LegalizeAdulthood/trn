@@ -37,7 +37,7 @@ void s_mail_and_place(void)
     bool previous,next;
 
 #ifdef MAILCALL
-    setmail(FALSE);		/* another chance to check mail */
+    setmail(false);		/* another chance to check mail */
     printf("%s",mailcall);
 #endif /* MAILCALL */
     /* print page status wrt all entries */
@@ -63,7 +63,7 @@ void s_refresh_top(void)
 	break;
 #endif
     }
-    s_ref_top = FALSE;
+    s_ref_top = false;
 }
 
 void s_refresh_bot(void)
@@ -77,7 +77,7 @@ void s_refresh_bot(void)
 	break;
 #endif
     }
-    s_ref_bot = FALSE;
+    s_ref_bot = false;
 }
 
 /* refresh both status and description */
@@ -101,7 +101,7 @@ void s_refresh_entzone(void)
     /* clear to end of screen */
     clear_rest();
     /* now we need to redraw the bottom status line */
-    s_ref_bot = TRUE;
+    s_ref_bot = true;
     s_ref_status = s_ref_desc = -1;
 }
 
@@ -150,7 +150,7 @@ void s_refresh_description(int line)
 	    } else
 		printf("   ");
 	}
-	printf("%s",s_get_desc(ent,i,TRUE));
+	printf("%s",s_get_desc(ent,i,true));
 	erase_eol();
 	putchar('\n');
     }
@@ -180,7 +180,7 @@ void s_ref_entry(int line, int jump)
 	    } else
 		printf("   ");
 	}
-	printf("%s",s_get_desc(ent,i,TRUE));
+	printf("%s",s_get_desc(ent,i,true));
 	erase_eol();
 	putchar('\n');
     }
@@ -216,7 +216,7 @@ void s_refresh(void)
     s_ref_status = s_ref_desc = -1;
     if ((s_ref_all || s_ref_bot) && s_bot_lines > 0)
 	s_refresh_bot();
-    s_ref_all = FALSE;
+    s_ref_all = false;
 }
 
 int s_initscreen(void)
@@ -250,7 +250,7 @@ void s_resize_win(void)
 
     i = s_initscreen();
     /* later possibly use the return value for an error abort? */
-    s_resized = TRUE;
+    s_resized = true;
 #endif
     ;	/* don't have an empty function */
 }

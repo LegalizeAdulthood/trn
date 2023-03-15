@@ -214,7 +214,7 @@ char *filexp(char *s)
 
 /* return ptr to little string in big string, NULL if not found */
 
-char *in_string(char *big, char *little, bool_int case_matters)
+char *in_string(char *big, char *little, bool case_matters)
 {
     register char* t;
     register char* s;
@@ -224,7 +224,7 @@ char *in_string(char *big, char *little, bool_int case_matters)
 	for (x=t,s=little; *s; x++,s++) {
 	    if (!*x)
 		return NULL;
-	    if (case_matters == TRUE) {
+	    if (case_matters == true) {
 		if (*s != *x)
 		    break;
 	    } else {

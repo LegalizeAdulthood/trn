@@ -2,8 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#define KF_GLOBAL 0
-#define KF_LOCAL 1
+#define KF_GLOBAL false
+#define KF_LOCAL true
 
 #define KFS_LOCAL_CHANGES	0x0001
 #define KFS_THREAD_CHANGES	0x0002
@@ -62,4 +62,4 @@ int edit_kfile _((void));
 #ifdef KILLFILES
 void open_kfile _((int));
 #endif
-void kf_append _((char*,bool_int));
+void kf_append(char *cmd, bool local);

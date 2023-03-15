@@ -118,13 +118,13 @@ EXT ART_NUM last_cached;
 EXT bool cached_all_in_range;
 EXT ARTICLE* sentinel_artp;
 
-#define DONT_FILL_CACHE	0
-#define FILL_CACHE	1
+#define DONT_FILL_CACHE	false
+#define FILL_CACHE	true
 
 EXT SUBJECT* first_subject INIT(0);
 EXT SUBJECT* last_subject INIT(0);
 
-EXT bool untrim_cache INIT(FALSE);
+EXT bool untrim_cache INIT(false);
 
 #ifdef PENDING
 EXT ART_NUM subj_to_get;
@@ -140,9 +140,9 @@ void cache_article _((ARTICLE*));
 void check_for_near_subj _((ARTICLE*));
 void change_join_subject_len _((int));
 void check_poster _((ARTICLE*));
-void uncache_article _((ARTICLE*,bool_int));
-char* fetchcache _((ART_NUM,int,bool_int));
-char* get_cached_line _((ARTICLE*,int,bool_int));
+void uncache_article(ARTICLE *ap, bool remove_empties);
+char *fetchcache(ART_NUM artnum, int which_line, bool fill_cache);
+char *get_cached_line(ARTICLE *ap, int which_line, bool no_truncs);
 void set_subj_line _((ARTICLE*,char*,int));
 int decode_header _((char*,char*,int));
 void dectrl _((char*));
@@ -158,6 +158,6 @@ bool cache_subjects _((void));
 bool cache_xrefs _((void));
 bool cache_all_arts _((void));
 bool cache_unread_arts _((void));
-bool art_data _((ART_NUM,ART_NUM,bool_int,bool_int));
+bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles);
 bool cache_range _((ART_NUM,ART_NUM));
 void clear_article _((ARTICLE*));

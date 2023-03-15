@@ -47,15 +47,7 @@
 
 /* some handy defs */
 
-#define bool char
-#define bool_int int
 #define char_int int
-#ifndef TRUE
-#define TRUE 1
-#endif
-#ifndef FALSE
-#define FALSE 0
-#endif
 
 #define Ctl(ch) (ch & 037)
 

@@ -77,19 +77,19 @@ static bool bad_filename(char *filename)
     if (len == 3) {
 	if (strcaseEQ(filename, "aux") || strcaseEQ(filename, "con")
 	 || strcaseEQ(filename, "nul") || strcaseEQ(filename, "prn"))
-	    return TRUE;
+	    return true;
     }
     else if (len == 4) {
 	if (strcaseEQ(filename, "com1") || strcaseEQ(filename, "com2")
 	 || strcaseEQ(filename, "com3") || strcaseEQ(filename, "com4")
 	 || strcaseEQ(filename, "lpt1") || strcaseEQ(filename, "lpt2")
 	 || strcaseEQ(filename, "lpt3"))
-	    return TRUE;
+	    return true;
     }
 #else
     if (len <= 2) {
 	if (*filename == '.' && (*filename == '\0' || *filename == '.'))
-	    return TRUE;
+	    return true;
     }
 #endif
     return 0;
@@ -108,7 +108,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
     *partp = part;
     *totalp = total;
     safefree(subject);
-    subject = fetchsubj(artnum,TRUE);
+    subject = fetchsubj(artnum,true);
     if (!*subject)
 	return NULL;
 

@@ -3,7 +3,7 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 static void univ_free_data _((UNIV_ITEM*));
-static int univ_DoMatch _((char*,char*));
+static bool univ_DoMatch(char *text, char *p);
 static bool univ_use_file _((char*,char*,char*));
 static bool univ_include_file _((char*));
 static void univ_do_line_ext1 _((char*,char*));

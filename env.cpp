@@ -28,9 +28,9 @@
 #include <winsock2.h>
 #endif
 
-bool env_init(char *tcbuf, bool_int lax)
+bool env_init(char *tcbuf, bool lax)
 {
-    bool fully_successful = TRUE;
+    bool fully_successful = true;
 
     if ((g_home_dir = getenv("HOME")) == NULL)
 	g_home_dir = getenv("LOGDIR");
@@ -69,13 +69,13 @@ bool env_init(char *tcbuf, bool_int lax)
 	    g_login_name = nullstr;
 	if (!g_real_name)
 	    g_real_name = nullstr;
-	fully_successful = FALSE;
+	fully_successful = false;
     }
     env_init2();
 
     /* set g_p_host_name to the hostname of our local machine */
     if (!set_p_host_name(tcbuf))
-	fully_successful = FALSE;
+	fully_successful = false;
 
 #ifdef SUPPORT_NNTP
     {
@@ -212,7 +212,7 @@ bool set_user_name(char *tmpbuf)
 bool set_p_host_name(char *tmpbuf)
 {
     FILE* fp;
-    bool hostname_ok = TRUE;
+    bool hostname_ok = true;
 
     /* Find the local hostname */
 
@@ -293,7 +293,7 @@ bool set_p_host_name(char *tmpbuf)
 #endif
 	{
 	    strcat(tmpbuf,"UNKNOWN.HOST");
-	    hostname_ok = FALSE;
+	    hostname_ok = false;
 	}
     }
     g_p_host_name = savestr(tmpbuf);
@@ -309,7 +309,7 @@ char *get_val(char *nam, char *def)
     return val;
 }
 
-static bool firstexport = TRUE;
+static bool firstexport = true;
 
 #ifndef WIN32
 extern char **environ;
@@ -330,7 +330,7 @@ char *export_var(const char *nam, const char *val)
 	    char** tmpenv = NULL;
 #endif /* lint */
     
-	    firstexport = FALSE;
+	    firstexport = false;
 	    for (j = 0; j < i; j++)	/* copy environment */
 		tmpenv[j] = environ[j];
 	    environ = tmpenv;		/* tell exec where it is now */

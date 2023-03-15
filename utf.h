@@ -21,35 +21,27 @@
 #define TAG_ISO8859_15		"Latin9"
 #define TAG_WINDOWS_1252	"CP1252"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef unsigned long CODE_POINT;
 
-int utf_init(const char *, const char *);
+int utf_init(const char *f, const char *t);
 const char *input_charset_name();
 const char *output_charset_name();
 
-bool at_norm_char(const char *);
+bool at_norm_char(const char *s);
 
-int byte_length_at(const char *);
-int visual_width_at(const char *);
-int visual_length_of(const char *);
-int visual_length_between(const char *, const char *);
-int insert_unicode_at(char *, CODE_POINT);
+int byte_length_at(const char *s);
+int visual_width_at(const char *s);
+int visual_length_of(const char *s);
+int visual_length_between(const char *s1, const char *s2);
+int insert_unicode_at(char *s, CODE_POINT c);
 
 #define INVALID_CODE_POINT ((CODE_POINT) ~0L)
-CODE_POINT code_point_at(const char *);
+CODE_POINT code_point_at(const char *s);
 
-int put_char_adv(char **, bool_int);
+int put_char_adv(char **strptr, bool outputok);
 
-char *create_utf8_copy(char *);
+char *create_utf8_copy(char *s);
 
-void terminate_string_at_visual_index(char *, int);
-
-#ifdef __cplusplus
-}
-#endif
+void terminate_string_at_visual_index(char *s, int i);
 
 #endif

@@ -22,7 +22,7 @@ enum
 };
 
 int	debug = 0;
-int	new_connection = FALSE;
+int	new_connection = false;
 char*	server_name;
 char*	nntp_auth_file;
 
@@ -43,9 +43,9 @@ int main(int argc, char *argv[])
     headbuf = safemalloc(headbuf_size);
 
 #ifdef LAX_INEWS
-    env_init(headbuf, 1);
+    env_init(headbuf, true);
 #else
-    if (!env_init(headbuf, 0)) {
+    if (!env_init(headbuf, false)) {
 	fprintf(stderr,"Can't get %s information. Please contact your system adminstrator.\n",
 		(*g_login_name || !*g_real_name)? "user" : "host");
 	exit(1);
@@ -89,12 +89,12 @@ int main(int argc, char *argv[])
 	line_end = "\n";
     }
 
-    in_header = 0;
-    has_fromline = 0;
-    has_pathline = 0;
+    in_header = false;
+    has_fromline = false;
+    has_pathline = false;
     artpos = 0;
     cp = headbuf;
-    had_nl = 1;
+    had_nl = true;
 
     for (;;) {
 	if (headbuf_size < artpos + LBUFLEN + 1) {
@@ -130,11 +130,11 @@ int main(int argc, char *argv[])
 		    continue;
 		break;
 	    }
-	    in_header = 1;
+	    in_header = true;
 	    if (strncaseEQ(cp, "From:", 5))
-		has_fromline = 1;
+		has_fromline = true;
 	    else if (strncaseEQ(cp, "Path:", 5))
-		has_pathline = 1;
+		has_pathline = true;
 	}
 	artpos += len;
 	cp += len;
@@ -157,18 +157,18 @@ int main(int argc, char *argv[])
 		    if (nntplink.wr_fp)
 			nntplink.flags |= NNTP_NEW_CMD_OK;
 		    else
-			nntp_close(FALSE);
+			nntp_close(false);
 		}
 	    }
 	}
 	if (!nntplink.wr_fp) {
-	    if (init_nntp() < 0 || !nntp_connect(server_name,0))
+	    if (init_nntp() < 0 || !nntp_connect(server_name,false))
 		exit(1);
-	    new_connection = TRUE;
+	    new_connection = true;
 	}
 	if (nntp_command("POST") <= 0 || nntp_check() <= 0) {
 	    if (new_connection)
-		nntp_close(TRUE);
+		nntp_close(true);
 	    fprintf(stderr,"Sorry, you can't post from this machine.\n");
 	    exit(1);
 	}
@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
     }
     fprintf(nntplink.wr_fp,"%s",line_end);
 
-    had_nl = 1;
+    had_nl = true;
     while (fgets(headbuf, headbuf_size, stdin)) {
 	/* Single . is eof, so put in extra one */
 	if (server_name && had_nl && *headbuf == '.')
@@ -205,11 +205,11 @@ int main(int argc, char *argv[])
 	if (cp > headbuf && *--cp == '\n') {
 	    *cp = '\0';
 	    fprintf(nntplink.wr_fp, "%s%s", headbuf, line_end);
-	    had_nl = 1;
+	    had_nl = true;
 	}
 	else {
 	    fputs(headbuf, nntplink.wr_fp);
-	    had_nl = 0;
+	    had_nl = false;
 	}
     }
 
@@ -239,12 +239,12 @@ int main(int argc, char *argv[])
 	else
 	    fprintf(stderr, "Remote error: %s\n", g_ser_line);
 	if (new_connection)
-	    nntp_close(TRUE);
+	    nntp_close(true);
 	exit(1);
     }
 
     if (new_connection)
-	nntp_close(TRUE);
+	nntp_close(true);
     cleanup_nntp();
 
     return 0;
@@ -316,22 +316,22 @@ void append_signature(void)
 int nntp_handle_timeout(void)
 {
     if (!new_connection) {
-	static bool handling_timeout = FALSE;
+	static bool handling_timeout = false;
 	char last_command_save[NNTP_STRLEN];
 
 	if (strcaseEQ(g_last_command,"quit"))
 	    return 0;
 	if (handling_timeout)
 	    return -1;
-	handling_timeout = TRUE;
+	handling_timeout = true;
 	strcpy(last_command_save, g_last_command);
-	nntp_close(FALSE);
-	if (init_nntp() < 0 || nntp_connect(server_name,0) <= 0)
+	nntp_close(false);
+	if (init_nntp() < 0 || nntp_connect(server_name,false) <= 0)
 	    exit(1);
 	if (nntp_command(last_command_save) <= 0)
 	    return -1;
-	handling_timeout = FALSE;
-	new_connection = TRUE;
+	handling_timeout = false;
+	new_connection = true;
 	return 1;
     }
     fputs("\n503 Server timed out.\n",stderr);

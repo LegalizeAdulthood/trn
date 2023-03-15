@@ -5,7 +5,7 @@
  */
 
 /* If true, resort next time order is considered */
-EXT bool s_order_changed INIT(FALSE);
+EXT bool s_order_changed INIT(false);
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 

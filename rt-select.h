@@ -39,10 +39,10 @@ EXT int sel_univsort INIT(SS_NATURAL);
 
 EXT char* sel_sort_string;
 EXT int sel_direction INIT(1);
-EXT bool sel_exclusive INIT(FALSE);
+EXT bool sel_exclusive INIT(false);
 EXT int sel_mask INIT(1);
 
-EXT bool selected_only INIT(FALSE);
+EXT bool selected_only INIT(false);
 EXT ART_UNREAD selected_count INIT(0);
 EXT int selected_subj_cnt INIT(0);
 EXT int added_articles INIT(0);
@@ -51,7 +51,7 @@ EXT char* sel_chars;
 EXT int sel_item_index;
 EXT int sel_last_line;
 EXT bool sel_at_end;
-EXT bool art_sel_ilock INIT(FALSE);
+EXT bool art_sel_ilock INIT(false);
 
 #define DS_ASK  	1
 #define DS_UPDATE	2

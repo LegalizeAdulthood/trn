@@ -7,13 +7,13 @@
 #define NN_REREAD 2
 #define NN_ASK 3
 
-EXT bool one_command INIT(FALSE);	/* no ':' processing in perform() */
+EXT bool one_command INIT(false);	/* no ':' processing in perform() */
 
 /* CAA: given the new and complex universal/help possibilities,
  *      the following interlock variable may save some trouble.
- *      (if TRUE, we are currently processing options)
+ *      (if true, we are currently processing options)
  */
-EXT bool option_sel_ilock INIT(FALSE);
+EXT bool option_sel_ilock INIT(false);
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 

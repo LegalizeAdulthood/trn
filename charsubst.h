@@ -22,8 +22,6 @@ EXT char* charsubst;
 
 #endif
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-int putsubstchar _((int,int,bool_int));
+int putsubstchar(int c, int limit, bool outputok);
 char* current_charsubst _((void));
 int strcharsubst _((char*,char*,int,char_int));

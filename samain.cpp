@@ -41,21 +41,21 @@ void sa_init(void)
 	return;				/* ...most likely dumb terminal */
     sa_initmode();			/*      mode differences */
     sa_init_threads();
-    sa_mode_read_elig = FALSE;
+    sa_mode_read_elig = false;
     if (firstart > lastart)		/* none unread */
-	sa_mode_read_elig = TRUE;	/* unread+read in some situations */
+	sa_mode_read_elig = true;	/* unread+read in some situations */
     if (!sa_initarts())			/* init article array(s) */
 	return;				/* ... no articles */
 #ifdef SCORE
 #ifdef PENDING
     if (sa_mode_read_elig) {
-	sc_fill_read = TRUE;
+	sc_fill_read = true;
 	sc_fill_max = absfirst - 1;
     }
 #endif
 #endif
     s_save_context();
-    sa_initialized = TRUE;		/* all went well... */
+    sa_initialized = true;		/* all went well... */
 }
 
 void sa_init_ents(void)
@@ -100,14 +100,14 @@ void sa_cleanmain(void)
 {
     sa_clean_ents();
 
-    sa_mode_zoom = FALSE;	/* doesn't survive across groups */
+    sa_mode_zoom = false;	/* doesn't survive across groups */
     /* remove the now-unused scan-context */
     s_delete_context(sa_scan_context);
-    sa_context_init = FALSE;
+    sa_context_init = false;
     sa_scan_context = -1;
     /* no longer "in" article scan mode */
-    sa_mode_read_elig = FALSE;	/* the default */
-    sa_in = FALSE;
+    sa_mode_read_elig = false;	/* the default */
+    sa_in = false;
 }
 
 void
@@ -140,7 +140,7 @@ bool sa_initarts(void)
 	    (void)sa_add_ent(a);
     }
     sa_order_read = sa_mode_read_elig;
-    return TRUE;
+    return true;
 }
 
 /* note: initscreen must be called before (for scr_width) */
@@ -166,14 +166,14 @@ int sa_mainloop(void)
      * If that fails then strn will just use arrival ordering.
      */
     if (!sc_initialized && sa_mode_order == 2) {
-	sc_delay = FALSE;	/* yes, actually score... */
-	sc_init(TRUE);		/* wait for articles to score */
+	sc_delay = false;	/* yes, actually score... */
+	sc_init(true);		/* wait for articles to score */
 	if (!sc_initialized)
 	    sa_mode_order = 1;	/* arrival order */
     }
 #endif
     /* redraw it *all* */
-    s_ref_all = TRUE;
+    s_ref_all = true;
     if (s_top_ent < 1)
 	s_top_ent = s_first();
     i = s_fillpage();
@@ -198,7 +198,7 @@ void sa_lookahead(void)
 {
 #ifdef PENDING
 #ifdef SCORE
-    sc_lookahead(TRUE,FALSE);		/* do resorting now... */
+    sc_lookahead(true,false);		/* do resorting now... */
 #else /* !SCORE */
 /* consider looking forward from the last article on the page... */
     ;				/* so the function isn't empty */

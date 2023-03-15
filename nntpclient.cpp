@@ -28,7 +28,7 @@ int nntp_handle_nested_lists(void);
 int nntp_handle_auth_err(void);
 #endif
 
-int nntp_connect(const char *machine, bool_int verbose)
+int nntp_connect(const char *machine, bool verbose)
 {
     int response;
 
@@ -291,7 +291,7 @@ int nntp_gets(char *bp, int len)
     return n;
 }
 
-void nntp_close(bool_int send_quit)
+void nntp_close(bool send_quit)
 {
     if (send_quit && nntplink.wr_fp != NULL && nntplink.rd_fp != NULL) {
 	if (nntp_command("QUIT") > 0)

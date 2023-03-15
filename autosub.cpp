@@ -39,19 +39,19 @@ bool matchlist(char *patlist, char *s)
     bool result;
     bool tmpresult;
 
-    result = FALSE;
+    result = false;
     init_compex(&ilcompex);
     while(patlist && *patlist) {
 	if (*patlist == '!') {
 	    patlist++;
-	    tmpresult = FALSE;
+	    tmpresult = false;
 	} else
-	    tmpresult = TRUE;
+	    tmpresult = true;
 
 	if ((p = index(patlist, ',')) != NULL)
 	    *p = '\0';
         /* compile regular expression */
-	err = ng_comp(&ilcompex,patlist,TRUE,TRUE);
+	err = ng_comp(&ilcompex,patlist,true,true);
 	if (p)
 	    *p++ = ',';
 

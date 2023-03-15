@@ -109,16 +109,16 @@ char *sa_desc_subject(long e)
 
 /* NOTE: should redesign later for the "menu" style... */
 // long e;		/* entry number */
-// bool_int trunc;		/* should it be truncated? */
-char *sa_get_desc(long e, int line, bool_int trunc)
+// bool trunc;		/* should it be truncated? */
+char *sa_get_desc(long e, int line, bool trunc)
 {
     static char desc_buf[1024];
     char* s;
-    bool use_standout;	/* if TRUE, use stdout on line */
+    bool use_standout;	/* if true, use stdout on line */
     ART_NUM artnum;
 
     artnum = sa_ents[e].artnum;
-    use_standout = FALSE;
+    use_standout = false;
     switch (line) {
       case 1:
 	desc_buf[0] = '\0';	/* initialize the buffer */
@@ -129,7 +129,7 @@ char *sa_get_desc(long e, int line, bool_int trunc)
 #ifdef SCORE
 	if (sc_initialized && sa_mode_desc_score) {
 	    /* we'd like the score now */
-	    sprintf(sa_buf,"[%4d] ",sc_score_art(artnum,TRUE));
+	    sprintf(sa_buf,"[%4d] ",sc_score_art(artnum,true));
 	    strcat(desc_buf,sa_buf);
 	}
 #endif /* SCORE */
@@ -164,7 +164,7 @@ char *sa_get_desc(long e, int line, bool_int trunc)
 
 /* include the following line to use standout mode */
 #if 0
-	    use_standout = TRUE;
+	    use_standout = true;
 #endif
 	    i = 0;
 	    /* if variable widths used later, use them */
@@ -195,7 +195,7 @@ char *sa_get_desc(long e, int line, bool_int trunc)
 	    char* s2;	/* for indenting */
 /* include the following line to use standout mode */
 #if 0
-	    use_standout = TRUE;
+	    use_standout = true;
 #endif
 	    i = 0;
 	    /* if variable widths used later, use them */

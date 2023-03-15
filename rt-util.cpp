@@ -504,7 +504,7 @@ char *compress_date(ARTICLE *ap, int size)
 #define EQ(x,y) ((isupper(x) ? tolower(x) : (x)) == (y))
 
 /* Parse the subject to look for any "Re[:^]"s at the start.
-** Returns TRUE if a Re was found.  If strp is non-NULL, it
+** Returns true if a Re was found.  If strp is non-NULL, it
 ** will be set to the start of the interesting characters.
 */
 bool subject_has_Re(char *str, char **strp)
@@ -726,10 +726,10 @@ static long	ps_missing;
 void perform_status_init(long cnt)
 {
     perform_cnt = 0;
-    error_occurred = FALSE;
+    error_occurred = false;
     subjline = NULL;
     page_line = 1;
-    performed_article_loop = TRUE;
+    performed_article_loop = true;
 
     prior_perform_cnt = 0;
     prior_now = 0;

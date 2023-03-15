@@ -38,25 +38,25 @@ EXT int sf_num_files INIT(0);
 EXT char **sf_abbr;		/* abbreviations */
 
 /* when true, the scoring routine prints lots of info... */
-EXT int sf_score_verbose INIT(FALSE);
+EXT int sf_score_verbose INIT(false);
 
-EXT bool sf_verbose INIT(TRUE);  /* if true print more stuff while loading */
+EXT bool sf_verbose INIT(true);  /* if true print more stuff while loading */
 
-/* if TRUE, only header types that are cached are scored... */
-EXT bool cached_rescore INIT(FALSE);
+/* if true, only header types that are cached are scored... */
+EXT bool cached_rescore INIT(false);
 
-/* if TRUE, newauthor is active */
-EXT bool newauthor_active INIT(FALSE);
+/* if true, newauthor is active */
+EXT bool newauthor_active INIT(false);
 /* bonus score given to a new (unscored) author */
 EXT int newauthor INIT(0);
 
-/* if TRUE, reply_score is active */
-EXT bool reply_active INIT(FALSE);
+/* if true, reply_score is active */
+EXT bool reply_active INIT(false);
 /* score amount added to an article reply */
 EXT int reply_score INIT(0);
 
 /* should we match by pattern? */
-EXT int sf_pattern_status INIT(FALSE);
+EXT int sf_pattern_status INIT(false);
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
@@ -69,9 +69,9 @@ char* sf_get_extra_header _((ART_NUM,int));
 bool is_text_zero _((char*));
 char* sf_get_filename _((int));
 char* sf_cmd_fname _((char*));
-bool sf_do_command _((char*,bool_int));
+bool sf_do_command(char *cmd, bool check);
 char* sf_freeform _((char*,char*));
-bool sf_do_line _((char*,bool_int));
+bool sf_do_line(char *line, bool check);
 void sf_do_file _((char*));
 int score_match _((char*,int));
 int sf_score _((ART_NUM));

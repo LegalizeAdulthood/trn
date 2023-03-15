@@ -17,7 +17,7 @@ static bool mark_DEL_as_READ _((char*,int));
 static int sel_command _((char_int));
 static bool sel_perform_change _((long,char*));
 static char another_command _((char_int));
-static int article_commands _((char_int));
+static int article_commands(char_int);
 static int newsgroup_commands _((char_int));
 static int addgroup_commands _((char_int));
 static int multirc_commands _((char_int));

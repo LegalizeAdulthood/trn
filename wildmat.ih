@@ -2,4 +2,4 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-static int DoMatch _((char*,char*));
+static bool DoMatch(char *text, char *p);

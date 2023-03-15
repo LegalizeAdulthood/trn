@@ -166,7 +166,7 @@ void nntp_body(ART_NUM artnum)
 {
     char* artname;
 
-    artname = nntp_artname(artnum, FALSE); /* Is it already in a tmp file? */
+    artname = nntp_artname(artnum, false); /* Is it already in a tmp file? */
     if (artname) {
 	if (body_pos >= 0)
 	    nntp_finishbody(FB_DISCARD);
@@ -176,7 +176,7 @@ void nntp_body(ART_NUM artnum)
 	return;
     }
 
-    artname = nntp_artname(artnum, TRUE);   /* Allocate a tmp file */
+    artname = nntp_artname(artnum, true);   /* Allocate a tmp file */
     if (!(artfp = fopen(artname, "w+"))) {
 	fprintf(stderr, "\nUnable to write temporary file: '%s'.\n",
 		artname);
@@ -228,7 +228,7 @@ long nntp_artsize(void)
 static int nntp_copybody(char *s, int limit, ART_POS pos)
 {
     int len;
-    bool had_nl = TRUE;
+    bool had_nl = true;
     int found_nl;
 
     while (pos > body_end || !had_nl) {
@@ -291,7 +291,7 @@ int nntp_finishbody(int bmode)
 	    fseek(artfp, (long)body_pos, 0);
     }
     if (bmode == FB_OUTPUT)
-	erase_line(0);	/* erase the prompt */
+	erase_line(false);	/* erase the prompt */
     return 1;
 }
 
@@ -440,7 +440,7 @@ ART_NUM nntp_find_real_art(ART_NUM after)
     return 0;
 }
 
-char *nntp_artname(ART_NUM artnum, bool_int allocate)
+char *nntp_artname(ART_NUM artnum, bool allocate)
 {
     static ART_NUM artnums[MAX_NNTP_ARTICLES];
     static time_t artages[MAX_NNTP_ARTICLES];
@@ -494,18 +494,18 @@ int nntp_handle_nested_lists(void)
 
 int nntp_handle_timeout(void)
 {
-    static bool handling_timeout = FALSE;
+    static bool handling_timeout = false;
     char last_command_save[NNTP_STRLEN];
 
     if (strcaseEQ(g_last_command,"quit"))
 	return 0;
     if (handling_timeout)
 	return -1;
-    handling_timeout = TRUE;
+    handling_timeout = true;
     strcpy(last_command_save, g_last_command);
-    nntp_close(FALSE);
+    nntp_close(false);
     datasrc->nntplink = nntplink;
-    if (nntp_connect(datasrc->newsid, 0) <= 0)
+    if (nntp_connect(datasrc->newsid, false) <= 0)
 	return -2;
     datasrc->nntplink = nntplink;
     if (in_ng && nntp_group(ngname, (NGDATA*)NULL) <= 0)
@@ -513,7 +513,7 @@ int nntp_handle_timeout(void)
     if (nntp_command(last_command_save) <= 0)
 	return -1;
     strcpy(g_last_command, last_command_save); /*$$ Is this really needed? */
-    handling_timeout = FALSE;
+    handling_timeout = false;
     return 1;
 }
 

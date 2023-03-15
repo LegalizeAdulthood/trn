@@ -5,5 +5,5 @@
 
 char* sa_get_statchars _((long,int));
 char* sa_desc_subject _((long));
-char* sa_get_desc _((long,int,bool_int));
+char *sa_get_desc(long e, int line, bool trunc);
 int sa_ent_lines _((long));

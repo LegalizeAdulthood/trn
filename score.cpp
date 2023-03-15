@@ -45,8 +45,8 @@
 FILE* filter_error_file;
 #endif
 
-//bool_int pend_wait;	/* if true, enter pending mode when scoring... */
-void sc_init(bool_int pend_wait)
+//bool pend_wait;	/* if true, enter pending mode when scoring... */
+void sc_init(bool pend_wait)
 {
     int i;
     ART_NUM a;
@@ -57,10 +57,10 @@ void sc_init(bool_int pend_wait)
 #endif
 	return;
     }
-    sc_sf_force_init = TRUE;		/* generally force initialization */
+    sc_sf_force_init = true;		/* generally force initialization */
     if (sc_delay)			/* requested delay? */
 	return;
-    sc_sf_delay = FALSE;
+    sc_sf_delay = false;
 
 /* Consider the relationships between scoring and article scan mode.
  * Should one be able to initialize the other?  How much can they depend on
@@ -68,25 +68,25 @@ void sc_init(bool_int pend_wait)
  * Consider this especially in a later redesign or porting these systems
  * to other newsreaders.
  */
-    kill_thresh_active = FALSE;  /* kill thresholds are generic */
-    /* July 24, 1993: changed default of sc_savescores to TRUE */
-    sc_savescores = TRUE;
+    kill_thresh_active = false;  /* kill thresholds are generic */
+    /* July 24, 1993: changed default of sc_savescores to true */
+    sc_savescores = true;
 
 /* CONSIDER: (for sc_init callers) is lastart properly set yet? */
     sc_fill_max = absfirst - 1;
 #ifdef SCAN_ART
     if (sa_mode_read_elig || firstart > lastart)
-	sc_fill_read = TRUE;
+	sc_fill_read = true;
     else
 #endif
-	sc_fill_read = FALSE;
+	sc_fill_read = false;
 
     if (sf_verbose) {
 	printf("\nScoring articles...");
 	fflush(stdout);		/* print it *now* */
     }
 
-    sc_initialized = TRUE;	/* little white lie for lookahead */
+    sc_initialized = true;	/* little white lie for lookahead */
     /* now is a good time to load a saved score-list which may exist */
     if (!sc_rescoring) {	/* don't load if rescoring */
 	sc_load_scores();	/* will be quiet if non-existent */
@@ -100,15 +100,15 @@ void sc_init(bool_int pend_wait)
 		break;
 	}
 	if (i == lastart)	/* all scored */
-	    sc_sf_delay = TRUE;
+	    sc_sf_delay = true;
     }
     if (sc_sf_force_init)
-	sc_sf_delay = FALSE;
+	sc_sf_delay = false;
 
     if (!sc_sf_delay)
 	sf_init();	/* initialize the scorefile code */
 
-    sc_do_spin = FALSE;
+    sc_do_spin = false;
     for (i = article_last(lastart); i >= absfirst; i = article_prev(i)) {
 	if (SCORED(i))
 	    break;
@@ -116,7 +116,7 @@ void sc_init(bool_int pend_wait)
     if (i < absfirst) {			/* none scored yet */
 	/* score one article, or give up */
 	for (a = article_last(lastart); a >= absfirst; a = article_prev(a)) {
-	    sc_score_art(a,TRUE);	/* I want it *now* */
+	    sc_score_art(a,true);	/* I want it *now* */
 	    if (SCORED(a))
 		break;
 	}
@@ -133,12 +133,12 @@ void sc_init(bool_int pend_wait)
     if (!sf_num_entries) {
 	/* score everything really fast */
 	for (a = article_last(lastart); a >= absfirst; a = article_prev(a))
-	    sc_score_art(a,TRUE);
+	    sc_score_art(a,true);
     }
     if (pend_wait) {
 	bool waitflag;		/* if true, use key pause */
 
-	waitflag = TRUE;	/* normal mode: wait for key first */
+	waitflag = true;	/* normal mode: wait for key first */
 	if (sf_verbose && waitflag) {
 #ifdef PENDING
 	    printf("(press key to start reading)");
@@ -149,18 +149,18 @@ void sc_init(bool_int pend_wait)
 	}
 	if (waitflag) {
 	    setspin(SPIN_FOREGROUND);
-	    sc_do_spin = TRUE;		/* really do it */
+	    sc_do_spin = true;		/* really do it */
 	}
-	sc_lookahead(TRUE,waitflag);	/* jump in *now* */
+	sc_lookahead(true,waitflag);	/* jump in *now* */
 	if (waitflag) {
-	    sc_do_spin = FALSE;
+	    sc_do_spin = false;
 	    setspin(SPIN_POP);
 	}
     }
     if (sf_verbose)
 	putchar('\n') FLUSH;
 
-    sc_initialized = TRUE;
+    sc_initialized = true;
 }
 
 void sc_cleanup(void)
@@ -179,7 +179,7 @@ void sc_cleanup(void)
 
     if (!sc_sf_delay)
 	sf_clean();	/* let the scorefile do whatever cleaning it needs */
-    sc_initialized = FALSE;
+    sc_initialized = false;
 
     if (sf_verbose)
 	printf("Done.\n") FLUSH;
@@ -198,7 +198,7 @@ void sc_set_score(ART_NUM a, int score)
     ap->score = score;	/* update the score */
     ap->scoreflags |= SFLAG_SCORED;
 #ifdef SCAN
-    s_order_changed = TRUE;	/* resort */
+    s_order_changed = true;	/* resort */
 #endif
 }
 
@@ -241,8 +241,8 @@ void sc_score_art_basic(ART_NUM a)
 }
 
 /* Returns an article's score, scoring it if necessary */
-//bool_int now;	/* if TRUE, sort the scores if necessary... */
-int sc_score_art(ART_NUM a, bool_int now)
+//bool now;	/* if true, sort the scores if necessary... */
+int sc_score_art(ART_NUM a, bool now)
 {
     if (a < absfirst || a > lastart) {
 #if 0
@@ -253,17 +253,17 @@ int sc_score_art(ART_NUM a, bool_int now)
     if (is_unavailable(a))
 	return LOWSCORE;
 
-    if (sc_initialized == FALSE) {
-	sc_delay = FALSE;
-	sc_sf_force_init = TRUE;
-	sc_init(FALSE);
-	sc_sf_force_init = FALSE;
+    if (sc_initialized == false) {
+	sc_delay = false;
+	sc_sf_force_init = true;
+	sc_init(false);
+	sc_sf_force_init = false;
     }
 
     if (!SCORED(a)) {
 	if (sc_sf_delay) {
 	    sf_init();
-	    sc_sf_delay = FALSE;
+	    sc_sf_delay = false;
 	}
 	sc_score_art_basic(a);
     }
@@ -279,16 +279,16 @@ void sc_fill_scorelist(ART_NUM first, ART_NUM last)
     int i;
 
     for (i = article_first(first); i <= last; i = article_next(i))
-	(void)sc_score_art(i,FALSE);	/* will be sorted later... */
+	(void)sc_score_art(i,false);	/* will be sorted later... */
 }
 
 /* consider having this return a flag (is finished/is not finished) */
 
-/* flag == TRUE means sort now, FALSE means wait until later (not used)
- * nowait == TRUE means start scoring immediately (group entry)
- * FALSE means use NICEBG if available
+/* flag == true means sort now, false means wait until later (not used)
+ * nowait == true means start scoring immediately (group entry)
+ * false means use NICEBG if available
  */
-void sc_lookahead(bool_int flag, bool_int nowait)
+void sc_lookahead(bool flag, bool nowait)
 {
     ART_NUM oldart = openart;
     ART_POS oldartpos;
@@ -343,7 +343,7 @@ void sc_lookahead(bool_int flag, bool_int nowait)
 	if (!sc_fill_read)	/* score only unread */
 	    if (!article_unread(sc_fill_max))
 		continue;
-	(void)sc_score_art(sc_fill_max,FALSE);
+	(void)sc_score_art(sc_fill_max,false);
     }
     if (oldart)			/* copied from cheat.c */
 	artopen(oldart,oldartpos);	/* do not screw the pager */
@@ -388,14 +388,14 @@ void sc_rescore_arts(void)
 
     if (!sc_initialized) {
 	if (sc_delay) {
-	    sc_delay = FALSE;
-	    sc_sf_force_init = TRUE;
-	    sc_init(TRUE);
-	    sc_sf_force_init = FALSE;
+	    sc_delay = false;
+	    sc_sf_force_init = true;
+	    sc_init(true);
+	    sc_sf_force_init = false;
 	}
     } else if (sc_sf_delay) {
 	sf_init();
-	sc_sf_delay = FALSE;
+	sc_sf_delay = false;
     }
     if (!sc_initialized) {
 	printf("\nScoring is not initialized, aborting command.\n") FLUSH;
@@ -404,7 +404,7 @@ void sc_rescore_arts(void)
     /* I think sc_do_spin will always be false, but why take chances? */
     old_spin = sc_do_spin;
     setspin(SPIN_FOREGROUND);
-    sc_do_spin = TRUE;				/* amuse the user */
+    sc_do_spin = true;				/* amuse the user */
     for (a = article_first(absfirst); a <= lastart; a = article_next(a)) {
 	if (article_exists(a))
 	    sc_score_art_basic(a);		/* rescore it then */
@@ -413,8 +413,8 @@ void sc_rescore_arts(void)
     setspin(SPIN_POP);
 #ifdef SCAN_ART
     if (sa_in) {
-	s_ref_all = TRUE;
-	s_refill = TRUE;
+	s_ref_all = true;
+	s_refill = true;
 	s_top_ent = 0;		/* make sure the refill starts from top */
     }
 #endif
@@ -430,14 +430,14 @@ void sc_append(char *line)
 
     if (!sc_initialized) {
 	if (sc_delay) {
-	    sc_delay = FALSE;
-	    sc_sf_force_init = TRUE;
-	    sc_init(TRUE);
-	    sc_sf_force_init = FALSE;
+	    sc_delay = false;
+	    sc_sf_force_init = true;
+	    sc_init(true);
+	    sc_sf_force_init = false;
 	}
     } else if (sc_sf_delay) {
 	sf_init();
-	sc_sf_delay = FALSE;
+	sc_sf_delay = false;
     }
     if (!sc_initialized) {
 	printf("\nScoring is not initialized, aborting command.\n") FLUSH;
@@ -464,16 +464,16 @@ void sc_append(char *line)
 
 void sc_rescore(void)
 {
-    sc_rescoring = TRUE;	/* in case routines need to know */
-    sc_cleanup();	/* get rid of the old */
-    sc_init(TRUE);	/* enter the new... (wait for rescore) */
+    sc_rescoring = true; /* in case routines need to know */
+    sc_cleanup();        /* get rid of the old */
+    sc_init(true);       /* enter the new... (wait for rescore) */
 #ifdef SCAN_ART
     if (sa_initialized) {
 	s_top_ent = -1;	/* reset top of page */
-	s_refill = TRUE;	/* make sure a refill is done */
+	s_refill = true;	/* make sure a refill is done */
     }
 #endif
-    sc_rescoring = FALSE;
+    sc_rescoring = false;
 }
 
 /* May have a very different interface in the user versions */
@@ -484,14 +484,14 @@ void sc_score_cmd(char *line)
 
     if (!sc_initialized) {
 	if (sc_delay) {
-	    sc_delay = FALSE;
-	    sc_sf_force_init = TRUE;
-	    sc_init(TRUE);
-	    sc_sf_force_init = FALSE;
+	    sc_delay = false;
+	    sc_sf_force_init = true;
+	    sc_init(true);
+	    sc_sf_force_init = false;
 	}
     } else if (sc_sf_delay) {
 	sf_init();
-	sc_sf_delay = FALSE;
+	sc_sf_delay = false;
     }
     if (!sc_initialized) {
 	printf("\nScoring is not initialized, aborting command.\n") FLUSH;
@@ -512,9 +512,9 @@ void sc_score_cmd(char *line)
 	printf("Scoring more articles...");
 	fflush(stdout);	/* print it now */
 	setspin(SPIN_FOREGROUND);
-	sc_do_spin = TRUE;
-	sc_lookahead(TRUE,FALSE);
-	sc_do_spin = FALSE;
+	sc_do_spin = true;
+	sc_lookahead(true,false);
+	sc_do_spin = false;
 	setspin(SPIN_POP);
 	/* consider a "done" message later,
 	 * *if* lookahead did all the arts */
@@ -527,12 +527,12 @@ void sc_score_cmd(char *line)
       case 's':	/* verbose score for this article */
 	/* XXX CONSIDER: A VERBOSE-SCORE ROUTINE (instead of this hack) */
 	i = 0;	/* total score */
-	sf_score_verbose = TRUE;
+	sf_score_verbose = true;
 	j = sf_score(art);
-	sf_score_verbose = FALSE;
+	sf_score_verbose = false;
 	printf("Scorefile total score: %ld\n",j);
 	i += j;
-	j = sc_score_art(art,TRUE);
+	j = sc_score_art(art,true);
 	if (i != j) {
 	    /* Consider resubmitting article to filter? */
 	    printf("Other scoring total: %ld\n", j - i) FLUSH;

@@ -25,7 +25,7 @@ EXT int _res_flg INIT(0);
 #endif
 
 EXT int _tty_ch INIT(2);
-EXT bool bizarre INIT(FALSE);		/* do we need to restore terminal? */
+EXT bool bizarre INIT(false);		/* do we need to restore terminal? */
 
 /* terminal mode diddling routines */
 
@@ -130,9 +130,9 @@ EXT char* tc_UE INIT(NULL);		/* end underline mode */
 EXT char* tc_UC INIT(NULL);		/* underline a character,
 						 if that's how it's done */
 EXT int tc_UG INIT(0);			/* blanks left by US and UE */
-EXT bool tc_AM INIT(FALSE);		/* does terminal have automatic
+EXT bool tc_AM INIT(false);		/* does terminal have automatic
 								 margins? */
-EXT bool tc_XN INIT(FALSE);		/* does it eat 1st newline after
+EXT bool tc_XN INIT(false);		/* does it eat 1st newline after
 							 automatic wrap? */
 EXT char tc_PC INIT(0);			/* pad character for use by tputs() */
 
@@ -179,19 +179,19 @@ inline void newline()
 //..."Don't know how to define the term macros!"
 #endif /* !HAS_TERMLIB */
 
-#define input_pending() finput_pending(TRUE)
-#define macro_pending() finput_pending(FALSE)
+#define input_pending() finput_pending(true)
+#define macro_pending() finput_pending(false)
 
 EXT int page_line INIT(1);	/* line number for paging in
 				 print_line (origin 1) */
-EXT bool error_occurred INIT(FALSE);
+EXT bool error_occurred INIT(false);
 
 EXT char* mousebar_btns;
 EXT int mousebar_cnt INIT(0);
 EXT int mousebar_start INIT(0);
 EXT int mousebar_width INIT(0);
-EXT bool xmouse_is_on INIT(FALSE);
-EXT bool mouse_is_down INIT(FALSE);
+EXT bool xmouse_is_on INIT(false);
+EXT bool mouse_is_down INIT(false);
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
@@ -204,7 +204,7 @@ void show_macros _((void));
 void set_mode _((char_int,char_int));
 int putchr _((char_int));
 void hide_pending _((void));
-bool finput_pending _((bool_int));
+bool finput_pending(bool check_term);
 bool finish_command _((int));
 char* edit_buf _((char*,char*));
 bool finish_dblchar _((void));
@@ -240,7 +240,7 @@ void printcmd _((void));
 #endif
 void rubout _((void));
 void reprint _((void));
-void erase_line _((bool_int));
+void erase_line(bool to_eos);
 void clear _((void));
 void home_cursor _((void));
 void goto_xy _((int,int));
@@ -257,7 +257,7 @@ void xmouse_init _((char*));
 void xmouse_check _((void));
 void xmouse_on _((void));
 void xmouse_off _((void));
-void draw_mousebar _((int,bool_int));
+void draw_mousebar(int limit, bool restore_cursor);
 bool check_mousebar _((int,int,int,int,int,int));
 void add_tc_string _((char*,char*));
 char* tc_color_capability _((char*));

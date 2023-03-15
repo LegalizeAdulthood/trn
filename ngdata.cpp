@@ -119,7 +119,7 @@ int access_ng(void)
 
     dmcount = 0;
     missing_count = 0;
-    in_ng = TRUE;			/* tell the world we are here */
+    in_ng = true;			/* tell the world we are here */
 
     build_cache();
     return 1;
@@ -141,7 +141,7 @@ void grow_ng(ART_NUM newlast)
 {
     ART_NUM tmpfirst;
 
-    forcegrow = FALSE;
+    forcegrow = false;
     if (newlast > lastart) {
 	ART_NUM tmpart = art;
 	ngptr->toread += (ART_UNREAD)(newlast-lastart);
@@ -176,7 +176,7 @@ void grow_ng(ART_NUM newlast)
 	if (kf_state & KFS_NORMAL_LINES) {
 	    bool forcelast_save = forcelast;
 	    ARTICLE* artp_save = artp;
-	    kill_unwanted(tmpfirst,buf,TRUE);
+	    kill_unwanted(tmpfirst,buf,true);
 	    artp = artp_save;
 	    forcelast = forcelast_save;
 	}
@@ -272,7 +272,7 @@ void ng_skip(void)
 	artp = article_ptr(art);
 	do {
 	    /* tries to grab PREFETCH_SIZE XHDRS, flagging missing articles */
-	    (void) fetchsubj(art, FALSE);
+	    (void) fetchsubj(art, false);
 	    artnum = art+PREFETCH_SIZE-1;
 	    if (artnum > lastart)
 		artnum = lastart;
@@ -304,7 +304,7 @@ void ng_skip(void)
 		sleep(2);
 	    }
 	}
-	inc_art(selected_only,FALSE);	/* try next article */
+	inc_art(selected_only,false);	/* try next article */
     }
 }
 

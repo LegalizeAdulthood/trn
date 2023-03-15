@@ -26,12 +26,12 @@ EXT int ing_state;
 #define INGS_CLEAN	0
 #define INGS_DIRTY	1
 
-EXT bool  write_less INIT(FALSE);	/* write .newsrc less often */
+EXT bool  write_less INIT(false);	/* write .newsrc less often */
 
 EXT char* auto_start_cmd INIT(NULL);	/* command to auto-start with */
-EXT bool  auto_started INIT(FALSE);	/* have we auto-started? */
+EXT bool  auto_started INIT(false);	/* have we auto-started? */
 
-EXT bool  is_strn INIT(FALSE);		/* Is this "strn", or trn/rn? */
+EXT bool  is_strn INIT(false);		/* Is this "strn", or trn/rn? */
 
 EXT char patchlevel[] INIT(PATCHLEVEL);
 
@@ -42,7 +42,7 @@ int main _((int,char**));
 void do_multirc _((void));
 int input_newsgroup _((void));
 #ifdef SUPPORT_NNTP
-void check_active_refetch _((bool_int));
+void check_active_refetch(bool force);
 #endif
 void trn_version _((void));
 void set_ngname _((char*));

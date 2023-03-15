@@ -165,7 +165,7 @@ void start_header(ART_NUM artnum)
 	htype[i].maxpos = 0;
     }
     in_header = SOME_LINE;
-    first_one = FALSE;
+    first_one = false;
     parsed_art = artnum;
     parsed_artp = article_ptr(artnum);
 }
@@ -173,11 +173,11 @@ void start_header(ART_NUM artnum)
 void end_header_line(void)
 {
     if (first_one) {		/* did we just pass 1st occurance? */
-	first_one = FALSE;
+	first_one = false;
 	/* remember where line left off */
 	htype[in_header].maxpos = artpos;
 	if (htype[in_header].flags & HT_CACHED) {
-	    if (!get_cached_line(parsed_artp, in_header, TRUE)) {
+	    if (!get_cached_line(parsed_artp, in_header, true)) {
 		int start = htype[in_header].minpos
 			  + htype[in_header].length + 1;
 		MEM_SIZE size;
@@ -232,7 +232,7 @@ bool parseline(char *art_buf, int newhide, int oldhide)
 	    if (htype[in_header].flags & HT_HIDE)
 		return newhide;
     }
-    return FALSE;			/* don't hide this line */
+    return false;			/* don't hide this line */
 }
 
 void end_header(void)
@@ -247,7 +247,7 @@ void end_header(void)
 
 #ifdef SUPPORT_NNTP
     if (reading_nntp_header) {
-	reading_nntp_header = FALSE;
+	reading_nntp_header = false;
 	htype[PAST_HEADER].minpos = artpos + 1;	/* nntp_body will fix this */
     }
     else
@@ -284,31 +284,31 @@ bool parseheader(ART_NUM artnum)
 {
     register char* bp;
     register int len;
-    bool had_nl = TRUE;
+    bool had_nl = true;
     int found_nl;
 
     if (parsed_art == artnum)
-	return TRUE;
+	return true;
     if (artnum > lastart)
-	return FALSE;
+	return false;
     spin(20);
 #ifdef SUPPORT_NNTP
     if (datasrc->flags & DF_REMOTE) {
-	char *s = nntp_artname(artnum, FALSE);
+	char *s = nntp_artname(artnum, false);
 	if (s) {
 	    if (!artopen(artnum,(ART_POS)0))
-		return FALSE;
+		return false;
 	}
 	else if (nntp_header(artnum) <= 0) {
-	    uncache_article(article_ptr(artnum),FALSE);
-	    return FALSE;
+	    uncache_article(article_ptr(artnum),false);
+	    return false;
 	}
 	else
-	    reading_nntp_header = TRUE;
+	    reading_nntp_header = true;
     }
 #endif
     ElseIf (!artopen(artnum,(ART_POS)0))
-	return FALSE;
+	return false;
 
     start_header(artnum);
     artpos = 0;
@@ -346,14 +346,14 @@ bool parseheader(ART_NUM artnum)
 	    found_nl = (bp[len-1] == '\n');
 	}
 	if (had_nl)
-	    parseline(bp,FALSE,FALSE);
+	    parseline(bp,false,false);
 	had_nl = found_nl;
 	artpos += len;
 	bp += len;
     }
     *bp = '\0';
     end_header();
-    return TRUE;
+    return true;
 }
 
 /* get a header line from an article */
@@ -371,7 +371,7 @@ char *fetchlines(ART_NUM artnum, int which_line)
     /* Only return a cached line if it isn't the current article */
     if (parsed_art != artnum) {
 	/* If the line is not in the cache, this will parse the header */
-	s = fetchcache(artnum,which_line,FILL_CACHE);
+	s = fetchcache(artnum,which_line, FILL_CACHE);
 	if (s)
 	    return savestr(s);
     }
@@ -410,7 +410,7 @@ char *mp_fetchlines(ART_NUM artnum, int which_line, int pool)
     /* Only return a cached line if it isn't the current article */
     if (parsed_art != artnum) {
 	/* If the line is not in the cache, this will parse the header */
-	s = fetchcache(artnum,which_line,FILL_CACHE);
+	s = fetchcache(artnum,which_line, FILL_CACHE);
 	if (s)
 	    return mp_savestr(s,pool);
     }
@@ -438,8 +438,8 @@ char *mp_fetchlines(ART_NUM artnum, int which_line, int pool)
 
 // ART_NUM artnum   article to get line from */
 // int which_line   type of line desired */
-// bool_int copy    do you want it savestr()ed? */
-char *prefetchlines(ART_NUM artnum, int which_line, bool_int copy)
+// bool copy    do you want it savestr()ed? */
+char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 {
     char* s;
     char* t;
@@ -453,9 +453,9 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool_int copy)
 	int size;
 	register ART_NUM num, priornum, lastnum;
 	bool cached;
- 	bool hasxhdr = TRUE;
+ 	bool hasxhdr = true;
 
-	s = fetchcache(artnum,which_line,DONT_FILL_CACHE);
+	s = fetchcache(artnum,which_line, DONT_FILL_CACHE);
 	if (s) {
 	    if (copy)
 		s = savestr(s);
@@ -507,7 +507,7 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool_int copy)
 		    continue;
 		if (!(datasrc->flags & DF_XHDR_BROKEN)) {
 		    while ((priornum = article_next(priornum)) < num)
-			uncache_article(article_ptr(priornum),FALSE);
+			uncache_article(article_ptr(priornum),false);
 		}
 		ap = article_find(num);
 		if (which_line == SUBJ_LINE)
@@ -520,7 +520,7 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool_int copy)
 	    if (last_buf != g_ser_line)
 		free(last_buf);
 	} else {
-	    hasxhdr = FALSE;
+	    hasxhdr = false;
 	    lastnum = artnum;
 	    if (!parseheader(artnum)) {
 	        fprintf(stderr,"\nBad NNTP response.\n");
@@ -530,7 +530,7 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool_int copy)
 	}
 	if (hasxhdr && !(datasrc->flags & DF_XHDR_BROKEN)) {
 	    for (priornum = article_first(priornum); priornum < lastnum; priornum = article_next(priornum))
-		uncache_article(article_ptr(priornum),FALSE);
+		uncache_article(article_ptr(priornum),false);
 	}
 	if (copy)
 	    s = saferealloc(s, (MEM_SIZE)strlen(s)+1);
@@ -541,7 +541,7 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool_int copy)
     /* Only return a cached line if it isn't the current article */
     s = NULL;
     if (parsed_art != artnum)
-	s = fetchcache(artnum,which_line,FILL_CACHE);
+	s = fetchcache(artnum,which_line, FILL_CACHE);
     if (parsed_art == artnum && (firstpos = htype[which_line].minpos) < 0)
 	s = nullstr;
     if (s) {

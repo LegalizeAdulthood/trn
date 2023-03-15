@@ -215,13 +215,13 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
     char spfbuf[512];
     static char* input_str = NULL;
     static int input_siz = 0;
-    bool upper = FALSE;
-    bool lastcomp = FALSE;
-    bool re_quote = FALSE;
+    bool upper = false;
+    bool lastcomp = false;
+    bool re_quote = false;
     int tick_quote = 0;
-    bool address_parse = FALSE;
-    bool comment_parse = FALSE;
-    bool proc_sprintf = FALSE;
+    bool address_parse = false;
+    bool comment_parse = false;
+    bool proc_sprintf = false;
     int metabit = 0;
 
 #ifdef DEBUG
@@ -231,35 +231,35 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 
     while (*pattern && (!stoppers || !index(stoppers,*pattern))) {
 	if (*pattern == '%' && pattern[1]) {
-	    upper = FALSE;
-	    lastcomp = FALSE;
-	    re_quote = FALSE;
+	    upper = false;
+	    lastcomp = false;
+	    re_quote = false;
 	    tick_quote = 0;
-	    address_parse = FALSE;
-	    comment_parse = FALSE;
-	    proc_sprintf = FALSE;
+	    address_parse = false;
+	    comment_parse = false;
+	    proc_sprintf = false;
 	    for (s=NULL; !s; ) {
 		switch (*++pattern) {
 		case '^':
-		    upper = TRUE;
+		    upper = true;
 		    break;
 		case '_':
-		    lastcomp = TRUE;
+		    lastcomp = true;
 		    break;
 		case '\\':
-		    re_quote = TRUE;
+		    re_quote = true;
 		    break;
 		case '\'':
 		    tick_quote++;
 		    break;
 		case '>':
-		    address_parse = TRUE;
+		    address_parse = true;
 		    break;
 		case ')':
-		    comment_parse = TRUE;
+		    comment_parse = true;
 		    break;
 		case ':':
-		    proc_sprintf = TRUE;
+		    proc_sprintf = true;
 		    h = spfbuf;
 		    *h++ = '%';
 		    pattern++;	/* Skip over ':' */
@@ -350,7 +350,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			goto getout;
 		    s = scrbuf;
 		    h = spfbuf;
-		    proc_sprintf = FALSE;
+		    proc_sprintf = false;
 		    do {
 			switch (*s) {
 			case '^':
@@ -361,16 +361,16 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			    *h++ = '\\';
 			    break;
 			case '%':
-			    proc_sprintf = TRUE;
+			    proc_sprintf = true;
 			    break;
 			}
 			*h++ = *s;
 		    } while (*s++);
 		    if (proc_sprintf) {
 			dointerp(scrbuf,sizeof scrbuf,spfbuf,(char*)NULL,cmd);
-			proc_sprintf = FALSE;
+			proc_sprintf = false;
 		    }
-		    if ((s = compile(&cond_compex,scrbuf,TRUE,TRUE)) != NULL) {
+		    if ((s = compile(&cond_compex,scrbuf,true,true)) != NULL) {
 			printf("%s: %s\n",scrbuf,s) FLUSH;
 			pattern += strlen(pattern);
 			free_compex(&cond_compex);
@@ -487,7 +487,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			    if (artopen(art,(ART_POS)0)) {
 				nntp_finishbody(FB_SILENT);
 				sprintf(s = scrbuf,"%s/%s",datasrc->spool_dir,
-					nntp_artname(art, FALSE));
+					nntp_artname(art, false));
 			    }
 			    else
 				s = nullstr;
@@ -729,10 +729,10 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			break;
 		    }
 		    if ((str = subj_buf) == NULL)
-			str = subj_buf = fetchsubj(art,TRUE);
+			str = subj_buf = fetchsubj(art,true);
 		    subject_has_Re(str,&str);
 		    if (*pattern == 's'
-		     && (h = in_string(str,"- (nf", TRUE)) != NULL)
+		     && (h = in_string(str,"- (nf", true)) != NULL)
 			*h = '\0';
 		    s = str;
 		    break;
@@ -762,7 +762,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			if (strnEQ(g_p_host_name,s,i) && s[i] == '!')
 			    s += i + 1;
 		    }
-		    address_parse = TRUE;	/* just the good part */
+		    address_parse = true;	/* just the good part */
 		    break;
 		case 'u':
 		    if (in_ng) {

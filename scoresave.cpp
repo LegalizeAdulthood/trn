@@ -116,7 +116,7 @@ void sc_sv_savefile(void)
 
     if (num_lines == 0)
 	return;
-    waiting = TRUE;	/* don't interrupt */
+    waiting = true;	/* don't interrupt */
     s = get_val("SAVESCOREFILE","%+/savedscores");
     savename = savestr(filexp(s));
     strcpy(lbuf,savename);
@@ -128,7 +128,7 @@ void sc_sv_savefile(void)
 	       lbuf) FLUSH;
 #endif
 	free(savename);
-	waiting = FALSE;
+	waiting = false;
 	return;
     }
     for (i = 0; i < num_lines; i++) {
@@ -140,14 +140,14 @@ void sc_sv_savefile(void)
 	    printf("\nWrite error in temporary save file %s\n",lbuf) FLUSH;
 	    printf("(keeping old saved scores)\n");
 	    UNLINK(lbuf);
-	    waiting = FALSE;
+	    waiting = false;
 	    return;
 	}
     }
     fclose(tmpfp);
     UNLINK(savename);
     RENAME(lbuf,savename);
-    waiting = FALSE;
+    waiting = false;
 }
 
 /* returns the next article number (after the last one used) */
@@ -253,7 +253,7 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
 ART_NUM sc_sv_make_line(ART_NUM a)
 {
     char* s;
-    bool lastscore_valid = FALSE;
+    bool lastscore_valid = false;
     int num_output = 0;
     int score,lastscore;
     int i;
@@ -296,10 +296,10 @@ ART_NUM sc_sv_make_line(ART_NUM a)
 	    } else {	/* not a repeat */
 		i = score;
 		if (i < 0) {
-		    neg_flag = TRUE;
+		    neg_flag = true;
 		    i = 0 - i;
 		} else
-		    neg_flag = FALSE;
+		    neg_flag = false;
 		sprintf(s,"%d",i);
 		i = (*s - '0');
 		if (neg_flag)
@@ -308,7 +308,7 @@ ART_NUM sc_sv_make_line(ART_NUM a)
 		    *s++ = 'J' + i;
 		s = lbuf + strlen(lbuf);
 		num_output++;
-		lastscore_valid = TRUE;
+		lastscore_valid = true;
 	    }
 	    lastscore = score;
 	    last = a;
@@ -421,7 +421,7 @@ void sc_save_scores(void)
     saved = 0;
     last = 0;
 
-    waiting = TRUE;	/* DON'T interrupt */
+    waiting = true;	/* DON'T interrupt */
     gname = savestr(filexp("%C"));
     /* not being able to open is OK */
     if (num_lines > 0) {
@@ -439,6 +439,6 @@ void sc_save_scores(void)
     last = a-1;
     while (a <= lastart)
 	a = sc_sv_make_line(a);
-    waiting = FALSE;
+    waiting = false;
 }
 #endif /* SCORE */

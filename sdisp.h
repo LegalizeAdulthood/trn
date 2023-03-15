@@ -10,7 +10,7 @@ EXT int scr_height INIT(0);
 EXT int scr_width INIT(0);
 
 /* has the window been resized? */
-EXT bool s_resized INIT(FALSE);
+EXT bool s_resized INIT(false);
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 

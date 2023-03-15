@@ -4,10 +4,9 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include "utf.h"
-
-EXT bool waiting INIT(FALSE);  	/* waiting for subprocess (in doshell)? */
-EXT bool nowait_fork INIT(FALSE);
-EXT bool export_nntp_fds INIT(FALSE);
+EXT bool waiting INIT(false);  	/* waiting for subprocess (in doshell)? */
+EXT bool nowait_fork INIT(false);
+EXT bool export_nntp_fds INIT(false);
 
 /* the strlen and the buffer length of "some_buf" after a call to:
  *     some_buf = get_a_line(bufptr,bufsize,realloc,fp); */
@@ -50,7 +49,7 @@ char* safecat _((char*,char*,int));
 int eaccess _((char*,int));
 #endif
 char* trn_getwd (char*,int);
-char* get_a_line _((char*,int,bool_int,FILE*));
+char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp);
 int makedir _((char*,int));
 void notincl _((char*));
 void growstr _((char**,int*,int));

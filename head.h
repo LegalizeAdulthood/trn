@@ -167,4 +167,4 @@ char* fetchlines _((ART_NUM,int));
 #ifdef SCAN
 char* mp_fetchlines _((ART_NUM,int,int));
 #endif
-char* prefetchlines _((ART_NUM,int,bool_int));
+char *prefetchlines(ART_NUM artnum, int which_line, bool copy);

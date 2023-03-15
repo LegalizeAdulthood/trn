@@ -121,7 +121,7 @@ int do_newsgroup(char *start_command)
     char gmode_save = gmode;
     int ret;
     char* whatnext = "%s%sWhat next? [%s]";
-    bool ng_virtual = FALSE;
+    bool ng_virtual = false;
 
     set_datasrc(ngptr->rc->datasrc);
 
@@ -140,7 +140,7 @@ int do_newsgroup(char *start_command)
 
     /* initialize the newsgroup data structures */
 
-    sel_rereading = 0;
+    sel_rereading = false;
     sel_mask = AF_SEL;
     ret = access_ng();
     if (ret == -2)
@@ -155,7 +155,7 @@ int do_newsgroup(char *start_command)
 
     /* FROM HERE ON, RETURN THRU CLEANUP OR WE ARE SCREWED */
 
-    forcelast = TRUE;			/* if 0 unread, do not bomb out */
+    forcelast = true;			/* if 0 unread, do not bomb out */
     recent_artp = curr_artp = NULL;
     recent_art = curr_art = lastart+1;
     prompt = whatnext;
@@ -169,11 +169,11 @@ int do_newsgroup(char *start_command)
     open_kfile(KF_LOCAL);
 # ifdef VERBOSE
     IF(verbose)
-	kill_unwanted(firstart,"Processing memorized commands...\n\n", TRUE);
+	kill_unwanted(firstart,"Processing memorized commands...\n\n", true);
     ELSE
 # endif
 # ifdef TERSE
-	kill_unwanted(firstart,"Auto-processing...\n\n",TRUE);
+	kill_unwanted(firstart,"Auto-processing...\n\n",true);
 # endif
 #endif
 
@@ -189,9 +189,9 @@ int do_newsgroup(char *start_command)
 #ifdef SCORE
 #ifdef SCAN_ART
     sc_init((sa_never_initialized || sa_mode_order == 2)
-	 && start_command && *start_command == ';');
+            && start_command && *start_command == ';');
 #else
-    sc_init(FALSE);
+    sc_init(false);
 #endif /* SCAN_ART */
 #endif /* SCORE */
 
@@ -200,7 +200,7 @@ int do_newsgroup(char *start_command)
 	goto cleanup;
     }
     if (!selected_count)
-	selected_only = FALSE;
+	selected_only = false;
     top_article();
 
     /* do they want a special top line? */
@@ -211,16 +211,16 @@ int do_newsgroup(char *start_command)
 
 #ifdef CUSTOMLINES
     if ((hideline = get_val("HIDELINE",(char*)NULL)) != NULL)
-	compile(&hide_compex,hideline,TRUE,TRUE);
+	compile(&hide_compex,hideline,true,true);
     if ((pagestop = get_val("PAGESTOP",(char*)NULL)) != NULL)
-	compile(&page_compex,pagestop,TRUE,TRUE);
+	compile(&page_compex,pagestop,true,true);
 #endif
 
     /* now read each unread article */
 
     /* CAA: if we are going directly to an article, set things up here */
     if (ng_go_artnum) {
-	ng_virtual = TRUE;
+	ng_virtual = true;
 	if (ng_go_artnum >= absfirst) {
 	    art = ng_go_artnum;
 	    artp = article_ptr(art);
@@ -229,15 +229,15 @@ int do_newsgroup(char *start_command)
     }
     else if (ng_go_msgid) {
 	/* not implemented yet */
-	ng_virtual = TRUE;
+	ng_virtual = true;
 	ng_go_msgid = 0;
     }
 
-    doing_ng = TRUE;			/* enter the twilight zone */
+    doing_ng = true;			/* enter the twilight zone */
     ngptr->rc->flags |= RF_RCCHANGED;
     if (!unsafe_rc_saves)
 	checkcount = 0;			/* do not checkpoint for a while */
-    do_fseek = FALSE;			/* start 1st article at top */
+    do_fseek = false;			/* start 1st article at top */
     for (; art <= lastart+1; ) {	/* for each article */
 	set_mode('r','a');
 
@@ -307,7 +307,7 @@ int do_newsgroup(char *start_command)
 	    }
 #ifdef SCAN_ART
 	    if (sa_in) {
-		sa_go = TRUE;
+		sa_go = true;
 		goto article_level;
 	    }
 #endif
@@ -355,7 +355,7 @@ int do_newsgroup(char *start_command)
 	else if (!reread && (was_read(art)
 		|| (selected_only && !(artp->flags & AF_SEL)))) {
 					/* has this article been read? */
-	    inc_art(selected_only,FALSE);/* then skip it */
+	    inc_art(selected_only,false);/* then skip it */
 	    continue;
 	}
 	else if (!reread && (!(artp->flags & AF_EXISTS) || !parseheader(art))) {
@@ -373,8 +373,8 @@ int do_newsgroup(char *start_command)
 		charsubst = charsets;
 #endif
 		first_view = 0;
-		do_hiding = TRUE;
-		rotate = FALSE;
+		do_hiding = true;
+		rotate = false;
 	    }
 	    if (!do_fseek) {		/* starting at top of article? */
 		artline = 0;		/* start at the beginning */
@@ -435,11 +435,11 @@ int do_newsgroup(char *start_command)
 
 reask_article:
 #ifdef MAILCALL
-	setmail(FALSE);
+	setmail(false);
 #endif
 	setdfltcmd();
 	if (erase_screen && erase_each_line)
-	    erase_line(1);
+	    erase_line(true);
 	if (g_term_line >= tc_LINES) {
 	    term_scrolled += g_term_line - tc_LINES + 1;
 	    g_term_line = tc_LINES-1;
@@ -454,14 +454,14 @@ reask_article:
 		nullstr,
 #endif
 		dfltcmd);
-	draw_mousebar(tc_COLS - (g_term_line == tc_LINES-1? strlen(buf)+5 : 0), 1);
+	draw_mousebar(tc_COLS - (g_term_line == tc_LINES-1? strlen(buf)+5 : 0), true);
 	color_string(COLOR_CMD,buf);
 	putchar(' ');
 	fflush(stdout);
 	g_term_col = strlen(buf) + 1;
 reinp_article:
-	reread = FALSE;
-	forcelast = FALSE;
+	reread = false;
+	forcelast = false;
 	eat_typeahead();
 #ifdef PENDING
 	look_ahead();			/* see what we can do in advance */
@@ -479,7 +479,7 @@ reinp_article:
 	    }
 	}
 article_level:
-	output_chase_phrase = TRUE;  /* Allow "Chasing Xrefs..." output */
+	output_chase_phrase = true;  /* Allow "Chasing Xrefs..." output */
 	if (mousebar_cnt)
 	    clear_rest();
 
@@ -522,7 +522,7 @@ article_level:
 	    break;
 #ifdef SCAN_ART
 	  case AS_SA:			/* go to article scan mode */
-	    sa_go = TRUE;
+	    sa_go = true;
 	    goto article_level;
 #endif
 	}
@@ -532,7 +532,7 @@ article_level:
 
 cleanup:
 #ifdef KILLFILES
-    kill_unwanted(firstart,"\nCleaning up...\n\n",FALSE);
+    kill_unwanted(firstart,"\nCleaning up...\n\n",false);
 					/* do cleanup from KILL file, if any */
 #endif
 #ifdef SCAN_ART
@@ -543,11 +543,11 @@ cleanup:
     if (sc_initialized)
 	sc_cleanup();
 #endif
-    chase_xrefs(FALSE);
+    chase_xrefs(false);
     if (!univ_ng_virtflag) {
     }
 
-    in_ng = FALSE;			/* leave newsgroup state */
+    in_ng = false;			/* leave newsgroup state */
     artclose();
     if (!univ_ng_virtflag)
 	newline();
@@ -556,7 +556,7 @@ cleanup:
     bits_to_rc();			/* reconstitute .newsrc line */
 cleanup2:
 /* go here if already cleaned up */
-    doing_ng = FALSE;			/* tell sig_catcher to cool it */
+    doing_ng = false;			/* tell sig_catcher to cool it */
     /* XXX later, make an option for faster/less-safe virtual groups */
     if (!univ_ng_virtflag &&
 	!(univ_read_virtflag && !(univ_follow || univ_follow_temp))) {
@@ -595,7 +595,7 @@ int art_switch(void)
 	return AS_ASK;
 #ifdef SCAN_ART
       case ';':			/* enter ScanArticle mode */
-	sa_go_explicit = TRUE;
+	sa_go_explicit = true;
 	return AS_SA;
 #endif
 #ifdef SCORE
@@ -605,7 +605,7 @@ int art_switch(void)
 	printf("\nEnter score append command or type RETURN for a menu\n");
 	termdown(2);
 	fflush(stdout);
-	if (finish_command(TRUE))	/* command entered successfully */
+	if (finish_command(true))	/* command entered successfully */
 	    sc_append(buf+1);
 	return AS_ASK;
       case '\'':		/* execute scoring command */
@@ -614,7 +614,7 @@ int art_switch(void)
 	printf("\nEnter scoring command or type RETURN for a menu\n");
 	termdown(2);
 	fflush(stdout);
-	if (finish_command(TRUE))	/* command entered successfully */
+	if (finish_command(true))	/* command entered successfully */
 	    sc_score_cmd(buf+1);
 	return AS_ASK;
 #endif
@@ -746,11 +746,11 @@ n or q to change nothing.\n\
 		termdown(2);
 		return AS_ASK;
 	    }
-	    reread = TRUE;
+	    reread = true;
 #ifdef SCAN
-	    s_follow_temp = TRUE;
+	    s_follow_temp = true;
 #endif
-	    univ_follow_temp = TRUE;
+	    univ_follow_temp = true;
 	    return AS_NORM;
 	}
 not_threaded:
@@ -792,11 +792,11 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 		termdown(2);
 		return AS_ASK;
 	    }
-	    reread = TRUE;
+	    reread = true;
 #ifdef SCAN
-	    s_follow_temp = TRUE;
+	    s_follow_temp = true;
 #endif
-	    univ_follow_temp = TRUE;
+	    univ_follow_temp = true;
 	    return AS_NORM;
 	}
 	goto not_threaded;
@@ -816,11 +816,11 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 		termdown(2);
 		return AS_ASK;
 	    }
-	    reread = TRUE;
+	    reread = true;
 #ifdef SCAN
-	    s_follow_temp = TRUE;
+	    s_follow_temp = true;
 #endif
-	    univ_follow_temp = TRUE;
+	    univ_follow_temp = true;
 	    return AS_NORM;
 	}
 	goto not_threaded;
@@ -840,7 +840,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	if (!artp)
 	    goto not_threaded;
 	/* first, write kill-subject command */
-	(void)art_search(buf, (sizeof buf), TRUE);
+	(void)art_search(buf, (sizeof buf), true);
 	art = curr_art;
 	artp = curr_artp;
 	kill_subject(artp->subj,AFFECT_ALL);/* take care of any prior subjects */
@@ -904,11 +904,11 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	return AS_ASK;
       case 'p':			/* find previous unread article */
 #ifdef SCAN
-	s_follow_temp = TRUE;	/* keep going until change req. */
+	s_follow_temp = true;	/* keep going until change req. */
 #endif
-	univ_follow_temp = TRUE;
+	univ_follow_temp = true;
 	do {
-	    dec_art(selected_only,FALSE);
+	    dec_art(selected_only,false);
 	} while (art >= firstart && (was_read(art) || !parseheader(art)));
 #ifdef ARTSEARCH
 	srchahead = 0;
@@ -919,10 +919,10 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	/* FALL THROUGH */
       case 'P':		/* goto previous article */
 #ifdef SCAN
-	s_follow_temp = TRUE;	/* keep going until change req. */
+	s_follow_temp = true;	/* keep going until change req. */
 #endif
-	univ_follow_temp = TRUE;
-	dec_art(FALSE,TRUE);
+	univ_follow_temp = true;
+	dec_art(false,true);
       check_dec_art:
 	if (art < absfirst) {
 #ifdef VERBOSE
@@ -942,7 +942,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    artp = curr_artp;
 	    return AS_ASK;
 	}
-	reread = TRUE;
+	reread = true;
 #ifdef ARTSEARCH
 	srchahead = 0;
 #endif
@@ -952,8 +952,8 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	if (recent_art >= 0) {
 	    art = recent_art;
 	    artp = recent_artp;
-	    reread = TRUE;
-	    forcelast = TRUE;
+	    reread = true;
+	    forcelast = true;
 #ifdef ARTSEARCH
 	    srchahead = -(srchahead != 0);
 #endif
@@ -975,10 +975,10 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    return AS_CLEAN;
 	}
 	if (!univ_default_cmd)
-	    univ_follow_temp = TRUE;
+	    univ_follow_temp = true;
 #ifdef SCAN
 	if (!s_default_cmd)
-	    s_follow_temp = TRUE;	/* keep going until change req. */
+	    s_follow_temp = true;	/* keep going until change req. */
 #endif
 	if (art > lastart) {
 	    if (!ngptr->toread)
@@ -1002,7 +1002,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    /* $$ will this work with 4.0? CAA */
 	    if (sa_in && ThreadedGroup) {
 		ARTICLE* old_artp = artp;
-		inc_art(selected_only,FALSE);
+		inc_art(selected_only,false);
 		if (!artp || !old_artp)
 		    return AS_SA;
 		switch (sel_mode) {
@@ -1024,7 +1024,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 		}
 	    } else
 #endif
-		inc_art(selected_only,FALSE);
+		inc_art(selected_only,false);
 	    if (art > lastart)
 		top_article();
 	}
@@ -1046,10 +1046,10 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    return AS_CLEAN;
 	}
 	if (!univ_default_cmd)
-	    univ_follow_temp = TRUE;
+	    univ_follow_temp = true;
 #ifdef SCAN
 	if (!s_default_cmd)
-	    s_follow_temp = TRUE;	/* keep going until change req. */
+	    s_follow_temp = true;	/* keep going until change req. */
 #endif
 	if (art > lastart) {
 	    if (!first_subject) {
@@ -1060,15 +1060,15 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 		if (artp->flags & AF_EXISTS)
 		    art = article_num(artp);
 		else
-		    inc_art(FALSE,TRUE);
+		    inc_art(false,true);
 	    }
 	}
 	else
-	    inc_art(FALSE,TRUE);
+	    inc_art(false,true);
 	if (art <= lastart)
-	    reread = TRUE;
+	    reread = true;
 	else
-	    forcelast = TRUE;
+	    forcelast = true;
 #ifdef ARTSEARCH
 	srchahead = 0;
 #endif
@@ -1076,7 +1076,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
       case '$':
 	art = lastart+1;
 	artp = NULL;
-	forcelast = TRUE;
+	forcelast = true;
 #ifdef ARTSEARCH
 	srchahead = 0;
 #endif
@@ -1085,14 +1085,14 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
       case '1': case '2': case '3':	/* goto specified article */
       case '4': case '5': case '6':	/* or do something with a range */
       case '7': case '8': case '9': case '.':
-	forcelast = TRUE;
+	forcelast = true;
 	switch (numnum()) {
 	  case NN_INP:
 	    return AS_INP;
 	  case NN_ASK:
 	    return AS_ASK;
 	  case NN_REREAD:
-	    reread = TRUE;
+	    reread = true;
 #ifdef ARTSEARCH
 	    if (srchahead)
 		srchahead = -1;
@@ -1100,7 +1100,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    break;
 	  case NN_NORM:
 	    if (use_threads) {
-		erase_line(0);
+		erase_line(false);
 		perform_status_end(ngptr->toread, "article");
 		fputs(msg, stdout) FLUSH;
 	    }
@@ -1128,10 +1128,10 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    return AS_CLEAN;
 	}
 	if (!univ_default_cmd)
-	    univ_follow_temp = TRUE;
+	    univ_follow_temp = true;
 #ifdef SCAN
 	if (!s_default_cmd)
-	    s_follow_temp = TRUE;	/* keep going until change req. */
+	    s_follow_temp = true;	/* keep going until change req. */
 #endif
 	if (*buf == Ctl('n')? next_art_with_subj() : prev_art_with_subj())
 	    return AS_NORM;
@@ -1141,9 +1141,9 @@ normal_search:
       {		/* search for article by pattern */
 	char cmd = *buf;
 	
-	reread = TRUE;		/* assume this */
+	reread = true;		/* assume this */
 	page_line = 1;
-	switch (art_search(buf, (sizeof buf), TRUE)) {
+	switch (art_search(buf, (sizeof buf), true)) {
 	  case SRCH_ERROR:
 	    art = curr_art;
 	    return AS_ASK;
@@ -1164,7 +1164,7 @@ normal_search:
 	    return AS_ASK;
 	  case SRCH_DONE:
 	    if (use_threads) {
-		erase_line(0);
+		erase_line(false);
 		perform_status_end(ngptr->toread, "article");
 		printf("%s\n",msg) FLUSH;
 	    }
@@ -1177,7 +1177,7 @@ normal_search:
 		return AS_ASK;
 	    }
 	    top_article();
-	    reread = FALSE;
+	    reread = false;
 	    return AS_NORM;
 	  case SRCH_SUBJDONE:
 #ifdef SCAN_ART
@@ -1185,7 +1185,7 @@ normal_search:
 		return AS_SA;
 #endif
 	    top_article();
-	    reread = FALSE;
+	    reread = false;
 	    return AS_NORM;
 	  case SRCH_NOTFOUND:
 	    fputs("\n\n\n\nNot found.\n",stdout) FLUSH;
@@ -1198,8 +1198,8 @@ normal_search:
 	    return AS_ASK;
 	  case SRCH_FOUND:
 	    if (cmd == Ctl('n') || cmd == Ctl('p')) {
-		oldsubject = TRUE;
-		reread = FALSE;
+		oldsubject = true;
+		reread = false;
 	    }
 	    break;
 	}
@@ -1242,7 +1242,7 @@ normal_search:
 	}
 	art = lastart+1;
 	artp = NULL;
-	forcelast = FALSE;
+	forcelast = false;
 	return AS_NORM;
       case 'Q':  case '`':
 	exit_code = NG_ASK;
@@ -1291,16 +1291,16 @@ run_the_selector:
 	}
 #ifdef SCAN_ART
 	/* modes do not mix very well, so turn off the SA mode */
-	sa_in = FALSE;
+	sa_in = false;
 #endif
 #ifdef SCAN
 	/* turn on temporary follow */
-	s_follow_temp = TRUE;
+	s_follow_temp = true;
 #endif
-	univ_follow_temp = TRUE;
-	art_sel_ilock = TRUE;
+	univ_follow_temp = true;
+	art_sel_ilock = true;
 	*buf = article_selector(*buf);
-	art_sel_ilock = FALSE;
+	art_sel_ilock = false;
 	switch (*buf) {
 	  case '+':
 	    newline();
@@ -1321,8 +1321,8 @@ run_the_selector:
 	    break;
 #ifdef SCAN_ART
 	  case ';':
-	    sa_do_selthreads = TRUE;
-	    sa_go_explicit = TRUE;
+	    sa_do_selthreads = true;
+	    sa_go_explicit = true;
 	    return AS_SA;
 #endif
 	  default:
@@ -1356,17 +1356,17 @@ run_the_selector:
 #endif
       case 'v':
 	if (art <= lastart) {
-	    reread = TRUE;
-	    do_hiding = FALSE;
+	    reread = true;
+	    do_hiding = false;
 	}
 	return AS_NORM;
       case Ctl('r'):
-	do_hiding = TRUE;
-	rotate = FALSE;
+	do_hiding = true;
+	rotate = false;
 	if (art <= lastart)
-	    reread = TRUE;
+	    reread = true;
 	else
-	    forcelast = TRUE;
+	    forcelast = true;
 	return AS_NORM;
       case 'x':
       case Ctl('x'):
@@ -1374,11 +1374,11 @@ run_the_selector:
 	 * filter-select mechanism.
 	 * Currently, both keys do ROT-13 translation.
 	 */
-	rotate = TRUE;
+	rotate = true;
 	if (art <= lastart)
-	    reread = TRUE;
+	    reread = true;
 	else
-	    forcelast = TRUE;
+	    forcelast = true;
 	return AS_NORM;
       case 'X':
 	rotate = !rotate;
@@ -1386,18 +1386,18 @@ run_the_selector:
       case 'l': case Ctl('l'):		/* refresh screen */
       refresh_screen:
 	if (art <= lastart) {
-	    reread = TRUE;
+	    reread = true;
 	    clear();
-	    do_fseek = TRUE;
+	    do_fseek = true;
 	    artline = topline;
 	    if (artline < 0)
 		artline = 0;
 	}
 	return AS_NORM;
       case Ctl('^'):
-	erase_line(0);		/* erase the prompt */
+	erase_line(false);		/* erase the prompt */
 #ifdef MAILCALL
-	setmail(TRUE);		/* force a mail check */
+	setmail(true);		/* force a mail check */
 #endif
 	return AS_ASK;
 #ifdef INNERSEARCH
@@ -1414,8 +1414,8 @@ run_the_selector:
 		seekartbuf(artsize);
 		seekartbuf(artpos);
 	    }
-	    reread = TRUE;
-	    do_fseek = TRUE;
+	    reread = true;
+	    do_fseek = true;
 	    topline = artline;
 	    innerlight = artline - 1;
 	    innersearch = artsize;
@@ -1429,9 +1429,9 @@ run_the_selector:
 	if (art <= lastart) {
 	    ART_LINE target;
 
-	    reread = TRUE;
+	    reread = true;
 	    clear();
-	    do_fseek = TRUE;
+	    do_fseek = true;
 	    if (*buf == 'B')
 		target = topline - 1;
 	    else {
@@ -1468,7 +1468,7 @@ run_the_selector:
       case 'F':
       case 'f': {		/* followup command */
 	followup();
-	forcegrow = TRUE;		/* recalculate lastart */
+	forcegrow = true;		/* recalculate lastart */
 	return AS_ASK;
       }
       case Ctl('f'): {			/* forward? */
@@ -1519,7 +1519,7 @@ run_the_selector:
 	    else
 		art++;
 	    if (art <= lastart)
-		reread = TRUE;
+		reread = true;
 #ifdef ARTSEARCH
 	    srchahead = 0;
 #endif
@@ -1586,7 +1586,7 @@ run_the_selector:
 /* see if there is any mail */
 
 #ifdef MAILCALL
-void setmail(bool_int force)
+void setmail(bool force)
 {
     if (force)
 	mailcount = 0;
@@ -1609,7 +1609,7 @@ void setdfltcmd(void)
 	dfltcmd = "npq";
     else {
 #if 0
-	if (multimedia_mime == TRUE) {
+	if (multimedia_mime == true) {
 	    multimedia_mime++;
 	    dfltcmd = "anpq";
 	} else
@@ -1650,7 +1650,7 @@ reask_catchup:
     printcmd();
 #endif
     if ((ch = *buf) == 'h' || ch == 'H') {
-	use_one_line = FALSE;
+	use_one_line = false;
 #ifdef VERBOSE
 	IF(verbose)
 	    fputs("\n\
@@ -1679,15 +1679,15 @@ u to mark all and unsubscribe.\n\n\
 	return 'n';
     }
     if (ch == '#') {
-	use_one_line = FALSE;
+	use_one_line = false;
 	in_char("\nEnter approx. number of articles to leave unread: ", 'C', "0");
 	if ((ch = *buf) == '0')
 	    ch = 'y';
     }
     if (isdigit(ch)) {
 	buf[1] = FINISHCMD;
-	if (!finish_command(FALSE)) {
-	    use_one_line = FALSE;
+	if (!finish_command(false)) {
+	    use_one_line = false;
 	    newline();
 	    goto reask_catchup;
 	}
@@ -1697,7 +1697,7 @@ u to mark all and unsubscribe.\n\n\
 	}
     }
     if (ch != 'y' && ch != 'u') {
-	use_one_line = FALSE;
+	use_one_line = false;
 	printf("\n%s\n", hforhelp) FLUSH;
 	termdown(3);
 	settle_down();
@@ -1710,7 +1710,7 @@ u to mark all and unsubscribe.\n\n\
 	    ngptr->toread = (ART_UNREAD)obj_count;
 	}
 	else {
-	    selected_count = selected_subj_cnt = selected_only = 0;
+	    selected_count = selected_subj_cnt = selected_only = false;
 	    ngptr->toread = 0;
 	    if (dmcount)
 		yankback();
@@ -1738,16 +1738,16 @@ static bool count_unCACHED_article(char *ptr, int arg)
     register ARTICLE* ap = (ARTICLE*)ptr;
     if ((ap->flags & (AF_UNREAD|AF_CACHED)) == AF_UNREAD)
 	obj_count++;
-    return 0;
+    return false;
 }
 
 static bool mark_all_READ(char *ptr, int leave_unread)
 {
     register ARTICLE* ap = (ARTICLE*)ptr;
     if (article_num(ap) > lastart - leave_unread)
-	return 1;
+	return true;
     ap->flags &= ~(sel_mask|AF_UNREAD);
-    return 0;
+    return false;
 }
 
 static bool mark_all_unREAD(char *ptr, int arg)
@@ -1757,7 +1757,7 @@ static bool mark_all_unREAD(char *ptr, int arg)
 	ap->flags |= AF_UNREAD;		/* mark as unread */
 	obj_count++;
     }
-    return 0;
+    return false;
 }
 
 bool output_subject(char *ptr, int flag)
@@ -1769,7 +1769,7 @@ bool output_subject(char *ptr, int flag)
     char* s;
 
     if (int_count)
-	return 1;
+	return true;
 
     if (!subjline) {
 	subjline = get_val("SUBJLINE",(char*)NULL);
@@ -1779,9 +1779,9 @@ bool output_subject(char *ptr, int flag)
 
     ap = (ARTICLE*)ptr;
     if (flag && !(ap->flags & flag))
-	return 0;
+	return false;
     i = article_num(ap);
-    if ((s = fetchsubj(i,FALSE)) != NULL) {
+    if ((s = fetchsubj(i,false)) != NULL) {
 	sprintf(tmpbuf,"%-5ld ", i);
 	len = strlen(tmpbuf);
 	if (subjline != nullstr) {
@@ -1793,9 +1793,9 @@ bool output_subject(char *ptr, int flag)
 	if (mode == 'k')
 	    page_line = 1;
 	if (print_lines(tmpbuf,NOMARKING) != 0)
-	    return 1;
+	    return true;
     }
-    return 0;
+    return false;
 }
 
 #ifdef DEBUG
@@ -1817,7 +1817,7 @@ char ask_memorize(char_int ch)
 {
     bool thread_cmd = (ch == 'T');
     bool use_one_line = (gmode == 's');
-    bool global_save = FALSE;
+    bool global_save = false;
     char* mode_string = (thread_cmd? "thread" : "subject");
     char* mode_phrase = (thread_cmd? "replies to this article" :
 				     "this subject and all replies");
@@ -1836,16 +1836,16 @@ reask_memorize:
     ch = *buf;
     if (!thread_cmd && ch == 'f') {
 	mode_string = *mode_string == 'a'? "subject" : "author";
-	erase_line(0);
+	erase_line(false);
 	goto reask_memorize;
     }
     if (!thread_cmd && ch == 'g') {
 	global_save = !global_save;
-	erase_line(0);
+	erase_line(false);
 	goto reask_memorize;
     }
     if (ch == 'h' || ch == 'H') {
-	use_one_line = FALSE;
+	use_one_line = false;
 #ifdef VERBOSE
 	IF(verbose) {
 	    printf("\n\
@@ -1909,7 +1909,7 @@ g toggles global memorization.\n");
     }
     if (ch == '+') {
 	if (!thread_cmd) {
-	    (void)art_search(buf, (sizeof buf), TRUE);
+	    (void)art_search(buf, (sizeof buf), true);
 	    art = art_hold;
 	    artp = artp_hold;
 	    ch = '.';
@@ -1932,7 +1932,7 @@ g toggles global memorization.\n");
     }
     else if (ch == '.') {
 	if (!thread_cmd) {
-	    (void)art_search(buf, (sizeof buf), TRUE);
+	    (void)art_search(buf, (sizeof buf), true);
 	    art = art_hold;
 	    artp = artp_hold;
 	} else {
@@ -1957,7 +1957,7 @@ g toggles global memorization.\n");
     else if (ch == 'J') {
 	if (!thread_cmd) {
 	    *buf = 'K';
-	    (void)art_search(buf, (sizeof buf), TRUE);
+	    (void)art_search(buf, (sizeof buf), true);
 	    art = art_hold;
 	    artp = artp_hold;
 	}
@@ -1987,7 +1987,7 @@ g toggles global memorization.\n");
     }
     else if (ch == ',') {
 	if (!thread_cmd) {
-	    (void)art_search(buf, (sizeof buf), TRUE);
+	    (void)art_search(buf, (sizeof buf), true);
 	    art = art_hold;
 	    artp = artp_hold;
 	}
@@ -2011,13 +2011,13 @@ g toggles global memorization.\n");
     else if (ch == 's') {
 	buf[1] = FINISHCMD;
 	finish_command(1);
-	(void)art_search(buf, (sizeof buf), TRUE);
+	(void)art_search(buf, (sizeof buf), true);
 	art = art_hold;
 	artp = artp_hold;
     }
 #endif
     else {
-	use_one_line = FALSE;
+	use_one_line = false;
 	printf("\n%s\n", hforhelp) FLUSH;
 	termdown(3);
 	settle_down();

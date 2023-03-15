@@ -15,7 +15,7 @@
 #include "INTERN.h"
 #include "util3.h"
 
-bool export_nntp_fds = FALSE;
+bool export_nntp_fds = false;
 
 #ifdef SUPPORT_NNTP
 char* nntp_password;
@@ -29,7 +29,7 @@ int doshell(char *sh, char *cmd)
 void finalize(int num)
 {
 #ifdef SUPPORT_NNTP
-    nntp_close(TRUE);
+    nntp_close(true);
 #endif
     exit(num);
 }

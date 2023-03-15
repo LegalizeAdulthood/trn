@@ -266,10 +266,10 @@ bool mime_PopSection(void)
 	free((char*)mime_section);
 	mime_section = mp;
 	mime_state = mp->type;
-	return TRUE;
+	return true;
     }
     mime_state = mime_article.type;
-    return FALSE;
+    return false;
 }
 
 /* Free up this mime structure's resources */
@@ -294,7 +294,7 @@ void mime_SetArticle(void)
 
     mime_InitSections();
     /*$$ Check mime version #? */
-    multimedia_mime = FALSE;
+    multimedia_mime = false;
     is_mime = (htype[MIMEVER_LINE].flags & HT_MAGIC)
 	    && htype[MIMEVER_LINE].minpos >= 0;
 
@@ -314,7 +314,7 @@ void mime_SetArticle(void)
 	mime_state = mime_section->type;
 	if (mime_state == NOT_MIME
 	 || (mime_state == TEXT_MIME && mime_section->encoding == MENCODE_NONE))
-	    is_mime = FALSE;
+	    is_mime = false;
 	else if (!mime_section->type_name)
 	    mime_section->type_name = savestr(text_plain);
     }
@@ -679,14 +679,14 @@ char *mime_SkipWhitespace(char *s)
     return s;
 }
 
-void mime_DecodeArticle(bool_int view)
+void mime_DecodeArticle(bool view)
 {
     MIMECAP_ENTRY* mcp = NULL;
 
     seekart(savefrom);
     *art_line = '\0';
 
-    while (1) {
+    while (true) {
 	if (mime_state != MESSAGE_MIME || !mime_section->total) {
 	    if (!readart(art_line,sizeof art_line))
 		break;
@@ -781,7 +781,7 @@ static Uchar index_hex[256] = {
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
 };
 
-int qp_decodestring(char *t, char *f, bool_int in_header)
+int qp_decodestring(char *t, char *f, bool in_header)
 {
     char* save_t = t;
     while (*f) {
@@ -833,7 +833,7 @@ int qp_decode(FILE *ifp, int state)
 	ofp = fopen(filename, FOPEN_WB);
 	if (!ofp)
 	    return DECODE_ERROR;
-	erase_line(0);
+	erase_line(false);
 	printf("Decoding %s", filename);
 	if (nowait_fork)
 	    fflush(stdout);
@@ -1293,11 +1293,11 @@ static char letters[2] = {'a', 'A'};
 static char roman_letters[] = { 'M', 'D', 'C', 'L', 'X', 'V', 'I'};
 static int  roman_values[]  = {1000, 500, 100,  50, 10,   5,   1 };
 
-static char *tag_action(char *t, char *word, bool_int opening_tag)
+static char *tag_action(char *t, char *word, bool opening_tag)
 {
     char* cp;
     int i, j, tnum, len, itype, ch, cnt, num;
-    bool match = 0;
+    bool match = false;
     HBLK* blks = mime_section->html_blks;
 
     for (cp = word; *cp && *cp != ' '; cp++) ;
@@ -1310,7 +1310,7 @@ static char *tag_action(char *t, char *word, bool_int opening_tag)
     for ( ; tnum < LAST_TAG && *tagattr[tnum].name == ch; tnum++) {
 	if (len == tagattr[tnum].length
 	 && strncaseEQ(word, tagattr[tnum].name, len)) {
-	    match = 1;
+	    match = true;
 	    break;
 	}
     }
@@ -1504,7 +1504,7 @@ static char *tag_action(char *t, char *word, bool_int opening_tag)
 		if (blks[j].tnum == tnum) {
 		    for (i = mime_section->html_blkcnt; --i > j; ) {
 			t = tag_action(t, tagattr[blks[i].tnum].name,
-				       CLOSING_TAG);
+                                       CLOSING_TAG);
 		    }
 		    mime_section->html_blkcnt = j;
 		    break;

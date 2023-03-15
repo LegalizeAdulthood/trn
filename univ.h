@@ -111,18 +111,18 @@ EXT int univ_ever_init;
 /* How deep are we in the tree? */
 EXT int univ_level;
 
-/* if TRUE, we are in the "virtual group" second pass */
-EXT bool univ_ng_virtflag INIT(FALSE);
+/* if true, we are in the "virtual group" second pass */
+EXT bool univ_ng_virtflag INIT(false);
 
-/* if TRUE, we are reading an article from a "virtual group" */
-EXT bool univ_read_virtflag INIT(FALSE);
+/* if true, we are reading an article from a "virtual group" */
+EXT bool univ_read_virtflag INIT(false);
 
 /* "follow"-related stuff (virtual groups) */
-EXT bool univ_default_cmd INIT(FALSE);
-EXT bool univ_follow INIT(TRUE);
-EXT bool univ_follow_temp INIT(FALSE);
+EXT bool univ_default_cmd INIT(false);
+EXT bool univ_follow INIT(true);
+EXT bool univ_follow_temp INIT(false);
 
-/* if TRUE, the user has loaded their own top univ. config file */
+/* if true, the user has loaded their own top univ. config file */
 EXT bool univ_usrtop;
 
 /* items which must be saved in context */

@@ -23,7 +23,7 @@ void s_init_context(int cnum, int type)
     /* s_num_contexts not incremented until last moment */
     if (cnum < 0 || cnum > s_num_contexts) {
 	printf("s_init_context: illegal context number %d!\n",cnum) FLUSH;
-	assert(FALSE);
+	assert(false);
     }
     p = s_contexts + cnum;
     p->type = type;
@@ -35,10 +35,10 @@ void s_init_context(int cnum, int type)
     p->page_size = MAX_PAGE_SIZE;
     p->top_ent = -1;
     p->bot_ent = -1;
-    p->refill = TRUE;
-    p->ref_all = TRUE;
-    p->ref_top = TRUE;
-    p->ref_bot = TRUE;
+    p->refill = true;
+    p->ref_all = true;
+    p->ref_top = true;
+    p->ref_bot = true;
     p->ref_status = -1;
     p->ref_desc = -1;
     /* next ones should be reset later */
@@ -134,7 +134,7 @@ void s_change_context(int newcontext)
 
     if (newcontext < 0 || newcontext >= s_num_contexts) {
 	printf("s_change_context: bad context number %d!\n",newcontext) FLUSH;
-	assert(FALSE);
+	assert(false);
     }
     s_cur_context = newcontext;
     p = s_contexts + newcontext;
@@ -177,7 +177,7 @@ void s_delete_context(int cnum)
 {
     if (cnum < 0 || cnum >= s_num_contexts) {
 	printf("s_delete_context: illegal context number %d!\n",cnum) FLUSH;
-	assert(FALSE);
+	assert(false);
     }
     s_order_clean();
     /* mark the context as empty */

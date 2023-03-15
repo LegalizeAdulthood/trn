@@ -4,7 +4,7 @@
 
 bool ov_init _((void));
 int ov_num _((char*,char*));
-bool ov_data _((ART_NUM,ART_NUM,bool_int));
+bool ov_data(ART_NUM first, ART_NUM last, bool cheating);
 void ov_close _((void));
 char* ov_fieldname _((int));
 char* ov_field _((ARTICLE*,int));

@@ -292,17 +292,17 @@ bool open_datasrc(DATASRC *dp)
     bool success;
 
     if (dp->flags & DF_UNAVAILABLE)
-	return FALSE;
+	return false;
     set_datasrc(dp);
     if (dp->flags & DF_OPEN)
-	return TRUE;
+	return true;
 #ifdef SUPPORT_NNTP
     if (dp->flags & DF_REMOTE) {
-	if (nntp_connect(dp->newsid,1) <= 0) {
+	if (nntp_connect(dp->newsid,true) <= 0) {
 	    dp->flags |= DF_UNAVAILABLE;
-	    return FALSE;
+	    return false;
 	}
-	nntp_allow_timeout = FALSE;
+	nntp_allow_timeout = false;
 	dp->nntplink = nntplink;
 	if (dp->act_sf.refetch_secs) {
 	    switch (nntp_list("active", "control", 7)) {
@@ -336,7 +336,7 @@ bool open_datasrc(DATASRC *dp)
 	    case -2:
 		printf("Failed to open news server %s:\n%s\n", dp->newsid, g_ser_line);
 		termdown(2);
-		success = FALSE;
+		success = false;
 		break;
 	    default:
 		success = actfile_hash(dp);
@@ -359,7 +359,7 @@ bool open_datasrc(DATASRC *dp)
 	dp->flags |= DF_UNAVAILABLE;
 #ifdef SUPPORT_NNTP
     if (dp->flags & DF_REMOTE)
-	nntp_allow_timeout = TRUE;
+	nntp_allow_timeout = true;
 #endif
     return success;
 }
@@ -390,7 +390,7 @@ void check_datasrcs(void)
 		    DATASRC* save_datasrc = datasrc;
 		    /*printf("\n*** Closing %s ***\n", dp->name); $$*/
 		    set_datasrc(dp);
-		    nntp_close(TRUE);
+		    nntp_close(true);
 		    dp->nntplink = nntplink;
 		    set_datasrc(save_datasrc);
 		}
@@ -424,7 +424,7 @@ void close_datasrc(DATASRC *dp)
     if (dp->flags & DF_REMOTE) {
 	DATASRC* save_datasrc = datasrc;
 	set_datasrc(dp);
-	nntp_close(TRUE);
+	nntp_close(true);
 	dp->nntplink = nntplink;
 	set_datasrc(save_datasrc);
     }
@@ -486,7 +486,7 @@ bool find_actgrp(DATASRC *dp, char *outbuf, char *nam, int len, ART_NUM high)
 	switch (nntp_list("active", nam, len)) {
 	case 0:
 	    set_datasrc(save_datasrc);
-	    return 0;
+	    return false;
 	case 1:
 	    sprintf(outbuf, "%s\n", g_ser_line);
 	    nntp_finish_list();
@@ -499,7 +499,7 @@ bool find_actgrp(DATASRC *dp, char *outbuf, char *nam, int len, ART_NUM high)
 	if (!lbp_len) {
 	    if (fp)
 		(void) srcfile_append(&dp->act_sf, outbuf, len);
-	    return 1;
+	    return true;
 	}
 # ifndef ANCIENT_NEWS
 	/* Safely update the low-water mark */
@@ -550,15 +550,15 @@ bool find_actgrp(DATASRC *dp, char *outbuf, char *nam, int len, ART_NUM high)
 	 && strnEQ(outbuf, nam, len) && outbuf[len] == ' ') {
 	    /* Remember the latest info in our cache. */
 	    (void) bcopy(outbuf, lbp, lbp_len);
-	    return 1;
+	    return true;
 	}
       use_cache:
 	/* Return our cached version */
 	(void) bcopy(lbp, outbuf, lbp_len);
 	outbuf[lbp_len] = '\0';
-	return 1;
+	return true;
     }
-    return 0;	/* no such group */
+    return false;	/* no such group */
 }
 
 char *find_grpdesc(DATASRC *dp, char *groupname)
@@ -682,7 +682,7 @@ int srcfile_open(SRCFILE *sfp, char *filename, char *fetchcmd, char *server)
     char* lbp;
 #ifdef SUPPORT_NNTP
     time_t now = time((time_t*)NULL);
-    bool use_buffered_nntp_gets = 0;
+    bool use_buffered_nntp_gets = false;
 
     if (!filename)
 	fp = NULL;
@@ -700,7 +700,7 @@ int srcfile_open(SRCFILE *sfp, char *filename, char *fetchcmd, char *server)
 		fflush(stdout);
 		/* tell server we want the file */
 		if (!(nntplink.flags & NNTP_NEW_CMD_OK))
-		    use_buffered_nntp_gets = 1;
+		    use_buffered_nntp_gets = true;
 		else if (nntp_list(fetchcmd, nullstr, 0) < 0) {
 		    printf("\nCan't get %s file from server: \n%s\n",
 			   fetchcmd, g_ser_line) FLUSH;
@@ -762,7 +762,7 @@ int srcfile_open(SRCFILE *sfp, char *filename, char *fetchcmd, char *server)
 #ifdef SUPPORT_NNTP
 	if (server) {
 	    if (use_buffered_nntp_gets)
-		use_buffered_nntp_gets = 0;
+		use_buffered_nntp_gets = false;
 	    else if (nntp_gets(buf, sizeof buf - 1) < 0) {
 		printf("\nError getting %s file.\n", fetchcmd) FLUSH;
 		termdown(2);

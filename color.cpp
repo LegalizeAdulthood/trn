@@ -155,7 +155,7 @@ void color_rc_attribute(char *object, char *value)
     }
 
     /* We have both colors and attributes, so turn colors on. */
-    use_colors = TRUE;
+    use_colors = true;
 
     /* Parse the foreground color. */
     if (*s == '-')
@@ -203,7 +203,7 @@ void color_rc_attribute(char *object, char *value)
 }
 
 /* Turn on color attribute for an object. */
-void color_object(int object, bool_int push)
+void color_object(int object, bool push)
 {
     COLOR_OBJ merged;
 
@@ -255,7 +255,7 @@ void color_string(int object, char *str)
     if (!use_colors && *tc_UC && objects[object].attr == UNDERLINE)
 	underprint(str);	/* hack for stupid terminals */
     else {
-	color_object(object, 1);
+	color_object(object, true);
 	fputs(str, stdout);
 	color_pop();
     }

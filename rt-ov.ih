@@ -23,5 +23,5 @@ static int hdrnum[] = {
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
-static void ov_parse _((char*,ART_NUM,bool_int));
+static void ov_parse(char *line, ART_NUM artnum, bool remote);
 static char* ov_name _((char*));

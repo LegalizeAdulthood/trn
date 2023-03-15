@@ -50,11 +50,11 @@ static int force_sel_pos;
 #define START_SELECTOR(new_mode)\
     char save_mode = mode;\
     char save_gmode = gmode;\
-    bos_on_stop = TRUE;\
+    bos_on_stop = true;\
     set_mode('s',new_mode)
 
 #define END_SELECTOR()\
-    bos_on_stop = FALSE;\
+    bos_on_stop = false;\
     set_mode(save_gmode,save_mode)
 
 #define PUSH_SELECTOR()\
@@ -69,7 +69,7 @@ static int force_sel_pos;
     sel_rereading = save_sel_rereading;\
     selected_count = save_selected_count;\
     extra_commands = save_extra_commands;\
-    bos_on_stop = TRUE;\
+    bos_on_stop = true;\
     if (sel_mode != save_sel_mode) {\
 	sel_mode = save_sel_mode;\
 	set_selector(0, 0);\
@@ -146,7 +146,7 @@ char article_selector(char_int cmd)
 	sel_mask = AF_SEL;
     }
     save_selected_only = selected_only;
-    selected_only = TRUE;
+    selected_only = true;
     count_subjects(cmd? CS_UNSEL_STORE : CS_NORM);
 
     init_pages(FILL_LAST_PAGE);
@@ -189,7 +189,7 @@ sel_exit:
     else if (sel_ret == '`')
 	sel_ret = 'Q';
     if (sel_rereading) {
-	sel_rereading = FALSE;
+	sel_rereading = false;
 	sel_mask = AF_SEL;
     }
     if (sel_mode != SM_ARTICLE || sel_sort == SS_GROUPS
@@ -298,8 +298,8 @@ char multirc_selector(void)
 {
     START_SELECTOR('c');
 
-    sel_rereading = FALSE;
-    sel_exclusive = FALSE;
+    sel_rereading = false;
+    sel_exclusive = false;
     selected_count = 0;
 
     set_selector(SM_MULTIRC, 0);
@@ -351,8 +351,8 @@ char newsgroup_selector(void)
 {
     START_SELECTOR('w');
 
-    sel_rereading = FALSE;
-    sel_exclusive = FALSE;
+    sel_rereading = false;
+    sel_exclusive = false;
     selected_count = 0;
 
     set_selector(SM_NEWSGROUP, 0);
@@ -424,8 +424,8 @@ char addgroup_selector(int flags)
 {
     START_SELECTOR('j');
 
-    sel_rereading = FALSE;
-    sel_exclusive = FALSE;
+    sel_rereading = false;
+    sel_exclusive = false;
     selected_count = 0;
 
     set_selector(SM_ADDGROUP, 0);
@@ -489,8 +489,8 @@ char option_selector(void)
     char** vals = INI_VALUES(options_ini);
     START_SELECTOR('l');
 
-    sel_rereading = FALSE;
-    sel_exclusive = FALSE;
+    sel_rereading = false;
+    sel_exclusive = false;
     selected_count = 0;
     parse_ini_section(nullstr, options_ini);
 
@@ -544,7 +544,7 @@ static int univ_read(UNIV_ITEM *ui)
     int exit_code = UR_NORM;
     char ch;
 
-    univ_follow_temp = FALSE;
+    univ_follow_temp = false;
     if (!ui) {
 	printf("NULL UI passed to reader!\n") FLUSH;
 	sleep(5);
@@ -597,9 +597,9 @@ static int univ_read(UNIV_ITEM *ui)
 	ThreadedGroup = (use_threads && !(np->flags & NF_UNTHREADED));
 	printf("Virtual: Entering %s:\n", ngname) FLUSH;
 	ng_go_artnum = ui->data.virt.num;
-	univ_read_virtflag = TRUE;
+	univ_read_virtflag = true;
 	ret = do_newsgroup(nullstr);
-	univ_read_virtflag = FALSE;
+	univ_read_virtflag = false;
 	switch (ret) {
 	  case NG_NORM:		/* handle more cases later */
 	  case NG_SELNEXT:
@@ -718,8 +718,8 @@ char universal_selector(void)
 {
     START_SELECTOR('v');		/* kind of like 'v'irtual... */
 
-    sel_rereading = FALSE;
-    sel_exclusive = FALSE;
+    sel_rereading = false;
+    sel_exclusive = false;
     selected_count = 0;
 
     set_selector(SM_UNIVERSAL, 0);
@@ -793,7 +793,7 @@ static void sel_display(void)
     /* Present a page of items to the user */
     display_page();
     if (erase_screen && erase_each_line)
-	erase_line(1);
+	erase_line(true);
 
     if (sel_item_index >= sel_page_item_cnt)
 	sel_item_index = 0;
@@ -843,7 +843,7 @@ static char sel_input(void)
     got_dash = got_goto = 0;
     force_sel_pos = -1;
     if (removed_prompt & 1) {
-	draw_mousebar(tc_COLS,0);
+	draw_mousebar(tc_COLS,false);
 	removed_prompt &= ~1;
     }
     if (can_home)
@@ -869,7 +869,7 @@ reinp_selector:
     if (disp_status_line == 2) {
 	if (can_home) {
 	    goto_xy(0,sel_last_line+1);
-	    erase_line(0);
+	    erase_line(false);
 	    if (g_term_line == tc_LINES-1)
 		removed_prompt |= 1;
 	}
@@ -903,7 +903,7 @@ reinp_selector:
 	if (disp_status_line == 2) {	/* status was printed */
 	    if (can_home) {
 		goto_xy(0,sel_last_line+1);
-		erase_line(0);
+		erase_line(false);
 		if (g_term_line == tc_LINES-1)
 		    removed_prompt |= 1;
 	    }
@@ -952,7 +952,7 @@ reinp_selector:
 	if (disp_status_line == 2) {	/* status was printed */
 	    if (can_home) {
 		goto_xy(0,sel_last_line+1);
-		erase_line(0);
+		erase_line(false);
 		if (g_term_line == tc_LINES-1)
 		    removed_prompt |= 1;
 	    }
@@ -1092,7 +1092,7 @@ reinp_selector:
 		fputs(msg,stdout);
 		g_term_col = strlen(msg);
 		if (removed_prompt & 1) {
-		    draw_mousebar(tc_COLS,0);
+		    draw_mousebar(tc_COLS,false);
 		    removed_prompt &= ~1;
 		}
 		disp_status_line = 2;
@@ -1157,7 +1157,7 @@ reinp_selector:
 	switch (ch) {
 	  case '+':
 	    if (select_item(sel_items[sel_item_index].u))
-		output_sel(sel_item_index, 1, TRUE);
+		output_sel(sel_item_index, 1, true);
 	    if (g_term_line >= sel_last_line) {
 		sel_display();
 		goto reask_selector;
@@ -1168,11 +1168,11 @@ reinp_selector:
 	    if (ch == 'M')
 		delay_return_item(sel_items[sel_item_index].u);
 	    if (ch == '-')
-		sel_rereading = FALSE;
+		sel_rereading = false;
 	    else
-		sel_rereading = TRUE;
+		sel_rereading = true;
 	    if (deselect_item(sel_items[sel_item_index].u))
-		output_sel(sel_item_index, ch == '-' ? 0 : 2, TRUE);
+		output_sel(sel_item_index, ch == '-' ? 0 : 2, true);
 	    sel_rereading = sel_reread_save;
 	    if (g_term_line >= sel_last_line) {
 		sel_display();
@@ -1194,11 +1194,11 @@ reinp_selector:
 
 static void sel_prompt(void)
 {
-    draw_mousebar(tc_COLS,0);
+    draw_mousebar(tc_COLS,false);
     if (can_home)
 	goto_xy(0,sel_last_line);
 #ifdef MAILCALL
-    setmail(FALSE);
+    setmail(false);
 #endif
     if (sel_at_end)
 	sprintf(cmd_buf, "%s [%c%c] --",
@@ -1237,7 +1237,7 @@ static bool select_item(SEL_UNION u)
 	break;
       case SM_OPTIONS:
 	if (!select_option(u.op) || !INI_VALUE(options_ini,u.op))
-	    return FALSE;
+	    return false;
 	break;
       case SM_THREAD:
 	select_thread(u.sp->thread, 0);
@@ -1254,7 +1254,7 @@ static bool select_item(SEL_UNION u)
 	u.un->flags = (u.un->flags & ~UF_DEL) | sel_mask;
 	break;
     }
-    return TRUE;
+    return true;
 }
 
 static bool delay_return_item(SEL_UNION u)
@@ -1265,7 +1265,7 @@ static bool delay_return_item(SEL_UNION u)
       case SM_NEWSGROUP:
       case SM_OPTIONS:
       case SM_UNIVERSAL:
-	return FALSE;
+	return false;
       case SM_ARTICLE:
 	delay_unmark(u.ap);
 	break;
@@ -1283,7 +1283,7 @@ static bool delay_return_item(SEL_UNION u)
 	  break;
       }
     }
-    return TRUE;
+    return true;
 }
 
 static bool deselect_item(SEL_UNION u)
@@ -1317,7 +1317,7 @@ static bool deselect_item(SEL_UNION u)
 	break;
       case SM_OPTIONS:
 	if (!select_option(u.op) || INI_VALUE(options_ini,u.op))
-	    return FALSE;
+	    return false;
 	break;
       case SM_THREAD:
 	deselect_thread(u.sp->thread);
@@ -1337,12 +1337,12 @@ static bool deselect_item(SEL_UNION u)
 	deselect_article(u.ap, 0);
 	break;
     }
-    return TRUE;
+    return true;
 }
 
 static bool select_option(int i)
 {
-    bool changed = FALSE;
+    bool changed = false;
     char** vals = INI_VALUES(options_ini);
     char* val;
     char* oldval;
@@ -1351,12 +1351,12 @@ static bool select_option(int i)
 	option_flags[i] ^= OF_SEL;
 	init_pages(FILL_LAST_PAGE);
 	g_term_line = sel_last_line;
-	return FALSE;
+	return false;
     }
 
     goto_xy(0,sel_last_line);
     erase_line(mousebar_cnt > 0);	/* erase the prompt */
-    color_object(COLOR_CMD, 1);
+    color_object(COLOR_CMD, true);
     printf("Change `%s' (%s)",options_ini[i].item, options_ini[i].help_str);
     color_pop();	/* of COLOR_CMD */
     newline();
@@ -1368,7 +1368,7 @@ static bool select_option(int i)
 	char* to = buf;
 	char* from = buf;
 	parse_string(&to, &from);
-	changed = TRUE;
+	changed = true;
 	if (vals[i]) {
 	    free(vals[i]);
 	    selected_count--;
@@ -1383,18 +1383,18 @@ static bool select_option(int i)
     free(oldval);
     if (clean_screen) {
 	up_line();
-	erase_line(1);
+	erase_line(true);
 	sel_prompt();
 	goto_xy(0,sel_items[sel_item_index].line);
 	if (changed) {
-	    erase_line(0);
+	    erase_line(false);
 	    display_option(i,sel_item_index);
 	    up_line();
 	}
     }
     else
-	return FALSE;
-    return TRUE;
+	return false;
+    return true;
 }
 
 static void sel_cleanup(void)
@@ -1487,7 +1487,7 @@ static bool mark_DEL_as_READ(char *ptr, int arg)
 	ap->flags &= ~AF_DEL;
 	set_read(ap);
     }
-    return 0;
+    return false;
 }
 
 static int sel_command(char_int ch)
@@ -1495,7 +1495,7 @@ static int sel_command(char_int ch)
     int ret;
     if (can_home)
 	goto_xy(0,sel_last_line);
-    clean_screen = TRUE;
+    clean_screen = true;
     term_scrolled = 0;
     page_line = 1;
     if (sel_mode == SM_NEWSGROUP) {
@@ -1507,7 +1507,7 @@ static int sel_command(char_int ch)
   do_command:
     *buf = ch;
     buf[1] = FINISHCMD;
-    output_chase_phrase = TRUE;
+    output_chase_phrase = true;
     switch (ch) {
       case '>':
 	sel_item_index = 0;
@@ -1532,10 +1532,10 @@ static int sel_command(char_int ch)
       case Ctl('l'):
 	return DS_DISPLAY;
       case Ctl('^'):
-	erase_line(0);		/* erase the prompt */
+	erase_line(false);		/* erase the prompt */
 	removed_prompt |= 2;
 #ifdef MAILCALL
-	setmail(TRUE);		/* force a mail check */
+	setmail(true);		/* force a mail check */
 #endif
 	break;
       case '\r':  case '\n':
@@ -1559,22 +1559,22 @@ static int sel_command(char_int ch)
       case '&':  case '!':
 	erase_line(mousebar_cnt > 0);	/* erase the prompt */
 	removed_prompt = 3;
-	if (!finish_command(TRUE)) {	/* get rest of command */
+	if (!finish_command(true)) {	/* get rest of command */
 	    if (clean_screen)
 		break;
 	}
 	else {
 	    PUSH_SELECTOR();
-	    one_command = TRUE;
-	    perform(buf, FALSE);
-	    one_command = FALSE;
+	    one_command = true;
+	    perform(buf, false);
+	    one_command = false;
 	    if (g_term_line != sel_last_line+1 || term_scrolled)
-		clean_screen = FALSE;
+		clean_screen = false;
 	    POP_SELECTOR();
 	    if (!save_sel_mode)
 		return DS_RESTART;
 	    if (clean_screen) {
-		erase_line(0);
+		erase_line(false);
 		return DS_ASK;
 	    }
 	}
@@ -1603,7 +1603,7 @@ static int sel_command(char_int ch)
 	    goto do_command;
 	}
 	if (clean_screen) {
-	    erase_line(0);
+	    erase_line(false);
 	    break;
 	}
 	if ((ch = another_command(1)) != '\0')
@@ -1641,14 +1641,14 @@ static bool sel_perform_change(long cnt, char *obj_type)
     if (page_line == 1) {
 	disp_status_line = 1;
 	if (g_term_line != sel_last_line+1 || term_scrolled)
-	    clean_screen = FALSE;
+	    clean_screen = false;
     }
     else
-	clean_screen = FALSE;
+	clean_screen = false;
 
     if (error_occurred) {
 	print_lines(msg,NOMARKING);
-	clean_screen = error_occurred = FALSE;
+	clean_screen = error_occurred = false;
     }
 
     ret = perform_status_end(cnt, obj_type);
@@ -1657,7 +1657,7 @@ static bool sel_perform_change(long cnt, char *obj_type)
     if (clean_screen) {
 	if (ret != 2) {
 	    up_line();
-	    return TRUE;
+	    return true;
 	}
     }
     else if (disp_status_line == 1) {
@@ -1667,7 +1667,7 @@ static bool sel_perform_change(long cnt, char *obj_type)
 
     init_pages(PRESERVE_PAGE);
 
-    return FALSE;
+    return false;
 }
 
 #ifdef SCAN_ART
@@ -1786,11 +1786,11 @@ a selects individual articles.\n\
 q does nothing.\n\n\
 ",stdout) FLUSH;
 #endif
-	    clean_screen = FALSE;
+	    clean_screen = false;
 	    goto reask_output;
 	} else if (*buf == 'q') {
 	    if (can_home)
-		erase_line(0);
+		erase_line(false);
 	    return DS_ASK;
 	}
 	if (isupper(*buf))
@@ -1862,11 +1862,11 @@ q does nothing.\n\n\
 ",stdout) FLUSH;
 	    }
 #endif
-	    clean_screen = FALSE;
+	    clean_screen = false;
 	    goto reask_sort;
 	} else if (*buf == 'q') {
 	    if (can_home)
-		erase_line(0);
+		erase_line(false);
 	    return DS_ASK;
 	}
 	set_sel_sort(sel_mode,*buf);
@@ -1998,7 +1998,7 @@ q does nothing.\n\n\
 	    break;
 	}
 	if (can_home)
-	    erase_line(0);
+	    erase_line(false);
 	break;
 #ifdef SCAN_ART
       case ';':
@@ -2025,7 +2025,7 @@ q does nothing.\n\n\
       case '/':
 	erase_line(mousebar_cnt > 0);	/* erase the prompt */
 	removed_prompt = 3;
-	if (!finish_command(TRUE)) {	/* get rest of command */
+	if (!finish_command(true)) {	/* get rest of command */
 	    if (clean_screen)
 		break;
 	}
@@ -2049,7 +2049,7 @@ q does nothing.\n\n\
 		** depending upon whether they specified the 'r' option.
 		*/
 		art = lastart+1;
-		switch (art_search(buf, sizeof buf, FALSE)) {
+		switch (art_search(buf, sizeof buf, false)) {
 		  case SRCH_ERROR:
 		  case SRCH_ABORT:
 		    break;
@@ -2094,7 +2094,7 @@ q does nothing.\n\n\
 	if (ch != 'N')
 	    return DS_DISPLAY;
 	if (can_home)
-	    erase_line(0);
+	    erase_line(false);
 	break;
       case 'h':
       case '?':
@@ -2171,9 +2171,9 @@ static int newsgroup_commands(char_int ch)
 		newsgroup_toread++;
 	    np->abs1st = 0;
 	}
-	erase_line(0);
+	erase_line(false);
 #ifdef SUPPORT_NNTP
-	check_active_refetch(TRUE);
+	check_active_refetch(true);
 #endif
 	return DS_RESTART;
       }
@@ -2223,11 +2223,11 @@ q does nothing.\n\n\
 ",stdout) FLUSH;
 	    }
 #endif
-	    clean_screen = FALSE;
+	    clean_screen = false;
 	    goto reask_sort;
 	  default:
 	    if (can_home)
-		erase_line(0);
+		erase_line(false);
 	    return DS_ASK;
 	}
 	set_sel_sort(sel_mode,*buf);
@@ -2260,7 +2260,7 @@ q does nothing.\n\n\
       case '/':
 	erase_line(mousebar_cnt > 0);	/* erase the prompt */
 	removed_prompt = 3;
-	if (!finish_command(TRUE)) {	/* get rest of command */
+	if (!finish_command(true)) {	/* get rest of command */
 	    if (clean_screen)
 		break;
 	}
@@ -2270,7 +2270,7 @@ q does nothing.\n\n\
 	    } else {
 #ifdef NGSEARCH
 		ngptr = NULL;
-		switch (ng_search(buf,FALSE)) {
+		switch (ng_search(buf,false)) {
 		  case NGS_ERROR:
 		  case NGS_ABORT:
 		    break;
@@ -2316,7 +2316,7 @@ q does nothing.\n\n\
 	if (ch != 'N')
 	    return DS_DISPLAY;
 	if (can_home)
-	    erase_line(0);
+	    erase_line(false);
 	break;
       case 'h':
       case '?':
@@ -2373,7 +2373,7 @@ q does nothing.\n\n\
 	    return DS_ERROR;
 	  case ING_ERASE:
 	    if (clean_screen) {
-		erase_line(0);
+		erase_line(false);
 		return DS_ASK;
 	    }
 	    break;
@@ -2383,7 +2383,7 @@ q does nothing.\n\n\
 	    if (g_term_line == sel_last_line)
 		newline();
 	    if (g_term_line != sel_last_line+1 || term_scrolled)
-		clean_screen = FALSE;
+		clean_screen = false;
 	    break;
 	}
 	sel_item_index = 0;
@@ -2397,7 +2397,7 @@ q does nothing.\n\n\
 	if ((calc_page(u) || ret == ING_DISPLAY) && clean_screen)
 	    return DS_DISPLAY;
 	if (ret == ING_MESSAGE) {
-	    clean_screen = 0;
+	    clean_screen = false;
 	    return DS_STATUS;
 	}
 	if (was_at_top)
@@ -2462,11 +2462,11 @@ q does nothing.\n\n\
 ",stdout) FLUSH;
 	    }
 #endif
-	    clean_screen = FALSE;
+	    clean_screen = false;
 	    goto reask_sort;
 	  default:
 	    if (can_home)
-		erase_line(0);
+		erase_line(false);
 	    return DS_ASK;
 	}
 	set_sel_sort(sel_mode,*buf);
@@ -2536,7 +2536,7 @@ q does nothing.\n\n\
       case '/':
 	erase_line(mousebar_cnt > 0);	/* erase the prompt */
 	removed_prompt = 3;
-	if (!finish_command(TRUE)) {	/* get rest of command */
+	if (!finish_command(true)) {	/* get rest of command */
 	    if (clean_screen)
 		break;
 	}
@@ -2545,7 +2545,7 @@ q does nothing.\n\n\
 		addgrp_sel_perform();
 	    } else {
 #ifdef NGSEARCH
-		switch (ng_search(buf,FALSE)) {
+		switch (ng_search(buf,false)) {
 		  case NGS_ERROR:
 		  case NGS_ABORT:
 		    break;
@@ -2644,11 +2644,11 @@ static int option_commands(char_int ch)
 	int i, j;
 	erase_line(mousebar_cnt > 0);	/* erase the prompt */
 	removed_prompt = 3;
-	if (!finish_command(TRUE))	/* get rest of command */
+	if (!finish_command(true))	/* get rest of command */
 	    break;
 	s = cpytill(buf,buf+1,'/');
 	for (pattern = buf; *pattern == ' '; pattern++) ;
-	if ((s = compile(&optcompex,pattern,TRUE,TRUE)) != NULL) {
+	if ((s = compile(&optcompex,pattern,true,true)) != NULL) {
 	    strcpy(msg,s);
 	    return DS_STATUS;
 	}
@@ -2765,12 +2765,12 @@ q does nothing.\n\n\
 ",stdout) FLUSH;
 	    }
 #endif
-	    clean_screen = FALSE;
+	    clean_screen = false;
 	    goto reask_sort;
 	} else if (*buf == 'q' ||
 		   (tolower(*buf) != 'n' && tolower(*buf) != 'p')) {
 	    if (can_home)
-		erase_line(0);
+		erase_line(false);
 	    return DS_ASK;
 	}
 	set_sel_sort(sel_mode,*buf);
@@ -2849,7 +2849,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 	    if (y > 0 && y < sel_last_line) {
 		if (btn & 4) {
 		    pushchar(btn_clk == 0? '\n' : 'Z');
-		    mouse_is_down = FALSE;
+		    mouse_is_down = false;
 		}
 		else {
 		    force_sel_pos = find_line(y);

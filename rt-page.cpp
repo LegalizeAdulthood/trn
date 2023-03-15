@@ -45,8 +45,8 @@ bool set_sel_mode(char_int ch)
       case 't':
 	if (in_ng && !ThreadedGroup) {
 	    bool always_save = thread_always;
-	    ThreadedGroup = TRUE;
-	    thread_always = TRUE;
+	    ThreadedGroup = true;
+	    thread_always = true;
 	    if (sel_rereading)
 		firstart = absfirst;
 	    printf("\nThreading the group. "), fflush(stdout);
@@ -54,7 +54,7 @@ bool set_sel_mode(char_int ch)
 	    thread_open();
 	    thread_always = always_save;
 	    if (last_cached < lastart)
-		ThreadedGroup = FALSE;
+		ThreadedGroup = false;
 	}
 	/* FALL THROUGH */
       case 'T':
@@ -62,9 +62,9 @@ bool set_sel_mode(char_int ch)
 	break;
       default:
 	set_selector(sel_defaultmode, 0);
-	return FALSE;
+	return false;
     }
-    return TRUE;
+    return true;
 }
 
 char *get_sel_order(int smode)
@@ -80,13 +80,13 @@ char *get_sel_order(int smode)
 
 bool set_sel_order(int smode, char *str)
 {
-    bool reverse = 0;
+    bool reverse = false;
     char ch;
 
     if (*str == 'r' || *str == 'R') {
 	while (*str && *str != ' ') str++;
 	while (*str == ' ') str++;
-	reverse = 1;
+	reverse = true;
     }
 
     ch = *str;
@@ -129,7 +129,7 @@ bool set_sel_sort(int smode, char_int ch)
 	ssort = SS_SCORE;
 	break;
       default:
-	return FALSE;
+	return false;
     }
 
     sel_mode = smode;
@@ -142,7 +142,7 @@ bool set_sel_sort(int smode, char_int ch)
 	sel_mode = save_sel_mode;
 	set_selector(0, 0);
     }
-    return TRUE;
+    return true;
 }
 
 void set_selector(int smode, int ssort)
@@ -284,7 +284,7 @@ static void sel_page_init(void)
     sel_page_item_cnt = 0;
 }
 
-void init_pages(bool_int fill_last_page)
+void init_pages(bool fill_last_page)
 {
     SEL_UNION no_search;
     no_search.op = -1;
@@ -309,8 +309,8 @@ try_again:
       }
       case SM_NEWSGROUP: {
 	NGDATA* np;
-	bool save_the_rest = FALSE;
-	group_init_done = TRUE;
+	bool save_the_rest = false;
+	group_init_done = true;
 	sort_newsgroups();
 	selected_count = 0;
 	obj_count = 0;
@@ -325,7 +325,7 @@ try_again:
 	    if (np->abs1st)
 		;
 	    else if (save_the_rest) {
-		group_init_done = FALSE;
+		group_init_done = false;
 		np->toread = !sel_rereading;
 	    }
 	    else {
@@ -358,7 +358,7 @@ try_again:
 	}
 	if (!sel_total_obj_cnt) {
 	    if (sel_exclusive) {
-		sel_exclusive = FALSE;
+		sel_exclusive = false;
 		sel_page_np = NULL;
 		goto try_again;
 	    }
@@ -402,7 +402,7 @@ try_again:
 	    obj_count++;
 	}
 	if (!sel_total_obj_cnt && sel_exclusive) {
-	    sel_exclusive = FALSE;
+	    sel_exclusive = false;
 	    sel_page_gp = NULL;
 	    goto try_again;
 	}
@@ -427,33 +427,33 @@ try_again:
 	    if (sel_page_univ == ui)
 		sel_prior_obj_cnt = sel_total_obj_cnt;
 	    ui->flags &= ~UF_INCLUDED;
-	    ui_elig = TRUE;
+	    ui_elig = true;
 	    switch (ui->type) {
 	      case UN_GROUP_DESEL:
 	      case UN_VGROUP_DESEL:
 	      case UN_DELETED:
 	      case UN_VGROUP:		    /* first-pass item */
 		/* always ineligible items */
-		ui_elig = FALSE;
+		ui_elig = false;
 		break;
 	      case UN_NEWSGROUP: {
 		NGDATA* np;
 		if (!ui->data.group.ng) {
-		    ui_elig = FALSE;
+		    ui_elig = false;
 		    break;
 		}
 		np = find_ng(ui->data.group.ng);
 		if (!np) {
-		    ui_elig = FALSE;
+		    ui_elig = false;
 		    break;
 		}
 		if (!np->abs1st) {
-		    toread_quiet = TRUE;
+		    toread_quiet = true;
 		    set_toread(np, ST_LAX);
-		    toread_quiet = FALSE;
+		    toread_quiet = false;
 		}
 		if (!(sel_rereading ^ (np->toread>TR_NONE))) {
-		    ui_elig = FALSE;
+		    ui_elig = false;
 		}
 		break;
 	      }
@@ -479,7 +479,7 @@ try_again:
 	    obj_count++;
 	}
 	if (!sel_total_obj_cnt && sel_exclusive) {
-	    sel_exclusive = FALSE;
+	    sel_exclusive = false;
 	    sel_page_univ = NULL;
 	    goto try_again;
 	}
@@ -516,7 +516,7 @@ try_again:
 	}
 #if 0
 	if (!sel_total_obj_cnt && sel_exclusive) {
-	    sel_exclusive = FALSE;
+	    sel_exclusive = false;
 	    sel_page_op = NULL;
 	    goto try_again;
 	}
@@ -580,7 +580,7 @@ try_again:
 		ap->flags &= ~AF_INCLUDED;
 	}
 	if (sel_exclusive && !sel_total_obj_cnt) {
-	    sel_exclusive = FALSE;
+	    sel_exclusive = false;
 	    sel_page_app = NULL;
 	    goto try_again;
 	}
@@ -641,7 +641,7 @@ try_again:
 		sel_total_obj_cnt += group_arts;
 	}
 	if (sel_exclusive && !sel_total_obj_cnt) {
-	    sel_exclusive = FALSE;
+	    sel_exclusive = false;
 	    sel_page_sp = NULL;
 	    goto try_again;
 	}
@@ -669,7 +669,7 @@ bool first_page(void)
 	    if (mp->flags & MF_INCLUDED) {
 		if (sel_page_mp != mp) {
 		    sel_page_mp = mp;
-		    return TRUE;
+		    return true;
 		}
 		break;
 	    }
@@ -682,7 +682,7 @@ bool first_page(void)
 	    if (np->flags & NF_INCLUDED) {
 		if (sel_page_np != np) {
 		    sel_page_np = np;
-		    return TRUE;
+		    return true;
 		}
 		break;
 	    }
@@ -695,7 +695,7 @@ bool first_page(void)
 	    if (gp->flags & AGF_INCLUDED) {
 		if (sel_page_gp != gp) {
 		    sel_page_gp = gp;
-		    return TRUE;
+		    return true;
 		}
 		break;
 	    }
@@ -708,7 +708,7 @@ bool first_page(void)
 	    if (ui->flags & UF_INCLUDED) {
 		if (sel_page_univ != ui) {
 		    sel_page_univ = ui;
-		    return TRUE;
+		    return true;
 		}
 		break;
 	    }
@@ -718,7 +718,7 @@ bool first_page(void)
       case SM_OPTIONS: {
 	if (sel_page_op != 1) {
 	    sel_page_op = 1;
-	    return TRUE;
+	    return true;
 	}
 	break;
       }
@@ -731,7 +731,7 @@ bool first_page(void)
 	    if ((*app)->flags & AF_INCLUDED) {
 		if (sel_page_app != app) {
 		    sel_page_app = app;
-		    return TRUE;
+		    return true;
 		}
 		break;
 	    }
@@ -745,7 +745,7 @@ bool first_page(void)
 	    if (sp->flags & SF_INCLUDED) {
 		if (sel_page_sp != sp) {
 		    sel_page_sp = sp;
-		    return TRUE;
+		    return true;
 		}
 		break;
 	    }
@@ -753,7 +753,7 @@ bool first_page(void)
 	break;
       }
     }
-    return FALSE;
+    return false;
 }
 
 bool last_page(void)
@@ -767,7 +767,7 @@ bool last_page(void)
 	if (!prev_page())
 	    sel_page_mp = mp;
 	else if (mp != sel_page_mp)
-	    return TRUE;
+	    return true;
 	break;
       }
       case SM_NEWSGROUP: {
@@ -776,7 +776,7 @@ bool last_page(void)
 	if (!prev_page())
 	    sel_page_np = np;
 	else if (np != sel_page_np)
-	    return TRUE;
+	    return true;
 	break;
       }
       case SM_ADDGROUP: {
@@ -785,7 +785,7 @@ bool last_page(void)
 	if (!prev_page())
 	    sel_page_gp = gp;
 	else if (gp != sel_page_gp)
-	    return TRUE;
+	    return true;
 	break;
       }
       case SM_UNIVERSAL: {
@@ -794,7 +794,7 @@ bool last_page(void)
 	if (!prev_page())
 	    sel_page_univ = ui;
 	else if (ui != sel_page_univ)
-	    return TRUE;
+	    return true;
 	break;
       }
       case SM_OPTIONS: {
@@ -803,7 +803,7 @@ bool last_page(void)
 	if (!prev_page())
 	    sel_page_op = op;
 	else if (op != sel_page_op)
-	    return TRUE;
+	    return true;
 	break;
       }
       case SM_ARTICLE: {
@@ -812,7 +812,7 @@ bool last_page(void)
 	if (!prev_page())
 	    sel_page_app = app;
 	else if (app != sel_page_app)
-	    return TRUE;
+	    return true;
 	break;
       }
       default: {
@@ -821,11 +821,11 @@ bool last_page(void)
 	if (!prev_page())
 	    sel_page_sp = sp;
 	else if (sp != sel_page_sp)
-	    return TRUE;
+	    return true;
 	break;
       }
     }
-    return FALSE;
+    return false;
 }
 
 bool next_page(void)
@@ -835,7 +835,7 @@ bool next_page(void)
 	if (sel_next_mp) {
 	    sel_page_mp = sel_next_mp;
 	    sel_prior_obj_cnt += sel_page_obj_cnt;
-	    return TRUE;
+	    return true;
 	}
 	break;
       }
@@ -843,7 +843,7 @@ bool next_page(void)
 	if (sel_next_np) {
 	    sel_page_np = sel_next_np;
 	    sel_prior_obj_cnt += sel_page_obj_cnt;
-	    return TRUE;
+	    return true;
 	}
 	break;
       }
@@ -851,7 +851,7 @@ bool next_page(void)
 	if (sel_next_gp) {
 	    sel_page_gp = sel_next_gp;
 	    sel_prior_obj_cnt += sel_page_obj_cnt;
-	    return TRUE;
+	    return true;
 	}
 	break;
       }
@@ -859,7 +859,7 @@ bool next_page(void)
 	if (sel_next_univ) {
 	    sel_page_univ = sel_next_univ;
 	    sel_prior_obj_cnt += sel_page_obj_cnt;
-	    return TRUE;
+	    return true;
 	}
 	break;
       }
@@ -867,7 +867,7 @@ bool next_page(void)
 	if (sel_next_op <= obj_count) {
 	    sel_page_op = sel_next_op;
 	    sel_prior_obj_cnt += sel_page_obj_cnt;
-	    return TRUE;
+	    return true;
 	}
 	break;
       }
@@ -875,7 +875,7 @@ bool next_page(void)
 	if (sel_next_app < artptr_list + artptr_list_size) {
 	    sel_page_app = sel_next_app;
 	    sel_prior_obj_cnt += sel_page_obj_cnt;
-	    return TRUE;
+	    return true;
 	}
 	break;
       }
@@ -883,12 +883,12 @@ bool next_page(void)
 	if (sel_next_sp) {
 	    sel_page_sp = sel_next_sp;
 	    sel_prior_obj_cnt += sel_page_obj_cnt;
-	    return TRUE;
+	    return true;
 	}
 	break;
       }
     }
-    return FALSE;
+    return false;
 }
 
 bool prev_page(void)
@@ -916,7 +916,7 @@ bool prev_page(void)
 	}
 	if (sel_page_mp != page_mp) {
 	    sel_page_mp = page_mp;
-	    return TRUE;
+	    return true;
 	}
 	break;
       }
@@ -939,7 +939,7 @@ bool prev_page(void)
 	}
 	if (sel_page_np != page_np) {
 	    sel_page_np = page_np;
-	    return TRUE;
+	    return true;
 	}
 	break;
       }
@@ -962,7 +962,7 @@ bool prev_page(void)
 	}
 	if (sel_page_gp != page_gp) {
 	    sel_page_gp = page_gp;
-	    return TRUE;
+	    return true;
 	}
 	break;
       }
@@ -985,7 +985,7 @@ bool prev_page(void)
 	}
 	if (sel_page_univ != page_ui) {
 	    sel_page_univ = page_ui;
-	    return TRUE;
+	    return true;
 	}
 	break;
       }
@@ -1003,7 +1003,7 @@ bool prev_page(void)
 	}
 	if (sel_page_op != page_op) {
 	    sel_page_op = page_op;
-	    return TRUE;
+	    return true;
 	}
 	break;
       }
@@ -1021,7 +1021,7 @@ bool prev_page(void)
 	}
 	if (sel_page_app != page_app) {
 	    sel_page_app = page_app;
-	    return TRUE;
+	    return true;
 	}
       }
       default: {
@@ -1056,18 +1056,18 @@ bool prev_page(void)
 	}
 	if (sel_page_sp != page_sp) {
 	    sel_page_sp = (page_sp? page_sp : first_subject);
-	    return TRUE;
+	    return true;
 	}
 	break;
       }
     }
-    return FALSE;
+    return false;
 }
 
-/* Return TRUE if we had to change pages to find the object */
+/* Return true if we had to change pages to find the object */
 bool calc_page(SEL_UNION u)
 {
-    int ret = FALSE;
+    int ret = false;
     if (u.op != -1)
 	sel_item_index = -1;
 try_again:
@@ -1188,12 +1188,12 @@ try_again:
     if (u.op != -1 && sel_item_index < 0) {
 	if (!ret) {
 	    if (first_page()) {
-		ret = TRUE;
+		ret = true;
 		goto try_again;
 	    }
 	}
 	if (next_page()) {
-	    ret = TRUE;
+	    ret = true;
 	    goto try_again;
 	}
 	first_page();
@@ -1202,7 +1202,7 @@ try_again:
     return ret;
 }
 
-void display_page_title(bool_int home_only)
+void display_page_title(bool home_only)
 {
     if (home_only || (erase_screen && erase_each_line))
 	home_cursor();
@@ -1213,7 +1213,7 @@ void display_page_title(bool_int home_only)
     else if (sel_mode == SM_OPTIONS)
 	color_string(COLOR_HEADING,"Options");
     else if (sel_mode == SM_UNIVERSAL) {
-	color_object(COLOR_HEADING, 1);
+	color_object(COLOR_HEADING, true);
 	printf("[%d] %s",univ_level,
 	       univ_title? univ_title : "Universal Selector");
 	color_pop();
@@ -1225,7 +1225,7 @@ void display_page_title(bool_int home_only)
     else {
 	int len;
 	NEWSRC* rp;
-	color_object(COLOR_HEADING, 1);
+	color_object(COLOR_HEADING, true);
 	printf("Newsgroups");
 	for (rp = multirc->first, len = 0; rp && len < 34; rp = rp->next) {
 	    if (rp->flags & RF_ACTIVE) {
@@ -1275,7 +1275,7 @@ void display_page(void)
 {
     int sel;
 
-    display_page_title(FALSE);
+    display_page_title(false);
 
 try_again:
     sel_page_init();
@@ -1310,7 +1310,7 @@ try_again:
 	    }
 	    if (rp)
 		strcpy(buf+len, ", ...");
-	    output_sel(sel_page_item_cnt, sel, FALSE);
+	    output_sel(sel_page_item_cnt, sel, false);
 	    printf("%5d %s\n", mp->num, buf+2);
 	    termdown(1);
 	    sel_page_item_cnt++;
@@ -1341,7 +1341,7 @@ try_again:
 		    /* this may move newsgroups around */
 		    cleanup_newsrc(np->rc);
 		    init_pages(PRESERVE_PAGE);
-		    display_page_title(FALSE);
+		    display_page_title(false);
 		    goto try_again;
 		}
 		if (sel_rereading? (np->toread != TR_NONE)
@@ -1365,7 +1365,7 @@ try_again:
 		sel_page_obj_cnt++;
 
 		maybe_eol();
-		output_sel(sel_page_item_cnt, sel, FALSE);
+		output_sel(sel_page_item_cnt, sel, false);
 		printf("%5ld ", (long)np->toread);
 		display_group(np->rc->datasrc,np->rcline,np->numoffset-1,max_len);
 	    }
@@ -1390,8 +1390,8 @@ try_again:
 	    }
 	    if (!np) {
 		int line = g_term_line;
-		group_init_done = TRUE;
-		display_page_title(TRUE);
+		group_init_done = true;
+		display_page_title(true);
 		goto_xy(0,line);
 	    }
 	}
@@ -1428,7 +1428,7 @@ try_again:
 	    sel_page_obj_cnt++;
 
 	    maybe_eol();
-	    output_sel(sel_page_item_cnt, sel, FALSE);
+	    output_sel(sel_page_item_cnt, sel, false);
 	    printf("%5ld ", (long)gp->toread);
 	    display_group(gp->datasrc, gp->name, strlen(gp->name), max_len);
 	    sel_page_item_cnt++;
@@ -1457,7 +1457,7 @@ try_again:
 	    sel_page_obj_cnt++;
 
 	    maybe_eol();
-	    output_sel(sel_page_item_cnt, sel, FALSE);
+	    output_sel(sel_page_item_cnt, sel, false);
 	    putchar(' ');
 	    display_univ(ui);
 	    sel_page_item_cnt++;
@@ -1641,13 +1641,13 @@ void update_page(void)
 	    continue;
 	goto_xy(0,sel_items[j].line);
 	sel_item_index = j;
-	output_sel(sel_item_index, sel, TRUE);
+	output_sel(sel_item_index, sel, true);
     }
     if (++sel_item_index == sel_page_item_cnt)
 	sel_item_index = 0;
 }
 
-void output_sel(int ix, int sel, bool_int update)
+void output_sel(int ix, int sel, bool update)
 {
     if (ix < 0) {
 	if (UseSelNum)
@@ -1665,16 +1665,16 @@ void output_sel(int ix, int sel, bool_int update)
 
     switch (sel) {
       case 1:			/* '+' */
-	color_object(COLOR_PLUS, 1);
+	color_object(COLOR_PLUS, true);
 	break;
       case 2:			/* '-' */
-	color_object(COLOR_MINUS, 1);
+	color_object(COLOR_MINUS, true);
 	break;
       case 3:			/* '*' */
-	color_object(COLOR_STAR, 1);
+	color_object(COLOR_STAR, true);
 	break;
       default:
-	color_object(COLOR_DEFAULT, 1);
+	color_object(COLOR_DEFAULT, true);
 	break;
     }
     putchar(sel_disp_char[sel]);
@@ -1749,7 +1749,7 @@ static void display_article(ARTICLE *ap, int ix, int sel)
     if (subj_width < 32)
 	subj_width = 32;
     
-    output_sel(ix, sel, FALSE);
+    output_sel(ix, sel, false);
     if (*sel_art_dmode == 's' || from_width < 8)
 	printf("  %s\n",compress_subj(ap->subj->articles,subj_width)) FLUSH;
     else if (*sel_art_dmode == 'd') {
@@ -1783,7 +1783,7 @@ static void display_subject(SUBJECT *subj, int ix, int sel)
 
     j = subj->misc;
 
-    output_sel(ix, sel, FALSE);
+    output_sel(ix, sel, false);
     if (*sel_art_dmode == 's' || from_width < 8) {
 	printf("%3d  %s\n",j,compress_subj(subj->articles,subj_width)) FLUSH;
 	termdown(1);
@@ -1877,7 +1877,7 @@ void display_option(int op, int item_index)
 	if (!val)
 	    val = quote_string(option_value(op));
     }
-    output_sel(item_index, sel_items[item_index].sel, FALSE);
+    output_sel(item_index, sel_items[item_index].sel, false);
     printf(" %s%s%s %.39s\n", pre, item, post + len, val);
     termdown(1);
 }

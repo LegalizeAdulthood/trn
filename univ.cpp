@@ -39,15 +39,15 @@
  * Lots more to do...
  */
 
-static bool univ_virt_pass_needed INIT(FALSE);
+static bool univ_virt_pass_needed INIT(false);
 
 static int univ_item_counter INIT(1);
 
-static bool univ_done_startup INIT(FALSE);
+static bool univ_done_startup INIT(false);
 
 /* this score is part of the line format, so it is not ifdefed */
 static int univ_min_score INIT(0);
-static bool univ_use_min_score INIT(FALSE);
+static bool univ_use_min_score INIT(false);
 
 void univ_init(void)
 {
@@ -60,8 +60,8 @@ void univ_startup(void)
     bool sys_top_load;
     bool user_top_load;
 
-    sys_top_load = FALSE;
-    user_top_load = FALSE;
+    sys_top_load = false;
+    user_top_load = false;
 
     /* later: make user top file an option or environment variable? */
     if (!univ_file_load("%+/univ/top","Top Level",(char*)NULL)) {
@@ -80,12 +80,12 @@ void univ_startup(void)
 	    univ_mask_load(savestr("*"),"All Newsgroups");
 	}
 	if (user_top_load) {
-	    univ_usrtop = TRUE;
+	    univ_usrtop = true;
 	}
     } else {
-	univ_usrtop = TRUE;
+	univ_usrtop = true;
     }
-    univ_done_startup = TRUE;
+    univ_done_startup = true;
 }
 
 void univ_open(void)
@@ -93,7 +93,7 @@ void univ_open(void)
     first_univ = last_univ = 0;
     sel_page_univ = sel_next_univ = 0;
     univ_fname = univ_title = univ_label = univ_tmp_file = NULL;
-    univ_virt_pass_needed = FALSE;
+    univ_virt_pass_needed = false;
     univ_ng_hash = univ_vg_hash = 0;
     univ_level++;
 }
@@ -347,7 +347,7 @@ void univ_add_virtgroup(char *grpname)
     if (!univ_vg_hash)
 	univ_vg_hash = hashcreate(701, HASH_DEFCMPFUNC);
 
-    univ_virt_pass_needed = TRUE;
+    univ_virt_pass_needed = true;
     data = hashfetch(univ_vg_hash,grpname,strlen(grpname));
     if (data.dat_ptr) {
 	/* group was already added */
@@ -374,7 +374,7 @@ void univ_add_virtgroup(char *grpname)
     hashstorelast(data);
 }
 
-static bool univ_begin_found INIT(FALSE);
+static bool univ_begin_found INIT(false);
 /* label to start working with */
 static char* univ_begin_label INIT(NULL);
 
@@ -382,13 +382,11 @@ static char* univ_begin_label INIT(NULL);
  * based on Rich $alz's wildmat, reduced to the simple case of *
  * and text.  The complete version can be found in wildmat.c.
  */
-/* an improbable number */
-#define ABORT			-42
 
 /*
-**  Match text and p, return TRUE, FALSE, or ABORT.
+**  Match text and p, return true, false.
 */
-static int univ_DoMatch(char *text, char *p)
+static bool univ_DoMatch(char *text, char *p)
 {
     register int	matched;
 
@@ -399,16 +397,14 @@ static int univ_DoMatch(char *text, char *p)
 		continue;
 	    if (*p == '\0')
 		/* Trailing star matches everything. */
-		return TRUE;
+		return true;
 	    while (*text)
-		if ((matched = univ_DoMatch(text++, p)) != FALSE)
+		if ((matched = univ_DoMatch(text++, p)) != false)
 		    return matched;
-	    return ABORT;
+	    return false;
 	}
 	if (*text != *p) {
-	    if (*text == '\0')
-		return ABORT;
-	    return FALSE;
+	    return false;
 	}
     }
     return *text == '\0';
@@ -434,7 +430,7 @@ void univ_use_pattern(char *pattern, int type)
 	  case 0:
 	    for (ui = first_univ; ui; ui = ui->next) {
 		if (ui->type == UN_NEWSGROUP && ui->data.group.ng
-		  && univ_DoMatch(ui->data.group.ng,s) == TRUE) {
+		  && univ_DoMatch(ui->data.group.ng,s) == true) {
 		    ui->type = UN_GROUP_DESEL;
 		}
 	    }
@@ -442,7 +438,7 @@ void univ_use_pattern(char *pattern, int type)
 	  case 1:
 	    for (ui = first_univ; ui; ui = ui->next) {
 		if (ui->type == UN_VGROUP && ui->data.vgroup.ng
-		  && univ_DoMatch(ui->data.vgroup.ng,s) == TRUE) {
+		  && univ_DoMatch(ui->data.vgroup.ng,s) == true) {
 		    ui->type = UN_VGROUP_DESEL;
 		}
 	    }
@@ -453,14 +449,14 @@ void univ_use_pattern(char *pattern, int type)
 	switch (type) {
 	  case 0:
 	    for (np = first_ng; np; np = np->next) {
-		if (univ_DoMatch(np->rcline,s) == TRUE) {
+		if (univ_DoMatch(np->rcline,s) == true) {
 		    univ_add_group(np->rcline,np->rcline);
 		}
 	    }
 	    break;
 	  case 1:
 	    for (np = first_ng; np; np = np->next) {
-		if (univ_DoMatch(np->rcline,s) == TRUE) {
+		if (univ_DoMatch(np->rcline,s) == true) {
 		    univ_add_virtgroup(np->rcline);
 		}
 	    }
@@ -493,7 +489,7 @@ void univ_use_group_line(char *line, int type)
     }
 }
 
-/* returns TRUE on success, FALSE otherwise */
+/* returns true on success, false otherwise */
 static bool univ_use_file(char *fname, char *title, char *label)
 {
     static char lbuf[LBUFLEN];
@@ -502,15 +498,15 @@ static bool univ_use_file(char *fname, char *title, char *label)
     char* p;
     char* open_name;
     bool save_temp;
-    bool begin_top;	/* if FALSE, look for "begin group"
+    bool begin_top;	/* if false, look for "begin group"
 			   before interpreting */
 
-    save_temp = FALSE;
-    begin_top = TRUE;	/* default assumption (might be changed later) */
+    save_temp = false;
+    begin_top = true;	/* default assumption (might be changed later) */
     p = NULL;
 
     if (!fname)
-	return FALSE;	/* bad argument */
+	return false;	/* bad argument */
 
     s = fname;
     open_name = s;
@@ -522,8 +518,8 @@ static bool univ_use_file(char *fname, char *title, char *label)
 	univ_tmp_file = open_name;
 	if (!url_get(fname+4,open_name))
 	    open_name = NULL;
-	save_temp = TRUE;
-	begin_top = FALSE;	/* we will need a "begin group" */
+	save_temp = true;
+	begin_top = false;	/* we will need a "begin group" */
 #else /* !USEURL */
 	printf("This copy of trn does not have URL support.\n") FLUSH;
 	open_name = NULL;
@@ -533,14 +529,14 @@ static bool univ_use_file(char *fname, char *title, char *label)
 	open_name = NULL;
     }
     if (!open_name)
-	return FALSE;
+	return false;
     univ_begin_found = begin_top;
     safefree0(univ_begin_label);
     if (label)
 	univ_begin_label = savestr(label);
     fp = fopen(filexp(open_name),"r");
     if (!fp)
-	return FALSE;		/* unsuccessful (XXX: complain) */
+	return false;		/* unsuccessful (XXX: complain) */
 /* Later considerations:
  * 1. Long lines
  * 2. Backslash continuations
@@ -560,7 +556,7 @@ static bool univ_use_file(char *fname, char *title, char *label)
 	univ_virt_pass();
     }
     sort_univ();
-    return TRUE;
+    return true;
 }
 
 static bool univ_include_file(char *fname)
@@ -623,12 +619,12 @@ static void univ_do_line_ext1(char *desc, char *line)
 	    if (isspace(*p)) {
 	      *p = '\0';
 	      univ_min_score = atoi(q);
-	      univ_use_min_score = TRUE;
+	      univ_use_min_score = true;
 	      s = p;
 	      s++;
 	    }
 	    univ_use_group_line(s,1);
-	    univ_use_min_score = FALSE;
+	    univ_use_min_score = false;
 	    break;
 	}
 	break;
@@ -649,7 +645,7 @@ static void univ_do_line_ext1(char *desc, char *line)
 /* if non-NULL, the description (printing name) of the entry */
 static char* univ_line_desc;
 
-/* returns FALSE when no more lines should be interpreted */
+/* returns false when no more lines should be interpreted */
 static bool univ_do_line(char *line)
 {
     char* s;
@@ -662,25 +658,25 @@ static bool univ_do_line(char *line)
     s = line;
     while (isspace(*s)) s++;
     if (*s == '\0')
-	return TRUE;	/* empty line */
+	return true;	/* empty line */
 
     if (!univ_begin_found) {
 	if (strncaseNE(s,"begin group",11))
-	    return TRUE;	/* wait until "begin group" is found */
-	univ_begin_found = TRUE;
+	    return true;	/* wait until "begin group" is found */
+	univ_begin_found = true;
     }
     if (univ_begin_label) {
 	if (*s == '>' && s[1] == ':' && strEQ(s+2,univ_begin_label)) {
 	    safefree0(univ_begin_label); /* interpret starting at next line */
 	}
-	return TRUE;
+	return true;
     }
     safefree0(univ_line_desc);
     if (*s == '"') {	/* description name */
 	p = cpytill(s,s+1,'"');
 	if (!*p) {
 	    printf("univ: unmatched quote in string:\n\"%s\"\n", s) FLUSH;
-	    return TRUE;
+	    return true;
 	}
 	*p = '\0';
 	univ_line_desc = savestr(s);
@@ -688,7 +684,7 @@ static bool univ_do_line(char *line)
     }
     while (isspace(*s)) s++;
     if (strncaseEQ(s,"end group",9))
-	return FALSE;
+	return false;
     if (strncaseEQ(s,"URL:",4)) {
 	for (p = s; *p && *p != '>'; p++) ;
 	if (*p) {
@@ -756,7 +752,7 @@ static bool univ_do_line(char *line)
 	    break;
 	  case '>':
 	    if (s[1] == ':')
-		return FALSE;	/* label found, end of previous block */
+		return false;	/* label found, end of previous block */
 	    break;	/* just ignore the line (print warning later?) */
 	  case '@':	/* virtual newsgroup file */
 	    break;	/* not used now */
@@ -778,7 +774,7 @@ static bool univ_do_line(char *line)
 	    break;
 	}
     }
-    return TRUE;	/* continue reading */
+    return true;	/* continue reading */
 }
 
 /* features to return later (?):
@@ -805,7 +801,7 @@ bool univ_file_load(char *fname, char *title, char *label)
     if (int_count) {
 	int_count = 0;
     }
-    if (finput_pending(TRUE)) {
+    if (finput_pending(true)) {
 	;		/* later, *maybe* eat input */
     }
     return flag;
@@ -880,7 +876,7 @@ static char *univ_edit_new_userfile(void)
     printf("New User Toplevel file created.\n") FLUSH;
     printf("After editing this file, exit and restart trn to use it.\n") FLUSH;
     (void)get_anything();
-    univ_usrtop = TRUE;		/* do not overwrite this file */
+    univ_usrtop = true;		/* do not overwrite this file */
     return s;
 }
 
@@ -955,14 +951,14 @@ static void univ_vg_addart(ART_NUM a)
     int score;
 
 #ifdef SCORE
-    score = sc_score_art(a,FALSE);
+    score = sc_score_art(a,false);
     if (univ_use_min_score && (score<univ_min_score))
 	return;
 #endif
-    subj = fetchsubj(a,FALSE);
+    subj = fetchsubj(a,false);
     if (!subj || !*subj)
 	return;
-    from = fetchfrom(a,FALSE);
+    from = fetchfrom(a,false);
     if (!from || !*from)
         from = "<No Author>";
 
@@ -1030,8 +1026,8 @@ void univ_virt_pass(void)
 {
     UNIV_ITEM* ui;
 
-    univ_ng_virtflag = TRUE;
-    univ_virt_pass_needed = FALSE;
+    univ_ng_virtflag = true;
+    univ_virt_pass_needed = false;
 
     for (ui = first_univ; ui; ui = ui->next) {
 	if (input_pending()) {
@@ -1045,12 +1041,12 @@ void univ_virt_pass(void)
 	    current_vg_ui = ui;
 #ifdef SCORE
 	    if (ui->data.vgroup.flags & UF_VG_MINSCORE) {
-		univ_use_min_score = TRUE;
+		univ_use_min_score = true;
 		univ_min_score = ui->data.vgroup.minscore;
 	    }
 #endif
 	    (void)univ_visit_group(ui->data.vgroup.ng);
-	    univ_use_min_score = FALSE;
+	    univ_use_min_score = false;
 	    /* later do something with return value */
 	    univ_free_data(ui);
 	    safefree(ui->desc);
@@ -1071,7 +1067,7 @@ void univ_virt_pass(void)
 	    break;
 	}
     }
-    univ_ng_virtflag = FALSE;
+    univ_ng_virtflag = false;
 }
 
 static int univ_order_number(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2)

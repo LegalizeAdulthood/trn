@@ -72,9 +72,9 @@ int nntp_auth(char *authc)
     /*termlib_reset();*/
     resetty();		/* restore tty state */
 #endif
-    export_nntp_fds = TRUE;
+    export_nntp_fds = true;
     ret = doshell(sh,authc);
-    export_nntp_fds = FALSE;
+    export_nntp_fds = false;
 #if 0
     noecho();		/* revert to cbreaking */
     crmode();

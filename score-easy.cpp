@@ -22,7 +22,7 @@ static char sc_e_newline[LBUFLEN];
 char *sc_easy_append(void)
 {
     char* s;
-    bool q_done;	/* if TRUE, we are finished with current question */
+    bool q_done;	/* if true, we are finished with current question */
     char filechar;
     long score;
     char ch;
@@ -30,7 +30,7 @@ char *sc_easy_append(void)
     filechar = '\0';	/* GCC warning avoidance */
     s = sc_e_newline;
     printf("\nScorefile easy append mode.\n") FLUSH;
-    q_done = FALSE;
+    q_done = false;
     while (!q_done) {
 	printf("0) Exit.\n") FLUSH;
 	printf("1) List the current scorefile abbreviations.\n");
@@ -39,7 +39,7 @@ char *sc_easy_append(void)
 	printf("4) Add an entry to another scorefile.\n");
 	printf("5) Use a temporary scoring rule.\n");
 	ch = menu_get_char();
-	q_done = TRUE;
+	q_done = true;
 	switch (ch) {
 	  case '0':
 	    return NULL;
@@ -60,10 +60,10 @@ char *sc_easy_append(void)
 	    break;
 	  case 'h':
 	    printf("No help available (yet).\n") FLUSH;
-	    q_done = FALSE;
+	    q_done = false;
 	    break;
 	  default:
-	    q_done = FALSE;
+	    q_done = false;
 	    break;
 	}
     }
@@ -80,7 +80,7 @@ char *sc_easy_append(void)
     }
     *s++ = filechar;
     *s++ = ' ';
-    q_done = FALSE;
+    q_done = false;
     while (!q_done) {
 	printf("What type of line do you want to add?\n");
 	printf("0) Exit.\n");
@@ -90,7 +90,7 @@ char *sc_easy_append(void)
 	printf("   (use this for any other kind of line)\n");
 	printf("\n[Other line formats will be supported later.]\n");
 	ch = menu_get_char();
-	q_done = TRUE;
+	q_done = true;
 	switch (ch) {
 	  case '0':
 	    return NULL;
@@ -101,29 +101,29 @@ char *sc_easy_append(void)
 	    fflush(stdout);
 	    buf[0] = '>';
 	    buf[1] = FINISHCMD;
-	    if (finish_command(TRUE)) {
+	    if (finish_command(true)) {
 		sprintf(s,"%s",buf+1);
 		return sc_e_newline;
 	    }
 	    printf("\n");
-	    q_done = FALSE;
+	    q_done = false;
 	    break;
 	  case 'h':
 	    printf("No help available (yet).\n") FLUSH;
-	    q_done = FALSE;
+	    q_done = false;
 	    break;
 	  default:
-	    q_done = FALSE;
+	    q_done = false;
 	    break;
 	}
     }
-    q_done = FALSE;
+    q_done = false;
     while (!q_done) {
 	printf("Enter a score amount (like 10 or -6):");
 	fflush(stdout);
 	buf[0] = ' ';
 	buf[1] = FINISHCMD;
-	if (finish_command(TRUE)) {
+	if (finish_command(true)) {
 	    score = atoi(buf+1);
 	    if (score == 0)
 		if (buf[1] != '0')
@@ -131,11 +131,11 @@ char *sc_easy_append(void)
 	    sprintf(s,"%ld",score);
 	    s = sc_e_newline+strlen(sc_e_newline); /* point at terminator  */
 	    *s++ = ' ';
-	    q_done = TRUE;
+	    q_done = true;
 	} else
 	    printf("\n") FLUSH;
     }
-    q_done = FALSE;
+    q_done = false;
     while (!q_done) {
 	printf("Do you want to:\n");
 	printf("0) Exit.\n");
@@ -144,7 +144,7 @@ char *sc_easy_append(void)
 /* add some more options here later */
 /* perhaps fold regular-expression question here? */
 	ch = menu_get_char();
-	q_done = TRUE;
+	q_done = true;
 	switch (ch) {
 	  case '0':
 	    return NULL;
@@ -158,10 +158,10 @@ char *sc_easy_append(void)
 	    return sc_e_newline;
 	  case 'h':
 	    printf("No help available (yet).\n") FLUSH;
-	    q_done = FALSE;
+	    q_done = false;
 	    break;
 	  default:
-	    q_done = FALSE;
+	    q_done = false;
 	    break;
 	}
     }
@@ -173,12 +173,12 @@ char *sc_easy_append(void)
 char *sc_easy_command(void)
 {
     char* s;
-    bool q_done;	/* if TRUE, we are finished with current question */
+    bool q_done;	/* if true, we are finished with current question */
     char ch;
 
     s = sc_e_newline;
     printf("\nScoring easy command mode.\n") FLUSH;
-    q_done = FALSE;
+    q_done = false;
     while (!q_done) {
 	printf("0) Exit.\n");
 	printf("1) Add something to a scorefile.\n");
@@ -189,7 +189,7 @@ char *sc_easy_command(void)
 	/* later add an option to edit an arbitrary file */
 	printf("5) Continue scoring unscored articles.\n");
 	ch = menu_get_char();
-	q_done = TRUE;
+	q_done = true;
 	switch (ch) {
 	  case '0':
 	    return NULL;
@@ -206,10 +206,10 @@ char *sc_easy_command(void)
 	    return "f";
 	  case 'h':
 	    printf("No help available (yet).\n") FLUSH;
-	    q_done = FALSE;
+	    q_done = false;
 	    break;
 	  default:
-	    q_done = FALSE;
+	    q_done = false;
 	    break;
 	}
     }

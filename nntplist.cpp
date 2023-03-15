@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 
     char tcbuf[1024];
     tcbuf[0] = 0;
-    env_init(tcbuf, 1);
+    env_init(tcbuf, true);
 
     cp = getenv("NNTPSERVER");
     if (!cp) {
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 
     if (server_name) {
 	if (init_nntp() < 0
-	 || nntp_connect(server_name,0) <= 0)
+	 || nntp_connect(server_name,false) <= 0)
 	    exit(1);
 	if (action)
 	    sprintf(command,"LIST %s",action);
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
 #ifdef HAS_SIGHOLD
 	sigrelse(SIGINT);
 #endif
-	nntp_close(TRUE);
+	nntp_close(true);
 	cleanup_nntp();
     }
     else {

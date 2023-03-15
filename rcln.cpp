@@ -79,7 +79,7 @@ int addartnum(DATASRC *dp, ART_NUM artnum, char *ngnam)
     register char* maxt = NULL;
     ART_NUM min = 0, max = -1, lastnum = 0;
     char* mbuf;
-    bool_int morenum;
+    bool morenum;
 
     if (!artnum)
 	return 0;
@@ -106,7 +106,7 @@ int addartnum(DATASRC *dp, ART_NUM artnum, char *ngnam)
 	printf("\nCorrupt Xref line!!!  %ld --> %s(1..%ld)\n",
 	    artnum,ngnam,
 	    np->ngmax) FLUSH;
-	paranoid = TRUE;		/* paranoia reigns supreme */
+	paranoid = true;		/* paranoia reigns supreme */
 	return -1;			/* hope this was the first newsgroup */
     }
 #endif
@@ -336,7 +336,7 @@ void prange(char *where, ART_NUM min, ART_NUM max)
 
 /* calculate the number of unread articles for a newsgroup */
 
-void set_toread(NGDATA *np, bool_int lax_high_check)
+void set_toread(NGDATA *np, bool lax_high_check)
 {
     register char* s;
     register char* c;
@@ -355,7 +355,7 @@ void set_toread(NGDATA *np, bool_int lax_high_check)
 	    printf("\nInvalid (bogus) newsgroup found: %s\n",np->rcline)
 	      FLUSH;
 	}
-	paranoid = TRUE;
+	paranoid = true;
 	if (virgin_ng || np->toread >= ng_min_toread) {
 	    newsgroup_toread--;
 	    missing_count++;
@@ -400,7 +400,7 @@ void set_toread(NGDATA *np, bool_int lax_high_check)
 		   np->rcline) FLUSH;
 	}
 	*(np->rcline + np->numoffset) = '\0';
-	paranoid = TRUE;		/* enough to make a guy paranoid */
+	paranoid = true;		/* enough to make a guy paranoid */
 	np->rc->flags |= RF_RCCHANGED;
     }
     if (np->subscribechar == NEGCHAR)
@@ -509,7 +509,7 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
 #endif
 }
 
-/* Returns TRUE if article is marked as read or does not exist */
+/* Returns true if article is marked as read or does not exist */
 /* could use a better name */
 bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
 {
@@ -520,12 +520,12 @@ bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
     ART_NUM min = 0, max = -1, lastnum = 0;
 
     if (!artnum)
-	return TRUE;
+	return true;
     np = find_ng(ngnam);
     if (np == NULL)			/* not found in newsrc? */
-	return TRUE;
+	return true;
     if (!np->numoffset)		/* no numbers on line */
-	return FALSE;
+	return false;
 #if 0
     /* consider this code later */
     if (!np->abs1st) {
@@ -535,9 +535,9 @@ bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
 #endif
 
     if (np->toread == TR_BOGUS)
-	return TRUE;
+	return true;
     if (artnum > np->ngmax) {
-        return FALSE;		/* probably doesn't exist, however */
+        return false;		/* probably doesn't exist, however */
     }
     s = np->rcline + np->numoffset;
     while (*s == ' ') s++;		/* skip spaces */
@@ -548,7 +548,7 @@ bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
 	if (*t == '-') {		/* is it a range? */
 	    t++;			/* skip to next number */
 	    if (artnum <= (max = atol(t)))
-		return TRUE;		/* it is in range => already read */
+		return true;		/* it is in range => already read */
 	    lastnum = max;		/* remember it */
 	    maxt = t;			/* remember position in case we */
 					/* want to overwrite the max */
@@ -556,7 +556,7 @@ bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
 	}
 	else {
 	    if (artnum == min)		/* explicitly a read article? */
-		return TRUE;
+		return true;
 	    lastnum = min;		/* remember what the number was */
 	    maxt = NULL;		/* last one was not a range */
 	}
@@ -564,6 +564,6 @@ bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
 	s = t;
     }
 
-    /* we have not read it, so return FALSE */
-    return FALSE;
+    /* we have not read it, so return false */
+    return false;
 }

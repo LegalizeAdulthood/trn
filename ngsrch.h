@@ -10,7 +10,7 @@
 #define NGS_ERROR 4
 #define NGS_DONE 5
 
-EXT bool ng_doempty INIT(FALSE);	/* search empty newsgroups? */
+EXT bool ng_doempty INIT(false);	/* search empty newsgroups? */
 #endif
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
@@ -20,4 +20,4 @@ void ngsrch_init _((void));
 int ng_search _((char*,int));
 bool ng_wanted _((NGDATA*));
 #endif
-char* ng_comp _((COMPEX*,char*,bool_int,bool_int));
+char *ng_comp(COMPEX *compex, char *pattern, bool RE, bool fold);

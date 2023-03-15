@@ -33,7 +33,7 @@
 
 void sa_refresh_top(void)
 {
-    color_object(COLOR_SCORE, 1);
+    color_object(COLOR_SCORE, true);
     printf("%s |",ngname);
 /* # of articles might be optional later */
     printf(" %d",sa_number_arts());
@@ -57,7 +57,7 @@ void sa_refresh_bot(void)
 {
     char* s;
 
-    color_object(COLOR_SCORE, 1);
+    color_object(COLOR_SCORE, true);
     s_mail_and_place();
     printf("(");
     switch (sa_mode_order) {

@@ -33,7 +33,7 @@
 
 void color_init _((void));
 void color_rc_attribute _((char*,char*));
-void color_object _((int,bool_int));
+void color_object(int object, bool push);
 void color_pop _((void));
 void color_string _((int,char*));
 void color_default _((void));

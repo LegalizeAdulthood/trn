@@ -811,43 +811,43 @@ EXT char* NewsSelBtns INIT(NULL);
 EXT char* OptionSelBtns INIT(NULL);
 EXT char* ArtPagerBtns INIT(NULL);
 
-EXT bool dont_filter_control INIT(FALSE);		/* -j */
+EXT bool dont_filter_control INIT(false);		/* -j */
 EXT int  join_subject_len INIT(0);			/* -J */
-EXT bool kill_thru_kludge INIT(TRUE);			/* -k */
-EXT bool keep_the_group_static INIT(FALSE);		/* -K */
-EXT bool mbox_always INIT(FALSE);			/* -M */
-EXT bool norm_always INIT(FALSE);			/* -N */
-EXT bool thread_always INIT(FALSE);			/* -a */
+EXT bool kill_thru_kludge INIT(true);			/* -k */
+EXT int keep_the_group_static INIT(0);			/* -K */
+EXT bool mbox_always INIT(false);			/* -M */
+EXT bool norm_always INIT(false);			/* -N */
+EXT bool thread_always INIT(false);			/* -a */
 EXT int auto_arrow_macros INIT(2);			/* -A */
-EXT bool breadth_first INIT(FALSE);			/* -b */
-EXT bool bkgnd_spinner INIT(FALSE);			/* -B */
-EXT bool novice_delays INIT(TRUE);			/* +f */
-EXT int olden_days INIT(FALSE);				/* -o */
+EXT bool breadth_first INIT(false);			/* -b */
+EXT bool bkgnd_spinner INIT(false);			/* -B */
+EXT bool novice_delays INIT(true);			/* +f */
+EXT int olden_days INIT(false);				/* -o */
 EXT char auto_select_postings INIT(0);			/* -p */
-EXT bool checkflag INIT(FALSE);				/* -c */
+EXT bool checkflag INIT(false);				/* -c */
 EXT char* savedir INIT(NULL);				/* -d */
-EXT bool suppress_cn INIT(FALSE);			/* -s */
+EXT bool suppress_cn INIT(false);			/* -s */
 EXT int countdown INIT(5);	/* how many lines to list before invoking -s */
-EXT bool muck_up_clear INIT(FALSE);			/* -loco */
-EXT bool erase_screen INIT(FALSE);			/* -e */
-EXT bool can_home INIT(FALSE);
-EXT bool erase_each_line INIT(FALSE);			/* fancy -e */
+EXT bool muck_up_clear INIT(false);			/* -loco */
+EXT bool erase_screen INIT(false);			/* -e */
+EXT bool can_home INIT(false);
+EXT bool erase_each_line INIT(false);			/* fancy -e */
 EXT int findlast INIT(0);				/* -r */
-EXT bool allow_typeahead INIT(FALSE);			/* -T */
+EXT bool allow_typeahead INIT(false);			/* -T */
 #ifdef EDIT_DISTANCE
-EXT bool fuzzyGet INIT(FALSE);				/* -G */
+EXT bool fuzzyGet INIT(false);				/* -G */
 #endif
 #ifdef VERBOSE
 #   ifdef TERSE
-EXT bool verbose INIT(TRUE);				/* +t */
+EXT bool verbose INIT(true);				/* +t */
 #   endif
 #endif
-EXT bool unbroken_subjects INIT(FALSE);			/* -u */
-EXT bool unsafe_rc_saves INIT(FALSE);			/* -U */
+EXT bool unbroken_subjects INIT(false);			/* -u */
+EXT bool unsafe_rc_saves INIT(false);			/* -U */
 #ifdef VERIFY
-EXT bool verify INIT(FALSE);				/* -v */
+EXT bool verify INIT(false);				/* -v */
 #endif
-EXT bool quickstart INIT(FALSE);			/* -q */
+EXT bool quickstart INIT(false);			/* -q */
 
 #define DEFAULT_REFETCH_SECS  4L*60*60	/* 4 hours */
 EXT time_t defRefetchSecs INIT(DEFAULT_REFETCH_SECS);	/* -z */
@@ -871,21 +871,21 @@ EXT bool append_unsub					/* -I */
      INIT(0);
 #endif
 
-EXT bool UseUnivSelector INIT(FALSE);
-EXT bool UseNewsrcSelector INIT(FALSE);
-EXT bool UseAddSelector INIT(TRUE);
-EXT bool UseNewsgroupSelector INIT(TRUE);
+EXT bool UseUnivSelector INIT(false);
+EXT bool UseNewsrcSelector INIT(false);
+EXT bool UseAddSelector INIT(true);
+EXT bool UseNewsgroupSelector INIT(true);
 EXT int UseNewsSelector INIT(SELECT_INIT-1);
-EXT bool UseMouse INIT(FALSE);
+EXT bool UseMouse INIT(false);
 EXT char MouseModes[32] INIT("acjlptwvK");
-EXT bool use_colors INIT(FALSE);
-EXT bool UseTk INIT(FALSE);
-EXT bool UseTcl INIT(FALSE);
-EXT bool UseSelNum INIT(FALSE);
-EXT bool SelNumGoto INIT(FALSE);
+EXT bool use_colors INIT(false);
+EXT bool UseTk INIT(false);
+EXT bool UseTcl INIT(false);
+EXT bool UseSelNum INIT(false);
+EXT bool SelNumGoto INIT(false);
 /* miscellania */
 
-EXT bool in_ng INIT(FALSE);		/* TRUE if in a newsgroup */
+EXT bool in_ng INIT(false);		/* true if in a newsgroup */
 EXT char mode INIT('i');		/* current state of trn */
 EXT char gmode INIT('I');		/* general mode of trn */
 

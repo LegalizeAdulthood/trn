@@ -70,7 +70,7 @@ retry_open:
 #endif
 	if (errno == EINTR)
 	    goto retry_open;
-	uncache_article(ap,FALSE);
+	uncache_article(ap,false);
     } else {
 #ifdef LINKART
 #ifdef SUPPORT_NNTP
@@ -88,7 +88,7 @@ retry_open:
 		    if ((s = index(tmpbuf,'\n')) != NULL)
 			*s = '\0';
 		    if (!(artfp = fopen(tmpbuf,"r")))
-			uncache_article(ap,FALSE);
+			uncache_article(ap,false);
 		    else {
 			if (*linkartname)
 			    free(linkartname);
@@ -161,7 +161,7 @@ int seekartbuf(ART_POS pos)
     artbuf_pos = artbuf_len;
 
     while (artbuf_pos < pos) {
-	if (!readartbuf(FALSE))
+	if (!readartbuf(false))
 	    return -1;
     }
 
@@ -170,7 +170,7 @@ int seekartbuf(ART_POS pos)
     return 0;
 }
 
-char *readartbuf(bool_int view_inline)
+char *readartbuf(bool view_inline)
 {
     char* bp;
     char* s;
@@ -256,7 +256,7 @@ char *readartbuf(bool_int view_inline)
       case HTMLTEXT_MIME:
 	if (mime_section->encoding == MENCODE_QPRINT) {
 	    o = line_offset + extra_offset;
-	    len = qp_decodestring(bp+o, bp+o, 0) + line_offset;
+	    len = qp_decodestring(bp+o, bp+o, false) + line_offset;
 	    if (len == line_offset || bp[len+extra_offset-1] != '\n') {
 		if (read_something >= 0) {
 		    read_offset = line_offset = len;
@@ -305,8 +305,8 @@ char *readartbuf(bool_int view_inline)
 				    MCF_NEEDSTERMINAL|MCF_COPIOUSOUTPUT);
 	if (mcp) {
 	    int save_term_line = g_term_line;
-	    nowait_fork = TRUE;
-	    color_object(COLOR_MIMEDESC, 1);
+	    nowait_fork = true;
+	    color_object(COLOR_MIMEDESC, true);
 	    if (decode_piece(mcp,bp) != 0) {
 		strcpy(bp = artbuf + artbuf_pos, art_line);
 		mime_SetState(bp);
@@ -317,8 +317,8 @@ char *readartbuf(bool_int view_inline)
 		mime_state = SKIP_MIME;
 	    color_pop();
 	    chdir_newsdir();
-	    erase_line(FALSE);
-	    nowait_fork = FALSE;
+	    erase_line(false);
+	    nowait_fork = false;
 	    first_view = artline;
 	    g_term_line = save_term_line;
 	    if (mime_state != SKIP_MIME)
@@ -389,7 +389,7 @@ char *readartbuf(bool_int view_inline)
       case IMAGE_MIME:
       case AUDIO_MIME:
 	if (!mime_article.total && !multimedia_mime)
-	    multimedia_mime = TRUE;
+	    multimedia_mime = true;
 	/* FALL THROUGH */
       default:
 	if (view_inline && first_view < artline

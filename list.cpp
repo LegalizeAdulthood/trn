@@ -120,9 +120,9 @@ bool walk_list(LIST *list, bool(*callback) _((char *, int)), int arg)
 	i = node->high - node->low + 1;
 	for (cp = node->data; i--; cp += item_size)
 	    if (callback(cp, arg))
-		return 1;
+		return true;
     }
-    return 0;
+    return false;
 }
 
 /* Since the list can be sparsely allocated, find the nearest number

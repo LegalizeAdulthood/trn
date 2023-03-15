@@ -33,7 +33,7 @@ bool s_eligible(long ent)
 #endif
       default:
 	printf("s_eligible: current type is bad!\n") FLUSH;
-	return FALSE;
+	return false;
     }
 }
 
@@ -57,7 +57,7 @@ char *s_get_statchars(long ent, int line)
     }
 }
 
-char *s_get_desc(long ent, int line, bool_int trunc)
+char *s_get_desc(long ent, int line, bool trunc)
 {
     switch (s_cur_type) {
 #ifdef SCAN_ART

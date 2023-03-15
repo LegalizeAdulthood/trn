@@ -22,4 +22,4 @@ void mark_as_read _((ARTICLE*));
 void mark_missing_articles _((void));
 void check_first _((ART_NUM));
 void yankback _((void));
-int chase_xrefs _((bool_int));
+bool chase_xrefs(bool until_key);

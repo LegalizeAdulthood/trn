@@ -45,7 +45,7 @@ static char url_host[256];
 static int  url_port;
 static char url_path[1024];
 
-/* returns TRUE if successful */
+/* returns true if successful */
 bool fetch_http(char *host, int port, char *path, char *outname)
 {
     int sock;
@@ -61,13 +61,13 @@ bool fetch_http(char *host, int port, char *path, char *outname)
     if (write(sock, url_buf, strlen(url_buf)+1) < 0) {
 	printf("\nError: writing on URL socket\n");
 	close(sock);
-	return FALSE;
+	return false;
     }
 
     fp_out = fopen(outname,"w");
     if (!fp_out) {
 	printf("\nURL output file could not be opened.\n");
-	return FALSE;
+	return false;
     }
     /* XXX some kind of URL timeout would be really nice */
     /* (the old nicebg code caused portability problems) */
@@ -75,7 +75,7 @@ bool fetch_http(char *host, int port, char *path, char *outname)
     while (1) {
 	if ((len = read(sock, url_buf, 1024)) < 0) {
 	    printf("\nError: reading URL reply\n");
-	    return FALSE;
+	    return false;
 	}
 	if (len == 0) {
 	    break;	/* no data, end connection */
@@ -84,7 +84,7 @@ bool fetch_http(char *host, int port, char *path, char *outname)
     }
     fclose(fp_out);
     close(sock);
-    return TRUE;
+    return true;
 }
 
 /* add port support later? */
@@ -105,11 +105,11 @@ bool fetch_ftp(char *host, char *origpath, char *outname)
     p = rindex(path, '/');	/* p points to last slash or NULL*/
     if (p == NULL) {
 	printf("Error: URL:ftp path has no '/' character.\n") FLUSH;
-	return FALSE;
+	return false;
     }
     if (p[1] == '\0') {
 	printf("Error: URL:ftp path has no final filename.\n") FLUSH;
-	return FALSE;
+	return false;
     }
     safecpy(username,filexp("%L"),120);
     safecpy(userhost,filexp("%H"),120);
@@ -146,10 +146,10 @@ bool fetch_ftp(char *host, char *origpath, char *outname)
     while (!input_pending()) ;
     eat_typeahead();
 #endif
-    return TRUE;
+    return true;
 #else
     printf("\nThis copy of trn does not have URL:ftp support.\n");
-    return FALSE;
+    return false;
 #endif
 }
 
@@ -165,14 +165,14 @@ bool parse_url(char *url)
     url_port = 80;	/* the default */
     if (!url || !*url) {
 	printf("Empty URL -- ignoring.\n") FLUSH;
-	return FALSE;
+	return false;
     }
     p = url_type;
     for (s = url; *s && *s != ':'; *p++ = *s++) ;
     *p = '\0';
     if (!*s) {
 	printf("Incomplete URL: %s\n",url) FLUSH;
-	return FALSE;
+	return false;
     }
     s++;
     if (strnEQ(s,"//",2)) {
@@ -185,7 +185,7 @@ bool parse_url(char *url)
 		*p++ = *s++;
 	    if (!*s) {
 		printf("Bad address literal: %s\n",url) FLUSH;
-		return FALSE;
+		return false;
 	    }
 	    s++;	/* skip ] */
 	} else
@@ -193,14 +193,14 @@ bool parse_url(char *url)
 	*p = '\0';
 	if (!*s) {
 	    printf("Incomplete URL: %s\n",url) FLUSH;
-	    return FALSE;
+	    return false;
 	}
 	if (*s == ':') {
 	    s++;
 	    p = url_buf;	/* temp space */
 	    if (!isdigit(*s)) {
 		printf("Bad URL (non-numeric portnum): %s\n",url) FLUSH;
-		return FALSE;
+		return false;
 	    }
 	    while (isdigit(*s)) *p++ = *s++;
 	    *p = '\0';
@@ -209,16 +209,16 @@ bool parse_url(char *url)
     } else {
 	if (!strEQ(url_type,"news")) {
 	    printf("URL needs a hostname: %s\n",url);
-	    return FALSE;
+	    return false;
 	}
     }
     /* finally, just do the path */
     if (*s != '/') {
 	printf("Bad URL (path does not start with /): %s\n",url) FLUSH;
-	return FALSE;
+	return false;
     }
     strcpy(url_path,s);
-    return TRUE;
+    return true;
 }
 
 bool url_get(char *url, char *outfile)
@@ -226,7 +226,7 @@ bool url_get(char *url, char *outfile)
     bool flag;
     
     if (!parse_url(url))
-	return FALSE;
+	return false;
 
     if (strEQ(url_type,"http"))
 	flag = fetch_http(url_host,url_port,url_path,outfile);
@@ -235,7 +235,7 @@ bool url_get(char *url, char *outfile)
     else {
 	if (url_type)
 	    printf("\nURL type %s not supported (yet?)\n",url_type) FLUSH;
-	flag = FALSE;
+	flag = false;
     }
     return flag;
 }

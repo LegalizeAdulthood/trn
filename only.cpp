@@ -36,8 +36,8 @@ void setngtodo(char *pat)
 	compextodo[i] = (COMPEX*)safemalloc(sizeof(COMPEX));
 #endif
 	init_compex(compextodo[i]);
-	compile(compextodo[i],pat,TRUE,TRUE);
-	if ((s = ng_comp(compextodo[i],pat,TRUE,TRUE)) != NULL) {
+	compile(compextodo[i],pat,true,true);
+	if ((s = ng_comp(compextodo[i],pat,true,true)) != NULL) {
 	    printf("\n%s\n",s) FLUSH;
 	    finalize(1);
 	}
@@ -52,12 +52,12 @@ bool inlist(char *ngnam)
     register int i;
 
     if (maxngtodo == 0)
-	return TRUE;
+	return true;
     for (i = save_maxngtodo; i < maxngtodo + save_maxngtodo; i++) {
 	if (execute(compextodo[i],ngnam))
-	    return TRUE;
+	    return true;
     }
-    return FALSE;
+    return false;
 }
 
 void end_only(void)

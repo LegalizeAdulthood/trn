@@ -20,8 +20,8 @@ EXT char* subjline INIT(NULL);	/* what format to use for '=' */
 EXT int mailcount INIT(0);	/* check for mail when 0 mod 10 */
 #endif
 EXT char* mailcall INIT(nullstr);
-EXT bool forcelast INIT(FALSE);	/* ought we show "End of newsgroup"? */
-EXT bool forcegrow INIT(FALSE);	/* do we want to recalculate size */
+EXT bool forcelast INIT(false);	/* ought we show "End of newsgroup"? */
+EXT bool forcegrow INIT(false);	/* do we want to recalculate size */
 				/*   of newsgroup, e.g. after posting? */
 
 #define NG_ERROR -1
@@ -40,7 +40,7 @@ void ng_init _((void));
 int do_newsgroup _((char*));
 int art_switch _((void));
 #ifdef MAILCALL
-void setmail _((bool_int));
+void setmail(bool force);
 #endif
 void setdfltcmd _((void));
 char ask_catchup _((void));

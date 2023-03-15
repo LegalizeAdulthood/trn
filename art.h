@@ -25,7 +25,7 @@ EXT char hide_everything INIT(0);/* if set, do not write page now, */
 
 void art_init _((void));
 int do_article _((void));
-int maybe_set_color _((char*,bool_int));
+bool maybe_set_color(char *cp, bool backsearch);
 int page_switch _((void));
 bool innermore _((void));
 void pager_mouse _((int,int,int,int,int,int));

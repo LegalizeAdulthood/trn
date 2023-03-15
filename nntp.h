@@ -37,7 +37,7 @@ int nntp_artnums _((void));
 int nntp_rover _((void));
 #endif
 ART_NUM nntp_find_real_art _((ART_NUM));
-char* nntp_artname _((ART_NUM,bool_int));
+char *nntp_artname(ART_NUM artnum, bool allocate);
 char* nntp_tmpname _((int));
 int nntp_handle_nested_lists(void);
 int nntp_handle_timeout _((void));

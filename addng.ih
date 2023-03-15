@@ -16,7 +16,7 @@ static void new_local_groups _((DATASRC*));
 static void add_to_hash _((HASHTABLE*,char*,int,char_int));
 static void add_to_list _((char*,int,char_int));
 static int list_groups _((int,HASHDATUM*,int));
-static void scanline _((char*,bool_int));
+static void scanline(char *actline, bool add_matching);
 static int agorder_number(const ADDGROUP**,const ADDGROUP**);
 static int agorder_groupname _((const ADDGROUP**,const ADDGROUP**));
 static int agorder_count _((const ADDGROUP**,const ADDGROUP**));

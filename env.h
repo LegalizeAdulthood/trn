@@ -17,7 +17,7 @@ EXT char *g_local_host INIT(NULL);	/* local host name */
 EXT int g_net_speed INIT(20);		/* how fast our net-connection is */
 #endif
 
-bool env_init(char *tcbuf, bool_int lax);
+bool env_init(char *tcbuf, bool lax);
 bool set_user_name(char *tmpbuf);
 bool set_p_host_name(char *tmpbuf);
 char *get_val(char *nam, char *def);

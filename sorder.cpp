@@ -112,7 +112,7 @@ void s_sort(void)
 #endif
     s_sort_basic();
     s_ent_sorted_max = s_ent_sort_max;  /* whole array is now sorted */
-    s_order_changed = FALSE;
+    s_order_changed = false;
     /* rebuild the indexes */
     for (i = 0; i <= s_ent_sort_max; i++)
 	s_ent_index[s_ent_sort[i]] = i;
@@ -170,7 +170,7 @@ void s_order_add(long ent)
 	    s_ent_index[i] = -1;	/* -1 == not a legal entry */
     }
     s_ent_index[ent] = s_ent_sort_max;
-    s_order_changed = TRUE;
+    s_order_changed = true;
 }
 
 long s_prev(long ent)

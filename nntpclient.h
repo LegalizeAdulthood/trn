@@ -25,9 +25,9 @@ enum
 };
 
 EXT NNTPLINK nntplink;		/* the current server's file handles */
-EXT bool nntp_allow_timeout INIT(FALSE);
+EXT bool nntp_allow_timeout INIT(false);
 
-#define nntp_get_a_line(buf,len,realloc) get_a_line(buf,len,realloc,nntplink.rd_fp)
+#define nntp_get_a_line(buf, len, realloc) get_a_line(buf, len, realloc, nntplink.rd_fp)
 
 /* RFC 977 defines these, so don't change them */
 enum
@@ -81,10 +81,10 @@ EXT char g_last_command[NNTP_STRLEN];
 
 #endif /* SUPPORT_NNTP */
 
-int nntp_connect(const char *machine, bool_int verbose);
+int nntp_connect(const char *machine, bool verbose);
 char *nntp_servername(char *name);
 int nntp_command(const char *bp);
 int nntp_check(void);
 bool nntp_at_list_end(const char *s);
 int nntp_gets(char *bp, int len);
-void nntp_close(bool_int send_quit);
+void nntp_close(bool send_quit);

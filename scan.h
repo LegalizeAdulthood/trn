@@ -76,7 +76,7 @@ EXT PAGE_ENT* page_ents INIT(NULL);	/* array of entries on page */
 /* -1 means not initialized for top and bottom entry */
 EXT long s_top_ent INIT(0);		/* top entry on page */
 EXT long s_bot_ent INIT(0);		/* bottom entry (note change) */
-EXT bool s_refill INIT(FALSE);		/* does the page need refilling? */
+EXT bool s_refill INIT(false);		/* does the page need refilling? */
 /* refresh entries */
 EXT bool s_ref_all INIT(0);		/* refresh all on page */
 EXT bool s_ref_top INIT(0);		/* top status bar */
@@ -106,7 +106,7 @@ EXT int s_cur_type INIT(0);
 
 /* options */
 /* show item numbers by default */
-EXT int s_itemnum INIT(TRUE);
+EXT int s_itemnum INIT(true);
 EXT int s_mode_vi INIT(0);
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */

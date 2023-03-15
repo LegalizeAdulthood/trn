@@ -153,7 +153,7 @@ struct mimecap_entry {
 #define MCF_NEEDSTERMINAL	0x0001
 #define MCF_COPIOUSOUTPUT	0x0002
 
-EXT bool auto_view_inline INIT(FALSE);
+EXT bool auto_view_inline INIT(false);
 EXT char* mime_getc_line INIT(NULL);
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
@@ -177,9 +177,9 @@ int mime_EndOfSection _((char*));
 char* mime_ParseParams _((char*));
 char* mime_FindParam _((char*,char*));
 char* mime_SkipWhitespace _((char*));
-void mime_DecodeArticle _((bool_int));
+void mime_DecodeArticle(bool view);
 void mime_Description _((MIME_SECT*,char*,int));
-int qp_decodestring _((char*,char*,bool_int));
+int qp_decodestring(char *t, char *f, bool in_header);
 int qp_decode _((FILE*,int));
 int b64_decodestring _((char*,char*));
 int b64_decode _((FILE*,int));

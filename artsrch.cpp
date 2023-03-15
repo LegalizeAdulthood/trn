@@ -42,7 +42,7 @@ void artsrch_init(void)
 /* search for an article containing some pattern */
 
 #ifdef ARTSEARCH
-/* if patbuf != buf, get_cmd must be set to FALSE!!! */
+/* if patbuf != buf, get_cmd must be set to false!!! */
 int art_search(char *patbuf, int patbufsiz, int get_cmd)
 {
     char* pattern;			/* unparsed pattern */
@@ -58,7 +58,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
     int srchhdr;			/* header to search if Hdr scope */
     bool topstart = 0;
     bool doread;			/* search read articles? */
-    bool foldcase = TRUE;		/* fold upper and lower case? */
+    bool foldcase = true;		/* fold upper and lower case? */
     int ignorethru = 0;			/* should we ignore the thru line? */
     bool output_level = (!use_threads && gmode != 's');
     ART_NUM srchfirst;
@@ -66,13 +66,13 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
     int_count = 0;
     if (cmdchr == '/' || cmdchr == '?') {	/* normal search? */
 	if (get_cmd && buf == patbuf)
-	    if (!finish_command(FALSE))	/* get rest of command */
+	    if (!finish_command(false))	/* get rest of command */
 		return SRCH_ABORT;
 	compex = &art_compex;
 	if (patbuf[1]) {
 	    howmuch = ARTSCOPE_SUBJECT;
 	    srchhdr = SOME_LINE;
-	    doread = FALSE;
+	    doread = false;
 	}
 	else {
 	    howmuch = art_howmuch;
@@ -110,16 +110,16 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 		    howmuch = ARTSCOPE_ARTICLE;
 		    break;
 		case 't':		/* start from the top */
-		    topstart = TRUE;
+		    topstart = true;
 		    break;
 		case 'r':		/* scan read articles */
-		    doread = TRUE;
+		    doread = true;
 		    break;
 		case 'K':		/* put into KILL file */
 		    saltaway = 1;
 		    break;
 		case 'c':		/* make search case sensitive */
-		    foldcase = FALSE;
+		    foldcase = false;
 		    break;
 		case 'I':		/* ignore the killfile thru line */
 		    ignorethru = 1;
@@ -140,7 +140,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 #else
 	    if (*s == 'm')
 #endif
-		doread = TRUE;
+		doread = true;
 	    if (*s == 'k')		/* grandfather clause */
 		*s = 'j';
 	    cmdlst = savestr(s);
@@ -240,7 +240,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	}
 #endif
     }
-    if ((s = compile(compex,pattern,TRUE,foldcase)) != NULL) {
+    if ((s = compile(compex,pattern,true,foldcase)) != NULL) {
 					/* compile regular expression */
 	errormsg(s);
 	ret = SRCH_ABORT;
@@ -308,7 +308,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 		      : (mode != 'k' || ignorethru > 0)? firstart : killfirst;
     if (topstart || art == 0) {
 	art = lastart+1;
-	topstart = FALSE;
+	topstart = false;
     }
     if (backward) {
 	if (cmdlst && art <= lastart)
@@ -364,7 +364,7 @@ exit:
 #endif /* ARTSEARCH */
 
 /* determine if article fits pattern */
-/* returns TRUE if it exists and fits pattern, FALSE otherwise */
+/* returns true if it exists and fits pattern, false otherwise */
 
 #ifdef ARTSEARCH
 bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
@@ -372,12 +372,12 @@ bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
     ARTICLE* ap = article_find(artnum);
 
     if (!ap || !(ap->flags & AF_EXISTS))
-	return FALSE;
+	return false;
 
     switch (scope) {
       case ARTSCOPE_SUBJECT:
 	strcpy(buf,"Subject: ");
-	strncpy(buf+9,fetchsubj(artnum,FALSE),256);
+	strncpy(buf+9,fetchsubj(artnum,false),256);
 #ifdef DEBUG
 	if (debug & DEB_SEARCH_AHEAD)
 	    printf("%s\n",buf) FLUSH;
@@ -385,46 +385,46 @@ bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
 	break;
       case ARTSCOPE_FROM:
 	strcpy(buf, "From: ");
-	strncpy(buf+6,fetchfrom(artnum,FALSE),256);
+	strncpy(buf+6,fetchfrom(artnum,false),256);
 	break;
       case ARTSCOPE_ONEHDR:
-	untrim_cache = TRUE;
+	untrim_cache = true;
 	sprintf(buf, "%s: %s", htype[art_srchhdr].name,
-		prefetchlines(artnum,art_srchhdr,FALSE));
-	untrim_cache = FALSE;
+		prefetchlines(artnum,art_srchhdr,false));
+	untrim_cache = false;
 	break;
       default: {
 	char* s;
 	char* nlptr;
 	char ch;
-	bool success = FALSE, in_sig = FALSE;
+	bool success = false, in_sig = false;
 	if (scope != ARTSCOPE_BODY && scope != ARTSCOPE_BODY_NOSIG) {
 	    if (!parseheader(artnum))
-		return FALSE;
+		return false;
 	    /* see if it's in the header */
 	    if (execute(compex,headbuf))	/* does it match? */
-		return TRUE;			/* say, "Eureka!" */
+		return true;			/* say, "Eureka!" */
 	    if (scope < ARTSCOPE_ARTICLE)
-		return FALSE;
+		return false;
 	}
 	if (parsed_art == artnum) {
 	    if (!artopen(artnum,htype[PAST_HEADER].minpos))
-		return FALSE;
+		return false;
 	}
 	else {
 	    if (!artopen(artnum,(ART_POS)0))
-		return FALSE;
+		return false;
 	    if (!parseheader(artnum))
-		return FALSE;
+		return false;
 	}
 	/* loop through each line of the article */
 	seekartbuf(htype[PAST_HEADER].minpos);
-	while ((s = readartbuf(FALSE)) != NULL) {
+	while ((s = readartbuf(false)) != NULL) {
 	    if (scope == ARTSCOPE_BODY_NOSIG && *s == '-' && s[1] == '-'
 	     && (s[2] == '\n' || (s[2] == ' ' && s[3] == '\n'))) {
 		if (in_sig && success)
-		    return TRUE;
-		in_sig = TRUE;
+		    return true;
+		in_sig = true;
 	    }
 	    if ((nlptr = index(s,'\n')) != NULL) {
 		ch = *++nlptr;
@@ -434,9 +434,9 @@ bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
 	    if (nlptr)
 		*nlptr = ch;
 	    if (success && !in_sig)		/* does it match? */
-		return TRUE;			/* say, "Eureka!" */
+		return true;			/* say, "Eureka!" */
 	}
-	return FALSE;			/* out of article, so no match */
+	return false;			/* out of article, so no match */
       }
     }
     return execute(compex,buf) != NULL;

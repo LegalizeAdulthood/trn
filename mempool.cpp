@@ -98,7 +98,7 @@ char *mp_savestr(char *str, int pool)
     if (!str) {
 #if 1
 	printf("\ntrn: mp_savestr(NULL,%d) error.\n",pool);
-	assert(FALSE);
+	assert(false);
 #else
 	return NULL;		/* only a flesh wound... (;-) */
 #endif

@@ -72,9 +72,9 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 
     prep_ini_words(options_ini);
     if (argc >= 2 && strEQ(argv[1],"-c"))
-	checkflag=TRUE;			/* so we can optimize for -c */
+	checkflag=true;			/* so we can optimize for -c */
     interp(*tcbufptr,TCBUF_SIZE,GLOBINIT);
-    opt_file(*tcbufptr,tcbufptr,FALSE);
+    opt_file(*tcbufptr,tcbufptr,false);
 
     option_def_vals = (char**)safemalloc(INI_LEN(options_ini)*sizeof(char*));
     bzero((char*)option_def_vals,INI_LEN(options_ini) * sizeof (char*));
@@ -97,7 +97,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 	}
     }
     if (stat(ini_file,&filestat) == 0)
-	opt_file(ini_file,tcbufptr,TRUE);
+	opt_file(ini_file,tcbufptr,true);
     if (!use_threads || (s = getenv("TRNINIT")) == NULL)
 	s = getenv("RNINIT");
     if (*safecpy(*tcbufptr,s,TCBUF_SIZE)) {
@@ -118,7 +118,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     init_compex(&optcompex);
 }
 
-void opt_file(char *filename, char **tcbufptr, bool_int bleat)
+void opt_file(char *filename, char **tcbufptr, bool bleat)
 {
     char* filebuf = *tcbufptr;
     char* s;
@@ -500,7 +500,7 @@ void set_option(int num, char *s)
 #if defined(VERBOSE) && defined(TERSE)
 	verbose = !YES(s);
 	if (!verbose)
-	    novice_delays = FALSE;
+	    novice_delays = false;
 #endif
 	break;
       case OI_EAT_TYPEAHEAD:
@@ -607,7 +607,7 @@ void save_options(char *filename)
     FILE* fp_out;
     char* filebuf = NULL;
     char* line = NULL;
-    static bool first_time = TRUE;
+    static bool first_time = true;
 
     sprintf(buf,"%s.new",filename);
     fp_out = fopen(buf,"w");
@@ -701,7 +701,7 @@ line that sets %sRNINIT.\n", ini_file, t, t);
 	    UNLINK(buf);
 	    RENAME(filename,buf);
 	}
-	first_time = FALSE;
+	first_time = false;
     }
     else
 	UNLINK(filename);
@@ -764,7 +764,7 @@ char *option_value(int num)
 	int save_sel_mode = sel_mode;
 	int save_Threaded = ThreadedGroup;
 	char* s;
-	ThreadedGroup = TRUE;
+	ThreadedGroup = true;
 	set_selector(sel_defaultmode, 0);
 	s = sel_mode_string;
 	sel_mode = save_sel_mode;
@@ -1026,11 +1026,11 @@ static void set_header_list(int flag, int defflag, char *str)
 	if ((cp = index(str,',')) != NULL)
 	    *cp = '\0';
 	if (*str == '!') {
-	    setit = FALSE;
+	    setit = false;
 	    str++;
 	}
 	else
-	    setit = TRUE;
+	    setit = true;
 	set_header(str,flag,setit);
 	if (!cp)
 	    break;
@@ -1039,7 +1039,7 @@ static void set_header_list(int flag, int defflag, char *str)
     }
 }
 
-void set_header(char *s, int flag, bool_int setit)
+void set_header(char *s, int flag, bool setit)
 {
     int i;
     int len = strlen(s);
@@ -1054,7 +1054,7 @@ void set_header(char *s, int flag, bool_int setit)
     if (flag == HT_HIDE && *s && isalpha(*s)) {
 	char ch = isupper(*s)? tolower(*s) : *s;
 	int add_at = 0, killed = 0;
-	bool save_it = TRUE;
+	bool save_it = true;
 	for (i = user_htypeix[ch - 'a']; *user_htype[i].name == ch; i--) {
 	    if (len <= user_htype[i].length
 	     && strncaseEQ(s,user_htype[i].name,len)) {
@@ -1066,7 +1066,7 @@ void set_header(char *s, int flag, bool_int setit)
 		  && strncaseEQ(s,user_htype[i].name,user_htype[i].length)) {
 		if (!add_at) {
 		    if (user_htype[i].flags == (setit? flag : 0))
-			save_it = FALSE;
+			save_it = false;
 		    add_at = i+1;
 		}
 	    }

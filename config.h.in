@@ -440,7 +440,7 @@ typedef struct timeb Timeval; /* Structure used by ftime() */
  *	to read its name.
  */
 /* HOSTBITS:
- *	Set to TRUE if we should compare only the domain portion of the
+ *	Set to true if we should compare only the domain portion of the
  *	hostname when looking for local articles.
  */
 #define PHOSTNAME "@PHOST@"

@@ -35,7 +35,7 @@
 
 #ifdef KILLFILES
 
-static bool exitcmds = FALSE;
+static bool exitcmds = false;
 
 char thread_cmd_ltr[] = "JK,j+S.m";
 unsigned short thread_cmd_flag[] = {
@@ -168,7 +168,7 @@ int do_kfile(FILE *kfp, int entering)
 	}
 	if (*bp == 'X') {		/* exit command? */
 	    if (entering) {
-		exitcmds = TRUE;
+		exitcmds = true;
 		continue;
 	    }
 	    bp++;
@@ -188,7 +188,7 @@ int do_kfile(FILE *kfp, int entering)
 		continue;
 	    if (last_kill_type) {
 		if (perform_status_end(ngptr->toread,"article")) {
-		    kill_mentioned = TRUE;
+		    kill_mentioned = true;
 		    carriage_return();
 		    fputs(msg, stdout);
 		    newline();
@@ -197,8 +197,8 @@ int do_kfile(FILE *kfp, int entering)
 	    perform_status_init(ngptr->toread);
 	    last_kill_type = '/';
 	    mention(bp);
-	    kill_mentioned = TRUE;
-	    switch (art_search(bp, (sizeof buf) - (bp - buf), FALSE)) {
+	    kill_mentioned = true;
+	    switch (art_search(bp, (sizeof buf) - (bp - buf), false)) {
 	    case SRCH_ABORT:
 		continue;
 	    case SRCH_INTR:
@@ -231,7 +231,7 @@ int do_kfile(FILE *kfp, int entering)
 	    if (last_kill_type != '<') {
 		if (last_kill_type) {
 		    if (perform_status_end(ngptr->toread,"article")) {
-			kill_mentioned = TRUE;
+			kill_mentioned = true;
 			carriage_return();
 			fputs(msg, stdout);
 			newline();
@@ -259,7 +259,7 @@ int do_kfile(FILE *kfp, int entering)
 		} else {
 		    art = article_num(ap);
 		    artp = ap;
-		    perform(cp,FALSE);
+		    perform(cp,false);
 		    if (ap->autofl & AUTO_SELS)
 			thread_select_cnt++;
 		    else if (ap->autofl & AUTO_KILLS)
@@ -289,17 +289,17 @@ int do_kfile(FILE *kfp, int entering)
 	sprintf(buf,"%ld auto-kill command%s.", (long)thread_kill_cnt,
 		PLURAL(thread_kill_cnt));
 	mention(buf);
-	kill_mentioned = TRUE;
+	kill_mentioned = true;
     }
     if (thread_select_cnt) {
 	sprintf(buf,"%ld auto-select command%s.", (long)thread_select_cnt,
 		PLURAL(thread_select_cnt));
 	mention(buf);
-	kill_mentioned = TRUE;
+	kill_mentioned = true;
     }
     if (last_kill_type) {
 	if (perform_status_end(ngptr->toread,"article")) {
-	    kill_mentioned = TRUE;
+	    kill_mentioned = true;
 	    carriage_return();
 	    fputs(msg, stdout);
 	    newline();
@@ -318,19 +318,19 @@ static bool kfile_junk(char *ptr, int killmask)
 	if (!selected_count--)
 	    selected_count = 0;
     }
-    return 0;
+    return false;
 }
 
 void kill_unwanted(ART_NUM starting, char *message, int entering)
 {
-    bool intr = FALSE;			/* did we get an interrupt? */
+    bool intr = false;			/* did we get an interrupt? */
     ART_NUM oldfirst;
     char oldmode = mode;
     bool anytokill = (ngptr->toread > 0);
 
     set_mode('r','k');
     if ((entering || exitcmds) && (localkfp || globkfp)) {
-	exitcmds = FALSE;
+	exitcmds = false;
 	oldfirst = firstart;
 	firstart = starting;
 	clear();
@@ -345,7 +345,7 @@ void kill_unwanted(ART_NUM starting, char *message, int entering)
 #endif
 	    fputs(message,stdout) FLUSH;
 
-	kill_mentioned = FALSE;
+	kill_mentioned = false;
 	if (localkfp) {
 	    if (entering)
 		kf_state |= KFS_LOCAL_CHANGES;
@@ -366,7 +366,7 @@ void kill_unwanted(ART_NUM starting, char *message, int entering)
 #endif
 	}
 	if (anytokill)			/* if there was anything to kill */
-	    forcelast = FALSE;		/* allow for having killed it all */
+	    forcelast = false;		/* allow for having killed it all */
 	firstart = oldfirst;
     }
     if (!entering && (kf_state & KFS_LOCAL_CHANGES) && !intr)
@@ -400,8 +400,8 @@ void rewrite_kfile(ART_NUM thru)
 {
     bool has_content = (kf_state & (KFS_THREAD_LINES|KFS_GLOBAL_THREADFILE))
 				 == KFS_THREAD_LINES;
-    bool has_star_commands = FALSE;
-    bool needs_newline = FALSE;
+    bool has_star_commands = false;
+    bool needs_newline = false;
     char* killname = filexp(get_val("KILLLOCAL",killlocal));
     char* bp;
 
@@ -433,12 +433,12 @@ void rewrite_kfile(ART_NUM thru)
 		continue;
 	    /* Write star commands after other kill commands */
 	    if (*bp == '*')
-		has_star_commands = TRUE;
+		has_star_commands = true;
 	    else {
 		fputs(buf,newkfp);
 		needs_newline = !index(bp,'\n');
 	    }
-	    has_content = TRUE;
+	    has_content = true;
 	}
 	if (needs_newline)
 	    putc('\n', newkfp);
@@ -709,7 +709,7 @@ void open_kfile(int local)
     }
 }
 
-void kf_append(char *cmd, bool_int local)
+void kf_append(char *cmd, bool local)
 {
     strcpy(cmd_buf, filexp(local? get_val("KILLLOCAL",killlocal)
 				: get_val("KILLGLOBAL",killglobal)));

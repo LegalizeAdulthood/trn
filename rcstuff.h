@@ -63,7 +63,7 @@ EXT MULTIRC* sel_next_mp;
 EXT LIST* multirc_list;	/* a list of all MULTIRCs */
 EXT MULTIRC* multirc;		/* the current MULTIRC */
 
-EXT bool paranoid INIT(FALSE);	/* did we detect some inconsistency in .newsrc? */
+EXT bool paranoid INIT(false);	/* did we detect some inconsistency in .newsrc? */
 EXT int addnewbydefault INIT(0);
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */

@@ -108,7 +108,7 @@ void init_tree(void)
 
     str = tree_buff;		/* initialize first line's data */
     *str++ = ' ';
-    node_on_line = FALSE;
+    node_on_line = false;
     line_num = 0;
     /* cache our portion of the tree */
     cache_tree(thread, 0, tree_indent);
@@ -184,7 +184,7 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
 		*cp = '|';
 	    else
 		*cp = ' ';
-	    node_on_line = TRUE;
+	    node_on_line = true;
 	    break;
 	}
 	case 2:
@@ -212,7 +212,7 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
 		}
 	    }
 	    line_num++;
-	    node_on_line = FALSE;
+	    node_on_line = false;
 	}
 	if (!(ap = ap->sibling) || line_num > max_line)
 	    break;
@@ -310,11 +310,11 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	end = line+1;
     }
 
-    color_object(COLOR_HEADER, 1);
+    color_object(COLOR_HEADER, true);
     /* If this is the first subject line, output it with a preceeding [1] */
     if (is_subject && !isspace(*line)) {
 	if (ThreadedGroup) {
-	    color_object(COLOR_TREE_MARK, 1);
+	    color_object(COLOR_TREE_MARK, true);
 	    putchar('[');
 	    putchar(thread_letter(curr_artp));
 	    putchar(']');
@@ -418,13 +418,13 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 		*cp1 = '\0';
 	    if (cp2 != NULL)
 		*cp2 = '\0';
-	    color_object(COLOR_TREE, 1);
+	    color_object(COLOR_TREE, true);
 	    fputs(cp, stdout);
 	    /* Handle standout output for '*' and '@' marked nodes, then
 	    ** continue with the rest of the line.
 	    */
 	    while (cp1 || cp2) {
-		color_object(COLOR_TREE_MARK, 1);
+		color_object(COLOR_TREE_MARK, true);
 		if (cp1 && (!cp2 || cp1 < cp2)) {
 		    cp = cp1;
 		    cp1 = NULL;
@@ -492,7 +492,7 @@ void entire_tree(ARTICLE* ap)
     }
 
     if (!ThreadedGroup) {
-	ThreadedGroup = TRUE;
+	ThreadedGroup = true;
 	printf("Threading the group. "), fflush(stdout);
 	thread_open();
 	if (!ThreadedGroup) {
@@ -542,7 +542,7 @@ static void display_tree(ARTICLE *article, char *cp)
 	return;
     cp[1] = ' ';
     cp += 5;
-    color_object(COLOR_TREE, 1);
+    color_object(COLOR_TREE, true);
     for (;;) {
 	putchar(((article->flags&AF_HAS_RE) || article->parent) ? '-' : ' ');
 	if (!(article->flags & AF_UNREAD)) {
@@ -560,7 +560,7 @@ static void display_tree(ARTICLE *article, char *cp)
 	    color_string(COLOR_TREE_MARK,buf);
 	} else if (article == recent_artp) {
 	    putchar(buf[0]);
-	    color_object(COLOR_TREE_MARK, 1);
+	    color_object(COLOR_TREE_MARK, true);
 	    putchar(buf[1]);
 	    color_pop();	/* of COLOR_TREE_MARK */
 	    putchar(buf[2]);
@@ -575,7 +575,7 @@ static void display_tree(ARTICLE *article, char *cp)
 	    putchar((article->child1->sibling)? '+' : '-');
 	    color_pop();	/* of COLOR_TREE */
 	    display_tree(article->child1, cp);
-	    color_object(COLOR_TREE, 1);
+	    color_object(COLOR_TREE, true);
 	    cp[1] = '\0';
 	} else
 	    newline();

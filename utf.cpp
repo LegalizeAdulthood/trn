@@ -105,9 +105,7 @@ struct gstate {
 struct gstate gs = { CHARSET_UTF8, CHARSET_UTF8, NULL };
 
 
-int
-find_charset(s)
-const char *s;
+static int find_charset(const char *s)
 {
     int it = CHARSET_UNKNOWN;
     if (s) {
@@ -128,9 +126,7 @@ const char *s;
     return it;
 }
 
-charset_desc_t *
-find_charset_desc(id)
-int id;
+static charset_desc_t *find_charset_desc(int id)
 {
     charset_desc_t *it = NULL;
     int i;
@@ -144,10 +140,7 @@ int id;
     return it;
 }
 
-int
-utf_init(f, t)
-const char *f;
-const char *t;
+int utf_init(const char *f, const char *t)
 {
     int i = find_charset(f);
     int o = find_charset(t);
@@ -166,21 +159,17 @@ const char *t;
     return i;
 }
 
-const char *
-input_charset_name()
+const char *input_charset_name()
 {
     return find_charset_desc(gs.in)->name;
 }
 
-const char *
-output_charset_name()
+const char *output_charset_name()
 {
     return find_charset_desc(gs.out)->name;
 }
 
-int
-byte_length_at(s)
-const char *s;
+int byte_length_at(const char *s)
 {
     int it = s != NULL; /* correct for ASCII */
     if (!it) {
@@ -211,9 +200,7 @@ const char *s;
 }
 
 /* NOTE: correctness is not guaranteed; this is only a rough generalization */
-int
-visual_width_at(s)
-const char *s;
+int visual_width_at(const char *s)
 {
     CODE_POINT c = code_point_at(s);
     int it = 1;
@@ -241,9 +228,7 @@ const char *s;
     return it;
 }
 
-int
-visual_length_of(s)
-const char *s;
+int visual_length_of(const char *s)
 {
     int it = 0;
     if (s) {
@@ -257,10 +242,7 @@ const char *s;
     return it;
 }
 
-int
-visual_length_between(s1, s2)
-const char *s1;
-const char *s2;
+int visual_length_between(const char *s1, const char *s2)
 {
     int it = 0;
     if (s1 && s2) {
@@ -279,9 +261,7 @@ const char *s2;
     return it;
 }
 
-CODE_POINT
-code_point_at(s)
-const char *s;
+CODE_POINT code_point_at(const char *s)
 {
     CODE_POINT it;
     if (s != NULL) {
@@ -315,10 +295,7 @@ const char *s;
     return it;
 }
 
-int
-insert_utf8_at(s, c)
-char *s;
-CODE_POINT c;
+static int insert_utf8_at(char *s, CODE_POINT c)
 {
     int it;
     /* FIXME - should we check if s has enough space? */
@@ -366,10 +343,7 @@ CODE_POINT c;
     return it;
 }
 
-int
-insert_unicode_at(s, c)
-char *s;
-CODE_POINT c;
+int insert_unicode_at(char *s, CODE_POINT c)
 {
     int it;
     /* FIXME - should we check if s has enough space? */
@@ -386,9 +360,7 @@ CODE_POINT c;
     return it;
 }
 
-bool
-at_norm_char(s)
-const char *s;
+bool at_norm_char(const char *s)
 {
     int it = s != NULL;
     if (it) { it = *s != 0; }
@@ -405,10 +377,7 @@ const char *s;
     return it;
 }
 
-int
-put_char_adv(strptr, outputok)
-char **strptr;
-bool_int outputok;
+int put_char_adv(char **strptr, bool outputok)
 {
     int it;
     if (strptr == NULL) {
@@ -439,9 +408,7 @@ bool_int outputok;
     return it;
 }
 
-char *
-create_utf8_copy(s)
-char *s;
+char *create_utf8_copy(char *s)
 {
     char *it = s;
     if (s != NULL) {
@@ -459,7 +426,7 @@ char *s;
 	}
 
 	/* Create the actual copy */
-	it = malloc(tlen + 1);
+	it = (char*) malloc(tlen + 1);
 	if (it) {
 	    char *bufptr = it;
 	    for (i = 0; s[i]; ) {
@@ -473,10 +440,7 @@ char *s;
     return it;
 }
 
-void
-terminate_string_at_visual_index(s, i)
-char *s;
-int i;
+void terminate_string_at_visual_index(char *s, int i)
 {
     if (s) {
 	int j;
