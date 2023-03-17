@@ -34,7 +34,7 @@ static int run(char* command)
 {
     jmp_buf panic;			/* How to recover from errors */
     char* shell;			/* Command processor */
-    char* s = NULL;			/* Holds the command */
+    char* s = nullptr;			/* Holds the command */
     int s_is_malloced = 0;		/* True if need to free 's' */
     static char* command_com = "COMMAND.COM";
     int status;				/* Return codes */
@@ -44,20 +44,20 @@ static int run(char* command)
 
     s = savestr(command);
     /* Determine the command processor */
-    if ((shell = getenv("SHELL")) == NULL
-     && (shell = getenv("COMSPEC")) == NULL)
+    if ((shell = getenv("SHELL")) == nullptr
+     && (shell = getenv("COMSPEC")) == nullptr)
 	shell = command_com;
     strupr(shell);
     shellpath = shell;
     /* Strip off any leading backslash directories */
     shell = rindex(shellpath, '\\');
-    if (shell != NULL)
+    if (shell != nullptr)
 	shell++;
     else
 	shell = shellpath;
     /* Strip off any leading slash directories */
     bp = rindex(shell, '/');
-    if (bp != NULL)
+    if (bp != nullptr)
 	shell = ++bp;
     if (strcmp(shell, command_com) != 0) {
 	/* MKS Shell needs quoted argument */
@@ -71,7 +71,7 @@ static int run(char* command)
     } else
 	s = command;
     /* Run the program */
-    status = spawnl(P_WAIT, shellpath, shell, dash_c, s, NULL);
+    status = spawnl(P_WAIT, shellpath, shell, dash_c, s, nullptr);
     if (s_is_malloced)
 	free(s);
     return status;
@@ -101,14 +101,14 @@ static void resetpipe(int fd)
     char* bp;
     if (fd >= 0 && fd < _NFILE) {
 	pipetype[fd] = 0;
-	if ((bp = pipename[fd]) != NULL) {
+	if ((bp = pipename[fd]) != nullptr) {
 	    (void) unlink(bp);
 	    free(bp);
-	    pipename[fd] = NULL;
+	    pipename[fd] = nullptr;
 	}
-	if ((bp = prgname[fd]) != NULL) {
+	if ((bp = prgname[fd]) != nullptr) {
 	    free(bp);
-	    prgname[fd] = NULL;
+	    prgname[fd] = nullptr;
 	}
     }
 }
@@ -122,7 +122,7 @@ static void resetpipe(int fd)
 //char* type;			/* "w" or "r" */
 FILE *popen(char *prg, char *type)
 { 
-    FILE* p = NULL;		/* Where we open the pipe */
+    FILE* p = nullptr;		/* Where we open the pipe */
     int ostdin;			/* Where our stdin is now */
     int pipefd = -1;		/* fileno(p) -- for convenience */
     char* tmpfile;		/* Holds name of pipe file */
@@ -135,16 +135,16 @@ FILE *popen(char *prg, char *type)
     if ((lineno = setjmp(panic)) != 0) {
 	/* An error has occurred, so clean up */
 	int E = errno;
-	if (p != NULL)
+	if (p != nullptr)
 	    (void) fclose(p);
 	resetpipe(pipefd);
 	errno = E;
 	lineno = lineno;
-	return NULL;
+	return nullptr;
     }
     if (strcmp(type, "w") == 0) {
 	/* for write style pipe, pclose handles program execution */
-	if ((p = fopen(tmpfile, "w")) != NULL) {
+	if ((p = fopen(tmpfile, "w")) != nullptr) {
 	    pipefd = fileno(p);
 	    pipetype[pipefd] = WRITEIT;
 	    pipename[pipefd] = savestr(tmpfile);
@@ -155,7 +155,7 @@ FILE *popen(char *prg, char *type)
 	 * file, and run the program.  note that if the pipe file cannot be
 	 * opened, it'll return a condition indicating pipe failure, which is
 	 * fine. */
-	if ((p = fopen(tmpfile, "w")) != NULL) {
+	if ((p = fopen(tmpfile, "w")) != nullptr) {
 	    int ostdout;
 	    pipefd = fileno(p);
 	    pipetype[pipefd]= READIT;
@@ -174,7 +174,7 @@ FILE *popen(char *prg, char *type)
 		longjmp(panic, __LINE__);
 	    if (fclose(p) < 0)
 		longjmp(panic, __LINE__);
-	    if ((p = fopen(tmpfile, "r")) == NULL)
+	    if ((p = fopen(tmpfile, "r")) == nullptr)
 		longjmp(panic, __LINE__);
 	}
     } else {
@@ -196,7 +196,7 @@ int pclose(FILE *p)
     if ((lineno = setjmp(panic)) != 0) {
 	/* An error has occurred, so clean up and return */
 	int E = errno;
-	if (p != NULL)
+	if (p != nullptr)
 	    (void) fclose(p);
 	resetpipe(pipefd);
 	errno = E;
@@ -210,7 +210,7 @@ int pclose(FILE *p)
     case WRITEIT:
 	/* open the temp file again as read, redirect stdin from that
 	 * file, run the program, then clean up. */
-	if ((p = fopen(pipename[pipefd],"r")) == NULL) 
+	if ((p = fopen(pipename[pipefd],"r")) == nullptr) 
 	    longjmp(panic, __LINE__);
 	ostdin = dup(fileno(stdin));
 	if (dup2(fileno(stdin), fileno(p)) < 0)

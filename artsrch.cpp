@@ -51,7 +51,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
     bool backward = cmdchr == '?' || cmdchr == Ctl('p');
 					/* direction of search */
     COMPEX* compex;			/* which compiled expression */
-    char* cmdlst = NULL;		/* list of commands to do */
+    char* cmdlst = nullptr;		/* list of commands to do */
     int ret = SRCH_NOTFOUND;		/* assume no commands */
     int saltaway = 0;			/* store in KILL file? */
     int howmuch;			/* search scope: subj/from/Hdr/head/art */
@@ -240,7 +240,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	}
 #endif
     }
-    if ((s = compile(compex,pattern,true,foldcase)) != NULL) {
+    if ((s = compile(compex,pattern,true,foldcase)) != nullptr) {
 					/* compile regular expression */
 	errormsg(s);
 	ret = SRCH_ABORT;
@@ -419,18 +419,18 @@ bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
 	}
 	/* loop through each line of the article */
 	seekartbuf(htype[PAST_HEADER].minpos);
-	while ((s = readartbuf(false)) != NULL) {
+	while ((s = readartbuf(false)) != nullptr) {
 	    if (scope == ARTSCOPE_BODY_NOSIG && *s == '-' && s[1] == '-'
 	     && (s[2] == '\n' || (s[2] == ' ' && s[3] == '\n'))) {
 		if (in_sig && success)
 		    return true;
 		in_sig = true;
 	    }
-	    if ((nlptr = index(s,'\n')) != NULL) {
+	    if ((nlptr = index(s,'\n')) != nullptr) {
 		ch = *++nlptr;
 		*nlptr = '\0';
 	    }
-	    success = success || execute(compex,s) != NULL;
+	    success = success || execute(compex,s) != nullptr;
 	    if (nlptr)
 		*nlptr = ch;
 	    if (success && !in_sig)		/* does it match? */
@@ -439,6 +439,6 @@ bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
 	return false;			/* out of article, so no match */
       }
     }
-    return execute(compex,buf) != NULL;
+    return execute(compex,buf) != nullptr;
 }
 #endif /* ARTSEARCH */

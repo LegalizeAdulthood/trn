@@ -108,26 +108,26 @@ EXT int lflusho INIT(LFLUSHO);
 
 #ifdef HAS_TERMLIB
 EXT int tc_GT;				/* hardware tabs */
-EXT char* tc_BC INIT(NULL);		/* backspace character */
-EXT char* tc_UP INIT(NULL);		/* move cursor up one line */
-EXT char* tc_CR INIT(NULL);		/* get to left margin, somehow */
-EXT char* tc_VB INIT(NULL);		/* visible bell */
-EXT char* tc_CL INIT(NULL);		/* home and clear screen */
-EXT char* tc_CE INIT(NULL);		/* clear to end of line */
-EXT char* tc_TI INIT(NULL);		/* initialize terminal */
-EXT char* tc_TE INIT(NULL);		/* reset terminal */
-EXT char* tc_KS INIT(NULL);		/* enter `keypad transmit' mode */
-EXT char* tc_KE INIT(NULL);		/* exit `keypad transmit' mode */
-EXT char* tc_CM INIT(NULL);		/* cursor motion */
-EXT char* tc_HO INIT(NULL);		/* home cursor */
-EXT char* tc_IL INIT(NULL);		/* insert line */
-EXT char* tc_CD INIT(NULL);		/* clear to end of display */
-EXT char* tc_SO INIT(NULL);		/* begin standout mode */
-EXT char* tc_SE INIT(NULL);		/* end standout mode */
+EXT char* tc_BC INIT(nullptr);		/* backspace character */
+EXT char* tc_UP INIT(nullptr);		/* move cursor up one line */
+EXT char* tc_CR INIT(nullptr);		/* get to left margin, somehow */
+EXT char* tc_VB INIT(nullptr);		/* visible bell */
+EXT char* tc_CL INIT(nullptr);		/* home and clear screen */
+EXT char* tc_CE INIT(nullptr);		/* clear to end of line */
+EXT char* tc_TI INIT(nullptr);		/* initialize terminal */
+EXT char* tc_TE INIT(nullptr);		/* reset terminal */
+EXT char* tc_KS INIT(nullptr);		/* enter `keypad transmit' mode */
+EXT char* tc_KE INIT(nullptr);		/* exit `keypad transmit' mode */
+EXT char* tc_CM INIT(nullptr);		/* cursor motion */
+EXT char* tc_HO INIT(nullptr);		/* home cursor */
+EXT char* tc_IL INIT(nullptr);		/* insert line */
+EXT char* tc_CD INIT(nullptr);		/* clear to end of display */
+EXT char* tc_SO INIT(nullptr);		/* begin standout mode */
+EXT char* tc_SE INIT(nullptr);		/* end standout mode */
 EXT int tc_SG INIT(0);			/* blanks left by SO and SE */
-EXT char* tc_US INIT(NULL);		/* start underline mode */
-EXT char* tc_UE INIT(NULL);		/* end underline mode */
-EXT char* tc_UC INIT(NULL);		/* underline a character,
+EXT char* tc_US INIT(nullptr);		/* start underline mode */
+EXT char* tc_UE INIT(nullptr);		/* end underline mode */
+EXT char* tc_UC INIT(nullptr);		/* underline a character,
 						 if that's how it's done */
 EXT int tc_UG INIT(0);			/* blanks left by US and UE */
 EXT bool tc_AM INIT(false);		/* does terminal have automatic

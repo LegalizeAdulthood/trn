@@ -125,7 +125,7 @@ void s_order_clean()
     if (s_ent_index)
 	free(s_ent_index);
 
-    s_ent_sort = NULL;
+    s_ent_sort = nullptr;
     s_contexts[s_cur_context].ent_sort = s_ent_sort;
 
     s_ent_index = (long*)0;

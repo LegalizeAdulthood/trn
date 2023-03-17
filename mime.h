@@ -154,7 +154,7 @@ struct mimecap_entry {
 #define MCF_COPIOUSOUTPUT	0x0002
 
 EXT bool auto_view_inline INIT(false);
-EXT char* mime_getc_line INIT(NULL);
+EXT char* mime_getc_line INIT(nullptr);
 
 void mime_init();
 void mime_ReadMimecap(char *);

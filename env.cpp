@@ -32,10 +32,10 @@ bool env_init(char *tcbuf, bool lax)
 {
     bool fully_successful = true;
 
-    if ((g_home_dir = getenv("HOME")) == NULL)
+    if ((g_home_dir = getenv("HOME")) == nullptr)
 	g_home_dir = getenv("LOGDIR");
 
-    if ((g_tmp_dir = getenv("TMPDIR")) == NULL)
+    if ((g_tmp_dir = getenv("TMPDIR")) == nullptr)
 	g_tmp_dir = get_val("TMP","/tmp");
 
     /* try to set g_login_name */
@@ -55,7 +55,7 @@ bool env_init(char *tcbuf, bool lax)
     g_login_name = getenv("USERNAME");
     char *home_drive = getenv("HOMEDRIVE");
     char *home_path = getenv("HOMEPATH");
-    if (home_drive != NULL && home_path != NULL)
+    if (home_drive != nullptr && home_path != nullptr)
     {
 	strcpy(tcbuf, home_drive);
 	strcat(tcbuf, home_path);
@@ -63,7 +63,7 @@ bool env_init(char *tcbuf, bool lax)
     }
 #endif
 
-    /* Set g_real_name, and maybe set g_login_name and g_home_dir (if NULL). */
+    /* Set g_real_name, and maybe set g_login_name and g_home_dir (if nullptr). */
     if (!set_user_name(tcbuf)) {
 	if (!g_login_name)
 	    g_login_name = nullstr;
@@ -118,7 +118,7 @@ bool set_user_name(char *tmpbuf)
 #ifdef HAS_GETPWENT
     struct passwd* pwd;
 
-    if (g_login_name == NULL)
+    if (g_login_name == nullptr)
 	pwd = getpwuid(getuid());
     else
 	pwd = getpwnam(g_login_name);
@@ -157,9 +157,9 @@ bool set_user_name(char *tmpbuf)
 #ifdef BERKJUNK
     while (*s && !isalnum(*s) && *s != '&') s++;
 #endif
-    if ((c = index(s, ',')) != NULL)
+    if ((c = index(s, ',')) != nullptr)
 	*c = '\0';
-    if ((c = index(s, ';')) != NULL)
+    if ((c = index(s, ';')) != nullptr)
 	*c = '\0';
     s = cpytill(buf,s,'&');
     if (*s == '&') {			/* whoever thought this one up was */
@@ -171,9 +171,9 @@ bool set_user_name(char *tmpbuf)
     }
     g_real_name = savestr(buf);
 #else /* !BERKNAMES */
-    if ((c = index(s, '(')) != NULL)
+    if ((c = index(s, '(')) != nullptr)
 	*c = '\0';
-    if ((c = index(s, '-')) != NULL)
+    if ((c = index(s, '-')) != nullptr)
 	s = c;
     g_real_name = savestr(s);
 #endif /* !BERKNAMES */
@@ -182,7 +182,7 @@ bool set_user_name(char *tmpbuf)
     {
 	FILE* fp;
 	env_init2(); /* Make sure g_home_dir/g_dot_dir/etc. are set. */
-	if ((fp = fopen(filexp(FULLNAMEFILE),"r")) != NULL) {
+	if ((fp = fopen(filexp(FULLNAMEFILE),"r")) != nullptr) {
 	    fgets(buf,sizeof buf,fp);
 	    fclose(fp);
 	    buf[strlen(buf)-1] = '\0';
@@ -190,10 +190,10 @@ bool set_user_name(char *tmpbuf)
 	}
     }
 #ifdef WIN32
-    if (g_real_name == NULL)
+    if (g_real_name == nullptr)
     {
 	DWORD size = 0;
-        GetUserNameExA(NameDisplay, NULL, &size);
+        GetUserNameExA(NameDisplay, nullptr, &size);
 	g_real_name = safemalloc(size);
 	GetUserNameExA(NameDisplay, g_real_name, &size);
     }
@@ -202,7 +202,7 @@ bool set_user_name(char *tmpbuf)
 #ifdef HAS_GETPWENT
     endpwent();
 #endif
-    if (g_real_name == NULL)
+    if (g_real_name == nullptr)
     {
         g_real_name = savestr("PUT_YOUR_NAME_HERE");
     }
@@ -234,7 +234,7 @@ bool set_p_host_name(char *tmpbuf)
 	FILE* popen();
 	FILE* pipefp = popen(PHOSTCMD,"r");
 	
-	if (pipefp == NULL) {
+	if (pipefp == nullptr) {
 	    printf("Can't find hostname\n");
 	    finalize(1);
 	}
@@ -254,7 +254,7 @@ bool set_p_host_name(char *tmpbuf)
     g_p_host_name = PHOSTNAME;
     if (FILE_REF(g_p_host_name) || *g_p_host_name == '~') {
 	g_p_host_name = filexp(g_p_host_name);
-	if ((fp = fopen(g_p_host_name,"r")) == NULL)
+	if ((fp = fopen(g_p_host_name,"r")) == nullptr)
 	    strcpy(tmpbuf,".");
 	else {
 	    fgets(tmpbuf,TCBUF_SIZE,fp);
@@ -282,7 +282,7 @@ bool set_p_host_name(char *tmpbuf)
 #ifdef HAS_RES_INIT
 	if (!(_res.options & RES_INIT))
 	    res_init();
-	if (_res.defdname != NULL)
+	if (_res.defdname != nullptr)
 	    strcat(tmpbuf,_res.defdname);
 	else
 #endif
@@ -304,7 +304,7 @@ char *get_val(char *nam, char *def)
 {
     char* val;
 
-    if ((val = getenv(nam)) == NULL || !*val)
+    if ((val = getenv(nam)) == nullptr || !*val)
 	return def;
     return val;
 }
@@ -327,7 +327,7 @@ char *export_var(const char *nam, const char *val)
 	    char** tmpenv = (char**)	/* point our wand at memory */
 		safemalloc((MEM_SIZE) (i+2) * sizeof(char*));
 #else
-	    char** tmpenv = NULL;
+	    char** tmpenv = nullptr;
 #endif /* lint */
     
 	    firstexport = false;
@@ -341,7 +341,7 @@ char *export_var(const char *nam, const char *val)
 		(MEM_SIZE) (i+2) * sizeof(char*));
 					/* just expand it a bit */
 #endif /* lint */
-	environ[i+1] = NULL;	/* make sure it's null terminated */
+	environ[i+1] = nullptr;	/* make sure it's null terminated */
     }
     environ[i] = safemalloc((MEM_SIZE)(namlen + strlen(val) + 2));
 					/* this may or may not be in */

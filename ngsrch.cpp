@@ -46,7 +46,7 @@ int ng_search(char *patbuf, int get_cmd)
     register char cmdchr = *patbuf;	/* what kind of search? */
     register char* s;
     char* pattern;			/* unparsed pattern */
-    char* cmdlst = NULL;		/* list of commands to do */
+    char* cmdlst = nullptr;		/* list of commands to do */
     int ret = NGS_NOTFOUND;		/* assume no commands */
     bool backward = cmdchr == '?';	/* direction of search */
     bool output_level = (!use_threads && gmode != 's');
@@ -83,7 +83,7 @@ int ng_search(char *patbuf, int get_cmd)
 	cmdlst = savestr("+");
     if (cmdlst)
 	ret = NGS_DONE;
-    if ((s = ng_comp(&ngcompex,pattern,true,true)) != NULL) {
+    if ((s = ng_comp(&ngcompex,pattern,true,true)) != nullptr) {
 					/* compile regular expression */
 	errormsg(s);
 	ret = NGS_ERROR;
@@ -97,7 +97,7 @@ int ng_search(char *patbuf, int get_cmd)
     if (first_addgroup) {
 	ADDGROUP *gp = first_addgroup;
 	do {
-	    if (execute(&ngcompex,gp->name) != NULL) {
+	    if (execute(&ngcompex,gp->name) != nullptr) {
 		if (!cmdlst)
 		    return NGS_FOUND;
 		if (addgrp_perform(gp,cmdlst,output_level && page_line==1)<0) {
@@ -107,7 +107,7 @@ int ng_search(char *patbuf, int get_cmd)
 	    }
 	    if (!output_level && page_line == 1)
 		perform_status(newsgroup_toread, 50);
-	} while ((gp = gp->next) != NULL);
+	} while ((gp = gp->next) != nullptr);
 	goto exit;
     }
 
@@ -174,7 +174,7 @@ exit:
 #ifdef NGSEARCH
 bool ng_wanted(NGDATA *np)
 {
-    return execute(&ngcompex,np->rcline) != NULL;
+    return execute(&ngcompex,np->rcline) != nullptr;
 }
 #endif /* NGSEARCH */
 
@@ -187,7 +187,7 @@ char *ng_comp(COMPEX *compex, char *pattern, bool RE, bool fold)
     if (!*s) {
 	if (compile(compex, "", RE, fold))
 	    return "No previous search pattern";
-	return NULL;			/* reuse old pattern */
+	return nullptr;			/* reuse old pattern */
     }
     for (; *s; s++) {
 	if (*s == '.') {

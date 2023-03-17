@@ -53,7 +53,7 @@ char *s_get_statchars(long ent, int line)
 	return sa_get_statchars(ent,line);
 #endif
       default:
-	return NULL;
+	return nullptr;
     }
 }
 
@@ -65,7 +65,7 @@ char *s_get_desc(long ent, int line, bool trunc)
 	return sa_get_desc(ent,line,trunc);
 #endif
       default:
-	return NULL;
+	return nullptr;
     }
 }
 

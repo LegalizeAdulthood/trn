@@ -98,7 +98,7 @@ static bool bad_filename(char *filename)
 /* Parse the subject looking for filename and part number information. */
 char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
 {
-    static char* subject = NULL;
+    static char* subject = nullptr;
     char* filename;
     char* s;
     char* t;
@@ -110,7 +110,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
     safefree(subject);
     subject = fetchsubj(artnum,true);
     if (!*subject)
-	return NULL;
+	return nullptr;
 
     /* Skip leading whitespace and other garbage */
     s = subject;
@@ -141,7 +141,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
 		hasdot = 1;
 	}
 	if (!*s || *s == '\n')
-	    return NULL;
+	    return nullptr;
     } while (t == s || (t[0] == 'v' && isdigit(t[1]) && *s == ':'));
     *s++ = '\0';
     
@@ -169,7 +169,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
     }
 
     if (s >= end)
-	return NULL;
+	return nullptr;
 
     /* Get part number */
     while (*s && *s != '\n') {
@@ -214,7 +214,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
     }
 
     if (total == 0 || part == -1 || part > total)
-	return NULL;
+	return nullptr;
     *partp = part;
     *totalp = total;
     return filename;
@@ -248,7 +248,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	}
     }
     else
-	dir = NULL;
+	dir = nullptr;
 
     if (mcp) {
 	if (chdir(dir)) {
@@ -297,7 +297,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	/* Retrieve any previously saved number of the last part */
 	if (total == 0) {
 	    sprintf(buf, "%sCT", dir);
-	    if ((fp = fopen(buf, "r")) != NULL) {
+	    if ((fp = fopen(buf, "r")) != nullptr) {
 		if (fgets(buf, sizeof buf, fp)) {
 		    total = atoi(buf);
 		    if (total < 0)
@@ -322,14 +322,14 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	}
     }
     else {
-	fp = NULL;
+	fp = nullptr;
 	total = 1;
     }
 
     if (mime_section->type == MESSAGE_MIME) {
 	mime_PushSection();
 	mime_ParseSubheader(fp,first_line);
-	first_line = NULL;
+	first_line = nullptr;
     }
     mime_getc_line = first_line;
     decoder = decode_function(mime_section->encoding);
@@ -363,7 +363,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     }
 
     if (state != DECODE_DONE) {
-	(void) decoder((FILE*)NULL, DECODE_DONE);
+	(void) decoder((FILE*)nullptr, DECODE_DONE);
 	if (state != DECODE_MAYBEDONE) {
 	    strcpy(msg,"Premature EOF.");
 	    return 0;
@@ -404,7 +404,7 @@ DECODE_FUNC decode_function(int encoding)
       case MENCODE_NONE:
 	return cat_decode;
       default:
-	return NULL;
+	return nullptr;
     }
 }
 
@@ -422,11 +422,11 @@ char *decode_mkdir(char *filename)
     strcat(dir, filename);
     s = dir + strlen(dir);
     if (s[-1] == '/')
-	return NULL;
+	return nullptr;
     *s++ = '/';
     *s = '\0';
     if (makedir(dir, MD_FILE) != 0)
-	return NULL;
+	return nullptr;
     return dir;
 }
 

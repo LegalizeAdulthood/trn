@@ -133,8 +133,8 @@ char article_selector(char_int cmd)
     if (sel_rereading) {
 	end_char = 'Z';
 	page_char = '>';
-	sel_page_app = NULL;
-	sel_page_sp = NULL;
+	sel_page_app = nullptr;
+	sel_page_sp = nullptr;
 	sel_mask = AF_DELSEL;
     } else {
 	end_char = NewsSelCmds[0];
@@ -196,10 +196,10 @@ sel_exit:
      || sel_sort == SS_STRING) {
 	if (artptr_list) {
 	    free((char*)artptr_list);
-	    artptr_list = sel_page_app = NULL;
+	    artptr_list = sel_page_app = nullptr;
 	    sort_subjects();
 	}
-	artptr = NULL;
+	artptr = nullptr;
 #ifdef ARTSEARCH
 	if (!ThreadedGroup)
 	    srchahead = -1;
@@ -264,7 +264,7 @@ static void sel_dogroups()
 	  case NG_ASK:
 	    goto loop_break;
 	  case NG_SELPRIOR:
-	    while ((np = np->prev) != NULL) {
+	    while ((np = np->prev) != nullptr) {
 		if (np->flags & NF_VISIT)
 		    goto do_group;
 	    }
@@ -377,7 +377,7 @@ char newsgroup_selector()
     page_char = NewsgroupSelCmds[1];
     if (sel_rereading) {
 	sel_mask = NF_DELSEL;
-	sel_page_np = NULL;
+	sel_page_np = nullptr;
     } else
 	sel_mask = NF_SEL;
     extra_commands = newsgroup_commands;
@@ -451,7 +451,7 @@ char addgroup_selector(int flags)
 	sel_mask = AGF_DELSEL;
     else
 	sel_mask = AGF_SEL;
-    sel_page_gp = NULL;
+    sel_page_gp = nullptr;
     extra_commands = addgroup_commands;
 
     init_pages(FILL_LAST_PAGE);
@@ -528,10 +528,10 @@ char option_selector()
 	    if (option_saved_vals[i] && strEQ(vals[i],option_saved_vals[i])) {
 		if (option_saved_vals[i] != option_def_vals[i])
 		    free(option_saved_vals[i]);
-		option_saved_vals[i] = NULL;
+		option_saved_vals[i] = nullptr;
 	    }
 	    free(vals[i]);
-	    vals[i] = NULL;
+	    vals[i] = nullptr;
 	}
     }
     END_SELECTOR();
@@ -546,7 +546,7 @@ static int univ_read(UNIV_ITEM *ui)
 
     univ_follow_temp = false;
     if (!ui) {
-	printf("NULL UI passed to reader!\n") FLUSH;
+	printf("nullptr UI passed to reader!\n") FLUSH;
 	sleep(5);
 	return exit_code;
     }
@@ -736,7 +736,7 @@ sel_restart:
 	sel_mask = UF_DELSEL;
     else
 	sel_mask = UF_SEL;
-    sel_page_univ = NULL;
+    sel_page_univ = nullptr;
     extra_commands = universal_commands;
 
     init_pages(FILL_LAST_PAGE);
@@ -1374,7 +1374,7 @@ static bool select_option(int i)
 	    selected_count--;
 	}
 	if (val != oldval && strEQ(buf,oldval))
-	    vals[i] = NULL;
+	    vals[i] = nullptr;
 	else {
 	    vals[i] = savestr(buf);
 	    selected_count++;
@@ -1455,8 +1455,8 @@ static void sel_cleanup()
 	    ** count_subjects() fix the counts after we're through.
 	    */
 	    register SUBJECT* sp;
-	    sel_last_ap = NULL;
-	    sel_last_sp = NULL;
+	    sel_last_ap = nullptr;
+	    sel_last_sp = nullptr;
 	    for (sp = first_subject; sp; sp = sp->next)
 		unkill_subject(sp);
 	}
@@ -1502,7 +1502,7 @@ static int sel_command(char_int ch)
 	if (sel_item_index < sel_page_item_cnt)
 	    set_ng(sel_items[sel_item_index].u.np);
 	else
-	    ngptr = NULL;
+	    ngptr = nullptr;
     }
   do_command:
     *buf = ch;
@@ -1707,8 +1707,8 @@ static int article_commands(char_int ch)
       case 'U':
 	sel_cleanup();
 	sel_rereading = !sel_rereading;
-	sel_page_sp = NULL;
-	sel_page_app = NULL;
+	sel_page_sp = nullptr;
+	sel_page_app = nullptr;
 	if (!cache_range(sel_rereading? absfirst : firstart, lastart))
 	    sel_rereading = !sel_rereading;
 	return DS_RESTART;
@@ -1739,8 +1739,8 @@ static int article_commands(char_int ch)
 	    sel_cleanup();
 	disp_status_line = 1;
 	count_subjects(CS_NORM);
-	sel_page_sp = NULL;
-	sel_page_app = NULL;
+	sel_page_sp = nullptr;
+	sel_page_app = nullptr;
 	init_pages(PRESERVE_PAGE);
 	return DS_DISPLAY;
       case '=':
@@ -1748,7 +1748,7 @@ static int article_commands(char_int ch)
 	    sel_cleanup();
 	if (sel_mode == SM_ARTICLE) {
 	    set_selector(sel_threadmode, 0);
-	    sel_page_sp = sel_page_app? sel_page_app[0]->subj : NULL;
+	    sel_page_sp = sel_page_app? sel_page_app[0]->subj : nullptr;
 	} else {
 	    set_selector(SM_ARTICLE, 0);
 	    sel_page_app = 0;
@@ -1871,8 +1871,8 @@ q does nothing.\n\n\
 	}
 	set_sel_sort(sel_mode,*buf);
 	count_subjects(CS_NORM);
-	sel_page_sp = NULL;
-	sel_page_app = NULL;
+	sel_page_sp = nullptr;
+	sel_page_app = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'R':
@@ -1880,8 +1880,8 @@ q does nothing.\n\n\
 	    sel_cleanup();
 	set_selector(sel_mode, sel_sort * -sel_direction);
 	count_subjects(CS_NORM);
-	sel_page_sp = NULL;
-	sel_page_app = NULL;
+	sel_page_sp = nullptr;
+	sel_page_app = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'E':
@@ -1889,8 +1889,8 @@ q does nothing.\n\n\
 	    sel_cleanup();
 	sel_exclusive = !sel_exclusive;
 	count_subjects(CS_NORM);
-	sel_page_sp = NULL;
-	sel_page_app = NULL;
+	sel_page_sp = nullptr;
+	sel_page_app = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	sel_item_index = 0;
 	return DS_DISPLAY;
@@ -2083,8 +2083,8 @@ q does nothing.\n\n\
 	if ((ch = ask_catchup()) == 'y' || ch == 'u') {
 	    count_subjects(CS_UNSELECT);
 	    if (ch != 'u' && obj_count) {
-		sel_page_sp = NULL;
-		sel_page_app = NULL;
+		sel_page_sp = nullptr;
+		sel_page_app = nullptr;
 		init_pages(FILL_LAST_PAGE);
 		return DS_DISPLAY;
 	    }
@@ -2120,7 +2120,7 @@ static int newsgroup_commands(char_int ch)
       case 'U':
 	sel_cleanup();
 	sel_rereading = !sel_rereading;
-	sel_page_np = NULL;
+	sel_page_np = nullptr;
 	return DS_RESTART;
       case 'L':
 	switch_dmode(&sel_grp_dmode);	    /* sets msg */
@@ -2231,21 +2231,21 @@ q does nothing.\n\n\
 	    return DS_ASK;
 	}
 	set_sel_sort(sel_mode,*buf);
-	sel_page_np = NULL;
+	sel_page_np = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'R':
 	if (!sel_rereading)
 	    sel_cleanup();
 	set_selector(sel_mode, sel_sort * -sel_direction);
-	sel_page_np = NULL;
+	sel_page_np = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'E':
 	if (!sel_rereading)
 	    sel_cleanup();
 	sel_exclusive = !sel_exclusive;
-	sel_page_np = NULL;
+	sel_page_np = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	sel_item_index = 0;
 	return DS_DISPLAY;
@@ -2269,7 +2269,7 @@ q does nothing.\n\n\
 		ngsel_perform();
 	    } else {
 #ifdef NGSEARCH
-		ngptr = NULL;
+		ngptr = nullptr;
 		switch (ng_search(buf,false)) {
 		  case NGS_ERROR:
 		  case NGS_ABORT:
@@ -2470,26 +2470,26 @@ q does nothing.\n\n\
 	    return DS_ASK;
 	}
 	set_sel_sort(sel_mode,*buf);
-	sel_page_np = NULL;
+	sel_page_np = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'U':
 	sel_cleanup();
 	sel_rereading = !sel_rereading;
-	sel_page_gp = NULL;
+	sel_page_gp = nullptr;
 	return DS_RESTART;
       case 'R':
 	if (!sel_rereading)
 	    sel_cleanup();
 	set_selector(sel_mode, sel_sort * -sel_direction);
-	sel_page_gp = NULL;
+	sel_page_gp = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'E':
 	if (!sel_rereading)
 	    sel_cleanup();
 	sel_exclusive = !sel_exclusive;
-	sel_page_gp = NULL;
+	sel_page_gp = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'L':
@@ -2591,14 +2591,14 @@ static int multirc_commands(char_int ch)
     switch (ch) {
       case 'R':
 	set_selector(sel_mode, sel_sort * -sel_direction);
-	sel_page_mp = NULL;
+	sel_page_mp = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'E':
 	if (!sel_rereading)
 	    sel_cleanup();
 	sel_exclusive = !sel_exclusive;
-	sel_page_mp = NULL;
+	sel_page_mp = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case '/':
@@ -2648,7 +2648,7 @@ static int option_commands(char_int ch)
 	    break;
 	s = cpytill(buf,buf+1,'/');
 	for (pattern = buf; *pattern == ' '; pattern++) ;
-	if ((s = compile(&optcompex,pattern,true,true)) != NULL) {
+	if ((s = compile(&optcompex,pattern,true,true)) != nullptr) {
 	    strcpy(msg,s);
 	    return DS_STATUS;
 	}
@@ -2693,14 +2693,14 @@ static int universal_commands(char_int ch)
     switch (ch) {
       case 'R':
 	set_selector(sel_mode, sel_sort * -sel_direction);
-	sel_page_univ = NULL;
+	sel_page_univ = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'E':
 	if (!sel_rereading)
 	    sel_cleanup();
 	sel_exclusive = !sel_exclusive;
-	sel_page_univ = NULL;
+	sel_page_univ = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
 #ifdef SCAN_ART
@@ -2711,13 +2711,13 @@ static int universal_commands(char_int ch)
       case 'U':
 	sel_cleanup();
 	sel_rereading = !sel_rereading;
-	sel_page_univ = NULL;
+	sel_page_univ = nullptr;
 	return DS_RESTART;
       case Ctl('e'):
 	univ_edit();
 	univ_redofile();
 	sel_cleanup();
-	sel_page_univ = NULL;
+	sel_page_univ = nullptr;
 	return DS_RESTART;
       case 'h':
       case '?':
@@ -2774,14 +2774,14 @@ q does nothing.\n\n\
 	    return DS_ASK;
 	}
 	set_sel_sort(sel_mode,*buf);
-	sel_page_univ = NULL;
+	sel_page_univ = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
 #endif
       case '~':
 	univ_virt_pass();
 	sel_cleanup();
-	sel_page_univ = NULL;
+	sel_page_univ = nullptr;
 	return DS_RESTART;
       default:
 	break;

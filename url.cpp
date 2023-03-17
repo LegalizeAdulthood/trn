@@ -102,8 +102,8 @@ bool fetch_ftp(char *host, char *origpath, char *outname)
     int x,y,l;
 
     safecpy(path,origpath,510);
-    p = rindex(path, '/');	/* p points to last slash or NULL*/
-    if (p == NULL) {
+    p = rindex(path, '/');	/* p points to last slash or nullptr*/
+    if (p == nullptr) {
 	printf("Error: URL:ftp path has no '/' character.\n") FLUSH;
 	return false;
     }
@@ -140,7 +140,7 @@ bool fetch_ftp(char *host, char *origpath, char *outname)
 #endif
 
     *p = '/';
-    status = doshell(NULL,cmdline);
+    status = doshell(nullptr,cmdline);
 #if 0
     printf("\nFTP command status is %d\n",status) FLUSH;
     while (!input_pending()) ;

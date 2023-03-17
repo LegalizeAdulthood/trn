@@ -56,9 +56,9 @@ void kfile_init()
 	FILE* fp;
 	kf_daynum = KF_DAYNUM(0);
 	kf_thread_cnt = kf_changethd_cnt = 0;
-	if ((fp = fopen(filexp(cp), "r")) != NULL) {
+	if ((fp = fopen(filexp(cp), "r")) != nullptr) {
 	    msgid_hash = hashcreate(1999, msgid_cmp);
-	    while (fgets(buf, sizeof buf, fp) != NULL) {
+	    while (fgets(buf, sizeof buf, fp) != nullptr) {
 		if (*buf == '<') {
 		    int age;
 		    cp = index(buf,' ');
@@ -71,7 +71,7 @@ void kfile_init()
 			kf_changethd_cnt++;
 			continue;
 		    }
-		    if ((cp = index(thread_cmd_ltr, *cp)) != NULL) {
+		    if ((cp = index(thread_cmd_ltr, *cp)) != nullptr) {
 			int auto_flag;
 			HASHDATUM data;
 
@@ -128,7 +128,7 @@ int do_kfile(FILE *kfp, int entering)
     art = lastart+1;
     killfirst = firstart;
     fseek(kfp,0L,0);			/* rewind file */
-    while (fgets(buf,LBUFLEN,kfp) != NULL) {
+    while (fgets(buf,LBUFLEN,kfp) != nullptr) {
 	if (*(cp = buf + strlen(buf) - 1) == '\n')
 	    *cp = '\0';
 	for (bp = buf; isspace(*bp); bp++) ;
@@ -158,7 +158,7 @@ int do_kfile(FILE *kfp, int entering)
 		cp = filexp(get_val("KILLLOCAL",killlocal));
 		set_ngname(ngptr->rcline);
 	    }
-	    if ((incfile = fopen(cp, "r")) != NULL) {
+	    if ((incfile = fopen(cp, "r")) != nullptr) {
 		ret = do_kfile(incfile, entering);
 		fclose(incfile);
 		if (ret)
@@ -245,11 +245,11 @@ int do_kfile(FILE *kfp, int entering)
 		cp = "T,";
 	    else
 		*cp++ = '\0';
-	    if ((ap = get_article(bp)) != NULL) {
+	    if ((ap = get_article(bp)) != nullptr) {
 		if ((ap->flags & AF_FAKE) && !ap->child1) {
 		    if (*cp == 'T')
 			cp++;
-		    if ((cp = index(thread_cmd_ltr, *cp)) != NULL) {
+		    if ((cp = index(thread_cmd_ltr, *cp)) != nullptr) {
 			ap->autofl = thread_cmd_flag[cp-thread_cmd_ltr];
 			if (ap->autofl & AUTO_KILLS)
 			    thread_kill_cnt++;
@@ -411,9 +411,9 @@ void rewrite_kfile(ART_NUM thru)
 	makedir(killname,MD_FILE);
     UNLINK(killname);			/* to prevent file reuse */
     kf_state &= ~(kfs_local_change_clear | KFS_NORMAL_LINES);
-    if ((newkfp = fopen(killname,"w")) != NULL) {
+    if ((newkfp = fopen(killname,"w")) != nullptr) {
 	fprintf(newkfp,"THRU %s %ld\n",ngptr->rc->name,(long)thru);
-	while (localkfp && fgets(buf,LBUFLEN,localkfp) != NULL) {
+	while (localkfp && fgets(buf,LBUFLEN,localkfp) != nullptr) {
 	    if (strnEQ(buf,"THRU",4)) {
 		char* cp = buf+4;
 		int len = strlen(ngptr->rc->name);
@@ -444,7 +444,7 @@ void rewrite_kfile(ART_NUM thru)
 	    putc('\n', newkfp);
 	if (has_star_commands) {
 	    fseek(localkfp,0L,0);			/* rewind file */
-	    while (fgets(buf,LBUFLEN,localkfp) != NULL) {
+	    while (fgets(buf,LBUFLEN,localkfp) != nullptr) {
 		for (bp = buf; isspace(*bp); bp++) ;
 		if (*bp == '*') {
 		    fputs(buf,newkfp);
@@ -547,13 +547,13 @@ void update_thread_kfile()
     makedir(cp,MD_FILE);
     if (kf_changethd_cnt*5 > kf_thread_cnt) {
 	UNLINK(cp);			/* to prevent file reuse */
-	if ((newkfp = fopen(cp,"w")) == NULL)
+	if ((newkfp = fopen(cp,"w")) == nullptr)
 	    return; /*$$ Yikes! */
 	kf_thread_cnt = kf_changethd_cnt = 0;
 	hashwalk(msgid_hash, write_global_thread_commands, 0); /* Rewrite */
     }
     else {
-	if ((newkfp = fopen(cp, "a")) == NULL)
+	if ((newkfp = fopen(cp, "a")) == nullptr)
 	    return; /*$$ Yikes! */
 	hashwalk(msgid_hash, write_global_thread_commands, 1); /* Append */
     }
@@ -654,7 +654,7 @@ int edit_kfile()
 	if (localkfp) {
 	    fseek(localkfp,0L,0);			/* rewind file */
 	    kf_state &= ~KFS_NORMAL_LINES;
-	    while (fgets(buf,LBUFLEN,localkfp) != NULL) {
+	    while (fgets(buf,LBUFLEN,localkfp) != nullptr) {
 		for (bp = buf; isspace(*bp); bp++) ;
 		if (*bp == '/' || *bp == '*')
 		    kf_state |= KFS_NORMAL_LINES;
@@ -665,10 +665,10 @@ int edit_kfile()
 			cp = ",";
 		    else
 			*cp++ = '\0';
-		    if ((ap = get_article(bp)) != NULL) {
+		    if ((ap = get_article(bp)) != nullptr) {
 			if (*cp == 'T')
 			    cp++;
-			if ((cp = index(thread_cmd_ltr, *cp)) != NULL)
+			if ((cp = index(thread_cmd_ltr, *cp)) != nullptr)
 			    ap->autofl |= thread_cmd_flag[cp-thread_cmd_ltr];
 		    }
 		}
@@ -725,7 +725,7 @@ void kf_append(char *cmd, bool local)
 	fflush(stdout);
 	if (novice_delays)
 	    sleep(2);
-	if ((tmpfp = fopen(cmd_buf,"a+")) != NULL) {
+	if ((tmpfp = fopen(cmd_buf,"a+")) != nullptr) {
 	    char ch;
 	    if (fseek(tmpfp,-1L,2) < 0)
 		ch = '\n';

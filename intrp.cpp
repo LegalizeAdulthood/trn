@@ -66,7 +66,7 @@ void intrp_init(char *tcbuf, int tcbuf_len)
 #ifdef HAS_GETPWENT
 	struct passwd* pwd = getpwnam(NEWS_ADMIN);
 
-	if (pwd != NULL)
+	if (pwd != nullptr)
 	    newsuid = pwd->pw_uid;
 #else
 #ifdef TILDENAME
@@ -196,24 +196,24 @@ getout:
 
 char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cmd)
 {
-    char* subj_buf = NULL;
-    char* ngs_buf = NULL;
-    char* refs_buf = NULL;
-    char* artid_buf = NULL;
-    char* reply_buf = NULL;
-    char* from_buf = NULL;
-    char* path_buf = NULL;
-    char* follow_buf = NULL;
-    char* dist_buf = NULL;
-    char* line_buf = NULL;
-    char* line_split = NULL;
+    char* subj_buf = nullptr;
+    char* ngs_buf = nullptr;
+    char* refs_buf = nullptr;
+    char* artid_buf = nullptr;
+    char* reply_buf = nullptr;
+    char* from_buf = nullptr;
+    char* path_buf = nullptr;
+    char* follow_buf = nullptr;
+    char* dist_buf = nullptr;
+    char* line_buf = nullptr;
+    char* line_split = nullptr;
     char* orig_dest = dest;
     register char* s;
     register char* h;
     register int i;
     char scrbuf[8192];
     char spfbuf[512];
-    static char* input_str = NULL;
+    static char* input_str = nullptr;
     static int input_siz = 0;
     bool upper = false;
     bool lastcomp = false;
@@ -238,7 +238,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 	    address_parse = false;
 	    comment_parse = false;
 	    proc_sprintf = false;
-	    for (s=NULL; !s; ) {
+	    for (s=nullptr; !s; ) {
 		switch (*++pattern) {
 		case '^':
 		    upper = true;
@@ -305,7 +305,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    break;
 		case '{':
 		    pattern = cpytill(scrbuf,pattern+1,'}');
-		    if ((s = index(scrbuf,'-')) != NULL)
+		    if ((s = index(scrbuf,'-')) != nullptr)
 			*s++ = '\0';
 		    else
 			s = nullstr;
@@ -313,7 +313,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    break;
 		case '<':
 		    pattern = cpytill(scrbuf,pattern+1,'>');
-		    if ((s = index(scrbuf,'-')) != NULL)
+		    if ((s = index(scrbuf,'-')) != nullptr)
 			*s++ = '\0';
 		    else
 			s = nullstr;
@@ -367,16 +367,16 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			*h++ = *s;
 		    } while (*s++);
 		    if (proc_sprintf) {
-			dointerp(scrbuf,sizeof scrbuf,spfbuf,(char*)NULL,cmd);
+			dointerp(scrbuf,sizeof scrbuf,spfbuf,(char*)nullptr,cmd);
 			proc_sprintf = false;
 		    }
-		    if ((s = compile(&cond_compex,scrbuf,true,true)) != NULL) {
+		    if ((s = compile(&cond_compex,scrbuf,true,true)) != nullptr) {
 			printf("%s: %s\n",scrbuf,s) FLUSH;
 			pattern += strlen(pattern);
 			free_compex(&cond_compex);
 			goto getout;
 		    }
-		    matched = (execute(&cond_compex,dest) != NULL);
+		    matched = (execute(&cond_compex,dest) != nullptr);
 		    if (getbracket(&cond_compex, 0)) /* were there brackets? */
 			bra_compex = &cond_compex;
 		    if (matched==(rch == '=')) {
@@ -401,7 +401,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 
 		    pattern = dointerp(scrbuf,(sizeof scrbuf),pattern+1,"`",cmd);
 		    pipefp = popen(scrbuf,"r");
-		    if (pipefp != NULL) {
+		    if (pipefp != nullptr) {
 			int len;
 
 			len = fread(scrbuf,sizeof(char),(sizeof scrbuf)-1,
@@ -626,8 +626,8 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 #ifdef IGNOREORG
 		    s = get_val("NEWSORG",orgname); 
 #else
-		    s = get_val("NEWSORG",NULL);
-		    if (s == NULL) 
+		    s = get_val("NEWSORG",nullptr);
+		    if (s == nullptr) 
 			s = get_val("ORGANIZATION",orgname); 
 #endif
 		    s = filexp(s);
@@ -636,7 +636,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			FILE* ofp = fopen(s,"r");
 
 			if (ofp) {
-			    if (fgets(scrbuf,sizeof scrbuf,ofp) == NULL)
+			    if (fgets(scrbuf,sizeof scrbuf,ofp) == nullptr)
 			    	*scrbuf = '\0';
 			    fclose(ofp);
 			    s = scrbuf+strlen(scrbuf)-1;
@@ -668,7 +668,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			if (htype[REFS_LINE].minpos >= 0) {
 			    refs_buf = fetchlines(art,REFS_LINE);
 			    normalize_refs(refs_buf);
-			    if ((s = rindex(refs_buf,'<')) != NULL)
+			    if ((s = rindex(refs_buf,'<')) != nullptr)
 				break;
 			}
 		    }
@@ -690,7 +690,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			/* no more than 3 prior references PLUS the
 			** root article allowed, including the one
 			** concatenated below */
-			if ((s = rindex(refs_buf,'<')) != NULL && s > refs_buf) {
+			if ((s = rindex(refs_buf,'<')) != nullptr && s > refs_buf) {
 			    *s = '\0';
 			    h = rindex(refs_buf,'<');
 			    *s = '<';
@@ -728,11 +728,11 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			s = nullstr;
 			break;
 		    }
-		    if ((str = subj_buf) == NULL)
+		    if ((str = subj_buf) == nullptr)
 			str = subj_buf = fetchsubj(art,true);
 		    subject_has_Re(str,&str);
 		    if (*pattern == 's'
-		     && (h = in_string(str,"- (nf", true)) != NULL)
+		     && (h = in_string(str,"- (nf", true)) != nullptr)
 			*h = '\0';
 		    s = str;
 		    break;
@@ -940,11 +940,11 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		}
 		decode_header(s, s, strlen(s));
 		if (address_parse) {
-		    if ((h=index(s,'<')) != NULL) { /* grab the good part */
+		    if ((h=index(s,'<')) != nullptr) { /* grab the good part */
 			s = h+1;
-			if ((h=index(s,'>')) != NULL)
+			if ((h=index(s,'>')) != nullptr)
 			    *h = '\0';
-		    } else if ((h=index(s,'(')) != NULL) {
+		    } else if ((h=index(s,'(')) != nullptr) {
 			while (h-- != s && *h == ' ')
 			    ;
 			h[1] = '\0';		/* or strip the comment */
@@ -1037,7 +1037,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 	}
     }
     *dest = '\0';
-    if (line_split != NULL)
+    if (line_split != nullptr)
 	if ((int)strlen(orig_dest) > 79)
 	    *line_split = '\n';
 getout:
@@ -1101,12 +1101,12 @@ char *interp_backslash(char *dest, char *pattern)
 
 char *interp(char *dest, int destsize, char *pattern)
 {
-    return dointerp(dest,destsize,pattern,(char*)NULL,(char*)NULL);
+    return dointerp(dest,destsize,pattern,(char*)nullptr,(char*)nullptr);
 }
 
 char *interpsearch(char *dest, int destsize, char *pattern, char *cmd)
 {
-    return dointerp(dest,destsize,pattern,(char*)NULL,cmd);
+    return dointerp(dest,destsize,pattern,(char*)nullptr,cmd);
 }
 
 /* normalize a references line in place */

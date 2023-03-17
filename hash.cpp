@@ -30,7 +30,7 @@
 /* tunable parameters */
 #define RETAIN 1000		/* retain & recycle this many HASHENTs */
 
-static HASHENT* hereuse = NULL;
+static HASHENT* hereuse = nullptr;
 static int reusables = 0;
 
 /* size - a crude guide to size */
@@ -52,7 +52,7 @@ HASHTABLE *hashcreate(unsigned size, int (*cmpfunc)(char *, int, HASHDATUM))
     tbl = &aap->ht;
     tbl->ht_size = size;
     tbl->ht_magic = HASHMAG;
-    tbl->ht_cmp = (cmpfunc == NULL? default_cmp: cmpfunc);
+    tbl->ht_cmp = (cmpfunc == nullptr? default_cmp: cmpfunc);
     tbl->ht_addr = aap->hepa;
     return tbl;
 }
@@ -73,15 +73,15 @@ void hashdestroy(HASHTABLE *tbl)
     tblsize = tbl->ht_size;
     hepp = tbl->ht_addr;
     for (idx = 0; idx < tblsize; idx++) {
-	for (hp = hepp[idx]; hp != NULL; hp = next) {
+	for (hp = hepp[idx]; hp != nullptr; hp = next) {
 	    next = hp->he_next;
-	    hp->he_next = NULL;
+	    hp->he_next = nullptr;
 	    hefree(hp);
 	}
-	hepp[idx] = NULL;
+	hepp[idx] = nullptr;
     }
     tbl->ht_magic = 0;			/* de-certify this table */
-    tbl->ht_addr = NULL;
+    tbl->ht_addr = nullptr;
     free((char*)tbl);
 }
 
@@ -92,9 +92,9 @@ void hashstore(HASHTABLE *tbl, char *key, int keylen, HASHDATUM data)
 
     nextp = hashfind(tbl, key, keylen);
     hp = *nextp;
-    if (hp == NULL) {			/* absent; allocate an entry */
+    if (hp == nullptr) {			/* absent; allocate an entry */
 	hp = healloc();
-	hp->he_next = NULL;
+	hp->he_next = nullptr;
 	hp->he_keylen = keylen;
 	*nextp = hp;			/* append to hash chain */
     }
@@ -108,11 +108,11 @@ void hashdelete(HASHTABLE *tbl, char *key, int keylen)
 
     nextp = hashfind(tbl, key, keylen);
     hp = *nextp;
-    if (hp == NULL)			/* absent */
+    if (hp == nullptr)			/* absent */
 	return;
     *nextp = hp->he_next;		/* skip this entry */
-    hp->he_next = NULL;
-    hp->he_data.dat_ptr = NULL;
+    hp->he_next = nullptr;
+    hp->he_data.dat_ptr = nullptr;
     hefree(hp);
 }
 
@@ -124,13 +124,13 @@ HASHDATUM hashfetch(HASHTABLE *tbl, char *key, int keylen)
 {
     register HASHENT* hp;
     register HASHENT** nextp;
-    static HASHDATUM errdatum = { NULL, 0 };
+    static HASHDATUM errdatum = { nullptr, 0 };
 
     nextp = hashfind(tbl, key, keylen);
     slast_nextp = nextp;
     slast_keylen = keylen;
     hp = *nextp;
-    if (hp == NULL)			/* absent */
+    if (hp == nullptr)			/* absent */
 	return errdatum;
     return hp->he_data;
 }
@@ -140,9 +140,9 @@ void hashstorelast(HASHDATUM data)
     register HASHENT* hp;
 
     hp = *slast_nextp;
-    if (hp == NULL) {			/* absent; allocate an entry */
+    if (hp == nullptr) {			/* absent; allocate an entry */
 	hp = healloc();
-	hp->he_next = NULL;
+	hp->he_next = nullptr;
 	hp->he_keylen = slast_keylen;
 	*slast_nextp = hp;		/* append to hash chain */
     }
@@ -166,11 +166,11 @@ void hashwalk(HASHTABLE *tbl, int (*nodefunc)(int, HASHDATUM *, int), int extra)
     tblsize = tbl->ht_size;
     for (idx = 0; idx < tblsize; idx++) {
 	slast_nextp = &hepp[idx];
-	for (hp = *slast_nextp; hp != NULL; hp = next) {
+	for (hp = *slast_nextp; hp != nullptr; hp = next) {
 	    next = hp->he_next;
 	    if ((*nodefunc)(hp->he_keylen, &hp->he_data, extra) < 0) {
 		*slast_nextp = next;
-		hp->he_next = NULL;
+		hp->he_next = nullptr;
 		hefree(hp);
 	    }
 	    else
@@ -180,14 +180,14 @@ void hashwalk(HASHTABLE *tbl, int (*nodefunc)(int, HASHDATUM *, int), int extra)
 }
 
 /* The returned value is the address of the pointer that refers to the
-** found object.  Said pointer may be NULL if the object was not found;
+** found object.  Said pointer may be nullptr if the object was not found;
 ** if so, this pointer should be updated with the address of the object
 ** to be inserted, if insertion is desired.
 */
 static HASHENT **hashfind(HASHTABLE *tbl, char *key, int keylen)
 {
     register HASHENT* hp;
-    register HASHENT* prevhp = NULL;
+    register HASHENT* prevhp = nullptr;
     register HASHENT** hepp;
     register unsigned size; 
 
@@ -197,12 +197,12 @@ static HASHENT **hashfind(HASHTABLE *tbl, char *key, int keylen)
     }
     size = tbl->ht_size;
     hepp = &tbl->ht_addr[hash(key,keylen) % size];
-    for (hp = *hepp; hp != NULL; prevhp = hp, hp = hp->he_next) {
+    for (hp = *hepp; hp != nullptr; prevhp = hp, hp = hp->he_next) {
 	if (hp->he_keylen == keylen && !(*tbl->ht_cmp)(key, keylen, hp->he_data))
 	    break;
     }
     /* assert: *(returned value) == hp */
-    return (prevhp == NULL? hepp: &prevhp->he_next);
+    return (prevhp == nullptr? hepp: &prevhp->he_next);
 }
 
 /* not yet taken modulus table size */
@@ -226,7 +226,7 @@ static HASHENT *healloc()
 {
     register HASHENT* hp;
 
-    if (hereuse == NULL) {
+    if (hereuse == nullptr) {
 	int i;
 
 	/* make a nice big block of hashents to play with */
@@ -235,7 +235,7 @@ static HASHENT *healloc()
 	for (i = 0; i < HEBLOCKSIZE-1; i++)
 	    (hp+i)->he_next = hp + i + 1;
 	/* The last block is the end of the list */
-	(hp+i)->he_next = NULL;
+	(hp+i)->he_next = nullptr;
 	hereuse = hp;		/* start of list is the first item */
 	reusables += HEBLOCKSIZE;
     }
@@ -243,7 +243,7 @@ static HASHENT *healloc()
     /* pull the first reusable one off the pile */
     hp = hereuse;
     hereuse = hereuse->he_next;
-    hp->he_next = NULL;			/* prevent accidents */
+    hp->he_next = nullptr;			/* prevent accidents */
     reusables--;
     return hp;
 }

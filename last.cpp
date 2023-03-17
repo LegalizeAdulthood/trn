@@ -14,21 +14,21 @@
 #include "INTERN.h"
 #include "last.h"
 
-static char* lastfile = NULL;	/* path name of .rnlast file */
+static char* lastfile = nullptr;	/* path name of .rnlast file */
 static long starttime;
 
 void last_init()
 {
     lastfile = savestr(filexp(LASTNAME));
 
-    starttime = (long)time((time_t*)NULL);
+    starttime = (long)time((time_t*)nullptr);
     readlast();
 }
 
 void readlast()
 {
-    if ((tmpfp = fopen(lastfile,"r")) != NULL) {
-	if (fgets(buf,sizeof buf,tmpfp) != NULL) {
+    if ((tmpfp = fopen(lastfile,"r")) != nullptr) {
+	if (fgets(buf,sizeof buf,tmpfp) != nullptr) {
 	    long old_last = lasttime;
 	    buf[strlen(buf)-1] = '\0';
 	    if (*buf) {
@@ -51,7 +51,7 @@ void readlast()
 void writelast()
 {
     sprintf(buf,"%s.%ld", lastfile, our_pid);
-    if ((tmpfp = fopen(buf,"w")) != NULL) {
+    if ((tmpfp = fopen(buf,"w")) != nullptr) {
 	if (lasttime < starttime)
 	    lasttime = starttime;
 	fprintf(tmpfp,"%s\n%ld\n%ld\n%ld\n%ld\n",

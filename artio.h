@@ -5,7 +5,7 @@
 EXT ART_POS artpos INIT(0);	/* byte position in article file */
 
 EXT ART_LINE artline INIT(0);	/* current line number in article file */
-EXT FILE* artfp INIT(NULL);	/* current article file pointer */
+EXT FILE* artfp INIT(nullptr);	/* current article file pointer */
 EXT ART_NUM openart INIT(0);	/* the article number we have open */
 
 EXT char* artbuf;

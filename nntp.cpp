@@ -198,7 +198,7 @@ void nntp_body(ART_NUM artnum)
 	finalize(1); /*$$*/
       case 0:
 	fclose(artfp);
-	artfp = NULL;
+	artfp = nullptr;
 	errno = ENOENT;			/* Simulate file-not-found */
 	return;
     }
@@ -321,7 +321,7 @@ char *nntp_readart(char *s, int limit)
     if (body_pos >= 0) {
 	if (body_pos == body_end) {
 	    if (nntp_copybody(s, limit, body_pos+1) <= 0)
-		return NULL;
+		return nullptr;
 	    if (body_end - body_pos < limit) {
 		body_pos = body_end;
 		return s;
@@ -349,7 +349,7 @@ time_t nntp_time()
     if (nntp_command("DATE") <= 0)
 	return -2;
     if (nntp_check() <= 0)
-	return time((time_t*)NULL);
+	return time((time_t*)nullptr);
 
     s = rindex(g_ser_line, ' ') + 1;
     month = (s[4] - '0') * 10 + (s[5] - '0');
@@ -368,7 +368,7 @@ time_t nntp_time()
     if (month < 1 || month > 12 || day < 1 || day > maxdays[month]
      || hh < 0 || hh > 23 || mm < 0 || mm > 59
      || ss < 0 || ss > 59)
-	return time((time_t*)NULL);
+	return time((time_t*)nullptr);
 
     for (month--; month; month--)
 	day += maxdays[month];
@@ -452,10 +452,10 @@ char *nntp_artname(ART_NUM artnum, bool allocate)
 	    artnums[i] = 0;
 	    artages[i] = 0;
 	}
-	return NULL;
+	return nullptr;
     }
 
-    now = time((time_t*)NULL);
+    now = time((time_t*)nullptr);
 
     for (i = j = 0, lowage = now; i < MAX_NNTP_ARTICLES; i++) {
 	if (artnums[i] == artnum) {
@@ -472,7 +472,7 @@ char *nntp_artname(ART_NUM artnum, bool allocate)
 	return nntp_tmpname(j);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 char *nntp_tmpname(int ndx)
@@ -508,7 +508,7 @@ int nntp_handle_timeout()
     if (nntp_connect(datasrc->newsid, false) <= 0)
 	return -2;
     datasrc->nntplink = nntplink;
-    if (in_ng && nntp_group(ngname, (NGDATA*)NULL) <= 0)
+    if (in_ng && nntp_group(ngname, (NGDATA*)nullptr) <= 0)
 	return -2;
     if (nntp_command(last_command_save) <= 0)
 	return -1;
@@ -524,7 +524,7 @@ void nntp_server_died(DATASRC *dp)
     dp->flags |= DF_UNAVAILABLE;
     unuse_multirc(mp);
     if (!use_multirc(mp))
-	multirc = NULL;
+	multirc = nullptr;
     fprintf(stderr,"\n%s\n", g_ser_line);
     get_anything();
 }

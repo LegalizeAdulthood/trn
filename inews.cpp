@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 	argc--;
     }
     if (argc > 1) {
-	if (freopen(*argv, "r", stdin) == NULL) {
+	if (freopen(*argv, "r", stdin) == nullptr) {
 	    perror(*argv);
 	    exit(1);
 	}
@@ -81,11 +81,11 @@ int main(int argc, char *argv[])
 	}
 	line_end = "\r\n";
 	nntp_auth_file = filexp(NNTP_AUTH_FILE);
-	if ((cp = getenv("NNTP_FORCE_AUTH")) != NULL
+	if ((cp = getenv("NNTP_FORCE_AUTH")) != nullptr
 	 && (*cp == 'y' || *cp == 'Y'))
 	    nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
     } else {
-	server_name = NULL;
+	server_name = nullptr;
 	line_end = "\n";
     }
 
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
     /* Well, the header looks ok, so let's get on with it. */
 
     if (server_name) {
-	if ((cp = getenv("NNTPFDS")) != NULL) {
+	if ((cp = getenv("NNTPFDS")) != nullptr) {
 	    int rd_fd, wr_fd;
 	    if (sscanf(cp,"%d.%d",&rd_fd,&wr_fd) == 2) {
 		nntplink.rd_fp = fdopen(rd_fd, "r");
@@ -286,11 +286,11 @@ void append_signature()
 #ifdef NO_INEWS_DOTDIR
     g_dot_dir = g_home_dir;
 #endif
-    if (g_dot_dir == NULL)
+    if (g_dot_dir == nullptr)
 	return;
 
     fp = fopen(filexp(SIGNATURE_FILE), "r");
-    if (fp == NULL)
+    if (fp == nullptr)
 	return;
 
     fprintf(nntplink.wr_fp, "-- \r\n");

@@ -129,13 +129,13 @@ struct headtype htype[HEAD_LAST] = {
 
 #endif
 
-EXT struct user_headtype* user_htype INIT(NULL);
+EXT struct user_headtype* user_htype INIT(nullptr);
 EXT short user_htypeix[26];
 EXT int user_htype_cnt INIT(0);
 EXT int user_htype_max INIT(0);
 
 EXT ART_NUM parsed_art INIT(0);		/* the article number we've parsed */
-EXT ARTICLE* parsed_artp INIT(NULL);	/* the article ptr we've parsed */
+EXT ARTICLE* parsed_artp INIT(nullptr);	/* the article ptr we've parsed */
 EXT int in_header INIT(0);		/* are we decoding the header? */
 EXT char* headbuf;
 EXT long headbuf_size;

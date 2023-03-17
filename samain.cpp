@@ -61,7 +61,7 @@ void sa_init()
 void sa_init_ents()
 {
     sa_num_ents = sa_ents_alloc = 0;
-    sa_ents = (SA_ENTRYDATA*)NULL;
+    sa_ents = (SA_ENTRYDATA*)nullptr;
 }
 
 void sa_clean_ents()

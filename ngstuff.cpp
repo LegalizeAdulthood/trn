@@ -71,7 +71,7 @@ int escapade()
 					/* skip leading spaces */
     interp(cmd_buf, (sizeof cmd_buf), s);/* interpret any % escapes */
     resetty();				/* make sure tty is friendly */
-    doshell((char*)NULL,cmd_buf);	/* invoke the shell */
+    doshell((char*)nullptr,cmd_buf);	/* invoke the shell */
     noecho();				/* and make terminal */
     crmode();				/*   unfriendly again */
     if (docd) {
@@ -120,7 +120,7 @@ int switcheroo()
 	}
     }
     else {
-	bool docd = (in_string(buf,"-d", true) != NULL);
+	bool docd = (in_string(buf,"-d", true) != nullptr);
  	char whereami[1024];
 	char tmpbuf[LBUFLEN+16];
 
@@ -152,7 +152,7 @@ int switcheroo()
 int numnum()
 {
     ART_NUM min, max;
-    char* cmdlst = NULL;
+    char* cmdlst = nullptr;
     register char* s;
     register char* c;
     ART_NUM oldart = art;
@@ -189,7 +189,7 @@ int numnum()
 	printf("Processing...");
 	fflush(stdout);
     }
-    for (s = tmpbuf; (c = index(s,',')) != NULL; s = ++c) {
+    for (s = tmpbuf; (c = index(s,',')) != nullptr; s = ++c) {
 	*c = '\0';
 	if (*s == '.')
 	    min = oldart;
@@ -200,7 +200,7 @@ int numnum()
 	    sprintf(msg,"(First article is %ld)",(long)absfirst);
 	    warnmsg(msg);
 	}
-	if ((s=index(s,'-')) != NULL) {
+	if ((s=index(s,'-')) != nullptr) {
 	    s++;
 	    if (*s == '$')
 		max = lastart;
@@ -301,7 +301,7 @@ int thread_perform()
 	if (one_thread)
 	    sp = (sel_mode==SM_THREAD? artp->subj->thread->subj : artp->subj);
 	else
-	    sp = next_subj((SUBJECT*)NULL,bits);
+	    sp = next_subj((SUBJECT*)nullptr,bits);
 	for ( ; sp; sp = next_subj(sp,bits)) {
 	    if ((!(sp->flags & sel_mask) ^ !bits) || !sp->misc)
 		continue;
@@ -356,7 +356,7 @@ int thread_perform()
 	    if (one_thread)
 		sp = (sel_mode==SM_THREAD? artp->subj->thread->subj : artp->subj);
 	    else
-		sp = next_subj((SUBJECT*)NULL,bits);
+		sp = next_subj((SUBJECT*)nullptr,bits);
 	    for ( ; sp; sp = next_subj(sp,bits)) {
 		for (ap = first_art(sp); ap; ap = next_art(ap))
 		    if ((!(ap->flags & AF_UNREAD) ^ want_unread)
@@ -504,7 +504,7 @@ int perform(char *cmdlst, int output_level)
 	    if (one_command)
 		interp(tmpbuf, (sizeof tmpbuf), cmdlst);
 	    else
-		cmdlst = dointerp(tmpbuf,sizeof tmpbuf,cmdlst,":",(char*)NULL) - 1;
+		cmdlst = dointerp(tmpbuf,sizeof tmpbuf,cmdlst,":",(char*)nullptr) - 1;
 	    perform_cnt--;
 	    if (perform(tmpbuf,output_level?2:0) < 0)
 		return -1;

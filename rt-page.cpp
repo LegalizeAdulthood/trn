@@ -303,7 +303,7 @@ try_again:
 	    else
 		mp->flags &= ~MF_INCLUDED;
 	}
-	if (sel_page_mp == NULL)
+	if (sel_page_mp == nullptr)
 	    (void) first_page();
 	break;
       }
@@ -359,7 +359,7 @@ try_again:
 	if (!sel_total_obj_cnt) {
 	    if (sel_exclusive) {
 		sel_exclusive = false;
-		sel_page_np = NULL;
+		sel_page_np = nullptr;
 		goto try_again;
 	    }
 	    if (maxngtodo) {
@@ -368,7 +368,7 @@ try_again:
 		newline();
 		if (fill_last_page)
 		    get_anything();
-		sel_page_np = NULL;
+		sel_page_np = nullptr;
 		goto try_again;
 	    }
 	}
@@ -403,10 +403,10 @@ try_again:
 	}
 	if (!sel_total_obj_cnt && sel_exclusive) {
 	    sel_exclusive = false;
-	    sel_page_gp = NULL;
+	    sel_page_gp = nullptr;
 	    goto try_again;
 	}
-	if (sel_page_gp == NULL)
+	if (sel_page_gp == nullptr)
 	    (void) first_page();
 	else if (sel_page_gp == last_addgroup)
 	    (void) last_page();
@@ -480,10 +480,10 @@ try_again:
 	}
 	if (!sel_total_obj_cnt && sel_exclusive) {
 	    sel_exclusive = false;
-	    sel_page_univ = NULL;
+	    sel_page_univ = nullptr;
 	    goto try_again;
 	}
-	if (sel_page_univ == NULL)
+	if (sel_page_univ == nullptr)
 	    (void) first_page();
 	else if (sel_page_univ == last_univ)
 	    (void) last_page();
@@ -517,7 +517,7 @@ try_again:
 #if 0
 	if (!sel_total_obj_cnt && sel_exclusive) {
 	    sel_exclusive = false;
-	    sel_page_op = NULL;
+	    sel_page_op = nullptr;
 	    goto try_again;
 	}
 #endif
@@ -540,14 +540,14 @@ try_again:
 	if (sel_page_app) {
 	    int desired_flags = (sel_rereading? AF_EXISTS:(AF_EXISTS|AF_UNREAD));
 	    limit = artptr_list + artptr_list_size;
-	    ap = NULL;
+	    ap = nullptr;
 	    for (app = sel_page_app; app < limit; app++) {
 		ap = *app;
 		if ((ap->flags & (AF_EXISTS|AF_UNREAD)) == desired_flags)
 		    break;
 	    }
 	    sort_articles();
-	    if (ap == NULL)
+	    if (ap == nullptr)
 		sel_page_app = artptr_list + artptr_list_size;
 	    else {
 		for (app = artptr_list; app < limit; app++) {
@@ -581,7 +581,7 @@ try_again:
 	}
 	if (sel_exclusive && !sel_total_obj_cnt) {
 	    sel_exclusive = false;
-	    sel_page_app = NULL;
+	    sel_page_app = nullptr;
 	    goto try_again;
 	}
 	if (!sel_page_app)
@@ -642,7 +642,7 @@ try_again:
 	}
 	if (sel_exclusive && !sel_total_obj_cnt) {
 	    sel_exclusive = false;
-	    sel_page_sp = NULL;
+	    sel_page_sp = nullptr;
 	    goto try_again;
 	}
 	if (!sel_page_sp)
@@ -763,7 +763,7 @@ bool last_page()
     switch (sel_mode) {
       case SM_MULTIRC: {
 	MULTIRC* mp = sel_page_mp;
-	sel_page_mp = NULL;
+	sel_page_mp = nullptr;
 	if (!prev_page())
 	    sel_page_mp = mp;
 	else if (mp != sel_page_mp)
@@ -772,7 +772,7 @@ bool last_page()
       }
       case SM_NEWSGROUP: {
 	NGDATA* np = sel_page_np;
-	sel_page_np = NULL;
+	sel_page_np = nullptr;
 	if (!prev_page())
 	    sel_page_np = np;
 	else if (np != sel_page_np)
@@ -781,7 +781,7 @@ bool last_page()
       }
       case SM_ADDGROUP: {
 	ADDGROUP* gp = sel_page_gp;
-	sel_page_gp = NULL;
+	sel_page_gp = nullptr;
 	if (!prev_page())
 	    sel_page_gp = gp;
 	else if (gp != sel_page_gp)
@@ -790,7 +790,7 @@ bool last_page()
       }
       case SM_UNIVERSAL: {
 	UNIV_ITEM* ui = sel_page_univ;
-	sel_page_univ = NULL;
+	sel_page_univ = nullptr;
 	if (!prev_page())
 	    sel_page_univ = ui;
 	else if (ui != sel_page_univ)
@@ -817,7 +817,7 @@ bool last_page()
       }
       default: {
 	SUBJECT* sp = sel_page_sp;
-	sel_page_sp = NULL;
+	sel_page_sp = nullptr;
 	if (!prev_page())
 	    sel_page_sp = sp;
 	else if (sp != sel_page_sp)
@@ -1037,9 +1037,9 @@ bool prev_page()
 		    sp = sp->prev;
 		    item_arts += sp->misc;
 		}
-		line_cnt = count_thread_lines(sp, (int*)NULL);
+		line_cnt = count_thread_lines(sp, (int*)nullptr);
 	    } else
-		line_cnt = count_subject_lines(sp, (int*)NULL);
+		line_cnt = count_subject_lines(sp, (int*)nullptr);
 	    if (!(sp->flags & SF_INCLUDED) || !line_cnt)
 		continue;
 	    if (line_cnt > sel_max_line_cnt)
@@ -1591,8 +1591,8 @@ try_again:
 	}
 	sel_next_sp = sp;
     }
-    sel_last_ap = NULL;
-    sel_last_sp = NULL;
+    sel_last_ap = nullptr;
+    sel_last_sp = nullptr;
     sel_at_end = (sel_prior_obj_cnt + sel_page_obj_cnt == sel_total_obj_cnt);
     maybe_eol();
     newline();
@@ -1731,7 +1731,7 @@ static int count_thread_lines(SUBJECT *subj, int *selptr)
 	    else if (sel != subj_sel)
 		sel = 3;
 	}
-    } while ((subj = subj->next) != NULL && subj->thread == thread);
+    } while ((subj = subj->next) != nullptr && subj->thread == thread);
     if (selptr)
 	*selptr = (sel < 0? 0 : sel);
     return total;
@@ -1791,10 +1791,10 @@ static void display_subject(SUBJECT *subj, int ix, int sel)
     else {
 	ARTICLE* first_ap;
 	/* Find the first unread article so we get the author right */
-	if ((first_ap = subj->thread) != NULL
-	 && (first_ap->subj != subj || first_ap->from == NULL
+	if ((first_ap = subj->thread) != nullptr
+	 && (first_ap->subj != subj || first_ap->from == nullptr
 	  || (!(first_ap->flags&AF_UNREAD) ^ sel_rereading)))
-	    first_ap = NULL;
+	    first_ap = nullptr;
 	for (ap = subj->articles; ap; ap = ap->subj_next) {
 	    if (!!(ap->flags&AF_UNREAD) ^ sel_rereading)
 		break;
@@ -1807,7 +1807,7 @@ static void display_subject(SUBJECT *subj, int ix, int sel)
 		   compress_subj(first_ap, subj_width - date_width)) FLUSH;
 	} else {
 	    printf("%s%3d  %s\n",
-		   compress_from(first_ap? first_ap->from : NULL, from_width), j,
+		   compress_from(first_ap? first_ap->from : nullptr, from_width), j,
 		   compress_subj(first_ap, subj_width - from_width)) FLUSH;
 	}
 	termdown(1);
@@ -1838,7 +1838,7 @@ static void display_subject(SUBJECT *subj, int ix, int sel)
 			if (UseSelNum)
 			    putchar(' ');
 			printf("  %s      ",
-			       compress_from(ap? ap->from : NULL, from_width)) FLUSH;
+			       compress_from(ap? ap->from : nullptr, from_width)) FLUSH;
 			continue;
 		    }
 		}
@@ -1847,7 +1847,7 @@ static void display_subject(SUBJECT *subj, int ix, int sel)
 		maybe_eol();
 		if (UseSelNum)
 		    putchar(' ');
-		printf("  %s\n", compress_from(ap? ap->from : NULL, from_width)) FLUSH;
+		printf("  %s\n", compress_from(ap? ap->from : nullptr, from_width)) FLUSH;
 		termdown(1);
 	    }
 	}
@@ -1935,7 +1935,7 @@ static void display_group(DATASRC *dp, char *group, int len, int max_len)
     else {
 	char* end;
 	char* cp = find_grpdesc(dp, group);
-	if (*cp != '?' && (end = index(cp, '\n')) != NULL
+	if (*cp != '?' && (end = index(cp, '\n')) != nullptr
 	 && end != cp) {
 	    char ch;
 	    if (end - cp > tc_COLS - max_len - 8 - 1 - UseSelNum)

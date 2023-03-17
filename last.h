@@ -2,7 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXT char* lastngname INIT(NULL);	/* last newsgroup read */
+EXT char* lastngname INIT(nullptr);	/* last newsgroup read */
 EXT long lasttime INIT(0);		/* time last we ran */
 EXT long lastactsiz INIT(0);		/* last known size of active file */
 EXT long lastnewtime INIT(0);		/* time of last newgroup request */

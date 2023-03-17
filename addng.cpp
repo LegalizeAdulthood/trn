@@ -37,7 +37,7 @@ static int build_addgroup_list(int keylen, HASHDATUM *data, int extra)
     ADDGROUP* node = (ADDGROUP*)data->dat_ptr;
 
     node->num = addgroup_cnt++;
-    node->next = NULL;
+    node->next = nullptr;
     node->prev = last_addgroup;
     if (last_addgroup)
 	last_addgroup->next = node;
@@ -89,7 +89,7 @@ static void process_list(int flag)
 		multirc->first->next? "s" : nullstr);
 	print_lines(cmd_buf, STANDOUT);
     }
-    if ((node = first_addgroup) != NULL && flag && UseAddSelector)
+    if ((node = first_addgroup) != nullptr && flag && UseAddSelector)
 	addgroup_selector(flag);
     while (node) {
 	if (!flag) {
@@ -102,8 +102,8 @@ static void process_list(int flag)
 	node = node->next;
 	free((char*)prevnode);
     }
-    first_addgroup = NULL;
-    last_addgroup = NULL;
+    first_addgroup = nullptr;
+    last_addgroup = nullptr;
     addgroup_cnt = 0;
 }
 
@@ -141,7 +141,7 @@ static void new_nntp_groups(DATASRC *dp)
 	if (nntp_at_list_end(g_ser_line))
 	    break;
 	foundSomething = true;
-	if ((s = index(g_ser_line, ' ')) != NULL)
+	if ((s = index(g_ser_line, ' ')) != nullptr)
 	    len = s - g_ser_line;
 	else
 	    len = strlen(g_ser_line);
@@ -166,7 +166,7 @@ static void new_nntp_groups(DATASRC *dp)
 	    if (*s == 'x' || *s == '=')
 		continue;
 	}
-	if ((np = find_ng(g_ser_line)) != NULL && np->toread > TR_UNSUB)
+	if ((np = find_ng(g_ser_line)) != nullptr && np->toread > TR_UNSUB)
 	    continue;
 	add_to_hash(newngs, g_ser_line, high-low, auto_subscribe(g_ser_line));
     }
@@ -197,16 +197,16 @@ static void new_local_groups(DATASRC *dp)
 	return;
 
     tmpfp = fopen(dp->extra_name,"r");
-    if (tmpfp == NULL) {
+    if (tmpfp == nullptr) {
 	printf(cantopen,dp->extra_name) FLUSH;
 	termdown(1);
 	return;
     }
-    lastone = time((time_t*)NULL) - 24L * 60 * 60 - 1;
+    lastone = time((time_t*)nullptr) - 24L * 60 * 60 - 1;
     newngs = hashcreate(33, addng_cmp);
 
-    while (fgets(buf,LBUFLEN,tmpfp) != NULL) {
-	if ((s = index(buf, ' ')) == NULL
+    while (fgets(buf,LBUFLEN,tmpfp) != nullptr) {
+	if ((s = index(buf, ' ')) == nullptr
 	 || (lastone = atol(s+1)) < dp->lastnewgrp)
 	    continue;
 	*s = '\0';
@@ -216,7 +216,7 @@ static void new_local_groups(DATASRC *dp)
 	sscanf(tmpbuf + (s-buf) + 1, "%ld %ld %c", &high, &low, &ch);
 	if (ch == 'x' || ch == '=')
 	    continue;
-	if ((np = find_ng(buf)) != NULL)
+	if ((np = find_ng(buf)) != nullptr)
 	    continue;
 	add_to_hash(newngs, buf, high-low, auto_subscribe(buf));
     }
@@ -251,7 +251,7 @@ static void add_to_hash(HASHTABLE *ng, char *name, int toread, char_int ch)
     node->toread = (toread < 0)? 0 : toread;
     strcpy(node->name, name);
     node->datasrc = datasrc;
-    node->next = node->prev = NULL;
+    node->next = node->prev = nullptr;
     hashstore(ng, name, namelen, data);
 }
 
@@ -281,7 +281,7 @@ static void add_to_list(char *name, int toread, char_int ch)
     node->num = addgroup_cnt++;
     strcpy(node->name, name);
     node->datasrc = datasrc;
-    node->next = NULL;
+    node->next = nullptr;
     node->prev = last_addgroup;
     if (last_addgroup)
 	last_addgroup->next = node;
@@ -352,7 +352,7 @@ static void scanline(char *actline, bool add_matching)
     long high, low;
     char ch;
 
-    if ((s = index(actline,' ')) == NULL)
+    if ((s = index(actline,' ')) == nullptr)
 	return;
     *s++ = '\0';		/* this buffer is expendable */
     high = 0, low = 1, ch = 'y';
@@ -361,7 +361,7 @@ static void scanline(char *actline, bool add_matching)
 	return;
     if (!inlist(actline))
 	return;
-    if ((np = find_ng(actline)) != NULL && np->toread > TR_UNSUB)
+    if ((np = find_ng(actline)) != nullptr && np->toread > TR_UNSUB)
 	return;
     if (add_matching || np) {
 	/* it's not in a newsrc */
@@ -423,12 +423,12 @@ void sort_addgroups()
     qsort(ag_list, addgroup_cnt, sizeof(ADDGROUP*), (int(*)(void const *, void const *)) sort_procedure);
 
     first_addgroup = ap = ag_list[0];
-    ap->prev = NULL;
+    ap->prev = nullptr;
     for (i = addgroup_cnt, lp = ag_list; --i; lp++) {
 	lp[0]->next = lp[1];
 	lp[1]->prev = lp[0];
     }
     last_addgroup = lp[0];
-    last_addgroup->next = NULL;
+    last_addgroup->next = nullptr;
     free((char*)ag_list);
 }

@@ -238,13 +238,13 @@ void sort_newsgroups()
     qsort(ng_list, newsgroup_cnt, sizeof (NGDATA*), (int(*)(void const *, void const *))sort_procedure);
 
     first_ng = np = ng_list[0];
-    np->prev = NULL;
+    np->prev = nullptr;
     for (i = newsgroup_cnt, lp = ng_list; --i; lp++) {
 	lp[0]->next = lp[1];
 	lp[1]->prev = lp[0];
     }
     last_ng = lp[0];
-    last_ng->next = NULL;
+    last_ng->next = nullptr;
     free((char*)ng_list);
 }
 
@@ -342,7 +342,7 @@ ART_NUM getngsize(NGDATA *gp)
 	if (redirected) {
 	    if (redirected != nullstr)
 		free(redirected);
-	    redirected = NULL;
+	    redirected = nullptr;
 	}
 	switch (ch) {
 	case 'n':

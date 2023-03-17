@@ -52,7 +52,7 @@ char *safemalloc(MEM_SIZE size)
 }
 #endif
 
-/* paranoid version of realloc.  If where is NULL, call malloc */
+/* paranoid version of realloc.  If where is nullptr, call malloc */
 
 #ifndef USE_DEBUGGING_MALLOC
 char *saferealloc(char *where, MEM_SIZE size)
@@ -108,6 +108,6 @@ char *get_auth_pass()
 #if defined(USE_GENAUTH) && defined(SUPPORT_NNTP)
 char *get_auth_command()
 {
-    return NULL;
+    return nullptr;
 }
 #endif

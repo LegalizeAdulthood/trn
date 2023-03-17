@@ -231,11 +231,11 @@ ARTICLE *get_tree_artp(int x, int y)
 {
     ARTICLE* ap;
     if (!tree_article || !tree_article->subj)
-	return NULL;
+	return nullptr;
     ap = tree_article->subj->thread;
     x -= tc_COLS-1 - max_depth;
     if (x < 0 || y > max_line || !ap)
-	return NULL;
+	return nullptr;
     x = (x-(x==max_depth))/5 + first_depth;
     find_artp_y = y + first_line;
     ap = find_artp(ap, x);
@@ -255,11 +255,11 @@ static ARTICLE *find_artp(ARTICLE *article, int x)
 		return ap;
 	}
 	else if (!find_artp_y--)
-	    return NULL;
+	    return nullptr;
 	if (!(article = article->sibling))
 	    break;
     }
-    return NULL;
+    return nullptr;
 }
 
 /* Output a header line with possible tree display on the right hand side.
@@ -277,7 +277,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
     char ch;
 
     /* Make a modifiable copy of the line */
-    if ((cp = index(orig_line, '\n')) != NULL)
+    if ((cp = index(orig_line, '\n')) != nullptr)
 	len = cp - orig_line;
     else
 	len = strlen(orig_line);
@@ -414,9 +414,9 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	    cp = tree_lines[header_line];
 	    cp1 = index(cp, '*');
 	    cp2 = index(cp, '@');
-	    if (cp1 != NULL)
+	    if (cp1 != nullptr)
 		*cp1 = '\0';
-	    if (cp2 != NULL)
+	    if (cp2 != nullptr)
 		*cp2 = '\0';
 	    color_object(COLOR_TREE, true);
 	    fputs(cp, stdout);
@@ -427,13 +427,13 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 		color_object(COLOR_TREE_MARK, true);
 		if (cp1 && (!cp2 || cp1 < cp2)) {
 		    cp = cp1;
-		    cp1 = NULL;
+		    cp1 = nullptr;
 		    *cp++ = '*';
 		    putchar(*cp++);
 		    putchar(*cp++);
 		} else {
 		    cp = cp2;
-		    cp2 = NULL;
+		    cp2 = nullptr;
 		    *cp++ = '@';
 		}
 		putchar(*cp++);

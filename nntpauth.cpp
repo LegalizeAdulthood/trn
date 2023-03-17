@@ -29,7 +29,7 @@ int nntp_handle_auth_err()
     strcpy(last_command_save, g_last_command);
 
 #ifdef USE_GENAUTH
-    if ((auth_command = get_auth_command()) != NULL) {
+    if ((auth_command = get_auth_command()) != nullptr) {
 	/* issue authentication request */
 	sprintf(g_ser_line, "AUTHINFO GENERIC %s", auth_command);
 	if (nntp_command(g_ser_line) <= 0

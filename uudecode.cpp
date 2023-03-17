@@ -25,7 +25,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
      && isdigit(bp[8]) && (bp[9] == ' ' ||
 	(bp[6] == '0' && isdigit(bp[9]) && bp[10] == ' '))) {
 	if (*partp == -1) {
-	    *filenamep = NULL;
+	    *filenamep = nullptr;
 	    *partp = 1;
 	    *totalp = 0;
 	}
@@ -171,7 +171,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 
 int uudecode(FILE *ifp, int state)
 {
-    static FILE* ofp = NULL;
+    static FILE* ofp = nullptr;
     static int line_length;
     char lastline[UULENGTH+1];
     char* filename;
@@ -181,7 +181,7 @@ int uudecode(FILE *ifp, int state)
       all_done:
 	if (ofp) {
 	    fclose(ofp);
-	    ofp = NULL;
+	    ofp = nullptr;
 	}
 	return state;
     }
@@ -263,7 +263,7 @@ int uudecode(FILE *ifp, int state)
 		uudecodeline(lastline, ofp);
 end:		if (ofp) {
 		    fclose(ofp);
-		    ofp = NULL;
+		    ofp = nullptr;
 		}
 		state = DECODE_MAYBEDONE;
 	    }

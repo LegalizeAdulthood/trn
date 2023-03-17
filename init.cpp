@@ -185,10 +185,10 @@ void newsnews_check()
 {
     char* newsnewsname = filexp(NEWSNEWSNAME);
 
-    if ((tmpfp = fopen(newsnewsname,"r")) != NULL) {
+    if ((tmpfp = fopen(newsnewsname,"r")) != nullptr) {
 	fstat(fileno(tmpfp),&filestat);
 	if (filestat.st_mtime > (time_t)lasttime) {
-	    while (fgets(buf,sizeof(buf),tmpfp) != NULL)
+	    while (fgets(buf,sizeof(buf),tmpfp) != nullptr)
 		fputs(buf,stdout) FLUSH;
 	    get_anything();
 	    putchar('\n') FLUSH;

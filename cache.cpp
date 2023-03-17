@@ -59,14 +59,14 @@ void cache_init()
 #endif
 }
 
-static NGDATA* cached_ng = NULL;
+static NGDATA* cached_ng = nullptr;
 static time_t cached_time = 0;
 
 void build_cache()
 {
-    if (cached_ng == ngptr && time((time_t*)NULL) < cached_time + 6*60*60L) {
+    if (cached_ng == ngptr && time((time_t*)nullptr) < cached_time + 6*60*60L) {
 	ART_NUM an;
-	cached_time = time((time_t*)NULL);
+	cached_time = time((time_t*)nullptr);
 	if (sel_mode == SM_ARTICLE)
 	    set_selector(sel_mode, sel_artsort);
 	else
@@ -82,7 +82,7 @@ void build_cache()
     close_cache();
 
     cached_ng = ngptr;
-    cached_time = time((time_t*)NULL);
+    cached_time = time((time_t*)nullptr);
     article_list = new_list(absfirst, lastart, sizeof (ARTICLE), 371,
 			    LF_SPARSE, init_artnode);
     subj_hash = hashcreate(991, subject_cmp);	/*TODO: pick a better size */
@@ -123,23 +123,23 @@ void close_cache()
 	free(sp->str);
 	free((char*)sp);
     }
-    first_subject = last_subject = NULL;
+    first_subject = last_subject = nullptr;
     subject_count = 0;			/* just to be sure */
     parsed_art = 0;
 
     if (artptr_list) {
 	free((char*)artptr_list);
-	artptr_list = NULL;
+	artptr_list = nullptr;
     }
-    artptr = NULL;
+    artptr = nullptr;
     thread_close();
 
     if (article_list) {
 	walk_list(article_list, clear_artitem, 0);
 	delete_list(article_list);
-	article_list = NULL;
+	article_list = nullptr;
     }
-    cached_ng = NULL;
+    cached_ng = nullptr;
 }
 
 /* Initialize the memory for an entire node's worth of article's */
@@ -254,19 +254,19 @@ void check_poster(ARTICLE *ap)
 	    char* u;
 	    char* h;
 	    strcpy(s,ap->from);
-	    if ((h=index(s,'<')) != NULL) { /* grab the good part */
+	    if ((h=index(s,'<')) != nullptr) { /* grab the good part */
 		s = h+1;
-		if ((h=index(s,'>')) != NULL)
+		if ((h=index(s,'>')) != nullptr)
 		    *h = '\0';
-	    } else if ((h=index(s,'(')) != NULL) {
+	    } else if ((h=index(s,'(')) != nullptr) {
 		while (h-- != s && *h == ' ')
 		    ;
 		h[1] = '\0';		/* or strip the comment */
 	    }
-	    if ((h = index(s,'%')) != NULL || (h = index(s,'@')) != NULL) {
+	    if ((h = index(s,'%')) != nullptr || (h = index(s,'@')) != nullptr) {
 		*h++ = '\0';
 		u = s;
-	    } else if ((u = rindex(s,'!')) != NULL) {
+	    } else if ((u = rindex(s,'!')) != nullptr) {
 		*u++ = '\0';
 		h = s;
 	    } else
@@ -335,7 +335,7 @@ void uncache_article(ARTICLE *ap, bool remove_empties)
 		sp->next->prev = sp->prev;
 	    hashdelete(subj_hash, sp->str+4, strlen(sp->str+4));
 	    free((char*)sp);
-	    ap->subj = NULL;
+	    ap->subj = nullptr;
 	    subject_count--;
 	}
     }
@@ -351,18 +351,18 @@ char *fetchcache(ART_NUM artnum, int which_line, bool fill_cache)
     register ARTICLE* ap;
     register bool cached = (htype[which_line].flags & HT_CACHED);
 
-    /* article_find() returns a NULL if the artnum value is invalid */
+    /* article_find() returns a nullptr if the artnum value is invalid */
     if (!(ap = article_find(artnum)) || !(ap->flags & AF_EXISTS))
 	return nullstr;
-    if (cached && (s=get_cached_line(ap,which_line,untrim_cache)) != NULL)
+    if (cached && (s=get_cached_line(ap,which_line,untrim_cache)) != nullptr)
 	return s;
     if (!fill_cache)
-	return NULL;
+	return nullptr;
     if (!parseheader(artnum))
 	return nullstr;
     if (cached)
 	return get_cached_line(ap,which_line,untrim_cache);
-    return NULL;
+    return nullptr;
 }
 
 /* Return a pointer to a cached header line for the indicated article.
@@ -375,13 +375,13 @@ char *get_cached_line(ARTICLE *ap, int which_line, bool no_truncs)
     switch (which_line) {
       case SUBJ_LINE:
 	if (!ap->subj || (no_truncs && (ap->subj->flags & SF_SUBJTRUNCED)))
-	    s = NULL;
+	    s = nullptr;
 	else
 	    s = ap->subj->str + ((ap->flags & AF_HAS_RE) ? 0 : 4);
 	break;
       case FROM_LINE:
 	if (no_truncs && (ap->flags & AF_FROMTRUNCED))
-	    s = NULL;
+	    s = nullptr;
 	else
 	    s = ap->from;
 	break;
@@ -413,7 +413,7 @@ char *get_cached_line(ARTICLE *ap, int which_line, bool no_truncs)
 	break;
       }
       default:
-	s = NULL;
+	s = nullptr;
 	break;
     }
     return s;
@@ -464,7 +464,7 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
 	    sp = (SUBJECT*)safemalloc(sizeof (SUBJECT));
 	    bzero((char*)sp, sizeof (SUBJECT));
 	    subject_count++;
-	    if ((sp->prev = last_subject) != NULL)
+	    if ((sp->prev = last_subject) != nullptr)
 		sp->prev->next = sp;
 	    else
 		first_subject = sp;
@@ -689,7 +689,7 @@ void look_ahead()
 	    termdown(2);
 	}
 #endif
-	if ((s = compile(&srchcompex,pattern,true,true)) != NULL) {
+	if ((s = compile(&srchcompex,pattern,true,true)) != nullptr) {
 				    /* compile regular expression */
 	    printf("\n%s\n",s) FLUSH;
 	    termdown(2);

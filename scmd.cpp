@@ -356,7 +356,7 @@ void s_search()
     }
     s_rub_ptr();
     buf[1] = '\0';
-    if (!s_finish_cmd(NULL))
+    if (!s_finish_cmd(nullptr))
 	return;
     if (buf[1]) {	/* new text */
 	s = buf+1;

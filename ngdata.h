@@ -17,19 +17,19 @@ struct ngdata {
     char flags;  	/* flags for each group */
 };
 
-EXT LIST* ngdata_list INIT(NULL); /* a list of NGDATA */
+EXT LIST* ngdata_list INIT(nullptr); /* a list of NGDATA */
 EXT int ngdata_cnt INIT(0);
 EXT NG_NUM newsgroup_cnt INIT(0); /* all newsgroups in our current newsrc(s) */
 EXT NG_NUM newsgroup_toread INIT(0);
 EXT ART_UNREAD ng_min_toread INIT(1); /* == TR_ONE or TR_NONE */
 
-EXT NGDATA* first_ng INIT(NULL);
-EXT NGDATA* last_ng INIT(NULL);
-EXT NGDATA* ngptr INIT(NULL);	/* current newsgroup data ptr */
+EXT NGDATA* first_ng INIT(nullptr);
+EXT NGDATA* last_ng INIT(nullptr);
+EXT NGDATA* ngptr INIT(nullptr);	/* current newsgroup data ptr */
 
-EXT NGDATA* current_ng INIT(NULL);/* stable current newsgroup so we can ditz with ngptr */
-EXT NGDATA* recent_ng INIT(NULL); /* the prior newsgroup we visited */
-EXT NGDATA* starthere INIT(NULL); /* set to the first newsgroup with unread news on startup */
+EXT NGDATA* current_ng INIT(nullptr);/* stable current newsgroup so we can ditz with ngptr */
+EXT NGDATA* recent_ng INIT(nullptr); /* the prior newsgroup we visited */
+EXT NGDATA* starthere INIT(nullptr); /* set to the first newsgroup with unread news on startup */
 
 #define ngdata_ptr(ngnum) ((NGDATA*)listnum2listitem(ngdata_list,(long)(ngnum)))
 /*#define ngdata_num(ngptr) listitem2listnum(ngdata_list,(char*)ngptr)*/
@@ -47,9 +47,9 @@ EXT char* redirected;
 EXT bool ThreadedGroup;
 
 /* CAA goto-newsgroup extensions */
-EXT NGDATA* ng_go_ngptr INIT(NULL);
+EXT NGDATA* ng_go_ngptr INIT(nullptr);
 EXT ART_NUM ng_go_artnum INIT(0);
-EXT char* ng_go_msgid INIT(NULL);
+EXT char* ng_go_msgid INIT(nullptr);
 
 void ngdata_init();
 void set_ng(NGDATA *);

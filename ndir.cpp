@@ -24,10 +24,10 @@ DIR *opendir(char *name)
 	register int fd;
 
 	if ((fd = open(name, 0)) == -1)
-		return NULL;
-	if ((dirp = (DIR*)malloc(sizeof(DIR))) == NULL) {
+		return nullptr;
+	if ((dirp = (DIR*)malloc(sizeof(DIR))) == nullptr) {
 		close (fd);
-		return NULL;
+		return nullptr;
 	}
 	dirp->dd_fd = fd;
 	dirp->dd_loc = 0;
@@ -67,7 +67,7 @@ Direntry_t *readdir(DIR *dirp)
 			dirp->dd_size = read(dirp->dd_fd, dirp->dd_buf,
 			    DIRBLKSIZ);
 			if (dirp->dd_size <= 0)
-				return NULL;
+				return nullptr;
 		}
 		if (dirp->dd_loc >= dirp->dd_size) {
 			dirp->dd_loc = 0;

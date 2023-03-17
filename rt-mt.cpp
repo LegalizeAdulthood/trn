@@ -30,7 +30,7 @@ static FILE* fp;
 static bool word_same, long_same;
 static BMAP my_bmap, mt_bmap;
 
-static char* strings = NULL;
+static char* strings = nullptr;
 static WORD* author_cnts = 0;
 static WORD* ids = 0;
 
@@ -66,7 +66,7 @@ bool mt_init()
     else
 #endif
     {
-	if ((fp = fopen(filexp(DBINIT), FOPEN_RB)) != NULL)
+	if ((fp = fopen(filexp(DBINIT), FOPEN_RB)) != nullptr)
 	    size = fread((char*)&mt_bmap, 1, sizeof (BMAP), fp);
 	else
 	    size = 0;
@@ -95,7 +95,7 @@ bool mt_init()
     }
     else
 #endif
-    if (fp != NULL)
+    if (fp != nullptr)
 	fclose(fp);
 
     if (success)
@@ -129,7 +129,7 @@ int mt_data()
     else
 #endif
     {
-	if ((fp = fopen(mt_name(ngname), FOPEN_RB)) == NULL)
+	if ((fp = fopen(mt_name(ngname), FOPEN_RB)) == nullptr)
 	    return 0;
 #ifdef VERBOSE
 	IF(verbose)
@@ -298,7 +298,7 @@ static int read_subjects()
 	set_subj_line(&arty, string_ptr, len);
 	if (len == 72)
 	    arty.subj->flags |= SF_SUBJTRUNCED;
-	arty.subj->thread_link = NULL;
+	arty.subj->thread_link = nullptr;
 	string_ptr += len + 1;
 	*subj_ptr++ = arty.subj;
     }
@@ -348,7 +348,7 @@ static int read_roots()
 	}
 	for (prev_sp = *subj_ptr; i--; prev_sp = sp, subj_ptr++) {
 	    sp = *subj_ptr;
-	    if (sp->thread_link == NULL) {
+	    if (sp->thread_link == nullptr) {
 		sp->thread_link = prev_sp->thread_link;
 		prev_sp->thread_link = sp;
 	    }
@@ -368,17 +368,17 @@ static int read_roots()
 static bool invalid_data;
 
 /* A simple routine that checks the validity of the article's subject value.
-** A -1 means that it is NULL, otherwise it should be an offset into the
+** A -1 means that it is nullptr, otherwise it should be an offset into the
 ** subject array we just unpacked.
 */
 static SUBJECT *the_subject(int num)
 {
     if (num == -1)
-	return NULL;
+	return nullptr;
     if (num < 0 || num >= total.subject) {
 	/*printf("Invalid subject in thread file: %d [%ld]\n", num, art_num);*/
 	invalid_data = true;
-	return NULL;
+	return nullptr;
     }
     return subject_array[num];
 }
@@ -387,11 +387,11 @@ static SUBJECT *the_subject(int num)
 static char *the_author(int num)
 {
     if (num == -1)
-	return NULL;
+	return nullptr;
     if (num < 0 || num >= total.author) {
 	/*error("invalid author in thread file: %d [%ld]\n", num, art_num);*/
 	invalid_data = true;
-	return NULL;
+	return nullptr;
     }
     return savestr(author_array[num]);
 }
@@ -405,12 +405,12 @@ static ARTICLE *the_article(int relative_offset, int num)
     union { ARTICLE* ap; int num; } uni;
 
     if (!relative_offset)
-	return NULL;
+	return nullptr;
     num += relative_offset;
     if (num < 0 || num >= total.article) {
 	/*error("invalid article offset in thread file.\n");*/
 	invalid_data = true;
-	return NULL;
+	return nullptr;
     }
     uni.num = num+1;
     return uni.ap;		/* slip them an offset in disguise */
@@ -472,7 +472,7 @@ static int read_articles()
 	    article->parent = article_array[uni.num-1];
 	}
 	else
-	    article->sibling = NULL;
+	    article->sibling = nullptr;
 	if (article->subj) {
 	    article->flags |= AF_FROMTRUNCED | AF_THREADED
 		    | ((p_article.flags & ROOT_ARTICLE)? 0 : AF_HAS_RE);
@@ -643,7 +643,7 @@ static int read_item(char **dest, MEM_SIZE len)
 
     if (ret != len) {
 	free(*dest);
-	*dest = NULL;
+	*dest = nullptr;
 	return 0;
     }
     putchar('.');

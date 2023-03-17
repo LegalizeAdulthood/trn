@@ -36,11 +36,11 @@
 void datasrc_init()
 {
     char** vals = prep_ini_words(datasrc_ini);
-    char* machine = NULL;
-    char* actname = NULL;
+    char* machine = nullptr;
+    char* actname = nullptr;
     char* s;
 
-    datasrc_list = new_list(0,0,sizeof(DATASRC),20,LF_ZERO_MEM,NULL);
+    datasrc_list = new_list(0,0,sizeof(DATASRC),20,LF_ZERO_MEM,nullptr);
 
 #ifdef SUPPORT_NNTP
     nntp_auth_file = savestr(filexp(NNTP_AUTH_FILE));
@@ -71,7 +71,7 @@ void datasrc_init()
 	if (FILE_REF(machine))
 	    machine = nntp_servername(machine);
 	if (strEQ(machine,"local")) {
-	    machine = NULL;
+	    machine = nullptr;
 	    actname = ACTIVE;
 	}
 #else
@@ -110,7 +110,7 @@ char *read_datasrcs(char *filename)
     char* s;
     char* section;
     char* cond;
-    char* filebuf = NULL;
+    char* filebuf = nullptr;
     char** vals = INI_VALUES(datasrc_ini);
 
     if ((fd = open(filexp(filename),0)) >= 0) {
@@ -122,7 +122,7 @@ char *read_datasrcs(char *filename)
 	    (filebuf)[len] = '\0';
 	    prep_ini_data(filebuf,filename);
 	    s = filebuf;
-	    while ((s = next_ini_section(s,&section,&cond)) != NULL) {
+	    while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
 		if (*cond && !check_ini_cond(cond))
 		    continue;
 		if (strncaseEQ(section, "group ", 6))
@@ -144,7 +144,7 @@ DATASRC *get_datasrc(char *name)
     for (dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp))
 	if (strEQ(dp->name,name))
 	    return dp;
-    return NULL;
+    return nullptr;
 }
 
 DATASRC *new_datasrc(char *name, char **vals)
@@ -157,26 +157,26 @@ DATASRC *new_datasrc(char *name, char **vals)
 	dp->flags |= DF_REMOTE;
 #else
 	datasrc_cnt--;
-	return NULL;
+	return nullptr;
 #endif
     }
     else if (!vals[DI_ACTIVE_FILE])
-	return NULL; /*$$*/
+	return nullptr; /*$$*/
 
     dp->name = savestr(name);
     if (strEQ(name,"default"))
 	dp->flags |= DF_DEFAULT;
 
 #ifdef SUPPORT_NNTP
-    if ((v = vals[DI_NNTP_SERVER]) != NULL) {
+    if ((v = vals[DI_NNTP_SERVER]) != nullptr) {
 	char* cp;
 	dp->newsid = savestr(v);
-	if ((cp = index(dp->newsid, ';')) != NULL) {
+	if ((cp = index(dp->newsid, ';')) != nullptr) {
 	    *cp = '\0';
 	    dp->nntplink.port_number = atoi(cp+1);
 	}
 
-	if ((v = vals[DI_ACT_REFETCH]) != NULL && *v)
+	if ((v = vals[DI_ACT_REFETCH]) != nullptr && *v)
 	    dp->act_sf.refetch_secs = text2secs(v,defRefetchSecs);
 	else if (!vals[DI_ACTIVE_FILE])
 	    dp->act_sf.refetch_secs = defRefetchSecs;
@@ -195,7 +195,7 @@ DATASRC *new_datasrc(char *name, char **vals)
     dp->extra_name = dir_or_none(dp,vals[DI_ACTIVE_TIMES],DF_ADD_OK);
 #ifdef SUPPORT_NNTP
     if (dp->flags & DF_REMOTE) {
-	/* FYI, we know extra_name to be NULL in this case. */
+	/* FYI, we know extra_name to be nullptr in this case. */
 	if (vals[DI_ACTIVE_FILE]) {
 	    dp->extra_name = savestr(filexp(vals[DI_ACTIVE_FILE]));
 	    if (stat(dp->extra_name,&filestat) >= 0)
@@ -208,7 +208,7 @@ DATASRC *new_datasrc(char *name, char **vals)
 		dp->act_sf.refetch_secs = 1;
 	}
 
-	if ((v = vals[DI_DESC_REFETCH]) != NULL && *v)
+	if ((v = vals[DI_DESC_REFETCH]) != nullptr && *v)
 	    dp->desc_sf.refetch_secs = text2secs(v,defRefetchSecs);
 	else if (!dp->grpdesc)
 	    dp->desc_sf.refetch_secs = defRefetchSecs;
@@ -223,19 +223,19 @@ DATASRC *new_datasrc(char *name, char **vals)
 		dp->desc_sf.refetch_secs = 1;
 	}
     }
-    if ((v = vals[DI_FORCE_AUTH]) != NULL && (*v == 'y' || *v == 'Y'))
+    if ((v = vals[DI_FORCE_AUTH]) != nullptr && (*v == 'y' || *v == 'Y'))
 	dp->nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
-    if ((v = vals[DI_AUTH_USER]) != NULL)
+    if ((v = vals[DI_AUTH_USER]) != nullptr)
 	dp->auth_user = savestr(v);
-    if ((v = vals[DI_AUTH_PASS]) != NULL)
+    if ((v = vals[DI_AUTH_PASS]) != nullptr)
 	dp->auth_pass = savestr(v);
 #ifdef USE_GENAUTH
-    if ((v = vals[DI_AUTH_COMMAND]) != NULL)
+    if ((v = vals[DI_AUTH_COMMAND]) != nullptr)
 	dp->auth_command = savestr(v);
 #endif
-    if ((v = vals[DI_XHDR_BROKEN]) != NULL && (*v == 'y' || *v == 'Y'))
+    if ((v = vals[DI_XHDR_BROKEN]) != nullptr && (*v == 'y' || *v == 'Y'))
 	dp->flags |= DF_XHDR_BROKEN;
-    if ((v = vals[DI_XREFS]) != NULL && (*v == 'n' || *v == 'N'))
+    if ((v = vals[DI_XREFS]) != nullptr && (*v == 'n' || *v == 'N'))
 	dp->flags |= DF_NOXREFS;
 
 #endif /* SUPPORT_NNTP */
@@ -249,7 +249,7 @@ static char *dir_or_none(DATASRC *dp, char *dir, int flag)
 	dp->flags |= flag;
 #ifdef SUPPORT_NNTP
 	if (dp->flags & DF_REMOTE)
-	    return NULL;
+	    return nullptr;
 #endif
 	if (flag == DF_ADD_OK) {
 	    char* cp = safemalloc(strlen(dp->newsid)+6+1);
@@ -260,7 +260,7 @@ static char *dir_or_none(DATASRC *dp, char *dir, int flag)
 	    char* cp = rindex(dp->newsid,'/');
 	    int len;
 	    if (!cp)
-		return NULL;
+		return nullptr;
 	    len = cp - dp->newsid + 1;
 	    cp = safemalloc(len+10+1);
 	    strcpy(cp,dp->newsid);
@@ -271,7 +271,7 @@ static char *dir_or_none(DATASRC *dp, char *dir, int flag)
     }
 
     if (strEQ(dir, "none"))
-	return NULL;
+	return nullptr;
 
     dp->flags |= flag;
     dir = filexp(dir);
@@ -283,7 +283,7 @@ static char *dir_or_none(DATASRC *dp, char *dir, int flag)
 static char *file_or_none(char *fn)
 {
     if (!fn || !*fn || strEQ(fn, "none") || strEQ(fn, "remote"))
-	return NULL;
+	return nullptr;
     return savestr(filexp(fn));
 }
 
@@ -325,10 +325,10 @@ bool open_datasrc(DATASRC *dp)
 		if (dp->flags & DF_TMPACTFILE) {
 		    dp->flags &= ~DF_TMPACTFILE;
 		    free(dp->extra_name);
-		    dp->extra_name = NULL;
+		    dp->extra_name = nullptr;
 		    dp->act_sf.refetch_secs = 0;
-		    success = srcfile_open(&dp->act_sf,(char*)NULL,
-					   (char*)NULL,(char*)NULL);
+		    success = srcfile_open(&dp->act_sf,(char*)nullptr,
+					   (char*)nullptr,(char*)nullptr);
 		}
 		else
 		    success = actfile_hash(dp);
@@ -379,12 +379,12 @@ void check_datasrcs()
 {
 #ifdef SUPPORT_NNTP
     DATASRC* dp;
-    time_t now = time((time_t*)NULL);
+    time_t now = time((time_t*)nullptr);
     time_t limit;
 
     if (datasrc_list) {
 	for (dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp)) {
-	    if ((dp->flags & DF_OPEN) && dp->nntplink.rd_fp != NULL) {
+	    if ((dp->flags & DF_OPEN) && dp->nntplink.rd_fp != nullptr) {
 		limit = ((dp->flags & DF_ACTIVE)? 30*60 : 10*60);
 		if (now - dp->nntplink.last_command > limit) {
 		    DATASRC* save_datasrc = datasrc;
@@ -433,7 +433,7 @@ void close_datasrc(DATASRC *dp)
     srcfile_close(&dp->desc_sf);
     dp->flags &= ~DF_OPEN;
     if (datasrc == dp)
-	datasrc = NULL;
+	datasrc = nullptr;
 }
 
 bool actfile_hash(DATASRC *dp)
@@ -451,7 +451,7 @@ bool actfile_hash(DATASRC *dp)
     }
     else
 #endif
-	ret = srcfile_open(&dp->act_sf, dp->newsid, (char*)NULL, (char*)NULL);
+	ret = srcfile_open(&dp->act_sf, dp->newsid, (char*)nullptr, (char*)nullptr);
     return ret;
 }
 
@@ -475,7 +475,7 @@ bool find_actgrp(DATASRC *dp, char *outbuf, char *nam, int len, ART_NUM high)
 	lbp_len = index(lbp, '\n') - lbp + 1;
     }
     else {
-	lbp = NULL;
+	lbp = nullptr;
 	lbp_len = 0;
     }
 #ifdef SUPPORT_NNTP
@@ -546,7 +546,7 @@ bool find_actgrp(DATASRC *dp, char *outbuf, char *nam, int len, ART_NUM high)
 	/*$$ if line has changed length or is not there, we should
 	 * discard/close the active file, and re-open it. $$*/
 	if (fseek(fp, act_pos, 0) >= 0
-	 && fgets(outbuf, LBUFLEN, fp) != NULL
+	 && fgets(outbuf, LBUFLEN, fp) != nullptr
 	 && strnEQ(outbuf, nam, len) && outbuf[len] == ' ') {
 	    /* Remember the latest info in our cache. */
 	    (void) bcopy(outbuf, lbp, lbp_len);
@@ -577,8 +577,8 @@ char *find_grpdesc(DATASRC *dp, char *groupname)
 	    set_datasrc(dp);
 	    if ((dp->flags & (DF_TMPGRPDESC|DF_NOXGTITLE)) == DF_TMPGRPDESC
 	     && g_net_speed < 5) {
-		(void)srcfile_open(&dp->desc_sf,(char*)NULL,/*$$check return?*/
-				   (char*)NULL,(char*)NULL);
+		(void)srcfile_open(&dp->desc_sf,(char*)nullptr,/*$$check return?*/
+				   (char*)nullptr,(char*)nullptr);
 		grouplen = strlen(groupname);
 		goto try_xgtitle;
 	    }
@@ -592,7 +592,7 @@ char *find_grpdesc(DATASRC *dp, char *groupname)
 	else
 #endif
 	    ret = srcfile_open(&dp->desc_sf, dp->grpdesc,
-			       (char*)NULL, (char*)NULL);
+			       (char*)nullptr, (char*)nullptr);
 	if (!ret) {
 #ifdef SUPPORT_NNTP
 	    if (dp->flags & DF_TMPGRPDESC) {
@@ -601,7 +601,7 @@ char *find_grpdesc(DATASRC *dp, char *groupname)
 	    }
 #endif
 	    free(dp->grpdesc);
-	    dp->grpdesc = NULL;
+	    dp->grpdesc = nullptr;
 	    return nullstr;
 	}
 #ifdef SUPPORT_NNTP
@@ -641,7 +641,7 @@ char *find_grpdesc(DATASRC *dp, char *groupname)
 	    if (dp->flags & DF_TMPGRPDESC)
 		return find_grpdesc(dp, groupname);
 	    free(dp->grpdesc);
-	    dp->grpdesc = NULL;
+	    dp->grpdesc = nullptr;
 	}
     }
 #endif
@@ -681,14 +681,14 @@ int srcfile_open(SRCFILE *sfp, char *filename, char *fetchcmd, char *server)
     FILE* fp;
     char* lbp;
 #ifdef SUPPORT_NNTP
-    time_t now = time((time_t*)NULL);
+    time_t now = time((time_t*)nullptr);
     bool use_buffered_nntp_gets = false;
 
     if (!filename)
-	fp = NULL;
+	fp = nullptr;
     else if (server) {
 	if (!sfp->refetch_secs) {
-	    server = NULL;
+	    server = nullptr;
 	    fp = fopen(filename, "r");
 	    spin_todo = 0;
 	}
@@ -714,7 +714,7 @@ int srcfile_open(SRCFILE *sfp, char *filename, char *fetchcmd, char *server)
 	    }
 	}
 	else {
-	    server = NULL;
+	    server = nullptr;
 	    fp = fopen(filename, "r+");
 	    if (!fp) {
 		sfp->refetch_secs = 0;
@@ -732,7 +732,7 @@ int srcfile_open(SRCFILE *sfp, char *filename, char *fetchcmd, char *server)
 	spin_todo = 0;
     }
 
-    if (filename && fp == NULL) {
+    if (filename && fp == nullptr) {
 	printf(cantopen, filename) FLUSH;
 	termdown(1);
 	return 0;
@@ -742,7 +742,7 @@ int srcfile_open(SRCFILE *sfp, char *filename, char *fetchcmd, char *server)
     srcfile_close(sfp);
 
     /* Create a list with one character per item using a large chunk size. */
-    sfp->lp = new_list(0, 0, 1, SRCFILE_CHUNK_SIZE, 0, NULL);
+    sfp->lp = new_list(0, 0, 1, SRCFILE_CHUNK_SIZE, 0, nullptr);
     sfp->hp = hashcreate(3001, srcfile_cmp);
     sfp->fp = fp;
 
@@ -902,15 +902,15 @@ void srcfile_close(SRCFILE *sfp)
 {
     if (sfp->fp) {
 	fclose(sfp->fp);
-	sfp->fp = NULL;
+	sfp->fp = nullptr;
     }
     if (sfp->lp) {
 	delete_list(sfp->lp);
-	sfp->lp = NULL;
+	sfp->lp = nullptr;
     }
     if (sfp->hp) {
 	hashdestroy(sfp->hp);
-	sfp->hp = NULL;
+	sfp->hp = nullptr;
     }
 }
 

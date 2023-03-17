@@ -1,7 +1,7 @@
 /* hash.ih
  */
 
-#define BADTBL(tbl)	((tbl) == NULL || (tbl)->ht_magic != HASHMAG)
+#define BADTBL(tbl)	((tbl) == nullptr || (tbl)->ht_magic != HASHMAG)
 
 #define HASHMAG  ((char)0257)
 

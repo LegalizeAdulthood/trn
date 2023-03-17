@@ -86,7 +86,7 @@ struct article {
 #define article_ptr(an)      ((ARTICLE*)listnum2listitem(article_list,(long)(an)))
 #define article_num(ap)      ((ap)->num)
 #define article_find(an)     ((an) <= lastart && article_hasdata(an)? \
-			      article_ptr(an) : NULL)
+			      article_ptr(an) : nullptr)
 #define article_walk(cb,ag)  walk_list(article_list,cb,ag)
 #define article_hasdata(an)  existing_listnum(article_list,(long)(an),0)
 #define article_first(an)    existing_listnum(article_list,(long)(an),1)

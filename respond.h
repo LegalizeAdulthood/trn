@@ -2,9 +2,9 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXT char* savedest INIT(NULL);		/* value of %b */
-EXT char* extractdest INIT(NULL);	/* value of %E */
-EXT char* extractprog INIT(NULL);	/* value of %e */
+EXT char* savedest INIT(nullptr);		/* value of %b */
+EXT char* extractdest INIT(nullptr);	/* value of %E */
+EXT char* extractprog INIT(nullptr);	/* value of %e */
 EXT ART_POS savefrom INIT(0);		/* value of %B */
 
 #define SAVE_ABORT 0

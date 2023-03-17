@@ -31,7 +31,7 @@ struct sf_file {
     char** lines;
 };
 
-EXT SF_FILE *sf_files INIT((SF_FILE*)NULL);
+EXT SF_FILE *sf_files INIT((SF_FILE*)nullptr);
 EXT int sf_num_files INIT(0);
 #endif
 

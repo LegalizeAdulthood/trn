@@ -56,8 +56,8 @@ bool ov_init()
     else
 #endif
     {
-	has_overview_fmt = datasrc->over_fmt != NULL
-			&& (tmpfp = fopen(datasrc->over_fmt, "r")) != NULL;
+	has_overview_fmt = datasrc->over_fmt != nullptr
+			&& (tmpfp = fopen(datasrc->over_fmt, "r")) != nullptr;
     }
 
     if (has_overview_fmt) {
@@ -177,7 +177,7 @@ beginning:
 	}
     }
 #endif
-    started_request = time((time_t*)NULL);
+    started_request = time((time_t*)nullptr);
     for (;;) {
 	artnum = article_last(last);
 	if (artnum < last || !(article_ptr(artnum)->flags & AF_CACHED))
@@ -201,7 +201,7 @@ beginning:
 #endif
     ElseIf (datasrc->ov_opened < started_request - 60*60) {
 	ov_close();
-	if ((datasrc->ov_in = fopen(ov_name(ngname), "r")) == NULL)
+	if ((datasrc->ov_in = fopen(ov_name(ngname), "r")) == nullptr)
 	    return false;
 #ifdef VERBOSE
 	IF(verbose && !first_subject)
@@ -308,7 +308,7 @@ beginning:
 	    success = false;
 	} else if (last < real_last) {
 	    if (!cheating || !input_pending()) {
-		long elapsed_time = time((time_t*)NULL) - started_request;
+		long elapsed_time = time((time_t*)nullptr) - started_request;
 		long expected_time = cheating? 2 : 10;
 		int max_chunk_size = cheating? 500 : 2000;
 		ov_chunk_size += (expected_time - elapsed_time) * OV_CHUNK_SIZE;
@@ -365,7 +365,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 
     bzero((char*)fields, sizeof fields);
     for (i = 0; cp && i < OV_MAX_FIELDS; cp = tab) {
-	if ((tab = index(cp, '\t')) != NULL)
+	if ((tab = index(cp, '\t')) != nullptr)
 	    *tab++ = '\0';
 	fn = fieldnum[i];
 	if (!(fieldflags[fn] & (FF_HAS_FIELD | FF_CHECK4FIELD)))
@@ -472,7 +472,7 @@ void ov_close()
     if (datasrc && datasrc->ov_opened) {
 	if (datasrc->ov_in) {
 	    (void) fclose(datasrc->ov_in);
-	    datasrc->ov_in = NULL;
+	    datasrc->ov_in = nullptr;
 	}
 	datasrc->ov_opened = 0;
     }
@@ -490,7 +490,7 @@ char *ov_field(ARTICLE *ap, int num)
 
     fn = datasrc->fieldnum[num];
     if (!(datasrc->fieldflags[fn] & (FF_HAS_FIELD | FF_CHECK4FIELD)))
-	return NULL;
+	return nullptr;
 
     if (fn == OV_NUM) {
 	sprintf(cmd_buf, "%ld", (long)ap->num);

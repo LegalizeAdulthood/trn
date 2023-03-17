@@ -15,7 +15,7 @@ EXT int checkcount INIT(0);	/* how many articles have we read */
 				/*   the last checkpoint? */
 EXT int docheckwhen INIT(20);	/* how often to do checkpoint */
 
-EXT char* subjline INIT(NULL);	/* what format to use for '=' */
+EXT char* subjline INIT(nullptr);	/* what format to use for '=' */
 #ifdef MAILCALL
 EXT int mailcount INIT(0);	/* check for mail when 0 mod 10 */
 #endif

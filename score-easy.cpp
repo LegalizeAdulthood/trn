@@ -18,7 +18,7 @@
 /* new line to return to the caller. */
 static char sc_e_newline[LBUFLEN];
 
-/* returns new string or NULL to abort. */
+/* returns new string or nullptr to abort. */
 char *sc_easy_append()
 {
     char* s;
@@ -42,7 +42,7 @@ char *sc_easy_append()
 	q_done = true;
 	switch (ch) {
 	  case '0':
-	    return NULL;
+	    return nullptr;
 	  case '1':
 	    strcpy(sc_e_newline,"?");
 	    return sc_e_newline;
@@ -93,7 +93,7 @@ char *sc_easy_append()
 	q_done = true;
 	switch (ch) {
 	  case '0':
-	    return NULL;
+	    return nullptr;
 	  case '1':
 	    break;
 	  case '2':
@@ -147,7 +147,7 @@ char *sc_easy_append()
 	q_done = true;
 	switch (ch) {
 	  case '0':
-	    return NULL;
+	    return nullptr;
 	  case '1':
 	    *s++ = 'S';
 	    *s++ = '\0';
@@ -166,10 +166,10 @@ char *sc_easy_append()
 	}
     }
     /* later ask for headers, pattern-matching, etc... */
-    return NULL;
+    return nullptr;
 }
 
-/* returns new string or NULL to abort. */
+/* returns new string or nullptr to abort. */
 char *sc_easy_command()
 {
     char* s;
@@ -192,7 +192,7 @@ char *sc_easy_command()
 	q_done = true;
 	switch (ch) {
 	  case '0':
-	    return NULL;
+	    return nullptr;
 	  case '1':
 	    return "\"";	/* do an append command */
 	  case '2':
@@ -213,6 +213,6 @@ char *sc_easy_command()
 	    break;
 	}
     }
-    return NULL;
+    return nullptr;
 }
 #endif /* SCORE */

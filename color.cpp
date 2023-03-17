@@ -81,11 +81,11 @@ void color_init()
 	int i;
 
 	/* Get default capabilities. */
-	if ((fg = tc_color_capability("fg default")) == NULL) {
+	if ((fg = tc_color_capability("fg default")) == nullptr) {
 	    fprintf(stderr,"trn: you need a 'fg default' definition in the [termcap] section.\n");
 	    finalize(1);
 	}
-	if ((bg = tc_color_capability("bg default")) == NULL) {
+	if ((bg = tc_color_capability("bg default")) == nullptr) {
 	    fprintf(stderr,"trn: you need a 'bg default' definition in the [termcap] section.\n");
 	    finalize(1);
 	}
@@ -111,7 +111,7 @@ void color_rc_attribute(char *object, char *value)
 {
     char* s;
     char* t;
-    char* n = NULL;
+    char* n = nullptr;
     int i;
 
     /* Find the specified object. */
@@ -159,11 +159,11 @@ void color_rc_attribute(char *object, char *value)
 
     /* Parse the foreground color. */
     if (*s == '-')
-	objects[i].fg = NULL;
+	objects[i].fg = nullptr;
     else {
 	sprintf(buf, "fg %s", s);
 	objects[i].fg = tc_color_capability(buf);
-	if (objects[i].fg == NULL) {
+	if (objects[i].fg == nullptr) {
 	    fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
 		    buf, object);
 	    finalize(1);
@@ -171,7 +171,7 @@ void color_rc_attribute(char *object, char *value)
     }
     if (n) {
 	*n = ' ';
-	n = NULL;
+	n = nullptr;
     }
 
     /* Make sure we have one more parameter. */
@@ -188,11 +188,11 @@ void color_rc_attribute(char *object, char *value)
 
     /* Parse the background color. */
     if (*s == '-')
-	objects[i].bg = NULL;
+	objects[i].bg = nullptr;
     else {
 	sprintf(buf, "bg %s", s);
 	objects[i].bg = tc_color_capability(buf);
-	if (objects[i].bg == NULL) {
+	if (objects[i].bg == nullptr) {
 	    fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
 		    buf, object);
 	    finalize(1);
@@ -273,7 +273,7 @@ void color_default()
 /* Set colors/attribute for an object. */
 static void output_color()
 {
-    static COLOR_OBJ prior = { nullstr, NULL, NULL, NOMARKING };
+    static COLOR_OBJ prior = { nullstr, nullptr, nullptr, NOMARKING };
     COLOR_OBJ* op = &color_stack[stack_pointer].object;
 
     /* If no change, just return. */

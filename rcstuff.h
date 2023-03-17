@@ -23,7 +23,7 @@
 #define GNG_RELOC	0x0001
 #define GNG_FUZZY	0x0002
 
-EXT HASHTABLE* newsrc_hash INIT(NULL);
+EXT HASHTABLE* newsrc_hash INIT(nullptr);
 
 struct newsrc {
     NEWSRC*	next;

@@ -219,7 +219,7 @@ char *sa_get_desc(long e, int line, bool trunc)
 	}
 	/* FALL THROUGH */
       default:	/* no line I know of */
-	/* later return NULL */
+	/* later return nullptr */
 	sprintf(desc_buf,"Entry %ld: Nonimplemented Description LINE",e);
 	break;
     } /* switch (line) */

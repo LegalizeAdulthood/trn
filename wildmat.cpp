@@ -138,12 +138,12 @@ int main()
     for ( ; ; ) {
 	printf("\nEnter pattern:  ");
 	(void)fflush(stdout);
-	if (gets(p) == NULL || p[0] == '\0')
+	if (gets(p) == nullptr || p[0] == '\0')
 	    break;
 	for ( ; ; ) {
 	    printf("Enter text:  ");
 	    (void)fflush(stdout);
-	    if (gets(text) == NULL)
+	    if (gets(text) == nullptr)
 		exit(0);
 	    if (text[0] == '\0')
 		/* Blank line; go back and get a new pattern. */

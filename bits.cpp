@@ -90,7 +90,7 @@ void rc_to_bits()
     }
 #endif
     i = firstart;
-    for ( ; (c = index(s,',')) != NULL; s = ++c) {	/* for each range */
+    for ( ; (c = index(s,',')) != nullptr; s = ++c) {	/* for each range */
 	ART_NUM min, max;
 	*c = '\0';			/* do not let index see past comma */
 	h = index(s,'-');
@@ -291,7 +291,7 @@ void find_existing_articles()
 	    }
 	}
 	else if (first_subject && cached_all_in_range) {
-	    if (!datasrc->ov_opened || datasrc->over_dir != NULL) {
+	    if (!datasrc->ov_opened || datasrc->over_dir != nullptr) {
 		for (ap = article_ptr(article_first(first_cached));
 		     ap && article_num(ap) <= last_cached;
 		     ap = article_nextp(ap))
@@ -339,7 +339,7 @@ void find_existing_articles()
 	     ap = article_nextp(ap))
 	    ap->flags &= ~AF_EXISTS;
 
-	while ((dp = readdir(dirp)) != NULL) {
+	while ((dp = readdir(dirp)) != nullptr) {
 	    if (sscanf(dp->d_name, "%ld%c", &lnum, &ch) == 1) {
 		an = (ART_NUM)lnum;
 		if (an <= lastart && an >= absfirst) {
@@ -668,7 +668,7 @@ static int chase_xref(ART_NUM artnum, int markread)
 # ifdef VALIDATE_XREF_SITE
 static bool valid_xref_site(ART_NUM artnum, char *site)
 {
-    static char* inews_site = NULL;
+    static char* inews_site = nullptr;
     char* sitebuf;
     char* s;
 
@@ -680,14 +680,14 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
 #ifndef ANCIENT_NEWS
     /* Grab the site from the first component of the Path line */
     sitebuf = fetchlines(artnum,PATH_LINE);
-    if ((s = index(sitebuf, '!')) != NULL) {
+    if ((s = index(sitebuf, '!')) != nullptr) {
 	*s = '\0';
 	inews_site = savestr(sitebuf);
     }
 #else /* ANCIENT_NEWS */
     /* Grab the site from the Posting-Version line */
     sitebuf = fetchlines(artnum,RVER_LINE);
-    if ((s = instr(sitebuf,"; site ",true)) != NULL) {
+    if ((s = instr(sitebuf,"; site ",true)) != nullptr) {
 	char* t = index(s+7, '.');
 	if (t)
 	    *t = '\0';
@@ -720,7 +720,7 @@ static int chase_xref(art_num artnum, INT markread)
     datum fetch();
     register char* idp;
     char* ident_buf;
-    static FILE* hist_file = NULL;
+    static FILE* hist_file = nullptr;
     long pos;
     register char* xartnum;
     register ART_NUM x;
@@ -755,7 +755,7 @@ static int chase_xref(art_num artnum, INT markread)
 	return 0;
 
     xref_buf = safemalloc((MEM_SIZE)BUFSIZ);
-    if (hist_file == NULL) {	/* Init. file accesses */
+    if (hist_file == nullptr) {	/* Init. file accesses */
 # ifdef DEBUG
 	if (debug) {
 	    printf("chase_xref: opening files\n");
@@ -763,7 +763,7 @@ static int chase_xref(art_num artnum, INT markread)
 	}
 # endif
 	dbminit(filexp(ARTFILE));
-	if ((hist_file = fopen(filexp(ARTFILE), "r")) == NULL)
+	if ((hist_file = fopen(filexp(ARTFILE), "r")) == nullptr)
 	    return 0;
     }
     ident_buf = fetchlines(artnum,MSGID_LINE);	/* get Message-ID */
@@ -774,7 +774,7 @@ static int chase_xref(art_num artnum, INT markread)
     }
 # endif
     
-    if ((idp = index(ident_buf, '@')) != NULL) {
+    if ((idp = index(ident_buf, '@')) != nullptr) {
 	while (*++idp)			/* make message-id case insensitive */
 	    if (isupper(*idp))
 		*idp = tolower(*idp);
@@ -782,7 +782,7 @@ static int chase_xref(art_num artnum, INT markread)
     lhs.dptr = ident_buf;		/* look up article by id */
     lhs.dsize = strlen(lhs.dptr) + 1;
     rhs = fetch(lhs);			/* fetch the record */
-    if (rhs.dptr == NULL)		/* if NULL, nothing there */
+    if (rhs.dptr == nullptr)		/* if nullptr, nothing there */
 	goto wild_goose;
     bcopy(rhs.dptr,(char*)&pos, 4);
     fseek(hist_file, pos, 0);	/* datum returned is position in hist file */

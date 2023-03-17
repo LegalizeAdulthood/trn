@@ -31,7 +31,7 @@
 ** Enhanced by Wayne Davison.
 */
 
-/* Extract the full-name part of an email address, returning NULL if not
+/* Extract the full-name part of an email address, returning nullptr if not
 ** found.
 */
 char *extract_name(char *name)
@@ -47,25 +47,25 @@ char *extract_name(char *name)
     rparen = rindex(name, ')');
     langle = index(name, '<');
     if (!lparen && !langle)
-	return NULL;
+	return nullptr;
     else if (langle && (!lparen || !rparen || lparen>langle || rparen<langle)) {
 	if (langle == name)
-	    return NULL;
+	    return nullptr;
 	*langle = '\0';
     } else {
 	name = lparen;
 	*name++ = '\0';
 	while (isspace(*name)) name++;
 	if (name == rparen)
-	    return NULL;
-	if (rparen != NULL)
+	    return nullptr;
+	if (rparen != nullptr)
 	    *rparen = '\0';
     }
 
     if (*name == '"') {
 	name++;
 	while (isspace(*name)) name++;
-	if ((s = rindex(name, '"')) != NULL)
+	if ((s = rindex(name, '"')) != nullptr)
 	    *s = '\0';
     }
     return name;
@@ -400,7 +400,7 @@ char *compress_address(char *name, int max)
     if ((len = s - name + 1) <= max)
 	return name;
 
-    at = bang = hack = NULL;
+    at = bang = hack = nullptr;
     for (s = name + 1; *s; s++) {
 	/* If there's whitespace in the middle then it's probably not
 	** really an email address. */
@@ -410,27 +410,27 @@ char *compress_address(char *name, int max)
 	}
 	switch (*s) {
 	  case '@':
-	    if (at == NULL) {
+	    if (at == nullptr) {
 		at = s;
 	    }
 	    break;
 	  case '!':
-	    if (at == NULL) {
+	    if (at == nullptr) {
 		bang = s;
-		hack = NULL;
+		hack = nullptr;
 	    }
 	    break;
 	  case '%':
-	    if (at == NULL && hack == NULL)
+	    if (at == nullptr && hack == nullptr)
 		hack = s;
 	    break;
 	}
     }
-    if (at == NULL)
+    if (at == nullptr)
 	at = name + len;
 
-    if (hack != NULL) {
-	if (bang != NULL) {
+    if (hack != nullptr) {
+	if (bang != nullptr) {
 	    if (at - bang - 1 >= max)
 		start = bang + 1;
 	    else if (at - name >= max)
@@ -439,7 +439,7 @@ char *compress_address(char *name, int max)
 		start = name;
 	} else
 	    start = name;
-    } else if (bang != NULL) {
+    } else if (bang != nullptr) {
 	if (at - name >= max)
 	    start = at - max;
 	else
@@ -465,7 +465,7 @@ char *compress_from(char *from, int size)
 #else
     safecpy(lbuf, s, sizeof lbuf);
 #endif
-    if ((s = extract_name(lbuf)) != NULL)
+    if ((s = extract_name(lbuf)) != nullptr)
 	s = compress_name(s, size);
     else
 	s = compress_address(lbuf, size);
@@ -495,7 +495,7 @@ char *compress_date(ARTICLE *ap, int size)
     char* t;
 
     strncpy(t = cmd_buf, ctime(&ap->date), size);
-    if ((s = index(t, '\n')) != NULL)
+    if ((s = index(t, '\n')) != nullptr)
 	*s = '\0';
     t[size] = '\0';
     return t;
@@ -504,7 +504,7 @@ char *compress_date(ARTICLE *ap, int size)
 #define EQ(x,y) ((isupper(x) ? tolower(x) : (x)) == (y))
 
 /* Parse the subject to look for any "Re[:^]"s at the start.
-** Returns true if a Re was found.  If strp is non-NULL, it
+** Returns true if a Re was found.  If strp is non-nullptr, it
 ** will be set to the start of the interesting characters.
 */
 bool subject_has_Re(char *str, char **strp)
@@ -557,7 +557,7 @@ compress_subj(ARTICLE*ap, int max)
     /* Remove "(was: oldsubject)", because we already know the old subjects.
     ** Also match "(Re: oldsubject)".  Allow possible spaces after the ('s.
     */
-    for (cp = buf; (cp = index(cp+1, '(')) != NULL;) {
+    for (cp = buf; (cp = index(cp+1, '(')) != nullptr;) {
 	while (*++cp == ' ') ;
 	if (EQ(cp[0], 'w') && EQ(cp[1], 'a') && EQ(cp[2], 's')
 	 && (cp[3] == ':' || cp[3] == ' ')) {
@@ -574,10 +574,10 @@ compress_subj(ARTICLE*ap, int max)
     if (!unbroken_subjects && len > max) {
 	char* last_word;
 	/* Try to include the last two words on the line while trimming */ 
-	if ((last_word = rindex(buf, ' ')) != NULL) {
+	if ((last_word = rindex(buf, ' ')) != nullptr) {
 	    char* next_to_last;
 	    *last_word = '\0';
-	    if ((next_to_last = rindex(buf, ' ')) != NULL) {
+	    if ((next_to_last = rindex(buf, ' ')) != nullptr) {
 		if (next_to_last-buf >= len - max + 3 + 10-1)
 		    cp = next_to_last;
 		else
@@ -727,7 +727,7 @@ void perform_status_init(long cnt)
 {
     perform_cnt = 0;
     error_occurred = false;
-    subjline = NULL;
+    subjline = nullptr;
     page_line = 1;
     performed_article_loop = true;
 
@@ -756,7 +756,7 @@ void perform_status(long cnt, int spin)
     if (perform_cnt == prior_perform_cnt)
 	return;
 
-    now = time((time_t*)NULL);
+    now = time((time_t*)nullptr);
     if (now - prior_now < 2)
 	return;
 
@@ -806,7 +806,7 @@ static char *output_change(char *cp, long num, char *obj_type, char *modifier, c
     if (obj_type)
 	sprintf(cp+=strlen(cp), "%s%s ", obj_type, PLURAL(num));
     cp += strlen(cp);
-    if ((s = modifier) != NULL) {
+    if ((s = modifier) != nullptr) {
 	*cp++ = ' ';
 	if (num != 1)
 	    while (*s++ != '|') ;
@@ -844,21 +844,21 @@ int perform_status_end(long cnt, char *obj_type)
     if (!performed_article_loop)
 	cp = output_change(cp, (long)perform_cnt,
 			   sel_mode == SM_THREAD? "thread" : "subject",
-			   (char*)NULL, "ERR|match|ed");
+			   (char*)nullptr, "ERR|match|ed");
     else if (perform_cnt != sels  && perform_cnt != -sels
 	  && perform_cnt != kills && perform_cnt != -kills) {
-	cp = output_change(cp, (long)perform_cnt, obj_type, (char*)NULL,
+	cp = output_change(cp, (long)perform_cnt, obj_type, (char*)nullptr,
 			   "ERR|match|ed");
-	obj_type = NULL;
+	obj_type = nullptr;
     }
     if (kills) {
-	cp = output_change(cp, kills, obj_type, (char*)NULL,
+	cp = output_change(cp, kills, obj_type, (char*)nullptr,
 			   article_status? "un||killed" : "more|less|");
-	obj_type = NULL;
+	obj_type = nullptr;
     }
     if (sels) {
-	cp = output_change(cp, sels, obj_type, (char*)NULL, "de||selected");
-	obj_type = NULL;
+	cp = output_change(cp, sels, obj_type, (char*)nullptr, "de||selected");
+	obj_type = nullptr;
     }
     if (article_status && missing > 0) {
 	*cp++ = '(';

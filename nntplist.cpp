@@ -24,11 +24,11 @@ int debug = 0;			/* make nntpclient.c happy */
 int main(int argc, char *argv[])
 {
     char command[32];
-    char* action = NULL;
-    char* wildarg = NULL;
+    char* action = nullptr;
+    char* wildarg = nullptr;
     char* cp;
     FILE* in_fp;
-    register FILE* out_fp = NULL;
+    register FILE* out_fp = nullptr;
 
     while (--argc) {
 	if (**++argv == '-') {
@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 		if (out_fp || !--argc)
 		    Usage();
 		out_fp = fopen(*++argv, "w");
-		if (out_fp == NULL) {
+		if (out_fp == nullptr) {
 		    perror(*argv);
 		    exit(1);
 		}
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 	    Usage();
     }
     if (action && strcaseEQ(action,"active"))
-	action = NULL;
+	action = nullptr;
     if (!out_fp)
 	out_fp = stdout;
 
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 	    nntplink.port_number = atoi(cp+1);
 	}
 	nntp_auth_file = filexp(NNTP_AUTH_FILE);
-	if ((cp = getenv("NNTP_FORCE_AUTH")) != NULL
+	if ((cp = getenv("NNTP_FORCE_AUTH")) != nullptr
 	 && (*cp == 'y' || *cp == 'Y'))
 	    nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
     }
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 	cleanup_nntp();
     }
     else {
-	cp = NULL;
+	cp = nullptr;
 	if (!action)
 	    cp = ACTIVE;
 	else if (strcaseEQ(action,"active.times"))
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
 		    action);
 	    exit(1);
 	}
-	if ((in_fp = fopen(filexp(cp), "r")) == NULL) {
+	if ((in_fp = fopen(filexp(cp), "r")) == nullptr) {
 	    fprintf(stderr,"Unable to open `%s'.\n", cp);
 	    exit(1);
 	}

@@ -98,7 +98,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     }
     if (stat(ini_file,&filestat) == 0)
 	opt_file(ini_file,tcbufptr,true);
-    if (!use_threads || (s = getenv("TRNINIT")) == NULL)
+    if (!use_threads || (s = getenv("TRNINIT")) == nullptr)
 	s = getenv("RNINIT");
     if (*safecpy(*tcbufptr,s,TCBUF_SIZE)) {
 	if (*s == '-' || *s == '+' || isspace(*s))
@@ -137,7 +137,7 @@ void opt_file(char *filename, char **tcbufptr, bool bleat)
 	    filebuf[len] = '\0';
 	    prep_ini_data(filebuf,filename);
 	    s = filebuf;
-	    while ((s = next_ini_section(s,&section,&cond)) != NULL) {
+	    while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
 		if (*cond && !check_ini_cond(cond))
 		    continue;
 		if (strEQ(section, "options")) {
@@ -605,8 +605,8 @@ void save_options(char *filename)
     int i;
     int fd_in;
     FILE* fp_out;
-    char* filebuf = NULL;
-    char* line = NULL;
+    char* filebuf = nullptr;
+    char* line = nullptr;
     static bool first_time = true;
 
     sprintf(buf,"%s.new",filename);
@@ -617,8 +617,8 @@ void save_options(char *filename)
     }
     if ((fd_in = open(filename,0)) >= 0) {
 	char* cp;
-	char* nlp = NULL;
-	char* comments = NULL;
+	char* nlp = nullptr;
+	char* comments = nullptr;
 	fstat(fd_in,&filestat);
 	if (filestat.st_size) {
 	    int len;
@@ -651,7 +651,7 @@ void save_options(char *filename)
 	    if (*cp == '[')
 		break;
 	    if (isalpha(*cp))
-		comments = NULL;
+		comments = nullptr;
 	    else if (!comments)
 		comments = line;
 	}
@@ -683,7 +683,7 @@ line that sets %sRNINIT.\n", ini_file, t, t);
 	    if (option_saved_vals[i]) {
 		if (option_saved_vals[i] != option_def_vals[i])
 		    free(option_saved_vals[i]);
-		option_saved_vals[i] = NULL;
+		option_saved_vals[i] = nullptr;
 	    }
 	}
     }
@@ -1023,7 +1023,7 @@ static void set_header_list(int flag, int defflag, char *str)
 			? (htype[i].flags | flag)
 			: (htype[i].flags & ~flag));
     for (;;) {
-	if ((cp = index(str,',')) != NULL)
+	if ((cp = index(str,',')) != nullptr)
 	    *cp = '\0';
 	if (*str == '!') {
 	    setit = false;
@@ -1059,7 +1059,7 @@ void set_header(char *s, int flag, bool setit)
 	    if (len <= user_htype[i].length
 	     && strncaseEQ(s,user_htype[i].name,len)) {
 		free(user_htype[i].name);
-		user_htype[i].name = NULL;
+		user_htype[i].name = nullptr;
 		killed = i;
 	    }
 	    else if (len > user_htype[i].length
@@ -1098,10 +1098,10 @@ void set_header(char *s, int flag, bool setit)
 	    }
 	}
 	if (killed) {
-	    while (killed < user_htype_cnt && user_htype[killed].name != NULL)
+	    while (killed < user_htype_cnt && user_htype[killed].name != nullptr)
 		killed++;
 	    for (i = killed+1; i < user_htype_cnt; i++) {
-		if (user_htype[i].name != NULL)
+		if (user_htype[i].name != nullptr)
 		    user_htype[killed++] = user_htype[i];
 	    }
 	    user_htype_cnt = killed;
@@ -1165,7 +1165,7 @@ static char *expand_mouse_buttons(char *cp, int cnt)
 
 char *quote_string(char *val)
 {
-    static char* bufptr = NULL;
+    static char* bufptr = nullptr;
     char* cp;
     int needs_quotes = 0;
     int ticks = 0;
@@ -1173,7 +1173,7 @@ char *quote_string(char *val)
     int backslashes = 0;
 
     safefree(bufptr);
-    bufptr = NULL;
+    bufptr = nullptr;
 
     if (isspace(*val))
 	needs_quotes = 1;

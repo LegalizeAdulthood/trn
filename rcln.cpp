@@ -76,7 +76,7 @@ int addartnum(DATASRC *dp, ART_NUM artnum, char *ngnam)
     register NGDATA* np;
     register char* s;
     register char* t;
-    register char* maxt = NULL;
+    register char* maxt = nullptr;
     ART_NUM min = 0, max = -1, lastnum = 0;
     char* mbuf;
     bool morenum;
@@ -84,7 +84,7 @@ int addartnum(DATASRC *dp, ART_NUM artnum, char *ngnam)
     if (!artnum)
 	return 0;
     np = find_ng(ngnam);
-    if (np == NULL)			/* not found in newsrc? */
+    if (np == nullptr)			/* not found in newsrc? */
 	return 0;
     if (dp != np->rc->datasrc) {	/* punt on cross-host xrefs */
 #ifdef DEBUG
@@ -143,7 +143,7 @@ int addartnum(DATASRC *dp, ART_NUM artnum, char *ngnam)
 	    if (artnum == min)		/* explicitly a read article? */
 		return 0;
 	    lastnum = min;		/* remember what the number was */
-	    maxt = NULL;		/* last one was not a range */
+	    maxt = nullptr;		/* last one was not a range */
 	}
 	while (*t && !isdigit(*t)) t++;	/* skip comma and any spaces */
 	s = t;
@@ -221,7 +221,7 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
     if (!artnum)
 	return;
     np = find_ng(ngnam);
-    if (np == NULL)			/* not found in newsrc? */
+    if (np == nullptr)			/* not found in newsrc? */
 	return;	
     if (dp != np->rc->datasrc)		/* punt on cross-host xrefs */
 	return;
@@ -377,9 +377,9 @@ void set_toread(NGDATA *np, bool lax_high_check)
     mybuf[length] = '\0';
     for (s = mybuf; isspace(*s); s++)
 	    ;
-    for ( ; (c = index(s,',')) != NULL ; s = ++c) {  /* for each range */
+    for ( ; (c = index(s,',')) != nullptr ; s = ++c) {  /* for each range */
 	*c = '\0';			/* keep index from running off */
-	if ((h = index(s,'-')) != NULL)	/* find - in range, if any */
+	if ((h = index(s,'-')) != nullptr)	/* find - in range, if any */
 	    unread -= (newmax = atol(h+1)) - atol(s) + 1;
 	else if ((newmax = atol(s)) != 0)
 	    unread--;		/* recalculate length */
@@ -516,13 +516,13 @@ bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
     register NGDATA* np;
     register char* s;
     register char* t;
-    register char* maxt = NULL;
+    register char* maxt = nullptr;
     ART_NUM min = 0, max = -1, lastnum = 0;
 
     if (!artnum)
 	return true;
     np = find_ng(ngnam);
-    if (np == NULL)			/* not found in newsrc? */
+    if (np == nullptr)			/* not found in newsrc? */
 	return true;
     if (!np->numoffset)		/* no numbers on line */
 	return false;
@@ -558,7 +558,7 @@ bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
 	    if (artnum == min)		/* explicitly a read article? */
 		return true;
 	    lastnum = min;		/* remember what the number was */
-	    maxt = NULL;		/* last one was not a range */
+	    maxt = nullptr;		/* last one was not a range */
 	}
 	while (*t && !isdigit(*t)) t++;	/* skip comma and any spaces */
 	s = t;

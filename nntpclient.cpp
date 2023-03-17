@@ -113,11 +113,11 @@ char *nntp_servername(char *name)
 {
     FILE* fp;
 
-    if (FILE_REF(name) && (fp = fopen(name, "r")) != NULL) {
-	while (fgets(g_ser_line, sizeof g_ser_line, fp) != NULL) {
+    if (FILE_REF(name) && (fp = fopen(name, "r")) != nullptr) {
+	while (fgets(g_ser_line, sizeof g_ser_line, fp) != nullptr) {
 	    if (*g_ser_line == '\n' || *g_ser_line == '#')
 		continue;
-	    if ((name = index(g_ser_line, '\n')) != NULL)
+	    if ((name = index(g_ser_line, '\n')) != nullptr)
 		*name = '\0';
 	    name = g_ser_line;
 	    break;
@@ -159,7 +159,7 @@ int nntp_command(const char *bp)
 #else
 	return -2;
 #endif
-    now = time((time_t*)NULL);
+    now = time((time_t*)nullptr);
     last_command_diff = now - nntplink.last_command;
     nntplink.last_command = now;
     return 1;
@@ -175,7 +175,7 @@ int nntp_check()
     sighold(SIGINT);
 #endif
     errno = 0;
-    ret = (fgets(g_ser_line, sizeof g_ser_line, nntplink.rd_fp) == NULL)? -2 : 0;
+    ret = (fgets(g_ser_line, sizeof g_ser_line, nntplink.rd_fp) == nullptr)? -2 : 0;
 #ifdef HAS_SIGHOLD
     sigrelse(SIGINT);
 #endif
@@ -293,18 +293,18 @@ int nntp_gets(char *bp, int len)
 
 void nntp_close(bool send_quit)
 {
-    if (send_quit && nntplink.wr_fp != NULL && nntplink.rd_fp != NULL) {
+    if (send_quit && nntplink.wr_fp != nullptr && nntplink.rd_fp != nullptr) {
 	if (nntp_command("QUIT") > 0)
 	    nntp_check();
     }
     /* the nntp_check() above might have closed these already. */
-    if (nntplink.wr_fp != NULL) {
+    if (nntplink.wr_fp != nullptr) {
 	fclose(nntplink.wr_fp);
-	nntplink.wr_fp = NULL;
+	nntplink.wr_fp = nullptr;
     }
-    if (nntplink.rd_fp != NULL) {
+    if (nntplink.rd_fp != nullptr) {
 	fclose(nntplink.rd_fp);
-	nntplink.rd_fp = NULL;
+	nntplink.rd_fp = nullptr;
     }
     nntplink.flags |= NNTP_NEW_CMD_OK;
 }

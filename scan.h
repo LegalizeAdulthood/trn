@@ -64,15 +64,15 @@ struct scontext {
 
 /* the current values */
 
-EXT long* s_ent_sort INIT(NULL);	/* sorted list of entries in the context */
+EXT long* s_ent_sort INIT(nullptr);	/* sorted list of entries in the context */
 EXT long s_ent_sort_max INIT(0);	/* maximum index of sorted array */
 EXT long s_ent_sorted_max INIT(0);	/* maximum index *that is sorted* */
-EXT long* s_ent_index INIT(NULL);	/* indexes into ent_sorted */
+EXT long* s_ent_index INIT(nullptr);	/* indexes into ent_sorted */
 EXT long s_ent_index_max INIT(0);	/* maximum entry number added */
 
 EXT int s_page_size INIT(0);		/* number of entries allocated for page */
 				/* (usually fixed, > max screen lines) */
-EXT PAGE_ENT* page_ents INIT(NULL);	/* array of entries on page */
+EXT PAGE_ENT* page_ents INIT(nullptr);	/* array of entries on page */
 /* -1 means not initialized for top and bottom entry */
 EXT long s_top_ent INIT(0);		/* top entry on page */
 EXT long s_bot_ent INIT(0);		/* bottom entry (note change) */
@@ -97,7 +97,7 @@ EXT long  s_flags INIT(0);		/* misc. flags */
 
 EXT int s_num_contexts INIT(0);
 /* array of context structures */
-EXT SCONTEXT* s_contexts INIT((SCONTEXT*)NULL);
+EXT SCONTEXT* s_contexts INIT((SCONTEXT*)nullptr);
 
 /* current context number */
 EXT int s_cur_context INIT(0);

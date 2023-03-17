@@ -39,8 +39,8 @@ char* g_dot_dir;
 int main(int argc, char *argv[])
 {
     FILE* fp;
-    FILE* fp_active = NULL;
-    FILE* fp_ng = NULL;
+    FILE* fp_active = nullptr;
+    FILE* fp_ng = nullptr;
     bool check_active = false;
     bool check_ng = false;
     char buff[LBUFLEN];
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     int found_newsgroups = 0;
 
     g_home_dir = getenv("HOME");
-    if (g_home_dir == NULL)
+    if (g_home_dir == nullptr)
 	g_home_dir = getenv("LOGDIR");
     g_dot_dir = getenv("DOTDIR");
     if (!g_dot_dir)
@@ -65,7 +65,7 @@ Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>\n");
 	exit(1);
     }
 
-    if ((fp = fopen(argv[1], "r")) == NULL) {
+    if ((fp = fopen(argv[1], "r")) == nullptr) {
 	fprintf(stderr, "trn-artchk: unable to open article `%s'.\n", argv[1]);
 	exit(1);
     }
@@ -165,23 +165,23 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 	    nntplink.port_number = atoi(cp+1);
 	}
 	nntp_auth_file = filexp(NNTP_AUTH_FILE);
-	if ((cp = getenv("NNTP_FORCE_AUTH")) != NULL
+	if ((cp = getenv("NNTP_FORCE_AUTH")) != nullptr
 	 && (*cp == 'y' || *cp == 'Y'))
 	    nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
 	if (init_nntp() < 0)
-	    server_name = NULL;
+	    server_name = nullptr;
     }
 #endif
     if (ngcnt) {
 	struct stat st;
 	if (stat(argv[3], &st) != -1)
-	    check_ng = st.st_size > 0 && (fp_ng = fopen(argv[3], "r")) != NULL;
+	    check_ng = st.st_size > 0 && (fp_ng = fopen(argv[3], "r")) != nullptr;
 #ifdef SUPPORT_NNTP
 	else if (server_name && server_connection())
 	    check_ng = true;
 #endif
 	if (stat(argv[4], &st) != -1)
-	    check_active = st.st_size > 0 && (fp_active = fopen(argv[4], "r")) != NULL;
+	    check_active = st.st_size > 0 && (fp_active = fopen(argv[4], "r")) != nullptr;
 #ifdef SUPPORT_NNTP
 	else if (server_name && server_connection())
 	    check_active = true;
@@ -195,7 +195,7 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 		foundactive[i] = 1;
 	    }
 	}
-	else if (fp_active != NULL) {
+	else if (fp_active != nullptr) {
 	    ngleft = ngcnt;
 	    while (fgets(buff, LBUFLEN, fp_active)) {
 		if (!ngleft)
@@ -241,10 +241,10 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 		}
 	    }
 	}
-	if (check_ng && fp_ng == NULL) {
+	if (check_ng && fp_ng == nullptr) {
 	    fp_ng = fopen(argv[3], "w+");
 	    unlink(argv[3]);
-	    if (fp_ng != NULL) {
+	    if (fp_ng != nullptr) {
 		for (i = 0; i < ngcnt; i++) {
 		    /* issue a description list command */
 		    sprintf(g_ser_line, "XGTITLE %s", ngptrs[i]);
@@ -264,7 +264,7 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 	    }
 	}
 #endif
-	if (fp_ng != NULL) {
+	if (fp_ng != nullptr) {
 	    ngleft = ngcnt;
 	    while (fgets(buff, LBUFLEN, fp_ng)) {
 		if (!ngleft)

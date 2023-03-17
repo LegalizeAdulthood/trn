@@ -60,7 +60,7 @@ int save_article()
     mime_SetArticle();
     clear_artbuf();
     savefrom = (cmd == 'w' || cmd == 'e')? htype[PAST_HEADER].minpos : 0;
-    if (artopen(art,savefrom) == NULL) {
+    if (artopen(art,savefrom) == nullptr) {
 #ifdef VERBOSE
 	IF(verbose)
 	    fputs("\nCan't save an empty article.\n",stdout) FLUSH;
@@ -112,7 +112,7 @@ int save_article()
 		    cmdstr = extractprog;
 	    }
 	    else
-		cmdstr = NULL;
+		cmdstr = nullptr;
 	    s = buf;
 	}
 	else {
@@ -121,7 +121,7 @@ int save_article()
 	    if (custom_extract)
 		cmdstr = extractprog;
 	    else
-		cmdstr = NULL;
+		cmdstr = nullptr;
 	}
 	custom_extract = (cmdstr != 0);
 
@@ -157,7 +157,7 @@ int save_article()
 	    printf("Extracting article into %s using %s\n",c,extractprog) FLUSH;
 	    termdown(1);
 	    interp(cmd_buf, sizeof cmd_buf, get_val("CUSTOMSAVER",CUSTOMSAVER));
-	    invoke(cmd_buf, (char*)NULL);
+	    invoke(cmd_buf, (char*)nullptr);
 	}
 	else if (is_mime) {
 	    printf("Extracting MIME article into %s:\n", c) FLUSH;
@@ -177,7 +177,7 @@ int save_article()
 	    if (totalOpt)
 		total = totalOpt;
 	    for (artpos = savefrom;
-		 readart(art_line,sizeof art_line) != NULL;
+		 readart(art_line,sizeof art_line) != nullptr;
 		 artpos = tellart())
 	    {
 		if (*art_line <= ' ')
@@ -210,18 +210,18 @@ int save_article()
 		printf("Extracting shar into %s:\n", c) FLUSH;
 		termdown(1);
 		interp(cmd_buf,(sizeof cmd_buf),get_val("SHARSAVER",SHARSAVER));
-		invoke(cmd_buf, (char*)NULL);
+		invoke(cmd_buf, (char*)nullptr);
 		break;
 	      case 2:
 		printf("Extracting uuencoded file into %s:\n", c) FLUSH;
 		termdown(1);
 		mime_section->type = IMAGE_MIME;
 		safefree(mime_section->filename);
-		mime_section->filename = filename? savestr(filename) : NULL;
+		mime_section->filename = filename? savestr(filename) : nullptr;
 		mime_section->encoding = MENCODE_UUE;
 		mime_section->part = part;
 		mime_section->total = total;
-		if (!decode_piece((MIMECAP_ENTRY*)NULL,(char*)NULL) && *msg) {
+		if (!decode_piece((MIMECAP_ENTRY*)nullptr,(char*)nullptr) && *msg) {
 		    newline();
 		    fputs(msg,stdout);
 		}
@@ -234,7 +234,7 @@ int save_article()
 	    }
 	}/* if */
     }
-    else if ((s = index(buf,'|')) != NULL) { /* is it a pipe command? */
+    else if ((s = index(buf,'|')) != nullptr) { /* is it a pipe command? */
 	s++;			/* skip the | */
 	while (*s == ' ') s++;
 	safecpy(altbuf,filexp(s),sizeof altbuf);
@@ -249,7 +249,7 @@ int save_article()
 	termlib_reset();
 	resetty();		/* restore tty state */
 	if (use_pref)		/* use preferred shell? */
-	    doshell((char*)NULL,cmd_buf);
+	    doshell((char*)nullptr,cmd_buf);
 				/* do command with it */
 	else
 	    doshell(sh,cmd_buf);	/* do command with sh */
@@ -308,7 +308,7 @@ int save_article()
 	safefree(savedest);
 	s = savedest = savestr(s);	/* doesn't move any more */
 					/* make it handy for %b */
-	tmpfp = NULL;
+	tmpfp = nullptr;
 	if (!there) {
 	    if (mbox_always)
 		mailbox = true;
@@ -391,12 +391,12 @@ q to abort.\n\
 #endif
 	    termlib_reset();
 	    resetty();		/* make terminal behave */
-	    i = doshell(use_pref?(char*)NULL:SH,cmd_buf);
+	    i = doshell(use_pref?(char*)nullptr:SH,cmd_buf);
 	    termlib_init();
 	    noecho();		/* make terminal do what we want */
 	    crmode();
 	}
-	else if (tmpfp != NULL || (tmpfp = fopen(savedest, "a")) != NULL) {
+	else if (tmpfp != nullptr || (tmpfp = fopen(savedest, "a")) != nullptr) {
 	    bool quote_From = false;
 	    fseek(tmpfp,0,2);
 	    if (mailbox) {
@@ -411,7 +411,7 @@ q to abort.\n\
 	    if (savefrom == 0 && art != 0)
 		fprintf(tmpfp,"Article: %ld of %s\n", (long)art, ngname);
 	    seekart(savefrom);
-	    while (readart(buf,LBUFLEN) != NULL) {
+	    while (readart(buf,LBUFLEN) != nullptr) {
 		if (quote_From && strncaseEQ(buf,"from ",5))
 		    putc('>', tmpfp);
 		fputs(buf, tmpfp);
@@ -446,7 +446,7 @@ int view_article()
     mime_SetArticle();
     clear_artbuf();
     savefrom = htype[PAST_HEADER].minpos;
-    if (artopen(art,savefrom) == NULL) {
+    if (artopen(art,savefrom) == nullptr) {
 #ifdef VERBOSE
 	IF(verbose)
 	    fputs("\nNo attatchments on an empty article.\n",stdout) FLUSH;
@@ -470,7 +470,7 @@ int view_article()
 	/* Scan subject for filename and part number information */
 	filename = decode_subject(art, &part, &total);
 	for (artpos = savefrom;
-	     readart(art_line,sizeof art_line) != NULL;
+	     readart(art_line,sizeof art_line) != nullptr;
 	     artpos = tellart())
 	{
 	    if (*art_line <= ' ')
@@ -481,11 +481,11 @@ int view_article()
 		seekart(savefrom);
 		mime_section->type = UNHANDLED_MIME;
 		safefree(mime_section->filename);
-		mime_section->filename = filename? savestr(filename) : NULL;
+		mime_section->filename = filename? savestr(filename) : nullptr;
 		mime_section->encoding = MENCODE_UUE;
 		mime_section->part = part;
 		mime_section->total = total;
-		if (mc && !decode_piece(mc,(char*)NULL) && *msg) {
+		if (mc && !decode_piece(mc,(char*)nullptr) && *msg) {
 		    newline();
 		    fputs(msg,stdout);
 		}
@@ -513,7 +513,7 @@ int cancel_article()
     int myuid = getuid();
     int r = -1;
 
-    if (artopen(art,(ART_POS)0) == NULL) {
+    if (artopen(art,(ART_POS)0) == nullptr) {
 #ifdef VERBOSE
 	IF(verbose)
 	    fputs("\nCan't cancel an empty article.\n",stdout) FLUSH;
@@ -555,7 +555,7 @@ int cancel_article()
     }
     else {
 	tmpfp = fopen(headname,"w");	/* open header file */
-	if (tmpfp == NULL) {
+	if (tmpfp == nullptr) {
 	    printf(cantcreate,headname) FLUSH;
 	    termdown(1);
 	    goto done;
@@ -586,7 +586,7 @@ int supersede_article()		/* Supersedes: */
     int r = -1;
     bool incl_body = (*buf == 'Z');
 
-    if (artopen(art,(ART_POS)0) == NULL) {
+    if (artopen(art,(ART_POS)0) == nullptr) {
 #ifdef VERBOSE
 	IF(verbose)
 	    fputs("\nCan't supersede an empty article.\n",stdout) FLUSH;
@@ -628,17 +628,17 @@ int supersede_article()		/* Supersedes: */
     }
     else {
 	tmpfp = fopen(headname,"w");	/* open header file */
-	if (tmpfp == NULL) {
+	if (tmpfp == nullptr) {
 	    printf(cantcreate,headname) FLUSH;
 	    termdown(1);
 	    goto done;
 	}
 	interp(hbuf, sizeof hbuf, get_val("SUPERSEDEHEADER",SUPERSEDEHEADER));
 	fputs(hbuf,tmpfp);
-	if (incl_body && artfp != NULL) {
+	if (incl_body && artfp != nullptr) {
 	    parseheader(art);
 	    seekart(htype[PAST_HEADER].minpos);
-	    while (readart(buf,LBUFLEN) != NULL)
+	    while (readart(buf,LBUFLEN) != nullptr)
 		fputs(buf,tmpfp);
 	}
 	fclose(tmpfp);
@@ -674,8 +674,8 @@ static void follow_it_up()
 	    char* deadart = filexp("%./dead.article");
 	    FILE* fp_in;
 	    FILE* fp_out;
-	    if ((fp_out = fopen(deadart, "a")) != NULL) {
-		if ((fp_in = fopen(headname, "r")) != NULL) {
+	    if ((fp_out = fopen(deadart, "a")) != nullptr) {
+		if ((fp_in = fopen(headname, "r")) != nullptr) {
 		    while (fgets(cmd_buf, sizeof cmd_buf, fp_in))
 			fputs(cmd_buf, fp_out);
 		    fclose(fp_in);
@@ -699,7 +699,7 @@ void reply()
 
     artopen(art,(ART_POS)0);
     tmpfp = fopen(headname,"w");	/* open header file */
-    if (tmpfp == NULL) {
+    if (tmpfp == nullptr) {
 	printf(cantcreate,headname) FLUSH;
 	termdown(1);
 	goto done;
@@ -718,7 +718,7 @@ void reply()
 #endif
 	termdown(3);
     }
-    if (incl_body && artfp != NULL) {
+    if (incl_body && artfp != nullptr) {
 	char* s;
 	char* t;
 	interp(buf, (sizeof buf), get_val("YOUSAID",YOUSAID));
@@ -728,8 +728,8 @@ void reply()
 	clear_artbuf();
 	seekart(htype[PAST_HEADER].minpos);
 	wrapped_nl = '\n';
-	while ((s = readartbuf(false)) != NULL) {
-	    if ((t = index(s, '\n')) != NULL)
+	while ((s = readartbuf(false)) != nullptr) {
+	    if ((t = index(s, '\n')) != nullptr)
 		*t = '\0';
 #ifdef CHARSUBST
 	    strcharsubst(hbuf,s,sizeof hbuf,*charsubst);
@@ -767,7 +767,7 @@ void forward()
 #endif
     artopen(art,(ART_POS)0);
     tmpfp = fopen(headname,"w");	/* open header file */
-    if (tmpfp == NULL) {
+    if (tmpfp == nullptr) {
 	printf(cantcreate,headname) FLUSH;
 	termdown(1);
 	goto done;
@@ -776,12 +776,12 @@ void forward()
     fputs(hbuf,tmpfp);
 #ifdef REGEX_WORKS_RIGHT
     if (!compile(&mime_compex,"Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"",true,true)
-     && execute(&mime_compex,hbuf) != NULL)
+     && execute(&mime_compex,hbuf) != nullptr)
 	mime_boundary = getbracket(&mime_compex,1);
     else
-	mime_boundary = NULL;
+	mime_boundary = nullptr;
 #else
-    mime_boundary = NULL;
+    mime_boundary = nullptr;
     for (s = hbuf; s; s = eol) {
 	eol = index(s, '\n');
 	if (eol)
@@ -798,7 +798,7 @@ void forward()
 		while (*++s == ' ') ;
 		if (*s == 'b' && strncaseEQ(s, "boundary=\"", 10)) {
 		    mime_boundary = s+10;
-		    if ((s = index(mime_boundary, '"')) != NULL)
+		    if ((s = index(mime_boundary, '"')) != nullptr)
 			*s = '\0';
 		    mime_boundary = savestr(mime_boundary);
 		    if (s)
@@ -821,7 +821,7 @@ void forward()
 #endif
 	termdown(3);
     }
-    if (artfp != NULL) {
+    if (artfp != nullptr) {
 	interp(buf, sizeof buf, get_val("FORWARDMSG",FORWARDMSG));
 	if (mime_boundary) {
 	    if (*buf && strncaseNE(buf, "Content-", 8))
@@ -833,7 +833,7 @@ void forward()
 	    fprintf(tmpfp,"%s\n",buf);
 	parseheader(art);
 	seekart((ART_POS)0);
-	while (readart(buf,sizeof buf) != NULL) {
+	while (readart(buf,sizeof buf) != nullptr) {
 	    if (!mime_boundary && *buf == '-') {
 		putchar('-');
 		putchar(' ');
@@ -877,7 +877,7 @@ void followup()
     }
     artopen(art,(ART_POS)0);
     tmpfp = fopen(headname,"w");
-    if (tmpfp == NULL) {
+    if (tmpfp == nullptr) {
 	printf(cantcreate,headname) FLUSH;
 	termdown(1);
 	art = oldart;
@@ -885,7 +885,7 @@ void followup()
     }
     interp(hbuf, sizeof hbuf, get_val("NEWSHEADER",NEWSHEADER));
     fputs(hbuf,tmpfp);
-    if (incl_body && artfp != NULL) {
+    if (incl_body && artfp != nullptr) {
 	char* s;
 	char* t;
 #ifdef VERBOSE
@@ -902,8 +902,8 @@ trim the quoted article down as much as possible.)\n\
 	clear_artbuf();
 	seekart(htype[PAST_HEADER].minpos);
 	wrapped_nl = '\n';
-	while ((s = readartbuf(false)) != NULL) {
-	    if ((t = index(s, '\n')) != NULL)
+	while ((s = readartbuf(false)) != nullptr) {
+	    if ((t = index(s, '\n')) != nullptr)
 		*t = '\0';
 #ifdef CHARSUBST
 	    strcharsubst(hbuf,s,sizeof hbuf,*charsubst);

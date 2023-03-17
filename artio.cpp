@@ -45,7 +45,7 @@ FILE *artopen(ART_NUM artnum, ART_NUM pos)
 
     if (!ap || !artnum || (ap->flags & (AF_EXISTS|AF_FAKE)) != AF_EXISTS) {
 	errno = ENOENT;
-	return NULL;
+	return nullptr;
     }
     if (openart == artnum) {		/* this article is already open? */
 	seekart(pos);			/* yes: just seek the file */
@@ -85,7 +85,7 @@ retry_open:
 		fgets(tmpbuf,sizeof tmpbuf,artfp);
 		if (FILE_REF(tmpbuf)) {	/* is a "link" to another article */
 		    fclose(artfp);
-		    if ((s = index(tmpbuf,'\n')) != NULL)
+		    if ((s = index(tmpbuf,'\n')) != nullptr)
 			*s = '\0';
 		    if (!(artfp = fopen(tmpbuf,"r")))
 			uncache_article(ap,false);
@@ -101,18 +101,18 @@ retry_open:
 	openart = artnum;		/* remember what we did here */
 	seekart(pos);
     }
-    return artfp;			/* and return either fp or NULL */
+    return artfp;			/* and return either fp or nullptr */
 }
 
 void artclose()
 {
-    if (artfp != NULL) {		/* article still open? */
+    if (artfp != nullptr) {		/* article still open? */
 #ifdef SUPPORT_NNTP
 	if (datasrc->flags & DF_REMOTE)
 	    nntp_finishbody(FB_DISCARD);
 #endif
 	fclose(artfp);			/* close it */
-	artfp = NULL;			/* and tell the world */
+	artfp = nullptr;			/* and tell the world */
 	openart = 0;
 	clear_artbuf();
     }
@@ -184,7 +184,7 @@ char *readartbuf(bool view_inline)
 	return bp;
     }
     if (artbuf_pos == artsize - htype[PAST_HEADER].minpos)
-	return NULL;
+	return nullptr;
     bp = artbuf + artbuf_pos;
     if (*bp == '\001' || *bp == '\002') {
 	bp++;
@@ -220,7 +220,7 @@ char *readartbuf(bool view_inline)
 	    if (!read_offset) {
 		*bp = '\0';
 		len = 0;
-		bp = NULL;
+		bp = nullptr;
 		goto done;
 	    }
 	    strcpy(bp+o, "\n");
@@ -268,7 +268,7 @@ char *readartbuf(bool view_inline)
 	else if (mime_section->encoding == MENCODE_BASE64) {
 	    o = line_offset + extra_offset;
 	    len = b64_decodestring(bp+o, bp+o) + line_offset;
-	    if ((s = index(bp+o, '\n')) == NULL) {
+	    if ((s = index(bp+o, '\n')) == nullptr) {
 		if (read_something >= 0) {
 		    read_offset = line_offset = len;
 		    goto read_more;
@@ -285,7 +285,7 @@ char *readartbuf(bool view_inline)
 	    break;
 	o = filter_offset + extra_offset;
 	len = filter_html(bp+filter_offset, bp+o) + filter_offset;
-	if (len == filter_offset || (s = index(bp,'\n')) == NULL) {
+	if (len == filter_offset || (s = index(bp,'\n')) == nullptr) {
 	    if (read_something >= 0) {
 		read_offset = line_offset = filter_offset = len;
 		goto read_more;
@@ -328,12 +328,12 @@ char *readartbuf(bool view_inline)
       }
       case SKIP_MIME: {
 	MIME_SECT* mp = mime_section;
-	while ((mp = mp->prev) != NULL && !mp->boundary_len) ;
+	while ((mp = mp->prev) != nullptr && !mp->boundary_len) ;
 	if (!mp) {
 	    artbuf_len = artbuf_pos;
 	    artsize = artbuf_len + htype[PAST_HEADER].minpos;
 	    read_something = 0;
-	    bp = NULL;
+	    bp = nullptr;
 	}
 	else if (read_something >= 0) {
 	    *bp = '\0';
@@ -408,7 +408,7 @@ char *readartbuf(bool view_inline)
     word_wrap = tc_COLS - word_wrap_offset;
     if (read_something && word_wrap_offset >= 0 && word_wrap > 20 && bp) {
 	char* cp;
-	for (cp = bp; *cp && (s = index(cp, '\n')) != NULL; cp = s+1) {
+	for (cp = bp; *cp && (s = index(cp, '\n')) != nullptr; cp = s+1) {
 	    if (s - cp > tc_COLS) {
 		char* t;
 		do {

@@ -205,7 +205,7 @@ bool parseline(char *art_buf, int newhide, int oldhide)
 
     end_header_line();
     s = index(art_buf,':');
-    if (s == NULL) {	/* is it the end of the header? */
+    if (s == nullptr) {	/* is it the end of the header? */
 #ifdef SUPPORT_NNTP
 	    /* Did NNTP ship us a mal-formed header line? */
 	    if (reading_nntp_header && *art_buf && *art_buf != '\n') {
@@ -340,7 +340,7 @@ bool parseheader(ART_NUM artnum)
 	else
 #endif
 	{
-	    if (readart(bp,LBUFLEN) == NULL)
+	    if (readart(bp,LBUFLEN) == nullptr)
 		break;
 	    len = strlen(bp);
 	    found_nl = (bp[len-1] == '\n');
@@ -497,7 +497,7 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 		    break;
 		last_buf = line;
 		last_buflen = buflen_last_line_got;
-		if ((t = index(line, '\r')) != NULL)
+		if ((t = index(line, '\r')) != nullptr)
 		    *t = '\0';
 		if (!(t = index(line, ' ')))
 		    continue;
@@ -539,7 +539,7 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 #endif /* SUPPORT_NNTP */
 
     /* Only return a cached line if it isn't the current article */
-    s = NULL;
+    s = nullptr;
     if (parsed_art != artnum)
 	s = fetchcache(artnum,which_line, FILL_CACHE);
     if (parsed_art == artnum && (firstpos = htype[which_line].minpos) < 0)

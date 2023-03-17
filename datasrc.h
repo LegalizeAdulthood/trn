@@ -81,10 +81,10 @@ EXT int datasrc_cnt INIT(0);
 
 #define DATASRC_ALARM_SECS   (5 * 60)
 
-EXT char* trnaccess_mem INIT(NULL);
+EXT char* trnaccess_mem INIT(nullptr);
 
 #ifdef SUPPORT_NNTP
-EXT char* nntp_auth_file INIT(NULL);
+EXT char* nntp_auth_file INIT(nullptr);
 #endif
 
 void datasrc_init();

@@ -47,8 +47,8 @@
 bool sa_extract_start();
 
 /* use this command on an extracted file */
-/*$$static char* sa_extracted_use = NULL;*/
-static char* sa_extract_dest = NULL;
+/*$$static char* sa_extracted_use = nullptr;*/
+static char* sa_extract_dest = nullptr;
 /* junk articles after extracting them */
 static bool sa_extract_junk = false;
 
@@ -507,7 +507,7 @@ int sa_docmd()
 	    safecpy(decode_dest,buf+1,MAXFILENAME);
 	    printf("\n") FLUSH;
 	}
-	if (sa_extract_dest == NULL) {
+	if (sa_extract_dest == nullptr) {
 	    sa_extract_dest = (char*)safemalloc(LBUFLEN);
 	    safecpy(sa_extract_dest,filexp("%p"),LBUFLEN);
 	}
@@ -521,7 +521,7 @@ int sa_docmd()
 	else
 	    printf("Use command (no default):\n") FLUSH;
 	*buf = ':';			/* cosmetic */
-	if (!s_finish_cmd(NULL))
+	if (!s_finish_cmd(nullptr))
 	    break;	/* command rubbed out */
 	if (buf[1] != '\0')		/* typed in a command */
 	    safecpy(sa_extracted_use,buf+1,LBUFLEN);
@@ -574,14 +574,14 @@ int sa_docmd()
 
 bool sa_extract_start()
 {
-    if (sa_extract_dest == NULL) {
+    if (sa_extract_dest == nullptr) {
 	sa_extract_dest = (char*)safemalloc(LBUFLEN);
 	safecpy(sa_extract_dest,filexp("%p"),LBUFLEN);
     }
     s_go_bot();
     printf("To directory (default %s)\n",sa_extract_dest) FLUSH;
     *buf = ':';			/* cosmetic */
-    if (!s_finish_cmd(NULL))
+    if (!s_finish_cmd(nullptr))
 	return false;		/* command rubbed out */
     s_ref_all = true;
     /* if the user typed something, copy it to the destination */

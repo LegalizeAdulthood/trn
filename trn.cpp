@@ -94,10 +94,10 @@ int main(int argc, char *argv[])
     /* Figure out our executable's name. */
 #ifdef MSDOS
     strlwr(argv[0]);
-    if ((s = rindex(argv[0],'\\')) != NULL)
+    if ((s = rindex(argv[0],'\\')) != nullptr)
 	*s = '/';
 #endif
-    if ((s = rindex(argv[0],'/')) == NULL)
+    if ((s = rindex(argv[0],'/')) == nullptr)
 	s = argv[0];
     else
 	s++;
@@ -120,12 +120,12 @@ int main(int argc, char *argv[])
 #ifdef FINDNEWNG
     if (find_new_groups()) {		/* did we add any new groups? */
 	foundany = true;
-	starthere = NULL;		/* start ng scan from the top */
+	starthere = nullptr;		/* start ng scan from the top */
     }
 #endif
 
     if (maxngtodo)
-	starthere = NULL;
+	starthere = nullptr;
     else if (!foundany) {		/* nothing to do? */
 #ifdef VERBOSE
 	if (verbose) {
@@ -192,9 +192,9 @@ void do_multirc()
 	bool retry = false;
 	if (findlast > 0) {
 	    findlast = -1;
-	    starthere = NULL;
+	    starthere = nullptr;
 	    if (lastngname) {
-		if ((ngptr = find_ng(lastngname)) == NULL)
+		if ((ngptr = find_ng(lastngname)) == nullptr)
 		    ngptr = first_ng;
 		else {
 		    set_ngname(lastngname);
@@ -205,12 +205,12 @@ void do_multirc()
 	    }
 	} else if (starthere) {
 	    ngptr = starthere;
-	    starthere = NULL;
+	    starthere = nullptr;
 	}
 	else
 	    ngptr = first_ng;
 	for (;;) {			/* for each newsgroup */
-	    if (ngptr == NULL) {	/* after the last newsgroup? */
+	    if (ngptr == nullptr) {	/* after the last newsgroup? */
 		set_mode('r','f');
 		if (maxngtodo) {
 		    if (retry) {
@@ -264,7 +264,7 @@ void do_multirc()
 			ngptr = ngptr->next;
 		    else {
 			ngptr = ngptr->prev;
-			if (ngptr == NULL) {
+			if (ngptr == nullptr) {
 			    ngptr = first_ng->next;
 			    go_forward = 1;
 			}
@@ -279,7 +279,7 @@ void do_multirc()
 	    }
     reask_newsgroup:
 	    unflush_output();	/* disable any ^O in effect */
-	    if (ngptr == NULL) {
+	    if (ngptr == nullptr) {
 		dfltcmd = (retry ? "npq" : "qnp");
 #ifdef VERBOSE
 		IF(verbose)
@@ -383,7 +383,7 @@ int input_newsgroup()
 #ifdef VERIFY
     printcmd();
 #endif
-    if (ngptr != NULL)
+    if (ngptr != nullptr)
 	*buf = buf[2];
 
   do_command:
@@ -430,7 +430,7 @@ int input_newsgroup()
 	break;
       case 'N':			/* goto next newsgroup */
       case 'n':			/* find next unread newsgroup */
-	if (ngptr == NULL) {
+	if (ngptr == nullptr) {
 	    newline();
 	    return ING_BREAK;
 	}
@@ -444,7 +444,7 @@ int input_newsgroup()
 	ing_state = INGS_CLEAN;
 	return ING_SPECIAL;
       case '$':
-	ngptr = NULL;		/* go past last newsgroup */
+	ngptr = nullptr;		/* go past last newsgroup */
 	ing_state = INGS_CLEAN;
 	break;
       case 'L':
@@ -662,7 +662,7 @@ reask_abandon:
 	*msg = '\0';
 	end_only();
 	if (buf[1]) {
-	    bool minusd = in_string(buf+1,"-d", true) != NULL;
+	    bool minusd = in_string(buf+1,"-d", true) != nullptr;
 	    sw_list(buf+1);
 	    if (minusd)
 		cwd_check();
@@ -748,7 +748,7 @@ reask_abandon:
 	else if (*buf == ' ' || *buf == '\r' || *buf == '\n')
 	    s = nullstr;
 	else
-	    s = NULL;
+	    s = nullptr;
 
       redo_newsgroup:
 	switch (do_newsgroup(s)) {
@@ -804,7 +804,7 @@ reask_abandon:
 void check_active_refetch(bool force)
 {
     DATASRC* dp;
-    time_t now = time((time_t*)NULL);
+    time_t now = time((time_t*)nullptr);
 
     for (dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp)) {
 	if (!ALLBITS(dp->flags, DF_OPEN | DF_ACTIVE))

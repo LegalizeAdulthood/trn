@@ -2,9 +2,9 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXT char* origdir INIT(NULL);		/* cwd when rn invoked */
-EXT char* hostname INIT(NULL);		/* host name to match local postings */
-EXT char* headname INIT(NULL);
+EXT char* origdir INIT(nullptr);		/* cwd when rn invoked */
+EXT char* hostname INIT(nullptr);		/* host name to match local postings */
+EXT char* headname INIT(nullptr);
 EXT int perform_cnt;
 
 #ifdef NEWS_ADMIN

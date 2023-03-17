@@ -64,7 +64,7 @@ void univ_startup()
     user_top_load = false;
 
     /* later: make user top file an option or environment variable? */
-    if (!univ_file_load("%+/univ/top","Top Level",(char*)NULL)) {
+    if (!univ_file_load("%+/univ/top","Top Level",(char*)nullptr)) {
 	univ_open();
 	univ_title = savestr("Top Level");
 	univ_fname = savestr("%+/univ/usertop");
@@ -72,7 +72,7 @@ void univ_startup()
 	/* read in trn default top file */
 	(void)univ_include_file("%X/sitetop");		/* pure local */
 	sys_top_load = univ_include_file("%X/trn4top");
-	user_top_load = univ_use_file("%+/univ/usertop", univ_title, NULL);
+	user_top_load = univ_use_file("%+/univ/usertop", univ_title, nullptr);
 
 	if (!(sys_top_load || user_top_load)) {
 	    /* last resort--all newsgroups */
@@ -92,7 +92,7 @@ void univ_open()
 {
     first_univ = last_univ = 0;
     sel_page_univ = sel_next_univ = 0;
-    univ_fname = univ_title = univ_label = univ_tmp_file = NULL;
+    univ_fname = univ_title = univ_label = univ_tmp_file = nullptr;
     univ_virt_pass_needed = false;
     univ_ng_hash = univ_vg_hash = 0;
     univ_level++;
@@ -139,13 +139,13 @@ UNIV_ITEM *univ_add(int type, char *desc)
     if (desc)
 	node->desc = savestr(desc);
     else
-	node->desc = NULL;
+	node->desc = nullptr;
     node->type = type;
     node->num = univ_item_counter++;
 #ifdef SCORE
     node->score = 0;		/* consider other default scores? */
 #endif
-    node->next = NULL;
+    node->next = nullptr;
     node->prev = last_univ;
     if (last_univ)
 	last_univ->next = node;
@@ -284,7 +284,7 @@ void univ_add_file(char *desc, char *fname, char *label)
     if (label && *label)
 	ui->data.cfile.label = savestr(label);
     else
-	ui->data.cfile.label = NULL;
+	ui->data.cfile.label = nullptr;
 }
 
 UNIV_ITEM *univ_add_virt_num(char *desc, char *grp, ART_NUM art)
@@ -294,8 +294,8 @@ UNIV_ITEM *univ_add_virt_num(char *desc, char *grp, ART_NUM art)
     ui = univ_add(UN_ARTICLE,desc);
     ui->data.virt.ng = savestr(grp);
     ui->data.virt.num = art;
-    ui->data.virt.subj = NULL;
-    ui->data.virt.from = NULL;
+    ui->data.virt.subj = nullptr;
+    ui->data.virt.from = nullptr;
     return ui;
 }
 
@@ -361,7 +361,7 @@ void univ_add_virtgroup(char *grpname)
 	}
 	return;
     }
-    ui = univ_add(UN_VGROUP,NULL);
+    ui = univ_add(UN_VGROUP,nullptr);
     ui->data.vgroup.flags = (char)0;
 #ifdef SCORE
     if (univ_use_min_score) {
@@ -376,7 +376,7 @@ void univ_add_virtgroup(char *grpname)
 
 static bool univ_begin_found INIT(false);
 /* label to start working with */
-static char* univ_begin_label INIT(NULL);
+static char* univ_begin_label INIT(nullptr);
 
 /* univ_DoMatch uses a modified Wildmat function which is
  * based on Rich $alz's wildmat, reduced to the simple case of *
@@ -503,7 +503,7 @@ static bool univ_use_file(char *fname, char *title, char *label)
 
     save_temp = false;
     begin_top = true;	/* default assumption (might be changed later) */
-    p = NULL;
+    p = nullptr;
 
     if (!fname)
 	return false;	/* bad argument */
@@ -517,16 +517,16 @@ static bool univ_use_file(char *fname, char *title, char *label)
 	open_name = temp_filename();
 	univ_tmp_file = open_name;
 	if (!url_get(fname+4,open_name))
-	    open_name = NULL;
+	    open_name = nullptr;
 	save_temp = true;
 	begin_top = false;	/* we will need a "begin group" */
 #else /* !USEURL */
 	printf("This copy of trn does not have URL support.\n") FLUSH;
-	open_name = NULL;
+	open_name = nullptr;
 #endif /* USEURL */
     } else if (*s == ':') {	/* relative to last file's directory */
 	printf("Colon filespec not supported for |%s|\n",s) FLUSH;
-	open_name = NULL;
+	open_name = nullptr;
     }
     if (!open_name)
 	return false;
@@ -541,7 +541,7 @@ static bool univ_use_file(char *fname, char *title, char *label)
  * 1. Long lines
  * 2. Backslash continuations
  */
-    while ((s = fgets(lbuf,sizeof lbuf,fp)) != NULL) {
+    while ((s = fgets(lbuf,sizeof lbuf,fp)) != nullptr) {
 	if (!s)		/* end of file */
 	    break;
 	if (!univ_do_line(s))
@@ -566,7 +566,7 @@ static bool univ_include_file(char *fname)
 
     old_univ_fname = univ_fname;
     univ_fname = savestr(fname);	/* LEAK */
-    retval = univ_use_file(univ_fname,univ_title,NULL);
+    retval = univ_use_file(univ_fname,univ_title,nullptr);
     univ_fname = old_univ_fname;
     return retval;
 }
@@ -642,7 +642,7 @@ static void univ_do_line_ext1(char *desc, char *line)
 }
 
 
-/* if non-NULL, the description (printing name) of the entry */
+/* if non-nullptr, the description (printing name) of the entry */
 static char* univ_line_desc;
 
 /* returns false when no more lines should be interpreted */
@@ -690,10 +690,10 @@ static bool univ_do_line(char *line)
 	if (*p) {
 	    p++;
 	    if (!*p)		/* empty label */
-		p = NULL;
+		p = nullptr;
 	    /* XXX later do more error checking */
 	} else
-	    p = NULL;
+	    p = nullptr;
 	/* description defaults to name */
 	univ_add_file(univ_line_desc? univ_line_desc : s, s, p);
     }
@@ -730,11 +730,11 @@ static bool univ_do_line(char *line)
 		    *p++ = '\0';	/* separate label */
 
 		    if (!*p)		/* empty label */
-			p = NULL;
+			p = nullptr;
 		    /* XXX later do more error checking */
 		}
 	    } else
-		p = NULL;
+		p = nullptr;
 	    /* description defaults to name */
 	    univ_add_file(univ_line_desc? univ_line_desc : s, filexp(s), p);
 	    break;
@@ -966,7 +966,7 @@ static void univ_vg_addart(ART_NUM a)
     /* later scan/replace bad characters */
 
     /* later consider author in description, scoring, etc. */
-    ui = univ_add_virt_num(NULL,ngname,a);
+    ui = univ_add_virt_num(nullptr,ngname,a);
 #ifdef SCORE
     ui->score = score;
 #endif
@@ -1126,7 +1126,7 @@ void sort_univ()
 	lp[1]->prev = lp[0];
     }
     last_univ = lp[0];
-    last_univ->next = NULL;
+    last_univ->next = nullptr;
 
     free((char*)univ_sort_list);
 }
@@ -1192,7 +1192,7 @@ void univ_help_main(int where)
     univ_title = savestr("Extended Help");
 
     /* first add help on current mode */
-    ui = univ_add(UN_HELPKEY, NULL);
+    ui = univ_add(UN_HELPKEY, nullptr);
     ui->data.i = where;
 
     /* later, do other mode sensitive stuff */

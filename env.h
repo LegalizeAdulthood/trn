@@ -2,16 +2,16 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXT char *g_home_dir INIT(NULL);	/* login directory */
-EXT char *g_dot_dir INIT(NULL);		/* where . files go */
-EXT char *g_trn_dir INIT(NULL);		/* usually %./.trn */
-EXT char *g_lib INIT(NULL);		/* news library */
-EXT char *g_rn_lib INIT(NULL);		/* private news program library */
-EXT char *g_tmp_dir INIT(NULL);		/* where tmp files go */
-EXT char *g_login_name INIT(NULL);	/* login id of user */
-EXT char *g_real_name INIT(NULL);	/* real name of user */
-EXT char *g_p_host_name INIT(NULL);	/* host name in a posting */
-EXT char *g_local_host INIT(NULL);	/* local host name */
+EXT char *g_home_dir INIT(nullptr);	/* login directory */
+EXT char *g_dot_dir INIT(nullptr);		/* where . files go */
+EXT char *g_trn_dir INIT(nullptr);		/* usually %./.trn */
+EXT char *g_lib INIT(nullptr);		/* news library */
+EXT char *g_rn_lib INIT(nullptr);		/* private news program library */
+EXT char *g_tmp_dir INIT(nullptr);		/* where tmp files go */
+EXT char *g_login_name INIT(nullptr);	/* login id of user */
+EXT char *g_real_name INIT(nullptr);	/* real name of user */
+EXT char *g_p_host_name INIT(nullptr);	/* host name in a posting */
+EXT char *g_local_host INIT(nullptr);	/* local host name */
 
 #ifdef SUPPORT_NNTP
 EXT int g_net_speed INIT(20);		/* how fast our net-connection is */

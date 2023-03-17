@@ -31,7 +31,7 @@
 
 static int num_lines = 0;
 static int lines_alloc = 0;
-static char** lines = NULL;
+static char** lines = nullptr;
 
 static char lbuf[LBUFLEN];
 static char lbuf2[LBUFLEN];		/* what's another buffer between... */
@@ -66,14 +66,14 @@ void sc_sv_delgroup(char *gname)
 	return;		/* group not found */
     start = i;
     free(lines[i]);
-    lines[i] = NULL;
+    lines[i] = nullptr;
     for (i++; i < num_lines; i++) {
 	s = lines[i];
 	if (s && *s == '!')
 	    break;
 	if (s) {
 	    free(s);
-	    lines[i] = NULL;
+	    lines[i] = nullptr;
 	}
     }
     /* copy into the hole (if any) */
@@ -89,7 +89,7 @@ void sc_sv_getfile()
     FILE* fp;
 
     num_lines = lines_alloc = 0;
-    lines = NULL;
+    lines = nullptr;
 
     s = get_val("SAVESCOREFILE","%+/savedscores");
     fp = fopen(filexp(s),"r");

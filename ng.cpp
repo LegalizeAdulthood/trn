@@ -156,7 +156,7 @@ int do_newsgroup(char *start_command)
     /* FROM HERE ON, RETURN THRU CLEANUP OR WE ARE SCREWED */
 
     forcelast = true;			/* if 0 unread, do not bomb out */
-    recent_artp = curr_artp = NULL;
+    recent_artp = curr_artp = nullptr;
     recent_art = curr_art = lastart+1;
     prompt = whatnext;
 #ifdef CHARSUBST
@@ -205,14 +205,14 @@ int do_newsgroup(char *start_command)
 
     /* do they want a special top line? */
 
-    firstline = get_val("FIRSTLINE",(char*)NULL);
+    firstline = get_val("FIRSTLINE",(char*)nullptr);
 
     /* custom line suppression, custom page ending */
 
 #ifdef CUSTOMLINES
-    if ((hideline = get_val("HIDELINE",(char*)NULL)) != NULL)
+    if ((hideline = get_val("HIDELINE",(char*)nullptr)) != nullptr)
 	compile(&hide_compex,hideline,true,true);
-    if ((pagestop = get_val("PAGESTOP",(char*)NULL)) != NULL)
+    if ((pagestop = get_val("PAGESTOP",(char*)nullptr)) != nullptr)
 	compile(&page_compex,pagestop,true,true);
 #endif
 
@@ -277,10 +277,10 @@ int do_newsgroup(char *start_command)
 		pushstring(start_command, 0);
 		free(start_command);
 	    }
-	    start_command = NULL;
+	    start_command = nullptr;
 	    if (input_pending()) {
 		art = curr_art = lastart+1;
-		artp = curr_artp = NULL;
+		artp = curr_artp = nullptr;
 		goto reinp_article;
 	    }
 	}
@@ -572,7 +572,7 @@ cleanup2:
 #ifdef KILLFILES
     if (localkfp) {
 	fclose(localkfp);
-	localkfp = NULL;
+	localkfp = nullptr;
     }
 #endif
     set_mode(gmode_save,mode_save);
@@ -706,7 +706,7 @@ n or q to change nothing.\n\
 		unkill_thread(artp->subj->thread);
 	    else
 		unkill_subject(artp->subj);
-	    if ((artp = first_art(artp->subj)) != NULL)
+	    if ((artp = first_art(artp->subj)) != nullptr)
 		art = article_num(artp);
 	}
 	else if (*buf == 's' && u_help_thread != nullstr)
@@ -1075,7 +1075,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	return AS_NORM;
       case '$':
 	art = lastart+1;
-	artp = NULL;
+	artp = nullptr;
 	forcelast = true;
 #ifdef ARTSEARCH
 	srchahead = 0;
@@ -1241,7 +1241,7 @@ normal_search:
 	    return AS_CLEAN;
 	}
 	art = lastart+1;
-	artp = NULL;
+	artp = nullptr;
 	forcelast = false;
 	return AS_NORM;
       case 'Q':  case '`':
@@ -1336,7 +1336,7 @@ run_the_selector:
 	page_start();
 	article_walk(output_subject, AF_UNREAD);
 	int_count = 0;
-	subjline = NULL;
+	subjline = nullptr;
 	art = oldart;
 	return AS_ASK;
       }
@@ -1535,7 +1535,7 @@ run_the_selector:
 		printf("\nSelected all articles in this subject.\n");
 	    }
 	    termdown(2);
-	    if ((artp = first_art(artp->subj)) != NULL) {
+	    if ((artp = first_art(artp->subj)) != nullptr) {
 		if (art == article_num(artp))
 		    return AS_ASK;
 		art = article_num(artp);
@@ -1772,7 +1772,7 @@ bool output_subject(char *ptr, int flag)
 	return true;
 
     if (!subjline) {
-	subjline = get_val("SUBJLINE",(char*)NULL);
+	subjline = get_val("SUBJLINE",(char*)nullptr);
 	if (!subjline)
 	    subjline = nullstr;
     }
@@ -1781,7 +1781,7 @@ bool output_subject(char *ptr, int flag)
     if (flag && !(ap->flags & flag))
 	return false;
     i = article_num(ap);
-    if ((s = fetchsubj(i,false)) != NULL) {
+    if ((s = fetchsubj(i,false)) != nullptr) {
 	sprintf(tmpbuf,"%-5ld ", i);
 	len = strlen(tmpbuf);
 	if (subjline != nullstr) {

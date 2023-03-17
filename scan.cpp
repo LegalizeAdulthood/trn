@@ -27,10 +27,10 @@ void s_init_context(int cnum, int type)
     }
     p = s_contexts + cnum;
     p->type = type;
-    p->ent_sort = (long*)NULL;
+    p->ent_sort = (long*)nullptr;
     p->ent_sort_max = -1;
     p->ent_sorted_max = -1;
-    p->ent_index = (long*)NULL;
+    p->ent_index = (long*)nullptr;
     p->ent_index_max = -1;
     p->page_size = MAX_PAGE_SIZE;
     p->top_ent = -1;

@@ -23,8 +23,8 @@
 #endif
 
 #ifdef TILDENAME
-static char* tildename = NULL;
-static char* tildedir = NULL;
+static char* tildename = nullptr;
+static char* tildedir = nullptr;
 #endif
 
 /* copy a string to a safe spot */
@@ -80,7 +80,7 @@ char *filexp(char *s)
 	printf("< %s\n",s) FLUSH;
 #endif
     /* interpret any % escapes */
-    dointerp(filename,sizeof filename,s,(char*)NULL,(char*)NULL);
+    dointerp(filename,sizeof filename,s,(char*)nullptr,(char*)nullptr);
 #ifdef DEBUG
     if (debug & DEB_FILEXP)
 	printf("%% %s\n",filename) FLUSH;
@@ -124,14 +124,14 @@ char *filexp(char *s)
 		    free(tildename);
 		if (tildedir)
 		    free(tildedir);
-		tildedir = NULL;
+		tildedir = nullptr;
 		tildename = savestr(scrbuf);
 #ifdef HAS_GETPWENT	/* getpwnam() is not the paragon of efficiency */
 		{
 		    struct passwd* pwd = getpwnam(tildename);
-		    if (pwd == NULL) {
+		    if (pwd == nullptr) {
 			printf("%s is an unknown user. Using default.\n",tildename) FLUSH;
-			return NULL;
+			return nullptr;
 		    }
 		    sprintf(scrbuf,"%s%s",pwd->pw_dir,s);
 		    tildedir = savestr(pwd->pw_dir);
@@ -145,7 +145,7 @@ char *filexp(char *s)
 		    int i;
 
 		    if (pfp) {
-			while (fgets(tmpbuf,512,pfp) != NULL) {
+			while (fgets(tmpbuf,512,pfp) != nullptr) {
 			    d = cpytill(scrbuf,tmpbuf,':');
 #ifdef DEBUG
 			    if (debug & DEB_FILEXP)
@@ -169,7 +169,7 @@ char *filexp(char *s)
 		    }
 		    if (!tildedir) {
 			printf("%s is an unknown user. Using default.\n",tildename) FLUSH;
-			return NULL;
+			return nullptr;
 		    }
 		}
 #endif
@@ -203,7 +203,7 @@ char *filexp(char *s)
 	    printf("$ %s\n",scrbuf) FLUSH;
 #endif
 	/* this might do some extra '%'s, but that's how the Mercedes Benz */
-	dointerp(filename,sizeof filename,scrbuf,(char*)NULL,(char*)NULL);
+	dointerp(filename,sizeof filename,scrbuf,(char*)nullptr,(char*)nullptr);
     }
 #ifdef DEBUG
     if (debug & DEB_FILEXP)
@@ -212,7 +212,7 @@ char *filexp(char *s)
     return filename;
 }
 
-/* return ptr to little string in big string, NULL if not found */
+/* return ptr to little string in big string, nullptr if not found */
 
 char *in_string(char *big, char *little, bool case_matters)
 {
@@ -223,7 +223,7 @@ char *in_string(char *big, char *little, bool case_matters)
     for (t = big; *t; t++) {
 	for (x=t,s=little; *s; x++,s++) {
 	    if (!*x)
-		return NULL;
+		return nullptr;
 	    if (case_matters == true) {
 		if (*s != *x)
 		    break;
@@ -244,7 +244,7 @@ char *in_string(char *big, char *little, bool case_matters)
 	if (!*s)
 	    return t;
     }
-    return NULL;
+    return nullptr;
 }
 
 #ifndef HAS_STRCASECMP
@@ -314,11 +314,11 @@ char *read_auth_file(char *file, char **pass_ptr)
     FILE* fp;
     char* strptr[2];
     char buf[1024];
-    strptr[0] = strptr[1] = NULL;
-    if ((fp = fopen(file,"r")) != NULL) {
+    strptr[0] = strptr[1] = nullptr;
+    if ((fp = fopen(file,"r")) != nullptr) {
 	int i;
 	for (i = 0; i < 2; i++) {
-	    if (fgets(buf, sizeof buf, fp) != NULL) {
+	    if (fgets(buf, sizeof buf, fp) != nullptr) {
 		char* cp = buf + strlen(buf) - 1;
 		if (*cp == '\n')
 		    *cp = '\0';

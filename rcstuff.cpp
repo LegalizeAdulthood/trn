@@ -35,10 +35,10 @@ static bool foundany;
 
 bool rcstuff_init()
 {
-    MULTIRC* mptr = NULL;
+    MULTIRC* mptr = nullptr;
     int i;
 
-    multirc_list = new_list(0,0,sizeof(MULTIRC),20,LF_ZERO_MEM|LF_SPARSE,NULL);
+    multirc_list = new_list(0,0,sizeof(MULTIRC),20,LF_ZERO_MEM|LF_SPARSE,nullptr);
 
     if (trnaccess_mem) {
 	NEWSRC* rp;
@@ -47,7 +47,7 @@ bool rcstuff_init()
 	char* cond;
 	char** vals = prep_ini_words(rcgroups_ini);
 	s = trnaccess_mem;
-	while ((s = next_ini_section(s,&section,&cond)) != NULL) {
+	while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
 	    if (*cond && !check_ini_cond(cond))
 		continue;
 	    if (strncaseNE(section, "group ", 6))
@@ -92,7 +92,7 @@ bool rcstuff_init()
 	use_next_multirc(mptr);
     if (!multirc) {
 	mptr = multirc_ptr(0);
-	mptr->first = new_newsrc("default",NULL,NULL);
+	mptr->first = new_newsrc("default",nullptr,nullptr);
 	if (!use_multirc(mptr)) {
 	    printf("Couldn't open any newsrc groups.  Is your access file ok?\n");
 	    finalize(1);
@@ -110,7 +110,7 @@ NEWSRC *new_newsrc(char *name, char *newsrc, char *add_ok)
     DATASRC* dp;
 
     if (!name || !*name)
-	return NULL;
+	return nullptr;
 
     if (!newsrc || !*newsrc) {
 	newsrc = getenv("NEWSRC");
@@ -120,7 +120,7 @@ NEWSRC *new_newsrc(char *name, char *newsrc, char *add_ok)
 
     dp = get_datasrc(name);
     if (!dp)
-	return NULL;
+	return nullptr;
 
     rp = (NEWSRC*)safemalloc(sizeof (NEWSRC));
     bzero((char*)rp, sizeof (NEWSRC));
@@ -196,19 +196,19 @@ void unuse_multirc(MULTIRC *mptr)
 	hashdestroy(newsrc_hash);
 	walk_list(ngdata_list, clear_ngitem, 0);
 	delete_list(ngdata_list);
-	ngdata_list = NULL;
-	first_ng = NULL;
-	last_ng = NULL;
-	ngptr = NULL;
-	current_ng = NULL;
-	recent_ng = NULL;
-	starthere = NULL;
-	sel_page_np = NULL;
+	ngdata_list = nullptr;
+	first_ng = nullptr;
+	last_ng = nullptr;
+	ngptr = nullptr;
+	current_ng = nullptr;
+	recent_ng = nullptr;
+	starthere = nullptr;
+	sel_page_np = nullptr;
     }
     ngdata_cnt = 0;
     newsgroup_cnt = 0;
     newsgroup_toread = 0;
-    multirc = NULL;
+    multirc = nullptr;
 }
 
 bool use_next_multirc(MULTIRC *mptr)
@@ -256,7 +256,7 @@ char *multirc_name(MULTIRC *mp)
     char* cp;
     if (mp->first->next)
 	return "<each-newsrc>";
-    if ((cp = rindex(mp->first->name, '/')) != NULL)
+    if ((cp = rindex(mp->first->name, '/')) != nullptr)
 	return cp+1;
     return mp->first->name;
 }
@@ -265,10 +265,10 @@ static bool clear_ngitem(char *cp, int arg)
 {
     NGDATA* ncp = (NGDATA*)cp;
 
-    if (ncp->rcline != NULL) {
+    if (ncp->rcline != nullptr) {
 	if (!checkflag)
 	    free(ncp->rcline);
-	ncp->rcline = NULL;
+	ncp->rcline = nullptr;
     }
     return 0;
 }
@@ -295,7 +295,7 @@ static bool lock_newsrc(NEWSRC *rp)
     }
 
     tmpfp = fopen(rp->lockname,"r");
-    if (tmpfp != NULL) {
+    if (tmpfp != nullptr) {
 	if (fgets(buf,LBUFLEN,tmpfp)) {
 	    processnum = atol(buf);
 	    if (fgets(buf,LBUFLEN,tmpfp) && *buf
@@ -398,7 +398,7 @@ the lock file: %s\n", rp->lockname) FLUSH;
 #endif
     }
     tmpfp = fopen(rp->lockname,"w");
-    if (tmpfp == NULL) {
+    if (tmpfp == nullptr) {
 	printf(cantcreate,rp->lockname) FLUSH;
 	sig_catcher(0);
     }
@@ -413,7 +413,7 @@ static void unlock_newsrc(NEWSRC *rp)
     if (rp->lockname) {
  	UNLINK(rp->lockname);
 	free(rp->lockname);
-	rp->lockname = NULL;
+	rp->lockname = nullptr;
     }
 }
 
@@ -428,9 +428,9 @@ static bool open_newsrc(NEWSRC *rp)
 
     /* make sure the .newsrc file exists */
 
-    if ((rcfp = fopen(rp->name,"r")) == NULL) {
+    if ((rcfp = fopen(rp->name,"r")) == nullptr) {
 	rcfp = fopen(rp->name,"w+");
-	if (rcfp == NULL) {
+	if (rcfp == nullptr) {
 	    printf("\nCan't create %s.\n", rp->name) FLUSH;
 	    termdown(2);
 	    return false;
@@ -447,7 +447,7 @@ static bool open_newsrc(NEWSRC *rp)
 	    } while (!nntp_at_list_end(g_ser_line));
 	}
 #endif
-	ElseIf (*some_buf && (tmpfp = fopen(filexp(some_buf),"r")) != NULL) {
+	ElseIf (*some_buf && (tmpfp = fopen(filexp(some_buf),"r")) != nullptr) {
 	    while (fgets(buf,sizeof buf,tmpfp))
 		fputs(buf,rcfp);
 	    fclose(tmpfp);
@@ -484,11 +484,11 @@ static bool open_newsrc(NEWSRC *rp)
     if (ngdata_cnt)
 	prev_np = ngdata_ptr(ngdata_cnt-1);
     else
-	prev_np = NULL;
+	prev_np = nullptr;
 
     /* read in the .newsrc file */
 
-    while ((some_buf = get_a_line(buf, LBUFLEN,false,rcfp)) != NULL) {
+    while ((some_buf = get_a_line(buf, LBUFLEN,false,rcfp)) != nullptr) {
 	length = len_last_line_got;	/* side effect of get_a_line */
 	if (length <= 1)		/* only a newline??? */
 	    continue;
@@ -576,7 +576,7 @@ static bool open_newsrc(NEWSRC *rp)
 	sethash(np);
     }
     if (prev_np) {
-	prev_np->next = NULL;
+	prev_np->next = nullptr;
 	last_ng = prev_np;
     }
     fclose(rcfp);			/* close .newsrc */
@@ -586,12 +586,12 @@ static bool open_newsrc(NEWSRC *rp)
     rp->flags |= RF_RCCHANGED;
 #endif
     if (rp->infoname) {
-	if ((tmpfp = fopen(rp->infoname,"r")) != NULL) {
-	    if (fgets(buf,sizeof buf,tmpfp) != NULL) {
+	if ((tmpfp = fopen(rp->infoname,"r")) != nullptr) {
+	    if (fgets(buf,sizeof buf,tmpfp) != nullptr) {
 		long actnum, descnum;
 		char* s;
 		buf[strlen(buf)-1] = '\0';
-		if ((s = index(buf, ':')) != NULL && s[1] == ' ' && s[2]) {
+		if ((s = index(buf, ':')) != nullptr && s[1] == ' ' && s[2]) {
 		    safefree0(lastngname);
 		    lastngname = savestr(s+2);
 		}
@@ -659,14 +659,14 @@ static void parse_rcline(NGDATA *np)
 
 void abandon_ng(NGDATA *np)
 {
-    char* some_buf = NULL;
+    char* some_buf = nullptr;
     FILE* rcfp;
 
     /* open newsrc backup copy and try to find the prior value for the group. */
-    if ((rcfp = fopen(np->rc->oldname, "r")) != NULL) {
+    if ((rcfp = fopen(np->rc->oldname, "r")) != nullptr) {
 	int length = np->numoffset - 1;
 
-	while ((some_buf = get_a_line(buf, LBUFLEN,false,rcfp)) != NULL) {
+	while ((some_buf = get_a_line(buf, LBUFLEN,false,rcfp)) != nullptr) {
 	    if (len_last_line_got <= 0)
 		continue;
 	    some_buf[len_last_line_got-1] = '\0';	/* wipe out newline */
@@ -683,7 +683,7 @@ void abandon_ng(NGDATA *np)
 	termdown(1);
 	return;
     }
-    if (some_buf == NULL) {
+    if (some_buf == nullptr) {
 	some_buf = np->rcline + np->numoffset;
 	if (*some_buf == ' ')
 	    some_buf++;
@@ -745,7 +745,7 @@ bool get_ng(char *what, int flags)
     }
     set_ngname(what);
     ngptr = find_ng(ngname);
-    if (ngptr == NULL) {		/* not in .newsrc? */
+    if (ngptr == nullptr) {		/* not in .newsrc? */
 	NEWSRC* rp;
 	for (rp = multirc->first; rp; rp = rp->next) {
 	    if (!ALLBITS(rp->flags, RF_ADD_GROUPS | RF_ACTIVE))
@@ -944,7 +944,7 @@ static NGDATA *add_newsgroup(NEWSRC *rp, char *ngn, char_int c)
 	last_ng->next = np;
     else
 	first_ng = np;
-    np->next = NULL;
+    np->next = nullptr;
     last_ng = np;
     newsgroup_cnt++;
 
@@ -993,7 +993,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
 	}
     }
 
-    starthere = NULL;			/* Disable this optimization */
+    starthere = nullptr;			/* Disable this optimization */
     if (move_np != last_ng) {
 	if (move_np->prev)
 	    move_np->prev->next = move_np->next;
@@ -1002,7 +1002,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
 	move_np->next->prev = move_np->prev;
 
 	move_np->prev = last_ng;
-	move_np->next = NULL;
+	move_np->next = nullptr;
 	last_ng->next = move_np;
 	last_ng = move_np;
     }
@@ -1102,7 +1102,7 @@ q to abort\n") FLUSH;
 	    if (!finish_command(true))	/* get rest of command */
 		goto reinp_reloc;
 	    np = find_ng(buf+1);
-	    if (np == NULL) {
+	    if (np == nullptr) {
 		fputs("Not found.",stdout) FLUSH;
 		goto reask_reloc;
 	    }
@@ -1125,7 +1125,7 @@ q to abort\n") FLUSH;
 	    return false;		/* This can't happen... */
 
 	last_ng = move_np->prev;
-	last_ng->next = NULL;
+	last_ng->next = nullptr;
 
 	move_np->prev = np->prev;
 	move_np->next = np;
@@ -1275,9 +1275,9 @@ Type n or SP to leave them at the end in case they return.\n\
 	    rp->flags |= RF_RCCHANGED; /*$$ needed? */
 	    last_ng = np;
 	    if (np)
-		np->next = NULL;
+		np->next = nullptr;
 	    else
-		first_ng = NULL;
+		first_ng = nullptr;
 	    if (current_ng && !current_ng->rcline)
 		current_ng = first_ng;
 	    if (recent_ng && !recent_ng->rcline)
@@ -1285,7 +1285,7 @@ Type n or SP to leave them at the end in case they return.\n\
 	    if (ngptr && !ngptr->rcline)
 		ngptr = first_ng;
 	    if (sel_page_np && !sel_page_np->rcline)
-		sel_page_np = NULL;
+		sel_page_np = nullptr;
 	}
 	else {
 	    fputs(hforhelp,stdout) FLUSH;
@@ -1371,7 +1371,7 @@ bool write_newsrcs(MULTIRC *mptr)
 	    continue;
 
 	if (rp->infoname) {
-	    if ((tmpfp = fopen(rp->infoname, "w")) != NULL) {
+	    if ((tmpfp = fopen(rp->infoname, "w")) != nullptr) {
 		fprintf(tmpfp,"Last-Group: %s\nNew-Group-State: %ld,%ld,%ld\n",
 			ngname? ngname : nullstr,rp->datasrc->lastnewgrp,
 			rp->datasrc->act_sf.recent_cnt,
@@ -1397,7 +1397,7 @@ bool write_newsrcs(MULTIRC *mptr)
 	    continue;
 
 	rcfp = fopen(rp->newname, "w");
-	if (rcfp == NULL) {
+	if (rcfp == nullptr) {
 	    printf(cantrecreate,rp->name) FLUSH;
 	    total_success = false;
 	    continue;
@@ -1421,7 +1421,7 @@ bool write_newsrcs(MULTIRC *mptr)
 		    delim[2] = '0';
 	    }
 	    else
-		delim = NULL;
+		delim = nullptr;
 #ifdef DEBUG
 	    if (debug & DEB_NEWSRC_LINE) {
 		printf("%s\n",np->rcline) FLUSH;

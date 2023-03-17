@@ -188,11 +188,11 @@ int doshell(char *shell, char *s)
     interp(buf,64-1+2,"%I");
     buf[strlen(buf)-1] = '\0';
     re_export(quotechars_export, buf+1, 64);
-    if (shell == NULL && (shell = get_val("SHELL",NULL)) == NULL)
+    if (shell == nullptr && (shell = get_val("SHELL",nullptr)) == nullptr)
 	shell = PREFSHELL;
     termlib_reset();
 #ifdef MSDOS
-    intptr_t status = spawnl(P_WAIT, shell, shell, "/c", s, (char*)NULL);
+    intptr_t status = spawnl(P_WAIT, shell, shell, "/c", s, (char*)nullptr);
 #else
     if ((pid = vfork()) == 0) {
 #ifdef SUPPORT_NNTP
@@ -219,9 +219,9 @@ int doshell(char *shell, char *s)
 	}
 
 	if (*s)
-	    execl(shell, shell, "-c", s, (char*)NULL);
+	    execl(shell, shell, "-c", s, (char*)nullptr);
 	else
-	    execl(shell, shell, (char*)NULL, (char*)NULL, (char*)NULL);
+	    execl(shell, shell, (char*)nullptr, (char*)nullptr, (char*)nullptr);
 	_exit(127);
     }
     sigignore(SIGINT);
@@ -280,7 +280,7 @@ char *safemalloc(MEM_SIZE size)
 }
 #endif
 
-/* paranoid version of realloc.  If where is NULL, call malloc */
+/* paranoid version of realloc.  If where is nullptr, call malloc */
 
 #ifndef USE_DEBUGGING_MALLOC
 char *saferealloc(char *where, MEM_SIZE size)
@@ -366,7 +366,7 @@ char *trn_getwd(char *buf, int buflen)
     }
 #ifdef MSDOS
     strlwr(buf);
-    while ((buf = index(buf,'\\')) != NULL)
+    while ((buf = index(buf,'\\')) != nullptr)
 	*buf++ = '/';
 #endif
     return ret;
@@ -392,21 +392,21 @@ int len;
     FILE* pipefp;
     char* nl;
 
-    if ((pipefp = popen("/bin/pwd","r")) == NULL) {
+    if ((pipefp = popen("/bin/pwd","r")) == nullptr) {
 	printf("Can't popen /bin/pwd\n") FLUSH;
-	return NULL;
+	return nullptr;
     }
     buf[0] = 0;
     fgets(ret = buf, len, pipefp);
     if (pclose(pipefp) == EOF) {
 	printf("Failed to run /bin/pwd\n") FLUSH;
-	return NULL;
+	return nullptr;
     }
     if (!buf[0]) {
 	printf("/bin/pwd didn't output anything\n") FLUSH;
-    	return NULL;
+    	return nullptr;
     }
-    if ((nl = index(buf, '\n')) != NULL)
+    if ((nl = index(buf, '\n')) != nullptr)
 	*nl = '\0';
 #endif
     return ret;
@@ -435,7 +435,7 @@ char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp)
 	}
 	if ((nextch = getc(fp)) == EOF) {
 	    if (!bufix)
-		return NULL;
+		return nullptr;
 	    break;
 	}
 	buffer[bufix++] = (char)nextch;
@@ -601,7 +601,7 @@ double current_time()
 {
 #ifdef HAS_GETTIMEOFDAY
     Timeval t;
-    (void) gettimeofday(&t, (struct timezone*)NULL);
+    (void) gettimeofday(&t, (struct timezone*)nullptr);
     return (double)t.tv_usec / 1000000. + t.tv_sec;
 #else
 # ifdef HAS_FTIME
@@ -609,7 +609,7 @@ double current_time()
     ftime(&t);
     return (double)t.millitm / 1000. + t.time;
 # else
-    return (double)time((time_t*)NULL);
+    return (double)time((time_t*)nullptr);
 # endif
 #endif
 }
@@ -722,7 +722,7 @@ char **prep_ini_words(INI_WORDS words[])
     char* cp = (char*)INI_VALUES(words);
     if (!cp) {
 	int i;
-	for (i = 1; words[i].item != NULL; i++) {
+	for (i = 1; words[i].item != nullptr; i++) {
 	    if (*words[i].item == '*') {
 		words[i].checksum = -1;
 		continue;
@@ -743,7 +743,7 @@ void unprep_ini_words(INI_WORDS words[])
 {
     free((char*)INI_VALUES(words));
     words[0].checksum = 0;
-    words[0].help_str = NULL;
+    words[0].help_str = nullptr;
 }
 
 void prep_ini_data(char *cp, char *filename)
@@ -793,7 +793,7 @@ void prep_ini_data(char *cp, char *filename)
 			    *t++ = '\0';
 			    cp++;
 			    if (parse_string(&t, &cp))
-				s = NULL;
+				s = nullptr;
 			    else
 				s = cp;
 			}
@@ -873,7 +873,7 @@ char *next_ini_section(char *cp, char **section, char **cond)
 {
     while (*cp != '[') {
 	if (!*cp)
-	    return NULL;
+	    return nullptr;
 	cp += strlen(cp) + 1;
 	cp += strlen(cp) + 1;
     }
@@ -897,7 +897,7 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
     int i;
 
     if (!*cp)
-	return NULL;
+	return nullptr;
 
     while (*cp && *cp != '[') {
 	checksum = 0;
@@ -939,7 +939,7 @@ bool check_ini_cond(char *cond)
 {
     int not, equal, upordown, num;
     char* s;
-    cond = dointerp(buf,sizeof buf,cond,"!=<>",(char*)NULL);
+    cond = dointerp(buf,sizeof buf,cond,"!=<>",(char*)nullptr);
     s = buf + strlen(buf);
     while (s != buf && isspace(s[-1])) s--;
     *s = '\0';
@@ -958,12 +958,12 @@ bool check_ini_cond(char *cond)
     else if (equal) {
 	COMPEX condcompex;
 	init_compex(&condcompex);
-	if ((s = compile(&condcompex,cond,true,true)) != NULL) {
+	if ((s = compile(&condcompex,cond,true,true)) != nullptr) {
 	    /*warning(s)*/;
 	    equal = false;
 	}
 	else
-	    equal = execute(&condcompex,buf) != NULL;
+	    equal = execute(&condcompex,buf) != nullptr;
 	free_compex(&condcompex);
 	return equal;
     }

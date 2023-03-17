@@ -83,7 +83,7 @@ void init_compex(COMPEX *compex)
     /* the following must start off zeroed */
 
     compex->eblen = 0;
-    compex->brastr = NULL;
+    compex->brastr = nullptr;
 }
 
 void free_compex(COMPEX *compex)
@@ -94,11 +94,11 @@ void free_compex(COMPEX *compex)
     }
     if (compex->brastr) {
 	free(compex->brastr);
-	compex->brastr = NULL;
+	compex->brastr = nullptr;
     }
 }
 
-static char* gbr_str = NULL;
+static char* gbr_str = nullptr;
 static int gbr_siz = 0;
 
 char *getbracket(COMPEX *compex, int n)
@@ -106,7 +106,7 @@ char *getbracket(COMPEX *compex, int n)
     int length = compex->braelist[n] - compex->braslist[n];
 
     if (!compex->nbra)
-	return NULL;
+	return nullptr;
     if (n > compex->nbra || !compex->braelist[n] || length < 0)
 	return nullstr;
     growstr(&gbr_str, &gbr_siz, length+1);
@@ -154,7 +154,7 @@ char *compile(COMPEX *compex, char *strp, bool RE, bool fold)
     if (*strp == 0) {			/* nothing to compile? */
 	if (*ep == 0)			/* nothing there yet? */
 	    return "Null search string";
-	return NULL;			/* just keep old expression */
+	return nullptr;			/* just keep old expression */
     }
     compex->nbra = 0;			/* no brackets yet */
     lastep = 0;
@@ -171,7 +171,7 @@ char *compile(COMPEX *compex, char *strp, bool RE, bool fold)
 	    }
 	    *ep++ = CEND;		/* terminate expression */
 	    *alt++ = 0;			/* terminal alternative list */
-	    return NULL;		/* return success */
+	    return nullptr;		/* return success */
 	}
 	if (c != '*')
 	    lastep = ep;
@@ -344,11 +344,11 @@ char *execute(COMPEX *compex, char *addr)
     register Uchar* trt = trans;
     register int c;
  
-    if (addr == NULL || compex->expbuf == NULL)
-	return NULL;
+    if (addr == nullptr || compex->expbuf == nullptr)
+	return nullptr;
     if (compex->nbra) {			/* any brackets? */
 	for (c = 0; c <= compex->nbra; c++)
-	    compex->braslist[c] = compex->braelist[c] = NULL;
+	    compex->braslist[c] = compex->braelist[c] = nullptr;
 	if (compex->brastr)
 	    free(compex->brastr);
 	compex->brastr = savestr(p1);	/* in case p1 is not static */
@@ -364,7 +364,7 @@ char *execute(COMPEX *compex, char *addr)
 	    p1++;
 	} while (*p1 && !err);
 	if (err) err = 0;
-	return NULL;
+	return nullptr;
     }
     else {			/* regular algorithm */
 	do {
@@ -376,7 +376,7 @@ char *execute(COMPEX *compex, char *addr)
 	    p1++;
 	} while (*p1 && !err);
 	if (err) err = 0;
-	return NULL;
+	return nullptr;
     }
    /*NOTREACHED*/
 }

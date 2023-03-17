@@ -171,7 +171,7 @@ int strcharsubst(char *outb, char *inb, int limit, char_int subst)
       case 'a':
 	return Latin1toASCII((Uchar*)outb, (Uchar*)inb, limit, 2);
       default:
-	if ((s = index(inb,'\n')) != NULL && s - inb + 1 < limit) {
+	if ((s = index(inb,'\n')) != nullptr && s - inb + 1 < limit) {
 	    len = s - inb + 1;
 	    limit = len + 1;
 	}
@@ -205,7 +205,7 @@ int strcharsubst(char *outb, char *inb, int limit, char_int subst)
    Markus Kuhn <mskuhn@immd4.informatik.uni-erlangen.de>                 */
 /* In this version, I have taken out all tables except 1 and 2 -ot */
 
-#define SUB NULL       /* used if no reasonable ASCII string is possible */
+#define SUB nullptr       /* used if no reasonable ASCII string is possible */
 
 static char* iso2asc[ISO_TABLES][96] = {
  {
@@ -237,7 +237,7 @@ static int Latin1toASCII(Uchar *asc, Uchar *iso, int limit, int t)
     char* p;
     char** tab;
 
-    if (iso == NULL || asc == NULL || limit <= 0)
+    if (iso == nullptr || asc == nullptr || limit <= 0)
 	return 0;
     if (limit == 1)
 	goto done;

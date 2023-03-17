@@ -39,8 +39,8 @@ void mp_init()
     int i;
 
     for (i = 1; i < MAX_MEM_FRAGS; i++) {
-	mpfrags[i].data = NULL;
-	mpfrags[i].lastfree = NULL;
+	mpfrags[i].data = nullptr;
+	mpfrags[i].lastfree = nullptr;
 	mpfrags[i].bytesfree = 0;
 	mpfrags[i].next = i+1;
     }
@@ -78,7 +78,7 @@ static void mp_free_frag(int f)
     /* old code to actually free the blocks */
     if (mpfrags[f].data)
 	free(mpfrags[f].data);
-    mpfrags[f].lastfree = NULL;
+    mpfrags[f].lastfree = nullptr;
     mpfrags[f].bytesfree = 0;
 #else
     /* instead of freeing it, reset it for later use */
@@ -97,10 +97,10 @@ char *mp_savestr(char *str, int pool)
 
     if (!str) {
 #if 1
-	printf("\ntrn: mp_savestr(NULL,%d) error.\n",pool);
+	printf("\ntrn: mp_savestr(nullptr,%d) error.\n",pool);
 	assert(false);
 #else
-	return NULL;		/* only a flesh wound... (;-) */
+	return nullptr;		/* only a flesh wound... (;-) */
 #endif
     }
     len = strlen(str);

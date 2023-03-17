@@ -24,9 +24,9 @@ int auto_subscribe(char *name)
 {
     char* s;
 
-    if((s = get_val("AUTOSUBSCRIBE", (char*)NULL)) && matchlist(s, name))
+    if((s = get_val("AUTOSUBSCRIBE", (char*)nullptr)) && matchlist(s, name))
 	return ':';
-    if((s = get_val("AUTOUNSUBSCRIBE", (char*)NULL)) && matchlist(s, name))
+    if((s = get_val("AUTOUNSUBSCRIBE", (char*)nullptr)) && matchlist(s, name))
 	return '!';
     return 0;
 }
@@ -48,19 +48,19 @@ bool matchlist(char *patlist, char *s)
 	} else
 	    tmpresult = true;
 
-	if ((p = index(patlist, ',')) != NULL)
+	if ((p = index(patlist, ',')) != nullptr)
 	    *p = '\0';
         /* compile regular expression */
 	err = ng_comp(&ilcompex,patlist,true,true);
 	if (p)
 	    *p++ = ',';
 
-	if (err != NULL) {
+	if (err != nullptr) {
 	    printf("\n%s\n", err) FLUSH;
 	    finalize(1);
 	}
 	
-	if (execute(&ilcompex,s) != NULL)
+	if (execute(&ilcompex,s) != nullptr)
 	    result = tmpresult;
 	patlist = p;
     }

@@ -10,7 +10,7 @@ struct hashdatum {
     unsigned dat_len;
 };
 
-#define HASH_DEFCMPFUNC (int (*)(char *, int, HASHDATUM)) NULL
+#define HASH_DEFCMPFUNC (int (*)(char *, int, HASHDATUM)) nullptr
 
 HASHTABLE *hashcreate(unsigned, int (*)(char *, int, HASHDATUM));
 void hashdestroy(HASHTABLE *);

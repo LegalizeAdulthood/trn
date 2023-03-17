@@ -2,10 +2,10 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXT char* ngname INIT(NULL);	/* name of current newsgroup */
+EXT char* ngname INIT(nullptr);	/* name of current newsgroup */
 EXT int ngnlen INIT(0);		/* current malloced size of ngname */
 EXT int ngname_len;		/* length of current ngname */
-EXT char* ngdir INIT(NULL);	/* same thing in directory name form */
+EXT char* ngdir INIT(nullptr);	/* same thing in directory name form */
 EXT int ngdlen INIT(0);		/* current malloced size of ngdir */
 
 #define ING_NORM	0
@@ -28,7 +28,7 @@ EXT int ing_state;
 
 EXT bool  write_less INIT(false);	/* write .newsrc less often */
 
-EXT char* auto_start_cmd INIT(NULL);	/* command to auto-start with */
+EXT char* auto_start_cmd INIT(nullptr);	/* command to auto-start with */
 EXT bool  auto_started INIT(false);	/* have we auto-started? */
 
 EXT bool  is_strn INIT(false);		/* Is this "strn", or trn/rn? */

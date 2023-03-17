@@ -419,5 +419,5 @@ void write_init_environment(FILE *fp)
     }
     init_environment_cnt = init_environment_max = 0;
     free((char*)init_environment_strings);
-    init_environment_strings = NULL;
+    init_environment_strings = nullptr;
 }

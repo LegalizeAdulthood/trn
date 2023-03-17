@@ -40,7 +40,7 @@ HISTORY
 				   when this # of bytes is exceeded */
 #define STRLENTHRESHOLD ((int) ((THRESHOLD / sizeof (int) - 3) / 2))
 
-#define SAFE_ASSIGN(x,y) (((x) != NULL) ? (*(x) = (y)) : (y))
+#define SAFE_ASSIGN(x,y) (((x) != nullptr) ? (*(x) = (y)) : (y))
 
 #define swap_int(x,y)  (_iswap = (x), (x) = (y), (y) = _iswap)
 #define swap_char(x,y) (_cswap = (x), (x) = (y), (y) = _cswap)
@@ -78,12 +78,12 @@ int edit_distn(char *from, int from_len, char *to, int to_len)
 
 /* Handle trivial cases when one string is empty */
 
-    if (from == NULL || !from_len) {
-	if (to == NULL || !to_len)
+    if (from == nullptr || !from_len) {
+	if (to == nullptr || !to_len)
 	    return 0;
 	return to_len * insert_cost;
     }
-    if (to == NULL || !to_len)
+    if (to == nullptr || !to_len)
 	return from_len * delete_cost;
 
 /* Initialize registers */

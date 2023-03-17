@@ -32,13 +32,13 @@
 #define SET_TORETURN	0x0004	/* only works with kill_*() */
 
 #define KF_AGE_MASK	0x003F
-#define KF_DAYNUM(x)	((long)time((time_t*)NULL) / 86400 - 10490 - (x))
+#define KF_DAYNUM(x)	((long)time((time_t*)nullptr) / 86400 - 10490 - (x))
 
 #define KF_MAXDAYS	30
 
 #ifdef KILLFILES
-EXT FILE* globkfp INIT(NULL);		/* global article killer file */
-EXT FILE* localkfp INIT(NULL);		/* local (for this newsgroup) file */
+EXT FILE* globkfp INIT(nullptr);		/* global article killer file */
+EXT FILE* localkfp INIT(nullptr);		/* local (for this newsgroup) file */
 EXT int kf_state;			/* the state of our kill files */
 EXT int kfs_local_change_clear;		/* bits to clear local changes */
 EXT int kfs_thread_change_set;		/* bits to set for thread changes */

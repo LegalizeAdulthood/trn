@@ -758,8 +758,8 @@ EXT char buf[LBUFLEN+1];	/* general purpose line buffer */
 EXT char cmd_buf[CBUFLEN];	/* buffer for formatting system commands */
 EXT char* indstr INIT(">");	/* indent for old article embedded in followup */
 
-EXT char* cwd INIT(NULL);	/* current working directory */
-EXT char* dfltcmd INIT(NULL);	/* 1st char is default command */
+EXT char* cwd INIT(nullptr);	/* current working directory */
+EXT char* dfltcmd INIT(nullptr);	/* 1st char is default command */
 
 /* switches */
 
@@ -803,13 +803,13 @@ EXT int NewsSelBtnCnt;
 EXT int OptionSelBtnCnt;
 EXT int ArtPagerBtnCnt;
 
-EXT char* UnivSelBtns INIT(NULL);
-EXT char* NewsrcSelBtns INIT(NULL);
-EXT char* AddSelBtns INIT(NULL);
-EXT char* NewsgroupSelBtns INIT(NULL);
-EXT char* NewsSelBtns INIT(NULL);
-EXT char* OptionSelBtns INIT(NULL);
-EXT char* ArtPagerBtns INIT(NULL);
+EXT char* UnivSelBtns INIT(nullptr);
+EXT char* NewsrcSelBtns INIT(nullptr);
+EXT char* AddSelBtns INIT(nullptr);
+EXT char* NewsgroupSelBtns INIT(nullptr);
+EXT char* NewsSelBtns INIT(nullptr);
+EXT char* OptionSelBtns INIT(nullptr);
+EXT char* ArtPagerBtns INIT(nullptr);
 
 EXT bool dont_filter_control INIT(false);		/* -j */
 EXT int  join_subject_len INIT(0);			/* -J */
@@ -825,7 +825,7 @@ EXT bool novice_delays INIT(true);			/* +f */
 EXT int olden_days INIT(false);				/* -o */
 EXT char auto_select_postings INIT(0);			/* -p */
 EXT bool checkflag INIT(false);				/* -c */
-EXT char* savedir INIT(NULL);				/* -d */
+EXT char* savedir INIT(nullptr);				/* -d */
 EXT bool suppress_cn INIT(false);			/* -s */
 EXT int countdown INIT(5);	/* how many lines to list before invoking -s */
 EXT bool muck_up_clear INIT(false);			/* -loco */
@@ -889,7 +889,7 @@ EXT bool in_ng INIT(false);		/* true if in a newsgroup */
 EXT char mode INIT('i');		/* current state of trn */
 EXT char gmode INIT('I');		/* general mode of trn */
 
-EXT FILE* tmpfp INIT(NULL);	/* scratch fp used for .rnlock, .rnlast, etc. */
+EXT FILE* tmpfp INIT(nullptr);	/* scratch fp used for .rnlock, .rnlast, etc. */
 
 #define PLURAL(num) ((num)==1? nullstr : ess)
 #define ALLBITS(val,bits) (((val) & (bits)) == (bits))

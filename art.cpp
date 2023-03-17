@@ -219,7 +219,7 @@ int do_article()
 	    else if (in_header && *(bufptr = headbuf + artpos))
 		continuation = *bufptr == ' ' || *bufptr == '\t';
 	    else {
-		if ((bufptr = readartbuf(auto_view_inline)) == NULL) {
+		if ((bufptr = readartbuf(auto_view_inline)) == nullptr) {
 		    special = false;
 		    if (innersearch)
 			(void)innermore();
@@ -242,7 +242,7 @@ int do_article()
 	    } else if (notesfiles && do_hiding && !continuation
 		    && *bufptr == '#' && isupper(bufptr[1])
 		    && bufptr[2] == ':' ) {
-		if ((bufptr = readartbuf(auto_view_inline)) == NULL)
+		if ((bufptr = readartbuf(auto_view_inline)) == nullptr)
 		    break;
 		for (s = bufptr; *s && *s != '\n' && *s != '!'; s++) ;
 		if (*s != '!')
@@ -260,11 +260,11 @@ int do_article()
 	    if (in_header && do_hiding && (htype[in_header].flags & HT_MAGIC)) {
 		switch (in_header) {
 		  case NGS_LINE:
-		    if ((s = index(bufptr,'\n')) != NULL)
+		    if ((s = index(bufptr,'\n')) != nullptr)
 			*s = '\0';
-		    hide_this_line = (index(bufptr,',') == NULL)
+		    hide_this_line = (index(bufptr,',') == nullptr)
 			&& strEQ(bufptr+12, ngname);
-		    if (s != NULL)
+		    if (s != nullptr)
 			*s = '\n';
 		    break;
 		  case EXPIR_LINE:
@@ -274,12 +274,12 @@ int do_article()
 		    }
 		    break;
 		 case FROM_LINE:
-		    if ((s = index(bufptr,'\n')) != NULL
+		    if ((s = index(bufptr,'\n')) != nullptr
 		     && s-bufptr < sizeof art_line)
 			safecpy(art_line,bufptr,s-bufptr+1);
 		    else
 			safecpy(art_line,bufptr,sizeof art_line);
-		    if ((s = extract_name(art_line+6)) != NULL) {
+		    if ((s = extract_name(art_line+6)) != nullptr) {
 			strcpy(art_line+6,s);
 			bufptr = art_line;
 		    }
@@ -304,7 +304,7 @@ int do_article()
 		}
 		else {
 		    int length = strlen(bufptr+1);
-		    notesfiles = in_string(&bufptr[length-10]," - (nf", true)!=NULL;
+		    notesfiles = in_string(&bufptr[length-10]," - (nf", true)!=nullptr;
 		    artline++;
 		    if (!s)
 			bufptr += (continuation? 0 : 9);
@@ -717,7 +717,7 @@ int page_switch()
 	    if (pos < htype[PAST_HEADER].minpos)
 		break;
 	    seekartbuf(pos);
-	    if ((s = readartbuf(false)) == NULL) {
+	    if ((s = readartbuf(false)) == nullptr) {
 		s = LINE_PTR(alinebeg);
 		break;
 	    }
@@ -735,7 +735,7 @@ int page_switch()
 	    return PS_ASK;
 	s = buf+1;
 	if (isspace(*s)) s++;
-	if ((s = compile(&gcompex,s,true,true)) != NULL) {
+	if ((s = compile(&gcompex,s,true,true)) != nullptr) {
 			    /* compile regular expression */
 	    printf("\n%s\n",s) FLUSH;
 	    termdown(2);
@@ -772,8 +772,8 @@ int page_switch()
 	seekartbuf(start_where);
 	innerlight = 0;
 	innersearch = 0; /* assume not found */
-	while ((s = readartbuf(false)) != NULL) {
-	    if ((nlptr = index(s,'\n')) != NULL) {
+	while ((s = readartbuf(false)) != nullptr) {
+	    if ((nlptr = index(s,'\n')) != nullptr) {
 		ch = *++nlptr;
 		*nlptr = '\0';
 	    }
@@ -781,7 +781,7 @@ int page_switch()
 	    if (debug & DEB_INNERSRCH)
 		printf("Test %s\n",s) FLUSH;
 #endif
-	    success = execute(&gcompex,s) != NULL;
+	    success = execute(&gcompex,s) != nullptr;
 	    if (nlptr)
 		*nlptr = ch;
 	    if (success) {
@@ -890,7 +890,7 @@ int page_switch()
 		pos = -pos;
 	    if (pos >= htype[PAST_HEADER].minpos) {
 		seekartbuf(pos);
-		if ((s = readartbuf(false)) != NULL) {
+		if ((s = readartbuf(false)) != nullptr) {
 		    artpos = vrdary(topline);
 		    if (artpos < 0)
 			artpos = -artpos;
@@ -1024,8 +1024,8 @@ int page_switch()
 	       case '\b': case '\177':
 leave_pager:
 	reread = false;
-	if (index("nNpP\016\020",*buf) == NULL
-	 && index("wWsSe:!&|/?123456789.",*buf) != NULL) {
+	if (index("nNpP\016\020",*buf) == nullptr
+	 && index("wWsSe:!&|/?123456789.",*buf) != nullptr) {
 	    setdfltcmd();
 	    color_object(COLOR_CMD, true);
 	    interpsearch(cmd_buf, sizeof cmd_buf, mailcall, buf);

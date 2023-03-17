@@ -6,7 +6,7 @@ EXT ART_NUM obj_count INIT(0);
 EXT int subject_count INIT(0);
 EXT bool output_chase_phrase;
 
-EXT HASHTABLE* msgid_hash INIT(NULL);
+EXT HASHTABLE* msgid_hash INIT(nullptr);
 
 /* Values to pass to count_subjects() */
 #define CS_RETAIN      0

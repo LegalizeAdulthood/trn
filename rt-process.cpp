@@ -48,7 +48,7 @@ static void fix_msgid(char *msgid)
 {
     register char* cp;
 
-    if ((cp = index(msgid, '@')) != NULL) {
+    if ((cp = index(msgid, '@')) != nullptr) {
 	while (*++cp) {
 	    if (isupper(*cp)) {
 		*cp = tolower(*cp);	/* lower-case domain portion */
@@ -86,14 +86,14 @@ bool valid_article(ARTICLE *article)
 		kf_changethd_cnt++;
 	    data.dat_len = 0;
 	}
-	if ((fake_ap = (ARTICLE*)data.dat_ptr) == NULL) {
+	if ((fake_ap = (ARTICLE*)data.dat_ptr) == nullptr) {
 	    data.dat_ptr = (char*)article;
 	    hashstorelast(data);
-	    fake_had_subj = NULL;
+	    fake_had_subj = nullptr;
 	    return true;
 	}
 	if (fake_ap == article) {
-	    fake_had_subj = NULL;
+	    fake_had_subj = nullptr;
 	    return true;
 	}
 
@@ -116,7 +116,7 @@ bool valid_article(ARTICLE *article)
 		recent_artp = article;
 		recent_art = article_num(article);
 	    }
-	    if ((ap = article->parent) != NULL) {
+	    if ((ap = article->parent) != nullptr) {
 		if (ap->child1 == fake_ap)
 		    ap->child1 = article;
 		else {
@@ -240,8 +240,8 @@ void thread_article(ARTICLE *article, char *references)
 	    ap->parent = 0;
 	    /* don't free it until group exit since we probably re-use it */
 	}
-	article->parent = NULL;		/* neaten up */
-	article->sibling = NULL;
+	article->parent = nullptr;		/* neaten up */
+	article->sibling = nullptr;
     }
 
     /* If we have references, process them from the right end one at a time
@@ -249,9 +249,9 @@ void thread_article(ARTICLE *article, char *references)
     */
     if (references && *references) {
 	prev = article;
-	ap = NULL;
-	if ((cp = rindex(references, '<')) == NULL
-	 || (end = index(cp+1, ' ')) == NULL)
+	ap = nullptr;
+	if ((cp = rindex(references, '<')) == nullptr
+	 || (end = index(cp+1, ' ')) == nullptr)
 	    end = references + strlen(references) - 1;
 	while (cp) {
 	    while (end >= cp && end > references
@@ -280,7 +280,7 @@ void thread_article(ARTICLE *article, char *references)
 	    */
 	    if ((ap->date && !ap->subj) || ap == article) {
 		if ((ap = prev) == article)
-		    ap = NULL;
+		    ap = nullptr;
 		goto next;
 	    }
 
@@ -338,7 +338,7 @@ void thread_article(ARTICLE *article, char *references)
 	    ** right where we are and link it to the thread.
 	    */
 	    unlink_child(ap);
-	    ap->parent = NULL;
+	    ap->parent = nullptr;
 	    link_child(ap);
 	}
     } else {
@@ -418,7 +418,7 @@ static char *valid_message_id(char *start, char *end)
 	*(end--) = '\0';
     }
     /* Id must be "<...@...>" */
-    if (*start != '<' || *end != '>' || (mid = index(start, '@')) == NULL
+    if (*start != '<' || *end != '>' || (mid = index(start, '@')) == nullptr
      || mid == start+1 || mid+1 == end) {
 	return 0;
     }

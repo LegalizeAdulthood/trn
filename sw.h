@@ -2,7 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-EXT char** init_environment_strings INIT(NULL);
+EXT char** init_environment_strings INIT(nullptr);
 EXT int init_environment_cnt INIT(0);
 EXT int init_environment_max INIT(0);
 

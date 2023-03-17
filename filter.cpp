@@ -35,7 +35,7 @@ extern FILE* filter_error_file;
 
 void filter_init()
 {
-    filt_wr = filt_rd = NULL;
+    filt_wr = filt_rd = nullptr;
     pipe_1[0] = pipe_1[1] = pipe_2[0] = pipe_2[1] = -1;
     filter_restarting = 0;
 }
@@ -78,18 +78,18 @@ static void filter_restart()
     if ((filter_pid = fork()) < 0)
 	perror("filter_restart");
     else if (filter_pid > 0) {
-	if ((filt_wr = fdopen(pipe_1[1], "w")) == NULL) {
+	if ((filt_wr = fdopen(pipe_1[1], "w")) == nullptr) {
 	    perror("configuring output pipe");
 	    filter_cleanup();
 	    return;
 	}
-	if ((filt_rd = fdopen(pipe_2[0], "r")) == NULL) {
+	if ((filt_rd = fdopen(pipe_2[0], "r")) == nullptr) {
 	    perror("configuring input pipe");
 	    filter_cleanup();
 	    return;
 	}
-	setvbuf(filt_wr, NULL, _IOLBF, BUFSIZ);	/* line buffering */
-	setvbuf(filt_rd, NULL, _IOLBF, BUFSIZ);
+	setvbuf(filt_wr, nullptr, _IOLBF, BUFSIZ);	/* line buffering */
+	setvbuf(filt_rd, nullptr, _IOLBF, BUFSIZ);
 	close(pipe_1[0]);
 	close(pipe_2[1]);
     }
@@ -111,7 +111,7 @@ static void filter_restart()
 
 	close(pipe_1[1]);
 	close(pipe_2[0]);
-	if (execl(filter, filter, NULL) < 0) {
+	if (execl(filter, filter, nullptr) < 0) {
 	    perror("switching to filter process");
 	    finalize(1);
 	}
@@ -139,7 +139,7 @@ void filter_nginit()
 
     sprintf(buf, "newsgroup %s\n", ngname);
     if (filter_send(buf) == 0) {
-	if (filter_recv(buf) != NULL) {
+	if (filter_recv(buf) != nullptr) {
 	    Uchar* fieldflags = datasrc->fieldflags;
 	    int i;
 	    if (strncaseEQ(buf, "overview", 8)) {
@@ -161,7 +161,7 @@ void filter_nginit()
 		    if (!*s)
 			break;
 		    s = cpytill(buf,s,' ');
-		    i = ov_num(buf,(char*)NULL);
+		    i = ov_num(buf,(char*)nullptr);
 		    if (i) {
 			fieldflags[i] |= FF_FILTERSEND;
 			need_to_filter = 1;
@@ -200,7 +200,7 @@ int filter(ART_NUM a)
 		     || filter_send(": ") < 0)
 			return 0;
 		}
-		if ((s = ov_field(ap, i)) != NULL) {
+		if ((s = ov_field(ap, i)) != nullptr) {
 		    if (filter_send(s) < 0)
 			return 0;
 		}
@@ -208,7 +208,7 @@ int filter(ART_NUM a)
 	}
 	if (filter_send("\n") < 0 || filter_send("scores\n") < 0)
 	    return 0;
-	while (filter_recv(buf) != NULL && strncaseNE(buf, "done", 4)) {
+	while (filter_recv(buf) != nullptr && strncaseNE(buf, "done", 4)) {
 	    sscanf(buf, "%ld %ld", &i, &sc);
 	    if (i == a)
 		score = sc;
@@ -226,11 +226,11 @@ int filter(ART_NUM a)
 
 static int filter_send(char *cmd)
 {
-    if (filt_wr == NULL || fputs(cmd, filt_wr) == EOF) {
+    if (filt_wr == nullptr || fputs(cmd, filt_wr) == EOF) {
 	filter_restart();
-	if (filt_wr == NULL) {
+	if (filt_wr == nullptr) {
 #ifdef FILTER_DEBUG
-	    fprintf (stderr, "filt_wr is still NULL\n");
+	    fprintf (stderr, "filt_wr is still nullptr\n");
 #endif
 	    return -1;
 	}
@@ -245,8 +245,8 @@ static int filter_send(char *cmd)
 
 static char *filter_recv(char *buf)
 {
-    if (filt_rd == NULL)
-	return NULL;
+    if (filt_rd == nullptr)
+	return nullptr;
 
     return (fgets(buf, 256, filt_rd));
 }
@@ -258,15 +258,15 @@ void filter_cleanup()
 	filter_pid = 0;
     }
 
-    if (filt_wr != NULL) {
+    if (filt_wr != nullptr) {
 	fputs("bye\n", filt_wr);
 	fclose(filt_wr);
-	filt_wr = NULL;
+	filt_wr = nullptr;
     }
 
-    if (filt_rd != NULL) {
+    if (filt_rd != nullptr) {
 	fclose(filt_rd);
-	filt_rd = NULL;
+	filt_rd = nullptr;
     }
 
     pipe_1[0] = pipe_1[1] = 0;

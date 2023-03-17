@@ -51,15 +51,15 @@
 
 char tcarea[TCSIZE];	/* area for "compiled" termcap strings */
 
-static KEYMAP*	topmap INIT(NULL);
+static KEYMAP*	topmap INIT(nullptr);
 
-static char* lines_export = NULL;
-static char* cols_export = NULL;
+static char* lines_export = nullptr;
+static char* cols_export = nullptr;
 
 static int leftcost, upcost;
 static bool got_a_char = false;	/* true if we got a char since eating */
 
-/* guarantee capability pointer != NULL */
+/* guarantee capability pointer != nullptr */
 /* (I believe terminfo will ignore the &tmpaddr argument.) */
 
 char* tgetstr();
@@ -239,7 +239,7 @@ void term_set(char *tcbuf)
     if ((tc_UG = tgetnum("ug"))<0)
 	tc_UG = 0;			/* blanks left by US, UE */
     if (*tc_US)
-	tc_UC = nullstr;		/* UC must not be NULL */
+	tc_UC = nullstr;		/* UC must not be nullptr */
     else
 	tc_UC = Tgetstr("uc");		/* underline a character */
     if (!*tc_US && !*tc_UC) {		/* no underline mode? */
@@ -289,7 +289,7 @@ void term_set(char *tcbuf)
     if (!*tc_CD || !can_home)		/* can we CE, CD, and home? */
 	erase_each_line = false;	/*  no, so disable use of clear eol */
     if (muck_up_clear)			/* this is for weird HPs */
-	tc_CL = NULL;
+	tc_CL = nullptr;
     leftcost = strlen(tc_BC);
     upcost = strlen(tc_UP);
 #else /* !HAS_TERMLIB */
@@ -419,10 +419,10 @@ static void mac_init(char *tcbuf)
     if (auto_arrow_macros)
 	arrow_macros(tmpbuf);
     if (!use_threads
-     || (tmpfp = fopen(filexp(get_val("TRNMACRO",TRNMACRO)),"r")) == NULL)
+     || (tmpfp = fopen(filexp(get_val("TRNMACRO",TRNMACRO)),"r")) == nullptr)
 	tmpfp = fopen(filexp(get_val("RNMACRO",RNMACRO)),"r");
     if (tmpfp) {
-	while (fgets(tcbuf,TCBUF_SIZE,tmpfp) != NULL)
+	while (fgets(tcbuf,TCBUF_SIZE,tmpfp) != nullptr)
 	    mac_line(tcbuf,tmpbuf,sizeof tmpbuf);
 	fclose(tmpfp);
     }
@@ -437,7 +437,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
     register int garbage = 0;
     static char override[] = "\nkeymap overrides string\n";
 
-    if (topmap == NULL)
+    if (topmap == nullptr)
 	topmap = newkeymap();
     if (*line == '#' || *line == '\n')
 	return;
@@ -446,7 +446,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
     /* A 0 length signifies we already parsed the macro into tmpbuf,
     ** so line is just the definition. */
     if (tbsize)
-	m = dointerp(tmpbuf,tbsize,line," \t",(char*)NULL);
+	m = dointerp(tmpbuf,tbsize,line," \t",(char*)nullptr);
     else
 	m = line;
     if (!*m)
@@ -467,10 +467,10 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
 		    termdown(2);
 		}
 		free(curmap->km_ptr[ch].km_str);
-		curmap->km_ptr[ch].km_str = NULL;
+		curmap->km_ptr[ch].km_str = nullptr;
 	    }
 	    curmap->km_type[ch] = KM_KEYMAP + garbage;
-	    if (curmap->km_ptr[ch].km_km == NULL)
+	    if (curmap->km_ptr[ch].km_km == nullptr)
 		curmap->km_ptr[ch].km_km = newkeymap();
 	    curmap = curmap->km_ptr[ch].km_km;
 	}
@@ -495,10 +495,10 @@ static KEYMAP *newkeymap()
 #ifndef lint
     map = (KEYMAP*)safemalloc(sizeof(KEYMAP));
 #else
-    map = NULL;
+    map = nullptr;
 #endif /* lint */
     for (i = 127; i >= 0; i--) {
-	map->km_ptr[i].km_km = NULL;
+	map->km_ptr[i].km_km = nullptr;
 	map->km_type[i] = KM_NOTHIN;
     }
     return map;
@@ -508,7 +508,7 @@ void show_macros()
 {
     char prebuf[64];
 
-    if (topmap != NULL) {
+    if (topmap != nullptr) {
 	print_lines("Macros:\n",STANDOUT);
 	*prebuf = '\0';
 	show_keymap(topmap,prebuf);
@@ -833,7 +833,7 @@ void eat_typeahead()
 		continue;
 	    }
 	    lc = *(Uchar*)buf;
-	    if ((lc & 0200) || curmap == NULL) {
+	    if ((lc & 0200) || curmap == nullptr) {
 		curmap = topmap;
 		j = 0;
 		continue;
@@ -1088,7 +1088,7 @@ tryagain:
 	    *whatbuf &= 0177;
 	    goto got_canonical;
 	}
-	if (curmap == NULL)
+	if (curmap == nullptr)
 	    goto got_canonical;
 	for (i = (curmap->km_type[lastchar] >> KM_GSHIFT) & KM_GMASK; i; i--)
 	    read_tty(&whatbuf[i],1);
@@ -1101,7 +1101,7 @@ tryagain:
 	    goto tryagain;
 	  case KM_KEYMAP:		/* another keymap? */
 	    curmap = curmap->km_ptr[lastchar].km_km;
-	    assert(curmap != NULL);
+	    assert(curmap != nullptr);
 	    break;
 	  case KM_STRING:		/* a string? */
 	    pushstring(curmap->km_ptr[lastchar].km_str,0200);
@@ -1141,7 +1141,7 @@ void pushstring(char *str, char_int bits)
     char tmpbuf[PUSHSIZE];
     register char* s = tmpbuf;
 
-    assert(str != NULL);
+    assert(str != nullptr);
     interp(tmpbuf,PUSHSIZE,str);
     for (i = strlen(s)-1; i >= 0; i--)
 	pushchar(s[i] ^ bits);
@@ -1304,7 +1304,7 @@ bool in_choice(char *prompt, char *value, char *choices, char_int newmode)
     char* cp;
     char* bp;
     char* s;
-    char* prefix = NULL;
+    char* prefix = nullptr;
     int len, number_was = -1, any_val_OK = 0, value_changed;
     char tmpbuf[80], prefixes[80];
 
@@ -1363,11 +1363,11 @@ reask_in_choice:
 	    while (*bp == ' ') bp++;
 	}
 	else
-	    prefix = NULL;
+	    prefix = nullptr;
 	value_changed = prefix != s;
     }
     else {
-	prefix = NULL;
+	prefix = nullptr;
 	value_changed = 0;
     }
     s = cp;
@@ -1377,13 +1377,13 @@ reask_in_choice:
 	    cp = tmpbuf;
 	if (*cp == '<'
 	 && (*buf == '<' || cp[1] != '#' || isdigit(*buf) || !*s)) {
-	    prefix = NULL;
+	    prefix = nullptr;
 	    break;
 	}
 	if (s == cp) {
 	    if (!value_changed) {
 		if (prefix)
-		    prefix = NULL;
+		    prefix = nullptr;
 		else
 		    dingaling();
 	    }
@@ -1430,7 +1430,7 @@ reinp_in_choice:
 	char ch = *s;
 	if (*cp == '<' && ch != '\t' && (ch != ' ' || buf != s)) {
 	    if (cp[1] == '#') {
-		s = edit_buf(s, (char*)NULL);
+		s = edit_buf(s, (char*)nullptr);
 		if (s != buf) {
 		    if (isdigit(s[-1]))
 			goto reinp_in_choice;
@@ -1439,7 +1439,7 @@ reinp_in_choice:
 		}
 	    }
 	    else {
-		s = edit_buf(s, (char*)NULL);
+		s = edit_buf(s, (char*)nullptr);
 		goto reinp_in_choice;
 	    }
 	}
@@ -1682,7 +1682,7 @@ void goto_xy(int to_col, int to_line)
 	str = tgoto(tc_CM,to_col,to_line);
 	cmcost = strlen(str);
     } else {
-	str = NULL;
+	str = nullptr;
 	cmcost = 9999;
     }
 
@@ -1962,7 +1962,7 @@ int ticks;		/* tenths of seconds to wait */
 	wait_time.tv_usec = (ticks%10)*1000000;
 	wait_time.tv_sec = ticks/10;
 
-	(void)select(wait_tbl_size,&wait_fdset,NULL,NULL,&wait_time);
+	(void)select(wait_tbl_size,&wait_fdset,nullptr,nullptr,&wait_time);
 
 #ifdef DEBUG_NICEBG
 	printf("exit: wait_key_pause\n") FLUSH; /* */
@@ -2056,7 +2056,7 @@ void xmouse_check()
 	    turn_it_on = false;
 	else {
 	    interp(msg, sizeof msg, MouseModes);
-	    turn_it_on = (index(msg, mode) != NULL);
+	    turn_it_on = (index(msg, mode) != nullptr);
 	}
 	if (turn_it_on) {
 	    char* s;
@@ -2345,7 +2345,7 @@ char *tc_color_capability(char *capability)
 	if (strEQ(tc_strings[c].capability, capability))
 	    return tc_strings[c].string;
     }
-    return NULL;
+    return nullptr;
 }
 
 #ifdef MSDOS

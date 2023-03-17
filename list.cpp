@@ -19,7 +19,7 @@ void list_init() {
 LIST *new_list(long low, long high, int item_size, int items_per_node, int flags, void (*init_node)(LIST *, LISTNODE *))
 {
     LIST* list = (LIST*)safemalloc(sizeof (LIST));
-    list->first = list->recent = NULL;
+    list->first = list->recent = nullptr;
     list->init_node = init_node? init_node : def_init_node;
     list->low = low;
     list->high = high;
@@ -44,7 +44,7 @@ static void def_init_node(LIST *list, LISTNODE *node)
 char *listnum2listitem(LIST *list, long num)
 {
     LISTNODE* node = list->recent;
-    LISTNODE* prevnode = NULL;
+    LISTNODE* prevnode = nullptr;
 
     if (node && num < node->low)
 	node = list->first;
@@ -132,7 +132,7 @@ bool walk_list(LIST *list, bool (*callback)(char *, int), int arg)
 long existing_listnum(LIST *list, long num, int direction)
 {
     register LISTNODE* node = list->recent;
-    LISTNODE* prevnode = NULL;
+    LISTNODE* prevnode = nullptr;
 
     if (node && num < node->low)
 	node = list->first;
@@ -166,7 +166,7 @@ long existing_listnum(LIST *list, long num, int direction)
 }
 
 /* Increment the item pointer to the next allocated item.
-** Returns NULL if ptr is the last one.
+** Returns nullptr if ptr is the last one.
 */
 char *next_listitem(LIST *list, char *ptr)
 {
@@ -175,21 +175,21 @@ char *next_listitem(LIST *list, char *ptr)
     if (ptr == node->data_high) {
 	node = node->next;
 	if (!node)
-	    return NULL;
+	    return nullptr;
 	list->recent = node;
 	return node->data;
     }
 #if 0
     if (node->high > list->high) {
 	if ((ptr - node->data) / list->item_size + node->low >= list->high)
-	    return NULL;
+	    return nullptr;
     }
 #endif
     return ptr += list->item_size;
 }
 
 /* Decrement the item pointer to the prev allocated item.
-** Returns NULL if ptr is the first one.
+** Returns nullptr if ptr is the first one.
 */
 char *prev_listitem(LIST *list, char *ptr)
 {
@@ -198,7 +198,7 @@ char *prev_listitem(LIST *list, char *ptr)
     if (ptr == node->data) {
 	LISTNODE* prev = list->first;
 	if (prev == node)
-	    return NULL;
+	    return nullptr;
 	while (prev->next != node)
 	    prev = prev->next;
 	list->recent = prev;
@@ -214,7 +214,7 @@ char *prev_listitem(LIST *list, char *ptr)
 void delete_list(LIST *list)
 {
     LISTNODE* node = list->first;
-    LISTNODE* prevnode = NULL;
+    LISTNODE* prevnode = nullptr;
 
     while (node) {
 	prevnode = node;

@@ -71,13 +71,13 @@ int server_init(const char *machine)
     ** the socket file descriptor.  Note that we can't just
     ** open a fp for reading and writing -- we have to open
     ** up two separate fp's, one for reading, one for writing. */
-    if ((nntplink.rd_fp = fdopen(sockt_rd, "r")) == NULL) {
+    if ((nntplink.rd_fp = fdopen(sockt_rd, "r")) == nullptr) {
 	perror("server_init: fdopen #1");
 	return -1;
     }
-    if ((nntplink.wr_fp = fdopen(sockt_wr, "w")) == NULL) {
+    if ((nntplink.wr_fp = fdopen(sockt_wr, "w")) == nullptr) {
 	perror("server_init: fdopen #2");
-	nntplink.rd_fp = NULL;
+	nntplink.rd_fp = nullptr;
 	return -1;
     }
 
@@ -112,7 +112,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
     struct addrinfo* res;
     struct addrinfo* res0;
     char portstr[8];
-    char* cause = NULL;
+    char* cause = nullptr;
     int error;
 
     memset(&hints, 0, sizeof hints);
@@ -174,7 +174,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 	sin.sin_port = htons(port);
     else {
 	struct servent* sp;
-	if ((sp = getservbyname(service, "tcp")) == NULL) {
+	if ((sp = getservbyname(service, "tcp")) == nullptr) {
 	    fprintf(stderr, "%s/tcp: Unknown service.\n", service);
 	    return -1;
 	}
@@ -201,7 +201,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 	def.h_aliases = 0;
 	hp = &def;
     }
-    if (hp == NULL) {
+    if (hp == nullptr) {
 	fprintf(stderr, "%s: Unknown host.\n", machine);
 	return -1;
     }
@@ -241,7 +241,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
     }
 #else /* no name server */
 #ifdef EXCELAN
-    s = socket(SOCK_STREAM, (struct sockproto*)NULL, &sin, SO_KEEPALIVE);
+    s = socket(SOCK_STREAM, (struct sockproto*)nullptr, &sin, SO_KEEPALIVE);
     if (s < 0) {
 	/* Get the socket */
 	perror("socket");
