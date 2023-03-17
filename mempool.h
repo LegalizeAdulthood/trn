@@ -12,7 +12,7 @@
 /* sathread.c storage */
 #define MP_SATHREAD 2
 
-void mp_init(void);
+void mp_init();
 char *mp_savestr(char *, int);
 char *mp_malloc(int, int);
 void mp_free(int);

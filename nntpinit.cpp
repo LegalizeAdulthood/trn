@@ -41,7 +41,7 @@ struct servent *getservbyname(void);
 struct hostent *gethostbyname(void);
 #endif
 
-int init_nntp(void)
+int init_nntp()
 {
 #ifdef WINSOCK
     if (WSAStartup(0x0101,&wsaData) == 0) {
@@ -97,7 +97,7 @@ int server_init(const char *machine)
     return atoi(g_ser_line);
 }
 
-void cleanup_nntp(void)
+void cleanup_nntp()
 {
 #ifdef WINSOCK
     WSACleanup();

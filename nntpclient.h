@@ -84,7 +84,7 @@ EXT char g_last_command[NNTP_STRLEN];
 int nntp_connect(const char *machine, bool verbose);
 char *nntp_servername(char *name);
 int nntp_command(const char *bp);
-int nntp_check(void);
+int nntp_check();
 bool nntp_at_list_end(const char *s);
 int nntp_gets(char *bp, int len);
 void nntp_close(bool send_quit);

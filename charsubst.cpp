@@ -108,7 +108,7 @@ int putsubstchar(int c, int limit, bool outputok)
     return i;
 }
 
-char *current_charsubst(void)
+char *current_charsubst()
 {
 #ifdef USE_UTF_HACK
     static char show[50];

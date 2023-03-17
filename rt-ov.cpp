@@ -30,7 +30,7 @@
 #include "rt-ov.h"
 #include "rt-ov.ih"
 
-bool ov_init(void)
+bool ov_init()
 {
     bool has_overview_fmt;
     Uchar* fieldnum = datasrc->fieldnum;
@@ -467,7 +467,7 @@ static char *ov_name(char *group)
     return buf;
 }
 
-void ov_close(void)
+void ov_close()
 {
     if (datasrc && datasrc->ov_opened) {
 	if (datasrc->ov_in) {

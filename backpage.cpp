@@ -17,7 +17,7 @@
 
 ART_LINE maxindx = -1;
 
-void backpage_init(void)
+void backpage_init()
 {
     char* varyname;
     

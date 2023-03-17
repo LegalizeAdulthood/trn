@@ -13,7 +13,7 @@
 EXT bool ng_doempty INIT(false);	/* search empty newsgroups? */
 #endif
 
-void ngsrch_init(void);
+void ngsrch_init();
 #ifdef NGSEARCH
 int ng_search(char *, int);
 bool ng_wanted(NGDATA *);

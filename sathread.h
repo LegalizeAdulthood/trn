@@ -8,7 +8,7 @@
  (sa_ents[e].subj_thread_num? sa_ents[e].subj_thread_num : \
  sa_get_subj_thread(e))
 
-void sa_init_threads(void);
+void sa_init_threads();
 long sa_get_subj_thread(long);
 int sa_subj_thread_count(long);
 long sa_subj_thread_prev(long);

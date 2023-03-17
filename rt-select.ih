@@ -2,17 +2,17 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-static void sel_dogroups(void);
+static void sel_dogroups();
 static int univ_read(UNIV_ITEM*);
-static void sel_display(void);
+static void sel_display();
 static void sel_status_msg(char*);
-static char sel_input(void);
-static void sel_prompt(void);
+static char sel_input();
+static void sel_prompt();
 static bool select_item(SEL_UNION);
 static bool delay_return_item(SEL_UNION);
 static bool deselect_item(SEL_UNION);
 static bool select_option(int);
-static void sel_cleanup(void);
+static void sel_cleanup();
 static bool mark_DEL_as_READ(char*,int);
 static int sel_command(char_int);
 static bool sel_perform_change(long,char*);

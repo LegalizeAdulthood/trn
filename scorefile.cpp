@@ -52,7 +52,7 @@ static int sf_num_extra_headers = 0;
 static bool sf_has_extra_headers;
 
 /* Must be called before any other sf_ routine (once for each group) */
-void sf_init(void)
+void sf_init()
 {
     int i;
     char* s;
@@ -134,7 +134,7 @@ void sf_init(void)
     }
 }
 
-void sf_clean(void)
+void sf_clean()
 {
     int i;
 
@@ -166,7 +166,7 @@ void sf_clean(void)
 /* use macro instead of all the "sf_entries[sf_num_entries-1]"?
  * call it "sf_recent_entry" or "sf_last_entry"?
  */
-void sf_grow(void)
+void sf_grow()
 {
     int i;
 
@@ -1267,7 +1267,7 @@ static int sf_open_file(char *name)
 #endif /* SCOREFILE_CACHE */
 
 #ifdef SCOREFILE_CACHE
-static void sf_file_clear(void)
+static void sf_file_clear()
 {
     int i;
 

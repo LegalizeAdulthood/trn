@@ -38,7 +38,7 @@ EXT int art_srchhdr;		/* specific header number to search */
 EXT bool art_doread;		/* search read articles? */
 #endif
 
-void artsrch_init(void);
+void artsrch_init();
 #ifdef ARTSEARCH
 int art_search(char *, int, int);
 bool wanted(COMPEX *, ART_NUM, char_int);

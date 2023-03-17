@@ -124,8 +124,7 @@ bool wildmat(char *text, char *p)
 #endif
 
 #ifdef	TEST
-int
-main()
+int main()
 {
     /* Yes, we use gets not fgets.  Sue me. */
     extern char* gets();

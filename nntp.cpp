@@ -58,7 +58,7 @@ int nntp_list(char *type, char *arg, int len)
     return 1;
 }
 
-void nntp_finish_list(void)
+void nntp_finish_list()
 {
     int ret;
     do {
@@ -138,7 +138,7 @@ ART_NUM nntp_stat_id(char *msgid)
     return (ART_NUM)artnum;
 }
 
-ART_NUM nntp_next_art(void)
+ART_NUM nntp_next_art()
 {
     long artnum;
 
@@ -220,7 +220,7 @@ void nntp_body(ART_NUM artnum)
     nntplink.flags &= ~NNTP_NEW_CMD_OK;
 }
 
-long nntp_artsize(void)
+long nntp_artsize()
 {
     return body_pos < 0 ? body_end : -1;
 }
@@ -311,7 +311,7 @@ int nntp_seekart(ART_POS pos)
     return fseek(artfp, (long)pos, 0);
 }
 
-ART_POS nntp_tellart(void)
+ART_POS nntp_tellart()
 {
     return body_pos < 0 ? (ART_POS)ftell(artfp) : body_pos;
 }
@@ -340,7 +340,7 @@ char *nntp_readart(char *s, int limit)
 /* This is a 1-relative list */
 static int maxdays[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
-time_t nntp_time(void)
+time_t nntp_time()
 {
     char* s;
     int year, month, day, hh, mm;
@@ -392,7 +392,7 @@ int nntp_newgroups(time_t t)
     return nntp_check();
 }
 
-int nntp_artnums(void)
+int nntp_artnums()
 {
     if (datasrc->flags & DF_NOLISTGROUP)
 	return 0;
@@ -406,7 +406,7 @@ int nntp_artnums(void)
 }
 
 #if 0
-int nntp_rover(void)
+int nntp_rover()
 {
     if (datasrc->flags & DF_NOXROVER)
 	return 0;
@@ -482,7 +482,7 @@ char *nntp_tmpname(int ndx)
     return artname;
 }
 
-int nntp_handle_nested_lists(void)
+int nntp_handle_nested_lists()
 {
     if (strcaseEQ(g_last_command,"quit"))
 	return 0; /*$$ flush data needed? */
@@ -492,7 +492,7 @@ int nntp_handle_nested_lists(void)
     return -1;
 }
 
-int nntp_handle_timeout(void)
+int nntp_handle_timeout()
 {
     static bool handling_timeout = false;
     char last_command_save[NNTP_STRLEN];
@@ -534,7 +534,7 @@ void nntp_server_died(DATASRC *dp)
 ** before calling nntp_read() for the actual data transfer.
 */
 #ifdef SUPPORT_XTHREAD
-long nntp_readcheck(void)
+long nntp_readcheck()
 {
     /* try to get the status line and the status code */
     switch (nntp_check()) {

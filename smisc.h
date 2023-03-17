@@ -9,7 +9,7 @@ EXT bool s_default_cmd INIT(false);
 EXT bool s_follow_temp INIT(false);
 
 bool s_eligible(long);
-void s_beep(void);
+void s_beep();
 char *s_get_statchars(long, int);
 char *s_get_desc(long ent, int line, bool trunc);
 int s_ent_lines(long);

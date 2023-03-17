@@ -18,7 +18,7 @@
 
 static int save_maxngtodo = 0;
 
-void only_init(void)
+void only_init()
 {
     ;
 }
@@ -60,7 +60,7 @@ bool inlist(char *ngnam)
     return false;
 }
 
-void end_only(void)
+void end_only()
 {
     if (maxngtodo) {			/* did they specify newsgroup(s) */
 	int i;
@@ -86,13 +86,13 @@ void end_only(void)
     }
 }
 
-void push_only(void)
+void push_only()
 {
     save_maxngtodo = maxngtodo;
     maxngtodo = 0;
 }
 
-void pop_only(void)
+void pop_only()
 {
     ART_UNREAD save_ng_min_toread = ng_min_toread;
 

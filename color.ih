@@ -14,4 +14,4 @@ struct color_obj {
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
-static void output_color(void);
+static void output_color();

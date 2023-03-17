@@ -32,7 +32,7 @@ void s_goxy(int x, int y)
  * sample: "(mail)-MIDDLE-"
  * Good for most bottom status bars.
  */
-void s_mail_and_place(void)
+void s_mail_and_place()
 {
     bool previous,next;
 
@@ -53,7 +53,7 @@ void s_mail_and_place(void)
 	printf("-ALL-");
 }
 
-void s_refresh_top(void)
+void s_refresh_top()
 {
     home_cursor();
     switch (s_cur_type) {
@@ -66,7 +66,7 @@ void s_refresh_top(void)
     s_ref_top = false;
 }
 
-void s_refresh_bot(void)
+void s_refresh_bot()
 {
     /* if bottom bar exists, then it is at least one character high... */
     s_goxy(0,tc_LINES-s_bot_lines);
@@ -81,7 +81,7 @@ void s_refresh_bot(void)
 }
 
 /* refresh both status and description */
-void s_refresh_entzone(void)
+void s_refresh_entzone()
 {
     int i;
     int start;		/* starting page_arts index to refresh... */
@@ -105,7 +105,7 @@ void s_refresh_entzone(void)
     s_ref_status = s_ref_desc = -1;
 }
 
-void s_place_ptr(void)
+void s_place_ptr()
 {
     s_goxy(s_status_cols,
 	    s_top_lines+page_ents[s_ptr_page_line].start_line);
@@ -186,12 +186,12 @@ void s_ref_entry(int line, int jump)
     }
 }
 
-void s_rub_ptr(void)
+void s_rub_ptr()
 {
     rubout();
 }
 
-void s_refresh(void)
+void s_refresh()
 {
     int i;
 
@@ -219,7 +219,7 @@ void s_refresh(void)
     s_ref_all = false;
 }
 
-int s_initscreen(void)
+int s_initscreen()
 {
     /* check to see if term is too dumb: if so, return non-zero */
 
@@ -243,7 +243,7 @@ void s_ref_status_onpage(long ent)
 }
 
 
-void s_resize_win(void)
+void s_resize_win()
 {
 #if 0
     int i;

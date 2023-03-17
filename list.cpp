@@ -9,7 +9,7 @@
 #include "list.h"
 #include "list.ih"
 
-void list_init(void) {
+void list_init() {
     ;
 }
 

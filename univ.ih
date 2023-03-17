@@ -8,9 +8,9 @@ static bool univ_use_file(char*,char*,char*);
 static bool univ_include_file(char*);
 static void univ_do_line_ext1(char*,char*);
 static bool univ_do_line(char*);
-static char* univ_edit_new_userfile(void);
+static char* univ_edit_new_userfile();
 static void univ_vg_addart(ART_NUM);
-static void univ_vg_addgroup(void);
+static void univ_vg_addgroup();
 static int univ_order_number(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2);
 #ifdef SCORE
 static int univ_order_score(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2);

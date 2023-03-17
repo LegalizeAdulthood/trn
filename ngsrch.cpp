@@ -31,7 +31,7 @@
 COMPEX ngcompex;
 #endif
 
-void ngsrch_init(void)
+void ngsrch_init()
 {
 #ifdef NGSEARCH
     init_compex(&ngcompex);

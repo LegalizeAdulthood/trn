@@ -150,4 +150,4 @@ void save_options(char *);
 char *option_value(int);
 void set_header(char *s, int flag, bool setit);
 char *quote_string(char *);
-void cwd_check(void);
+void cwd_check();

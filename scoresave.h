@@ -9,9 +9,9 @@ EXT int sc_loaded_count INIT(0);	/* how many articles were loaded? */
 
 void sc_sv_add(char *);
 void sc_sv_delgroup(char *);
-void sc_sv_getfile(void);
-void sc_sv_savefile(void);
+void sc_sv_getfile();
+void sc_sv_savefile();
 ART_NUM sc_sv_use_line(char *, ART_NUM);
 ART_NUM sc_sv_make_line(ART_NUM);
-void sc_load_scores(void);
-void sc_save_scores(void);
+void sc_load_scores();
+void sc_save_scores();

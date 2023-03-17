@@ -66,7 +66,7 @@ EXT MULTIRC* multirc;		/* the current MULTIRC */
 EXT bool paranoid INIT(false);	/* did we detect some inconsistency in .newsrc? */
 EXT int addnewbydefault INIT(0);
 
-bool rcstuff_init(void);
+bool rcstuff_init();
 NEWSRC *new_newsrc(char *, char *, char *);
 bool use_multirc(MULTIRC *);
 void unuse_multirc(MULTIRC *);
@@ -78,10 +78,10 @@ bool get_ng(char *, int);
 #ifdef RELOCATE
 bool relocate_newsgroup(NGDATA *, NG_NUM);
 #endif
-void list_newsgroups(void);
+void list_newsgroups();
 NGDATA *find_ng(char *);
 void cleanup_newsrc(NEWSRC *);
 void sethash(NGDATA *);
-void checkpoint_newsrcs(void);
+void checkpoint_newsrcs();
 bool write_newsrcs(MULTIRC *);
 void get_old_newsrcs(MULTIRC *);

@@ -32,7 +32,7 @@
 #include "INTERN.h"
 #include "samain.h"
 
-void sa_init(void)
+void sa_init()
 {
     sa_init_context();
     if (lastart == 0 || absfirst > lastart)
@@ -58,13 +58,13 @@ void sa_init(void)
     sa_initialized = true;		/* all went well... */
 }
 
-void sa_init_ents(void)
+void sa_init_ents()
 {
     sa_num_ents = sa_ents_alloc = 0;
     sa_ents = (SA_ENTRYDATA*)NULL;
 }
 
-void sa_clean_ents(void)
+void sa_clean_ents()
 {
     free(sa_ents);
 }
@@ -96,7 +96,7 @@ long sa_add_ent(ART_NUM artnum)
     return cur;
 }
 
-void sa_cleanmain(void)
+void sa_cleanmain()
 {
     sa_clean_ents();
 
@@ -120,7 +120,7 @@ sa_growarts(long oldlast,long last)
 }
 
 /* Initialize the scan-context to enter article scan mode. */
-void sa_init_context(void)
+void sa_init_context()
 {
     if (sa_context_init)
 	return;		/* already initialized */
@@ -129,7 +129,7 @@ void sa_init_context(void)
     s_change_context(sa_scan_context);
 }
 
-bool sa_initarts(void)
+bool sa_initarts()
 {
     int a;
 
@@ -144,7 +144,7 @@ bool sa_initarts(void)
 }
 
 /* note: initscreen must be called before (for scr_width) */
-void sa_initmode(void)
+void sa_initmode()
 {
     /* set up screen sizes */
     sa_set_screen();
@@ -152,7 +152,7 @@ void sa_initmode(void)
     sa_mode_zoom = 0;			/* reset zoom */
 }
 
-int sa_mainloop(void)
+int sa_mainloop()
 {
     int i;
 
@@ -194,7 +194,7 @@ int sa_mainloop(void)
 }
 
 /* do something useful until a key is pressed. */
-void sa_lookahead(void)
+void sa_lookahead()
 {
 #ifdef PENDING
 #ifdef SCORE
@@ -209,7 +209,7 @@ void sa_lookahead(void)
 }
 
 /* Returns first marked entry number, or 0 if no articles are marked. */
-long sa_readmarked_elig(void)
+long sa_readmarked_elig()
 {
     long e;
 

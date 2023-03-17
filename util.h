@@ -36,7 +36,7 @@ struct ini_words {
 #define safefree(ptr)  if (!ptr) ; else free((char*)(ptr))
 #define safefree0(ptr)  if (!ptr) ; else free((char*)(ptr)), (ptr)=0
 
-void util_init(void);
+void util_init();
 int doshell(char *, char *);
 #ifndef USE_DEBUGGING_MALLOC
 char *safemalloc(MEM_SIZE);
@@ -55,17 +55,17 @@ void setdef(char *, char *);
 #ifndef NO_FILELINKS
 void safelink(char *, char *);
 #endif
-void verify_sig(void);
-double current_time(void);
+void verify_sig();
+double current_time();
 time_t text2secs(char *, time_t);
 char *secs2text(time_t);
-char *temp_filename(void);
+char *temp_filename();
 #ifdef SUPPORT_NNTP
-char *get_auth_user(void);
-char *get_auth_pass(void);
+char *get_auth_user();
+char *get_auth_pass();
 #endif
 #if defined(USE_GENAUTH) && defined(SUPPORT_NNTP)
-char *get_auth_command(void);
+char *get_auth_command();
 #endif
 char **prep_ini_words(INI_WORDS *);
 void unprep_ini_words(INI_WORDS *);
@@ -74,5 +74,5 @@ bool parse_string(char **, char **);
 char *next_ini_section(char *, char **, char **);
 char *parse_ini_section(char *, INI_WORDS *);
 bool check_ini_cond(char *);
-char menu_get_char(void);
+char menu_get_char();
 int edit_file(char *);

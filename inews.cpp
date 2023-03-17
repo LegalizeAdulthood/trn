@@ -27,7 +27,7 @@ char*	server_name;
 char*	nntp_auth_file;
 
 int valid_header(char *);
-void append_signature(void);
+void append_signature();
 
 int main(int argc, char *argv[])
 {
@@ -277,7 +277,7 @@ int valid_header(char *h)
  * they have one.  Limit .signature to MAX_SIGNATURE lines.
  * The rn-style DOTDIR environmental variable is used if present.
  */
-void append_signature(void)
+void append_signature()
 {
     char* cp;
     FILE* fp;
@@ -313,7 +313,7 @@ void append_signature(void)
 }
 
 #ifdef SUPPORT_NNTP
-int nntp_handle_timeout(void)
+int nntp_handle_timeout()
 {
     if (!new_connection) {
 	static bool handling_timeout = false;

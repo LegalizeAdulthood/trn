@@ -4,6 +4,6 @@
  * article scan specific display functions
  */
 
-void sa_refresh_top(void);
-void sa_refresh_bot(void);
-void sa_set_screen(void);
+void sa_refresh_top();
+void sa_refresh_bot();
+void sa_set_screen();

@@ -36,7 +36,7 @@ bool reading_nntp_header;
 static short htypeix[26] =
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
-void head_init(void)
+void head_init()
 {
     register int i;
 
@@ -170,7 +170,7 @@ void start_header(ART_NUM artnum)
     parsed_artp = article_ptr(artnum);
 }
 
-void end_header_line(void)
+void end_header_line()
 {
     if (first_one) {		/* did we just pass 1st occurance? */
 	first_one = false;
@@ -235,7 +235,7 @@ bool parseline(char *art_buf, int newhide, int oldhide)
     return false;			/* don't hide this line */
 }
 
-void end_header(void)
+void end_header()
 {
     register ARTICLE* ap = parsed_artp;
 

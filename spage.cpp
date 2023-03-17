@@ -199,7 +199,7 @@ bool s_fillpage_forward(long start)
  *  or not.)
  */
 /* returns true on success */
-bool s_refillpage(void)
+bool s_refillpage()
 {
     int i,j;
     long a;
@@ -294,7 +294,7 @@ bool s_refillpage(void)
  *         negative # on special condition
  *         0 on failure
  */
-int s_fillpage(void)
+int s_fillpage()
 {
     int i;
 
@@ -343,21 +343,21 @@ int s_fillpage(void)
     return 1;	/* I guess everything worked :-) */
 }
 
-void s_cleanpage(void)
+void s_cleanpage()
 {
 }
 
-void s_go_top_page(void)
+void s_go_top_page()
 {
     s_ptr_page_line = 0;
 }
 
-void s_go_bot_page(void)
+void s_go_bot_page()
 {
     s_ptr_page_line = s_bot_ent;
 }
 
-bool s_go_top_ents(void)
+bool s_go_top_ents()
 {
     s_top_ent = s_first();
     if (!s_top_ent)
@@ -377,7 +377,7 @@ bool s_go_top_ents(void)
     return true;	/* successful */
 }
 
-bool s_go_bot_ents(void)
+bool s_go_bot_ents()
 {
     bool flag;
 
@@ -388,7 +388,7 @@ bool s_go_bot_ents(void)
     return true;
 }
 
-void s_go_next_page(void)
+void s_go_next_page()
 {
     long a;
     bool flag;
@@ -402,7 +402,7 @@ void s_go_next_page(void)
     s_ptr_page_line = 0;	/* top of page */
 }
 
-void s_go_prev_page(void)
+void s_go_prev_page()
 {
     long a;
     bool flag;

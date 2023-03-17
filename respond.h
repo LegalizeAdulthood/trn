@@ -10,12 +10,12 @@ EXT ART_POS savefrom INIT(0);		/* value of %B */
 #define SAVE_ABORT 0
 #define SAVE_DONE 1
 
-void respond_init(void);
-int save_article(void);
-int view_article(void);
-int cancel_article(void);
-int supersede_article(void);
-void reply(void);
-void forward(void);
-void followup(void);
+void respond_init();
+int save_article();
+int view_article();
+int cancel_article();
+int supersede_article();
+void reply();
+void forward();
+void followup();
 int invoke(char *, char *);

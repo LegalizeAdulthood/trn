@@ -14,7 +14,7 @@ EXT char int_count INIT(0);		/* how many interrupts we've had */
 EXT bool bos_on_stop INIT(false);	/* set when handling the stop signal */
 					/* would leave the screen a mess */
 
-void final_init(void);
+void final_init();
 void finalize(int)
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR >= 5)
     __attribute__((noreturn))

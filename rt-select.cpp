@@ -225,7 +225,7 @@ sel_exit:
     return sel_ret;
 }
 
-static void sel_dogroups(void)
+static void sel_dogroups()
 {
     NGDATA* np;
     int ret;
@@ -294,7 +294,7 @@ static void sel_dogroups(void)
     selected_count = save_selected_count;
 }
 
-char multirc_selector(void)
+char multirc_selector()
 {
     START_SELECTOR('c');
 
@@ -347,7 +347,7 @@ char multirc_selector(void)
     return sel_ret;
 }
 
-char newsgroup_selector(void)
+char newsgroup_selector()
 {
     START_SELECTOR('w');
 
@@ -483,7 +483,7 @@ char addgroup_selector(int flags)
     return sel_ret;
 }
 
-char option_selector(void)
+char option_selector()
 {
     int i;
     char** vals = INI_VALUES(options_ini);
@@ -714,7 +714,7 @@ static int univ_read(UNIV_ITEM *ui)
     return exit_code;
 }
 
-char universal_selector(void)
+char universal_selector()
 {
     START_SELECTOR('v');		/* kind of like 'v'irtual... */
 
@@ -788,7 +788,7 @@ sel_restart:
     return sel_ret;
 }
 
-static void sel_display(void)
+static void sel_display()
 {
     /* Present a page of items to the user */
     display_page();
@@ -819,7 +819,7 @@ static void sel_status_msg(char *cp)
     disp_status_line = 2;
 }
 
-static char sel_input(void)
+static char sel_input()
 {
     register int j;
     int ch, action;
@@ -1192,7 +1192,7 @@ reinp_selector:
     goto position_selector;
 }
 
-static void sel_prompt(void)
+static void sel_prompt()
 {
     draw_mousebar(tc_COLS,false);
     if (can_home)
@@ -1397,7 +1397,7 @@ static bool select_option(int i)
     return true;
 }
 
-static void sel_cleanup(void)
+static void sel_cleanup()
 {
     switch (sel_mode) {
       case SM_MULTIRC:

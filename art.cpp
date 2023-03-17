@@ -79,14 +79,14 @@ COMPEX gcompex;			/* in article search pattern */
 bool firstpage;			/* is this the 1st page of article? */
 static bool continuation{};	/* this line/header is being continued */
 
-void art_init(void)
+void art_init()
 {
 #ifdef INNERSEARCH
     init_compex(&gcompex);
 #endif
 }
 
-int do_article(void)
+int do_article()
 {
     register char* s;
     bool hide_this_line = false;	/* hidden header line? */
@@ -696,7 +696,7 @@ bool maybe_set_color(char *cp, bool backsearch)
 
 /* process pager commands */
 
-int page_switch(void)
+int page_switch()
 {
     register char* s;
 
@@ -1101,7 +1101,7 @@ leave_pager:
     return PS_ASK;
 }
 
-bool innermore(void)
+bool innermore()
 {
     if (artpos < innersearch) {		/* not even on page yet? */
 #ifdef DEBUG

@@ -25,7 +25,7 @@ EXT ADDGROUP* last_addgroup;
 EXT ADDGROUP* sel_page_gp;
 EXT ADDGROUP* sel_next_gp;
 
-void addng_init(void);
-bool find_new_groups(void);
+void addng_init();
+bool find_new_groups();
 bool scanactive(bool add_matching);
-void sort_addgroups(void);
+void sort_addgroups();

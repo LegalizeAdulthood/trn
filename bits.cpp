@@ -42,11 +42,11 @@
 
 static long chase_count = 0;
 
-void bits_init(void) {
+void bits_init() {
     ;
 }
 
-void rc_to_bits(void)
+void rc_to_bits()
 {
     char* mybuf = buf;			/* place to decode rc line */
     register char* s;
@@ -175,7 +175,7 @@ bool set_firstart(char *s)
 
 /* reconstruct the .newsrc line in a human readable form */
 
-void bits_to_rc(void)
+void bits_to_rc()
 {
     register char* s;
     register char* mybuf = buf;
@@ -257,7 +257,7 @@ void bits_to_rc(void)
     ngptr->rc->flags |= RF_RCCHANGED;
 }
 
-void find_existing_articles(void)
+void find_existing_articles()
 {
     ART_NUM an;
     ARTICLE* ap;
@@ -483,7 +483,7 @@ void mark_as_read(ARTICLE *ap)
     checkcount++;			/* get more worried about crashes */
 }
 
-void mark_missing_articles(void)
+void mark_missing_articles()
 {
     register ARTICLE* ap;
     for (ap = article_ptr(article_first(absfirst));
@@ -506,7 +506,7 @@ void check_first(ART_NUM min)
 }
 
 /* bring back articles marked with M */
-void yankback(void)
+void yankback()
 {
     if (dmcount) {			/* delayed unmarks pending? */
 	if (panic)

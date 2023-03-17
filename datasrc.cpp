@@ -33,7 +33,7 @@
 #include <io.h>
 #endif
 
-void datasrc_init(void)
+void datasrc_init()
 {
     char** vals = prep_ini_words(datasrc_ini);
     char* machine = NULL;
@@ -375,7 +375,7 @@ void set_datasrc(DATASRC *dp)
     datasrc = dp;
 }
 
-void check_datasrcs(void)
+void check_datasrcs()
 {
 #ifdef SUPPORT_NNTP
     DATASRC* dp;
@@ -955,7 +955,7 @@ static char** ngptrs;		/* List of potential matches */
 static int ngn;			/* Length of list in ngptrs[] */
 static int best_match;		/* Value of best match */
 
-int find_close_match(void)
+int find_close_match()
 {
     DATASRC* dp;
     int ret = 0;
@@ -1052,7 +1052,7 @@ static int check_distance(int len, HASHDATUM *data, int newsrc_ptr)
 /* Now we've got several potential matches, and have to choose between them
 ** somehow.  Again, results will be returned in global ngname.
 */
-static int get_near_miss(void)
+static int get_near_miss()
 {
     char promptbuf[256];
     char options[MAX_NG+10];

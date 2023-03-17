@@ -87,13 +87,13 @@ EXT char* trnaccess_mem INIT(NULL);
 EXT char* nntp_auth_file INIT(NULL);
 #endif
 
-void datasrc_init(void);
+void datasrc_init();
 char *read_datasrcs(char *);
 DATASRC *get_datasrc(char *);
 DATASRC *new_datasrc(char *, char **);
 bool open_datasrc(DATASRC *);
 void set_datasrc(DATASRC *);
-void check_datasrcs(void);
+void check_datasrcs();
 void close_datasrc(DATASRC *);
 bool actfile_hash(DATASRC *);
 bool find_actgrp(DATASRC *, char *, char *, int, ART_NUM);
@@ -104,4 +104,4 @@ char *srcfile_append(SRCFILE *, char *, int);
 void srcfile_end_append(SRCFILE *, char *);
 #endif
 void srcfile_close(SRCFILE *);
-int find_close_match(void);
+int find_close_match();

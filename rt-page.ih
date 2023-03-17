@@ -2,7 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-static void sel_page_init(void);
+static void sel_page_init();
 static int count_subject_lines(SUBJECT*,int*);
 static int count_thread_lines(SUBJECT*,int*);
 static void display_article(ARTICLE*,int,int);

@@ -222,7 +222,7 @@ static int default_cmp(char *key, int keylen, HASHDATUM data)
 }
 
 /* allocate a hash entry */
-static HASHENT *healloc(void)
+static HASHENT *healloc()
 {
     register HASHENT* hp;
 

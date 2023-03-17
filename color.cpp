@@ -73,7 +73,7 @@ static struct {
 static int stack_pointer = 0;
 
 /* Initialize color support after trnrc is read. */
-void color_init(void)
+void color_init()
 {
     if (use_colors) {
 	char* fg;
@@ -233,7 +233,7 @@ void color_object(int object, bool push)
 }
 
 /* Pop the color/attribute stack. */
-void color_pop(void)
+void color_pop()
 {
     /* Trying to pop an empty stack? */
     if (--stack_pointer < 0)
@@ -264,14 +264,14 @@ void color_string(int object, char *str)
 }
 
 /* Turn off color attribute. */
-void color_default(void)
+void color_default()
 {
     color_stack[stack_pointer].object = objects[COLOR_DEFAULT];
     output_color();
 }
 
 /* Set colors/attribute for an object. */
-static void output_color(void)
+static void output_color()
 {
     static COLOR_OBJ prior = { nullstr, NULL, NULL, NOMARKING };
     COLOR_OBJ* op = &color_stack[stack_pointer].object;

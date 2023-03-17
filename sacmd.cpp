@@ -44,7 +44,7 @@
 #include "INTERN.h"
 #include "sacmd.h"
 
-bool sa_extract_start(void);
+bool sa_extract_start();
 
 /* use this command on an extracted file */
 /*$$static char* sa_extracted_use = NULL;*/
@@ -57,7 +57,7 @@ static bool sa_extract_junk = false;
  * a condition code (negative #s) or an art# to read.  Also responsible
  * for setting refresh flags if necessary.
  */
-int sa_docmd(void)
+int sa_docmd()
 {
     long a;		/* article pointed to */
     long b;		/* misc. artnum */
@@ -572,7 +572,7 @@ int sa_docmd(void)
     return 0;
 }
 
-bool sa_extract_start(void)
+bool sa_extract_start()
 {
     if (sa_extract_dest == NULL) {
 	sa_extract_dest = (char*)safemalloc(LBUFLEN);

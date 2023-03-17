@@ -2,7 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-void filter_init(void);
-void filter_nginit(void);
+void filter_init();
+void filter_nginit();
 int filter(ART_NUM);
-void filter_cleanup(void);
+void filter_cleanup();

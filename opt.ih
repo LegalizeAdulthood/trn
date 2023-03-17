@@ -125,8 +125,8 @@ INI_WORDS options_ini[] = {
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
-static char* hidden_list(void);
-static char* magic_list(void);
+static char* hidden_list();
+static char* magic_list();
 static void set_header_list(int,int,char*);
 static int parse_mouse_buttons(char**,char*);
 static char* expand_mouse_buttons(char*,int);

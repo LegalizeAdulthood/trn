@@ -39,14 +39,14 @@
 #include "rthread.h"
 #include "rthread.ih"
 
-void thread_init(void)
+void thread_init()
 {
 }
 
 /* Generate the thread data we need for this group.  We must call
 ** thread_close() before calling this again.
 */
-void thread_open(void)
+void thread_open()
 {
     bool find_existing = !first_subject;
     time_t save_ov_opened;
@@ -134,7 +134,7 @@ void thread_open(void)
 
 /* Update the group's thread info.
 */
-void thread_grow(void)
+void thread_grow()
 {
     added_articles += lastart - last_cached;
     if (added_articles && thread_always)
@@ -146,7 +146,7 @@ void thread_grow(void)
 	sort_subjects();
 }
 
-void thread_close(void)
+void thread_close()
 {
     curr_artp = artp = NULL;
     init_tree();			/* free any tree lines */
@@ -185,7 +185,7 @@ static int cleanup_msgid_hash(int keylen, HASHDATUM *data, int extra)
     return ret;
 }
 
-void top_article(void)
+void top_article()
 {
     art = lastart+1;
     artp = NULL;
@@ -499,7 +499,7 @@ done:
 /* Find the next art/artp with the same subject as this one.  Returns
 ** false if no such article exists.
 */
-bool next_art_with_subj(void)
+bool next_art_with_subj()
 {
     register ARTICLE* ap = artp;
 
@@ -526,7 +526,7 @@ bool next_art_with_subj(void)
 /* Find the previous art/artp with the same subject as this one.  Returns
 ** false if no such article exists.
 */
-bool prev_art_with_subj(void)
+bool prev_art_with_subj()
 {
     register ARTICLE* ap = artp;
     register ARTICLE* ap2;
@@ -798,7 +798,7 @@ void deselect_thread(ARTICLE *thread)
 
 /* Deselect everything.
 */
-void deselect_all(void)
+void deselect_all()
 {
     register SUBJECT* sp;
 
@@ -1045,7 +1045,7 @@ ARTICLE *subj_art(SUBJECT *sp)
 /* Find the next thread (first if art > lastart).  If articles are selected,
 ** only choose from threads with selected articles.
 */
-void visit_next_thread(void)
+void visit_next_thread()
 {
     register SUBJECT* sp;
     register ARTICLE* ap = artp;
@@ -1067,7 +1067,7 @@ void visit_next_thread(void)
 /* Find previous thread (or last if artp == NULL).  If articles are selected,
 ** only choose from threads with selected articles.
 */
-void visit_prev_thread(void)
+void visit_prev_thread()
 {
     register SUBJECT* sp;
     register ARTICLE* ap = artp;
@@ -1128,7 +1128,7 @@ bool find_leaf(bool keep_going)
 ** same distance down the thread as we are.  Returns false if no such
 ** article.  Sets art and artp otherwise.
 */
-bool find_next_sib(void)
+bool find_next_sib()
 {
     ARTICLE* ta;
     ARTICLE* tb;
@@ -1177,7 +1177,7 @@ static ARTICLE *first_sib(ARTICLE *ta, int depth)
 ** the same distance down the thread as we are.  Returns false if no
 ** such article.  Sets art and artp otherwise.
 */
-bool find_prev_sib(void)
+bool find_prev_sib()
 {
     ARTICLE* ta;
     ARTICLE* tb;
@@ -1501,7 +1501,7 @@ static int threadorder_score(const SUBJECT** spp1, const SUBJECT** spp2)
 
 /* Sort the subjects according to the chosen order.
 */
-void sort_subjects(void)
+void sort_subjects()
 {
     register SUBJECT* sp;
     register int i;
@@ -1624,7 +1624,7 @@ static int artorder_score(const ARTICLE **art1, const ARTICLE **art2)
 
 /* Sort the articles according to the chosen order.
 */
-void sort_articles(void)
+void sort_articles()
 {
     int (*sort_procedure)(const ARTICLE **art1, const ARTICLE **art2);
 
@@ -1664,7 +1664,7 @@ void sort_articles(void)
     qsort(artptr_list, artptr_list_size, sizeof (ARTICLE*), ((int(*)(void const *, void const *))sort_procedure));
 }
 
-static void build_artptrs(void)
+static void build_artptrs()
 {
     ARTICLE** app;
     ARTICLE* ap;

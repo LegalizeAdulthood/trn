@@ -11,8 +11,8 @@
 #define SA_KILL_MARKED 5
 #define SA_EXTRACT 6
 
-int sa_docmd(void);
-bool sa_extract_start(void);
+int sa_docmd();
+bool sa_extract_start();
 void sa_art_cmd_prim(int, long);
 int sa_art_cmd(int, int, long);
 long sa_wrap_next_author(long);

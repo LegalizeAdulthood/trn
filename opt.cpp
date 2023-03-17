@@ -976,7 +976,7 @@ char *option_value(int num)
     return "<UNKNOWN>";
 }
 
-static char *hidden_list(void)
+static char *hidden_list()
 {
     int i;
     buf[0] = '\0';
@@ -988,7 +988,7 @@ static char *hidden_list(void)
     return buf+1;
 }
 
-static char *magic_list(void)
+static char *magic_list()
 {
     int i;
     buf[0] = '\0';
@@ -1218,7 +1218,7 @@ char *quote_string(char *val)
     return val;
 }
 
-void cwd_check(void)
+void cwd_check()
 {
     char tmpbuf[LBUFLEN];
 

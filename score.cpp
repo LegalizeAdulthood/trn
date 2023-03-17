@@ -163,7 +163,7 @@ void sc_init(bool pend_wait)
     sc_initialized = true;
 }
 
-void sc_cleanup(void)
+void sc_cleanup()
 {
     if (!sc_initialized)
 	return;
@@ -349,7 +349,7 @@ void sc_lookahead(bool flag, bool nowait)
 	artopen(oldart,oldartpos);	/* do not screw the pager */
 }
 
-int sc_percent_scored(void)
+int sc_percent_scored()
 {
     int i,total,scored;
 
@@ -381,7 +381,7 @@ int sc_percent_scored(void)
     return (scored*100) / total;
 }
 
-void sc_rescore_arts(void)
+void sc_rescore_arts()
 {
     ART_NUM a;
     bool old_spin;
@@ -462,7 +462,7 @@ void sc_append(char *line)
     }
 }
 
-void sc_rescore(void)
+void sc_rescore()
 {
     sc_rescoring = true; /* in case routines need to know */
     sc_cleanup();        /* get rid of the old */

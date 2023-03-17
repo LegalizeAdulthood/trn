@@ -20,7 +20,7 @@ struct compex {
 };
 #endif
 
-void search_init(void);
+void search_init();
 void init_compex(COMPEX *);
 void free_compex(COMPEX *);
 char *getbracket(COMPEX *, int);

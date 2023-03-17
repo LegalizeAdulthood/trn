@@ -37,7 +37,7 @@ bool s_eligible(long ent)
     }
 }
 
-void s_beep(void)
+void s_beep()
 {
     putchar(7);
     fflush(stdout);

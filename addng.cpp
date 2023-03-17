@@ -47,12 +47,12 @@ static int build_addgroup_list(int keylen, HASHDATUM *data, int extra)
     return 0;
 }
 
-void addng_init(void)
+void addng_init()
 {
     //
 }
 
-bool find_new_groups(void)
+bool find_new_groups()
 {
     NEWSRC* rp;
     NG_NUM oldcnt = newsgroup_cnt;	/* remember # newsgroups */
@@ -394,7 +394,7 @@ static int agorder_count(const ADDGROUP **app1, const ADDGROUP **app2)
 
 /* Sort the newsgroups into the chosen order.
 */
-void sort_addgroups(void)
+void sort_addgroups()
 {
     register ADDGROUP* ap;
     register int i;

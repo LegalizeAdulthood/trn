@@ -15,9 +15,9 @@ EXT int maxngtodo INIT(0);		/*  0 => no restrictions */
 
 EXT char empty_only_char INIT('o');
 
-void only_init(void);
+void only_init();
 void setngtodo(char *);
 bool inlist(char *);
-void end_only(void);
-void push_only(void);
-void pop_only(void);
+void end_only();
+void push_only();
+void pop_only();

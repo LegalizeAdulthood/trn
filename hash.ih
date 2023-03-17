@@ -23,5 +23,5 @@ struct hashtable {
 static HASHENT** hashfind(HASHTABLE*,char*,int);
 static unsigned hash(char*,int);
 static int default_cmp(char*,int,HASHDATUM);
-static HASHENT* healloc(void);
+static HASHENT* healloc();
 static void hefree(HASHENT*);

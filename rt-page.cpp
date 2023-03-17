@@ -264,7 +264,7 @@ void set_selector(int smode, int ssort)
     }
 }
 
-static void sel_page_init(void)
+static void sel_page_init()
 {
     sel_max_line_cnt = tc_LINES - (tc_COLS - mousebar_width < 50? 6 : 5);
     sel_chars = get_val("SELECTCHARS", SELECTCHARS);
@@ -658,7 +658,7 @@ try_again:
     }
 }
 
-bool first_page(void)
+bool first_page()
 {
     sel_prior_obj_cnt = 0;
 
@@ -756,7 +756,7 @@ bool first_page(void)
     return false;
 }
 
-bool last_page(void)
+bool last_page()
 {
     sel_prior_obj_cnt = sel_total_obj_cnt;
 
@@ -828,7 +828,7 @@ bool last_page(void)
     return false;
 }
 
-bool next_page(void)
+bool next_page()
 {
     switch (sel_mode) {
       case SM_MULTIRC: {
@@ -891,7 +891,7 @@ bool next_page(void)
     return false;
 }
 
-bool prev_page(void)
+bool prev_page()
 {
     int item_cnt = 0;
 
@@ -1271,7 +1271,7 @@ void display_page_title(bool home_only)
     newline();
 }
 
-void display_page(void)
+void display_page()
 {
     int sel;
 
@@ -1599,7 +1599,7 @@ try_again:
     sel_last_line = g_term_line;
 }
 
-void update_page(void)
+void update_page()
 {
     SEL_UNION u;
     int sel;

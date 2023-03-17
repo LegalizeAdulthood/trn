@@ -58,9 +58,9 @@ EXT int reply_score INIT(0);
 /* should we match by pattern? */
 EXT int sf_pattern_status INIT(false);
 
-void sf_init(void);
-void sf_clean(void);
-void sf_grow(void);
+void sf_init();
+void sf_clean();
+void sf_grow();
 int sf_check_extra_headers(char *);
 void sf_add_extra_header(char *);
 char *sf_get_extra_header(ART_NUM, int);

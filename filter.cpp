@@ -33,14 +33,14 @@ static pid_t filter_pid = 0;
 extern FILE* filter_error_file;
 #endif
 
-void filter_init(void)
+void filter_init()
 {
     filt_wr = filt_rd = NULL;
     pipe_1[0] = pipe_1[1] = pipe_2[0] = pipe_2[1] = -1;
     filter_restarting = 0;
 }
 
-static void filter_restart(void)
+static void filter_restart()
 {
     char* filter;				/* external filter file */
     struct stat f_inode;			/* stat buf */
@@ -122,7 +122,7 @@ static void filter_restart(void)
     recursing = 0;
 }
 
-void filter_nginit(void)
+void filter_nginit()
 {
     static int recursing = 0;
     char buf[1024];
@@ -251,7 +251,7 @@ static char *filter_recv(char *buf)
     return (fgets(buf, 256, filt_rd));
 }
 
-void filter_cleanup(void)
+void filter_cleanup()
 {
     if (filter_pid > 0) {
         kill(filter_pid, SIGTERM);

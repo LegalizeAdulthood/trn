@@ -29,7 +29,7 @@
 #include "INTERN.h"
 #include "artio.h"
 
-void artio_init(void)
+void artio_init()
 {
     artbuf_size = 8 * 1024;
     artbuf = safemalloc(artbuf_size);
@@ -104,7 +104,7 @@ retry_open:
     return artfp;			/* and return either fp or NULL */
 }
 
-void artclose(void)
+void artclose()
 {
     if (artfp != NULL) {		/* article still open? */
 #ifdef SUPPORT_NNTP
@@ -128,7 +128,7 @@ int seekart(ART_POS pos)
 }
 
 ART_POS
-tellart(void)
+tellart()
 {
 #ifdef SUPPORT_NNTP
     if (datasrc->flags & DF_REMOTE)
@@ -146,7 +146,7 @@ char *readart(char *s, int limit)
     return fgets(s,limit,artfp);
 }
 
-void clear_artbuf(void)
+void clear_artbuf()
 {
     *artbuf = '\0';
     artbuf_pos = artbuf_seek = artbuf_len = 0;

@@ -15,5 +15,5 @@ int trn_ncasecmp(const char *, const char *, int);
 char *read_auth_file(char *, char **);
 #endif
 #ifdef MSDOS
-int getuid(void);
+int getuid();
 #endif

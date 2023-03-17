@@ -83,7 +83,7 @@ static int run(char* command)
  *------------------------------------------------------------------------
  */
 
-static char *uniquepipe(void)
+static char *uniquepipe()
 { 
     static char name[14];
     static short int num = 0;

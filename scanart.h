@@ -94,6 +94,6 @@ EXT bool sa_mode_desc_subject INIT(true);
 EXT bool sa_mode_desc_summary INIT(false);
 EXT bool sa_mode_desc_keyw INIT(false);
 
-int sa_main(void);
+int sa_main();
 void sa_grow(ART_NUM, ART_NUM);
-void sa_cleanup(void);
+void sa_cleanup();

@@ -31,7 +31,7 @@
 #include "INTERN.h"
 #include "artsrch.h"
 
-void artsrch_init(void)
+void artsrch_init()
 {
 #ifdef ARTSEARCH
     init_compex(&sub_compex);

@@ -51,7 +51,7 @@ int s_compare(long a, long b)
 #define SOFF(a) ((a)-1)
 
 /* Uses a heapsort algorithm with the heap readjustment inlined. */
-void s_sort_basic(void)
+void s_sort_basic()
 {
     int i,n;
     int t1;
@@ -103,7 +103,7 @@ void s_sort_basic(void)
     /* end of heapsort */
 }
 
-void s_sort(void)
+void s_sort()
 {
     long i;
 
@@ -118,7 +118,7 @@ void s_sort(void)
 	s_ent_index[s_ent_sort[i]] = i;
 }
 
-void s_order_clean(void)
+void s_order_clean()
 {
     if (s_ent_sort)
 	free(s_ent_sort);
@@ -221,7 +221,7 @@ long s_next_elig(long a)
     return 0L;
 }
 
-long s_first(void)
+long s_first()
 {
     if (s_order_changed)
 	s_sort();
@@ -230,7 +230,7 @@ long s_first(void)
     return s_ent_sort[0];
 }
 
-long s_last(void)
+long s_last()
 {
     if (s_order_changed)
 	s_sort();

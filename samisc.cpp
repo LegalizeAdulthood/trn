@@ -102,7 +102,7 @@ long sa_artnum_to_ent(ART_NUM artnum)
 }
 
 /* select1 the articles picked in the TRN thread selector */
-void sa_selthreads(void)
+void sa_selthreads()
 {
     register SUBJECT *sp;
     register ARTICLE *ap;
@@ -144,7 +144,7 @@ void sa_selthreads(void)
     s_sort();
 }
 
-int sa_number_arts(void)
+int sa_number_arts()
 {
     int total;
     long i;

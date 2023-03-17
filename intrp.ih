@@ -3,4 +3,4 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 static char* skipinterp(char*,char*);
-static void abort_interp(void);
+static void abort_interp();

@@ -27,7 +27,7 @@
 #include <direct.h>
 #endif
 
-void decode_init(void)
+void decode_init()
 {
 }
 

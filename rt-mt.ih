@@ -57,15 +57,15 @@ struct bmap {
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
 static char* mt_name(char*);
-static int read_authors(void);
-static int read_subjects(void);
-static int read_roots(void);
+static int read_authors();
+static int read_subjects();
+static int read_roots();
 static SUBJECT* the_subject(int);
 static char* the_author(int);
 static ARTICLE* the_article(int,int);
-static int read_articles(void);
-static int read_ids(void);
-static void tweak_data(void);
+static int read_articles();
+static int read_ids();
+static void tweak_data();
 static int read_item(char**,MEM_SIZE);
 static void mybytemap(BMAP*);
 static void wp_bmap(WORD*,int);

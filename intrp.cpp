@@ -1131,7 +1131,7 @@ void normalize_refs(char *refs)
     *t = '\0';
 } 
 
-static void abort_interp(void)
+static void abort_interp()
 {
     fputs("\n% interp buffer overflow!\n",stdout) FLUSH;
     sig_catcher(0);

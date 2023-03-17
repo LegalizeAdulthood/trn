@@ -67,7 +67,7 @@ char* tgetstr();
 
 /* terminal initialization */
 
-void term_init(void)
+void term_init()
 {
     savetty();				/* remember current tty state */
 
@@ -487,7 +487,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
     }
 }
 
-static KEYMAP *newkeymap(void)
+static KEYMAP *newkeymap()
 {
     register int i;
     register KEYMAP* map;
@@ -504,7 +504,7 @@ static KEYMAP *newkeymap(void)
     return map;
 }
 
-void show_macros(void)
+void show_macros()
 {
     char prebuf[64];
 
@@ -582,7 +582,7 @@ int putchr(char_int ch)
 
 int not_echoing = 0;
 
-void hide_pending(void)
+void hide_pending()
 {
     not_echoing = 1;
     pushchar(0200);
@@ -789,7 +789,7 @@ echo_it:
     return s+1;
 }
 
-bool finish_dblchar(void)
+bool finish_dblchar()
 {
     bool ret;
     int buflimit_save = buflimit;
@@ -803,7 +803,7 @@ bool finish_dblchar(void)
 
 /* discard any characters typed ahead */
 
-void eat_typeahead(void)
+void eat_typeahead()
 {
     static double last_time = 0.;
     double this_time = current_time();
@@ -893,7 +893,7 @@ void save_typeahead(char *buf, int len)
     *buf = '\0';
 }
 
-void settle_down(void)
+void settle_down()
 {
     dingaling();
     fflush(stdout);
@@ -1011,7 +1011,7 @@ void underprint(char *s)
 /* keep screen from flashing strangely on magic cookie terminals */
 
 #ifdef NOFIREWORKS
-void no_sofire(void)
+void no_sofire()
 {
     /* should we disable fireworks? */
     if (!(fire_is_out & STANDOUT) && (g_term_line|g_term_col)==0 && *tc_UP && *tc_SE) {
@@ -1024,7 +1024,7 @@ void no_sofire(void)
 #endif
 
 #ifdef NOFIREWORKS
-void no_ulfire(void)
+void no_ulfire()
 {
     /* should we disable fireworks? */
     if (!(fire_is_out & UNDERLINE) && (g_term_line|g_term_col)==0 && *tc_UP && *tc_US) {
@@ -1147,7 +1147,7 @@ void pushstring(char *str, char_int bits)
 	pushchar(s[i] ^ bits);
 }
 
-int get_anything(void)
+int get_anything()
 {
     char tmpbuf[64];
     char mode_save = mode;
@@ -1206,7 +1206,7 @@ reask_anything:
     return 0;
 }
 
-int pause_getcmd(void)
+int pause_getcmd()
 {
     char mode_save = mode;
 
@@ -1529,7 +1529,7 @@ int print_lines(char *what_to_print, int hilite)
     return 0;
 }
 
-int check_page_line(void)
+int check_page_line()
 {
     if (page_line < 0)
 	return -1;
@@ -1546,7 +1546,7 @@ int check_page_line(void)
     return 0;
 }
 
-void page_start(void)
+void page_start()
 {
     page_line = 1;
     if (erase_screen)
@@ -1589,7 +1589,7 @@ void pad(int num)
 /* echo the command just typed */
 
 #ifdef VERIFY
-void printcmd(void)
+void printcmd()
 {
     if (verify && buf[1] == FINISHCMD) {
 	if (!AT_NORM_CHAR(buf)) {
@@ -1607,14 +1607,14 @@ void printcmd(void)
 }
 #endif
 
-void rubout(void)
+void rubout()
 {
     backspace();			/* do the old backspace, */
     putchar(' ');			/*   space, */
     backspace();			/*     backspace trick */
 }
 
-void reprint(void)
+void reprint()
 {
     register char* s;
 
@@ -1636,7 +1636,7 @@ void erase_line(bool to_eos)
     fflush(stdout);
 }
 
-void clear(void)
+void clear()
 {
     g_term_line = g_term_col = fire_is_out = 0;
     if (tc_CL)
@@ -1654,7 +1654,7 @@ void clear(void)
     tputs(tc_CR,1,putchr) FLUSH;
 }
 
-void home_cursor(void)
+void home_cursor()
 {
     if (!*tc_HO) {		/* no home sequence? */
 	if (!*tc_CM) {		/* no cursor motion either? */
@@ -1723,7 +1723,7 @@ void goto_xy(int to_col, int to_line)
 	while(g_term_col > to_col) g_term_col--, backspace();
 }
 
-static void line_col_calcs(void)
+static void line_col_calcs()
 {
     if (tc_LINES > 0) {		/* is this a crt? */
 	if (!initlines || !option_def_vals[OI_INITIAL_ARTICLE_LINES]) {
@@ -1786,7 +1786,7 @@ int dummy;
 }
 #endif
 
-void termlib_init(void)
+void termlib_init()
 {
 #ifdef USETITE
     if (tc_TI && *tc_TI) {
@@ -1805,7 +1805,7 @@ void termlib_init(void)
     term_scrolled = tc_LINES;
 }
 
-void termlib_reset(void)
+void termlib_reset()
 {
 #ifdef USETITE
     if (tc_TE && *tc_TE) {
@@ -2041,7 +2041,7 @@ void xmouse_init(char *progname)
     }
 }
 
-void xmouse_check(void)
+void xmouse_check()
 {
     mousebar_cnt = 0;
     if (UseMouse) {
@@ -2117,7 +2117,7 @@ void xmouse_check(void)
     }
 }
 
-void xmouse_on(void)
+void xmouse_on()
 {
     if (!xmouse_is_on) {
 	/* save old highlight mouse tracking and enable mouse tracking */
@@ -2127,7 +2127,7 @@ void xmouse_on(void)
     }
 }
 
-void xmouse_off(void)
+void xmouse_off()
 {
     if (xmouse_is_on) {
 	/* disable mouse tracking and restore old highlight mouse tracking */

@@ -25,7 +25,7 @@
 static long sa_num_threads = 0;
 static HASHTABLE* sa_thread_hash = 0;
 
-void sa_init_threads(void)
+void sa_init_threads()
 {
     mp_free(MP_SATHREAD);
     sa_num_threads = 0;

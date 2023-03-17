@@ -64,4 +64,4 @@ static char* dir_or_none(DATASRC*,char*,int);
 static char* file_or_none(char*);
 static int srcfile_cmp(char*,int,HASHDATUM);
 static int check_distance(int,HASHDATUM*,int);
-static int get_near_miss(void);
+static int get_near_miss();

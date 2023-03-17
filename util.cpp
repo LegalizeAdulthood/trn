@@ -67,7 +67,7 @@ static char* nntpauth_export = null_export + 2;
 static char* nntpforce_export = null_export + 2;
 #endif
 
-void util_init(void)
+void util_init()
 {
     extern char patchlevel[];
     char* cp;
@@ -575,7 +575,7 @@ char* new;
 #endif
 
 /* attempts to verify a cryptographic signature. */
-void verify_sig(void)
+void verify_sig()
 {
     int i;
 
@@ -597,7 +597,7 @@ void verify_sig(void)
     printf("No PGP/RIPEM signatures detected.\n") FLUSH;
 }
 
-double current_time(void)
+double current_time()
 {
 #ifdef HAS_GETTIMEOFDAY
     Timeval t;
@@ -686,7 +686,7 @@ char *secs2text(time_t secs)
 }
 
 /* returns a saved string representing a unique temporary filename */
-char *temp_filename(void)
+char *temp_filename()
 {
     static int tmpfile_num = 0;
     char tmpbuf[CBUFLEN];
@@ -696,21 +696,21 @@ char *temp_filename(void)
 }
 
 #ifdef SUPPORT_NNTP
-char *get_auth_user(void)
+char *get_auth_user()
 {
     return datasrc->auth_user;
 }
 #endif
 
 #ifdef SUPPORT_NNTP
-char *get_auth_pass(void)
+char *get_auth_pass()
 {
     return datasrc->auth_pass;
 }
 #endif
 
 #if defined(USE_GENAUTH) && defined(SUPPORT_NNTP)
-char *get_auth_command(void)
+char *get_auth_command()
 {
     return datasrc->auth_command;
 }
@@ -974,7 +974,7 @@ bool check_ini_cond(char *cond)
 
 /* $$ might get replaced soonish... */
 /* Ask for a single character (improve the prompt?) */
-char menu_get_char(void)
+char menu_get_char()
 {
     printf("Enter your choice: ");
     fflush(stdout);

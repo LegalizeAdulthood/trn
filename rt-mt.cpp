@@ -46,7 +46,7 @@ static PACKED_ARTICLE p_article;
 ** files and our own current byte-order.  If they differ, set flags to let
 ** the read code know what we'll need to translate.
 */
-bool mt_init(void)
+bool mt_init()
 {
     int i;
     long size;
@@ -106,7 +106,7 @@ bool mt_init(void)
 /* Open and process the data in the group's thread file.  Returns true unless
 ** we discovered a bogus thread file, destroyed the cache, and re-built it.
 */
-int mt_data(void)
+int mt_data()
 {
     int ret = 1;
 #ifdef SUPPORT_XTHREAD		/* use remote thread file? */
@@ -223,7 +223,7 @@ static char* subject_strings, *string_end;
 ** in at the same time, since they are appended to the end of the author
 ** strings.
 */
-static int read_authors(void)
+static int read_authors()
 {
     register int count;
     register char* string_ptr;
@@ -268,7 +268,7 @@ static int read_authors(void)
 ** (already read in above) and the use-count array.  They were saved in the
 ** order that the roots require while being unpacked.
 */
-static int read_subjects(void)
+static int read_subjects()
 {
     register int count;
     register char* string_ptr;
@@ -312,7 +312,7 @@ static int read_subjects(void)
 /* Read in the packed root structures to set each subject's thread article
 ** offset.  This gets turned into a real pointer later.
 */
-static int read_roots(void)
+static int read_roots()
 {
     register SUBJECT** subj_ptr;
     register int i;
@@ -417,7 +417,7 @@ static ARTICLE *the_article(int relative_offset, int num)
 }
 
 /* Read the articles into their trees.  Point everything everywhere. */
-static int read_articles(void)
+static int read_articles()
 {
     register int count;
     register ARTICLE* article;
@@ -499,7 +499,7 @@ static int read_articles(void)
 ** to which they belong.  The first domain name was omitted, as it is a null
 ** domain for those truly weird message-id's without '@'s.
 */
-static int read_ids(void)
+static int read_ids()
 {
     register ARTICLE* article;
     register char* string_ptr;
@@ -585,7 +585,7 @@ static int read_ids(void)
 /* And finally, turn all the links into real pointers and mark missing
 ** articles as read.
 */
-static void tweak_data(void)
+static void tweak_data()
 {
     register int count;
     register ARTICLE* ap;

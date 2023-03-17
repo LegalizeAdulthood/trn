@@ -95,7 +95,7 @@ bool env_init(char *tcbuf, bool lax)
     return fully_successful;
 }
 
-static void env_init2(void)
+static void env_init2()
 {
     if (g_dot_dir)		/* Avoid running multiple times. */
 	return;

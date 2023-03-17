@@ -75,7 +75,7 @@
 
 int exit_code = NG_NORM;
 
-void ng_init(void)
+void ng_init()
 {
     setdfltcmd();
 
@@ -581,7 +581,7 @@ cleanup2:
 
 /* decide what to do at the end of an article */
 
-int art_switch(void)
+int art_switch()
 {
     setdef(buf,dfltcmd);
 #ifdef VERIFY
@@ -1603,7 +1603,7 @@ void setmail(bool force)
 }
 #endif
 
-void setdfltcmd(void)
+void setdfltcmd()
 {
     if (!ngptr || !ngptr->toread)
 	dfltcmd = "npq";
@@ -1628,7 +1628,7 @@ void setdfltcmd(void)
 ** or 'u' for yes with unsubscribe.  Actually performs the catchup and
 ** unsubscription as needed.
 */
-char ask_catchup(void)
+char ask_catchup()
 {
     char ch;
     bool use_one_line = (gmode == 's');

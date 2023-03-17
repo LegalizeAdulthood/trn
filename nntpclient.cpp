@@ -19,13 +19,13 @@ char *savestr(char *);
 char *safemalloc(MEM_SIZE);
 #endif
 #ifdef NNTP_HANDLE_TIMEOUT
-int nntp_handle_timeout(void);
+int nntp_handle_timeout();
 #endif
 
-int nntp_handle_nested_lists(void);
+int nntp_handle_nested_lists();
 
 #ifdef NNTP_HANDLE_AUTH_ERR
-int nntp_handle_auth_err(void);
+int nntp_handle_auth_err();
 #endif
 
 int nntp_connect(const char *machine, bool verbose)
@@ -165,7 +165,7 @@ int nntp_command(const char *bp)
     return 1;
 }
 
-int nntp_check(void)
+int nntp_check()
 {
     int ret;
     int len = 0;

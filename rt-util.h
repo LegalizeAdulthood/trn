@@ -25,7 +25,7 @@ bool subject_has_Re(char *, char **);
 char *compress_subj(ARTICLE *, int);
 void setspin(int);
 void spin(int);
-bool inbackground(void);
+bool inbackground();
 void perform_status_init(long);
 void perform_status(long, int);
 int perform_status_end(long, char *);

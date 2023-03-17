@@ -31,7 +31,7 @@
 #include "INTERN.h"
 #include "sadisp.h"
 
-void sa_refresh_top(void)
+void sa_refresh_top()
 {
     color_object(COLOR_SCORE, true);
     printf("%s |",ngname);
@@ -53,7 +53,7 @@ void sa_refresh_top(void)
     printf("\n") FLUSH;
 }
 
-void sa_refresh_bot(void)
+void sa_refresh_bot()
 {
     char* s;
 
@@ -86,7 +86,7 @@ void sa_refresh_bot(void)
 }
 
 /* set up various screen dimensions */
-void sa_set_screen(void)
+void sa_set_screen()
 {
     /* One size fits all for now. */
     /* these things here because they may vary by screen size later */

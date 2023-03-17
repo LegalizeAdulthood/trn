@@ -11,12 +11,12 @@
 #include "INTERN.h"
 #include "help.h"
 
-void help_init(void)
+void help_init()
 {
     ;
 }
 
-int help_page(void)
+int help_page()
 {
     int cmd;
 #ifdef PAGERHELP
@@ -98,7 +98,7 @@ Type h at end of article for a description of these commands:\n\
     return 0;
 }
 
-int help_art(void)
+int help_art()
 {
     int cmd;
 #ifdef ARTHELP
@@ -256,7 +256,7 @@ Scoring commands:\n\
     return 0;
 }
 
-int help_ng(void)
+int help_ng()
 {
     int cmd;
 #ifdef NGHELP
@@ -342,7 +342,7 @@ v	Print version and the address for reporting bugs.\n\
     return 0;
 }
 
-int help_ngsel(void)
+int help_ngsel()
 {
     int cmd;
     page_start();
@@ -407,7 +407,7 @@ Q	Quit the selector and return to the rn-style group selector.\n\
     return 0;
 }
 
-int help_addsel(void)
+int help_addsel()
 {
     int cmd;
     page_start();
@@ -454,7 +454,7 @@ q	Quit the selector.\n\
 }
 
 #ifdef ESCSUBS
-int help_subs(void)
+int help_subs()
 {
     int cmd;
 #ifdef SUBSHELP
@@ -556,7 +556,7 @@ Put :FMT in the middle to format the result printf-style:  %:-30.30t\n\
 }
 #endif
 
-int help_artsel(void)
+int help_artsel()
 {
     int cmd;
     page_start();
@@ -650,7 +650,7 @@ Q	Quit group and return to news group selection prompt for this group.\n\
     return 0;
 }
 
-int help_multirc(void)
+int help_multirc()
 {
     int cmd;
     page_start();
@@ -690,7 +690,7 @@ q	Quit trn.\n\
     return 0;
 }
 
-int help_options(void)
+int help_options()
 {
     int cmd;
     page_start();
@@ -804,7 +804,7 @@ Active File Refetch Mins...... no/[# mins]\n\
 }
 
 #ifdef SCAN
-int help_scanart(void)
+int help_scanart()
 {
     int cmd;
 #ifdef UNDEF
@@ -962,7 +962,7 @@ R	Rescores all articles.  (same as 'r at article level).\n\
 }
 #endif /* SCAN */
 
-int help_univ(void)
+int help_univ()
 {
     int cmd;
     page_start();

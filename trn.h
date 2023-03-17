@@ -35,13 +35,13 @@ EXT bool  is_strn INIT(false);		/* Is this "strn", or trn/rn? */
 
 EXT char patchlevel[] INIT(PATCHLEVEL);
 
-void trn_init(void);
+void trn_init();
 int main(int, char **);
-void do_multirc(void);
-int input_newsgroup(void);
+void do_multirc();
+int input_newsgroup();
 #ifdef SUPPORT_NNTP
 void check_active_refetch(bool force);
 #endif
-void trn_version(void);
+void trn_version();
 void set_ngname(char *);
 char *getngdir(char *);

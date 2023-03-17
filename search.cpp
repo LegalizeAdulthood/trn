@@ -70,7 +70,7 @@ static bool folding = false;
 static int err;
 static char* FirstCharacter;
 
-void search_init(void)
+void search_init()
 {
     register int    i;
     

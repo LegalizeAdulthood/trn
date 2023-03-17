@@ -19,7 +19,7 @@
 static char sc_e_newline[LBUFLEN];
 
 /* returns new string or NULL to abort. */
-char *sc_easy_append(void)
+char *sc_easy_append()
 {
     char* s;
     bool q_done;	/* if true, we are finished with current question */
@@ -170,7 +170,7 @@ char *sc_easy_append(void)
 }
 
 /* returns new string or NULL to abort. */
-char *sc_easy_command(void)
+char *sc_easy_command()
 {
     char* s;
     bool q_done;	/* if true, we are finished with current question */

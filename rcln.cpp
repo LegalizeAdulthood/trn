@@ -20,7 +20,7 @@
 
 #define MAX_DIGITS 7
 
-void rcln_init(void)
+void rcln_init()
 {
 }
 

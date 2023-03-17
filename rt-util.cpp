@@ -712,7 +712,7 @@ void spin(int count)
     }
 }
 
-bool inbackground(void)
+bool inbackground()
 {
     return spin_mode == SPIN_BACKGROUND;
 }

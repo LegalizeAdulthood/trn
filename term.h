@@ -193,22 +193,22 @@ EXT int mousebar_width INIT(0);
 EXT bool xmouse_is_on INIT(false);
 EXT bool mouse_is_down INIT(false);
 
-void term_init(void);
+void term_init();
 void term_set(char *);
 void set_macro(char *, char *);
 void arrow_macros(char *);
 void mac_line(char *, char *, int);
-void show_macros(void);
+void show_macros();
 void set_mode(char_int, char_int);
 int putchr(char_int);
-void hide_pending(void);
+void hide_pending();
 bool finput_pending(bool check_term);
 bool finish_command(int);
 char *edit_buf(char *, char *);
-bool finish_dblchar(void);
-void eat_typeahead(void);
+bool finish_dblchar();
+void eat_typeahead();
 void save_typeahead(char *, int);
-void settle_down(void);
+void settle_down();
 Signal_t alarm_catcher(int);
 int read_tty(char *, int);
 #if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(MSDOS)
@@ -217,44 +217,44 @@ int circfill(void);
 void pushchar(char_int);
 void underprint(char *);
 #ifdef NOFIREWORKS
-void no_sofire(void);
-void no_ulfire(void);
+void no_sofire();
+void no_ulfire();
 #endif
 void getcmd(char *);
 void pushstring(char *, char_int);
-int get_anything(void);
-int pause_getcmd(void);
+int get_anything();
+int pause_getcmd();
 void in_char(char *, char_int, char *);
 void in_answer(char *, char_int);
 bool in_choice(char *, char *, char *, char_int);
 int print_lines(char *, int);
-int check_page_line(void);
-void page_start(void);
+int check_page_line();
+void page_start();
 void errormsg(char *);
 void warnmsg(char *);
 void pad(int);
 #ifdef VERIFY
-void printcmd(void);
+void printcmd();
 #endif
-void rubout(void);
-void reprint(void);
+void rubout();
+void reprint();
 void erase_line(bool to_eos);
-void clear(void);
-void home_cursor(void);
+void clear();
+void home_cursor();
 void goto_xy(int, int);
 #ifdef SIGWINCH
 Signal_t winch_catcher(int);
 #endif
-void termlib_init(void);
-void termlib_reset(void);
+void termlib_init();
+void termlib_reset();
 #ifdef NBG_SIGIO
 Signal_t waitkey_sig_handler(int);
 #endif
 bool wait_key_pause(int);
 void xmouse_init(char *);
-void xmouse_check(void);
-void xmouse_on(void);
-void xmouse_off(void);
+void xmouse_check();
+void xmouse_on();
+void xmouse_off();
 void draw_mousebar(int limit, bool restore_cursor);
 bool check_mousebar(int, int, int, int, int, int);
 void add_tc_string(char *, char *);

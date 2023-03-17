@@ -131,9 +131,9 @@ EXT ART_NUM subj_to_get;
 EXT ART_NUM xref_to_get;
 #endif
 
-void cache_init(void);
-void build_cache(void);
-void close_cache(void);
+void cache_init();
+void build_cache();
+void close_cache();
 void cache_article(ARTICLE *);
 void check_for_near_subj(ARTICLE *);
 void change_join_subject_len(int);
@@ -147,15 +147,15 @@ void dectrl(char *);
 void set_cached_line(ARTICLE *, int, char *);
 int subject_cmp(char *, int, HASHDATUM);
 #ifdef PENDING
-void look_ahead(void);
+void look_ahead();
 #endif
-void cache_until_key(void);
+void cache_until_key();
 #ifdef PENDING
-bool cache_subjects(void);
+bool cache_subjects();
 #endif
-bool cache_xrefs(void);
-bool cache_all_arts(void);
-bool cache_unread_arts(void);
+bool cache_xrefs();
+bool cache_all_arts();
+bool cache_unread_arts();
 bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles);
 bool cache_range(ART_NUM, ART_NUM);
 void clear_article(ARTICLE *);

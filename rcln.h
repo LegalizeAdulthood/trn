@@ -8,7 +8,7 @@ EXT bool toread_quiet INIT(false);
 #define ST_STRICT	false
 #define ST_LAX		true
 
-void rcln_init(void);
+void rcln_init();
 #ifdef CATCHUP
 void catch_up(NGDATA *, int, int);
 #endif

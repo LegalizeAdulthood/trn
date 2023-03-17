@@ -33,7 +33,7 @@
 
 static bool foundany;
 
-bool rcstuff_init(void)
+bool rcstuff_init()
 {
     MULTIRC* mptr = NULL;
     int i;
@@ -1151,7 +1151,7 @@ q to abort\n") FLUSH;
 
 /* List out the newsrc with annotations */
 
-void list_newsgroups(void)
+void list_newsgroups()
 {
     register NGDATA* np;
     register NG_NUM i;
@@ -1327,7 +1327,7 @@ static int rcline_cmp(char *key, int keylen, HASHDATUM data)
 
 /* checkpoint the newsrc(s) */
 
-void checkpoint_newsrcs(void)
+void checkpoint_newsrcs()
 {
 #ifdef DEBUG
     if (debug & DEB_CHECKPOINTING) {

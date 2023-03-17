@@ -181,7 +181,7 @@ bool initialize(int argc, char *argv[])
     return foundany;
 }
 
-void newsnews_check(void)
+void newsnews_check()
 {
     char* newsnewsname = filexp(NEWSNEWSNAME);
 

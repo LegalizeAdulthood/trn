@@ -156,16 +156,16 @@ struct mimecap_entry {
 EXT bool auto_view_inline INIT(false);
 EXT char* mime_getc_line INIT(NULL);
 
-void mime_init(void);
+void mime_init();
 void mime_ReadMimecap(char *);
 MIMECAP_ENTRY *mime_FindMimecapEntry(char *, int);
 bool mime_TypesMatch(char *, char *);
 int mime_Exec(char *);
-void mime_InitSections(void);
-void mime_PushSection(void);
-bool mime_PopSection(void);
+void mime_InitSections();
+void mime_PushSection();
+bool mime_PopSection();
 void mime_ClearStruct(MIME_SECT *);
-void mime_SetArticle(void);
+void mime_SetArticle();
 void mime_ParseType(MIME_SECT *, char *);
 void mime_ParseDisposition(MIME_SECT *, char *);
 void mime_ParseEncoding(MIME_SECT *, char *);

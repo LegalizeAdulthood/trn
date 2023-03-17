@@ -27,7 +27,7 @@
 #include "samain.h"
 #include "samisc.h"
 
-int sa_main(void)
+int sa_main()
 {
     char sa_oldmode;	/* keep mode of caller */
     int i;
@@ -99,7 +99,7 @@ void sa_grow(ART_NUM oldlast, ART_NUM last)
     sa_growarts(oldlast,last);
 }
 
-void sa_cleanup(void)
+void sa_cleanup()
 {
     /* we might be called by other routines which aren't sure
      * about the scan status

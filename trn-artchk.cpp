@@ -24,8 +24,8 @@
 #define MAXNGS 100
 
 #ifdef SUPPORT_NNTP
-int server_connection (void);
-int nntp_handle_timeout (void);
+int server_connection ();
+int nntp_handle_timeout ();
 
 char* server_name;
 char* nntp_auth_file;
@@ -312,7 +312,7 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 }
 
 #ifdef SUPPORT_NNTP
-int server_connection(void)
+int server_connection()
 {
     static int server_stat = 0;
     if (!server_stat) {
@@ -326,7 +326,7 @@ int server_connection(void)
 #endif
 
 #ifdef SUPPORT_NNTP
-int nntp_handle_timeout(void)
+int nntp_handle_timeout()
 {
     fputs("\n503 Server timed out.\n",stderr);
     return -2;

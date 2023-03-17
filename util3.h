@@ -16,10 +16,10 @@ char *saferealloc(char *, MEM_SIZE);
 #endif
 char *dointerp(char *, int, char *, char *, char *);
 #ifdef SUPPORT_NNTP
-int nntp_handle_nested_lists(void);
-char *get_auth_user(void);
-char *get_auth_pass(void);
+int nntp_handle_nested_lists();
+char *get_auth_user();
+char *get_auth_pass();
 #endif
 #if defined(USE_GENAUTH) && defined(SUPPORT_NNTP)
-char *get_auth_command(void);
+char *get_auth_command();
 #endif

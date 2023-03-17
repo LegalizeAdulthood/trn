@@ -46,15 +46,15 @@ EXT bool sc_sf_delay INIT(false);	/* if true, delay loading rule files */
 EXT bool sc_sf_force_init INIT(false);	/* If true, always sf_init() */
 
 void sc_init(bool pend_wait);
-void sc_cleanup(void);
+void sc_cleanup();
 void sc_set_score(ART_NUM, int);
 void sc_score_art_basic(ART_NUM);
 int sc_score_art(ART_NUM a, bool now);
 void sc_fill_scorelist(ART_NUM, ART_NUM);
 void sc_lookahead(bool flag, bool nowait);
-int sc_percent_scored(void);
-void sc_rescore_arts(void);
+int sc_percent_scored();
+void sc_rescore_arts();
 void sc_append(char *);
-void sc_rescore(void);
+void sc_rescore();
 void sc_score_cmd(char *);
 void sc_kill_threshold(int);

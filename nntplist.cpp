@@ -14,7 +14,7 @@
 #include "INTERN.h"
 #include "common.h"
 
-void Usage(void);
+void Usage();
 
 char* server_name;
 char* nntp_auth_file;
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void Usage(void)
+void Usage()
 {
     fprintf(stderr, "Usage: nntplist [-x WildSpec] [-o OutputFile] [type]\n\n"
                     "Where type is any of the LIST command arguments your server accepts.\n");
@@ -165,7 +165,7 @@ void Usage(void)
 }
 
 #ifdef SUPPORT_NNTP
-int nntp_handle_timeout(void)
+int nntp_handle_timeout()
 {
     fputs("\n503 Server timed out.\n",stderr);
     return -2;

@@ -68,11 +68,11 @@ EXT bool art_sel_ilock INIT(false);
 #define UR_ERROR	3	/* non-normal return */
 
 char article_selector(char_int);
-char multirc_selector(void);
-char newsgroup_selector(void);
+char multirc_selector();
+char newsgroup_selector();
 char addgroup_selector(int);
-char option_selector(void);
-char universal_selector(void);
+char option_selector();
+char universal_selector();
 void selector_mouse(int, int, int, int, int, int);
 int univ_visit_group(char *);
 void univ_visit_help(int);

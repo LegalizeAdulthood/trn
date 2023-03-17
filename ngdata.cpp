@@ -42,7 +42,7 @@
 #include <io.h>
 #endif
 
-void ngdata_init(void) {
+void ngdata_init() {
     ;
 }
 
@@ -55,7 +55,7 @@ void set_ng(NGDATA *np)
 	set_ngname(ngptr->rcline);
 }
 
-int access_ng(void)
+int access_ng()
 {
 #ifdef SUPPORT_NNTP
     ART_NUM old_first = ngptr->abs1st;
@@ -125,7 +125,7 @@ int access_ng(void)
     return 1;
 }
 
-void chdir_newsdir(void)
+void chdir_newsdir()
 {
     if (chdir(datasrc->spool_dir) || (
 #ifdef SUPPORT_NNTP
@@ -205,7 +205,7 @@ static int ngorder_count(const NGDATA **npp1, const NGDATA **npp2)
 
 /* Sort the newsgroups into the chosen order.
 */
-void sort_newsgroups(void)
+void sort_newsgroups()
 {
     register NGDATA* np;
     register int i;
@@ -248,7 +248,7 @@ void sort_newsgroups(void)
     free((char*)ng_list);
 }
 
-void ng_skip(void)
+void ng_skip()
 {
 #ifdef SUPPORT_NNTP
     if (datasrc->flags & DF_REMOTE) {

@@ -19,20 +19,20 @@
 #endif
 #define UHELP_UNIV 11
 
-void help_init(void);
-int help_page(void);
-int help_art(void);
-int help_ng(void);
-int help_ngsel(void);
-int help_addsel(void);
+void help_init();
+int help_page();
+int help_art();
+int help_ng();
+int help_ngsel();
+int help_addsel();
 #ifdef ESCSUBS
-int help_subs(void);
+int help_subs();
 #endif
-int help_artsel(void);
-int help_multirc(void);
-int help_options(void);
+int help_artsel();
+int help_multirc();
+int help_options();
 #ifdef SCAN
-int help_scanart(void);
+int help_scanart();
 #endif
-int help_univ(void);
+int help_univ();
 int univ_key_help(int);

@@ -63,7 +63,7 @@ static char* str;
 
 /* Prepare tree display for inclusion in the article header.
 */
-void init_tree(void)
+void init_tree()
 {
     ARTICLE* thread;
     SUBJECT* sp;

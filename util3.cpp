@@ -83,7 +83,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 }
 
 #ifdef SUPPORT_NNTP
-int nntp_handle_nested_lists(void)
+int nntp_handle_nested_lists()
 {
     fputs("Programming error! Nested NNTP calls detected.\n",stderr);
     return -1;
@@ -91,7 +91,7 @@ int nntp_handle_nested_lists(void)
 #endif
 
 #ifdef SUPPORT_NNTP
-char *get_auth_user(void)
+char *get_auth_user()
 {
     extern char* nntp_auth_file;
     return read_auth_file(nntp_auth_file, &nntp_password);
@@ -99,14 +99,14 @@ char *get_auth_user(void)
 #endif
 
 #ifdef SUPPORT_NNTP
-char *get_auth_pass(void)
+char *get_auth_pass()
 {
     return nntp_password;
 }
 #endif
 
 #if defined(USE_GENAUTH) && defined(SUPPORT_NNTP)
-char *get_auth_command(void)
+char *get_auth_command()
 {
     return NULL;
 }

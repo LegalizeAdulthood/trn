@@ -50,7 +50,7 @@
 HASHTABLE* subj_hash = 0;
 HASHTABLE* shortsubj_hash = 0;
 
-void cache_init(void)
+void cache_init()
 {
 #ifdef PENDING
 # ifdef ARTSEARCH
@@ -62,7 +62,7 @@ void cache_init(void)
 static NGDATA* cached_ng = NULL;
 static time_t cached_time = 0;
 
-void build_cache(void)
+void build_cache()
 {
     if (cached_ng == ngptr && time((time_t*)NULL) < cached_time + 6*60*60L) {
 	ART_NUM an;
@@ -100,7 +100,7 @@ void build_cache(void)
     thread_open();
 }
 
-void close_cache(void)
+void close_cache()
 {
     SUBJECT* sp;
     SUBJECT* next;
@@ -644,7 +644,7 @@ int subject_cmp(char *key, int keylen, HASHDATUM data)
 /* see what we can do while they are reading */
 
 #ifdef PENDING
-void look_ahead(void)
+void look_ahead()
 {
 #ifdef ARTSEARCH
     register char* h;
@@ -733,7 +733,7 @@ void look_ahead(void)
 
 /* see what else we can do while they are reading */
 
-void cache_until_key(void)
+void cache_until_key()
 {
     if (!in_ng)
 	return;
@@ -791,7 +791,7 @@ void cache_until_key(void)
 }
 
 #ifdef PENDING
-bool cache_subjects(void)
+bool cache_subjects()
 {
     register ART_NUM an;
 
@@ -809,7 +809,7 @@ bool cache_subjects(void)
     return subj_to_get > lastart;
 }
 
-bool cache_xrefs(void)
+bool cache_xrefs()
 {
     register ART_NUM an;
 
@@ -826,7 +826,7 @@ bool cache_xrefs(void)
     return xref_to_get > lastart;
 }
 
-bool cache_all_arts(void)
+bool cache_all_arts()
 {
     int old_last_cached = last_cached;
     if (!cached_all_in_range)
@@ -866,7 +866,7 @@ bool cache_all_arts(void)
     return true;
 }
 
-bool cache_unread_arts(void)
+bool cache_unread_arts()
 {
     if (last_cached >= lastart)
 	return true;

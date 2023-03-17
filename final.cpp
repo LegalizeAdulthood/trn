@@ -43,7 +43,7 @@
 #define sigmask(m)	(1 << ((m)-1))
 #endif
 
-void final_init(void)
+void final_init()
 {
 #ifdef SIGTSTP
     sigset(SIGTSTP, stop_catcher);	/* job control signals */

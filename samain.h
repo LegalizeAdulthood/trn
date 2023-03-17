@@ -39,15 +39,15 @@ EXT bool sa_order_read INIT(false);
 /* contains the scan-context number for the current article scan */
 EXT int sa_scan_context INIT(-1);
 
-void sa_init(void);
-void sa_init_ents(void);
-void sa_clean_ents(void);
+void sa_init();
+void sa_init_ents();
+void sa_clean_ents();
 long sa_add_ent(ART_NUM);
-void sa_cleanmain(void);
+void sa_cleanmain();
 void sa_growarts(long, long);
-void sa_init_context(void);
-bool sa_initarts(void);
-void sa_initmode(void);
-int sa_mainloop(void);
-void sa_lookahead(void);
-long sa_readmarked_elig(void);
+void sa_init_context();
+bool sa_initarts();
+void sa_initmode();
+int sa_mainloop();
+void sa_lookahead();
+long sa_readmarked_elig();

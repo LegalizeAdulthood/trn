@@ -11,4 +11,4 @@ EXT char *group_default INIT(nullstr);
 #endif
 
 bool initialize(int, char **);
-void newsnews_check(void);
+void newsnews_check();

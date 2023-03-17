@@ -47,7 +47,7 @@ static char killglobal[] = KILLGLOBAL;
 static char killlocal[] = KILLLOCAL;
 static char killthreads[] = KILLTHREADS;
 
-void kfile_init(void)
+void kfile_init()
 {
     char* cp = getenv("KILLTHREADS");
     if (!cp)
@@ -526,7 +526,7 @@ static int age_thread_commands(int keylen, HASHDATUM *data, int elapsed_days)
     return 0;
 }
 
-void update_thread_kfile(void)
+void update_thread_kfile()
 {
     char* cp;
     int elapsed_days;
@@ -623,7 +623,7 @@ kfile_init()
 
 /* edit KILL file for newsgroup */
 
-int edit_kfile(void)
+int edit_kfile()
 {
 #ifdef KILLFILES
     int r = -1;

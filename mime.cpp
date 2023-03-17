@@ -35,7 +35,7 @@ static char text_plain[] = "text/plain";
 #define CODE_POINT_MAX	0x7F
 #endif
 
-void mime_init(void)
+void mime_init()
 {
     char* s;
     char* t;
@@ -243,14 +243,14 @@ int mime_Exec(char *cmd)
     return doshell(sh, cmd_buf);
 }
 
-void mime_InitSections(void)
+void mime_InitSections()
 {
     while (mime_PopSection()) ;
     mime_ClearStruct(mime_section);
     mime_state = NOT_MIME;
 }
 
-void mime_PushSection(void)
+void mime_PushSection()
 {
     MIME_SECT* mp = (MIME_SECT*)safemalloc(sizeof (MIME_SECT));
     bzero((char*)mp, sizeof (MIME_SECT));
@@ -258,7 +258,7 @@ void mime_PushSection(void)
     mime_section = mp;
 }
 
-bool mime_PopSection(void)
+bool mime_PopSection()
 {
     MIME_SECT* mp = mime_section->prev;
     if (mp) {
@@ -288,7 +288,7 @@ void mime_ClearStruct(MIME_SECT *mp)
 }
 
 /* Setup mime_article structure based on article's headers */
-void mime_SetArticle(void)
+void mime_SetArticle()
 {
     char* s;
 

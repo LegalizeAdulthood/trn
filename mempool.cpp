@@ -34,7 +34,7 @@ static int mp_first_free_frag;
 
 static MP_HEAD mpheads[MAX_MEM_POOLS];
 
-void mp_init(void)
+void mp_init()
 {
     int i;
 
@@ -52,7 +52,7 @@ void mp_init(void)
 }
 
 /* returns the fragment number */
-static int mp_alloc_frag(void)
+static int mp_alloc_frag()
 {
     int f;
 

@@ -23,7 +23,7 @@ EXT char* decode_filename INIT(NULL);
 
 typedef int (*DECODE_FUNC)(FILE *, int);
 
-void decode_init(void);
+void decode_init();
 char *decode_fix_fname(char *);
 char *decode_subject(ART_NUM, int *, int *);
 int decode_piece(MIMECAP_ENTRY *, char *);

@@ -23,12 +23,12 @@ EXT char wrapped_nl INIT(WRAPPED_NL);
 EXT char* linkartname INIT(nullstr);/* real name of article for Eunice */
 #endif
 
-void artio_init(void);
+void artio_init();
 FILE *artopen(ART_NUM, ART_POS);
-void artclose(void);
+void artclose();
 int seekart(ART_POS);
-ART_POS tellart(void);
+ART_POS tellart();
 char *readart(char *, int);
-void clear_artbuf(void);
+void clear_artbuf();
 int seekartbuf(ART_POS);
 char *readartbuf(bool view_inline);

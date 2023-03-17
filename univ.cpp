@@ -49,13 +49,13 @@ static bool univ_done_startup INIT(false);
 static int univ_min_score INIT(0);
 static bool univ_use_min_score INIT(false);
 
-void univ_init(void)
+void univ_init()
 {
     univ_level = 0;
     univ_ever_init = 1;
 }
 
-void univ_startup(void)
+void univ_startup()
 {
     bool sys_top_load;
     bool user_top_load;
@@ -88,7 +88,7 @@ void univ_startup(void)
     univ_done_startup = true;
 }
 
-void univ_open(void)
+void univ_open()
 {
     first_univ = last_univ = 0;
     sel_page_univ = sel_next_univ = 0;
@@ -98,7 +98,7 @@ void univ_open(void)
     univ_level++;
 }
 
-void univ_close(void)
+void univ_close()
 {
     UNIV_ITEM* node;
     UNIV_ITEM* nextnode;
@@ -820,7 +820,7 @@ void univ_mask_load(char *mask, char *title)
     }
 }
 
-void univ_redofile(void)
+void univ_redofile()
 {
     char* tmp_fname;
     char* tmp_title;
@@ -842,7 +842,7 @@ void univ_redofile(void)
 }
 
 
-static char *univ_edit_new_userfile(void)
+static char *univ_edit_new_userfile()
 {
     char* s;
     FILE* fp;
@@ -882,7 +882,7 @@ static char *univ_edit_new_userfile(void)
 
 /* code adapted from edit_kfile in kfile.c */
 /* XXX problem if elements expand to larger than cmd_buf */
-void univ_edit(void)
+void univ_edit()
 {
     char* s;
 
@@ -925,7 +925,7 @@ static UNIV_ITEM* current_vg_ui;
 
 /* virtual newsgroup second pass function */
 /* called from within newsgroup */
-void univ_ng_virtual(void)
+void univ_ng_virtual()
 {
     switch (current_vg_ui->type) {
       case UN_VGROUP:
@@ -975,7 +975,7 @@ static void univ_vg_addart(ART_NUM a)
 }
 
 
-static void univ_vg_addgroup(void)
+static void univ_vg_addgroup()
 {
     ART_NUM a;
 
@@ -1022,7 +1022,7 @@ int univ_visit_group_main(char *gname)
 }
 
 /* LATER: allow the loop to be interrupted */
-void univ_virt_pass(void)
+void univ_virt_pass()
 {
     UNIV_ITEM* ui;
 
@@ -1085,7 +1085,7 @@ static int univ_order_score(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2)
 }
 #endif
 
-void sort_univ(void)
+void sort_univ()
 {
     int cnt,i;
     UNIV_ITEM* ui;

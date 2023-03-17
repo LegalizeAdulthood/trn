@@ -83,7 +83,7 @@ void sc_sv_delgroup(char *gname)
 }
 
 /* get the file containing scores into memory */
-void sc_sv_getfile(void)
+void sc_sv_getfile()
 {
     char* s;
     FILE* fp;
@@ -107,7 +107,7 @@ void sc_sv_getfile(void)
 }
 
 /* save the memory into the score file */
-void sc_sv_savefile(void)
+void sc_sv_savefile()
 {
     char* s;
     FILE* tmpfp;
@@ -320,7 +320,7 @@ ART_NUM sc_sv_make_line(ART_NUM a)
     return a;
 }
 
-void sc_load_scores(void)
+void sc_load_scores()
 {
 /* lots of cleanup needed here */
     ART_NUM a = 0;
@@ -413,7 +413,7 @@ void sc_load_scores(void)
 #endif
 }
 
-void sc_save_scores(void)
+void sc_save_scores()
 {
     ART_NUM a;
     char* gname;

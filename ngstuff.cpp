@@ -40,13 +40,13 @@
 #include <direct.h>
 #endif
 
-void ngstuff_init(void) {
+void ngstuff_init() {
     ;
 }
 
 /* do a shell escape */
 
-int escapade(void)
+int escapade()
 {
     register char* s;
     bool interactive = (buf[1] == FINISHCMD);
@@ -88,7 +88,7 @@ int escapade(void)
 
 /* process & command */
 
-int switcheroo(void)
+int switcheroo()
 {
     if (!finish_command(true)) /* get rest of command */
 	return -1;	/* if rubbed out, try something else */
@@ -149,7 +149,7 @@ int switcheroo(void)
 
 /* process range commands */
 
-int numnum(void)
+int numnum()
 {
     ART_NUM min, max;
     char* cmdlst = NULL;
@@ -254,7 +254,7 @@ int numnum(void)
     return NN_NORM;
 }
 
-int thread_perform(void)
+int thread_perform()
 {
     register SUBJECT* sp;
     register ARTICLE* ap;
@@ -570,7 +570,7 @@ int perform(char *cmdlst, int output_level)
     return 1;
 }
 
-int ngsel_perform(void)
+int ngsel_perform()
 {
     char* cmdstr;
     int len;
@@ -690,7 +690,7 @@ int ng_perform(char *cmdlst, int output_level)
     return 1;
 }
 
-int addgrp_sel_perform(void)
+int addgrp_sel_perform()
 {
     register ADDGROUP* gp;
     char* cmdstr;

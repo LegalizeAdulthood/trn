@@ -91,7 +91,7 @@ int s_new_context(int type)
 }
 
 /* saves the current context */
-void s_save_context(void)
+void s_save_context()
 {
     SCONTEXT *p;
 
@@ -168,7 +168,7 @@ void s_change_context(int newcontext)
 }
 
 /* implement later? */
-void s_clean_contexts(void)
+void s_clean_contexts()
 {
 }
 

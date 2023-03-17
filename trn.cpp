@@ -79,7 +79,7 @@
 #include "common.h"
 #include "trn.h"
 
-void trn_init(void)
+void trn_init()
 {
 }
 
@@ -146,7 +146,7 @@ newsgroup use the g<newsgroup> command.\n\
     return 0;
 }
 
-void do_multirc(void)
+void do_multirc()
 {
     bool special = false;	/* allow newsgroup with no unread news? */
     char mode_save = mode;
@@ -367,7 +367,7 @@ bug_out:
     set_mode(gmode_save,mode_save);
 }
 
-int input_newsgroup(void)
+int input_newsgroup()
 {
     register char* s;
 
@@ -816,7 +816,7 @@ void check_active_refetch(bool force)
 }
 #endif
 
-void trn_version(void)
+void trn_version()
 {
     page_start();
     sprintf(msg,"Trn version:%s.\nConfigured for ",patchlevel);

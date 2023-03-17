@@ -36,7 +36,7 @@
 
 void s_search(void);
 
-void s_go_bot(void)
+void s_go_bot()
 {
     s_ref_bot = true;			/* help uses whole screen */
     s_goxy(0,tc_LINES-s_bot_lines);	/* go to bottom bar */
@@ -58,7 +58,7 @@ int s_finish_cmd(char *string)
 }
 
 /* returns an entry # selected, S_QUIT, or S_ERR */
-int s_cmdloop(void)
+int s_cmdloop()
 {
     int i;
 
@@ -109,7 +109,7 @@ int s_cmdloop(void)
     }
 }
 
-void s_lookahead(void)
+void s_lookahead()
 {
     switch (s_cur_type) {
 #ifdef SCAN_ART
@@ -127,7 +127,7 @@ void s_lookahead(void)
  * a condition code (negative #s).  Responsible for setting refresh flags
  * if necessary.
  */
-int s_docmd(void)
+int s_docmd()
 {
     long a;		/* entry pointed to */
     bool flag;		/* misc */
@@ -342,7 +342,7 @@ long s_backward_search(long ent)
 }
 
 /* perhaps later have a wraparound search? */
-void s_search(void)
+void s_search()
 {
     int i;
     int fill_type;    /* 0: forward, 1: backward */
