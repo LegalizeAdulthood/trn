@@ -21,14 +21,12 @@ EXT char* decode_filename INIT(NULL);
 #define BADCHARS "!$&*()|\'\";<>[]{}?/`\\ \t"
 #endif
 
-typedef int (*DECODE_FUNC) _((FILE*,int));
+typedef int (*DECODE_FUNC)(FILE *, int);
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void decode_init _((void));
-char* decode_fix_fname _((char*));
-char* decode_subject _((ART_NUM,int*,int*));
-int decode_piece _((MIMECAP_ENTRY*,char*));
-DECODE_FUNC decode_function _((int));
-char* decode_mkdir _((char*));
-void decode_rmdir _((char*));
+void decode_init(void);
+char *decode_fix_fname(char *);
+char *decode_subject(ART_NUM, int *, int *);
+int decode_piece(MIMECAP_ENTRY *, char *);
+DECODE_FUNC decode_function(int);
+char *decode_mkdir(char *);
+void decode_rmdir(char *);

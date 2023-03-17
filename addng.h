@@ -25,9 +25,7 @@ EXT ADDGROUP* last_addgroup;
 EXT ADDGROUP* sel_page_gp;
 EXT ADDGROUP* sel_next_gp;
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void addng_init _((void));
-bool find_new_groups _((void));
+void addng_init(void);
+bool find_new_groups(void);
 bool scanactive(bool add_matching);
-void sort_addgroups _((void));
+void sort_addgroups(void);

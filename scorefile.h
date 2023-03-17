@@ -58,26 +58,24 @@ EXT int reply_score INIT(0);
 /* should we match by pattern? */
 EXT int sf_pattern_status INIT(false);
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void sf_init _((void));
-void sf_clean _((void));
-void sf_grow _((void));
-int sf_check_extra_headers _((char*));
-void sf_add_extra_header _((char*));
-char* sf_get_extra_header _((ART_NUM,int));
-bool is_text_zero _((char*));
-char* sf_get_filename _((int));
-char* sf_cmd_fname _((char*));
+void sf_init(void);
+void sf_clean(void);
+void sf_grow(void);
+int sf_check_extra_headers(char *);
+void sf_add_extra_header(char *);
+char *sf_get_extra_header(ART_NUM, int);
+bool is_text_zero(char *);
+char *sf_get_filename(int);
+char *sf_cmd_fname(char *);
 bool sf_do_command(char *cmd, bool check);
-char* sf_freeform _((char*,char*));
+char *sf_freeform(char *, char *);
 bool sf_do_line(char *line, bool check);
-void sf_do_file _((char*));
-int score_match _((char*,int));
-int sf_score _((ART_NUM));
-char* sf_missing_score _((char*));
-void sf_append _((char*));
-char* sf_get_line _((ART_NUM,int));
-void sf_print_match _((int));
-void sf_exclude_file _((char*));
-void sf_edit_file _((char*));
+void sf_do_file(char *);
+int score_match(char *, int);
+int sf_score(ART_NUM);
+char *sf_missing_score(char *);
+void sf_append(char *);
+char *sf_get_line(ART_NUM, int);
+void sf_print_match(int);
+void sf_exclude_file(char *);
+void sf_edit_file(char *);

@@ -16,7 +16,7 @@ void list_init(void) {
 
 /* Create the header for a dynamic list of items.
 */
-LIST *new_list(long low, long high, int item_size, int items_per_node, int flags, void(*init_node) _((LIST *, LISTNODE *)))
+LIST *new_list(long low, long high, int item_size, int items_per_node, int flags, void (*init_node)(LIST *, LISTNODE *))
 {
     LIST* list = (LIST*)safemalloc(sizeof (LIST));
     list->first = list->recent = NULL;
@@ -109,7 +109,7 @@ long listitem2listnum(LIST *list, char *ptr)
 
 /* Execute the indicated callback function on every item in the list.
 */
-bool walk_list(LIST *list, bool(*callback) _((char *, int)), int arg)
+bool walk_list(LIST *list, bool (*callback)(char *, int), int arg)
 {
     LISTNODE* node;
     char* cp;

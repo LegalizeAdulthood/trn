@@ -2,6 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-static void fix_msgid _((char*));
-static char* valid_message_id _((char*,char*));
-static void unlink_child _((ARTICLE*));
+static void fix_msgid(char*);
+static char* valid_message_id(char*,char*);
+static void unlink_child(ARTICLE*);

@@ -2,6 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-static void filter_restart _((void));
-static int filter_send _((char*));
-static char* filter_recv _((char*));
+static void filter_restart(void);
+static int filter_send(char*);
+static char* filter_recv(char*);

@@ -10,8 +10,6 @@ EXT ART_POS varybuf[VARYSIZE];		/* current window onto virtual array */
 
 EXT long oldoffset INIT(-1);		/* offset to block currently in window */
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void backpage_init _((void));
-ART_POS vrdary _((ART_LINE));
-void vwtary _((ART_LINE,ART_POS));
+void backpage_init(void);
+ART_POS vrdary(ART_LINE);
+void vwtary(ART_LINE, ART_POS);

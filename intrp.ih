@@ -2,5 +2,5 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-static char* skipinterp _((char*,char*));
-static void abort_interp _((void));
+static char* skipinterp(char*,char*);
+static void abort_interp(void);

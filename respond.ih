@@ -2,7 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-static void follow_it_up _((void));
+static void follow_it_up(void);
 #if 0
-static bool cut_line _((char*));
+static bool cut_line(char*);
 #endif

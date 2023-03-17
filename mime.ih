@@ -2,10 +2,10 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-static char* mime_ParseEntryArg _((char**));
-static int mime_getc _((FILE*));
+static char* mime_ParseEntryArg(char**);
+static int mime_getc(FILE*);
 static char *tag_action(char *t, char *word, bool opening_tag);
-static char* output_prep _((char*));
-static char* do_newline _((char*,int));
-static int do_indent _((char*));
-static char* find_attr _((char*,char*));
+static char* output_prep(char*);
+static char* do_newline(char*,int);
+static int do_indent(char*);
+static char* find_attr(char*,char*);

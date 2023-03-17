@@ -218,7 +218,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 #ifdef h_addr
     /* get a socket and initiate connection -- use multiple addresses */
     for (cp = hp->h_addr_list; cp && *cp; cp++) {
-	extern char* inet_ntoa _((const struct in_addr));
+	extern char* inet_ntoa (const struct in_addr);
 	s = socket(hp->h_addrtype, SOCK_STREAM, 0);
 	if (s < 0) {
 	    perror("socket");

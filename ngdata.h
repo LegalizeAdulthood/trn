@@ -51,13 +51,11 @@ EXT NGDATA* ng_go_ngptr INIT(NULL);
 EXT ART_NUM ng_go_artnum INIT(0);
 EXT char* ng_go_msgid INIT(NULL);
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void ngdata_init _((void));
-void set_ng _((NGDATA*));
-int access_ng _((void));
-void chdir_newsdir _((void));
-void grow_ng _((ART_NUM));
-void sort_newsgroups _((void));
-void ng_skip _((void));
-ART_NUM getngsize _((NGDATA*));
+void ngdata_init(void);
+void set_ng(NGDATA *);
+int access_ng(void);
+void chdir_newsdir(void);
+void grow_ng(ART_NUM);
+void sort_newsgroups(void);
+void ng_skip(void);
+ART_NUM getngsize(NGDATA *);

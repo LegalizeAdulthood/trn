@@ -23,9 +23,9 @@ struct keymap {
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
-static void mac_init _((char*));
-static KEYMAP* newkeymap _((void));
-static void show_keymap _((KEYMAP*,char*));
-static int echo_char _((char_int));
-static void line_col_calcs _((void));
-static void mouse_input _((char*));
+static void mac_init(char*);
+static KEYMAP* newkeymap(void);
+static void show_keymap(KEYMAP*,char*);
+static int echo_char(char_int);
+static void line_col_calcs(void);
+static void mouse_input(char*);

@@ -10,7 +10,5 @@ EXT long our_pid;
 EXT char *group_default INIT(nullstr);
 #endif
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-bool initialize _((int,char**));
-void newsnews_check _((void));
+bool initialize(int, char **);
+void newsnews_check(void);

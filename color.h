@@ -29,11 +29,9 @@
 #define COLOR_BODYTEXT	19	/* regular body text		*/
 #define MAX_COLORS	20
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void color_init _((void));
-void color_rc_attribute _((char*,char*));
+void color_init(void);
+void color_rc_attribute(char *, char *);
 void color_object(int object, bool push);
-void color_pop _((void));
-void color_string _((int,char*));
-void color_default _((void));
+void color_pop(void);
+void color_string(int, char *);
+void color_default(void);

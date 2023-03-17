@@ -15,13 +15,13 @@ struct hashtable {
     HASHENT** ht_addr;		/* array of HASHENT pointers */
     unsigned ht_size;
     char ht_magic;
-    int (*ht_cmp) _((char*,int,HASHDATUM));
+    int (*ht_cmp)(char*,int,HASHDATUM);
 };
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
-static HASHENT** hashfind _((HASHTABLE*,char*,int));
-static unsigned hash _((char*,int));
-static int default_cmp _((char*,int,HASHDATUM));
-static HASHENT* healloc _((void));
-static void hefree _((HASHENT*));
+static HASHENT** hashfind(HASHTABLE*,char*,int);
+static unsigned hash(char*,int);
+static int default_cmp(char*,int,HASHDATUM);
+static HASHENT* healloc(void);
+static void hefree(HASHENT*);

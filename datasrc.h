@@ -87,23 +87,21 @@ EXT char* trnaccess_mem INIT(NULL);
 EXT char* nntp_auth_file INIT(NULL);
 #endif
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void datasrc_init _((void));
-char* read_datasrcs _((char*));
-DATASRC* get_datasrc _((char*));
-DATASRC* new_datasrc _((char*,char**));
-bool open_datasrc _((DATASRC*));
-void set_datasrc _((DATASRC*));
-void check_datasrcs _((void));
-void close_datasrc _((DATASRC*));
-bool actfile_hash _((DATASRC*));
-bool find_actgrp _((DATASRC*,char*,char*,int,ART_NUM));
-char* find_grpdesc _((DATASRC*,char*));
-int srcfile_open _((SRCFILE*,char*,char*,char*));
+void datasrc_init(void);
+char *read_datasrcs(char *);
+DATASRC *get_datasrc(char *);
+DATASRC *new_datasrc(char *, char **);
+bool open_datasrc(DATASRC *);
+void set_datasrc(DATASRC *);
+void check_datasrcs(void);
+void close_datasrc(DATASRC *);
+bool actfile_hash(DATASRC *);
+bool find_actgrp(DATASRC *, char *, char *, int, ART_NUM);
+char *find_grpdesc(DATASRC *, char *);
+int srcfile_open(SRCFILE *, char *, char *, char *);
 #ifdef SUPPORT_NNTP
-char* srcfile_append _((SRCFILE*,char*,int));
-void srcfile_end_append _((SRCFILE*,char*));
+char *srcfile_append(SRCFILE *, char *, int);
+void srcfile_end_append(SRCFILE *, char *);
 #endif
-void srcfile_close _((SRCFILE*));
-int find_close_match _((void));
+void srcfile_close(SRCFILE *);
+int find_close_match(void);

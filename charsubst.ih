@@ -2,4 +2,4 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-static int Latin1toASCII _((Uchar*,Uchar*,int,int));
+static int Latin1toASCII(Uchar*,Uchar*,int,int);

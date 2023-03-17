@@ -131,33 +131,31 @@ EXT ART_NUM subj_to_get;
 EXT ART_NUM xref_to_get;
 #endif
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void cache_init _((void));
-void build_cache _((void));
-void close_cache _((void));
-void cache_article _((ARTICLE*));
-void check_for_near_subj _((ARTICLE*));
-void change_join_subject_len _((int));
-void check_poster _((ARTICLE*));
+void cache_init(void);
+void build_cache(void);
+void close_cache(void);
+void cache_article(ARTICLE *);
+void check_for_near_subj(ARTICLE *);
+void change_join_subject_len(int);
+void check_poster(ARTICLE *);
 void uncache_article(ARTICLE *ap, bool remove_empties);
 char *fetchcache(ART_NUM artnum, int which_line, bool fill_cache);
 char *get_cached_line(ARTICLE *ap, int which_line, bool no_truncs);
-void set_subj_line _((ARTICLE*,char*,int));
-int decode_header _((char*,char*,int));
-void dectrl _((char*));
-void set_cached_line _((ARTICLE*,int,char*));
-int subject_cmp _((char*,int,HASHDATUM));
+void set_subj_line(ARTICLE *, char *, int);
+int decode_header(char *, char *, int);
+void dectrl(char *);
+void set_cached_line(ARTICLE *, int, char *);
+int subject_cmp(char *, int, HASHDATUM);
 #ifdef PENDING
-void look_ahead _((void));
+void look_ahead(void);
 #endif
-void cache_until_key _((void));
+void cache_until_key(void);
 #ifdef PENDING
-bool cache_subjects _((void));
+bool cache_subjects(void);
 #endif
-bool cache_xrefs _((void));
-bool cache_all_arts _((void));
-bool cache_unread_arts _((void));
+bool cache_xrefs(void);
+bool cache_all_arts(void);
+bool cache_unread_arts(void);
 bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles);
-bool cache_range _((ART_NUM,ART_NUM));
-void clear_article _((ARTICLE*));
+bool cache_range(ART_NUM, ART_NUM);
+void clear_article(ARTICLE *);

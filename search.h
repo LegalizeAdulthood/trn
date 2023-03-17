@@ -20,16 +20,14 @@ struct compex {
 };
 #endif
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void search_init _((void));
-void init_compex _((COMPEX*));
-void free_compex _((COMPEX*));
-char* getbracket _((COMPEX*,int));
+void search_init(void);
+void init_compex(COMPEX *);
+void free_compex(COMPEX *);
+char *getbracket(COMPEX *, int);
 void case_fold(bool which);
 char *compile(COMPEX *compex, char *strp, bool RE, bool fold);
-char* grow_eb _((COMPEX*,char*,char**));
-char* execute _((COMPEX*,char*));
-bool advance _((COMPEX*,char*,char*));
-bool backref _((COMPEX*,int,char*));
-bool cclass (char*,int,int);
+char *grow_eb(COMPEX *, char *, char **);
+char *execute(COMPEX *, char *);
+bool advance(COMPEX *, char *, char *);
+bool backref(COMPEX *, int, char *);
+bool cclass(char *, int, int);

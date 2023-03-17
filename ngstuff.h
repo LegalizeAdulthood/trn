@@ -15,15 +15,13 @@ EXT bool one_command INIT(false);	/* no ':' processing in perform() */
  */
 EXT bool option_sel_ilock INIT(false);
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void ngstuff_init _((void));
-int escapade _((void));
-int switcheroo _((void));
-int numnum _((void));
-int thread_perform _((void));
-int perform _((char*,int));
-int ngsel_perform _((void));
-int ng_perform _((char*,int));
-int addgrp_sel_perform _((void));
-int addgrp_perform _((ADDGROUP*,char*,int));
+void ngstuff_init(void);
+int escapade(void);
+int switcheroo(void);
+int numnum(void);
+int thread_perform(void);
+int perform(char *, int);
+int ngsel_perform(void);
+int ng_perform(char *, int);
+int addgrp_sel_perform(void);
+int addgrp_perform(ADDGROUP *, char *, int);

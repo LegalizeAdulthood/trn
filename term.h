@@ -193,75 +193,73 @@ EXT int mousebar_width INIT(0);
 EXT bool xmouse_is_on INIT(false);
 EXT bool mouse_is_down INIT(false);
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
 void term_init(void);
-void term_set _((char*));
-void set_macro _((char*,char*));
-void arrow_macros _((char*));
-void mac_line _((char*,char*,int));
-void show_macros _((void));
-void set_mode _((char_int,char_int));
-int putchr _((char_int));
-void hide_pending _((void));
+void term_set(char *);
+void set_macro(char *, char *);
+void arrow_macros(char *);
+void mac_line(char *, char *, int);
+void show_macros(void);
+void set_mode(char_int, char_int);
+int putchr(char_int);
+void hide_pending(void);
 bool finput_pending(bool check_term);
-bool finish_command _((int));
-char* edit_buf _((char*,char*));
-bool finish_dblchar _((void));
-void eat_typeahead _((void));
-void save_typeahead _((char*,int));
-void settle_down _((void));
-Signal_t alarm_catcher _((int));
-int read_tty _((char*,int));
+bool finish_command(int);
+char *edit_buf(char *, char *);
+bool finish_dblchar(void);
+void eat_typeahead(void);
+void save_typeahead(char *, int);
+void settle_down(void);
+Signal_t alarm_catcher(int);
+int read_tty(char *, int);
 #if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(MSDOS)
-int circfill _((void));
+int circfill(void);
 #endif
-void pushchar _((char_int));
-void underprint _((char*));
+void pushchar(char_int);
+void underprint(char *);
 #ifdef NOFIREWORKS
-void no_sofire _((void));
-void no_ulfire _((void));
+void no_sofire(void);
+void no_ulfire(void);
 #endif
-void getcmd _((char*));
-void pushstring _((char*,char_int));
-int get_anything _((void));
-int pause_getcmd _((void));
-void in_char _((char*,char_int,char*));
-void in_answer _((char*,char_int));
-bool in_choice _((char*,char*,char*,char_int));
-int print_lines _((char*,int));
-int check_page_line _((void));
-void page_start _((void));
-void errormsg _((char*));
-void warnmsg _((char*));
-void pad _((int));
+void getcmd(char *);
+void pushstring(char *, char_int);
+int get_anything(void);
+int pause_getcmd(void);
+void in_char(char *, char_int, char *);
+void in_answer(char *, char_int);
+bool in_choice(char *, char *, char *, char_int);
+int print_lines(char *, int);
+int check_page_line(void);
+void page_start(void);
+void errormsg(char *);
+void warnmsg(char *);
+void pad(int);
 #ifdef VERIFY
-void printcmd _((void));
+void printcmd(void);
 #endif
-void rubout _((void));
-void reprint _((void));
+void rubout(void);
+void reprint(void);
 void erase_line(bool to_eos);
-void clear _((void));
-void home_cursor _((void));
-void goto_xy _((int,int));
+void clear(void);
+void home_cursor(void);
+void goto_xy(int, int);
 #ifdef SIGWINCH
-Signal_t winch_catcher _((int));
+Signal_t winch_catcher(int);
 #endif
-void termlib_init _((void));
-void termlib_reset _((void));
+void termlib_init(void);
+void termlib_reset(void);
 #ifdef NBG_SIGIO
-Signal_t waitkey_sig_handler _((int));
+Signal_t waitkey_sig_handler(int);
 #endif
-bool wait_key_pause _((int));
-void xmouse_init _((char*));
-void xmouse_check _((void));
-void xmouse_on _((void));
-void xmouse_off _((void));
+bool wait_key_pause(int);
+void xmouse_init(char *);
+void xmouse_check(void);
+void xmouse_on(void);
+void xmouse_off(void);
 void draw_mousebar(int limit, bool restore_cursor);
-bool check_mousebar _((int,int,int,int,int,int));
-void add_tc_string _((char*,char*));
-char* tc_color_capability _((char*));
+bool check_mousebar(int, int, int, int, int, int);
+void add_tc_string(char *, char *);
+char *tc_color_capability(char *);
 #ifdef MSDOS
-int tputs _((char*,int,int(*) _((char_int))));
-char* tgoto _((char*,int,int));
+int tputs(char *, int, int (*)(char_int));
+char *tgoto(char *, int, int);
 #endif

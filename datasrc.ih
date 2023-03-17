@@ -60,8 +60,8 @@ INI_WORDS datasrc_ini[] = {
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
-static char* dir_or_none _((DATASRC*,char*,int));
-static char* file_or_none _((char*));
-static int srcfile_cmp _((char*,int,HASHDATUM));
-static int check_distance _((int,HASHDATUM*,int));
-static int get_near_miss _((void));
+static char* dir_or_none(DATASRC*,char*,int);
+static char* file_or_none(char*);
+static int srcfile_cmp(char*,int,HASHDATUM);
+static int check_distance(int,HASHDATUM*,int);
+static int get_near_miss(void);

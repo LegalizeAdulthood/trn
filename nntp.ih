@@ -11,4 +11,4 @@ static long rawbytes = -1;	/* bytes remaining to be transfered */
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
-static int nntp_copybody _((char*,int,ART_POS));
+static int nntp_copybody(char*,int,ART_POS);

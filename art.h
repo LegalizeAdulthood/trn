@@ -21,11 +21,9 @@ EXT ART_LINE innerlight INIT(0); /* highlight position for innersearch or 0 */
 EXT char hide_everything INIT(0);/* if set, do not write page now, */
 				 /* ...but execute char when done with page */
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void art_init _((void));
-int do_article _((void));
+void art_init(void);
+int do_article(void);
 bool maybe_set_color(char *cp, bool backsearch);
-int page_switch _((void));
-bool innermore _((void));
-void pager_mouse _((int,int,int,int,int,int));
+int page_switch(void);
+bool innermore(void);
+void pager_mouse(int, int, int, int, int, int);

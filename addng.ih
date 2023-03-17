@@ -6,17 +6,17 @@ static int addgroup_cnt;
 
 /* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
 
-static int addng_cmp _((char*,int,HASHDATUM));
-static int build_addgroup_list _((int,HASHDATUM*,int));
-static void process_list _((int));
+static int addng_cmp(char*,int,HASHDATUM);
+static int build_addgroup_list(int,HASHDATUM*,int);
+static void process_list(int);
 #ifdef SUPPORT_NNTP
-static void new_nntp_groups _((DATASRC*));
+static void new_nntp_groups(DATASRC*);
 #endif
-static void new_local_groups _((DATASRC*));
-static void add_to_hash _((HASHTABLE*,char*,int,char_int));
-static void add_to_list _((char*,int,char_int));
-static int list_groups _((int,HASHDATUM*,int));
+static void new_local_groups(DATASRC*);
+static void add_to_hash(HASHTABLE*,char*,int,char_int);
+static void add_to_list(char*,int,char_int);
+static int list_groups(int,HASHDATUM*,int);
 static void scanline(char *actline, bool add_matching);
 static int agorder_number(const ADDGROUP**,const ADDGROUP**);
-static int agorder_groupname _((const ADDGROUP**,const ADDGROUP**));
-static int agorder_count _((const ADDGROUP**,const ADDGROUP**));
+static int agorder_groupname(const ADDGROUP**,const ADDGROUP**);
+static int agorder_count(const ADDGROUP**,const ADDGROUP**);

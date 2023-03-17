@@ -24,8 +24,8 @@
 #define MAXNGS 100
 
 #ifdef SUPPORT_NNTP
-int server_connection _((void));
-int nntp_handle_timeout _((void));
+int server_connection (void);
+int nntp_handle_timeout (void);
 
 char* server_name;
 char* nntp_auth_file;

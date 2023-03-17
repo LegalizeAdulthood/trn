@@ -2,5 +2,5 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-static int mp_alloc_frag _((void));
-static void mp_free_frag _((int));
+static int mp_alloc_frag(void);
+static void mp_free_frag(int);

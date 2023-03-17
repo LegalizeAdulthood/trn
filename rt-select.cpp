@@ -62,7 +62,7 @@ static int force_sel_pos;
     bool save_sel_rereading = sel_rereading;\
     bool save_sel_exclusive = sel_exclusive;\
     ART_UNREAD save_selected_count = selected_count;\
-    int (*save_extra_commands) _((char_int)) = extra_commands
+    int (*save_extra_commands)(char_int) = extra_commands
 
 #define POP_SELECTOR()\
     sel_exclusive = save_sel_exclusive;\
@@ -102,7 +102,7 @@ static int force_sel_pos;
     univ_ng_hash = save_univ_ng_hash;\
     univ_vg_hash = save_univ_vg_hash
 
-static int (*extra_commands) _((char_int));
+static int (*extra_commands) (char_int);
 
 /* Display a menu of threads/subjects/articles for the user to choose from.
 ** If "cmd" is '+' we display all the unread items and allow the user to mark

@@ -5,4 +5,4 @@
  * is at the user's own risk. 
  */
 
-int edit_distn _((char*,int,char*,int));
+int edit_distn(char *, int, char *, int);

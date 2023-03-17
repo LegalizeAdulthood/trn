@@ -23,5 +23,5 @@ EXT char* charsubst;
 #endif
 
 int putsubstchar(int c, int limit, bool outputok);
-char* current_charsubst _((void));
-int strcharsubst _((char*,char*,int,char_int));
+char *current_charsubst(void);
+int strcharsubst(char *, char *, int, char_int);

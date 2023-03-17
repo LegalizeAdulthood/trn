@@ -2,4 +2,4 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-static void uudecodeline _((char*,FILE*));
+static void uudecodeline(char*,FILE*);

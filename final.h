@@ -14,19 +14,17 @@ EXT char int_count INIT(0);		/* how many interrupts we've had */
 EXT bool bos_on_stop INIT(false);	/* set when handling the stop signal */
 					/* would leave the screen a mess */
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void final_init _((void));
-void finalize _((int))
+void final_init(void);
+void finalize(int)
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR >= 5)
-  __attribute__((noreturn))
+    __attribute__((noreturn))
 #endif
-  ;
-Signal_t int_catcher _((int));
-Signal_t sig_catcher _((int));
+    ;
+Signal_t int_catcher(int);
+Signal_t sig_catcher(int);
 #ifdef SUPPORT_NNTP
-Signal_t pipe_catcher _((int));
+Signal_t pipe_catcher(int);
 #endif
 #ifdef SIGTSTP
-Signal_t stop_catcher _((int));
+Signal_t stop_catcher(int);
 #endif

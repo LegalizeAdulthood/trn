@@ -36,45 +36,43 @@ struct ini_words {
 #define safefree(ptr)  if (!ptr) ; else free((char*)(ptr))
 #define safefree0(ptr)  if (!ptr) ; else free((char*)(ptr)), (ptr)=0
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void util_init _((void));
-int doshell _((char*,char*));
+void util_init(void);
+int doshell(char *, char *);
 #ifndef USE_DEBUGGING_MALLOC
 char *safemalloc(MEM_SIZE);
 char *saferealloc(char *, MEM_SIZE);
 #endif
-char* safecat _((char*,char*,int));
+char *safecat(char *, char *, int);
 #ifdef SETUIDGID
-int eaccess _((char*,int));
+int eaccess(char *, int);
 #endif
-char* trn_getwd (char*,int);
+char *trn_getwd(char *, int);
 char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp);
-int makedir _((char*,int));
-void notincl _((char*));
-void growstr _((char**,int*,int));
-void setdef _((char*,char*));
+int makedir(char *, int);
+void notincl(char *);
+void growstr(char **, int *, int);
+void setdef(char *, char *);
 #ifndef NO_FILELINKS
-void safelink _((char*,char*));
+void safelink(char *, char *);
 #endif
-void verify_sig _((void));
-double current_time _((void));
-time_t text2secs _((char*,time_t));
-char* secs2text _((time_t));
-char* temp_filename _((void));
+void verify_sig(void);
+double current_time(void);
+time_t text2secs(char *, time_t);
+char *secs2text(time_t);
+char *temp_filename(void);
 #ifdef SUPPORT_NNTP
-char* get_auth_user _((void));
-char* get_auth_pass _((void));
+char *get_auth_user(void);
+char *get_auth_pass(void);
 #endif
 #if defined(USE_GENAUTH) && defined(SUPPORT_NNTP)
-char* get_auth_command _((void));
+char *get_auth_command(void);
 #endif
-char** prep_ini_words _((INI_WORDS*));
-void unprep_ini_words _((INI_WORDS*));
-void prep_ini_data _((char*,char*));
-bool parse_string _((char**,char**));
-char* next_ini_section _((char*,char**,char**));
-char* parse_ini_section _((char*,INI_WORDS*));
-bool check_ini_cond _((char*));
-char menu_get_char _((void));
-int edit_file _((char*));
+char **prep_ini_words(INI_WORDS *);
+void unprep_ini_words(INI_WORDS *);
+void prep_ini_data(char *, char *);
+bool parse_string(char **, char **);
+char *next_ini_section(char *, char **, char **);
+char *parse_ini_section(char *, INI_WORDS *);
+bool check_ini_cond(char *);
+char menu_get_char(void);
+int edit_file(char *);

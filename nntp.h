@@ -13,36 +13,34 @@
 
 #endif
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
 #ifdef SUPPORT_NNTP
-int nntp_list _((char*,char*,int));
+int nntp_list(char *, char *, int);
 #endif
-void nntp_finish_list _((void));
-int nntp_group _((char*,NGDATA*));
-int nntp_stat _((ART_NUM));
-ART_NUM nntp_stat_id _((char*));
-ART_NUM nntp_next_art _((void));
-int nntp_header _((ART_NUM));
-void nntp_body _((ART_NUM));
-long nntp_artsize _((void));
-int nntp_finishbody _((int));
-int nntp_seekart _((ART_POS));
-ART_POS nntp_tellart _((void));
-char* nntp_readart _((char*,int));
-time_t nntp_time _((void));
-int nntp_newgroups _((time_t));
-int nntp_artnums _((void));
+void nntp_finish_list(void);
+int nntp_group(char *, NGDATA *);
+int nntp_stat(ART_NUM);
+ART_NUM nntp_stat_id(char *);
+ART_NUM nntp_next_art(void);
+int nntp_header(ART_NUM);
+void nntp_body(ART_NUM);
+long nntp_artsize(void);
+int nntp_finishbody(int);
+int nntp_seekart(ART_POS);
+ART_POS nntp_tellart(void);
+char *nntp_readart(char *, int);
+time_t nntp_time(void);
+int nntp_newgroups(time_t);
+int nntp_artnums(void);
 #if 0
-int nntp_rover _((void));
+int nntp_rover(void);
 #endif
-ART_NUM nntp_find_real_art _((ART_NUM));
+ART_NUM nntp_find_real_art(ART_NUM);
 char *nntp_artname(ART_NUM artnum, bool allocate);
-char* nntp_tmpname _((int));
+char *nntp_tmpname(int);
 int nntp_handle_nested_lists(void);
-int nntp_handle_timeout _((void));
-void nntp_server_died _((DATASRC*));
+int nntp_handle_timeout(void);
+void nntp_server_died(DATASRC *);
 #ifdef SUPPORT_XTHREAD
-long nntp_readcheck _((void));
-long nntp_read _((char*,long));
+long nntp_readcheck(void);
+long nntp_read(char *, long);
 #endif

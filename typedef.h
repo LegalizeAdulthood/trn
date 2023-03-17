@@ -12,8 +12,6 @@ typedef long		ACT_POS;	/* char position in active file */
 typedef unsigned int	MEM_SIZE;	/* for passing to malloc */
 typedef unsigned char	Uchar;		/* more space-efficient */
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
 /* addng.h */
 
 typedef struct addgroup ADDGROUP;

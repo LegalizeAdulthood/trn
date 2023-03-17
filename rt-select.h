@@ -67,14 +67,12 @@ EXT bool art_sel_ilock INIT(false);
 #define UR_BREAK	2	/* request return to selector */
 #define UR_ERROR	3	/* non-normal return */
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-char article_selector _((char_int));
-char multirc_selector _((void));
-char newsgroup_selector _((void));
-char addgroup_selector _((int));
-char option_selector _((void));
-char universal_selector _((void));
-void selector_mouse _((int,int,int,int,int,int));
-int univ_visit_group _((char*));
-void univ_visit_help _((int));
+char article_selector(char_int);
+char multirc_selector(void);
+char newsgroup_selector(void);
+char addgroup_selector(int);
+char option_selector(void);
+char universal_selector(void);
+void selector_mouse(int, int, int, int, int, int);
+int univ_visit_group(char *);
+void univ_visit_help(int);

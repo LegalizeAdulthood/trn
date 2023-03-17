@@ -109,11 +109,9 @@ EXT int s_cur_type INIT(0);
 EXT int s_itemnum INIT(true);
 EXT int s_mode_vi INIT(0);
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void s_init_context _((int,int));
-int s_new_context _((int));
-void s_save_context _((void));
-void s_change_context _((int));
-void s_clean_contexts _((void));
-void s_delete_context _((int));
+void s_init_context(int, int);
+int s_new_context(int);
+void s_save_context(void);
+void s_change_context(int);
+void s_clean_contexts(void);
+void s_delete_context(int);

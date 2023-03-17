@@ -33,7 +33,7 @@
 #endif
 
 #ifndef WINSOCK
-unsigned long inet_addr _((char*));
+unsigned long inet_addr (char*);
 struct servent* getservbyname();
 struct hostent* gethostbyname();
 #endif

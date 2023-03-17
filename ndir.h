@@ -48,12 +48,12 @@ typedef struct _dirdesc {
 	char	dd_buf[DIRBLKSIZ];
 } DIR;
 
-DIR* opendir _((char*));
-Direntry_t* readdir _((DIR*));
-long telldir _((DIR*));
-void seekdir _((DIR*));
-#define rewinddir(dirp)	seekdir((dirp), (long)0)
-void closedir _((DIR*));
+DIR *opendir(char *);
+Direntry_t *readdir(DIR *);
+long telldir(DIR *);
+void seekdir(DIR *);
+#define rewinddir(dirp) seekdir((dirp), (long)0)
+void closedir(DIR *);
 
 #endif
 #endif

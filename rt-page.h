@@ -43,21 +43,19 @@ struct sel_item {
 #define MAX_SEL 99
 EXT SEL_ITEM sel_items[MAX_SEL];
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-bool set_sel_mode _((char_int));
-char* get_sel_order _((int));
-bool set_sel_order _((int,char*));
-bool set_sel_sort _((int,char_int));
-void set_selector _((int,int));
+bool set_sel_mode(char_int);
+char *get_sel_order(int);
+bool set_sel_order(int, char *);
+bool set_sel_sort(int, char_int);
+void set_selector(int, int);
 void init_pages(bool fill_last_page);
-bool first_page _((void));
-bool last_page _((void));
-bool next_page _((void));
-bool prev_page _((void));
-bool calc_page _((SEL_UNION));
+bool first_page(void);
+bool last_page(void);
+bool next_page(void);
+bool prev_page(void);
+bool calc_page(SEL_UNION);
 void display_page_title(bool home_only);
-void display_page _((void));
-void update_page _((void));
+void display_page(void);
+void update_page(void);
 void output_sel(int ix, int sel, bool update);
-void display_option _((int,int));
+void display_option(int, int);

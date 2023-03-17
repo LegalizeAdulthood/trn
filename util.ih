@@ -2,5 +2,5 @@
  */
 
 #ifndef HAS_GETCWD
-static char* trn_getcwd _((char*,int));
+static char* trn_getcwd(char*,int);
 #endif

@@ -8,8 +8,6 @@ EXT long lastactsiz INIT(0);		/* last known size of active file */
 EXT long lastnewtime INIT(0);		/* time of last newgroup request */
 EXT long lastextranum INIT(0);
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void last_init _((void));
-void readlast _((void));
-void writelast _((void));
+void last_init(void);
+void readlast(void);
+void writelast(void);

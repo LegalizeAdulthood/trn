@@ -150,21 +150,19 @@ EXT long headbuf_size;
 #define fetchxref(artnum,copy) prefetchlines(artnum,XREF_LINE,copy)
 #endif
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void head_init _((void));
+void head_init(void);
 #ifdef DEBUG
-void dumpheader _((char*));
+void dumpheader(char *);
 #endif
-int set_line_type _((char*,char*));
-int get_header_num _((char*));
-void start_header _((ART_NUM));
-void end_header_line _((void));
-bool parseline _((char*,int,int));
-void end_header _((void));
-bool parseheader _((ART_NUM));
-char* fetchlines _((ART_NUM,int));
+int set_line_type(char *, char *);
+int get_header_num(char *);
+void start_header(ART_NUM);
+void end_header_line(void);
+bool parseline(char *, int, int);
+void end_header(void);
+bool parseheader(ART_NUM);
+char *fetchlines(ART_NUM, int);
 #ifdef SCAN
-char* mp_fetchlines _((ART_NUM,int,int));
+char *mp_fetchlines(ART_NUM, int, int);
 #endif
 char *prefetchlines(ART_NUM artnum, int which_line, bool copy);

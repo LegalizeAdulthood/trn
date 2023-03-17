@@ -48,18 +48,16 @@ EXT long kf_daynum;			/* day number for thread killfile */
 EXT ART_NUM killfirst;			/* used as firstart when killing */
 #endif
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void kfile_init _((void));
-int do_kfile _((FILE*,int));
-void kill_unwanted _((ART_NUM,char*,int));
-void rewrite_kfile _((ART_NUM));
-void update_thread_kfile _((void));
-void change_auto_flags _((ARTICLE*,int));
-void clear_auto_flags _((ARTICLE*));
-void perform_auto_flags _((ARTICLE*,int,int,int));
-int edit_kfile _((void));
+void kfile_init(void);
+int do_kfile(FILE *, int);
+void kill_unwanted(ART_NUM, char *, int);
+void rewrite_kfile(ART_NUM);
+void update_thread_kfile(void);
+void change_auto_flags(ARTICLE *, int);
+void clear_auto_flags(ARTICLE *);
+void perform_auto_flags(ARTICLE *, int, int, int);
+int edit_kfile(void);
 #ifdef KILLFILES
-void open_kfile _((int));
+void open_kfile(int);
 #endif
 void kf_append(char *cmd, bool local);

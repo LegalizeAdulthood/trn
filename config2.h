@@ -37,17 +37,9 @@
 #include "msdos.h"
 #endif
 
-/* what to do with ansi prototypes -- '()' == ignore, 'x' == use */
-#ifndef _
-#	define _(x) x
-#	ifndef CONST
-#	    define CONST const
-#	endif
-#endif
-
 /* some handy defs */
 
-#define char_int int
+using char_int = int;
 
 #define Ctl(ch) (ch & 037)
 

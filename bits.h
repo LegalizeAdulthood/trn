@@ -4,22 +4,20 @@
 
 EXT int dmcount INIT(0);
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-void bits_init _((void));
-void rc_to_bits _((void));
-bool set_firstart _((char*));
-void bits_to_rc _((void));
-void find_existing_articles _((void));
-void onemore _((ARTICLE*));
-void oneless _((ARTICLE*));
-void oneless_artnum _((ART_NUM));
-void onemissing _((ARTICLE*));
-void unmark_as_read _((ARTICLE*));
-void set_read _((ARTICLE*));
-void delay_unmark _((ARTICLE*));
-void mark_as_read _((ARTICLE*));
-void mark_missing_articles _((void));
-void check_first _((ART_NUM));
-void yankback _((void));
+void bits_init(void);
+void rc_to_bits(void);
+bool set_firstart(char *);
+void bits_to_rc(void);
+void find_existing_articles(void);
+void onemore(ARTICLE *);
+void oneless(ARTICLE *);
+void oneless_artnum(ART_NUM);
+void onemissing(ARTICLE *);
+void unmark_as_read(ARTICLE *);
+void set_read(ARTICLE *);
+void delay_unmark(ARTICLE *);
+void mark_as_read(ARTICLE *);
+void mark_missing_articles(void);
+void check_first(ART_NUM);
+void yankback(void);
 bool chase_xrefs(bool until_key);

@@ -3,5 +3,5 @@
  *
  */
 
-char* sc_easy_append _((void));
-char* sc_easy_command _((void));
+char *sc_easy_append(void);
+char *sc_easy_command(void);
