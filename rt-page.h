@@ -24,7 +24,8 @@ EXT char* sel_art_dmode INIT("*lmds");
 
 EXT bool group_init_done INIT(true);
 
-union sel_union {
+union SEL_UNION
+{
     ARTICLE* ap;
     SUBJECT* sp;
     ADDGROUP* gp;
@@ -34,7 +35,8 @@ union sel_union {
     int op;
 };
 
-struct sel_item {
+struct SEL_ITEM
+{
     SEL_UNION u;
     int line;
     int sel;
@@ -53,7 +55,7 @@ bool first_page();
 bool last_page();
 bool next_page();
 bool prev_page();
-bool calc_page(SEL_UNION);
+bool calc_page(SEL_UNION u);
 void display_page_title(bool home_only);
 void display_page();
 void update_page();

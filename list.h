@@ -2,7 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-struct listnode {
+struct LISTNODE
+{
     LISTNODE* next;
     /*LISTNODE* mid;*/
     long low;
@@ -11,7 +12,8 @@ struct listnode {
     char data[1];  /* this is actually longer */
 };
 
-struct list {
+struct LIST
+{
     LISTNODE* first;
     LISTNODE* recent;
     void (*init_node)(LIST*,LISTNODE*);
@@ -26,11 +28,11 @@ struct list {
 #define LF_SPARSE	0x0002
 
 void list_init();
-LIST *new_list(long, long, int, int, int, void (*)(LIST *, LISTNODE *));
-char *listnum2listitem(LIST *, long);
-long listitem2listnum(LIST *, char *);
-bool walk_list(LIST *, bool (*)(char *, int), int);
-long existing_listnum(LIST *, long, int);
-char *next_listitem(LIST *, char *);
-char *prev_listitem(LIST *, char *);
-void delete_list(LIST *);
+LIST *new_list(long low, long high, int item_size, int items_per_node, int flags, void (*init_node)(LIST *, LISTNODE *));
+char *listnum2listitem(LIST *list, long num);
+long listitem2listnum(LIST *list, char *ptr);
+bool walk_list(LIST *list, bool (*callback)(char *, int), int arg);
+long existing_listnum(LIST *list, long num, int direction);
+char *next_listitem(LIST *list, char *ptr);
+char *prev_listitem(LIST *list, char *ptr);
+void delete_list(LIST *list);

@@ -41,5 +41,5 @@ EXT bool art_doread;		/* search read articles? */
 void artsrch_init();
 #ifdef ARTSEARCH
 int art_search(char *, int, int);
-bool wanted(COMPEX *, ART_NUM, char_int);
+bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope);
 #endif

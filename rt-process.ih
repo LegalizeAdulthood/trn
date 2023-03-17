@@ -4,4 +4,4 @@
 
 static void fix_msgid(char*);
 static char* valid_message_id(char*,char*);
-static void unlink_child(ARTICLE*);
+static void unlink_child(ARTICLE *child);

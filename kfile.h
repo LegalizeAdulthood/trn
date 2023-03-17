@@ -53,9 +53,9 @@ int do_kfile(FILE *, int);
 void kill_unwanted(ART_NUM, char *, int);
 void rewrite_kfile(ART_NUM);
 void update_thread_kfile();
-void change_auto_flags(ARTICLE *, int);
-void clear_auto_flags(ARTICLE *);
-void perform_auto_flags(ARTICLE *, int, int, int);
+void change_auto_flags(ARTICLE *ap, int auto_flag);
+void clear_auto_flags(ARTICLE *ap);
+void perform_auto_flags(ARTICLE *ap, int thread_autofl, int subj_autofl, int chain_autofl);
 int edit_kfile();
 #ifdef KILLFILES
 void open_kfile(int);

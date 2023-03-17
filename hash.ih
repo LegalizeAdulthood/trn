@@ -5,23 +5,23 @@
 
 #define HASHMAG  ((char)0257)
 
-struct hashent {
+struct HASHENT
+{
     HASHENT* he_next;		/* in hash chain */
     HASHDATUM he_data;
     int he_keylen;		/* to help verify a match */
 };
 
-struct hashtable {
+struct HASHTABLE
+{
     HASHENT** ht_addr;		/* array of HASHENT pointers */
     unsigned ht_size;
     char ht_magic;
     int (*ht_cmp)(char*,int,HASHDATUM);
 };
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-static HASHENT** hashfind(HASHTABLE*,char*,int);
+static HASHENT **hashfind(HASHTABLE *tbl, char *key, int keylen);
 static unsigned hash(char*,int);
-static int default_cmp(char*,int,HASHDATUM);
-static HASHENT* healloc();
-static void hefree(HASHENT*);
+static int default_cmp(char *key, int keylen, HASHDATUM data);
+static HASHENT *healloc();
+static void hefree(HASHENT *hp);

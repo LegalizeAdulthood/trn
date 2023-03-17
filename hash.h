@@ -5,17 +5,20 @@
  * Geoffrey Collyer.  See hash.c for his copyright.
  */
 
-struct hashdatum {
+struct HASHDATUM
+{
     char* dat_ptr;
     unsigned dat_len;
 };
 
-#define HASH_DEFCMPFUNC (int (*)(char *, int, HASHDATUM)) nullptr
+using HASHCMPFUNC = int (*)(char *, int, HASHDATUM);
 
-HASHTABLE *hashcreate(unsigned, int (*)(char *, int, HASHDATUM));
-void hashdestroy(HASHTABLE *);
-void hashstore(HASHTABLE *, char *, int, HASHDATUM);
-void hashdelete(HASHTABLE *, char *, int);
-HASHDATUM hashfetch(HASHTABLE *, char *, int);
-void hashstorelast(HASHDATUM);
-void hashwalk(HASHTABLE *, int (*)(int, HASHDATUM *, int), int);
+#define HASH_DEFCMPFUNC (HASHCMPFUNC) nullptr
+
+HASHTABLE *hashcreate(unsigned size, int (*cmpfunc)(char *, int, HASHDATUM));
+void hashdestroy(HASHTABLE *tbl);
+void hashstore(HASHTABLE *tbl, char *key, int keylen, HASHDATUM data);
+void hashdelete(HASHTABLE *tbl, char *key, int keylen);
+HASHDATUM hashfetch(HASHTABLE *tbl, char *key, int keylen);
+void hashstorelast(HASHDATUM data);
+void hashwalk(HASHTABLE *tbl, int (*nodefunc)(int, HASHDATUM *, int), int extra);

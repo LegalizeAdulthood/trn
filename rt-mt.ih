@@ -15,7 +15,8 @@ typedef int	LONG;
 #define ROOT_ARTICLE	0x0001		/* article flag definitions */
 #define HAS_XREFS	0x0004		/* article has an xref line */
 
-struct packed_root {
+struct PACKED_ROOT
+{
     LONG root_num;
     WORD articles;
     WORD article_cnt;
@@ -23,7 +24,8 @@ struct packed_root {
     WORD pad_hack;
 };
 
-struct packed_article {
+struct PACKED_ARTICLE
+{
     LONG num;
     LONG date;
     WORD subject, author;
@@ -35,7 +37,8 @@ struct packed_article {
     WORD root;
 };
 
-struct total {
+struct TOTAL
+{
     LONG first, last;
     LONG string1;
     LONG string2;
@@ -47,7 +50,8 @@ struct total {
     WORD pad_hack;
 };
 
-struct bmap {
+struct BMAP
+{
     BYTE l[sizeof (LONG)];
     BYTE w[sizeof (WORD)];
     BYTE version;
@@ -60,13 +64,13 @@ static char* mt_name(char*);
 static int read_authors();
 static int read_subjects();
 static int read_roots();
-static SUBJECT* the_subject(int);
+static SUBJECT *the_subject(int num);
 static char* the_author(int);
-static ARTICLE* the_article(int,int);
+static ARTICLE *the_article(int relative_offset, int num);
 static int read_articles();
 static int read_ids();
 static void tweak_data();
 static int read_item(char**,MEM_SIZE);
-static void mybytemap(BMAP*);
+static void mybytemap(BMAP *map);
 static void wp_bmap(WORD*,int);
 static void lp_bmap(LONG*,int);

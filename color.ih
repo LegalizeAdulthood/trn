@@ -3,7 +3,8 @@
 /* This software is copyrighted as detailed in the LICENSE file, and
  * this file is also Copyright 1995 by Gran Larsson <hoh@approve.se>. */
 
-struct color_obj {
+struct COLOR_OBJ
+{
     char* name;
     char* fg;
     char* bg;

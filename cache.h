@@ -4,7 +4,8 @@
 
 /* Subjects get their own structure */
 
-struct subject {
+struct SUBJECT
+{
     SUBJECT* next;
     SUBJECT* prev;
     ARTICLE* articles;
@@ -31,7 +32,8 @@ struct subject {
 
 /* This is our article-caching structure */
 
-struct article {
+struct ARTICLE
+{
     ART_NUM num;
     time_t date;
     SUBJECT* subj;
@@ -134,18 +136,18 @@ EXT ART_NUM xref_to_get;
 void cache_init();
 void build_cache();
 void close_cache();
-void cache_article(ARTICLE *);
-void check_for_near_subj(ARTICLE *);
+void cache_article(ARTICLE *ap);
+void check_for_near_subj(ARTICLE *ap);
 void change_join_subject_len(int);
-void check_poster(ARTICLE *);
+void check_poster(ARTICLE *ap);
 void uncache_article(ARTICLE *ap, bool remove_empties);
 char *fetchcache(ART_NUM artnum, int which_line, bool fill_cache);
 char *get_cached_line(ARTICLE *ap, int which_line, bool no_truncs);
-void set_subj_line(ARTICLE *, char *, int);
+void set_subj_line(ARTICLE *ap, char *subj, int size);
 int decode_header(char *, char *, int);
 void dectrl(char *);
-void set_cached_line(ARTICLE *, int, char *);
-int subject_cmp(char *, int, HASHDATUM);
+void set_cached_line(ARTICLE *ap, int which_line, char *s);
+int subject_cmp(char *key, int keylen, HASHDATUM data);
 #ifdef PENDING
 void look_ahead();
 #endif
@@ -158,4 +160,4 @@ bool cache_all_arts();
 bool cache_unread_arts();
 bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles);
 bool cache_range(ART_NUM, ART_NUM);
-void clear_article(ARTICLE *);
+void clear_article(ARTICLE *ap);

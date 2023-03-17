@@ -5,7 +5,8 @@
 
 #define DEFAULT_SCOREDIR "%+/scores"
 
-struct sf_entry {
+struct SF_ENTRY
+{
     int head_type;	/* header # (see head.h) */
     int score;		/* score change */
     char* str1;		/* first string part */
@@ -19,11 +20,12 @@ struct sf_entry {
 /* note that negative header #s are used to indicate special entries... */
 
 EXT int sf_num_entries INIT(0);	/* # of entries */
-EXT SF_ENTRY* sf_entries;	/* array of entries */
+EXT SF_ENTRY *sf_entries INIT(nullptr); /* array of entries */
 
 #ifdef SCOREFILE_CACHE
 /* for cached score rules */
-struct sf_file {
+struct SF_FILE
+{
     char* fname;
     int num_lines;
     int num_alloc;
@@ -31,7 +33,7 @@ struct sf_file {
     char** lines;
 };
 
-EXT SF_FILE *sf_files INIT((SF_FILE*)nullptr);
+EXT SF_FILE *sf_files INIT(nullptr);
 EXT int sf_num_files INIT(0);
 #endif
 

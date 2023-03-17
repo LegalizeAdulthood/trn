@@ -2,7 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-struct srcfile {
+struct SRCFILE
+{
     FILE*	fp;		/* the file pointer to read the data */
     HASHTABLE*	hp;		/* the hash table for the data */
     LIST*	lp;		/* the list used to store the data */
@@ -13,7 +14,8 @@ struct srcfile {
 #endif
 };
 
-struct datasrc {
+struct DATASRC
+{
     char*	name;		/* our user-friendly name */
     char*	newsid;		/* the active file name or host name */
     SRCFILE	act_sf;		/* the active file's hashed contents */
@@ -89,19 +91,19 @@ EXT char* nntp_auth_file INIT(nullptr);
 
 void datasrc_init();
 char *read_datasrcs(char *);
-DATASRC *get_datasrc(char *);
-DATASRC *new_datasrc(char *, char **);
-bool open_datasrc(DATASRC *);
-void set_datasrc(DATASRC *);
+DATASRC *get_datasrc(char *name);
+DATASRC *new_datasrc(char *name, char **vals);
+bool open_datasrc(DATASRC *dp);
+void set_datasrc(DATASRC *dp);
 void check_datasrcs();
-void close_datasrc(DATASRC *);
-bool actfile_hash(DATASRC *);
-bool find_actgrp(DATASRC *, char *, char *, int, ART_NUM);
-char *find_grpdesc(DATASRC *, char *);
-int srcfile_open(SRCFILE *, char *, char *, char *);
+void close_datasrc(DATASRC *dp);
+bool actfile_hash(DATASRC *dp);
+bool find_actgrp(DATASRC *dp, char *outbuf, char *nam, int len, ART_NUM high);
+char *find_grpdesc(DATASRC *dp, char *groupname);
+int srcfile_open(SRCFILE *sfp, char *filename, char *fetchcmd, char *server);
 #ifdef SUPPORT_NNTP
-char *srcfile_append(SRCFILE *, char *, int);
-void srcfile_end_append(SRCFILE *, char *);
+char *srcfile_append(SRCFILE *sfp, char *bp, int keylen);
+void srcfile_end_append(SRCFILE *sfp, char *filename);
 #endif
-void srcfile_close(SRCFILE *);
+void srcfile_close(SRCFILE *sfp);
 int find_close_match();

@@ -26,7 +26,7 @@ typedef int (*DECODE_FUNC)(FILE *, int);
 void decode_init();
 char *decode_fix_fname(char *);
 char *decode_subject(ART_NUM, int *, int *);
-int decode_piece(MIMECAP_ENTRY *, char *);
+int decode_piece(MIMECAP_ENTRY *mcp, char *first_line);
 DECODE_FUNC decode_function(int);
 char *decode_mkdir(char *);
 void decode_rmdir(char *);

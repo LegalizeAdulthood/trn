@@ -2,7 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-struct addgroup {
+struct ADDGROUP {
     ADDGROUP* next;
     ADDGROUP* prev;
     DATASRC* datasrc;

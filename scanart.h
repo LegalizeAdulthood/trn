@@ -23,13 +23,14 @@
 #define SA_NORM 0
 
 /* per-entry data */
-struct sa_entrydata {
+struct SA_ENTRYDATA
+{
     ART_NUM artnum;
     long subj_thread_num;
     char sa_flags;		/* status bitmap (marked, select, etc...) */
 };
 
-EXT SA_ENTRYDATA* sa_ents INIT((SA_ENTRYDATA*)0);
+EXT SA_ENTRYDATA* sa_ents INIT(nullptr);
 EXT int sa_num_ents INIT(0);
 EXT int sa_ents_alloc INIT(0);
 

@@ -5,7 +5,8 @@
 
 #ifdef SUPPORT_NNTP
 
-struct nntplink {
+struct NNTPLINK
+{
     FILE*	rd_fp;
     FILE*	wr_fp;
     time_t	last_command;

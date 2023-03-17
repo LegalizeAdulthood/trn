@@ -4,19 +4,17 @@
 
 static int addgroup_cnt;
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
-static int addng_cmp(char*,int,HASHDATUM);
-static int build_addgroup_list(int,HASHDATUM*,int);
+static int addng_cmp(char *key, int keylen, HASHDATUM data);
+static int build_addgroup_list(int keylen, HASHDATUM *data, int extra);
 static void process_list(int);
 #ifdef SUPPORT_NNTP
-static void new_nntp_groups(DATASRC*);
+static void new_nntp_groups(DATASRC *dp);
 #endif
-static void new_local_groups(DATASRC*);
-static void add_to_hash(HASHTABLE*,char*,int,char_int);
+static void new_local_groups(DATASRC *dp);
+static void add_to_hash(HASHTABLE *ng, char *name, int toread, char_int ch);
 static void add_to_list(char*,int,char_int);
-static int list_groups(int,HASHDATUM*,int);
+static int list_groups(int keylen, HASHDATUM *data, int add_matching);
 static void scanline(char *actline, bool add_matching);
-static int agorder_number(const ADDGROUP**,const ADDGROUP**);
-static int agorder_groupname(const ADDGROUP**,const ADDGROUP**);
-static int agorder_count(const ADDGROUP**,const ADDGROUP**);
+static int agorder_number(const ADDGROUP **app1, const ADDGROUP **app2);
+static int agorder_groupname(const ADDGROUP **app1, const ADDGROUP **app2);
+static int agorder_count(const ADDGROUP **app1, const ADDGROUP **app2);

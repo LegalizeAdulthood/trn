@@ -24,4 +24,4 @@ int perform(char *, int);
 int ngsel_perform();
 int ng_perform(char *, int);
 int addgrp_sel_perform();
-int addgrp_perform(ADDGROUP *, char *, int);
+int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level);

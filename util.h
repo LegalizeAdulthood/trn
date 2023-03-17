@@ -23,7 +23,8 @@ EXT MEM_SIZE buflen_last_line_got INIT(0);
 
 /* a template for parsing an ini file */
 
-struct ini_words {
+struct INI_WORDS
+{
     int checksum;
     char* item;
     char* help_str;
@@ -67,12 +68,12 @@ char *get_auth_pass();
 #if defined(USE_GENAUTH) && defined(SUPPORT_NNTP)
 char *get_auth_command();
 #endif
-char **prep_ini_words(INI_WORDS *);
-void unprep_ini_words(INI_WORDS *);
+char **prep_ini_words(INI_WORDS words[]);
+void unprep_ini_words(INI_WORDS words[]);
 void prep_ini_data(char *, char *);
 bool parse_string(char **, char **);
 char *next_ini_section(char *, char **, char **);
-char *parse_ini_section(char *, INI_WORDS *);
+char *parse_ini_section(char *cp, INI_WORDS words[]);
 bool check_ini_cond(char *);
 char menu_get_char();
 int edit_file(char *);

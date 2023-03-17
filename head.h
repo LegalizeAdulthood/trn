@@ -41,7 +41,8 @@
 #define XREF_LINE	(SUBJ_LINE+1)		/* xref */
 #define HEAD_LAST	(XREF_LINE+1)		/* total # of headers */
 
-struct headtype {
+struct HEADTYPE
+{
     char* name;			/* header line identifier */
     ART_POS minpos;		/* pointer to beginning of line in article */
     ART_POS maxpos;		/* pointer to end of line in article */
@@ -49,7 +50,8 @@ struct headtype {
     char flags;			/* the header's flags */
 };
 
-struct user_headtype {
+struct USER_HEADTYPE
+{
     char* name;			/* user-defined headers */
     char length;		/* the header's string length */
     char flags;			/* the header's flags */
@@ -65,7 +67,7 @@ struct user_headtype {
 /* This array must stay in the same order as the list above */
 
 #ifndef DOINIT
-EXT struct headtype htype[HEAD_LAST];
+EXT HEADTYPE htype[HEAD_LAST];
 #else
 
 #define HIDDEN    (HT_HIDE|HT_DEFHIDE)
@@ -85,7 +87,7 @@ EXT struct headtype htype[HEAD_LAST];
 #define FILT_CACHED 0
 #endif
 
-struct headtype htype[HEAD_LAST] = {
+HEADTYPE htype[HEAD_LAST] = {
  /* name             minpos   maxpos  length   flag */
     {nullstr,/*BODY*/	0,	0,	0,	0		},
     {nullstr,/*SHOWN*/	0,	0,	0,	0		},
@@ -129,7 +131,7 @@ struct headtype htype[HEAD_LAST] = {
 
 #endif
 
-EXT struct user_headtype* user_htype INIT(nullptr);
+EXT USER_HEADTYPE* user_htype INIT(nullptr);
 EXT short user_htypeix[26];
 EXT int user_htype_cnt INIT(0);
 EXT int user_htype_max INIT(0);

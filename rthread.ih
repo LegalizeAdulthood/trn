@@ -2,9 +2,9 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-static int cleanup_msgid_hash(int, HASHDATUM *, int);
-static ARTICLE *first_sib(ARTICLE *, int);
-static ARTICLE *last_sib(ARTICLE *, int, ARTICLE *);
+static int cleanup_msgid_hash(int keylen, HASHDATUM *data, int extra);
+static ARTICLE *first_sib(ARTICLE *ta, int depth);
+static ARTICLE *last_sib(ARTICLE *ta, int depth, ARTICLE *limit);
 static int subjorder_subject(const SUBJECT **spp1, const SUBJECT **spp2);
 static int subjorder_date(const SUBJECT **spp1, const SUBJECT **spp2);
 static int subjorder_count(const SUBJECT **spp1, const SUBJECT **spp2);
@@ -16,7 +16,7 @@ static int threadorder_date(const SUBJECT **spp1, const SUBJECT **spp2);
 static int threadorder_count(const SUBJECT **spp1, const SUBJECT **spp2);
 static int threadorder_lines(const SUBJECT **spp1, const SUBJECT **spp2);
 #ifdef SCORE
-static int thread_score_high(const SUBJECT *);
+static int thread_score_high(const SUBJECT *tp);
 #endif
 static int threadorder_score(const SUBJECT **spp1, const SUBJECT **spp2);
 static int artorder_date(const ARTICLE **art1, const ARTICLE **art2);

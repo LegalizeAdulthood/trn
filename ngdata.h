@@ -2,7 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-struct ngdata {
+struct NGDATA
+{
     NGDATA* prev;
     NGDATA* next;
     NEWSRC* rc;		/* which rc is this line from? */
@@ -52,10 +53,10 @@ EXT ART_NUM ng_go_artnum INIT(0);
 EXT char* ng_go_msgid INIT(nullptr);
 
 void ngdata_init();
-void set_ng(NGDATA *);
+void set_ng(NGDATA *np);
 int access_ng();
 void chdir_newsdir();
 void grow_ng(ART_NUM);
 void sort_newsgroups();
 void ng_skip();
-ART_NUM getngsize(NGDATA *);
+ART_NUM getngsize(NGDATA *gp);

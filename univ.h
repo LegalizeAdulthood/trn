@@ -45,18 +45,21 @@
 /* articles use maximum score */
 #define UF_VG_MAXSCORE	0x02
 
-struct univ_groupmask_data {
+struct UNIV_GROUPMASK_DATA
+{
     char* title;
     char* masklist;
 };
 
-struct univ_configfile_data {
+struct UNIV_CONFIGFILE_DATA
+{
     char* title;
     char* fname;
     char* label;
 };
 
-struct univ_virt_data {
+struct UNIV_VIRT_DATA
+{
     char* ng;
     char* id;
     char* from;
@@ -64,7 +67,8 @@ struct univ_virt_data {
     ART_NUM num;
 };
 
-struct univ_virt_group {
+struct UNIV_VIRT_GROUP
+{
     char* ng;
 #ifdef SCORE
     int minscore;
@@ -73,15 +77,18 @@ struct univ_virt_group {
     char flags;
 };
 
-struct univ_newsgroup {
+struct UNIV_NEWSGROUP
+{
     char* ng;
 };
 
-struct univ_textfile {
+struct UNIV_TEXTFILE
+{
     char* fname;
 };
 
-union univ_data {
+union UNIV_DATA
+{
     char* str;
     int i;
     UNIV_GROUPMASK_DATA gmask;
@@ -92,7 +99,8 @@ union univ_data {
     UNIV_TEXTFILE textfile;
 };
 
-struct univ_item {
+struct UNIV_ITEM
+{
     UNIV_ITEM* next;
     UNIV_ITEM* prev;
     int num;				/* natural order (for sort) */

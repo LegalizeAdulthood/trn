@@ -19,14 +19,16 @@
 #define S_HELP 3
 #define S_VIRT 4
 
-struct page_ent {
+struct PAGE_ENT
+{
     long entnum;	/* entry (article/message/newsgroup) number */
     short lines;	/* how many screen lines to describe? */
     short start_line;	/* screen line (0 = line under top status bar) */
     char pageflags;	/* not currently used. */
 };
 
-struct scontext {
+struct SCONTEXT
+{
     int type;			/* context type */
 
     /* ordering information */
@@ -97,7 +99,7 @@ EXT long  s_flags INIT(0);		/* misc. flags */
 
 EXT int s_num_contexts INIT(0);
 /* array of context structures */
-EXT SCONTEXT* s_contexts INIT((SCONTEXT*)nullptr);
+EXT SCONTEXT* s_contexts INIT(nullptr);
 
 /* current context number */
 EXT int s_cur_context INIT(0);

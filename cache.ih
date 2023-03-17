@@ -2,5 +2,5 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-static void init_artnode(LIST*,LISTNODE*);
+static void init_artnode(LIST *list, LISTNODE *node);
 static bool clear_artitem(char*,int);

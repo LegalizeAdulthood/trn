@@ -25,7 +25,8 @@
 
 EXT HASHTABLE* newsrc_hash INIT(nullptr);
 
-struct newsrc {
+struct NEWSRC
+{
     NEWSRC*	next;
     DATASRC*	datasrc;
     char*	name;		/* the name of the associated newsrc */
@@ -42,7 +43,7 @@ struct newsrc {
 #define RF_ACTIVE	 0x0200
 #define RF_RCCHANGED	 0x0400
 
-struct multirc {
+struct MULTIRC {
     NEWSRC* first;
     int num;
     int flags;
@@ -67,21 +68,21 @@ EXT bool paranoid INIT(false);	/* did we detect some inconsistency in .newsrc? *
 EXT int addnewbydefault INIT(0);
 
 bool rcstuff_init();
-NEWSRC *new_newsrc(char *, char *, char *);
-bool use_multirc(MULTIRC *);
-void unuse_multirc(MULTIRC *);
-bool use_next_multirc(MULTIRC *);
-bool use_prev_multirc(MULTIRC *);
-char *multirc_name(MULTIRC *);
-void abandon_ng(NGDATA *);
+NEWSRC *new_newsrc(char *name, char *newsrc, char *add_ok);
+bool use_multirc(MULTIRC *mp);
+void unuse_multirc(MULTIRC *mptr);
+bool use_next_multirc(MULTIRC *mptr);
+bool use_prev_multirc(MULTIRC *mptr);
+char *multirc_name(MULTIRC *mp);
+void abandon_ng(NGDATA *np);
 bool get_ng(char *, int);
 #ifdef RELOCATE
-bool relocate_newsgroup(NGDATA *, NG_NUM);
+bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum);
 #endif
 void list_newsgroups();
-NGDATA *find_ng(char *);
-void cleanup_newsrc(NEWSRC *);
-void sethash(NGDATA *);
+NGDATA *find_ng(char *ngnam);
+void cleanup_newsrc(NEWSRC *rp);
+void sethash(NGDATA *np);
 void checkpoint_newsrcs();
-bool write_newsrcs(MULTIRC *);
-void get_old_newsrcs(MULTIRC *);
+bool write_newsrcs(MULTIRC *mptr);
+void get_old_newsrcs(MULTIRC *mptr);

@@ -4,6 +4,6 @@
 
 static void mention(char*);
 static bool kfile_junk(char*,int);
-static int write_local_thread_commands(int,HASHDATUM*,int);
-static int write_global_thread_commands(int,HASHDATUM*,int);
-static int age_thread_commands(int,HASHDATUM*,int);
+static int write_local_thread_commands(int keylen, HASHDATUM *data, int extra);
+static int write_global_thread_commands(int keylen, HASHDATUM *data, int appending);
+static int age_thread_commands(int keylen, HASHDATUM *data, int elapsed_days);

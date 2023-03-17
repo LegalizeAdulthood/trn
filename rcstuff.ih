@@ -14,13 +14,11 @@ INI_WORDS rcgroups_ini[] = {
     { 0, 0, 0 }
 };
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
 static bool clear_ngitem(char*,int);
-static bool lock_newsrc(NEWSRC*);
-static void unlock_newsrc(NEWSRC*);
-static bool open_newsrc(NEWSRC*);
-static void init_ngnode(LIST*,LISTNODE*);
-static void parse_rcline(NGDATA*);
-static NGDATA* add_newsgroup(NEWSRC*,char*,char_int);
-static int rcline_cmp(char*,int,HASHDATUM);
+static bool lock_newsrc(NEWSRC *rp);
+static void unlock_newsrc(NEWSRC *rp);
+static bool open_newsrc(NEWSRC *rp);
+static void init_ngnode(LIST *list, LISTNODE *node);
+static void parse_rcline(NGDATA *np);
+static NGDATA *add_newsgroup(NEWSRC *rp, char *ngn, char_int c);
+static int rcline_cmp(char *key, int keylen, HASHDATUM data);

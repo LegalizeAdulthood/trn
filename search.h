@@ -7,7 +7,8 @@
 				   RE -- \( \) */
 #define NALTS	10		/* the maximum number of \|'s */
  
-struct compex {
+struct COMPEX
+{
     char* expbuf;		/* The compiled search string */
     int eblen;			/* Length of above buffer */
     char* alternatives[NALTS+1];/* The list of \| seperated alternatives */
@@ -21,13 +22,13 @@ struct compex {
 #endif
 
 void search_init();
-void init_compex(COMPEX *);
-void free_compex(COMPEX *);
-char *getbracket(COMPEX *, int);
+void init_compex(COMPEX *compex);
+void free_compex(COMPEX *compex);
+char *getbracket(COMPEX *compex, int n);
 void case_fold(bool which);
 char *compile(COMPEX *compex, char *strp, bool RE, bool fold);
-char *grow_eb(COMPEX *, char *, char **);
-char *execute(COMPEX *, char *);
-bool advance(COMPEX *, char *, char *);
-bool backref(COMPEX *, int, char *);
+char *grow_eb(COMPEX *compex, char *epp, char **alt);
+char *execute(COMPEX *compex, char *addr);
+bool advance(COMPEX *compex, char *lp, char *ep);
+bool backref(COMPEX *compex, int i, char *lp);
 bool cclass(char *, int, int);

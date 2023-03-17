@@ -1,13 +1,15 @@
 /* mime.h
  */
 
-struct hblk {
+struct HBLK
+{
     int	    tnum;
     short   cnt;
     char    indent;
 };
 
-struct mime_sect {
+struct MIME_SECT
+{
     MIME_SECT* prev;
     char*   filename;
     char*   type_name;
@@ -79,7 +81,8 @@ struct mime_sect {
 #define CLOSING_TAG	0
 #define OPENING_TAG	1
 
-struct html_tags {
+struct HTML_TAGS
+{
     char* name;
     char length;
     int flags;
@@ -142,7 +145,8 @@ EXT char* multipart_separator INIT("-=-=-=-=-=-");
 #define MENCODE_UUE		3
 #define MENCODE_UNHANDLED	4
 
-struct mimecap_entry {
+struct MIMECAP_ENTRY
+{
     char* contenttype;
     char* command;
     char* testcommand;
@@ -158,17 +162,17 @@ EXT char* mime_getc_line INIT(nullptr);
 
 void mime_init();
 void mime_ReadMimecap(char *);
-MIMECAP_ENTRY *mime_FindMimecapEntry(char *, int);
+MIMECAP_ENTRY *mime_FindMimecapEntry(char *contenttype, int skip_flags);
 bool mime_TypesMatch(char *, char *);
 int mime_Exec(char *);
 void mime_InitSections();
 void mime_PushSection();
 bool mime_PopSection();
-void mime_ClearStruct(MIME_SECT *);
+void mime_ClearStruct(MIME_SECT *mp);
 void mime_SetArticle();
-void mime_ParseType(MIME_SECT *, char *);
-void mime_ParseDisposition(MIME_SECT *, char *);
-void mime_ParseEncoding(MIME_SECT *, char *);
+void mime_ParseType(MIME_SECT *mp, char *s);
+void mime_ParseDisposition(MIME_SECT *mp, char *s);
+void mime_ParseEncoding(MIME_SECT *mp, char *s);
 void mime_ParseSubheader(FILE *, char *);
 void mime_SetState(char *);
 int mime_EndOfSection(char *);
@@ -176,7 +180,7 @@ char *mime_ParseParams(char *);
 char *mime_FindParam(char *, char *);
 char *mime_SkipWhitespace(char *);
 void mime_DecodeArticle(bool view);
-void mime_Description(MIME_SECT *, char *, int);
+void mime_Description(MIME_SECT *mp, char *s, int limit);
 int qp_decodestring(char *t, char *f, bool in_header);
 int qp_decode(FILE *, int);
 int b64_decodestring(char *, char *);

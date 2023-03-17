@@ -17,7 +17,7 @@
 int nntp_list(char *, char *, int);
 #endif
 void nntp_finish_list();
-int nntp_group(char *, NGDATA *);
+int nntp_group(char *group, NGDATA *gp);
 int nntp_stat(ART_NUM);
 ART_NUM nntp_stat_id(char *);
 ART_NUM nntp_next_art();
@@ -39,7 +39,7 @@ char *nntp_artname(ART_NUM artnum, bool allocate);
 char *nntp_tmpname(int);
 int nntp_handle_nested_lists();
 int nntp_handle_timeout();
-void nntp_server_died(DATASRC *);
+void nntp_server_died(DATASRC *dp);
 #ifdef SUPPORT_XTHREAD
 long nntp_readcheck();
 long nntp_read(char *, long);

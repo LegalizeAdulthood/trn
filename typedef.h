@@ -14,106 +14,106 @@ typedef unsigned char	Uchar;		/* more space-efficient */
 
 /* addng.h */
 
-typedef struct addgroup ADDGROUP;
+struct ADDGROUP;
 
 /* cache.h */
 
-typedef struct subject SUBJECT;
-typedef struct article ARTICLE;
+struct SUBJECT;
+struct ARTICLE;
 
 /* color.ih */
 
-typedef struct color_obj COLOR_OBJ;
+struct COLOR_OBJ;
 
 /* datasrc.h */
 
-typedef struct srcfile SRCFILE;
-typedef struct datasrc DATASRC;
+struct SRCFILE;
+struct DATASRC;
 
 /* hash.h */
 
-typedef struct hashdatum HASHDATUM;
+struct HASHDATUM;
 
 /* hash.ih */
 
-typedef struct hashent HASHENT;
-typedef struct hashtable HASHTABLE;
+struct HASHENT;
+struct HASHTABLE;
 
 /* head.h */
 
-typedef struct headtype HEADTYPE;
-typedef struct user_headtype USER_HEADTYPE;
+struct HEADTYPE;
+struct USER_HEADTYPE;
 
 /* list.h */
 
-typedef struct listnode LISTNODE;
-typedef struct list LIST;
+struct LISTNODE;
+struct LIST;
 
 /* mime.h */
 
-typedef struct hblk HBLK;
-typedef struct mime_sect MIME_SECT;
-typedef struct html_tags HTML_TAGS;
-typedef struct mimecap_entry MIMECAP_ENTRY;
+struct HBLK;
+struct MIME_SECT;
+struct HTML_TAGS;
+struct MIMECAP_ENTRY;
 
 /* ngdata.h */
 
-typedef struct ngdata NGDATA;
+struct NGDATA;
 
 /* nntpclient.h */
 
-typedef struct nntplink NNTPLINK;
+struct NNTPLINK;
 
 /* rcstuff.h */
 
-typedef struct newsrc NEWSRC;
-typedef struct multirc MULTIRC;
+struct NEWSRC;
+struct MULTIRC;
 
 /* rt-mt.ih */
 
-typedef struct packed_root PACKED_ROOT;
-typedef struct packed_article PACKED_ARTICLE;
-typedef struct total TOTAL;
-typedef struct bmap BMAP;
+struct PACKED_ROOT;
+struct PACKED_ARTICLE;
+struct TOTAL;
+struct BMAP;
 
 /* rt-page.h */
 
-typedef union sel_union SEL_UNION;
-typedef struct sel_item SEL_ITEM;
+union SEL_UNION;
+struct SEL_ITEM;
 
 /* scan.h */
 
-typedef struct page_ent PAGE_ENT;
-typedef struct scontext SCONTEXT;
+struct PAGE_ENT;
+struct SCONTEXT;
 
 /* scanart.h */
 
-typedef struct sa_entrydata SA_ENTRYDATA;
+struct SA_ENTRYDATA;
 
 /* scorefile.h */
 
-typedef struct sf_entry SF_ENTRY;
-typedef struct sf_file SF_FILE;
+struct SF_ENTRY;
+struct SF_FILE;
 
 /* search.h */
 
-typedef struct compex COMPEX;
+struct COMPEX;
 
 /* term.ih */
 
-typedef struct keymap KEYMAP;
+struct KEYMAP;
 
 /* univ.h */
 
-typedef struct univ_groupmask_data UNIV_GROUPMASK_DATA;
-typedef struct univ_configfile_data UNIV_CONFIGFILE_DATA;
-typedef struct univ_virt_data UNIV_VIRT_DATA;
-typedef struct univ_virt_group UNIV_VIRT_GROUP;
-typedef struct univ_newsgroup UNIV_NEWSGROUP;
-typedef struct univ_textfile UNIV_TEXTFILE;
-typedef union univ_data UNIV_DATA;
-typedef struct univ_item UNIV_ITEM;
+struct UNIV_GROUPMASK_DATA;
+struct UNIV_CONFIGFILE_DATA;
+struct UNIV_VIRT_DATA;
+struct UNIV_VIRT_GROUP;
+struct UNIV_NEWSGROUP;
+struct UNIV_TEXTFILE;
+union UNIV_DATA;
+struct UNIV_ITEM;
 
 /* util.h */
 
-typedef struct ini_words INI_WORDS;
+struct INI_WORDS;

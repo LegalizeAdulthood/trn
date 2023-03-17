@@ -10,13 +10,13 @@ EXT bool toread_quiet INIT(false);
 
 void rcln_init();
 #ifdef CATCHUP
-void catch_up(NGDATA *, int, int);
+void catch_up(NGDATA *np, int leave_count, int output_level);
 #endif
-int addartnum(DATASRC *, ART_NUM, char *);
+int addartnum(DATASRC *dp, ART_NUM artnum, char *ngnam);
 #ifdef MCHASE
-void subartnum(DATASRC *, ART_NUM, char *);
+void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam);
 #endif
 void prange(char *, ART_NUM, ART_NUM);
 void set_toread(NGDATA *np, bool lax_high_check);
-void checkexpired(NGDATA *, ART_NUM);
-bool was_read_group(DATASRC *, ART_NUM, char *);
+void checkexpired(NGDATA *np, ART_NUM a1st);
+bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam);

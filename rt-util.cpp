@@ -532,8 +532,7 @@ bool subject_has_Re(char *str, char **strp)
 /* Output a subject in <max> chars.  Does intelligent trimming that tries to
 ** save the last two words on the line, excluding "(was: blah)" if needed.
 */
-char*
-compress_subj(ARTICLE*ap, int max)
+char *compress_subj(ARTICLE *ap, int max)
 {
     register char* cp;
     register int len;
