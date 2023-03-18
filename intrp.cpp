@@ -621,7 +621,6 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			s = get_val("ORGANIZATION",orgname); 
 #endif
 		    s = filexp(s);
-#ifdef ORGFILE
 		    if (FILE_REF(s)) {
 			FILE* ofp = fopen(s,"r");
 
@@ -637,7 +636,6 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			else
 			    s = nullstr;
 		    }
-#endif
 		    break;
 		case 'O':
 		    s = origdir;
