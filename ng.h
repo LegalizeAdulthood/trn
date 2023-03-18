@@ -6,9 +6,9 @@ EXT ART_NUM art INIT(0);	/* current or prospective article # */
 
 EXT ART_NUM recent_art;		/* previous article # for '-' command */
 EXT ART_NUM curr_art;		/* current article # */
-EXT ARTICLE* recent_artp INIT(0);/* article_ptr equivilents */
-EXT ARTICLE* curr_artp INIT(0);
-EXT ARTICLE* artp INIT(0);	/* the article ptr we use when art is 0 */
+EXT ARTICLE* recent_artp INIT(nullptr);/* article_ptr equivilents */
+EXT ARTICLE* curr_artp INIT(nullptr);
+EXT ARTICLE* artp INIT(nullptr);	/* the article ptr we use when art is 0 */
 
 EXT int checkcount INIT(0);	/* how many articles have we read */
 				/*   in the current newsgroup since */

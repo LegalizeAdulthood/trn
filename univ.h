@@ -142,8 +142,8 @@ EXT char* univ_fname;			/* current filename (may be null) */
 EXT char* univ_label;			/* current label (may be null) */
 EXT char* univ_title;			/* title of current level */
 EXT char* univ_tmp_file;		/* temp. file (may be null) */
-EXT HASHTABLE* univ_ng_hash INIT(0);
-EXT HASHTABLE* univ_vg_hash INIT(0);
+EXT HASHTABLE* univ_ng_hash INIT(nullptr);
+EXT HASHTABLE* univ_vg_hash INIT(nullptr);
 /* end of items that must be saved */
 
 void univ_init();

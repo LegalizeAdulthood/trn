@@ -106,8 +106,8 @@ enum
 			  && article_exists(an))
 #define is_unavailable(an)  (!is_available(an))
 
-EXT LIST* article_list INIT(0);		/* a list of ARTICLEs */
-EXT ARTICLE** artptr_list INIT(0);	/* the article-selector creates this */
+EXT LIST* article_list INIT(nullptr);		/* a list of ARTICLEs */
+EXT ARTICLE** artptr_list INIT(nullptr);	/* the article-selector creates this */
 EXT ARTICLE** artptr;			/* ditto -- used for article order */
 EXT ART_NUM artptr_list_size INIT(0);
 
@@ -124,8 +124,8 @@ EXT ARTICLE* sentinel_artp;
 #define DONT_FILL_CACHE	false
 #define FILL_CACHE	true
 
-EXT SUBJECT* first_subject INIT(0);
-EXT SUBJECT* last_subject INIT(0);
+EXT SUBJECT* first_subject INIT(nullptr);
+EXT SUBJECT* last_subject INIT(nullptr);
 
 EXT bool untrim_cache INIT(false);
 
