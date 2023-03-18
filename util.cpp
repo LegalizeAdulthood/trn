@@ -303,7 +303,7 @@ char *saferealloc(char *where, MEM_SIZE size)
 
 char *safecat(char *to, char *from, int len)
 {
-    register char* dest = to;
+    char* dest = to;
 
     len--;				/* leave room for null */
     if (*dest) {
@@ -417,8 +417,8 @@ int len;
 
 char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp)
 {
-    register int bufix = 0;
-    register int nextch;
+    int bufix = 0;
+    int nextch;
 
     do {
 	if (bufix >= buffer_length) {
@@ -449,8 +449,8 @@ char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp)
 int makedir(char *dirname, int nametype)
 {
 #ifdef MAKEDIR
-    register char* end;
-    register char* s;
+    char* end;
+    char* s;
 # ifdef HAS_MKDIR
     int status = 0;
 # else
@@ -718,7 +718,7 @@ char *get_auth_command()
 
 char **prep_ini_words(INI_WORDS words[])
 {
-    register int checksum;
+    int checksum;
     char* cp = (char*)INI_VALUES(words);
     if (!cp) {
 	int i;
@@ -891,8 +891,8 @@ char *next_ini_section(char *cp, char **section, char **cond)
 
 char *parse_ini_section(char *cp, INI_WORDS words[])
 {
-    register int checksum;
-    register char* s;
+    int checksum;
+    char* s;
     char** values = prep_ini_words(words);
     int i;
 

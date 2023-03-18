@@ -208,9 +208,9 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
     char* line_buf = nullptr;
     char* line_split = nullptr;
     char* orig_dest = dest;
-    register char* s;
-    register char* h;
-    register int i;
+    char* s;
+    char* h;
+    int i;
     char scrbuf[8192];
     char spfbuf[512];
     static char* input_str = nullptr;
@@ -1060,7 +1060,7 @@ getout:
 
 char *interp_backslash(char *dest, char *pattern)
 {
-    register int i = *pattern;
+    int i = *pattern;
 
     if (i >= '0' && i <= '7') {
 	i = 0;
@@ -1113,8 +1113,8 @@ char *interpsearch(char *dest, int destsize, char *pattern, char *cmd)
 
 void normalize_refs(char *refs)
 {
-    register char* f;
-    register char* t;
+    char* f;
+    char* t;
     
     for (f = t = refs; *f; ) {
 	if (*f == '<') {

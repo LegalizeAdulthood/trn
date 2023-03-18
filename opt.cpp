@@ -50,7 +50,7 @@ COMPEX optcompex;
 
 void opt_init(int argc, char *argv[], char **tcbufptr)
 {
-    register int i;
+    int i;
     char* s;
 
     sel_grp_dmode = savestr(sel_grp_dmode) + 1;

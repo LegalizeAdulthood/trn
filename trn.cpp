@@ -369,7 +369,7 @@ bug_out:
 
 int input_newsgroup()
 {
-    register char* s;
+    char* s;
 
     ing_state = INGS_DIRTY;
     eat_typeahead();
@@ -925,7 +925,7 @@ static int ngdirlen = 0;
 
 char *getngdir(char *ngnam)
 {
-    register char* s;
+    char* s;
 
     growstr(&myngdir,&ngdirlen,strlen(ngnam)+1);
     strcpy(myngdir,ngnam);

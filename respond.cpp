@@ -45,8 +45,8 @@ void respond_init()
 int save_article()
 {
     bool use_pref;
-    register char* s;
-    register char* c;
+    char* s;
+    char* c;
     char altbuf[CBUFLEN];
     int i;
     bool interactive = (buf[1] == FINISHCMD);

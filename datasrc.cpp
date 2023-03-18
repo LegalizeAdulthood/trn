@@ -661,7 +661,7 @@ char *adv_then_find_next_nl_and_dectrl(char *s)
     for (s++; *s && *s != '\n';) {
 	int w = byte_length_at(s);
 	if (AT_GREY_SPACE(s)) {
-	    register int i;
+	    int i;
 	    for (i = 0; i < w; i += 1) {
 		s[i] = ' ';
 	    }
@@ -673,8 +673,8 @@ char *adv_then_find_next_nl_and_dectrl(char *s)
 
 int srcfile_open(SRCFILE *sfp, char *filename, char *fetchcmd, char *server)
 {
-    register unsigned offset;
-    register char* s;
+    unsigned offset;
+    char* s;
     HASHDATUM data;
     long node_low;
     int keylen, linelen;

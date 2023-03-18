@@ -38,7 +38,7 @@ static short htypeix[26] =
 
 void head_init()
 {
-    register int i;
+    int i;
 
     for (i = HEAD_FIRST+1; i < HEAD_LAST; i++)
 	htypeix[*htype[i].name - 'a'] = i;
@@ -69,9 +69,9 @@ void dumpheader(char *where)
 
 int set_line_type(char *bufptr, char *colon)
 {
-    register char* t;
-    register char* f;
-    register int i, len;
+    char* t;
+    char* f;
+    int i, len;
 
     if (colon-bufptr > sizeof msg)
 	return SOME_LINE;
@@ -154,7 +154,7 @@ int get_header_num(char *s)
 
 void start_header(ART_NUM artnum)
 {
-    register int i;
+    int i;
 
 #ifdef DEBUG
     if (debug & DEB_HEADER)
@@ -237,7 +237,7 @@ bool parseline(char *art_buf, int newhide, int oldhide)
 
 void end_header()
 {
-    register ARTICLE* ap = parsed_artp;
+    ARTICLE* ap = parsed_artp;
 
     end_header_line();
     in_header = PAST_HEADER;	/* just to be sure */
@@ -282,8 +282,8 @@ void end_header()
 
 bool parseheader(ART_NUM artnum)
 {
-    register char* bp;
-    register int len;
+    char* bp;
+    int len;
     bool had_nl = true;
     int found_nl;
 
@@ -364,8 +364,8 @@ char *fetchlines(ART_NUM artnum, int which_line)
 {
     char* s;
     char* t;
-    register ART_POS firstpos;
-    register ART_POS lastpos;
+    ART_POS firstpos;
+    ART_POS lastpos;
     int size;
 
     /* Only return a cached line if it isn't the current article */
@@ -403,8 +403,8 @@ char *mp_fetchlines(ART_NUM artnum, int which_line, int pool)
 {
     char* s;
     char* t;
-    register ART_POS firstpos;
-    register ART_POS lastpos;
+    ART_POS firstpos;
+    ART_POS lastpos;
     int size;
 
     /* Only return a cached line if it isn't the current article */
@@ -443,15 +443,15 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 {
     char* s;
     char* t;
-    register ART_POS firstpos;
-    register ART_POS lastpos;
+    ART_POS firstpos;
+    ART_POS lastpos;
     int size;
 
 #ifdef SUPPORT_NNTP
     if ((datasrc->flags & DF_REMOTE) && parsed_art != artnum) {
 	ARTICLE* ap;
 	int size;
-	register ART_NUM num, priornum, lastnum;
+	ART_NUM num, priornum, lastnum;
 	bool cached;
  	bool hasxhdr = true;
 

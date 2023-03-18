@@ -43,8 +43,8 @@ void ngsrch_init()
 // get_cmd  be set to false!!! */
 int ng_search(char *patbuf, int get_cmd)
 {
-    register char cmdchr = *patbuf;	/* what kind of search? */
-    register char* s;
+    char cmdchr = *patbuf;	/* what kind of search? */
+    char* s;
     char* pattern;			/* unparsed pattern */
     char* cmdlst = nullptr;		/* list of commands to do */
     int ret = NGS_NOTFOUND;		/* assume no commands */
@@ -181,8 +181,8 @@ bool ng_wanted(NGDATA *np)
 char *ng_comp(COMPEX *compex, char *pattern, bool RE, bool fold)
 {
     char ng_pattern[128];
-    register char* s = pattern;
-    register char* d = ng_pattern;
+    char* s = pattern;
+    char* d = ng_pattern;
 
     if (!*s) {
 	if (compile(compex, "", RE, fold))

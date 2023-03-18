@@ -111,7 +111,7 @@ static void process_list(int flag)
 
 static void new_nntp_groups(DATASRC *dp)
 {
-    register char* s;
+    char* s;
     int len;
     time_t server_time;
     NGDATA* np;
@@ -181,7 +181,7 @@ static void new_nntp_groups(DATASRC *dp)
 
 static void new_local_groups(DATASRC *dp)
 {
-    register char* s;
+    char* s;
     time_t lastone;
     NGDATA* np;
     char tmpbuf[LBUFLEN];
@@ -347,7 +347,7 @@ static int list_groups(int keylen, HASHDATUM *data, int add_matching)
 
 static void scanline(char *actline, bool add_matching)
 {
-    register char* s;
+    char* s;
     NGDATA* np;
     long high, low;
     char ch;
@@ -396,8 +396,8 @@ static int agorder_count(const ADDGROUP **app1, const ADDGROUP **app2)
 */
 void sort_addgroups()
 {
-    register ADDGROUP* ap;
-    register int i;
+    ADDGROUP* ap;
+    int i;
     ADDGROUP** lp;
     ADDGROUP** ag_list;
     int (*sort_procedure)(const ADDGROUP**, const ADDGROUP**);

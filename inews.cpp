@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     int artpos, headbuf_size, len;
     char* headbuf;
     char* line_end;
-    register char* cp;
+    char* cp;
     int i;
 
     headbuf_size = LBUFLEN * 8;

@@ -71,7 +71,7 @@ static char* FirstCharacter;
 
 void search_init()
 {
-    register int    i;
+    int    i;
     
     for (i = 0; i < ASCSIZ; i++)
 	trans[i] = i;
@@ -115,7 +115,7 @@ char *getbracket(COMPEX *compex, int n)
 
 void case_fold(bool which)
 {
-    register int i;
+    int i;
 
     if (which != folding) {
 	if (which) {
@@ -134,8 +134,8 @@ void case_fold(bool which)
 
 char *compile(COMPEX *compex, char *strp, bool RE, bool fold)
 {
-    register int c;
-    register char* ep;
+    int c;
+    char* ep;
     char* lastep;
     char  bracket[NBRA];
     char* bracketp;
@@ -270,7 +270,7 @@ char *compile(COMPEX *compex, char *strp, bool RE, bool fold)
 		    continue;
  
 		case '[': {		/* character class */
-		    register int i;
+		    int i;
 		    
 		    if (ep - compex->expbuf >= compex->eblen - BMAPSIZ)
 			ep = grow_eb(compex, ep, alt); /* reserve bitmap */
@@ -324,8 +324,8 @@ cerror:
 
 char *grow_eb(COMPEX *compex, char *epp, char **alt)
 {
-    register char* oldbuf = compex->expbuf;
-    register char** altlist = compex->alternatives;
+    char* oldbuf = compex->expbuf;
+    char** altlist = compex->alternatives;
 
     compex->eblen += 80;
     compex->expbuf = saferealloc(compex->expbuf, (MEM_SIZE)compex->eblen + 4);
@@ -339,9 +339,9 @@ char *grow_eb(COMPEX *compex, char *epp, char **alt)
 
 char *execute(COMPEX *compex, char *addr)
 {
-    register char* p1 = addr;
-    register Uchar* trt = trans;
-    register int c;
+    char* p1 = addr;
+    Uchar* trt = trans;
+    int c;
  
     if (addr == nullptr || compex->expbuf == nullptr)
 	return nullptr;
@@ -367,7 +367,7 @@ char *execute(COMPEX *compex, char *addr)
     }
     else {			/* regular algorithm */
 	do {
-	    register char** alt = compex->alternatives;
+	    char** alt = compex->alternatives;
 	    while (*alt) {
 		if (advance(compex, p1, *alt++))
 		    return p1;
@@ -384,9 +384,9 @@ char *execute(COMPEX *compex, char *addr)
    string lp, simulates an NDFSA */
 bool advance(COMPEX *compex, char *lp, char *ep)
 {
-    register char* curlp;
-    register Uchar* trt = trans;
-    register int i;
+    char* curlp;
+    Uchar* trt = trans;
+    int i;
  
     while (*lp || (*ep & (STAR|MNULL))) {
 	switch (*ep++) {
@@ -544,7 +544,7 @@ bool advance(COMPEX *compex, char *lp, char *ep)
  
 bool backref(COMPEX *compex, int i, char *lp)
 {
-    register char* bp;
+    char* bp;
  
     bp = compex->braslist[i];
     while (*lp && *bp == *lp) {

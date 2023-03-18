@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     char* wildarg = nullptr;
     char* cp;
     FILE* in_fp;
-    register FILE* out_fp = nullptr;
+    FILE* out_fp = nullptr;
 
     while (--argc) {
 	if (**++argv == '-') {

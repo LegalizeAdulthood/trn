@@ -20,8 +20,8 @@
  */
 DIR *opendir(char *name)
 {
-	register DIR* dirp;
-	register int fd;
+	DIR* dirp;
+	int fd;
 
 	if ((fd = open(name, 0)) == -1)
 		return nullptr;
@@ -59,7 +59,7 @@ struct	olddirect {
  */
 Direntry_t *readdir(DIR *dirp)
 {
-	register struct olddirect* dp;
+	struct olddirect* dp;
 	static Direntry_t dir;
 
 	for (;;) {

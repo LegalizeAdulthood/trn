@@ -388,7 +388,7 @@ static char* univ_begin_label INIT(nullptr);
 */
 static bool univ_DoMatch(char *text, char *p)
 {
-    register int	matched;
+    int	matched;
 
     for ( ; *p; text++, p++) {
 	if (*p == '*') {

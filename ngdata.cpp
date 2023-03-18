@@ -207,8 +207,8 @@ static int ngorder_count(const NGDATA **npp1, const NGDATA **npp2)
 */
 void sort_newsgroups()
 {
-    register NGDATA* np;
-    register int i;
+    NGDATA* np;
+    int i;
     NGDATA** lp;
     NGDATA** ng_list;
     int (*sort_procedure)(const NGDATA **npp1,const NGDATA **npp2);
@@ -312,8 +312,8 @@ void ng_skip()
 
 ART_NUM getngsize(NGDATA *gp)
 {
-    register int len;
-    register char* nam;
+    int len;
+    char* nam;
     char tmpbuf[LBUFLEN];
     long last, first;
     char ch;

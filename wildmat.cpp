@@ -54,9 +54,9 @@
 */
 static bool DoMatch(char *text, char *p)
 {
-    register int	last;
-    register int	matched;
-    register int	reverse;
+    int	last;
+    int	matched;
+    int	reverse;
 
     for ( ; *p; text++, p++) {
 	if (*text == '\0' && *p != '*')

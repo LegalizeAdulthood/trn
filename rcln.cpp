@@ -73,10 +73,10 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
 
 int addartnum(DATASRC *dp, ART_NUM artnum, char *ngnam)
 {
-    register NGDATA* np;
-    register char* s;
-    register char* t;
-    register char* maxt = nullptr;
+    NGDATA* np;
+    char* s;
+    char* t;
+    char* maxt = nullptr;
     ART_NUM min = 0, max = -1, lastnum = 0;
     char* mbuf;
     bool morenum;
@@ -338,9 +338,9 @@ void prange(char *where, ART_NUM min, ART_NUM max)
 
 void set_toread(NGDATA *np, bool lax_high_check)
 {
-    register char* s;
-    register char* c;
-    register char* h;
+    char* s;
+    char* c;
+    char* h;
     char tmpbuf[64];
     char* mybuf = tmpbuf;
     char* nums;
@@ -427,8 +427,8 @@ void set_toread(NGDATA *np, bool lax_high_check)
 
 void checkexpired(NGDATA *np, ART_NUM a1st)
 {
-    register char* s;
-    register ART_NUM num, lastnum = 0;
+    char* s;
+    ART_NUM num, lastnum = 0;
     char* mbuf;
     char* cp;
     int len;
@@ -513,10 +513,10 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
 /* could use a better name */
 bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
 {
-    register NGDATA* np;
-    register char* s;
-    register char* t;
-    register char* maxt = nullptr;
+    NGDATA* np;
+    char* s;
+    char* t;
+    char* maxt = nullptr;
     ART_NUM min = 0, max = -1, lastnum = 0;
 
     if (!artnum)

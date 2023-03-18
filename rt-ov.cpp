@@ -338,8 +338,8 @@ beginning:
 
 static void ov_parse(char *line, ART_NUM artnum, bool remote)
 {
-    register ARTICLE* article;
-    register int i;
+    ARTICLE* article;
+    int i;
     int fn;
     Uchar* fieldnum = datasrc->fieldnum;
     Uchar* fieldflags = datasrc->fieldflags;
@@ -455,7 +455,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 */
 static char *ov_name(char *group)
 {
-    register char* cp;
+    char* cp;
 
     strcpy(buf, datasrc->over_dir);
     cp = buf + strlen(buf);

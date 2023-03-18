@@ -131,7 +131,7 @@ bool walk_list(LIST *list, bool (*callback)(char *, int), int arg)
 */
 long existing_listnum(LIST *list, long num, int direction)
 {
-    register LISTNODE* node = list->recent;
+    LISTNODE* node = list->recent;
     LISTNODE* prevnode = nullptr;
 
     if (node && num < node->low)
@@ -170,7 +170,7 @@ long existing_listnum(LIST *list, long num, int direction)
 */
 char *next_listitem(LIST *list, char *ptr)
 {
-    register LISTNODE* node = list->recent;
+    LISTNODE* node = list->recent;
 
     if (ptr == node->data_high) {
 	node = node->next;
@@ -193,7 +193,7 @@ char *next_listitem(LIST *list, char *ptr)
 */
 char *prev_listitem(LIST *list, char *ptr)
 {
-    register LISTNODE* node = list->recent;
+    LISTNODE* node = list->recent;
 
     if (ptr == node->data) {
 	LISTNODE* prev = list->first;

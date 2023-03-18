@@ -64,10 +64,10 @@ int edit_distn(char *from, int from_len, char *to, int to_len)
 #ifndef TRN_SPEEDUP
     register int ins, del, ch;	  	/* local copies of edit costs */
 #endif
-    register int row, col, index;	/* dynamic programming counters */
-    register int radix;			/* radix for modular indexing */
+    int row, col, index;	/* dynamic programming counters */
+    int radix;			/* radix for modular indexing */
 #ifdef TRN_SPEEDUP
-    register int low;
+    int low;
 #endif
     int* buffer;			/* pointer to storage for one row
 					   of the d.p. array */

@@ -151,7 +151,7 @@ int devtty;
 void term_set(char *tcbuf)
 {
     char* tmpaddr;			/* must not be register */
-    register char* tmpstr;
+    char* tmpstr;
     char* s;
     int status;
 #ifdef TIOCGWINSZ
@@ -370,7 +370,7 @@ void arrow_macros(char *tmpbuf)
 #ifndef MSDOS
     char* tmpaddr = tmpbuf;
 #endif
-    register char* tmpstr;
+    char* tmpstr;
 
     /* If arrows are defined as single keys, we probably don't
      * want to redefine them.  (The tvi912c defines kl as ^H)
@@ -430,11 +430,11 @@ static void mac_init(char *tcbuf)
 
 void mac_line(char *line, char *tmpbuf, int tbsize)
 {
-    register char* s;
-    register char* m;
-    register KEYMAP* curmap;
-    register int ch;
-    register int garbage = 0;
+    char* s;
+    char* m;
+    KEYMAP* curmap;
+    int ch;
+    int garbage = 0;
     static char override[] = "\nkeymap overrides string\n";
 
     if (topmap == nullptr)
@@ -489,8 +489,8 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
 
 static KEYMAP *newkeymap()
 {
-    register int i;
-    register KEYMAP* map;
+    int i;
+    KEYMAP* map;
 
 #ifndef lint
     map = (KEYMAP*)safemalloc(sizeof(KEYMAP));
@@ -520,9 +520,9 @@ void show_macros()
 
 static void show_keymap(KEYMAP *curmap, char *prefix)
 {
-    register int i;
-    register char* next = prefix + strlen(prefix);
-    register int kt;
+    int i;
+    char* next = prefix + strlen(prefix);
+    int kt;
 
     for (i = 0; i < 128; i++) {
 	if ((kt = curmap->km_type[i]) != 0) {
@@ -636,7 +636,7 @@ int buflimit = LBUFLEN;
 
 bool finish_command(int donewline)
 {
-    register char* s;
+    char* s;
     char gmode_save = gmode;
 
     s = buf;
@@ -820,7 +820,7 @@ void eat_typeahead()
     if (!allow_typeahead && !mouse_is_down && !macro_pending()
      && this_time - last_time > 0.3) {
 #ifdef PENDING
-	register KEYMAP* curmap = topmap;
+	KEYMAP* curmap = topmap;
 	Uchar lc;
 	int i, j;
 	for (j = 0; input_pending(); ) {
@@ -1040,8 +1040,8 @@ void no_ulfire()
 
 void getcmd(char *whatbuf)
 {
-    register KEYMAP* curmap;
-    register int i;
+    KEYMAP* curmap;
+    int i;
     bool no_macros; 
     int times = 0;			/* loop detector */
 
@@ -1137,9 +1137,9 @@ got_canonical:
 
 void pushstring(char *str, char_int bits)
 {
-    register int i;
+    int i;
     char tmpbuf[PUSHSIZE];
-    register char* s = tmpbuf;
+    char* s = tmpbuf;
 
     assert(str != nullptr);
     interp(tmpbuf,PUSHSIZE,str);
@@ -1474,8 +1474,8 @@ reinp_in_choice:
 
 int print_lines(char *what_to_print, int hilite)
 {
-    register char* s;
-    register int i;
+    char* s;
+    int i;
 
     for (s=what_to_print; *s; ) {
 	i = check_page_line();
@@ -1534,7 +1534,7 @@ int check_page_line()
     if (page_line < 0)
 	return -1;
     if (page_line >= tc_LINES || int_count) {
-	register int cmd = -1;
+	int cmd = -1;
 	if (int_count || (cmd = get_anything())) {
 	    page_line = -1;		/* disable further printing */
 	    if (cmd > 0)
@@ -1579,7 +1579,7 @@ void warnmsg(char *str)
 
 void pad(int num)
 {
-    register int i;
+    int i;
 
     for (i = num; i; i--)
 	putchar(tc_PC);
@@ -1616,7 +1616,7 @@ void rubout()
 
 void reprint()
 {
-    register char* s;
+    char* s;
 
     fputs("^R\n",stdout) FLUSH;
     termdown(1);

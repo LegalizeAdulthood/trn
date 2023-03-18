@@ -145,8 +145,8 @@ void close_cache()
 /* Initialize the memory for an entire node's worth of article's */
 static void init_artnode(LIST *list, LISTNODE *node)
 {
-    register ART_NUM i;
-    register ARTICLE* ap;
+    ART_NUM i;
+    ARTICLE* ap;
     bzero(node->data, list->items_per_node * list->item_size);
     for (i = node->low, ap = (ARTICLE*)node->data; i <= node->high; i++, ap++)
 	ap->num = i;
@@ -163,8 +163,8 @@ static bool clear_artitem(char *cp, int arg)
 */
 void cache_article(ARTICLE *ap)
 {
-    register ARTICLE* next;
-    register ARTICLE* ap2;
+    ARTICLE* next;
+    ARTICLE* ap2;
 
     if (!(next = ap->subj->articles) || ap->date < next->date)
 	ap->subj->articles = ap;
@@ -198,7 +198,7 @@ void cache_article(ARTICLE *ap)
 
 void check_for_near_subj(ARTICLE *ap)
 {
-    register SUBJECT* sp;
+    SUBJECT* sp;
     if (!shortsubj_hash) {
 	shortsubj_hash = hashcreate(401, subject_cmp);	/*TODO: pick a better size */
 	sp = first_subject;
@@ -306,14 +306,14 @@ void check_poster(ARTICLE *ap)
 */
 void uncache_article(ARTICLE *ap, bool remove_empties)
 {
-    register ARTICLE* next;
+    ARTICLE* next;
 
     if (ap->subj) {
 	if (ALLBITS(ap->flags, AF_CACHED | AF_EXISTS)) {
 	    if ((next = ap->subj->articles) == ap)
 		ap->subj->articles = ap->subj_next;
 	    else {
-		register ARTICLE* ap2;
+		ARTICLE* ap2;
 		while (next) {
 		    if ((ap2 = next->subj_next) == ap) {
 			next->subj_next = ap->subj_next;
@@ -324,7 +324,7 @@ void uncache_article(ARTICLE *ap, bool remove_empties)
 	    }
 	}
 	if (remove_empties && !ap->subj->articles) {
-	    register SUBJECT* sp = ap->subj;
+	    SUBJECT* sp = ap->subj;
 	    if (sp == first_subject)
 		first_subject = sp->next;
 	    else
@@ -347,9 +347,9 @@ void uncache_article(ARTICLE *ap, bool remove_empties)
 
 char *fetchcache(ART_NUM artnum, int which_line, bool fill_cache)
 {
-    register char* s;
-    register ARTICLE* ap;
-    register bool cached = (htype[which_line].flags & HT_CACHED);
+    char* s;
+    ARTICLE* ap;
+    bool cached = (htype[which_line].flags & HT_CACHED);
 
     /* article_find() returns a nullptr if the artnum value is invalid */
     if (!(ap = article_find(artnum)) || !(ap->flags & AF_EXISTS))
@@ -370,7 +370,7 @@ char *fetchcache(ART_NUM artnum, int which_line, bool fill_cache)
 */
 char *get_cached_line(ARTICLE *ap, int which_line, bool no_truncs)
 {
-    register char* s;
+    char* s;
 
     switch (which_line) {
       case SUBJ_LINE:
@@ -569,7 +569,7 @@ void dectrl(char *str)
     for ( ; *str;) {
 	int w = byte_length_at(str);
 	if (AT_GREY_SPACE(str)) {
-	    register int i;
+	    int i;
 	    for (i = 0; i < w; i += 1) {
 		str[i] = ' ';
 	    }
@@ -647,8 +647,8 @@ int subject_cmp(char *key, int keylen, HASHDATUM data)
 void look_ahead()
 {
 #ifdef ARTSEARCH
-    register char* h;
-    register char* s;
+    char* h;
+    char* s;
 
 #ifdef DEBUG
     if (debug && srchahead) {
@@ -674,7 +674,7 @@ void look_ahead()
 	h = pattern + strlen(pattern);
 	interp(h,(sizeof buf) - (h-buf),"%\\s");
 	{			/* compensate for notesfiles */
-	    register int i;
+	    int i;
 	    for (i = 24; *h && i--; h++)
 		if (*h == '\\')
 		    h++;
@@ -793,7 +793,7 @@ void cache_until_key()
 #ifdef PENDING
 bool cache_subjects()
 {
-    register ART_NUM an;
+    ART_NUM an;
 
     if (subj_to_get > lastart)
 	return true;
@@ -811,7 +811,7 @@ bool cache_subjects()
 
 bool cache_xrefs()
 {
-    register ART_NUM an;
+    ART_NUM an;
 
     if (olden_days || (datasrc->flags & DF_NOXREFS) || xref_to_get > lastart)
 	return true;
@@ -877,7 +877,7 @@ bool cache_unread_arts()
 
 bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
 {
-    register ART_NUM i;
+    ART_NUM i;
     ART_NUM expected_i = first;
 
     int cachemask = (ThreadedGroup ? AF_THREADED : AF_CACHED)

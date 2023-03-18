@@ -213,7 +213,7 @@ void unuse_multirc(MULTIRC *mptr)
 
 bool use_next_multirc(MULTIRC *mptr)
 {
-    register MULTIRC* mp = multirc_ptr(mptr->num);
+    MULTIRC* mp = multirc_ptr(mptr->num);
 
     unuse_multirc(mptr);
 
@@ -233,7 +233,7 @@ bool use_next_multirc(MULTIRC *mptr)
 
 bool use_prev_multirc(MULTIRC *mptr)
 {
-    register MULTIRC* mp = multirc_ptr(mptr->num);
+    MULTIRC* mp = multirc_ptr(mptr->num);
 
     unuse_multirc(mptr);
 
@@ -419,7 +419,7 @@ static void unlock_newsrc(NEWSRC *rp)
 
 static bool open_newsrc(NEWSRC *rp)
 {
-    register NGDATA* np;
+    NGDATA* np;
     NGDATA* prev_np;
     char* some_buf;
     long length;
@@ -627,8 +627,8 @@ static bool open_newsrc(NEWSRC *rp)
 /* Initialize the memory for an entire node's worth of article's */
 static void init_ngnode(LIST *list, LISTNODE *node)
 {
-    register ART_NUM i;
-    register NGDATA* np;
+    ART_NUM i;
+    NGDATA* np;
     bzero(node->data, list->items_per_node * list->item_size);
     for (i = node->low, np = (NGDATA*)node->data; i <= node->high; i++, np++)
 	np->num = i;
@@ -905,7 +905,7 @@ reask_unsub:
 	    return false;
 	}
 	else if (*buf == 'y') {
-	    register char* cp;
+	    char* cp;
 	    cp = ngptr->rcline + ngptr->numoffset;
 	    ngptr->flags = (*cp && cp[1] == '0' ? NF_UNTHREADED : 0);
 	    ngptr->subscribechar = ':';
@@ -936,7 +936,7 @@ reask_unsub:
 
 static NGDATA *add_newsgroup(NEWSRC *rp, char *ngn, char_int c)
 {
-    register NGDATA* np;
+    NGDATA* np;
 
     np = ngdata_ptr(ngdata_cnt++);
     np->prev = last_ng;
@@ -1153,8 +1153,8 @@ q to abort\n") FLUSH;
 
 void list_newsgroups()
 {
-    register NGDATA* np;
-    register NG_NUM i;
+    NGDATA* np;
+    NG_NUM i;
     char tmpbuf[2048];
     static char* status[] = {"(READ)","(UNSUB)","(DUP)","(BOGUS)","(JUNK)"};
 
@@ -1188,8 +1188,8 @@ NGDATA *find_ng(char *ngnam)
 
 void cleanup_newsrc(NEWSRC *rp)
 {
-    register NGDATA* np;
-    register NG_NUM bogosity = 0;
+    NGDATA* np;
+    NG_NUM bogosity = 0;
 
 #ifdef VERBOSE
     IF(verbose)
@@ -1352,7 +1352,7 @@ void checkpoint_newsrcs()
 bool write_newsrcs(MULTIRC *mptr)
 {
     NEWSRC* rp;
-    register NGDATA* np;
+    NGDATA* np;
     int save_sort = sel_sort;
     FILE* rcfp;
     bool total_success = true;
@@ -1411,7 +1411,7 @@ bool write_newsrcs(MULTIRC *mptr)
 	/* write out each line*/
 
 	for (np = first_ng; np; np = np->next) {
-	    register char* delim;
+	    char* delim;
 	    if (np->rc != rp)
 		continue;
 	    if (np->numoffset) {

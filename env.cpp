@@ -318,7 +318,7 @@ extern char **environ;
 char *export_var(const char *nam, const char *val)
 {
     int namlen = strlen(nam);
-    register int i=envix(nam,namlen);	/* where does it go? */
+    int i=envix(nam,namlen);	/* where does it go? */
 
     if (!environ[i]) {			/* does not exist yet */
 	if (firstexport) {		/* need we copy environment? */
@@ -368,7 +368,7 @@ void re_export(char *export_val, char *new_val, int limit)
 
 static int envix(const char *nam, int len)
 {
-    register int i;
+    int i;
 
     for (i = 0; environ[i]; i++) {
 	if (strnEQ(environ[i],nam,len) && environ[i][len] == '=')

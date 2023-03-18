@@ -88,18 +88,15 @@ void art_init()
 
 int do_article()
 {
-    register char* s;
+    char* s;
     bool hide_this_line = false;	/* hidden header line? */
     bool restart_color;
     ART_LINE linenum;			/* line # on page, 1 origin */
 #ifdef ULSMARTS
     bool under_lining = false;		/* are we underlining a word? */
 #endif
-#ifndef USE_UTF_HACK
-    register
-#endif
-    char* bufptr = art_line;		/* pointer to input buffer */
-    register int outpos;		/* column position of output */
+    char* bufptr = art_line;	/* pointer to input buffer */
+    int outpos;		/* column position of output */
     static char prompt_buf[64];		/* place to hold prompt */
     bool notesfiles = false;		/* might there be notesfiles junk? */
     char oldmode = mode;
@@ -393,7 +390,7 @@ int do_article()
 			}
 			else {
 #ifdef CHARSUBST
-			    register int i;
+			    int i;
 #ifdef USE_UTF_HACK
 			    if (outpos + visual_width_at(bufptr) > tc_COLS) { /* will line overflow? */
 				newline();
@@ -672,7 +669,7 @@ reask_pager:
 
 bool maybe_set_color(char *cp, bool backsearch)
 {
-    register char ch = (cp == artbuf || cp == art_line? 0 : cp[-1]);
+    char ch = (cp == artbuf || cp == art_line? 0 : cp[-1]);
     if (ch == '\001')
 	color_object(COLOR_MIMEDESC, false);
     else if (ch == '\002')
@@ -698,7 +695,7 @@ bool maybe_set_color(char *cp, bool backsearch)
 
 int page_switch()
 {
-    register char* s;
+    char* s;
 
     switch (*buf) {
       case '!':			/* shell escape */

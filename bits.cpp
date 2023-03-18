@@ -49,11 +49,11 @@ void bits_init() {
 void rc_to_bits()
 {
     char* mybuf = buf;			/* place to decode rc line */
-    register char* s;
-    register char* c;
-    register char* h;
-    register long i;
-    register ART_NUM unread;
+    char* s;
+    char* c;
+    char* h;
+    long i;
+    ART_NUM unread;
     ARTICLE* ap;
 
     /* modify the article flags to reflect what has already been read */
@@ -177,9 +177,9 @@ bool set_firstart(char *s)
 
 void bits_to_rc()
 {
-    register char* s;
-    register char* mybuf = buf;
-    register ART_NUM i;
+    char* s;
+    char* mybuf = buf;
+    ART_NUM i;
     ART_NUM count=0;
     int safelen = LBUFLEN - 32;
 
@@ -386,7 +386,7 @@ void find_existing_articles()
 void onemore(ARTICLE *ap)
 {
     if (!(ap->flags & AF_UNREAD)) {
-	register ART_NUM artnum = article_num(ap);
+	ART_NUM artnum = article_num(ap);
 	check_first(artnum);
 	ap->flags |= AF_UNREAD;
 	ap->flags &= ~AF_DEL;
@@ -485,7 +485,7 @@ void mark_as_read(ARTICLE *ap)
 
 void mark_missing_articles()
 {
-    register ARTICLE* ap;
+    ARTICLE* ap;
     for (ap = article_ptr(article_first(absfirst));
 	 ap && article_num(ap) <= lastart;
 	 ap = article_nextp(ap))
@@ -528,7 +528,7 @@ void yankback()
 
 static bool yank_article(char *ptr, int arg)
 {
-    register ARTICLE* ap = (ARTICLE*)ptr;
+    ARTICLE* ap = (ARTICLE*)ptr;
     if (ap->flags & AF_YANKBACK) {
 	unmark_as_read(ap);
 	if (selected_only)
@@ -552,7 +552,7 @@ bool chase_xrefs(bool until_key)
 
 static bool check_chase(char *ptr, int until_key)
 {
-    register ARTICLE* ap = (ARTICLE*)ptr;
+    ARTICLE* ap = (ARTICLE*)ptr;
 
     if (ap->flags & AF_KCHASE) {
 	chase_xref(article_num(ap),true);
@@ -580,8 +580,8 @@ static bool check_chase(char *ptr, int until_key)
 /* The Xref-line-using version */
 static int chase_xref(ART_NUM artnum, int markread)
 {
-    register char* xartnum;
-    register ART_NUM x;
+    char* xartnum;
+    ART_NUM x;
     char* xref_buf, *curxref;
     char tmpbuf[128];
 

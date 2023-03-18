@@ -104,8 +104,8 @@ long sa_artnum_to_ent(ART_NUM artnum)
 /* select1 the articles picked in the TRN thread selector */
 void sa_selthreads()
 {
-    register SUBJECT *sp;
-    register ARTICLE *ap;
+    SUBJECT *sp;
+    ARTICLE *ap;
     bool want_unread;
 #if 0
     /* this does not work now, but maybe it will help debugging? */

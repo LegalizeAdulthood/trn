@@ -48,7 +48,7 @@ void ngstuff_init() {
 
 int escapade()
 {
-    register char* s;
+    char* s;
     bool interactive = (buf[1] == FINISHCMD);
     bool docd;
     char whereiam[1024];
@@ -113,7 +113,7 @@ int switcheroo()
 	}
 	else {
 	    char tmpbuf[LBUFLEN];
-	    register char* s;
+	    char* s;
 
 	    for (s=buf+2; isspace(*s); s++);
 	    mac_line(s,tmpbuf,(sizeof tmpbuf));
@@ -153,8 +153,8 @@ int numnum()
 {
     ART_NUM min, max;
     char* cmdlst = nullptr;
-    register char* s;
-    register char* c;
+    char* s;
+    char* c;
     ART_NUM oldart = art;
     char tmpbuf[LBUFLEN];
     bool output_level = (!use_threads && gmode != 's');
@@ -256,8 +256,8 @@ int numnum()
 
 int thread_perform()
 {
-    register SUBJECT* sp;
-    register ARTICLE* ap;
+    SUBJECT* sp;
+    ARTICLE* ap;
     bool want_unread;
     char* cmdstr;
     int len;
@@ -382,7 +382,7 @@ int thread_perform()
 
 int perform(char *cmdlst, int output_level)
 {
-    register int ch;
+    int ch;
     int savemode = 0;
     char tbuf[LBUFLEN+1];
 
@@ -624,7 +624,7 @@ int ngsel_perform()
 
 int ng_perform(char *cmdlst, int output_level)
 {
-    register int ch;
+    int ch;
     
     if (output_level == 1) {
 	printf("%s ",ngname);
@@ -692,7 +692,7 @@ int ng_perform(char *cmdlst, int output_level)
 
 int addgrp_sel_perform()
 {
-    register ADDGROUP* gp;
+    ADDGROUP* gp;
     char* cmdstr;
     int len;
     int bits;
@@ -740,7 +740,7 @@ int addgrp_sel_perform()
 
 int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level)
 {
-    register int ch;
+    int ch;
     
     if (output_level == 1) {
 	printf("%s ",gp->name);

@@ -31,7 +31,7 @@ static char* tildedir = nullptr;
 
 char *savestr(char *str)
 {
-    register char* newaddr = safemalloc((MEM_SIZE)(strlen(str)+1));
+    char* newaddr = safemalloc((MEM_SIZE)(strlen(str)+1));
 
     strcpy(newaddr,str);
     return newaddr;
@@ -40,7 +40,7 @@ char *savestr(char *str)
 /* safe version of string copy */
 char *safecpy(char *to, char *from, int len)
 {
-    register char* dest = to;
+    char* dest = to;
 
     if (from) {
 	while (--len && *from)
@@ -73,7 +73,7 @@ char *filexp(char *s)
 {
     static char filename[CBUFLEN];
     char scrbuf[CBUFLEN];
-    register char* d;
+    char* d;
 
 #ifdef DEBUG
     if (debug & DEB_FILEXP)
@@ -216,9 +216,9 @@ char *filexp(char *s)
 
 char *in_string(char *big, char *little, bool case_matters)
 {
-    register char* t;
-    register char* s;
-    register char* x;
+    char* t;
+    char* s;
+    char* x;
 
     for (t = big; *t; t++) {
 	for (x=t,s=little; *s; x++,s++) {
@@ -228,7 +228,7 @@ char *in_string(char *big, char *little, bool case_matters)
 		if (*s != *x)
 		    break;
 	    } else {
-		register char c,d;
+		char c,d;
 		if (isupper(*s)) 
 		    c = tolower(*s);
 		else

@@ -161,7 +161,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
     struct hostent* hp;
 #ifdef h_addr
     int x = 0;
-    register char** cp;
+    char** cp;
     static char* alist[1];
 #endif /* h_addr */
     static struct hostent def;

@@ -36,10 +36,10 @@ static int reusables = 0;
 /* size - a crude guide to size */
 HASHTABLE *hashcreate(unsigned size, int (*cmpfunc)(char *, int, HASHDATUM))
 {
-    register HASHTABLE* tbl;
+    HASHTABLE* tbl;
     /* allocate HASHTABLE and (HASHENT*) array together to reduce the
     ** number of malloc calls. */
-    register struct alignalloc {
+    struct alignalloc {
 	HASHTABLE ht;
 	HASHENT* hepa[1];	/* longer than it looks */
     }* aap;
@@ -62,11 +62,11 @@ HASHTABLE *hashcreate(unsigned size, int (*cmpfunc)(char *, int, HASHDATUM))
 */
 void hashdestroy(HASHTABLE *tbl)
 {
-    register unsigned idx;
-    register HASHENT* hp;
-    register HASHENT* next;
-    register HASHENT** hepp;
-    register int tblsize;
+    unsigned idx;
+    HASHENT* hp;
+    HASHENT* next;
+    HASHENT** hepp;
+    int tblsize;
 
     if (BADTBL(tbl))
 	return;
@@ -87,8 +87,8 @@ void hashdestroy(HASHTABLE *tbl)
 
 void hashstore(HASHTABLE *tbl, char *key, int keylen, HASHDATUM data)
 {
-    register HASHENT* hp;
-    register HASHENT** nextp;
+    HASHENT* hp;
+    HASHENT** nextp;
 
     nextp = hashfind(tbl, key, keylen);
     hp = *nextp;
@@ -103,8 +103,8 @@ void hashstore(HASHTABLE *tbl, char *key, int keylen, HASHDATUM data)
 
 void hashdelete(HASHTABLE *tbl, char *key, int keylen)
 {
-    register HASHENT* hp;
-    register HASHENT** nextp;
+    HASHENT* hp;
+    HASHENT** nextp;
 
     nextp = hashfind(tbl, key, keylen);
     hp = *nextp;
@@ -122,8 +122,8 @@ int slast_keylen;
 /* data corresponding to key */
 HASHDATUM hashfetch(HASHTABLE *tbl, char *key, int keylen)
 {
-    register HASHENT* hp;
-    register HASHENT** nextp;
+    HASHENT* hp;
+    HASHENT** nextp;
     static HASHDATUM errdatum = { nullptr, 0 };
 
     nextp = hashfind(tbl, key, keylen);
@@ -137,7 +137,7 @@ HASHDATUM hashfetch(HASHTABLE *tbl, char *key, int keylen)
 
 void hashstorelast(HASHDATUM data)
 {
-    register HASHENT* hp;
+    HASHENT* hp;
 
     hp = *slast_nextp;
     if (hp == nullptr) {			/* absent; allocate an entry */
@@ -154,11 +154,11 @@ void hashstorelast(HASHDATUM data)
 */
 void hashwalk(HASHTABLE *tbl, int (*nodefunc)(int, HASHDATUM *, int), int extra)
 {
-    register unsigned idx;
-    register HASHENT* hp;
-    register HASHENT* next;
-    register HASHENT** hepp;
-    register int tblsize;
+    unsigned idx;
+    HASHENT* hp;
+    HASHENT* next;
+    HASHENT** hepp;
+    int tblsize;
 
     if (BADTBL(tbl))
 	return;
@@ -186,10 +186,10 @@ void hashwalk(HASHTABLE *tbl, int (*nodefunc)(int, HASHDATUM *, int), int extra)
 */
 static HASHENT **hashfind(HASHTABLE *tbl, char *key, int keylen)
 {
-    register HASHENT* hp;
-    register HASHENT* prevhp = nullptr;
-    register HASHENT** hepp;
-    register unsigned size; 
+    HASHENT* hp;
+    HASHENT* prevhp = nullptr;
+    HASHENT** hepp;
+    unsigned size; 
 
     if (BADTBL(tbl)) {
 	fputs("Hash table is invalid.",stderr);
@@ -208,7 +208,7 @@ static HASHENT **hashfind(HASHTABLE *tbl, char *key, int keylen)
 /* not yet taken modulus table size */
 static unsigned hash(char *key, int keylen)
 {
-    register unsigned hash = 0;
+    unsigned hash = 0;
 
     while (keylen--)
 	hash += *key++;
@@ -224,7 +224,7 @@ static int default_cmp(char *key, int keylen, HASHDATUM data)
 /* allocate a hash entry */
 static HASHENT *healloc()
 {
-    register HASHENT* hp;
+    HASHENT* hp;
 
     if (hereuse == nullptr) {
 	int i;

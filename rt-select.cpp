@@ -153,7 +153,7 @@ char article_selector(char_int cmd)
     sel_item_index = 0;
     *msg = '\0';
     if (added_articles) {
-	register long i = added_articles, j;
+	long i = added_articles, j;
 	for (j = lastart-i+1; j <= lastart; j++) {
 	    if (!article_unread(j))
 		i--;
@@ -821,7 +821,7 @@ static void sel_status_msg(char *cp)
 
 static char sel_input()
 {
-    register int j;
+    int j;
     int ch, action;
     char* in_select;
     int got_dash, got_goto;
@@ -1024,7 +1024,7 @@ reinp_selector:
 	else
 	    action = '+';
     } else if (ch == '*' && sel_mode == SM_ARTICLE) {
-	register ARTICLE* ap;
+	ARTICLE* ap;
 	if (!sel_page_item_cnt)
 	    dingaling();
 	else {
@@ -1140,7 +1140,7 @@ reinp_selector:
     if (++j == sel_page_item_cnt)
 	j = 0;
     do {
-	register int sel = sel_items[sel_item_index].sel;
+	int sel = sel_items[sel_item_index].sel;
 	if (can_home)
 	    goto_xy(0,sel_items[sel_item_index].line);
 	if (action == '@') {
@@ -1270,7 +1270,7 @@ static bool delay_return_item(SEL_UNION u)
 	delay_unmark(u.ap);
 	break;
       default: {
-	  register ARTICLE* ap;
+	  ARTICLE* ap;
 	  if (sel_mode == SM_THREAD) {
 	      for (ap = first_art(u.sp); ap; ap = next_art(ap))
 		  if (!!(ap->flags & AF_UNREAD) ^ sel_rereading)
@@ -1454,7 +1454,7 @@ static void sel_cleanup()
 	    /* Turn selections into unread selected articles.  Let
 	    ** count_subjects() fix the counts after we're through.
 	    */
-	    register SUBJECT* sp;
+	    SUBJECT* sp;
 	    sel_last_ap = nullptr;
 	    sel_last_sp = nullptr;
 	    for (sp = first_subject; sp; sp = sp->next)
@@ -1464,7 +1464,7 @@ static void sel_cleanup()
 	    if (sel_mode == SM_ARTICLE)
 		article_walk(mark_DEL_as_READ, 0);
 	    else {
-		register SUBJECT* sp;
+		SUBJECT* sp;
 		for (sp = first_subject; sp; sp = sp->next) {
 		    if (sp->flags & SF_DEL) {
 			sp->flags &= ~SF_DEL;
@@ -1482,7 +1482,7 @@ static void sel_cleanup()
 
 static bool mark_DEL_as_READ(char *ptr, int arg)
 {
-    register ARTICLE* ap = (ARTICLE*)ptr;
+    ARTICLE* ap = (ARTICLE*)ptr;
     if (ap->flags & AF_DEL) {
 	ap->flags &= ~AF_DEL;
 	set_read(ap);
@@ -1714,7 +1714,7 @@ static int article_commands(char_int ch)
 	return DS_RESTART;
       case '#':
 	if (sel_page_item_cnt) {
-	    register SUBJECT* sp;
+	    SUBJECT* sp;
 	    for (sp = first_subject; sp; sp = sp->next)
 		sp->flags &= ~SF_SEL;
 	    selected_count = 0;
@@ -1897,9 +1897,9 @@ q does nothing.\n\n\
       case 'X':  case 'D':  case 'J':
 	if (!sel_rereading) {
 	    if (sel_mode == SM_ARTICLE) {
-		register ARTICLE* ap;
-		register ARTICLE** app;
-		register ARTICLE** limit;
+		ARTICLE* ap;
+		ARTICLE** app;
+		ARTICLE** limit;
 		limit = artptr_list + artptr_list_size;
 		if (ch == 'D')
 		    app = sel_page_app;
@@ -1918,7 +1918,7 @@ q does nothing.\n\n\
 			break;
 		}
 	    } else {
-		register SUBJECT* sp;
+		SUBJECT* sp;
 		if (ch == 'D')
 		    sp = sel_page_sp;
 		else
@@ -1945,7 +1945,7 @@ q does nothing.\n\n\
 	    if (artptr_list && obj_count)
 		sort_articles();
 	} else if (ch == 'J') {
-	    register SUBJECT* sp;
+	    SUBJECT* sp;
 	    for (sp = first_subject; sp; sp = sp->next)
 		deselect_subject(sp);
 	    selected_subj_cnt = selected_count = 0;
@@ -1968,7 +1968,7 @@ q does nothing.\n\n\
 	if (sel_mode == SM_ARTICLE)
 	    artp = sel_items[sel_item_index].u.ap;
 	else {
-	    register SUBJECT* sp = sel_items[sel_item_index].u.sp;
+	    SUBJECT* sp = sel_items[sel_item_index].u.sp;
 	    if (sel_mode == SM_THREAD) {
 		while (!sp->misc)
 		    sp = sp->thread_link;
@@ -2010,7 +2010,7 @@ q does nothing.\n\n\
 	    if (sel_mode == SM_ARTICLE)
 		artp = sel_items[sel_item_index].u.ap;
 	    else {
-		register SUBJECT* sp = sel_items[sel_item_index].u.sp;
+		SUBJECT* sp = sel_items[sel_item_index].u.sp;
 		if (sel_mode == SM_THREAD) {
 		    while (!sp->misc)
 			sp = sp->thread_link;
@@ -2033,7 +2033,7 @@ q does nothing.\n\n\
 	    if (ch == ':') {
 		thread_perform();
 		if (!sel_rereading) {
-		    register SUBJECT* sp;
+		    SUBJECT* sp;
 		    for (sp = first_subject; sp; sp = sp->next) {
 			if (sp->flags & SF_DEL) {
 			    sp->flags = 0;
@@ -2131,7 +2131,7 @@ static int newsgroup_commands(char_int ch)
 	return DS_DISPLAY;
       case 'X':  case 'D':  case 'J':
 	if (!sel_rereading) {
-	    register NGDATA* np;
+	    NGDATA* np;
 	    if (ch == 'D')
 		np = sel_page_np;
 	    else
@@ -2155,7 +2155,7 @@ static int newsgroup_commands(char_int ch)
 		}
 	    }
 	} else if (ch == 'J') {
-	    register NGDATA* np;
+	    NGDATA* np;
 	    for (np = first_ng; np; np = np->next)
 		np->flags &= ~NF_DELSEL;
 	    selected_count = 0;
@@ -2501,7 +2501,7 @@ q does nothing.\n\n\
 	return DS_DISPLAY;
       case 'X':  case 'D':  case 'J':
 	if (!sel_rereading) {
-	    register ADDGROUP* gp;
+	    ADDGROUP* gp;
 	    if (ch == 'D')
 		gp = sel_page_gp;
 	    else
@@ -2525,7 +2525,7 @@ q does nothing.\n\n\
 		}
 	    }
 	} else if (ch == 'J') {
-	    register ADDGROUP* gp;
+	    ADDGROUP* gp;
 	    for (gp = first_addgroup; gp; gp = gp->next)
 		gp->flags &= ~AGF_DELSEL;
 	    selected_count = 0;
