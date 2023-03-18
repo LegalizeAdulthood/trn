@@ -22,8 +22,6 @@ struct KEYMAP
 
 #define TC_STRINGS 48	/* number of colors we can keep track of */
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
 static void mac_init(char*);
 static KEYMAP* newkeymap();
 static void show_keymap(KEYMAP *curmap, char *prefix);

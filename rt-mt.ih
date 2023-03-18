@@ -58,8 +58,6 @@ struct BMAP
     BYTE pad_hack;
 };
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
 static char* mt_name(char*);
 static int read_authors();
 static int read_subjects();

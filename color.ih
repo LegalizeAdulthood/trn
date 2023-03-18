@@ -13,6 +13,4 @@ struct COLOR_OBJ
 
 #define STACK_SIZE 16
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
 static void output_color();

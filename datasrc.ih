@@ -58,8 +58,6 @@ INI_WORDS datasrc_ini[] = {
     { 0, 0, 0 }
 };
 
-/* DON'T EDIT BELOW THIS LINE OR YOUR CHANGES WILL BE LOST! */
-
 static char *dir_or_none(DATASRC *dp, char *dir, int flag);
 static char* file_or_none(char*);
 static int srcfile_cmp(char *key, int keylen, HASHDATUM data);
