@@ -1756,9 +1756,7 @@ static int article_commands(char_int ch)
 	removed_prompt = 3;
       reask_output:
 	in_char("Selector mode:  Threads, Subjects, Articles?", 'o', "tsa");
-#ifdef VERIFY
 	printcmd();
-#endif
 	if (*buf == 'h' || *buf == 'H') {
 #ifdef VERBOSE
 	    IF(verbose)
@@ -1804,9 +1802,7 @@ q does nothing.\n\n\
 	else
 	    in_char("Order by Date, Subject, Count, Lines, or Points?",
 		    'q', "dsclpDSCLP");
-#ifdef VERIFY
 	printcmd();
-#endif
 	if (*buf == 'h' || *buf == 'H') {
 #ifdef VERBOSE
 	    IF(verbose) {
@@ -2174,9 +2170,7 @@ static int newsgroup_commands(char_int ch)
 	removed_prompt = 3;
       reask_sort:
 	in_char("Order by Newsrc, Group name, or Count?", 'q', "ngcNGC");
-#ifdef VERIFY
 	printcmd();
-#endif
 	switch (*buf) {
 	  case 'n': case 'N':
 	    break;
@@ -2411,9 +2405,7 @@ static int addgroup_commands(char_int ch)
 	removed_prompt = 3;
       reask_sort:
 	in_char("Order by Natural-order, Group name, or Count?", 'q', "ngcNGC");
-#ifdef VERIFY
 	printcmd();
-#endif
 	switch (*buf) {
 	  case 'n': case 'N':
 	    break;
@@ -2724,9 +2716,7 @@ static int universal_commands(char_int ch)
 	removed_prompt = 3;
       reask_sort:
 	in_char("Order by Natural, or score Points?", 'q', "npNP");
-#ifdef VERIFY
 	printcmd();
-#endif
 	if (*buf == 'h' || *buf == 'H') {
 #ifdef VERBOSE
 	    IF(verbose) {

@@ -796,9 +796,7 @@ bool get_ng(char *what, int flags)
 #endif
 reask_add:
 	    in_char(promptbuf,'A',"ynYN");
-#ifdef VERIFY
 	    printcmd();
-#endif
 	    newline();
 	    if (*buf == 'h') {
 #ifdef VERBOSE
@@ -880,9 +878,7 @@ y or SP to subscribe, Y to subscribe all new groups, N to unsubscribe all\n",
 #endif
 reask_unsub:
 	in_char(promptbuf,'R',"yn");
-#ifdef VERIFY
 	printcmd();
-#endif
 	newline();
 	if (*buf == 'h') {
 #ifdef VERBOSE
@@ -970,9 +966,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
 	if (newnum < 0) {
 	    /* ask if they want to keep the current order */
 	    in_char("Sort newsrc(s) using current sort order?", 'D', "yn"); /*$$ !'D' */
-#ifdef VERIFY
 	    printcmd();
-#endif
 	    newline();
 	    if (*buf == 'y')
 		set_selector(SM_NEWSGROUP, SS_NATURAL);
@@ -1027,9 +1021,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
 	if (errno || *buf == '\f')	/* if return from stop signal */
 	    goto reask_reloc;		/* give them a prompt again */
 	setdef(buf,dflt);
-#ifdef VERIFY
 	printcmd();
-#endif
 	if (*buf == 'h') {
 #ifdef VERBOSE
 	    IF(verbose) {
@@ -1237,9 +1229,7 @@ void cleanup_newsrc(NEWSRC *rp)
 #ifdef DELBOGUS
 reask_bogus:
 	in_char("Delete bogus newsgroups?", 'D', "ny");
-#ifdef VERIFY
 	printcmd();
-#endif
 	newline();
 	if (*buf == 'h') {
 #ifdef VERBOSE

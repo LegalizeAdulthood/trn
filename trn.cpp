@@ -376,9 +376,7 @@ int input_newsgroup()
     }
     buf[2] = *buf;
     setdef(buf,dfltcmd);
-#ifdef VERIFY
     printcmd();
-#endif
     if (ngptr != nullptr)
 	*buf = buf[2];
 
@@ -619,9 +617,7 @@ reask_abandon:
 #ifdef TERSE
 	    in_char("\nAbandon?", 'B', "ynh");
 #endif
-#ifdef VERIFY
 	printcmd();
-#endif
 	newline();
 	if (*buf == 'h') {
 #ifdef VERBOSE

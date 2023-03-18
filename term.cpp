@@ -1576,7 +1576,6 @@ void pad(int num)
 
 /* echo the command just typed */
 
-#ifdef VERIFY
 void printcmd()
 {
     if (verify && buf[1] == FINISHCMD) {
@@ -1593,7 +1592,6 @@ void printcmd()
 	fflush(stdout);
     }
 }
-#endif
 
 void rubout()
 {

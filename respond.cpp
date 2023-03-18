@@ -320,9 +320,7 @@ int save_article()
 	      reask_save:
 		in_char(cmd_buf, 'M', dflt);
 		newline();
-#ifdef VERIFY
 		printcmd();
-#endif
 		if (*buf == 'h') {
 #ifdef VERBOSE
 		    IF(verbose)

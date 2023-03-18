@@ -510,9 +510,7 @@ void set_option(int num, char *s)
 	unbroken_subjects = !YES(s);
 	break;
       case OI_VERIFY_INPUT:
-#ifdef VERIFY
 	verify = YES(s);
-#endif
 	break;
       case OI_ARTICLE_TREE_LINES:
 	if (isdigit(*s)) {
@@ -912,10 +910,8 @@ char *option_value(int num)
 	return YESorNO(!allow_typeahead);
       case OI_COMPRESS_SUBJECTS:
 	return YESorNO(!unbroken_subjects);
-#ifdef VERIFY
       case OI_VERIFY_INPUT:
 	return YESorNO(verify);
-#endif
       case OI_ARTICLE_TREE_LINES:
 	sprintf(buf,"%d",max_tree_lines);
 	return buf;

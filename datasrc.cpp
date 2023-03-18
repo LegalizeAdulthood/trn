@@ -1027,9 +1027,7 @@ static int get_near_miss()
 #endif
 reask:
     in_char(promptbuf, 'A', options);
-#ifdef VERIFY
     printcmd();
-#endif
     putchar('\n') FLUSH;
     switch (*buf) {
         case 'n':

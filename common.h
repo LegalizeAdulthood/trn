@@ -222,7 +222,6 @@
 #define MAILCALL	/* check periodically for mail */
 #define NOFIREWORKS	/* keep whole screen from flashing on certain */
 			/* terminals such as older Televideos */
-#define VERIFY		/* echo the command they just typed */
 #define BACKTICK	/* allow %`command` */
 #define PROMPTTTY	/* allow %"prompt" */
 #define ULSMARTS	/* catch _^H in text and do underlining */
@@ -838,9 +837,7 @@ EXT bool verbose INIT(true);				/* +t */
 #endif
 EXT bool unbroken_subjects INIT(false);			/* -u */
 EXT bool unsafe_rc_saves INIT(false);			/* -U */
-#ifdef VERIFY
 EXT bool verify INIT(false);				/* -v */
-#endif
 EXT bool quickstart INIT(false);			/* -q */
 
 #define DEFAULT_REFETCH_SECS  4L*60*60	/* 4 hours */

@@ -233,9 +233,7 @@ void page_start();
 void errormsg(char *);
 void warnmsg(char *);
 void pad(int);
-#ifdef VERIFY
 void printcmd();
-#endif
 void rubout();
 void reprint();
 void erase_line(bool to_eos);

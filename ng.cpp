@@ -576,9 +576,7 @@ cleanup2:
 int art_switch()
 {
     setdef(buf,dfltcmd);
-#ifdef VERIFY
     printcmd();
-#endif
 
     buf[2] = '\0';
     switch (*buf) {
@@ -655,9 +653,7 @@ s to mark subthread unread.\n";
 	}
       reask_unread:
 	in_char(u_prompt,'u',dfltcmd);
-#ifdef VERIFY
 	printcmd();
-#endif
 	newline();
 	if (*buf == 'h') {
 #ifdef VERBOSE
@@ -1636,9 +1632,7 @@ reask_catchup:
 	sprintf(buf,"Catchup %s?",ngname);
 #endif
     in_char(buf,'C',"yn#h");
-#ifdef VERIFY
     printcmd();
-#endif
     if ((ch = *buf) == 'h' || ch == 'H') {
 	use_one_line = false;
 #ifdef VERBOSE
@@ -1820,9 +1814,7 @@ reask_memorize:
     sprintf(cmd_buf,"%sMemorize %s command:", global_save?"Global-" : nullstr,
 	    mode_string);
     in_char(cmd_buf, 'm', thread_cmd? "+S.mJK,jcC" : "+S.mJK,jcCfg");
-#ifdef VERIFY
     printcmd();
-#endif
     ch = *buf;
     if (!thread_cmd && ch == 'f') {
 	mode_string = *mode_string == 'a'? "subject" : "author";
