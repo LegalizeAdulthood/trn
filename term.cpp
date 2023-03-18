@@ -753,7 +753,6 @@ char *edit_buf(char *s, char *cmd)
 	}
 	return s;
     }
-#ifdef WORDERASE
     else if (*s == Ctl('w')) {		/* wipe out one word? */
 	if (s == buf)
 	    return s;
@@ -768,7 +767,6 @@ char *edit_buf(char *s, char *cmd)
 	}
 	return s+1;
     }
-#endif
     else if (*s == Ctl('r')) {
 	*s = '\0';
 	reprint();
