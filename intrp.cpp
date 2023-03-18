@@ -166,11 +166,9 @@ static char *skipinterp(char *pattern, char *stoppers)
 		pattern = skipinterp(pattern+1,"`");
 		break;
 	    }
-#ifdef PROMPTTTY
 	    case '"':
 		pattern = skipinterp(pattern+1,"\"");
 		break;
-#endif
 	    default:
 		break;
 	    }
@@ -421,7 +419,6 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    s = scrbuf;
 		    break;
 		}
-#ifdef PROMPTTTY
 		case '"':
 		    pattern = dointerp(scrbuf,(sizeof scrbuf),pattern+1,"\"",cmd);
 		    fputs(scrbuf,stdout) FLUSH;
@@ -437,7 +434,6 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    safecpy(input_str, scrbuf, i+1);
 		    s = input_str;
 		    break;
-#endif
 		case '~':
 		    s = g_home_dir;
 		    break;
