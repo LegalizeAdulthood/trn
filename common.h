@@ -223,7 +223,6 @@
 #define NOFIREWORKS	/* keep whole screen from flashing on certain */
 			/* terminals such as older Televideos */
 #define TILDENAME	/* allow ~logname expansion */
-#define MEMHELP		/* keep help messages in memory */
 #define VERBOSE		/* compile in more informative messages */
 #define TERSE		/* compile in shorter messages */
 			/* (Note: both VERBOSE and TERSE can be defined; -t
@@ -323,28 +322,6 @@
 #   define assert(ex) {if (!(ex)){fprintf(stderr,"Assertion failed: file %s, line %d\n", __FILE__, __LINE__);sig_catcher(0);}}
 #else
 #   define assert(ex) ;
-#endif
-
-/* If you're strapped for space use the help messages in shell scripts */
-/* if {NG,ART,PAGER,SUBS}HELP is undefined, help messages are in memory */
-#ifdef MEMHELP  /* undef MEMHELP above to get them all as sh scripts */
-#   undef NGHELP
-#   undef ARTHELP
-#   undef PAGERHELP
-#   undef SUBSHELP
-#else
-#   ifndef NGHELP			/* % and ~ */
-#	define NGHELP "%X/ng.help"
-#   endif
-#   ifndef ARTHELP			/* % and ~ */
-#	define ARTHELP "%X/art.help"
-#   endif
-#   ifndef PAGERHELP		/* % and ~ */
-#	define PAGERHELP "%X/pager.help"
-#   endif
-#   ifndef SUBSHELP		/* % and ~ */
-#	define SUBSHELP "%X/subs.help"
-#   endif
 #endif
 
 #define TCSIZE 512	/* capacity for termcap strings */

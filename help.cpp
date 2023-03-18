@@ -19,9 +19,6 @@ void help_init()
 int help_page()
 {
     int cmd;
-#ifdef PAGERHELP
-    doshell(sh,filexp(PAGERHELP));
-#else
     page_start();
     if ((cmd = print_lines("\
 Paging commands:\n\
@@ -94,16 +91,12 @@ Type h at end of article for a description of these commands:\n\
 (To return to the middle of the article after one of these commands, type ^L.)\n\
 ",NOMARKING)) )
 	return cmd;
-#endif
     return 0;
 }
 
 int help_art()
 {
     int cmd;
-#ifdef ARTHELP
-    doshell(sh,filexp(ARTHELP));
-#else
     page_start();
     if ((cmd = print_lines("\
 Article Selection commands:\n\
@@ -252,16 +245,12 @@ Scoring commands:\n\
 #endif /* SCORE */
     )
 	return cmd;
-#endif
     return 0;
 }
 
 int help_ng()
 {
     int cmd;
-#ifdef NGHELP
-    doshell(sh,filexp(NGHELP));
-#else
     page_start();
     if ((cmd = print_lines("\
 Newsgroup Selection commands:\n\
@@ -335,7 +324,6 @@ x	Quit, restoring .newsrc to its state at startup of trn.\n\
 v	Print version and the address for reporting bugs.\n\
 ",NOMARKING)) )
 	return cmd;
-#endif
     if ((cmd = get_anything()) != 0)
 	return cmd;
     show_macros();
@@ -457,9 +445,6 @@ q	Quit the selector.\n\
 int help_subs()
 {
     int cmd;
-#ifdef SUBSHELP
-    doshell(sh,filexp(SUBSHELP));
-#else
     page_start();
     if ((cmd = print_lines("\
 Valid substitutions are:\n\
@@ -551,7 +536,6 @@ Put \\ in the middle to quote regexp and % characters in the resulting string\n\
 Put :FMT in the middle to format the result printf-style:  %:-30.30t\n\
 ",NOMARKING)) )
 	return cmd;
-#endif
     return 0;
 }
 #endif
