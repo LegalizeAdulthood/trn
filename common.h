@@ -222,7 +222,6 @@
 #define MAILCALL	/* check periodically for mail */
 #define NOFIREWORKS	/* keep whole screen from flashing on certain */
 			/* terminals such as older Televideos */
-#define BAUDMOD		/* allow baudrate modifier on switches */
 #define ORGFILE		/* if organization begins with /, look up in file */
 #define TILDENAME	/* allow ~logname expansion */
 #define SETENV		/* allow command line environment variable setting */
