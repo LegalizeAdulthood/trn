@@ -11,31 +11,35 @@
 #include <sys/utime.h>
 #endif
 #if !defined(I_UTIME) && !defined(I_SYS_UTIME)
-  struct utimbuf {
-      time_t actime;
-      time_t modtime;
-  };
+struct utimbuf
+{
+    time_t actime;
+    time_t modtime;
+};
 #endif
 #endif
 
-#define SRCFILE_CHUNK_SIZE (32*1024)
+enum
+{
+    SRCFILE_CHUNK_SIZE = (32 * 1024),
 
-#define DI_NNTP_SERVER	1
-#define DI_ACTIVE_FILE	2
-#define DI_ACT_REFETCH	3
-#define DI_SPOOL_DIR	4
-#define DI_THREAD_DIR	5
-#define DI_OVERVIEW_DIR	6
-#define DI_ACTIVE_TIMES	7
-#define DI_GROUP_DESC	8
-#define DI_DESC_REFETCH	9
-#define DI_AUTH_USER	10
-#define DI_AUTH_PASS	11
-#define DI_AUTH_COMMAND	12
-#define DI_XHDR_BROKEN	13
-#define DI_XREFS	14
-#define DI_OVERVIEW_FMT	15
-#define DI_FORCE_AUTH	16
+    DI_NNTP_SERVER = 1,
+    DI_ACTIVE_FILE = 2,
+    DI_ACT_REFETCH = 3,
+    DI_SPOOL_DIR = 4,
+    DI_THREAD_DIR = 5,
+    DI_OVERVIEW_DIR = 6,
+    DI_ACTIVE_TIMES = 7,
+    DI_GROUP_DESC = 8,
+    DI_DESC_REFETCH = 9,
+    DI_AUTH_USER = 10,
+    DI_AUTH_PASS = 11,
+    DI_AUTH_COMMAND = 12,
+    DI_XHDR_BROKEN = 13,
+    DI_XREFS = 14,
+    DI_OVERVIEW_FMT = 15,
+    DI_FORCE_AUTH = 16
+};
 
 INI_WORDS datasrc_ini[] = {
     { 0, "DATASRC", 0 },

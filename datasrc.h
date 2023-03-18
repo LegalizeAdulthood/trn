@@ -42,30 +42,39 @@ struct DATASRC
     int		flags;
 };
 
-#define DF_TRY_OVERVIEW	0x0001
-#define DF_TRY_THREAD	0x0002
-#define DF_ADD_OK	0x0004
-#define DF_DEFAULT	0x0008
+enum
+{
+    DF_TRY_OVERVIEW = 0x0001,
+    DF_TRY_THREAD = 0x0002,
+    DF_ADD_OK = 0x0004,
+    DF_DEFAULT = 0x0008,
+    DF_OPEN = 0x0010,
+    DF_ACTIVE = 0x0020,
+    DF_UNAVAILABLE = 0x0040
+};
 
-#define DF_OPEN 	0x0010
-#define DF_ACTIVE 	0x0020
-#define DF_UNAVAILABLE 	0x0040
 #ifdef SUPPORT_NNTP
-#define DF_REMOTE	0x0080
-#define DF_TMPACTFILE	0x0100
-#define DF_TMPGRPDESC	0x0200
-#define DF_USELISTACT	0x0400
-#define DF_XHDR_BROKEN	0x0800
-#define DF_NOXGTITLE	0x1000
-#define DF_NOLISTGROUP	0x2000
-#define DF_NOXREFS	0x4000
+enum
+{
+    DF_REMOTE = 0x0080,
+    DF_TMPACTFILE = 0x0100,
+    DF_TMPGRPDESC = 0x0200,
+    DF_USELISTACT = 0x0400,
+    DF_XHDR_BROKEN = 0x0800,
+    DF_NOXGTITLE = 0x1000,
+    DF_NOLISTGROUP = 0x2000,
+    DF_NOXREFS = 0x4000
+};
 #endif
 
-#define FF_HAS_FIELD	0x01
-#define FF_CHECK4FIELD	0x02
-#define FF_HAS_HDR	0x04
-#define FF_CHECK4HDR	0x08
-#define FF_FILTERSEND	0x10
+enum
+{
+    FF_HAS_FIELD = 0x01,
+    FF_CHECK4FIELD = 0x02,
+    FF_HAS_HDR = 0x04,
+    FF_CHECK4HDR = 0x08,
+    FF_FILTERSEND = 0x10
+};
 
 #define DATASRC_NNTP_FLAGS(dp) (((dp) == datasrc? nntplink.flags : (dp)->nntplink.flags))
 

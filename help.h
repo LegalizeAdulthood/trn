@@ -2,22 +2,27 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#define FOO 1
+
 /* help locations */
-#define UHELP_PAGE 1
-#define UHELP_ART 2
-#define UHELP_NG 3
-#define UHELP_NGSEL 4
-#define UHELP_ADDSEL 5
+enum
+{
+    UHELP_PAGE = 1,
+    UHELP_ART = 2,
+    UHELP_NG = 3,
+    UHELP_NGSEL = 4,
+    UHELP_ADDSEL = 5,
 #ifdef ESCSUBS
-#define UHELP_SUBS 6
+    UHELP_SUBS = 6,
 #endif
-#define UHELP_ARTSEL 7
-#define UHELP_MULTIRC 8
-#define UHELP_OPTIONS 9
+    UHELP_ARTSEL = 7,
+    UHELP_MULTIRC = 8,
+    UHELP_OPTIONS = 9,
 #ifdef SCAN
-#define UHELP_SCANART 10
+    UHELP_SCANART = 10,
 #endif
-#define UHELP_UNIV 11
+    UHELP_UNIV = 11
+};
 
 void help_init();
 int help_page();

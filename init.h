@@ -2,7 +2,10 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#define TCBUF_SIZE 1024
+enum
+{
+    TCBUF_SIZE = 1024
+};
 
 EXT long our_pid;
 /* default string for group entry */

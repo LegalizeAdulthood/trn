@@ -3,14 +3,13 @@
  */
 
 /* memory pool numbers */
-/* scoring rule text */
-#define MP_SCORE1 0
 
-/* scorefile cache */
-#define MP_SCORE2 1
-
-/* sathread.c storage */
-#define MP_SATHREAD 2
+enum
+{
+    MP_SCORE1 = 0,  /* scoring rule text */
+    MP_SCORE2 = 1,  /* scorefile cache */
+    MP_SATHREAD = 2 /* sathread.c storage */
+};
 
 void mp_init();
 char *mp_savestr(char *, int);

@@ -57,12 +57,15 @@ struct USER_HEADTYPE
     char flags;			/* the header's flags */
 };
 
-#define HT_HIDE	    0x01	/* hide this line */
-#define HT_MAGIC    0x02	/* do any special processing on this line */
-#define HT_CACHED   0x04	/* this information is cached article data */
-#define HT_DEFHIDE  0x08	/* hidden by default */
-#define HT_DEFMAGIC 0x10	/* magic by default */
-#define HT_MAGICOK  0x20	/* magic even possible for line */
+enum
+{
+    HT_HIDE = 0x01,     /* hide this line */
+    HT_MAGIC = 0x02,    /* do any special processing on this line */
+    HT_CACHED = 0x04,   /* this information is cached article data */
+    HT_DEFHIDE = 0x08,  /* hidden by default */
+    HT_DEFMAGIC = 0x10, /* magic by default */
+    HT_MAGICOK = 0x20   /* magic even possible for line */
+};
 
 /* This array must stay in the same order as the list above */
 

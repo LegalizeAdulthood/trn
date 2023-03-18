@@ -27,36 +27,48 @@ struct MIME_SECT
     short   html_blkcnt;
 };
 
-#define MSF_INLINE	0x0001
-#define MSF_ALTERNATIVE	0x0002
-#define MSF_ALTERNADONE	0x0004
+enum
+{
+    MSF_INLINE = 0x0001,
+    MSF_ALTERNATIVE = 0x0002,
+    MSF_ALTERNADONE = 0x0004
+};
 
 /* Only used with HTMLTEXT_MIME */
-#define HF_IN_TAG	0x0001
-#define HF_IN_COMMENT	0x0002
-#define HF_IN_HIDING	0x0004
-#define HF_IN_PRE	0x0008
-#define HF_IN_DQUOTE	0x0010
-#define HF_IN_SQUOTE	0x0020
-#define HF_QUEUED_P	0x0040
-#define HF_P_OK		0x0080
-#define HF_QUEUED_NL	0x0100
-#define HF_NL_OK	0x0200
-#define HF_NEED_INDENT	0x0400
-#define HF_SPACE_OK	0x0800
-#define HF_COMPACT	0x1000
+enum
+{
+    HF_IN_TAG = 0x0001,
+    HF_IN_COMMENT = 0x0002,
+    HF_IN_HIDING = 0x0004,
+    HF_IN_PRE = 0x0008,
+    HF_IN_DQUOTE = 0x0010,
+    HF_IN_SQUOTE = 0x0020,
+    HF_QUEUED_P = 0x0040,
+    HF_P_OK = 0x0080,
+    HF_QUEUED_NL = 0x0100,
+    HF_NL_OK = 0x0200,
+    HF_NEED_INDENT = 0x0400,
+    HF_SPACE_OK = 0x0800,
+    HF_COMPACT = 0x1000
+};
 
-#define HTML_MAX_BLOCKS	256
+enum
+{
+    HTML_MAX_BLOCKS = 256
+};
 
-#define TF_BLOCK	0x0001		/* This implies TF_HAS_CLOSE */
-#define TF_HAS_CLOSE	0x0002
-#define TF_NL		0x0004
-#define TF_P		0x0008
-#define TF_BR		0x0010
-#define TF_LIST		0x0020
-#define TF_HIDE		0x0040
-#define TF_SPACE	0x0080
-#define TF_TAB		0x0100
+enum
+{
+    TF_BLOCK = 0x0001, /* This implies TF_HAS_CLOSE */
+    TF_HAS_CLOSE = 0x0002,
+    TF_NL = 0x0004,
+    TF_P = 0x0008,
+    TF_BR = 0x0010,
+    TF_LIST = 0x0020,
+    TF_HIDE = 0x0040,
+    TF_SPACE = 0x0080,
+    TF_TAB = 0x0100
+};
 
 /* NOTE: This must match tagattr below */
 #define TAG_BLOCKQUOTE	0
@@ -78,8 +90,11 @@ struct MIME_SECT
 #define TAG_XML		(TAG_UL+1)
 #define LAST_TAG	(TAG_XML+1)
 
-#define CLOSING_TAG	0
-#define OPENING_TAG	1
+enum
+{
+    CLOSING_TAG = 0,
+    OPENING_TAG = 1
+};
 
 struct HTML_TAGS
 {

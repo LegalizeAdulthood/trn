@@ -29,15 +29,14 @@
 #include "INTERN.h"
 #include "search.h"
 
-#ifndef BITSPERBYTE
-#define BITSPERBYTE 8
-#endif
-
 #define BMAPSIZ (127 / BITSPERBYTE + 1)
 
-#define MNULL	64		/* Bit is set in a meta-character defn to
-				   indicate that the metacharacter can match
-				   a null string.  advance() uses this. */
+enum
+{
+    MNULL = 64 /* Bit is set in a meta-character defn to
+                          indicate that the metacharacter can match
+                          a null string.  advance() uses this. */
+};
  
 /* meta characters in the "compiled" form of a regular expression */
 #define CBRA	(2|MNULL)	/* \( -- begin bracket */

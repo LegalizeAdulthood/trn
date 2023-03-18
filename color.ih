@@ -11,6 +11,9 @@ struct COLOR_OBJ
     int attr;
 };
 
-#define STACK_SIZE 16
+enum
+{
+    STACK_SIZE = 16
+};
 
 static void output_color();

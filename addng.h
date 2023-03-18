@@ -12,12 +12,14 @@ struct ADDGROUP {
     char name[1];
 };
 
-#define AGF_SEL		0x01
-#define AGF_DEL		0x02
-#define AGF_DELSEL	0x04
-#define AGF_INCLUDED	0x10
-
-#define AGF_EXCLUDED	0x20
+enum
+{
+    AGF_SEL = 0x01,
+    AGF_DEL = 0x02,
+    AGF_DELSEL = 0x04,
+    AGF_INCLUDED = 0x10,
+    AGF_EXCLUDED = 0x20
+};
 
 EXT ADDGROUP* first_addgroup;
 EXT ADDGROUP* last_addgroup;

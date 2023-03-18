@@ -9,13 +9,17 @@
 
 #ifdef ARTSEARCH
 
-#define SRCH_ABORT 0
-#define SRCH_INTR 1
-#define SRCH_FOUND 2
-#define SRCH_NOTFOUND 3
-#define SRCH_DONE 4
-#define SRCH_SUBJDONE 5
-#define SRCH_ERROR 6
+enum
+{
+    SRCH_ABORT = 0,
+    SRCH_INTR = 1,
+    SRCH_FOUND = 2,
+    SRCH_NOTFOUND = 3,
+    SRCH_DONE = 4,
+    SRCH_SUBJDONE = 5,
+    SRCH_ERROR = 6
+};
+
 #endif
 
 EXT char* lastpat INIT(nullstr);	/* last search pattern */
@@ -24,13 +28,16 @@ EXT COMPEX sub_compex;		/* last compiled subject search */
 EXT COMPEX art_compex;		/* last compiled normal search */
 EXT COMPEX* bra_compex INIT(&(art_compex)); /* current compex with brackets */
 
-#define ARTSCOPE_SUBJECT	0
-#define ARTSCOPE_FROM		1
-#define ARTSCOPE_ONEHDR		2
-#define ARTSCOPE_HEAD		3
-#define ARTSCOPE_BODY_NOSIG	4
-#define ARTSCOPE_BODY		5
-#define ARTSCOPE_ARTICLE	6
+enum
+{
+    ARTSCOPE_SUBJECT = 0,
+    ARTSCOPE_FROM = 1,
+    ARTSCOPE_ONEHDR = 2,
+    ARTSCOPE_HEAD = 3,
+    ARTSCOPE_BODY_NOSIG = 4,
+    ARTSCOPE_BODY = 5,
+    ARTSCOPE_ARTICLE = 6
+};
 
 EXT char scopestr[] INIT("sfHhbBa");
 EXT int art_howmuch;		/* search scope */

@@ -18,17 +18,18 @@ struct SUBJECT
 };
 
 /* subject flags */
-
-#define SF_SEL		0x0001
-#define SF_DEL		0x0002
-#define SF_DELSEL	0x0004
-#define SF_OLDVISIT	0x0008
-#define SF_INCLUDED	0x0010
-
-#define SF_VISIT	0x0200
-#define SF_WASSELECTED  0x0400
-#define SF_SUBJTRUNCED	0x1000
-#define SF_ISOSUBJ	0x2000
+enum
+{
+    SF_SEL = 0x0001,
+    SF_DEL = 0x0002,
+    SF_DELSEL = 0x0004,
+    SF_OLDVISIT = 0x0008,
+    SF_INCLUDED = 0x0010,
+    SF_VISIT = 0x0200,
+    SF_WASSELECTED = 0x0400,
+    SF_SUBJTRUNCED = 0x1000,
+    SF_ISOSUBJ = 0x2000
+};
 
 /* This is our article-caching structure */
 
@@ -59,29 +60,29 @@ struct ARTICLE
 };
 
 /* article flags */
-
-#define AF_SEL		0x0001
-#define AF_DEL		0x0002
-#define AF_DELSEL	0x0004
-#define AF_OLDSEL	0x0008
-#define AF_INCLUDED	0x0010
-
-#define AF_UNREAD	0x0020
-#define AF_CACHED	0x0040
-#define AF_THREADED	0x0080
-#define AF_EXISTS	0x0100
-#define AF_HAS_RE	0x0200
-#define AF_KCHASE	0x0400
-#define AF_MCHASE	0x0800
-#define AF_YANKBACK	0x1000
-#define AF_FROMTRUNCED	0x2000
-#define AF_TMPMEM	0x4000
-#define AF_FAKE 	0x8000
-
-#define AF2_WASUNREAD   0x0001
-#define AF2_NODEDRAWN   0x0002
-#define AF2_CHANGED     0x0004
-#define AF2_BOGUS	0x0008
+enum
+{
+    AF_SEL = 0x0001,
+    AF_DEL = 0x0002,
+    AF_DELSEL = 0x0004,
+    AF_OLDSEL = 0x0008,
+    AF_INCLUDED = 0x0010,
+    AF_UNREAD = 0x0020,
+    AF_CACHED = 0x0040,
+    AF_THREADED = 0x0080,
+    AF_EXISTS = 0x0100,
+    AF_HAS_RE = 0x0200,
+    AF_KCHASE = 0x0400,
+    AF_MCHASE = 0x0800,
+    AF_YANKBACK = 0x1000,
+    AF_FROMTRUNCED = 0x2000,
+    AF_TMPMEM = 0x4000,
+    AF_FAKE = 0x8000,
+    AF2_WASUNREAD = 0x0001,
+    AF2_NODEDRAWN = 0x0002,
+    AF2_CHANGED = 0x0004,
+    AF2_BOGUS = 0x0008
+};
 
 /* See kfile.h for the AUTO_* flags */
 

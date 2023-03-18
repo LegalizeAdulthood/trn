@@ -4,10 +4,13 @@
 
 /* do_article() return values */
 
-#define DA_NORM 0
-#define DA_RAISE 1
-#define DA_CLEAN 2
-#define DA_TOEND 3
+enum
+{
+    DA_NORM = 0,
+    DA_RAISE = 1,
+    DA_CLEAN = 2,
+    DA_TOEND = 3
+};
 
 EXT ART_LINE highlight INIT(-1);/* next line to be highlighted */
 EXT ART_LINE first_view;
