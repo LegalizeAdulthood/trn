@@ -223,7 +223,6 @@
 #define NOFIREWORKS	/* keep whole screen from flashing on certain */
 			/* terminals such as older Televideos */
 #define TILDENAME	/* allow ~logname expansion */
-#define SETENV		/* allow command line environment variable setting */
 #define MAKEDIR		/* use our makedir() instead of shell script */
 #define MEMHELP		/* keep help messages in memory */
 #define VERBOSE		/* compile in more informative messages */
