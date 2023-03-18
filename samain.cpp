@@ -149,7 +149,7 @@ void sa_initmode()
     /* set up screen sizes */
     sa_set_screen();
 
-    sa_mode_zoom = 0;			/* reset zoom */
+    sa_mode_zoom = false;			/* reset zoom */
 }
 
 int sa_mainloop()

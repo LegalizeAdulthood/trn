@@ -159,7 +159,7 @@ void thread_close()
     sel_last_ap = 0;
     sel_last_sp = 0;
     selected_only = false;
-    sel_exclusive = 0;
+    sel_exclusive = false;
     ov_close();
 }
 

@@ -206,7 +206,7 @@ bool set_user_name(char *tmpbuf)
     {
         g_real_name = savestr("PUT_YOUR_NAME_HERE");
     }
-    return 1;
+    return true;
 }
 
 bool set_p_host_name(char *tmpbuf)

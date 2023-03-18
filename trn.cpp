@@ -266,7 +266,7 @@ void do_multirc()
 			ngptr = ngptr->prev;
 			if (ngptr == nullptr) {
 			    ngptr = first_ng->next;
-			    go_forward = 1;
+			    go_forward = true;
 			}
 		    }
 		    continue;

@@ -72,7 +72,7 @@ bool fetch_http(char *host, int port, char *path, char *outname)
     /* XXX some kind of URL timeout would be really nice */
     /* (the old nicebg code caused portability problems) */
     /* later consider larger buffers, spinner */
-    while (1) {
+    while (true) {
 	if ((len = read(sock, url_buf, 1024)) < 0) {
 	    printf("\nError: reading URL reply\n");
 	    return false;

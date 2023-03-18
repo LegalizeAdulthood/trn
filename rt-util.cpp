@@ -509,7 +509,7 @@ char *compress_date(ARTICLE *ap, int size)
 */
 bool subject_has_Re(char *str, char **strp)
 {
-    bool has_Re = 0;
+    bool has_Re = false;
 
     while (*str && AT_GREY_SPACE(str)) str++;
     while (EQ(str[0], 'r') && EQ(str[1], 'e')) {	/* check for Re: */
@@ -522,7 +522,7 @@ bool subject_has_Re(char *str, char **strp)
 	    break;
 	while (*++cp && AT_GREY_SPACE(cp)) ;
 	str = cp;
-	has_Re = 1;
+	has_Re = true;
     }
     if (strp)
 	*strp = str;
@@ -792,10 +792,10 @@ static char *output_change(char *cp, long num, char *obj_type, char *modifier, c
 
     if (num < 0) {
 	num *= -1;
-	neg = 1;
+	neg = true;
     }
     else
-	neg = 0;
+	neg = false;
 
     if (cp != msg) {
 	*cp++ = ',';

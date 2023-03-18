@@ -130,7 +130,7 @@ static void new_nntp_groups(DATASRC *dp)
     }
     newngs = hashcreate(33, addng_cmp);
 
-    while (1) {
+    while (true) {
 	high = 0, low = 1;
 	if (nntp_gets(g_ser_line, sizeof g_ser_line) < 0)
 	    break;

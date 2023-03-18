@@ -56,7 +56,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
     int saltaway = 0;			/* store in KILL file? */
     int howmuch;			/* search scope: subj/from/Hdr/head/art */
     int srchhdr;			/* header to search if Hdr scope */
-    bool topstart = 0;
+    bool topstart = false;
     bool doread;			/* search read articles? */
     bool foldcase = true;		/* fold upper and lower case? */
     int ignorethru = 0;			/* should we ignore the thru line? */

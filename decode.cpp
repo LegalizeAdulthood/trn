@@ -92,7 +92,7 @@ static bool bad_filename(char *filename)
 	    return true;
     }
 #endif
-    return 0;
+    return false;
 }
 
 /* Parse the subject looking for filename and part number information. */

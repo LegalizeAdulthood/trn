@@ -558,7 +558,7 @@ static bool check_chase(char *ptr, int until_key)
 	chase_xref(article_num(ap),true);
 	ap->flags &= ~AF_KCHASE;
 	if (!--chase_count)
-	    return 1;
+	    return true;
     }
 #ifdef MCHASE
     if (ap->flags & AF_MCHASE) {
@@ -569,8 +569,8 @@ static bool check_chase(char *ptr, int until_key)
     }
 #endif
     if (until_key && input_pending())
-	return 1;
-    return 0;
+	return true;
+    return false;
 }
 
 /* run down xref list and mark as read or unread */
@@ -601,7 +601,7 @@ static int chase_xref(ART_NUM artnum, int markread)
 		fputs("\nXrefs", stdout);
 # endif
 	    termdown(1);
-	    output_chase_phrase = 0;
+	    output_chase_phrase = false;
 	}
 	putchar('.');
 	fflush(stdout);

@@ -232,10 +232,10 @@ bool nntp_at_list_end(const char *s)
 {
     if (!s || (*s == '.' && (s[1] == '\0' || s[1] == '\r'))) {
 	nntplink.flags |= NNTP_NEW_CMD_OK;
-	return 1;
+	return true;
     }
     nntplink.flags &= ~NNTP_NEW_CMD_OK;
-    return 0;
+    return false;
 }
 
 /* This returns 1 when it reads a full line, 0 if it reads a partial
@@ -254,15 +254,15 @@ int nntp_gets(char *bp, int len)
     if (nntplink.trailing_CR) {
 	*cp++ = '\r';
 	len--;
-	nntplink.trailing_CR = 0;
+	nntplink.trailing_CR = false;
     }
-    while (1) {
+    while (true) {
 	if (len == 1) {
 	    if (cp[-1] == '\r') {
 		/* Hold a trailing CR until next time because we may need
 		 * to strip it if it is followed by a newline. */
 		cp--;
-		nntplink.trailing_CR = 1;
+		nntplink.trailing_CR = true;
 	    }
 	    break;
 	}

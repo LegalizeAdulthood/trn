@@ -335,7 +335,7 @@ void sc_load_scores()
     sc_loaded_count = 0;
 
     /* verbosity is only really useful for debugging... */
-    verbose = 0;
+    verbose = false;
 
     if (num_lines == 0)
 	sc_sv_getfile();

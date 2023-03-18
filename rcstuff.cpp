@@ -270,7 +270,7 @@ static bool clear_ngitem(char *cp, int arg)
 	    free(ncp->rcline);
 	ncp->rcline = nullptr;
     }
-    return 0;
+    return false;
 }
 
 /* make sure there is no trn out there reading this newsrc */
