@@ -162,12 +162,10 @@ static char *skipinterp(char *pattern, char *stoppers)
 		    pattern = skipinterp(pattern+1,")");
 		break;
 	    }
-#ifdef BACKTICK
 	    case '`': {
 		pattern = skipinterp(pattern+1,"`");
 		break;
 	    }
-#endif
 #ifdef PROMPTTTY
 	    case '"':
 		pattern = skipinterp(pattern+1,"\"");
@@ -395,7 +393,6 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    free_compex(&cond_compex);
 		    break;
 		}
-#ifdef BACKTICK
 		case '`': {
 		    FILE* pipefp;
 
@@ -424,7 +421,6 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    s = scrbuf;
 		    break;
 		}
-#endif
 #ifdef PROMPTTTY
 		case '"':
 		    pattern = dointerp(scrbuf,(sizeof scrbuf),pattern+1,"\"",cmd);

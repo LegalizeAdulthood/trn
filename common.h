@@ -222,7 +222,6 @@
 #define MAILCALL	/* check periodically for mail */
 #define NOFIREWORKS	/* keep whole screen from flashing on certain */
 			/* terminals such as older Televideos */
-#define BACKTICK	/* allow %`command` */
 #define PROMPTTTY	/* allow %"prompt" */
 #define ULSMARTS	/* catch _^H in text and do underlining */
 #define TERMMOD		/* allow terminal type modifier on switches */
