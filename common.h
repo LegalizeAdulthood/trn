@@ -219,7 +219,6 @@
 /* Undefine any of the following features to save both I and D space */
 /* In general, earlier ones are easier to get along without */
 /*#define USE_FILTER	*//* external kill/score filter */
-#define CUSTOMLINES	/* include code for HIDELINE and PAGESTOP */
 #define WORDERASE	/* enable ^W to erase a word */
 #define MAILCALL	/* check periodically for mail */
 #define NOFIREWORKS	/* keep whole screen from flashing on certain */

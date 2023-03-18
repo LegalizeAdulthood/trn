@@ -248,10 +248,8 @@ int do_article()
 		hide_this_line = true;	/* and do not print either */
 		notesfiles = false;
 	    }
-#ifdef CUSTOMLINES
 	    if (hideline && !continuation && execute(&hide_compex,bufptr))
 		hide_this_line = true;
-#endif
 	    if (in_header && do_hiding && (htype[in_header].flags & HT_MAGIC)) {
 		switch (in_header) {
 		  case NGS_LINE:
@@ -341,10 +339,8 @@ int do_article()
 			putchar(' ');
 		}
 		outputok = !hide_everything; /* registerize it, hopefully */
-#ifdef CUSTOMLINES
 		if (pagestop && !continuation && execute(&page_compex,bufptr))
 		    linenum = 32700;
-#endif
 		for (outpos = 0; outpos < tc_COLS; ) { /* while line has room */
 		    if (AT_NORM_CHAR(bufptr)) {	    /* normal char? */
 #ifdef ULSMARTS
@@ -1050,11 +1046,8 @@ leave_pager:
 	    slines = tc_LINES;
 	}
       go_forward:
-	if (*LINE_PTR(alinebeg) != '\f'
-#ifdef CUSTOMLINES
-	  && (!pagestop || continuation || !execute(&page_compex,LINE_PTR(alinebeg)))
-#endif
-	  ) {
+          if (*LINE_PTR(alinebeg) != '\f' && (!pagestop || continuation || !execute(&page_compex, LINE_PTR(alinebeg))))
+          {
 	    if (!special
 	     || (marking && (*buf!='d' || (marking_areas&HALFPAGE_MARKING)))) {
 		restart = alinebeg;

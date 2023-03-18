@@ -16,9 +16,7 @@ EXT bool rotate INIT(false);		/* has rotation been requested? */
 EXT char* prompt;			/* pointer to current prompt */
 
 EXT char* firstline INIT(nullptr);		/* special first line? */
-#ifdef CUSTOMLINES
 EXT char* hideline INIT(nullptr);		/* custom line hiding? */
 EXT char* pagestop INIT(nullptr);		/* custom page terminator? */
 EXT COMPEX hide_compex;
 EXT COMPEX page_compex;
-#endif

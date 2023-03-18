@@ -82,10 +82,8 @@ void ng_init()
 #ifdef KILLFILES
     open_kfile(KF_GLOBAL);
 #endif
-#ifdef CUSTOMLINES
     init_compex(&hide_compex);
     init_compex(&page_compex);
-#endif
 }
 
 /* do newsgroup pointed to by ngptr with name ngname
@@ -209,12 +207,10 @@ int do_newsgroup(char *start_command)
 
     /* custom line suppression, custom page ending */
 
-#ifdef CUSTOMLINES
     if ((hideline = get_val("HIDELINE",(char*)nullptr)) != nullptr)
 	compile(&hide_compex,hideline,true,true);
     if ((pagestop = get_val("PAGESTOP",(char*)nullptr)) != nullptr)
 	compile(&page_compex,pagestop,true,true);
-#endif
 
     /* now read each unread article */
 
