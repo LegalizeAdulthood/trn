@@ -267,11 +267,9 @@ int nntp_finishbody(int bmode)
     }
     else
     if (bmode == FB_OUTPUT) {
-#ifdef VERBOSE
 	IF(verbose)
 	    printf("Receiving the rest of the article..."), fflush(stdout);
 	ELSE
-#endif
 #ifdef TERSE
 	    printf("Receiving..."), fflush(stdout);
 #endif

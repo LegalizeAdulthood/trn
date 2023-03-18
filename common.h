@@ -223,7 +223,6 @@
 #define NOFIREWORKS	/* keep whole screen from flashing on certain */
 			/* terminals such as older Televideos */
 #define TILDENAME	/* allow ~logname expansion */
-#define VERBOSE		/* compile in more informative messages */
 #define TERSE		/* compile in shorter messages */
 			/* (Note: both VERBOSE and TERSE can be defined; -t
 			 * sets terse mode.  One or the other MUST be defined.
@@ -300,7 +299,6 @@
 #   define eaccess access
 #endif
 
-#ifdef VERBOSE
 #   ifdef TERSE
 #	define IF(c) if (c)
 #	define ELSE else
@@ -308,13 +306,6 @@
 #	define IF(c)
 #	define ELSE
 #   endif
-#else /* !VERBOSE */
-#   ifndef TERSE
-#	define TERSE
-#   endif
-#   define IF(c) ..."IF" outside of VERBOSE
-#   define ELSE ..."ELSE" outside of VERBOSE
-#endif
 
 #define ElseIf else if
 
@@ -792,11 +783,9 @@ EXT bool allow_typeahead INIT(false);			/* -T */
 #ifdef EDIT_DISTANCE
 EXT bool fuzzyGet INIT(false);				/* -G */
 #endif
-#ifdef VERBOSE
 #   ifdef TERSE
 EXT bool verbose INIT(true);				/* +t */
 #   endif
-#endif
 EXT bool unbroken_subjects INIT(false);			/* -u */
 EXT bool unsafe_rc_saves INIT(false);			/* -U */
 EXT bool verify INIT(false);				/* -v */
@@ -864,11 +853,7 @@ EXT char cantcreate[] INIT("Can't create %s\n");
 EXT char cantrecreate[] INIT("Can't recreate %s -- restoring older version.\n\
 Perhaps you are near or over quota?\n");
 
-#ifdef VERBOSE
-    EXT char nocd[] INIT("Can't chdir to directory %s\n");
-#else
-    EXT char nocd[] INIT("Can't find %s\n");
-#endif
+EXT char nocd[] INIT("Can't chdir to directory %s\n");
 
 #ifdef NOLINEBUF
 #define FLUSH ,fflush(stdout)

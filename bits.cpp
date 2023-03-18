@@ -513,10 +513,8 @@ void yankback()
 	    sprintf(msg, "Returned %ld Marked article%s.",(long)dmcount,
 		PLURAL(dmcount));
 	else {
-#ifdef VERBOSE
 	    printf("\nReturning %ld Marked article%s...\n",(long)dmcount,
 		PLURAL(dmcount)) FLUSH;
-#endif
 	    termdown(2);
 	}
 	article_walk(yank_article, 0);
@@ -590,11 +588,9 @@ static int chase_xref(ART_NUM artnum, int markread)
 	spin(10);
     else {
 	if (output_chase_phrase) {
-# ifdef VERBOSE
 	    IF(verbose)
 		fputs("\nChasing xrefs", stdout);
 	    ELSE
-# endif
 # ifdef TERSE
 		fputs("\nXrefs", stdout);
 # endif
@@ -733,11 +729,9 @@ static int chase_xref(art_num artnum, INT markread)
 	spin(10);
     else {
 	if (output_chase_phrase) {
-# ifdef VERBOSE
 	    IF(verbose)
 		fputs("\nChasing xrefs", stdout);
 	    ELSE
-# endif
 # ifdef TERSE
 		fputs("\nXrefs", stdout);
 # endif

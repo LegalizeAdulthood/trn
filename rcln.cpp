@@ -31,12 +31,10 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
     
     if (leave_count) {
 	if (output_level) {
-#ifdef VERBOSE
 	    IF(verbose)
 		printf("\nMarking all but %d articles in %s as read.\n",
 		       leave_count,np->rcline) FLUSH;
 	    ELSE
-#endif
 #ifdef TERSE
 		printf("\nAll but %d marked as read.\n",leave_count) FLUSH;
 #endif
@@ -46,11 +44,9 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
     }
     else {
 	if (output_level) {
-#ifdef VERBOSE
 	    IF(verbose)
 		printf("\nMarking %s as all read.\n",np->rcline) FLUSH;
 	    ELSE
-#endif
 #ifdef TERSE
 		fputs("\nMarked read\n",stdout) FLUSH;
 #endif

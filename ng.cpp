@@ -165,11 +165,9 @@ int do_newsgroup(char *start_command)
 
 #ifdef KILLFILES
     open_kfile(KF_LOCAL);
-# ifdef VERBOSE
     IF(verbose)
 	kill_unwanted(firstart,"Processing memorized commands...\n\n", true);
     ELSE
-# endif
 # ifdef TERSE
 	kill_unwanted(firstart,"Auto-processing...\n\n",true);
 # endif
@@ -311,12 +309,10 @@ int do_newsgroup(char *start_command)
 		fputs("\n\n",stdout) FLUSH;
 		termdown(2);
 	    }
-#ifdef VERBOSE
 	    IF(verbose)
 		printf("End of newsgroup %s.",ngname);
 					/* print pseudo-article */
 	    ELSE
-#endif
 #ifdef TERSE
 		printf("End of %s",ngname);
 #endif
@@ -620,18 +616,15 @@ int art_switch()
 
 	if (!artp) {
 	    u_help_thread = nullstr;
-#ifdef VERBOSE
 	    IF(verbose)
 		u_prompt = "\nUnkill: +select or all?";
 	    ELSE
-#endif
 #ifdef TERSE
 		u_prompt = "\nUnkill?";
 #endif
 	    dfltcmd = "+anq";
 	}
 	else {
-#ifdef VERBOSE
 	    IF(verbose) {
 		u_prompt = "\n\
 Unkill: +select, thread, subthread, or all?";
@@ -640,7 +633,6 @@ Type t or SP to mark this thread's articles as unread.\n\
 Type s to mark the current article and its descendants as unread.\n";
 	    }
 	    ELSE
-#endif
 #ifdef TERSE
 	    {
 		u_prompt = "\nUnkill?";
@@ -656,7 +648,6 @@ s to mark subthread unread.\n";
 	printcmd();
 	newline();
 	if (*buf == 'h') {
-#ifdef VERBOSE
 	    IF(verbose)
 	    {
 		fputs("\
@@ -671,7 +662,6 @@ Type n or q to change nothing.\n\
 		termdown(6);
 	    }
 	    ELSE
-#endif
 #ifdef TERSE
 	    {
 		fputs("\
@@ -722,12 +712,10 @@ n or q to change nothing.\n\
 	if (artp && ThreadedGroup) {
 	    if (!find_parent(*buf == '{')) {
 		char* cp = (*buf=='['?"parent":"root");
-#ifdef VERBOSE
 		IF(verbose)
 		    printf("\nThere is no %s article prior to this one.\n",
 			cp) FLUSH;
 		ELSE
-#endif
 #ifdef TERSE
 		    printf("\nNo prior %s.\n",cp) FLUSH;
 #endif
@@ -743,22 +731,18 @@ n or q to change nothing.\n\
 	}
 not_threaded:
 	if (!artp) {
-#ifdef VERBOSE
 	    IF(verbose)
 		fputs("\nYou're at the end of the group.\n",stdout) FLUSH;
 	    ELSE
-#endif
 #ifdef TERSE
 		fputs("\nEnd of group.\n",stdout) FLUSH;
 #endif
 	    termdown(2);
 	    return AS_ASK;
 	}
-#ifdef VERBOSE
 	IF(verbose)
 	    fputs("\nThis group is not threaded.\n",stdout) FLUSH;
 	ELSE
-#endif
 #ifdef TERSE
 	    fputs("\nUnthreaded group.\n",stdout) FLUSH;
 #endif
@@ -768,12 +752,10 @@ not_threaded:
       case '}':			/* goto thread's leaf article */
 	if (artp && ThreadedGroup) {
 	    if (!find_leaf(*buf == '}')) {
-#ifdef VERBOSE
 		IF(verbose)
 		    fputs("\n\
 This is the last leaf in this tree.\n",stdout) FLUSH;
 		ELSE
-#endif
 #ifdef TERSE
 		    fputs("\nLast leaf.\n",stdout) FLUSH;
 #endif
@@ -793,11 +775,9 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	if (artp && ThreadedGroup) {
 	    if (!(*buf == '(' ? find_prev_sib() : find_next_sib())) {
 		char* cp = (*buf == '(' ? "previous" : "next");
-#ifdef VERBOSE
 		IF(verbose)
 		    printf("\nThis article has no %s sibling.\n",cp) FLUSH;
 		ELSE
-#endif
 #ifdef TERSE
 		    printf("\nNo %s sibling.\n",cp) FLUSH;
 #endif
@@ -913,13 +893,11 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	dec_art(false,true);
       check_dec_art:
 	if (art < absfirst) {
-#ifdef VERBOSE
 	    IF(verbose)
 		printf("\nThere are no%s%s articles prior to this one.\n",
 			*buf=='P'?nullstr:" unread",
 			selected_only?" selected":nullstr) FLUSH;
 	    ELSE
-#endif
 #ifdef TERSE
 		printf("\nNo previous%s%s articles\n",
 			*buf=='P'?nullstr:" unread",
@@ -1139,11 +1117,9 @@ normal_search:
 	    art = curr_art;
 	    return AS_INP;
 	  case SRCH_INTR:
-#ifdef VERBOSE
 	    IF(verbose)
 		printf("\n(Interrupted at article %ld)\n",(long)art) FLUSH;
 	    ELSE
-#endif
 #ifdef TERSE
 		printf("\n(Intr at %ld)\n",(long)art) FLUSH;
 #endif
@@ -1260,11 +1236,9 @@ normal_search:
 	    return AS_INP;	/* if rubbed out, try something else */
 	return AS_ASK;
       case '#':
-#ifdef VERBOSE
 	IF(verbose)
 	    printf("\nThe last article is %ld.\n",(long)lastart) FLUSH;
 	ELSE
-#endif
 #ifdef TERSE
 	    printf("\n%ld\n",(long)lastart) FLUSH;
 #endif
@@ -1623,11 +1597,9 @@ char ask_catchup()
     if (!use_one_line)
 	newline();
 reask_catchup:
-#ifdef VERBOSE
     IF(verbose)
 	sprintf(buf,"Mark everything in %s as read?",ngname);
     ELSE
-#endif
 #ifdef TERSE
 	sprintf(buf,"Catchup %s?",ngname);
 #endif
@@ -1635,7 +1607,6 @@ reask_catchup:
     printcmd();
     if ((ch = *buf) == 'h' || ch == 'H') {
 	use_one_line = false;
-#ifdef VERBOSE
 	IF(verbose)
 	    fputs("\n\
 Type y or SP to mark all articles as read.\n\
@@ -1644,7 +1615,6 @@ The # means enter a number to mark all but the last # articles as read.\n\
 Type u to mark everything read and unsubscribe.\n\n\
 ",stdout) FLUSH;
 	ELSE
-#endif
 #ifdef TERSE
 	    fputs("\n\
 y or SP to mark all read.\n\
@@ -1828,7 +1798,6 @@ reask_memorize:
     }
     if (ch == 'h' || ch == 'H') {
 	use_one_line = false;
-#ifdef VERBOSE
 	IF(verbose) {
 	    printf("\n\
 Type + or SP to auto-select this %s (i.e. includes future articles).\n\
@@ -1851,7 +1820,6 @@ Type g to toggle global memorization.\n") FLUSH;
 	    }
 	}
 	ELSE
-#endif
 #ifdef TERSE
 	{
 	    printf("\n\

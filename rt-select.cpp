@@ -1758,7 +1758,6 @@ static int article_commands(char_int ch)
 	in_char("Selector mode:  Threads, Subjects, Articles?", 'o', "tsa");
 	printcmd();
 	if (*buf == 'h' || *buf == 'H') {
-#ifdef VERBOSE
 	    IF(verbose)
 		fputs("\n\
 Type t or SP to display/select thread groups (threads the group, if needed).\n\
@@ -1767,7 +1766,6 @@ Type a to display/select individual articles.\n\
 Type q to leave things as they are.\n\n\
 ",stdout) FLUSH;
 	    ELSE
-#endif
 #ifdef TERSE
 		fputs("\n\
 t or SP selects thread groups (threads the group too).\n\
@@ -1804,7 +1802,6 @@ q does nothing.\n\n\
 		    'q', "dsclpDSCLP");
 	printcmd();
 	if (*buf == 'h' || *buf == 'H') {
-#ifdef VERBOSE
 	    IF(verbose) {
 		fputs("\n\
 Type d or SP to order the displayed items by date.\n\
@@ -1827,7 +1824,6 @@ Type q to leave things as they are.\n\n\
 ",stdout) FLUSH;
 	    }
 	    ELSE
-#endif
 #ifdef TERSE
 	    {
 		fputs("\n\
@@ -2180,7 +2176,6 @@ static int newsgroup_commands(char_int ch)
 	  case 'c': case 'C':
 	    break;
 	  case 'h': case 'H':
-#ifdef VERBOSE
 	    IF(verbose) {
 		fputs("\n\
 Type n or SP to order the newsgroups in the .newsrc order.\n\
@@ -2193,7 +2188,6 @@ Type q to leave things as they are.\n\n\
 ",stdout) FLUSH;
 	    }
 	    ELSE
-#endif
 #ifdef TERSE
 	    {
 		fputs("\n\
@@ -2415,7 +2409,6 @@ static int addgroup_commands(char_int ch)
 	  case 'c': case 'C':
 	    break;
 	  case 'h': case 'H':
-#ifdef VERBOSE
 	    IF(verbose) {
 		fputs("\n\
 Type n or SP to order the items in their naturally occurring order.\n\
@@ -2428,7 +2421,6 @@ Type q to leave things as they are.\n\n\
 ",stdout) FLUSH;
 	    }
 	    ELSE
-#endif
 #ifdef TERSE
 	    {
 		fputs("\n\
@@ -2718,7 +2710,6 @@ static int universal_commands(char_int ch)
 	in_char("Order by Natural, or score Points?", 'q', "npNP");
 	printcmd();
 	if (*buf == 'h' || *buf == 'H') {
-#ifdef VERBOSE
 	    IF(verbose) {
 		fputs("\n\
 Type n or SP to order the items in the natural order.\n\
@@ -2730,7 +2721,6 @@ Type q to leave things as they are.\n\n\
 ",stdout) FLUSH;
 	    }
 	    ELSE
-#endif
 #ifdef TERSE
 	    {
 		fputs("\n\

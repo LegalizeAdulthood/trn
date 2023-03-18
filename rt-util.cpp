@@ -624,11 +624,7 @@ void setspin(int mode)
 	if (mode == SPIN_BARGRAPH) {
 	    if (spin_mode != SPIN_BARGRAPH) {
 		int i;
-#ifdef VERBOSE
 		spin_marks = (verbose? 25 : 10);
-#else
-		spin_marks = 25;
-#endif
 		printf(" [%*s]", spin_marks, nullstr);
 		for (i = spin_marks + 1; i--; ) backspace();
 		fflush(stdout);

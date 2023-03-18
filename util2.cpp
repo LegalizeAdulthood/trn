@@ -175,11 +175,9 @@ char *filexp(char *s)
 #endif
 	    }
 #else /* !TILDENAME */
-#ifdef VERBOSE
 	    IF(verbose)
 		fputs("~loginname not implemented.\n",stdout) FLUSH;
 	    ELSE
-#endif
 #ifdef TERSE
 		fputs("~login not impl.\n",stdout) FLUSH;
 #endif

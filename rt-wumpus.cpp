@@ -479,11 +479,9 @@ void entire_tree(ARTICLE* ap)
     int num;
 
     if (!ap) {
-#ifdef VERBOSE
 	IF (verbose)
 	    fputs("\nNo article tree to display.\n", stdout) FLUSH;
 	ELSE
-#endif
 #ifdef TERSE
 	    fputs("\nNo tree.\n", stdout) FLUSH;
 #endif

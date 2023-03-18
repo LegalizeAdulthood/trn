@@ -127,7 +127,6 @@ int main(int argc, char *argv[])
     if (maxngtodo)
 	starthere = nullptr;
     else if (!foundany) {		/* nothing to do? */
-#ifdef VERBOSE
 	if (verbose) {
 	    fputs("\
 No unread news in subscribed-to newsgroups.  To subscribe to a new\n\
@@ -135,7 +134,6 @@ newsgroup use the g<newsgroup> command.\n\
 ",stdout) FLUSH;
 	    termdown(2);
 	}
-#endif
 	starthere = last_ng;
     }
 
@@ -214,22 +212,18 @@ void do_multirc()
 		set_mode('r','f');
 		if (maxngtodo) {
 		    if (retry) {
-#ifdef VERBOSE
 			IF(verbose)
 			    printf("\nRestriction %s%s still in effect.\n",
 				   ngtodo[0], maxngtodo > 1 ? ", etc." : nullstr) FLUSH;
 		 	ELSE
-#endif
 #ifdef TERSE
 			    fputs("\n(\"Only\" mode.)\n",stdout) FLUSH;
 #endif
 			termdown(2);
 		    } else {
-#ifdef VERBOSE
 			IF(verbose)
 			    fputs("\nNo articles under restriction.", stdout) FLUSH;
 			ELSE
-#endif
 #ifdef TERSE
 			    fputs("\nNo \"only\" articles.",stdout) FLUSH;
 #endif
@@ -281,12 +275,10 @@ void do_multirc()
 	    unflush_output();	/* disable any ^O in effect */
 	    if (ngptr == nullptr) {
 		dfltcmd = (retry ? "npq" : "qnp");
-#ifdef VERBOSE
 		IF(verbose)
 		    printf("\n****** End of newsgroups -- what next? [%s] ",
 			   dfltcmd);
 		ELSE
-#endif
 #ifdef TERSE
 		    printf("\n**** End -- next? [%s] ", dfltcmd);
 #endif
@@ -295,14 +287,12 @@ void do_multirc()
 		ThreadedGroup = (use_threads && !(ngptr->flags&NF_UNTHREADED));
 		dfltcmd = (UseNewsSelector >= 0
 		  && ngptr->toread >= (ART_UNREAD)UseNewsSelector? "+ynq":"ynq");
-#ifdef VERBOSE
 		IF(verbose)
 		    printf("\n%s %3ld unread article%s in %s -- read now? [%s] ",
 			   ThreadedGroup? "======" : "******",
 			   (long)ngptr->toread, PLURAL(ngptr->toread),
 			   ngname, dfltcmd);
 		ELSE
-#endif
 #ifdef TERSE
 		    printf("\n%s %3ld in %s -- read? [%s] ",
 			   ThreadedGroup? "====" : "****",
@@ -454,11 +444,9 @@ int input_newsgroup()
 	    set_ng(current_ng);
 	    return ING_INPUT;
 	  case NGS_INTR:
-#ifdef VERBOSE
 	    IF(verbose)
 		fputs("\n(Interrupted)\n",stdout) FLUSH;
 	    ELSE
-#endif
 #ifdef TERSE
 		fputs("\n(Intr)\n",stdout) FLUSH;
 #endif
@@ -468,12 +456,10 @@ int input_newsgroup()
 	  case NGS_FOUND:
 	    return ING_SPECIAL;
 	  case NGS_NOTFOUND:
-#ifdef VERBOSE
 	    IF(verbose)
 		fputs("\n\nNot found -- use a or g to add newsgroups\n",
 		      stdout) FLUSH;
 	    ELSE
-#endif
 #ifdef TERSE
 		fputs("\n\nNot found\n",stdout) FLUSH;
 #endif
@@ -609,24 +595,17 @@ int input_newsgroup()
 	if (!ngptr)
 	    break;
 reask_abandon:
-#ifdef VERBOSE
 	IF(verbose)
 	    in_char("\nAbandon changes to current newsgroup?", 'B', "yn");
 	ELSE
-#endif
 #ifdef TERSE
 	    in_char("\nAbandon?", 'B', "ynh");
 #endif
 	printcmd();
 	newline();
 	if (*buf == 'h') {
-#ifdef VERBOSE
 	    printf("Type y or SP to abandon the changes to this group since you started trn.\n");
 	    printf("Type n to leave the group as it is.\n");
-#else
-	    printf("y or SP to abandon changes to this group.\n");
-	    printf("n to forget it.\n");
-#endif
 	    termdown(2);
 	    goto reask_abandon;
 	} else if (*buf != 'y' && *buf != 'n' && *buf != 'q') {

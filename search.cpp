@@ -163,9 +163,7 @@ char *compile(COMPEX *compex, char *strp, bool RE, bool fold)
 	c = *strp++;			/* fetch next char of pattern */
 	if (c == 0) {			/* end of pattern? */
 	    if (bracketp != bracket) {	/* balanced brackets? */
-#ifdef VERBOSE
 		retmes = "Unbalanced parens";
-#endif
 		goto cerror;
 	    }
 	    *ep++ = CEND;		/* terminate expression */
@@ -185,9 +183,7 @@ char *compile(COMPEX *compex, char *strp, bool RE, bool fold)
 		    switch (c = *strp++) {
 		    case '(':
 			if (compex->nbra >= NBRA) {
-#ifdef VERBOSE
 			    retmes = "Too many parens";
-#endif
 			    goto cerror;
 			}
 			*bracketp++ = ++compex->nbra;
@@ -196,25 +192,19 @@ char *compile(COMPEX *compex, char *strp, bool RE, bool fold)
 			break;
 		    case '|':
 			if (bracketp>bracket) {
-#ifdef VERBOSE
 			    retmes = "No \\| in parens";	/* Alas! */
-#endif
 			    goto cerror;
 			}
 			*ep++ = CEND;
 			*alt++ = ep;
 			if (alt > compex->alternatives + NALTS) {
-#ifdef VERBOSE
 				retmes = "Too many alternatives in reg ex";
-#endif
 				goto cerror;
 			}
 			break;
 		    case ')':
 			if (bracketp <= bracket) {
-#ifdef VERBOSE
 			    retmes = "Unmatched right paren";
-#endif
 			    goto cerror;
 			}
 			*ep++ = CKET;
@@ -288,9 +278,7 @@ char *compile(COMPEX *compex, char *strp, bool RE, bool fold)
 		    i = 0;		/* remember oldchar */
 		    do {
 			if (c == '\0') {
-#ifdef VERBOSE
 			    retmes = "Missing ]";
-#endif
 			    goto cerror;
 			}
 			if (*strp == '-' && *(++strp) != ']' && *strp)

@@ -65,12 +65,10 @@ void end_only()
     if (maxngtodo) {			/* did they specify newsgroup(s) */
 	int i;
 
-#ifdef VERBOSE
 	IF(verbose)
 	    sprintf(msg, "Restriction %s%s removed.",ngtodo[0],
 		    maxngtodo > 1 ? ", etc." : nullstr);
 	ELSE
-#endif
 #ifdef TERSE
 	    sprintf(msg, "Exiting \"only\".");
 #endif

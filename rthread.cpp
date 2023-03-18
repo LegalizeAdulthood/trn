@@ -598,17 +598,13 @@ SUBJECT *prev_subj(SUBJECT *sp, int subj_mask)
 void select_article(ARTICLE *ap, int auto_flags)
 {
     int desired_flags = (sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
-#ifdef VERBOSE
     bool echo = (auto_flags & ALSO_ECHO) != 0;
-#endif
     auto_flags &= AUTO_SELS;
     if ((ap->flags & (AF_EXISTS|AF_UNREAD)) == desired_flags) {
 	if (!(ap->flags & sel_mask)) {
 	    selected_count++;
-#ifdef VERBOSE
 	    IF(verbose && echo && gmode != 's')
 		fputs("\tSelected",stdout);
-#endif
 	}
 	ap->flags = (ap->flags & ~AF_DEL) | sel_mask;
     }
@@ -722,18 +718,14 @@ void select_subthread(ARTICLE *ap, int auto_flags)
 */
 void deselect_article(ARTICLE *ap, int auto_flags)
 {
-#ifdef VERBOSE
     bool echo = (auto_flags & ALSO_ECHO) != 0;
-#endif
     auto_flags &= AUTO_SELS;
     if (ap->flags & sel_mask) {
 	ap->flags &= ~sel_mask;
 	if (!selected_count--)
 	    selected_count = 0;
-#ifdef VERBOSE
 	IF(verbose && echo && gmode != 's')
 	    fputs("\tDeselected",stdout);
-#endif
     }
     if (sel_rereading && sel_mode == SM_ARTICLE)
 	ap->flags |= AF_DEL;

@@ -497,7 +497,7 @@ void set_option(int num, char *s)
 #endif
 	break;
       case OI_TERSE_OUTPUT:
-#if defined(VERBOSE) && defined(TERSE)
+#if defined(TERSE)
 	verbose = !YES(s);
 	if (!verbose)
 	    novice_delays = false;
@@ -902,7 +902,7 @@ char *option_value(int num)
 	sprintf(buf,"%d",scanon);
 	return buf;
 #endif
-#if defined(VERBOSE) && defined(TERSE)
+#if defined(TERSE)
       case OI_TERSE_OUTPUT:
 	return YESorNO(!verbose);
 #endif
@@ -1230,7 +1230,6 @@ void cwd_check()
 	    else
 		strcpy(tmpbuf,cmd_buf);
 	    chdir(tmpbuf);
-#ifdef VERBOSE
 	    IF(verbose)
 		printf("\
 Cannot make directory %s--\n\
@@ -1238,7 +1237,6 @@ Cannot make directory %s--\n\
 \n\
 ",cwd,tmpbuf) FLUSH;
 	    ELSE
-#endif
 #ifdef TERSE
 		printf("\
 Can't make %s--\n\
@@ -1251,14 +1249,12 @@ Can't make %s--\n\
     free(cwd);
     trn_getwd(tmpbuf, sizeof(tmpbuf));
     if (eaccess(tmpbuf,2)) {
-#ifdef VERBOSE
 	IF(verbose)
 	    printf("\
 Current directory %s is not writeable--\n\
 	articles will be saved to home directory\n\n\
 ",tmpbuf) FLUSH;
 	ELSE
-#endif
 #ifdef TERSE
 	    printf("%s not writeable--using ~\n\n",tmpbuf) FLUSH;
 #endif

@@ -119,10 +119,8 @@ int mt_data()
 	if (size < 0)
 	    return 0;
 
-#ifdef VERBOSE
 	IF(verbose)
 	    printf("\nGetting thread file."), fflush(stdout);
-#endif
 	if (nntp_read((char*)&total, (long)sizeof (TOTAL)) < sizeof (TOTAL))
 	    goto exit;
     }
@@ -131,10 +129,8 @@ int mt_data()
     {
 	if ((fp = fopen(mt_name(ngname), FOPEN_RB)) == nullptr)
 	    return 0;
-#ifdef VERBOSE
 	IF(verbose)
 	    printf("\nReading thread file."), fflush(stdout);
-#endif
 
 	if (fread((char*)&total, 1, sizeof (TOTAL), fp) < sizeof (TOTAL))
 	    goto exit;

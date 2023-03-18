@@ -928,11 +928,9 @@ int find_close_match()
 	    char* cp = index(ngptrs[0], ' ');
 	    if (cp)
 		*cp = '\0';
-#ifdef VERBOSE
 	    IF(verbose)
 		printf("(I assume you meant %s)\n", ngptrs[0]) FLUSH;
 	    ELSE
-#endif
 #ifdef TERSE
 		printf("(Using %s)\n", ngptrs[0]) FLUSH;
 #endif
@@ -999,10 +997,8 @@ static int get_near_miss()
     char* op = options;
     int i;
 
-#ifdef VERBOSE
     IF(verbose)
 	printf("However, here are some close matches:\n") FLUSH;
-#endif
     if (ngn > 9)
 	ngn = 9;	/* Since we're using single digits.... */
     for (i = 0; i < ngn; i++) {
@@ -1017,11 +1013,9 @@ static int get_near_miss()
     *op++ = 'n';
     *op = '\0';
 
-#ifdef VERBOSE
     IF(verbose)
 	sprintf(promptbuf, "Which of these would you like?");
     ELSE
-#endif
 #ifdef TERSE
 	sprintf(promptbuf, "Which?");
 #endif
@@ -1039,11 +1033,9 @@ reask:
 	    return 0;
 	case 'h':
 	case 'H':
-#ifdef VERBOSE
 	    IF(verbose)
 		fputs("  You entered an illegal newsgroup name, and these are the nearest possible\n  matches.  If you want one of these, then enter its number.  Otherwise\n  just say 'n'.\n", stdout) FLUSH;
 	    ELSE
-#endif
 #ifdef TERSE
 		fputs("Illegal newsgroup, enter a number or 'n'.\n", stdout) FLUSH;
 #endif

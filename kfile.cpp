@@ -101,13 +101,11 @@ void kfile_init()
 
 static void mention(char *str)
 {
-#ifdef VERBOSE
     IF(verbose) {
 	color_string(COLOR_NOTICE,str);
 	newline();
     }
     ELSE
-#endif
 #ifdef TERSE
 	putchar('.');
 #endif
@@ -202,12 +200,10 @@ int do_kfile(FILE *kfp, int entering)
 	    case SRCH_ABORT:
 		continue;
 	    case SRCH_INTR:
-#ifdef VERBOSE
 		IF(verbose)
 		    printf("\n(Interrupted at article %ld)\n",(long)art)
 		      FLUSH;
 		ELSE
-#endif
 #ifdef TERSE
 		    printf("\n(Intr at %ld)\n",(long)art) FLUSH;
 #endif
@@ -334,15 +330,11 @@ void kill_unwanted(ART_NUM starting, char *message, int entering)
 	oldfirst = firstart;
 	firstart = starting;
 	clear();
-#ifdef VERBOSE
 # ifdef TERSE
 	if (message && (verbose || entering))
 # else
 	if (message)
 # endif
-#else
-	if (message && entering)
-#endif
 	    fputs(message,stdout) FLUSH;
 
 	kill_mentioned = false;
@@ -356,11 +348,9 @@ void kill_unwanted(ART_NUM starting, char *message, int entering)
 	    intr = do_kfile(globkfp,entering);
 	newline();
 	if (entering && kill_mentioned && novice_delays) {
-#ifdef VERBOSE
 	    IF(verbose)
 		get_anything();
 	    ELSE
-#endif
 #ifdef TERSE
 		pad(just_a_sec);
 #endif
@@ -714,11 +704,9 @@ void kf_append(char *cmd, bool local)
     strcpy(cmd_buf, filexp(local? get_val("KILLLOCAL",killlocal)
 				: get_val("KILLGLOBAL",killglobal)));
     if (makedir(cmd_buf,MD_FILE) == 0) {
-#ifdef VERBOSE
 	IF(verbose)
 	    printf("\nDepositing command in %s...",cmd_buf);
 	ELSE
-#endif
 #ifdef TERSE
 	    printf("\n--> %s...",cmd_buf);
 #endif

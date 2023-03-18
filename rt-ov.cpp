@@ -182,19 +182,15 @@ beginning:
 	    success = false;
 	    goto exit;
 	}
-# ifdef VERBOSE
 	IF(verbose && !first_subject && !datasrc->ov_opened)
 	    printf("\nGetting overview file."), fflush(stdout);
-# endif
     }
     ElseIf (datasrc->ov_opened < started_request - 60*60) {
 	ov_close();
 	if ((datasrc->ov_in = fopen(ov_name(ngname), "r")) == nullptr)
 	    return false;
-#ifdef VERBOSE
 	IF(verbose && !first_subject)
 	    printf("\nReading overview file."), fflush(stdout);
-#endif
     }
     if (!datasrc->ov_opened) {
 	if (cheating)

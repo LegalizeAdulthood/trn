@@ -168,7 +168,6 @@ Signal_t int_catcher(int dummy)
 
 Signal_t sig_catcher(int signo)
 {
-#ifdef VERBOSE
     static char* signame[] = {
 	"",
 	"HUP",
@@ -203,7 +202,6 @@ Signal_t sig_catcher(int signo)
 #endif
 #endif
 	};
-#endif
 
 #ifdef DEBUG
     if (debug) {
@@ -234,12 +232,10 @@ Signal_t sig_catcher(int signo)
 #ifdef SIGHUP
     if (signo != SIGHUP) {
 #endif
-#ifdef VERBOSE
 	IF(verbose)
 	    printf("\nCaught %s%s--.newsrc restored\n",
 		signo ? "a SIG" : "an internal error", signame[signo]);
 	ELSE
-#endif
 #ifdef TERSE
 	    printf("\nSignal %d--bye bye\n",signo);
 #endif
