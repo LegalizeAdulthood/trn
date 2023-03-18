@@ -92,9 +92,7 @@ int do_article()
     bool hide_this_line = false;	/* hidden header line? */
     bool restart_color;
     ART_LINE linenum;			/* line # on page, 1 origin */
-#ifdef ULSMARTS
     bool under_lining = false;		/* are we underlining a word? */
-#endif
     char* bufptr = art_line;	/* pointer to input buffer */
     int outpos;		/* column position of output */
     static char prompt_buf[64];		/* place to hold prompt */
@@ -343,7 +341,6 @@ int do_article()
 		    linenum = 32700;
 		for (outpos = 0; outpos < tc_COLS; ) { /* while line has room */
 		    if (AT_NORM_CHAR(bufptr)) {	    /* normal char? */
-#ifdef ULSMARTS
 			if (*bufptr == '_') {
 			    if (bufptr[1] == '\b') {
 				if (outputok && !under_lining
@@ -371,7 +368,6 @@ int do_article()
 				}
 			    }
 			}
-#endif
 			/* handle rot-13 if wanted */
 			if (rotate && !in_header && isalpha(*bufptr)) {
 			    if (outputok) {
@@ -412,11 +408,8 @@ int do_article()
 #endif /* USE_UTF_HACK */
 #endif /* CHARSUBST */
 			}
-			if (*tc_UC && ((highlight==artline && marking == STANDOUT)
-#ifdef ULSMARTS
-			    || under_lining
-#endif
-			    )) {
+                        if (*tc_UC && ((highlight == artline && marking == STANDOUT) || under_lining))
+                        {
 			    backspace();
 			    underchar();
 			}
@@ -424,12 +417,10 @@ int do_article()
 			bufptr++;
 		    }
 		    else if (AT_NL(*bufptr) || !*bufptr) {    /* newline? */
-#ifdef ULSMARTS
 			if (under_lining) {
 			    under_lining = false;
 			    un_underline();
 			}
-#endif
 #ifdef DEBUG
 			if (debug & DEB_INNERSRCH && outpos < tc_COLS - 6) {
 			    standout();
