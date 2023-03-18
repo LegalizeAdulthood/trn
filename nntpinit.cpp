@@ -3,8 +3,6 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 
-/*#define NONETD	*//* Define if you're missing netdb.h */
-
 #include "EXTERN.h"
 #include "common.h"
 #include "nntpclient.h"

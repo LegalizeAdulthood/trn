@@ -15,7 +15,6 @@
 #include "url.h"
 
 /* Lower-level net routines grabbed from nntpinit.c.
- * The special cases (NONETD) are not supported.
  */
 
 /* NOTE: If running Winsock, NNTP must be enabled so that the Winsock
