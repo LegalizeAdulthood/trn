@@ -58,14 +58,12 @@ static char null_export[] = "_=X";/* Just in case doshell precedes util_init */
 static char* newsactive_export = null_export + 2;
 static char* grpdesc_export = null_export + 2;
 static char* quotechars_export = null_export + 2;
-#ifdef SUPPORT_NNTP
 static char* nntpserver_export = null_export + 2;
 static char* nntpfds_export = null_export + 2;
 #ifdef USE_GENAUTH
 static char* nntpauth_export = null_export + 2;
 #endif
 static char* nntpforce_export = null_export + 2;
-#endif
 
 void util_init()
 {
@@ -77,19 +75,15 @@ void util_init()
     *cp = '\0';
     newsactive_export = export_var("NEWSACTIVE", buf);
     grpdesc_export = export_var("NEWSDESCRIPTIONS", buf);
-#ifdef SUPPORT_NNTP
     nntpserver_export = export_var("NNTPSERVER", buf);
-#endif
     buf[64] = '\0';
     quotechars_export = export_var("QUOTECHARS",buf);
-#ifdef SUPPORT_NNTP
     nntpfds_export = export_var("NNTPFDS", buf);
 #ifdef USE_GENAUTH
     nntpauth_export = export_var("NNTP_AUTH_FDS", buf);
 #endif
     buf[3] = '\0';
     nntpforce_export = export_var("NNTP_FORCE_AUTH", buf);
-#endif
 
     for (cp = patchlevel; isspace(*cp); cp++) ;
     export_var("TRN_VERSION", cp);
@@ -112,7 +106,6 @@ int doshell(char *shell, char *s)
     sigset(SIGTTOU,SIG_DFL);
     sigset(SIGTTIN,SIG_DFL);
 #endif
-#ifdef SUPPORT_NNTP
     if (datasrc && (datasrc->flags & DF_REMOTE)) {
 #ifdef USE_GENAUTH
 	if (export_nntp_fds) {
@@ -162,25 +155,17 @@ int doshell(char *shell, char *s)
 	else
 	    re_export(newsactive_export, "none", 512);
     } else {
-#ifdef SUPPORT_NNTP
 	un_export(nntpfds_export);
 #ifdef USE_GENAUTH
 	un_export(nntpauth_export);
 #endif
 	un_export(nntpserver_export);
 	un_export(nntpforce_export);
-#endif
 	if (datasrc)
 	    re_export(newsactive_export, datasrc->newsid, 512);
 	else
 	    un_export(newsactive_export);
     }
-#else
-    if (datasrc)
-	re_export(newsactive_export, datasrc->newsid, 512);
-    else
-	un_export(newsactive_export);
-#endif
     if (datasrc)
 	re_export(grpdesc_export, datasrc->grpdesc, 512);
     else
@@ -195,7 +180,6 @@ int doshell(char *shell, char *s)
     intptr_t status = spawnl(P_WAIT, shell, shell, "/c", s, (char*)nullptr);
 #else
     if ((pid = vfork()) == 0) {
-#ifdef SUPPORT_NNTP
 	if (datasrc && (datasrc->flags & DF_REMOTE)) {
 	    int i;
 	    /* This is necessary to keep the bourne shell from puking */
@@ -211,7 +195,6 @@ int doshell(char *shell, char *s)
 		close(i);
 	    }
 	}
-#endif /* SUPPORT_NNTP */
 	if (nowait_fork) {
 	    close(1);
 	    close(2);
@@ -257,10 +240,8 @@ int doshell(char *shell, char *s)
     sigset(SIGTTOU,stop_catcher);
     sigset(SIGTTIN,stop_catcher);
 #endif
-#ifdef SUPPORT_NNTP
     if (datasrc && datasrc->auth_user)
 	UNLINK(nntp_auth_file);
-#endif
     return ret;
 }
 
@@ -695,21 +676,17 @@ char *temp_filename()
     return savestr(tmpbuf);
 }
 
-#ifdef SUPPORT_NNTP
 char *get_auth_user()
 {
     return datasrc->auth_user;
 }
-#endif
 
-#ifdef SUPPORT_NNTP
 char *get_auth_pass()
 {
     return datasrc->auth_pass;
 }
-#endif
 
-#if defined(USE_GENAUTH) && defined(SUPPORT_NNTP)
+#if defined(USE_GENAUTH)
 char *get_auth_command()
 {
     return datasrc->auth_command;

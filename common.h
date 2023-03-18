@@ -328,11 +328,7 @@
 #   define ELSE ..."ELSE" outside of VERBOSE
 #endif
 
-#ifdef SUPPORT_NNTP
 #define ElseIf else if
-#else
-#define ElseIf if
-#endif
 
 #ifdef DEBUG
 #   define assert(ex) {if (!(ex)){fprintf(stderr,"Assertion failed: file %s, line %d\n", __FILE__, __LINE__);sig_catcher(0);}}

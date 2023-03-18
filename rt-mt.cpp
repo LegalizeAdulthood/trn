@@ -146,10 +146,8 @@ int mt_data()
 	tweak_data();
 	goto exit;
     }
-#ifdef SUPPORT_NNTP
     if (!datasrc->thread_dir && total.last > lastart)
 	total.last = lastart;
-#endif
 
     if (read_authors()
      && read_subjects()
@@ -445,12 +443,8 @@ static int read_articles()
 	lp_bmap(&p_article.num, 2);
 	wp_bmap(&p_article.subject, 8);
 
-#ifdef SUPPORT_NNTP
 	article = *art_ptr++ = allocate_article(p_article.num > lastart?
 						0 : p_article.num);
-#else
-	article = *art_ptr++ = allocate_article(p_article.num);
-#endif
 	article->date = p_article.date;
 #ifndef DBM_XREFS
 	if (olden_days < 2 && !(p_article.flags & HAS_XREFS))

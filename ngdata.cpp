@@ -57,7 +57,6 @@ void set_ng(NGDATA *np)
 
 int access_ng()
 {
-#ifdef SUPPORT_NNTP
     ART_NUM old_first = ngptr->abs1st;
 
     if (datasrc->flags & DF_REMOTE) {
@@ -75,7 +74,6 @@ int access_ng()
 	    checkexpired(ngptr,absfirst);
     }
     else
-#endif
     {
 	if (eaccess(ngdir,5)) {		/* directory read protected? */
 	    if (eaccess(ngdir,0)) {
@@ -127,11 +125,8 @@ int access_ng()
 
 void chdir_newsdir()
 {
-    if (chdir(datasrc->spool_dir) || (
-#ifdef SUPPORT_NNTP
-			 !(datasrc->flags & DF_REMOTE) &&
-#endif
-					    chdir(ngdir))) {
+    if (chdir(datasrc->spool_dir) || (!(datasrc->flags & DF_REMOTE) && chdir(ngdir)))
+    {
 	printf(nocd,ngdir) FLUSH;
 	sig_catcher(0);
     }
@@ -250,7 +245,6 @@ void sort_newsgroups()
 
 void ng_skip()
 {
-#ifdef SUPPORT_NNTP
     if (datasrc->flags & DF_REMOTE) {
 	ART_NUM artnum;
 
@@ -285,7 +279,6 @@ void ng_skip()
 	} while (art <= lastart);
     }
     else
-#endif
     {
 	if (errno != ENOENT) {	/* has it not been deleted? */
 	    clear();

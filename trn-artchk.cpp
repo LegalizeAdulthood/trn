@@ -14,22 +14,18 @@
 #include "env.h"
 #include "util2.h"
 #include "util3.h"
-#ifdef SUPPORT_NNTP
 #include "nntpclient.h"
 #include "nntpinit.h"
-#endif
 #include "INTERN.h"
 #include "common.h"
 
 #define MAXNGS 100
 
-#ifdef SUPPORT_NNTP
 int server_connection ();
 int nntp_handle_timeout ();
 
 char* server_name;
 char* nntp_auth_file;
-#endif /* SUPPORT_NNTP */
 
 int debug = 0;
 
@@ -148,7 +144,6 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 	    break;
 	}
     }
-#ifdef SUPPORT_NNTP
     cp = getenv("NNTPSERVER");
     if (!cp) {
 	cp = filexp(SERVER_NAME);
@@ -171,21 +166,16 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 	if (init_nntp() < 0)
 	    server_name = nullptr;
     }
-#endif
     if (ngcnt) {
 	struct stat st;
 	if (stat(argv[3], &st) != -1)
 	    check_ng = st.st_size > 0 && (fp_ng = fopen(argv[3], "r")) != nullptr;
-#ifdef SUPPORT_NNTP
 	else if (server_name && server_connection())
 	    check_ng = true;
-#endif
 	if (stat(argv[4], &st) != -1)
 	    check_active = st.st_size > 0 && (fp_active = fopen(argv[4], "r")) != nullptr;
-#ifdef SUPPORT_NNTP
 	else if (server_name && server_connection())
 	    check_active = true;
-#endif
     }
     if (ngcnt && (check_ng || check_active)) {
 	/* Print a note about each newsgroup */
@@ -212,7 +202,6 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 	    }
 	    fclose(fp_active);
 	}
-#ifdef SUPPORT_NNTP
 	else if (server_name) {
 	    int listactive_works = 1;
 	    for (i = 0; i < ngcnt; i++) {
@@ -263,7 +252,6 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 		fseek(fp_ng, 0L, 0);
 	    }
 	}
-#endif
 	if (fp_ng != nullptr) {
 	    ngleft = ngcnt;
 	    while (fgets(buff, LBUFLEN, fp_ng)) {
@@ -302,16 +290,13 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 	}
     }
 
-#ifdef SUPPORT_NNTP
     nntp_close(true);
     if (server_name)
 	cleanup_nntp();
-#endif
 
     return 0;
 }
 
-#ifdef SUPPORT_NNTP
 int server_connection()
 {
     static int server_stat = 0;
@@ -323,12 +308,9 @@ int server_connection()
     }
     return server_stat == 1;
 }
-#endif
 
-#ifdef SUPPORT_NNTP
 int nntp_handle_timeout()
 {
     fputs("\n503 Server timed out.\n",stderr);
     return -2;
 }
-#endif

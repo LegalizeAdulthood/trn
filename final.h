@@ -22,9 +22,7 @@ void finalize(int)
     ;
 Signal_t int_catcher(int);
 Signal_t sig_catcher(int);
-#ifdef SUPPORT_NNTP
 Signal_t pipe_catcher(int);
-#endif
 #ifdef SIGTSTP
 Signal_t stop_catcher(int);
 #endif

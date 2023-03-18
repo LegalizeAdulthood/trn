@@ -77,7 +77,6 @@ bool env_init(char *tcbuf, bool lax)
     if (!set_p_host_name(tcbuf))
 	fully_successful = false;
 
-#ifdef SUPPORT_NNTP
     {
 	char* cp = get_val("NETSPEED","5");
 	if (*cp == 'f')
@@ -90,7 +89,6 @@ bool env_init(char *tcbuf, bool lax)
 		g_net_speed = 1;
 	}
     }
-#endif
 
     return fully_successful;
 }

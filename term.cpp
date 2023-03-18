@@ -903,7 +903,6 @@ void settle_down()
     eat_typeahead();
 }
 
-#ifdef SUPPORT_NNTP
 bool ignore_EINTR = false;
 
 #ifdef SIGALRM
@@ -917,7 +916,6 @@ int signo;
     sigset(SIGALRM,alarm_catcher);
     (void) alarm(DATASRC_ALARM_SECS);
 }
-#endif
 #endif
 
 /* read a character from the terminal, with multi-character pushback */
@@ -1045,14 +1043,12 @@ void getcmd(char *whatbuf)
     bool no_macros; 
     int times = 0;			/* loop detector */
 
-#ifdef SUPPORT_NNTP
     if (!input_pending()) {
 #ifdef SIGALRM
 	sigset(SIGALRM,alarm_catcher);
 	(void) alarm(DATASRC_ALARM_SECS);
 #endif
     }
-#endif
 
 tryagain:
     curmap = topmap;
@@ -1064,19 +1060,15 @@ tryagain:
     for (;;) {
 	int_count = 0;
 	errno = 0;
-#ifdef SUPPORT_NNTP
 	ignore_EINTR = false;
-#endif
 	if (read_tty(whatbuf,1) < 0) {
 	    if (!errno)
 	        errno = EINTR;
 	    if (errno == EINTR) {
-#ifdef SUPPORT_NNTP
 		if (ignore_EINTR)
 		    continue;
 #ifdef SIGALRM
 		(void) alarm(0);
-#endif
 #endif
 		return;
 	    }
@@ -1128,10 +1120,8 @@ got_canonical:
 #endif
     if (whatbuf == buf)
 	whatbuf[1] = FINISHCMD;		/* tell finish_command to work */
-#ifdef SUPPORT_NNTP
 #ifdef SIGALRM
     (void) alarm(0);
-#endif
 #endif
 }
 

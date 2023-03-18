@@ -2,8 +2,6 @@
 */ 
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#ifdef SUPPORT_NNTP
-
 #define FB_BACKGROUND	0
 #define FB_OUTPUT	1
 #define FB_SILENT	2
@@ -11,11 +9,7 @@
 
 #define MAX_NNTP_ARTICLES   10
 
-#endif
-
-#ifdef SUPPORT_NNTP
 int nntp_list(char *, char *, int);
-#endif
 void nntp_finish_list();
 int nntp_group(char *group, NGDATA *gp);
 int nntp_stat(ART_NUM);

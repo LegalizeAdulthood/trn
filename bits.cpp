@@ -262,7 +262,6 @@ void find_existing_articles()
     ART_NUM an;
     ARTICLE* ap;
 
-#ifdef SUPPORT_NNTP
     if (datasrc->flags & DF_REMOTE) {
 	/* Parse the LISTGROUP output and remember everything we find */
 	if (/*nntp_rover() ||*/ nntp_artnums()) {
@@ -320,7 +319,6 @@ void find_existing_articles()
 	}
     }
     else
-#endif
     {
 	ART_NUM first = lastart+1;
 	ART_NUM last = 0;

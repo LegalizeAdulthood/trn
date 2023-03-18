@@ -245,7 +245,6 @@ int do_newsgroup(char *start_command)
 
 	if ((art > lastart || forcegrow) && !keep_the_group_static) {
 	    ART_NUM oldlast = lastart;
-#ifdef SUPPORT_NNTP
 	    if (artsize < 0)
 		nntp_finishbody(FB_SILENT);
 	    if (datasrc->flags & DF_REMOTE) {
@@ -258,7 +257,6 @@ int do_newsgroup(char *start_command)
 		}
 	    }
 	    else
-#endif
 		grow_ng(getngsize(ngptr));
 	    if (forcelast && art > oldlast)
 		art = lastart+1;
@@ -382,7 +380,6 @@ int do_newsgroup(char *start_command)
 					/*  (line # within article file) */
 	    }
 	    clear();			/* clear screen */
-#ifdef SUPPORT_NNTP
 	    if (art == 0 && artp && artp->msgid && (datasrc->flags&DF_REMOTE)
 	     && !(artp->flags & AF_CACHED)) {
 		art = nntp_stat_id(artp->msgid);
@@ -393,7 +390,6 @@ int do_newsgroup(char *start_command)
 		if (art)
 		    artp = article_find(art);
 	    }
-#endif
 	    /* make sure article is found & open */
 	    if (!artopen(art,(ART_POS)0)) {
 		char tmpbuf[256];
@@ -1403,13 +1399,11 @@ run_the_selector:
 #ifdef INNERSEARCH
       case Ctl('e'):
 	if (art <= lastart) {
-#ifdef SUPPORT_NNTP
 	    if (artsize < 0) {
 		nntp_finishbody(FB_OUTPUT);
 		raw_artsize = nntp_artsize();
 		artsize = raw_artsize-artbuf_seek+artbuf_len+htype[PAST_HEADER].minpos;
 	    }
-#endif
 	    if (do_hiding) {
 		seekartbuf(artsize);
 		seekartbuf(artpos);

@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#ifdef SUPPORT_NNTP
-
 #ifdef I_UTIME
 #include <utime.h>
 #endif
@@ -16,7 +14,6 @@ struct utimbuf
     time_t actime;
     time_t modtime;
 };
-#endif
 #endif
 
 enum

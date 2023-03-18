@@ -308,7 +308,6 @@ int trn_ncasecmp(const char *s1, const char *s2, int len)
 }
 #endif
 
-#ifdef SUPPORT_NNTP
 char *read_auth_file(char *file, char **pass_ptr)
 {
     FILE* fp;
@@ -330,7 +329,6 @@ char *read_auth_file(char *file, char **pass_ptr)
     *pass_ptr = strptr[1];
     return strptr[0];
 }
-#endif
 
 #ifdef MSDOS
 int getuid() {

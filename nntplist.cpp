@@ -164,10 +164,8 @@ void Usage()
     exit(1);
 }
 
-#ifdef SUPPORT_NNTP
 int nntp_handle_timeout()
 {
     fputs("\n503 Server timed out.\n",stderr);
     return -2;
 }
-#endif

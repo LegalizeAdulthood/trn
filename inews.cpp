@@ -312,7 +312,6 @@ void append_signature()
     (void) fclose(fp);
 }
 
-#ifdef SUPPORT_NNTP
 int nntp_handle_timeout()
 {
     if (!new_connection) {
@@ -337,4 +336,3 @@ int nntp_handle_timeout()
     fputs("\n503 Server timed out.\n",stderr);
     return -2;
 }
-#endif

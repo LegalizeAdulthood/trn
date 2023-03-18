@@ -29,9 +29,7 @@
 #include "head.h"
 
 bool first_one;		/* is this the 1st occurance of this header line? */
-#ifdef SUPPORT_NNTP
 bool reading_nntp_header;
-#endif
 
 static short htypeix[26] =
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -206,13 +204,11 @@ bool parseline(char *art_buf, int newhide, int oldhide)
     end_header_line();
     s = index(art_buf,':');
     if (s == nullptr) {	/* is it the end of the header? */
-#ifdef SUPPORT_NNTP
 	    /* Did NNTP ship us a mal-formed header line? */
 	    if (reading_nntp_header && *art_buf && *art_buf != '\n') {
 		in_header = SOME_LINE;
 		return newhide;
 	    }
-#endif
 	    in_header = PAST_HEADER;
     }
     else {		/* it is a new header line */
@@ -245,13 +241,11 @@ void end_header()
     if (!ap->subj)
 	set_subj_line(ap,"<NONE>",6);
 
-#ifdef SUPPORT_NNTP
     if (reading_nntp_header) {
 	reading_nntp_header = false;
 	htype[PAST_HEADER].minpos = artpos + 1;	/* nntp_body will fix this */
     }
     else
-#endif
 	htype[PAST_HEADER].minpos = tellart();
 
     /* If there's no References: line, then the In-Reply-To: line may give us
@@ -292,7 +286,6 @@ bool parseheader(ART_NUM artnum)
     if (artnum > lastart)
 	return false;
     spin(20);
-#ifdef SUPPORT_NNTP
     if (datasrc->flags & DF_REMOTE) {
 	char *s = nntp_artname(artnum, false);
 	if (s) {
@@ -306,7 +299,6 @@ bool parseheader(ART_NUM artnum)
 	else
 	    reading_nntp_header = true;
     }
-#endif
     ElseIf (!artopen(artnum,(ART_POS)0))
 	return false;
 
@@ -320,7 +312,6 @@ bool parseheader(ART_NUM artnum)
 	    headbuf = saferealloc(headbuf,headbuf_size);
 	    bp = headbuf + len;
 	}
-#ifdef SUPPORT_NNTP
 	if (reading_nntp_header) {
 	    found_nl = nntp_gets(bp,LBUFLEN);
 	    if (found_nl < 0)
@@ -338,7 +329,6 @@ bool parseheader(ART_NUM artnum)
 	    bp[len] = '\0';
 	}
 	else
-#endif
 	{
 	    if (readart(bp,LBUFLEN) == nullptr)
 		break;
@@ -447,7 +437,6 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
     ART_POS lastpos;
     int size;
 
-#ifdef SUPPORT_NNTP
     if ((datasrc->flags & DF_REMOTE) && parsed_art != artnum) {
 	ARTICLE* ap;
 	int size;
@@ -536,7 +525,6 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 	    s = saferealloc(s, (MEM_SIZE)strlen(s)+1);
 	return s;
     }
-#endif /* SUPPORT_NNTP */
 
     /* Only return a cached line if it isn't the current article */
     s = nullptr;

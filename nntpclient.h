@@ -2,9 +2,6 @@
 */ 
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
-#ifdef SUPPORT_NNTP
-
 struct NNTPLINK
 {
     FILE*	rd_fp;
@@ -79,8 +76,6 @@ enum
 EXT char g_ser_line[NNTP_STRLEN];
 
 EXT char g_last_command[NNTP_STRLEN];
-
-#endif /* SUPPORT_NNTP */
 
 int nntp_connect(const char *machine, bool verbose);
 char *nntp_servername(char *name);

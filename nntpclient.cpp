@@ -5,9 +5,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-
-#ifdef SUPPORT_NNTP
-
 #include "nntpinit.h"
 #include "INTERN.h"
 #include "nntpclient.h"
@@ -308,5 +305,3 @@ void nntp_close(bool send_quit)
     }
     nntplink.flags |= NNTP_NEW_CMD_OK;
 }
-
-#endif /* SUPPORT_NNTP */

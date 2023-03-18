@@ -112,10 +112,8 @@ bool initialize(int argc, char *argv[])
     if (!checkflag)
 	cwd_check();
 
-#ifdef SUPPORT_NNTP
     if (init_nntp() < 0)
 	finalize(1);
-#endif
 
     /* if we aren't just checking, turn off echo */
 

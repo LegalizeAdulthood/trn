@@ -17,9 +17,7 @@
 
 bool export_nntp_fds = false;
 
-#ifdef SUPPORT_NNTP
-char* nntp_password;
-#endif
+char* nntp_password = nullptr;
 
 int doshell(char *sh, char *cmd)
 {
@@ -28,9 +26,7 @@ int doshell(char *sh, char *cmd)
 
 void finalize(int num)
 {
-#ifdef SUPPORT_NNTP
     nntp_close(true);
-#endif
     exit(num);
 }
 
@@ -82,30 +78,24 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
     return stoppers; /* This is wrong on purpose */
 }
 
-#ifdef SUPPORT_NNTP
 int nntp_handle_nested_lists()
 {
     fputs("Programming error! Nested NNTP calls detected.\n",stderr);
     return -1;
 }
-#endif
 
-#ifdef SUPPORT_NNTP
 char *get_auth_user()
 {
     extern char* nntp_auth_file;
     return read_auth_file(nntp_auth_file, &nntp_password);
 }
-#endif
 
-#ifdef SUPPORT_NNTP
 char *get_auth_pass()
 {
     return nntp_password;
 }
-#endif
 
-#if defined(USE_GENAUTH) && defined(SUPPORT_NNTP)
+#if defined(USE_GENAUTH)
 char *get_auth_command()
 {
     return nullptr;

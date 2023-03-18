@@ -331,12 +331,10 @@ void do_multirc()
 		goto loop_break;
 	    case ING_RESTART:
 		goto restart;
-#ifdef SUPPORT_NNTP
 	    case ING_NOSERVER:
 		if (multirc)
 		    goto restart;
 		goto bug_out;
-#endif
 	    case ING_SPECIAL:
 		special = true;
 		break;
@@ -352,9 +350,7 @@ void do_multirc()
 	    }
 	}
     loop_break:;
-#ifdef SUPPORT_NNTP
 	check_active_refetch(false);
-#endif
     }
 
 bug_out:
@@ -768,11 +764,9 @@ reask_abandon:
 	  case NG_MINUS:
 	    ngptr = recent_ng;	/* recall previous newsgroup */
 	    return ING_SPECIAL;
-#ifdef SUPPORT_NNTP
 	  case NG_NOSERVER:
 	    nntp_server_died(ngptr->rc->datasrc);
 	    return ING_NOSERVER;
-#endif
 	  /* CAA extensions */
 	  case NG_GO_ARTICLE:
 	    ngptr = ng_go_ngptr;
@@ -800,7 +794,6 @@ reask_abandon:
     return ING_NORM;
 }
 
-#ifdef SUPPORT_NNTP
 void check_active_refetch(bool force)
 {
     DATASRC* dp;
@@ -814,21 +807,16 @@ void check_active_refetch(bool force)
 	    actfile_hash(dp);
     }
 }
-#endif
 
 void trn_version()
 {
     page_start();
     sprintf(msg,"Trn version:%s.\nConfigured for ",patchlevel);
-#ifdef SUPPORT_NNTP
 # ifdef HAS_LOCAL_SPOOL
     strcat(msg,"both NNTP and local news access.\n");
 # else
     strcat(msg,"NNTP (plus individual local access).\n");
 # endif
-#else
-    strcat(msg,"local news access.\n");
-#endif
     print_lines(msg, NOMARKING);
 
     if (multirc) {
@@ -841,7 +829,6 @@ void trn_version()
 		continue;
 	    sprintf(msg,"ID %s:\nNewsrc %s.\n",rp->datasrc->name,rp->name);
 	    print_lines(msg, NOMARKING);
-#ifdef SUPPORT_NNTP
 	    if (rp->datasrc->flags & DF_REMOTE) {
 		sprintf(msg,"News from server %s.\n",rp->datasrc->newsid);
 		print_lines(msg, NOMARKING);
@@ -863,27 +850,22 @@ void trn_version()
 		strcat(msg,".\n");
 	    }
 	    else
-#endif
 		sprintf(msg,"News from %s.\nLocal active file %s.\n",
 			rp->datasrc->spool_dir, rp->datasrc->newsid);
 	    print_lines(msg, NOMARKING);
 	    if (rp->datasrc->grpdesc) {
-#ifdef SUPPORT_NNTP
 		if (!rp->datasrc->desc_sf.fp && rp->datasrc->desc_sf.hp)
 		    strcpy(msg,"Dynamic group desc. file");
 		else if (rp->datasrc->flags & DF_TMPGRPDESC)
 		    strcpy(msg,"Copy of remote group desc. file");
 		else
-#endif
 		    sprintf(msg,"Group desc. file: %s",rp->datasrc->grpdesc);
-#ifdef SUPPORT_NNTP
 		if (rp->datasrc->desc_sf.refetch_secs) {
 		    char* cp = secs2text(rp->datasrc->desc_sf.refetch_secs);
 		    if (*cp != 'n')
 			sprintf(msg+strlen(msg),
 				" (refetch%s %s)",*cp == 'm'? " if" : ":", cp);
 		}
-#endif
 		strcat(msg,".\n");
 		print_lines(msg, NOMARKING);
 	    }

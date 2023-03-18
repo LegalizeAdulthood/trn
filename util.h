@@ -61,11 +61,9 @@ double current_time();
 time_t text2secs(char *, time_t);
 char *secs2text(time_t);
 char *temp_filename();
-#ifdef SUPPORT_NNTP
 char *get_auth_user();
 char *get_auth_pass();
-#endif
-#if defined(USE_GENAUTH) && defined(SUPPORT_NNTP)
+#if defined(USE_GENAUTH)
 char *get_auth_command();
 #endif
 char **prep_ini_words(INI_WORDS words[]);

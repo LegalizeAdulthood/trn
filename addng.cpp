@@ -64,11 +64,9 @@ bool find_new_groups()
 
     for (rp = multirc->first; rp; rp = rp->next) {
 	if (ALLBITS(rp->flags, RF_ADD_NEWGROUPS | RF_ACTIVE)) {
-#ifdef SUPPORT_NNTP
 	    if (rp->datasrc->flags & DF_REMOTE)
 		new_nntp_groups(rp->datasrc);
 	    else
-#endif
 		new_local_groups(rp->datasrc);
 	}
     }
@@ -106,8 +104,6 @@ static void process_list(int flag)
     last_addgroup = nullptr;
     addgroup_cnt = 0;
 }
-
-#ifdef SUPPORT_NNTP
 
 static void new_nntp_groups(DATASRC *dp)
 {
@@ -177,7 +173,6 @@ static void new_nntp_groups(DATASRC *dp)
     }
     hashdestroy(newngs);
 }
-#endif
 
 static void new_local_groups(DATASRC *dp)
 {
@@ -304,7 +299,6 @@ bool scanactive(bool add_matching)
 	set_datasrc(dp);
 	if (dp->act_sf.fp)
 	    hashwalk(dp->act_sf.hp, list_groups, add_matching);
-#ifdef SUPPORT_NNTP
 	else {
 	    if (maxngtodo != 1)
 		strcpy(buf, "*");
@@ -324,7 +318,6 @@ bool scanactive(bool add_matching)
 		}
 	    }
 	}
-#endif
     }
 
     process_list(add_matching);

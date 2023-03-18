@@ -26,8 +26,6 @@
 #include "nntp.h"
 #include "nntp.ih"
 
-#ifdef SUPPORT_NNTP
-
 int nntp_list(char *type, char *arg, int len)
 {
     int ret;
@@ -586,5 +584,3 @@ long nntp_read(char *buf, long n)
     return n;
 }
 #endif /* SUPPORT_XTHREAD */
-
-#endif /* SUPPORT_NNTP */

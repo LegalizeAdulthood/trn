@@ -102,11 +102,9 @@ int do_article()
     char oldmode = mode;
     bool outputok = true;
 
-#ifdef SUPPORT_NNTP
     if (datasrc->flags & DF_REMOTE)
 	artsize = raw_artsize = nntp_artsize();
     else
-#endif
     {
 	if (fstat(fileno(artfp),&filestat))	/* get article file stats */
 	    return DA_CLEAN;
@@ -562,7 +560,6 @@ int do_article()
 
 	/* extra loop bombout */
 
-#ifdef SUPPORT_NNTP
 	if (artsize < 0 && (raw_artsize = nntp_artsize()) >= 0)
 	    artsize = raw_artsize-artbuf_seek+artbuf_len+htype[PAST_HEADER].minpos;
 recheck_pager:
@@ -573,7 +570,6 @@ recheck_pager:
 	    readartbuf(false);
 	    seekartbuf(seekpos);
 	}
-#endif
 	if (artpos == artsize) {/* did we just now reach EOF? */
 	    color_default();
 	    set_mode(gmode,oldmode);
@@ -592,11 +588,9 @@ reask_pager:
 	unflush_output();	/* disable any ^O in effect */
  	maybe_eol();
 	color_default();
-#ifdef SUPPORT_NNTP
 	if (artsize < 0)
 	    strcpy(cmd_buf,"?");
 	else
-#endif
 	    sprintf(cmd_buf,"%ld",(long)(artpos*100/artsize));
 #ifdef CHARSUBST
 	sprintf(buf,"%s--MORE--(%s%%)",current_charsubst(),cmd_buf);
@@ -626,13 +620,11 @@ reask_pager:
 #endif
 	}
 	cache_until_key();
-#ifdef SUPPORT_NNTP
 	if (artsize < 0 && (raw_artsize = nntp_artsize()) >= 0) {
 	    artsize = raw_artsize-artbuf_seek+artbuf_len+htype[PAST_HEADER].minpos;
 	    goto_xy(more_prompt_col,g_term_line);
 	    goto recheck_pager;
 	}
-#endif
 	set_mode(gmode,'p');
 	getcmd(buf);
 	if (errno) {
@@ -856,13 +848,11 @@ int page_switch()
 	return PS_NORM;
 #ifdef INNERSEARCH
       case Ctl('e'):
-#ifdef SUPPORT_NNTP
 	if (artsize < 0) {
 	    nntp_finishbody(FB_OUTPUT);
 	    raw_artsize = nntp_artsize();
 	    artsize = raw_artsize-artbuf_seek+artbuf_len+htype[PAST_HEADER].minpos;
 	}
-#endif
 	if (do_hiding) {
 	    seekartbuf(artsize);
 	    seekartbuf(artpos);

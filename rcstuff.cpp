@@ -436,7 +436,6 @@ static bool open_newsrc(NEWSRC *rp)
 	    return false;
 	}
 	some_buf = SUBSCRIPTIONS;
-#ifdef SUPPORT_NNTP
 	if ((rp->datasrc->flags & DF_REMOTE)
 	 && nntp_list("SUBSCRIPTIONS",nullstr,0) == 1) {
 	    do {
@@ -446,7 +445,6 @@ static bool open_newsrc(NEWSRC *rp)
 		    break;
 	    } while (!nntp_at_list_end(g_ser_line));
 	}
-#endif
 	ElseIf (*some_buf && (tmpfp = fopen(filexp(some_buf),"r")) != nullptr) {
 	    while (fgets(buf,sizeof buf,tmpfp))
 		fputs(buf,rcfp);
@@ -605,13 +603,11 @@ static bool open_newsrc(NEWSRC *rp)
     }
     else {
 	readlast();
-#ifdef SUPPORT_NNTP
 	if (rp->datasrc->flags & DF_REMOTE) {
 	    rp->datasrc->act_sf.recent_cnt = lastactsiz;
 	    rp->datasrc->desc_sf.recent_cnt = lastextranum;
 	}
 	else
-#endif
 	{
 	    rp->datasrc->act_sf.recent_cnt = lastextranum;
 	    rp->datasrc->desc_sf.recent_cnt = 0;
@@ -1381,13 +1377,11 @@ bool write_newsrcs(MULTIRC *mptr)
 	}
 	else {
 	    readlast();
-#ifdef SUPPORT_NNTP
 	    if (rp->datasrc->flags & DF_REMOTE) {
 		lastactsiz = rp->datasrc->act_sf.recent_cnt;
 		lastextranum = rp->datasrc->desc_sf.recent_cnt;
 	    }
 	    else
-#endif
 		lastextranum = rp->datasrc->act_sf.recent_cnt;
 	    lastnewtime = rp->datasrc->lastnewgrp;
 	    writelast();

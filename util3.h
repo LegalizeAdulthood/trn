@@ -15,11 +15,9 @@ char *safemalloc(MEM_SIZE);
 char *saferealloc(char *, MEM_SIZE);
 #endif
 char *dointerp(char *, int, char *, char *, char *);
-#ifdef SUPPORT_NNTP
 int nntp_handle_nested_lists();
 char *get_auth_user();
 char *get_auth_pass();
-#endif
-#if defined(USE_GENAUTH) && defined(SUPPORT_NNTP)
+#if defined(USE_GENAUTH)
 char *get_auth_command();
 #endif

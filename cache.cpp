@@ -105,9 +105,7 @@ void close_cache()
     SUBJECT* sp;
     SUBJECT* next;
 
-#ifdef SUPPORT_NNTP
     nntp_artname(0, false);		/* clear the tmpfile cache */
-#endif
 
     if (subj_hash) {
 	hashdestroy(subj_hash);
@@ -741,10 +739,8 @@ void cache_until_key()
     if (input_pending())
 	return;
 
-# ifdef SUPPORT_NNTP
     if ((datasrc->flags & DF_REMOTE) && nntp_finishbody(FB_BACKGROUND))
 	return;
-# endif
 
 # ifdef NICEBG
     if (wait_key_pause(10))
@@ -785,9 +781,7 @@ void cache_until_key()
     setspin(SPIN_OFF);
     untrim_cache = false;
 #endif
-#ifdef SUPPORT_NNTP
     check_datasrcs();
-#endif
 }
 
 #ifdef PENDING
@@ -887,11 +881,7 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
     if (cheating)
 	setspin(SPIN_BACKGROUND);
     else {
-#ifdef SUPPORT_NNTP
 	int lots2do = ((datasrc->flags & DF_REMOTE)? g_net_speed : 20) * 25;
-#else
-	int lots2do = 20 * 25;
-#endif
 	setspin(spin_estimate > lots2do? SPIN_BARGRAPH : SPIN_FOREGROUND);
     }
     /*assert(first >= absfirst && last <= lastart);*/

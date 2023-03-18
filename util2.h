@@ -11,9 +11,7 @@ char *in_string(char *big, char *little, bool case_matters);
 int trn_casecmp(const char *, const char *);
 int trn_ncasecmp(const char *, const char *, int);
 #endif
-#ifdef SUPPORT_NNTP
 char *read_auth_file(char *, char **);
-#endif
 #ifdef MSDOS
 int getuid();
 #endif

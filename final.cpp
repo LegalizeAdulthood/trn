@@ -58,10 +58,8 @@ void final_init()
 #ifdef SIGWINCH
     sigset(SIGWINCH, winch_catcher);
 #endif
-#ifdef SUPPORT_NNTP
 #ifdef SIGPIPE
     sigset(SIGPIPE,pipe_catcher);
-#endif
 #endif
 
 #ifndef lint
@@ -98,10 +96,8 @@ void final_init()
 
 void finalize(int status)
 {
-#ifdef SUPPORT_NNTP
     int i;
     char* s;
-#endif
 
 #ifdef SCORE
     sc_sv_savefile();	/* save any scores from memory to disk */
@@ -127,13 +123,11 @@ void finalize(int status)
 	for (dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp))
 	    close_datasrc(dp);
     }
-#ifdef SUPPORT_NNTP
     for (i = 0; i < MAX_NNTP_ARTICLES; i++) {
 	s = nntp_tmpname(i);
 	UNLINK(s);
     }
     cleanup_nntp();
-#endif
     if (headname)
 	UNLINK(headname);
     if (status < 0) {
@@ -263,7 +257,6 @@ Signal_t sig_catcher(int signo)
     finalize(1);				/* and blow up */
 }
 
-#ifdef SUPPORT_NNTP
 Signal_t pipe_catcher(int signo)
 {
 #ifdef SIGPIPE
@@ -271,7 +264,6 @@ Signal_t pipe_catcher(int signo)
     sigset(SIGPIPE,pipe_catcher);
 #endif
 }
-#endif
 
 /* come here on stop signal */
 

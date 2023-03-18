@@ -277,12 +277,10 @@ static void sel_dogroups()
 	    np->flags |= NF_VISIT;
 #endif
 	    goto do_group;
-#ifdef SUPPORT_NNTP
 	  case NG_NOSERVER:
 	    nntp_server_died(np->rc->datasrc);
 	    (void) first_page();
 	    break;
-#endif
 	  /* CAA extensions */
 	  case NG_GO_ARTICLE:
 	    np = ng_go_ngptr;
@@ -363,12 +361,10 @@ char newsgroup_selector()
 	for (rp = multirc->first; rp; rp = rp->next) {
 	    if ((rp->flags & RF_ACTIVE) && !rp->datasrc->desc_sf.hp) {
 		find_grpdesc(rp->datasrc, "control");
-#ifdef SUPPORT_NNTP
 		if (rp->datasrc->desc_sf.fp)
 		    rp->datasrc->flags |= DF_NOXGTITLE; /*$$ ok?*/
 		else
 		    rp->datasrc->desc_sf.refetch_secs = 0;
-#endif
 	    }
 	}
     }
@@ -436,10 +432,8 @@ char addgroup_selector(int flags)
 	for (rp = multirc->first; rp; rp = rp->next) {
 	    if ((rp->flags & RF_ACTIVE) && !rp->datasrc->desc_sf.hp) {
 		find_grpdesc(rp->datasrc, "control");
-#ifdef SUPPORT_NNTP
 		if (!rp->datasrc->desc_sf.fp)
 		    rp->datasrc->desc_sf.refetch_secs = 0;
-#endif
 	    }
 	}
     }
@@ -696,11 +690,9 @@ static int univ_read(UNIV_ITEM *ui)
 	  case NG_MINUS:
 	    np = recent_ng;
 	    goto do_group;
-#ifdef SUPPORT_NNTP
 	  case NG_NOSERVER:
 	    /* Eeep! */
 	    break;
-#endif
 	}
 	break;
       }
@@ -2172,9 +2164,7 @@ static int newsgroup_commands(char_int ch)
 	    np->abs1st = 0;
 	}
 	erase_line(false);
-#ifdef SUPPORT_NNTP
 	check_active_refetch(true);
-#endif
 	return DS_RESTART;
       }
       case 'O':
@@ -2357,7 +2347,6 @@ q does nothing.\n\n\
 	set_mode('s','w');
 	POP_SELECTOR();
 	switch (ret) {
-#ifdef SUPPORT_NNTP
 	  case ING_NOSERVER:
 	    if (multirc) {
 		if (!was_at_top)
@@ -2365,7 +2354,6 @@ q does nothing.\n\n\
 		return DS_RESTART;
 	    }
 	    /* FALL THROUGH */
-#endif
 	  case ING_QUIT:
 	    sel_ret = 'q';
 	    return DS_QUIT;

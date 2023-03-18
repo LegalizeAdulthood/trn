@@ -482,7 +482,6 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    break;
 		case 'A':
 		    if (in_ng) {
-#ifdef SUPPORT_NNTP
 			if (datasrc->flags & DF_REMOTE) {
 			    if (artopen(art,(ART_POS)0)) {
 				nntp_finishbody(FB_SILENT);
@@ -493,7 +492,6 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 				s = nullstr;
 			}
 			else
-#endif
 #ifdef LINKART
 			    s = linkartname;  /* for Eunice */
 #else

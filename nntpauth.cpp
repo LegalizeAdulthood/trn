@@ -16,8 +16,6 @@
 #include "INTERN.h"
 #include "nntpauth.h"
 
-#ifdef SUPPORT_NNTP
-
 int nntp_handle_auth_err()
 {
     char last_command_save[NNTP_STRLEN];
@@ -88,5 +86,3 @@ int nntp_auth(char *authc)
     return 1;
 }
 #endif /* USE_GENAUTH */
-
-#endif /* SUPPORT_NNTP */

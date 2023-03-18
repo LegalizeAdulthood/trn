@@ -13,9 +13,7 @@ EXT char *g_real_name INIT(nullptr);	/* real name of user */
 EXT char *g_p_host_name INIT(nullptr);	/* host name in a posting */
 EXT char *g_local_host INIT(nullptr);	/* local host name */
 
-#ifdef SUPPORT_NNTP
 EXT int g_net_speed INIT(20);		/* how fast our net-connection is */
-#endif
 
 bool env_init(char *tcbuf, bool lax);
 bool set_user_name(char *tmpbuf);

@@ -16,8 +16,6 @@
 #include <io.h>
 #endif
 
-#ifdef SUPPORT_NNTP
-
 #ifdef WINSOCK
 #include <winsock.h>
 WSADATA wsaData;
@@ -298,5 +296,3 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 #endif
     return s;
 }
-
-#endif /* SUPPORT_NNTP */

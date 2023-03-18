@@ -8,10 +8,8 @@ struct SRCFILE
     HASHTABLE*	hp;		/* the hash table for the data */
     LIST*	lp;		/* the list used to store the data */
     long	recent_cnt;	/* # lines/bytes this file might be */
-#ifdef SUPPORT_NNTP
     time_t	lastfetch;	/* when the data was last fetched */
     time_t	refetch_secs;	/* how long before we refetch this file */
-#endif
 };
 
 struct DATASRC
@@ -22,9 +20,7 @@ struct DATASRC
     char*	grpdesc;	/* the newsgroup description file or tmp */
     SRCFILE	desc_sf;	/* the group description's hashed contents */
     char*	extra_name;	/* local active.times or server's actfile */
-#ifdef SUPPORT_NNTP
     NNTPLINK	nntplink;
-#endif
     char*	spool_dir;
     char*	over_dir;
     char*	over_fmt;
@@ -50,12 +46,7 @@ enum
     DF_DEFAULT = 0x0008,
     DF_OPEN = 0x0010,
     DF_ACTIVE = 0x0020,
-    DF_UNAVAILABLE = 0x0040
-};
-
-#ifdef SUPPORT_NNTP
-enum
-{
+    DF_UNAVAILABLE = 0x0040,
     DF_REMOTE = 0x0080,
     DF_TMPACTFILE = 0x0100,
     DF_TMPGRPDESC = 0x0200,
@@ -65,7 +56,6 @@ enum
     DF_NOLISTGROUP = 0x2000,
     DF_NOXREFS = 0x4000
 };
-#endif
 
 enum
 {
@@ -94,9 +84,7 @@ EXT int datasrc_cnt INIT(0);
 
 EXT char* trnaccess_mem INIT(nullptr);
 
-#ifdef SUPPORT_NNTP
 EXT char* nntp_auth_file INIT(nullptr);
-#endif
 
 void datasrc_init();
 char *read_datasrcs(char *);
@@ -110,9 +98,7 @@ bool actfile_hash(DATASRC *dp);
 bool find_actgrp(DATASRC *dp, char *outbuf, char *nam, int len, ART_NUM high);
 char *find_grpdesc(DATASRC *dp, char *groupname);
 int srcfile_open(SRCFILE *sfp, char *filename, char *fetchcmd, char *server);
-#ifdef SUPPORT_NNTP
 char *srcfile_append(SRCFILE *sfp, char *bp, int keylen);
 void srcfile_end_append(SRCFILE *sfp, char *filename);
-#endif
 void srcfile_close(SRCFILE *sfp);
 int find_close_match();

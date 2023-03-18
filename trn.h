@@ -39,9 +39,7 @@ void trn_init();
 int main(int, char **);
 void do_multirc();
 int input_newsgroup();
-#ifdef SUPPORT_NNTP
 void check_active_refetch(bool force);
-#endif
 void trn_version();
 void set_ngname(char *);
 char *getngdir(char *);
