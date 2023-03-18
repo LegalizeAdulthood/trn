@@ -429,7 +429,6 @@ char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp)
 
 int makedir(char *dirname, int nametype)
 {
-#ifdef MAKEDIR
     char* end;
     char* s;
 # ifdef HAS_MKDIR
@@ -486,10 +485,6 @@ int makedir(char *dirname, int nametype)
 # else
     return (tbptr==tmpbuf+5 ? 0 : doshell(sh,tmpbuf));/* exercise our faith */
 # endif
-#else
-    sprintf(cmd_buf,"%s %s %d", filexp(DIRMAKER), dirname, nametype);
-    return doshell(sh,cmd_buf);
-#endif
 }
 
 void notincl(char *feature)

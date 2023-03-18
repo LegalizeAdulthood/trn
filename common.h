@@ -223,7 +223,6 @@
 #define NOFIREWORKS	/* keep whole screen from flashing on certain */
 			/* terminals such as older Televideos */
 #define TILDENAME	/* allow ~logname expansion */
-#define MAKEDIR		/* use our makedir() instead of shell script */
 #define MEMHELP		/* keep help messages in memory */
 #define VERBOSE		/* compile in more informative messages */
 #define TERSE		/* compile in shorter messages */
@@ -490,13 +489,6 @@
 #	define HEADNAME "%Y/tmpart.%$"
 #   else
 #	define HEADNAME "%./.rnhead.%$"
-#   endif
-#endif
-
-#ifndef MAKEDIR
-/* shell script to make n-deep subdirectories */
-#   ifndef DIRMAKER		/* % and ~ */
-#	define DIRMAKER "%X/makedir"
 #   endif
 #endif
 
