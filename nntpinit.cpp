@@ -3,7 +3,6 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 
-/*#define EXCELAN	*//* Excelan EXOS 205 support */
 /*#define NONETD	*//* Define if you're missing netdb.h */
 
 #include "EXTERN.h"
@@ -24,14 +23,6 @@ WSADATA wsaData;
 #include <netinet/in.h>
 #include <netdb.h>
 #endif
-
-#ifdef EXCELAN
-int connect(int, struct sockaddr *);
-unsigned short htons(unsigned short);
-unsigned long rhost(char **);
-int rresvport p((int));
-int socket(int, struct sockproto *, struct sockaddr_in *, int);
-#endif /* EXCELAN */
 
 #ifndef WINSOCK
 unsigned long inet_addr(char *);
@@ -238,30 +229,6 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 	return -1;
     }
 #else /* no name server */
-#ifdef EXCELAN
-    s = socket(SOCK_STREAM, (struct sockproto*)nullptr, &sin, SO_KEEPALIVE);
-    if (s < 0) {
-	/* Get the socket */
-	perror("socket");
-	return -1;
-    }
-    bzero((char*)&sin, sizeof sin);
-    sin.sin_family = AF_INET;
-    sin.sin_port = htons(port? port : *service == 'n'? IPPORT_NNTP : 80);
-
-    /* set up addr for the connect */
-    if ((sin.sin_addr.s_addr = rhost(&machine)) == -1) {
-	fprintf(stderr, "%s: Unknown host.\n", machine);
-	return -1;
-    }
-
-    /* And then connect */
-    if (connect(s, (struct sockaddr*)&sin) < 0) {
-	perror("connect");
-	(void) close(s);
-	return -1;
-    }
-#else /* !EXCELAN */
     if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 	perror("socket");
 	return -1;
@@ -276,7 +243,6 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 	return -1;
     }
 
-#endif /* !EXCELAN */
 #endif /* !h_addr */
 #endif /* !INET6 */
 #ifdef __hpux	/* recommended by raj@cup.hp.com */
