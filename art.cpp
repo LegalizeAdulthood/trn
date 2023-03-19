@@ -581,9 +581,7 @@ reask_pager:
 			    /* in an article he is interested in */
 	    checkcount = 0;
 	    checkpoint_newsrcs();	/* update all newsrcs */
-#ifdef KILLFILES
 	    update_thread_kfile();
-#endif
 	}
 	cache_until_key();
 	if (artsize < 0 && (raw_artsize = nntp_artsize()) >= 0) {

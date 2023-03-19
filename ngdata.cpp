@@ -147,7 +147,6 @@ void grow_ng(ART_NUM newlast)
 	/* Score all new articles now just in case they weren't done above. */
 	sc_fill_scorelist(tmpfirst,newlast);
 #endif
-#ifdef KILLFILES
 	if (verbose)
 	    sprintf(buf,
 		"%ld more article%s arrived -- processing memorized commands...\n\n",
@@ -163,7 +162,6 @@ void grow_ng(ART_NUM newlast)
 	    artp = artp_save;
 	    forcelast = forcelast_save;
 	}
-#endif
 	art = tmpart;
     }
 }

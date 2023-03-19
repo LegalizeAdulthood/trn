@@ -105,9 +105,7 @@ void finalize(int status)
 #ifdef USE_FILTER
     filter_cleanup();
 #endif
-#ifdef KILLFILES
     update_thread_kfile();
-#endif
     color_default();
     termlib_reset();
     if (bizarre)
@@ -225,9 +223,7 @@ Signal_t sig_catcher(int signo)
     if (!write_newsrcs(multirc)) {	/* write anything that's changed */
 	/*$$ get_old_newsrcs(multirc);  ?? */
     }
-#ifdef KILLFILES
     update_thread_kfile();
-#endif
 
 #ifdef SIGHUP
     if (signo != SIGHUP) {

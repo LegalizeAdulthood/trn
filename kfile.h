@@ -50,7 +50,6 @@ enum
     KF_MAXDAYS = 30
 };
 
-#ifdef KILLFILES
 EXT FILE* globkfp INIT(nullptr);		/* global article killer file */
 EXT FILE* localkfp INIT(nullptr);		/* local (for this newsgroup) file */
 EXT int kf_state;			/* the state of our kill files */
@@ -60,7 +59,6 @@ EXT int kf_thread_cnt;			/* # entries in the thread kfile */
 EXT int kf_changethd_cnt;		/* # entries changed from old to new */
 EXT long kf_daynum;			/* day number for thread killfile */
 EXT ART_NUM killfirst;			/* used as firstart when killing */
-#endif
 
 void kfile_init();
 int do_kfile(FILE *, int);
@@ -71,7 +69,5 @@ void change_auto_flags(ARTICLE *ap, int auto_flag);
 void clear_auto_flags(ARTICLE *ap);
 void perform_auto_flags(ARTICLE *ap, int thread_autofl, int subj_autofl, int chain_autofl);
 int edit_kfile();
-#ifdef KILLFILES
 void open_kfile(int);
-#endif
 void kf_append(char *cmd, bool local);

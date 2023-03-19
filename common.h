@@ -224,7 +224,6 @@
 			/* terminals such as older Televideos */
 #define TILDENAME	/* allow ~logname expansion */
 #undef MCHASE		/* unmark xrefed articles on m or M */
-#define KILLFILES	/* automatic article killer files */
 #define ARTSEARCH	/* pattern searches among articles */
 			/* /, ?, ^N, ^P, k, K */
 #define EDIT_DISTANCE	/* Allow -G to specify a fuzzy 'go' command */
@@ -272,10 +271,6 @@
 #  undef USE_FILTER
 # endif
 #endif /* SCORE */
-
-#ifndef ARTSEARCH
-#   undef KILLFILES
-#endif
 
 #ifndef SETUIDGID
 #   define eaccess access

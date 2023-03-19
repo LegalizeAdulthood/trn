@@ -79,9 +79,7 @@ void ng_init()
 {
     setdfltcmd();
 
-#ifdef KILLFILES
     open_kfile(KF_GLOBAL);
-#endif
     init_compex(&hide_compex);
     init_compex(&page_compex);
 }
@@ -161,13 +159,11 @@ int do_newsgroup(char *start_command)
 
     /* see if there are any special searches to do */
 
-#ifdef KILLFILES
     open_kfile(KF_LOCAL);
     if (verbose)
 	kill_unwanted(firstart,"Processing memorized commands...\n\n", true);
     else
 	kill_unwanted(firstart,"Auto-processing...\n\n",true);
-#endif
 
 #ifdef USE_FILTER
 
@@ -505,10 +501,8 @@ article_level:
 /* shut down newsgroup */
 
 cleanup:
-#ifdef KILLFILES
     kill_unwanted(firstart,"\nCleaning up...\n\n",false);
 					/* do cleanup from KILL file, if any */
-#endif
 #ifdef SCAN_ART
     if (sa_initialized)
 	sa_cleanup();
@@ -537,18 +531,14 @@ cleanup2:
 	if (!unsafe_rc_saves) {
 	    if (!write_newsrcs(multirc)) /* and update .newsrc */
 		get_anything();
-#ifdef KILLFILES
 	    update_thread_kfile();
-#endif
 	}
     }
 
-#ifdef KILLFILES
     if (localkfp) {
 	fclose(localkfp);
 	localkfp = nullptr;
     }
-#endif
     set_mode(gmode_save,mode_save);
     return exit_code;
 }					/* Whew! */

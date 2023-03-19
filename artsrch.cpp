@@ -251,7 +251,6 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	}
 	ret = SRCH_DONE;
     }
-#ifdef KILLFILES
     if (saltaway) {
 	char saltbuf[LBUFLEN], *f;
 
@@ -285,7 +284,6 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	safecpy(s,cmdlst,LBUFLEN-(s-saltbuf));
 	kf_append(saltbuf, saltaway == 2? KF_GLOBAL : KF_LOCAL);
     }
-#endif
     if (get_cmd) {
 	if (use_threads)
 	    newline();

@@ -33,8 +33,6 @@
 #include "kfile.h"
 #include "kfile.ih"
 
-#ifdef KILLFILES
-
 static bool exitcmds = false;
 
 char thread_cmd_ltr[] = "JK,j+S.m";
@@ -591,21 +589,10 @@ void perform_auto_flags(ARTICLE *ap, int thread_autofl, int subj_autofl, int cha
 	mark_as_read(ap);
 }
 
-#else /* !KILLFILES */
-
-void
-kfile_init()
-{
-    ;
-}
-
-#endif /* !KILLFILES */
-
 /* edit KILL file for newsgroup */
 
 int edit_kfile()
 {
-#ifdef KILLFILES
     int r = -1;
     char* bp;
 
@@ -660,13 +647,8 @@ int edit_kfile()
 	termdown(1);
     }
     return r;
-#else /* !KILLFILES */
-    notincl("^K");
-    return -1;
-#endif
 }
 
-#ifdef KILLFILES
 void open_kfile(int local)
 {
     char* kname = filexp(local ?
@@ -722,4 +704,3 @@ void kf_append(char *cmd, bool local)
     }
     kf_state |= KFS_NORMAL_LINES;
 }
-#endif /* KILLFILES */
