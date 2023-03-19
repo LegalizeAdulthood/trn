@@ -696,7 +696,6 @@ bool get_ng(char *what, int flags)
 	printf("\nBad newsgroup name.\n") FLUSH;
 	termdown(2);
       check_fuzzy_match:
-#ifdef EDIT_DISTANCE
 	if (fuzzyGet && (flags & GNG_FUZZY)) {
 	    flags &= ~GNG_FUZZY;
 	    if (find_close_match())
@@ -704,7 +703,6 @@ bool get_ng(char *what, int flags)
 	    else
 		return false;
 	} else
-#endif
 	    return false;
     }
     set_ngname(what);

@@ -860,8 +860,6 @@ static int srcfile_cmp(char *key, int keylen, HASHDATUM data)
     return bcmp(key, ((LISTNODE*)data.dat_ptr)->data + data.dat_len, keylen);
 }
 
-#ifdef EDIT_DISTANCE
-
 /* Edit Distance extension to trn
  *
  *	Mark Maimone (mwm@cmu.edu)
@@ -1056,5 +1054,3 @@ reask:
     settle_down();
     goto reask;
 }
-
-#endif /* EDIT_DISTANCE */

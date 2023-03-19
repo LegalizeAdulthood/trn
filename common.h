@@ -224,7 +224,6 @@
 			/* terminals such as older Televideos */
 #define TILDENAME	/* allow ~logname expansion */
 #undef MCHASE		/* unmark xrefed articles on m or M */
-#define EDIT_DISTANCE	/* Allow -G to specify a fuzzy 'go' command */
 #undef	VALIDATE_XREF_SITE /* are xrefs possibly invalid? */
 
 /*#define LONG_THREAD_NAMES	*//**/
@@ -282,9 +281,7 @@
 
 #define TCSIZE 512	/* capacity for termcap strings */
 
-#ifdef EDIT_DISTANCE
-#   define MIN_DIST 7	/* Maximum error count for acceptable match */
-#endif
+#define MIN_DIST 7 /* Maximum error count for acceptable match */
 
 /* Additional ideas:
  *	Make the do_newsgroup() routine a separate process.
@@ -743,9 +740,7 @@ EXT bool can_home INIT(false);
 EXT bool erase_each_line INIT(false);			/* fancy -e */
 EXT int findlast INIT(0);				/* -r */
 EXT bool allow_typeahead INIT(false);			/* -T */
-#ifdef EDIT_DISTANCE
 EXT bool fuzzyGet INIT(false);				/* -G */
-#endif
 EXT bool verbose INIT(true);				/* +t */
 EXT bool unbroken_subjects INIT(false);			/* -u */
 EXT bool unsafe_rc_saves INIT(false);			/* -U */

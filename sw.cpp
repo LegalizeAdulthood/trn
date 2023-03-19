@@ -201,11 +201,7 @@ void decode_switch(char *s)
 	    set_option(OI_GOTO_LINE_NUM, s+1);
 	    break;
 	case 'G':
-#ifdef EDIT_DISTANCE
 	    set_option(OI_FUZZY_NEWSGROUP_NAMES, YESorNO(upordown));
-#else
-	    notincl("-G");
-#endif        
 	    break;
 	case 'h':
 	    if (!s[1]) {
