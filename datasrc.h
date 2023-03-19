@@ -27,9 +27,6 @@ struct DATASRC
     char*	thread_dir;
     char*	auth_user;
     char*	auth_pass;
-#ifdef USE_GENAUTH
-    char*	auth_command;
-#endif
     long	lastnewgrp;	/* time of last newgroup check */
     FILE*	ov_in;		/* the overview's file handle */
     time_t	ov_opened;	/* time overview file was opened */

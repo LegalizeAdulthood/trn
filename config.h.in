@@ -322,10 +322,6 @@ typedef struct timeb Timeval; /* Structure used by ftime() */
  */
 #cmakedefine IGNOREORG		/**/
 
-/* USE_GENAUTH:
- *	This symbol, if defined, indicates that authinfo generic
- *	authentication is to be supported.
- */
 /* SERVER_NAME:
  *	When using NNTP, this symbol indicates the server name or a
  *	file to open to read the server name.
@@ -338,7 +334,6 @@ typedef struct timeb Timeval; /* Structure used by ftime() */
  *	This symbol, if defined, indicates that there's a local spool
  *	directory configured into trn.
  */
-#cmakedefine USE_GENAUTH	/**/
 #define SERVER_NAME "@SERVER_NAME@"  	/**/
 #cmakedefine SUPPORT_XTHREAD  	/**/
 #cmakedefine HAS_LOCAL_SPOOL	/**/

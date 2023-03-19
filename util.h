@@ -63,9 +63,6 @@ char *secs2text(time_t);
 char *temp_filename();
 char *get_auth_user();
 char *get_auth_pass();
-#if defined(USE_GENAUTH)
-char *get_auth_command();
-#endif
 char **prep_ini_words(INI_WORDS words[]);
 void unprep_ini_words(INI_WORDS words[]);
 void prep_ini_data(char *, char *);

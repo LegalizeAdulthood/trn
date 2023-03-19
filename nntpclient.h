@@ -9,9 +9,6 @@ struct NNTPLINK
     time_t	last_command;
     int		port_number;
     int		flags;
-#ifdef USE_GENAUTH
-    int		cookiefd;
-#endif
     bool	trailing_CR;
 };
 

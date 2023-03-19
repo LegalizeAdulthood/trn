@@ -49,9 +49,6 @@ void datasrc_init()
 	vals[DI_NNTP_SERVER] = machine;
 	vals[DI_AUTH_USER] = read_auth_file(nntp_auth_file,
 					    &vals[DI_AUTH_PASS]);
-#ifdef USE_GENAUTH
-	vals[DI_AUTH_COMMAND] = getenv("NNTPAUTH");
-#endif
 	vals[DI_FORCE_AUTH] = getenv("NNTP_FORCE_AUTH");
 	new_datasrc("default",vals);
     }
@@ -84,9 +81,6 @@ void datasrc_init()
 	if (machine) {
 	    vals[DI_AUTH_USER] = read_auth_file(nntp_auth_file,
 						&vals[DI_AUTH_PASS]);
-#ifdef USE_GENAUTH
-	    vals[DI_AUTH_COMMAND] = getenv("NNTPAUTH");
-#endif
 	    vals[DI_FORCE_AUTH] = getenv("NNTP_FORCE_AUTH");
 	}
 	new_datasrc("default",vals);
@@ -211,10 +205,6 @@ DATASRC *new_datasrc(char *name, char **vals)
 	dp->auth_user = savestr(v);
     if ((v = vals[DI_AUTH_PASS]) != nullptr)
 	dp->auth_pass = savestr(v);
-#ifdef USE_GENAUTH
-    if ((v = vals[DI_AUTH_COMMAND]) != nullptr)
-	dp->auth_command = savestr(v);
-#endif
     if ((v = vals[DI_XHDR_BROKEN]) != nullptr && (*v == 'y' || *v == 'Y'))
 	dp->flags |= DF_XHDR_BROKEN;
     if ((v = vals[DI_XREFS]) != nullptr && (*v == 'n' || *v == 'N'))

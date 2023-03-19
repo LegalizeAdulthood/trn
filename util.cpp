@@ -58,9 +58,6 @@ static char* grpdesc_export = null_export + 2;
 static char* quotechars_export = null_export + 2;
 static char* nntpserver_export = null_export + 2;
 static char* nntpfds_export = null_export + 2;
-#ifdef USE_GENAUTH
-static char* nntpauth_export = null_export + 2;
-#endif
 static char* nntpforce_export = null_export + 2;
 
 void util_init()
@@ -77,9 +74,6 @@ void util_init()
     buf[64] = '\0';
     quotechars_export = export_var("QUOTECHARS",buf);
     nntpfds_export = export_var("NNTPFDS", buf);
-#ifdef USE_GENAUTH
-    nntpauth_export = export_var("NNTP_AUTH_FDS", buf);
-#endif
     buf[3] = '\0';
     nntpforce_export = export_var("NNTP_FORCE_AUTH", buf);
 
@@ -105,19 +99,6 @@ int doshell(char *shell, char *s)
     sigset(SIGTTIN,SIG_DFL);
 #endif
     if (datasrc && (datasrc->flags & DF_REMOTE)) {
-#ifdef USE_GENAUTH
-	if (export_nntp_fds) {
-	    if (!nntplink.rd_fp) {
-		if (nntp_command("DATE") <= 0 || nntp_check() < 0)
-		    finalize(1); /*$$*/
-	    }
-	    sprintf(buf,"%d.%d.%d",(int)fileno(nntplink.rd_fp),
-		    (int)fileno(nntplink.wr_fp),nntplink.cookiefd);
-	    re_export(nntpauth_export, buf, 512);
-	}
-	else
-	    un_export(nntpauth_export);
-#endif
 	if (!export_nntp_fds || !nntplink.rd_fp)
 	    un_export(nntpfds_export);
 	else {
@@ -154,9 +135,6 @@ int doshell(char *shell, char *s)
 	    re_export(newsactive_export, "none", 512);
     } else {
 	un_export(nntpfds_export);
-#ifdef USE_GENAUTH
-	un_export(nntpauth_export);
-#endif
 	un_export(nntpserver_export);
 	un_export(nntpforce_export);
 	if (datasrc)
@@ -186,10 +164,6 @@ int doshell(char *shell, char *s)
 		 && (i == fileno(nntplink.rd_fp)
 		  || i == fileno(nntplink.wr_fp)))
 		    continue;
-#ifdef USE_GENAUTH
-		if (i == nntplink.cookiefd)
-		    continue;
-#endif
 		close(i);
 	    }
 	}
@@ -674,13 +648,6 @@ char *get_auth_pass()
 {
     return datasrc->auth_pass;
 }
-
-#if defined(USE_GENAUTH)
-char *get_auth_command()
-{
-    return datasrc->auth_command;
-}
-#endif
 
 char **prep_ini_words(INI_WORDS words[])
 {

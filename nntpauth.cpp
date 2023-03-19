@@ -19,23 +19,10 @@
 int nntp_handle_auth_err()
 {
     char last_command_save[NNTP_STRLEN];
-#ifdef USE_GENAUTH
-    char* auth_command;
-#endif
 
     /* save previous command */
     strcpy(last_command_save, g_last_command);
 
-#ifdef USE_GENAUTH
-    if ((auth_command = get_auth_command()) != nullptr) {
-	/* issue authentication request */
-	sprintf(g_ser_line, "AUTHINFO GENERIC %s", auth_command);
-	if (nntp_command(g_ser_line) <= 0
-	 || nntp_auth(auth_command) <= 0)
-	    return -2;
-    }
-    else
-#endif
     {
 	char* auth_user = get_auth_user();
 	char* auth_pass = get_auth_pass();
@@ -54,35 +41,3 @@ int nntp_handle_auth_err()
 
     return 1;
 }
-
-#ifdef USE_GENAUTH
-int nntp_auth(char *authc)
-{
-    int ret;
-
-    if (nntplink.cookiefd == 0) {
-	FILE* fp = tmpfile();
-	if (fp)
-	    nntplink.cookiefd = fileno(fp);
-    }
-
-#if 0
-    /*termlib_reset();*/
-    resetty();		/* restore tty state */
-#endif
-    export_nntp_fds = true;
-    ret = doshell(sh,authc);
-    export_nntp_fds = false;
-#if 0
-    noecho();		/* revert to cbreaking */
-    crmode();
-    /*termlib_init();*/
-#endif
-    if (ret) {
-	strcpy(g_ser_line, "502 Authentication failed");
-	return -1;
-    }
-    strcpy(g_ser_line, "281 Ok");
-    return 1;
-}
-#endif /* USE_GENAUTH */

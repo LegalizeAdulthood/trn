@@ -94,10 +94,3 @@ char *get_auth_pass()
 {
     return nntp_password;
 }
-
-#if defined(USE_GENAUTH)
-char *get_auth_command()
-{
-    return nullptr;
-}
-#endif
