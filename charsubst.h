@@ -20,4 +20,4 @@ EXT char* charsubst;
 
 int putsubstchar(int c, int limit, bool outputok);
 const char *current_charsubst();
-int strcharsubst(char *, char *, int, char_int);
+int strcharsubst(char *outb, const char *inb, int limit, char_int subst);

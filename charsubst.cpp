@@ -147,15 +147,15 @@ const char *current_charsubst()
     return show;
 }
 
-int strcharsubst(char *outb, char *inb, int limit, char_int subst)
+int strcharsubst(char *outb, const char *inb, int limit, char_int subst)
 {
-    char* s;
+    const char* s;
     int len;
     switch (subst) {
       case 'm':
-	return Latin1toASCII((Uchar*)outb, (Uchar*)inb, limit, 1);
+	return Latin1toASCII((Uchar*)outb, (const Uchar*)inb, limit, 1);
       case 'a':
-	return Latin1toASCII((Uchar*)outb, (Uchar*)inb, limit, 2);
+	return Latin1toASCII((Uchar*)outb, (const Uchar*)inb, limit, 2);
       default:
 	if ((s = strchr(inb,'\n')) != nullptr && s - inb + 1 < limit) {
 	    len = s - inb + 1;
@@ -217,7 +217,7 @@ static char* iso2asc[ISO_TABLES][96] = {
  *
  *  worst case: strlen(iso) == 4*strlen(asc)
  */
-static int Latin1toASCII(Uchar *asc, Uchar *iso, int limit, int t)
+static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t)
 {
     Uchar* s = asc;
     char* p;
