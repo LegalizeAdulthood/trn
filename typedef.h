@@ -3,14 +3,14 @@
 
 /* some important types */
 
-typedef int		NG_NUM;		/* newsgroup number */
-typedef long		ART_NUM;	/* article number */
-typedef long		ART_UNREAD;	/* could be short to save space */
-typedef long		ART_POS;	/* char position in article file */
-typedef int		ART_LINE;	/* line position in article file */
-typedef long		ACT_POS;	/* char position in active file */
-typedef unsigned int	MEM_SIZE;	/* for passing to malloc */
-typedef unsigned char	Uchar;		/* more space-efficient */
+using NG_NUM = int;            /* newsgroup number */
+using ART_NUM = long;          /* article number */
+using ART_UNREAD = long;       /* could be short to save space */
+using ART_POS = long;          /* char position in article file */
+using ART_LINE = int;          /* line position in article file */
+using ACT_POS = long;          /* char position in active file */
+using MEM_SIZE = unsigned int; /* for passing to malloc */
+using Uchar = unsigned char;   /* more space-efficient */
 
 /* addng.h */
 
