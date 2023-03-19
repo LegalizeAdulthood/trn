@@ -62,7 +62,7 @@ void univ_startup()
     user_top_load = false;
 
     /* later: make user top file an option or environment variable? */
-    if (!univ_file_load("%+/univ/top","Top Level",(char*)nullptr)) {
+    if (!univ_file_load("%+/univ/top","Top Level",nullptr)) {
 	univ_open();
 	univ_title = savestr("Top Level");
 	univ_fname = savestr("%+/univ/usertop");

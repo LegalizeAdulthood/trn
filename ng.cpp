@@ -169,13 +169,13 @@ int do_newsgroup(char *start_command)
 
     /* do they want a special top line? */
 
-    firstline = get_val("FIRSTLINE",(char*)nullptr);
+    firstline = get_val("FIRSTLINE",nullptr);
 
     /* custom line suppression, custom page ending */
 
-    if ((hideline = get_val("HIDELINE",(char*)nullptr)) != nullptr)
+    if ((hideline = get_val("HIDELINE",nullptr)) != nullptr)
 	compile(&hide_compex,hideline,true,true);
-    if ((pagestop = get_val("PAGESTOP",(char*)nullptr)) != nullptr)
+    if ((pagestop = get_val("PAGESTOP",nullptr)) != nullptr)
 	compile(&page_compex,pagestop,true,true);
 
     /* now read each unread article */
@@ -1550,7 +1550,7 @@ bool output_subject(char *ptr, int flag)
 	return true;
 
     if (!subjline) {
-	subjline = get_val("SUBJLINE",(char*)nullptr);
+	subjline = get_val("SUBJLINE",nullptr);
 	if (!subjline)
 	    subjline = "";
     }

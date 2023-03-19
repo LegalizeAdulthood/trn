@@ -831,20 +831,20 @@ int perform_status_end(long cnt, char *obj_type)
     if (!performed_article_loop)
 	cp = output_change(cp, (long)perform_cnt,
 			   sel_mode == SM_THREAD? "thread" : "subject",
-			   (char*)nullptr, "ERR|match|ed");
+			   nullptr, "ERR|match|ed");
     else if (perform_cnt != sels  && perform_cnt != -sels
 	  && perform_cnt != kills && perform_cnt != -kills) {
-	cp = output_change(cp, (long)perform_cnt, obj_type, (char*)nullptr,
+	cp = output_change(cp, (long)perform_cnt, obj_type, nullptr,
 			   "ERR|match|ed");
 	obj_type = nullptr;
     }
     if (kills) {
-	cp = output_change(cp, kills, obj_type, (char*)nullptr,
+	cp = output_change(cp, kills, obj_type, nullptr,
 			   article_status? "un||killed" : "more|less|");
 	obj_type = nullptr;
     }
     if (sels) {
-	cp = output_change(cp, sels, obj_type, (char*)nullptr, "de||selected");
+	cp = output_change(cp, sels, obj_type, nullptr, "de||selected");
 	obj_type = nullptr;
     }
     if (article_status && missing > 0) {

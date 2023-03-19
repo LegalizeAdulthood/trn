@@ -440,7 +440,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
     /* A 0 length signifies we already parsed the macro into tmpbuf,
     ** so line is just the definition. */
     if (tbsize)
-	m = dointerp(tmpbuf,tbsize,line," \t",(char*)nullptr);
+	m = dointerp(tmpbuf,tbsize,line," \t",nullptr);
     else
 	m = line;
     if (!*m)
@@ -1390,7 +1390,7 @@ reinp_in_choice:
 	char ch = *s;
 	if (*cp == '<' && ch != '\t' && (ch != ' ' || buf != s)) {
 	    if (cp[1] == '#') {
-		s = edit_buf(s, (char*)nullptr);
+		s = edit_buf(s, nullptr);
 		if (s != buf) {
 		    if (isdigit(s[-1]))
 			goto reinp_in_choice;
@@ -1399,7 +1399,7 @@ reinp_in_choice:
 		}
 	    }
 	    else {
-		s = edit_buf(s, (char*)nullptr);
+		s = edit_buf(s, nullptr);
 		goto reinp_in_choice;
 	    }
 	}

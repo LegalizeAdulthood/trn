@@ -24,9 +24,9 @@ int auto_subscribe(char *name)
 {
     char* s;
 
-    if((s = get_val("AUTOSUBSCRIBE", (char*)nullptr)) && matchlist(s, name))
+    if((s = get_val("AUTOSUBSCRIBE", nullptr)) && matchlist(s, name))
 	return ':';
-    if((s = get_val("AUTOUNSUBSCRIBE", (char*)nullptr)) && matchlist(s, name))
+    if((s = get_val("AUTOUNSUBSCRIBE", nullptr)) && matchlist(s, name))
 	return '!';
     return 0;
 }

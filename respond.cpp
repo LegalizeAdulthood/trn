@@ -153,7 +153,7 @@ int save_article()
 	    printf("Extracting article into %s using %s\n",c,extractprog) FLUSH;
 	    termdown(1);
 	    interp(cmd_buf, sizeof cmd_buf, get_val("CUSTOMSAVER",CUSTOMSAVER));
-	    invoke(cmd_buf, (char*)nullptr);
+	    invoke(cmd_buf, nullptr);
 	}
 	else if (is_mime) {
 	    printf("Extracting MIME article into %s:\n", c) FLUSH;
@@ -206,7 +206,7 @@ int save_article()
 		printf("Extracting shar into %s:\n", c) FLUSH;
 		termdown(1);
 		interp(cmd_buf,(sizeof cmd_buf),get_val("SHARSAVER",SHARSAVER));
-		invoke(cmd_buf, (char*)nullptr);
+		invoke(cmd_buf, nullptr);
 		break;
 	      case 2:
 		printf("Extracting uuencoded file into %s:\n", c) FLUSH;
@@ -217,7 +217,7 @@ int save_article()
 		mime_section->encoding = MENCODE_UUE;
 		mime_section->part = part;
 		mime_section->total = total;
-		if (!decode_piece((MIMECAP_ENTRY*)nullptr,(char*)nullptr) && *msg) {
+		if (!decode_piece((MIMECAP_ENTRY*)nullptr,nullptr) && *msg) {
 		    newline();
 		    fputs(msg,stdout);
 		}
@@ -243,7 +243,7 @@ int save_article()
 	termlib_reset();
 	resetty();		/* restore tty state */
 	if (use_pref)		/* use preferred shell? */
-	    doshell((char*)nullptr,cmd_buf);
+	    doshell(nullptr,cmd_buf);
 				/* do command with it */
 	else
 	    doshell(sh,cmd_buf);	/* do command with sh */
@@ -373,7 +373,7 @@ q to abort.\n\
 		nntp_finishbody(FB_SILENT);
 	    termlib_reset();
 	    resetty();		/* make terminal behave */
-	    i = doshell(use_pref?(char*)nullptr:SH,cmd_buf);
+	    i = doshell(use_pref?nullptr:SH,cmd_buf);
 	    termlib_init();
 	    noecho();		/* make terminal do what we want */
 	    crmode();
@@ -463,7 +463,7 @@ int view_article()
 		mime_section->encoding = MENCODE_UUE;
 		mime_section->part = part;
 		mime_section->total = total;
-		if (mc && !decode_piece(mc,(char*)nullptr) && *msg) {
+		if (mc && !decode_piece(mc,nullptr) && *msg) {
 		    newline();
 		    fputs(msg,stdout);
 		}

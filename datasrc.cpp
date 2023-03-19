@@ -294,8 +294,8 @@ bool open_datasrc(DATASRC *dp)
 		    free(dp->extra_name);
 		    dp->extra_name = nullptr;
 		    dp->act_sf.refetch_secs = 0;
-		    success = srcfile_open(&dp->act_sf,(char*)nullptr,
-					   (char*)nullptr,(char*)nullptr);
+		    success = srcfile_open(&dp->act_sf,nullptr,
+					   nullptr,nullptr);
 		}
 		else
 		    success = actfile_hash(dp);
@@ -405,7 +405,7 @@ bool actfile_hash(DATASRC *dp)
 	set_datasrc(save_datasrc);
     }
     else
-	ret = srcfile_open(&dp->act_sf, dp->newsid, (char*)nullptr, (char*)nullptr);
+	ret = srcfile_open(&dp->act_sf, dp->newsid, nullptr, nullptr);
     return ret;
 }
 
@@ -526,8 +526,8 @@ char *find_grpdesc(DATASRC *dp, char *groupname)
 	    set_datasrc(dp);
 	    if ((dp->flags & (DF_TMPGRPDESC|DF_NOXGTITLE)) == DF_TMPGRPDESC
 	     && g_net_speed < 5) {
-		(void)srcfile_open(&dp->desc_sf,(char*)nullptr,/*$$check return?*/
-				   (char*)nullptr,(char*)nullptr);
+		(void)srcfile_open(&dp->desc_sf,nullptr,/*$$check return?*/
+				   nullptr,nullptr);
 		grouplen = strlen(groupname);
 		goto try_xgtitle;
 	    }
@@ -540,7 +540,7 @@ char *find_grpdesc(DATASRC *dp, char *groupname)
 	}
 	else
 	    ret = srcfile_open(&dp->desc_sf, dp->grpdesc,
-			       (char*)nullptr, (char*)nullptr);
+			       nullptr, nullptr);
 	if (!ret) {
 	    if (dp->flags & DF_TMPGRPDESC) {
 		dp->flags &= ~DF_TMPGRPDESC;

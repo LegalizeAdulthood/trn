@@ -547,7 +547,7 @@ void mime_SetState(char *bp)
 
     while (mime_state == MESSAGE_MIME) {
 	mime_PushSection();
-	mime_ParseSubheader((FILE*)nullptr,*bp? bp : (char*)nullptr);
+	mime_ParseSubheader((FILE*)nullptr,*bp? bp : nullptr);
 	*bp = '\0';
     }
 
@@ -1266,7 +1266,7 @@ int filter_html(char *t, char *f)
 		char* s;
 		mime_section->html |= HF_NL_OK;
 		cp = line_start = do_newline(cp, HF_NL_OK);
-		fudge = do_indent((char*)nullptr);
+		fudge = do_indent(nullptr);
 		while (*cp == ' ' || *cp == '\t') cp++;
 		if ((fudge -= cp - line_start) != 0) {
 		    if (fudge < 0) {

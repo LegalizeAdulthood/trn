@@ -71,7 +71,7 @@ int escapade()
 					/* skip leading spaces */
     interp(cmd_buf, (sizeof cmd_buf), s);/* interpret any % escapes */
     resetty();				/* make sure tty is friendly */
-    doshell((char*)nullptr,cmd_buf);	/* invoke the shell */
+    doshell(nullptr,cmd_buf);	/* invoke the shell */
     noecho();				/* and make terminal */
     crmode();				/*   unfriendly again */
     if (docd) {
@@ -482,7 +482,7 @@ int perform(char *cmdlst, int output_level)
 	    if (one_command)
 		interp(tmpbuf, (sizeof tmpbuf), cmdlst);
 	    else
-		cmdlst = dointerp(tmpbuf,sizeof tmpbuf,cmdlst,":",(char*)nullptr) - 1;
+		cmdlst = dointerp(tmpbuf,sizeof tmpbuf,cmdlst,":",nullptr) - 1;
 	    perform_cnt--;
 	    if (perform(tmpbuf,output_level?2:0) < 0)
 		return -1;

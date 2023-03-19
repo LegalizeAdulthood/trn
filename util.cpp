@@ -153,7 +153,7 @@ int doshell(char *shell, char *s)
 	shell = PREFSHELL;
     termlib_reset();
 #ifdef MSDOS
-    intptr_t status = spawnl(P_WAIT, shell, shell, "/c", s, (char*)nullptr);
+    intptr_t status = spawnl(P_WAIT, shell, shell, "/c", s, nullptr);
 #else
     if ((pid = vfork()) == 0) {
 	if (datasrc && (datasrc->flags & DF_REMOTE)) {
@@ -174,9 +174,9 @@ int doshell(char *shell, char *s)
 	}
 
 	if (*s)
-	    execl(shell, shell, "-c", s, (char*)nullptr);
+	    execl(shell, shell, "-c", s, nullptr);
 	else
-	    execl(shell, shell, (char*)nullptr, (char*)nullptr, (char*)nullptr);
+	    execl(shell, shell, nullptr, nullptr, nullptr);
 	_exit(127);
     }
     sigignore(SIGINT);
@@ -872,7 +872,7 @@ bool check_ini_cond(char *cond)
 {
     int not, equal, upordown, num;
     char* s;
-    cond = dointerp(buf,sizeof buf,cond,"!=<>",(char*)nullptr);
+    cond = dointerp(buf,sizeof buf,cond,"!=<>",nullptr);
     s = buf + strlen(buf);
     while (s != buf && isspace(s[-1])) s--;
     *s = '\0';

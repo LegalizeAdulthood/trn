@@ -80,7 +80,7 @@ char *filexp(char *s)
 	printf("< %s\n",s) FLUSH;
 #endif
     /* interpret any % escapes */
-    dointerp(filename,sizeof filename,s,(char*)nullptr,(char*)nullptr);
+    dointerp(filename,sizeof filename,s,nullptr,nullptr);
 #ifdef DEBUG
     if (debug & DEB_FILEXP)
 	printf("%% %s\n",filename) FLUSH;
@@ -199,7 +199,7 @@ char *filexp(char *s)
 	    printf("$ %s\n",scrbuf) FLUSH;
 #endif
 	/* this might do some extra '%'s, but that's how the Mercedes Benz */
-	dointerp(filename,sizeof filename,scrbuf,(char*)nullptr,(char*)nullptr);
+	dointerp(filename,sizeof filename,scrbuf,nullptr,nullptr);
     }
 #ifdef DEBUG
     if (debug & DEB_FILEXP)

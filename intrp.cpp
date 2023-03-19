@@ -359,7 +359,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			*h++ = *s;
 		    } while (*s++);
 		    if (proc_sprintf) {
-			dointerp(scrbuf,sizeof scrbuf,spfbuf,(char*)nullptr,cmd);
+			dointerp(scrbuf,sizeof scrbuf,spfbuf,nullptr,cmd);
 			proc_sprintf = false;
 		    }
 		    if ((s = compile(&cond_compex,scrbuf,true,true)) != nullptr) {
@@ -1080,12 +1080,12 @@ char *interp_backslash(char *dest, char *pattern)
 
 char *interp(char *dest, int destsize, char *pattern)
 {
-    return dointerp(dest,destsize,pattern,(char*)nullptr,(char*)nullptr);
+    return dointerp(dest,destsize,pattern,nullptr,nullptr);
 }
 
 char *interpsearch(char *dest, int destsize, char *pattern, char *cmd)
 {
-    return dointerp(dest,destsize,pattern,(char*)nullptr,cmd);
+    return dointerp(dest,destsize,pattern,nullptr,cmd);
 }
 
 /* normalize a references line in place */
