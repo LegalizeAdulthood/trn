@@ -224,7 +224,6 @@
 			/* terminals such as older Televideos */
 #define TILDENAME	/* allow ~logname expansion */
 #undef MCHASE		/* unmark xrefed articles on m or M */
-#define FASTNEW		/* do optimizations on FINDNEWNG for faster startup */
 #define INNERSEARCH	/* search command 'g' with article */
 #define CATCHUP		/* catchup command at newsgroup level */
 #define NGSEARCH	/* newsgroup pattern matching */
