@@ -1,7 +1,7 @@
 /* wildmat.h
  */
 
-bool wildmat(char *text, char *p);
+bool wildmat(const char *text, const char *p);
 #ifdef	TEST
 int main();
 #endif

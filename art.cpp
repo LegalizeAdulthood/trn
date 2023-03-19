@@ -619,9 +619,9 @@ reask_pager:
     } /* end of page loop */
 }
 
-bool maybe_set_color(char *cp, bool backsearch)
+bool maybe_set_color(const char *cp, bool backsearch)
 {
-    char ch = (cp == artbuf || cp == art_line? 0 : cp[-1]);
+    const char ch = (cp == artbuf || cp == art_line? 0 : cp[-1]);
     if (ch == '\001')
 	color_object(COLOR_MIMEDESC, false);
     else if (ch == '\002')

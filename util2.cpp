@@ -29,7 +29,7 @@ static char* tildedir = nullptr;
 
 /* copy a string to a safe spot */
 
-char *savestr(char *str)
+char *savestr(const char *str)
 {
     char* newaddr = safemalloc((MEM_SIZE)(strlen(str)+1));
 
@@ -38,7 +38,7 @@ char *savestr(char *str)
 }
 
 /* safe version of string copy */
-char *safecpy(char *to, char *from, int len)
+char *safecpy(char *to, const char *from, int len)
 {
     char* dest = to;
 
@@ -304,7 +304,7 @@ int strncasecmp(const char *s1, const char *s2, int len)
 }
 #endif
 
-char *read_auth_file(char *file, char **pass_ptr)
+char *read_auth_file(const char *file, char **pass_ptr)
 {
     FILE* fp;
     char* strptr[2];
@@ -327,7 +327,8 @@ char *read_auth_file(char *file, char **pass_ptr)
 }
 
 #ifdef MSDOS
-int getuid() {
+int getuid()
+{
     return 2;
 }
 #endif

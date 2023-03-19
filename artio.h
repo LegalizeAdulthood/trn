@@ -28,7 +28,7 @@ FILE *artopen(ART_NUM, ART_POS);
 void artclose();
 int seekart(ART_POS);
 ART_POS tellart();
-char *readart(char *, int);
+char *readart(char *s, int limit);
 void clear_artbuf();
 int seekartbuf(ART_POS);
 char *readartbuf(bool view_inline);

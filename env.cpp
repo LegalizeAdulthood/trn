@@ -298,7 +298,7 @@ bool set_p_host_name(char *tmpbuf)
     return hostname_ok;
 }
 
-char *get_val(char *nam, char *def)
+char *get_val(const char *nam, char *def)
 {
     char* val;
 
@@ -357,7 +357,7 @@ void un_export(char *export_val)
     }
 }
 
-void re_export(char *export_val, char *new_val, int limit)
+void re_export(char *export_val, const char *new_val, int limit)
 {
     if (export_val[-1] == '=' && export_val[-2] == '_' && !export_val[1])
 	export_val[-2] = export_val[0];

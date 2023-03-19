@@ -83,7 +83,7 @@ void util_init()
     
 /* fork and exec a shell command */
 
-int doshell(char *shell, char *s)
+int doshell(const char *shell, const char *s)
 {
 #ifndef MSDOS
     WAIT_STATUS status;

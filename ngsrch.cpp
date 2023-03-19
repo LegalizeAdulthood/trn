@@ -170,10 +170,10 @@ bool ng_wanted(NGDATA *np)
     return execute(&ngcompex,np->rcline) != nullptr;
 }
 
-char *ng_comp(COMPEX *compex, char *pattern, bool RE, bool fold)
+char *ng_comp(COMPEX *compex, const char *pattern, bool RE, bool fold)
 {
     char ng_pattern[128];
-    char* s = pattern;
+    const char* s = pattern;
     char* d = ng_pattern;
 
     if (!*s) {

@@ -223,7 +223,7 @@ static void new_local_groups(DATASRC *dp)
     dp->act_sf.recent_cnt = filestat.st_size;
 }
 
-static void add_to_hash(HASHTABLE *ng, char *name, int toread, char_int ch)
+static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch)
 {
     HASHDATUM data;
     ADDGROUP* node;
@@ -250,7 +250,7 @@ static void add_to_hash(HASHTABLE *ng, char *name, int toread, char_int ch)
     hashstore(ng, name, namelen, data);
 }
 
-static void add_to_list(char *name, int toread, char_int ch)
+static void add_to_list(const char *name, int toread, char_int ch)
 {
     ADDGROUP* node = first_addgroup;
 

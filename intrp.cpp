@@ -190,7 +190,7 @@ getout:
 
 /* interpret interpolations */
 
-char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cmd)
+char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, char *cmd)
 {
     char* subj_buf = nullptr;
     char* ngs_buf = nullptr;

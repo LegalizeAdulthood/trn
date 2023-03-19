@@ -19,7 +19,7 @@ bool export_nntp_fds = false;
 
 char* nntp_password = nullptr;
 
-int doshell(char *sh, char *cmd)
+int doshell(const char *sh, const char *cmd)
 {
     return system(cmd);
 }
@@ -64,7 +64,7 @@ char *saferealloc(char *where, MEM_SIZE size)
 }
 #endif
 
-char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cmd)
+char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, char *cmd)
 {
     extern char* g_dot_dir;
     if (*pattern == '%' && pattern[1] == '.') {
@@ -75,7 +75,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
     }
     else
 	safecpy(dest, pattern, destsize);
-    return stoppers; /* This is wrong on purpose */
+    return nullptr; /* This is wrong on purpose */
 }
 
 int nntp_handle_nested_lists()

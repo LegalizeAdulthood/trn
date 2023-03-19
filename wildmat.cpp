@@ -52,7 +52,7 @@
 /*
 **  Match text and p, return true, false.
 */
-static bool DoMatch(char *text, char *p)
+static bool DoMatch(const char *text, const char *p)
 {
     int	last;
     int	matched;
@@ -110,7 +110,7 @@ static bool DoMatch(char *text, char *p)
 /*
 **  User-level routine.  Returns true or false.
 */
-bool wildmat(char *text, char *p)
+bool wildmat(const char *text, const char *p)
 {
 #ifdef	OPTIMIZE_JUST_STAR
     if (p[0] == '*' && p[1] == '\0')

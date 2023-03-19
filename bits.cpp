@@ -151,7 +151,7 @@ void rc_to_bits()
     ngptr->toread = unread;
 }
 
-bool set_firstart(char *s)
+bool set_firstart(const char *s)
 {
     while (*s == ' ') s++;
 

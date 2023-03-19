@@ -132,7 +132,7 @@ void case_fold(bool which)
 
 /* Compile the given regular expression into a [secret] internal format */
 
-char *compile(COMPEX *compex, char *strp, bool RE, bool fold)
+char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
 {
     int c;
     char* ep;
@@ -370,7 +370,7 @@ char *execute(COMPEX *compex, char *addr)
  
 /* advance the match of the regular expression starting at ep along the
    string lp, simulates an NDFSA */
-bool advance(COMPEX *compex, char *lp, char *ep)
+bool advance(COMPEX *compex, char *lp, const char *ep)
 {
     char* curlp;
     Uchar* trt = trans;
@@ -530,7 +530,7 @@ bool advance(COMPEX *compex, char *lp, char *ep)
     return false;
 }
  
-bool backref(COMPEX *compex, int i, char *lp)
+bool backref(COMPEX *compex, int i, const char *lp)
 {
     char* bp;
  
@@ -544,7 +544,7 @@ bool backref(COMPEX *compex, int i, char *lp)
     return false;
 }
 
-bool cclass(char *set, int c, int af)
+bool cclass(const char *set, int c, int af)
 {
     c &= 0177;
 #if BITSPERBYTE == 8

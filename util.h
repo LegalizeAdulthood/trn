@@ -38,7 +38,7 @@ struct INI_WORDS
 #define safefree0(ptr)  if (!ptr) ; else free((char*)(ptr)), (ptr)=0
 
 void util_init();
-int doshell(char *, char *);
+int doshell(const char *sh, const char *cmd);
 #ifndef USE_DEBUGGING_MALLOC
 char *safemalloc(MEM_SIZE);
 char *saferealloc(char *, MEM_SIZE);

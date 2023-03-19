@@ -18,7 +18,7 @@ EXT int g_net_speed INIT(20);		/* how fast our net-connection is */
 bool env_init(char *tcbuf, bool lax);
 bool set_user_name(char *tmpbuf);
 bool set_p_host_name(char *tmpbuf);
-char *get_val(char *nam, char *def);
+char *get_val(const char *nam, char *def);
 char *export_var(const char *nam, const char *val);
 void un_export(char *export_val);
-void re_export(char *export_val, char *new_val, int limit);
+void re_export(char *export_val, const char *new_val, int limit);
