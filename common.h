@@ -474,7 +474,22 @@
 #define FORWARDPOSTER MAILPOSTER
 
 #ifndef FORWARDHEADER	/* % */
-#   define FORWARDHEADER "To: %\"\n\nTo: \"\nSubject: %(%i=^$?:%[subject] (fwd\\)\n%(%{FROM}=^$?:From: %{FROM}\n)%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\n)X-Newsgroups: %n\nIn-Reply-To: %i)\n%(%[references]=^$?:References: %[references]\n)Organization: %o\nMime-Version: 1.0\nContent-Type: multipart/mixed; boundary=\"=%$%^#=--\"\nCc: \nBcc: \n\n"
+#define FORWARDHEADER                                                                                                  \
+    "To: %\"\n"                                                                                                        \
+    "\n"                                                                                                               \
+    "To: \"\n"                                                                                                         \
+    "Subject: %(%i=^$?:%[subject] (fwd\\)\n"                                                                           \
+    "%(%{FROM}=^$?:From: %{FROM}\n)"                                                                                   \
+    "%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\n)"                                                                         \
+    "X-Newsgroups: %n\n"                                                                                               \
+    "In-Reply-To: %i)\n"                                                                                               \
+    "%(%[references]=^$?:References: %[references]\n)"                                                                 \
+    "Organization: %o\n"                                                                                               \
+    "Mime-Version: 1.0\n"                                                                                              \
+    "Content-Type: multipart/mixed; boundary=\"=%$%^#=--\"\n"                                                          \
+    "Cc: \n"                                                                                                           \
+    "Bcc: \n"                                                                                                          \
+    "\n"
 #endif
 
 #ifndef FORWARDMSG		/* % */
