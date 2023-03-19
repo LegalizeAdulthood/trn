@@ -132,11 +132,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	}
 	while (isspace(*s) || *s == ':') s++;
 	if (*s) {
-#ifdef OLD_RN_WAY
-	    if (*s == 'm' || *s == 'M')
-#else
 	    if (*s == 'm')
-#endif
 		doread = true;
 	    if (*s == 'k')		/* grandfather clause */
 		*s = 'j';

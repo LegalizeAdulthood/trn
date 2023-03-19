@@ -193,13 +193,6 @@ char *ng_comp(COMPEX *compex, char *pattern, bool RE, bool fold)
 	    *d++ = '.';
 	    *d++ = *s;
 	}
-#if OLD_RN_WAY
-	else if (strnEQ(s,"all",3)) {
-	    *d++ = '.';
-	    *d++ = '*';
-	    s += 2;
-	}
-#endif
 	else
 	    *d++ = *s;
     }

@@ -1038,11 +1038,7 @@ void getcmd(char *whatbuf)
 
 tryagain:
     curmap = topmap;
-#ifdef OLD_RN_WAY
-    no_macros = (whatbuf != buf && !macro_pending()); 
-#else
     no_macros = (whatbuf != buf && !xmouse_is_on); 
-#endif
     for (;;) {
 	int_count = 0;
 	errno = 0;
