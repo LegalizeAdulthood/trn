@@ -43,9 +43,7 @@
 #include "ng.h"
 #include "decode.h"
 #include "scan.h"
-#ifdef SCORE
 #include "score.h"
-#endif
 #include "mempool.h"
 #include "color.h"
 #include "univ.h"

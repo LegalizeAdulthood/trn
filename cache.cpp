@@ -30,9 +30,7 @@
 #include "rt-process.h"
 #include "rt-select.h"
 #include "rt-util.h"
-#ifdef SCORE
 #include "score.h"
-#endif
 #include "env.h"
 #include "util.h"
 #include "util2.h"
@@ -752,10 +750,8 @@ void cache_until_key()
 	}
     }
 
-# ifdef SCORE
     if (!input_pending() && sc_initialized)
 	sc_lookahead(true,true);
-# endif
 
     setspin(SPIN_OFF);
     untrim_cache = false;

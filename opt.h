@@ -120,12 +120,8 @@ EXT char* yesorno[2]
 # define OI_SCANA_DISPKEYW		(OI_SCANA_DISPSUMMARY+1)
 # define OI_SCAN_LAST			(OI_SCANA_DISPKEYW)
 
-#ifdef SCORE
 # define OI_SC_VERBOSE			(OI_SCAN_LAST+2)
 # define OI_SCORE_LAST			(OI_SC_VERBOSE)
-#else
-# define OI_SCORE_LAST			(OI_SCAN_LAST)
-#endif
 
 extern INI_WORDS options_ini[];
 EXT char** option_def_vals;

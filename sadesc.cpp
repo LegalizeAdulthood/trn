@@ -21,9 +21,7 @@
 #include "sadisp.h"
 #include "sathread.h"
 #include "scan.h"
-#ifdef SCORE
 #include "score.h"
-#endif
 #include "INTERN.h"
 #include "sadesc.h"
 
@@ -125,13 +123,11 @@ char *sa_get_desc(long e, int line, bool trunc)
 	    sprintf(sa_buf,"%6d ",(int)artnum);
 	    strcat(desc_buf,sa_buf);
 	}
-#ifdef SCORE
 	if (sc_initialized && sa_mode_desc_score) {
 	    /* we'd like the score now */
 	    sprintf(sa_buf,"[%4d] ",sc_score_art(artnum,true));
 	    strcat(desc_buf,sa_buf);
 	}
-#endif /* SCORE */
 	if (sa_mode_desc_threadcount) {
 	    sprintf(sa_buf,"(%3d) ",sa_subj_thread_count(e));
 	    strcat(desc_buf,sa_buf);
@@ -169,10 +165,8 @@ char *sa_get_desc(long e, int line, bool trunc)
 	    /* if variable widths used later, use them */
 	    if (sa_mode_desc_artnum)
 		i += 7;
-#ifdef SCORE
 	    if (sc_initialized && sa_mode_desc_score)
 		i += 7;
-#endif
 	    if (sa_mode_desc_threadcount)
 		i += 6;
 	    s2 = desc_buf;
@@ -200,10 +194,8 @@ char *sa_get_desc(long e, int line, bool trunc)
 	    /* if variable widths used later, use them */
 	    if (sa_mode_desc_artnum)
 		i += 7;
-#ifdef SCORE
 	    if (sc_initialized && sa_mode_desc_score)
 		i += 7;
-#endif
 	    if (sa_mode_desc_threadcount)
 		i += 6;
 	    s2 = desc_buf;

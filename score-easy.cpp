@@ -6,7 +6,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef SCORE
 #include "search.h"
 #include "term.h"
 #include "util.h"
@@ -215,4 +214,3 @@ char *sc_easy_command()
     }
     return nullptr;
 }
-#endif /* SCORE */

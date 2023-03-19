@@ -802,7 +802,6 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		case 'X':			/* rn library */
 		    s = g_rn_lib;
 		    break;
-#ifdef SCORE
 		case 'y':	/* from line with *-shortening */
 		    if (!in_ng) {
 			s = nullstr;
@@ -847,7 +846,6 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			s = from_buf;
 		    }
 		    break;
-#endif /* SCORE */
 		case 'Y':
 		    s = g_tmp_dir;
 		    break;

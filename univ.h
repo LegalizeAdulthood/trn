@@ -70,10 +70,8 @@ struct UNIV_VIRT_DATA
 struct UNIV_VIRT_GROUP
 {
     char* ng;
-#ifdef SCORE
     int minscore;
     int maxscore;
-#endif
     char flags;
 };
 
@@ -107,9 +105,7 @@ struct UNIV_ITEM
     int flags;				/* for selector */
     int type;				/* what kind of object is it? */
     char* desc;				/* default description */
-#ifdef SCORE
     int score;
-#endif
     UNIV_DATA data;			/* describes the object */
 };
 

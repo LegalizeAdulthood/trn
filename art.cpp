@@ -42,9 +42,7 @@
 #include "rt-wumpus.h"
 #include "charsubst.h"
 #include "scanart.h"
-#ifdef SCORE
 #include "score.h"		/* for sc_lookahead() */
-#endif
 #include "color.h"
 #include "INTERN.h"
 #include "art.h"
@@ -927,10 +925,8 @@ int page_switch()
       case '+':
       case Ctl('v'):		/* verify crypto signature */
       case ';':			/* enter article scan mode */
-#ifdef SCORE
       case '"':			/* append to local scorefile */
       case '\'':		/* score command */
-#endif
       case '#':
       case '$':
       case '&':

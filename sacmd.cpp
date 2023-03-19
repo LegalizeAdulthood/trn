@@ -35,9 +35,7 @@
 #include "sadisp.h"
 #include "sadesc.h"
 #include "sathread.h"
-#ifdef SCORE
 #include "score.h"
-#endif
 #include "util.h"
 #include "util2.h"
 #include "INTERN.h"
@@ -78,7 +76,6 @@ int sa_docmd()
 	sa_art = artnum; /* give it somewhere to point */
 	s_save_context();	/* for possible later changes */
 	return SA_FAKE;	/* fake up the command. */
-#ifdef SCORE
       case 'K':	/* kill below a threshold */
 	*buf = ' ';				/* for finish_cmd() */
 	if (!s_finish_cmd("Kill below or equal score:"))
@@ -98,7 +95,6 @@ int sa_docmd()
 	s_refill = true;
 	s_ref_top = true;	/* refresh # of articles */
 	break;
-#endif /* SCORE */
       case 'D':	/* kill unmarked "on" page */
 	for (i = 0; i <= s_bot_ent; i++)
     /* This is a difficult decision, with no obviously good behavior. */
@@ -173,7 +169,6 @@ int sa_docmd()
 	s_refill = true;
 	s_ref_all = true;
 	break;
-#ifdef SCORE
       case 'o':	/* toggle between score and arrival orders */
 	s_rub_ptr();
 	if (sa_mode_order==1)
@@ -224,7 +219,6 @@ int sa_docmd()
 	sc_score_cmd("e");	/* edit scorefile */
 	eat_typeahead();	/* stay in control. */
 	break;
-#endif /* SCORE */
       case '\t':	/* TAB: toggle threadcount display */
 	sa_mode_desc_threadcount = !sa_mode_desc_threadcount;
 	s_ref_desc = 0;
@@ -243,7 +237,6 @@ int sa_docmd()
 	for (i = 1; i < sa_num_ents; i++)
 	    s_order_add(i);		/* duplicates ignored */
 	if (sa_eligible(s_first()) || s_next_elig(s_first())) {
-#ifdef SCORE
 #ifdef PENDING
 	    if (sa_mode_read_elig) {
 		sc_fill_read = true;
@@ -251,7 +244,6 @@ int sa_docmd()
 	    }
 	    if (!sa_mode_read_elig)
 		sc_fill_read = false;
-#endif
 #endif
 	    s_ref_top = true;
 	    s_rub_ptr();
@@ -533,7 +525,6 @@ int sa_docmd()
 	eat_typeahead();
 	break;
 #endif
-#ifdef SCORE
       case '"':			/* append to local SCORE file */
 	s_go_bot();
 	s_ref_all = true;
@@ -563,7 +554,6 @@ int sa_docmd()
 	(void)get_anything();
 	eat_typeahead();
 	break;
-#endif
       default:
 	s_beep();
 	return 0;

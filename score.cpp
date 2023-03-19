@@ -5,8 +5,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef SCORE
-/* if SCORE is undefined, no code should be compiled */
 /* sort the following includes later */
 #include "list.h"
 #include "hash.h"
@@ -508,4 +506,3 @@ void sc_kill_threshold(int thresh)
         }
     }
 }
-#endif /* SCORE */

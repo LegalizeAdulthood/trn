@@ -47,10 +47,8 @@ struct ARTICLE
     ARTICLE* subj_next;		/* next article in subject order */
     long bytes;
     long lines;
-#ifdef SCORE
     int score;
     unsigned short scoreflags;
-#endif
     unsigned short flags;	/* article state flags */
     unsigned short flags2;	/* more state flags */
     unsigned short autofl;	/* auto-processing flags */

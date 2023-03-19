@@ -27,9 +27,7 @@
 #include "util2.h"
 #include "rt-mt.h"
 #include "rt-ov.h"
-#ifdef SCORE
 #include "score.h"
-#endif
 #include "rt-page.h"
 #include "rt-process.h"
 #include "rt-select.h"
@@ -1336,8 +1334,6 @@ static int subjorder_lines(const SUBJECT **spp1, const SUBJECT**spp2)
     return eq? eq > 0? sel_direction : -sel_direction : subjorder_date(spp1,spp2);
 }
 
-#ifdef SCORE
-
 /* for now, highest eligible article score */
 static int subject_score_high(const SUBJECT *sp)
 {
@@ -1371,7 +1367,6 @@ static int subjorder_score(const SUBJECT** spp1, const SUBJECT** spp2)
 	return (sc2 - sc1) * sel_direction;
     return subjorder_date(spp1, spp2);
 }
-#endif
 
 static int threadorder_subject(const SUBJECT **spp1, const SUBJECT**spp2)
 {
@@ -1451,8 +1446,6 @@ static int threadorder_lines(const SUBJECT **spp1, const SUBJECT**spp2)
     return subjorder_date(spp1, spp2);
 }
 
-#ifdef SCORE
-
 static int thread_score_high(const SUBJECT *tp)
 { 
     const SUBJECT* sp;
@@ -1487,7 +1480,6 @@ static int threadorder_score(const SUBJECT** spp1, const SUBJECT** spp2)
 	return (sc2 - sc1) * sel_direction;
     return threadorder_date(spp1, spp2);
 }
-#endif
 
 /* Sort the subjects according to the chosen order.
 */
@@ -1521,13 +1513,11 @@ void sort_subjects()
 	sort_procedure = (sel_mode == SM_THREAD?
 			  threadorder_lines : subjorder_lines);
 	break;
-#ifdef SCORE
       /* if SCORE is undefined, use the default above */
       case SS_SCORE:
 	sort_procedure = (sel_mode == SM_THREAD?
 			  threadorder_score : subjorder_score);
 	break;
-#endif
     }
 
     subj_list = (SUBJECT**)safemalloc(subject_count * sizeof (SUBJECT*));
@@ -1603,14 +1593,12 @@ static int artorder_lines(const ARTICLE **art1, const ARTICLE **art2)
     return eq? eq > 0? sel_direction : -sel_direction : artorder_date(art1,art2);
 }
 
-#ifdef SCORE
 static int artorder_score(const ARTICLE **art1, const ARTICLE **art2)
 {
     int eq = sc_score_art(article_num(*art2),false)
 	   - sc_score_art(article_num(*art1),false);
     return eq? eq > 0? sel_direction : -sel_direction : 0;
 }
-#endif
 
 /* Sort the articles according to the chosen order.
 */
@@ -1644,11 +1632,9 @@ void sort_articles()
       case SS_LINES:
 	sort_procedure = artorder_lines;
 	break;
-#ifdef SCORE
       case SS_SCORE:
 	sort_procedure = artorder_score;
 	break;
-#endif
     }
     sel_page_app = 0;
     qsort(artptr_list, artptr_list_size, sizeof (ARTICLE*), ((int(*)(void const *, void const *))sort_procedure));

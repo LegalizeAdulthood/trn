@@ -26,9 +26,7 @@
 #include "sdisp.h"
 #include "sacmd.h"	/* sa_docmd */
 #include "samain.h"
-#ifdef SCORE
 #include "score.h"
-#endif
 #include "univ.h"
 #include "INTERN.h"
 #include "scmd.h"

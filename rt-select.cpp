@@ -2660,7 +2660,6 @@ static int universal_commands(char_int ch)
 	if (another_command(help_univ()))
 	    return DS_DOCOMMAND;
         return DS_DISPLAY;
-#ifdef SCORE
       case 'O':
 	if (!sel_rereading)
 	    sel_cleanup();
@@ -2703,7 +2702,6 @@ q does nothing.\n\n\
 	sel_page_univ = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
-#endif
       case '~':
 	univ_virt_pass();
 	sel_cleanup();

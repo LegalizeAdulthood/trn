@@ -25,9 +25,7 @@
 #include "head.h"		/* fetchsubj */
 #include "rthread.h"
 #include "rt-select.h"		/* sel_mode */
-#ifdef SCORE
 #include "score.h"
-#endif
 #include "INTERN.h"
 #include "samisc.h"
 
@@ -58,11 +56,9 @@ bool sa_basic_elig(long a)
 	return false;
     if (sa_mode_zoom && !sa_selected1(a))
 	return false;
-#ifdef SCORE
     if (sa_mode_order == 2)	/* score order */
 	if (!SCORED(artnum))
 	    return false;
-#endif
     /* now just check availability */
     if (is_unavailable(artnum)) {
 	if (!was_read(artnum))
@@ -131,11 +127,9 @@ void sa_selthreads()
 		 && (!(ap->flags & AF_UNREAD) ^ want_unread)) {
 		    /* this was a trn-thread selected article */
 		    sa_select1(sa_artnum_to_ent(art));
-#ifdef SCORE
     /* if scoring, make sure that this article is scored... */
 		    if (sa_mode_order == 2)	/* score order */
 			sc_score_art(art,false);
-#endif
 		    }
 		}/* for all articles */
 	    }/* if selected */
@@ -181,7 +175,6 @@ int sa_compare(long a, long b)
 {
     long i,j;
     
-#ifdef SCORE
     if (sa_mode_order == 2) {	/* score order */
 	/* do not score the articles here--move the articles to
 	 * the end of the list if unscored.
@@ -214,7 +207,6 @@ int sa_compare(long a, long b)
 	    return 1;
 	}
     }
-#endif
     if (a < b)
 	return -1;
     return 1;

@@ -22,9 +22,7 @@
 #include "util.h"
 #include "util2.h"
 #include "ndir.h"
-#ifdef SCORE
 #include "score.h"
-#endif
 #include "scan.h"
 #include "scanart.h"
 #include "nntpclient.h"
@@ -139,10 +137,8 @@ void grow_ng(ART_NUM newlast)
 	} while (lastart < newlast);
 	article_list->high = lastart;
 	thread_grow();
-#ifdef SCORE
 	/* Score all new articles now just in case they weren't done above. */
 	sc_fill_scorelist(tmpfirst,newlast);
-#endif
 	if (verbose)
 	    sprintf(buf,
 		"%ld more article%s arrived -- processing memorized commands...\n\n",

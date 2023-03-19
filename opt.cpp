@@ -29,10 +29,8 @@
 #include "sw.h"
 #include "scan.h"
 #include "scanart.h"
-#ifdef SCORE
 #include "score.h"
 #include "scorefile.h"
-#endif
 #include "color.h"
 #include "INTERN.h"
 #include "opt.h"
@@ -548,9 +546,7 @@ void set_option(int num, char *s)
 	sa_mode_desc_author = YES(s);
 	break;
       case OI_SCANA_DISPSCORE:
-#ifdef SCORE
 	sa_mode_desc_score = YES(s);
-#endif
 	break;
       case OI_SCANA_DISPSUBCNT:
 	sa_mode_desc_threadcount = YES(s);
@@ -567,11 +563,9 @@ void set_option(int num, char *s)
       case OI_SCANA_DISPKEYW:
 	sa_mode_desc_keyw = YES(s);
 	break;
-#ifdef SCORE
       case OI_SC_VERBOSE:
 	sf_verbose = YES(s);
 	break;
-#endif
       case OI_USE_SEL_NUM:
 	UseSelNum = YES(s);
 	break;
@@ -929,10 +923,8 @@ char *option_value(int num)
 	return YESorNO(sa_mode_desc_summary);
       case OI_SCANA_DISPKEYW:
 	return YESorNO(sa_mode_desc_keyw);
-#ifdef SCORE
       case OI_SC_VERBOSE:
 	return YESorNO(sf_verbose);
-#endif
       case OI_USE_SEL_NUM:
 	return YESorNO(UseSelNum);
 	break;

@@ -6,7 +6,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef SCORE
 #include "list.h"
 #include "hash.h"
 #include "cache.h"
@@ -429,4 +428,3 @@ void sc_save_scores()
 	a = sc_sv_make_line(a);
     waiting = false;
 }
-#endif /* SCORE */

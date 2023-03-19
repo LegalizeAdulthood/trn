@@ -62,11 +62,7 @@ EXT bool sa_mode_read_elig INIT(false);
  * 1: Arrival order
  * 2: Descending score
  */
-#ifdef SCORE
 EXT int sa_mode_order INIT(2);
-#else
-EXT int sa_mode_order INIT(1);
-#endif
 
 /* if true, don't move the cursor after marking or selecting articles */
 EXT bool sa_mark_stay INIT(false);
@@ -84,11 +80,7 @@ EXT bool sa_follow INIT(true);
 /* Options: what to display */
 EXT bool sa_mode_desc_artnum INIT(false);	/* show art#s */
 EXT bool sa_mode_desc_author INIT(true);	/* show author */
-#ifdef SCORE
 EXT bool sa_mode_desc_score INIT(true);		/* show score */
-#else
-EXT bool sa_mode_desc_score INIT(false);	/* show score */
-#endif
 /* flags to determine whether to display various things */
 EXT bool sa_mode_desc_threadcount INIT(false);
 EXT bool sa_mode_desc_subject INIT(true);

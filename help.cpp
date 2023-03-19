@@ -73,12 +73,10 @@ p,P,^P	Same as n,N,^N, only going backwards.\n\
     (cmd = print_lines("\
 ;	Enter article-scan mode.\n\
 ",NOMARKING)) ||
-#ifdef SCORE
     (cmd = print_lines("\
 Scoring commands are enabled.\n\
 (Type h at end of article for description of Scoring commands.)\n\
 ",NOMARKING)) ||
-#endif
     (cmd = print_lines("\
 The following commands also take you to the end of the article.\n\
 Type h at end of article for a description of these commands:\n\
@@ -213,7 +211,6 @@ u	Unsubscribe from this newsgroup.\n\
 q	Quit this newsgroup for now.\n\
 Q	Quit newsgroup, staying at current newsgroup.\n\
 ",NOMARKING))
-#ifdef SCORE
     || (cmd = print_lines("\
 Scoring commands:\n\
 ",STANDOUT)) ||
@@ -238,7 +235,6 @@ Scoring commands:\n\
 's	Show scoring rules which contributed to this article's score.\n\
 't	Test command: may do varying things.  (will usually be disabled)\n\
 ",NOMARKING))
-#endif /* SCORE */
     )
 	return cmd;
     return 0;
@@ -502,12 +498,10 @@ W	Where thread files are saved\n\
 x	News library directory\n\
 X	Trn library directory\n\
 ",NOMARKING)) ||
-#ifdef SCORE
     (cmd = print_lines("\
 y	From line with the domain abbreviated.\n\
 	(foo@x.y.bar.edu (Foo's Bar) -> foo@*.bar.edu (Foo's Bar))\n\
 ",NOMARKING)) ||
-#endif
     (cmd = print_lines("\
 Y	The current tmp dir (usually /tmp)\n\
 z	Length of current article in bytes\n\
@@ -891,7 +885,6 @@ TAB	Toggle display of \"threadcount\" (# of articles following this one\n\
 a	Toggle display of authors.\n\
 %%	Toggle display of article numbers.\n\
 ",NOMARKING))
-#ifdef SCORE
     || (cmd = print_lines("\
 Scoring commands:\n\
 ",STANDOUT)) ||
@@ -927,7 +920,6 @@ R	Rescores all articles.  (same as 'r at article level).\n\
 's	Show scoring rules which contributed to this article's score.\n\
 't	Test command: may do varying things.  (will usually be disabled)\n\
 ",NOMARKING))
-#endif /* SCORE */
     )
 	return cmd;
 #endif /* !UNDEF (later the !doshell part) */

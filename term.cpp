@@ -22,9 +22,7 @@
 #include "init.h"
 #include "art.h"
 #include "rt-select.h"
-#ifdef SCORE
 #include "score.h"		/* for sc_lookahead */
-#endif
 #include "scan.h"
 #include "sdisp.h"
 #include "scanart.h"

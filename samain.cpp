@@ -13,9 +13,7 @@
 #include "bits.h"
 #include "head.h" /* for fetching misc header lines... */
 #include "util.h"
-#ifdef SCORE
 #include "score.h"
-#endif
 #include "scan.h"
 #include "scmd.h"
 #include "sdisp.h"
@@ -45,13 +43,11 @@ void sa_init()
 	sa_mode_read_elig = true;	/* unread+read in some situations */
     if (!sa_initarts())			/* init article array(s) */
 	return;				/* ... no articles */
-#ifdef SCORE
 #ifdef PENDING
     if (sa_mode_read_elig) {
 	sc_fill_read = true;
 	sc_fill_max = absfirst - 1;
     }
-#endif
 #endif
     s_save_context();
     sa_initialized = true;		/* all went well... */
@@ -155,7 +151,6 @@ int sa_mainloop()
 {
     int i;
 
-#ifdef SCORE
 /* Eventually, strn will need a variable in score.[ch] set when the
  * scoring initialization *failed*, so that strn could try to
  * initialize the scoring again or decide to disallow score operations.)
@@ -170,7 +165,6 @@ int sa_mainloop()
 	if (!sc_initialized)
 	    sa_mode_order = 1;	/* arrival order */
     }
-#endif
     /* redraw it *all* */
     s_ref_all = true;
     if (s_top_ent < 1)
@@ -196,12 +190,7 @@ int sa_mainloop()
 void sa_lookahead()
 {
 #ifdef PENDING
-#ifdef SCORE
     sc_lookahead(true,false);		/* do resorting now... */
-#else /* !SCORE */
-/* consider looking forward from the last article on the page... */
-    ;				/* so the function isn't empty */
-#endif /* SCORE */
 #else /* !PENDING */
     ;				/* so the function isn't empty */
 #endif

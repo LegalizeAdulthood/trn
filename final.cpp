@@ -25,10 +25,8 @@
 #include "artio.h"
 #include "intrp.h"
 #include "kfile.h"
-#ifdef SCORE
 #include "score.h"
 #include "scoresave.h"
-#endif
 #include "INTERN.h"
 #include "final.h"
 #ifdef MSDOS
@@ -96,9 +94,7 @@ void finalize(int status)
     int i;
     char* s;
 
-#ifdef SCORE
     sc_sv_savefile();	/* save any scores from memory to disk */
-#endif
     update_thread_kfile();
     color_default();
     termlib_reset();

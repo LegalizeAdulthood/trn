@@ -45,9 +45,7 @@
 //#include "scan.h"
 #include "smisc.h"
 #include "scanart.h"
-#ifdef SCORE
 #include "score.h"
-#endif
 #include "univ.h"
 #include "artstate.h"
 #include "color.h"
@@ -158,10 +156,8 @@ int do_newsgroup(char *start_command)
     else
 	kill_unwanted(firstart,"Auto-processing...\n\n",true);
 
-#ifdef SCORE
     sc_init((sa_never_initialized || sa_mode_order == 2)
             && start_command && *start_command == ';');
-#endif /* SCORE */
 
     if (univ_ng_virtflag) {
 	univ_ng_virtual();
@@ -475,10 +471,8 @@ cleanup:
 					/* do cleanup from KILL file, if any */
     if (sa_initialized)
 	sa_cleanup();
-#ifdef SCORE
     if (sc_initialized)
 	sc_cleanup();
-#endif
     chase_xrefs(false);
     if (!univ_ng_virtflag) {
     }
@@ -526,7 +520,6 @@ int art_switch()
       case ';':			/* enter ScanArticle mode */
 	sa_go_explicit = true;
 	return AS_SA;
-#ifdef SCORE
       case '"':			/* append to local SCORE file */
 	buf[0] = ':';		/* enter command on next line */
 	buf[1] = FINISHCMD;
@@ -545,7 +538,6 @@ int art_switch()
 	if (finish_command(true))	/* command entered successfully */
 	    sc_score_cmd(buf+1);
 	return AS_ASK;
-#endif
       case '<':			/* goto previous subject/thread */
 	visit_prev_thread();
 	return AS_NORM;

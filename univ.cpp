@@ -24,9 +24,7 @@
 #include "rt-util.h"
 #include "final.h"
 #include "help.h"
-#ifdef SCORE
 #include "score.h"
-#endif
 #include "INTERN.h"
 #include "univ.h"
 #include "univ.ih"
@@ -142,9 +140,7 @@ UNIV_ITEM *univ_add(int type, char *desc)
 	node->desc = nullptr;
     node->type = type;
     node->num = univ_item_counter++;
-#ifdef SCORE
     node->score = 0;		/* consider other default scores? */
-#endif
     node->next = nullptr;
     node->prev = last_univ;
     if (last_univ)
@@ -363,12 +359,10 @@ void univ_add_virtgroup(char *grpname)
     }
     ui = univ_add(UN_VGROUP,nullptr);
     ui->data.vgroup.flags = (char)0;
-#ifdef SCORE
     if (univ_use_min_score) {
 	ui->data.vgroup.flags |= UF_VG_MINSCORE;
 	ui->data.vgroup.minscore = univ_min_score;
     }
-#endif
     ui->data.vgroup.ng = savestr(grpname);
     data.dat_ptr = ui->data.vgroup.ng;
     hashstorelast(data);
@@ -945,11 +939,9 @@ static void univ_vg_addart(ART_NUM a)
     UNIV_ITEM* ui;
     int score;
 
-#ifdef SCORE
     score = sc_score_art(a,false);
     if (univ_use_min_score && (score<univ_min_score))
 	return;
-#endif
     subj = fetchsubj(a,false);
     if (!subj || !*subj)
 	return;
@@ -962,9 +954,7 @@ static void univ_vg_addart(ART_NUM a)
 
     /* later consider author in description, scoring, etc. */
     ui = univ_add_virt_num(nullptr,ngname,a);
-#ifdef SCORE
     ui->score = score;
-#endif
     ui->data.virt.subj = savestr(subj);
     ui->data.virt.from = savestr(from);
 }
@@ -1034,12 +1024,10 @@ void univ_virt_pass()
 	    if (!ui->data.vgroup.ng)
 		break;			/* XXX whine */
 	    current_vg_ui = ui;
-#ifdef SCORE
 	    if (ui->data.vgroup.flags & UF_VG_MINSCORE) {
 		univ_use_min_score = true;
 		univ_min_score = ui->data.vgroup.minscore;
 	    }
-#endif
 	    (void)univ_visit_group(ui->data.vgroup.ng);
 	    univ_use_min_score = false;
 	    /* later do something with return value */
@@ -1070,7 +1058,6 @@ static int univ_order_number(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2)
     return (int)((*ui1)->num - (*ui2)->num) * sel_direction;
 }
 
-#ifdef SCORE
 static int univ_order_score(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2)
 {
     if ((*ui1)->score != (*ui2)->score)
@@ -1078,7 +1065,6 @@ static int univ_order_score(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2)
     else
 	return (int)((*ui1)->num - (*ui2)->num) * sel_direction;
 }
-#endif
 
 void sort_univ()
 {
@@ -1097,11 +1083,9 @@ void sort_univ()
 	return;
 
     switch (sel_sort) {
-#ifdef SCORE
       case SS_SCORE:
 	sort_procedure = univ_order_score;
 	break;
-#endif
       case SS_NATURAL:
       default:
 	sort_procedure = univ_order_number;
@@ -1158,11 +1142,7 @@ char *univ_article_desc(UNIV_ITEM *ui)
     }
     fbuf[16] = '\0';
     sbuf[55] = '\0';
-#ifdef SCORE
     sprintf(dbuf,"[%3d] %16s %s",ui->score,fbuf,sbuf);
-#else
-    sprintf(dbuf,"%16s %55s",fbuf,sbuf);
-#endif
     for (s = dbuf; *s; s++) {
 	if ((*s==Ctl('h')) || (*s=='\t') || (*s=='\n') || (*s=='\r')) {
 	    *s = ' ';

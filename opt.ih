@@ -114,10 +114,9 @@ INI_WORDS options_ini[] = {
     { 0, "Display Summary", yes_or_no },
     { 0, "Display Keywords", yes_or_no },
 
-#ifdef SCORE
     { 0, "*Scoring Options", 0 },
     { 0, "Verbose scoring", yes_or_no },
-#endif
+
     { 0, 0, 0 }
 };
 

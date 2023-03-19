@@ -21,9 +21,7 @@
 #include "sadesc.h"
 #include "samisc.h"
 #include "sathread.h"	/* for fold mode flag */
-#ifdef SCORE
 #include "score.h"
-#endif
 #include "scan.h"
 #include "sdisp.h"
 #include "color.h"
@@ -63,22 +61,18 @@ void sa_refresh_bot()
       case 1:
 	s = "arrival";
 	break;
-#ifdef SCORE
       case 2:
 	if (score_newfirst)
 	    s = "score (new>old)";
 	else
 	    s = "score (old>new)";
 	break;
-#endif
       default:
 	s = "unknown";
 	break;
     }
     printf("%s order",s);
-#ifdef SCORE
     printf(", %d%% scored",sc_percent_scored());
-#endif
     printf(")");
     color_pop();	/* of COLOR_SCORE */
     fflush(stdout);

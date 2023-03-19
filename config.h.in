@@ -450,11 +450,6 @@ typedef struct timeb Timeval; /* Structure used by ftime() */
  */
 #define PRIVLIB "@PRIVLIB@"		/**/
 
-/* SCORE:
- *	This is defined if you want strn's article scoring.
- */
-#cmakedefine SCORE		/**/
-
 /* THREAD_DIR:
  *	This symbol indicates where the thread files go.
  */

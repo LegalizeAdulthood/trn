@@ -7,8 +7,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef SCORE
-/* if SCORE is undefined, no code should be compiled */
 #include "list.h"
 #include "hash.h"
 #include "cache.h"
@@ -1243,4 +1241,3 @@ static char *sf_file_getline(int fnum)
     /* below: one of the more twisted lines of my career  (:-) */
     return sf_files[fnum].lines[sf_files[fnum].line_on++];
 }
-#endif /* SCORE */
