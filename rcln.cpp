@@ -24,7 +24,6 @@ void rcln_init()
 {
 }
 
-#ifdef CATCHUP
 void catch_up(NGDATA *np, int leave_count, int output_level)
 {
     char tmpbuf[128];
@@ -59,7 +58,6 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
     if (!write_newsrcs(multirc))
 	get_anything();
 }
-#endif
 
 /* add an article number to a newsgroup, if it isn't already read */
 

@@ -529,15 +529,11 @@ int input_newsgroup()
 	return ING_RESTART;
       }
       case 'c':			/* catch up */
-#ifdef CATCHUP
 	if (ngptr) {
 	    ask_catchup();
 	    if (ngptr->toread == TR_NONE)
 		ngptr = ngptr->next;
 	}
-#else
-	notincl("c");
-#endif
 	break;
       case 't':
 	if (!use_threads)
