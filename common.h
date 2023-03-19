@@ -223,7 +223,6 @@
 #define NOFIREWORKS	/* keep whole screen from flashing on certain */
 			/* terminals such as older Televideos */
 #define TILDENAME	/* allow ~logname expansion */
-#define RELOCATE	/* allow newsgroup rearranging */
 #define ESCSUBS		/* escape substitutions in multi-character commands */
 #undef MCHASE		/* unmark xrefed articles on m or M */
 #define MUNGHEADER	/* allow alternate header formatting via */

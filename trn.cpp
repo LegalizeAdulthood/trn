@@ -461,18 +461,14 @@ int input_newsgroup()
 #endif
 	break;
       case 'm':
-#ifndef RELOCATE
 	notincl("m");
 	break;
-#endif		    
       case 'g':	/* goto named newsgroup */
 	if (!finish_command(false))
 	    return ING_INPUT;
 	for (s = buf+1; *s == ' '; s++) ; /* skip leading spaces */
-#ifdef RELOCATE
 	if (!*s && *buf == 'm' && ngname && ngptr)
 	    strcpy(s,ngname);
-#endif
 	{
 	    char* _s;
 	    for (_s=s; isdigit(*_s); _s++) ;
@@ -494,11 +490,7 @@ int input_newsgroup()
 	    }
 	}
 	/* try to find newsgroup */
-#ifdef RELOCATE
 	if (!get_ng(ngname,(*buf=='m'?GNG_RELOC:0) | GNG_FUZZY))
-#else
-	if (!get_ng(ngname,GNG_FUZZY))
-#endif
 	    ngptr = current_ng;	/* if not found, go nowhere */
 	addnewbydefault = 0;
 	return ING_SPECIAL;

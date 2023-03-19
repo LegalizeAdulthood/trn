@@ -863,12 +863,10 @@ reask_unsub:
     /* now calculate how many unread articles in newsgroup */
 
     set_toread(ngptr, ST_STRICT);
-#ifdef RELOCATE
     if (flags & GNG_RELOC) {
 	if (!relocate_newsgroup(ngptr,-1))
 	    return false;
     }
-#endif
     return ngptr->toread >= TR_NONE;
 }
 
@@ -902,7 +900,6 @@ static NGDATA *add_newsgroup(NEWSRC *rp, char *ngn, char_int c)
     return np;
 }
 
-#ifdef RELOCATE
 bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
 {
     NGDATA* np;
@@ -1075,7 +1072,6 @@ q to abort\n") FLUSH;
     }
     return true;
 }
-#endif /* RELOCATE */
 
 /* List out the newsrc with annotations */
 
@@ -1143,7 +1139,6 @@ void cleanup_newsrc(NEWSRC *rp)
 ",stdout) FLUSH;
 	termdown(2);
     }
-#ifdef RELOCATE
     else if (bogosity) {
 	NGDATA* prev_np;
 	if (verbose)
@@ -1207,13 +1202,6 @@ Type n or SP to leave them at the end in case they return.\n\
 	    goto reask_bogus;
 	}
     }
-#else /* !RELOCATE */
-    if (verbose)
-	printf("You should edit bogus newsgroups out of '%s'.\n",rp->name) FLUSH;
-    else
-	printf("Edit boguses from '%s'.\n",rp->name) FLUSH;
-    termdown(1);
-#endif /* !RELOCATE */
     paranoid = false;
 }
 

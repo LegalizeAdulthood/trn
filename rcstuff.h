@@ -76,9 +76,7 @@ bool use_prev_multirc(MULTIRC *mptr);
 char *multirc_name(MULTIRC *mp);
 void abandon_ng(NGDATA *np);
 bool get_ng(char *, int);
-#ifdef RELOCATE
 bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum);
-#endif
 void list_newsgroups();
 NGDATA *find_ng(char *ngnam);
 void cleanup_newsrc(NEWSRC *rp);
