@@ -931,9 +931,7 @@ int find_close_match()
 	    IF(verbose)
 		printf("(I assume you meant %s)\n", ngptrs[0]) FLUSH;
 	    ELSE
-#ifdef TERSE
 		printf("(Using %s)\n", ngptrs[0]) FLUSH;
-#endif
 	    set_ngname(ngptrs[0]);
 	    if (cp)
 		*cp = ' ';
@@ -1016,9 +1014,7 @@ static int get_near_miss()
     IF(verbose)
 	sprintf(promptbuf, "Which of these would you like?");
     ELSE
-#ifdef TERSE
 	sprintf(promptbuf, "Which?");
-#endif
 reask:
     in_char(promptbuf, 'A', options);
     printcmd();
@@ -1036,9 +1032,7 @@ reask:
 	    IF(verbose)
 		fputs("  You entered an illegal newsgroup name, and these are the nearest possible\n  matches.  If you want one of these, then enter its number.  Otherwise\n  just say 'n'.\n", stdout) FLUSH;
 	    ELSE
-#ifdef TERSE
 		fputs("Illegal newsgroup, enter a number or 'n'.\n", stdout) FLUSH;
-#endif
 	    goto reask;
 	default:
 	    if (isdigit(*buf)) {

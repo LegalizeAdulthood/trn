@@ -372,9 +372,7 @@ void decode_switch(char *s)
 	    IF(verbose)
 		printf("\nIgnoring unrecognized switch: -%c\n", *s) FLUSH;
 	    ELSE
-#ifdef TERSE
 		printf("\nIgnoring -%c\n", *s) FLUSH;
-#endif
 	    termdown(2);
 	    break;
 	}

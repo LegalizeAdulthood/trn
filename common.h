@@ -223,10 +223,6 @@
 #define NOFIREWORKS	/* keep whole screen from flashing on certain */
 			/* terminals such as older Televideos */
 #define TILDENAME	/* allow ~logname expansion */
-#define TERSE		/* compile in shorter messages */
-			/* (Note: both VERBOSE and TERSE can be defined; -t
-			 * sets terse mode.  One or the other MUST be defined.
-			 */
 #define CHARSUBST	/* enable the _C command */
 #define DELBOGUS	/* ask if bogus newsgroups should be deleted */
 #define RELOCATE	/* allow newsgroup rearranging */
@@ -299,13 +295,8 @@
 #   define eaccess access
 #endif
 
-#   ifdef TERSE
 #	define IF(c) if (c)
 #	define ELSE else
-#   else
-#	define IF(c)
-#	define ELSE
-#   endif
 
 #define ElseIf else if
 
@@ -783,9 +774,7 @@ EXT bool allow_typeahead INIT(false);			/* -T */
 #ifdef EDIT_DISTANCE
 EXT bool fuzzyGet INIT(false);				/* -G */
 #endif
-#   ifdef TERSE
 EXT bool verbose INIT(true);				/* +t */
-#   endif
 EXT bool unbroken_subjects INIT(false);			/* -u */
 EXT bool unsafe_rc_saves INIT(false);			/* -U */
 EXT bool verify INIT(false);				/* -v */

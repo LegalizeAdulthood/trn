@@ -204,9 +204,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 		IF(verbose)
 		    sprintf(msg, "Current article has no %s.", finding_str);
 		ELSE
-#ifdef TERSE
 		    sprintf(msg, "Null %s.", finding_str);
-#endif
 		errormsg(msg);
 		ret = SRCH_ABORT;
 		goto exit;

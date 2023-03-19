@@ -106,9 +106,7 @@ static void mention(char *str)
 	newline();
     }
     ELSE
-#ifdef TERSE
 	putchar('.');
-#endif
     fflush(stdout);
 }
 
@@ -204,9 +202,7 @@ int do_kfile(FILE *kfp, int entering)
 		    printf("\n(Interrupted at article %ld)\n",(long)art)
 		      FLUSH;
 		ELSE
-#ifdef TERSE
 		    printf("\n(Intr at %ld)\n",(long)art) FLUSH;
-#endif
 		termdown(2);
 		return -1;
 	    case SRCH_DONE:
@@ -330,11 +326,7 @@ void kill_unwanted(ART_NUM starting, char *message, int entering)
 	oldfirst = firstart;
 	firstart = starting;
 	clear();
-# ifdef TERSE
 	if (message && (verbose || entering))
-# else
-	if (message)
-# endif
 	    fputs(message,stdout) FLUSH;
 
 	kill_mentioned = false;
@@ -351,9 +343,7 @@ void kill_unwanted(ART_NUM starting, char *message, int entering)
 	    IF(verbose)
 		get_anything();
 	    ELSE
-#ifdef TERSE
 		pad(just_a_sec);
-#endif
 	}
 	if (anytokill)			/* if there was anything to kill */
 	    forcelast = false;		/* allow for having killed it all */
@@ -707,9 +697,7 @@ void kf_append(char *cmd, bool local)
 	IF(verbose)
 	    printf("\nDepositing command in %s...",cmd_buf);
 	ELSE
-#ifdef TERSE
 	    printf("\n--> %s...",cmd_buf);
-#endif
 	fflush(stdout);
 	if (novice_delays)
 	    sleep(2);

@@ -236,9 +236,7 @@ Signal_t sig_catcher(int signo)
 	    printf("\nCaught %s%s--.newsrc restored\n",
 		signo ? "a SIG" : "an internal error", signame[signo]);
 	ELSE
-#ifdef TERSE
 	    printf("\nSignal %d--bye bye\n",signo);
-#endif
 #ifdef SIGHUP
     }
 #endif

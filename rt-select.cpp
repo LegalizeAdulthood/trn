@@ -1766,14 +1766,12 @@ Type a to display/select individual articles.\n\
 Type q to leave things as they are.\n\n\
 ",stdout) FLUSH;
 	    ELSE
-#ifdef TERSE
 		fputs("\n\
 t or SP selects thread groups (threads the group too).\n\
 s selects subject groups.\n\
 a selects individual articles.\n\
 q does nothing.\n\n\
 ",stdout) FLUSH;
-#endif
 	    clean_screen = false;
 	    goto reask_output;
 	} else if (*buf == 'q') {
@@ -1824,7 +1822,6 @@ Type q to leave things as they are.\n\n\
 ",stdout) FLUSH;
 	    }
 	    ELSE
-#ifdef TERSE
 	    {
 		fputs("\n\
 d or SP sorts by date.\n\
@@ -1845,7 +1842,6 @@ Upper case reverses the sort.\n\
 q does nothing.\n\n\
 ",stdout) FLUSH;
 	    }
-#endif
 	    clean_screen = false;
 	    goto reask_sort;
 	} else if (*buf == 'q') {
@@ -2188,7 +2184,6 @@ Type q to leave things as they are.\n\n\
 ",stdout) FLUSH;
 	    }
 	    ELSE
-#ifdef TERSE
 	    {
 		fputs("\n\
 n or SP sorts by .newsrc.\n\
@@ -2200,7 +2195,6 @@ Upper case reverses the sort.\n\
 q does nothing.\n\n\
 ",stdout) FLUSH;
 	    }
-#endif
 	    clean_screen = false;
 	    goto reask_sort;
 	  default:
@@ -2421,7 +2415,6 @@ Type q to leave things as they are.\n\n\
 ",stdout) FLUSH;
 	    }
 	    ELSE
-#ifdef TERSE
 	    {
 		fputs("\n\
 n or SP sorts by natural order.\n\
@@ -2433,7 +2426,6 @@ Upper case reverses the sort.\n\
 q does nothing.\n\n\
 ",stdout) FLUSH;
 	    }
-#endif
 	    clean_screen = false;
 	    goto reask_sort;
 	  default:
@@ -2721,7 +2713,6 @@ Type q to leave things as they are.\n\n\
 ",stdout) FLUSH;
 	    }
 	    ELSE
-#ifdef TERSE
 	    {
 		fputs("\n\
 n or SP sorts by natural order.\n\
@@ -2732,7 +2723,6 @@ Upper case reverses the sort.\n\
 q does nothing.\n\n\
 ",stdout) FLUSH;
 	    }
-#endif
 	    clean_screen = false;
 	    goto reask_sort;
 	} else if (*buf == 'q' ||

@@ -35,9 +35,7 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
 		printf("\nMarking all but %d articles in %s as read.\n",
 		       leave_count,np->rcline) FLUSH;
 	    ELSE
-#ifdef TERSE
 		printf("\nAll but %d marked as read.\n",leave_count) FLUSH;
-#endif
 	}
 	checkexpired(np, getngsize(np) - leave_count + 1);
 	set_toread(np, ST_STRICT);
@@ -47,9 +45,7 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
 	    IF(verbose)
 		printf("\nMarking %s as all read.\n",np->rcline) FLUSH;
 	    ELSE
-#ifdef TERSE
 		fputs("\nMarked read\n",stdout) FLUSH;
-#endif
 	}
 	sprintf(tmpbuf,"%s: 1-%ld", np->rcline,(long)getngsize(np));
 	free(np->rcline);

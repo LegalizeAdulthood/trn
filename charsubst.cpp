@@ -127,25 +127,19 @@ char *current_charsubst()
 	IF(verbose)
 	    show = "[ISO->USmono] ";
 	ELSE
-#ifdef TERSE
 	    show = "[M] ";
-#endif
 	break;
       case 'a':
 	IF(verbose)
 	    show = "[ISO->US] ";
 	ELSE
-#ifdef TERSE
 	    show = "[U] ";
-#endif
 	break;
       case 't':
 	IF(verbose)
 	    show = "[TeX->ISO] ";
 	ELSE
-#ifdef TERSE
 	    show = "[T] ";
-#endif
 	break;
       default:
 	show = nullstr;

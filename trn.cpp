@@ -216,17 +216,13 @@ void do_multirc()
 			    printf("\nRestriction %s%s still in effect.\n",
 				   ngtodo[0], maxngtodo > 1 ? ", etc." : nullstr) FLUSH;
 		 	ELSE
-#ifdef TERSE
 			    fputs("\n(\"Only\" mode.)\n",stdout) FLUSH;
-#endif
 			termdown(2);
 		    } else {
 			IF(verbose)
 			    fputs("\nNo articles under restriction.", stdout) FLUSH;
 			ELSE
-#ifdef TERSE
 			    fputs("\nNo \"only\" articles.",stdout) FLUSH;
-#endif
 			termdown(2);
 			end_only();	/* release the restriction */
 			printf("\n%s\n", msg) FLUSH;
@@ -279,9 +275,7 @@ void do_multirc()
 		    printf("\n****** End of newsgroups -- what next? [%s] ",
 			   dfltcmd);
 		ELSE
-#ifdef TERSE
 		    printf("\n**** End -- next? [%s] ", dfltcmd);
-#endif
 		termdown(1);
 	    } else {
 		ThreadedGroup = (use_threads && !(ngptr->flags&NF_UNTHREADED));
@@ -293,11 +287,9 @@ void do_multirc()
 			   (long)ngptr->toread, PLURAL(ngptr->toread),
 			   ngname, dfltcmd);
 		ELSE
-#ifdef TERSE
 		    printf("\n%s %3ld in %s -- read? [%s] ",
 			   ThreadedGroup? "====" : "****",
 			   (long)ngptr->toread,ngname,dfltcmd);
-#endif
 		termdown(1);
 	    }
 	    fflush(stdout);
@@ -447,9 +439,7 @@ int input_newsgroup()
 	    IF(verbose)
 		fputs("\n(Interrupted)\n",stdout) FLUSH;
 	    ELSE
-#ifdef TERSE
 		fputs("\n(Intr)\n",stdout) FLUSH;
-#endif
 	    termdown(2);
 	    set_ng(current_ng);
 	    return ING_ASK;
@@ -460,9 +450,7 @@ int input_newsgroup()
 		fputs("\n\nNot found -- use a or g to add newsgroups\n",
 		      stdout) FLUSH;
 	    ELSE
-#ifdef TERSE
 		fputs("\n\nNot found\n",stdout) FLUSH;
-#endif
 	    termdown(3);
 	    return ING_ASK;
 	  case NGS_DONE:
@@ -598,9 +586,7 @@ reask_abandon:
 	IF(verbose)
 	    in_char("\nAbandon changes to current newsgroup?", 'B', "yn");
 	ELSE
-#ifdef TERSE
 	    in_char("\nAbandon?", 'B', "ynh");
-#endif
 	printcmd();
 	newline();
 	if (*buf == 'h') {

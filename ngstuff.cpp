@@ -234,9 +234,7 @@ int numnum()
 		IF(verbose)
 		    sprintf(msg,"(Interrupted at article %ld)",(long)art);
 		ELSE
-#ifdef TERSE
 		    sprintf(msg,"(Intr at %ld)",(long)art);
-#endif
 		errormsg(msg);
 		if (cmdlst)
 		    free(cmdlst);

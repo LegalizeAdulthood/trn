@@ -312,9 +312,7 @@ static bool lock_newsrc(NEWSRC *rp)
 	    printf("\nThe requested newsrc is locked by process %ld on host %s.\n",
 		   processnum, runninghost) FLUSH;
 	ELSE
-#ifdef TERSE
 	    printf("\nNewsrc locked by %ld on host %s.\n",processnum,runninghost) FLUSH;
-#endif
 	termdown(2);
 	if (strNE(runninghost,g_local_host)) {
 	    IF(verbose)
@@ -323,10 +321,8 @@ Since that's not the same host as this one (%s), we must\n\
 assume that process still exists.  To override this check, remove\n\
 the lock file: %s\n", g_local_host, rp->lockname) FLUSH;
 	    ELSE
-#ifdef TERSE
 		printf("\nThis host (%s) doesn't match.\nCan't unlock %s.\n",
 		       g_local_host, rp->lockname) FLUSH;
-#endif
 	    termdown(2);
 	    if (bizarre)
 		resetty();
@@ -338,9 +334,7 @@ the lock file: %s\n", g_local_host, rp->lockname) FLUSH;
 Hey, that *my* pid!  Your access file is trying to use the same newsrc\n\
 more than once.\n") FLUSH;
 	    ELSE
-#ifdef TERSE
 		printf("\nAccess file error (our pid detected).\n") FLUSH;
-#endif
 	    termdown(2);
 	    return false;
 	}
@@ -353,17 +347,13 @@ That process does not seem to exist anymore.  The count of read articles\n\
 may be incorrect in the last newsgroup accessed by that other (defunct)\n\
 process.\n\n",stdout) FLUSH;
 	    ELSE
-#ifdef TERSE
 		fputs("\nProcess crashed.\n",stdout) FLUSH;
-#endif
 	    if (lastngname) {
 		IF(verbose)
 		    printf("(The last newsgroup accessed was %s.)\n\n",
 			   lastngname) FLUSH;
 		ELSE
-#ifdef TERSE
 		    printf("(In %s.)\n\n",lastngname) FLUSH;
-#endif
 	    }
 	    termdown(2);
 	    get_anything();
@@ -375,9 +365,7 @@ process.\n\n",stdout) FLUSH;
 It looks like that process still exists.  To override this, remove\n\
 the lock file: %s\n", rp->lockname) FLUSH;
 	    ELSE
-#ifdef TERSE
 		printf("\nCan't unlock %s.\n", rp->lockname) FLUSH;
-#endif
 	    termdown(2);
 	    if (bizarre)
 		resetty();
@@ -538,10 +526,8 @@ static bool open_newsrc(NEWSRC *rp)
 		    printf("Unread news in %-40s %5ld article%s\n",
 			np->rcline,(long)np->toread,PLURAL(np->toread)) FLUSH;
 		ELSE
-#ifdef TERSE
 		    printf("%s: %ld article%s\n",
 			np->rcline,(long)np->toread,PLURAL(np->toread)) FLUSH;
-#endif
 		termdown(1);
 		if (int_count) {
 		    countdown = 1;
@@ -704,9 +690,7 @@ bool get_ng(char *what, int flags)
     IF(verbose)
 	ntoforget = "Type n to forget about this newsgroup.\n";
     ELSE
-#ifdef TERSE
 	ntoforget = "n to forget it.\n";
-#endif
     if (index(what,'/')) {
 	dingaling();
 	printf("\nBad newsgroup name.\n") FLUSH;
@@ -739,9 +723,7 @@ bool get_ng(char *what, int flags)
 	    IF(verbose)
 		printf("\nNewsgroup %s does not exist!\n",ngname) FLUSH;
 	    ELSE
-#ifdef TERSE
 		printf("\nNo %s!\n",ngname) FLUSH;
-#endif
 	    termdown(2);
 	    if (novice_delays)
 		sleep(2);
@@ -771,9 +753,7 @@ bool get_ng(char *what, int flags)
 	    IF(verbose)
 		sprintf(promptbuf,"\nNewsgroup %s not in .newsrc -- subscribe?",ngname);
 	    ELSE
-#ifdef TERSE
 		sprintf(promptbuf,"\nSubscribe %s?",ngname);
-#endif
 reask_add:
 	    in_char(promptbuf,'A',"ynYN");
 	    printcmd();
@@ -786,14 +766,12 @@ Type N to leave all remaining new groups unsubscribed.\n", ngname) FLUSH;
 		    termdown(3);
 		}
 		ELSE
-#ifdef TERSE
 		{
 		    fputs("\
 y or SP to subscribe, Y to subscribe all new groups, N to unsubscribe all\n",
 			  stdout) FLUSH;
 		    termdown(1);
 		}
-#endif
 		fputs(ntoforget,stdout) FLUSH;
 		termdown(1);
 		goto reask_add;
@@ -848,10 +826,8 @@ y or SP to subscribe, Y to subscribe all new groups, N to unsubscribe all\n",
 "\nNewsgroup %s is unsubscribed -- resubscribe?",ngname)
   FLUSH;
 	ELSE
-#ifdef TERSE
 	    sprintf(promptbuf,"\nResubscribe %s?",ngname)
 	      FLUSH;
-#endif
 reask_unsub:
 	in_char(promptbuf,'R',"yn");
 	printcmd();
@@ -860,9 +836,7 @@ reask_unsub:
 	    IF(verbose)
 		printf("Type y or SP to resubscribe to %s.\n", ngname) FLUSH;
 	    ELSE
-#ifdef TERSE
 		fputs("y or SP to resubscribe.\n",stdout) FLUSH;
-#endif
 	    fputs(ntoforget,stdout) FLUSH;
 	    termdown(2);
 	    goto reask_unsub;
@@ -982,9 +956,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
 	IF(verbose)
 	    printf("\nPut newsgroup where? [%s] ", dflt);
 	ELSE
-#ifdef TERSE
 	    printf("\nPut where? [%s] ", dflt);
-#endif
 	fflush(stdout);
 	termdown(1);
       reinp_reloc:
@@ -1010,7 +982,6 @@ Type L for a listing of newsgroups and their positions.\n\
 Type q to abort the current action.\n") FLUSH;
 	    }
 	    ELSE
-#ifdef TERSE
 	    {
 		printf("\n\n\
 ^ to put newsgroup first (pos 0).\n\
@@ -1025,7 +996,6 @@ number in 0-%d to put at that pos.\n", newsgroup_cnt-1);
 L for list of newsrc.\n\
 q to abort\n") FLUSH;
 	    }
-#endif
 	    termdown(10);
 	    goto reask_reloc;
 	}
@@ -1152,9 +1122,7 @@ void cleanup_newsrc(NEWSRC *rp)
     IF(verbose)
 	printf("Checking out '%s' -- hang on a second...\n",rp->name) FLUSH;
     ELSE
-#ifdef TERSE
 	printf("Checking '%s' -- hang on...\n",rp->name) FLUSH;
-#endif
     termdown(1);
     for (np = first_ng; np; np = np->next) {
 /*#ifdef CHECK_ALL_BOGUS $$ what is this? */
@@ -1181,9 +1149,7 @@ void cleanup_newsrc(NEWSRC *rp)
 	IF(verbose)
 	    printf("Moving bogus newsgroups to the end of '%s'.\n",rp->name) FLUSH;
 	ELSE
-#ifdef TERSE
 	    fputs("Moving boguses to the end.\n",stdout) FLUSH;
-#endif
 	termdown(1);
 	while (np) {
 	    prev_np = np->prev;
@@ -1206,12 +1172,10 @@ Type n or SP to leave them at the end in case they return.\n\
 		termdown(2);
 	    }
 	    ELSE
-#ifdef TERSE
 	    {
 		fputs("y to delete, n to keep\n",stdout) FLUSH;
 		termdown(1);
 	    }
-#endif
 	    goto reask_bogus;
 	}
 	else if (*buf == 'n' || *buf == 'q')
@@ -1249,9 +1213,7 @@ Type n or SP to leave them at the end in case they return.\n\
     IF(verbose)
 	printf("You should edit bogus newsgroups out of '%s'.\n",rp->name) FLUSH;
     ELSE
-#ifdef TERSE
 	printf("Edit boguses from '%s'.\n",rp->name) FLUSH;
-#endif
     termdown(1);
 #endif /* !RELOCATE */
     paranoid = false;

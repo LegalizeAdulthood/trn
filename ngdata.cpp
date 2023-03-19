@@ -81,18 +81,14 @@ int access_ng()
 		    printf("\nNewsgroup %s does not have a spool directory!\n",
 			   ngname) FLUSH;
 		ELSE
-# ifdef TERSE
 		    printf("\nNo spool for %s!\n",ngname) FLUSH;
-# endif
 		termdown(2);
 	    } else {
 		IF(verbose)
 		    printf("\nNewsgroup %s is not currently accessible.\n",
 			   ngname) FLUSH;
 		ELSE
-# ifdef TERSE
 		    printf("\n%s not readable.\n",ngname) FLUSH;
-# endif
 		termdown(2);
 	    }
 	    /* make this newsgroup temporarily invisible */
@@ -158,9 +154,7 @@ void grow_ng(ART_NUM newlast)
 		(long)(lastart - tmpfirst + 1),
 		(lastart > tmpfirst ? "s have" : " has" ) );
 	ELSE			/* my, my, how clever we are */
-#ifdef TERSE
 	    strcpy(buf, "More news -- auto-processing...\n\n");
-#endif
 	termdown(2);
 	if (kf_state & KFS_NORMAL_LINES) {
 	    bool forcelast_save = forcelast;
@@ -246,9 +240,7 @@ void ng_skip()
 	IF(verbose)
 	    fputs("Skipping unavailable article\n",stdout);
 	ELSE
-# ifdef TERSE
 	    fputs("Skipping\n",stdout);
-# endif /* TERSE */
 	termdown(1);
 	if (novice_delays) {
 	    pad(just_a_sec/3);
@@ -278,9 +270,7 @@ void ng_skip()
 		printf("\n(Article %ld exists but is unreadable.)\n",(long)art)
 			FLUSH;
 	    ELSE
-# ifdef TERSE
 		printf("\n(%ld unreadable.)\n",(long)art) FLUSH;
-# endif
 	    termdown(2);
 	    if (novice_delays) {
 		pad(just_a_sec);

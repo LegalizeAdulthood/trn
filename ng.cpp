@@ -168,9 +168,7 @@ int do_newsgroup(char *start_command)
     IF(verbose)
 	kill_unwanted(firstart,"Processing memorized commands...\n\n", true);
     ELSE
-# ifdef TERSE
 	kill_unwanted(firstart,"Auto-processing...\n\n",true);
-# endif
 #endif
 
 #ifdef USE_FILTER
@@ -313,9 +311,7 @@ int do_newsgroup(char *start_command)
 		printf("End of newsgroup %s.",ngname);
 					/* print pseudo-article */
 	    ELSE
-#ifdef TERSE
 		printf("End of %s",ngname);
-#endif
 	    if (obj_count) {
 		if (selected_only)
 		    printf("  (%ld + %ld articles still unread)",
@@ -619,9 +615,7 @@ int art_switch()
 	    IF(verbose)
 		u_prompt = "\nUnkill: +select or all?";
 	    ELSE
-#ifdef TERSE
 		u_prompt = "\nUnkill?";
-#endif
 	    dfltcmd = "+anq";
 	}
 	else {
@@ -633,14 +627,12 @@ Type t or SP to mark this thread's articles as unread.\n\
 Type s to mark the current article and its descendants as unread.\n";
 	    }
 	    ELSE
-#ifdef TERSE
 	    {
 		u_prompt = "\nUnkill?";
 		u_help_thread = "\
 t or SP to mark thread unread.\n\
 s to mark subthread unread.\n";
 	    }
-#endif
 	    dfltcmd = "+tsanq";
 	}
       reask_unread:
@@ -662,7 +654,6 @@ Type n or q to change nothing.\n\
 		termdown(6);
 	    }
 	    ELSE
-#ifdef TERSE
 	    {
 		fputs("\
 + to select threads from the unread.\n\
@@ -674,7 +665,6 @@ n or q to change nothing.\n\
 ",stdout) FLUSH;
 		termdown(5);
 	    }
-#endif
 	    goto reask_unread;
 	}
 	else if (*buf == 'n' || *buf == 'q')
@@ -716,9 +706,7 @@ n or q to change nothing.\n\
 		    printf("\nThere is no %s article prior to this one.\n",
 			cp) FLUSH;
 		ELSE
-#ifdef TERSE
 		    printf("\nNo prior %s.\n",cp) FLUSH;
-#endif
 		termdown(2);
 		return AS_ASK;
 	    }
@@ -734,18 +722,14 @@ not_threaded:
 	    IF(verbose)
 		fputs("\nYou're at the end of the group.\n",stdout) FLUSH;
 	    ELSE
-#ifdef TERSE
 		fputs("\nEnd of group.\n",stdout) FLUSH;
-#endif
 	    termdown(2);
 	    return AS_ASK;
 	}
 	IF(verbose)
 	    fputs("\nThis group is not threaded.\n",stdout) FLUSH;
 	ELSE
-#ifdef TERSE
 	    fputs("\nUnthreaded group.\n",stdout) FLUSH;
-#endif
 	termdown(2);
 	return AS_ASK;
       case ']':			/* goto child article */
@@ -756,9 +740,7 @@ not_threaded:
 		    fputs("\n\
 This is the last leaf in this tree.\n",stdout) FLUSH;
 		ELSE
-#ifdef TERSE
 		    fputs("\nLast leaf.\n",stdout) FLUSH;
-#endif
 		termdown(2);
 		return AS_ASK;
 	    }
@@ -778,9 +760,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 		IF(verbose)
 		    printf("\nThis article has no %s sibling.\n",cp) FLUSH;
 		ELSE
-#ifdef TERSE
 		    printf("\nNo %s sibling.\n",cp) FLUSH;
-#endif
 		termdown(2);
 		return AS_ASK;
 	    }
@@ -898,11 +878,9 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 			*buf=='P'?nullstr:" unread",
 			selected_only?" selected":nullstr) FLUSH;
 	    ELSE
-#ifdef TERSE
 		printf("\nNo previous%s%s articles\n",
 			*buf=='P'?nullstr:" unread",
 			selected_only?" selected":nullstr) FLUSH;
-#endif
 	    termdown(2);
 	    art = curr_art;
 	    artp = curr_artp;
@@ -1120,9 +1098,7 @@ normal_search:
 	    IF(verbose)
 		printf("\n(Interrupted at article %ld)\n",(long)art) FLUSH;
 	    ELSE
-#ifdef TERSE
 		printf("\n(Intr at %ld)\n",(long)art) FLUSH;
-#endif
 	    termdown(2);
 	    art = curr_art;	    /* restore to current article */
 	    return AS_ASK;
@@ -1239,9 +1215,7 @@ normal_search:
 	IF(verbose)
 	    printf("\nThe last article is %ld.\n",(long)lastart) FLUSH;
 	ELSE
-#ifdef TERSE
 	    printf("\n%ld\n",(long)lastart) FLUSH;
-#endif
 	termdown(2);
 	return AS_ASK;
       case '+':			/* enter selection mode */
@@ -1600,9 +1574,7 @@ reask_catchup:
     IF(verbose)
 	sprintf(buf,"Mark everything in %s as read?",ngname);
     ELSE
-#ifdef TERSE
 	sprintf(buf,"Catchup %s?",ngname);
-#endif
     in_char(buf,'C',"yn#h");
     printcmd();
     if ((ch = *buf) == 'h' || ch == 'H') {
@@ -1615,14 +1587,12 @@ The # means enter a number to mark all but the last # articles as read.\n\
 Type u to mark everything read and unsubscribe.\n\n\
 ",stdout) FLUSH;
 	ELSE
-#ifdef TERSE
 	    fputs("\n\
 y or SP to mark all read.\n\
 n to forget it.\n\
 # means enter a number to leave unread.\n\
 u to mark all and unsubscribe.\n\n\
 ",stdout) FLUSH;
-#endif
 	termdown(6);
 	goto reask_catchup;
     }
@@ -1820,7 +1790,6 @@ Type g to toggle global memorization.\n") FLUSH;
 	    }
 	}
 	ELSE
-#ifdef TERSE
 	{
 	    printf("\n\
 + or SP auto-selects this %s.\n\
@@ -1842,7 +1811,6 @@ g toggles global memorization.\n");
 		termdown(2);
 	    }
 	}
-#endif
 	newline();
 	termdown(9);
 	goto reask_memorize;

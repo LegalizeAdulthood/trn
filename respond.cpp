@@ -64,9 +64,7 @@ int save_article()
 	IF(verbose)
 	    fputs("\nCan't save an empty article.\n",stdout) FLUSH;
 	ELSE
-#ifdef TERSE
 	    fputs(nullart,stdout) FLUSH;
-#endif
 	termdown(2);
 	return SAVE_DONE;
     }
@@ -263,9 +261,7 @@ int save_article()
 		fputs("Warning: '-' ignored.  This isn't readnews.\n",stdout)
 		  FLUSH;
 	    ELSE
-#ifdef TERSE
 		fputs("'-' ignored.\n",stdout) FLUSH;
-#endif
 	    termdown(1);
 	    s++;
 	}
@@ -325,13 +321,11 @@ Type n to create it as a normal file.\n\
 Type q to abort the save.\n\
 ",s) FLUSH;
 		    ELSE
-#ifdef TERSE
 			fputs("\n\
 y to create mailbox.\n\
 n to create normal file.\n\
 q to abort.\n\
 ",stdout) FLUSH;
-#endif
 		    termdown(4);
 		    goto reask_save;
 		}
@@ -438,9 +432,7 @@ int view_article()
 	IF(verbose)
 	    fputs("\nNo attatchments on an empty article.\n",stdout) FLUSH;
 	ELSE
-#ifdef TERSE
 	    fputs(nullart,stdout) FLUSH;
-#endif
 	termdown(2);
 	return SAVE_DONE;
     }
@@ -503,9 +495,7 @@ int cancel_article()
 	IF(verbose)
 	    fputs("\nCan't cancel an empty article.\n",stdout) FLUSH;
 	ELSE
-#ifdef TERSE
 	    fputs(nullart,stdout) FLUSH;
-#endif
 	termdown(2);
 	return r;
     }
@@ -530,9 +520,7 @@ int cancel_article()
 	IF(verbose)
 	    fputs("\nYou can't cancel someone else's article\n",stdout) FLUSH;
 	ELSE
-#ifdef TERSE
 	    fputs("\nNot your article\n",stdout) FLUSH;
-#endif
 	termdown(2);
     }
     else {
@@ -572,9 +560,7 @@ int supersede_article()		/* Supersedes: */
 	IF(verbose)
 	    fputs("\nCan't supersede an empty article.\n",stdout) FLUSH;
 	ELSE
-#ifdef TERSE
 	    fputs(nullart,stdout) FLUSH;
-#endif
 	termdown(2);
 	return r;
     }
@@ -599,9 +585,7 @@ int supersede_article()		/* Supersedes: */
 	IF(verbose)
 	    fputs("\nYou can't supersede someone else's article\n",stdout) FLUSH;
 	ELSE
-#ifdef TERSE
 	    fputs("\nNot your article\n",stdout) FLUSH;
-#endif
 	termdown(2);
     }
     else {
@@ -687,9 +671,7 @@ void reply()
 	    printf("\n%s\n(Above lines saved in file %s)\n",buf,headname)
 	      FLUSH;
 	ELSE
-#ifdef TERSE
 	    printf("\n%s\n(Header in %s)\n",buf,headname) FLUSH;
-#endif
 	termdown(3);
     }
     if (incl_body && artfp != nullptr) {
@@ -788,9 +770,7 @@ void forward()
 	    printf("\n%s\n(Above lines saved in file %s)\n",hbuf,headname)
 	      FLUSH;
 	ELSE
-#ifdef TERSE
 	    printf("\n%s\n(Header in %s)\n",hbuf,headname) FLUSH;
-#endif
 	termdown(3);
     }
     if (artfp != nullptr) {

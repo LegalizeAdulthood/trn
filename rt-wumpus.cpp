@@ -482,9 +482,7 @@ void entire_tree(ARTICLE* ap)
 	IF (verbose)
 	    fputs("\nNo article tree to display.\n", stdout) FLUSH;
 	ELSE
-#ifdef TERSE
 	    fputs("\nNo tree.\n", stdout) FLUSH;
-#endif
 	termdown(2);
 	return;
     }

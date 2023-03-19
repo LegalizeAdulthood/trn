@@ -497,11 +497,9 @@ void set_option(int num, char *s)
 #endif
 	break;
       case OI_TERSE_OUTPUT:
-#if defined(TERSE)
 	verbose = !YES(s);
 	if (!verbose)
 	    novice_delays = false;
-#endif
 	break;
       case OI_EAT_TYPEAHEAD:
 	allow_typeahead = !YES(s);
@@ -902,10 +900,8 @@ char *option_value(int num)
 	sprintf(buf,"%d",scanon);
 	return buf;
 #endif
-#if defined(TERSE)
       case OI_TERSE_OUTPUT:
 	return YESorNO(!verbose);
-#endif
       case OI_EAT_TYPEAHEAD:
 	return YESorNO(!allow_typeahead);
       case OI_COMPRESS_SUBJECTS:
@@ -1237,13 +1233,11 @@ Cannot make directory %s--\n\
 \n\
 ",cwd,tmpbuf) FLUSH;
 	    ELSE
-#ifdef TERSE
 		printf("\
 Can't make %s--\n\
 	using %s\n\
 \n\
 ",cwd,tmpbuf) FLUSH;
-#endif
 	}
     }
     free(cwd);
@@ -1255,9 +1249,7 @@ Current directory %s is not writeable--\n\
 	articles will be saved to home directory\n\n\
 ",tmpbuf) FLUSH;
 	ELSE
-#ifdef TERSE
 	    printf("%s not writeable--using ~\n\n",tmpbuf) FLUSH;
-#endif
 	strcpy(tmpbuf,g_home_dir);
     }
     cwd = savestr(tmpbuf);

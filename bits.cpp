@@ -591,9 +591,7 @@ static int chase_xref(ART_NUM artnum, int markread)
 	    IF(verbose)
 		fputs("\nChasing xrefs", stdout);
 	    ELSE
-# ifdef TERSE
 		fputs("\nXrefs", stdout);
-# endif
 	    termdown(1);
 	    output_chase_phrase = false;
 	}
@@ -732,9 +730,7 @@ static int chase_xref(art_num artnum, INT markread)
 	    IF(verbose)
 		fputs("\nChasing xrefs", stdout);
 	    ELSE
-# ifdef TERSE
 		fputs("\nXrefs", stdout);
-# endif
 	    termdown(1);
 	    output_chase_phrase = 0;
 	}

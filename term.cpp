@@ -1146,9 +1146,7 @@ reask_anything:
     IF(verbose)
 	fputs("[Type space to continue] ",stdout);
     ELSE
-#ifdef TERSE
 	fputs("[MORE] ",stdout);
-#endif
     color_pop();	/* of COLOR_MORE */
     fflush(stdout);
     eat_typeahead();
@@ -1166,9 +1164,7 @@ reask_anything:
 	IF(verbose)
 	    fputs("\nType q to quit or space to continue.\n",stdout) FLUSH;
 	ELSE
-#ifdef TERSE
 	    fputs("\nq to quit, space to continue.\n",stdout) FLUSH;
-#endif
 	termdown(2);
 	goto reask_anything;
     }
@@ -1199,9 +1195,7 @@ int pause_getcmd()
     IF(verbose)
 	fputs("[Type space or a command] ",stdout);
     ELSE
-#ifdef TERSE
 	fputs("[CMD] ",stdout);
-#endif
     color_pop();	/* of COLOR_CMD */
     fflush(stdout);
     eat_typeahead();

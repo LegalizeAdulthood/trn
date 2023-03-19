@@ -69,9 +69,7 @@ void end_only()
 	    sprintf(msg, "Restriction %s%s removed.",ngtodo[0],
 		    maxngtodo > 1 ? ", etc." : nullstr);
 	ELSE
-#ifdef TERSE
 	    sprintf(msg, "Exiting \"only\".");
-#endif
 	for (i = save_maxngtodo; i < maxngtodo + save_maxngtodo; i++) {
 	    free(ngtodo[i]);
 	    free_compex(compextodo[i]);
