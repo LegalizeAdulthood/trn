@@ -100,7 +100,7 @@ bool fetch_ftp(char *host, char *origpath, char *outname)
     int x,y,l;
 
     safecpy(path,origpath,510);
-    p = rindex(path, '/');	/* p points to last slash or nullptr*/
+    p = strrchr(path, '/');	/* p points to last slash or nullptr*/
     if (p == nullptr) {
 	printf("Error: URL:ftp path has no '/' character.\n") FLUSH;
 	return false;
@@ -124,7 +124,7 @@ bool fetch_ftp(char *host, char *origpath, char *outname)
     /* serious security holes could result without this code */
     l = strlen(cmdline);
     for (x = 0; cmdline[x]; x++) {
-	if (index("&;`'\"|*?~<>^()[]{}$\\",cmdline[x])) {
+	if (strchr("&;`'\"|*?~<>^()[]{}$\\",cmdline[x])) {
 	    for (y = l+1; y > x; y--)
 		cmdline[y] = cmdline[y-1];
 	    l++; /* length has been increased */

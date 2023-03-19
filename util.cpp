@@ -319,7 +319,7 @@ char *trn_getwd(char *buf, int buflen)
     }
 #ifdef MSDOS
     strlwr(buf);
-    while ((buf = index(buf,'\\')) != nullptr)
+    while ((buf = strchr(buf,'\\')) != nullptr)
 	*buf++ = '/';
 #endif
     return ret;
@@ -359,7 +359,7 @@ int len;
 	printf("/bin/pwd didn't output anything\n") FLUSH;
     	return nullptr;
     }
-    if ((nl = index(buf, '\n')) != nullptr)
+    if ((nl = strchr(buf, '\n')) != nullptr)
 	*nl = '\0';
 #endif
     return ret;
@@ -428,7 +428,7 @@ int makedir(char *dirname, int nametype)
 	    *s = '/';			/* mark this as existing */
 	    break;
 	}
-	s = rindex(dirname,'/');	/* shorten name */
+	s = strrchr(dirname,'/');	/* shorten name */
 	if (!s)				/* relative path! */
 	    break;			/* hope they know what they are doing */
 	*s = '\0';			/* mark as not existing */
@@ -668,7 +668,7 @@ char **prep_ini_words(INI_WORDS words[])
 	words[0].checksum = i;
 	words[0].help_str = cp = safemalloc(i * sizeof (char*));
     }
-    bzero(cp, INI_LEN(words) * sizeof (char*));
+    memset(cp,0,(words)[0].checksum * sizeof (char*));
     return (char**)cp;
 }
 

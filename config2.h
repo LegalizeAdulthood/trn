@@ -64,24 +64,6 @@ using char_int = int;
 #define strncaseEQ(s1,s2,l) (!trn_ncasecmp(s1,s2,l))
 #endif
 
-/* some slight-of-hand for compatibility issues */
-
-#ifndef index
-#  define index strchr
-#endif
-#ifndef rindex
-#  define rindex strrchr
-#endif
-#ifndef bcmp
-#  define bcmp(s,d,l) memcmp((s),(d),(l))
-#endif
-#ifndef bcopy
-#  define bcopy(s,d,l) memcpy((d),(s),(l))
-#endif
-#ifndef bzero
-#  define bzero(s,l) memset((s),0,(l))
-#endif
-
 #ifndef FILE_REF
 #   define FILE_REF(s) (*(s) == '/' ? '/' : 0)
 #endif

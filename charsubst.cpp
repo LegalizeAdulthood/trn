@@ -157,7 +157,7 @@ int strcharsubst(char *outb, char *inb, int limit, char_int subst)
       case 'a':
 	return Latin1toASCII((Uchar*)outb, (Uchar*)inb, limit, 2);
       default:
-	if ((s = index(inb,'\n')) != nullptr && s - inb + 1 < limit) {
+	if ((s = strchr(inb,'\n')) != nullptr && s - inb + 1 < limit) {
 	    len = s - inb + 1;
 	    limit = len + 1;
 	}

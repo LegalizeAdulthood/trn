@@ -61,7 +61,7 @@ void sf_init()
 
     /* initialize abbreviation list */
     sf_abbr = (char**)safemalloc(256 * sizeof (char*));
-    bzero((char*)sf_abbr, 256 * sizeof (char*));
+    memset((char*)sf_abbr,0,256 * sizeof (char*));
 
     if (sf_verbose)
 	printf("\nReading score files...\n") FLUSH;
@@ -255,7 +255,7 @@ char *sf_get_extra_header(ART_NUM art, int hnum)
 
     for (s = headbuf; s && *s && *s != '\n'; s++) {
 	if (strncaseEQ(head,s,len)) {
-	    s = index(s,':');
+	    s = strchr(s,':');
 	    if (!s)
 		return nullstr;
 	    s++;	/* skip the colon */
@@ -263,7 +263,7 @@ char *sf_get_extra_header(ART_NUM art, int hnum)
 	    if (!*s)
 		return nullstr;
 	    head = s;		/* now point to start of new text */
-	    s = index(s,'\n');
+	    s = strchr(s,'\n');
 	    if (!s)
 		return nullstr;
 	    *s = '\0';
@@ -271,7 +271,7 @@ char *sf_get_extra_header(ART_NUM art, int hnum)
 	    *s = '\n';
 	    return lbuf;
 	}
-	s = index(s,'\n');	/* '\n' will be skipped on loop increment */
+	s = strchr(s,'\n');	/* '\n' will be skipped on loop increment */
     }
     return nullstr;
 }
@@ -301,7 +301,7 @@ char *sf_get_filename(int level)
 	strcat(sf_file,"global");
     } else {
 	strcat(sf_file,filexp("%C"));
-	s = rindex(sf_file,'/');
+	s = strrchr(sf_file,'/');
 	/* maybe redo this logic later... */
 	while (level--) {
 	    if (*s == '\0')	/* no more name to match */
@@ -321,7 +321,7 @@ char *sf_cmd_fname(char *s)
     static char lbuf[LBUFLEN];
     char* s1;
 
-    s1 = index(s,'/');
+    s1 = strchr(s,'/');
     if (s1)
 	return s;
     /* no slashes in this filename */
@@ -664,7 +664,7 @@ bool sf_do_line(char *line, bool check)
 	sf_entries[sf_num_entries-1].str2 = nullptr;
 	/* Note: consider allowing * wildcard on other header filenames */
 	if (j == FROM_LINE) {	/* may have * wildcard */
-	    if ((s2 = index(s,'*')) != nullptr) {
+	    if ((s2 = strchr(s,'*')) != nullptr) {
 		sf_entries[sf_num_entries-1].str2 = mp_savestr(s2+1,MP_SCORE1);
 		*s2 = '\0';
 	    }
@@ -1099,10 +1099,9 @@ void sf_exclude_file(char *fname)
     tmp_entries = (SF_ENTRY*)safemalloc(newnum*sizeof(SF_ENTRY));
     /* copy the parts into tmp_entries */
     if (start > 0)
-	bcopy((char*)sf_entries,(char*)tmp_entries,start * sizeof (SF_ENTRY));
+	memcpy((char*)tmp_entries,(char*)sf_entries,start * sizeof (SF_ENTRY));
     if (end < sf_num_entries-1)
-	bcopy((char*)(sf_entries+end+1), (char*)(tmp_entries+start),
-		(sf_num_entries-end-1) * sizeof (SF_ENTRY));
+	memcpy((char*)(tmp_entries+start),(char*)(sf_entries+end+1),(sf_num_entries-end-1) * sizeof (SF_ENTRY));
     free(sf_entries);
     sf_entries = tmp_entries;
     sf_num_entries = newnum;

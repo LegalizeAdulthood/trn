@@ -43,9 +43,9 @@ char *extract_name(char *name)
 
     while (isspace(*name)) name++;
 
-    lparen = index(name, '(');
-    rparen = rindex(name, ')');
-    langle = index(name, '<');
+    lparen = strchr(name, '(');
+    rparen = strrchr(name, ')');
+    langle = strchr(name, '<');
     if (!lparen && !langle)
 	return nullptr;
     else if (langle && (!lparen || !rparen || lparen>langle || rparen<langle)) {
@@ -65,7 +65,7 @@ char *extract_name(char *name)
     if (*name == '"') {
 	name++;
 	while (isspace(*name)) name++;
-	if ((s = rindex(name, '"')) != nullptr)
+	if ((s = strrchr(name, '"')) != nullptr)
 	    *s = '\0';
     }
     return name;
@@ -264,7 +264,7 @@ try_again:
 		}
 #ifdef USE_UTF_HACK
 		w = byte_length_at(s);
-		bcopy(s, d, w);
+		memcpy(d,s,w);
 		d += w;
 		s += w;
 #else
@@ -357,7 +357,7 @@ try_again:
 	    int w = byte_length_at(last + i);
 	    int v = visual_width_at(last + i);
 	if (w == 0 || j + v > max) break;
-	    bcopy(last+i, d+i, w);
+	    memcpy(d+i,last+i,w);
 	    i += w;
 	    j += v;
 	}
@@ -491,7 +491,7 @@ char *compress_date(ARTICLE *ap, int size)
     char* t;
 
     strncpy(t = cmd_buf, ctime(&ap->date), size);
-    if ((s = index(t, '\n')) != nullptr)
+    if ((s = strchr(t, '\n')) != nullptr)
 	*s = '\0';
     t[size] = '\0';
     return t;
@@ -548,7 +548,7 @@ char *compress_subj(ARTICLE *ap, int max)
     /* Remove "(was: oldsubject)", because we already know the old subjects.
     ** Also match "(Re: oldsubject)".  Allow possible spaces after the ('s.
     */
-    for (cp = buf; (cp = index(cp+1, '(')) != nullptr;) {
+    for (cp = buf; (cp = strchr(cp+1, '(')) != nullptr;) {
 	while (*++cp == ' ') ;
 	if (EQ(cp[0], 'w') && EQ(cp[1], 'a') && EQ(cp[2], 's')
 	 && (cp[3] == ':' || cp[3] == ' ')) {
@@ -565,10 +565,10 @@ char *compress_subj(ARTICLE *ap, int max)
     if (!unbroken_subjects && len > max) {
 	char* last_word;
 	/* Try to include the last two words on the line while trimming */ 
-	if ((last_word = rindex(buf, ' ')) != nullptr) {
+	if ((last_word = strrchr(buf, ' ')) != nullptr) {
 	    char* next_to_last;
 	    *last_word = '\0';
-	    if ((next_to_last = rindex(buf, ' ')) != nullptr) {
+	    if ((next_to_last = strrchr(buf, ' ')) != nullptr) {
 		if (next_to_last-buf >= len - max + 3 + 10-1)
 		    cp = next_to_last;
 		else

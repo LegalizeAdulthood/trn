@@ -44,7 +44,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 		return 0;
 	    s += 9;
 	    tmpfilename = s;
-	    s = index(s, ' ');
+	    s = strchr(s, ' ');
 	    if (!s)
 		return 0;
 	    *s = '\0';
@@ -61,7 +61,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	    if (tmppart > tmptotal || strnNE(s,"file ",5))
 		return 0;
 	    tmpfilename = s+5;
-	    s = index(tmpfilename, ' ');
+	    s = strchr(tmpfilename, ' ');
 	    if (!s)
 		return 0;
 	    *s = '\0';
@@ -73,11 +73,11 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
     }
     if (strnEQ(bp, "POST V", 6)) {
 	/* "POST Vd.d.d F (Part N/M)" */
-	s = index(bp+6, ' ');
+	s = strchr(bp+6, ' ');
 	if (!s)
 	    return 0;
 	tmpfilename = s+1;
-	s = index(tmpfilename, ' ');
+	s = strchr(tmpfilename, ' ');
 	if (!s || strnNE(s, " (Part ", 7))
 	    return 0;
 	*s = '\0';
@@ -98,7 +98,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
     if (strnEQ(bp, "File: ", 6)) {
 	/* "File: F -- part N of M -- ... */
 	tmpfilename = bp+6;
-	s = index(tmpfilename, ' ');
+	s = strchr(tmpfilename, ' ');
 	if (!s || strnNE(s, " -- part ", 9))
 	    return 0;
 	*s = '\0';
@@ -130,7 +130,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	if (tmppart > tmptotal || strnNE(s, "File: ", 6))
 	    return 0;
 	tmpfilename = s+6;
-	s = index(tmpfilename, ' ');
+	s = strchr(tmpfilename, ' ');
 	if (!s)
 	    return 0;
 	*s = '\0';

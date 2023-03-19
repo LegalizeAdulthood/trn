@@ -154,7 +154,7 @@ char *filexp(char *s)
 			    if (strEQ(scrbuf,tildename)) {
 				for (i=LOGDIRFIELD-2; i; i--) {
 				    if (d)
-					d = index(d+1,':');
+					d = strchr(d+1,':');
 				}
 				if (d) {
 				    cpytill(scrbuf,d+1,':');

@@ -123,7 +123,7 @@ NEWSRC *new_newsrc(char *name, char *newsrc, char *add_ok)
 	return nullptr;
 
     rp = (NEWSRC*)safemalloc(sizeof (NEWSRC));
-    bzero((char*)rp, sizeof (NEWSRC));
+    memset((char*)rp,0,sizeof (NEWSRC));
     rp->datasrc = dp;
     rp->name = savestr(filexp(newsrc));
     sprintf(tmpbuf, RCNAME_OLD, rp->name);
@@ -256,7 +256,7 @@ char *multirc_name(MULTIRC *mp)
     char* cp;
     if (mp->first->next)
 	return "<each-newsrc>";
-    if ((cp = rindex(mp->first->name, '/')) != nullptr)
+    if ((cp = strrchr(mp->first->name, '/')) != nullptr)
 	return cp+1;
     return mp->first->name;
 }
@@ -561,7 +561,7 @@ static bool open_newsrc(NEWSRC *rp)
 		long actnum, descnum;
 		char* s;
 		buf[strlen(buf)-1] = '\0';
-		if ((s = index(buf, ':')) != nullptr && s[1] == ' ' && s[2]) {
+		if ((s = strchr(buf, ':')) != nullptr && s[1] == ' ' && s[2]) {
 		    safefree0(lastngname);
 		    lastngname = savestr(s+2);
 		}
@@ -597,7 +597,7 @@ static void init_ngnode(LIST *list, LISTNODE *node)
 {
     ART_NUM i;
     NGDATA* np;
-    bzero(node->data, list->items_per_node * list->item_size);
+    memset(node->data,0,list->items_per_node * list->item_size);
     for (i = node->low, np = (NGDATA*)node->data; i <= node->high; i++, np++)
 	np->num = i;
 }
@@ -691,7 +691,7 @@ bool get_ng(char *what, int flags)
 	ntoforget = "Type n to forget about this newsgroup.\n";
     else
 	ntoforget = "n to forget it.\n";
-    if (index(what,'/')) {
+    if (strchr(what,'/')) {
 	dingaling();
 	printf("\nBad newsgroup name.\n") FLUSH;
 	termdown(2);
@@ -1216,7 +1216,7 @@ void sethash(NGDATA *np)
 static int rcline_cmp(char *key, int keylen, HASHDATUM data)
 {
     /* We already know that the lengths are equal, just compare the strings */
-    return bcmp(key, ((NGDATA*)data.dat_ptr)->rcline, keylen);
+    return memcmp(key, ((NGDATA*)data.dat_ptr)->rcline, keylen);
 }
 
 /* checkpoint the newsrc(s) */

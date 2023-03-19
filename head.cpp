@@ -124,17 +124,17 @@ int get_header_num(char *s)
 	htype[CUSTOM_LINE].minpos = -1;
 	htype[CUSTOM_LINE].maxpos = 0;
 	for (bp = headbuf; *bp; bp = end) {
-	    if (!(end = index(bp,'\n')) || end == bp)
+	    if (!(end = strchr(bp,'\n')) || end == bp)
 		break;
 	    ch = *++end;
 	    *end = '\0';
-	    s = index(bp,':');
+	    s = strchr(bp,':');
 	    *end = ch;
 	    if (!s || (i = set_line_type(bp,s)) != CUSTOM_LINE)
 		continue;
 	    htype[CUSTOM_LINE].minpos = bp - headbuf;
 	    while (*end == ' ' || *end == '\t') {
-		if (!(end = index(end, '\n'))) {
+		if (!(end = strchr(end, '\n'))) {
 		    end = bp + strlen(bp);
 		    break;
 		}
@@ -200,7 +200,7 @@ bool parseline(char *art_buf, int newhide, int oldhide)
 	return oldhide;
 
     end_header_line();
-    s = index(art_buf,':');
+    s = strchr(art_buf,':');
     if (s == nullptr) {	/* is it the end of the header? */
 	    /* Did NNTP ship us a mal-formed header line? */
 	    if (reading_nntp_header && *art_buf && *art_buf != '\n') {
@@ -482,9 +482,9 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 		    break;
 		last_buf = line;
 		last_buflen = buflen_last_line_got;
-		if ((t = index(line, '\r')) != nullptr)
+		if ((t = strchr(line, '\r')) != nullptr)
 		    *t = '\0';
-		if (!(t = index(line, ' ')))
+		if (!(t = strchr(line, ' ')))
 		    continue;
 		t++;
 		num = atol(line);

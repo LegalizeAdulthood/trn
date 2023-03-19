@@ -345,7 +345,7 @@ time_t nntp_time()
     if (nntp_check() <= 0)
 	return time((time_t*)nullptr);
 
-    s = rindex(g_ser_line, ' ') + 1;
+    s = strrchr(g_ser_line, ' ') + 1;
     month = (s[4] - '0') * 10 + (s[5] - '0');
     day = (s[6] - '0') * 10 + (s[7] - '0');
     hh = (s[8] - '0') * 10 + (s[9] - '0');

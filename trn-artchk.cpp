@@ -74,7 +74,7 @@ Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>\n");
 	    break;
 	if (*buff == ' ' || *buff == '\t')
 	    continue;
-	if (!(cp = index(buff, ':'))) {
+	if (!(cp = strchr(buff, ':'))) {
 	    printf("\nERROR: line %d is an invalid header line:\n%s\n",
 		   line_num, buff);
 	    break;
@@ -88,7 +88,7 @@ ERROR: header on line %d does not have a space after the colon:\n%s\n",
 	    found_newsgroups = 1;
 	    for (cp = buff + 11; *cp == ' '; cp++)
 		;
-	    if (index(cp, ' ')) {
+	    if (strchr(cp, ' ')) {
 		printf("\n\
 ERROR: the \"Newsgroups:\" line has spaces in it that MUST be removed. The\n\
 only allowable space is the one separating the colon (:) from the contents.\n\
@@ -96,7 +96,7 @@ Use a comma (,) to separate multiple newsgroup names.\n");
 		continue;
 	    }
 	    while (*cp) {
-		if (!(cp2 = index(cp, ',')))
+		if (!(cp2 = strchr(cp, ',')))
 		    cp2 = cp + strlen(cp);
 		else
 		    *cp2++ = '\0';
@@ -152,9 +152,9 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
     }
     if (strNE(cp,"local")) {
 	server_name = savestr(cp);
-	cp = index(server_name, ';');
+	cp = strchr(server_name, ';');
 	if (!cp)
-	    cp = index(server_name, ':');
+	    cp = strchr(server_name, ':');
 	if (cp) {
 	    *cp = '\0';
 	    nntplink.port_number = atoi(cp+1);

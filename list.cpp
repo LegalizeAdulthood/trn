@@ -34,7 +34,7 @@ LIST *new_list(long low, long high, int item_size, int items_per_node, int flags
 static void def_init_node(LIST *list, LISTNODE *node)
 {
     if (list->flags & LF_ZERO_MEM)
-	bzero(node->data, list->items_per_node * list->item_size);
+	memset(node->data,0,list->items_per_node * list->item_size);
 }
 
 /* Take the number of a list element and return its pointer.  This

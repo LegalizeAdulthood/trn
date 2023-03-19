@@ -243,9 +243,9 @@ int do_article()
 	    if (in_header && do_hiding && (htype[in_header].flags & HT_MAGIC)) {
 		switch (in_header) {
 		  case NGS_LINE:
-		    if ((s = index(bufptr,'\n')) != nullptr)
+		    if ((s = strchr(bufptr,'\n')) != nullptr)
 			*s = '\0';
-		    hide_this_line = (index(bufptr,',') == nullptr)
+		    hide_this_line = (strchr(bufptr,',') == nullptr)
 			&& strEQ(bufptr+12, ngname);
 		    if (s != nullptr)
 			*s = '\n';
@@ -257,7 +257,7 @@ int do_article()
 		    }
 		    break;
 		 case FROM_LINE:
-		    if ((s = index(bufptr,'\n')) != nullptr
+		    if ((s = strchr(bufptr,'\n')) != nullptr
 		     && s-bufptr < sizeof art_line)
 			safecpy(art_line,bufptr,s-bufptr+1);
 		    else
@@ -504,7 +504,7 @@ int do_article()
 	    if (restart)	/* stranded somewhere in the buffer? */
 		artpos += restart - alinebeg;
 	    else if (in_header)
-		artpos = index(headbuf+artpos,'\n') - headbuf + 1;
+		artpos = strchr(headbuf+artpos,'\n') - headbuf + 1;
 	    else
 		artpos = artbuf_pos + htype[PAST_HEADER].minpos;
 	    vwtary(artline,artpos);	/* remember pos in file */
@@ -635,7 +635,7 @@ bool maybe_set_color(char *cp, bool backsearch)
     }
     else {
 	while (*cp == ' ' || *cp == '\t') cp++;
-	if (index(">}]#!:|", *cp))
+	if (strchr(">}]#!:|", *cp))
 	    color_object(COLOR_CITEDTEXT, false);
 	else
 	    color_object(COLOR_BODYTEXT, false);
@@ -721,7 +721,7 @@ int page_switch()
 	innerlight = 0;
 	innersearch = 0; /* assume not found */
 	while ((s = readartbuf(false)) != nullptr) {
-	    if ((nlptr = index(s,'\n')) != nullptr) {
+	    if ((nlptr = strchr(s,'\n')) != nullptr) {
 		ch = *++nlptr;
 		*nlptr = '\0';
 	    }
@@ -957,8 +957,8 @@ int page_switch()
 	       case '\b': case '\177':
 leave_pager:
 	reread = false;
-	if (index("nNpP\016\020",*buf) == nullptr
-	 && index("wWsSe:!&|/?123456789.",*buf) != nullptr) {
+	if (strchr("nNpP\016\020",*buf) == nullptr
+	 && strchr("wWsSe:!&|/?123456789.",*buf) != nullptr) {
 	    setdfltcmd();
 	    color_object(COLOR_CMD, true);
 	    interpsearch(cmd_buf, sizeof cmd_buf, mailcall, buf);

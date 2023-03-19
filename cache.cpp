@@ -139,7 +139,7 @@ static void init_artnode(LIST *list, LISTNODE *node)
 {
     ART_NUM i;
     ARTICLE* ap;
-    bzero(node->data, list->items_per_node * list->item_size);
+    memset(node->data,0,list->items_per_node * list->item_size);
     for (i = node->low, ap = (ARTICLE*)node->data; i <= node->high; i++, ap++)
 	ap->num = i;
 }
@@ -246,19 +246,19 @@ void check_poster(ARTICLE *ap)
 	    char* u;
 	    char* h;
 	    strcpy(s,ap->from);
-	    if ((h=index(s,'<')) != nullptr) { /* grab the good part */
+	    if ((h=strchr(s,'<')) != nullptr) { /* grab the good part */
 		s = h+1;
-		if ((h=index(s,'>')) != nullptr)
+		if ((h=strchr(s,'>')) != nullptr)
 		    *h = '\0';
-	    } else if ((h=index(s,'(')) != nullptr) {
+	    } else if ((h=strchr(s,'(')) != nullptr) {
 		while (h-- != s && *h == ' ')
 		    ;
 		h[1] = '\0';		/* or strip the comment */
 	    }
-	    if ((h = index(s,'%')) != nullptr || (h = index(s,'@')) != nullptr) {
+	    if ((h = strchr(s,'%')) != nullptr || (h = strchr(s,'@')) != nullptr) {
 		*h++ = '\0';
 		u = s;
-	    } else if ((u = rindex(s,'!')) != nullptr) {
+	    } else if ((u = strrchr(s,'!')) != nullptr) {
 		*u++ = '\0';
 		h = s;
 	    } else
@@ -445,7 +445,7 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
 	data = hashfetch(subj_hash, newsubj + 4, size);
 	if (!(sp = (SUBJECT*)data.dat_ptr)) {
 	    sp = (SUBJECT*)safemalloc(sizeof (SUBJECT));
-	    bzero((char*)sp, sizeof (SUBJECT));
+	    memset((char*)sp,0,sizeof (SUBJECT));
 	    subject_count++;
 	    if ((sp->prev = last_subject) != nullptr)
 		sp->prev->next = sp;
@@ -473,7 +473,7 @@ int decode_header(char *t, char *f, int size)
     /* Pass 1 to decode coded bytes (which might be character fragments - so 1 pass is wrong) */
     for (i = size; *f && i--; ) {
 	if (*f == '=' && f[1] == '?') {
-	    char* q = index(f+2,'?');
+	    char* q = strchr(f+2,'?');
 	    char ch = (q && q[2] == '?')? q[1] : 0;
 	    char* e;
 
@@ -487,7 +487,7 @@ int decode_header(char *t, char *f, int size)
 #endif
 		e = q+2;
 		do {
-		    e = index(e+1, '?');
+		    e = strchr(e+1, '?');
 		} while (e && e[1] != '=');
 		if (e) {
 		    int len = e - f + 2;
@@ -578,8 +578,8 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
 	if (ap->xrefs && ap->xrefs != nullstr)
 	    free(ap->xrefs);
 	/* Exclude an xref for just this group or "(none)". */
-	cp = index(s, ':');
-	if (!cp || !index(cp+1, ':')) {
+	cp = strchr(s, ':');
+	if (!cp || !strchr(cp+1, ':')) {
 	    free(s);
 	    s = nullstr;
 	}
@@ -602,7 +602,7 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
 int subject_cmp(char *key, int keylen, HASHDATUM data)
 {
     /* We already know that the lengths are equal, just compare the strings */
-    return bcmp(key, ((SUBJECT*)data.dat_ptr)->str+4, keylen);
+    return memcmp(key, ((SUBJECT*)data.dat_ptr)->str+4, keylen);
 }
 
 /* see what we can do while they are reading */

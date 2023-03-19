@@ -178,7 +178,7 @@ void decode_switch(char *s)
 	case 'E':
 	    if (*++s == '=') s++;
 	    strcpy(tmpbuf,s);
-	    s = index(tmpbuf,'=');
+	    s = strchr(tmpbuf,'=');
 	    if (s) {
 		*s++ = '\0';
 		s = export_var(tmpbuf,s) - (s-tmpbuf);
@@ -208,7 +208,7 @@ void decode_switch(char *s)
 		/* Free old user_htype list */
 		while (user_htype_cnt > 1)
 		    free(user_htype[--user_htype_cnt].name);
-		bzero((char*)user_htypeix, 26);
+		memset((char*)user_htypeix,0,26);
 	    }
 	    /* FALL THROUGH */
 	case 'H':
@@ -383,7 +383,7 @@ void write_init_environment(FILE *fp)
     int i;
     char* s;
     for (i = 0; i < init_environment_cnt; i++) {
-	s = index(init_environment_strings[i],'=');
+	s = strchr(init_environment_strings[i],'=');
 	if (!s)
 	    continue;
 	*s = '\0';

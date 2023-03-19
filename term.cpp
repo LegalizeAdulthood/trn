@@ -1808,7 +1808,7 @@ void xmouse_check()
 	    turn_it_on = false;
 	else {
 	    interp(msg, sizeof msg, MouseModes);
-	    turn_it_on = (index(msg, mode) != nullptr);
+	    turn_it_on = (strchr(msg, mode) != nullptr);
 	}
 	if (turn_it_on) {
 	    char* s;

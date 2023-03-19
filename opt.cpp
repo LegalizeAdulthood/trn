@@ -71,7 +71,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     opt_file(*tcbufptr,tcbufptr,false);
 
     option_def_vals = (char**)safemalloc(INI_LEN(options_ini)*sizeof(char*));
-    bzero((char*)option_def_vals,INI_LEN(options_ini) * sizeof (char*));
+    memset((char*)option_def_vals,0,(options_ini)[0].checksum * sizeof (char*));
     /* Set DEFHIDE and DEFMAGIC to current values and clear user_htype list */
     set_header_list(HT_DEFHIDE,HT_HIDE,nullstr);
     set_header_list(HT_DEFMAGIC,HT_MAGIC,nullstr);
@@ -101,9 +101,9 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 	    sw_file(tcbufptr);
     }
     option_saved_vals = (char**)safemalloc(INI_LEN(options_ini)*sizeof(char*));
-    bzero((char*)option_saved_vals,INI_LEN(options_ini) * sizeof (char*));
+    memset((char*)option_saved_vals,0,(options_ini)[0].checksum * sizeof (char*));
     option_flags = (char*)safemalloc(INI_LEN(options_ini)*sizeof(char));
-    bzero(option_flags,INI_LEN(options_ini) * sizeof (char));
+    memset(option_flags,0,(options_ini)[0].checksum * sizeof (char));
 
     if (argc > 1) {
 	for (i = 1; i < argc; i++)
@@ -608,7 +608,7 @@ void save_options(char *filename)
 
 	for (line = filebuf; line && *line; line = nlp) {
 	    cp = line;
-	    nlp = index(cp, '\n');
+	    nlp = strchr(cp, '\n');
 	    if (nlp)
 		*nlp++ = '\0';
 	    while (isspace(*cp)) cp++;
@@ -622,7 +622,7 @@ void save_options(char *filename)
 	}
 	for (line = nlp; line && *line; line = nlp) {
 	    cp = line;
-	    nlp = index(cp, '\n');
+	    nlp = strchr(cp, '\n');
 	    if (nlp)
 		nlp++;
 	    while (*cp != '\n' && isspace(*cp)) cp++;
@@ -975,7 +975,7 @@ static void set_header_list(int flag, int defflag, char *str)
 	/* Free old user_htype list */
 	while (user_htype_cnt > 1)
 	    free(user_htype[--user_htype_cnt].name);
-	bzero((char*)user_htypeix, sizeof user_htypeix);
+	memset((char*)user_htypeix,0,sizeof user_htypeix);
     }
 
     if (!*str)
@@ -985,7 +985,7 @@ static void set_header_list(int flag, int defflag, char *str)
 			? (htype[i].flags | flag)
 			: (htype[i].flags & ~flag));
     for (;;) {
-	if ((cp = index(str,',')) != nullptr)
+	if ((cp = strchr(str,',')) != nullptr)
 	    *cp = '\0';
 	if (*str == '!') {
 	    setit = false;
@@ -1068,7 +1068,7 @@ void set_header(char *s, int flag, bool setit)
 	    }
 	    user_htype_cnt = killed;
 	}
-	bzero((char*)user_htypeix, sizeof user_htypeix);
+	memset((char*)user_htypeix,0,sizeof user_htypeix);
 	for (i = 1; i < user_htype_cnt; i++)
 	    user_htypeix[*user_htype[i].name - 'a'] = i;
     }

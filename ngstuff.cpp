@@ -171,7 +171,7 @@ int numnum()
 
     perform_status_init(ngptr->toread);
 
-    for (s=buf; *s && (isdigit(*s) || index(" ,-.$",*s)); s++)
+    for (s=buf; *s && (isdigit(*s) || strchr(" ,-.$",*s)); s++)
 	if (!isdigit(*s))
 	    justone = false;
     if (*s) {
@@ -187,7 +187,7 @@ int numnum()
 	printf("Processing...");
 	fflush(stdout);
     }
-    for (s = tmpbuf; (c = index(s,',')) != nullptr; s = ++c) {
+    for (s = tmpbuf; (c = strchr(s,',')) != nullptr; s = ++c) {
 	*c = '\0';
 	if (*s == '.')
 	    min = oldart;
@@ -198,7 +198,7 @@ int numnum()
 	    sprintf(msg,"(First article is %ld)",(long)absfirst);
 	    warnmsg(msg);
 	}
-	if ((s=index(s,'-')) != nullptr) {
+	if ((s=strchr(s,'-')) != nullptr) {
 	    s++;
 	    if (*s == '$')
 		max = lastart;
@@ -487,7 +487,7 @@ int perform(char *cmdlst, int output_level)
 	    if (perform(tmpbuf,output_level?2:0) < 0)
 		return -1;
 	}
-	else if (index("!&sSwWae|",ch)) {
+	else if (strchr("!&sSwWae|",ch)) {
 	    if (one_command)
 		strcpy(buf,cmdlst);
 	    else

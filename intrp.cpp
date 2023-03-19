@@ -119,7 +119,7 @@ static char *skipinterp(char *pattern, char *stoppers)
 	printf("skipinterp %s (till %s)\n",pattern,stoppers?stoppers:"");
 #endif
 
-    while (*pattern && (!stoppers || !index(stoppers,*pattern))) {
+    while (*pattern && (!stoppers || !strchr(stoppers,*pattern))) {
 	if (*pattern == '%' && pattern[1]) {
 	switch_again:
 	    switch (*++pattern) {
@@ -225,7 +225,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 	printf(">dointerp: %s (till %s)\n",pattern,stoppers?stoppers:"");
 #endif
 
-    while (*pattern && (!stoppers || !index(stoppers,*pattern))) {
+    while (*pattern && (!stoppers || !strchr(stoppers,*pattern))) {
 	if (*pattern == '%' && pattern[1]) {
 	    upper = false;
 	    lastcomp = false;
@@ -269,12 +269,12 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    break;
 		case '/':
 		    s = scrbuf;
-		    if (!cmd || !index("/?g",*cmd))
+		    if (!cmd || !strchr("/?g",*cmd))
 			*s++ = '/';
 		    strcpy(s,lastpat);
 		    s += strlen(s);
 		    if (!cmd || *cmd != 'g') {
-			if (cmd && index("/?",*cmd))
+			if (cmd && strchr("/?",*cmd))
 			    *s++ = *cmd;
 			else
 			    *s++ = '/';
@@ -285,7 +285,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			    if (art_howmuch == ARTSCOPE_ONEHDR) {
 				safecpy(s,htype[art_srchhdr].name,
 					(sizeof scrbuf) - (s-scrbuf));
-				if (!(s = index(s,':')))
+				if (!(s = strchr(s,':')))
 				    s = scrbuf+(sizeof scrbuf)-1;
 				else
 				    s++;
@@ -297,7 +297,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    break;
 		case '{':
 		    pattern = cpytill(scrbuf,pattern+1,'}');
-		    if ((s = index(scrbuf,'-')) != nullptr)
+		    if ((s = strchr(scrbuf,'-')) != nullptr)
 			*s++ = '\0';
 		    else
 			s = nullstr;
@@ -305,7 +305,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    break;
 		case '<':
 		    pattern = cpytill(scrbuf,pattern+1,'>');
-		    if ((s = index(scrbuf,'-')) != nullptr)
+		    if ((s = strchr(scrbuf,'-')) != nullptr)
 			*s++ = '\0';
 		    else
 			s = nullstr;
@@ -652,7 +652,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			if (htype[REFS_LINE].minpos >= 0) {
 			    refs_buf = fetchlines(art,REFS_LINE);
 			    normalize_refs(refs_buf);
-			    if ((s = rindex(refs_buf,'<')) != nullptr)
+			    if ((s = strrchr(refs_buf,'<')) != nullptr)
 				break;
 			}
 		    }
@@ -674,12 +674,12 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			/* no more than 3 prior references PLUS the
 			** root article allowed, including the one
 			** concatenated below */
-			if ((s = rindex(refs_buf,'<')) != nullptr && s > refs_buf) {
+			if ((s = strrchr(refs_buf,'<')) != nullptr && s > refs_buf) {
 			    *s = '\0';
-			    h = rindex(refs_buf,'<');
+			    h = strrchr(refs_buf,'<');
 			    *s = '<';
 			    if (h && h > refs_buf) {
-				s = index(refs_buf+1,'<');
+				s = strchr(refs_buf+1,'<');
 				if (s < h)
 				    safecpy(s,h,len);
 			    }
@@ -893,7 +893,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    safecpy(scrbuf,s,sizeof scrbuf);
 		    s = scrbuf;
 		}
-		if (upper || !(t = rindex(s,'/')))
+		if (upper || !(t = strrchr(s,'/')))
 		    t = s;
 		while (*t && !isalpha(*t))
 		    t++;
@@ -919,11 +919,11 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		}
 		decode_header(s, s, strlen(s));
 		if (address_parse) {
-		    if ((h=index(s,'<')) != nullptr) { /* grab the good part */
+		    if ((h=strchr(s,'<')) != nullptr) { /* grab the good part */
 			s = h+1;
-			if ((h=index(s,'>')) != nullptr)
+			if ((h=strchr(s,'>')) != nullptr)
 			    *h = '\0';
-		    } else if ((h=index(s,'(')) != nullptr) {
+		    } else if ((h=strchr(s,'(')) != nullptr) {
 			while (h-- != s && *h == ' ')
 			    ;
 			h[1] = '\0';		/* or strip the comment */
@@ -953,7 +953,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			abort_interp();
 		}
 		while (*s) {
-		    if ((re_quote && index(regexp_specials, *s))
+		    if ((re_quote && strchr(regexp_specials, *s))
 		     || (tick_quote == 2 && *s == '"')) {
 			if (--destsize <= 0)
 			    abort_interp();

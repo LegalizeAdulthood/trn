@@ -29,7 +29,7 @@
 
 static int addng_cmp(char *key, int keylen, HASHDATUM data)
 {
-	return bcmp(key, ((ADDGROUP*)data.dat_ptr)->name, keylen);
+	return memcmp(key, ((ADDGROUP*)data.dat_ptr)->name, keylen);
 }
 
 static int build_addgroup_list(int keylen, HASHDATUM *data, int extra)
@@ -137,7 +137,7 @@ static void new_nntp_groups(DATASRC *dp)
 	if (nntp_at_list_end(g_ser_line))
 	    break;
 	foundSomething = true;
-	if ((s = index(g_ser_line, ' ')) != nullptr)
+	if ((s = strchr(g_ser_line, ' ')) != nullptr)
 	    len = s - g_ser_line;
 	else
 	    len = strlen(g_ser_line);
@@ -201,7 +201,7 @@ static void new_local_groups(DATASRC *dp)
     newngs = hashcreate(33, addng_cmp);
 
     while (fgets(buf,LBUFLEN,tmpfp) != nullptr) {
-	if ((s = index(buf, ' ')) == nullptr
+	if ((s = strchr(buf, ' ')) == nullptr
 	 || (lastone = atol(s+1)) < dp->lastnewgrp)
 	    continue;
 	*s = '\0';
@@ -331,8 +331,8 @@ bool scanactive(bool add_matching)
 static int list_groups(int keylen, HASHDATUM *data, int add_matching)
 {
     char* bp = ((LISTNODE*)data->dat_ptr)->data + data->dat_len;
-    int linelen = index(bp, '\n') - bp + 1;
-    (void) bcopy(bp, buf, linelen);
+    int linelen = strchr(bp, '\n') - bp + 1;
+    (void) memcpy(buf,bp,linelen);
     buf[linelen] = '\0';
     scanline(buf,add_matching);
     return 0;
@@ -345,7 +345,7 @@ static void scanline(char *actline, bool add_matching)
     long high, low;
     char ch;
 
-    if ((s = index(actline,' ')) == nullptr)
+    if ((s = strchr(actline,' ')) == nullptr)
 	return;
     *s++ = '\0';		/* this buffer is expendable */
     high = 0, low = 1, ch = 'y';

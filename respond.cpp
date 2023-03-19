@@ -230,7 +230,7 @@ int save_article()
 	    }
 	}/* if */
     }
-    else if ((s = index(buf,'|')) != nullptr) { /* is it a pipe command? */
+    else if ((s = strchr(buf,'|')) != nullptr) { /* is it a pipe command? */
 	s++;			/* skip the | */
 	while (*s == ' ') s++;
 	safecpy(altbuf,filexp(s),sizeof altbuf);
@@ -685,7 +685,7 @@ void reply()
 	seekart(htype[PAST_HEADER].minpos);
 	wrapped_nl = '\n';
 	while ((s = readartbuf(false)) != nullptr) {
-	    if ((t = index(s, '\n')) != nullptr)
+	    if ((t = strchr(s, '\n')) != nullptr)
 		*t = '\0';
 	    strcharsubst(hbuf,s,sizeof hbuf,*charsubst);
 	    fprintf(tmpfp,"%s%s\n",indstr,hbuf);
@@ -735,7 +735,7 @@ void forward()
 #else
     mime_boundary = nullptr;
     for (s = hbuf; s; s = eol) {
-	eol = index(s, '\n');
+	eol = strchr(s, '\n');
 	if (eol)
 	    eol++;
 	if (*s == 'C' && strncaseEQ(s, "Content-Type: multipart/", 24)) {
@@ -750,7 +750,7 @@ void forward()
 		while (*++s == ' ') ;
 		if (*s == 'b' && strncaseEQ(s, "boundary=\"", 10)) {
 		    mime_boundary = s+10;
-		    if ((s = index(mime_boundary, '"')) != nullptr)
+		    if ((s = strchr(mime_boundary, '"')) != nullptr)
 			*s = '\0';
 		    mime_boundary = savestr(mime_boundary);
 		    if (s)
@@ -849,7 +849,7 @@ trim the quoted article down as much as possible.)\n\
 	seekart(htype[PAST_HEADER].minpos);
 	wrapped_nl = '\n';
 	while ((s = readartbuf(false)) != nullptr) {
-	    if ((t = index(s, '\n')) != nullptr)
+	    if ((t = strchr(s, '\n')) != nullptr)
 		*t = '\0';
 	    strcharsubst(hbuf,s,sizeof hbuf,*charsubst);
 	    fprintf(tmpfp,"%s%s\n",indstr,hbuf);

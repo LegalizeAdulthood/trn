@@ -76,7 +76,7 @@ bool ov_init()
 	    if (*buf == '#')
 		continue;
 	    if (i < OV_MAX_FIELDS) {
-		char *s = index(buf,':');
+		char *s = strchr(buf,':');
 		fieldnum[i] = ov_num(buf,s);
 		fieldflags[fieldnum[i]] = FF_HAS_FIELD |
 		    ((s && strncaseEQ("full",s+1,4))? FF_HAS_HDR : 0);
@@ -331,15 +331,15 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
     }
     cp = line;
 
-    bzero((char*)fields, sizeof fields);
+    memset((char*)fields,0,sizeof fields);
     for (i = 0; cp && i < OV_MAX_FIELDS; cp = tab) {
-	if ((tab = index(cp, '\t')) != nullptr)
+	if ((tab = strchr(cp, '\t')) != nullptr)
 	    *tab++ = '\0';
 	fn = fieldnum[i];
 	if (!(fieldflags[fn] & (FF_HAS_FIELD | FF_CHECK4FIELD)))
 	    break;
 	if (fieldflags[fn] & (FF_HAS_HDR | FF_CHECK4HDR)) {
-	    char* s = index(cp, ':');
+	    char* s = strchr(cp, ':');
 	    if (fieldflags[fn] & FF_CHECK4HDR) {
 		if (s)
 		    fieldflags[fn] |= FF_HAS_HDR;
@@ -378,8 +378,8 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
     if (fieldflags[OV_XREF] & (FF_HAS_FIELD | FF_CHECK4FIELD)) {
 	if (!article->xrefs && fields[OV_XREF]) {
 	    /* Exclude an xref for just this group */
-	    cp = index(fields[OV_XREF], ':');
-	    if (cp && index(cp+1, ':'))
+	    cp = strchr(fields[OV_XREF], ':');
+	    if (cp && strchr(cp+1, ':'))
 		article->xrefs = savestr(fields[OV_XREF]);
 	}
 
@@ -425,7 +425,7 @@ static char *ov_name(char *group)
     cp = buf + strlen(buf);
     *cp++ = '/';
     strcpy(cp, group);
-    while ((cp = index(cp, '.')))
+    while ((cp = strchr(cp, '.')))
 	*cp = '/';
     strcat(buf, OV_FILE_NAME);
     return buf;

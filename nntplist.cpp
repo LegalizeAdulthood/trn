@@ -74,9 +74,9 @@ int main(int argc, char *argv[])
     }
     if (strNE(cp,"local")) {
 	server_name = savestr(cp);
-	cp = index(server_name, ';');
+	cp = strchr(server_name, ';');
 	if (!cp)
-	    cp = index(server_name, ':');
+	    cp = strchr(server_name, ':');
 	if (cp) {
 	    *cp = '\0';
 	    nntplink.port_number = atoi(cp+1);

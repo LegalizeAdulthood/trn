@@ -38,7 +38,7 @@ ARTICLE *allocate_article(ART_NUM artnum)
 	article = article_ptr(artnum);
     else {
 	article = (ARTICLE*)safemalloc(sizeof (ARTICLE));
-	bzero((char*)article, sizeof (ARTICLE));
+	memset((char*)article,0,sizeof (ARTICLE));
 	article->flags |= AF_FAKE|AF_TMPMEM;
     }
     return article;
@@ -48,7 +48,7 @@ static void fix_msgid(char *msgid)
 {
     char* cp;
 
-    if ((cp = index(msgid, '@')) != nullptr) {
+    if ((cp = strchr(msgid, '@')) != nullptr) {
 	while (*++cp) {
 	    if (isupper(*cp)) {
 		*cp = tolower(*cp);	/* lower-case domain portion */
@@ -61,8 +61,8 @@ int msgid_cmp(char *key, int keylen, HASHDATUM data)
 {
     /* We already know that the lengths are equal, just compare the strings */
     if (data.dat_len)
-	return bcmp(key, data.dat_ptr, keylen);
-    return bcmp(key, ((ARTICLE*)data.dat_ptr)->msgid, keylen);
+	return memcmp(key, data.dat_ptr, keylen);
+    return memcmp(key, ((ARTICLE*)data.dat_ptr)->msgid, keylen);
 }
 
 SUBJECT* fake_had_subj; /* the fake-turned-real article had this subject */
@@ -250,8 +250,8 @@ void thread_article(ARTICLE *article, char *references)
     if (references && *references) {
 	prev = article;
 	ap = nullptr;
-	if ((cp = rindex(references, '<')) == nullptr
-	 || (end = index(cp+1, ' ')) == nullptr)
+	if ((cp = strrchr(references, '<')) == nullptr
+	 || (end = strchr(cp+1, ' ')) == nullptr)
 	    end = references + strlen(references) - 1;
 	while (cp) {
 	    while (end >= cp && end > references
@@ -301,7 +301,7 @@ void thread_article(ARTICLE *article, char *references)
 	        end = cp-1;
 	    else
 	        end = cp;
-	    cp = rindex(references, '<');
+	    cp = strrchr(references, '<');
 	}
 	if (!ap)
 	    goto no_references;
@@ -380,7 +380,7 @@ void rover_thread(ARTICLE *article, char *s)
 	    link_child(prev);
 	    break;
 	}
-	end = index(s, '>');
+	end = strchr(s, '>');
 	if (!end)
 	    return;				/* Impossible! */
 	ch = end[1];
@@ -418,7 +418,7 @@ static char *valid_message_id(char *start, char *end)
 	*(end--) = '\0';
     }
     /* Id must be "<...@...>" */
-    if (*start != '<' || *end != '>' || (mid = index(start, '@')) == nullptr
+    if (*start != '<' || *end != '>' || (mid = strchr(start, '@')) == nullptr
      || mid == start+1 || mid+1 == end) {
 	return 0;
     }

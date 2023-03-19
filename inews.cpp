@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     }
     if (cp && *cp && strNE(cp,"local")) {
 	server_name = savestr(cp);
-	cp = index(server_name, ';');
+	cp = strchr(server_name, ';');
 	if (cp) {
 	    *cp = '\0';
 	    nntplink.port_number = atoi(cp+1);
@@ -264,8 +264,8 @@ int valid_header(char *h)
 
     /* Just check for initial letter, colon, and space to make
      * sure we discard only invalid headers. */
-    colon = index(h, ':');
-    space = index(h, ' ');
+    colon = strchr(h, ':');
+    space = strchr(h, ' ');
     if (isalpha(h[0]) && colon && space == colon + 1)
 	return 1;
 

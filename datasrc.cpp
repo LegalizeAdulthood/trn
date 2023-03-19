@@ -149,7 +149,7 @@ DATASRC *new_datasrc(char *name, char **vals)
     if ((v = vals[DI_NNTP_SERVER]) != nullptr) {
 	char* cp;
 	dp->newsid = savestr(v);
-	if ((cp = index(dp->newsid, ';')) != nullptr) {
+	if ((cp = strchr(dp->newsid, ';')) != nullptr) {
 	    *cp = '\0';
 	    dp->nntplink.port_number = atoi(cp+1);
 	}
@@ -225,7 +225,7 @@ static char *dir_or_none(DATASRC *dp, char *dir, int flag)
 	    return cp;
 	}
 	if (flag == 0) {
-	    char* cp = rindex(dp->newsid,'/');
+	    char* cp = strrchr(dp->newsid,'/');
 	    int len;
 	    if (!cp)
 		return nullptr;
@@ -426,7 +426,7 @@ bool find_actgrp(DATASRC *dp, char *outbuf, char *nam, int len, ART_NUM high)
 	/*dp->act_sf.lp->recent = node;*/
 	act_pos = node->low + data.dat_len;
 	lbp = node->data + data.dat_len;
-	lbp_len = index(lbp, '\n') - lbp + 1;
+	lbp_len = strchr(lbp, '\n') - lbp + 1;
     }
     else {
 	lbp = nullptr;
@@ -457,7 +457,7 @@ bool find_actgrp(DATASRC *dp, char *outbuf, char *nam, int len, ART_NUM high)
 # ifndef ANCIENT_NEWS
 	/* Safely update the low-water mark */
 	{
-	    char* f = rindex(outbuf, ' ');
+	    char* f = strrchr(outbuf, ' ');
 	    char* t = lbp + lbp_len;
 	    while (*--t != ' ') ;
 	    while (t > lbp) {
@@ -499,12 +499,12 @@ bool find_actgrp(DATASRC *dp, char *outbuf, char *nam, int len, ART_NUM high)
 	 && fgets(outbuf, LBUFLEN, fp) != nullptr
 	 && strnEQ(outbuf, nam, len) && outbuf[len] == ' ') {
 	    /* Remember the latest info in our cache. */
-	    (void) bcopy(outbuf, lbp, lbp_len);
+	    (void) memcpy(lbp,outbuf,lbp_len);
 	    return true;
 	}
       use_cache:
 	/* Return our cached version */
-	(void) bcopy(lbp, outbuf, lbp_len);
+	(void) memcpy(outbuf,lbp,lbp_len);
 	outbuf[lbp_len] = '\0';
 	return true;
     }
@@ -747,7 +747,7 @@ int srcfile_open(SRCFILE *sfp, char *filename, char *fetchcmd, char *server)
 	    data.dat_ptr = (char*)sfp->lp->recent;
 	}
 	data.dat_len = offset;
-	(void) bcopy(buf, lbp, linelen);
+	(void) memcpy(lbp,buf,linelen);
 	hashstore(sfp->hp, buf, keylen, data);
     }
     sfp->lp->high = node_low + offset - 1;
@@ -807,7 +807,7 @@ char *srcfile_append(SRCFILE *sfp, char *bp, int keylen)
 	data.dat_len = 0;
     }
     data.dat_ptr = (char*)node;
-    (void) bcopy(bp, lbp, linelen);
+    (void) memcpy(lbp,bp,linelen);
     hashstore(sfp->hp, bp, keylen, data);
     sfp->lp->high = pos + linelen - 1;
 
@@ -847,7 +847,7 @@ void srcfile_close(SRCFILE *sfp)
 static int srcfile_cmp(char *key, int keylen, HASHDATUM data)
 {
     /* We already know that the lengths are equal, just compare the strings */
-    return bcmp(key, ((LISTNODE*)data.dat_ptr)->data + data.dat_len, keylen);
+    return memcmp(key, ((LISTNODE*)data.dat_ptr)->data + data.dat_len, keylen);
 }
 
 /* Edit Distance extension to trn
@@ -913,7 +913,7 @@ int find_close_match()
         case 0:
 	    break;
 	case 1: {
-	    char* cp = index(ngptrs[0], ' ');
+	    char* cp = strchr(ngptrs[0], ' ');
 	    if (cp)
 		*cp = '\0';
 	    if (verbose)
@@ -988,7 +988,7 @@ static int get_near_miss()
     if (ngn > 9)
 	ngn = 9;	/* Since we're using single digits.... */
     for (i = 0; i < ngn; i++) {
-	char* cp = index(ngptrs[i], ' ');
+	char* cp = strchr(ngptrs[i], ' ');
 	if (cp)
 	    *cp = '\0';
 	printf("  %d.  %s\n", i+1, ngptrs[i]);
@@ -1024,11 +1024,11 @@ reask:
 	    goto reask;
 	default:
 	    if (isdigit(*buf)) {
-		char* s = index(options, *buf);
+		char* s = strchr(options, *buf);
 
 		i = s ? (s - options) : ngn;
 		if (i >= 0 && i < ngn) {
-		    char* cp = index(ngptrs[i], ' ');
+		    char* cp = strchr(ngptrs[i], ' ');
 		    if (cp)
 			*cp = '\0';
 		    set_ngname(ngptrs[i]);

@@ -47,7 +47,7 @@ void mime_init()
 	mcname = get_val("MAILCAPS", MIMECAP);
     mcname = s = savestr(mcname);
     do {
-	if ((t = index(s, ':')) != nullptr)
+	if ((t = strchr(s, ':')) != nullptr)
 	    *t++ = '\0';
 	if (*s)
 	    mime_ReadMimecap(s);
@@ -110,7 +110,7 @@ void mime_ReadMimecap(char *mcname)
 	mcp->command = savestr(mime_ParseEntryArg(&s));
 	while (s) {
 	    t = mime_ParseEntryArg(&s);
-	    if ((arg = index(t, '=')) != nullptr) {
+	    if ((arg = strchr(t, '=')) != nullptr) {
 		char* f = arg+1;
 		while (arg != t && isspace(arg[-1])) arg--;
 		*arg++ = '\0';
@@ -185,7 +185,7 @@ MIMECAP_ENTRY *mime_FindMimecapEntry(char *contenttype, int skip_flags)
 
 bool mime_TypesMatch(char *ct, char *pat)
 {
-    char* s = index(pat,'/');
+    char* s = strchr(pat,'/');
     int len = (s? s - pat : strlen(pat));
     bool iswild = (!s || strEQ(s+1,"*"));
 
@@ -212,7 +212,7 @@ int mime_Exec(char *cmd)
 		*t++ = '\'';
 		break;
 	      case '{': {
-		char* s = index(f, '}');
+		char* s = strchr(f, '}');
 		char* p;
                 if (!s)
 		    return -1;
@@ -253,7 +253,7 @@ void mime_InitSections()
 void mime_PushSection()
 {
     MIME_SECT* mp = (MIME_SECT*)safemalloc(sizeof (MIME_SECT));
-    bzero((char*)mp, sizeof (MIME_SECT));
+    memset((char*)mp,0,sizeof (MIME_SECT));
     mp->prev = mime_section;
     mime_section = mp;
 }
@@ -500,7 +500,7 @@ void mime_ParseSubheader(FILE *ifp, char *next_line)
 		break;
 	    }
 	}
-	s = index(line,':');
+	s = strchr(line,':');
 	if (s == nullptr)
 	    break;
 
@@ -1271,7 +1271,7 @@ int filter_html(char *t, char *f)
 		if ((fudge -= cp - line_start) != 0) {
 		    if (fudge < 0) {
 			if (t - cp > 0)
-			    bcopy(cp, cp + fudge, t - cp);
+			    memcpy(cp + fudge,cp,t - cp);
 		    }
 		    else
 			for (s = t; s-- != cp; ) s[fudge] = *s;
@@ -1644,7 +1644,7 @@ static char *find_attr(char *str, char *attr)
     char* cp = str;
     char* s;
 
-    while ((cp = index(cp+1, '=')) != nullptr) {
+    while ((cp = strchr(cp+1, '=')) != nullptr) {
 	for (s = cp; s[-1] == ' '; s--) ;
 	while (cp[1] == ' ') cp++;
 	if (s - str > len && s[-len-1] == ' ' && strncaseEQ(s-len,attr,len))

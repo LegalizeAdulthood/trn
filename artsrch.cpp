@@ -233,7 +233,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	ret = SRCH_ABORT;
 	goto exit;
     }
-    if (cmdlst && index(cmdlst,'='))
+    if (cmdlst && strchr(cmdlst,'='))
 	ret = SRCH_ERROR;		/* listing subjects is an error? */
     if (gmode == 's') {
 	if (!cmdlst) {
@@ -409,7 +409,7 @@ bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
 		    return true;
 		in_sig = true;
 	    }
-	    if ((nlptr = index(s,'\n')) != nullptr) {
+	    if ((nlptr = strchr(s,'\n')) != nullptr) {
 		ch = *++nlptr;
 		*nlptr = '\0';
 	    }

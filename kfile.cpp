@@ -59,7 +59,7 @@ void kfile_init()
 	    while (fgets(buf, sizeof buf, fp) != nullptr) {
 		if (*buf == '<') {
 		    int age;
-		    cp = index(buf,' ');
+		    cp = strchr(buf,' ');
 		    if (!cp)
 			cp = ",";
 		    else
@@ -69,7 +69,7 @@ void kfile_init()
 			kf_changethd_cnt++;
 			continue;
 		    }
-		    if ((cp = index(thread_cmd_ltr, *cp)) != nullptr) {
+		    if ((cp = strchr(thread_cmd_ltr, *cp)) != nullptr) {
 			int auto_flag;
 			HASHDATUM data;
 
@@ -147,7 +147,7 @@ int do_kfile(FILE *kfp, int entering)
 	    if (!*cp)
 		continue;
 	    cp = filexp(cp);
-	    if (!index(cp,'/')) {
+	    if (!strchr(cp,'/')) {
 		set_ngname(cp);
 		cp = filexp(get_val("KILLLOCAL",killlocal));
 		set_ngname(ngptr->rcline);
@@ -230,7 +230,7 @@ int do_kfile(FILE *kfp, int entering)
 		perform_status_init(ngptr->toread);
 		last_kill_type = '<';
 	    }
-	    cp = index(bp,' ');
+	    cp = strchr(bp,' ');
 	    if (!cp)
 		cp = "T,";
 	    else
@@ -239,7 +239,7 @@ int do_kfile(FILE *kfp, int entering)
 		if ((ap->flags & AF_FAKE) && !ap->child1) {
 		    if (*cp == 'T')
 			cp++;
-		    if ((cp = index(thread_cmd_ltr, *cp)) != nullptr) {
+		    if ((cp = strchr(thread_cmd_ltr, *cp)) != nullptr) {
 			ap->autofl = thread_cmd_flag[cp-thread_cmd_ltr];
 			if (ap->autofl & AUTO_KILLS)
 			    thread_kill_cnt++;
@@ -401,7 +401,7 @@ void rewrite_kfile(ART_NUM thru)
 		if (strnNE(cp, ngptr->rc->name, len)
 		 || (cp[len] && !isspace(cp[len]))) {
 		    fputs(buf,newkfp);
-		    needs_newline = !index(buf,'\n');
+		    needs_newline = !strchr(buf,'\n');
 		}
 		continue;
 	    }
@@ -414,7 +414,7 @@ void rewrite_kfile(ART_NUM thru)
 		has_star_commands = true;
 	    else {
 		fputs(buf,newkfp);
-		needs_newline = !index(bp,'\n');
+		needs_newline = !strchr(bp,'\n');
 	    }
 	    has_content = true;
 	}
@@ -426,7 +426,7 @@ void rewrite_kfile(ART_NUM thru)
 		for (bp = buf; isspace(*bp); bp++) ;
 		if (*bp == '*') {
 		    fputs(buf,newkfp);
-		    needs_newline = !index(bp,'\n');
+		    needs_newline = !strchr(bp,'\n');
 		}
 	    }
 	    if (needs_newline)
@@ -627,7 +627,7 @@ int edit_kfile()
 		    kf_state |= KFS_NORMAL_LINES;
 		else if (*bp == '<') {
 		    ARTICLE* ap;
-		    char* cp = index(bp,' ');
+		    char* cp = strchr(bp,' ');
 		    if (!cp)
 			cp = ",";
 		    else
@@ -635,7 +635,7 @@ int edit_kfile()
 		    if ((ap = get_article(bp)) != nullptr) {
 			if (*cp == 'T')
 			    cp++;
-			if ((cp = index(thread_cmd_ltr, *cp)) != nullptr)
+			if ((cp = strchr(thread_cmd_ltr, *cp)) != nullptr)
 			    ap->autofl |= thread_cmd_flag[cp-thread_cmd_ltr];
 		    }
 		}

@@ -50,13 +50,13 @@ static int run(char* command)
     strupr(shell);
     shellpath = shell;
     /* Strip off any leading backslash directories */
-    shell = rindex(shellpath, '\\');
+    shell = strrchr(shellpath, '\\');
     if (shell != nullptr)
 	shell++;
     else
 	shell = shellpath;
     /* Strip off any leading slash directories */
-    bp = rindex(shell, '/');
+    bp = strrchr(shell, '/');
     if (bp != nullptr)
 	shell = ++bp;
     if (strcmp(shell, command_com) != 0) {

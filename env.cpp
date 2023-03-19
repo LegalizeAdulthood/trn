@@ -139,7 +139,7 @@ bool set_user_name(char *tmpbuf)
     }
     for (s = tmpbuf, i = GCOSFIELD-1; i; i--) {
 	if (s)
-	    s = index(s+1,':');
+	    s = strchr(s+1,':');
     }
     if (!s)
 	return 0;
@@ -155,9 +155,9 @@ bool set_user_name(char *tmpbuf)
 #ifdef BERKJUNK
     while (*s && !isalnum(*s) && *s != '&') s++;
 #endif
-    if ((c = index(s, ',')) != nullptr)
+    if ((c = strchr(s, ',')) != nullptr)
 	*c = '\0';
-    if ((c = index(s, ';')) != nullptr)
+    if ((c = strchr(s, ';')) != nullptr)
 	*c = '\0';
     s = cpytill(buf,s,'&');
     if (*s == '&') {			/* whoever thought this one up was */
@@ -169,9 +169,9 @@ bool set_user_name(char *tmpbuf)
     }
     g_real_name = savestr(buf);
 #else /* !BERKNAMES */
-    if ((c = index(s, '(')) != nullptr)
+    if ((c = strchr(s, '(')) != nullptr)
 	*c = '\0';
-    if ((c = index(s, '-')) != nullptr)
+    if ((c = strchr(s, '-')) != nullptr)
 	s = c;
     g_real_name = savestr(s);
 #endif /* !BERKNAMES */
@@ -274,7 +274,7 @@ bool set_p_host_name(char *tmpbuf)
 	strcat(tmpbuf,buf);
     }
 
-    if (!index(tmpbuf,'.')) {
+    if (!strchr(tmpbuf,'.')) {
 	if (*tmpbuf)
 	    strcat(tmpbuf, ".");
 #ifdef HAS_RES_INIT

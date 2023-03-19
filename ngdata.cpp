@@ -322,7 +322,7 @@ ART_NUM getngsize(NGDATA *gp)
 	    len = strlen(tmpbuf);
 	    if (tmpbuf[len-1] == '\n')
 		tmpbuf[len-1] = '\0';
-	    redirected = savestr(rindex(tmpbuf, '=') + 1);
+	    redirected = savestr(strrchr(tmpbuf, '=') + 1);
 	    moderated = " (REDIRECTED)";
 	    break;
 	default:

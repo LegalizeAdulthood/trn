@@ -902,7 +902,7 @@ reinp_selector:
     }
     if (sel_mode == SM_OPTIONS && (ch == '\r' || ch == '\n'))
 	ch = '.';
-    in_select = index(sel_chars, ch);
+    in_select = strchr(sel_chars, ch);
     if (UseSelNum && ch >= '0' && ch <= '9') {
 	ch_num1 = ch;
 	/* would be *very* nice to use wait_key_pause() here */
@@ -1664,8 +1664,8 @@ static char another_command(char_int ch)
     if (ch != 0 && ch != '\n' && ch != '\r' && (!skip_q || ch != 'q')) {
 	if (ch > 0) {
 	    /* try to optimize the screen update for some commands. */
-	    if (!index(sel_chars, ch)
-	     && (index(SPECIAL_CMD_LETTERS, ch) || ch == Ctl('k'))) {
+	    if (!strchr(sel_chars, ch)
+	     && (strchr(SPECIAL_CMD_LETTERS, ch) || ch == Ctl('k'))) {
 		sel_ret = ch;
 		return ch;
 	    }

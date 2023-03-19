@@ -92,10 +92,10 @@ int main(int argc, char *argv[])
     /* Figure out our executable's name. */
 #ifdef MSDOS
     strlwr(argv[0]);
-    if ((s = rindex(argv[0],'\\')) != nullptr)
+    if ((s = strrchr(argv[0],'\\')) != nullptr)
 	*s = '/';
 #endif
-    if ((s = rindex(argv[0],'/')) == nullptr)
+    if ((s = strrchr(argv[0],'/')) == nullptr)
 	s = argv[0];
     else
 	s++;

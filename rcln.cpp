@@ -367,9 +367,9 @@ void set_toread(NGDATA *np, bool lax_high_check)
     mybuf[length] = '\0';
     for (s = mybuf; isspace(*s); s++)
 	    ;
-    for ( ; (c = index(s,',')) != nullptr ; s = ++c) {  /* for each range */
+    for ( ; (c = strchr(s,',')) != nullptr ; s = ++c) {  /* for each range */
 	*c = '\0';			/* keep index from running off */
-	if ((h = index(s,'-')) != nullptr)	/* find - in range, if any */
+	if ((h = strchr(s,'-')) != nullptr)	/* find - in range, if any */
 	    unread -= (newmax = atol(h+1)) - atol(s) + 1;
 	else if ((newmax = atol(s)) != 0)
 	    unread--;		/* recalculate length */

@@ -48,7 +48,7 @@ HASHTABLE *hashcreate(unsigned size, int (*cmpfunc)(char *, int, HASHDATUM))
 	size = 1;
     aap = (struct alignalloc*)
 	safemalloc(sizeof *aap + (size-1)*sizeof (HASHENT*));
-    bzero((char*)aap, sizeof *aap + (size-1)*sizeof (HASHENT*));
+    memset((char*)aap,0,sizeof *aap + (size-1)*sizeof (HASHENT*));
     tbl = &aap->ht;
     tbl->ht_size = size;
     tbl->ht_magic = HASHMAG;
@@ -218,7 +218,7 @@ static unsigned hash(char *key, int keylen)
 static int default_cmp(char *key, int keylen, HASHDATUM data)
 {
     /* We already know that the lengths are equal, just compare the strings */
-    return bcmp(key, data.dat_ptr, keylen);
+    return memcmp(key, data.dat_ptr, keylen);
 }
 
 /* allocate a hash entry */

@@ -64,7 +64,7 @@ void rc_to_bits()
     mybuf[i] = '\0';
     s = mybuf;				/* initialize the for loop below */
     if (set_firstart(s)) {
-	s = index(s,',') + 1;
+	s = strchr(s,',') + 1;
 	for (i = article_first(absfirst); i < firstart; i = article_next(i))
 	    article_ptr(i)->flags &= ~AF_UNREAD;
 	firstart = i;
@@ -83,10 +83,10 @@ void rc_to_bits()
     }
 #endif
     i = firstart;
-    for ( ; (c = index(s,',')) != nullptr; s = ++c) {	/* for each range */
+    for ( ; (c = strchr(s,',')) != nullptr; s = ++c) {	/* for each range */
 	ART_NUM min, max;
 	*c = '\0';			/* do not let index see past comma */
-	h = index(s,'-');
+	h = strchr(s,'-');
 	min = atol(s);
 	if (min < firstart)		/* make sure range is in range */
 	    min = firstart;
@@ -276,7 +276,7 @@ void find_existing_articles()
 		if (!(ap->flags2 & AF2_BOGUS))
 		    ap->flags |= AF_EXISTS;
 #if 0
-		s = index(g_ser_line, ' ');
+		s = strchr(g_ser_line, ' ');
 		if (s)
 		    rover_thread(article_ptr(an), s);
 #endif
@@ -608,7 +608,7 @@ static int chase_xref(ART_NUM artnum, int markread)
     {
 	while (*curxref) {		/* for each newsgroup */
 	    curxref = cpytill(tmpbuf,curxref,' ');
-	    xartnum = index(tmpbuf,':');
+	    xartnum = strchr(tmpbuf,':');
 	    if (!xartnum)
 		break;
 	    *xartnum++ = '\0';
@@ -663,7 +663,7 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
 #ifndef ANCIENT_NEWS
     /* Grab the site from the first component of the Path line */
     sitebuf = fetchlines(artnum,PATH_LINE);
-    if ((s = index(sitebuf, '!')) != nullptr) {
+    if ((s = strchr(sitebuf, '!')) != nullptr) {
 	*s = '\0';
 	inews_site = savestr(sitebuf);
     }
@@ -671,7 +671,7 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
     /* Grab the site from the Posting-Version line */
     sitebuf = fetchlines(artnum,RVER_LINE);
     if ((s = instr(sitebuf,"; site ",true)) != nullptr) {
-	char* t = index(s+7, '.');
+	char* t = strchr(s+7, '.');
 	if (t)
 	    *t = '\0';
 	inews_site = savestr(s+7);

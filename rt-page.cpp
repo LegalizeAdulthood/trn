@@ -1935,7 +1935,7 @@ static void display_group(DATASRC *dp, char *group, int len, int max_len)
     else {
 	char* end;
 	char* cp = find_grpdesc(dp, group);
-	if (*cp != '?' && (end = index(cp, '\n')) != nullptr
+	if (*cp != '?' && (end = strchr(cp, '\n')) != nullptr
 	 && end != cp) {
 	    char ch;
 	    if (end - cp > tc_COLS - max_len - 8 - 1 - UseSelNum)

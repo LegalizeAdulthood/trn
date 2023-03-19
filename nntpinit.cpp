@@ -155,7 +155,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
     static struct in_addr defaddr;
     static char namebuf[256];
 
-    bzero((char*)&sin, sizeof sin);
+    memset((char*)&sin,0,sizeof sin);
 
     if (port)
 	sin.sin_port = htons(port);
@@ -195,14 +195,6 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 
     sin.sin_family = hp->h_addrtype;
 
-    /* The following is kinda gross.  The name server under 4.3
-    ** returns a list of addresses, each of which should be tried
-    ** in turn if the previous one fails.  However, 4.2 hostent
-    ** structure doesn't have this list of addresses.
-    ** Under 4.3, h_addr is a #define to h_addr_list[0].
-    ** We use this to figure out whether to include the NS specific
-    ** code... */
-#ifdef h_addr
     /* get a socket and initiate connection -- use multiple addresses */
     for (cp = hp->h_addr_list; cp && *cp; cp++) {
 	extern char* inet_ntoa (const struct in_addr);
@@ -211,7 +203,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 	    perror("socket");
 	    return -1;
 	}
-        bcopy(*cp, (char*)&sin.sin_addr, hp->h_length);
+        memcpy((char*)&sin.sin_addr,*cp,hp->h_length);
 		
 	if (x < 0)
 	    fprintf(stderr, "trying %s\n", inet_ntoa(sin.sin_addr));
@@ -226,22 +218,6 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 	fprintf(stderr, "giving up...\n");
 	return -1;
     }
-#else /* no name server */
-    if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-	perror("socket");
-	return -1;
-    }
-
-    /* And then connect */
-
-    bcopy(hp->h_addr, (char*)&sin.sin_addr, hp->h_length);
-    if (connect(s, (struct sockaddr*)&sin, sizeof sin) < 0) {
-	perror("connect");
-	(void) close(s);
-	return -1;
-    }
-
-#endif /* !h_addr */
 #endif /* !INET6 */
 #ifdef __hpux	/* recommended by raj@cup.hp.com */
 #define	HPSOCKSIZE 0x8000

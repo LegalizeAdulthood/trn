@@ -54,9 +54,9 @@ char *decode_fix_fname(char *s)
 #endif
 	if (isprint(*s)
 #ifdef GOODCHARS
-	 && index(GOODCHARS, *s)
+	 && strchr(GOODCHARS, *s)
 #else
-	 && !index(BADCHARS, *s)
+	 && !strchr(BADCHARS, *s)
 #endif
 	)
 	    *t++ = *s;

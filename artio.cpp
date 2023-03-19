@@ -81,7 +81,7 @@ retry_open:
 		fgets(tmpbuf,sizeof tmpbuf,artfp);
 		if (FILE_REF(tmpbuf)) {	/* is a "link" to another article */
 		    fclose(artfp);
-		    if ((s = index(tmpbuf,'\n')) != nullptr)
+		    if ((s = strchr(tmpbuf,'\n')) != nullptr)
 			*s = '\0';
 		    if (!(artfp = fopen(tmpbuf,"r")))
 			uncache_article(ap,false);
@@ -253,7 +253,7 @@ char *readartbuf(bool view_inline)
 	else if (mime_section->encoding == MENCODE_BASE64) {
 	    o = line_offset + extra_offset;
 	    len = b64_decodestring(bp+o, bp+o) + line_offset;
-	    if ((s = index(bp+o, '\n')) == nullptr) {
+	    if ((s = strchr(bp+o, '\n')) == nullptr) {
 		if (read_something >= 0) {
 		    read_offset = line_offset = len;
 		    goto read_more;
@@ -270,7 +270,7 @@ char *readartbuf(bool view_inline)
 	    break;
 	o = filter_offset + extra_offset;
 	len = filter_html(bp+filter_offset, bp+o) + filter_offset;
-	if (len == filter_offset || (s = index(bp,'\n')) == nullptr) {
+	if (len == filter_offset || (s = strchr(bp,'\n')) == nullptr) {
 	    if (read_something >= 0) {
 		read_offset = line_offset = filter_offset = len;
 		goto read_more;
@@ -391,7 +391,7 @@ char *readartbuf(bool view_inline)
     word_wrap = tc_COLS - word_wrap_offset;
     if (read_something && word_wrap_offset >= 0 && word_wrap > 20 && bp) {
 	char* cp;
-	for (cp = bp; *cp && (s = index(cp, '\n')) != nullptr; cp = s+1) {
+	for (cp = bp; *cp && (s = strchr(cp, '\n')) != nullptr; cp = s+1) {
 	    if (s - cp > tc_COLS) {
 		char* t;
 		do {
