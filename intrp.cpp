@@ -812,9 +812,6 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			s = nullstr;
 			break;
 		    }
-#ifdef ASYNC_PARSE
-/*		    parse_maybe(art); */
-#endif
 		    /* XXX Rewrite this! */
 		    {	/* sick, but I don't want to hunt down a buf... */
 			static char tmpbuf[1024];

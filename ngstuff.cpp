@@ -474,17 +474,11 @@ int perform(char *cmdlst, int output_level)
 	    output_level = 0;
 	}
 	else if (ch == 'C') {
-#ifdef ASYNC_PARSE
 	    int ret = cancel_article();
 	    if (output_level && verbose)
 		printf("\t%sanceled",ret? "Not c" : "C");
-#else
-	    notincl("C");
-	    return -1;
-#endif
 	}
 	else if (ch == '%') {
-#ifdef ASYNC_PARSE
 	    char tmpbuf[512];
 
 	    if (one_command)
@@ -494,10 +488,6 @@ int perform(char *cmdlst, int output_level)
 	    perform_cnt--;
 	    if (perform(tmpbuf,output_level?2:0) < 0)
 		return -1;
-#else
-	    notincl("%");
-	    return -1;
-#endif
 	}
 	else if (index("!&sSwWae|",ch)) {
 	    if (one_command)

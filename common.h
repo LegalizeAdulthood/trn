@@ -224,8 +224,6 @@
 			/* terminals such as older Televideos */
 #define TILDENAME	/* allow ~logname expansion */
 #undef MCHASE		/* unmark xrefed articles on m or M */
-#define ASYNC_PARSE	/* allow parsing headers asyncronously to reading */
-			/* used by MCHASE and MUNGHEADER */
 #define FINDNEWNG	/* check for new newsgroups on startup */
 #define FASTNEW		/* do optimizations on FINDNEWNG for faster startup */
 #define INNERSEARCH	/* search command 'g' with article */
