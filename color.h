@@ -33,8 +33,8 @@ enum
 };
 
 void color_init();
-void color_rc_attribute(char *, char *);
+void color_rc_attribute(const char *object, char *value);
 void color_object(int object, bool push);
 void color_pop();
-void color_string(int, char *);
+void color_string(int object, const char *str);
 void color_default();

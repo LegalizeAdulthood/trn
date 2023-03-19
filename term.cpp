@@ -963,7 +963,7 @@ void pushchar(char_int c)
 
 /* print an underlined string, one way or another */
 
-void underprint(char *s)
+void underprint(const char *s)
 {
     assert(tc_UC);
     if (*tc_UC) {	/* char by char underline? */

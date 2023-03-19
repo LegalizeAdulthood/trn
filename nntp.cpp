@@ -26,7 +26,7 @@
 #include "nntp.h"
 #include "nntp.ih"
 
-int nntp_list(char *type, char *arg, int len)
+int nntp_list(const char *type, const char *arg, int len)
 {
     int ret;
 #ifdef DEBUG /*$$*/

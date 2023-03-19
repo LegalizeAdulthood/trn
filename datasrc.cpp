@@ -122,7 +122,7 @@ char *read_datasrcs(char *filename)
     return filebuf;
 }
 
-DATASRC *get_datasrc(char *name)
+DATASRC *get_datasrc(const char *name)
 {
     DATASRC* dp;
     for (dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp))
@@ -131,7 +131,7 @@ DATASRC *get_datasrc(char *name)
     return nullptr;
 }
 
-DATASRC *new_datasrc(char *name, char **vals)
+DATASRC *new_datasrc(const char *name, char **vals)
 {
     DATASRC* dp = datasrc_ptr(datasrc_cnt++);
     char* v;
@@ -295,7 +295,7 @@ bool open_datasrc(DATASRC *dp)
 		    dp->extra_name = nullptr;
 		    dp->act_sf.refetch_secs = 0;
 		    success = srcfile_open(&dp->act_sf,nullptr,
-					   nullptr,nullptr);
+                                           nullptr,nullptr);
 		}
 		else
 		    success = actfile_hash(dp);
@@ -409,7 +409,7 @@ bool actfile_hash(DATASRC *dp)
     return ret;
 }
 
-bool find_actgrp(DATASRC *dp, char *outbuf, char *nam, int len, ART_NUM high)
+bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM high)
 {
     HASHDATUM data;
     ACT_POS act_pos;
@@ -526,21 +526,21 @@ char *find_grpdesc(DATASRC *dp, char *groupname)
 	    set_datasrc(dp);
 	    if ((dp->flags & (DF_TMPGRPDESC|DF_NOXGTITLE)) == DF_TMPGRPDESC
 	     && g_net_speed < 5) {
-		(void)srcfile_open(&dp->desc_sf,nullptr,/*$$check return?*/
-				   nullptr,nullptr);
+		(void)srcfile_open(&dp->desc_sf,nullptr, /*$$check return?*/
+                                   nullptr,nullptr);
 		grouplen = strlen(groupname);
 		goto try_xgtitle;
 	    }
 	    spin_todo = dp->desc_sf.recent_cnt;
 	    ret = srcfile_open(&dp->desc_sf, dp->grpdesc,
-			       "newsgroups", dp->newsid);
+                               "newsgroups", dp->newsid);
 	    if (spin_count > 0)
 		dp->desc_sf.recent_cnt = spin_count;
 	    /*set_datasrc(save_datasrc);*/
 	}
 	else
 	    ret = srcfile_open(&dp->desc_sf, dp->grpdesc,
-			       nullptr, nullptr);
+                               nullptr, nullptr);
 	if (!ret) {
 	    if (dp->flags & DF_TMPGRPDESC) {
 		dp->flags &= ~DF_TMPGRPDESC;
@@ -613,7 +613,7 @@ char *adv_then_find_next_nl_and_dectrl(char *s)
     return s;
 }
 
-int srcfile_open(SRCFILE *sfp, char *filename, char *fetchcmd, char *server)
+int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const char *server)
 {
     unsigned offset;
     char* s;
@@ -633,8 +633,8 @@ int srcfile_open(SRCFILE *sfp, char *filename, char *fetchcmd, char *server)
 	    fp = fopen(filename, "r");
 	    spin_todo = 0;
 	}
-	else if (now - sfp->lastfetch > sfp->refetch_secs
-	      && (sfp->refetch_secs != 2 || !sfp->lastfetch)) {
+        else if (now - sfp->lastfetch > sfp->refetch_secs && (sfp->refetch_secs != 2 || !sfp->lastfetch))
+        {
 	    fp = fopen(filename, "w+");
 	    if (fp) {
 		printf("Getting %s file from %s.", fetchcmd, server);
@@ -814,7 +814,7 @@ char *srcfile_append(SRCFILE *sfp, char *bp, int keylen)
     return lbp;
 }
 
-void srcfile_end_append(SRCFILE *sfp, char *filename)
+void srcfile_end_append(SRCFILE *sfp, const char *filename)
 {
     if (sfp->fp && sfp->refetch_secs) {
 	fflush(sfp->fp);

@@ -9,7 +9,7 @@
 
 #define MAX_NNTP_ARTICLES   10
 
-int nntp_list(char *, char *, int);
+int nntp_list(const char *, const char *, int);
 void nntp_finish_list();
 int nntp_group(char *group, NGDATA *gp);
 int nntp_stat(ART_NUM);

@@ -15,8 +15,10 @@ EXT char* decode_filename INIT(nullptr);
 #define DECODE_ERROR	 8
 
 #ifdef MSDOS
-#define GOODCHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" \
-                  "0123456789-_^#%"
+#define GOODCHARS                \
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ" \
+    "abcdefghijklmnopqrstuvwxyz" \
+    "0123456789-_^#%"
 #else
 #define BADCHARS "!$&*()|\'\";<>[]{}?/`\\ \t"
 #endif
@@ -24,9 +26,9 @@ EXT char* decode_filename INIT(nullptr);
 typedef int (*DECODE_FUNC)(FILE *, int);
 
 void decode_init();
-char *decode_fix_fname(char *);
-char *decode_subject(ART_NUM, int *, int *);
+char *decode_fix_fname(const char *s);
+char *decode_subject(ART_NUM artnum, int *partp, int *totalp);
 int decode_piece(MIMECAP_ENTRY *mcp, char *first_line);
-DECODE_FUNC decode_function(int);
-char *decode_mkdir(char *);
-void decode_rmdir(char *);
+DECODE_FUNC decode_function(int encoding);
+char *decode_mkdir(const char *filename);
+void decode_rmdir(char *dir);

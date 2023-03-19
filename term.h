@@ -215,7 +215,7 @@ int read_tty(char *, int);
 int circfill(void);
 #endif
 void pushchar(char_int);
-void underprint(char *);
+void underprint(const char *);
 #ifdef NOFIREWORKS
 void no_sofire();
 void no_ulfire();

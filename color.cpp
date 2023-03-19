@@ -107,7 +107,7 @@ void color_init()
 }
 
 /* Parse a line from the [attribute] section of trnrc. */
-void color_rc_attribute(char *object, char *value)
+void color_rc_attribute(const char *object, char *value)
 {
     char* s;
     char* t;
@@ -243,7 +243,7 @@ void color_pop()
 }
 
 /* Color a string with the given object's color/attribute. */
-void color_string(int object, char *str)
+void color_string(int object, const char *str)
 {
     int len = strlen(str);
     if (str[len-1] == '\n') {

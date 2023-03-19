@@ -31,7 +31,7 @@ void decode_init()
 {
 }
 
-char *decode_fix_fname(char *s)
+char *decode_fix_fname(const char *s)
 {
     char* t;
 #ifdef MSDOS
@@ -70,7 +70,7 @@ char *decode_fix_fname(char *s)
 }
 
 /* Returns nonzero if "filename" is a bad choice */
-static bool bad_filename(char *filename)
+static bool bad_filename(const char *filename)
 {
     int len = strlen(filename);
 #ifdef MSDOS
@@ -409,7 +409,7 @@ DECODE_FUNC decode_function(int encoding)
 }
 
 /* return a directory to use for unpacking the pieces of a given filename */
-char *decode_mkdir(char *filename)
+char *decode_mkdir(const char *filename)
 {
     static char dir[LBUFLEN];
     char* s;

@@ -60,7 +60,7 @@ INI_WORDS datasrc_ini[] = {
 };
 
 static char *dir_or_none(DATASRC *dp, char *dir, int flag);
-static char* file_or_none(char*);
+static char *file_or_none(char *fn);
 static int srcfile_cmp(const char *key, int keylen, HASHDATUM data);
 static int check_distance(int len, HASHDATUM *data, int newsrc_ptr);
 static int get_near_miss();
