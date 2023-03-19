@@ -431,7 +431,7 @@ void unmark_as_read(ARTICLE *ap)
 {
     onemore(ap);
 #ifdef MCHASE
-    if (ap->xrefs != nullstr && !(ap->flags & AF_MCHASE)) {
+    if (ap->xrefs != "" && !(ap->flags & AF_MCHASE)) {
 	ap->flags |= AF_MCHASE;
 	chase_count++;
     }
@@ -444,7 +444,7 @@ void unmark_as_read(ARTICLE *ap)
 void set_read(ARTICLE *ap)
 {
     oneless(ap);
-    if (!olden_days && ap->xrefs != nullstr && !(ap->flags & AF_KCHASE)) {
+    if (!olden_days && ap->xrefs != "" && !(ap->flags & AF_KCHASE)) {
 	ap->flags |= AF_KCHASE;
 	chase_count++;
     }
@@ -467,7 +467,7 @@ void delay_unmark(ARTICLE *ap)
 void mark_as_read(ARTICLE *ap)
 {
     oneless(ap);
-    if (ap->xrefs != nullstr && !(ap->flags & AF_KCHASE)) {
+    if (ap->xrefs != "" && !(ap->flags & AF_KCHASE)) {
 	ap->flags |= AF_KCHASE;
 	chase_count++;
     }
@@ -678,7 +678,7 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
     }
 #endif /* ANCIENT_NEWS */
     else
-	inews_site = savestr(nullstr);
+	inews_site = savestr("");
     free(sitebuf);
 
     if (strEQ(site,inews_site))

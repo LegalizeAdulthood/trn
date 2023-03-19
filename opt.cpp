@@ -73,8 +73,8 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     option_def_vals = (char**)safemalloc(INI_LEN(options_ini)*sizeof(char*));
     memset((char*)option_def_vals,0,(options_ini)[0].checksum * sizeof (char*));
     /* Set DEFHIDE and DEFMAGIC to current values and clear user_htype list */
-    set_header_list(HT_DEFHIDE,HT_HIDE,nullstr);
-    set_header_list(HT_DEFMAGIC,HT_MAGIC,nullstr);
+    set_header_list(HT_DEFHIDE,HT_HIDE,"");
+    set_header_list(HT_DEFMAGIC,HT_MAGIC,"");
 
     if (use_threads)
 	s = get_val("TRNRC","%+/trnrc");
@@ -322,8 +322,8 @@ void set_option(int num, char *s)
 		export_var("SAVEDIR",  "%p/%c");
 		export_var("SAVENAME", "%a");
 	    }
-	    else if (strEQ(get_val("SAVEDIR",nullstr),"%p/%c")
-		  && strEQ(get_val("SAVENAME",nullstr),"%a")) {
+	    else if (strEQ(get_val("SAVEDIR",""),"%p/%c")
+		  && strEQ(get_val("SAVENAME",""),"%a")) {
 		export_var("SAVEDIR", "%p");
 		export_var("SAVENAME", "%^C");
 	    }
@@ -944,7 +944,7 @@ static char *hidden_list()
     buf[0] = '\0';
     buf[1] = '\0';
     for (i = 1; i < user_htype_cnt; i++) {
-	sprintf(buf+strlen(buf),",%s%s", user_htype[i].flags? nullstr : "!",
+	sprintf(buf+strlen(buf),",%s%s", user_htype[i].flags? "" : "!",
 		user_htype[i].name);
     }
     return buf+1;
@@ -958,7 +958,7 @@ static char *magic_list()
     for (i = HEAD_FIRST; i < HEAD_LAST; i++) {
 	if (!(htype[i].flags & HT_MAGIC) != !(htype[i].flags & HT_DEFMAGIC)) {
 	    sprintf(buf+strlen(buf),",%s%s",
-		    (htype[i].flags & HT_DEFMAGIC)? "!" : nullstr,
+		    (htype[i].flags & HT_DEFMAGIC)? "!" : "",
 		    htype[i].name);
 	}
     }

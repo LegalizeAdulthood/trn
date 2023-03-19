@@ -457,7 +457,7 @@ char *compress_address(char *name, int max)
 char *compress_from(char *from, int size)
 {
     static char lbuf[LBUFLEN];
-    char* s = from? from : nullstr;
+    char* s = from? from : "";
     int len, vis_len;
 
     strcharsubst(lbuf, s, sizeof lbuf, *charsubst);
@@ -617,7 +617,7 @@ void setspin(int mode)
 	    if (spin_mode != SPIN_BARGRAPH) {
 		int i;
 		spin_marks = (verbose? 25 : 10);
-		printf(" [%*s]", spin_marks, nullstr);
+		printf(" [%*s]", spin_marks, "");
 		for (i = spin_marks + 1; i--; ) backspace();
 		fflush(stdout);
 	    }

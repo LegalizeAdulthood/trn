@@ -48,7 +48,7 @@ bool ov_init()
 	/* Just in case... */
 	if (*g_ser_line == NNTP_CLASS_OK)
 	    nntp_finish_list();
-	if ((ret = nntp_list("overview.fmt",nullstr,0)) < -1)
+	if ((ret = nntp_list("overview.fmt","",0)) < -1)
 	    return false;
 	has_overview_fmt = ret > 0;
     }
@@ -385,7 +385,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 
 	if (fieldflags[OV_XREF] & FF_HAS_FIELD) {
 	    if (!article->xrefs)
-		article->xrefs = nullstr;
+		article->xrefs = "";
 	}
 	else if (fields[OV_XREF]) {
 	    ART_NUM an;
@@ -393,7 +393,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 	    for (an=article_first(absfirst); an<artnum; an=article_next(an)) {
 		ap = article_ptr(an);
 		if (!ap->xrefs)
-		    ap->xrefs = nullstr;
+		    ap->xrefs = "";
 	    }
 	    fieldflags[OV_XREF] |= FF_HAS_FIELD;
 	}
@@ -467,5 +467,5 @@ char *ov_field(ARTICLE *ap, int num)
     }
 
     s = get_cached_line(ap, hdrnum[fn], true);
-    return s? s : nullstr;
+    return s? s : "";
 }

@@ -245,7 +245,7 @@ static void sel_dogroups()
 	if (sel_ret == ';') {
 	    ret = do_newsgroup(savestr(";"));
 	} else
-	    ret = do_newsgroup(nullstr);
+	    ret = do_newsgroup("");
 	switch (ret) {
 	  case NG_NORM:
 	  case NG_SELNEXT:
@@ -477,7 +477,7 @@ char option_selector()
     sel_rereading = false;
     sel_exclusive = false;
     selected_count = 0;
-    parse_ini_section(nullstr, options_ini);
+    parse_ini_section("", options_ini);
 
     set_selector(SM_OPTIONS, 0);
 
@@ -583,7 +583,7 @@ static int univ_read(UNIV_ITEM *ui)
 	printf("Virtual: Entering %s:\n", ngname) FLUSH;
 	ng_go_artnum = ui->data.virt.num;
 	univ_read_virtflag = true;
-	ret = do_newsgroup(nullstr);
+	ret = do_newsgroup("");
 	univ_read_virtflag = false;
 	switch (ret) {
 	  case NG_NORM:		/* handle more cases later */
@@ -662,7 +662,7 @@ static int univ_read(UNIV_ITEM *ui)
 	if (sel_ret == ';')
 	    ret = do_newsgroup(savestr(";"));
 	else
-	    ret = do_newsgroup(nullstr);
+	    ret = do_newsgroup("");
 	switch (ret) {
 	  case NG_NORM:		/* handle more cases later */
 	  case NG_SELNEXT:
@@ -1183,13 +1183,13 @@ static void sel_prompt()
 		(!sel_prior_obj_cnt? "All" : "Bot"), end_char, page_char);
     else
 	sprintf(cmd_buf, "%s%ld%% [%c%c] --",
-		(!sel_prior_obj_cnt? "Top " : nullstr),
+		(!sel_prior_obj_cnt? "Top " : ""),
 		(long)((sel_prior_obj_cnt+sel_page_obj_cnt)*100 / sel_total_obj_cnt),
 		page_char, end_char);
     interp(buf, sizeof buf, mailcall);
     sprintf(msg, "%s-- %s %s (%s%s order) -- %s", buf,
 	    sel_exclusive && in_ng? "SELECTED" : "Select", sel_mode_string,
-	    sel_direction<0? "reverse " : nullstr, sel_sort_string, cmd_buf);
+	    sel_direction<0? "reverse " : "", sel_sort_string, cmd_buf);
     color_string(COLOR_CMD,msg);
     g_term_col = strlen(msg);
     removed_prompt = 0;

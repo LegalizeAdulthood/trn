@@ -734,13 +734,11 @@ EXT char gmode INIT('I');		/* general mode of trn */
 
 EXT FILE* tmpfp INIT(nullptr);	/* scratch fp used for .rnlock, .rnlast, etc. */
 
-#define PLURAL(num) ((num)==1? nullstr : ess)
+#define PLURAL(num) ((num)==1? "" : "s")
 #define ALLBITS(val,bits) (((val) & (bits)) == (bits))
 
 /* Factored strings */
 
-EXT char nullstr[1] INIT("");
-EXT char ess[2] INIT("s");
 EXT char sh[] INIT(SH);
 EXT char defeditor[] INIT(DEFEDITOR);
 EXT char hforhelp[] INIT("Type h for help.\n");

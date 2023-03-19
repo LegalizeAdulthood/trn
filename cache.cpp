@@ -345,13 +345,13 @@ char *fetchcache(ART_NUM artnum, int which_line, bool fill_cache)
 
     /* article_find() returns a nullptr if the artnum value is invalid */
     if (!(ap = article_find(artnum)) || !(ap->flags & AF_EXISTS))
-	return nullstr;
+	return "";
     if (cached && (s=get_cached_line(ap,which_line,untrim_cache)) != nullptr)
 	return s;
     if (!fill_cache)
 	return nullptr;
     if (!parseheader(artnum))
-	return nullstr;
+	return "";
     if (cached)
 	return get_cached_line(ap,which_line,untrim_cache);
     return nullptr;
@@ -575,13 +575,13 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
 	ap->from = s;
 	break;
       case XREF_LINE:
-	if (ap->xrefs && ap->xrefs != nullstr)
+	if (ap->xrefs && ap->xrefs != "")
 	    free(ap->xrefs);
 	/* Exclude an xref for just this group or "(none)". */
 	cp = strchr(s, ':');
 	if (!cp || !strchr(cp+1, ':')) {
 	    free(s);
-	    s = nullstr;
+	    s = "";
 	}
 	ap->xrefs = s;
 	break;
@@ -939,6 +939,6 @@ void clear_article(ARTICLE *ap)
 	free(ap->from);
     if (ap->msgid)
 	free(ap->msgid);
-    if (ap->xrefs && ap->xrefs != nullstr)
+    if (ap->xrefs && ap->xrefs != "")
 	free(ap->xrefs);
 }

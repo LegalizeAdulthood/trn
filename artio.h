@@ -20,7 +20,7 @@ EXT long artbuf_len;
 EXT char wrapped_nl INIT(WRAPPED_NL);
 
 #ifdef LINKART
-EXT char* linkartname INIT(nullstr);/* real name of article for Eunice */
+EXT char* linkartname INIT("");/* real name of article for Eunice */
 #endif
 
 void artio_init();

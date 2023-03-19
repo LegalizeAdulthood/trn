@@ -66,9 +66,9 @@ bool env_init(char *tcbuf, bool lax)
     /* Set g_real_name, and maybe set g_login_name and g_home_dir (if nullptr). */
     if (!set_user_name(tcbuf)) {
 	if (!g_login_name)
-	    g_login_name = nullstr;
+	    g_login_name = "";
 	if (!g_real_name)
-	    g_real_name = nullstr;
+	    g_real_name = "";
 	fully_successful = false;
     }
     env_init2();

@@ -116,7 +116,7 @@ int get_header_num(char *s)
     if (i <= SOME_LINE && i != CUSTOM_LINE) {
 	char* bp;
 	char ch;
-	if (htype[CUSTOM_LINE].name != nullstr)
+	if (htype[CUSTOM_LINE].name != "")
 	    free(htype[CUSTOM_LINE].name);
 	htype[CUSTOM_LINE].name = savestr(msg);
 	htype[CUSTOM_LINE].length = end - s;
@@ -364,7 +364,7 @@ char *fetchlines(ART_NUM artnum, int which_line)
 	    return savestr(s);
     }
     if ((firstpos = htype[which_line].minpos) < 0)
-	return savestr(nullstr);
+	return savestr("");
 
     firstpos += htype[which_line].length + 1;
     lastpos = htype[which_line].maxpos;
@@ -402,7 +402,7 @@ char *mp_fetchlines(ART_NUM artnum, int which_line, int pool)
 	    return mp_savestr(s,pool);
     }
     if ((firstpos = htype[which_line].minpos) < 0)
-	return mp_savestr(nullstr,pool);
+	return mp_savestr("",pool);
 
     firstpos += htype[which_line].length + 1;
     lastpos = htype[which_line].maxpos;
@@ -527,7 +527,7 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
     if (parsed_art != artnum)
 	s = fetchcache(artnum,which_line, FILL_CACHE);
     if (parsed_art == artnum && (firstpos = htype[which_line].minpos) < 0)
-	s = nullstr;
+	s = "";
     if (s) {
 	if (copy)
 	    s = savestr(s);

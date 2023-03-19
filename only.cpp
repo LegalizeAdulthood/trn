@@ -67,7 +67,7 @@ void end_only()
 
 	if (verbose)
 	    sprintf(msg, "Restriction %s%s removed.",ngtodo[0],
-		    maxngtodo > 1 ? ", etc." : nullstr);
+		    maxngtodo > 1 ? ", etc." : "");
 	else
 	    sprintf(msg, "Exiting \"only\".");
 	for (i = save_maxngtodo; i < maxngtodo + save_maxngtodo; i++) {

@@ -71,7 +71,7 @@ char *get_sel_order(int smode)
 {
     int save_sel_mode = sel_mode;
     set_selector(smode, 0);
-    sprintf(buf,"%s%s", sel_direction < 0? "reverse " : nullstr,
+    sprintf(buf,"%s%s", sel_direction < 0? "reverse " : "",
 	    sel_sort_string);
     sel_mode = save_sel_mode;
     set_selector(0, 0);
@@ -1249,14 +1249,14 @@ void display_page_title(bool home_only)
 	printf("      (Press 'S' to save changes, 'q' to abandon, or TAB to use.)");
     else if (in_ng) {
 	printf("          %ld %sarticle%s", (long)sel_total_obj_cnt,
-	       sel_rereading? "read " : nullstr,
-	       sel_total_obj_cnt == 1 ? nullstr : "s");
+	       sel_rereading? "read " : "",
+	       sel_total_obj_cnt == 1 ? "" : "s");
 	if (sel_exclusive)
 	    printf(" out of %ld", (long)obj_count);
 	fputs(moderated,stdout);
     }
     else {
-	printf("       %s%ld group%s",group_init_done? nullstr : "~",
+	printf("       %s%ld group%s",group_init_done? "" : "~",
 	    (long)sel_total_obj_cnt, PLURAL(sel_total_obj_cnt));
 	if (sel_exclusive)
 	    printf(" out of %ld", (long)obj_count);
@@ -1266,7 +1266,7 @@ void display_page_title(bool home_only)
     home_cursor();
     newline();
     maybe_eol();
-    if (in_ng && redirected && redirected != nullstr)
+    if (in_ng && redirected && redirected != "")
 	printf("\t** Please start using %s **", redirected);
     newline();
 }
@@ -1866,7 +1866,7 @@ void display_option(int op, int item_index)
 	pre = "==";
 	item = options_ini[op].item+1;
 	post = "==================================";
-	val = nullstr;
+	val = "";
     }
     else {
 	len = (options_ini[op].checksum & 0xff);

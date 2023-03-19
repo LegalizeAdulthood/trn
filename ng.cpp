@@ -226,7 +226,7 @@ int do_newsgroup(char *start_command)
 	if (art != 0 || (artp && !(artp->flags & AF_TMPMEM)))
 	    artp = article_find(art);
 	if (start_command) {		/* do we have an initial command? */
-	    if (start_command == nullstr) {
+	    if (start_command == "") {
 		if (UseNewsSelector >= 0
 		 && !ng_virtual
 		 && ngptr->toread >= (ART_UNREAD)UseNewsSelector)
@@ -288,7 +288,7 @@ int do_newsgroup(char *start_command)
 			(long)obj_count,PLURAL(obj_count));
 	    }
 	    if (redirected) {
-		if (redirected == nullstr)
+		if (redirected == "")
 		    printf("\n\n** This group has been disabled by your news admin **");
 		else
 		    printf("\n\n** Please start using %s **", redirected);
@@ -549,7 +549,7 @@ int art_switch()
 	char* u_help_thread;
 
 	if (!artp) {
-	    u_help_thread = nullstr;
+	    u_help_thread = "";
 	    if (verbose)
 		u_prompt = "\nUnkill: +select or all?";
 	    else
@@ -607,7 +607,7 @@ n or q to change nothing.\n\
 	}
 	else if (*buf == 'n' || *buf == 'q')
 	    return AS_ASK;
-	else if (*buf == 't' && u_help_thread != nullstr) {
+	else if (*buf == 't' && u_help_thread != "") {
 	    if (artp->subj->thread)
 		unkill_thread(artp->subj->thread);
 	    else
@@ -615,7 +615,7 @@ n or q to change nothing.\n\
 	    if ((artp = first_art(artp->subj)) != nullptr)
 		art = article_num(artp);
 	}
-	else if (*buf == 's' && u_help_thread != nullstr)
+	else if (*buf == 's' && u_help_thread != "")
 	    unkill_subthread(artp);
 	else if (*buf == 'a') {
 	    check_first(absfirst);
@@ -793,12 +793,12 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	if (art < absfirst) {
 	    if (verbose)
 		printf("\nThere are no%s%s articles prior to this one.\n",
-			*buf=='P'?nullstr:" unread",
-			selected_only?" selected":nullstr) FLUSH;
+			*buf=='P'?"":" unread",
+			selected_only?" selected":"") FLUSH;
 	    else
 		printf("\nNo previous%s%s articles\n",
-			*buf=='P'?nullstr:" unread",
-			selected_only?" selected":nullstr) FLUSH;
+			*buf=='P'?"":" unread",
+			selected_only?" selected":"") FLUSH;
 	    termdown(2);
 	    art = curr_art;
 	    artp = curr_artp;
@@ -1385,7 +1385,7 @@ void setmail(bool force)
 	
 	if (stat(mailfile,&filestat) < 0 || !filestat.st_size
 	    || filestat.st_atime > filestat.st_mtime)
-	    mailcall = nullstr;
+	    mailcall = "";
 	else
 	    mailcall = get_val("MAILCALL","(Mail) ");
     }
@@ -1552,7 +1552,7 @@ bool output_subject(char *ptr, int flag)
     if (!subjline) {
 	subjline = get_val("SUBJLINE",(char*)nullptr);
 	if (!subjline)
-	    subjline = nullstr;
+	    subjline = "";
     }
 
     ap = (ARTICLE*)ptr;
@@ -1562,7 +1562,7 @@ bool output_subject(char *ptr, int flag)
     if ((s = fetchsubj(i,false)) != nullptr) {
 	sprintf(tmpbuf,"%-5ld ", i);
 	len = strlen(tmpbuf);
-	if (subjline != nullstr) {
+	if (subjline != "") {
 	    art = i;
 	    interp(tmpbuf + len, sizeof tmpbuf - len, subjline);
 	}
@@ -1605,7 +1605,7 @@ char ask_memorize(char_int ch)
     if (!use_one_line)
 	newline();
 reask_memorize:
-    sprintf(cmd_buf,"%sMemorize %s command:", global_save?"Global-" : nullstr,
+    sprintf(cmd_buf,"%sMemorize %s command:", global_save?"Global-" : "",
 	    mode_string);
     in_char(cmd_buf, 'm', thread_cmd? "+S.mJK,jcC" : "+S.mJK,jcCfg");
     printcmd();

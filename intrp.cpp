@@ -300,7 +300,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    if ((s = strchr(scrbuf,'-')) != nullptr)
 			*s++ = '\0';
 		    else
-			s = nullstr;
+			s = "";
 		    s = get_val(scrbuf,s);
 		    break;
 		case '<':
@@ -308,7 +308,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    if ((s = strchr(scrbuf,'-')) != nullptr)
 			*s++ = '\0';
 		    else
-			s = nullstr;
+			s = "";
 		    interp(scrbuf, 8192, get_val(scrbuf,s));
 		    s = scrbuf;
 		    break;
@@ -321,10 +321,10 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			    s = line_buf = fetchlines(art,i);
 			}
 			else
-			    s = nullstr;
+			    s = "";
 		    }
 		    else
-			s = nullstr;
+			s = "";
 		    break;
 		case '(': {
 		    COMPEX *oldbra_compex = bra_compex;
@@ -466,7 +466,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			sprintf(s,"%ld",(long)art);
 		    }
 		    else
-			s = nullstr;
+			s = "";
 		    break;
 		case 'A':
 		    if (in_ng) {
@@ -477,7 +477,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 					nntp_artname(art, false));
 			    }
 			    else
-				s = nullstr;
+				s = "";
 			}
 			else
 #ifdef LINKART
@@ -488,20 +488,20 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 #endif
 		    }
 		    else
-			s = nullstr;
+			s = "";
 		    break;
 		case 'b':
-		    s = savedest? savedest : nullstr;
+		    s = savedest? savedest : "";
 		    break;
 		case 'B':
 		    s = scrbuf;
 		    sprintf(s,"%ld",(long)savefrom);
 		    break;
 		case 'c':
-		    s = ngdir? ngdir : nullstr;
+		    s = ngdir? ngdir : "";
 		    break;
 		case 'C':
-		    s = ngname? ngname : nullstr;
+		    s = ngname? ngname : "";
 		    break;
 		case 'd':
 		    if (ngdir) {
@@ -509,19 +509,19 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			sprintf(s,"%s/%s",datasrc->spool_dir,ngdir);
 		    }
 		    else
-			s = nullstr;
+			s = "";
 		    break;
 		case 'D':
 		    if (in_ng)
 			s = dist_buf = fetchlines(art,DIST_LINE);
 		    else
-			s = nullstr;
+			s = "";
 		    break;
 		case 'e':
 		    s = extractprog? extractprog : "-";
 		    break;
 		case 'E':
-		    s = extractdest? extractdest : nullstr;
+		    s = extractdest? extractdest : "";
 		    break;
 		case 'f':			/* from line */
 		    if (in_ng) {
@@ -535,7 +535,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			    s = from_buf = fetchlines(art,FROM_LINE);
 		    }
 		    else
-			s = nullstr;
+			s = "";
 		    break;
 		case 'F':
 		    if (in_ng) {
@@ -547,7 +547,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			    s = ngs_buf = fetchlines(art,NGS_LINE);
 		    }
 		    else
-			s = nullstr;
+			s = "";
 		    break;
 		case 'g':			/* general mode */
 		    s = scrbuf;
@@ -570,7 +570,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			}
 		    }
 		    else
-			s = nullstr;
+			s = "";
 		    break;
 		case 'I':			/* indent string for quoting */
 		    s = scrbuf;
@@ -603,7 +603,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    if (in_ng)
 			s = ngs_buf = fetchlines(art,NGS_LINE);
 		    else
-			s = nullstr;
+			s = "";
 		    break;
 		case 'N':			/* full name */
 		    s = get_val("NAME",g_real_name);
@@ -630,7 +630,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			    s = scrbuf;
 			}
 			else
-			    s = nullstr;
+			    s = "";
 		    }
 		    break;
 		case 'O':
@@ -640,7 +640,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    s = cwd;
 		    break;
 		case 'P':
-		    s = datasrc? datasrc->spool_dir : nullstr;
+		    s = datasrc? datasrc->spool_dir : "";
 		    break;
 		case 'q':
 		    s = input_str;
@@ -656,13 +656,13 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 				break;
 			}
 		    }
-		    s = nullstr;
+		    s = "";
 		    break;
 		case 'R': {
 		    int len, j;
 
 		    if (!in_ng) {
-			s = nullstr;
+			s = "";
 			break;
 		    }
 		    parseheader(art);
@@ -709,7 +709,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		case 'S': {
 		    char* str;
 		    if (!in_ng || !art || !artp) {
-			s = nullstr;
+			s = "";
 			break;
 		    }
 		    if ((str = subj_buf) == nullptr)
@@ -724,7 +724,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		case 't':
 		case 'T':
 		    if (!in_ng) {
-			s = nullstr;
+			s = "";
 			break;
 		    }
 		    parseheader(art);
@@ -754,13 +754,13 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			s = scrbuf;
 		    }
 		    else
-			s = nullstr;
+			s = "";
 		    break;
 		case 'U': {
 		    int unseen;
 
 		    if (!in_ng) {
-			s = nullstr;
+			s = "";
 			break;
 		    }
 		    unseen = (art <= lastart) && !was_read(art);
@@ -787,14 +787,14 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			s = scrbuf;
 		    }
 		    else
-			s = nullstr;
+			s = "";
 		    break;
 		}
 		case 'V':
 		    s = patchlevel + 1;
 		    break;
 		case 'W':
-		    s = datasrc? datasrc->thread_dir : nullstr;
+		    s = datasrc? datasrc->thread_dir : "";
 		    break;
 		case 'x':			/* news library */
 		    s = g_lib;
@@ -804,7 +804,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    break;
 		case 'y':	/* from line with *-shortening */
 		    if (!in_ng) {
-			s = nullstr;
+			s = "";
 			break;
 		    }
 		    /* XXX Rewrite this! */
@@ -851,7 +851,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    break;
 		case 'z':
 		    if (!in_ng) {
-			s = nullstr;
+			s = "";
 			break;
 		    }
 #ifdef LINKART
@@ -870,13 +870,13 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    s = scrbuf;
 		    break;
 		case '\0':
-		    s = nullstr;
+		    s = "";
 		    break;
 		default:
 		    if (--destsize <= 0)
 			abort_interp();
 		    *dest++ = *pattern | metabit;
-		    s = nullstr;
+		    s = "";
 		    break;
 		}
 	    }
@@ -930,7 +930,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    }
 		} else {
 		    if (!(s = extract_name(s)))
-			s = nullstr;
+			s = "";
 		}
 	    }
 	    if (metabit) {

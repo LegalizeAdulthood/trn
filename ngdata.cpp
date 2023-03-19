@@ -303,7 +303,7 @@ ART_NUM getngsize(NGDATA *gp)
 	gp->abs1st = (ART_NUM)first;
     if (!in_ng) {
 	if (redirected) {
-	    if (redirected != nullstr)
+	    if (redirected != "")
 		free(redirected);
 	    redirected = nullptr;
 	}
@@ -315,7 +315,7 @@ ART_NUM getngsize(NGDATA *gp)
 	    moderated = get_val("MODSTRING", " (moderated)");
 	    break;
 	case 'x':
-	    redirected = nullstr;
+	    redirected = "";
 	    moderated = " (DISABLED)";
 	    break;
 	case '=':
@@ -326,7 +326,7 @@ ART_NUM getngsize(NGDATA *gp)
 	    moderated = " (REDIRECTED)";
 	    break;
 	default:
-	    moderated = nullstr;
+	    moderated = "";
 	    break;
 	}
     }

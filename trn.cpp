@@ -210,7 +210,7 @@ void do_multirc()
 		    if (retry) {
 			if (verbose)
 			    printf("\nRestriction %s%s still in effect.\n",
-				   ngtodo[0], maxngtodo > 1 ? ", etc." : nullstr) FLUSH;
+				   ngtodo[0], maxngtodo > 1 ? ", etc." : "") FLUSH;
 		 	else
 			    fputs("\n(\"Only\" mode.)\n",stdout) FLUSH;
 			termdown(2);
@@ -536,7 +536,7 @@ int input_newsgroup()
 	    bool read_unthreaded = !(ngptr->flags&NF_UNTHREADED);
 	    ngptr->flags ^= NF_UNTHREADED;
 	    printf("\n\n%s will be read %sthreaded.\n",
-		   ngptr->rcline, read_unthreaded? "un" : nullstr) FLUSH;
+		   ngptr->rcline, read_unthreaded? "un" : "") FLUSH;
 	    set_toread(ngptr, ST_LAX);
 	}
 	termdown(3);
@@ -656,7 +656,7 @@ reask_abandon:
 	 *      (it seemed to miss all the if statements below)
 	 *      Just to be safe, make sure it is legal.
 	 */
-	s = nullstr;
+	s = "";
 	if (*buf == '.') {		/* start command? */
 	    if (!finish_command(false)) /* get rest of command */
 		return ING_INPUT;
@@ -669,7 +669,7 @@ reask_abandon:
 	    s = savestr(buf);
 	}
 	else if (*buf == ' ' || *buf == '\r' || *buf == '\n')
-	    s = nullstr;
+	    s = "";
 	else
 	    s = nullptr;
 

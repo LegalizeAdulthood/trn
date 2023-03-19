@@ -428,7 +428,7 @@ static int read_articles()
 						0 : p_article.num);
 	article->date = p_article.date;
 	if (olden_days < 2 && !(p_article.flags & HAS_XREFS))
-	    article->xrefs = nullstr;
+	    article->xrefs = "";
 	article->from = the_author(p_article.author);
 	article->parent = the_article(p_article.parent, count);
 	article->child1 = the_article((WORD)(p_article.child_cnt?1:0), count);

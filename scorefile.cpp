@@ -257,15 +257,15 @@ char *sf_get_extra_header(ART_NUM art, int hnum)
 	if (strncaseEQ(head,s,len)) {
 	    s = strchr(s,':');
 	    if (!s)
-		return nullstr;
+		return "";
 	    s++;	/* skip the colon */
 	    while (*s == ' ' || *s == '\t') s++;
 	    if (!*s)
-		return nullstr;
+		return "";
 	    head = s;		/* now point to start of new text */
 	    s = strchr(s,'\n');
 	    if (!s)
-		return nullstr;
+		return "";
 	    *s = '\0';
 	    safecpy(lbuf,head,sizeof lbuf - 1);
 	    *s = '\n';
@@ -273,7 +273,7 @@ char *sf_get_extra_header(ART_NUM art, int hnum)
 	}
 	s = strchr(s,'\n');	/* '\n' will be skipped on loop increment */
     }
-    return nullstr;
+    return "";
 }
 
 /* move to util.c ? */

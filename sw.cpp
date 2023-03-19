@@ -186,7 +186,7 @@ void decode_switch(char *s)
 		    save_init_environment(s);
 	    }
 	    else {
-		s = export_var(tmpbuf,nullstr) - strlen(tmpbuf) - 1;
+		s = export_var(tmpbuf,"") - strlen(tmpbuf) - 1;
 		if (mode == 'i')
 		    save_init_environment(s);
 	    }
@@ -263,7 +263,7 @@ void decode_switch(char *s)
 	    set_option(OI_NEWS_SEL_MODE, s);
 	    if (*++s) {
 		char tmpbuf[4];
-		sprintf(tmpbuf, "%s%c", isupper(*s)? "r " : nullstr, *s);
+		sprintf(tmpbuf, "%s%c", isupper(*s)? "r " : "", *s);
 		set_option(OI_NEWS_SEL_ORDER, tmpbuf);
 	    }
 	    break;

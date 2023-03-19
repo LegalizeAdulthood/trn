@@ -83,10 +83,10 @@ EXT HEADTYPE htype[HEAD_LAST];
 
 HEADTYPE htype[HEAD_LAST] = {
  /* name             minpos   maxpos  length   flag */
-    {nullstr,/*BODY*/	0,	0,	0,	0		},
-    {nullstr,/*SHOWN*/	0,	0,	0,	0		},
-    {nullstr,/*HIDDEN*/	0,	0,	0,	HIDDEN		},
-    {nullstr,/*CUSTOM*/	0,	0,	0,	0		},
+    {"",/*BODY*/	0,	0,	0,	0		},
+    {"",/*SHOWN*/	0,	0,	0,	0		},
+    {"",/*HIDDEN*/	0,	0,	0,	HIDDEN		},
+    {"",/*CUSTOM*/	0,	0,	0,	0		},
     {"unrecognized",	0,	0,	12,	HIDDEN		},
     {"author",		0,	0,	6,	0		},
     {"bytes",		0,	0,	5,	HIDDEN|HT_CACHED},

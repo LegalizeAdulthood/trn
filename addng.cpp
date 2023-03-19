@@ -84,7 +84,7 @@ static void process_list(int flag)
 
     if (!flag) {
 	sprintf(cmd_buf,"\nUnsubscribed but mentioned in your current newsrc%s:\n",
-		multirc->first->next? "s" : nullstr);
+		multirc->first->next? "s" : "");
 	print_lines(cmd_buf, STANDOUT);
     }
     if ((node = first_addgroup) != nullptr && flag && UseAddSelector)

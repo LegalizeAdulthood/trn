@@ -55,7 +55,7 @@ void writelast()
 	if (lasttime < starttime)
 	    lasttime = starttime;
 	fprintf(tmpfp,"%s\n%ld\n%ld\n%ld\n%ld\n",
-		ngname? ngname : nullstr,lasttime,
+		ngname? ngname : "",lasttime,
 		lastactsiz,lastnewtime,lastextranum);
 	fclose(tmpfp);
 	remove(lastfile);

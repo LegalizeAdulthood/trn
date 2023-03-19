@@ -413,7 +413,7 @@ static bool open_newsrc(NEWSRC *rp)
 	}
 	some_buf = SUBSCRIPTIONS;
 	if ((rp->datasrc->flags & DF_REMOTE)
-	 && nntp_list("SUBSCRIPTIONS",nullstr,0) == 1) {
+	 && nntp_list("SUBSCRIPTIONS","",0) == 1) {
 	    do {
 		fputs(g_ser_line,rcfp);
 		fputc('\n',rcfp);
@@ -732,7 +732,7 @@ bool get_ng(char *what, int flags)
 	if (autosub) {
 	    if (append_unsub) {
 		printf("(Adding %s to end of your .newsrc %ssubscribed)\n",
-		       ngname, (autosub == ADDNEW_SUB)? nullstr : "un") FLUSH;
+		       ngname, (autosub == ADDNEW_SUB)? "" : "un") FLUSH;
 		termdown(1);
 		ngptr = add_newsgroup(rp, ngname, autosub);
 	    } else {
@@ -1267,7 +1267,7 @@ bool write_newsrcs(MULTIRC *mptr)
 	if (rp->infoname) {
 	    if ((tmpfp = fopen(rp->infoname, "w")) != nullptr) {
 		fprintf(tmpfp,"Last-Group: %s\nNew-Group-State: %ld,%ld,%ld\n",
-			ngname? ngname : nullstr,rp->datasrc->lastnewgrp,
+			ngname? ngname : "",rp->datasrc->lastnewgrp,
 			rp->datasrc->act_sf.recent_cnt,
 			rp->datasrc->desc_sf.recent_cnt);
 		fclose(tmpfp);

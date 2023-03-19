@@ -57,7 +57,7 @@ static bool got_a_char = false;	/* true if we got a char since eating */
 /* (I believe terminfo will ignore the &tmpaddr argument.) */
 
 char* tgetstr();
-#define Tgetstr(key) ((tmpstr = tgetstr(key,&tmpaddr)) ? tmpstr : nullstr)
+#define Tgetstr(key) ((tmpstr = tgetstr(key,&tmpaddr)) ? tmpstr : "")
 
 /* terminal initialization */
 
@@ -175,22 +175,22 @@ void term_set(char *tcbuf)
     tc_BC = "\b";
     tc_UP = "\033[A";
     tc_CR = "\r";
-    tc_VB = nullstr;
+    tc_VB = "";
     tc_CL = "\033[H\033[2J";
     tc_CE = "\033[K";
-    tc_TI = nullstr;
-    tc_TE = nullstr;
-    tc_KS = nullstr;
-    tc_KE = nullstr;
+    tc_TI = "";
+    tc_TE = "";
+    tc_KS = "";
+    tc_KE = "";
     tc_CM = "\033[%d;%dH";
     tc_HO = "\033[H";
-    tc_IL = nullstr; /*$$*/
-    tc_CD = nullstr; /*$$*/
+    tc_IL = ""; /*$$*/
+    tc_CD = ""; /*$$*/
     tc_SO = "\033[7m";
     tc_SE = "\033[m";
     tc_US = "\033[7m";
     tc_UE = "\033[m";
-    tc_UC = nullstr;
+    tc_UC = "";
     tc_AM = true;
 #else
     s = getenv("TERM");
@@ -204,9 +204,9 @@ void term_set(char *tcbuf)
     tc_PC = *s;				/* get it where tputs wants it */
     if (!tgetflag("bs")) {		/* is backspace not used? */
 	tc_BC = Tgetstr("bc");		/* find out what is */
-	if (tc_BC == nullstr) {		/* terminfo grok's 'bs' but not 'bc' */
+	if (tc_BC == "") {		/* terminfo grok's 'bs' but not 'bc' */
 	    tc_BC = Tgetstr("le");
-	    if (tc_BC == nullstr)
+	    if (tc_BC == "")
 		tc_BC = "\b";		/* better than nothing... */
 	}
     } else
@@ -233,7 +233,7 @@ void term_set(char *tcbuf)
     if ((tc_UG = tgetnum("ug"))<0)
 	tc_UG = 0;			/* blanks left by US, UE */
     if (*tc_US)
-	tc_UC = nullstr;		/* UC must not be nullptr */
+	tc_UC = "";		/* UC must not be nullptr */
     else
 	tc_UC = Tgetstr("uc");		/* underline a character */
     if (!*tc_US && !*tc_UC) {		/* no underline mode? */
@@ -1843,7 +1843,7 @@ void xmouse_check()
 		mousebar_cnt = UnivSelBtnCnt;
 		break;
 	      default:
-		mousebar_btns = nullstr;
+		mousebar_btns = "";
 		/*mousebar_cnt = 0;*/
 		break;
 	    }

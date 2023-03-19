@@ -107,7 +107,7 @@ char *getbracket(COMPEX *compex, int n)
     if (!compex->nbra)
 	return nullptr;
     if (n > compex->nbra || !compex->braelist[n] || length < 0)
-	return nullstr;
+	return "";
     growstr(&gbr_str, &gbr_siz, length+1);
     safecpy(gbr_str, compex->braslist[n], length+1);
     return gbr_str;

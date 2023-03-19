@@ -518,7 +518,7 @@ char *find_grpdesc(DATASRC *dp, char *groupname)
     int ret;
 
     if (!dp->grpdesc)
-	return nullstr;
+	return "";
 
     if (!dp->desc_sf.hp) {
 	if ((dp->flags & DF_REMOTE) && dp->desc_sf.refetch_secs) {
@@ -548,7 +548,7 @@ char *find_grpdesc(DATASRC *dp, char *groupname)
 	    }
 	    free(dp->grpdesc);
 	    dp->grpdesc = nullptr;
-	    return nullstr;
+	    return "";
 	}
 	if (ret == 2 || !dp->desc_sf.refetch_secs)
 	    dp->flags |= DF_NOXGTITLE;
@@ -587,7 +587,7 @@ char *find_grpdesc(DATASRC *dp, char *groupname)
 	    dp->grpdesc = nullptr;
 	}
     }
-    return nullstr;
+    return "";
 }
 
 /* NOTE: This was factored from srcfile_open and srcfile_append and is
@@ -642,7 +642,7 @@ int srcfile_open(SRCFILE *sfp, char *filename, char *fetchcmd, char *server)
 		/* tell server we want the file */
 		if (!(nntplink.flags & NNTP_NEW_CMD_OK))
 		    use_buffered_nntp_gets = true;
-		else if (nntp_list(fetchcmd, nullstr, 0) < 0) {
+		else if (nntp_list(fetchcmd, "", 0) < 0) {
 		    printf("\nCan't get %s file from server: \n%s\n",
 			   fetchcmd, g_ser_line) FLUSH;
 		    termdown(2);

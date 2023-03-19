@@ -140,7 +140,7 @@ char *current_charsubst()
 	    show = "[T] ";
 	break;
       default:
-	show = nullstr;
+	show = "";
 	break;
     }
 #endif

@@ -19,7 +19,7 @@ EXT char* subjline INIT(nullptr);	/* what format to use for '=' */
 #ifdef MAILCALL
 EXT int mailcount INIT(0);	/* check for mail when 0 mod 10 */
 #endif
-EXT char* mailcall INIT(nullstr);
+EXT char* mailcall INIT("");
 EXT bool forcelast INIT(false);	/* ought we show "End of newsgroup"? */
 EXT bool forcegrow INIT(false);	/* do we want to recalculate size */
 				/*   of newsgroup, e.g. after posting? */

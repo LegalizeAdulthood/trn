@@ -1001,7 +1001,7 @@ int univ_visit_group_main(char *gname)
     old_threaded = ThreadedGroup;
     ThreadedGroup = (use_threads && !(np->flags & NF_UNTHREADED));
     printf("\nScanning newsgroup %s\n",gname);
-    ret = do_newsgroup(nullstr);
+    ret = do_newsgroup("");
     ThreadedGroup = old_threaded;
     return ret;
 }

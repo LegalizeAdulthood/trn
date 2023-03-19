@@ -41,7 +41,7 @@ void s_beep()
 char *s_get_statchars(long ent, int line)
 {
     if (s_status_cols == 0)
-	return nullstr;
+	return "";
     switch (s_cur_type) {
       case S_ART:
 	return sa_get_statchars(ent,line);

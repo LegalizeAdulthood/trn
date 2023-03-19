@@ -43,26 +43,26 @@
 */
 
 static COLOR_OBJ objects[MAX_COLORS] = {
-    { "default",	nullstr, nullstr, NOMARKING	},
-    { "ngname",		nullstr, nullstr, STANDOUT	},
-    { "plus",		nullstr, nullstr, LASTMARKING	},
-    { "minus",		nullstr, nullstr, LASTMARKING	},
-    { "star",		nullstr, nullstr, LASTMARKING	},
-    { "header",		nullstr, nullstr, LASTMARKING	},
-    { "subject",	nullstr, nullstr, UNDERLINE	},
-    { "tree",		nullstr, nullstr, LASTMARKING	},
-    { "tree marker",	nullstr, nullstr, STANDOUT	},
-    { "more",		nullstr, nullstr, STANDOUT	},
-    { "heading",	nullstr, nullstr, STANDOUT	},
-    { "command",	nullstr, nullstr, STANDOUT	},
-    { "mouse bar",	nullstr, nullstr, STANDOUT	},
-    { "notice",		nullstr, nullstr, STANDOUT	},
-    { "score",		nullstr, nullstr, STANDOUT	},
-    { "art heading",	nullstr, nullstr, LASTMARKING	},
-    { "mime separator",	nullstr, nullstr, STANDOUT	},
-    { "mime description",nullstr,nullstr, UNDERLINE	},
-    { "cited text",	nullstr, nullstr, LASTMARKING	},
-    { "body text",	nullstr, nullstr, NOMARKING	},
+    { "default",	"", "", NOMARKING	},
+    { "ngname",		"", "", STANDOUT	},
+    { "plus",		"", "", LASTMARKING	},
+    { "minus",		"", "", LASTMARKING	},
+    { "star",		"", "", LASTMARKING	},
+    { "header",		"", "", LASTMARKING	},
+    { "subject",	"", "", UNDERLINE	},
+    { "tree",		"", "", LASTMARKING	},
+    { "tree marker",	"", "", STANDOUT	},
+    { "more",		"", "", STANDOUT	},
+    { "heading",	"", "", STANDOUT	},
+    { "command",	"", "", STANDOUT	},
+    { "mouse bar",	"", "", STANDOUT	},
+    { "notice",		"", "", STANDOUT	},
+    { "score",		"", "", STANDOUT	},
+    { "art heading",	"", "", LASTMARKING	},
+    { "mime separator",	"", "", STANDOUT	},
+    { "mime description","","", UNDERLINE	},
+    { "cited text",	"", "", LASTMARKING	},
+    { "body text",	"", "", NOMARKING	},
 };
 
 /* The attribute stack.  The 0th element is always the "normal" object. */
@@ -90,11 +90,11 @@ void color_init()
 	    finalize(1);
 	}
 	if (strEQ(fg, bg))
-	    bg = nullstr;
+	    bg = "";
 	for (i = 0; i < MAX_COLORS; i++) {
-	    if (objects[i].fg == nullstr)
+	    if (objects[i].fg == "")
 		objects[i].fg = fg;
-	    if (objects[i].bg == nullstr)
+	    if (objects[i].bg == "")
 		objects[i].bg = bg;
 	}
     }
@@ -144,8 +144,8 @@ void color_rc_attribute(char *object, char *value)
     for (s = value; *s && !isspace(*s); s++) ;
     while (isspace(*s)) s++;
     if (!*s) {
-	objects[i].fg = nullstr;
-	objects[i].bg = nullstr;
+	objects[i].fg = "";
+	objects[i].bg = "";
 	return;
     }
     for (t = s; *t && !isspace(*t); t++) ;
@@ -273,7 +273,7 @@ void color_default()
 /* Set colors/attribute for an object. */
 static void output_color()
 {
-    static COLOR_OBJ prior = { nullstr, nullptr, nullptr, NOMARKING };
+    static COLOR_OBJ prior = { "", nullptr, nullptr, NOMARKING };
     COLOR_OBJ* op = &color_stack[stack_pointer].object;
 
     /* If no change, just return. */

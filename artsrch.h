@@ -18,7 +18,7 @@ enum
     SRCH_ERROR = 6
 };
 
-EXT char* lastpat INIT(nullstr);	/* last search pattern */
+EXT char* lastpat INIT("");	/* last search pattern */
 EXT COMPEX sub_compex;		/* last compiled subject search */
 EXT COMPEX art_compex;		/* last compiled normal search */
 EXT COMPEX* bra_compex INIT(&(art_compex)); /* current compex with brackets */
