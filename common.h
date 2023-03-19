@@ -770,6 +770,3 @@ EXT char nocd[] INIT("Can't chdir to directory %s\n");
 #define nntp_advise(str) fputs(str,stdout)
 #define nntp_init_error(str) fputs(str,stdout)
 #define nntp_error(str) fputs(str,stderr)
-#define NNTP_ERROR_IS_FATAL
-#define NNTP_HANDLE_TIMEOUT
-#define NNTP_HANDLE_AUTH_ERR

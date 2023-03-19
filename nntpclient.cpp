@@ -15,15 +15,11 @@ char *savestr(char *);
 #ifndef USE_DEBUGGING_MALLOC
 char *safemalloc(MEM_SIZE);
 #endif
-#ifdef NNTP_HANDLE_TIMEOUT
 int nntp_handle_timeout();
-#endif
 
 int nntp_handle_nested_lists();
 
-#ifdef NNTP_HANDLE_AUTH_ERR
 int nntp_handle_auth_err();
-#endif
 
 int nntp_connect(const char *machine, bool verbose)
 {
@@ -131,19 +127,13 @@ int nntp_command(const char *bp)
     if (debug & DEB_NNTP)
 	printf(">%s\n", bp) FLUSH;
 #endif
-#if defined(NNTP_HANDLE_TIMEOUT) || defined(NNTP_HANDLE_AUTH_ERR)
     strcpy(g_last_command, bp);
-# ifdef NNTP_HANDLE_TIMEOUT
     if (!nntplink.rd_fp)
 	return nntp_handle_timeout();
-# endif
-# ifdef NNTP_HANDLE_AUTH_ERR
     if (nntplink.flags & NNTP_FORCE_AUTH_NOW) {
 	nntplink.flags &= ~NNTP_FORCE_AUTH_NOW;
 	return nntp_handle_auth_err();
     }
-# endif
-#endif
     if (!(nntplink.flags & NNTP_NEW_CMD_OK)) {
 	int ret = nntp_handle_nested_lists();
 	if (ret <= 0)
@@ -151,11 +141,7 @@ int nntp_command(const char *bp)
     }
     if (fprintf(nntplink.wr_fp, "%s\r\n", bp) < 0
      || fflush(nntplink.wr_fp) < 0)
-#ifdef NNTP_HANDLE_TIMEOUT
 	return nntp_handle_timeout();
-#else
-	return -2;
-#endif
     now = time((time_t*)nullptr);
     last_command_diff = now - nntplink.last_command;
     nntplink.last_command = now;
@@ -181,7 +167,6 @@ int nntp_check()
 	    goto read_it;
 	strcpy(g_ser_line, "503 Server closed connection.");
     }
-#ifdef NNTP_HANDLE_TIMEOUT
     if (len == 0 && atoi(g_ser_line) == NNTP_TMPERR_VAL
      && nntp_allow_timeout && last_command_diff > 60) {
 	ret = nntp_handle_timeout();
@@ -197,7 +182,6 @@ int nntp_check()
 	}
     }
     else
-#endif
     if (*g_ser_line <= NNTP_CLASS_CONT && *g_ser_line >= NNTP_CLASS_INF)
 	ret = 1;			/* (this includes NNTP_CLASS_OK) */
     else if (*g_ser_line == NNTP_CLASS_FATAL)
@@ -215,13 +199,11 @@ int nntp_check()
     if (debug & DEB_NNTP)
 	printf("<%s\n", g_ser_line) FLUSH;
 #endif
-#ifdef NNTP_HANDLE_AUTH_ERR
     if (atoi(g_ser_line) == NNTP_AUTH_NEEDED_VAL) {
 	ret = nntp_handle_auth_err();
 	if (ret > 0)
 	    goto read_it;
     }
-#endif
     return ret;
 }
 
