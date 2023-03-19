@@ -224,7 +224,6 @@
 			/* terminals such as older Televideos */
 #define TILDENAME	/* allow ~logname expansion */
 #undef MCHASE		/* unmark xrefed articles on m or M */
-#define NGSEARCH	/* newsgroup pattern matching */
 #define KILLFILES	/* automatic article killer files */
 #define ARTSEARCH	/* pattern searches among articles */
 			/* /, ?, ^N, ^P, k, K */

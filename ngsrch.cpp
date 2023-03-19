@@ -27,18 +27,13 @@
 #include "INTERN.h"
 #include "ngsrch.h"
 
-#ifdef NGSEARCH
 COMPEX ngcompex;
-#endif
 
 void ngsrch_init()
 {
-#ifdef NGSEARCH
     init_compex(&ngcompex);
-#endif
 }
 
-#ifdef NGSEARCH
 // patbuf   if patbuf != buf, get_cmd must */
 // get_cmd  be set to false!!! */
 int ng_search(char *patbuf, int get_cmd)
@@ -169,14 +164,11 @@ exit:
 	free(cmdlst);
     return ret;
 }
-#endif /* NGSEARCH */
 
-#ifdef NGSEARCH
 bool ng_wanted(NGDATA *np)
 {
     return execute(&ngcompex,np->rcline) != nullptr;
 }
-#endif /* NGSEARCH */
 
 char *ng_comp(COMPEX *compex, char *pattern, bool RE, bool fold)
 {

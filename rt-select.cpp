@@ -2240,7 +2240,6 @@ q does nothing.\n\n\
 	    if (ch == ':') {
 		ngsel_perform();
 	    } else {
-#ifdef NGSEARCH
 		ngptr = nullptr;
 		switch (ng_search(buf,false)) {
 		  case NGS_ERROR:
@@ -2255,9 +2254,6 @@ q does nothing.\n\n\
 		    break;
 		}
 		ngptr = current_ng;
-#else
-		notincl("/");
-#endif
 	    }
 	    sel_item_index = 0;
 
@@ -2508,7 +2504,6 @@ q does nothing.\n\n\
 	    if (ch == ':') {
 		addgrp_sel_perform();
 	    } else {
-#ifdef NGSEARCH
 		switch (ng_search(buf,false)) {
 		  case NGS_ERROR:
 		  case NGS_ABORT:
@@ -2521,9 +2516,6 @@ q does nothing.\n\n\
 		  case NGS_DONE:
 		    break;
 		}
-#else
-		notincl("/");
-#endif
 	    }
 	    sel_item_index = 0;
 

@@ -425,7 +425,6 @@ int input_newsgroup()
 	list_newsgroups();
 	return ING_ASK;
       case '/': case '?':	/* scan for newsgroup pattern */
-#ifdef NGSEARCH
 	switch (ng_search(buf,true)) {
 	  case NGS_ERROR:
 	    set_ng(current_ng);
@@ -454,9 +453,6 @@ int input_newsgroup()
 	  case NGS_DONE:
 	    return ING_ASK;
 	}
-#else
-	notincl("/");
-#endif
 	break;
       case 'm':
 	notincl("m");
