@@ -6,7 +6,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef USEURL
 #include "nntpinit.h"
 #include "term.h"
 #include "util.h"
@@ -238,4 +237,3 @@ bool url_get(char *url, char *outfile)
     }
     return flag;
 }
-#endif /* USEURL */

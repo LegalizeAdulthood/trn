@@ -1227,7 +1227,6 @@ static int sf_open_file(char *name)
 
     temp_name = nullptr;
     if (strncaseEQ(name,"URL:",4)) {
-#ifdef USEURL
 	char lbuf[1024];
 	safecpy(lbuf,name,sizeof lbuf - 4);
 	name = lbuf;
@@ -1236,10 +1235,6 @@ static int sf_open_file(char *name)
 	    name = nullptr;
 	else
 	    name = temp_name;
-#else
-	printf("\nThis copy of strn does not have URL support.\n") FLUSH;
-	name = nullptr;
-#endif
     }
     if (!name) {
 	sf_files[i].num_lines = -1;

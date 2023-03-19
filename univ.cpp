@@ -512,7 +512,6 @@ static bool univ_use_file(char *fname, char *title, char *label)
     open_name = s;
     /* open URLs and translate them into local temporary filenames */
     if (strncaseEQ(fname,"URL:",4)) {
-#ifdef USEURL
 	s = fname;
 	open_name = temp_filename();
 	univ_tmp_file = open_name;
@@ -520,10 +519,6 @@ static bool univ_use_file(char *fname, char *title, char *label)
 	    open_name = nullptr;
 	save_temp = true;
 	begin_top = false;	/* we will need a "begin group" */
-#else /* !USEURL */
-	printf("This copy of trn does not have URL support.\n") FLUSH;
-	open_name = nullptr;
-#endif /* USEURL */
     } else if (*s == ':') {	/* relative to last file's directory */
 	printf("Colon filespec not supported for |%s|\n",s) FLUSH;
 	open_name = nullptr;

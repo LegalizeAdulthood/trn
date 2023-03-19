@@ -226,9 +226,6 @@
 #undef MCHASE		/* unmark xrefed articles on m or M */
 #undef	VALIDATE_XREF_SITE /* are xrefs possibly invalid? */
 
-/* USEURL may soon become a Configure script option */
-#define USEURL  /* allow trn to fetch/use WWW URLs */
-
 /* if USEFTP is defined, trn will use the ftpgrab script for ftp: URLs
  * USEFTP is not very well tested, and the ftpgrab script is not
  * installed with make install.  May go away later
