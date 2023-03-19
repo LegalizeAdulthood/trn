@@ -286,7 +286,6 @@ void sc_fill_scorelist(ART_NUM first, ART_NUM last)
 
 /* flag == true means sort now, false means wait until later (not used)
  * nowait == true means start scoring immediately (group entry)
- * false means use NICEBG if available
  */
 void sc_lookahead(bool flag, bool nowait)
 {
@@ -302,13 +301,6 @@ void sc_lookahead(bool flag, bool nowait)
 #endif
     if (!sc_initialized)
 	return;		/* don't score then... */
-#ifdef PENDING
-#ifdef NICEBG
-    if (sc_mode_nicebg && !nowait)
-	if (wait_key_pause(10))		/* wait up to 1 second for a key */
-	    return;
-#endif
-#endif
     if (oldart)			/* Was there an article open? */
 	oldartpos = tellart();	/* where were we in it? */
 #ifndef PENDING

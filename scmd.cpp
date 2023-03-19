@@ -443,11 +443,6 @@ void s_jumpnum(char_int firstchar)
     value = firstchar - '0';
 
     s_rub_ptr();
-#ifdef NICEBG
-    wait_key_pause(10);
-    if (input_pending())
-	jump_verbose = false;
-#endif
     if (jump_verbose) {
 	s_go_bot();
 	s_ref_bot = true;

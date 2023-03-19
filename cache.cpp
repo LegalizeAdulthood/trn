@@ -738,11 +738,6 @@ void cache_until_key()
     if ((datasrc->flags & DF_REMOTE) && nntp_finishbody(FB_BACKGROUND))
 	return;
 
-# ifdef NICEBG
-    if (wait_key_pause(10))
-	return;
-# endif
-
     untrim_cache = true;
     sentinel_artp = curr_artp;
 

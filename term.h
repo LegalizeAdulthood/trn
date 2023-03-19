@@ -245,9 +245,6 @@ Signal_t winch_catcher(int);
 #endif
 void termlib_init();
 void termlib_reset();
-#ifdef NBG_SIGIO
-Signal_t waitkey_sig_handler(int);
-#endif
 bool wait_key_pause(int);
 void xmouse_init(char *);
 void xmouse_check();

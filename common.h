@@ -232,16 +232,6 @@
  */
 #define USEFTP  /**/
 
-/* The NICEBG functions are probably only useful now for *slow* systems */
-/*#define NICEBG  *//* use some kind of nice-background call */
-/* the specific type of NICEBG is used only if NICBG is defined */
-/* select() call for nice background. */
-#define NBG_SELECT   /**/
-/* TERMIO(S) style of nice background available.  Second choice */
-/*#define NBG_TERMIO *//**/
-/* SIGIO style of nice background (last resort) */
-/*#define NBG_SIGIO  *//**/
-
 /* SHORTSCORENAMES has not been tested recently */
 /*#define SHORTSCORENAMES  *//* foo/bar/baz/SCORE instead of foo.bar.baz */
 
@@ -623,20 +613,6 @@
 /* where to find the mail file */
 #ifndef MAILFILE
 #   define MAILFILE "/usr/spool/mail/%L"
-#endif
-
-/* dependencies of nice background scoring */
-#ifdef PENDING
-# ifdef NICEBG
-#  ifndef I_TERMIO
-#   ifndef I_TERMIOS
-#    undef NBG_TERMIO
-#   endif
-#  endif
-/* later insert defines to turn off NBG_SIGIO when needed */
-# endif
-#else /* !PENDING */
-#   undef NICEBG
 #endif
 
 #ifndef HAS_VFORK
