@@ -22,7 +22,6 @@ struct SF_ENTRY
 EXT int sf_num_entries INIT(0);	/* # of entries */
 EXT SF_ENTRY *sf_entries INIT(nullptr); /* array of entries */
 
-#ifdef SCOREFILE_CACHE
 /* for cached score rules */
 struct SF_FILE
 {
@@ -35,7 +34,6 @@ struct SF_FILE
 
 EXT SF_FILE *sf_files INIT(nullptr);
 EXT int sf_num_files INIT(0);
-#endif
 
 EXT char **sf_abbr;		/* abbreviations */
 

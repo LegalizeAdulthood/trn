@@ -685,15 +685,9 @@ void sf_do_file(char *fname)
     int i;
     char* safefilename;
 
-#ifdef SCOREFILE_CACHE
     sf_fp = sf_open_file(fname);
     if (sf_fp < 0)
 	return;
-#else
-    fp = fopen(fname,"r");
-    if (!fp)
-	return;
-#endif
     sf_file_level++;
     if (sf_verbose) {
 	for (i = 1; i < sf_file_level; i++)
@@ -709,18 +703,11 @@ void sf_do_file(char *fname)
     sf_entries[sf_num_entries-1].str2 = nullptr;
     sf_entries[sf_num_entries-1].str1 = savestr(safefilename);
 
-#ifdef SCOREFILE_CACHE
     while ((s = sf_file_getline(sf_fp)) != nullptr) {
 	strcpy(sf_buf,s);
 	s = sf_buf;
-#else
-    while ((s = fgets(sf_buf,1020,fp)) != nullptr) { /* consider buffer size */
-#endif
 	(void)sf_do_line(s,false);
     }
-#ifndef SCOREFILE_CACHE
-    fclose(fp);
-#endif
     /* add end marker to scoring array */
     sf_grow();
     sf_entries[sf_num_entries-1].head_type = SF_FILE_MARK_END;
@@ -976,9 +963,7 @@ void sf_append(char *line)
     filename = filexp(sf_cmd_fname(filename));	/* allow shortcuts */
     /* make sure directory exists... */
     makedir(filename,MD_FILE);
-#ifdef SCOREFILE_CACHE
     sf_file_clear();
-#endif
     if ((fp = fopen(filename,"a")) != nullptr) { /* open (or create) for append */
 	fprintf(fp,"%s\n",scoreline);
 	fclose(fp);
@@ -1164,9 +1149,7 @@ void sf_edit_file(char *filespec)
     /* make sure directory exists... */
     if (makedir(filebuf,MD_FILE) == 0) {
 	(void)edit_file(fname_noexpand);
-#ifdef SCOREFILE_CACHE
 	sf_file_clear();
-#endif
     }
     else
 	printf("Can't make %s\n",filebuf) FLUSH;
@@ -1174,7 +1157,6 @@ void sf_edit_file(char *filespec)
 
 /* returns file number */
 /* if file number is negative, the file does not exist or cannot be opened */
-#ifdef SCOREFILE_CACHE
 static int sf_open_file(char *name)
 {
     FILE* fp;
@@ -1234,9 +1216,7 @@ static int sf_open_file(char *name)
 	UNLINK(temp_name);
     return i;
 }
-#endif /* SCOREFILE_CACHE */
 
-#ifdef SCOREFILE_CACHE
 static void sf_file_clear()
 {
     int i;
@@ -1255,9 +1235,7 @@ static void sf_file_clear()
     sf_files = (SF_FILE*)nullptr;
     sf_num_files = 0;
 }
-#endif /* SCOREFILE_CACHE */
 
-#ifdef SCOREFILE_CACHE
 static char *sf_file_getline(int fnum)
 {
     if (fnum < 0 || fnum >= sf_num_files)
@@ -1267,5 +1245,4 @@ static char *sf_file_getline(int fnum)
     /* below: one of the more twisted lines of my career  (:-) */
     return sf_files[fnum].lines[sf_files[fnum].line_on++];
 }
-#endif /* SCOREFILE_CACHE */
 #endif /* SCORE */

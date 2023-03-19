@@ -232,9 +232,6 @@
  */
 #define USEFTP  /**/
 
-/* if SCOREFILE_CACHE is defined, scorefiles will be kept in memory. */
-#define SCOREFILE_CACHE
-
 /* some dependencies among options */
 
 #ifdef SCAN
