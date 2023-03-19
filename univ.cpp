@@ -1225,10 +1225,8 @@ char *univ_keyhelp_modestr(UNIV_ITEM *ui)
 	return "Newsgroup Selector";
       case UHELP_ADDSEL:
 	return "Add-Newsgroup Selector";
-#ifdef ESCSUBS
       case UHELP_SUBS:
 	return "Escape Substitutions";
-#endif
       case UHELP_ARTSEL:
 	return "Thread/Subject/Article Selector";
       case UHELP_MULTIRC:

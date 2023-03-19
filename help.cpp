@@ -441,7 +441,6 @@ q	Quit the selector.\n\
     return 0;
 }
 
-#ifdef ESCSUBS
 int help_subs()
 {
     int cmd;
@@ -538,7 +537,6 @@ Put :FMT in the middle to format the result printf-style:  %:-30.30t\n\
 	return cmd;
     return 0;
 }
-#endif
 
 int help_artsel()
 {
@@ -1006,10 +1004,8 @@ int univ_key_help(int where)
 	return help_ngsel();
       case UHELP_ADDSEL:
 	return help_addsel();
-#ifdef ESCSUBS
       case UHELP_SUBS:
 	return help_subs();
-#endif
       case UHELP_ARTSEL:
 	return help_artsel();
       case UHELP_MULTIRC:

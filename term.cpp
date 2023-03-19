@@ -701,7 +701,6 @@ char *edit_buf(char *s, char *cmd)
 	    goto echo_it;
     }
     if (*s == '\033') {		/* substitution desired? */
-#ifdef ESCSUBS
 	char tmpbuf[4], *cpybuf;
 
 	tmpbuf[0] = '%';
@@ -728,11 +727,6 @@ char *edit_buf(char *s, char *cmd)
 	    fputs(s,stdout);
 	    s += strlen(s);
 	}
-#else
-	notincl("^[");
-	*s = '\0';
-	reprint();
-#endif
 	return s;
     }
     else if (*s == ERASECH) {		/* they want to rubout a char? */

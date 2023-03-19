@@ -12,9 +12,7 @@ enum
     UHELP_NG = 3,
     UHELP_NGSEL = 4,
     UHELP_ADDSEL = 5,
-#ifdef ESCSUBS
     UHELP_SUBS = 6,
-#endif
     UHELP_ARTSEL = 7,
     UHELP_MULTIRC = 8,
     UHELP_OPTIONS = 9,
@@ -30,9 +28,7 @@ int help_art();
 int help_ng();
 int help_ngsel();
 int help_addsel();
-#ifdef ESCSUBS
 int help_subs();
-#endif
 int help_artsel();
 int help_multirc();
 int help_options();
