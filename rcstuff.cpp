@@ -50,7 +50,7 @@ bool rcstuff_init()
 	while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
 	    if (*cond && !check_ini_cond(cond))
 		continue;
-	    if (strncaseNE(section, "group ", 6))
+	    if (strncasecmp(section, "group ", 6))
 		continue;
 	    i = atoi(section+6);
 	    if (i < 0)
@@ -285,7 +285,7 @@ static bool lock_newsrc(NEWSRC *rp)
 	return true;
 
     s = filexp(RCNAME);
-    if (strEQ(rp->name, s))
+    if (!strcmp(rp->name,s))
 	rp->lockname = savestr(filexp(LOCKNAME));
     else {
 	sprintf(buf, RCNAME_INFO, rp->name);
@@ -314,7 +314,7 @@ static bool lock_newsrc(NEWSRC *rp)
 	else
 	    printf("\nNewsrc locked by %ld on host %s.\n",processnum,runninghost) FLUSH;
 	termdown(2);
-	if (strNE(runninghost,g_local_host)) {
+	if (strcmp(runninghost,g_local_host)) {
 	    if (verbose)
 		printf("\n\
 Since that's not the same host as this one (%s), we must\n\
@@ -487,7 +487,7 @@ static bool open_newsrc(NEWSRC *rp)
 	    np->rcline = some_buf;
 	}
 	if (*some_buf == ' ' || *some_buf == '\t'
-	 || strnEQ(some_buf,"options",7)) {	/* non-useful line? */
+	 || !strncmp(some_buf,"options",7)) {	/* non-useful line? */
 	    np->toread = TR_JUNK;
 	    np->subscribechar = ' ';
 	    np->numoffset = 0;
@@ -639,7 +639,7 @@ void abandon_ng(NGDATA *np)
 		continue;
 	    some_buf[len_last_line_got-1] = '\0';	/* wipe out newline */
 	    if ((some_buf[length] == ':' || some_buf[length] == NEGCHAR)
-	     && strnEQ(np->rcline, some_buf, length)) {
+	     && !strncmp(np->rcline, some_buf, length)) {
 		break;
 	    }
 	    if (some_buf != buf)

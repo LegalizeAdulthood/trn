@@ -65,7 +65,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 	"[Next]n [Sel]+ [Quit]q [Help]h");
 
     prep_ini_words(options_ini);
-    if (argc >= 2 && strEQ(argv[1],"-c"))
+    if (argc >= 2 && !strcmp(argv[1],"-c"))
 	checkflag=true;			/* so we can optimize for -c */
     interp(*tcbufptr,TCBUF_SIZE,GLOBINIT);
     opt_file(*tcbufptr,tcbufptr,false);
@@ -134,13 +134,13 @@ void opt_file(char *filename, char **tcbufptr, bool bleat)
 	    while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
 		if (*cond && !check_ini_cond(cond))
 		    continue;
-		if (strEQ(section, "options")) {
+		if (!strcmp(section,"options")) {
 		    s = parse_ini_section(s, options_ini);
 		    if (!s)
 			break;
 		    set_options(INI_VALUES(options_ini));
 		}
-		else if (strEQ(section, "environment")) {
+		else if (!strcmp(section,"environment")) {
 		    while (*s && *s != '[') {
 			section = s;
 			s += strlen(s) + 1;
@@ -148,7 +148,7 @@ void opt_file(char *filename, char **tcbufptr, bool bleat)
 			s += strlen(s) + 1;
 		    }
 		}
-		else if (strEQ(section, "termcap")) {
+		else if (!strcmp(section,"termcap")) {
 		    while (*s && *s != '[') {
 			section = s;
 			s += strlen(s) + 1;
@@ -156,7 +156,7 @@ void opt_file(char *filename, char **tcbufptr, bool bleat)
 			s += strlen(s) + 1;
 		    }
 		}
-		else if (strEQ(section, "attribute")) {
+		else if (!strcmp(section,"attribute")) {
 		    while (*s && *s != '[') {
 			section = s;
 			s += strlen(s) + 1;
@@ -322,8 +322,8 @@ void set_option(int num, char *s)
 		export_var("SAVEDIR",  "%p/%c");
 		export_var("SAVENAME", "%a");
 	    }
-	    else if (strEQ(get_val("SAVEDIR",""),"%p/%c")
-		  && strEQ(get_val("SAVENAME",""),"%a")) {
+	    else if (!strcmp(get_val("SAVEDIR",""),"%p/%c")
+		  && !strcmp(get_val("SAVENAME",""),"%a")) {
 		export_var("SAVEDIR", "%p");
 		export_var("SAVENAME", "%^C");
 	    }
@@ -612,7 +612,7 @@ void save_options(char *filename)
 	    if (nlp)
 		*nlp++ = '\0';
 	    while (isspace(*cp)) cp++;
-	    if (*cp == '[' && strnEQ(cp+1,"options]",8)) {
+	    if (*cp == '[' && !strncmp(cp+1,"options]",8)) {
 		for (cp += 9; isspace(*cp); cp++) ;
 		if (!*cp)
 		    break;
@@ -766,7 +766,7 @@ char *option_value(int num)
       case OI_OPTION_SEL_BTNS:
 	return expand_mouse_buttons(OptionSelBtns,OptionSelBtnCnt);
       case OI_AUTO_SAVE_NAME:
-	return YESorNO(strEQ(get_val("SAVEDIR",SAVEDIR),"%p/%c"));
+	return YESorNO(!strcmp(get_val("SAVEDIR",SAVEDIR),"%p/%c"));
       case OI_BKGND_THREADING:
 	return YESorNO(!thread_always);
       case OI_AUTO_ARROW_MACROS:
@@ -1006,7 +1006,7 @@ void set_header(char *s, int flag, bool setit)
     int i;
     int len = strlen(s);
     for (i = HEAD_FIRST; i < HEAD_LAST; i++) {
-	if (!len || strncaseEQ(s,htype[i].name,len)) {
+	if (!len || !strncasecmp(s,htype[i].name,len)) {
 	    if (setit && (flag != HT_MAGIC || (htype[i].flags & HT_MAGICOK)))
 		htype[i].flags |= flag;
 	    else
@@ -1019,13 +1019,13 @@ void set_header(char *s, int flag, bool setit)
 	bool save_it = true;
 	for (i = user_htypeix[ch - 'a']; *user_htype[i].name == ch; i--) {
 	    if (len <= user_htype[i].length
-	     && strncaseEQ(s,user_htype[i].name,len)) {
+	     && !strncasecmp(s,user_htype[i].name,len)) {
 		free(user_htype[i].name);
 		user_htype[i].name = nullptr;
 		killed = i;
 	    }
 	    else if (len > user_htype[i].length
-		  && strncaseEQ(s,user_htype[i].name,user_htype[i].length)) {
+		  && !strncasecmp(s,user_htype[i].name,user_htype[i].length)) {
 		if (!add_at) {
 		    if (user_htype[i].flags == (setit? flag : 0))
 			save_it = false;

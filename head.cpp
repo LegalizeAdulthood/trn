@@ -88,15 +88,15 @@ int set_line_type(char *bufptr, char *colon)
      */
     if (*f >= 'a' && *f <= 'z') {
 	for (i = htypeix[*f - 'a']; *htype[i].name == *f; i--) {
-	    if (len == htype[i].length && strEQ(f, htype[i].name))
+	    if (len == htype[i].length && !strcmp(f,htype[i].name))
 		return i;
 	}
 	if (len == htype[CUSTOM_LINE].length
-	 && strEQ(f, htype[CUSTOM_LINE].name))
+	 && !strcmp(f,htype[(((0+1)+1)+1)].name))
 	    return CUSTOM_LINE;
 	for (i = user_htypeix[*f - 'a']; *user_htype[i].name == *f; i--) {
 	    if (len >= user_htype[i].length
-	     && strnEQ(f, user_htype[i].name, user_htype[i].length)) {
+	     && !strncmp(f, user_htype[i].name, user_htype[i].length)) {
 		if (user_htype[i].flags & HT_HIDE)
 		    return HIDDEN_LINE;
 		return SHOWN_LINE;

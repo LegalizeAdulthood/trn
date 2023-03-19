@@ -20,7 +20,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
     char* tmpfilename;
     int tmppart, tmptotal;
 
-    if (strnEQ(bp, "begin ", 6)
+    if (!strncmp(bp, "begin ", 6)
      && isdigit(bp[6]) && isdigit(bp[7])
      && isdigit(bp[8]) && (bp[9] == ' ' ||
 	(bp[6] == '0' && isdigit(bp[9]) && bp[10] == ' '))) {
@@ -31,15 +31,15 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	}
 	return 1;
     }
-    if (strnEQ(bp,"section ",8) && isdigit(bp[8])) {
+    if (!strncmp(bp,"section ",8) && isdigit(bp[8])) {
 	s = bp + 8;
 	tmppart = atoi(s);
 	if (tmppart == 0)
 	    return 0;
 	while (isdigit(*s)) s++;
-	if (strnEQ(s, " of ", 4)) {
+	if (!strncmp(s, " of ", 4)) {
 	    /* "section N of ... of file F ..." */
-	    for (s += 4; *s && strnNE(s," of file ",9); s++) ;
+	    for (s += 4; *s && strncmp(s," of file ",9); s++) ;
 	    if (!*s)
 		return 0;
 	    s += 9;
@@ -58,7 +58,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	    tmptotal = atoi(s);
 	    while (isdigit(*s)) s++;
 	    while (*s && isspace(*s)) s++;
-	    if (tmppart > tmptotal || strnNE(s,"file ",5))
+	    if (tmppart > tmptotal || strncmp(s,"file ",5))
 		return 0;
 	    tmpfilename = s+5;
 	    s = strchr(tmpfilename, ' ');
@@ -71,14 +71,14 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	    return 1;
 	}
     }
-    if (strnEQ(bp, "POST V", 6)) {
+    if (!strncmp(bp, "POST V", 6)) {
 	/* "POST Vd.d.d F (Part N/M)" */
 	s = strchr(bp+6, ' ');
 	if (!s)
 	    return 0;
 	tmpfilename = s+1;
 	s = strchr(tmpfilename, ' ');
-	if (!s || strnNE(s, " (Part ", 7))
+	if (!s || strncmp(s, " (Part ", 7))
 	    return 0;
 	*s = '\0';
 	s += 7;
@@ -95,29 +95,29 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	*totalp = tmptotal;
 	return 1;
     }
-    if (strnEQ(bp, "File: ", 6)) {
+    if (!strncmp(bp, "File: ", 6)) {
 	/* "File: F -- part N of M -- ... */
 	tmpfilename = bp+6;
 	s = strchr(tmpfilename, ' ');
-	if (!s || strnNE(s, " -- part ", 9))
+	if (!s || strncmp(s, " -- part ", 9))
 	    return 0;
 	*s = '\0';
 	s += 9;
 	tmppart = atoi(s);
 	while (isdigit(*s)) s++;
-	if (tmppart == 0 || strnNE(s, " of ", 4))
+	if (tmppart == 0 || strncmp(s, " of ", 4))
 	    return 0;
 	s += 4;
 	tmptotal = atoi(s);
 	while (isdigit(*s)) s++;
-	if (tmppart > tmptotal || strnNE(s, " -- ", 4))
+	if (tmppart > tmptotal || strncmp(s, " -- ", 4))
 	    return 0;
 	*filenamep = tmpfilename;
 	*partp = tmppart;
 	*totalp = tmptotal;
 	return 1;
     }
-    if (strnEQ(bp, "[Section: ", 10)) {
+    if (!strncmp(bp, "[Section: ", 10)) {
 	/* "[Section: N/M  File: F ..." */
 	s = bp + 10;
 	tmppart = atoi(s);
@@ -127,7 +127,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	tmptotal = atoi(++s);
 	while (isdigit(*s)) s++;
 	while (*s && isspace(*s)) s++;
-	if (tmppart > tmptotal || strnNE(s, "File: ", 6))
+	if (tmppart > tmptotal || strncmp(s, "File: ", 6))
 	    return 0;
 	tmpfilename = s+6;
 	s = strchr(tmpfilename, ' ');
@@ -140,27 +140,27 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	return 1;
     }
     if (*filenamep && *partp > 0 && *totalp > 0 && *partp <= *totalp
-     && (strnEQ(bp,"BEGIN",5) || strnEQ(bp,"--- BEGIN ---",12)
+     && (!strncmp(bp,"BEGIN",5) || !strncmp(bp,"--- BEGIN ---",12)
       || (bp[0] == 'M' && strlen(bp) == UULENGTH))) {
 	/* Found the start of a section of uuencoded data
 	 * and have the part N of M information.
 	 */
 	return 1;
     }
-    if (strncaseEQ(bp, "x-file-name: ", 13)) {
+    if (!strncasecmp(bp, "x-file-name: ", 13)) {
 	for (s = bp + 13; *s && !isspace(*s); s++) ;
 	*s = '\0';
 	safecpy(msg, bp+13, sizeof msg);
 	*filenamep = msg;
 	return 0;
     }
-    if (strncaseEQ(bp, "x-part: ", 8)) {
+    if (!strncasecmp(bp, "x-part: ", 8)) {
 	tmppart = atoi(bp+8);
 	if (tmppart > 0)
 	    *partp = tmppart;
 	return 0;
     }
-    if (strncaseEQ(bp, "x-part-total: ", 14)) {
+    if (!strncasecmp(bp, "x-part-total: ", 14)) {
 	tmptotal = atoi(bp+14);
 	if (tmptotal > 0)
 	    *totalp = tmptotal;
@@ -197,7 +197,7 @@ int uudecode(FILE *ifp, int state)
 	switch (state) {
 	  case DECODE_START:	/* Looking for start of uuencoded file */
 	  case DECODE_MAYBEDONE:
-	    if (strnNE(buf, "begin ", 6))
+	    if (strncmp(buf, "begin ", 6))
 		break;
 	    /* skip mode */
 	    p = buf + 6;
@@ -220,7 +220,7 @@ int uudecode(FILE *ifp, int state)
 	    break;
 	  case DECODE_INACTIVE:	/* Looking for uuencoded data to resume */
 	    if (*buf != 'M' || strlen(buf) != line_length) {
-		if (*buf == 'B' && strnEQ(buf, "BEGIN", 5))
+		if (*buf == 'B' && !strncmp(buf, "BEGIN", 5))
 		    state = DECODE_ACTIVE;
 		break;
 	    }
@@ -242,7 +242,7 @@ int uudecode(FILE *ifp, int state)
 	    /* May be nearing end of file, so save this line */
 	    strcpy(lastline, buf);
 	    /* some encoders put the end line right after the last M line */
-	    if (strnEQ(buf, "end", 3))
+	    if (!strncmp(buf, "end", 3))
 		goto end;
 	    else if (*buf == ' ' || *buf == '`')
 		state = DECODE_LAST;
@@ -250,7 +250,7 @@ int uudecode(FILE *ifp, int state)
 		state = DECODE_NEXT2LAST;
 	    break;
 	  case DECODE_NEXT2LAST:/* May be nearing end of file */
-	    if (strnEQ(buf, "end", 3))
+	    if (!strncmp(buf, "end", 3))
 		goto end;
 	    else if (*buf == ' ' || *buf == '`')
 		state = DECODE_LAST;
@@ -258,7 +258,7 @@ int uudecode(FILE *ifp, int state)
 		state = DECODE_INACTIVE;
 	    break;
 	  case DECODE_LAST:	/* Should be at end of file */
-	    if (strnEQ(buf, "end", 3) && isspace(buf[3])) {
+	    if (!strncmp(buf, "end", 3) && isspace(buf[3])) {
 		/* Handle that last line we saved */
 		uudecodeline(lastline, ofp);
 end:		if (ofp) {

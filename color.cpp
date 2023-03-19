@@ -89,7 +89,7 @@ void color_init()
 	    fprintf(stderr,"trn: you need a 'bg default' definition in the [termcap] section.\n");
 	    finalize(1);
 	}
-	if (strEQ(fg, bg))
+	if (!strcmp(fg,bg))
 	    bg = "";
 	for (i = 0; i < MAX_COLORS; i++) {
 	    if (objects[i].fg == "")
@@ -116,7 +116,7 @@ void color_rc_attribute(char *object, char *value)
 
     /* Find the specified object. */
     for (i = 0; i < MAX_COLORS; i++) {
-	if (strcaseEQ(object, objects[i].name))
+	if (!strcasecmp(object, objects[i].name))
 	    break;
     }
     if (i >= MAX_COLORS) {

@@ -235,7 +235,7 @@ void check_poster(ARTICLE *ap)
     if (auto_select_postings && (ap->flags & AF_EXISTS) && ap->from) {
 	if (ap->flags & AF_FROMTRUNCED) {
 	    strcpy(cmd_buf,g_real_name);
-	    if (strEQ(ap->from,compress_name(cmd_buf,16))) {
+	    if (!strcmp(ap->from,compress_name(cmd_buf,16))) {
 		untrim_cache = true;
 		fetchfrom(article_num(ap),false);
 		untrim_cache = false;
@@ -263,7 +263,7 @@ void check_poster(ARTICLE *ap)
 		h = s;
 	    } else
 		h = u = s;
-	    if (strEQ(u,g_login_name)) {
+	    if (!strcmp(u,g_login_name)) {
 		if (in_string(h,hostname, false)) {
 		    switch (auto_select_postings) {
 		      case '.':
@@ -428,7 +428,7 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
 	if ((size -= subj_start - newsubj - 4) < 0)
 	    size = 0;
     }
-    if (ap->subj && strnEQ(ap->subj->str+4, newsubj+4, size)) {
+    if (ap->subj && !strncmp(ap->subj->str+4, newsubj+4, size)) {
 	free(newsubj);
 	return;
     }

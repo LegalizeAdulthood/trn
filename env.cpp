@@ -369,7 +369,7 @@ static int envix(const char *nam, int len)
     int i;
 
     for (i = 0; environ[i]; i++) {
-	if (strnEQ(environ[i],nam,len) && environ[i][len] == '=')
+	if (!strncmp(environ[i],nam,len) && environ[i][len] == '=')
 	    break;			/* strnEQ must come first to avoid */
     }					/* potential SEGV's */
     return i;

@@ -155,7 +155,7 @@ bool set_firstart(char *s)
 {
     while (*s == ' ') s++;
 
-    if (strnEQ(s,"1-",2)) {		/* can we save some time here? */
+    if (!strncmp(s,"1-",2)) {		/* can we save some time here? */
 	firstart = atol(s+2)+1;		/* process first range thusly */
 	if (firstart < absfirst)
 	    firstart = absfirst;
@@ -614,7 +614,7 @@ static int chase_xref(ART_NUM artnum, int markread)
 	    *xartnum++ = '\0';
 	    if (!(x = atol(xartnum)))
 		continue;
-	    if (strEQ(tmpbuf,ngname)) {/* is this the current newsgroup? */
+	    if (!strcmp(tmpbuf,ngname)) {/* is this the current newsgroup? */
 		if (x < absfirst || x > lastart)
 		    continue;
 		if (markread)
@@ -655,7 +655,7 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
     char* sitebuf;
     char* s;
 
-    if (inews_site && strEQ(site,inews_site))
+    if (inews_site && !strcmp(site,inews_site))
 	return true;
 
     if (inews_site)
@@ -681,7 +681,7 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
 	inews_site = savestr("");
     free(sitebuf);
 
-    if (strEQ(site,inews_site))
+    if (!strcmp(site,inews_site))
 	return true;
 
 #ifdef DEBUG

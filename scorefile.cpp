@@ -197,7 +197,7 @@ int sf_check_extra_headers(char *head)
 	    *s = tolower(*s);		/* convert to lower case */
     }
     for (i = 0; i < sf_num_extra_headers; i++) {
-	if (strEQ(sf_extra_headers[i],lbuf))
+	if (!strcmp(sf_extra_headers[i],lbuf))
 	    return i;
     }
     return -1;
@@ -254,7 +254,7 @@ char *sf_get_extra_header(ART_NUM art, int hnum)
     len = strlen(head);
 
     for (s = headbuf; s && *s && *s != '\n'; s++) {
-	if (strncaseEQ(head,s,len)) {
+	if (!strncasecmp(head,s,len)) {
 	    s = strchr(s,':');
 	    if (!s)
 		return "";
@@ -340,7 +340,7 @@ bool sf_do_command(char *cmd, bool check)
     int i;
     char ch;
 
-    if (strnEQ(cmd,"killthreshold",13)) {
+    if (!strncmp(cmd,"killthreshold",13)) {
 	/* skip whitespace and = sign */
 	for (s = cmd+13; *s && (*s == ' ' || *s == '\t' || *s == '='); s++) ;
 
@@ -358,10 +358,10 @@ bool sf_do_command(char *cmd, bool check)
 	sf_entries[sf_num_entries-1].score = i;
 	return true;
     }
-    if (strnEQ(cmd,"savescores",10)) {
+    if (!strncmp(cmd,"savescores",10)) {
 	/* skip whitespace and = sign */
 	for (s = cmd+10; *s && (*s == ' ' || *s == '\t' || *s == '='); s++) ; 
-	if (strnEQ(s,"off",3)) {
+	if (!strncmp(s,"off",3)) {
 	    if (!check)
 		sc_savescores = false;
 	    return true;
@@ -375,7 +375,7 @@ bool sf_do_command(char *cmd, bool check)
 	printf("Bad savescores command: |%s|\n",cmd) FLUSH;
 	return false;
     }
-    if (strnEQ(cmd,"newauthor",9)) {
+    if (!strncmp(cmd,"newauthor",9)) {
 	/* skip whitespace and = sign */
 	for (s = cmd+9; *s && (*s == ' ' || *s == '\t' || *s == '='); s++) ;
 
@@ -393,7 +393,7 @@ bool sf_do_command(char *cmd, bool check)
 	sf_entries[sf_num_entries-1].score = i;
 	return true;
     }
-    if (strnEQ(cmd,"include",7)) {
+    if (!strncmp(cmd,"include",7)) {
 	if (check)
 	    return true;
 	s = cmd+7;
@@ -405,7 +405,7 @@ bool sf_do_command(char *cmd, bool check)
 	sf_do_file(filexp(sf_cmd_fname(s)));
 	return true;
     }
-    if (strnEQ(cmd,"exclude",7)) {
+    if (!strncmp(cmd,"exclude",7)) {
 	if (check)
 	    return true;
 	s = cmd+7;
@@ -417,7 +417,7 @@ bool sf_do_command(char *cmd, bool check)
 	sf_exclude_file(filexp(sf_cmd_fname(s)));
 	return true;
     }
-    if (strnEQ(cmd,"header",6)) {
+    if (!strncmp(cmd,"header",6)) {
 	char* s2;
 
 	s = cmd+7;
@@ -434,16 +434,16 @@ bool sf_do_command(char *cmd, bool check)
 	*s2 = ':';
 	return true;
     }
-    if (strnEQ(cmd,"begin",5)) {
+    if (!strncmp(cmd,"begin",5)) {
 	s = cmd+6;
 	while (*s == ' ' || *s == '\t') s++;	/* skip whitespace */
-	if (strnEQ(s,"score",5)) {
+	if (!strncmp(s,"score",5)) {
 	    /* do something useful later */
 	    return true;
 	}
 	return true;
     }
-    if (strnEQ(cmd,"reply",5)) {
+    if (!strncmp(cmd,"reply",5)) {
 	/* skip whitespace and = sign */
 	for (s = cmd+5; *s && (*s == ' ' || *s == '\t' || *s == '='); s++) ;
 
@@ -461,7 +461,7 @@ bool sf_do_command(char *cmd, bool check)
 	sf_entries[sf_num_entries-1].score = i;
 	return true;
     }
-    if (strnEQ(cmd,"file",4)) {
+    if (!strncmp(cmd,"file",4)) {
 	if (check)
 	    return true;
 	s = cmd+4;
@@ -482,16 +482,16 @@ bool sf_do_command(char *cmd, bool check)
 	sf_abbr[(int)ch] = savestr(sf_cmd_fname(s));
 	return true;
     }
-    if (strnEQ(cmd,"end",3)) {
+    if (!strncmp(cmd,"end",3)) {
 	s = cmd+4;
 	while (*s == ' ' || *s == '\t') s++;	/* skip whitespace */
-	if (strnEQ(s,"score",5)) {
+	if (!strncmp(s,"score",5)) {
 	    /* do something useful later */
 	    return true;
 	}
 	return true;
     }
-    if (strnEQ(cmd,"newsclip",8)) {
+    if (!strncmp(cmd,"newsclip",8)) {
 	printf("Newsclip is no longer supported.\n") FLUSH;
 	return false;
     }
@@ -514,7 +514,7 @@ char *sf_freeform(char *start1, char *end1)
     /* cases are # of letters in keyword */
     switch (end1-start1+1) {
       case 7:
-	if (strnEQ(start1,"pattern",7)) {
+	if (!strncmp(start1,"pattern",7)) {
 	    sf_pattern_status = true;
 	    break;
 	}
@@ -523,7 +523,7 @@ char *sf_freeform(char *start1, char *end1)
       case 4:
 #ifdef UNDEF
 /* here is an example of a hypothetical freeform key with an argument */
-	if (strnEQ(start1,"date",4)) {
+	if (!strncmp(start1,"date",4)) {
 	    char* s1;
 	    int datenum;
 	    /* skip whitespace and = sign */
@@ -1066,7 +1066,7 @@ void sf_exclude_file(char *fname)
 
     for (start = 0; start < sf_num_entries; start++)
 	if (sf_entries[start].head_type == SF_FILE_MARK_START
-	 && strEQ(sf_entries[start].str1,fname))
+	 && !strcmp(sf_entries[start].str1,fname))
 	    break;
     if (start == sf_num_entries) {
 	printf("Exclude: file |%s| was not included\n",fname) FLUSH;
@@ -1074,7 +1074,7 @@ void sf_exclude_file(char *fname)
     }
     for (end = start+1; end < sf_num_entries; end++)
 	if (sf_entries[end].head_type==SF_FILE_MARK_END
-	 && strEQ(sf_entries[end].str1,fname))
+	 && !strcmp(sf_entries[end].str1,fname))
 	    break;
     if (end == sf_num_entries) {
 	printf("Exclude: file |%s| is incomplete at exclusion command\n",
@@ -1162,7 +1162,7 @@ static int sf_open_file(char *name)
     if (!name || !*name)
 	return 0;	/* unable to open */
     for (i = 0; i < sf_num_files; i++)
-	if (strEQ(sf_files[i].fname,name)) {
+	if (!strcmp(sf_files[i].fname,name)) {
 	    if (sf_files[i].num_lines < 0)	/* nonexistent */
 		return -1;	/* no such file */
 	    sf_files[i].line_on = 0;
@@ -1178,7 +1178,7 @@ static int sf_open_file(char *name)
     sf_files[i].lines = nullptr;
 
     temp_name = nullptr;
-    if (strncaseEQ(name,"URL:",4)) {
+    if (!strncasecmp(name,"URL:",4)) {
 	char lbuf[1024];
 	safecpy(lbuf,name,sizeof lbuf - 4);
 	name = lbuf;

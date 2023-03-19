@@ -246,7 +246,7 @@ int do_article()
 		    if ((s = strchr(bufptr,'\n')) != nullptr)
 			*s = '\0';
 		    hide_this_line = (strchr(bufptr,',') == nullptr)
-			&& strEQ(bufptr+12, ngname);
+			&& !strcmp(bufptr+12,ngname);
 		    if (s != nullptr)
 			*s = '\n';
 		    break;

@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 	if (FILE_REF(cp))
 	    cp = nntp_servername(cp);
     }
-    if (cp && *cp && strNE(cp,"local")) {
+    if (cp && *cp && strcmp(cp,"local")) {
 	server_name = savestr(cp);
 	cp = strchr(server_name, ';');
 	if (cp) {
@@ -131,9 +131,9 @@ int main(int argc, char *argv[])
 		break;
 	    }
 	    in_header = true;
-	    if (strncaseEQ(cp, "From:", 5))
+	    if (!strncasecmp(cp, "From:", 5))
 		has_fromline = true;
-	    else if (strncaseEQ(cp, "Path:", 5))
+	    else if (!strncasecmp(cp, "Path:", 5))
 		has_pathline = true;
 	}
 	artpos += len;
@@ -318,7 +318,7 @@ int nntp_handle_timeout()
 	static bool handling_timeout = false;
 	char last_command_save[NNTP_STRLEN];
 
-	if (strcaseEQ(g_last_command,"quit"))
+	if (!strcasecmp(g_last_command,"quit"))
 	    return 0;
 	if (handling_timeout)
 	    return -1;

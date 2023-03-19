@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 	else
 	    Usage();
     }
-    if (action && strcaseEQ(action,"active"))
+    if (action && !strcasecmp(action,"active"))
 	action = nullptr;
     if (!out_fp)
 	out_fp = stdout;
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 	if (*cp == '/')
 	    cp = nntp_servername(cp);
     }
-    if (strNE(cp,"local")) {
+    if (strcmp(cp,"local")) {
 	server_name = savestr(cp);
 	cp = strchr(server_name, ';');
 	if (!cp)
@@ -124,13 +124,13 @@ int main(int argc, char *argv[])
 	cp = nullptr;
 	if (!action)
 	    cp = ACTIVE;
-	else if (strcaseEQ(action,"active.times"))
+	else if (!strcasecmp(action,"active.times"))
 	    cp = ACTIVE_TIMES;
-	else if (strcaseEQ(action,"newsgroups"))
+	else if (!strcasecmp(action,"newsgroups"))
 	    cp = GROUPDESC;
-	else if (strcaseEQ(action,"subscriptions"))
+	else if (!strcasecmp(action,"subscriptions"))
 	    cp = SUBSCRIPTIONS;
-	else if (strcaseEQ(action,"overview.fmt"))
+	else if (!strcasecmp(action,"overview.fmt"))
 	    cp = OVERVIEW_FMT;
 	if (!cp || !*cp) {
 	    fprintf(stderr, "Don't know how to list `%s' from your local system.\n",

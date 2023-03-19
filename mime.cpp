@@ -121,15 +121,15 @@ void mime_ReadMimecap(char *mcname)
 		    arg = f;
 	    }
 	    if (*t) {
-		if (strcaseEQ(t, "needsterminal"))
+		if (!strcasecmp(t, "needsterminal"))
 		    mcp->flags |= MCF_NEEDSTERMINAL;
-		else if (strcaseEQ(t, "copiousoutput"))
+		else if (!strcasecmp(t, "copiousoutput"))
 		    mcp->flags |= MCF_COPIOUSOUTPUT;
-		else if (arg && strcaseEQ(t, "test"))
+		else if (arg && !strcasecmp(t, "test"))
 		    mcp->testcommand = savestr(arg);
-		else if (arg && strcaseEQ(t, "description"))
+		else if (arg && !strcasecmp(t, "description"))
 		    mcp->label = savestr(arg);
-		else if (arg && strcaseEQ(t, "label")) 
+		else if (arg && !strcasecmp(t, "label")) 
 		    mcp->label = savestr(arg); /* bogus old name for description */
 	    }
 	}
@@ -187,10 +187,10 @@ bool mime_TypesMatch(char *ct, char *pat)
 {
     char* s = strchr(pat,'/');
     int len = (s? s - pat : strlen(pat));
-    bool iswild = (!s || strEQ(s+1,"*"));
+    bool iswild = (!s || !strcmp(s+1,"*"));
 
-    return strcaseEQ(ct,pat)
-	|| (iswild && strncaseEQ(ct,pat,len) && ct[len] == '/');
+    return !strcasecmp(ct,pat)
+	|| (iswild && !strncasecmp(ct,pat,len) && ct[len] == '/');
 }
 
 int mime_Exec(char *cmd)
@@ -340,7 +340,7 @@ void mime_ParseType(MIME_SECT *mp, char *s)
 	mp->filename = savestr(t);
     }
 
-    if (strncaseEQ(s, "text", 4)) {
+    if (!strncasecmp(s, "text", 4)) {
 	mp->type = TEXT_MIME;
 	s += 4;
 	if (*s++ != '/')
@@ -348,17 +348,17 @@ void mime_ParseType(MIME_SECT *mp, char *s)
 #ifdef USE_UTF_HACK
 	utf_init(mime_FindParam(mp->type_params,"charset"), "utf-8"); /*FIXME*/
 #endif
-	if (strncaseEQ(s, "html", 4))
+	if (!strncasecmp(s, "html", 4))
 	    mp->type = HTMLTEXT_MIME;
-	else if (strncaseEQ(s, "x-vcard", 7))
+	else if (!strncasecmp(s, "x-vcard", 7))
 	    mp->type = UNHANDLED_MIME;
 	return;
     }
 
-    if (strncaseEQ(s, "message/", 8)) {
+    if (!strncasecmp(s, "message/", 8)) {
 	s += 8;
 	mp->type = MESSAGE_MIME;
-	if (strcaseEQ(s, "partial")) {
+	if (!strcasecmp(s, "partial")) {
 	    t = mime_FindParam(mp->type_params,"id");
 	    if (!t)
 		return;
@@ -379,14 +379,14 @@ void mime_ParseType(MIME_SECT *mp, char *s)
 	return;
     }
 
-    if (strncaseEQ(s, "multipart/", 10)) {
+    if (!strncasecmp(s, "multipart/", 10)) {
 	s += 10;
 	t = mime_FindParam(mp->type_params,"boundary");
 	if (!t) {
 	    mp->type = UNHANDLED_MIME;
 	    return;
 	}
-	if (strncaseEQ(s, "alternative", 11))
+	if (!strncasecmp(s, "alternative", 11))
 	    mp->flags |= MSF_ALTERNATIVE;
 	safefree(mp->boundary);
 	mp->boundary = savestr(t);
@@ -395,12 +395,12 @@ void mime_ParseType(MIME_SECT *mp, char *s)
 	return;
     }
 
-    if (strncaseEQ(s, "image/", 6)) {
+    if (!strncasecmp(s, "image/", 6)) {
 	mp->type = IMAGE_MIME;
 	return;
     }
 
-    if (strncaseEQ(s, "audio/", 6)) {
+    if (!strncasecmp(s, "audio/", 6)) {
 	mp->type = AUDIO_MIME;
 	return;
     }
@@ -414,7 +414,7 @@ void mime_ParseDisposition(MIME_SECT *mp, char *s)
     char* params;
 
     params = mime_ParseParams(s);
-    if (strcaseEQ(s,"inline"))
+    if (!strcasecmp(s,"inline"))
 	mp->flags |= MSF_INLINE;
 
     s = mime_FindParam(params,"filename");
@@ -434,27 +434,27 @@ void mime_ParseEncoding(MIME_SECT *mp, char *s)
 	return;
     }
     if (*s == '7' || *s == '8') {
-	if (strncaseEQ(s+1, "bit", 3)) {
+	if (!strncasecmp(s+1, "bit", 3)) {
 	    s += 4;
 	    mp->encoding = MENCODE_NONE;
 	}
     }
-    else if (strncaseEQ(s, "quoted-printable", 16)) {
+    else if (!strncasecmp(s, "quoted-printable", 16)) {
 	s += 16;
 	mp->encoding = MENCODE_QPRINT;
     }
-    else if (strncaseEQ(s, "binary", 6)) {
+    else if (!strncasecmp(s, "binary", 6)) {
 	s += 6;
 	mp->encoding = MENCODE_NONE;
     }
-    else if (strncaseEQ(s, "base64", 6)) {
+    else if (!strncasecmp(s, "base64", 6)) {
 	s += 6;
 	mp->encoding = MENCODE_BASE64;
     }
-    else if (strncaseEQ(s, "x-uue", 5)) {
+    else if (!strncasecmp(s, "x-uue", 5)) {
 	s += 5;
 	mp->encoding = MENCODE_UUE;
-	if (strncaseEQ(s, "ncode", 5))
+	if (!strncasecmp(s, "ncode", 5))
 	    s += 5;
     }
     else {
@@ -582,7 +582,7 @@ int mime_EndOfSection(char *bp)
     if (mp) {
 	/* have we read all the data in this part? */
 	if (bp[0] == '-' && bp[1] == '-'
-	 && strnEQ(bp+2,mp->boundary,mp->boundary_len)) {
+	 && !strncmp(bp+2,mp->boundary,mp->boundary_len)) {
 	    int len = 2 + mp->boundary_len;
 	    /* have we found the last boundary? */
 	    if (bp[len] == '-' && bp[len+1] == '-'
@@ -638,7 +638,7 @@ char *mime_FindParam(char *s, char *param)
 {
     int param_len = strlen(param);
     while (s && *s) {
-	if (strncaseEQ(s, param, param_len) && s[param_len] == '=')
+	if (!strncasecmp(s, param, param_len) && s[param_len] == '=')
 	    return s + param_len + 1;
 	s += strlen(s) + 1;
     }
@@ -1197,7 +1197,7 @@ int filter_html(char *t, char *f)
 	    t = output_prep(t);
 	    for (i = 0; named_entities[i] != NULL; i += 2) {
 		int n = strlen(named_entities[i]);
-		if (strncaseEQ(f+1, named_entities[i], n)) {
+		if (!strncasecmp(f+1,named_entities[i],n)) {
 		    char det = f[n+1];
 		    if (det == ';')
 			entity_found = n + 1;
@@ -1309,7 +1309,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
     for (tnum = 0; tnum < LAST_TAG && *tagattr[tnum].name != ch; tnum++) ;
     for ( ; tnum < LAST_TAG && *tagattr[tnum].name == ch; tnum++) {
 	if (len == tagattr[tnum].length
-	 && strncaseEQ(word, tagattr[tnum].name, len)) {
+	 && !strncasecmp(word, tagattr[tnum].name, len)) {
 	    match = true;
 	    break;
 	}
@@ -1371,9 +1371,9 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 	switch (tnum) {
 	  case TAG_BLOCKQUOTE:
 	    if (((cp = find_attr(word, "type")) != nullptr
-	      && strncaseEQ(cp, "cite", 4))
+	      && !strncasecmp(cp, "cite", 4))
 	     || ((cp = find_attr(word, "style")) != nullptr
-	      && strncaseEQ(cp, "border-left:", 12)))
+	      && !strncasecmp(cp, "border-left:", 12)))
 		blks[j].indent = '>';
 	    else
 		blks[j].indent = ' ';
@@ -1647,7 +1647,7 @@ static char *find_attr(char *str, char *attr)
     while ((cp = strchr(cp+1, '=')) != nullptr) {
 	for (s = cp; s[-1] == ' '; s--) ;
 	while (cp[1] == ' ') cp++;
-	if (s - str > len && s[-len-1] == ' ' && strncaseEQ(s-len,attr,len))
+	if (s - str > len && s[-len-1] == ' ' && !strncasecmp(s-len,attr,len))
 	    return cp+1;
     }
     return nullptr;

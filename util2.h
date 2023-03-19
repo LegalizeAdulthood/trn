@@ -8,8 +8,8 @@ char *cpytill(char *, char *, int);
 char *filexp(char *);
 char *in_string(char *big, char *little, bool case_matters);
 #ifndef HAS_STRCASECMP
-int trn_casecmp(const char *, const char *);
-int trn_ncasecmp(const char *, const char *, int);
+int strcasecmp(const char *, const char *);
+int strncasecmp(const char *, const char *, int);
 #endif
 char *read_auth_file(char *, char **);
 #ifdef MSDOS

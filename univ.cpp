@@ -247,7 +247,7 @@ void univ_add_group(char *desc, char *grpname)
 	/* perhaps it is marked as deleted? */
 	for (ui = first_univ; ui; ui = ui->next) {
 	    if ((ui->type == UN_GROUP_DESEL) && ui->data.group.ng
-	     && strEQ(ui->data.group.ng,grpname)) {
+	     && !strcmp(ui->data.group.ng,grpname)) {
 		/* undelete the newsgroup */
 		ui->type = UN_NEWSGROUP;
 	    }
@@ -350,7 +350,7 @@ void univ_add_virtgroup(char *grpname)
 	/* perhaps it is marked as deleted? */
 	for (ui = first_univ; ui; ui = ui->next) {
 	    if ((ui->type == UN_VGROUP_DESEL) && ui->data.vgroup.ng
-	     && strEQ(ui->data.vgroup.ng,grpname)) {
+	     && !strcmp(ui->data.vgroup.ng,grpname)) {
 		/* undelete the newsgroup */
 		ui->type = UN_VGROUP;
 	    }
@@ -505,7 +505,7 @@ static bool univ_use_file(char *fname, char *title, char *label)
     s = fname;
     open_name = s;
     /* open URLs and translate them into local temporary filenames */
-    if (strncaseEQ(fname,"URL:",4)) {
+    if (!strncasecmp(fname,"URL:",4)) {
 	s = fname;
 	open_name = temp_filename();
 	univ_tmp_file = open_name;
@@ -650,12 +650,12 @@ static bool univ_do_line(char *line)
 	return true;	/* empty line */
 
     if (!univ_begin_found) {
-	if (strncaseNE(s,"begin group",11))
+	if (strncasecmp(s,"begin group",11))
 	    return true;	/* wait until "begin group" is found */
 	univ_begin_found = true;
     }
     if (univ_begin_label) {
-	if (*s == '>' && s[1] == ':' && strEQ(s+2,univ_begin_label)) {
+	if (*s == '>' && s[1] == ':' && !strcmp(s+2,univ_begin_label)) {
 	    safefree0(univ_begin_label); /* interpret starting at next line */
 	}
 	return true;
@@ -672,9 +672,9 @@ static bool univ_do_line(char *line)
 	s = p+1;
     }
     while (isspace(*s)) s++;
-    if (strncaseEQ(s,"end group",9))
+    if (!strncasecmp(s,"end group",9))
 	return false;
-    if (strncaseEQ(s,"URL:",4)) {
+    if (!strncasecmp(s,"URL:",4)) {
 	for (p = s; *p && *p != '>'; p++) ;
 	if (*p) {
 	    p++;
@@ -906,7 +906,7 @@ void univ_page_file(char *fname)
     /* later: consider something else that will return the key, and
      *        returning different codes based on the key.
      */
-    if (strnEQ(cmd_buf,"more ",5))
+    if (!strncmp(cmd_buf,"more ",5))
 	get_anything();
 }
 

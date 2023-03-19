@@ -843,7 +843,7 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
 	if (*s) {
 	    for (i = 1; words[i].checksum; i++) {
 		if (words[i].checksum == checksum
-		 && strcaseEQ(cp,words[i].item)) {
+		 && !strcasecmp(cp,words[i].item)) {
 		    values[i] = s;
 		    break;
 		}

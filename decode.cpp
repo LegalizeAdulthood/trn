@@ -75,15 +75,15 @@ static bool bad_filename(char *filename)
     int len = strlen(filename);
 #ifdef MSDOS
     if (len == 3) {
-	if (strcaseEQ(filename, "aux") || strcaseEQ(filename, "con")
-	 || strcaseEQ(filename, "nul") || strcaseEQ(filename, "prn"))
+	if (!strcasecmp(filename, "aux") || !strcasecmp(filename, "con")
+	 || !strcasecmp(filename, "nul") || !strcasecmp(filename, "prn"))
 	    return true;
     }
     else if (len == 4) {
-	if (strcaseEQ(filename, "com1") || strcaseEQ(filename, "com2")
-	 || strcaseEQ(filename, "com3") || strcaseEQ(filename, "com4")
-	 || strcaseEQ(filename, "lpt1") || strcaseEQ(filename, "lpt2")
-	 || strcaseEQ(filename, "lpt3"))
+	if (!strcasecmp(filename, "com1") || !strcasecmp(filename, "com2")
+	 || !strcasecmp(filename, "com3") || !strcasecmp(filename, "com4")
+	 || !strcasecmp(filename, "lpt1") || !strcasecmp(filename, "lpt2")
+	 || !strcasecmp(filename, "lpt3"))
 	    return true;
     }
 #else
@@ -115,12 +115,12 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
     /* Skip leading whitespace and other garbage */
     s = subject;
     while (*s == ' ' || *s == '\t' || *s == '-') s++;
-    if (strncaseEQ(s, "repost", 6)) {
+    if (!strncasecmp(s, "repost", 6)) {
 	for (s += 6; *s == ' ' || *s == '\t'
 	     || *s == ':' || *s == '-'; s++);
     }
 
-    while (strncaseEQ(s, "re:", 3)) {
+    while (!strncasecmp(s, "re:", 3)) {
 	s += 3;
 	while (isspace(*s)) s++;
     }
@@ -194,7 +194,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
 	}
 
 	/* look for "6 parts" or "part 1" */
-	if (strncaseEQ("part", s, 4)) {
+	if (!strncasecmp("part", s, 4)) {
 	    if (s[4] == 's') {
 		for (t = s; t >= subject && !isdigit(*t); t--);
 		if (t > subject) {

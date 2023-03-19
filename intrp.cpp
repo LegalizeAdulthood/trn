@@ -82,7 +82,7 @@ void intrp_init(char *tcbuf, int tcbuf_len)
 
     /* if this is the news admin then load his UID into newsuid */
 
-    if (strEQ(g_login_name,NEWS_ADMIN))
+    if (!strcmp(g_login_name,""))
 	newsuid = getuid();
 #endif
 
@@ -743,7 +743,7 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 			    s = path_buf = fetchlines(art,PATH_LINE);
 			}
 			i = strlen(g_p_host_name);
-			if (strnEQ(g_p_host_name,s,i) && s[i] == '!')
+			if (!strncmp(g_p_host_name,s,i) && s[i] == '!')
 			    s += i + 1;
 		    }
 		    address_parse = true;	/* just the good part */

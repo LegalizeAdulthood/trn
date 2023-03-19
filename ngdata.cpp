@@ -165,7 +165,7 @@ static int ngorder_number(const NGDATA **npp1, const NGDATA **npp2)
 
 static int ngorder_groupname(const NGDATA **npp1, const NGDATA **npp2)
 {
-    return strcaseCMP((*npp1)->rcline, (*npp2)->rcline) * sel_direction;
+    return strcasecmp((*npp1)->rcline, (*npp2)->rcline) * sel_direction;
 }
 
 static int ngorder_count(const NGDATA **npp1, const NGDATA **npp2)

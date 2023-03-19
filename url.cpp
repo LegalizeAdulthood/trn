@@ -173,7 +173,7 @@ bool parse_url(char *url)
 	return false;
     }
     s++;
-    if (strnEQ(s,"//",2)) {
+    if (!strncmp(s,"//",2)) {
 	/* normal URL type, will have host (optional portnum) */
 	s += 2;
 	p = url_host;
@@ -205,7 +205,7 @@ bool parse_url(char *url)
 	    url_port = atoi(url_buf);
 	}
     } else {
-	if (!strEQ(url_type,"news")) {
+	if (!!strcmp(url_type,"news")) {
 	    printf("URL needs a hostname: %s\n",url);
 	    return false;
 	}
@@ -226,9 +226,9 @@ bool url_get(char *url, char *outfile)
     if (!parse_url(url))
 	return false;
 
-    if (strEQ(url_type,"http"))
+    if (!strcmp(url_type,"http"))
 	flag = fetch_http(url_host,url_port,url_path,outfile);
-    else if (strEQ(url_type,"ftp"))
+    else if (!strcmp(url_type,"ftp"))
 	flag = fetch_ftp(url_host,url_path,outfile);
     else {
 	if (url_type)

@@ -45,7 +45,7 @@ void datasrc_init()
     nntp_auth_file = savestr(filexp(NNTP_AUTH_FILE));
 
     machine = getenv("NNTPSERVER");
-    if (machine && strNE(machine,"local")) {
+    if (machine && strcmp(machine,"local")) {
 	vals[DI_NNTP_SERVER] = machine;
 	vals[DI_AUTH_USER] = read_auth_file(nntp_auth_file,
 					    &vals[DI_AUTH_PASS]);
@@ -64,7 +64,7 @@ void datasrc_init()
 	machine = filexp(SERVER_NAME);
 	if (FILE_REF(machine))
 	    machine = nntp_servername(machine);
-	if (strEQ(machine,"local")) {
+	if (!strcmp(machine,"local")) {
 	    machine = nullptr;
 	    actname = ACTIVE;
 	}
@@ -109,7 +109,7 @@ char *read_datasrcs(char *filename)
 	    while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
 		if (*cond && !check_ini_cond(cond))
 		    continue;
-		if (strncaseEQ(section, "group ", 6))
+		if (!strncasecmp(section, "group ", 6))
 		    continue;
 		s = parse_ini_section(s, datasrc_ini);
 		if (!s)
@@ -126,7 +126,7 @@ DATASRC *get_datasrc(char *name)
 {
     DATASRC* dp;
     for (dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp))
-	if (strEQ(dp->name,name))
+	if (!strcmp(dp->name,name))
 	    return dp;
     return nullptr;
 }
@@ -143,7 +143,7 @@ DATASRC *new_datasrc(char *name, char **vals)
 	return nullptr; /*$$*/
 
     dp->name = savestr(name);
-    if (strEQ(name,"default"))
+    if (!strcmp(name,"default"))
 	dp->flags |= DF_DEFAULT;
 
     if ((v = vals[DI_NNTP_SERVER]) != nullptr) {
@@ -215,7 +215,7 @@ DATASRC *new_datasrc(char *name, char **vals)
 
 static char *dir_or_none(DATASRC *dp, char *dir, int flag)
 {
-    if (!dir || !*dir || strEQ(dir, "remote")) {
+    if (!dir || !*dir || !strcmp(dir,"remote")) {
 	dp->flags |= flag;
 	if (dp->flags & DF_REMOTE)
 	    return nullptr;
@@ -238,19 +238,19 @@ static char *dir_or_none(DATASRC *dp, char *dir, int flag)
 	return dp->spool_dir;
     }
 
-    if (strEQ(dir, "none"))
+    if (!strcmp(dir,"none"))
 	return nullptr;
 
     dp->flags |= flag;
     dir = filexp(dir);
-    if (strEQ(dir,dp->spool_dir))
+    if (!strcmp(dir,dp->spool_dir))
 	return dp->spool_dir;
     return savestr(dir);
 }
 
 static char *file_or_none(char *fn)
 {
-    if (!fn || !*fn || strEQ(fn, "none") || strEQ(fn, "remote"))
+    if (!fn || !*fn || !strcmp(fn,"none") || !strcmp(fn,"remote"))
 	return nullptr;
     return savestr(filexp(fn));
 }
@@ -274,7 +274,7 @@ bool open_datasrc(DATASRC *dp)
 	if (dp->act_sf.refetch_secs) {
 	    switch (nntp_list("active", "control", 7)) {
 	    case 1:
-		if (strnNE(g_ser_line, "control ", 8)) {
+		if (strncmp(g_ser_line, "control ", 8)) {
 		    strcpy(buf, g_ser_line);
 		    dp->act_sf.lastfetch = 0;
 		    success = actfile_hash(dp);
@@ -497,7 +497,7 @@ bool find_actgrp(DATASRC *dp, char *outbuf, char *nam, int len, ART_NUM high)
 	 * discard/close the active file, and re-open it. $$*/
 	if (fseek(fp, act_pos, 0) >= 0
 	 && fgets(outbuf, LBUFLEN, fp) != nullptr
-	 && strnEQ(outbuf, nam, len) && outbuf[len] == ' ') {
+	 && !strncmp(outbuf, nam, len) && outbuf[len] == ' ') {
 	    /* Remember the latest info in our cache. */
 	    (void) memcpy(lbp,outbuf,lbp_len);
 	    return true;
@@ -963,7 +963,7 @@ static int check_distance(int len, HASHDATUM *data, int newsrc_ptr)
     if (best_match < 0 || value <= best_match) {
 	int i;
 	for (i = 0; i < ngn; i++) {
-	    if (strEQ(name, ngptrs[i]))
+	    if (!strcmp(name,ngptrs[i]))
 		return 0;
 	}
 	best_match = value;

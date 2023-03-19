@@ -255,7 +255,7 @@ static void add_to_list(char *name, int toread, char_int ch)
     ADDGROUP* node = first_addgroup;
 
     while (node) {
-	if (strEQ(node->name, name))
+	if (!strcmp(node->name,name))
 	    return;
 	node = node->next;
     }
@@ -350,7 +350,7 @@ static void scanline(char *actline, bool add_matching)
     *s++ = '\0';		/* this buffer is expendable */
     high = 0, low = 1, ch = 'y';
     sscanf(s, "%ld %ld %c", &high, &low, &ch);
-    if (ch == 'x' || strnEQ(actline,"to.",3))
+    if (ch == 'x' || !strncmp(actline,"to.",3))
 	return;
     if (!inlist(actline))
 	return;
@@ -374,7 +374,7 @@ static int agorder_number(const ADDGROUP **app1, const ADDGROUP **app2)
 
 static int agorder_groupname(const ADDGROUP **app1, const ADDGROUP **app2)
 {
-    return strcaseCMP((*app1)->name, (*app2)->name) * sel_direction;
+    return strcasecmp((*app1)->name, (*app2)->name) * sel_direction;
 }
 
 static int agorder_count(const ADDGROUP **app1, const ADDGROUP **app2)

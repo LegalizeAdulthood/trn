@@ -110,7 +110,7 @@ char *filexp(char *s)
 #ifdef TILDENAME
 	    for (d = scrbuf; isalnum(*s); s++, d++) *d = *s;
 	    *d = '\0';
-	    if (tildedir && strEQ(tildename,scrbuf)) {
+	    if (tildedir && !strcmp(tildename,scrbuf)) {
 		strcpy(scrbuf,tildedir);
 		strcat(scrbuf, s);
 		strcpy(filename, scrbuf);
@@ -151,7 +151,7 @@ char *filexp(char *s)
 			    if (debug & DEB_FILEXP)
 				printf("p %s\n",tmpbuf) FLUSH;
 #endif
-			    if (strEQ(scrbuf,tildename)) {
+			    if (!strcmp(scrbuf,tildename)) {
 				for (i=LOGDIRFIELD-2; i; i--) {
 				    if (d)
 					d = strchr(d+1,':');
@@ -281,7 +281,7 @@ static Uchar casemap[256] = {
 #endif
 
 #ifndef HAS_STRCASECMP
-int trn_casecmp(const char *s1, const char *s2)
+int strcasecmp(const char *s1, const char *s2)
 {
     do {
 	if (casemap[(Uchar)*s1++] != casemap[(Uchar)*s2])
@@ -292,7 +292,7 @@ int trn_casecmp(const char *s1, const char *s2)
 #endif
 
 #ifndef HAS_STRCASECMP
-int trn_ncasecmp(const char *s1, const char *s2, int len)
+int strncasecmp(const char *s1, const char *s2, int len)
 {
     while (len--) {
 	if (casemap[(Uchar)*s1++] != casemap[(Uchar)*s2])

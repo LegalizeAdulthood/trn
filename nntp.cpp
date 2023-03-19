@@ -30,12 +30,12 @@ int nntp_list(char *type, char *arg, int len)
 {
     int ret;
 #ifdef DEBUG /*$$*/
-    if (len && (debug & 1) && strcaseEQ(type,"active"))
+    if (len && (debug & 1) && !strcasecmp(type,"active"))
 	return -1;
 #endif
     if (len)
 	sprintf(g_ser_line, "LIST %s %.*s", type, len, arg);
-    else if (strcaseEQ(type,"active"))
+    else if (!strcasecmp(type,"active"))
 	strcpy(g_ser_line, "LIST");
     else
 	sprintf(g_ser_line, "LIST %s", type);
@@ -478,7 +478,7 @@ char *nntp_tmpname(int ndx)
 
 int nntp_handle_nested_lists()
 {
-    if (strcaseEQ(g_last_command,"quit"))
+    if (!strcasecmp(g_last_command,"quit"))
 	return 0; /*$$ flush data needed? */
     if (nntp_finishbody(FB_DISCARD))
 	return 1;
@@ -491,7 +491,7 @@ int nntp_handle_timeout()
     static bool handling_timeout = false;
     char last_command_save[NNTP_STRLEN];
 
-    if (strcaseEQ(g_last_command,"quit"))
+    if (!strcasecmp(g_last_command,"quit"))
 	return 0;
     if (handling_timeout)
 	return -1;

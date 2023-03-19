@@ -79,7 +79,7 @@ bool ov_init()
 		char *s = strchr(buf,':');
 		fieldnum[i] = ov_num(buf,s);
 		fieldflags[fieldnum[i]] = FF_HAS_FIELD |
-		    ((s && strncaseEQ("full",s+1,4))? FF_HAS_HDR : 0);
+		    ((s && !strncasecmp("full",s+1,4))? FF_HAS_HDR : 0);
 		i++;
 	    }
 	}
@@ -349,7 +349,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 		if (!s)
 		    break;
 		if (s - cp != htype[hdrnum[fn]].length
-		 || strncaseNE(cp,htype[hdrnum[fn]].name,htype[hdrnum[fn]].length))
+		 || strncasecmp(cp,htype[hdrnum[fn]].name,htype[hdrnum[fn]].length))
 		    continue;
 		cp = s;
 		while (*++cp == ' ') ;

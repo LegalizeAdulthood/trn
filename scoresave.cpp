@@ -54,7 +54,7 @@ void sc_sv_delgroup(char *gname)
 
     for (i = 0; i < num_lines; i++) {
 	s = lines[i];
-	if (s && *s == '!' && strEQ(gname,s+1))
+	if (s && *s == '!' && !strcmp(gname,s+1))
 	    break;
     }
     if (i == num_lines)
@@ -339,7 +339,7 @@ void sc_load_scores()
 
     for (i = 0; i < num_lines; i++) {
 	s = lines[i];
-	if (s && *s == '!' && strEQ(s+1,gname))
+	if (s && *s == '!' && !strcmp(s+1,gname))
 	    break;
     }
     if (i == num_lines)

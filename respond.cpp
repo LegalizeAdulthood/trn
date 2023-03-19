@@ -179,13 +179,13 @@ int save_article()
 		if (*art_line <= ' ')
 		    continue;	/* Ignore empty or initially-whitespace lines */
 		if (((*art_line == '#' || *art_line == ':')
-		  && (strnEQ(art_line+1, "! /bin/sh", 9)
-		   || strnEQ(art_line+1, "!/bin/sh", 8)
-		   || strnEQ(art_line+2, "This is ", 8)))
+		  && (!strncmp(art_line+1, "! /bin/sh", 9)
+		   || !strncmp(art_line+1, "!/bin/sh", 8)
+		   || !strncmp(art_line+2, "This is ", 8)))
 #if 0
-		 || strnEQ(art_line, "sed ", 4)
-		 || strnEQ(art_line, "cat ", 4)
-		 || strnEQ(art_line, "echo ", 5)
+		 || !strncmp(art_line, "sed ", 4)
+		 || !strncmp(art_line, "cat ", 4)
+		 || !strncmp(art_line, "echo ", 5)
 #endif
 		) {
 		    savefrom = artpos;
@@ -394,7 +394,7 @@ q to abort.\n\
 		fprintf(tmpfp,"Article: %ld of %s\n", (long)art, ngname);
 	    seekart(savefrom);
 	    while (readart(buf,LBUFLEN) != nullptr) {
-		if (quote_From && strncaseEQ(buf,"from ",5))
+		if (quote_From && !strncasecmp(buf,"from ",5))
 		    putc('>', tmpfp);
 		fputs(buf, tmpfp);
 	    }
@@ -502,7 +502,7 @@ int cancel_article()
     reply_buf = fetchlines(art,REPLY_LINE);
     from_buf = fetchlines(art,FROM_LINE);
     ngs_buf = fetchlines(art,NGS_LINE);
-    if (strcaseNE(get_val("FROM",""),from_buf)
+    if (strcasecmp(get_val("FROM",""),from_buf)
      && (!in_string(from_buf,hostname, false)
       || (!in_string(from_buf,g_login_name, true)
        && !in_string(reply_buf,g_login_name, true)
@@ -567,7 +567,7 @@ int supersede_article()		/* Supersedes: */
     reply_buf = fetchlines(art,REPLY_LINE);
     from_buf = fetchlines(art,FROM_LINE);
     ngs_buf = fetchlines(art,NGS_LINE);
-    if (strcaseNE(get_val("FROM",""),from_buf)
+    if (strcasecmp(get_val("FROM",""),from_buf)
      && (!in_string(from_buf,hostname, false)
       || (!in_string(from_buf,g_login_name, true)
        && !in_string(reply_buf,g_login_name, true)
@@ -738,7 +738,7 @@ void forward()
 	eol = strchr(s, '\n');
 	if (eol)
 	    eol++;
-	if (*s == 'C' && strncaseEQ(s, "Content-Type: multipart/", 24)) {
+	if (*s == 'C' && !strncasecmp(s, "Content-Type: multipart/", 24)) {
 	    s += 24;
 	    for (;;) {
 		for ( ; *s && *s != ';'; s++) {
@@ -748,7 +748,7 @@ void forward()
 		if (*s != ';')
 		    break;
 		while (*++s == ' ') ;
-		if (*s == 'b' && strncaseEQ(s, "boundary=\"", 10)) {
+		if (*s == 'b' && !strncasecmp(s, "boundary=\"", 10)) {
 		    mime_boundary = s+10;
 		    if ((s = strchr(mime_boundary, '"')) != nullptr)
 			*s = '\0';
@@ -772,7 +772,7 @@ void forward()
     if (artfp != nullptr) {
 	interp(buf, sizeof buf, get_val("FORWARDMSG",FORWARDMSG));
 	if (mime_boundary) {
-	    if (*buf && strncaseNE(buf, "Content-", 8))
+	    if (*buf && strncasecmp(buf, "Content-", 8))
 		strcpy(buf, "Content-Type: text/plain\n");
 	    fprintf(tmpfp,"--%s\n%s\n[Replace this with your comments.]\n\n--%s\nContent-Type: message/rfc822\n\n",
 		    mime_boundary,buf,mime_boundary);
@@ -958,17 +958,17 @@ static bool cut_line(char *str)
 		*cp = '\0';
 		switch (got_flag) {
 		case 2:
-		    if (strEQ(word, "line")
-		     || strEQ(word, "here"))
+		    if (!strcmp(word, "line")
+		     || !strcmp(word, "here"))
 			if ((other_cnt -= 4) <= 20)
 			    return true;
 		    break;
 		case 1:
-		    if (strEQ(word, "this")) {
+		    if (!strcmp(word, "this")) {
 			got_flag = 2;
 			other_cnt -= 4;
 		    }
-		    else if (strEQ(word, "here")) {
+		    else if (!strcmp(word, "here")) {
 			other_cnt -= 4;
 			if ((dash_cnt >= 6 || equal_cnt >= 6)
 			 && other_cnt <= 20)
@@ -978,9 +978,9 @@ static bool cut_line(char *str)
 		    }
 		    break;
 		case 0:
-		    if (strEQ(word, "cut")
-		     || strEQ(word, "snip")
-		     || strEQ(word, "tear")) {
+		    if (!strcmp(word, "cut")
+		     || !strcmp(word, "snip")
+		     || !strcmp(word, "tear")) {
 			got_flag = 1;
 			other_cnt -= strlen(word);
 		    }

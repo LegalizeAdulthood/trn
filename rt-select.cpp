@@ -510,7 +510,7 @@ char option_selector()
     }
     for (i = 1; options_ini[i].checksum; i++) {
 	if (vals[i]) {
-	    if (option_saved_vals[i] && strEQ(vals[i],option_saved_vals[i])) {
+	    if (option_saved_vals[i] && !strcmp(vals[i],option_saved_vals[i])) {
 		if (option_saved_vals[i] != option_def_vals[i])
 		    free(option_saved_vals[i]);
 		option_saved_vals[i] = nullptr;
@@ -1342,7 +1342,7 @@ static bool select_option(int i)
     oldval = savestr(quote_string(option_value(i)));
     val = vals[i]? vals[i] : oldval;
     clean_screen = in_choice("> ", val, options_ini[i].help_str, 'z');
-    if (strNE(buf,val)) {
+    if (strcmp(buf,val)) {
 	char* to = buf;
 	char* from = buf;
 	parse_string(&to, &from);
@@ -1351,7 +1351,7 @@ static bool select_option(int i)
 	    free(vals[i]);
 	    selected_count--;
 	}
-	if (val != oldval && strEQ(buf,oldval))
+	if (val != oldval && !strcmp(buf,oldval))
 	    vals[i] = nullptr;
 	else {
 	    vals[i] = savestr(buf);

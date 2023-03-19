@@ -84,7 +84,7 @@ Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>\n");
 ERROR: header on line %d does not have a space after the colon:\n%s\n",
 		   line_num, buff);
 	}
-	if (cp - buff == 10 && strnEQ(buff, "Newsgroups", 10)) {
+	if (cp - buff == 10 && !strncmp(buff, "Newsgroups", 10)) {
 	    found_newsgroups = 1;
 	    for (cp = buff + 11; *cp == ' '; cp++)
 		;
@@ -150,7 +150,7 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 	if (FILE_REF(cp))
 	    cp = nntp_servername(cp);
     }
-    if (strNE(cp,"local")) {
+    if (strcmp(cp,"local")) {
 	server_name = savestr(cp);
 	cp = strchr(server_name, ';');
 	if (!cp)
@@ -193,7 +193,7 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 		for (i = 0; i < ngcnt; i++) {
 		    if (!foundactive[i]) {
 			if ((buff[nglens[i]] == '\t' || buff[nglens[i]] == ' ')
-			  && strnEQ(ngptrs[i], buff, nglens[i])) {
+			  && !strncmp(ngptrs[i], buff, nglens[i])) {
 			    foundactive[i] = 1;
 			    ngleft--;
 			}
@@ -260,7 +260,7 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 		for (i = 0; i < ngcnt; i++) {
 		    if (foundactive[i] && ngptrs[i]) {
 			if ((buff[nglens[i]] == '\t' || buff[nglens[i]] == ' ')
-			  && strnEQ(ngptrs[i], buff, nglens[i])) {
+			  && !strncmp(ngptrs[i], buff, nglens[i])) {
 			    cp = &buff[nglens[i]];
 			    *cp++ = '\0';
 			    while (*cp == ' ' || *cp == '\t')

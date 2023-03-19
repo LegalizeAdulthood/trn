@@ -50,7 +50,7 @@ void kfile_init()
     char* cp = getenv("KILLTHREADS");
     if (!cp)
 	cp = killthreads;
-    if (*cp && strNE(cp, "none")) {
+    if (*cp && strcmp(cp,"none")) {
 	FILE* fp;
 	kf_daynum = KF_DAYNUM(0);
 	kf_thread_cnt = kf_changethd_cnt = 0;
@@ -126,11 +126,11 @@ int do_kfile(FILE *kfp, int entering)
 	if (*(cp = buf + strlen(buf) - 1) == '\n')
 	    *cp = '\0';
 	for (bp = buf; isspace(*bp); bp++) ;
-	if (strnEQ(bp,"THRU",4)) {
+	if (!strncmp(bp,"THRU",4)) {
 	    int len = strlen(ngptr->rc->name);
 	    cp = bp + 4;
 	    while (isspace(*cp)) cp++;
-	    if (strnNE(cp, ngptr->rc->name, len) || !isspace(cp[len]))
+	    if (strncmp(cp, ngptr->rc->name, len) || !isspace(cp[len]))
 		continue;
 	    killfirst = atol(cp+len+1)+1;
 	    if (killfirst < firstart)
@@ -392,13 +392,13 @@ void rewrite_kfile(ART_NUM thru)
     if ((newkfp = fopen(killname,"w")) != nullptr) {
 	fprintf(newkfp,"THRU %s %ld\n",ngptr->rc->name,(long)thru);
 	while (localkfp && fgets(buf,LBUFLEN,localkfp) != nullptr) {
-	    if (strnEQ(buf,"THRU",4)) {
+	    if (!strncmp(buf,"THRU",4)) {
 		char* cp = buf+4;
 		int len = strlen(ngptr->rc->name);
 		while (isspace(*cp)) cp++;
 		if (isdigit(*cp))
 		    continue;
-		if (strnNE(cp, ngptr->rc->name, len)
+		if (strncmp(cp, ngptr->rc->name, len)
 		 || (cp[len] && !isspace(cp[len]))) {
 		    fputs(buf,newkfp);
 		    needs_newline = !strchr(buf,'\n');

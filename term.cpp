@@ -1349,7 +1349,7 @@ reask_in_choice:
 	    }
 	    break;
 	}
-	if (!*bp || strnEQ(cp,bp,any_val_OK? len : 1))
+	if (!*bp || !strncmp(cp,bp,any_val_OK? len : 1))
 	    break;
     }
 
@@ -2070,7 +2070,7 @@ void add_tc_string(char *capability, char *string)
     int i;
 
     for (i = 0; i < tc_string_cnt; i++) {
-	if (strEQ(capability, tc_strings[i].capability)) {
+	if (!strcmp(capability,tc_strings[i].capability)) {
 	    free(tc_strings[i].string);
 	    break;
 	}
@@ -2094,7 +2094,7 @@ char *tc_color_capability(char *capability)
     int c;
 
     for (c = 0; c < tc_string_cnt; c++) {
-	if (strEQ(tc_strings[c].capability, capability))
+	if (!strcmp(tc_strings[c].capability,capability))
 	    return tc_strings[c].string;
     }
     return nullptr;
