@@ -27,9 +27,9 @@
 
 #include <stdlib.h>
 
-static int addng_cmp(char *key, int keylen, HASHDATUM data)
+static int addng_cmp(const char *key, int keylen, HASHDATUM data)
 {
-	return memcmp(key, ((ADDGROUP*)data.dat_ptr)->name, keylen);
+    return memcmp(key, ((ADDGROUP *)data.dat_ptr)->name, keylen);
 }
 
 static int build_addgroup_list(int keylen, HASHDATUM *data, int extra)

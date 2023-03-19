@@ -1213,7 +1213,7 @@ void sethash(NGDATA *np)
     hashstore(newsrc_hash, np->rcline, data.dat_len, data);
 }
 
-static int rcline_cmp(char *key, int keylen, HASHDATUM data)
+static int rcline_cmp(const char *key, int keylen, HASHDATUM data)
 {
     /* We already know that the lengths are equal, just compare the strings */
     return memcmp(key, ((NGDATA*)data.dat_ptr)->rcline, keylen);

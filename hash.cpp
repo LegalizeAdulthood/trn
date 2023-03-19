@@ -34,7 +34,7 @@ static HASHENT* hereuse = nullptr;
 static int reusables = 0;
 
 /* size - a crude guide to size */
-HASHTABLE *hashcreate(unsigned size, int (*cmpfunc)(char *, int, HASHDATUM))
+HASHTABLE *hashcreate(unsigned size, HASHCMPFUNC cmpfunc)
 {
     HASHTABLE* tbl;
     /* allocate HASHTABLE and (HASHENT*) array together to reduce the
@@ -52,7 +52,7 @@ HASHTABLE *hashcreate(unsigned size, int (*cmpfunc)(char *, int, HASHDATUM))
     tbl = &aap->ht;
     tbl->ht_size = size;
     tbl->ht_magic = HASHMAG;
-    tbl->ht_cmp = (cmpfunc == nullptr? default_cmp: cmpfunc);
+    tbl->ht_cmp = cmpfunc == nullptr ? default_cmp : cmpfunc;
     tbl->ht_addr = aap->hepa;
     return tbl;
 }
@@ -85,7 +85,7 @@ void hashdestroy(HASHTABLE *tbl)
     free((char*)tbl);
 }
 
-void hashstore(HASHTABLE *tbl, char *key, int keylen, HASHDATUM data)
+void hashstore(HASHTABLE *tbl, const char *key, int keylen, HASHDATUM data)
 {
     HASHENT* hp;
     HASHENT** nextp;
@@ -101,7 +101,7 @@ void hashstore(HASHTABLE *tbl, char *key, int keylen, HASHDATUM data)
     hp->he_data = data;		/* supersede any old data for this key */
 }
 
-void hashdelete(HASHTABLE *tbl, char *key, int keylen)
+void hashdelete(HASHTABLE *tbl, const char *key, int keylen)
 {
     HASHENT* hp;
     HASHENT** nextp;
@@ -120,7 +120,7 @@ HASHENT** slast_nextp;
 int slast_keylen;
 
 /* data corresponding to key */
-HASHDATUM hashfetch(HASHTABLE *tbl, char *key, int keylen)
+HASHDATUM hashfetch(HASHTABLE *tbl, const char *key, int keylen)
 {
     HASHENT* hp;
     HASHENT** nextp;
@@ -152,7 +152,7 @@ void hashstorelast(HASHDATUM data)
 /* Visit each entry by calling nodefunc at each, with keylen, data,
 ** and extra as arguments.
 */
-void hashwalk(HASHTABLE *tbl, int (*nodefunc)(int, HASHDATUM *, int), int extra)
+void hashwalk(HASHTABLE *tbl, HASHWALKFUNC nodefunc, int extra)
 {
     unsigned idx;
     HASHENT* hp;
@@ -184,7 +184,7 @@ void hashwalk(HASHTABLE *tbl, int (*nodefunc)(int, HASHDATUM *, int), int extra)
 ** if so, this pointer should be updated with the address of the object
 ** to be inserted, if insertion is desired.
 */
-static HASHENT **hashfind(HASHTABLE *tbl, char *key, int keylen)
+static HASHENT **hashfind(HASHTABLE *tbl, const char *key, int keylen)
 {
     HASHENT* hp;
     HASHENT* prevhp = nullptr;
@@ -206,7 +206,7 @@ static HASHENT **hashfind(HASHTABLE *tbl, char *key, int keylen)
 }
 
 /* not yet taken modulus table size */
-static unsigned hash(char *key, int keylen)
+static unsigned hash(const char *key, int keylen)
 {
     unsigned hash = 0;
 
@@ -215,7 +215,7 @@ static unsigned hash(char *key, int keylen)
     return hash;
 }
 
-static int default_cmp(char *key, int keylen, HASHDATUM data)
+static int default_cmp(const char *key, int keylen, HASHDATUM data)
 {
     /* We already know that the lengths are equal, just compare the strings */
     return memcmp(key, data.dat_ptr, keylen);

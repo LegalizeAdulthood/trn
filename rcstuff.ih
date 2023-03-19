@@ -21,4 +21,4 @@ static bool open_newsrc(NEWSRC *rp);
 static void init_ngnode(LIST *list, LISTNODE *node);
 static void parse_rcline(NGDATA *np);
 static NGDATA *add_newsgroup(NEWSRC *rp, char *ngn, char_int c);
-static int rcline_cmp(char *key, int keylen, HASHDATUM data);
+static int rcline_cmp(const char *key, int keylen, HASHDATUM data);

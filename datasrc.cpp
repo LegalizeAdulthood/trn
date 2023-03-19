@@ -844,7 +844,7 @@ void srcfile_close(SRCFILE *sfp)
     }
 }
 
-static int srcfile_cmp(char *key, int keylen, HASHDATUM data)
+static int srcfile_cmp(const char *key, int keylen, HASHDATUM data)
 {
     /* We already know that the lengths are equal, just compare the strings */
     return memcmp(key, ((LISTNODE*)data.dat_ptr)->data + data.dat_len, keylen);

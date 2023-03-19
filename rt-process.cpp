@@ -57,7 +57,7 @@ static void fix_msgid(char *msgid)
     }
 }
 
-int msgid_cmp(char *key, int keylen, HASHDATUM data)
+int msgid_cmp(const char *key, int keylen, HASHDATUM data)
 {
     /* We already know that the lengths are equal, just compare the strings */
     if (data.dat_len)

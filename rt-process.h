@@ -3,7 +3,7 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 ARTICLE *allocate_article(ART_NUM artnum);
-int msgid_cmp(char *key, int keylen, HASHDATUM data);
+int msgid_cmp(const char *key, int keylen, HASHDATUM data);
 bool valid_article(ARTICLE *article);
 ARTICLE *get_article(char *msgid);
 void thread_article(ARTICLE *article, char *references);

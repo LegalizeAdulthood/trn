@@ -599,7 +599,7 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
     }
 }
 
-int subject_cmp(char *key, int keylen, HASHDATUM data)
+int subject_cmp(const char *key, int keylen, HASHDATUM data)
 {
     /* We already know that the lengths are equal, just compare the strings */
     return memcmp(key, ((SUBJECT*)data.dat_ptr)->str+4, keylen);
