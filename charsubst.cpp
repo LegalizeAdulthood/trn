@@ -106,7 +106,7 @@ int putsubstchar(int c, int limit, bool outputok)
     return i;
 }
 
-char *current_charsubst()
+const char *current_charsubst()
 {
 #ifdef USE_UTF_HACK
     static char show[50];
@@ -118,7 +118,7 @@ char *current_charsubst()
     else
 	sprintf(show, "[%.*s->%.*s]", maxlen, ics, maxlen, ocs);
 #else /*!USE_UTF_HACK */
-    static char* show;
+    static const char* show;
 
     switch (*charsubst) {
       case 'm':

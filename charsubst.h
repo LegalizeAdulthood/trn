@@ -19,5 +19,5 @@ EXT char* charsubst;
 #define HEADER_CONV() (*charsubst=='a' || *charsubst=='m'? *charsubst : '\0')
 
 int putsubstchar(int c, int limit, bool outputok);
-char *current_charsubst();
+const char *current_charsubst();
 int strcharsubst(char *, char *, int, char_int);
