@@ -602,7 +602,7 @@ char *adv_then_find_next_nl_and_dectrl(char *s)
 
     for (s++; *s && *s != '\n';) {
 	int w = byte_length_at(s);
-	if (AT_GREY_SPACE(s)) {
+	if (at_grey_space(s)) {
 	    int i;
 	    for (i = 0; i < w; i += 1) {
 		s[i] = ' ';

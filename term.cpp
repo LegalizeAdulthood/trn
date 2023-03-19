@@ -727,7 +727,7 @@ char *edit_buf(char *s, char *cmd)
 	if (s != buf) {
 	    rubout();
 	    s--;			/* discount the char rubbed out */
-	    if (!AT_NORM_CHAR(s))
+	    if (!at_norm_char(s))
 		rubout();
 	}
 	return s;
@@ -736,7 +736,7 @@ char *edit_buf(char *s, char *cmd)
 	while (s != buf) {		/* emulate that many ERASEs */
 	    rubout();
 	    s--;
-	    if (!AT_NORM_CHAR(s))
+	    if (!at_norm_char(s))
 		rubout();
 	}
 	return s;
@@ -747,7 +747,7 @@ char *edit_buf(char *s, char *cmd)
 	*s-- = ' ';
 	while (!isspace(*s) || isspace(s[1])) {
 	    rubout();
-	    if (!AT_NORM_CHAR(s))
+	    if (!at_norm_char(s))
 		rubout();
 	    if (s == buf)
 		return buf;
@@ -968,7 +968,7 @@ void underprint(char *s)
     assert(tc_UC);
     if (*tc_UC) {	/* char by char underline? */
 	while (*s) {
-	    if (!AT_NORM_CHAR(s)) {
+	    if (!at_norm_char(s)) {
 		putchar('^');
 		backspace();/* back up over it */
 		underchar();/* and do the underline */
@@ -1456,7 +1456,7 @@ int print_lines(char *what_to_print, int hilite)
 	    underline();
 	}
 	for (i = 0; *s && i < tc_COLS; ) {
-	    if (AT_NORM_CHAR(s)) {
+	    if (at_norm_char(s)) {
 		i += put_char_adv(&s, true);
 	    }
 	    else if (*s == '\t') {
@@ -1551,7 +1551,7 @@ void pad(int num)
 void printcmd()
 {
     if (verify && buf[1] == FINISHCMD) {
-	if (!AT_NORM_CHAR(buf)) {
+	if (!at_norm_char(buf)) {
 	    putchar('^');
 	    putchar((*buf & 0x7F) | 64);
 	    backspace();

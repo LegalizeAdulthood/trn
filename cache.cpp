@@ -464,16 +464,16 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
     }
 }
 
-int decode_header(char *t, char *f, int size)
+int decode_header(char *to, char *from, int size)
 {
     int i;
-    char *s = t; /* save for pass 2 */
+    char *s = to; /* save for pass 2 */
     bool pass2needed = false;
 
     /* Pass 1 to decode coded bytes (which might be character fragments - so 1 pass is wrong) */
-    for (i = size; *f && i--; ) {
-	if (*f == '=' && f[1] == '?') {
-	    char* q = strchr(f+2,'?');
+    for (i = size; *from && i--; ) {
+	if (*from == '=' && from[1] == '?') {
+	    char* q = strchr(from+2,'?');
 	    char ch = (q && q[2] == '?')? q[1] : 0;
 	    char* e;
 
@@ -482,7 +482,7 @@ int decode_header(char *t, char *f, int size)
 		const char* old_ocs = output_charset_name();
 #ifdef USE_UTF_HACK
 		*q = '\0';
-		utf_init(f+2, "utf-8"); /*FIXME*/
+		utf_init(from+2, "utf-8"); /*FIXME*/
 		*q = '?';
 #endif
 		e = q+2;
@@ -490,53 +490,53 @@ int decode_header(char *t, char *f, int size)
 		    e = strchr(e+1, '?');
 		} while (e && e[1] != '=');
 		if (e) {
-		    int len = e - f + 2;
+		    int len = e - from + 2;
 #ifdef USE_UTF_HACK
 		    char *d;
 #endif
 		    i -= len-1;
 		    size -= len;
 		    q += 3;
-		    f = e+2;
+		    from = e+2;
 		    *e = '\0';
 		    if (ch == 'q' || ch == 'Q')
-			len = qp_decodestring(t, q, true);
+			len = qp_decodestring(to, q, true);
 		    else
-			len = b64_decodestring(t, q);
+			len = b64_decodestring(to, q);
 #ifdef USE_UTF_HACK
-		    d = create_utf8_copy(t);
+		    d = create_utf8_copy(to);
 		    if (d) {
 			for (len = 0; d[len]; ) {
-			    t[len] = d[len];
+			    to[len] = d[len];
 			    len++;
 			}
 			free(d);
 		    }
 #endif
 		    *e = '?';
-		    t += len;
+		    to += len;
 		    size += len;
 		    /* If the next character is whitespace we should eat it now */
-		    while (*f == ' ' || *f == '\t')
-			f++;
+		    while (*from == ' ' || *from == '\t')
+			from++;
 		}
 		else
-		    *t++ = *f++;
+		    *to++ = *from++;
 #ifdef USE_UTF_HACK
 		utf_init(old_ics, old_ocs);
 #endif
 	    }
 	    else
-		*t++ = *f++;
-	} else if (*f != '\n')
-	    *t++ = *f++;
+		*to++ = *from++;
+	} else if (*from != '\n')
+	    *to++ = *from++;
 	else
-	    f++, size--;
+	    from++, size--;
 	pass2needed = true;
     }
-    while (size > 1 && t[-1] == ' ')
-	t--, size--;
-    *t = '\0';
+    while (size > 1 && to[-1] == ' ')
+	to--, size--;
+    *to = '\0';
 
     /* Pass 2 to clear out "control" characters */
     if (pass2needed)
@@ -551,7 +551,7 @@ void dectrl(char *str)
 
     for ( ; *str;) {
 	int w = byte_length_at(str);
-	if (AT_GREY_SPACE(str)) {
+	if (at_grey_space(str)) {
 	    int i;
 	    for (i = 0; i < w; i += 1) {
 		str[i] = ' ';

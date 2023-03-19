@@ -507,7 +507,7 @@ bool subject_has_Re(char *str, char **strp)
 {
     bool has_Re = false;
 
-    while (*str && AT_GREY_SPACE(str)) str++;
+    while (*str && at_grey_space(str)) str++;
     while (EQ(str[0], 'r') && EQ(str[1], 'e')) {	/* check for Re: */
       char* cp = str + 2;
 	if (*cp == '^') {				/* allow Re^2: */
@@ -516,7 +516,7 @@ bool subject_has_Re(char *str, char **strp)
 	}
 	if (*cp != ':')
 	    break;
-	while (*++cp && AT_GREY_SPACE(cp)) ;
+	while (*++cp && at_grey_space(cp)) ;
 	str = cp;
 	has_Re = true;
     }

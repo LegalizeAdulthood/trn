@@ -1149,7 +1149,7 @@ int filter_html(char *t, char *f)
 	    else if (*f == '\'')
 		mime_section->html |= HF_IN_SQUOTE;
 	    else if (tagword_len < (sizeof tagword) - 1) {
-		tagword[tagword_len++] = AT_GREY_SPACE(f)? ' ' : *f;
+		tagword[tagword_len++] = at_grey_space(f)? ' ' : *f;
 	    }
 	}
 	else if (mime_section->html & HF_IN_COMMENT) {
@@ -1218,7 +1218,7 @@ int filter_html(char *t, char *f)
 		*t++ = *f;
 	    mime_section->html |= HF_NL_OK|HF_P_OK|HF_SPACE_OK;
 	}
-	else if ((*f == ' ' || AT_GREY_SPACE(f)) && !(mime_section->html & HF_IN_PRE)) {
+	else if ((*f == ' ' || at_grey_space(f)) && !(mime_section->html & HF_IN_PRE)) {
 	    /* We don't want to call output_prep() here. */
 	    if (*f == ' ' || (mime_section->html & HF_SPACE_OK)) {
 		mime_section->html &= ~HF_SPACE_OK;
@@ -1227,7 +1227,7 @@ int filter_html(char *t, char *f)
 	    /* In non-PRE mode spaces should be collapsed */
 	    for (;;) {
 		int w = byte_length_at(f);
-	    if (w == 0 || f[w] == '\0' || !(f[w] == ' ' || AT_GREY_SPACE(f+w))) break;
+	    if (w == 0 || f[w] == '\0' || !(f[w] == ' ' || at_grey_space(f+w))) break;
 		f += w;
 	    }
 	}

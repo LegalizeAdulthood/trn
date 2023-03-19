@@ -332,7 +332,7 @@ int do_article()
 		if (pagestop && !continuation && execute(&page_compex,bufptr))
 		    linenum = 32700;
 		for (outpos = 0; outpos < tc_COLS; ) { /* while line has room */
-		    if (AT_NORM_CHAR(bufptr)) {	    /* normal char? */
+		    if (at_norm_char(bufptr)) {	    /* normal char? */
 			if (*bufptr == '_') {
 			    if (bufptr[1] == '\b') {
 				if (outputok && !under_lining
