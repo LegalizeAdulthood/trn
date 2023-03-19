@@ -224,8 +224,6 @@
 			/* terminals such as older Televideos */
 #define TILDENAME	/* allow ~logname expansion */
 #undef MCHASE		/* unmark xrefed articles on m or M */
-#define MUNGHEADER	/* allow alternate header formatting via */
-			/* environment variable ALTHEADER (not impl) */
 #define ASYNC_PARSE	/* allow parsing headers asyncronously to reading */
 			/* used by MCHASE and MUNGHEADER */
 #define FINDNEWNG	/* check for new newsgroups on startup */
