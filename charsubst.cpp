@@ -23,8 +23,6 @@
 #include "charsubst.h"
 #include "charsubst.ih"
 
-#ifdef CHARSUBST
-
 /* TeX encoding table - gives ISO char for "x (x=32..127) */
 
 static Uchar textbl[96] = {
@@ -257,5 +255,3 @@ static int Latin1toASCII(Uchar *asc, Uchar *iso, int limit, int t)
     *s = '\0';
     return s - asc;
 }
-
-#endif

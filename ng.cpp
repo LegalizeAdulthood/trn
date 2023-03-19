@@ -157,9 +157,7 @@ int do_newsgroup(char *start_command)
     recent_artp = curr_artp = nullptr;
     recent_art = curr_art = lastart+1;
     prompt = whatnext;
-#ifdef CHARSUBST
     charsubst = charsets;
-#endif
 
     /* see if there are any special searches to do */
 
@@ -290,9 +288,7 @@ int do_newsgroup(char *start_command)
 		curr_art = art;		/* set current article # */
 		recent_artp = curr_artp;
 		curr_artp = artp;
-#ifdef CHARSUBST
 		charsubst = charsets;
-#endif
 		first_view = 0;
 	    }
 #ifdef SCAN_ART
@@ -355,9 +351,7 @@ int do_newsgroup(char *start_command)
 		curr_art = art;		/* set current article # */
 		recent_artp = curr_artp;
 		curr_artp = artp;
-#ifdef CHARSUBST
 		charsubst = charsets;
-#endif
 		first_view = 0;
 		do_hiding = true;
 		rotate = false;
@@ -432,11 +426,7 @@ reask_article:
 	/* print prompt, whatever it is */
 	interp(cmd_buf, sizeof cmd_buf, mailcall);
 	sprintf(buf,prompt,cmd_buf,
-#ifdef CHARSUBST
 		current_charsubst(),
-#else
-		nullstr,
-#endif
 		dfltcmd);
 	draw_mousebar(tc_COLS - (g_term_line == tc_LINES-1? strlen(buf)+5 : 0), true);
 	color_string(COLOR_CMD,buf);
@@ -1487,12 +1477,10 @@ run_the_selector:
 	    }
 	    termdown(2);
 	    return AS_ASK;
-#ifdef CHARSUBST
 	  case 'C':
 	    if (!*(++charsubst))
 		charsubst = charsets;
 	    goto refresh_screen;
-#endif
 	  case 'a':  case 's':  case 't':  case 'T':
 	    *buf = buf[1];
 	    goto run_the_selector;

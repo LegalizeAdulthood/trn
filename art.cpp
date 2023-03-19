@@ -379,7 +379,6 @@ int do_article()
 			    outpos++;
 			}
 			else {
-#ifdef CHARSUBST
 			    int i;
 #ifdef USE_UTF_HACK
 			    if (outpos + visual_width_at(bufptr) > tc_COLS) { /* will line overflow? */
@@ -397,16 +396,6 @@ int do_article()
 				break;
 			    }
 			    outpos += i;
-#else
-#ifdef USE_UTF_HACK
-			    outpos += put_char_adv(&bufptr, outputok);
-			    bufptr--;
-#else /* !USE_UTF_HACK */
-			    if (outputok)
-				putchar(*bufptr);
-			    outpos++;
-#endif /* USE_UTF_HACK */
-#endif /* CHARSUBST */
 			}
                         if (*tc_UC && ((highlight == artline && marking == STANDOUT) || under_lining))
                         {
@@ -579,11 +568,7 @@ reask_pager:
 	    strcpy(cmd_buf,"?");
 	else
 	    sprintf(cmd_buf,"%ld",(long)(artpos*100/artsize));
-#ifdef CHARSUBST
 	sprintf(buf,"%s--MORE--(%s%%)",current_charsubst(),cmd_buf);
-#else
-	sprintf(buf,"--MORE--(%s%%)",cmd_buf);
-#endif
 	outpos = g_term_col + strlen(buf);
 	draw_mousebar(tc_COLS - (g_term_line == tc_LINES-1? outpos+5 : 0), true);
 	color_string(COLOR_MORE,buf);
@@ -927,12 +912,10 @@ int page_switch()
 	if (!finish_dblchar())
 	    return PS_ASK;
 	switch (buf[1] & 0177) {
-#ifdef CHARSUBST
 	  case 'C':
 	    if (!*(++charsubst))
 		charsubst = charsets;
 	    goto refresh_screen;
-#endif
 	  default:
 	    break;
 	}
@@ -1004,11 +987,7 @@ leave_pager:
 	    color_object(COLOR_CMD, true);
 	    interpsearch(cmd_buf, sizeof cmd_buf, mailcall, buf);
 	    printf(prompt,cmd_buf,
-#ifdef CHARSUBST
 		   current_charsubst(),
-#else
-		   nullstr,
-#endif
 		   dfltcmd);	/* print prompt, whatever it is */
 	    color_pop();	/* of COLOR_CMD */
 	    putchar(' ');

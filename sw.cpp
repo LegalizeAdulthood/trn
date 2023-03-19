@@ -298,12 +298,8 @@ void decode_switch(char *s)
 	    set_option(OI_NEWGROUP_CHECK, YESorNO(!upordown));
 	    break;
         case 'Q':
-#ifdef CHARSUBST
 	    if (*++s == '=') s++;
 	    set_option(OI_CHARSET, s);
-#else
-	    notincl("-Q");
-#endif
 	    break;
 	case 'r':
 	    set_option(OI_RESTART_AT_LAST_GROUP, YESorNO(upordown));

@@ -283,13 +283,11 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	len = strlen(orig_line);
 
     /* Copy line, filtering encoded and control characters. */
-#ifdef CHARSUBST
     if (HEADER_CONV()) {
 	tmpbuf = safemalloc(len * 2 + 2);
 	line = tmpbuf + len + 1;
     }
     else
-#endif
 	line = tmpbuf = safemalloc(len + 2);	/* yes, I mean "2" */
     if (do_hiding)
 	end = line + decode_header(line, orig_line, len);
@@ -298,12 +296,10 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	dectrl(line);
 	end = line + len;
     }
-#ifdef CHARSUBST
     if (HEADER_CONV()) {
 	end = tmpbuf + strcharsubst(tmpbuf, line, len*2+2, *charsubst);
 	line = tmpbuf;
     }
-#endif
 
     if (!*line) {
 	strcpy(line, " ");

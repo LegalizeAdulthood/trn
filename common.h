@@ -223,7 +223,6 @@
 #define NOFIREWORKS	/* keep whole screen from flashing on certain */
 			/* terminals such as older Televideos */
 #define TILDENAME	/* allow ~logname expansion */
-#define CHARSUBST	/* enable the _C command */
 #define DELBOGUS	/* ask if bogus newsgroups should be deleted */
 #define RELOCATE	/* allow newsgroup rearranging */
 #define ESCSUBS		/* escape substitutions in multi-character commands */

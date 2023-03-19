@@ -12,15 +12,11 @@
  * is at the user's own risk. 
  */
 
-#ifdef CHARSUBST
-
 /* Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced */
 EXT char* charsets INIT("patm");
 EXT char* charsubst;
 
 #define HEADER_CONV() (*charsubst=='a' || *charsubst=='m'? *charsubst : '\0')
-
-#endif
 
 int putsubstchar(int c, int limit, bool outputok);
 char *current_charsubst();

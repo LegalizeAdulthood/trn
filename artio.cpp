@@ -235,9 +235,6 @@ char *readartbuf(bool view_inline)
   mime_switch:
     switch (mime_state) {
       case ISOTEXT_MIME:
-#if 0 /*def CHARSUBST*/
-	charsubst = "a"; /*$$*/
-#endif
 	mime_state = TEXT_MIME;
 	/* FALL THROUGH */
       case TEXT_MIME:

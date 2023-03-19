@@ -460,11 +460,7 @@ char *compress_from(char *from, int size)
     char* s = from? from : nullstr;
     int len, vis_len;
 
-#ifdef CHARSUBST
     strcharsubst(lbuf, s, sizeof lbuf, *charsubst);
-#else
-    safecpy(lbuf, s, sizeof lbuf);
-#endif
     if ((s = extract_name(lbuf)) != nullptr)
 	s = compress_name(s, size);
     else
@@ -547,11 +543,7 @@ char *compress_subj(ARTICLE *ap, int max)
     if (ap != first || (ap->flags & AF_HAS_RE)
      || (!(ap->flags&AF_UNREAD) ^ sel_rereading))
 	*cp++ = '>';
-#ifdef CHARSUBST
     strcharsubst(cp, ap->subj->str + 4, (sizeof buf) - (cp-buf), *charsubst);
-#else
-    safecpy(cp, ap->subj->str + 4, (sizeof buf) - (cp-buf));
-#endif
 
     /* Remove "(was: oldsubject)", because we already know the old subjects.
     ** Also match "(Re: oldsubject)".  Allow possible spaces after the ('s.
