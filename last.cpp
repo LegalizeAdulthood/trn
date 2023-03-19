@@ -58,8 +58,8 @@ void writelast()
 		ngname? ngname : nullstr,lasttime,
 		lastactsiz,lastnewtime,lastextranum);
 	fclose(tmpfp);
-	UNLINK(lastfile);
-	RENAME(buf,lastfile);
+	remove(lastfile);
+	rename(buf,lastfile);
     }
     else {
 	printf(cantcreate,buf) FLUSH;

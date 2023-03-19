@@ -213,7 +213,7 @@ int doshell(char *shell, char *s)
     sigset(SIGTTIN,stop_catcher);
 #endif
     if (datasrc && datasrc->auth_user)
-	UNLINK(nntp_auth_file);
+	remove(nntp_auth_file);
     return ret;
 }
 

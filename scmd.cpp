@@ -302,7 +302,7 @@ bool s_match_description(long ent)
 	for (s = lbuf; *s; s++)
 	    if (isupper(*s))
 		*s = tolower(*s);		/* convert to lower case */
-	if (STRSTR(lbuf,search_text))
+	if (strstr(lbuf,search_text))
 	    return true;
     }
     return false;

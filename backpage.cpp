@@ -24,7 +24,7 @@ void backpage_init()
     varyname = filexp(VARYNAME);
     close(creat(varyname,0600));
     varyfd = open(varyname,2);
-    UNLINK(varyname);
+    remove(varyname);
     if (varyfd < 0) {
 	printf(cantopen,varyname) FLUSH;
 	sig_catcher(0);

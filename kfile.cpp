@@ -387,7 +387,7 @@ void rewrite_kfile(ART_NUM thru)
 	fseek(localkfp,0L,0);		/* rewind current file */
     else
 	makedir(killname,MD_FILE);
-    UNLINK(killname);			/* to prevent file reuse */
+    remove(killname);			/* to prevent file reuse */
     kf_state &= ~(kfs_local_change_clear | KFS_NORMAL_LINES);
     if ((newkfp = fopen(killname,"w")) != nullptr) {
 	fprintf(newkfp,"THRU %s %ld\n",ngptr->rc->name,(long)thru);
@@ -438,7 +438,7 @@ void rewrite_kfile(ART_NUM thru)
 	}
 	fclose(newkfp);
 	if (!has_content)
-	    UNLINK(killname);
+	    remove(killname);
 	open_kfile(KF_LOCAL);		/* and reopen local file */
     }
     else
@@ -524,7 +524,7 @@ void update_thread_kfile()
     cp = filexp(get_val("KILLTHREADS", killthreads));
     makedir(cp,MD_FILE);
     if (kf_changethd_cnt*5 > kf_thread_cnt) {
-	UNLINK(cp);			/* to prevent file reuse */
+	remove(cp);			/* to prevent file reuse */
 	if ((newkfp = fopen(cp,"w")) == nullptr)
 	    return; /*$$ Yikes! */
 	kf_thread_cnt = kf_changethd_cnt = 0;
@@ -658,7 +658,7 @@ void open_kfile(int local)
 
     /* delete the file if it is empty */
     if (stat(kname,&filestat) >= 0 && !filestat.st_size)
-	UNLINK(kname);
+	remove(kname);
     if (local) {
 	if (localkfp)
 	    fclose(localkfp);

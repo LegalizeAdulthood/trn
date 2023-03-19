@@ -387,7 +387,7 @@ static void unlock_newsrc(NEWSRC *rp)
 {
     safefree0(rp->infoname);
     if (rp->lockname) {
- 	UNLINK(rp->lockname);
+ 	remove(rp->lockname);
 	free(rp->lockname);
 	rp->lockname = nullptr;
     }
@@ -443,7 +443,7 @@ static bool open_newsrc(NEWSRC *rp)
 	    return false;
 	}
 	/* unlink backup file name and backup current name */
-	UNLINK(rp->oldname);
+	remove(rp->oldname);
 #ifndef NO_FILELINKS
 	safelink(rp->name,rp->oldname);
 #endif
@@ -551,8 +551,8 @@ static bool open_newsrc(NEWSRC *rp)
     }
     fclose(rcfp);			/* close .newsrc */
 #ifdef NO_FILELINKS
-    UNLINK(rp->oldname);
-    RENAME(rp->name,rp->oldname);
+    remove(rp->oldname);
+    rename(rp->name,rp->oldname);
     rp->flags |= RF_RCCHANGED;
 #endif
     if (rp->infoname) {
@@ -1339,14 +1339,14 @@ bool write_newsrcs(MULTIRC *mptr)
 	if (fclose(rcfp) == EOF) {
 	  write_error:
 	    printf(cantrecreate,rp->name) FLUSH;
-	    UNLINK(rp->newname);
+	    remove(rp->newname);
 	    total_success = false;
 	    continue;
 	}
 	rp->flags &= ~RF_RCCHANGED;
 
-	UNLINK(rp->name);
-	RENAME(rp->newname,rp->name);
+	remove(rp->name);
+	rename(rp->newname,rp->name);
     }
 
     if (sel_newsgroupsort != SS_NATURAL) {
@@ -1364,9 +1364,9 @@ void get_old_newsrcs(MULTIRC *mptr)
     if (mptr) {
 	for (rp = mptr->first; rp; rp = rp->next) {
 	    if (rp->flags & RF_ACTIVE) {
-		UNLINK(rp->newname);
-		RENAME(rp->name,rp->newname);
-		RENAME(rp->oldname,rp->name);
+		remove(rp->newname);
+		rename(rp->name,rp->newname);
+		rename(rp->oldname,rp->name);
 	    }
 	}
     }

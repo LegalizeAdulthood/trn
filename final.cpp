@@ -113,11 +113,11 @@ void finalize(int status)
     }
     for (i = 0; i < MAX_NNTP_ARTICLES; i++) {
 	s = nntp_tmpname(i);
-	UNLINK(s);
+	remove(s);
     }
     cleanup_nntp();
     if (headname)
-	UNLINK(headname);
+	remove(headname);
     if (status < 0) {
 	sigset(SIGILL,SIG_DFL);
 #ifdef HAS_SIGBLOCK

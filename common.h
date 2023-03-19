@@ -73,16 +73,6 @@
 #   define PENDING
 #endif
 
-#define UNLINK(victim) unlink(victim)
-
-#ifdef HAS_RENAME
-#   define RENAME(from,to) rename(from,to)
-#else
-#   define RENAME(from,to) safelink(from,to), UNLINK(from)
-#endif
-
-#define STRSTR(s1,s2) strstr((s1),(s2))
-
 /* Valid substitutions for strings marked with % comment are:
  *	%a	Current article number
  *	%A	Full name of current article (%P/%c/%a)

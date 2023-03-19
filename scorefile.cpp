@@ -736,7 +736,7 @@ int score_match(char *str, int ind)
 	return false;
     }
     /* default case */
-    if ((s3 = STRSTR(str,s1)) != nullptr && (!s2 || STRSTR(s3+strlen(s1),s2)))
+    if ((s3 = strstr(str,s1)) != nullptr && (!s2 || strstr(s3+strlen(s1),s2)))
 	return true;
     return false;
 }
@@ -1208,7 +1208,7 @@ static int sf_open_file(char *name)
     }
     fclose(fp);
     if (temp_name)
-	UNLINK(temp_name);
+	remove(temp_name);
     return i;
 }
 

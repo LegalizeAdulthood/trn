@@ -676,16 +676,16 @@ line that sets %sRNINIT.\n", ini_file, t, t);
     if (first_time) {
 	if (fd_in >= 0) {
 	    sprintf(buf,"%s.old",filename);
-	    UNLINK(buf);
-	    RENAME(filename,buf);
+	    remove(buf);
+	    rename(filename,buf);
 	}
 	first_time = false;
     }
     else
-	UNLINK(filename);
+	remove(filename);
 
     sprintf(buf,"%s.new",filename);
-    RENAME(buf,filename);
+    rename(buf,filename);
 }
 
 char *option_value(int num)

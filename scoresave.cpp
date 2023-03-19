@@ -134,14 +134,14 @@ void sc_sv_savefile()
 	    free(savename);
 	    printf("\nWrite error in temporary save file %s\n",lbuf) FLUSH;
 	    printf("(keeping old saved scores)\n");
-	    UNLINK(lbuf);
+	    remove(lbuf);
 	    waiting = false;
 	    return;
 	}
     }
     fclose(tmpfp);
-    UNLINK(savename);
-    RENAME(lbuf,savename);
+    remove(savename);
+    rename(lbuf,savename);
     waiting = false;
 }
 

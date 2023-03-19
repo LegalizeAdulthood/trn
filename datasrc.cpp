@@ -364,12 +364,12 @@ void close_datasrc(DATASRC *dp)
 {
     if (dp->flags & DF_REMOTE) {
 	if (dp->flags & DF_TMPACTFILE)
-	    UNLINK(dp->extra_name);
+	    remove(dp->extra_name);
 	else
 	    srcfile_end_append(&dp->act_sf, dp->extra_name);
 	if (dp->grpdesc) {
 	    if (dp->flags & DF_TMPGRPDESC)
-		UNLINK(dp->grpdesc);
+		remove(dp->grpdesc);
 	    else
 		srcfile_end_append(&dp->desc_sf, dp->grpdesc);
 	}
@@ -544,7 +544,7 @@ char *find_grpdesc(DATASRC *dp, char *groupname)
 	if (!ret) {
 	    if (dp->flags & DF_TMPGRPDESC) {
 		dp->flags &= ~DF_TMPGRPDESC;
-		UNLINK(dp->grpdesc);
+		remove(dp->grpdesc);
 	    }
 	    free(dp->grpdesc);
 	    dp->grpdesc = nullptr;

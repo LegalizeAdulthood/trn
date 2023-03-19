@@ -374,15 +374,15 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	/* Cleanup all the pieces */
 	for (part = 0; part <= total; part++) {
 	    sprintf(buf, "%s%d", dir, part);
-	    UNLINK(buf);
+	    remove(buf);
 	}
 	sprintf(buf, "%sCT", dir);
-	UNLINK(buf);
+	remove(buf);
     }
 
     if (mcp) {
 	mime_Exec(mcp->command);
-	UNLINK(decode_filename);
+	remove(decode_filename);
 	chdir("..");
     }
 

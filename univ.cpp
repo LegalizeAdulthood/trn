@@ -108,7 +108,7 @@ void univ_close()
 	free((char*)node);
     }
     if (univ_tmp_file) {
-	UNLINK(univ_tmp_file);
+	remove(univ_tmp_file);
 	free(univ_tmp_file);
     }
     safefree(univ_fname);
