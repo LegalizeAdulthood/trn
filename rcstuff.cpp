@@ -1158,7 +1158,6 @@ void cleanup_newsrc(NEWSRC *rp)
 	    np = prev_np;
 	}
 	rp->flags |= RF_RCCHANGED;
-#ifdef DELBOGUS
 reask_bogus:
 	in_char("Delete bogus newsgroups?", 'D', "ny");
 	printcmd();
@@ -1207,7 +1206,6 @@ Type n or SP to leave them at the end in case they return.\n\
 	    settle_down();
 	    goto reask_bogus;
 	}
-#endif /* DELBOGUS */
     }
 #else /* !RELOCATE */
     if (verbose)
