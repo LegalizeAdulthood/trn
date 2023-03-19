@@ -232,9 +232,6 @@
  */
 #define USEFTP  /**/
 
-/* SHORTSCORENAMES has not been tested recently */
-/*#define SHORTSCORENAMES  *//* foo/bar/baz/SCORE instead of foo.bar.baz */
-
 /* if SCOREFILE_CACHE is defined, scorefiles will be kept in memory. */
 #define SCOREFILE_CACHE
 

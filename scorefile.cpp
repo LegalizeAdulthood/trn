@@ -300,22 +300,6 @@ char *sf_get_filename(int level)
 
     strcpy(sf_file,filexp(get_val("SCOREDIR",DEFAULT_SCOREDIR)));
     strcat(sf_file,"/");
-#ifdef SHORTSCORENAMES
-    strcat(sf_file,filexp("%C"));
-
-    s1 = rindex(sf_file,'/');	/* find last slash in filename */
-    if (!level)
-	*s1 = '\0';	/* cut off slash for global */
-    i = level;
-    while (i--) {
-	*s1++ = '/';
-	while (*s1 != '.' && *s1 != '\0') s1++;
-	if (*s1 == '\0' && i > 0)	/* not enough levels exist */
-	    return nullptr;	/* get_file2 wouldn't work either... */
-	*s1 = '\0';
-    }
-    strcat(sf_file,"/SCORE");
-#else /* !SHORTSCORENAMES */
     if (!level) {
 	/* allow environment variable later... */
 	strcat(sf_file,"global");
@@ -332,7 +316,6 @@ char *sf_get_filename(int level)
 	}
 	*s = '\0';	/* cut end of score file */
     }
-#endif /* SHORTSCORENAMES */
     return sf_file;
 }
 
@@ -977,11 +960,7 @@ void sf_append(char *line)
     if (filechar == '"') {	/* do local group */
 /* Note: should probably be changed to use sf_ file functions */
 	strcpy(filebuf,get_val("SCOREDIR",DEFAULT_SCOREDIR));
-#ifdef SHORTSCORENAMES
-	strcat(filebuf,"/%c/SCORE");
-#else
 	strcat(filebuf,"/%C");
-#endif
 	filename = filebuf;
     }
     else if (filechar == '*') {	/* do global scorefile */
@@ -1166,11 +1145,7 @@ void sf_edit_file(char *filespec)
     else if (filechar == '"') {	/* edit local group */
 /* Note: should probably be changed to use sf_ file functions */
 	strcpy(filebuf,get_val("SCOREDIR",DEFAULT_SCOREDIR));
-#ifdef SHORTSCORENAMES
-	strcat(filebuf,"/%c/SCORE");
-#else
 	strcat(filebuf,"/%C");
-#endif
     }
     else if (filechar == '*') {	/* edit global scorefile */
 /* Note: should probably be changed to use sf_ file functions */
