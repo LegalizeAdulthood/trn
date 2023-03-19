@@ -41,9 +41,7 @@
 #include "rt-util.h"
 #include "rt-wumpus.h"
 #include "charsubst.h"
-#ifdef SCAN_ART
 #include "scanart.h"
-#endif
 #ifdef SCORE
 #include "score.h"		/* for sc_lookahead() */
 #endif
@@ -928,9 +926,7 @@ int page_switch()
       case ':':
       case '+':
       case Ctl('v'):		/* verify crypto signature */
-#ifdef SCAN_ART
       case ';':			/* enter article scan mode */
-#endif
 #ifdef SCORE
       case '"':			/* append to local scorefile */
       case '\'':		/* score command */

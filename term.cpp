@@ -27,9 +27,7 @@
 #endif
 #include "scan.h"
 #include "sdisp.h"
-#ifdef SCAN_ART
 #include "scanart.h"
-#endif
 #include "univ.h"
 #include "color.h"
 #include "INTERN.h"

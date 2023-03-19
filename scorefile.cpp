@@ -24,10 +24,8 @@
 #include "rt-util.h"
 #include "mempool.h"
 #include "score.h"		/* shared stuff... */
-#ifdef SCAN_ART
 #include "scanart.h"
 #include "samain.h"		/* for sa_authscored macro */
-#endif
 #include "url.h"
 #include "INTERN.h"
 #include "scorefile.h"

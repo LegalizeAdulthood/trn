@@ -16,20 +16,16 @@
 #include "sdisp.h"
 #include "sorder.h"
 #include "charsubst.h"
-#ifdef SCAN_ART
 #include "samisc.h"
 #include "sadesc.h"
-#endif
 #include "INTERN.h"
 #include "smisc.h"
 
 bool s_eligible(long ent)
 {
     switch (s_cur_type) {
-#ifdef SCAN_ART
       case S_ART:
 	return sa_eligible(ent);
-#endif
       default:
 	printf("s_eligible: current type is bad!\n") FLUSH;
 	return false;
@@ -47,10 +43,8 @@ char *s_get_statchars(long ent, int line)
     if (s_status_cols == 0)
 	return nullstr;
     switch (s_cur_type) {
-#ifdef SCAN_ART
       case S_ART:
 	return sa_get_statchars(ent,line);
-#endif
       default:
 	return nullptr;
     }
@@ -59,10 +53,8 @@ char *s_get_statchars(long ent, int line)
 char *s_get_desc(long ent, int line, bool trunc)
 {
     switch (s_cur_type) {
-#ifdef SCAN_ART
       case S_ART:
 	return sa_get_desc(ent,line,trunc);
-#endif
       default:
 	return nullptr;
     }
@@ -71,10 +63,8 @@ char *s_get_desc(long ent, int line, bool trunc)
 int s_ent_lines(long ent)
 {
     switch (s_cur_type) {
-#ifdef SCAN_ART
       case S_ART:
 	return sa_ent_lines(ent);
-#endif
       default:
 	return 1;
     }

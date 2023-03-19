@@ -5,7 +5,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef SCAN_ART
 #include "list.h"
 #include "hash.h"
 #include "cache.h"
@@ -266,5 +265,3 @@ int sa_ent_lines(long e)
     }
     return num;
 }
-
-#endif

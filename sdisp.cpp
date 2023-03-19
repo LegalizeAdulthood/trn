@@ -14,11 +14,9 @@
 #include "scan.h"
 #include "sorder.h"
 #include "smisc.h"
-#ifdef SCAN_ART
 #include "scanart.h"
 #include "samain.h"
 #include "sadisp.h"
-#endif
 #include "INTERN.h"
 #include "sdisp.h"
 
@@ -56,11 +54,9 @@ void s_refresh_top()
 {
     home_cursor();
     switch (s_cur_type) {
-#ifdef SCAN_ART
       case S_ART:
 	sa_refresh_top();
 	break;
-#endif
     }
     s_ref_top = false;
 }
@@ -70,11 +66,9 @@ void s_refresh_bot()
     /* if bottom bar exists, then it is at least one character high... */
     s_goxy(0,tc_LINES-s_bot_lines);
     switch (s_cur_type) {
-#ifdef SCAN_ART
       case S_ART:
 	sa_refresh_bot();
 	break;
-#endif
     }
     s_ref_bot = false;
 }

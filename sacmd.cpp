@@ -6,7 +6,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef SCAN_ART
 #include "list.h"
 #include "hash.h"
 #include "cache.h"
@@ -696,4 +695,3 @@ long sa_wrap_next_author(long a)
     return a;		/* feature is disabled */
 #endif
 }
-#endif

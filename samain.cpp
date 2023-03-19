@@ -6,7 +6,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef SCAN_ART
 #include "list.h"
 #include "hash.h"
 #include "cache.h"
@@ -225,4 +224,3 @@ long sa_readmarked_elig()
     /* This is possible since the marked articles might not be eligible. */
     return 0;
 }
-#endif

@@ -28,9 +28,7 @@
 #include "term.h"
 #include "sw.h"
 #include "scan.h"
-#ifdef SCAN_ART
 #include "scanart.h"
-#endif
 #ifdef SCORE
 #include "score.h"
 #include "scorefile.h"
@@ -531,7 +529,6 @@ void set_option(int num, char *s)
       case OI_SCAN_VI:
 	s_mode_vi = YES(s);
 	break;
-#ifdef SCAN_ART
       case OI_SCANA_FOLLOW:
 	sa_follow = YES(s);
 	break;
@@ -570,7 +567,6 @@ void set_option(int num, char *s)
       case OI_SCANA_DISPKEYW:
 	sa_mode_desc_keyw = YES(s);
 	break;
-#endif
 #ifdef SCORE
       case OI_SC_VERBOSE:
 	sf_verbose = YES(s);
@@ -911,7 +907,6 @@ char *option_value(int num)
 	return YESorNO(s_itemnum);
       case OI_SCAN_VI:
 	return YESorNO(s_mode_vi);
-#ifdef SCAN_ART
       case OI_SCANA_FOLLOW:
 	return YESorNO(sa_follow);
       case OI_SCANA_FOLD:
@@ -934,7 +929,6 @@ char *option_value(int num)
 	return YESorNO(sa_mode_desc_summary);
       case OI_SCANA_DISPKEYW:
 	return YESorNO(sa_mode_desc_keyw);
-#endif
 #ifdef SCORE
       case OI_SC_VERBOSE:
 	return YESorNO(sf_verbose);

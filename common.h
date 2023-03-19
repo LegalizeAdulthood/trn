@@ -234,8 +234,6 @@
 
 /* some dependencies among options */
 
-# define SCAN_ART
-
 #ifndef SCORE
 # ifdef USE_FILTER
 #  undef USE_FILTER

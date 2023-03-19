@@ -25,10 +25,8 @@
 #ifdef SCORE
 #include "score.h"
 #endif
-#ifdef SCAN_ART
 #include "scan.h"
 #include "scanart.h"
-#endif
 #include "nntpclient.h"
 #include "datasrc.h"
 #include "nntp.h"
@@ -133,10 +131,8 @@ void grow_ng(ART_NUM newlast)
 	ART_NUM tmpart = art;
 	ngptr->toread += (ART_UNREAD)(newlast-lastart);
 	tmpfirst = lastart+1;
-#ifdef SCAN_ART
 	/* Increase the size of article scan arrays. */
 	sa_grow(lastart,newlast);
-#endif
 	do {
 	    lastart++;
 	    article_ptr(lastart)->flags |= AF_EXISTS|AF_UNREAD;

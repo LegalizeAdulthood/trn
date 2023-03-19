@@ -99,7 +99,6 @@ INI_WORDS options_ini[] = {
     { 0, "Novice Delays", yes_or_no },
     { 0, "Old Mthreads Database", yes_or_no },
 
-#ifdef SCAN_ART
     { 0, "*Article Scan Mode Options", 0 },
     { 0, "Follow Threads", yes_or_no },
     { 0, "Fold Subjects", yes_or_no },
@@ -114,7 +113,6 @@ INI_WORDS options_ini[] = {
     { 0, "Display Subject", yes_or_no },
     { 0, "Display Summary", yes_or_no },
     { 0, "Display Keywords", yes_or_no },
-#endif
 
 #ifdef SCORE
     { 0, "*Scoring Options", 0 },

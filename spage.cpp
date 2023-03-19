@@ -15,11 +15,9 @@
 #include "sdisp.h"	/* for display dimension sizes */
 #include "smisc.h"
 #include "sorder.h"
-#ifdef SCAN_ART
 #include "scanart.h"
 #include "samain.h"
 #include "sathread.h"	/* sa_mode_fold */
-#endif
 #include "term.h"
 #include "INTERN.h"
 #include "spage.h"
@@ -98,7 +96,6 @@ bool s_fillpage_backward(long end)
      */
     if (s_ptr_page_line > s_bot_ent)
 	s_ptr_page_line = s_bot_ent;
-#ifdef SCAN_ART
     if (s_cur_type != S_ART)
 	return true;
     /* temporary fix.  Under some conditions ineligible entries will
@@ -111,7 +108,6 @@ bool s_fillpage_backward(long end)
     if (i <= s_bot_ent)
 	return s_fillpage_backward(end);
 /* next time the unavail won't be chosen */
-#endif
     return true;	/* we have a page... */
 }
 
@@ -175,7 +171,6 @@ bool s_fillpage_forward(long start)
     s_top_ent = page_ents[0].entnum;
     if (s_ptr_page_line > s_bot_ent)
 	s_ptr_page_line = s_bot_ent;
-#ifdef SCAN_ART
     if (s_cur_type != S_ART)
 	return true;
     /* temporary fix.  Under some conditions ineligible entries will
@@ -188,7 +183,6 @@ bool s_fillpage_forward(long start)
     if (i <= s_bot_ent)
 	return s_fillpage_forward(start);
     /* next time the unavail won't be chosen */
-#endif
     return true;	/* we have a page... */
 }
 
@@ -270,7 +264,6 @@ bool s_refillpage()
      */
     if (s_ptr_page_line > s_bot_ent)
 	s_ptr_page_line = s_bot_ent;
-#ifdef SCAN_ART
     if (s_cur_type != S_ART)
 	return true;
     /* temporary fix.  Under some conditions ineligible entries will
@@ -282,7 +275,6 @@ bool s_refillpage()
 	    break;
     if (i <= s_bot_ent)
 	return s_refillpage();	/* next time the unavail won't be chosen */
-#endif
     return true;	/* we have a page... */
 }
 
@@ -306,7 +298,6 @@ int s_fillpage()
 	if (!s_fillpage_backward(s_top_ent)) {
 	    /* downgrade eligibility standards */
 	    switch (s_cur_type) {
-#ifdef SCAN_ART
 	      case S_ART:		/* article context */
 		if (sa_mode_zoom) {		/* we were zoomed in */
 		    s_ref_top = true;	/* for "FOLD" display */
@@ -317,7 +308,6 @@ int s_fillpage()
 		    return s_fillpage();
 		}
 		return -1;		/* there just aren't entries! */
-#endif
 	      default:
 		return -1;		/* there just aren't entries! */
 	    } /* switch */
@@ -329,7 +319,6 @@ int s_fillpage()
     for (i = 0; i <= s_bot_ent; i++)
 	if (!s_eligible(page_ents[i].entnum))
 	    return s_fillpage();  /* ineligible won't be chosen again */
-#ifdef SCAN_ART
     if (s_cur_type != S_ART)
 	return 1;
     /* be extra cautious about the article scan pages */
@@ -338,7 +327,6 @@ int s_fillpage()
 	    break;
     if (i <= s_bot_ent)
 	return s_fillpage();	/* next time the unavail won't be chosen */
-#endif
     return 1;	/* I guess everything worked :-) */
 }
 

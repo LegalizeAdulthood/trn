@@ -9,10 +9,8 @@
 #include "util.h"
 #include "scan.h"
 #include "smisc.h"
-#ifdef SCAN_ART
 #include "scanart.h"
 #include "samisc.h"
-#endif
 #include "INTERN.h"
 #include "sorder.h"
 
@@ -21,10 +19,8 @@
 int s_compare(long *a, long *b)
 {
     switch(s_cur_type) {
-#ifdef SCAN_ART
       case S_ART:
 	return sa_compare(*a,*b);
-#endif
       default:
 	return *a - *b;
     }
@@ -35,10 +31,8 @@ int s_compare(long *a, long *b)
 int s_compare(long a, long b)
 {
     switch(s_cur_type) {
-#ifdef SCAN_ART
       case S_ART:
 	return sa_compare(a,b);
-#endif
       default:
 	return a - b;
     }

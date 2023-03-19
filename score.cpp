@@ -26,10 +26,8 @@
 #include "scan.h"
 #include "sorder.h"
 #include "scanart.h"
-#ifdef SCAN_ART
 #include "samain.h"
 #include "samisc.h"
-#endif
 #ifdef USE_FILTER
 #include "filter.h"
 #endif
@@ -72,11 +70,9 @@ void sc_init(bool pend_wait)
 
 /* CONSIDER: (for sc_init callers) is lastart properly set yet? */
     sc_fill_max = absfirst - 1;
-#ifdef SCAN_ART
     if (sa_mode_read_elig || firstart > lastart)
 	sc_fill_read = true;
     else
-#endif
 	sc_fill_read = false;
 
     if (sf_verbose) {
@@ -346,20 +342,14 @@ int sc_percent_scored()
     if (sc_fill_max == lastart)
 	return 100;
     i = firstart;
-#ifdef SCAN_ART
     if (sa_mode_read_elig)
 	i = absfirst;
-#endif
     total = scored = 0;
     for (i = article_first(i); i <= lastart; i = article_next(i)) {
 	if (!article_exists(i))
 	    continue;
-	if (!article_unread(i)
-#ifdef SCAN_ART
-	 && !sa_mode_read_elig
-#endif
-	)
-	    continue;
+        if (!article_unread(i) && !sa_mode_read_elig)
+            continue;
 	total++;
 	if (SCORED(i))
 	    scored++;
@@ -399,13 +389,11 @@ void sc_rescore_arts()
     }
     sc_do_spin = old_spin;
     setspin(SPIN_POP);
-#ifdef SCAN_ART
     if (sa_in) {
 	s_ref_all = true;
 	s_refill = true;
 	s_top_ent = 0;		/* make sure the refill starts from top */
     }
-#endif
 }
 
 /* Wrapper to isolate scorefile functions from the rest of the world */
@@ -443,10 +431,8 @@ void sc_append(char *line)
 	fflush(stdout);
 	sc_rescore_arts();
 	printf("Done.\n") FLUSH;
-#ifdef SCAN_ART
 	if (sa_initialized)
 	    s_top_ent = -1;		/* reset top of page */
-#endif
     }
 }
 
@@ -455,12 +441,10 @@ void sc_rescore()
     sc_rescoring = true; /* in case routines need to know */
     sc_cleanup();        /* get rid of the old */
     sc_init(true);       /* enter the new... (wait for rescore) */
-#ifdef SCAN_ART
     if (sa_initialized) {
 	s_top_ent = -1;	/* reset top of page */
 	s_refill = true;	/* make sure a refill is done */
     }
-#endif
     sc_rescoring = false;
 }
 
@@ -544,14 +528,15 @@ void sc_kill_threshold(int thresh)
 {
     ART_NUM a;
 
-    for (a = article_first(firstart); a <= lastart; a = article_next(a)) {
-	if (article_ptr(a)->score <= thresh && article_unread(a)
-#ifdef SCAN_ART
-	    /* CAA 6/19/93: this is needed for zoom mode */
-	 && sa_basic_elig(sa_artnum_to_ent(a))
-#endif
-	)
-	    oneless_artnum(a);
+    for (a = article_first(firstart); a <= lastart; a = article_next(a))
+    {
+        if (article_ptr(a)->score <= thresh &&
+            article_unread(a)
+            /* CAA 6/19/93: this is needed for zoom mode */
+            && sa_basic_elig(sa_artnum_to_ent(a)))
+        {
+            oneless_artnum(a);
+        }
     }
 }
 #endif /* SCORE */

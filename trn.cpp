@@ -642,9 +642,7 @@ reask_abandon:
 	}
 	UseNewsgroupSelector = false;
 	return ING_ASK;
-#ifdef SCAN_ART
       case ';':
-#endif
       case 'U': case '+':
       case '.': case '=':
       case 'y': case 'Y': case '\t': /* do normal thing */
@@ -664,11 +662,8 @@ reask_abandon:
 		return ING_INPUT;
 	    s = savestr(buf+1);		/* do_newsgroup will free it */
 	}
-	else if (*buf == '+' || *buf == 'U' || *buf == '='
-#ifdef SCAN_ART
-		|| *buf == ';'
-#endif
-	) {
+        else if (*buf == '+' || *buf == 'U' || *buf == '=' || *buf == ';')
+        {
 	    *buf = lastchar; /* restore 0200 if from a macro */
 	    save_typeahead(buf+1, sizeof buf - 1);
 	    s = savestr(buf);

@@ -5,7 +5,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef SCAN_ART
 #include "list.h"
 #include "hash.h"
 #include "cache.h"
@@ -121,4 +120,3 @@ long sa_subj_thread_next(long a)
     }
     return 0L;
 }
-#endif

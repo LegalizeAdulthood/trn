@@ -8,7 +8,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef SCAN_ART
 #include "hash.h"
 #include "cache.h"
 #include "ng.h"		/* variable art, the next article to read. */
@@ -111,4 +110,3 @@ void sa_cleanup()
     clear();		/* should something else clear the screen? */
     sa_initialized = false;		/* goodbye... */
 }
-#endif

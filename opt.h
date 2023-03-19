@@ -101,8 +101,7 @@ EXT char* yesorno[2]
 
 #define OI_TRN_LAST			(OI_OLD_MTHREADS_DATABASE)
 
-#ifdef SCAN_ART
-/* CAA: There are no current plans for scan modes other than SCAN_ART.
+/* CAA: There are no current plans for scan modes other than article.
  *      The general-scan options might as well be displayed in the same
  *      section as the article-scan options.
  */
@@ -120,9 +119,6 @@ EXT char* yesorno[2]
 # define OI_SCANA_DISPSUMMARY		(OI_SCANA_DISPSUBJ+1)
 # define OI_SCANA_DISPKEYW		(OI_SCANA_DISPSUMMARY+1)
 # define OI_SCAN_LAST			(OI_SCANA_DISPKEYW)
-#else /* !SCAN_ART */
-# define OI_SCAN_LAST			(OI_TRN_LAST)
-#endif /* SCAN_ART */
 
 #ifdef SCORE
 # define OI_SC_VERBOSE			(OI_SCAN_LAST+2)

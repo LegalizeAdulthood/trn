@@ -87,11 +87,9 @@ int s_cmdloop()
 	i = s_docmd();
 	if (i == S_NOTFOUND) {	/* command not in common set */
 	    switch (s_cur_type) {
-#ifdef SCAN_ART
 	      case S_ART:
 		i = sa_docmd();
 		break;
-#endif
 	      default:
 		i = 0;	/* just keep looping */
 		break;
@@ -111,11 +109,9 @@ int s_cmdloop()
 void s_lookahead()
 {
     switch (s_cur_type) {
-#ifdef SCAN_ART
       case S_ART:
 	sa_lookahead();
 	break;
-#endif
       default:
 	break;
     }
@@ -232,11 +228,9 @@ int s_docmd()
 	s_ref_all = true;
 	/* any commands typed during help are unused. (might change) */
 	switch (s_cur_type) {
-#ifdef SCAN_ART
 	  case S_ART:
 	    (void)help_scanart();
 	    break;
-#endif
 	  default:
 	    printf("No help available for this mode (yet).\n") FLUSH;
 	    printf("Press any key to continue.\n");

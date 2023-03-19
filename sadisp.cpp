@@ -6,7 +6,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef SCAN_ART
 #include "hash.h"
 #include "cache.h"
 /* for absfirst declaration */
@@ -103,4 +102,3 @@ void sa_set_screen()
     /* (scr_width-1) keeps last character blank. */
     s_desc_cols = (scr_width-1) -s_status_cols -s_cursor_cols -s_itemnum_cols;
 }
-#endif

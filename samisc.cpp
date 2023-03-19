@@ -6,7 +6,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef SCAN_ART
 #include "list.h"
 #include "hash.h"
 #include "cache.h"
@@ -220,4 +219,3 @@ int sa_compare(long a, long b)
 	return -1;
     return 1;
 }
-#endif

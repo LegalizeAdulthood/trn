@@ -18,11 +18,9 @@
 #include "util2.h"
 #include "env.h"		/* get_val */
 #include "scan.h"
-#ifdef SCAN_ART
 #include "scanart.h"
 #include "samain.h"
 #include "samisc.h"
-#endif
 #include "score.h"
 #include "INTERN.h"
 #include "scoresave.h"
@@ -380,19 +378,13 @@ void sc_load_scores()
 
     sc_loaded_count = loaded;
     a = firstart;
-#ifdef SCAN_ART
     if (sa_mode_read_elig)
 	a = absfirst;
-#endif
     total = scored = 0;
     for (a = article_first(a); a <= lastart; a = article_next(a)) {
 	if (!article_exists(a))
 	    continue;
-	if (!article_unread(a)
-#ifdef SCAN_ART
-	 && !sa_mode_read_elig
-#endif
-	)
+        if (!article_unread(a) && !sa_mode_read_elig)
 	    continue;
 	total++;
 	if (SCORED(a))

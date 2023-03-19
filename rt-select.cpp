@@ -242,11 +242,9 @@ static void sel_dogroups()
 	}
 	ThreadedGroup = (use_threads && !(np->flags & NF_UNTHREADED));
 	printf("Entering %s:", ngname);
-#ifdef SCAN_ART
 	if (sel_ret == ';') {
 	    ret = do_newsgroup(savestr(";"));
 	} else
-#endif
 	    ret = do_newsgroup(nullstr);
 	switch (ret) {
 	  case NG_NORM:
@@ -385,11 +383,8 @@ char newsgroup_selector()
     if (mousebar_cnt)
 	clear_rest();
 
-    if (sel_ret=='\r' || sel_ret=='\n' || sel_ret=='Z' || sel_ret=='\t'
-#ifdef SCAN_ART
-     || sel_ret==';'
-#endif
-    ) {
+    if (sel_ret == '\r' || sel_ret == '\n' || sel_ret == 'Z' || sel_ret == '\t' || sel_ret == ';')
+    {
 	NGDATA* np;
 	PUSH_SELECTOR();
 	for (np = first_ng; np; np = np->next) {
@@ -664,11 +659,9 @@ static int univ_read(UNIV_ITEM *ui)
 	}
 	ThreadedGroup = (use_threads && !(np->flags & NF_UNTHREADED));
 	printf("Entering %s:", ngname) FLUSH;
-#ifdef SCAN_ART
 	if (sel_ret == ';')
 	    ret = do_newsgroup(savestr(";"));
 	else
-#endif
 	    ret = do_newsgroup(nullstr);
 	switch (ret) {
 	  case NG_NORM:		/* handle more cases later */
@@ -738,11 +731,8 @@ sel_restart:
     if (mousebar_cnt)
 	clear_rest();
 
-    if (sel_ret=='\r' || sel_ret=='\n' || sel_ret=='\t'
-#ifdef SCAN_ART
-     || sel_ret==';'
-#endif
-     || sel_ret=='Z') {
+    if (sel_ret == '\r' || sel_ret == '\n' || sel_ret == '\t' || sel_ret == ';' || sel_ret == 'Z')
+    {
 	UNIV_ITEM *ui;
 	int i;
 	for (ui = first_univ, i = 0; ui; ui = ui->next, i++) {
@@ -1658,11 +1648,7 @@ static bool sel_perform_change(long cnt, char *obj_type)
     return false;
 }
 
-#ifdef SCAN_ART
 #define SPECIAL_CMD_LETTERS "<+>^$!?&:/\\hDEJLNOPqQRSUXYZ\n\r\t\033;"
-#else
-#define SPECIAL_CMD_LETTERS "<+>^$!?&:/\\hDEJLNOPqQRSUXYZ\n\r\t\033"
-#endif
 
 static char another_command(char_int ch)
 {
@@ -1976,11 +1962,9 @@ q does nothing.\n\n\
 	if (can_home)
 	    erase_line(false);
 	break;
-#ifdef SCAN_ART
       case ';':
 	sel_ret = ';';
 	return DS_QUIT;
-#endif
       case ':':
 	if (sel_page_item_cnt) {
 	    if (sel_mode == SM_ARTICLE)
@@ -2291,11 +2275,9 @@ q does nothing.\n\n\
 	if (another_command(help_ngsel()))
 	    return DS_DOCOMMAND;
         return DS_DISPLAY;
-#ifdef SCAN_ART
       case ';':
 	sel_ret = ';';
 	return DS_QUIT;
-#endif
       default: {
 	SEL_UNION u;
 	int ret;
@@ -2655,11 +2637,9 @@ static int universal_commands(char_int ch)
 	sel_page_univ = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
-#ifdef SCAN_ART
       case ';':
 	sel_ret = ';';
 	return DS_QUIT;
-#endif
       case 'U':
 	sel_cleanup();
 	sel_rereading = !sel_rereading;
