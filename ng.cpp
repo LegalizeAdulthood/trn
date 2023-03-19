@@ -1326,7 +1326,6 @@ run_the_selector:
 	setmail(true);		/* force a mail check */
 #endif
 	return AS_ASK;
-#ifdef INNERSEARCH
       case Ctl('e'):
 	if (art <= lastart) {
 	    if (artsize < 0) {
@@ -1347,7 +1346,6 @@ run_the_selector:
 	    hide_everything = 'b';
 	}
 	return AS_NORM;
-#endif
       case 'B':				/* back up one line */
       case 'b': case Ctl('b'):		/* back up a page */
 	if (art <= lastart) {

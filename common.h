@@ -224,7 +224,6 @@
 			/* terminals such as older Televideos */
 #define TILDENAME	/* allow ~logname expansion */
 #undef MCHASE		/* unmark xrefed articles on m or M */
-#define INNERSEARCH	/* search command 'g' with article */
 #define CATCHUP		/* catchup command at newsgroup level */
 #define NGSEARCH	/* newsgroup pattern matching */
 #define KILLFILES	/* automatic article killer files */
@@ -278,7 +277,6 @@
 
 #ifndef ARTSEARCH
 #   undef KILLFILES
-#   undef INNERSEARCH
 #endif
 
 #ifndef SETUIDGID

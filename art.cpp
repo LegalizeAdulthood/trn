@@ -72,18 +72,14 @@ ART_POS alinebeg;		/* where in file current line began */
 int more_prompt_col;		/* non-zero when the more prompt is indented */
 
 ART_LINE isrchline = 0;		/* last line to display */
-#ifdef INNERSEARCH
 COMPEX gcompex;			/* in article search pattern */
-#endif
 
 bool firstpage;			/* is this the 1st page of article? */
 static bool continuation{};	/* this line/header is being continued */
 
 void art_init()
 {
-#ifdef INNERSEARCH
     init_compex(&gcompex);
-#endif
 }
 
 int do_article()
@@ -518,14 +514,12 @@ int do_article()
 	    vwtary(artline,artpos);	/* remember pos in file */
 	} /* end of line loop */
 
-#ifdef INNERSEARCH
 	innersearch = 0;
 	if (hide_everything) {
 	    *buf = hide_everything;
 	    hide_everything = 0;
 	    goto fake_command;
 	}
-#endif
 	if (linenum >= 32700)	/* did last line have formfeed? */
 	    vwtary(artline-1,-vrdary(artline-1));
 				/* remember by negating pos in file */
@@ -665,7 +659,6 @@ int page_switch()
       case '!':			/* shell escape */
 	escapade();
 	return PS_ASK;
-#ifdef INNERSEARCH
       case Ctl('i'): {
 	ART_LINE i = artline;
 	ART_POS pos;
@@ -789,11 +782,6 @@ int page_switch()
 	}
 	return PS_NORM;
       }
-#else
-      case 'g': case 'G': case Ctl('g'):
-	notincl("g");
-	return PS_ASK;
-#endif
       case '\n':		/* one line down */
       case '\r':
 	special = true;
@@ -818,7 +806,6 @@ int page_switch()
 	    artline = 0;
 	firstpage = (topline < 0);
 	return PS_NORM;
-#ifdef INNERSEARCH
       case Ctl('e'):
 	if (artsize < 0) {
 	    nntp_finishbody(FB_OUTPUT);
@@ -835,7 +822,6 @@ int page_switch()
 	gline = 0;
 	hide_everything = 'b';
 	return PS_NORM;
-#endif
       case 'B':		/* one line up */
 	if (topline < 0)
 	    break;

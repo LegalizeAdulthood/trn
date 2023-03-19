@@ -198,11 +198,7 @@ void decode_switch(char *s)
 	    set_option(OI_CITED_TEXT_STRING, s+1);
 	    break;
 	case 'g':
-#ifdef INNERSEARCH
 	    set_option(OI_GOTO_LINE_NUM, s+1);
-#else
-	    notincl("-g");
-#endif
 	    break;
 	case 'G':
 #ifdef EDIT_DISTANCE
