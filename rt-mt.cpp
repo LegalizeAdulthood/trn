@@ -427,10 +427,8 @@ static int read_articles()
 	article = *art_ptr++ = allocate_article(p_article.num > lastart?
 						0 : p_article.num);
 	article->date = p_article.date;
-#ifndef DBM_XREFS
 	if (olden_days < 2 && !(p_article.flags & HAS_XREFS))
 	    article->xrefs = nullstr;
-#endif
 	article->from = the_author(p_article.author);
 	article->parent = the_article(p_article.parent, count);
 	article->child1 = the_article((WORD)(p_article.child_cnt?1:0), count);

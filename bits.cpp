@@ -33,13 +33,6 @@
 #include "bits.h"
 #include "bits.ih"
 
-#ifdef DBM_XREFS
-#    ifdef NULL
-#	undef NULL
-#    endif
-#    include <dbm.h>
-#endif
-
 static long chase_count = 0;
 
 void bits_init() {
@@ -571,8 +564,6 @@ static bool check_chase(char *ptr, int until_key)
 
 /* run down xref list and mark as read or unread */
 
-#ifndef DBM_XREFS
-/*=-=-=-=*/
 /* The Xref-line-using version */
 static int chase_xref(ART_NUM artnum, int markread)
 {
@@ -702,117 +693,3 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
     return false;
 }
 # endif /* VALIDATE_XREF_SITE */
-
-#else /* DBM_XREFS */
-
-/* The DBM version */
-static int chase_xref(art_num artnum, INT markread)
-{
-    datum lhs, rhs;
-    datum fetch();
-    register char* idp;
-    char* ident_buf;
-    static FILE* hist_file = nullptr;
-    long pos;
-    register char* xartnum;
-    register ART_NUM x;
-    char* xref_buf;
-    char* curxref;
-    char tmpbuf[128];
-
-    if (datasrc->flags & DF_NOXREFS)
-	return;
-
-    if (inbackground())
-	spin(10);
-    else {
-	if (output_chase_phrase) {
-	    if (verbose)
-		fputs("\nChasing xrefs", stdout);
-	    else
-		fputs("\nXrefs", stdout);
-	    termdown(1);
-	    output_chase_phrase = 0;
-	}
-	putchar('.');
-	fflush(stdout);
-    }
-
-    xref_buf = fetchcache(artnum, NGS_LINE, FILL_CACHE);
-    if (!xref_buf || !*xref_buf)
-	return 0;
-
-    xref_buf = safemalloc((MEM_SIZE)BUFSIZ);
-    if (hist_file == nullptr) {	/* Init. file accesses */
-# ifdef DEBUG
-	if (debug) {
-	    printf("chase_xref: opening files\n");
-	    termdown(1);
-	}
-# endif
-	dbminit(filexp(ARTFILE));
-	if ((hist_file = fopen(filexp(ARTFILE), "r")) == nullptr)
-	    return 0;
-    }
-    ident_buf = fetchlines(artnum,MSGID_LINE);	/* get Message-ID */
-# ifdef DEBUG
-    if (debug) {
-	printf ("chase_xref: Message-ID: %s\n", ident_buf);
-	termdown(1);
-    }
-# endif
-    
-    if ((idp = index(ident_buf, '@')) != nullptr) {
-	while (*++idp)			/* make message-id case insensitive */
-	    if (isupper(*idp))
-		*idp = tolower(*idp);
-    }
-    lhs.dptr = ident_buf;		/* look up article by id */
-    lhs.dsize = strlen(lhs.dptr) + 1;
-    rhs = fetch(lhs);			/* fetch the record */
-    if (rhs.dptr == nullptr)		/* if nullptr, nothing there */
-	goto wild_goose;
-    bcopy(rhs.dptr,(char*)&pos, 4);
-    fseek(hist_file, pos, 0);	/* datum returned is position in hist file */
-    fgets(xref_buf, BUFSIZ, hist_file);
-# ifdef DEBUG
-    if (debug) {
-	printf ("Xref from history: %s\n", xref_buf);
-	termdown(1);
-    }
-# endif
-    curxref = cpytill(tmpbuf, xref_buf, '\t') + 1;
-    curxref = cpytill(tmpbuf, curxref, '\t') + 1;
-# ifdef DEBUG
-    if (debug) {
-	printf ("chase_xref: curxref: %s\n", curxref);
-	termdown(1);
-    }
-# endif
-    while (*curxref) {			/* for each newsgroup */
-	curxref = cpytill(tmpbuf,curxref,' ');
-	xartnum = index(tmpbuf,'/');
-	if (!xartnum)			/* probably an old-style Xref */
-	    break;
-	*xartnum++ = '\0';
-	if (!(x = atol(xartnum)))
-	    continue;
-	if (strNE(tmpbuf,ngname)) {	/* not the current newsgroup? */
-	    if (markread) {
-		if (addartnum(datasrc,x,tmpbuf))
-		    goto wild_goose;
-	    }
-# ifdef MCHASE
-	    else
-		subartnum(datasrc,x,tmpbuf);
-# endif
-	}
-	while (*curxref && isspace(*curxref))
-	    curxref++;
-    }
-  wild_goose:
-    free(xref_buf);
-    free(ident_buf);
-    return 0;
-}
-#endif /* DBM_XREFS */

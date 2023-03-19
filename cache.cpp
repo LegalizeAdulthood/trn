@@ -377,11 +377,7 @@ char *get_cached_line(ARTICLE *ap, int which_line, bool no_truncs)
 	else
 	    s = ap->from;
 	break;
-#ifdef DBM_XREFS
-      case NGS_LINE:
-#else
       case XREF_LINE:
-#endif
 	s = ap->xrefs;
 	break;
       case MSGID_LINE:
@@ -578,17 +574,6 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
 	decode_header(s, s, strlen(s));
 	ap->from = s;
 	break;
-#ifdef DBM_XREFS
-      case NGS_LINE:
-	if (ap->xrefs && ap->xrefs != nullstr)
-	    free(ap->xrefs);
-	if (!index(s, ',')) {	/* if no comma, no Xref! */
-	    free(s);
-	    s = nullstr;
-	}
-	ap->xrefs = s;
-	break;
-#else
       case XREF_LINE:
 	if (ap->xrefs && ap->xrefs != nullstr)
 	    free(ap->xrefs);
@@ -600,7 +585,6 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
 	}
 	ap->xrefs = s;
 	break;
-#endif
       case MSGID_LINE:
 	if (ap->msgid)
 	    free(ap->msgid);

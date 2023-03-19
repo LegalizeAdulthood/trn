@@ -77,13 +77,8 @@ EXT HEADTYPE htype[HEAD_LAST];
 #define MAGIC_ON  (HT_MAGICOK|HT_MAGIC|HT_DEFMAGIC)
 #define MAGIC_OFF (HT_MAGICOK)
 
-#ifdef DBM_XREFS
-#define XREF_CACHED 0
-#define NGS_CACHED  HT_CACHED
-#else
 #define XREF_CACHED HT_CACHED
 #define NGS_CACHED  0
-#endif
 #define FILT_CACHED 0
 
 HEADTYPE htype[HEAD_LAST] = {
@@ -145,11 +140,7 @@ EXT long headbuf_size;
 
 #define fetchsubj(artnum,copy) prefetchlines(artnum,SUBJ_LINE,copy)
 #define fetchfrom(artnum,copy) prefetchlines(artnum,FROM_LINE,copy)
-#ifdef DBM_XREFS
-#define fetchxref(artnum,copy) prefetchlines(artnum,NGS_LINE,copy)
-#else
 #define fetchxref(artnum,copy) prefetchlines(artnum,XREF_LINE,copy)
-#endif
 
 void head_init();
 #ifdef DEBUG
