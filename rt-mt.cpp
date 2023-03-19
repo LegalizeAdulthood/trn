@@ -186,27 +186,12 @@ exit:
 }
 
 /* Change a newsgroup name into the name of the thread data file.  We
-** subsitute any '.'s in the group name into '/'s (unless LONG_THREAD_NAMES
-** is defined), prepend the path, and append the '/.thread' or '.th' on to
-** the end.
+** subsitute any '.'s in the group name into '/'s, prepend the path,
+** and append the '/.thread' or '.th' on to the end.
 */
 static char *mt_name(char *group)
 {
-#ifdef LONG_THREAD_NAMES
     sprintf(buf, "%s/%s", datasrc->thread_dir, group);
-#else
-    char* cp;
-
-    cp = strcpy(buf, datasrc->thread_dir) + strlen(datasrc->thread_dir);
-    *cp++ = '/';
-    strcpy(cp, group);
-    while ((cp = index(cp, '.')))
-	*cp = '/';
-    if (datasrc->thread_dir == datasrc->spool_dir)
-	strcat(buf, MT_FILE_NAME);
-    else
-	strcat(buf, ".th");
-#endif
     return buf;
 }
 

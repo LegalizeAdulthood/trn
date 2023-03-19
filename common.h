@@ -226,8 +226,6 @@
 #undef MCHASE		/* unmark xrefed articles on m or M */
 #undef	VALIDATE_XREF_SITE /* are xrefs possibly invalid? */
 
-/*#define LONG_THREAD_NAMES	*//**/
-
 /* USEURL may soon become a Configure script option */
 #define USEURL  /* allow trn to fetch/use WWW URLs */
 
@@ -312,10 +310,6 @@
 /* where to find news files */
 #ifndef NEWSSPOOL		/* % and ~ */
 #   define NEWSSPOOL "/usr/spool/news"
-#endif
-
-#ifndef THREAD_DIR
-#   undef LONG_THREAD_NAMES
 #endif
 
 /* default characters to use in the selection menu */
