@@ -84,11 +84,7 @@ EXT HEADTYPE htype[HEAD_LAST];
 #define XREF_CACHED HT_CACHED
 #define NGS_CACHED  0
 #endif
-#ifdef USE_FILTER
-#define FILT_CACHED HT_CACHED
-#else
 #define FILT_CACHED 0
-#endif
 
 HEADTYPE htype[HEAD_LAST] = {
  /* name             minpos   maxpos  length   flag */

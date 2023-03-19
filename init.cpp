@@ -31,9 +31,6 @@
 #include "backpage.h"
 #include "cache.h"
 #include "bits.h"
-#ifdef USE_FILTER
-#include "filter.h"
-#endif
 #include "head.h"
 #include "help.h"
 #include "mime.h"
@@ -151,9 +148,6 @@ bool initialize(int argc, char *argv[])
     cache_init();
     help_init();
     kfile_init();
-#ifdef USE_FILTER
-    filter_init();
-#endif
     mime_init();
     ng_init();
     ngsrch_init();

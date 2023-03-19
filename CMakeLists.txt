@@ -65,7 +65,6 @@ add_executable(trn
     datasrc.cpp datasrc.h datasrc.ih
     decode.cpp decode.h decode.ih
     edit_dist.cpp edit_dist.h
-    filter.cpp filter.h filter.ih
     final.cpp final.h
     hash.cpp hash.h hash.ih
     head.cpp head.h

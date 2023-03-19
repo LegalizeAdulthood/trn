@@ -28,18 +28,11 @@
 #include "scanart.h"
 #include "samain.h"
 #include "samisc.h"
-#ifdef USE_FILTER
-#include "filter.h"
-#endif
 #include "scorefile.h"
 #include "scoresave.h"
 #include "score-easy.h"		/* interactive menus and such */
 #include "INTERN.h"
 #include "score.h"
-
-#if defined(USE_FILTER) && defined(FILTER_DEBUG)
-FILE* filter_error_file;
-#endif
 
 //bool pend_wait;	/* if true, enter pending mode when scoring... */
 void sc_init(bool pend_wait)
@@ -199,33 +192,9 @@ void sc_set_score(ART_NUM a, int score)
 void sc_score_art_basic(ART_NUM a)
 {
     int score;
-#ifdef USE_FILTER
-    int sc;
-# ifdef FILTER_DEBUG
-    ARTICLE* ap;
-# endif
-#endif
 
     score = 0;
     score += sf_score(a);	/* get a score */
-
-#ifdef USE_FILTER
-
-# ifdef FILTER_DEBUG
-    filter_error_file = fopen("/tmp/score.log", "a");
-# endif
-
-    sc = filter(a);
-    score += sc;
-
-# ifdef FILTER_DEBUG
-    ap = article_find(a);
-    if (ap && ap->refs)
-	fprintf(filter_error_file, "%s: article %ld got score %ld\n",
-		current_ng->rcline, (long)a, (long)sc);
-    fclose(filter_error_file);
-# endif /* FILTER_DEBUG */
-#endif /* USE_FILTER */
 
     if (sc_do_spin)		/* appropriate to spin */
 	spin(20);		/* keep the user amused */

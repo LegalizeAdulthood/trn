@@ -41,9 +41,6 @@ struct ARTICLE
     char* from;
     char* msgid;
     char* xrefs;
-#ifdef USE_FILTER
-    char* refs;
-#endif
     ARTICLE* parent;		/* parent article */
     ARTICLE* child1;		/* first child of a chain */
     ARTICLE* sibling;		/* our next sibling */

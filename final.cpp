@@ -29,9 +29,6 @@
 #include "score.h"
 #include "scoresave.h"
 #endif
-#ifdef USE_FILTER
-#include "filter.h"
-#endif
 #include "INTERN.h"
 #include "final.h"
 #ifdef MSDOS
@@ -101,9 +98,6 @@ void finalize(int status)
 
 #ifdef SCORE
     sc_sv_savefile();	/* save any scores from memory to disk */
-#endif
-#ifdef USE_FILTER
-    filter_cleanup();
 #endif
     update_thread_kfile();
     color_default();

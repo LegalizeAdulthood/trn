@@ -370,10 +370,6 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 	set_cached_line(article, FROM_LINE, savestr(fields[OV_FROM]));
     if (!article->date)
 	article->date = parsedate(fields[OV_DATE]);
-#ifdef USE_FILTER
-    if (!article->refs && fields[OV_REFS])
-	set_cached_line(article, REFS_LINE, *fields[OV_REFS]? savestr(fields[OV_REFS]) : nullstr);
-#endif
     if (!article->bytes && fields[OV_BYTES])
 	set_cached_line(article, BYTES_LINE, fields[OV_BYTES]);
     if (!article->lines && fields[OV_LINES])

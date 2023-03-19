@@ -218,7 +218,6 @@
 
 /* Undefine any of the following features to save both I and D space */
 /* In general, earlier ones are easier to get along without */
-/*#define USE_FILTER	*//* external kill/score filter */
 #define MAILCALL	/* check periodically for mail */
 #define NOFIREWORKS	/* keep whole screen from flashing on certain */
 			/* terminals such as older Televideos */
@@ -233,12 +232,6 @@
 #define USEFTP  /**/
 
 /* some dependencies among options */
-
-#ifndef SCORE
-# ifdef USE_FILTER
-#  undef USE_FILTER
-# endif
-#endif /* SCORE */
 
 #ifndef SETUIDGID
 #   define eaccess access
@@ -566,12 +559,6 @@
 #ifndef KILLTHREADS		/* % and ~ */
 #   define KILLTHREADS "%+/Kill/Threads"
 #endif
-
-#ifdef USE_FILTER
-#  ifndef FILTERPROG
-#    define FILTERPROG "%+/filter"
-#  endif
-#endif /* USE_FILTER */
 
 /* how to cancel an article */
 #ifndef CALL_INEWS

@@ -389,11 +389,6 @@ char *get_cached_line(ARTICLE *ap, int which_line, bool no_truncs)
       case MSGID_LINE:
 	s = ap->msgid;
 	break;
-#ifdef USE_FILTER
-      case REFS_LINE:
-	s = ap->refs;
-	break;
-#endif
       case LINES_LINE: {
 	static char linesbuf[32];
 	sprintf(linesbuf, "%ld", ap->lines);
@@ -613,13 +608,6 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
 	    free(ap->msgid);
 	ap->msgid = s;
 	break;
-#ifdef USE_FILTER
-      case REFS_LINE:
-	if (ap->refs && ap->refs != nullstr)
-	    free(ap->refs);
-	ap->refs = s;
-	break;
-#endif
       case LINES_LINE:
 	ap->lines = atol(s);
 	break;
@@ -973,8 +961,4 @@ void clear_article(ARTICLE *ap)
 	free(ap->msgid);
     if (ap->xrefs && ap->xrefs != nullstr)
 	free(ap->xrefs);
-#ifdef USE_FILTER
-    if (ap->refs && ap->refs != nullstr)
-        free(ap->refs);
-#endif
 }

@@ -51,9 +51,6 @@
 #include "univ.h"
 #include "artstate.h"
 #include "color.h"
-#ifdef USE_FILTER
-#include "filter.h"
-#endif
 #include "INTERN.h"
 #include "ng.h"
 #include "ng.ih"
@@ -160,15 +157,6 @@ int do_newsgroup(char *start_command)
 	kill_unwanted(firstart,"Processing memorized commands...\n\n", true);
     else
 	kill_unwanted(firstart,"Auto-processing...\n\n",true);
-
-#ifdef USE_FILTER
-
-    /* Tell the filter process what newsgroup we're in.  We should
-       do this before sc_init, or filter_nginit will be called twice.
-       (Not destructive, but potentially wasteful.) */
-
-    filter_nginit();
-#endif /* USE_FILTER */
 
 #ifdef SCORE
     sc_init((sa_never_initialized || sa_mode_order == 2)
