@@ -171,10 +171,8 @@ bool initialize(int argc, char *argv[])
 
     writelast();	/* remember last runtime in .rnlast */
 
-#ifdef FINDNEWNG
     if (maxngtodo)			/* patterns on command line? */
 	foundany |= scanactive(true);
-#endif
 
     return foundany;
 }

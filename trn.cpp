@@ -117,12 +117,10 @@ int main(int argc, char *argv[])
 	finalize(0);
     }
 
-#ifdef FINDNEWNG
     if (find_new_groups()) {		/* did we add any new groups? */
 	foundany = true;
 	starthere = nullptr;		/* start ng scan from the top */
     }
-#endif
 
     if (maxngtodo)
 	starthere = nullptr;
@@ -595,17 +593,10 @@ reask_abandon:
 	    abandon_ng(ngptr);
 	return ING_SPECIAL;
       case 'a':
-#ifndef FINDNEWNG
-	notincl("a");
-	return ING_ASK;
-#else
 	/* FALL THROUGH */
-#endif
       case 'o':
       case 'O': {
-#ifdef FINDNEWNG
 	bool doscan = (*buf == 'a');
-#endif
 	if (!finish_command(true)) /* get rest of command */
 	    return ING_INPUT;
 	*msg = '\0';
@@ -615,10 +606,8 @@ reask_abandon:
 	    sw_list(buf+1);
 	    if (minusd)
 		cwd_check();
-#ifdef FINDNEWNG
 	    if (doscan && maxngtodo)
 		scanactive(true);
-#endif
 	    ng_min_toread = *buf == empty_only_char && maxngtodo
 			  ? TR_NONE : TR_ONE;
 	}
