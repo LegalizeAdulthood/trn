@@ -1758,14 +1758,14 @@ static int article_commands(char_int ch)
 	in_char("Selector mode:  Threads, Subjects, Articles?", 'o', "tsa");
 	printcmd();
 	if (*buf == 'h' || *buf == 'H') {
-	    IF(verbose)
+	    if (verbose)
 		fputs("\n\
 Type t or SP to display/select thread groups (threads the group, if needed).\n\
 Type s to display/select subject groups.\n\
 Type a to display/select individual articles.\n\
 Type q to leave things as they are.\n\n\
 ",stdout) FLUSH;
-	    ELSE
+	    else
 		fputs("\n\
 t or SP selects thread groups (threads the group too).\n\
 s selects subject groups.\n\
@@ -1800,7 +1800,7 @@ q does nothing.\n\n\
 		    'q', "dsclpDSCLP");
 	printcmd();
 	if (*buf == 'h' || *buf == 'H') {
-	    IF(verbose) {
+	    if (verbose) {
 		fputs("\n\
 Type d or SP to order the displayed items by date.\n\
 Type s to order the items by subject.\n\
@@ -1821,7 +1821,7 @@ Typing your selection in upper case it will reverse the selected order.\n\
 Type q to leave things as they are.\n\n\
 ",stdout) FLUSH;
 	    }
-	    ELSE
+	    else
 	    {
 		fputs("\n\
 d or SP sorts by date.\n\
@@ -2172,7 +2172,7 @@ static int newsgroup_commands(char_int ch)
 	  case 'c': case 'C':
 	    break;
 	  case 'h': case 'H':
-	    IF(verbose) {
+	    if (verbose) {
 		fputs("\n\
 Type n or SP to order the newsgroups in the .newsrc order.\n\
 Type g to order the items by group name.\n\
@@ -2183,7 +2183,7 @@ Typing your selection in upper case it will reverse the selected order.\n\
 Type q to leave things as they are.\n\n\
 ",stdout) FLUSH;
 	    }
-	    ELSE
+	    else
 	    {
 		fputs("\n\
 n or SP sorts by .newsrc.\n\
@@ -2403,7 +2403,7 @@ static int addgroup_commands(char_int ch)
 	  case 'c': case 'C':
 	    break;
 	  case 'h': case 'H':
-	    IF(verbose) {
+	    if (verbose) {
 		fputs("\n\
 Type n or SP to order the items in their naturally occurring order.\n\
 Type g to order the items by newsgroup name.\n\
@@ -2414,7 +2414,7 @@ Typing your selection in upper case it will reverse the selected order.\n\
 Type q to leave things as they are.\n\n\
 ",stdout) FLUSH;
 	    }
-	    ELSE
+	    else
 	    {
 		fputs("\n\
 n or SP sorts by natural order.\n\
@@ -2702,7 +2702,7 @@ static int universal_commands(char_int ch)
 	in_char("Order by Natural, or score Points?", 'q', "npNP");
 	printcmd();
 	if (*buf == 'h' || *buf == 'H') {
-	    IF(verbose) {
+	    if (verbose) {
 		fputs("\n\
 Type n or SP to order the items in the natural order.\n\
 Type p to order the items by score points.\n\
@@ -2712,7 +2712,7 @@ Typing your selection in upper case it will reverse the selected order.\n\
 Type q to leave things as they are.\n\n\
 ",stdout) FLUSH;
 	    }
-	    ELSE
+	    else
 	    {
 		fputs("\n\
 n or SP sorts by natural order.\n\

@@ -212,16 +212,16 @@ void do_multirc()
 		set_mode('r','f');
 		if (maxngtodo) {
 		    if (retry) {
-			IF(verbose)
+			if (verbose)
 			    printf("\nRestriction %s%s still in effect.\n",
 				   ngtodo[0], maxngtodo > 1 ? ", etc." : nullstr) FLUSH;
-		 	ELSE
+		 	else
 			    fputs("\n(\"Only\" mode.)\n",stdout) FLUSH;
 			termdown(2);
 		    } else {
-			IF(verbose)
+			if (verbose)
 			    fputs("\nNo articles under restriction.", stdout) FLUSH;
-			ELSE
+			else
 			    fputs("\nNo \"only\" articles.",stdout) FLUSH;
 			termdown(2);
 			end_only();	/* release the restriction */
@@ -271,22 +271,22 @@ void do_multirc()
 	    unflush_output();	/* disable any ^O in effect */
 	    if (ngptr == nullptr) {
 		dfltcmd = (retry ? "npq" : "qnp");
-		IF(verbose)
+		if (verbose)
 		    printf("\n****** End of newsgroups -- what next? [%s] ",
 			   dfltcmd);
-		ELSE
+		else
 		    printf("\n**** End -- next? [%s] ", dfltcmd);
 		termdown(1);
 	    } else {
 		ThreadedGroup = (use_threads && !(ngptr->flags&NF_UNTHREADED));
 		dfltcmd = (UseNewsSelector >= 0
 		  && ngptr->toread >= (ART_UNREAD)UseNewsSelector? "+ynq":"ynq");
-		IF(verbose)
+		if (verbose)
 		    printf("\n%s %3ld unread article%s in %s -- read now? [%s] ",
 			   ThreadedGroup? "======" : "******",
 			   (long)ngptr->toread, PLURAL(ngptr->toread),
 			   ngname, dfltcmd);
-		ELSE
+		else
 		    printf("\n%s %3ld in %s -- read? [%s] ",
 			   ThreadedGroup? "====" : "****",
 			   (long)ngptr->toread,ngname,dfltcmd);
@@ -436,9 +436,9 @@ int input_newsgroup()
 	    set_ng(current_ng);
 	    return ING_INPUT;
 	  case NGS_INTR:
-	    IF(verbose)
+	    if (verbose)
 		fputs("\n(Interrupted)\n",stdout) FLUSH;
-	    ELSE
+	    else
 		fputs("\n(Intr)\n",stdout) FLUSH;
 	    termdown(2);
 	    set_ng(current_ng);
@@ -446,10 +446,10 @@ int input_newsgroup()
 	  case NGS_FOUND:
 	    return ING_SPECIAL;
 	  case NGS_NOTFOUND:
-	    IF(verbose)
+	    if (verbose)
 		fputs("\n\nNot found -- use a or g to add newsgroups\n",
 		      stdout) FLUSH;
-	    ELSE
+	    else
 		fputs("\n\nNot found\n",stdout) FLUSH;
 	    termdown(3);
 	    return ING_ASK;
@@ -583,9 +583,9 @@ int input_newsgroup()
 	if (!ngptr)
 	    break;
 reask_abandon:
-	IF(verbose)
+	if (verbose)
 	    in_char("\nAbandon changes to current newsgroup?", 'B', "yn");
-	ELSE
+	else
 	    in_char("\nAbandon?", 'B', "ynh");
 	printcmd();
 	newline();

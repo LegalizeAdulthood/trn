@@ -603,7 +603,7 @@ void select_article(ARTICLE *ap, int auto_flags)
     if ((ap->flags & (AF_EXISTS|AF_UNREAD)) == desired_flags) {
 	if (!(ap->flags & sel_mask)) {
 	    selected_count++;
-	    IF(verbose && echo && gmode != 's')
+	    if (verbose && echo && gmode != 's')
 		fputs("\tSelected",stdout);
 	}
 	ap->flags = (ap->flags & ~AF_DEL) | sel_mask;
@@ -724,7 +724,7 @@ void deselect_article(ARTICLE *ap, int auto_flags)
 	ap->flags &= ~sel_mask;
 	if (!selected_count--)
 	    selected_count = 0;
-	IF(verbose && echo && gmode != 's')
+	if (verbose && echo && gmode != 's')
 	    fputs("\tDeselected",stdout);
     }
     if (sel_rereading && sel_mode == SM_ARTICLE)

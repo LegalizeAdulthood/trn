@@ -723,7 +723,7 @@ int srcfile_open(SRCFILE *sfp, char *filename, char *fetchcmd, char *server)
 	    fputs(buf, fp);
 	    spin(200 * g_net_speed);
 	}
-	ElseIf (!fgets(buf, sizeof buf, fp))
+	else if (!fgets(buf, sizeof buf, fp))
 	    break;
 
 	for (s = buf; *s && !isspace(*s); s++) ;
@@ -928,9 +928,9 @@ int find_close_match()
 	    char* cp = index(ngptrs[0], ' ');
 	    if (cp)
 		*cp = '\0';
-	    IF(verbose)
+	    if (verbose)
 		printf("(I assume you meant %s)\n", ngptrs[0]) FLUSH;
-	    ELSE
+	    else
 		printf("(Using %s)\n", ngptrs[0]) FLUSH;
 	    set_ngname(ngptrs[0]);
 	    if (cp)
@@ -995,7 +995,7 @@ static int get_near_miss()
     char* op = options;
     int i;
 
-    IF(verbose)
+    if (verbose)
 	printf("However, here are some close matches:\n") FLUSH;
     if (ngn > 9)
 	ngn = 9;	/* Since we're using single digits.... */
@@ -1011,9 +1011,9 @@ static int get_near_miss()
     *op++ = 'n';
     *op = '\0';
 
-    IF(verbose)
+    if (verbose)
 	sprintf(promptbuf, "Which of these would you like?");
-    ELSE
+    else
 	sprintf(promptbuf, "Which?");
 reask:
     in_char(promptbuf, 'A', options);
@@ -1029,9 +1029,9 @@ reask:
 	    return 0;
 	case 'h':
 	case 'H':
-	    IF(verbose)
+	    if (verbose)
 		fputs("  You entered an illegal newsgroup name, and these are the nearest possible\n  matches.  If you want one of these, then enter its number.  Otherwise\n  just say 'n'.\n", stdout) FLUSH;
-	    ELSE
+	    else
 		fputs("Illegal newsgroup, enter a number or 'n'.\n", stdout) FLUSH;
 	    goto reask;
 	default:

@@ -299,7 +299,7 @@ bool parseheader(ART_NUM artnum)
 	else
 	    reading_nntp_header = true;
     }
-    ElseIf (!artopen(artnum,(ART_POS)0))
+    else if (!artopen(artnum,(ART_POS)0))
 	return false;
 
     start_header(artnum);

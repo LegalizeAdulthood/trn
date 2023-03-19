@@ -231,9 +231,9 @@ int numnum()
 	for (art = article_first(min); art <= max; art = article_next(art)) {
 	    artp = article_ptr(art);
 	    if (perform(cmdlst,output_level && page_line == 1) < 0) {
-		IF(verbose)
+		if (verbose)
 		    sprintf(msg,"(Interrupted at article %ld)",(long)art);
-		ELSE
+		else
 		    sprintf(msg,"(Intr at %ld)",(long)art);
 		errormsg(msg);
 		if (cmdlst)
@@ -402,7 +402,7 @@ int perform(char *cmdlst, int output_level)
 	    }
 	    else if (!was_read(art)) {
 		mark_as_read(artp);
-		IF(output_level && verbose)
+		if (output_level && verbose)
 		    fputs("\tJunked",stdout);
 	    }
 	    if (sel_rereading)
@@ -442,7 +442,7 @@ int perform(char *cmdlst, int output_level)
 	} else if (ch == 'x') {
 	    if (!was_read(art)) {
 		oneless(artp);
-		IF(output_level && verbose)
+		if (output_level && verbose)
 		    fputs("\tKilled",stdout);
 	    }
 	    if (sel_rereading)
@@ -458,14 +458,14 @@ int perform(char *cmdlst, int output_level)
 		change_auto_flags(artp, AUTO_SEL_1);
 	    else if ((artp->flags & (AF_UNREAD|AF_EXISTS)) == AF_EXISTS) {
 		unmark_as_read(artp);
-		IF(output_level && verbose)
+		if (output_level && verbose)
 		    fputs("\tMarked unread",stdout);
 	    }
 	}
 	else if (ch == 'M') {
 	    delay_unmark(artp);
 	    oneless(artp);
-	    IF(output_level && verbose)
+	    if (output_level && verbose)
 		fputs("\tWill return",stdout);
 	}
 	else if (ch == '=') {
@@ -476,7 +476,7 @@ int perform(char *cmdlst, int output_level)
 	else if (ch == 'C') {
 #ifdef ASYNC_PARSE
 	    int ret = cancel_article();
-	    IF(output_level && verbose)
+	    if (output_level && verbose)
 		printf("\t%sanceled",ret? "Not c" : "C");
 #else
 	    notincl("C");
@@ -507,12 +507,12 @@ int perform(char *cmdlst, int output_level)
 	    /* we now have the command in buf */
 	    if (ch == '!') {
 		escapade();
-		IF(output_level && verbose)
+		if (output_level && verbose)
 		    fputs("\tShell escaped",stdout);
 	    }
 	    else if (ch == '&') {
 		switcheroo();
-		IF(output_level && verbose)
+		if (output_level && verbose)
 		    if (buf[1] && buf[1] != '&')
 			fputs("\tSwitched",stdout);
 	    }
@@ -534,12 +534,12 @@ int perform(char *cmdlst, int output_level)
 	    errormsg(msg);
 	    return -1;
 	}
-	IF(output_level && verbose)
+	if (output_level && verbose)
 	    fflush(stdout);
 	if (one_command)
 	    break;
     }
-    IF(output_level && verbose)
+    if (output_level && verbose)
 	newline();
     if (int_count) {
 	int_count = 0;
@@ -633,7 +633,7 @@ int ng_perform(char *cmdlst, int output_level)
 	    }
 	    break;
 	  case 'u':
-	    IF(output_level && verbose) {
+	    if (output_level && verbose) {
 		printf(unsubto,ngptr->rcline) FLUSH;
 		termdown(1);
 	    }
@@ -648,12 +648,12 @@ int ng_perform(char *cmdlst, int output_level)
 	    errormsg(msg);
 	    return -1;
 	}
-	IF(output_level && verbose)
+	if (output_level && verbose)
 	    fflush(stdout);
 	if (one_command)
 	    break;
     }
-    IF(output_level && verbose)
+    if (output_level && verbose)
 	newline();
     if (int_count) {
 	int_count = 0;
@@ -735,12 +735,12 @@ int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level)
 	    errormsg(msg);
 	    return -1;
 	}
-	IF(output_level && verbose)
+	if (output_level && verbose)
 	    fflush(stdout);
 	if (one_command)
 	    break;
     }
-    IF(output_level && verbose)
+    if (output_level && verbose)
 	newline();
     if (int_count) {
 	int_count = 0;

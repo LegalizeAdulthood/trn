@@ -165,9 +165,9 @@ int do_newsgroup(char *start_command)
 
 #ifdef KILLFILES
     open_kfile(KF_LOCAL);
-    IF(verbose)
+    if (verbose)
 	kill_unwanted(firstart,"Processing memorized commands...\n\n", true);
-    ELSE
+    else
 	kill_unwanted(firstart,"Auto-processing...\n\n",true);
 #endif
 
@@ -307,10 +307,10 @@ int do_newsgroup(char *start_command)
 		fputs("\n\n",stdout) FLUSH;
 		termdown(2);
 	    }
-	    IF(verbose)
+	    if (verbose)
 		printf("End of newsgroup %s.",ngname);
 					/* print pseudo-article */
-	    ELSE
+	    else
 		printf("End of %s",ngname);
 	    if (obj_count) {
 		if (selected_only)
@@ -612,21 +612,21 @@ int art_switch()
 
 	if (!artp) {
 	    u_help_thread = nullstr;
-	    IF(verbose)
+	    if (verbose)
 		u_prompt = "\nUnkill: +select or all?";
-	    ELSE
+	    else
 		u_prompt = "\nUnkill?";
 	    dfltcmd = "+anq";
 	}
 	else {
-	    IF(verbose) {
+	    if (verbose) {
 		u_prompt = "\n\
 Unkill: +select, thread, subthread, or all?";
 		u_help_thread = "\
 Type t or SP to mark this thread's articles as unread.\n\
 Type s to mark the current article and its descendants as unread.\n";
 	    }
-	    ELSE
+	    else
 	    {
 		u_prompt = "\nUnkill?";
 		u_help_thread = "\
@@ -640,7 +640,7 @@ s to mark subthread unread.\n";
 	printcmd();
 	newline();
 	if (*buf == 'h') {
-	    IF(verbose)
+	    if (verbose)
 	    {
 		fputs("\
 Type + to enter select thread mode using all the already-read articles.\n\
@@ -653,7 +653,7 @@ Type n or q to change nothing.\n\
 ",stdout) FLUSH;
 		termdown(6);
 	    }
-	    ELSE
+	    else
 	    {
 		fputs("\
 + to select threads from the unread.\n\
@@ -702,10 +702,10 @@ n or q to change nothing.\n\
 	if (artp && ThreadedGroup) {
 	    if (!find_parent(*buf == '{')) {
 		char* cp = (*buf=='['?"parent":"root");
-		IF(verbose)
+		if (verbose)
 		    printf("\nThere is no %s article prior to this one.\n",
 			cp) FLUSH;
-		ELSE
+		else
 		    printf("\nNo prior %s.\n",cp) FLUSH;
 		termdown(2);
 		return AS_ASK;
@@ -719,16 +719,16 @@ n or q to change nothing.\n\
 	}
 not_threaded:
 	if (!artp) {
-	    IF(verbose)
+	    if (verbose)
 		fputs("\nYou're at the end of the group.\n",stdout) FLUSH;
-	    ELSE
+	    else
 		fputs("\nEnd of group.\n",stdout) FLUSH;
 	    termdown(2);
 	    return AS_ASK;
 	}
-	IF(verbose)
+	if (verbose)
 	    fputs("\nThis group is not threaded.\n",stdout) FLUSH;
-	ELSE
+	else
 	    fputs("\nUnthreaded group.\n",stdout) FLUSH;
 	termdown(2);
 	return AS_ASK;
@@ -736,10 +736,10 @@ not_threaded:
       case '}':			/* goto thread's leaf article */
 	if (artp && ThreadedGroup) {
 	    if (!find_leaf(*buf == '}')) {
-		IF(verbose)
+		if (verbose)
 		    fputs("\n\
 This is the last leaf in this tree.\n",stdout) FLUSH;
-		ELSE
+		else
 		    fputs("\nLast leaf.\n",stdout) FLUSH;
 		termdown(2);
 		return AS_ASK;
@@ -757,9 +757,9 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	if (artp && ThreadedGroup) {
 	    if (!(*buf == '(' ? find_prev_sib() : find_next_sib())) {
 		char* cp = (*buf == '(' ? "previous" : "next");
-		IF(verbose)
+		if (verbose)
 		    printf("\nThis article has no %s sibling.\n",cp) FLUSH;
-		ELSE
+		else
 		    printf("\nNo %s sibling.\n",cp) FLUSH;
 		termdown(2);
 		return AS_ASK;
@@ -873,11 +873,11 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	dec_art(false,true);
       check_dec_art:
 	if (art < absfirst) {
-	    IF(verbose)
+	    if (verbose)
 		printf("\nThere are no%s%s articles prior to this one.\n",
 			*buf=='P'?nullstr:" unread",
 			selected_only?" selected":nullstr) FLUSH;
-	    ELSE
+	    else
 		printf("\nNo previous%s%s articles\n",
 			*buf=='P'?nullstr:" unread",
 			selected_only?" selected":nullstr) FLUSH;
@@ -1095,9 +1095,9 @@ normal_search:
 	    art = curr_art;
 	    return AS_INP;
 	  case SRCH_INTR:
-	    IF(verbose)
+	    if (verbose)
 		printf("\n(Interrupted at article %ld)\n",(long)art) FLUSH;
-	    ELSE
+	    else
 		printf("\n(Intr at %ld)\n",(long)art) FLUSH;
 	    termdown(2);
 	    art = curr_art;	    /* restore to current article */
@@ -1212,9 +1212,9 @@ normal_search:
 	    return AS_INP;	/* if rubbed out, try something else */
 	return AS_ASK;
       case '#':
-	IF(verbose)
+	if (verbose)
 	    printf("\nThe last article is %ld.\n",(long)lastart) FLUSH;
-	ELSE
+	else
 	    printf("\n%ld\n",(long)lastart) FLUSH;
 	termdown(2);
 	return AS_ASK;
@@ -1571,22 +1571,22 @@ char ask_catchup()
     if (!use_one_line)
 	newline();
 reask_catchup:
-    IF(verbose)
+    if (verbose)
 	sprintf(buf,"Mark everything in %s as read?",ngname);
-    ELSE
+    else
 	sprintf(buf,"Catchup %s?",ngname);
     in_char(buf,'C',"yn#h");
     printcmd();
     if ((ch = *buf) == 'h' || ch == 'H') {
 	use_one_line = false;
-	IF(verbose)
+	if (verbose)
 	    fputs("\n\
 Type y or SP to mark all articles as read.\n\
 Type n to leave articles marked as they are.\n\
 The # means enter a number to mark all but the last # articles as read.\n\
 Type u to mark everything read and unsubscribe.\n\n\
 ",stdout) FLUSH;
-	ELSE
+	else
 	    fputs("\n\
 y or SP to mark all read.\n\
 n to forget it.\n\
@@ -1768,7 +1768,7 @@ reask_memorize:
     }
     if (ch == 'h' || ch == 'H') {
 	use_one_line = false;
-	IF(verbose) {
+	if (verbose) {
 	    printf("\n\
 Type + or SP to auto-select this %s (i.e. includes future articles).\n\
 Type S to auto-select the current subject.\n\
@@ -1789,7 +1789,7 @@ Type g to toggle global memorization.\n") FLUSH;
 		termdown(2);
 	    }
 	}
-	ELSE
+	else
 	{
 	    printf("\n\
 + or SP auto-selects this %s.\n\

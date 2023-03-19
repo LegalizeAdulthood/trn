@@ -295,11 +295,6 @@
 #   define eaccess access
 #endif
 
-#	define IF(c) if (c)
-#	define ELSE else
-
-#define ElseIf else if
-
 #ifdef DEBUG
 #   define assert(ex) {if (!(ex)){fprintf(stderr,"Assertion failed: file %s, line %d\n", __FILE__, __LINE__);sig_catcher(0);}}
 #else

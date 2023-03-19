@@ -69,7 +69,7 @@ bool ov_init()
 		if (nntp_at_list_end(buf))
 		    break;
 	    }
-	    ElseIf (!fgets(buf, sizeof buf, tmpfp)) {
+	    else if (!fgets(buf, sizeof buf, tmpfp)) {
 		fclose(tmpfp);
 		break;
 	    }
@@ -182,14 +182,14 @@ beginning:
 	    success = false;
 	    goto exit;
 	}
-	IF(verbose && !first_subject && !datasrc->ov_opened)
+	if (verbose && !first_subject && !datasrc->ov_opened)
 	    printf("\nGetting overview file."), fflush(stdout);
     }
-    ElseIf (datasrc->ov_opened < started_request - 60*60) {
+    else if (datasrc->ov_opened < started_request - 60*60) {
 	ov_close();
 	if ((datasrc->ov_in = fopen(ov_name(ngname), "r")) == nullptr)
 	    return false;
-	IF(verbose && !first_subject)
+	if (verbose && !first_subject)
 	    printf("\nReading overview file."), fflush(stdout);
     }
     if (!datasrc->ov_opened) {
@@ -212,7 +212,7 @@ beginning:
 		break;
 	    line_cnt++;
 	}
-	ElseIf (!(line = get_a_line(last_buf,last_buflen,last_buf!=buf,datasrc->ov_in)))
+	else if (!(line = get_a_line(last_buf,last_buflen,last_buf!=buf,datasrc->ov_in)))
 	    break;
 
 	last_buf = line;

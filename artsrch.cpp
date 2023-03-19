@@ -201,9 +201,9 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 		mark_as_read(article_ptr(art));	/* this article needs to die */
 	    }
 	    if (!*h) {
-		IF(verbose)
+		if (verbose)
 		    sprintf(msg, "Current article has no %s.", finding_str);
-		ELSE
+	        else
 		    sprintf(msg, "Null %s.", finding_str);
 		errormsg(msg);
 		ret = SRCH_ABORT;

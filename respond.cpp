@@ -61,9 +61,9 @@ int save_article()
     clear_artbuf();
     savefrom = (cmd == 'w' || cmd == 'e')? htype[PAST_HEADER].minpos : 0;
     if (artopen(art,savefrom) == nullptr) {
-	IF(verbose)
+	if (verbose)
 	    fputs("\nCan't save an empty article.\n",stdout) FLUSH;
-	ELSE
+	else
 	    fputs(nullart,stdout) FLUSH;
 	termdown(2);
 	return SAVE_DONE;
@@ -257,10 +257,10 @@ int save_article()
 
 	s = buf+1;		/* skip s or S */
 	if (*s == '-') {	/* if they are confused, skip - also */
-	    IF(verbose)
+	    if (verbose)
 		fputs("Warning: '-' ignored.  This isn't readnews.\n",stdout)
 		  FLUSH;
-	    ELSE
+	    else
 		fputs("'-' ignored.\n",stdout) FLUSH;
 	    termdown(1);
 	    s++;
@@ -314,13 +314,13 @@ int save_article()
 		newline();
 		printcmd();
 		if (*buf == 'h') {
-		    IF(verbose)
+		    if (verbose)
 			printf("\n\
 Type y to create %s as a mailbox.\n\
 Type n to create it as a normal file.\n\
 Type q to abort the save.\n\
 ",s) FLUSH;
-		    ELSE
+		    else
 			fputs("\n\
 y to create mailbox.\n\
 n to create normal file.\n\
@@ -429,9 +429,9 @@ int view_article()
     clear_artbuf();
     savefrom = htype[PAST_HEADER].minpos;
     if (artopen(art,savefrom) == nullptr) {
-	IF(verbose)
+	if (verbose)
 	    fputs("\nNo attatchments on an empty article.\n",stdout) FLUSH;
-	ELSE
+	else
 	    fputs(nullart,stdout) FLUSH;
 	termdown(2);
 	return SAVE_DONE;
@@ -492,9 +492,9 @@ int cancel_article()
     int r = -1;
 
     if (artopen(art,(ART_POS)0) == nullptr) {
-	IF(verbose)
+	if (verbose)
 	    fputs("\nCan't cancel an empty article.\n",stdout) FLUSH;
-	ELSE
+	else
 	    fputs(nullart,stdout) FLUSH;
 	termdown(2);
 	return r;
@@ -517,9 +517,9 @@ int cancel_article()
 	    termdown(3);
 	}
 #endif
-	IF(verbose)
+	if (verbose)
 	    fputs("\nYou can't cancel someone else's article\n",stdout) FLUSH;
-	ELSE
+	else
 	    fputs("\nNot your article\n",stdout) FLUSH;
 	termdown(2);
     }
@@ -557,9 +557,9 @@ int supersede_article()		/* Supersedes: */
     bool incl_body = (*buf == 'Z');
 
     if (artopen(art,(ART_POS)0) == nullptr) {
-	IF(verbose)
+	if (verbose)
 	    fputs("\nCan't supersede an empty article.\n",stdout) FLUSH;
-	ELSE
+	else
 	    fputs(nullart,stdout) FLUSH;
 	termdown(2);
 	return r;
@@ -582,9 +582,9 @@ int supersede_article()		/* Supersedes: */
 	    termdown(3);
 	}
 #endif
-	IF(verbose)
+	if (verbose)
 	    fputs("\nYou can't supersede someone else's article\n",stdout) FLUSH;
-	ELSE
+	else
 	    fputs("\nNot your article\n",stdout) FLUSH;
 	termdown(2);
     }
@@ -667,10 +667,10 @@ void reply()
     interp(hbuf, sizeof hbuf, get_val("MAILHEADER",MAILHEADER));
     fputs(hbuf,tmpfp);
     if (!in_string(maildoer,"%h", true)) {
-	IF(verbose)
+	if (verbose)
 	    printf("\n%s\n(Above lines saved in file %s)\n",buf,headname)
 	      FLUSH;
-	ELSE
+	else
 	    printf("\n%s\n(Header in %s)\n",buf,headname) FLUSH;
 	termdown(3);
     }
@@ -766,10 +766,10 @@ void forward()
     }
 #endif
     if (!in_string(maildoer,"%h", true)) {
-	IF(verbose)
+	if (verbose)
 	    printf("\n%s\n(Above lines saved in file %s)\n",hbuf,headname)
 	      FLUSH;
-	ELSE
+	else
 	    printf("\n%s\n(Header in %s)\n",hbuf,headname) FLUSH;
 	termdown(3);
     }

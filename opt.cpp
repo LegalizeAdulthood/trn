@@ -1226,13 +1226,13 @@ void cwd_check()
 	    else
 		strcpy(tmpbuf,cmd_buf);
 	    chdir(tmpbuf);
-	    IF(verbose)
+	    if (verbose)
 		printf("\
 Cannot make directory %s--\n\
 	articles will be saved to %s\n\
 \n\
 ",cwd,tmpbuf) FLUSH;
-	    ELSE
+	    else
 		printf("\
 Can't make %s--\n\
 	using %s\n\
@@ -1243,12 +1243,12 @@ Can't make %s--\n\
     free(cwd);
     trn_getwd(tmpbuf, sizeof(tmpbuf));
     if (eaccess(tmpbuf,2)) {
-	IF(verbose)
+	if (verbose)
 	    printf("\
 Current directory %s is not writeable--\n\
 	articles will be saved to home directory\n\n\
 ",tmpbuf) FLUSH;
-	ELSE
+	else
 	    printf("%s not writeable--using ~\n\n",tmpbuf) FLUSH;
 	strcpy(tmpbuf,g_home_dir);
     }

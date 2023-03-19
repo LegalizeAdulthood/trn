@@ -232,10 +232,10 @@ Signal_t sig_catcher(int signo)
 #ifdef SIGHUP
     if (signo != SIGHUP) {
 #endif
-	IF(verbose)
+	if (verbose)
 	    printf("\nCaught %s%s--.newsrc restored\n",
 		signo ? "a SIG" : "an internal error", signame[signo]);
-	ELSE
+	else
 	    printf("\nSignal %d--bye bye\n",signo);
 #ifdef SIGHUP
     }

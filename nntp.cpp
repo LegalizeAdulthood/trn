@@ -267,9 +267,9 @@ int nntp_finishbody(int bmode)
     }
     else
     if (bmode == FB_OUTPUT) {
-	IF(verbose)
+	if (verbose)
 	    printf("Receiving the rest of the article..."), fflush(stdout);
-	ELSE
+	else
 	    printf("Receiving..."), fflush(stdout);
     }
     if (body_end != body_pos)

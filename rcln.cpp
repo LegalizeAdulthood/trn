@@ -31,10 +31,10 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
     
     if (leave_count) {
 	if (output_level) {
-	    IF(verbose)
+	    if (verbose)
 		printf("\nMarking all but %d articles in %s as read.\n",
 		       leave_count,np->rcline) FLUSH;
-	    ELSE
+	    else
 		printf("\nAll but %d marked as read.\n",leave_count) FLUSH;
 	}
 	checkexpired(np, getngsize(np) - leave_count + 1);
@@ -42,9 +42,9 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
     }
     else {
 	if (output_level) {
-	    IF(verbose)
+	    if (verbose)
 		printf("\nMarking %s as all read.\n",np->rcline) FLUSH;
-	    ELSE
+	    else
 		fputs("\nMarked read\n",stdout) FLUSH;
 	}
 	sprintf(tmpbuf,"%s: 1-%ld", np->rcline,(long)getngsize(np));

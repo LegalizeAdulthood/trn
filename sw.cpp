@@ -369,9 +369,9 @@ void decode_switch(char *s)
 		       upordown && *s? s : YESorNO(upordown));
 	    break;
 	default:
-	    IF(verbose)
+	    if (verbose)
 		printf("\nIgnoring unrecognized switch: -%c\n", *s) FLUSH;
-	    ELSE
+	    else
 		printf("\nIgnoring -%c\n", *s) FLUSH;
 	    termdown(2);
 	    break;

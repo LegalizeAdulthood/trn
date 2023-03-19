@@ -479,9 +479,9 @@ void entire_tree(ARTICLE* ap)
     int num;
 
     if (!ap) {
-	IF (verbose)
+	if (verbose)
 	    fputs("\nNo article tree to display.\n", stdout) FLUSH;
-	ELSE
+	else
 	    fputs("\nNo tree.\n", stdout) FLUSH;
 	termdown(2);
 	return;

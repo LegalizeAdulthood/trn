@@ -1143,9 +1143,9 @@ int get_anything()
 reask_anything:
     unflush_output();			/* disable any ^O in effect */
     color_object(COLOR_MORE, true);
-    IF(verbose)
+    if (verbose)
 	fputs("[Type space to continue] ",stdout);
-    ELSE
+    else
 	fputs("[MORE] ",stdout);
     color_pop();	/* of COLOR_MORE */
     fflush(stdout);
@@ -1161,9 +1161,9 @@ reask_anything:
 	goto reask_anything;		/* give them a prompt again */
     }
     if (*tmpbuf == 'h') {
-	IF(verbose)
+	if (verbose)
 	    fputs("\nType q to quit or space to continue.\n",stdout) FLUSH;
-	ELSE
+	else
 	    fputs("\nq to quit, space to continue.\n",stdout) FLUSH;
 	termdown(2);
 	goto reask_anything;
@@ -1192,9 +1192,9 @@ int pause_getcmd()
 
     unflush_output();			/* disable any ^O in effect */
     color_object(COLOR_CMD, true);
-    IF(verbose)
+    if (verbose)
 	fputs("[Type space or a command] ",stdout);
-    ELSE
+    else
 	fputs("[CMD] ",stdout);
     color_pop();	/* of COLOR_CMD */
     fflush(stdout);

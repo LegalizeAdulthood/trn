@@ -101,11 +101,11 @@ void kfile_init()
 
 static void mention(char *str)
 {
-    IF(verbose) {
+    if (verbose) {
 	color_string(COLOR_NOTICE,str);
 	newline();
     }
-    ELSE
+    else
 	putchar('.');
     fflush(stdout);
 }
@@ -198,10 +198,10 @@ int do_kfile(FILE *kfp, int entering)
 	    case SRCH_ABORT:
 		continue;
 	    case SRCH_INTR:
-		IF(verbose)
+		if (verbose)
 		    printf("\n(Interrupted at article %ld)\n",(long)art)
 		      FLUSH;
-		ELSE
+		else
 		    printf("\n(Intr at %ld)\n",(long)art) FLUSH;
 		termdown(2);
 		return -1;
@@ -340,9 +340,9 @@ void kill_unwanted(ART_NUM starting, char *message, int entering)
 	    intr = do_kfile(globkfp,entering);
 	newline();
 	if (entering && kill_mentioned && novice_delays) {
-	    IF(verbose)
+	    if (verbose)
 		get_anything();
-	    ELSE
+	    else
 		pad(just_a_sec);
 	}
 	if (anytokill)			/* if there was anything to kill */
@@ -694,9 +694,9 @@ void kf_append(char *cmd, bool local)
     strcpy(cmd_buf, filexp(local? get_val("KILLLOCAL",killlocal)
 				: get_val("KILLGLOBAL",killglobal)));
     if (makedir(cmd_buf,MD_FILE) == 0) {
-	IF(verbose)
+	if (verbose)
 	    printf("\nDepositing command in %s...",cmd_buf);
-	ELSE
+	else
 	    printf("\n--> %s...",cmd_buf);
 	fflush(stdout);
 	if (novice_delays)

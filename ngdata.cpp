@@ -77,17 +77,17 @@ int access_ng()
     {
 	if (eaccess(ngdir,5)) {		/* directory read protected? */
 	    if (eaccess(ngdir,0)) {
-		IF(verbose)
+		if (verbose)
 		    printf("\nNewsgroup %s does not have a spool directory!\n",
 			   ngname) FLUSH;
-		ELSE
+		else
 		    printf("\nNo spool for %s!\n",ngname) FLUSH;
 		termdown(2);
 	    } else {
-		IF(verbose)
+		if (verbose)
 		    printf("\nNewsgroup %s is not currently accessible.\n",
 			   ngname) FLUSH;
-		ELSE
+		else
 		    printf("\n%s not readable.\n",ngname) FLUSH;
 		termdown(2);
 	    }
@@ -148,12 +148,12 @@ void grow_ng(ART_NUM newlast)
 	sc_fill_scorelist(tmpfirst,newlast);
 #endif
 #ifdef KILLFILES
-	IF(verbose)
+	if (verbose)
 	    sprintf(buf,
 		"%ld more article%s arrived -- processing memorized commands...\n\n",
 		(long)(lastart - tmpfirst + 1),
 		(lastart > tmpfirst ? "s have" : " has" ) );
-	ELSE			/* my, my, how clever we are */
+	else			/* my, my, how clever we are */
 	    strcpy(buf, "More news -- auto-processing...\n\n");
 	termdown(2);
 	if (kf_state & KFS_NORMAL_LINES) {
@@ -237,9 +237,9 @@ void ng_skip()
 	ART_NUM artnum;
 
 	clear();
-	IF(verbose)
+	if (verbose)
 	    fputs("Skipping unavailable article\n",stdout);
-	ELSE
+	else
 	    fputs("Skipping\n",stdout);
 	termdown(1);
 	if (novice_delays) {
@@ -266,10 +266,10 @@ void ng_skip()
     {
 	if (errno != ENOENT) {	/* has it not been deleted? */
 	    clear();
-	    IF(verbose)
+	    if (verbose)
 		printf("\n(Article %ld exists but is unreadable.)\n",(long)art)
 			FLUSH;
-	    ELSE
+	    else
 		printf("\n(%ld unreadable.)\n",(long)art) FLUSH;
 	    termdown(2);
 	    if (novice_delays) {

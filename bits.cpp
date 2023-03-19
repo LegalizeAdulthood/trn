@@ -588,9 +588,9 @@ static int chase_xref(ART_NUM artnum, int markread)
 	spin(10);
     else {
 	if (output_chase_phrase) {
-	    IF(verbose)
+	    if (verbose)
 		fputs("\nChasing xrefs", stdout);
-	    ELSE
+	    else
 		fputs("\nXrefs", stdout);
 	    termdown(1);
 	    output_chase_phrase = false;
@@ -727,9 +727,9 @@ static int chase_xref(art_num artnum, INT markread)
 	spin(10);
     else {
 	if (output_chase_phrase) {
-	    IF(verbose)
+	    if (verbose)
 		fputs("\nChasing xrefs", stdout);
-	    ELSE
+	    else
 		fputs("\nXrefs", stdout);
 	    termdown(1);
 	    output_chase_phrase = 0;
