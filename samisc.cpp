@@ -220,4 +220,4 @@ int sa_compare(long a, long b)
 	return -1;
     return 1;
 }
-#endif /* SCAN */
+#endif

@@ -22,9 +22,7 @@
 #include "rt-util.h"
 #include "final.h"
 #include "parsedate.h"
-#ifdef SCAN
 #include "mempool.h"
-#endif
 #include "INTERN.h"
 #include "head.h"
 
@@ -385,7 +383,6 @@ char *fetchlines(ART_NUM artnum, int which_line)
 }
 
 /* (strn) like fetchlines, but for memory pools */
-#ifdef SCAN
 /* ART_NUM artnum   article to get line from */
 /* int which_line   type of line desired */
 /* int pool         which memory pool to use */
@@ -422,7 +419,6 @@ char *mp_fetchlines(ART_NUM artnum, int which_line, int pool)
     safecpy(s,t,size);
     return s;
 }
-#endif
 
 /* prefetch a header line from one or more articles */
 

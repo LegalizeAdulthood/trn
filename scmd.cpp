@@ -7,7 +7,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef SCAN
 #include "hash.h"
 #include "cache.h"
 #include "bits.h"
@@ -471,4 +470,3 @@ void s_jumpnum(char_int firstchar)
     }
     s_ptr_page_line = value-1;
 }
-#endif /* SCAN */

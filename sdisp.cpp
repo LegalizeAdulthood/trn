@@ -6,7 +6,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef SCAN
 #include "final.h"	/* assert() */
 #include "hash.h"
 #include "cache.h"
@@ -254,4 +253,3 @@ void s_resize_win()
 #endif
     ;	/* don't have an empty function */
 }
-#endif /* SCAN */

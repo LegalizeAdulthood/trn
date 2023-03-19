@@ -5,7 +5,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef SCAN
 #include "list.h"
 #include "hash.h"
 #include "cache.h"
@@ -419,4 +418,3 @@ void s_go_prev_page()
     s_ref_status = s_ref_desc = 0;	/* refresh from top */
     s_ptr_page_line = 0;	/* top of page */
 }
-#endif /* SCAN */

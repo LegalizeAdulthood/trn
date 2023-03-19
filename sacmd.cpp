@@ -696,4 +696,4 @@ long sa_wrap_next_author(long a)
     return a;		/* feature is disabled */
 #endif
 }
-#endif /* SCAN */
+#endif

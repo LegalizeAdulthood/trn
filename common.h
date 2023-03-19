@@ -234,13 +234,7 @@
 
 /* some dependencies among options */
 
-#ifdef SCAN
 # define SCAN_ART
-#else
-# ifdef SCAN_ART
-#  undef SCAN_ART
-# endif
-#endif /* SCAN */
 
 #ifndef SCORE
 # ifdef USE_FILTER

@@ -6,7 +6,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef SCAN
 #include "util.h"
 #include "scan.h"
 #include "smisc.h"
@@ -238,4 +237,3 @@ long s_last()
 	return 0;
     return s_ent_sort[s_ent_sorted_max];
 }
-#endif /* SCAN */

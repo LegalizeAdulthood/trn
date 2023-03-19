@@ -16,9 +16,7 @@ enum
     UHELP_ARTSEL = 7,
     UHELP_MULTIRC = 8,
     UHELP_OPTIONS = 9,
-#ifdef SCAN
     UHELP_SCANART = 10,
-#endif
     UHELP_UNIV = 11
 };
 
@@ -32,8 +30,6 @@ int help_subs();
 int help_artsel();
 int help_multirc();
 int help_options();
-#ifdef SCAN
 int help_scanart();
-#endif
 int help_univ();
 int univ_key_help(int);

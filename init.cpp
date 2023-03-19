@@ -45,9 +45,7 @@
 #include "rthread.h"
 #include "ng.h"
 #include "decode.h"
-#ifdef SCAN
 #include "scan.h"
-#endif
 #ifdef SCORE
 #include "score.h"
 #endif

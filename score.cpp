@@ -23,14 +23,12 @@
 #include "term.h"		/* input_pending() */
 #include "trn.h"		/* ngname */
 #include "util.h"		/* several */
-#ifdef SCAN
 #include "scan.h"
 #include "sorder.h"
 #include "scanart.h"
 #ifdef SCAN_ART
 #include "samain.h"
 #include "samisc.h"
-#endif
 #endif
 #ifdef USE_FILTER
 #include "filter.h"
@@ -197,9 +195,7 @@ void sc_set_score(ART_NUM a, int score)
     ap = article_ptr(a);
     ap->score = score;	/* update the score */
     ap->scoreflags |= SFLAG_SCORED;
-#ifdef SCAN
     s_order_changed = true;	/* resort */
-#endif
 }
 
 /* Hopefully people will write more scoring routines later */

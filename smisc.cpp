@@ -6,7 +6,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef SCAN
 #include "hash.h"
 #include "cache.h"
 #include "rt-util.h"	/* for from-compression stuff */
@@ -80,4 +79,3 @@ int s_ent_lines(long ent)
 	return 1;
     }
 }
-#endif /* SCAN */

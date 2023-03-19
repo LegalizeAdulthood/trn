@@ -25,10 +25,8 @@
 #ifdef SCORE
 #include "score.h"		/* for sc_lookahead */
 #endif
-#ifdef SCAN
 #include "scan.h"
 #include "sdisp.h"
-#endif
 #ifdef SCAN_ART
 #include "scanart.h"
 #endif
@@ -1715,9 +1713,7 @@ static void line_col_calcs()
     }
     if (tc_COLS <= 0)
 	tc_COLS = 80;
-#ifdef SCAN
     s_resize_win();	/* let various parts know */
-#endif
 }
 
 #ifdef SIGWINCH

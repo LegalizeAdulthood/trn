@@ -71,9 +71,7 @@
 #include "ng.h"
 #include "kfile.h"
 #include "rt-select.h"
-#ifdef SCAN
 #include "scan.h"
-#endif /* SCAN */
 #include "univ.h"
 #include "INTERN.h"
 #include "common.h"

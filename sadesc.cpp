@@ -267,4 +267,4 @@ int sa_ent_lines(long e)
     return num;
 }
 
-#endif /* SCAN */
+#endif

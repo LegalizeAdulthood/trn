@@ -121,5 +121,4 @@ long sa_subj_thread_next(long a)
     }
     return 0L;
 }
-
-#endif /* SCAN */
+#endif

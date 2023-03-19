@@ -111,4 +111,4 @@ void sa_cleanup()
     clear();		/* should something else clear the screen? */
     sa_initialized = false;		/* goodbye... */
 }
-#endif /* SCAN */
+#endif

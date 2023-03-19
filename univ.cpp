@@ -1228,10 +1228,8 @@ char *univ_keyhelp_modestr(UNIV_ITEM *ui)
 	return "Newsrc Selector";
       case UHELP_OPTIONS:
 	return "Option Selector";
-#ifdef SCAN
       case UHELP_SCANART:
 	return "Article Scan Mode";
-#endif
       case UHELP_UNIV:
 	return "Universal Selector";
       default:

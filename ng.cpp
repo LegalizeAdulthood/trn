@@ -42,11 +42,9 @@
 #include "rt-util.h"
 #include "decode.h"
 #include "charsubst.h"
-#ifdef SCAN
 //#include "scan.h"
 #include "smisc.h"
 #include "scanart.h"
-#endif
 #ifdef SCORE
 #include "score.h"
 #endif
@@ -685,9 +683,7 @@ n or q to change nothing.\n\
 		return AS_ASK;
 	    }
 	    reread = true;
-#ifdef SCAN
 	    s_follow_temp = true;
-#endif
 	    univ_follow_temp = true;
 	    return AS_NORM;
 	}
@@ -719,9 +715,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 		return AS_ASK;
 	    }
 	    reread = true;
-#ifdef SCAN
 	    s_follow_temp = true;
-#endif
 	    univ_follow_temp = true;
 	    return AS_NORM;
 	}
@@ -739,9 +733,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 		return AS_ASK;
 	    }
 	    reread = true;
-#ifdef SCAN
 	    s_follow_temp = true;
-#endif
 	    univ_follow_temp = true;
 	    return AS_NORM;
 	}
@@ -825,9 +817,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	artp = curr_artp;
 	return AS_ASK;
       case 'p':			/* find previous unread article */
-#ifdef SCAN
 	s_follow_temp = true;	/* keep going until change req. */
-#endif
 	univ_follow_temp = true;
 	do {
 	    dec_art(selected_only,false);
@@ -838,9 +828,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	art = absfirst;	
 	/* FALL THROUGH */
       case 'P':		/* goto previous article */
-#ifdef SCAN
 	s_follow_temp = true;	/* keep going until change req. */
-#endif
 	univ_follow_temp = true;
 	dec_art(false,true);
       check_dec_art:
@@ -888,10 +876,8 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	}
 	if (!univ_default_cmd)
 	    univ_follow_temp = true;
-#ifdef SCAN
 	if (!s_default_cmd)
 	    s_follow_temp = true;	/* keep going until change req. */
-#endif
 	if (art > lastart) {
 	    if (!ngptr->toread)
 		return AS_CLEAN;
@@ -955,10 +941,8 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	}
 	if (!univ_default_cmd)
 	    univ_follow_temp = true;
-#ifdef SCAN
 	if (!s_default_cmd)
 	    s_follow_temp = true;	/* keep going until change req. */
-#endif
 	if (art > lastart) {
 	    if (!first_subject) {
 		art = absfirst;
@@ -1031,10 +1015,8 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	}
 	if (!univ_default_cmd)
 	    univ_follow_temp = true;
-#ifdef SCAN
 	if (!s_default_cmd)
 	    s_follow_temp = true;	/* keep going until change req. */
-#endif
 	if (*buf == Ctl('n')? next_art_with_subj() : prev_art_with_subj())
 	    return AS_NORM;
       case '/': case '?':
@@ -1181,10 +1163,8 @@ run_the_selector:
 	/* modes do not mix very well, so turn off the SA mode */
 	sa_in = false;
 #endif
-#ifdef SCAN
 	/* turn on temporary follow */
 	s_follow_temp = true;
-#endif
 	univ_follow_temp = true;
 	art_sel_ilock = true;
 	*buf = article_selector(*buf);

@@ -28,10 +28,8 @@
 #ifdef MSDOS
 #include <process.h>
 #endif
-#ifdef SCAN
 #include "scan.h"
 #include "smisc.h"	/* s_default_cmd */
-#endif
 #include "univ.h"
 #include "INTERN.h"
 #include "util.ih"
@@ -507,18 +505,14 @@ void growstr(char **strptr, int *curlen, int newlen)
 
 void setdef(char *buffer, char *dflt)
 {
-#ifdef SCAN
     s_default_cmd = false;
-#endif
     univ_default_cmd = false;
     if (*buffer == ' '
 #ifndef STRICTCR
      || *buffer == '\n' || *buffer == '\r'
 #endif
     ) {
-#ifdef SCAN
 	s_default_cmd = true;
-#endif
 	univ_default_cmd = true;
 	if (*dflt == '^' && isupper(dflt[1]))
 	    pushchar(Ctl(dflt[1]));

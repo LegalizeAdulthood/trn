@@ -8,7 +8,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#ifdef SCAN
 #include "final.h"		/* for assert statements */
 #include "sorder.h"
 #include "util.h"		/* allocation */
@@ -183,4 +182,3 @@ void s_delete_context(int cnum)
     /* mark the context as empty */
     s_contexts[cnum].type = 0;
 }
-#endif /* SCAN */

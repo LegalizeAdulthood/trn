@@ -17,9 +17,7 @@
 #include "util.h"		/* several */
 #include "util2.h"
 #include "env.h"		/* get_val */
-#ifdef SCAN
 #include "scan.h"
-#endif
 #ifdef SCAN_ART
 #include "scanart.h"
 #include "samain.h"
@@ -407,10 +405,8 @@ void sc_load_scores()
 	       loaded,used,total-scored) FLUSH;
 
     sc_save_new = total-scored;
-#ifdef SCAN
     if (sa_initialized)
 	s_top_ent = -1;	/* reset top of page */
-#endif
 }
 
 void sc_save_scores()

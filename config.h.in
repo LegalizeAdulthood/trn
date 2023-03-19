@@ -450,13 +450,9 @@ typedef struct timeb Timeval; /* Structure used by ftime() */
  */
 #define PRIVLIB "@PRIVLIB@"		/**/
 
-/* SCAN:
- *	This is defined if you want strn's scan mode.
- */
 /* SCORE:
  *	This is defined if you want strn's article scoring.
  */
-#cmakedefine SCAN		/**/
 #cmakedefine SCORE		/**/
 
 /* THREAD_DIR:

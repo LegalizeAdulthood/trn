@@ -70,11 +70,9 @@ p,P,^P	Same as n,N,^N, only going backwards.\n\
 {, }	Go to tree's root/leaf.\n\
 \n\
 ",NOMARKING)) ||
-#ifdef SCAN
     (cmd = print_lines("\
 ;	Enter article-scan mode.\n\
 ",NOMARKING)) ||
-#endif
 #ifdef SCORE
     (cmd = print_lines("\
 Scoring commands are enabled.\n\
@@ -205,11 +203,9 @@ _a	Start the article selector.\n\
 _s	Start the subject selector.\n\
 _t	Start the thread selector.\n\
 ",NOMARKING)) ||
-#ifdef SCAN
     (cmd = print_lines("\
 ;	Enter article-scan mode.\n\
 ",NOMARKING)) ||
-#endif
     (cmd = print_lines("\
 _T	Start the thread selector if threaded, else the subject selector.\n\
 U	Unread some news -- prompts for thread, subthread, all, or select.\n\
@@ -266,11 +262,9 @@ SP	Do this newsgroup, executing the default command listed in []'s.\n\
 =	Start this newsgroup, but list subjects before reading articles.\n\
 U	Enter this newsgroup by way of the \"Set unread?\" prompt.\n\
 ",NOMARKING)) ||
-#ifdef SCAN
     (cmd = print_lines("\
 ;	Enter article-scan mode for this newsgroup.\n\
 ",NOMARKING)) ||
-#endif
     (cmd = print_lines("\
 u	Unsubscribe from this newsgroup.\n\
 ^N	Switch to next news source (the numbered GROUPs in ~/.trn/access).\n\
@@ -554,12 +548,10 @@ Z,TAB	Start reading.  If nothing is selected, read all unread articles.\n\
 .	Toggle the current item's selection.\n\
 *	Same as '.' except that it affects all items with the same subject.\n\
 ",NOMARKING)) ||
-#ifdef SCAN
     (cmd = print_lines("\
 ;	Enter article-scan mode.  If articles/subjects/threads were selected\n\
 	in the trn selector, article-scan will show only those articles.\n\
 ",NOMARKING)) ||
-#endif
     (cmd = print_lines("\
 #	Read the current item only, temporarily ignoring all other selections.\n\
 k, ','	Mark the current item as killed.\n\
@@ -785,7 +777,6 @@ Active File Refetch Mins...... no/[# mins]\n\
     return 0;
 }
 
-#ifdef SCAN
 int help_scanart()
 {
     int cmd;
@@ -942,7 +933,6 @@ R	Rescores all articles.  (same as 'r at article level).\n\
 #endif /* !UNDEF (later the !doshell part) */
     return 0;
 }
-#endif /* SCAN */
 
 int help_univ()
 {
@@ -1012,10 +1002,8 @@ int univ_key_help(int where)
 	return help_multirc();
       case UHELP_OPTIONS:
 	return help_options();
-#ifdef SCAN
       case UHELP_SCANART:
 	return help_scanart();
-#endif
       case UHELP_UNIV:
 	return help_univ();
       default:

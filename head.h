@@ -167,7 +167,5 @@ bool parseline(char *, int, int);
 void end_header();
 bool parseheader(ART_NUM);
 char *fetchlines(ART_NUM, int);
-#ifdef SCAN
 char *mp_fetchlines(ART_NUM, int, int);
-#endif
 char *prefetchlines(ART_NUM artnum, int which_line, bool copy);

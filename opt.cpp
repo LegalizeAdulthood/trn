@@ -27,11 +27,9 @@
 #include "charsubst.h"
 #include "term.h"
 #include "sw.h"
-#ifdef SCAN
 #include "scan.h"
 #ifdef SCAN_ART
 #include "scanart.h"
-#endif
 #endif
 #ifdef SCORE
 #include "score.h"
@@ -527,7 +525,6 @@ void set_option(int num, char *s)
       case OI_ART_PAGER_BTNS:
 	ArtPagerBtnCnt = parse_mouse_buttons(&ArtPagerBtns,s);
 	break;
-#ifdef SCAN
       case OI_SCAN_ITEMNUM:
 	s_itemnum = YES(s);
 	break;
@@ -574,7 +571,6 @@ void set_option(int num, char *s)
 	sa_mode_desc_keyw = YES(s);
 	break;
 #endif
-#endif /* SCAN */
 #ifdef SCORE
       case OI_SC_VERBOSE:
 	sf_verbose = YES(s);
@@ -911,7 +907,6 @@ char *option_value(int num)
 	return secs2text(defRefetchSecs);
       case OI_ART_PAGER_BTNS:
 	return expand_mouse_buttons(ArtPagerBtns,ArtPagerBtnCnt);
-#ifdef SCAN
       case OI_SCAN_ITEMNUM:
 	return YESorNO(s_itemnum);
       case OI_SCAN_VI:
@@ -939,7 +934,6 @@ char *option_value(int num)
 	return YESorNO(sa_mode_desc_summary);
       case OI_SCANA_DISPKEYW:
 	return YESorNO(sa_mode_desc_keyw);
-#endif
 #endif
 #ifdef SCORE
       case OI_SC_VERBOSE:

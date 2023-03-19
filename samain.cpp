@@ -225,4 +225,4 @@ long sa_readmarked_elig()
     /* This is possible since the marked articles might not be eligible. */
     return 0;
 }
-#endif /* SCAN */
+#endif
