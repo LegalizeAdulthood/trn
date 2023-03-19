@@ -42,9 +42,7 @@
 #include "cache.ih"
 
 #ifdef PENDING
-#   ifdef ARTSEARCH
-	COMPEX srchcompex;		/* compiled regex for searchahead */
-#   endif
+COMPEX srchcompex;		/* compiled regex for searchahead */
 #endif
 
 HASHTABLE* subj_hash = 0;
@@ -53,9 +51,7 @@ HASHTABLE* shortsubj_hash = 0;
 void cache_init()
 {
 #ifdef PENDING
-# ifdef ARTSEARCH
     init_compex(&srchcompex);
-# endif
 #endif
 }
 

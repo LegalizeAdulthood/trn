@@ -33,15 +33,12 @@
 
 void artsrch_init()
 {
-#ifdef ARTSEARCH
     init_compex(&sub_compex);
     init_compex(&art_compex);
-#endif
 }
 
 /* search for an article containing some pattern */
 
-#ifdef ARTSEARCH
 /* if patbuf != buf, get_cmd must be set to false!!! */
 int art_search(char *patbuf, int patbufsiz, int get_cmd)
 {
@@ -353,12 +350,10 @@ exit:
 	free(cmdlst);
     return ret;
 }
-#endif /* ARTSEARCH */
 
 /* determine if article fits pattern */
 /* returns true if it exists and fits pattern, false otherwise */
 
-#ifdef ARTSEARCH
 bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
 {
     ARTICLE* ap = article_find(artnum);
@@ -433,4 +428,3 @@ bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
     }
     return execute(compex,buf) != nullptr;
 }
-#endif /* ARTSEARCH */

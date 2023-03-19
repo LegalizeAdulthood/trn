@@ -7,8 +7,6 @@
 #include "search.h"
 #endif
 
-#ifdef ARTSEARCH
-
 enum
 {
     SRCH_ABORT = 0,
@@ -20,10 +18,7 @@ enum
     SRCH_ERROR = 6
 };
 
-#endif
-
 EXT char* lastpat INIT(nullstr);	/* last search pattern */
-#ifdef ARTSEARCH
 EXT COMPEX sub_compex;		/* last compiled subject search */
 EXT COMPEX art_compex;		/* last compiled normal search */
 EXT COMPEX* bra_compex INIT(&(art_compex)); /* current compex with brackets */
@@ -43,10 +38,7 @@ EXT char scopestr[] INIT("sfHhbBa");
 EXT int art_howmuch;		/* search scope */
 EXT int art_srchhdr;		/* specific header number to search */
 EXT bool art_doread;		/* search read articles? */
-#endif
 
 void artsrch_init();
-#ifdef ARTSEARCH
 int art_search(char *, int, int);
 bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope);
-#endif

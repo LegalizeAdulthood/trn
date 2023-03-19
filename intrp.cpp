@@ -268,7 +268,6 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    pattern--;
 		    break;
 		case '/':
-#ifdef ARTSEARCH
 		    s = scrbuf;
 		    if (!cmd || !index("/?g",*cmd))
 			*s++ = '/';
@@ -295,9 +294,6 @@ char *dointerp(char *dest, int destsize, char *pattern, char *stoppers, char *cm
 		    }
 		    *s = '\0';
 		    s = scrbuf;
-#else
-		    s = nullstr;
-#endif
 		    break;
 		case '{':
 		    pattern = cpytill(scrbuf,pattern+1,'}');

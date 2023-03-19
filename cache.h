@@ -111,10 +111,8 @@ EXT ARTICLE** artptr_list INIT(nullptr);	/* the article-selector creates this */
 EXT ARTICLE** artptr;			/* ditto -- used for article order */
 EXT ART_NUM artptr_list_size INIT(0);
 
-#ifdef ARTSEARCH
 EXT ART_NUM srchahead INIT(0); 	/* are we in subject scan mode? */
 				/* (if so, contains art # found or -1) */
-#endif
 
 EXT ART_NUM first_cached;
 EXT ART_NUM last_cached;

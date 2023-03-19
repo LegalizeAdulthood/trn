@@ -224,8 +224,6 @@
 			/* terminals such as older Televideos */
 #define TILDENAME	/* allow ~logname expansion */
 #undef MCHASE		/* unmark xrefed articles on m or M */
-#define ARTSEARCH	/* pattern searches among articles */
-			/* /, ?, ^N, ^P, k, K */
 #define EDIT_DISTANCE	/* Allow -G to specify a fuzzy 'go' command */
 #undef	VALIDATE_XREF_SITE /* are xrefs possibly invalid? */
 
@@ -694,9 +692,7 @@ EXT char* dfltcmd INIT(nullptr);	/* 1st char is default command */
 #   define DEB_FEED_XREF 16384
 #endif
 
-#ifdef ARTSEARCH
 EXT int scanon INIT(0);					/* -S */
-#endif
 
 EXT bool use_threads INIT(THREAD_INIT);			/* -x */
 EXT int max_tree_lines INIT(6);

@@ -517,9 +517,7 @@ bool next_art_with_subj()
 	  || (selected_only && !(ap->flags & AF_SEL)));
     artp = ap;
     art = article_num(ap);
-#ifdef ARTSEARCH
     srchahead = -1;
-#endif
     return true;
 }
 

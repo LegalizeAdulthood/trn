@@ -200,15 +200,11 @@ sel_exit:
 	    sort_subjects();
 	}
 	artptr = nullptr;
-#ifdef ARTSEARCH
 	if (!ThreadedGroup)
 	    srchahead = -1;
-#endif
     }
-#ifdef ARTSEARCH
     else
 	srchahead = 0;
-#endif
     selected_only = (selected_count != 0);
     if (sel_ret == '+') {
 	selected_only = save_selected_only;

@@ -487,12 +487,10 @@ void set_option(int num, char *s)
 	findlast = YES(s) * (mode == 'i'? 1 : -1);
 	break;
       case OI_SCANMODE_COUNT:
-#ifdef ARTSEARCH
 	if (isdigit(*s))
 	    scanon = atoi(s);
 	else
 	    scanon = YES(s)*3;
-#endif
 	break;
       case OI_TERSE_OUTPUT:
 	verbose = !YES(s);
@@ -889,11 +887,9 @@ char *option_value(int num)
 	return buf;
       case OI_RESTART_AT_LAST_GROUP:
 	return YESorNO(findlast != 0);
-#ifdef ARTSEARCH
       case OI_SCANMODE_COUNT:
 	sprintf(buf,"%d",scanon);
 	return buf;
-#endif
       case OI_TERSE_OUTPUT:
 	return YESorNO(!verbose);
       case OI_EAT_TYPEAHEAD:

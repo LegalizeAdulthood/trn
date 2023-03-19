@@ -166,10 +166,8 @@ int numnum()
 	errormsg("No articles");
 	return NN_ASK;
     }
-#ifdef ARTSEARCH
     if (srchahead)
 	srchahead = -1;
-#endif
 
     perform_status_init(ngptr->toread);
 
