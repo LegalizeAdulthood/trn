@@ -547,11 +547,7 @@ bool backref(COMPEX *compex, int i, const char *lp)
 bool cclass(const char *set, int c, int af)
 {
     c &= 0177;
-#if BITSPERBYTE == 8
     if (set[c >> 3] & 1 << (c & 7))
-#else
-    if (set[c / BITSPERBYTE] & 1 << (c % BITSPERBYTE))
-#endif
 	return af;
     return !af;
 }
