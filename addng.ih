@@ -2,6 +2,9 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#ifndef ADDNG_IH
+#define ADDNG_IH
+
 static int addgroup_cnt;
 
 static int addng_cmp(const char *key, int keylen, HASHDATUM data);
@@ -16,3 +19,5 @@ static void scanline(char *actline, bool add_matching);
 static int agorder_number(const ADDGROUP **app1, const ADDGROUP **app2);
 static int agorder_groupname(const ADDGROUP **app1, const ADDGROUP **app2);
 static int agorder_count(const ADDGROUP **app1, const ADDGROUP **app2);
+
+#endif

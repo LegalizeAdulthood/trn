@@ -89,8 +89,8 @@ int ng_search(char *patbuf, int get_cmd)
 	fflush(stdout);
     }
 
-    if (first_addgroup) {
-	ADDGROUP *gp = first_addgroup;
+    if (g_first_addgroup) {
+	ADDGROUP *gp = g_first_addgroup;
 	do {
 	    if (execute(&ngcompex,gp->name) != nullptr) {
 		if (!cmdlst)

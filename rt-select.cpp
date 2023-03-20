@@ -440,7 +440,7 @@ char addgroup_selector(int flags)
 	sel_mask = AGF_DELSEL;
     else
 	sel_mask = AGF_SEL;
-    sel_page_gp = nullptr;
+    g_sel_page_gp = nullptr;
     extra_commands = addgroup_commands;
 
     init_pages(FILL_LAST_PAGE);
@@ -459,7 +459,7 @@ char addgroup_selector(int flags)
 	ADDGROUP *gp;
 	int i;
 	addnewbydefault = ADDNEW_SUB;
-	for (gp = first_addgroup, i = 0; gp; gp = gp->next, i++) {
+	for (gp = g_first_addgroup, i = 0; gp; gp = gp->next, i++) {
 	    if (gp->flags & NF_SEL) {
 		gp->flags &= ~NF_SEL;
 		get_ng(gp->name,flags);
@@ -1387,7 +1387,7 @@ static void sel_cleanup()
       case SM_ADDGROUP:
 	if (sel_rereading) {
 	    ADDGROUP* gp;
-	    for (gp = first_addgroup; gp; gp = gp->next) {
+	    for (gp = g_first_addgroup; gp; gp = gp->next) {
 		if (gp->flags & AGF_DELSEL) {
 		    if (!(gp->flags & AGF_SEL))
 			selected_count++;
@@ -1398,7 +1398,7 @@ static void sel_cleanup()
 	}
 	else {
 	    ADDGROUP* gp;
-	    for (gp = first_addgroup; gp; gp = gp->next) {
+	    for (gp = g_first_addgroup; gp; gp = gp->next) {
 		if (gp->flags & AGF_DEL)
 		    gp->flags = (gp->flags & ~AGF_DEL) | AGF_EXCLUDED;
 	    }
@@ -2418,20 +2418,20 @@ q does nothing.\n\n\
       case 'U':
 	sel_cleanup();
 	sel_rereading = !sel_rereading;
-	sel_page_gp = nullptr;
+	g_sel_page_gp = nullptr;
 	return DS_RESTART;
       case 'R':
 	if (!sel_rereading)
 	    sel_cleanup();
 	set_selector(sel_mode, sel_sort * -sel_direction);
-	sel_page_gp = nullptr;
+	g_sel_page_gp = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'E':
 	if (!sel_rereading)
 	    sel_cleanup();
 	sel_exclusive = !sel_exclusive;
-	sel_page_gp = nullptr;
+	g_sel_page_gp = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'L':
@@ -2445,9 +2445,9 @@ q does nothing.\n\n\
 	if (!sel_rereading) {
 	    ADDGROUP* gp;
 	    if (ch == 'D')
-		gp = sel_page_gp;
+		gp = g_sel_page_gp;
 	    else
-		gp = first_addgroup;
+		gp = g_first_addgroup;
 	    while (gp) {
 		if ((!(gp->flags&AGF_SEL) ^ (ch=='J'))
 		 || (gp->flags & AGF_DEL)) {
@@ -2456,7 +2456,7 @@ q does nothing.\n\n\
 		    gp->flags &= ~(AGF_DEL|AGF_SEL);
 		}
 		gp = gp->next;
-		if (ch == 'D' && gp == sel_next_gp)
+		if (ch == 'D' && gp == g_sel_next_gp)
 		    break;
 	    }
 	    if (ch == 'J' || (ch == 'D' && !selected_count)) {
@@ -2468,7 +2468,7 @@ q does nothing.\n\n\
 	    }
 	} else if (ch == 'J') {
 	    ADDGROUP* gp;
-	    for (gp = first_addgroup; gp; gp = gp->next)
+	    for (gp = g_first_addgroup; gp; gp = gp->next)
 		gp->flags &= ~AGF_DELSEL;
 	    selected_count = 0;
 	    return DS_DISPLAY;

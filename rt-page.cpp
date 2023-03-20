@@ -387,8 +387,8 @@ try_again:
 	ADDGROUP* gp;
 	sort_addgroups();
 	obj_count = 0;
-	for (gp = first_addgroup; gp; gp = gp->next) {
-	    if (sel_page_gp == gp)
+	for (gp = g_first_addgroup; gp; gp = gp->next) {
+	    if (g_sel_page_gp == gp)
 		sel_prior_obj_cnt = sel_total_obj_cnt;
 	    gp->flags &= ~AGF_INCLUDED;
 	    if (!sel_rereading ^ !(gp->flags & AGF_EXCLUDED))
@@ -403,12 +403,12 @@ try_again:
 	}
 	if (!sel_total_obj_cnt && sel_exclusive) {
 	    sel_exclusive = false;
-	    sel_page_gp = nullptr;
+	    g_sel_page_gp = nullptr;
 	    goto try_again;
 	}
-	if (sel_page_gp == nullptr)
+	if (g_sel_page_gp == nullptr)
 	    (void) first_page();
-	else if (sel_page_gp == last_addgroup)
+	else if (g_sel_page_gp == g_last_addgroup)
 	    (void) last_page();
 	else if (sel_prior_obj_cnt && fill_last_page) {
 	    calc_page(no_search);
@@ -691,10 +691,10 @@ bool first_page()
       }
       case SM_ADDGROUP: {
 	ADDGROUP* gp;
-	for (gp = first_addgroup; gp; gp = gp->next) {
+	for (gp = g_first_addgroup; gp; gp = gp->next) {
 	    if (gp->flags & AGF_INCLUDED) {
-		if (sel_page_gp != gp) {
-		    sel_page_gp = gp;
+		if (g_sel_page_gp != gp) {
+		    g_sel_page_gp = gp;
 		    return true;
 		}
 		break;
@@ -780,11 +780,11 @@ bool last_page()
 	break;
       }
       case SM_ADDGROUP: {
-	ADDGROUP* gp = sel_page_gp;
-	sel_page_gp = nullptr;
+	ADDGROUP* gp = g_sel_page_gp;
+	g_sel_page_gp = nullptr;
 	if (!prev_page())
-	    sel_page_gp = gp;
-	else if (gp != sel_page_gp)
+	    g_sel_page_gp = gp;
+	else if (gp != g_sel_page_gp)
 	    return true;
 	break;
       }
@@ -848,8 +848,8 @@ bool next_page()
 	break;
       }
       case SM_ADDGROUP: {
-	if (sel_next_gp) {
-	    sel_page_gp = sel_next_gp;
+	if (g_sel_next_gp) {
+	    g_sel_page_gp = g_sel_next_gp;
 	    sel_prior_obj_cnt += sel_page_obj_cnt;
 	    return true;
 	}
@@ -944,11 +944,11 @@ bool prev_page()
 	break;
       }
       case SM_ADDGROUP: {
-	ADDGROUP* gp = sel_page_gp;
-	ADDGROUP* page_gp = sel_page_gp;
+	ADDGROUP* gp = g_sel_page_gp;
+	ADDGROUP* page_gp = g_sel_page_gp;
 
 	if (!gp)
-	    gp = last_addgroup;
+	    gp = g_last_addgroup;
 	else
 	    gp = gp->prev;
 	while (gp) {
@@ -960,8 +960,8 @@ bool prev_page()
 	    }
 	    gp = gp->prev;
 	}
-	if (sel_page_gp != page_gp) {
-	    sel_page_gp = page_gp;
+	if (g_sel_page_gp != page_gp) {
+	    g_sel_page_gp = page_gp;
 	    return true;
 	}
 	break;
@@ -1103,7 +1103,7 @@ try_again:
 	break;
       }
       case SM_ADDGROUP: {
-	ADDGROUP* gp = sel_page_gp;
+	ADDGROUP* gp = g_sel_page_gp;
 	for (; gp && sel_page_item_cnt < sel_max_per_page; gp = gp->next) {
 	    if (gp == u.gp)
 		sel_item_index = sel_page_item_cnt;
@@ -1111,7 +1111,7 @@ try_again:
 		sel_page_item_cnt++;
 	}
 	sel_page_obj_cnt = sel_page_item_cnt;
-	sel_next_gp = gp;
+	g_sel_next_gp = gp;
 	break;
       }
       case SM_UNIVERSAL: {
@@ -1397,7 +1397,7 @@ try_again:
 	}
     }
     else if (sel_mode == SM_ADDGROUP) {
-	ADDGROUP* gp = sel_page_gp;
+	ADDGROUP* gp = g_sel_page_gp;
 	int max_len = 0;
 	if (*sel_grp_dmode == 'l') {
 	    int i = 0;
@@ -1410,7 +1410,7 @@ try_again:
 		    max_len = len;
 		i++;
 	    }
-	    gp = sel_page_gp;
+	    gp = g_sel_page_gp;
 	}
 	for (; gp && sel_page_item_cnt < sel_max_per_page; gp = gp->next) {
 #if 0
@@ -1437,7 +1437,7 @@ try_again:
 	    if (last_page())
 		goto try_again;
 	}
-	sel_next_gp = gp;
+	g_sel_next_gp = gp;
     }
     else if (sel_mode == SM_UNIVERSAL) {
 	UNIV_ITEM* ui = sel_page_univ;

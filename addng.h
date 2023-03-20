@@ -2,6 +2,9 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#ifndef ADDNG_H
+#define ADDNG_H
+
 struct ADDGROUP {
     ADDGROUP* next;
     ADDGROUP* prev;
@@ -21,13 +24,14 @@ enum
     AGF_EXCLUDED = 0x20
 };
 
-EXT ADDGROUP* first_addgroup;
-EXT ADDGROUP* last_addgroup;
-
-EXT ADDGROUP* sel_page_gp;
-EXT ADDGROUP* sel_next_gp;
+extern ADDGROUP* g_first_addgroup;
+extern ADDGROUP* g_last_addgroup;
+extern ADDGROUP* g_sel_page_gp;
+extern ADDGROUP* g_sel_next_gp;
 
 void addng_init();
 bool find_new_groups();
 bool scanactive(bool add_matching);
 void sort_addgroups();
+
+#endif

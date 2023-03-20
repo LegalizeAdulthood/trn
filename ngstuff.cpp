@@ -670,7 +670,7 @@ int addgrp_sel_perform()
     else
 	bits = sel_mask;
     if (buf[len] == '.') {
-	if (first_addgroup) /*$$*/
+	if (g_first_addgroup) /*$$*/
 	    return -1;
 	one_group = true;
 	len++;
@@ -685,7 +685,7 @@ int addgrp_sel_perform()
 	goto break_out;
     }
 
-    for (gp = first_addgroup; gp; gp = gp->next) {
+    for (gp = g_first_addgroup; gp; gp = gp->next) {
 	if (!(gp->flags & sel_mask) ^ !!bits) {
 	    if (addgrp_perform(gp, cmdstr, 0) < 0)
 		break;
