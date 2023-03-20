@@ -1453,7 +1453,8 @@ int print_lines(const char *what_to_print, int hilite)
 	}
 	for (i = 0; *s && i < tc_COLS; ) {
 	    if (at_norm_char(s)) {
-		i += put_char_adv(&s, true);
+		// TODO: make this const friendly
+		i += put_char_adv(const_cast<char**>(&s), true);
 	    }
 	    else if (*s == '\t') {
 		putchar(*s);

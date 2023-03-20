@@ -142,7 +142,7 @@ void clear_artbuf()
 
 int seekartbuf(ART_POS pos)
 {
-    if (!do_hiding)
+    if (!g_do_hiding)
 	return seekart(pos);
 
     pos -= htype[PAST_HEADER].minpos;
@@ -166,12 +166,12 @@ char *readartbuf(bool view_inline)
     int word_wrap, extra_chars = 0;
     int read_something = 0;
 
-    if (!do_hiding) {
-	bp = readart(art_line,(sizeof art_line)-1);
+    if (!g_do_hiding) {
+	bp = readart(g_art_line,(sizeof g_art_line)-1);
 	artbuf_pos = artbuf_seek = tellart() - htype[PAST_HEADER].minpos;
 	return bp;
     }
-    if (artbuf_pos == artsize - htype[PAST_HEADER].minpos)
+    if (artbuf_pos == g_artsize - htype[PAST_HEADER].minpos)
 	return nullptr;
     bp = artbuf + artbuf_pos;
     if (*bp == '\001' || *bp == '\002') {
@@ -222,7 +222,7 @@ char *readartbuf(bool view_inline)
 	    }
 	    strcpy(bp + len++ + extra_offset, "\n");
 	}
-	if (!is_mime)
+	if (!g_is_mime)
 	    goto done;
 	o = line_offset + extra_offset;
 	mime_SetState(bp+o);
@@ -293,7 +293,7 @@ char *readartbuf(bool view_inline)
 	    nowait_fork = true;
 	    color_object(COLOR_MIMEDESC, true);
 	    if (decode_piece(mcp,bp) != 0) {
-		strcpy(bp = artbuf + artbuf_pos, art_line);
+		strcpy(bp = artbuf + artbuf_pos, g_art_line);
 		mime_SetState(bp);
 		if (mime_state == DECODE_MIME)
 		    mime_state = SKIP_MIME;
@@ -304,7 +304,7 @@ char *readartbuf(bool view_inline)
 	    chdir_newsdir();
 	    erase_line(false);
 	    nowait_fork = false;
-	    first_view = artline;
+	    g_first_view = artline;
 	    g_term_line = save_term_line;
 	    if (mime_state != SKIP_MIME)
 		goto mime_switch;
@@ -316,7 +316,7 @@ char *readartbuf(bool view_inline)
 	while ((mp = mp->prev) != nullptr && !mp->boundary_len) ;
 	if (!mp) {
 	    artbuf_len = artbuf_pos;
-	    artsize = artbuf_len + htype[PAST_HEADER].minpos;
+	    g_artsize = artbuf_len + htype[PAST_HEADER].minpos;
 	    read_something = 0;
 	    bp = nullptr;
 	}
@@ -336,9 +336,9 @@ char *readartbuf(bool view_inline)
 	else {
 	    if (datasrc->flags & DF_REMOTE) {
 		nntp_finishbody(FB_SILENT);
-		raw_artsize = nntp_artsize();
+		g_raw_artsize = nntp_artsize();
 	    }
-	    seekart(raw_artsize);
+	    seekart(g_raw_artsize);
 	}
 	/* FALL THROUGH */
       case BETWEEN_MIME:
@@ -371,11 +371,11 @@ char *readartbuf(bool view_inline)
 	break;
       case IMAGE_MIME:
       case AUDIO_MIME:
-	if (!mime_article.total && !multimedia_mime)
-	    multimedia_mime = true;
+	if (!mime_article.total && !g_multimedia_mime)
+	    g_multimedia_mime = true;
 	/* FALL THROUGH */
       default:
-	if (view_inline && first_view < artline
+	if (view_inline && g_first_view < artline
 	 && (mime_section->flags & MSF_INLINE))
 	    mime_state = DECODE_MIME;
 	else
@@ -424,8 +424,8 @@ char *readartbuf(bool view_inline)
     if (read_something) {
     	artbuf_seek = tellart();
 	artbuf_len = artbuf_pos + extra_chars;
-	if (artsize >= 0)
-	    artsize = raw_artsize-artbuf_seek+artbuf_len+htype[PAST_HEADER].minpos;
+	if (g_artsize >= 0)
+	    g_artsize = g_raw_artsize-artbuf_seek+artbuf_len+htype[PAST_HEADER].minpos;
     }
 
     return bp;

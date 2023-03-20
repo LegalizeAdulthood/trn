@@ -8,11 +8,9 @@
 #include "common.h"
 #include "list.h"
 #include "trn.h"
-#include "hash.h"
 #include "ngdata.h"
 #include "nntpclient.h"
 #include "datasrc.h"
-#include "addng.h"
 #include "nntp.h"
 #include "ngstuff.h"
 #include "cache.h"
@@ -33,7 +31,6 @@
 #include "utf.h"
 #include "sw.h"
 #include "kfile.h"
-#include "decode.h"
 #include "backpage.h"
 #include "intrp.h"
 #include "rthread.h"
@@ -41,14 +38,35 @@
 #include "rt-util.h"
 #include "rt-wumpus.h"
 #include "charsubst.h"
-#include "scanart.h"
-#include "score.h"		/* for sc_lookahead() */
 #include "color.h"
-#include "INTERN.h"
 #include "art.h"
-#include "artstate.h"			/* somebody has to do it */
 
 #include <time.h>
+
+ART_LINE g_highlight{-1}; /* next line to be highlighted */
+ART_LINE g_first_view{};
+ART_POS g_raw_artsize{};  /* size in bytes of raw article */
+ART_POS g_artsize{};      /* size in bytes of article */
+char g_art_line[LBUFLEN]; /* place for article lines */
+int g_gline{0};
+ART_POS g_innersearch{0};  /* artpos of end of line we want to visit */
+ART_LINE g_innerlight{0};  /* highlight position for g_innersearch or 0 */
+char g_hide_everything{0}; /* if set, do not write page now, ...but execute char when done with page */
+
+bool g_reread{false};          /* consider current art temporarily unread? */
+bool g_do_fseek{false};        /* should we back up in article file? */
+bool g_oldsubject{false};      /* not 1st art in subject thread */
+ART_LINE g_topline{-1};        /* top line of current screen */
+bool g_do_hiding{true};        /* hide header lines with -h? */
+bool g_is_mime{false};         /* process mime in an article? */
+bool g_multimedia_mime{false}; /* images/audio to see/hear? */
+bool g_rotate{false};          /* has rotation been requested? */
+char *g_prompt;                /* pointer to current prompt */
+char *g_firstline{nullptr};    /* special first line? */
+char *g_hideline{nullptr};     /* custom line hiding? */
+char *g_pagestop{nullptr};     /* custom page terminator? */
+COMPEX g_hide_compex;
+COMPEX g_page_compex;
 
 #define LINE_PTR(pos) (artbuf + (pos) - htype[PAST_HEADER].minpos)
 #define LINE_OFFSET(ptr) ((ptr) - artbuf + htype[PAST_HEADER].minpos)
@@ -78,14 +96,14 @@ void art_init()
     init_compex(&gcompex);
 }
 
-int do_article()
+do_article_result do_article()
 {
     char* s;
     bool hide_this_line = false;	/* hidden header line? */
     bool restart_color;
     ART_LINE linenum;			/* line # on page, 1 origin */
     bool under_lining = false;		/* are we underlining a word? */
-    char* bufptr = art_line;	/* pointer to input buffer */
+    char* bufptr = g_art_line;	/* pointer to input buffer */
     int outpos;		/* column position of output */
     static char prompt_buf[64];		/* place to hold prompt */
     bool notesfiles = false;		/* might there be notesfiles junk? */
@@ -93,21 +111,21 @@ int do_article()
     bool outputok = true;
 
     if (datasrc->flags & DF_REMOTE)
-	artsize = raw_artsize = nntp_artsize();
+	g_artsize = g_raw_artsize = nntp_artsize();
     else
     {
 	if (fstat(fileno(artfp),&filestat))	/* get article file stats */
 	    return DA_CLEAN;
 	if (!S_ISREG(filestat.st_mode))
 	    return DA_NORM;
-	artsize = raw_artsize = filestat.st_size;
+	g_artsize = g_raw_artsize = filestat.st_size;
     }
     sprintf(prompt_buf, mousebar_cnt>3? "%%sEnd of art %ld (of %ld) %%s[%%s]"
 	: "%%sEnd of article %ld (of %ld) %%s-- what next? [%%s]",
 	(long)art,(long)lastart);	/* format prompt string */
-    prompt = prompt_buf;
+    g_prompt = prompt_buf;
     int_count = 0;		/* interrupt count is 0 */
-    if ((firstpage = (topline < 0)) != 0) {
+    if ((firstpage = (g_topline < 0)) != 0) {
 	parseheader(art);
 	mime_SetArticle();
 	clear_artbuf();
@@ -119,7 +137,7 @@ int do_article()
 	if (ThreadedGroup && max_tree_lines)
 	    init_tree();	/* init tree display */
 	assert(art == openart);
-	if (do_fseek) {
+	if (g_do_fseek) {
 	    parseheader(art);		/* make sure header is ours */
 	    if (!*artbuf) {
 		mime_SetArticle();
@@ -139,40 +157,40 @@ int do_article()
 		seekart(artbuf_seek);
 		seekartbuf(artpos);
 	    }
-	    do_fseek = false;
+	    g_do_fseek = false;
 	    restart = 0;
 	}
 	linenum = 1;
 #if 0 /* This causes a bug (headers displayed twice sometimes when you press v then ^R) */
-	if (!do_hiding)
-	    is_mime = false;
+	if (!g_do_hiding)
+	    g_is_mime = false;
 #endif
 	if (firstpage) {
-	    if (firstline) {
-		interp(art_line,sizeof art_line,firstline);
-		linenum += tree_puts(art_line,linenum+topline,0);
+	    if (g_firstline) {
+		interp(g_art_line,sizeof g_art_line,g_firstline);
+		linenum += tree_puts(g_art_line,linenum+g_topline,0);
 	    } else {
 		ART_NUM i;
 		int selected, unseen;
 
 		selected = (curr_artp->flags & AF_SEL);
 		unseen = article_unread(art)? 1 : 0;
-		sprintf(art_line,"%s%s #%ld",ngname,moderated,(long)art);
+		sprintf(g_art_line,"%s%s #%ld",ngname,moderated,(long)art);
 		if (selected_only) {
 		    i = selected_count - (unseen && selected);
-		    sprintf(art_line+strlen(art_line)," (%ld + %ld more)",
+		    sprintf(g_art_line+strlen(g_art_line)," (%ld + %ld more)",
 			    (long)i,(long)ngptr->toread - selected_count
 					- (!selected && unseen));
 		}
 		else if ((i = (ART_NUM)(ngptr->toread - unseen)) != 0
 		       || (!ThreadedGroup && dmcount)) {
-		    sprintf(art_line+strlen(art_line),
+		    sprintf(g_art_line+strlen(g_art_line),
 			    " (%ld more)",(long)i);
 		}
 		if (!ThreadedGroup && dmcount)
-		    sprintf(art_line+strlen(art_line)-1,
+		    sprintf(g_art_line+strlen(g_art_line)-1,
 			    " + %ld Marked to return)",(long)dmcount);
-		linenum += tree_puts(art_line,linenum+topline,0);
+		linenum += tree_puts(g_art_line,linenum+g_topline,0);
 	    }
 	    start_header(art);
 	    forcelast = false;		/* we will have our day in court */
@@ -182,7 +200,7 @@ int do_article()
 	    vwtary(artline,artpos);	/* remember pos in file */
 	}
 	for (restart_color = true;			/* linenum already set */
-	  innersearch? (in_header || innermore())
+	  g_innersearch? (in_header || innermore())
 	   : special? (linenum < slines)
 	   : (firstpage && !in_header)? (linenum < initlines)
 	   : (linenum < tc_LINES);
@@ -198,7 +216,7 @@ int do_article()
 		bufptr = LINE_PTR(restart);/* then start again here */
 		restart = 0;		/* and reset the flag */
 		continuation = true;
-		if (restart_color && do_hiding && !in_header)
+		if (restart_color && g_do_hiding && !in_header)
 		    maybe_set_color(bufptr, true);
 	    }
 	    else if (in_header && *(bufptr = headbuf + artpos))
@@ -206,11 +224,11 @@ int do_article()
 	    else {
 		if ((bufptr = readartbuf(auto_view_inline)) == nullptr) {
 		    special = false;
-		    if (innersearch)
+		    if (g_innersearch)
 			(void)innermore();
 		    break;
 		}
-		if (do_hiding && !in_header)
+		if (g_do_hiding && !in_header)
 		    continuation = maybe_set_color(bufptr, restart_color);
 		else
 		    continuation = false;
@@ -218,13 +236,13 @@ int do_article()
 	    alinebeg = artpos;	/* remember where we began */
 	    restart_color = false;
 	    if (in_header) {
-		hide_this_line = parseline(bufptr,do_hiding,hide_this_line);
+		hide_this_line = parseline(bufptr,g_do_hiding,hide_this_line);
 		if (!in_header) {
-		    linenum += finish_tree(linenum+topline);
+		    linenum += finish_tree(linenum+g_topline);
 		    end_header();
 		    seekart(artbuf_seek);
 		}
-	    } else if (notesfiles && do_hiding && !continuation
+	    } else if (notesfiles && g_do_hiding && !continuation
 		    && *bufptr == '#' && isupper(bufptr[1])
 		    && bufptr[2] == ':' ) {
 		if ((bufptr = readartbuf(auto_view_inline)) == nullptr)
@@ -238,9 +256,9 @@ int do_article()
 		hide_this_line = true;	/* and do not print either */
 		notesfiles = false;
 	    }
-	    if (hideline && !continuation && execute(&hide_compex,bufptr))
+	    if (g_hideline && !continuation && execute(&g_hide_compex,bufptr))
 		hide_this_line = true;
-	    if (in_header && do_hiding && (htype[in_header].flags & HT_MAGIC)) {
+	    if (in_header && g_do_hiding && (htype[in_header].flags & HT_MAGIC)) {
 		switch (in_header) {
 		  case NGS_LINE:
 		    if ((s = strchr(bufptr,'\n')) != nullptr)
@@ -258,27 +276,27 @@ int do_article()
 		    break;
 		 case FROM_LINE:
 		    if ((s = strchr(bufptr,'\n')) != nullptr
-		     && s-bufptr < sizeof art_line)
-			safecpy(art_line,bufptr,s-bufptr+1);
+		     && s-bufptr < sizeof g_art_line)
+			safecpy(g_art_line,bufptr,s-bufptr+1);
 		    else
-			safecpy(art_line,bufptr,sizeof art_line);
-		    if ((s = extract_name(art_line+6)) != nullptr) {
-			strcpy(art_line+6,s);
-			bufptr = art_line;
+			safecpy(g_art_line,bufptr,sizeof g_art_line);
+		    if ((s = extract_name(g_art_line+6)) != nullptr) {
+			strcpy(g_art_line+6,s);
+			bufptr = g_art_line;
 		    }
 		    break;
 		  case DATE_LINE:
 		    if (curr_artp->date != -1) {
-			strncpy(art_line,bufptr,6);
-			strftime(art_line+6, (sizeof art_line)-6,
+			strncpy(g_art_line,bufptr,6);
+			strftime(g_art_line+6, (sizeof g_art_line)-6,
 				 get_val("LOCALTIMEFMT", LOCALTIMEFMT),
 				 localtime(&curr_artp->date));
-			bufptr = art_line;
+			bufptr = g_art_line;
 		    }
 		    break;
 		}
 	    }
-	    if (in_header == SUBJ_LINE && do_hiding
+	    if (in_header == SUBJ_LINE && g_do_hiding
 	     && (htype[SUBJ_LINE].flags & HT_MAGIC)) { /* handle the subject */
 		s = get_cached_line(artp, SUBJ_LINE, false);
 		if (s && continuation) {
@@ -294,22 +312,22 @@ int do_article()
 		    else
 			bufptr = s;
 		    /* tree_puts(, ,1) underlines subject */
-		    linenum += tree_puts(bufptr,linenum+topline,1)-1;
+		    linenum += tree_puts(bufptr,linenum+g_topline,1)-1;
 		}
 	    }
-	    else if (hide_this_line && do_hiding) {   /* do not print line? */
+	    else if (hide_this_line && g_do_hiding) {   /* do not print line? */
 		linenum--;			/* compensate for linenum++ */
 		if (!in_header)
 		    hide_this_line = false;
 	    }
 	    else if (in_header) {
 		artline++;
-		linenum += tree_puts(bufptr,linenum+topline,0)-1;
+		linenum += tree_puts(bufptr,linenum+g_topline,0)-1;
 	    }
 	    else {			/* just a normal line */
 		if (outputok && erase_each_line)
 		    erase_line(false);
-		if (highlight == artline) {	/* this line to be highlit? */
+		if (g_highlight == artline) {	/* this line to be highlit? */
 		    if (marking == STANDOUT) {
 #ifdef NOFIREWORKS
 			if (erase_screen)
@@ -328,15 +346,15 @@ int do_article()
 		    if (*bufptr == '\n')
 			putchar(' ');
 		}
-		outputok = !hide_everything; /* registerize it, hopefully */
-		if (pagestop && !continuation && execute(&page_compex,bufptr))
+		outputok = !g_hide_everything; /* registerize it, hopefully */
+		if (g_pagestop && !continuation && execute(&g_page_compex,bufptr))
 		    linenum = 32700;
 		for (outpos = 0; outpos < tc_COLS; ) { /* while line has room */
 		    if (at_norm_char(bufptr)) {	    /* normal char? */
 			if (*bufptr == '_') {
 			    if (bufptr[1] == '\b') {
 				if (outputok && !under_lining
-				 && highlight != artline) {
+				 && g_highlight != artline) {
 				    under_lining++;
 				    if (tc_UG) {
 					if (bufptr != buf && bufptr[-1]==' ') {
@@ -361,7 +379,7 @@ int do_article()
 			    }
 			}
 			/* handle rot-13 if wanted */
-			if (rotate && !in_header && isalpha(*bufptr)) {
+			if (g_rotate && !in_header && isalpha(*bufptr)) {
 			    if (outputok) {
 				if ((*bufptr & 31) <= 13)
 				    putchar(*bufptr+13);
@@ -389,7 +407,7 @@ int do_article()
 			    }
 			    outpos += i;
 			}
-                        if (*tc_UC && ((highlight == artline && marking == STANDOUT) || under_lining))
+                        if (*tc_UC && ((g_highlight == artline && marking == STANDOUT) || under_lining))
                         {
 			    backspace();
 			    underchar();
@@ -430,7 +448,7 @@ int do_article()
 			    break;
 			if (outputok)
 			    fputs("^L",stdout);
-			if (bufptr == LINE_PTR(alinebeg) && highlight != artline)
+			if (bufptr == LINE_PTR(alinebeg) && g_highlight != artline)
 			    linenum = 32700;
 			    /* how is that for a magic number? */
 			bufptr++;
@@ -447,7 +465,7 @@ int do_article()
 				break;
 			    if (outputok) {
 				putchar('^');
-				if (highlight == artline && *tc_UC
+				if (g_highlight == artline && *tc_UC
 				 && marking == STANDOUT) {
 				    backspace();
 				    underchar();
@@ -479,23 +497,23 @@ int do_article()
 
 		/* handle normal end of output line formalities */
 
-		if (highlight == artline) {
+		if (g_highlight == artline) {
 					/* were we highlighting line? */
 		    if (marking == STANDOUT)
 			un_standout();
 		    else
 			un_underline();
 		    carriage_return();
-		    highlight = -1;	/* no more we are */
+		    g_highlight = -1;	/* no more we are */
 		    /* in case terminal highlighted rest of line earlier */
 		    /* when we did an eol with highlight turned on: */
 		    if (erase_each_line)
 			erase_eol();
 		}
 		artline++;	/* count the line just printed */
-		if (artline - tc_LINES + 1 > topline)
+		if (artline - tc_LINES + 1 > g_topline)
 			    /* did we just scroll top line off? */
-		    topline = artline - tc_LINES + 1;
+		    g_topline = artline - tc_LINES + 1;
 			    /* then recompute top line # */
 	    }
 
@@ -510,10 +528,10 @@ int do_article()
 	    vwtary(artline,artpos);	/* remember pos in file */
 	} /* end of line loop */
 
-	innersearch = 0;
-	if (hide_everything) {
-	    *buf = hide_everything;
-	    hide_everything = 0;
+	g_innersearch = 0;
+	if (g_hide_everything) {
+	    *buf = g_hide_everything;
+	    g_hide_everything = 0;
 	    goto fake_command;
 	}
 	if (linenum >= 32700)	/* did last line have formfeed? */
@@ -522,21 +540,21 @@ int do_article()
 
 	special = false;	/* end of page, so reset page length */
 	firstpage = false;	/* and say it is not 1st time thru */
-	highlight = -1;
+	g_highlight = -1;
 
 	/* extra loop bombout */
 
-	if (artsize < 0 && (raw_artsize = nntp_artsize()) >= 0)
-	    artsize = raw_artsize-artbuf_seek+artbuf_len+htype[PAST_HEADER].minpos;
+	if (g_artsize < 0 && (g_raw_artsize = nntp_artsize()) >= 0)
+	    g_artsize = g_raw_artsize-artbuf_seek+artbuf_len+htype[PAST_HEADER].minpos;
 recheck_pager:
-	if (do_hiding && artbuf_pos == artbuf_len) {
+	if (g_do_hiding && artbuf_pos == artbuf_len) {
 	    /* If we're filtering we need to figure out if any
 	     * remaining text is going to vanish or not. */
 	    long seekpos = artbuf_pos + htype[PAST_HEADER].minpos;
 	    readartbuf(false);
 	    seekartbuf(seekpos);
 	}
-	if (artpos == artsize) {/* did we just now reach EOF? */
+	if (artpos == g_artsize) {/* did we just now reach EOF? */
 	    color_default();
 	    set_mode(gmode,oldmode);
 	    return DA_NORM;	/* avoid --MORE--(100%) */
@@ -554,10 +572,10 @@ reask_pager:
 	unflush_output();	/* disable any ^O in effect */
  	maybe_eol();
 	color_default();
-	if (artsize < 0)
+	if (g_artsize < 0)
 	    strcpy(cmd_buf,"?");
 	else
-	    sprintf(cmd_buf,"%ld",(long)(artpos*100/artsize));
+	    sprintf(cmd_buf,"%ld",(long)(artpos*100/g_artsize));
 	sprintf(buf,"%s--MORE--(%s%%)",current_charsubst(),cmd_buf);
 	outpos = g_term_col + strlen(buf);
 	draw_mousebar(tc_COLS - (g_term_line == tc_LINES-1? outpos+5 : 0), true);
@@ -580,8 +598,8 @@ reask_pager:
 	    update_thread_kfile();
 	}
 	cache_until_key();
-	if (artsize < 0 && (raw_artsize = nntp_artsize()) >= 0) {
-	    artsize = raw_artsize-artbuf_seek+artbuf_len+htype[PAST_HEADER].minpos;
+	if (g_artsize < 0 && (g_raw_artsize = nntp_artsize()) >= 0) {
+	    g_artsize = g_raw_artsize-artbuf_seek+artbuf_len+htype[PAST_HEADER].minpos;
 	    goto_xy(more_prompt_col,g_term_line);
 	    goto recheck_pager;
 	}
@@ -596,7 +614,7 @@ reask_pager:
 	}
 	erase_line(erase_screen && erase_each_line);
 
-    fake_command:		/* used by innersearch */
+    fake_command:		/* used by g_innersearch */
 	color_default();
 	output_chase_phrase = true;
 
@@ -621,7 +639,7 @@ reask_pager:
 
 bool maybe_set_color(const char *cp, bool backsearch)
 {
-    const char ch = (cp == artbuf || cp == art_line? 0 : cp[-1]);
+    const char ch = (cp == artbuf || cp == g_art_line? 0 : cp[-1]);
     if (ch == '\001')
 	color_object(COLOR_MIMEDESC, false);
     else if (ch == '\002')
@@ -656,9 +674,9 @@ int page_switch()
       case Ctl('i'): {
 	ART_LINE i = artline;
 	ART_POS pos;
-	gline = 3;
+	g_gline = 3;
 	s = LINE_PTR(alinebeg);
-	while (AT_NL(*s) && i >= topline) {
+	while (AT_NL(*s) && i >= g_topline) {
 	    pos = vrdary(--i);
 	    if (pos < 0)
 		pos = -pos;
@@ -675,7 +693,7 @@ int page_switch()
 	goto caseG;
       }
       case Ctl('g'):
-	gline = 3;
+	g_gline = 3;
 	compile(&gcompex,"^Subject:",true,true);
 	goto caseG;
       case 'g':		/* in-article search */
@@ -698,28 +716,28 @@ int page_switch()
 	char* nlptr;
 	char ch;
 
-	if (gline < 0 || gline > tc_LINES-2)
-	    gline = tc_LINES-2;
+	if (g_gline < 0 || g_gline > tc_LINES-2)
+	    g_gline = tc_LINES-2;
 #ifdef DEBUG
 	if (debug & DEB_INNERSRCH) {
-	    printf("Start here? %d  >=? %d\n",topline + gline + 1,artline)
+	    printf("Start here? %d  >=? %d\n",g_topline + g_gline + 1,artline)
 	      FLUSH;
 	    termdown(1);
 	}
 #endif
-	if (*buf == Ctl('i') || topline+gline+1 >= artline)
+	if (*buf == Ctl('i') || g_topline+g_gline+1 >= artline)
 	    start_where = artpos;
 			/* in case we had a line wrap */
 	else {
-	    start_where = vrdary(topline+gline+1);
+	    start_where = vrdary(g_topline+g_gline+1);
 	    if (start_where < 0)
 		start_where = -start_where;
 	}
 	if (start_where < htype[PAST_HEADER].minpos)
 	    start_where = htype[PAST_HEADER].minpos;
 	seekartbuf(start_where);
-	innerlight = 0;
-	innersearch = 0; /* assume not found */
+	g_innerlight = 0;
+	g_innersearch = 0; /* assume not found */
 	while ((s = readartbuf(false)) != nullptr) {
 	    if ((nlptr = strchr(s,'\n')) != nullptr) {
 		ch = *++nlptr;
@@ -733,11 +751,11 @@ int page_switch()
 	    if (nlptr)
 		*nlptr = ch;
 	    if (success) {
-		innersearch = artbuf_pos + htype[PAST_HEADER].minpos;
+		g_innersearch = artbuf_pos + htype[PAST_HEADER].minpos;
 		break;
 	    }
 	}
-	if (!innersearch) {
+	if (!g_innersearch) {
 	    seekartbuf(artpos);
 	    fputs("(Not found)",stdout) FLUSH;
 	    g_term_col = 11;
@@ -745,34 +763,34 @@ int page_switch()
 	}
 #ifdef DEBUG
 	if (debug & DEB_INNERSRCH) {
-	    printf("On page? %ld <=? %ld\n",(long)innersearch,(long)artpos)
+	    printf("On page? %ld <=? %ld\n",(long)g_innersearch,(long)artpos)
 	      FLUSH;
 	    termdown(1);
 	}
 #endif
-	if (innersearch <= artpos) {	/* already on page? */
-	    if (innersearch < artpos) {
-		artline = topline+1;
-		while (vrdary(artline) < innersearch)
+	if (g_innersearch <= artpos) {	/* already on page? */
+	    if (g_innersearch < artpos) {
+		artline = g_topline+1;
+		while (vrdary(artline) < g_innersearch)
 		    artline++;
 	    }
-	    highlight = artline - 1;
+	    g_highlight = artline - 1;
 #ifdef DEBUG
 	    if (debug & DEB_INNERSRCH) {
-		printf("@ %d\n",highlight) FLUSH;
+		printf("@ %d\n",g_highlight) FLUSH;
 		termdown(1);
 	    }
 #endif
-	    topline = highlight - gline;
-	    if (topline < -1)
-		topline = -1;
+	    g_topline = g_highlight - g_gline;
+	    if (g_topline < -1)
+		g_topline = -1;
 	    *buf = '\f';		/* fake up a refresh */
-	    innersearch = 0;
+	    g_innersearch = 0;
 	    return page_switch();
 	}
 	else {				/* who knows how many lines it is? */
-	    do_fseek = true;
-	    hide_everything = '\f';
+	    g_do_fseek = true;
+	    g_hide_everything = '\f';
 	}
 	return PS_NORM;
       }
@@ -782,55 +800,55 @@ int page_switch()
 	slines = 2;
 	return PS_NORM;
       case 'X':
-	rotate = !rotate;
+	g_rotate = !g_rotate;
 	/* FALL THROUGH */
       case 'l':
       case '\f':		/* refresh screen */
       refresh_screen:
 #ifdef DEBUG
 	if (debug & DEB_INNERSRCH) {
-	    printf("Topline = %d",topline) FLUSH;
+	    printf("Topline = %d",g_topline) FLUSH;
 	    fgets(buf, sizeof buf, stdin);
 	}
 #endif
 	clear();
-	do_fseek = true;
-	artline = topline;
+	g_do_fseek = true;
+	artline = g_topline;
 	if (artline < 0)
 	    artline = 0;
-	firstpage = (topline < 0);
+	firstpage = (g_topline < 0);
 	return PS_NORM;
       case Ctl('e'):
-	if (artsize < 0) {
+	if (g_artsize < 0) {
 	    nntp_finishbody(FB_OUTPUT);
-	    raw_artsize = nntp_artsize();
-	    artsize = raw_artsize-artbuf_seek+artbuf_len+htype[PAST_HEADER].minpos;
+	    g_raw_artsize = nntp_artsize();
+	    g_artsize = g_raw_artsize-artbuf_seek+artbuf_len+htype[PAST_HEADER].minpos;
 	}
-	if (do_hiding) {
-	    seekartbuf(artsize);
+	if (g_do_hiding) {
+	    seekartbuf(g_artsize);
 	    seekartbuf(artpos);
 	}
-	topline = artline;
-	innerlight = artline - 1;
-	innersearch = artsize;
-	gline = 0;
-	hide_everything = 'b';
+	g_topline = artline;
+	g_innerlight = artline - 1;
+	g_innersearch = g_artsize;
+	g_gline = 0;
+	g_hide_everything = 'b';
 	return PS_NORM;
       case 'B':		/* one line up */
-	if (topline < 0)
+	if (g_topline < 0)
 	    break;
 	if (*tc_IL && *tc_HO) {
 	    ART_POS pos;
 	    home_cursor();
 	    insert_line();
 	    carriage_return();
-	    pos = vrdary(topline-1);
+	    pos = vrdary(g_topline-1);
 	    if (pos < 0)
 		pos = -pos;
 	    if (pos >= htype[PAST_HEADER].minpos) {
 		seekartbuf(pos);
 		if ((s = readartbuf(false)) != nullptr) {
-		    artpos = vrdary(topline);
+		    artpos = vrdary(g_topline);
 		    if (artpos < 0)
 			artpos = -artpos;
 		    maybe_set_color(s, true);
@@ -838,7 +856,7 @@ int page_switch()
 			putchar(*s);
 		    color_default();
 		    putchar('\n') FLUSH;
-		    topline--;
+		    g_topline--;
 		    artpos = vrdary(--artline);
 		    if (artpos < 0)
 			artpos = -artpos;
@@ -846,7 +864,7 @@ int page_switch()
 		    alinebeg = vrdary(artline-1);
 		    if (alinebeg < 0)
 			alinebeg = -alinebeg;
-		    goto_xy(0,artline-topline);
+		    goto_xy(0,artline-g_topline);
 		    erase_line(false);
 		    return PS_ASK;
 		}
@@ -862,23 +880,23 @@ int page_switch()
 	else
 	    clear();
 
-	do_fseek = true;	/* reposition article file */
+	g_do_fseek = true;	/* reposition article file */
 	if (*buf == 'B')
-	    target = topline - 1;
+	    target = g_topline - 1;
 	else {
-	    target = topline - (tc_LINES - 2);
+	    target = g_topline - (tc_LINES - 2);
 	    if (marking && (marking_areas & BACKPAGE_MARKING))
-		highlight = topline;
+		g_highlight = g_topline;
 	}
-	artline = topline;
+	artline = g_topline;
 	if (artline >= 0) do {
 	    artline--;
 	} while(artline >= 0 && artline > target && vrdary(artline-1) >= 0);
-	topline = artline;	/* remember top line of screen */
+	g_topline = artline;	/* remember top line of screen */
 				/*  (line # within article file) */
 	if (artline < 0)
 	    artline = 0;
-	firstpage = (topline < 0);
+	firstpage = (g_topline < 0);
 	return PS_NORM;
     }
       case 'H':		/* help */
@@ -956,13 +974,13 @@ int page_switch()
       case '^':		  case Ctl('^'):
 	       case '\b': case '\177':
 leave_pager:
-	reread = false;
+	g_reread = false;
 	if (strchr("nNpP\016\020",*buf) == nullptr
 	 && strchr("wWsSe:!&|/?123456789.",*buf) != nullptr) {
 	    setdfltcmd();
 	    color_object(COLOR_CMD, true);
 	    interpsearch(cmd_buf, sizeof cmd_buf, mailcall, buf);
-	    printf(prompt,cmd_buf,
+	    printf(g_prompt,cmd_buf,
 		   current_charsubst(),
 		   dfltcmd);	/* print prompt, whatever it is */
 	    color_pop();	/* of COLOR_CMD */
@@ -992,7 +1010,7 @@ leave_pager:
 	    slines = tc_LINES;
 	}
       go_forward:
-          if (*LINE_PTR(alinebeg) != '\f' && (!pagestop || continuation || !execute(&page_compex, LINE_PTR(alinebeg))))
+          if (*LINE_PTR(alinebeg) != '\f' && (!g_pagestop || continuation || !execute(&g_page_compex, LINE_PTR(alinebeg))))
           {
 	    if (!special
 	     || (marking && (*buf!='d' || (marking_areas&HALFPAGE_MARKING)))) {
@@ -1002,9 +1020,9 @@ leave_pager:
 		if (special)
 		    up_line();
 		else
-		    topline = artline;
+		    g_topline = artline;
 		if (marking)
-		    highlight = artline;
+		    g_highlight = artline;
 	    }
 	    else
 		slines--;
@@ -1012,7 +1030,7 @@ leave_pager:
 	return PS_NORM;
       case 'i':
 	if ((auto_view_inline = !auto_view_inline) != 0)
-	    first_view = 0;
+	    g_first_view = 0;
 	printf("\nAuto-View inlined mime is %s\n", auto_view_inline? "on" : "off");
 	termdown(2);
 	break;
@@ -1029,42 +1047,42 @@ leave_pager:
 
 bool innermore()
 {
-    if (artpos < innersearch) {		/* not even on page yet? */
+    if (artpos < g_innersearch) {		/* not even on page yet? */
 #ifdef DEBUG
 	if (debug & DEB_INNERSRCH)
-	    printf("Not on page %ld < %ld\n",(long)artpos,(long)innersearch)
+	    printf("Not on page %ld < %ld\n",(long)artpos,(long)g_innersearch)
 	      FLUSH;
 #endif
 	return true;
     }
-    if (artpos == innersearch) {	/* just got onto page? */
+    if (artpos == g_innersearch) {	/* just got onto page? */
 	isrchline = artline;		/* remember first line after */
-	if (innerlight)
-	    highlight = innerlight;
+	if (g_innerlight)
+	    g_highlight = g_innerlight;
 	else
-	    highlight = artline - 1;
+	    g_highlight = artline - 1;
 #ifdef DEBUG
 	if (debug & DEB_INNERSRCH) {
 	    printf("There it is %ld = %ld, %d @ %d\n",(long)artpos,
-		(long)innersearch,hide_everything,highlight) FLUSH;
+		(long)g_innersearch,g_hide_everything,g_highlight) FLUSH;
 	    termdown(1);
 	}
 #endif
-	if (hide_everything) {		/* forced refresh? */
-	    topline = artline - gline - 1;
-	    if (topline < -1)
-		topline = -1;
+	if (g_hide_everything) {		/* forced refresh? */
+	    g_topline = artline - g_gline - 1;
+	    if (g_topline < -1)
+		g_topline = -1;
 	    return false;		/* let refresh do it all */
 	}
     }
 #ifdef DEBUG
     if (debug & DEB_INNERSRCH) {
-	printf("Not far enough? %d <? %d + %d\n",artline,isrchline,gline)
+	printf("Not far enough? %d <? %d + %d\n",artline,isrchline,g_gline)
 	  FLUSH;
 	termdown(1);
     }
 #endif
-    if (artline < isrchline + gline)
+    if (artline < isrchline + g_gline)
 	return true;
     return false;
 }
@@ -1087,8 +1105,8 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
     if (btn != 3)
 	return;
 
-    ap = get_tree_artp(x_clk,y_clk+topline+1+term_scrolled);
-    if (ap && ap != get_tree_artp(x,y+topline+1+term_scrolled))
+    ap = get_tree_artp(x_clk,y_clk+g_topline+1+term_scrolled);
+    if (ap && ap != get_tree_artp(x,y+g_topline+1+term_scrolled))
 	return;
 
     switch (btn_clk) {
@@ -1098,12 +1116,12 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 		return;
 	    artp = ap;
 	    art = article_num(ap);
-	    reread = true;
+	    g_reread = true;
 	    pushchar(Ctl('r'));
 	}
 	else if (y > tc_LINES/2)
 	    pushchar(' ');
-	else if (topline != -1)
+	else if (g_topline != -1)
 	    pushchar('b');
 	break;
       case 1:
@@ -1115,7 +1133,7 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 	}
 	else if (y > tc_LINES/2)
 	    pushchar('\n');
-	else if (topline != -1)
+	else if (g_topline != -1)
 	    pushchar('B');
 	break;
       case 2:

@@ -289,7 +289,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
     }
     else
 	line = tmpbuf = safemalloc(len + 2);	/* yes, I mean "2" */
-    if (do_hiding)
+    if (g_do_hiding)
 	end = line + decode_header(line, orig_line, len);
     else {
 	safecpy(line, orig_line, len+1);

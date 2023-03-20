@@ -373,7 +373,7 @@ void set_option(int num, char *s)
 	indstr = savestr(s);
 	break;
       case OI_GOTO_LINE_NUM:
-	gline = atoi(s)-1;
+	g_gline = atoi(s)-1;
 	break;
       case OI_FUZZY_NEWSGROUP_NAMES:
 	fuzzyGet = YES(s);
@@ -794,7 +794,7 @@ char *option_value(int num)
       case OI_CITED_TEXT_STRING:
 	return indstr;
       case OI_GOTO_LINE_NUM:
-	sprintf(buf,"%d",gline+1);
+	sprintf(buf,"%d",g_gline+1);
 	return buf;
       case OI_FUZZY_NEWSGROUP_NAMES:
 	return YESorNO(fuzzyGet);

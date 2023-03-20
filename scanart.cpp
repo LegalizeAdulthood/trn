@@ -15,7 +15,7 @@
 #include "term.h"	/* macro to clear... */
 #include "bits.h"	/* absfirst */
 #include "artsrch.h"	/* needed for artstate.h */
-#include "artstate.h"	/* for reread */
+#include "artstate.h"	/* for g_reread */
 #include "rt-select.h"	/* selected_only */
 #include "scan.h"
 #include "smisc.h"
@@ -52,7 +52,7 @@ sa_main_result sa_main()
 	a = sa_readmarked_elig();
 	if (a) {	/* there was an article */
 	    art = sa_ents[a].artnum;
-	    reread = true;
+	    g_reread = true;
 	    sa_clearmark(a);
 	    /* trn 3.x won't read an unselected article if selected_only */
 	    selected_only = false;
@@ -82,7 +82,7 @@ sa_main_result sa_main()
 	/* trn 3.x won't read an unselected article if selected_only */
 	selected_only = false;
 	if (sa_mode_read_elig)
-	    reread = true;
+	    g_reread = true;
     }
     if (sa_scan_context >= 0)
 	s_save_context();

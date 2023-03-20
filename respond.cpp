@@ -155,7 +155,7 @@ int save_article()
 	    interp(cmd_buf, sizeof cmd_buf, get_val("CUSTOMSAVER",CUSTOMSAVER));
 	    invoke(cmd_buf, nullptr);
 	}
-	else if (is_mime) {
+	else if (g_is_mime) {
 	    printf("Extracting MIME article into %s:\n", c) FLUSH;
 	    termdown(1);
 	    mime_DecodeArticle(false);
@@ -173,26 +173,26 @@ int save_article()
 	    if (totalOpt)
 		total = totalOpt;
 	    for (artpos = savefrom;
-		 readart(art_line,sizeof art_line) != nullptr;
+		 readart(g_art_line,sizeof g_art_line) != nullptr;
 		 artpos = tellart())
 	    {
-		if (*art_line <= ' ')
+		if (*g_art_line <= ' ')
 		    continue;	/* Ignore empty or initially-whitespace lines */
-		if (((*art_line == '#' || *art_line == ':')
-		  && (!strncmp(art_line+1, "! /bin/sh", 9)
-		   || !strncmp(art_line+1, "!/bin/sh", 8)
-		   || !strncmp(art_line+2, "This is ", 8)))
+		if (((*g_art_line == '#' || *g_art_line == ':')
+		  && (!strncmp(g_art_line+1, "! /bin/sh", 9)
+		   || !strncmp(g_art_line+1, "!/bin/sh", 8)
+		   || !strncmp(g_art_line+2, "This is ", 8)))
 #if 0
-		 || !strncmp(art_line, "sed ", 4)
-		 || !strncmp(art_line, "cat ", 4)
-		 || !strncmp(art_line, "echo ", 5)
+		 || !strncmp(g_art_line, "sed ", 4)
+		 || !strncmp(g_art_line, "cat ", 4)
+		 || !strncmp(g_art_line, "echo ", 5)
 #endif
 		) {
 		    savefrom = artpos;
 		    decode_type = 1;
 		    break;
 		}
-		else if (uue_prescan(art_line,&filename,&part,&total)) {
+		else if (uue_prescan(g_art_line,&filename,&part,&total)) {
 		    savefrom = artpos;
 		    seekart(savefrom);
 		    decode_type = 2;
@@ -438,7 +438,7 @@ int view_article()
     }
     printf("Processing attachments...\n") FLUSH;
     termdown(1);
-    if (is_mime)
+    if (g_is_mime)
 	mime_DecodeArticle(true);
     else {
 	char* filename;
@@ -448,12 +448,12 @@ int view_article()
 	/* Scan subject for filename and part number information */
 	filename = decode_subject(art, &part, &total);
 	for (artpos = savefrom;
-	     readart(art_line,sizeof art_line) != nullptr;
+	     readart(g_art_line,sizeof g_art_line) != nullptr;
 	     artpos = tellart())
 	{
-	    if (*art_line <= ' ')
+	    if (*g_art_line <= ' ')
 		continue;	/* Ignore empty or initially-whitespace lines */
-	    if (uue_prescan(art_line, &filename, &part, &total)) {
+	    if (uue_prescan(g_art_line, &filename, &part, &total)) {
 		MIMECAP_ENTRY* mc = mime_FindMimecapEntry("image/jpeg",0); /*$$ refine this */
 		savefrom = artpos;
 		seekart(savefrom);

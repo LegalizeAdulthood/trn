@@ -1017,7 +1017,7 @@ ARTICLE *subj_art(SUBJECT *sp)
     while (ap && (ap->flags & art_mask) != art_mask)
 	ap = next_art(ap);
     if (!ap) {
-	reread = true;
+	g_reread = true;
 	ap = first_art(sp);
 	if (selected_only) {
 	    while (ap && !(ap->flags & AF_SEL))
@@ -1045,7 +1045,7 @@ void visit_next_thread()
 	    artp = ap;
 	    return;
 	}
-	reread = false;
+	g_reread = false;
     }
     artp = nullptr;
     art = lastart+1;
@@ -1067,7 +1067,7 @@ void visit_prev_thread()
 	    artp = ap;
 	    return;
 	}
-	reread = false;
+	g_reread = false;
     }
     artp = nullptr;
     art = lastart+1;

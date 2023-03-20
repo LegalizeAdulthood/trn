@@ -236,7 +236,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     total = mime_section->total;
     *msg = '\0';
 
-    if (!total && is_mime)
+    if (!total && g_is_mime)
 	total = part = 1;
 
     if (mcp || total != 1 || part != 1) {
@@ -274,12 +274,12 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	    strcpy(msg,"Failed."); /*$$*/
 	    return 0;
 	}
-	while (readart(art_line,sizeof art_line)) {
-	    if (mime_EndOfSection(art_line))
+	while (readart(g_art_line,sizeof g_art_line)) {
+	    if (mime_EndOfSection(g_art_line))
 		break;
-	    fputs(art_line,fp);
-	    if (total == 0 && *art_line == 'e' && art_line[1] == 'n'
-	     && art_line[2] == 'd' && isspace(art_line[3])) {
+	    fputs(g_art_line,fp);
+	    if (total == 0 && *g_art_line == 'e' && g_art_line[1] == 'n'
+	     && g_art_line[2] == 'd' && isspace(g_art_line[3])) {
 		/* This is the last part. Remember the fact */
 		total = part;
 		sprintf(buf, "%sCT", dir);

@@ -294,15 +294,15 @@ void mime_SetArticle()
 
     mime_InitSections();
     /*$$ Check mime version #? */
-    multimedia_mime = false;
-    is_mime = (htype[MIMEVER_LINE].flags & HT_MAGIC)
+    g_multimedia_mime = false;
+    g_is_mime = (htype[MIMEVER_LINE].flags & HT_MAGIC)
 	    && htype[MIMEVER_LINE].minpos >= 0;
 
     s = fetchlines(art,CONTTYPE_LINE);
     mime_ParseType(mime_section,s);
     free(s);
 
-    if (is_mime) {
+    if (g_is_mime) {
 	s = fetchlines(art,CONTXFER_LINE);
 	mime_ParseEncoding(mime_section,s);
 	free(s);
@@ -314,7 +314,7 @@ void mime_SetArticle()
 	mime_state = mime_section->type;
 	if (mime_state == NOT_MIME
 	 || (mime_state == TEXT_MIME && mime_section->encoding == MENCODE_NONE))
-	    is_mime = false;
+	    g_is_mime = false;
 	else if (!mime_section->type_name)
 	    mime_section->type_name = savestr(text_plain);
     }
@@ -684,13 +684,13 @@ void mime_DecodeArticle(bool view)
     MIMECAP_ENTRY* mcp = nullptr;
 
     seekart(savefrom);
-    *art_line = '\0';
+    *g_art_line = '\0';
 
     while (true) {
 	if (mime_state != MESSAGE_MIME || !mime_section->total) {
-	    if (!readart(art_line,sizeof art_line))
+	    if (!readart(g_art_line,sizeof g_art_line))
 		break;
-	    mime_SetState(art_line);
+	    mime_SetState(g_art_line);
 	}
 	switch (mime_state) {
 	  case BETWEEN_MIME:
@@ -721,8 +721,8 @@ void mime_DecodeArticle(bool view)
 		}
 	    }
 	    mime_state = DECODE_MIME;
-	    if (decode_piece(mcp, *art_line == '\n'? nullptr : art_line) != 0) {
-		mime_SetState(art_line);
+	    if (decode_piece(mcp, *g_art_line == '\n'? nullptr : g_art_line) != 0) {
+		mime_SetState(g_art_line);
 		if (mime_state == DECODE_MIME)
 		    mime_state = SKIP_MIME;
 	    }
@@ -1001,8 +1001,8 @@ static int mime_getc(FILE *fp)
 	return fgetc(fp);
 
     if (!mime_getc_line || !*mime_getc_line) {
-	mime_getc_line = readart(art_line,sizeof art_line);
-	if (mime_EndOfSection(art_line))
+	mime_getc_line = readart(g_art_line,sizeof g_art_line);
+	if (mime_EndOfSection(g_art_line))
 	    return EOF;
 	if (!mime_getc_line)
 	    return EOF;
