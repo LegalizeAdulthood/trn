@@ -1,15 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-/* HASATTRIBUTE:
- *	This symbol indicates the C compiler can check for function attributes,
- *	such as printf formats. This is normally only supported by GNU cc.
- */
-#cmakedefine HASATTRIBUTE
-#ifndef HASATTRIBUTE
-#define __attribute__(_arg_)
-#endif
-
 /* HAS_GETPWENT:
  *	This symbol, if defined, indicates that the getpwent routine is
  *	available for sequential access of the passwd database.

@@ -24,7 +24,7 @@ int doshell(const char *sh, const char *cmd)
     return system(cmd);
 }
 
-void finalize(int num)
+[[noreturn]] void finalize(int num)
 {
     nntp_close(true);
     exit(num);

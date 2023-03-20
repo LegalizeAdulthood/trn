@@ -89,7 +89,7 @@ void final_init()
 #endif
 }
 
-void finalize(int status)
+[[noreturn]] void finalize(int status)
 {
     int i;
     char* s;

@@ -5,11 +5,7 @@
 extern char* g_home_dir;
 
 int doshell(const char *sh, const char *cmd);
-void finalize(int);
-#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR >= 5)
-  __attribute__((noreturn))
-#endif
-
+[[noreturn]] void finalize(int);
 #ifndef USE_DEBUGGING_MALLOC
 char *safemalloc(MEM_SIZE);
 char *saferealloc(char *, MEM_SIZE);
