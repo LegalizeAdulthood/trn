@@ -4,7 +4,7 @@
  * Routines for handling WWW URL references.
  */
 
-bool fetch_http(char *, int, char *, char *);
-bool fetch_ftp(char *, char *, char *);
-bool parse_url(char *);
-bool url_get(char *, char *);
+bool fetch_http(const char *host, int port, const char *path, const char *outname);
+bool fetch_ftp(const char *host, const char *origpath, const char *outname);
+bool parse_url(const char *url);
+bool url_get(const char *url, const char *outfile);

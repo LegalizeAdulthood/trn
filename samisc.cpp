@@ -30,17 +30,21 @@
 #include "samisc.h"
 
 #ifdef UNDEF	/* use function for breakpoint debugging */
-int check_article(long a)
+inline int check_article(long a)
 {
-    if (a < absfirst || a > lastart) {
-	printf("\nArticle %d out of range\n",a) FLUSH;
-	return false;
+    if (a < absfirst || a > lastart)
+    {
+        printf("\nArticle %d out of range\n", a) FLUSH;
+        return false;
     }
     return true;
 }
 #else
 /* note that argument is used twice. */
-#define check_article(a) ((a) >= absfirst && (a) <= lastart)
+inline bool check_article(long a)
+{
+    return a >= absfirst && a <= lastart;
+}
 #endif
 
 /* ignoring "Fold" (or later recursive) mode(s), is this article eligible? */

@@ -122,6 +122,6 @@ INI_WORDS options_ini[] = {
 
 static char* hidden_list();
 static char* magic_list();
-static void set_header_list(int,int,char*);
-static int parse_mouse_buttons(char**,char*);
-static char* expand_mouse_buttons(char*,int);
+static void set_header_list(int flag, int defflag, char *str);
+static int parse_mouse_buttons(char **cpp, const char *btns);
+static char *expand_mouse_buttons(char *cp, int cnt);

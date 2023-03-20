@@ -74,7 +74,11 @@ static int force_sel_pos;
 	sel_mode = save_sel_mode;\
 	set_selector(0, 0);\
 	save_sel_mode = 0;\
-    }
+    } \
+    do \
+    { \
+    } \
+    while (false)
 
 #define PUSH_UNIV_SELECTOR()\
     UNIV_ITEM* save_first_univ = first_univ;\
@@ -784,7 +788,7 @@ static void sel_display()
     }
 }
 
-static void sel_status_msg(char *cp)
+static void sel_status_msg(const char *cp)
 {
     if (can_home)
 	goto_xy(0,sel_last_line+1);
@@ -1611,7 +1615,7 @@ static int sel_command(char_int ch)
     return DS_ASK;
 }
 
-static bool sel_perform_change(long cnt, char *obj_type)
+static bool sel_perform_change(long cnt, const char *obj_type)
 {
     int ret;
 
@@ -1625,7 +1629,7 @@ static bool sel_perform_change(long cnt, char *obj_type)
 	clean_screen = false;
 
     if (error_occurred) {
-	print_lines(msg,NOMARKING);
+	print_lines(msg, NOMARKING);
 	clean_screen = error_occurred = false;
     }
 
@@ -1639,7 +1643,7 @@ static bool sel_perform_change(long cnt, char *obj_type)
 	}
     }
     else if (disp_status_line == 1) {
-	print_lines(msg,NOMARKING);
+	print_lines(msg, NOMARKING);
 	disp_status_line = 0;
     }
 
@@ -1775,11 +1779,11 @@ q does nothing.\n\n\
       reask_sort:
 	if (sel_mode == SM_ARTICLE)
 	    in_char(
-	       "Order by Date,Subject,Author,Number,subj-date Groups,Points?",
-		    'q', "dsangpDSANGP");
+                "Order by Date,Subject,Author,Number,subj-date Groups,Points?",
+                'q', "dsangpDSANGP");
 	else
 	    in_char("Order by Date, Subject, Count, Lines, or Points?",
-		    'q', "dsclpDSCLP");
+                    'q', "dsclpDSCLP");
 	printcmd();
 	if (*buf == 'h' || *buf == 'H') {
 	    if (verbose) {
@@ -2715,7 +2719,7 @@ q does nothing.\n\n\
 
 static void switch_dmode(char **dmode_cpp)
 {
-    char* s;
+    const char* s = "?";
 
     if (!*++*dmode_cpp) {
 	do {
@@ -2835,7 +2839,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 }
 
 /* Icky placement, but the PUSH/POP stuff is local to this file */
-int univ_visit_group(char *gname)
+int univ_visit_group(const char *gname)
 {
     PUSH_SELECTOR();
 

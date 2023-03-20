@@ -165,7 +165,7 @@ static char *mime_ParseEntryArg(char **cpp)
     return s;
 }
 
-MIMECAP_ENTRY *mime_FindMimecapEntry(char *contenttype, int skip_flags)
+MIMECAP_ENTRY *mime_FindMimecapEntry(const char *contenttype, int skip_flags)
 {
     MIMECAP_ENTRY* mcp;
     int i;
@@ -183,9 +183,9 @@ MIMECAP_ENTRY *mime_FindMimecapEntry(char *contenttype, int skip_flags)
     return nullptr;
 }
 
-bool mime_TypesMatch(char *ct, char *pat)
+bool mime_TypesMatch(const char *ct, const char *pat)
 {
-    char* s = strchr(pat,'/');
+    const char* s = strchr(pat,'/');
     int len = (s? s - pat : strlen(pat));
     bool iswild = (!s || !strcmp(s+1,"*"));
 

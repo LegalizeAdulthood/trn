@@ -417,7 +417,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 ** subsitute any '.'s in the group name into '/'s, prepend the path, and
 ** append the '/.overview' or '.ov') on to the end.
 */
-static char *ov_name(char *group)
+static const char *ov_name(const char *group)
 {
     char* cp;
 

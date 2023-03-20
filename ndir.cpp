@@ -18,7 +18,7 @@
 /*
  * open a directory.
  */
-DIR *opendir(char *name)
+DIR *opendir(const char *name)
 {
 	DIR* dirp;
 	int fd;

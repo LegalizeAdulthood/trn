@@ -503,7 +503,7 @@ void show_macros()
     char prebuf[64];
 
     if (topmap != nullptr) {
-	print_lines("Macros:\n",STANDOUT);
+	print_lines("Macros:\n", STANDOUT);
 	*prebuf = '\0';
 	show_keymap(topmap,prebuf);
     }
@@ -535,18 +535,18 @@ static void show_keymap(KEYMAP *curmap, char *prefix)
 	    switch (kt & KM_TMASK) {
 	      case KM_NOTHIN:
 		sprintf(cmd_buf,"%s	%c\n",prefix,i);
-		print_lines(cmd_buf,NOMARKING);
+		print_lines(cmd_buf, NOMARKING);
 		break;
 	      case KM_KEYMAP:
 		show_keymap(curmap->km_ptr[i].km_km, prefix);
 		break;
 	      case KM_STRING:
 		sprintf(cmd_buf,"%s	%s\n",prefix,curmap->km_ptr[i].km_str);
-		print_lines(cmd_buf,NOMARKING);
+		print_lines(cmd_buf, NOMARKING);
 		break;
 	      case KM_BOGUS:
 		sprintf(cmd_buf,"%s	BOGUS\n",prefix);
-		print_lines(cmd_buf,STANDOUT);
+		print_lines(cmd_buf, STANDOUT);
 		break;
 	    }
 	}
@@ -892,9 +892,7 @@ void settle_down()
 bool ignore_EINTR = false;
 
 #ifdef SIGALRM
-Signal_t
-alarm_catcher(signo)
-int signo;
+Signal_t alarm_catcher(int signo)
 {
     /*printf("\n*** In alarm catcher **\n"); $$*/
     ignore_EINTR = true;
@@ -930,8 +928,7 @@ int read_tty(char *addr, int size)
 
 #ifdef PENDING
 # if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(MSDOS)
-int
-circfill()
+int circfill()
 {
     register int Howmany;
 
@@ -1198,11 +1195,11 @@ int pause_getcmd()
     return 0;
 }
 
-void in_char(char *prompt, char_int newmode, char *dflt)
+void in_char(const char *prompt, char_int newmode, const char *dflt)
 {
     char mode_save = mode;
     char gmode_save = gmode;
-    char* s;
+    const char* s;
     int newlines;
 
     for (newlines = 0, s = prompt; *s; s++) {
@@ -1226,7 +1223,7 @@ reask_in_char:
     set_mode(gmode_save,mode_save);
 }
 
-void in_answer(char *prompt, char_int newmode)
+void in_answer(const char *prompt, char_int newmode)
 {
     char mode_save = mode;
     char gmode_save = gmode;
@@ -1257,11 +1254,10 @@ reinp_in_answer:
 
 /* If this takes more than one line, return false */
 
-bool in_choice(char *prompt, char *value, char *choices, char_int newmode)
+bool in_choice(const char *prompt, char *value, char *choices, char_int newmode)
 {
     char mode_save = mode;
     char gmode_save = gmode;
-    char* cp;
     char* bp;
     char* s;
     char* prefix = nullptr;
@@ -1273,7 +1269,7 @@ bool in_choice(char *prompt, char *value, char *choices, char_int newmode)
     set_mode('c',newmode);
     screen_is_dirty = false;
 
-    cp = choices;
+    char *cp = choices;
     if (*cp == '[') {
 	for (s = prefixes, cp++; *cp != ']'; ) {
 	    if (*cp == '/') {
@@ -1432,9 +1428,9 @@ reinp_in_choice:
     return !screen_is_dirty;
 }
 
-int print_lines(char *what_to_print, int hilite)
+int print_lines(const char *what_to_print, int hilite)
 {
-    char* s;
+    const char* s;
     int i;
 
     for (s=what_to_print; *s; ) {
@@ -1515,7 +1511,7 @@ void page_start()
 	newline();
 }
 
-void errormsg(char *str)
+void errormsg(const char *str)
 {
     if (gmode == 's') {
 	if (str != msg)
@@ -1528,7 +1524,7 @@ void errormsg(char *str)
     }
 }
 
-void warnmsg(char *str)
+void warnmsg(const char *str)
 {
     if (gmode != 's') {
 	printf("\n%s\n", str) FLUSH;
@@ -1777,7 +1773,7 @@ void termlib_reset()
 #endif
 }
 
-void xmouse_init(char *progname)
+void xmouse_init(const char *progname)
 {
     char* s;
     if (!can_home || !use_threads)
@@ -1952,7 +1948,7 @@ void draw_mousebar(int limit, bool restore_cursor)
 	goto_xy(save_col, save_line);
 }
 
-static void mouse_input(char *cp)
+static void mouse_input(const char *cp)
 {
     static int last_btn;
     static int last_x, last_y;
@@ -2065,7 +2061,7 @@ static struct {
 } tc_strings[TC_STRINGS];
 
 /* Parse a line from the [termcap] section of trnrc. */
-void add_tc_string(char *capability, char *string)
+void add_tc_string(const char *capability, const char *string)
 {
     int i;
 
@@ -2089,7 +2085,7 @@ void add_tc_string(char *capability, char *string)
 }
 
 /* Return the named termcap color capability's string. */
-char *tc_color_capability(char *capability)
+char *tc_color_capability(const char *capability)
 {
     int c;
 

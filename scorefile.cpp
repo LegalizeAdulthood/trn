@@ -184,7 +184,7 @@ void sf_grow()
  * into the sf_extra_headers array.
  */
 //char* head;		/* header name, (without ':' character) */
-int sf_check_extra_headers(char *head)
+int sf_check_extra_headers(const char *head)
 {
     int i;
     char* s;
@@ -207,7 +207,7 @@ int sf_check_extra_headers(char *head)
  * known.
  */
 //char* head;		/* new header name, (without ':' character) */
-void sf_add_extra_header(char *head)
+void sf_add_extra_header(const char *head)
 {
     static char lbuf[LBUFLEN];		/* ick. */
     int len;
@@ -274,16 +274,6 @@ char *sf_get_extra_header(ART_NUM art, int hnum)
 	s = strchr(s,'\n');	/* '\n' will be skipped on loop increment */
     }
     return "";
-}
-
-/* move to util.c ? */
-/* Returns true if text pointed to by s is a text representation of
- * the number 0.  Used for error checking.
- * Note: does not check for trailing garbage ("+00kjsdfk" returns true).
- */
-bool is_text_zero(char *s)
-{
-    return *s == '0' || ((*s == '+' || *s == '-') && s[1]=='0');
 }
 
 /* keep this one outside the functions because it is shared */
@@ -674,7 +664,7 @@ bool sf_do_line(char *line, bool check)
     return true;
 }
 
-void sf_do_file(char *fname)
+void sf_do_file(const char *fname)
 {
     char* s;
     int sf_fp;
@@ -808,7 +798,7 @@ int sf_score(ART_NUM a)
 	/* should be in cache if a rule above used the subject */
 	s = fetchcache(a, SUBJ_LINE, true);
 	/* later: consider other possible reply forms (threading?) */
-	if (s && subject_has_Re(s,(char**)nullptr)) {
+	if (s && subject_has_Re(s,nullptr)) {
 	    sum = sum+reply_score;
 	    if (sf_score_verbose) {
 		printf("Reply: %d\n",reply_score);
@@ -822,7 +812,7 @@ int sf_score(ART_NUM a)
 }
 
 /* returns changed score line or nullptr if no changes */
-char *sf_missing_score(char *line)
+char *sf_missing_score(const char *line)
 {
     static char lbuf[LBUFLEN];
     int i;
@@ -853,7 +843,7 @@ Type a score now or delete the colon to abort this entry:\n") FLUSH;
 void sf_append(char *line)
 {
     char* scoreline;	/* full line to add to scorefile */
-    char* scoretext;	/* text after the score# */
+    const char* scoretext;	/* text after the score# */
     char filechar;	/* filename character from line */
     char* filename;	/* expanded filename */
     static char filebuf[LBUFLEN];
@@ -1058,7 +1048,7 @@ void sf_print_match(int indx)
     printf("\n");
 }
 
-void sf_exclude_file(char *fname)
+void sf_exclude_file(const char *fname)
 {
     int start,end;
     int newnum;
@@ -1110,7 +1100,7 @@ void sf_exclude_file(char *fname)
 }
 
 //char* filespec;		/* file abbrev. or name */
-void sf_edit_file(char *filespec)
+void sf_edit_file(const char *filespec)
 {
     char filebuf[LBUFLEN];	/* clean up buffers */
     char filechar;		/* which file to do? */
@@ -1152,7 +1142,7 @@ void sf_edit_file(char *filespec)
 
 /* returns file number */
 /* if file number is negative, the file does not exist or cannot be opened */
-static int sf_open_file(char *name)
+static int sf_open_file(const char *name)
 {
     FILE* fp;
     char* temp_name;

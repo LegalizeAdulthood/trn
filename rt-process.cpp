@@ -236,8 +236,8 @@ void thread_article(ARTICLE *article, char *references)
 	    unlink_child(ap);
 	    prev = ap->parent;
 	    ap->date = 0;
-	    ap->subj = 0;
-	    ap->parent = 0;
+	    ap->subj = nullptr;
+	    ap->parent = nullptr;
 	    /* don't free it until group exit since we probably re-use it */
 	}
 	article->parent = nullptr;		/* neaten up */
@@ -402,7 +402,7 @@ static char *valid_message_id(char *start, char *end)
     char* mid;
 
     if (start == end)
-	return 0;
+	return nullptr;
 
     if (*end != '>') {
 	/* Compensate for space cadets who include the header in their
@@ -420,7 +420,7 @@ static char *valid_message_id(char *start, char *end)
     /* Id must be "<...@...>" */
     if (*start != '<' || *end != '>' || (mid = strchr(start, '@')) == nullptr
      || mid == start+1 || mid+1 == end) {
-	return 0;
+	return nullptr;
     }
     return end;
 }

@@ -21,7 +21,7 @@ struct HASHTABLE
 };
 
 static HASHENT **hashfind(HASHTABLE *tbl, const char *key, int keylen);
-static unsigned hash(const char *, int);
+static unsigned hash(const char *key, int keylen);
 static int default_cmp(const char *key, int keylen, HASHDATUM data);
 static HASHENT *healloc();
 static void hefree(HASHENT *hp);

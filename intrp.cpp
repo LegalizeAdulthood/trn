@@ -112,7 +112,7 @@ void intrp_init(char *tcbuf, int tcbuf_len)
 
 /* skip interpolations */
 
-static char *skipinterp(char *pattern, char *stoppers)
+static char *skipinterp(char *pattern, const char *stoppers)
 {
 #ifdef DEBUG
     if (debug & DEB_INTRP)
@@ -715,8 +715,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    if ((str = subj_buf) == nullptr)
 			str = subj_buf = fetchsubj(art,true);
 		    subject_has_Re(str,&str);
-		    if (*pattern == 's'
-		     && (h = in_string(str,"- (nf", true)) != nullptr)
+                    if (*pattern == 's' && (h = in_string(str, "- (nf", true)) != nullptr)
 			*h = '\0';
 		    s = str;
 		    break;

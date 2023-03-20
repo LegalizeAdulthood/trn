@@ -18,4 +18,4 @@ int supersede_article();
 void reply();
 void forward();
 void followup();
-int invoke(char *, char *);
+int invoke(char *cmd, char *dir);

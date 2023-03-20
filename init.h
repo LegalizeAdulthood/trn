@@ -8,10 +8,6 @@ enum
 };
 
 EXT long our_pid;
-/* default string for group entry */
-#if 0
-EXT char *group_default INIT("");
-#endif
 
-bool initialize(int, char **);
+bool initialize(int argc, char *argv[]);
 void newsnews_check();

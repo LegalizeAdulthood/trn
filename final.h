@@ -16,9 +16,9 @@ EXT bool bos_on_stop INIT(false);	/* set when handling the stop signal */
 
 void final_init();
 [[noreturn]] void finalize(int status);
-Signal_t int_catcher(int);
-Signal_t sig_catcher(int);
-Signal_t pipe_catcher(int);
+Signal_t int_catcher(int dummy);
+Signal_t sig_catcher(int signo);
+Signal_t pipe_catcher(int signo);
 #ifdef SIGTSTP
-Signal_t stop_catcher(int);
+Signal_t stop_catcher(int signo);
 #endif

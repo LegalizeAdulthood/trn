@@ -4,7 +4,7 @@
 
 void init_tree();
 ARTICLE *get_tree_artp(int x, int y);
-int tree_puts(char *, ART_LINE, int);
-int finish_tree(ART_LINE);
+int tree_puts(char *orig_line, ART_LINE header_line, int is_subject);
+int  finish_tree(ART_LINE last_line);
 void entire_tree(ARTICLE *ap);
 char thread_letter(ARTICLE *ap);

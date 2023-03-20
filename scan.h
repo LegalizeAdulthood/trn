@@ -111,9 +111,9 @@ EXT int s_cur_type INIT(0);
 EXT int s_itemnum INIT(true);
 EXT int s_mode_vi INIT(0);
 
-void s_init_context(int, int);
-int s_new_context(int);
+void s_init_context(int cnum, int type);
+int s_new_context(int type);
 void s_save_context();
-void s_change_context(int);
+void s_change_context(int newcontext);
 void s_clean_contexts();
-void s_delete_context(int);
+void s_delete_context(int cnum);

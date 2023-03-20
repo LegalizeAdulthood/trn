@@ -36,10 +36,9 @@ EXT bool  is_strn INIT(false);		/* Is this "strn", or trn/rn? */
 EXT char patchlevel[] INIT(PATCHLEVEL);
 
 void trn_init();
-int main(int, char **);
 void do_multirc();
 int input_newsgroup();
 void check_active_refetch(bool force);
 void trn_version();
-void set_ngname(char *);
-char *getngdir(char *);
+void set_ngname(const char *what);
+const char *getngdir(const char *ngnam);

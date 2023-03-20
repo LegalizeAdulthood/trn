@@ -3,13 +3,12 @@
  *
  */
 
-/* this define will save a *lot* of function calls. */
-#define sa_subj_thread(e) \
- (sa_ents[e].subj_thread_num? sa_ents[e].subj_thread_num : \
- sa_get_subj_thread(e))
-
 void sa_init_threads();
-long sa_get_subj_thread(long);
-int sa_subj_thread_count(long);
-long sa_subj_thread_prev(long);
-long sa_subj_thread_next(long);
+long sa_get_subj_thread(long e);
+int sa_subj_thread_count(long a);
+long sa_subj_thread_prev(long a);
+long sa_subj_thread_next(long a);
+inline long sa_subj_thread(long e)
+{
+    return sa_ents[e].subj_thread_num ? sa_ents[e].subj_thread_num : sa_get_subj_thread(e);
+}

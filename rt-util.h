@@ -16,16 +16,16 @@ EXT int  spin_marks INIT(25);	/* how many bargraph marks we want */
 
 EXT bool performed_article_loop;
 
-char *extract_name(char *);
-char *compress_name(char *, int);
-char *compress_address(char *, int);
-char *compress_from(char *, int);
-char *compress_date(ARTICLE *ap, int size);
-bool subject_has_Re(char *, char **);
-char *compress_subj(ARTICLE *ap, int max);
-void setspin(int);
-void spin(int);
+char *extract_name(char *name);
+char *compress_name(char *name, int max);
+char *compress_address(char *name, int max);
+char *compress_from(char *from, int size);
+char *compress_date(const ARTICLE *ap, int size);
+bool subject_has_Re(char *str, char **strp);
+const char *compress_subj(const ARTICLE *ap, int max);
+void setspin(int mode);
+void spin(int count);
 bool inbackground();
-void perform_status_init(long);
-void perform_status(long, int);
-int perform_status_end(long, char *);
+void perform_status_init(long cnt);
+void perform_status(long cnt, int spin);
+int perform_status_end(long cnt, const char *obj_type);

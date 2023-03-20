@@ -67,12 +67,12 @@ EXT bool art_sel_ilock INIT(false);
 #define UR_BREAK	2	/* request return to selector */
 #define UR_ERROR	3	/* non-normal return */
 
-char article_selector(char_int);
+char article_selector(char_int cmd);
 char multirc_selector();
 char newsgroup_selector();
-char addgroup_selector(int);
+char addgroup_selector(int flags);
 char option_selector();
 char universal_selector();
-void selector_mouse(int, int, int, int, int, int);
-int univ_visit_group(char *);
-void univ_visit_help(int);
+void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
+int univ_visit_group(const char *gname);
+void univ_visit_help(int where);

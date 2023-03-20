@@ -815,10 +815,10 @@ void trn_version()
     print_lines("\
 You can request help from:  trn-users@lists.sourceforge.net\n\
 Send bug reports, suggestions, etc. to:  trn-workers@lists.sourceforge.net\n",
-		NOMARKING);
+                NOMARKING);
 }
 
-void set_ngname(char *what)
+void set_ngname(const char *what)
 {
     if (ngname != what) {
 	ngname_len = strlen(what);
@@ -832,7 +832,7 @@ void set_ngname(char *what)
 static char* myngdir;
 static int ngdirlen = 0;
 
-char *getngdir(char *ngnam)
+const char *getngdir(const char *ngnam)
 {
     char* s;
 

@@ -22,9 +22,9 @@ struct KEYMAP
 
 #define TC_STRINGS 48	/* number of colors we can keep track of */
 
-static void mac_init(char*);
+static void mac_init(char *tcbuf);
 static KEYMAP* newkeymap();
 static void show_keymap(KEYMAP *curmap, char *prefix);
-static int echo_char(char_int);
+static int echo_char(char_int ch);
 static void line_col_calcs();
-static void mouse_input(char*);
+static void mouse_input(const char *cp);

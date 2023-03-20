@@ -4,4 +4,4 @@
  */
 
 char *sc_easy_append();
-char *sc_easy_command();
+const char *sc_easy_command();

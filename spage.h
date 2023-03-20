@@ -4,8 +4,8 @@
  * functions to manage a page of entries.
  */
 
-bool s_fillpage_backward(long);
-bool s_fillpage_forward(long);
+bool s_fillpage_backward(long end);
+bool s_fillpage_forward(long start);
 bool s_refillpage();
 int s_fillpage();
 void s_cleanpage();

@@ -2,39 +2,45 @@
 */ 
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#define FB_BACKGROUND	0
-#define FB_OUTPUT	1
-#define FB_SILENT	2
-#define FB_DISCARD	3
+enum
+{
+    FB_BACKGROUND = 0,
+    FB_OUTPUT = 1,
+    FB_SILENT = 2,
+    FB_DISCARD = 3
+};
 
-#define MAX_NNTP_ARTICLES   10
+enum
+{
+    MAX_NNTP_ARTICLES = 10
+};
 
-int nntp_list(const char *, const char *, int);
+int nntp_list(const char *type, const char *arg, int len);
 void nntp_finish_list();
 int nntp_group(char *group, NGDATA *gp);
-int nntp_stat(ART_NUM);
-ART_NUM nntp_stat_id(char *);
+int nntp_stat(ART_NUM artnum);
+ART_NUM nntp_stat_id(char *msgid);
 ART_NUM nntp_next_art();
-int nntp_header(ART_NUM);
-void nntp_body(ART_NUM);
+int nntp_header(ART_NUM artnum);
+void nntp_body(ART_NUM artnum);
 long nntp_artsize();
-int nntp_finishbody(int);
-int nntp_seekart(ART_POS);
+int nntp_finishbody(int bmode);
+int nntp_seekart(ART_POS pos);
 ART_POS nntp_tellart();
-char *nntp_readart(char *, int);
+char *nntp_readart(char *s, int limit);
 time_t nntp_time();
-int nntp_newgroups(time_t);
+int nntp_newgroups(time_t t);
 int nntp_artnums();
 #if 0
 int nntp_rover();
 #endif
-ART_NUM nntp_find_real_art(ART_NUM);
+ART_NUM nntp_find_real_art(ART_NUM after);
 char *nntp_artname(ART_NUM artnum, bool allocate);
-char *nntp_tmpname(int);
+char *nntp_tmpname(int ndx);
 int nntp_handle_nested_lists();
 int nntp_handle_timeout();
 void nntp_server_died(DATASRC *dp);
 #ifdef SUPPORT_XTHREAD
 long nntp_readcheck();
-long nntp_read(char *, long);
+long nntp_read(char *buf, long n);
 #endif

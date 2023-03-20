@@ -26,10 +26,9 @@
 #include "samain.h"
 #include "samisc.h"
 
-int sa_main()
+sa_main_result sa_main()
 {
     char sa_oldmode;	/* keep mode of caller */
-    int i;
 
     sa_in = true;
     sa_go = false;	/* ...do not collect $200... */
@@ -75,7 +74,7 @@ int sa_main()
 
     sa_oldmode = mode;			/* save mode */
     mode = 's';				/* for RN macros */
-    i = sa_mainloop();
+    sa_main_result i = sa_mainloop();
     mode = sa_oldmode;			/* restore mode */
 
     if (i == SA_NORM || i == SA_FAKE) {

@@ -134,12 +134,12 @@ EXT char* option_flags;
 EXT int sel_page_op;
 EXT int sel_next_op;
 
-void opt_init(int, char **, char **);
+void opt_init(int argc, char *argv[], char **tcbufptr);
 void opt_file(char *filename, char **tcbufptr, bool bleat);
-void set_options(char **);
-void set_option(int, char *);
-void save_options(char *);
-char *option_value(int);
+void set_options(char **vals);
+void set_option(int num, char *s);
+void save_options(const char *filename);
+char *option_value(int num);
 void set_header(char *s, int flag, bool setit);
-char *quote_string(char *);
+char *quote_string(char *val);
 void cwd_check();

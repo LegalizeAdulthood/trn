@@ -12,9 +12,9 @@ EXT char newsadmin[] INIT(NEWS_ADMIN);/* news administrator */
 EXT int newsuid INIT(0);
 #endif
 
-void intrp_init(char *, int);
+void intrp_init(char *tcbuf, int tcbuf_len);
 char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, char *cmd);
-char *interp_backslash(char *, char *);
-char *interp(char *, int, char *);
-char *interpsearch(char *, int, char *, char *);
-void normalize_refs(char *);
+char *interp_backslash(char *dest, char *pattern);
+char *interp(char *dest, int destsize, char *pattern);
+char *interpsearch(char *dest, int destsize, char *pattern, char *cmd);
+void normalize_refs(char *refs);

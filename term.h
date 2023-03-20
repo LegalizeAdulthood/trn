@@ -194,67 +194,68 @@ EXT bool xmouse_is_on INIT(false);
 EXT bool mouse_is_down INIT(false);
 
 void term_init();
-void term_set(char *);
-void set_macro(char *, char *);
-void arrow_macros(char *);
-void mac_line(char *, char *, int);
+void term_set(char *tcbuf);
+void set_macro(char *seq, char *def);
+void arrow_macros(char *tmpbuf);
+void mac_line(char *line, char *tmpbuf, int tbsize);
 void show_macros();
-void set_mode(char_int, char_int);
-int putchr(char_int);
+void set_mode(char_int new_gmode, char_int new_mode);
+int putchr(char_int ch);
 void hide_pending();
 bool finput_pending(bool check_term);
-bool finish_command(int);
-char *edit_buf(char *, char *);
+bool finish_command(int donewline);
+char *edit_buf(char *s, char *cmd);
 bool finish_dblchar();
 void eat_typeahead();
-void save_typeahead(char *, int);
+void save_typeahead(char *buf, int len);
 void settle_down();
-Signal_t alarm_catcher(int);
-int read_tty(char *, int);
-#if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(MSDOS)
-int circfill(void);
+#ifdef SIGALRM
+Signal_t alarm_catcher(int signo);
 #endif
-void pushchar(char_int);
-void underprint(const char *);
+int read_tty(char *addr, int size);
+#if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(MSDOS)
+int circfill();
+#endif
+void pushchar(char_int c);
+void underprint(const char *s);
 #ifdef NOFIREWORKS
 void no_sofire();
 void no_ulfire();
 #endif
-void getcmd(char *);
-void pushstring(char *, char_int);
+void getcmd(char *whatbuf);
+void pushstring(char *str, char_int bits);
 int get_anything();
 int pause_getcmd();
-void in_char(char *, char_int, char *);
-void in_answer(char *, char_int);
-bool in_choice(char *, char *, char *, char_int);
-int print_lines(char *, int);
+void in_char(const char *prompt, char_int newmode, const char *dflt);
+void in_answer(const char *prompt, char_int newmode);
+bool in_choice(const char *prompt, char *value, char *choices, char_int newmode);
+int print_lines(const char *what_to_print, int hilite);
 int check_page_line();
 void page_start();
-void errormsg(char *);
-void warnmsg(char *);
-void pad(int);
+void errormsg(const char *str);
+void warnmsg(const char *str);
+void pad(int num);
 void printcmd();
 void rubout();
 void reprint();
 void erase_line(bool to_eos);
 void clear();
 void home_cursor();
-void goto_xy(int, int);
+void goto_xy(int to_col, int to_line);
 #ifdef SIGWINCH
 Signal_t winch_catcher(int);
 #endif
 void termlib_init();
 void termlib_reset();
-bool wait_key_pause(int);
-void xmouse_init(char *);
+void xmouse_init(const char *progname);
 void xmouse_check();
 void xmouse_on();
 void xmouse_off();
 void draw_mousebar(int limit, bool restore_cursor);
-bool check_mousebar(int, int, int, int, int, int);
-void add_tc_string(char *, char *);
-char *tc_color_capability(char *);
+bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
+void add_tc_string(const char *capability, const char *string);
+char *tc_color_capability(const char *capability);
 #ifdef MSDOS
-int tputs(char *, int, int (*)(char_int));
-char *tgoto(char *, int, int);
+int tputs(char *str, int num, int (*func)(int));
+char *tgoto(char *str, int x, int y);
 #endif

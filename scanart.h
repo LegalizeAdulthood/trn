@@ -5,22 +5,17 @@
  */
 
 /* return codes for sa_main */
-	/* read article pointed to by art (always) */
-#define SA_READ (-7)
-	/* quit, and return to previous selector (backtick) */
-#define SA_QUIT_SEL (-6)
-	/* go to and enter prior newsgroup */
-#define SA_PRIOR (-5)
-	/* go to and enter next newsgroup */
-#define SA_NEXT (-4)
-	/* Fake a command (buf and art already set up) */
-#define SA_FAKE (-3)
-	/* error, quit out one level */
-#define SA_ERR (-2)
-	/* quit out one level and clean up... */
-#define SA_QUIT (-1)
-	/* do the normal thing (usually read article pointed to by art) */
-#define SA_NORM 0
+enum sa_main_result
+{
+    SA_READ = (-7),     /* read article pointed to by art (always) */
+    SA_QUIT_SEL = (-6), /* quit, and return to previous selector (backtick) */
+    SA_PRIOR = (-5),    /* go to and enter prior newsgroup */
+    SA_NEXT = (-4),     /* go to and enter next newsgroup */
+    SA_FAKE = (-3),     /* Fake a command (buf and art already set up) */
+    SA_ERR = (-2),      /* error, quit out one level */
+    SA_QUIT = (-1),     /* quit out one level and clean up... */
+    SA_NORM = 0         /* do the normal thing (usually read article pointed to by art) */
+};
 
 /* per-entry data */
 struct SA_ENTRYDATA
@@ -87,6 +82,7 @@ EXT bool sa_mode_desc_subject INIT(true);
 EXT bool sa_mode_desc_summary INIT(false);
 EXT bool sa_mode_desc_keyw INIT(false);
 
-int sa_main();
-void sa_grow(ART_NUM, ART_NUM);
+sa_main_result sa_main();
+sa_main_result sa_mainloop();
+void sa_grow(ART_NUM oldlast, ART_NUM last);
 void sa_cleanup();

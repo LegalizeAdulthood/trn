@@ -254,7 +254,7 @@ char *saferealloc(char *where, MEM_SIZE size)
 
 /* safe version of string concatenate, with \n deletion and space padding */
 
-char *safecat(char *to, char *from, int len)
+char *safecat(char *to, const char *from, int len)
 {
     char* dest = to;
 
@@ -326,10 +326,7 @@ char *trn_getwd(char *buf, int buflen)
 }
 
 #ifndef HAS_GETCWD
-static char*
-trn_getcwd(buf, len)
-char* buf;
-int len;
+static char *trn_getcwd(char *buf, int len)
 {
     char* ret;
 #ifdef HAS_GETWD
@@ -459,7 +456,7 @@ int makedir(char *dirname, int nametype)
 # endif
 }
 
-void notincl(char *feature)
+void notincl(const char *feature)
 {
     printf("\nNo room for feature \"%s\" on this machine.\n",feature) FLUSH;
 }
@@ -477,7 +474,7 @@ void growstr(char **strptr, int *curlen, int newlen)
     }
 }
 
-void setdef(char *buffer, char *dflt)
+void setdef(char *buffer, const char *dflt)
 {
     s_default_cmd = false;
     univ_default_cmd = false;
@@ -497,10 +494,7 @@ void setdef(char *buffer, char *dflt)
 }
 
 #ifndef NO_FILELINKS
-void
-safelink(old, new)
-char* old;
-char* new;
+void safelink(char *old, char *new)
 {
 #if 0
     extern int sys_nerr;

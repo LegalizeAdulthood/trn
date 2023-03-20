@@ -78,7 +78,7 @@ char *get_sel_order(int smode)
     return buf;
 }
 
-bool set_sel_order(int smode, char *str)
+bool set_sel_order(int smode, const char *str)
 {
     bool reverse = false;
     char ch;
@@ -1687,7 +1687,7 @@ void output_sel(int ix, int sel, bool update)
 /* Counts the number of lines needed to output a subject, including
 ** optional authors.
 */
-static int count_subject_lines(SUBJECT *subj, int *selptr)
+static int count_subject_lines(const SUBJECT *subj, int *selptr)
 {
     ARTICLE* ap;
     int sel;
@@ -1717,10 +1717,10 @@ static int count_subject_lines(SUBJECT *subj, int *selptr)
 /* Counts the number of lines needed to output a thread, including
 ** optional authors.
 */
-static int count_thread_lines(SUBJECT *subj, int *selptr)
+static int count_thread_lines(const SUBJECT *subj, int *selptr)
 {
     int total = 0;
-    ARTICLE* thread = subj->thread;
+    const ARTICLE* thread = subj->thread;
     int sel = -1, subj_sel;
 
     do {
@@ -1739,7 +1739,7 @@ static int count_thread_lines(SUBJECT *subj, int *selptr)
 
 /* Display an article, perhaps with its author.
 */
-static void display_article(ARTICLE *ap, int ix, int sel)
+static void display_article(const ARTICLE *ap, int ix, int sel)
 {
     int subj_width = tc_COLS - 5 - UseSelNum;
     int from_width = tc_COLS / 5;
@@ -1766,7 +1766,7 @@ static void display_article(ARTICLE *ap, int ix, int sel)
 
 /* Display the given subject group, with optional authors.
 */
-static void display_subject(SUBJECT *subj, int ix, int sel)
+static void display_subject(const SUBJECT *subj, int ix, int sel)
 {
     ARTICLE* ap;
     int j, i;
@@ -1857,10 +1857,10 @@ static void display_subject(SUBJECT *subj, int ix, int sel)
 void display_option(int op, int item_index)
 {
     int len;
-    char* pre;
-    char* item;
-    char* post;
-    char* val;
+    const char *pre;
+    const char *item;
+    const char *post;
+    const char *val;
     if (*options_ini[op].item == '*') {
 	len = strlen(options_ini[op].item+1);
 	pre = "==";
@@ -1882,7 +1882,7 @@ void display_option(int op, int item_index)
     termdown(1);
 }
 
-static void display_univ(UNIV_ITEM *ui)
+static void display_univ(const UNIV_ITEM *ui)
 {
     if (!ui) {
 	fputs("****EMPTY****",stdout);

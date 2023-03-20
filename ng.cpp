@@ -545,8 +545,8 @@ int art_switch()
 	visit_next_thread();
 	return AS_NORM;
       case 'U': {		/* unread some articles */
-	char* u_prompt;
-	char* u_help_thread;
+	const char* u_prompt;
+	const char* u_help_thread;
 
 	if (!artp) {
 	    u_help_thread = "";
@@ -607,7 +607,7 @@ n or q to change nothing.\n\
 	}
 	else if (*buf == 'n' || *buf == 'q')
 	    return AS_ASK;
-	else if (*buf == 't' && u_help_thread != "") {
+	else if (*buf == 't' && *u_help_thread) {
 	    if (artp->subj->thread)
 		unkill_thread(artp->subj->thread);
 	    else
@@ -615,7 +615,7 @@ n or q to change nothing.\n\
 	    if ((artp = first_art(artp->subj)) != nullptr)
 		art = article_num(artp);
 	}
-	else if (*buf == 's' && u_help_thread != "")
+	else if (*buf == 's' && *u_help_thread)
 	    unkill_subthread(artp);
 	else if (*buf == 'a') {
 	    check_first(absfirst);
@@ -1570,7 +1570,7 @@ bool output_subject(char *ptr, int flag)
 	    safecpy(tmpbuf + len, s, sizeof tmpbuf - len);
 	if (mode == 'k')
 	    page_line = 1;
-	if (print_lines(tmpbuf,NOMARKING) != 0)
+	if (print_lines(tmpbuf, NOMARKING) != 0)
 	    return true;
     }
     return false;

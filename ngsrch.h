@@ -12,6 +12,6 @@
 EXT bool ng_doempty INIT(false);	/* search empty newsgroups? */
 
 void ngsrch_init();
-int ng_search(char *, int);
+int ng_search(char *patbuf, int get_cmd);
 bool ng_wanted(NGDATA *np);
 char *ng_comp(COMPEX *compex, const char *pattern, bool RE, bool fold);

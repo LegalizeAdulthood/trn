@@ -27,7 +27,7 @@
 
 /* returns statchars in temp space... */
 // int line;		/* which status line (1 = first) */
-char *sa_get_statchars(long a, int line)
+const char *sa_get_statchars(long a, int line)
 {
     static char char_buf[16];
 
@@ -75,7 +75,7 @@ char *sa_get_statchars(long a, int line)
     return char_buf;
 }
 
-char *sa_desc_subject(long e)
+const char *sa_desc_subject(long e)
 {
     char* s;
     char* s1;
@@ -107,7 +107,7 @@ char *sa_desc_subject(long e)
 /* NOTE: should redesign later for the "menu" style... */
 // long e;		/* entry number */
 // bool trunc;		/* should it be truncated? */
-char *sa_get_desc(long e, int line, bool trunc)
+const char *sa_get_desc(long e, int line, bool trunc)
 {
     static char desc_buf[1024];
     char* s;

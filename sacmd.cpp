@@ -103,7 +103,7 @@ int sa_docmd()
      */
 	    if (!sa_marked(page_ents[i].entnum) || !sa_mode_fold)
 		(void)sa_art_cmd(sa_mode_fold,SA_KILL_UNMARKED,
-				 page_ents[i].entnum);
+                                 page_ents[i].entnum);
 /* consider: should it start reading? */
 	b = sa_readmarked_elig();
 	if (b) {
@@ -215,9 +215,9 @@ int sa_docmd()
       case Ctl('e'):		/* edit scorefile for group */
 	  /* clear to end of screen */
 	  clear_rest();
-	s_ref_all = true;	/* refresh everything */
-	sc_score_cmd("e");	/* edit scorefile */
-	eat_typeahead();	/* stay in control. */
+	s_ref_all = true;  /* refresh everything */
+	sc_score_cmd("e"); /* edit scorefile */
+	eat_typeahead();   /* stay in control. */
 	break;
       case '\t':	/* TAB: toggle threadcount display */
 	sa_mode_desc_threadcount = !sa_mode_desc_threadcount;
@@ -590,7 +590,7 @@ bool sa_extract_start()
 
 
 /* sa_art_cmd primitive: actually does work on an article */
-void sa_art_cmd_prim(int cmd, long a)
+void sa_art_cmd_prim(sa_cmd cmd, long a)
 {
     ART_NUM artnum;
 
@@ -645,7 +645,7 @@ void sa_art_cmd_prim(int cmd, long a)
 // int multiple;		/* follow the thread? */
 // int cmd;		/* what to do */
 // long a;		/* article # to affect or start with */
-int sa_art_cmd(int multiple, int cmd, long a)
+int sa_art_cmd(int multiple, sa_cmd cmd, long a)
 {
     long b;
 

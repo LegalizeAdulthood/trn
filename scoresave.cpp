@@ -36,7 +36,7 @@ static int used;
 static int saved;
 static ART_NUM last;
 
-void sc_sv_add(char *str)
+void sc_sv_add(const char *str)
 {
     if (num_lines == lines_alloc) {
 	lines_alloc += 100;
@@ -46,7 +46,7 @@ void sc_sv_add(char *str)
     num_lines++;
 }
 
-void sc_sv_delgroup(char *gname)
+void sc_sv_delgroup(const char *gname)
 {
     char* s;
     int i;

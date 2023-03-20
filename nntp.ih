@@ -9,4 +9,4 @@ static ART_POS body_end = 0;
 static long rawbytes = -1;	/* bytes remaining to be transfered */
 #endif
 
-static int nntp_copybody(char*,int,ART_POS);
+static int nntp_copybody(char *s, int limit, ART_POS pos);

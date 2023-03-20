@@ -56,7 +56,7 @@ void ngdata_init();
 void set_ng(NGDATA *np);
 int access_ng();
 void chdir_newsdir();
-void grow_ng(ART_NUM);
+void grow_ng(ART_NUM newlast);
 void sort_newsgroups();
 void ng_skip();
 ART_NUM getngsize(NGDATA *gp);

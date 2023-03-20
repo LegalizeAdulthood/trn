@@ -70,7 +70,7 @@ void univ_startup()
 	/* read in trn default top file */
 	(void)univ_include_file("%X/sitetop");		/* pure local */
 	sys_top_load = univ_include_file("%X/trn4top");
-	user_top_load = univ_use_file("%+/univ/usertop", univ_title, nullptr);
+	user_top_load = univ_use_file("%+/univ/usertop", nullptr);
 
 	if (!(sys_top_load || user_top_load)) {
 	    /* last resort--all newsgroups */
@@ -127,7 +127,7 @@ void univ_close()
     univ_level--;
 }
 
-UNIV_ITEM *univ_add(int type, char *desc)
+UNIV_ITEM *univ_add(int type, const char *desc)
 {
     UNIV_ITEM* node = first_univ;
 
@@ -198,27 +198,21 @@ static void univ_free_data(UNIV_ITEM *ui)
 }
 
 /* not used now, but may be used later... */
-int univ_lines(UNIV_ITEM *ui)
-{
-    /* later use the type and all that jazz... */
-    return 1;
-}
-
-/* not used now, but may be used later... */
 //UNIV_ITEM* ui;				/* universal item */
 //int linenum;				/* which line to describe (0 base) */
-char *univ_desc_line(UNIV_ITEM *ui, int linenum) {
+char *univ_desc_line(UNIV_ITEM *ui, int linenum)
+{
     return ui->desc;
 }
 
-void univ_add_text(char *txt)
+void univ_add_text(const char *txt)
 {
     /* later check text for bad things */
     (void)univ_add(UN_TXT,txt);
 }
 
 /* temp for testing */
-void univ_add_debug(char *desc, char *txt)
+void univ_add_debug(const char *desc, const char *txt)
 {
     UNIV_ITEM* ui;
     /* later check text for bad things */
@@ -226,10 +220,10 @@ void univ_add_debug(char *desc, char *txt)
     ui->data.str = savestr(txt);
 }
 
-void univ_add_group(char *desc, char *grpname)
+void univ_add_group(const char *desc, const char *grpname)
 {
     UNIV_ITEM* ui;
-    char* s;
+    const char* s;
     HASHDATUM data;
 
     s = grpname;
@@ -260,7 +254,7 @@ void univ_add_group(char *desc, char *grpname)
     hashstorelast(data);
 }
 
-void univ_add_mask(char *desc, char *mask)
+void univ_add_mask(const char *desc, const char *mask)
 {
     UNIV_ITEM* ui;
 
@@ -270,7 +264,7 @@ void univ_add_mask(char *desc, char *mask)
 }
 
 //char* fname;				/* May be URL */
-void univ_add_file(char *desc, char *fname, char *label)
+void univ_add_file(const char *desc, const char *fname, const char *label)
 {
     UNIV_ITEM* ui;
 
@@ -283,7 +277,7 @@ void univ_add_file(char *desc, char *fname, char *label)
 	ui->data.cfile.label = nullptr;
 }
 
-UNIV_ITEM *univ_add_virt_num(char *desc, char *grp, ART_NUM art)
+UNIV_ITEM *univ_add_virt_num(const char *desc, const char *grp, ART_NUM art)
 {
     UNIV_ITEM* ui;
 
@@ -295,7 +289,7 @@ UNIV_ITEM *univ_add_virt_num(char *desc, char *grp, ART_NUM art)
     return ui;
 }
 
-void univ_add_textfile(char *desc, char *name)
+void univ_add_textfile(const char *desc, char *name)
 {
     UNIV_ITEM* ui;
     char* s;
@@ -328,15 +322,14 @@ void univ_add_textfile(char *desc, char *name)
 }
 
 /* mostly the same as the newsgroup stuff */
-void univ_add_virtgroup(char *grpname)
+void univ_add_virtgroup(const char *grpname)
 {
     UNIV_ITEM* ui;
-    char* s;
     HASHDATUM data;
 
-    s = grpname;
-    if (!s)
+    if (!grpname)
 	return;
+
     /* later check grpname for bad things? */
 
     /* perhaps leave if group has no unread, or other factor */
@@ -380,7 +373,7 @@ static char* univ_begin_label INIT(nullptr);
 /*
 **  Match text and p, return true, false.
 */
-static bool univ_DoMatch(char *text, char *p)
+static bool univ_DoMatch(const char *text, const char *p)
 {
     int	matched;
 
@@ -405,9 +398,9 @@ static bool univ_DoMatch(char *text, char *p)
 }
 
 /* type: 0=newsgroup, 1=virtual (more in future?) */
-void univ_use_pattern(char *pattern, int type)
+void univ_use_pattern(const char *pattern, int type)
 {
-    char* s = pattern;
+    const char* s = pattern;
     NGDATA* np;
     UNIV_ITEM* ui;
 
@@ -484,7 +477,7 @@ void univ_use_group_line(char *line, int type)
 }
 
 /* returns true on success, false otherwise */
-static bool univ_use_file(char *fname, char *title, char *label)
+static bool univ_use_file(char *fname, const char *label)
 {
     static char lbuf[LBUFLEN];
     FILE* fp;
@@ -548,21 +541,21 @@ static bool univ_use_file(char *fname, char *title, char *label)
     return true;
 }
 
-static bool univ_include_file(char *fname)
+static bool univ_include_file(const char *fname)
 {
     char* old_univ_fname;
     bool retval;
 
     old_univ_fname = univ_fname;
     univ_fname = savestr(fname);	/* LEAK */
-    retval = univ_use_file(univ_fname,univ_title,nullptr);
+    retval = univ_use_file(univ_fname,nullptr);
     univ_fname = old_univ_fname;
     return retval;
 }
 
 /* do the '$' extensions of the line. */
 //char* line;			/* may be temporarily edited */
-static void univ_do_line_ext1(char *desc, char *line)
+static void univ_do_line_ext1(const char *desc, char *line)
 {
     char* s;
     char* p;
@@ -580,7 +573,7 @@ static void univ_do_line_ext1(char *desc, char *line)
 	  case '0':		/* test vector: "desc" $v0 */
 	    s++;
 	    (void)univ_add_virt_num(desc? desc : s,
-			   "news.software.readers",(ART_NUM)15000);
+                                    "news.software.readers",(ART_NUM)15000);
 	    break;
 	  case '1':		/* "desc" $v1 1500 news.admin */
 	    /* XXX error checking */
@@ -783,7 +776,7 @@ bool univ_file_load(char *fname, char *title, char *label)
 	univ_title = savestr(title);
     if (label)
 	univ_label = savestr(label);
-    flag = univ_use_file(fname,title,label);
+    flag = univ_use_file(fname,label);
     if (!flag) {
 	univ_close();
     }
@@ -797,7 +790,7 @@ bool univ_file_load(char *fname, char *title, char *label)
 }
 
 /* level generator */
-void univ_mask_load(char *mask, char *title)
+void univ_mask_load(char *mask, const char *title)
 {
     univ_open();
 
@@ -974,7 +967,7 @@ static void univ_vg_addgroup()
 }
 
 /* returns do_newsgroup() value */
-int univ_visit_group_main(char *gname)
+int univ_visit_group_main(const char *gname)
 {
     int ret;
     NGDATA* np;
@@ -1112,7 +1105,7 @@ void sort_univ()
 
 /* return a description of the article */
 /* do this better later, like the code in sadesc.c */
-char *univ_article_desc(UNIV_ITEM *ui)
+const char *univ_article_desc(const UNIV_ITEM *ui)
 {
     char* s;
     char* f;
@@ -1177,7 +1170,7 @@ void univ_help_main(int where)
 
     /* read in main help file */
     univ_fname = savestr("%X/HelpFiles/top");
-    flag = univ_use_file(univ_fname,univ_title,univ_label);
+    flag = univ_use_file(univ_fname,univ_label);
 
     /* later: if flag is not true, then add message? */
 }
@@ -1187,7 +1180,7 @@ void univ_help(int where)
     univ_visit_help(where);	/* push old selector info to stack */
 }
 
-char *univ_keyhelp_modestr(UNIV_ITEM *ui)
+const char *univ_keyhelp_modestr(const UNIV_ITEM *ui)
 {
     switch (ui->data.i) {
       case UHELP_PAGE:
@@ -1213,6 +1206,6 @@ char *univ_keyhelp_modestr(UNIV_ITEM *ui)
       case UHELP_UNIV:
 	return "Universal Selector";
       default:
-	return 0;
+	return nullptr;
     }
 }

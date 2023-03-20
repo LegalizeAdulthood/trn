@@ -43,7 +43,7 @@ void s_go_bot()
 
 /* finishes a command on the bottom line... */
 /* returns true if command entered, false if wiped out... */
-int s_finish_cmd(char *string)
+int s_finish_cmd(const char *string)
 {
     s_go_bot();
     if (string && *string) {

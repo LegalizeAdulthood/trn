@@ -63,7 +63,7 @@ void dumpheader(char *where)
 }
 #endif
 
-int set_line_type(char *bufptr, char *colon)
+int set_line_type(char *bufptr, const char *colon)
 {
     char* t;
     char* f;
@@ -76,7 +76,7 @@ int set_line_type(char *bufptr, char *colon)
 	/* guard against space before : */
 	if (isspace(*f))
 	    return SOME_LINE;
-	*t = isupper(*f) ? tolower(*f) : *f;
+	*t = isupper(*f) ? static_cast<char>(tolower(*f)) : *f;
     }
     *t = '\0';
     f = msg;				/* get msg into a register */

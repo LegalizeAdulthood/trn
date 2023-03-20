@@ -97,7 +97,7 @@ void kfile_init()
     }
 }
 
-static void mention(char *str)
+static void mention(const char *str)
 {
     if (verbose) {
 	color_string(COLOR_NOTICE,str);
@@ -311,7 +311,7 @@ static bool kfile_junk(char *ptr, int killmask)
     return false;
 }
 
-void kill_unwanted(ART_NUM starting, char *message, int entering)
+void kill_unwanted(ART_NUM starting, const char *message, int entering)
 {
     bool intr = false;			/* did we get an interrupt? */
     ART_NUM oldfirst;
@@ -671,7 +671,7 @@ void open_kfile(int local)
     }
 }
 
-void kf_append(char *cmd, bool local)
+void kf_append(const char *cmd, bool local)
 {
     strcpy(cmd_buf, filexp(local? get_val("KILLLOCAL",killlocal)
 				: get_val("KILLGLOBAL",killglobal)));

@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#define FOO 1
-
 /* help locations */
 enum
 {
@@ -32,4 +30,4 @@ int help_multirc();
 int help_options();
 int help_scanart();
 int help_univ();
-int univ_key_help(int);
+int univ_key_help(int where);

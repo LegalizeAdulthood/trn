@@ -2,9 +2,12 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#define RI_ID		1
-#define RI_NEWSRC	2
-#define RI_ADDGROUPS	3
+enum
+{
+    RI_ID = 1,
+    RI_NEWSRC = 2,
+    RI_ADDGROUPS = 3
+};
 
 INI_WORDS rcgroups_ini[] = {
     { 0, "RCGROUPS", 0 },
@@ -14,7 +17,7 @@ INI_WORDS rcgroups_ini[] = {
     { 0, 0, 0 }
 };
 
-static bool clear_ngitem(char*,int);
+static bool clear_ngitem(char *cp, int arg);
 static bool lock_newsrc(NEWSRC *rp);
 static void unlock_newsrc(NEWSRC *rp);
 static bool open_newsrc(NEWSRC *rp);

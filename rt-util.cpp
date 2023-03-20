@@ -485,7 +485,7 @@ char *compress_from(char *from, int size)
 }
 
 /* Fit the date in <max> chars. */
-char *compress_date(ARTICLE *ap, int size)
+char *compress_date(const ARTICLE *ap, int size)
 {
     char* s;
     char* t;
@@ -528,7 +528,7 @@ bool subject_has_Re(char *str, char **strp)
 /* Output a subject in <max> chars.  Does intelligent trimming that tries to
 ** save the last two words on the line, excluding "(was: blah)" if needed.
 */
-char *compress_subj(ARTICLE *ap, int max)
+const char *compress_subj(const ARTICLE *ap, int max)
 {
     char* cp;
     int len;
@@ -773,10 +773,10 @@ void perform_status(long cnt, int spin)
     fflush(stdout);
 }
 
-static char *output_change(char *cp, long num, char *obj_type, char *modifier, char *action)
+static char *output_change(char *cp, long num, const char *obj_type, const char *modifier, const char *action)
 {
     bool neg;
-    char* s;
+    const char* s;
 
     if (num < 0) {
 	num *= -1;
@@ -813,7 +813,7 @@ static char *output_change(char *cp, long num, char *obj_type, char *modifier, c
     return cp;
 }
 
-int perform_status_end(long cnt, char *obj_type)
+int perform_status_end(long cnt, const char *obj_type)
 {
     long kills, sels, missing;
     char* cp = msg;
@@ -830,17 +830,17 @@ int perform_status_end(long cnt, char *obj_type)
 
     if (!performed_article_loop)
 	cp = output_change(cp, (long)perform_cnt,
-			   sel_mode == SM_THREAD? "thread" : "subject",
-			   nullptr, "ERR|match|ed");
+                           sel_mode == SM_THREAD? "thread" : "subject",
+                           nullptr, "ERR|match|ed");
     else if (perform_cnt != sels  && perform_cnt != -sels
 	  && perform_cnt != kills && perform_cnt != -kills) {
 	cp = output_change(cp, (long)perform_cnt, obj_type, nullptr,
-			   "ERR|match|ed");
+                           "ERR|match|ed");
 	obj_type = nullptr;
     }
     if (kills) {
 	cp = output_change(cp, kills, obj_type, nullptr,
-			   article_status? "un||killed" : "more|less|");
+                           article_status? "un||killed" : "more|less|");
 	obj_type = nullptr;
     }
     if (sels) {

@@ -61,13 +61,13 @@ EXT long kf_daynum;			/* day number for thread killfile */
 EXT ART_NUM killfirst;			/* used as firstart when killing */
 
 void kfile_init();
-int do_kfile(FILE *, int);
-void kill_unwanted(ART_NUM, char *, int);
-void rewrite_kfile(ART_NUM);
+int do_kfile(FILE *kfp, int entering);
+void kill_unwanted(ART_NUM starting, const char *message, int entering);
+void rewrite_kfile(ART_NUM thru);
 void update_thread_kfile();
 void change_auto_flags(ARTICLE *ap, int auto_flag);
 void clear_auto_flags(ARTICLE *ap);
 void perform_auto_flags(ARTICLE *ap, int thread_autofl, int subj_autofl, int chain_autofl);
 int edit_kfile();
-void open_kfile(int);
-void kf_append(char *cmd, bool local);
+void open_kfile(int local);
+void kf_append(const char *cmd, bool local);

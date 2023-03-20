@@ -43,7 +43,7 @@ void sa_init_threads()
 long sa_get_subj_thread(long e)
 {
     HASHDATUM data;
-    char* s;
+    const char* s;
     bool old_untrim;
     char* p;
 

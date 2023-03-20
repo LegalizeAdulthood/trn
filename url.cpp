@@ -44,7 +44,7 @@ static int  url_port;
 static char url_path[1024];
 
 /* returns true if successful */
-bool fetch_http(char *host, int port, char *path, char *outname)
+bool fetch_http(const char *host, int port, const char *path, const char *outname)
 {
     int sock;
     FILE* fp_out;
@@ -86,7 +86,7 @@ bool fetch_http(char *host, int port, char *path, char *outname)
 }
 
 /* add port support later? */
-bool fetch_ftp(char *host, char *origpath, char *outname)
+bool fetch_ftp(const char *host, const char *origpath, const char *outname)
 {
 #ifdef USEFTP
     static char cmdline[1024];
@@ -154,9 +154,9 @@ bool fetch_ftp(char *host, char *origpath, char *outname)
 /* right now only full, absolute URLs are allowed. */
 /* use relative URLs later? */
 /* later: pay more attention to long URLs */
-bool parse_url(char *url)
+bool parse_url(const char *url)
 {
-    char* s;
+    const char* s;
     char* p;
 
     /* consider using 0 as default to look up the service? */
@@ -219,7 +219,7 @@ bool parse_url(char *url)
     return true;
 }
 
-bool url_get(char *url, char *outfile)
+bool url_get(const char *url, const char *outfile)
 {
     bool flag;
     

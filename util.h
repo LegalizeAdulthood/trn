@@ -42,35 +42,35 @@ struct INI_WORDS
 void util_init();
 int doshell(const char *sh, const char *cmd);
 #ifndef USE_DEBUGGING_MALLOC
-char *safemalloc(MEM_SIZE);
-char *saferealloc(char *, MEM_SIZE);
+char *safemalloc(MEM_SIZE size);
+char *saferealloc(char *where, MEM_SIZE size);
 #endif
-char *safecat(char *, char *, int);
+char *safecat(char *to, const char *from, int len);
 #ifdef SETUIDGID
 int eaccess(char *, int);
 #endif
-char *trn_getwd(char *, int);
+char *trn_getwd(char *buf, int buflen);
 char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp);
-int makedir(char *, int);
-void notincl(char *);
-void growstr(char **, int *, int);
-void setdef(char *, char *);
+int makedir(char *dirname, int nametype);
+void notincl(const char *feature);
+void growstr(char **strptr, int *curlen, int newlen);
+void setdef(char *buffer, const char *dflt);
 #ifndef NO_FILELINKS
-void safelink(char *, char *);
+void safelink(char *old, char *new);
 #endif
 void verify_sig();
 double current_time();
-time_t text2secs(char *, time_t);
-char *secs2text(time_t);
+time_t text2secs(char *s, time_t defSecs);
+char *secs2text(time_t secs);
 char *temp_filename();
 char *get_auth_user();
 char *get_auth_pass();
 char **prep_ini_words(INI_WORDS words[]);
 void unprep_ini_words(INI_WORDS words[]);
-void prep_ini_data(char *, char *);
-bool parse_string(char **, char **);
-char *next_ini_section(char *, char **, char **);
+void prep_ini_data(char *cp, char *filename);
+bool parse_string(char **to, char **from);
+char *next_ini_section(char *cp, char **section, char **cond);
 char *parse_ini_section(char *cp, INI_WORDS words[]);
-bool check_ini_cond(char *);
+bool check_ini_cond(char *cond);
 char menu_get_char();
-int edit_file(char *);
+int edit_file(char *fname);

@@ -9,37 +9,40 @@
  * Within each letter it helps to arrange in increasing likelihood.)
  */
 
-#define PAST_HEADER	0			/* body */
-#define SHOWN_LINE	(PAST_HEADER+1)		/* unrecognized but shown */
-#define HIDDEN_LINE	(SHOWN_LINE+1)		/* unrecognized but hidden */
-#define CUSTOM_LINE	(HIDDEN_LINE+1)		/* to isolate a custom line */
-#define SOME_LINE	(CUSTOM_LINE+1)		/* default for unrecognized */
-#define AUTHOR_LINE	(SOME_LINE+1)		/* Author */
-#define BYTES_LINE	(AUTHOR_LINE+1)		/* Bytes */
-#define CONTNAME_LINE	(BYTES_LINE+1)		/* Content-Name */
-#define CONTDISP_LINE	(CONTNAME_LINE+1)	/* Content-Disposition */
-#define CONTLEN_LINE	(CONTDISP_LINE+1)	/* Content-Length */
-#define CONTXFER_LINE	(CONTLEN_LINE+1)	/* Content-Transfer-Encoding */
-#define CONTTYPE_LINE	(CONTXFER_LINE+1)	/* Content-Type */
-#define DIST_LINE	(CONTTYPE_LINE+1)	/* distribution */
-#define DATE_LINE	(DIST_LINE+1)		/* date */
-#define EXPIR_LINE	(DATE_LINE+1)		/* expires */
-#define FOLLOW_LINE	(EXPIR_LINE+1)		/* followup-to */
-#define FROM_LINE	(FOLLOW_LINE+1)		/* from */
-#define INREPLY_LINE	(FROM_LINE+1)		/* in-reply-to */
-#define KEYW_LINE	(INREPLY_LINE+1)	/* keywords */
-#define LINES_LINE	(KEYW_LINE+1)		/* lines */
-#define MIMEVER_LINE	(LINES_LINE+1)		/* mime-version */
-#define MSGID_LINE	(MIMEVER_LINE+1)	/* message-id */
-#define NGS_LINE	(MSGID_LINE+1)		/* newsgroups */
-#define PATH_LINE	(NGS_LINE+1)		/* path */
-#define RVER_LINE	(PATH_LINE+1)		/* relay-version */
-#define REPLY_LINE	(RVER_LINE+1)		/* reply-to */
-#define REFS_LINE	(REPLY_LINE+1)		/* references */
-#define SUMRY_LINE	(REFS_LINE+1)		/* summary */
-#define SUBJ_LINE	(SUMRY_LINE+1)		/* subject */
-#define XREF_LINE	(SUBJ_LINE+1)		/* xref */
-#define HEAD_LAST	(XREF_LINE+1)		/* total # of headers */
+enum header_line_type
+{
+    PAST_HEADER = 0,                     /* body */
+    SHOWN_LINE = (PAST_HEADER + 1),      /* unrecognized but shown */
+    HIDDEN_LINE = (SHOWN_LINE + 1),      /* unrecognized but hidden */
+    CUSTOM_LINE = (HIDDEN_LINE + 1),     /* to isolate a custom line */
+    SOME_LINE = (CUSTOM_LINE + 1),       /* default for unrecognized */
+    AUTHOR_LINE = (SOME_LINE + 1),       /* Author */
+    BYTES_LINE = (AUTHOR_LINE + 1),      /* Bytes */
+    CONTNAME_LINE = (BYTES_LINE + 1),    /* Content-Name */
+    CONTDISP_LINE = (CONTNAME_LINE + 1), /* Content-Disposition */
+    CONTLEN_LINE = (CONTDISP_LINE + 1),  /* Content-Length */
+    CONTXFER_LINE = (CONTLEN_LINE + 1),  /* Content-Transfer-Encoding */
+    CONTTYPE_LINE = (CONTXFER_LINE + 1), /* Content-Type */
+    DIST_LINE = (CONTTYPE_LINE + 1),     /* distribution */
+    DATE_LINE = (DIST_LINE + 1),         /* date */
+    EXPIR_LINE = (DATE_LINE + 1),        /* expires */
+    FOLLOW_LINE = (EXPIR_LINE + 1),      /* followup-to */
+    FROM_LINE = (FOLLOW_LINE + 1),       /* from */
+    INREPLY_LINE = (FROM_LINE + 1),      /* in-reply-to */
+    KEYW_LINE = (INREPLY_LINE + 1),      /* keywords */
+    LINES_LINE = (KEYW_LINE + 1),        /* lines */
+    MIMEVER_LINE = (LINES_LINE + 1),     /* mime-version */
+    MSGID_LINE = (MIMEVER_LINE + 1),     /* message-id */
+    NGS_LINE = (MSGID_LINE + 1),         /* newsgroups */
+    PATH_LINE = (NGS_LINE + 1),          /* path */
+    RVER_LINE = (PATH_LINE + 1),         /* relay-version */
+    REPLY_LINE = (RVER_LINE + 1),        /* reply-to */
+    REFS_LINE = (REPLY_LINE + 1),        /* references */
+    SUMRY_LINE = (REFS_LINE + 1),        /* summary */
+    SUBJ_LINE = (SUMRY_LINE + 1),        /* subject */
+    XREF_LINE = (SUBJ_LINE + 1),         /* xref */
+    HEAD_LAST = (XREF_LINE + 1),         /* total # of headers */
+};
 
 struct HEADTYPE
 {
@@ -144,15 +147,15 @@ EXT long headbuf_size;
 
 void head_init();
 #ifdef DEBUG
-void dumpheader(char *);
+void dumpheader(char *where);
 #endif
-int set_line_type(char *, char *);
-int get_header_num(char *);
-void start_header(ART_NUM);
+int set_line_type(char *bufptr, const char *colon);
+int get_header_num(char *s);
+void start_header(ART_NUM artnum);
 void end_header_line();
-bool parseline(char *, int, int);
+bool parseline(char *art_buf, int newhide, int oldhide);
 void end_header();
-bool parseheader(ART_NUM);
-char *fetchlines(ART_NUM, int);
-char *mp_fetchlines(ART_NUM, int, int);
+bool parseheader(ART_NUM artnum);
+char *fetchlines(ART_NUM artnum, int which_line);
+char *mp_fetchlines(ART_NUM artnum, int which_line, int pool);
 char *prefetchlines(ART_NUM artnum, int which_line, bool copy);

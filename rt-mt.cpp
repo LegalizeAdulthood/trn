@@ -189,7 +189,7 @@ exit:
 ** subsitute any '.'s in the group name into '/'s, prepend the path,
 ** and append the '/.thread' or '.th' on to the end.
 */
-static char *mt_name(char *group)
+static char *mt_name(const char *group)
 {
     sprintf(buf, "%s/%s", datasrc->thread_dir, group);
     return buf;

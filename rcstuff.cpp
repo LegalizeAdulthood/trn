@@ -681,7 +681,7 @@ void abandon_ng(NGDATA *np)
 /* returns true if found or added, false if not. */
 /* assumes that we are chdir'ed to NEWSSPOOL */
 
-bool get_ng(char *what, int flags)
+bool get_ng(const char *what, int flags)
 {
     char* ntoforget;
     char promptbuf[128];
@@ -902,7 +902,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
 {
     NGDATA* np;
     int i;
-    char* dflt = (move_np!=current_ng ? "$^.Lq" : "$^Lq");
+    const char* dflt = (move_np!=current_ng ? "$^.Lq" : "$^Lq");
     int save_sort = sel_sort;
 
     if (sel_newsgroupsort != SS_NATURAL) {
@@ -1081,7 +1081,7 @@ void list_newsgroups()
     static char* status[] = {"(READ)","(UNSUB)","(DUP)","(BOGUS)","(JUNK)"};
 
     page_start();
-    print_lines("  #  Status  Newsgroup\n",STANDOUT);
+    print_lines("  #  Status  Newsgroup\n", STANDOUT);
     for (np = first_ng, i = 0; np && !int_count; np = np->next, i++) {
 	if (np->toread >= 0)
 	    set_toread(np, ST_LAX);
@@ -1092,7 +1092,7 @@ void list_newsgroups()
 	    sprintf(tmpbuf,"%3d %7s  ",i,status[-np->toread]);
 	safecpy(tmpbuf+13, np->rcline, sizeof tmpbuf - 13);
 	*(np->rcline + np->numoffset - 1) = '\0';
-	if (print_lines(tmpbuf,NOMARKING) != 0)
+	if (print_lines(tmpbuf, NOMARKING) != 0)
 	    break;
     }
     int_count = 0;
@@ -1100,7 +1100,7 @@ void list_newsgroups()
 
 /* find a newsgroup in any newsrc */
 
-NGDATA *find_ng(char *ngnam)
+NGDATA *find_ng(const char *ngnam)
 {
     HASHDATUM data;
 

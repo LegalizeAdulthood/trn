@@ -229,7 +229,7 @@ void decode_switch(char *s)
 	case 'J':
 	    if (*++s == '=') s++;
 	    set_option(OI_JOIN_SUBJECT_LINES,
-		       upordown && *s? s : YESorNO(upordown));
+                       upordown && *s? s : YESorNO(upordown));
 	    break;
 	case 'k':
 	    set_option(OI_IGNORE_THRU_ON_SELECT, YESorNO(upordown));
@@ -354,7 +354,7 @@ void decode_switch(char *s)
 	case 'z':
 	    if (*++s == '=') s++;
 	    set_option(OI_DEFAULT_REFETCH_TIME,
-		       upordown && *s? s : YESorNO(upordown));
+                       upordown && *s? s : YESorNO(upordown));
 	    break;
 	default:
 	    if (verbose)

@@ -20,10 +20,9 @@ static int save_maxngtodo = 0;
 
 void only_init()
 {
-    ;
 }
 
-void setngtodo(char *pat)
+void setngtodo(const char *pat)
 {
     char* s;
     int i = maxngtodo + save_maxngtodo;

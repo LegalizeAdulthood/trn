@@ -89,7 +89,7 @@ static void mp_free_frag(int f)
     mp_first_free_frag = f;
 }
 
-char *mp_savestr(char *str, int pool)
+char *mp_savestr(const char *str, int pool)
 {
     int f, oldf;
     int len;

@@ -50,19 +50,19 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     sel_grp_dmode = savestr(sel_grp_dmode) + 1;
     sel_art_dmode = savestr(sel_art_dmode) + 1;
     UnivSelBtnCnt = parse_mouse_buttons(&UnivSelBtns,
-	"[Top]^ [PgUp]< [PgDn]> [ OK ]^j [Quit]q [Help]?");
+                                        "[Top]^ [PgUp]< [PgDn]> [ OK ]^j [Quit]q [Help]?");
     NewsrcSelBtnCnt = parse_mouse_buttons(&NewsrcSelBtns,
-	"[Top]^ [PgUp]< [PgDn]> [ OK ]^j [Quit]q [Help]?");
+                                          "[Top]^ [PgUp]< [PgDn]> [ OK ]^j [Quit]q [Help]?");
     AddSelBtnCnt = parse_mouse_buttons(&AddSelBtns,
-	"[Top]^ [Bot]$ [PgUp]< [PgDn]> [ OK ]Z [Quit]q [Help]?");
+                                       "[Top]^ [Bot]$ [PgUp]< [PgDn]> [ OK ]Z [Quit]q [Help]?");
     OptionSelBtnCnt = parse_mouse_buttons(&OptionSelBtns,
-	"[Find]/ [FindNext]/^j [Top]^ [Bot]$ [PgUp]< [PgDn]> [Use]^i [Save]S [Abandon]q [Help]?");
+                                          "[Find]/ [FindNext]/^j [Top]^ [Bot]$ [PgUp]< [PgDn]> [Use]^i [Save]S [Abandon]q [Help]?");
     NewsgroupSelBtnCnt = parse_mouse_buttons(&NewsgroupSelBtns,
-	"[Top]^ [PgUp]< [PgDn]> [ OK ]Z [Quit]q [Help]?");
+                                             "[Top]^ [PgUp]< [PgDn]> [ OK ]Z [Quit]q [Help]?");
     NewsSelBtnCnt = parse_mouse_buttons(&NewsSelBtns,
-	"[Top]^ [Bot]$ [PgUp]< [PgDn]> [KillPg]D [ OK ]Z [Quit]q [Help]?");
+                                        "[Top]^ [Bot]$ [PgUp]< [PgDn]> [KillPg]D [ OK ]Z [Quit]q [Help]?");
     ArtPagerBtnCnt = parse_mouse_buttons(&ArtPagerBtns,
-	"[Next]n [Sel]+ [Quit]q [Help]h");
+                                         "[Next]n [Sel]+ [Quit]q [Help]h");
 
     prep_ini_words(options_ini);
     if (argc >= 2 && !strcmp(argv[1],"-c"))
@@ -578,7 +578,7 @@ void set_option(int num, char *s)
     }
 }
 
-void save_options(char *filename)
+void save_options(const char *filename)
 {
     int i;
     int fd_in;
@@ -1074,7 +1074,7 @@ void set_header(char *s, int flag, bool setit)
     }
 }
 
-static int parse_mouse_buttons(char **cpp, char *btns)
+static int parse_mouse_buttons(char **cpp, const char *btns)
 {
     char* t = *cpp;
     int cnt = 0;

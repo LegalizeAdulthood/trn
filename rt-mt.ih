@@ -58,17 +58,17 @@ struct BMAP
     BYTE pad_hack;
 };
 
-static char* mt_name(char*);
+static char *mt_name(const char *group);
 static int read_authors();
 static int read_subjects();
 static int read_roots();
 static SUBJECT *the_subject(int num);
-static char* the_author(int);
+static char *the_author(int num);
 static ARTICLE *the_article(int relative_offset, int num);
 static int read_articles();
 static int read_ids();
 static void tweak_data();
-static int read_item(char**,MEM_SIZE);
+static int read_item(char **dest, MEM_SIZE len);
 static void mybytemap(BMAP *map);
-static void wp_bmap(WORD*,int);
-static void lp_bmap(LONG*,int);
+static void wp_bmap(WORD *buf, int len);
+static void lp_bmap(LONG *buf, int len);

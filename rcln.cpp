@@ -61,7 +61,7 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
 
 /* add an article number to a newsgroup, if it isn't already read */
 
-int addartnum(DATASRC *dp, ART_NUM artnum, char *ngnam)
+int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
 {
     NGDATA* np;
     char* s;

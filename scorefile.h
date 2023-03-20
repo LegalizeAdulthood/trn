@@ -61,21 +61,30 @@ EXT int sf_pattern_status INIT(false);
 void sf_init();
 void sf_clean();
 void sf_grow();
-int sf_check_extra_headers(char *);
-void sf_add_extra_header(char *);
-char *sf_get_extra_header(ART_NUM, int);
-bool is_text_zero(char *);
-char *sf_get_filename(int);
-char *sf_cmd_fname(char *);
+int sf_check_extra_headers(const char *head);
+void sf_add_extra_header(const char *head);
+char *sf_get_extra_header(ART_NUM art, int hnum);
+
+/* Returns true if text pointed to by s is a text representation of
+ * the number 0.  Used for error checking.
+ * Note: does not check for trailing garbage ("+00kjsdfk" returns true).
+ */
+inline bool is_text_zero(const char *s)
+{
+    return *s == '0' || ((*s == '+' || *s == '-') && s[1]=='0');
+}
+
+char *sf_get_filename(int level);
+char *sf_cmd_fname(char *s);
 bool sf_do_command(char *cmd, bool check);
-char *sf_freeform(char *, char *);
+char *sf_freeform(char *start1, char *end1);
 bool sf_do_line(char *line, bool check);
-void sf_do_file(char *);
-int score_match(char *, int);
-int sf_score(ART_NUM);
-char *sf_missing_score(char *);
-void sf_append(char *);
-char *sf_get_line(ART_NUM, int);
-void sf_print_match(int);
-void sf_exclude_file(char *);
-void sf_edit_file(char *);
+void sf_do_file(const char *fname);
+int score_match(char *str, int ind);
+int sf_score(ART_NUM a);
+char *sf_missing_score(const char *line);
+void sf_append(char *line);
+char *sf_get_line(ART_NUM a, int h);
+void sf_print_match(int indx);
+void sf_exclude_file(const char *fname);
+void sf_edit_file(const char *filespec);

@@ -169,7 +169,7 @@ char *sc_easy_append()
 }
 
 /* returns new string or nullptr to abort. */
-char *sc_easy_command()
+const char *sc_easy_command()
 {
     char* s;
     bool q_done;	/* if true, we are finished with current question */

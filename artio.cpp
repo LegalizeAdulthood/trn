@@ -287,7 +287,7 @@ char *readartbuf(bool view_inline)
       case DECODE_MIME: {
 	MIMECAP_ENTRY* mcp;
 	mcp = mime_FindMimecapEntry(mime_section->type_name,
-				    MCF_NEEDSTERMINAL|MCF_COPIOUSOUTPUT);
+                                    MCF_NEEDSTERMINAL |MCF_COPIOUSOUTPUT);
 	if (mcp) {
 	    int save_term_line = g_term_line;
 	    nowait_fork = true;

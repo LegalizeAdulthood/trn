@@ -3,4 +3,4 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 static int mp_alloc_frag();
-static void mp_free_frag(int);
+static void mp_free_frag(int f);

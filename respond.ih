@@ -4,5 +4,5 @@
 
 static void follow_it_up();
 #if 0
-static bool cut_line(char*);
+static bool cut_line(char *str);
 #endif

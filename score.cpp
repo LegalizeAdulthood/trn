@@ -416,10 +416,10 @@ void sc_rescore()
 }
 
 /* May have a very different interface in the user versions */
-void sc_score_cmd(char *line)
+void sc_score_cmd(const char *line)
 {
     long i, j;
-    char* s;
+    const char* s;
 
     if (!sc_initialized) {
 	if (sc_delay) {
@@ -480,8 +480,8 @@ void sc_score_cmd(char *line)
 	break;
       case 'e':	/* edit scorefile or other file */
 	for (s = line+1; *s == ' ' || *s == '\t'; s++) ;
-	if (!*s)	/* empty name for scorefile */
-	    sf_edit_file("\"");	/* edit local scorefile */
+	if (!*s)                /* empty name for scorefile */
+	    sf_edit_file("\""); /* edit local scorefile */
 	else
 	    sf_edit_file(s);
 	break;

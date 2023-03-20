@@ -38,7 +38,7 @@ void s_beep()
     fflush(stdout);
 }
 
-char *s_get_statchars(long ent, int line)
+const char *s_get_statchars(long ent, int line)
 {
     if (s_status_cols == 0)
 	return "";
@@ -50,7 +50,7 @@ char *s_get_statchars(long ent, int line)
     }
 }
 
-char *s_get_desc(long ent, int line, bool trunc)
+const char *s_get_desc(long ent, int line, bool trunc)
 {
     switch (s_cur_type) {
       case S_ART:

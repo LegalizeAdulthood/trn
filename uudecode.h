@@ -5,5 +5,5 @@
 /* Length of a normal uuencoded line, including newline */
 #define UULENGTH 62
 
-int uue_prescan(char *, char **, int *, int *);
-int uudecode(FILE *, int);
+int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp);
+int uudecode(FILE *ifp, int state);

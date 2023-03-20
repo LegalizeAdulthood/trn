@@ -105,8 +105,7 @@ void sa_cleanmain()
     sa_in = false;
 }
 
-void
-sa_growarts(long oldlast,long last)
+void sa_growarts(long oldlast, long last)
 {
     int i;
 
@@ -147,11 +146,9 @@ void sa_initmode()
     sa_mode_zoom = false;			/* reset zoom */
 }
 
-int sa_mainloop()
+sa_main_result sa_mainloop()
 {
-    int i;
-
-/* Eventually, strn will need a variable in score.[ch] set when the
+    /* Eventually, strn will need a variable in score.[ch] set when the
  * scoring initialization *failed*, so that strn could try to
  * initialize the scoring again or decide to disallow score operations.)
  */
@@ -169,7 +166,7 @@ int sa_mainloop()
     s_ref_all = true;
     if (s_top_ent < 1)
 	s_top_ent = s_first();
-    i = s_fillpage();
+    int i = s_fillpage();
     if (i == -1 || i == 0) {
 	/* for now just quit if no page could be filled. */
 	return SA_QUIT;
@@ -183,7 +180,7 @@ int sa_mainloop()
 	return SA_NORM;
     }
     /* something else (quit, return, etc...) */
-    return i;
+    return static_cast<sa_main_result>(i);
 }
 
 /* do something useful until a key is pressed. */

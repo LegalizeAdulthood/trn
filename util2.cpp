@@ -210,11 +210,11 @@ char *filexp(char *s)
 
 /* return ptr to little string in big string, nullptr if not found */
 
-char *in_string(char *big, char *little, bool case_matters)
+char *in_string(char *big, const char *little, bool case_matters)
 {
     char* t;
-    char* s;
-    char* x;
+    const char* s;
+    const char* x;
 
     for (t = big; *t; t++) {
 	for (x=t,s=little; *s; x++,s++) {

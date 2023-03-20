@@ -8,8 +8,8 @@ EXT bool s_default_cmd INIT(false);
 /* explicitly follow until end of thread */
 EXT bool s_follow_temp INIT(false);
 
-bool s_eligible(long);
+bool s_eligible(long ent);
 void s_beep();
-char *s_get_statchars(long, int);
-char *s_get_desc(long ent, int line, bool trunc);
-int s_ent_lines(long);
+const char *s_get_statchars(long ent, int line);
+const char *s_get_desc(long ent, int line, bool trunc);
+int s_ent_lines(long ent);

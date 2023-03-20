@@ -61,6 +61,6 @@ bool find_parent(bool keep_going);
 bool find_leaf(bool keep_going);
 bool find_next_sib();
 bool find_prev_sib();
-void count_subjects(int);
+void count_subjects(int cmode);
 void sort_subjects();
 void sort_articles();

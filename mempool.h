@@ -12,6 +12,6 @@ enum
 };
 
 void mp_init();
-char *mp_savestr(char *, int);
-char *mp_malloc(int, int);
-void mp_free(int);
+char *mp_savestr(const char *str, int pool);
+char *mp_malloc(int len, int pool);
+void mp_free(int pool);
