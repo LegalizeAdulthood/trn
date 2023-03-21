@@ -6,16 +6,12 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "search.h"
 #include "term.h"
 #include "util.h"
-#include "score.h"
-#include "scorefile.h"
-#include "INTERN.h"
 #include "score-easy.h"
 
 /* new line to return to the caller. */
-static char sc_e_newline[LBUFLEN];
+static char s_sc_e_newline[LBUFLEN];
 
 /* returns new string or nullptr to abort. */
 char *sc_easy_append()
@@ -27,7 +23,7 @@ char *sc_easy_append()
     char ch;
 
     filechar = '\0';	/* GCC warning avoidance */
-    s = sc_e_newline;
+    s = s_sc_e_newline;
     printf("\nScorefile easy append mode.\n") FLUSH;
     q_done = false;
     while (!q_done) {
@@ -43,8 +39,8 @@ char *sc_easy_append()
 	  case '0':
 	    return nullptr;
 	  case '1':
-	    strcpy(sc_e_newline,"?");
-	    return sc_e_newline;
+	    strcpy(s_sc_e_newline,"?");
+	    return s_sc_e_newline;
 	  case '2':
 	    filechar = '*';
 	    break;
@@ -102,7 +98,7 @@ char *sc_easy_append()
 	    buf[1] = FINISHCMD;
 	    if (finish_command(true)) {
 		sprintf(s,"%s",buf+1);
-		return sc_e_newline;
+		return s_sc_e_newline;
 	    }
 	    printf("\n");
 	    q_done = false;
@@ -128,7 +124,7 @@ char *sc_easy_append()
 		if (buf[1] != '0')
 		    continue;	/* the while loop */
 	    sprintf(s,"%ld",score);
-	    s = sc_e_newline+strlen(sc_e_newline); /* point at terminator  */
+	    s = s_sc_e_newline+strlen(s_sc_e_newline); /* point at terminator  */
 	    *s++ = ' ';
 	    q_done = true;
 	} else
@@ -150,11 +146,11 @@ char *sc_easy_append()
 	  case '1':
 	    *s++ = 'S';
 	    *s++ = '\0';
-	    return sc_e_newline;
+	    return s_sc_e_newline;
 	  case '2':
 	    *s++ = 'F';
 	    *s++ = '\0';
-	    return sc_e_newline;
+	    return s_sc_e_newline;
 	  case 'h':
 	    printf("No help available (yet).\n") FLUSH;
 	    q_done = false;
@@ -175,7 +171,7 @@ const char *sc_easy_command()
     bool q_done;	/* if true, we are finished with current question */
     char ch;
 
-    s = sc_e_newline;
+    s = s_sc_e_newline;
     printf("\nScoring easy command mode.\n") FLUSH;
     q_done = false;
     while (!q_done) {
