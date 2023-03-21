@@ -183,13 +183,13 @@ do_article_result do_article()
 					- (!selected && unseen));
 		}
 		else if ((i = (ART_NUM)(ngptr->toread - unseen)) != 0
-		       || (!ThreadedGroup && dmcount)) {
+		       || (!ThreadedGroup && g_dmcount)) {
 		    sprintf(g_art_line+strlen(g_art_line),
 			    " (%ld more)",(long)i);
 		}
-		if (!ThreadedGroup && dmcount)
+		if (!ThreadedGroup && g_dmcount)
 		    sprintf(g_art_line+strlen(g_art_line)-1,
-			    " + %ld Marked to return)",(long)dmcount);
+			    " + %ld Marked to return)",(long)g_dmcount);
 		linenum += tree_puts(g_art_line,linenum+g_topline,0);
 	    }
 	    start_header(art);

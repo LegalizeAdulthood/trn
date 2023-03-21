@@ -56,7 +56,7 @@ add_executable(trn
     artstate.h
     autosub.cpp autosub.h
     backpage.cpp backpage.h
-    bits.cpp bits.h bits.ih
+    bits.cpp bits.h
     cache.cpp cache.h cache.ih
     charsubst.cpp charsubst.h charsubst.ih
     color.cpp color.h color.ih

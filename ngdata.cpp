@@ -103,7 +103,7 @@ int access_ng()
 	absfirst = ngptr->abs1st;
     }
 
-    dmcount = 0;
+    g_dmcount = 0;
     missing_count = 0;
     in_ng = true;			/* tell the world we are here */
 

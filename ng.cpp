@@ -1490,7 +1490,7 @@ u to mark all and unsubscribe.\n\n\
 	else {
 	    selected_count = selected_subj_cnt = selected_only = false;
 	    ngptr->toread = 0;
-	    if (dmcount)
+	    if (g_dmcount)
 		yankback();
 	}
 	newline();

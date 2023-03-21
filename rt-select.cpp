@@ -1708,7 +1708,7 @@ static int article_commands(char_int ch)
 	switch_dmode(&sel_art_dmode);	    /* sets msg */
 	return DS_DISPLAY;
       case 'Y':
-	if (!dmcount) {
+	if (!g_dmcount) {
 	    strcpy(msg,"No marked articles to yank back.");
 	    return DS_STATUS;
 	}

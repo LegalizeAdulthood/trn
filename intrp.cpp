@@ -596,7 +596,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s[1] = '\0';
 		    break;
 		case 'M':
-		    sprintf(scrbuf,"%ld",(long)dmcount);
+		    sprintf(scrbuf,"%ld",(long)g_dmcount);
 		    s = scrbuf;
 		    break;
 		case 'n':			/* newsgroups */

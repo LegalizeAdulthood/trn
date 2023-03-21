@@ -1,8 +1,10 @@
 /* bits.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef BITS_H
+#define BITS_H
 
-EXT int dmcount INIT(0);
+extern int g_dmcount;
 
 void bits_init();
 void rc_to_bits();
@@ -21,3 +23,5 @@ void mark_missing_articles();
 void check_first(ART_NUM min);
 void yankback();
 bool chase_xrefs(bool until_key);
+
+#endif

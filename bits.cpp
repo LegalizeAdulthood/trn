@@ -5,7 +5,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "hash.h"
 #include "cache.h"
 #include "list.h"
 #include "ngdata.h"
@@ -20,23 +19,26 @@
 #include "final.h"
 #include "trn.h"
 #include "ng.h"
-#include "artio.h"
-#include "intrp.h"
 #include "rcln.h"
 #include "ndir.h"
 #include "kfile.h"
 #include "rthread.h"
-#include "rt-process.h"
 #include "rt-select.h"
 #include "rt-util.h"
-#include "INTERN.h"
 #include "bits.h"
-#include "bits.ih"
 
-static long chase_count = 0;
+static long s_chase_count{0};
+int g_dmcount{0};
 
-void bits_init() {
-    ;
+static bool yank_article(char *ptr, int arg);
+static bool check_chase(char *ptr, int until_key);
+static int chase_xref(ART_NUM artnum, int markread);
+#ifdef VALIDATE_XREF_SITE
+static bool valid_xref_site(ART_NUM artnum, char *site);
+#endif
+
+void bits_init()
+{
 }
 
 void rc_to_bits()
@@ -433,7 +435,7 @@ void unmark_as_read(ARTICLE *ap)
 #ifdef MCHASE
     if (ap->xrefs != "" && !(ap->flags & AF_MCHASE)) {
 	ap->flags |= AF_MCHASE;
-	chase_count++;
+	s_chase_count++;
     }
 #endif
 }
@@ -446,7 +448,7 @@ void set_read(ARTICLE *ap)
     oneless(ap);
     if (!olden_days && ap->xrefs != "" && !(ap->flags & AF_KCHASE)) {
 	ap->flags |= AF_KCHASE;
-	chase_count++;
+	s_chase_count++;
     }
 }
 
@@ -457,7 +459,7 @@ void delay_unmark(ARTICLE *ap)
 {
     if (!(ap->flags & AF_YANKBACK)) {
 	ap->flags |= AF_YANKBACK;
-	dmcount++;
+	g_dmcount++;
     }
 }
 
@@ -469,7 +471,7 @@ void mark_as_read(ARTICLE *ap)
     oneless(ap);
     if (ap->xrefs != "" && !(ap->flags & AF_KCHASE)) {
 	ap->flags |= AF_KCHASE;
-	chase_count++;
+	s_chase_count++;
     }
     checkcount++;			/* get more worried about crashes */
 }
@@ -499,19 +501,19 @@ void check_first(ART_NUM min)
 /* bring back articles marked with M */
 void yankback()
 {
-    if (dmcount) {			/* delayed unmarks pending? */
+    if (g_dmcount) {			/* delayed unmarks pending? */
 	if (panic)
 	    ;
 	else if (gmode == 's')
-	    sprintf(msg, "Returned %ld Marked article%s.",(long)dmcount,
-		PLURAL(dmcount));
+	    sprintf(msg, "Returned %ld Marked article%s.",(long)g_dmcount,
+		PLURAL(g_dmcount));
 	else {
-	    printf("\nReturning %ld Marked article%s...\n",(long)dmcount,
-		PLURAL(dmcount)) FLUSH;
+	    printf("\nReturning %ld Marked article%s...\n",(long)g_dmcount,
+		PLURAL(g_dmcount)) FLUSH;
 	    termdown(2);
 	}
 	article_walk(yank_article, 0);
-	dmcount = 0;
+	g_dmcount = 0;
     }
 }
 
@@ -529,13 +531,13 @@ static bool yank_article(char *ptr, int arg)
 
 bool chase_xrefs(bool until_key)
 {
-    if (!chase_count)
+    if (!s_chase_count)
 	return true;
     if (until_key)
 	setspin(SPIN_BACKGROUND);
 
     article_walk(check_chase, until_key);
-    chase_count = 0;
+    s_chase_count = 0;
     return true;
 }
 
@@ -546,14 +548,14 @@ static bool check_chase(char *ptr, int until_key)
     if (ap->flags & AF_KCHASE) {
 	chase_xref(article_num(ap),true);
 	ap->flags &= ~AF_KCHASE;
-	if (!--chase_count)
+	if (!--s_chase_count)
 	    return true;
     }
 #ifdef MCHASE
     if (ap->flags & AF_MCHASE) {
 	chase_xref(article_num(ap),true);
 	ap->flags &= ~AF_MCHASE;
-	if (!--chase_count)
+	if (!--s_chase_count)
 	    return 1;
     }
 #endif
