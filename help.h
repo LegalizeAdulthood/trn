@@ -1,6 +1,8 @@
 /* help.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef HELP_H
+#define HELP_H
 
 /* help locations */
 enum
@@ -31,3 +33,5 @@ int help_options();
 int help_scanart();
 int help_univ();
 int univ_key_help(int where);
+
+#endif

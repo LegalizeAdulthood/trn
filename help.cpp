@@ -5,15 +5,12 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "list.h"
 #include "ngdata.h"
 #include "term.h"
-#include "INTERN.h"
 #include "help.h"
 
 void help_init()
 {
-    ;
 }
 
 int help_page()
