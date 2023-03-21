@@ -3,6 +3,8 @@
  *
  * smaller functions
  */
+#ifndef SAMISC_H
+#define SAMISC_H
 
 bool sa_basic_elig(long a);
 bool sa_eligible(long a);
@@ -11,3 +13,5 @@ void sa_selthreads();
 int sa_number_arts();
 void sa_go_art(long a);
 int sa_compare(long a, long b);
+
+#endif

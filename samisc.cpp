@@ -7,45 +7,23 @@
 #include "EXTERN.h"
 #include "common.h"
 #include "list.h"
-#include "hash.h"
 #include "cache.h"
 #include "artio.h"		/* openart */
 #include "bits.h"
-#include "final.h"		/* assert's sig_catcher() */
-#include "term.h"		/* for "backspace" */
-#include "util.h"
 #include "scanart.h"
 #include "samain.h"
 #include "sathread.h"
 #include "sorder.h"
-#include "trn.h"
 #include "ngdata.h"		/* several */
-#include "rcstuff.h"
 #include "ng.h"			/* for "g_art" */
-#include "head.h"		/* fetchsubj */
 #include "rthread.h"
-#include "rt-select.h"		/* g_sel_mode */
 #include "score.h"
-#include "INTERN.h"
 #include "samisc.h"
 
-#ifdef UNDEF	/* use function for breakpoint debugging */
 inline int check_article(long a)
-{
-    if (a < g_absfirst || a > g_lastart)
-    {
-        printf("\nArticle %d out of range\n", a) FLUSH;
-        return false;
-    }
-    return true;
-}
-#else
-/* note that argument is used twice. */
-inline bool check_article(long a)
 {
     return a >= g_absfirst && a <= g_lastart;
 }
-#endif
 
 /* ignoring "Fold" (or later recursive) mode(s), is this article eligible? */
 bool sa_basic_elig(long a)
