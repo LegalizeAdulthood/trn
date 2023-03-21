@@ -7,18 +7,19 @@
 #include "common.h"
 #include "util.h"
 #include "util2.h"
-#include "list.h"
-#include "hash.h"
 #include "ngdata.h"
 #include "nntpclient.h"
 #include "datasrc.h"
-#include "nntp.h"
 #include "rcstuff.h"
 #include "term.h"
-#include "INTERN.h"
 #include "rcln.h"
 
-#define MAX_DIGITS 7
+enum
+{
+    MAX_DIGITS = 7
+};
+
+bool toread_quiet{};
 
 void rcln_init()
 {

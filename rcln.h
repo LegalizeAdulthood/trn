@@ -1,9 +1,11 @@
 /* rcln.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef RCLN_H
+#define RCLN_H
 
 /* if true, silence is golden (universal scan mode) */
-EXT bool toread_quiet INIT(false);
+extern bool toread_quiet;
 
 #define ST_STRICT	false
 #define ST_LAX		true
@@ -18,3 +20,5 @@ void prange(char *where, ART_NUM min, ART_NUM max);
 void set_toread(NGDATA *np, bool lax_high_check);
 void checkexpired(NGDATA *np, ART_NUM a1st);
 bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam);
+
+#endif
