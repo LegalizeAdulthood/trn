@@ -70,7 +70,7 @@ add_executable(trn
     head.cpp head.h
     help.cpp help.h
     init.cpp init.h
-    intrp.cpp intrp.h intrp.ih
+    intrp.cpp intrp.h
     kfile.cpp kfile.h kfile.ih
     last.cpp last.h
     list.cpp list.h list.ih

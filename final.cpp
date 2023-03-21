@@ -113,8 +113,8 @@ void final_init()
 	remove(s);
     }
     cleanup_nntp();
-    if (headname)
-	remove(headname);
+    if (g_headname)
+	remove(g_headname);
     if (status < 0) {
 	sigset(SIGILL,SIG_DFL);
 #ifdef HAS_SIGBLOCK
@@ -123,8 +123,8 @@ void final_init()
 	abort();
     }
 #ifdef RESTORE_ORIGDIR
-    if (origdir)
-	chdir(origdir);
+    if (g_origdir)
+	chdir(g_origdir);
 #endif
     exit(status);
 }

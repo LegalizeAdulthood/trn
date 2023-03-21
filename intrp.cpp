@@ -30,10 +30,7 @@
 #include "rthread.h"
 #include "rt-select.h"
 #include "rt-util.h"
-#include "INTERN.h"
 #include "intrp.h"
-#include "intrp.ih"
-//#include <netdb.h>
 
 #ifdef HAS_UNAME
 #include <sys/utsname.h>
@@ -45,11 +42,22 @@ struct utsname utsn;
 #define pclose(f) _pclose(f)
 #endif
 
-static char* regexp_specials = "^$.*[\\/?%";
+char *g_origdir{};  /* cwd when rn invoked */
+char *g_hostname{}; /* host name to match local postings */
+char *g_headname{};
+int g_perform_cnt{};
 
-char orgname[] = ORGNAME;
+#ifdef NEWS_ADMIN
+char g_newsadmin[]{NEWS_ADMIN}; /* news administrator */
+int g_newsuid{};
+#endif
 
-COMPEX cond_compex;
+static char *skipinterp(char *pattern, const char *stoppers);
+static void abort_interp();
+
+static char *s_regexp_specials = "^$.*[\\/?%";
+static char s_orgname[] = ORGNAME;
+static COMPEX s_cond_compex;
 
 void intrp_init(char *tcbuf, int tcbuf_len)
 {
@@ -57,7 +65,7 @@ void intrp_init(char *tcbuf, int tcbuf_len)
     int i;
 #endif
 
-    init_compex(&cond_compex);
+    init_compex(&s_cond_compex);
     
     /* get environmental stuff */
 
@@ -67,7 +75,7 @@ void intrp_init(char *tcbuf, int tcbuf_len)
 	struct passwd* pwd = getpwnam(NEWS_ADMIN);
 
 	if (pwd != nullptr)
-	    newsuid = pwd->pw_uid;
+	    g_newsuid = pwd->pw_uid;
 #else
 #ifdef TILDENAME
 	char tildenews[2+sizeof NEWS_ADMIN];
@@ -80,33 +88,33 @@ void intrp_init(char *tcbuf, int tcbuf_len)
 #endif	/* HAS_GETPWENT */
     }
 
-    /* if this is the news admin then load his UID into newsuid */
+    /* if this is the news admin then load his UID into g_newsuid */
 
     if (!strcmp(g_login_name,""))
-	newsuid = getuid();
+	g_newsuid = getuid();
 #endif
 
     if (checkflag)			/* that getwd below takes ~1/3 sec. */
 	return;				/* and we do not need it for -c */
     trn_getwd(tcbuf, tcbuf_len);	/* find working directory name */
-    origdir = savestr(tcbuf);		/* and remember it */
+    g_origdir = savestr(tcbuf);		/* and remember it */
 
     /* name of header file (%h) */
 
-    headname = savestr(filexp(HEADNAME));
+    g_headname = savestr(filexp(HEADNAME));
 
     /* the hostname to use in local-article comparisons */
 #if HOSTBITS != 0
     i = (HOSTBITS < 2? 2 : HOSTBITS);
-    hostname = g_p_host_name+strlen(g_p_host_name)-1;
-    while (i && hostname != g_p_host_name) {
-	if (*--hostname == '.')
+    g_hostname = g_p_host_name+strlen(g_p_host_name)-1;
+    while (i && g_hostname != g_p_host_name) {
+	if (*--g_hostname == '.')
 	    i--;
     }
-    if (*hostname == '.')
-	hostname++;
+    if (*g_hostname == '.')
+	g_hostname++;
 #else
-    hostname = g_p_host_name;
+    g_hostname = g_p_host_name;
 #endif
 }
 
@@ -362,15 +370,15 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			dointerp(scrbuf,sizeof scrbuf,spfbuf,nullptr,cmd);
 			proc_sprintf = false;
 		    }
-		    if ((s = compile(&cond_compex,scrbuf,true,true)) != nullptr) {
+		    if ((s = compile(&s_cond_compex,scrbuf,true,true)) != nullptr) {
 			printf("%s: %s\n",scrbuf,s) FLUSH;
 			pattern += strlen(pattern);
-			free_compex(&cond_compex);
+			free_compex(&s_cond_compex);
 			goto getout;
 		    }
-		    matched = (execute(&cond_compex,dest) != nullptr);
-		    if (getbracket(&cond_compex, 0)) /* were there brackets? */
-			bra_compex = &cond_compex;
+		    matched = (execute(&s_cond_compex,dest) != nullptr);
+		    if (getbracket(&s_cond_compex, 0)) /* were there brackets? */
+			bra_compex = &s_cond_compex;
 		    if (matched==(rch == '=')) {
 			pattern = dointerp(dest,destsize,pattern+1,":)",cmd);
 			if (*pattern == ':')
@@ -384,7 +392,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    }
 		    s = dest;
 		    bra_compex = oldbra_compex;
-		    free_compex(&cond_compex);
+		    free_compex(&s_cond_compex);
 		    break;
 		}
 		case '`': {
@@ -450,7 +458,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			sprintf(s,"%d",++counter);
 		    }
 		    else
-			sprintf(s,"%d",perform_cnt);
+			sprintf(s,"%d",g_perform_cnt);
 		    break;
 		case '?':
 		    s = " ";
@@ -555,7 +563,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s[1] = '\0';
 		    break;
 		case 'h':			/* header file name */
-		    s = headname;
+		    s = g_headname;
 		    break;
 		case 'H':			/* host name in postings */
 		    s = g_p_host_name;
@@ -582,7 +590,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case 'l':			/* rn library */
 #ifdef NEWS_ADMIN
-		    s = newsadmin;
+		    s = g_newsadmin;
 #else
 		    s = "???";
 #endif
@@ -610,11 +618,11 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case 'o':			/* organization */
 #ifdef IGNOREORG
-		    s = get_val("NEWSORG",orgname); 
+		    s = get_val("NEWSORG",s_orgname); 
 #else
 		    s = get_val("NEWSORG",nullptr);
 		    if (s == nullptr) 
-			s = get_val("ORGANIZATION",orgname); 
+			s = get_val("ORGANIZATION",s_orgname); 
 #endif
 		    s = filexp(s);
 		    if (FILE_REF(s)) {
@@ -634,7 +642,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    }
 		    break;
 		case 'O':
-		    s = origdir;
+		    s = g_origdir;
 		    break;
 		case 'p':
 		    s = cwd;
@@ -952,7 +960,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			abort_interp();
 		}
 		while (*s) {
-		    if ((re_quote && strchr(regexp_specials, *s))
+		    if ((re_quote && strchr(s_regexp_specials, *s))
 		     || (tick_quote == 2 && *s == '"')) {
 			if (--destsize <= 0)
 			    abort_interp();

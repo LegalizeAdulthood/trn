@@ -275,7 +275,7 @@ void check_poster(ARTICLE *ap)
 	    } else
 		h = u = s;
 	    if (!strcmp(u,g_login_name)) {
-		if (in_string(h,hostname, false)) {
+		if (in_string(h,g_hostname, false)) {
 		    switch (auto_select_postings) {
 		      case '.':
 			select_subthread(ap,AUTO_SEL_FOL);

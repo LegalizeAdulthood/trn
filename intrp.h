@@ -1,15 +1,17 @@
 /* intrp.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef INTRP_H
+#define INTRP_H
 
-EXT char* origdir INIT(nullptr);		/* cwd when rn invoked */
-EXT char* hostname INIT(nullptr);		/* host name to match local postings */
-EXT char* headname INIT(nullptr);
-EXT int perform_cnt;
+extern char *g_origdir;  /* cwd when rn invoked */
+extern char *g_hostname; /* host name to match local postings */
+extern char *g_headname;
+extern int g_perform_cnt;
 
 #ifdef NEWS_ADMIN
-EXT char newsadmin[] INIT(NEWS_ADMIN);/* news administrator */
-EXT int newsuid INIT(0);
+extern char g_newsadmin[]; /* news administrator */
+extern int g_newsuid;
 #endif
 
 void intrp_init(char *tcbuf, int tcbuf_len);
@@ -18,3 +20,5 @@ char *interp_backslash(char *dest, char *pattern);
 char *interp(char *dest, int destsize, char *pattern);
 char *interpsearch(char *dest, int destsize, char *pattern, char *cmd);
 void normalize_refs(char *refs);
+
+#endif

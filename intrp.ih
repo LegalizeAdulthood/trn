@@ -1,6 +1,0 @@
-/* intrp.ih
- */
-/* This software is copyrighted as detailed in the LICENSE file. */
-
-static char *skipinterp(char *pattern, const char *stoppers);
-static void abort_interp();

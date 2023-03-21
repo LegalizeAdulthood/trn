@@ -389,7 +389,7 @@ int perform(char *cmdlst, int output_level)
 	fflush(stdout);
     }
 
-    perform_cnt++;
+    g_perform_cnt++;
     for (; (ch = *cmdlst) != 0; cmdlst++) {
 	if (isspace(ch) || ch == ':')
 	    continue;
@@ -483,7 +483,7 @@ int perform(char *cmdlst, int output_level)
 		interp(tmpbuf, (sizeof tmpbuf), cmdlst);
 	    else
 		cmdlst = dointerp(tmpbuf,sizeof tmpbuf,cmdlst,":",nullptr) - 1;
-	    perform_cnt--;
+	    g_perform_cnt--;
 	    if (perform(tmpbuf,output_level?2:0) < 0)
 		return -1;
 	}
@@ -597,7 +597,7 @@ int ng_perform(char *cmdlst, int output_level)
 	fflush(stdout);
     }
 
-    perform_cnt++;
+    g_perform_cnt++;
     for (; (ch = *cmdlst) != 0; cmdlst++) {
 	if (isspace(ch) || ch == ':')
 	    continue;
@@ -707,7 +707,7 @@ int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level)
 	fflush(stdout);
     }
 
-    perform_cnt++;
+    g_perform_cnt++;
     for (; (ch = *cmdlst) != 0; cmdlst++) {
 	if (isspace(ch) || ch == ':')
 	    continue;

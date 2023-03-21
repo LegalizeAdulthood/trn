@@ -503,16 +503,16 @@ int cancel_article()
     from_buf = fetchlines(art,FROM_LINE);
     ngs_buf = fetchlines(art,NGS_LINE);
     if (strcasecmp(get_val("FROM",""),from_buf)
-     && (!in_string(from_buf,hostname, false)
+     && (!in_string(from_buf,g_hostname, false)
       || (!in_string(from_buf,g_login_name, true)
        && !in_string(reply_buf,g_login_name, true)
 #ifdef NEWS_ADMIN
-       && myuid != newsuid
+       && myuid != g_newsuid
 #endif
        && myuid != ROOTID))) {
 #ifdef DEBUG
 	if (debug) {
-	    printf("\n%s@%s != %s\n",g_login_name,hostname,from_buf) FLUSH;
+	    printf("\n%s@%s != %s\n",g_login_name,g_hostname,from_buf) FLUSH;
 	    printf("%s != %s\n",get_val("FROM",""),from_buf) FLUSH;
 	    termdown(3);
 	}
@@ -524,9 +524,9 @@ int cancel_article()
 	termdown(2);
     }
     else {
-	tmpfp = fopen(headname,"w");	/* open header file */
+	tmpfp = fopen(g_headname,"w");	/* open header file */
 	if (tmpfp == nullptr) {
-	    printf(cantcreate,headname) FLUSH;
+	    printf(cantcreate,g_headname) FLUSH;
 	    termdown(1);
 	    goto done;
 	}
@@ -568,16 +568,16 @@ int supersede_article()		/* Supersedes: */
     from_buf = fetchlines(art,FROM_LINE);
     ngs_buf = fetchlines(art,NGS_LINE);
     if (strcasecmp(get_val("FROM",""),from_buf)
-     && (!in_string(from_buf,hostname, false)
+     && (!in_string(from_buf,g_hostname, false)
       || (!in_string(from_buf,g_login_name, true)
        && !in_string(reply_buf,g_login_name, true)
 #ifdef NEWS_ADMIN
-       && myuid != newsuid
+       && myuid != g_newsuid
 #endif
        && myuid != ROOTID))) {
 #ifdef DEBUG
 	if (debug) {
-	    printf("\n%s@%s != %s\n",g_login_name,hostname,from_buf) FLUSH;
+	    printf("\n%s@%s != %s\n",g_login_name,g_hostname,from_buf) FLUSH;
 	    printf("%s != %s\n",get_val("FROM",""),from_buf) FLUSH;
 	    termdown(3);
 	}
@@ -589,9 +589,9 @@ int supersede_article()		/* Supersedes: */
 	termdown(2);
     }
     else {
-	tmpfp = fopen(headname,"w");	/* open header file */
+	tmpfp = fopen(g_headname,"w");	/* open header file */
 	if (tmpfp == nullptr) {
-	    printf(cantcreate,headname) FLUSH;
+	    printf(cantcreate,g_headname) FLUSH;
 	    termdown(1);
 	    goto done;
 	}
@@ -617,7 +617,7 @@ done:
 static void follow_it_up()
 {
     safecpy(cmd_buf,filexp(get_val("NEWSPOSTER",NEWSPOSTER)), sizeof cmd_buf);
-    if (invoke(cmd_buf,origdir) == 42) {
+    if (invoke(cmd_buf,g_origdir) == 42) {
 	int ret;
 	if ((g_datasrc->flags & DF_REMOTE)
 	 && (nntp_command("DATE") <= 0
@@ -626,7 +626,7 @@ static void follow_it_up()
 	else
 	{
 	    export_nntp_fds = true;
-	    ret = invoke(filexp(CALL_INEWS),origdir);
+	    ret = invoke(filexp(CALL_INEWS),g_origdir);
 	    export_nntp_fds = false;
 	}
 	if (ret) {
@@ -635,7 +635,7 @@ static void follow_it_up()
 	    FILE* fp_in;
 	    FILE* fp_out;
 	    if ((fp_out = fopen(deadart, "a")) != nullptr) {
-		if ((fp_in = fopen(headname, "r")) != nullptr) {
+		if ((fp_in = fopen(g_headname, "r")) != nullptr) {
 		    while (fgets(cmd_buf, sizeof cmd_buf, fp_in))
 			fputs(cmd_buf, fp_out);
 		    fclose(fp_in);
@@ -658,9 +658,9 @@ void reply()
     char* maildoer = savestr(get_val("MAILPOSTER",MAILPOSTER));
 
     artopen(art,(ART_POS)0);
-    tmpfp = fopen(headname,"w");	/* open header file */
+    tmpfp = fopen(g_headname,"w");	/* open header file */
     if (tmpfp == nullptr) {
-	printf(cantcreate,headname) FLUSH;
+	printf(cantcreate,g_headname) FLUSH;
 	termdown(1);
 	goto done;
     }
@@ -668,10 +668,10 @@ void reply()
     fputs(hbuf,tmpfp);
     if (!in_string(maildoer,"%h", true)) {
 	if (verbose)
-	    printf("\n%s\n(Above lines saved in file %s)\n",buf,headname)
+	    printf("\n%s\n(Above lines saved in file %s)\n",buf,g_headname)
 	      FLUSH;
 	else
-	    printf("\n%s\n(Header in %s)\n",buf,headname) FLUSH;
+	    printf("\n%s\n(Header in %s)\n",buf,g_headname) FLUSH;
 	termdown(3);
     }
     if (incl_body && artfp != nullptr) {
@@ -697,7 +697,7 @@ void reply()
     }
     fclose(tmpfp);
     safecpy(cmd_buf,filexp(maildoer),sizeof cmd_buf);
-    invoke(cmd_buf,origdir);
+    invoke(cmd_buf,g_origdir);
 done:
     free(maildoer);
 }
@@ -718,9 +718,9 @@ void forward()
     init_compex(&mime_compex);
 #endif
     artopen(art,(ART_POS)0);
-    tmpfp = fopen(headname,"w");	/* open header file */
+    tmpfp = fopen(g_headname,"w");	/* open header file */
     if (tmpfp == nullptr) {
-	printf(cantcreate,headname) FLUSH;
+	printf(cantcreate,g_headname) FLUSH;
 	termdown(1);
 	goto done;
     }
@@ -763,10 +763,10 @@ void forward()
 #endif
     if (!in_string(maildoer,"%h", true)) {
 	if (verbose)
-	    printf("\n%s\n(Above lines saved in file %s)\n",hbuf,headname)
+	    printf("\n%s\n(Above lines saved in file %s)\n",hbuf,g_headname)
 	      FLUSH;
 	else
-	    printf("\n%s\n(Header in %s)\n",hbuf,headname) FLUSH;
+	    printf("\n%s\n(Header in %s)\n",hbuf,g_headname) FLUSH;
 	termdown(3);
     }
     if (artfp != nullptr) {
@@ -798,7 +798,7 @@ void forward()
     }
     fclose(tmpfp);
     safecpy(cmd_buf,filexp(maildoer),sizeof cmd_buf);
-    invoke(cmd_buf,origdir);
+    invoke(cmd_buf,g_origdir);
   done:
     free(maildoer);
 #ifdef REGEX_WORKS_RIGHT
@@ -824,9 +824,9 @@ void followup()
 	    art = lastart + 1;
     }
     artopen(art,(ART_POS)0);
-    tmpfp = fopen(headname,"w");
+    tmpfp = fopen(g_headname,"w");
     if (tmpfp == nullptr) {
-	printf(cantcreate,headname) FLUSH;
+	printf(cantcreate,g_headname) FLUSH;
 	termdown(1);
 	art = oldart;
 	return;
