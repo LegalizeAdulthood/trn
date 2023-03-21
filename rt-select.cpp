@@ -1547,9 +1547,9 @@ static int sel_command(char_int ch)
 	}
 	else {
 	    PUSH_SELECTOR();
-	    one_command = true;
+	    g_one_command = true;
 	    perform(buf, false);
-	    one_command = false;
+	    g_one_command = false;
 	    if (g_term_line != sel_last_line+1 || term_scrolled)
 		clean_screen = false;
 	    POP_SELECTOR();

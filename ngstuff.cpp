@@ -9,16 +9,11 @@
 #include "term.h"
 #include "util.h"
 #include "util2.h"
-#include "hash.h"
 #include "cache.h"
 #include "bits.h"
 #include "ngdata.h"
-#include "nntpclient.h"
-#include "datasrc.h"
-#include "nntp.h"
 #include "ng.h"
 #include "intrp.h"
-#include "head.h"
 #include "final.h"
 #include "sw.h"
 #include "rthread.h"
@@ -30,18 +25,23 @@
 #include "rcstuff.h"
 #include "respond.h"
 #include "kfile.h"
-#include "decode.h"
 #include "addng.h"
 #include "opt.h"
-#include "only.h"
-#include "INTERN.h"
 #include "ngstuff.h"
+
 #ifdef MSDOS
 #include <direct.h>
 #endif
 
-void ngstuff_init() {
-    ;
+bool g_one_command{}; /* no ':' processing in perform() */
+/* CAA: given the new and complex universal/help possibilities,
+ *      the following interlock variable may save some trouble.
+ *      (if true, we are currently processing options)
+ */
+bool g_option_sel_ilock{};
+
+void ngstuff_init()
+{
 }
 
 /* do a shell escape */
@@ -94,14 +94,14 @@ int switcheroo()
 	return -1;	/* if rubbed out, try something else */
     if (!buf[1]) {
 	char* prior_savedir = savedir;
-	if (option_sel_ilock) {
+	if (g_option_sel_ilock) {
 	    buf[1] = '\0';
 	    return 0;
 	}
-	option_sel_ilock = true;
+	g_option_sel_ilock = true;
 	if (gmode != 's' || sel_mode != SM_OPTIONS)/*$$*/
 	    option_selector();
-	option_sel_ilock = false;
+	g_option_sel_ilock = false;
 	if (savedir != prior_savedir)
 	    cwd_check();
 	buf[1] = '\0';
@@ -479,7 +479,7 @@ int perform(char *cmdlst, int output_level)
 	else if (ch == '%') {
 	    char tmpbuf[512];
 
-	    if (one_command)
+	    if (g_one_command)
 		interp(tmpbuf, (sizeof tmpbuf), cmdlst);
 	    else
 		cmdlst = dointerp(tmpbuf,sizeof tmpbuf,cmdlst,":",nullptr) - 1;
@@ -488,7 +488,7 @@ int perform(char *cmdlst, int output_level)
 		return -1;
 	}
 	else if (strchr("!&sSwWae|",ch)) {
-	    if (one_command)
+	    if (g_one_command)
 		strcpy(buf,cmdlst);
 	    else
 		cmdlst = cpytill(buf,cmdlst,':') - 1;
@@ -524,7 +524,7 @@ int perform(char *cmdlst, int output_level)
 	}
 	if (output_level && verbose)
 	    fflush(stdout);
-	if (one_command)
+	if (g_one_command)
 	    break;
     }
     if (output_level && verbose)
@@ -638,7 +638,7 @@ int ng_perform(char *cmdlst, int output_level)
 	}
 	if (output_level && verbose)
 	    fflush(stdout);
-	if (one_command)
+	if (g_one_command)
 	    break;
     }
     if (output_level && verbose)
@@ -725,7 +725,7 @@ int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level)
 	}
 	if (output_level && verbose)
 	    fflush(stdout);
-	if (one_command)
+	if (g_one_command)
 	    break;
     }
     if (output_level && verbose)
