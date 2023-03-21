@@ -52,11 +52,11 @@ bool mt_init()
     long size;
     bool success = true;
 
-    datasrc->flags &= ~DF_TRY_THREAD;
+    g_datasrc->flags &= ~DF_TRY_THREAD;
 
     word_same = long_same = true;
 #ifdef SUPPORT_XTHREAD
-    if (!datasrc->thread_dir) {
+    if (!g_datasrc->thread_dir) {
 	if (nntp_command("XTHREAD DBINIT") <= 0)
 	    return false;
 	size = nntp_readcheck();
@@ -89,7 +89,7 @@ bool mt_init()
     } else
 	success = false;
 #ifdef SUPPORT_XTHREAD
-    if (!datasrc->thread_dir) {
+    if (!g_datasrc->thread_dir) {
 	while (nntp_read(g_ser_line, (long)sizeof g_ser_line))
 	    ;		/* trash any extraneous bytes */
     }
@@ -99,7 +99,7 @@ bool mt_init()
 	fclose(fp);
 
     if (success)
-	datasrc->flags |= DF_TRY_THREAD;
+	g_datasrc->flags |= DF_TRY_THREAD;
     return success;
 }
 
@@ -112,7 +112,7 @@ int mt_data()
 #ifdef SUPPORT_XTHREAD		/* use remote thread file? */
     long size;
 
-    if (!datasrc->thread_dir) {
+    if (!g_datasrc->thread_dir) {
 	if (nntp_command("XTHREAD THREAD") <= 0)
 	    return 0;
 	size = nntp_readcheck();
@@ -142,7 +142,7 @@ int mt_data()
 	tweak_data();
 	goto exit;
     }
-    if (!datasrc->thread_dir && total.last > lastart)
+    if (!g_datasrc->thread_dir && total.last > lastart)
 	total.last = lastart;
 
     if (read_authors()
@@ -167,14 +167,14 @@ int mt_data()
     safefree0(subject_array);
     safefree0(author_array);
     safefree0(ids);
-    datasrc->flags &= ~DF_TRY_THREAD;
+    g_datasrc->flags &= ~DF_TRY_THREAD;
     build_cache();
-    datasrc->flags |= DF_TRY_THREAD;
+    g_datasrc->flags |= DF_TRY_THREAD;
     ret = -1;
 
 exit:
 #ifdef SUPPORT_XTHREAD
-    if (!datasrc->thread_dir) {
+    if (!g_datasrc->thread_dir) {
 	while (nntp_read(g_ser_line, (long)sizeof g_ser_line))
 	    ;		/* trash any extraneous bytes */
     }
@@ -191,7 +191,7 @@ exit:
 */
 static char *mt_name(const char *group)
 {
-    sprintf(buf, "%s/%s", datasrc->thread_dir, group);
+    sprintf(buf, "%s/%s", g_datasrc->thread_dir, group);
     return buf;
 }
 
@@ -304,7 +304,7 @@ static int read_roots()
 
     for (count = total.root; count--; ) {
 #ifdef SUPPORT_XTHREAD
-	if (!datasrc->thread_dir)
+	if (!g_datasrc->thread_dir)
 	    ret = nntp_read((char*)&p_root, (long)sizeof (PACKED_ROOT));
 	else
 #endif
@@ -410,7 +410,7 @@ static int read_articles()
     invalid_data = false;
     for (count = 0; count < total.article; count++) {
 #ifdef SUPPORT_XTHREAD
-	if (!datasrc->thread_dir)
+	if (!g_datasrc->thread_dir)
 	    ret = nntp_read((char*)&p_article, (long)sizeof (PACKED_ARTICLE));
 	else
 #endif
@@ -608,7 +608,7 @@ static int read_item(char **dest, MEM_SIZE len)
 
     *dest = safemalloc(len);
 #ifdef SUPPORT_XTHREAD
-    if (!datasrc->thread_dir)
+    if (!g_datasrc->thread_dir)
 	ret = nntp_read(*dest, (long)len);
     else
 #endif

@@ -98,7 +98,7 @@ int doshell(const char *shell, const char *s)
     sigset(SIGTTOU,SIG_DFL);
     sigset(SIGTTIN,SIG_DFL);
 #endif
-    if (datasrc && (datasrc->flags & DF_REMOTE)) {
+    if (g_datasrc && (g_datasrc->flags & DF_REMOTE)) {
 	if (!export_nntp_fds || !nntplink.rd_fp)
 	    un_export(nntpfds_export);
 	else {
@@ -106,18 +106,18 @@ int doshell(const char *shell, const char *s)
 				(int)fileno(nntplink.wr_fp));
 	    re_export(nntpfds_export, buf, 64);
 	}
-	re_export(nntpserver_export,datasrc->newsid,512);
-	if (datasrc->nntplink.flags & NNTP_FORCE_AUTH_NEEDED)
+	re_export(nntpserver_export,g_datasrc->newsid,512);
+	if (g_datasrc->nntplink.flags & NNTP_FORCE_AUTH_NEEDED)
 	    re_export(nntpforce_export,"yes",3);
 	else
 	    un_export(nntpforce_export);
-	if (datasrc->auth_user) {
+	if (g_datasrc->auth_user) {
 	    int fd;
-	    if ((fd = open(nntp_auth_file, O_WRONLY|O_CREAT, 0600)) >= 0) {
-		write(fd, datasrc->auth_user, strlen(datasrc->auth_user));
+	    if ((fd = open(g_nntp_auth_file, O_WRONLY|O_CREAT, 0600)) >= 0) {
+		write(fd, g_datasrc->auth_user, strlen(g_datasrc->auth_user));
 		write(fd, "\n", 1);
-		if (datasrc->auth_pass) {
-		    write(fd, datasrc->auth_pass, strlen(datasrc->auth_pass));
+		if (g_datasrc->auth_pass) {
+		    write(fd, g_datasrc->auth_pass, strlen(g_datasrc->auth_pass));
 		    write(fd, "\n", 1);
 		}
 		close(fd);
@@ -129,21 +129,21 @@ int doshell(const char *shell, const char *s)
 	    if (len + (int)strlen(buf) < 511)
 		strcpy(nntpserver_export+len, buf);
 	}
-	if (datasrc->act_sf.fp)
-	    re_export(newsactive_export, datasrc->extra_name, 512);
+	if (g_datasrc->act_sf.fp)
+	    re_export(newsactive_export, g_datasrc->extra_name, 512);
 	else
 	    re_export(newsactive_export, "none", 512);
     } else {
 	un_export(nntpfds_export);
 	un_export(nntpserver_export);
 	un_export(nntpforce_export);
-	if (datasrc)
-	    re_export(newsactive_export, datasrc->newsid, 512);
+	if (g_datasrc)
+	    re_export(newsactive_export, g_datasrc->newsid, 512);
 	else
 	    un_export(newsactive_export);
     }
-    if (datasrc)
-	re_export(grpdesc_export, datasrc->grpdesc, 512);
+    if (g_datasrc)
+	re_export(grpdesc_export, g_datasrc->grpdesc, 512);
     else
 	un_export(grpdesc_export);
     interp(buf,64-1+2,"%I");
@@ -156,7 +156,7 @@ int doshell(const char *shell, const char *s)
     intptr_t status = spawnl(P_WAIT, shell, shell, "/c", s, nullptr);
 #else
     if ((pid = vfork()) == 0) {
-	if (datasrc && (datasrc->flags & DF_REMOTE)) {
+	if (g_datasrc && (g_datasrc->flags & DF_REMOTE)) {
 	    int i;
 	    /* This is necessary to keep the bourne shell from puking */
 	    for (i = 3; i < 10; ++i) {
@@ -212,8 +212,8 @@ int doshell(const char *shell, const char *s)
     sigset(SIGTTOU,stop_catcher);
     sigset(SIGTTIN,stop_catcher);
 #endif
-    if (datasrc && datasrc->auth_user)
-	remove(nntp_auth_file);
+    if (g_datasrc && g_datasrc->auth_user)
+	remove(g_nntp_auth_file);
     return ret;
 }
 
@@ -635,12 +635,12 @@ char *temp_filename()
 
 char *get_auth_user()
 {
-    return datasrc->auth_user;
+    return g_datasrc->auth_user;
 }
 
 char *get_auth_pass()
 {
-    return datasrc->auth_pass;
+    return g_datasrc->auth_pass;
 }
 
 char **prep_ini_words(INI_WORDS words[])

@@ -470,10 +470,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case 'A':
 		    if (in_ng) {
-			if (datasrc->flags & DF_REMOTE) {
+			if (g_datasrc->flags & DF_REMOTE) {
 			    if (artopen(art,(ART_POS)0)) {
 				nntp_finishbody(FB_SILENT);
-				sprintf(s = scrbuf,"%s/%s",datasrc->spool_dir,
+				sprintf(s = scrbuf,"%s/%s",g_datasrc->spool_dir,
 					nntp_artname(art, false));
 			    }
 			    else
@@ -483,7 +483,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 #ifdef LINKART
 			    s = linkartname;  /* for Eunice */
 #else
-			    sprintf(s = scrbuf,"%s/%s/%ld",datasrc->spool_dir,
+			    sprintf(s = scrbuf,"%s/%s/%ld",g_datasrc->spool_dir,
 				    ngdir,(long)art);
 #endif
 		    }
@@ -506,7 +506,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		case 'd':
 		    if (ngdir) {
 			s = scrbuf;
-			sprintf(s,"%s/%s",datasrc->spool_dir,ngdir);
+			sprintf(s,"%s/%s",g_datasrc->spool_dir,ngdir);
 		    }
 		    else
 			s = "";
@@ -640,7 +640,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = cwd;
 		    break;
 		case 'P':
-		    s = datasrc? datasrc->spool_dir : "";
+		    s = g_datasrc? g_datasrc->spool_dir : "";
 		    break;
 		case 'q':
 		    s = input_str;
@@ -793,7 +793,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = patchlevel + 1;
 		    break;
 		case 'W':
-		    s = datasrc? datasrc->thread_dir : "";
+		    s = g_datasrc? g_datasrc->thread_dir : "";
 		    break;
 		case 'x':			/* news library */
 		    s = g_lib;

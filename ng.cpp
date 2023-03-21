@@ -114,8 +114,8 @@ int do_newsgroup(char *start_command)
 
     set_datasrc(ngptr->rc->datasrc);
 
-    if (chdir(datasrc->spool_dir)) {
-	printf(nocd,datasrc->spool_dir) FLUSH;
+    if (chdir(g_datasrc->spool_dir)) {
+	printf(nocd,g_datasrc->spool_dir) FLUSH;
 	return -1;
     }
 
@@ -209,8 +209,8 @@ int do_newsgroup(char *start_command)
 	    ART_NUM oldlast = lastart;
 	    if (g_artsize < 0)
 		nntp_finishbody(FB_SILENT);
-	    if (datasrc->flags & DF_REMOTE) {
-		if (datasrc->act_sf.fp || getngsize(ngptr) > lastart) {
+	    if (g_datasrc->flags & DF_REMOTE) {
+		if (g_datasrc->act_sf.fp || getngsize(ngptr) > lastart) {
 		    if (nntp_group(ngname,ngptr) <= 0) {
 			exit_code = NG_NOSERVER;
 			goto cleanup;
@@ -330,7 +330,7 @@ int do_newsgroup(char *start_command)
 					/*  (line # within article file) */
 	    }
 	    clear();			/* clear screen */
-	    if (art == 0 && artp && artp->msgid && (datasrc->flags&DF_REMOTE)
+	    if (art == 0 && artp && artp->msgid && (g_datasrc->flags&DF_REMOTE)
 	     && !(artp->flags & AF_CACHED)) {
 		art = nntp_stat_id(artp->msgid);
 		if (art < 0) {

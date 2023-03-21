@@ -459,7 +459,7 @@ try_again:
 	      }
 	      case UN_ARTICLE:
 		/* later: use the datasrc of the newsgroup */
-		ui_elig = !was_read_group(datasrc, ui->data.virt.num,
+		ui_elig = !was_read_group(g_datasrc, ui->data.virt.num,
 					  ui->data.virt.ng);
 		if (sel_rereading)
 		    ui_elig = !ui_elig;

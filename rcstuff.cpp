@@ -40,13 +40,13 @@ bool rcstuff_init()
 
     multirc_list = new_list(0,0,sizeof(MULTIRC),20,LF_ZERO_MEM|LF_SPARSE,nullptr);
 
-    if (trnaccess_mem) {
+    if (g_trnaccess_mem) {
 	NEWSRC* rp;
 	char* s;
 	char* section;
 	char* cond;
 	char** vals = prep_ini_words(rcgroups_ini);
-	s = trnaccess_mem;
+	s = g_trnaccess_mem;
 	while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
 	    if (*cond && !check_ini_cond(cond))
 		continue;
@@ -81,7 +81,7 @@ bool rcstuff_init()
 		;$$complain?*/
 	}
 	free((char*)vals);
-	free(trnaccess_mem);
+	free(g_trnaccess_mem);
     }
 
     if (UseNewsrcSelector && !checkflag)

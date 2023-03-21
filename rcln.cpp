@@ -213,7 +213,7 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
     np = find_ng(ngnam);
     if (np == nullptr)			/* not found in newsrc? */
 	return;	
-    if (dp != np->rc->datasrc)		/* punt on cross-host xrefs */
+    if (dp != np->rc->g_datasrc)		/* punt on cross-host xrefs */
 	return;
     if (!np->numoffset)
 	return;

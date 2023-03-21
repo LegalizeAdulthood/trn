@@ -1,6 +1,8 @@
 /* datasrc.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef DATASRC_H
+#define DATASRC_H
 
 struct SRCFILE
 {
@@ -63,15 +65,11 @@ enum
     FF_FILTERSEND = 0x10
 };
 
-#define DATASRC_NNTP_FLAGS(dp) (((dp) == datasrc? nntplink.flags : (dp)->nntplink.flags))
+#define DATASRC_NNTP_FLAGS(dp) (((dp) == g_datasrc? nntplink.flags : (dp)->nntplink.flags))
 
-EXT LIST* datasrc_list;		/* a list of all DATASRCs */
-EXT DATASRC* datasrc;		/* the current datasrc */
-EXT int datasrc_cnt INIT(0);
-
-#define datasrc_ptr(n)  ((DATASRC*)listnum2listitem(datasrc_list,(long)(n)))
-#define datasrc_first() ((DATASRC*)listnum2listitem(datasrc_list,0L))
-#define datasrc_next(p) ((DATASRC*)next_listitem(datasrc_list,(char*)(p)))
+#define datasrc_ptr(n)  ((DATASRC*)listnum2listitem(g_datasrc_list,(long)(n)))
+#define datasrc_first() ((DATASRC*)listnum2listitem(g_datasrc_list,0L))
+#define datasrc_next(p) ((DATASRC*)next_listitem(g_datasrc_list,(char*)(p)))
 
 #define LENGTH_HACK 5	/* Don't bother comparing strings with lengths
 			 * that differ by more than this. */
@@ -79,9 +77,11 @@ EXT int datasrc_cnt INIT(0);
 
 #define DATASRC_ALARM_SECS   (5 * 60)
 
-EXT char* trnaccess_mem INIT(nullptr);
-
-EXT char* nntp_auth_file INIT(nullptr);
+extern LIST *g_datasrc_list; /* a list of all DATASRCs */
+extern DATASRC *g_datasrc;   /* the current datasrc */
+extern int g_datasrc_cnt;
+extern char *g_trnaccess_mem;
+extern char *g_nntp_auth_file;
 
 void datasrc_init();
 char *read_datasrcs(char *filename);
@@ -99,3 +99,5 @@ char *srcfile_append(SRCFILE *sfp, char *bp, int keylen);
 void srcfile_end_append(SRCFILE *sfp, const char *filename);
 void srcfile_close(SRCFILE *sfp);
 int find_close_match();
+
+#endif

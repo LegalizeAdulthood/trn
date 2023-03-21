@@ -284,7 +284,7 @@ bool parseheader(ART_NUM artnum)
     if (artnum > lastart)
 	return false;
     spin(20);
-    if (datasrc->flags & DF_REMOTE) {
+    if (g_datasrc->flags & DF_REMOTE) {
 	char *s = nntp_artname(artnum, false);
 	if (s) {
 	    if (!artopen(artnum,(ART_POS)0))
@@ -433,7 +433,7 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
     ART_POS lastpos;
     int size;
 
-    if ((datasrc->flags & DF_REMOTE) && parsed_art != artnum) {
+    if ((g_datasrc->flags & DF_REMOTE) && parsed_art != artnum) {
 	ARTICLE* ap;
 	int size;
 	ART_NUM num, priornum, lastnum;
@@ -490,7 +490,7 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 		num = atol(line);
 		if (num < artnum || num > lastnum)
 		    continue;
-		if (!(datasrc->flags & DF_XHDR_BROKEN)) {
+		if (!(g_datasrc->flags & DF_XHDR_BROKEN)) {
 		    while ((priornum = article_next(priornum)) < num)
 			uncache_article(article_ptr(priornum),false);
 		}
@@ -513,7 +513,7 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 	    }
 	    s = fetchlines(artnum,which_line);
 	}
-	if (hasxhdr && !(datasrc->flags & DF_XHDR_BROKEN)) {
+	if (hasxhdr && !(g_datasrc->flags & DF_XHDR_BROKEN)) {
 	    for (priornum = article_first(priornum); priornum < lastnum; priornum = article_next(priornum))
 		uncache_article(article_ptr(priornum),false);
 	}

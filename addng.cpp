@@ -200,7 +200,7 @@ static void new_local_groups(DATASRC *dp)
     char ch;
     HASHTABLE* newngs;
 
-    datasrc = dp;
+    g_datasrc = dp;
 
     /* did active.times file grow? */
     stat(dp->extra_name,&filestat);
@@ -221,7 +221,7 @@ static void new_local_groups(DATASRC *dp)
 	 || (lastone = atol(s+1)) < dp->lastnewgrp)
 	    continue;
 	*s = '\0';
-	if (!find_actgrp(datasrc, tmpbuf, buf, s - buf, (ART_NUM)0))
+	if (!find_actgrp(g_datasrc, tmpbuf, buf, s - buf, (ART_NUM)0))
 	    continue;
 	high = 0, low = 1, ch = 'y';
 	sscanf(tmpbuf + (s-buf) + 1, "%ld %ld %c", &high, &low, &ch);
@@ -261,7 +261,7 @@ static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch
     }
     node->toread = (toread < 0)? 0 : toread;
     strcpy(node->name, name);
-    node->datasrc = datasrc;
+    node->datasrc = g_datasrc;
     node->next = node->prev = nullptr;
     hashstore(ng, name, namelen, data);
 }
@@ -291,7 +291,7 @@ static void add_to_list(const char *name, int toread, char_int ch)
     node->toread = (toread < 0)? 0 : toread;
     node->num = addgroup_cnt++;
     strcpy(node->name, name);
-    node->datasrc = datasrc;
+    node->datasrc = g_datasrc;
     node->next = nullptr;
     node->prev = g_last_addgroup;
     if (g_last_addgroup)

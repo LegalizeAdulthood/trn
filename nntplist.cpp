@@ -17,7 +17,7 @@
 void Usage();
 
 char* server_name;
-char* nntp_auth_file;
+char* g_nntp_auth_file;
 
 int debug = 0;			/* make nntpclient.c happy */
 
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 	    *cp = '\0';
 	    nntplink.port_number = atoi(cp+1);
 	}
-	nntp_auth_file = filexp(NNTP_AUTH_FILE);
+	g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
 	if ((cp = getenv("NNTP_FORCE_AUTH")) != nullptr
 	 && (*cp == 'y' || *cp == 'Y'))
 	    nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;

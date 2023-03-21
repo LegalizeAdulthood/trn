@@ -257,7 +257,7 @@ void find_existing_articles()
     ART_NUM an;
     ARTICLE* ap;
 
-    if (datasrc->flags & DF_REMOTE) {
+    if (g_datasrc->flags & DF_REMOTE) {
 	/* Parse the LISTGROUP output and remember everything we find */
 	if (/*nntp_rover() ||*/ nntp_artnums()) {
 	    /*char* s;*/
@@ -285,7 +285,7 @@ void find_existing_articles()
 	    }
 	}
 	else if (g_first_subject && g_cached_all_in_range) {
-	    if (!datasrc->ov_opened || datasrc->over_dir != nullptr) {
+	    if (!g_datasrc->ov_opened || g_datasrc->over_dir != nullptr) {
 		for (ap = article_ptr(article_first(g_first_cached));
 		     ap && article_num(ap) <= g_last_cached;
 		     ap = article_nextp(ap))
@@ -574,7 +574,7 @@ static int chase_xref(ART_NUM artnum, int markread)
     char* xref_buf, *curxref;
     char tmpbuf[128];
 
-    if (datasrc->flags & DF_NOXREFS)
+    if (g_datasrc->flags & DF_NOXREFS)
 	return 0;
 
     if (inbackground())
@@ -627,12 +627,12 @@ static int chase_xref(ART_NUM artnum, int markread)
 # endif
 	    } else {
 		if (markread) {
-		    if (addartnum(datasrc,x,tmpbuf))
+		    if (addartnum(g_datasrc,x,tmpbuf))
 			break;
 		}
 # ifdef MCHASE
 		else
-		    subartnum(datasrc,x,tmpbuf);
+		    subartnum(g_datasrc,x,tmpbuf);
 # endif
 	    }
 	    while (*curxref && isspace(*curxref))

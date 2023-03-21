@@ -15,48 +15,110 @@
 #include "env.h"
 #include "util.h"
 #include "util2.h"
-#include "opt.h"
-#include "intrp.h"
-#include "init.h"
 #include "rcstuff.h"
 #include "edit_dist.h"
-#include "cache.h"
-#include "last.h"
 #include "rt-mt.h"
 #include "rt-ov.h"
 #include "rt-util.h"
 #include "nntp.h"
-#include "INTERN.h"
 #include "datasrc.h"
-#include "datasrc.ih"
+
 #ifdef MSDOS
 #include <io.h>
 #endif
+#ifdef I_UTIME
+#include <utime.h>
+#endif
+#ifdef I_SYS_UTIME
+#include <sys/utime.h>
+#endif
+#if !defined(I_UTIME) && !defined(I_SYS_UTIME)
+struct utimbuf
+{
+    time_t actime;
+    time_t modtime;
+};
+#endif
+
+LIST *g_datasrc_list{}; /* a list of all DATASRCs */
+DATASRC *g_datasrc{};   /* the current datasrc */
+int g_datasrc_cnt{};
+char *g_trnaccess_mem{};
+char *g_nntp_auth_file{};
+
+enum
+{
+    SRCFILE_CHUNK_SIZE = (32 * 1024),
+
+    DI_NNTP_SERVER = 1,
+    DI_ACTIVE_FILE = 2,
+    DI_ACT_REFETCH = 3,
+    DI_SPOOL_DIR = 4,
+    DI_THREAD_DIR = 5,
+    DI_OVERVIEW_DIR = 6,
+    DI_ACTIVE_TIMES = 7,
+    DI_GROUP_DESC = 8,
+    DI_DESC_REFETCH = 9,
+    DI_AUTH_USER = 10,
+    DI_AUTH_PASS = 11,
+    DI_AUTH_COMMAND = 12,
+    DI_XHDR_BROKEN = 13,
+    DI_XREFS = 14,
+    DI_OVERVIEW_FMT = 15,
+    DI_FORCE_AUTH = 16
+};
+
+static INI_WORDS s_datasrc_ini[] = {
+    { 0, "DATASRC", nullptr },
+    { 0, "NNTP Server", nullptr },
+    { 0, "Active File", nullptr },
+    { 0, "Active File Refetch", nullptr },
+    { 0, "Spool Dir", nullptr },
+    { 0, "Thread Dir", nullptr },
+    { 0, "Overview Dir", nullptr },
+    { 0, "Active Times", nullptr },
+    { 0, "Group Desc", nullptr },
+    { 0, "Group Desc Refetch", nullptr },
+    { 0, "Auth User", nullptr },
+    { 0, "Auth Password", nullptr },
+    { 0, "Auth Command", nullptr },
+    { 0, "XHDR Broken", nullptr },
+    { 0, "Xrefs", nullptr },
+    { 0, "Overview Format File", nullptr },
+    { 0, "Force Auth", nullptr },
+    { 0, nullptr, nullptr }
+};
+
+static char *dir_or_none(DATASRC *dp, char *dir, int flag);
+static char *file_or_none(char *fn);
+static int srcfile_cmp(const char *key, int keylen, HASHDATUM data);
+static int check_distance(int len, HASHDATUM *data, int newsrc_ptr);
+static int get_near_miss();
 
 void datasrc_init()
 {
-    char** vals = prep_ini_words(datasrc_ini);
+    char** vals = prep_ini_words(s_datasrc_ini);
     char* machine = nullptr;
     char* actname = nullptr;
     char* s;
 
-    datasrc_list = new_list(0,0,sizeof(DATASRC),20,LF_ZERO_MEM,nullptr);
+    g_datasrc_list = new_list(0,0,sizeof(DATASRC),20,LF_ZERO_MEM,nullptr);
 
-    nntp_auth_file = savestr(filexp(NNTP_AUTH_FILE));
+    g_nntp_auth_file = savestr(filexp(NNTP_AUTH_FILE));
 
     machine = getenv("NNTPSERVER");
     if (machine && strcmp(machine,"local")) {
 	vals[DI_NNTP_SERVER] = machine;
-	vals[DI_AUTH_USER] = read_auth_file(nntp_auth_file,
+	vals[DI_AUTH_USER] = read_auth_file(g_nntp_auth_file,
 					    &vals[DI_AUTH_PASS]);
 	vals[DI_FORCE_AUTH] = getenv("NNTP_FORCE_AUTH");
 	new_datasrc("default",vals);
     }
 
-    trnaccess_mem = read_datasrcs(TRNACCESS);
+    g_trnaccess_mem = read_datasrcs(TRNACCESS);
     s = read_datasrcs(DEFACCESS);
-    if (!trnaccess_mem)
-	trnaccess_mem = s;
+    if (!g_trnaccess_mem)
+	g_trnaccess_mem = s;
     else if (s)
 	free(s);
 
@@ -68,7 +130,7 @@ void datasrc_init()
 	    machine = nullptr;
 	    actname = ACTIVE;
 	}
-	prep_ini_words(datasrc_ini);	/* re-zero the values */
+	prep_ini_words(s_datasrc_ini);	/* re-zero the values */
 
 	vals[DI_NNTP_SERVER] = machine;
 	vals[DI_ACTIVE_FILE] = actname;
@@ -79,13 +141,13 @@ void datasrc_init()
 	vals[DI_ACTIVE_TIMES] = ACTIVE_TIMES;
 	vals[DI_GROUP_DESC] = GROUPDESC;
 	if (machine) {
-	    vals[DI_AUTH_USER] = read_auth_file(nntp_auth_file,
+	    vals[DI_AUTH_USER] = read_auth_file(g_nntp_auth_file,
 						&vals[DI_AUTH_PASS]);
 	    vals[DI_FORCE_AUTH] = getenv("NNTP_FORCE_AUTH");
 	}
 	new_datasrc("default",vals);
     }
-    unprep_ini_words(datasrc_ini);
+    unprep_ini_words(s_datasrc_ini);
 }
 
 char *read_datasrcs(char *filename)
@@ -95,7 +157,7 @@ char *read_datasrcs(char *filename)
     char* section;
     char* cond;
     char* filebuf = nullptr;
-    char** vals = INI_VALUES(datasrc_ini);
+    char** vals = INI_VALUES(s_datasrc_ini);
 
     if ((fd = open(filexp(filename),0)) >= 0) {
 	fstat(fd,&filestat);
@@ -111,7 +173,7 @@ char *read_datasrcs(char *filename)
 		    continue;
 		if (!strncasecmp(section, "group ", 6))
 		    continue;
-		s = parse_ini_section(s, datasrc_ini);
+		s = parse_ini_section(s, s_datasrc_ini);
 		if (!s)
 		    break;
 		new_datasrc(section,vals);
@@ -133,7 +195,7 @@ DATASRC *get_datasrc(const char *name)
 
 DATASRC *new_datasrc(const char *name, char **vals)
 {
-    DATASRC* dp = datasrc_ptr(datasrc_cnt++);
+    DATASRC* dp = datasrc_ptr(g_datasrc_cnt++);
     char* v;
 
     if (vals[DI_NNTP_SERVER]) {
@@ -330,11 +392,11 @@ bool open_datasrc(DATASRC *dp)
 
 void set_datasrc(DATASRC *dp)
 {
-    if (datasrc)
-	datasrc->nntplink = nntplink;
+    if (g_datasrc)
+	g_datasrc->nntplink = nntplink;
     if (dp)
 	nntplink = dp->nntplink;
-    datasrc = dp;
+    g_datasrc = dp;
 }
 
 void check_datasrcs()
@@ -343,12 +405,12 @@ void check_datasrcs()
     time_t now = time((time_t*)nullptr);
     time_t limit;
 
-    if (datasrc_list) {
+    if (g_datasrc_list) {
 	for (dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp)) {
 	    if ((dp->flags & DF_OPEN) && dp->nntplink.rd_fp != nullptr) {
 		limit = ((dp->flags & DF_ACTIVE)? 30*60 : 10*60);
 		if (now - dp->nntplink.last_command > limit) {
-		    DATASRC* save_datasrc = datasrc;
+		    DATASRC* save_datasrc = g_datasrc;
 		    /*printf("\n*** Closing %s ***\n", dp->name); $$*/
 		    set_datasrc(dp);
 		    nntp_close(true);
@@ -379,7 +441,7 @@ void close_datasrc(DATASRC *dp)
 	return;
 
     if (dp->flags & DF_REMOTE) {
-	DATASRC* save_datasrc = datasrc;
+	DATASRC* save_datasrc = g_datasrc;
 	set_datasrc(dp);
 	nntp_close(true);
 	dp->nntplink = nntplink;
@@ -388,15 +450,15 @@ void close_datasrc(DATASRC *dp)
     srcfile_close(&dp->act_sf);
     srcfile_close(&dp->desc_sf);
     dp->flags &= ~DF_OPEN;
-    if (datasrc == dp)
-	datasrc = nullptr;
+    if (g_datasrc == dp)
+	g_datasrc = nullptr;
 }
 
 bool actfile_hash(DATASRC *dp)
 {
     int ret;
     if (dp->flags & DF_REMOTE) {
-	DATASRC* save_datasrc = datasrc;
+	DATASRC* save_datasrc = g_datasrc;
 	set_datasrc(dp);
 	spin_todo = dp->act_sf.recent_cnt;
 	ret = srcfile_open(&dp->act_sf, dp->extra_name, "active", dp->newsid);
@@ -434,7 +496,7 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
     }
     if ((dp->flags & DF_USELISTACT)
      && (DATASRC_NNTP_FLAGS(dp) & NNTP_NEW_CMD_OK)) {
-	DATASRC* save_datasrc = datasrc;
+	DATASRC* save_datasrc = g_datasrc;
 	set_datasrc(dp);
 	switch (nntp_list("active", nam, len)) {
 	case 0:
@@ -522,7 +584,7 @@ char *find_grpdesc(DATASRC *dp, char *groupname)
 
     if (!dp->desc_sf.hp) {
 	if ((dp->flags & DF_REMOTE) && dp->desc_sf.refetch_secs) {
-	    /*DATASRC* save_datasrc = datasrc;*/
+	    /*DATASRC* save_datasrc = g_datasrc;*/
 	    set_datasrc(dp);
 	    if ((dp->flags & (DF_TMPGRPDESC|DF_NOXGTITLE)) == DF_TMPGRPDESC
 	     && g_net_speed < 5) {

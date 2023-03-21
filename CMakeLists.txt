@@ -62,7 +62,7 @@ add_executable(trn
     color.cpp color.h
     common.h
     config2.h
-    datasrc.cpp datasrc.h datasrc.ih
+    datasrc.cpp datasrc.h
     decode.cpp decode.h decode.ih
     edit_dist.cpp edit_dist.h
     final.cpp final.h

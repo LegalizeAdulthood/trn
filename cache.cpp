@@ -716,7 +716,7 @@ void cache_until_key()
     if (input_pending())
 	return;
 
-    if ((datasrc->flags & DF_REMOTE) && nntp_finishbody(FB_BACKGROUND))
+    if ((g_datasrc->flags & DF_REMOTE) && nntp_finishbody(FB_BACKGROUND))
 	return;
 
     g_untrim_cache = true;
@@ -777,7 +777,7 @@ bool cache_xrefs()
 {
     ART_NUM an;
 
-    if (olden_days || (datasrc->flags & DF_NOXREFS) || s_xref_to_get > lastart)
+    if (olden_days || (g_datasrc->flags & DF_NOXREFS) || s_xref_to_get > lastart)
 	return true;
     setspin(SPIN_BACKGROUND);
     for (an=article_first(s_xref_to_get); an <= lastart; an=article_next(an)) {
@@ -801,7 +801,7 @@ bool cache_all_arts()
     /* turn it on as late as possible to avoid fseek()ing openart */
     setspin(SPIN_BACKGROUND);
     if (g_last_cached < lastart) {
-	if (datasrc->ov_opened)
+	if (g_datasrc->ov_opened)
 	    ov_data(g_last_cached+1, lastart, true);
 	if (!art_data(g_last_cached+1, lastart, true, true)) {
 	    g_last_cached = old_last_cached;
@@ -810,7 +810,7 @@ bool cache_all_arts()
 	g_cached_all_in_range = true;
     }
     if (g_first_cached > absfirst) {
-	if (datasrc->ov_opened)
+	if (g_datasrc->ov_opened)
 	    ov_data(absfirst, g_first_cached-1, true);
 	else
 	    art_data(absfirst, g_first_cached-1, true, true);
@@ -851,7 +851,7 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
     if (cheating)
 	setspin(SPIN_BACKGROUND);
     else {
-	int lots2do = ((datasrc->flags & DF_REMOTE)? g_net_speed : 20) * 25;
+	int lots2do = ((g_datasrc->flags & DF_REMOTE)? g_net_speed : 20) * 25;
 	setspin(spin_estimate > lots2do? SPIN_BARGRAPH : SPIN_FOREGROUND);
     }
     /*assert(first >= absfirst && last <= lastart);*/
@@ -926,7 +926,7 @@ bool cache_range(ART_NUM first, ART_NUM last)
     setspin(SPIN_FOREGROUND);
 
     if (first < g_first_cached) {
-	if (datasrc->ov_opened) {
+	if (g_datasrc->ov_opened) {
 	    ov_data(absfirst,g_first_cached-1,false);
 	    success = (g_first_cached == absfirst);
 	} else {
@@ -935,7 +935,7 @@ bool cache_range(ART_NUM first, ART_NUM last)
 	}
     }
     if (success && g_last_cached < last) {
-	if (datasrc->ov_opened)
+	if (g_datasrc->ov_opened)
 	    ov_data(g_last_cached+1, last, false);
 	success = art_data(g_last_cached+1, last, false, all_arts);
 	g_cached_all_in_range = (all_arts && success);

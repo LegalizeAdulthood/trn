@@ -67,15 +67,15 @@ void thread_open()
     else
 	set_selector(sel_threadmode, sel_threadsort);
 
-    if ((datasrc->flags & DF_TRY_THREAD) && !g_first_subject) {
+    if ((g_datasrc->flags & DF_TRY_THREAD) && !g_first_subject) {
 	if (mt_data() < 0)
 	    return;
     }
-    if ((datasrc->flags & DF_TRY_OVERVIEW) && !g_cached_all_in_range) {
+    if ((g_datasrc->flags & DF_TRY_OVERVIEW) && !g_cached_all_in_range) {
 	if (thread_always) {
 	    spin_todo = spin_estimate = lastart - absfirst + 1;
 	    (void) ov_data(absfirst, lastart, false);
-	    if (datasrc->ov_opened && find_existing && datasrc->over_dir == nullptr) {
+	    if (g_datasrc->ov_opened && find_existing && g_datasrc->over_dir == nullptr) {
 		mark_missing_articles();
 		rc_to_bits();
 		find_existing = false;
@@ -121,10 +121,10 @@ void thread_open()
 	    check_poster(ap);
     }
 
-    save_ov_opened = datasrc->ov_opened;
-    datasrc->ov_opened = 0; /* avoid trying to call ov_data twice for high arts */
+    save_ov_opened = g_datasrc->ov_opened;
+    g_datasrc->ov_opened = 0; /* avoid trying to call ov_data twice for high arts */
     thread_grow();	    /* thread any new articles not yet in the database */
-    datasrc->ov_opened = save_ov_opened;
+    g_datasrc->ov_opened = save_ov_opened;
     added_articles = 0;
     sel_page_sp = 0;
     sel_page_app = 0;

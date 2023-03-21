@@ -55,7 +55,7 @@ int access_ng()
 {
     ART_NUM old_first = ngptr->abs1st;
 
-    if (datasrc->flags & DF_REMOTE) {
+    if (g_datasrc->flags & DF_REMOTE) {
 	int ret = nntp_group(ngname,ngptr);
 	if (ret == -2)
 	    return -2;
@@ -113,7 +113,7 @@ int access_ng()
 
 void chdir_newsdir()
 {
-    if (chdir(datasrc->spool_dir) || (!(datasrc->flags & DF_REMOTE) && chdir(ngdir)))
+    if (chdir(g_datasrc->spool_dir) || (!(g_datasrc->flags & DF_REMOTE) && chdir(ngdir)))
     {
 	printf(nocd,ngdir) FLUSH;
 	sig_catcher(0);
@@ -223,7 +223,7 @@ void sort_newsgroups()
 
 void ng_skip()
 {
-    if (datasrc->flags & DF_REMOTE) {
+    if (g_datasrc->flags & DF_REMOTE) {
 	ART_NUM artnum;
 
 	clear();

@@ -2436,7 +2436,7 @@ q does nothing.\n\n\
 	return DS_DISPLAY;
       case 'L':
 	switch_dmode(&sel_grp_dmode);	    /* sets msg */
-	if (*sel_grp_dmode != 's' && !datasrc->desc_sf.hp) {
+	if (*sel_grp_dmode != 's' && !g_datasrc->desc_sf.hp) {
 	    newline();
 	    return DS_RESTART;
 	}

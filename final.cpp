@@ -106,7 +106,7 @@ void final_init()
     chdir(g_tmp_dir);
     if (!checkflag)
 	unuse_multirc(multirc);
-    if (datasrc_list) {
+    if (g_datasrc_list) {
 	DATASRC* dp;
 	for (dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp))
 	    close_datasrc(dp);

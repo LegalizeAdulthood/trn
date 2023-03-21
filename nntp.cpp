@@ -388,12 +388,12 @@ int nntp_newgroups(time_t t)
 
 int nntp_artnums()
 {
-    if (datasrc->flags & DF_NOLISTGROUP)
+    if (g_datasrc->flags & DF_NOLISTGROUP)
 	return 0;
     if (nntp_command("LISTGROUP") <= 0)
 	return -2;
     if (nntp_check() <= 0) {
-	datasrc->flags |= DF_NOLISTGROUP;
+	g_datasrc->flags |= DF_NOLISTGROUP;
 	return 0;
     }
     return 1;
@@ -402,12 +402,12 @@ int nntp_artnums()
 #if 0
 int nntp_rover()
 {
-    if (datasrc->flags & DF_NOXROVER)
+    if (g_datasrc->flags & DF_NOXROVER)
 	return 0;
     if (nntp_command("XROVER 1-") <= 0)
 	return -2;
     if (nntp_check() <= 0) {
-	datasrc->flags |= DF_NOXROVER;
+	g_datasrc->flags |= DF_NOXROVER;
 	return 0;
     }
     return 1;
@@ -498,10 +498,10 @@ int nntp_handle_timeout()
     handling_timeout = true;
     strcpy(last_command_save, g_last_command);
     nntp_close(false);
-    datasrc->nntplink = nntplink;
-    if (nntp_connect(datasrc->newsid, false) <= 0)
+    g_datasrc->nntplink = nntplink;
+    if (nntp_connect(g_datasrc->newsid, false) <= 0)
 	return -2;
-    datasrc->nntplink = nntplink;
+    g_datasrc->nntplink = nntplink;
     if (in_ng && nntp_group(ngname, (NGDATA*)nullptr) <= 0)
 	return -2;
     if (nntp_command(last_command_save) <= 0)

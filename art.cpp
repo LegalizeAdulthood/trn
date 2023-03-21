@@ -110,7 +110,7 @@ do_article_result do_article()
     char oldmode = mode;
     bool outputok = true;
 
-    if (datasrc->flags & DF_REMOTE)
+    if (g_datasrc->flags & DF_REMOTE)
 	g_artsize = g_raw_artsize = nntp_artsize();
     else
     {

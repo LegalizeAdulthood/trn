@@ -33,10 +33,10 @@
 bool ov_init()
 {
     bool has_overview_fmt;
-    Uchar* fieldnum = datasrc->fieldnum;
-    Uchar* fieldflags = datasrc->fieldflags;
-    datasrc->flags &= ~DF_TRY_OVERVIEW;
-    if (!datasrc->over_dir) {
+    Uchar* fieldnum = g_datasrc->fieldnum;
+    Uchar* fieldflags = g_datasrc->fieldflags;
+    g_datasrc->flags &= ~DF_TRY_OVERVIEW;
+    if (!g_datasrc->over_dir) {
 	int ret;
 	/* Check if the server is XOVER compliant */
 	if (nntp_command("XOVER") <= 0)
@@ -54,8 +54,8 @@ bool ov_init()
     }
     else
     {
-	has_overview_fmt = datasrc->over_fmt != nullptr
-			&& (tmpfp = fopen(datasrc->over_fmt, "r")) != nullptr;
+	has_overview_fmt = g_datasrc->over_fmt != nullptr
+			&& (tmpfp = fopen(g_datasrc->over_fmt, "r")) != nullptr;
     }
 
     if (has_overview_fmt) {
@@ -63,7 +63,7 @@ bool ov_init()
 	fieldnum[0] = OV_NUM;
 	fieldflags[OV_NUM] = FF_HAS_FIELD;
 	for (i = 1;;) {
-	    if (!datasrc->over_dir) {
+	    if (!g_datasrc->over_dir) {
 		if (nntp_gets(buf, sizeof buf) < 0)
 		    break;/*$$*/
 		if (nntp_at_list_end(buf))
@@ -104,7 +104,7 @@ bool ov_init()
 	}
 	fieldflags[OV_XREF] = FF_CHECK4FIELD | FF_CHECK4HDR;
     }
-    datasrc->flags |= DF_TRY_OVERVIEW;
+    g_datasrc->flags |= DF_TRY_OVERVIEW;
     return true;
 }
 
@@ -149,7 +149,7 @@ bool ov_data(ART_NUM first, ART_NUM last, bool cheating)
     int line_cnt;
     int ov_chunk_size = cheating? OV_CHUNK_SIZE : OV_CHUNK_SIZE * 8;
     time_t started_request;
-    bool remote = !datasrc->over_dir;
+    bool remote = !g_datasrc->over_dir;
 
 beginning:
     for (;;) {
@@ -182,26 +182,26 @@ beginning:
 	    success = false;
 	    goto exit;
 	}
-	if (verbose && !g_first_subject && !datasrc->ov_opened)
+	if (verbose && !g_first_subject && !g_datasrc->ov_opened)
 	    printf("\nGetting overview file."), fflush(stdout);
     }
-    else if (datasrc->ov_opened < started_request - 60*60) {
+    else if (g_datasrc->ov_opened < started_request - 60*60) {
 	ov_close();
-	if ((datasrc->ov_in = fopen(ov_name(ngname), "r")) == nullptr)
+	if ((g_datasrc->ov_in = fopen(ov_name(ngname), "r")) == nullptr)
 	    return false;
 	if (verbose && !g_first_subject)
 	    printf("\nReading overview file."), fflush(stdout);
     }
-    if (!datasrc->ov_opened) {
+    if (!g_datasrc->ov_opened) {
 	if (cheating)
 	    setspin(SPIN_BACKGROUND);
 	else {
-	    int lots2do = ((datasrc->flags & DF_REMOTE)? g_net_speed : 20) * 100;
+	    int lots2do = ((g_datasrc->flags & DF_REMOTE)? g_net_speed : 20) * 100;
 	    if (spin_estimate > spin_todo)
 		spin_estimate = spin_todo;
 	    setspin(spin_estimate > lots2do? SPIN_BARGRAPH : SPIN_FOREGROUND);
 	}
-	datasrc->ov_opened = started_request;
+	g_datasrc->ov_opened = started_request;
     }
 
     artnum = first-1;
@@ -212,7 +212,7 @@ beginning:
 		break;
 	    line_cnt++;
 	}
-	else if (!(line = get_a_line(last_buf,last_buflen,last_buf!=buf,datasrc->ov_in)))
+	else if (!(line = get_a_line(last_buf,last_buflen,last_buf!=buf,g_datasrc->ov_in)))
 	    break;
 
 	last_buf = line;
@@ -294,8 +294,8 @@ beginning:
 	    success = false;
 	}
     }
-    if (!cheating && datasrc->ov_in)
-	fseek(datasrc->ov_in, 0L, 0);	/* rewind it for the cheating phase */
+    if (!cheating && g_datasrc->ov_in)
+	fseek(g_datasrc->ov_in, 0L, 0);	/* rewind it for the cheating phase */
     if (success && real_first <= g_first_cached) {
 	g_first_cached = real_first;
 	g_cached_all_in_range = true;
@@ -311,8 +311,8 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
     ARTICLE* article;
     int i;
     int fn;
-    Uchar* fieldnum = datasrc->fieldnum;
-    Uchar* fieldflags = datasrc->fieldflags;
+    Uchar* fieldnum = g_datasrc->fieldnum;
+    Uchar* fieldflags = g_datasrc->fieldflags;
     char* fields[OV_MAX_FIELDS];
     char* cp;
     char* tab;
@@ -421,7 +421,7 @@ static const char *ov_name(const char *group)
 {
     char* cp;
 
-    strcpy(buf, datasrc->over_dir);
+    strcpy(buf, g_datasrc->over_dir);
     cp = buf + strlen(buf);
     *cp++ = '/';
     strcpy(cp, group);
@@ -433,12 +433,12 @@ static const char *ov_name(const char *group)
 
 void ov_close()
 {
-    if (datasrc && datasrc->ov_opened) {
-	if (datasrc->ov_in) {
-	    (void) fclose(datasrc->ov_in);
-	    datasrc->ov_in = nullptr;
+    if (g_datasrc && g_datasrc->ov_opened) {
+	if (g_datasrc->ov_in) {
+	    (void) fclose(g_datasrc->ov_in);
+	    g_datasrc->ov_in = nullptr;
 	}
-	datasrc->ov_opened = 0;
+	g_datasrc->ov_opened = 0;
     }
 }
 
@@ -452,8 +452,8 @@ char *ov_field(ARTICLE *ap, int num)
     char* s;
     int fn;
 
-    fn = datasrc->fieldnum[num];
-    if (!(datasrc->fieldflags[fn] & (FF_HAS_FIELD | FF_CHECK4FIELD)))
+    fn = g_datasrc->fieldnum[num];
+    if (!(g_datasrc->fieldflags[fn] & (FF_HAS_FIELD | FF_CHECK4FIELD)))
 	return nullptr;
 
     if (fn == OV_NUM) {

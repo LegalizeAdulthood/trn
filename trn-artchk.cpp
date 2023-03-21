@@ -25,7 +25,7 @@ int server_connection ();
 int nntp_handle_timeout ();
 
 char* server_name;
-char* nntp_auth_file;
+char* g_nntp_auth_file;
 
 int debug = 0;
 
@@ -159,7 +159,7 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 	    *cp = '\0';
 	    nntplink.port_number = atoi(cp+1);
 	}
-	nntp_auth_file = filexp(NNTP_AUTH_FILE);
+	g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
 	if ((cp = getenv("NNTP_FORCE_AUTH")) != nullptr
 	 && (*cp == 'y' || *cp == 'Y'))
 	    nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;

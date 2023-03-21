@@ -236,7 +236,7 @@ int save_article()
 	safecpy(altbuf,filexp(s),sizeof altbuf);
 	safefree(savedest);
 	savedest = savestr(altbuf);
-	if (datasrc->flags & DF_REMOTE)
+	if (g_datasrc->flags & DF_REMOTE)
 	    nntp_finishbody(FB_SILENT);
 	interp(cmd_buf, (sizeof cmd_buf), get_val("PIPESAVER",PIPESAVER));
 				/* then set up for command */
@@ -369,7 +369,7 @@ q to abort.\n\
 	    if (tmpfp)
 		fclose(tmpfp);
 	    safecpy(cmd_buf, filexp(s), sizeof cmd_buf);
-	    if (datasrc->flags & DF_REMOTE)
+	    if (g_datasrc->flags & DF_REMOTE)
 		nntp_finishbody(FB_SILENT);
 	    termlib_reset();
 	    resetty();		/* make terminal behave */
@@ -619,7 +619,7 @@ static void follow_it_up()
     safecpy(cmd_buf,filexp(get_val("NEWSPOSTER",NEWSPOSTER)), sizeof cmd_buf);
     if (invoke(cmd_buf,origdir) == 42) {
 	int ret;
-	if ((datasrc->flags & DF_REMOTE)
+	if ((g_datasrc->flags & DF_REMOTE)
 	 && (nntp_command("DATE") <= 0
 	  || (nntp_check() < 0 && atoi(g_ser_line) != NNTP_BAD_COMMAND_VAL)))
 	    ret = 1;
@@ -869,7 +869,7 @@ int invoke(char *cmd, char *dir)
     char oldmode = mode;
     int ret = -1;
 
-    if (datasrc->flags & DF_REMOTE)
+    if (g_datasrc->flags & DF_REMOTE)
 	nntp_finishbody(FB_SILENT);
 #ifdef DEBUG
     if (debug)

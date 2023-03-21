@@ -24,7 +24,7 @@ enum
 int	debug = 0;
 int	new_connection = false;
 char*	server_name;
-char*	nntp_auth_file;
+char*	g_nntp_auth_file;
 
 int valid_header(char *);
 void append_signature();
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 	    nntplink.port_number = atoi(cp+1);
 	}
 	line_end = "\r\n";
-	nntp_auth_file = filexp(NNTP_AUTH_FILE);
+	g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
 	if ((cp = getenv("NNTP_FORCE_AUTH")) != nullptr
 	 && (*cp == 'y' || *cp == 'Y'))
 	    nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;

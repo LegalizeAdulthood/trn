@@ -86,8 +86,8 @@ int nntp_handle_nested_lists()
 
 char *get_auth_user()
 {
-    extern char* nntp_auth_file;
-    return read_auth_file(nntp_auth_file, &nntp_password);
+    extern char* g_nntp_auth_file;
+    return read_auth_file(g_nntp_auth_file, &nntp_password);
 }
 
 char *get_auth_pass()
