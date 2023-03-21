@@ -6,26 +6,34 @@
 #include "EXTERN.h"
 #include "common.h"
 #include "term.h"
-#include "hash.h"
-#include "cache.h"
 #include "head.h"
 #include "art.h"
 #include "artio.h"
 #include "artstate.h"
 #include "intrp.h"
 #include "final.h"
-#include "respond.h"
 #include "mime.h"
-#include "env.h"
 #include "util.h"
 #include "util2.h"
 #include "uudecode.h"
-#include "INTERN.h"
 #include "decode.h"
-#include "decode.ih"
+
 #ifdef MSDOS
 #include <direct.h>
 #endif
+
+#ifdef MSDOS
+#define GOODCHARS                \
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ" \
+    "abcdefghijklmnopqrstuvwxyz" \
+    "0123456789-_^#%"
+#else
+#define BADCHARS "!$&*()|\'\";<>[]{}?/`\\ \t"
+#endif
+
+char *g_decode_filename{};
+
+static bool bad_filename(const char *filename);
 
 void decode_init()
 {
@@ -41,15 +49,15 @@ char *decode_fix_fname(const char *s)
     if (!s)
 	s = "unknown";
 
-    safefree(decode_filename);
-    decode_filename = safemalloc(strlen(s) + 2);
+    safefree(g_decode_filename);
+    g_decode_filename = safemalloc(strlen(s) + 2);
 
 /*$$ we need to eliminate any "../"s from the string */
     while (*s == '/' || *s == '~') s++;
-    for (t = decode_filename; *s; s++) {
+    for (t = g_decode_filename; *s; s++) {
 #ifdef MSDOS
 /*$$ we should also handle backslashes here */
-	if (*s == '.' && (t == decode_filename || dotcount++))
+	if (*s == '.' && (t == g_decode_filename || dotcount++))
 	    continue;
 #endif
 	if (isprint(*s)
@@ -62,11 +70,11 @@ char *decode_fix_fname(const char *s)
 	    *t++ = *s;
     }
     *t = '\0';
-    if (t == decode_filename || bad_filename(decode_filename)) {
+    if (t == g_decode_filename || bad_filename(g_decode_filename)) {
 	*t++ = 'x';
 	*t = '\0';
     }
-    return decode_filename;
+    return g_decode_filename;
 }
 
 /* Returns nonzero if "filename" is a bad choice */
@@ -382,7 +390,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 
     if (mcp) {
 	mime_Exec(mcp->command);
-	remove(decode_filename);
+	remove(g_decode_filename);
 	chdir("..");
     }
 

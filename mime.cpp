@@ -202,7 +202,7 @@ int mime_Exec(char *cmd)
 	if (*f == '%') {
 	    switch (*++f) {
 	      case 's':
-		safecpy(t, decode_filename, CBUFLEN-(t-cmd_buf));
+		safecpy(t, g_decode_filename, CBUFLEN-(t-cmd_buf));
 		t += strlen(t);
 		break;
 	      case 't':

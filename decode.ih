@@ -1,5 +1,0 @@
-/* decode.ih
- */
-/* This software is copyrighted as detailed in the LICENSE file. */
-
-static bool bad_filename(const char *filename);

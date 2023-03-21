@@ -63,7 +63,7 @@ add_executable(trn
     common.h
     config2.h
     datasrc.cpp datasrc.h
-    decode.cpp decode.h decode.ih
+    decode.cpp decode.h
     edit_dist.cpp edit_dist.h
     final.cpp final.h
     hash.cpp hash.h hash.ih
