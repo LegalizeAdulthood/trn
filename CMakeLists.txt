@@ -49,7 +49,7 @@ add_executable(trn
     ${CMAKE_CURRENT_BINARY_DIR}/config.h
     EXTERN.h
     INTERN.h
-    addng.cpp addng.h addng.ih
+    addng.cpp addng.h
     art.cpp art.h
     artio.cpp artio.h
     artsrch.cpp artsrch.h

@@ -19,7 +19,6 @@
 #include "autosub.h"
 #include "rt-select.h"
 #include "addng.h"
-#include "addng.ih"
 
 #include <stdlib.h>
 
@@ -29,6 +28,20 @@ ADDGROUP* g_last_addgroup{};
 ADDGROUP* g_sel_page_gp{};
 ADDGROUP* g_sel_next_gp{};
 
+static int addgroup_cnt;
+
+static int addng_cmp(const char *key, int keylen, HASHDATUM data);
+static int build_addgroup_list(int keylen, HASHDATUM *data, int extra);
+static void process_list(int);
+static void new_nntp_groups(DATASRC *dp);
+static void new_local_groups(DATASRC *dp);
+static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch);
+static void add_to_list(const char *name, int toread, char_int ch);
+static int list_groups(int keylen, HASHDATUM *data, int add_matching);
+static void scanline(char *actline, bool add_matching);
+static int agorder_number(const ADDGROUP **app1, const ADDGROUP **app2);
+static int agorder_groupname(const ADDGROUP **app1, const ADDGROUP **app2);
+static int agorder_count(const ADDGROUP **app1, const ADDGROUP **app2);
 
 static int addng_cmp(const char *key, int keylen, HASHDATUM data)
 {
