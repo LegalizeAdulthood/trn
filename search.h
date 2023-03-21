@@ -1,6 +1,8 @@
 /* search.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef SEARCH_H
+#define SEARCH_H
 
 #ifndef NBRA
 #define	NBRA	10		/* the maximum number of meta-brackets in an
@@ -32,3 +34,5 @@ char *execute(COMPEX *compex, char *addr);
 bool advance(COMPEX *compex, char *lp, const char *ep);
 bool backref(COMPEX *compex, int i, const char *lp);
 bool cclass(const char *set, int c, int af);
+
+#endif

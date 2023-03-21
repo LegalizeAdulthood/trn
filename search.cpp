@@ -26,7 +26,6 @@
 #include "common.h"
 #include "util.h"
 #include "util2.h"
-#include "INTERN.h"
 #include "search.h"
 
 #define BMAPSIZ (127 / BITSPERBYTE + 1)
@@ -56,25 +55,27 @@ enum
 #define WBOUND	(36|MNULL)	/* matches word boundary \b */
 #define NWBOUND	(38|MNULL)	/* matches non-(word boundary) \B */
  
-#define	STAR	01		/* * -- Kleene star, repeats the previous
-				   REas many times as possible; the value
-				   ORs with the other operator types */
- 
-#define ASCSIZ 256
-typedef Uchar	TRANSTABLE[ASCSIZ];
+enum
+{
+    STAR = 01, /* * -- Kleene star, repeats the previous
+                          REas many times as possible; the value
+                          ORs with the other operator types */
 
-static TRANSTABLE trans;
-static bool folding = false;
+    ASCSIZ = 256
+};
+using TRANSTABLE = Uchar[ASCSIZ];
 
-static int err;
-static char* FirstCharacter;
+static TRANSTABLE s_trans{};
+static bool s_folding{};
+static int s_err{};
+static char *s_first_character{};
 
 void search_init()
 {
     int    i;
     
     for (i = 0; i < ASCSIZ; i++)
-	trans[i] = i;
+	s_trans[i] = i;
 }
 
 void init_compex(COMPEX *compex)
@@ -117,16 +118,16 @@ void case_fold(bool which)
 {
     int i;
 
-    if (which != folding) {
+    if (which != s_folding) {
 	if (which) {
 	    for (i = 'A'; i <= 'Z'; i++)
-		trans[i] = tolower(i);
+		s_trans[i] = tolower(i);
 	}
 	else {
 	    for (i = 'A'; i <= 'Z'; i++)
-		trans[i] = i;
+		s_trans[i] = i;
 	}
-	folding = which;
+	s_folding = which;
     }
 }
 
@@ -328,7 +329,7 @@ char *grow_eb(COMPEX *compex, char *epp, char **alt)
 char *execute(COMPEX *compex, char *addr)
 {
     char* p1 = addr;
-    Uchar* trt = trans;
+    Uchar* trt = s_trans;
     int c;
  
     if (addr == nullptr || compex->expbuf == nullptr)
@@ -342,15 +343,15 @@ char *execute(COMPEX *compex, char *addr)
 	p1 = compex->brastr;		/* ! */
     }
     case_fold(compex->do_folding);	/* make sure table is correct */
-    FirstCharacter = p1;		/* for ^ tests */
+    s_first_character = p1;		/* for ^ tests */
     if (compex->expbuf[0] == CCHR && !compex->alternatives[1]) {
 	c = trt[*(Uchar*)(compex->expbuf+1)]; /* fast check for first char */
 	do {
 	    if (trt[*(Uchar*)p1] == c && advance(compex, p1, compex->expbuf))
 		return p1;
 	    p1++;
-	} while (*p1 && !err);
-	if (err) err = 0;
+	} while (*p1 && !s_err);
+	if (s_err) s_err = 0;
 	return nullptr;
     }
     else {			/* regular algorithm */
@@ -361,8 +362,8 @@ char *execute(COMPEX *compex, char *addr)
 		    return p1;
 	    }
 	    p1++;
-	} while (*p1 && !err);
-	if (err) err = 0;
+	} while (*p1 && !s_err);
+	if (s_err) s_err = 0;
 	return nullptr;
     }
    /*NOTREACHED*/
@@ -373,7 +374,7 @@ char *execute(COMPEX *compex, char *addr)
 bool advance(COMPEX *compex, char *lp, const char *ep)
 {
     char* curlp;
-    Uchar* trt = trans;
+    Uchar* trt = s_trans;
     int i;
  
     while (*lp || (*ep & (STAR|MNULL))) {
@@ -396,7 +397,7 @@ bool advance(COMPEX *compex, char *lp, const char *ep)
 		return false;
  
 	    case CIRC:
-		if (lp == FirstCharacter || lp[-1]=='\n')
+		if (lp == s_first_character || lp[-1]=='\n')
 		    continue;
 		return false;
  
@@ -415,13 +416,13 @@ bool advance(COMPEX *compex, char *lp, const char *ep)
 		return false;
  
 	    case WBOUND:
-		if ((lp == FirstCharacter || !isalnum(lp[-1])) !=
+		if ((lp == s_first_character || !isalnum(lp[-1])) !=
 			(!*lp || !isalnum(*lp)) )
 		    continue;
 		return false;
  
 	    case NWBOUND:
-		if ((lp == FirstCharacter || !isalnum(lp[-1])) ==
+		if ((lp == s_first_character || !isalnum(lp[-1])) ==
 			(!*lp || !isalnum(*lp)))
 		    continue;
 		return false;
@@ -459,7 +460,7 @@ bool advance(COMPEX *compex, char *lp, const char *ep)
 	    case CBACK:
 		if (compex->braelist[i = *ep++] == 0) {
 		    fputs("bad braces\n",stdout) FLUSH;
-		    err = true;
+		    s_err = true;
 		    return false;
 		}
 		if (backref(compex, i, lp)) {
@@ -471,7 +472,7 @@ bool advance(COMPEX *compex, char *lp, const char *ep)
 	    case CBACK | STAR:
 		if (compex->braelist[i = *ep++] == 0) {
 		    fputs("bad braces\n",stdout) FLUSH;
-		    err = true;
+		    s_err = true;
 		    return false;
 		}
 		curlp = lp;
@@ -523,7 +524,7 @@ bool advance(COMPEX *compex, char *lp, const char *ep)
  
 	    default:
 		fputs("Badly compiled pattern\n",stdout) FLUSH;
-		err = true;
+		s_err = true;
 		return false;
 	}
     }
