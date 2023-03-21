@@ -169,8 +169,8 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     int i;
     char* s;
 
-    sel_grp_dmode = savestr(sel_grp_dmode) + 1;
-    sel_art_dmode = savestr(sel_art_dmode) + 1;
+    g_sel_grp_dmode = savestr(g_sel_grp_dmode) + 1;
+    g_sel_art_dmode = savestr(g_sel_art_dmode) + 1;
     UnivSelBtnCnt = parse_mouse_buttons(&UnivSelBtns,
                                         "[Top]^ [PgUp]< [PgDn]> [ OK ]^j [Quit]q [Help]?");
     NewsrcSelBtnCnt = parse_mouse_buttons(&NewsrcSelBtns,
@@ -393,9 +393,9 @@ void set_option(int num, char *s)
 	break;
       case OI_NEWSGROUP_SEL_STYLES:
 	free(option_value(OI_NEWSGROUP_SEL_STYLES)-1);
-	sel_grp_dmode = safemalloc(strlen(s)+2);
-	*sel_grp_dmode++ = '*';
-	strcpy(sel_grp_dmode, s);
+	g_sel_grp_dmode = safemalloc(strlen(s)+2);
+	*g_sel_grp_dmode++ = '*';
+	strcpy(g_sel_grp_dmode, s);
 	break;
       case OI_USE_NEWS_SEL:
 	if (isdigit(*s))
@@ -426,9 +426,9 @@ void set_option(int num, char *s)
 	break;
       case OI_NEWS_SEL_STYLES:
 	free(option_value(OI_NEWS_SEL_STYLES)-1);
-	sel_art_dmode = safemalloc(strlen(s)+2);
-	*sel_art_dmode++ = '*';
-	strcpy(sel_art_dmode, s);
+	g_sel_art_dmode = safemalloc(strlen(s)+2);
+	*g_sel_art_dmode++ = '*';
+	strcpy(g_sel_art_dmode, s);
 	break;
       case OI_OPTION_SEL_CMDS:
 	*OptionSelCmds = *s;
@@ -851,7 +851,7 @@ char *option_value(int num)
       case OI_NEWSGROUP_SEL_BTNS:
 	return expand_mouse_buttons(NewsgroupSelBtns,NewsgroupSelBtnCnt);
       case OI_NEWSGROUP_SEL_STYLES: {
-	char* s = sel_grp_dmode;
+	char* s = g_sel_grp_dmode;
 	while (s[-1] != '*') s--;
 	return s;
       }
@@ -879,7 +879,7 @@ char *option_value(int num)
       case OI_NEWS_SEL_BTNS:
 	return expand_mouse_buttons(NewsSelBtns,NewsSelBtnCnt);
       case OI_NEWS_SEL_STYLES: {
-	char* s = sel_art_dmode;
+	char* s = g_sel_art_dmode;
 	while (s[-1] != '*') s--;
 	return s;
       }

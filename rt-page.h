@@ -1,28 +1,16 @@
 /* rt-page.h
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef RT_PAGE_H
+#define RT_PAGE_H
 
 #define PRESERVE_PAGE     false
 #define FILL_LAST_PAGE    true
 
-EXT int sel_total_obj_cnt;
-EXT int sel_prior_obj_cnt;
-EXT int sel_page_obj_cnt;
-EXT int sel_page_item_cnt;
-EXT int sel_max_per_page;
-EXT int sel_max_line_cnt;
-
-EXT ARTICLE** sel_page_app;
-EXT ARTICLE** sel_next_app;
-EXT ARTICLE* sel_last_ap;
-EXT SUBJECT* sel_page_sp;
-EXT SUBJECT* sel_next_sp;
-EXT SUBJECT* sel_last_sp;
-
-EXT char* sel_grp_dmode INIT("*slm");
-EXT char* sel_art_dmode INIT("*lmds");
-
-EXT bool group_init_done INIT(true);
+enum
+{
+    MAX_SEL = 99
+};
 
 union SEL_UNION
 {
@@ -42,8 +30,22 @@ struct SEL_ITEM
     int sel;
 };
 
-#define MAX_SEL 99
-EXT SEL_ITEM sel_items[MAX_SEL];
+extern SEL_ITEM g_sel_items[MAX_SEL];
+extern int g_sel_total_obj_cnt;
+extern int g_sel_prior_obj_cnt;
+extern int g_sel_page_obj_cnt;
+extern int g_sel_page_item_cnt;
+extern int g_sel_max_per_page;
+extern int g_sel_max_line_cnt;
+extern ARTICLE **g_sel_page_app;
+extern ARTICLE **g_sel_next_app;
+extern ARTICLE *g_sel_last_ap;
+extern SUBJECT *g_sel_page_sp;
+extern SUBJECT *g_sel_next_sp;
+extern SUBJECT *g_sel_last_sp;
+extern char *g_sel_grp_dmode;
+extern char *g_sel_art_dmode;
+extern bool g_group_init_done;
 
 bool set_sel_mode(char_int ch);
 char *get_sel_order(int smode);
@@ -61,3 +63,5 @@ void display_page();
 void update_page();
 void output_sel(int ix, int sel, bool update);
 void display_option(int op, int item_index);
+
+#endif

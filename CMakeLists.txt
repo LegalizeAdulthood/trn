@@ -93,7 +93,7 @@ add_executable(trn
     rthread.cpp rthread.h
     rt-mt.cpp rt-mt.h
     rt-ov.cpp rt-ov.h
-    rt-page.cpp rt-page.h rt-page.ih
+    rt-page.cpp rt-page.h
     rt-process.cpp rt-process.h rt-process.ih
     rt-select.cpp rt-select.h rt-select.ih
     rt-util.cpp rt-util.h rt-util.ih

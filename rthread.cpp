@@ -154,8 +154,8 @@ void thread_open()
     thread_grow();	    /* thread any new articles not yet in the database */
     g_datasrc->ov_opened = save_ov_opened;
     added_articles = 0;
-    sel_page_sp = 0;
-    sel_page_app = 0;
+    g_sel_page_sp = 0;
+    g_sel_page_app = 0;
 }
 
 /* Update the group's thread info.
@@ -180,10 +180,10 @@ void thread_close()
     update_thread_kfile();
     if (msgid_hash)
 	hashwalk(msgid_hash, cleanup_msgid_hash, 0);
-    sel_page_sp = 0;
-    sel_page_app = 0;
-    sel_last_ap = 0;
-    sel_last_sp = 0;
+    g_sel_page_sp = 0;
+    g_sel_page_app = 0;
+    g_sel_last_ap = 0;
+    g_sel_last_sp = 0;
     selected_only = false;
     sel_exclusive = false;
     ov_close();
@@ -821,10 +821,10 @@ void deselect_all()
     for (sp = g_first_subject; sp; sp = sp->next)
 	deselect_subject(sp);
     selected_count = selected_subj_cnt = 0;
-    sel_page_sp = 0;
-    sel_page_app = 0;
-    sel_last_ap = 0;
-    sel_last_sp = 0;
+    g_sel_page_sp = 0;
+    g_sel_page_app = 0;
+    g_sel_last_ap = 0;
+    g_sel_last_sp = 0;
     selected_only = false;
 }
 
@@ -1664,7 +1664,7 @@ void sort_articles()
 	sort_procedure = artorder_score;
 	break;
     }
-    sel_page_app = 0;
+    g_sel_page_app = 0;
     qsort(g_artptr_list, g_artptr_list_size, sizeof (ARTICLE*), ((int(*)(void const *, void const *))sort_procedure));
 }
 

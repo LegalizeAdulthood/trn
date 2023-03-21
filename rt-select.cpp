@@ -138,15 +138,15 @@ char article_selector(char_int cmd)
     if (sel_rereading) {
 	end_char = 'Z';
 	page_char = '>';
-	sel_page_app = nullptr;
-	sel_page_sp = nullptr;
+	g_sel_page_app = nullptr;
+	g_sel_page_sp = nullptr;
 	sel_mask = AF_DELSEL;
     } else {
 	end_char = NewsSelCmds[0];
 	page_char = NewsSelCmds[1];
 	if (g_curr_artp) {
-	    sel_last_ap = g_curr_artp;
-	    sel_last_sp = g_curr_artp->subj;
+	    g_sel_last_ap = g_curr_artp;
+	    g_sel_last_sp = g_curr_artp->subj;
 	}
 	sel_mask = AF_SEL;
     }
@@ -201,7 +201,7 @@ sel_exit:
      || sel_sort == SS_STRING) {
 	if (g_artptr_list) {
 	    free((char*)g_artptr_list);
-	    g_artptr_list = sel_page_app = nullptr;
+	    g_artptr_list = g_sel_page_app = nullptr;
 	    sort_subjects();
 	}
 	g_artptr = nullptr;
@@ -355,7 +355,7 @@ char newsgroup_selector()
     set_selector(SM_NEWSGROUP, 0);
 
   sel_restart:
-    if (*sel_grp_dmode != 's') {
+    if (*g_sel_grp_dmode != 's') {
 	NEWSRC* rp;
 	for (rp = g_multirc->first; rp; rp = rp->next) {
 	    if ((rp->flags & RF_ACTIVE) && !rp->datasrc->desc_sf.hp) {
@@ -423,7 +423,7 @@ char addgroup_selector(int flags)
     set_selector(SM_ADDGROUP, 0);
 
   sel_restart:
-    if (*sel_grp_dmode != 's') {
+    if (*g_sel_grp_dmode != 's') {
 	NEWSRC* rp;
 	for (rp = g_multirc->first; rp; rp = rp->next) {
 	    if ((rp->flags & RF_ACTIVE) && !rp->datasrc->desc_sf.hp) {
@@ -778,7 +778,7 @@ static void sel_display()
     if (erase_screen && erase_each_line)
 	erase_line(true);
 
-    if (sel_item_index >= sel_page_item_cnt)
+    if (sel_item_index >= g_sel_page_item_cnt)
 	sel_item_index = 0;
 
     if (disp_status_line == 1) {
@@ -797,7 +797,7 @@ static void sel_status_msg(const char *cp)
 	newline();
     fputs(cp, stdout);
     g_term_col = strlen(cp);
-    goto_xy(0,sel_items[sel_item_index].line);
+    goto_xy(0,g_sel_items[sel_item_index].line);
     fflush(stdout);	/* CAA: otherwise may not be visible */
     disp_status_line = 2;
 }
@@ -830,7 +830,7 @@ static char sel_input()
 	removed_prompt &= ~1;
     }
     if (can_home)
-	goto_xy(0,sel_items[sel_item_index].line);
+	goto_xy(0,g_sel_items[sel_item_index].line);
 
 reinp_selector:
     if (removed_prompt & 1)
@@ -858,12 +858,12 @@ reinp_selector:
 	}
 	disp_status_line = 0;
     }
-    if (ch == '-' && sel_page_item_cnt) {
+    if (ch == '-' && g_sel_page_item_cnt) {
 	got_dash = 1;
 	got_goto = 0;	/* right action is not clear if both are true */
 	if (can_home) {
 	    if (!input_pending()) {
-		j = (sel_item_index > 0? sel_item_index : sel_page_item_cnt);
+		j = (sel_item_index > 0? sel_item_index : g_sel_page_item_cnt);
 		if (UseSelNum)
 		    sprintf(msg,"Range: %d-", j);
 		else
@@ -916,7 +916,7 @@ reinp_selector:
 		if (sel_item_index > 0) {
 		    j = sel_item_index;  /* -1, +1 to print */
 		} else	/* wrap around from the bottom */
-		    j = sel_page_item_cnt;
+		    j = g_sel_page_item_cnt;
 		sprintf(msg,"Range: %d-%c", j, ch);
 	    } else {
 		if (got_goto) {
@@ -955,7 +955,7 @@ reinp_selector:
 		if (sel_item_index > 0) {
 		    j = sel_item_index;  /* -1, +1 to print */
 		} else	/* wrap around from the bottom */
-		    j = sel_page_item_cnt;
+		    j = g_sel_page_item_cnt;
 		sprintf(msg,"Range: %d- ", j);
 		sel_status_msg(msg);
 		goto reinp_selector;
@@ -973,7 +973,7 @@ reinp_selector:
 	    sel_number = (ch_num1 - '0');
 	}
 	j = sel_number-1;
-	if ((j < 0) || (j >= sel_page_item_cnt)) {
+	if ((j < 0) || (j >= g_sel_page_item_cnt)) {
 	    dingaling();
 	    sprintf(msg, "No item %c%c on this page.", ch_num1, ch);
 	    sel_status_msg(msg);
@@ -985,13 +985,13 @@ reinp_selector:
 	    goto position_selector;
 	} else if (got_dash)
 	    ;
-	else if (sel_items[j].sel == 1)
+	else if (g_sel_items[j].sel == 1)
 	    action = (sel_rereading? 'k' : '-');
 	else
 	    action = '+';
     } else if (in_select && !UseSelNum) {
 	j = in_select - sel_chars;
-	if (j >= sel_page_item_cnt) {
+	if (j >= g_sel_page_item_cnt) {
 	    dingaling();
 	    sprintf(msg, "No item '%c' on this page.", ch);
 	    sel_status_msg(msg);
@@ -1002,17 +1002,17 @@ reinp_selector:
 	    goto position_selector;
 	} else if (got_dash)
 	    ;
-	else if (sel_items[j].sel == 1)
+	else if (g_sel_items[j].sel == 1)
 	    action = (sel_rereading? 'k' : '-');
 	else
 	    action = '+';
     } else if (ch == '*' && sel_mode == SM_ARTICLE) {
 	ARTICLE* ap;
-	if (!sel_page_item_cnt)
+	if (!g_sel_page_item_cnt)
 	    dingaling();
 	else {
-	    ap = sel_items[sel_item_index].u.ap;
-	    if (sel_items[sel_item_index].sel)
+	    ap = g_sel_items[sel_item_index].u.ap;
+	    if (g_sel_items[sel_item_index].sel)
 		deselect_subject(ap->subj);
 	    else
 		select_subject(ap->subj, 0);
@@ -1021,7 +1021,7 @@ reinp_selector:
 	goto position_selector;
     } else if (ch == 'y' || ch == '.' || ch == '*' || ch == Ctl('t')) {
 	j = sel_item_index;
-	if (sel_page_item_cnt && sel_items[j].sel == 1)
+	if (g_sel_page_item_cnt && g_sel_items[j].sel == 1)
 	    action = (sel_rereading? 'k' : '-');
 	else
 	    action = '+';
@@ -1038,15 +1038,15 @@ reinp_selector:
 	action = 'M';
     } else if (ch == '@') {
 	sel_item_index = 0;
-	j = sel_page_item_cnt-1;
+	j = g_sel_page_item_cnt-1;
 	got_dash = 1;
 	action = '@';
     } else if (ch == '[' || ch == 'p') {
 	if (--sel_item_index < 0)
-	    sel_item_index = sel_page_item_cnt? sel_page_item_cnt-1 : 0;
+	    sel_item_index = g_sel_page_item_cnt? g_sel_page_item_cnt-1 : 0;
 	goto position_selector;
     } else if (ch == ']' || ch == 'n') {
-	if (++sel_item_index >= sel_page_item_cnt)
+	if (++sel_item_index >= g_sel_page_item_cnt)
 	    sel_item_index = 0;
 	goto position_selector;
     } else {
@@ -1104,7 +1104,7 @@ reinp_selector:
 	}
     }
 
-    if (!sel_page_item_cnt) {
+    if (!g_sel_page_item_cnt) {
 	dingaling();
 	goto position_selector;
     }
@@ -1120,12 +1120,12 @@ reinp_selector:
 	}
     }
 
-    if (++j == sel_page_item_cnt)
+    if (++j == g_sel_page_item_cnt)
 	j = 0;
     do {
-	int sel = sel_items[sel_item_index].sel;
+	int sel = g_sel_items[sel_item_index].sel;
 	if (can_home)
-	    goto_xy(0,sel_items[sel_item_index].line);
+	    goto_xy(0,g_sel_items[sel_item_index].line);
 	if (action == '@') {
 	    if (sel == 2)
 		ch = (sel_rereading? '+' : ' ');
@@ -1139,7 +1139,7 @@ reinp_selector:
 	    ch = action;
 	switch (ch) {
 	  case '+':
-	    if (select_item(sel_items[sel_item_index].u))
+	    if (select_item(g_sel_items[sel_item_index].u))
 		output_sel(sel_item_index, 1, true);
 	    if (g_term_line >= sel_last_line) {
 		sel_display();
@@ -1149,12 +1149,12 @@ reinp_selector:
 	  case '-':  case 'k':  case 'M': {
 	    bool sel_reread_save = sel_rereading;
 	    if (ch == 'M')
-		delay_return_item(sel_items[sel_item_index].u);
+		delay_return_item(g_sel_items[sel_item_index].u);
 	    if (ch == '-')
 		sel_rereading = false;
 	    else
 		sel_rereading = true;
-	    if (deselect_item(sel_items[sel_item_index].u))
+	    if (deselect_item(g_sel_items[sel_item_index].u))
 		output_sel(sel_item_index, ch == '-' ? 0 : 2, true);
 	    sel_rereading = sel_reread_save;
 	    if (g_term_line >= sel_last_line) {
@@ -1167,7 +1167,7 @@ reinp_selector:
 	if (can_home)
 	    carriage_return();
 	fflush(stdout);
-	if (++sel_item_index == sel_page_item_cnt)
+	if (++sel_item_index == g_sel_page_item_cnt)
 	    sel_item_index = 0;
     } while (sel_item_index != j);
     if (force_sel_pos >= 0)
@@ -1185,11 +1185,11 @@ static void sel_prompt()
 #endif
     if (sel_at_end)
 	sprintf(cmd_buf, "%s [%c%c] --",
-		(!sel_prior_obj_cnt? "All" : "Bot"), end_char, page_char);
+		(!g_sel_prior_obj_cnt? "All" : "Bot"), end_char, page_char);
     else
 	sprintf(cmd_buf, "%s%ld%% [%c%c] --",
-		(!sel_prior_obj_cnt? "Top " : ""),
-		(long)((sel_prior_obj_cnt+sel_page_obj_cnt)*100 / sel_total_obj_cnt),
+		(!g_sel_prior_obj_cnt? "Top " : ""),
+		(long)((g_sel_prior_obj_cnt+g_sel_page_obj_cnt)*100 / g_sel_total_obj_cnt),
 		page_char, end_char);
     interp(buf, sizeof buf, g_mailcall);
     sprintf(msg, "%s-- %s %s (%s%s order) -- %s", buf,
@@ -1368,7 +1368,7 @@ static bool select_option(int i)
 	up_line();
 	erase_line(true);
 	sel_prompt();
-	goto_xy(0,sel_items[sel_item_index].line);
+	goto_xy(0,g_sel_items[sel_item_index].line);
 	if (changed) {
 	    erase_line(false);
 	    display_option(i,sel_item_index);
@@ -1438,8 +1438,8 @@ static void sel_cleanup()
 	    ** count_subjects() fix the counts after we're through.
 	    */
 	    SUBJECT* sp;
-	    sel_last_ap = nullptr;
-	    sel_last_sp = nullptr;
+	    g_sel_last_ap = nullptr;
+	    g_sel_last_sp = nullptr;
 	    for (sp = g_first_subject; sp; sp = sp->next)
 		unkill_subject(sp);
 	}
@@ -1482,8 +1482,8 @@ static int sel_command(char_int ch)
     term_scrolled = 0;
     page_line = 1;
     if (sel_mode == SM_NEWSGROUP) {
-	if (sel_item_index < sel_page_item_cnt)
-	    set_ng(sel_items[sel_item_index].u.np);
+	if (sel_item_index < g_sel_page_item_cnt)
+	    set_ng(g_sel_items[sel_item_index].u.np);
 	else
 	    g_ngptr = nullptr;
     }
@@ -1522,9 +1522,9 @@ static int sel_command(char_int ch)
 #endif
 	break;
       case '\r':  case '\n':
-	if (!selected_count && sel_page_item_cnt) {
-	    if (sel_rereading || sel_items[sel_item_index].sel != 2)
-		select_item(sel_items[sel_item_index].u);
+	if (!selected_count && g_sel_page_item_cnt) {
+	    if (sel_rereading || g_sel_items[sel_item_index].sel != 2)
+		select_item(g_sel_items[sel_item_index].u);
 	}
 	return DS_QUIT;
       case 'Z':  case '\t':
@@ -1686,19 +1686,19 @@ static int article_commands(char_int ch)
       case 'U':
 	sel_cleanup();
 	sel_rereading = !sel_rereading;
-	sel_page_sp = nullptr;
-	sel_page_app = nullptr;
+	g_sel_page_sp = nullptr;
+	g_sel_page_app = nullptr;
 	if (!cache_range(sel_rereading? g_absfirst : g_firstart, g_lastart))
 	    sel_rereading = !sel_rereading;
 	return DS_RESTART;
       case '#':
-	if (sel_page_item_cnt) {
+	if (g_sel_page_item_cnt) {
 	    SUBJECT* sp;
 	    for (sp = g_first_subject; sp; sp = sp->next)
 		sp->flags &= ~SF_SEL;
 	    selected_count = 0;
-	    deselect_item(sel_items[sel_item_index].u);
-	    select_item(sel_items[sel_item_index].u);
+	    deselect_item(g_sel_items[sel_item_index].u);
+	    select_item(g_sel_items[sel_item_index].u);
 	    if (!keep_the_group_static)
 		keep_the_group_static = 2;
 	}
@@ -1706,7 +1706,7 @@ static int article_commands(char_int ch)
       case 'N':  case 'P':
 	return DS_QUIT;
       case 'L':
-	switch_dmode(&sel_art_dmode);	    /* sets msg */
+	switch_dmode(&g_sel_art_dmode);	    /* sets msg */
 	return DS_DISPLAY;
       case 'Y':
 	if (!g_dmcount) {
@@ -1718,8 +1718,8 @@ static int article_commands(char_int ch)
 	    sel_cleanup();
 	disp_status_line = 1;
 	count_subjects(CS_NORM);
-	sel_page_sp = nullptr;
-	sel_page_app = nullptr;
+	g_sel_page_sp = nullptr;
+	g_sel_page_app = nullptr;
 	init_pages(PRESERVE_PAGE);
 	return DS_DISPLAY;
       case '=':
@@ -1727,10 +1727,10 @@ static int article_commands(char_int ch)
 	    sel_cleanup();
 	if (sel_mode == SM_ARTICLE) {
 	    set_selector(sel_threadmode, 0);
-	    sel_page_sp = sel_page_app? sel_page_app[0]->subj : nullptr;
+	    g_sel_page_sp = g_sel_page_app? g_sel_page_app[0]->subj : nullptr;
 	} else {
 	    set_selector(SM_ARTICLE, 0);
-	    sel_page_app = 0;
+	    g_sel_page_app = 0;
 	}
 	count_subjects(CS_NORM);
 	sel_item_index = 0;
@@ -1838,8 +1838,8 @@ q does nothing.\n\n\
 	}
 	set_sel_sort(sel_mode,*buf);
 	count_subjects(CS_NORM);
-	sel_page_sp = nullptr;
-	sel_page_app = nullptr;
+	g_sel_page_sp = nullptr;
+	g_sel_page_app = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'R':
@@ -1847,8 +1847,8 @@ q does nothing.\n\n\
 	    sel_cleanup();
 	set_selector(sel_mode, sel_sort * -sel_direction);
 	count_subjects(CS_NORM);
-	sel_page_sp = nullptr;
-	sel_page_app = nullptr;
+	g_sel_page_sp = nullptr;
+	g_sel_page_app = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'E':
@@ -1856,8 +1856,8 @@ q does nothing.\n\n\
 	    sel_cleanup();
 	sel_exclusive = !sel_exclusive;
 	count_subjects(CS_NORM);
-	sel_page_sp = nullptr;
-	sel_page_app = nullptr;
+	g_sel_page_sp = nullptr;
+	g_sel_page_app = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	sel_item_index = 0;
 	return DS_DISPLAY;
@@ -1869,7 +1869,7 @@ q does nothing.\n\n\
 		ARTICLE** limit;
 		limit = g_artptr_list + g_artptr_list_size;
 		if (ch == 'D')
-		    app = sel_page_app;
+		    app = g_sel_page_app;
 		else
 		    app = g_artptr_list;
 		while (app < limit) {
@@ -1881,13 +1881,13 @@ q does nothing.\n\n\
 			    set_read(ap);
 			}
 		    app++;
-		    if (ch == 'D' && app == sel_next_app)
+		    if (ch == 'D' && app == g_sel_next_app)
 			break;
 		}
 	    } else {
 		SUBJECT* sp;
 		if (ch == 'D')
-		    sp = sel_page_sp;
+		    sp = g_sel_page_sp;
 		else
 		    sp = g_first_subject;
 		while (sp) {
@@ -1899,7 +1899,7 @@ q does nothing.\n\n\
 			}
 		    }
 		    sp = sp->next;
-		    if (ch == 'D' && sp == sel_next_sp)
+		    if (ch == 'D' && sp == g_sel_next_sp)
 			break;
 		}
 	    }
@@ -1926,16 +1926,16 @@ q does nothing.\n\n\
 	}
 	/* FALL THROUGH */
       case 'A':
-	if (!sel_page_item_cnt) {
+	if (!g_sel_page_item_cnt) {
 	    dingaling();
 	    break;
 	}
 	erase_line(mousebar_cnt > 0);	/* erase the prompt */
 	removed_prompt = 3;
 	if (sel_mode == SM_ARTICLE)
-	    g_artp = sel_items[sel_item_index].u.ap;
+	    g_artp = g_sel_items[sel_item_index].u.ap;
 	else {
-	    SUBJECT* sp = sel_items[sel_item_index].u.sp;
+	    SUBJECT* sp = g_sel_items[sel_item_index].u.sp;
 	    if (sel_mode == SM_THREAD) {
 		while (!sp->misc)
 		    sp = sp->thread_link;
@@ -1971,11 +1971,11 @@ q does nothing.\n\n\
 	sel_ret = ';';
 	return DS_QUIT;
       case ':':
-	if (sel_page_item_cnt) {
+	if (g_sel_page_item_cnt) {
 	    if (sel_mode == SM_ARTICLE)
-		g_artp = sel_items[sel_item_index].u.ap;
+		g_artp = g_sel_items[sel_item_index].u.ap;
 	    else {
-		SUBJECT* sp = sel_items[sel_item_index].u.sp;
+		SUBJECT* sp = g_sel_items[sel_item_index].u.sp;
 		if (sel_mode == SM_THREAD) {
 		    while (!sp->misc)
 			sp = sp->thread_link;
@@ -2048,8 +2048,8 @@ q does nothing.\n\n\
 	if ((ch = ask_catchup()) == 'y' || ch == 'u') {
 	    count_subjects(CS_UNSELECT);
 	    if (ch != 'u' && obj_count) {
-		sel_page_sp = nullptr;
-		sel_page_app = nullptr;
+		g_sel_page_sp = nullptr;
+		g_sel_page_app = nullptr;
 		init_pages(FILL_LAST_PAGE);
 		return DS_DISPLAY;
 	    }
@@ -2088,8 +2088,8 @@ static int newsgroup_commands(char_int ch)
 	g_sel_page_np = nullptr;
 	return DS_RESTART;
       case 'L':
-	switch_dmode(&sel_grp_dmode);	    /* sets msg */
-	if (*sel_grp_dmode != 's' && !g_multirc->first->datasrc->desc_sf.hp) {
+	switch_dmode(&g_sel_grp_dmode);	    /* sets msg */
+	if (*g_sel_grp_dmode != 's' && !g_multirc->first->datasrc->desc_sf.hp) {
 	    newline();
 	    return DS_RESTART;
 	}
@@ -2114,7 +2114,7 @@ static int newsgroup_commands(char_int ch)
 	    }
 	    if (ch == 'J' || (ch == 'D' && !selected_count)) {
 		init_pages(FILL_LAST_PAGE);
-		if (sel_total_obj_cnt) {
+		if (g_sel_total_obj_cnt) {
 		    sel_item_index = 0;
 		    return DS_DISPLAY;
 		}
@@ -2251,8 +2251,8 @@ q does nothing.\n\n\
 	    return DS_DOCOMMAND;
 	return DS_DISPLAY;
       case 'c':
-	if (sel_item_index < sel_page_item_cnt)
-	    set_ng(sel_items[sel_item_index].u.np);
+	if (sel_item_index < g_sel_page_item_cnt)
+	    set_ng(g_sel_items[sel_item_index].u.np);
 	else {
 	    strcpy(msg, "No newsgroup to catchup.");
 	    disp_status_line = 1;
@@ -2286,7 +2286,7 @@ q does nothing.\n\n\
       default: {
 	SEL_UNION u;
 	int ret;
-	bool was_at_top = !sel_prior_obj_cnt;
+	bool was_at_top = !g_sel_prior_obj_cnt;
 	PUSH_SELECTOR();
 	if (!(removed_prompt & 2)) {
 	    erase_line(mousebar_cnt > 0);	/* erase the prompt */
@@ -2339,7 +2339,7 @@ q does nothing.\n\n\
 	init_pages(PRESERVE_PAGE);
 	if (ret == ING_SPECIAL && g_ngptr && g_ngptr->toread < g_ng_min_toread){
 	    g_ngptr->flags |= NF_INCLUDED;
-	    sel_total_obj_cnt++;
+	    g_sel_total_obj_cnt++;
 	    ret = ING_DISPLAY;
 	}
 	u.np = g_ngptr;
@@ -2436,8 +2436,8 @@ q does nothing.\n\n\
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'L':
-	switch_dmode(&sel_grp_dmode);	    /* sets msg */
-	if (*sel_grp_dmode != 's' && !g_datasrc->desc_sf.hp) {
+	switch_dmode(&g_sel_grp_dmode);	    /* sets msg */
+	if (*g_sel_grp_dmode != 's' && !g_datasrc->desc_sf.hp) {
 	    newline();
 	    return DS_RESTART;
 	}
@@ -2462,7 +2462,7 @@ q does nothing.\n\n\
 	    }
 	    if (ch == 'J' || (ch == 'D' && !selected_count)) {
 		init_pages(FILL_LAST_PAGE);
-		if (sel_total_obj_cnt) {
+		if (g_sel_total_obj_cnt) {
 		    sel_item_index = 0;
 		    return DS_DISPLAY;
 		}
@@ -2590,7 +2590,7 @@ static int option_commands(char_int ch)
 	    strcpy(msg,s);
 	    return DS_STATUS;
 	}
-	i = j = sel_items[sel_item_index].u.op;
+	i = j = g_sel_items[sel_item_index].u.op;
 	do {
 	    if (++i > obj_count)
 		i = 1;
@@ -2747,8 +2747,8 @@ static void switch_dmode(char **dmode_cpp)
 static int find_line(int y)
 {
     int i;
-    for (i = 0; i < sel_page_item_cnt; i++) {
-	if (sel_items[i].line > y)
+    for (i = 0; i < g_sel_page_item_cnt; i++) {
+	if (g_sel_items[i].line > y)
 	    break;
     }
     if (i > 0)
@@ -2806,7 +2806,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 		pushchar(' ');
 	    else {
 		int i = find_line(y);
-		if (sel_items[i].line != g_term_line) {
+		if (g_sel_items[i].line != g_term_line) {
 		    if (UseSelNum) {
 			pushchar(('0' + (i+1) % 10) | 0200);
 			pushchar(('0' + (i+1) / 10) | 0200);
