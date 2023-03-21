@@ -304,7 +304,7 @@ void end_header()
     /* If there's no References: line, then the In-Reply-To: line may give us
     ** more information.
     */
-    if (ThreadedGroup
+    if (g_threaded_group
      && (!(ap->flags & AF_THREADED) || g_htype[INREPLY_LINE].minpos >= 0)) {
 	if (valid_article(ap)) {
 	    ARTICLE* artp_hold = g_artp;
@@ -336,7 +336,7 @@ bool parseheader(ART_NUM artnum)
 
     if (g_parsed_art == artnum)
 	return true;
-    if (artnum > lastart)
+    if (artnum > g_lastart)
 	return false;
     spin(20);
     if (g_datasrc->flags & DF_REMOTE) {
@@ -513,8 +513,8 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 	priornum = artnum-1;
 	if ((cached = (g_htype[which_line].flags & HT_CACHED)) != 0) {
 	    lastnum = artnum + PREFETCH_SIZE - 1;
-	    if (lastnum > lastart)
-		lastnum = lastart;
+	    if (lastnum > g_lastart)
+		lastnum = g_lastart;
 	    sprintf(g_ser_line,"XHDR %s %ld-%ld",g_htype[which_line].name,
 		artnum,lastnum);
 	} else {

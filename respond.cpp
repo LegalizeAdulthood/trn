@@ -814,14 +814,14 @@ void followup()
     bool incl_body = (*buf == 'F' && g_art);
     ART_NUM oldart = g_art;
 
-    if (!incl_body && g_art <= lastart) {
+    if (!incl_body && g_art <= g_lastart) {
 	termdown(2);
 	in_answer("\n\nAre you starting an unrelated topic? [ynq] ", 'F');
 	setdef(buf,"y");
 	if (*buf == 'q')  /*TODO: need to add 'h' also */
 	    return;
 	if (*buf != 'n')
-	    g_art = lastart + 1;
+	    g_art = g_lastart + 1;
     }
     artopen(g_art,(ART_POS)0);
     tmpfp = fopen(g_headname,"w");

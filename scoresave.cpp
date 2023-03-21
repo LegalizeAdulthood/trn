@@ -258,7 +258,7 @@ ART_NUM sc_sv_make_line(ART_NUM a)
     *s++ = '.';
     lastscore = 0;
 
-    for (a = article_first(a); a <= lastart && num_output < 50; a = article_next(a)) {
+    for (a = article_first(a); a <= g_lastart && num_output < 50; a = article_next(a)) {
 	if (article_unread(a) && SCORED(a)) {
 	    if (last != a-1) {
 		if (last == a-2) {
@@ -275,7 +275,7 @@ ART_NUM sc_sv_make_line(ART_NUM a)
 	    /* check for repeating scores */
 	    if (score == lastscore && lastscore_valid) {
 		a = article_next(a);
-		for (i = 1; a <= lastart && article_unread(a) && SCORED(a)
+		for (i = 1; a <= g_lastart && article_unread(a) && SCORED(a)
 			 && article_ptr(a)->score == score; i++)
 		    a = article_next(a);
 		a = article_prev(a);	/* prepare for the for loop increment */
@@ -376,11 +376,11 @@ void sc_load_scores()
     } /* while */
 
     sc_loaded_count = loaded;
-    a = firstart;
+    a = g_firstart;
     if (sa_mode_read_elig)
-	a = absfirst;
+	a = g_absfirst;
     total = scored = 0;
-    for (a = article_first(a); a <= lastart; a = article_next(a)) {
+    for (a = article_first(a); a <= g_lastart; a = article_next(a)) {
 	if (!article_exists(a))
 	    continue;
         if (!article_unread(a) && !sa_mode_read_elig)
@@ -420,11 +420,11 @@ void sc_save_scores()
     sprintf(lbuf2,"!%s",gname);	/* add the header */
     sc_sv_add(lbuf2);
 
-    a = firstart;
+    a = g_firstart;
     sprintf(lbuf2,":%ld",a);
     sc_sv_add(lbuf2);
     last = a-1;
-    while (a <= lastart)
+    while (a <= g_lastart)
 	a = sc_sv_make_line(a);
     waiting = false;
 }

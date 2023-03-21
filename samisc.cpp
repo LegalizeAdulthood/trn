@@ -32,7 +32,7 @@
 #ifdef UNDEF	/* use function for breakpoint debugging */
 inline int check_article(long a)
 {
-    if (a < absfirst || a > lastart)
+    if (a < g_absfirst || a > g_lastart)
     {
         printf("\nArticle %d out of range\n", a) FLUSH;
         return false;
@@ -43,7 +43,7 @@ inline int check_article(long a)
 /* note that argument is used twice. */
 inline bool check_article(long a)
 {
-    return a >= absfirst && a <= lastart;
+    return a >= g_absfirst && a <= g_lastart;
 }
 #endif
 
@@ -148,9 +148,9 @@ int sa_number_arts()
     ART_NUM a;
 
     if (sa_mode_read_elig)
-	i = absfirst;
+	i = g_absfirst;
     else
-	i = firstart;
+	i = g_firstart;
     total = 0;
     for (i = 1; i < sa_num_ents; i++) {
 	a = sa_ents[i].artnum;

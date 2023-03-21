@@ -43,18 +43,18 @@ bool set_sel_mode(char_int ch)
 	set_selector(sel_defaultmode = SM_SUBJECT, 0);
 	break;
       case 't':
-	if (in_ng && !ThreadedGroup) {
+	if (in_ng && !g_threaded_group) {
 	    bool always_save = thread_always;
-	    ThreadedGroup = true;
+	    g_threaded_group = true;
 	    thread_always = true;
 	    if (sel_rereading)
-		firstart = absfirst;
+		g_firstart = g_absfirst;
 	    printf("\nThreading the group. "), fflush(stdout);
 	    termdown(1);
 	    thread_open();
 	    thread_always = always_save;
-	    if (g_last_cached < lastart)
-		ThreadedGroup = false;
+	    if (g_last_cached < g_lastart)
+		g_threaded_group = false;
 	}
 	/* FALL THROUGH */
       case 'T':
@@ -189,7 +189,7 @@ void set_selector(int smode, int ssort)
 	sel_sort = -ssort;
     }
 
-    if (sel_mode == SM_THREAD && !ThreadedGroup)
+    if (sel_mode == SM_THREAD && !g_threaded_group)
 	sel_mode = SM_SUBJECT;
 
     switch (sel_mode) {
@@ -314,8 +314,8 @@ try_again:
 	sort_newsgroups();
 	selected_count = 0;
 	obj_count = 0;
-	for (np = first_ng; np; np = np->next) {
-	    if (sel_page_np == np)
+	for (np = g_first_ng; np; np = np->next) {
+	    if (g_sel_page_np == np)
 		sel_prior_obj_cnt = sel_total_obj_cnt;
 	    np->flags &= ~NF_INCLUDED;
 	    if (np->toread < TR_NONE)
@@ -329,21 +329,21 @@ try_again:
 		np->toread = !sel_rereading;
 	    }
 	    else {
-		/*ngptr = np; ??*/
+		/*g_ngptr = np; ??*/
 		/*set_ngname(np->rcline);*/
 		set_toread(np, ST_LAX);
 		if (!np->rc->datasrc->act_sf.fp)
 		    save_the_rest = (sel_rereading ^ (np->toread > TR_NONE));
 	    }
 	    if (paranoid) {
-		current_ng = ngptr = np;
+		g_current_ng = g_ngptr = np;
 		/* this may move newsgroups around */
 		cleanup_newsrc(np->rc);
 		goto try_again;
 	    }
 	    if (!(np->flags & sel_mask)
 	     && (sel_rereading? np->toread != TR_NONE
-			      : np->toread < ng_min_toread))
+			      : np->toread < g_ng_min_toread))
 		continue;
 	    obj_count++;
 
@@ -359,7 +359,7 @@ try_again:
 	if (!sel_total_obj_cnt) {
 	    if (sel_exclusive) {
 		sel_exclusive = false;
-		sel_page_np = nullptr;
+		g_sel_page_np = nullptr;
 		goto try_again;
 	    }
 	    if (maxngtodo) {
@@ -368,13 +368,13 @@ try_again:
 		newline();
 		if (fill_last_page)
 		    get_anything();
-		sel_page_np = nullptr;
+		g_sel_page_np = nullptr;
 		goto try_again;
 	    }
 	}
-	if (!sel_page_np)
+	if (!g_sel_page_np)
 	    (void) first_page();
-	else if (sel_page_np == last_ng)
+	else if (g_sel_page_np == g_last_ng)
 	    (void) last_page();
 	else if (sel_prior_obj_cnt && fill_last_page) {
 	    calc_page(no_search);
@@ -678,10 +678,10 @@ bool first_page()
       }
       case SM_NEWSGROUP: {
 	NGDATA* np;
-	for (np = first_ng; np; np = np->next) {
+	for (np = g_first_ng; np; np = np->next) {
 	    if (np->flags & NF_INCLUDED) {
-		if (sel_page_np != np) {
-		    sel_page_np = np;
+		if (g_sel_page_np != np) {
+		    g_sel_page_np = np;
 		    return true;
 		}
 		break;
@@ -771,11 +771,11 @@ bool last_page()
 	break;
       }
       case SM_NEWSGROUP: {
-	NGDATA* np = sel_page_np;
-	sel_page_np = nullptr;
+	NGDATA* np = g_sel_page_np;
+	g_sel_page_np = nullptr;
 	if (!prev_page())
-	    sel_page_np = np;
-	else if (np != sel_page_np)
+	    g_sel_page_np = np;
+	else if (np != g_sel_page_np)
 	    return true;
 	break;
       }
@@ -840,8 +840,8 @@ bool next_page()
 	break;
       }
       case SM_NEWSGROUP: {
-	if (sel_next_np) {
-	    sel_page_np = sel_next_np;
+	if (g_sel_next_np) {
+	    g_sel_page_np = g_sel_next_np;
 	    sel_prior_obj_cnt += sel_page_obj_cnt;
 	    return true;
 	}
@@ -921,11 +921,11 @@ bool prev_page()
 	break;
       }
       case SM_NEWSGROUP: {
-	NGDATA* np = sel_page_np;
-	NGDATA* page_np = sel_page_np;
+	NGDATA* np = g_sel_page_np;
+	NGDATA* page_np = g_sel_page_np;
 	
 	if (!np)
-	    np = last_ng;
+	    np = g_last_ng;
 	else
 	    np = np->prev;
 	while (np) {
@@ -937,8 +937,8 @@ bool prev_page()
 	    }
 	    np = np->prev;
 	}
-	if (sel_page_np != page_np) {
-	    sel_page_np = page_np;
+	if (g_sel_page_np != page_np) {
+	    g_sel_page_np = page_np;
 	    return true;
 	}
 	break;
@@ -1091,7 +1091,7 @@ try_again:
 	break;
       }
       case SM_NEWSGROUP: {
-	NGDATA* np = sel_page_np;
+	NGDATA* np = g_sel_page_np;
 	for (; np && sel_page_item_cnt < sel_max_per_page; np = np->next) {
 	    if (np == u.np)
 		sel_item_index = sel_page_item_cnt;
@@ -1099,7 +1099,7 @@ try_again:
 		sel_page_item_cnt++;
 	}
 	sel_page_obj_cnt = sel_page_item_cnt;
-	sel_next_np = np;
+	g_sel_next_np = np;
 	break;
       }
       case SM_ADDGROUP: {
@@ -1253,7 +1253,7 @@ void display_page_title(bool home_only)
 	       sel_total_obj_cnt == 1 ? "" : "s");
 	if (sel_exclusive)
 	    printf(" out of %ld", (long)obj_count);
-	fputs(moderated,stdout);
+	fputs(g_moderated,stdout);
     }
     else {
 	printf("       %s%ld group%s",group_init_done? "" : "~",
@@ -1266,8 +1266,8 @@ void display_page_title(bool home_only)
     home_cursor();
     newline();
     maybe_eol();
-    if (in_ng && redirected && redirected != "")
-	printf("\t** Please start using %s **", redirected);
+    if (in_ng && g_redirected && g_redirected != "")
+	printf("\t** Please start using %s **", g_redirected);
     newline();
 }
 
@@ -1326,8 +1326,8 @@ try_again:
 	int max_len = 0;
 	int outputting = (*sel_grp_dmode != 'l');
       start_of_loop:
-	for (np = sel_page_np; np; np = np->next) {
-	    if (np == ngptr)
+	for (np = g_sel_page_np; np; np = np->next) {
+	    if (np == g_ngptr)
 		sel_item_index = sel_page_item_cnt;
 
 	    if (!(np->flags & NF_INCLUDED))
@@ -1337,7 +1337,7 @@ try_again:
 		set_toread(np, ST_LAX);
 		if (paranoid) {
 		    newline();
-		    current_ng = ngptr = np;
+		    g_current_ng = g_ngptr = np;
 		    /* this may move newsgroups around */
 		    cleanup_newsrc(np->rc);
 		    init_pages(PRESERVE_PAGE);
@@ -1345,11 +1345,11 @@ try_again:
 		    goto try_again;
 		}
 		if (sel_rereading? (np->toread != TR_NONE)
-				 : (np->toread < ng_min_toread)) {
+				 : (np->toread < g_ng_min_toread)) {
 		    np->flags &= ~NF_INCLUDED;
 		    sel_total_obj_cnt--;
-		    newsgroup_toread--;
-		    missing_count++;
+		    g_newsgroup_toread--;
+		    g_missing_count++;
 		    continue;
 		}
 	    }
@@ -1382,7 +1382,7 @@ try_again:
 	    if (last_page())
 		goto try_again;
 	}
-	sel_next_np = np;
+	g_sel_next_np = np;
 	if (!group_init_done) {
 	    for (; np; np = np->next) {
 		if (!np->abs1st)

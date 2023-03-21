@@ -142,8 +142,8 @@ int mt_data()
 	tweak_data();
 	goto exit;
     }
-    if (!g_datasrc->thread_dir && total.last > lastart)
-	total.last = lastart;
+    if (!g_datasrc->thread_dir && total.last > g_lastart)
+	total.last = g_lastart;
 
     if (read_authors()
      && read_subjects()
@@ -152,8 +152,8 @@ int mt_data()
      && read_ids())
     {
 	tweak_data();
-	g_first_cached = absfirst;
-	g_last_cached = (total.last < absfirst ? absfirst-1: total.last);
+	g_first_cached = g_absfirst;
+	g_last_cached = (total.last < g_absfirst ? g_absfirst-1: total.last);
 	g_cached_all_in_range = true;
 	goto exit;
     }
@@ -424,7 +424,7 @@ static int read_articles()
 	lp_bmap(&p_article.num, 2);
 	wp_bmap(&p_article.subject, 8);
 
-	article = *art_ptr++ = allocate_article(p_article.num > lastart?
+	article = *art_ptr++ = allocate_article(p_article.num > g_lastart?
 						0 : p_article.num);
 	article->date = p_article.date;
 	if (olden_days < 2 && !(p_article.flags & HAS_XREFS))

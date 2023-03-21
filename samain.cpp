@@ -32,21 +32,21 @@
 void sa_init()
 {
     sa_init_context();
-    if (lastart == 0 || absfirst > lastart)
+    if (g_lastart == 0 || g_absfirst > g_lastart)
 	return;		/* no articles */
     if (s_initscreen())		/* If not able to init screen...*/
 	return;				/* ...most likely dumb terminal */
     sa_initmode();			/*      mode differences */
     sa_init_threads();
     sa_mode_read_elig = false;
-    if (firstart > lastart)		/* none unread */
+    if (g_firstart > g_lastart)		/* none unread */
 	sa_mode_read_elig = true;	/* unread+read in some situations */
     if (!sa_initarts())			/* init article array(s) */
 	return;				/* ... no articles */
 #ifdef PENDING
     if (sa_mode_read_elig) {
 	sc_fill_read = true;
-	sc_fill_max = absfirst - 1;
+	sc_fill_max = g_absfirst - 1;
     }
 #endif
     s_save_context();
@@ -129,7 +129,7 @@ bool sa_initarts()
 
     sa_init_ents();
     /* add all available articles to entry list */
-    for (a = article_first(absfirst); a <= lastart; a = article_next(a)) {
+    for (a = article_first(g_absfirst); a <= g_lastart; a = article_next(a)) {
 	if (article_exists(a))
 	    (void)sa_add_ent(a);
     }

@@ -8,7 +8,7 @@
 #include "list.h"
 #include "hash.h"
 #include "cache.h"
-#include "bits.h"	/* for absfirst */
+#include "bits.h"	/* for g_absfirst */
 #include "head.h"	/* hc_setspin() */
 #include "ngdata.h"
 #include "mempool.h"

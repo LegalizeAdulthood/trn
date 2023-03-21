@@ -355,7 +355,7 @@ bool s_go_top_ents()
     if (!s_top_ent) {	/* none eligible */
 	/* just go to the top of all the entries */
 	if (s_cur_type == S_ART)
-	    s_top_ent = absfirst;
+	    s_top_ent = g_absfirst;
 	else
 	    s_top_ent = 1;	/* not very nice coding */
     }

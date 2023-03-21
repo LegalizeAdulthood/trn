@@ -13,7 +13,7 @@
 #include "ng.h"		/* variable g_art, the next article to read. */
 #include "ngdata.h"
 #include "term.h"	/* macro to clear... */
-#include "bits.h"	/* absfirst */
+#include "bits.h"	/* g_absfirst */
 #include "artsrch.h"	/* needed for artstate.h */
 #include "artstate.h"	/* for g_reread */
 #include "rt-select.h"	/* selected_only */
@@ -34,7 +34,7 @@ sa_main_result sa_main()
     sa_go = false;	/* ...do not collect $200... */
     s_follow_temp = false;
 
-    if (lastart < absfirst) {
+    if (g_lastart < g_absfirst) {
 	s_beep();
 	return SA_QUIT;
     }

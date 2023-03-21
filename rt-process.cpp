@@ -34,7 +34,7 @@ ARTICLE *allocate_article(ART_NUM artnum)
     ARTICLE* article;
 
     /* create an new article */
-    if (artnum >= absfirst)
+    if (artnum >= g_absfirst)
 	article = article_ptr(artnum);
     else {
 	article = (ARTICLE*)safemalloc(sizeof (ARTICLE));

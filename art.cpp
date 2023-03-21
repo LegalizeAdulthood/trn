@@ -122,7 +122,7 @@ do_article_result do_article()
     }
     sprintf(prompt_buf, mousebar_cnt>3? "%%sEnd of art %ld (of %ld) %%s[%%s]"
 	: "%%sEnd of article %ld (of %ld) %%s-- what next? [%%s]",
-	(long)g_art,(long)lastart);	/* format prompt string */
+	(long)g_art,(long)g_lastart);	/* format prompt string */
     g_prompt = prompt_buf;
     g_int_count = 0;		/* interrupt count is 0 */
     if ((firstpage = (g_topline < 0)) != 0) {
@@ -134,7 +134,7 @@ do_article_result do_article()
     term_scrolled = 0;
 
     for (;;) {			/* for each page */
-	if (ThreadedGroup && max_tree_lines)
+	if (g_threaded_group && max_tree_lines)
 	    init_tree();	/* init tree display */
 	assert(art == openart);
 	if (g_do_fseek) {
@@ -175,19 +175,19 @@ do_article_result do_article()
 
 		selected = (g_curr_artp->flags & AF_SEL);
 		unseen = article_unread(g_art)? 1 : 0;
-		sprintf(g_art_line,"%s%s #%ld",ngname,moderated,(long)g_art);
+		sprintf(g_art_line,"%s%s #%ld",ngname,g_moderated,(long)g_art);
 		if (selected_only) {
 		    i = selected_count - (unseen && selected);
 		    sprintf(g_art_line+strlen(g_art_line)," (%ld + %ld more)",
-			    (long)i,(long)ngptr->toread - selected_count
+			    (long)i,(long)g_ngptr->toread - selected_count
 					- (!selected && unseen));
 		}
-		else if ((i = (ART_NUM)(ngptr->toread - unseen)) != 0
-		       || (!ThreadedGroup && g_dmcount)) {
+		else if ((i = (ART_NUM)(g_ngptr->toread - unseen)) != 0
+		       || (!g_threaded_group && g_dmcount)) {
 		    sprintf(g_art_line+strlen(g_art_line),
 			    " (%ld more)",(long)i);
 		}
-		if (!ThreadedGroup && g_dmcount)
+		if (!g_threaded_group && g_dmcount)
 		    sprintf(g_art_line+strlen(g_art_line)-1,
 			    " + %ld Marked to return)",(long)g_dmcount);
 		linenum += tree_puts(g_art_line,linenum+g_topline,0);

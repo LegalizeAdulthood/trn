@@ -9,13 +9,13 @@
 #include "list.h"
 #include "hash.h"
 #include "cache.h"
-/* absfirst, lastart, oneless_artnum() */
+/* g_absfirst, g_lastart, oneless_artnum() */
 #include "bits.h"
 #include "decode.h"
 #include "term.h"	/* for LINES */
 #include "head.h"
 #include "help.h"	/* online help */
-#include "ngdata.h"	/* for ThreadedGroup */
+#include "ngdata.h"	/* for g_threaded_group */
 #include "ng.h"
 #include "nntpclient.h"
 #include "datasrc.h"
@@ -67,7 +67,7 @@ int sa_docmd()
 
     switch(*buf) {
       case '+':	/* enter thread selector */
-	if (!ThreadedGroup) {
+	if (!g_threaded_group) {
 	    s_beep();
 	    return 0;
 	}
@@ -240,7 +240,7 @@ int sa_docmd()
 #ifdef PENDING
 	    if (sa_mode_read_elig) {
 		sc_fill_read = true;
-		sc_fill_max = absfirst - 1;
+		sc_fill_max = g_absfirst - 1;
 	    }
 	    if (!sa_mode_read_elig)
 		sc_fill_read = false;

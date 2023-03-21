@@ -83,7 +83,7 @@ enum
 
 #define article_ptr(an)      ((ARTICLE*)listnum2listitem(g_article_list,(long)(an)))
 #define article_num(ap)      ((ap)->num)
-#define article_find(an)     ((an) <= lastart && article_hasdata(an)? \
+#define article_find(an)     ((an) <= g_lastart && article_hasdata(an)? \
 			      article_ptr(an) : nullptr)
 #define article_walk(cb,ag)  walk_list(g_article_list,cb,ag)
 #define article_hasdata(an)  existing_listnum(g_article_list,(long)(an),0)
@@ -97,7 +97,7 @@ enum
 #define article_unread(an)   (article_ptr(an)->flags & AF_UNREAD)
 
 #define was_read(an)	    (!article_hasdata(an) || !article_unread(an))
-#define is_available(an)    ((an) <= lastart && article_hasdata(an) \
+#define is_available(an)    ((an) <= g_lastart && article_hasdata(an) \
 			  && article_exists(an))
 #define is_unavailable(an)  (!is_available(an))
 

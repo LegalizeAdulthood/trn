@@ -10,7 +10,7 @@
 #include "list.h"
 #include "hash.h"
 #include "cache.h"
-#include "bits.h"		/* absfirst */
+#include "bits.h"		/* g_absfirst */
 #include "head.h"
 #include "search.h"		/* regex matches */
 #include "ngdata.h"

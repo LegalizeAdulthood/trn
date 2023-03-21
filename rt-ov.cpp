@@ -255,7 +255,7 @@ beginning:
 	}
     }
     if (remote) {
-	int cachemask = (ThreadedGroup? AF_THREADED : AF_CACHED);
+	int cachemask = (g_threaded_group? AF_THREADED : AF_CACHED);
 	ARTICLE* ap;
 	for (ap = article_ptr(article_first(real_first));
 	     ap && article_num(ap) <= artnum;
@@ -390,7 +390,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 	else if (fields[OV_XREF]) {
 	    ART_NUM an;
 	    ARTICLE* ap;
-	    for (an=article_first(absfirst); an<artnum; an=article_next(an)) {
+	    for (an=article_first(g_absfirst); an<artnum; an=article_next(an)) {
 		ap = article_ptr(an);
 		if (!ap->xrefs)
 		    ap->xrefs = "";
@@ -402,7 +402,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
     if (remote)
 	article->flags |= AF_EXISTS;
 
-    if (ThreadedGroup) {
+    if (g_threaded_group) {
 	if (valid_article(article))
 	    thread_article(article, fields[OV_REFS]);
     } else if (!(article->flags & AF_CACHED))

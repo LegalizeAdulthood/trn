@@ -69,35 +69,35 @@ static time_t cached_time = 0;
 
 void build_cache()
 {
-    if (cached_ng == ngptr && time((time_t*)nullptr) < cached_time + 6*60*60L) {
+    if (cached_ng == g_ngptr && time((time_t*)nullptr) < cached_time + 6*60*60L) {
 	ART_NUM an;
 	cached_time = time((time_t*)nullptr);
 	if (sel_mode == SM_ARTICLE)
 	    set_selector(sel_mode, sel_artsort);
 	else
 	    set_selector(sel_threadmode, sel_threadsort);
-	for (an = g_last_cached+1; an <= lastart; an++)
+	for (an = g_last_cached+1; an <= g_lastart; an++)
 	    article_ptr(an)->flags |= AF_EXISTS;
 	rc_to_bits();
-	g_article_list->high = lastart;
+	g_article_list->high = g_lastart;
 	thread_grow();
 	return;
     }
 
     close_cache();
 
-    cached_ng = ngptr;
+    cached_ng = g_ngptr;
     cached_time = time((time_t*)nullptr);
-    g_article_list = new_list(absfirst, lastart, sizeof (ARTICLE), 371,
+    g_article_list = new_list(g_absfirst, g_lastart, sizeof (ARTICLE), 371,
 			    LF_SPARSE, init_artnode);
     s_subj_hash = hashcreate(991, subject_cmp);	/*TODO: pick a better size */
 
-    set_firstart(ngptr->rcline + ngptr->numoffset);
-    g_first_cached = thread_always? absfirst : firstart;
+    set_firstart(g_ngptr->rcline + g_ngptr->numoffset);
+    g_first_cached = thread_always? g_absfirst : g_firstart;
     g_last_cached = g_first_cached-1;
     g_cached_all_in_range = false;
 #ifdef PENDING
-    s_subj_to_get = s_xref_to_get = firstart;
+    s_subj_to_get = s_xref_to_get = g_firstart;
 #endif
 
     /* Cache as much data in advance as possible, possibly threading
@@ -633,7 +633,7 @@ void look_ahead()
 #endif
 #endif
 
-    if (ThreadedGroup) {
+    if (g_threaded_group) {
 	g_artp = g_curr_artp;
 	inc_art(selected_only,false);
 	if (g_artp)
@@ -674,7 +674,7 @@ void look_ahead()
 	    g_srchahead = g_art;
 	    for (;;) {
 		g_srchahead++;	/* go forward one article */
-		if (g_srchahead > lastart) { /* out of articles? */
+		if (g_srchahead > g_lastart) { /* out of articles? */
 #ifdef DEBUG
 		    if (debug)
 			fputs("(not found)",stdout);
@@ -700,7 +700,7 @@ void look_ahead()
     else
 #endif /* ARTSEARCH */
     {
-	if (article_next(g_art) <= lastart)	/* how about a pre-fetch? */
+	if (article_next(g_art) <= g_lastart)	/* how about a pre-fetch? */
 	    parseheader(article_next(g_art));	/* look for the next article */
     }
 }
@@ -727,7 +727,7 @@ void cache_until_key()
 	if (cache_subjects()) {
 	    if (cache_xrefs()) {
 		if (chase_xrefs(true)) {
-		    if (ThreadedGroup)
+		    if (g_threaded_group)
 			cache_all_arts();
 		    else
 			cache_unread_arts();
@@ -735,7 +735,7 @@ void cache_until_key()
 	    }
 	}
     } else {
-	if (!ThreadedGroup || cache_all_arts()) {
+	if (!g_threaded_group || cache_all_arts()) {
 	    if (cache_subjects()) {
 		if (cache_unread_arts()) {
 		    if (cache_xrefs())
@@ -759,10 +759,10 @@ bool cache_subjects()
 {
     ART_NUM an;
 
-    if (s_subj_to_get > lastart)
+    if (s_subj_to_get > g_lastart)
 	return true;
     setspin(SPIN_BACKGROUND);
-    for (an=article_first(s_subj_to_get); an <= lastart; an=article_next(an)) {
+    for (an=article_first(s_subj_to_get); an <= g_lastart; an=article_next(an)) {
 	if (input_pending())
 	    break;
 	
@@ -770,24 +770,24 @@ bool cache_subjects()
 	    fetchsubj(an,false);
     }
     s_subj_to_get = an;
-    return s_subj_to_get > lastart;
+    return s_subj_to_get > g_lastart;
 }
 
 bool cache_xrefs()
 {
     ART_NUM an;
 
-    if (olden_days || (g_datasrc->flags & DF_NOXREFS) || s_xref_to_get > lastart)
+    if (olden_days || (g_datasrc->flags & DF_NOXREFS) || s_xref_to_get > g_lastart)
 	return true;
     setspin(SPIN_BACKGROUND);
-    for (an=article_first(s_xref_to_get); an <= lastart; an=article_next(an)) {
+    for (an=article_first(s_xref_to_get); an <= g_lastart; an=article_next(an)) {
 	if (input_pending())
 	    break;
 	if (article_unread(an))
 	    fetchxref(an,false);
     }
     s_xref_to_get = an;
-    return s_xref_to_get > lastart;
+    return s_xref_to_get > g_lastart;
 }
 
 bool cache_all_arts()
@@ -795,27 +795,27 @@ bool cache_all_arts()
     int old_last_cached = g_last_cached;
     if (!g_cached_all_in_range)
 	g_last_cached = g_first_cached-1;
-    if (g_last_cached >= lastart && g_first_cached <= absfirst)
+    if (g_last_cached >= g_lastart && g_first_cached <= g_absfirst)
 	return true;
 
     /* turn it on as late as possible to avoid fseek()ing openart */
     setspin(SPIN_BACKGROUND);
-    if (g_last_cached < lastart) {
+    if (g_last_cached < g_lastart) {
 	if (g_datasrc->ov_opened)
-	    ov_data(g_last_cached+1, lastart, true);
-	if (!art_data(g_last_cached+1, lastart, true, true)) {
+	    ov_data(g_last_cached+1, g_lastart, true);
+	if (!art_data(g_last_cached+1, g_lastart, true, true)) {
 	    g_last_cached = old_last_cached;
 	    return false;
 	}
 	g_cached_all_in_range = true;
     }
-    if (g_first_cached > absfirst) {
+    if (g_first_cached > g_absfirst) {
 	if (g_datasrc->ov_opened)
-	    ov_data(absfirst, g_first_cached-1, true);
+	    ov_data(g_absfirst, g_first_cached-1, true);
 	else
-	    art_data(absfirst, g_first_cached-1, true, true);
+	    art_data(g_absfirst, g_first_cached-1, true, true);
 	/* If we got interrupted, make a quick exit */
-	if (g_first_cached > absfirst) {
+	if (g_first_cached > g_absfirst) {
 	    g_last_cached = old_last_cached;
 	    return false;
 	}
@@ -832,10 +832,10 @@ bool cache_all_arts()
 
 bool cache_unread_arts()
 {
-    if (g_last_cached >= lastart)
+    if (g_last_cached >= g_lastart)
 	return true;
     setspin(SPIN_BACKGROUND);
-    return art_data(g_last_cached+1, lastart, true, false);
+    return art_data(g_last_cached+1, g_lastart, true, false);
 }
 #endif
 
@@ -844,7 +844,7 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
     ART_NUM i;
     ART_NUM expected_i = first;
 
-    int cachemask = (ThreadedGroup ? AF_THREADED : AF_CACHED)
+    int cachemask = (g_threaded_group ? AF_THREADED : AF_CACHED)
 		  + (all_articles? 0 : AF_UNREAD);
     int cachemask2 = (all_articles? 0 : AF_UNREAD);
 
@@ -854,7 +854,7 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
 	int lots2do = ((g_datasrc->flags & DF_REMOTE)? g_net_speed : 20) * 25;
 	setspin(spin_estimate > lots2do? SPIN_BARGRAPH : SPIN_FOREGROUND);
     }
-    /*assert(first >= absfirst && last <= lastart);*/
+    /*assert(first >= g_absfirst && last <= g_lastart);*/
     for (i = article_first(first); i <= last; i = article_next(i)) {
 	if ((article_ptr(i)->flags & cachemask) ^ cachemask2)
 	    continue;
@@ -913,13 +913,13 @@ bool cache_range(ART_NUM first, ART_NUM last)
     if (g_first_cached > g_last_cached) {
 	if (sel_rereading) {
 	    if (g_first_subject)
-		count -= ngptr->toread;
-	} else if (first == firstart && last == lastart && !all_arts)
-	    count = ngptr->toread;
+		count -= g_ngptr->toread;
+	} else if (first == g_firstart && last == g_lastart && !all_arts)
+	    count = g_ngptr->toread;
     }
     spin_estimate = count;
 
-    printf("\n%sing %ld article%s.", ThreadedGroup? "Thread" : "Cach",
+    printf("\n%sing %ld article%s.", g_threaded_group? "Thread" : "Cach",
 	   (long)count, PLURAL(count));
     termdown(1);
 
@@ -927,8 +927,8 @@ bool cache_range(ART_NUM first, ART_NUM last)
 
     if (first < g_first_cached) {
 	if (g_datasrc->ov_opened) {
-	    ov_data(absfirst,g_first_cached-1,false);
-	    success = (g_first_cached == absfirst);
+	    ov_data(g_absfirst,g_first_cached-1,false);
+	    success = (g_first_cached == g_absfirst);
 	} else {
 	    success = art_data(first, g_first_cached-1, false, all_arts);
 	    g_cached_all_in_range = (all_arts && success);

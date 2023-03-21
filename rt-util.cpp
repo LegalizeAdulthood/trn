@@ -539,7 +539,7 @@ const char *compress_subj(const ARTICLE *ap, int max)
 
     /* Put a preceeding '>' on subjects that are replies to other articles */
     cp = buf;
-    first = (ThreadedGroup? ap->subj->thread : ap->subj->articles);
+    first = (g_threaded_group? ap->subj->thread : ap->subj->articles);
     if (ap != first || (ap->flags & AF_HAS_RE)
      || (!(ap->flags&AF_UNREAD) ^ sel_rereading))
 	*cp++ = '>';
@@ -722,7 +722,7 @@ void perform_status_init(long cnt)
     prior_now = 0;
     ps_sel = selected_count;
     ps_cnt = cnt;
-    ps_missing = missing_count;
+    ps_missing = g_missing_count;
 
     spin_count = 0;
     spin_place = 0;
@@ -750,7 +750,7 @@ void perform_status(long cnt, int spin)
     prior_now = now;
     prior_perform_cnt = g_perform_cnt;
 
-    missing = missing_count - ps_missing;
+    missing = g_missing_count - ps_missing;
     kills = ps_cnt - cnt - missing;
     sels = selected_count - ps_sel;
 
@@ -824,7 +824,7 @@ int perform_status_end(long cnt, const char *obj_type)
 	return 0;
     }
 
-    missing = missing_count - ps_missing;
+    missing = g_missing_count - ps_missing;
     kills = ps_cnt - cnt - missing;
     sels = selected_count - ps_sel;
 

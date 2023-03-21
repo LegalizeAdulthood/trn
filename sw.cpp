@@ -110,7 +110,7 @@ void decode_switch(char *s)
     if (*s != '-' && *s != '+') {	/* newsgroup pattern */
 	setngtodo(s);
 	if (mode == 'i')
-	    ng_min_toread = 0;
+	    g_ng_min_toread = 0;
     }
     else {				/* normal switch */
 	bool upordown = *s == '-' ? true : false;

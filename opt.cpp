@@ -740,13 +740,13 @@ char *option_value(int num)
 	return buf;
       case OI_NEWS_SEL_MODE: {
 	int save_sel_mode = sel_mode;
-	int save_Threaded = ThreadedGroup;
+	int save_Threaded = g_threaded_group;
 	char* s;
-	ThreadedGroup = true;
+	g_threaded_group = true;
 	set_selector(sel_defaultmode, 0);
 	s = sel_mode_string;
 	sel_mode = save_sel_mode;
-	ThreadedGroup = save_Threaded;
+	g_threaded_group = save_Threaded;
 	set_selector(0, 0);
 	return s;
       }

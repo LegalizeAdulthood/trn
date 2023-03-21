@@ -245,7 +245,7 @@ int help_ng()
 Newsgroup Selection commands:\n\
 ", STANDOUT)) != 0)
 	return cmd;
-    if (ngptr) {
+    if (g_ngptr) {
 	if ((cmd = print_lines("\
 \n\
 y	Do this newsgroup now.\n\

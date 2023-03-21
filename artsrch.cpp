@@ -289,20 +289,20 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
     if (ignorethru == 0 && kill_thru_kludge && cmdlst
      && (*cmdlst == '+' || *cmdlst == '.'))
 	ignorethru = 1;
-    srchfirst = doread || sel_rereading? absfirst
-		      : (mode != 'k' || ignorethru > 0)? firstart : g_killfirst;
+    srchfirst = doread || sel_rereading? g_absfirst
+		      : (mode != 'k' || ignorethru > 0)? g_firstart : g_killfirst;
     if (topstart || g_art == 0) {
-	g_art = lastart+1;
+	g_art = g_lastart+1;
 	topstart = false;
     }
     if (backward) {
-	if (cmdlst && g_art <= lastart)
+	if (cmdlst && g_art <= g_lastart)
 	    g_art++;			/* include current article */
     }
     else {
-	if (g_art > lastart)
+	if (g_art > g_lastart)
 	    g_art = srchfirst-1;
-	else if (cmdlst && g_art >= absfirst)
+	else if (cmdlst && g_art >= g_absfirst)
 	    g_art--;			/* include current article */
     }
     if (g_srchahead > 0) {
@@ -311,11 +311,11 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	g_srchahead = -1;
     }
     assert(!cmdlst || *cmdlst);
-    perform_status_init(ngptr->toread);
+    perform_status_init(g_ngptr->toread);
     for (;;) {
 	/* check if we're out of articles */
 	if (backward? ((g_art = article_prev(g_art)) < srchfirst)
-		    : ((g_art = article_next(g_art)) > lastart))
+		    : ((g_art = article_next(g_art)) > g_lastart))
 	    break;
 	if (g_int_count) {
 	    g_int_count = 0;
@@ -339,7 +339,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	    }
 	}
 	if (!output_level && page_line == 1)
-	    perform_status(ngptr->toread, 60 / (howmuch+1));
+	    perform_status(g_ngptr->toread, 60 / (howmuch+1));
     }
 exit:
     if (cmdlst)

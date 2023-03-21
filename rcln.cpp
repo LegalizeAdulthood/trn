@@ -50,8 +50,8 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
 	free(np->rcline);
 	np->rcline = savestr(tmpbuf);
 	*(np->rcline + np->numoffset - 1) = '\0';
-	if (ng_min_toread > TR_NONE && np->toread > TR_NONE)
-	    newsgroup_toread--;
+	if (g_ng_min_toread > TR_NONE && np->toread > TR_NONE)
+	    g_newsgroup_toread--;
 	np->toread = TR_NONE;
     }
     np->rc->flags |= RF_RCCHANGED;
@@ -346,9 +346,9 @@ void set_toread(NGDATA *np, bool lax_high_check)
 	      FLUSH;
 	}
 	paranoid = true;
-	if (virgin_ng || np->toread >= ng_min_toread) {
-	    newsgroup_toread--;
-	    missing_count++;
+	if (virgin_ng || np->toread >= g_ng_min_toread) {
+	    g_newsgroup_toread--;
+	    g_missing_count++;
 	}
 	np->toread = TR_BOGUS;
 	return;
@@ -396,15 +396,15 @@ void set_toread(NGDATA *np, bool lax_high_check)
     if (np->subscribechar == NEGCHAR)
 	unread = TR_UNSUB;
 
-    if (unread >= ng_min_toread) {
-	if (!virgin_ng && np->toread < ng_min_toread)
-	    newsgroup_toread++;
+    if (unread >= g_ng_min_toread) {
+	if (!virgin_ng && np->toread < g_ng_min_toread)
+	    g_newsgroup_toread++;
     }
     else if (unread <= 0) {
-	if (np->toread > ng_min_toread) {
-	    newsgroup_toread--;
+	if (np->toread > g_ng_min_toread) {
+	    g_newsgroup_toread--;
 	    if (virgin_ng)
-		missing_count++;
+		g_missing_count++;
 	}
     }
     np->toread = (ART_UNREAD)unread;	/* remember how many are left */

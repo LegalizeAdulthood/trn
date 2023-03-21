@@ -71,7 +71,7 @@ void addng_init()
 bool find_new_groups()
 {
     NEWSRC* rp;
-    NG_NUM oldcnt = newsgroup_cnt;	/* remember # newsgroups */
+    NG_NUM oldcnt = g_newsgroup_cnt;	/* remember # newsgroups */
 
     /* Skip this check if the -q flag was given. */
     if (quickstart)
@@ -90,7 +90,7 @@ bool find_new_groups()
 
     process_list(GNG_RELOC);
 
-    return oldcnt != newsgroup_cnt;
+    return oldcnt != g_newsgroup_cnt;
 }
 
 static void process_list(int flag)
@@ -304,7 +304,7 @@ static void add_to_list(const char *name, int toread, char_int ch)
 bool scanactive(bool add_matching)
 {
     DATASRC* dp;
-    NG_NUM oldcnt = newsgroup_cnt;	/* remember # of newsgroups */
+    NG_NUM oldcnt = g_newsgroup_cnt;	/* remember # of newsgroups */
 
     if (!add_matching)
 	print_lines("Completely unsubscribed newsgroups:\n", STANDOUT);
@@ -339,9 +339,9 @@ bool scanactive(bool add_matching)
     process_list(add_matching);
 
     if (in_ng) /*$$*/
-	set_datasrc(ngptr->rc->datasrc);
+	set_datasrc(g_ngptr->rc->datasrc);
 
-    return oldcnt != newsgroup_cnt;
+    return oldcnt != g_newsgroup_cnt;
 }
 
 static int list_groups(int keylen, HASHDATUM *data, int add_matching)

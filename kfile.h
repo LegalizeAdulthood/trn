@@ -60,7 +60,7 @@ extern int g_kfs_thread_change_set;  /* bits to set for thread changes */
 extern int g_kf_thread_cnt;          /* # entries in the thread kfile */
 extern int g_kf_changethd_cnt;       /* # entries changed from old to new */
 extern long g_kf_daynum;             /* day number for thread killfile */
-extern ART_NUM g_killfirst;          /* used as firstart when killing */
+extern ART_NUM g_killfirst;          /* used as g_firstart when killing */
 
 void kfile_init();
 int do_kfile(FILE *kfp, int entering);

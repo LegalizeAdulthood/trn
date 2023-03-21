@@ -79,7 +79,7 @@ add_executable(trn
     msdos.h
     ndir.cpp ndir.h
     ng.cpp ng.h
-    ngdata.cpp ngdata.h ngdata.ih
+    ngdata.cpp ngdata.h
     ngsrch.cpp ngsrch.h
     ngstuff.cpp ngstuff.h
     nntp.cpp nntp.h nntp.ih

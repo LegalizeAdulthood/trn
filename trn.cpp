@@ -117,11 +117,11 @@ int main(int argc, char *argv[])
 
     if (find_new_groups()) {		/* did we add any new groups? */
 	foundany = true;
-	starthere = nullptr;		/* start ng scan from the top */
+	g_starthere = nullptr;		/* start ng scan from the top */
     }
 
     if (maxngtodo)
-	starthere = nullptr;
+	g_starthere = nullptr;
     else if (!foundany) {		/* nothing to do? */
 	if (verbose) {
 	    fputs("\
@@ -130,7 +130,7 @@ newsgroup use the g<newsgroup> command.\n\
 ",stdout) FLUSH;
 	    termdown(2);
 	}
-	starthere = last_ng;
+	g_starthere = g_last_ng;
     }
 
     do_multirc();
@@ -175,36 +175,36 @@ void do_multirc()
 	case 'q':
 	    goto bug_out;
 	}
-	starthere = ngptr;
+	g_starthere = g_ngptr;
 	UseNewsgroupSelector = false;
     }
 
     /* loop through all unread news */
   restart:
-    current_ng = first_ng;
+    g_current_ng = g_first_ng;
     for (;;) {
 	bool retry = false;
 	if (findlast > 0) {
 	    findlast = -1;
-	    starthere = nullptr;
+	    g_starthere = nullptr;
 	    if (g_lastngname) {
-		if ((ngptr = find_ng(g_lastngname)) == nullptr)
-		    ngptr = first_ng;
+		if ((g_ngptr = find_ng(g_lastngname)) == nullptr)
+		    g_ngptr = g_first_ng;
 		else {
 		    set_ngname(g_lastngname);
-		    set_toread(ngptr, ST_LAX);
-		    if (ngptr->toread <= TR_NONE)
-			ngptr = first_ng;
+		    set_toread(g_ngptr, ST_LAX);
+		    if (g_ngptr->toread <= TR_NONE)
+			g_ngptr = g_first_ng;
 		}
 	    }
-	} else if (starthere) {
-	    ngptr = starthere;
-	    starthere = nullptr;
+	} else if (g_starthere) {
+	    g_ngptr = g_starthere;
+	    g_starthere = nullptr;
 	}
 	else
-	    ngptr = first_ng;
+	    g_ngptr = g_first_ng;
 	for (;;) {			/* for each newsgroup */
-	    if (ngptr == nullptr) {	/* after the last newsgroup? */
+	    if (g_ngptr == nullptr) {	/* after the last newsgroup? */
 		set_mode('r','f');
 		if (maxngtodo) {
 		    if (retry) {
@@ -231,27 +231,27 @@ void do_multirc()
 		bool shoe_fits;	/* newsgroup matches restriction? */
 
 		set_mode('r','n');
-		if (ngptr->toread >= TR_NONE) {	/* recalc toread? */
-		    set_ngname(ngptr->rcline);
+		if (g_ngptr->toread >= TR_NONE) {	/* recalc toread? */
+		    set_ngname(g_ngptr->rcline);
 		    shoe_fits = inlist(ngname);
 		    if (shoe_fits)
-			set_toread(ngptr, ST_LAX);
+			set_toread(g_ngptr, ST_LAX);
 		    if (paranoid) {
-			recent_ng = current_ng;
-			current_ng = ngptr;
-			cleanup_newsrc(ngptr->rc); /* this may move newsgroups around */
-			set_ng(current_ng);
+			g_recent_ng = g_current_ng;
+			g_current_ng = g_ngptr;
+			cleanup_newsrc(g_ngptr->rc); /* this may move newsgroups around */
+			set_ng(g_current_ng);
 		    }
 		} else
 		    shoe_fits = true;
-		if (ngptr->toread < (special? TR_NONE : ng_min_toread)
+		if (g_ngptr->toread < (special? TR_NONE : g_ng_min_toread)
 		 || !shoe_fits) {		/* unwanted newsgroup? */
 		    if (go_forward)
-			ngptr = ngptr->next;
+			g_ngptr = g_ngptr->next;
 		    else {
-			ngptr = ngptr->prev;
-			if (ngptr == nullptr) {
-			    ngptr = first_ng->next;
+			g_ngptr = g_ngptr->prev;
+			if (g_ngptr == nullptr) {
+			    g_ngptr = g_first_ng->next;
 			    go_forward = true;
 			}
 		    }
@@ -259,13 +259,13 @@ void do_multirc()
 		}
 	    }
 	    special = false;	/* go back to normal mode */
-	    if (ngptr != current_ng) {
-		recent_ng = current_ng;	/* remember previous newsgroup */
-		current_ng = ngptr;	/* remember current newsgroup */
+	    if (g_ngptr != g_current_ng) {
+		g_recent_ng = g_current_ng;	/* remember previous newsgroup */
+		g_current_ng = g_ngptr;	/* remember current newsgroup */
 	    }
     reask_newsgroup:
 	    unflush_output();	/* disable any ^O in effect */
-	    if (ngptr == nullptr) {
+	    if (g_ngptr == nullptr) {
 		dfltcmd = (retry ? "npq" : "qnp");
 		if (verbose)
 		    printf("\n****** End of newsgroups -- what next? [%s] ",
@@ -274,23 +274,23 @@ void do_multirc()
 		    printf("\n**** End -- next? [%s] ", dfltcmd);
 		termdown(1);
 	    } else {
-		ThreadedGroup = (use_threads && !(ngptr->flags&NF_UNTHREADED));
+		g_threaded_group = (use_threads && !(g_ngptr->flags&NF_UNTHREADED));
 		dfltcmd = (UseNewsSelector >= 0
-		  && ngptr->toread >= (ART_UNREAD)UseNewsSelector? "+ynq":"ynq");
+		  && g_ngptr->toread >= (ART_UNREAD)UseNewsSelector? "+ynq":"ynq");
 		if (verbose)
 		    printf("\n%s %3ld unread article%s in %s -- read now? [%s] ",
-			   ThreadedGroup? "======" : "******",
-			   (long)ngptr->toread, PLURAL(ngptr->toread),
+			   g_threaded_group? "======" : "******",
+			   (long)g_ngptr->toread, PLURAL(g_ngptr->toread),
 			   ngname, dfltcmd);
 		else
 		    printf("\n%s %3ld in %s -- read? [%s] ",
-			   ThreadedGroup? "====" : "****",
-			   (long)ngptr->toread,ngname,dfltcmd);
+			   g_threaded_group? "====" : "****",
+			   (long)g_ngptr->toread,ngname,dfltcmd);
 		termdown(1);
 	    }
 	    fflush(stdout);
     reinp_newsgroup:
-	    if (special || (ngptr && ngptr->toread > 0))
+	    if (special || (g_ngptr && g_ngptr->toread > 0))
 		retry = true;
 	    switch (input_newsgroup()) {
 	    case ING_ASK:
@@ -355,7 +355,7 @@ int input_newsgroup()
     buf[2] = *buf;
     setdef(buf,dfltcmd);
     printcmd();
-    if (ngptr != nullptr)
+    if (g_ngptr != nullptr)
 	*buf = buf[2];
 
   do_command:
@@ -363,20 +363,20 @@ int input_newsgroup()
     switch (*buf) {
       case 'P':			/* goto previous newsgroup */
       case 'p':			/* find previous unread newsgroup */
-	if (!ngptr)
-	    ngptr = last_ng;
-	else if (ngptr != first_ng)
-	    ngptr = ngptr->prev;
+	if (!g_ngptr)
+	    g_ngptr = g_last_ng;
+	else if (g_ngptr != g_first_ng)
+	    g_ngptr = g_ngptr->prev;
 	go_forward = false;	/* go backward in the newsrc */
 	ing_state = INGS_CLEAN;
 	if (*buf == 'P')
 	    return ING_SPECIAL;
 	break;
       case '-':
-	ngptr = recent_ng;		/* recall previous newsgroup */
-	if (ngptr) {
-	    if (!get_ng(ngptr->rcline,0))
-		set_ng(current_ng);
+	g_ngptr = g_recent_ng;		/* recall previous newsgroup */
+	if (g_ngptr) {
+	    if (!get_ng(g_ngptr->rcline,0))
+		set_ng(g_current_ng);
 	    addnewbydefault = 0;
 	}
 	return ING_SPECIAL;
@@ -397,26 +397,26 @@ int input_newsgroup()
       case '^':
 	if (gmode != 's')
 	    newline();
-	ngptr = first_ng;
+	g_ngptr = g_first_ng;
 	ing_state = INGS_CLEAN;
 	break;
       case 'N':			/* goto next newsgroup */
       case 'n':			/* find next unread newsgroup */
-	if (ngptr == nullptr) {
+	if (g_ngptr == nullptr) {
 	    newline();
 	    return ING_BREAK;
 	}
-	ngptr = ngptr->next;
+	g_ngptr = g_ngptr->next;
 	ing_state = INGS_CLEAN;
 	if (*buf == 'N')
 	    return ING_SPECIAL;
 	break;
       case '1':			/* goto 1st newsgroup */
-	ngptr = first_ng;
+	g_ngptr = g_first_ng;
 	ing_state = INGS_CLEAN;
 	return ING_SPECIAL;
       case '$':
-	ngptr = nullptr;		/* go past last newsgroup */
+	g_ngptr = nullptr;		/* go past last newsgroup */
 	ing_state = INGS_CLEAN;
 	break;
       case 'L':
@@ -425,10 +425,10 @@ int input_newsgroup()
       case '/': case '?':	/* scan for newsgroup pattern */
 	switch (ng_search(buf,true)) {
 	  case NGS_ERROR:
-	    set_ng(current_ng);
+	    set_ng(g_current_ng);
 	    return ING_ASK;
 	  case NGS_ABORT:
-	    set_ng(current_ng);
+	    set_ng(g_current_ng);
 	    return ING_INPUT;
 	  case NGS_INTR:
 	    if (verbose)
@@ -436,7 +436,7 @@ int input_newsgroup()
 	    else
 		fputs("\n(Intr)\n",stdout) FLUSH;
 	    termdown(2);
-	    set_ng(current_ng);
+	    set_ng(g_current_ng);
 	    return ING_ASK;
 	  case NGS_FOUND:
 	    return ING_SPECIAL;
@@ -459,7 +459,7 @@ int input_newsgroup()
 	if (!finish_command(false))
 	    return ING_INPUT;
 	for (s = buf+1; *s == ' '; s++) ; /* skip leading spaces */
-	if (!*s && *buf == 'm' && ngname && ngptr)
+	if (!*s && *buf == 'm' && ngname && g_ngptr)
 	    strcpy(s,ngname);
 	{
 	    char* _s;
@@ -469,21 +469,21 @@ int input_newsgroup()
 		set_ngname(s);
 	    else {
 		int rcnum = atoi(s);
-		for (ngptr = first_ng; ngptr; ngptr = ngptr->next)
-		    if (ngptr->num == rcnum)
+		for (g_ngptr = g_first_ng; g_ngptr; g_ngptr = g_ngptr->next)
+		    if (g_ngptr->num == rcnum)
 			break;
-		if (!ngptr) {
-		    ngptr = current_ng;
-		    printf("\nOnly %d groups. Try again.\n", newsgroup_cnt) FLUSH;
+		if (!g_ngptr) {
+		    g_ngptr = g_current_ng;
+		    printf("\nOnly %d groups. Try again.\n", g_newsgroup_cnt) FLUSH;
 		    termdown(2);
 		    return ING_ASK;
 		}
-		set_ngname(ngptr->rcline);
+		set_ngname(g_ngptr->rcline);
 	    }
 	}
 	/* try to find newsgroup */
 	if (!get_ng(ngname,(*buf=='m'?GNG_RELOC:0) | GNG_FUZZY))
-	    ngptr = current_ng;	/* if not found, go nowhere */
+	    g_ngptr = g_current_ng;	/* if not found, go nowhere */
 	addnewbydefault = 0;
 	return ING_SPECIAL;
 #ifdef DEBUG
@@ -523,34 +523,34 @@ int input_newsgroup()
 	return ING_RESTART;
       }
       case 'c':			/* catch up */
-	if (ngptr) {
+	if (g_ngptr) {
 	    ask_catchup();
-	    if (ngptr->toread == TR_NONE)
-		ngptr = ngptr->next;
+	    if (g_ngptr->toread == TR_NONE)
+		g_ngptr = g_ngptr->next;
 	}
 	break;
       case 't':
 	if (!use_threads)
 	    printf("\n\nNot running in thread mode.\n");
-	else if (ngptr && ngptr->toread >= TR_NONE) {
-	    bool read_unthreaded = !(ngptr->flags&NF_UNTHREADED);
-	    ngptr->flags ^= NF_UNTHREADED;
+	else if (g_ngptr && g_ngptr->toread >= TR_NONE) {
+	    bool read_unthreaded = !(g_ngptr->flags&NF_UNTHREADED);
+	    g_ngptr->flags ^= NF_UNTHREADED;
 	    printf("\n\n%s will be read %sthreaded.\n",
-		   ngptr->rcline, read_unthreaded? "un" : "") FLUSH;
-	    set_toread(ngptr, ST_LAX);
+		   g_ngptr->rcline, read_unthreaded? "un" : "") FLUSH;
+	    set_toread(g_ngptr, ST_LAX);
 	}
 	termdown(3);
 	return ING_SPECIAL;
       case 'u':			/* unsubscribe */
-	if (ngptr && ngptr->toread >= TR_NONE) {/* unsubscribable? */
+	if (g_ngptr && g_ngptr->toread >= TR_NONE) {/* unsubscribable? */
 	    newline();
-	    printf(unsubto,ngptr->rcline) FLUSH;
+	    printf(unsubto,g_ngptr->rcline) FLUSH;
 	    termdown(1);
-	    ngptr->subscribechar = NEGCHAR;	/* unsubscribe it */
-	    ngptr->toread = TR_UNSUB;		/* and make line invisible */
-	    ngptr->rc->flags |= RF_RCCHANGED;
-	    ngptr = ngptr->next;		/* do an automatic 'n' */
-	    newsgroup_toread--;
+	    g_ngptr->subscribechar = NEGCHAR;	/* unsubscribe it */
+	    g_ngptr->toread = TR_UNSUB;		/* and make line invisible */
+	    g_ngptr->rc->flags |= RF_RCCHANGED;
+	    g_ngptr = g_ngptr->next;		/* do an automatic 'n' */
+	    g_newsgroup_toread--;
 	}
 	break;
       case 'h':
@@ -560,7 +560,7 @@ int input_newsgroup()
 	help_ng();
 	return ING_ASK;
       case 'A':
-	if (!ngptr)
+	if (!g_ngptr)
 	    break;
 reask_abandon:
 	if (verbose)
@@ -580,7 +580,7 @@ reask_abandon:
 	    settle_down();
 	    goto reask_abandon;
 	} else if (*buf == 'y')
-	    abandon_ng(ngptr);
+	    abandon_ng(g_ngptr);
 	return ING_SPECIAL;
       case 'a':
 	/* FALL THROUGH */
@@ -598,10 +598,10 @@ reask_abandon:
 		cwd_check();
 	    if (doscan && maxngtodo)
 		scanactive(true);
-	    ng_min_toread = *buf == empty_only_char && maxngtodo
+	    g_ng_min_toread = *buf == empty_only_char && maxngtodo
 			  ? TR_NONE : TR_ONE;
 	}
-	ngptr = first_ng;	/* simulate ^ */
+	g_ngptr = g_first_ng;	/* simulate ^ */
 	if (*msg && !maxngtodo)
 	    return ING_MESSAGE;
 	return ING_DISPLAY;
@@ -647,7 +647,7 @@ reask_abandon:
       case '.': case '=':
       case 'y': case 'Y': case '\t': /* do normal thing */
       case ' ': case '\r': case '\n':
-	if (!ngptr) {
+	if (!g_ngptr) {
 	    fputs("\nNot on a newsgroup.",stdout) FLUSH;
 	    termdown(1);
 	    return ING_ASK;
@@ -678,7 +678,7 @@ reask_abandon:
 	  case NG_NORM:
 	  case NG_NEXT:
 	  case NG_ERROR:
-	    ngptr = ngptr->next;
+	    g_ngptr = g_ngptr->next;
 	    break;
 	  case NG_ASK:
 	    return ING_ASK;
@@ -689,14 +689,14 @@ reask_abandon:
 	    *buf = 'n';
 	    goto do_command;
 	  case NG_MINUS:
-	    ngptr = recent_ng;	/* recall previous newsgroup */
+	    g_ngptr = g_recent_ng;	/* recall previous newsgroup */
 	    return ING_SPECIAL;
 	  case NG_NOSERVER:
-	    nntp_server_died(ngptr->rc->datasrc);
+	    nntp_server_died(g_ngptr->rc->datasrc);
 	    return ING_NOSERVER;
 	  /* CAA extensions */
 	  case NG_GO_ARTICLE:
-	    ngptr = ng_go_ngptr;
+	    g_ngptr = g_ng_go_ngptr;
 	    s = savestr("y");		/* enter with minimal fuss */
 	    goto redo_newsgroup;
 	  /* later: possible go-to-newsgroup */
@@ -707,7 +707,7 @@ reask_abandon:
 	    return ING_INPUT;
 	page_line = 1;
 	newline();
-	set_ng(current_ng);
+	set_ng(g_current_ng);
 	return ING_ASK;
       case 'v':
 	newline();

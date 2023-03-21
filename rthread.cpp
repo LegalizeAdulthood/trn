@@ -52,12 +52,12 @@ void thread_open()
 
     if (!msgid_hash)
 	msgid_hash = hashcreate(1999, msgid_cmp); /*TODO: pick a better size */
-    if (ThreadedGroup) {
+    if (g_threaded_group) {
 	/* Parse input and use msgid_hash for quick article lookups. */
 	/* If cached but not threaded articles exist, set up to thread them. */
 	if (g_first_subject) {
-	    g_first_cached = firstart;
-	    g_last_cached = firstart - 1;
+	    g_first_cached = g_firstart;
+	    g_last_cached = g_firstart - 1;
 	    g_parsed_art = 0;
 	}
     }
@@ -73,8 +73,8 @@ void thread_open()
     }
     if ((g_datasrc->flags & DF_TRY_OVERVIEW) && !g_cached_all_in_range) {
 	if (thread_always) {
-	    spin_todo = spin_estimate = lastart - absfirst + 1;
-	    (void) ov_data(absfirst, lastart, false);
+	    spin_todo = spin_estimate = g_lastart - g_absfirst + 1;
+	    (void) ov_data(g_absfirst, g_lastart, false);
 	    if (g_datasrc->ov_opened && find_existing && g_datasrc->over_dir == nullptr) {
 		mark_missing_articles();
 		rc_to_bits();
@@ -82,14 +82,14 @@ void thread_open()
 	    }
 	}
 	else {
-	    spin_todo = lastart - firstart + 1;
-	    spin_estimate = ngptr->toread;
-	    if (firstart > lastart) {
+	    spin_todo = g_lastart - g_firstart + 1;
+	    spin_estimate = g_ngptr->toread;
+	    if (g_firstart > g_lastart) {
 		/* If no unread articles, see if ov. exists as fast as possible */
-		(void) ov_data(absfirst, absfirst, false);
+		(void) ov_data(g_absfirst, g_absfirst, false);
 		g_cached_all_in_range = false;
 	    } else
-		(void) ov_data(firstart, lastart, false);
+		(void) ov_data(g_firstart, g_lastart, false);
 	}
     }
     if (find_existing) {
@@ -98,7 +98,7 @@ void thread_open()
 	rc_to_bits();
     }
 
-    for (ap = article_ptr(article_first(firstart));
+    for (ap = article_ptr(article_first(g_firstart));
 	 ap && article_num(ap) <= g_last_cached;
 	 ap = article_nextp(ap))
     {
@@ -106,15 +106,15 @@ void thread_open()
 	    (void) parseheader(article_num(ap));
     }
 
-    if (g_last_cached > lastart) {
-	ngptr->toread += (ART_UNREAD)(g_last_cached-lastart);
+    if (g_last_cached > g_lastart) {
+	g_ngptr->toread += (ART_UNREAD)(g_last_cached-g_lastart);
 	/* ensure getngsize() knows the new maximum */
-	ngptr->ngmax = lastart = g_last_cached;
+	g_ngptr->ngmax = g_lastart = g_last_cached;
     }
-    g_article_list->high = lastart;
+    g_article_list->high = g_lastart;
 
-    for (ap = article_ptr(article_first(absfirst));
-	 ap && article_num(ap) <= lastart;
+    for (ap = article_ptr(article_first(g_absfirst));
+	 ap && article_num(ap) <= g_lastart;
 	 ap = article_nextp(ap))
     {
 	if (ap->flags & AF_CACHED)
@@ -134,9 +134,9 @@ void thread_open()
 */
 void thread_grow()
 {
-    added_articles += lastart - g_last_cached;
+    added_articles += g_lastart - g_last_cached;
     if (added_articles && thread_always)
-	cache_range(g_last_cached + 1, lastart);
+	cache_range(g_last_cached + 1, g_lastart);
     count_subjects(CS_NORM);
     if (g_artptr_list)
 	sort_articles();
@@ -185,16 +185,16 @@ static int cleanup_msgid_hash(int keylen, HASHDATUM *data, int extra)
 
 void top_article()
 {
-    g_art = lastart+1;
+    g_art = g_lastart+1;
     g_artp = nullptr;
     inc_art(selected_only, false);
-    if (g_art > lastart && g_last_cached < lastart)
-	g_art = firstart;
+    if (g_art > g_lastart && g_last_cached < g_lastart)
+	g_art = g_firstart;
 }
 
 ARTICLE *first_art(SUBJECT *sp)
 {
-    ARTICLE* ap = (ThreadedGroup? sp->thread : sp->articles);
+    ARTICLE* ap = (g_threaded_group? sp->thread : sp->articles);
     if (ap && !(ap->flags & AF_EXISTS)) {
 	oneless(ap);
 	ap = next_art(ap);
@@ -206,7 +206,7 @@ ARTICLE *last_art(SUBJECT *sp)
 {
     ARTICLE* ap;
 
-    if (!ThreadedGroup) {
+    if (!g_threaded_group) {
 	ap = sp->articles;
 	while (ap->subj_next)
 	    ap = ap->subj_next;
@@ -262,14 +262,14 @@ void inc_art(bool sel_flag, bool rereading)
 	    g_art = article_num(g_artp);
 	} else {
 	    g_artp = nullptr;
-	    g_art = lastart+1;
+	    g_art = g_lastart+1;
 	    g_artptr = g_artptr_list;
 	}
 	return;
     }
 
     /* Use subject- or thread-order when possible */
-    if (ThreadedGroup || g_srchahead) {
+    if (g_threaded_group || g_srchahead) {
 	SUBJECT* sp;
 	if (ap)
 	    sp = ap->subj;
@@ -297,10 +297,10 @@ void inc_art(bool sel_flag, bool rereading)
 		g_art = g_last_cached+1;
 	    else
 		g_art++;
-	    if (g_art <= lastart)
+	    if (g_art <= g_lastart)
 		g_artp = article_ptr(g_art);
 	    else
-		g_art = lastart+1;
+		g_art = g_lastart+1;
 	}
 	return;
     }
@@ -308,11 +308,11 @@ void inc_art(bool sel_flag, bool rereading)
     /* Otherwise, just increment through the art numbers */
   num_inc:
     if (!ap)
-      g_art = firstart-1;
+      g_art = g_firstart-1;
     for (;;) {
 	g_art = article_next(g_art);
-	if (g_art > lastart) {
-	    g_art = lastart+1;
+	if (g_art > g_lastart) {
+	    g_art = g_lastart+1;
 	    ap = nullptr;
 	    break;
 	}
@@ -358,7 +358,7 @@ void dec_art(bool sel_flag, bool rereading)
     }
 
     /* Use subject- or thread-order when possible */
-    if (ThreadedGroup || g_srchahead) {
+    if (g_threaded_group || g_srchahead) {
 	SUBJECT* sp;
 	if (ap)
 	    sp = ap->subj;
@@ -382,7 +382,7 @@ void dec_art(bool sel_flag, bool rereading)
 	if ((g_artp = ap) != nullptr)
 	    g_art = article_num(ap);
 	else
-	    g_art = absfirst-1;
+	    g_art = g_absfirst-1;
 	return;
     }
 
@@ -390,8 +390,8 @@ void dec_art(bool sel_flag, bool rereading)
   num_dec:
     for (;;) {
 	g_art = article_prev(g_art);
-	if (g_art < absfirst) {
-	    g_art = absfirst-1;
+	if (g_art < g_absfirst) {
+	    g_art = g_absfirst-1;
 	    ap = nullptr;
 	    break;
 	}
@@ -424,7 +424,7 @@ ARTICLE *bump_art(ARTICLE *ap)
 ARTICLE *next_art(ARTICLE *ap)
 {
 try_again:
-    if (!ThreadedGroup) {
+    if (!g_threaded_group) {
 	ap = ap->subj_next;
 	goto done;
     }
@@ -466,7 +466,7 @@ ARTICLE *prev_art(ARTICLE *ap)
 
 try_again:
     initial_ap = ap;
-    if (!ThreadedGroup) {
+    if (!g_threaded_group) {
 	if ((ap = ap->subj->articles) == initial_ap)
 	    ap = nullptr;
 	else
@@ -508,7 +508,7 @@ bool next_art_with_subj()
 	ap = ap->subj_next;
 	if (!ap) {
 	    if (!g_art)
-		g_art = firstart;
+		g_art = g_firstart;
 	    return false;
 	}
     } while (!ALLBITS(ap->flags, AF_EXISTS | AF_UNREAD)
@@ -541,7 +541,7 @@ bool prev_art_with_subj()
 	}
 	if (!ap) {
 	    if (!g_art)
-		g_art = lastart;
+		g_art = g_lastart;
 	    return false;
 	}
     } while (!(ap->flags & AF_EXISTS)
@@ -897,7 +897,7 @@ void unkill_subject(SUBJECT *subj)
 	if (sel_rereading) {
 	    if (ALLBITS(ap->flags, AF_DELSEL | AF_EXISTS)) {
 		if (!(ap->flags & AF_UNREAD))
-		    ngptr->toread++;
+		    g_ngptr->toread++;
 		if (selected_only && !(ap->flags & AF_SEL))
 		    selected_count++;
 		ap->flags = (ap->flags & ~AF_DELSEL) | AF_SEL|AF_UNREAD;
@@ -1010,9 +1010,9 @@ ARTICLE *subj_art(SUBJECT *sp)
 {
     ARTICLE* ap = nullptr;
     int art_mask = (selected_only? (AF_SEL|AF_UNREAD) : AF_UNREAD);
-    bool TG_save = ThreadedGroup;
+    bool TG_save = g_threaded_group;
 
-    ThreadedGroup = (sel_mode == SM_THREAD);
+    g_threaded_group = (sel_mode == SM_THREAD);
     ap = first_art(sp);
     while (ap && (ap->flags & art_mask) != art_mask)
 	ap = next_art(ap);
@@ -1026,11 +1026,11 @@ ARTICLE *subj_art(SUBJECT *sp)
 		ap = first_art(sp);
 	}
     }
-    ThreadedGroup = TG_save;
+    g_threaded_group = TG_save;
     return ap;
 }
 
-/* Find the next thread (first if g_art > lastart).  If articles are selected,
+/* Find the next thread (first if g_art > g_lastart).  If articles are selected,
 ** only choose from threads with selected articles.
 */
 void visit_next_thread()
@@ -1048,7 +1048,7 @@ void visit_next_thread()
 	g_reread = false;
     }
     g_artp = nullptr;
-    g_art = lastart+1;
+    g_art = g_lastart+1;
     g_forcelast = true;
 }
 
@@ -1070,7 +1070,7 @@ void visit_prev_thread()
 	g_reread = false;
     }
     g_artp = nullptr;
-    g_art = lastart+1;
+    g_art = g_lastart+1;
     g_forcelast = true;
 }
 
@@ -1230,8 +1230,8 @@ void count_subjects(int cmode)
     time_t subjdate;
 
     obj_count = selected_count = selected_subj_cnt = 0;
-    if (g_last_cached >= lastart)
-	firstart = lastart+1;
+    if (g_last_cached >= g_lastart)
+	g_firstart = g_lastart+1;
 
     switch (cmode) {
     case CS_RETAIN:
@@ -1267,8 +1267,8 @@ void count_subjects(int cmode)
 		    sel_count++;
 		if (!subjdate)
 		    subjdate = ap->date;
-		if (article_num(ap) < firstart)
-		    firstart = article_num(ap);
+		if (article_num(ap) < g_firstart)
+		    g_firstart = article_num(ap);
 	    }
 	}
 	sp->misc = count;
@@ -1654,7 +1654,7 @@ static void build_artptrs()
 	g_artptr_list_size = count;
     }
     app = g_artptr_list;
-    for (an = article_first(absfirst); count; an = article_next(an)) {
+    for (an = article_first(g_absfirst); count; an = article_next(an)) {
 	ap = article_ptr(an);
 	if ((ap->flags & (AF_EXISTS|AF_UNREAD)) == desired_flags) {
 	    *app++ = ap;

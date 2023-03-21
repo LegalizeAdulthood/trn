@@ -38,7 +38,7 @@ void sc_init(bool pend_wait)
     int i;
     ART_NUM a;
 
-    if (lastart == 0 || lastart < absfirst) {
+    if (g_lastart == 0 || g_lastart < g_absfirst) {
 #if 0
 	printf("No articles exist to be scored.\n") FLUSH;
 #endif
@@ -59,9 +59,9 @@ void sc_init(bool pend_wait)
     /* July 24, 1993: changed default of sc_savescores to true */
     sc_savescores = true;
 
-/* CONSIDER: (for sc_init callers) is lastart properly set yet? */
-    sc_fill_max = absfirst - 1;
-    if (sa_mode_read_elig || firstart > lastart)
+/* CONSIDER: (for sc_init callers) is g_lastart properly set yet? */
+    sc_fill_max = g_absfirst - 1;
+    if (sa_mode_read_elig || g_firstart > g_lastart)
 	sc_fill_read = true;
     else
 	sc_fill_read = false;
@@ -75,16 +75,16 @@ void sc_init(bool pend_wait)
     /* now is a good time to load a saved score-list which may exist */
     if (!sc_rescoring) {	/* don't load if rescoring */
 	sc_load_scores();	/* will be quiet if non-existent */
-	i = firstart;
+	i = g_firstart;
 	if (sc_fill_read)
-	    i = absfirst;
+	    i = g_absfirst;
 	if (sc_sf_force_init)
-	    i = lastart+1;	/* skip loop */
-	for (i = article_first(i); i <= lastart; i = article_next(i)) {
+	    i = g_lastart+1;	/* skip loop */
+	for (i = article_first(i); i <= g_lastart; i = article_next(i)) {
 	    if (!SCORED(i) && (sc_fill_read || article_unread(i)))
 		break;
 	}
-	if (i == lastart)	/* all scored */
+	if (i == g_lastart)	/* all scored */
 	    sc_sf_delay = true;
     }
     if (sc_sf_force_init)
@@ -94,18 +94,18 @@ void sc_init(bool pend_wait)
 	sf_init();	/* initialize the scorefile code */
 
     sc_do_spin = false;
-    for (i = article_last(lastart); i >= absfirst; i = article_prev(i)) {
+    for (i = article_last(g_lastart); i >= g_absfirst; i = article_prev(i)) {
 	if (SCORED(i))
 	    break;
     }
-    if (i < absfirst) {			/* none scored yet */
+    if (i < g_absfirst) {			/* none scored yet */
 	/* score one article, or give up */
-	for (a = article_last(lastart); a >= absfirst; a = article_prev(a)) {
+	for (a = article_last(g_lastart); a >= g_absfirst; a = article_prev(a)) {
 	    sc_score_art(a,true);	/* I want it *now* */
 	    if (SCORED(a))
 		break;
 	}
-	if (a < absfirst) {		/* no articles scored */
+	if (a < g_absfirst) {		/* no articles scored */
 	    if (sf_verbose)
 		printf("\nNo articles available for scoring\n");
 	    sc_cleanup();
@@ -117,7 +117,7 @@ void sc_init(bool pend_wait)
     /* XXX will be bad if later methods are added. */
     if (!sf_num_entries) {
 	/* score everything really fast */
-	for (a = article_last(lastart); a >= absfirst; a = article_prev(a))
+	for (a = article_last(g_lastart); a >= g_absfirst; a = article_prev(a))
 	    sc_score_art(a,true);
     }
     if (pend_wait) {
@@ -203,7 +203,7 @@ void sc_score_art_basic(ART_NUM a)
 //bool now;	/* if true, sort the scores if necessary... */
 int sc_score_art(ART_NUM a, bool now)
 {
-    if (a < absfirst || a > lastart) {
+    if (a < g_absfirst || a > g_lastart) {
 #if 0
  	printf("\nsc_score_art: illegal article# %d\n",a) FLUSH;
 #endif
@@ -267,11 +267,11 @@ void sc_lookahead(bool flag, bool nowait)
 	g_int_count = 0;		/* clear the interrupt count */
 #endif
     /* prevent needless looping below */
-    if (sc_fill_max < firstart && !sc_fill_read)
-	sc_fill_max = article_first(firstart)-1;
+    if (sc_fill_max < g_firstart && !sc_fill_read)
+	sc_fill_max = article_first(g_firstart)-1;
     else
 	sc_fill_max = article_first(sc_fill_max);
-    while (sc_fill_max < lastart
+    while (sc_fill_max < g_lastart
 #ifdef PENDING
      && !input_pending()
 #endif
@@ -284,7 +284,7 @@ void sc_lookahead(bool flag, bool nowait)
 #endif
 	sc_fill_max = article_next(sc_fill_max);
 	/* skip over some articles quickly */
-	while (sc_fill_max < lastart
+	while (sc_fill_max < g_lastart
 	 && (SCORED(sc_fill_max)
 	  || (!sc_fill_read && !article_unread(sc_fill_max))))
 	    sc_fill_max = article_next(sc_fill_max);
@@ -306,13 +306,13 @@ int sc_percent_scored()
 
     if (!sc_initialized)
 	return 0;	/* none scored */
-    if (sc_fill_max == lastart)
+    if (sc_fill_max == g_lastart)
 	return 100;
-    i = firstart;
+    i = g_firstart;
     if (sa_mode_read_elig)
-	i = absfirst;
+	i = g_absfirst;
     total = scored = 0;
-    for (i = article_first(i); i <= lastart; i = article_next(i)) {
+    for (i = article_first(i); i <= g_lastart; i = article_next(i)) {
 	if (!article_exists(i))
 	    continue;
         if (!article_unread(i) && !sa_mode_read_elig)
@@ -350,7 +350,7 @@ void sc_rescore_arts()
     old_spin = sc_do_spin;
     setspin(SPIN_FOREGROUND);
     sc_do_spin = true;				/* amuse the user */
-    for (a = article_first(absfirst); a <= lastart; a = article_next(a)) {
+    for (a = article_first(g_absfirst); a <= g_lastart; a = article_next(a)) {
 	if (article_exists(a))
 	    sc_score_art_basic(a);		/* rescore it then */
     }
@@ -495,7 +495,7 @@ void sc_kill_threshold(int thresh)
 {
     ART_NUM a;
 
-    for (a = article_first(firstart); a <= lastart; a = article_next(a))
+    for (a = article_first(g_firstart); a <= g_lastart; a = article_next(a))
     {
         if (article_ptr(a)->score <= thresh &&
             article_unread(a)

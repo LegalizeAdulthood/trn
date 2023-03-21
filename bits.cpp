@@ -53,7 +53,7 @@ void rc_to_bits()
 
     /* modify the article flags to reflect what has already been read */
 
-    for (s = ngptr->rcline + ngptr->numoffset; *s == ' '; s++) ;
+    for (s = g_ngptr->rcline + g_ngptr->numoffset; *s == ' '; s++) ;
 					/* find numbers in rc line */
     i = strlen(s);
 #ifndef lint
@@ -67,33 +67,33 @@ void rc_to_bits()
     s = mybuf;				/* initialize the for loop below */
     if (set_firstart(s)) {
 	s = strchr(s,',') + 1;
-	for (i = article_first(absfirst); i < firstart; i = article_next(i))
+	for (i = article_first(g_absfirst); i < g_firstart; i = article_next(i))
 	    article_ptr(i)->flags &= ~AF_UNREAD;
-	firstart = i;
+	g_firstart = i;
     }
     else
-	firstart = article_first(firstart);
+	g_firstart = article_first(g_firstart);
     unread = 0;
 #ifdef DEBUG
     if (debug & DEB_CTLAREA_BITMAP) {
 	printf("\n%s\n",mybuf) FLUSH;
 	termdown(2);
-	for (i = article_first(absfirst); i < firstart; i = article_next(i)) {
+	for (i = article_first(g_absfirst); i < g_firstart; i = article_next(i)) {
 	    if (article_unread(i))
 		printf("%ld ",(long)i) FLUSH;
 	}
     }
 #endif
-    i = firstart;
+    i = g_firstart;
     for ( ; (c = strchr(s,',')) != nullptr; s = ++c) {	/* for each range */
 	ART_NUM min, max;
 	*c = '\0';			/* do not let index see past comma */
 	h = strchr(s,'-');
 	min = atol(s);
-	if (min < firstart)		/* make sure range is in range */
-	    min = firstart;
-	if (min > lastart)
-	    min = lastart+1;
+	if (min < g_firstart)		/* make sure range is in range */
+	    min = g_firstart;
+	if (min > g_lastart)
+	    min = g_lastart+1;
 	for (; i < min; i = article_next(i)) {
 	    ap = article_ptr(i);
 	    if (ap->flags & AF_EXISTS) {
@@ -111,8 +111,8 @@ void rc_to_bits()
 	    max = min;
 	else if ((max = atol(h+1)) < min)
 	    max = min-1;
-	if (max > lastart)
-	    max = lastart;
+	if (max > g_lastart)
+	    max = g_lastart;
 	/* mark all arts in range as read */
 	for ( ; i <= max; i = article_next(i))
 	    article_ptr(i)->flags &= ~AF_UNREAD;
@@ -120,7 +120,7 @@ void rc_to_bits()
 	if (debug & DEB_CTLAREA_BITMAP) {
 	    printf("\n%s\n",s) FLUSH;
 	    termdown(2);
-	    for (i = absfirst; i <= lastart; i++) {
+	    for (i = g_absfirst; i <= g_lastart; i++) {
 		if (!was_read(i))
 		    printf("%ld ",(long)i) FLUSH;
 	    }
@@ -128,7 +128,7 @@ void rc_to_bits()
 #endif
 	i = article_next(max);
     }
-    for (; i <= lastart; i = article_next(i)) {
+    for (; i <= g_lastart; i = article_next(i)) {
 	ap = article_ptr(i);
 	if (ap->flags & AF_EXISTS) {
 	    if (ap->autofl & AUTO_KILLS)
@@ -150,7 +150,7 @@ void rc_to_bits()
 #endif
     if (mybuf != buf)
 	free(mybuf);
-    ngptr->toread = unread;
+    g_ngptr->toread = unread;
 }
 
 bool set_firstart(const char *s)
@@ -158,13 +158,13 @@ bool set_firstart(const char *s)
     while (*s == ' ') s++;
 
     if (!strncmp(s,"1-",2)) {		/* can we save some time here? */
-	firstart = atol(s+2)+1;		/* process first range thusly */
-	if (firstart < absfirst)
-	    firstart = absfirst;
+	g_firstart = atol(s+2)+1;		/* process first range thusly */
+	if (g_firstart < g_absfirst)
+	    g_firstart = g_absfirst;
 	return true;
     }
 
-    firstart = absfirst;
+    g_firstart = g_absfirst;
     return false;
 }
 
@@ -178,16 +178,16 @@ void bits_to_rc()
     ART_NUM count=0;
     int safelen = LBUFLEN - 32;
 
-    strcpy(buf,ngptr->rcline);		/* start with the newsgroup name */
-    s = buf + ngptr->numoffset - 1;	/* use s for buffer pointer */
-    *s++ = ngptr->subscribechar;		/* put the requisite : or !*/
-    for (i = article_first(absfirst); i <= lastart; i = article_next(i)) {
+    strcpy(buf,g_ngptr->rcline);		/* start with the newsgroup name */
+    s = buf + g_ngptr->numoffset - 1;	/* use s for buffer pointer */
+    *s++ = g_ngptr->subscribechar;		/* put the requisite : or !*/
+    for (i = article_first(g_absfirst); i <= g_lastart; i = article_next(i)) {
 	if (article_unread(i))
 	    break;
     }
     sprintf(s," 1-%ld,",(long)i-1);
     s += strlen(s);
-    for (; i<=lastart; i++) {	/* for each article in newsgroup */
+    for (; i<=g_lastart; i++) {	/* for each article in newsgroup */
 	if (s-mybuf > safelen) {	/* running out of room? */
 	    safelen *= 2;
 	    if (mybuf == buf) {		/* currently static? */
@@ -211,7 +211,7 @@ void bits_to_rc()
 	    sprintf(s,"%ld",(long)i);	/* put out the min of the range */
 	    s += strlen(s);		/* keeping house */
 	    oldi = i;			/* remember this spot */
-	    do i++; while (i <= lastart && was_read(i));
+	    do i++; while (i <= g_lastart && was_read(i));
 					/* find 1st unread article or end */
 	    i--;			/* backup to last read article */
 	    if (i > oldi) {		/* range of more than 1? */
@@ -228,28 +228,28 @@ void bits_to_rc()
     *s++ = '\0';			/* and terminate string */
 #ifdef DEBUG
     if ((debug & DEB_NEWSRC_LINE) && !g_panic) {
-	printf("%s: %s\n",ngptr->rcline,ngptr->rcline+ngptr->numoffset) FLUSH;
+	printf("%s: %s\n",g_ngptr->rcline,g_ngptr->rcline+g_ngptr->numoffset) FLUSH;
 	printf("%s\n",mybuf) FLUSH;
 	termdown(2);
     }
 #endif
-    free(ngptr->rcline);		/* return old rc line */
+    free(g_ngptr->rcline);		/* return old rc line */
     if (mybuf == buf) {
-	ngptr->rcline = safemalloc((MEM_SIZE)(s-buf)+1);
+	g_ngptr->rcline = safemalloc((MEM_SIZE)(s-buf)+1);
 					/* grab a new rc line */
-	strcpy(ngptr->rcline, buf);	/* and load it */
+	strcpy(g_ngptr->rcline, buf);	/* and load it */
     }
     else {
 	mybuf = saferealloc(mybuf,(MEM_SIZE)(s-mybuf)+1);
 					/* be nice to the heap */
-	ngptr->rcline = mybuf;
+	g_ngptr->rcline = mybuf;
     }
-    *(ngptr->rcline + ngptr->numoffset - 1) = '\0';
-    if (ngptr->subscribechar == NEGCHAR)/* did they unsubscribe? */
-	ngptr->toread = TR_UNSUB;	/* make line invisible */
+    *(g_ngptr->rcline + g_ngptr->numoffset - 1) = '\0';
+    if (g_ngptr->subscribechar == NEGCHAR)/* did they unsubscribe? */
+	g_ngptr->toread = TR_UNSUB;	/* make line invisible */
     else
-	ngptr->toread = (ART_UNREAD)count; /* otherwise, remember the count */
-    ngptr->rc->flags |= RF_RCCHANGED;
+	g_ngptr->toread = (ART_UNREAD)count; /* otherwise, remember the count */
+    g_ngptr->rc->flags |= RF_RCCHANGED;
 }
 
 void find_existing_articles()
@@ -262,8 +262,8 @@ void find_existing_articles()
 	if (/*nntp_rover() ||*/ nntp_artnums()) {
 	    /*char* s;*/
 
-	    for (ap = article_ptr(article_first(absfirst));
-		 ap && article_num(ap) <= lastart;
+	    for (ap = article_ptr(article_first(g_absfirst));
+		 ap && article_num(ap) <= g_lastart;
 		 ap = article_nextp(ap))
 		ap->flags &= ~AF_EXISTS;
 	    for (;;) {
@@ -272,7 +272,7 @@ void find_existing_articles()
 		if (nntp_at_list_end(g_ser_line))
 		    break;
 		an = (ART_NUM)atol(g_ser_line);
-		if (an < absfirst)
+		if (an < g_absfirst)
 		    continue;	/* Ignore some wacked-out NNTP servers */
 		ap = article_ptr(an);
 		if (!(ap->flags2 & AF2_BOGUS))
@@ -294,19 +294,19 @@ void find_existing_articles()
 			ap->flags |= AF_EXISTS;
 		}
 	    }
-	    for (an = absfirst; an < g_first_cached; an++) {
+	    for (an = g_absfirst; an < g_first_cached; an++) {
 		ap = article_ptr(an);
 		if (!(ap->flags2 & AF2_BOGUS))
 		    ap->flags |= AF_EXISTS;
 	    }
-	    for (an = g_last_cached+1; an <= lastart; an++) {
+	    for (an = g_last_cached+1; an <= g_lastart; an++) {
 		ap = article_ptr(an);
 		if (!(ap->flags2 & AF2_BOGUS))
 		    ap->flags |= AF_EXISTS;
 	    }
 	}
 	else {
-	    for (an = absfirst; an <= lastart; an++) {
+	    for (an = g_absfirst; an <= g_lastart; an++) {
 		ap = article_ptr(an);
 		if (!(ap->flags2 & AF2_BOGUS))
 		    ap->flags |= AF_EXISTS;
@@ -315,7 +315,7 @@ void find_existing_articles()
     }
     else
     {
-	ART_NUM first = lastart+1;
+	ART_NUM first = g_lastart+1;
 	ART_NUM last = 0;
 	DIR* dirp;
 	Direntry_t* dp;
@@ -327,15 +327,15 @@ void find_existing_articles()
 	if (!(dirp = opendir(".")))
 	    return;
 
-	for (ap = article_ptr(article_first(absfirst));
-	     ap && article_num(ap) <= lastart;
+	for (ap = article_ptr(article_first(g_absfirst));
+	     ap && article_num(ap) <= g_lastart;
 	     ap = article_nextp(ap))
 	    ap->flags &= ~AF_EXISTS;
 
 	while ((dp = readdir(dirp)) != nullptr) {
 	    if (sscanf(dp->d_name, "%ld%c", &lnum, &ch) == 1) {
 		an = (ART_NUM)lnum;
-		if (an <= lastart && an >= absfirst) {
+		if (an <= g_lastart && an >= g_absfirst) {
 		    if (an < first)
 			first = an;
 		    if (an > last)
@@ -348,30 +348,30 @@ void find_existing_articles()
 	}
 	closedir(dirp);
 
-	ngptr->abs1st = first;
-	ngptr->ngmax = last;
+	g_ngptr->abs1st = first;
+	g_ngptr->ngmax = last;
 
-	if (first > absfirst) {
-	    checkexpired(ngptr,first);
-	    for (absfirst = article_first(absfirst);
-		 absfirst < first;
-		 absfirst = article_next(absfirst))
+	if (first > g_absfirst) {
+	    checkexpired(g_ngptr,first);
+	    for (g_absfirst = article_first(g_absfirst);
+		 g_absfirst < first;
+		 g_absfirst = article_next(g_absfirst))
 	    {
-		onemissing(article_ptr(absfirst));
+		onemissing(article_ptr(g_absfirst));
 	    }
-	    absfirst = first;
+	    g_absfirst = first;
 	}
-	lastart = last;
+	g_lastart = last;
     }
 
-    if (firstart < absfirst)
-	firstart = absfirst;
-    if (firstart > lastart)
-	firstart = lastart + 1;
-    if (g_first_cached < absfirst)
-	g_first_cached = absfirst;
-    if (g_last_cached < absfirst)
-	g_last_cached = absfirst - 1;
+    if (g_firstart < g_absfirst)
+	g_firstart = g_absfirst;
+    if (g_firstart > g_lastart)
+	g_firstart = g_lastart + 1;
+    if (g_first_cached < g_absfirst)
+	g_first_cached = g_absfirst;
+    if (g_last_cached < g_absfirst)
+	g_last_cached = g_absfirst - 1;
 }
 
 /* mark an article unread, keeping track of toread[] */
@@ -383,7 +383,7 @@ void onemore(ARTICLE *ap)
 	check_first(artnum);
 	ap->flags |= AF_UNREAD;
 	ap->flags &= ~AF_DEL;
-	ngptr->toread++;
+	g_ngptr->toread++;
 	if (ap->subj) {
 	    if (selected_only) {
 		if (ap->subj->flags & sel_mask) {
@@ -407,8 +407,8 @@ void oneless(ARTICLE *ap)
 	    selected_count--;
 	    ap->flags &= ~sel_mask;
 	}
-	if (ngptr->toread > TR_NONE)
-	    ngptr->toread--;
+	if (g_ngptr->toread > TR_NONE)
+	    g_ngptr->toread--;
     }
 }
 
@@ -421,7 +421,7 @@ void oneless_artnum(ART_NUM artnum)
 
 void onemissing(ARTICLE *ap)
 {
-    missing_count += (ap->flags & AF_UNREAD) != 0;
+    g_missing_count += (ap->flags & AF_UNREAD) != 0;
     oneless(ap);
     ap->flags = (ap->flags & ~(AF_HAS_RE|AF_YANKBACK|AF_FROMTRUNCED|AF_EXISTS))
 	      | AF_CACHED|AF_THREADED;
@@ -479,8 +479,8 @@ void mark_as_read(ARTICLE *ap)
 void mark_missing_articles()
 {
     ARTICLE* ap;
-    for (ap = article_ptr(article_first(absfirst));
-	 ap && article_num(ap) <= lastart;
+    for (ap = article_ptr(article_first(g_absfirst));
+	 ap && article_num(ap) <= g_lastart;
 	 ap = article_nextp(ap))
     {
 	if (!(ap->flags & AF_EXISTS))
@@ -488,14 +488,14 @@ void mark_missing_articles()
     }
 }
 
-/* keep firstart pointing at the first unread article */
+/* keep g_firstart pointing at the first unread article */
 
 void check_first(ART_NUM min)
 {
-    if (min < absfirst)
-	min = absfirst;
-    if (min < firstart)
-	firstart = min;
+    if (min < g_absfirst)
+	min = g_absfirst;
+    if (min < g_firstart)
+	g_firstart = min;
 }
 
 /* bring back articles marked with M */
@@ -617,7 +617,7 @@ static int chase_xref(ART_NUM artnum, int markread)
 	    if (!(x = atol(xartnum)))
 		continue;
 	    if (!strcmp(tmpbuf,ngname)) {/* is this the current newsgroup? */
-		if (x < absfirst || x > lastart)
+		if (x < g_absfirst || x > g_lastart)
 		    continue;
 		if (markread)
 		    oneless(article_ptr(x)); /* take care of old C newses */

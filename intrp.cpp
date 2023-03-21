@@ -757,7 +757,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case 'u':
 		    if (in_ng) {
-			sprintf(scrbuf,"%ld",(long)ngptr->toread);
+			sprintf(scrbuf,"%ld",(long)g_ngptr->toread);
 			s = scrbuf;
 		    }
 		    else
@@ -770,7 +770,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			s = "";
 			break;
 		    }
-		    unseen = (g_art <= lastart) && !was_read(g_art);
+		    unseen = (g_art <= g_lastart) && !was_read(g_art);
 		    if (selected_only) {
 			int selected;
 
@@ -779,7 +779,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 				(long)selected_count - (selected && unseen));
 		    }
 		    else
-			sprintf(scrbuf,"%ld",(long)ngptr->toread - unseen);
+			sprintf(scrbuf,"%ld",(long)g_ngptr->toread - unseen);
 		    s = scrbuf;
 		    break;
 		}
@@ -788,8 +788,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 
 		    if (in_ng) {
 			selected = g_curr_artp && (g_curr_artp->flags & AF_SEL);
-			unseen = (g_art <= lastart) && !was_read(g_art);
-			sprintf(scrbuf,"%ld",(long)ngptr->toread-selected_count
+			unseen = (g_art <= g_lastart) && !was_read(g_art);
+			sprintf(scrbuf,"%ld",(long)g_ngptr->toread-selected_count
 						- (!selected && unseen));
 			s = scrbuf;
 		    }

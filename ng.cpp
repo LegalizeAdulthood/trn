@@ -93,7 +93,7 @@ void ng_init()
     init_compex(&g_page_compex);
 }
 
-/* do newsgroup pointed to by ngptr with name ngname
+/* do newsgroup pointed to by g_ngptr with name ngname
  *
  * The basic structure is:
  *	for each desired article
@@ -128,7 +128,7 @@ int do_newsgroup(char *start_command)
     char* whatnext = "%s%sWhat next? [%s]";
     bool ng_virtual = false;
 
-    set_datasrc(ngptr->rc->datasrc);
+    set_datasrc(g_ngptr->rc->datasrc);
 
     if (chdir(g_datasrc->spool_dir)) {
 	printf(nocd,g_datasrc->spool_dir) FLUSH;
@@ -153,14 +153,14 @@ int do_newsgroup(char *start_command)
     if (ret <= 0)
 	return NG_ERROR;
 
-    g_srchahead = (scanon && !ThreadedGroup	/* did they say -S? */
-	      && ((ART_NUM)ngptr->toread) >= scanon ? -1 : 0);
+    g_srchahead = (scanon && !g_threaded_group	/* did they say -S? */
+	      && ((ART_NUM)g_ngptr->toread) >= scanon ? -1 : 0);
 
     /* FROM HERE ON, RETURN THRU CLEANUP OR WE ARE SCREWED */
 
     g_forcelast = true;			/* if 0 unread, do not bomb out */
     g_recent_artp = g_curr_artp = nullptr;
-    g_recent_art = g_curr_art = lastart+1;
+    g_recent_art = g_curr_art = g_lastart+1;
     g_prompt = whatnext;
     g_charsubst = g_charsets;
 
@@ -168,9 +168,9 @@ int do_newsgroup(char *start_command)
 
     open_kfile(KF_LOCAL);
     if (verbose)
-	kill_unwanted(firstart,"Processing memorized commands...\n\n", true);
+	kill_unwanted(g_firstart,"Processing memorized commands...\n\n", true);
     else
-	kill_unwanted(firstart,"Auto-processing...\n\n",true);
+	kill_unwanted(g_firstart,"Auto-processing...\n\n",true);
 
     sc_init((sa_never_initialized || sa_mode_order == 2)
             && start_command && *start_command == ';');
@@ -197,47 +197,47 @@ int do_newsgroup(char *start_command)
     /* now read each unread article */
 
     /* CAA: if we are going directly to an article, set things up here */
-    if (ng_go_artnum) {
+    if (g_ng_go_artnum) {
 	ng_virtual = true;
-	if (ng_go_artnum >= absfirst) {
-	    g_art = ng_go_artnum;
+	if (g_ng_go_artnum >= g_absfirst) {
+	    g_art = g_ng_go_artnum;
 	    g_artp = article_ptr(g_art);
 	}
-	ng_go_artnum = 0;
+	g_ng_go_artnum = 0;
     }
-    else if (ng_go_msgid) {
+    else if (g_ng_go_msgid) {
 	/* not implemented yet */
 	ng_virtual = true;
-	ng_go_msgid = 0;
+	g_ng_go_msgid = 0;
     }
 
     g_doing_ng = true;			/* enter the twilight zone */
-    ngptr->rc->flags |= RF_RCCHANGED;
+    g_ngptr->rc->flags |= RF_RCCHANGED;
     if (!unsafe_rc_saves)
 	g_checkcount = 0;			/* do not checkpoint for a while */
     g_do_fseek = false;			/* start 1st article at top */
-    for (; g_art <= lastart+1; ) {	/* for each article */
+    for (; g_art <= g_lastart+1; ) {	/* for each article */
 	set_mode('r','a');
 
 	/* do we need to "grow" the newsgroup? */
 
-	if ((g_art > lastart || g_forcegrow) && !keep_the_group_static) {
-	    ART_NUM oldlast = lastart;
+	if ((g_art > g_lastart || g_forcegrow) && !keep_the_group_static) {
+	    ART_NUM oldlast = g_lastart;
 	    if (g_artsize < 0)
 		nntp_finishbody(FB_SILENT);
 	    if (g_datasrc->flags & DF_REMOTE) {
-		if (g_datasrc->act_sf.fp || getngsize(ngptr) > lastart) {
-		    if (nntp_group(ngname,ngptr) <= 0) {
+		if (g_datasrc->act_sf.fp || getngsize(g_ngptr) > g_lastart) {
+		    if (nntp_group(ngname,g_ngptr) <= 0) {
 			s_exit_code = NG_NOSERVER;
 			goto cleanup;
 		    }
-		    grow_ng(ngptr->ngmax);
+		    grow_ng(g_ngptr->ngmax);
 		}
 	    }
 	    else
-		grow_ng(getngsize(ngptr));
+		grow_ng(getngsize(g_ngptr));
 	    if (g_forcelast && g_art > oldlast)
-		g_art = lastart+1;
+		g_art = g_lastart+1;
 	}
 	if (g_art != 0 || (g_artp && !(g_artp->flags & AF_TMPMEM)))
 	    g_artp = article_find(g_art);
@@ -245,7 +245,7 @@ int do_newsgroup(char *start_command)
 	    if (start_command == "") {
 		if (UseNewsSelector >= 0
 		 && !ng_virtual
-		 && ngptr->toread >= (ART_UNREAD)UseNewsSelector)
+		 && g_ngptr->toread >= (ART_UNREAD)UseNewsSelector)
 		    pushchar('+');
 	    }
 	    else {
@@ -255,14 +255,14 @@ int do_newsgroup(char *start_command)
 	    }
 	    start_command = nullptr;
 	    if (input_pending()) {
-		g_art = g_curr_art = lastart+1;
+		g_art = g_curr_art = g_lastart+1;
 		g_artp = g_curr_artp = nullptr;
 		goto reinp_article;
 	    }
 	}
-	if (g_art > lastart) {		/* are we off the end still? */
-	    g_art = lastart + 1;		/* keep pointer references sane */
-	    if (!g_forcelast && ngptr->toread && selected_only && !selected_count) {
+	if (g_art > g_lastart) {		/* are we off the end still? */
+	    g_art = g_lastart + 1;		/* keep pointer references sane */
+	    if (!g_forcelast && g_ngptr->toread && selected_only && !selected_count) {
 		g_art = g_curr_art;
 		g_artp = g_curr_artp;
 		strcpy(buf, "+");
@@ -270,7 +270,7 @@ int do_newsgroup(char *start_command)
 	    }
 	    count_subjects(CS_RETAIN);
 	    article_walk(count_unCACHED_article, 0);
-	    ngptr->toread = (ART_UNREAD)obj_count;
+	    g_ngptr->toread = (ART_UNREAD)obj_count;
 	    if (g_artp != g_curr_artp) {
 		g_recent_art = g_curr_art;	/* remember last article # (for '-') */
 		g_curr_art = g_art;		/* set current article # */
@@ -303,11 +303,11 @@ int do_newsgroup(char *start_command)
 		    printf("  (%ld article%s still unread)",
 			(long)obj_count,PLURAL(obj_count));
 	    }
-	    if (redirected) {
-		if (redirected == "")
+	    if (g_redirected) {
+		if (g_redirected == "")
 		    printf("\n\n** This group has been disabled by your news admin **");
 		else
-		    printf("\n\n** Please start using %s **", redirected);
+		    printf("\n\n** Please start using %s **", g_redirected);
 		termdown(2);
 	    }
 	    else if (!obj_count && !g_forcelast)
@@ -364,7 +364,7 @@ int do_newsgroup(char *start_command)
 		init_tree();
 		sprintf(tmpbuf,"%s: article is not available.",ngname);
 		if (g_artp && !(g_artp->flags & AF_CACHED)) {
-		    if (absfirst < g_first_cached || g_last_cached < lastart
+		    if (g_absfirst < g_first_cached || g_last_cached < g_lastart
 		     || !g_cached_all_in_range)
 			sprintf(tmpbuf,"%s: article may show up in a moment.",
 				ngname);
@@ -387,7 +387,7 @@ int do_newsgroup(char *start_command)
 		    break;
 		}
 	    }
-	    if (g_art >= absfirst)	/* don't mark non-existant articles */
+	    if (g_art >= g_absfirst)	/* don't mark non-existant articles */
 		mark_as_read(g_artp);	/* mark current article as read */
 	}
 
@@ -483,7 +483,7 @@ article_level:
 /* shut down newsgroup */
 
 cleanup:
-    kill_unwanted(firstart,"\nCleaning up...\n\n",false);
+    kill_unwanted(g_firstart,"\nCleaning up...\n\n",false);
 					/* do cleanup from KILL file, if any */
     if (sa_initialized)
 	sa_cleanup();
@@ -634,10 +634,10 @@ n or q to change nothing.\n\
 	else if (*buf == 's' && *u_help_thread)
 	    unkill_subthread(g_artp);
 	else if (*buf == 'a') {
-	    check_first(absfirst);
+	    check_first(g_absfirst);
 	    article_walk(mark_all_unREAD, 0);
 	    count_subjects(CS_NORM);
-	    ngptr->toread = (ART_UNREAD)obj_count;
+	    g_ngptr->toread = (ART_UNREAD)obj_count;
 	}
 	else if (*buf == '+') {
 	    *buf = 'U';
@@ -653,7 +653,7 @@ n or q to change nothing.\n\
       }
       case '[':			/* goto parent article */
       case '{':			/* goto thread's root article */
-	if (g_artp && ThreadedGroup) {
+	if (g_artp && g_threaded_group) {
 	    if (!find_parent(*buf == '{')) {
 		char* cp = (*buf=='['?"parent":"root");
 		if (verbose)
@@ -686,7 +686,7 @@ not_threaded:
 	return AS_ASK;
       case ']':			/* goto child article */
       case '}':			/* goto thread's leaf article */
-	if (g_artp && ThreadedGroup) {
+	if (g_artp && g_threaded_group) {
 	    if (!find_leaf(*buf == '}')) {
 		if (verbose)
 		    fputs("\n\
@@ -704,7 +704,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	goto not_threaded;
       case '(':			/* goto previous sibling */
       case ')':			/* goto next sibling */
-	if (g_artp && ThreadedGroup) {
+	if (g_artp && g_threaded_group) {
 	    if (!(*buf == '(' ? find_prev_sib() : find_next_sib())) {
 		char* cp = (*buf == '(' ? "previous" : "next");
 		if (verbose)
@@ -721,7 +721,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	}
 	goto not_threaded;
       case 'T':
-	if (!ThreadedGroup)
+	if (!g_threaded_group)
 	    goto not_threaded;
 	/* FALL THROUGH */
       case 'A':
@@ -746,9 +746,9 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
       case ',':		/* kill this node and all descendants */
 	if (!g_artp)
 	    goto not_threaded;
-	if (ThreadedGroup)
+	if (g_threaded_group)
 	    kill_subthread(g_artp,AFFECT_ALL);
-	else if (g_art >= absfirst && g_art <= lastart)
+	else if (g_art >= g_absfirst && g_art <= g_lastart)
 	    mark_as_read(g_artp);
 	if (sa_in && !(sa_follow || s_follow_temp))
 	    return AS_SA;
@@ -756,7 +756,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
       case 'J':		/* Junk all nodes in this thread */
 	if (!g_artp)
 	    goto not_threaded;
-	if (ThreadedGroup) {
+	if (g_threaded_group) {
 	    kill_thread(g_artp->subj->thread,AFFECT_ALL);
 	    if (sa_in)
 		return AS_SA;
@@ -767,7 +767,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	if (!g_artp)
 	    goto not_threaded;
 	kill_subject(g_artp->subj,AFFECT_ALL);
-	if (!ThreadedGroup || g_last_cached < lastart) {
+	if (!g_threaded_group || g_last_cached < g_lastart) {
 	    *buf = 'k';
 	    goto normal_search;
 	}
@@ -784,7 +784,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	if (!thread_perform())
 	    return AS_INP;
 	carriage_return();
-	perform_status_end(ngptr->toread, "article");
+	perform_status_end(g_ngptr->toread, "article");
 	fputs(msg, stdout);
 	newline();
 	g_art = g_curr_art;
@@ -795,18 +795,18 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	univ_follow_temp = true;
 	do {
 	    dec_art(selected_only,false);
-	} while (g_art >= firstart && (was_read(g_art) || !parseheader(g_art)));
+	} while (g_art >= g_firstart && (was_read(g_art) || !parseheader(g_art)));
 	g_srchahead = 0;
-	if (g_art >= firstart)
+	if (g_art >= g_firstart)
 	    return AS_NORM;
-	g_art = absfirst;	
+	g_art = g_absfirst;	
 	/* FALL THROUGH */
       case 'P':		/* goto previous article */
 	s_follow_temp = true;	/* keep going until change req. */
 	univ_follow_temp = true;
 	dec_art(false,true);
       check_dec_art:
-	if (g_art < absfirst) {
+	if (g_art < g_absfirst) {
 	    if (verbose)
 		printf("\nThere are no%s%s articles prior to this one.\n",
 			*buf=='P'?"":" unread",
@@ -848,14 +848,14 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    univ_follow_temp = true;
 	if (!s_default_cmd)
 	    s_follow_temp = true;	/* keep going until change req. */
-	if (g_art > lastart) {
-	    if (!ngptr->toread)
+	if (g_art > g_lastart) {
+	    if (!g_ngptr->toread)
 		return AS_CLEAN;
 	    top_article();
 	    if (sa_in)
 		return AS_SA;
 	}
-	else if (scanon && !ThreadedGroup && g_srchahead) {
+	else if (scanon && !g_threaded_group && g_srchahead) {
 	    *buf = Ctl('n');
 	    if (!next_art_with_subj())
 		goto normal_search;
@@ -863,7 +863,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	}
 	else {
 	    /* $$ will this work with 4.0? CAA */
-	    if (sa_in && ThreadedGroup) {
+	    if (sa_in && g_threaded_group) {
 		ARTICLE* old_artp = g_artp;
 		inc_art(selected_only,false);
 		if (!g_artp || !old_artp)
@@ -887,7 +887,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 		}
 	    } else
 		inc_art(selected_only,false);
-	    if (g_art > lastart)
+	    if (g_art > g_lastart)
 		top_article();
 	}
 	g_srchahead = 0;
@@ -905,9 +905,9 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    univ_follow_temp = true;
 	if (!s_default_cmd)
 	    s_follow_temp = true;	/* keep going until change req. */
-	if (g_art > lastart) {
+	if (g_art > g_lastart) {
 	    if (!g_first_subject) {
-		g_art = absfirst;
+		g_art = g_absfirst;
 		g_artp = article_ptr(g_art);
 	    } else {
 		g_artp = g_first_subject->articles;
@@ -919,14 +919,14 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	}
 	else
 	    inc_art(false,true);
-	if (g_art <= lastart)
+	if (g_art <= g_lastart)
 	    g_reread = true;
 	else
 	    g_forcelast = true;
 	g_srchahead = 0;
 	return AS_NORM;
       case '$':
-	g_art = lastart+1;
+	g_art = g_lastart+1;
 	g_artp = nullptr;
 	g_forcelast = true;
 	g_srchahead = 0;
@@ -949,7 +949,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	  case NN_NORM:
 	    if (use_threads) {
 		erase_line(false);
-		perform_status_end(ngptr->toread, "article");
+		perform_status_end(g_ngptr->toread, "article");
 		fputs(msg, stdout) FLUSH;
 	    }
 	    newline();
@@ -1000,7 +1000,7 @@ normal_search:
 	  case SRCH_DONE:
 	    if (use_threads) {
 		erase_line(false);
-		perform_status_end(ngptr->toread, "article");
+		perform_status_end(g_ngptr->toread, "article");
 		printf("%s\n",msg) FLUSH;
 	    }
 	    else
@@ -1040,12 +1040,12 @@ normal_search:
 	newline();
 	printf(unsubto,ngname) FLUSH;
 	termdown(1);
-	ngptr->subscribechar = NEGCHAR;
-	ngptr->rc->flags |= RF_RCCHANGED;
-	newsgroup_toread--;
+	g_ngptr->subscribechar = NEGCHAR;
+	g_ngptr->rc->flags |= RF_RCCHANGED;
+	g_newsgroup_toread--;
 	return AS_CLEAN;
       case 'M':
-	if (g_art <= lastart) {
+	if (g_art <= g_lastart) {
 	    delay_unmark(g_artp);
 	    oneless(g_artp);
 	    printf("\nArticle %ld will return.\n",(long)g_art) FLUSH;
@@ -1053,7 +1053,7 @@ normal_search:
 	}
 	return AS_ASK;
       case 'm':
-	if (g_art >= absfirst && g_art <= lastart) {
+	if (g_art >= g_absfirst && g_art <= g_lastart) {
 	    unmark_as_read(g_artp);
 	    printf("\nArticle %ld marked as still unread.\n",(long)g_art) FLUSH;
 	    termdown(2);
@@ -1066,7 +1066,7 @@ normal_search:
 	case 'u':
 	    return AS_CLEAN;
 	}
-	g_art = lastart+1;
+	g_art = g_lastart+1;
 	g_artp = nullptr;
 	g_forcelast = false;
 	return AS_NORM;
@@ -1084,7 +1084,7 @@ normal_search:
 	break;
       case 'j':
 	newline();
-	if (g_art >= absfirst && g_art <= lastart)
+	if (g_art >= g_absfirst && g_art <= g_lastart)
 	    mark_as_read(g_artp);
 	return AS_ASK;
       case 'h':
@@ -1099,9 +1099,9 @@ normal_search:
 	return AS_ASK;
       case '#':
 	if (verbose)
-	    printf("\nThe last article is %ld.\n",(long)lastart) FLUSH;
+	    printf("\nThe last article is %ld.\n",(long)g_lastart) FLUSH;
 	else
-	    printf("\n%ld\n",(long)lastart) FLUSH;
+	    printf("\n%ld\n",(long)g_lastart) FLUSH;
 	termdown(2);
 	return AS_ASK;
       case '+':			/* enter selection mode */
@@ -1142,7 +1142,7 @@ run_the_selector:
 	    sa_go_explicit = true;
 	    return AS_SA;
 	  default:
-	    if (ngptr->toread)
+	    if (g_ngptr->toread)
 		return AS_NORM;
 	    break;
 	}
@@ -1162,14 +1162,14 @@ run_the_selector:
 	return AS_NORM;
 #ifdef DEBUG
       case 'D':
-	printf("\nFirst article: %ld\n",(long)firstart) FLUSH;
+	printf("\nFirst article: %ld\n",(long)g_firstart) FLUSH;
 	termdown(2);
 	article_walk(debug_article_output, 0);
 	g_int_count = 0;
 	return AS_ASK;
 #endif
       case 'v':
-	if (g_art <= lastart) {
+	if (g_art <= g_lastart) {
 	    g_reread = true;
 	    g_do_hiding = false;
 	}
@@ -1177,7 +1177,7 @@ run_the_selector:
       case Ctl('r'):
 	g_do_hiding = true;
 	g_rotate = false;
-	if (g_art <= lastart)
+	if (g_art <= g_lastart)
 	    g_reread = true;
 	else
 	    g_forcelast = true;
@@ -1189,7 +1189,7 @@ run_the_selector:
 	 * Currently, both keys do ROT-13 translation.
 	 */
 	g_rotate = true;
-	if (g_art <= lastart)
+	if (g_art <= g_lastart)
 	    g_reread = true;
 	else
 	    g_forcelast = true;
@@ -1199,7 +1199,7 @@ run_the_selector:
 	/* FALL THROUGH */
       case 'l': case Ctl('l'):		/* refresh screen */
       refresh_screen:
-	if (g_art <= lastart) {
+	if (g_art <= g_lastart) {
 	    g_reread = true;
 	    clear();
 	    g_do_fseek = true;
@@ -1215,7 +1215,7 @@ run_the_selector:
 #endif
 	return AS_ASK;
       case Ctl('e'):
-	if (g_art <= lastart) {
+	if (g_art <= g_lastart) {
 	    if (g_artsize < 0) {
 		nntp_finishbody(FB_OUTPUT);
 		g_raw_artsize = nntp_artsize();
@@ -1236,7 +1236,7 @@ run_the_selector:
 	return AS_NORM;
       case 'B':				/* back up one line */
       case 'b': case Ctl('b'):		/* back up a page */
-	if (g_art <= lastart) {
+	if (g_art <= g_lastart) {
 	    ART_LINE target;
 
 	    g_reread = true;
@@ -1278,7 +1278,7 @@ run_the_selector:
       case 'F':
       case 'f': {		/* followup command */
 	followup();
-	g_forcegrow = true;		/* recalculate lastart */
+	g_forcegrow = true;		/* recalculate g_lastart */
 	return AS_ASK;
       }
       case Ctl('f'): {			/* forward? */
@@ -1324,18 +1324,18 @@ run_the_selector:
 	    g_art--;
 	    goto check_dec_art;
 	  case 'N':
-	    if (g_art > lastart)
-		g_art = absfirst;
+	    if (g_art > g_lastart)
+		g_art = g_absfirst;
 	    else
 		g_art++;
-	    if (g_art <= lastart)
+	    if (g_art <= g_lastart)
 		g_reread = true;
 	    g_srchahead = 0;
 	    return AS_NORM;
 	  case '+':
 	    if (!g_artp)
 		goto not_threaded;
-	    if (ThreadedGroup) {
+	    if (g_threaded_group) {
 		select_arts_thread(g_artp, 0);
 		printf("\nSelected all articles in this thread.\n");
 	    } else {
@@ -1411,7 +1411,7 @@ void setmail(bool force)
 
 void setdfltcmd()
 {
-    if (!ngptr || !ngptr->toread)
+    if (!g_ngptr || !g_ngptr->toread)
 	dfltcmd = "npq";
     else {
 #if 0
@@ -1501,11 +1501,11 @@ u to mark all and unsubscribe.\n\n\
 	article_walk(mark_all_READ, leave_unread);
 	if (leave_unread) {
 	    count_subjects(CS_NORM);
-	    ngptr->toread = (ART_UNREAD)obj_count;
+	    g_ngptr->toread = (ART_UNREAD)obj_count;
 	}
 	else {
 	    selected_count = selected_subj_cnt = selected_only = false;
-	    ngptr->toread = 0;
+	    g_ngptr->toread = 0;
 	    if (g_dmcount)
 		yankback();
 	}
@@ -1513,12 +1513,12 @@ u to mark all and unsubscribe.\n\n\
     }
     else {
 	newline();
-	catch_up(ngptr, leave_unread, 1);
+	catch_up(g_ngptr, leave_unread, 1);
     }
     if (ch == 'u') {
-	ngptr->subscribechar = NEGCHAR;
-	ngptr->rc->flags |= RF_RCCHANGED;
-	newsgroup_toread--;
+	g_ngptr->subscribechar = NEGCHAR;
+	g_ngptr->rc->flags |= RF_RCCHANGED;
+	g_newsgroup_toread--;
 	newline();
 	printf(unsubto,ngname);
 	printf("(If you meant to hit 'y' instead of 'u', press '-'.)\n") FLUSH;
@@ -1538,7 +1538,7 @@ static bool count_unCACHED_article(char *ptr, int arg)
 static bool mark_all_READ(char *ptr, int leave_unread)
 {
     ARTICLE* ap = (ARTICLE*)ptr;
-    if (article_num(ap) > lastart - leave_unread)
+    if (article_num(ap) > g_lastart - leave_unread)
 	return true;
     ap->flags &= ~(sel_mask|AF_UNREAD);
     return false;
@@ -1598,7 +1598,7 @@ static bool debug_article_output(char *ptr, int arg)
     register ARTICLE* ap = (ARTICLE*)ptr;
     if (g_int_count)
 	return 1;
-    if (article_num(ap) >= firstart && ap->subj) {
+    if (article_num(ap) >= g_firstart && ap->subj) {
 	printf("%5ld %c %s\n", article_num(ap),
 	       (ap->flags & AF_UNREAD)? 'y' : 'n', ap->subj->str) FLUSH;
 	termdown(1);

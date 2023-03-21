@@ -435,14 +435,14 @@ void univ_use_pattern(const char *pattern, int type)
     else {
 	switch (type) {
 	  case 0:
-	    for (np = first_ng; np; np = np->next) {
+	    for (np = g_first_ng; np; np = np->next) {
 		if (univ_DoMatch(np->rcline,s) == true) {
 		    univ_add_group(np->rcline,np->rcline);
 		}
 	    }
 	    break;
 	  case 1:
-	    for (np = first_ng; np; np = np->next) {
+	    for (np = g_first_ng; np; np = np->next) {
 		if (univ_DoMatch(np->rcline,s) == true) {
 		    univ_add_virtgroup(np->rcline);
 		}
@@ -958,7 +958,7 @@ static void univ_vg_addgroup()
     ART_NUM a;
 
 /* later: allow was-read articles, etc... */
-    for (a = article_first(firstart); a <= lastart; a = article_next(a)) {
+    for (a = article_first(g_firstart); a <= g_lastart; a = article_next(a)) {
 	if (!article_unread(a))
 	    continue;
 	/* minimum score check */
@@ -986,16 +986,16 @@ int univ_visit_group_main(const char *gname)
       return NG_ERROR;
 
     set_ng(np);
-    if (np != current_ng) {
+    if (np != g_current_ng) {
 	/* probably unnecessary... */
-	recent_ng = current_ng;
-	current_ng = np;
+	g_recent_ng = g_current_ng;
+	g_current_ng = np;
     }
-    old_threaded = ThreadedGroup;
-    ThreadedGroup = (use_threads && !(np->flags & NF_UNTHREADED));
+    old_threaded = g_threaded_group;
+    g_threaded_group = (use_threads && !(np->flags & NF_UNTHREADED));
     printf("\nScanning newsgroup %s\n",gname);
     ret = do_newsgroup("");
-    ThreadedGroup = old_threaded;
+    g_threaded_group = old_threaded;
     return ret;
 }
 

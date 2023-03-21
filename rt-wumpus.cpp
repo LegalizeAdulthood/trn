@@ -309,7 +309,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
     color_object(COLOR_HEADER, true);
     /* If this is the first subject line, output it with a preceeding [1] */
     if (is_subject && !isspace(*line)) {
-	if (ThreadedGroup) {
+	if (g_threaded_group) {
 	    color_object(COLOR_TREE_MARK, true);
 	    putchar('[');
 	    putchar(thread_letter(g_curr_artp));
@@ -483,11 +483,11 @@ void entire_tree(ARTICLE* ap)
 	return;
     }
 
-    if (!ThreadedGroup) {
-	ThreadedGroup = true;
+    if (!g_threaded_group) {
+	g_threaded_group = true;
 	printf("Threading the group. "), fflush(stdout);
 	thread_open();
-	if (!ThreadedGroup) {
+	if (!g_threaded_group) {
 	    printf("*failed*\n") FLUSH;
 	    termdown(1);
 	    return;
@@ -594,7 +594,7 @@ char thread_letter(ARTICLE *ap)
     int subj = ap->subj->misc;
 
     if (!(ap->flags & AF_CACHED)
-     && (absfirst < g_first_cached || g_last_cached < lastart
+     && (g_absfirst < g_first_cached || g_last_cached < g_lastart
       || !g_cached_all_in_range))
 	return '?';
     if (!(ap->flags & AF_EXISTS))

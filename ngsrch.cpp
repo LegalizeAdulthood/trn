@@ -45,14 +45,14 @@ int ng_search(char *patbuf, int get_cmd)
     int ret = NGS_NOTFOUND;		/* assume no commands */
     bool backward = cmdchr == '?';	/* direction of search */
     bool output_level = (!use_threads && gmode != 's');
-    NGDATA* ng_start = ngptr;
+    NGDATA* ng_start = g_ngptr;
 
     g_int_count = 0;
     if (get_cmd && buf == patbuf)
 	if (!finish_command(false))	/* get rest of command */
 	    return NGS_ABORT;
 
-    perform_status_init(newsgroup_toread);
+    perform_status_init(g_newsgroup_toread);
     s = cpytill(buf,patbuf+1,cmdchr);	/* ok to cpy buf+1 to buf */
     for (pattern = buf; *pattern == ' '; pattern++) ;
     if (*pattern)
@@ -101,33 +101,33 @@ int ng_search(char *patbuf, int get_cmd)
 		}
 	    }
 	    if (!output_level && page_line == 1)
-		perform_status(newsgroup_toread, 50);
+		perform_status(g_newsgroup_toread, 50);
 	} while ((gp = gp->next) != nullptr);
 	goto exit;
     }
 
     if (backward) {
-	if (!ngptr)
-	    ng_start = ngptr = last_ng;
+	if (!g_ngptr)
+	    ng_start = g_ngptr = g_last_ng;
 	else if (!cmdlst) {
-	    if (ngptr == first_ng)	/* skip current newsgroup */
-		ngptr = last_ng;
+	    if (g_ngptr == g_first_ng)	/* skip current newsgroup */
+		g_ngptr = g_last_ng;
 	    else
-		ngptr = ngptr->prev;
+		g_ngptr = g_ngptr->prev;
 	}
     }
     else {
-	if (!ngptr)
-	    ng_start = ngptr = first_ng;
+	if (!g_ngptr)
+	    ng_start = g_ngptr = g_first_ng;
 	else if (!cmdlst) {
-	    if (ngptr == last_ng)	/* skip current newsgroup */
-		ngptr = first_ng;
+	    if (g_ngptr == g_last_ng)	/* skip current newsgroup */
+		g_ngptr = g_first_ng;
 	    else
-		ngptr = ngptr->next;
+		g_ngptr = g_ngptr->next;
 	}
     }
 
-    if (!ngptr)
+    if (!g_ngptr)
 	return NGS_NOTFOUND;
 
     do {
@@ -137,27 +137,27 @@ int ng_search(char *patbuf, int get_cmd)
 	    break;
 	}
 
-	if (ngptr->toread >= TR_NONE && ng_wanted(ngptr)) {
-	    if (ngptr->toread == TR_NONE)
-		set_toread(ngptr, ST_LAX);
-	    if (ng_doempty || ((ngptr->toread > TR_NONE) ^ sel_rereading)) {
+	if (g_ngptr->toread >= TR_NONE && ng_wanted(g_ngptr)) {
+	    if (g_ngptr->toread == TR_NONE)
+		set_toread(g_ngptr, ST_LAX);
+	    if (ng_doempty || ((g_ngptr->toread > TR_NONE) ^ sel_rereading)) {
 		if (!cmdlst)
 		    return NGS_FOUND;
-		set_ng(ngptr);
+		set_ng(g_ngptr);
 		if (ng_perform(cmdlst,output_level && page_line == 1) < 0) {
 		    free(cmdlst);
 		    return NGS_INTR;
 		}
 	    }
 	    if (output_level && !cmdlst) {
-		printf("\n[0 unread in %s -- skipping]",ngptr->rcline);
+		printf("\n[0 unread in %s -- skipping]",g_ngptr->rcline);
 		fflush(stdout);
 	    }
 	}
 	if (!output_level && page_line == 1)
-	    perform_status(newsgroup_toread, 50);
-    } while ((ngptr = (backward? (ngptr->prev? ngptr->prev : last_ng)
-			       : (ngptr->next? ngptr->next : first_ng)))
+	    perform_status(g_newsgroup_toread, 50);
+    } while ((g_ngptr = (backward? (g_ngptr->prev? g_ngptr->prev : g_last_ng)
+			       : (g_ngptr->next? g_ngptr->next : g_first_ng)))
 		!= ng_start);
 exit:
     if (cmdlst)

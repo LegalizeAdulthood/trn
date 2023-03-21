@@ -77,7 +77,7 @@ void end_only()
 #endif
 	}
 	maxngtodo = 0;
-	ng_min_toread = 1;
+	g_ng_min_toread = 1;
     }
 }
 
@@ -89,12 +89,12 @@ void push_only()
 
 void pop_only()
 {
-    ART_UNREAD save_ng_min_toread = ng_min_toread;
+    ART_UNREAD save_ng_min_toread = g_ng_min_toread;
 
     end_only();
 
     maxngtodo = save_maxngtodo;
     save_maxngtodo = 0;
 
-    ng_min_toread = save_ng_min_toread;
+    g_ng_min_toread = save_ng_min_toread;
 }

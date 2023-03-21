@@ -34,7 +34,7 @@ int g_kfs_thread_change_set{};  /* bits to set for thread changes */
 int g_kf_thread_cnt{};          /* # entries in the thread kfile */
 int g_kf_changethd_cnt{};       /* # entries changed from old to new */
 long g_kf_daynum{};             /* day number for thread killfile */
-ART_NUM g_killfirst{};          /* used as firstart when killing */
+ART_NUM g_killfirst{};          /* used as g_firstart when killing */
 
 static void mention(const char *str);
 static bool kfile_junk(char *ptr, int killmask);
@@ -125,24 +125,24 @@ int do_kfile(FILE *kfp, int entering)
     char* cp;
     char* bp;
 
-    g_art = lastart+1;
-    g_killfirst = firstart;
+    g_art = g_lastart+1;
+    g_killfirst = g_firstart;
     fseek(kfp,0L,0);			/* rewind file */
     while (fgets(buf,LBUFLEN,kfp) != nullptr) {
 	if (*(cp = buf + strlen(buf) - 1) == '\n')
 	    *cp = '\0';
 	for (bp = buf; isspace(*bp); bp++) ;
 	if (!strncmp(bp,"THRU",4)) {
-	    int len = strlen(ngptr->rc->name);
+	    int len = strlen(g_ngptr->rc->name);
 	    cp = bp + 4;
 	    while (isspace(*cp)) cp++;
-	    if (strncmp(cp, ngptr->rc->name, len) || !isspace(cp[len]))
+	    if (strncmp(cp, g_ngptr->rc->name, len) || !isspace(cp[len]))
 		continue;
 	    g_killfirst = atol(cp+len+1)+1;
-	    if (g_killfirst < firstart)
-		g_killfirst = firstart;
-	    if (g_killfirst > lastart)
-		g_killfirst = lastart+1;
+	    if (g_killfirst < g_firstart)
+		g_killfirst = g_firstart;
+	    if (g_killfirst > g_lastart)
+		g_killfirst = g_lastart+1;
 	    continue;
 	}
 	if (*bp == 'I') {
@@ -156,7 +156,7 @@ int do_kfile(FILE *kfp, int entering)
 	    if (!strchr(cp,'/')) {
 		set_ngname(cp);
 		cp = filexp(get_val("KILLLOCAL",s_killlocal));
-		set_ngname(ngptr->rcline);
+		set_ngname(g_ngptr->rcline);
 	    }
 	    if ((incfile = fopen(cp, "r")) != nullptr) {
 		ret = do_kfile(incfile, entering);
@@ -184,17 +184,17 @@ int do_kfile(FILE *kfp, int entering)
 	}
 	else if (*bp == '/') {
 	    g_kf_state |= KFS_NORMAL_LINES;
-	    if (firstart > lastart)
+	    if (g_firstart > g_lastart)
 		continue;
 	    if (last_kill_type) {
-		if (perform_status_end(ngptr->toread,"article")) {
+		if (perform_status_end(g_ngptr->toread,"article")) {
 		    kill_mentioned = true;
 		    carriage_return();
 		    fputs(msg, stdout);
 		    newline();
 		}
 	    }
-	    perform_status_init(ngptr->toread);
+	    perform_status_init(g_ngptr->toread);
 	    last_kill_type = '/';
 	    mention(bp);
 	    kill_mentioned = true;
@@ -226,14 +226,14 @@ int do_kfile(FILE *kfp, int entering)
 	    ARTICLE* ap;
 	    if (last_kill_type != '<') {
 		if (last_kill_type) {
-		    if (perform_status_end(ngptr->toread,"article")) {
+		    if (perform_status_end(g_ngptr->toread,"article")) {
 			kill_mentioned = true;
 			carriage_return();
 			fputs(msg, stdout);
 			newline();
 		    }
 		}
-		perform_status_init(ngptr->toread);
+		perform_status_init(g_ngptr->toread);
 		last_kill_type = '<';
 	    }
 	    cp = strchr(bp,' ');
@@ -262,7 +262,7 @@ int do_kfile(FILE *kfp, int entering)
 			thread_kill_cnt++;
 		}
 	    }
-	    g_art = lastart+1;
+	    g_art = g_lastart+1;
 	    g_kf_state |= KFS_THREAD_LINES;
 	}
 	else if (*bp == '<') {
@@ -294,7 +294,7 @@ int do_kfile(FILE *kfp, int entering)
 	kill_mentioned = true;
     }
     if (last_kill_type) {
-	if (perform_status_end(ngptr->toread,"article")) {
+	if (perform_status_end(g_ngptr->toread,"article")) {
 	    kill_mentioned = true;
 	    carriage_return();
 	    fputs(msg, stdout);
@@ -322,13 +322,13 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
     bool intr = false;			/* did we get an interrupt? */
     ART_NUM oldfirst;
     char oldmode = mode;
-    bool anytokill = (ngptr->toread > 0);
+    bool anytokill = (g_ngptr->toread > 0);
 
     set_mode('r','k');
     if ((entering || s_exitcmds) && (g_localkfp || g_globkfp)) {
 	s_exitcmds = false;
-	oldfirst = firstart;
-	firstart = starting;
+	oldfirst = g_firstart;
+	g_firstart = starting;
 	clear();
 	if (message && (verbose || entering))
 	    fputs(message,stdout) FLUSH;
@@ -351,10 +351,10 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
 	}
 	if (anytokill)			/* if there was anything to kill */
 	    g_forcelast = false;		/* allow for having killed it all */
-	firstart = oldfirst;
+	g_firstart = oldfirst;
     }
     if (!entering && (g_kf_state & KFS_LOCAL_CHANGES) && !intr)
-	rewrite_kfile(lastart);
+	rewrite_kfile(g_lastart);
     set_mode(gmode,oldmode);
 }
 
@@ -396,15 +396,15 @@ void rewrite_kfile(ART_NUM thru)
     remove(killname);			/* to prevent file reuse */
     g_kf_state &= ~(g_kfs_local_change_clear | KFS_NORMAL_LINES);
     if ((newkfp = fopen(killname,"w")) != nullptr) {
-	fprintf(newkfp,"THRU %s %ld\n",ngptr->rc->name,(long)thru);
+	fprintf(newkfp,"THRU %s %ld\n",g_ngptr->rc->name,(long)thru);
 	while (g_localkfp && fgets(buf,LBUFLEN,g_localkfp) != nullptr) {
 	    if (!strncmp(buf,"THRU",4)) {
 		char* cp = buf+4;
-		int len = strlen(ngptr->rc->name);
+		int len = strlen(g_ngptr->rc->name);
 		while (isspace(*cp)) cp++;
 		if (isdigit(*cp))
 		    continue;
-		if (strncmp(cp, ngptr->rc->name, len)
+		if (strncmp(cp, g_ngptr->rc->name, len)
 		 || (cp[len] && !isspace(cp[len]))) {
 		    fputs(buf,newkfp);
 		    needs_newline = !strchr(buf,'\n');
@@ -604,7 +604,7 @@ int edit_kfile()
 
     if (in_ng) {
 	if (g_kf_state & KFS_LOCAL_CHANGES)
-	    rewrite_kfile(lastart);
+	    rewrite_kfile(g_lastart);
 	if (!(g_kf_state & KFS_GLOBAL_THREADFILE)) {
 	    SUBJECT* sp;
 	    for (sp = g_first_subject; sp; sp = sp->next)
