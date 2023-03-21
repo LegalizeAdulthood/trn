@@ -1037,7 +1037,7 @@ tryagain:
     curmap = topmap;
     no_macros = (whatbuf != buf && !xmouse_is_on); 
     for (;;) {
-	int_count = 0;
+	g_int_count = 0;
 	errno = 0;
 	ignore_EINTR = false;
 	if (read_tty(whatbuf,1) < 0) {
@@ -1131,7 +1131,7 @@ reask_anything:
     color_pop();	/* of COLOR_MORE */
     fflush(stdout);
     eat_typeahead();
-    if (int_count)
+    if (g_int_count)
 	return -1;
     cache_until_key();
     set_mode(gmode, 'K');
@@ -1180,7 +1180,7 @@ int pause_getcmd()
     color_pop();	/* of COLOR_CMD */
     fflush(stdout);
     eat_typeahead();
-    if (int_count)
+    if (g_int_count)
 	return -1;
     cache_until_key();
     set_mode(gmode,'K');
@@ -1490,9 +1490,9 @@ int check_page_line()
 {
     if (page_line < 0)
 	return -1;
-    if (page_line >= tc_LINES || int_count) {
+    if (page_line >= tc_LINES || g_int_count) {
 	int cmd = -1;
-	if (int_count || (cmd = get_anything())) {
+	if (g_int_count || (cmd = get_anything())) {
 	    page_line = -1;		/* disable further printing */
 	    if (cmd > 0)
 		pushchar(cmd);

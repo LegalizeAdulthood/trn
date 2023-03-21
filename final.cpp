@@ -8,27 +8,19 @@
 #include "list.h"
 #include "env.h"
 #include "util.h"
-#include "hash.h"
-#include "cache.h"
 #include "bits.h"
 #include "term.h"
 #include "color.h"
-#include "ng.h"
-#include "init.h"
-#include "last.h"
-#include "ngdata.h"
 #include "nntpclient.h"
 #include "nntpinit.h"
 #include "datasrc.h"
 #include "nntp.h"
 #include "rcstuff.h"
-#include "artio.h"
 #include "intrp.h"
 #include "kfile.h"
-#include "score.h"
 #include "scoresave.h"
-#include "INTERN.h"
 #include "final.h"
+
 #ifdef MSDOS
 #include <direct.h>
 #include <io.h>
@@ -37,6 +29,11 @@
 #ifndef sigmask
 #define sigmask(m)	(1 << ((m)-1))
 #endif
+
+bool g_panic{};       /* we got hung up or something-- so leave tty alone */
+bool g_doing_ng{};    /* do we need to reconstitute current rc line? */
+char g_int_count{};   /* how many interrupts we've had */
+bool g_bos_on_stop{}; /* set when handling the stop signal would leave the screen a mess */
 
 void final_init()
 {
@@ -142,8 +139,8 @@ Signal_t int_catcher(int dummy)
 	write(2,"int_catcher\n",12);
 #endif
     if (!waiting) {
-	if (int_count++) {		/* was there already an interrupt? */
-	    if (int_count == 3 || int_count > 5) {
+	if (g_int_count++) {		/* was there already an interrupt? */
+	    if (g_int_count == 3 || g_int_count > 5) {
 		write(2,"\nBye-bye.\n",10);
 		sig_catcher(0);		/* emulate the other signals */
 	    }
@@ -197,19 +194,19 @@ Signal_t sig_catcher(int signo)
 	finalize(-1);
     }
 #endif
-    if (panic) {
+    if (g_panic) {
 #ifdef HAS_SIGBLOCK
 	sigsetmask(sigblock(0) & ~(sigmask(SIGILL) | sigmask(SIGIOT)));
 #endif
 	abort();
     }
     (void) sigset(SIGILL,SIG_DFL);
-    panic = true;			/* disable terminal I/O */
-    if (doing_ng) {			/* need we reconstitute rc line? */
+    g_panic = true;			/* disable terminal I/O */
+    if (g_doing_ng) {			/* need we reconstitute rc line? */
 	yankback();
 	bits_to_rc();			/* then do so (hope this works) */
     }
-    doing_ng = false;
+    g_doing_ng = false;
     if (!write_newsrcs(multirc)) {	/* write anything that's changed */
 	/*$$ get_old_newsrcs(multirc);  ?? */
     }
@@ -253,7 +250,7 @@ Signal_t stop_catcher(int signo)
     if (!waiting) {
 	xmouse_off();
 	checkpoint_newsrcs();	/* good chance of crash while stopped */
-	if (bos_on_stop) {
+	if (g_bos_on_stop) {
 	    goto_xy(0, tc_LINES-1);
 	    putchar('\n') FLUSH;
 	}
@@ -273,7 +270,7 @@ Signal_t stop_catcher(int signo)
 #ifdef MAILCALL
     	mailcount = 0;			/* force recheck */
 #endif
-    	if (!panic) {
+    	if (!g_panic) {
 	    if (!waiting) {
 		termlib_init();
 		noecho();			/* set no echo */

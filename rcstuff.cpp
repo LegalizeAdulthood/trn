@@ -529,9 +529,9 @@ static bool open_newsrc(NEWSRC *rp)
 		    printf("%s: %ld article%s\n",
 			np->rcline,(long)np->toread,PLURAL(np->toread)) FLUSH;
 		termdown(1);
-		if (int_count) {
+		if (g_int_count) {
 		    countdown = 1;
-		    int_count = 0;
+		    g_int_count = 0;
 		}
 		if (countdown) {
 		    if (!--countdown) {
@@ -1082,7 +1082,7 @@ void list_newsgroups()
 
     page_start();
     print_lines("  #  Status  Newsgroup\n", STANDOUT);
-    for (np = first_ng, i = 0; np && !int_count; np = np->next, i++) {
+    for (np = first_ng, i = 0; np && !g_int_count; np = np->next, i++) {
 	if (np->toread >= 0)
 	    set_toread(np, ST_LAX);
 	*(np->rcline + np->numoffset - 1) = np->subscribechar;
@@ -1095,7 +1095,7 @@ void list_newsgroups()
 	if (print_lines(tmpbuf, NOMARKING) != 0)
 	    break;
     }
-    int_count = 0;
+    g_int_count = 0;
 }
 
 /* find a newsgroup in any newsrc */
@@ -1229,7 +1229,7 @@ void checkpoint_newsrcs()
 	fflush(stdout);
     }
 #endif
-    if (doing_ng)
+    if (g_doing_ng)
 	bits_to_rc();			/* do not restore M articles */
     if (!write_newsrcs(multirc))
 	get_anything();

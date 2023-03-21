@@ -529,8 +529,8 @@ int perform(char *cmdlst, int output_level)
     }
     if (output_level && verbose)
 	newline();
-    if (int_count) {
-	int_count = 0;
+    if (g_int_count) {
+	g_int_count = 0;
 	return -1;
     }
     return 1;
@@ -643,8 +643,8 @@ int ng_perform(char *cmdlst, int output_level)
     }
     if (output_level && verbose)
 	newline();
-    if (int_count) {
-	int_count = 0;
+    if (g_int_count) {
+	g_int_count = 0;
 	return -1;
     }
     return 1;
@@ -730,8 +730,8 @@ int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level)
     }
     if (output_level && verbose)
 	newline();
-    if (int_count) {
-	int_count = 0;
+    if (g_int_count) {
+	g_int_count = 0;
 	return -1;
     }
     return 1;

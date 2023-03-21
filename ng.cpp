@@ -195,7 +195,7 @@ int do_newsgroup(char *start_command)
 	ng_go_msgid = 0;
     }
 
-    doing_ng = true;			/* enter the twilight zone */
+    g_doing_ng = true;			/* enter the twilight zone */
     ngptr->rc->flags |= RF_RCCHANGED;
     if (!unsafe_rc_saves)
 	checkcount = 0;			/* do not checkpoint for a while */
@@ -411,7 +411,7 @@ reinp_article:
 	artp = curr_artp;
 	getcmd(buf);
 	if (errno || *buf == '\f') {
-	    if (tc_LINES < 100 && !int_count)
+	    if (tc_LINES < 100 && !g_int_count)
 		*buf = '\f';		/* on CONT fake up refresh */
 	    else {
 		newline();		/* but only on a crt */
@@ -486,7 +486,7 @@ cleanup:
     bits_to_rc();			/* reconstitute .newsrc line */
 cleanup2:
 /* go here if already cleaned up */
-    doing_ng = false;			/* tell sig_catcher to cool it */
+    g_doing_ng = false;			/* tell sig_catcher to cool it */
     /* XXX later, make an option for faster/less-safe virtual groups */
     if (!univ_ng_virtflag &&
 	!(univ_read_virtflag && !(univ_follow || univ_follow_temp))) {
@@ -1135,7 +1135,7 @@ run_the_selector:
 	ART_NUM oldart = art;
 	page_start();
 	article_walk(output_subject, AF_UNREAD);
-	int_count = 0;
+	g_int_count = 0;
 	subjline = nullptr;
 	art = oldart;
 	return AS_ASK;
@@ -1149,7 +1149,7 @@ run_the_selector:
 	printf("\nFirst article: %ld\n",(long)firstart) FLUSH;
 	termdown(2);
 	article_walk(debug_article_output, 0);
-	int_count = 0;
+	g_int_count = 0;
 	return AS_ASK;
 #endif
       case 'v':
@@ -1275,7 +1275,7 @@ run_the_selector:
       case 'e':			/* extract command */
 	if (save_article() == SAVE_ABORT)
 	    return AS_INP;
-	int_count = 0;
+	g_int_count = 0;
 	return AS_ASK;
 #if 0
       case 'E':
@@ -1289,7 +1289,7 @@ run_the_selector:
 	newline();
 	if (view_article() == SAVE_ABORT)
 	    return AS_INP;
-	int_count = 0;
+	g_int_count = 0;
 	return AS_ASK;
       case 'Y':				/* yank back M articles */
 	yankback();
@@ -1546,7 +1546,7 @@ bool output_subject(char *ptr, int flag)
     int len;
     char* s;
 
-    if (int_count)
+    if (g_int_count)
 	return true;
 
     if (!subjline) {
@@ -1580,7 +1580,7 @@ bool output_subject(char *ptr, int flag)
 static bool debug_article_output(char *ptr, int arg)
 {
     register ARTICLE* ap = (ARTICLE*)ptr;
-    if (int_count)
+    if (g_int_count)
 	return 1;
     if (article_num(ap) >= firstart && ap->subj) {
 	printf("%5ld %c %s\n", article_num(ap),

@@ -60,7 +60,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
     bool output_level = (!use_threads && gmode != 's');
     ART_NUM srchfirst;
 
-    int_count = 0;
+    g_int_count = 0;
     if (cmdchr == '/' || cmdchr == '?') {	/* normal search? */
 	if (get_cmd && buf == patbuf)
 	    if (!finish_command(false))	/* get rest of command */
@@ -317,8 +317,8 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	if (backward? ((art = article_prev(art)) < srchfirst)
 		    : ((art = article_next(art)) > lastart))
 	    break;
-	if (int_count) {
-	    int_count = 0;
+	if (g_int_count) {
+	    g_int_count = 0;
 	    ret = SRCH_INTR;
 	    break;
 	}

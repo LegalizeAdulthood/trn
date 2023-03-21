@@ -780,8 +780,8 @@ bool univ_file_load(char *fname, char *title, char *label)
     if (!flag) {
 	univ_close();
     }
-    if (int_count) {
-	int_count = 0;
+    if (g_int_count) {
+	g_int_count = 0;
     }
     if (finput_pending(true)) {
 	;		/* later, *maybe* eat input */
@@ -797,8 +797,8 @@ void univ_mask_load(char *mask, const char *title)
     univ_use_group_line(mask,0);
     if (title)
 	univ_title = savestr(title);
-    if (int_count) {
-	int_count = 0;
+    if (g_int_count) {
+	g_int_count = 0;
     }
 }
 

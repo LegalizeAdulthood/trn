@@ -65,10 +65,10 @@ int s_cmdloop()
     while(true) {
 	s_refresh();
 	s_place_ptr();		/* place article pointer */
-	bos_on_stop = true;
+	g_bos_on_stop = true;
 	s_lookahead();		/* do something useful while waiting */
 	getcmd(buf);
-	bos_on_stop = false;
+	g_bos_on_stop = false;
 	eat_typeahead();	/* stay in control. */
 	/* check for window resizing and refresh */
 	/* if window is resized, refill and redraw */

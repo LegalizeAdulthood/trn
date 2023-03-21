@@ -11,7 +11,7 @@
 #include "cache.h"
 #include "bits.h"
 #include "artio.h"		/* for openart var.*/
-#include "final.h"		/* int_count */
+#include "final.h"		/* g_int_count */
 #include "head.h"		/* ? */
 #include "intrp.h"		/* for filexp */
 #include "ng.h"			/* art */
@@ -263,8 +263,8 @@ void sc_lookahead(bool flag, bool nowait)
     if (oldart)			/* Was there an article open? */
 	oldartpos = tellart();	/* where were we in it? */
 #ifndef PENDING
-    if (int_count)
-	int_count = 0;		/* clear the interrupt count */
+    if (g_int_count)
+	g_int_count = 0;		/* clear the interrupt count */
 #endif
     /* prevent needless looping below */
     if (sc_fill_max < firstart && !sc_fill_read)
@@ -277,8 +277,8 @@ void sc_lookahead(bool flag, bool nowait)
 #endif
     ) { 
 #ifndef PENDING
-	if (int_count > 0) {
-	    int_count = 0;
+	if (g_int_count > 0) {
+	    g_int_count = 0;
 	    return;	/* user requested break */
 	}
 #endif

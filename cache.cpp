@@ -865,8 +865,8 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
 	/* This parses the header which will cache/thread the article */
 	(void) parseheader(i);
 
-	if (int_count) {
-	    int_count = 0;
+	if (g_int_count) {
+	    g_int_count = 0;
 	    break;
 	}
 	if (cheating) {

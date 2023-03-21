@@ -228,8 +228,8 @@ beginning:
 	}
 	spin_todo -= an - artnum - 1;
 	ov_parse(line, artnum = an, remote);
-	if (int_count) {
-	    int_count = 0;
+	if (g_int_count) {
+	    g_int_count = 0;
 	    success = false;
 	    if (!remote)
 		break;
@@ -269,8 +269,8 @@ beginning:
     if (artnum > g_last_cached && artnum >= first)
 	g_last_cached = artnum;
   exit:
-    if (int_count || !success) {
-	int_count = 0;
+    if (g_int_count || !success) {
+	g_int_count = 0;
 	success = false;
     }
     else if (remote) {

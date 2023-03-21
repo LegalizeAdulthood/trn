@@ -50,11 +50,11 @@ static int force_sel_pos;
 #define START_SELECTOR(new_mode)\
     char save_mode = mode;\
     char save_gmode = gmode;\
-    bos_on_stop = true;\
+    g_bos_on_stop = true;\
     set_mode('s',new_mode)
 
 #define END_SELECTOR()\
-    bos_on_stop = false;\
+    g_bos_on_stop = false;\
     set_mode(save_gmode,save_mode)
 
 #define PUSH_SELECTOR()\
@@ -69,7 +69,7 @@ static int force_sel_pos;
     sel_rereading = save_sel_rereading;\
     selected_count = save_selected_count;\
     extra_commands = save_extra_commands;\
-    bos_on_stop = true;\
+    g_bos_on_stop = true;\
     if (sel_mode != save_sel_mode) {\
 	sel_mode = save_sel_mode;\
 	set_selector(0, 0);\

@@ -227,7 +227,7 @@ void bits_to_rc()
 	s--;				/* take it back */
     *s++ = '\0';			/* and terminate string */
 #ifdef DEBUG
-    if ((debug & DEB_NEWSRC_LINE) && !panic) {
+    if ((debug & DEB_NEWSRC_LINE) && !g_panic) {
 	printf("%s: %s\n",ngptr->rcline,ngptr->rcline+ngptr->numoffset) FLUSH;
 	printf("%s\n",mybuf) FLUSH;
 	termdown(2);
@@ -502,7 +502,7 @@ void check_first(ART_NUM min)
 void yankback()
 {
     if (g_dmcount) {			/* delayed unmarks pending? */
-	if (panic)
+	if (g_panic)
 	    ;
 	else if (gmode == 's')
 	    sprintf(msg, "Returned %ld Marked article%s.",(long)g_dmcount,

@@ -124,7 +124,7 @@ do_article_result do_article()
 	: "%%sEnd of article %ld (of %ld) %%s-- what next? [%%s]",
 	(long)art,(long)lastart);	/* format prompt string */
     g_prompt = prompt_buf;
-    int_count = 0;		/* interrupt count is 0 */
+    g_int_count = 0;		/* interrupt count is 0 */
     if ((firstpage = (g_topline < 0)) != 0) {
 	parseheader(art);
 	mime_SetArticle();
@@ -205,9 +205,9 @@ do_article_result do_article()
 	   : (firstpage && !in_header)? (linenum < initlines)
 	   : (linenum < tc_LINES);
 	     linenum++) {		/* for each line on page */
-	    if (int_count) {	/* exit via interrupt? */
+	    if (g_int_count) {	/* exit via interrupt? */
 		newline();	/* get to left margin */
-		int_count = 0;	/* reset interrupt count */
+		g_int_count = 0;	/* reset interrupt count */
 		set_mode(gmode,oldmode);
 		special = false;
 		return DA_NORM;	/* skip out of loops */
@@ -606,7 +606,7 @@ reask_pager:
 	set_mode(gmode,'p');
 	getcmd(buf);
 	if (errno) {
-	    if (tc_LINES < 100 && !int_count)
+	    if (tc_LINES < 100 && !g_int_count)
 		*buf = '\f';/* on CONT fake up refresh */
 	    else {
 		*buf = 'q';	/* on INTR or paper just quit */
