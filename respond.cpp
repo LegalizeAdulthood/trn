@@ -29,14 +29,23 @@
 #include "decode.h"
 #include "uudecode.h"
 #include "charsubst.h"
-#include "INTERN.h"
 #include "respond.h"
-#include "respond.ih"
+
 #ifdef MSDOS
 #include <direct.h>
 #endif
 
-static char nullart[] = "\nEmpty article.\n";
+char *g_savedest{};    /* value of %b */
+char *g_extractdest{}; /* value of %E */
+char *g_extractprog{}; /* value of %e */
+ART_POS g_savefrom{};  /* value of %B */
+
+static char s_nullart[] = "\nEmpty article.\n";
+
+static void follow_it_up();
+#if 0
+static bool cut_line(char *str);
+#endif
 
 void respond_init()
 {
@@ -59,12 +68,12 @@ int save_article()
     parseheader(g_art);
     mime_SetArticle();
     clear_artbuf();
-    savefrom = (cmd == 'w' || cmd == 'e')? g_htype[PAST_HEADER].minpos : 0;
-    if (artopen(g_art,savefrom) == nullptr) {
+    g_savefrom = (cmd == 'w' || cmd == 'e')? g_htype[PAST_HEADER].minpos : 0;
+    if (artopen(g_art,g_savefrom) == nullptr) {
 	if (verbose)
 	    fputs("\nCan't save an empty article.\n",stdout) FLUSH;
 	else
-	    fputs(nullart,stdout) FLUSH;
+	    fputs(s_nullart,stdout) FLUSH;
 	termdown(2);
 	return SAVE_DONE;
     }
@@ -101,21 +110,21 @@ int save_article()
 		s = cmdstr+1;			/* skip | */
 		while (*s == ' ') s++;
 		if (*s)	{			/* if new command, use it */
-		    safefree(extractprog);
-		    extractprog = savestr(s);	/* put extracter in %e */
+		    safefree(g_extractprog);
+		    g_extractprog = savestr(s);	/* put extracter in %e */
 		}
 		else
-		    cmdstr = extractprog;
+		    cmdstr = g_extractprog;
 	    }
 	    else
 		cmdstr = nullptr;
 	    s = buf;
 	}
 	else {
-	    if (extractdest)
-		strcpy(s, extractdest);
+	    if (g_extractdest)
+		strcpy(s, g_extractdest);
 	    if (custom_extract)
-		cmdstr = extractprog;
+		cmdstr = g_extractprog;
 	    else
 		cmdstr = nullptr;
 	}
@@ -138,8 +147,8 @@ int save_article()
 	    sprintf(c, "%s/%s", cwd, s);
 	    s = c;			/* absolutize it */
 	}
-	safefree(extractdest);
-	s = extractdest = savestr(s); /* make it handy for %E */
+	safefree(g_extractdest);
+	s = g_extractdest = savestr(s); /* make it handy for %E */
 	if (makedir(s, MD_DIR)) {	/* ensure directory exists */
 	    g_int_count++;
 	    return SAVE_DONE;
@@ -150,7 +159,7 @@ int save_article()
 	}
 	c = trn_getwd(buf, sizeof(buf));	/* simplify path for output */
 	if (custom_extract) {
-	    printf("Extracting article into %s using %s\n",c,extractprog) FLUSH;
+	    printf("Extracting article into %s using %s\n",c,g_extractprog) FLUSH;
 	    termdown(1);
 	    interp(cmd_buf, sizeof cmd_buf, get_val("CUSTOMSAVER",CUSTOMSAVER));
 	    invoke(cmd_buf, nullptr);
@@ -172,7 +181,7 @@ int save_article()
 		part = partOpt;
 	    if (totalOpt)
 		total = totalOpt;
-	    for (artpos = savefrom;
+	    for (artpos = g_savefrom;
 		 readart(g_art_line,sizeof g_art_line) != nullptr;
 		 artpos = tellart())
 	    {
@@ -188,13 +197,13 @@ int save_article()
 		 || !strncmp(g_art_line, "echo ", 5)
 #endif
 		) {
-		    savefrom = artpos;
+		    g_savefrom = artpos;
 		    decode_type = 1;
 		    break;
 		}
 		else if (uue_prescan(g_art_line,&filename,&part,&total)) {
-		    savefrom = artpos;
-		    seekart(savefrom);
+		    g_savefrom = artpos;
+		    seekart(g_savefrom);
 		    decode_type = 2;
 		    break;
 		}
@@ -234,8 +243,8 @@ int save_article()
 	s++;			/* skip the | */
 	while (*s == ' ') s++;
 	safecpy(altbuf,filexp(s),sizeof altbuf);
-	safefree(savedest);
-	savedest = savestr(altbuf);
+	safefree(g_savedest);
+	g_savedest = savestr(altbuf);
 	if (g_datasrc->flags & DF_REMOTE)
 	    nntp_finishbody(FB_SILENT);
 	interp(cmd_buf, (sizeof cmd_buf), get_val("PIPESAVER",PIPESAVER));
@@ -295,8 +304,8 @@ int save_article()
 	    sprintf(c, "%s/%s", cwd, s);
 	    s = c;			/* absolutize it */
 	}
-	safefree(savedest);
-	s = savedest = savestr(s);	/* doesn't move any more */
+	safefree(g_savedest);
+	s = g_savedest = savestr(s);	/* doesn't move any more */
 					/* make it handy for %b */
 	tmpfp = nullptr;
 	if (!there) {
@@ -378,7 +387,7 @@ q to abort.\n\
 	    noecho();		/* make terminal do what we want */
 	    crmode();
 	}
-	else if (tmpfp != nullptr || (tmpfp = fopen(savedest, "a")) != nullptr) {
+	else if (tmpfp != nullptr || (tmpfp = fopen(g_savedest, "a")) != nullptr) {
 	    bool quote_From = false;
 	    fseek(tmpfp,0,2);
 	    if (mailbox) {
@@ -390,9 +399,9 @@ q to abort.\n\
 		quote_From = true;
 #endif
 	    }
-	    if (savefrom == 0 && g_art != 0)
+	    if (g_savefrom == 0 && g_art != 0)
 		fprintf(tmpfp,"Article: %ld of %s\n", (long)g_art, ngname);
-	    seekart(savefrom);
+	    seekart(g_savefrom);
 	    while (readart(buf,LBUFLEN) != nullptr) {
 		if (quote_From && !strncasecmp(buf,"from ",5))
 		    putc('>', tmpfp);
@@ -412,7 +421,7 @@ q to abort.\n\
 	    fputs("Not saved",stdout);
 	else {
 	    printf("%s to %s %s", there? "Appended" : "Saved",
-		   mailbox? "mailbox" : "file", savedest);
+		   mailbox? "mailbox" : "file", g_savedest);
 	}
 	if (interactive)
 	    newline();
@@ -427,12 +436,12 @@ int view_article()
     parseheader(g_art);
     mime_SetArticle();
     clear_artbuf();
-    savefrom = g_htype[PAST_HEADER].minpos;
-    if (artopen(g_art,savefrom) == nullptr) {
+    g_savefrom = g_htype[PAST_HEADER].minpos;
+    if (artopen(g_art,g_savefrom) == nullptr) {
 	if (verbose)
 	    fputs("\nNo attatchments on an empty article.\n",stdout) FLUSH;
 	else
-	    fputs(nullart,stdout) FLUSH;
+	    fputs(s_nullart,stdout) FLUSH;
 	termdown(2);
 	return SAVE_DONE;
     }
@@ -447,7 +456,7 @@ int view_article()
 
 	/* Scan subject for filename and part number information */
 	filename = decode_subject(g_art, &part, &total);
-	for (artpos = savefrom;
+	for (artpos = g_savefrom;
 	     readart(g_art_line,sizeof g_art_line) != nullptr;
 	     artpos = tellart())
 	{
@@ -455,8 +464,8 @@ int view_article()
 		continue;	/* Ignore empty or initially-whitespace lines */
 	    if (uue_prescan(g_art_line, &filename, &part, &total)) {
 		MIMECAP_ENTRY* mc = mime_FindMimecapEntry("image/jpeg",0); /*$$ refine this */
-		savefrom = artpos;
-		seekart(savefrom);
+		g_savefrom = artpos;
+		seekart(g_savefrom);
 		g_mime_section->type = UNHANDLED_MIME;
 		safefree(g_mime_section->filename);
 		g_mime_section->filename = filename? savestr(filename) : nullptr;
@@ -495,7 +504,7 @@ int cancel_article()
 	if (verbose)
 	    fputs("\nCan't cancel an empty article.\n",stdout) FLUSH;
 	else
-	    fputs(nullart,stdout) FLUSH;
+	    fputs(s_nullart,stdout) FLUSH;
 	termdown(2);
 	return r;
     }
@@ -560,7 +569,7 @@ int supersede_article()		/* Supersedes: */
 	if (verbose)
 	    fputs("\nCan't supersede an empty article.\n",stdout) FLUSH;
 	else
-	    fputs(nullart,stdout) FLUSH;
+	    fputs(s_nullart,stdout) FLUSH;
 	termdown(2);
 	return r;
     }

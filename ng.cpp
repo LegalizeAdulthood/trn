@@ -140,8 +140,8 @@ int do_newsgroup(char *start_command)
 		 |KFS_NORMAL_LINES  | KFS_THREAD_LINES);
     g_killfirst = 0;
 
-    safefree0(extractdest);
-    safefree0(extractprog);
+    safefree0(g_extractdest);
+    safefree0(g_extractprog);
 
     /* initialize the newsgroup data structures */
 

@@ -499,11 +499,11 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			s = "";
 		    break;
 		case 'b':
-		    s = savedest? savedest : "";
+		    s = g_savedest? g_savedest : "";
 		    break;
 		case 'B':
 		    s = scrbuf;
-		    sprintf(s,"%ld",(long)savefrom);
+		    sprintf(s,"%ld",(long)g_savefrom);
 		    break;
 		case 'c':
 		    s = ngdir? ngdir : "";
@@ -526,10 +526,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			s = "";
 		    break;
 		case 'e':
-		    s = extractprog? extractprog : "-";
+		    s = g_extractprog? g_extractprog : "-";
 		    break;
 		case 'E':
-		    s = extractdest? extractdest : "";
+		    s = g_extractdest? g_extractdest : "";
 		    break;
 		case 'f':			/* from line */
 		    if (in_ng) {

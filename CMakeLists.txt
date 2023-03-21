@@ -89,7 +89,7 @@ add_executable(trn
     patchlevel.h
     rcln.cpp rcln.h
     rcstuff.cpp rcstuff.h
-    respond.cpp respond.h respond.ih
+    respond.cpp respond.h
     rt-mt.cpp rt-mt.h rt-mt.ih
     rt-ov.cpp rt-ov.h rt-ov.ih
     rt-page.cpp rt-page.h rt-page.ih

@@ -718,7 +718,7 @@ void mime_DecodeArticle(bool view)
 {
     MIMECAP_ENTRY* mcp = nullptr;
 
-    seekart(savefrom);
+    seekart(g_savefrom);
     *g_art_line = '\0';
 
     while (true) {

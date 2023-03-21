@@ -1,14 +1,19 @@
 /* respond.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef RESPOND_H
+#define RESPOND_H
 
-EXT char* savedest INIT(nullptr);		/* value of %b */
-EXT char* extractdest INIT(nullptr);	/* value of %E */
-EXT char* extractprog INIT(nullptr);	/* value of %e */
-EXT ART_POS savefrom INIT(0);		/* value of %B */
+extern char *g_savedest;    /* value of %b */
+extern char *g_extractdest; /* value of %E */
+extern char *g_extractprog; /* value of %e */
+extern ART_POS g_savefrom;  /* value of %B */
 
-#define SAVE_ABORT 0
-#define SAVE_DONE 1
+enum
+{
+    SAVE_ABORT = 0,
+    SAVE_DONE = 1
+};
 
 void respond_init();
 int save_article();
@@ -19,3 +24,5 @@ void reply();
 void forward();
 void followup();
 int invoke(char *cmd, char *dir);
+
+#endif
