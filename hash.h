@@ -4,6 +4,8 @@
 /* This file is an altered version of a set of hash routines by
  * Geoffrey Collyer.  See hash.c for his copyright.
  */
+#ifndef HASH_H
+#define HASH_H
 
 struct HASHDATUM
 {
@@ -23,3 +25,5 @@ void hashdelete(HASHTABLE *tbl, const char *key, int keylen);
 HASHDATUM hashfetch(HASHTABLE *tbl, const char *key, int keylen);
 void hashstorelast(HASHDATUM data);
 void hashwalk(HASHTABLE *tbl, HASHWALKFUNC nodefunc, int extra);
+
+#endif

@@ -8,16 +8,42 @@
 #include "common.h"
 #include "util.h"
 #include "final.h"
-#include "INTERN.h"
 #include "hash.h"
-#include "hash.ih"
+
+#define BADTBL(tbl)	((tbl) == nullptr || (tbl)->ht_magic != HASHMAG)
+
+#define HASHMAG  ((char)0257)
+
+struct HASHENT
+{
+    HASHENT* he_next;		/* in hash chain */
+    HASHDATUM he_data;
+    int he_keylen;		/* to help verify a match */
+};
+
+struct HASHTABLE
+{
+    HASHENT** ht_addr;		/* array of HASHENT pointers */
+    unsigned ht_size;
+    char ht_magic;
+    HASHCMPFUNC ht_cmp;
+};
+
+static HASHENT **hashfind(HASHTABLE *tbl, const char *key, int keylen);
+static unsigned hash(const char *key, int keylen);
+static int default_cmp(const char *key, int keylen, HASHDATUM data);
+static HASHENT *healloc();
+static void hefree(HASHENT *hp);
 
 /* CAA: In the future it might be a good idea to preallocate a region
  *      of hashents, since allocation overhead on some systems will be as
  *      large as the structure itself.
  */
 /* grab this many hashents at a time (under 1024 for malloc overhead) */
-#define HEBLOCKSIZE 1000
+enum
+{
+    HEBLOCKSIZE = 1000
+};
 
 /* define the following if you actually want to free the hashents
  * You probably don't want to do this with the usual malloc...
@@ -28,10 +54,13 @@
  *      one hashent, and various newsgroup hashes can easily get large.
  */
 /* tunable parameters */
-#define RETAIN 1000		/* retain & recycle this many HASHENTs */
+enum
+{
+    RETAIN = 1000 /* retain & recycle this many HASHENTs */
+};
 
-static HASHENT* hereuse = nullptr;
-static int reusables = 0;
+static HASHENT *s_hereuse{};
+static int s_reusables{};
 
 /* size - a crude guide to size */
 HASHTABLE *hashcreate(unsigned size, HASHCMPFUNC cmpfunc)
@@ -226,7 +255,7 @@ static HASHENT *healloc()
 {
     HASHENT* hp;
 
-    if (hereuse == nullptr) {
+    if (s_hereuse == nullptr) {
 	int i;
 
 	/* make a nice big block of hashents to play with */
@@ -236,15 +265,15 @@ static HASHENT *healloc()
 	    (hp+i)->he_next = hp + i + 1;
 	/* The last block is the end of the list */
 	(hp+i)->he_next = nullptr;
-	hereuse = hp;		/* start of list is the first item */
-	reusables += HEBLOCKSIZE;
+	s_hereuse = hp;		/* start of list is the first item */
+	s_reusables += HEBLOCKSIZE;
     }
 
     /* pull the first reusable one off the pile */
-    hp = hereuse;
-    hereuse = hereuse->he_next;
+    hp = s_hereuse;
+    s_hereuse = s_hereuse->he_next;
     hp->he_next = nullptr;			/* prevent accidents */
-    reusables--;
+    s_reusables--;
     return hp;
 }
 
@@ -252,18 +281,18 @@ static HASHENT *healloc()
 static void hefree(HASHENT *hp)
 {
 #ifdef HASH_FREE_ENTRIES
-    if (reusables >= RETAIN)		/* compost heap is full? */
+    if (s_reusables >= RETAIN)		/* compost heap is full? */
 	free((char*)hp);		/* yup, just pitch this one */
     else {				/* no, just stash for reuse */
-	++reusables;
-	hp->he_next = hereuse;
-	hereuse = hp;
+	++s_reusables;
+	hp->he_next = s_hereuse;
+	s_hereuse = hp;
     }
 #else
     /* always add to list */
-    ++reusables;
-    hp->he_next = hereuse;
-    hereuse = hp;
+    ++s_reusables;
+    hp->he_next = s_hereuse;
+    s_hereuse = hp;
 #endif
 }
 

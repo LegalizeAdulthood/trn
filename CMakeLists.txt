@@ -66,7 +66,7 @@ add_executable(trn
     decode.cpp decode.h
     edit_dist.cpp edit_dist.h
     final.cpp final.h
-    hash.cpp hash.h hash.ih
+    hash.cpp hash.h
     head.cpp head.h
     help.cpp help.h
     init.cpp init.h
