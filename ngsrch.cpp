@@ -5,33 +5,26 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "list.h"
 #include "ngdata.h"
-#include "hash.h"
-#include "nntpclient.h"
-#include "datasrc.h"
 #include "addng.h"
-#include "nntp.h"
 #include "ngstuff.h"
 #include "rcstuff.h"
 #include "final.h"
 #include "search.h"
-#include "trn.h"
-#include "util.h"
 #include "util2.h"
 #include "term.h"
 #include "rcln.h"
-#include "cache.h"
 #include "rt-select.h"
 #include "rt-util.h"
-#include "INTERN.h"
 #include "ngsrch.h"
 
-COMPEX ngcompex;
+bool g_ng_doempty{}; /* search empty newsgroups? */
+
+static COMPEX s_ngcompex;
 
 void ngsrch_init()
 {
-    init_compex(&ngcompex);
+    init_compex(&s_ngcompex);
 }
 
 // patbuf   if patbuf != buf, get_cmd must */
@@ -56,13 +49,13 @@ int ng_search(char *patbuf, int get_cmd)
     s = cpytill(buf,patbuf+1,cmdchr);	/* ok to cpy buf+1 to buf */
     for (pattern = buf; *pattern == ' '; pattern++) ;
     if (*pattern)
-	ng_doempty = false;
+	g_ng_doempty = false;
 
     if (*s) {				/* modifiers or commands? */
 	while (*++s) {
 	    switch (*s) {
 	    case 'r':
-		ng_doempty = true;
+		g_ng_doempty = true;
 		break;
 	    default:
 		goto loop_break;
@@ -78,7 +71,7 @@ int ng_search(char *patbuf, int get_cmd)
 	cmdlst = savestr("+");
     if (cmdlst)
 	ret = NGS_DONE;
-    if ((s = ng_comp(&ngcompex,pattern,true,true)) != nullptr) {
+    if ((s = ng_comp(&s_ngcompex,pattern,true,true)) != nullptr) {
 					/* compile regular expression */
 	errormsg(s);
 	ret = NGS_ERROR;
@@ -92,7 +85,7 @@ int ng_search(char *patbuf, int get_cmd)
     if (g_first_addgroup) {
 	ADDGROUP *gp = g_first_addgroup;
 	do {
-	    if (execute(&ngcompex,gp->name) != nullptr) {
+	    if (execute(&s_ngcompex,gp->name) != nullptr) {
 		if (!cmdlst)
 		    return NGS_FOUND;
 		if (addgrp_perform(gp,cmdlst,output_level && page_line==1)<0) {
@@ -140,7 +133,7 @@ int ng_search(char *patbuf, int get_cmd)
 	if (g_ngptr->toread >= TR_NONE && ng_wanted(g_ngptr)) {
 	    if (g_ngptr->toread == TR_NONE)
 		set_toread(g_ngptr, ST_LAX);
-	    if (ng_doempty || ((g_ngptr->toread > TR_NONE) ^ sel_rereading)) {
+	    if (g_ng_doempty || ((g_ngptr->toread > TR_NONE) ^ sel_rereading)) {
 		if (!cmdlst)
 		    return NGS_FOUND;
 		set_ng(g_ngptr);
@@ -167,7 +160,7 @@ exit:
 
 bool ng_wanted(NGDATA *np)
 {
-    return execute(&ngcompex,np->rcline) != nullptr;
+    return execute(&s_ngcompex,np->rcline) != nullptr;
 }
 
 char *ng_comp(COMPEX *compex, const char *pattern, bool RE, bool fold)
