@@ -1,19 +1,23 @@
 /* rthread.h
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef RTHREAD_H
+#define RTHREAD_H
 
-EXT ART_NUM obj_count INIT(0);
-EXT int subject_count INIT(0);
-EXT bool output_chase_phrase;
-
-EXT HASHTABLE* msgid_hash INIT(nullptr);
+extern ART_NUM obj_count;
+extern int subject_count;
+extern bool output_chase_phrase;
+extern HASHTABLE *msgid_hash;
 
 /* Values to pass to count_subjects() */
-#define CS_RETAIN      0
-#define CS_NORM        1
-#define CS_RESELECT    2
-#define CS_UNSELECT    3
-#define CS_UNSEL_STORE 4
+enum
+{
+    CS_RETAIN = 0,
+    CS_NORM = 1,
+    CS_RESELECT = 2,
+    CS_UNSELECT = 3,
+    CS_UNSEL_STORE = 4
+};
 
 void thread_init();
 void thread_open();
@@ -64,3 +68,5 @@ bool find_prev_sib();
 void count_subjects(int cmode);
 void sort_subjects();
 void sort_articles();
+
+#endif

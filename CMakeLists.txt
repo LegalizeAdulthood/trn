@@ -90,6 +90,7 @@ add_executable(trn
     rcln.cpp rcln.h
     rcstuff.cpp rcstuff.h
     respond.cpp respond.h
+    rthread.cpp rthread.h
     rt-mt.cpp rt-mt.h rt-mt.ih
     rt-ov.cpp rt-ov.h rt-ov.ih
     rt-page.cpp rt-page.h rt-page.ih
@@ -97,7 +98,6 @@ add_executable(trn
     rt-select.cpp rt-select.h rt-select.ih
     rt-util.cpp rt-util.h rt-util.ih
     rt-wumpus.cpp rt-wumpus.h rt-wumpus.ih
-    rthread.cpp rthread.h rthread.ih
     sacmd.cpp sacmd.h
     sadesc.cpp sadesc.h
     sadisp.cpp sadisp.h
