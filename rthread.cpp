@@ -146,7 +146,7 @@ void thread_grow()
 
 void thread_close()
 {
-    curr_artp = artp = nullptr;
+    g_curr_artp = g_artp = nullptr;
     init_tree();			/* free any tree lines */
 
     update_thread_kfile();
@@ -185,11 +185,11 @@ static int cleanup_msgid_hash(int keylen, HASHDATUM *data, int extra)
 
 void top_article()
 {
-    art = lastart+1;
-    artp = nullptr;
+    g_art = lastart+1;
+    g_artp = nullptr;
     inc_art(selected_only, false);
-    if (art > lastart && g_last_cached < lastart)
-	art = firstart;
+    if (g_art > lastart && g_last_cached < lastart)
+	g_art = firstart;
 }
 
 ARTICLE *first_art(SUBJECT *sp)
@@ -231,13 +231,13 @@ ARTICLE *last_art(SUBJECT *sp)
     return ap;
 }
 
-/* Bump art/artp to the next article, wrapping from thread to thread.
+/* Bump g_art/g_artp to the next article, wrapping from thread to thread.
 ** If sel_flag is true, only stops at selected articles.
 ** If rereading is false, only stops at unread articles.
 */
 void inc_art(bool sel_flag, bool rereading)
 {
-    ARTICLE* ap = artp;
+    ARTICLE* ap = g_artp;
     int subj_mask = (rereading? 0 : SF_VISIT);
 
     /* Use the explicit article-order if it exists */
@@ -258,11 +258,11 @@ void inc_art(bool sel_flag, bool rereading)
 	} while ((!rereading && !(ap->flags & AF_UNREAD))
 	      || (sel_flag && !(ap->flags & AF_SEL)));
 	if (g_artptr < limit) {
-	    artp = *g_artptr;
-	    art = article_num(artp);
+	    g_artp = *g_artptr;
+	    g_art = article_num(g_artp);
 	} else {
-	    artp = nullptr;
-	    art = lastart+1;
+	    g_artp = nullptr;
+	    g_art = lastart+1;
 	    g_artptr = g_artptr_list;
 	}
 	return;
@@ -290,17 +290,17 @@ void inc_art(bool sel_flag, bool rereading)
 	    }
 	} while (ap && ((!rereading && !(ap->flags & AF_UNREAD))
 		     || (sel_flag && !(ap->flags & AF_SEL))));
-	if ((artp = ap) != nullptr)
-	    art = article_num(ap);
+	if ((g_artp = ap) != nullptr)
+	    g_art = article_num(ap);
 	else {
-	    if (art <= g_last_cached)
-		art = g_last_cached+1;
+	    if (g_art <= g_last_cached)
+		g_art = g_last_cached+1;
 	    else
-		art++;
-	    if (art <= lastart)
-		artp = article_ptr(art);
+		g_art++;
+	    if (g_art <= lastart)
+		g_artp = article_ptr(g_art);
 	    else
-		art = lastart+1;
+		g_art = lastart+1;
 	}
 	return;
     }
@@ -308,31 +308,31 @@ void inc_art(bool sel_flag, bool rereading)
     /* Otherwise, just increment through the art numbers */
   num_inc:
     if (!ap)
-      art = firstart-1;
+      g_art = firstart-1;
     for (;;) {
-	art = article_next(art);
-	if (art > lastart) {
-	    art = lastart+1;
+	g_art = article_next(g_art);
+	if (g_art > lastart) {
+	    g_art = lastart+1;
 	    ap = nullptr;
 	    break;
 	}
-	ap = article_ptr(art);
+	ap = article_ptr(g_art);
 	if (!(ap->flags & AF_EXISTS))
 	    oneless(ap);
 	else if ((rereading || (ap->flags & AF_UNREAD))
 	      && (!sel_flag || (ap->flags & AF_SEL)))
 	    break;
     } 
-    artp = ap;
+    g_artp = ap;
 }
 
-/* Bump art/artp to the previous article, wrapping from thread to thread.
+/* Bump g_art/g_artp to the previous article, wrapping from thread to thread.
 ** If sel_flag is true, only stops at selected articles.
 ** If rereading is false, only stops at unread articles.
 */
 void dec_art(bool sel_flag, bool rereading)
 {
-    ARTICLE* ap = artp;
+    ARTICLE* ap = g_artp;
     int subj_mask = (rereading? 0 : SF_VISIT);
 
     /* Use the explicit article-order if it exists */
@@ -352,8 +352,8 @@ void dec_art(bool sel_flag, bool rereading)
 	    ap = *--g_artptr;
 	} while ((!rereading && !(ap->flags & AF_UNREAD))
 	      || (sel_flag && !(ap->flags & AF_SEL)));
-	artp = *g_artptr;
-	art = article_num(artp);
+	g_artp = *g_artptr;
+	g_art = article_num(g_artp);
 	return;
     }
 
@@ -379,30 +379,30 @@ void dec_art(bool sel_flag, bool rereading)
 	    }
 	} while (ap && ((!rereading && !(ap->flags & AF_UNREAD))
 		     || (sel_flag && !(ap->flags & AF_SEL))));
-	if ((artp = ap) != nullptr)
-	    art = article_num(ap);
+	if ((g_artp = ap) != nullptr)
+	    g_art = article_num(ap);
 	else
-	    art = absfirst-1;
+	    g_art = absfirst-1;
 	return;
     }
 
     /* Otherwise, just decrement through the art numbers */
   num_dec:
     for (;;) {
-	art = article_prev(art);
-	if (art < absfirst) {
-	    art = absfirst-1;
+	g_art = article_prev(g_art);
+	if (g_art < absfirst) {
+	    g_art = absfirst-1;
 	    ap = nullptr;
 	    break;
 	}
-	ap = article_ptr(art);
+	ap = article_ptr(g_art);
 	if (!(ap->flags & AF_EXISTS))
 	    oneless(ap);
 	else if ((rereading || (ap->flags & AF_UNREAD))
 	      && (!sel_flag || (ap->flags & AF_SEL)))
 	    break;
     }
-    artp = ap;
+    g_artp = ap;
 }
 
 /* Bump the param to the next article in depth-first order.
@@ -494,12 +494,12 @@ done:
     return ap;
 }
 
-/* Find the next art/artp with the same subject as this one.  Returns
+/* Find the next g_art/g_artp with the same subject as this one.  Returns
 ** false if no such article exists.
 */
 bool next_art_with_subj()
 {
-    ARTICLE* ap = artp;
+    ARTICLE* ap = g_artp;
 
     if (!ap)
 	return false;
@@ -507,24 +507,24 @@ bool next_art_with_subj()
     do {
 	ap = ap->subj_next;
 	if (!ap) {
-	    if (!art)
-		art = firstart;
+	    if (!g_art)
+		g_art = firstart;
 	    return false;
 	}
     } while (!ALLBITS(ap->flags, AF_EXISTS | AF_UNREAD)
 	  || (selected_only && !(ap->flags & AF_SEL)));
-    artp = ap;
-    art = article_num(ap);
+    g_artp = ap;
+    g_art = article_num(ap);
     g_srchahead = -1;
     return true;
 }
 
-/* Find the previous art/artp with the same subject as this one.  Returns
+/* Find the previous g_art/g_artp with the same subject as this one.  Returns
 ** false if no such article exists.
 */
 bool prev_art_with_subj()
 {
-    ARTICLE* ap = artp;
+    ARTICLE* ap = g_artp;
     ARTICLE* ap2;
 
     if (!ap)
@@ -540,14 +540,14 @@ bool prev_art_with_subj()
 	    ap = ap2;
 	}
 	if (!ap) {
-	    if (!art)
-		art = lastart;
+	    if (!g_art)
+		g_art = lastart;
 	    return false;
 	}
     } while (!(ap->flags & AF_EXISTS)
 	  || (selected_only && !(ap->flags & AF_SEL)));
-    artp = ap;
-    art = article_num(ap);
+    g_artp = ap;
+    g_art = article_num(ap);
     return true;
 }
 
@@ -1030,56 +1030,56 @@ ARTICLE *subj_art(SUBJECT *sp)
     return ap;
 }
 
-/* Find the next thread (first if art > lastart).  If articles are selected,
+/* Find the next thread (first if g_art > lastart).  If articles are selected,
 ** only choose from threads with selected articles.
 */
 void visit_next_thread()
 {
     SUBJECT* sp;
-    ARTICLE* ap = artp;
+    ARTICLE* ap = g_artp;
 
     sp = (ap? ap->subj : nullptr);
     while ((sp = next_subj(sp, SF_VISIT)) != nullptr) {
 	if ((ap = subj_art(sp)) != nullptr) {
-	    art = article_num(ap);
-	    artp = ap;
+	    g_art = article_num(ap);
+	    g_artp = ap;
 	    return;
 	}
 	g_reread = false;
     }
-    artp = nullptr;
-    art = lastart+1;
-    forcelast = true;
+    g_artp = nullptr;
+    g_art = lastart+1;
+    g_forcelast = true;
 }
 
-/* Find previous thread (or last if artp == nullptr).  If articles are selected,
+/* Find previous thread (or last if g_artp == nullptr).  If articles are selected,
 ** only choose from threads with selected articles.
 */
 void visit_prev_thread()
 {
     SUBJECT* sp;
-    ARTICLE* ap = artp;
+    ARTICLE* ap = g_artp;
 
     sp = (ap? ap->subj : nullptr);
     while ((sp = prev_subj(sp, SF_VISIT)) != nullptr) {
 	if ((ap = subj_art(sp)) != nullptr) {
-	    art = article_num(ap);
-	    artp = ap;
+	    g_art = article_num(ap);
+	    g_artp = ap;
 	    return;
 	}
 	g_reread = false;
     }
-    artp = nullptr;
-    art = lastart+1;
-    forcelast = true;
+    g_artp = nullptr;
+    g_art = lastart+1;
+    g_forcelast = true;
 }
 
-/* Find artp's parent or oldest ancestor.  Returns false if no such
-** article.  Sets art and artp otherwise.
+/* Find g_artp's parent or oldest ancestor.  Returns false if no such
+** article.  Sets g_art and g_artp otherwise.
 */
 bool find_parent(bool keep_going)
 {
-    ARTICLE* ap = artp;
+    ARTICLE* ap = g_artp;
 
     if (!ap->parent)
 	return false;
@@ -1088,17 +1088,17 @@ bool find_parent(bool keep_going)
 	ap = ap->parent;
     } while (keep_going && ap->parent);
 
-    artp = ap;
-    art = article_num(ap);
+    g_artp = ap;
+    g_art = article_num(ap);
     return true;
 }
 
-/* Find artp's first child or youngest decendent.  Returns false if no
-** such article.  Sets art and artp otherwise.
+/* Find g_artp's first child or youngest decendent.  Returns false if no
+** such article.  Sets g_art and g_artp otherwise.
 */
 bool find_leaf(bool keep_going)
 {
-    ARTICLE* ap = artp;
+    ARTICLE* ap = g_artp;
 
     if (!ap->child1)
 	return false;
@@ -1107,14 +1107,14 @@ bool find_leaf(bool keep_going)
 	ap = ap->child1;
     } while (keep_going && ap->child1);
 
-    artp = ap;
-    art = article_num(ap);
+    g_artp = ap;
+    g_art = article_num(ap);
     return true;
 }
 
-/* Find the next "sibling" of artp, including cousins that are the
+/* Find the next "sibling" of g_artp, including cousins that are the
 ** same distance down the thread as we are.  Returns false if no such
-** article.  Sets art and artp otherwise.
+** article.  Sets g_art and g_artp otherwise.
 */
 bool find_next_sib()
 {
@@ -1123,13 +1123,13 @@ bool find_next_sib()
     int ascent;
 
     ascent = 0;
-    ta = artp;
+    ta = g_artp;
     for (;;) {
 	while (ta->sibling) {
 	    ta = ta->sibling;
 	    if ((tb = first_sib(ta, ascent)) != nullptr) {
-		artp = tb;
-		art = article_num(tb);
+		g_artp = tb;
+		g_art = article_num(tb);
 		return true;
 	    }
 	}
@@ -1161,9 +1161,9 @@ static ARTICLE *first_sib(ARTICLE *ta, int depth)
     }
 }
 
-/* Find the previous "sibling" of artp, including cousins that are
+/* Find the previous "sibling" of g_artp, including cousins that are
 ** the same distance down the thread as we are.  Returns false if no
-** such article.  Sets art and artp otherwise.
+** such article.  Sets g_art and g_artp otherwise.
 */
 bool find_prev_sib()
 {
@@ -1172,7 +1172,7 @@ bool find_prev_sib()
     int ascent;
 
     ascent = 0;
-    ta = artp;
+    ta = g_artp;
     for (;;) {
 	tb = ta;
 	if (ta->parent)
@@ -1180,8 +1180,8 @@ bool find_prev_sib()
 	else
 	    ta = ta->subj->thread;
 	if ((tb = last_sib(ta, ascent, tb)) != nullptr) {
-	    artp = tb;
-	    art = article_num(tb);
+	    g_artp = tb;
+	    g_art = article_num(tb);
 	    return true;
 	}
 	if (!(ta = ta->parent))

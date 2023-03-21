@@ -307,7 +307,7 @@ void end_header()
     if (ThreadedGroup
      && (!(ap->flags & AF_THREADED) || g_htype[INREPLY_LINE].minpos >= 0)) {
 	if (valid_article(ap)) {
-	    ARTICLE* artp_hold = artp;
+	    ARTICLE* artp_hold = g_artp;
 	    char* references = fetchlines(g_parsed_art, REFS_LINE);
 	    char* inreply = fetchlines(g_parsed_art, INREPLY_LINE);
 	    int reflen = strlen(references) + 1;
@@ -316,7 +316,7 @@ void end_header()
 	    thread_article(ap, references);
 	    free(inreply);
 	    free(references);
-	    artp = artp_hold;
+	    g_artp = artp_hold;
 	    check_poster(ap);
 	}
     } else if (!(ap->flags & AF_CACHED)) {

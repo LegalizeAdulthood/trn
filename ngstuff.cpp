@@ -81,7 +81,7 @@ int escapade()
 	}
     }
 #ifdef MAILCALL
-    mailcount = 0;			/* force recheck */
+    g_mailcount = 0;			/* force recheck */
 #endif
     return 0;
 }
@@ -155,7 +155,7 @@ int numnum()
     char* cmdlst = nullptr;
     char* s;
     char* c;
-    ART_NUM oldart = art;
+    ART_NUM oldart = g_art;
     char tmpbuf[LBUFLEN];
     bool output_level = (!use_threads && gmode != 's');
     bool justone = true;		/* assume only one article */
@@ -223,16 +223,16 @@ int numnum()
 	    return NN_ASK;
 	}
 	if (justone) {
-	    art = min;
+	    g_art = min;
 	    return NN_REREAD;
 	}
-	for (art = article_first(min); art <= max; art = article_next(art)) {
-	    artp = article_ptr(art);
+	for (g_art = article_first(min); g_art <= max; g_art = article_next(g_art)) {
+	    g_artp = article_ptr(g_art);
 	    if (perform(cmdlst,output_level && page_line == 1) < 0) {
 		if (verbose)
-		    sprintf(msg,"(Interrupted at article %ld)",(long)art);
+		    sprintf(msg,"(Interrupted at article %ld)",(long)g_art);
 		else
-		    sprintf(msg,"(Intr at %ld)",(long)art);
+		    sprintf(msg,"(Intr at %ld)",(long)g_art);
 		errormsg(msg);
 		if (cmdlst)
 		    free(cmdlst);
@@ -242,7 +242,7 @@ int numnum()
 		perform_status(ngptr->toread, 50);
 	}
     }
-    art = oldart;
+    g_art = oldart;
     if (cmdlst)
 	free(cmdlst);
     return NN_NORM;
@@ -271,7 +271,7 @@ int thread_perform()
     else
 	bits = SF_VISIT;
     if (buf[len] == '.') {
-	if (!artp)
+	if (!g_artp)
 	    return -1;
 	one_thread = true;
 	len++;
@@ -293,15 +293,15 @@ int thread_perform()
        || *cmdstr == 'T' || *cmdstr == 'A'))) {
         performed_article_loop = false;
 	if (one_thread)
-	    sp = (sel_mode==SM_THREAD? artp->subj->thread->subj : artp->subj);
+	    sp = (sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
 	else
 	    sp = next_subj((SUBJECT*)nullptr,bits);
 	for ( ; sp; sp = next_subj(sp,bits)) {
 	    if ((!(sp->flags & sel_mask) ^ !bits) || !sp->misc)
 		continue;
-	    artp = first_art(sp);
-	    if (artp) {
-		art = article_num(artp);
+	    g_artp = first_art(sp);
+	    if (g_artp) {
+		g_art = article_num(g_artp);
 		if (perform(cmdstr, 0) < 0) {
 		    errormsg("Interrupted");
 		    goto break_out;
@@ -317,11 +317,11 @@ int thread_perform()
 	    decode_end();
 #endif
     } else if (*cmdstr == 'p') {
-	ART_NUM oldart = art;
-	art = lastart+1;
+	ART_NUM oldart = g_art;
+	g_art = lastart+1;
 	followup();
-	forcegrow = true;
-	art = oldart;
+	g_forcegrow = true;
+	g_art = oldart;
 	page_line++; /*$$*/
     } else {
 	/* The rest loop through the articles. */
@@ -329,15 +329,15 @@ int thread_perform()
 	if (g_artptr_list) {
 	    ARTICLE** app;
 	    ARTICLE** limit = g_artptr_list + g_artptr_list_size;
-	    sp = (sel_mode==SM_THREAD? artp->subj->thread->subj : artp->subj);
+	    sp = (sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
 	    for (app = g_artptr_list; app < limit; app++) {
 		ap = *app;
 		if (one_thread && ap->subj->thread != sp->thread)
 		    continue;
 		if ((!(ap->flags & AF_UNREAD) ^ want_unread)
 		 && !(ap->flags & sel_mask) ^ !!bits) {
-		    art = article_num(ap);
-		    artp = ap;
+		    g_art = article_num(ap);
+		    g_artp = ap;
 		    if (perform(cmdstr, output_level && page_line == 1) < 0) {
 			errormsg("Interrupted");
 			goto break_out;
@@ -348,15 +348,15 @@ int thread_perform()
 	    }
 	} else {
 	    if (one_thread)
-		sp = (sel_mode==SM_THREAD? artp->subj->thread->subj : artp->subj);
+		sp = (sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
 	    else
 		sp = next_subj((SUBJECT*)nullptr,bits);
 	    for ( ; sp; sp = next_subj(sp,bits)) {
 		for (ap = first_art(sp); ap; ap = next_art(ap))
 		    if ((!(ap->flags & AF_UNREAD) ^ want_unread)
 		     && !(ap->flags & sel_mask) ^ !!bits) {
-			art = article_num(ap);
-			artp = ap;
+			g_art = article_num(ap);
+			g_artp = ap;
 			if (perform(cmdstr,output_level && page_line==1) < 0) {
 			    errormsg("Interrupted");
 			    goto break_out;
@@ -385,7 +385,7 @@ int perform(char *cmdlst, int output_level)
     cmdlst = tbuf;
 
     if (output_level == 1) {
-	printf("%-6ld ",art);
+	printf("%-6ld ",g_art);
 	fflush(stdout);
     }
 
@@ -395,80 +395,80 @@ int perform(char *cmdlst, int output_level)
 	    continue;
 	if (ch == 'j') {
 	    if (savemode) {
-		mark_as_read(artp);
-		change_auto_flags(artp, AUTO_KILL_1);
+		mark_as_read(g_artp);
+		change_auto_flags(g_artp, AUTO_KILL_1);
 	    }
-	    else if (!was_read(art)) {
-		mark_as_read(artp);
+	    else if (!was_read(g_art)) {
+		mark_as_read(g_artp);
 		if (output_level && verbose)
 		    fputs("\tJunked",stdout);
 	    }
 	    if (sel_rereading)
-		deselect_article(artp, output_level? ALSO_ECHO : 0);
+		deselect_article(g_artp, output_level? ALSO_ECHO : 0);
 	} else if (ch == '+') {
 	    if (savemode || cmdlst[1] == '+') {
 		if (sel_mode == SM_THREAD)
-		    select_arts_thread(artp, savemode? AUTO_SEL_THD : 0);
+		    select_arts_thread(g_artp, savemode? AUTO_SEL_THD : 0);
 		else
-		    select_arts_subject(artp, savemode? AUTO_SEL_SBJ : 0);
+		    select_arts_subject(g_artp, savemode? AUTO_SEL_SBJ : 0);
 		if (cmdlst[1] == '+')
 		    cmdlst++;
 	    } else
-		select_article(artp, output_level? ALSO_ECHO : 0);
+		select_article(g_artp, output_level? ALSO_ECHO : 0);
 	} else if (ch == 'S') {
-	    select_arts_subject(artp, AUTO_SEL_SBJ);
+	    select_arts_subject(g_artp, AUTO_SEL_SBJ);
 	} else if (ch == '.') {
-	    select_subthread(artp, savemode? AUTO_SEL_FOL : 0);
+	    select_subthread(g_artp, savemode? AUTO_SEL_FOL : 0);
 	} else if (ch == '-') {
 	    if (cmdlst[1] == '-') {
 		if (sel_mode == SM_THREAD)
-		    deselect_arts_thread(artp);
+		    deselect_arts_thread(g_artp);
 		else
-		    deselect_arts_subject(artp);
+		    deselect_arts_subject(g_artp);
 		cmdlst++;
 	    } else
-		deselect_article(artp, output_level? ALSO_ECHO : 0);
+		deselect_article(g_artp, output_level? ALSO_ECHO : 0);
 	} else if (ch == ',') {
-	    kill_subthread(artp, AFFECT_ALL | (savemode? AUTO_KILL_FOL : 0));
+	    kill_subthread(g_artp, AFFECT_ALL | (savemode? AUTO_KILL_FOL : 0));
 	} else if (ch == 'J') {
 	    if (sel_mode == SM_THREAD)
-		kill_arts_thread(artp,AFFECT_ALL|(savemode? AUTO_KILL_THD:0));
+		kill_arts_thread(g_artp,AFFECT_ALL|(savemode? AUTO_KILL_THD:0));
 	    else
-		kill_arts_subject(artp,AFFECT_ALL|(savemode? AUTO_KILL_SBJ:0));
+		kill_arts_subject(g_artp,AFFECT_ALL|(savemode? AUTO_KILL_SBJ:0));
 	} else if (ch == 'K' || ch == 'k') {
-	    kill_arts_subject(artp, AFFECT_ALL|(savemode? AUTO_KILL_SBJ : 0));
+	    kill_arts_subject(g_artp, AFFECT_ALL|(savemode? AUTO_KILL_SBJ : 0));
 	} else if (ch == 'x') {
-	    if (!was_read(art)) {
-		oneless(artp);
+	    if (!was_read(g_art)) {
+		oneless(g_artp);
 		if (output_level && verbose)
 		    fputs("\tKilled",stdout);
 	    }
 	    if (sel_rereading)
-		deselect_article(artp, 0);
+		deselect_article(g_artp, 0);
 	} else if (ch == 't') {
-	    entire_tree(artp);
+	    entire_tree(g_artp);
 	} else if (ch == 'T') {
 	    savemode = 1;
 	} else if (ch == 'A') {
 	    savemode = 2;
 	} else if (ch == 'm') {
 	    if (savemode)
-		change_auto_flags(artp, AUTO_SEL_1);
-	    else if ((artp->flags & (AF_UNREAD|AF_EXISTS)) == AF_EXISTS) {
-		unmark_as_read(artp);
+		change_auto_flags(g_artp, AUTO_SEL_1);
+	    else if ((g_artp->flags & (AF_UNREAD|AF_EXISTS)) == AF_EXISTS) {
+		unmark_as_read(g_artp);
 		if (output_level && verbose)
 		    fputs("\tMarked unread",stdout);
 	    }
 	}
 	else if (ch == 'M') {
-	    delay_unmark(artp);
-	    oneless(artp);
+	    delay_unmark(g_artp);
+	    oneless(g_artp);
 	    if (output_level && verbose)
 		fputs("\tWill return",stdout);
 	}
 	else if (ch == '=') {
 	    carriage_return();
-	    output_subject((char*)artp,0);
+	    output_subject((char*)g_artp,0);
 	    output_level = 0;
 	}
 	else if (ch == 'C') {
@@ -507,7 +507,7 @@ int perform(char *cmdlst, int output_level)
 	    else {
 		if (output_level != 1) {
 		    erase_line(false);
-		    printf("%-6ld ",art);
+		    printf("%-6ld ",g_art);
 		}
 		if (ch == 'a')
 		    view_article();

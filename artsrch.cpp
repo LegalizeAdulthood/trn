@@ -191,7 +191,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 		    cmdlst = savestr(",");
 		else
 		    cmdlst = savestr("j");
-		mark_as_read(article_ptr(art));	/* this article needs to die */
+		mark_as_read(article_ptr(g_art));	/* this article needs to die */
 	    }
 	    if (!*h) {
 		if (verbose)
@@ -291,40 +291,40 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	ignorethru = 1;
     srchfirst = doread || sel_rereading? absfirst
 		      : (mode != 'k' || ignorethru > 0)? firstart : g_killfirst;
-    if (topstart || art == 0) {
-	art = lastart+1;
+    if (topstart || g_art == 0) {
+	g_art = lastart+1;
 	topstart = false;
     }
     if (backward) {
-	if (cmdlst && art <= lastart)
-	    art++;			/* include current article */
+	if (cmdlst && g_art <= lastart)
+	    g_art++;			/* include current article */
     }
     else {
-	if (art > lastart)
-	    art = srchfirst-1;
-	else if (cmdlst && art >= absfirst)
-	    art--;			/* include current article */
+	if (g_art > lastart)
+	    g_art = srchfirst-1;
+	else if (cmdlst && g_art >= absfirst)
+	    g_art--;			/* include current article */
     }
     if (g_srchahead > 0) {
 	if (!backward)
-	    art = g_srchahead - 1;
+	    g_art = g_srchahead - 1;
 	g_srchahead = -1;
     }
     assert(!cmdlst || *cmdlst);
     perform_status_init(ngptr->toread);
     for (;;) {
 	/* check if we're out of articles */
-	if (backward? ((art = article_prev(art)) < srchfirst)
-		    : ((art = article_next(art)) > lastart))
+	if (backward? ((g_art = article_prev(g_art)) < srchfirst)
+		    : ((g_art = article_next(g_art)) > lastart))
 	    break;
 	if (g_int_count) {
 	    g_int_count = 0;
 	    ret = SRCH_INTR;
 	    break;
 	}
-	artp = article_ptr(art);
-	if (doread || (!(artp->flags & AF_UNREAD) ^ !sel_rereading)) {
-	    if (wanted(compex,art,howmuch)) {
+	g_artp = article_ptr(g_art);
+	if (doread || (!(g_artp->flags & AF_UNREAD) ^ !sel_rereading)) {
+	    if (wanted(compex,g_art,howmuch)) {
 				    /* does the shoe fit? */
 		if (!cmdlst)
 		    return SRCH_FOUND;
@@ -333,8 +333,8 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 		    return SRCH_INTR;
 		}
 	    }
-	    else if (output_level && !cmdlst && !(art%50)) {
-		printf("...%ld",(long)art);
+	    else if (output_level && !cmdlst && !(g_art%50)) {
+		printf("...%ld",(long)g_art);
 		fflush(stdout);
 	    }
 	}

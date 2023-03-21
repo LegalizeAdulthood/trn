@@ -1,38 +1,37 @@
 /* ng.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef NG_H
+#define NG_H
 
-EXT ART_NUM art INIT(0);	/* current or prospective article # */
-
-EXT ART_NUM recent_art;		/* previous article # for '-' command */
-EXT ART_NUM curr_art;		/* current article # */
-EXT ARTICLE* recent_artp INIT(nullptr);/* article_ptr equivilents */
-EXT ARTICLE* curr_artp INIT(nullptr);
-EXT ARTICLE* artp INIT(nullptr);	/* the article ptr we use when art is 0 */
-
-EXT int checkcount INIT(0);	/* how many articles have we read */
-				/*   in the current newsgroup since */
-				/*   the last checkpoint? */
-EXT int docheckwhen INIT(20);	/* how often to do checkpoint */
-
-EXT char* subjline INIT(nullptr);	/* what format to use for '=' */
+extern ART_NUM g_art;          /* current or prospective article # */
+extern ART_NUM g_recent_art;   /* previous article # for '-' command */
+extern ART_NUM g_curr_art;     /* current article # */
+extern ARTICLE *g_recent_artp; /* article_ptr equivilents */
+extern ARTICLE *g_curr_artp;
+extern ARTICLE *g_artp;   /* the article ptr we use when g_art is 0 */
+extern int g_checkcount;  /* how many articles have we read in the current newsgroup since the last checkpoint? */
+extern int g_docheckwhen; /* how often to do checkpoint */
+extern char *g_subjline;  /* what format to use for '=' */
 #ifdef MAILCALL
-EXT int mailcount INIT(0);	/* check for mail when 0 mod 10 */
+extern int g_mailcount; /* check for mail when 0 mod 10 */
 #endif
-EXT char* mailcall INIT("");
-EXT bool forcelast INIT(false);	/* ought we show "End of newsgroup"? */
-EXT bool forcegrow INIT(false);	/* do we want to recalculate size */
-				/*   of newsgroup, e.g. after posting? */
+extern char *g_mailcall;
+extern bool g_forcelast; /* ought we show "End of newsgroup"? */
+extern bool g_forcegrow; /* do we want to recalculate size of newsgroup, e.g. after posting? */
 
-#define NG_ERROR -1
-#define NG_NORM 0
-#define NG_ASK 1
-#define NG_MINUS 2
-#define NG_SELPRIOR 3
-#define NG_SELNEXT 4
-#define NG_NOSERVER 5
-#define NG_NEXT 6
-#define NG_GO_ARTICLE 7
+enum
+{
+    NG_ERROR = -1,
+    NG_NORM = 0,
+    NG_ASK = 1,
+    NG_MINUS = 2,
+    NG_SELPRIOR = 3,
+    NG_SELNEXT = 4,
+    NG_NOSERVER = 5,
+    NG_NEXT = 6,
+    NG_GO_ARTICLE = 7
+};
 
 void ng_init();
 int do_newsgroup(char *start_command);
@@ -44,3 +43,5 @@ void setdfltcmd();
 char ask_catchup();
 bool output_subject(char *ptr, int flag);
 char ask_memorize(char_int ch);
+
+#endif

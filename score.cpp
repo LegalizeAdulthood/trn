@@ -14,7 +14,7 @@
 #include "final.h"		/* g_int_count */
 #include "head.h"		/* ? */
 #include "intrp.h"		/* for filexp */
-#include "ng.h"			/* art */
+#include "ng.h"			/* g_art */
 #include "ngdata.h"
 #include "search.h"		/* for regex */
 #include "rt-util.h"		/* spinner */
@@ -467,11 +467,11 @@ void sc_score_cmd(const char *line)
 	/* XXX CONSIDER: A VERBOSE-SCORE ROUTINE (instead of this hack) */
 	i = 0;	/* total score */
 	sf_score_verbose = true;
-	j = sf_score(art);
+	j = sf_score(g_art);
 	sf_score_verbose = false;
 	printf("Scorefile total score: %ld\n",j);
 	i += j;
-	j = sc_score_art(art,true);
+	j = sc_score_art(g_art,true);
 	if (i != j) {
 	    /* Consider resubmitting article to filter? */
 	    printf("Other scoring total: %ld\n", j - i) FLUSH;

@@ -630,7 +630,7 @@ void sa_art_cmd_prim(sa_cmd cmd, long a)
 	break;
       case SA_EXTRACT:
 	sa_clearmark(a);
-	art = artnum;
+	g_art = artnum;
 	*buf = 'e';		/* fake up the extract command */
 	safecpy(buf+1,sa_extract_dest,LBUFLEN);
 	(void)save_article();

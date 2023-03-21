@@ -351,7 +351,7 @@ void set_option(int num, char *s)
 	bkgnd_spinner = YES(s);
 	break;
       case OI_CHECKPOINT_NEWSRC_FREQUENCY:
-	docheckwhen = atoi(s);
+	g_docheckwhen = atoi(s);
 	break;
       case OI_SAVE_DIR:
 	if (!checkflag) {
@@ -783,7 +783,7 @@ char *option_value(int num)
       case OI_BKGND_SPINNER:
 	return YESorNO(bkgnd_spinner);
       case OI_CHECKPOINT_NEWSRC_FREQUENCY:
-	sprintf(buf,"%d",docheckwhen);
+	sprintf(buf,"%d",g_docheckwhen);
 	return buf;
       case OI_SAVE_DIR:
 	return savedir? savedir : "%./News";

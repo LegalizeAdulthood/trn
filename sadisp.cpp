@@ -10,7 +10,7 @@
 #include "cache.h"
 /* for absfirst declaration */
 #include "bits.h"
-/* for mailcall */
+/* for g_mailcall */
 #include "ng.h"
 /* for ngname */
 #include "trn.h"

@@ -9,7 +9,7 @@
 #include "final.h"	/* assert() */
 #include "hash.h"
 #include "cache.h"
-#include "ng.h"		/* mailcall */
+#include "ng.h"		/* g_mailcall */
 #include "term.h"
 #include "scan.h"
 #include "sorder.h"
@@ -35,7 +35,7 @@ void s_mail_and_place()
 
 #ifdef MAILCALL
     setmail(false);		/* another chance to check mail */
-    printf("%s",mailcall);
+    printf("%s",g_mailcall);
 #endif /* MAILCALL */
     /* print page status wrt all entries */
     previous = (0 != s_prev_elig(page_ents[0].entnum));

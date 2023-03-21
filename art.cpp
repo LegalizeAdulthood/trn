@@ -122,11 +122,11 @@ do_article_result do_article()
     }
     sprintf(prompt_buf, mousebar_cnt>3? "%%sEnd of art %ld (of %ld) %%s[%%s]"
 	: "%%sEnd of article %ld (of %ld) %%s-- what next? [%%s]",
-	(long)art,(long)lastart);	/* format prompt string */
+	(long)g_art,(long)lastart);	/* format prompt string */
     g_prompt = prompt_buf;
     g_int_count = 0;		/* interrupt count is 0 */
     if ((firstpage = (g_topline < 0)) != 0) {
-	parseheader(art);
+	parseheader(g_art);
 	mime_SetArticle();
 	clear_artbuf();
 	seekart(artbuf_seek = g_htype[PAST_HEADER].minpos);
@@ -138,7 +138,7 @@ do_article_result do_article()
 	    init_tree();	/* init tree display */
 	assert(art == openart);
 	if (g_do_fseek) {
-	    parseheader(art);		/* make sure header is ours */
+	    parseheader(g_art);		/* make sure header is ours */
 	    if (!*artbuf) {
 		mime_SetArticle();
 		artbuf_seek = g_htype[PAST_HEADER].minpos;
@@ -173,9 +173,9 @@ do_article_result do_article()
 		ART_NUM i;
 		int selected, unseen;
 
-		selected = (curr_artp->flags & AF_SEL);
-		unseen = article_unread(art)? 1 : 0;
-		sprintf(g_art_line,"%s%s #%ld",ngname,moderated,(long)art);
+		selected = (g_curr_artp->flags & AF_SEL);
+		unseen = article_unread(g_art)? 1 : 0;
+		sprintf(g_art_line,"%s%s #%ld",ngname,moderated,(long)g_art);
 		if (selected_only) {
 		    i = selected_count - (unseen && selected);
 		    sprintf(g_art_line+strlen(g_art_line)," (%ld + %ld more)",
@@ -192,8 +192,8 @@ do_article_result do_article()
 			    " + %ld Marked to return)",(long)g_dmcount);
 		linenum += tree_puts(g_art_line,linenum+g_topline,0);
 	    }
-	    start_header(art);
-	    forcelast = false;		/* we will have our day in court */
+	    start_header(g_art);
+	    g_forcelast = false;		/* we will have our day in court */
 	    restart = 0;
 	    artline = 0;		/* start counting lines */
 	    artpos = 0;
@@ -286,11 +286,11 @@ do_article_result do_article()
 		    }
 		    break;
 		  case DATE_LINE:
-		    if (curr_artp->date != -1) {
+		    if (g_curr_artp->date != -1) {
 			strncpy(g_art_line,bufptr,6);
 			strftime(g_art_line+6, (sizeof g_art_line)-6,
 				 get_val("LOCALTIMEFMT", LOCALTIMEFMT),
-				 localtime(&curr_artp->date));
+				 localtime(&g_curr_artp->date));
 			bufptr = g_art_line;
 		    }
 		    break;
@@ -298,7 +298,7 @@ do_article_result do_article()
 	    }
 	    if (g_in_header == SUBJ_LINE && g_do_hiding
 	     && (g_htype[SUBJ_LINE].flags & HT_MAGIC)) { /* handle the subject */
-		s = get_cached_line(artp, SUBJ_LINE, false);
+		s = get_cached_line(g_artp, SUBJ_LINE, false);
 		if (s && continuation) {
 		    /* continuation lines were already output */
 		    linenum--;
@@ -585,15 +585,15 @@ reask_pager:
 	eat_typeahead();
 #ifdef DEBUG
 	if (debug & DEB_CHECKPOINTING) {
-	    printf("(%d %d %d)",checkcount,linenum,artline);
+	    printf("(%d %d %d)",g_checkcount,linenum,artline);
 	    fflush(stdout);
 	}
 #endif
-	if (checkcount >= docheckwhen && linenum == tc_LINES
-	 && (artline > 40 || checkcount >= docheckwhen+10)) {
+	if (g_checkcount >= g_docheckwhen && linenum == tc_LINES
+	 && (artline > 40 || g_checkcount >= g_docheckwhen+10)) {
 			    /* while he is reading a whole page */
 			    /* in an article he is interested in */
-	    checkcount = 0;
+	    g_checkcount = 0;
 	    checkpoint_newsrcs();	/* update all newsrcs */
 	    update_thread_kfile();
 	}
@@ -904,7 +904,7 @@ int page_switch()
 	return PS_ASK;
       case 't':		/* output thread data */
 	page_line = 1;
-	entire_tree(curr_artp);
+	entire_tree(g_curr_artp);
 	return PS_ASK;
       case '_':
 	if (!finish_dblchar())
@@ -932,7 +932,7 @@ int page_switch()
       case 'u':
       case 'w':	case 'W':
       case '|':
-	mark_as_read(artp);	/* mark article as read */
+	mark_as_read(g_artp);	/* mark article as read */
 	/* FALL THROUGH */
       case 'U': case ',':
       case '<': case '>':
@@ -979,7 +979,7 @@ leave_pager:
 	 && strchr("wWsSe:!&|/?123456789.",*buf) != nullptr) {
 	    setdfltcmd();
 	    color_object(COLOR_CMD, true);
-	    interpsearch(cmd_buf, sizeof cmd_buf, mailcall, buf);
+	    interpsearch(cmd_buf, sizeof cmd_buf, g_mailcall, buf);
 	    printf(g_prompt,cmd_buf,
 		   current_charsubst(),
 		   dfltcmd);	/* print prompt, whatever it is */
@@ -1112,10 +1112,10 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
     switch (btn_clk) {
       case 0:
 	if (ap) {
-	    if (ap == artp)
+	    if (ap == g_artp)
 		return;
-	    artp = ap;
-	    art = article_num(ap);
+	    g_artp = ap;
+	    g_art = article_num(ap);
 	    g_reread = true;
 	    pushchar(Ctl('r'));
 	}

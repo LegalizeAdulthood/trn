@@ -634,14 +634,14 @@ void look_ahead()
 #endif
 
     if (ThreadedGroup) {
-	artp = curr_artp;
+	g_artp = g_curr_artp;
 	inc_art(selected_only,false);
-	if (artp)
-	    parseheader(art);
+	if (g_artp)
+	    parseheader(g_art);
     }
     else
 #ifdef ARTSEARCH
-    if (g_srchahead && g_srchahead < art) {	/* in ^N mode? */
+    if (g_srchahead && g_srchahead < g_art) {	/* in ^N mode? */
 	char* pattern;
 
 	pattern = buf+1;
@@ -671,7 +671,7 @@ void look_ahead()
 	    g_srchahead = 0;
 	}
 	if (g_srchahead) {
-	    g_srchahead = art;
+	    g_srchahead = g_art;
 	    for (;;) {
 		g_srchahead++;	/* go forward one article */
 		if (g_srchahead > lastart) { /* out of articles? */
@@ -700,8 +700,8 @@ void look_ahead()
     else
 #endif /* ARTSEARCH */
     {
-	if (article_next(art) <= lastart)	/* how about a pre-fetch? */
-	    parseheader(article_next(art));	/* look for the next article */
+	if (article_next(g_art) <= lastart)	/* how about a pre-fetch? */
+	    parseheader(article_next(g_art));	/* look for the next article */
     }
 }
 #endif /* PENDING */
@@ -720,7 +720,7 @@ void cache_until_key()
 	return;
 
     g_untrim_cache = true;
-    g_sentinel_artp = curr_artp;
+    g_sentinel_artp = g_curr_artp;
 
     /* Prioritize our caching based on what mode we're in */
     if (gmode == 's') {
@@ -822,7 +822,7 @@ bool cache_all_arts()
     }
     /* We're all done threading the group, so if the current article is
     ** still in doubt, tell them it's missing. */
-    if (curr_artp && !(curr_artp->flags & AF_CACHED) && !input_pending())
+    if (g_curr_artp && !(g_curr_artp->flags & AF_CACHED) && !input_pending())
 	pushchar('\f' | 0200);
     /* A completely empty group needs a count & a sort */
     if (gmode != 's' && !obj_count && !selected_only)
@@ -873,7 +873,7 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
 	    if (input_pending())
 		break;
 	    /* If the current article is no longer a '?', let them know. */
-	    if (curr_artp != g_sentinel_artp) {
+	    if (g_curr_artp != g_sentinel_artp) {
 		pushchar('\f' | 0200);
 		break;
 	    }

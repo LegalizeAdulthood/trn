@@ -124,9 +124,9 @@ void grow_ng(ART_NUM newlast)
 {
     ART_NUM tmpfirst;
 
-    forcegrow = false;
+    g_forcegrow = false;
     if (newlast > lastart) {
-	ART_NUM tmpart = art;
+	ART_NUM tmpart = g_art;
 	ngptr->toread += (ART_UNREAD)(newlast-lastart);
 	tmpfirst = lastart+1;
 	/* Increase the size of article scan arrays. */
@@ -148,13 +148,13 @@ void grow_ng(ART_NUM newlast)
 	    strcpy(buf, "More news -- auto-processing...\n\n");
 	termdown(2);
 	if (g_kf_state & KFS_NORMAL_LINES) {
-	    bool forcelast_save = forcelast;
-	    ARTICLE* artp_save = artp;
+	    bool forcelast_save = g_forcelast;
+	    ARTICLE* artp_save = g_artp;
 	    kill_unwanted(tmpfirst,buf,true);
-	    artp = artp_save;
-	    forcelast = forcelast_save;
+	    g_artp = artp_save;
+	    g_forcelast = forcelast_save;
 	}
-	art = tmpart;
+	g_art = tmpart;
     }
 }
 
@@ -236,31 +236,31 @@ void ng_skip()
 	    pad(just_a_sec/3);
 	    sleep(1);
 	}
-	art = article_next(art);
-	artp = article_ptr(art);
+	g_art = article_next(g_art);
+	g_artp = article_ptr(g_art);
 	do {
 	    /* tries to grab PREFETCH_SIZE XHDRS, flagging missing articles */
-	    (void) fetchsubj(art, false);
-	    artnum = art+PREFETCH_SIZE-1;
+	    (void) fetchsubj(g_art, false);
+	    artnum = g_art+PREFETCH_SIZE-1;
 	    if (artnum > lastart)
 		artnum = lastart;
-	    while (art <= artnum) {
-		if (artp->flags & AF_EXISTS)
+	    while (g_art <= artnum) {
+		if (g_artp->flags & AF_EXISTS)
 		    return;
-		art = article_next(art);
-		artp = article_ptr(art);
+		g_art = article_next(g_art);
+		g_artp = article_ptr(g_art);
 	    }
-	} while (art <= lastart);
+	} while (g_art <= lastart);
     }
     else
     {
 	if (errno != ENOENT) {	/* has it not been deleted? */
 	    clear();
 	    if (verbose)
-		printf("\n(Article %ld exists but is unreadable.)\n",(long)art)
+		printf("\n(Article %ld exists but is unreadable.)\n",(long)g_art)
 			FLUSH;
 	    else
-		printf("\n(%ld unreadable.)\n",(long)art) FLUSH;
+		printf("\n(%ld unreadable.)\n",(long)g_art) FLUSH;
 	    termdown(2);
 	    if (novice_delays) {
 		pad(just_a_sec);

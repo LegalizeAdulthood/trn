@@ -10,7 +10,7 @@
 #include "common.h"
 #include "hash.h"
 #include "cache.h"
-#include "ng.h"		/* variable art, the next article to read. */
+#include "ng.h"		/* variable g_art, the next article to read. */
 #include "ngdata.h"
 #include "term.h"	/* macro to clear... */
 #include "bits.h"	/* absfirst */
@@ -51,7 +51,7 @@ sa_main_result sa_main()
 	long a;
 	a = sa_readmarked_elig();
 	if (a) {	/* there was an article */
-	    art = sa_ents[a].artnum;
+	    g_art = sa_ents[a].artnum;
 	    g_reread = true;
 	    sa_clearmark(a);
 	    /* trn 3.x won't read an unselected article if selected_only */
@@ -78,7 +78,7 @@ sa_main_result sa_main()
     mode = sa_oldmode;			/* restore mode */
 
     if (i == SA_NORM || i == SA_FAKE) {
-	art = sa_art;
+	g_art = sa_art;
 	/* trn 3.x won't read an unselected article if selected_only */
 	selected_only = false;
 	if (sa_mode_read_elig)

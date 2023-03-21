@@ -473,7 +473,7 @@ void mark_as_read(ARTICLE *ap)
 	ap->flags |= AF_KCHASE;
 	s_chase_count++;
     }
-    checkcount++;			/* get more worried about crashes */
+    g_checkcount++;			/* get more worried about crashes */
 }
 
 void mark_missing_articles()

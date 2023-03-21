@@ -714,7 +714,7 @@ void perform_status_init(long cnt)
 {
     g_perform_cnt = 0;
     error_occurred = false;
-    subjline = nullptr;
+    g_subjline = nullptr;
     page_line = 1;
     performed_article_loop = true;
 

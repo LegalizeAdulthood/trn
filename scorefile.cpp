@@ -905,7 +905,7 @@ void sf_append(char *line)
 	    break;
 	  case 'S':	/* current subject */
 	    strcpy(lbuf,scoreline);
-	    s = fetchcache(art, SUBJ_LINE,true);
+	    s = fetchcache(g_art, SUBJ_LINE,true);
 	    if (!s || !*s) {
 		printf("No subject: score entry aborted.\n");
 		return;

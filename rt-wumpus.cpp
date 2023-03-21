@@ -72,7 +72,7 @@ void init_tree()
     while (max_line >= 0)		/* free any previous tree data */
 	free(tree_lines[max_line--]);
 
-    if (!(tree_article = curr_artp) || !tree_article->subj)
+    if (!(tree_article = g_curr_artp) || !tree_article->subj)
 	return;
     if (!(thread = tree_article->subj->thread))
 	return;
@@ -174,7 +174,7 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
 		*str++ = '<';
 		ch = '>';
 	    }
-	    if (ap == recent_artp && ap != tree_article)
+	    if (ap == g_recent_artp && ap != tree_article)
 		*str++ = '@';
 	    *str++ = thread_letter(ap);
 	    *str++ = ch;
@@ -312,7 +312,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	if (ThreadedGroup) {
 	    color_object(COLOR_TREE_MARK, true);
 	    putchar('[');
-	    putchar(thread_letter(curr_artp));
+	    putchar(thread_letter(g_curr_artp));
 	    putchar(']');
 	    color_pop();
 	    putchar(' ');
@@ -548,9 +548,9 @@ static void display_tree(ARTICLE *article, char *cp)
 	    buf[2] = '>';
 	}
 	buf[1] = thread_letter(article);
-	if (article == curr_artp) {
+	if (article == g_curr_artp) {
 	    color_string(COLOR_TREE_MARK,buf);
-	} else if (article == recent_artp) {
+	} else if (article == g_recent_artp) {
 	    putchar(buf[0]);
 	    color_object(COLOR_TREE_MARK, true);
 	    putchar(buf[1]);

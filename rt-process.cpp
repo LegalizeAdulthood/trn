@@ -108,13 +108,13 @@ bool valid_article(ARTICLE *article)
 		article->autofl |= fake_ap->autofl;
 		g_kf_state |= g_kfs_thread_change_set;
 	    }
-	    if (curr_artp == fake_ap) {
-		curr_artp = article;
-		curr_art = article_num(article);
+	    if (g_curr_artp == fake_ap) {
+		g_curr_artp = article;
+		g_curr_art = article_num(article);
 	    }
-	    if (recent_artp == fake_ap) {
-		recent_artp = article;
-		recent_art = article_num(article);
+	    if (g_recent_artp == fake_ap) {
+		g_recent_artp = article;
+		g_recent_art = article_num(article);
 	    }
 	    if ((ap = article->parent) != nullptr) {
 		if (ap->child1 == fake_ap)

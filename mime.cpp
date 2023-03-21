@@ -333,16 +333,16 @@ void mime_SetArticle()
     g_is_mime = (g_htype[MIMEVER_LINE].flags & HT_MAGIC)
 	    && g_htype[MIMEVER_LINE].minpos >= 0;
 
-    s = fetchlines(art,CONTTYPE_LINE);
+    s = fetchlines(g_art,CONTTYPE_LINE);
     mime_ParseType(g_mime_section,s);
     free(s);
 
     if (g_is_mime) {
-	s = fetchlines(art,CONTXFER_LINE);
+	s = fetchlines(g_art,CONTXFER_LINE);
 	mime_ParseEncoding(g_mime_section,s);
 	free(s);
 
-	s = fetchlines(art,CONTDISP_LINE);
+	s = fetchlines(g_art,CONTDISP_LINE);
 	mime_ParseDisposition(g_mime_section,s);
 	free(s);
 

@@ -56,11 +56,11 @@ int save_article()
 	return SAVE_ABORT;
     if ((use_pref = isupper(cmd)) != 0)
 	cmd = tolower(cmd);
-    parseheader(art);
+    parseheader(g_art);
     mime_SetArticle();
     clear_artbuf();
     savefrom = (cmd == 'w' || cmd == 'e')? g_htype[PAST_HEADER].minpos : 0;
-    if (artopen(art,savefrom) == nullptr) {
+    if (artopen(g_art,savefrom) == nullptr) {
 	if (verbose)
 	    fputs("\nCan't save an empty article.\n",stdout) FLUSH;
 	else
@@ -167,7 +167,7 @@ int save_article()
 	    int cnt = 0;
 
 	    /* Scan subject for filename and part number information */
-	    filename = decode_subject(art, &part, &total);
+	    filename = decode_subject(g_art, &part, &total);
 	    if (partOpt)
 		part = partOpt;
 	    if (totalOpt)
@@ -390,8 +390,8 @@ q to abort.\n\
 		quote_From = true;
 #endif
 	    }
-	    if (savefrom == 0 && art != 0)
-		fprintf(tmpfp,"Article: %ld of %s\n", (long)art, ngname);
+	    if (savefrom == 0 && g_art != 0)
+		fprintf(tmpfp,"Article: %ld of %s\n", (long)g_art, ngname);
 	    seekart(savefrom);
 	    while (readart(buf,LBUFLEN) != nullptr) {
 		if (quote_From && !strncasecmp(buf,"from ",5))
@@ -424,11 +424,11 @@ s_bomb:
 
 int view_article()
 {
-    parseheader(art);
+    parseheader(g_art);
     mime_SetArticle();
     clear_artbuf();
     savefrom = g_htype[PAST_HEADER].minpos;
-    if (artopen(art,savefrom) == nullptr) {
+    if (artopen(g_art,savefrom) == nullptr) {
 	if (verbose)
 	    fputs("\nNo attatchments on an empty article.\n",stdout) FLUSH;
 	else
@@ -446,7 +446,7 @@ int view_article()
 	int cnt = 0;
 
 	/* Scan subject for filename and part number information */
-	filename = decode_subject(art, &part, &total);
+	filename = decode_subject(g_art, &part, &total);
 	for (artpos = savefrom;
 	     readart(g_art_line,sizeof g_art_line) != nullptr;
 	     artpos = tellart())
@@ -491,7 +491,7 @@ int cancel_article()
     int myuid = getuid();
     int r = -1;
 
-    if (artopen(art,(ART_POS)0) == nullptr) {
+    if (artopen(g_art,(ART_POS)0) == nullptr) {
 	if (verbose)
 	    fputs("\nCan't cancel an empty article.\n",stdout) FLUSH;
 	else
@@ -499,9 +499,9 @@ int cancel_article()
 	termdown(2);
 	return r;
     }
-    reply_buf = fetchlines(art,REPLY_LINE);
-    from_buf = fetchlines(art,FROM_LINE);
-    ngs_buf = fetchlines(art,NGS_LINE);
+    reply_buf = fetchlines(g_art,REPLY_LINE);
+    from_buf = fetchlines(g_art,FROM_LINE);
+    ngs_buf = fetchlines(g_art,NGS_LINE);
     if (strcasecmp(get_val("FROM",""),from_buf)
      && (!in_string(from_buf,g_hostname, false)
       || (!in_string(from_buf,g_login_name, true)
@@ -556,7 +556,7 @@ int supersede_article()		/* Supersedes: */
     int r = -1;
     bool incl_body = (*buf == 'Z');
 
-    if (artopen(art,(ART_POS)0) == nullptr) {
+    if (artopen(g_art,(ART_POS)0) == nullptr) {
 	if (verbose)
 	    fputs("\nCan't supersede an empty article.\n",stdout) FLUSH;
 	else
@@ -564,9 +564,9 @@ int supersede_article()		/* Supersedes: */
 	termdown(2);
 	return r;
     }
-    reply_buf = fetchlines(art,REPLY_LINE);
-    from_buf = fetchlines(art,FROM_LINE);
-    ngs_buf = fetchlines(art,NGS_LINE);
+    reply_buf = fetchlines(g_art,REPLY_LINE);
+    from_buf = fetchlines(g_art,FROM_LINE);
+    ngs_buf = fetchlines(g_art,NGS_LINE);
     if (strcasecmp(get_val("FROM",""),from_buf)
      && (!in_string(from_buf,g_hostname, false)
       || (!in_string(from_buf,g_login_name, true)
@@ -598,7 +598,7 @@ int supersede_article()		/* Supersedes: */
 	interp(hbuf, sizeof hbuf, get_val("SUPERSEDEHEADER",SUPERSEDEHEADER));
 	fputs(hbuf,tmpfp);
 	if (incl_body && artfp != nullptr) {
-	    parseheader(art);
+	    parseheader(g_art);
 	    seekart(g_htype[PAST_HEADER].minpos);
 	    while (readart(buf,LBUFLEN) != nullptr)
 		fputs(buf,tmpfp);
@@ -654,10 +654,10 @@ static void follow_it_up()
 void reply()
 {
     char hbuf[5*LBUFLEN];
-    bool incl_body = (*buf == 'R' && art);
+    bool incl_body = (*buf == 'R' && g_art);
     char* maildoer = savestr(get_val("MAILPOSTER",MAILPOSTER));
 
-    artopen(art,(ART_POS)0);
+    artopen(g_art,(ART_POS)0);
     tmpfp = fopen(g_headname,"w");	/* open header file */
     if (tmpfp == nullptr) {
 	printf(cantcreate,g_headname) FLUSH;
@@ -679,7 +679,7 @@ void reply()
 	char* t;
 	interp(buf, (sizeof buf), get_val("YOUSAID",YOUSAID));
 	fprintf(tmpfp,"%s\n",buf);
-	parseheader(art);
+	parseheader(g_art);
 	mime_SetArticle();
 	clear_artbuf();
 	seekart(g_htype[PAST_HEADER].minpos);
@@ -717,7 +717,7 @@ void forward()
 #ifdef REGEX_WORKS_RIGHT
     init_compex(&mime_compex);
 #endif
-    artopen(art,(ART_POS)0);
+    artopen(g_art,(ART_POS)0);
     tmpfp = fopen(g_headname,"w");	/* open header file */
     if (tmpfp == nullptr) {
 	printf(cantcreate,g_headname) FLUSH;
@@ -779,7 +779,7 @@ void forward()
 	}
 	else if (*buf)
 	    fprintf(tmpfp,"%s\n",buf);
-	parseheader(art);
+	parseheader(g_art);
 	seekart((ART_POS)0);
 	while (readart(buf,sizeof buf) != nullptr) {
 	    if (!mime_boundary && *buf == '-') {
@@ -811,24 +811,24 @@ void forward()
 void followup()
 {
     char hbuf[5*LBUFLEN];
-    bool incl_body = (*buf == 'F' && art);
-    ART_NUM oldart = art;
+    bool incl_body = (*buf == 'F' && g_art);
+    ART_NUM oldart = g_art;
 
-    if (!incl_body && art <= lastart) {
+    if (!incl_body && g_art <= lastart) {
 	termdown(2);
 	in_answer("\n\nAre you starting an unrelated topic? [ynq] ", 'F');
 	setdef(buf,"y");
 	if (*buf == 'q')  /*TODO: need to add 'h' also */
 	    return;
 	if (*buf != 'n')
-	    art = lastart + 1;
+	    g_art = lastart + 1;
     }
-    artopen(art,(ART_POS)0);
+    artopen(g_art,(ART_POS)0);
     tmpfp = fopen(g_headname,"w");
     if (tmpfp == nullptr) {
 	printf(cantcreate,g_headname) FLUSH;
 	termdown(1);
-	art = oldart;
+	g_art = oldart;
 	return;
     }
     interp(hbuf, sizeof hbuf, get_val("NEWSHEADER",NEWSHEADER));
@@ -843,7 +843,7 @@ trim the quoted article down as much as possible.)\n\
 ",stdout) FLUSH;
 	interp(buf, (sizeof buf), get_val("ATTRIBUTION",ATTRIBUTION));
 	fprintf(tmpfp,"%s\n",buf);
-	parseheader(art);
+	parseheader(g_art);
 	mime_SetArticle();
 	clear_artbuf();
 	seekart(g_htype[PAST_HEADER].minpos);
@@ -861,7 +861,7 @@ trim the quoted article down as much as possible.)\n\
     }
     fclose(tmpfp);
     follow_it_up();
-    art = oldart;
+    g_art = oldart;
 }
 
 int invoke(char *cmd, char *dir)

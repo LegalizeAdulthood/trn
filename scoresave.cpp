@@ -11,7 +11,7 @@
 #include "cache.h"
 #include "bits.h"
 #include "intrp.h"		/* for filexp */
-#include "ng.h"			/* art */
+#include "ng.h"			/* g_art */
 #include "ngdata.h"
 #include "util.h"		/* several */
 #include "util2.h"

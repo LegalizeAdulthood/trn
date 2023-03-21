@@ -120,7 +120,7 @@ char article_selector(char_int cmd)
 
     sel_rereading = (cmd == 'U');
 
-    art = lastart+1;
+    g_art = lastart+1;
     extra_commands = article_commands;
     keep_the_group_static = (keep_the_group_static == 1);
 
@@ -143,9 +143,9 @@ char article_selector(char_int cmd)
     } else {
 	end_char = NewsSelCmds[0];
 	page_char = NewsSelCmds[1];
-	if (curr_artp) {
-	    sel_last_ap = curr_artp;
-	    sel_last_sp = curr_artp->subj;
+	if (g_curr_artp) {
+	    sel_last_ap = g_curr_artp;
+	    sel_last_sp = g_curr_artp->subj;
 	}
 	sel_mask = AF_SEL;
     }
@@ -217,8 +217,8 @@ sel_exit:
     else
 	count_subjects(CS_UNSELECT);
     if (sel_ret == '+') {
-	art = curr_art;
-	artp = curr_artp;
+	g_art = g_curr_art;
+	g_artp = g_curr_artp;
     } else
 	top_article();
     END_SELECTOR();
@@ -1190,7 +1190,7 @@ static void sel_prompt()
 		(!sel_prior_obj_cnt? "Top " : ""),
 		(long)((sel_prior_obj_cnt+sel_page_obj_cnt)*100 / sel_total_obj_cnt),
 		page_char, end_char);
-    interp(buf, sizeof buf, mailcall);
+    interp(buf, sizeof buf, g_mailcall);
     sprintf(msg, "%s-- %s %s (%s%s order) -- %s", buf,
 	    sel_exclusive && in_ng? "SELECTED" : "Select", sel_mode_string,
 	    sel_direction<0? "reverse " : "", sel_sort_string, cmd_buf);
@@ -1932,16 +1932,16 @@ q does nothing.\n\n\
 	erase_line(mousebar_cnt > 0);	/* erase the prompt */
 	removed_prompt = 3;
 	if (sel_mode == SM_ARTICLE)
-	    artp = sel_items[sel_item_index].u.ap;
+	    g_artp = sel_items[sel_item_index].u.ap;
 	else {
 	    SUBJECT* sp = sel_items[sel_item_index].u.sp;
 	    if (sel_mode == SM_THREAD) {
 		while (!sp->misc)
 		    sp = sp->thread_link;
 	    }
-	    artp = sp->articles;
+	    g_artp = sp->articles;
 	}
-	art = article_num(artp);
+	g_art = article_num(g_artp);
 	/* This call executes the action too */
 	switch (ask_memorize(ch)) {
 	  case 'J': case 'j': case 'K':  case ',':
@@ -1972,19 +1972,19 @@ q does nothing.\n\n\
       case ':':
 	if (sel_page_item_cnt) {
 	    if (sel_mode == SM_ARTICLE)
-		artp = sel_items[sel_item_index].u.ap;
+		g_artp = sel_items[sel_item_index].u.ap;
 	    else {
 		SUBJECT* sp = sel_items[sel_item_index].u.sp;
 		if (sel_mode == SM_THREAD) {
 		    while (!sp->misc)
 			sp = sp->thread_link;
 		}
-		artp = sp->articles;
+		g_artp = sp->articles;
 	    }
-	    art = article_num(artp);
+	    g_art = article_num(g_artp);
 	}
 	else
-	    art = 0;
+	    g_art = 0;
 	/* FALL THROUGH */
       case '/':
 	erase_line(mousebar_cnt > 0);	/* erase the prompt */
@@ -2012,7 +2012,7 @@ q does nothing.\n\n\
 		/* Force the search to begin at absfirst or firstart,
 		** depending upon whether they specified the 'r' option.
 		*/
-		art = lastart+1;
+		g_art = lastart+1;
 		switch (art_search(buf, sizeof buf, false)) {
 		  case SRCH_ERROR:
 		  case SRCH_ABORT:

@@ -78,7 +78,7 @@ add_executable(trn
     mime.cpp mime.h
     msdos.h
     ndir.cpp ndir.h
-    ng.cpp ng.h ng.ih
+    ng.cpp ng.h
     ngdata.cpp ngdata.h ngdata.ih
     ngsrch.cpp ngsrch.h
     ngstuff.cpp ngstuff.h

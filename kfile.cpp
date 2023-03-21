@@ -125,7 +125,7 @@ int do_kfile(FILE *kfp, int entering)
     char* cp;
     char* bp;
 
-    art = lastart+1;
+    g_art = lastart+1;
     g_killfirst = firstart;
     fseek(kfp,0L,0);			/* rewind file */
     while (fgets(buf,LBUFLEN,kfp) != nullptr) {
@@ -203,10 +203,10 @@ int do_kfile(FILE *kfp, int entering)
 		continue;
 	    case SRCH_INTR:
 		if (verbose)
-		    printf("\n(Interrupted at article %ld)\n",(long)art)
+		    printf("\n(Interrupted at article %ld)\n",(long)g_art)
 		      FLUSH;
 		else
-		    printf("\n(Intr at %ld)\n",(long)art) FLUSH;
+		    printf("\n(Intr at %ld)\n",(long)g_art) FLUSH;
 		termdown(2);
 		return -1;
 	    case SRCH_DONE:
@@ -253,8 +253,8 @@ int do_kfile(FILE *kfp, int entering)
 			    thread_select_cnt++;
 		    }
 		} else {
-		    art = article_num(ap);
-		    artp = ap;
+		    g_art = article_num(ap);
+		    g_artp = ap;
 		    perform(cp,false);
 		    if (ap->autofl & AUTO_SELS)
 			thread_select_cnt++;
@@ -262,7 +262,7 @@ int do_kfile(FILE *kfp, int entering)
 			thread_kill_cnt++;
 		}
 	    }
-	    art = lastart+1;
+	    g_art = lastart+1;
 	    g_kf_state |= KFS_THREAD_LINES;
 	}
 	else if (*bp == '<') {
@@ -350,7 +350,7 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
 		pad(just_a_sec);
 	}
 	if (anytokill)			/* if there was anything to kill */
-	    forcelast = false;		/* allow for having killed it all */
+	    g_forcelast = false;		/* allow for having killed it all */
 	firstart = oldfirst;
     }
     if (!entering && (g_kf_state & KFS_LOCAL_CHANGES) && !intr)

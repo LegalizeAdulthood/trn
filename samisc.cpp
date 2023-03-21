@@ -21,7 +21,7 @@
 #include "trn.h"
 #include "ngdata.h"		/* several */
 #include "rcstuff.h"
-#include "ng.h"			/* for "art" */
+#include "ng.h"			/* for "g_art" */
 #include "head.h"		/* fetchsubj */
 #include "rthread.h"
 #include "rt-select.h"		/* sel_mode */
@@ -168,10 +168,10 @@ int sa_number_arts()
  */
 void sa_go_art(long a)
 {
-    art = a;
-    (void)article_find(art);
-    if (openart != art)
-        artopen(art,(ART_POS)0);
+    g_art = a;
+    (void)article_find(g_art);
+    if (openart != g_art)
+        artopen(g_art,(ART_POS)0);
 }
 
 // long a,b;		/* the entry numbers to compare */

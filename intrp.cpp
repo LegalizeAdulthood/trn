@@ -326,7 +326,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			if (*scrbuf
 			 && (i = get_header_num(scrbuf)) != SOME_LINE) {
 			    safefree(line_buf);
-			    s = line_buf = fetchlines(art,i);
+			    s = line_buf = fetchlines(g_art,i);
 			}
 			else
 			    s = "";
@@ -471,7 +471,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		case 'a':
 		    if (in_ng) {
 			s = scrbuf;
-			sprintf(s,"%ld",(long)art);
+			sprintf(s,"%ld",(long)g_art);
 		    }
 		    else
 			s = "";
@@ -479,10 +479,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		case 'A':
 		    if (in_ng) {
 			if (g_datasrc->flags & DF_REMOTE) {
-			    if (artopen(art,(ART_POS)0)) {
+			    if (artopen(g_art,(ART_POS)0)) {
 				nntp_finishbody(FB_SILENT);
 				sprintf(s = scrbuf,"%s/%s",g_datasrc->spool_dir,
-					nntp_artname(art, false));
+					nntp_artname(g_art, false));
 			    }
 			    else
 				s = "";
@@ -492,7 +492,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			    s = linkartname;  /* for Eunice */
 #else
 			    sprintf(s = scrbuf,"%s/%s/%ld",g_datasrc->spool_dir,
-				    ngdir,(long)art);
+				    ngdir,(long)g_art);
 #endif
 		    }
 		    else
@@ -521,7 +521,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case 'D':
 		    if (in_ng)
-			s = dist_buf = fetchlines(art,DIST_LINE);
+			s = dist_buf = fetchlines(g_art,DIST_LINE);
 		    else
 			s = "";
 		    break;
@@ -533,26 +533,26 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case 'f':			/* from line */
 		    if (in_ng) {
-			parseheader(art);
+			parseheader(g_art);
 			if (g_htype[REPLY_LINE].minpos >= 0 && !comment_parse) {
 						/* was there a reply line? */
 			    if (!(s=reply_buf))
-				s = reply_buf = fetchlines(art,REPLY_LINE);
+				s = reply_buf = fetchlines(g_art,REPLY_LINE);
 			}
 			else if (!(s = from_buf))
-			    s = from_buf = fetchlines(art,FROM_LINE);
+			    s = from_buf = fetchlines(g_art,FROM_LINE);
 		    }
 		    else
 			s = "";
 		    break;
 		case 'F':
 		    if (in_ng) {
-			parseheader(art);
+			parseheader(g_art);
 			if (g_htype[FOLLOW_LINE].minpos >= 0)
 					/* is there a Followup-To line? */
-			    s = follow_buf = fetchlines(art,FOLLOW_LINE);
+			    s = follow_buf = fetchlines(g_art,FOLLOW_LINE);
 			else 
-			    s = ngs_buf = fetchlines(art,NGS_LINE);
+			    s = ngs_buf = fetchlines(g_art,NGS_LINE);
 		    }
 		    else
 			s = "";
@@ -571,7 +571,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		case 'i':
 		    if (in_ng) {
 			if (!(s=artid_buf))
-			    s = artid_buf = fetchlines(art,MSGID_LINE);
+			    s = artid_buf = fetchlines(g_art,MSGID_LINE);
 			if (*s && *s != '<') {
 			    sprintf(scrbuf,"<%s>",artid_buf);
 			    s = scrbuf;
@@ -609,7 +609,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case 'n':			/* newsgroups */
 		    if (in_ng)
-			s = ngs_buf = fetchlines(art,NGS_LINE);
+			s = ngs_buf = fetchlines(g_art,NGS_LINE);
 		    else
 			s = "";
 		    break;
@@ -655,10 +655,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case 'r':
 		    if (in_ng) {
-			parseheader(art);
+			parseheader(g_art);
 			safefree0(refs_buf);
 			if (g_htype[REFS_LINE].minpos >= 0) {
-			    refs_buf = fetchlines(art,REFS_LINE);
+			    refs_buf = fetchlines(g_art,REFS_LINE);
 			    normalize_refs(refs_buf);
 			    if ((s = strrchr(refs_buf,'<')) != nullptr)
 				break;
@@ -673,10 +673,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			s = "";
 			break;
 		    }
-		    parseheader(art);
+		    parseheader(g_art);
 		    safefree0(refs_buf);
 		    if (g_htype[REFS_LINE].minpos >= 0) {
-			refs_buf = fetchlines(art,REFS_LINE);
+			refs_buf = fetchlines(g_art,REFS_LINE);
 			len = strlen(refs_buf)+1;
 			normalize_refs(refs_buf);
 			/* no more than 3 prior references PLUS the
@@ -696,7 +696,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    else
 			len = 0;
 		    if (!artid_buf)
-			artid_buf = fetchlines(art,MSGID_LINE);
+			artid_buf = fetchlines(g_art,MSGID_LINE);
 		    i = refs_buf? strlen(refs_buf) : 0;
 		    j = strlen(artid_buf) + (i? 1 : 0)
 		      + (artid_buf[0] == '<'? 0 : 2) + 1;
@@ -716,12 +716,12 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		case 's':
 		case 'S': {
 		    char* str;
-		    if (!in_ng || !art || !artp) {
+		    if (!in_ng || !g_art || !g_artp) {
 			s = "";
 			break;
 		    }
 		    if ((str = subj_buf) == nullptr)
-			str = subj_buf = fetchsubj(art,true);
+			str = subj_buf = fetchsubj(g_art,true);
 		    subject_has_Re(str,&str);
                     if (*pattern == 's' && (h = in_string(str, "- (nf", true)) != nullptr)
 			*h = '\0';
@@ -734,20 +734,20 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			s = "";
 			break;
 		    }
-		    parseheader(art);
+		    parseheader(g_art);
 		    if (g_htype[REPLY_LINE].minpos >= 0) {
 					/* was there a reply line? */
 			if (!(s=reply_buf))
-			    s = reply_buf = fetchlines(art,REPLY_LINE);
+			    s = reply_buf = fetchlines(g_art,REPLY_LINE);
 		    }
 		    else if (!(s = from_buf))
-			s = from_buf = fetchlines(art,FROM_LINE);
+			s = from_buf = fetchlines(g_art,FROM_LINE);
 		    else
 			s = "noname";
 		    if (*pattern == 'T') {
 			if (g_htype[PATH_LINE].minpos >= 0) {
 					/* should we substitute path? */
-			    s = path_buf = fetchlines(art,PATH_LINE);
+			    s = path_buf = fetchlines(g_art,PATH_LINE);
 			}
 			i = strlen(g_p_host_name);
 			if (!strncmp(g_p_host_name,s,i) && s[i] == '!')
@@ -770,11 +770,11 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			s = "";
 			break;
 		    }
-		    unseen = (art <= lastart) && !was_read(art);
+		    unseen = (g_art <= lastart) && !was_read(g_art);
 		    if (selected_only) {
 			int selected;
 
-			selected = curr_artp && (curr_artp->flags & AF_SEL);
+			selected = g_curr_artp && (g_curr_artp->flags & AF_SEL);
 			sprintf(scrbuf,"%ld",
 				(long)selected_count - (selected && unseen));
 		    }
@@ -787,8 +787,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    int selected, unseen;
 
 		    if (in_ng) {
-			selected = curr_artp && (curr_artp->flags & AF_SEL);
-			unseen = (art <= lastart) && !was_read(art);
+			selected = g_curr_artp && (g_curr_artp->flags & AF_SEL);
+			unseen = (g_art <= lastart) && !was_read(g_art);
 			sprintf(scrbuf,"%ld",(long)ngptr->toread-selected_count
 						- (!selected && unseen));
 			s = scrbuf;
@@ -821,7 +821,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			char* s3;
 			int i = 0;
 
-			s2 = fetchlines(art,FROM_LINE);
+			s2 = fetchlines(g_art,FROM_LINE);
 			strcpy(tmpbuf,s2);
 			free(s2);
 			for (s2=tmpbuf;
@@ -865,7 +865,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = linkartname;	/* so Eunice people get right file */
 #else
 		    s = scrbuf;
-		    sprintf(s,"%ld",(long)art);
+		    sprintf(s,"%ld",(long)g_art);
 #endif
 		    if (stat(s,&filestat) < 0)
 			filestat.st_size = 0L;
