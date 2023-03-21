@@ -487,7 +487,7 @@ cleanup:
 					/* do cleanup from KILL file, if any */
     if (g_sa_initialized)
 	sa_cleanup();
-    if (sc_initialized)
+    if (g_sc_initialized)
 	sc_cleanup();
     chase_xrefs(false);
     if (!univ_ng_virtflag) {

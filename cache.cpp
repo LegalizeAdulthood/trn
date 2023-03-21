@@ -745,7 +745,7 @@ void cache_until_key()
 	}
     }
 
-    if (!input_pending() && sc_initialized)
+    if (!input_pending() && g_sc_initialized)
 	sc_lookahead(true,true);
 
     setspin(SPIN_OFF);

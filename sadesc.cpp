@@ -116,7 +116,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
 	    sprintf(g_sa_buf,"%6d ",(int)artnum);
 	    strcat(desc_buf,g_sa_buf);
 	}
-	if (sc_initialized && g_sa_mode_desc_score) {
+	if (g_sc_initialized && g_sa_mode_desc_score) {
 	    /* we'd like the score now */
 	    sprintf(g_sa_buf,"[%4d] ",sc_score_art(artnum,true));
 	    strcat(desc_buf,g_sa_buf);
@@ -158,7 +158,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
 	    /* if variable widths used later, use them */
 	    if (g_sa_mode_desc_artnum)
 		i += 7;
-	    if (sc_initialized && g_sa_mode_desc_score)
+	    if (g_sc_initialized && g_sa_mode_desc_score)
 		i += 7;
 	    if (g_sa_mode_desc_threadcount)
 		i += 6;
@@ -187,7 +187,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
 	    /* if variable widths used later, use them */
 	    if (g_sa_mode_desc_artnum)
 		i += 7;
-	    if (sc_initialized && g_sa_mode_desc_score)
+	    if (g_sc_initialized && g_sa_mode_desc_score)
 		i += 7;
 	    if (g_sa_mode_desc_threadcount)
 		i += 6;

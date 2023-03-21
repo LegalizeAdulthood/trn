@@ -43,8 +43,8 @@ void sa_init()
 	return;				/* ... no articles */
 #ifdef PENDING
     if (g_sa_mode_read_elig) {
-	sc_fill_read = true;
-	sc_fill_max = g_absfirst - 1;
+	g_sc_fill_read = true;
+	g_sc_fill_max = g_absfirst - 1;
     }
 #endif
     s_save_context();
@@ -154,10 +154,10 @@ sa_main_result sa_mainloop()
      * then try to initialize.
      * If that fails then strn will just use arrival ordering.
      */
-    if (!sc_initialized && g_sa_mode_order == 2) {
-	sc_delay = false;	/* yes, actually score... */
+    if (!g_sc_initialized && g_sa_mode_order == 2) {
+	g_sc_delay = false;	/* yes, actually score... */
 	sc_init(true);		/* wait for articles to score */
-	if (!sc_initialized)
+	if (!g_sc_initialized)
 	    g_sa_mode_order = 1;	/* arrival order */
     }
     /* redraw it *all* */

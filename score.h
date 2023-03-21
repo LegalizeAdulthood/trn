@@ -2,48 +2,39 @@
 /* score.h
  *
  */
+#ifndef SCORE_H
+#define SCORE_H
 
 /* RETHINK LOWSCORE: (especially for 16-bit scores?) */
 /* score given to unavailable articles */
-#define LOWSCORE (-999999)
+enum
+{
+    LOWSCORE = -999999
+};
 
 /* specific scoreflag meanings:  (note: bad placement, but where else?) */
-/* author has a score (match on FROM: line) */
-#define SFLAG_AUTHOR 1
-/* if true, the article has been scored */
-#define SFLAG_SCORED 16
+enum
+{
+    SFLAG_AUTHOR = 1, /* author has a score (match on FROM: line) */
+    SFLAG_SCORED = 16 /* if true, the article has been scored */
+};
+
 #define SCORED(a) (article_ptr(a)->scoreflags & SFLAG_SCORED)
 
-EXT bool kill_thresh_active INIT(false);
-EXT int kill_thresh INIT(LOWSCORE);   /* KILL articles at or below this score */
-
-EXT ART_NUM sc_fill_max;	   /* maximum art# scored by fill-routine */
-EXT bool sc_fill_read INIT(false); /* true if also scoring read arts... */
-
-/* has score been initialized (are we "in" scoring?) */
-EXT bool sc_initialized INIT(false);
-
-/* are we currently scoring an article (prevents loops) */
-EXT bool sc_scoring INIT(false);
-
-/* changes order of sorting (artnum comparison) when scores are equal */
-EXT bool score_newfirst INIT(false);
-
-/* if nice background available, use it */
-EXT bool sc_mode_nicebg INIT(true);
-
-/* If true, save the scores for this group on exit. */
-EXT bool sc_savescores INIT(false);
-
-/* If true, delay initialization of scoring until explicitly required */
-EXT bool sc_delay INIT(false);
-
-EXT bool sc_rescoring INIT(false);	/* are we rescoring now? */
-
-EXT bool sc_do_spin INIT(false);	/* actually do the score spinner */
-
-EXT bool sc_sf_delay INIT(false);	/* if true, delay loading rule files */
-EXT bool sc_sf_force_init INIT(false);	/* If true, always sf_init() */
+extern bool g_kill_thresh_active;
+extern int g_kill_thresh;       /* KILL articles at or below this score */
+extern ART_NUM g_sc_fill_max;   /* maximum art# scored by fill-routine */
+extern bool g_sc_fill_read;     /* true if also scoring read arts... */
+extern bool g_sc_initialized;   /* has score been initialized (are we "in" scoring?) */
+extern bool g_sc_scoring;       /* are we currently scoring an article (prevents loops) */
+extern bool g_score_newfirst;   /* changes order of sorting (artnum comparison) when scores are equal */
+extern bool g_sc_mode_nicebg;   /* if nice background available, use it */
+extern bool g_sc_savescores;    /* If true, save the scores for this group on exit. */
+extern bool g_sc_delay;         /* If true, delay initialization of scoring until explicitly required */
+extern bool g_sc_rescoring;     /* are we rescoring now? */
+extern bool g_sc_do_spin;       /* actually do the score spinner */
+extern bool g_sc_sf_delay;      /* if true, delay loading rule files */
+extern bool g_sc_sf_force_init; /* If true, always sf_init() */
 
 void sc_init(bool pend_wait);
 void sc_cleanup();
@@ -58,3 +49,5 @@ void sc_append(char *line);
 void sc_rescore();
 void sc_score_cmd(const char *line);
 void sc_kill_threshold(int thresh);
+
+#endif

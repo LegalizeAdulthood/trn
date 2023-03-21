@@ -179,7 +179,7 @@ int sa_compare(long a, long b)
 	if (i > j)
 	    return -1;
 	/* i == j */
-	if (score_newfirst) {
+	if (g_score_newfirst) {
 	    if (a < b)
 		return 1;
 	    return -1;

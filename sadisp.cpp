@@ -51,7 +51,7 @@ void sa_refresh_bot()
 	s = "arrival";
 	break;
       case 2:
-	if (score_newfirst)
+	if (g_score_newfirst)
 	    s = "score (new>old)";
 	else
 	    s = "score (old>new)";

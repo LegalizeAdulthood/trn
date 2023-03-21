@@ -157,11 +157,11 @@ int sa_docmd()
 	    g_sa_mode_order = 2;
 	else
 	    g_sa_mode_order = 1;
-	if (g_sa_mode_order == 2 && sc_delay) {
-	    sc_delay = false;
+	if (g_sa_mode_order == 2 && g_sc_delay) {
+	    g_sc_delay = false;
 	    sc_init(true);
 	}
-	if (g_sa_mode_order == 2 && !sc_initialized) /* score order */
+	if (g_sa_mode_order == 2 && !g_sc_initialized) /* score order */
 	    g_sa_mode_order = 1;	/* nope... (maybe allow later) */
 	/* if we go into score mode, make sure score is displayed */
 	if (g_sa_mode_order == 2 && !g_sa_mode_desc_score)
@@ -176,13 +176,13 @@ int sa_docmd()
 	    s_beep();
 	    break;
 	}
-	score_newfirst = !score_newfirst;
+	g_score_newfirst = !g_score_newfirst;
 	s_sort();
 	s_go_top_ents();
 	g_s_refill = true;
 	break;
       case 'R':	/* rescore articles */
-	if (!sc_initialized)
+	if (!g_sc_initialized)
 	    break;
 	/* clear to end of screen */
 	clear_rest();
@@ -221,11 +221,11 @@ int sa_docmd()
 	if (sa_eligible(s_first()) || s_next_elig(s_first())) {
 #ifdef PENDING
 	    if (g_sa_mode_read_elig) {
-		sc_fill_read = true;
-		sc_fill_max = g_absfirst - 1;
+		g_sc_fill_read = true;
+		g_sc_fill_max = g_absfirst - 1;
 	    }
 	    if (!g_sa_mode_read_elig)
-		sc_fill_read = false;
+		g_sc_fill_read = false;
 #endif
 	    g_s_ref_top = true;
 	    s_rub_ptr();

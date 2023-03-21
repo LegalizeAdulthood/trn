@@ -82,14 +82,14 @@ void sf_init()
     /* do post-processing (set thresholds and detect extra header usage) */
     sf_has_extra_headers = false;
     /* set thresholds from the sf_entries */
-    reply_active = newauthor_active = kill_thresh_active = false;
+    reply_active = newauthor_active = g_kill_thresh_active = false;
     for (i = 0; i < sf_num_entries; i++) {
 	if (sf_entries[i].head_type >= HEAD_LAST)
 	    sf_has_extra_headers = true;
 	switch (sf_entries[i].head_type) {
 	  case SF_KILLTHRESHOLD:
-	    kill_thresh_active = true;
-	    kill_thresh = sf_entries[i].score;
+	    g_kill_thresh_active = true;
+	    g_kill_thresh = sf_entries[i].score;
 	    if (sf_verbose) {
 		int j;
 		/* rethink? */
@@ -97,7 +97,7 @@ void sf_init()
 		    if (sf_entries[j].head_type == SF_KILLTHRESHOLD)
 			break;
 		if (j == sf_num_entries) /* no later thresholds */
-		    printf("killthreshold %d\n",kill_thresh) FLUSH;
+		    printf("killthreshold %d\n",g_kill_thresh) FLUSH;
 	    }
 	    break;
 	  case SF_NEWAUTHOR:
@@ -353,13 +353,13 @@ bool sf_do_command(char *cmd, bool check)
 	for (s = cmd+10; *s && (*s == ' ' || *s == '\t' || *s == '='); s++) ; 
 	if (!strncmp(s,"off",3)) {
 	    if (!check)
-		sc_savescores = false;
+		g_sc_savescores = false;
 	    return true;
 	}
 	if (*s) {	/* there is some argument */
 	    if (check)
 		return true;
-	    sc_savescores = true;
+	    g_sc_savescores = true;
 	    return true;
 	}
 	printf("Bad savescores command: |%s|\n",cmd) FLUSH;
@@ -746,7 +746,7 @@ int sf_score(ART_NUM a)
 	return 0;
     old_untrim = g_untrim_cache;
     g_untrim_cache = true;
-    sc_scoring = true;		/* loop prevention */
+    g_sc_scoring = true;		/* loop prevention */
     sum = 0;
 
     /* parse the header now if there are extra headers */
@@ -807,7 +807,7 @@ int sf_score(ART_NUM a)
 	}
     }
     g_untrim_cache = old_untrim;
-    sc_scoring = false;
+    g_sc_scoring = false;
     return sum;
 }
 
