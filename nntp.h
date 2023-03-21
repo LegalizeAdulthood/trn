@@ -1,6 +1,8 @@
 /* nntp.h
 */ 
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef NNTP_H
+#define NNTP_H
 
 enum
 {
@@ -43,4 +45,6 @@ void nntp_server_died(DATASRC *dp);
 #ifdef SUPPORT_XTHREAD
 long nntp_readcheck();
 long nntp_read(char *buf, long n);
+#endif
+
 #endif

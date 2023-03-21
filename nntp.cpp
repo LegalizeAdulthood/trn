@@ -5,26 +5,27 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "list.h"
-#include "util.h"
 #include "util2.h"
 #include "init.h"
 #include "trn.h"
-#include "hash.h"
 #include "ngdata.h"
 #include "nntpclient.h"
 #include "datasrc.h"
-#include "rcln.h"
 #include "cache.h"
-#include "bits.h"
 #include "head.h"
 #include "term.h"
 #include "final.h"
 #include "artio.h"
 #include "rcstuff.h"
-#include "INTERN.h"
 #include "nntp.h"
-#include "nntp.ih"
+
+static int nntp_copybody(char *s, int limit, ART_POS pos);
+
+static ART_POS s_body_pos{-1};
+static ART_POS s_body_end{};
+#ifdef SUPPORT_XTHREAD
+static long s_rawbytes{-1}; /* bytes remaining to be transfered */
+#endif
 
 int nntp_list(const char *type, const char *arg, int len)
 {
@@ -166,11 +167,11 @@ void nntp_body(ART_NUM artnum)
 
     artname = nntp_artname(artnum, false); /* Is it already in a tmp file? */
     if (artname) {
-	if (body_pos >= 0)
+	if (s_body_pos >= 0)
 	    nntp_finishbody(FB_DISCARD);
 	artfp = fopen(artname,"r");
 	if (artfp && fstat(fileno(artfp),&filestat) == 0)
-	    body_end = filestat.st_size;
+	    s_body_end = filestat.st_size;
 	return;
     }
 
@@ -200,18 +201,18 @@ void nntp_body(ART_NUM artnum)
 	errno = ENOENT;			/* Simulate file-not-found */
 	return;
     }
-    body_pos = 0;
+    s_body_pos = 0;
     if (g_parsed_art == artnum) {
 	fwrite(g_headbuf, 1, strlen(g_headbuf), artfp);
-	g_htype[PAST_HEADER].minpos = body_end = (ART_POS)ftell(artfp);
+	g_htype[PAST_HEADER].minpos = s_body_end = (ART_POS)ftell(artfp);
     }
     else {
 	char b[NNTP_STRLEN];
-	ART_POS prev_pos = body_end = 0;
-	while (nntp_copybody(b, sizeof b, body_end+1) > 0) {
-	    if (*b == '\n' && body_end - prev_pos < sizeof b)
+	ART_POS prev_pos = s_body_end = 0;
+	while (nntp_copybody(b, sizeof b, s_body_end+1) > 0) {
+	    if (*b == '\n' && s_body_end - prev_pos < sizeof b)
 		break;
-	    prev_pos = body_end;
+	    prev_pos = s_body_end;
 	}
     }
     fseek(artfp, 0L, 0);
@@ -220,7 +221,7 @@ void nntp_body(ART_NUM artnum)
 
 long nntp_artsize()
 {
-    return body_pos < 0 ? body_end : -1;
+    return s_body_pos < 0 ? s_body_end : -1;
 }
 
 static int nntp_copybody(char *s, int limit, ART_POS pos)
@@ -229,14 +230,14 @@ static int nntp_copybody(char *s, int limit, ART_POS pos)
     bool had_nl = true;
     int found_nl;
 
-    while (pos > body_end || !had_nl) {
+    while (pos > s_body_end || !had_nl) {
 	found_nl = nntp_gets(s, limit);
 	if (found_nl < 0)
 	    strcpy(s,"."); /*$$*/
 	if (had_nl) {
 	    if (nntp_at_list_end(s)) {
-		fseek(artfp, (long)body_pos, 0);
-		body_pos = -1;
+		fseek(artfp, (long)s_body_pos, 0);
+		s_body_pos = -1;
 		return 0;
 	    }
 	    if (s[0] == '.')
@@ -246,7 +247,7 @@ static int nntp_copybody(char *s, int limit, ART_POS pos)
 	if (found_nl)
 	    strcpy(s+len, "\n");
 	fputs(s, artfp);
-	body_end = ftell(artfp);
+	s_body_end = ftell(artfp);
 	had_nl = found_nl;
     }
     return 1;
@@ -255,7 +256,7 @@ static int nntp_copybody(char *s, int limit, ART_POS pos)
 int nntp_finishbody(int bmode)
 {
     char b[NNTP_STRLEN];
-    if (body_pos < 0)
+    if (s_body_pos < 0)
 	return 0;
     if (bmode == FB_DISCARD) {
 	/*printf("Discarding the rest of the article...\n") FLUSH; $$*/
@@ -272,17 +273,17 @@ int nntp_finishbody(int bmode)
 	else
 	    printf("Receiving..."), fflush(stdout);
     }
-    if (body_end != body_pos)
-	fseek(artfp, (long)body_end, 0);
+    if (s_body_end != s_body_pos)
+	fseek(artfp, (long)s_body_end, 0);
     if (bmode != FB_BACKGROUND)
 	nntp_copybody(b, sizeof b, (ART_POS)0x7fffffffL);
     else {
-	while (nntp_copybody(b, sizeof b, body_end+1)) {
+	while (nntp_copybody(b, sizeof b, s_body_end+1)) {
 	    if (input_pending())
 		break;
 	}
-	if (body_pos >= 0)
-	    fseek(artfp, (long)body_pos, 0);
+	if (s_body_pos >= 0)
+	    fseek(artfp, (long)s_body_pos, 0);
     }
     if (bmode == FB_OUTPUT)
 	erase_line(false);	/* erase the prompt */
@@ -291,41 +292,41 @@ int nntp_finishbody(int bmode)
 
 int nntp_seekart(ART_POS pos)
 {
-    if (body_pos >= 0) {
-	if (body_end < pos) {
+    if (s_body_pos >= 0) {
+	if (s_body_end < pos) {
 	    char b[NNTP_STRLEN];
-	    fseek(artfp, (long)body_end, 0);
+	    fseek(artfp, (long)s_body_end, 0);
 	    nntp_copybody(b, sizeof b, pos);
-	    if (body_pos >= 0)
-		body_pos = pos;
+	    if (s_body_pos >= 0)
+		s_body_pos = pos;
 	}
 	else
-	    body_pos = pos;
+	    s_body_pos = pos;
     }
     return fseek(artfp, (long)pos, 0);
 }
 
 ART_POS nntp_tellart()
 {
-    return body_pos < 0 ? (ART_POS)ftell(artfp) : body_pos;
+    return s_body_pos < 0 ? (ART_POS)ftell(artfp) : s_body_pos;
 }
 
 char *nntp_readart(char *s, int limit)
 {
-    if (body_pos >= 0) {
-	if (body_pos == body_end) {
-	    if (nntp_copybody(s, limit, body_pos+1) <= 0)
+    if (s_body_pos >= 0) {
+	if (s_body_pos == s_body_end) {
+	    if (nntp_copybody(s, limit, s_body_pos+1) <= 0)
 		return nullptr;
-	    if (body_end - body_pos < limit) {
-		body_pos = body_end;
+	    if (s_body_end - s_body_pos < limit) {
+		s_body_pos = s_body_end;
 		return s;
 	    }
-	    fseek(artfp, (long)body_pos, 0);
+	    fseek(artfp, (long)s_body_pos, 0);
 	}
 	s = fgets(s, limit, artfp);
-	body_pos = ftell(artfp);
-	if (body_pos == body_end)
-	    fseek(artfp, (long)body_pos, 0);  /* Prepare for coming write */
+	s_body_pos = ftell(artfp);
+	if (s_body_pos == s_body_end)
+	    fseek(artfp, (long)s_body_pos, 0);  /* Prepare for coming write */
 	return s;
     }
     return fgets(s, limit, artfp);
@@ -536,13 +537,13 @@ long nntp_readcheck()
 	return -2;
       case -1:
       case 0:
-	return rawbytes = -1;
+	return s_rawbytes = -1;
     }
 
     /* try to get the number of bytes being transfered */
-    if (sscanf(g_ser_line, "%*d%ld", &rawbytes) != 1)
-	return rawbytes = -1;
-    return rawbytes;
+    if (sscanf(g_ser_line, "%*d%ld", &s_rawbytes) != 1)
+	return s_rawbytes = -1;
+    return s_rawbytes;
 }
 #endif
 
@@ -553,7 +554,7 @@ long nntp_readcheck()
 long nntp_read(char *buf, long n)
 {
     /* if no bytes to read, then just return EOF */
-    if (rawbytes < 0)
+    if (s_rawbytes < 0)
 	return 0;
 
 #ifdef HAS_SIGHOLD
@@ -561,18 +562,18 @@ long nntp_read(char *buf, long n)
 #endif
 
     /* try to read some data from the server */
-    if (rawbytes) {
-	n = fread(buf, 1, n > rawbytes ? rawbytes : n, nntplink.rd_fp);
-	rawbytes -= n;
+    if (s_rawbytes) {
+	n = fread(buf, 1, n > s_rawbytes ? s_rawbytes : n, nntplink.rd_fp);
+	s_rawbytes -= n;
     } else
 	n = 0;
 
     /* if no more left, then fetch the end-of-command signature */
-    if (!rawbytes) {
+    if (!s_rawbytes) {
 	char buf[5];	/* "\r\n.\r\n" */
 
 	fread(buf, 1, 5, nntplink.rd_fp);
-	rawbytes = -1;
+	s_rawbytes = -1;
     }
 #ifdef HAS_SIGHOLD
     sigrelse(SIGINT);

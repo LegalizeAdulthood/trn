@@ -82,7 +82,7 @@ add_executable(trn
     ngdata.cpp ngdata.h
     ngsrch.cpp ngsrch.h
     ngstuff.cpp ngstuff.h
-    nntp.cpp nntp.h nntp.ih
+    nntp.cpp nntp.h
     only.cpp only.h
     opt.cpp opt.h opt.ih
     ${BISON_parsedate_OUTPUTS} parsedate.h
