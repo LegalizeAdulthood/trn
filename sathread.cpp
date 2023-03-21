@@ -5,32 +5,25 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "list.h"
 #include "hash.h"
 #include "cache.h"
-#include "bits.h"	/* for g_absfirst */
-#include "head.h"	/* hc_setspin() */
-#include "ngdata.h"
 #include "mempool.h"
 #include "scanart.h"
 #include "sadesc.h"	/* sa_desc_subject() */
-#include "samain.h"
 #include "samisc.h"
 #include "sorder.h"
-#include "util.h"
-#include "INTERN.h"
 #include "sathread.h"
 
-static long sa_num_threads = 0;
-static HASHTABLE* sa_thread_hash = 0;
+static long s_sa_num_threads{};
+static HASHTABLE *s_sa_thread_hash{};
 
 void sa_init_threads()
 {
     mp_free(MP_SATHREAD);
-    sa_num_threads = 0;
-    if (sa_thread_hash) {
-	hashdestroy(sa_thread_hash);
-	sa_thread_hash = 0;
+    s_sa_num_threads = 0;
+    if (s_sa_thread_hash) {
+	hashdestroy(s_sa_thread_hash);
+	s_sa_thread_hash = 0;
     }
 }
 
@@ -57,21 +50,21 @@ long sa_get_subj_thread(long e)
     if ((*s == '>') && (s[1] == ' '))
 	s += 2;
 
-    if (!sa_thread_hash) {
-	sa_thread_hash = hashcreate(401, HASH_DEFCMPFUNC);
+    if (!s_sa_thread_hash) {
+	s_sa_thread_hash = hashcreate(401, HASH_DEFCMPFUNC);
     }
-    data = hashfetch(sa_thread_hash,s,strlen(s));
+    data = hashfetch(s_sa_thread_hash,s,strlen(s));
     if (data.dat_ptr) {
 	return (long)(data.dat_len);
     }
     p = mp_savestr(s,MP_SATHREAD);
-    data = hashfetch(sa_thread_hash,p,strlen(s));
+    data = hashfetch(s_sa_thread_hash,p,strlen(s));
     data.dat_ptr = p;
-    data.dat_len = (unsigned)(sa_num_threads+1);
+    data.dat_len = (unsigned)(s_sa_num_threads+1);
     hashstorelast(data);
-    sa_num_threads++;
-    sa_ents[e].subj_thread_num = sa_num_threads;
-    return sa_num_threads;
+    s_sa_num_threads++;
+    sa_ents[e].subj_thread_num = s_sa_num_threads;
+    return s_sa_num_threads;
 }
 
 int sa_subj_thread_count(long a)

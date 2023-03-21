@@ -2,6 +2,8 @@
 /* sathread.h
  *
  */
+#ifndef SATHREAD_H
+#define SATHREAD_H
 
 void sa_init_threads();
 long sa_get_subj_thread(long e);
@@ -12,3 +14,5 @@ inline long sa_subj_thread(long e)
 {
     return sa_ents[e].subj_thread_num ? sa_ents[e].subj_thread_num : sa_get_subj_thread(e);
 }
+
+#endif
