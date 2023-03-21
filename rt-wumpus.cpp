@@ -297,7 +297,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	end = line + len;
     }
     if (HEADER_CONV()) {
-	end = tmpbuf + strcharsubst(tmpbuf, line, len*2+2, *charsubst);
+	end = tmpbuf + strcharsubst(tmpbuf, line, len*2+2, *g_charsubst);
 	line = tmpbuf;
     }
 

@@ -911,8 +911,8 @@ int page_switch()
 	    return PS_ASK;
 	switch (buf[1] & 0177) {
 	  case 'C':
-	    if (!*(++charsubst))
-		charsubst = charsets;
+	    if (!*(++g_charsubst))
+		g_charsubst = g_charsets;
 	    goto refresh_screen;
 	  default:
 	    break;

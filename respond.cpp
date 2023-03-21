@@ -687,7 +687,7 @@ void reply()
 	while ((s = readartbuf(false)) != nullptr) {
 	    if ((t = strchr(s, '\n')) != nullptr)
 		*t = '\0';
-	    strcharsubst(hbuf,s,sizeof hbuf,*charsubst);
+	    strcharsubst(hbuf,s,sizeof hbuf,*g_charsubst);
 	    fprintf(tmpfp,"%s%s\n",indstr,hbuf);
 	    if (t)
 		*t = '\0';
@@ -851,7 +851,7 @@ trim the quoted article down as much as possible.)\n\
 	while ((s = readartbuf(false)) != nullptr) {
 	    if ((t = strchr(s, '\n')) != nullptr)
 		*t = '\0';
-	    strcharsubst(hbuf,s,sizeof hbuf,*charsubst);
+	    strcharsubst(hbuf,s,sizeof hbuf,*g_charsubst);
 	    fprintf(tmpfp,"%s%s\n",indstr,hbuf);
 	    if (t)
 		*t = '\0';

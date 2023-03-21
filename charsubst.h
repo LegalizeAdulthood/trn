@@ -11,13 +11,17 @@
  * for any use whatsoever, and it is provided as is. Any use of this software
  * is at the user's own risk. 
  */
+#ifndef CHARSUBST_H
+#define CHARSUBST_H
 
 /* Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced */
-EXT char* charsets INIT("patm");
-EXT char* charsubst;
+extern char* g_charsets;
+extern char* g_charsubst;
 
-#define HEADER_CONV() (*charsubst=='a' || *charsubst=='m'? *charsubst : '\0')
+#define HEADER_CONV() (*g_charsubst=='a' || *g_charsubst=='m'? *g_charsubst : '\0')
 
 int putsubstchar(int c, int limit, bool outputok);
 const char *current_charsubst();
 int strcharsubst(char *outb, const char *inb, int limit, char_int subst);
+
+#endif

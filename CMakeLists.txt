@@ -58,7 +58,7 @@ add_executable(trn
     backpage.cpp backpage.h
     bits.cpp bits.h
     cache.cpp cache.h
-    charsubst.cpp charsubst.h charsubst.ih
+    charsubst.cpp charsubst.h
     color.cpp color.h color.ih
     common.h
     config2.h

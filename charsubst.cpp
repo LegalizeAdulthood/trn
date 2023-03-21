@@ -15,13 +15,13 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "search.h"
-#include "artstate.h"
 #include "util2.h"
 #include "utf.h"
-#include "INTERN.h"
 #include "charsubst.h"
-#include "charsubst.ih"
+
+/* Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced */
+char *g_charsets{"patm"};
+char *g_charsubst{};
 
 /* TeX encoding table - gives ISO char for "x (x=32..127) */
 
@@ -36,11 +36,13 @@ static Uchar textbl[96] = {
 
 static char texchar = '\0';
 
+static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t);
+
 int putsubstchar(int c, int limit, bool outputok)
 {
     Uchar d, oc[2], nc[5];
     int t, i = 0;
-    switch (*charsubst) {
+    switch (*g_charsubst) {
       case 'm':
 	t = 1;
 	goto doconvert;
@@ -120,7 +122,7 @@ const char *current_charsubst()
 #else /*!USE_UTF_HACK */
     static const char* show;
 
-    switch (*charsubst) {
+    switch (*g_charsubst) {
       case 'm':
 	if (verbose)
 	    show = "[ISO->USmono] ";

@@ -464,7 +464,7 @@ void set_option(int num, char *s)
 	empty_only_char = YES(s)? 'o' : 'O';
 	break;
       case OI_CHARSET:
-	charsets = savestr(s);
+	g_charsets = savestr(s);
 	break;
       case OI_INITIAL_GROUP_LIST:
 	if (isdigit(*s)) {
@@ -865,7 +865,7 @@ char *option_value(int num)
       case OI_RESTRICTION_INCLUDES_EMPTIES:
 	return YESorNO(empty_only_char == 'o');
       case OI_CHARSET:
-	return charsets;
+	return g_charsets;
       case OI_INITIAL_GROUP_LIST:
 	if (suppress_cn)
 	    return YESorNO(0);

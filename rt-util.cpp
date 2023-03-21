@@ -460,7 +460,7 @@ char *compress_from(char *from, int size)
     char* s = from? from : "";
     int len, vis_len;
 
-    strcharsubst(lbuf, s, sizeof lbuf, *charsubst);
+    strcharsubst(lbuf, s, sizeof lbuf, *g_charsubst);
     if ((s = extract_name(lbuf)) != nullptr)
 	s = compress_name(s, size);
     else
@@ -543,7 +543,7 @@ const char *compress_subj(const ARTICLE *ap, int max)
     if (ap != first || (ap->flags & AF_HAS_RE)
      || (!(ap->flags&AF_UNREAD) ^ sel_rereading))
 	*cp++ = '>';
-    strcharsubst(cp, ap->subj->str + 4, (sizeof buf) - (cp-buf), *charsubst);
+    strcharsubst(cp, ap->subj->str + 4, (sizeof buf) - (cp-buf), *g_charsubst);
 
     /* Remove "(was: oldsubject)", because we already know the old subjects.
     ** Also match "(Re: oldsubject)".  Allow possible spaces after the ('s.
