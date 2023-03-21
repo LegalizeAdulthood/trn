@@ -28,12 +28,24 @@
 #include "EXTERN.h"
 #include "common.h"
 #include "term.h"
-#include "util.h"
 #include "final.h"
 #include "util2.h"
-#include "INTERN.h"
 #include "color.h"
-#include "color.ih"
+
+struct COLOR_OBJ
+{
+    char* name;
+    char* fg;
+    char* bg;
+    int attr;
+};
+
+enum
+{
+    STACK_SIZE = 16
+};
+
+static void output_color();
 
 /*
 ** Object properties.

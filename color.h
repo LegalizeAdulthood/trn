@@ -2,6 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file, and
  * this file is also Copyright 1995 by Gran Larsson <hoh@approve.se>. */
+#ifndef COLOR_H
+#define COLOR_H
 
 /*
 ** Object numbers.
@@ -38,3 +40,5 @@ void color_object(int object, bool push);
 void color_pop();
 void color_string(int object, const char *str);
 void color_default();
+
+#endif
