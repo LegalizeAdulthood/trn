@@ -58,17 +58,17 @@ bool set_sel_mode(char_int ch)
 {
     switch (ch) {
       case 'a':
-	set_selector(sel_defaultmode = SM_ARTICLE, 0);
+	set_selector(g_sel_defaultmode = SM_ARTICLE, 0);
 	break;
       case 's':
-	set_selector(sel_defaultmode = SM_SUBJECT, 0);
+	set_selector(g_sel_defaultmode = SM_SUBJECT, 0);
 	break;
       case 't':
 	if (in_ng && !g_threaded_group) {
 	    bool always_save = thread_always;
 	    g_threaded_group = true;
 	    thread_always = true;
-	    if (sel_rereading)
+	    if (g_sel_rereading)
 		g_firstart = g_absfirst;
 	    printf("\nThreading the group. "), fflush(stdout);
 	    termdown(1);
@@ -79,10 +79,10 @@ bool set_sel_mode(char_int ch)
 	}
 	/* FALL THROUGH */
       case 'T':
-	set_selector(sel_defaultmode = SM_THREAD, 0);
+	set_selector(g_sel_defaultmode = SM_THREAD, 0);
 	break;
       default:
-	set_selector(sel_defaultmode, 0);
+	set_selector(g_sel_defaultmode, 0);
 	return false;
     }
     return true;
@@ -90,11 +90,11 @@ bool set_sel_mode(char_int ch)
 
 char *get_sel_order(int smode)
 {
-    int save_sel_mode = sel_mode;
+    int save_sel_mode = g_sel_mode;
     set_selector(smode, 0);
-    sprintf(buf,"%s%s", sel_direction < 0? "reverse " : "",
-	    sel_sort_string);
-    sel_mode = save_sel_mode;
+    sprintf(buf,"%s%s", g_sel_direction < 0? "reverse " : "",
+	    g_sel_sort_string);
+    g_sel_mode = save_sel_mode;
     set_selector(0, 0);
     return buf;
 }
@@ -121,7 +121,7 @@ bool set_sel_order(int smode, const char *str)
 
 bool set_sel_sort(int smode, char_int ch)
 {
-    int save_sel_mode = sel_mode;
+    int save_sel_mode = g_sel_mode;
     int ssort;
 
     switch (ch) {
@@ -153,14 +153,14 @@ bool set_sel_sort(int smode, char_int ch)
 	return false;
     }
 
-    sel_mode = smode;
+    g_sel_mode = smode;
     if (isupper(ch))
 	set_selector(0, -ssort);
     else
 	set_selector(0, ssort);
 
-    if (sel_mode != save_sel_mode) {
-	sel_mode = save_sel_mode;
+    if (g_sel_mode != save_sel_mode) {
+	g_sel_mode = save_sel_mode;
 	set_selector(0, 0);
     }
     return true;
@@ -169,118 +169,118 @@ bool set_sel_sort(int smode, char_int ch)
 void set_selector(int smode, int ssort)
 {
     if (smode == 0) {
-	if (sel_mode == SM_SUBJECT)
-	    sel_mode = sel_threadmode;
-	smode = sel_mode;
+	if (g_sel_mode == SM_SUBJECT)
+	    g_sel_mode = g_sel_threadmode;
+	smode = g_sel_mode;
     }
     else
-	sel_mode = smode;
+	g_sel_mode = smode;
     if (!ssort) {
-	switch (sel_mode) {
+	switch (g_sel_mode) {
 	  case SM_MULTIRC:
 	    ssort = SS_NATURAL;
 	    break;
 	  case SM_ADDGROUP:
-	    ssort = sel_addgroupsort;
+	    ssort = g_sel_addgroupsort;
 	    break;
 	  case SM_NEWSGROUP:
-	    ssort = sel_newsgroupsort;
+	    ssort = g_sel_newsgroupsort;
 	    break;
 	  case SM_OPTIONS:
 	    ssort = SS_NATURAL;
 	    break;
 	  case SM_THREAD:
 	  case SM_SUBJECT:
-	    ssort = sel_threadsort;
+	    ssort = g_sel_threadsort;
 	    break;
 	  case SM_ARTICLE:
-	    ssort = sel_artsort;
+	    ssort = g_sel_artsort;
 	    break;
 	  case SM_UNIVERSAL:
-	    ssort = sel_univsort;
+	    ssort = g_sel_univsort;
 	    break;
 	}
     }
     if (ssort > 0) {
-	sel_direction = 1;
-	sel_sort = ssort;
+	g_sel_direction = 1;
+	g_sel_sort = ssort;
     }
     else {
-	sel_direction = -1;
-	sel_sort = -ssort;
+	g_sel_direction = -1;
+	g_sel_sort = -ssort;
     }
 
-    if (sel_mode == SM_THREAD && !g_threaded_group)
-	sel_mode = SM_SUBJECT;
+    if (g_sel_mode == SM_THREAD && !g_threaded_group)
+	g_sel_mode = SM_SUBJECT;
 
-    switch (sel_mode) {
+    switch (g_sel_mode) {
       case SM_MULTIRC:
-	sel_mode_string = "a newsrc group";
+	g_sel_mode_string = "a newsrc group";
 	break;
       case SM_ADDGROUP:
-	sel_mode_string = "a newsgroup to add";
-	sel_addgroupsort = ssort;
+	g_sel_mode_string = "a newsgroup to add";
+	g_sel_addgroupsort = ssort;
 	break;
       case SM_NEWSGROUP:
-	sel_mode_string = "a newsgroup";
-	sel_newsgroupsort = ssort;
+	g_sel_mode_string = "a newsgroup";
+	g_sel_newsgroupsort = ssort;
 	break;
       case SM_OPTIONS:
-	sel_mode_string = "an option to change";
+	g_sel_mode_string = "an option to change";
 	break;
       case SM_UNIVERSAL:
-	sel_mode_string = "an item";
-	sel_univsort = ssort;
+	g_sel_mode_string = "an item";
+	g_sel_univsort = ssort;
 	break;
       case SM_THREAD:
-	sel_mode_string = "threads";
-	sel_threadmode = smode;
-	sel_threadsort = ssort;
+	g_sel_mode_string = "threads";
+	g_sel_threadmode = smode;
+	g_sel_threadsort = ssort;
 	goto thread_subj_sort;
       case SM_SUBJECT:
-	sel_mode_string = "subjects";
-	sel_threadmode = smode;
-	sel_threadsort = ssort;
+	g_sel_mode_string = "subjects";
+	g_sel_threadmode = smode;
+	g_sel_threadsort = ssort;
      thread_subj_sort:
-	if (sel_sort == SS_AUTHOR || sel_sort == SS_GROUPS
-	 || sel_sort == SS_NATURAL)
-	    sel_sort = SS_DATE;
+	if (g_sel_sort == SS_AUTHOR || g_sel_sort == SS_GROUPS
+	 || g_sel_sort == SS_NATURAL)
+	    g_sel_sort = SS_DATE;
 	break;
       case SM_ARTICLE:
-	sel_mode_string = "articles";
-	sel_artsort = ssort;
-	if (sel_sort == SS_COUNT)
-	    sel_sort = SS_DATE;
+	g_sel_mode_string = "articles";
+	g_sel_artsort = ssort;
+	if (g_sel_sort == SS_COUNT)
+	    g_sel_sort = SS_DATE;
 	break;
     }
 
-    switch (sel_sort) {
+    switch (g_sel_sort) {
       case SS_DATE:
-	sel_sort_string = "date";
+	g_sel_sort_string = "date";
 	break;
       case SS_STRING:
-	sel_sort_string = "subject";
+	g_sel_sort_string = "subject";
 	break;
       case SS_AUTHOR:
-	sel_sort_string = "author";
+	g_sel_sort_string = "author";
 	break;
       case SS_COUNT:
-	sel_sort_string = "count";
+	g_sel_sort_string = "count";
 	break;
       case SS_LINES:
-	sel_sort_string = "lines";
+	g_sel_sort_string = "lines";
 	break;
       case SS_NATURAL:
-	sel_sort_string = "natural";
+	g_sel_sort_string = "natural";
 	break;
       case SS_GROUPS:
-	if (sel_mode == SM_NEWSGROUP)
-	    sel_sort_string = "group name";
+	if (g_sel_mode == SM_NEWSGROUP)
+	    g_sel_sort_string = "group name";
 	else
-	    sel_sort_string = "SubjDate";
+	    g_sel_sort_string = "SubjDate";
 	break;
       case SS_SCORE:
-	sel_sort_string = "points";
+	g_sel_sort_string = "points";
 	break;
     }
 }
@@ -288,15 +288,15 @@ void set_selector(int smode, int ssort)
 static void sel_page_init()
 {
     g_sel_max_line_cnt = tc_LINES - (tc_COLS - mousebar_width < 50? 6 : 5);
-    sel_chars = get_val("SELECTCHARS", SELECTCHARS);
+    g_sel_chars = get_val("SELECTCHARS", SELECTCHARS);
     /* The numeric option of up to 99 lines will require many adaptations
      * to be able to switch from a large numeric page (more than
-     * strlen(sel_chars) lines) to an alphanumeric page. XXX
+     * strlen(g_sel_chars) lines) to an alphanumeric page. XXX
      */
     if (UseSelNum)
         g_sel_max_per_page = 99;
     else
-	g_sel_max_per_page = strlen(sel_chars);
+	g_sel_max_per_page = strlen(g_sel_chars);
     if (g_sel_max_per_page > MAX_SEL)
 	g_sel_max_per_page = MAX_SEL;
     if (g_sel_max_per_page > g_sel_max_line_cnt)
@@ -313,7 +313,7 @@ void init_pages(bool fill_last_page)
 try_again:
     g_sel_prior_obj_cnt = g_sel_total_obj_cnt = 0;
 
-    switch (sel_mode) {
+    switch (g_sel_mode) {
       case SM_MULTIRC: {
 	MULTIRC* mp;
 	for (mp = multirc_low(); mp; mp = multirc_next(mp)) {
@@ -333,7 +333,7 @@ try_again:
 	bool save_the_rest = false;
 	g_group_init_done = true;
 	sort_newsgroups();
-	selected_count = 0;
+	g_selected_count = 0;
 	obj_count = 0;
 	for (np = g_first_ng; np; np = np->next) {
 	    if (g_sel_page_np == np)
@@ -347,14 +347,14 @@ try_again:
 		;
 	    else if (save_the_rest) {
 		g_group_init_done = false;
-		np->toread = !sel_rereading;
+		np->toread = !g_sel_rereading;
 	    }
 	    else {
 		/*g_ngptr = np; ??*/
 		/*set_ngname(np->rcline);*/
 		set_toread(np, ST_LAX);
 		if (!np->rc->datasrc->act_sf.fp)
-		    save_the_rest = (sel_rereading ^ (np->toread > TR_NONE));
+		    save_the_rest = (g_sel_rereading ^ (np->toread > TR_NONE));
 	    }
 	    if (g_paranoid) {
 		g_current_ng = g_ngptr = np;
@@ -362,24 +362,24 @@ try_again:
 		cleanup_newsrc(np->rc);
 		goto try_again;
 	    }
-	    if (!(np->flags & sel_mask)
-	     && (sel_rereading? np->toread != TR_NONE
+	    if (!(np->flags & g_sel_mask)
+	     && (g_sel_rereading? np->toread != TR_NONE
 			      : np->toread < g_ng_min_toread))
 		continue;
 	    obj_count++;
 
-	    if (!sel_exclusive || (np->flags & sel_mask)) {
-		if (np->flags & sel_mask)
-		    selected_count++;
-		else if (sel_rereading)
+	    if (!g_sel_exclusive || (np->flags & g_sel_mask)) {
+		if (np->flags & g_sel_mask)
+		    g_selected_count++;
+		else if (g_sel_rereading)
 		    np->flags |= NF_DEL;
 		np->flags |= NF_INCLUDED;
 		g_sel_total_obj_cnt++;
 	    }
 	}
 	if (!g_sel_total_obj_cnt) {
-	    if (sel_exclusive) {
-		sel_exclusive = false;
+	    if (g_sel_exclusive) {
+		g_sel_exclusive = false;
 		g_sel_page_np = nullptr;
 		goto try_again;
 	    }
@@ -412,18 +412,18 @@ try_again:
 	    if (g_sel_page_gp == gp)
 		g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
 	    gp->flags &= ~AGF_INCLUDED;
-	    if (!sel_rereading ^ !(gp->flags & AGF_EXCLUDED))
+	    if (!g_sel_rereading ^ !(gp->flags & AGF_EXCLUDED))
 		continue;
-	    if (!sel_exclusive || (gp->flags & sel_mask)) {
-		if (sel_rereading && !(gp->flags & sel_mask))
+	    if (!g_sel_exclusive || (gp->flags & g_sel_mask)) {
+		if (g_sel_rereading && !(gp->flags & g_sel_mask))
 		    gp->flags |= AGF_DEL;
 		gp->flags |= AGF_INCLUDED;
 		g_sel_total_obj_cnt++;
 	    }
 	    obj_count++;
 	}
-	if (!g_sel_total_obj_cnt && sel_exclusive) {
-	    sel_exclusive = false;
+	if (!g_sel_total_obj_cnt && g_sel_exclusive) {
+	    g_sel_exclusive = false;
 	    g_sel_page_gp = nullptr;
 	    goto try_again;
 	}
@@ -473,7 +473,7 @@ try_again:
 		    set_toread(np, ST_LAX);
 		    toread_quiet = false;
 		}
-		if (!(sel_rereading ^ (np->toread>TR_NONE))) {
+		if (!(g_sel_rereading ^ (np->toread>TR_NONE))) {
 		    ui_elig = false;
 		}
 		break;
@@ -482,25 +482,25 @@ try_again:
 		/* later: use the datasrc of the newsgroup */
 		ui_elig = !was_read_group(g_datasrc, ui->data.virt.num,
 					  ui->data.virt.ng);
-		if (sel_rereading)
+		if (g_sel_rereading)
 		    ui_elig = !ui_elig;
 		break;
 	      default:
-		ui_elig = !sel_rereading;
+		ui_elig = !g_sel_rereading;
 		break;
 	    }
 	    if (!ui_elig)
 	        continue;
-	    if (!sel_exclusive || (ui->flags & sel_mask)) {
-		if (sel_rereading && !(ui->flags & sel_mask))
+	    if (!g_sel_exclusive || (ui->flags & g_sel_mask)) {
+		if (g_sel_rereading && !(ui->flags & g_sel_mask))
 		    ui->flags |= UF_DEL;
 		ui->flags |= UF_INCLUDED;
 		g_sel_total_obj_cnt++;
 	    }
 	    obj_count++;
 	}
-	if (!g_sel_total_obj_cnt && sel_exclusive) {
-	    sel_exclusive = false;
+	if (!g_sel_total_obj_cnt && g_sel_exclusive) {
+	    g_sel_exclusive = false;
 	    sel_page_univ = nullptr;
 	    goto try_again;
 	}
@@ -536,8 +536,8 @@ try_again:
 	    obj_count++;
 	}
 #if 0
-	if (!g_sel_total_obj_cnt && sel_exclusive) {
-	    sel_exclusive = false;
+	if (!g_sel_total_obj_cnt && g_sel_exclusive) {
+	    g_sel_exclusive = false;
 	    g_sel_page_op = nullptr;
 	    goto try_again;
 	}
@@ -559,7 +559,7 @@ try_again:
 	ARTICLE** limit;
 
 	if (g_sel_page_app) {
-	    int desired_flags = (sel_rereading? AF_EXISTS:(AF_EXISTS|AF_UNREAD));
+	    int desired_flags = (g_sel_rereading? AF_EXISTS:(AF_EXISTS|AF_UNREAD));
 	    limit = g_artptr_list + g_artptr_list_size;
 	    ap = nullptr;
 	    for (app = g_sel_page_app; app < limit; app++) {
@@ -587,21 +587,21 @@ try_again:
 	limit = g_artptr_list + g_artptr_list_size;
 	for (app = g_artptr_list; app < limit; app++) {
 	    ap = *app;
-	    if (sel_rereading && !(ap->flags & sel_mask))
+	    if (g_sel_rereading && !(ap->flags & g_sel_mask))
 		ap->flags |= AF_DEL;
 	    if (g_sel_page_app == app
 	     || (!g_sel_page_app && ap->subj == g_sel_page_sp)) {
 		g_sel_page_app = app;
 		g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
 	    }
-	    if (!sel_exclusive || (ap->flags & sel_mask)) {
+	    if (!g_sel_exclusive || (ap->flags & g_sel_mask)) {
 		g_sel_total_obj_cnt++;
 		ap->flags |= AF_INCLUDED;
 	    } else
 		ap->flags &= ~AF_INCLUDED;
 	}
-	if (sel_exclusive && !g_sel_total_obj_cnt) {
-	    sel_exclusive = false;
+	if (g_sel_exclusive && !g_sel_total_obj_cnt) {
+	    g_sel_exclusive = false;
 	    g_sel_page_app = nullptr;
 	    goto try_again;
 	}
@@ -630,20 +630,20 @@ try_again:
 	} else
 	    sort_subjects();
 	for (sp = g_first_subject; sp; sp = sp->next) {
-	    if (sel_rereading && !(sp->flags & sel_mask))
+	    if (g_sel_rereading && !(sp->flags & g_sel_mask))
 		sp->flags |= SF_DEL;
 
 	    group_sp = sp;
 	    group_arts = sp->misc;
 
-	    if (!sel_exclusive || (sp->flags & sel_mask))
+	    if (!g_sel_exclusive || (sp->flags & g_sel_mask))
 		sp->flags |= SF_INCLUDED;
 	    else
 		sp->flags &= ~SF_INCLUDED;
 
 	    if (g_sel_page_sp == group_sp)
 		g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
-	    if (sel_mode == SM_THREAD) {
+	    if (g_sel_mode == SM_THREAD) {
 		while (sp->next && sp->next->thread == sp->thread) {
 		    sp = sp->next;
 		    if (sp == g_sel_page_sp) {
@@ -651,9 +651,9 @@ try_again:
 			g_sel_page_sp = group_sp;
 		    }
 		    sp->flags &= ~SF_INCLUDED;
-		    if (sp->flags & sel_mask)
+		    if (sp->flags & g_sel_mask)
 			group_sp->flags |= SF_INCLUDED;
-		    else if (sel_rereading)
+		    else if (g_sel_rereading)
 			sp->flags |= SF_DEL;
 		    group_arts += sp->misc;
 		}
@@ -661,8 +661,8 @@ try_again:
 	    if (group_sp->flags & SF_INCLUDED)
 		g_sel_total_obj_cnt += group_arts;
 	}
-	if (sel_exclusive && !g_sel_total_obj_cnt) {
-	    sel_exclusive = false;
+	if (g_sel_exclusive && !g_sel_total_obj_cnt) {
+	    g_sel_exclusive = false;
 	    g_sel_page_sp = nullptr;
 	    goto try_again;
 	}
@@ -683,7 +683,7 @@ bool first_page()
 {
     g_sel_prior_obj_cnt = 0;
 
-    switch (sel_mode) {
+    switch (g_sel_mode) {
       case SM_MULTIRC: {
 	MULTIRC* mp;
 	for (mp = multirc_low(); mp; mp = multirc_next(mp)) {
@@ -781,7 +781,7 @@ bool last_page()
 {
     g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
 
-    switch (sel_mode) {
+    switch (g_sel_mode) {
       case SM_MULTIRC: {
 	MULTIRC* mp = g_sel_page_mp;
 	g_sel_page_mp = nullptr;
@@ -851,7 +851,7 @@ bool last_page()
 
 bool next_page()
 {
-    switch (sel_mode) {
+    switch (g_sel_mode) {
       case SM_MULTIRC: {
 	if (g_sel_next_mp) {
 	    g_sel_page_mp = g_sel_next_mp;
@@ -917,7 +917,7 @@ bool prev_page()
     int item_cnt = 0;
 
     /* Scan the items in reverse to go back a page */
-    switch (sel_mode) {
+    switch (g_sel_mode) {
       case SM_MULTIRC: {
 	MULTIRC* mp = g_sel_page_mp;
 	MULTIRC* page_mp = g_sel_page_mp;
@@ -1053,7 +1053,7 @@ bool prev_page()
 	line = 2;
 	for (sp = (!page_sp? g_last_subject : page_sp->prev); sp; sp=sp->prev) {
 	    item_arts = sp->misc;
-	    if (sel_mode == SM_THREAD) {
+	    if (g_sel_mode == SM_THREAD) {
 		while (sp->prev && sp->prev->thread == sp->thread) {
 		    sp = sp->prev;
 		    item_arts += sp->misc;
@@ -1090,20 +1090,20 @@ bool calc_page(SEL_UNION u)
 {
     int ret = false;
     if (u.op != -1)
-	sel_item_index = -1;
+	g_sel_item_index = -1;
 try_again:
     g_sel_page_obj_cnt = 0;
     g_sel_page_item_cnt = 0;
     g_term_line = 2;
 
-    switch (sel_mode) {
+    switch (g_sel_mode) {
       case SM_MULTIRC: {
 	MULTIRC* mp = g_sel_page_mp;
 	if (mp)
 	    (void) multirc_ptr(mp->num);
 	for (; mp && g_sel_page_item_cnt<g_sel_max_per_page; mp=multirc_next(mp)) {
 	    if (mp == u.mp)
-		sel_item_index = g_sel_page_item_cnt;
+		g_sel_item_index = g_sel_page_item_cnt;
 	    if (mp->flags & MF_INCLUDED)
 		g_sel_page_item_cnt++;
 	}
@@ -1115,7 +1115,7 @@ try_again:
 	NGDATA* np = g_sel_page_np;
 	for (; np && g_sel_page_item_cnt < g_sel_max_per_page; np = np->next) {
 	    if (np == u.np)
-		sel_item_index = g_sel_page_item_cnt;
+		g_sel_item_index = g_sel_page_item_cnt;
 	    if (np->flags & NF_INCLUDED)
 		g_sel_page_item_cnt++;
 	}
@@ -1127,7 +1127,7 @@ try_again:
 	ADDGROUP* gp = g_sel_page_gp;
 	for (; gp && g_sel_page_item_cnt < g_sel_max_per_page; gp = gp->next) {
 	    if (gp == u.gp)
-		sel_item_index = g_sel_page_item_cnt;
+		g_sel_item_index = g_sel_page_item_cnt;
 	    if (gp->flags & AGF_INCLUDED)
 		g_sel_page_item_cnt++;
 	}
@@ -1139,7 +1139,7 @@ try_again:
 	UNIV_ITEM* ui = sel_page_univ;
 	for (; ui && g_sel_page_item_cnt < g_sel_max_per_page; ui = ui->next) {
 	    if (ui == u.un)
-		sel_item_index = g_sel_page_item_cnt;
+		g_sel_item_index = g_sel_page_item_cnt;
 	    if (ui->flags & UF_INCLUDED)
 		g_sel_page_item_cnt++;
 	}
@@ -1151,7 +1151,7 @@ try_again:
 	int op = g_sel_page_op;
 	for (; op <= obj_count && g_sel_page_item_cnt < g_sel_max_per_page; op++) {
 	    if (op == u.op)
-		sel_item_index = g_sel_page_item_cnt;
+		g_sel_item_index = g_sel_page_item_cnt;
 	    if (g_option_flags[op] & OF_INCLUDED)
 		g_sel_page_item_cnt++;
 	}
@@ -1164,7 +1164,7 @@ try_again:
 	ARTICLE** limit = g_artptr_list + g_artptr_list_size;
 	for (; app < limit && g_sel_page_item_cnt < g_sel_max_per_page; app++) {
 	    if (*app == u.ap)
-		sel_item_index = g_sel_page_item_cnt;
+		g_sel_item_index = g_sel_page_item_cnt;
 	    if ((*app)->flags & AF_INCLUDED)
 		g_sel_page_item_cnt++;
 	}
@@ -1177,9 +1177,9 @@ try_again:
 	int line_cnt, sel;
 	for (; sp && g_sel_page_item_cnt < g_sel_max_per_page; sp = sp->next) {
 	    if (sp == u.sp)
-		sel_item_index = g_sel_page_item_cnt;
+		g_sel_item_index = g_sel_page_item_cnt;
 	    if (sp->flags & SF_INCLUDED) {
-		if (sel_mode == SM_THREAD)
+		if (g_sel_mode == SM_THREAD)
 		    line_cnt = count_thread_lines(sp, &sel);
 		else
 		    line_cnt = count_subject_lines(sp, &sel);
@@ -1193,7 +1193,7 @@ try_again:
 		}
 	    } else
 		line_cnt = 0;
-	    if (sel_mode == SM_THREAD) {
+	    if (g_sel_mode == SM_THREAD) {
 		while (sp->next && sp->next->thread == sp->thread) {
 		    sp = sp->next;
 		    if (!line_cnt || !sp->misc)
@@ -1206,7 +1206,7 @@ try_again:
 	break;
       }
     }
-    if (u.op != -1 && sel_item_index < 0) {
+    if (u.op != -1 && g_sel_item_index < 0) {
 	if (!ret) {
 	    if (first_page()) {
 		ret = true;
@@ -1218,7 +1218,7 @@ try_again:
 	    goto try_again;
 	}
 	first_page();
-	sel_item_index = 0;
+	g_sel_item_index = 0;
     }
     return ret;
 }
@@ -1229,11 +1229,11 @@ void display_page_title(bool home_only)
 	home_cursor();
     else
 	clear();
-    if (sel_mode == SM_MULTIRC)
+    if (g_sel_mode == SM_MULTIRC)
 	color_string(COLOR_HEADING,"Newsrcs");
-    else if (sel_mode == SM_OPTIONS)
+    else if (g_sel_mode == SM_OPTIONS)
 	color_string(COLOR_HEADING,"Options");
-    else if (sel_mode == SM_UNIVERSAL) {
+    else if (g_sel_mode == SM_UNIVERSAL) {
 	color_object(COLOR_HEADING, true);
 	printf("[%d] %s",univ_level,
 	       univ_title? univ_title : "Universal Selector");
@@ -1241,7 +1241,7 @@ void display_page_title(bool home_only)
     }
     else if (in_ng)
 	color_string(COLOR_NGNAME, ngname);
-    else if (sel_mode == SM_ADDGROUP)
+    else if (g_sel_mode == SM_ADDGROUP)
 	color_string(COLOR_HEADING,"ADD newsgroups");
     else {
 	int len;
@@ -1262,24 +1262,24 @@ void display_page_title(bool home_only)
     }
     if (home_only || (erase_screen && erase_each_line))
 	erase_eol();
-    if (sel_mode == SM_MULTIRC)
+    if (g_sel_mode == SM_MULTIRC)
 	;
-    else if (sel_mode == SM_UNIVERSAL)
+    else if (g_sel_mode == SM_UNIVERSAL)
 	;
-    else if (sel_mode == SM_OPTIONS)
+    else if (g_sel_mode == SM_OPTIONS)
 	printf("      (Press 'S' to save changes, 'q' to abandon, or TAB to use.)");
     else if (in_ng) {
 	printf("          %ld %sarticle%s", (long)g_sel_total_obj_cnt,
-	       sel_rereading? "read " : "",
+	       g_sel_rereading? "read " : "",
 	       g_sel_total_obj_cnt == 1 ? "" : "s");
-	if (sel_exclusive)
+	if (g_sel_exclusive)
 	    printf(" out of %ld", (long)obj_count);
 	fputs(g_moderated,stdout);
     }
     else {
 	printf("       %s%ld group%s",g_group_init_done? "" : "~",
 	    (long)g_sel_total_obj_cnt, PLURAL(g_sel_total_obj_cnt));
-	if (sel_exclusive)
+	if (g_sel_exclusive)
 	    printf(" out of %ld", (long)obj_count);
 	if (g_maxngtodo)
 	    printf(" (Restriction)");
@@ -1303,7 +1303,7 @@ try_again:
 
     if (!g_sel_total_obj_cnt)
 	;
-    else if (sel_mode == SM_MULTIRC) {
+    else if (g_sel_mode == SM_MULTIRC) {
 	MULTIRC* mp = g_sel_page_mp;
 	NEWSRC* rp;
 	int len;
@@ -1312,13 +1312,13 @@ try_again:
 	for (; mp && g_sel_page_item_cnt<g_sel_max_per_page; mp=multirc_next(mp)) {
 #if 0
 	    if (mp == g_multirc)
-		sel_item_index = g_sel_page_item_cnt;
+		g_sel_item_index = g_sel_page_item_cnt;
 #endif
 
 	    if (!(mp->flags & MF_INCLUDED))
 		continue;
 
-	    sel = !!(mp->flags & sel_mask);
+	    sel = !!(mp->flags & g_sel_mask);
 	    g_sel_items[g_sel_page_item_cnt].u.mp = mp;
 	    g_sel_items[g_sel_page_item_cnt].line = g_term_line;
 	    g_sel_items[g_sel_page_item_cnt].sel = sel;
@@ -1342,14 +1342,14 @@ try_again:
 	}
 	g_sel_next_mp = mp;
     }
-    else if (sel_mode == SM_NEWSGROUP) {
+    else if (g_sel_mode == SM_NEWSGROUP) {
 	NGDATA* np;
 	int max_len = 0;
 	int outputting = (*g_sel_grp_dmode != 'l');
       start_of_loop:
 	for (np = g_sel_page_np; np; np = np->next) {
 	    if (np == g_ngptr)
-		sel_item_index = g_sel_page_item_cnt;
+		g_sel_item_index = g_sel_page_item_cnt;
 
 	    if (!(np->flags & NF_INCLUDED))
 		continue;
@@ -1365,7 +1365,7 @@ try_again:
 		    display_page_title(false);
 		    goto try_again;
 		}
-		if (sel_rereading? (np->toread != TR_NONE)
+		if (g_sel_rereading? (np->toread != TR_NONE)
 				 : (np->toread < g_ng_min_toread)) {
 		    np->flags &= ~NF_INCLUDED;
 		    g_sel_total_obj_cnt--;
@@ -1379,7 +1379,7 @@ try_again:
 		break;
 
 	    if (outputting) {
-		sel = !!(np->flags & sel_mask) + (np->flags & NF_DEL);
+		sel = !!(np->flags & g_sel_mask) + (np->flags & NF_DEL);
 		g_sel_items[g_sel_page_item_cnt].u.np = np;
 		g_sel_items[g_sel_page_item_cnt].line = g_term_line;
 		g_sel_items[g_sel_page_item_cnt].sel = sel;
@@ -1417,7 +1417,7 @@ try_again:
 	    }
 	}
     }
-    else if (sel_mode == SM_ADDGROUP) {
+    else if (g_sel_mode == SM_ADDGROUP) {
 	ADDGROUP* gp = g_sel_page_gp;
 	int max_len = 0;
 	if (*g_sel_grp_dmode == 'l') {
@@ -1436,13 +1436,13 @@ try_again:
 	for (; gp && g_sel_page_item_cnt < g_sel_max_per_page; gp = gp->next) {
 #if 0
 	    if (gp == xx)
-		sel_item_index = g_sel_page_item_cnt;
+		g_sel_item_index = g_sel_page_item_cnt;
 #endif
 
 	    if (!(gp->flags & AGF_INCLUDED))
 		continue;
 
-	    sel = !!(gp->flags & sel_mask) + (gp->flags & AGF_DEL);
+	    sel = !!(gp->flags & g_sel_mask) + (gp->flags & AGF_DEL);
 	    g_sel_items[g_sel_page_item_cnt].u.gp = gp;
 	    g_sel_items[g_sel_page_item_cnt].line = g_term_line;
 	    g_sel_items[g_sel_page_item_cnt].sel = sel;
@@ -1460,18 +1460,18 @@ try_again:
 	}
 	g_sel_next_gp = gp;
     }
-    else if (sel_mode == SM_UNIVERSAL) {
+    else if (g_sel_mode == SM_UNIVERSAL) {
 	UNIV_ITEM* ui = sel_page_univ;
 	for (; ui && g_sel_page_item_cnt < g_sel_max_per_page; ui = ui->next) {
 #if 0
 	    if (ui == xx)
-		sel_item_index = g_sel_page_item_cnt;
+		g_sel_item_index = g_sel_page_item_cnt;
 #endif
 
 	    if (!(ui->flags & UF_INCLUDED))
 		continue;
 
-	    sel = !!(ui->flags & sel_mask) + (ui->flags & UF_DEL);
+	    sel = !!(ui->flags & g_sel_mask) + (ui->flags & UF_DEL);
 	    g_sel_items[g_sel_page_item_cnt].u.un = ui;
 	    g_sel_items[g_sel_page_item_cnt].line = g_term_line;
 	    g_sel_items[g_sel_page_item_cnt].sel = sel;
@@ -1489,12 +1489,12 @@ try_again:
 	}
 	sel_next_univ = ui;
     }
-    else if (sel_mode == SM_OPTIONS) {
+    else if (g_sel_mode == SM_OPTIONS) {
 	int op = g_sel_page_op;
 	for (; op <= obj_count && g_sel_page_item_cnt<g_sel_max_per_page; op++) {
 #if 0
 	    if (op == xx)
-		sel_item_index = g_sel_page_item_cnt;
+		g_sel_item_index = g_sel_page_item_cnt;
 #endif
 
 	    if (!(g_option_flags[op] & OF_INCLUDED))
@@ -1521,7 +1521,7 @@ try_again:
 	}
 	g_sel_next_op = op;
     }
-    else if (sel_mode == SM_ARTICLE) {
+    else if (g_sel_mode == SM_ARTICLE) {
 	ARTICLE* ap;
 	ARTICLE** app;
 	ARTICLE** limit;
@@ -1531,10 +1531,10 @@ try_again:
 	for (; app < limit && g_sel_page_item_cnt < g_sel_max_per_page; app++) {
 	    ap = *app;
 	    if (ap == g_sel_last_ap)
-		sel_item_index = g_sel_page_item_cnt;
+		g_sel_item_index = g_sel_page_item_cnt;
 	    if (!(ap->flags & AF_INCLUDED))
 		continue;
-	    sel = !!(ap->flags & sel_mask) + (ap->flags & AF_DEL);
+	    sel = !!(ap->flags & g_sel_mask) + (ap->flags & AF_DEL);
 	    g_sel_items[g_sel_page_item_cnt].u.ap = ap;
 	    g_sel_items[g_sel_page_item_cnt].line = g_term_line;
 	    g_sel_items[g_sel_page_item_cnt].sel = sel;
@@ -1558,11 +1558,11 @@ try_again:
 	sp = g_sel_page_sp;
 	for (; sp && !etc && g_sel_page_item_cnt<g_sel_max_per_page; sp=sp->next) {
 	    if (sp == g_sel_last_sp)
-		sel_item_index = g_sel_page_item_cnt;
+		g_sel_item_index = g_sel_page_item_cnt;
 
 	    if (sp->flags & SF_INCLUDED) {
 		/* Compute how many lines we need to display this group */
-		if (sel_mode == SM_THREAD)
+		if (g_sel_mode == SM_THREAD)
 		    line_cnt = count_thread_lines(sp, &sel);
 		else
 		    line_cnt = count_subject_lines(sp, &sel);
@@ -1592,7 +1592,7 @@ try_again:
 		}
 	    } else
 		line_cnt = 0;
-	    if (sel_mode == SM_THREAD) {
+	    if (g_sel_mode == SM_THREAD) {
 		while (sp->next && sp->next->thread == sp->thread) {
 		    sp = sp->next;
 		    if (!line_cnt || !sp->misc)
@@ -1614,10 +1614,10 @@ try_again:
     }
     g_sel_last_ap = nullptr;
     g_sel_last_sp = nullptr;
-    sel_at_end = (g_sel_prior_obj_cnt + g_sel_page_obj_cnt == g_sel_total_obj_cnt);
+    g_sel_at_end = (g_sel_prior_obj_cnt + g_sel_page_obj_cnt == g_sel_total_obj_cnt);
     maybe_eol();
     newline();
-    sel_last_line = g_term_line;
+    g_sel_last_line = g_term_line;
 }
 
 void update_page()
@@ -1627,18 +1627,18 @@ void update_page()
     int j;
     for (j = 0; j < g_sel_page_item_cnt; j++) {
 	u = g_sel_items[j].u;
-	switch (sel_mode) {
+	switch (g_sel_mode) {
 	  case SM_MULTIRC:
-	    sel = !!(u.mp->flags & sel_mask);
+	    sel = !!(u.mp->flags & g_sel_mask);
 	    break;
 	  case SM_NEWSGROUP:
-	    sel = !!(u.np->flags & sel_mask) + (u.np->flags & NF_DEL);
+	    sel = !!(u.np->flags & g_sel_mask) + (u.np->flags & NF_DEL);
 	    break;
 	  case SM_ADDGROUP:
-	    sel = !!(u.gp->flags & sel_mask) + (u.gp->flags & AGF_DEL);
+	    sel = !!(u.gp->flags & g_sel_mask) + (u.gp->flags & AGF_DEL);
 	    break;
 	  case SM_UNIVERSAL:
-	    sel = !!(u.un->flags & sel_mask) + (u.un->flags & UF_DEL);
+	    sel = !!(u.un->flags & g_sel_mask) + (u.un->flags & UF_DEL);
 	    break;
 	  case SM_OPTIONS:
 	    if (*g_options_ini[u.op].item == '*')
@@ -1649,7 +1649,7 @@ void update_page()
 			(g_option_def_vals[u.op]? 0 : 2)));
 	    break;
 	  case SM_ARTICLE:
-	    sel = !!(u.ap->flags & sel_mask) + (u.ap->flags & AF_DEL);
+	    sel = !!(u.ap->flags & g_sel_mask) + (u.ap->flags & AF_DEL);
 	    break;
 	  case SM_THREAD:
 	    (void) count_thread_lines(u.sp, &sel);
@@ -1661,11 +1661,11 @@ void update_page()
 	if (sel == g_sel_items[j].sel)
 	    continue;
 	goto_xy(0,g_sel_items[j].line);
-	sel_item_index = j;
-	output_sel(sel_item_index, sel, true);
+	g_sel_item_index = j;
+	output_sel(g_sel_item_index, sel, true);
     }
-    if (++sel_item_index == g_sel_page_item_cnt)
-	sel_item_index = 0;
+    if (++g_sel_item_index == g_sel_page_item_cnt)
+	g_sel_item_index = 0;
 }
 
 void output_sel(int ix, int sel, bool update)
@@ -1682,7 +1682,7 @@ void output_sel(int ix, int sel, bool update)
 	/* later consider no-leading-zero option */
 	printf("%02d",ix+1);
     } else
-	putchar(sel_chars[ix]);
+	putchar(g_sel_chars[ix]);
 
     switch (sel) {
       case 1:			/* '+' */
@@ -1698,7 +1698,7 @@ void output_sel(int ix, int sel, bool update)
 	color_object(COLOR_DEFAULT, true);
 	break;
     }
-    putchar(sel_disp_char[sel]);
+    putchar(g_sel_disp_char[sel]);
     color_pop();	/* of COLOR_PLUS/MINUS/STAR/DEFAULT */
 
     if (update)
@@ -1715,11 +1715,11 @@ static int count_subject_lines(const SUBJECT *subj, int *selptr)
 
     if (subj->flags & SF_DEL)
 	sel = 2;
-    else if (subj->flags & sel_mask) {
+    else if (subj->flags & g_sel_mask) {
 	sel = 1;
 	for (ap = subj->articles; ap; ap = ap->subj_next) {
-	    if ((!!(ap->flags&AF_UNREAD) ^ sel_rereading)
-	      && !(ap->flags & sel_mask)) {
+	    if ((!!(ap->flags&AF_UNREAD) ^ g_sel_rereading)
+	      && !(ap->flags & g_sel_mask)) {
 		sel = 3;
 		break;
 	    }
@@ -1814,10 +1814,10 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
 	/* Find the first unread article so we get the author right */
 	if ((first_ap = subj->thread) != nullptr
 	 && (first_ap->subj != subj || first_ap->from == nullptr
-	  || (!(first_ap->flags&AF_UNREAD) ^ sel_rereading)))
+	  || (!(first_ap->flags&AF_UNREAD) ^ g_sel_rereading)))
 	    first_ap = nullptr;
 	for (ap = subj->articles; ap; ap = ap->subj_next) {
-	    if (!!(ap->flags&AF_UNREAD) ^ sel_rereading)
+	    if (!!(ap->flags&AF_UNREAD) ^ g_sel_rereading)
 		break;
 	}
 	if (!first_ap)
@@ -1835,7 +1835,7 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
 	i = -1;
 	if (*g_sel_art_dmode != 'd' && --j && ap) {
 	    for ( ; ap && j; ap = ap->subj_next) {
-		if ((!(ap->flags&AF_UNREAD) ^ sel_rereading)
+		if ((!(ap->flags&AF_UNREAD) ^ g_sel_rereading)
 		 || ap == first_ap)
 		    continue;
 		j--;

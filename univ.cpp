@@ -1048,15 +1048,15 @@ void univ_virt_pass()
 
 static int univ_order_number(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2)
 {
-    return (int)((*ui1)->num - (*ui2)->num) * sel_direction;
+    return (int)((*ui1)->num - (*ui2)->num) * g_sel_direction;
 }
 
 static int univ_order_score(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2)
 {
     if ((*ui1)->score != (*ui2)->score)
-	return (int)((*ui2)->score - (*ui1)->score) * sel_direction;
+	return (int)((*ui2)->score - (*ui1)->score) * g_sel_direction;
     else
-	return (int)((*ui1)->num - (*ui2)->num) * sel_direction;
+	return (int)((*ui1)->num - (*ui2)->num) * g_sel_direction;
 }
 
 void sort_univ()
@@ -1075,7 +1075,7 @@ void sort_univ()
     if (cnt<=1)
 	return;
 
-    switch (sel_sort) {
+    switch (g_sel_sort) {
       case SS_SCORE:
 	sort_procedure = univ_order_score;
 	break;

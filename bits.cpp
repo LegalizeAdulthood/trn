@@ -385,10 +385,10 @@ void onemore(ARTICLE *ap)
 	ap->flags &= ~AF_DEL;
 	g_ngptr->toread++;
 	if (ap->subj) {
-	    if (selected_only) {
-		if (ap->subj->flags & sel_mask) {
-		    ap->flags |= sel_mask;
-		    selected_count++;
+	    if (g_selected_only) {
+		if (ap->subj->flags & g_sel_mask) {
+		    ap->flags |= g_sel_mask;
+		    g_selected_count++;
 		}
 	    } else
 		ap->subj->flags |= SF_VISIT;
@@ -402,10 +402,10 @@ void oneless(ARTICLE *ap)
 {
     if (ap->flags & AF_UNREAD) {
 	ap->flags &= ~AF_UNREAD;
-	/* Keep selected_count accurate */
-	if (ap->flags & sel_mask) {
-	    selected_count--;
-	    ap->flags &= ~sel_mask;
+	/* Keep g_selected_count accurate */
+	if (ap->flags & g_sel_mask) {
+	    g_selected_count--;
+	    ap->flags &= ~g_sel_mask;
 	}
 	if (g_ngptr->toread > TR_NONE)
 	    g_ngptr->toread--;
@@ -522,7 +522,7 @@ static bool yank_article(char *ptr, int arg)
     ARTICLE* ap = (ARTICLE*)ptr;
     if (ap->flags & AF_YANKBACK) {
 	unmark_as_read(ap);
-	if (selected_only)
+	if (g_selected_only)
 	    select_article(ap, 0);
 	ap->flags &= ~AF_YANKBACK;
     }

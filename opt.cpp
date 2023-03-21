@@ -404,17 +404,17 @@ void set_option(int num, char *s)
 	    UseNewsSelector = YES(s)-1;
 	break;
       case OI_NEWS_SEL_MODE: {
-	int save_sel_mode = sel_mode;
+	int save_sel_mode = g_sel_mode;
 	set_sel_mode(*s);
 	if (save_sel_mode != SM_ARTICLE && save_sel_mode != SM_SUBJECT
 	 && save_sel_mode != SM_THREAD) {
-	    sel_mode = save_sel_mode;
+	    g_sel_mode = save_sel_mode;
 	    set_selector(0,0);
 	}
 	break;
       }
       case OI_NEWS_SEL_ORDER:
-	set_sel_order(sel_defaultmode,s);
+	set_sel_order(g_sel_defaultmode,s);
 	break;
       case OI_NEWS_SEL_CMDS:
 	*NewsSelCmds = *s;
@@ -861,19 +861,19 @@ char *option_value(int num)
 	sprintf(buf,"%d",UseNewsSelector);
 	return buf;
       case OI_NEWS_SEL_MODE: {
-	int save_sel_mode = sel_mode;
+	int save_sel_mode = g_sel_mode;
 	int save_Threaded = g_threaded_group;
 	char* s;
 	g_threaded_group = true;
-	set_selector(sel_defaultmode, 0);
-	s = sel_mode_string;
-	sel_mode = save_sel_mode;
+	set_selector(g_sel_defaultmode, 0);
+	s = g_sel_mode_string;
+	g_sel_mode = save_sel_mode;
 	g_threaded_group = save_Threaded;
 	set_selector(0, 0);
 	return s;
       }
       case OI_NEWS_SEL_ORDER:
-	return get_sel_order(sel_defaultmode);
+	return get_sel_order(g_sel_defaultmode);
       case OI_NEWS_SEL_CMDS:
 	return NewsSelCmds;
       case OI_NEWS_SEL_BTNS:

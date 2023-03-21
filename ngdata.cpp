@@ -187,19 +187,19 @@ void grow_ng(ART_NUM newlast)
 
 static int ngorder_number(const NGDATA **npp1, const NGDATA **npp2)
 {
-    return (int)((*npp1)->num - (*npp2)->num) * sel_direction;
+    return (int)((*npp1)->num - (*npp2)->num) * g_sel_direction;
 }
 
 static int ngorder_groupname(const NGDATA **npp1, const NGDATA **npp2)
 {
-    return strcasecmp((*npp1)->rcline, (*npp2)->rcline) * sel_direction;
+    return strcasecmp((*npp1)->rcline, (*npp2)->rcline) * g_sel_direction;
 }
 
 static int ngorder_count(const NGDATA **npp1, const NGDATA **npp2)
 {
     int eq;
     if ((eq = (int)((*npp1)->toread - (*npp2)->toread)) != 0)
-	return eq * sel_direction;
+	return eq * g_sel_direction;
     return (int)((*npp1)->num - (*npp2)->num);
 }
 
@@ -217,7 +217,7 @@ void sort_newsgroups()
     if (!g_first_ng || !g_first_ng->next)
 	return;
 
-    switch (sel_sort) {
+    switch (g_sel_sort) {
       case SS_NATURAL:
       default:
 	sort_procedure = ngorder_number;
@@ -294,7 +294,7 @@ void ng_skip()
 		sleep(2);
 	    }
 	}
-	inc_art(selected_only,false);	/* try next article */
+	inc_art(g_selected_only,false);	/* try next article */
     }
 }
 

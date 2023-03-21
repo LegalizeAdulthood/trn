@@ -931,9 +931,9 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
     NGDATA* np;
     int i;
     const char* dflt = (move_np!=g_current_ng ? "$^.Lq" : "$^Lq");
-    int save_sort = sel_sort;
+    int save_sort = g_sel_sort;
 
-    if (sel_newsgroupsort != SS_NATURAL) {
+    if (g_sel_newsgroupsort != SS_NATURAL) {
 	if (newnum < 0) {
 	    /* ask if they want to keep the current order */
 	    in_char("Sort newsrc(s) using current sort order?", 'D', "yn"); /*$$ !'D' */
@@ -942,14 +942,14 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
 	    if (*buf == 'y')
 		set_selector(SM_NEWSGROUP, SS_NATURAL);
 	    else {
-		sel_sort = SS_NATURAL;
-		sel_direction = 1;
+		g_sel_sort = SS_NATURAL;
+		g_sel_direction = 1;
 		sort_newsgroups();
 	    }
 	}
 	else {
-	    sel_sort = SS_NATURAL;
-	    sel_direction = 1;
+	    g_sel_sort = SS_NATURAL;
+	    g_sel_direction = 1;
 	    sort_newsgroups();
 	}
     }
@@ -1091,10 +1091,10 @@ q to abort\n") FLUSH;
 	for (; np; np = np->next, newnum++)
 	    np->num = newnum;
     }
-    if (sel_newsgroupsort != SS_NATURAL) {
-	sel_sort = sel_newsgroupsort;
+    if (g_sel_newsgroupsort != SS_NATURAL) {
+	g_sel_sort = g_sel_newsgroupsort;
 	sort_newsgroups();
-	sel_sort = save_sort;
+	g_sel_sort = save_sort;
     }
     return true;
 }
@@ -1275,16 +1275,16 @@ bool write_newsrcs(MULTIRC *mptr)
 {
     NEWSRC* rp;
     NGDATA* np;
-    int save_sort = sel_sort;
+    int save_sort = g_sel_sort;
     FILE* rcfp;
     bool total_success = true;
 
     if (!mptr)
 	return true;
 
-    if (sel_newsgroupsort != SS_NATURAL) {
-	sel_sort = SS_NATURAL;
-	sel_direction = 1;
+    if (g_sel_newsgroupsort != SS_NATURAL) {
+	g_sel_sort = SS_NATURAL;
+	g_sel_direction = 1;
 	sort_newsgroups();
     }
 
@@ -1377,10 +1377,10 @@ bool write_newsrcs(MULTIRC *mptr)
 	rename(rp->newname,rp->name);
     }
 
-    if (sel_newsgroupsort != SS_NATURAL) {
-	sel_sort = sel_newsgroupsort;
+    if (g_sel_newsgroupsort != SS_NATURAL) {
+	g_sel_sort = g_sel_newsgroupsort;
 	sort_newsgroups();
-	sel_sort = save_sort;
+	g_sel_sort = save_sort;
     }
     return total_success;
 }

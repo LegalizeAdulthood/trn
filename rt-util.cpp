@@ -541,7 +541,7 @@ const char *compress_subj(const ARTICLE *ap, int max)
     cp = buf;
     first = (g_threaded_group? ap->subj->thread : ap->subj->articles);
     if (ap != first || (ap->flags & AF_HAS_RE)
-     || (!(ap->flags&AF_UNREAD) ^ sel_rereading))
+     || (!(ap->flags&AF_UNREAD) ^ g_sel_rereading))
 	*cp++ = '>';
     strcharsubst(cp, ap->subj->str + 4, (sizeof buf) - (cp-buf), *g_charsubst);
 
@@ -720,7 +720,7 @@ void perform_status_init(long cnt)
 
     prior_perform_cnt = 0;
     prior_now = 0;
-    ps_sel = selected_count;
+    ps_sel = g_selected_count;
     ps_cnt = cnt;
     ps_missing = g_missing_count;
 
@@ -752,7 +752,7 @@ void perform_status(long cnt, int spin)
 
     missing = g_missing_count - ps_missing;
     kills = ps_cnt - cnt - missing;
-    sels = selected_count - ps_sel;
+    sels = g_selected_count - ps_sel;
 
     if (!(kills | sels))
 	return;
@@ -826,11 +826,11 @@ int perform_status_end(long cnt, const char *obj_type)
 
     missing = g_missing_count - ps_missing;
     kills = ps_cnt - cnt - missing;
-    sels = selected_count - ps_sel;
+    sels = g_selected_count - ps_sel;
 
     if (!performed_article_loop)
 	cp = output_change(cp, (long)g_perform_cnt,
-                           sel_mode == SM_THREAD? "thread" : "subject",
+                           g_sel_mode == SM_THREAD? "thread" : "subject",
                            nullptr, "ERR|match|ed");
     else if (g_perform_cnt != sels  && g_perform_cnt != -sels
 	  && g_perform_cnt != kills && g_perform_cnt != -kills) {

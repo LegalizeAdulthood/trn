@@ -99,7 +99,7 @@ int switcheroo()
 	    return 0;
 	}
 	g_option_sel_ilock = true;
-	if (gmode != 's' || sel_mode != SM_OPTIONS)/*$$*/
+	if (gmode != 's' || g_sel_mode != SM_OPTIONS)/*$$*/
 	    option_selector();
 	g_option_sel_ilock = false;
 	if (savedir != prior_savedir)
@@ -277,7 +277,7 @@ int thread_perform()
 	len++;
     }
     cmdstr = savestr(buf+len);
-    want_unread = !sel_rereading && *cmdstr != 'm';
+    want_unread = !g_sel_rereading && *cmdstr != 'm';
 
     perform_status_init(g_ngptr->toread);
     len = strlen(cmdstr);
@@ -293,11 +293,11 @@ int thread_perform()
        || *cmdstr == 'T' || *cmdstr == 'A'))) {
         performed_article_loop = false;
 	if (one_thread)
-	    sp = (sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
+	    sp = (g_sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
 	else
 	    sp = next_subj((SUBJECT*)nullptr,bits);
 	for ( ; sp; sp = next_subj(sp,bits)) {
-	    if ((!(sp->flags & sel_mask) ^ !bits) || !sp->misc)
+	    if ((!(sp->flags & g_sel_mask) ^ !bits) || !sp->misc)
 		continue;
 	    g_artp = first_art(sp);
 	    if (g_artp) {
@@ -329,13 +329,13 @@ int thread_perform()
 	if (g_artptr_list) {
 	    ARTICLE** app;
 	    ARTICLE** limit = g_artptr_list + g_artptr_list_size;
-	    sp = (sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
+	    sp = (g_sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
 	    for (app = g_artptr_list; app < limit; app++) {
 		ap = *app;
 		if (one_thread && ap->subj->thread != sp->thread)
 		    continue;
 		if ((!(ap->flags & AF_UNREAD) ^ want_unread)
-		 && !(ap->flags & sel_mask) ^ !!bits) {
+		 && !(ap->flags & g_sel_mask) ^ !!bits) {
 		    g_art = article_num(ap);
 		    g_artp = ap;
 		    if (perform(cmdstr, output_level && page_line == 1) < 0) {
@@ -348,13 +348,13 @@ int thread_perform()
 	    }
 	} else {
 	    if (one_thread)
-		sp = (sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
+		sp = (g_sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
 	    else
 		sp = next_subj((SUBJECT*)nullptr,bits);
 	    for ( ; sp; sp = next_subj(sp,bits)) {
 		for (ap = first_art(sp); ap; ap = next_art(ap))
 		    if ((!(ap->flags & AF_UNREAD) ^ want_unread)
-		     && !(ap->flags & sel_mask) ^ !!bits) {
+		     && !(ap->flags & g_sel_mask) ^ !!bits) {
 			g_art = article_num(ap);
 			g_artp = ap;
 			if (perform(cmdstr,output_level && page_line==1) < 0) {
@@ -403,11 +403,11 @@ int perform(char *cmdlst, int output_level)
 		if (output_level && verbose)
 		    fputs("\tJunked",stdout);
 	    }
-	    if (sel_rereading)
+	    if (g_sel_rereading)
 		deselect_article(g_artp, output_level? ALSO_ECHO : 0);
 	} else if (ch == '+') {
 	    if (savemode || cmdlst[1] == '+') {
-		if (sel_mode == SM_THREAD)
+		if (g_sel_mode == SM_THREAD)
 		    select_arts_thread(g_artp, savemode? AUTO_SEL_THD : 0);
 		else
 		    select_arts_subject(g_artp, savemode? AUTO_SEL_SBJ : 0);
@@ -421,7 +421,7 @@ int perform(char *cmdlst, int output_level)
 	    select_subthread(g_artp, savemode? AUTO_SEL_FOL : 0);
 	} else if (ch == '-') {
 	    if (cmdlst[1] == '-') {
-		if (sel_mode == SM_THREAD)
+		if (g_sel_mode == SM_THREAD)
 		    deselect_arts_thread(g_artp);
 		else
 		    deselect_arts_subject(g_artp);
@@ -431,7 +431,7 @@ int perform(char *cmdlst, int output_level)
 	} else if (ch == ',') {
 	    kill_subthread(g_artp, AFFECT_ALL | (savemode? AUTO_KILL_FOL : 0));
 	} else if (ch == 'J') {
-	    if (sel_mode == SM_THREAD)
+	    if (g_sel_mode == SM_THREAD)
 		kill_arts_thread(g_artp,AFFECT_ALL|(savemode? AUTO_KILL_THD:0));
 	    else
 		kill_arts_subject(g_artp,AFFECT_ALL|(savemode? AUTO_KILL_SBJ:0));
@@ -443,7 +443,7 @@ int perform(char *cmdlst, int output_level)
 		if (output_level && verbose)
 		    fputs("\tKilled",stdout);
 	    }
-	    if (sel_rereading)
+	    if (g_sel_rereading)
 		deselect_article(g_artp, 0);
 	} else if (ch == 't') {
 	    entire_tree(g_artp);
@@ -571,12 +571,12 @@ int ngsel_perform()
     }
 
     for (g_ngptr = g_first_ng; g_ngptr; g_ngptr = g_ngptr->next) {
-	if (sel_rereading? g_ngptr->toread != TR_NONE
+	if (g_sel_rereading? g_ngptr->toread != TR_NONE
 			 : g_ngptr->toread < g_ng_min_toread)
 	    continue;
 	set_ng(g_ngptr);
 	if ((g_ngptr->flags & bits) == bits
-	 && (!(g_ngptr->flags & sel_mask) ^ !!bits)) {
+	 && (!(g_ngptr->flags & g_sel_mask) ^ !!bits)) {
 	    if (ng_perform(cmdstr, 0) < 0)
 		break;
 	}
@@ -603,9 +603,9 @@ int ng_perform(char *cmdlst, int output_level)
 	    continue;
 	switch (ch) {
 	  case '+':
-	    if (!(g_ngptr->flags & sel_mask)) {
-		g_ngptr->flags = ((g_ngptr->flags | sel_mask) & ~NF_DEL);
-		selected_count++;
+	    if (!(g_ngptr->flags & g_sel_mask)) {
+		g_ngptr->flags = ((g_ngptr->flags | g_sel_mask) & ~NF_DEL);
+		g_selected_count++;
 	    }
 	    break;
 	  case 'c':
@@ -613,11 +613,11 @@ int ng_perform(char *cmdlst, int output_level)
 	    /* FALL THROUGH */
 	  case '-':
 	  deselect:
-	    if (g_ngptr->flags & sel_mask) {
-		g_ngptr->flags &= ~sel_mask;
-		if (sel_rereading)
+	    if (g_ngptr->flags & g_sel_mask) {
+		g_ngptr->flags &= ~g_sel_mask;
+		if (g_sel_rereading)
 		    g_ngptr->flags |= NF_DEL;
-		selected_count--;
+		g_selected_count--;
 	    }
 	    break;
 	  case 'u':
@@ -628,7 +628,7 @@ int ng_perform(char *cmdlst, int output_level)
 	    g_ngptr->subscribechar = NEGCHAR;
 	    g_ngptr->toread = TR_UNSUB;
 	    g_ngptr->rc->flags |= RF_RCCHANGED;
-	    g_ngptr->flags &= ~sel_mask;
+	    g_ngptr->flags &= ~g_sel_mask;
 	    g_newsgroup_toread--;
 	    goto deselect;
 	  default:
@@ -668,7 +668,7 @@ int addgrp_sel_perform()
 	len++;
     }
     else
-	bits = sel_mask;
+	bits = g_sel_mask;
     if (buf[len] == '.') {
 	if (g_first_addgroup) /*$$*/
 	    return -1;
@@ -686,7 +686,7 @@ int addgrp_sel_perform()
     }
 
     for (gp = g_first_addgroup; gp; gp = gp->next) {
-	if (!(gp->flags & sel_mask) ^ !!bits) {
+	if (!(gp->flags & g_sel_mask) ^ !!bits) {
 	    if (addgrp_perform(gp, cmdstr, 0) < 0)
 		break;
 	}
@@ -713,10 +713,10 @@ int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level)
 	    continue;
 	if (ch == '+') {
 	    gp->flags |= AGF_SEL;
-	    selected_count++;
+	    g_selected_count++;
 	} else if (ch == '-') {
 	    gp->flags &= ~AGF_SEL;
-	    selected_count--;
+	    g_selected_count--;
 	}
 	else {
 	    sprintf(msg,"Unknown command: %s",cmdlst);

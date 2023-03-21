@@ -346,7 +346,7 @@ void thread_article(ARTICLE *article, char *references)
     if (!(article->flags & AF_CACHED))
 	cache_article(article);
     thread_autofl = chain_autofl;
-    if (sel_mode == SM_THREAD) {
+    if (g_sel_mode == SM_THREAD) {
 	SUBJECT* sp = article->subj->thread_link;
 	while (sp != article->subj) {
 	    if (sp->articles)
@@ -504,7 +504,7 @@ void merge_threads(SUBJECT *s1, SUBJECT *s2)
 
     /* If thread mode is set, ensure the subjects are adjacent in the list. */
     /* Don't do this if the selector is active, because it gets messed up. */
-    if (sel_mode == SM_THREAD && gmode != 's') {
+    if (g_sel_mode == SM_THREAD && gmode != 's') {
 	for (sp = s2; sp->prev && sp->prev->thread == t1; ) {
 	    sp = sp->prev;
 	    if (sp == s1)

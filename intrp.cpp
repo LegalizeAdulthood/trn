@@ -771,12 +771,12 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			break;
 		    }
 		    unseen = (g_art <= g_lastart) && !was_read(g_art);
-		    if (selected_only) {
+		    if (g_selected_only) {
 			int selected;
 
 			selected = g_curr_artp && (g_curr_artp->flags & AF_SEL);
 			sprintf(scrbuf,"%ld",
-				(long)selected_count - (selected && unseen));
+				(long)g_selected_count - (selected && unseen));
 		    }
 		    else
 			sprintf(scrbuf,"%ld",(long)g_ngptr->toread - unseen);
@@ -789,7 +789,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    if (in_ng) {
 			selected = g_curr_artp && (g_curr_artp->flags & AF_SEL);
 			unseen = (g_art <= g_lastart) && !was_read(g_art);
-			sprintf(scrbuf,"%ld",(long)g_ngptr->toread-selected_count
+			sprintf(scrbuf,"%ld",(long)g_ngptr->toread-g_selected_count
 						- (!selected && unseen));
 			s = scrbuf;
 		    }
@@ -873,7 +873,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = scrbuf;
 		    break;
 		case 'Z':
-		    sprintf(scrbuf,"%ld",(long)selected_count);
+		    sprintf(scrbuf,"%ld",(long)g_selected_count);
 		    s = scrbuf;
 		    break;
 		case '\0':

@@ -72,10 +72,10 @@ void build_cache()
     if (cached_ng == g_ngptr && time((time_t*)nullptr) < cached_time + 6*60*60L) {
 	ART_NUM an;
 	cached_time = time((time_t*)nullptr);
-	if (sel_mode == SM_ARTICLE)
-	    set_selector(sel_mode, sel_artsort);
+	if (g_sel_mode == SM_ARTICLE)
+	    set_selector(g_sel_mode, g_sel_artsort);
 	else
-	    set_selector(sel_threadmode, sel_threadsort);
+	    set_selector(g_sel_threadmode, g_sel_threadsort);
 	for (an = g_last_cached+1; an <= g_lastart; an++)
 	    article_ptr(an)->flags |= AF_EXISTS;
 	rc_to_bits();
@@ -179,14 +179,14 @@ void cache_article(ARTICLE *ap)
     ap->subj_next = next;
     ap->flags |= AF_CACHED;
 
-    if (!!(ap->flags & AF_UNREAD) ^ sel_rereading) {
-	if (ap->subj->flags & sel_mask)
+    if (!!(ap->flags & AF_UNREAD) ^ g_sel_rereading) {
+	if (ap->subj->flags & g_sel_mask)
 	    select_article(ap, 0);
 	else {
 	    if (ap->subj->flags & SF_WASSELECTED) {
 #if 0
-		if (selected_only)
-		    ap->flags |= sel_mask;
+		if (g_selected_only)
+		    ap->flags |= g_sel_mask;
 		else
 #endif
 		    select_article(ap, 0);
@@ -635,7 +635,7 @@ void look_ahead()
 
     if (g_threaded_group) {
 	g_artp = g_curr_artp;
-	inc_art(selected_only,false);
+	inc_art(g_selected_only,false);
 	if (g_artp)
 	    parseheader(g_art);
     }
@@ -825,7 +825,7 @@ bool cache_all_arts()
     if (g_curr_artp && !(g_curr_artp->flags & AF_CACHED) && !input_pending())
 	pushchar('\f' | 0200);
     /* A completely empty group needs a count & a sort */
-    if (gmode != 's' && !obj_count && !selected_only)
+    if (gmode != 's' && !obj_count && !g_selected_only)
 	thread_grow();
     return true;
 }
@@ -895,10 +895,10 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
 bool cache_range(ART_NUM first, ART_NUM last)
 {
     bool success = true;
-    bool all_arts = (sel_rereading || thread_always);
+    bool all_arts = (g_sel_rereading || thread_always);
     ART_NUM count = 0;
 
-    if (sel_rereading && !g_cached_all_in_range) {
+    if (g_sel_rereading && !g_cached_all_in_range) {
 	g_first_cached = first;
 	g_last_cached = first-1;
     }
@@ -911,7 +911,7 @@ bool cache_range(ART_NUM first, ART_NUM last)
     spin_todo = count;
 
     if (g_first_cached > g_last_cached) {
-	if (sel_rereading) {
+	if (g_sel_rereading) {
 	    if (g_first_subject)
 		count -= g_ngptr->toread;
 	} else if (first == g_firstart && last == g_lastart && !all_arts)

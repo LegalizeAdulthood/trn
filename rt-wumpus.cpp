@@ -167,7 +167,7 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
 	    if (!(ap->flags & AF_UNREAD)) {
 		*str++ = '(';
 		ch = ')';
-	    } else if (!selected_only || (ap->flags & AF_SEL)) {
+	    } else if (!g_selected_only || (ap->flags & AF_SEL)) {
 		*str++ = '[';
 		ch = ']';
 	    } else {
@@ -540,7 +540,7 @@ static void display_tree(ARTICLE *article, char *cp)
 	if (!(article->flags & AF_UNREAD)) {
 	    buf[0] = '(';
 	    buf[2] = ')';
-	} else if (!selected_only || (article->flags & AF_SEL)) {
+	} else if (!g_selected_only || (article->flags & AF_SEL)) {
 	    buf[0] = '[';
 	    buf[2] = ']';
 	} else {

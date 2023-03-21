@@ -24,7 +24,7 @@
 #include "ng.h"			/* for "g_art" */
 #include "head.h"		/* fetchsubj */
 #include "rthread.h"
-#include "rt-select.h"		/* sel_mode */
+#include "rt-select.h"		/* g_sel_mode */
 #include "score.h"
 #include "INTERN.h"
 #include "samisc.h"
@@ -108,7 +108,7 @@ void sa_selthreads()
     bool want_unread;
 #if 0
     /* this does not work now, but maybe it will help debugging? */
-    int subj_mask = (sel_mode == SM_THREAD? (SF_THREAD|SF_VISIT) : SF_VISIT);
+    int subj_mask = (g_sel_mode == SM_THREAD? (SF_THREAD|SF_VISIT) : SF_VISIT);
 #endif
     int subj_mask = SF_VISIT;
 

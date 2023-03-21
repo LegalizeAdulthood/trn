@@ -272,7 +272,7 @@ int do_kfile(FILE *kfp, int entering)
 	    int killmask = AF_UNREAD;
 	    switch (bp[1]) {
 	    case 'X':
-		killmask |= sel_mask;	/* don't kill selected articles */
+		killmask |= g_sel_mask;	/* don't kill selected articles */
 		/* FALL THROUGH */
 	    case 'j':
 		article_walk(kfile_junk, killmask);
@@ -309,10 +309,10 @@ static bool kfile_junk(char *ptr, int killmask)
     ARTICLE* ap = (ARTICLE*)ptr;
     if ((ap->flags & killmask) == AF_UNREAD)
 	set_read(ap);
-    else if (ap->flags & sel_mask) {
-	ap->flags &= ~sel_mask;
-	if (!selected_count--)
-	    selected_count = 0;
+    else if (ap->flags & g_sel_mask) {
+	ap->flags &= ~g_sel_mask;
+	if (!g_selected_count--)
+	    g_selected_count = 0;
     }
     return false;
 }
@@ -569,7 +569,7 @@ void clear_auto_flags(ARTICLE *ap)
 void perform_auto_flags(ARTICLE *ap, int thread_autofl, int subj_autofl, int chain_autofl)
 {
     if (thread_autofl & AUTO_SEL_THD) {
-	if (sel_mode == SM_THREAD)
+	if (g_sel_mode == SM_THREAD)
 	    select_arts_thread(ap, AUTO_SEL_THD);
 	else
 	    select_arts_subject(ap, AUTO_SEL_THD);
@@ -582,7 +582,7 @@ void perform_auto_flags(ARTICLE *ap, int thread_autofl, int subj_autofl, int cha
 	select_article(ap, AUTO_SEL_1);
 
     if (thread_autofl & AUTO_KILL_THD) {
-	if (sel_mode == SM_THREAD)
+	if (g_sel_mode == SM_THREAD)
 	    kill_arts_thread(ap, AFFECT_ALL|AUTO_KILL_THD);
 	else
 	    kill_arts_subject(ap, AFFECT_ALL|AUTO_KILL_THD);

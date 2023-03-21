@@ -237,7 +237,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	ret = SRCH_ERROR;		/* listing subjects is an error? */
     if (gmode == 's') {
 	if (!cmdlst) {
-	    if (sel_mode == SM_ARTICLE)/* set the selector's default command */
+	    if (g_sel_mode == SM_ARTICLE)/* set the selector's default command */
 		cmdlst = savestr("+");
 	    else
 		cmdlst = savestr("++");
@@ -289,7 +289,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
     if (ignorethru == 0 && kill_thru_kludge && cmdlst
      && (*cmdlst == '+' || *cmdlst == '.'))
 	ignorethru = 1;
-    srchfirst = doread || sel_rereading? g_absfirst
+    srchfirst = doread || g_sel_rereading? g_absfirst
 		      : (mode != 'k' || ignorethru > 0)? g_firstart : g_killfirst;
     if (topstart || g_art == 0) {
 	g_art = g_lastart+1;
@@ -323,7 +323,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	    break;
 	}
 	g_artp = article_ptr(g_art);
-	if (doread || (!(g_artp->flags & AF_UNREAD) ^ !sel_rereading)) {
+	if (doread || (!(g_artp->flags & AF_UNREAD) ^ !g_sel_rereading)) {
 	    if (wanted(compex,g_art,howmuch)) {
 				    /* does the shoe fit? */
 		if (!cmdlst)

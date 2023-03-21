@@ -176,10 +176,10 @@ do_article_result do_article()
 		selected = (g_curr_artp->flags & AF_SEL);
 		unseen = article_unread(g_art)? 1 : 0;
 		sprintf(g_art_line,"%s%s #%ld",ngname,g_moderated,(long)g_art);
-		if (selected_only) {
-		    i = selected_count - (unseen && selected);
+		if (g_selected_only) {
+		    i = g_selected_count - (unseen && selected);
 		    sprintf(g_art_line+strlen(g_art_line)," (%ld + %ld more)",
-			    (long)i,(long)g_ngptr->toread - selected_count
+			    (long)i,(long)g_ngptr->toread - g_selected_count
 					- (!selected && unseen));
 		}
 		else if ((i = (ART_NUM)(g_ngptr->toread - unseen)) != 0

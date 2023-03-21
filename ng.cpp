@@ -145,8 +145,8 @@ int do_newsgroup(char *start_command)
 
     /* initialize the newsgroup data structures */
 
-    sel_rereading = false;
-    sel_mask = AF_SEL;
+    g_sel_rereading = false;
+    g_sel_mask = AF_SEL;
     ret = access_ng();
     if (ret == -2)
 	return NG_NOSERVER;
@@ -179,8 +179,8 @@ int do_newsgroup(char *start_command)
 	univ_ng_virtual();
 	goto cleanup;
     }
-    if (!selected_count)
-	selected_only = false;
+    if (!g_selected_count)
+	g_selected_only = false;
     top_article();
 
     /* do they want a special top line? */
@@ -262,7 +262,7 @@ int do_newsgroup(char *start_command)
 	}
 	if (g_art > g_lastart) {		/* are we off the end still? */
 	    g_art = g_lastart + 1;		/* keep pointer references sane */
-	    if (!g_forcelast && g_ngptr->toread && selected_only && !selected_count) {
+	    if (!g_forcelast && g_ngptr->toread && g_selected_only && !g_selected_count) {
 		g_art = g_curr_art;
 		g_artp = g_curr_artp;
 		strcpy(buf, "+");
@@ -295,10 +295,10 @@ int do_newsgroup(char *start_command)
 	    else
 		printf("End of %s",ngname);
 	    if (obj_count) {
-		if (selected_only)
+		if (g_selected_only)
 		    printf("  (%ld + %ld articles still unread)",
-			(long)selected_count,
-			(long)obj_count-selected_count);
+			(long)g_selected_count,
+			(long)obj_count-g_selected_count);
 		else
 		    printf("  (%ld article%s still unread)",
 			(long)obj_count,PLURAL(obj_count));
@@ -319,9 +319,9 @@ int do_newsgroup(char *start_command)
 	    termdown(2);
 	}
 	else if (!g_reread && (was_read(g_art)
-		|| (selected_only && !(g_artp->flags & AF_SEL)))) {
+		|| (g_selected_only && !(g_artp->flags & AF_SEL)))) {
 					/* has this article been read? */
-	    inc_art(selected_only,false);/* then skip it */
+	    inc_art(g_selected_only,false);/* then skip it */
 	    continue;
 	}
 	else if (!g_reread && (!(g_artp->flags & AF_EXISTS) || !parseheader(g_art))) {
@@ -794,7 +794,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	s_follow_temp = true;	/* keep going until change req. */
 	univ_follow_temp = true;
 	do {
-	    dec_art(selected_only,false);
+	    dec_art(g_selected_only,false);
 	} while (g_art >= g_firstart && (was_read(g_art) || !parseheader(g_art)));
 	g_srchahead = 0;
 	if (g_art >= g_firstart)
@@ -810,11 +810,11 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    if (verbose)
 		printf("\nThere are no%s%s articles prior to this one.\n",
 			*buf=='P'?"":" unread",
-			selected_only?" selected":"") FLUSH;
+			g_selected_only?" selected":"") FLUSH;
 	    else
 		printf("\nNo previous%s%s articles\n",
 			*buf=='P'?"":" unread",
-			selected_only?" selected":"") FLUSH;
+			g_selected_only?" selected":"") FLUSH;
 	    termdown(2);
 	    g_art = g_curr_art;
 	    g_artp = g_curr_artp;
@@ -865,10 +865,10 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    /* $$ will this work with 4.0? CAA */
 	    if (sa_in && g_threaded_group) {
 		ARTICLE* old_artp = g_artp;
-		inc_art(selected_only,false);
+		inc_art(g_selected_only,false);
 		if (!g_artp || !old_artp)
 		    return AS_SA;
-		switch (sel_mode) {
+		switch (g_sel_mode) {
 		  case SM_ARTICLE:
 		    if (s_default_cmd)
 			return AS_SA;
@@ -886,7 +886,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 		    break;
 		}
 	    } else
-		inc_art(selected_only,false);
+		inc_art(g_selected_only,false);
 	    if (g_art > g_lastart)
 		top_article();
 	}
@@ -1106,7 +1106,7 @@ normal_search:
 	return AS_ASK;
       case '+':			/* enter selection mode */
 run_the_selector:
-	if (art_sel_ilock) {
+	if (g_art_sel_ilock) {
 	    printf("\nAlready inside article selector!\n") FLUSH;
 	    termdown(2);
 	    return AS_ASK;
@@ -1116,9 +1116,9 @@ run_the_selector:
 	/* turn on temporary follow */
 	s_follow_temp = true;
 	univ_follow_temp = true;
-	art_sel_ilock = true;
+	g_art_sel_ilock = true;
 	*buf = article_selector(*buf);
-	art_sel_ilock = false;
+	g_art_sel_ilock = false;
 	switch (*buf) {
 	  case '+':
 	    newline();
@@ -1352,7 +1352,7 @@ run_the_selector:
 	  case '-':
 	    if (!g_artp)
 		goto not_threaded;
-	    if (sel_mode == SM_THREAD) {
+	    if (g_sel_mode == SM_THREAD) {
 		deselect_arts_thread(g_artp);
 		printf("\nDeselected all articles in this thread.\n");
 	    } else {
@@ -1504,7 +1504,7 @@ u to mark all and unsubscribe.\n\n\
 	    g_ngptr->toread = (ART_UNREAD)obj_count;
 	}
 	else {
-	    selected_count = selected_subj_cnt = selected_only = false;
+	    g_selected_count = g_selected_subj_cnt = g_selected_only = false;
 	    g_ngptr->toread = 0;
 	    if (g_dmcount)
 		yankback();
@@ -1540,7 +1540,7 @@ static bool mark_all_READ(char *ptr, int leave_unread)
     ARTICLE* ap = (ARTICLE*)ptr;
     if (article_num(ap) > g_lastart - leave_unread)
 	return true;
-    ap->flags &= ~(sel_mask|AF_UNREAD);
+    ap->flags &= ~(g_sel_mask|AF_UNREAD);
     return false;
 }
 

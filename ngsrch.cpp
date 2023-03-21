@@ -133,7 +133,7 @@ int ng_search(char *patbuf, int get_cmd)
 	if (g_ngptr->toread >= TR_NONE && ng_wanted(g_ngptr)) {
 	    if (g_ngptr->toread == TR_NONE)
 		set_toread(g_ngptr, ST_LAX);
-	    if (g_ng_doempty || ((g_ngptr->toread > TR_NONE) ^ sel_rereading)) {
+	    if (g_ng_doempty || ((g_ngptr->toread > TR_NONE) ^ g_sel_rereading)) {
 		if (!cmdlst)
 		    return NGS_FOUND;
 		set_ng(g_ngptr);

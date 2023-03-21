@@ -16,7 +16,7 @@
 #include "bits.h"	/* g_absfirst */
 #include "artsrch.h"	/* needed for artstate.h */
 #include "artstate.h"	/* for g_reread */
-#include "rt-select.h"	/* selected_only */
+#include "rt-select.h"	/* g_selected_only */
 #include "scan.h"
 #include "smisc.h"
 #include "spage.h"
@@ -54,8 +54,8 @@ sa_main_result sa_main()
 	    g_art = sa_ents[a].artnum;
 	    g_reread = true;
 	    sa_clearmark(a);
-	    /* trn 3.x won't read an unselected article if selected_only */
-	    selected_only = false;
+	    /* trn 3.x won't read an unselected article if g_selected_only */
+	    g_selected_only = false;
 	    s_save_context();
 	    return SA_NORM;
 	}
@@ -79,8 +79,8 @@ sa_main_result sa_main()
 
     if (i == SA_NORM || i == SA_FAKE) {
 	g_art = sa_art;
-	/* trn 3.x won't read an unselected article if selected_only */
-	selected_only = false;
+	/* trn 3.x won't read an unselected article if g_selected_only */
+	g_selected_only = false;
 	if (sa_mode_read_elig)
 	    g_reread = true;
     }

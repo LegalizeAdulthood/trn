@@ -1,71 +1,79 @@
 /* rt-select.h
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef RT_SELECT_H
+#define RT_SELECT_H
 
-EXT bool sel_rereading INIT(0);
-EXT char sel_disp_char[] INIT(" +-*");
+enum
+{
+    SM_THREAD = 1,
+    SM_SUBJECT = 2,
+    SM_ARTICLE = 3,
+    SM_NEWSGROUP = 4,
+    SM_ADDGROUP = 5,
+    SM_MULTIRC = 6,
+    SM_OPTIONS = 7,
+    SM_UNIVERSAL = 8
+};
 
-#define SM_THREAD	1
-#define SM_SUBJECT	2
-#define SM_ARTICLE	3
-#define SM_NEWSGROUP	4
-#define SM_ADDGROUP	5
-#define SM_MULTIRC	6
-#define SM_OPTIONS	7
-#define SM_UNIVERSAL	8
+enum
+{
+    SS_DATE = 1,
+    SS_STRING = 2,
+    SS_AUTHOR = 3,
+    SS_COUNT = 4,
+    SS_NATURAL = 5,
+    SS_GROUPS = 6,
+    SS_LINES = 7,
+    /* NOTE: The score order is still valid even without scoring enabled. */
+    /*       (The real order is then something like natural or date.) */
+    SS_SCORE = 8
+};
 
-EXT int sel_mode;
-EXT int sel_defaultmode INIT(SM_THREAD);
-EXT int sel_threadmode INIT(SM_THREAD);
+enum
+{
+    DS_ASK = 1,
+    DS_UPDATE = 2,
+    DS_DISPLAY = 3,
+    DS_RESTART = 4,
+    DS_STATUS = 5,
+    DS_QUIT = 6,
+    DS_DOCOMMAND = 7,
+    DS_ERROR = 8
+};
 
-#define SS_DATE		1
-#define SS_STRING	2
-#define SS_AUTHOR	3
-#define SS_COUNT	4
-#define SS_NATURAL	5
-#define SS_GROUPS	6
-#define SS_LINES	7
-/* NOTE: The score order is still valid even without scoring enabled. */
-/*       (The real order is then something like natural or date.) */
-#define SS_SCORE	8
+enum
+{
+    UR_NORM = 1,
+    UR_BREAK = 2, /* request return to selector */
+    UR_ERROR = 3  /* non-normal return */
+};
 
-EXT char* sel_mode_string;
-EXT int sel_sort;
-EXT int sel_artsort INIT(SS_GROUPS);
-EXT int sel_threadsort INIT(SS_DATE);
-EXT int sel_newsgroupsort INIT(SS_NATURAL);
-EXT int sel_addgroupsort INIT(SS_NATURAL);
-EXT int sel_univsort INIT(SS_NATURAL);
-
-EXT char* sel_sort_string;
-EXT int sel_direction INIT(1);
-EXT bool sel_exclusive INIT(false);
-EXT int sel_mask INIT(1);
-
-EXT bool selected_only INIT(false);
-EXT ART_UNREAD selected_count INIT(0);
-EXT int selected_subj_cnt INIT(0);
-EXT int added_articles INIT(0);
-
-EXT char* sel_chars;
-EXT int sel_item_index;
-EXT int sel_last_line;
-EXT bool sel_at_end;
-EXT bool art_sel_ilock INIT(false);
-
-#define DS_ASK  	1
-#define DS_UPDATE	2
-#define DS_DISPLAY	3
-#define DS_RESTART	4
-#define DS_STATUS	5
-#define DS_QUIT 	6
-#define DS_DOCOMMAND	7
-#define DS_ERROR	8
-
-
-#define UR_NORM		1
-#define UR_BREAK	2	/* request return to selector */
-#define UR_ERROR	3	/* non-normal return */
+extern bool g_sel_rereading;
+extern char g_sel_disp_char[];
+extern int g_sel_mode;
+extern int g_sel_defaultmode;
+extern int g_sel_threadmode;
+extern char *g_sel_mode_string;
+extern int g_sel_sort;
+extern int g_sel_artsort;
+extern int g_sel_threadsort;
+extern int g_sel_newsgroupsort;
+extern int g_sel_addgroupsort;
+extern int g_sel_univsort;
+extern char *g_sel_sort_string;
+extern int g_sel_direction;
+extern bool g_sel_exclusive;
+extern int g_sel_mask;
+extern bool g_selected_only;
+extern ART_UNREAD g_selected_count;
+extern int g_selected_subj_cnt;
+extern int g_added_articles;
+extern char *g_sel_chars;
+extern int g_sel_item_index;
+extern int g_sel_last_line;
+extern bool g_sel_at_end;
+extern bool g_art_sel_ilock;
 
 char article_selector(char_int cmd);
 char multirc_selector();
@@ -76,3 +84,5 @@ char universal_selector();
 void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
 int univ_visit_group(const char *gname);
 void univ_visit_help(int where);
+
+#endif

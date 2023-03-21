@@ -385,19 +385,19 @@ static void scanline(char *actline, bool add_matching)
 static int agorder_number(const ADDGROUP **app1, const ADDGROUP **app2)
 {
     ART_NUM eq = (*app1)->num - (*app2)->num;
-    return eq > 0? sel_direction : -sel_direction;
+    return eq > 0? g_sel_direction : -g_sel_direction;
 }
 
 static int agorder_groupname(const ADDGROUP **app1, const ADDGROUP **app2)
 {
-    return strcasecmp((*app1)->name, (*app2)->name) * sel_direction;
+    return strcasecmp((*app1)->name, (*app2)->name) * g_sel_direction;
 }
 
 static int agorder_count(const ADDGROUP **app1, const ADDGROUP **app2)
 {
     long eq = (*app1)->toread - (*app2)->toread;
     if (eq)
-	return eq > 0? sel_direction : -sel_direction;
+	return eq > 0? g_sel_direction : -g_sel_direction;
     return agorder_groupname(app1, app2);
 }
 
@@ -411,7 +411,7 @@ void sort_addgroups()
     ADDGROUP** ag_list;
     int (*sort_procedure)(const ADDGROUP**, const ADDGROUP**);
 
-    switch (sel_sort) {
+    switch (g_sel_sort) {
       case SS_NATURAL:
       default:
 	sort_procedure = agorder_number;
