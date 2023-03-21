@@ -96,7 +96,7 @@ add_executable(trn
     rt-page.cpp rt-page.h
     rt-process.cpp rt-process.h
     rt-select.cpp rt-select.h
-    rt-util.cpp rt-util.h rt-util.ih
+    rt-util.cpp rt-util.h
     rt-wumpus.cpp rt-wumpus.h rt-wumpus.ih
     sacmd.cpp sacmd.h
     sadesc.cpp sadesc.h

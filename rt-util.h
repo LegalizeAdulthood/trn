@@ -1,20 +1,24 @@
 /* rt-util.h
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef RT_UTIL_H
+#define RT_UTIL_H
 
-EXT char spin_char INIT(' ');	/* char to put back when we're done spinning */
-EXT long spin_estimate;		/* best guess of how much work there is */
-EXT long spin_todo;		/* the max word to do (might decrease) */
-EXT int  spin_count;		/* counter for when to spin */
-EXT int  spin_marks INIT(25);	/* how many bargraph marks we want */
+extern char g_spin_char;     /* char to put back when we're done spinning */
+extern long g_spin_estimate; /* best guess of how much work there is */
+extern long g_spin_todo;     /* the max word to do (might decrease) */
+extern int g_spin_count;     /* counter for when to spin */
+extern int g_spin_marks;     /* how many bargraph marks we want */
+extern bool g_performed_article_loop;
 
-#define SPIN_OFF	0
-#define SPIN_POP	1
-#define SPIN_FOREGROUND	2
-#define SPIN_BACKGROUND 3
-#define SPIN_BARGRAPH	4
-
-EXT bool performed_article_loop;
+enum
+{
+    SPIN_OFF = 0,
+    SPIN_POP = 1,
+    SPIN_FOREGROUND = 2,
+    SPIN_BACKGROUND = 3,
+    SPIN_BARGRAPH = 4
+};
 
 char *extract_name(char *name);
 char *compress_name(char *name, int max);
@@ -29,3 +33,5 @@ bool inbackground();
 void perform_status_init(long cnt);
 void perform_status(long cnt, int spin);
 int perform_status_end(long cnt, const char *obj_type);
+
+#endif

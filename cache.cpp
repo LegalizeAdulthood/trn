@@ -852,14 +852,14 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
 	setspin(SPIN_BACKGROUND);
     else {
 	int lots2do = ((g_datasrc->flags & DF_REMOTE)? g_net_speed : 20) * 25;
-	setspin(spin_estimate > lots2do? SPIN_BARGRAPH : SPIN_FOREGROUND);
+	setspin(g_spin_estimate > lots2do? SPIN_BARGRAPH : SPIN_FOREGROUND);
     }
     /*assert(first >= g_absfirst && last <= g_lastart);*/
     for (i = article_first(first); i <= last; i = article_next(i)) {
 	if ((article_ptr(i)->flags & cachemask) ^ cachemask2)
 	    continue;
 
-	spin_todo -= i - expected_i;
+	g_spin_todo -= i - expected_i;
 	expected_i = i + 1;
 
 	/* This parses the header which will cache/thread the article */
@@ -908,7 +908,7 @@ bool cache_range(ART_NUM first, ART_NUM last)
 	count += last-g_last_cached;
     if (!count)
 	return true;
-    spin_todo = count;
+    g_spin_todo = count;
 
     if (g_first_cached > g_last_cached) {
 	if (g_sel_rereading) {
@@ -917,7 +917,7 @@ bool cache_range(ART_NUM first, ART_NUM last)
 	} else if (first == g_firstart && last == g_lastart && !all_arts)
 	    count = g_ngptr->toread;
     }
-    spin_estimate = count;
+    g_spin_estimate = count;
 
     printf("\n%sing %ld article%s.", g_threaded_group? "Thread" : "Cach",
 	   (long)count, PLURAL(count));

@@ -101,7 +101,7 @@ void thread_open()
     }
     if ((g_datasrc->flags & DF_TRY_OVERVIEW) && !g_cached_all_in_range) {
 	if (thread_always) {
-	    spin_todo = spin_estimate = g_lastart - g_absfirst + 1;
+	    g_spin_todo = g_spin_estimate = g_lastart - g_absfirst + 1;
 	    (void) ov_data(g_absfirst, g_lastart, false);
 	    if (g_datasrc->ov_opened && find_existing && g_datasrc->over_dir == nullptr) {
 		mark_missing_articles();
@@ -110,8 +110,8 @@ void thread_open()
 	    }
 	}
 	else {
-	    spin_todo = g_lastart - g_firstart + 1;
-	    spin_estimate = g_ngptr->toread;
+	    g_spin_todo = g_lastart - g_firstart + 1;
+	    g_spin_estimate = g_ngptr->toread;
 	    if (g_firstart > g_lastart) {
 		/* If no unread articles, see if ov. exists as fast as possible */
 		(void) ov_data(g_absfirst, g_absfirst, false);

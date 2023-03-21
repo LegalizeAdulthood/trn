@@ -460,10 +460,10 @@ bool actfile_hash(DATASRC *dp)
     if (dp->flags & DF_REMOTE) {
 	DATASRC* save_datasrc = g_datasrc;
 	set_datasrc(dp);
-	spin_todo = dp->act_sf.recent_cnt;
+	g_spin_todo = dp->act_sf.recent_cnt;
 	ret = srcfile_open(&dp->act_sf, dp->extra_name, "active", dp->newsid);
-	if (spin_count > 0)
-	    dp->act_sf.recent_cnt = spin_count;
+	if (g_spin_count > 0)
+	    dp->act_sf.recent_cnt = g_spin_count;
 	set_datasrc(save_datasrc);
     }
     else
@@ -593,11 +593,11 @@ char *find_grpdesc(DATASRC *dp, char *groupname)
 		grouplen = strlen(groupname);
 		goto try_xgtitle;
 	    }
-	    spin_todo = dp->desc_sf.recent_cnt;
+	    g_spin_todo = dp->desc_sf.recent_cnt;
 	    ret = srcfile_open(&dp->desc_sf, dp->grpdesc,
                                "newsgroups", dp->newsid);
-	    if (spin_count > 0)
-		dp->desc_sf.recent_cnt = spin_count;
+	    if (g_spin_count > 0)
+		dp->desc_sf.recent_cnt = g_spin_count;
 	    /*set_datasrc(save_datasrc);*/
 	}
 	else
@@ -693,7 +693,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
 	if (!sfp->refetch_secs) {
 	    server = nullptr;
 	    fp = fopen(filename, "r");
-	    spin_todo = 0;
+	    g_spin_todo = 0;
 	}
         else if (now - sfp->lastfetch > sfp->refetch_secs && (sfp->refetch_secs != 2 || !sfp->lastfetch))
         {
@@ -713,7 +713,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
 		}
 		sfp->lastfetch = now;
 		if (g_net_speed > 8)
-		    spin_todo = 0;
+		    g_spin_todo = 0;
 	    }
 	}
 	else {
@@ -723,7 +723,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
 		sfp->refetch_secs = 0;
 		fp = fopen(filename, "r");
 	    }
-	    spin_todo = 0;
+	    g_spin_todo = 0;
 	}
 	if (sfp->refetch_secs & 3)
 	    sfp->refetch_secs += 365L*24*60*60;
@@ -731,7 +731,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
     else
     {
 	fp = fopen(filename, "r");
-	spin_todo = 0;
+	g_spin_todo = 0;
     }
 
     if (filename && fp == nullptr) {
@@ -739,7 +739,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
 	termdown(1);
 	return 0;
     }
-    setspin(spin_todo > 0? SPIN_BARGRAPH : SPIN_FOREGROUND);
+    setspin(g_spin_todo > 0? SPIN_BARGRAPH : SPIN_FOREGROUND);
 
     srcfile_close(sfp);
 

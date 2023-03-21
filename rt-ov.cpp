@@ -183,7 +183,7 @@ beginning:
 	artnum = article_first(first);
 	if (artnum > first || !(article_ptr(artnum)->flags & AF_CACHED))
 	    break;
-	spin_todo--;
+	g_spin_todo--;
 	first++;
     }
     if (first > last)
@@ -199,7 +199,7 @@ beginning:
 	artnum = article_last(last);
 	if (artnum < last || !(article_ptr(artnum)->flags & AF_CACHED))
 	    break;
-	spin_todo--;
+	g_spin_todo--;
 	last--;
     }
 
@@ -224,9 +224,9 @@ beginning:
 	    setspin(SPIN_BACKGROUND);
 	else {
 	    int lots2do = ((g_datasrc->flags & DF_REMOTE)? g_net_speed : 20) * 100;
-	    if (spin_estimate > spin_todo)
-		spin_estimate = spin_todo;
-	    setspin(spin_estimate > lots2do? SPIN_BARGRAPH : SPIN_FOREGROUND);
+	    if (g_spin_estimate > g_spin_todo)
+		g_spin_estimate = g_spin_todo;
+	    setspin(g_spin_estimate > lots2do? SPIN_BARGRAPH : SPIN_FOREGROUND);
 	}
 	g_datasrc->ov_opened = started_request;
     }
@@ -253,7 +253,7 @@ beginning:
 		continue;
 	    break;
 	}
-	spin_todo -= an - artnum - 1;
+	g_spin_todo -= an - artnum - 1;
 	ov_parse(line, artnum = an, remote);
 	if (g_int_count) {
 	    g_int_count = 0;
@@ -277,7 +277,7 @@ beginning:
 	an = nntp_find_real_art(last);
 	if (an > 0) {
 	    last = an - 1;
-	    spin_todo -= last - artnum;
+	    g_spin_todo -= last - artnum;
 	    artnum = last;
 	}
     }
@@ -291,7 +291,7 @@ beginning:
 	    if (!(ap->flags & cachemask))
 		onemissing(ap);
 	}
-	spin_todo -= last - artnum;
+	g_spin_todo -= last - artnum;
     }
     if (artnum > g_last_cached && artnum >= first)
 	g_last_cached = artnum;
@@ -346,7 +346,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 
     article = article_ptr(artnum);
     if (article->flags & AF_THREADED) {
-	spin_todo--;
+	g_spin_todo--;
 	return;
     }
 

@@ -883,9 +883,9 @@ reinp_selector:
     fflush(stdout);
     eat_typeahead();
     if (UseSelNum)
-	spin_char = '0' + (g_sel_item_index+1)/10;	/* first digit */
+	g_spin_char = '0' + (g_sel_item_index+1)/10;	/* first digit */
     else
-	spin_char = g_sel_chars[g_sel_item_index];
+	g_spin_char = g_sel_chars[g_sel_item_index];
     cache_until_key();
     getcmd(buf);
     if (*buf == ' ')

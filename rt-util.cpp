@@ -2,30 +2,29 @@
 *  vi: set sw=4 ts=8 ai sm noet :
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
-
-
 #include "EXTERN.h"
 #include "common.h"
-#include "list.h"
-#include "hash.h"
 #include "cache.h"
 #include "ngdata.h"
 #include "artio.h"
-#include "rthread.h"
 #include "rt-select.h"
 #include "term.h"
-#include "nntpclient.h"
 #include "charsubst.h"
-#include "datasrc.h"
-#include "nntp.h"
 #include "intrp.h"
 #include "ng.h"
 #include "util.h"
 #include "util2.h"
 #include "utf.h"
-#include "INTERN.h"
 #include "rt-util.h"
-#include "rt-util.ih"
+
+char g_spin_char{' '};  /* char to put back when we're done spinning */
+long g_spin_estimate{}; /* best guess of how much work there is */
+long g_spin_todo{};     /* the max word to do (might decrease) */
+int g_spin_count{};     /* counter for when to spin */
+int g_spin_marks{25};   /* how many bargraph marks we want */
+bool g_performed_article_loop{};
+
+static char *output_change(char *cp, long num, const char *obj_type, const char *modifier, const char *action);
 
 /* Name-munging routines written by Ross Ridge.
 ** Enhanced by Wayne Davison.
@@ -608,7 +607,7 @@ void setspin(int mode)
 	if (!spin_level++) {
 	    if ((spin_art = openart) != 0 && artfp)
 		spin_tell = tellart();
-	    spin_count = 0;
+	    g_spin_count = 0;
 	    spin_place = 0;
 	}
 	if (spin_mode == SPIN_BARGRAPH)
@@ -616,9 +615,9 @@ void setspin(int mode)
 	if (mode == SPIN_BARGRAPH) {
 	    if (spin_mode != SPIN_BARGRAPH) {
 		int i;
-		spin_marks = (verbose? 25 : 10);
-		printf(" [%*s]", spin_marks, "");
-		for (i = spin_marks + 1; i--; ) backspace();
+		g_spin_marks = (verbose? 25 : 10);
+		printf(" [%*s]", g_spin_marks, "");
+		for (i = g_spin_marks + 1; i--; ) backspace();
 		fflush(stdout);
 	    }
 	    spin_pos = 0;
@@ -631,16 +630,16 @@ void setspin(int mode)
 	if (spin_mode == SPIN_BARGRAPH) {
 	    spin_level = 1;
 	    spin(10000);
-	    if (spin_count >= spin_todo)
-		spin_char = ']';
-	    spin_count--;
+	    if (g_spin_count >= g_spin_todo)
+		g_spin_char = ']';
+	    g_spin_count--;
 	    spin_mode = SPIN_FOREGROUND;
 	}
 	if (mode == SPIN_POP && --spin_level > 0)
 	    break;
 	spin_level = 0;
 	if (spin_place) {	/* we have spun at least once */
-	    putchar(spin_char); /* get rid of spin character */
+	    putchar(g_spin_char); /* get rid of spin character */
 	    backspace();
 	    fflush(stdout);
 	    spin_place = 0;
@@ -650,7 +649,7 @@ void setspin(int mode)
 	    spin_art = 0;
 	}
 	spin_mode = SPIN_OFF;
-	spin_char = ' ';
+	g_spin_char = ' ';
 	break;
     }
 }
@@ -664,14 +663,14 @@ void spin(int count)
       case SPIN_BACKGROUND:
 	if (!bkgnd_spinner)
 	    return;
-	if (!(++spin_count % count)) {
+	if (!(++g_spin_count % count)) {
 	    putchar(spinchars[++spin_place % 4]);
 	    backspace();
 	    fflush(stdout);
 	}
 	break;
       case SPIN_FOREGROUND:
-	if (!(++spin_count % count)) {
+	if (!(++g_spin_count % count)) {
 	    putchar('.');
 	    fflush(stdout);
 	}
@@ -679,17 +678,17 @@ void spin(int count)
       case SPIN_BARGRAPH: {
 	int new_pos;
 
-	if (spin_todo == 0)
+	if (g_spin_todo == 0)
 	    break;		/* bail out rather than crash */
-	new_pos = (int)((long)spin_marks * ++spin_count / spin_todo);
-	if (spin_pos < new_pos && spin_count <= spin_todo+1) {
+	new_pos = (int)((long)g_spin_marks * ++g_spin_count / g_spin_todo);
+	if (spin_pos < new_pos && g_spin_count <= g_spin_todo+1) {
 	    do {
 		putchar('*');
 	    } while (++spin_pos < new_pos);
 	    spin_place = 0;
 	    fflush(stdout);
 	}
-	else if (!(spin_count % count)) {
+	else if (!(g_spin_count % count)) {
 	    putchar(spinchars[++spin_place % 4]);
 	    backspace();
 	    fflush(stdout);
@@ -716,7 +715,7 @@ void perform_status_init(long cnt)
     error_occurred = false;
     g_subjline = nullptr;
     page_line = 1;
-    performed_article_loop = true;
+    g_performed_article_loop = true;
 
     prior_perform_cnt = 0;
     prior_now = 0;
@@ -724,7 +723,7 @@ void perform_status_init(long cnt)
     ps_cnt = cnt;
     ps_missing = g_missing_count;
 
-    spin_count = 0;
+    g_spin_count = 0;
     spin_place = 0;
     spinchars = "v>^<";
 }
@@ -734,7 +733,7 @@ void perform_status(long cnt, int spin)
     long kills, sels, missing;
     time_t now;
 
-    if (!(++spin_count % spin)) {
+    if (!(++g_spin_count % spin)) {
 	putchar(spinchars[++spin_place % 4]);
 	backspace();
 	fflush(stdout);
@@ -828,7 +827,7 @@ int perform_status_end(long cnt, const char *obj_type)
     kills = ps_cnt - cnt - missing;
     sels = g_selected_count - ps_sel;
 
-    if (!performed_article_loop)
+    if (!g_performed_article_loop)
 	cp = output_change(cp, (long)g_perform_cnt,
                            g_sel_mode == SM_THREAD? "thread" : "subject",
                            nullptr, "ERR|match|ed");

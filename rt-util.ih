@@ -1,5 +1,0 @@
-/* rt-util.ih
- */
-/* This software is copyrighted as detailed in the LICENSE file. */
-
-static char *output_change(char *cp, long num, const char *obj_type, const char *modifier, const char *action);

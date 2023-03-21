@@ -291,7 +291,7 @@ int thread_perform()
      || (len == 2
       && (((*cmdstr == '+' || *cmdstr == '-') && cmdstr[0] == cmdstr[1])
        || *cmdstr == 'T' || *cmdstr == 'A'))) {
-        performed_article_loop = false;
+        g_performed_article_loop = false;
 	if (one_thread)
 	    sp = (g_sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
 	else
