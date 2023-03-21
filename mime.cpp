@@ -1324,7 +1324,7 @@ int filter_html(char *t, char *f)
 #undef XX
 
 static char bullets[3] = {'*', 'o', '+'};
-static char letters[2] = {'a', 'A'};
+static char g_letters[2] = {'a', 'A'};
 static char roman_letters[] = { 'M', 'D', 'C', 'L', 'X', 'V', 'I'};
 static int  roman_values[]  = {1000, 500, 100,  50, 10,   5,   1 };
 
@@ -1476,8 +1476,8 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 		if (cnt >= 26*26)
 		    cnt = blks[j].cnt = 0;
 		if (cnt >= 26)
-		    t[-4] = letters[ch-5] + (cnt / 26) - 1;
-		t[-3] =	letters[ch-5] + (cnt % 26);
+		    t[-4] = g_letters[ch-5] + (cnt / 26) - 1;
+		t[-3] =	g_letters[ch-5] + (cnt % 26);
 		t[-2] = '.';
 		break;
 	      case 7:

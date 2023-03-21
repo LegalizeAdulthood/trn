@@ -1,8 +1,0 @@
-/* rt-wumpus.ih
- */
-/* This software is copyrighted as detailed in the LICENSE file. */
-
-static void find_depth(ARTICLE *article, int depth);
-static void cache_tree(ARTICLE *ap, int depth, char *cp);
-static ARTICLE *find_artp(ARTICLE *article, int x);
-static void display_tree(ARTICLE *article, char *cp);

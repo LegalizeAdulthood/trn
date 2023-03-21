@@ -5,15 +5,12 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "list.h"
-#include "hash.h"
 #include "cache.h"
 #include "ng.h"
 #include "head.h"
 #include "util.h"
 #include "util2.h"
 #include "term.h"
-#include "final.h"
 #include "ngdata.h"
 #include "artio.h"
 #include "artstate.h"
@@ -22,11 +19,11 @@
 #include "rt-select.h"
 #include "charsubst.h"
 #include "color.h"
-#include "INTERN.h"
 #include "rt-wumpus.h"
-#include "rt-wumpus.ih"
 
-static char tree_indent[] = {
+char g_letters[] = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+";
+
+static char s_tree_indent[] = {
     ' ', 0,
     ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
     ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
@@ -43,23 +40,25 @@ static char tree_indent[] = {
     ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
     ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0
 };
+static ARTICLE *s_tree_article{};
+static int s_max_depth{};
+static int s_max_line{-1};
+static int s_first_depth{};
+static int s_first_line{};
+static int s_my_depth{};
+static int s_my_line{};
+static bool s_node_on_line{};
+static int s_node_line_cnt{};
+static int s_line_num{};
+static int s_header_indent{};
+static char *s_tree_lines[11]{};
+static char s_tree_buff[128]{};
+static char *s_str{};
 
-char letters[] = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+";
-
-static ARTICLE* tree_article;
-
-static int max_depth, max_line = -1;
-static int first_depth, first_line;
-static int my_depth, my_line;
-static bool node_on_line;
-static int node_line_cnt;
-
-static int line_num;
-static int header_indent;
-
-static char* tree_lines[11];
-static char tree_buff[128];
-static char* str;
+static void find_depth(ARTICLE *article, int depth);
+static void cache_tree(ARTICLE *ap, int depth, char *cp);
+static ARTICLE *find_artp(ARTICLE *article, int x);
+static void display_tree(ARTICLE *article, char *cp);
 
 /* Prepare tree display for inclusion in the article header.
 */
@@ -69,12 +68,12 @@ void init_tree()
     SUBJECT* sp;
     int num;
 
-    while (max_line >= 0)		/* free any previous tree data */
-	free(tree_lines[max_line--]);
+    while (s_max_line >= 0)		/* free any previous tree data */
+	free(s_tree_lines[s_max_line--]);
 
-    if (!(tree_article = g_curr_artp) || !tree_article->subj)
+    if (!(s_tree_article = g_curr_artp) || !s_tree_article->subj)
 	return;
-    if (!(thread = tree_article->subj->thread))
+    if (!(thread = s_tree_article->subj->thread))
 	return;
     /* Enumerate our subjects for display */
     sp = thread->subj;
@@ -84,57 +83,57 @@ void init_tree()
 	sp = sp->thread_link;
     } while (sp != thread->subj);
 
-    max_depth = max_line = my_depth = my_line = node_line_cnt = 0;
+    s_max_depth = s_max_line = s_my_depth = s_my_line = s_node_line_cnt = 0;
     find_depth(thread, 0);
 
-    if (max_depth <= 5)
-	first_depth = 0;
+    if (s_max_depth <= 5)
+	s_first_depth = 0;
     else {
-	if (my_depth+2 > max_depth)
-	    first_depth = max_depth - 5;
-	else if ((first_depth = my_depth - 3) < 0)
-	    first_depth = 0;
-	max_depth = first_depth + 5;
+	if (s_my_depth+2 > s_max_depth)
+	    s_first_depth = s_max_depth - 5;
+	else if ((s_first_depth = s_my_depth - 3) < 0)
+	    s_first_depth = 0;
+	s_max_depth = s_first_depth + 5;
     }
-    if (--max_line < max_tree_lines)
-	first_line = 0;
+    if (--s_max_line < max_tree_lines)
+	s_first_line = 0;
     else {
-	if (my_line + max_tree_lines/2 > max_line)
-	    first_line = max_line - (max_tree_lines-1);
-	else if ((first_line = my_line - (max_tree_lines-1)/2) < 0)
-	    first_line = 0;
-	max_line = first_line + max_tree_lines-1;
+	if (s_my_line + max_tree_lines/2 > s_max_line)
+	    s_first_line = s_max_line - (max_tree_lines-1);
+	else if ((s_first_line = s_my_line - (max_tree_lines-1)/2) < 0)
+	    s_first_line = 0;
+	s_max_line = s_first_line + max_tree_lines-1;
     }
 
-    str = tree_buff;		/* initialize first line's data */
-    *str++ = ' ';
-    node_on_line = false;
-    line_num = 0;
+    s_str = s_tree_buff;		/* initialize first line's data */
+    *s_str++ = ' ';
+    s_node_on_line = false;
+    s_line_num = 0;
     /* cache our portion of the tree */
-    cache_tree(thread, 0, tree_indent);
+    cache_tree(thread, 0, s_tree_indent);
 
-    max_depth = (max_depth-first_depth+1) * 5;	/* turn depth into char width */
-    max_line -= first_line;			/* turn max_line into count */
+    s_max_depth = (s_max_depth-s_first_depth+1) * 5;	/* turn depth into char width */
+    s_max_line -= s_first_line;			/* turn s_max_line into count */
     /* shorten tree if lower lines aren't visible */
-    if (node_line_cnt < max_line)
-	max_line = node_line_cnt + 1;
+    if (s_node_line_cnt < s_max_line)
+	s_max_line = s_node_line_cnt + 1;
 }
 
 /* A recursive routine to find the maximum tree extents and where we are.
 */
 static void find_depth(ARTICLE *article, int depth)
 {
-    if (depth > max_depth)
-	max_depth = depth;
+    if (depth > s_max_depth)
+	s_max_depth = depth;
     for (;;) {
-	if (article == tree_article) {
-	    my_depth = depth;
-	    my_line = max_line;
+	if (article == s_tree_article) {
+	    s_my_depth = depth;
+	    s_my_line = s_max_line;
 	}
 	if (article->child1)
 	    find_depth(article->child1, depth+1);
 	else
-	    max_line++;
+	    s_max_line++;
 	if (!(article = article->sibling))
 	    break;
     }
@@ -147,13 +146,13 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
     int depth_mode;
 
     cp[1] = ' ';
-    if (depth >= first_depth && depth <= max_depth) {
+    if (depth >= s_first_depth && depth <= s_max_depth) {
 	cp += 5;
 	depth_mode = 1;
-    } else if (depth+1 == first_depth)
+    } else if (depth+1 == s_first_depth)
 	depth_mode = 2;
     else {
-	cp = tree_indent;
+	cp = s_tree_indent;
 	depth_mode = 0;
     }
     for (;;) {
@@ -161,34 +160,34 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
 	case 1: {
 	    char ch;
 
-	    *str++ = ((ap->flags & AF_HAS_RE) || ap->parent) ? '-' : ' ';
-	    if (ap == tree_article)
-		*str++ = '*';
+	    *s_str++ = ((ap->flags & AF_HAS_RE) || ap->parent) ? '-' : ' ';
+	    if (ap == s_tree_article)
+		*s_str++ = '*';
 	    if (!(ap->flags & AF_UNREAD)) {
-		*str++ = '(';
+		*s_str++ = '(';
 		ch = ')';
 	    } else if (!g_selected_only || (ap->flags & AF_SEL)) {
-		*str++ = '[';
+		*s_str++ = '[';
 		ch = ']';
 	    } else {
-		*str++ = '<';
+		*s_str++ = '<';
 		ch = '>';
 	    }
-	    if (ap == g_recent_artp && ap != tree_article)
-		*str++ = '@';
-	    *str++ = thread_letter(ap);
-	    *str++ = ch;
+	    if (ap == g_recent_artp && ap != s_tree_article)
+		*s_str++ = '@';
+	    *s_str++ = thread_letter(ap);
+	    *s_str++ = ch;
 	    if (ap->child1)
-		*str++ = (ap->child1->sibling? '+' : '-');
+		*s_str++ = (ap->child1->sibling? '+' : '-');
 	    if (ap->sibling)
 		*cp = '|';
 	    else
 		*cp = ' ';
-	    node_on_line = true;
+	    s_node_on_line = true;
 	    break;
 	}
 	case 2:
-	    *tree_buff = (!ap->child1)? ' ' :
+	    *s_tree_buff = (!ap->child1)? ' ' :
 		(ap->child1->sibling)? '+' : '-';
 	    break;
 	default:
@@ -198,30 +197,30 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
 	    cache_tree(ap->child1, depth+1, cp);
 	    cp[1] = '\0';
 	} else {
-	    if (!node_on_line && first_line == line_num)
-		first_line++;
-	    if (line_num >= first_line) {
-		if (str[-1] == ' ')
-		    str--;
-		*str = '\0';
-		tree_lines[line_num-first_line]
-			= safemalloc(str-tree_buff + 1);
-		strcpy(tree_lines[line_num - first_line], tree_buff);
-		if (node_on_line) {
-		    node_line_cnt = line_num - first_line;
+	    if (!s_node_on_line && s_first_line == s_line_num)
+		s_first_line++;
+	    if (s_line_num >= s_first_line) {
+		if (s_str[-1] == ' ')
+		    s_str--;
+		*s_str = '\0';
+		s_tree_lines[s_line_num-s_first_line]
+			= safemalloc(s_str-s_tree_buff + 1);
+		strcpy(s_tree_lines[s_line_num - s_first_line], s_tree_buff);
+		if (s_node_on_line) {
+		    s_node_line_cnt = s_line_num - s_first_line;
 		}
 	    }
-	    line_num++;
-	    node_on_line = false;
+	    s_line_num++;
+	    s_node_on_line = false;
 	}
-	if (!(ap = ap->sibling) || line_num > max_line)
+	if (!(ap = ap->sibling) || s_line_num > s_max_line)
 	    break;
 	if (!ap->sibling)
 	    *cp = '\\';
-	if (!first_depth)
-	    tree_indent[5] = ' ';
-	strcpy(tree_buff, tree_indent+5);
-	str = tree_buff + strlen(tree_buff);
+	if (!s_first_depth)
+	    s_tree_indent[5] = ' ';
+	strcpy(s_tree_buff, s_tree_indent+5);
+	s_str = s_tree_buff + strlen(s_tree_buff);
     }
 }
 
@@ -230,14 +229,14 @@ static int find_artp_y;
 ARTICLE *get_tree_artp(int x, int y)
 {
     ARTICLE* ap;
-    if (!tree_article || !tree_article->subj)
+    if (!s_tree_article || !s_tree_article->subj)
 	return nullptr;
-    ap = tree_article->subj->thread;
-    x -= tc_COLS-1 - max_depth;
-    if (x < 0 || y > max_line || !ap)
+    ap = s_tree_article->subj->thread;
+    x -= tc_COLS-1 - s_max_depth;
+    if (x < 0 || y > s_max_line || !ap)
 	return nullptr;
-    x = (x-(x==max_depth))/5 + first_depth;
-    find_artp_y = y + first_line;
+    x = (x-(x==s_max_depth))/5 + s_first_depth;
+    find_artp_y = y + s_first_line;
     ap = find_artp(ap, x);
     return ap;
 }
@@ -316,25 +315,25 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	    putchar(']');
 	    color_pop();
 	    putchar(' ');
-	    header_indent = 4;
+	    s_header_indent = 4;
 	}
 	else {
 	    fputs("Subject: ", stdout);
-	    header_indent = 9;
+	    s_header_indent = 9;
 	}
 	i = 0;
     } else {
 	if (*line != ' ') {
-	    /* A "normal" header line -- output keyword and set header_indent
+	    /* A "normal" header line -- output keyword and set s_header_indent
 	    ** _except_ for the first line, which is a non-standard header.
 	    */
 	    if (!header_line || !(cp = strchr(line, ':')) || *++cp != ' ')
-		header_indent = 0;
+		s_header_indent = 0;
 	    else {
 		*cp = '\0';
 		fputs(line, stdout);
 		putchar(' ');
-		header_indent = ++cp - line;
+		s_header_indent = ++cp - line;
 		line = cp;
 		if (!*line)
 		    *--line = ' ';
@@ -343,26 +342,26 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	} else {
 	    /* Skip whitespace of continuation lines and prepare to indent */
 	    while (*++line == ' ') ;
-	    i = header_indent;
+	    i = s_header_indent;
 	}
     }
-    for ( ; *line; i = header_indent) {
+    for ( ; *line; i = s_header_indent) {
 	maybe_eol();
 	if (i) {
 	    putchar('+');
 	    while (--i)
 		putchar(' ');
 	}
-	g_term_col = header_indent;
+	g_term_col = s_header_indent;
 	/* If no (more) tree lines, wrap at tc_COLS-1 */
-	if (max_line < 0 || header_line > max_line+1)
+	if (s_max_line < 0 || header_line > s_max_line+1)
 	    wrap_at = tc_COLS-1;
 	else
-	    wrap_at = tc_COLS - max_depth - 3;
+	    wrap_at = tc_COLS - s_max_depth - 3;
 	/* Figure padding between header and tree output, wrapping long lines */
-	pad_cnt = wrap_at - (end - line + header_indent);
+	pad_cnt = wrap_at - (end - line + s_header_indent);
 	if (pad_cnt <= 0) {
-	    cp = line + (int)(wrap_at - header_indent - 1);
+	    cp = line + (int)(wrap_at - s_header_indent - 1);
 	    pad_cnt = 1;
 	    while (cp > line && *cp != ' ') {
 		if (*--cp == ',' || *cp == '.' || *cp == '-' || *cp == '!') {
@@ -372,7 +371,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 		pad_cnt++;
 	    }
 	    if (cp == line) {
-		cp += wrap_at - header_indent;
+		cp += wrap_at - s_header_indent;
 		pad_cnt = 0;
 	    }
 	    ch = *cp;
@@ -386,7 +385,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	}
 	if (is_subject)
 	    color_string(COLOR_SUBJECT, line);
-	else if (header_indent == 0 && *line != '+')
+	else if (s_header_indent == 0 && *line != '+')
 	    color_string(COLOR_ARTLINE1, line);
 	else
 	    fputs(line, stdout);
@@ -396,7 +395,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	    cp++;
 	line = cp;
 	/* Check if we've got any tree lines to output */
-	if (wrap_at != tc_COLS-1 && header_line <= max_line) {
+	if (wrap_at != tc_COLS-1 && header_line <= s_max_line) {
 	    char* cp1;
 	    char* cp2;
 
@@ -407,7 +406,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	    /* Check string for the '*' flagging our current node
 	    ** and the '@' flagging our prior node.
 	    */
-	    cp = tree_lines[header_line];
+	    cp = s_tree_lines[header_line];
 	    cp1 = strchr(cp, '*');
 	    cp2 = strchr(cp, '@');
 	    if (cp1 != nullptr)
@@ -458,7 +457,7 @@ int  finish_tree(ART_LINE last_line)
 {
     ART_LINE start_line = last_line;
 
-    while (last_line <= max_line) {
+    while (last_line <= s_max_line) {
 	artline++;
 	last_line += tree_puts("+", last_line, 0);
 	vwtary(artline, artpos);	/* keep rn's backpager happy */
@@ -507,7 +506,7 @@ void entire_tree(ARTICLE* ap)
     do {
 	if (check_page_line())
 	    return;
-	printf("[%c] %s\n",letters[num>9+26+26? 9+26+26:num],sp->str+4) FLUSH;
+	printf("[%c] %s\n",g_letters[num>9+26+26? 9+26+26:num],sp->str+4) FLUSH;
 	termdown(1);
 	sp->misc = num++;
 	sp = sp->thread_link;
@@ -519,7 +518,7 @@ void entire_tree(ARTICLE* ap)
 	return;
     putchar(' ');
     buf[3] = '\0';
-    display_tree(thread, tree_indent);
+    display_tree(thread, s_tree_indent);
 
     if (check_page_line())
 	return;
@@ -530,7 +529,7 @@ void entire_tree(ARTICLE* ap)
 */
 static void display_tree(ARTICLE *article, char *cp)
 {
-    if (cp - tree_indent > tc_COLS || page_line < 0)
+    if (cp - s_tree_indent > tc_COLS || page_line < 0)
 	return;
     cp[1] = ' ';
     cp += 5;
@@ -575,12 +574,12 @@ static void display_tree(ARTICLE *article, char *cp)
 	    break;
 	if (!article->sibling)
 	    *cp = '\\';
-	tree_indent[5] = ' ';
+	s_tree_indent[5] = ' ';
 	if (check_page_line()) {
 	    color_pop();
 	    return;
 	}
-	fputs(tree_indent+5, stdout);
+	fputs(s_tree_indent+5, stdout);
     }
     color_pop();	/* of COLOR_TREE */
 }
@@ -599,5 +598,5 @@ char thread_letter(ARTICLE *ap)
 	return '?';
     if (!(ap->flags & AF_EXISTS))
 	return ' ';
-    return letters[subj > 9+26+26 ? 9+26+26 : subj];
+    return g_letters[subj > 9+26+26 ? 9+26+26 : subj];
 }
