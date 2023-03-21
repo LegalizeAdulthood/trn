@@ -348,12 +348,12 @@ may be incorrect in the last newsgroup accessed by that other (defunct)\n\
 process.\n\n",stdout) FLUSH;
 	    else
 		fputs("\nProcess crashed.\n",stdout) FLUSH;
-	    if (lastngname) {
+	    if (g_lastngname) {
 		if (verbose)
 		    printf("(The last newsgroup accessed was %s.)\n\n",
-			   lastngname) FLUSH;
+			   g_lastngname) FLUSH;
 		else
-		    printf("(In %s.)\n\n",lastngname) FLUSH;
+		    printf("(In %s.)\n\n",g_lastngname) FLUSH;
 	    }
 	    termdown(2);
 	    get_anything();
@@ -562,11 +562,11 @@ static bool open_newsrc(NEWSRC *rp)
 		char* s;
 		buf[strlen(buf)-1] = '\0';
 		if ((s = strchr(buf, ':')) != nullptr && s[1] == ' ' && s[2]) {
-		    safefree0(lastngname);
-		    lastngname = savestr(s+2);
+		    safefree0(g_lastngname);
+		    g_lastngname = savestr(s+2);
 		}
 		if (fscanf(tmpfp,"New-Group-State: %ld,%ld,%ld",
-			   &lastnewtime,&actnum,&descnum) == 3) {
+			   &g_lastnewtime,&actnum,&descnum) == 3) {
 		    rp->datasrc->act_sf.recent_cnt = actnum;
 		    rp->datasrc->desc_sf.recent_cnt = descnum;
 		}
@@ -576,16 +576,16 @@ static bool open_newsrc(NEWSRC *rp)
     else {
 	readlast();
 	if (rp->datasrc->flags & DF_REMOTE) {
-	    rp->datasrc->act_sf.recent_cnt = lastactsiz;
-	    rp->datasrc->desc_sf.recent_cnt = lastextranum;
+	    rp->datasrc->act_sf.recent_cnt = g_lastactsiz;
+	    rp->datasrc->desc_sf.recent_cnt = g_lastextranum;
 	}
 	else
 	{
-	    rp->datasrc->act_sf.recent_cnt = lastextranum;
+	    rp->datasrc->act_sf.recent_cnt = g_lastextranum;
 	    rp->datasrc->desc_sf.recent_cnt = 0;
 	}
     }
-    rp->datasrc->lastnewgrp = lastnewtime;
+    rp->datasrc->lastnewgrp = g_lastnewtime;
 
     if (paranoid && !checkflag)
 	cleanup_newsrc(rp);
@@ -1276,12 +1276,12 @@ bool write_newsrcs(MULTIRC *mptr)
 	else {
 	    readlast();
 	    if (rp->datasrc->flags & DF_REMOTE) {
-		lastactsiz = rp->datasrc->act_sf.recent_cnt;
-		lastextranum = rp->datasrc->desc_sf.recent_cnt;
+		g_lastactsiz = rp->datasrc->act_sf.recent_cnt;
+		g_lastextranum = rp->datasrc->desc_sf.recent_cnt;
 	    }
 	    else
-		lastextranum = rp->datasrc->act_sf.recent_cnt;
-	    lastnewtime = rp->datasrc->lastnewgrp;
+		g_lastextranum = rp->datasrc->act_sf.recent_cnt;
+	    g_lastnewtime = rp->datasrc->lastnewgrp;
 	    writelast();
 	}
 

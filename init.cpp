@@ -174,7 +174,7 @@ void newsnews_check()
 
     if ((tmpfp = fopen(newsnewsname,"r")) != nullptr) {
 	fstat(fileno(tmpfp),&filestat);
-	if (filestat.st_mtime > (time_t)lasttime) {
+	if (filestat.st_mtime > (time_t)g_lasttime) {
 	    while (fgets(buf,sizeof(buf),tmpfp) != nullptr)
 		fputs(buf,stdout) FLUSH;
 	    get_anything();

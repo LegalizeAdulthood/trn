@@ -187,11 +187,11 @@ void do_multirc()
 	if (findlast > 0) {
 	    findlast = -1;
 	    starthere = nullptr;
-	    if (lastngname) {
-		if ((ngptr = find_ng(lastngname)) == nullptr)
+	    if (g_lastngname) {
+		if ((ngptr = find_ng(g_lastngname)) == nullptr)
 		    ngptr = first_ng;
 		else {
-		    set_ngname(lastngname);
+		    set_ngname(g_lastngname);
 		    set_toread(ngptr, ST_LAX);
 		    if (ngptr->toread <= TR_NONE)
 			ngptr = first_ng;
