@@ -3,6 +3,8 @@
  *
  * Scan command interpreter/router
  */
+#ifndef SCMD_H
+#define SCMD_H
 
 void s_go_bot();
 int s_finish_cmd(const char *string);
@@ -14,3 +16,5 @@ long s_forward_search(long ent);
 long s_backward_search(long ent);
 void s_search();
 void s_jumpnum(char_int firstchar);
+
+#endif

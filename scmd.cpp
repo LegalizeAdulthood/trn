@@ -7,18 +7,11 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "hash.h"
-#include "cache.h"
-#include "bits.h"
 #include "final.h"
 #include "help.h"
 #include "ng.h"
-#include "nntpclient.h"
-#include "datasrc.h"
-#include "addng.h"
 #include "ngstuff.h"
 #include "term.h"
-#include "util.h"
 #include "scan.h"
 #include "smisc.h"
 #include "sorder.h"
@@ -26,12 +19,8 @@
 #include "sdisp.h"
 #include "sacmd.h"	/* sa_docmd */
 #include "samain.h"
-#include "score.h"
 #include "univ.h"
-#include "INTERN.h"
 #include "scmd.h"
-
-void s_search(void);
 
 void s_go_bot()
 {
