@@ -6,23 +6,16 @@
 #include "EXTERN.h"
 #include "common.h"
 #include "list.h"
-#include "hash.h"
 #include "cache.h"
-#include "bits.h"
 #include "head.h"
 /* currently used for fast author fetch when group is threaded */
-#include "ngdata.h"
 #include "term.h"	/* for standout */
-#include "rthread.h"
 #include "rt-util.h"	/* compress_from() */
 #include "scanart.h"
 #include "samain.h"
-#include "sacmd.h"	/* for sa_wrap_next_author() */
-#include "sadisp.h"
 #include "sathread.h"
 #include "scan.h"
 #include "score.h"
-#include "INTERN.h"
 #include "sadesc.h"
 
 /* returns statchars in temp space... */
