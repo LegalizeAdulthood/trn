@@ -5,14 +5,12 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "hash.h"
 #include "init.h"
 #include "env.h"
 #include "util.h"
 #include "util2.h"
 #include "intrp.h"
 #include "final.h"
-#include "list.h"
 #include "art.h"
 #include "cache.h"
 #include "head.h"
@@ -20,7 +18,6 @@
 #include "mime.h"
 #include "only.h"
 #include "ngdata.h"
-#include "search.h"
 #include "rt-select.h"
 #include "univ.h"
 #include "rt-page.h"
@@ -29,18 +26,143 @@
 #include "sw.h"
 #include "scan.h"
 #include "scanart.h"
-#include "score.h"
 #include "scorefile.h"
 #include "color.h"
-#include "INTERN.h"
 #include "opt.h"
-#include "opt.ih"
+
 #ifdef MSDOS
 #include <direct.h>
 #include <io.h>
 #endif
 
-COMPEX optcompex;
+COMPEX g_optcompex;
+char *g_ini_file{};
+char *g_yesorno[2] = {"no", "yes"};
+INI_WORDS g_options_ini[] = {
+    { 0, "OPTIONS", 0 },
+
+    { 0, "*Display Options", 0 },
+    { 0, "Terse Output", "yes/no" },
+    { 0, "Pager Line-Marking", "standout/underline/no" },
+    { 0, "Erase Screen", "yes/no" },
+    { 0, "Erase Each Line", "yes/no" },
+    { 0, "Muck Up Clear", "yes/no" },
+    { 0, "Background Spinner", "yes/no" },
+    { 0, "Charset", "<e.g. patm>" },
+    { 0, "Filter Control Characters", "yes/no" },
+
+    { 0, "*Selector Options", 0 },
+    { 0, "Use Universal Selector", "yes/no" },
+    { 0, "Universal Selector Order", "natural/points" },
+    { 0, "Universal Selector article follow", "yes/no" },
+    { 0, "Universal Selector Commands", "<Last-page-cmd><Other-page-cmd>" },
+    { 0, "Use Newsrc Selector", "yes/no" },
+    { 0, "Newsrc Selector Commands", "<Last-page-cmd><Other-page-cmd>" },
+    { 0, "Use Addgroup Selector", "yes/no" },
+    { 0, "Addgroup Selector Commands", "<Last-page-cmd><Other-page-cmd>" },
+    { 0, "Use Newsgroup Selector", "yes/no" },
+    { 0, "Newsgroup Selector Order", "natural/group/count" },
+    { 0, "Newsgroup Selector Commands", "<Last-page-cmd><Other-page-cmd>" },
+    { 0, "Newsgroup Selector Display Styles", "<e.g. slm=short/long/med>" },
+    { 0, "Use News Selector", "yes/no/<# articles>" },
+    { 0, "News Selector Mode", "threads/subjects/articles" },
+    { 0, "News Selector Order", "[reverse] date/subject/author/groups/cnt/points" },
+    { 0, "News Selector Commands", "<Last-page-cmd><Other-page-cmd>" },
+    { 0, "News Selector Display Styles", "<e.g. lms=long/medium/short>" },
+    { 0, "Option Selector Commands", "<Last-page-cmd><Other-page-cmd>" },
+    { 0, "Use Selector Numbers", "yes/no" },
+    { 0, "Selector Number Auto-Goto", "yes/no" },
+
+    { 0, "*Newsreading Options", 0 },
+    { 0, "Use Threads", "yes/no" },
+    { 0, "Select My Postings", "subthread/parent/thread/no" },
+    { 0, "Initial Article Lines", "no/<# lines>" },
+    { 0, "Article Tree Lines", "no/<# lines>" },
+    { 0, "Word-Wrap Margin", "no/<# chars in margin>" },
+    { 0, "Auto-Grow Groups", "yes/no" },
+    { 0, "Compress Subjects", "yes/no" },
+    { 0, "Join Subject Lines", "no/<# chars>" },
+    { 0, "Line Num for Goto", "<# line (1-n)>" },
+    { 0, "Ignore THRU on Select", "yes/no" },
+    { 0, "Read Breadth First", "yes/no" },
+    { 0, "Background Threading", "yes/no" },
+    { 0, "Scan Mode Count", "no/<# articles>" },
+    { 0, "Header Magic", "<[!]header,...>" },
+    { 0, "Header Hiding", "<[!]header,...>" },
+
+    { 0, "*Posting Options", 0 },
+    { 0, "Cited Text String", "<e.g. '>'>" },
+#if 0
+    { 0, "Attribute string", "<e.g. ...>" },
+    { 0, "Reply To", "<e.g. ...>" },
+#endif
+
+    { 0, "*Save Options", 0 },
+    { 0, "Save Dir", "<directory path>" },
+    { 0, "Auto Savename", "yes/no" },
+    { 0, "Default Savefile Type", "norm/mail/ask" },
+
+    { 0, "*Mouse Options", 0 },
+    { 0, "Use XTerm Mouse", "yes/no" },
+    { 0, "Mouse Modes", "<e.g. acjlptwK>" },
+    { 0, "Universal Selector Mousebar", "<e.g. [PgUp]< [PgDn]> Z [Quit]q>" },
+    { 0, "Newsrc Selector Mousebar", "<e.g. [PgUp]< [PgDn]> Z [Quit]q>" },
+    { 0, "Addgroup Selector Mousebar", "<e.g. [Top]^ [Bot]$ [ OK ]Z>" },
+    { 0, "Newsgroup Selector Mousebar", "<e.g. [ OK ]Z [Quit]q [Help]?>" },
+    { 0, "News Selector Mousebar", "<e.g. [KillPg]D [Read]^j [Quit]Q>" },
+    { 0, "Option Selector Mousebar", "<e.g. [Save]S [Use]^I [Abandon]q>" },
+    { 0, "Article Pager Mousebar", "<e.g. [Next]n J [Sel]+ [Quit]q>" },
+
+    { 0, "*MIME Options", 0 },
+    { 0, "Multipart Separator", "<string>" },
+    { 0, "Auto-View Inline", "yes/no" },
+
+    { 0, "*Misc Options", 0 },
+    { 0, "Check for New Groups", "yes/no" },
+    { 0, "Restriction Includes Empty Groups", "yes/no" },
+    { 0, "Append Unsubscribed Groups", "yes/no" },
+    { 0, "Initial Group List", "no/<# groups>" },
+    { 0, "Restart At Last Group", "yes/no" },
+    { 0, "Eat Type-Ahead", "yes/no" },
+    { 0, "Verify Input", "yes/no" },
+    { 0, "Fuzzy Newsgroup Names", "yes/no" },
+    { 0, "Auto Arrow Macros", "regular/alternate/no" },
+    { 0, "Checkpoint Newsrc Frequency", "<# articles>" },
+    { 0, "Default Refetch Time", "never/<1 day 5 hours 8 mins>" },
+    { 0, "Novice Delays", "yes/no" },
+    { 0, "Old Mthreads Database", "yes/no" },
+
+    { 0, "*Article Scan Mode Options", 0 },
+    { 0, "Follow Threads", "yes/no" },
+    { 0, "Fold Subjects", "yes/no" },
+    { 0, "Re-fold Subjects", "yes/no" },
+    { 0, "Mark Without Moving", "yes/no" },
+    { 0, "VI Key Movement Allowed", "yes/no" },
+    { 0, "Display Item Numbers", "yes/no" },
+    { 0, "Display Article Number", "yes/no" },
+    { 0, "Display Author", "yes/no" },
+    { 0, "Display Score", "yes/no" },
+    { 0, "Display Subject Count", "yes/no" },
+    { 0, "Display Subject", "yes/no" },
+    { 0, "Display Summary", "yes/no" },
+    { 0, "Display Keywords", "yes/no" },
+
+    { 0, "*Scoring Options", 0 },
+    { 0, "Verbose scoring", "yes/no" },
+
+    { 0, 0, 0 }
+};
+char **g_option_def_vals{};
+char **g_option_saved_vals{};
+char *g_option_flags{};
+int g_sel_page_op{};
+int g_sel_next_op{};
+
+static char* hidden_list();
+static char* magic_list();
+static void set_header_list(int flag, int defflag, char *str);
+static int parse_mouse_buttons(char **cpp, const char *btns);
+static char *expand_mouse_buttons(char *cp, int cnt);
 
 void opt_init(int argc, char *argv[], char **tcbufptr)
 {
@@ -64,14 +186,14 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     ArtPagerBtnCnt = parse_mouse_buttons(&ArtPagerBtns,
                                          "[Next]n [Sel]+ [Quit]q [Help]h");
 
-    prep_ini_words(options_ini);
+    prep_ini_words(g_options_ini);
     if (argc >= 2 && !strcmp(argv[1],"-c"))
 	checkflag=true;			/* so we can optimize for -c */
     interp(*tcbufptr,TCBUF_SIZE,GLOBINIT);
     opt_file(*tcbufptr,tcbufptr,false);
 
-    option_def_vals = (char**)safemalloc(INI_LEN(options_ini)*sizeof(char*));
-    memset((char*)option_def_vals,0,(options_ini)[0].checksum * sizeof (char*));
+    g_option_def_vals = (char**)safemalloc(INI_LEN(g_options_ini)*sizeof(char*));
+    memset((char*)g_option_def_vals,0,(g_options_ini)[0].checksum * sizeof (char*));
     /* Set DEFHIDE and DEFMAGIC to current values and clear g_user_htype list */
     set_header_list(HT_DEFHIDE,HT_HIDE,"");
     set_header_list(HT_DEFMAGIC,HT_MAGIC,"");
@@ -80,7 +202,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 	s = get_val("TRNRC","%+/trnrc");
     else
 	s = get_val("RNRC","%+/rnrc");
-    ini_file = savestr(filexp(s));
+    g_ini_file = savestr(filexp(s));
 
     s = filexp("%+");
     if (stat(s,&filestat) < 0 || !S_ISDIR(filestat.st_mode)) {
@@ -90,8 +212,8 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 	    finalize(1); /*$$??*/
 	}
     }
-    if (stat(ini_file,&filestat) == 0)
-	opt_file(ini_file,tcbufptr,true);
+    if (stat(g_ini_file,&filestat) == 0)
+	opt_file(g_ini_file,tcbufptr,true);
     if (!use_threads || (s = getenv("TRNINIT")) == nullptr)
 	s = getenv("RNINIT");
     if (*safecpy(*tcbufptr,s,TCBUF_SIZE)) {
@@ -100,16 +222,16 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 	else
 	    sw_file(tcbufptr);
     }
-    option_saved_vals = (char**)safemalloc(INI_LEN(options_ini)*sizeof(char*));
-    memset((char*)option_saved_vals,0,(options_ini)[0].checksum * sizeof (char*));
-    option_flags = (char*)safemalloc(INI_LEN(options_ini)*sizeof(char));
-    memset(option_flags,0,(options_ini)[0].checksum * sizeof (char));
+    g_option_saved_vals = (char**)safemalloc(INI_LEN(g_options_ini)*sizeof(char*));
+    memset((char*)g_option_saved_vals,0,(g_options_ini)[0].checksum * sizeof (char*));
+    g_option_flags = (char*)safemalloc(INI_LEN(g_options_ini)*sizeof(char));
+    memset(g_option_flags,0,(g_options_ini)[0].checksum * sizeof (char));
 
     if (argc > 1) {
 	for (i = 1; i < argc; i++)
 	    decode_switch(argv[i]);
     }
-    init_compex(&optcompex);
+    init_compex(&g_optcompex);
 }
 
 void opt_file(char *filename, char **tcbufptr, bool bleat)
@@ -135,10 +257,10 @@ void opt_file(char *filename, char **tcbufptr, bool bleat)
 		if (*cond && !check_ini_cond(cond))
 		    continue;
 		if (!strcmp(section,"options")) {
-		    s = parse_ini_section(s, options_ini);
+		    s = parse_ini_section(s, g_options_ini);
 		    if (!s)
 			break;
-		    set_options(INI_VALUES(options_ini));
+		    set_options(INI_VALUES(g_options_ini));
 		}
 		else if (!strcmp(section,"environment")) {
 		    while (*s && *s != '[') {
@@ -181,7 +303,7 @@ void opt_file(char *filename, char **tcbufptr, bool bleat)
 
 void set_options(char **vals)
 {
-    int limit = INI_LEN(options_ini);
+    int limit = INI_LEN(g_options_ini);
     int i;
     for (i = 1; i < limit; i++) {
 	if (*++vals)
@@ -191,16 +313,16 @@ void set_options(char **vals)
 
 void set_option(int num, char *s)
 {
-    if (option_saved_vals) {
-	if (!option_saved_vals[num]) {
-	    option_saved_vals[num] = savestr(option_value(num));
-	    if (!option_def_vals[num])
-		option_def_vals[num] = option_saved_vals[num];
+    if (g_option_saved_vals) {
+	if (!g_option_saved_vals[num]) {
+	    g_option_saved_vals[num] = savestr(option_value(num));
+	    if (!g_option_def_vals[num])
+		g_option_def_vals[num] = g_option_saved_vals[num];
 	}
     }
-    else if (option_def_vals) {
-	if (!option_def_vals[num])
-	    option_def_vals[num] = savestr(option_value(num));
+    else if (g_option_def_vals) {
+	if (!g_option_def_vals[num])
+	    g_option_def_vals[num] = savestr(option_value(num));
     }
     switch (num) {
       case OI_USE_THREADS:
@@ -643,25 +765,25 @@ This is the first save of the option file, %s.\n\
 By default this file overrides your %sRNINIT variable, but if you\n\
 want to continue to use an old-style init file (that overrides the\n\
 settings in the option file), edit the option file and change the\n\
-line that sets %sRNINIT.\n", ini_file, t, t);
+line that sets %sRNINIT.\n", g_ini_file, t, t);
 	get_anything();
 	fprintf(fp_out, "# trnrc file auto-generated\n[environment]\n");
 	write_init_environment(fp_out);
 	fprintf(fp_out, "%sRNINIT = ''\n\n", t);
     }
     fprintf(fp_out,"[options]\n");
-    for (i = 1; options_ini[i].checksum; i++) {
-	if (*options_ini[i].item == '*')
-	    fprintf(fp_out,"# ==%s========\n",options_ini[i].item+1);
+    for (i = 1; g_options_ini[i].checksum; i++) {
+	if (*g_options_ini[i].item == '*')
+	    fprintf(fp_out,"# ==%s========\n",g_options_ini[i].item+1);
 	else {
-	    fprintf(fp_out,"%s = ",options_ini[i].item);
-	    if (!option_def_vals[i])
+	    fprintf(fp_out,"%s = ",g_options_ini[i].item);
+	    if (!g_option_def_vals[i])
 		fputs("#default of ",fp_out);
 	    fprintf(fp_out,"%s\n",quote_string(option_value(i)));
-	    if (option_saved_vals[i]) {
-		if (option_saved_vals[i] != option_def_vals[i])
-		    free(option_saved_vals[i]);
-		option_saved_vals[i] = nullptr;
+	    if (g_option_saved_vals[i]) {
+		if (g_option_saved_vals[i] != g_option_def_vals[i])
+		    free(g_option_saved_vals[i]);
+		g_option_saved_vals[i] = nullptr;
 	    }
 	}
     }
@@ -803,7 +925,7 @@ char *option_value(int num)
       case OI_HEADER_HIDING:
 	return hidden_list();
       case OI_INITIAL_ARTICLE_LINES:
-	if (!option_def_vals[OI_INITIAL_ARTICLE_LINES])
+	if (!g_option_def_vals[OI_INITIAL_ARTICLE_LINES])
 	    return "$LINES";
 	sprintf(buf,"%d",initlines);
     	return buf;

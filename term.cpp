@@ -1681,7 +1681,7 @@ void goto_xy(int to_col, int to_line)
 static void line_col_calcs()
 {
     if (tc_LINES > 0) {		/* is this a crt? */
-	if (!initlines || !option_def_vals[OI_INITIAL_ARTICLE_LINES]) {
+	if (!initlines || !g_option_def_vals[OI_INITIAL_ARTICLE_LINES]) {
 	    /* no -i or unreasonable value for initlines */
 	    if (outspeed >= B9600) 	/* whole page at >= 9600 baud */
 		initlines = tc_LINES;
@@ -1697,7 +1697,7 @@ static void line_col_calcs()
     else {				/* not a crt */
 	tc_LINES = 30000;		/* so don't page */
 	tc_CL = "\n\n";			/* put a couple of lines between */
-	if (!initlines || !option_def_vals[OI_INITIAL_ARTICLE_LINES])
+	if (!initlines || !g_option_def_vals[OI_INITIAL_ARTICLE_LINES])
 	    initlines = 8;		/* make initlines reasonable */
     }
     if (tc_COLS <= 0)

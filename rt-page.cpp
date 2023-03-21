@@ -498,32 +498,32 @@ try_again:
 	int op;
 	int included = 0;
 	obj_count = 0;
-	for (op = 1; options_ini[op].checksum; op++) {
-	    if (sel_page_op == op)
+	for (op = 1; g_options_ini[op].checksum; op++) {
+	    if (g_sel_page_op == op)
 		sel_prior_obj_cnt = sel_total_obj_cnt;
-	    if (*options_ini[op].item == '*') {
-		included = (option_flags[op] & OF_SEL);
+	    if (*g_options_ini[op].item == '*') {
+		included = (g_option_flags[op] & OF_SEL);
 		sel_total_obj_cnt++;
-		option_flags[op] |= OF_INCLUDED;
+		g_option_flags[op] |= OF_INCLUDED;
 	    }
 	    else if (included) {
 		sel_total_obj_cnt++;
-		option_flags[op] |= OF_INCLUDED;
+		g_option_flags[op] |= OF_INCLUDED;
 	    }
 	    else
-		option_flags[op] &= ~OF_INCLUDED;
+		g_option_flags[op] &= ~OF_INCLUDED;
 	    obj_count++;
 	}
 #if 0
 	if (!sel_total_obj_cnt && sel_exclusive) {
 	    sel_exclusive = false;
-	    sel_page_op = nullptr;
+	    g_sel_page_op = nullptr;
 	    goto try_again;
 	}
 #endif
-	if (sel_page_op < 1)
+	if (g_sel_page_op < 1)
 	    (void) first_page();
-	else if (sel_page_op >= obj_count)
+	else if (g_sel_page_op >= obj_count)
 	    (void) last_page();
 	else if (sel_prior_obj_cnt && fill_last_page) {
 	    calc_page(no_search);
@@ -716,8 +716,8 @@ bool first_page()
 	break;
       }
       case SM_OPTIONS: {
-	if (sel_page_op != 1) {
-	    sel_page_op = 1;
+	if (g_sel_page_op != 1) {
+	    g_sel_page_op = 1;
 	    return true;
 	}
 	break;
@@ -798,11 +798,11 @@ bool last_page()
 	break;
       }
       case SM_OPTIONS: {
-	int op = sel_page_op;
-	sel_page_op = obj_count+1;
+	int op = g_sel_page_op;
+	g_sel_page_op = obj_count+1;
 	if (!prev_page())
-	    sel_page_op = op;
-	else if (op != sel_page_op)
+	    g_sel_page_op = op;
+	else if (op != g_sel_page_op)
 	    return true;
 	break;
       }
@@ -864,8 +864,8 @@ bool next_page()
 	break;
       }
       case SM_OPTIONS: {
-	if (sel_next_op <= obj_count) {
-	    sel_page_op = sel_next_op;
+	if (g_sel_next_op <= obj_count) {
+	    g_sel_page_op = g_sel_next_op;
 	    sel_prior_obj_cnt += sel_page_obj_cnt;
 	    return true;
 	}
@@ -990,19 +990,19 @@ bool prev_page()
 	break;
       }
       case SM_OPTIONS: {
-	int op = sel_page_op;
-	int page_op = sel_page_op;
+	int op = g_sel_page_op;
+	int page_op = g_sel_page_op;
 
 	while (--op > 0) {
-	    if (option_flags[op] & OF_INCLUDED) {
+	    if (g_option_flags[op] & OF_INCLUDED) {
 		page_op = op;
 		sel_prior_obj_cnt--;
 		if (++item_cnt >= sel_max_per_page)
 		    break;
 	    }
 	}
-	if (sel_page_op != page_op) {
-	    sel_page_op = page_op;
+	if (g_sel_page_op != page_op) {
+	    g_sel_page_op = page_op;
 	    return true;
 	}
 	break;
@@ -1127,15 +1127,15 @@ try_again:
 	break;
       }
       case SM_OPTIONS: {
-	int op = sel_page_op;
+	int op = g_sel_page_op;
 	for (; op <= obj_count && sel_page_item_cnt < sel_max_per_page; op++) {
 	    if (op == u.op)
 		sel_item_index = sel_page_item_cnt;
-	    if (option_flags[op] & OF_INCLUDED)
+	    if (g_option_flags[op] & OF_INCLUDED)
 		sel_page_item_cnt++;
 	}
 	sel_page_obj_cnt = sel_page_item_cnt;
-	sel_next_op = op;
+	g_sel_next_op = op;
 	break;
       }
       case SM_ARTICLE: {
@@ -1469,22 +1469,22 @@ try_again:
 	sel_next_univ = ui;
     }
     else if (sel_mode == SM_OPTIONS) {
-	int op = sel_page_op;
+	int op = g_sel_page_op;
 	for (; op <= obj_count && sel_page_item_cnt<sel_max_per_page; op++) {
 #if 0
 	    if (op == xx)
 		sel_item_index = sel_page_item_cnt;
 #endif
 
-	    if (!(option_flags[op] & OF_INCLUDED))
+	    if (!(g_option_flags[op] & OF_INCLUDED))
 		continue;
 
-	    if (*options_ini[op].item == '*')
-		sel = !!(option_flags[op] & OF_SEL);
+	    if (*g_options_ini[op].item == '*')
+		sel = !!(g_option_flags[op] & OF_SEL);
 	    else
-		sel = (INI_VALUE(options_ini,op)? 1 :
-		       (option_saved_vals[op]? 3 :
-			(option_def_vals[op]? 0 : 2)));
+		sel = (INI_VALUE(g_options_ini,op)? 1 :
+		       (g_option_saved_vals[op]? 3 :
+			(g_option_def_vals[op]? 0 : 2)));
 	    sel_items[sel_page_item_cnt].u.op = op;
 	    sel_items[sel_page_item_cnt].line = g_term_line;
 	    sel_items[sel_page_item_cnt].sel = sel;
@@ -1498,7 +1498,7 @@ try_again:
 	    if (last_page())
 		goto try_again;
 	}
-	sel_next_op = op;
+	g_sel_next_op = op;
     }
     else if (sel_mode == SM_ARTICLE) {
 	ARTICLE* ap;
@@ -1620,12 +1620,12 @@ void update_page()
 	    sel = !!(u.un->flags & sel_mask) + (u.un->flags & UF_DEL);
 	    break;
 	  case SM_OPTIONS:
-	    if (*options_ini[u.op].item == '*')
-		sel = !!(option_flags[u.op] & OF_SEL);
+	    if (*g_options_ini[u.op].item == '*')
+		sel = !!(g_option_flags[u.op] & OF_SEL);
 	    else
-		sel = (INI_VALUE(options_ini,u.op)? 1 :
-		       (option_saved_vals[u.op]? 3 :
-			(option_def_vals[u.op]? 0 : 2)));
+		sel = (INI_VALUE(g_options_ini,u.op)? 1 :
+		       (g_option_saved_vals[u.op]? 3 :
+			(g_option_def_vals[u.op]? 0 : 2)));
 	    break;
 	  case SM_ARTICLE:
 	    sel = !!(u.ap->flags & sel_mask) + (u.ap->flags & AF_DEL);
@@ -1861,19 +1861,19 @@ void display_option(int op, int item_index)
     const char *item;
     const char *post;
     const char *val;
-    if (*options_ini[op].item == '*') {
-	len = strlen(options_ini[op].item+1);
+    if (*g_options_ini[op].item == '*') {
+	len = strlen(g_options_ini[op].item+1);
 	pre = "==";
-	item = options_ini[op].item+1;
+	item = g_options_ini[op].item+1;
 	post = "==================================";
 	val = "";
     }
     else {
-	len = (options_ini[op].checksum & 0xff);
+	len = (g_options_ini[op].checksum & 0xff);
 	pre = "  ";
-	item = options_ini[op].item;
+	item = g_options_ini[op].item;
 	post = "..................................";
-	val = INI_VALUE(options_ini,op);
+	val = INI_VALUE(g_options_ini,op);
 	if (!val)
 	    val = quote_string(option_value(op));
     }

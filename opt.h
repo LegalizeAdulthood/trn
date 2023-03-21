@@ -1,16 +1,10 @@
 /* opt.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef OPT_H
+#define OPT_H
 
-EXT char* ini_file;
-EXT char* yesorno[2]
-#ifdef DOINIT
- = {"no", "yes"};
-#else
- ;
-#endif
-
-#define YESorNO(v) yesorno[(int)(v)]
+#define YESorNO(v) g_yesorno[(int)(v)]
 
 /* Display Options */
 #define OI_TERSE_OUTPUT			2
@@ -123,16 +117,18 @@ EXT char* yesorno[2]
 # define OI_SC_VERBOSE			(OI_SCAN_LAST+2)
 # define OI_SCORE_LAST			(OI_SC_VERBOSE)
 
-extern INI_WORDS options_ini[];
-EXT char** option_def_vals;
-EXT char** option_saved_vals;
-EXT char* option_flags;
-
 #define OF_SEL		0x0001
 #define OF_INCLUDED	0x0010
 
-EXT int sel_page_op;
-EXT int sel_next_op;
+extern COMPEX g_optcompex;
+extern char* g_ini_file;
+extern char* g_yesorno[2];
+extern INI_WORDS g_options_ini[];
+extern char **g_option_def_vals;
+extern char **g_option_saved_vals;
+extern char *g_option_flags;
+extern int g_sel_page_op;
+extern int g_sel_next_op;
 
 void opt_init(int argc, char *argv[], char **tcbufptr);
 void opt_file(char *filename, char **tcbufptr, bool bleat);
@@ -143,3 +139,5 @@ char *option_value(int num);
 void set_header(char *s, int flag, bool setit);
 char *quote_string(char *val);
 void cwd_check();
+
+#endif

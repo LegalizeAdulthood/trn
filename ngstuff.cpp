@@ -133,8 +133,8 @@ int switcheroo()
 	else {
 	    sprintf(tmpbuf,"[options]\n%s\n",buf+1);
 	    prep_ini_data(tmpbuf,"'&' input");
-	    parse_ini_section(tmpbuf+10,options_ini);
-	    set_options(INI_VALUES(options_ini));
+	    parse_ini_section(tmpbuf+10,g_options_ini);
+	    set_options(INI_VALUES(g_options_ini));
 	}
 	if (docd) {
 	    cwd_check();

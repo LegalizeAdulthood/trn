@@ -84,7 +84,7 @@ add_executable(trn
     ngstuff.cpp ngstuff.h
     nntp.cpp nntp.h
     only.cpp only.h
-    opt.cpp opt.h opt.ih
+    opt.cpp opt.h
     ${BISON_parsedate_OUTPUTS} parsedate.h
     patchlevel.h
     rcln.cpp rcln.h

@@ -36,6 +36,7 @@
 #include "rt-util.h"
 #include "color.h"
 #include "only.h"
+#include "opt.h"
 #include "INTERN.h"
 #include "rt-select.h"
 #include "rt-select.ih"
@@ -475,13 +476,13 @@ char addgroup_selector(int flags)
 char option_selector()
 {
     int i;
-    char** vals = INI_VALUES(options_ini);
+    char** vals = INI_VALUES(g_options_ini);
     START_SELECTOR('l');
 
     sel_rereading = false;
     sel_exclusive = false;
     selected_count = 0;
-    parse_ini_section("", options_ini);
+    parse_ini_section("", g_options_ini);
 
     set_selector(SM_OPTIONS, 0);
 
@@ -492,7 +493,7 @@ char option_selector()
 	sel_mask = AF_DELSEL;
     else
 	sel_mask = AF_SEL;
-    sel_page_op = -1;
+    g_sel_page_op = -1;
     extra_commands = option_commands;
 
     init_pages(FILL_LAST_PAGE);
@@ -510,14 +511,14 @@ char option_selector()
     if (sel_ret=='Z' || sel_ret=='\t' || sel_ret == 'S') {
 	set_options(vals);
 	if (sel_ret == 'S')
-	    save_options(ini_file);
+	    save_options(g_ini_file);
     }
-    for (i = 1; options_ini[i].checksum; i++) {
+    for (i = 1; g_options_ini[i].checksum; i++) {
 	if (vals[i]) {
-	    if (option_saved_vals[i] && !strcmp(vals[i],option_saved_vals[i])) {
-		if (option_saved_vals[i] != option_def_vals[i])
-		    free(option_saved_vals[i]);
-		option_saved_vals[i] = nullptr;
+	    if (g_option_saved_vals[i] && !strcmp(vals[i],g_option_saved_vals[i])) {
+		if (g_option_saved_vals[i] != g_option_def_vals[i])
+		    free(g_option_saved_vals[i]);
+		g_option_saved_vals[i] = nullptr;
 	    }
 	    free(vals[i]);
 	    vals[i] = nullptr;
@@ -1218,7 +1219,7 @@ static bool select_item(SEL_UNION u)
 	u.np->flags = (u.np->flags & ~NF_DEL) | sel_mask;
 	break;
       case SM_OPTIONS:
-	if (!select_option(u.op) || !INI_VALUE(options_ini,u.op))
+	if (!select_option(u.op) || !INI_VALUE(g_options_ini,u.op))
 	    return false;
 	break;
       case SM_THREAD:
@@ -1298,7 +1299,7 @@ static bool deselect_item(SEL_UNION u)
 	    u.np->flags |= NF_DEL;
 	break;
       case SM_OPTIONS:
-	if (!select_option(u.op) || INI_VALUE(options_ini,u.op))
+	if (!select_option(u.op) || INI_VALUE(g_options_ini,u.op))
 	    return false;
 	break;
       case SM_THREAD:
@@ -1325,12 +1326,12 @@ static bool deselect_item(SEL_UNION u)
 static bool select_option(int i)
 {
     bool changed = false;
-    char** vals = INI_VALUES(options_ini);
+    char** vals = INI_VALUES(g_options_ini);
     char* val;
     char* oldval;
 
-    if (*options_ini[i].item == '*') {
-	option_flags[i] ^= OF_SEL;
+    if (*g_options_ini[i].item == '*') {
+	g_option_flags[i] ^= OF_SEL;
 	init_pages(FILL_LAST_PAGE);
 	g_term_line = sel_last_line;
 	return false;
@@ -1339,13 +1340,13 @@ static bool select_option(int i)
     goto_xy(0,sel_last_line);
     erase_line(mousebar_cnt > 0);	/* erase the prompt */
     color_object(COLOR_CMD, true);
-    printf("Change `%s' (%s)",options_ini[i].item, options_ini[i].help_str);
+    printf("Change `%s' (%s)",g_options_ini[i].item, g_options_ini[i].help_str);
     color_pop();	/* of COLOR_CMD */
     newline();
     *buf = '\0';
     oldval = savestr(quote_string(option_value(i)));
     val = vals[i]? vals[i] : oldval;
-    clean_screen = in_choice("> ", val, options_ini[i].help_str, 'z');
+    clean_screen = in_choice("> ", val, g_options_ini[i].help_str, 'z');
     if (strcmp(buf,val)) {
 	char* to = buf;
 	char* from = buf;
@@ -2562,20 +2563,19 @@ static int option_commands(char_int ch)
     switch (ch) {
       case 'R':
 	set_selector(sel_mode, sel_sort * -sel_direction);
-	sel_page_op = 1;
+	g_sel_page_op = 1;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'E':
 	if (!sel_rereading)
 	    sel_cleanup();
 	sel_exclusive = !sel_exclusive;
-	sel_page_op = 1;
+	g_sel_page_op = 1;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'S':
 	return DS_QUIT;
       case '/': {
-	extern COMPEX optcompex;
 	SEL_UNION u;
 	char* s;
 	char* pattern;
@@ -2586,7 +2586,7 @@ static int option_commands(char_int ch)
 	    break;
 	s = cpytill(buf,buf+1,'/');
 	for (pattern = buf; *pattern == ' '; pattern++) ;
-	if ((s = compile(&optcompex,pattern,true,true)) != nullptr) {
+	if ((s = compile(&g_optcompex,pattern,true,true)) != nullptr) {
 	    strcpy(msg,s);
 	    return DS_STATUS;
 	}
@@ -2594,15 +2594,15 @@ static int option_commands(char_int ch)
 	do {
 	    if (++i > obj_count)
 		i = 1;
-	    if (*options_ini[i].item == '*')
+	    if (*g_options_ini[i].item == '*')
 		continue;
-	    if (execute(&optcompex,options_ini[i].item))
+	    if (execute(&g_optcompex,g_options_ini[i].item))
 		break;
 	} while (i != j);
 	u.op = i;
-	if (!(option_flags[i] & OF_INCLUDED)) {
-	    for (j = i-1; *options_ini[j].item != '*'; j--) ;
-	    option_flags[j] |= OF_SEL;
+	if (!(g_option_flags[i] & OF_INCLUDED)) {
+	    for (j = i-1; *g_options_ini[j].item != '*'; j--) ;
+	    g_option_flags[j] |= OF_SEL;
 	    init_pages(FILL_LAST_PAGE);
 	    calc_page(u);
 	    return DS_DISPLAY;
