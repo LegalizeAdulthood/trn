@@ -26,9 +26,36 @@
 #include "rt-process.h"
 #include "rt-util.h"
 #include "parsedate.h"
-#include "INTERN.h"
 #include "rt-ov.h"
-#include "rt-ov.ih"
+
+
+/* The usual order for the overview data fields. */
+enum
+{
+    OV_NUM = 0,
+    OV_SUBJ = 1,
+    OV_FROM = 2,
+    OV_DATE = 3,
+    OV_MSGID = 4,
+    OV_REFS = 5,
+    OV_BYTES = 6,
+    OV_LINES = 7,
+    OV_XREF = 8
+};
+
+/* How many overview lines to read with one NNTP call */
+enum
+{
+    OV_CHUNK_SIZE = 40
+};
+
+static int s_hdrnum[] = {
+    0, SUBJ_LINE, FROM_LINE, DATE_LINE, MSGID_LINE,
+    REFS_LINE, BYTES_LINE, LINES_LINE, XREF_LINE
+};
+
+static void ov_parse(char *line, ART_NUM artnum, bool remote);
+static const char *ov_name(const char *group);
 
 bool ov_init()
 {
@@ -348,8 +375,8 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 	    if (fieldflags[fn] & FF_HAS_HDR) {
 		if (!s)
 		    break;
-		if (s - cp != g_htype[hdrnum[fn]].length
-		 || strncasecmp(cp,g_htype[hdrnum[fn]].name,g_htype[hdrnum[fn]].length))
+		if (s - cp != g_htype[s_hdrnum[fn]].length
+		 || strncasecmp(cp,g_htype[s_hdrnum[fn]].name,g_htype[s_hdrnum[fn]].length))
 		    continue;
 		cp = s;
 		while (*++cp == ' ') ;
@@ -444,7 +471,7 @@ void ov_close()
 
 char *ov_fieldname(int num)
 {
-    return g_htype[hdrnum[num]].name;
+    return g_htype[s_hdrnum[num]].name;
 }
 
 char *ov_field(ARTICLE *ap, int num)
@@ -466,6 +493,6 @@ char *ov_field(ARTICLE *ap, int num)
 	return cmd_buf;
     }
 
-    s = get_cached_line(ap, hdrnum[fn], true);
+    s = get_cached_line(ap, s_hdrnum[fn], true);
     return s? s : "";
 }
