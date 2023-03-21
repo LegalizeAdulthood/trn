@@ -6,31 +6,21 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "list.h"
 #include "env.h"
 #include "util.h"
 #include "util2.h"
 #include "final.h"
 #include "help.h"
-#include "hash.h"
 #include "cache.h"
 #include "opt.h"
-#include "ngdata.h"
-#include "nntpclient.h"
-#include "datasrc.h"
 #include "intrp.h"
 #include "init.h"
 #include "art.h"
 #include "rt-select.h"
-#include "score.h"		/* for sc_lookahead */
-#include "scan.h"
 #include "sdisp.h"
-#include "scanart.h"
 #include "univ.h"
 #include "color.h"
-#include "INTERN.h"
 #include "term.h"
-#include "term.ih"
 #include "utf.h"
 #ifdef MSDOS
 #include <conio.h>
@@ -43,15 +33,105 @@
 #undef	USETITE		/* use terminal init/exit seqences (not recommended) */
 #undef	USEKSKE		/* use keypad start/end sequences */
 
-char tcarea[TCSIZE];	/* area for "compiled" termcap strings */
+char ERASECH{}; /* rubout character */
+char KILLCH{};  /* line delete character */
+char circlebuf[PUSHSIZE];
+int nextin{};
+int nextout{};
+unsigned char lastchar;
+int _tty_ch{2};
+bool bizarre{}; /* do we need to restore terminal? */
 
-static KEYMAP*	topmap INIT(nullptr);
+#ifdef HAS_TERMLIB
+int tc_GT{};   /* hardware tabs */
+char *tc_BC{}; /* backspace character */
+char *tc_UP{}; /* move cursor up one line */
+char *tc_CR{}; /* get to left margin, somehow */
+char *tc_VB{}; /* visible bell */
+char *tc_CL{}; /* home and clear screen */
+char *tc_CE{}; /* clear to end of line */
+char *tc_TI{}; /* initialize terminal */
+char *tc_TE{}; /* reset terminal */
+char *tc_KS{}; /* enter `keypad transmit' mode */
+char *tc_KE{}; /* exit `keypad transmit' mode */
+char *tc_CM{}; /* cursor motion */
+char *tc_HO{}; /* home cursor */
+char *tc_IL{}; /* insert line */
+char *tc_CD{}; /* clear to end of display */
+char *tc_SO{}; /* begin standout mode */
+char *tc_SE{}; /* end standout mode */
+int tc_SG{};   /* blanks left by SO and SE */
+char *tc_US{}; /* start underline mode */
+char *tc_UE{}; /* end underline mode */
+char *tc_UC{}; /* underline a character, if that's how it's done */
+int tc_UG{};   /* blanks left by US and UE */
+bool tc_AM{};  /* does terminal have automatic margins? */
+bool tc_XN{};  /* does it eat 1st newline after automatic wrap? */
+char tc_PC{};  /* pad character for use by tputs() */
+#ifdef _POSIX_SOURCE
+speed_t outspeed{}; /* terminal output speed, */
+#else
+long outspeed{}; /* 	for use by tputs() */
+#endif
+int fire_is_out{1};
+int tc_LINES{};
+int tc_COLS{};
+int g_term_line;
+int g_term_col;
+int term_scrolled;           /* how many lines scrolled away */
+int just_a_sec{960};         /* 1 sec at current baud rate (number of nulls) */
+int page_line{1};            /* line number for paging in print_line (origin 1) */
+bool error_occurred{};
+char *mousebar_btns;
+int mousebar_cnt{};
+int mousebar_start{};
+int mousebar_width{};
+bool xmouse_is_on{};
+bool mouse_is_down{};
+#endif
 
-static char* lines_export = nullptr;
-static char* cols_export = nullptr;
+struct KEYMAP
+{
+    char km_type[128];
+    union km_union
+    {
+        KEYMAP *km_km;
+        char *km_str;
+    } km_ptr[128];
+};
 
-static int leftcost, upcost;
-static bool got_a_char = false;	/* true if we got a char since eating */
+enum
+{
+    KM_NOTHIN = 0,
+    KM_STRING = 1,
+    KM_KEYMAP = 2,
+    KM_BOGUS = 3,
+    KM_TMASK = 3,
+    KM_GSHIFT = 4,
+    KM_GMASK = 7
+};
+
+enum
+{
+    TC_STRINGS = 48 /* number of colors we can keep track of */
+};
+
+#ifndef MSDOS
+static char s_tcarea[TCSIZE]; /* area for "compiled" termcap strings */
+#endif
+static KEYMAP *s_topmap{};
+static char *s_lines_export{};
+static char *s_cols_export{};
+static int s_leftcost{};
+static int s_upcost{};
+static bool s_got_a_char{}; /* true if we got a char since eating */
+
+static void mac_init(char *tcbuf);
+static KEYMAP* newkeymap();
+static void show_keymap(KEYMAP *curmap, char *prefix);
+static int echo_char(char_int ch);
+static void line_col_calcs();
+static void mouse_input(const char *cp);
 
 /* guarantee capability pointer != nullptr */
 /* (I believe terminfo will ignore the &tmpaddr argument.) */
@@ -199,7 +279,7 @@ void term_set(char *tcbuf)
 	printf("No termcap %s found.\n", status ? "file" : "entry") FLUSH;
 	finalize(1);
     }
-    tmpaddr = tcarea;			/* set up strange tgetstr pointer */
+    tmpaddr = s_tcarea;			/* set up strange tgetstr pointer */
     s = Tgetstr("pc");			/* get pad character */
     tc_PC = *s;				/* get it where tputs wants it */
     if (!tgetflag("bs")) {		/* is backspace not used? */
@@ -284,8 +364,8 @@ void term_set(char *tcbuf)
 	erase_each_line = false;	/*  no, so disable use of clear eol */
     if (muck_up_clear)			/* this is for weird HPs */
 	tc_CL = nullptr;
-    leftcost = strlen(tc_BC);
-    upcost = strlen(tc_UP);
+    s_leftcost = strlen(tc_BC);
+    s_upcost = strlen(tc_UP);
 #else /* !HAS_TERMLIB */
     ..."Don't know how to set the terminal!"
 #endif /* !HAS_TERMLIB */
@@ -294,9 +374,9 @@ void term_set(char *tcbuf)
     noecho();				/* turn off echo */
     crmode();				/* enter cbreak mode */
     sprintf(buf, "%d", tc_LINES);
-    lines_export = export_var("LINES",buf);
+    s_lines_export = export_var("LINES",buf);
     sprintf(buf, "%d", tc_COLS);
-    cols_export = export_var("COLUMNS",buf);
+    s_cols_export = export_var("COLUMNS",buf);
 
     mac_init(tcbuf);
 }
@@ -431,8 +511,8 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
     int garbage = 0;
     static char override[] = "\nkeymap overrides string\n";
 
-    if (topmap == nullptr)
-	topmap = newkeymap();
+    if (s_topmap == nullptr)
+	s_topmap = newkeymap();
     if (*line == '#' || *line == '\n')
 	return;
     if (line[ch = strlen(line)-1] == '\n')
@@ -446,7 +526,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
     if (!*m)
 	return;
     while (*m == ' ' || *m == '\t') m++;
-    for (s=tmpbuf,curmap=topmap; *s; s++) {
+    for (s=tmpbuf,curmap=s_topmap; *s; s++) {
 	ch = *s & 0177;
 	if (s[1] == '+' && isdigit(s[2])) {
 	    s += 2;
@@ -502,10 +582,10 @@ void show_macros()
 {
     char prebuf[64];
 
-    if (topmap != nullptr) {
+    if (s_topmap != nullptr) {
 	print_lines("Macros:\n", STANDOUT);
 	*prebuf = '\0';
-	show_keymap(topmap,prebuf);
+	show_keymap(s_topmap,prebuf);
     }
     else {
 	print_lines("No macros defined.\n", NOMARKING);
@@ -798,15 +878,15 @@ void eat_typeahead()
     if (univ_ng_virtflag)
       return;
     /* Don't eat twice before getting a character */
-    if (!got_a_char)
+    if (!s_got_a_char)
 	return;
-    got_a_char = false;
+    s_got_a_char = false;
 
     /* cancel only keyboard stuff */
     if (!allow_typeahead && !mouse_is_down && !macro_pending()
      && this_time - last_time > 0.3) {
 #ifdef PENDING
-	KEYMAP* curmap = topmap;
+	KEYMAP* curmap = s_topmap;
 	Uchar lc;
 	int i, j;
 	for (j = 0; input_pending(); ) {
@@ -820,7 +900,7 @@ void eat_typeahead()
 	    }
 	    lc = *(Uchar*)buf;
 	    if ((lc & 0200) || curmap == nullptr) {
-		curmap = topmap;
+		curmap = s_topmap;
 		j = 0;
 		continue;
 	    }
@@ -834,7 +914,7 @@ void eat_typeahead()
 	    switch (curmap->km_type[lc] & KM_TMASK) {
 	      case KM_STRING:		/* a string? */
 	      case KM_NOTHIN:		/* no entry? */
-		curmap = topmap;
+		curmap = s_topmap;
 		j = 0;
 		continue;
 	      case KM_KEYMAP:		/* another keymap? */
@@ -922,7 +1002,7 @@ int read_tty(char *addr, int size)
 #ifdef RAWONLY
     *addr &= 0177;
 #endif
-    got_a_char = true;
+    s_got_a_char = true;
     return size;
 }
 
@@ -1034,7 +1114,7 @@ void getcmd(char *whatbuf)
     }
 
 tryagain:
-    curmap = topmap;
+    curmap = s_topmap;
     no_macros = (whatbuf != buf && !xmouse_is_on); 
     for (;;) {
 	g_int_count = 0;
@@ -1066,7 +1146,7 @@ tryagain:
 
 	switch (curmap->km_type[lastchar] & KM_TMASK) {
 	  case KM_NOTHIN:		/* no entry? */
-	    if (curmap == topmap)	/* unmapped canonical */
+	    if (curmap == s_topmap)	/* unmapped canonical */
 		goto got_canonical;
 	    settle_down();
 	    goto tryagain;
@@ -1642,7 +1722,7 @@ void goto_xy(int to_col, int to_line)
     }
 
     if ((ycost = (to_line - g_term_line)) < 0)
-	ycost = (upcost? -ycost * upcost : 7777);
+	ycost = (s_upcost? -ycost * s_upcost : 7777);
     else if (ycost > 0)
 	g_term_col = 0;
 
@@ -1652,7 +1732,7 @@ void goto_xy(int to_col, int to_line)
 	    xcost = 0;
 	}
 	else
-	    xcost = -xcost * leftcost;
+	    xcost = -xcost * s_leftcost;
     }
     else if (xcost > 0 && cmcost < 9999)
 	xcost = 9999;
@@ -1721,8 +1801,8 @@ int dummy;
 		tc_LINES = ws.ws_row;
 		tc_COLS = ws.ws_col;
 		line_col_calcs();
-		sprintf(lines_export, "%d", tc_LINES);
-		sprintf(cols_export, "%d", tc_COLS);
+		sprintf(s_lines_export, "%d", tc_LINES);
+		sprintf(s_cols_export, "%d", tc_COLS);
 		if (gmode == 's' || mode == 'a' || mode == 'p') {
 		    forceme("\f");	/* cause a refresh */
 					/* (defined only if TIOCSTI defined) */

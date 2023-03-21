@@ -1,13 +1,8 @@
 /* term.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-
-EXT char ERASECH;		/* rubout character */
-EXT char KILLCH;		/* line delete character */
-EXT char circlebuf[PUSHSIZE];
-EXT int nextin INIT(0);
-EXT int nextout INIT(0);
-EXT unsigned char lastchar;
+#ifndef TERM_H
+#define TERM_H
 
 /* stuff wanted by terminal mode diddling routines */
 
@@ -24,8 +19,67 @@ EXT int _res_flg INIT(0);
 # endif
 #endif
 
-EXT int _tty_ch INIT(2);
-EXT bool bizarre INIT(false);		/* do we need to restore terminal? */
+extern char ERASECH; /* rubout character */
+extern char KILLCH;  /* line delete character */
+extern char circlebuf[PUSHSIZE];
+extern int nextin;
+extern int nextout;
+extern unsigned char lastchar;
+extern int _tty_ch;
+extern bool bizarre; /* do we need to restore terminal? */
+
+/* termcap stuff */
+
+/*
+ * NOTE: if you don't have termlib you'll either have to define these strings
+ *    and the tputs routine, or you'll have to redefine the macros below
+ */
+#ifdef HAS_TERMLIB
+extern int tc_GT;   /* hardware tabs */
+extern char *tc_BC; /* backspace character */
+extern char *tc_UP; /* move cursor up one line */
+extern char *tc_CR; /* get to left margin, somehow */
+extern char *tc_VB; /* visible bell */
+extern char *tc_CL; /* home and clear screen */
+extern char *tc_CE; /* clear to end of line */
+extern char *tc_TI; /* initialize terminal */
+extern char *tc_TE; /* reset terminal */
+extern char *tc_KS; /* enter `keypad transmit' mode */
+extern char *tc_KE; /* exit `keypad transmit' mode */
+extern char *tc_CM; /* cursor motion */
+extern char *tc_HO; /* home cursor */
+extern char *tc_IL; /* insert line */
+extern char *tc_CD; /* clear to end of display */
+extern char *tc_SO; /* begin standout mode */
+extern char *tc_SE; /* end standout mode */
+extern int tc_SG;   /* blanks left by SO and SE */
+extern char *tc_US; /* start underline mode */
+extern char *tc_UE; /* end underline mode */
+extern char *tc_UC; /* underline a character, if that's how it's done */
+extern int tc_UG;   /* blanks left by US and UE */
+extern bool tc_AM;  /* does terminal have automatic margins? */
+extern bool tc_XN;  /* does it eat 1st newline after automatic wrap? */
+extern char tc_PC;  /* pad character for use by tputs() */
+#ifdef _POSIX_SOURCE
+extern speed_t outspeed; /* terminal output speed, */
+#else
+extern long outspeed; /* 	for use by tputs() */
+#endif
+extern int fire_is_out;
+extern int tc_LINES;
+extern int tc_COLS;
+extern int g_term_line;
+extern int g_term_col;
+extern int term_scrolled; /* how many lines scrolled away */
+extern int just_a_sec;    /* 1 sec at current baud rate (number of nulls) */
+extern int page_line;     /* line number for paging in print_line (origin 1) */
+extern bool error_occurred;
+extern char *mousebar_btns;
+extern int mousebar_cnt;
+extern int mousebar_start;
+extern int mousebar_width;
+extern bool xmouse_is_on;
+extern bool mouse_is_down;
 
 /* terminal mode diddling routines */
 
@@ -99,56 +153,6 @@ EXT int lflusho INIT(LFLUSHO);
 #define forceme(c)
 #endif
 
-/* termcap stuff */
-
-/*
- * NOTE: if you don't have termlib you'll either have to define these strings
- *    and the tputs routine, or you'll have to redefine the macros below
- */
-
-#ifdef HAS_TERMLIB
-EXT int tc_GT;				/* hardware tabs */
-EXT char* tc_BC INIT(nullptr);		/* backspace character */
-EXT char* tc_UP INIT(nullptr);		/* move cursor up one line */
-EXT char* tc_CR INIT(nullptr);		/* get to left margin, somehow */
-EXT char* tc_VB INIT(nullptr);		/* visible bell */
-EXT char* tc_CL INIT(nullptr);		/* home and clear screen */
-EXT char* tc_CE INIT(nullptr);		/* clear to end of line */
-EXT char* tc_TI INIT(nullptr);		/* initialize terminal */
-EXT char* tc_TE INIT(nullptr);		/* reset terminal */
-EXT char* tc_KS INIT(nullptr);		/* enter `keypad transmit' mode */
-EXT char* tc_KE INIT(nullptr);		/* exit `keypad transmit' mode */
-EXT char* tc_CM INIT(nullptr);		/* cursor motion */
-EXT char* tc_HO INIT(nullptr);		/* home cursor */
-EXT char* tc_IL INIT(nullptr);		/* insert line */
-EXT char* tc_CD INIT(nullptr);		/* clear to end of display */
-EXT char* tc_SO INIT(nullptr);		/* begin standout mode */
-EXT char* tc_SE INIT(nullptr);		/* end standout mode */
-EXT int tc_SG INIT(0);			/* blanks left by SO and SE */
-EXT char* tc_US INIT(nullptr);		/* start underline mode */
-EXT char* tc_UE INIT(nullptr);		/* end underline mode */
-EXT char* tc_UC INIT(nullptr);		/* underline a character,
-						 if that's how it's done */
-EXT int tc_UG INIT(0);			/* blanks left by US and UE */
-EXT bool tc_AM INIT(false);		/* does terminal have automatic
-								 margins? */
-EXT bool tc_XN INIT(false);		/* does it eat 1st newline after
-							 automatic wrap? */
-EXT char tc_PC INIT(0);			/* pad character for use by tputs() */
-
-#ifdef _POSIX_SOURCE
-EXT speed_t outspeed INIT(0);		/* terminal output speed, */
-#else
-EXT long outspeed INIT(0);		/* 	for use by tputs() */
-#endif
-
-EXT int fire_is_out INIT(1);
-EXT int tc_LINES INIT(0), tc_COLS INIT(0);/* size of screen */
-EXT int g_term_line, g_term_col;	/* position of cursor */
-EXT int term_scrolled;			/* how many lines scrolled away */
-EXT int just_a_sec INIT(960);		/* 1 sec at current baud rate */
-					/* (number of nulls) */
-
 /* define a few handy macros */
 inline void termdown(int x)
 {
@@ -181,17 +185,6 @@ inline void newline()
 
 #define input_pending() finput_pending(true)
 #define macro_pending() finput_pending(false)
-
-EXT int page_line INIT(1);	/* line number for paging in
-				 print_line (origin 1) */
-EXT bool error_occurred INIT(false);
-
-EXT char* mousebar_btns;
-EXT int mousebar_cnt INIT(0);
-EXT int mousebar_start INIT(0);
-EXT int mousebar_width INIT(0);
-EXT bool xmouse_is_on INIT(false);
-EXT bool mouse_is_down INIT(false);
 
 void term_init();
 void term_set(char *tcbuf);
@@ -258,4 +251,6 @@ char *tc_color_capability(const char *capability);
 #ifdef MSDOS
 int tputs(char *str, int num, int (*func)(int));
 char *tgoto(char *str, int x, int y);
+#endif
+
 #endif

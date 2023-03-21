@@ -117,7 +117,7 @@ add_executable(trn
     sorder.cpp sorder.h
     spage.cpp spage.h
     sw.cpp sw.h
-    term.cpp term.h term.ih
+    term.cpp term.h
     trn.cpp trn.h
     typedef.h
     utf.cpp utf.h
