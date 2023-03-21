@@ -6,26 +6,15 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "hash.h"
-#include "cache.h"
-/* for absfirst declaration */
-#include "bits.h"
-/* for g_mailcall */
-#include "ng.h"
-/* for ngname */
 #include "trn.h"
 #include "term.h"
-#include "util.h"
 #include "scanart.h"
 #include "samain.h"
-#include "sadesc.h"
 #include "samisc.h"
-#include "sathread.h"	/* for fold mode flag */
 #include "score.h"
 #include "scan.h"
 #include "sdisp.h"
 #include "color.h"
-#include "INTERN.h"
 #include "sadisp.h"
 
 void sa_refresh_top()
