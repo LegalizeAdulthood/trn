@@ -601,7 +601,7 @@ int edit_kfile()
 	    rewrite_kfile(lastart);
 	if (!(kf_state & KFS_GLOBAL_THREADFILE)) {
 	    SUBJECT* sp;
-	    for (sp = first_subject; sp; sp = sp->next)
+	    for (sp = g_first_subject; sp; sp = sp->next)
 		clear_subject(sp);
 	}
 	strcpy(buf,filexp(get_val("KILLLOCAL",killlocal)));

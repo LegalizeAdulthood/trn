@@ -152,9 +152,9 @@ int mt_data()
      && read_ids())
     {
 	tweak_data();
-	first_cached = absfirst;
-	last_cached = (total.last < absfirst ? absfirst-1: total.last);
-	cached_all_in_range = true;
+	g_first_cached = absfirst;
+	g_last_cached = (total.last < absfirst ? absfirst-1: total.last);
+	g_cached_all_in_range = true;
 	goto exit;
     }
     /* Something failed.  Safefree takes care of checking if some items

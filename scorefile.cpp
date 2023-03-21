@@ -744,8 +744,8 @@ int sf_score(ART_NUM a)
     /* if there are no score entries, then the answer is real easy and quick */
     if (sf_num_entries == 0)
 	return 0;
-    old_untrim = untrim_cache;
-    untrim_cache = true;
+    old_untrim = g_untrim_cache;
+    g_untrim_cache = true;
     sc_scoring = true;		/* loop prevention */
     sum = 0;
 
@@ -806,7 +806,7 @@ int sf_score(ART_NUM a)
 	    }
 	}
     }
-    untrim_cache = old_untrim;
+    g_untrim_cache = old_untrim;
     sc_scoring = false;
     return sum;
 }

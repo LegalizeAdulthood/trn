@@ -182,14 +182,14 @@ beginning:
 	    success = false;
 	    goto exit;
 	}
-	if (verbose && !first_subject && !datasrc->ov_opened)
+	if (verbose && !g_first_subject && !datasrc->ov_opened)
 	    printf("\nGetting overview file."), fflush(stdout);
     }
     else if (datasrc->ov_opened < started_request - 60*60) {
 	ov_close();
 	if ((datasrc->ov_in = fopen(ov_name(ngname), "r")) == nullptr)
 	    return false;
-	if (verbose && !first_subject)
+	if (verbose && !g_first_subject)
 	    printf("\nReading overview file."), fflush(stdout);
     }
     if (!datasrc->ov_opened) {
@@ -239,7 +239,7 @@ beginning:
 		success = false;
 		break;
 	    }
-	    if (curr_artp != sentinel_artp) {
+	    if (curr_artp != g_sentinel_artp) {
 		pushchar('\f' | 0200);
 		success = false;
 		break;
@@ -266,15 +266,15 @@ beginning:
 	}
 	spin_todo -= last - artnum;
     }
-    if (artnum > last_cached && artnum >= first)
-	last_cached = artnum;
+    if (artnum > g_last_cached && artnum >= first)
+	g_last_cached = artnum;
   exit:
     if (int_count || !success) {
 	int_count = 0;
 	success = false;
     }
     else if (remote) {
-	if (cheating && curr_artp != sentinel_artp) {
+	if (cheating && curr_artp != g_sentinel_artp) {
 	    pushchar('\f' | 0200);
 	    success = false;
 	} else if (last < real_last) {
@@ -296,9 +296,9 @@ beginning:
     }
     if (!cheating && datasrc->ov_in)
 	fseek(datasrc->ov_in, 0L, 0);	/* rewind it for the cheating phase */
-    if (success && real_first <= first_cached) {
-	first_cached = real_first;
-	cached_all_in_range = true;
+    if (success && real_first <= g_first_cached) {
+	g_first_cached = real_first;
+	g_cached_all_in_range = true;
     }
     setspin(SPIN_POP);
     if (last_buf != buf)

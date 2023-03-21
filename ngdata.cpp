@@ -135,7 +135,7 @@ void grow_ng(ART_NUM newlast)
 	    lastart++;
 	    article_ptr(lastart)->flags |= AF_EXISTS|AF_UNREAD;
 	} while (lastart < newlast);
-	article_list->high = lastart;
+	g_article_list->high = lastart;
 	thread_grow();
 	/* Score all new articles now just in case they weren't done above. */
 	sc_fill_scorelist(tmpfirst,newlast);

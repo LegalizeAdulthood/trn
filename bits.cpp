@@ -284,22 +284,22 @@ void find_existing_articles()
 #endif
 	    }
 	}
-	else if (first_subject && cached_all_in_range) {
+	else if (g_first_subject && g_cached_all_in_range) {
 	    if (!datasrc->ov_opened || datasrc->over_dir != nullptr) {
-		for (ap = article_ptr(article_first(first_cached));
-		     ap && article_num(ap) <= last_cached;
+		for (ap = article_ptr(article_first(g_first_cached));
+		     ap && article_num(ap) <= g_last_cached;
 		     ap = article_nextp(ap))
 		{
 		    if (ap->flags & AF_CACHED)
 			ap->flags |= AF_EXISTS;
 		}
 	    }
-	    for (an = absfirst; an < first_cached; an++) {
+	    for (an = absfirst; an < g_first_cached; an++) {
 		ap = article_ptr(an);
 		if (!(ap->flags2 & AF2_BOGUS))
 		    ap->flags |= AF_EXISTS;
 	    }
-	    for (an = last_cached+1; an <= lastart; an++) {
+	    for (an = g_last_cached+1; an <= lastart; an++) {
 		ap = article_ptr(an);
 		if (!(ap->flags2 & AF2_BOGUS))
 		    ap->flags |= AF_EXISTS;
@@ -368,10 +368,10 @@ void find_existing_articles()
 	firstart = absfirst;
     if (firstart > lastart)
 	firstart = lastart + 1;
-    if (first_cached < absfirst)
-	first_cached = absfirst;
-    if (last_cached < absfirst)
-	last_cached = absfirst - 1;
+    if (g_first_cached < absfirst)
+	g_first_cached = absfirst;
+    if (g_last_cached < absfirst)
+	g_last_cached = absfirst - 1;
 }
 
 /* mark an article unread, keeping track of toread[] */

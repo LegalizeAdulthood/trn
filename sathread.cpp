@@ -47,10 +47,10 @@ long sa_get_subj_thread(long e)
     bool old_untrim;
     char* p;
 
-    old_untrim = untrim_cache;
-    untrim_cache = true;
+    old_untrim = g_untrim_cache;
+    g_untrim_cache = true;
     s = sa_desc_subject(e);
-    untrim_cache = old_untrim;
+    g_untrim_cache = old_untrim;
 
     if (!s || !*s)
       return -2;

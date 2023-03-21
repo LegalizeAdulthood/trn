@@ -142,8 +142,8 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	art_howmuch = howmuch;
 	art_srchhdr = srchhdr;
 	art_doread = doread;
-	if (srchahead)
-	    srchahead = -1;
+	if (g_srchahead)
+	    g_srchahead = -1;
     }
     else {
 	char* h;
@@ -210,8 +210,8 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 		termdown(2);
 	    }
 	}
-	else if (!srchahead)
-	    srchahead = -1;
+	else if (!g_srchahead)
+	    g_srchahead = -1;
 
 	{			/* compensate for notesfiles */
 	    int i;
@@ -305,10 +305,10 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	else if (cmdlst && art >= absfirst)
 	    art--;			/* include current article */
     }
-    if (srchahead > 0) {
+    if (g_srchahead > 0) {
 	if (!backward)
-	    art = srchahead - 1;
-	srchahead = -1;
+	    art = g_srchahead - 1;
+	g_srchahead = -1;
     }
     assert(!cmdlst || *cmdlst);
     perform_status_init(ngptr->toread);
@@ -371,10 +371,10 @@ bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
 	strncpy(buf+6,fetchfrom(artnum,false),256);
 	break;
       case ARTSCOPE_ONEHDR:
-	untrim_cache = true;
+	g_untrim_cache = true;
 	sprintf(buf, "%s: %s", htype[art_srchhdr].name,
 		prefetchlines(artnum,art_srchhdr,false));
-	untrim_cache = false;
+	g_untrim_cache = false;
 	break;
       default: {
 	char* s;

@@ -123,7 +123,7 @@ void sa_selthreads()
 	    (sa_ents[i].sa_flags & 0xfd);
 
     /* Loop through all (selected) articles. */
-    for (sp = first_subject; sp; sp = sp->next) {
+    for (sp = g_first_subject; sp; sp = sp->next) {
 	if ((sp->flags & subj_mask) == subj_mask) {
 	    for (ap = first_art(sp); ap; ap = next_art(ap)) {
 		art = article_num(ap);

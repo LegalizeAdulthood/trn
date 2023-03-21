@@ -594,8 +594,8 @@ char thread_letter(ARTICLE *ap)
     int subj = ap->subj->misc;
 
     if (!(ap->flags & AF_CACHED)
-     && (absfirst < first_cached || last_cached < lastart
-      || !cached_all_in_range))
+     && (absfirst < g_first_cached || g_last_cached < lastart
+      || !g_cached_all_in_range))
 	return '?';
     if (!(ap->flags & AF_EXISTS))
 	return ' ';

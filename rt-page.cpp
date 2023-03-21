@@ -53,7 +53,7 @@ bool set_sel_mode(char_int ch)
 	    termdown(1);
 	    thread_open();
 	    thread_always = always_save;
-	    if (last_cached < lastart)
+	    if (g_last_cached < lastart)
 		ThreadedGroup = false;
 	}
 	/* FALL THROUGH */
@@ -539,7 +539,7 @@ try_again:
 
 	if (sel_page_app) {
 	    int desired_flags = (sel_rereading? AF_EXISTS:(AF_EXISTS|AF_UNREAD));
-	    limit = artptr_list + artptr_list_size;
+	    limit = g_artptr_list + g_artptr_list_size;
 	    ap = nullptr;
 	    for (app = sel_page_app; app < limit; app++) {
 		ap = *app;
@@ -548,9 +548,9 @@ try_again:
 	    }
 	    sort_articles();
 	    if (ap == nullptr)
-		sel_page_app = artptr_list + artptr_list_size;
+		sel_page_app = g_artptr_list + g_artptr_list_size;
 	    else {
-		for (app = artptr_list; app < limit; app++) {
+		for (app = g_artptr_list; app < limit; app++) {
 		    if (*app == ap) {
 			sel_page_app = app;
 			break;
@@ -562,9 +562,9 @@ try_again:
 
 	while (sel_page_sp && sel_page_sp->misc == 0)
 	    sel_page_sp = sel_page_sp->next;
-	/* The artptr_list contains only unread or read articles, never both */
-	limit = artptr_list + artptr_list_size;
-	for (app = artptr_list; app < limit; app++) {
+	/* The g_artptr_list contains only unread or read articles, never both */
+	limit = g_artptr_list + g_artptr_list_size;
+	for (app = g_artptr_list; app < limit; app++) {
 	    ap = *app;
 	    if (sel_rereading && !(ap->flags & sel_mask))
 		ap->flags |= AF_DEL;
@@ -605,10 +605,10 @@ try_again:
 		sel_page_sp = sel_page_sp->next;
 	    sort_subjects();
 	    if (!sel_page_sp)
-		sel_page_sp = last_subject;
+		sel_page_sp = g_last_subject;
 	} else
 	    sort_subjects();
-	for (sp = first_subject; sp; sp = sp->next) {
+	for (sp = g_first_subject; sp; sp = sp->next) {
 	    if (sel_rereading && !(sp->flags & sel_mask))
 		sp->flags |= SF_DEL;
 
@@ -647,7 +647,7 @@ try_again:
 	}
 	if (!sel_page_sp)
 	    (void) first_page();
-	else if (sel_page_sp == last_subject)
+	else if (sel_page_sp == g_last_subject)
 	    (void) last_page();
 	else if (sel_prior_obj_cnt && fill_last_page) {
 	    calc_page(no_search);
@@ -726,8 +726,8 @@ bool first_page()
 	ARTICLE** app;
 	ARTICLE** limit;
 
-	limit = artptr_list + artptr_list_size;
-	for (app = artptr_list; app < limit; app++) {
+	limit = g_artptr_list + g_artptr_list_size;
+	for (app = g_artptr_list; app < limit; app++) {
 	    if ((*app)->flags & AF_INCLUDED) {
 		if (sel_page_app != app) {
 		    sel_page_app = app;
@@ -741,7 +741,7 @@ bool first_page()
       default: {
 	SUBJECT* sp;
 
-	for (sp = first_subject; sp; sp = sp->next) {
+	for (sp = g_first_subject; sp; sp = sp->next) {
 	    if (sp->flags & SF_INCLUDED) {
 		if (sel_page_sp != sp) {
 		    sel_page_sp = sp;
@@ -808,7 +808,7 @@ bool last_page()
       }
       case SM_ARTICLE: {
 	ARTICLE** app = sel_page_app;
-	sel_page_app = artptr_list + artptr_list_size;
+	sel_page_app = g_artptr_list + g_artptr_list_size;
 	if (!prev_page())
 	    sel_page_app = app;
 	else if (app != sel_page_app)
@@ -872,7 +872,7 @@ bool next_page()
 	break;
       }
       case SM_ARTICLE: {
-	if (sel_next_app < artptr_list + artptr_list_size) {
+	if (sel_next_app < g_artptr_list + g_artptr_list_size) {
 	    sel_page_app = sel_next_app;
 	    sel_prior_obj_cnt += sel_page_obj_cnt;
 	    return true;
@@ -1011,7 +1011,7 @@ bool prev_page()
 	ARTICLE** app;
 	ARTICLE** page_app = sel_page_app;
 
-	for (app = sel_page_app; --app >= artptr_list; ) {
+	for (app = sel_page_app; --app >= g_artptr_list; ) {
 	    if ((*app)->flags & AF_INCLUDED) {
 		page_app = app;
 		sel_prior_obj_cnt--;
@@ -1030,7 +1030,7 @@ bool prev_page()
 	int line_cnt, item_arts, line;
 
 	line = 2;
-	for (sp = (!page_sp? last_subject : page_sp->prev); sp; sp=sp->prev) {
+	for (sp = (!page_sp? g_last_subject : page_sp->prev); sp; sp=sp->prev) {
 	    item_arts = sp->misc;
 	    if (sel_mode == SM_THREAD) {
 		while (sp->prev && sp->prev->thread == sp->thread) {
@@ -1055,7 +1055,7 @@ bool prev_page()
 		break;
 	}
 	if (sel_page_sp != page_sp) {
-	    sel_page_sp = (page_sp? page_sp : first_subject);
+	    sel_page_sp = (page_sp? page_sp : g_first_subject);
 	    return true;
 	}
 	break;
@@ -1140,7 +1140,7 @@ try_again:
       }
       case SM_ARTICLE: {
 	ARTICLE** app = sel_page_app;
-	ARTICLE** limit = artptr_list + artptr_list_size;
+	ARTICLE** limit = g_artptr_list + g_artptr_list_size;
 	for (; app < limit && sel_page_item_cnt < sel_max_per_page; app++) {
 	    if (*app == u.ap)
 		sel_item_index = sel_page_item_cnt;
@@ -1505,7 +1505,7 @@ try_again:
 	ARTICLE** app;
 	ARTICLE** limit;
 
-	limit = artptr_list + artptr_list_size;
+	limit = g_artptr_list + g_artptr_list_size;
 	app = sel_page_app;
 	for (; app < limit && sel_page_item_cnt < sel_max_per_page; app++) {
 	    ap = *app;

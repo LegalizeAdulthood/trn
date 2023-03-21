@@ -137,7 +137,7 @@ int do_newsgroup(char *start_command)
     if (ret <= 0)
 	return NG_ERROR;
 
-    srchahead = (scanon && !ThreadedGroup	/* did they say -S? */
+    g_srchahead = (scanon && !ThreadedGroup	/* did they say -S? */
 	      && ((ART_NUM)ngptr->toread) >= scanon ? -1 : 0);
 
     /* FROM HERE ON, RETURN THRU CLEANUP OR WE ARE SCREWED */
@@ -298,7 +298,7 @@ int do_newsgroup(char *start_command)
 		goto cleanup;		/* actually exit newsgroup */
 	    set_mode(gmode,'e');
 	    g_prompt = whatnext;
-	    srchahead = 0;		/* no more subject search mode */
+	    g_srchahead = 0;		/* no more subject search mode */
 	    fputs("\n\n",stdout) FLUSH;
 	    termdown(2);
 	}
@@ -348,8 +348,8 @@ int do_newsgroup(char *start_command)
 		init_tree();
 		sprintf(tmpbuf,"%s: article is not available.",ngname);
 		if (artp && !(artp->flags & AF_CACHED)) {
-		    if (absfirst < first_cached || last_cached < lastart
-		     || !cached_all_in_range)
+		    if (absfirst < g_first_cached || g_last_cached < lastart
+		     || !g_cached_all_in_range)
 			sprintf(tmpbuf,"%s: article may show up in a moment.",
 				ngname);
 		}
@@ -357,7 +357,7 @@ int do_newsgroup(char *start_command)
 		vwtary(artline,(ART_POS)0);
 		finish_tree(linenum);
 		g_prompt = whatnext;
-		srchahead = 0;
+		g_srchahead = 0;
 	    }
 	    else {			/* found it, so print it */
 		switch (do_article()) {
@@ -751,7 +751,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	if (!artp)
 	    goto not_threaded;
 	kill_subject(artp->subj,AFFECT_ALL);
-	if (!ThreadedGroup || last_cached < lastart) {
+	if (!ThreadedGroup || g_last_cached < lastart) {
 	    *buf = 'k';
 	    goto normal_search;
 	}
@@ -780,7 +780,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	do {
 	    dec_art(selected_only,false);
 	} while (art >= firstart && (was_read(art) || !parseheader(art)));
-	srchahead = 0;
+	g_srchahead = 0;
 	if (art >= firstart)
 	    return AS_NORM;
 	art = absfirst;	
@@ -805,7 +805,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    return AS_ASK;
 	}
 	g_reread = true;
-	srchahead = 0;
+	g_srchahead = 0;
 	return AS_NORM;
       case '-':
       case '\b':  case '\177':
@@ -814,7 +814,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    artp = recent_artp;
 	    g_reread = true;
 	    forcelast = true;
-	    srchahead = -(srchahead != 0);
+	    g_srchahead = -(g_srchahead != 0);
 	    return AS_NORM;
 	}
 	exit_code = NG_MINUS;
@@ -839,7 +839,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    if (sa_in)
 		return AS_SA;
 	}
-	else if (scanon && !ThreadedGroup && srchahead) {
+	else if (scanon && !ThreadedGroup && g_srchahead) {
 	    *buf = Ctl('n');
 	    if (!next_art_with_subj())
 		goto normal_search;
@@ -874,7 +874,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    if (art > lastart)
 		top_article();
 	}
-	srchahead = 0;
+	g_srchahead = 0;
 	return AS_NORM;
       case 'N':			/* goto next article */
 	if (sa_in && s_default_cmd && !(sa_follow || s_follow_temp))
@@ -890,11 +890,11 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	if (!s_default_cmd)
 	    s_follow_temp = true;	/* keep going until change req. */
 	if (art > lastart) {
-	    if (!first_subject) {
+	    if (!g_first_subject) {
 		art = absfirst;
 		artp = article_ptr(art);
 	    } else {
-		artp = first_subject->articles;
+		artp = g_first_subject->articles;
 		if (artp->flags & AF_EXISTS)
 		    art = article_num(artp);
 		else
@@ -907,13 +907,13 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    g_reread = true;
 	else
 	    forcelast = true;
-	srchahead = 0;
+	g_srchahead = 0;
 	return AS_NORM;
       case '$':
 	art = lastart+1;
 	artp = nullptr;
 	forcelast = true;
-	srchahead = 0;
+	g_srchahead = 0;
 	return AS_NORM;
       case '0':
       case '1': case '2': case '3':	/* goto specified article */
@@ -927,8 +927,8 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    return AS_ASK;
 	  case NN_REREAD:
 	    g_reread = true;
-	    if (srchahead)
-		srchahead = -1;
+	    if (g_srchahead)
+		g_srchahead = -1;
 	    break;
 	  case NN_NORM:
 	    if (use_threads) {
@@ -991,7 +991,7 @@ normal_search:
 		fputs("done\n",stdout) FLUSH;
 	    termdown(1);
 	    pad(just_a_sec/3);	/* 1/3 second */
-	    if (!srchahead) {
+	    if (!g_srchahead) {
 		art = curr_art;
 		return AS_ASK;
 	    }
@@ -1142,7 +1142,7 @@ run_the_selector:
       }
       case '^':
 	top_article();
-	srchahead = 0;
+	g_srchahead = 0;
 	return AS_NORM;
 #ifdef DEBUG
       case 'D':
@@ -1314,7 +1314,7 @@ run_the_selector:
 		art++;
 	    if (art <= lastart)
 		g_reread = true;
-	    srchahead = 0;
+	    g_srchahead = 0;
 	    return AS_NORM;
 	  case '+':
 	    if (!artp)
@@ -1404,7 +1404,7 @@ void setdfltcmd()
 	    dfltcmd = "anpq";
 	} else
 #endif
-	if (srchahead)
+	if (g_srchahead)
 	    dfltcmd = "^Nnpq";
 	else
 	    dfltcmd = "npq";

@@ -166,8 +166,8 @@ int numnum()
 	errormsg("No articles");
 	return NN_ASK;
     }
-    if (srchahead)
-	srchahead = -1;
+    if (g_srchahead)
+	g_srchahead = -1;
 
     perform_status_init(ngptr->toread);
 
@@ -326,11 +326,11 @@ int thread_perform()
     } else {
 	/* The rest loop through the articles. */
 	/* Use the explicit article-order if it exists */
-	if (artptr_list) {
+	if (g_artptr_list) {
 	    ARTICLE** app;
-	    ARTICLE** limit = artptr_list + artptr_list_size;
+	    ARTICLE** limit = g_artptr_list + g_artptr_list_size;
 	    sp = (sel_mode==SM_THREAD? artp->subj->thread->subj : artp->subj);
-	    for (app = artptr_list; app < limit; app++) {
+	    for (app = g_artptr_list; app < limit; app++) {
 		ap = *app;
 		if (one_thread && ap->subj->thread != sp->thread)
 		    continue;

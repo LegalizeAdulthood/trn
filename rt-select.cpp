@@ -198,17 +198,17 @@ sel_exit:
     }
     if (sel_mode != SM_ARTICLE || sel_sort == SS_GROUPS
      || sel_sort == SS_STRING) {
-	if (artptr_list) {
-	    free((char*)artptr_list);
-	    artptr_list = sel_page_app = nullptr;
+	if (g_artptr_list) {
+	    free((char*)g_artptr_list);
+	    g_artptr_list = sel_page_app = nullptr;
 	    sort_subjects();
 	}
-	artptr = nullptr;
+	g_artptr = nullptr;
 	if (!ThreadedGroup)
-	    srchahead = -1;
+	    g_srchahead = -1;
     }
     else
-	srchahead = 0;
+	g_srchahead = 0;
     selected_only = (selected_count != 0);
     if (sel_ret == '+') {
 	selected_only = save_selected_only;
@@ -1439,7 +1439,7 @@ static void sel_cleanup()
 	    SUBJECT* sp;
 	    sel_last_ap = nullptr;
 	    sel_last_sp = nullptr;
-	    for (sp = first_subject; sp; sp = sp->next)
+	    for (sp = g_first_subject; sp; sp = sp->next)
 		unkill_subject(sp);
 	}
 	else {
@@ -1447,7 +1447,7 @@ static void sel_cleanup()
 		article_walk(mark_DEL_as_READ, 0);
 	    else {
 		SUBJECT* sp;
-		for (sp = first_subject; sp; sp = sp->next) {
+		for (sp = g_first_subject; sp; sp = sp->next) {
 		    if (sp->flags & SF_DEL) {
 			sp->flags &= ~SF_DEL;
 			if (sel_mode == SM_THREAD)
@@ -1693,7 +1693,7 @@ static int article_commands(char_int ch)
       case '#':
 	if (sel_page_item_cnt) {
 	    SUBJECT* sp;
-	    for (sp = first_subject; sp; sp = sp->next)
+	    for (sp = g_first_subject; sp; sp = sp->next)
 		sp->flags &= ~SF_SEL;
 	    selected_count = 0;
 	    deselect_item(sel_items[sel_item_index].u);
@@ -1866,11 +1866,11 @@ q does nothing.\n\n\
 		ARTICLE* ap;
 		ARTICLE** app;
 		ARTICLE** limit;
-		limit = artptr_list + artptr_list_size;
+		limit = g_artptr_list + g_artptr_list_size;
 		if (ch == 'D')
 		    app = sel_page_app;
 		else
-		    app = artptr_list;
+		    app = g_artptr_list;
 		while (app < limit) {
 		    ap = *app;
 		    if ((!(ap->flags & AF_SEL) ^ (ch == 'J'))
@@ -1888,7 +1888,7 @@ q does nothing.\n\n\
 		if (ch == 'D')
 		    sp = sel_page_sp;
 		else
-		    sp = first_subject;
+		    sp = g_first_subject;
 		while (sp) {
 		    if (((!(sp->flags & SF_SEL) ^ (ch == 'J')) && sp->misc)
 		     || (sp->flags & SF_DEL)) {
@@ -1908,11 +1908,11 @@ q does nothing.\n\n\
 		sel_item_index = 0;
 		return DS_DISPLAY;
 	    }
-	    if (artptr_list && obj_count)
+	    if (g_artptr_list && obj_count)
 		sort_articles();
 	} else if (ch == 'J') {
 	    SUBJECT* sp;
-	    for (sp = first_subject; sp; sp = sp->next)
+	    for (sp = g_first_subject; sp; sp = sp->next)
 		deselect_subject(sp);
 	    selected_subj_cnt = selected_count = 0;
 	    return DS_DISPLAY;
@@ -1998,7 +1998,7 @@ q does nothing.\n\n\
 		thread_perform();
 		if (!sel_rereading) {
 		    SUBJECT* sp;
-		    for (sp = first_subject; sp; sp = sp->next) {
+		    for (sp = g_first_subject; sp; sp = sp->next) {
 			if (sp->flags & SF_DEL) {
 			    sp->flags = 0;
 			    if (sel_mode == SM_THREAD)

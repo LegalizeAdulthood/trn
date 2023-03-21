@@ -524,18 +524,18 @@ void merge_threads(SUBJECT *s1, SUBJECT *s2)
 	}
 	/* Unlink the s2 chunk of subjects from the list */
 	if (!sp->prev)
-	    first_subject = s2->next;
+	    g_first_subject = s2->next;
 	else
 	    sp->prev->next = s2->next;
 	if (!s2->next)
-	    last_subject = sp->prev;
+	    g_last_subject = sp->prev;
 	else
 	    s2->next->prev = sp->prev;
 	/* Link the s2 chunk after s1 */
 	sp->prev = s1;
 	s2->next = s1->next;
 	if (!s1->next)
-	    last_subject = s2;
+	    g_last_subject = s2;
 	else
 	    s1->next->prev = s2;
 	s1->next = sp;

@@ -57,7 +57,7 @@ add_executable(trn
     autosub.cpp autosub.h
     backpage.cpp backpage.h
     bits.cpp bits.h
-    cache.cpp cache.h cache.ih
+    cache.cpp cache.h
     charsubst.cpp charsubst.h charsubst.ih
     color.cpp color.h color.ih
     common.h

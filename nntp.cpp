@@ -418,8 +418,8 @@ ART_NUM nntp_find_real_art(ART_NUM after)
 {
     ART_NUM an;
 
-    if (last_cached > after || last_cached < absfirst
-     || nntp_stat(last_cached) <= 0) {
+    if (g_last_cached > after || g_last_cached < absfirst
+     || nntp_stat(g_last_cached) <= 0) {
 	if (nntp_stat_id("") > after)
 	    return 0;
     }
