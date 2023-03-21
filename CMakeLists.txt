@@ -94,7 +94,7 @@ add_executable(trn
     rt-mt.cpp rt-mt.h
     rt-ov.cpp rt-ov.h
     rt-page.cpp rt-page.h
-    rt-process.cpp rt-process.h rt-process.ih
+    rt-process.cpp rt-process.h
     rt-select.cpp rt-select.h rt-select.ih
     rt-util.cpp rt-util.h rt-util.ih
     rt-wumpus.cpp rt-wumpus.h rt-wumpus.ih
