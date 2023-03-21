@@ -9,10 +9,10 @@
 #include "util.h"
 #include "scan.h"
 #include "smisc.h"
-#include "scanart.h"
 #include "samisc.h"
-#include "INTERN.h"
 #include "sorder.h"
+
+bool g_s_order_changed{}; /* If true, resort next time order is considered */
 
 #ifdef UNDEF
 /* pointers to the two entries to be compared */
@@ -105,7 +105,7 @@ void s_sort()
 #endif
     s_sort_basic();
     g_s_ent_sorted_max = g_s_ent_sort_max;  /* whole array is now sorted */
-    s_order_changed = false;
+    g_s_order_changed = false;
     /* rebuild the indexes */
     for (i = 0; i <= g_s_ent_sort_max; i++)
 	g_s_ent_index[g_s_ent_sort[i]] = i;
@@ -163,7 +163,7 @@ void s_order_add(long ent)
 	    g_s_ent_index[i] = -1;	/* -1 == not a legal entry */
     }
     g_s_ent_index[ent] = g_s_ent_sort_max;
-    s_order_changed = true;
+    g_s_order_changed = true;
 }
 
 long s_prev(long ent)
@@ -172,7 +172,7 @@ long s_prev(long ent)
 
     if (ent < 0 || ent > g_s_ent_index_max || g_s_ent_sorted_max < 0)
 	return 0;
-    if (s_order_changed)
+    if (g_s_order_changed)
 	s_sort();
     tmp = g_s_ent_index[ent];
     if (tmp <= 0)
@@ -186,7 +186,7 @@ long s_next(long ent)
 
     if (ent < 0 || ent > g_s_ent_index_max || g_s_ent_sorted_max < 0)
 	return 0;
-    if (s_order_changed)
+    if (g_s_order_changed)
 	s_sort();
     tmp = g_s_ent_index[ent];
     if (tmp < 0 || tmp == g_s_ent_sorted_max)
@@ -216,7 +216,7 @@ long s_next_elig(long a)
 
 long s_first()
 {
-    if (s_order_changed)
+    if (g_s_order_changed)
 	s_sort();
     if (g_s_ent_sorted_max < 0)
 	return 0;
@@ -225,7 +225,7 @@ long s_first()
 
 long s_last()
 {
-    if (s_order_changed)
+    if (g_s_order_changed)
 	s_sort();
     if (g_s_ent_sorted_max < 0)
 	return 0;

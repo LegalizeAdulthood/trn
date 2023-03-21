@@ -188,7 +188,7 @@ void sc_set_score(ART_NUM a, int score)
     ap = article_ptr(a);
     ap->score = score;	/* update the score */
     ap->scoreflags |= SFLAG_SCORED;
-    s_order_changed = true;	/* resort */
+    g_s_order_changed = true;	/* resort */
 }
 
 /* Hopefully people will write more scoring routines later */

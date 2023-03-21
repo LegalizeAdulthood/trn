@@ -3,9 +3,10 @@
  *
  * scan ordering
  */
+#ifndef SORDER_H
+#define SORDER_H
 
-/* If true, resort next time order is considered */
-EXT bool s_order_changed INIT(false);
+extern bool g_s_order_changed; /* If true, resort next time order is considered */
 
 int s_compare(long a, long b);
 void s_sort_basic();
@@ -18,3 +19,5 @@ long s_prev_elig(long a);
 long s_next_elig(long a);
 long s_first();
 long s_last();
+
+#endif
