@@ -6,14 +6,9 @@
 #include "EXTERN.h"
 #include "common.h"
 #include "search.h"
-#include "list.h"
-#include "ngdata.h"
 #include "ngsrch.h"
 #include "env.h"
-#include "util.h"
-#include "util2.h"
 #include "final.h"
-#include "INTERN.h"
 #include "autosub.h"
 
 /* Consider the newsgroup specified, and return:	*/
