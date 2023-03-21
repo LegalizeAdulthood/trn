@@ -8,7 +8,6 @@
 #include "EXTERN.h"
 #include "common.h"		/* Declare MEM_SIZE */
 #include "util.h"		/* Declare safemalloc() */
-#include "INTERN.h"
 #include "edit_dist.h"
 
 /* edit_dist -- returns the minimum edit distance between two strings
@@ -40,18 +39,17 @@ HISTORY
 
 #define SAFE_ASSIGN(x,y) (((x) != nullptr) ? (*(x) = (y)) : (y))
 
-#define swap_int(x,y)  (_iswap = (x), (x) = (y), (y) = _iswap)
-#define swap_char(x,y) (_cswap = (x), (x) = (y), (y) = _cswap)
-#define min3(x,y,z) (_mx = (x), _my = (y), _mz = (z), (_mx < _my ? (_mx < _mz ? _mx : _mz) : (_mz < _my) ? _mz : _my))
-#define min2(x,y) (_mx = (x), _my = (y), (_mx < _my ? _mx : _my))
+#define swap_int(x,y)  (s_iswap = (x), (x) = (y), (y) = s_iswap)
+#define swap_char(x,y) (s_cswap = (x), (x) = (y), (y) = s_cswap)
+#define min3(x,y,z) (s_mx = (x), s_my = (y), s_mz = (z), (s_mx < s_my ? (s_mx < s_mz ? s_mx : s_mz) : (s_mz < s_my) ? s_mz : s_my))
+#define min2(x,y) (s_mx = (x), s_my = (y), (s_mx < s_my ? s_mx : s_my))
 
 
-static int insert_cost = 1;
-static int delete_cost = 1;
-
-static int _iswap;			/* swap_int temp variable */
-static char* _cswap;			/* swap_char temp variable */
-static int _mx, _my, _mz;		/* min2, min3 temp variables */
+static int s_insert_cost = 1;
+static int s_delete_cost = 1;
+static int s_iswap;          /* swap_int temp variable */
+static char *s_cswap;        /* swap_char temp variable */
+static int s_mx, s_my, s_mz; /* min2, min3 temp variables */
 
 
 /* edit_distn -- returns the edit distance between two strings, or -1 on
@@ -79,10 +77,10 @@ int edit_distn(char *from, int from_len, char *to, int to_len)
     if (from == nullptr || !from_len) {
 	if (to == nullptr || !to_len)
 	    return 0;
-	return to_len * insert_cost;
+	return to_len * s_insert_cost;
     }
     if (to == nullptr || !to_len)
-	return from_len * delete_cost;
+	return from_len * s_delete_cost;
 
 /* Initialize registers */
 
@@ -93,8 +91,8 @@ int edit_distn(char *from, int from_len, char *to, int to_len)
 #define ch 1
 #define swap_cost 1
 #else
-    ins  = insert_cost;
-    del  = delete_cost;
+    ins  = s_insert_cost;
+    del  = s_delete_cost;
     ch   = change_cost;
 #endif
 
@@ -130,11 +128,11 @@ int edit_distn(char *from, int from_len, char *to, int to_len)
 
    The dynamic programming recursion is defined as follows:
 
-	ar(x,0) := x * insert_cost
-	ar(0,y) := y * delete_cost
+	ar(x,0) := x * s_insert_cost
+	ar(0,y) := y * s_delete_cost
 	ar(x,y) := min(a(x - 1, y - 1) + (from[x] == to[y] ? 0 : change),
-		       a(x - 1, y) + insert_cost,
-		       a(x, y - 1) + delete_cost,
+		       a(x - 1, y) + s_insert_cost,
+		       a(x, y - 1) + s_delete_cost,
 		       a(x - 2, y - 2) + (from[x] == to[y-1] &&
 					  from[x-1] == to[y] ? swap_cost :
 					  infinity))
