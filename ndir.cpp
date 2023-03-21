@@ -5,7 +5,6 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "INTERN.h"
 #include "ndir.h"
 
 #ifdef EMULATE_NDIR

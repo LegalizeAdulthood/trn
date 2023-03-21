@@ -1,7 +1,8 @@
 /* ndir.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-
+#ifndef NDIR_H
+#define NDIR_H
 
 #if defined(I_DIRENT) && !defined(EMULATE_NDIR)
 #include <dirent.h>
@@ -58,4 +59,6 @@ void closedir(DIR *dirp);
 #endif
 #endif
 #endif
+#endif
+
 #endif
