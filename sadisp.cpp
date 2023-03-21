@@ -28,7 +28,7 @@ void sa_refresh_top()
 	printf(" unread+read");
     else
 	printf(" unread");
-    if (sa_mode_zoom)
+    if (g_sa_mode_zoom)
 	printf(" zoom");
     if (sa_mode_fold)
 	printf(" Fold");

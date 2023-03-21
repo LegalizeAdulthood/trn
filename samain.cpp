@@ -7,27 +7,25 @@
 #include "EXTERN.h"
 #include "common.h"
 #include "list.h"
-#include "hash.h"
 #include "cache.h"
 #include "ngdata.h"
-#include "bits.h"
-#include "head.h" /* for fetching misc header lines... */
 #include "util.h"
 #include "score.h"
 #include "scan.h"
 #include "scmd.h"
 #include "sdisp.h"
-#include "smisc.h"	/* needed? */
 #include "sorder.h"
 #include "spage.h"
 #include "scanart.h"
 #include "samisc.h"
-#include "sacmd.h"
-#include "sadesc.h"
 #include "sadisp.h"
 #include "sathread.h"
-#include "INTERN.h"
 #include "samain.h"
+
+char g_sa_buf[LBUFLEN];    /* misc. buffer */
+bool g_sa_mode_zoom{};     /* true if in "zoom" (display only selected) mode */
+bool g_sa_order_read{};    /* if true, the already-read articles have been added to the order arrays */
+int g_sa_scan_context{-1}; /* contains the scan-context number for the current article scan */
 
 void sa_init()
 {
@@ -95,11 +93,11 @@ void sa_cleanmain()
 {
     sa_clean_ents();
 
-    sa_mode_zoom = false;	/* doesn't survive across groups */
+    g_sa_mode_zoom = false;	/* doesn't survive across groups */
     /* remove the now-unused scan-context */
-    s_delete_context(sa_scan_context);
+    s_delete_context(g_sa_scan_context);
     sa_context_init = false;
-    sa_scan_context = -1;
+    g_sa_scan_context = -1;
     /* no longer "in" article scan mode */
     sa_mode_read_elig = false;	/* the default */
     sa_in = false;
@@ -118,9 +116,9 @@ void sa_init_context()
 {
     if (sa_context_init)
 	return;		/* already initialized */
-    if (sa_scan_context == -1)
-	sa_scan_context = s_new_context(S_ART);
-    s_change_context(sa_scan_context);
+    if (g_sa_scan_context == -1)
+	g_sa_scan_context = s_new_context(S_ART);
+    s_change_context(g_sa_scan_context);
 }
 
 bool sa_initarts()
@@ -133,7 +131,7 @@ bool sa_initarts()
 	if (article_exists(a))
 	    (void)sa_add_ent(a);
     }
-    sa_order_read = sa_mode_read_elig;
+    g_sa_order_read = sa_mode_read_elig;
     return true;
 }
 
@@ -143,7 +141,7 @@ void sa_initmode()
     /* set up screen sizes */
     sa_set_screen();
 
-    sa_mode_zoom = false;			/* reset zoom */
+    g_sa_mode_zoom = false;			/* reset zoom */
 }
 
 sa_main_result sa_mainloop()

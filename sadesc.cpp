@@ -113,25 +113,25 @@ const char *sa_get_desc(long e, int line, bool trunc)
       case 1:
 	desc_buf[0] = '\0';	/* initialize the buffer */
 	if (sa_mode_desc_artnum) {
-	    sprintf(sa_buf,"%6d ",(int)artnum);
-	    strcat(desc_buf,sa_buf);
+	    sprintf(g_sa_buf,"%6d ",(int)artnum);
+	    strcat(desc_buf,g_sa_buf);
 	}
 	if (sc_initialized && sa_mode_desc_score) {
 	    /* we'd like the score now */
-	    sprintf(sa_buf,"[%4d] ",sc_score_art(artnum,true));
-	    strcat(desc_buf,sa_buf);
+	    sprintf(g_sa_buf,"[%4d] ",sc_score_art(artnum,true));
+	    strcat(desc_buf,g_sa_buf);
 	}
 	if (sa_mode_desc_threadcount) {
-	    sprintf(sa_buf,"(%3d) ",sa_subj_thread_count(e));
-	    strcat(desc_buf,sa_buf);
+	    sprintf(g_sa_buf,"(%3d) ",sa_subj_thread_count(e));
+	    strcat(desc_buf,g_sa_buf);
 	}
 	if (sa_mode_desc_author) {
 #if 0
 	    if (trunc)
-		sprintf(sa_buf,"%s ",padspaces(sa_desc_author(e,16),16));
+		sprintf(g_sa_buf,"%s ",padspaces(sa_desc_author(e,16),16));
 	    else
-		sprintf(sa_buf,"%s ",sa_desc_author(e,40));
-	    strcat(desc_buf,sa_buf);
+		sprintf(g_sa_buf,"%s ",sa_desc_author(e,40));
+	    strcat(desc_buf,g_sa_buf);
 #endif
 	    if (trunc)
 		strcat(desc_buf,compress_from(article_ptr(artnum)->from,16));
@@ -140,8 +140,8 @@ const char *sa_get_desc(long e, int line, bool trunc)
 	    strcat(desc_buf," ");
 	}
 	if (sa_mode_desc_subject) {
-	    sprintf(sa_buf,"%s",sa_desc_subject(e));
-	    strcat(desc_buf,sa_buf);
+	    sprintf(g_sa_buf,"%s",sa_desc_subject(e));
+	    strcat(desc_buf,g_sa_buf);
 	}
 	break;
       case 2:	/* summary line (test) */

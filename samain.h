@@ -3,6 +3,8 @@
  *
  * Main routines for article-scan mode.
  */
+#ifndef SAMAIN_H
+#define SAMAIN_H
 
 /* sa_flags character bitmap:
  * 0: If set, the article is "marked" (for reading).
@@ -27,17 +29,10 @@
 #define sa_clearauthscored(a) (sa_ents[a].sa_flags &= 0xf7)
 #define sa_authscored(a) (sa_ents[a].sa_flags & 8)
 
-/* misc. buffer */
-EXT char sa_buf[LBUFLEN];
-
-/* true if in "zoom" (display only selected) mode */
-EXT bool sa_mode_zoom INIT(false);
-
-/* if true, the already-read articles have been added to the order arrays */
-EXT bool sa_order_read INIT(false);
-
-/* contains the scan-context number for the current article scan */
-EXT int sa_scan_context INIT(-1);
+extern char g_sa_buf[LBUFLEN]; /* misc. buffer */
+extern bool g_sa_mode_zoom;    /* true if in "zoom" (display only selected) mode */
+extern bool g_sa_order_read;   /* if true, the already-read articles have been added to the order arrays */
+extern int g_sa_scan_context;  /* contains the scan-context number for the current article scan */
 
 void sa_init();
 void sa_init_ents();
@@ -50,3 +45,5 @@ bool sa_initarts();
 void sa_initmode();
 void sa_lookahead();
 long sa_readmarked_elig();
+
+#endif

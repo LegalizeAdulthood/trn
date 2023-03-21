@@ -44,7 +44,7 @@ sa_main_result sa_main()
 	    return SA_ERR;		/* we don't belong here */
 	sa_never_initialized = false;	/* we have entered at least once */
     } else
-	s_change_context(sa_scan_context);
+	s_change_context(g_sa_scan_context);
 
     /* unless "explicit" entry, read any marked articles */
     if (!sa_go_explicit) {
@@ -68,7 +68,7 @@ sa_main_result sa_main()
     if (sa_do_selthreads) {
 	sa_selthreads();
 	sa_do_selthreads = false;
-	sa_mode_zoom = true;		/* zoom in by default */
+	g_sa_mode_zoom = true;		/* zoom in by default */
 	s_top_ent = -1;		/* go to top of arts... */
     }
 
@@ -84,7 +84,7 @@ sa_main_result sa_main()
 	if (sa_mode_read_elig)
 	    g_reread = true;
     }
-    if (sa_scan_context >= 0)
+    if (g_sa_scan_context >= 0)
 	s_save_context();
     return i;
 }

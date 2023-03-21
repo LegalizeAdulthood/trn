@@ -247,14 +247,14 @@ int sa_docmd()
 	for (i = 1; i < sa_num_ents; i++)
 	    sa_ents[i].sa_flags = (sa_ents[i].sa_flags & 0xfd);
 	s_ref_status = 0;
-	if (!sa_mode_zoom)
+	if (!g_sa_mode_zoom)
 	    break;
 	s_ref_all = true;	/* otherwise won't be refreshed */
 	/* if in zoom mode, turn it off... */
 	/* FALL THROUGH */
       case 'z':	/* zoom mode toggle */
-	sa_mode_zoom = !sa_mode_zoom;
-	if (sa_unzoomrefold && !sa_mode_zoom)
+	g_sa_mode_zoom = !g_sa_mode_zoom;
+	if (sa_unzoomrefold && !g_sa_mode_zoom)
 	    sa_mode_fold = true;
 	/* toggle mode again if no elibible articles left */
 	if (sa_eligible(s_first()) || s_next_elig(s_first())) {
@@ -263,7 +263,7 @@ int sa_docmd()
 	    s_refill = true;
 	} else {
 	    s_beep();
-	    sa_mode_zoom = !sa_mode_zoom;	/* toggle it right back */
+	    g_sa_mode_zoom = !g_sa_mode_zoom;	/* toggle it right back */
 	}
 	break;
       case 'j':	/* junk just this article */
@@ -403,13 +403,13 @@ int sa_docmd()
 	break;
       case 's':	/* toggle select1 on one article */
       case 'S':	/* toggle select1 on a thread */
-	if (!sa_mode_zoom)
+	if (!g_sa_mode_zoom)
 	    s_rub_ptr();
 	(void)sa_art_cmd((*buf == 'S'),SA_SELECT,a);
 	/* if in zoom mode, selection will remove article(s) from the
 	 * page, so that moving the cursor down is unnecessary
 	 */
-	if (!sa_mark_stay && !sa_mode_zoom) {
+	if (!sa_mark_stay && !g_sa_mode_zoom) {
 	    /* go to next art on page or top of page if at bottom */
 	    if (s_ptr_page_line<(s_bot_ent))	/* more on page */
 		s_ptr_page_line +=1;
@@ -604,7 +604,7 @@ void sa_art_cmd_prim(sa_cmd cmd, long a)
       case SA_SELECT:		/* select this article */
 	if (sa_selected1(a)) {
 	    sa_clearselect1(a);
-	    if (sa_mode_zoom)
+	    if (g_sa_mode_zoom)
 		s_refill = true;	/* article is now ineligible */
 	} else
 	    sa_select1(a);

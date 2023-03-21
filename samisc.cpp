@@ -58,7 +58,7 @@ bool sa_basic_elig(long a)
     /* "run the gauntlet" style (:-) */
     if (!sa_mode_read_elig && was_read(artnum))
 	return false;
-    if (sa_mode_zoom && !sa_selected1(a))
+    if (g_sa_mode_zoom && !sa_selected1(a))
 	return false;
     if (sa_mode_order == 2)	/* score order */
 	if (!SCORED(artnum))

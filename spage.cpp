@@ -299,9 +299,9 @@ int s_fillpage()
 	    /* downgrade eligibility standards */
 	    switch (s_cur_type) {
 	      case S_ART:		/* article context */
-		if (sa_mode_zoom) {		/* we were zoomed in */
+		if (g_sa_mode_zoom) {		/* we were zoomed in */
 		    s_ref_top = true;	/* for "FOLD" display */
-		    sa_mode_zoom = false;	/* zoom out */
+		    g_sa_mode_zoom = false;	/* zoom out */
 		    if (sa_unzoomrefold)
 			sa_mode_fold = true;
 		    (void)s_go_top_ents();	/* go to top (ents and page) */
