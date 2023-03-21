@@ -88,7 +88,7 @@ add_executable(trn
     ${BISON_parsedate_OUTPUTS} parsedate.h
     patchlevel.h
     rcln.cpp rcln.h
-    rcstuff.cpp rcstuff.h rcstuff.ih
+    rcstuff.cpp rcstuff.h
     respond.cpp respond.h respond.ih
     rt-mt.cpp rt-mt.h rt-mt.ih
     rt-ov.cpp rt-ov.h rt-ov.ih

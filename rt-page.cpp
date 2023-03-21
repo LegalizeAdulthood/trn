@@ -303,7 +303,7 @@ try_again:
 	    else
 		mp->flags &= ~MF_INCLUDED;
 	}
-	if (sel_page_mp == nullptr)
+	if (g_sel_page_mp == nullptr)
 	    (void) first_page();
 	break;
       }
@@ -335,7 +335,7 @@ try_again:
 		if (!np->rc->datasrc->act_sf.fp)
 		    save_the_rest = (sel_rereading ^ (np->toread > TR_NONE));
 	    }
-	    if (paranoid) {
+	    if (g_paranoid) {
 		g_current_ng = g_ngptr = np;
 		/* this may move newsgroups around */
 		cleanup_newsrc(np->rc);
@@ -667,8 +667,8 @@ bool first_page()
 	MULTIRC* mp;
 	for (mp = multirc_low(); mp; mp = multirc_next(mp)) {
 	    if (mp->flags & MF_INCLUDED) {
-		if (sel_page_mp != mp) {
-		    sel_page_mp = mp;
+		if (g_sel_page_mp != mp) {
+		    g_sel_page_mp = mp;
 		    return true;
 		}
 		break;
@@ -762,11 +762,11 @@ bool last_page()
 
     switch (sel_mode) {
       case SM_MULTIRC: {
-	MULTIRC* mp = sel_page_mp;
-	sel_page_mp = nullptr;
+	MULTIRC* mp = g_sel_page_mp;
+	g_sel_page_mp = nullptr;
 	if (!prev_page())
-	    sel_page_mp = mp;
-	else if (mp != sel_page_mp)
+	    g_sel_page_mp = mp;
+	else if (mp != g_sel_page_mp)
 	    return true;
 	break;
       }
@@ -832,8 +832,8 @@ bool next_page()
 {
     switch (sel_mode) {
       case SM_MULTIRC: {
-	if (sel_next_mp) {
-	    sel_page_mp = sel_next_mp;
+	if (g_sel_next_mp) {
+	    g_sel_page_mp = g_sel_next_mp;
 	    sel_prior_obj_cnt += sel_page_obj_cnt;
 	    return true;
 	}
@@ -898,8 +898,8 @@ bool prev_page()
     /* Scan the items in reverse to go back a page */
     switch (sel_mode) {
       case SM_MULTIRC: {
-	MULTIRC* mp = sel_page_mp;
-	MULTIRC* page_mp = sel_page_mp;
+	MULTIRC* mp = g_sel_page_mp;
+	MULTIRC* page_mp = g_sel_page_mp;
 
 	if (!mp)
 	    mp = multirc_high();
@@ -914,8 +914,8 @@ bool prev_page()
 	    }
 	    mp = multirc_prev(mp);
 	}
-	if (sel_page_mp != page_mp) {
-	    sel_page_mp = page_mp;
+	if (g_sel_page_mp != page_mp) {
+	    g_sel_page_mp = page_mp;
 	    return true;
 	}
 	break;
@@ -1077,7 +1077,7 @@ try_again:
 
     switch (sel_mode) {
       case SM_MULTIRC: {
-	MULTIRC* mp = sel_page_mp;
+	MULTIRC* mp = g_sel_page_mp;
 	if (mp)
 	    (void) multirc_ptr(mp->num);
 	for (; mp && sel_page_item_cnt<sel_max_per_page; mp=multirc_next(mp)) {
@@ -1087,7 +1087,7 @@ try_again:
 		sel_page_item_cnt++;
 	}
 	sel_page_obj_cnt = sel_page_item_cnt;
-	sel_next_mp = mp;
+	g_sel_next_mp = mp;
 	break;
       }
       case SM_NEWSGROUP: {
@@ -1227,7 +1227,7 @@ void display_page_title(bool home_only)
 	NEWSRC* rp;
 	color_object(COLOR_HEADING, true);
 	printf("Newsgroups");
-	for (rp = multirc->first, len = 0; rp && len < 34; rp = rp->next) {
+	for (rp = g_multirc->first, len = 0; rp && len < 34; rp = rp->next) {
 	    if (rp->flags & RF_ACTIVE) {
 		sprintf(buf+len, ", %s", rp->datasrc->name);
 		len += strlen(buf+len);
@@ -1236,7 +1236,7 @@ void display_page_title(bool home_only)
 	if (rp)
 	    strcpy(buf+len, ", ...");
 	if (strcmp(buf+2,"default"))
-	    printf(" (group #%d: %s)",multirc->num, buf+2);
+	    printf(" (group #%d: %s)",g_multirc->num, buf+2);
 	color_pop();	/* of COLOR_HEADING */
     }
     if (home_only || (erase_screen && erase_each_line))
@@ -1283,14 +1283,14 @@ try_again:
     if (!sel_total_obj_cnt)
 	;
     else if (sel_mode == SM_MULTIRC) {
-	MULTIRC* mp = sel_page_mp;
+	MULTIRC* mp = g_sel_page_mp;
 	NEWSRC* rp;
 	int len;
 	if (mp)
 	    (void) multirc_ptr(mp->num);
 	for (; mp && sel_page_item_cnt<sel_max_per_page; mp=multirc_next(mp)) {
 #if 0
-	    if (mp == multirc)
+	    if (mp == g_multirc)
 		sel_item_index = sel_page_item_cnt;
 #endif
 
@@ -1319,7 +1319,7 @@ try_again:
 	    if (last_page())
 		goto try_again;
 	}
-	sel_next_mp = mp;
+	g_sel_next_mp = mp;
     }
     else if (sel_mode == SM_NEWSGROUP) {
 	NGDATA* np;
@@ -1335,7 +1335,7 @@ try_again:
 
 	    if (!np->abs1st) {
 		set_toread(np, ST_LAX);
-		if (paranoid) {
+		if (g_paranoid) {
 		    newline();
 		    g_current_ng = g_ngptr = np;
 		    /* this may move newsgroups around */

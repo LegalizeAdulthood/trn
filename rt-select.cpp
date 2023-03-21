@@ -357,7 +357,7 @@ char newsgroup_selector()
   sel_restart:
     if (*sel_grp_dmode != 's') {
 	NEWSRC* rp;
-	for (rp = multirc->first; rp; rp = rp->next) {
+	for (rp = g_multirc->first; rp; rp = rp->next) {
 	    if ((rp->flags & RF_ACTIVE) && !rp->datasrc->desc_sf.hp) {
 		find_grpdesc(rp->datasrc, "control");
 		if (rp->datasrc->desc_sf.fp)
@@ -402,7 +402,7 @@ char newsgroup_selector()
 	sel_dogroups();
 	save_selected_count = selected_count;
 	POP_SELECTOR();
-	if (multirc)
+	if (g_multirc)
 	    goto sel_restart;
 	sel_ret = 'q';
     }
@@ -425,7 +425,7 @@ char addgroup_selector(int flags)
   sel_restart:
     if (*sel_grp_dmode != 's') {
 	NEWSRC* rp;
-	for (rp = multirc->first; rp; rp = rp->next) {
+	for (rp = g_multirc->first; rp; rp = rp->next) {
 	    if ((rp->flags & RF_ACTIVE) && !rp->datasrc->desc_sf.hp) {
 		find_grpdesc(rp->datasrc, "control");
 		if (!rp->datasrc->desc_sf.fp)
@@ -459,14 +459,14 @@ char addgroup_selector(int flags)
     if (sel_ret=='\r' || sel_ret=='\n' || sel_ret=='Z' || sel_ret=='\t') {
 	ADDGROUP *gp;
 	int i;
-	addnewbydefault = ADDNEW_SUB;
+	g_addnewbydefault = ADDNEW_SUB;
 	for (gp = g_first_addgroup, i = 0; gp; gp = gp->next, i++) {
 	    if (gp->flags & NF_SEL) {
 		gp->flags &= ~NF_SEL;
 		get_ng(gp->name,flags);
 	    }
 	}
-	addnewbydefault = 0;
+	g_addnewbydefault = 0;
     }
     sel_cleanup();
     END_SELECTOR();
@@ -2089,7 +2089,7 @@ static int newsgroup_commands(char_int ch)
 	return DS_RESTART;
       case 'L':
 	switch_dmode(&sel_grp_dmode);	    /* sets msg */
-	if (*sel_grp_dmode != 's' && !multirc->first->datasrc->desc_sf.hp) {
+	if (*sel_grp_dmode != 's' && !g_multirc->first->datasrc->desc_sf.hp) {
 	    newline();
 	    return DS_RESTART;
 	}
@@ -2309,7 +2309,7 @@ q does nothing.\n\n\
 	POP_SELECTOR();
 	switch (ret) {
 	  case ING_NOSERVER:
-	    if (multirc) {
+	    if (g_multirc) {
 		if (!was_at_top)
 		    (void) first_page();
 		return DS_RESTART;
@@ -2530,14 +2530,14 @@ static int multirc_commands(char_int ch)
     switch (ch) {
       case 'R':
 	set_selector(sel_mode, sel_sort * -sel_direction);
-	sel_page_mp = nullptr;
+	g_sel_page_mp = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'E':
 	if (!sel_rereading)
 	    sel_cleanup();
 	sel_exclusive = !sel_exclusive;
-	sel_page_mp = nullptr;
+	g_sel_page_mp = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case '/':

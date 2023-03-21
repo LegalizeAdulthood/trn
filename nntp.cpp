@@ -514,12 +514,12 @@ int nntp_handle_timeout()
 
 void nntp_server_died(DATASRC *dp)
 {
-    MULTIRC* mp = multirc;
+    MULTIRC* mp = g_multirc;
     close_datasrc(dp);
     dp->flags |= DF_UNAVAILABLE;
     unuse_multirc(mp);
     if (!use_multirc(mp))
-	multirc = nullptr;
+	g_multirc = nullptr;
     fprintf(stderr,"\n%s\n", g_ser_line);
     get_anything();
 }

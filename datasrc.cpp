@@ -965,7 +965,7 @@ int find_close_match()
     }
 
     if (ret < 0) {
-	hashwalk(newsrc_hash, check_distance, 1);
+	hashwalk(g_newsrc_hash, check_distance, 1);
 	ret = 0;
     }
 

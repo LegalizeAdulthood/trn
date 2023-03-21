@@ -153,10 +153,10 @@ void do_multirc()
 	if (ch != 'Q') {
 	    /* section copied from bug_out below */
 	    /* now write the newsrc(s) back out */
-	    if (!write_newsrcs(multirc))
+	    if (!write_newsrcs(g_multirc))
 		restore_old_newsrc = true; /*$$ ask to retry! */
 	    if (restore_old_newsrc)
-		get_old_newsrcs(multirc);
+		get_old_newsrcs(g_multirc);
 	    finalize(0);
 	}
     }
@@ -165,11 +165,11 @@ void do_multirc()
       ng_start_sel:
 	switch (newsgroup_selector()) {
 	case Ctl('n'):
-	    use_next_multirc(multirc);
+	    use_next_multirc(g_multirc);
 	    end_only();
 	    goto ng_start_sel;
 	case Ctl('p'):
-	    use_prev_multirc(multirc);
+	    use_prev_multirc(g_multirc);
 	    end_only();
 	    goto ng_start_sel;
 	case 'q':
@@ -236,7 +236,7 @@ void do_multirc()
 		    shoe_fits = inlist(ngname);
 		    if (shoe_fits)
 			set_toread(g_ngptr, ST_LAX);
-		    if (paranoid) {
+		    if (g_paranoid) {
 			g_recent_ng = g_current_ng;
 			g_current_ng = g_ngptr;
 			cleanup_newsrc(g_ngptr->rc); /* this may move newsgroups around */
@@ -310,7 +310,7 @@ void do_multirc()
 	    case ING_RESTART:
 		goto restart;
 	    case ING_NOSERVER:
-		if (multirc)
+		if (g_multirc)
 		    goto restart;
 		goto bug_out;
 	    case ING_SPECIAL:
@@ -333,10 +333,10 @@ void do_multirc()
 
 bug_out:
     /* now write the newsrc(s) back out */
-    if (!write_newsrcs(multirc))
+    if (!write_newsrcs(g_multirc))
 	restore_old_newsrc = true; /*$$ ask to retry! */
     if (restore_old_newsrc)
-	get_old_newsrcs(multirc);
+	get_old_newsrcs(g_multirc);
 
     set_mode(gmode_save,mode_save);
 }
@@ -377,7 +377,7 @@ int input_newsgroup()
 	if (g_ngptr) {
 	    if (!get_ng(g_ngptr->rcline,0))
 		set_ng(g_current_ng);
-	    addnewbydefault = 0;
+	    g_addnewbydefault = 0;
 	}
 	return ING_SPECIAL;
       case 'x':
@@ -387,7 +387,7 @@ int input_newsgroup()
 	if (*buf != 'y')
 	    break;
 	printf("\nThe abandoned changes are in %s.new.\n",
-	       multirc_name(multirc)) FLUSH;
+	       multirc_name(g_multirc)) FLUSH;
 	termdown(2);
 	restore_old_newsrc = true;
 	return ING_QUIT;
@@ -484,7 +484,7 @@ int input_newsgroup()
 	/* try to find newsgroup */
 	if (!get_ng(ngname,(*buf=='m'?GNG_RELOC:0) | GNG_FUZZY))
 	    g_ngptr = g_current_ng;	/* if not found, go nowhere */
-	addnewbydefault = 0;
+	g_addnewbydefault = 0;
 	return ING_SPECIAL;
 #ifdef DEBUG
       case 'D':
@@ -500,17 +500,17 @@ int input_newsgroup()
       case Ctl('n'):		/* next newsrc list */
 	end_only();
 	newline();
-	use_next_multirc(multirc);
+	use_next_multirc(g_multirc);
 	goto display_multirc;
       case Ctl('p'):		/* prev newsrc list */
 	end_only();
 	newline();
-	use_prev_multirc(multirc);
+	use_next_multirc(g_multirc);
       display_multirc:
       {
 	NEWSRC* rp;
 	int len;
-	for (rp = multirc->first, len = 0; rp && len < 66; rp = rp->next) {
+	for (rp = g_multirc->first, len = 0; rp && len < 66; rp = rp->next) {
 	    if (rp->flags & RF_ACTIVE) {
 		sprintf(buf+len, ", %s", rp->datasrc->name);
 		len += strlen(buf+len);
@@ -518,7 +518,7 @@ int input_newsgroup()
 	}
 	if (rp)
 	    strcpy(buf+len, ", ...");
-	printf("\nUsing newsrc group #%d: %s.\n",multirc->num,buf+2);
+	printf("\nUsing newsrc group #%d: %s.\n",g_multirc->num,buf+2);
 	termdown(3);
 	return ING_RESTART;
       }
@@ -631,11 +631,11 @@ reask_abandon:
 	switch (newsgroup_selector()) {
 	  case Ctl('n'):
 	    end_only();
-	    use_next_multirc(multirc);
+	    use_next_multirc(g_multirc);
 	    goto ng_start_sel;
 	  case Ctl('p'):
 	    end_only();
-	    use_prev_multirc(multirc);
+	    use_prev_multirc(g_multirc);
 	    goto ng_start_sel;
 	  case 'q':
 	     return ING_QUIT;
@@ -746,12 +746,12 @@ void trn_version()
 # endif
     print_lines(msg, NOMARKING);
 
-    if (multirc) {
+    if (g_multirc) {
 	NEWSRC* rp;
 	newline();
-	sprintf(msg,"News source group #%d:\n\n", multirc->num);
+	sprintf(msg,"News source group #%d:\n\n", g_multirc->num);
 	print_lines(msg, NOMARKING);
-	for (rp = multirc->first; rp; rp = rp->next) {
+	for (rp = g_multirc->first; rp; rp = rp->next) {
 	    if (!(rp->flags & RF_ACTIVE))
 		continue;
 	    sprintf(msg,"ID %s:\nNewsrc %s.\n",rp->datasrc->name,rp->name);

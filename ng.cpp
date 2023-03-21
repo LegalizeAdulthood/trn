@@ -507,7 +507,7 @@ cleanup2:
     if (!univ_ng_virtflag &&
 	!(univ_read_virtflag && !(univ_follow || univ_follow_temp))) {
 	if (!unsafe_rc_saves) {
-	    if (!write_newsrcs(multirc)) /* and update .newsrc */
+	    if (!write_newsrcs(g_multirc)) /* and update .newsrc */
 		get_anything();
 	    update_thread_kfile();
 	}

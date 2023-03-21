@@ -102,7 +102,7 @@ void final_init()
 
     chdir(g_tmp_dir);
     if (!checkflag)
-	unuse_multirc(multirc);
+	unuse_multirc(g_multirc);
     if (g_datasrc_list) {
 	DATASRC* dp;
 	for (dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp))
@@ -207,8 +207,8 @@ Signal_t sig_catcher(int signo)
 	bits_to_rc();			/* then do so (hope this works) */
     }
     g_doing_ng = false;
-    if (!write_newsrcs(multirc)) {	/* write anything that's changed */
-	/*$$ get_old_newsrcs(multirc);  ?? */
+    if (!write_newsrcs(g_multirc)) {	/* write anything that's changed */
+	/*$$ get_old_newsrcs(g_multirc);  ?? */
     }
     update_thread_kfile();
 

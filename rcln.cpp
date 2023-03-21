@@ -56,7 +56,7 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
 	np->toread = TR_NONE;
     }
     np->rc->flags |= RF_RCCHANGED;
-    if (!write_newsrcs(multirc))
+    if (!write_newsrcs(g_multirc))
 	get_anything();
 }
 
@@ -97,7 +97,7 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
 	printf("\nCorrupt Xref line!!!  %ld --> %s(1..%ld)\n",
 	    artnum,ngnam,
 	    np->ngmax) FLUSH;
-	paranoid = true;		/* paranoia reigns supreme */
+	g_paranoid = true;		/* paranoia reigns supreme */
 	return -1;			/* hope this was the first newsgroup */
     }
 #endif
@@ -346,7 +346,7 @@ void set_toread(NGDATA *np, bool lax_high_check)
 	    printf("\nInvalid (bogus) newsgroup found: %s\n",np->rcline)
 	      FLUSH;
 	}
-	paranoid = true;
+	g_paranoid = true;
 	if (virgin_ng || np->toread >= g_ng_min_toread) {
 	    g_newsgroup_toread--;
 	    g_missing_count++;
@@ -391,7 +391,7 @@ void set_toread(NGDATA *np, bool lax_high_check)
 		   np->rcline) FLUSH;
 	}
 	*(np->rcline + np->numoffset) = '\0';
-	paranoid = true;		/* enough to make a guy paranoid */
+	g_paranoid = true;		/* enough to make a guy paranoid */
 	np->rc->flags |= RF_RCCHANGED;
     }
     if (np->subscribechar == NEGCHAR)

@@ -20,32 +20,60 @@
 #include "trn.h"
 #include "env.h"
 #include "init.h"
-#include "intrp.h"
 #include "only.h"
 #include "rcln.h"
 #include "last.h"
 #include "autosub.h"
 #include "rt-select.h"
 #include "rt-page.h"
-#include "INTERN.h"
 #include "rcstuff.h"
-#include "rcstuff.ih"
 
-static bool foundany;
+HASHTABLE *g_newsrc_hash{};
+MULTIRC *g_sel_page_mp{};
+MULTIRC *g_sel_next_mp{};
+LIST *g_multirc_list{}; /* a list of all MULTIRCs */
+MULTIRC *g_multirc{};   /* the current MULTIRC */
+bool g_paranoid{};      /* did we detect some inconsistency in .newsrc? */
+int g_addnewbydefault{};
+
+enum
+{
+    RI_ID = 1,
+    RI_NEWSRC = 2,
+    RI_ADDGROUPS = 3
+};
+
+static INI_WORDS s_rcgroups_ini[] = {
+    { 0, "RCGROUPS", 0 },
+    { 0, "ID", 0 },
+    { 0, "Newsrc", 0 },
+    { 0, "Add Groups", 0 },
+    { 0, 0, 0 }
+};
+static bool s_foundany{};
+
+static bool clear_ngitem(char *cp, int arg);
+static bool lock_newsrc(NEWSRC *rp);
+static void unlock_newsrc(NEWSRC *rp);
+static bool open_newsrc(NEWSRC *rp);
+static void init_ngnode(LIST *list, LISTNODE *node);
+static void parse_rcline(NGDATA *np);
+static NGDATA *add_newsgroup(NEWSRC *rp, char *ngn, char_int c);
+static int rcline_cmp(const char *key, int keylen, HASHDATUM data);
 
 bool rcstuff_init()
 {
     MULTIRC* mptr = nullptr;
     int i;
 
-    multirc_list = new_list(0,0,sizeof(MULTIRC),20,LF_ZERO_MEM|LF_SPARSE,nullptr);
+    g_multirc_list = new_list(0,0,sizeof(MULTIRC),20,LF_ZERO_MEM|LF_SPARSE,nullptr);
 
     if (g_trnaccess_mem) {
 	NEWSRC* rp;
 	char* s;
 	char* section;
 	char* cond;
-	char** vals = prep_ini_words(rcgroups_ini);
+	char** vals = prep_ini_words(s_rcgroups_ini);
 	s = g_trnaccess_mem;
 	while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
 	    if (*cond && !check_ini_cond(cond))
@@ -55,7 +83,7 @@ bool rcstuff_init()
 	    i = atoi(section+6);
 	    if (i < 0)
 		i = 0;
-	    s = parse_ini_section(s, rcgroups_ini);
+	    s = parse_ini_section(s, s_rcgroups_ini);
 	    if (!s)
 		break;
 	    rp = new_newsrc(vals[RI_ID],vals[RI_NEWSRC],vals[RI_ADDGROUPS]);
@@ -87,10 +115,10 @@ bool rcstuff_init()
     if (UseNewsrcSelector && !checkflag)
 	return true;
 
-    foundany = false;
+    s_foundany = false;
     if (mptr && !use_multirc(mptr))
 	use_next_multirc(mptr);
-    if (!multirc) {
+    if (!g_multirc) {
 	mptr = multirc_ptr(0);
 	mptr->first = new_newsrc("default",nullptr,nullptr);
 	if (!use_multirc(mptr)) {
@@ -99,8 +127,8 @@ bool rcstuff_init()
 	}
     }
     if (checkflag)			/* were we just checking? */
-	finalize(foundany);		/* tell them what we found */
-    return foundany;
+	finalize(s_foundany);		/* tell them what we found */
+    return s_foundany;
 }
 
 NEWSRC *new_newsrc(char *name, char *newsrc, char *add_ok)
@@ -169,9 +197,9 @@ bool use_multirc(MULTIRC *mp)
 	get_anything();
     if (!had_success)
 	return false;
-    multirc = mp;
+    g_multirc = mp;
 #ifdef NO_FILELINKS
-    if (!write_newsrcs(multirc))
+    if (!write_newsrcs(g_multirc))
 	get_anything();
 #endif
     return true;
@@ -193,7 +221,7 @@ void unuse_multirc(MULTIRC *mptr)
     }
     if (g_ngdata_list) {
 	close_cache();
-	hashdestroy(newsrc_hash);
+	hashdestroy(g_newsrc_hash);
 	walk_list(g_ngdata_list, clear_ngitem, 0);
 	delete_list(g_ngdata_list);
 	g_ngdata_list = nullptr;
@@ -208,7 +236,7 @@ void unuse_multirc(MULTIRC *mptr)
     g_ngdata_cnt = 0;
     g_newsgroup_cnt = 0;
     g_newsgroup_toread = 0;
-    multirc = nullptr;
+    g_multirc = nullptr;
 }
 
 bool use_next_multirc(MULTIRC *mptr)
@@ -452,7 +480,7 @@ static bool open_newsrc(NEWSRC *rp)
     if (!g_ngdata_list) {
 	/* allocate memory for rc file globals */
 	g_ngdata_list = new_list(0, 0, sizeof (NGDATA), 200, 0, init_ngnode);
-	newsrc_hash = hashcreate(3001, rcline_cmp);
+	g_newsrc_hash = hashcreate(3001, rcline_cmp);
     }
 
     if (g_ngdata_cnt)
@@ -494,7 +522,7 @@ static bool open_newsrc(NEWSRC *rp)
 	    continue;
 	}
 	parse_rcline(np);
-	data = hashfetch(newsrc_hash, np->rcline, np->numoffset - 1);
+	data = hashfetch(g_newsrc_hash, np->rcline, np->numoffset - 1);
 	if (data.dat_ptr) {
 	    np->toread = TR_IGNORE;
 	    continue;
@@ -508,14 +536,14 @@ static bool open_newsrc(NEWSRC *rp)
 
 	/* now find out how much there is to read */
 
-	if (!inlist(buf) || (suppress_cn && foundany && !paranoid))
+	if (!inlist(buf) || (suppress_cn && s_foundany && !g_paranoid))
 	    np->toread = TR_NONE;	/* no need to calculate now */
 	else
 	    set_toread(np, ST_LAX);
 	if (np->toread > TR_NONE) {	/* anything unread? */
-	    if (!foundany) {
+	    if (!s_foundany) {
 		g_starthere = np;
-		foundany = true;	/* remember that fact*/
+		s_foundany = true;	/* remember that fact*/
 	    }
 	    if (suppress_cn) {		/* if no listing desired */
 		if (checkflag)		/* if that is all they wanted */
@@ -587,7 +615,7 @@ static bool open_newsrc(NEWSRC *rp)
     }
     rp->datasrc->lastnewgrp = g_lastnewtime;
 
-    if (paranoid && !checkflag)
+    if (g_paranoid && !checkflag)
 	cleanup_newsrc(rp);
     return true;
 }
@@ -709,7 +737,7 @@ bool get_ng(const char *what, int flags)
     g_ngptr = find_ng(ngname);
     if (g_ngptr == nullptr) {		/* not in .newsrc? */
 	NEWSRC* rp;
-	for (rp = multirc->first; rp; rp = rp->next) {
+	for (rp = g_multirc->first; rp; rp = rp->next) {
 	    if (!ALLBITS(rp->flags, RF_ADD_GROUPS | RF_ACTIVE))
 		continue;
 	    /*$$ this may scan a datasrc multiple times... */
@@ -728,7 +756,7 @@ bool get_ng(const char *what, int flags)
 	    goto check_fuzzy_match;
 	}
 	if (mode != 'i' || !(autosub = auto_subscribe(ngname)))
-	    autosub = addnewbydefault;
+	    autosub = g_addnewbydefault;
 	if (autosub) {
 	    if (append_unsub) {
 		printf("(Adding %s to end of your .newsrc %ssubscribed)\n",
@@ -784,7 +812,7 @@ y or SP to subscribe, Y to subscribe all new groups, N to unsubscribe all\n",
 		flags |= GNG_RELOC;
 	    }
 	    else if (*buf == 'Y') {
-		addnewbydefault = ADDNEW_SUB;
+		g_addnewbydefault = ADDNEW_SUB;
 		if (append_unsub)
 		    printf("(Adding %s to end of your .newsrc subscribed)\n",
 			   ngname) FLUSH;
@@ -795,7 +823,7 @@ y or SP to subscribe, Y to subscribe all new groups, N to unsubscribe all\n",
 		flags &= ~GNG_RELOC;
 	    }
 	    else if (*buf == 'N') {
-		addnewbydefault = ADDNEW_UNSUB;
+		g_addnewbydefault = ADDNEW_UNSUB;
 		if (append_unsub) {
 		    printf("(Adding %s to end of your .newsrc unsubscribed)\n",
 			   ngname) FLUSH;
@@ -1104,7 +1132,7 @@ NGDATA *find_ng(const char *ngnam)
 {
     HASHDATUM data;
 
-    data = hashfetch(newsrc_hash, ngnam, strlen(ngnam));
+    data = hashfetch(g_newsrc_hash, ngnam, strlen(ngnam));
     return (NGDATA*)data.dat_ptr;
 }
 
@@ -1174,7 +1202,7 @@ Type n or SP to leave them at the end in case they return.\n\
 	    ;
 	else if (*buf == 'y') {
 	    for (np = g_last_ng; np && np->toread == TR_BOGUS; np = np->prev) {
-		hashdelete(newsrc_hash, np->rcline, np->numoffset - 1);
+		hashdelete(g_newsrc_hash, np->rcline, np->numoffset - 1);
 		clear_ngitem((char*)np,0);
 		g_newsgroup_cnt--;
 	    }
@@ -1200,7 +1228,7 @@ Type n or SP to leave them at the end in case they return.\n\
 	    goto reask_bogus;
 	}
     }
-    paranoid = false;
+    g_paranoid = false;
 }
 
 /* make an entry in the hash table for the current newsgroup */
@@ -1210,7 +1238,7 @@ void sethash(NGDATA *np)
     HASHDATUM data;
     data.dat_ptr = (char*)np;
     data.dat_len = np->numoffset - 1;
-    hashstore(newsrc_hash, np->rcline, data.dat_len, data);
+    hashstore(g_newsrc_hash, np->rcline, data.dat_len, data);
 }
 
 static int rcline_cmp(const char *key, int keylen, HASHDATUM data)
@@ -1231,7 +1259,7 @@ void checkpoint_newsrcs()
 #endif
     if (g_doing_ng)
 	bits_to_rc();			/* do not restore M articles */
-    if (!write_newsrcs(multirc))
+    if (!write_newsrcs(g_multirc))
 	get_anything();
 #ifdef DEBUG
     if (debug & DEB_CHECKPOINTING) {

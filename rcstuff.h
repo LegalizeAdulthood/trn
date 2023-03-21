@@ -1,6 +1,8 @@
 /* rcstuff.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef RCSTUFF_H
+#define RCSTUFF_H
 
 #define TR_ONE ((ART_UNREAD) 1)
 #define TR_NONE ((ART_UNREAD) 0)
@@ -10,20 +12,24 @@
 #define TR_BOGUS ((ART_UNREAD) -3)
 #define TR_JUNK ((ART_UNREAD) -4)
 
-#define NF_SEL		0x01
-#define NF_DEL		0x02
-#define NF_DELSEL	0x04
-#define NF_INCLUDED	0x10
-#define NF_UNTHREADED	0x40
-#define NF_VISIT	0x80
+enum
+{
+    NF_SEL = 0x01,
+    NF_DEL = 0x02,
+    NF_DELSEL = 0x04,
+    NF_INCLUDED = 0x10,
+    NF_UNTHREADED = 0x40,
+    NF_VISIT = 0x80
+};
 
 #define ADDNEW_SUB ':'
 #define ADDNEW_UNSUB '!'
 
-#define GNG_RELOC	0x0001
-#define GNG_FUZZY	0x0002
-
-EXT HASHTABLE* newsrc_hash INIT(nullptr);
+enum
+{
+    GNG_RELOC = 0x0001,
+    GNG_FUZZY = 0x0002
+};
 
 struct NEWSRC
 {
@@ -37,11 +43,14 @@ struct NEWSRC
     int		flags;
 };
 
-#define RF_ADD_NEWGROUPS 0x0001
-#define RF_ADD_GROUPS	 0x0002
-#define RF_OPEN		 0x0100
-#define RF_ACTIVE	 0x0200
-#define RF_RCCHANGED	 0x0400
+enum
+{
+    RF_ADD_NEWGROUPS = 0x0001,
+    RF_ADD_GROUPS = 0x0002,
+    RF_OPEN = 0x0100,
+    RF_ACTIVE = 0x0200,
+    RF_RCCHANGED = 0x0400
+};
 
 struct MULTIRC {
     NEWSRC* first;
@@ -49,23 +58,25 @@ struct MULTIRC {
     int flags;
 };
 
-#define MF_SEL		0x0001
-#define MF_INCLUDED	0x0010
+enum
+{
+    MF_SEL = 0x0001,
+    MF_INCLUDED = 0x0010
+};
 
-EXT MULTIRC* sel_page_mp;
-EXT MULTIRC* sel_next_mp;
+#define multirc_ptr(n)  ((MULTIRC*)listnum2listitem(g_multirc_list,(long)(n)))
+#define multirc_low()   ((MULTIRC*)listnum2listitem(g_multirc_list,existing_listnum(g_multirc_list,0L,1)))
+#define multirc_high()  ((MULTIRC*)listnum2listitem(g_multirc_list,existing_listnum(g_multirc_list,g_multirc_list->high,-1)))
+#define multirc_next(p) ((MULTIRC*)next_listitem(g_multirc_list,(char*)(p)))
+#define multirc_prev(p) ((MULTIRC*)prev_listitem(g_multirc_list,(char*)(p)))
 
-#define multirc_ptr(n)  ((MULTIRC*)listnum2listitem(multirc_list,(long)(n)))
-#define multirc_low()   ((MULTIRC*)listnum2listitem(multirc_list,existing_listnum(multirc_list,0L,1)))
-#define multirc_high()  ((MULTIRC*)listnum2listitem(multirc_list,existing_listnum(multirc_list,multirc_list->high,-1)))
-#define multirc_next(p) ((MULTIRC*)next_listitem(multirc_list,(char*)(p)))
-#define multirc_prev(p) ((MULTIRC*)prev_listitem(multirc_list,(char*)(p)))
-
-EXT LIST* multirc_list;	/* a list of all MULTIRCs */
-EXT MULTIRC* multirc;		/* the current MULTIRC */
-
-EXT bool paranoid INIT(false);	/* did we detect some inconsistency in .newsrc? */
-EXT int addnewbydefault INIT(0);
+extern HASHTABLE *g_newsrc_hash;
+extern MULTIRC *g_sel_page_mp;
+extern MULTIRC *g_sel_next_mp;
+extern LIST *g_multirc_list; /* a list of all MULTIRCs */
+extern MULTIRC *g_multirc;   /* the current MULTIRC */
+extern bool g_paranoid;      /* did we detect some inconsistency in .newsrc? */
+extern int g_addnewbydefault;
 
 bool rcstuff_init();
 NEWSRC *new_newsrc(char *name, char *newsrc, char *add_ok);
@@ -84,3 +95,5 @@ void sethash(NGDATA *np);
 void checkpoint_newsrcs();
 bool write_newsrcs(MULTIRC *mptr);
 void get_old_newsrcs(MULTIRC *mptr);
+
+#endif

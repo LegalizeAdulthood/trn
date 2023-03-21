@@ -78,7 +78,7 @@ bool find_new_groups()
 	return false
 	;
 
-    for (rp = multirc->first; rp; rp = rp->next) {
+    for (rp = g_multirc->first; rp; rp = rp->next) {
 	if (ALLBITS(rp->flags, RF_ADD_NEWGROUPS | RF_ACTIVE)) {
 	    if (rp->datasrc->flags & DF_REMOTE)
 		new_nntp_groups(rp->datasrc);
@@ -86,7 +86,7 @@ bool find_new_groups()
 		new_local_groups(rp->datasrc);
 	}
     }
-    addnewbydefault = 0;
+    g_addnewbydefault = 0;
 
     process_list(GNG_RELOC);
 
@@ -100,7 +100,7 @@ static void process_list(int flag)
 
     if (!flag) {
 	sprintf(cmd_buf,"\nUnsubscribed but mentioned in your current newsrc%s:\n",
-		multirc->first->next? "s" : "");
+		g_multirc->first->next? "s" : "");
 	print_lines(cmd_buf, STANDOUT);
     }
     if ((node = g_first_addgroup) != nullptr && flag && UseAddSelector)
