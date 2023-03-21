@@ -72,16 +72,16 @@ void sa_set_screen()
 {
     /* One size fits all for now. */
     /* these things here because they may vary by screen size later */
-    s_top_lines = 1;
-    s_bot_lines = 1;
-    s_status_cols = 3;
-    s_cursor_cols = 2;
+    g_s_top_lines = 1;
+    g_s_bot_lines = 1;
+    g_s_status_cols = 3;
+    g_s_cursor_cols = 2;
 
-    if (s_itemnum)
-	s_itemnum_cols = 3;
+    if (g_s_itemnum)
+	g_s_itemnum_cols = 3;
     else
-	s_itemnum_cols = 0;
+	g_s_itemnum_cols = 0;
 
     /* (scr_width-1) keeps last character blank. */
-    s_desc_cols = (scr_width-1) -s_status_cols -s_cursor_cols -s_itemnum_cols;
+    g_s_desc_cols = (scr_width-1) -g_s_status_cols -g_s_cursor_cols -g_s_itemnum_cols;
 }

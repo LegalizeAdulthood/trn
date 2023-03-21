@@ -38,8 +38,8 @@ void s_mail_and_place()
     printf("%s",g_mailcall);
 #endif /* MAILCALL */
     /* print page status wrt all entries */
-    previous = (0 != s_prev_elig(page_ents[0].entnum));
-    next = (0 != s_next_elig(page_ents[s_bot_ent].entnum));
+    previous = (0 != s_prev_elig(g_page_ents[0].entnum));
+    next = (0 != s_next_elig(g_page_ents[g_s_bot_ent].entnum));
     if (previous && next)
 	printf("-MIDDLE-");		/* middle of entries */
     else if (next && !previous)
@@ -53,24 +53,24 @@ void s_mail_and_place()
 void s_refresh_top()
 {
     home_cursor();
-    switch (s_cur_type) {
+    switch (g_s_cur_type) {
       case S_ART:
 	sa_refresh_top();
 	break;
     }
-    s_ref_top = false;
+    g_s_ref_top = false;
 }
 
 void s_refresh_bot()
 {
     /* if bottom bar exists, then it is at least one character high... */
-    s_goxy(0,tc_LINES-s_bot_lines);
-    switch (s_cur_type) {
+    s_goxy(0,tc_LINES-g_s_bot_lines);
+    switch (g_s_cur_type) {
       case S_ART:
 	sa_refresh_bot();
 	break;
     }
-    s_ref_bot = false;
+    g_s_ref_bot = false;
 }
 
 /* refresh both status and description */
@@ -79,29 +79,29 @@ void s_refresh_entzone()
     int i;
     int start;		/* starting page_arts index to refresh... */
 
-    if (s_ref_status < s_ref_desc) {
+    if (g_s_ref_status < g_s_ref_desc) {
 	/* refresh status characters up to (not including) desc_line */
-	for (i = s_ref_status; i <= s_bot_ent && i < s_ref_desc; i++)
+	for (i = g_s_ref_status; i <= g_s_bot_ent && i < g_s_ref_desc; i++)
 	    s_refresh_description(i);
 	start = i;
     } else {
-	for (i = s_ref_desc; i <= s_bot_ent && i < s_ref_status; i++)
+	for (i = g_s_ref_desc; i <= g_s_bot_ent && i < g_s_ref_status; i++)
 	    s_refresh_status(i);
 	start = i;
     }
-    for (i = start; i <= s_bot_ent; i++)
+    for (i = start; i <= g_s_bot_ent; i++)
 	s_ref_entry(i,i==start);
     /* clear to end of screen */
     clear_rest();
     /* now we need to redraw the bottom status line */
-    s_ref_bot = true;
-    s_ref_status = s_ref_desc = -1;
+    g_s_ref_bot = true;
+    g_s_ref_status = g_s_ref_desc = -1;
 }
 
 void s_place_ptr()
 {
-    s_goxy(s_status_cols,
-	    s_top_lines+page_ents[s_ptr_page_line].start_line);
+    s_goxy(g_s_status_cols,
+	    g_s_top_lines+g_page_ents[g_s_ptr_page_line].start_line);
     putchar('>');
     fflush(stdout);
 }
@@ -113,10 +113,10 @@ void s_refresh_status(int line)
     int i,j;
     long ent;
 
-    ent = page_ents[line].entnum;
+    ent = g_page_ents[line].entnum;
     assert(line <= s_bot_ent);	/* better be refreshing on-page */
-    s_goxy(0,s_top_lines+page_ents[line].start_line);
-    j = page_ents[line].lines;
+    s_goxy(0,g_s_top_lines+g_page_ents[line].start_line);
+    j = g_page_ents[line].lines;
     for (i = 1; i <= j; i++)
 	printf("%s\n",s_get_statchars(ent,i));
     fflush(stdout);
@@ -127,14 +127,14 @@ void s_refresh_description(int line)
     int i,j,startline;
     long ent;
 
-    ent = page_ents[line].entnum;
+    ent = g_page_ents[line].entnum;
     assert(line <= s_bot_ent);	/* better be refreshing on-page */
-    startline = s_top_lines+page_ents[line].start_line;
-    j = page_ents[line].lines;
+    startline = g_s_top_lines+g_page_ents[line].start_line;
+    j = g_page_ents[line].lines;
     for (i = 1; i <= j; i++) {
-	s_goxy(s_status_cols+s_cursor_cols,(i-1)+startline);
+	s_goxy(g_s_status_cols+g_s_cursor_cols,(i-1)+startline);
 	/* allow flexible format later? */
-	if (s_itemnum_cols) {
+	if (g_s_itemnum_cols) {
 	    if (i == 1) {	/* first description line */
 		if (line < 99)
 		    printf("%2d ",line+1);
@@ -156,15 +156,15 @@ void s_ref_entry(int line, int jump)
     int i,j;
     long ent;
 
-    ent = page_ents[line].entnum;
+    ent = g_page_ents[line].entnum;
     assert(line <= s_bot_ent);	/* better be refreshing on-page */
     if (jump)
-	s_goxy(0,s_top_lines+page_ents[line].start_line);
-    j = page_ents[line].lines;
+	s_goxy(0,g_s_top_lines+g_page_ents[line].start_line);
+    j = g_page_ents[line].lines;
     for (i = 1; i <= j; i++) {
 /* later replace middle with variable #spaces routine */
 	printf("%s%s",s_get_statchars(ent,i),"  ");
-	if (s_itemnum_cols) {
+	if (g_s_itemnum_cols) {
 	    if (i == 1) {	/* first description line */
 		if (line < 99)
 		    printf("%2d ",line+1);
@@ -188,28 +188,28 @@ void s_refresh()
 {
     int i;
 
-    if (s_ref_all) {
+    if (g_s_ref_all) {
 	clear();	/* make a clean slate */
-	s_ref_desc = s_ref_status = 0;
+	g_s_ref_desc = g_s_ref_status = 0;
     }
-    if ((s_ref_all || s_ref_top) && s_top_lines>0)
+    if ((g_s_ref_all || g_s_ref_top) && g_s_top_lines>0)
 	s_refresh_top();
-    if (s_ref_all || ((s_ref_status>=0) && (s_ref_desc>=0)))
+    if (g_s_ref_all || ((g_s_ref_status>=0) && (g_s_ref_desc>=0)))
 	s_refresh_entzone();
     else {
-	if (s_ref_status>=0) {
-	    for (i = s_ref_status; i <= s_bot_ent; i++)
+	if (g_s_ref_status>=0) {
+	    for (i = g_s_ref_status; i <= g_s_bot_ent; i++)
 		s_refresh_status(i);
 	}
-	if (s_ref_desc >= 0) {
-	    for (i = s_ref_desc; i <= s_bot_ent; i++)
+	if (g_s_ref_desc >= 0) {
+	    for (i = g_s_ref_desc; i <= g_s_bot_ent; i++)
 		s_refresh_description(i);
 	}
     }
-    s_ref_status = s_ref_desc = -1;
-    if ((s_ref_all || s_ref_bot) && s_bot_lines > 0)
+    g_s_ref_status = g_s_ref_desc = -1;
+    if ((g_s_ref_all || g_s_ref_bot) && g_s_bot_lines > 0)
 	s_refresh_bot();
-    s_ref_all = false;
+    g_s_ref_all = false;
 }
 
 int s_initscreen()
@@ -230,8 +230,8 @@ int s_initscreen()
 void s_ref_status_onpage(long ent)
 {
     int i;
-    for (i = 0; i <= s_bot_ent; i++)
-	if (page_ents[i].entnum == ent)
+    for (i = 0; i <= g_s_bot_ent; i++)
+	if (g_page_ents[i].entnum == ent)
 	    s_refresh_status(i);
 }
 

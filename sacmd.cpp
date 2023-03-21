@@ -44,7 +44,7 @@ int sa_docmd()
     /*$$bool flag;*/		/* misc */
     ART_NUM artnum;
 
-    a = (long)page_ents[s_ptr_page_line].entnum;
+    a = (long)g_page_ents[g_s_ptr_page_line].entnum;
     artnum = sa_ents[a].artnum;
 
     switch(*buf) {
@@ -74,39 +74,39 @@ int sa_docmd()
 	    }
 	}
 	sc_kill_threshold(i);
-	s_refill = true;
-	s_ref_top = true;	/* refresh # of articles */
+	g_s_refill = true;
+	g_s_ref_top = true;	/* refresh # of articles */
 	break;
       case 'D':	/* kill unmarked "on" page */
-	for (i = 0; i <= s_bot_ent; i++)
+	for (i = 0; i <= g_s_bot_ent; i++)
     /* This is a difficult decision, with no obviously good behavior. */
     /* Do not kill threads with the first article marked, as it is probably
      * not what the user wanted.
      */
-	    if (!sa_marked(page_ents[i].entnum) || !sa_mode_fold)
+	    if (!sa_marked(g_page_ents[i].entnum) || !sa_mode_fold)
 		(void)sa_art_cmd(sa_mode_fold,SA_KILL_UNMARKED,
-                                 page_ents[i].entnum);
+                                 g_page_ents[i].entnum);
 /* consider: should it start reading? */
 	b = sa_readmarked_elig();
 	if (b) {
 	    sa_clearmark(b);
 	    return b;
 	}
-	s_ref_top = true;	/* refresh # of articles */
-	s_refill = true;
+	g_s_ref_top = true;	/* refresh # of articles */
+	g_s_refill = true;
 	break;
       case 'J':	/* kill marked "on" page */
 	/* If in "fold" mode, kill threads with the first article marked */
 	if (sa_mode_fold) {
-	    for (i = 0; i <= s_bot_ent; i++) {
-		if (sa_marked(page_ents[i].entnum))
-		    (void)sa_art_cmd(true,SA_KILL,page_ents[i].entnum);
+	    for (i = 0; i <= g_s_bot_ent; i++) {
+		if (sa_marked(g_page_ents[i].entnum))
+		    (void)sa_art_cmd(true,SA_KILL,g_page_ents[i].entnum);
 	    }
 	} else
-	    for (i = 0; i <= s_bot_ent; i++)
-		(void)sa_art_cmd(false,SA_KILL_MARKED,page_ents[i].entnum);
-	s_refill = true;
-	s_ref_top = true;	/* refresh # of articles */
+	    for (i = 0; i <= g_s_bot_ent; i++)
+		(void)sa_art_cmd(false,SA_KILL_MARKED,g_page_ents[i].entnum);
+	g_s_refill = true;
+	g_s_ref_top = true;	/* refresh # of articles */
 	break;
       case 'X':	/* kill unmarked (basic-eligible) in group */
 	*buf = '?';				/* for finish_cmd() */
@@ -142,14 +142,14 @@ int sa_docmd()
 	    sa_clearmark(b);
 	    return b;
 	}
-	s_refill = true;
-	s_ref_top = true;	/* refresh # of articles */
+	g_s_refill = true;
+	g_s_ref_top = true;	/* refresh # of articles */
 	break;
       case 'c':	/* catchup */
 	s_go_bot();
 	ask_catchup();
-	s_refill = true;
-	s_ref_all = true;
+	g_s_refill = true;
+	g_s_ref_all = true;
 	break;
       case 'o':	/* toggle between score and arrival orders */
 	s_rub_ptr();
@@ -168,8 +168,8 @@ int sa_docmd()
 	    sa_mode_desc_score = true;
 	s_sort();
 	s_go_top_ents();
-	s_refill = true;
-	s_ref_bot = true;
+	g_s_refill = true;
+	g_s_ref_bot = true;
 	break;
       case 'O':	/* change article sorting order */
 	if (sa_mode_order != 2) { /* not in score order */
@@ -179,39 +179,39 @@ int sa_docmd()
 	score_newfirst = !score_newfirst;
 	s_sort();
 	s_go_top_ents();
-	s_refill = true;
+	g_s_refill = true;
 	break;
       case 'R':	/* rescore articles */
 	if (!sc_initialized)
 	    break;
 	/* clear to end of screen */
 	clear_rest();
-	s_ref_all = true;	/* refresh everything */
+	g_s_ref_all = true;	/* refresh everything */
 	printf("\nRescoring articles...\n") FLUSH;
 	sc_rescore();
 	s_sort();
 	s_go_top_ents();
-	s_refill = true;
+	g_s_refill = true;
 	eat_typeahead();	/* stay in control. */
 	break;
       case Ctl('e'):		/* edit scorefile for group */
 	  /* clear to end of screen */
 	  clear_rest();
-	s_ref_all = true;  /* refresh everything */
+	g_s_ref_all = true;  /* refresh everything */
 	sc_score_cmd("e"); /* edit scorefile */
 	eat_typeahead();   /* stay in control. */
 	break;
       case '\t':	/* TAB: toggle threadcount display */
 	sa_mode_desc_threadcount = !sa_mode_desc_threadcount;
-	s_ref_desc = 0;
+	g_s_ref_desc = 0;
 	break;
       case 'a':	/* toggle author display */
 	sa_mode_desc_author = !sa_mode_desc_author;
-	s_ref_desc = 0;
+	g_s_ref_desc = 0;
 	break;
       case '%':	/* toggle article # display */
 	sa_mode_desc_artnum = !sa_mode_desc_artnum;
-	s_ref_desc = 0;
+	g_s_ref_desc = 0;
 	break;
       case 'U':	/* toggle unread/unread+read mode */
 	sa_mode_read_elig = !sa_mode_read_elig;
@@ -227,29 +227,29 @@ int sa_docmd()
 	    if (!sa_mode_read_elig)
 		sc_fill_read = false;
 #endif
-	    s_ref_top = true;
+	    g_s_ref_top = true;
 	    s_rub_ptr();
 	    s_go_top_ents();
-	    s_refill = true;
+	    g_s_refill = true;
 	} else	/* quit out: no articles */
 	    return SA_QUIT;
 	break;
       case 'F':	/* Fold */
 	sa_mode_fold = !sa_mode_fold;
-	s_refill = true;
-	s_ref_top = true;
+	g_s_refill = true;
+	g_s_ref_top = true;
 	break;
       case 'f':	/* follow */
 	sa_follow = !sa_follow;
-	s_ref_top = true;
+	g_s_ref_top = true;
 	break;
       case 'Z':	/* Zero (wipe) selections... */
 	for (i = 1; i < sa_num_ents; i++)
 	    sa_ents[i].sa_flags = (sa_ents[i].sa_flags & 0xfd);
-	s_ref_status = 0;
+	g_s_ref_status = 0;
 	if (!g_sa_mode_zoom)
 	    break;
-	s_ref_all = true;	/* otherwise won't be refreshed */
+	g_s_ref_all = true;	/* otherwise won't be refreshed */
 	/* if in zoom mode, turn it off... */
 	/* FALL THROUGH */
       case 'z':	/* zoom mode toggle */
@@ -258,9 +258,9 @@ int sa_docmd()
 	    sa_mode_fold = true;
 	/* toggle mode again if no elibible articles left */
 	if (sa_eligible(s_first()) || s_next_elig(s_first())) {
-	    s_ref_top = true;
+	    g_s_ref_top = true;
 	    s_go_top_ents();
-	    s_refill = true;
+	    g_s_refill = true;
 	} else {
 	    s_beep();
 	    g_sa_mode_zoom = !g_sa_mode_zoom;	/* toggle it right back */
@@ -269,16 +269,16 @@ int sa_docmd()
       case 'j':	/* junk just this article */
 	(void)sa_art_cmd(false,SA_KILL,a);
 	/* later refill the page */
-	s_refill = true;
-	s_ref_top = true;	/* refresh # of articles */
+	g_s_refill = true;
+	g_s_ref_top = true;	/* refresh # of articles */
 	break;
       case 'n':	/* next art */
       case ']':
 	s_rub_ptr();
-	if (s_ptr_page_line<(s_bot_ent)) /* more on page... */
-	    s_ptr_page_line +=1;
+	if (g_s_ptr_page_line<(g_s_bot_ent)) /* more on page... */
+	    g_s_ptr_page_line +=1;
 	else {
-	    if (!s_next_elig(page_ents[s_bot_ent].entnum)) {
+	    if (!s_next_elig(g_page_ents[g_s_bot_ent].entnum)) {
 		s_beep();
 		return 0;
 	    }
@@ -288,8 +288,8 @@ int sa_docmd()
       case 'k':	/* kill subject thread */
       case ',':	/* might later clone TRN ',' */
 	(void)sa_art_cmd(true,SA_KILL,a);
-	s_refill = true;
-	s_ref_top = true;	/* refresh # of articles */
+	g_s_refill = true;
+	g_s_ref_top = true;	/* refresh # of articles */
 	break;
       case Ctl('n'):	/* follow subject forward */
 	  i = sa_subj_thread(a);
@@ -300,15 +300,15 @@ int sa_docmd()
 	    s_beep();
 	    return 0;
 	}
-	for (i = s_ptr_page_line+1; i <= s_bot_ent; i++)
-	    if (page_ents[i].entnum == b) {	/* art is on same page */
+	for (i = g_s_ptr_page_line+1; i <= g_s_bot_ent; i++)
+	    if (g_page_ents[i].entnum == b) {	/* art is on same page */
 		s_rub_ptr();
-		s_ptr_page_line = i;
+		g_s_ptr_page_line = i;
 		return 0;
 	    }
 	/* article is not on page... */
 	(void)s_fillpage_forward(b);  /* fill forward (*must* work) */
-	s_ptr_page_line = 0;
+	g_s_ptr_page_line = 0;
 	break;
       case Ctl('a'):	/* next article with same author... */
 	/* good for scoring */
@@ -318,15 +318,15 @@ int sa_docmd()
 	    s_beep();
 	    return 0;
 	}
-	for (i = 0; i <= s_bot_ent; i++)
-	    if (page_ents[i].entnum == b) {	/* art is on same page */
+	for (i = 0; i <= g_s_bot_ent; i++)
+	    if (g_page_ents[i].entnum == b) {	/* art is on same page */
 		s_rub_ptr();
-		s_ptr_page_line = i;
+		g_s_ptr_page_line = i;
 		return 0;
 	    }
 	/* article is not on page... */
 	(void)s_fillpage_forward(b);  /* fill forward (*must* work) */
-	s_ptr_page_line = 0;
+	g_s_ptr_page_line = 0;
 	break;
       case Ctl('p'):	/* follow subject backwards */
 	  i = sa_subj_thread(a);
@@ -337,17 +337,17 @@ int sa_docmd()
 	    s_beep();
 	    return 0;
 	}
-	for (i = s_ptr_page_line-1; i >= 0; i--)
-	    if (page_ents[i].entnum == b) {	/* art is on same page */
+	for (i = g_s_ptr_page_line-1; i >= 0; i--)
+	    if (g_page_ents[i].entnum == b) {	/* art is on same page */
 		s_rub_ptr();
-		s_ptr_page_line = i;
+		g_s_ptr_page_line = i;
 		return 0;
 	    }
 	/* article is not on page... */
 	(void)s_fillpage_backward(b);  /* fill backward (*must* work) */
-	s_ptr_page_line = s_bot_ent;  /* go to bottom of page */
+	g_s_ptr_page_line = g_s_bot_ent;  /* go to bottom of page */
 	(void)s_refillpage();	/* make sure page is full */
-	s_ref_all = true;		/* make everything redrawn... */
+	g_s_ref_all = true;		/* make everything redrawn... */
 	break;
       case 'G': /* go to article number */
 	*buf = ' ';				/* for finish_cmd() */
@@ -387,7 +387,7 @@ int sa_docmd()
 	/* FALL THROUGH */
       case 'r':	/* read article... */
 	/* everything needs to be refreshed... */
-	s_ref_all = true;
+	g_s_ref_all = true;
 	return a;
       case 'm':	/* toggle mark on one article */
       case 'M':	/* toggle mark on thread */
@@ -395,8 +395,8 @@ int sa_docmd()
 	(void)sa_art_cmd((*buf == 'M'),SA_MARK,a);
 	if (!sa_mark_stay) {
 	    /* go to next art on page or top of page if at bottom */
-	    if (s_ptr_page_line < s_bot_ent)	/* more on page */
-		s_ptr_page_line +=1;
+	    if (g_s_ptr_page_line < g_s_bot_ent)	/* more on page */
+		g_s_ptr_page_line +=1;
 	    else
 		s_go_top_page();	/* wrap around to top */
 	}
@@ -411,8 +411,8 @@ int sa_docmd()
 	 */
 	if (!sa_mark_stay && !g_sa_mode_zoom) {
 	    /* go to next art on page or top of page if at bottom */
-	    if (s_ptr_page_line<(s_bot_ent))	/* more on page */
-		s_ptr_page_line +=1;
+	    if (g_s_ptr_page_line<(g_s_bot_ent))	/* more on page */
+		g_s_ptr_page_line +=1;
 	    else
 		s_go_top_page();	/* wrap around to top */
 	}
@@ -433,18 +433,18 @@ int sa_docmd()
 		(void)sa_art_cmd(false,SA_EXTRACT,a);
 	    }
 	if (!flag) {			/* none were marked */
-	    a = page_ents[s_ptr_page_line].entnum;
+	    a = g_page_ents[g_s_ptr_page_line].entnum;
 	    (void)sa_art_cmd(false,SA_EXTRACT,a);
 	}
-	s_refill = true;
-	s_ref_top = true;	/* refresh # of articles */
+	g_s_refill = true;
+	g_s_ref_top = true;	/* refresh # of articles */
 	(void)get_anything();
 	eat_typeahead();
 #endif
 	break;
 #if 0
       case 'E':	/* end extraction, do command on image */
-	s_ref_all = true;
+	g_s_ref_all = true;
 	s_go_bot();
 	if (decode_fp) {
 	    printf("\nIncomplete file: %s\n",decode_dest) FLUSH;
@@ -509,7 +509,7 @@ int sa_docmd()
 #endif
       case '"':			/* append to local SCORE file */
 	s_go_bot();
-	s_ref_all = true;
+	g_s_ref_all = true;
 	printf("Enter score append command or type RETURN for a menu\n");
 	buf[0] = ':';
 	buf[1] = FINISHCMD;
@@ -523,7 +523,7 @@ int sa_docmd()
 	break;
       case '\'':			/* execute scoring command */
 	s_go_bot();
-	s_ref_all = true;
+	g_s_ref_all = true;
 	printf("\nEnter scoring command or type RETURN for a menu\n");
 	buf[0] = ':';
 	buf[1] = FINISHCMD;
@@ -532,7 +532,7 @@ int sa_docmd()
 	printf("\n") FLUSH;
 	sa_go_art(artnum);
 	sc_score_cmd(buf+1);
-	s_ref_all = true;
+	g_s_ref_all = true;
 	(void)get_anything();
 	eat_typeahead();
 	break;
@@ -554,7 +554,7 @@ bool sa_extract_start()
     *buf = ':';			/* cosmetic */
     if (!s_finish_cmd(nullptr))
 	return false;		/* command rubbed out */
-    s_ref_all = true;
+    g_s_ref_all = true;
     /* if the user typed something, copy it to the destination */
     if (buf[1] != '\0')
 	safecpy(s_sa_extract_dest,filexp(buf+1),LBUFLEN);
@@ -605,7 +605,7 @@ void sa_art_cmd_prim(sa_cmd cmd, long a)
 	if (sa_selected1(a)) {
 	    sa_clearselect1(a);
 	    if (g_sa_mode_zoom)
-		s_refill = true;	/* article is now ineligible */
+		g_s_refill = true;	/* article is now ineligible */
 	} else
 	    sa_select1(a);
 	s_ref_status_onpage(a);

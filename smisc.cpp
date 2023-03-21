@@ -23,7 +23,7 @@
 
 bool s_eligible(long ent)
 {
-    switch (s_cur_type) {
+    switch (g_s_cur_type) {
       case S_ART:
 	return sa_eligible(ent);
       default:
@@ -40,9 +40,9 @@ void s_beep()
 
 const char *s_get_statchars(long ent, int line)
 {
-    if (s_status_cols == 0)
+    if (g_s_status_cols == 0)
 	return "";
-    switch (s_cur_type) {
+    switch (g_s_cur_type) {
       case S_ART:
 	return sa_get_statchars(ent,line);
       default:
@@ -52,7 +52,7 @@ const char *s_get_statchars(long ent, int line)
 
 const char *s_get_desc(long ent, int line, bool trunc)
 {
-    switch (s_cur_type) {
+    switch (g_s_cur_type) {
       case S_ART:
 	return sa_get_desc(ent,line,trunc);
       default:
@@ -62,7 +62,7 @@ const char *s_get_desc(long ent, int line, bool trunc)
 
 int s_ent_lines(long ent)
 {
-    switch (s_cur_type) {
+    switch (g_s_cur_type) {
       case S_ART:
 	return sa_ent_lines(ent);
       default:

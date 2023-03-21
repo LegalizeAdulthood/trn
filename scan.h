@@ -3,21 +3,31 @@
  *
  * (Mostly scan context declarations.)
  */
+#ifndef SCAN_H
+#define SCAN_H
 
 /* return codes.  First two should be the same as article scan codes */
-#define S_QUIT (-1)
-#define S_ERR (-2)
-/* command was not found in common scan subset */
-#define S_NOTFOUND (-3)
+enum
+{
+    S_QUIT = -1,
+    S_ERR = -2,
+    S_NOTFOUND = -3 /* command was not found in common scan subset */
+};
 
 /* number of entries allocated for a page */
-#define MAX_PAGE_SIZE 256
+enum
+{
+    MAX_PAGE_SIZE = 256
+};
 
 /* different context types */
-#define S_ART 1
-#define S_GROUP 2
-#define S_HELP 3
-#define S_VIRT 4
+enum
+{
+    S_ART = 1,
+    S_GROUP = 2,
+    S_HELP = 3,
+    S_VIRT = 4
+};
 
 struct PAGE_ENT
 {
@@ -65,51 +75,42 @@ struct SCONTEXT
 };
 
 /* the current values */
-
-EXT long* s_ent_sort INIT(nullptr);	/* sorted list of entries in the context */
-EXT long s_ent_sort_max INIT(0);	/* maximum index of sorted array */
-EXT long s_ent_sorted_max INIT(0);	/* maximum index *that is sorted* */
-EXT long* s_ent_index INIT(nullptr);	/* indexes into ent_sorted */
-EXT long s_ent_index_max INIT(0);	/* maximum entry number added */
-
-EXT int s_page_size INIT(0);		/* number of entries allocated for page */
-				/* (usually fixed, > max screen lines) */
-EXT PAGE_ENT* page_ents INIT(nullptr);	/* array of entries on page */
+extern long *g_s_ent_sort;      /* sorted list of entries in the context */
+extern long g_s_ent_sort_max;   /* maximum index of sorted array */
+extern long g_s_ent_sorted_max; /* maximum index *that is sorted* */
+extern long *g_s_ent_index;     /* indexes into ent_sorted */
+extern long g_s_ent_index_max;  /* maximum entry number added */
+extern int g_s_page_size;       /* number of entries allocated for page */
+/* (usually fixed, > max screen lines) */
+extern PAGE_ENT *g_page_ents; /* array of entries on page */
 /* -1 means not initialized for top and bottom entry */
-EXT long s_top_ent INIT(0);		/* top entry on page */
-EXT long s_bot_ent INIT(0);		/* bottom entry (note change) */
-EXT bool s_refill INIT(false);		/* does the page need refilling? */
+extern long g_s_top_ent; /* top entry on page */
+extern long g_s_bot_ent; /* bottom entry (note change) */
+extern bool g_s_refill;  /* does the page need refilling? */
 /* refresh entries */
-EXT bool s_ref_all INIT(0);		/* refresh all on page */
-EXT bool s_ref_top INIT(0);		/* top status bar */
-EXT bool s_ref_bot INIT(0);		/* bottom status bar */
+extern bool g_s_ref_all; /* refresh all on page */
+extern bool g_s_ref_top; /* top status bar */
+extern bool g_s_ref_bot; /* bottom status bar */
 /* -1 for the next two entries means don't refresh */
-EXT short s_ref_status INIT(0);		/* line to start refreshing status from */
-EXT short s_ref_desc INIT(0);		/* line to start refreshing descript. from */
+extern short g_s_ref_status; /* line to start refreshing status from */
+extern short g_s_ref_desc;   /* line to start refreshing descript. from */
 /* screen sizes */
-EXT short s_top_lines INIT(0);		/* lines for top status bar */
-EXT short s_bot_lines INIT(0);		/* lines for bottom status bar */
-EXT short s_status_cols INIT(0);	/* characters for status column */
-EXT short s_cursor_cols INIT(0);	/* characters for cursor column */
-EXT short s_itemnum_cols INIT(0);	/* characters for item number column */
-EXT short s_desc_cols INIT(0);		/* characters for description column */
+extern short g_s_top_lines;    /* lines for top status bar */
+extern short g_s_bot_lines;    /* lines for bottom status bar */
+extern short g_s_status_cols;  /* characters for status column */
+extern short g_s_cursor_cols;  /* characters for cursor column */
+extern short g_s_itemnum_cols; /* characters for item number column */
+extern short g_s_desc_cols;    /* characters for description column */
 /* pointer info */
-EXT short s_ptr_page_line INIT(0);	/* page_ent index */
-EXT long  s_flags INIT(0);		/* misc. flags */
-
-EXT int s_num_contexts INIT(0);
-/* array of context structures */
-EXT SCONTEXT* s_contexts INIT(nullptr);
-
-/* current context number */
-EXT int s_cur_context INIT(0);
-/* current context type (for fast switching) */
-EXT int s_cur_type INIT(0);
-
+extern short g_s_ptr_page_line; /* page_ent index */
+extern long g_s_flags;          /* misc. flags */
+extern int g_s_num_contexts;
+extern SCONTEXT *g_s_contexts; /* array of context structures */
+extern int g_s_cur_context;       /* current context number */
+extern int g_s_cur_type;          /* current context type (for fast switching) */
 /* options */
-/* show item numbers by default */
-EXT int s_itemnum INIT(true);
-EXT int s_mode_vi INIT(0);
+extern int g_s_itemnum; /* show item numbers by default */
+extern int g_s_mode_vi;
 
 void s_init_context(int cnum, int type);
 int s_new_context(int type);
@@ -117,3 +118,5 @@ void s_save_context();
 void s_change_context(int newcontext);
 void s_clean_contexts();
 void s_delete_context(int cnum);
+
+#endif

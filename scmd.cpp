@@ -35,10 +35,10 @@ void s_search(void);
 
 void s_go_bot()
 {
-    s_ref_bot = true;			/* help uses whole screen */
-    s_goxy(0,tc_LINES-s_bot_lines);	/* go to bottom bar */
+    g_s_ref_bot = true;			/* help uses whole screen */
+    s_goxy(0,tc_LINES-g_s_bot_lines);	/* go to bottom bar */
     erase_eol();			/* erase to end of line */
-    s_goxy(0,tc_LINES-s_bot_lines);	/* go (back?) to bottom bar */
+    s_goxy(0,tc_LINES-g_s_bot_lines);	/* go (back?) to bottom bar */
 }
 
 /* finishes a command on the bottom line... */
@@ -60,7 +60,7 @@ int s_cmdloop()
     int i;
 
     /* initialization stuff for entry into s_cmdloop */
-    s_ref_all = true;
+    g_s_ref_all = true;
     eat_typeahead();	/* no typeahead before entry */
     while(true) {
 	s_refresh();
@@ -84,7 +84,7 @@ int s_cmdloop()
 	}
 	i = s_docmd();
 	if (i == S_NOTFOUND) {	/* command not in common set */
-	    switch (s_cur_type) {
+	    switch (g_s_cur_type) {
 	      case S_ART:
 		i = sa_docmd();
 		break;
@@ -95,7 +95,7 @@ int s_cmdloop()
 	}
 	if (i != 0)	/* either an entry # or a return code */
 	    return i;
-	if (s_refill) {
+	if (g_s_refill) {
 	    i = s_fillpage();
 	    if (i == -1 || i == 0)	/* can't fillpage */
 	        return S_QUIT;
@@ -106,7 +106,7 @@ int s_cmdloop()
 
 void s_lookahead()
 {
-    switch (s_cur_type) {
+    switch (g_s_cur_type) {
       case S_ART:
 	sa_lookahead();
 	break;
@@ -125,43 +125,43 @@ int s_docmd()
     long a;		/* entry pointed to */
     bool flag;		/* misc */
 
-    a = page_ents[s_ptr_page_line].entnum;
+    a = g_page_ents[g_s_ptr_page_line].entnum;
     if (*buf == '\f')	/* map form feed to ^l */
 	*buf = Ctl('l');
     switch(*buf) {
       case 'j':		/* vi mode */
-	if (!s_mode_vi)
+	if (!g_s_mode_vi)
 	    return S_NOTFOUND;
 	/* FALL THROUGH */
       case 'n':		/* next art */
       case ']':
 	s_rub_ptr();
-	if (s_ptr_page_line < s_bot_ent)	/* more on page... */
-	    s_ptr_page_line +=1;
+	if (g_s_ptr_page_line < g_s_bot_ent)	/* more on page... */
+	    g_s_ptr_page_line +=1;
 	else {
-	    if (!s_next_elig(page_ents[s_bot_ent].entnum)) {
+	    if (!s_next_elig(g_page_ents[g_s_bot_ent].entnum)) {
 		s_beep();
-		s_refill = true;
+		g_s_refill = true;
 		break;
 	    }
 	    s_go_next_page();	/* will jump to top too... */
 	}
 	break;
       case 'k':	/* vi mode */
-	if (!s_mode_vi)
+	if (!g_s_mode_vi)
 	    return S_NOTFOUND;
 	/* FALL THROUGH */
       case 'p':	/* previous art */
       case '[':
 	s_rub_ptr();
-	if (s_ptr_page_line > 0)	/* more on page... */
-	    s_ptr_page_line = s_ptr_page_line - 1;
+	if (g_s_ptr_page_line > 0)	/* more on page... */
+	    g_s_ptr_page_line = g_s_ptr_page_line - 1;
 	else {
-	    if (s_prev_elig(page_ents[0].entnum)) {
+	    if (s_prev_elig(g_page_ents[0].entnum)) {
 		s_go_prev_page();
-		s_ptr_page_line = s_bot_ent; /* go to page bot. */
+		g_s_ptr_page_line = g_s_bot_ent; /* go to page bot. */
 	    } else {
-		s_refill = true;
+		g_s_refill = true;
 		s_beep();
 	    }
 	}
@@ -176,7 +176,7 @@ int s_docmd()
 	break;
       case '>':	/* next page */
 	s_rub_ptr();
-	a = s_next_elig(page_ents[s_bot_ent].entnum);
+	a = s_next_elig(g_page_ents[g_s_bot_ent].entnum);
 	if (!a) {		/* at end of articles */
 	    s_beep();
 	    break;
@@ -185,7 +185,7 @@ int s_docmd()
 	break;
       case '<':	/* previous page */
 	s_rub_ptr();
-	if (!s_prev_elig(page_ents[0].entnum)) {
+	if (!s_prev_elig(g_page_ents[0].entnum)) {
 	    s_beep();
 	    break;
 	}
@@ -207,25 +207,25 @@ int s_docmd()
 	break;
       case Ctl('r'):	/* refresh screen */
       case Ctl('l'):
-	  s_ref_all = true;
+	  g_s_ref_all = true;
 	break;
       case Ctl('f'):	/* refresh (mail) display */
 #ifdef MAILCALL
 	setmail(true);
 #endif
-	s_ref_bot = true;
+	g_s_ref_bot = true;
 	break;
       case 'h': /* universal help */
 	s_go_bot();
-	s_ref_all = true;
+	g_s_ref_all = true;
 	univ_help(UHELP_SCANART);
 	eat_typeahead();
 	break;
       case 'H':	/* help */
 	s_go_bot();
-	s_ref_all = true;
+	g_s_ref_all = true;
 	/* any commands typed during help are unused. (might change) */
-	switch (s_cur_type) {
+	switch (g_s_cur_type) {
 	  case S_ART:
 	    (void)help_scanart();
 	    break;
@@ -239,7 +239,7 @@ int s_docmd()
 	break;
       case '!':	/* shell command */
 	s_go_bot();
-	s_ref_all = true;			/* will need refresh */
+	g_s_ref_all = true;			/* will need refresh */
 	if (!escapade())
 	    (void)get_anything();
 	eat_typeahead();
@@ -251,7 +251,7 @@ int s_docmd()
  * It may be necessary for this code to do the context saving.
  */
 	s_go_bot();
-	s_ref_all = true;			/* will need refresh */
+	g_s_ref_all = true;			/* will need refresh */
 	if (!switcheroo())		/* XXX same semantics in trn4? */
 	    (void)get_anything();
 	eat_typeahead();
@@ -267,18 +267,18 @@ int s_docmd()
 	s_jumpnum(*buf);
 	break;
       case '#':		/* Toggle item numbers */
-	if (s_itemnum) {
+	if (g_s_itemnum) {
 	    /* turn off item numbers */
-	    s_desc_cols += s_itemnum_cols;
-	    s_itemnum_cols = 0;
-	    s_itemnum = 0;
+	    g_s_desc_cols += g_s_itemnum_cols;
+	    g_s_itemnum_cols = 0;
+	    g_s_itemnum = 0;
 	} else {
 	    /* turn on item numbers */
-	    s_itemnum_cols = 3;
-	    s_desc_cols -= s_itemnum_cols;
-	    s_itemnum = 1;
+	    g_s_itemnum_cols = 3;
+	    g_s_desc_cols -= g_s_itemnum_cols;
+	    g_s_itemnum = 1;
 	}
-	s_ref_all = true;
+	g_s_ref_all = true;
 	break;
       default:
 	return S_NOTFOUND;		/* not one of the simple commands */
@@ -363,13 +363,13 @@ void s_search()
 	s_beep();
 	printf("\nNo previous search string.\n") FLUSH;
 	(void)get_anything();
-	s_ref_all = true;
+	g_s_ref_all = true;
 	return;
     }
     s_go_bot();
     printf("Searching for %s",search_text);
     fflush(stdout);
-    ent = page_ents[s_ptr_page_line].entnum;
+    ent = g_page_ents[g_s_ptr_page_line].entnum;
     switch (*buf) {
       case '/':
 	error_msg = "No matches forward from current point.";
@@ -386,7 +386,7 @@ void s_search()
 	if (!ent) {
 	    ent = s_forward_search(0);	/* from top */
 	    /* did we just loop around? */
-	    if (ent == page_ents[s_ptr_page_line].entnum) {
+	    if (ent == g_page_ents[g_s_ptr_page_line].entnum) {
 		ent = 0;
 		error_msg = "No other entry matches.";
 	    } else
@@ -403,25 +403,25 @@ void s_search()
 	s_beep();
 	printf("\n%s\n",error_msg) FLUSH;
 	(void)get_anything();
-	s_ref_all = true;
+	g_s_ref_all = true;
 	return;
     }
-    for (i = 0; i <= s_bot_ent; i++)
-	if (page_ents[i].entnum == ent) {	/* entry is on same page */
-	    s_ptr_page_line = i;
+    for (i = 0; i <= g_s_bot_ent; i++)
+	if (g_page_ents[i].entnum == ent) {	/* entry is on same page */
+	    g_s_ptr_page_line = i;
 	    return;
 	}
     /* entry is not on page... */
     if (fill_type == 1) {
 	(void)s_fillpage_backward(ent);
 	s_go_bot_page();
-	s_refill = true;
-	s_ref_all = true;
+	g_s_refill = true;
+	g_s_ref_all = true;
     }
     else {
 	(void)s_fillpage_forward(ent);
 	s_go_top_page();
-	s_ref_all = true;
+	g_s_ref_all = true;
     }
 }
 
@@ -436,7 +436,7 @@ void s_jumpnum(char_int firstchar)
     s_rub_ptr();
     if (jump_verbose) {
 	s_go_bot();
-	s_ref_bot = true;
+	g_s_ref_bot = true;
 	printf("Jump to item: %c",firstchar);
 	fflush(stdout);
     }
@@ -456,9 +456,9 @@ void s_jumpnum(char_int firstchar)
 	pushchar(*buf);
 	break;
     }
-    if (value == 0 || value > s_bot_ent+1) {
+    if (value == 0 || value > g_s_bot_ent+1) {
 	s_beep();
 	return;
     }
-    s_ptr_page_line = value-1;
+    g_s_ptr_page_line = value-1;
 }

@@ -397,7 +397,7 @@ void sc_load_scores()
 
     sc_save_new = total-scored;
     if (sa_initialized)
-	s_top_ent = -1;	/* reset top of page */
+	g_s_top_ent = -1;	/* reset top of page */
 }
 
 void sc_save_scores()

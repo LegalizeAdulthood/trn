@@ -208,7 +208,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
 	break;
     } /* switch (line) */
     if (trunc)
-	desc_buf[s_desc_cols] = '\0';	/* make sure it's not too long */
+	desc_buf[g_s_desc_cols] = '\0';	/* make sure it's not too long */
 #ifdef HAS_TERMLIB
     if (use_standout)
 	strcat(desc_buf,tc_SE);	/* end standout mode */

@@ -644,10 +644,10 @@ void set_option(int num, char *s)
 	ArtPagerBtnCnt = parse_mouse_buttons(&ArtPagerBtns,s);
 	break;
       case OI_SCAN_ITEMNUM:
-	s_itemnum = YES(s);
+	g_s_itemnum = YES(s);
 	break;
       case OI_SCAN_VI:
-	s_mode_vi = YES(s);
+	g_s_mode_vi = YES(s);
 	break;
       case OI_SCANA_FOLLOW:
 	sa_follow = YES(s);
@@ -1020,9 +1020,9 @@ char *option_value(int num)
       case OI_ART_PAGER_BTNS:
 	return expand_mouse_buttons(ArtPagerBtns,ArtPagerBtnCnt);
       case OI_SCAN_ITEMNUM:
-	return YESorNO(s_itemnum);
+	return YESorNO(g_s_itemnum);
       case OI_SCAN_VI:
-	return YESorNO(s_mode_vi);
+	return YESorNO(g_s_mode_vi);
       case OI_SCANA_FOLLOW:
 	return YESorNO(sa_follow);
       case OI_SCANA_FOLD:

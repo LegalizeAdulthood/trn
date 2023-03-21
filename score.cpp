@@ -357,9 +357,9 @@ void sc_rescore_arts()
     sc_do_spin = old_spin;
     setspin(SPIN_POP);
     if (sa_in) {
-	s_ref_all = true;
-	s_refill = true;
-	s_top_ent = 0;		/* make sure the refill starts from top */
+	g_s_ref_all = true;
+	g_s_refill = true;
+	g_s_top_ent = 0;		/* make sure the refill starts from top */
     }
 }
 
@@ -399,7 +399,7 @@ void sc_append(char *line)
 	sc_rescore_arts();
 	printf("Done.\n") FLUSH;
 	if (sa_initialized)
-	    s_top_ent = -1;		/* reset top of page */
+	    g_s_top_ent = -1;		/* reset top of page */
     }
 }
 
@@ -409,8 +409,8 @@ void sc_rescore()
     sc_cleanup();        /* get rid of the old */
     sc_init(true);       /* enter the new... (wait for rescore) */
     if (sa_initialized) {
-	s_top_ent = -1;	/* reset top of page */
-	s_refill = true;	/* make sure a refill is done */
+	g_s_top_ent = -1;	/* reset top of page */
+	g_s_refill = true;	/* make sure a refill is done */
     }
     sc_rescoring = false;
 }

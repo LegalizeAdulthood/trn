@@ -161,9 +161,9 @@ sa_main_result sa_mainloop()
 	    sa_mode_order = 1;	/* arrival order */
     }
     /* redraw it *all* */
-    s_ref_all = true;
-    if (s_top_ent < 1)
-	s_top_ent = s_first();
+    g_s_ref_all = true;
+    if (g_s_top_ent < 1)
+	g_s_top_ent = s_first();
     int i = s_fillpage();
     if (i == -1 || i == 0) {
 	/* for now just quit if no page could be filled. */
