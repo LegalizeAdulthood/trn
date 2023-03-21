@@ -452,10 +452,10 @@ void set_option(int num, char *s)
 	}
 	break;
       case OI_MULTIPART_SEPARATOR:
-	multipart_separator = savestr(s);
+	g_multipart_separator = savestr(s);
 	break;
       case OI_AUTO_VIEW_INLINE:
-	auto_view_inline = YES(s);
+	g_auto_view_inline = YES(s);
 	break;
       case OI_NEWGROUP_CHECK:
 	quickstart = !YES(s);
@@ -857,9 +857,9 @@ char *option_value(int num)
 	}
 	return YESorNO(0);
       case OI_MULTIPART_SEPARATOR:
-	return multipart_separator;
+	return g_multipart_separator;
       case OI_AUTO_VIEW_INLINE:
-	return YESorNO(auto_view_inline);
+	return YESorNO(g_auto_view_inline);
       case OI_NEWGROUP_CHECK:
 	return YESorNO(!quickstart);
       case OI_RESTRICTION_INCLUDES_EMPTIES:

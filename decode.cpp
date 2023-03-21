@@ -239,9 +239,9 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     int part, total, state;
     DECODE_FUNC decoder;
 
-    filename = decode_fix_fname(mime_section->filename);
-    part = mime_section->part;
-    total = mime_section->total;
+    filename = decode_fix_fname(g_mime_section->filename);
+    part = g_mime_section->part;
+    total = g_mime_section->total;
     *msg = '\0';
 
     if (!total && g_is_mime)
@@ -334,13 +334,13 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	total = 1;
     }
 
-    if (mime_section->type == MESSAGE_MIME) {
+    if (g_mime_section->type == MESSAGE_MIME) {
 	mime_PushSection();
 	mime_ParseSubheader(fp,first_line);
 	first_line = nullptr;
     }
-    mime_getc_line = first_line;
-    decoder = decode_function(mime_section->encoding);
+    g_mime_getc_line = first_line;
+    decoder = decode_function(g_mime_section->encoding);
     if (!decoder) {
 	strcpy(msg,"Unhandled encoding type -- aborting.");
 	if (fp)

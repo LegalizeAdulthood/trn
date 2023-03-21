@@ -190,14 +190,14 @@ char *readartbuf(bool view_inline)
 	read_offset = line_offset = filter_offset = 0;
 
   read_more:
-    extra_offset = mime_state == HTMLTEXT_MIME? 1024 : 0;
+    extra_offset = g_mime_state == HTMLTEXT_MIME? 1024 : 0;
     o = read_offset + extra_offset;
     if (artbuf_size < artbuf_pos + o + LBUFLEN) {
 	artbuf_size += LBUFLEN * 4;
 	artbuf = saferealloc(artbuf,artbuf_size);
 	bp = artbuf + artbuf_pos;
     }
-    switch (mime_state) {
+    switch (g_mime_state) {
       case IMAGE_MIME:
       case AUDIO_MIME:
 	break;
@@ -233,13 +233,13 @@ char *readartbuf(bool view_inline)
 	break;
     }
   mime_switch:
-    switch (mime_state) {
+    switch (g_mime_state) {
       case ISOTEXT_MIME:
-	mime_state = TEXT_MIME;
+	g_mime_state = TEXT_MIME;
 	/* FALL THROUGH */
       case TEXT_MIME:
       case HTMLTEXT_MIME:
-	if (mime_section->encoding == MENCODE_QPRINT) {
+	if (g_mime_section->encoding == MENCODE_QPRINT) {
 	    o = line_offset + extra_offset;
 	    len = qp_decodestring(bp+o, bp+o, false) + line_offset;
 	    if (len == line_offset || bp[len+extra_offset-1] != '\n') {
@@ -250,7 +250,7 @@ char *readartbuf(bool view_inline)
 		strcpy(bp + len++ + extra_offset, "\n");
 	    }
 	}
-	else if (mime_section->encoding == MENCODE_BASE64) {
+	else if (g_mime_section->encoding == MENCODE_BASE64) {
 	    o = line_offset + extra_offset;
 	    len = b64_decodestring(bp+o, bp+o) + line_offset;
 	    if ((s = strchr(bp+o, '\n')) == nullptr) {
@@ -266,7 +266,7 @@ char *readartbuf(bool view_inline)
 		extra_chars -= len;
 	    }
 	}
-	if (mime_state != HTMLTEXT_MIME)
+	if (g_mime_state != HTMLTEXT_MIME)
 	    break;
 	o = filter_offset + extra_offset;
 	len = filter_html(bp+filter_offset, bp+o) + filter_offset;
@@ -286,7 +286,7 @@ char *readartbuf(bool view_inline)
 	break;
       case DECODE_MIME: {
 	MIMECAP_ENTRY* mcp;
-	mcp = mime_FindMimecapEntry(mime_section->type_name,
+	mcp = mime_FindMimecapEntry(g_mime_section->type_name,
                                     MCF_NEEDSTERMINAL |MCF_COPIOUSOUTPUT);
 	if (mcp) {
 	    int save_term_line = g_term_line;
@@ -295,24 +295,24 @@ char *readartbuf(bool view_inline)
 	    if (decode_piece(mcp,bp) != 0) {
 		strcpy(bp = artbuf + artbuf_pos, g_art_line);
 		mime_SetState(bp);
-		if (mime_state == DECODE_MIME)
-		    mime_state = SKIP_MIME;
+		if (g_mime_state == DECODE_MIME)
+		    g_mime_state = SKIP_MIME;
 	    }
 	    else
-		mime_state = SKIP_MIME;
+		g_mime_state = SKIP_MIME;
 	    color_pop();
 	    chdir_newsdir();
 	    erase_line(false);
 	    nowait_fork = false;
 	    g_first_view = artline;
 	    g_term_line = save_term_line;
-	    if (mime_state != SKIP_MIME)
+	    if (g_mime_state != SKIP_MIME)
 		goto mime_switch;
 	}
 	/* FALL THROUGH */
       }
       case SKIP_MIME: {
-	MIME_SECT* mp = mime_section;
+	MIME_SECT* mp = g_mime_section;
 	while ((mp = mp->prev) != nullptr && !mp->boundary_len) ;
 	if (!mp) {
 	    artbuf_len = artbuf_pos;
@@ -331,8 +331,8 @@ char *readartbuf(bool view_inline)
 	break;
       }
     case END_OF_MIME:
-	if (mime_section->prev)
-	    mime_state = SKIP_MIME;
+	if (g_mime_section->prev)
+	    g_mime_state = SKIP_MIME;
 	else {
 	    if (g_datasrc->flags & DF_REMOTE) {
 		nntp_finishbody(FB_SILENT);
@@ -342,7 +342,7 @@ char *readartbuf(bool view_inline)
 	}
 	/* FALL THROUGH */
       case BETWEEN_MIME:
-	len = strlen(multipart_separator) + 1;
+	len = strlen(g_multipart_separator) + 1;
 	if (extra_offset && filter_offset) {
 	    extra_chars = len + 1;
 	    len = o = read_offset + 1;
@@ -353,36 +353,36 @@ char *readartbuf(bool view_inline)
 	    artbuf_pos++;
 	    bp++;
 	}
-	sprintf(bp+o,"\002%s\n",multipart_separator);
+	sprintf(bp+o,"\002%s\n",g_multipart_separator);
 	break;
       case UNHANDLED_MIME:
-	mime_state = SKIP_MIME;
+	g_mime_state = SKIP_MIME;
 	*bp++ = '\001';
 	artbuf_pos++;
-	mime_Description(mime_section,bp,tc_COLS);
+	mime_Description(g_mime_section,bp,tc_COLS);
 	len = strlen(bp);
 	break;
       case ALTERNATE_MIME:
-	mime_state = SKIP_MIME;
+	g_mime_state = SKIP_MIME;
 	*bp++ = '\001';
 	artbuf_pos++;
-	sprintf(bp,"[Alternative: %s]\n", mime_section->type_name);
+	sprintf(bp,"[Alternative: %s]\n", g_mime_section->type_name);
 	len = strlen(bp);
 	break;
       case IMAGE_MIME:
       case AUDIO_MIME:
-	if (!mime_article.total && !g_multimedia_mime)
+	if (!g_mime_article.total && !g_multimedia_mime)
 	    g_multimedia_mime = true;
 	/* FALL THROUGH */
       default:
 	if (view_inline && g_first_view < artline
-	 && (mime_section->flags & MSF_INLINE))
-	    mime_state = DECODE_MIME;
+	 && (g_mime_section->flags & MSF_INLINE))
+	    g_mime_state = DECODE_MIME;
 	else
-	    mime_state = SKIP_MIME;
+	    g_mime_state = SKIP_MIME;
 	*bp++ = '\001';
 	artbuf_pos++;
-	mime_Description(mime_section,bp,tc_COLS);
+	mime_Description(g_mime_section,bp,tc_COLS);
 	len = strlen(bp);
 	break;
     }

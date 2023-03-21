@@ -1061,9 +1061,9 @@ normal_search:
 	exit_code = NG_NEXT;
 	return AS_CLEAN;
       case 'i':
-	if ((auto_view_inline = !auto_view_inline) != 0)
+	if ((g_auto_view_inline = !g_auto_view_inline) != 0)
 	    g_first_view = 0;
-	printf("\nAuto-View inlined mime is %s\n", auto_view_inline? "on" : "off");
+	printf("\nAuto-View inlined mime is %s\n", g_auto_view_inline? "on" : "off");
 	termdown(2);
 	break;
       case 'j':

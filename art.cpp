@@ -222,7 +222,7 @@ do_article_result do_article()
 	    else if (g_in_header && *(bufptr = g_headbuf + artpos))
 		continuation = *bufptr == ' ' || *bufptr == '\t';
 	    else {
-		if ((bufptr = readartbuf(auto_view_inline)) == nullptr) {
+		if ((bufptr = readartbuf(g_auto_view_inline)) == nullptr) {
 		    special = false;
 		    if (g_innersearch)
 			(void)innermore();
@@ -245,11 +245,11 @@ do_article_result do_article()
 	    } else if (notesfiles && g_do_hiding && !continuation
 		    && *bufptr == '#' && isupper(bufptr[1])
 		    && bufptr[2] == ':' ) {
-		if ((bufptr = readartbuf(auto_view_inline)) == nullptr)
+		if ((bufptr = readartbuf(g_auto_view_inline)) == nullptr)
 		    break;
 		for (s = bufptr; *s && *s != '\n' && *s != '!'; s++) ;
 		if (*s != '!')
-		    readartbuf(auto_view_inline);
+		    readartbuf(g_auto_view_inline);
 		mime_SetArticle();
 		clear_artbuf();		/* exclude notesfiles droppings */
 		artbuf_seek = g_htype[PAST_HEADER].minpos = tellart();
@@ -1029,9 +1029,9 @@ leave_pager:
 	}
 	return PS_NORM;
       case 'i':
-	if ((auto_view_inline = !auto_view_inline) != 0)
+	if ((g_auto_view_inline = !g_auto_view_inline) != 0)
 	    g_first_view = 0;
-	printf("\nAuto-View inlined mime is %s\n", auto_view_inline? "on" : "off");
+	printf("\nAuto-View inlined mime is %s\n", g_auto_view_inline? "on" : "off");
 	termdown(2);
 	break;
       case 'q':	/* quit this article? */

@@ -1,5 +1,7 @@
 /* mime.h
  */
+#ifndef MIME_H
+#define MIME_H
 
 struct HBLK
 {
@@ -71,24 +73,27 @@ enum
 };
 
 /* NOTE: This must match tagattr below */
-#define TAG_BLOCKQUOTE	0
-#define TAG_BR		(TAG_BLOCKQUOTE+1)
-#define TAG_DIV		(TAG_BR+1)
-#define TAG_HR		(TAG_DIV+1)
-#define TAG_IMG		(TAG_HR+1)
-#define TAG_LI		(TAG_IMG+1)
-#define TAG_OL		(TAG_LI+1)
-#define TAG_P		(TAG_OL+1)
-#define TAG_PRE		(TAG_P+1)
-#define TAG_SCRIPT	(TAG_PRE+1)
-#define TAG_STYLE	(TAG_SCRIPT+1)
-#define TAG_TD		(TAG_STYLE+1)
-#define TAG_TH		(TAG_TD+1)
-#define TAG_TR		(TAG_TH+1)
-#define TAG_TITLE	(TAG_TR+1)
-#define TAG_UL		(TAG_TITLE+1)
-#define TAG_XML		(TAG_UL+1)
-#define LAST_TAG	(TAG_XML+1)
+enum
+{
+    TAG_BLOCKQUOTE = 0,
+    TAG_BR = TAG_BLOCKQUOTE + 1,
+    TAG_DIV = TAG_BR + 1,
+    TAG_HR = TAG_DIV + 1,
+    TAG_IMG = TAG_HR + 1,
+    TAG_LI = TAG_IMG + 1,
+    TAG_OL = TAG_LI + 1,
+    TAG_P = TAG_OL + 1,
+    TAG_PRE = TAG_P + 1,
+    TAG_SCRIPT = TAG_PRE + 1,
+    TAG_STYLE = TAG_SCRIPT + 1,
+    TAG_TD = TAG_STYLE + 1,
+    TAG_TH = TAG_TD + 1,
+    TAG_TR = TAG_TH + 1,
+    TAG_TITLE = TAG_TR + 1,
+    TAG_UL = TAG_TITLE + 1,
+    TAG_XML = TAG_UL + 1,
+    LAST_TAG = TAG_XML + 1,
+};
 
 enum
 {
@@ -103,62 +108,40 @@ struct HTML_TAGS
     int flags;
 };
 
-#ifndef DOINIT
-EXT HTML_TAGS tagattr[LAST_TAG];
-#else
+extern MIME_SECT g_mime_article;
+extern MIME_SECT *g_mime_section;
+extern short g_mime_state;
+extern char *g_multipart_separator;
+extern bool g_auto_view_inline;
+extern char *g_mime_getc_line;
 
-HTML_TAGS tagattr[LAST_TAG] = {
- /* name               length   flags */
-    {"blockquote",	10,	TF_BLOCK | TF_P | TF_NL			},
-    {"br",		 2,	TF_NL | TF_BR				},
-    {"div",		 3,	TF_BLOCK | TF_NL			},
-    {"hr",		 2,	TF_NL					},
-    {"img",		 3,	0					},
-    {"li",		 2,	TF_NL					},
-    {"ol",		 2,	TF_BLOCK | TF_P | TF_NL | TF_LIST	},
-    {"p",		 1,	TF_HAS_CLOSE | TF_P | TF_NL		},
-    {"pre",		 3,	TF_BLOCK | TF_P | TF_NL			},
-    {"script",		 6,	TF_BLOCK | TF_HIDE			},
-    {"style",		 5,	TF_BLOCK | TF_HIDE			},
-    {"td",		 2,	TF_TAB					},
-    {"th",		 2,	TF_TAB					},
-    {"tr",		 2,	TF_NL					},
-    {"title",		 5,	TF_BLOCK | TF_HIDE			},
-    {"ul",		 2,	TF_BLOCK | TF_P | TF_NL | TF_LIST	},
-    {"xml",		 3,	TF_BLOCK | TF_HIDE			}, /* non-standard but seen in the wild */
+enum
+{
+    NOT_MIME = 0,
+    TEXT_MIME = 1,
+    ISOTEXT_MIME = 2,
+    MESSAGE_MIME = 3,
+    MULTIPART_MIME = 4,
+    IMAGE_MIME = 5,
+    AUDIO_MIME = 6,
+    APP_MIME = 7,
+    UNHANDLED_MIME = 8,
+    SKIP_MIME = 9,
+    DECODE_MIME = 10,
+    BETWEEN_MIME = 11,
+    END_OF_MIME = 12,
+    HTMLTEXT_MIME = 13,
+    ALTERNATE_MIME = 14
 };
-#endif
 
-EXT LIST* mimecap_list;
-
-#define mimecap_ptr(n) ((MIMECAP_ENTRY*)listnum2listitem(mimecap_list,(long)(n)))
-
-EXT MIME_SECT mime_article;
-EXT MIME_SECT* mime_section INIT(&mime_article);
-EXT short mime_state;
-EXT char* multipart_separator INIT("-=-=-=-=-=-");
-
-#define NOT_MIME	0
-#define TEXT_MIME	1
-#define ISOTEXT_MIME	2
-#define MESSAGE_MIME	3
-#define MULTIPART_MIME	4
-#define IMAGE_MIME	5
-#define AUDIO_MIME	6
-#define APP_MIME	7
-#define UNHANDLED_MIME	8
-#define SKIP_MIME	9
-#define DECODE_MIME	10
-#define BETWEEN_MIME	11
-#define END_OF_MIME	12
-#define HTMLTEXT_MIME	13
-#define ALTERNATE_MIME	14
-
-#define MENCODE_NONE		0
-#define MENCODE_BASE64		1
-#define MENCODE_QPRINT		2
-#define MENCODE_UUE		3
-#define MENCODE_UNHANDLED	4
+enum
+{
+    MENCODE_NONE = 0,
+    MENCODE_BASE64 = 1,
+    MENCODE_QPRINT = 2,
+    MENCODE_UUE = 3,
+    MENCODE_UNHANDLED = 4
+};
 
 struct MIMECAP_ENTRY
 {
@@ -169,11 +152,11 @@ struct MIMECAP_ENTRY
     int flags;
 };
 
-#define MCF_NEEDSTERMINAL	0x0001
-#define MCF_COPIOUSOUTPUT	0x0002
-
-EXT bool auto_view_inline INIT(false);
-EXT char* mime_getc_line INIT(nullptr);
+enum
+{
+    MCF_NEEDSTERMINAL = 0x0001,
+    MCF_COPIOUSOUTPUT = 0x0002
+};
 
 void mime_init();
 void mime_ReadMimecap(char *mcname);
@@ -202,3 +185,5 @@ int b64_decodestring(char *t, char *f);
 int b64_decode(FILE *ifp, int state);
 int cat_decode(FILE *ifp, int state);
 int filter_html(char *t, char *f);
+
+#endif

@@ -75,7 +75,7 @@ add_executable(trn
     last.cpp last.h
     list.cpp list.h
     mempool.cpp mempool.h
-    mime.cpp mime.h mime.ih
+    mime.cpp mime.h
     msdos.h
     ndir.cpp ndir.h
     ng.cpp ng.h ng.ih
