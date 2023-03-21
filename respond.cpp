@@ -59,7 +59,7 @@ int save_article()
     parseheader(art);
     mime_SetArticle();
     clear_artbuf();
-    savefrom = (cmd == 'w' || cmd == 'e')? htype[PAST_HEADER].minpos : 0;
+    savefrom = (cmd == 'w' || cmd == 'e')? g_htype[PAST_HEADER].minpos : 0;
     if (artopen(art,savefrom) == nullptr) {
 	if (verbose)
 	    fputs("\nCan't save an empty article.\n",stdout) FLUSH;
@@ -427,7 +427,7 @@ int view_article()
     parseheader(art);
     mime_SetArticle();
     clear_artbuf();
-    savefrom = htype[PAST_HEADER].minpos;
+    savefrom = g_htype[PAST_HEADER].minpos;
     if (artopen(art,savefrom) == nullptr) {
 	if (verbose)
 	    fputs("\nNo attatchments on an empty article.\n",stdout) FLUSH;
@@ -599,7 +599,7 @@ int supersede_article()		/* Supersedes: */
 	fputs(hbuf,tmpfp);
 	if (incl_body && artfp != nullptr) {
 	    parseheader(art);
-	    seekart(htype[PAST_HEADER].minpos);
+	    seekart(g_htype[PAST_HEADER].minpos);
 	    while (readart(buf,LBUFLEN) != nullptr)
 		fputs(buf,tmpfp);
 	}
@@ -682,7 +682,7 @@ void reply()
 	parseheader(art);
 	mime_SetArticle();
 	clear_artbuf();
-	seekart(htype[PAST_HEADER].minpos);
+	seekart(g_htype[PAST_HEADER].minpos);
 	wrapped_nl = '\n';
 	while ((s = readartbuf(false)) != nullptr) {
 	    if ((t = strchr(s, '\n')) != nullptr)
@@ -846,7 +846,7 @@ trim the quoted article down as much as possible.)\n\
 	parseheader(art);
 	mime_SetArticle();
 	clear_artbuf();
-	seekart(htype[PAST_HEADER].minpos);
+	seekart(g_htype[PAST_HEADER].minpos);
 	wrapped_nl = '\n';
 	while ((s = readartbuf(false)) != nullptr) {
 	    if ((t = strchr(s, '\n')) != nullptr)

@@ -72,7 +72,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 
     option_def_vals = (char**)safemalloc(INI_LEN(options_ini)*sizeof(char*));
     memset((char*)option_def_vals,0,(options_ini)[0].checksum * sizeof (char*));
-    /* Set DEFHIDE and DEFMAGIC to current values and clear user_htype list */
+    /* Set DEFHIDE and DEFMAGIC to current values and clear g_user_htype list */
     set_header_list(HT_DEFHIDE,HT_HIDE,"");
     set_header_list(HT_DEFMAGIC,HT_MAGIC,"");
 
@@ -943,9 +943,9 @@ static char *hidden_list()
     int i;
     buf[0] = '\0';
     buf[1] = '\0';
-    for (i = 1; i < user_htype_cnt; i++) {
-	sprintf(buf+strlen(buf),",%s%s", user_htype[i].flags? "" : "!",
-		user_htype[i].name);
+    for (i = 1; i < g_user_htype_cnt; i++) {
+	sprintf(buf+strlen(buf),",%s%s", g_user_htype[i].flags? "" : "!",
+		g_user_htype[i].name);
     }
     return buf+1;
 }
@@ -956,10 +956,10 @@ static char *magic_list()
     buf[0] = '\0';
     buf[1] = '\0';
     for (i = HEAD_FIRST; i < HEAD_LAST; i++) {
-	if (!(htype[i].flags & HT_MAGIC) != !(htype[i].flags & HT_DEFMAGIC)) {
+	if (!(g_htype[i].flags & HT_MAGIC) != !(g_htype[i].flags & HT_DEFMAGIC)) {
 	    sprintf(buf+strlen(buf),",%s%s",
-		    (htype[i].flags & HT_DEFMAGIC)? "!" : "",
-		    htype[i].name);
+		    (g_htype[i].flags & HT_DEFMAGIC)? "!" : "",
+		    g_htype[i].name);
 	}
     }
     return buf+1;
@@ -972,18 +972,18 @@ static void set_header_list(int flag, int defflag, char *str)
     char* cp;
 
     if (flag == HT_HIDE || flag == HT_DEFHIDE) {
-	/* Free old user_htype list */
-	while (user_htype_cnt > 1)
-	    free(user_htype[--user_htype_cnt].name);
-	memset((char*)user_htypeix,0,sizeof user_htypeix);
+	/* Free old g_user_htype list */
+	while (g_user_htype_cnt > 1)
+	    free(g_user_htype[--g_user_htype_cnt].name);
+	memset((char*)g_user_htypeix,0,sizeof g_user_htypeix);
     }
 
     if (!*str)
 	str = " ";
     for (i = HEAD_FIRST; i < HEAD_LAST; i++)
-	htype[i].flags = ((htype[i].flags & defflag)
-			? (htype[i].flags | flag)
-			: (htype[i].flags & ~flag));
+	g_htype[i].flags = ((g_htype[i].flags & defflag)
+			? (g_htype[i].flags | flag)
+			: (g_htype[i].flags & ~flag));
     for (;;) {
 	if ((cp = strchr(str,',')) != nullptr)
 	    *cp = '\0';
@@ -1006,71 +1006,71 @@ void set_header(char *s, int flag, bool setit)
     int i;
     int len = strlen(s);
     for (i = HEAD_FIRST; i < HEAD_LAST; i++) {
-	if (!len || !strncasecmp(s,htype[i].name,len)) {
-	    if (setit && (flag != HT_MAGIC || (htype[i].flags & HT_MAGICOK)))
-		htype[i].flags |= flag;
+	if (!len || !strncasecmp(s,g_htype[i].name,len)) {
+	    if (setit && (flag != HT_MAGIC || (g_htype[i].flags & HT_MAGICOK)))
+		g_htype[i].flags |= flag;
 	    else
-		htype[i].flags &= ~flag;
+		g_htype[i].flags &= ~flag;
 	}
     }
     if (flag == HT_HIDE && *s && isalpha(*s)) {
 	char ch = isupper(*s)? tolower(*s) : *s;
 	int add_at = 0, killed = 0;
 	bool save_it = true;
-	for (i = user_htypeix[ch - 'a']; *user_htype[i].name == ch; i--) {
-	    if (len <= user_htype[i].length
-	     && !strncasecmp(s,user_htype[i].name,len)) {
-		free(user_htype[i].name);
-		user_htype[i].name = nullptr;
+	for (i = g_user_htypeix[ch - 'a']; *g_user_htype[i].name == ch; i--) {
+	    if (len <= g_user_htype[i].length
+	     && !strncasecmp(s,g_user_htype[i].name,len)) {
+		free(g_user_htype[i].name);
+		g_user_htype[i].name = nullptr;
 		killed = i;
 	    }
-	    else if (len > user_htype[i].length
-		  && !strncasecmp(s,user_htype[i].name,user_htype[i].length)) {
+	    else if (len > g_user_htype[i].length
+		  && !strncasecmp(s,g_user_htype[i].name,g_user_htype[i].length)) {
 		if (!add_at) {
-		    if (user_htype[i].flags == (setit? flag : 0))
+		    if (g_user_htype[i].flags == (setit? flag : 0))
 			save_it = false;
 		    add_at = i+1;
 		}
 	    }
 	}
 	if (save_it) {
-	    if (!killed || (add_at && user_htype[add_at].name)) {
-		if (user_htype_cnt >= user_htype_max) {
-		    user_htype = (USER_HEADTYPE*)
-			realloc(user_htype, (user_htype_max += 10)
+	    if (!killed || (add_at && g_user_htype[add_at].name)) {
+		if (g_user_htype_cnt >= g_user_htype_max) {
+		    g_user_htype = (USER_HEADTYPE*)
+			realloc(g_user_htype, (g_user_htype_max += 10)
 					    * sizeof (USER_HEADTYPE));
 		}
 		if (!add_at) {
-		    add_at = user_htypeix[ch - 'a']+1;
+		    add_at = g_user_htypeix[ch - 'a']+1;
 		    if (add_at == 1)
-			add_at = user_htype_cnt;
+			add_at = g_user_htype_cnt;
 		}
-		for (i = user_htype_cnt; i > add_at; i--)
-		    user_htype[i] = user_htype[i-1];
-		user_htype_cnt++;
+		for (i = g_user_htype_cnt; i > add_at; i--)
+		    g_user_htype[i] = g_user_htype[i-1];
+		g_user_htype_cnt++;
 	    }
 	    else if (!add_at)
 		add_at = killed;
-	    user_htype[add_at].length = len;
-	    user_htype[add_at].flags = setit? flag : 0;
-	    user_htype[add_at].name = savestr(s);
-	    for (s = user_htype[add_at].name; *s; s++) {
+	    g_user_htype[add_at].length = len;
+	    g_user_htype[add_at].flags = setit? flag : 0;
+	    g_user_htype[add_at].name = savestr(s);
+	    for (s = g_user_htype[add_at].name; *s; s++) {
 		if (isupper(*s))
 		    *s = tolower(*s);
 	    }
 	}
 	if (killed) {
-	    while (killed < user_htype_cnt && user_htype[killed].name != nullptr)
+	    while (killed < g_user_htype_cnt && g_user_htype[killed].name != nullptr)
 		killed++;
-	    for (i = killed+1; i < user_htype_cnt; i++) {
-		if (user_htype[i].name != nullptr)
-		    user_htype[killed++] = user_htype[i];
+	    for (i = killed+1; i < g_user_htype_cnt; i++) {
+		if (g_user_htype[i].name != nullptr)
+		    g_user_htype[killed++] = g_user_htype[i];
 	    }
-	    user_htype_cnt = killed;
+	    g_user_htype_cnt = killed;
 	}
-	memset((char*)user_htypeix,0,sizeof user_htypeix);
-	for (i = 1; i < user_htype_cnt; i++)
-	    user_htypeix[*user_htype[i].name - 'a'] = i;
+	memset((char*)g_user_htypeix,0,sizeof g_user_htypeix);
+	for (i = 1; i < g_user_htype_cnt; i++)
+	    g_user_htypeix[*g_user_htype[i].name - 'a'] = i;
     }
 }
 

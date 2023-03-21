@@ -265,8 +265,8 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	if (howmuch != ARTSCOPE_SUBJECT) {
 	    *s++ = scopestr[howmuch];
 	    if (howmuch == ARTSCOPE_ONEHDR) {
-		safecpy(s,htype[srchhdr].name,LBUFLEN-(s-saltbuf));
-		s += htype[srchhdr].length;
+		safecpy(s,g_htype[srchhdr].name,LBUFLEN-(s-saltbuf));
+		s += g_htype[srchhdr].length;
 		if (s - saltbuf > LBUFLEN-2)
 		    s = saltbuf+LBUFLEN-2;
 	    }
@@ -372,7 +372,7 @@ bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
 	break;
       case ARTSCOPE_ONEHDR:
 	g_untrim_cache = true;
-	sprintf(buf, "%s: %s", htype[art_srchhdr].name,
+	sprintf(buf, "%s: %s", g_htype[art_srchhdr].name,
 		prefetchlines(artnum,art_srchhdr,false));
 	g_untrim_cache = false;
 	break;
@@ -385,13 +385,13 @@ bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
 	    if (!parseheader(artnum))
 		return false;
 	    /* see if it's in the header */
-	    if (execute(compex,headbuf))	/* does it match? */
+	    if (execute(compex,g_headbuf))	/* does it match? */
 		return true;			/* say, "Eureka!" */
 	    if (scope < ARTSCOPE_ARTICLE)
 		return false;
 	}
-	if (parsed_art == artnum) {
-	    if (!artopen(artnum,htype[PAST_HEADER].minpos))
+	if (g_parsed_art == artnum) {
+	    if (!artopen(artnum,g_htype[PAST_HEADER].minpos))
 		return false;
 	}
 	else {
@@ -401,7 +401,7 @@ bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
 		return false;
 	}
 	/* loop through each line of the article */
-	seekartbuf(htype[PAST_HEADER].minpos);
+	seekartbuf(g_htype[PAST_HEADER].minpos);
 	while ((s = readartbuf(false)) != nullptr) {
 	    if (scope == ARTSCOPE_BODY_NOSIG && *s == '-' && s[1] == '-'
 	     && (s[2] == '\n' || (s[2] == ' ' && s[3] == '\n'))) {

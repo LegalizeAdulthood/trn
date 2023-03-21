@@ -1203,7 +1203,7 @@ run_the_selector:
 	    if (g_artsize < 0) {
 		nntp_finishbody(FB_OUTPUT);
 		g_raw_artsize = nntp_artsize();
-		g_artsize = g_raw_artsize-artbuf_seek+artbuf_len+htype[PAST_HEADER].minpos;
+		g_artsize = g_raw_artsize-artbuf_seek+artbuf_len+g_htype[PAST_HEADER].minpos;
 	    }
 	    if (g_do_hiding) {
 		seekartbuf(g_artsize);

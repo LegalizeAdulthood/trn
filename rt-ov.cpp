@@ -348,8 +348,8 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 	    if (fieldflags[fn] & FF_HAS_HDR) {
 		if (!s)
 		    break;
-		if (s - cp != htype[hdrnum[fn]].length
-		 || strncasecmp(cp,htype[hdrnum[fn]].name,htype[hdrnum[fn]].length))
+		if (s - cp != g_htype[hdrnum[fn]].length
+		 || strncasecmp(cp,g_htype[hdrnum[fn]].name,g_htype[hdrnum[fn]].length))
 		    continue;
 		cp = s;
 		while (*++cp == ' ') ;
@@ -444,7 +444,7 @@ void ov_close()
 
 char *ov_fieldname(int num)
 {
-    return htype[hdrnum[num]].name;
+    return g_htype[hdrnum[num]].name;
 }
 
 char *ov_field(ARTICLE *ap, int num)

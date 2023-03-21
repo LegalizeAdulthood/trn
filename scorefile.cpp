@@ -29,7 +29,7 @@
 #include "scorefile.h"
 #include "scorefile.ih"
 
-/* list of score array markers (in htype field of score entry) */
+/* list of score array markers (in g_htype field of score entry) */
     /* entry is a file marker.  Score is the file level */
 #define SF_FILE_MARK_START (-1)
 #define SF_FILE_MARK_END (-2)
@@ -253,7 +253,7 @@ char *sf_get_extra_header(ART_NUM art, int hnum)
     head = sf_extra_headers[hnum];
     len = strlen(head);
 
-    for (s = headbuf; s && *s && *s != '\n'; s++) {
+    for (s = g_headbuf; s && *s && *s != '\n'; s++) {
 	if (!strncasecmp(head,s,len)) {
 	    s = strchr(s,':');
 	    if (!s)
@@ -1040,7 +1040,7 @@ void sf_print_match(int indx)
     if (sf_entries[indx].head_type >= HEAD_LAST)
 	head_name = sf_extra_headers[sf_entries[indx].head_type-HEAD_LAST];
     else
-	head_name = htype[sf_entries[indx].head_type].name;
+	head_name = g_htype[sf_entries[indx].head_type].name;
     printf("%d %s%s: %s", sf_entries[indx].score,pattern,head_name,
 	   sf_entries[indx].str1);
     if (sf_entries[indx].str2)

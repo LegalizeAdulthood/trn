@@ -184,7 +184,7 @@ void nntp_body(ART_NUM artnum)
     chmod(artname, 0600);
 #endif
     /*artio_setbuf(artfp);$$*/
-    if (parsed_art == artnum)
+    if (g_parsed_art == artnum)
 	sprintf(g_ser_line, "BODY %ld", (long)artnum);
     else
 	sprintf(g_ser_line, "ARTICLE %ld", (long)artnum);
@@ -201,9 +201,9 @@ void nntp_body(ART_NUM artnum)
 	return;
     }
     body_pos = 0;
-    if (parsed_art == artnum) {
-	fwrite(headbuf, 1, strlen(headbuf), artfp);
-	htype[PAST_HEADER].minpos = body_end = (ART_POS)ftell(artfp);
+    if (g_parsed_art == artnum) {
+	fwrite(g_headbuf, 1, strlen(g_headbuf), artfp);
+	g_htype[PAST_HEADER].minpos = body_end = (ART_POS)ftell(artfp);
     }
     else {
 	char b[NNTP_STRLEN];

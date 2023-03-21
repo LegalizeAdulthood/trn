@@ -205,10 +205,10 @@ void decode_switch(char *s)
 	    break;
 	case 'h':
 	    if (!s[1]) {
-		/* Free old user_htype list */
-		while (user_htype_cnt > 1)
-		    free(user_htype[--user_htype_cnt].name);
-		memset((char*)user_htypeix,0,26);
+		/* Free old g_user_htype list */
+		while (g_user_htype_cnt > 1)
+		    free(g_user_htype[--g_user_htype_cnt].name);
+		memset((char*)g_user_htypeix,0,26);
 	    }
 	    /* FALL THROUGH */
 	case 'H':

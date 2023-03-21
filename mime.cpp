@@ -295,8 +295,8 @@ void mime_SetArticle()
     mime_InitSections();
     /*$$ Check mime version #? */
     g_multimedia_mime = false;
-    g_is_mime = (htype[MIMEVER_LINE].flags & HT_MAGIC)
-	    && htype[MIMEVER_LINE].minpos >= 0;
+    g_is_mime = (g_htype[MIMEVER_LINE].flags & HT_MAGIC)
+	    && g_htype[MIMEVER_LINE].minpos >= 0;
 
     s = fetchlines(art,CONTTYPE_LINE);
     mime_ParseType(mime_section,s);

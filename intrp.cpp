@@ -283,7 +283,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			if (art_howmuch != ARTSCOPE_SUBJECT) {
 			    *s++ = scopestr[art_howmuch];
 			    if (art_howmuch == ARTSCOPE_ONEHDR) {
-				safecpy(s,htype[art_srchhdr].name,
+				safecpy(s,g_htype[art_srchhdr].name,
 					(sizeof scrbuf) - (s-scrbuf));
 				if (!(s = strchr(s,':')))
 				    s = scrbuf+(sizeof scrbuf)-1;
@@ -526,7 +526,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		case 'f':			/* from line */
 		    if (in_ng) {
 			parseheader(art);
-			if (htype[REPLY_LINE].minpos >= 0 && !comment_parse) {
+			if (g_htype[REPLY_LINE].minpos >= 0 && !comment_parse) {
 						/* was there a reply line? */
 			    if (!(s=reply_buf))
 				s = reply_buf = fetchlines(art,REPLY_LINE);
@@ -540,7 +540,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		case 'F':
 		    if (in_ng) {
 			parseheader(art);
-			if (htype[FOLLOW_LINE].minpos >= 0)
+			if (g_htype[FOLLOW_LINE].minpos >= 0)
 					/* is there a Followup-To line? */
 			    s = follow_buf = fetchlines(art,FOLLOW_LINE);
 			else 
@@ -649,7 +649,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    if (in_ng) {
 			parseheader(art);
 			safefree0(refs_buf);
-			if (htype[REFS_LINE].minpos >= 0) {
+			if (g_htype[REFS_LINE].minpos >= 0) {
 			    refs_buf = fetchlines(art,REFS_LINE);
 			    normalize_refs(refs_buf);
 			    if ((s = strrchr(refs_buf,'<')) != nullptr)
@@ -667,7 +667,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    }
 		    parseheader(art);
 		    safefree0(refs_buf);
-		    if (htype[REFS_LINE].minpos >= 0) {
+		    if (g_htype[REFS_LINE].minpos >= 0) {
 			refs_buf = fetchlines(art,REFS_LINE);
 			len = strlen(refs_buf)+1;
 			normalize_refs(refs_buf);
@@ -727,7 +727,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			break;
 		    }
 		    parseheader(art);
-		    if (htype[REPLY_LINE].minpos >= 0) {
+		    if (g_htype[REPLY_LINE].minpos >= 0) {
 					/* was there a reply line? */
 			if (!(s=reply_buf))
 			    s = reply_buf = fetchlines(art,REPLY_LINE);
@@ -737,7 +737,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    else
 			s = "noname";
 		    if (*pattern == 'T') {
-			if (htype[PATH_LINE].minpos >= 0) {
+			if (g_htype[PATH_LINE].minpos >= 0) {
 					/* should we substitute path? */
 			    s = path_buf = fetchlines(art,PATH_LINE);
 			}

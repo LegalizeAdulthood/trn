@@ -58,7 +58,7 @@ void thread_open()
 	if (g_first_subject) {
 	    g_first_cached = firstart;
 	    g_last_cached = firstart - 1;
-	    parsed_art = 0;
+	    g_parsed_art = 0;
 	}
     }
 

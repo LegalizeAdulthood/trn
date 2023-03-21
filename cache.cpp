@@ -128,7 +128,7 @@ void close_cache()
     }
     g_first_subject = g_last_subject = nullptr;
     subject_count = 0;			/* just to be sure */
-    parsed_art = 0;
+    g_parsed_art = 0;
 
     if (g_artptr_list) {
 	free((char*)g_artptr_list);
@@ -352,7 +352,7 @@ char *fetchcache(ART_NUM artnum, int which_line, bool fill_cache)
 {
     char* s;
     ARTICLE* ap;
-    bool cached = (htype[which_line].flags & HT_CACHED);
+    bool cached = (g_htype[which_line].flags & HT_CACHED);
 
     /* article_find() returns a nullptr if the artnum value is invalid */
     if (!(ap = article_find(artnum)) || !(ap->flags & AF_EXISTS))

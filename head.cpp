@@ -7,45 +7,100 @@
 #include "common.h"
 #include "list.h"
 #include "artio.h"
-#include "hash.h"
 #include "cache.h"
 #include "ng.h"
 #include "ngdata.h"
 #include "nntpclient.h"
-#include "nntpinit.h"
 #include "datasrc.h"
 #include "nntp.h"
 #include "util.h"
 #include "util2.h"
-#include "rthread.h"
 #include "rt-process.h"
 #include "rt-util.h"
 #include "final.h"
 #include "parsedate.h"
 #include "mempool.h"
-#include "INTERN.h"
 #include "head.h"
 
-bool first_one;		/* is this the 1st occurance of this header line? */
-bool reading_nntp_header;
+#define HIDDEN    (HT_HIDE|HT_DEFHIDE)
+#define MAGIC_ON  (HT_MAGICOK|HT_MAGIC|HT_DEFMAGIC)
+#define MAGIC_OFF (HT_MAGICOK)
 
-static short htypeix[26] =
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+#define XREF_CACHED HT_CACHED
+#define NGS_CACHED  0
+#define FILT_CACHED 0
+
+/* This array must stay in the same order as the enum values header_line_type */
+HEADTYPE g_htype[HEAD_LAST] = {
+    /* name             minpos   maxpos  length   flag */
+    {"",/*BODY*/	0,	0,	0,	0		},
+    {"",/*SHOWN*/	0,	0,	0,	0		},
+    {"",/*HIDDEN*/	0,	0,	0,	HIDDEN		},
+    {"",/*CUSTOM*/	0,	0,	0,	0		},
+    {"unrecognized",	0,	0,	12,	HIDDEN		},
+    {"author",		0,	0,	6,	0		},
+    {"bytes",		0,	0,	5,	HIDDEN|HT_CACHED},
+    {"content-name",	0,	0,	12,	HIDDEN		},
+    {"content-disposition",
+			0,	0,	19,	HIDDEN		},
+    {"content-length",	0,	0,	14,	HIDDEN		},
+    {"content-transfer-encoding",
+			0,	0,	25,	HIDDEN		},
+    {"content-type",	0,	0,	12,	HIDDEN		},
+    {"distribution",	0,	0,	12,	0		},
+    {"date",		0,	0,	4,	MAGIC_ON	},
+    {"expires",		0,	0,	7,	HIDDEN|MAGIC_ON	},
+    {"followup-to",	0,	0,	11,	0		},
+    {"from",		0,	0,	4,	MAGIC_OFF|HT_CACHED},
+    {"in-reply-to",	0,	0,	11,	HIDDEN		},
+    {"keywords",	0,	0,	8,	0		},
+    {"lines",		0,	0,	5,	HT_CACHED	},
+    {"mime-version",	0,	0,	12,	MAGIC_ON|HIDDEN	},
+    {"message-id",	0,	0,	10,	HIDDEN|HT_CACHED},
+    {"newsgroups",	0,	0,	10,	MAGIC_ON|HIDDEN|NGS_CACHED},
+    {"path",		0,	0,	4,	HIDDEN		},
+    {"relay-version",	0,	0,	13,	HIDDEN		},
+    {"reply-to",	0,	0,	8,	0		},
+    {"references",	0,	0,	10,	HIDDEN|FILT_CACHED},
+    {"summary",		0,	0,	7,	0		},
+    {"subject",		0,	0,	7,	MAGIC_ON|HT_CACHED},
+    {"xref",		0,	0,	4,	HIDDEN|XREF_CACHED},
+};
+
+#undef HIDDEN
+#undef MAGIC_ON
+#undef MAGIC_OFF
+#undef NGS_CACHED
+#undef XREF_CACHED
+
+USER_HEADTYPE *g_user_htype{};
+short g_user_htypeix[26];
+int g_user_htype_cnt{};
+int g_user_htype_max{};
+ART_NUM g_parsed_art{};   /* the article number we've parsed */
+ARTICLE *g_parsed_artp{}; /* the article ptr we've parsed */
+int g_in_header{};        /* are we decoding the header? */
+char *g_headbuf;
+long g_headbuf_size;
+
+static bool s_first_one; /* is this the 1st occurance of this header line? */
+static bool s_reading_nntp_header;
+static short s_htypeix[26] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 void head_init()
 {
     int i;
 
     for (i = HEAD_FIRST+1; i < HEAD_LAST; i++)
-	htypeix[*htype[i].name - 'a'] = i;
+	s_htypeix[*g_htype[i].name - 'a'] = i;
 
-    user_htype_max = 10;
-    user_htype = (USER_HEADTYPE*)safemalloc(user_htype_max
+    g_user_htype_max = 10;
+    g_user_htype = (USER_HEADTYPE*)safemalloc(g_user_htype_max
 					    * sizeof (USER_HEADTYPE));
-    user_htype[user_htype_cnt++].name = "*";
+    g_user_htype[g_user_htype_cnt++].name = "*";
 
-    headbuf_size = LBUFLEN * 8;
-    headbuf = safemalloc(headbuf_size);
+    g_headbuf_size = LBUFLEN * 8;
+    g_headbuf = safemalloc(g_headbuf_size);
 }
 
 #ifdef DEBUG
@@ -53,12 +108,12 @@ void dumpheader(char *where)
 {
     register int i;
 
-    printf("header: %ld %s", (long)parsed_art, where);
+    printf("header: %ld %s", (long)g_parsed_art, where);
 
     for (i = HEAD_FIRST-1; i < HEAD_LAST; i++) {
-	printf("%15s %4ld %4ld %03o\n",htype[i].name,
-	       (long)htype[i].minpos, (long)htype[i].maxpos,
-	       htype[i].flags) FLUSH;
+	printf("%15s %4ld %4ld %03o\n",g_htype[i].name,
+	       (long)g_htype[i].minpos, (long)g_htype[i].maxpos,
+	       g_htype[i].flags) FLUSH;
     }
 }
 #endif
@@ -87,17 +142,17 @@ int set_line_type(char *bufptr, const char *colon)
      * optimization to avoid calling subroutine strEQ unnecessarily.  Hauls.
      */
     if (*f >= 'a' && *f <= 'z') {
-	for (i = htypeix[*f - 'a']; *htype[i].name == *f; i--) {
-	    if (len == htype[i].length && !strcmp(f,htype[i].name))
+	for (i = s_htypeix[*f - 'a']; *g_htype[i].name == *f; i--) {
+	    if (len == g_htype[i].length && !strcmp(f,g_htype[i].name))
 		return i;
 	}
-	if (len == htype[CUSTOM_LINE].length
-	 && !strcmp(f,htype[(((0+1)+1)+1)].name))
+	if (len == g_htype[CUSTOM_LINE].length
+	 && !strcmp(f,g_htype[(((0+1)+1)+1)].name))
 	    return CUSTOM_LINE;
-	for (i = user_htypeix[*f - 'a']; *user_htype[i].name == *f; i--) {
-	    if (len >= user_htype[i].length
-	     && !strncmp(f, user_htype[i].name, user_htype[i].length)) {
-		if (user_htype[i].flags & HT_HIDE)
+	for (i = g_user_htypeix[*f - 'a']; *g_user_htype[i].name == *f; i--) {
+	    if (len >= g_user_htype[i].length
+	     && !strncmp(f, g_user_htype[i].name, g_user_htype[i].length)) {
+		if (g_user_htype[i].flags & HT_HIDE)
 		    return HIDDEN_LINE;
 		return SHOWN_LINE;
 	    }
@@ -116,14 +171,14 @@ int get_header_num(char *s)
     if (i <= SOME_LINE && i != CUSTOM_LINE) {
 	char* bp;
 	char ch;
-	if (htype[CUSTOM_LINE].name != "")
-	    free(htype[CUSTOM_LINE].name);
-	htype[CUSTOM_LINE].name = savestr(msg);
-	htype[CUSTOM_LINE].length = end - s;
-	htype[CUSTOM_LINE].flags = htype[i].flags;
-	htype[CUSTOM_LINE].minpos = -1;
-	htype[CUSTOM_LINE].maxpos = 0;
-	for (bp = headbuf; *bp; bp = end) {
+	if (g_htype[CUSTOM_LINE].name != "")
+	    free(g_htype[CUSTOM_LINE].name);
+	g_htype[CUSTOM_LINE].name = savestr(msg);
+	g_htype[CUSTOM_LINE].length = end - s;
+	g_htype[CUSTOM_LINE].flags = g_htype[i].flags;
+	g_htype[CUSTOM_LINE].minpos = -1;
+	g_htype[CUSTOM_LINE].maxpos = 0;
+	for (bp = g_headbuf; *bp; bp = end) {
 	    if (!(end = strchr(bp,'\n')) || end == bp)
 		break;
 	    ch = *++end;
@@ -132,7 +187,7 @@ int get_header_num(char *s)
 	    *end = ch;
 	    if (!s || (i = set_line_type(bp,s)) != CUSTOM_LINE)
 		continue;
-	    htype[CUSTOM_LINE].minpos = bp - headbuf;
+	    g_htype[CUSTOM_LINE].minpos = bp - g_headbuf;
 	    while (*end == ' ' || *end == '\t') {
 		if (!(end = strchr(end, '\n'))) {
 		    end = bp + strlen(bp);
@@ -140,7 +195,7 @@ int get_header_num(char *s)
 		}
 		end++;
 	    }
-	    htype[CUSTOM_LINE].maxpos = end - headbuf;
+	    g_htype[CUSTOM_LINE].maxpos = end - g_headbuf;
 	    break;
 	}
 	i = CUSTOM_LINE;
@@ -157,35 +212,35 @@ void start_header(ART_NUM artnum)
 	dumpheader("start_header\n");
 #endif
     for (i = 0; i < HEAD_LAST; i++) {
-	htype[i].minpos = -1;
-	htype[i].maxpos = 0;
+	g_htype[i].minpos = -1;
+	g_htype[i].maxpos = 0;
     }
-    in_header = SOME_LINE;
-    first_one = false;
-    parsed_art = artnum;
-    parsed_artp = article_ptr(artnum);
+    g_in_header = SOME_LINE;
+    s_first_one = false;
+    g_parsed_art = artnum;
+    g_parsed_artp = article_ptr(artnum);
 }
 
 void end_header_line()
 {
-    if (first_one) {		/* did we just pass 1st occurance? */
-	first_one = false;
+    if (s_first_one) {		/* did we just pass 1st occurance? */
+	s_first_one = false;
 	/* remember where line left off */
-	htype[in_header].maxpos = artpos;
-	if (htype[in_header].flags & HT_CACHED) {
-	    if (!get_cached_line(parsed_artp, in_header, true)) {
-		int start = htype[in_header].minpos
-			  + htype[in_header].length + 1;
+	g_htype[g_in_header].maxpos = artpos;
+	if (g_htype[g_in_header].flags & HT_CACHED) {
+	    if (!get_cached_line(g_parsed_artp, g_in_header, true)) {
+		int start = g_htype[g_in_header].minpos
+			  + g_htype[g_in_header].length + 1;
 		MEM_SIZE size;
-		while (headbuf[start] == ' ' || headbuf[start] == '\t')
+		while (g_headbuf[start] == ' ' || g_headbuf[start] == '\t')
 		    start++;
 		size = artpos - start + 1 - 1;	/* pre-strip newline */
-		if (in_header == SUBJ_LINE)
-		    set_subj_line(parsed_artp,headbuf+start,size-1);
+		if (g_in_header == SUBJ_LINE)
+		    set_subj_line(g_parsed_artp,g_headbuf+start,size-1);
 		else {
 		    char* s = safemalloc(size);
-		    safecpy(s,headbuf+start,size);
-		    set_cached_line(parsed_artp,in_header,s);
+		    safecpy(s,g_headbuf+start,size);
+		    set_cached_line(g_parsed_artp,g_in_header,s);
 		}
 	    }
 	}
@@ -203,27 +258,27 @@ bool parseline(char *art_buf, int newhide, int oldhide)
     s = strchr(art_buf,':');
     if (s == nullptr) {	/* is it the end of the header? */
 	    /* Did NNTP ship us a mal-formed header line? */
-	    if (reading_nntp_header && *art_buf && *art_buf != '\n') {
-		in_header = SOME_LINE;
+	    if (s_reading_nntp_header && *art_buf && *art_buf != '\n') {
+		g_in_header = SOME_LINE;
 		return newhide;
 	    }
-	    in_header = PAST_HEADER;
+	    g_in_header = PAST_HEADER;
     }
     else {		/* it is a new header line */
-	    in_header = set_line_type(art_buf,s);
-	    first_one = (htype[in_header].minpos < 0);
-	    if (first_one) {
-		htype[in_header].minpos = artpos;
-		if (in_header == DATE_LINE) {
-		    if (!parsed_artp->date)
-			parsed_artp->date = parsedate(art_buf+6);
+	    g_in_header = set_line_type(art_buf,s);
+	    s_first_one = (g_htype[g_in_header].minpos < 0);
+	    if (s_first_one) {
+		g_htype[g_in_header].minpos = artpos;
+		if (g_in_header == DATE_LINE) {
+		    if (!g_parsed_artp->date)
+			g_parsed_artp->date = parsedate(art_buf+6);
 		}
 	    }
 #ifdef DEBUG
 	    if (debug & DEB_HEADER)
 		dumpheader(art_buf);
 #endif
-	    if (htype[in_header].flags & HT_HIDE)
+	    if (g_htype[g_in_header].flags & HT_HIDE)
 		return newhide;
     }
     return false;			/* don't hide this line */
@@ -231,30 +286,30 @@ bool parseline(char *art_buf, int newhide, int oldhide)
 
 void end_header()
 {
-    ARTICLE* ap = parsed_artp;
+    ARTICLE* ap = g_parsed_artp;
 
     end_header_line();
-    in_header = PAST_HEADER;	/* just to be sure */
+    g_in_header = PAST_HEADER;	/* just to be sure */
 
     if (!ap->subj)
 	set_subj_line(ap,"<NONE>",6);
 
-    if (reading_nntp_header) {
-	reading_nntp_header = false;
-	htype[PAST_HEADER].minpos = artpos + 1;	/* nntp_body will fix this */
+    if (s_reading_nntp_header) {
+	s_reading_nntp_header = false;
+	g_htype[PAST_HEADER].minpos = artpos + 1;	/* nntp_body will fix this */
     }
     else
-	htype[PAST_HEADER].minpos = tellart();
+	g_htype[PAST_HEADER].minpos = tellart();
 
     /* If there's no References: line, then the In-Reply-To: line may give us
     ** more information.
     */
     if (ThreadedGroup
-     && (!(ap->flags & AF_THREADED) || htype[INREPLY_LINE].minpos >= 0)) {
+     && (!(ap->flags & AF_THREADED) || g_htype[INREPLY_LINE].minpos >= 0)) {
 	if (valid_article(ap)) {
 	    ARTICLE* artp_hold = artp;
-	    char* references = fetchlines(parsed_art, REFS_LINE);
-	    char* inreply = fetchlines(parsed_art, INREPLY_LINE);
+	    char* references = fetchlines(g_parsed_art, REFS_LINE);
+	    char* inreply = fetchlines(g_parsed_art, INREPLY_LINE);
 	    int reflen = strlen(references) + 1;
 	    growstr(&references, &reflen, reflen + strlen(inreply) + 1);
 	    safecat(references, inreply, reflen);
@@ -279,7 +334,7 @@ bool parseheader(ART_NUM artnum)
     bool had_nl = true;
     int found_nl;
 
-    if (parsed_art == artnum)
+    if (g_parsed_art == artnum)
 	return true;
     if (artnum > lastart)
 	return false;
@@ -295,22 +350,22 @@ bool parseheader(ART_NUM artnum)
 	    return false;
 	}
 	else
-	    reading_nntp_header = true;
+	    s_reading_nntp_header = true;
     }
     else if (!artopen(artnum,(ART_POS)0))
 	return false;
 
     start_header(artnum);
     artpos = 0;
-    bp = headbuf;
-    while (in_header) {
-	if (headbuf_size < artpos + LBUFLEN) {
-	    len = bp - headbuf;
-	    headbuf_size += LBUFLEN * 4;
-	    headbuf = saferealloc(headbuf,headbuf_size);
-	    bp = headbuf + len;
+    bp = g_headbuf;
+    while (g_in_header) {
+	if (g_headbuf_size < artpos + LBUFLEN) {
+	    len = bp - g_headbuf;
+	    g_headbuf_size += LBUFLEN * 4;
+	    g_headbuf = saferealloc(g_headbuf,g_headbuf_size);
+	    bp = g_headbuf + len;
 	}
-	if (reading_nntp_header) {
+	if (s_reading_nntp_header) {
 	    found_nl = nntp_gets(bp,LBUFLEN);
 	    if (found_nl < 0)
 		strcpy(bp,"."); /*$$*/
@@ -357,19 +412,19 @@ char *fetchlines(ART_NUM artnum, int which_line)
     int size;
 
     /* Only return a cached line if it isn't the current article */
-    if (parsed_art != artnum) {
+    if (g_parsed_art != artnum) {
 	/* If the line is not in the cache, this will parse the header */
 	s = fetchcache(artnum,which_line, FILL_CACHE);
 	if (s)
 	    return savestr(s);
     }
-    if ((firstpos = htype[which_line].minpos) < 0)
+    if ((firstpos = g_htype[which_line].minpos) < 0)
 	return savestr("");
 
-    firstpos += htype[which_line].length + 1;
-    lastpos = htype[which_line].maxpos;
+    firstpos += g_htype[which_line].length + 1;
+    lastpos = g_htype[which_line].maxpos;
     size = lastpos - firstpos;
-    t = headbuf + firstpos;
+    t = g_headbuf + firstpos;
     while (*t == ' ' || *t == '\t') t++, size--;
 #ifdef DEBUG
     if (debug && (size < 1 || size > 1000)) {
@@ -395,19 +450,19 @@ char *mp_fetchlines(ART_NUM artnum, int which_line, int pool)
     int size;
 
     /* Only return a cached line if it isn't the current article */
-    if (parsed_art != artnum) {
+    if (g_parsed_art != artnum) {
 	/* If the line is not in the cache, this will parse the header */
 	s = fetchcache(artnum,which_line, FILL_CACHE);
 	if (s)
 	    return mp_savestr(s,pool);
     }
-    if ((firstpos = htype[which_line].minpos) < 0)
+    if ((firstpos = g_htype[which_line].minpos) < 0)
 	return mp_savestr("",pool);
 
-    firstpos += htype[which_line].length + 1;
-    lastpos = htype[which_line].maxpos;
+    firstpos += g_htype[which_line].length + 1;
+    lastpos = g_htype[which_line].maxpos;
     size = lastpos - firstpos;
-    t = headbuf + firstpos;
+    t = g_headbuf + firstpos;
     while (*t == ' ' || *t == '\t') t++, size--;
 #ifdef DEBUG
     if (debug && (size < 1 || size > 1000)) {
@@ -433,7 +488,7 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
     ART_POS lastpos;
     int size;
 
-    if ((g_datasrc->flags & DF_REMOTE) && parsed_art != artnum) {
+    if ((g_datasrc->flags & DF_REMOTE) && g_parsed_art != artnum) {
 	ARTICLE* ap;
 	int size;
 	ART_NUM num, priornum, lastnum;
@@ -456,15 +511,15 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 	}
 	*s = '\0';
 	priornum = artnum-1;
-	if ((cached = (htype[which_line].flags & HT_CACHED)) != 0) {
+	if ((cached = (g_htype[which_line].flags & HT_CACHED)) != 0) {
 	    lastnum = artnum + PREFETCH_SIZE - 1;
 	    if (lastnum > lastart)
 		lastnum = lastart;
-	    sprintf(g_ser_line,"XHDR %s %ld-%ld",htype[which_line].name,
+	    sprintf(g_ser_line,"XHDR %s %ld-%ld",g_htype[which_line].name,
 		artnum,lastnum);
 	} else {
 	    lastnum = artnum;
-	    sprintf(g_ser_line,"XHDR %s %ld",htype[which_line].name,artnum);
+	    sprintf(g_ser_line,"XHDR %s %ld",g_htype[which_line].name,artnum);
 	}
 	if (nntp_command(g_ser_line) <= 0)
 	    finalize(1); /*$$*/
@@ -524,9 +579,9 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 
     /* Only return a cached line if it isn't the current article */
     s = nullptr;
-    if (parsed_art != artnum)
+    if (g_parsed_art != artnum)
 	s = fetchcache(artnum,which_line, FILL_CACHE);
-    if (parsed_art == artnum && (firstpos = htype[which_line].minpos) < 0)
+    if (g_parsed_art == artnum && (firstpos = g_htype[which_line].minpos) < 0)
 	s = "";
     if (s) {
 	if (copy)
@@ -534,10 +589,10 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 	return s;
     }
 
-    firstpos += htype[which_line].length + 1;
-    lastpos = htype[which_line].maxpos;
+    firstpos += g_htype[which_line].length + 1;
+    lastpos = g_htype[which_line].maxpos;
     size = lastpos - firstpos;
-    t = headbuf + firstpos;
+    t = g_headbuf + firstpos;
     while (*t == ' ' || *t == '\t') t++, size--;
     if (copy)
 	s = safemalloc((MEM_SIZE)size);

@@ -145,7 +145,7 @@ int seekartbuf(ART_POS pos)
     if (!g_do_hiding)
 	return seekart(pos);
 
-    pos -= htype[PAST_HEADER].minpos;
+    pos -= g_htype[PAST_HEADER].minpos;
     artbuf_pos = artbuf_len;
 
     while (artbuf_pos < pos) {
@@ -168,10 +168,10 @@ char *readartbuf(bool view_inline)
 
     if (!g_do_hiding) {
 	bp = readart(g_art_line,(sizeof g_art_line)-1);
-	artbuf_pos = artbuf_seek = tellart() - htype[PAST_HEADER].minpos;
+	artbuf_pos = artbuf_seek = tellart() - g_htype[PAST_HEADER].minpos;
 	return bp;
     }
-    if (artbuf_pos == g_artsize - htype[PAST_HEADER].minpos)
+    if (artbuf_pos == g_artsize - g_htype[PAST_HEADER].minpos)
 	return nullptr;
     bp = artbuf + artbuf_pos;
     if (*bp == '\001' || *bp == '\002') {
@@ -316,7 +316,7 @@ char *readartbuf(bool view_inline)
 	while ((mp = mp->prev) != nullptr && !mp->boundary_len) ;
 	if (!mp) {
 	    artbuf_len = artbuf_pos;
-	    g_artsize = artbuf_len + htype[PAST_HEADER].minpos;
+	    g_artsize = artbuf_len + g_htype[PAST_HEADER].minpos;
 	    read_something = 0;
 	    bp = nullptr;
 	}
@@ -425,7 +425,7 @@ char *readartbuf(bool view_inline)
     	artbuf_seek = tellart();
 	artbuf_len = artbuf_pos + extra_chars;
 	if (g_artsize >= 0)
-	    g_artsize = g_raw_artsize-artbuf_seek+artbuf_len+htype[PAST_HEADER].minpos;
+	    g_artsize = g_raw_artsize-artbuf_seek+artbuf_len+g_htype[PAST_HEADER].minpos;
     }
 
     return bp;
