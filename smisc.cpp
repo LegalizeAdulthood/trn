@@ -6,20 +6,13 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "hash.h"
-#include "cache.h"
-#include "rt-util.h"	/* for from-compression stuff */
-#include "intrp.h"
-#include "term.h"
-#include "util.h"
 #include "scan.h"
-#include "sdisp.h"
-#include "sorder.h"
-#include "charsubst.h"
 #include "samisc.h"
 #include "sadesc.h"
-#include "INTERN.h"
 #include "smisc.h"
+
+bool g_s_default_cmd{}; /* true if the last command (run through setdef()) was the default */
+bool g_s_follow_temp{}; /* explicitly follow until end of thread */
 
 bool s_eligible(long ent)
 {

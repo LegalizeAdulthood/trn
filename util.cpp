@@ -29,7 +29,7 @@
 #include <process.h>
 #endif
 #include "scan.h"
-#include "smisc.h"	/* s_default_cmd */
+#include "smisc.h"	/* g_s_default_cmd */
 #include "univ.h"
 #include "INTERN.h"
 #include "util.ih"
@@ -476,14 +476,14 @@ void growstr(char **strptr, int *curlen, int newlen)
 
 void setdef(char *buffer, const char *dflt)
 {
-    s_default_cmd = false;
+    g_s_default_cmd = false;
     univ_default_cmd = false;
     if (*buffer == ' '
 #ifndef STRICTCR
      || *buffer == '\n' || *buffer == '\r'
 #endif
     ) {
-	s_default_cmd = true;
+	g_s_default_cmd = true;
 	univ_default_cmd = true;
 	if (*dflt == '^' && isupper(dflt[1]))
 	    pushchar(Ctl(dflt[1]));

@@ -82,7 +82,7 @@ sa_main_result sa_main()
 
     g_sa_in = true;
     g_sa_go = false;	/* ...do not collect $200... */
-    s_follow_temp = false;
+    g_s_follow_temp = false;
 
     if (g_lastart < g_absfirst) {
 	s_beep();

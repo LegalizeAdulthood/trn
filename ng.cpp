@@ -665,7 +665,7 @@ n or q to change nothing.\n\
 		return AS_ASK;
 	    }
 	    g_reread = true;
-	    s_follow_temp = true;
+	    g_s_follow_temp = true;
 	    univ_follow_temp = true;
 	    return AS_NORM;
 	}
@@ -697,7 +697,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 		return AS_ASK;
 	    }
 	    g_reread = true;
-	    s_follow_temp = true;
+	    g_s_follow_temp = true;
 	    univ_follow_temp = true;
 	    return AS_NORM;
 	}
@@ -715,7 +715,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 		return AS_ASK;
 	    }
 	    g_reread = true;
-	    s_follow_temp = true;
+	    g_s_follow_temp = true;
 	    univ_follow_temp = true;
 	    return AS_NORM;
 	}
@@ -740,7 +740,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	g_art = g_curr_art;
 	g_artp = g_curr_artp;
 	kill_subject(g_artp->subj,AFFECT_ALL);/* take care of any prior subjects */
-	if (g_sa_in && !(g_sa_follow || s_follow_temp))
+	if (g_sa_in && !(g_sa_follow || g_s_follow_temp))
 	    return AS_SA;
 	return AS_NORM;
       case ',':		/* kill this node and all descendants */
@@ -750,7 +750,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    kill_subthread(g_artp,AFFECT_ALL);
 	else if (g_art >= g_absfirst && g_art <= g_lastart)
 	    mark_as_read(g_artp);
-	if (g_sa_in && !(g_sa_follow || s_follow_temp))
+	if (g_sa_in && !(g_sa_follow || g_s_follow_temp))
 	    return AS_SA;
 	return AS_NORM;
       case 'J':		/* Junk all nodes in this thread */
@@ -771,7 +771,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    *buf = 'k';
 	    goto normal_search;
 	}
-	if (g_sa_in && !(g_sa_follow || s_follow_temp))
+	if (g_sa_in && !(g_sa_follow || g_s_follow_temp))
 	    return AS_SA;
 	return AS_NORM;
       case 't':
@@ -791,7 +791,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	g_artp = g_curr_artp;
 	return AS_ASK;
       case 'p':			/* find previous unread article */
-	s_follow_temp = true;	/* keep going until change req. */
+	g_s_follow_temp = true;	/* keep going until change req. */
 	univ_follow_temp = true;
 	do {
 	    dec_art(g_selected_only,false);
@@ -802,7 +802,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	g_art = g_absfirst;	
 	/* FALL THROUGH */
       case 'P':		/* goto previous article */
-	s_follow_temp = true;	/* keep going until change req. */
+	g_s_follow_temp = true;	/* keep going until change req. */
 	univ_follow_temp = true;
 	dec_art(false,true);
       check_dec_art:
@@ -836,9 +836,9 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	s_exit_code = NG_MINUS;
 	return AS_CLEAN;
       case 'n':		/* find next unread article? */
-	if (g_sa_in && s_default_cmd && !(g_sa_follow || s_follow_temp))
+	if (g_sa_in && g_s_default_cmd && !(g_sa_follow || g_s_follow_temp))
 	    return AS_SA;
-        if (univ_read_virtflag && univ_default_cmd && !(g_sa_in && (g_sa_follow || s_follow_temp)) &&
+        if (univ_read_virtflag && univ_default_cmd && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
             !(univ_follow || univ_follow_temp))
         {
 	    s_exit_code = NG_NEXT;
@@ -846,8 +846,8 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	}
 	if (!univ_default_cmd)
 	    univ_follow_temp = true;
-	if (!s_default_cmd)
-	    s_follow_temp = true;	/* keep going until change req. */
+	if (!g_s_default_cmd)
+	    g_s_follow_temp = true;	/* keep going until change req. */
 	if (g_art > g_lastart) {
 	    if (!g_ngptr->toread)
 		return AS_CLEAN;
@@ -870,7 +870,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 		    return AS_SA;
 		switch (g_sel_mode) {
 		  case SM_ARTICLE:
-		    if (s_default_cmd)
+		    if (g_s_default_cmd)
 			return AS_SA;
 		    break;
 		  case SM_SUBJECT:
@@ -893,9 +893,9 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	g_srchahead = 0;
 	return AS_NORM;
       case 'N':			/* goto next article */
-	if (g_sa_in && s_default_cmd && !(g_sa_follow || s_follow_temp))
+	if (g_sa_in && g_s_default_cmd && !(g_sa_follow || g_s_follow_temp))
 	    return AS_SA;
-        if (univ_read_virtflag && univ_default_cmd && !(g_sa_in && (g_sa_follow || s_follow_temp)) &&
+        if (univ_read_virtflag && univ_default_cmd && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
             !(univ_follow || univ_follow_temp))
         {
 	    s_exit_code = NG_NEXT;
@@ -903,8 +903,8 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	}
 	if (!univ_default_cmd)
 	    univ_follow_temp = true;
-	if (!s_default_cmd)
-	    s_follow_temp = true;	/* keep going until change req. */
+	if (!g_s_default_cmd)
+	    g_s_follow_temp = true;	/* keep going until change req. */
 	if (g_art > g_lastart) {
 	    if (!g_first_subject) {
 		g_art = g_absfirst;
@@ -961,9 +961,9 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	return AS_ASK;
       case Ctl('n'):	/* search for next article with same subject */
       case Ctl('p'):	/* search for previous article with same subject */
-        if (g_sa_in && s_default_cmd && *buf == Ctl('n') && !(g_sa_follow || s_follow_temp))
+        if (g_sa_in && g_s_default_cmd && *buf == Ctl('n') && !(g_sa_follow || g_s_follow_temp))
             return AS_SA;
-        if (univ_read_virtflag && univ_default_cmd && (*buf == Ctl('n')) && !(g_sa_in && (g_sa_follow || s_follow_temp)) &&
+        if (univ_read_virtflag && univ_default_cmd && (*buf == Ctl('n')) && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
             !(univ_follow || univ_follow_temp))
         {
 	    s_exit_code = NG_NEXT;
@@ -971,8 +971,8 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	}
 	if (!univ_default_cmd)
 	    univ_follow_temp = true;
-	if (!s_default_cmd)
-	    s_follow_temp = true;	/* keep going until change req. */
+	if (!g_s_default_cmd)
+	    g_s_follow_temp = true;	/* keep going until change req. */
 	if (*buf == Ctl('n')? next_art_with_subj() : prev_art_with_subj())
 	    return AS_NORM;
       case '/': case '?':
@@ -1114,7 +1114,7 @@ run_the_selector:
 	/* modes do not mix very well, so turn off the SA mode */
 	g_sa_in = false;
 	/* turn on temporary follow */
-	s_follow_temp = true;
+	g_s_follow_temp = true;
 	univ_follow_temp = true;
 	g_art_sel_ilock = true;
 	*buf = article_selector(*buf);
