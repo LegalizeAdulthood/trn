@@ -3,6 +3,8 @@
  *
  * main command loop
  */
+#ifndef SACMD_H
+#define SACMD_H
 
 enum sa_cmd
 {
@@ -19,3 +21,5 @@ bool sa_extract_start();
 void sa_art_cmd_prim(sa_cmd cmd, long a);
 int sa_art_cmd(int multiple, sa_cmd cmd, long a);
 long sa_wrap_next_author(long a);
+
+#endif

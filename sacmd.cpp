@@ -7,22 +7,12 @@
 #include "EXTERN.h"
 #include "common.h"
 #include "list.h"
-#include "hash.h"
 #include "cache.h"
-/* g_absfirst, g_lastart, oneless_artnum() */
 #include "bits.h"
-#include "decode.h"
 #include "term.h"	/* for LINES */
-#include "head.h"
-#include "help.h"	/* online help */
 #include "ngdata.h"	/* for g_threaded_group */
 #include "ng.h"
-#include "nntpclient.h"
-#include "datasrc.h"
-#include "addng.h"
-#include "ngstuff.h"
 #include "respond.h"
-#include "intrp.h"
 #include "scan.h"
 #include "scmd.h"
 #include "smisc.h"	/* needed? */
@@ -32,22 +22,14 @@
 #include "scanart.h"
 #include "samain.h"
 #include "samisc.h"
-#include "sadisp.h"
-#include "sadesc.h"
 #include "sathread.h"
 #include "score.h"
 #include "util.h"
 #include "util2.h"
-#include "INTERN.h"
 #include "sacmd.h"
 
-bool sa_extract_start();
-
-/* use this command on an extracted file */
-/*$$static char* sa_extracted_use = nullptr;*/
-static char* sa_extract_dest = nullptr;
-/* junk articles after extracting them */
-static bool sa_extract_junk = false;
+static char *s_sa_extract_dest{}; /* use this command on an extracted file */
+static bool s_sa_extract_junk{};  /* junk articles after extracting them */
 
 /* several basic commands are already done by s_docmd (Scan level) */
 /* interprets command in buf, returning 0 to continue looping,
@@ -498,13 +480,13 @@ int sa_docmd()
 	    safecpy(decode_dest,buf+1,MAXFILENAME);
 	    printf("\n") FLUSH;
 	}
-	if (sa_extract_dest == nullptr) {
-	    sa_extract_dest = (char*)safemalloc(LBUFLEN);
-	    safecpy(sa_extract_dest,filexp("%p"),LBUFLEN);
+	if (s_sa_extract_dest == nullptr) {
+	    s_sa_extract_dest = (char*)safemalloc(LBUFLEN);
+	    safecpy(s_sa_extract_dest,filexp("%p"),LBUFLEN);
 	}
 	if (*decode_dest != '/' && *decode_dest != '~'
 	 && *decode_dest != '%') {
-	    sprintf(buf,"%s/%s",sa_extract_dest,decode_dest);
+	    sprintf(buf,"%s/%s",s_sa_extract_dest,decode_dest);
 	    safecpy(decode_dest,buf,MAXFILENAME);
 	}
 	if (*sa_extracted_use)
@@ -563,28 +545,28 @@ int sa_docmd()
 
 bool sa_extract_start()
 {
-    if (sa_extract_dest == nullptr) {
-	sa_extract_dest = (char*)safemalloc(LBUFLEN);
-	safecpy(sa_extract_dest,filexp("%p"),LBUFLEN);
+    if (s_sa_extract_dest == nullptr) {
+	s_sa_extract_dest = (char*)safemalloc(LBUFLEN);
+	safecpy(s_sa_extract_dest,filexp("%p"),LBUFLEN);
     }
     s_go_bot();
-    printf("To directory (default %s)\n",sa_extract_dest) FLUSH;
+    printf("To directory (default %s)\n",s_sa_extract_dest) FLUSH;
     *buf = ':';			/* cosmetic */
     if (!s_finish_cmd(nullptr))
 	return false;		/* command rubbed out */
     s_ref_all = true;
     /* if the user typed something, copy it to the destination */
     if (buf[1] != '\0')
-	safecpy(sa_extract_dest,filexp(buf+1),LBUFLEN);
+	safecpy(s_sa_extract_dest,filexp(buf+1),LBUFLEN);
 /* set a mode for this later? */
     printf("\nMark extracted articles as read? [yn]");
     fflush(stdout);
     getcmd(buf);
     printf("\n") FLUSH;
     if (*buf == 'y' || *buf == ' ' || *buf == '\n')
-	sa_extract_junk = true;
+	s_sa_extract_junk = true;
     else
-	sa_extract_junk = false;
+	s_sa_extract_junk = false;
     return true;
 }
 
@@ -632,9 +614,9 @@ void sa_art_cmd_prim(sa_cmd cmd, long a)
 	sa_clearmark(a);
 	g_art = artnum;
 	*buf = 'e';		/* fake up the extract command */
-	safecpy(buf+1,sa_extract_dest,LBUFLEN);
+	safecpy(buf+1,s_sa_extract_dest,LBUFLEN);
 	(void)save_article();
-	if (sa_extract_junk)
+	if (s_sa_extract_junk)
 	    oneless_artnum(artnum);
 	break;
     } /* switch */
