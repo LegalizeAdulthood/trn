@@ -82,6 +82,6 @@ void sa_set_screen()
     else
 	g_s_itemnum_cols = 0;
 
-    /* (scr_width-1) keeps last character blank. */
-    g_s_desc_cols = (scr_width-1) -g_s_status_cols -g_s_cursor_cols -g_s_itemnum_cols;
+    /* (g_scr_width-1) keeps last character blank. */
+    g_s_desc_cols = (g_scr_width-1) -g_s_status_cols -g_s_cursor_cols -g_s_itemnum_cols;
 }

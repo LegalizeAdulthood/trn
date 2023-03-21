@@ -6,19 +6,17 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "final.h"	/* assert() */
-#include "hash.h"
-#include "cache.h"
 #include "ng.h"		/* g_mailcall */
 #include "term.h"
 #include "scan.h"
 #include "sorder.h"
 #include "smisc.h"
-#include "scanart.h"
-#include "samain.h"
 #include "sadisp.h"
-#include "INTERN.h"
 #include "sdisp.h"
+
+int g_scr_height{}; /* height of screen in characters */
+int g_scr_width{};  /* width of screen in characters */
+bool g_s_resized{}; /* has the window been resized? */
 
 void s_goxy(int x, int y)
 {
@@ -219,9 +217,9 @@ int s_initscreen()
     /* set scr_{height,width} */
     /* return 0 if all went well */
 
-    scr_height = tc_LINES;
-    scr_width = tc_COLS;
-    if (scr_height > 2 && scr_width > 1)	/* current dependencies */
+    g_scr_height = tc_LINES;
+    g_scr_width = tc_COLS;
+    if (g_scr_height > 2 && g_scr_width > 1)	/* current dependencies */
 	return 0;	/* everything is OK. */
     return 1;	/* we can't play with this... */
 }
@@ -243,7 +241,7 @@ void s_resize_win()
 
     i = s_initscreen();
     /* later possibly use the return value for an error abort? */
-    s_resized = true;
+    g_s_resized = true;
 #endif
     ;	/* don't have an empty function */
 }

@@ -37,7 +37,7 @@ bool s_fillpage_backward(long end)
     printf("entry: s_fillpage_backward(%d)\n",end) FLUSH;
 #endif
 
-    page_lines = scr_height - g_s_top_lines - g_s_bot_lines;
+    page_lines = g_scr_height - g_s_top_lines - g_s_bot_lines;
     min_page_ents = MAX_PAGE_SIZE-1;
     g_s_bot_ent = -1;	/* none yet */
     line_on = 0;
@@ -126,7 +126,7 @@ bool s_fillpage_forward(long start)
     printf("entry: s_fillpage_forward(%d)\n",start) FLUSH;
 #endif
 
-    page_lines = scr_height - g_s_top_lines - g_s_bot_lines;
+    page_lines = g_scr_height - g_s_top_lines - g_s_bot_lines;
     g_s_bot_ent = -1;
     line_on = 0;
 
@@ -204,7 +204,7 @@ bool s_refillpage()
     printf("entry: s_refillpage\n") FLUSH;
 #endif
 
-    page_lines = scr_height - g_s_top_lines - g_s_bot_lines;
+    page_lines = g_scr_height - g_s_top_lines - g_s_bot_lines;
     /* if the top entry is not the g_s_top_ent,
      *    or the top entry is not eligible,
      *    or the top entry is not on the first line,

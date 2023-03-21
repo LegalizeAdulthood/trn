@@ -135,7 +135,7 @@ bool sa_initarts()
     return true;
 }
 
-/* note: initscreen must be called before (for scr_width) */
+/* note: initscreen must be called before (for g_scr_width) */
 void sa_initmode()
 {
     /* set up screen sizes */

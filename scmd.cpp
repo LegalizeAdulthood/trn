@@ -61,7 +61,7 @@ int s_cmdloop()
 	eat_typeahead();	/* stay in control. */
 	/* check for window resizing and refresh */
 	/* if window is resized, refill and redraw */
-	if (s_resized) {
+	if (g_s_resized) {
 	    char ch = *buf;
 	    i = s_fillpage();
 	    if (i == -1 || i == 0)	/* can't fillpage */
@@ -69,7 +69,7 @@ int s_cmdloop()
 	    *buf = Ctl('l');
 	    (void)s_docmd();
 	    *buf = ch;
-	    s_resized = false;		/* dealt with */
+	    g_s_resized = false;		/* dealt with */
 	}
 	i = s_docmd();
 	if (i == S_NOTFOUND) {	/* command not in common set */
