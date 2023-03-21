@@ -72,7 +72,7 @@ void sc_init(bool pend_wait)
     else
 	g_sc_fill_read = false;
 
-    if (sf_verbose) {
+    if (g_sf_verbose) {
 	printf("\nScoring articles...");
 	fflush(stdout);		/* print it *now* */
     }
@@ -112,7 +112,7 @@ void sc_init(bool pend_wait)
 		break;
 	}
 	if (a < g_absfirst) {		/* no articles scored */
-	    if (sf_verbose)
+	    if (g_sf_verbose)
 		printf("\nNo articles available for scoring\n");
 	    sc_cleanup();
 	    return;
@@ -121,7 +121,7 @@ void sc_init(bool pend_wait)
 
     /* if no scoring rules/methods are present, score everything */
     /* XXX will be bad if later methods are added. */
-    if (!sf_num_entries) {
+    if (!g_sf_num_entries) {
 	/* score everything really fast */
 	for (a = article_last(g_lastart); a >= g_absfirst; a = article_prev(a))
 	    sc_score_art(a,true);
@@ -130,7 +130,7 @@ void sc_init(bool pend_wait)
 	bool waitflag;		/* if true, use key pause */
 
 	waitflag = true;	/* normal mode: wait for key first */
-	if (sf_verbose && waitflag) {
+	if (g_sf_verbose && waitflag) {
 #ifdef PENDING
 	    printf("(press key to start reading)");
 #else
@@ -148,7 +148,7 @@ void sc_init(bool pend_wait)
 	    setspin(SPIN_POP);
 	}
     }
-    if (sf_verbose)
+    if (g_sf_verbose)
 	putchar('\n') FLUSH;
 
     g_sc_initialized = true;
@@ -163,7 +163,7 @@ void sc_cleanup()
 	sc_save_scores();
     sc_loaded_count = 0;
 
-    if (sf_verbose) {
+    if (g_sf_verbose) {
 	printf("\nCleaning up scoring...");
 	fflush(stdout);
     }
@@ -172,7 +172,7 @@ void sc_cleanup()
 	sf_clean();	/* let the scorefile do whatever cleaning it needs */
     g_sc_initialized = false;
 
-    if (sf_verbose)
+    if (g_sf_verbose)
 	printf("Done.\n") FLUSH;
 }
 
@@ -472,9 +472,9 @@ void sc_score_cmd(const char *line)
       case 's':	/* verbose score for this article */
 	/* XXX CONSIDER: A VERBOSE-SCORE ROUTINE (instead of this hack) */
 	i = 0;	/* total score */
-	sf_score_verbose = true;
+	g_sf_score_verbose = true;
 	j = sf_score(g_art);
-	sf_score_verbose = false;
+	g_sf_score_verbose = false;
 	printf("Scorefile total score: %ld\n",j);
 	i += j;
 	j = sc_score_art(g_art,true);

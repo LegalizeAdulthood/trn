@@ -2,6 +2,8 @@
 /* scorefile.h
  *
  */
+#ifndef SCOREFILE_H
+#define SCOREFILE_H
 
 #define DEFAULT_SCOREDIR "%+/scores"
 
@@ -19,9 +21,6 @@ struct SF_ENTRY
 };
 /* note that negative header #s are used to indicate special entries... */
 
-EXT int sf_num_entries INIT(0);	/* # of entries */
-EXT SF_ENTRY *sf_entries INIT(nullptr); /* array of entries */
-
 /* for cached score rules */
 struct SF_FILE
 {
@@ -32,31 +31,19 @@ struct SF_FILE
     char** lines;
 };
 
-EXT SF_FILE *sf_files INIT(nullptr);
-EXT int sf_num_files INIT(0);
-
-EXT char **sf_abbr;		/* abbreviations */
-
-/* when true, the scoring routine prints lots of info... */
-EXT int sf_score_verbose INIT(false);
-
-EXT bool sf_verbose INIT(true);  /* if true print more stuff while loading */
-
-/* if true, only header types that are cached are scored... */
-EXT bool cached_rescore INIT(false);
-
-/* if true, newauthor is active */
-EXT bool newauthor_active INIT(false);
-/* bonus score given to a new (unscored) author */
-EXT int newauthor INIT(0);
-
-/* if true, reply_score is active */
-EXT bool reply_active INIT(false);
-/* score amount added to an article reply */
-EXT int reply_score INIT(0);
-
-/* should we match by pattern? */
-EXT int sf_pattern_status INIT(false);
+extern int g_sf_num_entries;   /* # of entries */
+extern SF_ENTRY *g_sf_entries; /* array of entries */
+extern SF_FILE *g_sf_files;
+extern int g_sf_num_files;
+extern char **g_sf_abbr;        /* abbreviations */
+extern int g_sf_score_verbose;  /* when true, the scoring routine prints lots of info... */
+extern bool g_sf_verbose;       /* if true print more stuff while loading */
+extern bool g_cached_rescore;   /* if true, only header types that are cached are scored... */
+extern bool g_newauthor_active; /* if true, g_newauthor is active */
+extern int g_newauthor;         /* bonus score given to a new (unscored) author */
+extern bool g_reply_active;     /* if true, g_reply_score is active */
+extern int g_reply_score;       /* score amount added to an article reply */
+extern int g_sf_pattern_status; /* should we match by pattern? */
 
 void sf_init();
 void sf_clean();
@@ -88,3 +75,5 @@ char *sf_get_line(ART_NUM a, int h);
 void sf_print_match(int indx);
 void sf_exclude_file(const char *fname);
 void sf_edit_file(const char *filespec);
+
+#endif

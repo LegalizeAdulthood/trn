@@ -1,7 +1,0 @@
-/* scorefile.ih
- */
-/* This software is copyrighted as detailed in the LICENSE file. */
-
-static int sf_open_file(const char *name);
-static void sf_file_clear();
-static char *sf_file_getline(int fnum);

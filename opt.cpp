@@ -686,7 +686,7 @@ void set_option(int num, char *s)
 	g_sa_mode_desc_keyw = YES(s);
 	break;
       case OI_SC_VERBOSE:
-	sf_verbose = YES(s);
+	g_sf_verbose = YES(s);
 	break;
       case OI_USE_SEL_NUM:
 	UseSelNum = YES(s);
@@ -1046,7 +1046,7 @@ char *option_value(int num)
       case OI_SCANA_DISPKEYW:
 	return YESorNO(g_sa_mode_desc_keyw);
       case OI_SC_VERBOSE:
-	return YESorNO(sf_verbose);
+	return YESorNO(g_sf_verbose);
       case OI_USE_SEL_NUM:
 	return YESorNO(UseSelNum);
 	break;

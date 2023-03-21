@@ -109,7 +109,7 @@ add_executable(trn
     scmd.cpp scmd.h
     score-easy.cpp score-easy.h
     score.cpp score.h
-    scorefile.cpp scorefile.h scorefile.ih
+    scorefile.cpp scorefile.h
     scoresave.cpp scoresave.h
     sdisp.cpp sdisp.h
     search.cpp search.h
