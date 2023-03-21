@@ -5,12 +5,12 @@
 #include "EXTERN.h"
 #include "common.h"
 #include "util.h"
-#include "INTERN.h"
 #include "list.h"
-#include "list.ih"
 
-void list_init() {
-    ;
+static void def_init_node(LIST *list, LISTNODE *node);
+
+void list_init()
+{
 }
 
 

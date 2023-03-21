@@ -73,7 +73,7 @@ add_executable(trn
     intrp.cpp intrp.h
     kfile.cpp kfile.h
     last.cpp last.h
-    list.cpp list.h list.ih
+    list.cpp list.h
     mempool.cpp mempool.h mempool.ih
     mime.cpp mime.h mime.ih
     msdos.h

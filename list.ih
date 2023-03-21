@@ -1,5 +1,0 @@
-/* list.ih
- */
-/* This software is copyrighted as detailed in the LICENSE file. */
-
-static void def_init_node(LIST *list, LISTNODE *node);

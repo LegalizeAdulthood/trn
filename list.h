@@ -1,6 +1,8 @@
 /* list.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef LIST_H
+#define LIST_H
 
 struct LISTNODE
 {
@@ -24,8 +26,11 @@ struct LIST
     int flags;
 };
 
-#define LF_ZERO_MEM	0x0001
-#define LF_SPARSE	0x0002
+enum
+{
+    LF_ZERO_MEM = 0x0001,
+    LF_SPARSE = 0x0002
+};
 
 void list_init();
 LIST *new_list(long low, long high, int item_size, int items_per_node, int flags, void (*init_node)(LIST *, LISTNODE *));
@@ -36,3 +41,5 @@ long existing_listnum(LIST *list, long num, int direction);
 char *next_listitem(LIST *list, char *ptr);
 char *prev_listitem(LIST *list, char *ptr);
 void delete_list(LIST *list);
+
+#endif
