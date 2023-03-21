@@ -50,7 +50,7 @@ void readlast()
 
 void writelast()
 {
-    sprintf(buf,"%s.%ld", lastfile, our_pid);
+    sprintf(buf,"%s.%ld", lastfile, g_our_pid);
     if ((tmpfp = fopen(buf,"w")) != nullptr) {
 	if (lasttime < starttime)
 	    lasttime = starttime;

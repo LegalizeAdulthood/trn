@@ -328,7 +328,7 @@ the lock file: %s\n", g_local_host, rp->lockname) FLUSH;
 		resetty();
 	    finalize(0);
 	}
-	if (processnum == our_pid) {
+	if (processnum == g_our_pid) {
 	    if (verbose)
 		printf("\n\
 Hey, that *my* pid!  Your access file is trying to use the same newsrc\n\
@@ -378,7 +378,7 @@ the lock file: %s\n", rp->lockname) FLUSH;
 	printf(cantcreate,rp->lockname) FLUSH;
 	sig_catcher(0);
     }
-    fprintf(tmpfp,"%ld\n%s\n",our_pid,g_local_host);
+    fprintf(tmpfp,"%ld\n%s\n",g_our_pid,g_local_host);
     fclose(tmpfp);
     return true;
 }

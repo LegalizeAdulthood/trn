@@ -47,12 +47,13 @@
 #include "mempool.h"
 #include "color.h"
 #include "univ.h"
-#include "INTERN.h"
 #include "init.h"
 
 #ifdef _WIN32
 #include <process.h>
 #endif
+
+long g_our_pid{};
 
 bool initialize(int argc, char *argv[])
 {
@@ -67,7 +68,7 @@ bool initialize(int argc, char *argv[])
     tcbuf = safemalloc(TCBUF_SIZE);	/* make temp buffer for termcap and */
 					/* other initialization stuff */
 
-    our_pid = (long)getpid();
+    g_our_pid = (long)getpid();
 
     /* init terminal */
 

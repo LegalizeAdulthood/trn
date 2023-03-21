@@ -472,7 +472,7 @@ char *nntp_artname(ART_NUM artnum, bool allocate)
 char *nntp_tmpname(int ndx)
 {
     static char artname[20];
-    sprintf(artname,"rrn.%ld.%d",our_pid,ndx);
+    sprintf(artname,"rrn.%ld.%d",g_our_pid,ndx);
     return artname;
 }
 
