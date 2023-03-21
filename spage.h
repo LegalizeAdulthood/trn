@@ -3,6 +3,8 @@
  *
  * functions to manage a page of entries.
  */
+#ifndef SPAGE_H
+#define SPAGE_H
 
 bool s_fillpage_backward(long end);
 bool s_fillpage_forward(long start);
@@ -15,3 +17,5 @@ bool s_go_top_ents();
 bool s_go_bot_ents();
 void s_go_next_page();
 void s_go_prev_page();
+
+#endif

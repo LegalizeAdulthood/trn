@@ -6,9 +6,7 @@
 #include "EXTERN.h"
 #include "common.h"
 #include "list.h"
-#include "hash.h"
 #include "cache.h"
-#include "final.h"	/* assert() */
 #include "ngdata.h"
 #include "rt-util.h"	/* spinner */
 #include "scan.h"
@@ -17,12 +15,9 @@
 #include "sorder.h"
 #include "scanart.h"
 #include "samain.h"
-#include "sathread.h"	/* g_sa_mode_fold */
-#include "term.h"
-#include "INTERN.h"
 #include "spage.h"
 
-/* returns true if sucessful */
+/* returns true if successful */
 //long end;		/* entry number to be last on page */
 bool s_fillpage_backward(long end)
 {
