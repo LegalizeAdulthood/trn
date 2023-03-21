@@ -362,7 +362,7 @@ try_again:
 		g_sel_page_np = nullptr;
 		goto try_again;
 	    }
-	    if (maxngtodo) {
+	    if (g_maxngtodo) {
 		end_only();
 		fputs(msg, stdout);
 		newline();
@@ -1260,7 +1260,7 @@ void display_page_title(bool home_only)
 	    (long)sel_total_obj_cnt, PLURAL(sel_total_obj_cnt));
 	if (sel_exclusive)
 	    printf(" out of %ld", (long)obj_count);
-	if (maxngtodo)
+	if (g_maxngtodo)
 	    printf(" (Restriction)");
     }
     home_cursor();

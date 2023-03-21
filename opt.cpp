@@ -461,7 +461,7 @@ void set_option(int num, char *s)
 	quickstart = !YES(s);
 	break;
       case OI_RESTRICTION_INCLUDES_EMPTIES:
-	empty_only_char = YES(s)? 'o' : 'O';
+	g_empty_only_char = YES(s)? 'o' : 'O';
 	break;
       case OI_CHARSET:
 	g_charsets = savestr(s);
@@ -863,7 +863,7 @@ char *option_value(int num)
       case OI_NEWGROUP_CHECK:
 	return YESorNO(!quickstart);
       case OI_RESTRICTION_INCLUDES_EMPTIES:
-	return YESorNO(empty_only_char == 'o');
+	return YESorNO(g_empty_only_char == 'o');
       case OI_CHARSET:
 	return g_charsets;
       case OI_INITIAL_GROUP_LIST:

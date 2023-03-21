@@ -9,14 +9,17 @@
 #include "util.h"
 #include "util2.h"
 #include "final.h"
-#include "list.h"
-#include "term.h"
 #include "ngdata.h"
 #include "ngsrch.h"
-#include "INTERN.h"
 #include "only.h"
 
-static int save_maxngtodo = 0;
+char *g_ngtodo[MAXNGTODO];       /* restrictions in effect */
+COMPEX *g_compextodo[MAXNGTODO]; /* restrictions in compiled form */
+int g_maxngtodo{};               /*  0 => no restrictions */
+                                 /* >0 => # of entries in g_ngtodo */
+char g_empty_only_char{'o'};
+
+static int s_save_maxngtodo{};
 
 void only_init()
 {
@@ -25,22 +28,22 @@ void only_init()
 void setngtodo(const char *pat)
 {
     char* s;
-    int i = maxngtodo + save_maxngtodo;
+    int i = g_maxngtodo + s_save_maxngtodo;
 
     if (!*pat)
 	return;
     if (i < MAXNGTODO) {
-	ngtodo[i] = savestr(pat);
+	g_ngtodo[i] = savestr(pat);
 #ifndef lint
-	compextodo[i] = (COMPEX*)safemalloc(sizeof(COMPEX));
+	g_compextodo[i] = (COMPEX*)safemalloc(sizeof(COMPEX));
 #endif
-	init_compex(compextodo[i]);
-	compile(compextodo[i],pat,true,true);
-	if ((s = ng_comp(compextodo[i],pat,true,true)) != nullptr) {
+	init_compex(g_compextodo[i]);
+	compile(g_compextodo[i],pat,true,true);
+	if ((s = ng_comp(g_compextodo[i],pat,true,true)) != nullptr) {
 	    printf("\n%s\n",s) FLUSH;
 	    finalize(1);
 	}
-	maxngtodo++;
+	g_maxngtodo++;
     }
 }
 
@@ -50,10 +53,10 @@ bool inlist(char *ngnam)
 {
     int i;
 
-    if (maxngtodo == 0)
+    if (g_maxngtodo == 0)
 	return true;
-    for (i = save_maxngtodo; i < maxngtodo + save_maxngtodo; i++) {
-	if (execute(compextodo[i],ngnam))
+    for (i = s_save_maxngtodo; i < g_maxngtodo + s_save_maxngtodo; i++) {
+	if (execute(g_compextodo[i],ngnam))
 	    return true;
     }
     return false;
@@ -61,30 +64,30 @@ bool inlist(char *ngnam)
 
 void end_only()
 {
-    if (maxngtodo) {			/* did they specify newsgroup(s) */
+    if (g_maxngtodo) {			/* did they specify newsgroup(s) */
 	int i;
 
 	if (verbose)
-	    sprintf(msg, "Restriction %s%s removed.",ngtodo[0],
-		    maxngtodo > 1 ? ", etc." : "");
+	    sprintf(msg, "Restriction %s%s removed.",g_ngtodo[0],
+		    g_maxngtodo > 1 ? ", etc." : "");
 	else
 	    sprintf(msg, "Exiting \"only\".");
-	for (i = save_maxngtodo; i < maxngtodo + save_maxngtodo; i++) {
-	    free(ngtodo[i]);
-	    free_compex(compextodo[i]);
+	for (i = s_save_maxngtodo; i < g_maxngtodo + s_save_maxngtodo; i++) {
+	    free(g_ngtodo[i]);
+	    free_compex(g_compextodo[i]);
 #ifndef lint
-	    free((char*)compextodo[i]);
+	    free((char*)g_compextodo[i]);
 #endif
 	}
-	maxngtodo = 0;
+	g_maxngtodo = 0;
 	g_ng_min_toread = 1;
     }
 }
 
 void push_only()
 {
-    save_maxngtodo = maxngtodo;
-    maxngtodo = 0;
+    s_save_maxngtodo = g_maxngtodo;
+    g_maxngtodo = 0;
 }
 
 void pop_only()
@@ -93,8 +96,8 @@ void pop_only()
 
     end_only();
 
-    maxngtodo = save_maxngtodo;
-    save_maxngtodo = 0;
+    g_maxngtodo = s_save_maxngtodo;
+    s_save_maxngtodo = 0;
 
     g_ng_min_toread = save_ng_min_toread;
 }

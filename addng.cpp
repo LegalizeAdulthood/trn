@@ -316,13 +316,13 @@ bool scanactive(bool add_matching)
 	if (dp->act_sf.fp)
 	    hashwalk(dp->act_sf.hp, list_groups, add_matching);
 	else {
-	    if (maxngtodo != 1)
+	    if (g_maxngtodo != 1)
 		strcpy(buf, "*");
 	    else {
-		if (ngtodo[0][0] == '^')
-		    sprintf(buf,"%s*", &ngtodo[0][1]);
+		if (g_ngtodo[0][0] == '^')
+		    sprintf(buf,"%s*", &g_ngtodo[0][1]);
 		else
-		    sprintf(buf,"*%s*", ngtodo[0]);
+		    sprintf(buf,"*%s*", g_ngtodo[0]);
 		if (buf[strlen(buf)-2] == '$')
 		    buf[strlen(buf)-2] = '\0';
 	    }

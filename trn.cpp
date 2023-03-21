@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 	g_starthere = nullptr;		/* start ng scan from the top */
     }
 
-    if (maxngtodo)
+    if (g_maxngtodo)
 	g_starthere = nullptr;
     else if (!foundany) {		/* nothing to do? */
 	if (verbose) {
@@ -206,11 +206,11 @@ void do_multirc()
 	for (;;) {			/* for each newsgroup */
 	    if (g_ngptr == nullptr) {	/* after the last newsgroup? */
 		set_mode('r','f');
-		if (maxngtodo) {
+		if (g_maxngtodo) {
 		    if (retry) {
 			if (verbose)
 			    printf("\nRestriction %s%s still in effect.\n",
-				   ngtodo[0], maxngtodo > 1 ? ", etc." : "") FLUSH;
+				   g_ngtodo[0], g_maxngtodo > 1 ? ", etc." : "") FLUSH;
 		 	else
 			    fputs("\n(\"Only\" mode.)\n",stdout) FLUSH;
 			termdown(2);
@@ -596,13 +596,13 @@ reask_abandon:
 	    sw_list(buf+1);
 	    if (minusd)
 		cwd_check();
-	    if (doscan && maxngtodo)
+	    if (doscan && g_maxngtodo)
 		scanactive(true);
-	    g_ng_min_toread = *buf == empty_only_char && maxngtodo
+	    g_ng_min_toread = *buf == g_empty_only_char && g_maxngtodo
 			  ? TR_NONE : TR_ONE;
 	}
 	g_ngptr = g_first_ng;	/* simulate ^ */
-	if (*msg && !maxngtodo)
+	if (*msg && !g_maxngtodo)
 	    return ING_MESSAGE;
 	return ING_DISPLAY;
       }

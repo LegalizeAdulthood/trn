@@ -162,7 +162,7 @@ bool initialize(int argc, char *argv[])
 
     writelast();	/* remember last runtime in .rnlast */
 
-    if (maxngtodo)			/* patterns on command line? */
+    if (g_maxngtodo)			/* patterns on command line? */
 	foundany |= scanactive(true);
 
     return foundany;
