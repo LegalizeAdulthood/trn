@@ -5,12 +5,8 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "list.h"
-#include "hash.h"
 #include "env.h"
 #include "util.h"
-#include "util2.h"
-#include "cache.h"
 #include "head.h"
 #include "init.h"
 #include "opt.h"
@@ -19,13 +15,15 @@
 #include "intrp.h"
 #include "trn.h"
 #include "ngdata.h"
-#include "rt-page.h"
-#include "charsubst.h"
-#include "INTERN.h"
 #include "sw.h"
+
 #ifdef MSDOS
 #include <io.h>
 #endif
+
+static char **s_init_environment_strings{};
+static int s_init_environment_cnt{};
+static int s_init_environment_max{};
 
 void sw_file(char **tcbufptr)
 {
@@ -369,28 +367,28 @@ void decode_switch(char *s)
 
 void save_init_environment(char *str)
 {
-    if (init_environment_cnt >= init_environment_max) {
-	init_environment_max += 32;
-	init_environment_strings = (char**)
-	  saferealloc((char*)init_environment_strings,
-		      init_environment_max * sizeof (char*));
+    if (s_init_environment_cnt >= s_init_environment_max) {
+	s_init_environment_max += 32;
+	s_init_environment_strings = (char**)
+	  saferealloc((char*)s_init_environment_strings,
+		      s_init_environment_max * sizeof (char*));
     }
-    init_environment_strings[init_environment_cnt++] = str;
+    s_init_environment_strings[s_init_environment_cnt++] = str;
 }
 
 void write_init_environment(FILE *fp)
 {
     int i;
     char* s;
-    for (i = 0; i < init_environment_cnt; i++) {
-	s = strchr(init_environment_strings[i],'=');
+    for (i = 0; i < s_init_environment_cnt; i++) {
+	s = strchr(s_init_environment_strings[i],'=');
 	if (!s)
 	    continue;
 	*s = '\0';
-	fprintf(fp, "%s=%s\n", init_environment_strings[i],quote_string(s+1));
+	fprintf(fp, "%s=%s\n", s_init_environment_strings[i],quote_string(s+1));
 	*s = '=';
     }
-    init_environment_cnt = init_environment_max = 0;
-    free((char*)init_environment_strings);
-    init_environment_strings = nullptr;
+    s_init_environment_cnt = s_init_environment_max = 0;
+    free((char*)s_init_environment_strings);
+    s_init_environment_strings = nullptr;
 }
