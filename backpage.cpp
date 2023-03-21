@@ -5,17 +5,22 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "intrp.h"
 #include "util2.h"
 #include "final.h"
-#include "INTERN.h"
 #include "backpage.h"
 
 #ifdef MSDOS
 #include <io.h>
 #endif
 
-ART_LINE maxindx = -1;
+namespace
+{
+
+int s_varyfd{0};             /* virtual array file for storing  file offsets */
+ART_POS s_varybuf[VARYSIZE]; /* current window onto virtual array */
+long s_oldoffset{-1};        /* offset to block currently in window */
+
+} // namespace
 
 void backpage_init()
 {
@@ -23,9 +28,9 @@ void backpage_init()
     
     varyname = filexp(VARYNAME);
     close(creat(varyname,0600));
-    varyfd = open(varyname,2);
+    s_varyfd = open(varyname,2);
     remove(varyname);
-    if (varyfd < 0) {
+    if (s_varyfd < 0) {
 	printf(cantopen,varyname) FLUSH;
 	sig_catcher(0);
     }
@@ -48,21 +53,21 @@ ART_POS vrdary(ART_LINE indx)
     if (indx < 0)
 	return 0;
     subindx = indx % VARYSIZE;
-    offset = (indx - subindx) * sizeof(varybuf[0]);
-    if (offset != oldoffset) {
-	if (oldoffset >= 0) {
+    offset = (indx - subindx) * sizeof(s_varybuf[0]);
+    if (offset != s_oldoffset) {
+	if (s_oldoffset >= 0) {
 #ifndef lint
-	    (void)lseek(varyfd,oldoffset,0);
-	    write(varyfd, (char*)varybuf,sizeof(varybuf));
+	    (void)lseek(s_varyfd,s_oldoffset,0);
+	    write(s_varyfd, (char*)s_varybuf,sizeof(s_varybuf));
 #endif /* lint */
 	}
 #ifndef lint
-	(void)lseek(varyfd,offset,0);
-	read(varyfd,(char*)varybuf,sizeof(varybuf));
+	(void)lseek(s_varyfd,offset,0);
+	read(s_varyfd,(char*)s_varybuf,sizeof(s_varybuf));
 #endif /* lint */
-	oldoffset = offset;
+	s_oldoffset = offset;
     }
-    return varybuf[subindx];
+    return s_varybuf[subindx];
 }
 
 /* write to virtual array */
@@ -83,19 +88,19 @@ void vwtary(ART_LINE indx, ART_POS newvalue)
     }
 #endif
     subindx = indx % VARYSIZE;
-    offset = (indx - subindx) * sizeof(varybuf[0]);
-    if (offset != oldoffset) {
-	if (oldoffset >= 0) {
+    offset = (indx - subindx) * sizeof(s_varybuf[0]);
+    if (offset != s_oldoffset) {
+	if (s_oldoffset >= 0) {
 #ifndef lint
-	    (void)lseek(varyfd,oldoffset,0);
-	    write(varyfd,(char*)varybuf,sizeof(varybuf));
+	    (void)lseek(s_varyfd,s_oldoffset,0);
+	    write(s_varyfd,(char*)s_varybuf,sizeof(s_varybuf));
 #endif /* lint */
 	}
 #ifndef lint
-	(void)lseek(varyfd,offset,0);
-	read(varyfd,(char*)varybuf,sizeof(varybuf));
+	(void)lseek(s_varyfd,offset,0);
+	read(s_varyfd,(char*)s_varybuf,sizeof(s_varybuf));
 #endif /* lint */
-	oldoffset = offset;
+	s_oldoffset = offset;
     }
-    varybuf[subindx] = newvalue;
+    s_varybuf[subindx] = newvalue;
 }
