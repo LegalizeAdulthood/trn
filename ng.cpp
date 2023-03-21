@@ -120,9 +120,9 @@ int do_newsgroup(char *start_command)
     }
 
     exit_code = NG_NORM;
-    kf_state &= ~(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES
+    g_kf_state &= ~(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES
 		 |KFS_NORMAL_LINES  | KFS_THREAD_LINES);
-    killfirst = 0;
+    g_killfirst = 0;
 
     safefree0(extractdest);
     safefree0(extractprog);
@@ -497,9 +497,9 @@ cleanup2:
 	}
     }
 
-    if (localkfp) {
-	fclose(localkfp);
-	localkfp = nullptr;
+    if (g_localkfp) {
+	fclose(g_localkfp);
+	g_localkfp = nullptr;
     }
     set_mode(gmode_save,mode_save);
     return exit_code;

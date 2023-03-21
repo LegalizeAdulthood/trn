@@ -147,7 +147,7 @@ void grow_ng(ART_NUM newlast)
 	else			/* my, my, how clever we are */
 	    strcpy(buf, "More news -- auto-processing...\n\n");
 	termdown(2);
-	if (kf_state & KFS_NORMAL_LINES) {
+	if (g_kf_state & KFS_NORMAL_LINES) {
 	    bool forcelast_save = forcelast;
 	    ARTICLE* artp_save = artp;
 	    kill_unwanted(tmpfirst,buf,true);

@@ -169,7 +169,7 @@ static int cleanup_msgid_hash(int keylen, HASHDATUM *data, int extra)
     if (ap) {
 	if (data->dat_len)
 	    return 0;
-	if ((kf_state & KFS_GLOBAL_THREADFILE) && ap->autofl) {
+	if ((g_kf_state & KFS_GLOBAL_THREADFILE) && ap->autofl) {
 	    data->dat_ptr = ap->msgid;
 	    data->dat_len = ap->autofl;
 	    ret = 0;

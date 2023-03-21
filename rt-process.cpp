@@ -83,7 +83,7 @@ bool valid_article(ARTICLE *article)
 	    if ((data.dat_len & KF_AGE_MASK) == 0)
 		article->autofl |= AUTO_OLD;
 	    else
-		kf_changethd_cnt++;
+		g_kf_changethd_cnt++;
 	    data.dat_len = 0;
 	}
 	if ((fake_ap = (ARTICLE*)data.dat_ptr) == nullptr) {
@@ -106,7 +106,7 @@ bool valid_article(ARTICLE *article)
 	    fake_had_subj = fake_ap->subj;
 	    if (fake_ap->autofl) {
 		article->autofl |= fake_ap->autofl;
-		kf_state |= kfs_thread_change_set;
+		g_kf_state |= g_kfs_thread_change_set;
 	    }
 	    if (curr_artp == fake_ap) {
 		curr_artp = article;
@@ -181,7 +181,7 @@ ARTICLE *get_article(char *msgid)
 	if ((data.dat_len & KF_AGE_MASK) == 0)
 	    article->autofl |= AUTO_OLD;
 	else
-	    kf_changethd_cnt++;
+	    g_kf_changethd_cnt++;
 	article->msgid = data.dat_ptr;
 	data.dat_ptr = (char*)article;
 	data.dat_len = 0;

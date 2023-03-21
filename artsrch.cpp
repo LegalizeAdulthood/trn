@@ -290,7 +290,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
      && (*cmdlst == '+' || *cmdlst == '.'))
 	ignorethru = 1;
     srchfirst = doread || sel_rereading? absfirst
-		      : (mode != 'k' || ignorethru > 0)? firstart : killfirst;
+		      : (mode != 'k' || ignorethru > 0)? firstart : g_killfirst;
     if (topstart || art == 0) {
 	art = lastart+1;
 	topstart = false;

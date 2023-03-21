@@ -529,7 +529,7 @@ static int read_ids()
 			if ((data.dat_len & KF_AGE_MASK) == 0)
 			    article->autofl |= AUTO_OLD;
 			else
-			    kf_changethd_cnt++;
+			    g_kf_changethd_cnt++;
 			data.dat_len = 0;
 			free(data.dat_ptr);
 		    }

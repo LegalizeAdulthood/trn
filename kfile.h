@@ -1,6 +1,8 @@
 /* kfile.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef KFILE_H
+#define KFILE_H
 
 #define KF_GLOBAL false
 #define KF_LOCAL true
@@ -50,15 +52,15 @@ enum
     KF_MAXDAYS = 30
 };
 
-EXT FILE* globkfp INIT(nullptr);		/* global article killer file */
-EXT FILE* localkfp INIT(nullptr);		/* local (for this newsgroup) file */
-EXT int kf_state;			/* the state of our kill files */
-EXT int kfs_local_change_clear;		/* bits to clear local changes */
-EXT int kfs_thread_change_set;		/* bits to set for thread changes */
-EXT int kf_thread_cnt;			/* # entries in the thread kfile */
-EXT int kf_changethd_cnt;		/* # entries changed from old to new */
-EXT long kf_daynum;			/* day number for thread killfile */
-EXT ART_NUM killfirst;			/* used as firstart when killing */
+extern FILE *g_globkfp;              /* global article killer file */
+extern FILE *g_localkfp;             /* local (for this newsgroup) file */
+extern int g_kf_state;               /* the state of our kill files */
+extern int g_kfs_local_change_clear; /* bits to clear local changes */
+extern int g_kfs_thread_change_set;  /* bits to set for thread changes */
+extern int g_kf_thread_cnt;          /* # entries in the thread kfile */
+extern int g_kf_changethd_cnt;       /* # entries changed from old to new */
+extern long g_kf_daynum;             /* day number for thread killfile */
+extern ART_NUM g_killfirst;          /* used as firstart when killing */
 
 void kfile_init();
 int do_kfile(FILE *kfp, int entering);
@@ -71,3 +73,5 @@ void perform_auto_flags(ARTICLE *ap, int thread_autofl, int subj_autofl, int cha
 int edit_kfile();
 void open_kfile(int local);
 void kf_append(const char *cmd, bool local);
+
+#endif

@@ -71,7 +71,7 @@ add_executable(trn
     help.cpp help.h
     init.cpp init.h
     intrp.cpp intrp.h
-    kfile.cpp kfile.h kfile.ih
+    kfile.cpp kfile.h
     last.cpp last.h
     list.cpp list.h list.ih
     mempool.cpp mempool.h mempool.ih

@@ -1,9 +1,0 @@
-/* kfile.ih
- */
-/* This software is copyrighted as detailed in the LICENSE file. */
-
-static void mention(const char *str);
-static bool kfile_junk(char *ptr, int killmask);
-static int write_local_thread_commands(int keylen, HASHDATUM *data, int extra);
-static int write_global_thread_commands(int keylen, HASHDATUM *data, int appending);
-static int age_thread_commands(int keylen, HASHDATUM *data, int elapsed_days);
