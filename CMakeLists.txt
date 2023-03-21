@@ -91,7 +91,7 @@ add_executable(trn
     rcstuff.cpp rcstuff.h
     respond.cpp respond.h
     rthread.cpp rthread.h
-    rt-mt.cpp rt-mt.h rt-mt.ih
+    rt-mt.cpp rt-mt.h
     rt-ov.cpp rt-ov.h rt-ov.ih
     rt-page.cpp rt-page.h rt-page.ih
     rt-process.cpp rt-process.h rt-process.ih
