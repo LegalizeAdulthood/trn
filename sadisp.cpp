@@ -24,15 +24,15 @@ void sa_refresh_top()
 /* # of articles might be optional later */
     printf(" %d",sa_number_arts());
 
-    if (sa_mode_read_elig)
+    if (g_sa_mode_read_elig)
 	printf(" unread+read");
     else
 	printf(" unread");
     if (g_sa_mode_zoom)
 	printf(" zoom");
-    if (sa_mode_fold)
+    if (g_sa_mode_fold)
 	printf(" Fold");
-    if (sa_follow)
+    if (g_sa_follow)
 	printf(" follow");
     color_pop();	/* of COLOR_SCORE */
     erase_eol();
@@ -46,7 +46,7 @@ void sa_refresh_bot()
     color_object(COLOR_SCORE, true);
     s_mail_and_place();
     printf("(");
-    switch (sa_mode_order) {
+    switch (g_sa_mode_order) {
       case 1:
 	s = "arrival";
 	break;

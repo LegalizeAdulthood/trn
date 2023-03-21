@@ -17,7 +17,7 @@
 #include "sorder.h"
 #include "scanart.h"
 #include "samain.h"
-#include "sathread.h"	/* sa_mode_fold */
+#include "sathread.h"	/* g_sa_mode_fold */
 #include "term.h"
 #include "INTERN.h"
 #include "spage.h"
@@ -103,7 +103,7 @@ bool s_fillpage_backward(long end)
      * refill the page.
      */
     for (i = 0; i <= g_s_bot_ent; i++)
-	if (is_unavailable(sa_ents[g_page_ents[i].entnum].artnum))
+	if (is_unavailable(g_sa_ents[g_page_ents[i].entnum].artnum))
 	    break;
     if (i <= g_s_bot_ent)
 	return s_fillpage_backward(end);
@@ -178,7 +178,7 @@ bool s_fillpage_forward(long start)
      * refill the page.
      */
     for (i = 0; i <= g_s_bot_ent; i++)
-	if (is_unavailable(sa_ents[g_page_ents[i].entnum].artnum))
+	if (is_unavailable(g_sa_ents[g_page_ents[i].entnum].artnum))
 	    break;
     if (i <= g_s_bot_ent)
 	return s_fillpage_forward(start);
@@ -271,7 +271,7 @@ bool s_refillpage()
      * refill the page.
      */
     for (i = 0; i <= g_s_bot_ent; i++)
-	if (is_unavailable(sa_ents[g_page_ents[i].entnum].artnum))
+	if (is_unavailable(g_sa_ents[g_page_ents[i].entnum].artnum))
 	    break;
     if (i <= g_s_bot_ent)
 	return s_refillpage();	/* next time the unavail won't be chosen */
@@ -302,8 +302,8 @@ int s_fillpage()
 		if (g_sa_mode_zoom) {		/* we were zoomed in */
 		    g_s_ref_top = true;	/* for "FOLD" display */
 		    g_sa_mode_zoom = false;	/* zoom out */
-		    if (sa_unzoomrefold)
-			sa_mode_fold = true;
+		    if (g_sa_unzoomrefold)
+			g_sa_mode_fold = true;
 		    (void)s_go_top_ents();	/* go to top (ents and page) */
 		    return s_fillpage();
 		}
@@ -323,7 +323,7 @@ int s_fillpage()
 	return 1;
     /* be extra cautious about the article scan pages */
     for (i = 0; i <= g_s_bot_ent; i++)
-	if (is_unavailable(sa_ents[g_page_ents[i].entnum].artnum))
+	if (is_unavailable(g_sa_ents[g_page_ents[i].entnum].artnum))
 	    break;
     if (i <= g_s_bot_ent)
 	return s_fillpage();	/* next time the unavail won't be chosen */

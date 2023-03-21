@@ -650,40 +650,40 @@ void set_option(int num, char *s)
 	g_s_mode_vi = YES(s);
 	break;
       case OI_SCANA_FOLLOW:
-	sa_follow = YES(s);
+	g_sa_follow = YES(s);
 	break;
       case OI_SCANA_FOLD:
-	sa_mode_fold = YES(s);
+	g_sa_mode_fold = YES(s);
 	break;
       case OI_SCANA_UNZOOMFOLD:
-	sa_unzoomrefold = YES(s);
+	g_sa_unzoomrefold = YES(s);
 	break;
       case OI_SCANA_MARKSTAY:
-	sa_mark_stay = YES(s);
+	g_sa_mark_stay = YES(s);
 	break;
       case OI_SCANA_DISPANUM:
-	sa_mode_desc_artnum = YES(s);
+	g_sa_mode_desc_artnum = YES(s);
 	break;
       case OI_SCANA_DISPAUTHOR:
-	sa_mode_desc_author = YES(s);
+	g_sa_mode_desc_author = YES(s);
 	break;
       case OI_SCANA_DISPSCORE:
-	sa_mode_desc_score = YES(s);
+	g_sa_mode_desc_score = YES(s);
 	break;
       case OI_SCANA_DISPSUBCNT:
-	sa_mode_desc_threadcount = YES(s);
+	g_sa_mode_desc_threadcount = YES(s);
 	break;
       case OI_SCANA_DISPSUBJ:
 #if 0
 	/* CAA: for now, always on. */
-	sa_mode_desc_subject = YES(s);
+	g_sa_mode_desc_subject = YES(s);
 #endif
 	break;
       case OI_SCANA_DISPSUMMARY:
-	sa_mode_desc_summary = YES(s);
+	g_sa_mode_desc_summary = YES(s);
 	break;
       case OI_SCANA_DISPKEYW:
-	sa_mode_desc_keyw = YES(s);
+	g_sa_mode_desc_keyw = YES(s);
 	break;
       case OI_SC_VERBOSE:
 	sf_verbose = YES(s);
@@ -1024,27 +1024,27 @@ char *option_value(int num)
       case OI_SCAN_VI:
 	return YESorNO(g_s_mode_vi);
       case OI_SCANA_FOLLOW:
-	return YESorNO(sa_follow);
+	return YESorNO(g_sa_follow);
       case OI_SCANA_FOLD:
-	return YESorNO(sa_mode_fold);
+	return YESorNO(g_sa_mode_fold);
       case OI_SCANA_UNZOOMFOLD:
-	return YESorNO(sa_unzoomrefold);
+	return YESorNO(g_sa_unzoomrefold);
       case OI_SCANA_MARKSTAY:
-	return YESorNO(sa_mark_stay);
+	return YESorNO(g_sa_mark_stay);
       case OI_SCANA_DISPANUM:
-	return YESorNO(sa_mode_desc_artnum);
+	return YESorNO(g_sa_mode_desc_artnum);
       case OI_SCANA_DISPAUTHOR:
-	return YESorNO(sa_mode_desc_author);
+	return YESorNO(g_sa_mode_desc_author);
       case OI_SCANA_DISPSCORE:
-	return YESorNO(sa_mode_desc_score);
+	return YESorNO(g_sa_mode_desc_score);
       case OI_SCANA_DISPSUBCNT:
-	return YESorNO(sa_mode_desc_threadcount);
+	return YESorNO(g_sa_mode_desc_threadcount);
       case OI_SCANA_DISPSUBJ:
-	return YESorNO(sa_mode_desc_subject);
+	return YESorNO(g_sa_mode_desc_subject);
       case OI_SCANA_DISPSUMMARY:
-	return YESorNO(sa_mode_desc_summary);
+	return YESorNO(g_sa_mode_desc_summary);
       case OI_SCANA_DISPKEYW:
-	return YESorNO(sa_mode_desc_keyw);
+	return YESorNO(g_sa_mode_desc_keyw);
       case OI_SC_VERBOSE:
 	return YESorNO(sf_verbose);
       case OI_USE_SEL_NUM:

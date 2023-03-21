@@ -63,7 +63,7 @@ long sa_get_subj_thread(long e)
     data.dat_len = (unsigned)(s_sa_num_threads+1);
     hashstorelast(data);
     s_sa_num_threads++;
-    sa_ents[e].subj_thread_num = s_sa_num_threads;
+    g_sa_ents[e].subj_thread_num = s_sa_num_threads;
     return s_sa_num_threads;
 }
 
@@ -90,7 +90,7 @@ long sa_subj_thread_prev(long a)
     while ((a = s_prev(a)) != 0) {
 	if (!sa_basic_elig(a))
 	    continue;
-	if (!(j = sa_ents[a].subj_thread_num))
+	if (!(j = g_sa_ents[a].subj_thread_num))
 	    j = sa_subj_thread(a);
 	if (i == j)
 	    return a;
@@ -106,7 +106,7 @@ long sa_subj_thread_next(long a)
     while ((a = s_next(a)) != 0) {
 	if (!sa_basic_elig(a))
 	    continue;
-	if (!(j = sa_ents[a].subj_thread_num))
+	if (!(j = g_sa_ents[a].subj_thread_num))
 	    j = sa_subj_thread(a);
 	if (i == j)
 	    return a;

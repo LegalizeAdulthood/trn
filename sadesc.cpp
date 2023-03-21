@@ -38,7 +38,7 @@ const char *sa_get_statchars(long a, int line)
 	    char_buf[4] = 'x';
 	if (sa_selected1(a))
 	    char_buf[3] = '+';
-	if (was_read(sa_ents[a].artnum))
+	if (was_read(g_sa_ents[a].artnum))
 	    char_buf[0] = '-';
 	else
 	    char_buf[0] = '+';
@@ -55,7 +55,7 @@ const char *sa_get_statchars(long a, int line)
 	    char_buf[2] = 'x';
 	if (sa_selected1(a))
 	    char_buf[1] = '*';
-	if (was_read(sa_ents[a].artnum))
+	if (was_read(g_sa_ents[a].artnum))
 	    char_buf[0] = '-';
 	else
 	    char_buf[0] = '+';
@@ -75,7 +75,7 @@ const char *sa_desc_subject(long e)
     static char sa_subj_buf[256];
 
     /* fetchlines saves its arguments */
-    s = fetchlines(sa_ents[e].artnum,SUBJ_LINE);
+    s = fetchlines(g_sa_ents[e].artnum,SUBJ_LINE);
 
     if (!s || !*s) {
 	if (s)
@@ -107,25 +107,25 @@ const char *sa_get_desc(long e, int line, bool trunc)
     bool use_standout;	/* if true, use stdout on line */
     ART_NUM artnum;
 
-    artnum = sa_ents[e].artnum;
+    artnum = g_sa_ents[e].artnum;
     use_standout = false;
     switch (line) {
       case 1:
 	desc_buf[0] = '\0';	/* initialize the buffer */
-	if (sa_mode_desc_artnum) {
+	if (g_sa_mode_desc_artnum) {
 	    sprintf(g_sa_buf,"%6d ",(int)artnum);
 	    strcat(desc_buf,g_sa_buf);
 	}
-	if (sc_initialized && sa_mode_desc_score) {
+	if (sc_initialized && g_sa_mode_desc_score) {
 	    /* we'd like the score now */
 	    sprintf(g_sa_buf,"[%4d] ",sc_score_art(artnum,true));
 	    strcat(desc_buf,g_sa_buf);
 	}
-	if (sa_mode_desc_threadcount) {
+	if (g_sa_mode_desc_threadcount) {
 	    sprintf(g_sa_buf,"(%3d) ",sa_subj_thread_count(e));
 	    strcat(desc_buf,g_sa_buf);
 	}
-	if (sa_mode_desc_author) {
+	if (g_sa_mode_desc_author) {
 #if 0
 	    if (trunc)
 		sprintf(g_sa_buf,"%s ",padspaces(sa_desc_author(e,16),16));
@@ -139,7 +139,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
 		strcat(desc_buf,compress_from(article_ptr(artnum)->from,200));
 	    strcat(desc_buf," ");
 	}
-	if (sa_mode_desc_subject) {
+	if (g_sa_mode_desc_subject) {
 	    sprintf(g_sa_buf,"%s",sa_desc_subject(e));
 	    strcat(desc_buf,g_sa_buf);
 	}
@@ -156,11 +156,11 @@ const char *sa_get_desc(long e, int line, bool trunc)
 #endif
 	    i = 0;
 	    /* if variable widths used later, use them */
-	    if (sa_mode_desc_artnum)
+	    if (g_sa_mode_desc_artnum)
 		i += 7;
-	    if (sc_initialized && sa_mode_desc_score)
+	    if (sc_initialized && g_sa_mode_desc_score)
 		i += 7;
-	    if (sa_mode_desc_threadcount)
+	    if (g_sa_mode_desc_threadcount)
 		i += 6;
 	    s2 = desc_buf;
 	    while (i--) *s2++ = ' ';
@@ -185,11 +185,11 @@ const char *sa_get_desc(long e, int line, bool trunc)
 #endif
 	    i = 0;
 	    /* if variable widths used later, use them */
-	    if (sa_mode_desc_artnum)
+	    if (g_sa_mode_desc_artnum)
 		i += 7;
-	    if (sc_initialized && sa_mode_desc_score)
+	    if (sc_initialized && g_sa_mode_desc_score)
 		i += 7;
-	    if (sa_mode_desc_threadcount)
+	    if (g_sa_mode_desc_threadcount)
 		i += 6;
 	    s2 = desc_buf;
 	    while (i--) *s2++ = ' ';
@@ -233,15 +233,15 @@ int sa_ent_lines(long e)
     ART_NUM artnum;
     int num = 1;
 
-    artnum = sa_ents[e].artnum;
-    if (sa_mode_desc_summary) {
+    artnum = g_sa_ents[e].artnum;
+    if (g_sa_mode_desc_summary) {
 	s = fetchlines(artnum,SUMRY_LINE);
 	if (s && *s)
 	    num++;	/* just a test */
 	if (s)
 	    free(s);
     }
-    if (sa_mode_desc_keyw) {
+    if (g_sa_mode_desc_keyw) {
 	s = fetchlines(artnum,KEYW_LINE);
 	if (s && *s)
 	    num++;	/* just a test */

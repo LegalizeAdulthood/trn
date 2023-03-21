@@ -36,30 +36,30 @@ void sa_init()
 	return;				/* ...most likely dumb terminal */
     sa_initmode();			/*      mode differences */
     sa_init_threads();
-    sa_mode_read_elig = false;
+    g_sa_mode_read_elig = false;
     if (g_firstart > g_lastart)		/* none unread */
-	sa_mode_read_elig = true;	/* unread+read in some situations */
+	g_sa_mode_read_elig = true;	/* unread+read in some situations */
     if (!sa_initarts())			/* init article array(s) */
 	return;				/* ... no articles */
 #ifdef PENDING
-    if (sa_mode_read_elig) {
+    if (g_sa_mode_read_elig) {
 	sc_fill_read = true;
 	sc_fill_max = g_absfirst - 1;
     }
 #endif
     s_save_context();
-    sa_initialized = true;		/* all went well... */
+    g_sa_initialized = true;		/* all went well... */
 }
 
 void sa_init_ents()
 {
-    sa_num_ents = sa_ents_alloc = 0;
-    sa_ents = (SA_ENTRYDATA*)nullptr;
+    g_sa_num_ents = g_sa_ents_alloc = 0;
+    g_sa_ents = (SA_ENTRYDATA*)nullptr;
 }
 
 void sa_clean_ents()
 {
-    free(sa_ents);
+    free(g_sa_ents);
 }
 
 /* returns entry number that was added */
@@ -68,23 +68,23 @@ long sa_add_ent(ART_NUM artnum)
 {
     long cur;
 
-    sa_num_ents++;
-    if (sa_num_ents > sa_ents_alloc) {
-	sa_ents_alloc += 100;
-	if (sa_ents_alloc == 100) {	/* newly allocated */
+    g_sa_num_ents++;
+    if (g_sa_num_ents > g_sa_ents_alloc) {
+	g_sa_ents_alloc += 100;
+	if (g_sa_ents_alloc == 100) {	/* newly allocated */
 	    /* don't use number 0, just allocate it and skip it */
-	    sa_num_ents = 2;
-	    sa_ents = (SA_ENTRYDATA*)safemalloc(sa_ents_alloc
+	    g_sa_num_ents = 2;
+	    g_sa_ents = (SA_ENTRYDATA*)safemalloc(g_sa_ents_alloc
 					* sizeof (SA_ENTRYDATA));
         } else {
-	    sa_ents = (SA_ENTRYDATA*)saferealloc((char*)sa_ents,
-			sa_ents_alloc * sizeof (SA_ENTRYDATA));
+	    g_sa_ents = (SA_ENTRYDATA*)saferealloc((char*)g_sa_ents,
+			g_sa_ents_alloc * sizeof (SA_ENTRYDATA));
 	}
     }
-    cur = sa_num_ents-1;
-    sa_ents[cur].artnum = artnum;
-    sa_ents[cur].subj_thread_num = 0;
-    sa_ents[cur].sa_flags = (char)0;
+    cur = g_sa_num_ents-1;
+    g_sa_ents[cur].artnum = artnum;
+    g_sa_ents[cur].subj_thread_num = 0;
+    g_sa_ents[cur].sa_flags = (char)0;
     s_order_add(cur);
     return cur;
 }
@@ -96,11 +96,11 @@ void sa_cleanmain()
     g_sa_mode_zoom = false;	/* doesn't survive across groups */
     /* remove the now-unused scan-context */
     s_delete_context(g_sa_scan_context);
-    sa_context_init = false;
+    g_sa_context_init = false;
     g_sa_scan_context = -1;
     /* no longer "in" article scan mode */
-    sa_mode_read_elig = false;	/* the default */
-    sa_in = false;
+    g_sa_mode_read_elig = false;	/* the default */
+    g_sa_in = false;
 }
 
 void sa_growarts(long oldlast, long last)
@@ -114,7 +114,7 @@ void sa_growarts(long oldlast, long last)
 /* Initialize the scan-context to enter article scan mode. */
 void sa_init_context()
 {
-    if (sa_context_init)
+    if (g_sa_context_init)
 	return;		/* already initialized */
     if (g_sa_scan_context == -1)
 	g_sa_scan_context = s_new_context(S_ART);
@@ -131,7 +131,7 @@ bool sa_initarts()
 	if (article_exists(a))
 	    (void)sa_add_ent(a);
     }
-    g_sa_order_read = sa_mode_read_elig;
+    g_sa_order_read = g_sa_mode_read_elig;
     return true;
 }
 
@@ -154,11 +154,11 @@ sa_main_result sa_mainloop()
      * then try to initialize.
      * If that fails then strn will just use arrival ordering.
      */
-    if (!sc_initialized && sa_mode_order == 2) {
+    if (!sc_initialized && g_sa_mode_order == 2) {
 	sc_delay = false;	/* yes, actually score... */
 	sc_init(true);		/* wait for articles to score */
 	if (!sc_initialized)
-	    sa_mode_order = 1;	/* arrival order */
+	    g_sa_mode_order = 1;	/* arrival order */
     }
     /* redraw it *all* */
     g_s_ref_all = true;
@@ -174,7 +174,7 @@ sa_main_result sa_mainloop()
 	i = SA_NORM;
     }
     if (i > 0) {
-	sa_art = sa_ents[i].artnum;
+	g_sa_art = g_sa_ents[i].artnum;
 	return SA_NORM;
     }
     /* something else (quit, return, etc...) */

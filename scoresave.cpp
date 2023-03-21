@@ -377,13 +377,13 @@ void sc_load_scores()
 
     sc_loaded_count = loaded;
     a = g_firstart;
-    if (sa_mode_read_elig)
+    if (g_sa_mode_read_elig)
 	a = g_absfirst;
     total = scored = 0;
     for (a = article_first(a); a <= g_lastart; a = article_next(a)) {
 	if (!article_exists(a))
 	    continue;
-        if (!article_unread(a) && !sa_mode_read_elig)
+        if (!article_unread(a) && !g_sa_mode_read_elig)
 	    continue;
 	total++;
 	if (SCORED(a))
@@ -396,7 +396,7 @@ void sc_load_scores()
 	       loaded,used,total-scored) FLUSH;
 
     sc_save_new = total-scored;
-    if (sa_initialized)
+    if (g_sa_initialized)
 	g_s_top_ent = -1;	/* reset top of page */
 }
 

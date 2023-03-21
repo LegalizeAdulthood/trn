@@ -30,15 +30,15 @@ bool sa_basic_elig(long a)
 {
     ART_NUM artnum;
 
-    artnum = sa_ents[a].artnum;
+    artnum = g_sa_ents[a].artnum;
     assert(check_article(artnum));
 
     /* "run the gauntlet" style (:-) */
-    if (!sa_mode_read_elig && was_read(artnum))
+    if (!g_sa_mode_read_elig && was_read(artnum))
 	return false;
     if (g_sa_mode_zoom && !sa_selected1(a))
 	return false;
-    if (sa_mode_order == 2)	/* score order */
+    if (g_sa_mode_order == 2)	/* score order */
 	if (!SCORED(artnum))
 	    return false;
     /* now just check availability */
@@ -57,7 +57,7 @@ bool sa_eligible(long a)
     assert(check_article(sa_ents[a].artnum));
     if (!sa_basic_elig(a))
 	return false;		/* must always be basic-eligible */
-    if (!sa_mode_fold)
+    if (!g_sa_mode_fold)
 	return true;		/* just use basic-eligible */
     else {
 	if (sa_subj_thread_prev(a))
@@ -71,8 +71,8 @@ bool sa_eligible(long a)
 long sa_artnum_to_ent(ART_NUM artnum)
 {
     long i;
-    for (i = 1; i < sa_num_ents; i++)
-	if (sa_ents[i].artnum == artnum)
+    for (i = 1; i < g_sa_num_ents; i++)
+	if (g_sa_ents[i].artnum == artnum)
 	    return i;
     /* this had better not happen (complain?) */
     return -1;
@@ -93,12 +93,12 @@ void sa_selthreads()
     long art;
     long i;
 
-    want_unread = !sa_mode_read_elig;
+    want_unread = !g_sa_mode_read_elig;
 
     /* clear any old selections */
-    for (i = 1; i < sa_num_ents; i++)
-	sa_ents[i].sa_flags =
-	    (sa_ents[i].sa_flags & 0xfd);
+    for (i = 1; i < g_sa_num_ents; i++)
+	g_sa_ents[i].sa_flags =
+	    (g_sa_ents[i].sa_flags & 0xfd);
 
     /* Loop through all (selected) articles. */
     for (sp = g_first_subject; sp; sp = sp->next) {
@@ -110,7 +110,7 @@ void sa_selthreads()
 		    /* this was a trn-thread selected article */
 		    sa_select1(sa_artnum_to_ent(art));
     /* if scoring, make sure that this article is scored... */
-		    if (sa_mode_order == 2)	/* score order */
+		    if (g_sa_mode_order == 2)	/* score order */
 			sc_score_art(art,false);
 		    }
 		}/* for all articles */
@@ -125,16 +125,16 @@ int sa_number_arts()
     long i;
     ART_NUM a;
 
-    if (sa_mode_read_elig)
+    if (g_sa_mode_read_elig)
 	i = g_absfirst;
     else
 	i = g_firstart;
     total = 0;
-    for (i = 1; i < sa_num_ents; i++) {
-	a = sa_ents[i].artnum;
+    for (i = 1; i < g_sa_num_ents; i++) {
+	a = g_sa_ents[i].artnum;
 	if (is_unavailable(a))
 	    continue;
-	if (!article_unread(a) && !sa_mode_read_elig)
+	if (!article_unread(a) && !g_sa_mode_read_elig)
 	    continue;
 	total++;
     }
@@ -157,23 +157,23 @@ int sa_compare(long a, long b)
 {
     long i,j;
     
-    if (sa_mode_order == 2) {	/* score order */
+    if (g_sa_mode_order == 2) {	/* score order */
 	/* do not score the articles here--move the articles to
 	 * the end of the list if unscored.
 	 */
-	if (!SCORED(sa_ents[a].artnum)) {	/* a unscored */
-	    if (!SCORED(sa_ents[b].artnum)) {	/* a+b unscored */
-	        if (a < b)		/* keep ordering consistent */
+	if (!SCORED(g_sa_ents[a].artnum)) {                       /* a unscored */
+	    if (!SCORED(g_sa_ents[b].artnum)) { /* a+b unscored */
+	        if (a < b)                                        /* keep ordering consistent */
 		    return -1;
 		return 1;
 	    }
 	    return 1;		/* move unscored (a) to end */
 	}
-	if (!SCORED(sa_ents[b].artnum))	/* only b unscored */
+	if (!SCORED(g_sa_ents[b].artnum))	/* only b unscored */
 	    return -1;		/* move unscored (b) to end */
 
-	i = sc_score_art(sa_ents[a].artnum,true);
-	j = sc_score_art(sa_ents[b].artnum,true);
+	i = sc_score_art(g_sa_ents[a].artnum,true);
+	j = sc_score_art(g_sa_ents[b].artnum,true);
 	if (i < j)
 	    return 1;
 	if (i > j)

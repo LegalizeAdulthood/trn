@@ -12,7 +12,7 @@ long sa_subj_thread_prev(long a);
 long sa_subj_thread_next(long a);
 inline long sa_subj_thread(long e)
 {
-    return sa_ents[e].subj_thread_num ? sa_ents[e].subj_thread_num : sa_get_subj_thread(e);
+    return g_sa_ents[e].subj_thread_num ? g_sa_ents[e].subj_thread_num : sa_get_subj_thread(e);
 }
 
 #endif

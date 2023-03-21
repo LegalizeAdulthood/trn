@@ -61,7 +61,7 @@ void sc_init(bool pend_wait)
 
 /* CONSIDER: (for sc_init callers) is g_lastart properly set yet? */
     sc_fill_max = g_absfirst - 1;
-    if (sa_mode_read_elig || g_firstart > g_lastart)
+    if (g_sa_mode_read_elig || g_firstart > g_lastart)
 	sc_fill_read = true;
     else
 	sc_fill_read = false;
@@ -309,13 +309,13 @@ int sc_percent_scored()
     if (sc_fill_max == g_lastart)
 	return 100;
     i = g_firstart;
-    if (sa_mode_read_elig)
+    if (g_sa_mode_read_elig)
 	i = g_absfirst;
     total = scored = 0;
     for (i = article_first(i); i <= g_lastart; i = article_next(i)) {
 	if (!article_exists(i))
 	    continue;
-        if (!article_unread(i) && !sa_mode_read_elig)
+        if (!article_unread(i) && !g_sa_mode_read_elig)
             continue;
 	total++;
 	if (SCORED(i))
@@ -356,7 +356,7 @@ void sc_rescore_arts()
     }
     sc_do_spin = old_spin;
     setspin(SPIN_POP);
-    if (sa_in) {
+    if (g_sa_in) {
 	g_s_ref_all = true;
 	g_s_refill = true;
 	g_s_top_ent = 0;		/* make sure the refill starts from top */
@@ -398,7 +398,7 @@ void sc_append(char *line)
 	fflush(stdout);
 	sc_rescore_arts();
 	printf("Done.\n") FLUSH;
-	if (sa_initialized)
+	if (g_sa_initialized)
 	    g_s_top_ent = -1;		/* reset top of page */
     }
 }
@@ -408,7 +408,7 @@ void sc_rescore()
     sc_rescoring = true; /* in case routines need to know */
     sc_cleanup();        /* get rid of the old */
     sc_init(true);       /* enter the new... (wait for rescore) */
-    if (sa_initialized) {
+    if (g_sa_initialized) {
 	g_s_top_ent = -1;	/* reset top of page */
 	g_s_refill = true;	/* make sure a refill is done */
     }

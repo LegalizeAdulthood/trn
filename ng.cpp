@@ -172,7 +172,7 @@ int do_newsgroup(char *start_command)
     else
 	kill_unwanted(g_firstart,"Auto-processing...\n\n",true);
 
-    sc_init((sa_never_initialized || sa_mode_order == 2)
+    sc_init((g_sa_never_initialized || g_sa_mode_order == 2)
             && start_command && *start_command == ';');
 
     if (univ_ng_virtflag) {
@@ -279,8 +279,8 @@ int do_newsgroup(char *start_command)
 		g_charsubst = g_charsets;
 		g_first_view = 0;
 	    }
-	    if (sa_in) {
-		sa_go = true;
+	    if (g_sa_in) {
+		g_sa_go = true;
 		goto article_level;
 	    }
 	    if (erase_screen)
@@ -439,7 +439,7 @@ article_level:
 	if (mousebar_cnt)
 	    clear_rest();
 
-	if (sa_go) {
+	if (g_sa_go) {
 	    switch (sa_main()) {
 	      case SA_NORM:
 		continue;		/* ...the article (for) loop */
@@ -475,7 +475,7 @@ article_level:
 	  case AS_NORM:			/* display article art */
 	    break;
 	  case AS_SA:			/* go to article scan mode */
-	    sa_go = true;
+	    g_sa_go = true;
 	    goto article_level;
 	}
     }					/* end of article selection loop */
@@ -485,7 +485,7 @@ article_level:
 cleanup:
     kill_unwanted(g_firstart,"\nCleaning up...\n\n",false);
 					/* do cleanup from KILL file, if any */
-    if (sa_initialized)
+    if (g_sa_initialized)
 	sa_cleanup();
     if (sc_initialized)
 	sc_cleanup();
@@ -534,7 +534,7 @@ int art_switch()
 	verify_sig();
 	return AS_ASK;
       case ';':			/* enter ScanArticle mode */
-	sa_go_explicit = true;
+	g_sa_go_explicit = true;
 	return AS_SA;
       case '"':			/* append to local SCORE file */
 	buf[0] = ':';		/* enter command on next line */
@@ -740,7 +740,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	g_art = g_curr_art;
 	g_artp = g_curr_artp;
 	kill_subject(g_artp->subj,AFFECT_ALL);/* take care of any prior subjects */
-	if (sa_in && !(sa_follow || s_follow_temp))
+	if (g_sa_in && !(g_sa_follow || s_follow_temp))
 	    return AS_SA;
 	return AS_NORM;
       case ',':		/* kill this node and all descendants */
@@ -750,7 +750,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    kill_subthread(g_artp,AFFECT_ALL);
 	else if (g_art >= g_absfirst && g_art <= g_lastart)
 	    mark_as_read(g_artp);
-	if (sa_in && !(sa_follow || s_follow_temp))
+	if (g_sa_in && !(g_sa_follow || s_follow_temp))
 	    return AS_SA;
 	return AS_NORM;
       case 'J':		/* Junk all nodes in this thread */
@@ -758,7 +758,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    goto not_threaded;
 	if (g_threaded_group) {
 	    kill_thread(g_artp->subj->thread,AFFECT_ALL);
-	    if (sa_in)
+	    if (g_sa_in)
 		return AS_SA;
 	    return AS_NORM;
 	}
@@ -771,7 +771,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    *buf = 'k';
 	    goto normal_search;
 	}
-	if (sa_in && !(sa_follow || s_follow_temp))
+	if (g_sa_in && !(g_sa_follow || s_follow_temp))
 	    return AS_SA;
 	return AS_NORM;
       case 't':
@@ -836,9 +836,9 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	s_exit_code = NG_MINUS;
 	return AS_CLEAN;
       case 'n':		/* find next unread article? */
-	if (sa_in && s_default_cmd && !(sa_follow || s_follow_temp))
+	if (g_sa_in && s_default_cmd && !(g_sa_follow || s_follow_temp))
 	    return AS_SA;
-        if (univ_read_virtflag && univ_default_cmd && !(sa_in && (sa_follow || s_follow_temp)) &&
+        if (univ_read_virtflag && univ_default_cmd && !(g_sa_in && (g_sa_follow || s_follow_temp)) &&
             !(univ_follow || univ_follow_temp))
         {
 	    s_exit_code = NG_NEXT;
@@ -852,7 +852,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    if (!g_ngptr->toread)
 		return AS_CLEAN;
 	    top_article();
-	    if (sa_in)
+	    if (g_sa_in)
 		return AS_SA;
 	}
 	else if (scanon && !g_threaded_group && g_srchahead) {
@@ -863,7 +863,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	}
 	else {
 	    /* $$ will this work with 4.0? CAA */
-	    if (sa_in && g_threaded_group) {
+	    if (g_sa_in && g_threaded_group) {
 		ARTICLE* old_artp = g_artp;
 		inc_art(g_selected_only,false);
 		if (!g_artp || !old_artp)
@@ -893,9 +893,9 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	g_srchahead = 0;
 	return AS_NORM;
       case 'N':			/* goto next article */
-	if (sa_in && s_default_cmd && !(sa_follow || s_follow_temp))
+	if (g_sa_in && s_default_cmd && !(g_sa_follow || s_follow_temp))
 	    return AS_SA;
-        if (univ_read_virtflag && univ_default_cmd && !(sa_in && (sa_follow || s_follow_temp)) &&
+        if (univ_read_virtflag && univ_default_cmd && !(g_sa_in && (g_sa_follow || s_follow_temp)) &&
             !(univ_follow || univ_follow_temp))
         {
 	    s_exit_code = NG_NEXT;
@@ -961,9 +961,9 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	return AS_ASK;
       case Ctl('n'):	/* search for next article with same subject */
       case Ctl('p'):	/* search for previous article with same subject */
-        if (sa_in && s_default_cmd && *buf == Ctl('n') && !(sa_follow || s_follow_temp))
+        if (g_sa_in && s_default_cmd && *buf == Ctl('n') && !(g_sa_follow || s_follow_temp))
             return AS_SA;
-        if (univ_read_virtflag && univ_default_cmd && (*buf == Ctl('n')) && !(sa_in && (sa_follow || s_follow_temp)) &&
+        if (univ_read_virtflag && univ_default_cmd && (*buf == Ctl('n')) && !(g_sa_in && (g_sa_follow || s_follow_temp)) &&
             !(univ_follow || univ_follow_temp))
         {
 	    s_exit_code = NG_NEXT;
@@ -1015,7 +1015,7 @@ normal_search:
 	    g_reread = false;
 	    return AS_NORM;
 	  case SRCH_SUBJDONE:
-	    if (sa_in)
+	    if (g_sa_in)
 		return AS_SA;
 	    top_article();
 	    g_reread = false;
@@ -1024,7 +1024,7 @@ normal_search:
 	    fputs("\n\n\n\nNot found.\n",stdout) FLUSH;
 	    termdown(5);
 	    g_art = g_curr_art;  /* restore to current article */
-	    if (sa_in)
+	    if (g_sa_in)
 		return AS_SA;
 	    return AS_ASK;
 	  case SRCH_FOUND:
@@ -1112,7 +1112,7 @@ run_the_selector:
 	    return AS_ASK;
 	}
 	/* modes do not mix very well, so turn off the SA mode */
-	sa_in = false;
+	g_sa_in = false;
 	/* turn on temporary follow */
 	s_follow_temp = true;
 	univ_follow_temp = true;
@@ -1138,8 +1138,8 @@ run_the_selector:
 	    s_exit_code = NG_SELPRIOR;
 	    break;
 	  case ';':
-	    sa_do_selthreads = true;
-	    sa_go_explicit = true;
+	    g_sa_do_selthreads = true;
+	    g_sa_go_explicit = true;
 	    return AS_SA;
 	  default:
 	    if (g_ngptr->toread)

@@ -3,18 +3,20 @@
  *
  * Interface to rest of [t]rn
  */
+#ifndef SCANART_H
+#define SCANART_H
 
 /* return codes for sa_main */
 enum sa_main_result
 {
-    SA_READ = (-7),     /* read article pointed to by g_art (always) */
-    SA_QUIT_SEL = (-6), /* quit, and return to previous selector (backtick) */
-    SA_PRIOR = (-5),    /* go to and enter prior newsgroup */
-    SA_NEXT = (-4),     /* go to and enter next newsgroup */
-    SA_FAKE = (-3),     /* Fake a command (buf and g_art already set up) */
-    SA_ERR = (-2),      /* error, quit out one level */
-    SA_QUIT = (-1),     /* quit out one level and clean up... */
-    SA_NORM = 0         /* do the normal thing (usually read article pointed to by g_art) */
+    SA_READ = -7,     /* read article pointed to by g_art (always) */
+    SA_QUIT_SEL = -6, /* quit, and return to previous selector (backtick) */
+    SA_PRIOR = -5,    /* go to and enter prior newsgroup */
+    SA_NEXT = -4,     /* go to and enter next newsgroup */
+    SA_FAKE = -3,     /* Fake a command (buf and g_art already set up) */
+    SA_ERR = -2,      /* error, quit out one level */
+    SA_QUIT = -1,     /* quit out one level and clean up... */
+    SA_NORM = 0       /* do the normal thing (usually read article pointed to by g_art) */
 };
 
 /* per-entry data */
@@ -25,31 +27,31 @@ struct SA_ENTRYDATA
     char sa_flags;		/* status bitmap (marked, select, etc...) */
 };
 
-EXT SA_ENTRYDATA* sa_ents INIT(nullptr);
-EXT int sa_num_ents INIT(0);
-EXT int sa_ents_alloc INIT(0);
+extern SA_ENTRYDATA *g_sa_ents;
+extern int g_sa_num_ents;
+extern int g_sa_ents_alloc;
 
-EXT bool sa_initialized INIT(false);	/* Have we initialized? */
-EXT bool sa_never_initialized INIT(true); /* Have we ever initialized? */
+extern bool g_sa_initialized;       /* Have we initialized? */
+extern bool g_sa_never_initialized; /* Have we ever initialized? */
 
-/* note: sa_in should be checked for returning to SA */
-EXT bool sa_in INIT(false);		/* Are we "in" SA? */
+/* note: g_sa_in should be checked for returning to SA */
+extern bool g_sa_in; /* Are we "in" SA? */
 
-EXT bool sa_go INIT(false);		/* go to sa.  Do not pass GO (:-) */
-EXT bool sa_go_explicit INIT(false);	/* want to bypass read-next-marked */
+extern bool g_sa_go;          /* go to sa.  Do not pass GO (:-) */
+extern bool g_sa_go_explicit; /* want to bypass read-next-marked */
 
-EXT bool sa_context_init INIT(false);	/* has context been initialized? */
+extern bool g_sa_context_init; /* has context been initialized? */
 
 /* used to pass an article number to read soon */
-EXT ART_NUM sa_art INIT(0);
+extern ART_NUM g_sa_art;
 
 /* reimplement later */
 /* select threads from TRN thread selector */
-EXT bool sa_do_selthreads INIT(false);
+extern bool g_sa_do_selthreads;
 
 /* true if read articles are eligible */
 /* in scanart.h for world-visibilty */
-EXT bool sa_mode_read_elig INIT(false);
+extern bool g_sa_mode_read_elig;
 
 /* Options */
 /* Display order variable:
@@ -57,32 +59,34 @@ EXT bool sa_mode_read_elig INIT(false);
  * 1: Arrival order
  * 2: Descending score
  */
-EXT int sa_mode_order INIT(2);
+extern int g_sa_mode_order;
 
 /* if true, don't move the cursor after marking or selecting articles */
-EXT bool sa_mark_stay INIT(false);
+extern bool g_sa_mark_stay;
 
 /* if true, re-"fold" after an un-zoom operation. */
 /* This flag is useful for very slow terminals */
-EXT bool sa_unzoomrefold INIT(false);
+extern bool g_sa_unzoomrefold;
 
 /* true if in "fold" mode */
-EXT bool sa_mode_fold INIT(false);
+extern bool g_sa_mode_fold;
 
 /* Follow threads by default? */
-EXT bool sa_follow INIT(true);
+extern bool g_sa_follow;
 
 /* Options: what to display */
-EXT bool sa_mode_desc_artnum INIT(false);	/* show art#s */
-EXT bool sa_mode_desc_author INIT(true);	/* show author */
-EXT bool sa_mode_desc_score INIT(true);		/* show score */
+extern bool g_sa_mode_desc_artnum; /* show art#s */
+extern bool g_sa_mode_desc_author; /* show author */
+extern bool g_sa_mode_desc_score;  /* show score */
 /* flags to determine whether to display various things */
-EXT bool sa_mode_desc_threadcount INIT(false);
-EXT bool sa_mode_desc_subject INIT(true);
-EXT bool sa_mode_desc_summary INIT(false);
-EXT bool sa_mode_desc_keyw INIT(false);
+extern bool g_sa_mode_desc_threadcount;
+extern bool g_sa_mode_desc_subject;
+extern bool g_sa_mode_desc_summary;
+extern bool g_sa_mode_desc_keyw;
 
 sa_main_result sa_main();
 sa_main_result sa_mainloop();
 void sa_grow(ART_NUM oldlast, ART_NUM last);
 void sa_cleanup();
+
+#endif

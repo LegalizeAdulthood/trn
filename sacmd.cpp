@@ -45,7 +45,7 @@ int sa_docmd()
     ART_NUM artnum;
 
     a = (long)g_page_ents[g_s_ptr_page_line].entnum;
-    artnum = sa_ents[a].artnum;
+    artnum = g_sa_ents[a].artnum;
 
     switch(*buf) {
       case '+':	/* enter thread selector */
@@ -55,7 +55,7 @@ int sa_docmd()
 	}
 	buf[0] = '+';	/* fake up command for return */
 	buf[1] = '\0';
-	sa_art = artnum; /* give it somewhere to point */
+	g_sa_art = artnum; /* give it somewhere to point */
 	s_save_context();	/* for possible later changes */
 	return SA_FAKE;	/* fake up the command. */
       case 'K':	/* kill below a threshold */
@@ -83,8 +83,8 @@ int sa_docmd()
     /* Do not kill threads with the first article marked, as it is probably
      * not what the user wanted.
      */
-	    if (!sa_marked(g_page_ents[i].entnum) || !sa_mode_fold)
-		(void)sa_art_cmd(sa_mode_fold,SA_KILL_UNMARKED,
+	    if (!sa_marked(g_page_ents[i].entnum) || !g_sa_mode_fold)
+		(void)sa_art_cmd(g_sa_mode_fold,SA_KILL_UNMARKED,
                                  g_page_ents[i].entnum);
 /* consider: should it start reading? */
 	b = sa_readmarked_elig();
@@ -97,7 +97,7 @@ int sa_docmd()
 	break;
       case 'J':	/* kill marked "on" page */
 	/* If in "fold" mode, kill threads with the first article marked */
-	if (sa_mode_fold) {
+	if (g_sa_mode_fold) {
 	    for (i = 0; i <= g_s_bot_ent; i++) {
 		if (sa_marked(g_page_ents[i].entnum))
 		    (void)sa_art_cmd(true,SA_KILL,g_page_ents[i].entnum);
@@ -124,8 +124,8 @@ int sa_docmd()
 	for ( ; i; i = s_next(i)) {
 	    if (!sa_basic_elig(i))
 		continue;
-	    if (!sa_marked(i) && !was_read(sa_ents[i].artnum)) {
-		if (sa_mode_fold) {		/* new semantics */
+	    if (!sa_marked(i) && !was_read(g_sa_ents[i].artnum)) {
+		if (g_sa_mode_fold) {		/* new semantics */
 		    long j;
 		    /* make j == 0 if no prior marked articles in the thread. */
 		    for (j = i; j; j = sa_subj_thread_prev(j))
@@ -134,7 +134,7 @@ int sa_docmd()
 		    if (j)	/* there was a marked article */
 			continue;	/* article selection loop */
 		}
-		oneless_artnum(sa_ents[i].artnum);
+		oneless_artnum(g_sa_ents[i].artnum);
 	    }
 	}
 	b = sa_readmarked_elig();
@@ -153,26 +153,26 @@ int sa_docmd()
 	break;
       case 'o':	/* toggle between score and arrival orders */
 	s_rub_ptr();
-	if (sa_mode_order==1)
-	    sa_mode_order = 2;
+	if (g_sa_mode_order==1)
+	    g_sa_mode_order = 2;
 	else
-	    sa_mode_order = 1;
-	if (sa_mode_order == 2 && sc_delay) {
+	    g_sa_mode_order = 1;
+	if (g_sa_mode_order == 2 && sc_delay) {
 	    sc_delay = false;
 	    sc_init(true);
 	}
-	if (sa_mode_order == 2 && !sc_initialized) /* score order */
-	    sa_mode_order = 1;	/* nope... (maybe allow later) */
+	if (g_sa_mode_order == 2 && !sc_initialized) /* score order */
+	    g_sa_mode_order = 1;	/* nope... (maybe allow later) */
 	/* if we go into score mode, make sure score is displayed */
-	if (sa_mode_order == 2 && !sa_mode_desc_score)
-	    sa_mode_desc_score = true;
+	if (g_sa_mode_order == 2 && !g_sa_mode_desc_score)
+	    g_sa_mode_desc_score = true;
 	s_sort();
 	s_go_top_ents();
 	g_s_refill = true;
 	g_s_ref_bot = true;
 	break;
       case 'O':	/* change article sorting order */
-	if (sa_mode_order != 2) { /* not in score order */
+	if (g_sa_mode_order != 2) { /* not in score order */
 	    s_beep();
 	    break;
 	}
@@ -202,29 +202,29 @@ int sa_docmd()
 	eat_typeahead();   /* stay in control. */
 	break;
       case '\t':	/* TAB: toggle threadcount display */
-	sa_mode_desc_threadcount = !sa_mode_desc_threadcount;
+	g_sa_mode_desc_threadcount = !g_sa_mode_desc_threadcount;
 	g_s_ref_desc = 0;
 	break;
       case 'a':	/* toggle author display */
-	sa_mode_desc_author = !sa_mode_desc_author;
+	g_sa_mode_desc_author = !g_sa_mode_desc_author;
 	g_s_ref_desc = 0;
 	break;
       case '%':	/* toggle article # display */
-	sa_mode_desc_artnum = !sa_mode_desc_artnum;
+	g_sa_mode_desc_artnum = !g_sa_mode_desc_artnum;
 	g_s_ref_desc = 0;
 	break;
       case 'U':	/* toggle unread/unread+read mode */
-	sa_mode_read_elig = !sa_mode_read_elig;
+	g_sa_mode_read_elig = !g_sa_mode_read_elig;
 /* maybe later use the flag to not do this more than once per newsgroup */
-	for (i = 1; i < sa_num_ents; i++)
+	for (i = 1; i < g_sa_num_ents; i++)
 	    s_order_add(i);		/* duplicates ignored */
 	if (sa_eligible(s_first()) || s_next_elig(s_first())) {
 #ifdef PENDING
-	    if (sa_mode_read_elig) {
+	    if (g_sa_mode_read_elig) {
 		sc_fill_read = true;
 		sc_fill_max = g_absfirst - 1;
 	    }
-	    if (!sa_mode_read_elig)
+	    if (!g_sa_mode_read_elig)
 		sc_fill_read = false;
 #endif
 	    g_s_ref_top = true;
@@ -235,17 +235,17 @@ int sa_docmd()
 	    return SA_QUIT;
 	break;
       case 'F':	/* Fold */
-	sa_mode_fold = !sa_mode_fold;
+	g_sa_mode_fold = !g_sa_mode_fold;
 	g_s_refill = true;
 	g_s_ref_top = true;
 	break;
       case 'f':	/* follow */
-	sa_follow = !sa_follow;
+	g_sa_follow = !g_sa_follow;
 	g_s_ref_top = true;
 	break;
       case 'Z':	/* Zero (wipe) selections... */
-	for (i = 1; i < sa_num_ents; i++)
-	    sa_ents[i].sa_flags = (sa_ents[i].sa_flags & 0xfd);
+	for (i = 1; i < g_sa_num_ents; i++)
+	    g_sa_ents[i].sa_flags = (g_sa_ents[i].sa_flags & 0xfd);
 	g_s_ref_status = 0;
 	if (!g_sa_mode_zoom)
 	    break;
@@ -254,8 +254,8 @@ int sa_docmd()
 	/* FALL THROUGH */
       case 'z':	/* zoom mode toggle */
 	g_sa_mode_zoom = !g_sa_mode_zoom;
-	if (sa_unzoomrefold && !g_sa_mode_zoom)
-	    sa_mode_fold = true;
+	if (g_sa_unzoomrefold && !g_sa_mode_zoom)
+	    g_sa_mode_fold = true;
 	/* toggle mode again if no elibible articles left */
 	if (sa_eligible(s_first()) || s_next_elig(s_first())) {
 	    g_s_ref_top = true;
@@ -364,7 +364,7 @@ int sa_docmd()
 		return 0;			/* beep but do nothing */
 	    }
 	}
-	sa_art = (ART_NUM)i;
+	g_sa_art = (ART_NUM)i;
 	return SA_READ;			/* special code to really return */
       case 'N':	/* next newsgroup */
 	return SA_NEXT;
@@ -375,7 +375,7 @@ int sa_docmd()
       case 'q':	/* quit newsgroup */
 	return SA_QUIT;
       case 'Q':	/* start reading and quit SA mode */
-	sa_in = false;
+	g_sa_in = false;
 	/* FALL THROUGH */
       case '\n':
       case ' ':
@@ -393,7 +393,7 @@ int sa_docmd()
       case 'M':	/* toggle mark on thread */
 	s_rub_ptr();
 	(void)sa_art_cmd((*buf == 'M'),SA_MARK,a);
-	if (!sa_mark_stay) {
+	if (!g_sa_mark_stay) {
 	    /* go to next art on page or top of page if at bottom */
 	    if (g_s_ptr_page_line < g_s_bot_ent)	/* more on page */
 		g_s_ptr_page_line +=1;
@@ -409,7 +409,7 @@ int sa_docmd()
 	/* if in zoom mode, selection will remove article(s) from the
 	 * page, so that moving the cursor down is unnecessary
 	 */
-	if (!sa_mark_stay && !g_sa_mode_zoom) {
+	if (!g_sa_mark_stay && !g_sa_mode_zoom) {
 	    /* go to next art on page or top of page if at bottom */
 	    if (g_s_ptr_page_line<(g_s_bot_ent))	/* more on page */
 		g_s_ptr_page_line +=1;
@@ -576,7 +576,7 @@ void sa_art_cmd_prim(sa_cmd cmd, long a)
 {
     ART_NUM artnum;
 
-    artnum = sa_ents[a].artnum;
+    artnum = g_sa_ents[a].artnum;
 /* do more onpage status refreshes when in unread+read mode? */
     switch (cmd) {
       case SA_KILL_MARKED:
