@@ -161,7 +161,7 @@ void sc_cleanup()
 
     if (g_sc_savescores)
 	sc_save_scores();
-    sc_loaded_count = 0;
+    g_sc_loaded_count = 0;
 
     if (g_sf_verbose) {
 	printf("\nCleaning up scoring...");

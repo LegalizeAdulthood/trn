@@ -7,43 +7,37 @@
 #include "EXTERN.h"
 #include "common.h"
 #include "list.h"
-#include "hash.h"
 #include "cache.h"
-#include "bits.h"
-#include "intrp.h"		/* for filexp */
-#include "ng.h"			/* g_art */
 #include "ngdata.h"
 #include "util.h"		/* several */
 #include "util2.h"
 #include "env.h"		/* get_val */
 #include "scan.h"
 #include "scanart.h"
-#include "samain.h"
-#include "samisc.h"
 #include "score.h"
-#include "INTERN.h"
 #include "scoresave.h"
 
-static int num_lines = 0;
-static int lines_alloc = 0;
-static char** lines = nullptr;
+int g_sc_loaded_count{}; /* how many articles were loaded? */
 
-static char lbuf[LBUFLEN];
-static char lbuf2[LBUFLEN];		/* what's another buffer between... */
-
-static int loaded;
-static int used;
-static int saved;
-static ART_NUM last;
+static long s_sc_save_new{}; /* new articles (unloaded) */
+static int s_num_lines{};
+static int s_lines_alloc{};
+static char **s_lines{};
+static char s_lbuf[LBUFLEN]{};
+static char s_lbuf2[LBUFLEN]{}; /* what's another buffer between... */
+static int s_loaded{};
+static int s_used{};
+static int s_saved{};
+static ART_NUM s_last{};
 
 void sc_sv_add(const char *str)
 {
-    if (num_lines == lines_alloc) {
-	lines_alloc += 100;
-	lines = (char**)saferealloc((char*)lines,lines_alloc * sizeof (char*));
+    if (s_num_lines == s_lines_alloc) {
+	s_lines_alloc += 100;
+	s_lines = (char**)saferealloc((char*)s_lines,s_lines_alloc * sizeof (char*));
     }
-    lines[num_lines] = savestr(str);
-    num_lines++;
+    s_lines[s_num_lines] = savestr(str);
+    s_num_lines++;
 }
 
 void sc_sv_delgroup(const char *gname)
@@ -52,29 +46,29 @@ void sc_sv_delgroup(const char *gname)
     int i;
     int start;
 
-    for (i = 0; i < num_lines; i++) {
-	s = lines[i];
+    for (i = 0; i < s_num_lines; i++) {
+	s = s_lines[i];
 	if (s && *s == '!' && !strcmp(gname,s+1))
 	    break;
     }
-    if (i == num_lines)
+    if (i == s_num_lines)
 	return;		/* group not found */
     start = i;
-    free(lines[i]);
-    lines[i] = nullptr;
-    for (i++; i < num_lines; i++) {
-	s = lines[i];
+    free(s_lines[i]);
+    s_lines[i] = nullptr;
+    for (i++; i < s_num_lines; i++) {
+	s = s_lines[i];
 	if (s && *s == '!')
 	    break;
 	if (s) {
 	    free(s);
-	    lines[i] = nullptr;
+	    s_lines[i] = nullptr;
 	}
     }
     /* copy into the hole (if any) */
-    for ( ; i < num_lines; i++)
-	lines[start++] = lines[i];
-    num_lines -= (i-start);
+    for ( ; i < s_num_lines; i++)
+	s_lines[start++] = s_lines[i];
+    s_num_lines -= (i-start);
 }
 
 /* get the file containing scores into memory */
@@ -83,8 +77,8 @@ void sc_sv_getfile()
     char* s;
     FILE* fp;
 
-    num_lines = lines_alloc = 0;
-    lines = nullptr;
+    s_num_lines = s_lines_alloc = 0;
+    s_lines = nullptr;
 
     s = get_val("SAVESCOREFILE","%+/savedscores");
     fp = fopen(filexp(s),"r");
@@ -94,9 +88,9 @@ void sc_sv_getfile()
 #endif
 	return;
     }
-    while (fgets(lbuf,LBUFLEN-2,fp)) {
-	lbuf[strlen(lbuf)-1] = '\0';	/* strip \n */
-	sc_sv_add(lbuf);
+    while (fgets(s_lbuf,LBUFLEN-2,fp)) {
+	s_lbuf[strlen(s_lbuf)-1] = '\0';	/* strip \n */
+	sc_sv_add(s_lbuf);
     }
     fclose(fp);
 }
@@ -109,39 +103,39 @@ void sc_sv_savefile()
     char* savename;
     int i;
 
-    if (num_lines == 0)
+    if (s_num_lines == 0)
 	return;
     waiting = true;	/* don't interrupt */
     s = get_val("SAVESCOREFILE","%+/savedscores");
     savename = savestr(filexp(s));
-    strcpy(lbuf,savename);
-    strcat(lbuf,".tmp");
-    tmpfp = fopen(lbuf,"w");
+    strcpy(s_lbuf,savename);
+    strcat(s_lbuf,".tmp");
+    tmpfp = fopen(s_lbuf,"w");
     if (!tmpfp) {
 #if 0
 	printf("Could not open score save temp file %s for writing.\n",
-	       lbuf) FLUSH;
+	       s_lbuf) FLUSH;
 #endif
 	free(savename);
 	waiting = false;
 	return;
     }
-    for (i = 0; i < num_lines; i++) {
-	if (lines[i])
-	    fprintf(tmpfp,"%s\n",lines[i]);
+    for (i = 0; i < s_num_lines; i++) {
+	if (s_lines[i])
+	    fprintf(tmpfp,"%s\n",s_lines[i]);
 	if (ferror(tmpfp)) {
 	    fclose(tmpfp);
 	    free(savename);
-	    printf("\nWrite error in temporary save file %s\n",lbuf) FLUSH;
+	    printf("\nWrite error in temporary save file %s\n",s_lbuf) FLUSH;
 	    printf("(keeping old saved scores)\n");
-	    remove(lbuf);
+	    remove(s_lbuf);
 	    waiting = false;
 	    return;
 	}
     }
     fclose(tmpfp);
     remove(savename);
-    rename(lbuf,savename);
+    rename(s_lbuf,savename);
     waiting = false;
 }
 
@@ -174,10 +168,10 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
 	    score = 0 - atoi(p);
 	    *p = c1;
 	    *s = c2;
-	    loaded++;
+	    s_loaded++;
 	    if (is_available(a) && article_unread(a)) {
 		sc_set_score(a,score);
-		used++;
+		s_used++;
 	    }
 	    a++;
 	    break;
@@ -194,10 +188,10 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
 	    score = atoi(p);
 	    *p = c1;
 	    *s = c2;
-	    loaded++;
+	    s_loaded++;
 	    if (is_available(a) && article_unread(a)) {
 		sc_set_score(a,score);
-		used++;
+		s_used++;
 	    }
 	    a++;
 	    break;
@@ -216,10 +210,10 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
 		*s = c1;
 	    }
 	    for ( ; x; x--) {
-		loaded++;
+		s_loaded++;
 		if (is_available(a) && article_unread(a)) {
 		    sc_set_score(a,score);
-		    used++;
+		    s_used++;
 		}
 		a++;
 	    }
@@ -254,19 +248,19 @@ ART_NUM sc_sv_make_line(ART_NUM a)
     int i;
     bool neg_flag;
 
-    s = lbuf;
+    s = s_lbuf;
     *s++ = '.';
     lastscore = 0;
 
     for (a = article_first(a); a <= g_lastart && num_output < 50; a = article_next(a)) {
 	if (article_unread(a) && SCORED(a)) {
-	    if (last != a-1) {
-		if (last == a-2) {
+	    if (s_last != a-1) {
+		if (s_last == a-2) {
 		    *s++ = 's';
 		    num_output++;
 		} else {
-		    sprintf(s,"s%ld",(a-last)-1);
-		    s = lbuf + strlen(lbuf);
+		    sprintf(s,"s%ld",(a-s_last)-1);
+		    s = s_lbuf + strlen(s_lbuf);
 		    num_output++;
 		}
 	    }
@@ -284,10 +278,10 @@ ART_NUM sc_sv_make_line(ART_NUM a)
 		    num_output++;
 		} else {
 		    sprintf(s,"r%d",i);	/* repeat >one */
-		    s = lbuf + strlen(lbuf);
+		    s = s_lbuf + strlen(s_lbuf);
 		    num_output++;
 		}
-		saved += i-1;
+		s_saved += i-1;
 	    } else {	/* not a repeat */
 		i = score;
 		if (i < 0) {
@@ -301,17 +295,17 @@ ART_NUM sc_sv_make_line(ART_NUM a)
 		    *s++ = 'J' - i;
 		else
 		    *s++ = 'J' + i;
-		s = lbuf + strlen(lbuf);
+		s = s_lbuf + strlen(s_lbuf);
 		num_output++;
 		lastscore_valid = true;
 	    }
 	    lastscore = score;
-	    last = a;
-	    saved++;
+	    s_last = a;
+	    s_saved++;
 	} /* if */
     } /* for */
     *s = '\0';
-    sc_sv_add(lbuf);
+    sc_sv_add(s_lbuf);
     return a;
 }
 
@@ -325,24 +319,24 @@ void sc_load_scores()
     int total,scored;
     bool verbose;
 
-    sc_save_new = -1;		/* just in case we exit early */
-    loaded = used = 0;
-    sc_loaded_count = 0;
+    s_sc_save_new = -1;		/* just in case we exit early */
+    s_loaded = s_used = 0;
+    g_sc_loaded_count = 0;
 
     /* verbosity is only really useful for debugging... */
     verbose = false;
 
-    if (num_lines == 0)
+    if (s_num_lines == 0)
 	sc_sv_getfile();
 
     gname = savestr(filexp("%C"));
 
-    for (i = 0; i < num_lines; i++) {
-	s = lines[i];
+    for (i = 0; i < s_num_lines; i++) {
+	s = s_lines[i];
 	if (s && *s == '!' && !strcmp(s+1,gname))
 	    break;
     }
-    if (i == num_lines)
+    if (i == s_num_lines)
 	return;		/* no scores loaded */
     i++;
 
@@ -350,8 +344,8 @@ void sc_load_scores()
 	printf("\nLoading scores...");
 	fflush(stdout);
     }
-    while (i < num_lines) {
-	s = lines[i++];
+    while (i < s_num_lines) {
+	s = s_lines[i++];
 	if (!s)
 	    continue;
 	switch (*s) {
@@ -362,7 +356,7 @@ void sc_load_scores()
 	    a = sc_sv_use_line(s+1,a);
 	    break;
 	  case '!':			/* group of shared file */
-	    i = num_lines;
+	    i = s_num_lines;
 	    break;
 	  case 'v':			/* version number */
 	    break;			/* not used now */
@@ -375,7 +369,7 @@ void sc_load_scores()
 	} /* switch */
     } /* while */
 
-    sc_loaded_count = loaded;
+    g_sc_loaded_count = s_loaded;
     a = g_firstart;
     if (g_sa_mode_read_elig)
 	a = g_absfirst;
@@ -393,9 +387,9 @@ void sc_load_scores()
     /* sloppy plurals (:-) */
     if (verbose)
 	printf("(%d/%d/%d scores loaded/used/unscored)\n",
-	       loaded,used,total-scored) FLUSH;
+	       s_loaded,s_used,total-scored) FLUSH;
 
-    sc_save_new = total-scored;
+    s_sc_save_new = total-scored;
     if (g_sa_initialized)
 	g_s_top_ent = -1;	/* reset top of page */
 }
@@ -405,25 +399,25 @@ void sc_save_scores()
     ART_NUM a;
     char* gname;
 
-    saved = 0;
-    last = 0;
+    s_saved = 0;
+    s_last = 0;
 
     waiting = true;	/* DON'T interrupt */
     gname = savestr(filexp("%C"));
     /* not being able to open is OK */
-    if (num_lines > 0) {
+    if (s_num_lines > 0) {
 	sc_sv_delgroup(gname);	/* delete old group */
     } else {		/* there was no old file */
 	sc_sv_add("#STRN saved score file.");
 	sc_sv_add("v1.0");
     }
-    sprintf(lbuf2,"!%s",gname);	/* add the header */
-    sc_sv_add(lbuf2);
+    sprintf(s_lbuf2,"!%s",gname);	/* add the header */
+    sc_sv_add(s_lbuf2);
 
     a = g_firstart;
-    sprintf(lbuf2,":%ld",a);
-    sc_sv_add(lbuf2);
-    last = a-1;
+    sprintf(s_lbuf2,":%ld",a);
+    sc_sv_add(s_lbuf2);
+    s_last = a-1;
     while (a <= g_lastart)
 	a = sc_sv_make_line(a);
     waiting = false;
