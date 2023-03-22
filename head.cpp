@@ -105,7 +105,7 @@ void head_init()
 #ifdef DEBUG
 void dumpheader(char *where)
 {
-    register int i;
+    int i;
 
     printf("header: %ld %s", (long)g_parsed_art, where);
 

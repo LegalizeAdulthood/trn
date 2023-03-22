@@ -201,10 +201,10 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
 #ifdef MCHASE
 void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
 {
-    register NGDATA* np;
-    register char* s;
-    register char* t;
-    register ART_NUM min, max;
+    NGDATA* np;
+    char* s;
+    char* t;
+    ART_NUM min, max;
     char* mbuf;
     int curlen;
 

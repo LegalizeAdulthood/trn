@@ -1030,7 +1030,7 @@ int read_tty(char *addr, int size)
 # if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(MSDOS)
 int circfill()
 {
-    register int Howmany;
+    int Howmany;
 
     errno = 0;
     Howmany = read(devtty,s_circlebuf+s_nextin,1);

@@ -1594,7 +1594,7 @@ bool output_subject(char *ptr, int flag)
 #ifdef DEBUG
 static bool debug_article_output(char *ptr, int arg)
 {
-    register ARTICLE* ap = (ARTICLE*)ptr;
+    ARTICLE* ap = (ARTICLE*)ptr;
     if (g_int_count)
 	return 1;
     if (article_num(ap) >= g_firstart && ap->subj) {

@@ -405,7 +405,7 @@ int makedir(char *dirname, int nametype)
     int status = 0;
 # else
     char tmpbuf[1024];
-    register char* tbptr = tmpbuf+5;
+    char* tbptr = tmpbuf+5;
 # endif
 
     for (end = dirname; *end; end++) ;	/* find the end */
