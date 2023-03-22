@@ -138,7 +138,7 @@ Signal_t int_catcher(int dummy)
     if (debug)
 	write(2,"int_catcher\n",12);
 #endif
-    if (!waiting) {
+    if (!g_waiting) {
 	if (g_int_count++) {		/* was there already an interrupt? */
 	    if (g_int_count == 3 || g_int_count > 5) {
 		write(2,"\nBye-bye.\n",10);
@@ -247,7 +247,7 @@ Signal_t pipe_catcher(int signo)
 #ifdef SIGTSTP
 Signal_t stop_catcher(int signo)
 {
-    if (!waiting) {
+    if (!g_waiting) {
 	xmouse_off();
 	checkpoint_newsrcs();	/* good chance of crash while stopped */
 	if (g_bos_on_stop) {
@@ -271,7 +271,7 @@ Signal_t stop_catcher(int signo)
     	mailcount = 0;			/* force recheck */
 #endif
     	if (!g_panic) {
-	    if (!waiting) {
+	    if (!g_waiting) {
 		termlib_init();
 		noecho();			/* set no echo */
 		crmode();			/* set cbreak mode */

@@ -491,7 +491,7 @@ static bool open_newsrc(NEWSRC *rp)
     /* read in the .newsrc file */
 
     while ((some_buf = get_a_line(g_buf, LBUFLEN,false,rcfp)) != nullptr) {
-	length = len_last_line_got;	/* side effect of get_a_line */
+	length = g_len_last_line_got;	/* side effect of get_a_line */
 	if (length <= 1)		/* only a newline??? */
 	    continue;
 	np = ngdata_ptr(g_ngdata_cnt++);
@@ -663,9 +663,9 @@ void abandon_ng(NGDATA *np)
 	int length = np->numoffset - 1;
 
 	while ((some_buf = get_a_line(g_buf, LBUFLEN,false,rcfp)) != nullptr) {
-	    if (len_last_line_got <= 0)
+	    if (g_len_last_line_got <= 0)
 		continue;
-	    some_buf[len_last_line_got-1] = '\0';	/* wipe out newline */
+	    some_buf[g_len_last_line_got-1] = '\0';	/* wipe out newline */
 	    if ((some_buf[length] == ':' || some_buf[length] == NEGCHAR)
 	     && !strncmp(np->rcline, some_buf, length)) {
 		break;
@@ -693,7 +693,7 @@ void abandon_ng(NGDATA *np)
 	else {
 	    /*NOSTRICT*/
 #ifndef lint
-	    some_buf = saferealloc(some_buf, (MEM_SIZE)(len_last_line_got));
+	    some_buf = saferealloc(some_buf, (MEM_SIZE)(g_len_last_line_got));
 #endif /* lint */
 	    np->rcline = some_buf;
 	}

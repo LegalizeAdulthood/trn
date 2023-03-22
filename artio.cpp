@@ -290,7 +290,7 @@ char *readartbuf(bool view_inline)
                                     MCF_NEEDSTERMINAL |MCF_COPIOUSOUTPUT);
 	if (mcp) {
 	    int save_term_line = g_term_line;
-	    nowait_fork = true;
+	    g_nowait_fork = true;
 	    color_object(COLOR_MIMEDESC, true);
 	    if (decode_piece(mcp,bp) != 0) {
 		strcpy(bp = artbuf + artbuf_pos, g_art_line);
@@ -303,7 +303,7 @@ char *readartbuf(bool view_inline)
 	    color_pop();
 	    chdir_newsdir();
 	    erase_line(false);
-	    nowait_fork = false;
+	    g_nowait_fork = false;
 	    g_first_view = artline;
 	    g_term_line = save_term_line;
 	    if (g_mime_state != SKIP_MIME)

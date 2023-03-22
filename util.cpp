@@ -7,18 +7,16 @@
 #include "common.h"
 #include "final.h"
 #include "term.h"
-#include "list.h"
-#include "hash.h"
-#include "ngdata.h"
 #include "nntpclient.h"
 #include "datasrc.h"
-#include "nntp.h"
-#include "nntpauth.h"
 #include "intrp.h"
 #include "env.h"
 #include "util2.h"
-#include "only.h"
 #include "search.h"
+#include "smisc.h"	/* g_s_default_cmd */
+#include "univ.h"
+#include "util.h"
+
 #ifdef I_SYS_TIMEB
 #include <sys/timeb.h>
 #endif
@@ -28,37 +26,41 @@
 #ifdef MSDOS
 #include <process.h>
 #endif
-#include "scan.h"
-#include "smisc.h"	/* g_s_default_cmd */
-#include "univ.h"
-#include "INTERN.h"
-#include "util.ih"
-#include "util.h"
-
 #ifdef _WIN32
 #include <direct.h>
 #include <io.h>
 #include <sys/types.h>
 #endif
 
-#ifdef UNION_WAIT
-typedef union wait WAIT_STATUS;
-#else
-typedef int WAIT_STATUS;
+#ifndef HAS_GETCWD
+static char *trn_getcwd(char *buf, int len);
 #endif
+
+#ifdef UNION_WAIT
+using WAIT_STATUS = union wait;
+#else
+using WAIT_STATUS = int;
+#endif
+
+bool g_waiting{}; /* waiting for subprocess (in doshell)? */
+bool g_nowait_fork{};
+bool export_nntp_fds{};
+/* the strlen and the buffer length of "some_buf" after a call to:
+ *     some_buf = get_a_line(bufptr,bufsize,realloc,fp); */
+int g_len_last_line_got{};
+MEM_SIZE g_buflen_last_line_got{};
 
 #ifndef USE_DEBUGGING_MALLOC
-static char nomem[] = "trn: out of memory!\n";
+static char s_nomem[] = "trn: out of memory!\n";
 #endif
 
-static char null_export[] = "_=X";/* Just in case doshell precedes util_init */
-
-static char* newsactive_export = null_export + 2;
-static char* grpdesc_export = null_export + 2;
-static char* quotechars_export = null_export + 2;
-static char* nntpserver_export = null_export + 2;
-static char* nntpfds_export = null_export + 2;
-static char* nntpforce_export = null_export + 2;
+static char s_null_export[] = "_=X";/* Just in case doshell precedes util_init */
+static char *s_newsactive_export = s_null_export + 2;
+static char *s_grpdesc_export = s_null_export + 2;
+static char *s_quotechars_export = s_null_export + 2;
+static char *s_nntpserver_export = s_null_export + 2;
+static char *s_nntpfds_export = s_null_export + 2;
+static char *s_nntpforce_export = s_null_export + 2;
 
 void util_init()
 {
@@ -68,14 +70,14 @@ void util_init()
     for (i = 0, cp = g_buf; i < 512; i++)
 	*cp++ = 'X';
     *cp = '\0';
-    newsactive_export = export_var("NEWSACTIVE", g_buf);
-    grpdesc_export = export_var("NEWSDESCRIPTIONS", g_buf);
-    nntpserver_export = export_var("NNTPSERVER", g_buf);
+    s_newsactive_export = export_var("NEWSACTIVE", g_buf);
+    s_grpdesc_export = export_var("NEWSDESCRIPTIONS", g_buf);
+    s_nntpserver_export = export_var("NNTPSERVER", g_buf);
     g_buf[64] = '\0';
-    quotechars_export = export_var("QUOTECHARS",g_buf);
-    nntpfds_export = export_var("NNTPFDS", g_buf);
+    s_quotechars_export = export_var("QUOTECHARS",g_buf);
+    s_nntpfds_export = export_var("NNTPFDS", g_buf);
     g_buf[3] = '\0';
-    nntpforce_export = export_var("NNTP_FORCE_AUTH", g_buf);
+    s_nntpforce_export = export_var("NNTP_FORCE_AUTH", g_buf);
 
     for (cp = g_patchlevel; isspace(*cp); cp++) ;
     export_var("TRN_VERSION", cp);
@@ -100,17 +102,17 @@ int doshell(const char *shell, const char *s)
 #endif
     if (g_datasrc && (g_datasrc->flags & DF_REMOTE)) {
 	if (!export_nntp_fds || !nntplink.rd_fp)
-	    un_export(nntpfds_export);
+	    un_export(s_nntpfds_export);
 	else {
 	    sprintf(g_buf,"%d.%d",(int)fileno(nntplink.rd_fp),
 				(int)fileno(nntplink.wr_fp));
-	    re_export(nntpfds_export, g_buf, 64);
+	    re_export(s_nntpfds_export, g_buf, 64);
 	}
-	re_export(nntpserver_export,g_datasrc->newsid,512);
+	re_export(s_nntpserver_export,g_datasrc->newsid,512);
 	if (g_datasrc->nntplink.flags & NNTP_FORCE_AUTH_NEEDED)
-	    re_export(nntpforce_export,"yes",3);
+	    re_export(s_nntpforce_export,"yes",3);
 	else
-	    un_export(nntpforce_export);
+	    un_export(s_nntpforce_export);
 	if (g_datasrc->auth_user) {
 	    int fd;
 	    if ((fd = open(g_nntp_auth_file, O_WRONLY|O_CREAT, 0600)) >= 0) {
@@ -124,31 +126,31 @@ int doshell(const char *shell, const char *s)
 	    }
 	}
 	if (nntplink.port_number) {
-	    int len = strlen(nntpserver_export);
+	    int len = strlen(s_nntpserver_export);
 	    sprintf(g_buf,";%d",nntplink.port_number);
 	    if (len + (int)strlen(g_buf) < 511)
-		strcpy(nntpserver_export+len, g_buf);
+		strcpy(s_nntpserver_export+len, g_buf);
 	}
 	if (g_datasrc->act_sf.fp)
-	    re_export(newsactive_export, g_datasrc->extra_name, 512);
+	    re_export(s_newsactive_export, g_datasrc->extra_name, 512);
 	else
-	    re_export(newsactive_export, "none", 512);
+	    re_export(s_newsactive_export, "none", 512);
     } else {
-	un_export(nntpfds_export);
-	un_export(nntpserver_export);
-	un_export(nntpforce_export);
+	un_export(s_nntpfds_export);
+	un_export(s_nntpserver_export);
+	un_export(s_nntpforce_export);
 	if (g_datasrc)
-	    re_export(newsactive_export, g_datasrc->newsid, 512);
+	    re_export(s_newsactive_export, g_datasrc->newsid, 512);
 	else
-	    un_export(newsactive_export);
+	    un_export(s_newsactive_export);
     }
     if (g_datasrc)
-	re_export(grpdesc_export, g_datasrc->grpdesc, 512);
+	re_export(s_grpdesc_export, g_datasrc->grpdesc, 512);
     else
-	un_export(grpdesc_export);
+	un_export(s_grpdesc_export);
     interp(g_buf,64-1+2,"%I");
     g_buf[strlen(g_buf)-1] = '\0';
-    re_export(quotechars_export, g_buf+1, 64);
+    re_export(s_quotechars_export, g_buf+1, 64);
     if (shell == nullptr && (shell = get_val("SHELL",nullptr)) == nullptr)
 	shell = PREFSHELL;
     termlib_reset();
@@ -167,7 +169,7 @@ int doshell(const char *shell, const char *s)
 		close(i);
 	    }
 	}
-	if (nowait_fork) {
+	if (g_nowait_fork) {
 	    close(1);
 	    close(2);
 	    dup(open("/dev/null",1));
@@ -183,7 +185,7 @@ int doshell(const char *shell, const char *s)
 #ifdef SIGQUIT
     sigignore(SIGQUIT);
 #endif 
-    waiting = true;
+    g_waiting = true;
     while ((w = wait(&status)) != pid)
 	if (w == -1 && errno != EINTR)
 	    break;
@@ -202,7 +204,7 @@ int doshell(const char *shell, const char *s)
 #endif /* !MSDOS */
     termlib_init();
     xmouse_check();
-    waiting = false;
+    g_waiting = false;
     sigset(SIGINT,int_catcher);
 #ifdef SIGQUIT
     sigset(SIGQUIT,SIG_DFL);
@@ -226,7 +228,7 @@ char *safemalloc(MEM_SIZE size)
 
     ptr = (char*) malloc(size ? size : (MEM_SIZE)1);
     if (!ptr) {
-	fputs(nomem,stdout) FLUSH;
+	fputs(s_nomem,stdout) FLUSH;
 	sig_catcher(0);
     }
     return ptr;
@@ -245,7 +247,7 @@ char *saferealloc(char *where, MEM_SIZE size)
     else
 	ptr = (char*) realloc(where, size ? size : (MEM_SIZE)1);
     if (!ptr) {
-	fputs(nomem,stdout) FLUSH;
+	fputs(s_nomem,stdout) FLUSH;
 	sig_catcher(0);
     }
     return ptr;
@@ -311,7 +313,7 @@ char *trn_getwd(char *buf, int buflen)
 #ifdef HAS_GETCWD
     ret = getcwd(buf, buflen);
 #else
-    ret = trn_getcwd(g_buf, buflen);
+    ret = trn_getcwd(buf, buflen);
 #endif
     if (!ret) {
 	printf("Cannot determine current working directory!\n") FLUSH;
@@ -326,13 +328,13 @@ char *trn_getwd(char *buf, int buflen)
 }
 
 #ifndef HAS_GETCWD
-static char *trn_getcwd(char *g_buf, int len)
+static char *trn_getcwd(char *buf, int len)
 {
     char* ret;
 #ifdef HAS_GETWD
-    g_buf[len-1] = 0;
-    ret = getwd(g_buf);
-    if (g_buf[len-1]) {
+    buf[len-1] = 0;
+    ret = getwd(buf);
+    if (buf[len-1]) {
 	/* getwd() overwrote the end of the buffer */
 	printf("getwd() buffer overrun!\n") FLUSH;
 	finalize(1);
@@ -346,17 +348,17 @@ static char *trn_getcwd(char *g_buf, int len)
 	printf("Can't popen /bin/pwd\n") FLUSH;
 	return nullptr;
     }
-    g_buf[0] = 0;
-    fgets(ret = g_buf, len, pipefp);
+    buf[0] = 0;
+    fgets(ret = buf, len, pipefp);
     if (pclose(pipefp) == EOF) {
 	printf("Failed to run /bin/pwd\n") FLUSH;
 	return nullptr;
     }
-    if (!g_buf[0]) {
+    if (!buf[0]) {
 	printf("/bin/pwd didn't output anything\n") FLUSH;
     	return nullptr;
     }
-    if ((nl = strchr(g_buf, '\n')) != nullptr)
+    if ((nl = strchr(buf, '\n')) != nullptr)
 	*nl = '\0';
 #endif
     return ret;
@@ -391,8 +393,8 @@ char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp)
 	buffer[bufix++] = (char)nextch;
     } while (nextch && nextch != '\n');
     buffer[bufix] = '\0';
-    len_last_line_got = bufix;
-    buflen_last_line_got = buffer_length;
+    g_len_last_line_got = bufix;
+    g_buflen_last_line_got = buffer_length;
     return buffer;
 }
 

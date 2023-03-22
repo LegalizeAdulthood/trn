@@ -243,7 +243,7 @@ beginning:
 	    break;
 
 	last_buf = line;
-	last_buflen = buflen_last_line_got;
+	last_buflen = g_buflen_last_line_got;
 	an = atol(line);
 	if (an < first)
 	    continue;
@@ -350,11 +350,11 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 	return;
     }
 
-    if (len_last_line_got > 0 && line[len_last_line_got-1] == '\n') {
-	if (len_last_line_got > 1 && line[len_last_line_got-2] == '\r')
-	    line[len_last_line_got-2] = '\0';
+    if (g_len_last_line_got > 0 && line[g_len_last_line_got-1] == '\n') {
+	if (g_len_last_line_got > 1 && line[g_len_last_line_got-2] == '\r')
+	    line[g_len_last_line_got-2] = '\0';
 	else
-	    line[len_last_line_got-1] = '\0';
+	    line[g_len_last_line_got-1] = '\0';
     }
     cp = line;
 

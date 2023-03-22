@@ -2,16 +2,19 @@
  * vi: set sw=4 ts=8 ai sm noet :
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef UTIL_H
+#define UTIL_H
 
 #include "utf.h"
-EXT bool waiting INIT(false);  	/* waiting for subprocess (in doshell)? */
-EXT bool nowait_fork INIT(false);
-EXT bool export_nntp_fds INIT(false);
+
+extern bool g_waiting; /* waiting for subprocess (in doshell)? */
+extern bool g_nowait_fork;
+extern bool export_nntp_fds;
 
 /* the strlen and the buffer length of "some_buf" after a call to:
  *     some_buf = get_a_line(bufptr,bufsize,realloc,fp); */
-EXT int len_last_line_got INIT(0);
-EXT MEM_SIZE buflen_last_line_got INIT(0);
+extern int g_len_last_line_got;
+extern MEM_SIZE g_buflen_last_line_got;
 
 inline bool at_grey_space(const char *s)
 {
@@ -20,8 +23,11 @@ inline bool at_grey_space(const char *s)
 
 /* is the string for makedir a directory name or a filename? */
 
-#define MD_DIR 	0
-#define MD_FILE 1
+enum
+{
+    MD_DIR = 0,
+    MD_FILE = 1
+};
 
 /* a template for parsing an ini file */
 
@@ -74,3 +80,5 @@ char *parse_ini_section(char *cp, INI_WORDS words[]);
 bool check_ini_cond(char *cond);
 char menu_get_char();
 int edit_file(char *fname);
+
+#endif

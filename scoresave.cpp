@@ -105,7 +105,7 @@ void sc_sv_savefile()
 
     if (s_num_lines == 0)
 	return;
-    waiting = true;	/* don't interrupt */
+    g_waiting = true;	/* don't interrupt */
     s = get_val("SAVESCOREFILE","%+/savedscores");
     savename = savestr(filexp(s));
     strcpy(s_lbuf,savename);
@@ -117,7 +117,7 @@ void sc_sv_savefile()
 	       s_lbuf) FLUSH;
 #endif
 	free(savename);
-	waiting = false;
+	g_waiting = false;
 	return;
     }
     for (i = 0; i < s_num_lines; i++) {
@@ -129,14 +129,14 @@ void sc_sv_savefile()
 	    printf("\nWrite error in temporary save file %s\n",s_lbuf) FLUSH;
 	    printf("(keeping old saved scores)\n");
 	    remove(s_lbuf);
-	    waiting = false;
+	    g_waiting = false;
 	    return;
 	}
     }
     fclose(tmpfp);
     remove(savename);
     rename(s_lbuf,savename);
-    waiting = false;
+    g_waiting = false;
 }
 
 /* returns the next article number (after the last one used) */
@@ -402,7 +402,7 @@ void sc_save_scores()
     s_saved = 0;
     s_last = 0;
 
-    waiting = true;	/* DON'T interrupt */
+    g_waiting = true;	/* DON'T interrupt */
     gname = savestr(filexp("%C"));
     /* not being able to open is OK */
     if (s_num_lines > 0) {
@@ -420,5 +420,5 @@ void sc_save_scores()
     s_last = a-1;
     while (a <= g_lastart)
 	a = sc_sv_make_line(a);
-    waiting = false;
+    g_waiting = false;
 }

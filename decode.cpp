@@ -271,7 +271,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	    sprintf(g_buf+strlen(g_buf), "of %d ", total);
 	strcat(g_buf, filename);
 	fputs(g_buf,stdout);
-	if (nowait_fork)
+	if (g_nowait_fork)
 	    fflush(stdout);
 	else
 	    newline();

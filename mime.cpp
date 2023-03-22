@@ -870,7 +870,7 @@ int qp_decode(FILE *ifp, int state)
 	    return DECODE_ERROR;
 	erase_line(false);
 	printf("Decoding %s", filename);
-	if (nowait_fork)
+	if (g_nowait_fork)
 	    fflush(stdout);
 	else
 	    newline();
@@ -975,7 +975,7 @@ int b64_decode(FILE *ifp, int state)
 	if (!ofp)
 	    return DECODE_ERROR;
 	printf("Decoding %s", filename);
-	if (nowait_fork)
+	if (g_nowait_fork)
 	    fflush(stdout);
 	else
 	    newline();
@@ -1062,7 +1062,7 @@ int cat_decode(FILE *ifp, int state)
 	if (!ofp)
 	    return DECODE_ERROR;
 	printf("Decoding %s", filename);
-	if (nowait_fork)
+	if (g_nowait_fork)
 	    fflush(stdout);
 	else
 	    newline();

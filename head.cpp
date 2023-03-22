@@ -536,7 +536,7 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 		if (nntp_at_list_end(line))
 		    break;
 		last_buf = line;
-		last_buflen = buflen_last_line_got;
+		last_buflen = g_buflen_last_line_got;
 		if ((t = strchr(line, '\r')) != nullptr)
 		    *t = '\0';
 		if (!(t = strchr(line, ' ')))

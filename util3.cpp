@@ -30,7 +30,7 @@ int doshell(const char *sh, const char *cmd)
     exit(num);
 }
 
-static char nomem[] = "trn: out of memory!\n";
+static char s_nomem[] = "trn: out of memory!\n";
 
 /* paranoid version of malloc */
 
@@ -41,7 +41,7 @@ char *safemalloc(MEM_SIZE size)
 
     ptr = (char*) malloc(size ? size : (MEM_SIZE)1);
     if (!ptr) {
-	fputs(nomem,stdout);
+	fputs(s_nomem,stdout);
 	finalize(1);
     }
     return ptr;
@@ -57,7 +57,7 @@ char *saferealloc(char *where, MEM_SIZE size)
 
     ptr = (char*) realloc(where, size ? size : (MEM_SIZE)1);
     if (!ptr) {
-	fputs(nomem,stdout);
+	fputs(s_nomem,stdout);
 	finalize(1);
     }
     return ptr;

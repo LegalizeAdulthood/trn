@@ -123,7 +123,7 @@ add_executable(trn
     utf.cpp utf.h
     univ.cpp univ.h
     url.cpp url.h
-    util.cpp util.h util.ih
+    util.cpp util.h
     uudecode.cpp uudecode.h uudecode.ih
 )
 if(WIN32)
