@@ -1083,7 +1083,9 @@ int cat_decode(FILE *ifp, int state)
     return DECODE_MAYBEDONE;
 }
 
-static int word_wrap_in_pre, normal_word_wrap, word_wrap;
+static int s_word_wrap_in_pre{};
+static int s_normal_word_wrap{};
+static int s_word_wrap{};
 
 static const char* named_entities[] = {
     "lt",	"<",
@@ -1133,18 +1135,18 @@ int filter_html(char *t, char *f)
     char* cp;
 
     if (g_word_wrap_offset < 0) {
-	normal_word_wrap = g_tc_COLS - 8;
-	word_wrap_in_pre = 0;
+	s_normal_word_wrap = g_tc_COLS - 8;
+	s_word_wrap_in_pre = 0;
     }
     else
-	word_wrap_in_pre = normal_word_wrap = g_tc_COLS - g_word_wrap_offset;
+	s_word_wrap_in_pre = s_normal_word_wrap = g_tc_COLS - g_word_wrap_offset;
 
-    if (normal_word_wrap <= 20)
-	normal_word_wrap = 0;
-    if (word_wrap_in_pre <= 20)
-	word_wrap_in_pre = 0;
-    word_wrap = (g_mime_section->html & HF_IN_PRE)? word_wrap_in_pre
-						: normal_word_wrap;
+    if (s_normal_word_wrap <= 20)
+	s_normal_word_wrap = 0;
+    if (s_word_wrap_in_pre <= 20)
+	s_word_wrap_in_pre = 0;
+    s_word_wrap = (g_mime_section->html & HF_IN_PRE)? s_word_wrap_in_pre
+						: s_normal_word_wrap;
     if (!g_mime_section->html_line_start)
 	g_mime_section->html_line_start = t - g_artbuf;
 
@@ -1281,13 +1283,13 @@ int filter_html(char *t, char *f)
 	    g_mime_section->html |= HF_NL_OK|HF_P_OK|HF_SPACE_OK;
 	}
 
-	if (word_wrap && t - g_artbuf - g_mime_section->html_line_start > g_tc_COLS) {
+	if (s_word_wrap && t - g_artbuf - g_mime_section->html_line_start > g_tc_COLS) {
 	    char* line_start = g_mime_section->html_line_start + g_artbuf;
-	    for (cp = line_start + word_wrap;
+	    for (cp = line_start + s_word_wrap;
 		 cp > line_start && *cp != ' ' && *cp != '\t';
 		 cp--) ;
 	    if (cp == line_start) {
-		for (cp = line_start + word_wrap;
+		for (cp = line_start + s_word_wrap;
 		     cp - line_start <= g_tc_COLS && *cp != ' ' && *cp != '\t';
 		     cp++) ;
 		if (cp - line_start > g_tc_COLS) {
@@ -1323,10 +1325,10 @@ int filter_html(char *t, char *f)
 }
 #undef XX
 
-static char bullets[3] = {'*', 'o', '+'};
+static char s_bullets[3] = {'*', 'o', '+'};
 static char g_letters[2] = {'a', 'A'};
-static char roman_letters[] = { 'M', 'D', 'C', 'L', 'X', 'V', 'I'};
-static int  roman_values[]  = {1000, 500, 100,  50, 10,   5,   1 };
+static char s_roman_letters[] = { 'M', 'D', 'C', 'L', 'X', 'V', 'I'};
+static int  s_roman_values[]  = {1000, 500, 100,  50, 10,   5,   1 };
 
 static char *tag_action(char *t, char *word, bool opening_tag)
 {
@@ -1464,7 +1466,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 	    ch = j < 0? ' ' : blks[j].indent;
 	    switch (ch) {
 	      case 1: case 2: case 3:
-		t[-2] = bullets[ch-1];
+		t[-2] = s_bullets[ch-1];
 		break;
 	      case 4:
 		sprintf(t-4, "%2d. ", ++blks[j].cnt);
@@ -1482,30 +1484,30 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 		break;
 	      case 7:
 		for (i = 0; i < 7; i++) {
-		    if (isupper(roman_letters[i]))
-			roman_letters[i] = tolower(roman_letters[i]);
+		    if (isupper(s_roman_letters[i]))
+			s_roman_letters[i] = tolower(s_roman_letters[i]);
 		}
 		goto roman_numerals;
 	      case 8:
 		for (i = 0; i < 7; i++) {
-		    if (islower(roman_letters[i]))
-			roman_letters[i] = toupper(roman_letters[i]);
+		    if (islower(s_roman_letters[i]))
+			s_roman_letters[i] = toupper(s_roman_letters[i]);
 		}
 	      roman_numerals:
 		cp = t - 6;
 		cnt = ++blks[j].cnt;
 		for (i = 0; cnt && i < 7; i++) {
-		    num = roman_values[i];
+		    num = s_roman_values[i];
 		    while (cnt >= num) {
-			*cp++ = roman_letters[i];
+			*cp++ = s_roman_letters[i];
 			cnt -= num;
 		    }
 		    j = (i | 1) + 1;
 		    if (j < 7) {
-			num -= roman_values[j];
+			num -= s_roman_values[j];
 			if (cnt >= num) {
-			    *cp++ = roman_letters[j];
-			    *cp++ = roman_letters[i];
+			    *cp++ = s_roman_letters[j];
+			    *cp++ = s_roman_letters[i];
 			    cnt -= num;
 			}
 		    }
@@ -1529,7 +1531,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 	    break;
 	  case TAG_PRE:
 	    g_mime_section->html |= HF_IN_PRE;
-	    word_wrap = word_wrap_in_pre;
+	    s_word_wrap = s_word_wrap_in_pre;
 	    break;
 	}
     }
@@ -1575,7 +1577,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 	switch (tnum) {
 	  case TAG_PRE:
 	    g_mime_section->html &= ~HF_IN_PRE;
-	    word_wrap = normal_word_wrap;
+	    s_word_wrap = s_normal_word_wrap;
 	    break;
 	}
     }
