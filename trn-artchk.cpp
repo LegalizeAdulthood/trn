@@ -16,15 +16,13 @@
 #include "util3.h"
 #include "nntpclient.h"
 #include "nntpinit.h"
-#include "INTERN.h"
-#include "common.h"
 
 #define MAXNGS 100
 
-int server_connection ();
-int nntp_handle_timeout ();
+int server_connection();
+int nntp_handle_timeout();
 
-char* server_name;
+char* g_server_name;
 char* g_nntp_auth_file;
 
 int debug = 0;
@@ -151,10 +149,10 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 	    cp = nntp_servername(cp);
     }
     if (strcmp(cp,"local")) {
-	server_name = savestr(cp);
-	cp = strchr(server_name, ';');
+	g_server_name = savestr(cp);
+	cp = strchr(g_server_name, ';');
 	if (!cp)
-	    cp = strchr(server_name, ':');
+	    cp = strchr(g_server_name, ':');
 	if (cp) {
 	    *cp = '\0';
 	    g_nntplink.port_number = atoi(cp+1);
@@ -164,17 +162,17 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 	 && (*cp == 'y' || *cp == 'Y'))
 	    g_nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
 	if (init_nntp() < 0)
-	    server_name = nullptr;
+	    g_server_name = nullptr;
     }
     if (ngcnt) {
 	struct stat st;
 	if (stat(argv[3], &st) != -1)
 	    check_ng = st.st_size > 0 && (fp_ng = fopen(argv[3], "r")) != nullptr;
-	else if (server_name && server_connection())
+	else if (g_server_name && server_connection())
 	    check_ng = true;
 	if (stat(argv[4], &st) != -1)
 	    check_active = st.st_size > 0 && (fp_active = fopen(argv[4], "r")) != nullptr;
-	else if (server_name && server_connection())
+	else if (g_server_name && server_connection())
 	    check_active = true;
     }
     if (ngcnt && (check_ng || check_active)) {
@@ -202,7 +200,7 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 	    }
 	    fclose(fp_active);
 	}
-	else if (server_name) {
+	else if (g_server_name) {
 	    int listactive_works = 1;
 	    for (i = 0; i < ngcnt; i++) {
 		if (listactive_works) {
@@ -291,7 +289,7 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
     }
 
     nntp_close(true);
-    if (server_name)
+    if (g_server_name)
 	cleanup_nntp();
 
     return 0;
@@ -301,7 +299,7 @@ int server_connection()
 {
     static int server_stat = 0;
     if (!server_stat) {
-	if (nntp_connect(server_name,false) > 0)
+	if (nntp_connect(g_server_name,false) > 0)
 	    server_stat = 1;
 	else
 	    server_stat = -1;
