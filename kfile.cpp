@@ -114,7 +114,7 @@ static void mention(const char *str)
     fflush(stdout);
 }
 
-static bool kill_mentioned;
+static bool s_kill_mentioned;
 
 int do_kfile(FILE *kfp, int entering)
 {
@@ -188,7 +188,7 @@ int do_kfile(FILE *kfp, int entering)
 		continue;
 	    if (last_kill_type) {
 		if (perform_status_end(g_ngptr->toread,"article")) {
-		    kill_mentioned = true;
+		    s_kill_mentioned = true;
 		    carriage_return();
 		    fputs(g_msg, stdout);
 		    newline();
@@ -197,7 +197,7 @@ int do_kfile(FILE *kfp, int entering)
 	    perform_status_init(g_ngptr->toread);
 	    last_kill_type = '/';
 	    mention(bp);
-	    kill_mentioned = true;
+	    s_kill_mentioned = true;
 	    switch (art_search(bp, (sizeof g_buf) - (bp - g_buf), false)) {
 	    case SRCH_ABORT:
 		continue;
@@ -227,7 +227,7 @@ int do_kfile(FILE *kfp, int entering)
 	    if (last_kill_type != '<') {
 		if (last_kill_type) {
 		    if (perform_status_end(g_ngptr->toread,"article")) {
-			kill_mentioned = true;
+			s_kill_mentioned = true;
 			carriage_return();
 			fputs(g_msg, stdout);
 			newline();
@@ -285,17 +285,17 @@ int do_kfile(FILE *kfp, int entering)
 	sprintf(g_buf,"%ld auto-kill command%s.", (long)thread_kill_cnt,
 		PLURAL(thread_kill_cnt));
 	mention(g_buf);
-	kill_mentioned = true;
+	s_kill_mentioned = true;
     }
     if (thread_select_cnt) {
 	sprintf(g_buf,"%ld auto-select command%s.", (long)thread_select_cnt,
 		PLURAL(thread_select_cnt));
 	mention(g_buf);
-	kill_mentioned = true;
+	s_kill_mentioned = true;
     }
     if (last_kill_type) {
 	if (perform_status_end(g_ngptr->toread,"article")) {
-	    kill_mentioned = true;
+	    s_kill_mentioned = true;
 	    carriage_return();
 	    fputs(g_msg, stdout);
 	    newline();
@@ -333,7 +333,7 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
 	if (message && (g_verbose || entering))
 	    fputs(message,stdout) FLUSH;
 
-	kill_mentioned = false;
+	s_kill_mentioned = false;
 	if (g_localkfp) {
 	    if (entering)
 		g_kf_state |= KFS_LOCAL_CHANGES;
@@ -343,7 +343,7 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
 	if (g_globkfp && !intr)
 	    intr = do_kfile(g_globkfp,entering);
 	newline();
-	if (entering && kill_mentioned && g_novice_delays) {
+	if (entering && s_kill_mentioned && g_novice_delays) {
 	    if (g_verbose)
 		get_anything();
 	    else
@@ -358,7 +358,7 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
     set_mode(g_general_mode,oldmode);
 }
 
-static FILE* newkfp;
+static FILE *s_newkfp{};
 
 static int write_local_thread_commands(int keylen, HASHDATUM *data, int extra)
 {
@@ -375,7 +375,7 @@ static int write_local_thread_commands(int keylen, HASHDATUM *data, int extra)
 		break;
 	    }
 	}
-	fprintf(newkfp,"%s T%c\n", ap->msgid, ch);
+	fprintf(s_newkfp,"%s T%c\n", ap->msgid, ch);
     }
     return 0;
 }
@@ -395,8 +395,8 @@ void rewrite_kfile(ART_NUM thru)
 	makedir(killname,MD_FILE);
     remove(killname);			/* to prevent file reuse */
     g_kf_state &= ~(g_kfs_local_change_clear | KFS_NORMAL_LINES);
-    if ((newkfp = fopen(killname,"w")) != nullptr) {
-	fprintf(newkfp,"THRU %s %ld\n",g_ngptr->rc->name,(long)thru);
+    if ((s_newkfp = fopen(killname,"w")) != nullptr) {
+	fprintf(s_newkfp,"THRU %s %ld\n",g_ngptr->rc->name,(long)thru);
 	while (g_localkfp && fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
 	    if (!strncmp(g_buf,"THRU",4)) {
 		char* cp = g_buf+4;
@@ -406,7 +406,7 @@ void rewrite_kfile(ART_NUM thru)
 		    continue;
 		if (strncmp(cp, g_ngptr->rc->name, len)
 		 || (cp[len] && !isspace(cp[len]))) {
-		    fputs(g_buf,newkfp);
+		    fputs(g_buf,s_newkfp);
 		    needs_newline = !strchr(g_buf,'\n');
 		}
 		continue;
@@ -419,30 +419,30 @@ void rewrite_kfile(ART_NUM thru)
 	    if (*bp == '*')
 		has_star_commands = true;
 	    else {
-		fputs(g_buf,newkfp);
+		fputs(g_buf,s_newkfp);
 		needs_newline = !strchr(bp,'\n');
 	    }
 	    has_content = true;
 	}
 	if (needs_newline)
-	    putc('\n', newkfp);
+	    putc('\n', s_newkfp);
 	if (has_star_commands) {
 	    fseek(g_localkfp,0L,0);			/* rewind file */
 	    while (fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
 		for (bp = g_buf; isspace(*bp); bp++) ;
 		if (*bp == '*') {
-		    fputs(g_buf,newkfp);
+		    fputs(g_buf,s_newkfp);
 		    needs_newline = !strchr(bp,'\n');
 		}
 	    }
 	    if (needs_newline)
-		putc('\n', newkfp);
+		putc('\n', s_newkfp);
 	}
 	if (!(g_kf_state & KFS_GLOBAL_THREADFILE)) {
 	    /* Append all the still-valid thread commands */
 	    hashwalk(g_msgid_hash, write_local_thread_commands, 0);
 	}
-	fclose(newkfp);
+	fclose(s_newkfp);
 	if (!has_content)
 	    remove(killname);
 	open_kfile(KF_LOCAL);		/* and reopen local file */
@@ -482,7 +482,7 @@ static int write_global_thread_commands(int keylen, HASHDATUM *data, int appendi
 	    break;
 	}
     }
-    fprintf(newkfp,"%s %c %ld\n", msgid, ch, g_kf_daynum - age);
+    fprintf(s_newkfp,"%s %c %ld\n", msgid, ch, g_kf_daynum - age);
     g_kf_thread_cnt++;
 
     return 0;
@@ -531,17 +531,17 @@ void update_thread_kfile()
     makedir(cp,MD_FILE);
     if (g_kf_changethd_cnt*5 > g_kf_thread_cnt) {
 	remove(cp);			/* to prevent file reuse */
-	if ((newkfp = fopen(cp,"w")) == nullptr)
+	if ((s_newkfp = fopen(cp,"w")) == nullptr)
 	    return; /*$$ Yikes! */
 	g_kf_thread_cnt = g_kf_changethd_cnt = 0;
 	hashwalk(g_msgid_hash, write_global_thread_commands, 0); /* Rewrite */
     }
     else {
-	if ((newkfp = fopen(cp, "a")) == nullptr)
+	if ((s_newkfp = fopen(cp, "a")) == nullptr)
 	    return; /*$$ Yikes! */
 	hashwalk(g_msgid_hash, write_global_thread_commands, 1); /* Append */
     }
-    fclose(newkfp);
+    fclose(s_newkfp);
 
     g_kf_state &= ~KFS_THREAD_CHANGES;
 }
