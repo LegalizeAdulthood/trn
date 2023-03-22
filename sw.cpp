@@ -319,8 +319,8 @@ void decode_switch(char *s)
 	    break;
 	case 'V':
 	    if (g_mode == 'i') {
-		tc_LINES = 1000;
-		tc_COLS = 1000;
+		g_tc_LINES = 1000;
+		g_tc_COLS = 1000;
 		g_erase_screen = false;
 	    }
 	    trn_version();

@@ -260,7 +260,7 @@ void ng_skip()
 	    fputs("Skipping\n",stdout);
 	termdown(1);
 	if (g_novice_delays) {
-	    pad(just_a_sec/3);
+	    pad(g_just_a_sec/3);
 	    sleep(1);
 	}
 	g_art = article_next(g_art);
@@ -290,7 +290,7 @@ void ng_skip()
 		printf("\n(%ld unreadable.)\n",(long)g_art) FLUSH;
 	    termdown(2);
 	    if (g_novice_delays) {
-		pad(just_a_sec);
+		pad(g_just_a_sec);
 		sleep(2);
 	    }
 	}

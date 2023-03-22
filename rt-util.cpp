@@ -712,9 +712,9 @@ static long	ps_missing;
 void perform_status_init(long cnt)
 {
     g_perform_cnt = 0;
-    error_occurred = false;
+    g_error_occurred = false;
     g_subjline = nullptr;
-    page_line = 1;
+    g_page_line = 1;
     g_performed_article_loop = true;
 
     prior_perform_cnt = 0;

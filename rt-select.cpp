@@ -229,7 +229,7 @@ char article_selector(char_int cmd)
 
     sel_cleanup();
     newline();
-    if (mousebar_cnt)
+    if (g_mousebar_cnt)
 	clear_rest();
 
 sel_exit:
@@ -359,7 +359,7 @@ char multirc_selector()
 	goto sel_restart;
 
     newline();
-    if (mousebar_cnt)
+    if (g_mousebar_cnt)
 	clear_rest();
 
     if (s_sel_ret=='\r' || s_sel_ret=='\n' || s_sel_ret=='Z' || s_sel_ret=='\t') {
@@ -429,7 +429,7 @@ char newsgroup_selector()
 	goto sel_restart;
 
     newline();
-    if (mousebar_cnt)
+    if (g_mousebar_cnt)
 	clear_rest();
 
     if (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == 'Z' || s_sel_ret == '\t' || s_sel_ret == ';')
@@ -497,7 +497,7 @@ char addgroup_selector(int flags)
 
     g_selected_count = 0;
     newline();
-    if (mousebar_cnt)
+    if (g_mousebar_cnt)
 	clear_rest();
 
     if (s_sel_ret=='\r' || s_sel_ret=='\n' || s_sel_ret=='Z' || s_sel_ret=='\t') {
@@ -549,7 +549,7 @@ char option_selector()
 
     g_selected_count = 0;
     newline();
-    if (mousebar_cnt)
+    if (g_mousebar_cnt)
 	clear_rest();
 
     if (s_sel_ret=='Z' || s_sel_ret=='\t' || s_sel_ret == 'S') {
@@ -777,7 +777,7 @@ sel_restart:
 	goto sel_restart;
 
     newline();
-    if (mousebar_cnt)
+    if (g_mousebar_cnt)
 	clear_rest();
 
     if (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == '\t' || s_sel_ret == ';' || s_sel_ret == 'Z')
@@ -870,7 +870,7 @@ static char sel_input()
     got_dash = got_goto = 0;
     s_force_sel_pos = -1;
     if (s_removed_prompt & 1) {
-	draw_mousebar(tc_COLS,false);
+	draw_mousebar(g_tc_COLS,false);
 	s_removed_prompt &= ~1;
     }
     if (g_can_home)
@@ -897,7 +897,7 @@ reinp_selector:
 	if (g_can_home) {
 	    goto_xy(0,g_sel_last_line+1);
 	    erase_line(false);
-	    if (g_term_line == tc_LINES-1)
+	    if (g_term_line == g_tc_LINES-1)
 		s_removed_prompt |= 1;
 	}
 	s_disp_status_line = 0;
@@ -922,7 +922,7 @@ reinp_selector:
 	goto reinp_selector;
     }
     /* allow the user to back out of a range or a goto with erase char */
-    if (ch == ERASECH || ch == KILLCH) {
+    if (ch == g_erase_char || ch == g_kill_char) {
 	/* later consider dingaling() if neither got_{dash,goto} is true */
 	got_dash = 0;
 	got_goto = 0;
@@ -931,7 +931,7 @@ reinp_selector:
 	    if (g_can_home) {
 		goto_xy(0,g_sel_last_line+1);
 		erase_line(false);
-		if (g_term_line == tc_LINES-1)
+		if (g_term_line == g_tc_LINES-1)
 		    s_removed_prompt |= 1;
 	    }
 	    s_disp_status_line = 0;
@@ -980,17 +980,17 @@ reinp_selector:
 	    if (g_can_home) {
 		goto_xy(0,g_sel_last_line+1);
 		erase_line(false);
-		if (g_term_line == tc_LINES-1)
+		if (g_term_line == g_tc_LINES-1)
 		    s_removed_prompt |= 1;
 	    }
 	    s_disp_status_line = 0;
 	}
-	if (ch == KILLCH) {	/* kill whole command in progress */
+	if (ch == g_kill_char) {	/* kill whole command in progress */
 	    got_goto = 0;
 	    got_dash = 0;
 	    goto position_selector;
 	}
-	if (ch == ERASECH) {
+	if (ch == g_erase_char) {
 	    /* Erase any first digit printed, but allow complex
 	     * commands to continue.  Spaces at end of message are
 	     * there to wipe out old first digit.
@@ -1119,7 +1119,7 @@ reinp_selector:
 		fputs(g_msg,stdout);
 		g_term_col = strlen(g_msg);
 		if (s_removed_prompt & 1) {
-		    draw_mousebar(tc_COLS,false);
+		    draw_mousebar(g_tc_COLS,false);
 		    s_removed_prompt &= ~1;
 		}
 		s_disp_status_line = 2;
@@ -1221,7 +1221,7 @@ reinp_selector:
 
 static void sel_prompt()
 {
-    draw_mousebar(tc_COLS,false);
+    draw_mousebar(g_tc_COLS,false);
     if (g_can_home)
 	goto_xy(0,g_sel_last_line);
 #ifdef MAILCALL
@@ -1382,7 +1382,7 @@ static bool select_option(int i)
     }
 
     goto_xy(0,g_sel_last_line);
-    erase_line(mousebar_cnt > 0);	/* erase the prompt */
+    erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
     color_object(COLOR_CMD, true);
     printf("Change `%s' (%s)",g_options_ini[i].item, g_options_ini[i].help_str);
     color_pop();	/* of COLOR_CMD */
@@ -1523,8 +1523,8 @@ static int sel_command(char_int ch)
     if (g_can_home)
 	goto_xy(0,g_sel_last_line);
     s_clean_screen = true;
-    term_scrolled = 0;
-    page_line = 1;
+    g_term_scrolled = 0;
+    g_page_line = 1;
     if (g_sel_mode == SM_NEWSGROUP) {
 	if (g_sel_item_index < g_sel_page_item_cnt)
 	    set_ng(g_sel_items[g_sel_item_index].u.np);
@@ -1584,7 +1584,7 @@ static int sel_command(char_int ch)
 	edit_kfile();
 	return DS_DISPLAY;
       case '&':  case '!':
-	erase_line(mousebar_cnt > 0);	/* erase the prompt */
+	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
 	if (!finish_command(true)) {	/* get rest of command */
 	    if (s_clean_screen)
@@ -1595,7 +1595,7 @@ static int sel_command(char_int ch)
 	    g_one_command = true;
 	    perform(g_buf, false);
 	    g_one_command = false;
-	    if (g_term_line != g_sel_last_line+1 || term_scrolled)
+	    if (g_term_line != g_sel_last_line+1 || g_term_scrolled)
 		s_clean_screen = false;
 	    POP_SELECTOR();
 	    if (!save_sel_mode)
@@ -1615,7 +1615,7 @@ static int sel_command(char_int ch)
 	    goto do_command;
 	return DS_DISPLAY;
       case '\\':
-	erase_line(mousebar_cnt > 0);	/* erase the prompt */
+	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
 	if (g_sel_mode == SM_NEWSGROUP)
 	    printf("[%s] Cmd: ", g_ngptr? g_ngptr->rcline : "*End*");
@@ -1665,17 +1665,17 @@ static bool sel_perform_change(long cnt, const char *obj_type)
     int ret;
 
     carriage_return();
-    if (page_line == 1) {
+    if (g_page_line == 1) {
 	s_disp_status_line = 1;
-	if (g_term_line != g_sel_last_line+1 || term_scrolled)
+	if (g_term_line != g_sel_last_line+1 || g_term_scrolled)
 	    s_clean_screen = false;
     }
     else
 	s_clean_screen = false;
 
-    if (error_occurred) {
+    if (g_error_occurred) {
 	print_lines(g_msg, NOMARKING);
-	s_clean_screen = error_occurred = false;
+	s_clean_screen = g_error_occurred = false;
     }
 
     ret = perform_status_end(cnt, obj_type);
@@ -1783,7 +1783,7 @@ static int article_commands(char_int ch)
       case 'S':
 	if (!g_sel_rereading)
 	    sel_cleanup();
-	erase_line(mousebar_cnt > 0);	/* erase the prompt */
+	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
       reask_output:
 	in_char("Selector mode:  Threads, Subjects, Articles?", 'o', "tsa");
@@ -1819,7 +1819,7 @@ q does nothing.\n\n\
       case 'O':
 	if (!g_sel_rereading)
 	    sel_cleanup();
-	erase_line(mousebar_cnt > 0);	/* erase the prompt */
+	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
       reask_sort:
 	if (g_sel_mode == SM_ARTICLE)
@@ -1974,7 +1974,7 @@ q does nothing.\n\n\
 	    dingaling();
 	    break;
 	}
-	erase_line(mousebar_cnt > 0);	/* erase the prompt */
+	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
 	if (g_sel_mode == SM_ARTICLE)
 	    g_artp = g_sel_items[g_sel_item_index].u.ap;
@@ -2032,7 +2032,7 @@ q does nothing.\n\n\
 	    g_art = 0;
 	/* FALL THROUGH */
       case '/':
-	erase_line(mousebar_cnt > 0);	/* erase the prompt */
+	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
 	if (!finish_command(true)) {	/* get rest of command */
 	    if (s_clean_screen)
@@ -2087,7 +2087,7 @@ q does nothing.\n\n\
 	    return DS_DOCOMMAND;
 	return DS_DISPLAY;
       case 'c':
-	erase_line(mousebar_cnt > 0);	/* erase the prompt */
+	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
 	if ((ch = ask_catchup()) == 'y' || ch == 'u') {
 	    count_subjects(CS_UNSELECT);
@@ -2187,7 +2187,7 @@ static int newsgroup_commands(char_int ch)
       case 'O':
 	if (!g_sel_rereading)
 	    sel_cleanup();
-	erase_line(mousebar_cnt > 0);	/* erase the prompt */
+	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
       reask_sort:
 	in_char("Order by Newsrc, Group name, or Count?", 'q', "ngcNGC");
@@ -2259,7 +2259,7 @@ q does nothing.\n\n\
 	/* FALL THROUGH */
 #endif
       case '/':
-	erase_line(mousebar_cnt > 0);	/* erase the prompt */
+	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
 	if (!finish_command(true)) {	/* get rest of command */
 	    if (s_clean_screen)
@@ -2306,7 +2306,7 @@ q does nothing.\n\n\
 	    g_recent_ng = g_current_ng;
 	    g_current_ng = g_ngptr;
 	}
-	erase_line(mousebar_cnt > 0);	/* erase the prompt */
+	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
 	if ((ch = ask_catchup()) == 'y' || ch == 'u')
 	    return DS_DISPLAY;
@@ -2333,7 +2333,7 @@ q does nothing.\n\n\
 	bool was_at_top = !g_sel_prior_obj_cnt;
 	PUSH_SELECTOR();
 	if (!(s_removed_prompt & 2)) {
-	    erase_line(mousebar_cnt > 0);	/* erase the prompt */
+	    erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	    s_removed_prompt = 3;
 	    printf("[%s] Cmd: ", g_ngptr? g_ngptr->rcline : "*End*");
 	    fflush(stdout);
@@ -2375,7 +2375,7 @@ q does nothing.\n\n\
 		return DS_RESTART;
 	    if (g_term_line == g_sel_last_line)
 		newline();
-	    if (g_term_line != g_sel_last_line+1 || term_scrolled)
+	    if (g_term_line != g_sel_last_line+1 || g_term_scrolled)
 		s_clean_screen = false;
 	    break;
 	}
@@ -2412,7 +2412,7 @@ static int addgroup_commands(char_int ch)
       case 'O':
 	if (!g_sel_rereading)
 	    sel_cleanup();
-	erase_line(mousebar_cnt > 0);	/* erase the prompt */
+	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
       reask_sort:
 	in_char("Order by Natural-order, Group name, or Count?", 'q', "ngcNGC");
@@ -2521,7 +2521,7 @@ q does nothing.\n\n\
 	return DS_QUIT;
       case ':':
       case '/':
-	erase_line(mousebar_cnt > 0);	/* erase the prompt */
+	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
 	if (!finish_command(true)) {	/* get rest of command */
 	    if (s_clean_screen)
@@ -2624,7 +2624,7 @@ static int option_commands(char_int ch)
 	char* s;
 	char* pattern;
 	int i, j;
-	erase_line(mousebar_cnt > 0);	/* erase the prompt */
+	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
 	if (!finish_command(true))	/* get rest of command */
 	    break;
@@ -2711,7 +2711,7 @@ static int universal_commands(char_int ch)
       case 'O':
 	if (!g_sel_rereading)
 	    sel_cleanup();
-	erase_line(mousebar_cnt > 0);	/* erase the prompt */
+	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
       reask_sort:
 	in_char("Order by Natural, or score Points?", 'q', "npNP");
@@ -2802,7 +2802,7 @@ static int find_line(int y)
 
 /* On click:
  *    btn = 0 (left), 1 (middle), or 2 (right) + 4 if double-clicked;
- *    x = 0 to tc_COLS-1; y = 0 to tc_LINES-1;
+ *    x = 0 to g_tc_COLS-1; y = 0 to g_tc_LINES-1;
  *    btn_clk = 0, 1, or 2 (no 4); x_clk = x; y_clk = y.
  * On release:
  *    btn = 3; x = release's x; y = release's y;
@@ -2821,7 +2821,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 	    if (y > 0 && y < g_sel_last_line) {
 		if (btn & 4) {
 		    pushchar(btn_clk == 0? '\n' : 'Z');
-		    mouse_is_down = false;
+		    g_mouse_is_down = false;
 		}
 		else {
 		    s_force_sel_pos = find_line(y);
@@ -2873,7 +2873,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 	     *   if cursor in top half: backwards
 	     *   if cursor in bottom half: forwards
 	     */
-	    if (y < tc_LINES/2)
+	    if (y < g_tc_LINES/2)
 		pushchar('<' | 0200);
 	    else
 		pushchar('>' | 0200);

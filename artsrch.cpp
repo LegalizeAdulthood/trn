@@ -329,7 +329,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 				    /* does the shoe fit? */
 		if (!cmdlst)
 		    return SRCH_FOUND;
-		if (perform(cmdlst,output_level && page_line == 1) < 0) {
+		if (perform(cmdlst,output_level && g_page_line == 1) < 0) {
 		    free(cmdlst);
 		    return SRCH_INTR;
 		}
@@ -339,7 +339,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 		fflush(stdout);
 	    }
 	}
-	if (!output_level && page_line == 1)
+	if (!output_level && g_page_line == 1)
 	    perform_status(g_ngptr->toread, 60 / (howmuch+1));
     }
 exit:

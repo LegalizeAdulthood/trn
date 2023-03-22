@@ -400,9 +400,9 @@ reask_article:
 	setdfltcmd();
 	if (g_erase_screen && g_erase_each_line)
 	    erase_line(true);
-	if (g_term_line >= tc_LINES) {
-	    term_scrolled += g_term_line - tc_LINES + 1;
-	    g_term_line = tc_LINES-1;
+	if (g_term_line >= g_tc_LINES) {
+	    g_term_scrolled += g_term_line - g_tc_LINES + 1;
+	    g_term_line = g_tc_LINES-1;
 	}
 	unflush_output();		/* disable any ^O in effect */
 	/* print prompt, whatever it is */
@@ -410,7 +410,7 @@ reask_article:
 	sprintf(g_buf,g_prompt,g_cmd_buf,
 		current_charsubst(),
 		g_dfltcmd);
-	draw_mousebar(tc_COLS - (g_term_line == tc_LINES-1? strlen(g_buf)+5 : 0), true);
+	draw_mousebar(g_tc_COLS - (g_term_line == g_tc_LINES-1? strlen(g_buf)+5 : 0), true);
 	color_string(COLOR_CMD,g_buf);
 	putchar(' ');
 	fflush(stdout);
@@ -427,7 +427,7 @@ reinp_article:
 	g_artp = g_curr_artp;
 	getcmd(g_buf);
 	if (errno || *g_buf == '\f') {
-	    if (tc_LINES < 100 && !g_int_count)
+	    if (g_tc_LINES < 100 && !g_int_count)
 		*g_buf = '\f';		/* on CONT fake up refresh */
 	    else {
 		newline();		/* but only on a crt */
@@ -436,7 +436,7 @@ reinp_article:
 	}
 article_level:
 	output_chase_phrase = true;  /* Allow "Chasing Xrefs..." output */
-	if (mousebar_cnt)
+	if (g_mousebar_cnt)
 	    clear_rest();
 
 	if (g_sa_go) {
@@ -456,7 +456,7 @@ article_level:
 		s_exit_code = NG_ASK;
 		goto cleanup;
 	      case SA_FAKE:
-		lastchar = g_buf[0];	/* needed for fake to work */
+		g_lastchar = g_buf[0];	/* needed for fake to work */
 		break;			/* fall through to art_switch */
 	    }
 	}
@@ -776,11 +776,11 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	return AS_NORM;
       case 't':
 	erase_line(g_erase_screen && g_erase_each_line);
-	page_line = 1;
+	g_page_line = 1;
 	entire_tree(g_curr_artp);
 	return AS_ASK;
       case ':':			/* execute command on selected articles */
-	page_line = 1;
+	g_page_line = 1;
 	if (!thread_perform())
 	    return AS_INP;
 	carriage_return();
@@ -981,7 +981,7 @@ normal_search:
 	char cmd = *g_buf;
 	
 	g_reread = true;		/* assume this */
-	page_line = 1;
+	g_page_line = 1;
 	switch (art_search(g_buf, (sizeof g_buf), true)) {
 	  case SRCH_ERROR:
 	    g_art = g_curr_art;
@@ -1006,7 +1006,7 @@ normal_search:
 	    else
 		fputs("done\n",stdout) FLUSH;
 	    termdown(1);
-	    pad(just_a_sec/3);	/* 1/3 second */
+	    pad(g_just_a_sec/3);	/* 1/3 second */
 	    if (!g_srchahead) {
 		g_art = g_curr_art;
 		return AS_ASK;
@@ -1122,8 +1122,8 @@ run_the_selector:
 	switch (*g_buf) {
 	  case '+':
 	    newline();
-	    term_scrolled = tc_LINES;
-	    g_term_line = tc_LINES-1;
+	    g_term_scrolled = g_tc_LINES;
+	    g_term_line = g_tc_LINES-1;
 	    return AS_ASK;
 	  case 'Q':
 	    s_exit_code = NG_ASK;
@@ -1245,7 +1245,7 @@ run_the_selector:
 	    if (*g_buf == 'B')
 		target = g_topline - 1;
 	    else {
-		target = g_topline - (tc_LINES - 2);
+		target = g_topline - (g_tc_LINES - 2);
 		if (g_marking && (g_marking_areas & BACKPAGE_MARKING)) {
 		    g_highlight = g_topline;
 		}
@@ -1585,7 +1585,7 @@ bool output_subject(char *ptr, int flag)
 	else
 	    safecpy(tmpbuf + len, s, sizeof tmpbuf - len);
 	if (g_mode == 'k')
-	    page_line = 1;
+	    g_page_line = 1;
 	if (print_lines(tmpbuf, NOMARKING) != 0)
 	    return true;
     }

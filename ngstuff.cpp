@@ -228,7 +228,7 @@ int numnum()
 	}
 	for (g_art = article_first(min); g_art <= max; g_art = article_next(g_art)) {
 	    g_artp = article_ptr(g_art);
-	    if (perform(cmdlst,output_level && page_line == 1) < 0) {
+	    if (perform(cmdlst,output_level && g_page_line == 1) < 0) {
 		if (g_verbose)
 		    sprintf(g_msg,"(Interrupted at article %ld)",(long)g_art);
 		else
@@ -322,7 +322,7 @@ int thread_perform()
 	followup();
 	g_forcegrow = true;
 	g_art = oldart;
-	page_line++; /*$$*/
+	g_page_line++; /*$$*/
     } else {
 	/* The rest loop through the articles. */
 	/* Use the explicit article-order if it exists */
@@ -338,7 +338,7 @@ int thread_perform()
 		 && !(ap->flags & g_sel_mask) ^ !!bits) {
 		    g_art = article_num(ap);
 		    g_artp = ap;
-		    if (perform(cmdstr, output_level && page_line == 1) < 0) {
+		    if (perform(cmdstr, output_level && g_page_line == 1) < 0) {
 			errormsg("Interrupted");
 			goto break_out;
 		    }
@@ -357,7 +357,7 @@ int thread_perform()
 		     && !(ap->flags & g_sel_mask) ^ !!bits) {
 			g_art = article_num(ap);
 			g_artp = ap;
-			if (perform(cmdstr,output_level && page_line==1) < 0) {
+			if (perform(cmdstr,output_level && g_page_line==1) < 0) {
 			    errormsg("Interrupted");
 			    goto break_out;
 			}

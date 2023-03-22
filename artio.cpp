@@ -339,7 +339,7 @@ char *readartbuf(bool view_inline)
 	g_mime_state = SKIP_MIME;
 	*bp++ = '\001';
 	g_artbuf_pos++;
-	mime_Description(g_mime_section,bp,tc_COLS);
+	mime_Description(g_mime_section,bp,g_tc_COLS);
 	len = strlen(bp);
 	break;
       case ALTERNATE_MIME:
@@ -362,24 +362,24 @@ char *readartbuf(bool view_inline)
 	    g_mime_state = SKIP_MIME;
 	*bp++ = '\001';
 	g_artbuf_pos++;
-	mime_Description(g_mime_section,bp,tc_COLS);
+	mime_Description(g_mime_section,bp,g_tc_COLS);
 	len = strlen(bp);
 	break;
     }
 
   done:
-    word_wrap = tc_COLS - g_word_wrap_offset;
+    word_wrap = g_tc_COLS - g_word_wrap_offset;
     if (read_something && g_word_wrap_offset >= 0 && word_wrap > 20 && bp) {
 	char* cp;
 	for (cp = bp; *cp && (s = strchr(cp, '\n')) != nullptr; cp = s+1) {
-	    if (s - cp > tc_COLS) {
+	    if (s - cp > g_tc_COLS) {
 		char* t;
 		do {
 		    for (t = cp+word_wrap; *t!=' ' && *t!='\t' && t > cp; t--) ;
 		    if (t == cp) {
-			for (t = cp+word_wrap; *t!=' ' && *t!='\t' && t<=cp+tc_COLS; t++) ;
-			if (t > cp+tc_COLS) {
-			    t = cp + tc_COLS - 1;
+			for (t = cp+word_wrap; *t!=' ' && *t!='\t' && t<=cp+g_tc_COLS; t++) ;
+			if (t > cp+g_tc_COLS) {
+			    t = cp + g_tc_COLS - 1;
 			    continue;
 			}
 		    }

@@ -582,7 +582,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case 'j':
 		    s = scrbuf;
-		    sprintf(scrbuf,"%d",just_a_sec*10);
+		    sprintf(scrbuf,"%d",g_just_a_sec*10);
 		    break;
 		case 'l':			/* rn library */
 #ifdef NEWS_ADMIN

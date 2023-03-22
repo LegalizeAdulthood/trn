@@ -352,7 +352,7 @@ the lock file: %s\n", g_local_host, rp->lockname) FLUSH;
 		printf("\nThis host (%s) doesn't match.\nCan't unlock %s.\n",
 		       g_local_host, rp->lockname) FLUSH;
 	    termdown(2);
-	    if (bizarre)
+	    if (g_bizarre)
 		resetty();
 	    finalize(0);
 	}
@@ -395,7 +395,7 @@ the lock file: %s\n", rp->lockname) FLUSH;
 	    else
 		printf("\nCan't unlock %s.\n", rp->lockname) FLUSH;
 	    termdown(2);
-	    if (bizarre)
+	    if (g_bizarre)
 		resetty();
 	    finalize(0);
 	}

@@ -95,7 +95,7 @@ void final_init()
     update_thread_kfile();
     color_default();
     termlib_reset();
-    if (bizarre)
+    if (g_bizarre)
 	resetty();
     xmouse_off();	/* turn off mouse tracking (if on) */
     fflush(stdout);
@@ -251,7 +251,7 @@ Signal_t stop_catcher(int signo)
 	xmouse_off();
 	checkpoint_newsrcs();	/* good chance of crash while stopped */
 	if (g_bos_on_stop) {
-	    goto_xy(0, tc_LINES-1);
+	    goto_xy(0, g_tc_LINES-1);
 	    putchar('\n') FLUSH;
 	}
 	termlib_reset();

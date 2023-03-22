@@ -670,7 +670,7 @@ reask_abandon:
 	}
         else if (*g_buf == '+' || *g_buf == 'U' || *g_buf == '=' || *g_buf == ';')
         {
-	    *g_buf = lastchar; /* restore 0200 if from a macro */
+	    *g_buf = g_lastchar; /* restore 0200 if from a macro */
 	    save_typeahead(g_buf+1, sizeof g_buf - 1);
 	    s = savestr(g_buf);
 	}
@@ -711,7 +711,7 @@ reask_abandon:
       case ':':		/* execute command on selected groups */
 	if (!ngsel_perform())
 	    return ING_INPUT;
-	page_line = 1;
+	g_page_line = 1;
 	newline();
 	set_ng(g_current_ng);
 	return ING_ASK;
@@ -720,7 +720,7 @@ reask_abandon:
 	trn_version();
 	return ING_ASK;
       default:
-	if (*g_buf == ERASECH || *g_buf == KILLCH)
+	if (*g_buf == g_erase_char || *g_buf == g_kill_char)
 	    return ING_ERASE;
 	return ING_ERROR;
     }

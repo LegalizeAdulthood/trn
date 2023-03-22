@@ -33,61 +33,78 @@
 #undef	USETITE		/* use terminal init/exit seqences (not recommended) */
 #undef	USEKSKE		/* use keypad start/end sequences */
 
-char ERASECH{}; /* rubout character */
-char KILLCH{};  /* line delete character */
-char circlebuf[PUSHSIZE];
-int nextin{};
-int nextout{};
-unsigned char lastchar;
-int _tty_ch{2};
-bool bizarre{}; /* do we need to restore terminal? */
+#ifdef I_TERMIO
+termio g_tty;
+termio g_oldtty;
+int g_tty_ch{2};
+#else
+# ifdef I_TERMIOS
+termios g_tty;
+termios g_oldtty;
+int g_tty_ch{2};
+# else
+#  ifdef I_SGTTY
+sgttyb g_tty;
+int g_tty_ch{2};
+int g_res_flg{};
+#   ifdef LFLUSHO
+extern int g_lflusho{LFLUSHO};
+#   endif
+#  endif
+# endif
+#endif
+
+char g_erase_char{}; /* rubout character */
+char g_kill_char{};  /* line delete character */
+unsigned char g_lastchar{};
+bool g_bizarre{}; /* do we need to restore terminal? */
 
 #ifdef HAS_TERMLIB
-int tc_GT{};   /* hardware tabs */
-char *tc_BC{}; /* backspace character */
-char *tc_UP{}; /* move cursor up one line */
-char *tc_CR{}; /* get to left margin, somehow */
-char *tc_VB{}; /* visible bell */
-char *tc_CL{}; /* home and clear screen */
-char *tc_CE{}; /* clear to end of line */
-char *tc_TI{}; /* initialize terminal */
-char *tc_TE{}; /* reset terminal */
-char *tc_KS{}; /* enter `keypad transmit' mode */
-char *tc_KE{}; /* exit `keypad transmit' mode */
-char *tc_CM{}; /* cursor motion */
-char *tc_HO{}; /* home cursor */
-char *tc_IL{}; /* insert line */
-char *tc_CD{}; /* clear to end of display */
-char *tc_SO{}; /* begin standout mode */
-char *tc_SE{}; /* end standout mode */
-int tc_SG{};   /* blanks left by SO and SE */
-char *tc_US{}; /* start underline mode */
-char *tc_UE{}; /* end underline mode */
-char *tc_UC{}; /* underline a character, if that's how it's done */
-int tc_UG{};   /* blanks left by US and UE */
-bool tc_AM{};  /* does terminal have automatic margins? */
-bool tc_XN{};  /* does it eat 1st newline after automatic wrap? */
-char tc_PC{};  /* pad character for use by tputs() */
+int g_tc_GT{};   /* hardware tabs */
+char *g_tc_BC{}; /* backspace character */
+char *g_tc_UP{}; /* move cursor up one line */
+char *g_tc_CR{}; /* get to left margin, somehow */
+char *g_tc_VB{}; /* visible bell */
+char *g_tc_CL{}; /* home and clear screen */
+char *g_tc_CE{}; /* clear to end of line */
+char *g_tc_TI{}; /* initialize terminal */
+char *g_tc_TE{}; /* reset terminal */
+char *g_tc_KS{}; /* enter `keypad transmit' mode */
+char *g_tc_KE{}; /* exit `keypad transmit' mode */
+char *g_tc_CM{}; /* cursor motion */
+char *g_tc_HO{}; /* home cursor */
+char *g_tc_IL{}; /* insert line */
+char *g_tc_CD{}; /* clear to end of display */
+char *g_tc_SO{}; /* begin standout mode */
+char *g_tc_SE{}; /* end standout mode */
+int g_tc_SG{};   /* blanks left by SO and SE */
+char *g_tc_US{}; /* start underline mode */
+char *g_tc_UE{}; /* end underline mode */
+char *g_tc_UC{}; /* underline a character, if that's how it's done */
+int g_tc_UG{};   /* blanks left by US and UE */
+bool g_tc_AM{};  /* does terminal have automatic margins? */
+bool g_tc_XN{};  /* does it eat 1st newline after automatic wrap? */
+char g_tc_PC{};  /* pad character for use by tputs() */
 #ifdef _POSIX_SOURCE
-speed_t outspeed{}; /* terminal output speed, */
+speed_t g_outspeed{}; /* terminal output speed, */
 #else
-long outspeed{}; /* 	for use by tputs() */
+long g_outspeed{}; /* 	for use by tputs() */
 #endif
-int fire_is_out{1};
-int tc_LINES{};
-int tc_COLS{};
+int g_fire_is_out{1};
+int g_tc_LINES{};
+int g_tc_COLS{};
 int g_term_line;
 int g_term_col;
-int term_scrolled;           /* how many lines scrolled away */
-int just_a_sec{960};         /* 1 sec at current baud rate (number of nulls) */
-int page_line{1};            /* line number for paging in print_line (origin 1) */
-bool error_occurred{};
-char *mousebar_btns;
-int mousebar_cnt{};
-int mousebar_start{};
-int mousebar_width{};
-bool xmouse_is_on{};
-bool mouse_is_down{};
+int g_term_scrolled;           /* how many lines scrolled away */
+int g_just_a_sec{960};         /* 1 sec at current baud rate (number of nulls) */
+int g_page_line{1};            /* line number for paging in print_line (origin 1) */
+bool g_error_occurred{};
+char *g_mousebar_btns;
+int g_mousebar_cnt{};
+int g_mousebar_start{};
+int g_mousebar_width{};
+bool g_xmouse_is_on{};
+bool g_mouse_is_down{};
 #endif
 
 struct KEYMAP
@@ -115,6 +132,10 @@ enum
 {
     TC_STRINGS = 48 /* number of colors we can keep track of */
 };
+
+static char s_circlebuf[PUSHSIZE]{};
+static int s_nextin{};
+static int s_nextout{};
 
 #ifndef MSDOS
 static char s_tcarea[TCSIZE]; /* area for "compiled" termcap strings */
@@ -146,36 +167,36 @@ void term_init()
     savetty();				/* remember current tty state */
 
 #ifdef I_TERMIO
-    outspeed = _tty.c_cflag & CBAUD;	/* for tputs() */
-    ERASECH = _tty.c_cc[VERASE];	/* for finish_command() */
-    KILLCH = _tty.c_cc[VKILL];		/* for finish_command() */
-    if (tc_GT = ((_tty.c_oflag & TABDLY) != TAB3))
+    g_outspeed = g_tty.c_cflag & CBAUD;	/* for tputs() */
+    g_erase_char = g_tty.c_cc[VERASE];	/* for finish_command() */
+    g_kill_char = g_tty.c_cc[VKILL];		/* for finish_command() */
+    if (g_tc_GT = ((g_tty.c_oflag & TABDLY) != TAB3))
 	/* we have tabs, so that's OK */;
     else
-	_tty.c_oflag &= ~TAB3;	/* turn off kernel tabbing -- done in rn */
+	g_tty.c_oflag &= ~TAB3;	/* turn off kernel tabbing -- done in rn */
 #else /* !I_TERMIO */
 # ifdef I_TERMIOS
-    outspeed = cfgetospeed(&_tty);	/* for tputs() (output) */
-    ERASECH = _tty.c_cc[VERASE];	/* for finish_command() */
-    KILLCH = _tty.c_cc[VKILL];		/* for finish_command() */
+    g_outspeed = cfgetospeed(&g_tty);	/* for tputs() (output) */
+    g_erase_char = g_tty.c_cc[VERASE];	/* for finish_command() */
+    g_kill_char = g_tty.c_cc[VKILL];		/* for finish_command() */
 #if 0
-    _tty.c_oflag &= ~OXTABS;	/* turn off kernel tabbing-done in rn */
+    g_tty.c_oflag &= ~OXTABS;	/* turn off kernel tabbing-done in rn */
 #endif
 # else /* !I_TERMIOS */
 #  ifdef I_SGTTY
-    outspeed = _tty.sg_ospeed;		/* for tputs() */
-    ERASECH = _tty.sg_erase;		/* for finish_command() */
-    KILLCH = _tty.sg_kill;		/* for finish_command() */
-    if (tc_GT = ((_tty.sg_flags & XTABS) != XTABS))
+    g_outspeed = g_tty.sg_ospeed;		/* for tputs() */
+    g_erase_char = g_tty.sg_erase;		/* for finish_command() */
+    g_kill_char = g_tty.sg_kill;		/* for finish_command() */
+    if (g_tc_GT = ((g_tty.sg_flags & XTABS) != XTABS))
 	/* we have tabs, so that's OK */;
     else
-	_tty.sg_flags &= ~XTABS;
+	g_tty.sg_flags &= ~XTABS;
 #  else /* !I_SGTTY */
 #   ifdef MSDOS
-    outspeed = B19200;
-    ERASECH = '\b';
-    KILLCH = Ctl('u');
-    tc_GT = 1;
+    g_outspeed = B19200;
+    g_erase_char = '\b';
+    g_kill_char = Ctl('u');
+    g_tc_GT = 1;
 #   else
     ..."Don't know how to initialize the terminal!"
 #   endif /* !MSDOS */
@@ -186,29 +207,29 @@ void term_init()
     /* The following could be a table but I can't be sure that there isn't */
     /* some degree of sparsity out there in the world. */
 
-    switch (outspeed) {			/* 1 second of padding */
+    switch (g_outspeed) {			/* 1 second of padding */
 #ifdef BEXTA
-        case BEXTA:  just_a_sec = 1920; break;
+        case BEXTA:  g_just_a_sec = 1920; break;
 #else
 #ifdef B19200
-        case B19200: just_a_sec = 1920; break;
+        case B19200: g_just_a_sec = 1920; break;
 #endif
 #endif
-        case B9600:  just_a_sec =  960; break;
-        case B4800:  just_a_sec =  480; break;
-        case B2400:  just_a_sec =  240; break;
-        case B1800:  just_a_sec =  180; break;
-        case B1200:  just_a_sec =  120; break;
-        case B600:   just_a_sec =   60; break;
-	case B300:   just_a_sec =   30; break;
+        case B9600:  g_just_a_sec =  960; break;
+        case B4800:  g_just_a_sec =  480; break;
+        case B2400:  g_just_a_sec =  240; break;
+        case B1800:  g_just_a_sec =  180; break;
+        case B1200:  g_just_a_sec =  120; break;
+        case B600:   g_just_a_sec =   60; break;
+	case B300:   g_just_a_sec =   30; break;
 	/* do I really have to type the rest of this??? */
-        case B200:   just_a_sec =   20; break;
-        case B150:   just_a_sec =   15; break;
-        case B134:   just_a_sec =   13; break;
-        case B110:   just_a_sec =   11; break;
-        case B75:    just_a_sec =    8; break;
-        case B50:    just_a_sec =    5; break;
-        default:     just_a_sec =  960; break;
+        case B200:   g_just_a_sec =   20; break;
+        case B150:   g_just_a_sec =   15; break;
+        case B134:   g_just_a_sec =   13; break;
+        case B110:   g_just_a_sec =   11; break;
+        case B75:    g_just_a_sec =    8; break;
+        case B50:    g_just_a_sec =    5; break;
+        default:     g_just_a_sec =  960; break;
 					/* if we are running detached I */
     }					/*  don't want to know about it! */
 }
@@ -252,26 +273,26 @@ void term_set(char *tcbuf)
 
 #ifdef HAS_TERMLIB
 #ifdef MSDOS
-    tc_BC = "\b";
-    tc_UP = "\033[A";
-    tc_CR = "\r";
-    tc_VB = "";
-    tc_CL = "\033[H\033[2J";
-    tc_CE = "\033[K";
-    tc_TI = "";
-    tc_TE = "";
-    tc_KS = "";
-    tc_KE = "";
-    tc_CM = "\033[%d;%dH";
-    tc_HO = "\033[H";
-    tc_IL = ""; /*$$*/
-    tc_CD = ""; /*$$*/
-    tc_SO = "\033[7m";
-    tc_SE = "\033[m";
-    tc_US = "\033[7m";
-    tc_UE = "\033[m";
-    tc_UC = "";
-    tc_AM = true;
+    g_tc_BC = "\b";
+    g_tc_UP = "\033[A";
+    g_tc_CR = "\r";
+    g_tc_VB = "";
+    g_tc_CL = "\033[H\033[2J";
+    g_tc_CE = "\033[K";
+    g_tc_TI = "";
+    g_tc_TE = "";
+    g_tc_KS = "";
+    g_tc_KE = "";
+    g_tc_CM = "\033[%d;%dH";
+    g_tc_HO = "\033[H";
+    g_tc_IL = ""; /*$$*/
+    g_tc_CD = ""; /*$$*/
+    g_tc_SO = "\033[7m";
+    g_tc_SE = "\033[m";
+    g_tc_US = "\033[7m";
+    g_tc_UE = "\033[m";
+    g_tc_UC = "";
+    g_tc_AM = true;
 #else
     s = getenv("TERM");
     status = tgetent(tcbuf,s? s : "dumb");	/* get termcap entry */
@@ -281,91 +302,91 @@ void term_set(char *tcbuf)
     }
     tmpaddr = s_tcarea;			/* set up strange tgetstr pointer */
     s = Tgetstr("pc");			/* get pad character */
-    tc_PC = *s;				/* get it where tputs wants it */
+    g_tc_PC = *s;				/* get it where tputs wants it */
     if (!tgetflag("bs")) {		/* is backspace not used? */
-	tc_BC = Tgetstr("bc");		/* find out what is */
-	if (tc_BC == "") {		/* terminfo grok's 'bs' but not 'bc' */
-	    tc_BC = Tgetstr("le");
-	    if (tc_BC == "")
-		tc_BC = "\b";		/* better than nothing... */
+	g_tc_BC = Tgetstr("bc");		/* find out what is */
+	if (g_tc_BC == "") {		/* terminfo grok's 'bs' but not 'bc' */
+	    g_tc_BC = Tgetstr("le");
+	    if (g_tc_BC == "")
+		g_tc_BC = "\b";		/* better than nothing... */
 	}
     } else
-	tc_BC = "\b";			/* make a backspace handy */
-    tc_UP = Tgetstr("up");		/* move up a line */
-    tc_CL = Tgetstr("cl");		/* get clear string */
-    tc_CE = Tgetstr("ce");		/* clear to end of line string */
-    tc_TI = Tgetstr("ti");		/* initialize display */
-    tc_TE = Tgetstr("te");		/* reset display */
-    tc_KS = Tgetstr("ks");		/* enter `keypad transmit' mode */
-    tc_KE = Tgetstr("ke");		/* exit `keypad transmit' mode */
-    tc_HO = Tgetstr("ho");		/* home cursor */
-    tc_IL = Tgetstr("al");		/* insert (add) line */
-    tc_CM = Tgetstr("cm");		/* cursor motion */
-    tc_CD = Tgetstr("cd");		/* clear to end of display */
-    if (!*tc_CE)
-	tc_CE = tc_CD;
-    tc_SO = Tgetstr("so");		/* begin standout */
-    tc_SE = Tgetstr("se");		/* end standout */
-    if ((tc_SG = tgetnum("sg"))<0)
-	tc_SG = 0;			/* blanks left by SG, SE */
-    tc_US = Tgetstr("us");		/* start underline */
-    tc_UE = Tgetstr("ue");		/* end underline */
-    if ((tc_UG = tgetnum("ug"))<0)
-	tc_UG = 0;			/* blanks left by US, UE */
-    if (*tc_US)
-	tc_UC = "";		/* UC must not be nullptr */
+	g_tc_BC = "\b";			/* make a backspace handy */
+    g_tc_UP = Tgetstr("up");		/* move up a line */
+    g_tc_CL = Tgetstr("cl");		/* get clear string */
+    g_tc_CE = Tgetstr("ce");		/* clear to end of line string */
+    g_tc_TI = Tgetstr("ti");		/* initialize display */
+    g_tc_TE = Tgetstr("te");		/* reset display */
+    g_tc_KS = Tgetstr("ks");		/* enter `keypad transmit' mode */
+    g_tc_KE = Tgetstr("ke");		/* exit `keypad transmit' mode */
+    g_tc_HO = Tgetstr("ho");		/* home cursor */
+    g_tc_IL = Tgetstr("al");		/* insert (add) line */
+    g_tc_CM = Tgetstr("cm");		/* cursor motion */
+    g_tc_CD = Tgetstr("cd");		/* clear to end of display */
+    if (!*g_tc_CE)
+	g_tc_CE = g_tc_CD;
+    g_tc_SO = Tgetstr("so");		/* begin standout */
+    g_tc_SE = Tgetstr("se");		/* end standout */
+    if ((g_tc_SG = tgetnum("sg"))<0)
+	g_tc_SG = 0;			/* blanks left by SG, SE */
+    g_tc_US = Tgetstr("us");		/* start underline */
+    g_tc_UE = Tgetstr("ue");		/* end underline */
+    if ((g_tc_UG = tgetnum("ug"))<0)
+	g_tc_UG = 0;			/* blanks left by US, UE */
+    if (*g_tc_US)
+	g_tc_UC = "";		/* UC must not be nullptr */
     else
-	tc_UC = Tgetstr("uc");		/* underline a character */
-    if (!*tc_US && !*tc_UC) {		/* no underline mode? */
-	tc_US = tc_SO;			/* substitute standout mode */
-	tc_UE = tc_SE;
-	tc_UG = tc_SG;
+	g_tc_UC = Tgetstr("uc");		/* underline a character */
+    if (!*g_tc_US && !*g_tc_UC) {		/* no underline mode? */
+	g_tc_US = g_tc_SO;			/* substitute standout mode */
+	g_tc_UE = g_tc_SE;
+	g_tc_UG = g_tc_SG;
     }
-    tc_LINES = tgetnum("li");		/* lines per page */
-    tc_COLS = tgetnum("co");		/* columns on page */
+    g_tc_LINES = tgetnum("li");		/* lines per page */
+    g_tc_COLS = tgetnum("co");		/* columns on page */
 
 #ifdef TIOCGWINSZ
     { struct winsize ws;
 	if (ioctl(0, TIOCGWINSZ, &ws) >= 0 && ws.ws_row > 0 && ws.ws_col > 0) {
-	    tc_LINES = ws.ws_row;
-	    tc_COLS = ws.ws_col;
+	    g_tc_LINES = ws.ws_row;
+	    g_tc_COLS = ws.ws_col;
 	}
     }
 #endif
 	
-    tc_AM = tgetflag("am");		/* terminal wraps automatically? */
-    tc_XN = tgetflag("xn");		/* then eats next newline? */
-    tc_VB = Tgetstr("vb");
-    if (!*tc_VB)
-	tc_VB = "\007";
-    tc_CR = Tgetstr("cr");
-    if (!*tc_CR) {
-	if (tgetflag("nc") && *tc_UP) {
-	    tc_CR = safemalloc((MEM_SIZE)strlen(tc_UP)+2);
-	    sprintf(tc_CR,"%s\r",tc_UP);
+    g_tc_AM = tgetflag("am");		/* terminal wraps automatically? */
+    g_tc_XN = tgetflag("xn");		/* then eats next newline? */
+    g_tc_VB = Tgetstr("vb");
+    if (!*g_tc_VB)
+	g_tc_VB = "\007";
+    g_tc_CR = Tgetstr("cr");
+    if (!*g_tc_CR) {
+	if (tgetflag("nc") && *g_tc_UP) {
+	    g_tc_CR = safemalloc((MEM_SIZE)strlen(g_tc_UP)+2);
+	    sprintf(g_tc_CR,"%s\r",g_tc_UP);
 	}
 	else
-	    tc_CR = "\r";
+	    g_tc_CR = "\r";
     }
 #ifdef TIOCGWINSZ
 	if (ioctl(1, TIOCGWINSZ, &winsize) >= 0) {
 		if (winsize.ws_row > 0)
-		    tc_LINES = winsize.ws_row;
+		    g_tc_LINES = winsize.ws_row;
 		if (winsize.ws_col > 0)
-		    tc_COLS = winsize.ws_col;
+		    g_tc_COLS = winsize.ws_col;
 	}
 # endif
 #endif
-    if (!*tc_UP)			/* no UP string? */
+    if (!*g_tc_UP)			/* no UP string? */
 	g_marking = 0;			/* disable any marking */
-    if (*tc_CM || *tc_HO)
+    if (*g_tc_CM || *g_tc_HO)
 	g_can_home = true;
-    if (!*tc_CD || !g_can_home)		/* can we CE, CD, and home? */
+    if (!*g_tc_CD || !g_can_home)		/* can we CE, CD, and home? */
 	g_erase_each_line = false;	/*  no, so disable use of clear eol */
     if (g_muck_up_clear)			/* this is for weird HPs */
-	tc_CL = nullptr;
-    s_leftcost = strlen(tc_BC);
-    s_upcost = strlen(tc_UP);
+	g_tc_CL = nullptr;
+    s_leftcost = strlen(g_tc_BC);
+    s_upcost = strlen(g_tc_UP);
 #else /* !HAS_TERMLIB */
     ..."Don't know how to set the terminal!"
 #endif /* !HAS_TERMLIB */
@@ -373,9 +394,9 @@ void term_set(char *tcbuf)
     line_col_calcs();
     noecho();				/* turn off echo */
     crmode();				/* enter cbreak mode */
-    sprintf(g_buf, "%d", tc_LINES);
+    sprintf(g_buf, "%d", g_tc_LINES);
     s_lines_export = export_var("LINES",g_buf);
-    sprintf(g_buf, "%d", tc_COLS);
+    sprintf(g_buf, "%d", g_tc_COLS);
     s_cols_export = export_var("COLUMNS",g_buf);
 
     mac_init(tcbuf);
@@ -664,19 +685,19 @@ void hide_pending()
 
 bool finput_pending(bool check_term)
 {
-    while (nextout != nextin) {
-	if (circlebuf[nextout] != '\200')
+    while (s_nextout != s_nextin) {
+	if (s_circlebuf[s_nextout] != '\200')
 	    return true;
 	switch (not_echoing) {
 	  case 0:
 	    return true;
 	  case 1:
-	    nextout++;
-	    nextout %= PUSHSIZE;
+	    s_nextout++;
+	    s_nextout %= PUSHSIZE;
 	    not_echoing = 0;
 	    break;
 	  default:
-	    circlebuf[nextout] = '\n';
+	    s_circlebuf[s_nextout] = '\n';
 	    not_echoing = 0;
 	    return true;
 	}
@@ -734,7 +755,7 @@ bool finish_command(int donewline)
 	    *s = Ctl('r');		/* force rewrite on CONT */
 	}
     } while (*s != '\r' && *s != '\n'); /* until CR or NL (not echoed) */
-    mouse_is_down = false;
+    g_mouse_is_down = false;
 
     while (s[-1] == ' ') s--;
     *s = '\0';				/* terminate the string nicely */
@@ -803,7 +824,7 @@ char *edit_buf(char *s, char *cmd)
 	}
 	return s;
     }
-    else if (*s == ERASECH) {		/* they want to rubout a char? */
+    else if (*s == g_erase_char) {		/* they want to rubout a char? */
 	if (s != g_buf) {
 	    rubout();
 	    s--;			/* discount the char rubbed out */
@@ -812,7 +833,7 @@ char *edit_buf(char *s, char *cmd)
 	}
 	return s;
     }
-    else if (*s == KILLCH) {		/* wipe out the whole line? */
+    else if (*s == g_kill_char) {		/* wipe out the whole line? */
 	while (s != g_buf) {		/* emulate that many ERASEs */
 	    rubout();
 	    s--;
@@ -883,7 +904,7 @@ void eat_typeahead()
     s_got_a_char = false;
 
     /* cancel only keyboard stuff */
-    if (!g_allow_typeahead && !mouse_is_down && !macro_pending()
+    if (!g_allow_typeahead && !g_mouse_is_down && !macro_pending()
      && this_time - last_time > 0.3) {
 #ifdef PENDING
 	KEYMAP* curmap = s_topmap;
@@ -930,13 +951,13 @@ void eat_typeahead()
 	}
 #else /* this is probably v7 */
 # ifdef I_SGTTY
-	ioctl(_tty_ch,TIOCSETP,&_tty);
+	ioctl(g_tty_ch,TIOCSETP,&g_tty);
 # else
 #  ifdef I_TERMIO
-	ioctl(_tty_ch,TCSETAW,&_tty);
+	ioctl(g_tty_ch,TCSETAW,&g_tty);
 #  else
 #   ifdef I_TERMIOS
-	tcsetattr(_tty_ch,TCSAFLUSH,&_tty);
+	tcsetattr(g_tty_ch,TCSAFLUSH,&g_tty);
 #   else
 	..."Don't know how to eat typeahead!"
 #   endif
@@ -964,7 +985,7 @@ void settle_down()
     dingaling();
     fflush(stdout);
     /*sleep(1);*/
-    nextout = nextin;			/* empty circlebuf */
+    s_nextout = s_nextin;			/* empty s_circlebuf */
     not_echoing = 0;
     eat_typeahead();
 }
@@ -987,8 +1008,8 @@ Signal_t alarm_catcher(int signo)
 int read_tty(char *addr, int size)
 {
     if (macro_pending()) {
-	*addr = circlebuf[nextout++];
-	nextout %= PUSHSIZE;
+	*addr = s_circlebuf[s_nextout++];
+	s_nextout %= PUSHSIZE;
 	return 1;
     }
 #ifdef MSDOS
@@ -1013,13 +1034,13 @@ int circfill()
     register int Howmany;
 
     errno = 0;
-    Howmany = read(devtty,circlebuf+nextin,1);
+    Howmany = read(devtty,s_circlebuf+s_nextin,1);
 
     if (Howmany < 0 && (errno == EAGAIN || errno == EINTR))
 	Howmany = 0;
     if (Howmany) {
-	nextin += Howmany;
-	nextin %= PUSHSIZE;
+	s_nextin += Howmany;
+	s_nextin %= PUSHSIZE;
     }
     return Howmany;
 }
@@ -1028,14 +1049,14 @@ int circfill()
 
 void pushchar(char_int c)
 {
-    nextout--;
-    if (nextout < 0)
-	nextout = PUSHSIZE - 1;
-    if (nextout == nextin) {
+    s_nextout--;
+    if (s_nextout < 0)
+	s_nextout = PUSHSIZE - 1;
+    if (s_nextout == s_nextin) {
 	fputs("\npushback buffer overflow\n",stdout) FLUSH;
 	sig_catcher(0);
     }
-    circlebuf[nextout] = c;
+    s_circlebuf[s_nextout] = c;
 }
 
 /* print an underlined string, one way or another */
@@ -1043,7 +1064,7 @@ void pushchar(char_int c)
 void underprint(const char *s)
 {
     assert(tc_UC);
-    if (*tc_UC) {	/* char by char underline? */
+    if (*g_tc_UC) {	/* char by char underline? */
 	while (*s) {
 	    if (!at_norm_char(s)) {
 		putchar('^');
@@ -1075,7 +1096,7 @@ void underprint(const char *s)
 void no_sofire()
 {
     /* should we disable fireworks? */
-    if (!(fire_is_out & STANDOUT) && (g_term_line|g_term_col)==0 && *tc_UP && *tc_SE) {
+    if (!(g_fire_is_out & STANDOUT) && (g_term_line|g_term_col)==0 && *g_tc_UP && *g_tc_SE) {
 	newline();
 	un_standout();
 	up_line();
@@ -1088,7 +1109,7 @@ void no_sofire()
 void no_ulfire()
 {
     /* should we disable fireworks? */
-    if (!(fire_is_out & UNDERLINE) && (g_term_line|g_term_col)==0 && *tc_UP && *tc_US) {
+    if (!(g_fire_is_out & UNDERLINE) && (g_term_line|g_term_col)==0 && *g_tc_UP && *g_tc_US) {
 	newline();
 	un_underline();
 	up_line();
@@ -1115,7 +1136,7 @@ void getcmd(char *whatbuf)
 
 tryagain:
     curmap = s_topmap;
-    no_macros = (whatbuf != g_buf && !xmouse_is_on); 
+    no_macros = (whatbuf != g_buf && !g_xmouse_is_on); 
     for (;;) {
 	g_int_count = 0;
 	errno = 0;
@@ -1134,28 +1155,28 @@ tryagain:
 	    perror(g_readerr);
 	    sig_catcher(0);
 	}
-	lastchar = *(Uchar*)whatbuf;
-	if (lastchar & 0200 || no_macros) {
+	g_lastchar = *(Uchar*)whatbuf;
+	if (g_lastchar & 0200 || no_macros) {
 	    *whatbuf &= 0177;
 	    goto got_canonical;
 	}
 	if (curmap == nullptr)
 	    goto got_canonical;
-	for (i = (curmap->km_type[lastchar] >> KM_GSHIFT) & KM_GMASK; i; i--)
+	for (i = (curmap->km_type[g_lastchar] >> KM_GSHIFT) & KM_GMASK; i; i--)
 	    read_tty(&whatbuf[i],1);
 
-	switch (curmap->km_type[lastchar] & KM_TMASK) {
+	switch (curmap->km_type[g_lastchar] & KM_TMASK) {
 	  case KM_NOTHIN:		/* no entry? */
 	    if (curmap == s_topmap)	/* unmapped canonical */
 		goto got_canonical;
 	    settle_down();
 	    goto tryagain;
 	  case KM_KEYMAP:		/* another keymap? */
-	    curmap = curmap->km_ptr[lastchar].km_km;
+	    curmap = curmap->km_ptr[g_lastchar].km_km;
 	    assert(curmap != nullptr);
 	    break;
 	  case KM_STRING:		/* a string? */
-	    pushstring(curmap->km_ptr[lastchar].km_str,0200);
+	    pushstring(curmap->km_ptr[g_lastchar].km_str,0200);
 	    if (++times > 20) {		/* loop? */
 		fputs("\nmacro loop?\n",stdout);
 		termdown(2);
@@ -1168,7 +1189,7 @@ tryagain:
 
 got_canonical:
     /* This hack is for mouse support */
-    if (xmouse_is_on && *whatbuf == Ctl('c')) {
+    if (g_xmouse_is_on && *whatbuf == Ctl('c')) {
 	mouse_input(whatbuf+1);
 	times = 0;
 	goto tryagain;
@@ -1234,11 +1255,11 @@ reask_anything:
 	return *tmpbuf == 'q' ? -1 : *tmpbuf;
     }
     if (*tmpbuf == '\n') {
-	page_line = tc_LINES - 1;
+	g_page_line = g_tc_LINES - 1;
 	erase_line(false);
     }
     else {
-	page_line = 1;
+	g_page_line = 1;
 	if (g_erase_screen)		/* -e? */
 	    clear();			/* clear screen */
 	else
@@ -1320,7 +1341,7 @@ reinp_in_answer:
 	newline();			/* if return from stop signal */
 	goto reask_in_answer;		/* give them a prompt again */
     }
-    if (*g_buf == ERASECH)
+    if (*g_buf == g_erase_char)
 	goto reinp_in_answer;
     if (*g_buf != '\n' && *g_buf != ' ') {
 	if (!finish_command(false))
@@ -1456,7 +1477,7 @@ reask_in_choice:
     number_was = -1;
 
 reinp_in_choice:
-    if ((s-g_buf) + len >= tc_COLS)
+    if ((s-g_buf) + len >= g_tc_COLS)
 	screen_is_dirty = true;
     fflush(stdout);
     getcmd(s);
@@ -1498,7 +1519,7 @@ reinp_in_choice:
 		    ch = g_buf[0];
 		}
 	    }
-	    sprintf(g_buf,"%c %c",ch == ERASECH || ch == KILLCH? '<' : ch, ch1);
+	    sprintf(g_buf,"%c %c",ch == g_erase_char || ch == g_kill_char? '<' : ch, ch1);
 	}
 	goto reask_in_choice;
     }
@@ -1531,7 +1552,7 @@ int print_lines(const char *what_to_print, int hilite)
 #endif
 	    underline();
 	}
-	for (i = 0; *s && i < tc_COLS; ) {
+	for (i = 0; *s && i < g_tc_COLS; ) {
 	    if (at_norm_char(s)) {
 		// TODO: make this const friendly
 		i += put_char_adv(const_cast<char**>(&s), true);
@@ -1557,7 +1578,7 @@ int print_lines(const char *what_to_print, int hilite)
 		un_standout();
 	    else if (hilite == UNDERLINE)
 		un_underline();
-	    if (tc_AM && i == tc_COLS)
+	    if (g_tc_AM && i == g_tc_COLS)
 		fflush(stdout);
 	    else
 		newline();
@@ -1568,24 +1589,24 @@ int print_lines(const char *what_to_print, int hilite)
 
 int check_page_line()
 {
-    if (page_line < 0)
+    if (g_page_line < 0)
 	return -1;
-    if (page_line >= tc_LINES || g_int_count) {
+    if (g_page_line >= g_tc_LINES || g_int_count) {
 	int cmd = -1;
 	if (g_int_count || (cmd = get_anything())) {
-	    page_line = -1;		/* disable further printing */
+	    g_page_line = -1;		/* disable further printing */
 	    if (cmd > 0)
 		pushchar(cmd);
 	    return cmd;
 	}
     }
-    page_line++;
+    g_page_line++;
     return 0;
 }
 
 void page_start()
 {
-    page_line = 1;
+    g_page_line = 1;
     if (g_erase_screen)
 	clear();
     else
@@ -1597,7 +1618,7 @@ void errormsg(const char *str)
     if (g_general_mode == 's') {
 	if (str != g_msg)
 	    strcpy(g_msg,str);
-	error_occurred = true;
+	g_error_occurred = true;
     }
     else if (*str) {
 	printf("\n%s\n", str) FLUSH;
@@ -1610,7 +1631,7 @@ void warnmsg(const char *str)
     if (g_general_mode != 's') {
 	printf("\n%s\n", str) FLUSH;
 	termdown(2);
-	pad(just_a_sec/3);
+	pad(g_just_a_sec/3);
     }
 }
 
@@ -1619,7 +1640,7 @@ void pad(int num)
     int i;
 
     for (i = num; i; i--)
-	putchar(tc_PC);
+	putchar(g_tc_PC);
     fflush(stdout);
 }
 
@@ -1673,34 +1694,34 @@ void erase_line(bool to_eos)
 
 void clear()
 {
-    g_term_line = g_term_col = fire_is_out = 0;
-    if (tc_CL)
-	tputs(tc_CL,tc_LINES,putchr);
-    else if (tc_CD) {
+    g_term_line = g_term_col = g_fire_is_out = 0;
+    if (g_tc_CL)
+	tputs(g_tc_CL,g_tc_LINES,putchr);
+    else if (g_tc_CD) {
 	home_cursor();
-	tputs(tc_CD,tc_LINES,putchr);
+	tputs(g_tc_CD,g_tc_LINES,putchr);
     }
     else {
 	int i;
-	for (i = 0; i < tc_LINES; i++)
+	for (i = 0; i < g_tc_LINES; i++)
 	    putchr('\n');
 	home_cursor();
     }
-    tputs(tc_CR,1,putchr) FLUSH;
+    tputs(g_tc_CR,1,putchr) FLUSH;
 }
 
 void home_cursor()
 {
-    if (!*tc_HO) {		/* no home sequence? */
-	if (!*tc_CM) {		/* no cursor motion either? */
+    if (!*g_tc_HO) {		/* no home sequence? */
+	if (!*g_tc_CM) {		/* no cursor motion either? */
 	    fputs("\n\n\n", stdout);
 	    termdown(3);
 	    return;		/* forget it. */
 	}
-	tputs(tgoto(tc_CM, 0, 0), 1, putchr);	/* go to home via CM */
+	tputs(tgoto(g_tc_CM, 0, 0), 1, putchr);	/* go to home via CM */
     }
     else {			/* we have home sequence */
-	tputs(tc_HO, 1, putchr);/* home via HO */
+	tputs(g_tc_HO, 1, putchr);/* home via HO */
     }
     carriage_return();	/* Resets kernel's tab column counter to 0 */
     g_term_line = g_term_col = 0;
@@ -1713,8 +1734,8 @@ void goto_xy(int to_col, int to_line)
 
     if (g_term_col == to_col && g_term_line == to_line)
 	return;
-    if (*tc_CM && !g_muck_up_clear) {
-	str = tgoto(tc_CM,to_col,to_line);
+    if (*g_tc_CM && !g_muck_up_clear) {
+	str = tgoto(g_tc_CM,to_col,to_line);
 	cmcost = strlen(str);
     } else {
 	str = nullptr;
@@ -1760,28 +1781,28 @@ void goto_xy(int to_col, int to_line)
 
 static void line_col_calcs()
 {
-    if (tc_LINES > 0) {		/* is this a crt? */
+    if (g_tc_LINES > 0) {		/* is this a crt? */
 	if (!g_initlines || !g_option_def_vals[OI_INITIAL_ARTICLE_LINES]) {
 	    /* no -i or unreasonable value for g_initlines */
-	    if (outspeed >= B9600) 	/* whole page at >= 9600 baud */
-		g_initlines = tc_LINES;
-	    else if (outspeed >= B4800)	/* 16 lines at 4800 */
+	    if (g_outspeed >= B9600) 	/* whole page at >= 9600 baud */
+		g_initlines = g_tc_LINES;
+	    else if (g_outspeed >= B4800)	/* 16 lines at 4800 */
 		g_initlines = 16;
 	    else			/* otherwise just header */
 		g_initlines = 8;
 	}
 	/* Check for g_initlines bigger than the screen and fix it! */
-	if (g_initlines > tc_LINES)
-	    g_initlines = tc_LINES;
+	if (g_initlines > g_tc_LINES)
+	    g_initlines = g_tc_LINES;
     }
     else {				/* not a crt */
-	tc_LINES = 30000;		/* so don't page */
-	tc_CL = "\n\n";			/* put a couple of lines between */
+	g_tc_LINES = 30000;		/* so don't page */
+	g_tc_CL = "\n\n";			/* put a couple of lines between */
 	if (!g_initlines || !g_option_def_vals[OI_INITIAL_ARTICLE_LINES])
 	    g_initlines = 8;		/* make g_initlines reasonable */
     }
-    if (tc_COLS <= 0)
-	tc_COLS = 80;
+    if (g_tc_COLS <= 0)
+	g_tc_COLS = 80;
     s_resize_win();	/* let various parts know */
 }
 
@@ -1797,12 +1818,12 @@ int dummy;
 #ifdef TIOCGWINSZ
     {	struct winsize ws;
 	if (ioctl(0, TIOCGWINSZ, &ws) >= 0 && ws.ws_row > 0 && ws.ws_col > 0) {
-	    if (tc_LINES != ws.ws_row || tc_COLS != ws.ws_col) {
-		tc_LINES = ws.ws_row;
-		tc_COLS = ws.ws_col;
+	    if (g_tc_LINES != ws.ws_row || g_tc_COLS != ws.ws_col) {
+		g_tc_LINES = ws.ws_row;
+		g_tc_COLS = ws.ws_col;
 		line_col_calcs();
-		sprintf(s_lines_export, "%d", tc_LINES);
-		sprintf(s_cols_export, "%d", tc_COLS);
+		sprintf(s_lines_export, "%d", g_tc_LINES);
+		sprintf(s_cols_export, "%d", g_tc_COLS);
 		if (g_general_mode == 's' || g_mode == 'a' || g_mode == 'p') {
 		    forceme("\f");	/* cause a refresh */
 					/* (defined only if TIOCSTI defined) */
@@ -1822,33 +1843,33 @@ int dummy;
 void termlib_init()
 {
 #ifdef USETITE
-    if (tc_TI && *tc_TI) {
-	tputs(tc_TI,1,putchr);
+    if (g_tc_TI && *g_tc_TI) {
+	tputs(g_tc_TI,1,putchr);
 	fflush(stdout);
     }
 #endif
 #ifdef USEKSKE
-    if (tc_KS && *tc_KS) {
-	tputs(tc_KS,1,putchr);
+    if (g_tc_KS && *g_tc_KS) {
+	tputs(g_tc_KS,1,putchr);
 	fflush(stdout);
     }
 #endif
-    g_term_line = tc_LINES-1;
+    g_term_line = g_tc_LINES-1;
     g_term_col = 0;
-    term_scrolled = tc_LINES;
+    g_term_scrolled = g_tc_LINES;
 }
 
 void termlib_reset()
 {
 #ifdef USETITE
-    if (tc_TE && *tc_TE) {
-	tputs(tc_TE,1,putchr);
+    if (g_tc_TE && *g_tc_TE) {
+	tputs(g_tc_TE,1,putchr);
 	fflush(stdout);
     }
 #endif
 #ifdef USEKSKE
-    if (tc_KE && *tc_KE) {
-	tputs(tc_KE,1,putchr);
+    if (g_tc_KE && *g_tc_KE) {
+	tputs(g_tc_KE,1,putchr);
 	fflush(stdout);
     }
 #endif
@@ -1872,7 +1893,7 @@ void xmouse_init(const char *progname)
 
 void xmouse_check()
 {
-    mousebar_cnt = 0;
+    g_mousebar_cnt = 0;
     if (g_use_mouse) {
 	bool turn_it_on;
 	char mmode = g_mode;
@@ -1892,49 +1913,49 @@ void xmouse_check()
 	    int i, j;
 	    switch (mmode) {
 	      case 'c':
-		mousebar_btns = g_newsrc_sel_btns;
-		mousebar_cnt = g_newsrc_sel_btn_cnt;
+		g_mousebar_btns = g_newsrc_sel_btns;
+		g_mousebar_cnt = g_newsrc_sel_btn_cnt;
 		break;
 	      case 'j':
-		mousebar_btns = g_add_sel_btns;
-		mousebar_cnt = g_add_sel_btn_cnt;
+		g_mousebar_btns = g_add_sel_btns;
+		g_mousebar_cnt = g_add_sel_btn_cnt;
 		break;
 	      case 'l':
-		mousebar_btns = g_option_sel_btns;
-		mousebar_cnt = g_option_sel_btn_cnt;
+		g_mousebar_btns = g_option_sel_btns;
+		g_mousebar_cnt = g_option_sel_btn_cnt;
 		break;
 	      case 't':
-		mousebar_btns = g_news_sel_btns;
-		mousebar_cnt = g_news_sel_btn_cnt;
+		g_mousebar_btns = g_news_sel_btns;
+		g_mousebar_cnt = g_news_sel_btn_cnt;
 		break;
 	      case 'w':
-		mousebar_btns = g_newsgroup_sel_btns;
-		mousebar_cnt = g_newsgroup_sel_btn_cnt;
+		g_mousebar_btns = g_newsgroup_sel_btns;
+		g_mousebar_cnt = g_newsgroup_sel_btn_cnt;
 		break;
 	      case 'a':  case 'p':
-		mousebar_btns = g_art_pager_btns;
-		mousebar_cnt = g_art_pager_btn_cnt;
+		g_mousebar_btns = g_art_pager_btns;
+		g_mousebar_cnt = g_art_pager_btn_cnt;
 		break;
 	      case 'v':
-		mousebar_btns = g_univ_sel_btns;
-		mousebar_cnt = g_univ_sel_btn_cnt;
+		g_mousebar_btns = g_univ_sel_btns;
+		g_mousebar_cnt = g_univ_sel_btn_cnt;
 		break;
 	      default:
-		mousebar_btns = "";
-		/*mousebar_cnt = 0;*/
+		g_mousebar_btns = "";
+		/*g_mousebar_cnt = 0;*/
 		break;
 	    }
-	    s = mousebar_btns;
-	    mousebar_width = 0;
-	    for (i = 0; i < mousebar_cnt; i++) {
+	    s = g_mousebar_btns;
+	    g_mousebar_width = 0;
+	    for (i = 0; i < g_mousebar_cnt; i++) {
 		j = strlen(s);
 		if (*s == '[') {
-		    mousebar_width += j;
+		    g_mousebar_width += j;
 		    s += j + 1;
 		    j = strlen(s);
 		}
 		else
-		    mousebar_width += (j < 2? 3+1 : (j == 2? 4+1
+		    g_mousebar_width += (j < 2? 3+1 : (j == 2? 4+1
 						     : (j < 5? j: 5+1)));
 		s += j + 1;
 	    }
@@ -1942,27 +1963,27 @@ void xmouse_check()
 	}
 	else
 	    xmouse_off();
-	mouse_is_down = false;
+	g_mouse_is_down = false;
     }
 }
 
 void xmouse_on()
 {
-    if (!xmouse_is_on) {
+    if (!g_xmouse_is_on) {
 	/* save old highlight mouse tracking and enable mouse tracking */
 	fputs("\033[?1001s\033[?1000h",stdout);
 	fflush(stdout);
-	xmouse_is_on = true;
+	g_xmouse_is_on = true;
     }
 }
 
 void xmouse_off()
 {
-    if (xmouse_is_on) {
+    if (g_xmouse_is_on) {
 	/* disable mouse tracking and restore old highlight mouse tracking */
 	fputs("\033[?1000l\033[?1001r",stdout);
 	fflush(stdout);
-	xmouse_is_on = false;
+	g_xmouse_is_on = false;
     }
 }
 
@@ -1974,13 +1995,13 @@ void draw_mousebar(int limit, bool restore_cursor)
     int save_col = g_term_col;
     int save_line = g_term_line;
 
-    mousebar_width = 0;
-    if (mousebar_cnt == 0)
+    g_mousebar_width = 0;
+    if (g_mousebar_cnt == 0)
 	return;
 
-    s = mousebar_btns;
+    s = g_mousebar_btns;
     t = g_msg;
-    for (i = 0; i < mousebar_cnt; i++) {
+    for (i = 0; i < g_mousebar_cnt; i++) {
 	if (*s == '[') {
 	    while (*++s) *t++ = *s;
 	    s++;
@@ -2007,24 +2028,24 @@ void draw_mousebar(int limit, bool restore_cursor)
 	s += strlen(s) + 1;
 	*t++ = '\0';
     }
-    mousebar_width = t - g_msg;
-    mousebar_start = 0;
+    g_mousebar_width = t - g_msg;
+    g_mousebar_start = 0;
 
     s = g_msg;
-    while (mousebar_width > limit) {
+    while (g_mousebar_width > limit) {
 	int len = strlen(s) + 1;
 	s += len;
-	mousebar_width -= len;
-	mousebar_start++;
+	g_mousebar_width -= len;
+	g_mousebar_start++;
     }
 
-    goto_xy(tc_COLS - mousebar_width - 1, tc_LINES-1);
-    for (i = mousebar_start; i < mousebar_cnt; i++) {
+    goto_xy(g_tc_COLS - g_mousebar_width - 1, g_tc_LINES-1);
+    for (i = g_mousebar_start; i < g_mousebar_cnt; i++) {
 	putchar(' ');
 	color_string(COLOR_MOUSE,s);
 	s += strlen(s) + 1;
     }
-    g_term_col = tc_COLS-1;
+    g_term_col = g_tc_COLS-1;
     if (restore_cursor)
 	goto_xy(save_col, save_line);
 }
@@ -2054,12 +2075,12 @@ static void mouse_input(const char *cp)
 	last_btn = (btn & 3);
 	last_x = x;
 	last_y = y;
-	mouse_is_down = true;
+	g_mouse_is_down = true;
     }
     else {
-	if (!mouse_is_down)
+	if (!g_mouse_is_down)
 	    return;
-	mouse_is_down = false;
+	g_mouse_is_down = false;
     }
 
     if (g_general_mode == 's')
@@ -2072,15 +2093,15 @@ static void mouse_input(const char *cp)
 
 bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 {
-    char* s = mousebar_btns;
+    char* s = g_mousebar_btns;
     char* t;
     int i, j;
-    int col = tc_COLS - mousebar_width;
+    int col = g_tc_COLS - g_mousebar_width;
 
-    if (mousebar_width != 0 && btn_clk == 0 && y_clk == tc_LINES-1
+    if (g_mousebar_width != 0 && btn_clk == 0 && y_clk == g_tc_LINES-1
      && (x_clk -= col-1) > 0) {
 	x -= col-1;
-	for (i = 0; i < mousebar_start; i++) {
+	for (i = 0; i < g_mousebar_start; i++) {
 	    if (*s == '[')
 		s += strlen(s) + 1;
 	    s += strlen(s) + 1;
@@ -2104,7 +2125,7 @@ bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 	    if (x_clk < i) {
 		int tcol = g_term_col;
 		int tline = g_term_line;
-		goto_xy(col+j,tc_LINES-1);
+		goto_xy(col+j,g_tc_LINES-1);
 		if (btn == 3)
 		    color_object(COLOR_MOUSE, true);
 		if (s == t) {

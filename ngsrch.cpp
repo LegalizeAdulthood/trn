@@ -88,12 +88,12 @@ int ng_search(char *patbuf, int get_cmd)
 	    if (execute(&s_ngcompex,gp->name) != nullptr) {
 		if (!cmdlst)
 		    return NGS_FOUND;
-		if (addgrp_perform(gp,cmdlst,output_level && page_line==1)<0) {
+		if (addgrp_perform(gp,cmdlst,output_level && g_page_line==1)<0) {
 		    free(cmdlst);
 		    return NGS_INTR;
 		}
 	    }
-	    if (!output_level && page_line == 1)
+	    if (!output_level && g_page_line == 1)
 		perform_status(g_newsgroup_toread, 50);
 	} while ((gp = gp->next) != nullptr);
 	goto exit;
@@ -137,7 +137,7 @@ int ng_search(char *patbuf, int get_cmd)
 		if (!cmdlst)
 		    return NGS_FOUND;
 		set_ng(g_ngptr);
-		if (ng_perform(cmdlst,output_level && page_line == 1) < 0) {
+		if (ng_perform(cmdlst,output_level && g_page_line == 1) < 0) {
 		    free(cmdlst);
 		    return NGS_INTR;
 		}
@@ -147,7 +147,7 @@ int ng_search(char *patbuf, int get_cmd)
 		fflush(stdout);
 	    }
 	}
-	if (!output_level && page_line == 1)
+	if (!output_level && g_page_line == 1)
 	    perform_status(g_newsgroup_toread, 50);
     } while ((g_ngptr = (backward? (g_ngptr->prev? g_ngptr->prev : g_last_ng)
 			       : (g_ngptr->next? g_ngptr->next : g_first_ng)))

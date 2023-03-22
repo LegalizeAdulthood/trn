@@ -166,7 +166,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
 	    while (i--) *s2++ = ' ';
 #ifdef HAS_TERMLIB
 	    if (use_standout)
-		sprintf(s2,"Summary: %s%s",tc_SO,s);
+		sprintf(s2,"Summary: %s%s",g_tc_SO,s);
 	    else
 #endif
 		sprintf(s2,"Summary: %s",s);
@@ -195,7 +195,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
 	    while (i--) *s2++ = ' ';
 #ifdef HAS_TERMLIB
 	    if (use_standout)
-		sprintf(s2,"Keys: %s%s",tc_SO,s);
+		sprintf(s2,"Keys: %s%s",g_tc_SO,s);
 	    else
 #endif
 		sprintf(s2,"Keys: %s",s);
@@ -211,7 +211,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
 	desc_buf[g_s_desc_cols] = '\0';	/* make sure it's not too long */
 #ifdef HAS_TERMLIB
     if (use_standout)
-	strcat(desc_buf,tc_SE);	/* end standout mode */
+	strcat(desc_buf,g_tc_SE);	/* end standout mode */
 #endif
     /* take out bad characters (replace with one space) */
     for (s = desc_buf; *s; s++)

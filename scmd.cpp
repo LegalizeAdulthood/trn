@@ -25,9 +25,9 @@
 void s_go_bot()
 {
     g_s_ref_bot = true;			/* help uses whole screen */
-    s_goxy(0,tc_LINES-g_s_bot_lines);	/* go to bottom bar */
+    s_goxy(0,g_tc_LINES-g_s_bot_lines);	/* go to bottom bar */
     erase_eol();			/* erase to end of line */
-    s_goxy(0,tc_LINES-g_s_bot_lines);	/* go (back?) to bottom bar */
+    s_goxy(0,g_tc_LINES-g_s_bot_lines);	/* go (back?) to bottom bar */
 }
 
 /* finishes a command on the bottom line... */
@@ -430,7 +430,7 @@ void s_jumpnum(char_int firstchar)
 	fflush(stdout);
     }
     getcmd(g_buf);
-    if (*g_buf == ERASECH)
+    if (*g_buf == g_erase_char)
 	return;
     switch (*g_buf) {
       case '0': case '1': case '2': case '3': case '4':

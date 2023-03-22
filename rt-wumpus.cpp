@@ -232,7 +232,7 @@ ARTICLE *get_tree_artp(int x, int y)
     if (!s_tree_article || !s_tree_article->subj)
 	return nullptr;
     ap = s_tree_article->subj->thread;
-    x -= tc_COLS-1 - s_max_depth;
+    x -= g_tc_COLS-1 - s_max_depth;
     if (x < 0 || y > s_max_line || !ap)
 	return nullptr;
     x = (x-(x==s_max_depth))/5 + s_first_depth;
@@ -353,11 +353,11 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 		putchar(' ');
 	}
 	g_term_col = s_header_indent;
-	/* If no (more) tree lines, wrap at tc_COLS-1 */
+	/* If no (more) tree lines, wrap at g_tc_COLS-1 */
 	if (s_max_line < 0 || header_line > s_max_line+1)
-	    wrap_at = tc_COLS-1;
+	    wrap_at = g_tc_COLS-1;
 	else
-	    wrap_at = tc_COLS - s_max_depth - 3;
+	    wrap_at = g_tc_COLS - s_max_depth - 3;
 	/* Figure padding between header and tree output, wrapping long lines */
 	pad_cnt = wrap_at - (end - line + s_header_indent);
 	if (pad_cnt <= 0) {
@@ -395,7 +395,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	    cp++;
 	line = cp;
 	/* Check if we've got any tree lines to output */
-	if (wrap_at != tc_COLS-1 && header_line <= s_max_line) {
+	if (wrap_at != g_tc_COLS-1 && header_line <= s_max_line) {
 	    char* cp1;
 	    char* cp2;
 
@@ -529,7 +529,7 @@ void entire_tree(ARTICLE* ap)
 */
 static void display_tree(ARTICLE *article, char *cp)
 {
-    if (cp - s_tree_indent > tc_COLS || page_line < 0)
+    if (cp - s_tree_indent > g_tc_COLS || g_page_line < 0)
 	return;
     cp[1] = ' ';
     cp += 5;

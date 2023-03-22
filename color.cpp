@@ -264,7 +264,7 @@ void color_string(int object, const char *str)
 	str = g_msg;
 	len = 0;
     }
-    if (!g_use_colors && *tc_UC && objects[object].attr == UNDERLINE)
+    if (!g_use_colors && *g_tc_UC && objects[object].attr == UNDERLINE)
 	underprint(str);	/* hack for stupid terminals */
     else {
 	color_object(object, true);

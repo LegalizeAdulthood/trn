@@ -287,7 +287,7 @@ void set_selector(int smode, int ssort)
 
 static void sel_page_init()
 {
-    g_sel_max_line_cnt = tc_LINES - (tc_COLS - mousebar_width < 50? 6 : 5);
+    g_sel_max_line_cnt = g_tc_LINES - (g_tc_COLS - g_mousebar_width < 50? 6 : 5);
     g_sel_chars = get_val("SELECTCHARS", SELECTCHARS);
     /* The numeric option of up to 99 lines will require many adaptations
      * to be able to switch from a large numeric page (more than
@@ -1762,9 +1762,9 @@ static int count_thread_lines(const SUBJECT *subj, int *selptr)
 */
 static void display_article(const ARTICLE *ap, int ix, int sel)
 {
-    int subj_width = tc_COLS - 5 - g_use_sel_num;
-    int from_width = tc_COLS / 5;
-    int date_width = tc_COLS / 5;
+    int subj_width = g_tc_COLS - 5 - g_use_sel_num;
+    int from_width = g_tc_COLS / 5;
+    int date_width = g_tc_COLS / 5;
 
     maybe_eol();
     if (subj_width < 32)
@@ -1791,9 +1791,9 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
 {
     ARTICLE* ap;
     int j, i;
-    int subj_width = tc_COLS - 8 - g_use_sel_num;
-    int from_width = tc_COLS / 5;
-    int date_width = tc_COLS / 5;
+    int subj_width = g_tc_COLS - 8 - g_use_sel_num;
+    int from_width = g_tc_COLS / 5;
+    int date_width = g_tc_COLS / 5;
 #ifdef USE_UTF_HACK
     utf_init("utf-8", "utf-8"); /* FIXME */
 #endif
@@ -1959,8 +1959,8 @@ static void display_group(DATASRC *dp, char *group, int len, int max_len)
 	if (*cp != '?' && (end = strchr(cp, '\n')) != nullptr
 	 && end != cp) {
 	    char ch;
-	    if (end - cp > tc_COLS - max_len - 8 - 1 - g_use_sel_num)
-		end = cp + tc_COLS - max_len - 8 - 1 - g_use_sel_num;
+	    if (end - cp > g_tc_COLS - max_len - 8 - 1 - g_use_sel_num)
+		end = cp + g_tc_COLS - max_len - 8 - 1 - g_use_sel_num;
 	    ch = *end;
 	    *end = '\0';
 	    if (*g_sel_grp_dmode == 'm')

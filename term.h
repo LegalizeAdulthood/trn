@@ -7,26 +7,24 @@
 /* stuff wanted by terminal mode diddling routines */
 
 #ifdef I_TERMIO
-EXT struct termio _tty, _oldtty;
+extern termio g_tty;
+extern termio g_oldtty;
 #else
 # ifdef I_TERMIOS
-EXT struct termios _tty, _oldtty;
+extern termios g_tty;
+extern termios g_oldtty;
 # else
 #  ifdef I_SGTTY
-EXT struct sgttyb _tty;
-EXT int _res_flg INIT(0);
+extern sgttyb g_tty;
+extern int g_res_flg INIT(0);
 #  endif
 # endif
 #endif
 
-extern char ERASECH; /* rubout character */
-extern char KILLCH;  /* line delete character */
-extern char circlebuf[PUSHSIZE];
-extern int nextin;
-extern int nextout;
-extern unsigned char lastchar;
-extern int _tty_ch;
-extern bool bizarre; /* do we need to restore terminal? */
+extern char g_erase_char; /* rubout character */
+extern char g_kill_char;  /* line delete character */
+extern unsigned char g_lastchar;
+extern bool g_bizarre; /* do we need to restore terminal? */
 
 /* termcap stuff */
 
@@ -35,109 +33,112 @@ extern bool bizarre; /* do we need to restore terminal? */
  *    and the tputs routine, or you'll have to redefine the macros below
  */
 #ifdef HAS_TERMLIB
-extern int tc_GT;   /* hardware tabs */
-extern char *tc_BC; /* backspace character */
-extern char *tc_UP; /* move cursor up one line */
-extern char *tc_CR; /* get to left margin, somehow */
-extern char *tc_VB; /* visible bell */
-extern char *tc_CL; /* home and clear screen */
-extern char *tc_CE; /* clear to end of line */
-extern char *tc_TI; /* initialize terminal */
-extern char *tc_TE; /* reset terminal */
-extern char *tc_KS; /* enter `keypad transmit' mode */
-extern char *tc_KE; /* exit `keypad transmit' mode */
-extern char *tc_CM; /* cursor motion */
-extern char *tc_HO; /* home cursor */
-extern char *tc_IL; /* insert line */
-extern char *tc_CD; /* clear to end of display */
-extern char *tc_SO; /* begin standout mode */
-extern char *tc_SE; /* end standout mode */
-extern int tc_SG;   /* blanks left by SO and SE */
-extern char *tc_US; /* start underline mode */
-extern char *tc_UE; /* end underline mode */
-extern char *tc_UC; /* underline a character, if that's how it's done */
-extern int tc_UG;   /* blanks left by US and UE */
-extern bool tc_AM;  /* does terminal have automatic margins? */
-extern bool tc_XN;  /* does it eat 1st newline after automatic wrap? */
-extern char tc_PC;  /* pad character for use by tputs() */
+extern int g_tc_GT;   /* hardware tabs */
+extern char *g_tc_BC; /* backspace character */
+extern char *g_tc_UP; /* move cursor up one line */
+extern char *g_tc_CR; /* get to left margin, somehow */
+extern char *g_tc_VB; /* visible bell */
+extern char *g_tc_CL; /* home and clear screen */
+extern char *g_tc_CE; /* clear to end of line */
+extern char *g_tc_TI; /* initialize terminal */
+extern char *g_tc_TE; /* reset terminal */
+extern char *g_tc_KS; /* enter `keypad transmit' mode */
+extern char *g_tc_KE; /* exit `keypad transmit' mode */
+extern char *g_tc_CM; /* cursor motion */
+extern char *g_tc_HO; /* home cursor */
+extern char *g_tc_IL; /* insert line */
+extern char *g_tc_CD; /* clear to end of display */
+extern char *g_tc_SO; /* begin standout mode */
+extern char *g_tc_SE; /* end standout mode */
+extern int g_tc_SG;   /* blanks left by SO and SE */
+extern char *g_tc_US; /* start underline mode */
+extern char *g_tc_UE; /* end underline mode */
+extern char *g_tc_UC; /* underline a character, if that's how it's done */
+extern int g_tc_UG;   /* blanks left by US and UE */
+extern bool g_tc_AM;  /* does terminal have automatic margins? */
+extern bool g_tc_XN;  /* does it eat 1st newline after automatic wrap? */
+extern char g_tc_PC;  /* pad character for use by tputs() */
 #ifdef _POSIX_SOURCE
-extern speed_t outspeed; /* terminal output speed, */
+extern speed_t g_outspeed; /* terminal output speed, */
 #else
-extern long outspeed; /* 	for use by tputs() */
+extern long g_outspeed; /* 	for use by tputs() */
 #endif
-extern int fire_is_out;
-extern int tc_LINES;
-extern int tc_COLS;
+extern int g_fire_is_out;
+extern int g_tc_LINES;
+extern int g_tc_COLS;
 extern int g_term_line;
 extern int g_term_col;
-extern int term_scrolled; /* how many lines scrolled away */
-extern int just_a_sec;    /* 1 sec at current baud rate (number of nulls) */
-extern int page_line;     /* line number for paging in print_line (origin 1) */
-extern bool error_occurred;
-extern char *mousebar_btns;
-extern int mousebar_cnt;
-extern int mousebar_start;
-extern int mousebar_width;
-extern bool xmouse_is_on;
-extern bool mouse_is_down;
+extern int g_term_scrolled; /* how many lines scrolled away */
+extern int g_just_a_sec;    /* 1 sec at current baud rate (number of nulls) */
+extern int g_page_line;     /* line number for paging in print_line (origin 1) */
+extern bool g_error_occurred;
+extern char *g_mousebar_btns;
+extern int g_mousebar_cnt;
+extern int g_mousebar_start;
+extern int g_mousebar_width;
+extern bool g_xmouse_is_on;
+extern bool g_mouse_is_down;
 
 /* terminal mode diddling routines */
 
 #ifdef I_TERMIO
+extern int g_tty_ch;
 
-#define crmode() ((bizarre=1),_tty.c_lflag &=~ICANON,_tty.c_cc[VMIN] = 1,ioctl(_tty_ch,TCSETAF,&_tty))
-#define nocrmode() ((bizarre=1),_tty.c_lflag |= ICANON,_tty.c_cc[VEOF] = CEOF,stty(_tty_ch,&_tty))
-#define echo()	 ((bizarre=1),_tty.c_lflag |= ECHO, ioctl(_tty_ch, TCSETA, &_tty))
-#define noecho() ((bizarre=1),_tty.c_lflag &=~ECHO, ioctl(_tty_ch, TCSETA, &_tty))
-#define nl()	 ((bizarre=1),_tty.c_iflag |= ICRNL,_tty.c_oflag |= ONLCR,ioctl(_tty_ch, TCSETAW, &_tty))
-#define nonl()	 ((bizarre=1),_tty.c_iflag &=~ICRNL,_tty.c_oflag &=~ONLCR,ioctl(_tty_ch, TCSETAW, &_tty))
-#define	savetty() (ioctl(_tty_ch, TCGETA, &_oldtty),ioctl(_tty_ch, TCGETA, &_tty))
-#define	resetty() ((bizarre=0),ioctl(_tty_ch, TCSETAF, &_oldtty))
+#define crmode() ((g_bizarre=1),g_tty.c_lflag &=~ICANON,g_tty.c_cc[VMIN] = 1,ioctl(g_tty_ch,TCSETAF,&g_tty))
+#define nocrmode() ((g_bizarre=1),g_tty.c_lflag |= ICANON,g_tty.c_cc[VEOF] = CEOF,stty(g_tty_ch,&g_tty))
+#define echo()	 ((g_bizarre=1),g_tty.c_lflag |= ECHO, ioctl(g_tty_ch, TCSETA, &g_tty))
+#define noecho() ((g_bizarre=1),g_tty.c_lflag &=~ECHO, ioctl(g_tty_ch, TCSETA, &g_tty))
+#define nl()	 ((g_bizarre=1),g_tty.c_iflag |= ICRNL,g_tty.c_oflag |= ONLCR,ioctl(g_tty_ch, TCSETAW, &g_tty))
+#define nonl()	 ((g_bizarre=1),g_tty.c_iflag &=~ICRNL,g_tty.c_oflag &=~ONLCR,ioctl(g_tty_ch, TCSETAW, &g_tty))
+#define	savetty() (ioctl(g_tty_ch, TCGETA, &g_oldtty),ioctl(g_tty_ch, TCGETA, &g_tty))
+#define	resetty() ((g_bizarre=0),ioctl(g_tty_ch, TCSETAF, &g_oldtty))
 #define unflush_output()
 
 #else /* !I_TERMIO */
 # ifdef I_TERMIOS
+extern int g_tty_ch;
 
-#define crmode() ((bizarre=1), _tty.c_lflag &= ~ICANON,_tty.c_cc[VMIN]=1,tcsetattr(_tty_ch, TCSAFLUSH, &_tty))
-#define nocrmode() ((bizarre=1),_tty.c_lflag |= ICANON,_tty.c_cc[VEOF] = CEOF,tcsetattr(_tty_ch, TCSAFLUSH,&_tty))
-#define echo()	 ((bizarre=1),_tty.c_lflag |= ECHO, tcsetattr(_tty_ch, TCSAFLUSH, &_tty))
-#define noecho() ((bizarre=1),_tty.c_lflag &=~ECHO, tcsetattr(_tty_ch, TCSAFLUSH, &_tty))
-#define nl()	 ((bizarre=1),_tty.c_iflag |= ICRNL,_tty.c_oflag |= ONLCR,tcsetattr(_tty_ch, TCSAFLUSH, &_tty))
-#define nonl()	 ((bizarre=1),_tty.c_iflag &=~ICRNL,_tty.c_oflag &=~ONLCR,tcsetattr(_tty_ch, TCSAFLUSH, &_tty))
-#define	savetty() (tcgetattr(_tty_ch, &_oldtty),tcgetattr(_tty_ch, &_tty))
-#define	resetty() ((bizarre=0),tcsetattr(_tty_ch, TCSAFLUSH, &_oldtty))
+#define crmode() ((g_bizarre=1), g_tty.c_lflag &= ~ICANON,g_tty.c_cc[VMIN]=1,tcsetattr(g_tty_ch, TCSAFLUSH, &g_tty))
+#define nocrmode() ((g_bizarre=1),g_tty.c_lflag |= ICANON,g_tty.c_cc[VEOF] = CEOF,tcsetattr(g_tty_ch, TCSAFLUSH,&g_tty))
+#define echo()	 ((g_bizarre=1),g_tty.c_lflag |= ECHO, tcsetattr(g_tty_ch, TCSAFLUSH, &g_tty))
+#define noecho() ((g_bizarre=1),g_tty.c_lflag &=~ECHO, tcsetattr(g_tty_ch, TCSAFLUSH, &g_tty))
+#define nl()	 ((g_bizarre=1),g_tty.c_iflag |= ICRNL,g_tty.c_oflag |= ONLCR,tcsetattr(g_tty_ch, TCSAFLUSH, &g_tty))
+#define nonl()	 ((g_bizarre=1),g_tty.c_iflag &=~ICRNL,g_tty.c_oflag &=~ONLCR,tcsetattr(g_tty_ch, TCSAFLUSH, &g_tty))
+#define	savetty() (tcgetattr(g_tty_ch, &g_oldtty),tcgetattr(g_tty_ch, &g_tty))
+#define	resetty() ((g_bizarre=0),tcsetattr(g_tty_ch, TCSAFLUSH, &g_oldtty))
 #define unflush_output()
 
 # else /* !I_TERMIOS */
 #  ifdef I_SGTTY
+extern int g_tty_ch;
 
-#define raw()	 ((bizarre=1),_tty.sg_flags|=RAW, stty(_tty_ch,&_tty))
-#define noraw()	 ((bizarre=1),_tty.sg_flags&=~RAW,stty(_tty_ch,&_tty))
-#define crmode() ((bizarre=1),_tty.sg_flags |= CBREAK, stty(_tty_ch,&_tty))
-#define nocrmode() ((bizarre=1),_tty.sg_flags &= ~CBREAK,stty(_tty_ch,&_tty))
-#define echo()	 ((bizarre=1),_tty.sg_flags |= ECHO, stty(_tty_ch, &_tty))
-#define noecho() ((bizarre=1),_tty.sg_flags &= ~ECHO, stty(_tty_ch, &_tty))
-#define nl()	 ((bizarre=1),_tty.sg_flags |= CRMOD,stty(_tty_ch, &_tty))
-#define nonl()	 ((bizarre=1),_tty.sg_flags &= ~CRMOD, stty(_tty_ch, &_tty))
-#define	savetty() (gtty(_tty_ch, &_tty), _res_flg = _tty.sg_flags)
-#define	resetty() ((bizarre=0),_tty.sg_flags = _res_flg, stty(_tty_ch, &_tty))
+#define raw()	 ((g_bizarre=1),g_tty.sg_flags|=RAW, stty(g_tty_ch,&g_tty))
+#define noraw()	 ((g_bizarre=1),g_tty.sg_flags&=~RAW,stty(g_tty_ch,&g_tty))
+#define crmode() ((g_bizarre=1),g_tty.sg_flags |= CBREAK, stty(g_tty_ch,&g_tty))
+#define nocrmode() ((g_bizarre=1),g_tty.sg_flags &= ~CBREAK,stty(g_tty_ch,&g_tty))
+#define echo()	 ((g_bizarre=1),g_tty.sg_flags |= ECHO, stty(g_tty_ch, &g_tty))
+#define noecho() ((g_bizarre=1),g_tty.sg_flags &= ~ECHO, stty(g_tty_ch, &g_tty))
+#define nl()	 ((g_bizarre=1),g_tty.sg_flags |= CRMOD,stty(g_tty_ch, &g_tty))
+#define nonl()	 ((g_bizarre=1),g_tty.sg_flags &= ~CRMOD, stty(g_tty_ch, &g_tty))
+#define	savetty() (gtty(g_tty_ch, &g_tty), g_res_flg = g_tty.sg_flags)
+#define	resetty() ((g_bizarre=0),g_tty.sg_flags = g_res_flg, stty(g_tty_ch, &g_tty))
 #   ifdef LFLUSHO
-EXT int lflusho INIT(LFLUSHO);
-#define unflush_output() (ioctl(_tty_ch,TIOCLBIC,&lflusho))
+extern int g_lflusho;
+#define unflush_output() (ioctl(g_tty_ch, TIOCLBIC, &g_lflusho))
 #   else /*! LFLUSHO */
 #define unflush_output()
 #   endif
 #  else
 #   ifdef MSDOS
 
-#define crmode() (bizarre=1)
-#define nocrmode() (bizarre=1)
-#define echo()	 (bizarre=1)
-#define noecho() (bizarre=1)
-#define nl()	 (bizarre=1)
-#define nonl()	 (bizarre=1)
+#define crmode() (g_bizarre=1)
+#define nocrmode() (g_bizarre=1)
+#define echo()	 (g_bizarre=1)
+#define noecho() (g_bizarre=1)
+#define nl()	 (g_bizarre=1)
+#define nonl()	 (g_bizarre=1)
 #define	savetty()
-#define	resetty() (bizarre=0)
+#define	resetty() (g_bizarre=0)
 #define unflush_output()
 #   else /* !MSDOS */
 // ..."Don't know how to define the term macros!"
@@ -148,7 +149,7 @@ EXT int lflusho INIT(LFLUSHO);
 #endif /* !I_TERMIO */
 
 #ifdef TIOCSTI
-#define forceme(c) ioctl(_tty_ch,TIOCSTI,c) /* pass character in " " */
+#define forceme(c) ioctl(g_tty_ch,TIOCSTI,c) /* pass character in " " */
 #else
 #define forceme(c)
 #endif
@@ -166,21 +167,21 @@ inline void newline()
     putchar('\n');
     FLUSH;
 }
-#define backspace() tputs(tc_BC, 0, putchr) FLUSH
-#define erase_eol() tputs(tc_CE, 1, putchr) FLUSH
-#define clear_rest() tputs(tc_CD, tc_LINES, putchr) FLUSH
+#define backspace() tputs(g_tc_BC, 0, putchr) FLUSH
+#define erase_eol() tputs(g_tc_CE, 1, putchr) FLUSH
+#define clear_rest() tputs(g_tc_CD, g_tc_LINES, putchr) FLUSH
 #define maybe_eol()                        \
     if (g_erase_screen && g_erase_each_line) \
-    tputs(tc_CE, 1, putchr) FLUSH
-#define underline() tputs(tc_US, 1, putchr) FLUSH
-#define un_underline() fire_is_out |= UNDERLINE, tputs(tc_UE, 1, putchr) FLUSH
-#define underchar() tputs(tc_UC, 0, putchr) FLUSH
-#define standout() tputs(tc_SO, 1, putchr) FLUSH
-#define un_standout() fire_is_out |= STANDOUT, tputs(tc_SE, 1, putchr) FLUSH
-#define up_line() g_term_line--, tputs(tc_UP, 1, putchr) FLUSH
-#define insert_line() tputs(tc_IL, 1, putchr) FLUSH
-#define carriage_return() g_term_col = 0, tputs(tc_CR, 1, putchr) FLUSH
-#define dingaling() tputs(tc_VB, 1, putchr) FLUSH
+    tputs(g_tc_CE, 1, putchr) FLUSH
+#define underline() tputs(g_tc_US, 1, putchr) FLUSH
+#define un_underline() g_fire_is_out |= UNDERLINE, tputs(g_tc_UE, 1, putchr) FLUSH
+#define underchar() tputs(g_tc_UC, 0, putchr) FLUSH
+#define standout() tputs(g_tc_SO, 1, putchr) FLUSH
+#define un_standout() g_fire_is_out |= STANDOUT, tputs(g_tc_SE, 1, putchr) FLUSH
+#define up_line() g_term_line--, tputs(g_tc_UP, 1, putchr) FLUSH
+#define insert_line() tputs(g_tc_IL, 1, putchr) FLUSH
+#define carriage_return() g_term_col = 0, tputs(g_tc_CR, 1, putchr) FLUSH
+#define dingaling() tputs(g_tc_VB, 1, putchr) FLUSH
 #else /* !HAS_TERMLIB */
 //..."Don't know how to define the term macros!"
 #endif /* !HAS_TERMLIB */

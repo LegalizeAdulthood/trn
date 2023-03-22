@@ -347,7 +347,7 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
 	    if (g_verbose)
 		get_anything();
 	    else
-		pad(just_a_sec);
+		pad(g_just_a_sec);
 	}
 	if (anytokill)			/* if there was anything to kill */
 	    g_forcelast = false;		/* allow for having killed it all */
