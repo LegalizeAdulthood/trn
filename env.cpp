@@ -319,7 +319,7 @@ char *get_val(const char *nam, char *def)
     return val;
 }
 
-static bool firstexport = true;
+static bool s_firstexport = true;
 
 #ifndef WIN32
 extern char **environ;
@@ -331,7 +331,7 @@ char *export_var(const char *nam, const char *val)
     int i=envix(nam,namlen);	/* where does it go? */
 
     if (!environ[i]) {			/* does not exist yet */
-	if (firstexport) {		/* need we copy environment? */
+	if (s_firstexport) {		/* need we copy environment? */
 	    int j;
 #ifndef lint
 	    char** tmpenv = (char**)	/* point our wand at memory */
@@ -340,7 +340,7 @@ char *export_var(const char *nam, const char *val)
 	    char** tmpenv = nullptr;
 #endif /* lint */
     
-	    firstexport = false;
+	    s_firstexport = false;
 	    for (j = 0; j < i; j++)	/* copy environment */
 		tmpenv[j] = environ[j];
 	    environ = tmpenv;		/* tell exec where it is now */
