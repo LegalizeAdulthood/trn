@@ -175,7 +175,7 @@ int do_newsgroup(char *start_command)
     sc_init((g_sa_never_initialized || g_sa_mode_order == 2)
             && start_command && *start_command == ';');
 
-    if (univ_ng_virtflag) {
+    if (g_univ_ng_virtflag) {
 	univ_ng_virtual();
 	goto cleanup;
     }
@@ -490,12 +490,12 @@ cleanup:
     if (g_sc_initialized)
 	sc_cleanup();
     chase_xrefs(false);
-    if (!univ_ng_virtflag) {
+    if (!g_univ_ng_virtflag) {
     }
 
     g_in_ng = false;			/* leave newsgroup state */
     artclose();
-    if (!univ_ng_virtflag)
+    if (!g_univ_ng_virtflag)
 	newline();
     deselect_all();
     yankback();				/* do a Y command */
@@ -504,8 +504,8 @@ cleanup2:
 /* go here if already cleaned up */
     g_doing_ng = false;			/* tell sig_catcher to cool it */
     /* XXX later, make an option for faster/less-safe virtual groups */
-    if (!univ_ng_virtflag &&
-	!(univ_read_virtflag && !(univ_follow || univ_follow_temp))) {
+    if (!g_univ_ng_virtflag &&
+	!(g_univ_read_virtflag && !(g_univ_follow || g_univ_follow_temp))) {
 	if (!g_unsafe_rc_saves) {
 	    if (!write_newsrcs(g_multirc)) /* and update .newsrc */
 		get_anything();
@@ -666,7 +666,7 @@ n or q to change nothing.\n\
 	    }
 	    g_reread = true;
 	    g_s_follow_temp = true;
-	    univ_follow_temp = true;
+	    g_univ_follow_temp = true;
 	    return AS_NORM;
 	}
 not_threaded:
@@ -698,7 +698,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    }
 	    g_reread = true;
 	    g_s_follow_temp = true;
-	    univ_follow_temp = true;
+	    g_univ_follow_temp = true;
 	    return AS_NORM;
 	}
 	goto not_threaded;
@@ -716,7 +716,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	    }
 	    g_reread = true;
 	    g_s_follow_temp = true;
-	    univ_follow_temp = true;
+	    g_univ_follow_temp = true;
 	    return AS_NORM;
 	}
 	goto not_threaded;
@@ -792,7 +792,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	return AS_ASK;
       case 'p':			/* find previous unread article */
 	g_s_follow_temp = true;	/* keep going until change req. */
-	univ_follow_temp = true;
+	g_univ_follow_temp = true;
 	do {
 	    dec_art(g_selected_only,false);
 	} while (g_art >= g_firstart && (was_read(g_art) || !parseheader(g_art)));
@@ -803,7 +803,7 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
 	/* FALL THROUGH */
       case 'P':		/* goto previous article */
 	g_s_follow_temp = true;	/* keep going until change req. */
-	univ_follow_temp = true;
+	g_univ_follow_temp = true;
 	dec_art(false,true);
       check_dec_art:
 	if (g_art < g_absfirst) {
@@ -838,14 +838,14 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
       case 'n':		/* find next unread article? */
 	if (g_sa_in && g_s_default_cmd && !(g_sa_follow || g_s_follow_temp))
 	    return AS_SA;
-        if (univ_read_virtflag && univ_default_cmd && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
-            !(univ_follow || univ_follow_temp))
+        if (g_univ_read_virtflag && g_univ_default_cmd && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
+            !(g_univ_follow || g_univ_follow_temp))
         {
 	    s_exit_code = NG_NEXT;
 	    return AS_CLEAN;
 	}
-	if (!univ_default_cmd)
-	    univ_follow_temp = true;
+	if (!g_univ_default_cmd)
+	    g_univ_follow_temp = true;
 	if (!g_s_default_cmd)
 	    g_s_follow_temp = true;	/* keep going until change req. */
 	if (g_art > g_lastart) {
@@ -895,14 +895,14 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
       case 'N':			/* goto next article */
 	if (g_sa_in && g_s_default_cmd && !(g_sa_follow || g_s_follow_temp))
 	    return AS_SA;
-        if (univ_read_virtflag && univ_default_cmd && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
-            !(univ_follow || univ_follow_temp))
+        if (g_univ_read_virtflag && g_univ_default_cmd && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
+            !(g_univ_follow || g_univ_follow_temp))
         {
 	    s_exit_code = NG_NEXT;
 	    return AS_CLEAN;
 	}
-	if (!univ_default_cmd)
-	    univ_follow_temp = true;
+	if (!g_univ_default_cmd)
+	    g_univ_follow_temp = true;
 	if (!g_s_default_cmd)
 	    g_s_follow_temp = true;	/* keep going until change req. */
 	if (g_art > g_lastart) {
@@ -963,14 +963,14 @@ This is the last leaf in this tree.\n",stdout) FLUSH;
       case Ctl('p'):	/* search for previous article with same subject */
         if (g_sa_in && g_s_default_cmd && *g_buf == Ctl('n') && !(g_sa_follow || g_s_follow_temp))
             return AS_SA;
-        if (univ_read_virtflag && univ_default_cmd && (*g_buf == Ctl('n')) && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
-            !(univ_follow || univ_follow_temp))
+        if (g_univ_read_virtflag && g_univ_default_cmd && (*g_buf == Ctl('n')) && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
+            !(g_univ_follow || g_univ_follow_temp))
         {
 	    s_exit_code = NG_NEXT;
 	    return AS_CLEAN;
 	}
-	if (!univ_default_cmd)
-	    univ_follow_temp = true;
+	if (!g_univ_default_cmd)
+	    g_univ_follow_temp = true;
 	if (!g_s_default_cmd)
 	    g_s_follow_temp = true;	/* keep going until change req. */
 	if (*g_buf == Ctl('n')? next_art_with_subj() : prev_art_with_subj())
@@ -1115,7 +1115,7 @@ run_the_selector:
 	g_sa_in = false;
 	/* turn on temporary follow */
 	g_s_follow_temp = true;
-	univ_follow_temp = true;
+	g_univ_follow_temp = true;
 	g_art_sel_ilock = true;
 	*g_buf = article_selector(*g_buf);
 	g_art_sel_ilock = false;

@@ -121,7 +121,7 @@ add_executable(trn
     trn.cpp trn.h
     typedef.h
     utf.cpp utf.h
-    univ.cpp univ.h univ.ih
+    univ.cpp univ.h
     url.cpp url.h
     util.cpp util.h util.ih
     uudecode.cpp uudecode.h uudecode.ih

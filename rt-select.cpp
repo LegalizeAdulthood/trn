@@ -104,30 +104,30 @@ static int (*s_extra_commands)(char_int){};
     while (false)
 
 #define PUSH_UNIV_SELECTOR()\
-    UNIV_ITEM* save_first_univ = first_univ;\
-    UNIV_ITEM* save_last_univ = last_univ;\
+    UNIV_ITEM* save_first_univ = g_first_univ;\
+    UNIV_ITEM* save_last_univ = g_last_univ;\
     UNIV_ITEM* save_page_univ = sel_page_univ;\
-    UNIV_ITEM* save_next_univ = sel_next_univ;\
-    char* save_univ_fname = univ_fname;\
-    char* save_univ_label = univ_label;\
-    char* save_univ_title = univ_title;\
-    char* save_univ_tmp_file = univ_tmp_file;\
+    UNIV_ITEM* save_next_univ = g_sel_next_univ;\
+    char* save_univ_fname = g_univ_fname;\
+    char* save_univ_label = g_univ_label;\
+    char* save_univ_title = g_univ_title;\
+    char* save_univ_tmp_file = g_univ_tmp_file;\
     char save_sel_ret = s_sel_ret;\
-    HASHTABLE* save_univ_ng_hash = univ_ng_hash;\
-    HASHTABLE* save_univ_vg_hash = univ_vg_hash
+    HASHTABLE* save_univ_ng_hash = g_univ_ng_hash;\
+    HASHTABLE* save_univ_vg_hash = g_univ_vg_hash
 
 #define POP_UNIV_SELECTOR()\
-    first_univ = save_first_univ;\
-    last_univ = save_last_univ;\
+    g_first_univ = save_first_univ;\
+    g_last_univ = save_last_univ;\
     sel_page_univ = save_page_univ;\
-    sel_next_univ = save_next_univ;\
-    univ_fname = save_univ_fname;\
-    univ_label = save_univ_label;\
-    univ_title = save_univ_title;\
-    univ_tmp_file = save_univ_tmp_file;\
+    g_sel_next_univ = save_next_univ;\
+    g_univ_fname = save_univ_fname;\
+    g_univ_label = save_univ_label;\
+    g_univ_title = save_univ_title;\
+    g_univ_tmp_file = save_univ_tmp_file;\
     s_sel_ret = save_sel_ret;\
-    univ_ng_hash = save_univ_ng_hash;\
-    univ_vg_hash = save_univ_vg_hash
+    g_univ_ng_hash = save_univ_ng_hash;\
+    g_univ_vg_hash = save_univ_vg_hash
 
 static void sel_dogroups();
 static int univ_read(UNIV_ITEM *ui);
@@ -578,7 +578,7 @@ static int univ_read(UNIV_ITEM *ui)
     int exit_code = UR_NORM;
     char ch;
 
-    univ_follow_temp = false;
+    g_univ_follow_temp = false;
     if (!ui) {
 	printf("nullptr UI passed to reader!\n") FLUSH;
 	sleep(5);
@@ -631,9 +631,9 @@ static int univ_read(UNIV_ITEM *ui)
 	g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
 	printf("Virtual: Entering %s:\n", g_ngname) FLUSH;
 	g_ng_go_artnum = ui->data.virt.num;
-	univ_read_virtflag = true;
+	g_univ_read_virtflag = true;
 	ret = do_newsgroup("");
-	univ_read_virtflag = false;
+	g_univ_read_virtflag = false;
 	switch (ret) {
 	  case NG_NORM:		/* handle more cases later */
 	  case NG_SELNEXT:
@@ -784,7 +784,7 @@ sel_restart:
     {
 	UNIV_ITEM *ui;
 	int i;
-	for (ui = first_univ, i = 0; ui; ui = ui->next, i++) {
+	for (ui = g_first_univ, i = 0; ui; ui = ui->next, i++) {
 	    int ret;
 	    if (ui->flags & UF_SEL) {
 		PUSH_SELECTOR();

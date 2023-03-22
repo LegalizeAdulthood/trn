@@ -3,47 +3,44 @@
 /* Universal selector
  *
  */
+#ifndef UNIV_H
+#define UNIV_H
 
-#define UN_NONE		0
-/* textual placeholder */
-#define UN_TXT		1
-#define UN_DATASRC	2
-#define UN_NEWSGROUP	3
-#define UN_GROUPMASK	4
-/* an individual article */
-#define UN_ARTICLE	5
-/* filename for a configuration file */
-#define UN_CONFIGFILE	6
-/* Virtual newsgroup file (reserved for compatability with strn) */
-#define UN_VIRTUAL1	7
-/* virtual newsgroup marker (for pass 2) */
-#define UN_VGROUP	8
-/* text file */
-#define UN_TEXTFILE	9
-/* keystroke help functions from help.c */
-#define UN_HELPKEY	10
-
-/* quick debugging: just has data */
-#define UN_DEBUG1	-1
-/* group that is deselected (with !group) */
-#define UN_GROUP_DESEL  -2
-/* virtual newsgroup deselected (with !group) */
-#define UN_VGROUP_DESEL -3
-/* generic deleted item -- no per-item memory */
-#define UN_DELETED	-4
+enum
+{
+    UN_NONE = 0,          //
+    UN_TXT = 1,           /* textual placeholder */
+    UN_DATASRC = 2,       //
+    UN_NEWSGROUP = 3,     //
+    UN_GROUPMASK = 4,     //
+    UN_ARTICLE = 5,       /* an individual article */
+    UN_CONFIGFILE = 6,    /* filename for a configuration file */
+    UN_VIRTUAL1 = 7,      /* Virtual newsgroup file (reserved for compatability with strn) */
+    UN_VGROUP = 8,        /* virtual newsgroup marker (for pass 2) */
+    UN_TEXTFILE = 9,      /* text file */
+    UN_HELPKEY = 10,      /* keystroke help functions from help.c */
+    UN_DEBUG1 = -1,       /* quick debugging: just has data */
+    UN_GROUP_DESEL = -2,  /* group that is deselected (with !group) */
+    UN_VGROUP_DESEL = -3, /* virtual newsgroup deselected (with !group) */
+    UN_DELETED = -4       /* generic deleted item -- no per-item memory */
+};
 
 /* selector flags */
-#define UF_SEL		0x01
-#define UF_DEL		0x02
-#define UF_DELSEL	0x04
-#define UF_INCLUDED	0x10
-#define UF_EXCLUDED	0x20
+enum
+{
+    UF_SEL = 0x01,
+    UF_DEL = 0x02,
+    UF_DELSEL = 0x04,
+    UF_INCLUDED = 0x10,
+    UF_EXCLUDED = 0x20
+};
 
 /* virtual/merged group flags (UNIV_VIRT_GROUP.flags) */
-/* articles use minimum score */
-#define UF_VG_MINSCORE	0x01
-/* articles use maximum score */
-#define UF_VG_MAXSCORE	0x02
+enum
+{
+    UF_VG_MINSCORE = 0x01, /* articles use minimum score */
+    UF_VG_MAXSCORE = 0x02  /* articles use maximum score */
+};
 
 struct UNIV_GROUPMASK_DATA
 {
@@ -109,37 +106,26 @@ struct UNIV_ITEM
     UNIV_DATA data;			/* describes the object */
 };
 
-/* have we ever been initialized? */
-EXT int univ_ever_init;
-
-/* How deep are we in the tree? */
-EXT int univ_level;
-
-/* if true, we are in the "virtual group" second pass */
-EXT bool univ_ng_virtflag INIT(false);
-
-/* if true, we are reading an article from a "virtual group" */
-EXT bool univ_read_virtflag INIT(false);
-
-/* "follow"-related stuff (virtual groups) */
-EXT bool univ_default_cmd INIT(false);
-EXT bool univ_follow INIT(true);
-EXT bool univ_follow_temp INIT(false);
-
-/* if true, the user has loaded their own top univ. config file */
-EXT bool univ_usrtop;
+extern int g_univ_ever_init;      /* have we ever been initialized? */
+extern int g_univ_level;          /* How deep are we in the tree? */
+extern bool g_univ_ng_virtflag;   /* if true, we are in the "virtual group" second pass */
+extern bool g_univ_read_virtflag; /* if true, we are reading an article from a "virtual group" */
+extern bool g_univ_default_cmd;   /* "follow"-related stuff (virtual groups) */
+extern bool g_univ_follow;
+extern bool g_univ_follow_temp;
+extern bool g_univ_usrtop; /* if true, the user has loaded their own top univ. config file */
 
 /* items which must be saved in context */
-EXT UNIV_ITEM* first_univ;
-EXT UNIV_ITEM* last_univ;
-EXT UNIV_ITEM* sel_page_univ;
-EXT UNIV_ITEM* sel_next_univ;
-EXT char* univ_fname;			/* current filename (may be null) */
-EXT char* univ_label;			/* current label (may be null) */
-EXT char* univ_title;			/* title of current level */
-EXT char* univ_tmp_file;		/* temp. file (may be null) */
-EXT HASHTABLE* univ_ng_hash INIT(nullptr);
-EXT HASHTABLE* univ_vg_hash INIT(nullptr);
+extern UNIV_ITEM *g_first_univ;
+extern UNIV_ITEM *g_last_univ;
+extern UNIV_ITEM *sel_page_univ;
+extern UNIV_ITEM *g_sel_next_univ;
+extern char *g_univ_fname;    /* current filename (may be null) */
+extern char *g_univ_label;    /* current label (may be null) */
+extern char *g_univ_title;    /* title of current level */
+extern char *g_univ_tmp_file; /* temp. file (may be null) */
+extern HASHTABLE *g_univ_ng_hash;
+extern HASHTABLE *g_univ_vg_hash;
 /* end of items that must be saved */
 
 void univ_init();
@@ -171,3 +157,5 @@ const char *univ_article_desc(const UNIV_ITEM *ui);
 void univ_help_main(int where);
 void univ_help(int where);
 const char *univ_keyhelp_modestr(const UNIV_ITEM *ui);
+
+#endif

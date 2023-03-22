@@ -875,7 +875,7 @@ void eat_typeahead()
     double this_time = current_time();
 
     /* do not eat typeahead while creating virtual group */
-    if (univ_ng_virtflag)
+    if (g_univ_ng_virtflag)
       return;
     /* Don't eat twice before getting a character */
     if (!s_got_a_char)

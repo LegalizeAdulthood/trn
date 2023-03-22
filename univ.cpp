@@ -25,9 +25,7 @@
 #include "final.h"
 #include "help.h"
 #include "score.h"
-#include "INTERN.h"
 #include "univ.h"
-#include "univ.ih"
 
 /* TODO:
  *
@@ -37,20 +35,54 @@
  * Lots more to do...
  */
 
-static bool univ_virt_pass_needed INIT(false);
+int g_univ_ever_init{};      /* have we ever been initialized? */
+int g_univ_level{};          /* How deep are we in the tree? */
+bool g_univ_ng_virtflag{};   /* if true, we are in the "virtual group" second pass */
+bool g_univ_read_virtflag{}; /* if true, we are reading an article from a "virtual group" */
+bool g_univ_default_cmd{};   /* "follow"-related stuff (virtual groups) */
+bool g_univ_follow{true};
+bool g_univ_follow_temp{};
+bool g_univ_usrtop{}; /* if true, the user has loaded their own top univ. config file */
 
-static int univ_item_counter INIT(1);
+/* items which must be saved in context */
+UNIV_ITEM *g_first_univ{};
+UNIV_ITEM *g_last_univ{};
+UNIV_ITEM *sel_page_univ{};
+UNIV_ITEM *g_sel_next_univ{};
+char *g_univ_fname{};    /* current filename (may be null) */
+char *g_univ_label{};    /* current label (may be null) */
+char *g_univ_title{};    /* title of current level */
+char *g_univ_tmp_file{}; /* temp. file (may be null) */
+HASHTABLE *g_univ_ng_hash{};
+HASHTABLE *g_univ_vg_hash{};
+/* end of items that must be saved */
 
-static bool univ_done_startup INIT(false);
+static bool s_univ_virt_pass_needed{};
+static int s_univ_item_counter{1};
+static bool s_univ_done_startup{};
+static int s_univ_min_score{}; /* this score is part of the line format, so it is not ifdefed */
+static bool s_univ_use_min_score{};
+static bool s_univ_begin_found{};
+static char *s_univ_begin_label{}; /* label to start working with */
+static char *s_univ_line_desc{};   /* if non-nullptr, the description (printing name) of the entry */
+static UNIV_ITEM *s_current_vg_ui{};
 
-/* this score is part of the line format, so it is not ifdefed */
-static int univ_min_score INIT(0);
-static bool univ_use_min_score INIT(false);
+static void univ_free_data(UNIV_ITEM *ui);
+static bool univ_DoMatch(const char *text, const char *p);
+static bool univ_use_file(char *fname, const char *label);
+static bool univ_include_file(const char *fname);
+static void univ_do_line_ext1(const char *desc, char *line);
+static bool univ_do_line(char *line);
+static char* univ_edit_new_userfile();
+static void univ_vg_addart(ART_NUM a);
+static void univ_vg_addgroup();
+static int univ_order_number(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2);
+static int univ_order_score(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2);
 
 void univ_init()
 {
-    univ_level = 0;
-    univ_ever_init = 1;
+    g_univ_level = 0;
+    g_univ_ever_init = 1;
 }
 
 void univ_startup()
@@ -64,8 +96,8 @@ void univ_startup()
     /* later: make user top file an option or environment variable? */
     if (!univ_file_load("%+/univ/top","Top Level",nullptr)) {
 	univ_open();
-	univ_title = savestr("Top Level");
-	univ_fname = savestr("%+/univ/usertop");
+	g_univ_title = savestr("Top Level");
+	g_univ_fname = savestr("%+/univ/usertop");
 
 	/* read in trn default top file */
 	(void)univ_include_file("%X/sitetop");		/* pure local */
@@ -78,22 +110,22 @@ void univ_startup()
 	    univ_mask_load(savestr("*"),"All Newsgroups");
 	}
 	if (user_top_load) {
-	    univ_usrtop = true;
+	    g_univ_usrtop = true;
 	}
     } else {
-	univ_usrtop = true;
+	g_univ_usrtop = true;
     }
-    univ_done_startup = true;
+    s_univ_done_startup = true;
 }
 
 void univ_open()
 {
-    first_univ = last_univ = 0;
-    sel_page_univ = sel_next_univ = 0;
-    univ_fname = univ_title = univ_label = univ_tmp_file = nullptr;
-    univ_virt_pass_needed = false;
-    univ_ng_hash = univ_vg_hash = 0;
-    univ_level++;
+    g_first_univ = g_last_univ = 0;
+    sel_page_univ = g_sel_next_univ = 0;
+    g_univ_fname = g_univ_title = g_univ_label = g_univ_tmp_file = nullptr;
+    s_univ_virt_pass_needed = false;
+    g_univ_ng_hash = g_univ_vg_hash = 0;
+    g_univ_level++;
 }
 
 void univ_close()
@@ -101,35 +133,35 @@ void univ_close()
     UNIV_ITEM* node;
     UNIV_ITEM* nextnode;
 
-    for (node = first_univ; node; node = nextnode) {
+    for (node = g_first_univ; node; node = nextnode) {
 	univ_free_data(node);
 	safefree(node->desc);
 	nextnode = node->next;
 	free((char*)node);
     }
-    if (univ_tmp_file) {
-	remove(univ_tmp_file);
-	free(univ_tmp_file);
+    if (g_univ_tmp_file) {
+	remove(g_univ_tmp_file);
+	free(g_univ_tmp_file);
     }
-    safefree(univ_fname);
-    safefree(univ_title);
-    safefree(univ_label);
-    if (univ_ng_hash) {
-	hashdestroy(univ_ng_hash);
-	univ_ng_hash = 0;
+    safefree(g_univ_fname);
+    safefree(g_univ_title);
+    safefree(g_univ_label);
+    if (g_univ_ng_hash) {
+	hashdestroy(g_univ_ng_hash);
+	g_univ_ng_hash = 0;
     }
-    if (univ_vg_hash) {
-	hashdestroy(univ_vg_hash);
-	univ_vg_hash = 0;
+    if (g_univ_vg_hash) {
+	hashdestroy(g_univ_vg_hash);
+	g_univ_vg_hash = 0;
     }
-    first_univ = last_univ = 0;
-    sel_page_univ = sel_next_univ = 0;
-    univ_level--;
+    g_first_univ = g_last_univ = 0;
+    sel_page_univ = g_sel_next_univ = 0;
+    g_univ_level--;
 }
 
 UNIV_ITEM *univ_add(int type, const char *desc)
 {
-    UNIV_ITEM* node = first_univ;
+    UNIV_ITEM* node = g_first_univ;
 
     node = (UNIV_ITEM*)safemalloc(sizeof (UNIV_ITEM));
 
@@ -139,15 +171,15 @@ UNIV_ITEM *univ_add(int type, const char *desc)
     else
 	node->desc = nullptr;
     node->type = type;
-    node->num = univ_item_counter++;
+    node->num = s_univ_item_counter++;
     node->score = 0;		/* consider other default scores? */
     node->next = nullptr;
-    node->prev = last_univ;
-    if (last_univ)
-	last_univ->next = node;
+    node->prev = g_last_univ;
+    if (g_last_univ)
+	g_last_univ->next = node;
     else
-	first_univ = node;
-    last_univ = node;
+	g_first_univ = node;
+    g_last_univ = node;
 
     return node;
 }
@@ -231,15 +263,15 @@ void univ_add_group(const char *desc, const char *grpname)
 	return;
     /* later check grpname for bad things? */
 
-    if (!univ_ng_hash)
-	univ_ng_hash = hashcreate(701, HASH_DEFCMPFUNC);
+    if (!g_univ_ng_hash)
+	g_univ_ng_hash = hashcreate(701, HASH_DEFCMPFUNC);
 
-    data = hashfetch(univ_ng_hash,grpname,strlen(grpname));
+    data = hashfetch(g_univ_ng_hash,grpname,strlen(grpname));
 
     if (data.dat_ptr) {
 	/* group was already added */
 	/* perhaps it is marked as deleted? */
-	for (ui = first_univ; ui; ui = ui->next) {
+	for (ui = g_first_univ; ui; ui = ui->next) {
 	    if ((ui->type == UN_GROUP_DESEL) && ui->data.group.ng
 	     && !strcmp(ui->data.group.ng,grpname)) {
 		/* undelete the newsgroup */
@@ -303,7 +335,7 @@ void univ_add_textfile(const char *desc, char *name)
 	s++;
       default:
 	/* XXX later have error checking on length */
-	strcpy(lbuf,univ_fname);
+	strcpy(lbuf,g_univ_fname);
 	for (p = lbuf+strlen(lbuf); p > lbuf && *p != '/'; p--) ;
 	if (p) {
 	    *p++ = '/';
@@ -333,15 +365,15 @@ void univ_add_virtgroup(const char *grpname)
     /* later check grpname for bad things? */
 
     /* perhaps leave if group has no unread, or other factor */
-    if (!univ_vg_hash)
-	univ_vg_hash = hashcreate(701, HASH_DEFCMPFUNC);
+    if (!g_univ_vg_hash)
+	g_univ_vg_hash = hashcreate(701, HASH_DEFCMPFUNC);
 
-    univ_virt_pass_needed = true;
-    data = hashfetch(univ_vg_hash,grpname,strlen(grpname));
+    s_univ_virt_pass_needed = true;
+    data = hashfetch(g_univ_vg_hash,grpname,strlen(grpname));
     if (data.dat_ptr) {
 	/* group was already added */
 	/* perhaps it is marked as deleted? */
-	for (ui = first_univ; ui; ui = ui->next) {
+	for (ui = g_first_univ; ui; ui = ui->next) {
 	    if ((ui->type == UN_VGROUP_DESEL) && ui->data.vgroup.ng
 	     && !strcmp(ui->data.vgroup.ng,grpname)) {
 		/* undelete the newsgroup */
@@ -352,18 +384,14 @@ void univ_add_virtgroup(const char *grpname)
     }
     ui = univ_add(UN_VGROUP,nullptr);
     ui->data.vgroup.flags = (char)0;
-    if (univ_use_min_score) {
+    if (s_univ_use_min_score) {
 	ui->data.vgroup.flags |= UF_VG_MINSCORE;
-	ui->data.vgroup.minscore = univ_min_score;
+	ui->data.vgroup.minscore = s_univ_min_score;
     }
     ui->data.vgroup.ng = savestr(grpname);
     data.dat_ptr = ui->data.vgroup.ng;
     hashstorelast(data);
 }
-
-static bool univ_begin_found INIT(false);
-/* label to start working with */
-static char* univ_begin_label INIT(nullptr);
 
 /* univ_DoMatch uses a modified Wildmat function which is
  * based on Rich $alz's wildmat, reduced to the simple case of *
@@ -415,7 +443,7 @@ void univ_use_pattern(const char *pattern, int type)
 	s++;
 	switch (type) {
 	  case 0:
-	    for (ui = first_univ; ui; ui = ui->next) {
+	    for (ui = g_first_univ; ui; ui = ui->next) {
 		if (ui->type == UN_NEWSGROUP && ui->data.group.ng
 		  && univ_DoMatch(ui->data.group.ng,s) == true) {
 		    ui->type = UN_GROUP_DESEL;
@@ -423,7 +451,7 @@ void univ_use_pattern(const char *pattern, int type)
 	    }
 	    break;
 	  case 1:
-	    for (ui = first_univ; ui; ui = ui->next) {
+	    for (ui = g_first_univ; ui; ui = ui->next) {
 		if (ui->type == UN_VGROUP && ui->data.vgroup.ng
 		  && univ_DoMatch(ui->data.vgroup.ng,s) == true) {
 		    ui->type = UN_VGROUP_DESEL;
@@ -501,7 +529,7 @@ static bool univ_use_file(char *fname, const char *label)
     if (!strncasecmp(fname,"URL:",4)) {
 	s = fname;
 	open_name = temp_filename();
-	univ_tmp_file = open_name;
+	g_univ_tmp_file = open_name;
 	if (!url_get(fname+4,open_name))
 	    open_name = nullptr;
 	save_temp = true;
@@ -512,10 +540,10 @@ static bool univ_use_file(char *fname, const char *label)
     }
     if (!open_name)
 	return false;
-    univ_begin_found = begin_top;
-    safefree0(univ_begin_label);
+    s_univ_begin_found = begin_top;
+    safefree0(s_univ_begin_label);
     if (label)
-	univ_begin_label = savestr(label);
+	s_univ_begin_label = savestr(label);
     fp = fopen(filexp(open_name),"r");
     if (!fp)
 	return false;		/* unsuccessful (XXX: complain) */
@@ -530,11 +558,11 @@ static bool univ_use_file(char *fname, const char *label)
 	    break;	/* end of useful file */
     }
     fclose(fp);
-    if (!univ_begin_found)
+    if (!s_univ_begin_found)
 	printf("\"begin group\" not found.\n") FLUSH;
-    if (univ_begin_label)
-	printf("label not found: %s\n",univ_begin_label);
-    if (univ_virt_pass_needed) {
+    if (s_univ_begin_label)
+	printf("label not found: %s\n",s_univ_begin_label);
+    if (s_univ_virt_pass_needed) {
 	univ_virt_pass();
     }
     sort_univ();
@@ -546,10 +574,10 @@ static bool univ_include_file(const char *fname)
     char* old_univ_fname;
     bool retval;
 
-    old_univ_fname = univ_fname;
-    univ_fname = savestr(fname);	/* LEAK */
-    retval = univ_use_file(univ_fname,nullptr);
-    univ_fname = old_univ_fname;
+    old_univ_fname = g_univ_fname;
+    g_univ_fname = savestr(fname);	/* LEAK */
+    retval = univ_use_file(g_univ_fname,nullptr);
+    g_univ_fname = old_univ_fname;
     return retval;
 }
 
@@ -600,13 +628,13 @@ static void univ_do_line_ext1(const char *desc, char *line)
 	    while (isdigit(*p)) p++;
 	    if (isspace(*p)) {
 	      *p = '\0';
-	      univ_min_score = atoi(q);
-	      univ_use_min_score = true;
+	      s_univ_min_score = atoi(q);
+	      s_univ_use_min_score = true;
 	      s = p;
 	      s++;
 	    }
 	    univ_use_group_line(s,1);
-	    univ_use_min_score = false;
+	    s_univ_use_min_score = false;
 	    break;
 	}
 	break;
@@ -623,10 +651,6 @@ static void univ_do_line_ext1(const char *desc, char *line)
     }
 }
 
-
-/* if non-nullptr, the description (printing name) of the entry */
-static char* univ_line_desc;
-
 /* returns false when no more lines should be interpreted */
 static bool univ_do_line(char *line)
 {
@@ -642,18 +666,18 @@ static bool univ_do_line(char *line)
     if (*s == '\0')
 	return true;	/* empty line */
 
-    if (!univ_begin_found) {
+    if (!s_univ_begin_found) {
 	if (strncasecmp(s,"begin group",11))
 	    return true;	/* wait until "begin group" is found */
-	univ_begin_found = true;
+	s_univ_begin_found = true;
     }
-    if (univ_begin_label) {
-	if (*s == '>' && s[1] == ':' && !strcmp(s+2,univ_begin_label)) {
-	    safefree0(univ_begin_label); /* interpret starting at next line */
+    if (s_univ_begin_label) {
+	if (*s == '>' && s[1] == ':' && !strcmp(s+2,s_univ_begin_label)) {
+	    safefree0(s_univ_begin_label); /* interpret starting at next line */
 	}
 	return true;
     }
-    safefree0(univ_line_desc);
+    safefree0(s_univ_line_desc);
     if (*s == '"') {	/* description name */
 	p = cpytill(s,s+1,'"');
 	if (!*p) {
@@ -661,7 +685,7 @@ static bool univ_do_line(char *line)
 	    return true;
 	}
 	*p = '\0';
-	univ_line_desc = savestr(s);
+	s_univ_line_desc = savestr(s);
 	s = p+1;
     }
     while (isspace(*s)) s++;
@@ -677,17 +701,17 @@ static bool univ_do_line(char *line)
 	} else
 	    p = nullptr;
 	/* description defaults to name */
-	univ_add_file(univ_line_desc? univ_line_desc : s, s, p);
+	univ_add_file(s_univ_line_desc? s_univ_line_desc : s, s, p);
     }
     else {
 	switch (*s) {
 	  case '#':	/* comment */
 	    break;
-	  case ':':	/* relative to univ_fname */
+	  case ':':	/* relative to g_univ_fname */
 	    /* XXX hack the variable and fall through */
-	    if (univ_fname && strlen(univ_fname)+strlen(s) < 1020) {
+	    if (g_univ_fname && strlen(g_univ_fname)+strlen(s) < 1020) {
 		static char lbuf[1024];
-		strcpy(lbuf,univ_fname);
+		strcpy(lbuf,g_univ_fname);
 		for (p = lbuf+strlen(lbuf); p > lbuf && *p != '/'; p--) ;
 		if (p) {
 		    *p++ = '/';
@@ -718,7 +742,7 @@ static bool univ_do_line(char *line)
 	    } else
 		p = nullptr;
 	    /* description defaults to name */
-	    univ_add_file(univ_line_desc? univ_line_desc : s, filexp(s), p);
+	    univ_add_file(s_univ_line_desc? s_univ_line_desc : s, filexp(s), p);
 	    break;
 	  case '-':	/* label within same file */
 	    s++;
@@ -726,11 +750,11 @@ static bool univ_do_line(char *line)
 		/* XXX give an error message later */
 		break;
 	    }
-	    if (univ_tmp_file)
-		p = univ_tmp_file;
+	    if (g_univ_tmp_file)
+		p = g_univ_tmp_file;
 	    else
-		p = univ_fname;
-	    univ_add_file(univ_line_desc? univ_line_desc : s, univ_fname, s);
+		p = g_univ_fname;
+	    univ_add_file(s_univ_line_desc? s_univ_line_desc : s, g_univ_fname, s);
 	    break;
 	  case '>':
 	    if (s[1] == ':')
@@ -740,15 +764,15 @@ static bool univ_do_line(char *line)
 	    break;	/* not used now */
 	  case '&':     /* text file shortcut (for help files) */
 	    s++;
-	    univ_add_textfile(univ_line_desc? univ_line_desc : s, s);
+	    univ_add_textfile(s_univ_line_desc? s_univ_line_desc : s, s);
 	    break;
 	  case '$':	/* extension 1 */
-	    univ_do_line_ext1(univ_line_desc,s);
+	    univ_do_line_ext1(s_univ_line_desc,s);
 	    break;
 	  default:
 	    /* if there is a description, this must be a restriction list */
-	    if (univ_line_desc) {
-		univ_add_mask(univ_line_desc,s);
+	    if (s_univ_line_desc) {
+		univ_add_mask(s_univ_line_desc,s);
 		break;
 	    }
 	    /* one or more newsgroups instead */
@@ -771,11 +795,11 @@ bool univ_file_load(char *fname, char *title, char *label)
     univ_open();
 
     if (fname)
-	univ_fname = savestr(fname);
+	g_univ_fname = savestr(fname);
     if (title)
-	univ_title = savestr(title);
+	g_univ_title = savestr(title);
     if (label)
-	univ_label = savestr(label);
+	g_univ_label = savestr(label);
     flag = univ_use_file(fname,label);
     if (!flag) {
 	univ_close();
@@ -796,7 +820,7 @@ void univ_mask_load(char *mask, const char *title)
 
     univ_use_group_line(mask,0);
     if (title)
-	univ_title = savestr(title);
+	g_univ_title = savestr(title);
     if (g_int_count) {
 	g_int_count = 0;
     }
@@ -808,12 +832,12 @@ void univ_redofile()
     char* tmp_title;
     char* tmp_label;
 
-    tmp_fname = (univ_fname ? savestr(univ_fname) : 0);
-    tmp_title = (univ_title ? savestr(univ_title) : 0);
-    tmp_label = (univ_label ? savestr(univ_label) : 0);
+    tmp_fname = (g_univ_fname ? savestr(g_univ_fname) : 0);
+    tmp_title = (g_univ_title ? savestr(g_univ_title) : 0);
+    tmp_label = (g_univ_label ? savestr(g_univ_label) : 0);
 
     univ_close();
-    if (univ_level)
+    if (g_univ_level)
 	(void)univ_file_load(tmp_fname,tmp_title,tmp_label);
     else
 	univ_startup();
@@ -841,7 +865,7 @@ static char *univ_edit_new_userfile()
     fp = fopen(s,"r");
     if (fp) {
 	fclose(fp);
-	return univ_fname;	/* as if this function was not called */
+	return g_univ_fname;	/* as if this function was not called */
     }
 
     makedir(s,MD_FILE);
@@ -851,14 +875,14 @@ static char *univ_edit_new_userfile()
 	printf("Could not create new user file.\n");
 	printf("Editing current system file\n") FLUSH;
 	(void)get_anything();
-	return univ_fname;
+	return g_univ_fname;
     }
     fprintf(fp,"# User Toplevel (Universal Selector)\n");
     fclose(fp);
     printf("New User Toplevel file created.\n") FLUSH;
     printf("After editing this file, exit and restart trn to use it.\n") FLUSH;
     (void)get_anything();
-    univ_usrtop = true;		/* do not overwrite this file */
+    g_univ_usrtop = true;		/* do not overwrite this file */
     return s;
 }
 
@@ -868,11 +892,11 @@ void univ_edit()
 {
     char* s;
 
-    if (univ_usrtop || !(univ_done_startup)) {
-	if (univ_tmp_file) {
-	    s = univ_tmp_file;
+    if (g_univ_usrtop || !(s_univ_done_startup)) {
+	if (g_univ_tmp_file) {
+	    s = g_univ_tmp_file;
 	} else {
-	    s = univ_fname;
+	    s = g_univ_fname;
 	}
     } else {
 	s = univ_edit_new_userfile();
@@ -903,13 +927,11 @@ void univ_page_file(char *fname)
 	get_anything();
 }
 
-static UNIV_ITEM* current_vg_ui;
-
 /* virtual newsgroup second pass function */
 /* called from within newsgroup */
 void univ_ng_virtual()
 {
-    switch (current_vg_ui->type) {
+    switch (s_current_vg_ui->type) {
       case UN_VGROUP:
 	univ_vg_addgroup();
 	break;
@@ -933,7 +955,7 @@ static void univ_vg_addart(ART_NUM a)
     int score;
 
     score = sc_score_art(a,false);
-    if (univ_use_min_score && (score<univ_min_score))
+    if (s_univ_use_min_score && (score<s_univ_min_score))
 	return;
     subj = fetchsubj(a,false);
     if (!subj || !*subj)
@@ -1004,10 +1026,10 @@ void univ_virt_pass()
 {
     UNIV_ITEM* ui;
 
-    univ_ng_virtflag = true;
-    univ_virt_pass_needed = false;
+    g_univ_ng_virtflag = true;
+    s_univ_virt_pass_needed = false;
 
-    for (ui = first_univ; ui; ui = ui->next) {
+    for (ui = g_first_univ; ui; ui = ui->next) {
 	if (input_pending()) {
 	    /* later consider cleaning up the remains */
 	    break;
@@ -1016,13 +1038,13 @@ void univ_virt_pass()
 	  case UN_VGROUP:
 	    if (!ui->data.vgroup.ng)
 		break;			/* XXX whine */
-	    current_vg_ui = ui;
+	    s_current_vg_ui = ui;
 	    if (ui->data.vgroup.flags & UF_VG_MINSCORE) {
-		univ_use_min_score = true;
-		univ_min_score = ui->data.vgroup.minscore;
+		s_univ_use_min_score = true;
+		s_univ_min_score = ui->data.vgroup.minscore;
 	    }
 	    (void)univ_visit_group(ui->data.vgroup.ng);
-	    univ_use_min_score = false;
+	    s_univ_use_min_score = false;
 	    /* later do something with return value */
 	    univ_free_data(ui);
 	    safefree(ui->desc);
@@ -1035,7 +1057,7 @@ void univ_virt_pass()
 	      break;
 	    if (ui->data.virt.subj)
 	      break;
-	    current_vg_ui = ui;
+	    s_current_vg_ui = ui;
 	    (void)univ_visit_group(ui->data.virt.ng);
 	    /* later do something with return value */
 	    break;
@@ -1043,7 +1065,7 @@ void univ_virt_pass()
 	    break;
 	}
     }
-    univ_ng_virtflag = false;
+    g_univ_ng_virtflag = false;
 }
 
 static int univ_order_number(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2)
@@ -1068,7 +1090,7 @@ void sort_univ()
     int (*sort_procedure)(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2);
 
     cnt = 0;
-    for (ui = first_univ; ui; ui = ui->next) {
+    for (ui = g_first_univ; ui; ui = ui->next) {
 	cnt++;
     }
 
@@ -1086,19 +1108,19 @@ void sort_univ()
     }
 
     univ_sort_list = (UNIV_ITEM**)safemalloc(cnt*sizeof(UNIV_ITEM*));
-    for (lp = univ_sort_list, ui = first_univ; ui; ui = ui->next)
+    for (lp = univ_sort_list, ui = g_first_univ; ui; ui = ui->next)
 	*lp++ = ui;
     assert(lp - univ_sort_list == cnt);
 
     qsort(univ_sort_list, cnt, sizeof(UNIV_ITEM *), (int(*)(void const *, void const *))sort_procedure);
 
-    first_univ = ui = univ_sort_list[0];
+    g_first_univ = ui = univ_sort_list[0];
     for (i = cnt, lp = univ_sort_list; --i; lp++) {
 	lp[0]->next = lp[1];
 	lp[1]->prev = lp[0];
     }
-    last_univ = lp[0];
-    last_univ->next = nullptr;
+    g_last_univ = lp[0];
+    g_last_univ->next = nullptr;
 
     free((char*)univ_sort_list);
 }
@@ -1157,7 +1179,7 @@ void univ_help_main(int where)
     bool flag;
 
     univ_open();
-    univ_title = savestr("Extended Help");
+    g_univ_title = savestr("Extended Help");
 
     /* first add help on current mode */
     ui = univ_add(UN_HELPKEY, nullptr);
@@ -1169,8 +1191,8 @@ void univ_help_main(int where)
     univ_include_file("%X/sitehelp/top");
 
     /* read in main help file */
-    univ_fname = savestr("%X/HelpFiles/top");
-    flag = univ_use_file(univ_fname,univ_label);
+    g_univ_fname = savestr("%X/HelpFiles/top");
+    flag = univ_use_file(g_univ_fname,g_univ_label);
 
     /* later: if flag is not true, then add message? */
 }

@@ -444,7 +444,7 @@ try_again:
 	obj_count = 0;
 
 	sort_univ();
-	for (ui = first_univ; ui; ui = ui->next) {
+	for (ui = g_first_univ; ui; ui = ui->next) {
 	    if (sel_page_univ == ui)
 		g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
 	    ui->flags &= ~UF_INCLUDED;
@@ -506,7 +506,7 @@ try_again:
 	}
 	if (sel_page_univ == nullptr)
 	    (void) first_page();
-	else if (sel_page_univ == last_univ)
+	else if (sel_page_univ == g_last_univ)
 	    (void) last_page();
 	else if (g_sel_prior_obj_cnt && fill_last_page) {
 	    calc_page(no_search);
@@ -725,7 +725,7 @@ bool first_page()
       }
       case SM_UNIVERSAL: {
 	UNIV_ITEM* ui;
-	for (ui = first_univ; ui; ui = ui->next) {
+	for (ui = g_first_univ; ui; ui = ui->next) {
 	    if (ui->flags & UF_INCLUDED) {
 		if (sel_page_univ != ui) {
 		    sel_page_univ = ui;
@@ -877,8 +877,8 @@ bool next_page()
 	break;
       }
       case SM_UNIVERSAL: {
-	if (sel_next_univ) {
-	    sel_page_univ = sel_next_univ;
+	if (g_sel_next_univ) {
+	    sel_page_univ = g_sel_next_univ;
 	    g_sel_prior_obj_cnt += g_sel_page_obj_cnt;
 	    return true;
 	}
@@ -992,7 +992,7 @@ bool prev_page()
 	UNIV_ITEM* page_ui = sel_page_univ;
 
 	if (!ui)
-	    ui = last_univ;
+	    ui = g_last_univ;
 	else
 	    ui = ui->prev;
 	while (ui) {
@@ -1144,7 +1144,7 @@ try_again:
 		g_sel_page_item_cnt++;
 	}
 	g_sel_page_obj_cnt = g_sel_page_item_cnt;
-	sel_next_univ = ui;
+	g_sel_next_univ = ui;
 	break;
       }
       case SM_OPTIONS: {
@@ -1235,8 +1235,8 @@ void display_page_title(bool home_only)
 	color_string(COLOR_HEADING,"Options");
     else if (g_sel_mode == SM_UNIVERSAL) {
 	color_object(COLOR_HEADING, true);
-	printf("[%d] %s",univ_level,
-	       univ_title? univ_title : "Universal Selector");
+	printf("[%d] %s",g_univ_level,
+	       g_univ_title? g_univ_title : "Universal Selector");
 	color_pop();
     }
     else if (g_in_ng)
@@ -1487,7 +1487,7 @@ try_again:
 	    if (last_page())
 		goto try_again;
 	}
-	sel_next_univ = ui;
+	g_sel_next_univ = ui;
     }
     else if (g_sel_mode == SM_OPTIONS) {
 	int op = g_sel_page_op;

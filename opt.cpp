@@ -353,7 +353,7 @@ void set_option(int num, char *s)
 	set_sel_order(SM_UNIVERSAL,s);
 	break;
       case OI_UNIV_FOLLOW:
-	univ_follow = YES(s);
+	g_univ_follow = YES(s);
 	break;
       case OI_USE_NEWSRC_SEL:
 	g_use_newsrc_selector = YES(s);
@@ -828,7 +828,7 @@ char *option_value(int num)
       case OI_UNIV_SEL_ORDER:
 	return get_sel_order(SM_UNIVERSAL);
       case OI_UNIV_FOLLOW:
-	return YESorNO(univ_follow);
+	return YESorNO(g_univ_follow);
 	break;
       case OI_USE_NEWSRC_SEL:
 	return YESorNO(g_use_newsrc_selector);
