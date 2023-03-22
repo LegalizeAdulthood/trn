@@ -14,7 +14,7 @@
 
 void Usage();
 
-char *server_name{};
+char *g_server_name{};
 char *g_nntp_auth_file{};
 int debug{};             /* make nntpclient.c happy */
 char g_buf[LBUFLEN + 1]{}; /* general purpose line buffer */
@@ -71,10 +71,10 @@ int main(int argc, char *argv[])
 	    cp = nntp_servername(cp);
     }
     if (strcmp(cp,"local")) {
-	server_name = savestr(cp);
-	cp = strchr(server_name, ';');
+	g_server_name = savestr(cp);
+	cp = strchr(g_server_name, ';');
 	if (!cp)
-	    cp = strchr(server_name, ':');
+	    cp = strchr(g_server_name, ':');
 	if (cp) {
 	    *cp = '\0';
 	    g_nntplink.port_number = atoi(cp+1);
@@ -85,9 +85,9 @@ int main(int argc, char *argv[])
 	    g_nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
     }
 
-    if (server_name) {
+    if (g_server_name) {
 	if (init_nntp() < 0
-	 || nntp_connect(server_name,false) <= 0)
+	 || nntp_connect(g_server_name,false) <= 0)
 	    exit(1);
 	if (action)
 	    sprintf(command,"LIST %s",action);
