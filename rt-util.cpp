@@ -703,11 +703,11 @@ bool inbackground()
     return s_spin_mode == SPIN_BACKGROUND;
 }
 
-static int	prior_perform_cnt;
-static time_t	prior_now;
-static long	ps_sel;
-static long	ps_cnt;
-static long	ps_missing;
+static int s_prior_perform_cnt{};
+static time_t s_prior_now{};
+static long s_ps_sel{};
+static long s_ps_cnt{};
+static long s_ps_missing{};
 
 void perform_status_init(long cnt)
 {
@@ -717,11 +717,11 @@ void perform_status_init(long cnt)
     g_page_line = 1;
     g_performed_article_loop = true;
 
-    prior_perform_cnt = 0;
-    prior_now = 0;
-    ps_sel = g_selected_count;
-    ps_cnt = cnt;
-    ps_missing = g_missing_count;
+    s_prior_perform_cnt = 0;
+    s_prior_now = 0;
+    s_ps_sel = g_selected_count;
+    s_ps_cnt = cnt;
+    s_ps_missing = g_missing_count;
 
     g_spin_count = 0;
     s_spin_place = 0;
@@ -739,19 +739,19 @@ void perform_status(long cnt, int spin)
 	fflush(stdout);
     }
 
-    if (g_perform_cnt == prior_perform_cnt)
+    if (g_perform_cnt == s_prior_perform_cnt)
 	return;
 
     now = time((time_t*)nullptr);
-    if (now - prior_now < 2)
+    if (now - s_prior_now < 2)
 	return;
 
-    prior_now = now;
-    prior_perform_cnt = g_perform_cnt;
+    s_prior_now = now;
+    s_prior_perform_cnt = g_perform_cnt;
 
-    missing = g_missing_count - ps_missing;
-    kills = ps_cnt - cnt - missing;
-    sels = g_selected_count - ps_sel;
+    missing = g_missing_count - s_ps_missing;
+    kills = s_ps_cnt - cnt - missing;
+    sels = g_selected_count - s_ps_sel;
 
     if (!(kills | sels))
 	return;
@@ -823,9 +823,9 @@ int perform_status_end(long cnt, const char *obj_type)
 	return 0;
     }
 
-    missing = g_missing_count - ps_missing;
-    kills = ps_cnt - cnt - missing;
-    sels = g_selected_count - ps_sel;
+    missing = g_missing_count - s_ps_missing;
+    kills = s_ps_cnt - cnt - missing;
+    sels = g_selected_count - s_ps_sel;
 
     if (!g_performed_article_loop)
 	cp = output_change(cp, (long)g_perform_cnt,
