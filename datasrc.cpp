@@ -936,23 +936,23 @@ static int srcfile_cmp(const char *key, int keylen, HASHDATUM data)
  *
  * You might want to present all of the closest matches, and let the user
  * choose among them.  But because I'm lazy I chose to only keep track of
- * all with newsgroups with the *single* smallest error, in array ngptrs[].
+ * all with newsgroups with the *single* smallest error, in array s_ngptrs[].
  * A more flexible approach would keep around the 10 best matches, whether
  * or not they had precisely the same edit distance, but oh well.
  */
 
-static char** ngptrs;		/* List of potential matches */
-static int ngn;			/* Length of list in ngptrs[] */
-static int best_match;		/* Value of best match */
+static char **s_ngptrs;  /* List of potential matches */
+static int s_ngn;        /* Length of list in s_ngptrs[] */
+static int s_best_match; /* Value of best match */
 
 int find_close_match()
 {
     DATASRC* dp;
     int ret = 0;
 
-    best_match = -1;
-    ngptrs = (char**)safemalloc(MAX_NG * sizeof (char*));
-    ngn = 0;
+    s_best_match = -1;
+    s_ngptrs = (char**)safemalloc(MAX_NG * sizeof (char*));
+    s_ngn = 0;
 
     /* Iterate over all legal newsgroups */
     for (dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp)) {
@@ -969,20 +969,20 @@ int find_close_match()
 	ret = 0;
     }
 
-    /* ngn is the number of possibilities.  If there's just one, go with it. */
+    /* s_ngn is the number of possibilities.  If there's just one, go with it. */
 
-    switch (ngn) {
+    switch (s_ngn) {
         case 0:
 	    break;
 	case 1: {
-	    char* cp = strchr(ngptrs[0], ' ');
+	    char* cp = strchr(s_ngptrs[0], ' ');
 	    if (cp)
 		*cp = '\0';
 	    if (g_verbose)
-		printf("(I assume you meant %s)\n", ngptrs[0]) FLUSH;
+		printf("(I assume you meant %s)\n", s_ngptrs[0]) FLUSH;
 	    else
-		printf("(Using %s)\n", ngptrs[0]) FLUSH;
-	    set_ngname(ngptrs[0]);
+		printf("(Using %s)\n", s_ngptrs[0]) FLUSH;
+	    set_ngname(s_ngptrs[0]);
 	    if (cp)
 		*cp = ' ';
 	    ret = 1;
@@ -992,7 +992,7 @@ int find_close_match()
 	    ret = get_near_miss();
 	    break;
     }
-    free((char*)ngptrs);
+    free((char*)s_ngptrs);
     return ret;
 }
 
@@ -1020,17 +1020,17 @@ static int check_distance(int len, HASHDATUM *data, int newsrc_ptr)
     if (value > MIN_DIST)
 	return 0;
 
-    if (value < best_match)
-	ngn = 0;
-    if (best_match < 0 || value <= best_match) {
+    if (value < s_best_match)
+	s_ngn = 0;
+    if (s_best_match < 0 || value <= s_best_match) {
 	int i;
-	for (i = 0; i < ngn; i++) {
-	    if (!strcmp(name,ngptrs[i]))
+	for (i = 0; i < s_ngn; i++) {
+	    if (!strcmp(name,s_ngptrs[i]))
 		return 0;
 	}
-	best_match = value;
-	if (ngn < MAX_NG)
-	    ngptrs[ngn++] = name;
+	s_best_match = value;
+	if (s_ngn < MAX_NG)
+	    s_ngptrs[s_ngn++] = name;
     }
     return 0;
 }
@@ -1047,13 +1047,13 @@ static int get_near_miss()
 
     if (g_verbose)
 	printf("However, here are some close matches:\n") FLUSH;
-    if (ngn > 9)
-	ngn = 9;	/* Since we're using single digits.... */
-    for (i = 0; i < ngn; i++) {
-	char* cp = strchr(ngptrs[i], ' ');
+    if (s_ngn > 9)
+	s_ngn = 9;	/* Since we're using single digits.... */
+    for (i = 0; i < s_ngn; i++) {
+	char* cp = strchr(s_ngptrs[i], ' ');
 	if (cp)
 	    *cp = '\0';
-	printf("  %d.  %s\n", i+1, ngptrs[i]);
+	printf("  %d.  %s\n", i+1, s_ngptrs[i]);
 	sprintf(op++, "%d", i+1);	/* Expensive, but avoids ASCII deps */
 	if (cp)
 	    *cp = ' ';
@@ -1088,12 +1088,12 @@ reask:
 	    if (isdigit(*g_buf)) {
 		char* s = strchr(options, *g_buf);
 
-		i = s ? (s - options) : ngn;
-		if (i >= 0 && i < ngn) {
-		    char* cp = strchr(ngptrs[i], ' ');
+		i = s ? (s - options) : s_ngn;
+		if (i >= 0 && i < s_ngn) {
+		    char* cp = strchr(s_ngptrs[i], ' ');
 		    if (cp)
 			*cp = '\0';
-		    set_ngname(ngptrs[i]);
+		    set_ngname(s_ngptrs[i]);
 		    if (cp)
 			*cp = ' ';
 		    return 1;
