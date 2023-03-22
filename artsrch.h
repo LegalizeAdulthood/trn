@@ -8,7 +8,7 @@
 #include "search.h"
 #endif
 
-enum
+enum art_search_result
 {
     SRCH_ABORT = 0,
     SRCH_INTR = 1,
@@ -40,7 +40,7 @@ extern int g_art_srchhdr;    /* specific header number to search */
 extern bool g_art_doread;    /* search read articles? */
 
 void artsrch_init();
-int art_search(char *patbuf, int patbufsiz, int get_cmd);
+art_search_result art_search(char *patbuf, int patbufsiz, int get_cmd);
 bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope);
 
 #endif

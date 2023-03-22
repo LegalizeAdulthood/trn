@@ -219,7 +219,9 @@ int do_kfile(FILE *kfp, int entering)
 	    case SRCH_FOUND:
 		/*fputs("\tfound\n",stdout) FLUSH;*/
 		break;
-	    }
+            case SRCH_ERROR:
+                break;
+            }
 	}
 	else if (first_time && *bp == '<') {
 	    ARTICLE* ap;

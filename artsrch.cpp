@@ -40,7 +40,7 @@ void artsrch_init()
 /* search for an article containing some pattern */
 
 /* if patbuf != g_buf, get_cmd must be set to false!!! */
-int art_search(char *patbuf, int patbufsiz, int get_cmd)
+art_search_result art_search(char *patbuf, int patbufsiz, int get_cmd)
 {
     char* pattern;			/* unparsed pattern */
     char cmdchr = *patbuf;	/* what kind of search? */
@@ -49,7 +49,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 					/* direction of search */
     COMPEX* compex;			/* which compiled expression */
     char* cmdlst = nullptr;		/* list of commands to do */
-    int ret = SRCH_NOTFOUND;		/* assume no commands */
+    art_search_result ret = SRCH_NOTFOUND; /* assume no commands */
     int saltaway = 0;			/* store in KILL file? */
     int howmuch;			/* search scope: subj/from/Hdr/head/art */
     int srchhdr;			/* header to search if Hdr scope */
