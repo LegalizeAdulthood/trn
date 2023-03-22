@@ -6,7 +6,6 @@
 #include "EXTERN.h"
 #include "common.h"
 #include "nntpclient.h"
-#include "INTERN.h"
 #include "nntpinit.h"
 
 #ifdef WIN32
