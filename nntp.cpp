@@ -333,7 +333,7 @@ char *nntp_readart(char *s, int limit)
 }
 
 /* This is a 1-relative list */
-static int maxdays[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+static int s_maxdays[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 time_t nntp_time()
 {
@@ -357,16 +357,16 @@ time_t nntp_time()
 
     /* This simple algorithm will be valid until the year 2100 */
     if (year % 4)
-	maxdays[2] = 28;
+	s_maxdays[2] = 28;
     else
-	maxdays[2] = 29;
-    if (month < 1 || month > 12 || day < 1 || day > maxdays[month]
+	s_maxdays[2] = 29;
+    if (month < 1 || month > 12 || day < 1 || day > s_maxdays[month]
      || hh < 0 || hh > 23 || mm < 0 || mm > 59
      || ss < 0 || ss > 59)
 	return time((time_t*)nullptr);
 
     for (month--; month; month--)
-	day += maxdays[month];
+	day += s_maxdays[month];
 
     ss = ((((year-1970) * 365 + (year-1969)/4 + day - 1) * 24L + hh) * 60
 	  + mm) * 60 + ss;
