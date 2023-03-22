@@ -47,9 +47,11 @@ HISTORY
 
 static int s_insert_cost = 1;
 static int s_delete_cost = 1;
-static int s_iswap;          /* swap_int temp variable */
-static char *s_cswap;        /* swap_char temp variable */
-static int s_mx, s_my, s_mz; /* min2, min3 temp variables */
+static int s_iswap{};   /* swap_int temp variable */
+static char *s_cswap{}; /* swap_char temp variable */
+static int s_mx{};      /* min2, min3 temp variables */
+static int s_my{};
+static int s_mz{};
 
 
 /* edit_distn -- returns the edit distance between two strings, or -1 on
