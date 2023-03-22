@@ -36,18 +36,15 @@
 **  on.
 */
 
-#include <stdio.h>
-#include "config.h"
-#include "config2.h"
 #include "wildmat.h"
-#include "wildmat.ih"
 
     /* What character marks an inverted character class? */
 #define NEGATE_CLASS		'^'
-    /* Is "*" a common pattern? */
-#define OPTIMIZE_JUST_STAR
-    /* Do tar(1) matching rules, which ignore a trailing slash? */
-#undef MATCH_TAR_PATTERN
+
+#define OPTIMIZE_JUST_STAR /* Is "*" a common pattern? */
+#undef MATCH_TAR_PATTERN   /* Do tar(1) matching rules, which ignore a trailing slash? */
+
+static bool DoMatch(const char *text, const char *p);
 
 /*
 **  Match text and p, return true, false.
@@ -121,9 +118,7 @@ bool wildmat(const char *text, const char *p)
 
 #ifdef	TEST
 #include <stdio.h>
-#endif
 
-#ifdef	TEST
 int main()
 {
     /* Yes, we use gets not fgets.  Sue me. */

@@ -1,5 +1,0 @@
-/* wildmat.ih
- */
-/* This software is copyrighted as detailed in the LICENSE file. */
-
-static bool DoMatch(const char *text, const char *p);
