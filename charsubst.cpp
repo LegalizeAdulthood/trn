@@ -25,7 +25,7 @@ char *g_charsubst{};
 
 /* TeX encoding table - gives ISO char for "x (x=32..127) */
 
-static Uchar textbl[96] = {
+static Uchar s_textbl[96] = {
     0,  0,'"',  0,  0,  0,  0,'"',  0,  0,  0,  0,  0,  0,  0,  0,
     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
     0,196,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,214,
@@ -33,8 +33,7 @@ static Uchar textbl[96] = {
   '"',228,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,246,
     0,  0,  0,223,  0,252,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
 };
-
-static char texchar = '\0';
+static char s_texchar = '\0';
 
 static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t);
 
@@ -63,15 +62,15 @@ int putsubstchar(int c, int limit, bool outputok)
 	break;
       case 't':
 	if (c == '\\' || c == '"') {
-	    if (texchar && (c == '\\' || texchar != '\\')) {
+	    if (s_texchar && (c == '\\' || s_texchar != '\\')) {
 		if (outputok)
-		    putchar(texchar);
+		    putchar(s_texchar);
 		i++;
 	    }
-	    texchar = (char)c;
+	    s_texchar = (char)c;
 	    break;
 	}
-	else if (texchar == '\\') {
+	else if (s_texchar == '\\') {
 	    if (outputok)
 		putchar('\\');
 	    if (limit == 1) {
@@ -80,12 +79,12 @@ int putsubstchar(int c, int limit, bool outputok)
 	    }
 	    i++;
 	}
-	else if (texchar == '"') {
+	else if (s_texchar == '"') {
 	    if (c < 32 || c > 128)
 		d = '\0';
 	    else
-		d = textbl[c-32];
-	    texchar = '\0'; 
+		d = s_textbl[c-32];
+	    s_texchar = '\0'; 
 	    if (d)
 		c = d;
 	    else {
