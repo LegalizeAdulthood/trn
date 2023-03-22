@@ -488,12 +488,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 				s = "";
 			}
 			else
-#ifdef LINKART
-			    s = linkartname;  /* for Eunice */
-#else
 			    sprintf(s = scrbuf,"%s/%s/%ld",g_datasrc->spool_dir,
 				    g_ngdir,(long)g_art);
-#endif
 		    }
 		    else
 			s = "";
@@ -861,12 +857,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			s = "";
 			break;
 		    }
-#ifdef LINKART
-		    s = linkartname;	/* so Eunice people get right file */
-#else
 		    s = scrbuf;
 		    sprintf(s,"%ld",(long)g_art);
-#endif
 		    if (stat(s,&g_filestat) < 0)
 			g_filestat.st_size = 0L;
 		    sprintf(scrbuf,"%5ld",(long)g_filestat.st_size);

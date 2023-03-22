@@ -169,14 +169,14 @@ void nntp_body(ART_NUM artnum)
     if (artname) {
 	if (s_body_pos >= 0)
 	    nntp_finishbody(FB_DISCARD);
-	artfp = fopen(artname,"r");
-	if (artfp && fstat(fileno(artfp),&g_filestat) == 0)
+	g_artfp = fopen(artname,"r");
+	if (g_artfp && fstat(fileno(g_artfp),&g_filestat) == 0)
 	    s_body_end = g_filestat.st_size;
 	return;
     }
 
     artname = nntp_artname(artnum, true);   /* Allocate a tmp file */
-    if (!(artfp = fopen(artname, "w+"))) {
+    if (!(g_artfp = fopen(artname, "w+"))) {
 	fprintf(stderr, "\nUnable to write temporary file: '%s'.\n",
 		artname);
 	finalize(1); /*$$*/
@@ -184,7 +184,7 @@ void nntp_body(ART_NUM artnum)
 #ifndef MSDOS
     chmod(artname, 0600);
 #endif
-    /*artio_setbuf(artfp);$$*/
+    /*artio_setbuf(g_artfp);$$*/
     if (g_parsed_art == artnum)
 	sprintf(g_ser_line, "BODY %ld", (long)artnum);
     else
@@ -196,15 +196,15 @@ void nntp_body(ART_NUM artnum)
       case -1:
 	finalize(1); /*$$*/
       case 0:
-	fclose(artfp);
-	artfp = nullptr;
+	fclose(g_artfp);
+	g_artfp = nullptr;
 	errno = ENOENT;			/* Simulate file-not-found */
 	return;
     }
     s_body_pos = 0;
     if (g_parsed_art == artnum) {
-	fwrite(g_headbuf, 1, strlen(g_headbuf), artfp);
-	g_htype[PAST_HEADER].minpos = s_body_end = (ART_POS)ftell(artfp);
+	fwrite(g_headbuf, 1, strlen(g_headbuf), g_artfp);
+	g_htype[PAST_HEADER].minpos = s_body_end = (ART_POS)ftell(g_artfp);
     }
     else {
 	char b[NNTP_STRLEN];
@@ -215,7 +215,7 @@ void nntp_body(ART_NUM artnum)
 	    prev_pos = s_body_end;
 	}
     }
-    fseek(artfp, 0L, 0);
+    fseek(g_artfp, 0L, 0);
     nntplink.flags &= ~NNTP_NEW_CMD_OK;
 }
 
@@ -236,7 +236,7 @@ static int nntp_copybody(char *s, int limit, ART_POS pos)
 	    strcpy(s,"."); /*$$*/
 	if (had_nl) {
 	    if (nntp_at_list_end(s)) {
-		fseek(artfp, (long)s_body_pos, 0);
+		fseek(g_artfp, (long)s_body_pos, 0);
 		s_body_pos = -1;
 		return 0;
 	    }
@@ -246,8 +246,8 @@ static int nntp_copybody(char *s, int limit, ART_POS pos)
 	len = strlen(s);
 	if (found_nl)
 	    strcpy(s+len, "\n");
-	fputs(s, artfp);
-	s_body_end = ftell(artfp);
+	fputs(s, g_artfp);
+	s_body_end = ftell(g_artfp);
 	had_nl = found_nl;
     }
     return 1;
@@ -262,8 +262,8 @@ int nntp_finishbody(int bmode)
 	/*printf("Discarding the rest of the article...\n") FLUSH; $$*/
 #if 0
 	/* Implement this if flushing the data becomes possible */
-	nntp_artname(openart, -1); /* Or something... */
-	openart = 0;	/* Since we didn't finish the art, forget its number */
+	nntp_artname(g_openart, -1); /* Or something... */
+	g_openart = 0;	/* Since we didn't finish the art, forget its number */
 #endif
     }
     else
@@ -274,7 +274,7 @@ int nntp_finishbody(int bmode)
 	    printf("Receiving..."), fflush(stdout);
     }
     if (s_body_end != s_body_pos)
-	fseek(artfp, (long)s_body_end, 0);
+	fseek(g_artfp, (long)s_body_end, 0);
     if (bmode != FB_BACKGROUND)
 	nntp_copybody(b, sizeof b, (ART_POS)0x7fffffffL);
     else {
@@ -283,7 +283,7 @@ int nntp_finishbody(int bmode)
 		break;
 	}
 	if (s_body_pos >= 0)
-	    fseek(artfp, (long)s_body_pos, 0);
+	    fseek(g_artfp, (long)s_body_pos, 0);
     }
     if (bmode == FB_OUTPUT)
 	erase_line(false);	/* erase the prompt */
@@ -295,7 +295,7 @@ int nntp_seekart(ART_POS pos)
     if (s_body_pos >= 0) {
 	if (s_body_end < pos) {
 	    char b[NNTP_STRLEN];
-	    fseek(artfp, (long)s_body_end, 0);
+	    fseek(g_artfp, (long)s_body_end, 0);
 	    nntp_copybody(b, sizeof b, pos);
 	    if (s_body_pos >= 0)
 		s_body_pos = pos;
@@ -303,12 +303,12 @@ int nntp_seekart(ART_POS pos)
 	else
 	    s_body_pos = pos;
     }
-    return fseek(artfp, (long)pos, 0);
+    return fseek(g_artfp, (long)pos, 0);
 }
 
 ART_POS nntp_tellart()
 {
-    return s_body_pos < 0 ? (ART_POS)ftell(artfp) : s_body_pos;
+    return s_body_pos < 0 ? (ART_POS)ftell(g_artfp) : s_body_pos;
 }
 
 char *nntp_readart(char *s, int limit)
@@ -321,15 +321,15 @@ char *nntp_readart(char *s, int limit)
 		s_body_pos = s_body_end;
 		return s;
 	    }
-	    fseek(artfp, (long)s_body_pos, 0);
+	    fseek(g_artfp, (long)s_body_pos, 0);
 	}
-	s = fgets(s, limit, artfp);
-	s_body_pos = ftell(artfp);
+	s = fgets(s, limit, g_artfp);
+	s_body_pos = ftell(g_artfp);
 	if (s_body_pos == s_body_end)
-	    fseek(artfp, (long)s_body_pos, 0);  /* Prepare for coming write */
+	    fseek(g_artfp, (long)s_body_pos, 0);  /* Prepare for coming write */
 	return s;
     }
-    return fgets(s, limit, artfp);
+    return fgets(s, limit, g_artfp);
 }
 
 /* This is a 1-relative list */

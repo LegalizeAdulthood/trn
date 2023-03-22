@@ -9,7 +9,7 @@
 #include "list.h"
 #include "cache.h"
 #include "bits.h"
-#include "artio.h"		/* for openart var.*/
+#include "artio.h"		/* for g_openart var.*/
 #include "ng.h"			/* g_art */
 #include "ngdata.h"
 #include "rt-util.h"		/* spinner */
@@ -254,7 +254,7 @@ void sc_fill_scorelist(ART_NUM first, ART_NUM last)
  */
 void sc_lookahead(bool flag, bool nowait)
 {
-    ART_NUM oldart = openart;
+    ART_NUM oldart = g_openart;
     ART_POS oldartpos;
 
     if (!g_sc_initialized)

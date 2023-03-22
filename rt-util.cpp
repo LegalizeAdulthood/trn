@@ -605,7 +605,7 @@ void setspin(int mode)
       case SPIN_BACKGROUND:
       case SPIN_BARGRAPH:
 	if (!spin_level++) {
-	    if ((spin_art = openart) != 0 && artfp)
+	    if ((spin_art = g_openart) != 0 && g_artfp)
 		spin_tell = tellart();
 	    g_spin_count = 0;
 	    spin_place = 0;

@@ -181,9 +181,9 @@ int save_article()
 		part = partOpt;
 	    if (totalOpt)
 		total = totalOpt;
-	    for (artpos = g_savefrom;
+	    for (g_artpos = g_savefrom;
 		 readart(g_art_line,sizeof g_art_line) != nullptr;
-		 artpos = tellart())
+		 g_artpos = tellart())
 	    {
 		if (*g_art_line <= ' ')
 		    continue;	/* Ignore empty or initially-whitespace lines */
@@ -197,12 +197,12 @@ int save_article()
 		 || !strncmp(g_art_line, "echo ", 5)
 #endif
 		) {
-		    g_savefrom = artpos;
+		    g_savefrom = g_artpos;
 		    decode_type = 1;
 		    break;
 		}
 		else if (uue_prescan(g_art_line,&filename,&part,&total)) {
-		    g_savefrom = artpos;
+		    g_savefrom = g_artpos;
 		    seekart(g_savefrom);
 		    decode_type = 2;
 		    break;
@@ -456,15 +456,15 @@ int view_article()
 
 	/* Scan subject for filename and part number information */
 	filename = decode_subject(g_art, &part, &total);
-	for (artpos = g_savefrom;
+	for (g_artpos = g_savefrom;
 	     readart(g_art_line,sizeof g_art_line) != nullptr;
-	     artpos = tellart())
+	     g_artpos = tellart())
 	{
 	    if (*g_art_line <= ' ')
 		continue;	/* Ignore empty or initially-whitespace lines */
 	    if (uue_prescan(g_art_line, &filename, &part, &total)) {
 		MIMECAP_ENTRY* mc = mime_FindMimecapEntry("image/jpeg",0); /*$$ refine this */
-		g_savefrom = artpos;
+		g_savefrom = g_artpos;
 		seekart(g_savefrom);
 		g_mime_section->type = UNHANDLED_MIME;
 		safefree(g_mime_section->filename);
@@ -606,7 +606,7 @@ int supersede_article()		/* Supersedes: */
 	}
 	interp(hbuf, sizeof hbuf, get_val("SUPERSEDEHEADER",SUPERSEDEHEADER));
 	fputs(hbuf,g_tmpfp);
-	if (incl_body && artfp != nullptr) {
+	if (incl_body && g_artfp != nullptr) {
 	    parseheader(g_art);
 	    seekart(g_htype[PAST_HEADER].minpos);
 	    while (readart(g_buf,LBUFLEN) != nullptr)
@@ -683,7 +683,7 @@ void reply()
 	    printf("\n%s\n(Header in %s)\n",g_buf,g_headname) FLUSH;
 	termdown(3);
     }
-    if (incl_body && artfp != nullptr) {
+    if (incl_body && g_artfp != nullptr) {
 	char* s;
 	char* t;
 	interp(g_buf, (sizeof g_buf), get_val("YOUSAID",YOUSAID));
@@ -692,7 +692,7 @@ void reply()
 	mime_SetArticle();
 	clear_artbuf();
 	seekart(g_htype[PAST_HEADER].minpos);
-	wrapped_nl = '\n';
+	g_wrapped_nl = '\n';
 	while ((s = readartbuf(false)) != nullptr) {
 	    if ((t = strchr(s, '\n')) != nullptr)
 		*t = '\0';
@@ -702,7 +702,7 @@ void reply()
 		*t = '\0';
 	}
 	fprintf(g_tmpfp,"\n");
-	wrapped_nl = WRAPPED_NL;
+	g_wrapped_nl = WRAPPED_NL;
     }
     fclose(g_tmpfp);
     safecpy(g_cmd_buf,filexp(maildoer),sizeof g_cmd_buf);
@@ -778,7 +778,7 @@ void forward()
 	    printf("\n%s\n(Header in %s)\n",hbuf,g_headname) FLUSH;
 	termdown(3);
     }
-    if (artfp != nullptr) {
+    if (g_artfp != nullptr) {
 	interp(g_buf, sizeof g_buf, get_val("FORWARDMSG",FORWARDMSG));
 	if (mime_boundary) {
 	    if (*g_buf && strncasecmp(g_buf, "Content-", 8))
@@ -842,7 +842,7 @@ void followup()
     }
     interp(hbuf, sizeof hbuf, get_val("NEWSHEADER",NEWSHEADER));
     fputs(hbuf,g_tmpfp);
-    if (incl_body && artfp != nullptr) {
+    if (incl_body && g_artfp != nullptr) {
 	char* s;
 	char* t;
 	if (g_verbose)
@@ -856,7 +856,7 @@ trim the quoted article down as much as possible.)\n\
 	mime_SetArticle();
 	clear_artbuf();
 	seekart(g_htype[PAST_HEADER].minpos);
-	wrapped_nl = '\n';
+	g_wrapped_nl = '\n';
 	while ((s = readartbuf(false)) != nullptr) {
 	    if ((t = strchr(s, '\n')) != nullptr)
 		*t = '\0';
@@ -866,7 +866,7 @@ trim the quoted article down as much as possible.)\n\
 		*t = '\0';
 	}
 	fprintf(g_tmpfp,"\n");
-	wrapped_nl = WRAPPED_NL;
+	g_wrapped_nl = WRAPPED_NL;
     }
     fclose(g_tmpfp);
     follow_it_up();

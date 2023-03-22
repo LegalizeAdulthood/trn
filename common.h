@@ -77,7 +77,6 @@
 /* Valid substitutions for strings marked with % comment are:
  *	%a	Current article number
  *	%A	Full name of current article (%P/%c/%a)
- *		(if LINKART defined, is the name of the real article)
  *	%b	Destination of a save command, a mailbox or command
  *	%B	The byte offset to the beginning of the article for saves
  *		with or without the header

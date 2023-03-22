@@ -20,7 +20,7 @@ extern ART_POS g_artsize;        /* size in bytes of article */
 extern char g_art_line[LBUFLEN]; /* place for article lines */
 
 extern int g_gline;
-extern ART_POS g_innersearch;  /* artpos of end of line we want to visit */
+extern ART_POS g_innersearch;  /* g_artpos of end of line we want to visit */
 extern ART_LINE g_innerlight;  /* highlight position for g_innersearch or 0 */
 extern char g_hide_everything; /* if set, do not write page now, */
                              /* ...but execute char when done with page */

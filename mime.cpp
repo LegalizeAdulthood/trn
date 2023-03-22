@@ -1146,7 +1146,7 @@ int filter_html(char *t, char *f)
     word_wrap = (g_mime_section->html & HF_IN_PRE)? word_wrap_in_pre
 						: normal_word_wrap;
     if (!g_mime_section->html_line_start)
-	g_mime_section->html_line_start = t - artbuf;
+	g_mime_section->html_line_start = t - g_artbuf;
 
     if (!g_mime_section->html_blks) {
 	g_mime_section->html_blks = (HBLK*)safemalloc(HTML_MAX_BLOCKS
@@ -1281,8 +1281,8 @@ int filter_html(char *t, char *f)
 	    g_mime_section->html |= HF_NL_OK|HF_P_OK|HF_SPACE_OK;
 	}
 
-	if (word_wrap && t - artbuf - g_mime_section->html_line_start > tc_COLS) {
-	    char* line_start = g_mime_section->html_line_start + artbuf;
+	if (word_wrap && t - g_artbuf - g_mime_section->html_line_start > tc_COLS) {
+	    char* line_start = g_mime_section->html_line_start + g_artbuf;
 	    for (cp = line_start + word_wrap;
 		 cp > line_start && *cp != ' ' && *cp != '\t';
 		 cp--) ;
@@ -1620,7 +1620,7 @@ static char *do_newline(char *t, int flag)
 	g_mime_section->html &= ~(flag|HF_SPACE_OK);
 	t += do_indent(t);
 	*t++ = '\n';
-	g_mime_section->html_line_start = t - artbuf;
+	g_mime_section->html_line_start = t - g_artbuf;
 	g_mime_section->html |= HF_NEED_INDENT;
     }
     return t;

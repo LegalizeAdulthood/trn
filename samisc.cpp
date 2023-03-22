@@ -8,7 +8,7 @@
 #include "common.h"
 #include "list.h"
 #include "cache.h"
-#include "artio.h"		/* openart */
+#include "artio.h"		/* g_openart */
 #include "bits.h"
 #include "scanart.h"
 #include "samain.h"
@@ -148,7 +148,7 @@ void sa_go_art(long a)
 {
     g_art = a;
     (void)article_find(g_art);
-    if (openart != g_art)
+    if (g_openart != g_art)
         artopen(g_art,(ART_POS)0);
 }
 

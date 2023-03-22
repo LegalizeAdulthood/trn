@@ -341,7 +341,7 @@ int do_newsgroup(char *start_command)
 		g_rotate = false;
 	    }
 	    if (!g_do_fseek) {		/* starting at top of article? */
-		artline = 0;		/* start at the beginning */
+		g_artline = 0;		/* start at the beginning */
 		g_topline = -1;		/* and remember top line of screen */
 					/*  (line # within article file) */
 	    }
@@ -370,7 +370,7 @@ int do_newsgroup(char *start_command)
 				g_ngname);
 		}
 		linenum = tree_puts(tmpbuf,0,0);
-		vwtary(artline,(ART_POS)0);
+		vwtary(g_artline,(ART_POS)0);
 		finish_tree(linenum);
 		g_prompt = whatnext;
 		g_srchahead = 0;
@@ -1203,9 +1203,9 @@ run_the_selector:
 	    g_reread = true;
 	    clear();
 	    g_do_fseek = true;
-	    artline = g_topline;
-	    if (artline < 0)
-		artline = 0;
+	    g_artline = g_topline;
+	    if (g_artline < 0)
+		g_artline = 0;
 	}
 	return AS_NORM;
       case Ctl('^'):
@@ -1219,16 +1219,16 @@ run_the_selector:
 	    if (g_artsize < 0) {
 		nntp_finishbody(FB_OUTPUT);
 		g_raw_artsize = nntp_artsize();
-		g_artsize = g_raw_artsize-artbuf_seek+artbuf_len+g_htype[PAST_HEADER].minpos;
+		g_artsize = g_raw_artsize-g_artbuf_seek+g_artbuf_len+g_htype[PAST_HEADER].minpos;
 	    }
 	    if (g_do_hiding) {
 		seekartbuf(g_artsize);
-		seekartbuf(artpos);
+		seekartbuf(g_artpos);
 	    }
 	    g_reread = true;
 	    g_do_fseek = true;
-	    g_topline = artline;
-	    g_innerlight = artline - 1;
+	    g_topline = g_artline;
+	    g_innerlight = g_artline - 1;
 	    g_innersearch = g_artsize;
 	    g_gline = 0;
 	    g_hide_everything = 'b';
@@ -1250,13 +1250,13 @@ run_the_selector:
 		    g_highlight = g_topline;
 		}
 	    }
-	    artline = g_topline;
-	    if (artline >= 0) do {
-		artline--;
-	    } while(artline >= 0 && artline > target && vrdary(artline-1) >= 0);
-	    g_topline = artline;
-	    if (artline < 0)
-		artline = 0;
+	    g_artline = g_topline;
+	    if (g_artline >= 0) do {
+		g_artline--;
+	    } while(g_artline >= 0 && g_artline > target && vrdary(g_artline-1) >= 0);
+	    g_topline = g_artline;
+	    if (g_artline < 0)
+		g_artline = 0;
 	}
 	return AS_NORM;
       case '!':			/* shell escape */

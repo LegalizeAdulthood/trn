@@ -226,7 +226,7 @@ void end_header_line()
     if (s_first_one) {		/* did we just pass 1st occurance? */
 	s_first_one = false;
 	/* remember where line left off */
-	g_htype[g_in_header].maxpos = artpos;
+	g_htype[g_in_header].maxpos = g_artpos;
 	if (g_htype[g_in_header].flags & HT_CACHED) {
 	    if (!get_cached_line(g_parsed_artp, g_in_header, true)) {
 		int start = g_htype[g_in_header].minpos
@@ -234,7 +234,7 @@ void end_header_line()
 		MEM_SIZE size;
 		while (g_headbuf[start] == ' ' || g_headbuf[start] == '\t')
 		    start++;
-		size = artpos - start + 1 - 1;	/* pre-strip newline */
+		size = g_artpos - start + 1 - 1;	/* pre-strip newline */
 		if (g_in_header == SUBJ_LINE)
 		    set_subj_line(g_parsed_artp,g_headbuf+start,size-1);
 		else {
@@ -268,7 +268,7 @@ bool parseline(char *art_buf, int newhide, int oldhide)
 	    g_in_header = set_line_type(art_buf,s);
 	    s_first_one = (g_htype[g_in_header].minpos < 0);
 	    if (s_first_one) {
-		g_htype[g_in_header].minpos = artpos;
+		g_htype[g_in_header].minpos = g_artpos;
 		if (g_in_header == DATE_LINE) {
 		    if (!g_parsed_artp->date)
 			g_parsed_artp->date = parsedate(art_buf+6);
@@ -296,7 +296,7 @@ void end_header()
 
     if (s_reading_nntp_header) {
 	s_reading_nntp_header = false;
-	g_htype[PAST_HEADER].minpos = artpos + 1;	/* nntp_body will fix this */
+	g_htype[PAST_HEADER].minpos = g_artpos + 1;	/* nntp_body will fix this */
     }
     else
 	g_htype[PAST_HEADER].minpos = tellart();
@@ -356,10 +356,10 @@ bool parseheader(ART_NUM artnum)
 	return false;
 
     start_header(artnum);
-    artpos = 0;
+    g_artpos = 0;
     bp = g_headbuf;
     while (g_in_header) {
-	if (g_headbuf_size < artpos + LBUFLEN) {
+	if (g_headbuf_size < g_artpos + LBUFLEN) {
 	    len = bp - g_headbuf;
 	    g_headbuf_size += LBUFLEN * 4;
 	    g_headbuf = saferealloc(g_headbuf,g_headbuf_size);
@@ -391,7 +391,7 @@ bool parseheader(ART_NUM artnum)
 	if (had_nl)
 	    parseline(bp,false,false);
 	had_nl = found_nl;
-	artpos += len;
+	g_artpos += len;
 	bp += len;
     }
     *bp = '\0';
