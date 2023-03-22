@@ -1,7 +1,8 @@
 /* common.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-
+#ifndef COMMON_H
+#define COMMON_H
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -602,22 +603,22 @@
 /* GLOBAL THINGS */
 
 /* file statistics area */
-EXT struct stat filestat;
+extern struct stat filestat;
 
 /* various things of type char */
 
-EXT char msg[CBUFLEN];		/* general purpose message buffer */
-EXT char buf[LBUFLEN+1];	/* general purpose line buffer */
-EXT char cmd_buf[CBUFLEN];	/* buffer for formatting system commands */
-EXT char* indstr INIT(">");	/* indent for old article embedded in followup */
+extern char msg[CBUFLEN];     /* general purpose message buffer */
+extern char buf[LBUFLEN + 1]; /* general purpose line buffer */
+extern char cmd_buf[CBUFLEN]; /* buffer for formatting system commands */
+extern char *indstr;          /* indent for old article embedded in followup */
 
-EXT char* cwd INIT(nullptr);	/* current working directory */
-EXT char* dfltcmd INIT(nullptr);	/* 1st char is default command */
+extern char *cwd;     /* current working directory */
+extern char *dfltcmd; /* 1st char is default command */
 
 /* switches */
 
 #ifdef DEBUG
-    EXT int debug INIT(0);				/* -D */
+extern int debug; /* -D */
 #   define DEB_COREDUMPSOK 2
 #   define DEB_HEADER 4
 #   define DEB_INTRP 8
@@ -634,125 +635,121 @@ EXT char* dfltcmd INIT(nullptr);	/* 1st char is default command */
 #   define DEB_FEED_XREF 16384
 #endif
 
-EXT int scanon INIT(0);					/* -S */
+extern int scanon; /* -S */
 
-EXT bool use_threads INIT(THREAD_INIT);			/* -x */
-EXT int max_tree_lines INIT(6);
+extern bool use_threads; /* -x */
+extern int max_tree_lines;
 
-EXT char UnivSelCmds[3] INIT("Z>");
-EXT char NewsrcSelCmds[3] INIT("Z>");
-EXT char AddSelCmds[3] INIT("Z>");
-EXT char NewsgroupSelCmds[3] INIT("Z>");
-EXT char NewsSelCmds[3] INIT("Z>");
-EXT char OptionSelCmds[3] INIT("Z>");
+extern char UnivSelCmds[3];
+extern char NewsrcSelCmds[3];
+extern char AddSelCmds[3];
+extern char NewsgroupSelCmds[3];
+extern char NewsSelCmds[3];
+extern char OptionSelCmds[3];
 
-EXT int UnivSelBtnCnt;
-EXT int NewsrcSelBtnCnt;
-EXT int AddSelBtnCnt;
-EXT int NewsgroupSelBtnCnt;
-EXT int NewsSelBtnCnt;
-EXT int OptionSelBtnCnt;
-EXT int ArtPagerBtnCnt;
+extern int UnivSelBtnCnt;
+extern int NewsrcSelBtnCnt;
+extern int AddSelBtnCnt;
+extern int NewsgroupSelBtnCnt;
+extern int NewsSelBtnCnt;
+extern int OptionSelBtnCnt;
+extern int ArtPagerBtnCnt;
 
-EXT char* UnivSelBtns INIT(nullptr);
-EXT char* NewsrcSelBtns INIT(nullptr);
-EXT char* AddSelBtns INIT(nullptr);
-EXT char* NewsgroupSelBtns INIT(nullptr);
-EXT char* NewsSelBtns INIT(nullptr);
-EXT char* OptionSelBtns INIT(nullptr);
-EXT char* ArtPagerBtns INIT(nullptr);
+extern char *UnivSelBtns;
+extern char *NewsrcSelBtns;
+extern char *AddSelBtns;
+extern char *NewsgroupSelBtns;
+extern char *NewsSelBtns;
+extern char *OptionSelBtns;
+extern char *ArtPagerBtns;
 
-EXT bool dont_filter_control INIT(false);		/* -j */
-EXT int  join_subject_len INIT(0);			/* -J */
-EXT bool kill_thru_kludge INIT(true);			/* -k */
-EXT int keep_the_group_static INIT(0);			/* -K */
-EXT bool mbox_always INIT(false);			/* -M */
-EXT bool norm_always INIT(false);			/* -N */
-EXT bool thread_always INIT(false);			/* -a */
-EXT int auto_arrow_macros INIT(2);			/* -A */
-EXT bool breadth_first INIT(false);			/* -b */
-EXT bool bkgnd_spinner INIT(false);			/* -B */
-EXT bool novice_delays INIT(true);			/* +f */
-EXT int olden_days INIT(false);				/* -o */
-EXT char auto_select_postings INIT(0);			/* -p */
-EXT bool checkflag INIT(false);				/* -c */
-EXT char* savedir INIT(nullptr);				/* -d */
-EXT bool suppress_cn INIT(false);			/* -s */
-EXT int countdown INIT(5);	/* how many lines to list before invoking -s */
-EXT bool muck_up_clear INIT(false);			/* -loco */
-EXT bool erase_screen INIT(false);			/* -e */
-EXT bool can_home INIT(false);
-EXT bool erase_each_line INIT(false);			/* fancy -e */
-EXT int findlast INIT(0);				/* -r */
-EXT bool allow_typeahead INIT(false);			/* -T */
-EXT bool fuzzyGet INIT(false);				/* -G */
-EXT bool verbose INIT(true);				/* +t */
-EXT bool unbroken_subjects INIT(false);			/* -u */
-EXT bool unsafe_rc_saves INIT(false);			/* -U */
-EXT bool verify INIT(false);				/* -v */
-EXT bool quickstart INIT(false);			/* -q */
+extern bool dont_filter_control;  /* -j */
+extern int join_subject_len;      /* -J */
+extern bool kill_thru_kludge;     /* -k */
+extern int keep_the_group_static; /* -K */
+extern bool mbox_always;          /* -M */
+extern bool norm_always;          /* -N */
+extern bool thread_always;        /* -a */
+extern int auto_arrow_macros;     /* -A */
+extern bool breadth_first;        /* -b */
+extern bool bkgnd_spinner;        /* -B */
+extern bool novice_delays;        /* +f */
+extern int olden_days;            /* -o */
+extern char auto_select_postings; /* -p */
+extern bool checkflag;            /* -c */
+extern char *savedir;             /* -d */
+extern bool suppress_cn;          /* -s */
+extern int countdown;             /* how many lines to list before invoking -s */
+extern bool muck_up_clear;        /* -loco */
+extern bool erase_screen;         /* -e */
+extern bool can_home;
+extern bool erase_each_line;   /* fancy -e */
+extern int findlast;           /* -r */
+extern bool allow_typeahead;   /* -T */
+extern bool fuzzyGet;          /* -G */
+extern bool verbose;           /* +t */
+extern bool unbroken_subjects; /* -u */
+extern bool unsafe_rc_saves;   /* -U */
+extern bool verify;            /* -v */
+extern bool quickstart;        /* -q */
 
 #define DEFAULT_REFETCH_SECS  4L*60*60	/* 4 hours */
-EXT time_t defRefetchSecs INIT(DEFAULT_REFETCH_SECS);	/* -z */
+extern time_t defRefetchSecs;             /* -z */
 
-EXT int word_wrap_offset INIT(8);  /* right-hand column size (0 is off) */
+extern int word_wrap_offset; /* right-hand column size (0 is off) */
 
 #define NOMARKING 0
 #define STANDOUT 1
 #define UNDERLINE 2
 #define LASTMARKING 3
-EXT int marking INIT(NOMARKING);			/* -m */
+
+extern int marking; /* -m */
+
 #define HALFPAGE_MARKING 1
 #define BACKPAGE_MARKING 2
-EXT int marking_areas INIT(HALFPAGE_MARKING);
+extern int marking_areas;
 
-EXT ART_LINE initlines INIT(0);				/* -i */
-EXT bool append_unsub					/* -I */
-#ifdef APPEND_UNSUB
-     INIT(1);
-#else
-     INIT(0);
-#endif
+extern ART_LINE initlines; /* -i */
+extern bool append_unsub;  /* -I */
 
-EXT bool UseUnivSelector INIT(false);
-EXT bool UseNewsrcSelector INIT(false);
-EXT bool UseAddSelector INIT(true);
-EXT bool UseNewsgroupSelector INIT(true);
-EXT int UseNewsSelector INIT(SELECT_INIT-1);
-EXT bool UseMouse INIT(false);
-EXT char MouseModes[32] INIT("acjlptwvK");
-EXT bool use_colors INIT(false);
-EXT bool UseTk INIT(false);
-EXT bool UseTcl INIT(false);
-EXT bool UseSelNum INIT(false);
-EXT bool SelNumGoto INIT(false);
+extern bool UseUnivSelector;
+extern bool UseNewsrcSelector;
+extern bool UseAddSelector;
+extern bool UseNewsgroupSelector;
+extern int UseNewsSelector;
+extern bool UseMouse;
+extern char MouseModes[32];
+extern bool use_colors;
+extern bool UseTk;
+extern bool UseTcl;
+extern bool UseSelNum;
+extern bool SelNumGoto;
 /* miscellania */
 
-EXT bool in_ng INIT(false);		/* true if in a newsgroup */
-EXT char mode INIT('i');		/* current state of trn */
-EXT char gmode INIT('I');		/* general mode of trn */
+extern bool in_ng; /* true if in a newsgroup */
+extern char mode;  /* current state of trn */
+extern char gmode; /* general mode of trn */
 
-EXT FILE* tmpfp INIT(nullptr);	/* scratch fp used for .rnlock, .rnlast, etc. */
+extern FILE *tmpfp; /* scratch fp used for .rnlock, .rnlast, etc. */
 
 #define PLURAL(num) ((num)==1? "" : "s")
 #define ALLBITS(val,bits) (((val) & (bits)) == (bits))
 
 /* Factored strings */
 
-EXT char sh[] INIT(SH);
-EXT char defeditor[] INIT(DEFEDITOR);
-EXT char hforhelp[] INIT("Type h for help.\n");
+extern char sh[];
+extern char defeditor[];
+extern char hforhelp[];
 #ifdef STRICTCR
-EXT char badcr[] INIT("\nUnnecessary CR ignored.\n");
+extern char badcr[];
 #endif
-EXT char readerr[] INIT("rn read error");
-EXT char unsubto[] INIT("Unsubscribed to newsgroup %s\n");
-EXT char cantopen[] INIT("Can't open %s\n");
-EXT char cantcreate[] INIT("Can't create %s\n");
-EXT char cantrecreate[] INIT("Can't recreate %s -- restoring older version.\n\
-Perhaps you are near or over quota?\n");
+extern char readerr[];
+extern char unsubto[];
+extern char cantopen[];
+extern char cantcreate[];
+extern char cantrecreate[];
 
-EXT char nocd[] INIT("Can't chdir to directory %s\n");
+extern char nocd[];
 
 #ifdef NOLINEBUF
 #define FLUSH ,fflush(stdout)
@@ -770,3 +767,5 @@ EXT char nocd[] INIT("Can't chdir to directory %s\n");
 #define nntp_advise(str) fputs(str,stdout)
 #define nntp_init_error(str) fputs(str,stdout)
 #define nntp_error(str) fputs(str,stderr)
+
+#endif

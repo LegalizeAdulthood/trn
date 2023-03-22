@@ -6,13 +6,10 @@
 #include "EXTERN.h"
 #include "common.h"
 #include "env.h"
-#include "init.h"
 #include "util2.h"
 #include "util3.h"
 #include "nntpclient.h"
 #include "nntpinit.h"
-#include "INTERN.h"
-#include "common.h"
 
 #include <stdio.h>
 
@@ -21,10 +18,11 @@ enum
     MAX_SIGNATURE = 4
 };
 
-int	debug = 0;
-int	new_connection = false;
-char*	server_name;
-char*	g_nntp_auth_file;
+int debug{};
+int new_connection{};
+char *server_name{};
+char *g_nntp_auth_file{};
+char buf[LBUFLEN + 1]{}; /* general purpose line buffer */
 
 int valid_header(char *);
 void append_signature();

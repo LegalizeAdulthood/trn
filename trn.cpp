@@ -43,7 +43,6 @@
 #include "patchlevel.h"
 #include "common.h"
 #include "list.h"
-#include "hash.h"
 #include "ngdata.h"
 #include "nntpclient.h"
 #include "datasrc.h"
@@ -51,11 +50,9 @@
 #include "utf.h"
 #include "term.h"
 #include "final.h"
-#include "search.h"
 #include "addng.h"
 #include "ngstuff.h"
 #include "rcstuff.h"
-#include "env.h"
 #include "util.h"
 #include "util2.h"
 #include "only.h"
@@ -63,19 +60,26 @@
 #include "help.h"
 #include "last.h"
 #include "init.h"
-#include "intrp.h"
 #include "rcln.h"
 #include "sw.h"
 #include "opt.h"
-#include "cache.h"
 #include "ng.h"
 #include "kfile.h"
 #include "rt-select.h"
-#include "scan.h"
 #include "univ.h"
-#include "INTERN.h"
-#include "common.h"
 #include "trn.h"
+
+char *ngname{};   /* name of current newsgroup */
+int ngnlen{};     /* current malloced size of ngname */
+int ngname_len{}; /* length of current ngname */
+char *ngdir{};    /* same thing in directory name form */
+int ngdlen{};     /* current malloced size of ngdir */
+int ing_state{};
+bool write_less{};      /* write .newsrc less often */
+char *auto_start_cmd{}; /* command to auto-start with */
+bool auto_started{};    /* have we auto-started? */
+bool is_strn{};         /* Is this "strn", or trn/rn? */
+char patchlevel[]{PATCHLEVEL};
 
 void trn_init()
 {

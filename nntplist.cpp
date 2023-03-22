@@ -11,15 +11,13 @@
 #include "wildmat.h"
 #include "nntpclient.h"
 #include "nntpinit.h"
-#include "INTERN.h"
-#include "common.h"
 
 void Usage();
 
-char* server_name;
-char* g_nntp_auth_file;
-
-int debug = 0;			/* make nntpclient.c happy */
+char *server_name{};
+char *g_nntp_auth_file{};
+int debug{};             /* make nntpclient.c happy */
+char buf[LBUFLEN + 1]{}; /* general purpose line buffer */
 
 int main(int argc, char *argv[])
 {

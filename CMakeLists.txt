@@ -60,7 +60,7 @@ add_executable(trn
     cache.cpp cache.h
     charsubst.cpp charsubst.h
     color.cpp color.h
-    common.h
+    common.cpp common.h
     config2.h
     datasrc.cpp datasrc.h
     decode.cpp decode.h
