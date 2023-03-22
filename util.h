@@ -9,7 +9,7 @@
 
 extern bool g_waiting; /* waiting for subprocess (in doshell)? */
 extern bool g_nowait_fork;
-extern bool export_nntp_fds;
+extern bool g_export_nntp_fds;
 
 /* the strlen and the buffer length of "some_buf" after a call to:
  *     some_buf = get_a_line(bufptr,bufsize,realloc,fp); */

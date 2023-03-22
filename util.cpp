@@ -44,7 +44,7 @@ using WAIT_STATUS = int;
 
 bool g_waiting{}; /* waiting for subprocess (in doshell)? */
 bool g_nowait_fork{};
-bool export_nntp_fds{};
+bool g_export_nntp_fds{};
 /* the strlen and the buffer length of "some_buf" after a call to:
  *     some_buf = get_a_line(bufptr,bufsize,realloc,fp); */
 int g_len_last_line_got{};
@@ -101,7 +101,7 @@ int doshell(const char *shell, const char *s)
     sigset(SIGTTIN,SIG_DFL);
 #endif
     if (g_datasrc && (g_datasrc->flags & DF_REMOTE)) {
-	if (!export_nntp_fds || !g_nntplink.rd_fp)
+	if (!g_export_nntp_fds || !g_nntplink.rd_fp)
 	    un_export(s_nntpfds_export);
 	else {
 	    sprintf(g_buf,"%d.%d",(int)fileno(g_nntplink.rd_fp),

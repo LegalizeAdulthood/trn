@@ -544,9 +544,9 @@ int cancel_article()
 	fclose(g_tmpfp);
 	fputs("\nCanceling...\n",stdout) FLUSH;
 	termdown(2);
-	export_nntp_fds = true;
+	g_export_nntp_fds = true;
 	r = doshell(g_sh,filexp(get_val("CANCEL",CALL_INEWS)));
-	export_nntp_fds = false;
+	g_export_nntp_fds = false;
     }
 done:
     free(ngs_buf);
@@ -634,9 +634,9 @@ static void follow_it_up()
 	    ret = 1;
 	else
 	{
-	    export_nntp_fds = true;
+	    g_export_nntp_fds = true;
 	    ret = invoke(filexp(CALL_INEWS),g_origdir);
-	    export_nntp_fds = false;
+	    g_export_nntp_fds = false;
 	}
 	if (ret) {
 	    int appended = 0;

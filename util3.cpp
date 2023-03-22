@@ -4,20 +4,17 @@
 
 
 #include <stdio.h>
-#include "config.h"
-#include "config2.h"
 #include "typedef.h"
 #include "EXTERN.h"
-#include "config.h"
 #include "config2.h"
 #include "nntpclient.h"
 #include "util2.h"
-#include "INTERN.h"
 #include "util3.h"
 
-bool export_nntp_fds = false;
+bool g_export_nntp_fds{};
+char *g_nntp_password{};
 
-char* nntp_password = nullptr;
+static char s_nomem[] = "trn: out of memory!\n";
 
 int doshell(const char *sh, const char *cmd)
 {
@@ -29,8 +26,6 @@ int doshell(const char *sh, const char *cmd)
     nntp_close(true);
     exit(num);
 }
-
-static char s_nomem[] = "trn: out of memory!\n";
 
 /* paranoid version of malloc */
 
@@ -87,10 +82,10 @@ int nntp_handle_nested_lists()
 char *get_auth_user()
 {
     extern char* g_nntp_auth_file;
-    return read_auth_file(g_nntp_auth_file, &nntp_password);
+    return read_auth_file(g_nntp_auth_file, &g_nntp_password);
 }
 
 char *get_auth_pass()
 {
-    return nntp_password;
+    return g_nntp_password;
 }
