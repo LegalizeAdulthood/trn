@@ -89,7 +89,7 @@ void trn_init()
 {
 }
 
-int main(int argc, char *argv[])
+int trn_main(int argc, char *argv[])
 {
     bool foundany;
     char* s;

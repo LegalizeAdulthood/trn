@@ -45,5 +45,6 @@ void check_active_refetch(bool force);
 void trn_version();
 void set_ngname(const char *what);
 const char *getngdir(const char *ngnam);
+int trn_main(int argc, char *argv[]);
 
 #endif
