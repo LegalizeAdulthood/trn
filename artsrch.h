@@ -19,7 +19,7 @@ enum art_search_result
     SRCH_ERROR = 6
 };
 
-enum
+enum art_scope
 {
     ARTSCOPE_SUBJECT = 0,
     ARTSCOPE_FROM = 1,
@@ -30,17 +30,16 @@ enum
     ARTSCOPE_ARTICLE = 6
 };
 
-extern char *g_lastpat;      /* last search pattern */
-extern COMPEX g_sub_compex;  /* last compiled subject search */
-extern COMPEX g_art_compex;  /* last compiled normal search */
-extern COMPEX *g_bra_compex; /* current compex with brackets */
-extern char g_scopestr[];    //
-extern int g_art_howmuch;    /* search scope */
-extern int g_art_srchhdr;    /* specific header number to search */
-extern bool g_art_doread;    /* search read articles? */
+extern char *g_lastpat;         /* last search pattern */
+extern COMPEX g_sub_compex;     /* last compiled subject search */
+extern COMPEX g_art_compex;     /* last compiled normal search */
+extern COMPEX *g_bra_compex;    /* current compex with brackets */
+extern char g_scopestr[];       //
+extern art_scope g_art_howmuch; /* search scope */
+extern int g_art_srchhdr;       /* specific header number to search */
+extern bool g_art_doread;       /* search read articles? */
 
 void artsrch_init();
 art_search_result art_search(char *patbuf, int patbufsiz, int get_cmd);
-bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope);
 
 #endif

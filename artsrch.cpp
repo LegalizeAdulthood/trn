@@ -27,9 +27,11 @@ COMPEX g_sub_compex{};               /* last compiled subject search */
 COMPEX g_art_compex{};               /* last compiled normal search */
 COMPEX *g_bra_compex{&g_art_compex}; /* current compex with brackets */
 char g_scopestr[]{"sfHhbBa"};        //
-int g_art_howmuch{};                 /* search scope */
+art_scope g_art_howmuch{};           /* search scope */
 int g_art_srchhdr{};                 /* specific header number to search */
 bool g_art_doread{};                 /* search read articles? */
+
+static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope);
 
 void artsrch_init()
 {
@@ -51,7 +53,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, int get_cmd)
     char* cmdlst = nullptr;		/* list of commands to do */
     art_search_result ret = SRCH_NOTFOUND; /* assume no commands */
     int saltaway = 0;			/* store in KILL file? */
-    int howmuch;			/* search scope: subj/from/Hdr/head/art */
+    art_scope howmuch;			/* search scope: subj/from/Hdr/head/art */
     int srchhdr;			/* header to search if Hdr scope */
     bool topstart = false;
     bool doread;			/* search read articles? */
@@ -350,7 +352,7 @@ exit:
 /* determine if article fits pattern */
 /* returns true if it exists and fits pattern, false otherwise */
 
-bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
+static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
 {
     ARTICLE* ap = article_find(artnum);
 
