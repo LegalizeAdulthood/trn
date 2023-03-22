@@ -242,7 +242,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     filename = decode_fix_fname(g_mime_section->filename);
     part = g_mime_section->part;
     total = g_mime_section->total;
-    *msg = '\0';
+    *g_msg = '\0';
 
     if (!total && g_is_mime)
 	total = part = 1;
@@ -251,7 +251,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	/* Create directory to store parts and copy this part there. */
 	dir = decode_mkdir(filename);
 	if (!dir) {
-	    strcpy(msg, "Failed.");
+	    strcpy(g_msg, "Failed.");
 	    return 0;
 	}
     }
@@ -260,26 +260,26 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 
     if (mcp) {
 	if (chdir(dir)) {
-	    printf(nocd,dir) FLUSH;
+	    printf(g_nocd,dir) FLUSH;
 	    sig_catcher(0);
 	}
     }
 
     if (total != 1 || part != 1) {
-	sprintf(buf, "Saving part %d ", part);
+	sprintf(g_buf, "Saving part %d ", part);
 	if (total)
-	    sprintf(buf+strlen(buf), "of %d ", total);
-	strcat(buf, filename);
-	fputs(buf,stdout);
+	    sprintf(g_buf+strlen(g_buf), "of %d ", total);
+	strcat(g_buf, filename);
+	fputs(g_buf,stdout);
 	if (nowait_fork)
 	    fflush(stdout);
 	else
 	    newline();
 
-	sprintf(buf, "%s%d", dir, part);
-	fp = fopen(buf, "w");
+	sprintf(g_buf, "%s%d", dir, part);
+	fp = fopen(g_buf, "w");
 	if (!fp) {
-	    strcpy(msg,"Failed."); /*$$*/
+	    strcpy(g_msg,"Failed."); /*$$*/
 	    return 0;
 	}
 	while (readart(g_art_line,sizeof g_art_line)) {
@@ -290,13 +290,13 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	     && g_art_line[2] == 'd' && isspace(g_art_line[3])) {
 		/* This is the last part. Remember the fact */
 		total = part;
-		sprintf(buf, "%sCT", dir);
-		tmpfp = fopen(buf, "w");
-		if (!tmpfp)
-		    /*os_perror(buf)*/;
+		sprintf(g_buf, "%sCT", dir);
+		g_tmpfp = fopen(g_buf, "w");
+		if (!g_tmpfp)
+		    /*os_perror(g_buf)*/;
 		else {
-		    fprintf(tmpfp, "%d\n", total);
-		    fclose(tmpfp);
+		    fprintf(g_tmpfp, "%d\n", total);
+		    fclose(g_tmpfp);
 		}
 	    }
 	}
@@ -304,10 +304,10 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 
 	/* Retrieve any previously saved number of the last part */
 	if (total == 0) {
-	    sprintf(buf, "%sCT", dir);
-	    if ((fp = fopen(buf, "r")) != nullptr) {
-		if (fgets(buf, sizeof buf, fp)) {
-		    total = atoi(buf);
+	    sprintf(g_buf, "%sCT", dir);
+	    if ((fp = fopen(g_buf, "r")) != nullptr) {
+		if (fgets(g_buf, sizeof g_buf, fp)) {
+		    total = atoi(g_buf);
 		    if (total < 0)
 			total = 0;
 		}
@@ -321,8 +321,8 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	 * as we are more likely not to have them.
 	 */
 	for (part = total; part; part--) {
-	    sprintf(buf, "%s%d", dir, part);
-	    fp = fopen(buf, "r");
+	    sprintf(g_buf, "%s%d", dir, part);
+	    fp = fopen(g_buf, "r");
 	    if (!fp)
 		return 1;
 	    if (part != 1)
@@ -342,7 +342,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     g_mime_getc_line = first_line;
     decoder = decode_function(g_mime_section->encoding);
     if (!decoder) {
-	strcpy(msg,"Unhandled encoding type -- aborting.");
+	strcpy(g_msg,"Unhandled encoding type -- aborting.");
 	if (fp)
 	    fclose(fp);
 	if (dir)
@@ -353,10 +353,10 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     /* Handle each part in order */
     for (state = DECODE_START, part = 1; part <= total; part++) {
 	if (part != 1) {
-	    sprintf(buf, "%s%d", dir, part);
-	    fp = fopen(buf, "r");
+	    sprintf(g_buf, "%s%d", dir, part);
+	    fp = fopen(g_buf, "r");
 	    if (!fp) {
-		/*os_perror(buf);*/
+		/*os_perror(g_buf);*/
 		return 1;
 	    }
 	}
@@ -365,7 +365,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	if (fp)
 	    fclose(fp);
 	if (state == DECODE_ERROR) {
-	    strcpy(msg,"Failed."); /*$$*/
+	    strcpy(g_msg,"Failed."); /*$$*/
 	    return 0;
 	}
     }
@@ -373,7 +373,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     if (state != DECODE_DONE) {
 	(void) decoder((FILE*)nullptr, DECODE_DONE);
 	if (state != DECODE_MAYBEDONE) {
-	    strcpy(msg,"Premature EOF.");
+	    strcpy(g_msg,"Premature EOF.");
 	    return 0;
 	}
     }
@@ -381,11 +381,11 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     if (fp) {
 	/* Cleanup all the pieces */
 	for (part = 0; part <= total; part++) {
-	    sprintf(buf, "%s%d", dir, part);
-	    remove(buf);
+	    sprintf(g_buf, "%s%d", dir, part);
+	    remove(g_buf);
 	}
-	sprintf(buf, "%sCT", dir);
-	remove(buf);
+	sprintf(g_buf, "%sCT", dir);
+	remove(g_buf);
     }
 
     if (mcp) {

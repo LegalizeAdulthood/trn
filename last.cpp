@@ -30,22 +30,22 @@ void last_init()
 
 void readlast()
 {
-    if ((tmpfp = fopen(s_lastfile,"r")) != nullptr) {
-	if (fgets(buf,sizeof buf,tmpfp) != nullptr) {
+    if ((g_tmpfp = fopen(s_lastfile,"r")) != nullptr) {
+	if (fgets(g_buf,sizeof g_buf,g_tmpfp) != nullptr) {
 	    long old_last = g_lasttime;
-	    buf[strlen(buf)-1] = '\0';
-	    if (*buf) {
+	    g_buf[strlen(g_buf)-1] = '\0';
+	    if (*g_buf) {
 		safefree0(g_lastngname);
-		g_lastngname = savestr(buf);
+		g_lastngname = savestr(g_buf);
 	    }
-	    fscanf(tmpfp,"%ld %ld %ld %ld",&g_lasttime,&g_lastactsiz,
+	    fscanf(g_tmpfp,"%ld %ld %ld %ld",&g_lasttime,&g_lastactsiz,
 					   &g_lastnewtime,&g_lastextranum);
 	    if (!g_lastnewtime)
 		g_lastnewtime = s_starttime;
 	    if (old_last > g_lasttime)
 		g_lasttime = old_last;
 	}
-	fclose(tmpfp);
+	fclose(g_tmpfp);
     }
 }
 
@@ -53,19 +53,19 @@ void readlast()
 
 void writelast()
 {
-    sprintf(buf,"%s.%ld", s_lastfile, g_our_pid);
-    if ((tmpfp = fopen(buf,"w")) != nullptr) {
+    sprintf(g_buf,"%s.%ld", s_lastfile, g_our_pid);
+    if ((g_tmpfp = fopen(g_buf,"w")) != nullptr) {
 	if (g_lasttime < s_starttime)
 	    g_lasttime = s_starttime;
-	fprintf(tmpfp,"%s\n%ld\n%ld\n%ld\n%ld\n",
-		ngname? ngname : "",g_lasttime,
+	fprintf(g_tmpfp,"%s\n%ld\n%ld\n%ld\n%ld\n",
+		g_ngname? g_ngname : "",g_lasttime,
 		g_lastactsiz,g_lastnewtime,g_lastextranum);
-	fclose(tmpfp);
+	fclose(g_tmpfp);
 	remove(s_lastfile);
-	rename(buf,s_lastfile);
+	rename(g_buf,s_lastfile);
     }
     else {
-	printf(cantcreate,buf) FLUSH;
+	printf(g_cantcreate,g_buf) FLUSH;
 	/*termdown(1);*/
     }
 }

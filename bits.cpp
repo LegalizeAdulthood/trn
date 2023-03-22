@@ -43,7 +43,7 @@ void bits_init()
 
 void rc_to_bits()
 {
-    char* mybuf = buf;			/* place to decode rc line */
+    char* mybuf = g_buf;			/* place to decode rc line */
     char* s;
     char* c;
     char* h;
@@ -57,7 +57,7 @@ void rc_to_bits()
 					/* find numbers in rc line */
     i = strlen(s);
 #ifndef lint
-    if (i >= LBUFLEN-2)			/* bigger than buf? */
+    if (i >= LBUFLEN-2)			/* bigger than g_buf? */
 	mybuf = safemalloc((MEM_SIZE)(i+2));
 #endif
     strcpy(mybuf,s);			/* make scratch copy of line */
@@ -145,10 +145,10 @@ void rc_to_bits()
     if (debug & DEB_CTLAREA_BITMAP) {
 	fputs("\n(hit CR)",stdout) FLUSH;
 	termdown(1);
-	fgets(cmd_buf, sizeof cmd_buf, stdin);
+	fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
     }
 #endif
-    if (mybuf != buf)
+    if (mybuf != g_buf)
 	free(mybuf);
     g_ngptr->toread = unread;
 }
@@ -173,13 +173,13 @@ bool set_firstart(const char *s)
 void bits_to_rc()
 {
     char* s;
-    char* mybuf = buf;
+    char* mybuf = g_buf;
     ART_NUM i;
     ART_NUM count=0;
     int safelen = LBUFLEN - 32;
 
-    strcpy(buf,g_ngptr->rcline);		/* start with the newsgroup name */
-    s = buf + g_ngptr->numoffset - 1;	/* use s for buffer pointer */
+    strcpy(g_buf,g_ngptr->rcline);		/* start with the newsgroup name */
+    s = g_buf + g_ngptr->numoffset - 1;	/* use s for buffer pointer */
     *s++ = g_ngptr->subscribechar;		/* put the requisite : or !*/
     for (i = article_first(g_absfirst); i <= g_lastart; i = article_next(i)) {
 	if (article_unread(i))
@@ -190,11 +190,11 @@ void bits_to_rc()
     for (; i<=g_lastart; i++) {	/* for each article in newsgroup */
 	if (s-mybuf > safelen) {	/* running out of room? */
 	    safelen *= 2;
-	    if (mybuf == buf) {		/* currently static? */
+	    if (mybuf == g_buf) {		/* currently static? */
 		*s = '\0';
 		mybuf = safemalloc((MEM_SIZE)safelen + 32);
-		strcpy(mybuf,buf);	/* so we must copy it */
-		s = mybuf + (s-buf);
+		strcpy(mybuf,g_buf);	/* so we must copy it */
+		s = mybuf + (s-g_buf);
 					/* fix the pointer, too */
 	    }
 	    else {			/* just grow in place, if possible */
@@ -234,10 +234,10 @@ void bits_to_rc()
     }
 #endif
     free(g_ngptr->rcline);		/* return old rc line */
-    if (mybuf == buf) {
-	g_ngptr->rcline = safemalloc((MEM_SIZE)(s-buf)+1);
+    if (mybuf == g_buf) {
+	g_ngptr->rcline = safemalloc((MEM_SIZE)(s-g_buf)+1);
 					/* grab a new rc line */
-	strcpy(g_ngptr->rcline, buf);	/* and load it */
+	strcpy(g_ngptr->rcline, g_buf);	/* and load it */
     }
     else {
 	mybuf = saferealloc(mybuf,(MEM_SIZE)(s-mybuf)+1);
@@ -446,7 +446,7 @@ void unmark_as_read(ARTICLE *ap)
 void set_read(ARTICLE *ap)
 {
     oneless(ap);
-    if (!olden_days && ap->xrefs != "" && !(ap->flags & AF_KCHASE)) {
+    if (!g_olden_days && ap->xrefs != "" && !(ap->flags & AF_KCHASE)) {
 	ap->flags |= AF_KCHASE;
 	s_chase_count++;
     }
@@ -504,8 +504,8 @@ void yankback()
     if (g_dmcount) {			/* delayed unmarks pending? */
 	if (g_panic)
 	    ;
-	else if (gmode == 's')
-	    sprintf(msg, "Returned %ld Marked article%s.",(long)g_dmcount,
+	else if (g_general_mode == 's')
+	    sprintf(g_msg, "Returned %ld Marked article%s.",(long)g_dmcount,
 		PLURAL(g_dmcount));
 	else {
 	    printf("\nReturning %ld Marked article%s...\n",(long)g_dmcount,
@@ -581,7 +581,7 @@ static int chase_xref(ART_NUM artnum, int markread)
 	spin(10);
     else {
 	if (output_chase_phrase) {
-	    if (verbose)
+	    if (g_verbose)
 		fputs("\nChasing xrefs", stdout);
 	    else
 		fputs("\nXrefs", stdout);
@@ -616,7 +616,7 @@ static int chase_xref(ART_NUM artnum, int markread)
 	    *xartnum++ = '\0';
 	    if (!(x = atol(xartnum)))
 		continue;
-	    if (!strcmp(tmpbuf,ngname)) {/* is this the current newsgroup? */
+	    if (!strcmp(tmpbuf,g_ngname)) {/* is this the current newsgroup? */
 		if (x < g_absfirst || x > g_lastart)
 		    continue;
 		if (markread)

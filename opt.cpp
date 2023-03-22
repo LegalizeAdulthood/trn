@@ -171,24 +171,24 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 
     g_sel_grp_dmode = savestr(g_sel_grp_dmode) + 1;
     g_sel_art_dmode = savestr(g_sel_art_dmode) + 1;
-    UnivSelBtnCnt = parse_mouse_buttons(&UnivSelBtns,
+    g_univ_sel_btn_cnt = parse_mouse_buttons(&g_univ_sel_btns,
                                         "[Top]^ [PgUp]< [PgDn]> [ OK ]^j [Quit]q [Help]?");
-    NewsrcSelBtnCnt = parse_mouse_buttons(&NewsrcSelBtns,
+    g_newsrc_sel_btn_cnt = parse_mouse_buttons(&g_newsrc_sel_btns,
                                           "[Top]^ [PgUp]< [PgDn]> [ OK ]^j [Quit]q [Help]?");
-    AddSelBtnCnt = parse_mouse_buttons(&AddSelBtns,
+    g_add_sel_btn_cnt = parse_mouse_buttons(&g_add_sel_btns,
                                        "[Top]^ [Bot]$ [PgUp]< [PgDn]> [ OK ]Z [Quit]q [Help]?");
-    OptionSelBtnCnt = parse_mouse_buttons(&OptionSelBtns,
+    g_option_sel_btn_cnt = parse_mouse_buttons(&g_option_sel_btns,
                                           "[Find]/ [FindNext]/^j [Top]^ [Bot]$ [PgUp]< [PgDn]> [Use]^i [Save]S [Abandon]q [Help]?");
-    NewsgroupSelBtnCnt = parse_mouse_buttons(&NewsgroupSelBtns,
+    g_newsgroup_sel_btn_cnt = parse_mouse_buttons(&g_newsgroup_sel_btns,
                                              "[Top]^ [PgUp]< [PgDn]> [ OK ]Z [Quit]q [Help]?");
-    NewsSelBtnCnt = parse_mouse_buttons(&NewsSelBtns,
+    g_news_sel_btn_cnt = parse_mouse_buttons(&g_news_sel_btns,
                                         "[Top]^ [Bot]$ [PgUp]< [PgDn]> [KillPg]D [ OK ]Z [Quit]q [Help]?");
-    ArtPagerBtnCnt = parse_mouse_buttons(&ArtPagerBtns,
+    g_art_pager_btn_cnt = parse_mouse_buttons(&g_art_pager_btns,
                                          "[Next]n [Sel]+ [Quit]q [Help]h");
 
     prep_ini_words(g_options_ini);
     if (argc >= 2 && !strcmp(argv[1],"-c"))
-	checkflag=true;			/* so we can optimize for -c */
+	g_checkflag=true;			/* so we can optimize for -c */
     interp(*tcbufptr,TCBUF_SIZE,GLOBINIT);
     opt_file(*tcbufptr,tcbufptr,false);
 
@@ -198,23 +198,23 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     set_header_list(HT_DEFHIDE,HT_HIDE,"");
     set_header_list(HT_DEFMAGIC,HT_MAGIC,"");
 
-    if (use_threads)
+    if (g_use_threads)
 	s = get_val("TRNRC","%+/trnrc");
     else
 	s = get_val("RNRC","%+/rnrc");
     g_ini_file = savestr(filexp(s));
 
     s = filexp("%+");
-    if (stat(s,&filestat) < 0 || !S_ISDIR(filestat.st_mode)) {
+    if (stat(s,&g_filestat) < 0 || !S_ISDIR(g_filestat.st_mode)) {
 	printf("Creating the directory %s.\n",s);
 	if (makedir(s,MD_DIR) != 0) {
 	    printf("Unable to create `%s'.\n",s);
 	    finalize(1); /*$$??*/
 	}
     }
-    if (stat(g_ini_file,&filestat) == 0)
+    if (stat(g_ini_file,&g_filestat) == 0)
 	opt_file(g_ini_file,tcbufptr,true);
-    if (!use_threads || (s = getenv("TRNINIT")) == nullptr)
+    if (!g_use_threads || (s = getenv("TRNINIT")) == nullptr)
 	s = getenv("RNINIT");
     if (*safecpy(*tcbufptr,s,TCBUF_SIZE)) {
 	if (*s == '-' || *s == '+' || isspace(*s))
@@ -243,13 +243,13 @@ void opt_file(char *filename, char **tcbufptr, bool bleat)
     int fd = open(filename,0);
 	
     if (fd >= 0) {
-	fstat(fd,&filestat);
-	if (filestat.st_size >= TCBUF_SIZE-1) {
-	    filebuf = saferealloc(filebuf,(MEM_SIZE)filestat.st_size+2);
+	fstat(fd,&g_filestat);
+	if (g_filestat.st_size >= TCBUF_SIZE-1) {
+	    filebuf = saferealloc(filebuf,(MEM_SIZE)g_filestat.st_size+2);
 	    *tcbufptr = filebuf;
 	}
-	if (filestat.st_size) {
-	    int len = read(fd,filebuf,(int)filestat.st_size);
+	if (g_filestat.st_size) {
+	    int len = read(fd,filebuf,(int)g_filestat.st_size);
 	    filebuf[len] = '\0';
 	    prep_ini_data(filebuf,filename);
 	    s = filebuf;
@@ -291,7 +291,7 @@ void opt_file(char *filename, char **tcbufptr, bool bleat)
 	close(fd);
     }
     else if (bleat) {
-	printf(cantopen,filename) FLUSH;
+	printf(g_cantopen,filename) FLUSH;
 	/*termdown(1);*/
     }
 
@@ -326,28 +326,28 @@ void set_option(int num, char *s)
     }
     switch (num) {
       case OI_USE_THREADS:
-	use_threads = YES(s);
+	g_use_threads = YES(s);
 	break;
       case OI_USE_MOUSE:
-	UseMouse = YES(s);
-	if (UseMouse) {
+	g_use_mouse = YES(s);
+	if (g_use_mouse) {
 	    /* set up the Xterm mouse sequence */
 	    set_macro("\033[M+3","\003");
 	}
 	break;
       case OI_MOUSE_MODES:
-	safecpy(MouseModes, s, sizeof MouseModes);
+	safecpy(g_mouse_modes, s, sizeof g_mouse_modes);
 	break;
       case OI_USE_UNIV_SEL:
-	UseUnivSelector = YES(s);
+	g_use_univ_selector = YES(s);
 	break;
       case OI_UNIV_SEL_CMDS:
-	*UnivSelCmds = *s;
+	*g_univ_sel_cmds = *s;
 	if (s[1])
-	    UnivSelCmds[1] = s[1];
+	    g_univ_sel_cmds[1] = s[1];
 	break;
       case OI_UNIV_SEL_BTNS:
-	UnivSelBtnCnt = parse_mouse_buttons(&UnivSelBtns,s);
+	g_univ_sel_btn_cnt = parse_mouse_buttons(&g_univ_sel_btns,s);
 	break;
       case OI_UNIV_SEL_ORDER:
 	set_sel_order(SM_UNIVERSAL,s);
@@ -356,40 +356,40 @@ void set_option(int num, char *s)
 	univ_follow = YES(s);
 	break;
       case OI_USE_NEWSRC_SEL:
-	UseNewsrcSelector = YES(s);
+	g_use_newsrc_selector = YES(s);
 	break;
       case OI_NEWSRC_SEL_CMDS:
-	*NewsrcSelCmds = *s;
+	*g_newsrc_sel_cmds = *s;
 	if (s[1])
-	    NewsrcSelCmds[1] = s[1];
+	    g_newsrc_sel_cmds[1] = s[1];
 	break;
       case OI_NEWSRC_SEL_BTNS:
-	NewsrcSelBtnCnt = parse_mouse_buttons(&NewsrcSelBtns,s);
+	g_newsrc_sel_btn_cnt = parse_mouse_buttons(&g_newsrc_sel_btns,s);
 	break;
       case OI_USE_ADD_SEL:
-	UseAddSelector = YES(s);
+	g_use_add_selector = YES(s);
 	break;
       case OI_ADD_SEL_CMDS:
-	*AddSelCmds = *s;
+	*g_add_sel_cmds = *s;
 	if (s[1])
-	    AddSelCmds[1] = s[1];
+	    g_add_sel_cmds[1] = s[1];
 	break;
       case OI_ADD_SEL_BTNS:
-	AddSelBtnCnt = parse_mouse_buttons(&AddSelBtns,s);
+	g_add_sel_btn_cnt = parse_mouse_buttons(&g_add_sel_btns,s);
 	break;
       case OI_USE_NEWSGROUP_SEL:
-	UseNewsgroupSelector = YES(s);
+	g_use_newsgroup_selector = YES(s);
 	break;
       case OI_NEWSGROUP_SEL_ORDER:
 	set_sel_order(SM_NEWSGROUP,s);
 	break;
       case OI_NEWSGROUP_SEL_CMDS:
-	*NewsgroupSelCmds = *s;
+	*g_newsgroup_sel_cmds = *s;
 	if (s[1])
-	    NewsgroupSelCmds[1] = s[1];
+	    g_newsgroup_sel_cmds[1] = s[1];
 	break;
       case OI_NEWSGROUP_SEL_BTNS:
-	NewsgroupSelBtnCnt = parse_mouse_buttons(&NewsgroupSelBtns,s);
+	g_newsgroup_sel_btn_cnt = parse_mouse_buttons(&g_newsgroup_sel_btns,s);
 	break;
       case OI_NEWSGROUP_SEL_STYLES:
 	free(option_value(OI_NEWSGROUP_SEL_STYLES)-1);
@@ -399,9 +399,9 @@ void set_option(int num, char *s)
 	break;
       case OI_USE_NEWS_SEL:
 	if (isdigit(*s))
-	    UseNewsSelector = atoi(s);
+	    g_use_news_selector = atoi(s);
 	else
-	    UseNewsSelector = YES(s)-1;
+	    g_use_news_selector = YES(s)-1;
 	break;
       case OI_NEWS_SEL_MODE: {
 	int save_sel_mode = g_sel_mode;
@@ -417,12 +417,12 @@ void set_option(int num, char *s)
 	set_sel_order(g_sel_defaultmode,s);
 	break;
       case OI_NEWS_SEL_CMDS:
-	*NewsSelCmds = *s;
+	*g_news_sel_cmds = *s;
 	if (s[1])
-	    NewsSelCmds[1] = s[1];
+	    g_news_sel_cmds[1] = s[1];
 	break;
       case OI_NEWS_SEL_BTNS:
-	NewsSelBtnCnt = parse_mouse_buttons(&NewsSelBtns,s);
+	g_news_sel_btn_cnt = parse_mouse_buttons(&g_news_sel_btns,s);
 	break;
       case OI_NEWS_SEL_STYLES:
 	free(option_value(OI_NEWS_SEL_STYLES)-1);
@@ -431,15 +431,15 @@ void set_option(int num, char *s)
 	strcpy(g_sel_art_dmode, s);
 	break;
       case OI_OPTION_SEL_CMDS:
-	*OptionSelCmds = *s;
+	*g_option_sel_cmds = *s;
 	if (s[1])
-	    OptionSelCmds[1] = s[1];
+	    g_option_sel_cmds[1] = s[1];
 	break;
       case OI_OPTION_SEL_BTNS:
-	OptionSelBtnCnt = parse_mouse_buttons(&OptionSelBtns,s);
+	g_option_sel_btn_cnt = parse_mouse_buttons(&g_option_sel_btns,s);
 	break;
       case OI_AUTO_SAVE_NAME:
-	if (!checkflag) {
+	if (!g_checkflag) {
 	    if (YES(s)) {
 		export_var("SAVEDIR",  "%p/%c");
 		export_var("SAVENAME", "%a");
@@ -452,69 +452,69 @@ void set_option(int num, char *s)
 	}
 	break;
       case OI_BKGND_THREADING:
-	thread_always = !YES(s);
+	g_thread_always = !YES(s);
 	break;
       case OI_AUTO_ARROW_MACROS: {
-	int prev = auto_arrow_macros;
+	int prev = g_auto_arrow_macros;
 	if (YES(s) || *s == 'r' || *s == 'R')
-	    auto_arrow_macros = 2;
+	    g_auto_arrow_macros = 2;
 	else
-	    auto_arrow_macros = !NO(s);
-	if (mode != 'i' && auto_arrow_macros != prev) {
+	    g_auto_arrow_macros = !NO(s);
+	if (g_mode != 'i' && g_auto_arrow_macros != prev) {
 	    char tmpbuf[1024];
 	    arrow_macros(tmpbuf);
 	}
 	break;
       }
       case OI_READ_BREADTH_FIRST:
-	breadth_first = YES(s);
+	g_breadth_first = YES(s);
 	break;
       case OI_BKGND_SPINNER:
-	bkgnd_spinner = YES(s);
+	g_bkgnd_spinner = YES(s);
 	break;
       case OI_CHECKPOINT_NEWSRC_FREQUENCY:
 	g_docheckwhen = atoi(s);
 	break;
       case OI_SAVE_DIR:
-	if (!checkflag) {
-	    savedir = savestr(s);
-	    if (cwd) {
-		chdir(cwd);
-		free(cwd);
+	if (!g_checkflag) {
+	    g_savedir = savestr(s);
+	    if (g_cwd) {
+		chdir(g_cwd);
+		free(g_cwd);
 	    }
-	    cwd = savestr(filexp(s));
+	    g_cwd = savestr(filexp(s));
 	}
 	break;
       case OI_ERASE_SCREEN:
-	erase_screen = YES(s);
+	g_erase_screen = YES(s);
 	break;
       case OI_NOVICE_DELAYS:
-	novice_delays = YES(s);
+	g_novice_delays = YES(s);
 	break;
       case OI_CITED_TEXT_STRING:
-	indstr = savestr(s);
+	g_indstr = savestr(s);
 	break;
       case OI_GOTO_LINE_NUM:
 	g_gline = atoi(s)-1;
 	break;
       case OI_FUZZY_NEWSGROUP_NAMES:
-	fuzzyGet = YES(s);
+	g_fuzzy_get = YES(s);
 	break;
       case OI_HEADER_MAGIC:
-	if (!checkflag)
+	if (!g_checkflag)
 	    set_header_list(HT_MAGIC, HT_DEFMAGIC, s);
 	break;
       case OI_HEADER_HIDING:
 	set_header_list(HT_HIDE, HT_DEFHIDE, s);
 	break;
       case OI_INITIAL_ARTICLE_LINES:
-	initlines = atoi(s);
+	g_initlines = atoi(s);
 	break;
       case OI_APPEND_UNSUBSCRIBED_GROUPS:
-	append_unsub = YES(s);
+	g_append_unsub = YES(s);
 	break;
       case OI_FILTER_CONTROL_CHARACTERS:
-	dont_filter_control = !YES(s);
+	g_dont_filter_control = !YES(s);
 	break;
       case OI_JOIN_SUBJECT_LINES:
 	if (isdigit(*s))
@@ -523,52 +523,52 @@ void set_option(int num, char *s)
 	    change_join_subject_len(YES(s)? 30 : 0);
 	break;
       case OI_IGNORE_THRU_ON_SELECT:
-	kill_thru_kludge = YES(s);
+	g_kill_thru_kludge = YES(s);
 	break;
       case OI_AUTO_GROW_GROUPS:
-	keep_the_group_static = !YES(s);
+	g_keep_the_group_static = !YES(s);
 	break;
       case OI_MUCK_UP_CLEAR:
-	muck_up_clear = YES(s);
+	g_muck_up_clear = YES(s);
 	break;
       case OI_ERASE_EACH_LINE:
-	erase_each_line = YES(s);
+	g_erase_each_line = YES(s);
 	break;
       case OI_SAVEFILE_TYPE:
-	mbox_always = (*s == 'm' || *s == 'M');
-	norm_always = (*s == 'n' || *s == 'N');
+	g_mbox_always = (*s == 'm' || *s == 'M');
+	g_norm_always = (*s == 'n' || *s == 'N');
 	break;
       case OI_PAGER_LINE_MARKING:
 	if (isdigit(*s))
-	    marking_areas = atoi(s);
+	    g_marking_areas = atoi(s);
 	else
-	    marking_areas = HALFPAGE_MARKING;
+	    g_marking_areas = HALFPAGE_MARKING;
 	if (NO(s))
-	    marking = NOMARKING;
+	    g_marking = NOMARKING;
 	else if (*s == 'u')
-	    marking = UNDERLINE;
+	    g_marking = UNDERLINE;
 	else
-	    marking = STANDOUT;
+	    g_marking = STANDOUT;
 	break;
       case OI_OLD_MTHREADS_DATABASE:
 	if (isdigit(*s))
-	    olden_days = atoi(s);
+	    g_olden_days = atoi(s);
 	else
-	    olden_days = YES(s);
+	    g_olden_days = YES(s);
 	break;
       case OI_SELECT_MY_POSTS:
 	if (NO(s))
-	    auto_select_postings = 0;
+	    g_auto_select_postings = 0;
 	else {
 	    switch (*s) {
 	      case 't':
-		auto_select_postings = '+';
+		g_auto_select_postings = '+';
 		break;
 	      case 'p':
-		auto_select_postings = 'p';
+		g_auto_select_postings = 'p';
 		break;
 	      default:
-		auto_select_postings = '.';
+		g_auto_select_postings = '.';
 		break;
 	    }
 	}
@@ -580,7 +580,7 @@ void set_option(int num, char *s)
 	g_auto_view_inline = YES(s);
 	break;
       case OI_NEWGROUP_CHECK:
-	quickstart = !YES(s);
+	g_quickstart = !YES(s);
 	break;
       case OI_RESTRICTION_INCLUDES_EMPTIES:
 	g_empty_only_char = YES(s)? 'o' : 'O';
@@ -590,58 +590,58 @@ void set_option(int num, char *s)
 	break;
       case OI_INITIAL_GROUP_LIST:
 	if (isdigit(*s)) {
-	    countdown = atoi(s);
-	    suppress_cn = (countdown == 0);
+	    g_countdown = atoi(s);
+	    g_suppress_cn = (g_countdown == 0);
 	}
 	else {
-	    suppress_cn = NO(s);
-	    if (!suppress_cn)
-		countdown = 5;
+	    g_suppress_cn = NO(s);
+	    if (!g_suppress_cn)
+		g_countdown = 5;
 	}
 	break;
       case OI_RESTART_AT_LAST_GROUP:
-	findlast = YES(s) * (mode == 'i'? 1 : -1);
+	g_findlast = YES(s) * (g_mode == 'i'? 1 : -1);
 	break;
       case OI_SCANMODE_COUNT:
 	if (isdigit(*s))
-	    scanon = atoi(s);
+	    g_scanon = atoi(s);
 	else
-	    scanon = YES(s)*3;
+	    g_scanon = YES(s)*3;
 	break;
       case OI_TERSE_OUTPUT:
-	verbose = !YES(s);
-	if (!verbose)
-	    novice_delays = false;
+	g_verbose = !YES(s);
+	if (!g_verbose)
+	    g_novice_delays = false;
 	break;
       case OI_EAT_TYPEAHEAD:
-	allow_typeahead = !YES(s);
+	g_allow_typeahead = !YES(s);
 	break;
       case OI_COMPRESS_SUBJECTS:
-	unbroken_subjects = !YES(s);
+	g_unbroken_subjects = !YES(s);
 	break;
       case OI_VERIFY_INPUT:
-	verify = YES(s);
+	g_verify = YES(s);
 	break;
       case OI_ARTICLE_TREE_LINES:
 	if (isdigit(*s)) {
-	    if ((max_tree_lines = atoi(s)) > 11)
-		max_tree_lines = 11;
+	    if ((g_max_tree_lines = atoi(s)) > 11)
+		g_max_tree_lines = 11;
 	} else
-	    max_tree_lines = YES(s) * 6;
+	    g_max_tree_lines = YES(s) * 6;
 	break;
       case OI_WORD_WRAP_MARGIN:
 	if (isdigit(*s))
-	    word_wrap_offset = atoi(s);
+	    g_word_wrap_offset = atoi(s);
 	else if (YES(s))
-	    word_wrap_offset = 8;
+	    g_word_wrap_offset = 8;
 	else
-	    word_wrap_offset = -1;
+	    g_word_wrap_offset = -1;
 	break;
       case OI_DEFAULT_REFETCH_TIME:
-	defRefetchSecs = text2secs(s, DEFAULT_REFETCH_SECS);
+	g_def_refetch_secs = text2secs(s, DEFAULT_REFETCH_SECS);
 	break;
       case OI_ART_PAGER_BTNS:
-	ArtPagerBtnCnt = parse_mouse_buttons(&ArtPagerBtns,s);
+	g_art_pager_btn_cnt = parse_mouse_buttons(&g_art_pager_btns,s);
 	break;
       case OI_SCAN_ITEMNUM:
 	g_s_itemnum = YES(s);
@@ -689,10 +689,10 @@ void set_option(int num, char *s)
 	g_sf_verbose = YES(s);
 	break;
       case OI_USE_SEL_NUM:
-	UseSelNum = YES(s);
+	g_use_sel_num = YES(s);
 	break;
       case OI_SEL_NUM_GOTO:
-	SelNumGoto = YES(s);
+	g_sel_num_goto = YES(s);
 	break;
       default:
 	printf("*** Internal error: Unknown Option ***\n");
@@ -709,21 +709,21 @@ void save_options(const char *filename)
     char* line = nullptr;
     static bool first_time = true;
 
-    sprintf(buf,"%s.new",filename);
-    fp_out = fopen(buf,"w");
+    sprintf(g_buf,"%s.new",filename);
+    fp_out = fopen(g_buf,"w");
     if (!fp_out) {
-	printf(cantcreate,buf);
+	printf(g_cantcreate,g_buf);
 	return;
     }
     if ((fd_in = open(filename,0)) >= 0) {
 	char* cp;
 	char* nlp = nullptr;
 	char* comments = nullptr;
-	fstat(fd_in,&filestat);
-	if (filestat.st_size) {
+	fstat(fd_in,&g_filestat);
+	if (g_filestat.st_size) {
 	    int len;
-	    filebuf = safemalloc((MEM_SIZE)filestat.st_size+2);
-	    len = read(fd_in,filebuf,(int)filestat.st_size);
+	    filebuf = safemalloc((MEM_SIZE)g_filestat.st_size+2);
+	    len = read(fd_in,filebuf,(int)g_filestat.st_size);
 	    filebuf[len] = '\0';
 	}
 	close(fd_in);
@@ -759,7 +759,7 @@ void save_options(const char *filename)
 	    line = comments;
     }
     else {
-	char *t = use_threads? "T" : "";
+	char *t = g_use_threads? "T" : "";
 	printf("\n\
 This is the first save of the option file, %s.\n\
 By default this file overrides your %sRNINIT variable, but if you\n\
@@ -797,69 +797,69 @@ line that sets %sRNINIT.\n", g_ini_file, t, t);
 
     if (first_time) {
 	if (fd_in >= 0) {
-	    sprintf(buf,"%s.old",filename);
-	    remove(buf);
-	    rename(filename,buf);
+	    sprintf(g_buf,"%s.old",filename);
+	    remove(g_buf);
+	    rename(filename,g_buf);
 	}
 	first_time = false;
     }
     else
 	remove(filename);
 
-    sprintf(buf,"%s.new",filename);
-    rename(buf,filename);
+    sprintf(g_buf,"%s.new",filename);
+    rename(g_buf,filename);
 }
 
 char *option_value(int num)
 {
     switch (num) {
       case OI_USE_THREADS:
-	return YESorNO(use_threads);
+	return YESorNO(g_use_threads);
       case OI_USE_MOUSE:
-	return YESorNO(UseMouse);
+	return YESorNO(g_use_mouse);
       case OI_MOUSE_MODES:
-	return MouseModes;
+	return g_mouse_modes;
       case OI_USE_UNIV_SEL:
-	return YESorNO(UseUnivSelector);
+	return YESorNO(g_use_univ_selector);
       case OI_UNIV_SEL_CMDS:
-	return UnivSelCmds;
+	return g_univ_sel_cmds;
       case OI_UNIV_SEL_BTNS:
-	return expand_mouse_buttons(UnivSelBtns,UnivSelBtnCnt);
+	return expand_mouse_buttons(g_univ_sel_btns,g_univ_sel_btn_cnt);
       case OI_UNIV_SEL_ORDER:
 	return get_sel_order(SM_UNIVERSAL);
       case OI_UNIV_FOLLOW:
 	return YESorNO(univ_follow);
 	break;
       case OI_USE_NEWSRC_SEL:
-	return YESorNO(UseNewsrcSelector);
+	return YESorNO(g_use_newsrc_selector);
       case OI_NEWSRC_SEL_CMDS:
-	return NewsrcSelCmds;
+	return g_newsrc_sel_cmds;
       case OI_NEWSRC_SEL_BTNS:
-	return expand_mouse_buttons(NewsrcSelBtns,NewsrcSelBtnCnt);
+	return expand_mouse_buttons(g_newsrc_sel_btns,g_newsrc_sel_btn_cnt);
       case OI_USE_ADD_SEL:
-	return YESorNO(UseAddSelector);
+	return YESorNO(g_use_add_selector);
       case OI_ADD_SEL_CMDS:
-	return AddSelCmds;
+	return g_add_sel_cmds;
       case OI_ADD_SEL_BTNS:
-	return expand_mouse_buttons(AddSelBtns,AddSelBtnCnt);
+	return expand_mouse_buttons(g_add_sel_btns,g_add_sel_btn_cnt);
       case OI_USE_NEWSGROUP_SEL:
-	return YESorNO(UseNewsgroupSelector);
+	return YESorNO(g_use_newsgroup_selector);
       case OI_NEWSGROUP_SEL_ORDER:
 	return get_sel_order(SM_NEWSGROUP);
       case OI_NEWSGROUP_SEL_CMDS:
-	return NewsgroupSelCmds;
+	return g_newsgroup_sel_cmds;
       case OI_NEWSGROUP_SEL_BTNS:
-	return expand_mouse_buttons(NewsgroupSelBtns,NewsgroupSelBtnCnt);
+	return expand_mouse_buttons(g_newsgroup_sel_btns,g_newsgroup_sel_btn_cnt);
       case OI_NEWSGROUP_SEL_STYLES: {
 	char* s = g_sel_grp_dmode;
 	while (s[-1] != '*') s--;
 	return s;
       }
       case OI_USE_NEWS_SEL:
-	if (UseNewsSelector < 1)
-	    return YESorNO(UseNewsSelector+1);
-	sprintf(buf,"%d",UseNewsSelector);
-	return buf;
+	if (g_use_news_selector < 1)
+	    return YESorNO(g_use_news_selector+1);
+	sprintf(g_buf,"%d",g_use_news_selector);
+	return g_buf;
       case OI_NEWS_SEL_MODE: {
 	int save_sel_mode = g_sel_mode;
 	int save_Threaded = g_threaded_group;
@@ -875,24 +875,24 @@ char *option_value(int num)
       case OI_NEWS_SEL_ORDER:
 	return get_sel_order(g_sel_defaultmode);
       case OI_NEWS_SEL_CMDS:
-	return NewsSelCmds;
+	return g_news_sel_cmds;
       case OI_NEWS_SEL_BTNS:
-	return expand_mouse_buttons(NewsSelBtns,NewsSelBtnCnt);
+	return expand_mouse_buttons(g_news_sel_btns,g_news_sel_btn_cnt);
       case OI_NEWS_SEL_STYLES: {
 	char* s = g_sel_art_dmode;
 	while (s[-1] != '*') s--;
 	return s;
       }
       case OI_OPTION_SEL_CMDS:
-	return OptionSelCmds;
+	return g_option_sel_cmds;
       case OI_OPTION_SEL_BTNS:
-	return expand_mouse_buttons(OptionSelBtns,OptionSelBtnCnt);
+	return expand_mouse_buttons(g_option_sel_btns,g_option_sel_btn_cnt);
       case OI_AUTO_SAVE_NAME:
 	return YESorNO(!strcmp(get_val("SAVEDIR",SAVEDIR),"%p/%c"));
       case OI_BKGND_THREADING:
-	return YESorNO(!thread_always);
+	return YESorNO(!g_thread_always);
       case OI_AUTO_ARROW_MACROS:
-	switch (auto_arrow_macros) {
+	switch (g_auto_arrow_macros) {
 	  case 2:
 	    return "regular";
 	  case 1:
@@ -901,25 +901,25 @@ char *option_value(int num)
 	    return YESorNO(0);
 	}
       case OI_READ_BREADTH_FIRST:
-	return YESorNO(breadth_first);
+	return YESorNO(g_breadth_first);
       case OI_BKGND_SPINNER:
-	return YESorNO(bkgnd_spinner);
+	return YESorNO(g_bkgnd_spinner);
       case OI_CHECKPOINT_NEWSRC_FREQUENCY:
-	sprintf(buf,"%d",g_docheckwhen);
-	return buf;
+	sprintf(g_buf,"%d",g_docheckwhen);
+	return g_buf;
       case OI_SAVE_DIR:
-	return savedir? savedir : "%./News";
+	return g_savedir? g_savedir : "%./News";
       case OI_ERASE_SCREEN:
-	return YESorNO(erase_screen);
+	return YESorNO(g_erase_screen);
       case OI_NOVICE_DELAYS:
-	return YESorNO(novice_delays);
+	return YESorNO(g_novice_delays);
       case OI_CITED_TEXT_STRING:
-	return indstr;
+	return g_indstr;
       case OI_GOTO_LINE_NUM:
-	sprintf(buf,"%d",g_gline+1);
-	return buf;
+	sprintf(g_buf,"%d",g_gline+1);
+	return g_buf;
       case OI_FUZZY_NEWSGROUP_NAMES:
-	return YESorNO(fuzzyGet);
+	return YESorNO(g_fuzzy_get);
       case OI_HEADER_MAGIC:
 	return magic_list();
       case OI_HEADER_HIDING:
@@ -927,47 +927,47 @@ char *option_value(int num)
       case OI_INITIAL_ARTICLE_LINES:
 	if (!g_option_def_vals[OI_INITIAL_ARTICLE_LINES])
 	    return "$LINES";
-	sprintf(buf,"%d",initlines);
-    	return buf;
+	sprintf(g_buf,"%d",g_initlines);
+    	return g_buf;
       case OI_APPEND_UNSUBSCRIBED_GROUPS:
-	return YESorNO(append_unsub);
+	return YESorNO(g_append_unsub);
       case OI_FILTER_CONTROL_CHARACTERS:
-	return YESorNO(!dont_filter_control);
+	return YESorNO(!g_dont_filter_control);
       case OI_JOIN_SUBJECT_LINES:
-	if (join_subject_len) {
-	    sprintf(buf,"%d",join_subject_len);
-	    return buf;
+	if (g_join_subject_len) {
+	    sprintf(g_buf,"%d",g_join_subject_len);
+	    return g_buf;
 	}
 	return YESorNO(0);
       case OI_IGNORE_THRU_ON_SELECT:
-	return YESorNO(kill_thru_kludge);
+	return YESorNO(g_kill_thru_kludge);
       case OI_AUTO_GROW_GROUPS:
-	return YESorNO(!keep_the_group_static);
+	return YESorNO(!g_keep_the_group_static);
       case OI_MUCK_UP_CLEAR:
-	return YESorNO(muck_up_clear);
+	return YESorNO(g_muck_up_clear);
       case OI_ERASE_EACH_LINE:
-	return YESorNO(erase_each_line);
+	return YESorNO(g_erase_each_line);
       case OI_SAVEFILE_TYPE:
-	return mbox_always? "mail" : (norm_always? "norm" : "ask");
+	return g_mbox_always? "mail" : (g_norm_always? "norm" : "ask");
       case OI_PAGER_LINE_MARKING:
-	if (marking == NOMARKING)
+	if (g_marking == NOMARKING)
 	    return YESorNO(0);
-	if (marking_areas != HALFPAGE_MARKING)
-	    sprintf(buf,"%d",marking_areas);
+	if (g_marking_areas != HALFPAGE_MARKING)
+	    sprintf(g_buf,"%d",g_marking_areas);
 	else
-	    *buf = '\0';
-	if (marking == UNDERLINE)
-	    strcat(buf,"underline");
+	    *g_buf = '\0';
+	if (g_marking == UNDERLINE)
+	    strcat(g_buf,"underline");
 	else
-	    strcat(buf,"standout");
-	return buf;
+	    strcat(g_buf,"standout");
+	return g_buf;
       case OI_OLD_MTHREADS_DATABASE:
-	if (olden_days <= 1)
-	    return YESorNO(olden_days);
-	sprintf(buf,"%d",olden_days);
-	return buf;
+	if (g_olden_days <= 1)
+	    return YESorNO(g_olden_days);
+	sprintf(g_buf,"%d",g_olden_days);
+	return g_buf;
       case OI_SELECT_MY_POSTS:
-	switch (auto_select_postings) {
+	switch (g_auto_select_postings) {
 	  case '+':
 	    return "thread";
 	  case 'p':
@@ -983,42 +983,42 @@ char *option_value(int num)
       case OI_AUTO_VIEW_INLINE:
 	return YESorNO(g_auto_view_inline);
       case OI_NEWGROUP_CHECK:
-	return YESorNO(!quickstart);
+	return YESorNO(!g_quickstart);
       case OI_RESTRICTION_INCLUDES_EMPTIES:
 	return YESorNO(g_empty_only_char == 'o');
       case OI_CHARSET:
 	return g_charsets;
       case OI_INITIAL_GROUP_LIST:
-	if (suppress_cn)
+	if (g_suppress_cn)
 	    return YESorNO(0);
-	sprintf(buf,"%d",countdown);
-	return buf;
+	sprintf(g_buf,"%d",g_countdown);
+	return g_buf;
       case OI_RESTART_AT_LAST_GROUP:
-	return YESorNO(findlast != 0);
+	return YESorNO(g_findlast != 0);
       case OI_SCANMODE_COUNT:
-	sprintf(buf,"%d",scanon);
-	return buf;
+	sprintf(g_buf,"%d",g_scanon);
+	return g_buf;
       case OI_TERSE_OUTPUT:
-	return YESorNO(!verbose);
+	return YESorNO(!g_verbose);
       case OI_EAT_TYPEAHEAD:
-	return YESorNO(!allow_typeahead);
+	return YESorNO(!g_allow_typeahead);
       case OI_COMPRESS_SUBJECTS:
-	return YESorNO(!unbroken_subjects);
+	return YESorNO(!g_unbroken_subjects);
       case OI_VERIFY_INPUT:
-	return YESorNO(verify);
+	return YESorNO(g_verify);
       case OI_ARTICLE_TREE_LINES:
-	sprintf(buf,"%d",max_tree_lines);
-	return buf;
+	sprintf(g_buf,"%d",g_max_tree_lines);
+	return g_buf;
       case OI_WORD_WRAP_MARGIN:
-	if (word_wrap_offset >= 0) {
-	    sprintf(buf,"%d",word_wrap_offset);
-	    return buf;
+	if (g_word_wrap_offset >= 0) {
+	    sprintf(g_buf,"%d",g_word_wrap_offset);
+	    return g_buf;
 	}
 	return YESorNO(0);
       case OI_DEFAULT_REFETCH_TIME:
-	return secs2text(defRefetchSecs);
+	return secs2text(g_def_refetch_secs);
       case OI_ART_PAGER_BTNS:
-	return expand_mouse_buttons(ArtPagerBtns,ArtPagerBtnCnt);
+	return expand_mouse_buttons(g_art_pager_btns,g_art_pager_btn_cnt);
       case OI_SCAN_ITEMNUM:
 	return YESorNO(g_s_itemnum);
       case OI_SCAN_VI:
@@ -1048,10 +1048,10 @@ char *option_value(int num)
       case OI_SC_VERBOSE:
 	return YESorNO(g_sf_verbose);
       case OI_USE_SEL_NUM:
-	return YESorNO(UseSelNum);
+	return YESorNO(g_use_sel_num);
 	break;
       case OI_SEL_NUM_GOTO:
-	return YESorNO(SelNumGoto);
+	return YESorNO(g_sel_num_goto);
 	break;
       default:
 	printf("*** Internal error: Unknown Option ***\n");
@@ -1063,28 +1063,28 @@ char *option_value(int num)
 static char *hidden_list()
 {
     int i;
-    buf[0] = '\0';
-    buf[1] = '\0';
+    g_buf[0] = '\0';
+    g_buf[1] = '\0';
     for (i = 1; i < g_user_htype_cnt; i++) {
-	sprintf(buf+strlen(buf),",%s%s", g_user_htype[i].flags? "" : "!",
+	sprintf(g_buf+strlen(g_buf),",%s%s", g_user_htype[i].flags? "" : "!",
 		g_user_htype[i].name);
     }
-    return buf+1;
+    return g_buf+1;
 }
 
 static char *magic_list()
 {
     int i;
-    buf[0] = '\0';
-    buf[1] = '\0';
+    g_buf[0] = '\0';
+    g_buf[1] = '\0';
     for (i = HEAD_FIRST; i < HEAD_LAST; i++) {
 	if (!(g_htype[i].flags & HT_MAGIC) != !(g_htype[i].flags & HT_DEFMAGIC)) {
-	    sprintf(buf+strlen(buf),",%s%s",
+	    sprintf(g_buf+strlen(g_buf),",%s%s",
 		    (g_htype[i].flags & HT_DEFMAGIC)? "!" : "",
 		    g_htype[i].name);
 	}
     }
-    return buf+1;
+    return g_buf+1;
 }
 
 static void set_header_list(int flag, int defflag, char *str)
@@ -1231,20 +1231,20 @@ static int parse_mouse_buttons(char **cpp, const char *btns)
 
 static char *expand_mouse_buttons(char *cp, int cnt)
 {
-    *buf = '\0';
+    *g_buf = '\0';
     while (cnt--) {
 	if (*cp == '[') {
 	    int len = strlen(cp);
 	    cp[len] = ']';
-	    safecat(buf,cp,sizeof buf);
+	    safecat(g_buf,cp,sizeof g_buf);
 	    cp += len;
 	    *cp++ = '\0';
 	}
 	else
-	    safecat(buf,cp,sizeof buf);
+	    safecat(g_buf,cp,sizeof g_buf);
 	cp += strlen(cp)+1;
     }
-    return buf;
+    return g_buf;
 }
 
 char *quote_string(char *val)
@@ -1306,36 +1306,36 @@ void cwd_check()
 {
     char tmpbuf[LBUFLEN];
 
-    if (!cwd)
-	cwd = savestr(filexp("~/News"));
-    strcpy(tmpbuf,cwd);
-    if (chdir(cwd) != 0) {
-	safecpy(tmpbuf,filexp(cwd),sizeof tmpbuf);
+    if (!g_cwd)
+	g_cwd = savestr(filexp("~/News"));
+    strcpy(tmpbuf,g_cwd);
+    if (chdir(g_cwd) != 0) {
+	safecpy(tmpbuf,filexp(g_cwd),sizeof tmpbuf);
 	if (makedir(tmpbuf,MD_DIR) != 0 || chdir(tmpbuf) != 0) {
-	    interp(cmd_buf, (sizeof cmd_buf), "%~/News");
-	    if (makedir(cmd_buf,MD_DIR) != 0)
+	    interp(g_cmd_buf, (sizeof g_cmd_buf), "%~/News");
+	    if (makedir(g_cmd_buf,MD_DIR) != 0)
 		strcpy(tmpbuf,g_home_dir);
 	    else
-		strcpy(tmpbuf,cmd_buf);
+		strcpy(tmpbuf,g_cmd_buf);
 	    chdir(tmpbuf);
-	    if (verbose)
+	    if (g_verbose)
 		printf("\
 Cannot make directory %s--\n\
 	articles will be saved to %s\n\
 \n\
-",cwd,tmpbuf) FLUSH;
+",g_cwd,tmpbuf) FLUSH;
 	    else
 		printf("\
 Can't make %s--\n\
 	using %s\n\
 \n\
-",cwd,tmpbuf) FLUSH;
+",g_cwd,tmpbuf) FLUSH;
 	}
     }
-    free(cwd);
+    free(g_cwd);
     trn_getwd(tmpbuf, sizeof(tmpbuf));
     if (eaccess(tmpbuf,2)) {
-	if (verbose)
+	if (g_verbose)
 	    printf("\
 Current directory %s is not writeable--\n\
 	articles will be saved to home directory\n\n\
@@ -1344,5 +1344,5 @@ Current directory %s is not writeable--\n\
 	    printf("%s not writeable--using ~\n\n",tmpbuf) FLUSH;
 	strcpy(tmpbuf,g_home_dir);
     }
-    cwd = savestr(tmpbuf);
+    g_cwd = savestr(tmpbuf);
 }

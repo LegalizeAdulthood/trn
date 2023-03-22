@@ -6,126 +6,126 @@
 /* GLOBAL THINGS */
 
 /* file statistics area */
-struct stat filestat;
+struct stat g_filestat;
 
 /* various things of type char */
 
-char msg[CBUFLEN];     /* general purpose message buffer */
-char buf[LBUFLEN + 1]; /* general purpose line buffer */
-char cmd_buf[CBUFLEN]; /* buffer for formatting system commands */
-char *indstr{">"};     /* indent for old article embedded in followup */
+char g_msg[CBUFLEN];     /* general purpose message buffer */
+char g_buf[LBUFLEN + 1]; /* general purpose line buffer */
+char g_cmd_buf[CBUFLEN]; /* buffer for formatting system commands */
+char *g_indstr{">"};     /* indent for old article embedded in followup */
 
-char *cwd{nullptr};     /* current working directory */
-char *dfltcmd{nullptr}; /* 1st char is default command */
+char *g_cwd{};     /* current working directory */
+char *g_dfltcmd{}; /* 1st char is default command */
 
 /* switches */
 
-int scanon{0}; /* -S */
+int g_scanon{}; /* -S */
 
-bool use_threads{THREAD_INIT}; /* -x */
-int max_tree_lines{6};
+bool g_use_threads{THREAD_INIT}; /* -x */
+int g_max_tree_lines{6};
 
-char UnivSelCmds[3]{"Z>"};
-char NewsrcSelCmds[3]{"Z>"};
-char AddSelCmds[3]{"Z>"};
-char NewsgroupSelCmds[3]{"Z>"};
-char NewsSelCmds[3]{"Z>"};
-char OptionSelCmds[3]{"Z>"};
+char g_univ_sel_cmds[3]{"Z>"};
+char g_newsrc_sel_cmds[3]{"Z>"};
+char g_add_sel_cmds[3]{"Z>"};
+char g_newsgroup_sel_cmds[3]{"Z>"};
+char g_news_sel_cmds[3]{"Z>"};
+char g_option_sel_cmds[3]{"Z>"};
 
-int UnivSelBtnCnt;
-int NewsrcSelBtnCnt;
-int AddSelBtnCnt;
-int NewsgroupSelBtnCnt;
-int NewsSelBtnCnt;
-int OptionSelBtnCnt;
-int ArtPagerBtnCnt;
+int g_univ_sel_btn_cnt;
+int g_newsrc_sel_btn_cnt;
+int g_add_sel_btn_cnt;
+int g_newsgroup_sel_btn_cnt;
+int g_news_sel_btn_cnt;
+int g_option_sel_btn_cnt;
+int g_art_pager_btn_cnt;
 
-char *UnivSelBtns{nullptr};
-char *NewsrcSelBtns{nullptr};
-char *AddSelBtns{nullptr};
-char *NewsgroupSelBtns{nullptr};
-char *NewsSelBtns{nullptr};
-char *OptionSelBtns{nullptr};
-char *ArtPagerBtns{nullptr};
+char *g_univ_sel_btns{};
+char *g_newsrc_sel_btns{};
+char *g_add_sel_btns{};
+char *g_newsgroup_sel_btns{};
+char *g_news_sel_btns{};
+char *g_option_sel_btns{};
+char *g_art_pager_btns{};
 
-bool dont_filter_control{false}; /* -j */
-int join_subject_len{0};         /* -J */
-bool kill_thru_kludge{true};     /* -k */
-int keep_the_group_static{0};    /* -K */
-bool mbox_always{false};         /* -M */
-bool norm_always{false};         /* -N */
-bool thread_always{false};       /* -a */
-int auto_arrow_macros{2};        /* -A */
-bool breadth_first{false};       /* -b */
-bool bkgnd_spinner{false};       /* -B */
-bool novice_delays{true};        /* +f */
-int olden_days{false};           /* -o */
-char auto_select_postings{0};    /* -p */
-bool checkflag{false};           /* -c */
-char *savedir{nullptr};          /* -d */
-bool suppress_cn{false};         /* -s */
-int countdown{5};                /* how many lines to list before invoking -s */
-bool muck_up_clear{false};       /* -loco */
-bool erase_screen{false};        /* -e */
-bool can_home{false};
-bool erase_each_line{false};   /* fancy -e */
-int findlast{0};               /* -r */
-bool allow_typeahead{false};   /* -T */
-bool fuzzyGet{false};          /* -G */
-bool verbose{true};            /* +t */
-bool unbroken_subjects{false}; /* -u */
-bool unsafe_rc_saves{false};   /* -U */
-bool verify{false};            /* -v */
-bool quickstart{false};        /* -q */
+bool g_dont_filter_control{};  /* -j */
+int g_join_subject_len{};      /* -J */
+bool g_kill_thru_kludge{true}; /* -k */
+int g_keep_the_group_static{}; /* -K */
+bool g_mbox_always{};          /* -M */
+bool g_norm_always{};          /* -N */
+bool g_thread_always{};        /* -a */
+int g_auto_arrow_macros{2};    /* -A */
+bool g_breadth_first{};        /* -b */
+bool g_bkgnd_spinner{};        /* -B */
+bool g_novice_delays{true};    /* +f */
+int g_olden_days{};            /* -o */
+char g_auto_select_postings{}; /* -p */
+bool g_checkflag{};            /* -c */
+char *g_savedir{};             /* -d */
+bool g_suppress_cn{};          /* -s */
+int g_countdown{5};            /* how many lines to list before invoking -s */
+bool g_muck_up_clear{};        /* -loco */
+bool g_erase_screen{};         /* -e */
+bool g_can_home{};
+bool g_erase_each_line{};   /* fancy -e */
+int g_findlast{};           /* -r */
+bool g_allow_typeahead{};   /* -T */
+bool g_fuzzy_get{};         /* -G */
+bool g_verbose{true};       /* +t */
+bool g_unbroken_subjects{}; /* -u */
+bool g_unsafe_rc_saves{};   /* -U */
+bool g_verify{};            /* -v */
+bool g_quickstart{};        /* -q */
 
-time_t defRefetchSecs{DEFAULT_REFETCH_SECS}; /* -z */
+time_t g_def_refetch_secs{DEFAULT_REFETCH_SECS}; /* -z */
 
-int word_wrap_offset{8}; /* right-hand column size (0 is off) */
+int g_word_wrap_offset{8}; /* right-hand column size (0 is off) */
 
-int marking{NOMARKING}; /* -m */
-int marking_areas{HALFPAGE_MARKING};
+int g_marking{NOMARKING}; /* -m */
+int g_marking_areas{HALFPAGE_MARKING};
 
-ART_LINE initlines{0}; /* -i */
+ART_LINE g_initlines{}; /* -i */
 
 #ifdef APPEND_UNSUB
-bool append_unsub{1}; /* -I */
+bool g_append_unsub{true}; /* -I */
 #else
-bool append_unsub{0}; /* -I */
+bool g_append_unsub{}; /* -I */
 #endif
 
-bool UseUnivSelector{false};
-bool UseNewsrcSelector{false};
-bool UseAddSelector{true};
-bool UseNewsgroupSelector{true};
-int UseNewsSelector{SELECT_INIT - 1};
-bool UseMouse{false};
-char MouseModes[32]{"acjlptwvK"};
-bool use_colors{false};
-bool UseTk{false};
-bool UseTcl{false};
-bool UseSelNum{false};
-bool SelNumGoto{false};
+bool g_use_univ_selector{};
+bool g_use_newsrc_selector{};
+bool g_use_add_selector{true};
+bool g_use_newsgroup_selector{true};
+int g_use_news_selector{SELECT_INIT - 1};
+bool g_use_mouse{};
+char g_mouse_modes[32]{"acjlptwvK"};
+bool g_use_colors{};
+bool g_use_tk{};
+bool g_use_tcl{};
+bool g_use_sel_num{};
+bool g_sel_num_goto{};
 /* miscellania */
 
-bool in_ng{false}; /* true if in a newsgroup */
-char mode{'i'};    /* current state of trn */
-char gmode{'I'};   /* general mode of trn */
+bool g_in_ng{};           /* true if in a newsgroup */
+char g_mode{'i'};         /* current state of trn */
+char g_general_mode{'I'}; /* general mode of trn */
 
-FILE *tmpfp{nullptr}; /* scratch fp used for .rnlock, .rnlast, etc. */
+FILE *g_tmpfp{}; /* scratch fp used for .rnlock, .rnlast, etc. */
 
 /* Factored strings */
 
-char sh[]{SH};
-char defeditor[]{DEFEDITOR};
-char hforhelp[]{"Type h for help.\n"};
+char g_sh[]{SH};
+char g_defeditor[]{DEFEDITOR};
+char g_hforhelp[]{"Type h for help.\n"};
 #ifdef STRICTCR
-char badcr[]{"\nUnnecessary CR ignored.\n"};
+char g_badcr[]{"\nUnnecessary CR ignored.\n"};
 #endif
-char readerr[]{"rn read error"};
-char unsubto[]{"Unsubscribed to newsgroup %s\n"};
-char cantopen[]{"Can't open %s\n"};
-char cantcreate[]{"Can't create %s\n"};
-char cantrecreate[]{"Can't recreate %s -- restoring older version.\n"
+char g_readerr[]{"rn read error"};
+char g_unsubto[]{"Unsubscribed to newsgroup %s\n"};
+char g_cantopen[]{"Can't open %s\n"};
+char g_cantcreate[]{"Can't create %s\n"};
+char g_cantrecreate[]{"Can't recreate %s -- restoring older version.\n"
                     "Perhaps you are near or over quota?\n"};
 
-char nocd[]{"Can't chdir to directory %s\n"};
+char g_nocd[]{"Can't chdir to directory %s\n"};

@@ -69,17 +69,17 @@
 #include "univ.h"
 #include "trn.h"
 
-char *ngname{};   /* name of current newsgroup */
-int ngnlen{};     /* current malloced size of ngname */
-int ngname_len{}; /* length of current ngname */
-char *ngdir{};    /* same thing in directory name form */
-int ngdlen{};     /* current malloced size of ngdir */
-int ing_state{};
-bool write_less{};      /* write .newsrc less often */
-char *auto_start_cmd{}; /* command to auto-start with */
-bool auto_started{};    /* have we auto-started? */
-bool is_strn{};         /* Is this "strn", or trn/rn? */
-char patchlevel[]{PATCHLEVEL};
+char *g_ngname{};   /* name of current newsgroup */
+int g_ngnlen{};     /* current malloced size of g_ngname */
+int g_ngname_len{}; /* length of current g_ngname */
+char *g_ngdir{};    /* same thing in directory name form */
+int g_ngdlen{};     /* current malloced size of g_ngdir */
+int g_ing_state{};
+bool g_write_less{};      /* write .newsrc less often */
+char *g_auto_start_cmd{}; /* command to auto-start with */
+bool g_auto_started{};    /* have we auto-started? */
+bool g_is_strn{};         /* Is this "strn", or trn/rn? */
+char g_patchlevel[]{PATCHLEVEL};
 
 void trn_init()
 {
@@ -106,15 +106,15 @@ int main(int argc, char *argv[])
 #if !THREAD_INIT
     /* Default to threaded operation if our name starts with a 't' or 's'. */
     if (*s == 't' || *s == 's')
-	use_threads = true;
+	g_use_threads = true;
     else
-	UseNewsSelector = -1;
+	g_use_news_selector = -1;
 #endif
     if (*s == 's')
-	is_strn = true;
+	g_is_strn = true;
     foundany = initialize(argc,argv);
 
-    if (UseNewsrcSelector) {
+    if (g_use_newsrc_selector) {
 	multirc_selector();
 	finalize(0);
     }
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
     if (g_maxngtodo)
 	g_starthere = nullptr;
     else if (!foundany) {		/* nothing to do? */
-	if (verbose) {
+	if (g_verbose) {
 	    fputs("\
 No unread news in subscribed-to newsgroups.  To subscribe to a new\n\
 newsgroup use the g<newsgroup> command.\n\
@@ -147,10 +147,10 @@ newsgroup use the g<newsgroup> command.\n\
 void do_multirc()
 {
     bool special = false;	/* allow newsgroup with no unread news? */
-    char mode_save = mode;
-    char gmode_save = gmode;
+    char mode_save = g_mode;
+    char gmode_save = g_general_mode;
 
-    if (UseUnivSelector) {
+    if (g_use_univ_selector) {
 	char ch;
 	univ_startup();		/* load startup file */
 	ch = universal_selector();
@@ -165,7 +165,7 @@ void do_multirc()
 	}
     }
 
-    if (UseNewsgroupSelector) {
+    if (g_use_newsgroup_selector) {
       ng_start_sel:
 	switch (newsgroup_selector()) {
 	case Ctl('n'):
@@ -180,7 +180,7 @@ void do_multirc()
 	    goto bug_out;
 	}
 	g_starthere = g_ngptr;
-	UseNewsgroupSelector = false;
+	g_use_newsgroup_selector = false;
     }
 
     /* loop through all unread news */
@@ -188,8 +188,8 @@ void do_multirc()
     g_current_ng = g_first_ng;
     for (;;) {
 	bool retry = false;
-	if (findlast > 0) {
-	    findlast = -1;
+	if (g_findlast > 0) {
+	    g_findlast = -1;
 	    g_starthere = nullptr;
 	    if (g_lastngname) {
 		if ((g_ngptr = find_ng(g_lastngname)) == nullptr)
@@ -212,20 +212,20 @@ void do_multirc()
 		set_mode('r','f');
 		if (g_maxngtodo) {
 		    if (retry) {
-			if (verbose)
+			if (g_verbose)
 			    printf("\nRestriction %s%s still in effect.\n",
 				   g_ngtodo[0], g_maxngtodo > 1 ? ", etc." : "") FLUSH;
 		 	else
 			    fputs("\n(\"Only\" mode.)\n",stdout) FLUSH;
 			termdown(2);
 		    } else {
-			if (verbose)
+			if (g_verbose)
 			    fputs("\nNo articles under restriction.", stdout) FLUSH;
 			else
 			    fputs("\nNo \"only\" articles.",stdout) FLUSH;
 			termdown(2);
 			end_only();	/* release the restriction */
-			printf("\n%s\n", msg) FLUSH;
+			printf("\n%s\n", g_msg) FLUSH;
 			termdown(2);
 			retry = true;
 		    }
@@ -237,7 +237,7 @@ void do_multirc()
 		set_mode('r','n');
 		if (g_ngptr->toread >= TR_NONE) {	/* recalc toread? */
 		    set_ngname(g_ngptr->rcline);
-		    shoe_fits = inlist(ngname);
+		    shoe_fits = inlist(g_ngname);
 		    if (shoe_fits)
 			set_toread(g_ngptr, ST_LAX);
 		    if (g_paranoid) {
@@ -270,26 +270,26 @@ void do_multirc()
     reask_newsgroup:
 	    unflush_output();	/* disable any ^O in effect */
 	    if (g_ngptr == nullptr) {
-		dfltcmd = (retry ? "npq" : "qnp");
-		if (verbose)
+		g_dfltcmd = (retry ? "npq" : "qnp");
+		if (g_verbose)
 		    printf("\n****** End of newsgroups -- what next? [%s] ",
-			   dfltcmd);
+			   g_dfltcmd);
 		else
-		    printf("\n**** End -- next? [%s] ", dfltcmd);
+		    printf("\n**** End -- next? [%s] ", g_dfltcmd);
 		termdown(1);
 	    } else {
-		g_threaded_group = (use_threads && !(g_ngptr->flags&NF_UNTHREADED));
-		dfltcmd = (UseNewsSelector >= 0
-		  && g_ngptr->toread >= (ART_UNREAD)UseNewsSelector? "+ynq":"ynq");
-		if (verbose)
+		g_threaded_group = (g_use_threads && !(g_ngptr->flags&NF_UNTHREADED));
+		g_dfltcmd = (g_use_news_selector >= 0
+		  && g_ngptr->toread >= (ART_UNREAD)g_use_news_selector? "+ynq":"ynq");
+		if (g_verbose)
 		    printf("\n%s %3ld unread article%s in %s -- read now? [%s] ",
 			   g_threaded_group? "======" : "******",
 			   (long)g_ngptr->toread, PLURAL(g_ngptr->toread),
-			   ngname, dfltcmd);
+			   g_ngname, g_dfltcmd);
 		else
 		    printf("\n%s %3ld in %s -- read? [%s] ",
 			   g_threaded_group? "====" : "****",
-			   (long)g_ngptr->toread,ngname,dfltcmd);
+			   (long)g_ngptr->toread,g_ngname,g_dfltcmd);
 		termdown(1);
 	    }
 	    fflush(stdout);
@@ -303,7 +303,7 @@ void do_multirc()
 	    case ING_ERASE:
 		goto reinp_newsgroup;
 	    case ING_ERROR:
-		printf("\n%s",hforhelp) FLUSH;
+		printf("\n%s",g_hforhelp) FLUSH;
 		termdown(2);
 		settle_down();
 		goto reask_newsgroup;
@@ -326,7 +326,7 @@ void do_multirc()
 		newline();
 		break;
 	    case ING_MESSAGE:
-		printf("\n%s\n", msg) FLUSH;
+		printf("\n%s\n", g_msg) FLUSH;
 		termdown(2);
 		break;
 	    }
@@ -349,22 +349,22 @@ int input_newsgroup()
 {
     char* s;
 
-    ing_state = INGS_DIRTY;
+    g_ing_state = INGS_DIRTY;
     eat_typeahead();
-    getcmd(buf);
-    if (errno || *buf == '\f') {
+    getcmd(g_buf);
+    if (errno || *g_buf == '\f') {
 	newline();		/* if return from stop signal */
 	return ING_ASK;
     }
-    buf[2] = *buf;
-    setdef(buf,dfltcmd);
+    g_buf[2] = *g_buf;
+    setdef(g_buf,g_dfltcmd);
     printcmd();
     if (g_ngptr != nullptr)
-	*buf = buf[2];
+	*g_buf = g_buf[2];
 
   do_command:
     go_forward = true;		/* default to forward motion */
-    switch (*buf) {
+    switch (*g_buf) {
       case 'P':			/* goto previous newsgroup */
       case 'p':			/* find previous unread newsgroup */
 	if (!g_ngptr)
@@ -372,8 +372,8 @@ int input_newsgroup()
 	else if (g_ngptr != g_first_ng)
 	    g_ngptr = g_ngptr->prev;
 	go_forward = false;	/* go backward in the newsrc */
-	ing_state = INGS_CLEAN;
-	if (*buf == 'P')
+	g_ing_state = INGS_CLEAN;
+	if (*g_buf == 'P')
 	    return ING_SPECIAL;
 	break;
       case '-':
@@ -388,7 +388,7 @@ int input_newsgroup()
 	newline();
 	in_char("Confirm: exit and abandon newsrc changes?", 'A', "yn");
 	newline();
-	if (*buf != 'y')
+	if (*g_buf != 'y')
 	    break;
 	printf("\nThe abandoned changes are in %s.new.\n",
 	       multirc_name(g_multirc)) FLUSH;
@@ -399,10 +399,10 @@ int input_newsgroup()
 	newline();
 	return ING_QUIT;
       case '^':
-	if (gmode != 's')
+	if (g_general_mode != 's')
 	    newline();
 	g_ngptr = g_first_ng;
-	ing_state = INGS_CLEAN;
+	g_ing_state = INGS_CLEAN;
 	break;
       case 'N':			/* goto next newsgroup */
       case 'n':			/* find next unread newsgroup */
@@ -411,23 +411,23 @@ int input_newsgroup()
 	    return ING_BREAK;
 	}
 	g_ngptr = g_ngptr->next;
-	ing_state = INGS_CLEAN;
-	if (*buf == 'N')
+	g_ing_state = INGS_CLEAN;
+	if (*g_buf == 'N')
 	    return ING_SPECIAL;
 	break;
       case '1':			/* goto 1st newsgroup */
 	g_ngptr = g_first_ng;
-	ing_state = INGS_CLEAN;
+	g_ing_state = INGS_CLEAN;
 	return ING_SPECIAL;
       case '$':
 	g_ngptr = nullptr;		/* go past last newsgroup */
-	ing_state = INGS_CLEAN;
+	g_ing_state = INGS_CLEAN;
 	break;
       case 'L':
 	list_newsgroups();
 	return ING_ASK;
       case '/': case '?':	/* scan for newsgroup pattern */
-	switch (ng_search(buf,true)) {
+	switch (ng_search(g_buf,true)) {
 	  case NGS_ERROR:
 	    set_ng(g_current_ng);
 	    return ING_ASK;
@@ -435,7 +435,7 @@ int input_newsgroup()
 	    set_ng(g_current_ng);
 	    return ING_INPUT;
 	  case NGS_INTR:
-	    if (verbose)
+	    if (g_verbose)
 		fputs("\n(Interrupted)\n",stdout) FLUSH;
 	    else
 		fputs("\n(Intr)\n",stdout) FLUSH;
@@ -445,7 +445,7 @@ int input_newsgroup()
 	  case NGS_FOUND:
 	    return ING_SPECIAL;
 	  case NGS_NOTFOUND:
-	    if (verbose)
+	    if (g_verbose)
 		fputs("\n\nNot found -- use a or g to add newsgroups\n",
 		      stdout) FLUSH;
 	    else
@@ -462,9 +462,9 @@ int input_newsgroup()
       case 'g':	/* goto named newsgroup */
 	if (!finish_command(false))
 	    return ING_INPUT;
-	for (s = buf+1; *s == ' '; s++) ; /* skip leading spaces */
-	if (!*s && *buf == 'm' && ngname && g_ngptr)
-	    strcpy(s,ngname);
+	for (s = g_buf+1; *s == ' '; s++) ; /* skip leading spaces */
+	if (!*s && *g_buf == 'm' && g_ngname && g_ngptr)
+	    strcpy(s,g_ngname);
 	{
 	    char* _s;
 	    for (_s=s; isdigit(*_s); _s++) ;
@@ -486,7 +486,7 @@ int input_newsgroup()
 	    }
 	}
 	/* try to find newsgroup */
-	if (!get_ng(ngname,(*buf=='m'?GNG_RELOC:0) | GNG_FUZZY))
+	if (!get_ng(g_ngname,(*g_buf=='m'?GNG_RELOC:0) | GNG_FUZZY))
 	    g_ngptr = g_current_ng;	/* if not found, go nowhere */
 	g_addnewbydefault = 0;
 	return ING_SPECIAL;
@@ -516,13 +516,13 @@ int input_newsgroup()
 	int len;
 	for (rp = g_multirc->first, len = 0; rp && len < 66; rp = rp->next) {
 	    if (rp->flags & RF_ACTIVE) {
-		sprintf(buf+len, ", %s", rp->datasrc->name);
-		len += strlen(buf+len);
+		sprintf(g_buf+len, ", %s", rp->datasrc->name);
+		len += strlen(g_buf+len);
 	    }
 	}
 	if (rp)
-	    strcpy(buf+len, ", ...");
-	printf("\nUsing newsrc group #%d: %s.\n",g_multirc->num,buf+2);
+	    strcpy(g_buf+len, ", ...");
+	printf("\nUsing newsrc group #%d: %s.\n",g_multirc->num,g_buf+2);
 	termdown(3);
 	return ING_RESTART;
       }
@@ -534,7 +534,7 @@ int input_newsgroup()
 	}
 	break;
       case 't':
-	if (!use_threads)
+	if (!g_use_threads)
 	    printf("\n\nNot running in thread mode.\n");
 	else if (g_ngptr && g_ngptr->toread >= TR_NONE) {
 	    bool read_unthreaded = !(g_ngptr->flags&NF_UNTHREADED);
@@ -548,7 +548,7 @@ int input_newsgroup()
       case 'u':			/* unsubscribe */
 	if (g_ngptr && g_ngptr->toread >= TR_NONE) {/* unsubscribable? */
 	    newline();
-	    printf(unsubto,g_ngptr->rcline) FLUSH;
+	    printf(g_unsubto,g_ngptr->rcline) FLUSH;
 	    termdown(1);
 	    g_ngptr->subscribechar = NEGCHAR;	/* unsubscribe it */
 	    g_ngptr->toread = TR_UNSUB;		/* and make line invisible */
@@ -567,46 +567,46 @@ int input_newsgroup()
 	if (!g_ngptr)
 	    break;
 reask_abandon:
-	if (verbose)
+	if (g_verbose)
 	    in_char("\nAbandon changes to current newsgroup?", 'B', "yn");
 	else
 	    in_char("\nAbandon?", 'B', "ynh");
 	printcmd();
 	newline();
-	if (*buf == 'h') {
+	if (*g_buf == 'h') {
 	    printf("Type y or SP to abandon the changes to this group since you started trn.\n");
 	    printf("Type n to leave the group as it is.\n");
 	    termdown(2);
 	    goto reask_abandon;
-	} else if (*buf != 'y' && *buf != 'n' && *buf != 'q') {
-	    fputs(hforhelp,stdout) FLUSH;
+	} else if (*g_buf != 'y' && *g_buf != 'n' && *g_buf != 'q') {
+	    fputs(g_hforhelp,stdout) FLUSH;
 	    termdown(1);
 	    settle_down();
 	    goto reask_abandon;
-	} else if (*buf == 'y')
+	} else if (*g_buf == 'y')
 	    abandon_ng(g_ngptr);
 	return ING_SPECIAL;
       case 'a':
 	/* FALL THROUGH */
       case 'o':
       case 'O': {
-	bool doscan = (*buf == 'a');
+	bool doscan = (*g_buf == 'a');
 	if (!finish_command(true)) /* get rest of command */
 	    return ING_INPUT;
-	*msg = '\0';
+	*g_msg = '\0';
 	end_only();
-	if (buf[1]) {
-	    bool minusd = in_string(buf+1,"-d", true) != nullptr;
-	    sw_list(buf+1);
+	if (g_buf[1]) {
+	    bool minusd = in_string(g_buf+1,"-d", true) != nullptr;
+	    sw_list(g_buf+1);
 	    if (minusd)
 		cwd_check();
 	    if (doscan && g_maxngtodo)
 		scanactive(true);
-	    g_ng_min_toread = *buf == g_empty_only_char && g_maxngtodo
+	    g_ng_min_toread = *g_buf == g_empty_only_char && g_maxngtodo
 			  ? TR_NONE : TR_ONE;
 	}
 	g_ngptr = g_first_ng;	/* simulate ^ */
-	if (*msg && !g_maxngtodo)
+	if (*g_msg && !g_maxngtodo)
 	    return ING_MESSAGE;
 	return ING_DISPLAY;
       }
@@ -617,7 +617,7 @@ reask_abandon:
       case 'l': {		/* list other newsgroups */
 	if (!finish_command(true)) /* get rest of command */
 	    return ING_INPUT;	/* if rubbed out, try something else */
-	for (s = buf+1; *s == ' '; s++) ; /* skip leading spaces */
+	for (s = g_buf+1; *s == ' '; s++) ; /* skip leading spaces */
 	push_only();
 	if (*s)
 	    sw_list(s);
@@ -628,10 +628,10 @@ reask_abandon:
       }
       case '`':
       case '\\':
-	if (gmode == 's')
+	if (g_general_mode == 's')
 	    return ING_ERASE;
       ng_start_sel:
-	UseNewsgroupSelector = true;
+	g_use_newsgroup_selector = true;
 	switch (newsgroup_selector()) {
 	  case Ctl('n'):
 	    end_only();
@@ -644,7 +644,7 @@ reask_abandon:
 	  case 'q':
 	     return ING_QUIT;
 	}
-	UseNewsgroupSelector = false;
+	g_use_newsgroup_selector = false;
 	return ING_ASK;
       case ';':
       case 'U': case '+':
@@ -661,18 +661,18 @@ reask_abandon:
 	 *      Just to be safe, make sure it is legal.
 	 */
 	s = "";
-	if (*buf == '.') {		/* start command? */
+	if (*g_buf == '.') {		/* start command? */
 	    if (!finish_command(false)) /* get rest of command */
 		return ING_INPUT;
-	    s = savestr(buf+1);		/* do_newsgroup will free it */
+	    s = savestr(g_buf+1);		/* do_newsgroup will free it */
 	}
-        else if (*buf == '+' || *buf == 'U' || *buf == '=' || *buf == ';')
+        else if (*g_buf == '+' || *g_buf == 'U' || *g_buf == '=' || *g_buf == ';')
         {
-	    *buf = lastchar; /* restore 0200 if from a macro */
-	    save_typeahead(buf+1, sizeof buf - 1);
-	    s = savestr(buf);
+	    *g_buf = lastchar; /* restore 0200 if from a macro */
+	    save_typeahead(g_buf+1, sizeof g_buf - 1);
+	    s = savestr(g_buf);
 	}
-	else if (*buf == ' ' || *buf == '\r' || *buf == '\n')
+	else if (*g_buf == ' ' || *g_buf == '\r' || *g_buf == '\n')
 	    s = "";
 	else
 	    s = nullptr;
@@ -687,10 +687,10 @@ reask_abandon:
 	  case NG_ASK:
 	    return ING_ASK;
 	  case NG_SELPRIOR:
-	    *buf = 'p';
+	    *g_buf = 'p';
 	    goto do_command;
 	  case NG_SELNEXT:
-	    *buf = 'n';
+	    *g_buf = 'n';
 	    goto do_command;
 	  case NG_MINUS:
 	    g_ngptr = g_recent_ng;	/* recall previous newsgroup */
@@ -718,7 +718,7 @@ reask_abandon:
 	trn_version();
 	return ING_ASK;
       default:
-	if (*buf == ERASECH || *buf == KILLCH)
+	if (*g_buf == ERASECH || *g_buf == KILLCH)
 	    return ING_ERASE;
 	return ING_ERROR;
     }
@@ -742,75 +742,75 @@ void check_active_refetch(bool force)
 void trn_version()
 {
     page_start();
-    sprintf(msg,"Trn version:%s.\nConfigured for ",patchlevel);
+    sprintf(g_msg,"Trn version:%s.\nConfigured for ",g_patchlevel);
 # ifdef HAS_LOCAL_SPOOL
-    strcat(msg,"both NNTP and local news access.\n");
+    strcat(g_msg,"both NNTP and local news access.\n");
 # else
-    strcat(msg,"NNTP (plus individual local access).\n");
+    strcat(g_msg,"NNTP (plus individual local access).\n");
 # endif
-    print_lines(msg, NOMARKING);
+    print_lines(g_msg, NOMARKING);
 
     if (g_multirc) {
 	NEWSRC* rp;
 	newline();
-	sprintf(msg,"News source group #%d:\n\n", g_multirc->num);
-	print_lines(msg, NOMARKING);
+	sprintf(g_msg,"News source group #%d:\n\n", g_multirc->num);
+	print_lines(g_msg, NOMARKING);
 	for (rp = g_multirc->first; rp; rp = rp->next) {
 	    if (!(rp->flags & RF_ACTIVE))
 		continue;
-	    sprintf(msg,"ID %s:\nNewsrc %s.\n",rp->datasrc->name,rp->name);
-	    print_lines(msg, NOMARKING);
+	    sprintf(g_msg,"ID %s:\nNewsrc %s.\n",rp->datasrc->name,rp->name);
+	    print_lines(g_msg, NOMARKING);
 	    if (rp->datasrc->flags & DF_REMOTE) {
-		sprintf(msg,"News from server %s.\n",rp->datasrc->newsid);
-		print_lines(msg, NOMARKING);
+		sprintf(g_msg,"News from server %s.\n",rp->datasrc->newsid);
+		print_lines(g_msg, NOMARKING);
 		if (rp->datasrc->act_sf.fp) {
 		    if (rp->datasrc->flags & DF_TMPACTFILE)
-			strcpy(msg,"Copy of remote active file");
+			strcpy(g_msg,"Copy of remote active file");
 		    else
-			sprintf(msg,"Local active file: %s",
+			sprintf(g_msg,"Local active file: %s",
 				rp->datasrc->extra_name);
 		}
 		else
-		    strcpy(msg,"Dynamic active file");
+		    strcpy(g_msg,"Dynamic active file");
 		if (rp->datasrc->act_sf.refetch_secs) {
 		    char* cp = secs2text(rp->datasrc->act_sf.refetch_secs);
 		    if (*cp != 'n')
-			sprintf(msg+strlen(msg),
+			sprintf(g_msg+strlen(g_msg),
 				" (refetch%s %s)",*cp == 'm'? " if" : ":", cp);
 		}
-		strcat(msg,".\n");
+		strcat(g_msg,".\n");
 	    }
 	    else
-		sprintf(msg,"News from %s.\nLocal active file %s.\n",
+		sprintf(g_msg,"News from %s.\nLocal active file %s.\n",
 			rp->datasrc->spool_dir, rp->datasrc->newsid);
-	    print_lines(msg, NOMARKING);
+	    print_lines(g_msg, NOMARKING);
 	    if (rp->datasrc->grpdesc) {
 		if (!rp->datasrc->desc_sf.fp && rp->datasrc->desc_sf.hp)
-		    strcpy(msg,"Dynamic group desc. file");
+		    strcpy(g_msg,"Dynamic group desc. file");
 		else if (rp->datasrc->flags & DF_TMPGRPDESC)
-		    strcpy(msg,"Copy of remote group desc. file");
+		    strcpy(g_msg,"Copy of remote group desc. file");
 		else
-		    sprintf(msg,"Group desc. file: %s",rp->datasrc->grpdesc);
+		    sprintf(g_msg,"Group desc. file: %s",rp->datasrc->grpdesc);
 		if (rp->datasrc->desc_sf.refetch_secs) {
 		    char* cp = secs2text(rp->datasrc->desc_sf.refetch_secs);
 		    if (*cp != 'n')
-			sprintf(msg+strlen(msg),
+			sprintf(g_msg+strlen(g_msg),
 				" (refetch%s %s)",*cp == 'm'? " if" : ":", cp);
 		}
-		strcat(msg,".\n");
-		print_lines(msg, NOMARKING);
+		strcat(g_msg,".\n");
+		print_lines(g_msg, NOMARKING);
 	    }
 	    if (rp->datasrc->flags & DF_TRY_OVERVIEW) {
-		sprintf(msg,"Overview files from %s.\n",
+		sprintf(g_msg,"Overview files from %s.\n",
 			rp->datasrc->over_dir? rp->datasrc->over_dir
 					     : "the server");
-		print_lines(msg, NOMARKING);
+		print_lines(g_msg, NOMARKING);
 	    }
 	    if (rp->datasrc->flags & DF_TRY_THREAD) {
-		sprintf(msg,"Thread files from %s.\n",
+		sprintf(g_msg,"Thread files from %s.\n",
 			rp->datasrc->thread_dir? rp->datasrc->thread_dir
 					       : "the server");
-		print_lines(msg, NOMARKING);
+		print_lines(g_msg, NOMARKING);
 	    }
 	    print_lines("\n", NOMARKING);
 	}
@@ -824,13 +824,13 @@ Send bug reports, suggestions, etc. to:  trn-workers@lists.sourceforge.net\n",
 
 void set_ngname(const char *what)
 {
-    if (ngname != what) {
-	ngname_len = strlen(what);
-	growstr(&ngname,&ngnlen,ngname_len+1);
-	strcpy(ngname,what);
+    if (g_ngname != what) {
+	g_ngname_len = strlen(what);
+	growstr(&g_ngname,&g_ngnlen,g_ngname_len+1);
+	strcpy(g_ngname,what);
     }
-    growstr(&ngdir,&ngdlen,ngname_len+1);
-    strcpy(ngdir,getngdir(ngname));
+    growstr(&g_ngdir,&g_ngdlen,g_ngname_len+1);
+    strcpy(g_ngdir,getngdir(g_ngname));
 }
 
 static char* myngdir;

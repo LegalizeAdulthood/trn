@@ -447,8 +447,8 @@ void sc_score_cmd(const char *line)
 	if (!line)
 	    return;		/* do nothing with empty string */
 	if (*line == '\"') {
-	    buf[0] = '\0';
-	    sc_append(buf);
+	    g_buf[0] = '\0';
+	    sc_append(g_buf);
 	    return;
 	}
     }

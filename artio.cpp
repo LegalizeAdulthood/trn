@@ -76,8 +76,8 @@ retry_open:
 	    char tmpbuf[256];
 	    char* s;
 
-	    if (!fstat(fileno(artfp),&filestat)
-	     && filestat.st_size < sizeof tmpbuf) {
+	    if (!fstat(fileno(artfp),&g_filestat)
+	     && g_filestat.st_size < sizeof tmpbuf) {
 		fgets(tmpbuf,sizeof tmpbuf,artfp);
 		if (FILE_REF(tmpbuf)) {	/* is a "link" to another article */
 		    fclose(artfp);
@@ -388,8 +388,8 @@ char *readartbuf(bool view_inline)
     }
 
   done:
-    word_wrap = tc_COLS - word_wrap_offset;
-    if (read_something && word_wrap_offset >= 0 && word_wrap > 20 && bp) {
+    word_wrap = tc_COLS - g_word_wrap_offset;
+    if (read_something && g_word_wrap_offset >= 0 && word_wrap > 20 && bp) {
 	char* cp;
 	for (cp = bp; *cp && (s = strchr(cp, '\n')) != nullptr; cp = s+1) {
 	    if (s - cp > tc_COLS) {

@@ -103,7 +103,7 @@ bool initialize(int argc, char *argv[])
 
     /* now make sure we have a current working directory */
 
-    if (!checkflag)
+    if (!g_checkflag)
 	cwd_check();
 
     if (init_nntp() < 0)
@@ -111,7 +111,7 @@ bool initialize(int argc, char *argv[])
 
     /* if we aren't just checking, turn off echo */
 
-    if (!checkflag)
+    if (!g_checkflag)
 	term_set(tcbuf);
 
     /* get info on last trn run, if any */
@@ -124,7 +124,7 @@ bool initialize(int argc, char *argv[])
 
     /* check for news news */
 
-    if (!checkflag)
+    if (!g_checkflag)
 	newsnews_check();
 
     /* process the newsid(s) and associate the newsrc(s) */
@@ -172,14 +172,14 @@ void newsnews_check()
 {
     char* newsnewsname = filexp(NEWSNEWSNAME);
 
-    if ((tmpfp = fopen(newsnewsname,"r")) != nullptr) {
-	fstat(fileno(tmpfp),&filestat);
-	if (filestat.st_mtime > (time_t)g_lasttime) {
-	    while (fgets(buf,sizeof(buf),tmpfp) != nullptr)
-		fputs(buf,stdout) FLUSH;
+    if ((g_tmpfp = fopen(newsnewsname,"r")) != nullptr) {
+	fstat(fileno(g_tmpfp),&g_filestat);
+	if (g_filestat.st_mtime > (time_t)g_lasttime) {
+	    while (fgets(g_buf,sizeof(g_buf),g_tmpfp) != nullptr)
+		fputs(g_buf,stdout) FLUSH;
 	    get_anything();
 	    putchar('\n') FLUSH;
 	}
-	fclose(tmpfp);
+	fclose(g_tmpfp);
     }
 }

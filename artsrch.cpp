@@ -39,7 +39,7 @@ void artsrch_init()
 
 /* search for an article containing some pattern */
 
-/* if patbuf != buf, get_cmd must be set to false!!! */
+/* if patbuf != g_buf, get_cmd must be set to false!!! */
 int art_search(char *patbuf, int patbufsiz, int get_cmd)
 {
     char* pattern;			/* unparsed pattern */
@@ -57,12 +57,12 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
     bool doread;			/* search read articles? */
     bool foldcase = true;		/* fold upper and lower case? */
     int ignorethru = 0;			/* should we ignore the thru line? */
-    bool output_level = (!use_threads && gmode != 's');
+    bool output_level = (!g_use_threads && g_general_mode != 's');
     ART_NUM srchfirst;
 
     g_int_count = 0;
     if (cmdchr == '/' || cmdchr == '?') {	/* normal search? */
-	if (get_cmd && buf == patbuf)
+	if (get_cmd && g_buf == patbuf)
 	    if (!finish_command(false))	/* get rest of command */
 		return SRCH_ABORT;
 	compex = &art_compex;
@@ -76,8 +76,8 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	    srchhdr = art_srchhdr;
 	    doread = art_doread;
 	}
-	s = cpytill(buf,patbuf+1,cmdchr);/* ok to cpy buf+1 to buf */
-	pattern = buf;
+	s = cpytill(g_buf,patbuf+1,cmdchr);/* ok to cpy g_buf+1 to g_buf */
+	pattern = g_buf;
 	if (*pattern) {
 	    if (*lastpat)
 		free(lastpat);
@@ -91,8 +91,8 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 		    break;
 		case 'H':		/* scan a specific header */
 		    howmuch = ARTSCOPE_ONEHDR;
-		    s = cpytill(msg, s+1, ':');
-		    srchhdr = get_header_num(msg);
+		    s = cpytill(g_msg, s+1, ':');
+		    srchhdr = get_header_num(g_msg);
 		    goto loop_break;
 		case 'h':		/* scan header */
 		    howmuch = ARTSCOPE_HEAD;
@@ -174,12 +174,12 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	    ret = SRCH_DONE;
 	    if (cmdchr == '+') {
 		cmdlst = savestr("+");
-		if (!ignorethru && kill_thru_kludge)
+		if (!ignorethru && g_kill_thru_kludge)
 		    ignorethru = 1;
 	    }
 	    else if (cmdchr == '.') {
 		cmdlst = savestr(".");
-		if (!ignorethru && kill_thru_kludge)
+		if (!ignorethru && g_kill_thru_kludge)
 		    ignorethru = 1;
 	    }
 	    else if (cmdchr == 's') {
@@ -194,15 +194,15 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 		mark_as_read(article_ptr(g_art));	/* this article needs to die */
 	    }
 	    if (!*h) {
-		if (verbose)
-		    sprintf(msg, "Current article has no %s.", finding_str);
+		if (g_verbose)
+		    sprintf(g_msg, "Current article has no %s.", finding_str);
 	        else
-		    sprintf(msg, "Null %s.", finding_str);
-		errormsg(msg);
+		    sprintf(g_msg, "Null %s.", finding_str);
+		errormsg(g_msg);
 		ret = SRCH_ABORT;
 		goto exit;
 	    }
-	    if (verbose) {
+	    if (g_verbose) {
 		if (cmdchr != '+' && cmdchr != '.')
 		    printf("\nMarking %s \"%s\" as read.\n",finding_str,h) FLUSH;
 		else
@@ -235,7 +235,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
     }
     if (cmdlst && strchr(cmdlst,'='))
 	ret = SRCH_ERROR;		/* listing subjects is an error? */
-    if (gmode == 's') {
+    if (g_general_mode == 's') {
 	if (!cmdlst) {
 	    if (g_sel_mode == SM_ARTICLE)/* set the selector's default command */
 		cmdlst = savestr("+");
@@ -278,7 +278,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	kf_append(saltbuf, saltaway == 2? KF_GLOBAL : KF_LOCAL);
     }
     if (get_cmd) {
-	if (use_threads)
+	if (g_use_threads)
 	    newline();
 	else {
 	    fputs("\nSearching...\n",stdout) FLUSH;
@@ -286,11 +286,11 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	}
 					/* give them something to read */
     }
-    if (ignorethru == 0 && kill_thru_kludge && cmdlst
+    if (ignorethru == 0 && g_kill_thru_kludge && cmdlst
      && (*cmdlst == '+' || *cmdlst == '.'))
 	ignorethru = 1;
     srchfirst = doread || g_sel_rereading? g_absfirst
-		      : (mode != 'k' || ignorethru > 0)? g_firstart : g_killfirst;
+		      : (g_mode != 'k' || ignorethru > 0)? g_firstart : g_killfirst;
     if (topstart || g_art == 0) {
 	g_art = g_lastart+1;
 	topstart = false;
@@ -359,20 +359,20 @@ bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
 
     switch (scope) {
       case ARTSCOPE_SUBJECT:
-	strcpy(buf,"Subject: ");
-	strncpy(buf+9,fetchsubj(artnum,false),256);
+	strcpy(g_buf,"Subject: ");
+	strncpy(g_buf+9,fetchsubj(artnum,false),256);
 #ifdef DEBUG
 	if (debug & DEB_SEARCH_AHEAD)
-	    printf("%s\n",buf) FLUSH;
+	    printf("%s\n",g_buf) FLUSH;
 #endif
 	break;
       case ARTSCOPE_FROM:
-	strcpy(buf, "From: ");
-	strncpy(buf+6,fetchfrom(artnum,false),256);
+	strcpy(g_buf, "From: ");
+	strncpy(g_buf+6,fetchfrom(artnum,false),256);
 	break;
       case ARTSCOPE_ONEHDR:
 	g_untrim_cache = true;
-	sprintf(buf, "%s: %s", g_htype[art_srchhdr].name,
+	sprintf(g_buf, "%s: %s", g_htype[art_srchhdr].name,
 		prefetchlines(artnum,art_srchhdr,false));
 	g_untrim_cache = false;
 	break;
@@ -422,5 +422,5 @@ bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
 	return false;			/* out of article, so no match */
       }
     }
-    return execute(compex,buf) != nullptr;
+    return execute(compex,g_buf) != nullptr;
 }

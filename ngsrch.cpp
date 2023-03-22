@@ -27,7 +27,7 @@ void ngsrch_init()
     init_compex(&s_ngcompex);
 }
 
-// patbuf   if patbuf != buf, get_cmd must */
+// patbuf   if patbuf != g_buf, get_cmd must */
 // get_cmd  be set to false!!! */
 int ng_search(char *patbuf, int get_cmd)
 {
@@ -37,17 +37,17 @@ int ng_search(char *patbuf, int get_cmd)
     char* cmdlst = nullptr;		/* list of commands to do */
     int ret = NGS_NOTFOUND;		/* assume no commands */
     bool backward = cmdchr == '?';	/* direction of search */
-    bool output_level = (!use_threads && gmode != 's');
+    bool output_level = (!g_use_threads && g_general_mode != 's');
     NGDATA* ng_start = g_ngptr;
 
     g_int_count = 0;
-    if (get_cmd && buf == patbuf)
+    if (get_cmd && g_buf == patbuf)
 	if (!finish_command(false))	/* get rest of command */
 	    return NGS_ABORT;
 
     perform_status_init(g_newsgroup_toread);
-    s = cpytill(buf,patbuf+1,cmdchr);	/* ok to cpy buf+1 to buf */
-    for (pattern = buf; *pattern == ' '; pattern++) ;
+    s = cpytill(g_buf,patbuf+1,cmdchr);	/* ok to cpy g_buf+1 to g_buf */
+    for (pattern = g_buf; *pattern == ' '; pattern++) ;
     if (*pattern)
 	g_ng_doempty = false;
 
@@ -67,7 +67,7 @@ int ng_search(char *patbuf, int get_cmd)
 	s++;
     if (*s)
 	cmdlst = savestr(s);
-    else if (gmode == 's')
+    else if (g_general_mode == 's')
 	cmdlst = savestr("+");
     if (cmdlst)
 	ret = NGS_DONE;

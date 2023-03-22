@@ -74,7 +74,7 @@ bool find_new_groups()
     NG_NUM oldcnt = g_newsgroup_cnt;	/* remember # newsgroups */
 
     /* Skip this check if the -q flag was given. */
-    if (quickstart)
+    if (g_quickstart)
 	return false
 	;
 
@@ -99,18 +99,18 @@ static void process_list(int flag)
     ADDGROUP* prevnode;
 
     if (!flag) {
-	sprintf(cmd_buf,"\nUnsubscribed but mentioned in your current newsrc%s:\n",
+	sprintf(g_cmd_buf,"\nUnsubscribed but mentioned in your current newsrc%s:\n",
 		g_multirc->first->next? "s" : "");
-	print_lines(cmd_buf, STANDOUT);
+	print_lines(g_cmd_buf, STANDOUT);
     }
-    if ((node = g_first_addgroup) != nullptr && flag && UseAddSelector)
+    if ((node = g_first_addgroup) != nullptr && flag && g_use_add_selector)
 	addgroup_selector(flag);
     while (node) {
 	if (!flag) {
-	    sprintf(cmd_buf, "%s\n", node->name);
-	    print_lines(cmd_buf, NOMARKING);
+	    sprintf(g_cmd_buf, "%s\n", node->name);
+	    print_lines(g_cmd_buf, NOMARKING);
 	}
-	else if (!UseAddSelector)
+	else if (!g_use_add_selector)
 	    get_ng(node->name,flag);	/* add newsgroup -- maybe */
 	prevnode = node;
 	node = node->next;
@@ -158,9 +158,9 @@ static void new_nntp_groups(DATASRC *dp)
 	else
 	    len = strlen(g_ser_line);
 	if (dp->act_sf.fp) {
-	    if (find_actgrp(dp, buf, g_ser_line, len, (ART_NUM)0)) {
+	    if (find_actgrp(dp, g_buf, g_ser_line, len, (ART_NUM)0)) {
 		if (!s)
-		    s = buf + len + 1;
+		    s = g_buf + len + 1;
 	    }
 	    else {
 		char ch = 'y';
@@ -203,40 +203,40 @@ static void new_local_groups(DATASRC *dp)
     g_datasrc = dp;
 
     /* did active.times file grow? */
-    stat(dp->extra_name,&filestat);
-    if (filestat.st_size == dp->act_sf.recent_cnt)
+    stat(dp->extra_name,&g_filestat);
+    if (g_filestat.st_size == dp->act_sf.recent_cnt)
 	return;
 
-    tmpfp = fopen(dp->extra_name,"r");
-    if (tmpfp == nullptr) {
-	printf(cantopen,dp->extra_name) FLUSH;
+    g_tmpfp = fopen(dp->extra_name,"r");
+    if (g_tmpfp == nullptr) {
+	printf(g_cantopen,dp->extra_name) FLUSH;
 	termdown(1);
 	return;
     }
     lastone = time((time_t*)nullptr) - 24L * 60 * 60 - 1;
     newngs = hashcreate(33, addng_cmp);
 
-    while (fgets(buf,LBUFLEN,tmpfp) != nullptr) {
-	if ((s = strchr(buf, ' ')) == nullptr
+    while (fgets(g_buf,LBUFLEN,g_tmpfp) != nullptr) {
+	if ((s = strchr(g_buf, ' ')) == nullptr
 	 || (lastone = atol(s+1)) < dp->lastnewgrp)
 	    continue;
 	*s = '\0';
-	if (!find_actgrp(g_datasrc, tmpbuf, buf, s - buf, (ART_NUM)0))
+	if (!find_actgrp(g_datasrc, tmpbuf, g_buf, s - g_buf, (ART_NUM)0))
 	    continue;
 	high = 0, low = 1, ch = 'y';
-	sscanf(tmpbuf + (s-buf) + 1, "%ld %ld %c", &high, &low, &ch);
+	sscanf(tmpbuf + (s-g_buf) + 1, "%ld %ld %c", &high, &low, &ch);
 	if (ch == 'x' || ch == '=')
 	    continue;
-	if ((np = find_ng(buf)) != nullptr)
+	if ((np = find_ng(g_buf)) != nullptr)
 	    continue;
-	add_to_hash(newngs, buf, high-low, auto_subscribe(buf));
+	add_to_hash(newngs, g_buf, high-low, auto_subscribe(g_buf));
     }
-    fclose(tmpfp);
+    fclose(g_tmpfp);
 
     hashwalk(newngs, build_addgroup_list, 0);
     hashdestroy(newngs);
     dp->lastnewgrp = lastone+1;
-    dp->act_sf.recent_cnt = filestat.st_size;
+    dp->act_sf.recent_cnt = g_filestat.st_size;
 }
 
 static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch)
@@ -317,16 +317,16 @@ bool scanactive(bool add_matching)
 	    hashwalk(dp->act_sf.hp, list_groups, add_matching);
 	else {
 	    if (g_maxngtodo != 1)
-		strcpy(buf, "*");
+		strcpy(g_buf, "*");
 	    else {
 		if (g_ngtodo[0][0] == '^')
-		    sprintf(buf,"%s*", &g_ngtodo[0][1]);
+		    sprintf(g_buf,"%s*", &g_ngtodo[0][1]);
 		else
-		    sprintf(buf,"*%s*", g_ngtodo[0]);
-		if (buf[strlen(buf)-2] == '$')
-		    buf[strlen(buf)-2] = '\0';
+		    sprintf(g_buf,"*%s*", g_ngtodo[0]);
+		if (g_buf[strlen(g_buf)-2] == '$')
+		    g_buf[strlen(g_buf)-2] = '\0';
 	    }
-	    if (nntp_list("active", buf, strlen(buf)) == 1) {
+	    if (nntp_list("active", g_buf, strlen(g_buf)) == 1) {
 		while (!nntp_at_list_end(g_ser_line)) {
 		    scanline(g_ser_line,add_matching);
 		    if (nntp_gets(g_ser_line, sizeof g_ser_line) < 0)
@@ -338,7 +338,7 @@ bool scanactive(bool add_matching)
 
     process_list(add_matching);
 
-    if (in_ng) /*$$*/
+    if (g_in_ng) /*$$*/
 	set_datasrc(g_ngptr->rc->datasrc);
 
     return oldcnt != g_newsgroup_cnt;
@@ -348,9 +348,9 @@ static int list_groups(int keylen, HASHDATUM *data, int add_matching)
 {
     char* bp = ((LISTNODE*)data->dat_ptr)->data + data->dat_len;
     int linelen = strchr(bp, '\n') - bp + 1;
-    (void) memcpy(buf,bp,linelen);
-    buf[linelen] = '\0';
-    scanline(buf,add_matching);
+    (void) memcpy(g_buf,bp,linelen);
+    g_buf[linelen] = '\0';
+    scanline(g_buf,add_matching);
     return 0;
 }
 

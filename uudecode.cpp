@@ -150,8 +150,8 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
     if (!strncasecmp(bp, "x-file-name: ", 13)) {
 	for (s = bp + 13; *s && !isspace(*s); s++) ;
 	*s = '\0';
-	safecpy(msg, bp+13, sizeof msg);
-	*filenamep = msg;
+	safecpy(g_msg, bp+13, sizeof g_msg);
+	*filenamep = g_msg;
 	return 0;
     }
     if (!strncasecmp(bp, "x-part: ", 8)) {
@@ -186,10 +186,10 @@ int uudecode(FILE *ifp, int state)
 	return state;
     }
 
-    while (ifp? fgets(buf, sizeof buf, ifp) : readart(buf, sizeof buf)) {
-	if (!ifp && mime_EndOfSection(buf))
+    while (ifp? fgets(g_buf, sizeof g_buf, ifp) : readart(g_buf, sizeof g_buf)) {
+	if (!ifp && mime_EndOfSection(g_buf))
 	    break;
-	p = strchr(buf, '\r');
+	p = strchr(g_buf, '\r');
 	if (p) {
 	    p[0] = '\n';
 	    p[1] = '\0';
@@ -197,10 +197,10 @@ int uudecode(FILE *ifp, int state)
 	switch (state) {
 	  case DECODE_START:	/* Looking for start of uuencoded file */
 	  case DECODE_MAYBEDONE:
-	    if (strncmp(buf, "begin ", 6))
+	    if (strncmp(g_buf, "begin ", 6))
 		break;
 	    /* skip mode */
-	    p = buf + 6;
+	    p = g_buf + 6;
 	    while (*p && !isspace(*p)) p++;
 	    while (*p && isspace(*p)) p++;
 	    filename = p;
@@ -219,46 +219,46 @@ int uudecode(FILE *ifp, int state)
 	    state = DECODE_SETLEN;
 	    break;
 	  case DECODE_INACTIVE:	/* Looking for uuencoded data to resume */
-	    if (*buf != 'M' || strlen(buf) != line_length) {
-		if (*buf == 'B' && !strncmp(buf, "BEGIN", 5))
+	    if (*g_buf != 'M' || strlen(g_buf) != line_length) {
+		if (*g_buf == 'B' && !strncmp(g_buf, "BEGIN", 5))
 		    state = DECODE_ACTIVE;
 		break;
 	    }
 	    state = DECODE_ACTIVE;
 	    /* FALL THROUGH */
 	  case DECODE_SETLEN:
-	    line_length = strlen(buf);
+	    line_length = strlen(g_buf);
 	    state = DECODE_ACTIVE;
 	    /* FALL THROUGH */
 	  case DECODE_ACTIVE:	/* Decoding data */
-	    if (*buf == 'M' && strlen(buf) == line_length) {
-		uudecodeline(buf, ofp);
+	    if (*g_buf == 'M' && strlen(g_buf) == line_length) {
+		uudecodeline(g_buf, ofp);
 		break;
 	    }
-	    if ((int)strlen(buf) > line_length) {
+	    if ((int)strlen(g_buf) > line_length) {
 		state = DECODE_INACTIVE;
 		break;
 	    }
 	    /* May be nearing end of file, so save this line */
-	    strcpy(lastline, buf);
+	    strcpy(lastline, g_buf);
 	    /* some encoders put the end line right after the last M line */
-	    if (!strncmp(buf, "end", 3))
+	    if (!strncmp(g_buf, "end", 3))
 		goto end;
-	    else if (*buf == ' ' || *buf == '`')
+	    else if (*g_buf == ' ' || *g_buf == '`')
 		state = DECODE_LAST;
 	    else
 		state = DECODE_NEXT2LAST;
 	    break;
 	  case DECODE_NEXT2LAST:/* May be nearing end of file */
-	    if (!strncmp(buf, "end", 3))
+	    if (!strncmp(g_buf, "end", 3))
 		goto end;
-	    else if (*buf == ' ' || *buf == '`')
+	    else if (*g_buf == ' ' || *g_buf == '`')
 		state = DECODE_LAST;
 	    else
 		state = DECODE_INACTIVE;
 	    break;
 	  case DECODE_LAST:	/* Should be at end of file */
-	    if (!strncmp(buf, "end", 3) && isspace(buf[3])) {
+	    if (!strncmp(g_buf, "end", 3) && isspace(g_buf[3])) {
 		/* Handle that last line we saved */
 		uudecodeline(lastline, ofp);
 end:		if (ofp) {

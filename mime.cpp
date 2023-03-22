@@ -233,16 +233,16 @@ int mime_Exec(char *cmd)
     char* f;
     char* t;
 
-    for (f = cmd, t = cmd_buf; *f && t-cmd_buf < CBUFLEN-2; f++) {
+    for (f = cmd, t = g_cmd_buf; *f && t-g_cmd_buf < CBUFLEN-2; f++) {
 	if (*f == '%') {
 	    switch (*++f) {
 	      case 's':
-		safecpy(t, g_decode_filename, CBUFLEN-(t-cmd_buf));
+		safecpy(t, g_decode_filename, CBUFLEN-(t-g_cmd_buf));
 		t += strlen(t);
 		break;
 	      case 't':
 		*t++ = '\'';
-		safecpy(t, g_mime_section->type_name, CBUFLEN-(t-cmd_buf)-1);
+		safecpy(t, g_mime_section->type_name, CBUFLEN-(t-g_cmd_buf)-1);
 		t += strlen(t);
 		*t++ = '\'';
 		break;
@@ -257,7 +257,7 @@ int mime_Exec(char *cmd)
 		*s = '}'; /* restore */
 		f = s;
 		*t++ = '\'';
-		safecpy(t, p, CBUFLEN-(t-cmd_buf)-1);
+		safecpy(t, p, CBUFLEN-(t-g_cmd_buf)-1);
 		t += strlen(t);
 		*t++ = '\'';
 		break;
@@ -275,7 +275,7 @@ int mime_Exec(char *cmd)
     }
     *t = '\0';
 
-    return doshell(sh, cmd_buf);
+    return doshell(g_sh, g_cmd_buf);
 }
 
 void mime_InitSections()
@@ -762,9 +762,9 @@ void mime_DecodeArticle(bool view)
 		    g_mime_state = SKIP_MIME;
 	    }
 	    else {
-		if (*msg) {
+		if (*g_msg) {
 		    newline();
-		    fputs(msg,stdout);
+		    fputs(g_msg,stdout);
 		}
 		g_mime_state = SKIP_MIME;
 	    }
@@ -1069,14 +1069,14 @@ int cat_decode(FILE *ifp, int state)
     }
 
     if (ifp) {
-	while (fgets(buf, sizeof buf, ifp))
-	    fputs(buf, ofp);
+	while (fgets(g_buf, sizeof g_buf, ifp))
+	    fputs(g_buf, ofp);
     }
     else {
-	while (readart(buf, sizeof buf)) {
-	    if (mime_EndOfSection(buf))
+	while (readart(g_buf, sizeof g_buf)) {
+	    if (mime_EndOfSection(g_buf))
 		break;
-	    fputs(buf, ofp);
+	    fputs(g_buf, ofp);
 	}
     }
 
@@ -1132,12 +1132,12 @@ int filter_html(char *t, char *f)
     char* bp;
     char* cp;
 
-    if (word_wrap_offset < 0) {
+    if (g_word_wrap_offset < 0) {
 	normal_word_wrap = tc_COLS - 8;
 	word_wrap_in_pre = 0;
     }
     else
-	word_wrap_in_pre = normal_word_wrap = tc_COLS - word_wrap_offset;
+	word_wrap_in_pre = normal_word_wrap = tc_COLS - g_word_wrap_offset;
 
     if (normal_word_wrap <= 20)
 	normal_word_wrap = 0;

@@ -101,7 +101,7 @@ void final_init()
     fflush(stdout);
 
     chdir(g_tmp_dir);
-    if (!checkflag)
+    if (!g_checkflag)
 	unuse_multirc(g_multirc);
     if (g_datasrc_list) {
 	DATASRC* dp;
@@ -215,7 +215,7 @@ Signal_t sig_catcher(int signo)
 #ifdef SIGHUP
     if (signo != SIGHUP) {
 #endif
-	if (verbose)
+	if (g_verbose)
 	    printf("\nCaught %s%s--.newsrc restored\n",
 		signo ? "a SIG" : "an internal error", signame[signo]);
 	else

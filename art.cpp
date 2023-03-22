@@ -107,18 +107,18 @@ do_article_result do_article()
     int outpos;		/* column position of output */
     static char prompt_buf[64];		/* place to hold prompt */
     bool notesfiles = false;		/* might there be notesfiles junk? */
-    char oldmode = mode;
+    char oldmode = g_mode;
     bool outputok = true;
 
     if (g_datasrc->flags & DF_REMOTE)
 	g_artsize = g_raw_artsize = nntp_artsize();
     else
     {
-	if (fstat(fileno(artfp),&filestat))	/* get article file stats */
+	if (fstat(fileno(artfp),&g_filestat))	/* get article file stats */
 	    return DA_CLEAN;
-	if (!S_ISREG(filestat.st_mode))
+	if (!S_ISREG(g_filestat.st_mode))
 	    return DA_NORM;
-	g_artsize = g_raw_artsize = filestat.st_size;
+	g_artsize = g_raw_artsize = g_filestat.st_size;
     }
     sprintf(prompt_buf, mousebar_cnt>3? "%%sEnd of art %ld (of %ld) %%s[%%s]"
 	: "%%sEnd of article %ld (of %ld) %%s-- what next? [%%s]",
@@ -134,7 +134,7 @@ do_article_result do_article()
     term_scrolled = 0;
 
     for (;;) {			/* for each page */
-	if (g_threaded_group && max_tree_lines)
+	if (g_threaded_group && g_max_tree_lines)
 	    init_tree();	/* init tree display */
 	assert(art == openart);
 	if (g_do_fseek) {
@@ -175,7 +175,7 @@ do_article_result do_article()
 
 		selected = (g_curr_artp->flags & AF_SEL);
 		unseen = article_unread(g_art)? 1 : 0;
-		sprintf(g_art_line,"%s%s #%ld",ngname,g_moderated,(long)g_art);
+		sprintf(g_art_line,"%s%s #%ld",g_ngname,g_moderated,(long)g_art);
 		if (g_selected_only) {
 		    i = g_selected_count - (unseen && selected);
 		    sprintf(g_art_line+strlen(g_art_line)," (%ld + %ld more)",
@@ -202,13 +202,13 @@ do_article_result do_article()
 	for (restart_color = true;			/* linenum already set */
 	  g_innersearch? (g_in_header || innermore())
 	   : special? (linenum < slines)
-	   : (firstpage && !g_in_header)? (linenum < initlines)
+	   : (firstpage && !g_in_header)? (linenum < g_initlines)
 	   : (linenum < tc_LINES);
 	     linenum++) {		/* for each line on page */
 	    if (g_int_count) {	/* exit via interrupt? */
 		newline();	/* get to left margin */
 		g_int_count = 0;	/* reset interrupt count */
-		set_mode(gmode,oldmode);
+		set_mode(g_general_mode,oldmode);
 		special = false;
 		return DA_NORM;	/* skip out of loops */
 	    }
@@ -264,7 +264,7 @@ do_article_result do_article()
 		    if ((s = strchr(bufptr,'\n')) != nullptr)
 			*s = '\0';
 		    hide_this_line = (strchr(bufptr,',') == nullptr)
-			&& !strcmp(bufptr+12,ngname);
+			&& !strcmp(bufptr+12,g_ngname);
 		    if (s != nullptr)
 			*s = '\n';
 		    break;
@@ -325,19 +325,19 @@ do_article_result do_article()
 		linenum += tree_puts(bufptr,linenum+g_topline,0)-1;
 	    }
 	    else {			/* just a normal line */
-		if (outputok && erase_each_line)
+		if (outputok && g_erase_each_line)
 		    erase_line(false);
 		if (g_highlight == artline) {	/* this line to be highlit? */
-		    if (marking == STANDOUT) {
+		    if (g_marking == STANDOUT) {
 #ifdef NOFIREWORKS
-			if (erase_screen)
+			if (g_erase_screen)
 			    no_sofire();
 #endif
 			standout();
 		    }
 		    else {
 #ifdef NOFIREWORKS
-			if (erase_screen)
+			if (g_erase_screen)
 			    no_ulfire();
 #endif
 			underline();
@@ -357,7 +357,7 @@ do_article_result do_article()
 				 && g_highlight != artline) {
 				    under_lining++;
 				    if (tc_UG) {
-					if (bufptr != buf && bufptr[-1]==' ') {
+					if (bufptr != g_buf && bufptr[-1]==' ') {
 					    outpos--;
 					    backspace();
 					}
@@ -407,7 +407,7 @@ do_article_result do_article()
 			    }
 			    outpos += i;
 			}
-                        if (*tc_UC && ((g_highlight == artline && marking == STANDOUT) || under_lining))
+                        if (*tc_UC && ((g_highlight == artline && g_marking == STANDOUT) || under_lining))
                         {
 			    backspace();
 			    underchar();
@@ -455,7 +455,7 @@ do_article_result do_article()
 			outpos += 2;
 		    }
 		    else {		/* other control char */
-			if (dont_filter_control) {
+			if (g_dont_filter_control) {
 			    if (outputok)
 				putchar(*bufptr);
 			    outpos++;
@@ -466,7 +466,7 @@ do_article_result do_article()
 			    if (outputok) {
 				putchar('^');
 				if (g_highlight == artline && *tc_UC
-				 && marking == STANDOUT) {
+				 && g_marking == STANDOUT) {
 				    backspace();
 				    underchar();
 				    putchar((*bufptr & 0x7F) ^ 0x40);
@@ -499,7 +499,7 @@ do_article_result do_article()
 
 		if (g_highlight == artline) {
 					/* were we highlighting line? */
-		    if (marking == STANDOUT)
+		    if (g_marking == STANDOUT)
 			un_standout();
 		    else
 			un_underline();
@@ -507,7 +507,7 @@ do_article_result do_article()
 		    g_highlight = -1;	/* no more we are */
 		    /* in case terminal highlighted rest of line earlier */
 		    /* when we did an eol with highlight turned on: */
-		    if (erase_each_line)
+		    if (g_erase_each_line)
 			erase_eol();
 		}
 		artline++;	/* count the line just printed */
@@ -530,7 +530,7 @@ do_article_result do_article()
 
 	g_innersearch = 0;
 	if (g_hide_everything) {
-	    *buf = g_hide_everything;
+	    *g_buf = g_hide_everything;
 	    g_hide_everything = 0;
 	    goto fake_command;
 	}
@@ -556,7 +556,7 @@ recheck_pager:
 	}
 	if (artpos == g_artsize) {/* did we just now reach EOF? */
 	    color_default();
-	    set_mode(gmode,oldmode);
+	    set_mode(g_general_mode,oldmode);
 	    return DA_NORM;	/* avoid --MORE--(100%) */
 	}
 
@@ -573,13 +573,13 @@ reask_pager:
  	maybe_eol();
 	color_default();
 	if (g_artsize < 0)
-	    strcpy(cmd_buf,"?");
+	    strcpy(g_cmd_buf,"?");
 	else
-	    sprintf(cmd_buf,"%ld",(long)(artpos*100/g_artsize));
-	sprintf(buf,"%s--MORE--(%s%%)",current_charsubst(),cmd_buf);
-	outpos = g_term_col + strlen(buf);
+	    sprintf(g_cmd_buf,"%ld",(long)(artpos*100/g_artsize));
+	sprintf(g_buf,"%s--MORE--(%s%%)",current_charsubst(),g_cmd_buf);
+	outpos = g_term_col + strlen(g_buf);
 	draw_mousebar(tc_COLS - (g_term_line == tc_LINES-1? outpos+5 : 0), true);
-	color_string(COLOR_MORE,buf);
+	color_string(COLOR_MORE,g_buf);
 	fflush(stdout);
 	g_term_col = outpos;
 	eat_typeahead();
@@ -603,16 +603,16 @@ reask_pager:
 	    goto_xy(more_prompt_col,g_term_line);
 	    goto recheck_pager;
 	}
-	set_mode(gmode,'p');
-	getcmd(buf);
+	set_mode(g_general_mode,'p');
+	getcmd(g_buf);
 	if (errno) {
 	    if (tc_LINES < 100 && !g_int_count)
-		*buf = '\f';/* on CONT fake up refresh */
+		*g_buf = '\f';/* on CONT fake up refresh */
 	    else {
-		*buf = 'q';	/* on INTR or paper just quit */
+		*g_buf = 'q';	/* on INTR or paper just quit */
 	    }
 	}
-	erase_line(erase_screen && erase_each_line);
+	erase_line(g_erase_screen && g_erase_each_line);
 
     fake_command:		/* used by g_innersearch */
 	color_default();
@@ -626,10 +626,10 @@ reask_pager:
 	  case PS_ASK:	/* reprompt "--MORE--..." */
 	    goto reask_pager;
 	  case PS_RAISE:	/* reparse on article level */
-	    set_mode(gmode,oldmode);
+	    set_mode(g_general_mode,oldmode);
 	    return DA_RAISE;
 	  case PS_TOEND:	/* fast pager loop exit */
-	    set_mode(gmode,oldmode);
+	    set_mode(g_general_mode,oldmode);
 	    return DA_TOEND;
 	  case PS_NORM:		/* display more article */
 	    break;
@@ -667,7 +667,7 @@ int page_switch()
 {
     char* s;
 
-    switch (*buf) {
+    switch (*g_buf) {
       case '!':			/* shell escape */
 	escapade();
 	return PS_ASK;
@@ -688,8 +688,8 @@ int page_switch()
 		break;
 	    }
 	}
-	sprintf(cmd_buf,"^[^%c\n]",*s);
-	compile(&gcompex,cmd_buf,true,true);
+	sprintf(g_cmd_buf,"^[^%c\n]",*s);
+	compile(&gcompex,g_cmd_buf,true,true);
 	goto caseG;
       }
       case Ctl('g'):
@@ -699,7 +699,7 @@ int page_switch()
       case 'g':		/* in-article search */
 	if (!finish_command(false))/* get rest of command */
 	    return PS_ASK;
-	s = buf+1;
+	s = g_buf+1;
 	if (isspace(*s)) s++;
 	if ((s = compile(&gcompex,s,true,true)) != nullptr) {
 			    /* compile regular expression */
@@ -725,7 +725,7 @@ int page_switch()
 	    termdown(1);
 	}
 #endif
-	if (*buf == Ctl('i') || g_topline+g_gline+1 >= artline)
+	if (*g_buf == Ctl('i') || g_topline+g_gline+1 >= artline)
 	    start_where = artpos;
 			/* in case we had a line wrap */
 	else {
@@ -784,7 +784,7 @@ int page_switch()
 	    g_topline = g_highlight - g_gline;
 	    if (g_topline < -1)
 		g_topline = -1;
-	    *buf = '\f';		/* fake up a refresh */
+	    *g_buf = '\f';		/* fake up a refresh */
 	    g_innersearch = 0;
 	    return page_switch();
 	}
@@ -808,7 +808,7 @@ int page_switch()
 #ifdef DEBUG
 	if (debug & DEB_INNERSRCH) {
 	    printf("Topline = %d",g_topline) FLUSH;
-	    fgets(buf, sizeof buf, stdin);
+	    fgets(g_buf, sizeof g_buf, stdin);
 	}
 #endif
 	clear();
@@ -875,17 +875,17 @@ int page_switch()
       case Ctl('b'): {	/* back up a page */
 	ART_LINE target;
 
-	if (erase_each_line)
+	if (g_erase_each_line)
 	    home_cursor();
 	else
 	    clear();
 
 	g_do_fseek = true;	/* reposition article file */
-	if (*buf == 'B')
+	if (*g_buf == 'B')
 	    target = g_topline - 1;
 	else {
 	    target = g_topline - (tc_LINES - 2);
-	    if (marking && (marking_areas & BACKPAGE_MARKING))
+	    if (g_marking && (g_marking_areas & BACKPAGE_MARKING))
 		g_highlight = g_topline;
 	}
 	artline = g_topline;
@@ -909,7 +909,7 @@ int page_switch()
       case '_':
 	if (!finish_dblchar())
 	    return PS_ASK;
-	switch (buf[1] & 0177) {
+	switch (g_buf[1] & 0177) {
 	  case 'C':
 	    if (!*(++g_charsubst))
 		g_charsubst = g_charsets;
@@ -919,7 +919,7 @@ int page_switch()
 	}
 	goto leave_pager;
       case '\0':		/* treat break as 'n' */
-	*buf = 'n';
+	*g_buf = 'n';
 	/* FALL THROUGH */
       case 'a': case 'A':
       case 'e':
@@ -975,14 +975,14 @@ int page_switch()
 	       case '\b': case '\177':
 leave_pager:
 	g_reread = false;
-	if (strchr("nNpP\016\020",*buf) == nullptr
-	 && strchr("wWsSe:!&|/?123456789.",*buf) != nullptr) {
+	if (strchr("nNpP\016\020",*g_buf) == nullptr
+	 && strchr("wWsSe:!&|/?123456789.",*g_buf) != nullptr) {
 	    setdfltcmd();
 	    color_object(COLOR_CMD, true);
-	    interpsearch(cmd_buf, sizeof cmd_buf, g_mailcall, buf);
-	    printf(g_prompt,cmd_buf,
+	    interpsearch(g_cmd_buf, sizeof g_cmd_buf, g_mailcall, g_buf);
+	    printf(g_prompt,g_cmd_buf,
 		   current_charsubst(),
-		   dfltcmd);	/* print prompt, whatever it is */
+		   g_dfltcmd);	/* print prompt, whatever it is */
 	    color_pop();	/* of COLOR_CMD */
 	    putchar(' ');
 	    fflush(stdout);
@@ -998,8 +998,8 @@ leave_pager:
 	goto go_forward;
       case 'y':
       case ' ':	/* continue current article */
-	if (erase_screen) {	/* -e? */
-	    if (erase_each_line)
+	if (g_erase_screen) {	/* -e? */
+	    if (g_erase_each_line)
 		home_cursor();
 	    else
 		clear();	/* clear screen */
@@ -1013,7 +1013,7 @@ leave_pager:
           if (*LINE_PTR(alinebeg) != '\f' && (!g_pagestop || continuation || !execute(&g_page_compex, LINE_PTR(alinebeg))))
           {
 	    if (!special
-	     || (marking && (*buf!='d' || (marking_areas&HALFPAGE_MARKING)))) {
+	     || (g_marking && (*g_buf!='d' || (g_marking_areas&HALFPAGE_MARKING)))) {
 		restart = alinebeg;
 		artline--;	 /* restart this line */
 		artpos = alinebeg;
@@ -1021,7 +1021,7 @@ leave_pager:
 		    up_line();
 		else
 		    g_topline = artline;
-		if (marking)
+		if (g_marking)
 		    g_highlight = artline;
 	    }
 	    else
@@ -1037,7 +1037,7 @@ leave_pager:
       case 'q':	/* quit this article? */
 	return PS_TOEND;
       default:
-	fputs(hforhelp,stdout) FLUSH;
+	fputs(g_hforhelp,stdout) FLUSH;
 	termdown(1);
 	settle_down();
 	return PS_ASK;

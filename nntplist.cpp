@@ -17,7 +17,7 @@ void Usage();
 char *server_name{};
 char *g_nntp_auth_file{};
 int debug{};             /* make nntpclient.c happy */
-char buf[LBUFLEN + 1]{}; /* general purpose line buffer */
+char g_buf[LBUFLEN + 1]{}; /* general purpose line buffer */
 
 int main(int argc, char *argv[])
 {

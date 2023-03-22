@@ -67,11 +67,11 @@ void end_only()
     if (g_maxngtodo) {			/* did they specify newsgroup(s) */
 	int i;
 
-	if (verbose)
-	    sprintf(msg, "Restriction %s%s removed.",g_ngtodo[0],
+	if (g_verbose)
+	    sprintf(g_msg, "Restriction %s%s removed.",g_ngtodo[0],
 		    g_maxngtodo > 1 ? ", etc." : "");
 	else
-	    sprintf(msg, "Exiting \"only\".");
+	    sprintf(g_msg, "Exiting \"only\".");
 	for (i = s_save_maxngtodo; i < g_maxngtodo + s_save_maxngtodo; i++) {
 	    free(g_ngtodo[i]);
 	    free_compex(g_compextodo[i]);

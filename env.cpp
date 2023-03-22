@@ -134,8 +134,8 @@ bool set_user_name(char *tmpbuf)
     if (getpw(getuid(), tmpbuf+1) != 0)
 	return 0;
     if (!g_login_name) {
-	cpytill(buf,tmpbuf+1,':');
-	g_login_name = savestr(buf);
+	cpytill(g_buf,tmpbuf+1,':');
+	g_login_name = savestr(g_buf);
     }
     for (s = tmpbuf, i = GCOSFIELD-1; i; i--) {
 	if (s)
@@ -145,8 +145,8 @@ bool set_user_name(char *tmpbuf)
 	return 0;
     s = cpytill(tmpbuf,s+1,':');
     if (!g_home_dir) {
-	cpytill(buf,s+1,':');
-	g_home_dir = savestr(buf);
+	cpytill(g_buf,s+1,':');
+	g_home_dir = savestr(g_buf);
     }
     s = tmpbuf;
 #endif
@@ -159,15 +159,15 @@ bool set_user_name(char *tmpbuf)
 	*c = '\0';
     if ((c = strchr(s, ';')) != nullptr)
 	*c = '\0';
-    s = cpytill(buf,s,'&');
+    s = cpytill(g_buf,s,'&');
     if (*s == '&') {			/* whoever thought this one up was */
-	c = buf + strlen(buf);		/* in the middle of the night */
+	c = g_buf + strlen(g_buf);		/* in the middle of the night */
 	strcat(c,g_login_name);		/* before the morning after */
 	strcat(c,s+1);
 	if (islower(*c))
 	    *c = toupper(*c);		/* gack and double gack */
     }
-    g_real_name = savestr(buf);
+    g_real_name = savestr(g_buf);
 #else /* !BERKNAMES */
     if ((c = strchr(s, '(')) != nullptr)
 	*c = '\0';
@@ -181,10 +181,10 @@ bool set_user_name(char *tmpbuf)
 	FILE* fp;
 	env_init2(); /* Make sure g_home_dir/g_dot_dir/etc. are set. */
 	if ((fp = fopen(filexp(FULLNAMEFILE),"r")) != nullptr) {
-	    fgets(buf,sizeof buf,fp);
+	    fgets(g_buf,sizeof g_buf,fp);
 	    fclose(fp);
-	    buf[strlen(buf)-1] = '\0';
-	    g_real_name = savestr(buf);
+	    g_buf[strlen(g_buf)-1] = '\0';
+	    g_real_name = savestr(g_buf);
 	}
     }
 #ifdef WIN32
@@ -267,11 +267,11 @@ bool set_p_host_name(char *tmpbuf)
 
     if (*tmpbuf == '.') {
 	if (tmpbuf[1] != '\0')
-	    strcpy(buf,tmpbuf);
+	    strcpy(g_buf,tmpbuf);
 	else
-	    *buf = '\0';
+	    *g_buf = '\0';
 	strcpy(tmpbuf,g_local_host);
-	strcat(tmpbuf,buf);
+	strcat(tmpbuf,g_buf);
     }
 
     if (!strchr(tmpbuf,'.')) {
@@ -285,8 +285,8 @@ bool set_p_host_name(char *tmpbuf)
 	else
 #endif
 #ifdef HAS_GETDOMAINNAME
-	if (getdomainname(buf,LBUFLEN) == 0)
-	    strcat(tmpbuf,buf);
+	if (getdomainname(g_buf,LBUFLEN) == 0)
+	    strcat(tmpbuf,g_buf);
 	else
 #endif
 	{

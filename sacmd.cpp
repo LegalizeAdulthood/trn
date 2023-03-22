@@ -32,7 +32,7 @@ static char *s_sa_extract_dest{}; /* use this command on an extracted file */
 static bool s_sa_extract_junk{};  /* junk articles after extracting them */
 
 /* several basic commands are already done by s_docmd (Scan level) */
-/* interprets command in buf, returning 0 to continue looping,
+/* interprets command in g_buf, returning 0 to continue looping,
  * a condition code (negative #s) or an art# to read.  Also responsible
  * for setting refresh flags if necessary.
  */
@@ -47,26 +47,26 @@ int sa_docmd()
     a = (long)g_page_ents[g_s_ptr_page_line].entnum;
     artnum = g_sa_ents[a].artnum;
 
-    switch(*buf) {
+    switch(*g_buf) {
       case '+':	/* enter thread selector */
 	if (!g_threaded_group) {
 	    s_beep();
 	    return 0;
 	}
-	buf[0] = '+';	/* fake up command for return */
-	buf[1] = '\0';
+	g_buf[0] = '+';	/* fake up command for return */
+	g_buf[1] = '\0';
 	g_sa_art = artnum; /* give it somewhere to point */
 	s_save_context();	/* for possible later changes */
 	return SA_FAKE;	/* fake up the command. */
       case 'K':	/* kill below a threshold */
-	*buf = ' ';				/* for finish_cmd() */
+	*g_buf = ' ';				/* for finish_cmd() */
 	if (!s_finish_cmd("Kill below or equal score:"))
 	    break;
 	/* make **sure** that there is a number here */
-	i = atoi(buf+1);
+	i = atoi(g_buf+1);
 	if (i == 0) {			/* it might not be a number */
 	    char* s;
-	    s = buf+1;
+	    s = g_buf+1;
 	    if (*s != '0' && ((*s != '+' && *s != '-') || s[1] != '0')) {
 		/* text was not a numeric 0 */
 		s_beep();
@@ -109,10 +109,10 @@ int sa_docmd()
 	g_s_ref_top = true;	/* refresh # of articles */
 	break;
       case 'X':	/* kill unmarked (basic-eligible) in group */
-	*buf = '?';				/* for finish_cmd() */
+	*g_buf = '?';				/* for finish_cmd() */
 	if (!s_finish_cmd("Junk all unmarked articles"))
 	    break;
-	if ((buf[1] != 'Y') && (buf[1] != 'y'))
+	if ((g_buf[1] != 'Y') && (g_buf[1] != 'y'))
 	    break;
 	i = s_first();
 	if (!i)
@@ -350,14 +350,14 @@ int sa_docmd()
 	g_s_ref_all = true;		/* make everything redrawn... */
 	break;
       case 'G': /* go to article number */
-	*buf = ' ';				/* for finish_cmd() */
+	*g_buf = ' ';				/* for finish_cmd() */
 	if (!s_finish_cmd("Goto article:"))
 	    break;
 	/* make **sure** that there is a number here */
-	i = atoi(buf+1);
+	i = atoi(g_buf+1);
 	if (i == 0) {			/* it might not be a number */
 	    char* s;
-	    s = buf+1;
+	    s = g_buf+1;
 	    if (*s != '0' && ((*s != '+' && *s != '-') || s[1] != '0')) {
 		/* text was not a numeric 0 */
 		s_beep();
@@ -392,7 +392,7 @@ int sa_docmd()
       case 'm':	/* toggle mark on one article */
       case 'M':	/* toggle mark on thread */
 	s_rub_ptr();
-	(void)sa_art_cmd((*buf == 'M'),SA_MARK,a);
+	(void)sa_art_cmd((*g_buf == 'M'),SA_MARK,a);
 	if (!g_sa_mark_stay) {
 	    /* go to next art on page or top of page if at bottom */
 	    if (g_s_ptr_page_line < g_s_bot_ent)	/* more on page */
@@ -405,7 +405,7 @@ int sa_docmd()
       case 'S':	/* toggle select1 on a thread */
 	if (!g_sa_mode_zoom)
 	    s_rub_ptr();
-	(void)sa_art_cmd((*buf == 'S'),SA_SELECT,a);
+	(void)sa_art_cmd((*g_buf == 'S'),SA_SELECT,a);
 	/* if in zoom mode, selection will remove article(s) from the
 	 * page, so that moving the cursor down is unnecessary
 	 */
@@ -450,15 +450,15 @@ int sa_docmd()
 	    printf("\nIncomplete file: %s\n",decode_dest) FLUSH;
 	    printf("Continue with command? [ny]");
 	    fflush(stdout);
-	    getcmd(buf);
+	    getcmd(g_buf);
 	    printf("\n") FLUSH;
-	    if (*buf == 'n' || *buf == ' ' || *buf == '\n')
+	    if (*g_buf == 'n' || *g_buf == ' ' || *g_buf == '\n')
 		break;
 		printf("Remove this file? [ny]");
 	    fflush(stdout);
-	    getcmd(buf);
+	    getcmd(g_buf);
 	    printf("\n") FLUSH;
-	    if (*buf == 'y' || *buf == 'Y') {
+	    if (*g_buf == 'y' || *g_buf == 'Y') {
 		decode_end();	/* will remove file */
 		break;
 	    }
@@ -472,12 +472,12 @@ int sa_docmd()
 	}
 	if (!*decode_dest) {
 	    printf("\nTrn doesn't remember an extracted file name.\n") FLUSH;
-	    *buf = ' ';
+	    *g_buf = ' ';
 	    if (!s_finish_cmd("Please enter a file to use:"))
 		break;
-	    if (!buf[1])	/* user just typed return */
+	    if (!g_buf[1])	/* user just typed return */
 		break;
-	    safecpy(decode_dest,buf+1,MAXFILENAME);
+	    safecpy(decode_dest,g_buf+1,MAXFILENAME);
 	    printf("\n") FLUSH;
 	}
 	if (s_sa_extract_dest == nullptr) {
@@ -486,22 +486,22 @@ int sa_docmd()
 	}
 	if (*decode_dest != '/' && *decode_dest != '~'
 	 && *decode_dest != '%') {
-	    sprintf(buf,"%s/%s",s_sa_extract_dest,decode_dest);
-	    safecpy(decode_dest,buf,MAXFILENAME);
+	    sprintf(g_buf,"%s/%s",s_sa_extract_dest,decode_dest);
+	    safecpy(decode_dest,g_buf,MAXFILENAME);
 	}
 	if (*sa_extracted_use)
 	    printf("Use command (default %s):\n",sa_extracted_use) FLUSH;
 	else
 	    printf("Use command (no default):\n") FLUSH;
-	*buf = ':';			/* cosmetic */
+	*g_buf = ':';			/* cosmetic */
 	if (!s_finish_cmd(nullptr))
 	    break;	/* command rubbed out */
-	if (buf[1] != '\0')		/* typed in a command */
-	    safecpy(sa_extracted_use,buf+1,LBUFLEN);
+	if (g_buf[1] != '\0')		/* typed in a command */
+	    safecpy(sa_extracted_use,g_buf+1,LBUFLEN);
 	if (*sa_extracted_use == '\0')	/* no command */
 	    break;
-	sprintf(buf,"!%s %s",sa_extracted_use,decode_dest);
-	printf("\n%s\n",buf+1) FLUSH;
+	sprintf(g_buf,"!%s %s",sa_extracted_use,decode_dest);
+	printf("\n%s\n",g_buf+1) FLUSH;
 	(void)escapade();
 	(void)get_anything();
 	eat_typeahead();
@@ -511,13 +511,13 @@ int sa_docmd()
 	s_go_bot();
 	g_s_ref_all = true;
 	printf("Enter score append command or type RETURN for a menu\n");
-	buf[0] = ':';
-	buf[1] = FINISHCMD;
+	g_buf[0] = ':';
+	g_buf[1] = FINISHCMD;
 	if (!finish_command(false))
 	    break;
 	printf("\n") FLUSH;
 	sa_go_art(artnum);
-	sc_append(buf+1);
+	sc_append(g_buf+1);
 	(void)get_anything();
 	eat_typeahead();
 	break;
@@ -525,13 +525,13 @@ int sa_docmd()
 	s_go_bot();
 	g_s_ref_all = true;
 	printf("\nEnter scoring command or type RETURN for a menu\n");
-	buf[0] = ':';
-	buf[1] = FINISHCMD;
+	g_buf[0] = ':';
+	g_buf[1] = FINISHCMD;
 	if (!finish_command(false))
 	    break;
 	printf("\n") FLUSH;
 	sa_go_art(artnum);
-	sc_score_cmd(buf+1);
+	sc_score_cmd(g_buf+1);
 	g_s_ref_all = true;
 	(void)get_anything();
 	eat_typeahead();
@@ -551,19 +551,19 @@ bool sa_extract_start()
     }
     s_go_bot();
     printf("To directory (default %s)\n",s_sa_extract_dest) FLUSH;
-    *buf = ':';			/* cosmetic */
+    *g_buf = ':';			/* cosmetic */
     if (!s_finish_cmd(nullptr))
 	return false;		/* command rubbed out */
     g_s_ref_all = true;
     /* if the user typed something, copy it to the destination */
-    if (buf[1] != '\0')
-	safecpy(s_sa_extract_dest,filexp(buf+1),LBUFLEN);
+    if (g_buf[1] != '\0')
+	safecpy(s_sa_extract_dest,filexp(g_buf+1),LBUFLEN);
 /* set a mode for this later? */
     printf("\nMark extracted articles as read? [yn]");
     fflush(stdout);
-    getcmd(buf);
+    getcmd(g_buf);
     printf("\n") FLUSH;
-    if (*buf == 'y' || *buf == ' ' || *buf == '\n')
+    if (*g_buf == 'y' || *g_buf == ' ' || *g_buf == '\n')
 	s_sa_extract_junk = true;
     else
 	s_sa_extract_junk = false;
@@ -613,8 +613,8 @@ void sa_art_cmd_prim(sa_cmd cmd, long a)
       case SA_EXTRACT:
 	sa_clearmark(a);
 	g_art = artnum;
-	*buf = 'e';		/* fake up the extract command */
-	safecpy(buf+1,s_sa_extract_dest,LBUFLEN);
+	*g_buf = 'e';		/* fake up the extract command */
+	safecpy(g_buf+1,s_sa_extract_dest,LBUFLEN);
 	(void)save_article();
 	if (s_sa_extract_junk)
 	    oneless_artnum(artnum);

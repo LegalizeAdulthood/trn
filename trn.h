@@ -26,17 +26,17 @@ enum
     INGS_DIRTY = 1
 };
 
-extern char *ngname;   /* name of current newsgroup */
-extern int ngnlen;     /* current malloced size of ngname */
-extern int ngname_len; /* length of current ngname */
-extern char *ngdir;    /* same thing in directory name form */
-extern int ngdlen;     /* current malloced size of ngdir */
-extern int ing_state;
-extern bool write_less;      /* write .newsrc less often */
-extern char *auto_start_cmd; /* command to auto-start with */
-extern bool auto_started;    /* have we auto-started? */
-extern bool is_strn;         /* Is this "strn", or trn/rn? */
-extern char patchlevel[];
+extern char *g_ngname;   /* name of current newsgroup */
+extern int g_ngnlen;     /* current malloced size of g_ngname */
+extern int g_ngname_len; /* length of current g_ngname */
+extern char *g_ngdir;    /* same thing in directory name form */
+extern int g_ngdlen;     /* current malloced size of g_ngdir */
+extern int g_ing_state;
+extern bool g_write_less;      /* write .newsrc less often */
+extern char *g_auto_start_cmd; /* command to auto-start with */
+extern bool g_auto_started;    /* have we auto-started? */
+extern bool g_is_strn;         /* Is this "strn", or trn/rn? */
+extern char g_patchlevel[];
 
 void trn_init();
 void do_multirc();

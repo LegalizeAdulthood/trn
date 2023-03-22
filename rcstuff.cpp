@@ -112,7 +112,7 @@ bool rcstuff_init()
 	free(g_trnaccess_mem);
     }
 
-    if (UseNewsrcSelector && !checkflag)
+    if (g_use_newsrc_selector && !g_checkflag)
 	return true;
 
     s_foundany = false;
@@ -126,7 +126,7 @@ bool rcstuff_init()
 	    finalize(1);
 	}
     }
-    if (checkflag)			/* were we just checking? */
+    if (g_checkflag)			/* were we just checking? */
 	finalize(s_foundany);		/* tell them what we found */
     return s_foundany;
 }
@@ -294,7 +294,7 @@ static bool clear_ngitem(char *cp, int arg)
     NGDATA* ncp = (NGDATA*)cp;
 
     if (ncp->rcline != nullptr) {
-	if (!checkflag)
+	if (!g_checkflag)
 	    free(ncp->rcline);
 	ncp->rcline = nullptr;
     }
@@ -309,41 +309,41 @@ static bool lock_newsrc(NEWSRC *rp)
     char* runninghost = "(Unknown)";
     char* s;
 
-    if (checkflag)
+    if (g_checkflag)
 	return true;
 
     s = filexp(RCNAME);
     if (!strcmp(rp->name,s))
 	rp->lockname = savestr(filexp(LOCKNAME));
     else {
-	sprintf(buf, RCNAME_INFO, rp->name);
-	rp->infoname = savestr(buf);
-	sprintf(buf, RCNAME_LOCK, rp->name);
-	rp->lockname = savestr(buf);
+	sprintf(g_buf, RCNAME_INFO, rp->name);
+	rp->infoname = savestr(g_buf);
+	sprintf(g_buf, RCNAME_LOCK, rp->name);
+	rp->lockname = savestr(g_buf);
     }
 
-    tmpfp = fopen(rp->lockname,"r");
-    if (tmpfp != nullptr) {
-	if (fgets(buf,LBUFLEN,tmpfp)) {
-	    processnum = atol(buf);
-	    if (fgets(buf,LBUFLEN,tmpfp) && *buf
-	     && *(s = buf + strlen(buf) - 1) == '\n') {
+    g_tmpfp = fopen(rp->lockname,"r");
+    if (g_tmpfp != nullptr) {
+	if (fgets(g_buf,LBUFLEN,g_tmpfp)) {
+	    processnum = atol(g_buf);
+	    if (fgets(g_buf,LBUFLEN,g_tmpfp) && *g_buf
+	     && *(s = g_buf + strlen(g_buf) - 1) == '\n') {
 		*s = '\0';
-		runninghost = buf;
+		runninghost = g_buf;
 	    }
 	}
-	fclose(tmpfp);
+	fclose(g_tmpfp);
     }
     if (processnum) {
 #ifndef MSDOS
-	if (verbose)
+	if (g_verbose)
 	    printf("\nThe requested newsrc is locked by process %ld on host %s.\n",
 		   processnum, runninghost) FLUSH;
 	else
 	    printf("\nNewsrc locked by %ld on host %s.\n",processnum,runninghost) FLUSH;
 	termdown(2);
 	if (strcmp(runninghost,g_local_host)) {
-	    if (verbose)
+	    if (g_verbose)
 		printf("\n\
 Since that's not the same host as this one (%s), we must\n\
 assume that process still exists.  To override this check, remove\n\
@@ -357,7 +357,7 @@ the lock file: %s\n", g_local_host, rp->lockname) FLUSH;
 	    finalize(0);
 	}
 	if (processnum == g_our_pid) {
-	    if (verbose)
+	    if (g_verbose)
 		printf("\n\
 Hey, that *my* pid!  Your access file is trying to use the same newsrc\n\
 more than once.\n") FLUSH;
@@ -369,7 +369,7 @@ more than once.\n") FLUSH;
 	if (kill(processnum, 0) != 0) {
 	    /* Process is apparently gone */
 	    sleep(2);
-	    if (verbose)
+	    if (g_verbose)
 		fputs("\n\
 That process does not seem to exist anymore.  The count of read articles\n\
 may be incorrect in the last newsgroup accessed by that other (defunct)\n\
@@ -377,7 +377,7 @@ process.\n\n",stdout) FLUSH;
 	    else
 		fputs("\nProcess crashed.\n",stdout) FLUSH;
 	    if (g_lastngname) {
-		if (verbose)
+		if (g_verbose)
 		    printf("(The last newsgroup accessed was %s.)\n\n",
 			   g_lastngname) FLUSH;
 		else
@@ -388,7 +388,7 @@ process.\n\n",stdout) FLUSH;
 	    newline();
 	}
 	else {
-	    if (verbose)
+	    if (g_verbose)
 		printf("\n\
 It looks like that process still exists.  To override this, remove\n\
 the lock file: %s\n", rp->lockname) FLUSH;
@@ -401,13 +401,13 @@ the lock file: %s\n", rp->lockname) FLUSH;
 	}
 #endif
     }
-    tmpfp = fopen(rp->lockname,"w");
-    if (tmpfp == nullptr) {
-	printf(cantcreate,rp->lockname) FLUSH;
+    g_tmpfp = fopen(rp->lockname,"w");
+    if (g_tmpfp == nullptr) {
+	printf(g_cantcreate,rp->lockname) FLUSH;
 	sig_catcher(0);
     }
-    fprintf(tmpfp,"%ld\n%s\n",g_our_pid,g_local_host);
-    fclose(tmpfp);
+    fprintf(g_tmpfp,"%ld\n%s\n",g_our_pid,g_local_host);
+    fclose(g_tmpfp);
     return true;
 }
 
@@ -449,21 +449,21 @@ static bool open_newsrc(NEWSRC *rp)
 		    break;
 	    } while (!nntp_at_list_end(g_ser_line));
 	}
-	else if (*some_buf && (tmpfp = fopen(filexp(some_buf),"r")) != nullptr) {
-	    while (fgets(buf,sizeof buf,tmpfp))
-		fputs(buf,rcfp);
-	    fclose(tmpfp);
+	else if (*some_buf && (g_tmpfp = fopen(filexp(some_buf),"r")) != nullptr) {
+	    while (fgets(g_buf,sizeof g_buf,g_tmpfp))
+		fputs(g_buf,rcfp);
+	    fclose(g_tmpfp);
 	}
 	fseek(rcfp, 0L, 0);
     }
     else {
 	/* File exists; if zero length and backup isn't, complain */
-	if (fstat(fileno(rcfp),&filestat) < 0) {
+	if (fstat(fileno(rcfp),&g_filestat) < 0) {
 	    perror(rp->name);
 	    return false;
 	}
-	if (filestat.st_size == 0
-	 && stat(rp->oldname,&filestat) >= 0 && filestat.st_size > 0) {
+	if (g_filestat.st_size == 0
+	 && stat(rp->oldname,&g_filestat) >= 0 && g_filestat.st_size > 0) {
 	    printf("Warning: %s is zero length but %s is not.\n",
 		   rp->name,rp->oldname);
 	    printf("Either recover your newsrc or else remove the backup copy.\n");
@@ -490,7 +490,7 @@ static bool open_newsrc(NEWSRC *rp)
 
     /* read in the .newsrc file */
 
-    while ((some_buf = get_a_line(buf, LBUFLEN,false,rcfp)) != nullptr) {
+    while ((some_buf = get_a_line(g_buf, LBUFLEN,false,rcfp)) != nullptr) {
 	length = len_last_line_got;	/* side effect of get_a_line */
 	if (length <= 1)		/* only a newline??? */
 	    continue;
@@ -505,7 +505,7 @@ static bool open_newsrc(NEWSRC *rp)
 	g_newsgroup_cnt++;
 	if (some_buf[length-1] == '\n')
 	    some_buf[--length] = '\0';	/* wipe out newline */
-	if (some_buf == buf)
+	if (some_buf == g_buf)
 	    np->rcline = savestr(some_buf);  /* make semipermanent copy */
 	else {
 	    /*NOSTRICT*/
@@ -536,7 +536,7 @@ static bool open_newsrc(NEWSRC *rp)
 
 	/* now find out how much there is to read */
 
-	if (!inlist(buf) || (suppress_cn && s_foundany && !g_paranoid))
+	if (!inlist(g_buf) || (g_suppress_cn && s_foundany && !g_paranoid))
 	    np->toread = TR_NONE;	/* no need to calculate now */
 	else
 	    set_toread(np, ST_LAX);
@@ -545,12 +545,12 @@ static bool open_newsrc(NEWSRC *rp)
 		g_starthere = np;
 		s_foundany = true;	/* remember that fact*/
 	    }
-	    if (suppress_cn) {		/* if no listing desired */
-		if (checkflag)		/* if that is all they wanted */
+	    if (g_suppress_cn) {		/* if no listing desired */
+		if (g_checkflag)		/* if that is all they wanted */
 		    finalize(1);	/* then bomb out */
 	    }
 	    else {
-		if (verbose)
+		if (g_verbose)
 		    printf("Unread news in %-40s %5ld article%s\n",
 			np->rcline,(long)np->toread,PLURAL(np->toread)) FLUSH;
 		else
@@ -558,15 +558,15 @@ static bool open_newsrc(NEWSRC *rp)
 			np->rcline,(long)np->toread,PLURAL(np->toread)) FLUSH;
 		termdown(1);
 		if (g_int_count) {
-		    countdown = 1;
+		    g_countdown = 1;
 		    g_int_count = 0;
 		}
-		if (countdown) {
-		    if (!--countdown) {
+		if (g_countdown) {
+		    if (!--g_countdown) {
 			fputs("etc.\n",stdout) FLUSH;
-			if (checkflag)
+			if (g_checkflag)
 			    finalize(1);
-			suppress_cn = true;
+			g_suppress_cn = true;
 		    }
 		}
 	    }
@@ -584,16 +584,16 @@ static bool open_newsrc(NEWSRC *rp)
     rp->flags |= RF_RCCHANGED;
 #endif
     if (rp->infoname) {
-	if ((tmpfp = fopen(rp->infoname,"r")) != nullptr) {
-	    if (fgets(buf,sizeof buf,tmpfp) != nullptr) {
+	if ((g_tmpfp = fopen(rp->infoname,"r")) != nullptr) {
+	    if (fgets(g_buf,sizeof g_buf,g_tmpfp) != nullptr) {
 		long actnum, descnum;
 		char* s;
-		buf[strlen(buf)-1] = '\0';
-		if ((s = strchr(buf, ':')) != nullptr && s[1] == ' ' && s[2]) {
+		g_buf[strlen(g_buf)-1] = '\0';
+		if ((s = strchr(g_buf, ':')) != nullptr && s[1] == ' ' && s[2]) {
 		    safefree0(g_lastngname);
 		    g_lastngname = savestr(s+2);
 		}
-		if (fscanf(tmpfp,"New-Group-State: %ld,%ld,%ld",
+		if (fscanf(g_tmpfp,"New-Group-State: %ld,%ld,%ld",
 			   &g_lastnewtime,&actnum,&descnum) == 3) {
 		    rp->datasrc->act_sf.recent_cnt = actnum;
 		    rp->datasrc->desc_sf.recent_cnt = descnum;
@@ -615,7 +615,7 @@ static bool open_newsrc(NEWSRC *rp)
     }
     rp->datasrc->lastnewgrp = g_lastnewtime;
 
-    if (g_paranoid && !checkflag)
+    if (g_paranoid && !g_checkflag)
 	cleanup_newsrc(rp);
     return true;
 }
@@ -637,7 +637,7 @@ static void parse_rcline(NGDATA *np)
 
     for (s=np->rcline; *s && *s!=':' && *s!=NEGCHAR && !isspace(*s); s++) ;
     len = s - np->rcline;
-    if ((!*s || isspace(*s)) && !checkflag) {
+    if ((!*s || isspace(*s)) && !g_checkflag) {
 #ifndef lint
 	np->rcline = saferealloc(np->rcline,(MEM_SIZE)len + 3);
 #endif
@@ -662,7 +662,7 @@ void abandon_ng(NGDATA *np)
     if ((rcfp = fopen(np->rc->oldname, "r")) != nullptr) {
 	int length = np->numoffset - 1;
 
-	while ((some_buf = get_a_line(buf, LBUFLEN,false,rcfp)) != nullptr) {
+	while ((some_buf = get_a_line(g_buf, LBUFLEN,false,rcfp)) != nullptr) {
 	    if (len_last_line_got <= 0)
 		continue;
 	    some_buf[len_last_line_got-1] = '\0';	/* wipe out newline */
@@ -670,7 +670,7 @@ void abandon_ng(NGDATA *np)
 	     && !strncmp(np->rcline, some_buf, length)) {
 		break;
 	    }
-	    if (some_buf != buf)
+	    if (some_buf != g_buf)
 		free(some_buf);
 	}
 	fclose(rcfp);
@@ -688,7 +688,7 @@ void abandon_ng(NGDATA *np)
     }
     else {
 	free(np->rcline);
-	if (some_buf == buf)
+	if (some_buf == g_buf)
 	    np->rcline = savestr(some_buf);
 	else {
 	    /*NOSTRICT*/
@@ -715,7 +715,7 @@ bool get_ng(const char *what, int flags)
     char promptbuf[128];
     int autosub;
 
-    if (verbose)
+    if (g_verbose)
 	ntoforget = "Type n to forget about this newsgroup.\n";
     else
 	ntoforget = "n to forget it.\n";
@@ -724,71 +724,71 @@ bool get_ng(const char *what, int flags)
 	printf("\nBad newsgroup name.\n") FLUSH;
 	termdown(2);
       check_fuzzy_match:
-	if (fuzzyGet && (flags & GNG_FUZZY)) {
+	if (g_fuzzy_get && (flags & GNG_FUZZY)) {
 	    flags &= ~GNG_FUZZY;
 	    if (find_close_match())
-		what = ngname;
+		what = g_ngname;
 	    else
 		return false;
 	} else
 	    return false;
     }
     set_ngname(what);
-    g_ngptr = find_ng(ngname);
+    g_ngptr = find_ng(g_ngname);
     if (g_ngptr == nullptr) {		/* not in .newsrc? */
 	NEWSRC* rp;
 	for (rp = g_multirc->first; rp; rp = rp->next) {
 	    if (!ALLBITS(rp->flags, RF_ADD_GROUPS | RF_ACTIVE))
 		continue;
 	    /*$$ this may scan a datasrc multiple times... */
-	    if (find_actgrp(rp->datasrc,buf,ngname,ngname_len,(ART_NUM)0))
+	    if (find_actgrp(rp->datasrc,g_buf,g_ngname,g_ngname_len,(ART_NUM)0))
 		break;  /*$$ let them choose which server */
 	}
 	if (!rp) {
 	    dingaling();
-	    if (verbose)
-		printf("\nNewsgroup %s does not exist!\n",ngname) FLUSH;
+	    if (g_verbose)
+		printf("\nNewsgroup %s does not exist!\n",g_ngname) FLUSH;
 	    else
-		printf("\nNo %s!\n",ngname) FLUSH;
+		printf("\nNo %s!\n",g_ngname) FLUSH;
 	    termdown(2);
-	    if (novice_delays)
+	    if (g_novice_delays)
 		sleep(2);
 	    goto check_fuzzy_match;
 	}
-	if (mode != 'i' || !(autosub = auto_subscribe(ngname)))
+	if (g_mode != 'i' || !(autosub = auto_subscribe(g_ngname)))
 	    autosub = g_addnewbydefault;
 	if (autosub) {
-	    if (append_unsub) {
+	    if (g_append_unsub) {
 		printf("(Adding %s to end of your .newsrc %ssubscribed)\n",
-		       ngname, (autosub == ADDNEW_SUB)? "" : "un") FLUSH;
+		       g_ngname, (autosub == ADDNEW_SUB)? "" : "un") FLUSH;
 		termdown(1);
-		g_ngptr = add_newsgroup(rp, ngname, autosub);
+		g_ngptr = add_newsgroup(rp, g_ngname, autosub);
 	    } else {
 		if (autosub == ADDNEW_SUB) {
-		    printf("(Subscribing to %s)\n", ngname) FLUSH;
+		    printf("(Subscribing to %s)\n", g_ngname) FLUSH;
 		    termdown(1);
-		    g_ngptr = add_newsgroup(rp, ngname, autosub);
+		    g_ngptr = add_newsgroup(rp, g_ngname, autosub);
 		} else {
-		    printf("(Ignoring %s)\n", ngname) FLUSH;
+		    printf("(Ignoring %s)\n", g_ngname) FLUSH;
 		    termdown(1);
 		    return false;
 		}
 	    }
 	    flags &= ~GNG_RELOC;
 	} else {
-	    if (verbose)
-		sprintf(promptbuf,"\nNewsgroup %s not in .newsrc -- subscribe?",ngname);
+	    if (g_verbose)
+		sprintf(promptbuf,"\nNewsgroup %s not in .newsrc -- subscribe?",g_ngname);
 	    else
-		sprintf(promptbuf,"\nSubscribe %s?",ngname);
+		sprintf(promptbuf,"\nSubscribe %s?",g_ngname);
 reask_add:
 	    in_char(promptbuf,'A',"ynYN");
 	    printcmd();
 	    newline();
-	    if (*buf == 'h') {
-		if (verbose) {
+	    if (*g_buf == 'h') {
+		if (g_verbose) {
 		    printf("Type y or SP to subscribe to %s.\n\
 Type Y to subscribe to this and all remaining new groups.\n\
-Type N to leave all remaining new groups unsubscribed.\n", ngname) FLUSH;
+Type N to leave all remaining new groups unsubscribed.\n", g_ngname) FLUSH;
 		    termdown(3);
 		}
 		else
@@ -802,75 +802,75 @@ y or SP to subscribe, Y to subscribe all new groups, N to unsubscribe all\n",
 		termdown(1);
 		goto reask_add;
 	    }
-	    else if (*buf == 'n' || *buf == 'q') {
-		if (append_unsub)
-		    g_ngptr = add_newsgroup(rp, ngname, NEGCHAR);
+	    else if (*g_buf == 'n' || *g_buf == 'q') {
+		if (g_append_unsub)
+		    g_ngptr = add_newsgroup(rp, g_ngname, NEGCHAR);
 		return false;
 	    }
-	    else if (*buf == 'y') {
-		g_ngptr = add_newsgroup(rp, ngname, ':');
+	    else if (*g_buf == 'y') {
+		g_ngptr = add_newsgroup(rp, g_ngname, ':');
 		flags |= GNG_RELOC;
 	    }
-	    else if (*buf == 'Y') {
+	    else if (*g_buf == 'Y') {
 		g_addnewbydefault = ADDNEW_SUB;
-		if (append_unsub)
+		if (g_append_unsub)
 		    printf("(Adding %s to end of your .newsrc subscribed)\n",
-			   ngname) FLUSH;
+			   g_ngname) FLUSH;
 		else
-		    printf("(Subscribing to %s)\n", ngname) FLUSH;
+		    printf("(Subscribing to %s)\n", g_ngname) FLUSH;
 		termdown(1);
-		g_ngptr = add_newsgroup(rp, ngname, ':');
+		g_ngptr = add_newsgroup(rp, g_ngname, ':');
 		flags &= ~GNG_RELOC;
 	    }
-	    else if (*buf == 'N') {
+	    else if (*g_buf == 'N') {
 		g_addnewbydefault = ADDNEW_UNSUB;
-		if (append_unsub) {
+		if (g_append_unsub) {
 		    printf("(Adding %s to end of your .newsrc unsubscribed)\n",
-			   ngname) FLUSH;
+			   g_ngname) FLUSH;
 		    termdown(1);
-		    g_ngptr = add_newsgroup(rp, ngname, NEGCHAR);
+		    g_ngptr = add_newsgroup(rp, g_ngname, NEGCHAR);
 		    flags &= ~GNG_RELOC;
 		} else {
-		    printf("(Ignoring %s)\n", ngname) FLUSH;
+		    printf("(Ignoring %s)\n", g_ngname) FLUSH;
 		    termdown(1);
 		    return false;
 		}
 	    }
 	    else {
-		fputs(hforhelp,stdout) FLUSH;
+		fputs(g_hforhelp,stdout) FLUSH;
 		termdown(1);
 		settle_down();
 		goto reask_add;
 	    }
 	}
     }
-    else if (mode == 'i')		/* adding new groups during init? */
+    else if (g_mode == 'i')		/* adding new groups during init? */
 	return false;
     else if (g_ngptr->subscribechar == NEGCHAR) {/* unsubscribed? */
-	if (verbose)
+	if (g_verbose)
 	    sprintf(promptbuf,
-"\nNewsgroup %s is unsubscribed -- resubscribe?",ngname)
+"\nNewsgroup %s is unsubscribed -- resubscribe?",g_ngname)
   FLUSH;
 	else
-	    sprintf(promptbuf,"\nResubscribe %s?",ngname)
+	    sprintf(promptbuf,"\nResubscribe %s?",g_ngname)
 	      FLUSH;
 reask_unsub:
 	in_char(promptbuf,'R',"yn");
 	printcmd();
 	newline();
-	if (*buf == 'h') {
-	    if (verbose)
-		printf("Type y or SP to resubscribe to %s.\n", ngname) FLUSH;
+	if (*g_buf == 'h') {
+	    if (g_verbose)
+		printf("Type y or SP to resubscribe to %s.\n", g_ngname) FLUSH;
 	    else
 		fputs("y or SP to resubscribe.\n",stdout) FLUSH;
 	    fputs(ntoforget,stdout) FLUSH;
 	    termdown(2);
 	    goto reask_unsub;
 	}
-	else if (*buf == 'n' || *buf == 'q') {
+	else if (*g_buf == 'n' || *g_buf == 'q') {
 	    return false;
 	}
-	else if (*buf == 'y') {
+	else if (*g_buf == 'y') {
 	    char* cp;
 	    cp = g_ngptr->rcline + g_ngptr->numoffset;
 	    g_ngptr->flags = (*cp && cp[1] == '0' ? NF_UNTHREADED : 0);
@@ -879,7 +879,7 @@ reask_unsub:
 	    flags &= ~GNG_RELOC;
 	}
 	else {
-	    fputs(hforhelp,stdout) FLUSH;
+	    fputs(g_hforhelp,stdout) FLUSH;
 	    termdown(1);
 	    settle_down();
 	    goto reask_unsub;
@@ -939,7 +939,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
 	    in_char("Sort newsrc(s) using current sort order?", 'D', "yn"); /*$$ !'D' */
 	    printcmd();
 	    newline();
-	    if (*buf == 'y')
+	    if (*g_buf == 'y')
 		set_selector(SM_NEWSGROUP, SS_NATURAL);
 	    else {
 		g_sel_sort = SS_NATURAL;
@@ -976,7 +976,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
     if (newnum < 0) {
       reask_reloc:
 	unflush_output();		/* disable any ^O in effect */
-	if (verbose)
+	if (g_verbose)
 	    printf("\nPut newsgroup where? [%s] ", dflt);
 	else
 	    printf("\nPut where? [%s] ", dflt);
@@ -984,13 +984,13 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
 	termdown(1);
       reinp_reloc:
 	eat_typeahead();
-	getcmd(buf);
-	if (errno || *buf == '\f')	/* if return from stop signal */
+	getcmd(g_buf);
+	if (errno || *g_buf == '\f')	/* if return from stop signal */
 	    goto reask_reloc;		/* give them a prompt again */
-	setdef(buf,dflt);
+	setdef(g_buf,dflt);
 	printcmd();
-	if (*buf == 'h') {
-	    if (verbose) {
+	if (*g_buf == 'h') {
+	    if (g_verbose) {
 		printf("\n\n\
 Type ^ to put the newsgroup first (position 0).\n\
 Type $ to put the newsgroup last (position %d).\n", g_newsgroup_cnt-1);
@@ -1022,47 +1022,47 @@ q to abort\n") FLUSH;
 	    termdown(10);
 	    goto reask_reloc;
 	}
-	else if (*buf == 'q')
+	else if (*g_buf == 'q')
 	    return false;
-	else if (*buf == 'L') {
+	else if (*g_buf == 'L') {
 	    newline();
 	    list_newsgroups();
 	    goto reask_reloc;
 	}
-	else if (isdigit(*buf)) {
+	else if (isdigit(*g_buf)) {
 	    if (!finish_command(true))	/* get rest of command */
 		goto reinp_reloc;
-	    newnum = atol(buf);
+	    newnum = atol(g_buf);
 	    if (newnum < 0)
 		newnum = 0;
 	    if (newnum >= g_newsgroup_cnt)
 		newnum = g_newsgroup_cnt-1;
 	}
-	else if (*buf == '^') {
+	else if (*g_buf == '^') {
 	    newline();
 	    newnum = 0;
 	}
-	else if (*buf == '$') {
+	else if (*g_buf == '$') {
 	    newnum = g_newsgroup_cnt-1;
 	}
-	else if (*buf == '.') {
+	else if (*g_buf == '.') {
 	    newline();
 	    newnum = g_current_ng->num;
 	}
-	else if (*buf == '-' || *buf == '+') {
+	else if (*g_buf == '-' || *g_buf == '+') {
 	    if (!finish_command(true))	/* get rest of command */
 		goto reinp_reloc;
-	    np = find_ng(buf+1);
+	    np = find_ng(g_buf+1);
 	    if (np == nullptr) {
 		fputs("Not found.",stdout) FLUSH;
 		goto reask_reloc;
 	    }
 	    newnum = np->num;
-	    if (*buf == '+')
+	    if (*g_buf == '+')
 		newnum++;
 	}
 	else {
-	    printf("\n%s",hforhelp) FLUSH;
+	    printf("\n%s",g_hforhelp) FLUSH;
 	    termdown(2);
 	    settle_down();
 	    goto reask_reloc;
@@ -1141,7 +1141,7 @@ void cleanup_newsrc(NEWSRC *rp)
     NGDATA* np;
     NG_NUM bogosity = 0;
 
-    if (verbose)
+    if (g_verbose)
 	printf("Checking out '%s' -- hang on a second...\n",rp->name) FLUSH;
     else
 	printf("Checking '%s' -- hang on...\n",rp->name) FLUSH;
@@ -1167,7 +1167,7 @@ void cleanup_newsrc(NEWSRC *rp)
     }
     else if (bogosity) {
 	NGDATA* prev_np;
-	if (verbose)
+	if (g_verbose)
 	    printf("Moving bogus newsgroups to the end of '%s'.\n",rp->name) FLUSH;
 	else
 	    fputs("Moving boguses to the end.\n",stdout) FLUSH;
@@ -1183,8 +1183,8 @@ reask_bogus:
 	in_char("Delete bogus newsgroups?", 'D', "ny");
 	printcmd();
 	newline();
-	if (*buf == 'h') {
-	    if (verbose) {
+	if (*g_buf == 'h') {
+	    if (g_verbose) {
 		fputs("\
 Type y to delete bogus newsgroups.\n\
 Type n or SP to leave them at the end in case they return.\n\
@@ -1198,9 +1198,9 @@ Type n or SP to leave them at the end in case they return.\n\
 	    }
 	    goto reask_bogus;
 	}
-	else if (*buf == 'n' || *buf == 'q')
+	else if (*g_buf == 'n' || *g_buf == 'q')
 	    ;
-	else if (*buf == 'y') {
+	else if (*g_buf == 'y') {
 	    for (np = g_last_ng; np && np->toread == TR_BOGUS; np = np->prev) {
 		hashdelete(g_newsrc_hash, np->rcline, np->numoffset - 1);
 		clear_ngitem((char*)np,0);
@@ -1222,7 +1222,7 @@ Type n or SP to leave them at the end in case they return.\n\
 		g_sel_page_np = nullptr;
 	}
 	else {
-	    fputs(hforhelp,stdout) FLUSH;
+	    fputs(g_hforhelp,stdout) FLUSH;
 	    termdown(1);
 	    settle_down();
 	    goto reask_bogus;
@@ -1293,12 +1293,12 @@ bool write_newsrcs(MULTIRC *mptr)
 	    continue;
 
 	if (rp->infoname) {
-	    if ((tmpfp = fopen(rp->infoname, "w")) != nullptr) {
-		fprintf(tmpfp,"Last-Group: %s\nNew-Group-State: %ld,%ld,%ld\n",
-			ngname? ngname : "",rp->datasrc->lastnewgrp,
+	    if ((g_tmpfp = fopen(rp->infoname, "w")) != nullptr) {
+		fprintf(g_tmpfp,"Last-Group: %s\nNew-Group-State: %ld,%ld,%ld\n",
+			g_ngname? g_ngname : "",rp->datasrc->lastnewgrp,
 			rp->datasrc->act_sf.recent_cnt,
 			rp->datasrc->desc_sf.recent_cnt);
-		fclose(tmpfp);
+		fclose(g_tmpfp);
 	    }
 	}
 	else {
@@ -1318,14 +1318,14 @@ bool write_newsrcs(MULTIRC *mptr)
 
 	rcfp = fopen(rp->newname, "w");
 	if (rcfp == nullptr) {
-	    printf(cantrecreate,rp->name) FLUSH;
+	    printf(g_cantrecreate,rp->name) FLUSH;
 	    total_success = false;
 	    continue;
 	}
 #ifndef MSDOS
-	if (stat(rp->name,&filestat)>=0) { /* preserve permissions */
-	    chmod(rp->newname,filestat.st_mode&0666);
-	    chown(rp->newname,filestat.st_uid,filestat.st_gid);
+	if (stat(rp->name,&g_filestat)>=0) { /* preserve permissions */
+	    chmod(rp->newname,g_filestat.st_mode&0666);
+	    chown(rp->newname,g_filestat.st_uid,g_filestat.st_gid);
 	}
 #endif
 	/* write out each line*/
@@ -1366,7 +1366,7 @@ bool write_newsrcs(MULTIRC *mptr)
 	}
 	if (fclose(rcfp) == EOF) {
 	  write_error:
-	    printf(cantrecreate,rp->name) FLUSH;
+	    printf(g_cantrecreate,rp->name) FLUSH;
 	    remove(rp->newname);
 	    total_success = false;
 	    continue;

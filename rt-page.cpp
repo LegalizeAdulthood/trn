@@ -64,16 +64,16 @@ bool set_sel_mode(char_int ch)
 	set_selector(g_sel_defaultmode = SM_SUBJECT, 0);
 	break;
       case 't':
-	if (in_ng && !g_threaded_group) {
-	    bool always_save = thread_always;
+	if (g_in_ng && !g_threaded_group) {
+	    bool always_save = g_thread_always;
 	    g_threaded_group = true;
-	    thread_always = true;
+	    g_thread_always = true;
 	    if (g_sel_rereading)
 		g_firstart = g_absfirst;
 	    printf("\nThreading the group. "), fflush(stdout);
 	    termdown(1);
 	    thread_open();
-	    thread_always = always_save;
+	    g_thread_always = always_save;
 	    if (g_last_cached < g_lastart)
 		g_threaded_group = false;
 	}
@@ -92,11 +92,11 @@ char *get_sel_order(int smode)
 {
     int save_sel_mode = g_sel_mode;
     set_selector(smode, 0);
-    sprintf(buf,"%s%s", g_sel_direction < 0? "reverse " : "",
+    sprintf(g_buf,"%s%s", g_sel_direction < 0? "reverse " : "",
 	    g_sel_sort_string);
     g_sel_mode = save_sel_mode;
     set_selector(0, 0);
-    return buf;
+    return g_buf;
 }
 
 bool set_sel_order(int smode, const char *str)
@@ -293,7 +293,7 @@ static void sel_page_init()
      * to be able to switch from a large numeric page (more than
      * strlen(g_sel_chars) lines) to an alphanumeric page. XXX
      */
-    if (UseSelNum)
+    if (g_use_sel_num)
         g_sel_max_per_page = 99;
     else
 	g_sel_max_per_page = strlen(g_sel_chars);
@@ -385,7 +385,7 @@ try_again:
 	    }
 	    if (g_maxngtodo) {
 		end_only();
-		fputs(msg, stdout);
+		fputs(g_msg, stdout);
 		newline();
 		if (fill_last_page)
 		    get_anything();
@@ -1225,7 +1225,7 @@ try_again:
 
 void display_page_title(bool home_only)
 {
-    if (home_only || (erase_screen && erase_each_line))
+    if (home_only || (g_erase_screen && g_erase_each_line))
 	home_cursor();
     else
 	clear();
@@ -1239,8 +1239,8 @@ void display_page_title(bool home_only)
 	       univ_title? univ_title : "Universal Selector");
 	color_pop();
     }
-    else if (in_ng)
-	color_string(COLOR_NGNAME, ngname);
+    else if (g_in_ng)
+	color_string(COLOR_NGNAME, g_ngname);
     else if (g_sel_mode == SM_ADDGROUP)
 	color_string(COLOR_HEADING,"ADD newsgroups");
     else {
@@ -1250,17 +1250,17 @@ void display_page_title(bool home_only)
 	printf("Newsgroups");
 	for (rp = g_multirc->first, len = 0; rp && len < 34; rp = rp->next) {
 	    if (rp->flags & RF_ACTIVE) {
-		sprintf(buf+len, ", %s", rp->datasrc->name);
-		len += strlen(buf+len);
+		sprintf(g_buf+len, ", %s", rp->datasrc->name);
+		len += strlen(g_buf+len);
 	    }
 	}
 	if (rp)
-	    strcpy(buf+len, ", ...");
-	if (strcmp(buf+2,"default"))
-	    printf(" (group #%d: %s)",g_multirc->num, buf+2);
+	    strcpy(g_buf+len, ", ...");
+	if (strcmp(g_buf+2,"default"))
+	    printf(" (group #%d: %s)",g_multirc->num, g_buf+2);
 	color_pop();	/* of COLOR_HEADING */
     }
-    if (home_only || (erase_screen && erase_each_line))
+    if (home_only || (g_erase_screen && g_erase_each_line))
 	erase_eol();
     if (g_sel_mode == SM_MULTIRC)
 	;
@@ -1268,7 +1268,7 @@ void display_page_title(bool home_only)
 	;
     else if (g_sel_mode == SM_OPTIONS)
 	printf("      (Press 'S' to save changes, 'q' to abandon, or TAB to use.)");
-    else if (in_ng) {
+    else if (g_in_ng) {
 	printf("          %ld %sarticle%s", (long)g_sel_total_obj_cnt,
 	       g_sel_rereading? "read " : "",
 	       g_sel_total_obj_cnt == 1 ? "" : "s");
@@ -1287,7 +1287,7 @@ void display_page_title(bool home_only)
     home_cursor();
     newline();
     maybe_eol();
-    if (in_ng && g_redirected && g_redirected != "")
+    if (g_in_ng && g_redirected && g_redirected != "")
 	printf("\t** Please start using %s **", g_redirected);
     newline();
 }
@@ -1326,13 +1326,13 @@ try_again:
 
 	    maybe_eol();
 	    for (rp = mp->first, len = 0; rp && len < 34; rp = rp->next) {
-		sprintf(buf+len, ", %s", rp->datasrc->name);
-		len += strlen(buf+len);
+		sprintf(g_buf+len, ", %s", rp->datasrc->name);
+		len += strlen(g_buf+len);
 	    }
 	    if (rp)
-		strcpy(buf+len, ", ...");
+		strcpy(g_buf+len, ", ...");
 	    output_sel(g_sel_page_item_cnt, sel, false);
-	    printf("%5d %s\n", mp->num, buf+2);
+	    printf("%5d %s\n", mp->num, g_buf+2);
 	    termdown(1);
 	    g_sel_page_item_cnt++;
 	}
@@ -1671,14 +1671,14 @@ void update_page()
 void output_sel(int ix, int sel, bool update)
 {
     if (ix < 0) {
-	if (UseSelNum)
+	if (g_use_sel_num)
 	    putchar(' ');
 	putchar(' ');
 	putchar(' ');
 	return;
     }
 
-    if (UseSelNum) {
+    if (g_use_sel_num) {
 	/* later consider no-leading-zero option */
 	printf("%02d",ix+1);
     } else
@@ -1762,7 +1762,7 @@ static int count_thread_lines(const SUBJECT *subj, int *selptr)
 */
 static void display_article(const ARTICLE *ap, int ix, int sel)
 {
-    int subj_width = tc_COLS - 5 - UseSelNum;
+    int subj_width = tc_COLS - 5 - g_use_sel_num;
     int from_width = tc_COLS / 5;
     int date_width = tc_COLS / 5;
 
@@ -1791,7 +1791,7 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
 {
     ARTICLE* ap;
     int j, i;
-    int subj_width = tc_COLS - 8 - UseSelNum;
+    int subj_width = tc_COLS - 8 - g_use_sel_num;
     int from_width = tc_COLS / 5;
     int date_width = tc_COLS / 5;
 #ifdef USE_UTF_HACK
@@ -1856,7 +1856,7 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
 			    i = 1;
 			} else
 			    i++;
-			if (UseSelNum)
+			if (g_use_sel_num)
 			    putchar(' ');
 			printf("  %s      ",
 			       compress_from(ap? ap->from : nullptr, from_width)) FLUSH;
@@ -1866,7 +1866,7 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
 		if (g_term_line >= g_sel_max_line_cnt + 2)
 		    return;
 		maybe_eol();
-		if (UseSelNum)
+		if (g_use_sel_num)
 		    putchar(' ');
 		printf("  %s\n", compress_from(ap? ap->from : nullptr, from_width)) FLUSH;
 		termdown(1);
@@ -1959,8 +1959,8 @@ static void display_group(DATASRC *dp, char *group, int len, int max_len)
 	if (*cp != '?' && (end = strchr(cp, '\n')) != nullptr
 	 && end != cp) {
 	    char ch;
-	    if (end - cp > tc_COLS - max_len - 8 - 1 - UseSelNum)
-		end = cp + tc_COLS - max_len - 8 - 1 - UseSelNum;
+	    if (end - cp > tc_COLS - max_len - 8 - 1 - g_use_sel_num)
+		end = cp + tc_COLS - max_len - 8 - 1 - g_use_sel_num;
 	    ch = *end;
 	    *end = '\0';
 	    if (*g_sel_grp_dmode == 'm')

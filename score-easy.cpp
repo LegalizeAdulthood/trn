@@ -66,9 +66,9 @@ char *sc_easy_append()
 	printf("Type the (single character) abbreviation of the scorefile:");
 	fflush(stdout);
 	eat_typeahead();
-	getcmd(buf);
-	printf("%c\n",*buf) FLUSH;
-	filechar = *buf;
+	getcmd(g_buf);
+	printf("%c\n",*g_buf) FLUSH;
+	filechar = *g_buf;
 	/* If error checking is done later, then an error should set
 	 * filechar to '\0' and continue the while loop.
 	 */
@@ -94,10 +94,10 @@ char *sc_easy_append()
 	  case '2':
 	    printf("Enter the line below:\n");
 	    fflush(stdout);
-	    buf[0] = '>';
-	    buf[1] = FINISHCMD;
+	    g_buf[0] = '>';
+	    g_buf[1] = FINISHCMD;
 	    if (finish_command(true)) {
-		sprintf(s,"%s",buf+1);
+		sprintf(s,"%s",g_buf+1);
 		return s_sc_e_newline;
 	    }
 	    printf("\n");
@@ -116,12 +116,12 @@ char *sc_easy_append()
     while (!q_done) {
 	printf("Enter a score amount (like 10 or -6):");
 	fflush(stdout);
-	buf[0] = ' ';
-	buf[1] = FINISHCMD;
+	g_buf[0] = ' ';
+	g_buf[1] = FINISHCMD;
 	if (finish_command(true)) {
-	    score = atoi(buf+1);
+	    score = atoi(g_buf+1);
 	    if (score == 0)
-		if (buf[1] != '0')
+		if (g_buf[1] != '0')
 		    continue;	/* the while loop */
 	    sprintf(s,"%ld",score);
 	    s = s_sc_e_newline+strlen(s_sc_e_newline); /* point at terminator  */

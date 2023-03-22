@@ -170,8 +170,8 @@ void nntp_body(ART_NUM artnum)
 	if (s_body_pos >= 0)
 	    nntp_finishbody(FB_DISCARD);
 	artfp = fopen(artname,"r");
-	if (artfp && fstat(fileno(artfp),&filestat) == 0)
-	    s_body_end = filestat.st_size;
+	if (artfp && fstat(fileno(artfp),&g_filestat) == 0)
+	    s_body_end = g_filestat.st_size;
 	return;
     }
 
@@ -268,7 +268,7 @@ int nntp_finishbody(int bmode)
     }
     else
     if (bmode == FB_OUTPUT) {
-	if (verbose)
+	if (g_verbose)
 	    printf("Receiving the rest of the article..."), fflush(stdout);
 	else
 	    printf("Receiving..."), fflush(stdout);
@@ -503,7 +503,7 @@ int nntp_handle_timeout()
     if (nntp_connect(g_datasrc->newsid, false) <= 0)
 	return -2;
     g_datasrc->nntplink = nntplink;
-    if (in_ng && nntp_group(ngname, (NGDATA*)nullptr) <= 0)
+    if (g_in_ng && nntp_group(g_ngname, (NGDATA*)nullptr) <= 0)
 	return -2;
     if (nntp_command(last_command_save) <= 0)
 	return -1;

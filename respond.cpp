@@ -58,8 +58,8 @@ int save_article()
     char* c;
     char altbuf[CBUFLEN];
     int i;
-    bool interactive = (buf[1] == FINISHCMD);
-    char cmd = *buf;
+    bool interactive = (g_buf[1] == FINISHCMD);
+    char cmd = *g_buf;
     
     if (!finish_command(interactive))	/* get rest of command */
 	return SAVE_ABORT;
@@ -70,15 +70,15 @@ int save_article()
     clear_artbuf();
     g_savefrom = (cmd == 'w' || cmd == 'e')? g_htype[PAST_HEADER].minpos : 0;
     if (artopen(g_art,g_savefrom) == nullptr) {
-	if (verbose)
+	if (g_verbose)
 	    fputs("\nCan't save an empty article.\n",stdout) FLUSH;
 	else
 	    fputs(s_nullart,stdout) FLUSH;
 	termdown(2);
 	return SAVE_DONE;
     }
-    if (chdir(cwd)) {
-	printf(nocd,cwd) FLUSH;
+    if (chdir(g_cwd)) {
+	printf(g_nocd,g_cwd) FLUSH;
 	sig_catcher(0);
     }
     if (cmd == 'e') {		/* is this an extract command? */
@@ -86,7 +86,7 @@ int save_article()
 	char* cmdstr;
 	int partOpt = 0, totalOpt = 0;
 
-	s = buf+1;		/* skip e */
+	s = g_buf+1;		/* skip e */
 	while (*s == ' ') s++;	/* skip leading spaces */
 	if (*s == '-' && isdigit(s[1])) {
 	    partOpt = atoi(s+1);
@@ -102,8 +102,8 @@ int save_article()
 	safecpy(altbuf,filexp(s),sizeof altbuf);
 	s = altbuf;
 	if (*s) {
-	    cmdstr = cpytill(buf,s,'|');	/* check for | */
-	    s = buf + strlen(buf)-1;
+	    cmdstr = cpytill(g_buf,s,'|');	/* check for | */
+	    s = g_buf + strlen(g_buf)-1;
 	    while (*s == ' ') s--;		/* trim trailing spaces */
 	    *++s = '\0';
 	    if (*cmdstr) {
@@ -118,7 +118,7 @@ int save_article()
 	    }
 	    else
 		cmdstr = nullptr;
-	    s = buf;
+	    s = g_buf;
 	}
 	else {
 	    if (g_extractdest)
@@ -131,20 +131,20 @@ int save_article()
 	custom_extract = (cmdstr != 0);
 
 	if (FILE_REF(s) != '/') {	/* relative path? */
-	    c = (s==buf ? altbuf : buf);
-	    interp(c, (sizeof buf), get_val("SAVEDIR",SAVEDIR));
+	    c = (s==g_buf ? altbuf : g_buf);
+	    interp(c, (sizeof g_buf), get_val("SAVEDIR",SAVEDIR));
 	    if (makedir(c,MD_DIR))	/* ensure directory exists */
-		strcpy(c,cwd);
+		strcpy(c,g_cwd);
 	    if (*s) {
 		while (*c) c++;
 		*c++ = '/';
 		strcpy(c,s);		/* add filename */
 	    }
-	    s = (s==buf ? altbuf : buf);
+	    s = (s==g_buf ? altbuf : g_buf);
 	}
 	if (FILE_REF(s) != '/') {	/* path still relative? */
-	    c = (s==buf ? altbuf : buf);
-	    sprintf(c, "%s/%s", cwd, s);
+	    c = (s==g_buf ? altbuf : g_buf);
+	    sprintf(c, "%s/%s", g_cwd, s);
 	    s = c;			/* absolutize it */
 	}
 	safefree(g_extractdest);
@@ -154,15 +154,15 @@ int save_article()
 	    return SAVE_DONE;
 	}
 	if (chdir(s)) {
-	    printf(nocd,s) FLUSH;
+	    printf(g_nocd,s) FLUSH;
 	    sig_catcher(0);
 	}
-	c = trn_getwd(buf, sizeof(buf));	/* simplify path for output */
+	c = trn_getwd(g_buf, sizeof(g_buf));	/* simplify path for output */
 	if (custom_extract) {
 	    printf("Extracting article into %s using %s\n",c,g_extractprog) FLUSH;
 	    termdown(1);
-	    interp(cmd_buf, sizeof cmd_buf, get_val("CUSTOMSAVER",CUSTOMSAVER));
-	    invoke(cmd_buf, nullptr);
+	    interp(g_cmd_buf, sizeof g_cmd_buf, get_val("CUSTOMSAVER",CUSTOMSAVER));
+	    invoke(g_cmd_buf, nullptr);
 	}
 	else if (g_is_mime) {
 	    printf("Extracting MIME article into %s:\n", c) FLUSH;
@@ -214,8 +214,8 @@ int save_article()
 	      case 1:
 		printf("Extracting shar into %s:\n", c) FLUSH;
 		termdown(1);
-		interp(cmd_buf,(sizeof cmd_buf),get_val("SHARSAVER",SHARSAVER));
-		invoke(cmd_buf, nullptr);
+		interp(g_cmd_buf,(sizeof g_cmd_buf),get_val("SHARSAVER",SHARSAVER));
+		invoke(g_cmd_buf, nullptr);
 		break;
 	      case 2:
 		printf("Extracting uuencoded file into %s:\n", c) FLUSH;
@@ -226,9 +226,9 @@ int save_article()
 		g_mime_section->encoding = MENCODE_UUE;
 		g_mime_section->part = part;
 		g_mime_section->total = total;
-		if (!decode_piece((MIMECAP_ENTRY*)nullptr,nullptr) && *msg) {
+		if (!decode_piece((MIMECAP_ENTRY*)nullptr,nullptr) && *g_msg) {
 		    newline();
-		    fputs(msg,stdout);
+		    fputs(g_msg,stdout);
 		}
 		newline();
 		break;
@@ -239,7 +239,7 @@ int save_article()
 	    }
 	}/* if */
     }
-    else if ((s = strchr(buf,'|')) != nullptr) { /* is it a pipe command? */
+    else if ((s = strchr(g_buf,'|')) != nullptr) { /* is it a pipe command? */
 	s++;			/* skip the | */
 	while (*s == ' ') s++;
 	safecpy(altbuf,filexp(s),sizeof altbuf);
@@ -247,15 +247,15 @@ int save_article()
 	g_savedest = savestr(altbuf);
 	if (g_datasrc->flags & DF_REMOTE)
 	    nntp_finishbody(FB_SILENT);
-	interp(cmd_buf, (sizeof cmd_buf), get_val("PIPESAVER",PIPESAVER));
+	interp(g_cmd_buf, (sizeof g_cmd_buf), get_val("PIPESAVER",PIPESAVER));
 				/* then set up for command */
 	termlib_reset();
 	resetty();		/* restore tty state */
 	if (use_pref)		/* use preferred shell? */
-	    doshell(nullptr,cmd_buf);
+	    doshell(nullptr,g_cmd_buf);
 				/* do command with it */
 	else
-	    doshell(sh,cmd_buf);	/* do command with sh */
+	    doshell(g_sh,g_cmd_buf);	/* do command with sh */
 	noecho();		/* and stop echoing */
 	crmode();		/* and start cbreaking */
 	termlib_init();
@@ -264,9 +264,9 @@ int save_article()
 	bool there, mailbox;
 	char* savename = get_val("SAVENAME",SAVENAME);
 
-	s = buf+1;		/* skip s or S */
+	s = g_buf+1;		/* skip s or S */
 	if (*s == '-') {	/* if they are confused, skip - also */
-	    if (verbose)
+	    if (g_verbose)
 		fputs("Warning: '-' ignored.  This isn't readnews.\n",stdout)
 		  FLUSH;
 	    else
@@ -278,52 +278,52 @@ int save_article()
 	safecpy(altbuf,filexp(s),sizeof altbuf);
 	s = altbuf;
 	if (!FILE_REF(s)) {
-	    interp(buf, (sizeof buf), get_val("SAVEDIR",SAVEDIR));
-	    if (makedir(buf,MD_DIR))	/* ensure directory exists */
-		strcpy(buf,cwd);
+	    interp(g_buf, (sizeof g_buf), get_val("SAVEDIR",SAVEDIR));
+	    if (makedir(g_buf,MD_DIR))	/* ensure directory exists */
+		strcpy(g_buf,g_cwd);
 	    if (*s) {
-		for (c = buf; *c; c++) ;
+		for (c = g_buf; *c; c++) ;
 		*c++ = '/';
 		strcpy(c,s);		/* add filename */
 	    }
-	    s = buf;
+	    s = g_buf;
 	}
 	for (i = 0;
-	    (there = stat(s,&filestat) >= 0) && S_ISDIR(filestat.st_mode);
+	    (there = stat(s,&g_filestat) >= 0) && S_ISDIR(g_filestat.st_mode);
 	    i++) {			/* is it a directory? */
 
 	    c = (s+strlen(s));
 	    *c++ = '/';			/* put a slash before filename */
-	    interp(c, s==buf?(sizeof buf):(sizeof altbuf),
+	    interp(c, s==g_buf?(sizeof g_buf):(sizeof altbuf),
 		i ? "News" : savename );
 				/* generate a default name somehow or other */
 	}
 	makedir(s,MD_FILE);
 	if (FILE_REF(s) != '/') {	/* relative path? */
-	    c = (s==buf ? altbuf : buf);
-	    sprintf(c, "%s/%s", cwd, s);
+	    c = (s==g_buf ? altbuf : g_buf);
+	    sprintf(c, "%s/%s", g_cwd, s);
 	    s = c;			/* absolutize it */
 	}
 	safefree(g_savedest);
 	s = g_savedest = savestr(s);	/* doesn't move any more */
 					/* make it handy for %b */
-	tmpfp = nullptr;
+	g_tmpfp = nullptr;
 	if (!there) {
-	    if (mbox_always)
+	    if (g_mbox_always)
 		mailbox = true;
-	    else if (norm_always)
+	    else if (g_norm_always)
 		mailbox = false;
 	    else {
 		char* dflt = (in_string(savename,"%a", true) ? "nyq" : "ynq");
 		
-		sprintf(cmd_buf,
+		sprintf(g_cmd_buf,
 		"\nFile %s doesn't exist--\n	use mailbox format?",s);
 	      reask_save:
-		in_char(cmd_buf, 'M', dflt);
+		in_char(g_cmd_buf, 'M', dflt);
 		newline();
 		printcmd();
-		if (*buf == 'h') {
-		    if (verbose)
+		if (*g_buf == 'h') {
+		    if (g_verbose)
 			printf("\n\
 Type y to create %s as a mailbox.\n\
 Type n to create it as a normal file.\n\
@@ -338,81 +338,81 @@ q to abort.\n\
 		    termdown(4);
 		    goto reask_save;
 		}
-		else if (*buf == 'n') {
+		else if (*g_buf == 'n') {
 		    mailbox = false;
 		}
-		else if (*buf == 'y') {
+		else if (*g_buf == 'y') {
 		    mailbox = true;
 		}
-		else if (*buf == 'q') {
+		else if (*g_buf == 'q') {
 		    goto s_bomb;
 		}
 		else {
-		    fputs(hforhelp,stdout) FLUSH;
+		    fputs(g_hforhelp,stdout) FLUSH;
 		    termdown(1);
 		    settle_down();
 		    goto reask_save;
 		}
 	    }
 	}
-	else if (S_ISCHR(filestat.st_mode))
+	else if (S_ISCHR(g_filestat.st_mode))
 	    mailbox = false;
 	else {
-	    tmpfp = fopen(s,"r+");
-	    if (!tmpfp)
+	    g_tmpfp = fopen(s,"r+");
+	    if (!g_tmpfp)
 		mailbox = false;
 	    else {
-		if (fread(buf,1,LBUFLEN,tmpfp)) {
-		    c = buf;
+		if (fread(g_buf,1,LBUFLEN,g_tmpfp)) {
+		    c = g_buf;
 		    if (!isspace(MBOXCHAR))   /* if non-zero, */
 			while (isspace(*c))   /* check the first character */
 			    c++;
 		    mailbox = (*c == MBOXCHAR);
 		} else
-		    mailbox = mbox_always;    /* if zero length, recheck -M */
+		    mailbox = g_mbox_always;    /* if zero length, recheck -M */
 	    }
 	}
 
 	s = getenv(mailbox ? "MBOXSAVER" : "NORMSAVER");
 	if (s) {
-	    if (tmpfp)
-		fclose(tmpfp);
-	    safecpy(cmd_buf, filexp(s), sizeof cmd_buf);
+	    if (g_tmpfp)
+		fclose(g_tmpfp);
+	    safecpy(g_cmd_buf, filexp(s), sizeof g_cmd_buf);
 	    if (g_datasrc->flags & DF_REMOTE)
 		nntp_finishbody(FB_SILENT);
 	    termlib_reset();
 	    resetty();		/* make terminal behave */
-	    i = doshell(use_pref?nullptr:SH,cmd_buf);
+	    i = doshell(use_pref?nullptr:SH,g_cmd_buf);
 	    termlib_init();
 	    noecho();		/* make terminal do what we want */
 	    crmode();
 	}
-	else if (tmpfp != nullptr || (tmpfp = fopen(g_savedest, "a")) != nullptr) {
+	else if (g_tmpfp != nullptr || (g_tmpfp = fopen(g_savedest, "a")) != nullptr) {
 	    bool quote_From = false;
-	    fseek(tmpfp,0,2);
+	    fseek(g_tmpfp,0,2);
 	    if (mailbox) {
 #if MBOXCHAR == '\001'
-		fprintf(tmpfp,"\001\001\001\001\n");
+		fprintf(g_tmpfp,"\001\001\001\001\n");
 #else
-		interp(cmd_buf, sizeof cmd_buf, "From %t %`LANG= date`\n");
-		fputs(cmd_buf, tmpfp);
+		interp(g_cmd_buf, sizeof g_cmd_buf, "From %t %`LANG= date`\n");
+		fputs(g_cmd_buf, g_tmpfp);
 		quote_From = true;
 #endif
 	    }
 	    if (g_savefrom == 0 && g_art != 0)
-		fprintf(tmpfp,"Article: %ld of %s\n", (long)g_art, ngname);
+		fprintf(g_tmpfp,"Article: %ld of %s\n", (long)g_art, g_ngname);
 	    seekart(g_savefrom);
-	    while (readart(buf,LBUFLEN) != nullptr) {
-		if (quote_From && !strncasecmp(buf,"from ",5))
-		    putc('>', tmpfp);
-		fputs(buf, tmpfp);
+	    while (readart(g_buf,LBUFLEN) != nullptr) {
+		if (quote_From && !strncasecmp(g_buf,"from ",5))
+		    putc('>', g_tmpfp);
+		fputs(g_buf, g_tmpfp);
 	    }
-	    fputs("\n\n", tmpfp);
+	    fputs("\n\n", g_tmpfp);
 #if MBOXCHAR == '\001'
 	    if (mailbox)
-		fprintf(tmpfp,"\001\001\001\001\n");
+		fprintf(g_tmpfp,"\001\001\001\001\n");
 #endif
-	    fclose(tmpfp);
+	    fclose(g_tmpfp);
 	    i = 0; /*$$ set non-zero on write error */
 	}
 	else
@@ -438,7 +438,7 @@ int view_article()
     clear_artbuf();
     g_savefrom = g_htype[PAST_HEADER].minpos;
     if (artopen(g_art,g_savefrom) == nullptr) {
-	if (verbose)
+	if (g_verbose)
 	    fputs("\nNo attatchments on an empty article.\n",stdout) FLUSH;
 	else
 	    fputs(s_nullart,stdout) FLUSH;
@@ -472,9 +472,9 @@ int view_article()
 		g_mime_section->encoding = MENCODE_UUE;
 		g_mime_section->part = part;
 		g_mime_section->total = total;
-		if (mc && !decode_piece(mc,nullptr) && *msg) {
+		if (mc && !decode_piece(mc,nullptr) && *g_msg) {
 		    newline();
-		    fputs(msg,stdout);
+		    fputs(g_msg,stdout);
 		}
 		newline();
 		cnt = 0;
@@ -501,7 +501,7 @@ int cancel_article()
     int r = -1;
 
     if (artopen(g_art,(ART_POS)0) == nullptr) {
-	if (verbose)
+	if (g_verbose)
 	    fputs("\nCan't cancel an empty article.\n",stdout) FLUSH;
 	else
 	    fputs(s_nullart,stdout) FLUSH;
@@ -526,26 +526,26 @@ int cancel_article()
 	    termdown(3);
 	}
 #endif
-	if (verbose)
+	if (g_verbose)
 	    fputs("\nYou can't cancel someone else's article\n",stdout) FLUSH;
 	else
 	    fputs("\nNot your article\n",stdout) FLUSH;
 	termdown(2);
     }
     else {
-	tmpfp = fopen(g_headname,"w");	/* open header file */
-	if (tmpfp == nullptr) {
-	    printf(cantcreate,g_headname) FLUSH;
+	g_tmpfp = fopen(g_headname,"w");	/* open header file */
+	if (g_tmpfp == nullptr) {
+	    printf(g_cantcreate,g_headname) FLUSH;
 	    termdown(1);
 	    goto done;
 	}
 	interp(hbuf, sizeof hbuf, get_val("CANCELHEADER",CANCELHEADER));
-	fputs(hbuf,tmpfp);
-	fclose(tmpfp);
+	fputs(hbuf,g_tmpfp);
+	fclose(g_tmpfp);
 	fputs("\nCanceling...\n",stdout) FLUSH;
 	termdown(2);
 	export_nntp_fds = true;
-	r = doshell(sh,filexp(get_val("CANCEL",CALL_INEWS)));
+	r = doshell(g_sh,filexp(get_val("CANCEL",CALL_INEWS)));
 	export_nntp_fds = false;
     }
 done:
@@ -563,10 +563,10 @@ int supersede_article()		/* Supersedes: */
     char* reply_buf;
     int myuid = getuid();
     int r = -1;
-    bool incl_body = (*buf == 'Z');
+    bool incl_body = (*g_buf == 'Z');
 
     if (artopen(g_art,(ART_POS)0) == nullptr) {
-	if (verbose)
+	if (g_verbose)
 	    fputs("\nCan't supersede an empty article.\n",stdout) FLUSH;
 	else
 	    fputs(s_nullart,stdout) FLUSH;
@@ -591,28 +591,28 @@ int supersede_article()		/* Supersedes: */
 	    termdown(3);
 	}
 #endif
-	if (verbose)
+	if (g_verbose)
 	    fputs("\nYou can't supersede someone else's article\n",stdout) FLUSH;
 	else
 	    fputs("\nNot your article\n",stdout) FLUSH;
 	termdown(2);
     }
     else {
-	tmpfp = fopen(g_headname,"w");	/* open header file */
-	if (tmpfp == nullptr) {
-	    printf(cantcreate,g_headname) FLUSH;
+	g_tmpfp = fopen(g_headname,"w");	/* open header file */
+	if (g_tmpfp == nullptr) {
+	    printf(g_cantcreate,g_headname) FLUSH;
 	    termdown(1);
 	    goto done;
 	}
 	interp(hbuf, sizeof hbuf, get_val("SUPERSEDEHEADER",SUPERSEDEHEADER));
-	fputs(hbuf,tmpfp);
+	fputs(hbuf,g_tmpfp);
 	if (incl_body && artfp != nullptr) {
 	    parseheader(g_art);
 	    seekart(g_htype[PAST_HEADER].minpos);
-	    while (readart(buf,LBUFLEN) != nullptr)
-		fputs(buf,tmpfp);
+	    while (readart(g_buf,LBUFLEN) != nullptr)
+		fputs(g_buf,g_tmpfp);
 	}
-	fclose(tmpfp);
+	fclose(g_tmpfp);
 	follow_it_up();
 	r = 0;
     }
@@ -625,8 +625,8 @@ done:
 
 static void follow_it_up()
 {
-    safecpy(cmd_buf,filexp(get_val("NEWSPOSTER",NEWSPOSTER)), sizeof cmd_buf);
-    if (invoke(cmd_buf,g_origdir) == 42) {
+    safecpy(g_cmd_buf,filexp(get_val("NEWSPOSTER",NEWSPOSTER)), sizeof g_cmd_buf);
+    if (invoke(g_cmd_buf,g_origdir) == 42) {
 	int ret;
 	if ((g_datasrc->flags & DF_REMOTE)
 	 && (nntp_command("DATE") <= 0
@@ -645,8 +645,8 @@ static void follow_it_up()
 	    FILE* fp_out;
 	    if ((fp_out = fopen(deadart, "a")) != nullptr) {
 		if ((fp_in = fopen(g_headname, "r")) != nullptr) {
-		    while (fgets(cmd_buf, sizeof cmd_buf, fp_in))
-			fputs(cmd_buf, fp_out);
+		    while (fgets(g_cmd_buf, sizeof g_cmd_buf, fp_in))
+			fputs(g_cmd_buf, fp_out);
 		    fclose(fp_in);
 		    appended = 1;
 		}
@@ -663,31 +663,31 @@ static void follow_it_up()
 void reply()
 {
     char hbuf[5*LBUFLEN];
-    bool incl_body = (*buf == 'R' && g_art);
+    bool incl_body = (*g_buf == 'R' && g_art);
     char* maildoer = savestr(get_val("MAILPOSTER",MAILPOSTER));
 
     artopen(g_art,(ART_POS)0);
-    tmpfp = fopen(g_headname,"w");	/* open header file */
-    if (tmpfp == nullptr) {
-	printf(cantcreate,g_headname) FLUSH;
+    g_tmpfp = fopen(g_headname,"w");	/* open header file */
+    if (g_tmpfp == nullptr) {
+	printf(g_cantcreate,g_headname) FLUSH;
 	termdown(1);
 	goto done;
     }
     interp(hbuf, sizeof hbuf, get_val("MAILHEADER",MAILHEADER));
-    fputs(hbuf,tmpfp);
+    fputs(hbuf,g_tmpfp);
     if (!in_string(maildoer,"%h", true)) {
-	if (verbose)
-	    printf("\n%s\n(Above lines saved in file %s)\n",buf,g_headname)
+	if (g_verbose)
+	    printf("\n%s\n(Above lines saved in file %s)\n",g_buf,g_headname)
 	      FLUSH;
 	else
-	    printf("\n%s\n(Header in %s)\n",buf,g_headname) FLUSH;
+	    printf("\n%s\n(Header in %s)\n",g_buf,g_headname) FLUSH;
 	termdown(3);
     }
     if (incl_body && artfp != nullptr) {
 	char* s;
 	char* t;
-	interp(buf, (sizeof buf), get_val("YOUSAID",YOUSAID));
-	fprintf(tmpfp,"%s\n",buf);
+	interp(g_buf, (sizeof g_buf), get_val("YOUSAID",YOUSAID));
+	fprintf(g_tmpfp,"%s\n",g_buf);
 	parseheader(g_art);
 	mime_SetArticle();
 	clear_artbuf();
@@ -697,16 +697,16 @@ void reply()
 	    if ((t = strchr(s, '\n')) != nullptr)
 		*t = '\0';
 	    strcharsubst(hbuf,s,sizeof hbuf,*g_charsubst);
-	    fprintf(tmpfp,"%s%s\n",indstr,hbuf);
+	    fprintf(g_tmpfp,"%s%s\n",g_indstr,hbuf);
 	    if (t)
 		*t = '\0';
 	}
-	fprintf(tmpfp,"\n");
+	fprintf(g_tmpfp,"\n");
 	wrapped_nl = WRAPPED_NL;
     }
-    fclose(tmpfp);
-    safecpy(cmd_buf,filexp(maildoer),sizeof cmd_buf);
-    invoke(cmd_buf,g_origdir);
+    fclose(g_tmpfp);
+    safecpy(g_cmd_buf,filexp(maildoer),sizeof g_cmd_buf);
+    invoke(g_cmd_buf,g_origdir);
 done:
     free(maildoer);
 }
@@ -727,14 +727,14 @@ void forward()
     init_compex(&mime_compex);
 #endif
     artopen(g_art,(ART_POS)0);
-    tmpfp = fopen(g_headname,"w");	/* open header file */
-    if (tmpfp == nullptr) {
-	printf(cantcreate,g_headname) FLUSH;
+    g_tmpfp = fopen(g_headname,"w");	/* open header file */
+    if (g_tmpfp == nullptr) {
+	printf(g_cantcreate,g_headname) FLUSH;
 	termdown(1);
 	goto done;
     }
     interp(hbuf, sizeof hbuf, get_val("FORWARDHEADER",FORWARDHEADER));
-    fputs(hbuf,tmpfp);
+    fputs(hbuf,g_tmpfp);
 #ifdef REGEX_WORKS_RIGHT
     if (!compile(&mime_compex,"Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"",true,true)
      && execute(&mime_compex,hbuf) != nullptr)
@@ -771,7 +771,7 @@ void forward()
     }
 #endif
     if (!in_string(maildoer,"%h", true)) {
-	if (verbose)
+	if (g_verbose)
 	    printf("\n%s\n(Above lines saved in file %s)\n",hbuf,g_headname)
 	      FLUSH;
 	else
@@ -779,35 +779,35 @@ void forward()
 	termdown(3);
     }
     if (artfp != nullptr) {
-	interp(buf, sizeof buf, get_val("FORWARDMSG",FORWARDMSG));
+	interp(g_buf, sizeof g_buf, get_val("FORWARDMSG",FORWARDMSG));
 	if (mime_boundary) {
-	    if (*buf && strncasecmp(buf, "Content-", 8))
-		strcpy(buf, "Content-Type: text/plain\n");
-	    fprintf(tmpfp,"--%s\n%s\n[Replace this with your comments.]\n\n--%s\nContent-Type: message/rfc822\n\n",
-		    mime_boundary,buf,mime_boundary);
+	    if (*g_buf && strncasecmp(g_buf, "Content-", 8))
+		strcpy(g_buf, "Content-Type: text/plain\n");
+	    fprintf(g_tmpfp,"--%s\n%s\n[Replace this with your comments.]\n\n--%s\nContent-Type: message/rfc822\n\n",
+		    mime_boundary,g_buf,mime_boundary);
 	}
-	else if (*buf)
-	    fprintf(tmpfp,"%s\n",buf);
+	else if (*g_buf)
+	    fprintf(g_tmpfp,"%s\n",g_buf);
 	parseheader(g_art);
 	seekart((ART_POS)0);
-	while (readart(buf,sizeof buf) != nullptr) {
-	    if (!mime_boundary && *buf == '-') {
+	while (readart(g_buf,sizeof g_buf) != nullptr) {
+	    if (!mime_boundary && *g_buf == '-') {
 		putchar('-');
 		putchar(' ');
 	    }
-	    fprintf(tmpfp,"%s",buf);
+	    fprintf(g_tmpfp,"%s",g_buf);
 	}
 	if (mime_boundary)
-	    fprintf(tmpfp,"\n--%s--\n",mime_boundary);
+	    fprintf(g_tmpfp,"\n--%s--\n",mime_boundary);
 	else {
-	    interp(buf, (sizeof buf), get_val("FORWARDMSGEND",FORWARDMSGEND));
-	    if (*buf)
-		fprintf(tmpfp,"%s\n",buf);
+	    interp(g_buf, (sizeof g_buf), get_val("FORWARDMSGEND",FORWARDMSGEND));
+	    if (*g_buf)
+		fprintf(g_tmpfp,"%s\n",g_buf);
 	}
     }
-    fclose(tmpfp);
-    safecpy(cmd_buf,filexp(maildoer),sizeof cmd_buf);
-    invoke(cmd_buf,g_origdir);
+    fclose(g_tmpfp);
+    safecpy(g_cmd_buf,filexp(maildoer),sizeof g_cmd_buf);
+    invoke(g_cmd_buf,g_origdir);
   done:
     free(maildoer);
 #ifdef REGEX_WORKS_RIGHT
@@ -820,38 +820,38 @@ void forward()
 void followup()
 {
     char hbuf[5*LBUFLEN];
-    bool incl_body = (*buf == 'F' && g_art);
+    bool incl_body = (*g_buf == 'F' && g_art);
     ART_NUM oldart = g_art;
 
     if (!incl_body && g_art <= g_lastart) {
 	termdown(2);
 	in_answer("\n\nAre you starting an unrelated topic? [ynq] ", 'F');
-	setdef(buf,"y");
-	if (*buf == 'q')  /*TODO: need to add 'h' also */
+	setdef(g_buf,"y");
+	if (*g_buf == 'q')  /*TODO: need to add 'h' also */
 	    return;
-	if (*buf != 'n')
+	if (*g_buf != 'n')
 	    g_art = g_lastart + 1;
     }
     artopen(g_art,(ART_POS)0);
-    tmpfp = fopen(g_headname,"w");
-    if (tmpfp == nullptr) {
-	printf(cantcreate,g_headname) FLUSH;
+    g_tmpfp = fopen(g_headname,"w");
+    if (g_tmpfp == nullptr) {
+	printf(g_cantcreate,g_headname) FLUSH;
 	termdown(1);
 	g_art = oldart;
 	return;
     }
     interp(hbuf, sizeof hbuf, get_val("NEWSHEADER",NEWSHEADER));
-    fputs(hbuf,tmpfp);
+    fputs(hbuf,g_tmpfp);
     if (incl_body && artfp != nullptr) {
 	char* s;
 	char* t;
-	if (verbose)
+	if (g_verbose)
 	    fputs("\n\
 (Be sure to double-check the attribution against the signature, and\n\
 trim the quoted article down as much as possible.)\n\
 ",stdout) FLUSH;
-	interp(buf, (sizeof buf), get_val("ATTRIBUTION",ATTRIBUTION));
-	fprintf(tmpfp,"%s\n",buf);
+	interp(g_buf, (sizeof g_buf), get_val("ATTRIBUTION",ATTRIBUTION));
+	fprintf(g_tmpfp,"%s\n",g_buf);
 	parseheader(g_art);
 	mime_SetArticle();
 	clear_artbuf();
@@ -861,21 +861,21 @@ trim the quoted article down as much as possible.)\n\
 	    if ((t = strchr(s, '\n')) != nullptr)
 		*t = '\0';
 	    strcharsubst(hbuf,s,sizeof hbuf,*g_charsubst);
-	    fprintf(tmpfp,"%s%s\n",indstr,hbuf);
+	    fprintf(g_tmpfp,"%s%s\n",g_indstr,hbuf);
 	    if (t)
 		*t = '\0';
 	}
-	fprintf(tmpfp,"\n");
+	fprintf(g_tmpfp,"\n");
 	wrapped_nl = WRAPPED_NL;
     }
-    fclose(tmpfp);
+    fclose(g_tmpfp);
     follow_it_up();
     g_art = oldart;
 }
 
 int invoke(char *cmd, char *dir)
 {
-    char oldmode = mode;
+    char oldmode = g_mode;
     int ret = -1;
 
     if (g_datasrc->flags & DF_REMOTE)
@@ -886,18 +886,18 @@ int invoke(char *cmd, char *dir)
 #endif
     if (dir) {
 	if (chdir(dir)) {
-	    printf(nocd,dir) FLUSH;
+	    printf(g_nocd,dir) FLUSH;
 	    return ret;
 	}
     }
-    set_mode(gmode,'x');
+    set_mode(g_general_mode,'x');
     termlib_reset();
     resetty();			/* make terminal well-behaved */
-    ret = doshell(sh,cmd);	/* do the command */
+    ret = doshell(g_sh,cmd);	/* do the command */
     noecho();			/* set no echo */
     crmode();			/* and cbreak mode */
     termlib_init();
-    set_mode(gmode,oldmode);
+    set_mode(g_general_mode,oldmode);
     if (dir)
 	chdir_newsdir();
     return ret;

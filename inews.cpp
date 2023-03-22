@@ -22,7 +22,7 @@ int debug{};
 int new_connection{};
 char *server_name{};
 char *g_nntp_auth_file{};
-char buf[LBUFLEN + 1]{}; /* general purpose line buffer */
+char g_buf[LBUFLEN + 1]{}; /* general purpose line buffer */
 
 int valid_header(char *);
 void append_signature();
@@ -172,8 +172,8 @@ int main(int argc, char *argv[])
 	}
     }
     else {
-	sprintf(buf, "%s -h", EXTRAINEWS);
-	nntplink.wr_fp = _popen(buf,"w");
+	sprintf(g_buf, "%s -h", EXTRAINEWS);
+	nntplink.wr_fp = _popen(g_buf,"w");
 	if (!nntplink.wr_fp) {
 	    fprintf(stderr,"Unable to execute inews for local posting.\n");
 	    exit(1);

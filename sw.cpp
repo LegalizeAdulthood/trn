@@ -30,11 +30,11 @@ void sw_file(char **tcbufptr)
     int initfd = open(*tcbufptr,0);
 
     if (initfd >= 0) {
-	fstat(initfd,&filestat);
-	if (filestat.st_size >= TCBUF_SIZE-1)
-	    *tcbufptr = saferealloc(*tcbufptr,(MEM_SIZE)filestat.st_size+1);
-	if (filestat.st_size) {
-	    int len = read(initfd,*tcbufptr,(int)filestat.st_size);
+	fstat(initfd,&g_filestat);
+	if (g_filestat.st_size >= TCBUF_SIZE-1)
+	    *tcbufptr = saferealloc(*tcbufptr,(MEM_SIZE)g_filestat.st_size+1);
+	if (g_filestat.st_size) {
+	    int len = read(initfd,*tcbufptr,(int)g_filestat.st_size);
 	    (*tcbufptr)[len] = '\0';
 	    sw_list(*tcbufptr);
 	}
@@ -107,7 +107,7 @@ void decode_switch(char *s)
 #endif
     if (*s != '-' && *s != '+') {	/* newsgroup pattern */
 	setngtodo(s);
-	if (mode == 'i')
+	if (g_mode == 'i')
 	    g_ng_min_toread = 0;
     }
     else {				/* normal switch */
@@ -139,7 +139,7 @@ void decode_switch(char *s)
 	    set_option(OI_BKGND_SPINNER, YESorNO(upordown));
 	    break;
 	case 'c':
-	    checkflag = upordown;
+	    g_checkflag = upordown;
 	    break;
 	case 'C':
 	    if (*++s == '=') s++;
@@ -180,12 +180,12 @@ void decode_switch(char *s)
 	    if (s) {
 		*s++ = '\0';
 		s = export_var(tmpbuf,s) - (s-tmpbuf);
-		if (mode == 'i')
+		if (g_mode == 'i')
 		    save_init_environment(s);
 	    }
 	    else {
 		s = export_var(tmpbuf,"") - strlen(tmpbuf) - 1;
-		if (mode == 'i')
+		if (g_mode == 'i')
 		    save_init_environment(s);
 	    }
 	    break;
@@ -210,7 +210,7 @@ void decode_switch(char *s)
 	    }
 	    /* FALL THROUGH */
 	case 'H':
-	    if (checkflag)
+	    if (g_checkflag)
 		break;
 	    set_header(s+1,*s == 'h'? HT_HIDE : HT_MAGIC, upordown);
 	    break;
@@ -312,20 +312,20 @@ void decode_switch(char *s)
 	    set_option(OI_COMPRESS_SUBJECTS, YESorNO(!upordown));
 	    break;
 	case 'U':
-	    unsafe_rc_saves = upordown;
+	    g_unsafe_rc_saves = upordown;
 	    break;
 	case 'v':
 	    set_option(OI_VERIFY_INPUT, YESorNO(upordown));
 	    break;
 	case 'V':
-	    if (mode == 'i') {
+	    if (g_mode == 'i') {
 		tc_LINES = 1000;
 		tc_COLS = 1000;
-		erase_screen = false;
+		g_erase_screen = false;
 	    }
 	    trn_version();
 	    newline();
-	    if (mode == 'i')
+	    if (g_mode == 'i')
 		exit(0);
 	    break;
 	case 'x':
@@ -355,7 +355,7 @@ void decode_switch(char *s)
                        upordown && *s? s : YESorNO(upordown));
 	    break;
 	default:
-	    if (verbose)
+	    if (g_verbose)
 		printf("\nIgnoring unrecognized switch: -%c\n", *s) FLUSH;
 	    else
 		printf("\nIgnoring -%c\n", *s) FLUSH;

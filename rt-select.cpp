@@ -71,8 +71,8 @@ static int s_force_sel_pos{};
 static int (*s_extra_commands)(char_int){};
 
 #define START_SELECTOR(new_mode)\
-    char save_mode = mode;\
-    char save_gmode = gmode;\
+    char save_mode = g_mode;\
+    char save_gmode = g_general_mode;\
     g_bos_on_stop = true;\
     set_mode('s',new_mode)
 
@@ -167,7 +167,7 @@ char article_selector(char_int cmd)
 
     g_art = g_lastart+1;
     s_extra_commands = article_commands;
-    keep_the_group_static = (keep_the_group_static == 1);
+    g_keep_the_group_static = (g_keep_the_group_static == 1);
 
     g_sel_mode = SM_ARTICLE;
     set_sel_mode(cmd);
@@ -186,8 +186,8 @@ char article_selector(char_int cmd)
 	g_sel_page_sp = nullptr;
 	g_sel_mask = AF_DELSEL;
     } else {
-	s_end_char = NewsSelCmds[0];
-	s_page_char = NewsSelCmds[1];
+	s_end_char = g_news_sel_cmds[0];
+	s_page_char = g_news_sel_cmds[1];
 	if (g_curr_artp) {
 	    g_sel_last_ap = g_curr_artp;
 	    g_sel_last_sp = g_curr_artp->subj;
@@ -200,7 +200,7 @@ char article_selector(char_int cmd)
 
     init_pages(FILL_LAST_PAGE);
     g_sel_item_index = 0;
-    *msg = '\0';
+    *g_msg = '\0';
     if (g_added_articles) {
 	long i = g_added_articles, j;
 	for (j = g_lastart-i+1; j <= g_lastart; j++) {
@@ -208,16 +208,16 @@ char article_selector(char_int cmd)
 		i--;
 	}
 	if (i == g_added_articles)
-	    sprintf(msg, "** %ld new article%s arrived **  ",
+	    sprintf(g_msg, "** %ld new article%s arrived **  ",
 		(long)g_added_articles, PLURAL(g_added_articles));
 	else
-	    sprintf(msg, "** %ld of %ld new articles unread **  ",
+	    sprintf(g_msg, "** %ld of %ld new articles unread **  ",
 		i, (long)g_added_articles);
 	s_disp_status_line = 1;
     }
     g_added_articles = 0;
     if (cmd && g_selected_count) {
-	sprintf(msg+strlen(msg), "%ld article%s selected.",
+	sprintf(g_msg+strlen(g_msg), "%ld article%s selected.",
 		(long)g_selected_count, g_selected_count == 1? " is" : "s are");
 	s_disp_status_line = 1;
     }
@@ -289,8 +289,8 @@ static void sel_dogroups()
 	    g_recent_ng = g_current_ng;
 	    g_current_ng = np;
 	}
-	g_threaded_group = (use_threads && !(np->flags & NF_UNTHREADED));
-	printf("Entering %s:", ngname);
+	g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
+	printf("Entering %s:", g_ngname);
 	if (s_sel_ret == ';') {
 	    ret = do_newsgroup(savestr(";"));
 	} else
@@ -346,8 +346,8 @@ char multirc_selector()
     set_selector(SM_MULTIRC, 0);
 
   sel_restart:
-    s_end_char = NewsrcSelCmds[0];
-    s_page_char = NewsrcSelCmds[1];
+    s_end_char = g_newsrc_sel_cmds[0];
+    s_page_char = g_newsrc_sel_cmds[1];
     g_sel_mask = MF_SEL;
     s_extra_commands = multirc_commands;
 
@@ -412,8 +412,8 @@ char newsgroup_selector()
 	}
     }
 
-    s_end_char = NewsgroupSelCmds[0];
-    s_page_char = NewsgroupSelCmds[1];
+    s_end_char = g_newsgroup_sel_cmds[0];
+    s_page_char = g_newsgroup_sel_cmds[1];
     if (g_sel_rereading) {
 	g_sel_mask = NF_DELSEL;
 	g_sel_page_np = nullptr;
@@ -478,8 +478,8 @@ char addgroup_selector(int flags)
 	}
     }
 
-    s_end_char = AddSelCmds[0];
-    s_page_char = AddSelCmds[1];
+    s_end_char = g_add_sel_cmds[0];
+    s_page_char = g_add_sel_cmds[1];
     /* Setup for selecting articles to read or set unread */
     if (g_sel_rereading)
 	g_sel_mask = AGF_DELSEL;
@@ -531,8 +531,8 @@ char option_selector()
     set_selector(SM_OPTIONS, 0);
 
   sel_restart:
-    s_end_char = OptionSelCmds[0];
-    s_page_char = OptionSelCmds[1];
+    s_end_char = g_option_sel_cmds[0];
+    s_page_char = g_option_sel_cmds[1];
     if (g_sel_rereading)
 	g_sel_mask = AF_DELSEL;
     else
@@ -609,7 +609,7 @@ static int univ_read(UNIV_ITEM *ui)
 	int ret;
 	NGDATA* np;
 
-	if (in_ng) {
+	if (g_in_ng) {
 	    /* XXX whine: can't recurse at this time */
 	    break;
 	}
@@ -628,8 +628,8 @@ static int univ_read(UNIV_ITEM *ui)
 	    g_recent_ng = g_current_ng;
 	    g_current_ng = np;
 	}
-	g_threaded_group = (use_threads && !(np->flags & NF_UNTHREADED));
-	printf("Virtual: Entering %s:\n", ngname) FLUSH;
+	g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
+	printf("Virtual: Entering %s:\n", g_ngname) FLUSH;
 	g_ng_go_artnum = ui->data.virt.num;
 	univ_read_virtflag = true;
 	ret = do_newsgroup("");
@@ -686,7 +686,7 @@ static int univ_read(UNIV_ITEM *ui)
 	int ret;
 	NGDATA* np;
 
-	if (in_ng) {
+	if (g_in_ng) {
 	    /* XXX whine: can't recurse at this time */
 	    break;
 	}
@@ -706,8 +706,8 @@ static int univ_read(UNIV_ITEM *ui)
 	    g_recent_ng = g_current_ng;
 	    g_current_ng = np;
 	}
-	g_threaded_group = (use_threads && !(np->flags & NF_UNTHREADED));
-	printf("Entering %s:", ngname) FLUSH;
+	g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
+	printf("Entering %s:", g_ngname) FLUSH;
 	if (s_sel_ret == ';')
 	    ret = do_newsgroup(savestr(";"));
 	else
@@ -819,7 +819,7 @@ static void sel_display()
 {
     /* Present a page of items to the user */
     display_page();
-    if (erase_screen && erase_each_line)
+    if (g_erase_screen && g_erase_each_line)
 	erase_line(true);
 
     if (g_sel_item_index >= g_sel_page_item_cnt)
@@ -827,15 +827,15 @@ static void sel_display()
 
     if (s_disp_status_line == 1) {
 	newline();
-	fputs(msg, stdout);
-	g_term_col = strlen(msg);
+	fputs(g_msg, stdout);
+	g_term_col = strlen(g_msg);
 	s_disp_status_line = 2;
     }
 }
 
 static void sel_status_msg(const char *cp)
 {
-    if (can_home)
+    if (g_can_home)
 	goto_xy(0,g_sel_last_line+1);
     else
 	newline();
@@ -873,7 +873,7 @@ static char sel_input()
 	draw_mousebar(tc_COLS,false);
 	s_removed_prompt &= ~1;
     }
-    if (can_home)
+    if (g_can_home)
 	goto_xy(0,g_sel_items[g_sel_item_index].line);
 
 reinp_selector:
@@ -882,19 +882,19 @@ reinp_selector:
     /* Grab some commands from the user */
     fflush(stdout);
     eat_typeahead();
-    if (UseSelNum)
+    if (g_use_sel_num)
 	g_spin_char = '0' + (g_sel_item_index+1)/10;	/* first digit */
     else
 	g_spin_char = g_sel_chars[g_sel_item_index];
     cache_until_key();
-    getcmd(buf);
-    if (*buf == ' ')
-	setdef(buf, g_sel_at_end? &s_end_char : &s_page_char);
-    ch = *buf;
+    getcmd(g_buf);
+    if (*g_buf == ' ')
+	setdef(g_buf, g_sel_at_end? &s_end_char : &s_page_char);
+    ch = *g_buf;
     if (errno)
 	ch = Ctl('l');
     if (s_disp_status_line == 2) {
-	if (can_home) {
+	if (g_can_home) {
 	    goto_xy(0,g_sel_last_line+1);
 	    erase_line(false);
 	    if (g_term_line == tc_LINES-1)
@@ -905,14 +905,14 @@ reinp_selector:
     if (ch == '-' && g_sel_page_item_cnt) {
 	got_dash = 1;
 	got_goto = 0;	/* right action is not clear if both are true */
-	if (can_home) {
+	if (g_can_home) {
 	    if (!input_pending()) {
 		j = (g_sel_item_index > 0? g_sel_item_index : g_sel_page_item_cnt);
-		if (UseSelNum)
-		    sprintf(msg,"Range: %d-", j);
+		if (g_use_sel_num)
+		    sprintf(g_msg,"Range: %d-", j);
 		else
-		    sprintf(msg,"Range: %c-", g_sel_chars[j-1]);
-		sel_status_msg(msg);
+		    sprintf(g_msg,"Range: %c-", g_sel_chars[j-1]);
+		sel_status_msg(g_msg);
 	    }
 	}
 	else {
@@ -928,7 +928,7 @@ reinp_selector:
 	got_goto = 0;
 	/* following if statement should be function */
 	if (s_disp_status_line == 2) {	/* status was printed */
-	    if (can_home) {
+	    if (g_can_home) {
 		goto_xy(0,g_sel_last_line+1);
 		erase_line(false);
 		if (g_term_line == tc_LINES-1)
@@ -942,7 +942,7 @@ reinp_selector:
 	got_goto = 1;
 	got_dash = 0;	/* right action is not clear if both are true */
 	if (!input_pending()) {
-	    if (UseSelNum)
+	    if (g_use_sel_num)
 		sel_status_msg("Go to number?");
 	    else
 		sel_status_msg("Go to letter?");
@@ -952,7 +952,7 @@ reinp_selector:
     if (g_sel_mode == SM_OPTIONS && (ch == '\r' || ch == '\n'))
 	ch = '.';
     in_select = strchr(g_sel_chars, ch);
-    if (UseSelNum && ch >= '0' && ch <= '9') {
+    if (g_use_sel_num && ch >= '0' && ch <= '9') {
 	ch_num1 = ch;
 	/* would be *very* nice to use wait_key_pause() here */
 	if (!input_pending()) {
@@ -961,23 +961,23 @@ reinp_selector:
 		    j = g_sel_item_index;  /* -1, +1 to print */
 		} else	/* wrap around from the bottom */
 		    j = g_sel_page_item_cnt;
-		sprintf(msg,"Range: %d-%c", j, ch);
+		sprintf(g_msg,"Range: %d-%c", j, ch);
 	    } else {
 		if (got_goto) {
-		    sprintf(msg,"Go to number: %c", ch);
+		    sprintf(g_msg,"Go to number: %c", ch);
 		} else {
-		    sprintf(msg,"%c", ch);
+		    sprintf(g_msg,"%c", ch);
 		}
 	    }
-	    sel_status_msg(msg);
+	    sel_status_msg(g_msg);
 	}	
 	/* Consider cache_until_key() here.  The middle of typing a
 	 * number is a lousy time to delay, however.
 	 */
-	getcmd(buf);
-	ch = *buf;
+	getcmd(g_buf);
+	ch = *g_buf;
 	if (s_disp_status_line == 2) {	/* status was printed */
-	    if (can_home) {
+	    if (g_can_home) {
 		goto_xy(0,g_sel_last_line+1);
 		erase_line(false);
 		if (g_term_line == tc_LINES-1)
@@ -1000,8 +1000,8 @@ reinp_selector:
 		    j = g_sel_item_index;  /* -1, +1 to print */
 		} else	/* wrap around from the bottom */
 		    j = g_sel_page_item_cnt;
-		sprintf(msg,"Range: %d- ", j);
-		sel_status_msg(msg);
+		sprintf(g_msg,"Range: %d- ", j);
+		sel_status_msg(g_msg);
 		goto reinp_selector;
 	    }
 	    if (got_goto) {
@@ -1019,11 +1019,11 @@ reinp_selector:
 	j = sel_number-1;
 	if ((j < 0) || (j >= g_sel_page_item_cnt)) {
 	    dingaling();
-	    sprintf(msg, "No item %c%c on this page.", ch_num1, ch);
-	    sel_status_msg(msg);
+	    sprintf(g_msg, "No item %c%c on this page.", ch_num1, ch);
+	    sel_status_msg(g_msg);
 	    goto position_selector;
 	}
-	else if (got_goto || (SelNumGoto && !got_dash)) {
+	else if (got_goto || (g_sel_num_goto && !got_dash)) {
 	    /* (but only do always-goto if there was not a dash) */
 	    g_sel_item_index = j;
 	    goto position_selector;
@@ -1033,12 +1033,12 @@ reinp_selector:
 	    action = (g_sel_rereading? 'k' : '-');
 	else
 	    action = '+';
-    } else if (in_select && !UseSelNum) {
+    } else if (in_select && !g_use_sel_num) {
 	j = in_select - g_sel_chars;
 	if (j >= g_sel_page_item_cnt) {
 	    dingaling();
-	    sprintf(msg, "No item '%c' on this page.", ch);
-	    sel_status_msg(msg);
+	    sprintf(g_msg, "No item '%c' on this page.", ch);
+	    sel_status_msg(g_msg);
 	    goto position_selector;
 	}
 	else if (got_goto) {
@@ -1077,7 +1077,7 @@ reinp_selector:
     } else if (ch == 'm' || ch == '|') {
 	j = g_sel_item_index;
 	action = '-';
-    } else if (ch == 'M' && in_ng) {
+    } else if (ch == 'M' && g_in_ng) {
 	j = g_sel_item_index;
 	action = 'M';
     } else if (ch == '@') {
@@ -1116,8 +1116,8 @@ reinp_selector:
 	    }
 	    if (s_disp_status_line == 1) {
 		newline();
-		fputs(msg,stdout);
-		g_term_col = strlen(msg);
+		fputs(g_msg,stdout);
+		g_term_col = strlen(g_msg);
 		if (s_removed_prompt & 1) {
 		    draw_mousebar(tc_COLS,false);
 		    s_removed_prompt &= ~1;
@@ -1125,7 +1125,7 @@ reinp_selector:
 		s_disp_status_line = 2;
 	    }
 	    update_page();
-	    if (can_home)
+	    if (g_can_home)
 		goto_xy(0,g_sel_last_line);
 	    goto reask_selector;
 	  case DS_RESTART:
@@ -1138,9 +1138,9 @@ reinp_selector:
 		sel_display();
 		goto reask_selector;
 	    }
-	    sel_status_msg(msg);
+	    sel_status_msg(g_msg);
 
-	    if (!can_home)
+	    if (!g_can_home)
 		newline();
 	    if (s_removed_prompt & 2)
 		goto reask_selector;
@@ -1168,7 +1168,7 @@ reinp_selector:
 	j = 0;
     do {
 	int sel = g_sel_items[g_sel_item_index].sel;
-	if (can_home)
+	if (g_can_home)
 	    goto_xy(0,g_sel_items[g_sel_item_index].line);
 	if (action == '@') {
 	    if (sel == 2)
@@ -1208,7 +1208,7 @@ reinp_selector:
 	    break;
 	  }
 	}
-	if (can_home)
+	if (g_can_home)
 	    carriage_return();
 	fflush(stdout);
 	if (++g_sel_item_index == g_sel_page_item_cnt)
@@ -1222,25 +1222,25 @@ reinp_selector:
 static void sel_prompt()
 {
     draw_mousebar(tc_COLS,false);
-    if (can_home)
+    if (g_can_home)
 	goto_xy(0,g_sel_last_line);
 #ifdef MAILCALL
     setmail(false);
 #endif
     if (g_sel_at_end)
-	sprintf(cmd_buf, "%s [%c%c] --",
+	sprintf(g_cmd_buf, "%s [%c%c] --",
 		(!g_sel_prior_obj_cnt? "All" : "Bot"), s_end_char, s_page_char);
     else
-	sprintf(cmd_buf, "%s%ld%% [%c%c] --",
+	sprintf(g_cmd_buf, "%s%ld%% [%c%c] --",
 		(!g_sel_prior_obj_cnt? "Top " : ""),
 		(long)((g_sel_prior_obj_cnt+g_sel_page_obj_cnt)*100 / g_sel_total_obj_cnt),
 		s_page_char, s_end_char);
-    interp(buf, sizeof buf, g_mailcall);
-    sprintf(msg, "%s-- %s %s (%s%s order) -- %s", buf,
-	    g_sel_exclusive && in_ng? "SELECTED" : "Select", g_sel_mode_string,
-	    g_sel_direction<0? "reverse " : "", g_sel_sort_string, cmd_buf);
-    color_string(COLOR_CMD,msg);
-    g_term_col = strlen(msg);
+    interp(g_buf, sizeof g_buf, g_mailcall);
+    sprintf(g_msg, "%s-- %s %s (%s%s order) -- %s", g_buf,
+	    g_sel_exclusive && g_in_ng? "SELECTED" : "Select", g_sel_mode_string,
+	    g_sel_direction<0? "reverse " : "", g_sel_sort_string, g_cmd_buf);
+    color_string(COLOR_CMD,g_msg);
+    g_term_col = strlen(g_msg);
     s_removed_prompt = 0;
 }
 
@@ -1387,23 +1387,23 @@ static bool select_option(int i)
     printf("Change `%s' (%s)",g_options_ini[i].item, g_options_ini[i].help_str);
     color_pop();	/* of COLOR_CMD */
     newline();
-    *buf = '\0';
+    *g_buf = '\0';
     oldval = savestr(quote_string(option_value(i)));
     val = vals[i]? vals[i] : oldval;
     s_clean_screen = in_choice("> ", val, g_options_ini[i].help_str, 'z');
-    if (strcmp(buf,val)) {
-	char* to = buf;
-	char* from = buf;
+    if (strcmp(g_buf,val)) {
+	char* to = g_buf;
+	char* from = g_buf;
 	parse_string(&to, &from);
 	changed = true;
 	if (vals[i]) {
 	    free(vals[i]);
 	    g_selected_count--;
 	}
-	if (val != oldval && !strcmp(buf,oldval))
+	if (val != oldval && !strcmp(g_buf,oldval))
 	    vals[i] = nullptr;
 	else {
-	    vals[i] = savestr(buf);
+	    vals[i] = savestr(g_buf);
 	    g_selected_count++;
 	}
     }
@@ -1520,7 +1520,7 @@ static bool mark_DEL_as_READ(char *ptr, int arg)
 static int sel_command(char_int ch)
 {
     int ret;
-    if (can_home)
+    if (g_can_home)
 	goto_xy(0,g_sel_last_line);
     s_clean_screen = true;
     term_scrolled = 0;
@@ -1532,8 +1532,8 @@ static int sel_command(char_int ch)
 	    g_ngptr = nullptr;
     }
   do_command:
-    *buf = ch;
-    buf[1] = FINISHCMD;
+    *g_buf = ch;
+    g_buf[1] = FINISHCMD;
     output_chase_phrase = true;
     switch (ch) {
       case '>':
@@ -1593,7 +1593,7 @@ static int sel_command(char_int ch)
 	else {
 	    PUSH_SELECTOR();
 	    g_one_command = true;
-	    perform(buf, false);
+	    perform(g_buf, false);
 	    g_one_command = false;
 	    if (g_term_line != g_sel_last_line+1 || term_scrolled)
 		s_clean_screen = false;
@@ -1622,11 +1622,11 @@ static int sel_command(char_int ch)
 	else
 	    fputs("Cmd: ", stdout);
 	fflush(stdout);
-	getcmd(buf);
-	if (*buf == '\\')
+	getcmd(g_buf);
+	if (*g_buf == '\\')
 	    goto the_default;
-	if (*buf != ' ' && *buf != '\n' && *buf != '\r') {
-	    ch = *buf;
+	if (*g_buf != ' ' && *g_buf != '\n' && *g_buf != '\r') {
+	    ch = *g_buf;
 	    goto do_command;
 	}
 	if (s_clean_screen) {
@@ -1648,11 +1648,11 @@ static int sel_command(char_int ch)
 	  default:
 	    return ret;
 	}
-	strcpy(msg,"Type ? for help.");
+	strcpy(g_msg,"Type ? for help.");
 	settle_down();
 	if (s_clean_screen)
 	    return DS_STATUS;
-	printf("\n%s\n",msg);
+	printf("\n%s\n",g_msg);
 	if ((ch = another_command(1)) != '\0')
 	    goto do_command;
 	return DS_DISPLAY;
@@ -1674,7 +1674,7 @@ static bool sel_perform_change(long cnt, const char *obj_type)
 	s_clean_screen = false;
 
     if (error_occurred) {
-	print_lines(msg, NOMARKING);
+	print_lines(g_msg, NOMARKING);
 	s_clean_screen = error_occurred = false;
     }
 
@@ -1688,7 +1688,7 @@ static bool sel_perform_change(long cnt, const char *obj_type)
 	}
     }
     else if (s_disp_status_line == 1) {
-	print_lines(msg, NOMARKING);
+	print_lines(g_msg, NOMARKING);
 	s_disp_status_line = 0;
     }
 
@@ -1705,8 +1705,8 @@ static char another_command(char_int ch)
     if (ch < 0)
 	return 0;
     if (ch > 1) {
-	read_tty(buf,1);
-	ch = *buf;
+	read_tty(g_buf,1);
+	ch = *g_buf;
     }
     else
 	ch = pause_getcmd();
@@ -1743,18 +1743,18 @@ static int article_commands(char_int ch)
 	    g_selected_count = 0;
 	    deselect_item(g_sel_items[g_sel_item_index].u);
 	    select_item(g_sel_items[g_sel_item_index].u);
-	    if (!keep_the_group_static)
-		keep_the_group_static = 2;
+	    if (!g_keep_the_group_static)
+		g_keep_the_group_static = 2;
 	}
 	return DS_QUIT;
       case 'N':  case 'P':
 	return DS_QUIT;
       case 'L':
-	switch_dmode(&g_sel_art_dmode);	    /* sets msg */
+	switch_dmode(&g_sel_art_dmode);	    /* sets g_msg */
 	return DS_DISPLAY;
       case 'Y':
 	if (!g_dmcount) {
-	    strcpy(msg,"No marked articles to yank back.");
+	    strcpy(g_msg,"No marked articles to yank back.");
 	    return DS_STATUS;
 	}
 	yankback();
@@ -1788,8 +1788,8 @@ static int article_commands(char_int ch)
       reask_output:
 	in_char("Selector mode:  Threads, Subjects, Articles?", 'o', "tsa");
 	printcmd();
-	if (*buf == 'h' || *buf == 'H') {
-	    if (verbose)
+	if (*g_buf == 'h' || *g_buf == 'H') {
+	    if (g_verbose)
 		fputs("\n\
 Type t or SP to display/select thread groups (threads the group, if needed).\n\
 Type s to display/select subject groups.\n\
@@ -1805,14 +1805,14 @@ q does nothing.\n\n\
 ",stdout) FLUSH;
 	    s_clean_screen = false;
 	    goto reask_output;
-	} else if (*buf == 'q') {
-	    if (can_home)
+	} else if (*g_buf == 'q') {
+	    if (g_can_home)
 		erase_line(false);
 	    return DS_ASK;
 	}
-	if (isupper(*buf))
-	    *buf = tolower(*buf);
-	set_sel_mode(*buf);
+	if (isupper(*g_buf))
+	    *g_buf = tolower(*g_buf);
+	set_sel_mode(*g_buf);
 	count_subjects(CS_NORM);
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
@@ -1830,8 +1830,8 @@ q does nothing.\n\n\
 	    in_char("Order by Date, Subject, Count, Lines, or Points?",
                     'q', "dsclpDSCLP");
 	printcmd();
-	if (*buf == 'h' || *buf == 'H') {
-	    if (verbose) {
+	if (*g_buf == 'h' || *g_buf == 'H') {
+	    if (g_verbose) {
 		fputs("\n\
 Type d or SP to order the displayed items by date.\n\
 Type s to order the items by subject.\n\
@@ -1875,12 +1875,12 @@ q does nothing.\n\n\
 	    }
 	    s_clean_screen = false;
 	    goto reask_sort;
-	} else if (*buf == 'q') {
-	    if (can_home)
+	} else if (*g_buf == 'q') {
+	    if (g_can_home)
 		erase_line(false);
 	    return DS_ASK;
 	}
-	set_sel_sort(g_sel_mode,*buf);
+	set_sel_sort(g_sel_mode,*g_buf);
 	count_subjects(CS_NORM);
 	g_sel_page_sp = nullptr;
 	g_sel_page_app = nullptr;
@@ -1965,7 +1965,7 @@ q does nothing.\n\n\
 	return DS_QUIT;
       case 'T':
 	if (!g_threaded_group) {
-	    strcpy(msg,"Group is not threaded.");
+	    strcpy(g_msg,"Group is not threaded.");
 	    return DS_STATUS;
 	}
 	/* FALL THROUGH */
@@ -1992,15 +1992,15 @@ q does nothing.\n\n\
 	  case 'J': case 'j': case 'K':  case ',':
 	    count_subjects(g_sel_rereading? CS_NORM : CS_UNSELECT);
 	    init_pages(PRESERVE_PAGE);
-	    strcpy(msg,"Kill memorized.");
+	    strcpy(g_msg,"Kill memorized.");
 	    s_disp_status_line = 1;
 	    return DS_DISPLAY;
 	  case '+': case '.': case 'S': case 'm':
-	    strcpy(msg,"Selection memorized.");
+	    strcpy(g_msg,"Selection memorized.");
 	    s_disp_status_line = 1;
 	    return DS_UPDATE;
 	  case 'c':  case 'C':
-	    strcpy(msg,"Auto-commands cleared.");
+	    strcpy(g_msg,"Auto-commands cleared.");
 	    s_disp_status_line = 1;
 	    return DS_UPDATE;
 	  case 'q':
@@ -2008,7 +2008,7 @@ q does nothing.\n\n\
 	  case 'Q':
 	    break;
 	}
-	if (can_home)
+	if (g_can_home)
 	    erase_line(false);
 	break;
       case ';':
@@ -2058,7 +2058,7 @@ q does nothing.\n\n\
 		** depending upon whether they specified the 'r' option.
 		*/
 		g_art = g_lastart+1;
-		switch (art_search(buf, sizeof buf, false)) {
+		switch (art_search(g_buf, sizeof g_buf, false)) {
 		  case SRCH_ERROR:
 		  case SRCH_ABORT:
 		    break;
@@ -2102,7 +2102,7 @@ q does nothing.\n\n\
 	}
 	if (ch != 'N')
 	    return DS_DISPLAY;
-	if (can_home)
+	if (g_can_home)
 	    erase_line(false);
 	break;
       case 'h':
@@ -2132,7 +2132,7 @@ static int newsgroup_commands(char_int ch)
 	g_sel_page_np = nullptr;
 	return DS_RESTART;
       case 'L':
-	switch_dmode(&g_sel_grp_dmode);	    /* sets msg */
+	switch_dmode(&g_sel_grp_dmode);	    /* sets g_msg */
 	if (*g_sel_grp_dmode != 's' && !g_multirc->first->datasrc->desc_sf.hp) {
 	    newline();
 	    return DS_RESTART;
@@ -2192,16 +2192,16 @@ static int newsgroup_commands(char_int ch)
       reask_sort:
 	in_char("Order by Newsrc, Group name, or Count?", 'q', "ngcNGC");
 	printcmd();
-	switch (*buf) {
+	switch (*g_buf) {
 	  case 'n': case 'N':
 	    break;
 	  case 'g': case 'G':
-	    *buf += 's' - 'g';		/* Group name == SS_STRING */
+	    *g_buf += 's' - 'g';		/* Group name == SS_STRING */
 	    break;
 	  case 'c': case 'C':
 	    break;
 	  case 'h': case 'H':
-	    if (verbose) {
+	    if (g_verbose) {
 		fputs("\n\
 Type n or SP to order the newsgroups in the .newsrc order.\n\
 Type g to order the items by group name.\n\
@@ -2227,11 +2227,11 @@ q does nothing.\n\n\
 	    s_clean_screen = false;
 	    goto reask_sort;
 	  default:
-	    if (can_home)
+	    if (g_can_home)
 		erase_line(false);
 	    return DS_ASK;
 	}
-	set_sel_sort(g_sel_mode,*buf);
+	set_sel_sort(g_sel_mode,*g_buf);
 	g_sel_page_np = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
@@ -2270,7 +2270,7 @@ q does nothing.\n\n\
 		ngsel_perform();
 	    } else {
 		g_ngptr = nullptr;
-		switch (ng_search(buf,false)) {
+		switch (ng_search(g_buf,false)) {
 		  case NGS_ERROR:
 		  case NGS_ABORT:
 		    break;
@@ -2298,7 +2298,7 @@ q does nothing.\n\n\
 	if (g_sel_item_index < g_sel_page_item_cnt)
 	    set_ng(g_sel_items[g_sel_item_index].u.np);
 	else {
-	    strcpy(msg, "No newsgroup to catchup.");
+	    strcpy(g_msg, "No newsgroup to catchup.");
 	    s_disp_status_line = 1;
 	    return DS_UPDATE;
 	}
@@ -2312,7 +2312,7 @@ q does nothing.\n\n\
 	    return DS_DISPLAY;
 	if (ch != 'N')
 	    return DS_DISPLAY;
-	if (can_home)
+	if (g_can_home)
 	    erase_line(false);
 	break;
       case 'h':
@@ -2338,7 +2338,7 @@ q does nothing.\n\n\
 	    printf("[%s] Cmd: ", g_ngptr? g_ngptr->rcline : "*End*");
 	    fflush(stdout);
 	}
-	dfltcmd = "\\";
+	g_dfltcmd = "\\";
 	set_mode('r','n');
 	if (ch == '\\') {
 	    putchar(ch);
@@ -2417,16 +2417,16 @@ static int addgroup_commands(char_int ch)
       reask_sort:
 	in_char("Order by Natural-order, Group name, or Count?", 'q', "ngcNGC");
 	printcmd();
-	switch (*buf) {
+	switch (*g_buf) {
 	  case 'n': case 'N':
 	    break;
 	  case 'g': case 'G':
-	    *buf += 's' - 'g';		/* Group name == SS_STRING */
+	    *g_buf += 's' - 'g';		/* Group name == SS_STRING */
 	    break;
 	  case 'c': case 'C':
 	    break;
 	  case 'h': case 'H':
-	    if (verbose) {
+	    if (g_verbose) {
 		fputs("\n\
 Type n or SP to order the items in their naturally occurring order.\n\
 Type g to order the items by newsgroup name.\n\
@@ -2452,11 +2452,11 @@ q does nothing.\n\n\
 	    s_clean_screen = false;
 	    goto reask_sort;
 	  default:
-	    if (can_home)
+	    if (g_can_home)
 		erase_line(false);
 	    return DS_ASK;
 	}
-	set_sel_sort(g_sel_mode,*buf);
+	set_sel_sort(g_sel_mode,*g_buf);
 	g_sel_page_np = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
@@ -2480,7 +2480,7 @@ q does nothing.\n\n\
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
       case 'L':
-	switch_dmode(&g_sel_grp_dmode);	    /* sets msg */
+	switch_dmode(&g_sel_grp_dmode);	    /* sets g_msg */
 	if (*g_sel_grp_dmode != 's' && !g_datasrc->desc_sf.hp) {
 	    newline();
 	    return DS_RESTART;
@@ -2531,7 +2531,7 @@ q does nothing.\n\n\
 	    if (ch == ':') {
 		addgrp_sel_perform();
 	    } else {
-		switch (ng_search(buf,false)) {
+		switch (ng_search(g_buf,false)) {
 		  case NGS_ERROR:
 		  case NGS_ABORT:
 		    break;
@@ -2628,10 +2628,10 @@ static int option_commands(char_int ch)
 	s_removed_prompt = 3;
 	if (!finish_command(true))	/* get rest of command */
 	    break;
-	s = cpytill(buf,buf+1,'/');
-	for (pattern = buf; *pattern == ' '; pattern++) ;
+	s = cpytill(g_buf,g_buf+1,'/');
+	for (pattern = g_buf; *pattern == ' '; pattern++) ;
 	if ((s = compile(&g_optcompex,pattern,true,true)) != nullptr) {
-	    strcpy(msg,s);
+	    strcpy(g_msg,s);
 	    return DS_STATUS;
 	}
 	i = j = g_sel_items[g_sel_item_index].u.op;
@@ -2716,8 +2716,8 @@ static int universal_commands(char_int ch)
       reask_sort:
 	in_char("Order by Natural, or score Points?", 'q', "npNP");
 	printcmd();
-	if (*buf == 'h' || *buf == 'H') {
-	    if (verbose) {
+	if (*g_buf == 'h' || *g_buf == 'H') {
+	    if (g_verbose) {
 		fputs("\n\
 Type n or SP to order the items in the natural order.\n\
 Type p to order the items by score points.\n\
@@ -2740,13 +2740,13 @@ q does nothing.\n\n\
 	    }
 	    s_clean_screen = false;
 	    goto reask_sort;
-	} else if (*buf == 'q' ||
-		   (tolower(*buf) != 'n' && tolower(*buf) != 'p')) {
-	    if (can_home)
+	} else if (*g_buf == 'q' ||
+		   (tolower(*g_buf) != 'n' && tolower(*g_buf) != 'p')) {
+	    if (g_can_home)
 		erase_line(false);
 	    return DS_ASK;
 	}
-	set_sel_sort(g_sel_mode,*buf);
+	set_sel_sort(g_sel_mode,*g_buf);
 	sel_page_univ = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
@@ -2784,7 +2784,7 @@ static void switch_dmode(char **dmode_cpp)
 	s = "long";
 	break;
     }
-    sprintf(msg,"(%s display style)",s);
+    sprintf(g_msg,"(%s display style)",s);
     s_disp_status_line = 1;
 }
 
@@ -2825,7 +2825,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 		}
 		else {
 		    s_force_sel_pos = find_line(y);
-		    if (UseSelNum) {
+		    if (g_use_sel_num) {
 			pushchar(('0' + (s_force_sel_pos+1) % 10) | 0200);
 			pushchar(('0' + (s_force_sel_pos+1)/10) | 0200);
 		    } else {
@@ -2851,7 +2851,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 	    else {
 		int i = find_line(y);
 		if (g_sel_items[i].line != g_term_line) {
-		    if (UseSelNum) {
+		    if (g_use_sel_num) {
 			pushchar(('0' + (i+1) % 10) | 0200);
 			pushchar(('0' + (i+1) / 10) | 0200);
 		    } else {

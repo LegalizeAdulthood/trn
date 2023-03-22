@@ -82,7 +82,7 @@ bool ov_init()
     else
     {
 	has_overview_fmt = g_datasrc->over_fmt != nullptr
-			&& (tmpfp = fopen(g_datasrc->over_fmt, "r")) != nullptr;
+			&& (g_tmpfp = fopen(g_datasrc->over_fmt, "r")) != nullptr;
     }
 
     if (has_overview_fmt) {
@@ -91,20 +91,20 @@ bool ov_init()
 	fieldflags[OV_NUM] = FF_HAS_FIELD;
 	for (i = 1;;) {
 	    if (!g_datasrc->over_dir) {
-		if (nntp_gets(buf, sizeof buf) < 0)
+		if (nntp_gets(g_buf, sizeof g_buf) < 0)
 		    break;/*$$*/
-		if (nntp_at_list_end(buf))
+		if (nntp_at_list_end(g_buf))
 		    break;
 	    }
-	    else if (!fgets(buf, sizeof buf, tmpfp)) {
-		fclose(tmpfp);
+	    else if (!fgets(g_buf, sizeof g_buf, g_tmpfp)) {
+		fclose(g_tmpfp);
 		break;
 	    }
-	    if (*buf == '#')
+	    if (*g_buf == '#')
 		continue;
 	    if (i < OV_MAX_FIELDS) {
-		char *s = strchr(buf,':');
-		fieldnum[i] = ov_num(buf,s);
+		char *s = strchr(g_buf,':');
+		fieldnum[i] = ov_num(g_buf,s);
 		fieldflags[fieldnum[i]] = FF_HAS_FIELD |
 		    ((s && !strncasecmp("full",s+1,4))? FF_HAS_HDR : 0);
 		i++;
@@ -168,7 +168,7 @@ bool ov_data(ART_NUM first, ART_NUM last, bool cheating)
 {
     ART_NUM artnum, an;
     char* line;
-    char* last_buf = buf;
+    char* last_buf = g_buf;
     MEM_SIZE last_buflen = LBUFLEN;
     bool success = true;
     ART_NUM real_first = first;
@@ -209,14 +209,14 @@ beginning:
 	    success = false;
 	    goto exit;
 	}
-	if (verbose && !g_first_subject && !g_datasrc->ov_opened)
+	if (g_verbose && !g_first_subject && !g_datasrc->ov_opened)
 	    printf("\nGetting overview file."), fflush(stdout);
     }
     else if (g_datasrc->ov_opened < started_request - 60*60) {
 	ov_close();
-	if ((g_datasrc->ov_in = fopen(ov_name(ngname), "r")) == nullptr)
+	if ((g_datasrc->ov_in = fopen(ov_name(g_ngname), "r")) == nullptr)
 	    return false;
-	if (verbose && !g_first_subject)
+	if (g_verbose && !g_first_subject)
 	    printf("\nReading overview file."), fflush(stdout);
     }
     if (!g_datasrc->ov_opened) {
@@ -234,12 +234,12 @@ beginning:
     artnum = first-1;
     for (;;) {
 	if (remote) {
-	    line = nntp_get_a_line(last_buf,last_buflen,last_buf!=buf);
+	    line = nntp_get_a_line(last_buf,last_buflen,last_buf!=g_buf);
 	    if (nntp_at_list_end(line))
 		break;
 	    line_cnt++;
 	}
-	else if (!(line = get_a_line(last_buf,last_buflen,last_buf!=buf,g_datasrc->ov_in)))
+	else if (!(line = get_a_line(last_buf,last_buflen,last_buf!=g_buf,g_datasrc->ov_in)))
 	    break;
 
 	last_buf = line;
@@ -328,7 +328,7 @@ beginning:
 	g_cached_all_in_range = true;
     }
     setspin(SPIN_POP);
-    if (last_buf != buf)
+    if (last_buf != g_buf)
 	free(last_buf);
     return success;
 }
@@ -448,14 +448,14 @@ static const char *ov_name(const char *group)
 {
     char* cp;
 
-    strcpy(buf, g_datasrc->over_dir);
-    cp = buf + strlen(buf);
+    strcpy(g_buf, g_datasrc->over_dir);
+    cp = g_buf + strlen(g_buf);
     *cp++ = '/';
     strcpy(cp, group);
     while ((cp = strchr(cp, '.')))
 	*cp = '/';
-    strcat(buf, OV_FILE_NAME);
-    return buf;
+    strcat(g_buf, OV_FILE_NAME);
+    return g_buf;
 }
 
 void ov_close()
@@ -484,13 +484,13 @@ char *ov_field(ARTICLE *ap, int num)
 	return nullptr;
 
     if (fn == OV_NUM) {
-	sprintf(cmd_buf, "%ld", (long)ap->num);
-	return cmd_buf;
+	sprintf(g_cmd_buf, "%ld", (long)ap->num);
+	return g_cmd_buf;
     }
 
     if (fn == OV_DATE) {
-	sprintf(cmd_buf, "%ld", (long)ap->date);
-	return cmd_buf;
+	sprintf(g_cmd_buf, "%ld", (long)ap->date);
+	return g_cmd_buf;
     }
 
     s = get_cached_line(ap, s_hdrnum[fn], true);

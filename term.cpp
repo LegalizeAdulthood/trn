@@ -357,12 +357,12 @@ void term_set(char *tcbuf)
 # endif
 #endif
     if (!*tc_UP)			/* no UP string? */
-	marking = 0;			/* disable any marking */
+	g_marking = 0;			/* disable any marking */
     if (*tc_CM || *tc_HO)
-	can_home = true;
-    if (!*tc_CD || !can_home)		/* can we CE, CD, and home? */
-	erase_each_line = false;	/*  no, so disable use of clear eol */
-    if (muck_up_clear)			/* this is for weird HPs */
+	g_can_home = true;
+    if (!*tc_CD || !g_can_home)		/* can we CE, CD, and home? */
+	g_erase_each_line = false;	/*  no, so disable use of clear eol */
+    if (g_muck_up_clear)			/* this is for weird HPs */
 	tc_CL = nullptr;
     s_leftcost = strlen(tc_BC);
     s_upcost = strlen(tc_UP);
@@ -373,10 +373,10 @@ void term_set(char *tcbuf)
     line_col_calcs();
     noecho();				/* turn off echo */
     crmode();				/* enter cbreak mode */
-    sprintf(buf, "%d", tc_LINES);
-    s_lines_export = export_var("LINES",buf);
-    sprintf(buf, "%d", tc_COLS);
-    s_cols_export = export_var("COLUMNS",buf);
+    sprintf(g_buf, "%d", tc_LINES);
+    s_lines_export = export_var("LINES",g_buf);
+    sprintf(g_buf, "%d", tc_COLS);
+    s_cols_export = export_var("COLUMNS",g_buf);
 
     mac_init(tcbuf);
 }
@@ -455,7 +455,7 @@ void arrow_macros(char *tmpbuf)
     strcpy(lbuf,Tgetstr("ku"));		/* up */
 #endif
     if ((int)strlen(lbuf) > 1)
-	set_macro(lbuf,up[auto_arrow_macros]);
+	set_macro(lbuf,up[g_auto_arrow_macros]);
 
 #ifdef MSDOS
     strcpy(lbuf,"\035\120");
@@ -463,7 +463,7 @@ void arrow_macros(char *tmpbuf)
     strcpy(lbuf,Tgetstr("kd"));		/* down */
 #endif
     if ((int)strlen(lbuf) > 1)
-	set_macro(lbuf,down[auto_arrow_macros]);
+	set_macro(lbuf,down[g_auto_arrow_macros]);
 
 #ifdef MSDOS
     strcpy(lbuf,"\035\113");
@@ -471,7 +471,7 @@ void arrow_macros(char *tmpbuf)
     strcpy(lbuf,Tgetstr("kl"));		/* left */
 #endif
     if ((int)strlen(lbuf) > 1)
-	set_macro(lbuf,left[auto_arrow_macros]);
+	set_macro(lbuf,left[g_auto_arrow_macros]);
 
 #ifdef MSDOS
     strcpy(lbuf,"\035\115");
@@ -479,7 +479,7 @@ void arrow_macros(char *tmpbuf)
     strcpy(lbuf,Tgetstr("kr"));		/* right */
 #endif
     if ((int)strlen(lbuf) > 1)
-	set_macro(lbuf,right[auto_arrow_macros]);
+	set_macro(lbuf,right[g_auto_arrow_macros]);
 
     if (*lbuf == '\033')
 	set_macro("\033\033", "\033");
@@ -490,15 +490,15 @@ static void mac_init(char *tcbuf)
 {
     char tmpbuf[1024];
 
-    if (auto_arrow_macros)
+    if (g_auto_arrow_macros)
 	arrow_macros(tmpbuf);
-    if (!use_threads
-     || (tmpfp = fopen(filexp(get_val("TRNMACRO",TRNMACRO)),"r")) == nullptr)
-	tmpfp = fopen(filexp(get_val("RNMACRO",RNMACRO)),"r");
-    if (tmpfp) {
-	while (fgets(tcbuf,TCBUF_SIZE,tmpfp) != nullptr)
+    if (!g_use_threads
+     || (g_tmpfp = fopen(filexp(get_val("TRNMACRO",TRNMACRO)),"r")) == nullptr)
+	g_tmpfp = fopen(filexp(get_val("RNMACRO",RNMACRO)),"r");
+    if (g_tmpfp) {
+	while (fgets(tcbuf,TCBUF_SIZE,g_tmpfp) != nullptr)
 	    mac_line(tcbuf,tmpbuf,sizeof tmpbuf);
-	fclose(tmpfp);
+	fclose(g_tmpfp);
     }
 }
 
@@ -609,24 +609,24 @@ static void show_keymap(KEYMAP *curmap, char *prefix)
 	    else
 		sprintf(next,"%c",i);
 	    if ((kt >> KM_GSHIFT) & KM_GMASK) {
-		sprintf(cmd_buf,"+%d", (kt >> KM_GSHIFT) & KM_GMASK);
-		strcat(next,cmd_buf);
+		sprintf(g_cmd_buf,"+%d", (kt >> KM_GSHIFT) & KM_GMASK);
+		strcat(next,g_cmd_buf);
 	    }
 	    switch (kt & KM_TMASK) {
 	      case KM_NOTHIN:
-		sprintf(cmd_buf,"%s	%c\n",prefix,i);
-		print_lines(cmd_buf, NOMARKING);
+		sprintf(g_cmd_buf,"%s	%c\n",prefix,i);
+		print_lines(g_cmd_buf, NOMARKING);
 		break;
 	      case KM_KEYMAP:
 		show_keymap(curmap->km_ptr[i].km_km, prefix);
 		break;
 	      case KM_STRING:
-		sprintf(cmd_buf,"%s	%s\n",prefix,curmap->km_ptr[i].km_str);
-		print_lines(cmd_buf, NOMARKING);
+		sprintf(g_cmd_buf,"%s	%s\n",prefix,curmap->km_ptr[i].km_str);
+		print_lines(g_cmd_buf, NOMARKING);
 		break;
 	      case KM_BOGUS:
-		sprintf(cmd_buf,"%s	BOGUS\n",prefix);
-		print_lines(cmd_buf, STANDOUT);
+		sprintf(g_cmd_buf,"%s	BOGUS\n",prefix);
+		print_lines(g_cmd_buf, STANDOUT);
 		break;
 	    }
 	}
@@ -635,9 +635,9 @@ static void show_keymap(KEYMAP *curmap, char *prefix)
 
 void set_mode(char_int new_gmode, char_int new_mode)
 {
-    if (gmode != new_gmode || mode != new_mode) {
-	gmode = new_gmode;
-	mode = new_mode;
+    if (g_general_mode != new_gmode || g_mode != new_mode) {
+	g_general_mode = new_gmode;
+	g_mode = new_mode;
 	xmouse_check();
     }
 }
@@ -711,22 +711,22 @@ int buflimit = LBUFLEN;
 bool finish_command(int donewline)
 {
     char* s;
-    char gmode_save = gmode;
+    char gmode_save = g_general_mode;
 
-    s = buf;
+    s = g_buf;
     if (s[1] != FINISHCMD)		/* someone faking up a command? */
 	return true;
-    set_mode('i',mode);
+    set_mode('i',g_mode);
     if (not_echoing)
 	not_echoing = 2;
     do {
-	s = edit_buf(s, buf);
-	if (s == buf) {			/* entire string gone? */
+	s = edit_buf(s, g_buf);
+	if (s == g_buf) {			/* entire string gone? */
 	    fflush(stdout);		/* return to single char command mode */
-	    set_mode(gmode_save,mode);
+	    set_mode(gmode_save,g_mode);
 	    return false;
 	}
-	if (s - buf == buflimit)
+	if (s - g_buf == buflimit)
 	    break;
 	fflush(stdout);
 	getcmd(s);
@@ -742,7 +742,7 @@ bool finish_command(int donewline)
     if (donewline)
 	newline();
 
-    set_mode(gmode_save,mode);
+    set_mode(gmode_save,g_mode);
     return true;			/* retrn success */
 }
 
@@ -764,14 +764,14 @@ static int echo_char(char_int ch)
 
 static bool screen_is_dirty; /*$$ remove this? */
 
-/* Process the character *s in the buffer buf returning the new 's' */
+/* Process the character *s in the buffer g_buf returning the new 's' */
 
 char *edit_buf(char *s, char *cmd)
 {
     static bool quoteone = false;
     if (quoteone) {
 	quoteone = false;
-	if (s != buf)
+	if (s != g_buf)
 	    goto echo_it;
     }
     if (*s == '\033') {		/* substitution desired? */
@@ -790,21 +790,21 @@ char *edit_buf(char *s, char *cmd)
 	}
 	else if (tmpbuf[1] == '\033') {
 	    *s = '\0';
-	    cpybuf = savestr(buf);
-	    interpsearch(buf, sizeof buf, cpybuf, cmd);
+	    cpybuf = savestr(g_buf);
+	    interpsearch(g_buf, sizeof g_buf, cpybuf, cmd);
 	    free(cpybuf);
-	    s = buf + strlen(buf);
+	    s = g_buf + strlen(g_buf);
 	    reprint();
 	}
 	else {
-	    interpsearch(s, sizeof buf - (s-buf), tmpbuf, cmd);
+	    interpsearch(s, sizeof g_buf - (s-g_buf), tmpbuf, cmd);
 	    fputs(s,stdout);
 	    s += strlen(s);
 	}
 	return s;
     }
     else if (*s == ERASECH) {		/* they want to rubout a char? */
-	if (s != buf) {
+	if (s != g_buf) {
 	    rubout();
 	    s--;			/* discount the char rubbed out */
 	    if (!at_norm_char(s))
@@ -813,7 +813,7 @@ char *edit_buf(char *s, char *cmd)
 	return s;
     }
     else if (*s == KILLCH) {		/* wipe out the whole line? */
-	while (s != buf) {		/* emulate that many ERASEs */
+	while (s != g_buf) {		/* emulate that many ERASEs */
 	    rubout();
 	    s--;
 	    if (!at_norm_char(s))
@@ -822,15 +822,15 @@ char *edit_buf(char *s, char *cmd)
 	return s;
     }
     else if (*s == Ctl('w')) {		/* wipe out one word? */
-	if (s == buf)
+	if (s == g_buf)
 	    return s;
 	*s-- = ' ';
 	while (!isspace(*s) || isspace(s[1])) {
 	    rubout();
 	    if (!at_norm_char(s))
 		rubout();
-	    if (s == buf)
-		return buf;
+	    if (s == g_buf)
+		return g_buf;
 	    s--;
 	}
 	return s+1;
@@ -883,7 +883,7 @@ void eat_typeahead()
     s_got_a_char = false;
 
     /* cancel only keyboard stuff */
-    if (!allow_typeahead && !mouse_is_down && !macro_pending()
+    if (!g_allow_typeahead && !mouse_is_down && !macro_pending()
      && this_time - last_time > 0.3) {
 #ifdef PENDING
 	KEYMAP* curmap = s_topmap;
@@ -891,14 +891,14 @@ void eat_typeahead()
 	int i, j;
 	for (j = 0; input_pending(); ) {
 	    errno = 0;
-	    if (read_tty(&buf[j],1) < 0) {
+	    if (read_tty(&g_buf[j],1) < 0) {
 		if (errno && errno != EINTR) {
-		    perror(readerr);
+		    perror(g_readerr);
 		    sig_catcher(0);
 		}
 		continue;
 	    }
-	    lc = *(Uchar*)buf;
+	    lc = *(Uchar*)g_buf;
 	    if ((lc & 0200) || curmap == nullptr) {
 		curmap = s_topmap;
 		j = 0;
@@ -908,7 +908,7 @@ void eat_typeahead()
 	    for (i = (curmap->km_type[lc] >> KM_GSHIFT) & KM_GMASK; i; i--) {
 		if (!input_pending())
 		    goto dbl_break;
-		read_tty(&buf[j++],1);
+		read_tty(&g_buf[j++],1);
 	    }
 
 	    switch (curmap->km_type[lc] & KM_TMASK) {
@@ -925,8 +925,8 @@ void eat_typeahead()
       dbl_break:
 	if (j) {
 	    /* Don't delete a partial macro sequence */
-	    buf[j] = '\0';
-	    pushstring(buf,0);
+	    g_buf[j] = '\0';
+	    pushstring(g_buf,0);
 	}
 #else /* this is probably v7 */
 # ifdef I_SGTTY
@@ -1115,7 +1115,7 @@ void getcmd(char *whatbuf)
 
 tryagain:
     curmap = s_topmap;
-    no_macros = (whatbuf != buf && !xmouse_is_on); 
+    no_macros = (whatbuf != g_buf && !xmouse_is_on); 
     for (;;) {
 	g_int_count = 0;
 	errno = 0;
@@ -1131,7 +1131,7 @@ tryagain:
 #endif
 		return;
 	    }
-	    perror(readerr);
+	    perror(g_readerr);
 	    sig_catcher(0);
 	}
 	lastchar = *(Uchar*)whatbuf;
@@ -1177,7 +1177,7 @@ got_canonical:
     if (*whatbuf == '\r')
 	*whatbuf = '\n';
 #endif
-    if (whatbuf == buf)
+    if (whatbuf == g_buf)
 	whatbuf[1] = FINISHCMD;		/* tell finish_command to work */
 #ifdef SIGALRM
     (void) alarm(0);
@@ -1199,12 +1199,12 @@ void pushstring(char *str, char_int bits)
 int get_anything()
 {
     char tmpbuf[64];
-    char mode_save = mode;
+    char mode_save = g_mode;
 
 reask_anything:
     unflush_output();			/* disable any ^O in effect */
     color_object(COLOR_MORE, true);
-    if (verbose)
+    if (g_verbose)
 	fputs("[Type space to continue] ",stdout);
     else
 	fputs("[MORE] ",stdout);
@@ -1214,15 +1214,15 @@ reask_anything:
     if (g_int_count)
 	return -1;
     cache_until_key();
-    set_mode(gmode, 'K');
+    set_mode(g_general_mode, 'K');
     getcmd(tmpbuf);
-    set_mode(gmode,mode_save);
+    set_mode(g_general_mode,mode_save);
     if (errno || *tmpbuf == '\f') {
 	newline();			/* if return from stop signal */
 	goto reask_anything;		/* give them a prompt again */
     }
     if (*tmpbuf == 'h') {
-	if (verbose)
+	if (g_verbose)
 	    fputs("\nType q to quit or space to continue.\n",stdout) FLUSH;
 	else
 	    fputs("\nq to quit, space to continue.\n",stdout) FLUSH;
@@ -1239,7 +1239,7 @@ reask_anything:
     }
     else {
 	page_line = 1;
-	if (erase_screen)		/* -e? */
+	if (g_erase_screen)		/* -e? */
 	    clear();			/* clear screen */
 	else
 	    erase_line(false);		/* erase the prompt */
@@ -1249,11 +1249,11 @@ reask_anything:
 
 int pause_getcmd()
 {
-    char mode_save = mode;
+    char mode_save = g_mode;
 
     unflush_output();			/* disable any ^O in effect */
     color_object(COLOR_CMD, true);
-    if (verbose)
+    if (g_verbose)
 	fputs("[Type space or a command] ",stdout);
     else
 	fputs("[CMD] ",stdout);
@@ -1263,22 +1263,22 @@ int pause_getcmd()
     if (g_int_count)
 	return -1;
     cache_until_key();
-    set_mode(gmode,'K');
-    getcmd(buf);
-    set_mode(gmode,mode_save);
-    if (errno || *buf == '\f')
+    set_mode(g_general_mode,'K');
+    getcmd(g_buf);
+    set_mode(g_general_mode,mode_save);
+    if (errno || *g_buf == '\f')
 	return 0;			/* if return from stop signal */
-    if (*buf != ' ') {
+    if (*g_buf != ' ') {
 	erase_line(false);	/* erase the prompt */
-	return *buf;
+	return *g_buf;
     }
     return 0;
 }
 
 void in_char(const char *prompt, char_int newmode, const char *dflt)
 {
-    char mode_save = mode;
-    char gmode_save = gmode;
+    char mode_save = g_mode;
+    char gmode_save = g_general_mode;
     const char* s;
     int newlines;
 
@@ -1294,19 +1294,19 @@ reask_in_char:
     termdown(newlines);
     eat_typeahead();
     set_mode('p',newmode);
-    getcmd(buf);
-    if (errno || *buf == '\f') {
+    getcmd(g_buf);
+    if (errno || *g_buf == '\f') {
 	newline();			/* if return from stop signal */
 	goto reask_in_char;		/* give them a prompt again */
     }
-    setdef(buf,dflt);
+    setdef(g_buf,dflt);
     set_mode(gmode_save,mode_save);
 }
 
 void in_answer(const char *prompt, char_int newmode)
 {
-    char mode_save = mode;
-    char gmode_save = gmode;
+    char mode_save = g_mode;
+    char gmode_save = g_general_mode;
 
 reask_in_answer:
     unflush_output();			/* disable any ^O in effect */
@@ -1315,19 +1315,19 @@ reask_in_answer:
     eat_typeahead();
     set_mode('i',newmode);
 reinp_in_answer:
-    getcmd(buf);
-    if (errno || *buf == '\f') {
+    getcmd(g_buf);
+    if (errno || *g_buf == '\f') {
 	newline();			/* if return from stop signal */
 	goto reask_in_answer;		/* give them a prompt again */
     }
-    if (*buf == ERASECH)
+    if (*g_buf == ERASECH)
 	goto reinp_in_answer;
-    if (*buf != '\n' && *buf != ' ') {
+    if (*g_buf != '\n' && *g_buf != ' ') {
 	if (!finish_command(false))
 	    goto reinp_in_answer;
     }
     else
-	buf[1] = '\0';
+	g_buf[1] = '\0';
     newline();
     set_mode(gmode_save,mode_save);
 }
@@ -1336,8 +1336,8 @@ reinp_in_answer:
 
 bool in_choice(const char *prompt, char *value, char *choices, char_int newmode)
 {
-    char mode_save = mode;
-    char gmode_save = gmode;
+    char mode_save = g_mode;
+    char gmode_save = g_general_mode;
     char* bp;
     char* s;
     char* prefix = nullptr;
@@ -1383,19 +1383,19 @@ bool in_choice(const char *prompt, char *value, char *choices, char_int newmode)
     cp = s;
     *s++ = '\0';
     *s = '\0';
-    strcpy(buf,value);
+    strcpy(g_buf,value);
 
 reask_in_choice:
-    len = strlen(buf);
-    bp = buf;
+    len = strlen(g_buf);
+    bp = g_buf;
     if (*prefixes != '\0') {
 	s = prefix;
 	for (prefix = prefixes; *prefix; prefix += strlen(prefix)) {
-	    if (*prefix == *buf)
+	    if (*prefix == *g_buf)
 		break;
 	}
 	if (*prefix) {
-	    for (bp = buf; *bp && *bp != ' '; bp++) ;
+	    for (bp = g_buf; *bp && *bp != ' '; bp++) ;
 	    while (*bp == ' ') bp++;
 	}
 	else
@@ -1412,7 +1412,7 @@ reask_in_choice:
 	if (!*cp)
 	    cp = tmpbuf;
 	if (*cp == '<'
-	 && (*buf == '<' || cp[1] != '#' || isdigit(*buf) || !*s)) {
+	 && (*g_buf == '<' || cp[1] != '#' || isdigit(*g_buf) || !*s)) {
 	    prefix = nullptr;
 	    break;
 	}
@@ -1430,33 +1430,33 @@ reask_in_choice:
     }
 
     if (*cp == '<') {
-	if (*buf == '<' || cp[1] == '#') {
+	if (*g_buf == '<' || cp[1] == '#') {
 	    if (number_was >= 0)
-		sprintf(buf, "%d", number_was);
+		sprintf(g_buf, "%d", number_was);
 	    else {
-		for (s = buf; isdigit(*s); s++) ;
+		for (s = g_buf; isdigit(*s); s++) ;
 		*s = '\0';
 	    }
 	}
     }
     else {
 	if (prefix) {
-	    sprintf(buf, "%s ", prefix);
-	    strcat(buf,cp);
+	    sprintf(g_buf, "%s ", prefix);
+	    strcat(g_buf,cp);
 	}
 	else
-	    strcpy(buf,cp);
+	    strcpy(g_buf,cp);
     }
-    s = buf + strlen(buf);
+    s = g_buf + strlen(g_buf);
     carriage_return();
     erase_line(false);
     fputs(prompt,stdout);
-    fputs(buf,stdout);
+    fputs(g_buf,stdout);
     len = strlen(prompt);
     number_was = -1;
 
 reinp_in_choice:
-    if ((s-buf) + len >= tc_COLS)
+    if ((s-g_buf) + len >= tc_COLS)
 	screen_is_dirty = true;
     fflush(stdout);
     getcmd(s);
@@ -1464,14 +1464,14 @@ reinp_in_choice:
 	*s = '\n';
     if (*s != '\n') {
 	char ch = *s;
-	if (*cp == '<' && ch != '\t' && (ch != ' ' || buf != s)) {
+	if (*cp == '<' && ch != '\t' && (ch != ' ' || g_buf != s)) {
 	    if (cp[1] == '#') {
 		s = edit_buf(s, nullptr);
-		if (s != buf) {
+		if (s != g_buf) {
 		    if (isdigit(s[-1]))
 			goto reinp_in_choice;
 		    else
-			number_was = atoi(buf);
+			number_was = atoi(g_buf);
 		}
 	    }
 	    else {
@@ -1480,25 +1480,25 @@ reinp_in_choice:
 	    }
 	}
 	*s = '\0';
-	for (s = buf; *s && *s != ' '; s++) ;
+	for (s = g_buf; *s && *s != ' '; s++) ;
 	if (*s == ' ') s++;
 	if (ch == ' ' || ch == '\t') {
 	    if (prefix)
 		*s = '\0';
 	    else
-		*buf = '\0';
+		*g_buf = '\0';
 	}
 	else {
-	    char ch1 = buf[0];
+	    char ch1 = g_buf[0];
 	    if (prefix) {
 		if (ch == ch1)
 		    ch = *s;
 		else {
 		    ch1 = ch;
-		    ch = buf[0];
+		    ch = g_buf[0];
 		}
 	    }
-	    sprintf(buf,"%c %c",ch == ERASECH || ch == KILLCH? '<' : ch, ch1);
+	    sprintf(g_buf,"%c %c",ch == ERASECH || ch == KILLCH? '<' : ch, ch1);
 	}
 	goto reask_in_choice;
     }
@@ -1519,14 +1519,14 @@ int print_lines(const char *what_to_print, int hilite)
 	    return i;
 	if (hilite == STANDOUT) {
 #ifdef NOFIREWORKS
-	    if (erase_screen)
+	    if (g_erase_screen)
 		no_sofire();
 #endif
 	    standout();
 	}
 	else if (hilite == UNDERLINE) {
 #ifdef NOFIREWORKS
-	    if (erase_screen)
+	    if (g_erase_screen)
 		no_ulfire();
 #endif
 	    underline();
@@ -1586,7 +1586,7 @@ int check_page_line()
 void page_start()
 {
     page_line = 1;
-    if (erase_screen)
+    if (g_erase_screen)
 	clear();
     else
 	newline();
@@ -1594,9 +1594,9 @@ void page_start()
 
 void errormsg(const char *str)
 {
-    if (gmode == 's') {
-	if (str != msg)
-	    strcpy(msg,str);
+    if (g_general_mode == 's') {
+	if (str != g_msg)
+	    strcpy(g_msg,str);
 	error_occurred = true;
     }
     else if (*str) {
@@ -1607,7 +1607,7 @@ void errormsg(const char *str)
 
 void warnmsg(const char *str)
 {
-    if (gmode != 's') {
+    if (g_general_mode != 's') {
 	printf("\n%s\n", str) FLUSH;
 	termdown(2);
 	pad(just_a_sec/3);
@@ -1627,15 +1627,15 @@ void pad(int num)
 
 void printcmd()
 {
-    if (verify && buf[1] == FINISHCMD) {
-	if (!at_norm_char(buf)) {
+    if (g_verify && g_buf[1] == FINISHCMD) {
+	if (!at_norm_char(g_buf)) {
 	    putchar('^');
-	    putchar((*buf & 0x7F) | 64);
+	    putchar((*g_buf & 0x7F) | 64);
 	    backspace();
 	    backspace();
 	}
 	else {
-	    putchar(*buf);
+	    putchar(*g_buf);
 	    backspace();
 	}
 	fflush(stdout);
@@ -1655,7 +1655,7 @@ void reprint()
 
     fputs("^R\n",stdout) FLUSH;
     termdown(1);
-    for (s = buf; *s; s++)
+    for (s = g_buf; *s; s++)
 	echo_char(*s);
     screen_is_dirty = true;
 }
@@ -1713,7 +1713,7 @@ void goto_xy(int to_col, int to_line)
 
     if (g_term_col == to_col && g_term_line == to_line)
 	return;
-    if (*tc_CM && !muck_up_clear) {
+    if (*tc_CM && !g_muck_up_clear) {
 	str = tgoto(tc_CM,to_col,to_line);
 	cmcost = strlen(str);
     } else {
@@ -1761,24 +1761,24 @@ void goto_xy(int to_col, int to_line)
 static void line_col_calcs()
 {
     if (tc_LINES > 0) {		/* is this a crt? */
-	if (!initlines || !g_option_def_vals[OI_INITIAL_ARTICLE_LINES]) {
-	    /* no -i or unreasonable value for initlines */
+	if (!g_initlines || !g_option_def_vals[OI_INITIAL_ARTICLE_LINES]) {
+	    /* no -i or unreasonable value for g_initlines */
 	    if (outspeed >= B9600) 	/* whole page at >= 9600 baud */
-		initlines = tc_LINES;
+		g_initlines = tc_LINES;
 	    else if (outspeed >= B4800)	/* 16 lines at 4800 */
-		initlines = 16;
+		g_initlines = 16;
 	    else			/* otherwise just header */
-		initlines = 8;
+		g_initlines = 8;
 	}
-	/* Check for initlines bigger than the screen and fix it! */
-	if (initlines > tc_LINES)
-	    initlines = tc_LINES;
+	/* Check for g_initlines bigger than the screen and fix it! */
+	if (g_initlines > tc_LINES)
+	    g_initlines = tc_LINES;
     }
     else {				/* not a crt */
 	tc_LINES = 30000;		/* so don't page */
 	tc_CL = "\n\n";			/* put a couple of lines between */
-	if (!initlines || !g_option_def_vals[OI_INITIAL_ARTICLE_LINES])
-	    initlines = 8;		/* make initlines reasonable */
+	if (!g_initlines || !g_option_def_vals[OI_INITIAL_ARTICLE_LINES])
+	    g_initlines = 8;		/* make g_initlines reasonable */
     }
     if (tc_COLS <= 0)
 	tc_COLS = 80;
@@ -1803,7 +1803,7 @@ int dummy;
 		line_col_calcs();
 		sprintf(s_lines_export, "%d", tc_LINES);
 		sprintf(s_cols_export, "%d", tc_COLS);
-		if (gmode == 's' || mode == 'a' || mode == 'p') {
+		if (g_general_mode == 's' || g_mode == 'a' || g_mode == 'p') {
 		    forceme("\f");	/* cause a refresh */
 					/* (defined only if TIOCSTI defined) */
 		}
@@ -1857,12 +1857,12 @@ void termlib_reset()
 void xmouse_init(const char *progname)
 {
     char* s;
-    if (!can_home || !use_threads)
+    if (!g_can_home || !g_use_threads)
 	return;
     s = getenv("XTERMMOUSE");
     if (s && *s) {
-	interp(msg, sizeof msg, s);
-	set_option(OI_USE_MOUSE, msg);
+	interp(g_msg, sizeof g_msg, s);
+	set_option(OI_USE_MOUSE, g_msg);
     }
     else if (progname[strlen(progname)-1] == 'x') {
 	/* an 'x' at the end means enable Xterm mouse tracking */
@@ -1873,51 +1873,51 @@ void xmouse_init(const char *progname)
 void xmouse_check()
 {
     mousebar_cnt = 0;
-    if (UseMouse) {
+    if (g_use_mouse) {
 	bool turn_it_on;
-	char mmode = mode;
-	if (gmode == 'p') {
+	char mmode = g_mode;
+	if (g_general_mode == 'p') {
 	    turn_it_on = true;
 	    mmode = '\0';
 	}
-	else if (gmode == 'i' || gmode == 'p'
-	      || (muck_up_clear && gmode != 's'))
+	else if (g_general_mode == 'i' || g_general_mode == 'p'
+	      || (g_muck_up_clear && g_general_mode != 's'))
 	    turn_it_on = false;
 	else {
-	    interp(msg, sizeof msg, MouseModes);
-	    turn_it_on = (strchr(msg, mode) != nullptr);
+	    interp(g_msg, sizeof g_msg, g_mouse_modes);
+	    turn_it_on = (strchr(g_msg, g_mode) != nullptr);
 	}
 	if (turn_it_on) {
 	    char* s;
 	    int i, j;
 	    switch (mmode) {
 	      case 'c':
-		mousebar_btns = NewsrcSelBtns;
-		mousebar_cnt = NewsrcSelBtnCnt;
+		mousebar_btns = g_newsrc_sel_btns;
+		mousebar_cnt = g_newsrc_sel_btn_cnt;
 		break;
 	      case 'j':
-		mousebar_btns = AddSelBtns;
-		mousebar_cnt = AddSelBtnCnt;
+		mousebar_btns = g_add_sel_btns;
+		mousebar_cnt = g_add_sel_btn_cnt;
 		break;
 	      case 'l':
-		mousebar_btns = OptionSelBtns;
-		mousebar_cnt = OptionSelBtnCnt;
+		mousebar_btns = g_option_sel_btns;
+		mousebar_cnt = g_option_sel_btn_cnt;
 		break;
 	      case 't':
-		mousebar_btns = NewsSelBtns;
-		mousebar_cnt = NewsSelBtnCnt;
+		mousebar_btns = g_news_sel_btns;
+		mousebar_cnt = g_news_sel_btn_cnt;
 		break;
 	      case 'w':
-		mousebar_btns = NewsgroupSelBtns;
-		mousebar_cnt = NewsgroupSelBtnCnt;
+		mousebar_btns = g_newsgroup_sel_btns;
+		mousebar_cnt = g_newsgroup_sel_btn_cnt;
 		break;
 	      case 'a':  case 'p':
-		mousebar_btns = ArtPagerBtns;
-		mousebar_cnt = ArtPagerBtnCnt;
+		mousebar_btns = g_art_pager_btns;
+		mousebar_cnt = g_art_pager_btn_cnt;
 		break;
 	      case 'v':
-		mousebar_btns = UnivSelBtns;
-		mousebar_cnt = UnivSelBtnCnt;
+		mousebar_btns = g_univ_sel_btns;
+		mousebar_cnt = g_univ_sel_btn_cnt;
 		break;
 	      default:
 		mousebar_btns = "";
@@ -1979,7 +1979,7 @@ void draw_mousebar(int limit, bool restore_cursor)
 	return;
 
     s = mousebar_btns;
-    t = msg;
+    t = g_msg;
     for (i = 0; i < mousebar_cnt; i++) {
 	if (*s == '[') {
 	    while (*++s) *t++ = *s;
@@ -2007,10 +2007,10 @@ void draw_mousebar(int limit, bool restore_cursor)
 	s += strlen(s) + 1;
 	*t++ = '\0';
     }
-    mousebar_width = t - msg;
+    mousebar_width = t - g_msg;
     mousebar_start = 0;
 
-    s = msg;
+    s = g_msg;
     while (mousebar_width > limit) {
 	int len = strlen(s) + 1;
 	s += len;
@@ -2062,9 +2062,9 @@ static void mouse_input(const char *cp)
 	mouse_is_down = false;
     }
 
-    if (gmode == 's')
+    if (g_general_mode == 's')
 	selector_mouse(btn, x,y, last_btn, last_x,last_y);
-    else if (mode == 'a' || mode == 'p')
+    else if (g_mode == 'a' || g_mode == 'p')
 	pager_mouse(btn, x,y, last_btn, last_x,last_y);
     else
 	pushchar(' ');

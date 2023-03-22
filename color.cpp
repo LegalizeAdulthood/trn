@@ -87,7 +87,7 @@ static int stack_pointer = 0;
 /* Initialize color support after trnrc is read. */
 void color_init()
 {
-    if (use_colors) {
+    if (g_use_colors) {
 	char* fg;
 	char* bg;
 	int i;
@@ -167,17 +167,17 @@ void color_rc_attribute(const char *object, char *value)
     }
 
     /* We have both colors and attributes, so turn colors on. */
-    use_colors = true;
+    g_use_colors = true;
 
     /* Parse the foreground color. */
     if (*s == '-')
 	objects[i].fg = nullptr;
     else {
-	sprintf(buf, "fg %s", s);
-	objects[i].fg = tc_color_capability(buf);
+	sprintf(g_buf, "fg %s", s);
+	objects[i].fg = tc_color_capability(g_buf);
 	if (objects[i].fg == nullptr) {
 	    fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
-		    buf, object);
+		    g_buf, object);
 	    finalize(1);
 	}
     }
@@ -202,11 +202,11 @@ void color_rc_attribute(const char *object, char *value)
     if (*s == '-')
 	objects[i].bg = nullptr;
     else {
-	sprintf(buf, "bg %s", s);
-	objects[i].bg = tc_color_capability(buf);
+	sprintf(g_buf, "bg %s", s);
+	objects[i].bg = tc_color_capability(g_buf);
 	if (objects[i].bg == nullptr) {
 	    fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
-		    buf, object);
+		    g_buf, object);
 	    finalize(1);
 	}
     }
@@ -259,12 +259,12 @@ void color_string(int object, const char *str)
 {
     int len = strlen(str);
     if (str[len-1] == '\n') {
-	strcpy(msg, str);
-	msg[len-1] = '\0';
-	str = msg;
+	strcpy(g_msg, str);
+	g_msg[len-1] = '\0';
+	str = g_msg;
 	len = 0;
     }
-    if (!use_colors && *tc_UC && objects[object].attr == UNDERLINE)
+    if (!g_use_colors && *tc_UC && objects[object].attr == UNDERLINE)
 	underprint(str);	/* hack for stupid terminals */
     else {
 	color_object(object, true);
@@ -293,7 +293,7 @@ static void output_color()
 	return;
 
     /* Start by turning off any existing colors and/or attributes. */
-    if (use_colors) {
+    if (g_use_colors) {
 	if (objects[COLOR_DEFAULT].fg != prior.fg
 	 || objects[COLOR_DEFAULT].bg != prior.bg) {
 	    fputs(prior.fg = objects[COLOR_DEFAULT].fg, stdout);
@@ -312,7 +312,7 @@ static void output_color()
     }
 
     /* For color terminals we set the foreground and background color. */
-    if (use_colors) {
+    if (g_use_colors) {
 	if (op->fg != prior.fg)
 	    fputs(prior.fg = op->fg, stdout);
 	if (op->bg != prior.bg)

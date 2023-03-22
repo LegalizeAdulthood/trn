@@ -124,17 +124,17 @@ int set_line_type(char *bufptr, const char *colon)
     char* f;
     int i, len;
 
-    if (colon-bufptr > sizeof msg)
+    if (colon-bufptr > sizeof g_msg)
 	return SOME_LINE;
 
-    for (t = msg, f = bufptr; f < colon; f++, t++) {
+    for (t = g_msg, f = bufptr; f < colon; f++, t++) {
 	/* guard against space before : */
 	if (isspace(*f))
 	    return SOME_LINE;
 	*t = isupper(*f) ? static_cast<char>(tolower(*f)) : *f;
     }
     *t = '\0';
-    f = msg;				/* get msg into a register */
+    f = g_msg;				/* get g_msg into a register */
     len = t - f;
 
     /* now scan the HEADTYPE table, backwards so we don't have to supply an
@@ -166,14 +166,14 @@ int get_header_num(char *s)
     char* end = s + strlen(s);
     int i;
 
-    i = set_line_type(s, end);	    /* Sets msg to lower-cased header name */
+    i = set_line_type(s, end);	    /* Sets g_msg to lower-cased header name */
 
     if (i <= SOME_LINE && i != CUSTOM_LINE) {
 	char* bp;
 	char ch;
 	if (g_htype[CUSTOM_LINE].name != "")
 	    free(g_htype[CUSTOM_LINE].name);
-	g_htype[CUSTOM_LINE].name = savestr(msg);
+	g_htype[CUSTOM_LINE].name = savestr(g_msg);
 	g_htype[CUSTOM_LINE].length = end - s;
 	g_htype[CUSTOM_LINE].flags = g_htype[i].flags;
 	g_htype[CUSTOM_LINE].minpos = -1;
@@ -429,7 +429,7 @@ char *fetchlines(ART_NUM artnum, int which_line)
 #ifdef DEBUG
     if (debug && (size < 1 || size > 1000)) {
 	printf("Firstpos = %ld, lastpos = %ld\n",(long)firstpos,(long)lastpos);
-	fgets(cmd_buf, sizeof cmd_buf, stdin);
+	fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
     }
 #endif
     s = safemalloc((MEM_SIZE)size);
@@ -467,7 +467,7 @@ char *mp_fetchlines(ART_NUM artnum, int which_line, int pool)
 #ifdef DEBUG
     if (debug && (size < 1 || size > 1000)) {
 	printf("Firstpos = %ld, lastpos = %ld\n",(long)firstpos,(long)lastpos);
-	fgets(cmd_buf, sizeof cmd_buf, stdin);
+	fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
     }
 #endif
     s = mp_malloc(size,pool);
@@ -506,8 +506,8 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 	if (copy)
 	    s = safemalloc((MEM_SIZE)(size = LBUFLEN));
 	else {
-	    s = cmd_buf;
-	    size = sizeof cmd_buf;
+	    s = g_cmd_buf;
+	    size = sizeof g_cmd_buf;
 	}
 	*s = '\0';
 	priornum = artnum-1;
@@ -597,9 +597,9 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
     if (copy)
 	s = safemalloc((MEM_SIZE)size);
     else {				/* hope this is okay--we're */
-	s = cmd_buf;			/* really scraping for space here */
-	if (size > sizeof cmd_buf)
-	    size = sizeof cmd_buf;
+	s = g_cmd_buf;			/* really scraping for space here */
+	if (size > sizeof g_cmd_buf)
+	    size = sizeof g_cmd_buf;
     }
     safecpy(s,t,size);
     return s;

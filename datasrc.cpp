@@ -160,11 +160,11 @@ char *read_datasrcs(char *filename)
     char** vals = INI_VALUES(s_datasrc_ini);
 
     if ((fd = open(filexp(filename),0)) >= 0) {
-	fstat(fd,&filestat);
-	if (filestat.st_size) {
+	fstat(fd,&g_filestat);
+	if (g_filestat.st_size) {
 	    int len;
-	    filebuf = safemalloc((MEM_SIZE)filestat.st_size+2);
-	    len = read(fd,filebuf,(int)filestat.st_size);
+	    filebuf = safemalloc((MEM_SIZE)g_filestat.st_size+2);
+	    len = read(fd,filebuf,(int)g_filestat.st_size);
 	    (filebuf)[len] = '\0';
 	    prep_ini_data(filebuf,filename);
 	    s = filebuf;
@@ -217,9 +217,9 @@ DATASRC *new_datasrc(const char *name, char **vals)
 	}
 
 	if ((v = vals[DI_ACT_REFETCH]) != nullptr && *v)
-	    dp->act_sf.refetch_secs = text2secs(v,defRefetchSecs);
+	    dp->act_sf.refetch_secs = text2secs(v,g_def_refetch_secs);
 	else if (!vals[DI_ACTIVE_FILE])
-	    dp->act_sf.refetch_secs = defRefetchSecs;
+	    dp->act_sf.refetch_secs = g_def_refetch_secs;
     }
     else
 	dp->newsid = savestr(filexp(vals[DI_ACTIVE_FILE]));
@@ -236,8 +236,8 @@ DATASRC *new_datasrc(const char *name, char **vals)
 	/* FYI, we know extra_name to be nullptr in this case. */
 	if (vals[DI_ACTIVE_FILE]) {
 	    dp->extra_name = savestr(filexp(vals[DI_ACTIVE_FILE]));
-	    if (stat(dp->extra_name,&filestat) >= 0)
-		dp->act_sf.lastfetch = filestat.st_mtime;
+	    if (stat(dp->extra_name,&g_filestat) >= 0)
+		dp->act_sf.lastfetch = g_filestat.st_mtime;
 	}
 	else {
 	    dp->extra_name = temp_filename();
@@ -247,12 +247,12 @@ DATASRC *new_datasrc(const char *name, char **vals)
 	}
 
 	if ((v = vals[DI_DESC_REFETCH]) != nullptr && *v)
-	    dp->desc_sf.refetch_secs = text2secs(v,defRefetchSecs);
+	    dp->desc_sf.refetch_secs = text2secs(v,g_def_refetch_secs);
 	else if (!dp->grpdesc)
-	    dp->desc_sf.refetch_secs = defRefetchSecs;
+	    dp->desc_sf.refetch_secs = g_def_refetch_secs;
 	if (dp->grpdesc) {
-	    if (stat(dp->grpdesc,&filestat) >= 0)
-		dp->desc_sf.lastfetch = filestat.st_mtime;
+	    if (stat(dp->grpdesc,&g_filestat) >= 0)
+		dp->desc_sf.lastfetch = g_filestat.st_mtime;
 	}
 	else {
 	    dp->grpdesc = temp_filename();
@@ -337,13 +337,13 @@ bool open_datasrc(DATASRC *dp)
 	    switch (nntp_list("active", "control", 7)) {
 	    case 1:
 		if (strncmp(g_ser_line, "control ", 8)) {
-		    strcpy(buf, g_ser_line);
+		    strcpy(g_buf, g_ser_line);
 		    dp->act_sf.lastfetch = 0;
 		    success = actfile_hash(dp);
 		    break;
 		}
-		if (nntp_gets(buf, sizeof buf - 1) > 0
-		 && !nntp_at_list_end(buf)) {
+		if (nntp_gets(g_buf, sizeof g_buf - 1) > 0
+		 && !nntp_at_list_end(g_buf)) {
 		    nntp_finish_list();
 		    success = actfile_hash(dp);
 		    break;
@@ -630,14 +630,14 @@ char *find_grpdesc(DATASRC *dp, char *groupname)
 	set_datasrc(dp);
 	sprintf(g_ser_line, "XGTITLE %s", groupname);
 	if (nntp_command(g_ser_line) > 0 && nntp_check() > 0) {
-	    nntp_gets(buf, sizeof buf - 1);
-	    if (nntp_at_list_end(buf))
-		sprintf(buf, "%s \n", groupname);
+	    nntp_gets(g_buf, sizeof g_buf - 1);
+	    if (nntp_at_list_end(g_buf))
+		sprintf(g_buf, "%s \n", groupname);
 	    else {
 		nntp_finish_list();
-		strcat(buf, "\n");
+		strcat(g_buf, "\n");
 	    }
-	    groupname = srcfile_append(&dp->desc_sf, buf, grouplen);
+	    groupname = srcfile_append(&dp->desc_sf, g_buf, grouplen);
 	    return groupname+grouplen+1;
 	}
 	dp->flags |= DF_NOXGTITLE;
@@ -735,7 +735,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
     }
 
     if (filename && fp == nullptr) {
-	printf(cantopen, filename) FLUSH;
+	printf(g_cantopen, filename) FLUSH;
 	termdown(1);
 	return 0;
     }
@@ -762,37 +762,37 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
 	if (server) {
 	    if (use_buffered_nntp_gets)
 		use_buffered_nntp_gets = false;
-	    else if (nntp_gets(buf, sizeof buf - 1) < 0) {
+	    else if (nntp_gets(g_buf, sizeof g_buf - 1) < 0) {
 		printf("\nError getting %s file.\n", fetchcmd) FLUSH;
 		termdown(2);
 		srcfile_close(sfp);
 		setspin(SPIN_OFF);
 		return 0;
 	    }
-	    if (nntp_at_list_end(buf))
+	    if (nntp_at_list_end(g_buf))
 		break;
-	    strcat(buf,"\n");
-	    fputs(buf, fp);
+	    strcat(g_buf,"\n");
+	    fputs(g_buf, fp);
 	    spin(200 * g_net_speed);
 	}
-	else if (!fgets(buf, sizeof buf, fp))
+	else if (!fgets(g_buf, sizeof g_buf, fp))
 	    break;
 
-	for (s = buf; *s && !isspace(*s); s++) ;
+	for (s = g_buf; *s && !isspace(*s); s++) ;
 	if (!*s) {
 	    linelen = 0;
 	    continue;
 	}
-	keylen = s - buf;
+	keylen = s - g_buf;
 	if (*++s != '\n' && isspace(*s)) {
 	    while (*++s != '\n' && isspace(*s)) ;
-	    strcpy(buf+keylen+1, s);
-	    s = buf+keylen+1;
+	    strcpy(g_buf+keylen+1, s);
+	    s = g_buf+keylen+1;
 	}
 	s = adv_then_find_next_nl_and_dectrl(s);
-	linelen = s - buf + 1;
+	linelen = s - g_buf + 1;
 	if (*s != '\n') {
-	    if (linelen == sizeof buf) {
+	    if (linelen == sizeof g_buf) {
 		linelen = 0;
 		continue;
 	    }
@@ -809,8 +809,8 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
 	    data.dat_ptr = (char*)sfp->lp->recent;
 	}
 	data.dat_len = offset;
-	(void) memcpy(lbp,buf,linelen);
-	hashstore(sfp->hp, buf, keylen, data);
+	(void) memcpy(lbp,g_buf,linelen);
+	hashstore(sfp->hp, g_buf, keylen, data);
     }
     sfp->lp->high = node_low + offset - 1;
     setspin(SPIN_OFF);
@@ -924,7 +924,7 @@ static int srcfile_cmp(const char *key, int keylen, HASHDATUM data)
  */
 
 /* find_close_match -- Finds the closest match for the string given in
- * global ngname.  If found, the result will be the corrected string
+ * global g_ngname.  If found, the result will be the corrected string
  * returned in that global.
  *
  * We compare the (presumably misspelled) newsgroup name with all legal
@@ -978,7 +978,7 @@ int find_close_match()
 	    char* cp = strchr(ngptrs[0], ' ');
 	    if (cp)
 		*cp = '\0';
-	    if (verbose)
+	    if (g_verbose)
 		printf("(I assume you meant %s)\n", ngptrs[0]) FLUSH;
 	    else
 		printf("(Using %s)\n", ngptrs[0]) FLUSH;
@@ -1007,16 +1007,16 @@ static int check_distance(int len, HASHDATUM *data, int newsrc_ptr)
 	name = ((LISTNODE*)data->dat_ptr)->data + data->dat_len;
 
     /* Efficiency: don't call edit_dist when the lengths are too different. */
-    if (len < ngname_len) {
-	if (ngname_len - len > LENGTH_HACK)
+    if (len < g_ngname_len) {
+	if (g_ngname_len - len > LENGTH_HACK)
 	    return 0;
     }
     else {
-	if (len - ngname_len > LENGTH_HACK)
+	if (len - g_ngname_len > LENGTH_HACK)
 	    return 0;
     }
 
-    value = edit_distn(ngname, ngname_len, name, len);
+    value = edit_distn(g_ngname, g_ngname_len, name, len);
     if (value > MIN_DIST)
 	return 0;
 
@@ -1036,7 +1036,7 @@ static int check_distance(int len, HASHDATUM *data, int newsrc_ptr)
 }
 
 /* Now we've got several potential matches, and have to choose between them
-** somehow.  Again, results will be returned in global ngname.
+** somehow.  Again, results will be returned in global g_ngname.
 */
 static int get_near_miss()
 {
@@ -1045,7 +1045,7 @@ static int get_near_miss()
     char* op = options;
     int i;
 
-    if (verbose)
+    if (g_verbose)
 	printf("However, here are some close matches:\n") FLUSH;
     if (ngn > 9)
 	ngn = 9;	/* Since we're using single digits.... */
@@ -1061,7 +1061,7 @@ static int get_near_miss()
     *op++ = 'n';
     *op = '\0';
 
-    if (verbose)
+    if (g_verbose)
 	sprintf(promptbuf, "Which of these would you like?");
     else
 	sprintf(promptbuf, "Which?");
@@ -1069,7 +1069,7 @@ reask:
     in_char(promptbuf, 'A', options);
     printcmd();
     putchar('\n') FLUSH;
-    switch (*buf) {
+    switch (*g_buf) {
         case 'n':
 	case 'N':
 	case 'q':
@@ -1079,14 +1079,14 @@ reask:
 	    return 0;
 	case 'h':
 	case 'H':
-	    if (verbose)
+	    if (g_verbose)
 		fputs("  You entered an illegal newsgroup name, and these are the nearest possible\n  matches.  If you want one of these, then enter its number.  Otherwise\n  just say 'n'.\n", stdout) FLUSH;
 	    else
 		fputs("Illegal newsgroup, enter a number or 'n'.\n", stdout) FLUSH;
 	    goto reask;
 	default:
-	    if (isdigit(*buf)) {
-		char* s = strchr(options, *buf);
+	    if (isdigit(*g_buf)) {
+		char* s = strchr(options, *g_buf);
 
 		i = s ? (s - options) : ngn;
 		if (i >= 0 && i < ngn) {
@@ -1099,7 +1099,7 @@ reask:
 		    return 1;
 		}
 	    }
-	    fputs(hforhelp, stdout) FLUSH;
+	    fputs(g_hforhelp, stdout) FLUSH;
 	    break;
     }
 

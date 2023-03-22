@@ -193,7 +193,7 @@ int mt_data()
 	if (size < 0)
 	    return 0;
 
-	if (verbose)
+	if (g_verbose)
 	    printf("\nGetting thread file."), fflush(stdout);
 	if (nntp_read((char*)&s_total, (long)sizeof (TOTAL)) < sizeof (TOTAL))
 	    goto exit;
@@ -201,9 +201,9 @@ int mt_data()
     else
 #endif
     {
-	if ((s_fp = fopen(mt_name(ngname), FOPEN_RB)) == nullptr)
+	if ((s_fp = fopen(mt_name(g_ngname), FOPEN_RB)) == nullptr)
 	    return 0;
-	if (verbose)
+	if (g_verbose)
 	    printf("\nReading thread file."), fflush(stdout);
 
 	if (fread((char*)&s_total, 1, sizeof (TOTAL), s_fp) < sizeof (TOTAL))
@@ -265,8 +265,8 @@ exit:
 */
 static char *mt_name(const char *group)
 {
-    sprintf(buf, "%s/%s", g_datasrc->thread_dir, group);
-    return buf;
+    sprintf(g_buf, "%s/%s", g_datasrc->thread_dir, group);
+    return g_buf;
 }
 
 static char* subject_strings, *string_end;
@@ -501,7 +501,7 @@ static int read_articles()
 	article = *art_ptr++ = allocate_article(s_p_article.num > g_lastart?
 						0 : s_p_article.num);
 	article->date = s_p_article.date;
-	if (olden_days < 2 && !(s_p_article.flags & HAS_XREFS))
+	if (g_olden_days < 2 && !(s_p_article.flags & HAS_XREFS))
 	    article->xrefs = "";
 	article->from = the_author(s_p_article.author);
 	article->parent = the_article(s_p_article.parent, count);
@@ -573,11 +573,11 @@ static int read_ids()
 		/*error("error unpacking domain strings.\n");*/
 		return 0;
 	    }
-	    sprintf(buf, "@%s", string_ptr);
+	    sprintf(g_buf, "@%s", string_ptr);
 	    len = strlen(string_ptr) + 1;
 	    string_ptr += len;
 	} else {
-	    *buf = '\0';
+	    *g_buf = '\0';
 	    len = 0;
 	}
 	if (s_ids[i] != -1) {
@@ -593,7 +593,7 @@ static int read_ids()
 		}
 		len2 = strlen(string_ptr);
 		article->msgid = safemalloc(len2 + len + 2 + 1);
-		sprintf(article->msgid, "<%s%s>", string_ptr, buf);
+		sprintf(article->msgid, "<%s%s>", string_ptr, g_buf);
 		string_ptr += len2 + 1;
 		if (msgid_hash) {
 		    HASHDATUM data;

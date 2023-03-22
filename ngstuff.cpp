@@ -49,34 +49,34 @@ void ngstuff_init()
 int escapade()
 {
     char* s;
-    bool interactive = (buf[1] == FINISHCMD);
+    bool interactive = (g_buf[1] == FINISHCMD);
     bool docd;
     char whereiam[1024];
 
     if (!finish_command(interactive))	/* get remainder of command */
 	return -1;
-    s = buf+1;
+    s = g_buf+1;
     docd = *s != '!';
     if (!docd) {
 	s++;
     }
     else {
 	trn_getwd(whereiam, sizeof(whereiam));
-	if (chdir(cwd)) {
-	    printf(nocd,cwd) FLUSH;
+	if (chdir(g_cwd)) {
+	    printf(g_nocd,g_cwd) FLUSH;
 	    sig_catcher(0);
 	}
     }
     while (*s == ' ') s++;
 					/* skip leading spaces */
-    interp(cmd_buf, (sizeof cmd_buf), s);/* interpret any % escapes */
+    interp(g_cmd_buf, (sizeof g_cmd_buf), s);/* interpret any % escapes */
     resetty();				/* make sure tty is friendly */
-    doshell(nullptr,cmd_buf);	/* invoke the shell */
+    doshell(nullptr,g_cmd_buf);	/* invoke the shell */
     noecho();				/* and make terminal */
     crmode();				/*   unfriendly again */
     if (docd) {
 	if (chdir(whereiam)) {
-	    printf(nocd,whereiam) FLUSH;
+	    printf(g_nocd,whereiam) FLUSH;
 	    sig_catcher(0);
 	}
     }
@@ -92,22 +92,22 @@ int switcheroo()
 {
     if (!finish_command(true)) /* get rest of command */
 	return -1;	/* if rubbed out, try something else */
-    if (!buf[1]) {
-	char* prior_savedir = savedir;
+    if (!g_buf[1]) {
+	char* prior_savedir = g_savedir;
 	if (g_option_sel_ilock) {
-	    buf[1] = '\0';
+	    g_buf[1] = '\0';
 	    return 0;
 	}
 	g_option_sel_ilock = true;
-	if (gmode != 's' || g_sel_mode != SM_OPTIONS)/*$$*/
+	if (g_general_mode != 's' || g_sel_mode != SM_OPTIONS)/*$$*/
 	    option_selector();
 	g_option_sel_ilock = false;
-	if (savedir != prior_savedir)
+	if (g_savedir != prior_savedir)
 	    cwd_check();
-	buf[1] = '\0';
+	g_buf[1] = '\0';
     }
-    else if (buf[1] == '&') {
-	if (!buf[2]) {
+    else if (g_buf[1] == '&') {
+	if (!g_buf[2]) {
 	    page_start();
 	    show_macros();
 	}
@@ -115,23 +115,23 @@ int switcheroo()
 	    char tmpbuf[LBUFLEN];
 	    char* s;
 
-	    for (s=buf+2; isspace(*s); s++);
+	    for (s=g_buf+2; isspace(*s); s++);
 	    mac_line(s,tmpbuf,(sizeof tmpbuf));
 	}
     }
     else {
-	bool docd = (in_string(buf,"-d", true) != nullptr);
+	bool docd = (in_string(g_buf,"-d", true) != nullptr);
  	char whereami[1024];
 	char tmpbuf[LBUFLEN+16];
 
 	if (docd)
 	    trn_getwd(whereami, sizeof(whereami));
-	if (buf[1] == '-' || buf[1] == '+') {
-	    strcpy(tmpbuf,buf+1);
+	if (g_buf[1] == '-' || g_buf[1] == '+') {
+	    strcpy(tmpbuf,g_buf+1);
 	    sw_list(tmpbuf);
 	}
 	else {
-	    sprintf(tmpbuf,"[options]\n%s\n",buf+1);
+	    sprintf(tmpbuf,"[options]\n%s\n",g_buf+1);
 	    prep_ini_data(tmpbuf,"'&' input");
 	    parse_ini_section(tmpbuf+10,g_options_ini);
 	    set_options(INI_VALUES(g_options_ini));
@@ -139,7 +139,7 @@ int switcheroo()
 	if (docd) {
 	    cwd_check();
 	    if (chdir(whereami)) {		/* -d does chdirs */
-		printf(nocd,whereami) FLUSH;
+		printf(g_nocd,whereami) FLUSH;
 		sig_catcher(0);
 	    }
 	}
@@ -157,7 +157,7 @@ int numnum()
     char* c;
     ART_NUM oldart = g_art;
     char tmpbuf[LBUFLEN];
-    bool output_level = (!use_threads && gmode != 's');
+    bool output_level = (!g_use_threads && g_general_mode != 's');
     bool justone = true;		/* assume only one article */
 
     if (!finish_command(true))	/* get rest of command */
@@ -171,7 +171,7 @@ int numnum()
 
     perform_status_init(g_ngptr->toread);
 
-    for (s=buf; *s && (isdigit(*s) || strchr(" ,-.$",*s)); s++)
+    for (s=g_buf; *s && (isdigit(*s) || strchr(" ,-.$",*s)); s++)
 	if (!isdigit(*s))
 	    justone = false;
     if (*s) {
@@ -182,7 +182,7 @@ int numnum()
 	cmdlst = savestr("m");
     *s++ = ',';
     *s = '\0';
-    safecpy(tmpbuf,buf,LBUFLEN);
+    safecpy(tmpbuf,g_buf,LBUFLEN);
     if (!output_level && !justone) {
 	printf("Processing...");
 	fflush(stdout);
@@ -195,8 +195,8 @@ int numnum()
 	    min = atol(s);
 	if (min < g_absfirst) {
 	    min = g_absfirst;
-	    sprintf(msg,"(First article is %ld)",(long)g_absfirst);
-	    warnmsg(msg);
+	    sprintf(g_msg,"(First article is %ld)",(long)g_absfirst);
+	    warnmsg(g_msg);
 	}
 	if ((s=strchr(s,'-')) != nullptr) {
 	    s++;
@@ -213,8 +213,8 @@ int numnum()
 	    max = g_lastart;
 	    if (min > max)
 		min = max;
-	    sprintf(msg,"(Last article is %ld)",(long)g_lastart) FLUSH;
-	    warnmsg(msg);
+	    sprintf(g_msg,"(Last article is %ld)",(long)g_lastart) FLUSH;
+	    warnmsg(g_msg);
 	}
 	if (max < min) {
 	    errormsg("Bad range");
@@ -229,11 +229,11 @@ int numnum()
 	for (g_art = article_first(min); g_art <= max; g_art = article_next(g_art)) {
 	    g_artp = article_ptr(g_art);
 	    if (perform(cmdlst,output_level && page_line == 1) < 0) {
-		if (verbose)
-		    sprintf(msg,"(Interrupted at article %ld)",(long)g_art);
+		if (g_verbose)
+		    sprintf(g_msg,"(Interrupted at article %ld)",(long)g_art);
 		else
-		    sprintf(msg,"(Intr at %ld)",(long)g_art);
-		errormsg(msg);
+		    sprintf(g_msg,"(Intr at %ld)",(long)g_art);
+		errormsg(g_msg);
 		if (cmdlst)
 		    free(cmdlst);
 		return NN_ASK;
@@ -256,27 +256,27 @@ int thread_perform()
     char* cmdstr;
     int len;
     int bits;
-    bool output_level = (!use_threads && gmode != 's');
+    bool output_level = (!g_use_threads && g_general_mode != 's');
     bool one_thread = false;
 
     if (!finish_command(true))	/* get rest of command */
 	return 0;
-    if (!buf[1])
+    if (!g_buf[1])
 	return -1;
     len = 1;
-    if (buf[1] == ':') {
+    if (g_buf[1] == ':') {
 	bits = 0;
 	len++;
     }
     else
 	bits = SF_VISIT;
-    if (buf[len] == '.') {
+    if (g_buf[len] == '.') {
 	if (!g_artp)
 	    return -1;
 	one_thread = true;
 	len++;
     }
-    cmdstr = savestr(buf+len);
+    cmdstr = savestr(g_buf+len);
     want_unread = !g_sel_rereading && *cmdstr != 'm';
 
     perform_status_init(g_ngptr->toread);
@@ -380,7 +380,7 @@ int perform(char *cmdlst, int output_level)
     int savemode = 0;
     char tbuf[LBUFLEN+1];
 
-    /* A quick fix to avoid reuse of buf and cmdlst by shell commands. */
+    /* A quick fix to avoid reuse of g_buf and cmdlst by shell commands. */
     safecpy(tbuf, cmdlst, sizeof tbuf);
     cmdlst = tbuf;
 
@@ -400,7 +400,7 @@ int perform(char *cmdlst, int output_level)
 	    }
 	    else if (!was_read(g_art)) {
 		mark_as_read(g_artp);
-		if (output_level && verbose)
+		if (output_level && g_verbose)
 		    fputs("\tJunked",stdout);
 	    }
 	    if (g_sel_rereading)
@@ -440,7 +440,7 @@ int perform(char *cmdlst, int output_level)
 	} else if (ch == 'x') {
 	    if (!was_read(g_art)) {
 		oneless(g_artp);
-		if (output_level && verbose)
+		if (output_level && g_verbose)
 		    fputs("\tKilled",stdout);
 	    }
 	    if (g_sel_rereading)
@@ -456,14 +456,14 @@ int perform(char *cmdlst, int output_level)
 		change_auto_flags(g_artp, AUTO_SEL_1);
 	    else if ((g_artp->flags & (AF_UNREAD|AF_EXISTS)) == AF_EXISTS) {
 		unmark_as_read(g_artp);
-		if (output_level && verbose)
+		if (output_level && g_verbose)
 		    fputs("\tMarked unread",stdout);
 	    }
 	}
 	else if (ch == 'M') {
 	    delay_unmark(g_artp);
 	    oneless(g_artp);
-	    if (output_level && verbose)
+	    if (output_level && g_verbose)
 		fputs("\tWill return",stdout);
 	}
 	else if (ch == '=') {
@@ -473,7 +473,7 @@ int perform(char *cmdlst, int output_level)
 	}
 	else if (ch == 'C') {
 	    int ret = cancel_article();
-	    if (output_level && verbose)
+	    if (output_level && g_verbose)
 		printf("\t%sanceled",ret? "Not c" : "C");
 	}
 	else if (ch == '%') {
@@ -489,19 +489,19 @@ int perform(char *cmdlst, int output_level)
 	}
 	else if (strchr("!&sSwWae|",ch)) {
 	    if (g_one_command)
-		strcpy(buf,cmdlst);
+		strcpy(g_buf,cmdlst);
 	    else
-		cmdlst = cpytill(buf,cmdlst,':') - 1;
-	    /* we now have the command in buf */
+		cmdlst = cpytill(g_buf,cmdlst,':') - 1;
+	    /* we now have the command in g_buf */
 	    if (ch == '!') {
 		escapade();
-		if (output_level && verbose)
+		if (output_level && g_verbose)
 		    fputs("\tShell escaped",stdout);
 	    }
 	    else if (ch == '&') {
 		switcheroo();
-		if (output_level && verbose)
-		    if (buf[1] && buf[1] != '&')
+		if (output_level && g_verbose)
+		    if (g_buf[1] && g_buf[1] != '&')
 			fputs("\tSwitched",stdout);
 	    }
 	    else {
@@ -518,16 +518,16 @@ int perform(char *cmdlst, int output_level)
 	    }
 	}
 	else {
-	    sprintf(msg,"Unknown command: %s",cmdlst);
-	    errormsg(msg);
+	    sprintf(g_msg,"Unknown command: %s",cmdlst);
+	    errormsg(g_msg);
 	    return -1;
 	}
-	if (output_level && verbose)
+	if (output_level && g_verbose)
 	    fflush(stdout);
 	if (g_one_command)
 	    break;
     }
-    if (output_level && verbose)
+    if (output_level && g_verbose)
 	newline();
     if (g_int_count) {
 	g_int_count = 0;
@@ -545,22 +545,22 @@ int ngsel_perform()
 
     if (!finish_command(true))	/* get rest of command */
 	return 0;
-    if (!buf[1])
+    if (!g_buf[1])
 	return -1;
     len = 1;
-    if (buf[1] == ':') {
+    if (g_buf[1] == ':') {
 	bits = 0;
 	len++;
     }
     else
 	bits = NF_INCLUDED;
-    if (buf[len] == '.') {
+    if (g_buf[len] == '.') {
 	if (!g_ngptr)
 	    return -1;
 	one_group = true;
 	len++;
     }
-    cmdstr = savestr(buf+len);
+    cmdstr = savestr(g_buf+len);
 
     perform_status_init(g_newsgroup_toread);
     len = strlen(cmdstr);
@@ -593,7 +593,7 @@ int ng_perform(char *cmdlst, int output_level)
     int ch;
     
     if (output_level == 1) {
-	printf("%s ",ngname);
+	printf("%s ",g_ngname);
 	fflush(stdout);
     }
 
@@ -621,8 +621,8 @@ int ng_perform(char *cmdlst, int output_level)
 	    }
 	    break;
 	  case 'u':
-	    if (output_level && verbose) {
-		printf(unsubto,g_ngptr->rcline) FLUSH;
+	    if (output_level && g_verbose) {
+		printf(g_unsubto,g_ngptr->rcline) FLUSH;
 		termdown(1);
 	    }
 	    g_ngptr->subscribechar = NEGCHAR;
@@ -632,16 +632,16 @@ int ng_perform(char *cmdlst, int output_level)
 	    g_newsgroup_toread--;
 	    goto deselect;
 	  default:
-	    sprintf(msg,"Unknown command: %s",cmdlst);
-	    errormsg(msg);
+	    sprintf(g_msg,"Unknown command: %s",cmdlst);
+	    errormsg(g_msg);
 	    return -1;
 	}
-	if (output_level && verbose)
+	if (output_level && g_verbose)
 	    fflush(stdout);
 	if (g_one_command)
 	    break;
     }
-    if (output_level && verbose)
+    if (output_level && g_verbose)
 	newline();
     if (g_int_count) {
 	g_int_count = 0;
@@ -660,22 +660,22 @@ int addgrp_sel_perform()
 
     if (!finish_command(true))	/* get rest of command */
 	return 0;
-    if (!buf[1])
+    if (!g_buf[1])
 	return -1;
     len = 1;
-    if (buf[1] == ':') {
+    if (g_buf[1] == ':') {
 	bits = 0;
 	len++;
     }
     else
 	bits = g_sel_mask;
-    if (buf[len] == '.') {
+    if (g_buf[len] == '.') {
 	if (g_first_addgroup) /*$$*/
 	    return -1;
 	one_group = true;
 	len++;
     }
-    cmdstr = savestr(buf+len);
+    cmdstr = savestr(g_buf+len);
 
     perform_status_init(g_newsgroup_toread);
     len = strlen(cmdstr);
@@ -719,16 +719,16 @@ int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level)
 	    g_selected_count--;
 	}
 	else {
-	    sprintf(msg,"Unknown command: %s",cmdlst);
-	    errormsg(msg);
+	    sprintf(g_msg,"Unknown command: %s",cmdlst);
+	    errormsg(g_msg);
 	    return -1;
 	}
-	if (output_level && verbose)
+	if (output_level && g_verbose)
 	    fflush(stdout);
 	if (g_one_command)
 	    break;
     }
-    if (output_level && verbose)
+    if (output_level && g_verbose)
 	newline();
     if (g_int_count) {
 	g_int_count = 0;

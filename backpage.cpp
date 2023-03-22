@@ -31,7 +31,7 @@ void backpage_init()
     s_varyfd = open(varyname,2);
     remove(varyname);
     if (s_varyfd < 0) {
-	printf(cantopen,varyname) FLUSH;
+	printf(g_cantopen,varyname) FLUSH;
 	sig_catcher(0);
     }
     

@@ -39,7 +39,7 @@ int s_finish_cmd(const char *string)
 	printf("%s",string);
 	fflush(stdout);
     }
-    buf[1] = FINISHCMD;
+    g_buf[1] = FINISHCMD;
     return finish_command(false);	/* do not echo newline */
 }
 
@@ -56,19 +56,19 @@ int s_cmdloop()
 	s_place_ptr();		/* place article pointer */
 	g_bos_on_stop = true;
 	s_lookahead();		/* do something useful while waiting */
-	getcmd(buf);
+	getcmd(g_buf);
 	g_bos_on_stop = false;
 	eat_typeahead();	/* stay in control. */
 	/* check for window resizing and refresh */
 	/* if window is resized, refill and redraw */
 	if (g_s_resized) {
-	    char ch = *buf;
+	    char ch = *g_buf;
 	    i = s_fillpage();
 	    if (i == -1 || i == 0)	/* can't fillpage */
 	        return S_QUIT;
-	    *buf = Ctl('l');
+	    *g_buf = Ctl('l');
 	    (void)s_docmd();
-	    *buf = ch;
+	    *g_buf = ch;
 	    g_s_resized = false;		/* dealt with */
 	}
 	i = s_docmd();
@@ -105,7 +105,7 @@ void s_lookahead()
 }
 
 /* Do some simple, common Scan commands for any mode */
-/* Interprets command in buf, returning 0 to continue looping or
+/* Interprets command in g_buf, returning 0 to continue looping or
  * a condition code (negative #s).  Responsible for setting refresh flags
  * if necessary.
  */
@@ -115,9 +115,9 @@ int s_docmd()
     bool flag;		/* misc */
 
     a = g_page_ents[g_s_ptr_page_line].entnum;
-    if (*buf == '\f')	/* map form feed to ^l */
-	*buf = Ctl('l');
-    switch(*buf) {
+    if (*g_buf == '\f')	/* map form feed to ^l */
+	*g_buf = Ctl('l');
+    switch(*g_buf) {
       case 'j':		/* vi mode */
 	if (!g_s_mode_vi)
 	    return S_NOTFOUND;
@@ -253,7 +253,7 @@ int s_docmd()
 	break;
       case '0': case '1': case '2': case '3': case '4':
       case '5': case '6': case '7': case '8': case '9':
-	s_jumpnum(*buf);
+	s_jumpnum(*g_buf);
 	break;
       case '#':		/* Toggle item numbers */
 	if (g_s_itemnum) {
@@ -335,11 +335,11 @@ void s_search()
 	search_text[0] = '\0';
     }
     s_rub_ptr();
-    buf[1] = '\0';
+    g_buf[1] = '\0';
     if (!s_finish_cmd(nullptr))
 	return;
-    if (buf[1]) {	/* new text */
-	s = buf+1;
+    if (g_buf[1]) {	/* new text */
+	s = g_buf+1;
 	/* make leading space skip an option later? */
 	/* (it isn't too important because substring matching is used) */
 	while (*s == ' ') s++;	/* skip leading spaces */
@@ -359,7 +359,7 @@ void s_search()
     printf("Searching for %s",search_text);
     fflush(stdout);
     ent = g_page_ents[g_s_ptr_page_line].entnum;
-    switch (*buf) {
+    switch (*g_buf) {
       case '/':
 	error_msg = "No matches forward from current point.";
 	ent = s_forward_search(ent);
@@ -429,20 +429,20 @@ void s_jumpnum(char_int firstchar)
 	printf("Jump to item: %c",firstchar);
 	fflush(stdout);
     }
-    getcmd(buf);
-    if (*buf == ERASECH)
+    getcmd(g_buf);
+    if (*g_buf == ERASECH)
 	return;
-    switch (*buf) {
+    switch (*g_buf) {
       case '0': case '1': case '2': case '3': case '4':
       case '5': case '6': case '7': case '8': case '9':
 	if (jump_verbose) {
-	    printf("%c",*buf);
+	    printf("%c",*g_buf);
 	    fflush(stdout);
 	}
-	value = value*10 + (*buf - '0');
+	value = value*10 + (*g_buf - '0');
 	break;
       default:
-	pushchar(*buf);
+	pushchar(*g_buf);
 	break;
     }
     if (value == 0 || value > g_s_bot_ent+1) {

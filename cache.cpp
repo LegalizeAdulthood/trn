@@ -93,7 +93,7 @@ void build_cache()
     s_subj_hash = hashcreate(991, subject_cmp);	/*TODO: pick a better size */
 
     set_firstart(g_ngptr->rcline + g_ngptr->numoffset);
-    g_first_cached = thread_always? g_absfirst : g_firstart;
+    g_first_cached = g_thread_always? g_absfirst : g_firstart;
     g_last_cached = g_first_cached-1;
     g_cached_all_in_range = false;
 #ifdef PENDING
@@ -195,7 +195,7 @@ void cache_article(ARTICLE *ap)
 	}
     }
 
-    if (join_subject_len != 0)
+    if (g_join_subject_len != 0)
 	check_for_near_subj(ap);
 }
 
@@ -212,10 +212,10 @@ void check_for_near_subj(ARTICLE *ap)
 	    sp = nullptr;
     }
     while (sp) {
-	if ((int)strlen(sp->str+4) >= join_subject_len && sp->thread) {
+	if ((int)strlen(sp->str+4) >= g_join_subject_len && sp->thread) {
 	    SUBJECT* sp2;
 	    HASHDATUM data;
-	    data = hashfetch(s_shortsubj_hash, sp->str+4, join_subject_len);
+	    data = hashfetch(s_shortsubj_hash, sp->str+4, g_join_subject_len);
 	    if (!(sp2 = (SUBJECT*)data.dat_ptr)) {
 		data.dat_ptr = (char*)sp;
 		hashstorelast(data);
@@ -230,12 +230,12 @@ void check_for_near_subj(ARTICLE *ap)
 
 void change_join_subject_len(int len)
 {
-    if (join_subject_len != len) {
+    if (g_join_subject_len != len) {
 	if (s_shortsubj_hash) {
 	    hashdestroy(s_shortsubj_hash);
 	    s_shortsubj_hash = nullptr;
 	}
-	join_subject_len = len;
+	g_join_subject_len = len;
 	if (len && g_first_subject && g_first_subject->articles)
 	    check_for_near_subj(g_first_subject->articles);
     }
@@ -243,17 +243,17 @@ void change_join_subject_len(int len)
 
 void check_poster(ARTICLE *ap)
 {
-    if (auto_select_postings && (ap->flags & AF_EXISTS) && ap->from) {
+    if (g_auto_select_postings && (ap->flags & AF_EXISTS) && ap->from) {
 	if (ap->flags & AF_FROMTRUNCED) {
-	    strcpy(cmd_buf,g_real_name);
-	    if (!strcmp(ap->from,compress_name(cmd_buf,16))) {
+	    strcpy(g_cmd_buf,g_real_name);
+	    if (!strcmp(ap->from,compress_name(g_cmd_buf,16))) {
 		g_untrim_cache = true;
 		fetchfrom(article_num(ap),false);
 		g_untrim_cache = false;
 	    }
 	}
 	if (!(ap->flags & AF_FROMTRUNCED)) {
-	    char* s = cmd_buf;
+	    char* s = g_cmd_buf;
 	    char* u;
 	    char* h;
 	    strcpy(s,ap->from);
@@ -276,7 +276,7 @@ void check_poster(ARTICLE *ap)
 		h = u = s;
 	    if (!strcmp(u,g_login_name)) {
 		if (in_string(h,g_hostname, false)) {
-		    switch (auto_select_postings) {
+		    switch (g_auto_select_postings) {
 		      case '.':
 			select_subthread(ap,AUTO_SEL_FOL);
 			break;
@@ -644,10 +644,10 @@ void look_ahead()
     if (g_srchahead && g_srchahead < g_art) {	/* in ^N mode? */
 	char* pattern;
 
-	pattern = buf+1;
+	pattern = g_buf+1;
 	strcpy(pattern,": *");
 	h = pattern + strlen(pattern);
-	interp(h,(sizeof buf) - (h-buf),"%\\s");
+	interp(h,(sizeof g_buf) - (h-g_buf),"%\\s");
 	{			/* compensate for notesfiles */
 	    int i;
 	    for (i = 24; *h && i--; h++)
@@ -659,7 +659,7 @@ void look_ahead()
 	if (debug & DEB_SEARCH_AHEAD) {
 	    fputs("(hit CR)",stdout);
 	    fflush(stdout);
-	    fgets(buf+128, sizeof buf-128, stdin);
+	    fgets(g_buf+128, sizeof g_buf-128, stdin);
 	    printf("\npattern = %s\n",pattern);
 	    termdown(2);
 	}
@@ -710,7 +710,7 @@ void look_ahead()
 
 void cache_until_key()
 {
-    if (!in_ng)
+    if (!g_in_ng)
 	return;
 #ifdef PENDING
     if (input_pending())
@@ -723,7 +723,7 @@ void cache_until_key()
     g_sentinel_artp = g_curr_artp;
 
     /* Prioritize our caching based on what mode we're in */
-    if (gmode == 's') {
+    if (g_general_mode == 's') {
 	if (cache_subjects()) {
 	    if (cache_xrefs()) {
 		if (chase_xrefs(true)) {
@@ -777,7 +777,7 @@ bool cache_xrefs()
 {
     ART_NUM an;
 
-    if (olden_days || (g_datasrc->flags & DF_NOXREFS) || s_xref_to_get > g_lastart)
+    if (g_olden_days || (g_datasrc->flags & DF_NOXREFS) || s_xref_to_get > g_lastart)
 	return true;
     setspin(SPIN_BACKGROUND);
     for (an=article_first(s_xref_to_get); an <= g_lastart; an=article_next(an)) {
@@ -825,7 +825,7 @@ bool cache_all_arts()
     if (g_curr_artp && !(g_curr_artp->flags & AF_CACHED) && !input_pending())
 	pushchar('\f' | 0200);
     /* A completely empty group needs a count & a sort */
-    if (gmode != 's' && !obj_count && !g_selected_only)
+    if (g_general_mode != 's' && !obj_count && !g_selected_only)
 	thread_grow();
     return true;
 }
@@ -895,7 +895,7 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
 bool cache_range(ART_NUM first, ART_NUM last)
 {
     bool success = true;
-    bool all_arts = (g_sel_rereading || thread_always);
+    bool all_arts = (g_sel_rereading || g_thread_always);
     ART_NUM count = 0;
 
     if (g_sel_rereading && !g_cached_all_in_range) {

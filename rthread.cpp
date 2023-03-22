@@ -100,7 +100,7 @@ void thread_open()
 	    return;
     }
     if ((g_datasrc->flags & DF_TRY_OVERVIEW) && !g_cached_all_in_range) {
-	if (thread_always) {
+	if (g_thread_always) {
 	    g_spin_todo = g_spin_estimate = g_lastart - g_absfirst + 1;
 	    (void) ov_data(g_absfirst, g_lastart, false);
 	    if (g_datasrc->ov_opened && find_existing && g_datasrc->over_dir == nullptr) {
@@ -163,7 +163,7 @@ void thread_open()
 void thread_grow()
 {
     g_added_articles += g_lastart - g_last_cached;
-    if (g_added_articles && thread_always)
+    if (g_added_articles && g_thread_always)
 	cache_range(g_last_cached + 1, g_lastart);
     count_subjects(CS_NORM);
     if (g_artptr_list)
@@ -447,7 +447,7 @@ ARTICLE *bump_art(ARTICLE *ap)
 }
 
 /* Bump the param to the next REAL article.  Uses subject order in a
-** non-threaded group; honors the breadth_first flag in a threaded one.
+** non-threaded group; honors the g_breadth_first flag in a threaded one.
 */
 ARTICLE *next_art(ARTICLE *ap)
 {
@@ -456,7 +456,7 @@ try_again:
 	ap = ap->subj_next;
 	goto done;
     }
-    if (breadth_first) {
+    if (g_breadth_first) {
 	if (ap->sibling) {
 	    ap = ap->sibling;
 	    goto done;
@@ -476,7 +476,7 @@ try_again:
 		return nullptr;
 	}
 	ap = ap->sibling;
-    } while (breadth_first);
+    } while (g_breadth_first);
 done:
     if (ap && !(ap->flags & AF_EXISTS)) {
 	oneless(ap);
@@ -627,7 +627,7 @@ void select_article(ARTICLE *ap, int auto_flags)
     if ((ap->flags & (AF_EXISTS|AF_UNREAD)) == desired_flags) {
 	if (!(ap->flags & g_sel_mask)) {
 	    g_selected_count++;
-	    if (verbose && echo && gmode != 's')
+	    if (g_verbose && echo && g_general_mode != 's')
 		fputs("\tSelected",stdout);
 	}
 	ap->flags = (ap->flags & ~AF_DEL) | g_sel_mask;
@@ -748,7 +748,7 @@ void deselect_article(ARTICLE *ap, int auto_flags)
 	ap->flags &= ~g_sel_mask;
 	if (!g_selected_count--)
 	    g_selected_count = 0;
-	if (verbose && echo && gmode != 's')
+	if (g_verbose && echo && g_general_mode != 's')
 	    fputs("\tDeselected",stdout);
     }
     if (g_sel_rereading && g_sel_mode == SM_ARTICLE)
@@ -1245,7 +1245,7 @@ static ARTICLE *last_sib(ARTICLE *ta, int depth, ARTICLE *limit)
 /* Get each subject's article count; count total articles and selected
 ** articles (use g_sel_rereading to determine whether to count read or
 ** unread articles); deselect any subjects we find that are empty if
-** CS_UNSELECT or CS_UNSEL_STORE is specified.  If mode is CS_RESELECT
+** CS_UNSELECT or CS_UNSEL_STORE is specified.  If g_mode is CS_RESELECT
 ** is specified, the selections from the last CS_UNSEL_STORE are
 ** reselected.
 */

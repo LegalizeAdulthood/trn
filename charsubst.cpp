@@ -124,19 +124,19 @@ const char *current_charsubst()
 
     switch (*g_charsubst) {
       case 'm':
-	if (verbose)
+	if (g_verbose)
 	    show = "[ISO->USmono] ";
 	else
 	    show = "[M] ";
 	break;
       case 'a':
-	if (verbose)
+	if (g_verbose)
 	    show = "[ISO->US] ";
 	else
 	    show = "[U] ";
 	break;
       case 't':
-	if (verbose)
+	if (g_verbose)
 	    show = "[TeX->ISO] ";
 	else
 	    show = "[T] ";

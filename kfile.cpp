@@ -62,10 +62,10 @@ void kfile_init()
 	g_kf_thread_cnt = g_kf_changethd_cnt = 0;
 	if ((fp = fopen(filexp(cp), "r")) != nullptr) {
 	    msgid_hash = hashcreate(1999, msgid_cmp);
-	    while (fgets(buf, sizeof buf, fp) != nullptr) {
-		if (*buf == '<') {
+	    while (fgets(g_buf, sizeof g_buf, fp) != nullptr) {
+		if (*g_buf == '<') {
 		    int age;
-		    cp = strchr(buf,' ');
+		    cp = strchr(g_buf,' ');
 		    if (!cp)
 			cp = ",";
 		    else
@@ -80,9 +80,9 @@ void kfile_init()
 			HASHDATUM data;
 
 			auto_flag = s_thread_cmd_flag[cp-s_thread_cmd_ltr];
-			data = hashfetch(msgid_hash,buf,strlen(buf));
+			data = hashfetch(msgid_hash,g_buf,strlen(g_buf));
 			if (!data.dat_ptr)
-			    data.dat_ptr = savestr(buf);
+			    data.dat_ptr = savestr(g_buf);
 			else
 			    g_kf_changethd_cnt++;
 			data.dat_len = auto_flag | age;
@@ -105,7 +105,7 @@ void kfile_init()
 
 static void mention(const char *str)
 {
-    if (verbose) {
+    if (g_verbose) {
 	color_string(COLOR_NOTICE,str);
 	newline();
     }
@@ -128,10 +128,10 @@ int do_kfile(FILE *kfp, int entering)
     g_art = g_lastart+1;
     g_killfirst = g_firstart;
     fseek(kfp,0L,0);			/* rewind file */
-    while (fgets(buf,LBUFLEN,kfp) != nullptr) {
-	if (*(cp = buf + strlen(buf) - 1) == '\n')
+    while (fgets(g_buf,LBUFLEN,kfp) != nullptr) {
+	if (*(cp = g_buf + strlen(g_buf) - 1) == '\n')
 	    *cp = '\0';
-	for (bp = buf; isspace(*bp); bp++) ;
+	for (bp = g_buf; isspace(*bp); bp++) ;
 	if (!strncmp(bp,"THRU",4)) {
 	    int len = strlen(g_ngptr->rc->name);
 	    cp = bp + 4;
@@ -178,8 +178,8 @@ int do_kfile(FILE *kfp, int entering)
 
 	if (*bp == '&') {
 	    mention(bp);
-	    if (bp > buf)
-		strcpy(buf, bp);
+	    if (bp > g_buf)
+		strcpy(g_buf, bp);
 	    switcheroo();
 	}
 	else if (*bp == '/') {
@@ -190,7 +190,7 @@ int do_kfile(FILE *kfp, int entering)
 		if (perform_status_end(g_ngptr->toread,"article")) {
 		    kill_mentioned = true;
 		    carriage_return();
-		    fputs(msg, stdout);
+		    fputs(g_msg, stdout);
 		    newline();
 		}
 	    }
@@ -198,11 +198,11 @@ int do_kfile(FILE *kfp, int entering)
 	    last_kill_type = '/';
 	    mention(bp);
 	    kill_mentioned = true;
-	    switch (art_search(bp, (sizeof buf) - (bp - buf), false)) {
+	    switch (art_search(bp, (sizeof g_buf) - (bp - g_buf), false)) {
 	    case SRCH_ABORT:
 		continue;
 	    case SRCH_INTR:
-		if (verbose)
+		if (g_verbose)
 		    printf("\n(Interrupted at article %ld)\n",(long)g_art)
 		      FLUSH;
 		else
@@ -229,7 +229,7 @@ int do_kfile(FILE *kfp, int entering)
 		    if (perform_status_end(g_ngptr->toread,"article")) {
 			kill_mentioned = true;
 			carriage_return();
-			fputs(msg, stdout);
+			fputs(g_msg, stdout);
 			newline();
 		    }
 		}
@@ -282,22 +282,22 @@ int do_kfile(FILE *kfp, int entering)
 	}
     }
     if (thread_kill_cnt) {
-	sprintf(buf,"%ld auto-kill command%s.", (long)thread_kill_cnt,
+	sprintf(g_buf,"%ld auto-kill command%s.", (long)thread_kill_cnt,
 		PLURAL(thread_kill_cnt));
-	mention(buf);
+	mention(g_buf);
 	kill_mentioned = true;
     }
     if (thread_select_cnt) {
-	sprintf(buf,"%ld auto-select command%s.", (long)thread_select_cnt,
+	sprintf(g_buf,"%ld auto-select command%s.", (long)thread_select_cnt,
 		PLURAL(thread_select_cnt));
-	mention(buf);
+	mention(g_buf);
 	kill_mentioned = true;
     }
     if (last_kill_type) {
 	if (perform_status_end(g_ngptr->toread,"article")) {
 	    kill_mentioned = true;
 	    carriage_return();
-	    fputs(msg, stdout);
+	    fputs(g_msg, stdout);
 	    newline();
 	}
     }
@@ -321,7 +321,7 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
 {
     bool intr = false;			/* did we get an interrupt? */
     ART_NUM oldfirst;
-    char oldmode = mode;
+    char oldmode = g_mode;
     bool anytokill = (g_ngptr->toread > 0);
 
     set_mode('r','k');
@@ -330,7 +330,7 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
 	oldfirst = g_firstart;
 	g_firstart = starting;
 	clear();
-	if (message && (verbose || entering))
+	if (message && (g_verbose || entering))
 	    fputs(message,stdout) FLUSH;
 
 	kill_mentioned = false;
@@ -343,8 +343,8 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
 	if (g_globkfp && !intr)
 	    intr = do_kfile(g_globkfp,entering);
 	newline();
-	if (entering && kill_mentioned && novice_delays) {
-	    if (verbose)
+	if (entering && kill_mentioned && g_novice_delays) {
+	    if (g_verbose)
 		get_anything();
 	    else
 		pad(just_a_sec);
@@ -355,7 +355,7 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
     }
     if (!entering && (g_kf_state & KFS_LOCAL_CHANGES) && !intr)
 	rewrite_kfile(g_lastart);
-    set_mode(gmode,oldmode);
+    set_mode(g_general_mode,oldmode);
 }
 
 static FILE* newkfp;
@@ -397,21 +397,21 @@ void rewrite_kfile(ART_NUM thru)
     g_kf_state &= ~(g_kfs_local_change_clear | KFS_NORMAL_LINES);
     if ((newkfp = fopen(killname,"w")) != nullptr) {
 	fprintf(newkfp,"THRU %s %ld\n",g_ngptr->rc->name,(long)thru);
-	while (g_localkfp && fgets(buf,LBUFLEN,g_localkfp) != nullptr) {
-	    if (!strncmp(buf,"THRU",4)) {
-		char* cp = buf+4;
+	while (g_localkfp && fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
+	    if (!strncmp(g_buf,"THRU",4)) {
+		char* cp = g_buf+4;
 		int len = strlen(g_ngptr->rc->name);
 		while (isspace(*cp)) cp++;
 		if (isdigit(*cp))
 		    continue;
 		if (strncmp(cp, g_ngptr->rc->name, len)
 		 || (cp[len] && !isspace(cp[len]))) {
-		    fputs(buf,newkfp);
-		    needs_newline = !strchr(buf,'\n');
+		    fputs(g_buf,newkfp);
+		    needs_newline = !strchr(g_buf,'\n');
 		}
 		continue;
 	    }
-	    for (bp = buf; isspace(*bp); bp++) ;
+	    for (bp = g_buf; isspace(*bp); bp++) ;
 	    /* Leave out any outdated thread commands */
 	    if (*bp == 'T' || *bp == '<')
 		continue;
@@ -419,7 +419,7 @@ void rewrite_kfile(ART_NUM thru)
 	    if (*bp == '*')
 		has_star_commands = true;
 	    else {
-		fputs(buf,newkfp);
+		fputs(g_buf,newkfp);
 		needs_newline = !strchr(bp,'\n');
 	    }
 	    has_content = true;
@@ -428,10 +428,10 @@ void rewrite_kfile(ART_NUM thru)
 	    putc('\n', newkfp);
 	if (has_star_commands) {
 	    fseek(g_localkfp,0L,0);			/* rewind file */
-	    while (fgets(buf,LBUFLEN,g_localkfp) != nullptr) {
-		for (bp = buf; isspace(*bp); bp++) ;
+	    while (fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
+		for (bp = g_buf; isspace(*bp); bp++) ;
 		if (*bp == '*') {
-		    fputs(buf,newkfp);
+		    fputs(g_buf,newkfp);
 		    needs_newline = !strchr(bp,'\n');
 		}
 	    }
@@ -448,7 +448,7 @@ void rewrite_kfile(ART_NUM thru)
 	open_kfile(KF_LOCAL);		/* and reopen local file */
     }
     else
-	printf(cantcreate,buf) FLUSH;
+	printf(g_cantcreate,g_buf) FLUSH;
 }
 
 static int write_global_thread_commands(int keylen, HASHDATUM *data, int appending)
@@ -602,7 +602,7 @@ int edit_kfile()
     int r = -1;
     char* bp;
 
-    if (in_ng) {
+    if (g_in_ng) {
 	if (g_kf_state & KFS_LOCAL_CHANGES)
 	    rewrite_kfile(g_lastart);
 	if (!(g_kf_state & KFS_GLOBAL_THREADFILE)) {
@@ -610,25 +610,25 @@ int edit_kfile()
 	    for (sp = g_first_subject; sp; sp = sp->next)
 		clear_subject(sp);
 	}
-	strcpy(buf,filexp(get_val("KILLLOCAL",s_killlocal)));
+	strcpy(g_buf,filexp(get_val("KILLLOCAL",s_killlocal)));
     } else
-	strcpy(buf,filexp(get_val("KILLGLOBAL",s_killglobal)));
-    if ((r = makedir(buf,MD_FILE)) == 0) {
-	sprintf(cmd_buf,"%s %s",
-	    filexp(get_val("VISUAL",get_val("EDITOR",defeditor))),buf);
+	strcpy(g_buf,filexp(get_val("KILLGLOBAL",s_killglobal)));
+    if ((r = makedir(g_buf,MD_FILE)) == 0) {
+	sprintf(g_cmd_buf,"%s %s",
+	    filexp(get_val("VISUAL",get_val("EDITOR",g_defeditor))),g_buf);
 	printf("\nEditing %s KILL file:\n%s\n",
-	    (in_ng?"local":"global"),cmd_buf) FLUSH;
+	    (g_in_ng?"local":"global"),g_cmd_buf) FLUSH;
 	termdown(3);
 	resetty();			/* make sure tty is friendly */
-	r = doshell(sh,cmd_buf);/* invoke the shell */
+	r = doshell(g_sh,g_cmd_buf);/* invoke the shell */
 	noecho();			/* and make terminal */
 	crmode();			/*   unfriendly again */
-	open_kfile(in_ng);
+	open_kfile(g_in_ng);
 	if (g_localkfp) {
 	    fseek(g_localkfp,0L,0);			/* rewind file */
 	    g_kf_state &= ~KFS_NORMAL_LINES;
-	    while (fgets(buf,LBUFLEN,g_localkfp) != nullptr) {
-		for (bp = buf; isspace(*bp); bp++) ;
+	    while (fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
+		for (bp = g_buf; isspace(*bp); bp++) ;
 		if (*bp == '/' || *bp == '*')
 		    g_kf_state |= KFS_NORMAL_LINES;
 		else if (*bp == '<') {
@@ -649,7 +649,7 @@ int edit_kfile()
 	}
     }
     else {
-	printf("Can't make %s\n",buf) FLUSH;
+	printf("Can't make %s\n",g_buf) FLUSH;
 	termdown(1);
     }
     return r;
@@ -663,7 +663,7 @@ void open_kfile(int local)
 	);
 
     /* delete the file if it is empty */
-    if (stat(kname,&filestat) >= 0 && !filestat.st_size)
+    if (stat(kname,&g_filestat) >= 0 && !g_filestat.st_size)
 	remove(kname);
     if (local) {
 	if (g_localkfp)
@@ -679,33 +679,33 @@ void open_kfile(int local)
 
 void kf_append(const char *cmd, bool local)
 {
-    strcpy(cmd_buf, filexp(local? get_val("KILLLOCAL",s_killlocal)
+    strcpy(g_cmd_buf, filexp(local? get_val("KILLLOCAL",s_killlocal)
 				: get_val("KILLGLOBAL",s_killglobal)));
-    if (makedir(cmd_buf,MD_FILE) == 0) {
-	if (verbose)
-	    printf("\nDepositing command in %s...",cmd_buf);
+    if (makedir(g_cmd_buf,MD_FILE) == 0) {
+	if (g_verbose)
+	    printf("\nDepositing command in %s...",g_cmd_buf);
 	else
-	    printf("\n--> %s...",cmd_buf);
+	    printf("\n--> %s...",g_cmd_buf);
 	fflush(stdout);
-	if (novice_delays)
+	if (g_novice_delays)
 	    sleep(2);
-	if ((tmpfp = fopen(cmd_buf,"a+")) != nullptr) {
+	if ((g_tmpfp = fopen(g_cmd_buf,"a+")) != nullptr) {
 	    char ch;
-	    if (fseek(tmpfp,-1L,2) < 0)
+	    if (fseek(g_tmpfp,-1L,2) < 0)
 		ch = '\n';
 	    else
-		ch = getc(tmpfp);
-	    fseek(tmpfp,0L,2);
+		ch = getc(g_tmpfp);
+	    fseek(g_tmpfp,0L,2);
 	    if (ch != '\n')
-		putc('\n', tmpfp);
-	    fprintf(tmpfp,"%s\n",cmd);
-	    fclose(tmpfp);
+		putc('\n', g_tmpfp);
+	    fprintf(g_tmpfp,"%s\n",cmd);
+	    fclose(g_tmpfp);
 	    if (local && !g_localkfp)
 		open_kfile(KF_LOCAL);
 	    fputs("done\n",stdout) FLUSH;
 	}
 	else
-	    printf(cantopen,cmd_buf) FLUSH;
+	    printf(g_cantopen,g_cmd_buf) FLUSH;
 	termdown(2);
     }
     g_kf_state |= KFS_NORMAL_LINES;

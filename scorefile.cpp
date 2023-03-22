@@ -829,18 +829,18 @@ char *sf_missing_score(const char *line)
     int i;
     char* s;
 
-    /* save line since it is probably pointing at (the TRN-global) buf */
+    /* save line since it is probably pointing at (the TRN-global) g_buf */
     s = savestr(line);
     printf("Possibly missing score.\n\
 Type a score now or delete the colon to abort this entry:\n") FLUSH;
-    buf[0] = ':';
-    buf[1] = FINISHCMD;
+    g_buf[0] = ':';
+    g_buf[1] = FINISHCMD;
     i = finish_command(true);	/* print the CR */
     if (!i) { /* there was no score */
 	free(s);
 	return nullptr;
     }
-    strcpy(lbuf,buf+1);
+    strcpy(lbuf,g_buf+1);
     i = strlen(lbuf);
     lbuf[i] = ' ';
     lbuf[i+1] = '\0';

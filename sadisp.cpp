@@ -20,7 +20,7 @@
 void sa_refresh_top()
 {
     color_object(COLOR_SCORE, true);
-    printf("%s |",ngname);
+    printf("%s |",g_ngname);
 /* # of articles might be optional later */
     printf(" %d",sa_number_arts());
 

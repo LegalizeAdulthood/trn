@@ -31,7 +31,7 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
     
     if (leave_count) {
 	if (output_level) {
-	    if (verbose)
+	    if (g_verbose)
 		printf("\nMarking all but %d articles in %s as read.\n",
 		       leave_count,np->rcline) FLUSH;
 	    else
@@ -42,7 +42,7 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
     }
     else {
 	if (output_level) {
-	    if (verbose)
+	    if (g_verbose)
 		printf("\nMarking %s as all read.\n",np->rcline) FLUSH;
 	    else
 		fputs("\nMarked read\n",stdout) FLUSH;
@@ -482,10 +482,10 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
 		safecpy(cp,s,len+1);
 	}
 
-	if (!checkflag && np->rcline == mbuf)
+	if (!g_checkflag && np->rcline == mbuf)
 	    np->rcline = saferealloc(np->rcline, (MEM_SIZE)(cp-mbuf+len+1));
 	else {
-	    if (!checkflag)
+	    if (!g_checkflag)
 		free(np->rcline);
 	    np->rcline = mbuf;
 	}

@@ -863,7 +863,7 @@ static char *univ_edit_new_userfile()
 }
 
 /* code adapted from edit_kfile in kfile.c */
-/* XXX problem if elements expand to larger than cmd_buf */
+/* XXX problem if elements expand to larger than g_cmd_buf */
 void univ_edit()
 {
     char* s;
@@ -888,18 +888,18 @@ void univ_page_file(char *fname)
     if (!fname || !*fname)
 	return;
 
-    sprintf(cmd_buf,"%s ",
+    sprintf(g_cmd_buf,"%s ",
 	    filexp(get_val("HELPPAGER",get_val("PAGER","more"))));
-    strcat(cmd_buf, filexp(fname));
+    strcat(g_cmd_buf, filexp(fname));
     termdown(3);
     resetty();			/* make sure tty is friendly */
-    doshell(sh,cmd_buf);	/* invoke the shell */
+    doshell(g_sh,g_cmd_buf);	/* invoke the shell */
     noecho();			/* and make terminal */
     crmode();			/*   unfriendly again */
     /* later: consider something else that will return the key, and
      *        returning different codes based on the key.
      */
-    if (!strncmp(cmd_buf,"more ",5))
+    if (!strncmp(g_cmd_buf,"more ",5))
 	get_anything();
 }
 
@@ -946,7 +946,7 @@ static void univ_vg_addart(ART_NUM a)
     /* later scan/replace bad characters */
 
     /* later consider author in description, scoring, etc. */
-    ui = univ_add_virt_num(nullptr,ngname,a);
+    ui = univ_add_virt_num(nullptr,g_ngname,a);
     ui->score = score;
     ui->data.virt.subj = savestr(subj);
     ui->data.virt.from = savestr(from);
@@ -992,7 +992,7 @@ int univ_visit_group_main(const char *gname)
 	g_current_ng = np;
     }
     old_threaded = g_threaded_group;
-    g_threaded_group = (use_threads && !(np->flags & NF_UNTHREADED));
+    g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
     printf("\nScanning newsgroup %s\n",gname);
     ret = do_newsgroup("");
     g_threaded_group = old_threaded;

@@ -166,19 +166,21 @@ inline void newline()
     putchar('\n');
     FLUSH;
 }
-#define backspace() tputs(tc_BC,0,putchr) FLUSH
-#define erase_eol() tputs(tc_CE,1,putchr) FLUSH
-#define clear_rest() tputs(tc_CD,tc_LINES,putchr) FLUSH
-#define maybe_eol() if(erase_screen&&erase_each_line)tputs(tc_CE,1,putchr) FLUSH
-#define underline() tputs(tc_US,1,putchr) FLUSH
-#define un_underline() fire_is_out|=UNDERLINE, tputs(tc_UE,1,putchr) FLUSH
-#define underchar() tputs(tc_UC,0,putchr) FLUSH
-#define standout() tputs(tc_SO,1,putchr) FLUSH
-#define un_standout() fire_is_out|=STANDOUT, tputs(tc_SE,1,putchr) FLUSH
-#define up_line() g_term_line--, tputs(tc_UP,1,putchr) FLUSH
-#define insert_line() tputs(tc_IL,1,putchr) FLUSH
-#define carriage_return() g_term_col=0, tputs(tc_CR,1,putchr) FLUSH
-#define dingaling() tputs(tc_VB,1,putchr) FLUSH
+#define backspace() tputs(tc_BC, 0, putchr) FLUSH
+#define erase_eol() tputs(tc_CE, 1, putchr) FLUSH
+#define clear_rest() tputs(tc_CD, tc_LINES, putchr) FLUSH
+#define maybe_eol()                        \
+    if (g_erase_screen && g_erase_each_line) \
+    tputs(tc_CE, 1, putchr) FLUSH
+#define underline() tputs(tc_US, 1, putchr) FLUSH
+#define un_underline() fire_is_out |= UNDERLINE, tputs(tc_UE, 1, putchr) FLUSH
+#define underchar() tputs(tc_UC, 0, putchr) FLUSH
+#define standout() tputs(tc_SO, 1, putchr) FLUSH
+#define un_standout() fire_is_out |= STANDOUT, tputs(tc_SE, 1, putchr) FLUSH
+#define up_line() g_term_line--, tputs(tc_UP, 1, putchr) FLUSH
+#define insert_line() tputs(tc_IL, 1, putchr) FLUSH
+#define carriage_return() g_term_col = 0, tputs(tc_CR, 1, putchr) FLUSH
+#define dingaling() tputs(tc_VB, 1, putchr) FLUSH
 #else /* !HAS_TERMLIB */
 //..."Don't know how to define the term macros!"
 #endif /* !HAS_TERMLIB */

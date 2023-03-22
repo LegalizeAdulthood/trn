@@ -122,10 +122,10 @@ sa_main_result sa_main()
 	g_s_top_ent = -1;		/* go to top of arts... */
     }
 
-    sa_oldmode = mode;			/* save mode */
-    mode = 's';				/* for RN macros */
+    sa_oldmode = g_mode;			/* save mode */
+    g_mode = 's';				/* for RN macros */
     sa_main_result i = sa_mainloop();
-    mode = sa_oldmode;			/* restore mode */
+    g_mode = sa_oldmode;			/* restore mode */
 
     if (i == SA_NORM || i == SA_FAKE) {
 	g_art = g_sa_art;

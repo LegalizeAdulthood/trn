@@ -603,17 +603,17 @@
 /* GLOBAL THINGS */
 
 /* file statistics area */
-extern struct stat filestat;
+extern struct stat g_filestat;
 
 /* various things of type char */
 
-extern char msg[CBUFLEN];     /* general purpose message buffer */
-extern char buf[LBUFLEN + 1]; /* general purpose line buffer */
-extern char cmd_buf[CBUFLEN]; /* buffer for formatting system commands */
-extern char *indstr;          /* indent for old article embedded in followup */
+extern char g_msg[CBUFLEN];     /* general purpose message buffer */
+extern char g_buf[LBUFLEN + 1]; /* general purpose line buffer */
+extern char g_cmd_buf[CBUFLEN]; /* buffer for formatting system commands */
+extern char *g_indstr;          /* indent for old article embedded in followup */
 
-extern char *cwd;     /* current working directory */
-extern char *dfltcmd; /* 1st char is default command */
+extern char *g_cwd;     /* current working directory */
+extern char *g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
@@ -635,121 +635,121 @@ extern int debug; /* -D */
 #   define DEB_FEED_XREF 16384
 #endif
 
-extern int scanon; /* -S */
+extern int g_scanon; /* -S */
 
-extern bool use_threads; /* -x */
-extern int max_tree_lines;
+extern bool g_use_threads; /* -x */
+extern int g_max_tree_lines;
 
-extern char UnivSelCmds[3];
-extern char NewsrcSelCmds[3];
-extern char AddSelCmds[3];
-extern char NewsgroupSelCmds[3];
-extern char NewsSelCmds[3];
-extern char OptionSelCmds[3];
+extern char g_univ_sel_cmds[3];
+extern char g_newsrc_sel_cmds[3];
+extern char g_add_sel_cmds[3];
+extern char g_newsgroup_sel_cmds[3];
+extern char g_news_sel_cmds[3];
+extern char g_option_sel_cmds[3];
 
-extern int UnivSelBtnCnt;
-extern int NewsrcSelBtnCnt;
-extern int AddSelBtnCnt;
-extern int NewsgroupSelBtnCnt;
-extern int NewsSelBtnCnt;
-extern int OptionSelBtnCnt;
-extern int ArtPagerBtnCnt;
+extern int g_univ_sel_btn_cnt;
+extern int g_newsrc_sel_btn_cnt;
+extern int g_add_sel_btn_cnt;
+extern int g_newsgroup_sel_btn_cnt;
+extern int g_news_sel_btn_cnt;
+extern int g_option_sel_btn_cnt;
+extern int g_art_pager_btn_cnt;
 
-extern char *UnivSelBtns;
-extern char *NewsrcSelBtns;
-extern char *AddSelBtns;
-extern char *NewsgroupSelBtns;
-extern char *NewsSelBtns;
-extern char *OptionSelBtns;
-extern char *ArtPagerBtns;
+extern char *g_univ_sel_btns;
+extern char *g_newsrc_sel_btns;
+extern char *g_add_sel_btns;
+extern char *g_newsgroup_sel_btns;
+extern char *g_news_sel_btns;
+extern char *g_option_sel_btns;
+extern char *g_art_pager_btns;
 
-extern bool dont_filter_control;  /* -j */
-extern int join_subject_len;      /* -J */
-extern bool kill_thru_kludge;     /* -k */
-extern int keep_the_group_static; /* -K */
-extern bool mbox_always;          /* -M */
-extern bool norm_always;          /* -N */
-extern bool thread_always;        /* -a */
-extern int auto_arrow_macros;     /* -A */
-extern bool breadth_first;        /* -b */
-extern bool bkgnd_spinner;        /* -B */
-extern bool novice_delays;        /* +f */
-extern int olden_days;            /* -o */
-extern char auto_select_postings; /* -p */
-extern bool checkflag;            /* -c */
-extern char *savedir;             /* -d */
-extern bool suppress_cn;          /* -s */
-extern int countdown;             /* how many lines to list before invoking -s */
-extern bool muck_up_clear;        /* -loco */
-extern bool erase_screen;         /* -e */
-extern bool can_home;
-extern bool erase_each_line;   /* fancy -e */
-extern int findlast;           /* -r */
-extern bool allow_typeahead;   /* -T */
-extern bool fuzzyGet;          /* -G */
-extern bool verbose;           /* +t */
-extern bool unbroken_subjects; /* -u */
-extern bool unsafe_rc_saves;   /* -U */
-extern bool verify;            /* -v */
-extern bool quickstart;        /* -q */
+extern bool g_dont_filter_control;  /* -j */
+extern int g_join_subject_len;      /* -J */
+extern bool g_kill_thru_kludge;     /* -k */
+extern int g_keep_the_group_static; /* -K */
+extern bool g_mbox_always;          /* -M */
+extern bool g_norm_always;          /* -N */
+extern bool g_thread_always;        /* -a */
+extern int g_auto_arrow_macros;     /* -A */
+extern bool g_breadth_first;        /* -b */
+extern bool g_bkgnd_spinner;        /* -B */
+extern bool g_novice_delays;        /* +f */
+extern int g_olden_days;            /* -o */
+extern char g_auto_select_postings; /* -p */
+extern bool g_checkflag;            /* -c */
+extern char *g_savedir;             /* -d */
+extern bool g_suppress_cn;          /* -s */
+extern int g_countdown;             /* how many lines to list before invoking -s */
+extern bool g_muck_up_clear;        /* -loco */
+extern bool g_erase_screen;         /* -e */
+extern bool g_can_home;
+extern bool g_erase_each_line;   /* fancy -e */
+extern int g_findlast;           /* -r */
+extern bool g_allow_typeahead;   /* -T */
+extern bool g_fuzzy_get;          /* -G */
+extern bool g_verbose;           /* +t */
+extern bool g_unbroken_subjects; /* -u */
+extern bool g_unsafe_rc_saves;   /* -U */
+extern bool g_verify;            /* -v */
+extern bool g_quickstart;        /* -q */
 
 #define DEFAULT_REFETCH_SECS  4L*60*60	/* 4 hours */
-extern time_t defRefetchSecs;             /* -z */
+extern time_t g_def_refetch_secs;             /* -z */
 
-extern int word_wrap_offset; /* right-hand column size (0 is off) */
+extern int g_word_wrap_offset; /* right-hand column size (0 is off) */
 
 #define NOMARKING 0
 #define STANDOUT 1
 #define UNDERLINE 2
 #define LASTMARKING 3
 
-extern int marking; /* -m */
+extern int g_marking; /* -m */
 
 #define HALFPAGE_MARKING 1
 #define BACKPAGE_MARKING 2
-extern int marking_areas;
+extern int g_marking_areas;
 
-extern ART_LINE initlines; /* -i */
-extern bool append_unsub;  /* -I */
+extern ART_LINE g_initlines; /* -i */
+extern bool g_append_unsub;  /* -I */
 
-extern bool UseUnivSelector;
-extern bool UseNewsrcSelector;
-extern bool UseAddSelector;
-extern bool UseNewsgroupSelector;
-extern int UseNewsSelector;
-extern bool UseMouse;
-extern char MouseModes[32];
-extern bool use_colors;
-extern bool UseTk;
-extern bool UseTcl;
-extern bool UseSelNum;
-extern bool SelNumGoto;
+extern bool g_use_univ_selector;
+extern bool g_use_newsrc_selector;
+extern bool g_use_add_selector;
+extern bool g_use_newsgroup_selector;
+extern int g_use_news_selector;
+extern bool g_use_mouse;
+extern char g_mouse_modes[32];
+extern bool g_use_colors;
+extern bool g_use_tk;
+extern bool g_use_tcl;
+extern bool g_use_sel_num;
+extern bool g_sel_num_goto;
 /* miscellania */
 
-extern bool in_ng; /* true if in a newsgroup */
-extern char mode;  /* current state of trn */
-extern char gmode; /* general mode of trn */
+extern bool g_in_ng; /* true if in a newsgroup */
+extern char g_mode;  /* current state of trn */
+extern char g_general_mode; /* general mode of trn */
 
-extern FILE *tmpfp; /* scratch fp used for .rnlock, .rnlast, etc. */
+extern FILE *g_tmpfp; /* scratch fp used for .rnlock, .rnlast, etc. */
 
 #define PLURAL(num) ((num)==1? "" : "s")
 #define ALLBITS(val,bits) (((val) & (bits)) == (bits))
 
 /* Factored strings */
 
-extern char sh[];
-extern char defeditor[];
-extern char hforhelp[];
+extern char g_sh[];
+extern char g_defeditor[];
+extern char g_hforhelp[];
 #ifdef STRICTCR
-extern char badcr[];
+extern char g_badcr[];
 #endif
-extern char readerr[];
-extern char unsubto[];
-extern char cantopen[];
-extern char cantcreate[];
-extern char cantrecreate[];
+extern char g_readerr[];
+extern char g_unsubto[];
+extern char g_cantopen[];
+extern char g_cantcreate[];
+extern char g_cantrecreate[];
 
-extern char nocd[];
+extern char g_nocd[];
 
 #ifdef NOLINEBUF
 #define FLUSH ,fflush(stdout)

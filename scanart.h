@@ -13,7 +13,7 @@ enum sa_main_result
     SA_QUIT_SEL = -6, /* quit, and return to previous selector (backtick) */
     SA_PRIOR = -5,    /* go to and enter prior newsgroup */
     SA_NEXT = -4,     /* go to and enter next newsgroup */
-    SA_FAKE = -3,     /* Fake a command (buf and g_art already set up) */
+    SA_FAKE = -3,     /* Fake a command (g_buf and g_art already set up) */
     SA_ERR = -2,      /* error, quit out one level */
     SA_QUIT = -1,     /* quit out one level and clean up... */
     SA_NORM = 0       /* do the normal thing (usually read article pointed to by g_art) */

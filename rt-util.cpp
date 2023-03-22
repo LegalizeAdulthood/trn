@@ -489,7 +489,7 @@ char *compress_date(const ARTICLE *ap, int size)
     char* s;
     char* t;
 
-    strncpy(t = cmd_buf, ctime(&ap->date), size);
+    strncpy(t = g_cmd_buf, ctime(&ap->date), size);
     if ((s = strchr(t, '\n')) != nullptr)
 	*s = '\0';
     t[size] = '\0';
@@ -537,17 +537,17 @@ const char *compress_subj(const ARTICLE *ap, int max)
 	return "<MISSING>";
 
     /* Put a preceeding '>' on subjects that are replies to other articles */
-    cp = buf;
+    cp = g_buf;
     first = (g_threaded_group? ap->subj->thread : ap->subj->articles);
     if (ap != first || (ap->flags & AF_HAS_RE)
      || (!(ap->flags&AF_UNREAD) ^ g_sel_rereading))
 	*cp++ = '>';
-    strcharsubst(cp, ap->subj->str + 4, (sizeof buf) - (cp-buf), *g_charsubst);
+    strcharsubst(cp, ap->subj->str + 4, (sizeof g_buf) - (cp-g_buf), *g_charsubst);
 
     /* Remove "(was: oldsubject)", because we already know the old subjects.
     ** Also match "(Re: oldsubject)".  Allow possible spaces after the ('s.
     */
-    for (cp = buf; (cp = strchr(cp+1, '(')) != nullptr;) {
+    for (cp = g_buf; (cp = strchr(cp+1, '(')) != nullptr;) {
 	while (*++cp == ' ') ;
 	if (EQ(cp[0], 'w') && EQ(cp[1], 'a') && EQ(cp[2], 's')
 	 && (cp[3] == ':' || cp[3] == ' ')) {
@@ -560,23 +560,23 @@ const char *compress_subj(const ARTICLE *ap, int max)
 	    break;
 	}
     }
-    len = strlen(buf);
-    if (!unbroken_subjects && len > max) {
+    len = strlen(g_buf);
+    if (!g_unbroken_subjects && len > max) {
 	char* last_word;
 	/* Try to include the last two words on the line while trimming */ 
-	if ((last_word = strrchr(buf, ' ')) != nullptr) {
+	if ((last_word = strrchr(g_buf, ' ')) != nullptr) {
 	    char* next_to_last;
 	    *last_word = '\0';
-	    if ((next_to_last = strrchr(buf, ' ')) != nullptr) {
-		if (next_to_last-buf >= len - max + 3 + 10-1)
+	    if ((next_to_last = strrchr(g_buf, ' ')) != nullptr) {
+		if (next_to_last-g_buf >= len - max + 3 + 10-1)
 		    cp = next_to_last;
 		else
 		    cp = last_word;
 	    } else
 		cp = last_word;
 	    *last_word = ' ';
-	    if (cp-buf >= len - max + 3 + 10-1) {
-		char* s = buf + max - (len-(cp-buf)+3);
+	    if (cp-g_buf >= len - max + 3 + 10-1) {
+		char* s = g_buf + max - (len-(cp-g_buf)+3);
 		*s++ = '.'; *s++ = '.'; *s++ = '.';
 		safecpy(s, cp + 1, max);
 		len = max;
@@ -584,8 +584,8 @@ const char *compress_subj(const ARTICLE *ap, int max)
 	}
     }
     if (len > max)
-	buf[max] = '\0';
-    return buf;
+	g_buf[max] = '\0';
+    return g_buf;
 }
 
 /* Modified version of a spinner originally found in Clifford Adams' strn. */
@@ -615,7 +615,7 @@ void setspin(int mode)
 	if (mode == SPIN_BARGRAPH) {
 	    if (spin_mode != SPIN_BARGRAPH) {
 		int i;
-		g_spin_marks = (verbose? 25 : 10);
+		g_spin_marks = (g_verbose? 25 : 10);
 		printf(" [%*s]", g_spin_marks, "");
 		for (i = g_spin_marks + 1; i--; ) backspace();
 		fflush(stdout);
@@ -661,7 +661,7 @@ void spin(int count)
 	return;
     switch (spin_mode) {
       case SPIN_BACKGROUND:
-	if (!bkgnd_spinner)
+	if (!g_bkgnd_spinner)
 	    return;
 	if (!(++g_spin_count % count)) {
 	    putchar(spinchars[++spin_place % 4]);
@@ -784,7 +784,7 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
     else
 	neg = false;
 
-    if (cp != msg) {
+    if (cp != g_msg) {
 	*cp++ = ',';
 	*cp++ = ' ';
     }
@@ -815,11 +815,11 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
 int perform_status_end(long cnt, const char *obj_type)
 {
     long kills, sels, missing;
-    char* cp = msg;
+    char* cp = g_msg;
     bool article_status = (*obj_type == 'a');
 
     if (g_perform_cnt == 0) {
-	sprintf(msg, "No %ss affected.", obj_type);
+	sprintf(g_msg, "No %ss affected.", obj_type);
 	return 0;
     }
 

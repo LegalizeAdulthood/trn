@@ -83,7 +83,7 @@ int access_ng()
     ART_NUM old_first = g_ngptr->abs1st;
 
     if (g_datasrc->flags & DF_REMOTE) {
-	int ret = nntp_group(ngname,g_ngptr);
+	int ret = nntp_group(g_ngname,g_ngptr);
 	if (ret == -2)
 	    return -2;
 	if (ret <= 0) {
@@ -98,20 +98,20 @@ int access_ng()
     }
     else
     {
-	if (eaccess(ngdir,5)) {		/* directory read protected? */
-	    if (eaccess(ngdir,0)) {
-		if (verbose)
+	if (eaccess(g_ngdir,5)) {		/* directory read protected? */
+	    if (eaccess(g_ngdir,0)) {
+		if (g_verbose)
 		    printf("\nNewsgroup %s does not have a spool directory!\n",
-			   ngname) FLUSH;
+			   g_ngname) FLUSH;
 		else
-		    printf("\nNo spool for %s!\n",ngname) FLUSH;
+		    printf("\nNo spool for %s!\n",g_ngname) FLUSH;
 		termdown(2);
 	    } else {
-		if (verbose)
+		if (g_verbose)
 		    printf("\nNewsgroup %s is not currently accessible.\n",
-			   ngname) FLUSH;
+			   g_ngname) FLUSH;
 		else
-		    printf("\n%s not readable.\n",ngname) FLUSH;
+		    printf("\n%s not readable.\n",g_ngname) FLUSH;
 		termdown(2);
 	    }
 	    /* make this newsgroup temporarily invisible */
@@ -121,8 +121,8 @@ int access_ng()
 
 	/* chdir to newsgroup subdirectory */
 
-	if (chdir(ngdir)) {
-	    printf(nocd,ngdir) FLUSH;
+	if (chdir(g_ngdir)) {
+	    printf(g_nocd,g_ngdir) FLUSH;
 	    return 0;
 	}
 	if ((g_lastart = getngsize(g_ngptr)) < 0) /* Impossible... */
@@ -132,7 +132,7 @@ int access_ng()
 
     g_dmcount = 0;
     g_missing_count = 0;
-    in_ng = true;			/* tell the world we are here */
+    g_in_ng = true;			/* tell the world we are here */
 
     build_cache();
     return 1;
@@ -140,9 +140,9 @@ int access_ng()
 
 void chdir_newsdir()
 {
-    if (chdir(g_datasrc->spool_dir) || (!(g_datasrc->flags & DF_REMOTE) && chdir(ngdir)))
+    if (chdir(g_datasrc->spool_dir) || (!(g_datasrc->flags & DF_REMOTE) && chdir(g_ngdir)))
     {
-	printf(nocd,ngdir) FLUSH;
+	printf(g_nocd,g_ngdir) FLUSH;
 	sig_catcher(0);
     }
 }
@@ -166,18 +166,18 @@ void grow_ng(ART_NUM newlast)
 	thread_grow();
 	/* Score all new articles now just in case they weren't done above. */
 	sc_fill_scorelist(tmpfirst,newlast);
-	if (verbose)
-	    sprintf(buf,
+	if (g_verbose)
+	    sprintf(g_buf,
 		"%ld more article%s arrived -- processing memorized commands...\n\n",
 		(long)(g_lastart - tmpfirst + 1),
 		(g_lastart > tmpfirst ? "s have" : " has" ) );
 	else			/* my, my, how clever we are */
-	    strcpy(buf, "More news -- auto-processing...\n\n");
+	    strcpy(g_buf, "More news -- auto-processing...\n\n");
 	termdown(2);
 	if (g_kf_state & KFS_NORMAL_LINES) {
 	    bool forcelast_save = g_forcelast;
 	    ARTICLE* artp_save = g_artp;
-	    kill_unwanted(tmpfirst,buf,true);
+	    kill_unwanted(tmpfirst,g_buf,true);
 	    g_artp = artp_save;
 	    g_forcelast = forcelast_save;
 	}
@@ -254,12 +254,12 @@ void ng_skip()
 	ART_NUM artnum;
 
 	clear();
-	if (verbose)
+	if (g_verbose)
 	    fputs("Skipping unavailable article\n",stdout);
 	else
 	    fputs("Skipping\n",stdout);
 	termdown(1);
-	if (novice_delays) {
+	if (g_novice_delays) {
 	    pad(just_a_sec/3);
 	    sleep(1);
 	}
@@ -283,13 +283,13 @@ void ng_skip()
     {
 	if (errno != ENOENT) {	/* has it not been deleted? */
 	    clear();
-	    if (verbose)
+	    if (g_verbose)
 		printf("\n(Article %ld exists but is unreadable.)\n",(long)g_art)
 			FLUSH;
 	    else
 		printf("\n(%ld unreadable.)\n",(long)g_art) FLUSH;
 	    termdown(2);
-	    if (novice_delays) {
+	    if (g_novice_delays) {
 		pad(just_a_sec);
 		sleep(2);
 	    }
@@ -328,7 +328,7 @@ ART_NUM getngsize(NGDATA *gp)
 #endif
     if (!gp->abs1st)
 	gp->abs1st = (ART_NUM)first;
-    if (!in_ng) {
+    if (!g_in_ng) {
 	if (g_redirected) {
 	    if (g_redirected != "")
 		free(g_redirected);

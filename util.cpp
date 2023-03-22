@@ -62,22 +62,22 @@ static char* nntpforce_export = null_export + 2;
 
 void util_init()
 {
-    extern char patchlevel[];
+    extern char g_patchlevel[];
     char* cp;
     int i;
-    for (i = 0, cp = buf; i < 512; i++)
+    for (i = 0, cp = g_buf; i < 512; i++)
 	*cp++ = 'X';
     *cp = '\0';
-    newsactive_export = export_var("NEWSACTIVE", buf);
-    grpdesc_export = export_var("NEWSDESCRIPTIONS", buf);
-    nntpserver_export = export_var("NNTPSERVER", buf);
-    buf[64] = '\0';
-    quotechars_export = export_var("QUOTECHARS",buf);
-    nntpfds_export = export_var("NNTPFDS", buf);
-    buf[3] = '\0';
-    nntpforce_export = export_var("NNTP_FORCE_AUTH", buf);
+    newsactive_export = export_var("NEWSACTIVE", g_buf);
+    grpdesc_export = export_var("NEWSDESCRIPTIONS", g_buf);
+    nntpserver_export = export_var("NNTPSERVER", g_buf);
+    g_buf[64] = '\0';
+    quotechars_export = export_var("QUOTECHARS",g_buf);
+    nntpfds_export = export_var("NNTPFDS", g_buf);
+    g_buf[3] = '\0';
+    nntpforce_export = export_var("NNTP_FORCE_AUTH", g_buf);
 
-    for (cp = patchlevel; isspace(*cp); cp++) ;
+    for (cp = g_patchlevel; isspace(*cp); cp++) ;
     export_var("TRN_VERSION", cp);
 }
     
@@ -102,9 +102,9 @@ int doshell(const char *shell, const char *s)
 	if (!export_nntp_fds || !nntplink.rd_fp)
 	    un_export(nntpfds_export);
 	else {
-	    sprintf(buf,"%d.%d",(int)fileno(nntplink.rd_fp),
+	    sprintf(g_buf,"%d.%d",(int)fileno(nntplink.rd_fp),
 				(int)fileno(nntplink.wr_fp));
-	    re_export(nntpfds_export, buf, 64);
+	    re_export(nntpfds_export, g_buf, 64);
 	}
 	re_export(nntpserver_export,g_datasrc->newsid,512);
 	if (g_datasrc->nntplink.flags & NNTP_FORCE_AUTH_NEEDED)
@@ -125,9 +125,9 @@ int doshell(const char *shell, const char *s)
 	}
 	if (nntplink.port_number) {
 	    int len = strlen(nntpserver_export);
-	    sprintf(buf,";%d",nntplink.port_number);
-	    if (len + (int)strlen(buf) < 511)
-		strcpy(nntpserver_export+len, buf);
+	    sprintf(g_buf,";%d",nntplink.port_number);
+	    if (len + (int)strlen(g_buf) < 511)
+		strcpy(nntpserver_export+len, g_buf);
 	}
 	if (g_datasrc->act_sf.fp)
 	    re_export(newsactive_export, g_datasrc->extra_name, 512);
@@ -146,9 +146,9 @@ int doshell(const char *shell, const char *s)
 	re_export(grpdesc_export, g_datasrc->grpdesc, 512);
     else
 	un_export(grpdesc_export);
-    interp(buf,64-1+2,"%I");
-    buf[strlen(buf)-1] = '\0';
-    re_export(quotechars_export, buf+1, 64);
+    interp(g_buf,64-1+2,"%I");
+    g_buf[strlen(g_buf)-1] = '\0';
+    re_export(quotechars_export, g_buf+1, 64);
     if (shell == nullptr && (shell = get_val("SHELL",nullptr)) == nullptr)
 	shell = PREFSHELL;
     termlib_reset();
@@ -287,13 +287,13 @@ int mod;
     int protection, euid;
     
     mod &= 7;				/* remove extraneous garbage */
-    if (stat(filename, &filestat) < 0)
+    if (stat(filename, &g_filestat) < 0)
 	return -1;
     euid = geteuid();
     if (euid == ROOTID)
 	return 0;
-    protection = 7 & ( filestat.st_mode >> (filestat.st_uid == euid ?
-			6 : (filestat.st_gid == getegid() ? 3 : 0)) );
+    protection = 7 & ( g_filestat.st_mode >> (g_filestat.st_uid == euid ?
+			6 : (g_filestat.st_gid == getegid() ? 3 : 0)) );
     if ((mod & protection) == mod)
 	return 0;
     errno = EACCES;
@@ -311,7 +311,7 @@ char *trn_getwd(char *buf, int buflen)
 #ifdef HAS_GETCWD
     ret = getcwd(buf, buflen);
 #else
-    ret = trn_getcwd(buf, buflen);
+    ret = trn_getcwd(g_buf, buflen);
 #endif
     if (!ret) {
 	printf("Cannot determine current working directory!\n") FLUSH;
@@ -326,13 +326,13 @@ char *trn_getwd(char *buf, int buflen)
 }
 
 #ifndef HAS_GETCWD
-static char *trn_getcwd(char *buf, int len)
+static char *trn_getcwd(char *g_buf, int len)
 {
     char* ret;
 #ifdef HAS_GETWD
-    buf[len-1] = 0;
-    ret = getwd(buf);
-    if (buf[len-1]) {
+    g_buf[len-1] = 0;
+    ret = getwd(g_buf);
+    if (g_buf[len-1]) {
 	/* getwd() overwrote the end of the buffer */
 	printf("getwd() buffer overrun!\n") FLUSH;
 	finalize(1);
@@ -346,17 +346,17 @@ static char *trn_getcwd(char *buf, int len)
 	printf("Can't popen /bin/pwd\n") FLUSH;
 	return nullptr;
     }
-    buf[0] = 0;
-    fgets(ret = buf, len, pipefp);
+    g_buf[0] = 0;
+    fgets(ret = g_buf, len, pipefp);
     if (pclose(pipefp) == EOF) {
 	printf("Failed to run /bin/pwd\n") FLUSH;
 	return nullptr;
     }
-    if (!buf[0]) {
+    if (!g_buf[0]) {
 	printf("/bin/pwd didn't output anything\n") FLUSH;
     	return nullptr;
     }
-    if ((nl = strchr(buf, '\n')) != nullptr)
+    if ((nl = strchr(g_buf, '\n')) != nullptr)
 	*nl = '\0';
 #endif
     return ret;
@@ -420,7 +420,7 @@ int makedir(char *dirname, int nametype)
 
     s = end;
     for (;;) {
-	if (stat(dirname,&filestat) >= 0 && S_ISDIR(filestat.st_mode)) {
+	if (stat(dirname,&g_filestat) >= 0 && S_ISDIR(g_filestat.st_mode)) {
 					/* does this much exist as a dir? */
 	    *s = '/';			/* mark this as existing */
 	    break;
@@ -452,7 +452,7 @@ int makedir(char *dirname, int nametype)
 # ifdef HAS_MKDIR
     return status;
 # else
-    return (tbptr==tmpbuf+5 ? 0 : doshell(sh,tmpbuf));/* exercise our faith */
+    return (tbptr==tmpbuf+5 ? 0 : doshell(g_sh,tmpbuf));/* exercise our faith */
 # endif
 }
 
@@ -519,16 +519,16 @@ void verify_sig()
 
     printf("\n");
     /* RIPEM */
-    i = doshell(sh,filexp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
+    i = doshell(g_sh,filexp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
     if (!i) {	/* found RIPEM */
-	i = doshell(sh,filexp(get_val("VERIFY_RIPEM",VERIFY_RIPEM)));
+	i = doshell(g_sh,filexp(get_val("VERIFY_RIPEM",VERIFY_RIPEM)));
 	printf("\nReturned value: %d\n",i) FLUSH;
 	return;
     }
     /* PGP */
-    i = doshell(sh,filexp("grep -s \"BEGIN PGP\" %A"));
+    i = doshell(g_sh,filexp("grep -s \"BEGIN PGP\" %A"));
     if (!i) {	/* found PGP */
-	i = doshell(sh,filexp(get_val("VERIFY_PGP",VERIFY_PGP)));
+	i = doshell(g_sh,filexp(get_val("VERIFY_PGP",VERIFY_PGP)));
 	printf("\nReturned value: %d\n",i) FLUSH;
 	return;
     }
@@ -594,7 +594,7 @@ time_t text2secs(char *s, time_t defSecs)
 
 char *secs2text(time_t secs)
 {
-    char* s = buf;
+    char* s = g_buf;
     int items;
 
     if (!secs || (secs & 1))
@@ -620,7 +620,7 @@ char *secs2text(time_t secs)
 	s += strlen(s);
     }
     s[-2] = '\0';
-    return buf;
+    return g_buf;
 }
 
 /* returns a saved string representing a unique temporary filename */
@@ -866,9 +866,9 @@ bool check_ini_cond(char *cond)
 {
     int not, equal, upordown, num;
     char* s;
-    cond = dointerp(buf,sizeof buf,cond,"!=<>",nullptr);
-    s = buf + strlen(buf);
-    while (s != buf && isspace(s[-1])) s--;
+    cond = dointerp(g_buf,sizeof g_buf,cond,"!=<>",nullptr);
+    s = g_buf + strlen(g_buf);
+    while (s != g_buf && isspace(s[-1])) s--;
     *s = '\0';
     if ((not = (*cond == '!')) != 0)
 	cond++;
@@ -878,7 +878,7 @@ bool check_ini_cond(char *cond)
 	cond++;
     while (isspace(*cond)) cond++;
     if (upordown) {
-	num = atoi(cond) - atoi(buf);
+	num = atoi(cond) - atoi(g_buf);
 	if (!((equal && !num) || (upordown * num < 0)) ^ not)
 	    return false;
     }
@@ -890,7 +890,7 @@ bool check_ini_cond(char *cond)
 	    equal = false;
 	}
 	else
-	    equal = execute(&condcompex,buf) != nullptr;
+	    equal = execute(&condcompex,g_buf) != nullptr;
 	free_compex(&condcompex);
 	return equal;
     }
@@ -906,9 +906,9 @@ char menu_get_char()
     printf("Enter your choice: ");
     fflush(stdout);
     eat_typeahead();
-    getcmd(buf);
-    printf("%c\n",*buf) FLUSH;
-    return(*buf);
+    getcmd(g_buf);
+    printf("%c\n",*g_buf) FLUSH;
+    return(*g_buf);
 }
 
 /* NOTE: kfile.c uses its own editor function */
@@ -921,12 +921,12 @@ int edit_file(char *fname)
 	return r;
 
     /* XXX paranoia check on length */
-    sprintf(cmd_buf,"%s ",
-	    filexp(get_val("VISUAL",get_val("EDITOR",defeditor))));
-    strcat(cmd_buf, filexp(fname));
+    sprintf(g_cmd_buf,"%s ",
+	    filexp(get_val("VISUAL",get_val("EDITOR",g_defeditor))));
+    strcat(g_cmd_buf, filexp(fname));
     termdown(3);
     resetty();			/* make sure tty is friendly */
-    r = doshell(sh,cmd_buf);/* invoke the shell */
+    r = doshell(g_sh,g_cmd_buf);/* invoke the shell */
     noecho();			/* and make terminal */
     crmode();			/*   unfriendly again */
     return r;

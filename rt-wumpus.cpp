@@ -95,14 +95,14 @@ void init_tree()
 	    s_first_depth = 0;
 	s_max_depth = s_first_depth + 5;
     }
-    if (--s_max_line < max_tree_lines)
+    if (--s_max_line < g_max_tree_lines)
 	s_first_line = 0;
     else {
-	if (s_my_line + max_tree_lines/2 > s_max_line)
-	    s_first_line = s_max_line - (max_tree_lines-1);
-	else if ((s_first_line = s_my_line - (max_tree_lines-1)/2) < 0)
+	if (s_my_line + g_max_tree_lines/2 > s_max_line)
+	    s_first_line = s_max_line - (g_max_tree_lines-1);
+	else if ((s_first_line = s_my_line - (g_max_tree_lines-1)/2) < 0)
 	    s_first_line = 0;
-	s_max_line = s_first_line + max_tree_lines-1;
+	s_max_line = s_first_line + g_max_tree_lines-1;
     }
 
     s_str = s_tree_buff;		/* initialize first line's data */
@@ -474,7 +474,7 @@ void entire_tree(ARTICLE* ap)
     int num;
 
     if (!ap) {
-	if (verbose)
+	if (g_verbose)
 	    fputs("\nNo article tree to display.\n", stdout) FLUSH;
 	else
 	    fputs("\nNo tree.\n", stdout) FLUSH;
@@ -517,7 +517,7 @@ void entire_tree(ARTICLE* ap)
     if (check_page_line())
 	return;
     putchar(' ');
-    buf[3] = '\0';
+    g_buf[3] = '\0';
     display_tree(thread, s_tree_indent);
 
     if (check_page_line())
@@ -537,26 +537,26 @@ static void display_tree(ARTICLE *article, char *cp)
     for (;;) {
 	putchar(((article->flags&AF_HAS_RE) || article->parent) ? '-' : ' ');
 	if (!(article->flags & AF_UNREAD)) {
-	    buf[0] = '(';
-	    buf[2] = ')';
+	    g_buf[0] = '(';
+	    g_buf[2] = ')';
 	} else if (!g_selected_only || (article->flags & AF_SEL)) {
-	    buf[0] = '[';
-	    buf[2] = ']';
+	    g_buf[0] = '[';
+	    g_buf[2] = ']';
 	} else {
-	    buf[0] = '<';
-	    buf[2] = '>';
+	    g_buf[0] = '<';
+	    g_buf[2] = '>';
 	}
-	buf[1] = thread_letter(article);
+	g_buf[1] = thread_letter(article);
 	if (article == g_curr_artp) {
-	    color_string(COLOR_TREE_MARK,buf);
+	    color_string(COLOR_TREE_MARK,g_buf);
 	} else if (article == g_recent_artp) {
-	    putchar(buf[0]);
+	    putchar(g_buf[0]);
 	    color_object(COLOR_TREE_MARK, true);
-	    putchar(buf[1]);
+	    putchar(g_buf[1]);
 	    color_pop();	/* of COLOR_TREE_MARK */
-	    putchar(buf[2]);
+	    putchar(g_buf[2]);
 	} else
-	    fputs(buf, stdout);
+	    fputs(g_buf, stdout);
 
 	if (article->sibling) {
 	    *cp = '|';

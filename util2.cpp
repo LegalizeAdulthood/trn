@@ -175,7 +175,7 @@ char *filexp(char *s)
 #endif
 	    }
 #else /* !TILDENAME */
-	    if (verbose)
+	    if (g_verbose)
 		fputs("~loginname not implemented.\n",stdout) FLUSH;
 	    else
 		fputs("~login not impl.\n",stdout) FLUSH;
