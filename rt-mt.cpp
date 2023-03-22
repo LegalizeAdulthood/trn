@@ -269,7 +269,8 @@ static char *mt_name(const char *group)
     return g_buf;
 }
 
-static char* subject_strings, *string_end;
+static char *s_subject_strings{};
+static char *s_string_end{};
 
 /* The author information is an array of use-counts, followed by all the
 ** null-terminated strings crammed together.  The subject strings are read
@@ -290,8 +291,8 @@ static int read_authors()
 	return 0;
 
     string_ptr = s_strings;
-    string_end = string_ptr + s_total.string1;
-    if (string_end[-1] != '\0') {
+    s_string_end = string_ptr + s_total.string1;
+    if (s_string_end[-1] != '\0') {
 	/*error("first string table is invalid.\n");*/
 	return 0;
     }
@@ -303,12 +304,12 @@ static int read_authors()
     author_ptr = s_author_array;
 
     for (count = s_total.author; count; count--) {
-	if (string_ptr >= string_end)
+	if (string_ptr >= s_string_end)
 	    break;
 	*author_ptr++ = string_ptr;
 	string_ptr += strlen(string_ptr) + 1;
     }
-    subject_strings = string_ptr;
+    s_subject_strings = string_ptr;
 
     if (count) {
 	/*error("author unpacking failed.\n");*/
@@ -339,12 +340,12 @@ static int read_subjects()
     s_subject_array = (SUBJECT**)safemalloc(s_total.subject * sizeof (SUBJECT*));
     subj_ptr = s_subject_array;
 
-    string_ptr = subject_strings;	/* string_end is already set */
+    string_ptr = s_subject_strings;	/* s_string_end is already set */
 
     for (count = s_total.subject; count; count--) {
 	int len;
 	ARTICLE arty;
-	if (string_ptr >= string_end)
+	if (string_ptr >= s_string_end)
 	    break;
 	len = strlen(string_ptr);
 	arty.subj = 0;
@@ -355,7 +356,7 @@ static int read_subjects()
 	string_ptr += len + 1;
 	*subj_ptr++ = arty.subj;
     }
-    if (count || string_ptr != string_end) {
+    if (count || string_ptr != s_string_end) {
 	/*error("subject data is invalid.\n");*/
 	return 0;
     }
@@ -418,7 +419,7 @@ static int read_roots()
     return 1;
 }
 
-static bool invalid_data;
+static bool s_invalid_data{};
 
 /* A simple routine that checks the validity of the article's subject value.
 ** A -1 means that it is nullptr, otherwise it should be an offset into the
@@ -430,7 +431,7 @@ static SUBJECT *the_subject(int num)
 	return nullptr;
     if (num < 0 || num >= s_total.subject) {
 	/*printf("Invalid subject in thread file: %d [%ld]\n", num, art_num);*/
-	invalid_data = true;
+	s_invalid_data = true;
 	return nullptr;
     }
     return s_subject_array[num];
@@ -443,7 +444,7 @@ static char *the_author(int num)
 	return nullptr;
     if (num < 0 || num >= s_total.author) {
 	/*error("invalid author in thread file: %d [%ld]\n", num, art_num);*/
-	invalid_data = true;
+	s_invalid_data = true;
 	return nullptr;
     }
     return savestr(s_author_array[num]);
@@ -462,7 +463,7 @@ static ARTICLE *the_article(int relative_offset, int num)
     num += relative_offset;
     if (num < 0 || num >= s_total.article) {
 	/*error("invalid article offset in thread file.\n");*/
-	invalid_data = true;
+	s_invalid_data = true;
 	return nullptr;
     }
     uni.num = num+1;
@@ -481,7 +482,7 @@ static int read_articles()
     s_article_array = (ARTICLE**)safemalloc(s_total.article * sizeof (ARTICLE*));
     art_ptr = s_article_array;
 
-    invalid_data = false;
+    s_invalid_data = false;
     for (count = 0; count < s_total.article; count++) {
 #ifdef SUPPORT_XTHREAD
 	if (!g_datasrc->thread_dir)
@@ -508,7 +509,7 @@ static int read_articles()
 	article->child1 = the_article((WORD)(s_p_article.child_cnt?1:0), count);
 	article->sibling = the_article(s_p_article.sibling, count);
 	article->subj = the_subject(s_p_article.subject);
-	if (invalid_data) {
+	if (s_invalid_data) {
 	    /* (Error already logged.) */
 	    return 0;
 	}
@@ -560,16 +561,16 @@ static int read_ids()
     wp_bmap(s_ids, s_total.article + s_total.domain + 1);
 
     string_ptr = s_strings;
-    string_end = string_ptr + s_total.string2;
+    s_string_end = string_ptr + s_total.string2;
 
-    if (string_end[-1] != '\0') {
+    if (s_string_end[-1] != '\0') {
 	/*error("second string table is invalid.\n");*/
 	return 0;
     }
 
     for (i = 0, count = s_total.domain + 1; count--; i++) {
 	if (i) {
-	    if (string_ptr >= string_end) {
+	    if (string_ptr >= s_string_end) {
 		/*error("error unpacking domain strings.\n");*/
 		return 0;
 	    }
@@ -587,7 +588,7 @@ static int read_ids()
 	    }
 	    article = s_article_array[s_ids[i]];
 	    for (;;) {
-		if (string_ptr >= string_end) {
+		if (string_ptr >= s_string_end) {
 		    /*error("error unpacking domain strings.\n");*/
 		    return 0;
 		}
