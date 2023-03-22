@@ -80,9 +80,8 @@ static COLOR_OBJ objects[MAX_COLORS] = {
 /* The attribute stack.  The 0th element is always the "normal" object. */
 static struct {
     COLOR_OBJ object;
-} color_stack[STACK_SIZE];
-
-static int stack_pointer = 0;
+} s_color_stack[STACK_SIZE];
+static int s_stack_pointer = 0;
 
 /* Initialize color support after trnrc is read. */
 void color_init()
@@ -221,7 +220,7 @@ void color_object(int object, bool push)
 
     /* Merge in the colors/attributes that we are not setting
      * from the current object. */
-    merged = color_stack[stack_pointer].object;
+    merged = s_color_stack[s_stack_pointer].object;
 
     /* Merge in the new colors/attributes. */
     if (objects[object].fg)
@@ -232,13 +231,13 @@ void color_object(int object, bool push)
 	merged.attr = objects[object].attr;
 
     /* Push onto stack. */
-    if (push && ++stack_pointer >= STACK_SIZE) {
+    if (push && ++s_stack_pointer >= STACK_SIZE) {
 	/* error reporting? $$ */
-	stack_pointer = 0;		/* empty stack */
+	s_stack_pointer = 0;		/* empty stack */
 	color_default();		/* and set normal colors */
 	return;
     }
-    color_stack[stack_pointer].object = merged;
+    s_color_stack[s_stack_pointer].object = merged;
 
     /* Set colors/attributes. */
     output_color();
@@ -248,8 +247,8 @@ void color_object(int object, bool push)
 void color_pop()
 {
     /* Trying to pop an empty stack? */
-    if (--stack_pointer < 0)
-	stack_pointer = 0;
+    if (--s_stack_pointer < 0)
+	s_stack_pointer = 0;
     else
 	output_color();
 }
@@ -278,7 +277,7 @@ void color_string(int object, const char *str)
 /* Turn off color attribute. */
 void color_default()
 {
-    color_stack[stack_pointer].object = objects[COLOR_DEFAULT];
+    s_color_stack[s_stack_pointer].object = objects[COLOR_DEFAULT];
     output_color();
 }
 
@@ -286,7 +285,7 @@ void color_default()
 static void output_color()
 {
     static COLOR_OBJ prior = { "", nullptr, nullptr, NOMARKING };
-    COLOR_OBJ* op = &color_stack[stack_pointer].object;
+    COLOR_OBJ* op = &s_color_stack[s_stack_pointer].object;
 
     /* If no change, just return. */
     if (op->attr == prior.attr && op->fg == prior.fg && op->bg == prior.bg)
