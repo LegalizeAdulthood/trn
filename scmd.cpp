@@ -275,9 +275,8 @@ int s_docmd()
     return 0;		/* keep on looping! */
 }
 
-static char search_text[LBUFLEN];
-
-static char search_init INIT(false);
+static char s_search_text[LBUFLEN]{};
+static char s_search_init{};
 
 bool s_match_description(long ent)
 {
@@ -291,7 +290,7 @@ bool s_match_description(long ent)
 	for (s = lbuf; *s; s++)
 	    if (isupper(*s))
 		*s = tolower(*s);		/* convert to lower case */
-	if (strstr(lbuf,search_text))
+	if (strstr(lbuf,s_search_text))
 	    return true;
     }
     return false;
@@ -330,9 +329,9 @@ void s_search()
     char* s;
     char* error_msg;
 
-    if (!search_init) {
-	search_init = true;
-	search_text[0] = '\0';
+    if (!s_search_init) {
+	s_search_init = true;
+	s_search_text[0] = '\0';
     }
     s_rub_ptr();
     g_buf[1] = '\0';
@@ -343,12 +342,12 @@ void s_search()
 	/* make leading space skip an option later? */
 	/* (it isn't too important because substring matching is used) */
 	while (*s == ' ') s++;	/* skip leading spaces */
-	strncpy(search_text,s,LBUFLEN);
-	for (s = search_text; *s != '\0'; s++)
+	strncpy(s_search_text,s,LBUFLEN);
+	for (s = s_search_text; *s != '\0'; s++)
 	    if (isupper(*s))
 		*s = tolower(*s);		/* convert to lower case */
     }
-    if (!*search_text) {
+    if (!*s_search_text) {
 	s_beep();
 	printf("\nNo previous search string.\n") FLUSH;
 	(void)get_anything();
@@ -356,7 +355,7 @@ void s_search()
 	return;
     }
     s_go_bot();
-    printf("Searching for %s",search_text);
+    printf("Searching for %s",s_search_text);
     fflush(stdout);
     ent = g_page_ents[g_s_ptr_page_line].entnum;
     switch (*g_buf) {
