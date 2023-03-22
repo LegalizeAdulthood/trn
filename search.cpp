@@ -98,8 +98,8 @@ void free_compex(COMPEX *compex)
     }
 }
 
-static char* gbr_str = nullptr;
-static int gbr_siz = 0;
+static char *s_gbr_str{};
+static int s_gbr_siz{};
 
 char *getbracket(COMPEX *compex, int n)
 {
@@ -109,9 +109,9 @@ char *getbracket(COMPEX *compex, int n)
 	return nullptr;
     if (n > compex->nbra || !compex->braelist[n] || length < 0)
 	return "";
-    growstr(&gbr_str, &gbr_siz, length+1);
-    safecpy(gbr_str, compex->braslist[n], length+1);
-    return gbr_str;
+    growstr(&s_gbr_str, &s_gbr_siz, length+1);
+    safecpy(s_gbr_str, compex->braslist[n], length+1);
+    return s_gbr_str;
 }
 
 void case_fold(bool which)
