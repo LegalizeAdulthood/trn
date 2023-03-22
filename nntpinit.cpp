@@ -47,7 +47,7 @@ int server_init(const char *machine)
 {
     int sockt_rd, sockt_wr;
 
-    sockt_rd = get_tcp_socket(machine, nntplink.port_number, "nntp");
+    sockt_rd = get_tcp_socket(machine, g_nntplink.port_number, "nntp");
 
     if (sockt_rd < 0)
 	return -1;
@@ -58,13 +58,13 @@ int server_init(const char *machine)
     ** the socket file descriptor.  Note that we can't just
     ** open a fp for reading and writing -- we have to open
     ** up two separate fp's, one for reading, one for writing. */
-    if ((nntplink.rd_fp = fdopen(sockt_rd, "r")) == nullptr) {
+    if ((g_nntplink.rd_fp = fdopen(sockt_rd, "r")) == nullptr) {
 	perror("server_init: fdopen #1");
 	return -1;
     }
-    if ((nntplink.wr_fp = fdopen(sockt_wr, "w")) == nullptr) {
+    if ((g_nntplink.wr_fp = fdopen(sockt_wr, "w")) == nullptr) {
 	perror("server_init: fdopen #2");
-	nntplink.rd_fp = nullptr;
+	g_nntplink.rd_fp = nullptr;
 	return -1;
     }
 

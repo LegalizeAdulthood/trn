@@ -101,11 +101,11 @@ int doshell(const char *shell, const char *s)
     sigset(SIGTTIN,SIG_DFL);
 #endif
     if (g_datasrc && (g_datasrc->flags & DF_REMOTE)) {
-	if (!export_nntp_fds || !nntplink.rd_fp)
+	if (!export_nntp_fds || !g_nntplink.rd_fp)
 	    un_export(s_nntpfds_export);
 	else {
-	    sprintf(g_buf,"%d.%d",(int)fileno(nntplink.rd_fp),
-				(int)fileno(nntplink.wr_fp));
+	    sprintf(g_buf,"%d.%d",(int)fileno(g_nntplink.rd_fp),
+				(int)fileno(g_nntplink.wr_fp));
 	    re_export(s_nntpfds_export, g_buf, 64);
 	}
 	re_export(s_nntpserver_export,g_datasrc->newsid,512);
@@ -125,9 +125,9 @@ int doshell(const char *shell, const char *s)
 		close(fd);
 	    }
 	}
-	if (nntplink.port_number) {
+	if (g_nntplink.port_number) {
 	    int len = strlen(s_nntpserver_export);
-	    sprintf(g_buf,";%d",nntplink.port_number);
+	    sprintf(g_buf,";%d",g_nntplink.port_number);
 	    if (len + (int)strlen(g_buf) < 511)
 		strcpy(s_nntpserver_export+len, g_buf);
 	}
@@ -162,9 +162,9 @@ int doshell(const char *shell, const char *s)
 	    int i;
 	    /* This is necessary to keep the bourne shell from puking */
 	    for (i = 3; i < 10; ++i) {
-		if (nntplink.rd_fp
-		 && (i == fileno(nntplink.rd_fp)
-		  || i == fileno(nntplink.wr_fp)))
+		if (g_nntplink.rd_fp
+		 && (i == fileno(g_nntplink.rd_fp)
+		  || i == fileno(g_nntplink.wr_fp)))
 		    continue;
 		close(i);
 	    }

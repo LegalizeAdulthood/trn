@@ -157,12 +157,12 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 	    cp = strchr(server_name, ':');
 	if (cp) {
 	    *cp = '\0';
-	    nntplink.port_number = atoi(cp+1);
+	    g_nntplink.port_number = atoi(cp+1);
 	}
 	g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
 	if ((cp = getenv("NNTP_FORCE_AUTH")) != nullptr
 	 && (*cp == 'y' || *cp == 'Y'))
-	    nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
+	    g_nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
 	if (init_nntp() < 0)
 	    server_name = nullptr;
     }

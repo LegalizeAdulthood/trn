@@ -75,13 +75,13 @@ int main(int argc, char *argv[])
 	cp = strchr(server_name, ';');
 	if (cp) {
 	    *cp = '\0';
-	    nntplink.port_number = atoi(cp+1);
+	    g_nntplink.port_number = atoi(cp+1);
 	}
 	line_end = "\r\n";
 	g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
 	if ((cp = getenv("NNTP_FORCE_AUTH")) != nullptr
 	 && (*cp == 'y' || *cp == 'Y'))
-	    nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
+	    g_nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
     } else {
 	server_name = nullptr;
 	line_end = "\n";
@@ -149,17 +149,17 @@ int main(int argc, char *argv[])
 	if ((cp = getenv("NNTPFDS")) != nullptr) {
 	    int rd_fd, wr_fd;
 	    if (sscanf(cp,"%d.%d",&rd_fd,&wr_fd) == 2) {
-		nntplink.rd_fp = fdopen(rd_fd, "r");
-		if (nntplink.rd_fp) {
-		    nntplink.wr_fp = fdopen(wr_fd, "w");
-		    if (nntplink.wr_fp)
-			nntplink.flags |= NNTP_NEW_CMD_OK;
+		g_nntplink.rd_fp = fdopen(rd_fd, "r");
+		if (g_nntplink.rd_fp) {
+		    g_nntplink.wr_fp = fdopen(wr_fd, "w");
+		    if (g_nntplink.wr_fp)
+			g_nntplink.flags |= NNTP_NEW_CMD_OK;
 		    else
 			nntp_close(false);
 		}
 	    }
 	}
-	if (!nntplink.wr_fp) {
+	if (!g_nntplink.wr_fp) {
 	    if (init_nntp() < 0 || !nntp_connect(server_name,false))
 		exit(1);
 	    new_connection = true;
@@ -173,54 +173,54 @@ int main(int argc, char *argv[])
     }
     else {
 	sprintf(g_buf, "%s -h", EXTRAINEWS);
-	nntplink.wr_fp = _popen(g_buf,"w");
-	if (!nntplink.wr_fp) {
+	g_nntplink.wr_fp = _popen(g_buf,"w");
+	if (!g_nntplink.wr_fp) {
 	    fprintf(stderr,"Unable to execute inews for local posting.\n");
 	    exit(1);
 	}
     }
 
-    fputs(headbuf, nntplink.wr_fp);
+    fputs(headbuf, g_nntplink.wr_fp);
     if (!has_pathline)
-	fprintf(nntplink.wr_fp,"Path: not-for-mail%s",line_end);
+	fprintf(g_nntplink.wr_fp,"Path: not-for-mail%s",line_end);
     if (!has_fromline) {
-	fprintf(nntplink.wr_fp,"From: %s@%s (%s)%s",g_login_name,g_p_host_name,
+	fprintf(g_nntplink.wr_fp,"From: %s@%s (%s)%s",g_login_name,g_p_host_name,
 		get_val("NAME",g_real_name),line_end);
     }
     if (!getenv("NO_ORIGINATOR")) {
-	fprintf(nntplink.wr_fp,"Originator: %s@%s (%s)%s",g_login_name,g_p_host_name,
+	fprintf(g_nntplink.wr_fp,"Originator: %s@%s (%s)%s",g_login_name,g_p_host_name,
 		get_val("NAME",g_real_name),line_end);
     }
-    fprintf(nntplink.wr_fp,"%s",line_end);
+    fprintf(g_nntplink.wr_fp,"%s",line_end);
 
     had_nl = true;
     while (fgets(headbuf, headbuf_size, stdin)) {
 	/* Single . is eof, so put in extra one */
 	if (server_name && had_nl && *headbuf == '.')
-	    fputc('.', nntplink.wr_fp);
+	    fputc('.', g_nntplink.wr_fp);
 	/* check on newline */
 	cp = headbuf + strlen(headbuf);
 	if (cp > headbuf && *--cp == '\n') {
 	    *cp = '\0';
-	    fprintf(nntplink.wr_fp, "%s%s", headbuf, line_end);
+	    fprintf(g_nntplink.wr_fp, "%s%s", headbuf, line_end);
 	    had_nl = true;
 	}
 	else {
-	    fputs(headbuf, nntplink.wr_fp);
+	    fputs(headbuf, g_nntplink.wr_fp);
 	    had_nl = false;
 	}
     }
 
     if (!server_name)
-	return _pclose(nntplink.wr_fp);
+	return _pclose(g_nntplink.wr_fp);
 
     if (!had_nl)
-        fputs(line_end, nntplink.wr_fp);
+        fputs(line_end, g_nntplink.wr_fp);
 
     append_signature();
 
-    fputs(".\r\n",nntplink.wr_fp);
-    (void) fflush(nntplink.wr_fp);
+    fputs(".\r\n",g_nntplink.wr_fp);
+    (void) fflush(g_nntplink.wr_fp);
 
     if (nntp_gets(g_ser_line, sizeof g_ser_line) < 0
      || *g_ser_line != NNTP_CLASS_OK) {
@@ -291,7 +291,7 @@ void append_signature()
     if (fp == nullptr)
 	return;
 
-    fprintf(nntplink.wr_fp, "-- \r\n");
+    fprintf(g_nntplink.wr_fp, "-- \r\n");
     while (fgets(g_ser_line, sizeof g_ser_line, fp)) {
 	count++;
 	if (count > MAX_SIGNATURE) {
@@ -305,7 +305,7 @@ void append_signature()
 	cp = g_ser_line + strlen(g_ser_line) - 1;
 	if (cp >= g_ser_line && *cp == '\n')
 	    *cp = '\0';
-	fprintf(nntplink.wr_fp, "%s\r\n", g_ser_line);
+	fprintf(g_nntplink.wr_fp, "%s\r\n", g_ser_line);
     }
     (void) fclose(fp);
 }

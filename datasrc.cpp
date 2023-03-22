@@ -331,8 +331,8 @@ bool open_datasrc(DATASRC *dp)
 	    dp->flags |= DF_UNAVAILABLE;
 	    return false;
 	}
-	nntp_allow_timeout = false;
-	dp->nntplink = nntplink;
+	g_nntp_allow_timeout = false;
+	dp->nntplink = g_nntplink;
 	if (dp->act_sf.refetch_secs) {
 	    switch (nntp_list("active", "control", 7)) {
 	    case 1:
@@ -386,16 +386,16 @@ bool open_datasrc(DATASRC *dp)
     else
 	dp->flags |= DF_UNAVAILABLE;
     if (dp->flags & DF_REMOTE)
-	nntp_allow_timeout = true;
+	g_nntp_allow_timeout = true;
     return success;
 }
 
 void set_datasrc(DATASRC *dp)
 {
     if (g_datasrc)
-	g_datasrc->nntplink = nntplink;
+	g_datasrc->nntplink = g_nntplink;
     if (dp)
-	nntplink = dp->nntplink;
+	g_nntplink = dp->nntplink;
     g_datasrc = dp;
 }
 
@@ -414,7 +414,7 @@ void check_datasrcs()
 		    /*printf("\n*** Closing %s ***\n", dp->name); $$*/
 		    set_datasrc(dp);
 		    nntp_close(true);
-		    dp->nntplink = nntplink;
+		    dp->nntplink = g_nntplink;
 		    set_datasrc(save_datasrc);
 		}
 	    }
@@ -444,7 +444,7 @@ void close_datasrc(DATASRC *dp)
 	DATASRC* save_datasrc = g_datasrc;
 	set_datasrc(dp);
 	nntp_close(true);
-	dp->nntplink = nntplink;
+	dp->nntplink = g_nntplink;
 	set_datasrc(save_datasrc);
     }
     srcfile_close(&dp->act_sf);
@@ -702,7 +702,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
 		printf("Getting %s file from %s.", fetchcmd, server);
 		fflush(stdout);
 		/* tell server we want the file */
-		if (!(nntplink.flags & NNTP_NEW_CMD_OK))
+		if (!(g_nntplink.flags & NNTP_NEW_CMD_OK))
 		    use_buffered_nntp_gets = true;
 		else if (nntp_list(fetchcmd, "", 0) < 0) {
 		    printf("\nCan't get %s file from server: \n%s\n",

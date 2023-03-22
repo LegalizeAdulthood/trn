@@ -65,7 +65,7 @@ enum
     FF_FILTERSEND = 0x10
 };
 
-#define DATASRC_NNTP_FLAGS(dp) (((dp) == g_datasrc? nntplink.flags : (dp)->nntplink.flags))
+#define DATASRC_NNTP_FLAGS(dp) (((dp) == g_datasrc? g_nntplink.flags : (dp)->nntplink.flags))
 
 #define datasrc_ptr(n)  ((DATASRC*)listnum2listitem(g_datasrc_list,(long)(n)))
 #define datasrc_first() ((DATASRC*)listnum2listitem(g_datasrc_list,0L))

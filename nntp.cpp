@@ -216,7 +216,7 @@ void nntp_body(ART_NUM artnum)
 	}
     }
     fseek(g_artfp, 0L, 0);
-    nntplink.flags &= ~NNTP_NEW_CMD_OK;
+    g_nntplink.flags &= ~NNTP_NEW_CMD_OK;
 }
 
 long nntp_artsize()
@@ -499,10 +499,10 @@ int nntp_handle_timeout()
     handling_timeout = true;
     strcpy(last_command_save, g_last_command);
     nntp_close(false);
-    g_datasrc->nntplink = nntplink;
+    g_datasrc->nntplink = g_nntplink;
     if (nntp_connect(g_datasrc->newsid, false) <= 0)
 	return -2;
-    g_datasrc->nntplink = nntplink;
+    g_datasrc->nntplink = g_nntplink;
     if (g_in_ng && nntp_group(g_ngname, (NGDATA*)nullptr) <= 0)
 	return -2;
     if (nntp_command(last_command_save) <= 0)
@@ -563,7 +563,7 @@ long nntp_read(char *buf, long n)
 
     /* try to read some data from the server */
     if (s_rawbytes) {
-	n = fread(buf, 1, n > s_rawbytes ? s_rawbytes : n, nntplink.rd_fp);
+	n = fread(buf, 1, n > s_rawbytes ? s_rawbytes : n, g_nntplink.rd_fp);
 	s_rawbytes -= n;
     } else
 	n = 0;
@@ -572,7 +572,7 @@ long nntp_read(char *buf, long n)
     if (!s_rawbytes) {
 	char buf[5];	/* "\r\n.\r\n" */
 
-	fread(buf, 1, 5, nntplink.rd_fp);
+	fread(buf, 1, 5, g_nntplink.rd_fp);
 	s_rawbytes = -1;
     }
 #ifdef HAS_SIGHOLD

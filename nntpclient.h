@@ -1,6 +1,8 @@
 /* nntpclient.h
 */ 
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef NNTPCLIENT_H
+#define NNTPCLIENT_H
 
 struct NNTPLINK
 {
@@ -18,11 +20,6 @@ enum
     NNTP_FORCE_AUTH_NEEDED = 0x0002,
     NNTP_FORCE_AUTH_NOW = 0x0004
 };
-
-EXT NNTPLINK nntplink;		/* the current server's file handles */
-EXT bool nntp_allow_timeout INIT(false);
-
-#define nntp_get_a_line(buf, len, realloc) get_a_line(buf, len, realloc, nntplink.rd_fp)
 
 /* RFC 977 defines these, so don't change them */
 enum
@@ -70,9 +67,12 @@ enum
     NNTP_STRLEN = 512
 };
 
-EXT char g_ser_line[NNTP_STRLEN];
+extern NNTPLINK g_nntplink; /* the current server's file handles */
+extern bool g_nntp_allow_timeout;
+extern char g_ser_line[NNTP_STRLEN];
+extern char g_last_command[NNTP_STRLEN];
 
-EXT char g_last_command[NNTP_STRLEN];
+#define nntp_get_a_line(buf, len, realloc) get_a_line(buf, len, realloc, g_nntplink.rd_fp)
 
 int nntp_connect(const char *machine, bool verbose);
 char *nntp_servername(char *name);
@@ -81,3 +81,5 @@ int nntp_check();
 bool nntp_at_list_end(const char *s);
 int nntp_gets(char *bp, int len);
 void nntp_close(bool send_quit);
+
+#endif

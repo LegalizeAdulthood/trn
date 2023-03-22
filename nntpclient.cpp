@@ -5,32 +5,28 @@
 
 #include "EXTERN.h"
 #include "common.h"
+#include "nntp.h"
+#include "nntpauth.h"
 #include "nntpinit.h"
-#include "INTERN.h"
 #include "nntpclient.h"
 
-time_t last_command_diff;
+NNTPLINK g_nntplink{};		/* the current server's file handles */
+bool g_nntp_allow_timeout{};
+char g_ser_line[NNTP_STRLEN]{};
+char g_last_command[NNTP_STRLEN]{};
 
-char *savestr(char *);
-#ifndef USE_DEBUGGING_MALLOC
-char *safemalloc(MEM_SIZE);
-#endif
-int nntp_handle_timeout();
-
-int nntp_handle_nested_lists();
-
-int nntp_handle_auth_err();
+static time_t s_last_command_diff{};
 
 int nntp_connect(const char *machine, bool verbose)
 {
     int response;
 
-    if (nntplink.rd_fp)
+    if (g_nntplink.rd_fp)
 	return 1;
 
-    if (nntplink.flags & NNTP_FORCE_AUTH_NEEDED)
-	nntplink.flags |= NNTP_FORCE_AUTH_NOW;
-    nntplink.flags |= NNTP_NEW_CMD_OK;
+    if (g_nntplink.flags & NNTP_FORCE_AUTH_NEEDED)
+	g_nntplink.flags |= NNTP_FORCE_AUTH_NOW;
+    g_nntplink.flags |= NNTP_NEW_CMD_OK;
 #if 0
   try_to_connect:
 #endif
@@ -128,23 +124,23 @@ int nntp_command(const char *bp)
 	printf(">%s\n", bp) FLUSH;
 #endif
     strcpy(g_last_command, bp);
-    if (!nntplink.rd_fp)
+    if (!g_nntplink.rd_fp)
 	return nntp_handle_timeout();
-    if (nntplink.flags & NNTP_FORCE_AUTH_NOW) {
-	nntplink.flags &= ~NNTP_FORCE_AUTH_NOW;
+    if (g_nntplink.flags & NNTP_FORCE_AUTH_NOW) {
+	g_nntplink.flags &= ~NNTP_FORCE_AUTH_NOW;
 	return nntp_handle_auth_err();
     }
-    if (!(nntplink.flags & NNTP_NEW_CMD_OK)) {
+    if (!(g_nntplink.flags & NNTP_NEW_CMD_OK)) {
 	int ret = nntp_handle_nested_lists();
 	if (ret <= 0)
 	    return ret;
     }
-    if (fprintf(nntplink.wr_fp, "%s\r\n", bp) < 0
-     || fflush(nntplink.wr_fp) < 0)
+    if (fprintf(g_nntplink.wr_fp, "%s\r\n", bp) < 0
+     || fflush(g_nntplink.wr_fp) < 0)
 	return nntp_handle_timeout();
     now = time((time_t*)nullptr);
-    last_command_diff = now - nntplink.last_command;
-    nntplink.last_command = now;
+    s_last_command_diff = now - g_nntplink.last_command;
+    g_nntplink.last_command = now;
     return 1;
 }
 
@@ -158,7 +154,7 @@ int nntp_check()
     sighold(SIGINT);
 #endif
     errno = 0;
-    ret = (fgets(g_ser_line, sizeof g_ser_line, nntplink.rd_fp) == nullptr)? -2 : 0;
+    ret = (fgets(g_ser_line, sizeof g_ser_line, g_nntplink.rd_fp) == nullptr)? -2 : 0;
 #ifdef HAS_SIGHOLD
     sigrelse(SIGINT);
 #endif
@@ -168,7 +164,7 @@ int nntp_check()
 	strcpy(g_ser_line, "503 Server closed connection.");
     }
     if (len == 0 && atoi(g_ser_line) == NNTP_TMPERR_VAL
-     && nntp_allow_timeout && last_command_diff > 60) {
+     && g_nntp_allow_timeout && s_last_command_diff > 60) {
 	ret = nntp_handle_timeout();
 	switch (ret) {
 	case 1:
@@ -189,9 +185,9 @@ int nntp_check()
     /* Even though the following check doesn't catch all possible lists, the
      * bit will get set right when the caller checks nntp_at_list_end(). */
     if (atoi(g_ser_line) == NNTP_LIST_FOLLOWS_VAL)
-	nntplink.flags &= ~NNTP_NEW_CMD_OK;
+	g_nntplink.flags &= ~NNTP_NEW_CMD_OK;
     else
-	nntplink.flags |= NNTP_NEW_CMD_OK;
+	g_nntplink.flags |= NNTP_NEW_CMD_OK;
     len = strlen(g_ser_line);
     if (len >= 2 && g_ser_line[len-1] == '\n' && g_ser_line[len-2] == '\r')
 	g_ser_line[len-2] = '\0';
@@ -210,10 +206,10 @@ int nntp_check()
 bool nntp_at_list_end(const char *s)
 {
     if (!s || (*s == '.' && (s[1] == '\0' || s[1] == '\r'))) {
-	nntplink.flags |= NNTP_NEW_CMD_OK;
+	g_nntplink.flags |= NNTP_NEW_CMD_OK;
 	return true;
     }
-    nntplink.flags &= ~NNTP_NEW_CMD_OK;
+    g_nntplink.flags &= ~NNTP_NEW_CMD_OK;
     return false;
 }
 
@@ -230,10 +226,10 @@ int nntp_gets(char *bp, int len)
 #ifdef HAS_SIGHOLD
     sighold(SIGINT);
 #endif
-    if (nntplink.trailing_CR) {
+    if (g_nntplink.trailing_CR) {
 	*cp++ = '\r';
 	len--;
-	nntplink.trailing_CR = false;
+	g_nntplink.trailing_CR = false;
     }
     while (true) {
 	if (len == 1) {
@@ -241,16 +237,16 @@ int nntp_gets(char *bp, int len)
 		/* Hold a trailing CR until next time because we may need
 		 * to strip it if it is followed by a newline. */
 		cp--;
-		nntplink.trailing_CR = true;
+		g_nntplink.trailing_CR = true;
 	    }
 	    break;
 	}
 	do {
 	    errno = 0;
-	    ch = fgetc(nntplink.rd_fp);
+	    ch = fgetc(g_nntplink.rd_fp);
 	} while (errno == EINTR);
 	if (ch == EOF) {
-	    nntplink.flags |= NNTP_NEW_CMD_OK;
+	    g_nntplink.flags |= NNTP_NEW_CMD_OK;
 	    n = -2;
 	    break;
 	}
@@ -272,18 +268,18 @@ int nntp_gets(char *bp, int len)
 
 void nntp_close(bool send_quit)
 {
-    if (send_quit && nntplink.wr_fp != nullptr && nntplink.rd_fp != nullptr) {
+    if (send_quit && g_nntplink.wr_fp != nullptr && g_nntplink.rd_fp != nullptr) {
 	if (nntp_command("QUIT") > 0)
 	    nntp_check();
     }
     /* the nntp_check() above might have closed these already. */
-    if (nntplink.wr_fp != nullptr) {
-	fclose(nntplink.wr_fp);
-	nntplink.wr_fp = nullptr;
+    if (g_nntplink.wr_fp != nullptr) {
+	fclose(g_nntplink.wr_fp);
+	g_nntplink.wr_fp = nullptr;
     }
-    if (nntplink.rd_fp != nullptr) {
-	fclose(nntplink.rd_fp);
-	nntplink.rd_fp = nullptr;
+    if (g_nntplink.rd_fp != nullptr) {
+	fclose(g_nntplink.rd_fp);
+	g_nntplink.rd_fp = nullptr;
     }
-    nntplink.flags |= NNTP_NEW_CMD_OK;
+    g_nntplink.flags |= NNTP_NEW_CMD_OK;
 }
