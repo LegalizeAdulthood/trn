@@ -224,7 +224,7 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
     }
 }
 
-static int find_artp_y;
+static int s_find_artp_y{};
 
 ARTICLE *get_tree_artp(int x, int y)
 {
@@ -236,7 +236,7 @@ ARTICLE *get_tree_artp(int x, int y)
     if (x < 0 || y > s_max_line || !ap)
 	return nullptr;
     x = (x-(x==s_max_depth))/5 + s_first_depth;
-    find_artp_y = y + s_first_line;
+    s_find_artp_y = y + s_first_line;
     ap = find_artp(ap, x);
     return ap;
 }
@@ -246,14 +246,14 @@ ARTICLE *get_tree_artp(int x, int y)
 static ARTICLE *find_artp(ARTICLE *article, int x)
 {
     for (;;) {
-	if (!x && !find_artp_y)
+	if (!x && !s_find_artp_y)
 	    return article;
 	if (article->child1) {
 	    ARTICLE* ap = find_artp(article->child1, x-1);
 	    if (ap)
 		return ap;
 	}
-	else if (!find_artp_y--)
+	else if (!s_find_artp_y--)
 	    return nullptr;
 	if (!(article = article->sibling))
 	    break;
