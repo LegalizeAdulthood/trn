@@ -279,19 +279,19 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = scrbuf;
 		    if (!cmd || !strchr("/?g",*cmd))
 			*s++ = '/';
-		    strcpy(s,lastpat);
+		    strcpy(s,g_lastpat);
 		    s += strlen(s);
 		    if (!cmd || *cmd != 'g') {
 			if (cmd && strchr("/?",*cmd))
 			    *s++ = *cmd;
 			else
 			    *s++ = '/';
-			if (art_doread)
+			if (g_art_doread)
 			    *s++ = 'r';
-			if (art_howmuch != ARTSCOPE_SUBJECT) {
-			    *s++ = scopestr[art_howmuch];
-			    if (art_howmuch == ARTSCOPE_ONEHDR) {
-				safecpy(s,g_htype[art_srchhdr].name,
+			if (g_art_howmuch != ARTSCOPE_SUBJECT) {
+			    *s++ = g_scopestr[g_art_howmuch];
+			    if (g_art_howmuch == ARTSCOPE_ONEHDR) {
+				safecpy(s,g_htype[g_art_srchhdr].name,
 					(sizeof scrbuf) - (s-scrbuf));
 				if (!(s = strchr(s,':')))
 				    s = scrbuf+(sizeof scrbuf)-1;
@@ -335,7 +335,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			s = "";
 		    break;
 		case '(': {
-		    COMPEX *oldbra_compex = bra_compex;
+		    COMPEX *oldbra_compex = g_bra_compex;
 		    char rch;
 		    bool matched;
 		    
@@ -378,7 +378,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    }
 		    matched = (execute(&s_cond_compex,dest) != nullptr);
 		    if (getbracket(&s_cond_compex, 0)) /* were there brackets? */
-			bra_compex = &s_cond_compex;
+			g_bra_compex = &s_cond_compex;
 		    if (matched==(rch == '=')) {
 			pattern = dointerp(dest,destsize,pattern+1,":)",cmd);
 			if (*pattern == ':')
@@ -391,7 +391,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			pattern = dointerp(dest,destsize,pattern,")",cmd);
 		    }
 		    s = dest;
-		    bra_compex = oldbra_compex;
+		    g_bra_compex = oldbra_compex;
 		    free_compex(&s_cond_compex);
 		    break;
 		}
@@ -466,7 +466,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case '0': case '1': case '2': case '3': case '4':
 		case '5': case '6': case '7': case '8': case '9':
-		    s = getbracket(bra_compex,*pattern - '0');
+		    s = getbracket(g_bra_compex,*pattern - '0');
 		    break;
 		case 'a':
 		    if (g_in_ng) {

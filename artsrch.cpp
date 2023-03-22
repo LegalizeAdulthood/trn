@@ -6,14 +6,9 @@
 #include "EXTERN.h"
 #include "common.h"
 #include "list.h"
-#include "hash.h"
 #include "ngdata.h"
-#include "nntpclient.h"
-#include "datasrc.h"
-#include "nntp.h"
 #include "search.h"
 #include "term.h"
-#include "util.h"
 #include "util2.h"
 #include "intrp.h"
 #include "cache.h"
@@ -22,19 +17,25 @@
 #include "head.h"
 #include "final.h"
 #include "ng.h"
-#include "addng.h"
 #include "ngstuff.h"
 #include "artio.h"
-#include "rthread.h"
 #include "rt-util.h"
 #include "rt-select.h"
-#include "INTERN.h"
 #include "artsrch.h"
+
+char *g_lastpat{""};                 /* last search pattern */
+COMPEX g_sub_compex{};               /* last compiled subject search */
+COMPEX g_art_compex{};               /* last compiled normal search */
+COMPEX *g_bra_compex{&g_art_compex}; /* current compex with brackets */
+char g_scopestr[]{"sfHhbBa"};        //
+int g_art_howmuch{};                 /* search scope */
+int g_art_srchhdr{};                 /* specific header number to search */
+bool g_art_doread{};                 /* search read articles? */
 
 void artsrch_init()
 {
-    init_compex(&sub_compex);
-    init_compex(&art_compex);
+    init_compex(&g_sub_compex);
+    init_compex(&g_art_compex);
 }
 
 /* search for an article containing some pattern */
@@ -65,23 +66,23 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	if (get_cmd && g_buf == patbuf)
 	    if (!finish_command(false))	/* get rest of command */
 		return SRCH_ABORT;
-	compex = &art_compex;
+	compex = &g_art_compex;
 	if (patbuf[1]) {
 	    howmuch = ARTSCOPE_SUBJECT;
 	    srchhdr = SOME_LINE;
 	    doread = false;
 	}
 	else {
-	    howmuch = art_howmuch;
-	    srchhdr = art_srchhdr;
-	    doread = art_doread;
+	    howmuch = g_art_howmuch;
+	    srchhdr = g_art_srchhdr;
+	    doread = g_art_doread;
 	}
 	s = cpytill(g_buf,patbuf+1,cmdchr);/* ok to cpy g_buf+1 to g_buf */
 	pattern = g_buf;
 	if (*pattern) {
-	    if (*lastpat)
-		free(lastpat);
-	    lastpat = savestr(pattern);
+	    if (*g_lastpat)
+		free(g_lastpat);
+	    g_lastpat = savestr(pattern);
 	}
 	if (*s) {			/* modifiers or commands? */
 	    while (*++s) {
@@ -139,9 +140,9 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	    cmdlst = savestr(s);
 	    ret = SRCH_DONE;
 	}
-	art_howmuch = howmuch;
-	art_srchhdr = srchhdr;
-	art_doread = doread;
+	g_art_howmuch = howmuch;
+	g_art_srchhdr = srchhdr;
+	g_art_doread = doread;
 	if (g_srchahead)
 	    g_srchahead = -1;
     }
@@ -155,7 +156,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	doread = (cmdchr == Ctl('p'));
 	if (cmdchr == Ctl('n'))
 	    ret = SRCH_SUBJDONE;
-	compex = &sub_compex;
+	compex = &g_sub_compex;
 	pattern = patbuf+1;
 	if (howmuch == ARTSCOPE_SUBJECT) {
 	    strcpy(pattern,": *");
@@ -263,7 +264,7 @@ int art_search(char *patbuf, int patbufsiz, int get_cmd)
 	if (ignorethru)
 	    *s++ = (ignorethru == 1 ? 'I' : 'N');
 	if (howmuch != ARTSCOPE_SUBJECT) {
-	    *s++ = scopestr[howmuch];
+	    *s++ = g_scopestr[howmuch];
 	    if (howmuch == ARTSCOPE_ONEHDR) {
 		safecpy(s,g_htype[srchhdr].name,LBUFLEN-(s-saltbuf));
 		s += g_htype[srchhdr].length;
@@ -372,8 +373,8 @@ bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope)
 	break;
       case ARTSCOPE_ONEHDR:
 	g_untrim_cache = true;
-	sprintf(g_buf, "%s: %s", g_htype[art_srchhdr].name,
-		prefetchlines(artnum,art_srchhdr,false));
+	sprintf(g_buf, "%s: %s", g_htype[g_art_srchhdr].name,
+		prefetchlines(artnum,g_art_srchhdr,false));
 	g_untrim_cache = false;
 	break;
       default: {

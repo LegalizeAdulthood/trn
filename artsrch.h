@@ -1,7 +1,8 @@
 /* artsrch.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-
+#ifndef ARTSRCH_H
+#define ARTSRCH_H
 
 #ifndef NBRA
 #include "search.h"
@@ -18,11 +19,6 @@ enum
     SRCH_ERROR = 6
 };
 
-EXT char* lastpat INIT("");	/* last search pattern */
-EXT COMPEX sub_compex;		/* last compiled subject search */
-EXT COMPEX art_compex;		/* last compiled normal search */
-EXT COMPEX* bra_compex INIT(&(art_compex)); /* current compex with brackets */
-
 enum
 {
     ARTSCOPE_SUBJECT = 0,
@@ -34,11 +30,17 @@ enum
     ARTSCOPE_ARTICLE = 6
 };
 
-EXT char scopestr[] INIT("sfHhbBa");
-EXT int art_howmuch;		/* search scope */
-EXT int art_srchhdr;		/* specific header number to search */
-EXT bool art_doread;		/* search read articles? */
+extern char *g_lastpat;      /* last search pattern */
+extern COMPEX g_sub_compex;  /* last compiled subject search */
+extern COMPEX g_art_compex;  /* last compiled normal search */
+extern COMPEX *g_bra_compex; /* current compex with brackets */
+extern char g_scopestr[];    //
+extern int g_art_howmuch;    /* search scope */
+extern int g_art_srchhdr;    /* specific header number to search */
+extern bool g_art_doread;    /* search read articles? */
 
 void artsrch_init();
 int art_search(char *patbuf, int patbufsiz, int get_cmd);
 bool wanted(COMPEX *compex, ART_NUM artnum, char_int scope);
+
+#endif
