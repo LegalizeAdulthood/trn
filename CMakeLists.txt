@@ -19,7 +19,6 @@ configure()
 add_library(util
     ${CMAKE_CURRENT_BINARY_DIR}/config.h
     EXTERN.h
-    INTERN.h
     env.cpp env.h
     util2.cpp util2.h
     wildmat.cpp wildmat.h
@@ -48,7 +47,6 @@ bison_target(parsedate parsedate.y ${CMAKE_CURRENT_BINARY_DIR}/parsedate.c)
 add_executable(trn
     ${CMAKE_CURRENT_BINARY_DIR}/config.h
     EXTERN.h
-    INTERN.h
     addng.cpp addng.h
     art.cpp art.h
     artio.cpp artio.h
