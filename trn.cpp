@@ -81,12 +81,14 @@ bool g_auto_started{};    /* have we auto-started? */
 bool g_is_strn{};         /* Is this "strn", or trn/rn? */
 char g_patchlevel[]{PATCHLEVEL};
 
+static bool s_restore_old_newsrc{};
+static bool s_go_forward{true};
+static char *s_myngdir{};
+static int s_ngdirlen{};
+
 void trn_init()
 {
 }
-
-static bool restore_old_newsrc = false;
-static bool go_forward = true;
 
 int main(int argc, char *argv[])
 {
@@ -158,8 +160,8 @@ void do_multirc()
 	    /* section copied from bug_out below */
 	    /* now write the newsrc(s) back out */
 	    if (!write_newsrcs(g_multirc))
-		restore_old_newsrc = true; /*$$ ask to retry! */
-	    if (restore_old_newsrc)
+		s_restore_old_newsrc = true; /*$$ ask to retry! */
+	    if (s_restore_old_newsrc)
 		get_old_newsrcs(g_multirc);
 	    finalize(0);
 	}
@@ -250,13 +252,13 @@ void do_multirc()
 		    shoe_fits = true;
 		if (g_ngptr->toread < (special? TR_NONE : g_ng_min_toread)
 		 || !shoe_fits) {		/* unwanted newsgroup? */
-		    if (go_forward)
+		    if (s_go_forward)
 			g_ngptr = g_ngptr->next;
 		    else {
 			g_ngptr = g_ngptr->prev;
 			if (g_ngptr == nullptr) {
 			    g_ngptr = g_first_ng->next;
-			    go_forward = true;
+			    s_go_forward = true;
 			}
 		    }
 		    continue;
@@ -338,8 +340,8 @@ void do_multirc()
 bug_out:
     /* now write the newsrc(s) back out */
     if (!write_newsrcs(g_multirc))
-	restore_old_newsrc = true; /*$$ ask to retry! */
-    if (restore_old_newsrc)
+	s_restore_old_newsrc = true; /*$$ ask to retry! */
+    if (s_restore_old_newsrc)
 	get_old_newsrcs(g_multirc);
 
     set_mode(gmode_save,mode_save);
@@ -363,7 +365,7 @@ int input_newsgroup()
 	*g_buf = g_buf[2];
 
   do_command:
-    go_forward = true;		/* default to forward motion */
+    s_go_forward = true;		/* default to forward motion */
     switch (*g_buf) {
       case 'P':			/* goto previous newsgroup */
       case 'p':			/* find previous unread newsgroup */
@@ -371,7 +373,7 @@ int input_newsgroup()
 	    g_ngptr = g_last_ng;
 	else if (g_ngptr != g_first_ng)
 	    g_ngptr = g_ngptr->prev;
-	go_forward = false;	/* go backward in the newsrc */
+	s_go_forward = false;	/* go backward in the newsrc */
 	g_ing_state = INGS_CLEAN;
 	if (*g_buf == 'P')
 	    return ING_SPECIAL;
@@ -393,7 +395,7 @@ int input_newsgroup()
 	printf("\nThe abandoned changes are in %s.new.\n",
 	       multirc_name(g_multirc)) FLUSH;
 	termdown(2);
-	restore_old_newsrc = true;
+	s_restore_old_newsrc = true;
 	return ING_QUIT;
       case 'q': case 'Q':	/* quit? */
 	newline();
@@ -833,17 +835,14 @@ void set_ngname(const char *what)
     strcpy(g_ngdir,getngdir(g_ngname));
 }
 
-static char* myngdir;
-static int ngdirlen = 0;
-
 const char *getngdir(const char *ngnam)
 {
     char* s;
 
-    growstr(&myngdir,&ngdirlen,strlen(ngnam)+1);
-    strcpy(myngdir,ngnam);
-    for (s = myngdir; *s; s++)
+    growstr(&s_myngdir,&s_ngdirlen,strlen(ngnam)+1);
+    strcpy(s_myngdir,ngnam);
+    for (s = s_myngdir; *s; s++)
 	if (*s == '.')
 	    *s = '/';
-    return myngdir;
+    return s_myngdir;
 }
