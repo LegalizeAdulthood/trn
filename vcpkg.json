@@ -3,6 +3,10 @@
    "name": "trn",
   "version": "5.0.0",
   "dependencies": [
-    "pdcurses"
+    {
+      "name": "pdcurses",
+      "platform": "windows"
+    },
+    "gtest"
   ]
 }
