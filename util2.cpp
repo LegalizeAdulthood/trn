@@ -6,16 +6,8 @@
 #include "EXTERN.h"
 #include "common.h"
 #include "env.h"
-#include "list.h"
-#include "hash.h"
-#include "ngdata.h"
-#include "nntpclient.h"
-#include "datasrc.h"
-#include "nntp.h"
-#include "nntpauth.h"
 #include "util.h"
 #include "util3.h"
-#include "INTERN.h"
 #include "util2.h"
 
 #ifdef MSDOS
@@ -23,8 +15,8 @@
 #endif
 
 #ifdef TILDENAME
-static char* tildename = nullptr;
-static char* tildedir = nullptr;
+static char *s_tildename{};
+static char *s_tildedir{};
 #endif
 
 /* copy a string to a safe spot */
@@ -110,31 +102,31 @@ char *filexp(char *s)
 #ifdef TILDENAME
 	    for (d = scrbuf; isalnum(*s); s++, d++) *d = *s;
 	    *d = '\0';
-	    if (tildedir && !strcmp(tildename,scrbuf)) {
-		strcpy(scrbuf,tildedir);
+	    if (s_tildedir && !strcmp(s_tildename,scrbuf)) {
+		strcpy(scrbuf,s_tildedir);
 		strcat(scrbuf, s);
 		strcpy(filename, scrbuf);
 #ifdef DEBUG
 		if (debug & DEB_FILEXP)
-		    printf("r %s %s\n",tildename,tildedir) FLUSH;
+		    printf("r %s %s\n",s_tildename,s_tildedir) FLUSH;
 #endif
 	    }
 	    else {
-		if (tildename)
-		    free(tildename);
-		if (tildedir)
-		    free(tildedir);
-		tildedir = nullptr;
-		tildename = savestr(scrbuf);
+		if (s_tildename)
+		    free(s_tildename);
+		if (s_tildedir)
+		    free(s_tildedir);
+		s_tildedir = nullptr;
+		s_tildename = savestr(scrbuf);
 #ifdef HAS_GETPWENT	/* getpwnam() is not the paragon of efficiency */
 		{
-		    struct passwd* pwd = getpwnam(tildename);
+		    struct passwd* pwd = getpwnam(s_tildename);
 		    if (pwd == nullptr) {
-			printf("%s is an unknown user. Using default.\n",tildename) FLUSH;
+			printf("%s is an unknown user. Using default.\n",s_tildename) FLUSH;
 			return nullptr;
 		    }
 		    sprintf(scrbuf,"%s%s",pwd->pw_dir,s);
-		    tildedir = savestr(pwd->pw_dir);
+		    s_tildedir = savestr(pwd->pw_dir);
 		    strcpy(filename,scrbuf);
 		    endpwent();
 		}
@@ -151,14 +143,14 @@ char *filexp(char *s)
 			    if (debug & DEB_FILEXP)
 				printf("p %s\n",tmpbuf) FLUSH;
 #endif
-			    if (!strcmp(scrbuf,tildename)) {
+			    if (!strcmp(scrbuf,s_tildename)) {
 				for (i=LOGDIRFIELD-2; i; i--) {
 				    if (d)
 					d = strchr(d+1,':');
 				}
 				if (d) {
 				    cpytill(scrbuf,d+1,':');
-				    tildedir = savestr(scrbuf);
+				    s_tildedir = savestr(scrbuf);
 				    strcat(scrbuf,s);
 				    strcpy(filename,scrbuf);
 				}
@@ -167,8 +159,8 @@ char *filexp(char *s)
 			}
 			fclose(pfp);
 		    }
-		    if (!tildedir) {
-			printf("%s is an unknown user. Using default.\n",tildename) FLUSH;
+		    if (!s_tildedir) {
+			printf("%s is an unknown user. Using default.\n",s_tildename) FLUSH;
 			return nullptr;
 		    }
 		}

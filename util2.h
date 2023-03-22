@@ -1,6 +1,8 @@
 /* util2.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef UTIL2_H
+#define UTIL2_H
 
 char *savestr(const char *str);
 char *safecpy(char *to, const char *from, int len);
@@ -14,4 +16,6 @@ int strncasecmp(const char *s1, const char *s2, int len);
 char *read_auth_file(const char *file, char **pass_ptr);
 #ifdef MSDOS
 int getuid();
+#endif
+
 #endif
