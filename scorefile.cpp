@@ -54,7 +54,7 @@ static char s_sf_buf[LBUFLEN]{};
 static char **s_sf_extra_headers{};
 static int s_sf_num_extra_headers{};
 static bool s_sf_has_extra_headers{};
-static COMPEX *sf_compex{};
+static COMPEX *s_sf_compex{};
 
 static int sf_open_file(const char *name);
 static void sf_file_clear();
@@ -290,21 +290,21 @@ char *sf_get_extra_header(ART_NUM art, int hnum)
 }
 
 /* keep this one outside the functions because it is shared */
-static char sf_file[LBUFLEN];
+static char s_sf_file[LBUFLEN];
 
 /* filenames of type a/b/c/foo.bar.misc for group foo.bar.misc */
 char *sf_get_filename(int level)
 {
     char* s;
 
-    strcpy(sf_file,filexp(get_val("SCOREDIR",DEFAULT_SCOREDIR)));
-    strcat(sf_file,"/");
+    strcpy(s_sf_file,filexp(get_val("SCOREDIR",DEFAULT_SCOREDIR)));
+    strcat(s_sf_file,"/");
     if (!level) {
 	/* allow environment variable later... */
-	strcat(sf_file,"global");
+	strcat(s_sf_file,"global");
     } else {
-	strcat(sf_file,filexp("%C"));
-	s = strrchr(sf_file,'/');
+	strcat(s_sf_file,filexp("%C"));
+	s = strrchr(s_sf_file,'/');
 	/* maybe redo this logic later... */
 	while (level--) {
 	    if (*s == '\0')	/* no more name to match */
@@ -315,7 +315,7 @@ char *sf_get_filename(int level)
 	}
 	*s = '\0';	/* cut end of score file */
     }
-    return sf_file;
+    return s_sf_file;
 }
 
 /* given a string, if no slashes prepends SCOREDIR env. variable */
@@ -642,23 +642,23 @@ bool sf_do_line(char *line, bool check)
     if (g_sf_pattern_status) {	/* in pattern matching mode */
 	g_sf_entries[g_sf_num_entries-1].flags |= 1;
 	g_sf_entries[g_sf_num_entries-1].str1 = mp_savestr(s,MP_SCORE1);
-	sf_compex = (COMPEX*)safemalloc(sizeof (COMPEX));
-	init_compex(sf_compex);
+	s_sf_compex = (COMPEX*)safemalloc(sizeof (COMPEX));
+	init_compex(s_sf_compex);
 	/* compile arguments: */
 	/* 1st is COMPEX to store compiled regex in */
 	/* 2nd is search string */
 	/* 3rd should be true if the search string is a regex */
 	/* 4th is true for case-insensitivity */
-	s2 = compile(sf_compex,s,true,true);
+	s2 = compile(s_sf_compex,s,true,true);
 	if (s2 != nullptr) {
 	    printf("Bad pattern : |%s|\n",s) FLUSH;
 	    printf("Compex returns: |%s|\n",s2) FLUSH;
-	    free_compex(sf_compex);
-	    free(sf_compex);
+	    free_compex(s_sf_compex);
+	    free(s_sf_compex);
 	    g_sf_entries[g_sf_num_entries-1].compex = nullptr;
 	    return false;
 	} else
-	    g_sf_entries[g_sf_num_entries-1].compex = sf_compex;
+	    g_sf_entries[g_sf_num_entries-1].compex = s_sf_compex;
     }
     else {
 	g_sf_entries[g_sf_num_entries-1].flags &= 0xfe;
