@@ -16,7 +16,7 @@ extern termios g_oldtty;
 # else
 #  ifdef I_SGTTY
 extern sgttyb g_tty;
-extern int g_res_flg INIT(0);
+extern int g_res_flg;
 #  endif
 # endif
 #endif
