@@ -3,7 +3,6 @@
  * simple MS-DOS piping scheme to imitate UNIX pipes
  */
 
-#include "EXTERN.h"
 #include "common.h"
 #include "env.h"
 #include "util2.h"

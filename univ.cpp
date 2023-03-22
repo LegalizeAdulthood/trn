@@ -5,7 +5,6 @@
  *
  */
 
-#include "EXTERN.h"
 #include "common.h"
 #include "env.h"
 #include "hash.h"

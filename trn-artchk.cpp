@@ -9,7 +9,6 @@
 ** Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>
 */
 
-#include "EXTERN.h"
 #include "common.h"
 #include "env.h"
 #include "util2.h"

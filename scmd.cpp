@@ -5,7 +5,6 @@
  * Does some simple commands, and passes the rest to context-specific routines.
  */
 
-#include "EXTERN.h"
 #include "common.h"
 #include "final.h"
 #include "help.h"

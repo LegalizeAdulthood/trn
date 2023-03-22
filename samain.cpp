@@ -4,7 +4,6 @@
  * main working routines  (may change later)
  */
 
-#include "EXTERN.h"
 #include "common.h"
 #include "list.h"
 #include "cache.h"

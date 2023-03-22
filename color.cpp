@@ -25,7 +25,6 @@
 ** are used, otherwise only normal monochrome video attributes.
 */
 
-#include "EXTERN.h"
 #include "common.h"
 #include "term.h"
 #include "final.h"

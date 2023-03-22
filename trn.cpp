@@ -39,7 +39,6 @@
  *
  */
 
-#include "EXTERN.h"
 #include "patchlevel.h"
 #include "common.h"
 #include "list.h"

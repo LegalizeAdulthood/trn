@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 #include "typedef.h"
-#include "EXTERN.h"
 #include "config2.h"
 #include "nntpclient.h"
 #include "util2.h"

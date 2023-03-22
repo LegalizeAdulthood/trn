@@ -4,7 +4,6 @@
 ** Geoffrey Collyer.  See the end of the file for his copyright.
 */
 
-#include "EXTERN.h"
 #include "common.h"
 #include "util.h"
 #include "final.h"

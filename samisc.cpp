@@ -4,7 +4,6 @@
  * lower-level routines
  */
 
-#include "EXTERN.h"
 #include "common.h"
 #include "list.h"
 #include "cache.h"

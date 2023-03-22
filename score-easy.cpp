@@ -4,7 +4,6 @@
  * Simple interactive menus for scorefile tasks.
  */
 
-#include "EXTERN.h"
 #include "common.h"
 #include "term.h"
 #include "util.h"

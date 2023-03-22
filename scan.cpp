@@ -6,7 +6,6 @@
 
 /* CLEANUP: make a scontext file for the scan context stuff. */
 
-#include "EXTERN.h"
 #include "common.h"
 #include "sorder.h"
 #include "util.h"		/* allocation */

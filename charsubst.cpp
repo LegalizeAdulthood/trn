@@ -13,7 +13,6 @@
  * is at the user's own risk. 
  */
 
-#include "EXTERN.h"
 #include "common.h"
 #include "util2.h"
 #include "utf.h"

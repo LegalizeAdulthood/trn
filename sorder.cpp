@@ -4,7 +4,6 @@
  * scan ordering
  */
 
-#include "EXTERN.h"
 #include "common.h"
 #include "util.h"
 #include "scan.h"

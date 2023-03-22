@@ -3,7 +3,6 @@
  *
  */
 
-#include "EXTERN.h"
 #include "common.h"
 /* sort the following includes later */
 #include "list.h"

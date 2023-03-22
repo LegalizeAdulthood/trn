@@ -4,7 +4,6 @@
  * Lots of misc. stuff.
  */
 
-#include "EXTERN.h"
 #include "common.h"
 #include "scan.h"
 #include "samisc.h"

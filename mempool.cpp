@@ -2,7 +2,6 @@
  * mempool.c
  */
 
-#include "EXTERN.h"
 #include "common.h"
 #include "final.h"
 #include "util.h"

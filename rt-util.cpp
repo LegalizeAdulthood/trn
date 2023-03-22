@@ -2,7 +2,6 @@
 *  vi: set sw=4 ts=8 ai sm noet :
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#include "EXTERN.h"
 #include "common.h"
 #include "cache.h"
 #include "ngdata.h"

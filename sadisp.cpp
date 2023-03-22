@@ -4,7 +4,6 @@
  * display stuff
  */
 
-#include "EXTERN.h"
 #include "common.h"
 #include "trn.h"
 #include "term.h"

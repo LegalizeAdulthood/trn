@@ -6,7 +6,6 @@
  * Interface routines to the rest of trn
  */
 
-#include "EXTERN.h"
 #include "common.h"
 #include "ng.h"		/* variable g_art, the next article to read. */
 #include "ngdata.h"

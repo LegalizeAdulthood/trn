@@ -4,7 +4,6 @@
  * display stuff
  */
 
-#include "EXTERN.h"
 #include "common.h"
 #include "ng.h"		/* g_mailcall */
 #include "term.h"
