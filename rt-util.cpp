@@ -590,13 +590,13 @@ const char *compress_subj(const ARTICLE *ap, int max)
 
 /* Modified version of a spinner originally found in Clifford Adams' strn. */
 
-static char *spinchars;
-static int spin_level INIT(0);	/* used to allow non-interfering nested spins */
-static int spin_mode;
-static int spin_place;		/* represents place in spinchars array */
-static int spin_pos;		/* the last spinbar position we drew */
-static ART_NUM spin_art;
-static ART_POS spin_tell;
+static char *s_spinchars{};
+static int s_spin_level{}; /* used to allow non-interfering nested spins */
+static int s_spin_mode{};
+static int s_spin_place{}; /* represents place in s_spinchars array */
+static int s_spin_pos{};   /* the last spinbar position we drew */
+static ART_NUM s_spin_art{};
+static ART_POS s_spin_tell{};
 
 void setspin(int mode)
 {
@@ -604,51 +604,51 @@ void setspin(int mode)
       case SPIN_FOREGROUND:
       case SPIN_BACKGROUND:
       case SPIN_BARGRAPH:
-	if (!spin_level++) {
-	    if ((spin_art = g_openart) != 0 && g_artfp)
-		spin_tell = tellart();
+	if (!s_spin_level++) {
+	    if ((s_spin_art = g_openart) != 0 && g_artfp)
+		s_spin_tell = tellart();
 	    g_spin_count = 0;
-	    spin_place = 0;
+	    s_spin_place = 0;
 	}
-	if (spin_mode == SPIN_BARGRAPH)
+	if (s_spin_mode == SPIN_BARGRAPH)
 	    mode = SPIN_BARGRAPH;
 	if (mode == SPIN_BARGRAPH) {
-	    if (spin_mode != SPIN_BARGRAPH) {
+	    if (s_spin_mode != SPIN_BARGRAPH) {
 		int i;
 		g_spin_marks = (g_verbose? 25 : 10);
 		printf(" [%*s]", g_spin_marks, "");
 		for (i = g_spin_marks + 1; i--; ) backspace();
 		fflush(stdout);
 	    }
-	    spin_pos = 0;
+	    s_spin_pos = 0;
 	}
-	spinchars = "|/-\\";
-	spin_mode = mode;
+	s_spinchars = "|/-\\";
+	s_spin_mode = mode;
 	break;
       case SPIN_POP:
       case SPIN_OFF:
-	if (spin_mode == SPIN_BARGRAPH) {
-	    spin_level = 1;
+	if (s_spin_mode == SPIN_BARGRAPH) {
+	    s_spin_level = 1;
 	    spin(10000);
 	    if (g_spin_count >= g_spin_todo)
 		g_spin_char = ']';
 	    g_spin_count--;
-	    spin_mode = SPIN_FOREGROUND;
+	    s_spin_mode = SPIN_FOREGROUND;
 	}
-	if (mode == SPIN_POP && --spin_level > 0)
+	if (mode == SPIN_POP && --s_spin_level > 0)
 	    break;
-	spin_level = 0;
-	if (spin_place) {	/* we have spun at least once */
+	s_spin_level = 0;
+	if (s_spin_place) {	/* we have spun at least once */
 	    putchar(g_spin_char); /* get rid of spin character */
 	    backspace();
 	    fflush(stdout);
-	    spin_place = 0;
+	    s_spin_place = 0;
 	}
-	if (spin_art) {
-	    artopen(spin_art,spin_tell);   /* do not screw up the pager */
-	    spin_art = 0;
+	if (s_spin_art) {
+	    artopen(s_spin_art,s_spin_tell);   /* do not screw up the pager */
+	    s_spin_art = 0;
 	}
-	spin_mode = SPIN_OFF;
+	s_spin_mode = SPIN_OFF;
 	g_spin_char = ' ';
 	break;
     }
@@ -657,14 +657,14 @@ void setspin(int mode)
 /* modulus for the spin... */
 void spin(int count)
 {
-    if (!spin_level)
+    if (!s_spin_level)
 	return;
-    switch (spin_mode) {
+    switch (s_spin_mode) {
       case SPIN_BACKGROUND:
 	if (!g_bkgnd_spinner)
 	    return;
 	if (!(++g_spin_count % count)) {
-	    putchar(spinchars[++spin_place % 4]);
+	    putchar(s_spinchars[++s_spin_place % 4]);
 	    backspace();
 	    fflush(stdout);
 	}
@@ -681,15 +681,15 @@ void spin(int count)
 	if (g_spin_todo == 0)
 	    break;		/* bail out rather than crash */
 	new_pos = (int)((long)g_spin_marks * ++g_spin_count / g_spin_todo);
-	if (spin_pos < new_pos && g_spin_count <= g_spin_todo+1) {
+	if (s_spin_pos < new_pos && g_spin_count <= g_spin_todo+1) {
 	    do {
 		putchar('*');
-	    } while (++spin_pos < new_pos);
-	    spin_place = 0;
+	    } while (++s_spin_pos < new_pos);
+	    s_spin_place = 0;
 	    fflush(stdout);
 	}
 	else if (!(g_spin_count % count)) {
-	    putchar(spinchars[++spin_place % 4]);
+	    putchar(s_spinchars[++s_spin_place % 4]);
 	    backspace();
 	    fflush(stdout);
 	}
@@ -700,7 +700,7 @@ void spin(int count)
 
 bool inbackground()
 {
-    return spin_mode == SPIN_BACKGROUND;
+    return s_spin_mode == SPIN_BACKGROUND;
 }
 
 static int	prior_perform_cnt;
@@ -724,8 +724,8 @@ void perform_status_init(long cnt)
     ps_missing = g_missing_count;
 
     g_spin_count = 0;
-    spin_place = 0;
-    spinchars = "v>^<";
+    s_spin_place = 0;
+    s_spinchars = "v>^<";
 }
 
 void perform_status(long cnt, int spin)
@@ -734,7 +734,7 @@ void perform_status(long cnt, int spin)
     time_t now;
 
     if (!(++g_spin_count % spin)) {
-	putchar(spinchars[++spin_place % 4]);
+	putchar(s_spinchars[++s_spin_place % 4]);
 	backspace();
 	fflush(stdout);
     }
