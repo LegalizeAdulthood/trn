@@ -6,7 +6,7 @@
 
 extern char *g_decode_filename;
 
-enum
+enum decode_state
 {
     DECODE_DONE = 0,
     DECODE_START = 1,
@@ -19,7 +19,7 @@ enum
     DECODE_ERROR = 8
 };
 
-using DECODE_FUNC = int (*)(FILE *ifp, int state);
+using DECODE_FUNC = decode_state (*)(FILE *ifp, decode_state state);
 
 void decode_init();
 char *decode_fix_fname(const char *s);

@@ -235,7 +235,9 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     char* dir;
     char* filename;
     FILE* fp;
-    int part, total, state;
+    int part;
+    int total;
+    decode_state state;
     DECODE_FUNC decoder;
 
     filename = decode_fix_fname(g_mime_section->filename);

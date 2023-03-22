@@ -850,7 +850,7 @@ int qp_decodestring(char *t, char *f, bool in_header)
     return t - save_t;
 }
 
-int qp_decode(FILE *ifp, int state)
+decode_state qp_decode(FILE *ifp, decode_state state)
 {
     static FILE* ofp = nullptr;
     int c1, c2;
@@ -955,7 +955,7 @@ int b64_decodestring(char *t, char *f)
     return t - save_t;
 }
 
-int b64_decode(FILE *ifp, int state)
+decode_state b64_decode(FILE *ifp, decode_state state)
 {
     static FILE* ofp = nullptr;
     int c1, c2, c3, c4;
@@ -1044,7 +1044,7 @@ static int mime_getc(FILE *fp)
     return *g_mime_getc_line++;
 }
 
-int cat_decode(FILE *ifp, int state)
+decode_state cat_decode(FILE *ifp, decode_state state)
 {
     static FILE* ofp = nullptr;
 

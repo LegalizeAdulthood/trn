@@ -3,6 +3,8 @@
 #ifndef MIME_H
 #define MIME_H
 
+#include "decode.h"
+
 struct HBLK
 {
     int	    tnum;
@@ -180,10 +182,10 @@ char *mime_SkipWhitespace(char *s);
 void mime_DecodeArticle(bool view);
 void mime_Description(MIME_SECT *mp, char *s, int limit);
 int qp_decodestring(char *t, char *f, bool in_header);
-int qp_decode(FILE *ifp, int state);
+decode_state qp_decode(FILE *ifp, decode_state state);
 int b64_decodestring(char *t, char *f);
-int b64_decode(FILE *ifp, int state);
-int cat_decode(FILE *ifp, int state);
+decode_state b64_decode(FILE *ifp, decode_state state);
+decode_state cat_decode(FILE *ifp, decode_state state);
 int filter_html(char *t, char *f);
 
 #endif
