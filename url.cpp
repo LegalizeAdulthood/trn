@@ -7,10 +7,8 @@
 #include "EXTERN.h"
 #include "common.h"
 #include "nntpinit.h"
-#include "term.h"
 #include "util.h"
 #include "util2.h"
-#include "INTERN.h"
 #include "url.h"
 
 /* Lower-level net routines grabbed from nntpinit.c.
@@ -36,12 +34,12 @@ struct servent* getservbyname();
 struct hostent* gethostbyname();
 #endif
 
-static char url_buf[1030];
+static char s_url_buf[1030];
 /* XXX just a little bit larger than necessary... */
-static char url_type[256];
-static char url_host[256];
-static int  url_port;
-static char url_path[1024];
+static char s_url_type[256];
+static char s_url_host[256];
+static int  s_url_port;
+static char s_url_path[1024];
 
 /* returns true if successful */
 bool fetch_http(const char *host, int port, const char *path, const char *outname)
@@ -54,9 +52,9 @@ bool fetch_http(const char *host, int port, const char *path, const char *outnam
 
     /* XXX length check */
     /* XXX later consider using HTTP/1.0 format (and user-agent) */
-    sprintf(url_buf, "GET %s\n",path);
+    sprintf(s_url_buf, "GET %s\n",path);
     /* Should I be writing the 0 char at the end? */
-    if (write(sock, url_buf, strlen(url_buf)+1) < 0) {
+    if (write(sock, s_url_buf, strlen(s_url_buf)+1) < 0) {
 	printf("\nError: writing on URL socket\n");
 	close(sock);
 	return false;
@@ -71,14 +69,14 @@ bool fetch_http(const char *host, int port, const char *path, const char *outnam
     /* (the old nicebg code caused portability problems) */
     /* later consider larger buffers, spinner */
     while (true) {
-	if ((len = read(sock, url_buf, 1024)) < 0) {
+	if ((len = read(sock, s_url_buf, 1024)) < 0) {
 	    printf("\nError: reading URL reply\n");
 	    return false;
 	}
 	if (len == 0) {
 	    break;	/* no data, end connection */
 	}
-	fwrite(url_buf,1,len,fp_out);
+	fwrite(s_url_buf,1,len,fp_out);
     }
     fclose(fp_out);
     close(sock);
@@ -160,12 +158,12 @@ bool parse_url(const char *url)
     char* p;
 
     /* consider using 0 as default to look up the service? */
-    url_port = 80;	/* the default */
+    s_url_port = 80;	/* the default */
     if (!url || !*url) {
 	printf("Empty URL -- ignoring.\n") FLUSH;
 	return false;
     }
-    p = url_type;
+    p = s_url_type;
     for (s = url; *s && *s != ':'; *p++ = *s++) ;
     *p = '\0';
     if (!*s) {
@@ -176,7 +174,7 @@ bool parse_url(const char *url)
     if (!strncmp(s,"//",2)) {
 	/* normal URL type, will have host (optional portnum) */
 	s += 2;
-	p = url_host;
+	p = s_url_host;
 	/* check for address literal: news://[ip:v6:address]:port/ */
 	if (*s == '[') {
 	    while (*s && *s != ']')
@@ -195,17 +193,17 @@ bool parse_url(const char *url)
 	}
 	if (*s == ':') {
 	    s++;
-	    p = url_buf;	/* temp space */
+	    p = s_url_buf;	/* temp space */
 	    if (!isdigit(*s)) {
 		printf("Bad URL (non-numeric portnum): %s\n",url) FLUSH;
 		return false;
 	    }
 	    while (isdigit(*s)) *p++ = *s++;
 	    *p = '\0';
-	    url_port = atoi(url_buf);
+	    s_url_port = atoi(s_url_buf);
 	}
     } else {
-	if (!!strcmp(url_type,"news")) {
+	if (!!strcmp(s_url_type,"news")) {
 	    printf("URL needs a hostname: %s\n",url);
 	    return false;
 	}
@@ -215,7 +213,7 @@ bool parse_url(const char *url)
 	printf("Bad URL (path does not start with /): %s\n",url) FLUSH;
 	return false;
     }
-    strcpy(url_path,s);
+    strcpy(s_url_path,s);
     return true;
 }
 
@@ -226,13 +224,13 @@ bool url_get(const char *url, const char *outfile)
     if (!parse_url(url))
 	return false;
 
-    if (!strcmp(url_type,"http"))
-	flag = fetch_http(url_host,url_port,url_path,outfile);
-    else if (!strcmp(url_type,"ftp"))
-	flag = fetch_ftp(url_host,url_path,outfile);
+    if (!strcmp(s_url_type,"http"))
+	flag = fetch_http(s_url_host,s_url_port,s_url_path,outfile);
+    else if (!strcmp(s_url_type,"ftp"))
+	flag = fetch_ftp(s_url_host,s_url_path,outfile);
     else {
-	if (url_type)
-	    printf("\nURL type %s not supported (yet?)\n",url_type) FLUSH;
+	if (s_url_type)
+	    printf("\nURL type %s not supported (yet?)\n",s_url_type) FLUSH;
 	flag = false;
     }
     return flag;
