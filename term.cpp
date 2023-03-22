@@ -783,7 +783,7 @@ static int echo_char(char_int ch)
     return 1;
 }
 
-static bool screen_is_dirty; /*$$ remove this? */
+static bool s_screen_is_dirty{}; /*$$ remove this? */
 
 /* Process the character *s in the buffer g_buf returning the new 's' */
 
@@ -1368,7 +1368,7 @@ bool in_choice(const char *prompt, char *value, char *choices, char_int newmode)
     unflush_output();			/* disable any ^O in effect */
     eat_typeahead();
     set_mode('c',newmode);
-    screen_is_dirty = false;
+    s_screen_is_dirty = false;
 
     char *cp = choices;
     if (*cp == '[') {
@@ -1478,7 +1478,7 @@ reask_in_choice:
 
 reinp_in_choice:
     if ((s-g_buf) + len >= g_tc_COLS)
-	screen_is_dirty = true;
+	s_screen_is_dirty = true;
     fflush(stdout);
     getcmd(s);
     if (errno || *s == '\f')		/* if return from stop signal */
@@ -1526,7 +1526,7 @@ reinp_in_choice:
     *s = '\0';
 
     set_mode(gmode_save,mode_save);
-    return !screen_is_dirty;
+    return !s_screen_is_dirty;
 }
 
 int print_lines(const char *what_to_print, int hilite)
@@ -1678,7 +1678,7 @@ void reprint()
     termdown(1);
     for (s = g_buf; *s; s++)
 	echo_char(*s);
-    screen_is_dirty = true;
+    s_screen_is_dirty = true;
 }
 
 void erase_line(bool to_eos)
@@ -2155,7 +2155,7 @@ bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
     return false;
 }
 
-static int tc_string_cnt = 0;
+static int s_tc_string_cnt{};
 
 static struct {
 	char* capability;	/* name of capability, e.g. "forground red" */
@@ -2167,19 +2167,19 @@ void add_tc_string(const char *capability, const char *string)
 {
     int i;
 
-    for (i = 0; i < tc_string_cnt; i++) {
+    for (i = 0; i < s_tc_string_cnt; i++) {
 	if (!strcmp(capability,tc_strings[i].capability)) {
 	    free(tc_strings[i].string);
 	    break;
 	}
     }
-    if (i == tc_string_cnt) {
-	if (tc_string_cnt == TC_STRINGS) {
+    if (i == s_tc_string_cnt) {
+	if (s_tc_string_cnt == TC_STRINGS) {
 	    fprintf(stderr,"trn: too many colors in [termcap] section (max is %d).\n",
 		    TC_STRINGS);
 	    finalize(1);
 	}
-	tc_string_cnt++;
+	s_tc_string_cnt++;
 	tc_strings[i].capability = savestr(capability);
     }
 
@@ -2191,7 +2191,7 @@ char *tc_color_capability(const char *capability)
 {
     int c;
 
-    for (c = 0; c < tc_string_cnt; c++) {
+    for (c = 0; c < s_tc_string_cnt; c++) {
 	if (!strcmp(tc_strings[c].capability,capability))
 	    return tc_strings[c].string;
     }
