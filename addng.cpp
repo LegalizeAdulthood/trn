@@ -28,7 +28,7 @@ ADDGROUP* g_last_addgroup{};
 ADDGROUP* g_sel_page_gp{};
 ADDGROUP* g_sel_next_gp{};
 
-static int addgroup_cnt;
+static int s_addgroup_cnt{};
 
 static int addng_cmp(const char *key, int keylen, HASHDATUM data);
 static int build_addgroup_list(int keylen, HASHDATUM *data, int extra);
@@ -52,7 +52,7 @@ static int build_addgroup_list(int keylen, HASHDATUM *data, int extra)
 {
     ADDGROUP* node = (ADDGROUP*)data->dat_ptr;
 
-    node->num = addgroup_cnt++;
+    node->num = s_addgroup_cnt++;
     node->next = nullptr;
     node->prev = g_last_addgroup;
     if (g_last_addgroup)
@@ -118,7 +118,7 @@ static void process_list(int flag)
     }
     g_first_addgroup = nullptr;
     g_last_addgroup = nullptr;
-    addgroup_cnt = 0;
+    s_addgroup_cnt = 0;
 }
 
 static void new_nntp_groups(DATASRC *dp)
@@ -289,7 +289,7 @@ static void add_to_list(const char *name, int toread, char_int ch)
 	break;
     }
     node->toread = (toread < 0)? 0 : toread;
-    node->num = addgroup_cnt++;
+    node->num = s_addgroup_cnt++;
     strcpy(node->name, name);
     node->datasrc = g_datasrc;
     node->next = nullptr;
@@ -424,16 +424,16 @@ void sort_addgroups()
 	break;
     }
 
-    ag_list = (ADDGROUP**)safemalloc(addgroup_cnt * sizeof(ADDGROUP*));
+    ag_list = (ADDGROUP**)safemalloc(s_addgroup_cnt * sizeof(ADDGROUP*));
     for (lp = ag_list, ap = g_first_addgroup; ap; ap = ap->next)
 	*lp++ = ap;
     assert(lp - ag_list == addgroup_cnt);
 
-    qsort(ag_list, addgroup_cnt, sizeof(ADDGROUP*), (int(*)(void const *, void const *)) sort_procedure);
+    qsort(ag_list, s_addgroup_cnt, sizeof(ADDGROUP*), (int(*)(void const *, void const *)) sort_procedure);
 
     g_first_addgroup = ap = ag_list[0];
     ap->prev = nullptr;
-    for (i = addgroup_cnt, lp = ag_list; --i; lp++) {
+    for (i = s_addgroup_cnt, lp = ag_list; --i; lp++) {
 	lp[0]->next = lp[1];
 	lp[1]->prev = lp[0];
     }
