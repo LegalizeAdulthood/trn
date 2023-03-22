@@ -616,7 +616,7 @@ reask_pager:
 
     fake_command:		/* used by g_innersearch */
 	color_default();
-	output_chase_phrase = true;
+	g_output_chase_phrase = true;
 
 	/* parse and process pager command */
 

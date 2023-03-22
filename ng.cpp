@@ -270,7 +270,7 @@ int do_newsgroup(char *start_command)
 	    }
 	    count_subjects(CS_RETAIN);
 	    article_walk(count_unCACHED_article, 0);
-	    g_ngptr->toread = (ART_UNREAD)obj_count;
+	    g_ngptr->toread = (ART_UNREAD)g_obj_count;
 	    if (g_artp != g_curr_artp) {
 		g_recent_art = g_curr_art;	/* remember last article # (for '-') */
 		g_curr_art = g_art;		/* set current article # */
@@ -294,14 +294,14 @@ int do_newsgroup(char *start_command)
 					/* print pseudo-article */
 	    else
 		printf("End of %s",g_ngname);
-	    if (obj_count) {
+	    if (g_obj_count) {
 		if (g_selected_only)
 		    printf("  (%ld + %ld articles still unread)",
 			(long)g_selected_count,
-			(long)obj_count-g_selected_count);
+			(long)g_obj_count-g_selected_count);
 		else
 		    printf("  (%ld article%s still unread)",
-			(long)obj_count,PLURAL(obj_count));
+			(long)g_obj_count,PLURAL(g_obj_count));
 	    }
 	    if (g_redirected) {
 		if (g_redirected == "")
@@ -310,7 +310,7 @@ int do_newsgroup(char *start_command)
 		    printf("\n\n** Please start using %s **", g_redirected);
 		termdown(2);
 	    }
-	    else if (!obj_count && !g_forcelast)
+	    else if (!g_obj_count && !g_forcelast)
 		goto cleanup;		/* actually exit newsgroup */
 	    set_mode(g_general_mode,'e');
 	    g_prompt = whatnext;
@@ -435,7 +435,7 @@ reinp_article:
 	    }
 	}
 article_level:
-	output_chase_phrase = true;  /* Allow "Chasing Xrefs..." output */
+	g_output_chase_phrase = true;  /* Allow "Chasing Xrefs..." output */
 	if (g_mousebar_cnt)
 	    clear_rest();
 
@@ -637,7 +637,7 @@ n or q to change nothing.\n\
 	    check_first(g_absfirst);
 	    article_walk(mark_all_unREAD, 0);
 	    count_subjects(CS_NORM);
-	    g_ngptr->toread = (ART_UNREAD)obj_count;
+	    g_ngptr->toread = (ART_UNREAD)g_obj_count;
 	}
 	else if (*g_buf == '+') {
 	    *g_buf = 'U';
@@ -1501,7 +1501,7 @@ u to mark all and unsubscribe.\n\n\
 	article_walk(mark_all_READ, leave_unread);
 	if (leave_unread) {
 	    count_subjects(CS_NORM);
-	    g_ngptr->toread = (ART_UNREAD)obj_count;
+	    g_ngptr->toread = (ART_UNREAD)g_obj_count;
 	}
 	else {
 	    g_selected_count = g_selected_subj_cnt = g_selected_only = false;
@@ -1531,7 +1531,7 @@ static bool count_unCACHED_article(char *ptr, int arg)
 {
     ARTICLE* ap = (ARTICLE*)ptr;
     if ((ap->flags & (AF_UNREAD|AF_CACHED)) == AF_UNREAD)
-	obj_count++;
+	g_obj_count++;
     return false;
 }
 
@@ -1549,7 +1549,7 @@ static bool mark_all_unREAD(char *ptr, int arg)
     ARTICLE* ap = (ARTICLE*)ptr;
     if ((ap->flags & (AF_UNREAD|AF_EXISTS)) == AF_EXISTS) {
 	ap->flags |= AF_UNREAD;		/* mark as unread */
-	obj_count++;
+	g_obj_count++;
     }
     return false;
 }

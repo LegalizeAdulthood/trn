@@ -334,7 +334,7 @@ try_again:
 	g_group_init_done = true;
 	sort_newsgroups();
 	g_selected_count = 0;
-	obj_count = 0;
+	g_obj_count = 0;
 	for (np = g_first_ng; np; np = np->next) {
 	    if (g_sel_page_np == np)
 		g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
@@ -366,7 +366,7 @@ try_again:
 	     && (g_sel_rereading? np->toread != TR_NONE
 			      : np->toread < g_ng_min_toread))
 		continue;
-	    obj_count++;
+	    g_obj_count++;
 
 	    if (!g_sel_exclusive || (np->flags & g_sel_mask)) {
 		if (np->flags & g_sel_mask)
@@ -407,7 +407,7 @@ try_again:
       case SM_ADDGROUP: {
 	ADDGROUP* gp;
 	sort_addgroups();
-	obj_count = 0;
+	g_obj_count = 0;
 	for (gp = g_first_addgroup; gp; gp = gp->next) {
 	    if (g_sel_page_gp == gp)
 		g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
@@ -420,7 +420,7 @@ try_again:
 		gp->flags |= AGF_INCLUDED;
 		g_sel_total_obj_cnt++;
 	    }
-	    obj_count++;
+	    g_obj_count++;
 	}
 	if (!g_sel_total_obj_cnt && g_sel_exclusive) {
 	    g_sel_exclusive = false;
@@ -441,7 +441,7 @@ try_again:
       case SM_UNIVERSAL: {
 	UNIV_ITEM* ui;
 	bool ui_elig;
-	obj_count = 0;
+	g_obj_count = 0;
 
 	sort_univ();
 	for (ui = g_first_univ; ui; ui = ui->next) {
@@ -497,7 +497,7 @@ try_again:
 		ui->flags |= UF_INCLUDED;
 		g_sel_total_obj_cnt++;
 	    }
-	    obj_count++;
+	    g_obj_count++;
 	}
 	if (!g_sel_total_obj_cnt && g_sel_exclusive) {
 	    g_sel_exclusive = false;
@@ -518,7 +518,7 @@ try_again:
       case SM_OPTIONS: {
 	int op;
 	int included = 0;
-	obj_count = 0;
+	g_obj_count = 0;
 	for (op = 1; g_options_ini[op].checksum; op++) {
 	    if (g_sel_page_op == op)
 		g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
@@ -533,7 +533,7 @@ try_again:
 	    }
 	    else
 		g_option_flags[op] &= ~OF_INCLUDED;
-	    obj_count++;
+	    g_obj_count++;
 	}
 #if 0
 	if (!g_sel_total_obj_cnt && g_sel_exclusive) {
@@ -544,7 +544,7 @@ try_again:
 #endif
 	if (g_sel_page_op < 1)
 	    (void) first_page();
-	else if (g_sel_page_op >= obj_count)
+	else if (g_sel_page_op >= g_obj_count)
 	    (void) last_page();
 	else if (g_sel_prior_obj_cnt && fill_last_page) {
 	    calc_page(no_search);
@@ -820,7 +820,7 @@ bool last_page()
       }
       case SM_OPTIONS: {
 	int op = g_sel_page_op;
-	g_sel_page_op = obj_count+1;
+	g_sel_page_op = g_obj_count+1;
 	if (!prev_page())
 	    g_sel_page_op = op;
 	else if (op != g_sel_page_op)
@@ -885,7 +885,7 @@ bool next_page()
 	break;
       }
       case SM_OPTIONS: {
-	if (g_sel_next_op <= obj_count) {
+	if (g_sel_next_op <= g_obj_count) {
 	    g_sel_page_op = g_sel_next_op;
 	    g_sel_prior_obj_cnt += g_sel_page_obj_cnt;
 	    return true;
@@ -1149,7 +1149,7 @@ try_again:
       }
       case SM_OPTIONS: {
 	int op = g_sel_page_op;
-	for (; op <= obj_count && g_sel_page_item_cnt < g_sel_max_per_page; op++) {
+	for (; op <= g_obj_count && g_sel_page_item_cnt < g_sel_max_per_page; op++) {
 	    if (op == u.op)
 		g_sel_item_index = g_sel_page_item_cnt;
 	    if (g_option_flags[op] & OF_INCLUDED)
@@ -1273,14 +1273,14 @@ void display_page_title(bool home_only)
 	       g_sel_rereading? "read " : "",
 	       g_sel_total_obj_cnt == 1 ? "" : "s");
 	if (g_sel_exclusive)
-	    printf(" out of %ld", (long)obj_count);
+	    printf(" out of %ld", (long)g_obj_count);
 	fputs(g_moderated,stdout);
     }
     else {
 	printf("       %s%ld group%s",g_group_init_done? "" : "~",
 	    (long)g_sel_total_obj_cnt, PLURAL(g_sel_total_obj_cnt));
 	if (g_sel_exclusive)
-	    printf(" out of %ld", (long)obj_count);
+	    printf(" out of %ld", (long)g_obj_count);
 	if (g_maxngtodo)
 	    printf(" (Restriction)");
     }
@@ -1491,7 +1491,7 @@ try_again:
     }
     else if (g_sel_mode == SM_OPTIONS) {
 	int op = g_sel_page_op;
-	for (; op <= obj_count && g_sel_page_item_cnt<g_sel_max_per_page; op++) {
+	for (; op <= g_obj_count && g_sel_page_item_cnt<g_sel_max_per_page; op++) {
 #if 0
 	    if (op == xx)
 		g_sel_item_index = g_sel_page_item_cnt;

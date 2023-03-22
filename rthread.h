@@ -4,10 +4,10 @@
 #ifndef RTHREAD_H
 #define RTHREAD_H
 
-extern ART_NUM obj_count;
-extern int subject_count;
-extern bool output_chase_phrase;
-extern HASHTABLE *msgid_hash;
+extern ART_NUM g_obj_count;
+extern int g_subject_count;
+extern bool g_output_chase_phrase;
+extern HASHTABLE *g_msgid_hash;
 
 /* Values to pass to count_subjects() */
 enum

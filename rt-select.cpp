@@ -1534,7 +1534,7 @@ static int sel_command(char_int ch)
   do_command:
     *g_buf = ch;
     g_buf[1] = FINISHCMD;
-    output_chase_phrase = true;
+    g_output_chase_phrase = true;
     switch (ch) {
       case '>':
 	g_sel_item_index = 0;
@@ -1948,12 +1948,12 @@ q does nothing.\n\n\
 		}
 	    }
 	    count_subjects(CS_UNSELECT);
-	    if (obj_count && (ch == 'J' || (ch == 'D' && !g_selected_count))) {
+	    if (g_obj_count && (ch == 'J' || (ch == 'D' && !g_selected_count))) {
 		init_pages(FILL_LAST_PAGE);
 		g_sel_item_index = 0;
 		return DS_DISPLAY;
 	    }
-	    if (g_artptr_list && obj_count)
+	    if (g_artptr_list && g_obj_count)
 		sort_articles();
 	} else if (ch == 'J') {
 	    SUBJECT* sp;
@@ -2091,7 +2091,7 @@ q does nothing.\n\n\
 	s_removed_prompt = 3;
 	if ((ch = ask_catchup()) == 'y' || ch == 'u') {
 	    count_subjects(CS_UNSELECT);
-	    if (ch != 'u' && obj_count) {
+	    if (ch != 'u' && g_obj_count) {
 		g_sel_page_sp = nullptr;
 		g_sel_page_app = nullptr;
 		init_pages(FILL_LAST_PAGE);
@@ -2636,7 +2636,7 @@ static int option_commands(char_int ch)
 	}
 	i = j = g_sel_items[g_sel_item_index].u.op;
 	do {
-	    if (++i > obj_count)
+	    if (++i > g_obj_count)
 		i = 1;
 	    if (*g_options_ini[i].item == '*')
 		continue;

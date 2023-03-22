@@ -69,7 +69,7 @@ bool valid_article(ARTICLE *article)
 
     if (msgid) {
 	fix_msgid(msgid);
-	data = hashfetch(msgid_hash, msgid, strlen(msgid));
+	data = hashfetch(g_msgid_hash, msgid, strlen(msgid));
 	if (data.dat_len) {
 	    safefree0(data.dat_ptr);
 	    article->autofl = data.dat_len & (AUTO_SELS | AUTO_KILLS);
@@ -167,7 +167,7 @@ ARTICLE *get_article(char *msgid)
 
     fix_msgid(msgid);
 
-    data = hashfetch(msgid_hash, msgid, strlen(msgid));
+    data = hashfetch(g_msgid_hash, msgid, strlen(msgid));
     if (data.dat_len) {
 	article = allocate_article(0);
 	article->autofl = data.dat_len & (AUTO_SELS | AUTO_KILLS);

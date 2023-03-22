@@ -6,21 +6,14 @@
 #include "EXTERN.h"
 #include "common.h"
 #include "list.h"
-#include "intrp.h"
-#include "trn.h"
 #include "hash.h"
 #include "cache.h"
 #include "bits.h"
 #include "ngdata.h"
 #include "nntpclient.h"
 #include "datasrc.h"
-#include "nntp.h"
 #include "ng.h"
-#include "rcln.h"
-#include "search.h"
 #include "artstate.h"
-#include "rcstuff.h"
-#include "final.h"
 #include "kfile.h"
 #include "head.h"
 #include "util.h"
@@ -33,13 +26,12 @@
 #include "rt-select.h"
 #include "rt-util.h"
 #include "rt-wumpus.h"
-#include "INTERN.h"
 #include "rthread.h"
 
-ART_NUM obj_count{};
-int subject_count{};
-bool output_chase_phrase{};
-HASHTABLE *msgid_hash{};
+ART_NUM g_obj_count{};
+int g_subject_count{};
+bool g_output_chase_phrase{};
+HASHTABLE *g_msgid_hash{};
 
 static int cleanup_msgid_hash(int keylen, HASHDATUM *data, int extra);
 static ARTICLE *first_sib(ARTICLE *ta, int depth);
@@ -78,10 +70,10 @@ void thread_open()
     time_t save_ov_opened;
     ARTICLE* ap;
 
-    if (!msgid_hash)
-	msgid_hash = hashcreate(1999, msgid_cmp); /*TODO: pick a better size */
+    if (!g_msgid_hash)
+	g_msgid_hash = hashcreate(1999, msgid_cmp); /*TODO: pick a better size */
     if (g_threaded_group) {
-	/* Parse input and use msgid_hash for quick article lookups. */
+	/* Parse input and use g_msgid_hash for quick article lookups. */
 	/* If cached but not threaded articles exist, set up to thread them. */
 	if (g_first_subject) {
 	    g_first_cached = g_firstart;
@@ -178,8 +170,8 @@ void thread_close()
     init_tree();			/* free any tree lines */
 
     update_thread_kfile();
-    if (msgid_hash)
-	hashwalk(msgid_hash, cleanup_msgid_hash, 0);
+    if (g_msgid_hash)
+	hashwalk(g_msgid_hash, cleanup_msgid_hash, 0);
     g_sel_page_sp = 0;
     g_sel_page_app = 0;
     g_sel_last_ap = 0;
@@ -1257,7 +1249,7 @@ void count_subjects(int cmode)
     int desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
     time_t subjdate;
 
-    obj_count = g_selected_count = g_selected_subj_cnt = 0;
+    g_obj_count = g_selected_count = g_selected_subj_cnt = 0;
     if (g_last_cached >= g_lastart)
 	g_firstart = g_lastart+1;
 
@@ -1304,7 +1296,7 @@ void count_subjects(int cmode)
 	    sp->date = subjdate;
 	else if (!sp->date && sp->articles)
 	    sp->date = sp->articles->date;
-	obj_count += count;
+	g_obj_count += count;
 	if (cmode == CS_RESELECT) {
 	    if (sp->flags & SF_VISIT) {
 		sp->flags = (sp->flags & ~(SF_SEL|SF_DEL)) | g_sel_mask;
@@ -1330,7 +1322,7 @@ void count_subjects(int cmode)
 	}
     }
     if (cmode != CS_RETAIN && cmode != CS_RESELECT
-     && !obj_count && !g_selected_only) {
+     && !g_obj_count && !g_selected_only) {
 	for (sp = g_first_subject; sp; sp = sp->next)
 	    sp->flags |= SF_VISIT;
     }
@@ -1548,16 +1540,16 @@ void sort_subjects()
 	break;
     }
 
-    subj_list = (SUBJECT**)safemalloc(subject_count * sizeof (SUBJECT*));
+    subj_list = (SUBJECT**)safemalloc(g_subject_count * sizeof (SUBJECT*));
     for (lp = subj_list, sp = g_first_subject; sp; sp = sp->next)
 	*lp++ = sp;
     assert(lp - subj_list == subject_count);
 
-    qsort(subj_list, subject_count, sizeof (SUBJECT*), ((int(*)(void const *, void const *))sort_procedure));
+    qsort(subj_list, g_subject_count, sizeof (SUBJECT*), ((int(*)(void const *, void const *))sort_procedure));
 
     g_first_subject = sp = subj_list[0];
     sp->prev = nullptr;
-    for (i = subject_count, lp = subj_list; --i; lp++) {
+    for (i = g_subject_count, lp = subj_list; --i; lp++) {
 	lp[0]->next = lp[1];
 	lp[1]->prev = lp[0];
 	if (g_sel_mode == SM_THREAD) {
@@ -1673,7 +1665,7 @@ static void build_artptrs()
     ARTICLE** app;
     ARTICLE* ap;
     ART_NUM an;
-    ART_NUM count = obj_count;
+    ART_NUM count = g_obj_count;
     int desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
 
     if (!g_artptr_list || g_artptr_list_size != count) {

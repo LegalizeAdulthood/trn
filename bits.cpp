@@ -580,13 +580,13 @@ static int chase_xref(ART_NUM artnum, int markread)
     if (inbackground())
 	spin(10);
     else {
-	if (output_chase_phrase) {
+	if (g_output_chase_phrase) {
 	    if (g_verbose)
 		fputs("\nChasing xrefs", stdout);
 	    else
 		fputs("\nXrefs", stdout);
 	    termdown(1);
-	    output_chase_phrase = false;
+	    g_output_chase_phrase = false;
 	}
 	putchar('.');
 	fflush(stdout);

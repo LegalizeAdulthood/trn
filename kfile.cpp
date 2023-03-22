@@ -61,7 +61,7 @@ void kfile_init()
 	g_kf_daynum = KF_DAYNUM(0);
 	g_kf_thread_cnt = g_kf_changethd_cnt = 0;
 	if ((fp = fopen(filexp(cp), "r")) != nullptr) {
-	    msgid_hash = hashcreate(1999, msgid_cmp);
+	    g_msgid_hash = hashcreate(1999, msgid_cmp);
 	    while (fgets(g_buf, sizeof g_buf, fp) != nullptr) {
 		if (*g_buf == '<') {
 		    int age;
@@ -80,7 +80,7 @@ void kfile_init()
 			HASHDATUM data;
 
 			auto_flag = s_thread_cmd_flag[cp-s_thread_cmd_ltr];
-			data = hashfetch(msgid_hash,g_buf,strlen(g_buf));
+			data = hashfetch(g_msgid_hash,g_buf,strlen(g_buf));
 			if (!data.dat_ptr)
 			    data.dat_ptr = savestr(g_buf);
 			else
@@ -440,7 +440,7 @@ void rewrite_kfile(ART_NUM thru)
 	}
 	if (!(g_kf_state & KFS_GLOBAL_THREADFILE)) {
 	    /* Append all the still-valid thread commands */
-	    hashwalk(msgid_hash, write_local_thread_commands, 0);
+	    hashwalk(g_msgid_hash, write_local_thread_commands, 0);
 	}
 	fclose(newkfp);
 	if (!has_content)
@@ -520,7 +520,7 @@ void update_thread_kfile()
 
     elapsed_days = KF_DAYNUM(g_kf_daynum);
     if (elapsed_days) {
-	hashwalk(msgid_hash, age_thread_commands, elapsed_days);
+	hashwalk(g_msgid_hash, age_thread_commands, elapsed_days);
 	g_kf_daynum += elapsed_days;
     }
 
@@ -534,12 +534,12 @@ void update_thread_kfile()
 	if ((newkfp = fopen(cp,"w")) == nullptr)
 	    return; /*$$ Yikes! */
 	g_kf_thread_cnt = g_kf_changethd_cnt = 0;
-	hashwalk(msgid_hash, write_global_thread_commands, 0); /* Rewrite */
+	hashwalk(g_msgid_hash, write_global_thread_commands, 0); /* Rewrite */
     }
     else {
 	if ((newkfp = fopen(cp, "a")) == nullptr)
 	    return; /*$$ Yikes! */
-	hashwalk(msgid_hash, write_global_thread_commands, 1); /* Append */
+	hashwalk(g_msgid_hash, write_global_thread_commands, 1); /* Append */
     }
     fclose(newkfp);
 

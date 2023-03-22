@@ -595,9 +595,9 @@ static int read_ids()
 		article->msgid = safemalloc(len2 + len + 2 + 1);
 		sprintf(article->msgid, "<%s%s>", string_ptr, g_buf);
 		string_ptr += len2 + 1;
-		if (msgid_hash) {
+		if (g_msgid_hash) {
 		    HASHDATUM data;
-		    data = hashfetch(msgid_hash, article->msgid, len2+len+2);
+		    data = hashfetch(g_msgid_hash, article->msgid, len2+len+2);
 		    if (data.dat_len) {
 			article->autofl = data.dat_len&(AUTO_SELS|AUTO_KILLS);
 			if ((data.dat_len & KF_AGE_MASK) == 0)

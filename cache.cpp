@@ -127,7 +127,7 @@ void close_cache()
 	free((char*)sp);
     }
     g_first_subject = g_last_subject = nullptr;
-    subject_count = 0;			/* just to be sure */
+    g_subject_count = 0;			/* just to be sure */
     g_parsed_art = 0;
 
     if (g_artptr_list) {
@@ -339,7 +339,7 @@ void uncache_article(ARTICLE *ap, bool remove_empties)
 	    hashdelete(s_subj_hash, sp->str+4, strlen(sp->str+4));
 	    free((char*)sp);
 	    ap->subj = nullptr;
-	    subject_count--;
+	    g_subject_count--;
 	}
     }
     ap->flags2 |= AF2_BOGUS;
@@ -457,7 +457,7 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
 	if (!(sp = (SUBJECT*)data.dat_ptr)) {
 	    sp = (SUBJECT*)safemalloc(sizeof (SUBJECT));
 	    memset((char*)sp,0,sizeof (SUBJECT));
-	    subject_count++;
+	    g_subject_count++;
 	    if ((sp->prev = g_last_subject) != nullptr)
 		sp->prev->next = sp;
 	    else
@@ -825,7 +825,7 @@ bool cache_all_arts()
     if (g_curr_artp && !(g_curr_artp->flags & AF_CACHED) && !input_pending())
 	pushchar('\f' | 0200);
     /* A completely empty group needs a count & a sort */
-    if (g_general_mode != 's' && !obj_count && !g_selected_only)
+    if (g_general_mode != 's' && !g_obj_count && !g_selected_only)
 	thread_grow();
     return true;
 }
