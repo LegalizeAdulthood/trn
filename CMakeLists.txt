@@ -20,9 +20,9 @@ add_library(util
     ${CMAKE_CURRENT_BINARY_DIR}/config.h
     EXTERN.h
     INTERN.h
-    env.cpp env.h env.ih
+    env.cpp env.h
     util2.cpp util2.h
-    wildmat.cpp wildmat.h wildmat.ih
+    wildmat.cpp wildmat.h
     config.h.in
 )
 source_group("Template Files" REGULAR_EXPRESSION "^.*\.in$")
@@ -129,7 +129,7 @@ add_executable(trn
 if(WIN32)
     target_sources(trn PUBLIC popen.cpp)
 endif()
-source_group("Header Files" REGULAR_EXPRESSION "^.*\.(h|ih)$")
+source_group("Header Files" REGULAR_EXPRESSION "^.*\.h$")
 target_link_libraries(trn PUBLIC curses nntp)
 
 add_executable(inews inews.cpp)

@@ -6,12 +6,9 @@
 #include "EXTERN.h"
 #include "common.h"
 #include "init.h"
-#include "final.h"
 #include "util.h"
 #include "util2.h"
-#include "INTERN.h"
 #include "env.h"
-#include "env.ih"
 
 #ifdef HAS_RES_INIT
 #include <netinet/in.h>
@@ -27,6 +24,21 @@
 #pragma comment(lib, "Secur32")
 #include <winsock2.h>
 #endif
+
+char *g_home_dir{};    /* login directory */
+char *g_dot_dir{};     /* where . files go */
+char *g_trn_dir{};     /* usually %./.trn */
+char *g_lib{};         /* news library */
+char *g_rn_lib{};      /* private news program library */
+char *g_tmp_dir{};     /* where tmp files go */
+char *g_login_name{};  /* login id of user */
+char *g_real_name{};   /* real name of user */
+char *g_p_host_name{}; /* host name in a posting */
+char *g_local_host{};  /* local host name */
+int g_net_speed{20};   /* how fast our net-connection is */
+
+static void env_init2();
+static int envix(const char *nam, int len);
 
 bool env_init(char *tcbuf, bool lax)
 {
