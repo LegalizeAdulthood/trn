@@ -1,9 +1,16 @@
 /* uudecode.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef UUDECODE_H
+#define UUDECODE_H
 
 /* Length of a normal uuencoded line, including newline */
-#define UULENGTH 62
+enum
+{
+    UULENGTH = 62
+};
 
 int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp);
 int uudecode(FILE *ifp, int state);
+
+#endif

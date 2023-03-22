@@ -1,5 +1,0 @@
-/* uudecode.ih
- */
-/* This software is copyrighted as detailed in the LICENSE file. */
-
-static void uudecodeline(char *line, FILE *ofp);

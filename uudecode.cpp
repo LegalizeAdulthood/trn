@@ -4,15 +4,14 @@
 
 #include "EXTERN.h"
 #include "common.h"
-#include "respond.h"
 #include "artio.h"
 #include "mime.h"
 #include "term.h"
 #include "util2.h"
 #include "decode.h"
-#include "INTERN.h"
 #include "uudecode.h"
-#include "uudecode.ih"
+
+static void uudecodeline(char *line, FILE *ofp);
 
 int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 {

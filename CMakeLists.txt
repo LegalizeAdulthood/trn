@@ -124,7 +124,7 @@ add_executable(trn
     univ.cpp univ.h
     url.cpp url.h
     util.cpp util.h
-    uudecode.cpp uudecode.h uudecode.ih
+    uudecode.cpp uudecode.h
 )
 if(WIN32)
     target_sources(trn PUBLIC popen.cpp)
