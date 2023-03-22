@@ -20,7 +20,7 @@ enum
 
 int debug{};
 int new_connection{};
-char *server_name{};
+char *g_server_name{};
 char *g_nntp_auth_file{};
 char g_buf[LBUFLEN + 1]{}; /* general purpose line buffer */
 
@@ -71,8 +71,8 @@ int main(int argc, char *argv[])
 	    cp = nntp_servername(cp);
     }
     if (cp && *cp && strcmp(cp,"local")) {
-	server_name = savestr(cp);
-	cp = strchr(server_name, ';');
+	g_server_name = savestr(cp);
+	cp = strchr(g_server_name, ';');
 	if (cp) {
 	    *cp = '\0';
 	    g_nntplink.port_number = atoi(cp+1);
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 	 && (*cp == 'y' || *cp == 'Y'))
 	    g_nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
     } else {
-	server_name = nullptr;
+	g_server_name = nullptr;
 	line_end = "\n";
     }
 
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 	    cp = headbuf + len;
 	}
 	i = getc(stdin);
-	if (server_name && had_nl && i == '.')
+	if (g_server_name && had_nl && i == '.')
 	    *cp++ = '.';
 
 	if (i == '\n') {
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 	}
 	artpos += len;
 	cp += len;
-	if ((had_nl = found_nl) != 0 && server_name) {
+	if ((had_nl = found_nl) != 0 && g_server_name) {
 	    cp[-1] = '\r';
 	    *cp++ = '\n';
 	}
@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 
     /* Well, the header looks ok, so let's get on with it. */
 
-    if (server_name) {
+    if (g_server_name) {
 	if ((cp = getenv("NNTPFDS")) != nullptr) {
 	    int rd_fd, wr_fd;
 	    if (sscanf(cp,"%d.%d",&rd_fd,&wr_fd) == 2) {
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
 	    }
 	}
 	if (!g_nntplink.wr_fp) {
-	    if (init_nntp() < 0 || !nntp_connect(server_name,false))
+	    if (init_nntp() < 0 || !nntp_connect(g_server_name,false))
 		exit(1);
 	    new_connection = true;
 	}
@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
     had_nl = true;
     while (fgets(headbuf, headbuf_size, stdin)) {
 	/* Single . is eof, so put in extra one */
-	if (server_name && had_nl && *headbuf == '.')
+	if (g_server_name && had_nl && *headbuf == '.')
 	    fputc('.', g_nntplink.wr_fp);
 	/* check on newline */
 	cp = headbuf + strlen(headbuf);
@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
 	}
     }
 
-    if (!server_name)
+    if (!g_server_name)
 	return _pclose(g_nntplink.wr_fp);
 
     if (!had_nl)
@@ -323,7 +323,7 @@ int nntp_handle_timeout()
 	handling_timeout = true;
 	strcpy(last_command_save, g_last_command);
 	nntp_close(false);
-	if (init_nntp() < 0 || nntp_connect(server_name,false) <= 0)
+	if (init_nntp() < 0 || nntp_connect(g_server_name,false) <= 0)
 	    exit(1);
 	if (nntp_command(last_command_save) <= 0)
 	    return -1;
