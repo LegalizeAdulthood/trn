@@ -591,13 +591,13 @@ const char *compress_subj(const ARTICLE *ap, int max)
 
 static char *s_spinchars{};
 static int s_spin_level{}; /* used to allow non-interfering nested spins */
-static int s_spin_mode{};
+static spin_mode s_spin_mode{};
 static int s_spin_place{}; /* represents place in s_spinchars array */
 static int s_spin_pos{};   /* the last spinbar position we drew */
 static ART_NUM s_spin_art{};
 static ART_POS s_spin_tell{};
 
-void setspin(int mode)
+void setspin(spin_mode mode)
 {
     switch (mode) {
       case SPIN_FOREGROUND:

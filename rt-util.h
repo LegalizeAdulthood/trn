@@ -11,13 +11,13 @@ extern int g_spin_count;     /* counter for when to spin */
 extern int g_spin_marks;     /* how many bargraph marks we want */
 extern bool g_performed_article_loop;
 
-enum
+enum spin_mode
 {
     SPIN_OFF = 0,
-    SPIN_POP = 1,
-    SPIN_FOREGROUND = 2,
-    SPIN_BACKGROUND = 3,
-    SPIN_BARGRAPH = 4
+    SPIN_POP,
+    SPIN_FOREGROUND,
+    SPIN_BACKGROUND,
+    SPIN_BARGRAPH
 };
 
 char *extract_name(char *name);
@@ -27,7 +27,7 @@ char *compress_from(char *from, int size);
 char *compress_date(const ARTICLE *ap, int size);
 bool subject_has_Re(char *str, char **strp);
 const char *compress_subj(const ARTICLE *ap, int max);
-void setspin(int mode);
+void setspin(spin_mode mode);
 void spin(int count);
 bool inbackground();
 void perform_status_init(long cnt);
