@@ -28,16 +28,16 @@ void ngsrch_init()
 
 // patbuf   if patbuf != g_buf, get_cmd must */
 // get_cmd  be set to false!!! */
-int ng_search(char *patbuf, int get_cmd)
+ng_search_result ng_search(char *patbuf, int get_cmd)
 {
-    char cmdchr = *patbuf;	/* what kind of search? */
-    char* s;
-    char* pattern;			/* unparsed pattern */
-    char* cmdlst = nullptr;		/* list of commands to do */
-    int ret = NGS_NOTFOUND;		/* assume no commands */
-    bool backward = cmdchr == '?';	/* direction of search */
+    char cmdchr = *patbuf; /* what kind of search? */
+    char *s;
+    char *pattern;                       /* unparsed pattern */
+    char *cmdlst = nullptr;              /* list of commands to do */
+    ng_search_result ret = NGS_NOTFOUND; /* assume no commands */
+    bool backward = cmdchr == '?';       /* direction of search */
     bool output_level = (!g_use_threads && g_general_mode != 's');
-    NGDATA* ng_start = g_ngptr;
+    NGDATA *ng_start = g_ngptr;
 
     g_int_count = 0;
     if (get_cmd && g_buf == patbuf)
