@@ -33,33 +33,21 @@ enum
 
 enum
 {
-    NNTP_POSTOK_VAL = 200,      /* Hello -- you can post */
-    NNTP_NOPOSTOK_VAL = 201,    /* Hello -- you can't post */
-    NNTP_LIST_FOLLOWS_VAL = 215 /* There's a list a-comin' next */
-};
-
-enum
-{
-    NNTP_GOODBYE_VAL = 400,     /* Have to hang up for some reason */
-    NNTP_NOSUCHGROUP_VAL = 411, /* No such newsgroup */
-    NNTP_NONEXT_VAL = 421,      /* No next article */
-    NNTP_NOPREV_VAL = 422,      /* No previous article */
-    NNTP_POSTFAIL_VAL = 441     /* Posting failed */
-};
-
-enum
-{
-    NNTP_AUTH_NEEDED_VAL = 480, /* Authorization Failed */
-    NNTP_AUTH_REJECT_VAL = 482  /* Authorization data rejected */
-};
-
-enum
-{
-    NNTP_BAD_COMMAND_VAL = 500, /* Command not recognized */
-    NNTP_SYNTAX_VAL = 501,      /* Command syntax error */
-    NNTP_ACCESS_VAL = 502,      /* Access to server denied */
-    NNTP_TMPERR_VAL = 503,      /* Program fault, command not performed */
-    NNTP_AUTH_BAD_VAL = 580     /* Authorization Failed */
+    NNTP_POSTOK_VAL = 200,       /* Hello -- you can post */
+    NNTP_NOPOSTOK_VAL = 201,     /* Hello -- you can't post */
+    NNTP_LIST_FOLLOWS_VAL = 215, /* There's a list a-comin' next */
+    NNTP_GOODBYE_VAL = 400,      /* Have to hang up for some reason */
+    NNTP_NOSUCHGROUP_VAL = 411,  /* No such newsgroup */
+    NNTP_NONEXT_VAL = 421,       /* No next article */
+    NNTP_NOPREV_VAL = 422,       /* No previous article */
+    NNTP_POSTFAIL_VAL = 441,     /* Posting failed */
+    NNTP_AUTH_NEEDED_VAL = 480,  /* Authorization Failed */
+    NNTP_AUTH_REJECT_VAL = 482,  /* Authorization data rejected */
+    NNTP_BAD_COMMAND_VAL = 500,  /* Command not recognized */
+    NNTP_SYNTAX_VAL = 501,       /* Command syntax error */
+    NNTP_ACCESS_VAL = 502,       /* Access to server denied */
+    NNTP_TMPERR_VAL = 503,       /* Program fault, command not performed */
+    NNTP_AUTH_BAD_VAL = 580      /* Authorization Failed */
 };
 
 enum
