@@ -1240,7 +1240,7 @@ static ARTICLE *last_sib(ARTICLE *ta, int depth, ARTICLE *limit)
 ** is specified, the selections from the last CS_UNSEL_STORE are
 ** reselected.
 */
-void count_subjects(int cmode)
+void count_subjects(cs_mode cmode)
 {
     int count, sel_count;
     ARTICLE* ap;

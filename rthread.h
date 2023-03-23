@@ -10,13 +10,13 @@ extern bool g_output_chase_phrase;
 extern HASHTABLE *g_msgid_hash;
 
 /* Values to pass to count_subjects() */
-enum
+enum cs_mode
 {
     CS_RETAIN = 0,
-    CS_NORM = 1,
-    CS_RESELECT = 2,
-    CS_UNSELECT = 3,
-    CS_UNSEL_STORE = 4
+    CS_NORM,
+    CS_RESELECT,
+    CS_UNSELECT,
+    CS_UNSEL_STORE
 };
 
 void thread_init();
@@ -65,7 +65,7 @@ bool find_parent(bool keep_going);
 bool find_leaf(bool keep_going);
 bool find_next_sib();
 bool find_prev_sib();
-void count_subjects(int cmode);
+void count_subjects(cs_mode cmode);
 void sort_subjects();
 void sort_articles();
 
