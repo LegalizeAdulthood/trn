@@ -232,7 +232,7 @@ void sort_newsgroups()
     ng_list = (NGDATA**)safemalloc(g_newsgroup_cnt * sizeof (NGDATA*));
     for (lp = ng_list, np = g_first_ng; np; np = np->next)
 	*lp++ = np;
-    assert(lp - ng_list == newsgroup_cnt);
+    TRN_ASSERT(lp - ng_list == g_newsgroup_cnt);
 
     qsort(ng_list, g_newsgroup_cnt, sizeof (NGDATA*), (int(*)(void const *, void const *))sort_procedure);
 

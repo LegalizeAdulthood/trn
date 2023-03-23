@@ -343,7 +343,7 @@ bool s_go_top_ents()
     g_s_top_ent = s_first();
     if (!g_s_top_ent)
 	printf("s_go_top_ents(): no first entry\n") FLUSH;
-    assert(s_top_ent);	/* be nicer later */
+    TRN_ASSERT(g_s_top_ent);	/* be nicer later */
     if (!s_eligible(g_s_top_ent))	/* this may save a redraw...*/
 	g_s_top_ent = s_next_elig(g_s_top_ent);
     if (!g_s_top_ent) {	/* none eligible */
@@ -379,7 +379,7 @@ void s_go_next_page()
 	return;		/* no next page (we shouldn't have been called) */
     /* the fill-page will set the refresh for the screen */
     flag = s_fillpage_forward(a);
-    assert(flag);		/* I *must* be able to fill a page */
+    TRN_ASSERT(flag);		/* I *must* be able to fill a page */
     g_s_ptr_page_line = 0;	/* top of page */
 }
 
@@ -393,10 +393,10 @@ void s_go_prev_page()
 	return;		/* no prev. page (we shouldn't have been called) */
     /* the fill-page will set the refresh for the screen */
     flag = s_fillpage_backward(a);	/* fill backward */
-    assert(flag);		/* be nicer later... */
+    TRN_ASSERT(flag);		/* be nicer later... */
     /* take care of partially filled previous pages */
     flag = s_refillpage();
-    assert(flag);		/* be nicer later... */
+    TRN_ASSERT(flag);		/* be nicer later... */
     g_s_ref_status = g_s_ref_desc = 0;	/* refresh from top */
     g_s_ptr_page_line = 0;	/* top of page */
 }

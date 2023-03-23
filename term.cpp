@@ -1062,7 +1062,7 @@ void pushchar(char_int c)
 
 void underprint(const char *s)
 {
-    assert(tc_UC);
+    TRN_ASSERT(g_tc_UC);
     if (*g_tc_UC) {	/* char by char underline? */
 	while (*s) {
 	    if (!at_norm_char(s)) {
@@ -1172,7 +1172,7 @@ tryagain:
 	    goto tryagain;
 	  case KM_KEYMAP:		/* another keymap? */
 	    curmap = curmap->km_ptr[g_lastchar].km_km;
-	    assert(curmap != nullptr);
+	    TRN_ASSERT(curmap != nullptr);
 	    break;
 	  case KM_STRING:		/* a string? */
 	    pushstring(curmap->km_ptr[g_lastchar].km_str,0200);
@@ -1210,7 +1210,7 @@ void pushstring(char *str, char_int bits)
     char tmpbuf[PUSHSIZE];
     char* s = tmpbuf;
 
-    assert(str != nullptr);
+    TRN_ASSERT(str != nullptr);
     interp(tmpbuf,PUSHSIZE,str);
     for (i = strlen(s)-1; i >= 0; i--)
 	pushchar(s[i] ^ bits);

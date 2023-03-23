@@ -1542,7 +1542,7 @@ void sort_subjects()
     subj_list = (SUBJECT**)safemalloc(g_subject_count * sizeof (SUBJECT*));
     for (lp = subj_list, sp = g_first_subject; sp; sp = sp->next)
 	*lp++ = sp;
-    assert(lp - subj_list == subject_count);
+    TRN_ASSERT(lp - subj_list == g_subject_count);
 
     qsort(subj_list, g_subject_count, sizeof (SUBJECT*), ((int(*)(void const *, void const *))sort_procedure));
 
@@ -1597,8 +1597,8 @@ static int artorder_groups(const ARTICLE **art1, const ARTICLE **art2)
 {
     long eq;
 #ifdef DEBUG
-    assert((*art1)->subj != nullptr);
-    assert((*art2)->subj != nullptr);
+    TRN_ASSERT((*art1)->subj != nullptr);
+    TRN_ASSERT((*art2)->subj != nullptr);
 #endif
     if ((*art1)->subj == (*art2)->subj)
 	return artorder_date(art1, art2);

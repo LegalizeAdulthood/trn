@@ -101,7 +101,7 @@ char *mp_savestr(const char *str, memory_pool pool)
     if (!str) {
 #if 1
 	printf("\ntrn: mp_savestr(nullptr,%d) error.\n",pool);
-	assert(false);
+	TRN_ASSERT(false);
 #else
 	return nullptr;		/* only a flesh wound... (;-) */
 #endif

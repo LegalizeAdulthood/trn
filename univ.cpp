@@ -1109,7 +1109,7 @@ void sort_univ()
     univ_sort_list = (UNIV_ITEM**)safemalloc(cnt*sizeof(UNIV_ITEM*));
     for (lp = univ_sort_list, ui = g_first_univ; ui; ui = ui->next)
 	*lp++ = ui;
-    assert(lp - univ_sort_list == cnt);
+    TRN_ASSERT(lp - univ_sort_list == cnt);
 
     qsort(univ_sort_list, cnt, sizeof(UNIV_ITEM *), (int(*)(void const *, void const *))sort_procedure);
 

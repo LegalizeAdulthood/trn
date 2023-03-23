@@ -135,7 +135,7 @@ do_article_result do_article()
     for (;;) {			/* for each page */
 	if (g_threaded_group && g_max_tree_lines)
 	    init_tree();	/* init tree display */
-	assert(art == openart);
+	TRN_ASSERT(g_art == g_openart);
 	if (g_do_fseek) {
 	    parseheader(g_art);		/* make sure header is ours */
 	    if (!*g_artbuf) {

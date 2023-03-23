@@ -853,7 +853,7 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
 	int lots2do = ((g_datasrc->flags & DF_REMOTE)? g_net_speed : 20) * 25;
 	setspin(g_spin_estimate > lots2do? SPIN_BARGRAPH : SPIN_FOREGROUND);
     }
-    /*assert(first >= g_absfirst && last <= g_lastart);*/
+    /*TRN_ASSERT(first >= g_absfirst && last <= g_lastart);*/
     for (i = article_first(first); i <= last; i = article_next(i)) {
 	if ((article_ptr(i)->flags & cachemask) ^ cachemask2)
 	    continue;

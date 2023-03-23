@@ -4,6 +4,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <stdexcept>
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -227,10 +229,23 @@
 #   define eaccess access
 #endif
 
-#ifdef DEBUG
-#   define assert(ex) {if (!(ex)){fprintf(stderr,"Assertion failed: file %s, line %d\n", __FILE__, __LINE__);sig_catcher(0);}}
+#ifdef NDEBUG
+#define TRN_ASSERT(ex)
 #else
-#   define assert(ex) ;
+[[noreturn]]
+inline void reportAssertion(const char *expr, const char *file, unsigned int line)
+{
+    fprintf(stderr, "%s(%u): Assertion '%s' failed\n", file, line, expr);
+    throw std::runtime_error("assertion failure");
+}
+#define TRN_ASSERT(expr_)                                \
+    do                                                   \
+    {                                                    \
+        if (!(expr_))                                    \
+        {                                                \
+            reportAssertion(#expr_, __FILE__, __LINE__); \
+        }                                                \
+    } while (false)
 #endif
 
 #define TCSIZE 512	/* capacity for termcap strings */

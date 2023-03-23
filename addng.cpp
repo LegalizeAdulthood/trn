@@ -426,7 +426,7 @@ void sort_addgroups()
     ag_list = (ADDGROUP**)safemalloc(s_addgroup_cnt * sizeof(ADDGROUP*));
     for (lp = ag_list, ap = g_first_addgroup; ap; ap = ap->next)
 	*lp++ = ap;
-    assert(lp - ag_list == addgroup_cnt);
+    TRN_ASSERT(lp - ag_list == s_addgroup_cnt);
 
     qsort(ag_list, s_addgroup_cnt, sizeof(ADDGROUP*), (int(*)(void const *, void const *)) sort_procedure);
 

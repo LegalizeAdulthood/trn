@@ -312,7 +312,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, int get_cmd)
 	    g_art = g_srchahead - 1;
 	g_srchahead = -1;
     }
-    assert(!cmdlst || *cmdlst);
+    TRN_ASSERT(!cmdlst || *cmdlst);
     perform_status_init(g_ngptr->toread);
     for (;;) {
 	/* check if we're out of articles */

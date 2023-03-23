@@ -111,7 +111,7 @@ void s_refresh_status(int line)
     long ent;
 
     ent = g_page_ents[line].entnum;
-    assert(line <= s_bot_ent);	/* better be refreshing on-page */
+    TRN_ASSERT(line <= g_s_bot_ent);	/* better be refreshing on-page */
     s_goxy(0,g_s_top_lines+g_page_ents[line].start_line);
     j = g_page_ents[line].lines;
     for (i = 1; i <= j; i++)
@@ -125,7 +125,7 @@ void s_refresh_description(int line)
     long ent;
 
     ent = g_page_ents[line].entnum;
-    assert(line <= s_bot_ent);	/* better be refreshing on-page */
+    TRN_ASSERT(line <= g_s_bot_ent);	/* better be refreshing on-page */
     startline = g_s_top_lines+g_page_ents[line].start_line;
     j = g_page_ents[line].lines;
     for (i = 1; i <= j; i++) {
@@ -154,7 +154,7 @@ void s_ref_entry(int line, int jump)
     long ent;
 
     ent = g_page_ents[line].entnum;
-    assert(line <= s_bot_ent);	/* better be refreshing on-page */
+    TRN_ASSERT(line <= g_s_bot_ent);	/* better be refreshing on-page */
     if (jump)
 	s_goxy(0,g_s_top_lines+g_page_ents[line].start_line);
     j = g_page_ents[line].lines;

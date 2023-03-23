@@ -30,7 +30,7 @@ bool sa_basic_elig(long a)
     ART_NUM artnum;
 
     artnum = g_sa_ents[a].artnum;
-    assert(check_article(artnum));
+    TRN_ASSERT(check_article(artnum));
 
     /* "run the gauntlet" style (:-) */
     if (!g_sa_mode_read_elig && was_read(artnum))
@@ -52,8 +52,7 @@ bool sa_basic_elig(long a)
 
 bool sa_eligible(long a)
 {
-
-    assert(check_article(sa_ents[a].artnum));
+    TRN_ASSERT(check_article(g_sa_ents[a].artnum));
     if (!sa_basic_elig(a))
 	return false;		/* must always be basic-eligible */
     if (!g_sa_mode_fold)

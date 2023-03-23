@@ -57,7 +57,7 @@ void s_init_context(int cnum, int type)
     /* g_s_num_contexts not incremented until last moment */
     if (cnum < 0 || cnum > g_s_num_contexts) {
 	printf("s_init_context: illegal context number %d!\n",cnum) FLUSH;
-	assert(false);
+	TRN_ASSERT(false);
     }
     p = g_s_contexts + cnum;
     p->type = type;
@@ -168,7 +168,7 @@ void s_change_context(int newcontext)
 
     if (newcontext < 0 || newcontext >= g_s_num_contexts) {
 	printf("s_change_context: bad context number %d!\n",newcontext) FLUSH;
-	assert(false);
+	TRN_ASSERT(false);
     }
     g_s_cur_context = newcontext;
     p = g_s_contexts + newcontext;
@@ -211,7 +211,7 @@ void s_delete_context(int cnum)
 {
     if (cnum < 0 || cnum >= g_s_num_contexts) {
 	printf("s_delete_context: illegal context number %d!\n",cnum) FLUSH;
-	assert(false);
+	TRN_ASSERT(false);
     }
     s_order_clean();
     /* mark the context as empty */
