@@ -33,16 +33,16 @@
 #include "util.h"
 #include "util2.h"
 
-enum
+enum display_state
 {
     DS_ASK = 1,
-    DS_UPDATE = 2,
-    DS_DISPLAY = 3,
-    DS_RESTART = 4,
-    DS_STATUS = 5,
-    DS_QUIT = 6,
-    DS_DOCOMMAND = 7,
-    DS_ERROR = 8
+    DS_UPDATE,
+    DS_DISPLAY,
+    DS_RESTART,
+    DS_STATUS,
+    DS_QUIT,
+    DS_DOCOMMAND,
+    DS_ERROR
 };
 
 bool g_sel_rereading{};
@@ -78,7 +78,7 @@ static int s_disp_status_line{};
 static bool s_clean_screen{};
 static int s_removed_prompt{};
 static int s_force_sel_pos{};
-static int (*s_extra_commands)(char_int){};
+static display_state (*s_extra_commands)(char_int){};
 
 #define START_SELECTOR(new_mode)            \
     const char save_mode = g_mode;          \
@@ -101,7 +101,7 @@ static int (*s_extra_commands)(char_int){};
     const bool save_sel_rereading = g_sel_rereading;   \
     const bool save_sel_exclusive = g_sel_exclusive;   \
     ART_UNREAD save_selected_count = g_selected_count; \
-    int (*const save_extra_commands)(char_int) = s_extra_commands
+    display_state (*const save_extra_commands)(char_int) = s_extra_commands
 
 #define POP_SELECTOR()                                      \
     do                                                      \
@@ -160,15 +160,15 @@ static bool deselect_item(SEL_UNION u);
 static bool select_option(int i);
 static void sel_cleanup();
 static bool mark_DEL_as_READ(char *ptr, int arg);
-static int sel_command(char_int ch);
+static display_state sel_command(char_int ch);
 static bool sel_perform_change(long cnt, const char *obj_type);
 static char another_command(char_int ch);
-static int article_commands(char_int ch);
-static int newsgroup_commands(char_int ch);
-static int addgroup_commands(char_int ch);
-static int multirc_commands(char_int ch);
-static int option_commands(char_int ch);
-static int universal_commands(char_int ch);
+static display_state article_commands(char_int ch);
+static display_state newsgroup_commands(char_int ch);
+static display_state addgroup_commands(char_int ch);
+static display_state multirc_commands(char_int ch);
+static display_state option_commands(char_int ch);
+static display_state universal_commands(char_int ch);
 static void switch_dmode(char **dmode_cpp);
 static int find_line(int y);
 
@@ -1536,9 +1536,9 @@ static bool mark_DEL_as_READ(char *ptr, int arg)
     return false;
 }
 
-static int sel_command(char_int ch)
+static display_state sel_command(char_int ch)
 {
-    int ret;
+    display_state ret;
     if (g_can_home)
 	goto_xy(0,g_sel_last_line);
     s_clean_screen = true;
@@ -1743,7 +1743,7 @@ static char another_command(char_int ch)
     return '\0';
 }
 
-static int article_commands(char_int ch)
+static display_state article_commands(char_int ch)
 {
     switch (ch) {
       case 'U':
@@ -2139,7 +2139,7 @@ q does nothing.\n\n\
     return DS_ASK;
 }
 
-static int newsgroup_commands(char_int ch)
+static display_state newsgroup_commands(char_int ch)
 {
     switch (ch) {
       case Ctl('n'):
@@ -2425,7 +2425,7 @@ q does nothing.\n\n\
     return DS_ASK;
 }
 
-static int addgroup_commands(char_int ch)
+static display_state addgroup_commands(char_int ch)
 {
     switch (ch) {
       case 'O':
@@ -2588,7 +2588,7 @@ q does nothing.\n\n\
     return DS_ASK;
 }
 
-static int multirc_commands(char_int ch)
+static display_state multirc_commands(char_int ch)
 {
     switch (ch) {
       case 'R':
@@ -2621,7 +2621,7 @@ static int multirc_commands(char_int ch)
     return DS_ASK;
 }
 
-static int option_commands(char_int ch)
+static display_state option_commands(char_int ch)
 {
     switch (ch) {
       case 'R':
@@ -2689,7 +2689,7 @@ static int option_commands(char_int ch)
     return DS_ASK;
 }
 
-static int universal_commands(char_int ch)
+static display_state universal_commands(char_int ch)
 {
     switch (ch) {
       case 'R':
