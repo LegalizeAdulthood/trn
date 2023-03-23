@@ -4,7 +4,7 @@
 #ifndef NNTP_H
 #define NNTP_H
 
-enum
+enum finishbody_mode
 {
     FB_BACKGROUND = 0,
     FB_OUTPUT = 1,
@@ -26,7 +26,7 @@ ART_NUM nntp_next_art();
 int nntp_header(ART_NUM artnum);
 void nntp_body(ART_NUM artnum);
 long nntp_artsize();
-int nntp_finishbody(int bmode);
+int nntp_finishbody(finishbody_mode bmode);
 int nntp_seekart(ART_POS pos);
 ART_POS nntp_tellart();
 char *nntp_readart(char *s, int limit);
