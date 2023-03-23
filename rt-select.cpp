@@ -45,6 +45,13 @@ enum display_state
     DS_ERROR
 };
 
+enum univ_read_result
+{
+    UR_NORM = 1,
+    UR_BREAK = 2, /* request return to selector */
+    UR_ERROR = 3  /* non-normal return */
+};
+
 bool g_sel_rereading{};
 char g_sel_disp_char[]{" +-*"};
 sel_mode g_sel_mode{};
@@ -149,7 +156,7 @@ static display_state (*s_extra_commands)(char_int){};
     } while (false)
 
 static void sel_dogroups();
-static int univ_read(UNIV_ITEM *ui);
+static univ_read_result univ_read(UNIV_ITEM *ui);
 static void sel_display();
 static void sel_status_msg(const char *cp);
 static char sel_input();
@@ -592,9 +599,9 @@ char option_selector()
 }
 
 /* returns a command to do */
-static int univ_read(UNIV_ITEM *ui)
+static univ_read_result univ_read(UNIV_ITEM *ui)
 {
-    int exit_code = UR_NORM;
+    univ_read_result exit_code = UR_NORM;
     char ch;
 
     g_univ_follow_temp = false;
@@ -804,14 +811,13 @@ sel_restart:
 	UNIV_ITEM *ui;
 	int i;
 	for (ui = g_first_univ, i = 0; ui; ui = ui->next, i++) {
-	    int ret;
-	    if (ui->flags & UF_SEL) {
+            if (ui->flags & UF_SEL) {
 		PUSH_SELECTOR();
 		PUSH_UNIV_SELECTOR();
 
 		ui->flags &= ~UF_SEL;
 		save_selected_count--;
-		ret = univ_read(ui);
+		univ_read_result ret = univ_read(ui);
 
 		POP_UNIV_SELECTOR();
 		POP_SELECTOR();

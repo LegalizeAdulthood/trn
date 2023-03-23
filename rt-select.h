@@ -34,13 +34,6 @@ enum sel_sort_mode
     SS_SCORE
 };
 
-enum
-{
-    UR_NORM = 1,
-    UR_BREAK = 2, /* request return to selector */
-    UR_ERROR = 3  /* non-normal return */
-};
-
 extern bool g_sel_rereading;
 extern char g_sel_disp_char[];
 extern sel_mode g_sel_mode;
