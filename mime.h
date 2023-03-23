@@ -74,27 +74,27 @@ enum
     TF_TAB = 0x0100
 };
 
-/* NOTE: This must match tagattr below */
+/* NOTE: This must match tagattr in mime.cpp */
 enum
 {
     TAG_BLOCKQUOTE = 0,
-    TAG_BR = TAG_BLOCKQUOTE + 1,
-    TAG_DIV = TAG_BR + 1,
-    TAG_HR = TAG_DIV + 1,
-    TAG_IMG = TAG_HR + 1,
-    TAG_LI = TAG_IMG + 1,
-    TAG_OL = TAG_LI + 1,
-    TAG_P = TAG_OL + 1,
-    TAG_PRE = TAG_P + 1,
-    TAG_SCRIPT = TAG_PRE + 1,
-    TAG_STYLE = TAG_SCRIPT + 1,
-    TAG_TD = TAG_STYLE + 1,
-    TAG_TH = TAG_TD + 1,
-    TAG_TR = TAG_TH + 1,
-    TAG_TITLE = TAG_TR + 1,
-    TAG_UL = TAG_TITLE + 1,
-    TAG_XML = TAG_UL + 1,
-    LAST_TAG = TAG_XML + 1,
+    TAG_BR,
+    TAG_DIV,
+    TAG_HR,
+    TAG_IMG,
+    TAG_LI,
+    TAG_OL,
+    TAG_P,
+    TAG_PRE,
+    TAG_SCRIPT,
+    TAG_STYLE,
+    TAG_TD,
+    TAG_TH,
+    TAG_TR,
+    TAG_TITLE,
+    TAG_UL,
+    TAG_XML,
+    LAST_TAG,
 };
 
 enum
