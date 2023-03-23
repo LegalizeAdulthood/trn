@@ -33,6 +33,18 @@
 #include "util.h"
 #include "util2.h"
 
+enum
+{
+    DS_ASK = 1,
+    DS_UPDATE = 2,
+    DS_DISPLAY = 3,
+    DS_RESTART = 4,
+    DS_STATUS = 5,
+    DS_QUIT = 6,
+    DS_DOCOMMAND = 7,
+    DS_ERROR = 8
+};
+
 bool g_sel_rereading{};
 char g_sel_disp_char[]{" +-*"};
 sel_mode g_sel_mode{};

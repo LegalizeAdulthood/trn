@@ -36,18 +36,6 @@ enum sel_sort_mode
 
 enum
 {
-    DS_ASK = 1,
-    DS_UPDATE = 2,
-    DS_DISPLAY = 3,
-    DS_RESTART = 4,
-    DS_STATUS = 5,
-    DS_QUIT = 6,
-    DS_DOCOMMAND = 7,
-    DS_ERROR = 8
-};
-
-enum
-{
     UR_NORM = 1,
     UR_BREAK = 2, /* request return to selector */
     UR_ERROR = 3  /* non-normal return */
