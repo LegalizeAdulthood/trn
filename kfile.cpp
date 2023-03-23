@@ -598,7 +598,7 @@ void perform_auto_flags(ARTICLE *ap, int thread_autofl, int subj_autofl, int cha
 
 /* edit KILL file for newsgroup */
 
-int edit_kfile()
+void edit_kfile()
 {
     char* bp;
 
@@ -613,16 +613,14 @@ int edit_kfile()
 	strcpy(g_buf,filexp(get_val("KILLLOCAL",s_killlocal)));
     } else
 	strcpy(g_buf,filexp(get_val("KILLGLOBAL",s_killglobal)));
-    const bool made_dir = makedir(g_buf, MD_FILE);
-    int r = made_dir ? 1 : 0;
-    if (!made_dir) {
+    if (!makedir(g_buf, MD_FILE)) {
 	sprintf(g_cmd_buf,"%s %s",
 	    filexp(get_val("VISUAL",get_val("EDITOR",g_defeditor))),g_buf);
 	printf("\nEditing %s KILL file:\n%s\n",
 	    (g_in_ng?"local":"global"),g_cmd_buf) FLUSH;
 	termdown(3);
 	resetty();			/* make sure tty is friendly */
-	r = doshell(g_sh,g_cmd_buf);/* invoke the shell */
+        doshell(g_sh, g_cmd_buf);       /* invoke the shell */
 	noecho();			/* and make terminal */
 	crmode();			/*   unfriendly again */
 	open_kfile(g_in_ng);
@@ -654,7 +652,6 @@ int edit_kfile()
 	printf("Can't make %s\n",g_buf) FLUSH;
 	termdown(1);
     }
-    return r;
 }
 
 void open_kfile(int local)

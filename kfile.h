@@ -70,7 +70,7 @@ void update_thread_kfile();
 void change_auto_flags(ARTICLE *ap, int auto_flag);
 void clear_auto_flags(ARTICLE *ap);
 void perform_auto_flags(ARTICLE *ap, int thread_autofl, int subj_autofl, int chain_autofl);
-int edit_kfile();
+void edit_kfile();
 void open_kfile(int local);
 void kf_append(const char *cmd, bool local);
 
