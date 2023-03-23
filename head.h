@@ -70,7 +70,7 @@ enum
     HT_CACHED = 0x04,   /* this information is cached article data */
     HT_DEFHIDE = 0x08,  /* hidden by default */
     HT_DEFMAGIC = 0x10, /* magic by default */
-    HT_MAGICOK = 0x20,   /* magic even possible for line */
+    HT_MAGICOK = 0x20,  /* magic even possible for line */
 };
 
 extern HEADTYPE g_htype[HEAD_LAST];
