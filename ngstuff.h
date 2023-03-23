@@ -4,12 +4,12 @@
 #ifndef NGSTUFF_H
 #define NGSTUFF_H
 
-enum
+enum numnum_result
 {
     NN_NORM = 0,
-    NN_INP = 1,
-    NN_REREAD = 2,
-    NN_ASK = 3
+    NN_INP,
+    NN_REREAD,
+    NN_ASK
 };
 
 extern bool g_one_command; /* no ':' processing in perform() */
@@ -23,7 +23,7 @@ extern bool g_option_sel_ilock;
 void ngstuff_init();
 int escapade();
 int switcheroo();
-int numnum();
+numnum_result numnum();
 int thread_perform();
 int perform(char *cmdlst, int output_level);
 int ngsel_perform();

@@ -148,7 +148,7 @@ int switcheroo()
 
 /* process range commands */
 
-int numnum()
+numnum_result numnum()
 {
     ART_NUM min, max;
     char* cmdlst = nullptr;
