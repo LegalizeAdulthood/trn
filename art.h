@@ -28,7 +28,6 @@ extern char g_hide_everything; /* if set, do not write page now, */
 void art_init();
 do_article_result do_article();
 bool maybe_set_color(const char *cp, bool backsearch);
-int page_switch();
 bool innermore();
 void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
 

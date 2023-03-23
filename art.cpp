@@ -71,8 +71,7 @@ COMPEX g_page_compex;
 #define LINE_OFFSET(ptr) ((ptr) - g_artbuf + g_htype[PAST_HEADER].minpos)
 
 /* page_switch() return values */
-
-enum
+enum page_switch_result
 {
     PS_NORM = 0,
     PS_ASK = 1,
@@ -89,6 +88,8 @@ static ART_LINE s_isrchline{};  /* last line to display */
 static COMPEX s_gcompex{};      /* in article search pattern */
 static bool s_firstpage{};      /* is this the 1st page of article? */
 static bool s_continuation{};   /* this line/header is being continued */
+
+static page_switch_result page_switch();
 
 void art_init()
 {
@@ -662,7 +663,7 @@ bool maybe_set_color(const char *cp, bool backsearch)
 
 /* process pager commands */
 
-int page_switch()
+page_switch_result page_switch()
 {
     char* s;
 
