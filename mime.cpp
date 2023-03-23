@@ -22,7 +22,7 @@
 
 MIME_SECT g_mime_article{};
 MIME_SECT *g_mime_section{&g_mime_article};
-short g_mime_state{};
+mime_state g_mime_state{};
 char *g_multipart_separator{"-=-=-=-=-=-"};
 bool g_auto_view_inline{false};
 char *g_mime_getc_line{nullptr};

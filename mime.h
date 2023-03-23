@@ -12,23 +12,42 @@ struct HBLK
     char    indent;
 };
 
+enum mime_state
+{
+    NOT_MIME = 0,
+    TEXT_MIME,
+    ISOTEXT_MIME,
+    MESSAGE_MIME,
+    MULTIPART_MIME,
+    IMAGE_MIME,
+    AUDIO_MIME,
+    APP_MIME,
+    UNHANDLED_MIME,
+    SKIP_MIME,
+    DECODE_MIME,
+    BETWEEN_MIME,
+    END_OF_MIME,
+    HTMLTEXT_MIME,
+    ALTERNATE_MIME
+};
+
 struct MIME_SECT
 {
-    MIME_SECT* prev;
-    char*   filename;
-    char*   type_name;
-    char*   type_params;
-    char*   boundary;
-    int     html_line_start;
-    HBLK*   html_blks;
-    short   type;
-    short   encoding;
-    short   part;
-    short   total;
-    short   boundary_len;
-    short   flags;
-    short   html;
-    short   html_blkcnt;
+    MIME_SECT *prev;
+    char *filename;
+    char *type_name;
+    char *type_params;
+    char *boundary;
+    int html_line_start;
+    HBLK *html_blks;
+    mime_state type;
+    short encoding;
+    short part;
+    short total;
+    short boundary_len;
+    short flags;
+    short html;
+    short html_blkcnt;
 };
 
 enum
@@ -106,29 +125,10 @@ struct HTML_TAGS
 
 extern MIME_SECT g_mime_article;
 extern MIME_SECT *g_mime_section;
-extern short g_mime_state;
+extern mime_state g_mime_state;
 extern char *g_multipart_separator;
 extern bool g_auto_view_inline;
 extern char *g_mime_getc_line;
-
-enum
-{
-    NOT_MIME = 0,
-    TEXT_MIME = 1,
-    ISOTEXT_MIME = 2,
-    MESSAGE_MIME = 3,
-    MULTIPART_MIME = 4,
-    IMAGE_MIME = 5,
-    AUDIO_MIME = 6,
-    APP_MIME = 7,
-    UNHANDLED_MIME = 8,
-    SKIP_MIME = 9,
-    DECODE_MIME = 10,
-    BETWEEN_MIME = 11,
-    END_OF_MIME = 12,
-    HTMLTEXT_MIME = 13,
-    ALTERNATE_MIME = 14
-};
 
 enum
 {
