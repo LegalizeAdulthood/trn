@@ -4,6 +4,8 @@
 #ifndef RT_SELECT_H
 #define RT_SELECT_H
 
+#include "help.h"
+
 enum
 {
     SM_THREAD = 1,
@@ -83,6 +85,6 @@ char option_selector();
 char universal_selector();
 void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
 int univ_visit_group(const char *gname);
-void univ_visit_help(int where);
+void univ_visit_help(help_location where);
 
 #endif

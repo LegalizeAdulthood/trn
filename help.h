@@ -5,7 +5,7 @@
 #define HELP_H
 
 /* help locations */
-enum
+enum help_location
 {
     UHELP_PAGE = 1,
     UHELP_ART = 2,
@@ -32,6 +32,6 @@ int help_multirc();
 int help_options();
 int help_scanart();
 int help_univ();
-int univ_key_help(int where);
+int univ_key_help(help_location where);
 
 #endif

@@ -6,6 +6,8 @@
 #ifndef UNIV_H
 #define UNIV_H
 
+#include "help.h"
+
 enum
 {
     UN_NONE = 0,          //
@@ -85,7 +87,7 @@ struct UNIV_TEXTFILE
 union UNIV_DATA
 {
     char* str;
-    int i;
+    help_location i;
     UNIV_GROUPMASK_DATA gmask;
     UNIV_CONFIGFILE_DATA cfile;
     UNIV_NEWSGROUP group;
@@ -154,8 +156,8 @@ int univ_visit_group_main(const char *gname);
 void univ_virt_pass();
 void sort_univ();
 const char *univ_article_desc(const UNIV_ITEM *ui);
-void univ_help_main(int where);
-void univ_help(int where);
+void univ_help_main(help_location where);
+void univ_help(help_location where);
 const char *univ_keyhelp_modestr(const UNIV_ITEM *ui);
 
 #endif

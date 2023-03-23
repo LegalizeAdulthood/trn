@@ -3,36 +3,35 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include "common.h"
-#include "list.h"
-#include "trn.h"
-#include "term.h"
-#include "final.h"
-#include "util.h"
-#include "util2.h"
-#include "help.h"
-#include "cache.h"
-#include "bits.h"
-#include "artsrch.h"
-#include "ng.h"
-#include "opt.h"
-#include "ngdata.h"
-#include "nntpclient.h"
-#include "datasrc.h"
+#include "rt-select.h"
+
 #include "addng.h"
-#include "nntp.h"
-#include "ngstuff.h"
-#include "ngsrch.h"
-#include "rcstuff.h"
-#include "rcln.h"
-#include "kfile.h"
+#include "artsrch.h"
+#include "bits.h"
+#include "cache.h"
+#include "color.h"
+#include "datasrc.h"
+#include "final.h"
 #include "intrp.h"
-#include "rthread.h"
-#include "univ.h"
+#include "kfile.h"
+#include "list.h"
+#include "ng.h"
+#include "ngdata.h"
+#include "ngsrch.h"
+#include "ngstuff.h"
+#include "nntp.h"
+#include "only.h"
+#include "opt.h"
+#include "rcln.h"
+#include "rcstuff.h"
 #include "rt-page.h"
 #include "rt-util.h"
-#include "color.h"
-#include "only.h"
-#include "rt-select.h"
+#include "rthread.h"
+#include "term.h"
+#include "trn.h"
+#include "univ.h"
+#include "util.h"
+#include "util2.h"
 
 bool g_sel_rereading{};
 char g_sel_disp_char[]{" +-*"};
@@ -2893,7 +2892,7 @@ int univ_visit_group(const char *gname)
 }
 
 /* later consider returning universal_selector() value */
-void univ_visit_help(int where)
+void univ_visit_help(help_location where)
 {
     PUSH_SELECTOR();
     PUSH_UNIV_SELECTOR();

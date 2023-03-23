@@ -969,7 +969,7 @@ Q	Quit the current level.  At top level, go to the next selector.\n\
     return 0;
 }
 
-int univ_key_help(int where)
+int univ_key_help(help_location where)
 {
     switch (where) {
       case UHELP_PAGE:
