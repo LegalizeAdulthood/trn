@@ -64,6 +64,9 @@ static HTML_TAGS s_tagattr[LAST_TAG] = {
 static LIST *s_mimecap_list{};
 static char s_text_plain[] = "text/plain";
 
+constexpr bool CLOSING_TAG = false;
+constexpr bool OPENING_TAG = true;
+
 inline MIMECAP_ENTRY *mimecap_ptr(long n)
 {
     return (MIMECAP_ENTRY *)listnum2listitem(s_mimecap_list, n);

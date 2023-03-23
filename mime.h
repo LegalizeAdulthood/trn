@@ -97,12 +97,6 @@ enum
     LAST_TAG,
 };
 
-enum
-{
-    CLOSING_TAG = 0,
-    OPENING_TAG = 1
-};
-
 struct HTML_TAGS
 {
     char* name;
