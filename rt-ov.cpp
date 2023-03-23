@@ -32,14 +32,14 @@
 enum
 {
     OV_NUM = 0,
-    OV_SUBJ = 1,
-    OV_FROM = 2,
-    OV_DATE = 3,
-    OV_MSGID = 4,
-    OV_REFS = 5,
-    OV_BYTES = 6,
-    OV_LINES = 7,
-    OV_XREF = 8
+    OV_SUBJ,
+    OV_FROM,
+    OV_DATE,
+    OV_MSGID,
+    OV_REFS,
+    OV_BYTES,
+    OV_LINES,
+    OV_XREF
 };
 
 /* How many overview lines to read with one NNTP call */
