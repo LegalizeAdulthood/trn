@@ -440,7 +440,7 @@ char *fetchlines(ART_NUM artnum, int which_line)
 /* ART_NUM artnum   article to get line from */
 /* int which_line   type of line desired */
 /* int pool         which memory pool to use */
-char *mp_fetchlines(ART_NUM artnum, int which_line, int pool)
+char *mp_fetchlines(ART_NUM artnum, int which_line, memory_pool pool)
 {
     char* s;
     char* t;

@@ -4,6 +4,8 @@
 #ifndef HEAD_H
 #define HEAD_H
 
+#include "mempool.h"
+
 /* types of header lines (if only C really believed in enums)
  * (These must stay in alphabetic order at least in the first letter.
  * Within each letter it helps to arrange in increasing likelihood.)
@@ -103,7 +105,7 @@ bool parseline(char *art_buf, int newhide, int oldhide);
 void end_header();
 bool parseheader(ART_NUM artnum);
 char *fetchlines(ART_NUM artnum, int which_line);
-char *mp_fetchlines(ART_NUM artnum, int which_line, int pool);
+char *mp_fetchlines(ART_NUM artnum, int which_line, memory_pool pool);
 char *prefetchlines(ART_NUM artnum, int which_line, bool copy);
 
 #endif

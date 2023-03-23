@@ -92,7 +92,7 @@ static void mp_free_frag(int f)
     s_mp_first_free_frag = f;
 }
 
-char *mp_savestr(const char *str, int pool)
+char *mp_savestr(const char *str, memory_pool pool)
 {
     int f, oldf;
     int len;
@@ -128,7 +128,7 @@ char *mp_savestr(const char *str, int pool)
 }
 
 /* returns a pool-allocated string */
-char *mp_malloc(int len, int pool)
+char *mp_malloc(int len, memory_pool pool)
 {
     int f,oldf;
     char* s;
@@ -154,7 +154,7 @@ char *mp_malloc(int len, int pool)
 }
 
 /* free a whole memory pool */
-void mp_free(int pool)
+void mp_free(memory_pool pool)
 {
     int oldnext;
     int f;
