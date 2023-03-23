@@ -6,16 +6,17 @@
 
 #include "help.h"
 
-enum
+enum sel_mode
 {
-    SM_THREAD = 1,
-    SM_SUBJECT = 2,
-    SM_ARTICLE = 3,
-    SM_NEWSGROUP = 4,
-    SM_ADDGROUP = 5,
-    SM_MULTIRC = 6,
-    SM_OPTIONS = 7,
-    SM_UNIVERSAL = 8
+    SM_MAGIC_NUMBER = 0, // Not sure what this mode value means?
+    SM_THREAD,
+    SM_SUBJECT,
+    SM_ARTICLE,
+    SM_NEWSGROUP,
+    SM_ADDGROUP,
+    SM_MULTIRC,
+    SM_OPTIONS,
+    SM_UNIVERSAL
 };
 
 enum
@@ -53,9 +54,9 @@ enum
 
 extern bool g_sel_rereading;
 extern char g_sel_disp_char[];
-extern int g_sel_mode;
-extern int g_sel_defaultmode;
-extern int g_sel_threadmode;
+extern sel_mode g_sel_mode;
+extern sel_mode g_sel_defaultmode;
+extern sel_mode g_sel_threadmode;
 extern char *g_sel_mode_string;
 extern int g_sel_sort;
 extern int g_sel_artsort;

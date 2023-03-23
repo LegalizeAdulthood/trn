@@ -403,12 +403,12 @@ void set_option(int num, char *s)
 	    g_use_news_selector = YES(s)-1;
 	break;
       case OI_NEWS_SEL_MODE: {
-	int save_sel_mode = g_sel_mode;
+	const sel_mode save_sel_mode = g_sel_mode;
 	set_sel_mode(*s);
 	if (save_sel_mode != SM_ARTICLE && save_sel_mode != SM_SUBJECT
 	 && save_sel_mode != SM_THREAD) {
 	    g_sel_mode = save_sel_mode;
-	    set_selector(0,0);
+	    set_selector(SM_MAGIC_NUMBER,0);
 	}
 	break;
       }
@@ -860,15 +860,15 @@ char *option_value(int num)
 	sprintf(g_buf,"%d",g_use_news_selector);
 	return g_buf;
       case OI_NEWS_SEL_MODE: {
-	int save_sel_mode = g_sel_mode;
-	int save_Threaded = g_threaded_group;
+	const sel_mode save_sel_mode = g_sel_mode;
+	const int save_Threaded = g_threaded_group;
 	char* s;
 	g_threaded_group = true;
 	set_selector(g_sel_defaultmode, 0);
 	s = g_sel_mode_string;
 	g_sel_mode = save_sel_mode;
 	g_threaded_group = save_Threaded;
-	set_selector(0, 0);
+	set_selector(SM_MAGIC_NUMBER, 0);
 	return s;
       }
       case OI_NEWS_SEL_ORDER:

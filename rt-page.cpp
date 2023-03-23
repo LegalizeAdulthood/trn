@@ -87,18 +87,18 @@ bool set_sel_mode(char_int ch)
     return true;
 }
 
-char *get_sel_order(int smode)
+char *get_sel_order(sel_mode smode)
 {
-    int save_sel_mode = g_sel_mode;
+    sel_mode save_sel_mode = g_sel_mode;
     set_selector(smode, 0);
     sprintf(g_buf,"%s%s", g_sel_direction < 0? "reverse " : "",
 	    g_sel_sort_string);
     g_sel_mode = save_sel_mode;
-    set_selector(0, 0);
+    set_selector(SM_MAGIC_NUMBER, 0);
     return g_buf;
 }
 
-bool set_sel_order(int smode, const char *str)
+bool set_sel_order(sel_mode smode, const char *str)
 {
     bool reverse = false;
     char ch;
@@ -118,9 +118,9 @@ bool set_sel_order(int smode, const char *str)
     return set_sel_sort(smode,ch);
 }
 
-bool set_sel_sort(int smode, char_int ch)
+bool set_sel_sort(sel_mode smode, char_int ch)
 {
-    int save_sel_mode = g_sel_mode;
+    sel_mode save_sel_mode = g_sel_mode;
     int ssort;
 
     switch (ch) {
@@ -154,20 +154,20 @@ bool set_sel_sort(int smode, char_int ch)
 
     g_sel_mode = smode;
     if (isupper(ch))
-	set_selector(0, -ssort);
+	set_selector(SM_MAGIC_NUMBER, -ssort);
     else
-	set_selector(0, ssort);
+	set_selector(SM_MAGIC_NUMBER, ssort);
 
     if (g_sel_mode != save_sel_mode) {
 	g_sel_mode = save_sel_mode;
-	set_selector(0, 0);
+	set_selector(SM_MAGIC_NUMBER, 0);
     }
     return true;
 }
 
-void set_selector(int smode, int ssort)
+void set_selector(sel_mode smode, int ssort)
 {
-    if (smode == 0) {
+    if (smode == SM_MAGIC_NUMBER) {
 	if (g_sel_mode == SM_SUBJECT)
 	    g_sel_mode = g_sel_threadmode;
 	smode = g_sel_mode;

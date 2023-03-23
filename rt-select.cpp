@@ -35,9 +35,9 @@
 
 bool g_sel_rereading{};
 char g_sel_disp_char[]{" +-*"};
-int g_sel_mode{};
-int g_sel_defaultmode{SM_THREAD};
-int g_sel_threadmode{SM_THREAD};
+sel_mode g_sel_mode{};
+sel_mode g_sel_defaultmode{SM_THREAD};
+sel_mode g_sel_threadmode{SM_THREAD};
 char *g_sel_mode_string{};
 int g_sel_sort{};
 int g_sel_artsort{SS_GROUPS};
@@ -68,64 +68,73 @@ static int s_removed_prompt{};
 static int s_force_sel_pos{};
 static int (*s_extra_commands)(char_int){};
 
-#define START_SELECTOR(new_mode)\
-    char save_mode = g_mode;\
-    char save_gmode = g_general_mode;\
-    g_bos_on_stop = true;\
-    set_mode('s',new_mode)
+#define START_SELECTOR(new_mode)            \
+    const char save_mode = g_mode;          \
+    const char save_gmode = g_general_mode; \
+    do                                      \
+    {                                       \
+        g_bos_on_stop = true;               \
+        set_mode('s', new_mode);            \
+    } while (false)
 
-#define END_SELECTOR()\
-    g_bos_on_stop = false;\
-    set_mode(save_gmode,save_mode)
+#define END_SELECTOR()                   \
+    do                                   \
+    {                                    \
+        g_bos_on_stop = false;           \
+        set_mode(save_gmode, save_mode); \
+    } while (false)
 
-#define PUSH_SELECTOR()\
-    int save_sel_mode = g_sel_mode;\
-    bool save_sel_rereading = g_sel_rereading;\
-    bool save_sel_exclusive = g_sel_exclusive;\
-    ART_UNREAD save_selected_count = g_selected_count;\
-    int (*save_extra_commands)(char_int) = s_extra_commands
+#define PUSH_SELECTOR()                                \
+    sel_mode save_sel_mode = g_sel_mode;               \
+    const bool save_sel_rereading = g_sel_rereading;   \
+    const bool save_sel_exclusive = g_sel_exclusive;   \
+    ART_UNREAD save_selected_count = g_selected_count; \
+    int (*const save_extra_commands)(char_int) = s_extra_commands
 
-#define POP_SELECTOR()\
-    g_sel_exclusive = save_sel_exclusive;\
-    g_sel_rereading = save_sel_rereading;\
-    g_selected_count = save_selected_count;\
-    s_extra_commands = save_extra_commands;\
-    g_bos_on_stop = true;\
-    if (g_sel_mode != save_sel_mode) {\
-	g_sel_mode = save_sel_mode;\
-	set_selector(0, 0);\
-	save_sel_mode = 0;\
-    } \
-    do \
-    { \
-    } \
-    while (false)
+#define POP_SELECTOR()                          \
+    do                                          \
+    {                                           \
+        g_sel_exclusive = save_sel_exclusive;   \
+        g_sel_rereading = save_sel_rereading;   \
+        g_selected_count = save_selected_count; \
+        s_extra_commands = save_extra_commands; \
+        g_bos_on_stop = true;                   \
+        if (g_sel_mode != save_sel_mode)        \
+        {                                       \
+            g_sel_mode = save_sel_mode;         \
+            set_selector(SM_MAGIC_NUMBER, 0);   \
+            save_sel_mode = SM_MAGIC_NUMBER;    \
+        }                                       \
+    } while (false)
 
-#define PUSH_UNIV_SELECTOR()\
-    UNIV_ITEM* save_first_univ = g_first_univ;\
-    UNIV_ITEM* save_last_univ = g_last_univ;\
-    UNIV_ITEM* save_page_univ = sel_page_univ;\
-    UNIV_ITEM* save_next_univ = g_sel_next_univ;\
-    char* save_univ_fname = g_univ_fname;\
-    char* save_univ_label = g_univ_label;\
-    char* save_univ_title = g_univ_title;\
-    char* save_univ_tmp_file = g_univ_tmp_file;\
-    char save_sel_ret = s_sel_ret;\
-    HASHTABLE* save_univ_ng_hash = g_univ_ng_hash;\
-    HASHTABLE* save_univ_vg_hash = g_univ_vg_hash
+#define PUSH_UNIV_SELECTOR()                             \
+    UNIV_ITEM *const save_first_univ = g_first_univ;     \
+    UNIV_ITEM *const save_last_univ = g_last_univ;       \
+    UNIV_ITEM *const save_page_univ = sel_page_univ;     \
+    UNIV_ITEM *const save_next_univ = g_sel_next_univ;   \
+    char *const save_univ_fname = g_univ_fname;          \
+    char *const save_univ_label = g_univ_label;          \
+    char *const save_univ_title = g_univ_title;          \
+    char *const save_univ_tmp_file = g_univ_tmp_file;    \
+    const char save_sel_ret = s_sel_ret;                 \
+    HASHTABLE *const save_univ_ng_hash = g_univ_ng_hash; \
+    HASHTABLE *const save_univ_vg_hash = g_univ_vg_hash
 
-#define POP_UNIV_SELECTOR()\
-    g_first_univ = save_first_univ;\
-    g_last_univ = save_last_univ;\
-    sel_page_univ = save_page_univ;\
-    g_sel_next_univ = save_next_univ;\
-    g_univ_fname = save_univ_fname;\
-    g_univ_label = save_univ_label;\
-    g_univ_title = save_univ_title;\
-    g_univ_tmp_file = save_univ_tmp_file;\
-    s_sel_ret = save_sel_ret;\
-    g_univ_ng_hash = save_univ_ng_hash;\
-    g_univ_vg_hash = save_univ_vg_hash
+#define POP_UNIV_SELECTOR()                   \
+    do                                        \
+    {                                         \
+        g_first_univ = save_first_univ;       \
+        g_last_univ = save_last_univ;         \
+        sel_page_univ = save_page_univ;       \
+        g_sel_next_univ = save_next_univ;     \
+        g_univ_fname = save_univ_fname;       \
+        g_univ_label = save_univ_label;       \
+        g_univ_title = save_univ_title;       \
+        g_univ_tmp_file = save_univ_tmp_file; \
+        s_sel_ret = save_sel_ret;             \
+        g_univ_ng_hash = save_univ_ng_hash;   \
+        g_univ_vg_hash = save_univ_vg_hash;   \
+    } while (false)
 
 static void sel_dogroups();
 static int univ_read(UNIV_ITEM *ui);
