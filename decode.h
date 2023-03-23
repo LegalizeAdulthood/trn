@@ -6,6 +6,15 @@
 
 extern char *g_decode_filename;
 
+enum mime_encoding
+{
+    MENCODE_NONE = 0,
+    MENCODE_BASE64 = 1,
+    MENCODE_QPRINT = 2,
+    MENCODE_UUE = 3,
+    MENCODE_UNHANDLED = 4
+};
+
 enum decode_state
 {
     DECODE_DONE = 0,
@@ -25,7 +34,7 @@ void decode_init();
 char *decode_fix_fname(const char *s);
 char *decode_subject(ART_NUM artnum, int *partp, int *totalp);
 int decode_piece(MIMECAP_ENTRY *mcp, char *first_line);
-DECODE_FUNC decode_function(int encoding);
+DECODE_FUNC decode_function(mime_encoding encoding);
 char *decode_mkdir(const char *filename);
 void decode_rmdir(char *dir);
 

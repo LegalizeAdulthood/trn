@@ -401,7 +401,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     return 1;
 }
 
-DECODE_FUNC decode_function(int encoding)
+DECODE_FUNC decode_function(mime_encoding encoding)
 {
     switch (encoding) {
       case MENCODE_QPRINT:

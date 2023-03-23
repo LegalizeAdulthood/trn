@@ -41,7 +41,7 @@ struct MIME_SECT
     int html_line_start;
     HBLK *html_blks;
     mime_state type;
-    short encoding;
+    mime_encoding encoding;
     short part;
     short total;
     short boundary_len;
@@ -129,15 +129,6 @@ extern mime_state g_mime_state;
 extern char *g_multipart_separator;
 extern bool g_auto_view_inline;
 extern char *g_mime_getc_line;
-
-enum
-{
-    MENCODE_NONE = 0,
-    MENCODE_BASE64 = 1,
-    MENCODE_QPRINT = 2,
-    MENCODE_UUE = 3,
-    MENCODE_UNHANDLED = 4
-};
 
 struct MIMECAP_ENTRY
 {
