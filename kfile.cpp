@@ -600,7 +600,6 @@ void perform_auto_flags(ARTICLE *ap, int thread_autofl, int subj_autofl, int cha
 
 int edit_kfile()
 {
-    int r = -1;
     char* bp;
 
     if (g_in_ng) {
@@ -614,7 +613,9 @@ int edit_kfile()
 	strcpy(g_buf,filexp(get_val("KILLLOCAL",s_killlocal)));
     } else
 	strcpy(g_buf,filexp(get_val("KILLGLOBAL",s_killglobal)));
-    if ((r = makedir(g_buf,MD_FILE)) == 0) {
+    const bool made_dir = makedir(g_buf, MD_FILE);
+    int r = made_dir ? 1 : 0;
+    if (!made_dir) {
 	sprintf(g_cmd_buf,"%s %s",
 	    filexp(get_val("VISUAL",get_val("EDITOR",g_defeditor))),g_buf);
 	printf("\nEditing %s KILL file:\n%s\n",
@@ -682,7 +683,7 @@ void kf_append(const char *cmd, bool local)
 {
     strcpy(g_cmd_buf, filexp(local? get_val("KILLLOCAL",s_killlocal)
 				: get_val("KILLGLOBAL",s_killglobal)));
-    if (makedir(g_cmd_buf,MD_FILE) == 0) {
+    if (!makedir(g_cmd_buf,MD_FILE)) {
 	if (g_verbose)
 	    printf("\nDepositing command in %s...",g_cmd_buf);
 	else

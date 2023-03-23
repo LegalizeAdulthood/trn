@@ -148,7 +148,7 @@ int save_article()
 	}
 	safefree(g_extractdest);
 	s = g_extractdest = savestr(s); /* make it handy for %E */
-	if (makedir(s, MD_DIR)) {	/* ensure directory exists */
+	if (makedir(s, MD_DIR)) {       /* ensure directory exists */
 	    g_int_count++;
 	    return SAVE_DONE;
 	}

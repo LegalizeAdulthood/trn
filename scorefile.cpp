@@ -1142,7 +1142,7 @@ void sf_edit_file(const char *filespec)
     fname_noexpand = sf_cmd_fname(filebuf);
     strcpy(filebuf,filexp(fname_noexpand));
     /* make sure directory exists... */
-    if (makedir(filebuf,MD_FILE) == 0) {
+    if (!makedir(filebuf,MD_FILE)) {
 	(void)edit_file(fname_noexpand);
 	sf_file_clear();
     }

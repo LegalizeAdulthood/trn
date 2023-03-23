@@ -206,7 +206,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     s = filexp("%+");
     if (stat(s,&g_filestat) < 0 || !S_ISDIR(g_filestat.st_mode)) {
 	printf("Creating the directory %s.\n",s);
-	if (makedir(s,MD_DIR) != 0) {
+	if (makedir(s,MD_DIR)) {
 	    printf("Unable to create `%s'.\n",s);
 	    finalize(1); /*$$??*/
 	}
@@ -1310,9 +1310,9 @@ void cwd_check()
     strcpy(tmpbuf,g_cwd);
     if (chdir(g_cwd) != 0) {
 	safecpy(tmpbuf,filexp(g_cwd),sizeof tmpbuf);
-	if (makedir(tmpbuf,MD_DIR) != 0 || chdir(tmpbuf) != 0) {
+	if (makedir(tmpbuf,MD_DIR) || chdir(tmpbuf) != 0) {
 	    interp(g_cmd_buf, (sizeof g_cmd_buf), "%~/News");
-	    if (makedir(g_cmd_buf,MD_DIR) != 0)
+	    if (makedir(g_cmd_buf,MD_DIR))
 		strcpy(tmpbuf,g_home_dir);
 	    else
 		strcpy(tmpbuf,g_cmd_buf);

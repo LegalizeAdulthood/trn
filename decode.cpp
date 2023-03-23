@@ -434,7 +434,7 @@ char *decode_mkdir(const char *filename)
 	return nullptr;
     *s++ = '/';
     *s = '\0';
-    if (makedir(dir, MD_FILE) != 0)
+    if (makedir(dir, MD_FILE))
 	return nullptr;
     return dir;
 }

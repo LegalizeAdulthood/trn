@@ -23,7 +23,7 @@ inline bool at_grey_space(const char *s)
 
 /* is the string for makedir a directory name or a filename? */
 
-enum
+enum makedir_name_type
 {
     MD_DIR = 0,
     MD_FILE = 1
@@ -57,7 +57,7 @@ int eaccess(char *, int);
 #endif
 char *trn_getwd(char *buf, int buflen);
 char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp);
-int makedir(char *dirname, int nametype);
+bool makedir(char *dirname, makedir_name_type nametype);
 void notincl(const char *feature);
 void growstr(char **strptr, int *curlen, int newlen);
 void setdef(char *buffer, const char *dflt);

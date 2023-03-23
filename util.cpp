@@ -397,12 +397,12 @@ char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp)
     return buffer;
 }
 
-int makedir(char *dirname, int nametype)
+bool makedir(char *dirname, makedir_name_type nametype)
 {
     char* end;
     char* s;
 # ifdef HAS_MKDIR
-    int status = 0;
+    bool status{};
 # else
     char tmpbuf[1024];
     char* tbptr = tmpbuf+5;
@@ -412,7 +412,7 @@ int makedir(char *dirname, int nametype)
     if (nametype == MD_FILE) {		/* not to create last component? */
 	for (--end; end != dirname && *end != '/'; --end) ;
 	if (*end != '/')
-	    return 0;			/* nothing to make */
+	    return false;			/* nothing to make */
 	*end = '\0';			/* isolate file name */
     }
 # ifndef HAS_MKDIR
@@ -436,7 +436,7 @@ int makedir(char *dirname, int nametype)
 	if (!*s) {			/* something to make? */
 # ifdef HAS_MKDIR
 #ifdef _WIN32
-	    status = status || mkdir(dirname);
+	    status = status || mkdir(dirname) != 0;
 #else
 	    status = status || mkdir(dirname,0777);
 #endif
@@ -453,7 +453,7 @@ int makedir(char *dirname, int nametype)
 # ifdef HAS_MKDIR
     return status;
 # else
-    return (tbptr==tmpbuf+5 ? 0 : doshell(g_sh,tmpbuf));/* exercise our faith */
+    return tbptr == tmpbuf + 5 ? false : doshell(g_sh, tmpbuf) != 0; /* exercise our faith */
 # endif
 }
 
