@@ -50,7 +50,7 @@ void respond_init()
 {
 }
 
-int save_article()
+save_result save_article()
 {
     bool use_pref;
     char* s;
@@ -430,7 +430,7 @@ s_bomb:
     return SAVE_DONE;
 }
 
-int view_article()
+save_result view_article()
 {
     parseheader(g_art);
     mime_SetArticle();

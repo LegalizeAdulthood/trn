@@ -9,15 +9,15 @@ extern char *g_extractdest; /* value of %E */
 extern char *g_extractprog; /* value of %e */
 extern ART_POS g_savefrom;  /* value of %B */
 
-enum
+enum save_result
 {
     SAVE_ABORT = 0,
     SAVE_DONE = 1
 };
 
 void respond_init();
-int save_article();
-int view_article();
+save_result save_article();
+save_result view_article();
 int cancel_article();
 int supersede_article();
 void reply();
