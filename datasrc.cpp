@@ -48,26 +48,31 @@ char *g_nntp_auth_file{};
 enum
 {
     SRCFILE_CHUNK_SIZE = (32 * 1024),
-
-    DI_NNTP_SERVER = 1,
-    DI_ACTIVE_FILE = 2,
-    DI_ACT_REFETCH = 3,
-    DI_SPOOL_DIR = 4,
-    DI_THREAD_DIR = 5,
-    DI_OVERVIEW_DIR = 6,
-    DI_ACTIVE_TIMES = 7,
-    DI_GROUP_DESC = 8,
-    DI_DESC_REFETCH = 9,
-    DI_AUTH_USER = 10,
-    DI_AUTH_PASS = 11,
-    DI_AUTH_COMMAND = 12,
-    DI_XHDR_BROKEN = 13,
-    DI_XREFS = 14,
-    DI_OVERVIEW_FMT = 15,
-    DI_FORCE_AUTH = 16
 };
 
-static INI_WORDS s_datasrc_ini[] = {
+enum datasrc_ini_index
+{
+    DI_NNTP_SERVER = 1,
+    DI_ACTIVE_FILE,
+    DI_ACT_REFETCH,
+    DI_SPOOL_DIR,
+    DI_THREAD_DIR,
+    DI_OVERVIEW_DIR,
+    DI_ACTIVE_TIMES,
+    DI_GROUP_DESC,
+    DI_DESC_REFETCH,
+    DI_AUTH_USER,
+    DI_AUTH_PASS,
+    DI_AUTH_COMMAND,
+    DI_XHDR_BROKEN,
+    DI_XREFS,
+    DI_OVERVIEW_FMT,
+    DI_FORCE_AUTH
+};
+
+static INI_WORDS s_datasrc_ini[] =
+{
+    // clang-format off
     { 0, "DATASRC", nullptr },
     { 0, "NNTP Server", nullptr },
     { 0, "Active File", nullptr },
@@ -86,6 +91,7 @@ static INI_WORDS s_datasrc_ini[] = {
     { 0, "Overview Format File", nullptr },
     { 0, "Force Auth", nullptr },
     { 0, nullptr, nullptr }
+    // clang-format on
 };
 
 static char *dir_or_none(DATASRC *dp, char *dir, int flag);
