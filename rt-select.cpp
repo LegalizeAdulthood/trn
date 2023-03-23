@@ -39,12 +39,12 @@ sel_mode g_sel_mode{};
 sel_mode g_sel_defaultmode{SM_THREAD};
 sel_mode g_sel_threadmode{SM_THREAD};
 char *g_sel_mode_string{};
-int g_sel_sort{};
-int g_sel_artsort{SS_GROUPS};
-int g_sel_threadsort{SS_DATE};
-int g_sel_newsgroupsort{SS_NATURAL};
-int g_sel_addgroupsort{SS_NATURAL};
-int g_sel_univsort{SS_NATURAL};
+sel_sort_mode g_sel_sort{};
+sel_sort_mode g_sel_artsort{SS_GROUPS};
+sel_sort_mode g_sel_threadsort{SS_DATE};
+sel_sort_mode g_sel_newsgroupsort{SS_NATURAL};
+sel_sort_mode g_sel_addgroupsort{SS_NATURAL};
+sel_sort_mode g_sel_univsort{SS_NATURAL};
 char *g_sel_sort_string{};
 int g_sel_direction{1};
 bool g_sel_exclusive{};
@@ -91,20 +91,20 @@ static int (*s_extra_commands)(char_int){};
     ART_UNREAD save_selected_count = g_selected_count; \
     int (*const save_extra_commands)(char_int) = s_extra_commands
 
-#define POP_SELECTOR()                          \
-    do                                          \
-    {                                           \
-        g_sel_exclusive = save_sel_exclusive;   \
-        g_sel_rereading = save_sel_rereading;   \
-        g_selected_count = save_selected_count; \
-        s_extra_commands = save_extra_commands; \
-        g_bos_on_stop = true;                   \
-        if (g_sel_mode != save_sel_mode)        \
-        {                                       \
-            g_sel_mode = save_sel_mode;         \
-            set_selector(SM_MAGIC_NUMBER, 0);   \
-            save_sel_mode = SM_MAGIC_NUMBER;    \
-        }                                       \
+#define POP_SELECTOR()                                      \
+    do                                                      \
+    {                                                       \
+        g_sel_exclusive = save_sel_exclusive;               \
+        g_sel_rereading = save_sel_rereading;               \
+        g_selected_count = save_selected_count;             \
+        s_extra_commands = save_extra_commands;             \
+        g_bos_on_stop = true;                               \
+        if (g_sel_mode != save_sel_mode)                    \
+        {                                                   \
+            g_sel_mode = save_sel_mode;                     \
+            set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER); \
+            save_sel_mode = SM_MAGIC_NUMBER;                \
+        }                                                   \
     } while (false)
 
 #define PUSH_UNIV_SELECTOR()                             \
@@ -350,7 +350,7 @@ char multirc_selector()
     g_sel_exclusive = false;
     g_selected_count = 0;
 
-    set_selector(SM_MULTIRC, 0);
+    set_selector(SM_MULTIRC, SS_MAGIC_NUMBER);
 
   sel_restart:
     s_end_char = g_newsrc_sel_cmds[0];
@@ -403,7 +403,7 @@ char newsgroup_selector()
     g_sel_exclusive = false;
     g_selected_count = 0;
 
-    set_selector(SM_NEWSGROUP, 0);
+    set_selector(SM_NEWSGROUP, SS_MAGIC_NUMBER);
 
   sel_restart:
     if (*g_sel_grp_dmode != 's') {
@@ -471,7 +471,7 @@ char addgroup_selector(int flags)
     g_sel_exclusive = false;
     g_selected_count = 0;
 
-    set_selector(SM_ADDGROUP, 0);
+    set_selector(SM_ADDGROUP, SS_MAGIC_NUMBER);
 
   sel_restart:
     if (*g_sel_grp_dmode != 's') {
@@ -535,7 +535,7 @@ char option_selector()
     g_selected_count = 0;
     parse_ini_section("", g_options_ini);
 
-    set_selector(SM_OPTIONS, 0);
+    set_selector(SM_OPTIONS, SS_MAGIC_NUMBER);
 
   sel_restart:
     s_end_char = g_option_sel_cmds[0];
@@ -759,7 +759,7 @@ char universal_selector()
     g_sel_exclusive = false;
     g_selected_count = 0;
 
-    set_selector(SM_UNIVERSAL, 0);
+    set_selector(SM_UNIVERSAL, SS_MAGIC_NUMBER);
 
     g_selected_count = 0;
 
@@ -1777,10 +1777,10 @@ static int article_commands(char_int ch)
 	if (!g_sel_rereading)
 	    sel_cleanup();
 	if (g_sel_mode == SM_ARTICLE) {
-	    set_selector(g_sel_threadmode, 0);
+	    set_selector(g_sel_threadmode, SS_MAGIC_NUMBER);
 	    g_sel_page_sp = g_sel_page_app? g_sel_page_app[0]->subj : nullptr;
 	} else {
-	    set_selector(SM_ARTICLE, 0);
+	    set_selector(SM_ARTICLE, SS_MAGIC_NUMBER);
 	    g_sel_page_app = 0;
 	}
 	count_subjects(CS_NORM);
@@ -1896,7 +1896,7 @@ q does nothing.\n\n\
       case 'R':
 	if (!g_sel_rereading)
 	    sel_cleanup();
-	set_selector(g_sel_mode, g_sel_sort * -g_sel_direction);
+	set_selector(g_sel_mode, static_cast<sel_sort_mode>(g_sel_sort * -g_sel_direction));
 	count_subjects(CS_NORM);
 	g_sel_page_sp = nullptr;
 	g_sel_page_app = nullptr;
@@ -2245,7 +2245,7 @@ q does nothing.\n\n\
       case 'R':
 	if (!g_sel_rereading)
 	    sel_cleanup();
-	set_selector(g_sel_mode, g_sel_sort * -g_sel_direction);
+	set_selector(g_sel_mode, static_cast<sel_sort_mode>(g_sel_sort * -g_sel_direction));
 	g_sel_page_np = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
@@ -2475,7 +2475,7 @@ q does nothing.\n\n\
       case 'R':
 	if (!g_sel_rereading)
 	    sel_cleanup();
-	set_selector(g_sel_mode, g_sel_sort * -g_sel_direction);
+	set_selector(g_sel_mode, static_cast<sel_sort_mode>(g_sel_sort * -g_sel_direction));
 	g_sel_page_gp = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
@@ -2580,7 +2580,7 @@ static int multirc_commands(char_int ch)
 {
     switch (ch) {
       case 'R':
-	set_selector(g_sel_mode, g_sel_sort * -g_sel_direction);
+	set_selector(g_sel_mode, static_cast<sel_sort_mode>(g_sel_sort * -g_sel_direction));
 	g_sel_page_mp = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
@@ -2613,7 +2613,7 @@ static int option_commands(char_int ch)
 {
     switch (ch) {
       case 'R':
-	set_selector(g_sel_mode, g_sel_sort * -g_sel_direction);
+	set_selector(g_sel_mode, static_cast<sel_sort_mode>(g_sel_sort * -g_sel_direction));
 	g_sel_page_op = 1;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;
@@ -2681,7 +2681,7 @@ static int universal_commands(char_int ch)
 {
     switch (ch) {
       case 'R':
-	set_selector(g_sel_mode, g_sel_sort * -g_sel_direction);
+	set_selector(g_sel_mode, static_cast<sel_sort_mode>(g_sel_sort * -g_sel_direction));
 	sel_page_univ = nullptr;
 	init_pages(FILL_LAST_PAGE);
 	return DS_DISPLAY;

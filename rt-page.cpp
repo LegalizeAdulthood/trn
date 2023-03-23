@@ -57,10 +57,10 @@ bool set_sel_mode(char_int ch)
 {
     switch (ch) {
       case 'a':
-	set_selector(g_sel_defaultmode = SM_ARTICLE, 0);
+	set_selector(g_sel_defaultmode = SM_ARTICLE, SS_MAGIC_NUMBER);
 	break;
       case 's':
-	set_selector(g_sel_defaultmode = SM_SUBJECT, 0);
+	set_selector(g_sel_defaultmode = SM_SUBJECT, SS_MAGIC_NUMBER);
 	break;
       case 't':
 	if (g_in_ng && !g_threaded_group) {
@@ -78,10 +78,10 @@ bool set_sel_mode(char_int ch)
 	}
 	/* FALL THROUGH */
       case 'T':
-	set_selector(g_sel_defaultmode = SM_THREAD, 0);
+	set_selector(g_sel_defaultmode = SM_THREAD, SS_MAGIC_NUMBER);
 	break;
       default:
-	set_selector(g_sel_defaultmode, 0);
+	set_selector(g_sel_defaultmode, SS_MAGIC_NUMBER);
 	return false;
     }
     return true;
@@ -90,11 +90,11 @@ bool set_sel_mode(char_int ch)
 char *get_sel_order(sel_mode smode)
 {
     sel_mode save_sel_mode = g_sel_mode;
-    set_selector(smode, 0);
+    set_selector(smode, SS_MAGIC_NUMBER);
     sprintf(g_buf,"%s%s", g_sel_direction < 0? "reverse " : "",
 	    g_sel_sort_string);
     g_sel_mode = save_sel_mode;
-    set_selector(SM_MAGIC_NUMBER, 0);
+    set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
     return g_buf;
 }
 
@@ -121,7 +121,7 @@ bool set_sel_order(sel_mode smode, const char *str)
 bool set_sel_sort(sel_mode smode, char_int ch)
 {
     sel_mode save_sel_mode = g_sel_mode;
-    int ssort;
+    sel_sort_mode ssort;
 
     switch (ch) {
       case 'd':  case 'D':
@@ -154,18 +154,18 @@ bool set_sel_sort(sel_mode smode, char_int ch)
 
     g_sel_mode = smode;
     if (isupper(ch))
-	set_selector(SM_MAGIC_NUMBER, -ssort);
+	set_selector(SM_MAGIC_NUMBER, static_cast<sel_sort_mode>(-ssort));
     else
 	set_selector(SM_MAGIC_NUMBER, ssort);
 
     if (g_sel_mode != save_sel_mode) {
 	g_sel_mode = save_sel_mode;
-	set_selector(SM_MAGIC_NUMBER, 0);
+	set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
     }
     return true;
 }
 
-void set_selector(sel_mode smode, int ssort)
+void set_selector(sel_mode smode, sel_sort_mode ssort)
 {
     if (smode == SM_MAGIC_NUMBER) {
 	if (g_sel_mode == SM_SUBJECT)
@@ -200,13 +200,13 @@ void set_selector(sel_mode smode, int ssort)
 	    break;
 	}
     }
-    if (ssort > 0) {
+    if (ssort > SM_MAGIC_NUMBER) {
 	g_sel_direction = 1;
 	g_sel_sort = ssort;
     }
     else {
 	g_sel_direction = -1;
-	g_sel_sort = -ssort;
+	g_sel_sort = static_cast<sel_sort_mode>(-ssort);
     }
 
     if (g_sel_mode == SM_THREAD && !g_threaded_group)
@@ -241,8 +241,7 @@ void set_selector(sel_mode smode, int ssort)
 	g_sel_threadmode = smode;
 	g_sel_threadsort = ssort;
      thread_subj_sort:
-	if (g_sel_sort == SS_AUTHOR || g_sel_sort == SS_GROUPS
-	 || g_sel_sort == SS_NATURAL)
+          if (g_sel_sort == SS_AUTHOR || g_sel_sort == SS_GROUPS || g_sel_sort == SS_NATURAL)
 	    g_sel_sort = SS_DATE;
 	break;
       case SM_ARTICLE:

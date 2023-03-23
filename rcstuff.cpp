@@ -930,7 +930,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
     NGDATA* np;
     int i;
     const char* dflt = (move_np!=g_current_ng ? "$^.Lq" : "$^Lq");
-    int save_sort = g_sel_sort;
+    sel_sort_mode save_sort = g_sel_sort;
 
     if (g_sel_newsgroupsort != SS_NATURAL) {
 	if (newnum < 0) {
@@ -1274,7 +1274,7 @@ bool write_newsrcs(MULTIRC *mptr)
 {
     NEWSRC* rp;
     NGDATA* np;
-    int save_sort = g_sel_sort;
+    sel_sort_mode save_sort = g_sel_sort;
     FILE* rcfp;
     bool total_success = true;
 

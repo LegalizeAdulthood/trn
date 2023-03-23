@@ -19,18 +19,19 @@ enum sel_mode
     SM_UNIVERSAL
 };
 
-enum
+enum sel_sort_mode
 {
-    SS_DATE = 1,
-    SS_STRING = 2,
-    SS_AUTHOR = 3,
-    SS_COUNT = 4,
-    SS_NATURAL = 5,
-    SS_GROUPS = 6,
-    SS_LINES = 7,
+    SS_MAGIC_NUMBER = 0, // Not sure what this mode value means?
+    SS_DATE,
+    SS_STRING,
+    SS_AUTHOR,
+    SS_COUNT,
+    SS_NATURAL,
+    SS_GROUPS,
+    SS_LINES,
     /* NOTE: The score order is still valid even without scoring enabled. */
     /*       (The real order is then something like natural or date.) */
-    SS_SCORE = 8
+    SS_SCORE
 };
 
 enum
@@ -58,12 +59,12 @@ extern sel_mode g_sel_mode;
 extern sel_mode g_sel_defaultmode;
 extern sel_mode g_sel_threadmode;
 extern char *g_sel_mode_string;
-extern int g_sel_sort;
-extern int g_sel_artsort;
-extern int g_sel_threadsort;
-extern int g_sel_newsgroupsort;
-extern int g_sel_addgroupsort;
-extern int g_sel_univsort;
+extern sel_sort_mode g_sel_sort;
+extern sel_sort_mode g_sel_artsort;
+extern sel_sort_mode g_sel_threadsort;
+extern sel_sort_mode g_sel_newsgroupsort;
+extern sel_sort_mode g_sel_addgroupsort;
+extern sel_sort_mode g_sel_univsort;
 extern char *g_sel_sort_string;
 extern int g_sel_direction;
 extern bool g_sel_exclusive;

@@ -408,7 +408,7 @@ void set_option(int num, char *s)
 	if (save_sel_mode != SM_ARTICLE && save_sel_mode != SM_SUBJECT
 	 && save_sel_mode != SM_THREAD) {
 	    g_sel_mode = save_sel_mode;
-	    set_selector(SM_MAGIC_NUMBER,0);
+	    set_selector(SM_MAGIC_NUMBER,SS_MAGIC_NUMBER);
 	}
 	break;
       }
@@ -864,11 +864,11 @@ char *option_value(int num)
 	const int save_Threaded = g_threaded_group;
 	char* s;
 	g_threaded_group = true;
-	set_selector(g_sel_defaultmode, 0);
+	set_selector(g_sel_defaultmode, SS_MAGIC_NUMBER);
 	s = g_sel_mode_string;
 	g_sel_mode = save_sel_mode;
 	g_threaded_group = save_Threaded;
-	set_selector(SM_MAGIC_NUMBER, 0);
+	set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
 	return s;
       }
       case OI_NEWS_SEL_ORDER:

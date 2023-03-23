@@ -52,7 +52,7 @@ bool set_sel_mode(char_int ch);
 char *get_sel_order(sel_mode smode);
 bool set_sel_order(sel_mode smode, const char *str);
 bool set_sel_sort(sel_mode smode, char_int ch);
-void set_selector(sel_mode smode, int ssort);
+void set_selector(sel_mode smode, sel_sort_mode ssort);
 void init_pages(bool fill_last_page);
 bool first_page();
 bool last_page();
