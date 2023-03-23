@@ -4,6 +4,8 @@
 #ifndef DATASRC_H
 #define DATASRC_H
 
+#include "nntpclient.h"
+
 struct SRCFILE
 {
     FILE*	fp;		/* the file pointer to read the data */
