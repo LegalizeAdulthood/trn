@@ -81,7 +81,7 @@ static bool mark_all_unREAD(char *ptr, int arg);
 static bool debug_article_output(char *ptr, int arg);
 #endif
 
-static int s_exit_code = NG_NORM;
+static do_newsgroup_result s_exit_code = NG_NORM;
 
 static art_switch_result art_switch();
 
@@ -121,7 +121,7 @@ void ng_init()
  */
 
 // start_command command to fake up first
-int do_newsgroup(char *start_command)
+do_newsgroup_result do_newsgroup(char *start_command)
 {
     char mode_save = g_mode;
     char gmode_save = g_general_mode;
@@ -133,7 +133,7 @@ int do_newsgroup(char *start_command)
 
     if (chdir(g_datasrc->spool_dir)) {
 	printf(g_nocd,g_datasrc->spool_dir) FLUSH;
-	return -1;
+	return NG_ERROR;
     }
 
     s_exit_code = NG_NORM;

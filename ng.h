@@ -20,7 +20,7 @@ extern char *g_mailcall;
 extern bool g_forcelast; /* ought we show "End of newsgroup"? */
 extern bool g_forcegrow; /* do we want to recalculate size of newsgroup, e.g. after posting? */
 
-enum
+enum do_newsgroup_result
 {
     NG_ERROR = -1,
     NG_NORM = 0,
@@ -34,7 +34,7 @@ enum
 };
 
 void ng_init();
-int do_newsgroup(char *start_command);
+do_newsgroup_result do_newsgroup(char *start_command);
 #ifdef MAILCALL
 void setmail(bool force);
 #endif
