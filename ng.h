@@ -35,7 +35,6 @@ enum
 
 void ng_init();
 int do_newsgroup(char *start_command);
-int art_switch();
 #ifdef MAILCALL
 void setmail(bool force);
 #endif

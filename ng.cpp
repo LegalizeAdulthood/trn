@@ -63,7 +63,7 @@ bool g_forcelast{}; /* ought we show "End of newsgroup"? */
 bool g_forcegrow{}; /* do we want to recalculate size of newsgroup, e.g. after posting? */
 
 /* art_switch() return values */
-enum
+enum art_switch_result
 {
     AS_NORM = 0,
     AS_INP = 1,
@@ -82,6 +82,8 @@ static bool debug_article_output(char *ptr, int arg);
 #endif
 
 static int s_exit_code = NG_NORM;
+
+static art_switch_result art_switch();
 
 void ng_init()
 {
@@ -522,7 +524,7 @@ cleanup2:
 
 /* decide what to do at the end of an article */
 
-int art_switch()
+static art_switch_result art_switch()
 {
     setdef(g_buf,g_dfltcmd);
     printcmd();
