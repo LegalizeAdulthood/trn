@@ -1,20 +1,22 @@
 #include <gtest/gtest.h>
 
 #include "common.h"
+#include "color.h"
 #include "head.h"
 
-#include <iterator>
-
-struct header_line_type_values
+template <typename Enum>
+struct enum_values
 {
     const char *name;
-    header_line_type type;
+    Enum type;
     int value;
 };
 
+using header_line_type_values = enum_values<header_line_type>;
+
 #define ENUM_VALUE(enum_, value_) { #enum_, enum_, value_ }
 
-header_line_type_values values[] =
+header_line_type_values header_line_types[] =
 {
     // clang-format off
     ENUM_VALUE(PAST_HEADER, 0),
@@ -52,7 +54,8 @@ header_line_type_values values[] =
     // clang-format on
 };
 
-void PrintTo(const header_line_type_values &param, std::ostream *str)
+template <typename T>
+void PrintTo(const enum_values<T> &param, std::ostream *str)
 {
     *str << param.name << " <=> " << param.value;
 }
@@ -68,4 +71,44 @@ TEST_P(HeaderLineTypes, orderRelationships)
     ASSERT_EQ(param.value, param.type);
 }
 
-INSTANTIATE_TEST_SUITE_P(TestHeaderLineTypes, HeaderLineTypes, testing::ValuesIn(values));
+INSTANTIATE_TEST_SUITE_P(TestHeaderLineTypes, HeaderLineTypes, testing::ValuesIn(header_line_types));
+
+using object_number_values = enum_values<object_number>;
+
+object_number_values object_numbers[] =
+{
+    ENUM_VALUE(COLOR_DEFAULT, 0),
+    ENUM_VALUE(COLOR_NGNAME, 1),
+    ENUM_VALUE(COLOR_PLUS, 2),
+    ENUM_VALUE(COLOR_MINUS, 3),
+    ENUM_VALUE(COLOR_STAR, 4),
+    ENUM_VALUE(COLOR_HEADER, 5),
+    ENUM_VALUE(COLOR_SUBJECT, 6),
+    ENUM_VALUE(COLOR_TREE, 7),
+    ENUM_VALUE(COLOR_TREE_MARK, 8),
+    ENUM_VALUE(COLOR_MORE, 9),
+    ENUM_VALUE(COLOR_HEADING, 10),
+    ENUM_VALUE(COLOR_CMD, 11),
+    ENUM_VALUE(COLOR_MOUSE, 12),
+    ENUM_VALUE(COLOR_NOTICE, 13),
+    ENUM_VALUE(COLOR_SCORE, 14),
+    ENUM_VALUE(COLOR_ARTLINE1, 15),
+    ENUM_VALUE(COLOR_MIMESEP, 16),
+    ENUM_VALUE(COLOR_MIMEDESC, 17),
+    ENUM_VALUE(COLOR_CITEDTEXT, 18),
+    ENUM_VALUE(COLOR_BODYTEXT, 19),
+    ENUM_VALUE(MAX_COLORS, 20),
+};
+
+class ObjectNumbers : public testing::TestWithParam<object_number_values>
+{
+};
+
+TEST_P(ObjectNumbers, orderRelationships)
+{
+    const object_number_values param = GetParam();
+
+    ASSERT_EQ(param.value, param.type);
+}
+
+INSTANTIATE_TEST_SUITE_P(TestObjectNumbers, ObjectNumbers, testing::ValuesIn(object_numbers));
