@@ -6,45 +6,45 @@
 
 #include "mempool.h"
 
-/* types of header lines (if only C really believed in enums)
+
+/* types of header lines
  * (These must stay in alphabetic order at least in the first letter.
  * Within each letter it helps to arrange in increasing likelihood.)
  */
-
 enum header_line_type
 {
-    PAST_HEADER = 0,                   /* body */
-    SHOWN_LINE = PAST_HEADER + 1,      /* unrecognized but shown */
-    HIDDEN_LINE = SHOWN_LINE + 1,      /* unrecognized but hidden */
-    CUSTOM_LINE = HIDDEN_LINE + 1,     /* to isolate a custom line */
-    SOME_LINE = CUSTOM_LINE + 1,       /* default for unrecognized */
-    HEAD_FIRST = SOME_LINE,            /* first header line */
-    AUTHOR_LINE = SOME_LINE + 1,       /* Author */
-    BYTES_LINE = AUTHOR_LINE + 1,      /* Bytes */
-    CONTNAME_LINE = BYTES_LINE + 1,    /* Content-Name */
-    CONTDISP_LINE = CONTNAME_LINE + 1, /* Content-Disposition */
-    CONTLEN_LINE = CONTDISP_LINE + 1,  /* Content-Length */
-    CONTXFER_LINE = CONTLEN_LINE + 1,  /* Content-Transfer-Encoding */
-    CONTTYPE_LINE = CONTXFER_LINE + 1, /* Content-Type */
-    DIST_LINE = CONTTYPE_LINE + 1,     /* distribution */
-    DATE_LINE = DIST_LINE + 1,         /* date */
-    EXPIR_LINE = DATE_LINE + 1,        /* expires */
-    FOLLOW_LINE = EXPIR_LINE + 1,      /* followup-to */
-    FROM_LINE = FOLLOW_LINE + 1,       /* from */
-    INREPLY_LINE = FROM_LINE + 1,      /* in-reply-to */
-    KEYW_LINE = INREPLY_LINE + 1,      /* keywords */
-    LINES_LINE = KEYW_LINE + 1,        /* lines */
-    MIMEVER_LINE = LINES_LINE + 1,     /* mime-version */
-    MSGID_LINE = MIMEVER_LINE + 1,     /* message-id */
-    NGS_LINE = MSGID_LINE + 1,         /* newsgroups */
-    PATH_LINE = NGS_LINE + 1,          /* path */
-    RVER_LINE = PATH_LINE + 1,         /* relay-version */
-    REPLY_LINE = RVER_LINE + 1,        /* reply-to */
-    REFS_LINE = REPLY_LINE + 1,        /* references */
-    SUMRY_LINE = REFS_LINE + 1,        /* summary */
-    SUBJ_LINE = SUMRY_LINE + 1,        /* subject */
-    XREF_LINE = SUBJ_LINE + 1,         /* xref */
-    HEAD_LAST = XREF_LINE + 1,         /* total # of headers */
+    PAST_HEADER = 0,        /* body */
+    SHOWN_LINE,             /* unrecognized but shown */
+    HIDDEN_LINE,            /* unrecognized but hidden */
+    CUSTOM_LINE,            /* to isolate a custom line */
+    SOME_LINE,              /* default for unrecognized */
+    HEAD_FIRST = SOME_LINE, /* first header line */
+    AUTHOR_LINE,            /* Author */
+    BYTES_LINE,             /* Bytes */
+    CONTNAME_LINE,          /* Content-Name */
+    CONTDISP_LINE,          /* Content-Disposition */
+    CONTLEN_LINE,           /* Content-Length */
+    CONTXFER_LINE,          /* Content-Transfer-Encoding */
+    CONTTYPE_LINE,          /* Content-Type */
+    DIST_LINE,              /* distribution */
+    DATE_LINE,              /* date */
+    EXPIR_LINE,             /* expires */
+    FOLLOW_LINE,            /* followup-to */
+    FROM_LINE,              /* from */
+    INREPLY_LINE,           /* in-reply-to */
+    KEYW_LINE,              /* keywords */
+    LINES_LINE,             /* lines */
+    MIMEVER_LINE,           /* mime-version */
+    MSGID_LINE,             /* message-id */
+    NGS_LINE,               /* newsgroups */
+    PATH_LINE,              /* path */
+    RVER_LINE,              /* relay-version */
+    REPLY_LINE,             /* reply-to */
+    REFS_LINE,              /* references */
+    SUMRY_LINE,             /* summary */
+    SUBJ_LINE,              /* subject */
+    XREF_LINE,              /* xref */
+    HEAD_LAST,              /* total # of headers */
 };
 
 struct HEADTYPE

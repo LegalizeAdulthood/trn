@@ -229,7 +229,7 @@ static HASHENT **hashfind(HASHTABLE *tbl, const char *key, int keylen)
 	if (hp->he_keylen == keylen && !(*tbl->ht_cmp)(key, keylen, hp->he_data))
 	    break;
     }
-    /* assert: *(returned value) == hp */
+    /* TRN_ASSERT: *(returned value) == hp */
     return (prevhp == nullptr? hepp: &prevhp->he_next);
 }
 
