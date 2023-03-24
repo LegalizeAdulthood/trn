@@ -4,8 +4,22 @@
 #ifndef RT_OV_H
 #define RT_OV_H
 
+/* The usual order for the overview data fields. */
+enum ov_field_num
+{
+    OV_NUM = 0,
+    OV_SUBJ,
+    OV_FROM,
+    OV_DATE,
+    OV_MSGID,
+    OV_REFS,
+    OV_BYTES,
+    OV_LINES,
+    OV_XREF,
+    OV_MAX_FIELDS
+};
+
 bool ov_init();
-int ov_num(char *hdr, char *end);
 bool ov_data(ART_NUM first, ART_NUM last, bool cheating);
 void ov_close();
 char *ov_fieldname(int num);

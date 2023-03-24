@@ -28,20 +28,6 @@
 #include "rt-ov.h"
 
 
-/* The usual order for the overview data fields. */
-enum
-{
-    OV_NUM = 0,
-    OV_SUBJ,
-    OV_FROM,
-    OV_DATE,
-    OV_MSGID,
-    OV_REFS,
-    OV_BYTES,
-    OV_LINES,
-    OV_XREF
-};
-
 /* How many overview lines to read with one NNTP call */
 enum
 {
@@ -55,11 +41,12 @@ static int s_hdrnum[] = {
 
 static void ov_parse(char *line, ART_NUM artnum, bool remote);
 static const char *ov_name(const char *group);
+static ov_field_num ov_num(char *hdr, char *end);
 
 bool ov_init()
 {
     bool has_overview_fmt;
-    Uchar* fieldnum = g_datasrc->fieldnum;
+    ov_field_num *fieldnum = g_datasrc->fieldnum;
     Uchar* fieldflags = g_datasrc->fieldflags;
     g_datasrc->flags &= ~DF_TRY_OVERVIEW;
     if (!g_datasrc->over_dir) {
@@ -119,13 +106,13 @@ bool ov_init()
 		    break;
 	    }
 	    while (i < OV_MAX_FIELDS)
-		fieldnum[i++] = j;
+		fieldnum[i++] = static_cast<ov_field_num>(j);
 	}
     }
     else {
 	int i;
 	for (i = 0; i < OV_MAX_FIELDS; i++) {
-	    fieldnum[i] = i;
+	    fieldnum[i] = static_cast<ov_field_num>(i);
 	    fieldflags[i] = FF_HAS_FIELD;
 	}
 	fieldflags[OV_XREF] = FF_CHECK4FIELD | FF_CHECK4HDR;
@@ -134,7 +121,7 @@ bool ov_init()
     return true;
 }
 
-int ov_num(char *hdr, char *end)
+ov_field_num ov_num(char *hdr, char *end)
 {
     if (!end)
 	end = hdr + strlen(hdr);
@@ -158,7 +145,7 @@ int ov_num(char *hdr, char *end)
       case XREF_LINE:
 	return OV_XREF;
     }
-    return 0;
+    return OV_NUM;
 }
 
 /* Process the data in the group's news-overview file.
@@ -337,7 +324,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
     ARTICLE* article;
     int i;
     int fn;
-    Uchar* fieldnum = g_datasrc->fieldnum;
+    ov_field_num *fieldnum = g_datasrc->fieldnum;
     Uchar* fieldflags = g_datasrc->fieldflags;
     char* fields[OV_MAX_FIELDS];
     char* cp;

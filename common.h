@@ -64,7 +64,6 @@
 #define PUSHSIZE 256
 #define MAXFILENAME 512
 #define FINISHCMD 0177
-#define OV_MAX_FIELDS 9
 
 /* Things we can figure out ourselves */
 

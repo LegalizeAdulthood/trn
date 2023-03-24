@@ -5,6 +5,7 @@
 #define DATASRC_H
 
 #include "nntpclient.h"
+#include "rt-ov.h"
 
 struct SRCFILE
 {
@@ -34,7 +35,7 @@ struct DATASRC
     long	lastnewgrp;	/* time of last newgroup check */
     FILE*	ov_in;		/* the overview's file handle */
     time_t	ov_opened;	/* time overview file was opened */
-    Uchar	fieldnum[OV_MAX_FIELDS];
+    ov_field_num fieldnum[OV_MAX_FIELDS];
     Uchar	fieldflags[OV_MAX_FIELDS];
     int		flags;
 };
