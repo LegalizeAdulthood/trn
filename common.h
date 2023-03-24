@@ -57,13 +57,16 @@
 
 #include "typedef.h"
 
-#define BITSPERBYTE 8
-#define LBUFLEN 1024	/* line buffer length */
-			/* (don't worry, .newsrc lines can exceed this) */
-#define CBUFLEN 512	/* command buffer length */
-#define PUSHSIZE 256
-#define MAXFILENAME 512
-#define FINISHCMD 0177
+enum
+{
+    BITSPERBYTE = 8,
+    LBUFLEN = 1024, /* line buffer length */
+                    /* (don't worry, .newsrc lines can exceed this) */
+    CBUFLEN = 512,  /* command buffer length */
+    PUSHSIZE = 256,
+    MAXFILENAME = 512,
+    FINISHCMD = 0177
+};
 
 /* Things we can figure out ourselves */
 
@@ -203,9 +206,12 @@
 /* Space conservation section */
 
 /* To save D space, cut down size of MAXNGTODO and VARYSIZE. */
-#define MAXNGTODO 512	/* number of newsgroups allowed on command line */
-#define VARYSIZE 256	/* this makes a block 1024 bytes long in DECville */
-			/* (used by virtual array routines) */
+enum
+{
+    MAXNGTODO = 512, /* number of newsgroups allowed on command line */
+    VARYSIZE = 256   /* this makes a block 1024 bytes long in DECville */
+                     /* (used by virtual array routines) */
+};
 
 /* Undefine any of the following features to save both I and D space */
 /* In general, earlier ones are easier to get along without */
