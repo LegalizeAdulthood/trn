@@ -47,7 +47,6 @@ void rc_to_bits()
     char* s;
     char* c;
     char* h;
-    long i;
     ART_NUM unread;
     ARTICLE* ap;
 
@@ -55,7 +54,7 @@ void rc_to_bits()
 
     for (s = g_ngptr->rcline + g_ngptr->numoffset; *s == ' '; s++) ;
 					/* find numbers in rc line */
-    i = strlen(s);
+    long i = strlen(s);
 #ifndef lint
     if (i >= LBUFLEN-2)			/* bigger than g_buf? */
 	mybuf = safemalloc((MEM_SIZE)(i+2));
@@ -86,10 +85,10 @@ void rc_to_bits()
 #endif
     i = g_firstart;
     for ( ; (c = strchr(s,',')) != nullptr; s = ++c) {	/* for each range */
-	ART_NUM min, max;
+	ART_NUM max;
 	*c = '\0';			/* do not let index see past comma */
 	h = strchr(s,'-');
-	min = atol(s);
+	ART_NUM min = atol(s);
 	if (min < g_firstart)		/* make sure range is in range */
 	    min = g_firstart;
 	if (min > g_lastart)
@@ -172,15 +171,14 @@ bool set_firstart(const char *s)
 
 void bits_to_rc()
 {
-    char* s;
     char* mybuf = g_buf;
     ART_NUM i;
     ART_NUM count=0;
     int safelen = LBUFLEN - 32;
 
-    strcpy(g_buf,g_ngptr->rcline);		/* start with the newsgroup name */
-    s = g_buf + g_ngptr->numoffset - 1;	/* use s for buffer pointer */
-    *s++ = g_ngptr->subscribechar;		/* put the requisite : or !*/
+    strcpy(g_buf,g_ngptr->rcline);            /* start with the newsgroup name */
+    char *s = g_buf + g_ngptr->numoffset - 1; /* use s for buffer pointer */
+    *s++ = g_ngptr->subscribechar;            /* put the requisite : or !*/
     for (i = article_first(g_absfirst); i <= g_lastart; i = article_next(i)) {
 	if (article_unread(i))
 	    break;
@@ -206,11 +204,10 @@ void bits_to_rc()
 	if (!was_read(i))		/* still unread? */
 	    count++;			/* then count it */
 	else {				/* article was read */
-	    ART_NUM oldi;
 
-	    sprintf(s,"%ld",(long)i);	/* put out the min of the range */
-	    s += strlen(s);		/* keeping house */
-	    oldi = i;			/* remember this spot */
+            sprintf(s,"%ld",(long)i); /* put out the min of the range */
+	    s += strlen(s);           /* keeping house */
+	    ART_NUM oldi = i;         /* remember this spot */
 	    do i++; while (i <= g_lastart && was_read(i));
 					/* find 1st unread article or end */
 	    i--;			/* backup to last read article */
@@ -478,10 +475,9 @@ void mark_as_read(ARTICLE *ap)
 
 void mark_missing_articles()
 {
-    ARTICLE* ap;
-    for (ap = article_ptr(article_first(g_absfirst));
-	 ap && article_num(ap) <= g_lastart;
-	 ap = article_nextp(ap))
+    for (ARTICLE *ap = article_ptr(article_first(g_absfirst));
+         ap && article_num(ap) <= g_lastart;
+         ap = article_nextp(ap))
     {
 	if (!(ap->flags & AF_EXISTS))
 	    onemissing(ap);
@@ -571,7 +567,7 @@ static int chase_xref(ART_NUM artnum, int markread)
 {
     char* xartnum;
     ART_NUM x;
-    char* xref_buf, *curxref;
+    char *curxref;
     char tmpbuf[128];
 
     if (g_datasrc->flags & DF_NOXREFS)
@@ -592,7 +588,7 @@ static int chase_xref(ART_NUM artnum, int markread)
 	fflush(stdout);
     }
 
-    xref_buf = fetchcache(artnum, XREF_LINE, FILL_CACHE);
+    char *xref_buf = fetchcache(artnum, XREF_LINE, FILL_CACHE);
     if (!xref_buf || !*xref_buf)
 	return 0;
 

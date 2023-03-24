@@ -99,14 +99,12 @@ void art_init()
 do_article_result do_article()
 {
     char* s;
-    bool hide_this_line = false;	/* hidden header line? */
-    bool restart_color;
-    ART_LINE linenum;			/* line # on page, 1 origin */
-    bool under_lining = false;		/* are we underlining a word? */
-    char* bufptr = g_art_line;	/* pointer to input buffer */
-    int outpos;		/* column position of output */
-    static char prompt_buf[64];		/* place to hold prompt */
-    bool notesfiles = false;		/* might there be notesfiles junk? */
+    bool hide_this_line = false; /* hidden header line? */
+    bool under_lining = false;   /* are we underlining a word? */
+    char* bufptr = g_art_line;   /* pointer to input buffer */
+    int outpos;                  /* column position of output */
+    static char prompt_buf[64];  /* place to hold prompt */
+    bool notesfiles = false;     /* might there be notesfiles junk? */
     char oldmode = g_mode;
     bool outputok = true;
 
@@ -160,7 +158,7 @@ do_article_result do_article()
 	    g_do_fseek = false;
 	    s_restart = 0;
 	}
-	linenum = 1;
+	ART_LINE linenum = 1;
 #if 0 /* This causes a bug (headers displayed twice sometimes when you press v then ^R) */
 	if (!g_do_hiding)
 	    g_is_mime = false;
@@ -171,10 +169,9 @@ do_article_result do_article()
 		linenum += tree_puts(g_art_line,linenum+g_topline,0);
 	    } else {
 		ART_NUM i;
-		int selected, unseen;
 
-		selected = (g_curr_artp->flags & AF_SEL);
-		unseen = article_unread(g_art)? 1 : 0;
+                int selected = (g_curr_artp->flags & AF_SEL);
+		int unseen = article_unread(g_art) ? 1 : 0;
 		sprintf(g_art_line,"%s%s #%ld",g_ngname,g_moderated,(long)g_art);
 		if (g_selected_only) {
 		    i = g_selected_count - (unseen && selected);
@@ -199,7 +196,7 @@ do_article_result do_article()
 	    g_artpos = 0;
 	    vwtary(g_artline,g_artpos);	/* remember pos in file */
 	}
-	for (restart_color = true;			/* linenum already set */
+	for (bool restart_color = true;			/* linenum already set */
 	  g_innersearch? (g_in_header || innermore())
 	   : s_special? (linenum < s_slines)
 	   : (s_firstpage && !g_in_header)? (linenum < g_initlines)
@@ -673,11 +670,10 @@ page_switch_result page_switch()
 	return PS_ASK;
       case Ctl('i'): {
 	ART_LINE i = g_artline;
-	ART_POS pos;
-	g_gline = 3;
+        g_gline = 3;
 	s = LINE_PTR(s_alinebeg);
 	while (AT_NL(*s) && i >= g_topline) {
-	    pos = vrdary(--i);
+	    ART_POS pos = vrdary(--i);
 	    if (pos < 0)
 		pos = -pos;
 	    if (pos < g_htype[PAST_HEADER].minpos)
@@ -838,11 +834,10 @@ page_switch_result page_switch()
 	if (g_topline < 0)
 	    break;
 	if (*g_tc_IL && *g_tc_HO) {
-	    ART_POS pos;
-	    home_cursor();
+            home_cursor();
 	    insert_line();
 	    carriage_return();
-	    pos = vrdary(g_topline-1);
+	    ART_POS pos = vrdary(g_topline - 1);
 	    if (pos < 0)
 		pos = -pos;
 	    if (pos >= g_htype[PAST_HEADER].minpos) {
@@ -1097,7 +1092,6 @@ bool innermore()
  */
 void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 {
-    ARTICLE* ap;
 
     if (check_mousebar(btn, x,y, btn_clk, x_clk,y_clk))
 	return;
@@ -1105,7 +1099,7 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
     if (btn != 3)
 	return;
 
-    ap = get_tree_artp(x_clk,y_clk+g_topline+1+g_term_scrolled);
+    ARTICLE *ap = get_tree_artp(x_clk, y_clk + g_topline + 1 + g_term_scrolled);
     if (ap && ap != get_tree_artp(x,y+g_topline+1+g_term_scrolled))
 	return;
 

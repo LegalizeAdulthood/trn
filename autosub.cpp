@@ -29,11 +29,9 @@ bool matchlist(char *patlist, char *s)
 {
     COMPEX ilcompex;
     char* p;
-    char* err;
-    bool result;
     bool tmpresult;
 
-    result = false;
+    bool result = false;
     init_compex(&ilcompex);
     while(patlist && *patlist) {
 	if (*patlist == '!') {
@@ -45,7 +43,7 @@ bool matchlist(char *patlist, char *s)
 	if ((p = strchr(patlist, ',')) != nullptr)
 	    *p = '\0';
         /* compile regular expression */
-	err = ng_comp(&ilcompex,patlist,true,true);
+	char *err = ng_comp(&ilcompex, patlist, true, true);
 	if (p)
 	    *p++ = ',';
 

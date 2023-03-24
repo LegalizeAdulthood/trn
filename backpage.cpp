@@ -12,20 +12,13 @@
 #include <io.h>
 #endif
 
-namespace
-{
-
-int s_varyfd{0};             /* virtual array file for storing  file offsets */
-ART_POS s_varybuf[VARYSIZE]; /* current window onto virtual array */
-long s_oldoffset{-1};        /* offset to block currently in window */
-
-} // namespace
+static int s_varyfd{0};             /* virtual array file for storing  file offsets */
+static ART_POS s_varybuf[VARYSIZE]; /* current window onto virtual array */
+static long s_oldoffset{-1};        /* offset to block currently in window */
 
 void backpage_init()
 {
-    char* varyname;
-    
-    varyname = filexp(VARYNAME);
+    char *varyname = filexp(VARYNAME);
     close(creat(varyname,0600));
     s_varyfd = open(varyname,2);
     remove(varyname);

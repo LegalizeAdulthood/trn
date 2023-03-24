@@ -69,7 +69,6 @@ void addng_init()
 
 bool find_new_groups()
 {
-    NEWSRC* rp;
     NG_NUM oldcnt = g_newsgroup_cnt;	/* remember # newsgroups */
 
     /* Skip this check if the -q flag was given. */
@@ -77,7 +76,7 @@ bool find_new_groups()
 	return false
 	;
 
-    for (rp = g_multirc->first; rp; rp = rp->next) {
+    for (NEWSRC *rp = g_multirc->first; rp; rp = rp->next) {
 	if (ALLBITS(rp->flags, RF_ADD_NEWGROUPS | RF_ACTIVE)) {
 	    if (rp->datasrc->flags & DF_REMOTE)
 		new_nntp_groups(rp->datasrc);
@@ -95,7 +94,6 @@ bool find_new_groups()
 static void process_list(int flag)
 {
     ADDGROUP* node;
-    ADDGROUP* prevnode;
 
     if (!flag) {
 	sprintf(g_cmd_buf,"\nUnsubscribed but mentioned in your current newsrc%s:\n",
@@ -111,7 +109,7 @@ static void process_list(int flag)
 	}
 	else if (!g_use_add_selector)
 	    get_ng(node->name,flag);	/* add newsgroup -- maybe */
-	prevnode = node;
+	ADDGROUP *prevnode = node;
 	node = node->next;
 	free((char*)prevnode);
     }
@@ -124,22 +122,20 @@ static void new_nntp_groups(DATASRC *dp)
 {
     char* s;
     int len;
-    time_t server_time;
     NGDATA* np;
     bool foundSomething = false;
     long high, low;
-    HASHTABLE* newngs;
 
     set_datasrc(dp);
 
-    server_time = nntp_time();
+    time_t server_time = nntp_time();
     if (server_time == -2)
 	return; /*$$*/
     if (nntp_newgroups(dp->lastnewgrp) < 1) { /*$$*/
 	printf("Can't get new groups from server:\n%s\n", g_ser_line);
 	return;
     }
-    newngs = hashcreate(33, addng_cmp);
+    HASHTABLE *newngs = hashcreate(33, addng_cmp);
 
     while (true) {
 	high = 0, low = 1;
@@ -192,12 +188,10 @@ static void new_nntp_groups(DATASRC *dp)
 static void new_local_groups(DATASRC *dp)
 {
     char* s;
-    time_t lastone;
     NGDATA* np;
     char tmpbuf[LBUFLEN];
     long high, low;
     char ch;
-    HASHTABLE* newngs;
 
     g_datasrc = dp;
 
@@ -212,8 +206,8 @@ static void new_local_groups(DATASRC *dp)
 	termdown(1);
 	return;
     }
-    lastone = time((time_t*)nullptr) - 24L * 60 * 60 - 1;
-    newngs = hashcreate(33, addng_cmp);
+    time_t lastone = time((time_t*)nullptr) - 24L * 60 * 60 - 1;
+    HASHTABLE *newngs = hashcreate(33, addng_cmp);
 
     while (fgets(g_buf,LBUFLEN,g_tmpfp) != nullptr) {
 	if ((s = strchr(g_buf, ' ')) == nullptr
@@ -241,11 +235,10 @@ static void new_local_groups(DATASRC *dp)
 static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch)
 {
     HASHDATUM data;
-    ADDGROUP* node;
     unsigned namelen = strlen(name);
     
     data.dat_len = namelen + sizeof (ADDGROUP);
-    node = (ADDGROUP*)safemalloc(data.dat_len);
+    ADDGROUP *node = (ADDGROUP*)safemalloc(data.dat_len);
     data.dat_ptr = (char *)node;
     switch (ch) {
       case ':':
@@ -302,13 +295,12 @@ static void add_to_list(const char *name, int toread, char_int ch)
 
 bool scanactive(bool add_matching)
 {
-    DATASRC* dp;
     NG_NUM oldcnt = g_newsgroup_cnt;	/* remember # of newsgroups */
 
     if (!add_matching)
 	print_lines("Completely unsubscribed newsgroups:\n", STANDOUT);
 
-    for (dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp)) {
+    for (DATASRC *dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp)) {
 	if (!(dp->flags & DF_OPEN))
 	    continue;
 	set_datasrc(dp);
@@ -407,7 +399,6 @@ void sort_addgroups()
     ADDGROUP* ap;
     int i;
     ADDGROUP** lp;
-    ADDGROUP** ag_list;
     int (*sort_procedure)(const ADDGROUP**, const ADDGROUP**);
 
     switch (g_sel_sort) {
@@ -423,7 +414,7 @@ void sort_addgroups()
 	break;
     }
 
-    ag_list = (ADDGROUP**)safemalloc(s_addgroup_cnt * sizeof(ADDGROUP*));
+    ADDGROUP **ag_list = (ADDGROUP**)safemalloc(s_addgroup_cnt * sizeof(ADDGROUP*));
     for (lp = ag_list, ap = g_first_addgroup; ap; ap = ap->next)
 	*lp++ = ap;
     TRN_ASSERT(lp - ag_list == s_addgroup_cnt);
