@@ -62,7 +62,7 @@ bool g_multimedia_mime{}; /* images/audio to see/hear? */
 bool g_rotate{};          /* has rotation been requested? */
 char *g_prompt;           /* pointer to current prompt */
 char *g_firstline{};      /* s_special first line? */
-char *g_hideline{};       /* custom line hiding? */
+const char *g_hideline{};       /* custom line hiding? */
 const char *g_pagestop{}; /* custom page terminator? */
 COMPEX g_hide_compex{};
 COMPEX g_page_compex{};
