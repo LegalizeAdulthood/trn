@@ -8,7 +8,7 @@
 
 #include "help.h"
 
-enum
+enum univ_item_type
 {
     UN_NONE = 0,          //
     UN_TXT = 1,           /* textual placeholder */
@@ -100,12 +100,12 @@ struct UNIV_ITEM
 {
     UNIV_ITEM* next;
     UNIV_ITEM* prev;
-    int num;				/* natural order (for sort) */
-    int flags;				/* for selector */
-    int type;				/* what kind of object is it? */
-    char* desc;				/* default description */
+    int num;                            /* natural order (for sort) */
+    int flags;                          /* for selector */
+    univ_item_type type;                /* what kind of object is it? */
+    char *desc;                         /* default description */
     int score;
-    UNIV_DATA data;			/* describes the object */
+    UNIV_DATA data;                     /* describes the object */
 };
 
 extern int g_univ_ever_init;      /* have we ever been initialized? */
@@ -134,7 +134,7 @@ void univ_init();
 void univ_startup();
 void univ_open();
 void univ_close();
-UNIV_ITEM *univ_add(int type, const char *desc);
+UNIV_ITEM *univ_add(univ_item_type type, const char *desc);
 char *univ_desc_line(UNIV_ITEM *ui, int linenum);
 void univ_add_text(const char *txt);
 void univ_add_debug(const char *desc, const char *txt);
