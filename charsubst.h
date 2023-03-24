@@ -18,7 +18,7 @@
 extern char* g_charsets;
 extern char* g_charsubst;
 
-#define HEADER_CONV() (*g_charsubst=='a' || *g_charsubst=='m'? *g_charsubst : '\0')
+#define HEADER_CONV() (g_charsubst[0]=='a' || g_charsubst[0]=='m'? g_charsubst[0] : '\0')
 
 int putsubstchar(int c, int limit, bool outputok);
 const char *current_charsubst();
