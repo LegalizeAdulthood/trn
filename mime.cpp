@@ -277,7 +277,7 @@ int mime_Exec(char *cmd)
     }
     *t = '\0';
 
-    return doshell(g_sh, g_cmd_buf);
+    return doshell(SH, g_cmd_buf);
 }
 
 void mime_InitSections()

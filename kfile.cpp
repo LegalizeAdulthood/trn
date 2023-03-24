@@ -615,12 +615,12 @@ void edit_kfile()
 	strcpy(g_buf,filexp(get_val("KILLGLOBAL",s_killglobal)));
     if (!makedir(g_buf, MD_FILE)) {
 	sprintf(g_cmd_buf,"%s %s",
-	    filexp(get_val("VISUAL",get_val("EDITOR",g_defeditor))),g_buf);
+	    filexp(get_val("VISUAL",get_val("EDITOR",DEFEDITOR))),g_buf);
 	printf("\nEditing %s KILL file:\n%s\n",
 	    (g_in_ng?"local":"global"),g_cmd_buf) FLUSH;
 	termdown(3);
 	resetty();			/* make sure tty is friendly */
-        doshell(g_sh, g_cmd_buf);       /* invoke the shell */
+        doshell(SH, g_cmd_buf);       /* invoke the shell */
 	noecho();			/* and make terminal */
 	crmode();			/*   unfriendly again */
 	open_kfile(g_in_ng);

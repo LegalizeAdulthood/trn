@@ -756,19 +756,16 @@ extern FILE *g_tmpfp; /* scratch fp used for .rnlock, .rnlast, etc. */
 
 /* Factored strings */
 
-extern char g_sh[];
-extern char g_defeditor[];
-extern char g_hforhelp[];
+extern const char *g_hforhelp;
 #ifdef STRICTCR
 extern char g_badcr[];
 #endif
-extern char g_readerr[];
-extern char g_unsubto[];
-extern char g_cantopen[];
-extern char g_cantcreate[];
-extern char g_cantrecreate[];
-
-extern char g_nocd[];
+extern const char *g_readerr;
+extern const char *g_unsubto;
+extern const char *g_cantopen;
+extern const char *g_cantcreate;
+extern const char *g_cantrecreate;
+extern const char *g_nocd;
 
 #ifdef NOLINEBUF
 #define FLUSH ,fflush(stdout)

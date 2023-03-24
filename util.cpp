@@ -453,7 +453,7 @@ bool makedir(char *dirname, makedir_name_type nametype)
 # ifdef HAS_MKDIR
     return status;
 # else
-    return tbptr == tmpbuf + 5 ? false : doshell(g_sh, tmpbuf) != 0; /* exercise our faith */
+    return tbptr == tmpbuf + 5 ? false : doshell(SH, tmpbuf) != 0; /* exercise our faith */
 # endif
 }
 
@@ -520,16 +520,16 @@ void verify_sig()
 
     printf("\n");
     /* RIPEM */
-    i = doshell(g_sh,filexp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
+    i = doshell(SH,filexp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
     if (!i) {	/* found RIPEM */
-	i = doshell(g_sh,filexp(get_val("VERIFY_RIPEM",VERIFY_RIPEM)));
+	i = doshell(SH,filexp(get_val("VERIFY_RIPEM",VERIFY_RIPEM)));
 	printf("\nReturned value: %d\n",i) FLUSH;
 	return;
     }
     /* PGP */
-    i = doshell(g_sh,filexp("grep -s \"BEGIN PGP\" %A"));
+    i = doshell(SH,filexp("grep -s \"BEGIN PGP\" %A"));
     if (!i) {	/* found PGP */
-	i = doshell(g_sh,filexp(get_val("VERIFY_PGP",VERIFY_PGP)));
+	i = doshell(SH,filexp(get_val("VERIFY_PGP",VERIFY_PGP)));
 	printf("\nReturned value: %d\n",i) FLUSH;
 	return;
     }
@@ -923,11 +923,11 @@ int edit_file(char *fname)
 
     /* XXX paranoia check on length */
     sprintf(g_cmd_buf,"%s ",
-	    filexp(get_val("VISUAL",get_val("EDITOR",g_defeditor))));
+	    filexp(get_val("VISUAL",get_val("EDITOR",DEFEDITOR))));
     strcat(g_cmd_buf, filexp(fname));
     termdown(3);
     resetty();			/* make sure tty is friendly */
-    r = doshell(g_sh,g_cmd_buf);/* invoke the shell */
+    r = doshell(SH,g_cmd_buf);/* invoke the shell */
     noecho();			/* and make terminal */
     crmode();			/*   unfriendly again */
     return r;

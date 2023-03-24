@@ -772,7 +772,7 @@ int help_scanart()
     int cmd;
 #ifdef UNDEF
 /* implement this later? */
-    doshell(g_sh,filexp(SAHELP));
+    doshell(SH,filexp(SAHELP));
 #else
     page_start();
     if ((cmd = print_lines("\

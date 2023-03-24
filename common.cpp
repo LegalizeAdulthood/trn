@@ -115,17 +115,15 @@ FILE *g_tmpfp{}; /* scratch fp used for .rnlock, .rnlast, etc. */
 
 /* Factored strings */
 
-char g_sh[]{SH};
-char g_defeditor[]{DEFEDITOR};
-char g_hforhelp[]{"Type h for help.\n"};
+const char *g_hforhelp{"Type h for help.\n"};
 #ifdef STRICTCR
 char g_badcr[]{"\nUnnecessary CR ignored.\n"};
 #endif
-char g_readerr[]{"rn read error"};
-char g_unsubto[]{"Unsubscribed to newsgroup %s\n"};
-char g_cantopen[]{"Can't open %s\n"};
-char g_cantcreate[]{"Can't create %s\n"};
-char g_cantrecreate[]{"Can't recreate %s -- restoring older version.\n"
+const char *g_readerr{"rn read error"};
+const char *g_unsubto{"Unsubscribed to newsgroup %s\n"};
+const char *g_cantopen{"Can't open %s\n"};
+const char *g_cantcreate{"Can't create %s\n"};
+const char *g_cantrecreate{"Can't recreate %s -- restoring older version.\n"
                     "Perhaps you are near or over quota?\n"};
 
-char g_nocd[]{"Can't chdir to directory %s\n"};
+const char *g_nocd{"Can't chdir to directory %s\n"};

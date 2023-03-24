@@ -254,7 +254,7 @@ save_result save_article()
 	    doshell(nullptr,g_cmd_buf);
 				/* do command with it */
 	else
-	    doshell(g_sh,g_cmd_buf);	/* do command with sh */
+	    doshell(SH,g_cmd_buf);	/* do command with sh */
 	noecho();		/* and stop echoing */
 	crmode();		/* and start cbreaking */
 	termlib_init();
@@ -544,7 +544,7 @@ int cancel_article()
 	fputs("\nCanceling...\n",stdout) FLUSH;
 	termdown(2);
 	g_export_nntp_fds = true;
-	r = doshell(g_sh,filexp(get_val("CANCEL",CALL_INEWS)));
+	r = doshell(SH,filexp(get_val("CANCEL",CALL_INEWS)));
 	g_export_nntp_fds = false;
     }
 done:
@@ -892,7 +892,7 @@ int invoke(char *cmd, char *dir)
     set_mode(g_general_mode,'x');
     termlib_reset();
     resetty();			/* make terminal well-behaved */
-    ret = doshell(g_sh,cmd);	/* do the command */
+    ret = doshell(SH,cmd);	/* do the command */
     noecho();			/* set no echo */
     crmode();			/* and cbreak mode */
     termlib_init();
