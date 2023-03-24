@@ -73,7 +73,6 @@ int g_ngnlen{};     /* current malloced size of g_ngname */
 int g_ngname_len{}; /* length of current g_ngname */
 char *g_ngdir{};    /* same thing in directory name form */
 int g_ngdlen{};     /* current malloced size of g_ngdir */
-int g_ing_state{};
 bool g_write_less{};      /* write .newsrc less often */
 char *g_auto_start_cmd{}; /* command to auto-start with */
 bool g_auto_started{};    /* have we auto-started? */
@@ -350,7 +349,6 @@ input_newsgroup_result input_newsgroup()
 {
     char* s;
 
-    g_ing_state = INGS_DIRTY;
     eat_typeahead();
     getcmd(g_buf);
     if (errno || *g_buf == '\f') {
@@ -373,7 +371,6 @@ input_newsgroup_result input_newsgroup()
 	else if (g_ngptr != g_first_ng)
 	    g_ngptr = g_ngptr->prev;
 	s_go_forward = false;	/* go backward in the newsrc */
-	g_ing_state = INGS_CLEAN;
 	if (*g_buf == 'P')
 	    return ING_SPECIAL;
 	break;
@@ -403,7 +400,6 @@ input_newsgroup_result input_newsgroup()
 	if (g_general_mode != 's')
 	    newline();
 	g_ngptr = g_first_ng;
-	g_ing_state = INGS_CLEAN;
 	break;
       case 'N':			/* goto next newsgroup */
       case 'n':			/* find next unread newsgroup */
@@ -412,17 +408,14 @@ input_newsgroup_result input_newsgroup()
 	    return ING_BREAK;
 	}
 	g_ngptr = g_ngptr->next;
-	g_ing_state = INGS_CLEAN;
 	if (*g_buf == 'N')
 	    return ING_SPECIAL;
 	break;
       case '1':			/* goto 1st newsgroup */
 	g_ngptr = g_first_ng;
-	g_ing_state = INGS_CLEAN;
 	return ING_SPECIAL;
       case '$':
 	g_ngptr = nullptr;		/* go past last newsgroup */
-	g_ing_state = INGS_CLEAN;
 	break;
       case 'L':
 	list_newsgroups();

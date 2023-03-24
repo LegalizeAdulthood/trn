@@ -20,18 +20,11 @@ enum input_newsgroup_result
     ING_MESSAGE
 };
 
-enum
-{
-    INGS_CLEAN = 0,
-    INGS_DIRTY = 1
-};
-
 extern char *g_ngname;   /* name of current newsgroup */
 extern int g_ngnlen;     /* current malloced size of g_ngname */
 extern int g_ngname_len; /* length of current g_ngname */
 extern char *g_ngdir;    /* same thing in directory name form */
 extern int g_ngdlen;     /* current malloced size of g_ngdir */
-extern int g_ing_state;
 extern bool g_write_less;      /* write .newsrc less often */
 extern char *g_auto_start_cmd; /* command to auto-start with */
 extern bool g_auto_started;    /* have we auto-started? */
