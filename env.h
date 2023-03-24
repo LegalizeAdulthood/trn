@@ -9,7 +9,7 @@ extern char *g_dot_dir;     /* where . files go */
 extern char *g_trn_dir;     /* usually %./.trn */
 extern char *g_lib;         /* news library */
 extern char *g_rn_lib;      /* private news program library */
-extern char *g_tmp_dir;     /* where tmp files go */
+extern const char *g_tmp_dir; /* where tmp files go */
 extern char *g_login_name;  /* login id of user */
 extern char *g_real_name;   /* real name of user */
 extern char *g_p_host_name; /* host name in a posting */

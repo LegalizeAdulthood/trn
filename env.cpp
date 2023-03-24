@@ -29,7 +29,7 @@ char *g_dot_dir{};     /* where . files go */
 char *g_trn_dir{};     /* usually %./.trn */
 char *g_lib{};         /* news library */
 char *g_rn_lib{};      /* private news program library */
-char *g_tmp_dir{};     /* where tmp files go */
+const char *g_tmp_dir{}; /* where tmp files go */
 char *g_login_name{};  /* login id of user */
 char *g_real_name{};   /* real name of user */
 char *g_p_host_name{}; /* host name in a posting */

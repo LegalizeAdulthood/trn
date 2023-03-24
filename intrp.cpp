@@ -849,7 +849,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    }
 		    break;
 		case 'Y':
-		    s = g_tmp_dir;
+		    from_buf = savestr(g_tmp_dir);
+		    s = from_buf;
 		    break;
 		case 'z':
 		    if (!g_in_ng) {
