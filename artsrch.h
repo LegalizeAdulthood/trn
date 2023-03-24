@@ -34,7 +34,7 @@ extern char *g_lastpat;         /* last search pattern */
 extern COMPEX g_sub_compex;     /* last compiled subject search */
 extern COMPEX g_art_compex;     /* last compiled normal search */
 extern COMPEX *g_bra_compex;    /* current compex with brackets */
-extern char g_scopestr[];       //
+extern const char *g_scopestr;  //
 extern art_scope g_art_howmuch; /* search scope */
 extern int g_art_srchhdr;       /* specific header number to search */
 extern bool g_art_doread;       /* search read articles? */

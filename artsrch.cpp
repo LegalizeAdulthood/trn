@@ -26,7 +26,7 @@ char *g_lastpat{""};                 /* last search pattern */
 COMPEX g_sub_compex{};               /* last compiled subject search */
 COMPEX g_art_compex{};               /* last compiled normal search */
 COMPEX *g_bra_compex{&g_art_compex}; /* current compex with brackets */
-char g_scopestr[]{"sfHhbBa"};        //
+const char *g_scopestr{"sfHhbBa"};   //
 art_scope g_art_howmuch{};           /* search scope */
 int g_art_srchhdr{};                 /* specific header number to search */
 bool g_art_doread{};                 /* search read articles? */
