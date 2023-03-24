@@ -15,7 +15,7 @@ extern bool g_rotate;          /* has rotation been requested? */
 extern char *g_prompt;         /* pointer to current prompt */
 extern char *g_firstline;      /* special first line? */
 extern char *g_hideline;       /* custom line hiding? */
-extern char *g_pagestop;       /* custom page terminator? */
+extern const char *g_pagestop; /* custom page terminator? */
 extern COMPEX g_hide_compex;
 extern COMPEX g_page_compex;
 
