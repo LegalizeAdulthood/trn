@@ -2354,7 +2354,7 @@ q does nothing.\n\n\
 	return DS_QUIT;
       default: {
 	SEL_UNION u;
-	int ret;
+	input_newsgroup_result ret;
 	bool was_at_top = !g_sel_prior_obj_cnt;
 	PUSH_SELECTOR();
 	if (!(s_removed_prompt & 2)) {

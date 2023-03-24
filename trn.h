@@ -4,20 +4,20 @@
 #ifndef TRN_H
 #define TRN_H
 
-enum
+enum input_newsgroup_result
 {
     ING_NORM = 0,
-    ING_ASK = 1,
-    ING_INPUT = 2,
-    ING_ERASE = 3,
-    ING_QUIT = 4,
-    ING_ERROR = 5,
-    ING_SPECIAL = 6,
-    ING_BREAK = 7,
-    ING_RESTART = 8,
-    ING_NOSERVER = 9,
-    ING_DISPLAY = 10,
-    ING_MESSAGE = 11
+    ING_ASK,
+    ING_INPUT,
+    ING_ERASE,
+    ING_QUIT,
+    ING_ERROR,
+    ING_SPECIAL,
+    ING_BREAK,
+    ING_RESTART,
+    ING_NOSERVER,
+    ING_DISPLAY,
+    ING_MESSAGE
 };
 
 enum
@@ -40,7 +40,7 @@ extern char g_patchlevel[];
 
 void trn_init();
 void do_multirc();
-int input_newsgroup();
+input_newsgroup_result input_newsgroup();
 void check_active_refetch(bool force);
 void trn_version();
 void set_ngname(const char *what);
