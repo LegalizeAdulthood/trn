@@ -44,12 +44,12 @@ long g_s_flags{};          /* misc. flags */
 int g_s_num_contexts{};
 SCONTEXT *g_s_contexts{}; /* array of context structures */
 int g_s_cur_context{};    /* current context number */
-int g_s_cur_type{};       /* current context type (for fast switching) */
+scontext_type g_s_cur_type{};       /* current context type (for fast switching) */
 /* options */
 int g_s_itemnum{true}; /* show item numbers by default */
 int g_s_mode_vi{};
 
-void s_init_context(int cnum, int type)
+void s_init_context(int cnum, scontext_type type)
 {
     SCONTEXT*p;
     int i;
@@ -96,13 +96,13 @@ void s_init_context(int cnum, int type)
 /* allocate a new context number and initialize it */
 /* returns context number */
 //int type;			/* context type */
-int s_new_context(int type)
+int s_new_context(scontext_type type)
 {
     int i;
 
     /* check for deleted contexts */
     for (i = 0; i < g_s_num_contexts; i++)
-	if (g_s_contexts[i].type == 0)	/* deleted context */
+	if (g_s_contexts[i].type == S_NONE)	/* deleted context */
 	    break;
     if (i < g_s_num_contexts) {	/* a deleted one was found */
 	s_init_context(i,type);
@@ -215,5 +215,5 @@ void s_delete_context(int cnum)
     }
     s_order_clean();
     /* mark the context as empty */
-    g_s_contexts[cnum].type = 0;
+    g_s_contexts[cnum].type = S_NONE;
 }
