@@ -129,7 +129,7 @@ save_result save_article()
 	}
 	custom_extract = (cmdstr != 0);
 
-	if (FILE_REF(s) != '/') {	/* relative path? */
+	if (!FILE_REF(s)) {	/* relative path? */
 	    c = (s==g_buf ? altbuf : g_buf);
 	    interp(c, (sizeof g_buf), get_val("SAVEDIR",SAVEDIR));
 	    if (makedir(c,MD_DIR))	/* ensure directory exists */
@@ -141,7 +141,7 @@ save_result save_article()
 	    }
 	    s = (s==g_buf ? altbuf : g_buf);
 	}
-	if (FILE_REF(s) != '/') {	/* path still relative? */
+	if (!FILE_REF(s)) {	/* path still relative? */
 	    c = (s==g_buf ? altbuf : g_buf);
 	    sprintf(c, "%s/%s", g_cwd, s);
 	    s = c;			/* absolutize it */
@@ -298,7 +298,7 @@ save_result save_article()
 				/* generate a default name somehow or other */
 	}
 	makedir(s,MD_FILE);
-	if (FILE_REF(s) != '/') {	/* relative path? */
+	if (!FILE_REF(s)) {	/* relative path? */
 	    c = (s==g_buf ? altbuf : g_buf);
 	    sprintf(c, "%s/%s", g_cwd, s);
 	    s = c;			/* absolutize it */

@@ -44,7 +44,11 @@ using char_int = int;
 #define Ctl(ch) (ch & 037)
 
 #ifndef FILE_REF
-#   define FILE_REF(s) (*(s) == '/' ? '/' : 0)
+inline bool file_ref(const char *s)
+{
+    return s[0] == '/';
+}
+#   define FILE_REF(s) file_ref(s)
 #endif
 
 /* how to open binary format files */

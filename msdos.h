@@ -1,16 +1,18 @@
 /* msdos.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef MSDOS_H
+#define MSDOS_H
 
-
-//#include <io.h>
-//#include <dos.h>
-//#include <dir.h>
-//#include <conio.h>
-//#include <process.h>
+#include <ctype.h>
 #include <stdio.h>
 
-#define FILE_REF(s) (*(s)=='/'?'/':(isalpha(*s)&&(s)[1]==':'?(s)[2]:0))
+inline bool file_ref(const char *s)
+{
+    return s[0] == '/' || (isalpha(s[0]) && s[1] == ':');
+}
+
+#define FILE_REF(s) file_ref(s)
 
 #define FOPEN_RB "rb"
 #define FOPEN_WB "wb"
@@ -35,3 +37,5 @@
 #define LAX_INEWS
 
 #define sleep(secs_) _sleep(secs_)
+
+#endif
