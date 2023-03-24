@@ -74,11 +74,14 @@ enum
 #define datasrc_first() ((DATASRC*)listnum2listitem(g_datasrc_list,0L))
 #define datasrc_next(p) ((DATASRC*)next_listitem(g_datasrc_list,(char*)(p)))
 
-#define LENGTH_HACK 5	/* Don't bother comparing strings with lengths
-			 * that differ by more than this. */
-#define MAX_NG 9	/* Maximum number of groups to offer. */
+enum
+{
+    LENGTH_HACK = 5, /* Don't bother comparing strings with lengths
+                      * that differ by more than this. */
+    MAX_NG = 9,      /* Maximum number of groups to offer. */
 
-#define DATASRC_ALARM_SECS   (5 * 60)
+    DATASRC_ALARM_SECS = (5 * 60)
+};
 
 extern LIST *g_datasrc_list; /* a list of all DATASRCs */
 extern DATASRC *g_datasrc;   /* the current datasrc */
