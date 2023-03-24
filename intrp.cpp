@@ -278,7 +278,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = scrbuf;
 		    if (!cmd || !strchr("/?g",*cmd))
 			*s++ = '/';
-		    strcpy(s,g_lastpat);
+		    strcpy(s,g_lastpat.c_str());
 		    s += strlen(s);
 		    if (!cmd || *cmd != 'g') {
 			if (cmd && strchr("/?",*cmd))

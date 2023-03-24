@@ -22,7 +22,7 @@
 #include "rt-select.h"
 #include "artsrch.h"
 
-char *g_lastpat{""};                 /* last search pattern */
+std::string g_lastpat;               /* last search pattern */
 COMPEX g_sub_compex{};               /* last compiled subject search */
 COMPEX g_art_compex{};               /* last compiled normal search */
 COMPEX *g_bra_compex{&g_art_compex}; /* current compex with brackets */
@@ -81,9 +81,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, int get_cmd)
 	s = cpytill(g_buf,patbuf+1,cmdchr);/* ok to cpy g_buf+1 to g_buf */
 	pattern = g_buf;
 	if (*pattern) {
-	    if (*g_lastpat)
-		free(g_lastpat);
-	    g_lastpat = savestr(pattern);
+	    g_lastpat = pattern;
 	}
 	if (*s) {			/* modifiers or commands? */
 	    while (*++s) {

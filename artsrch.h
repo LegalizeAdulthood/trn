@@ -8,6 +8,8 @@
 #include "search.h"
 #endif
 
+#include <string>
+
 enum art_search_result
 {
     SRCH_ABORT = 0,
@@ -30,7 +32,7 @@ enum art_scope
     ARTSCOPE_ARTICLE = 6
 };
 
-extern char *g_lastpat;         /* last search pattern */
+extern std::string g_lastpat;   /* last search pattern */
 extern COMPEX g_sub_compex;     /* last compiled subject search */
 extern COMPEX g_art_compex;     /* last compiled normal search */
 extern COMPEX *g_bra_compex;    /* current compex with brackets */
