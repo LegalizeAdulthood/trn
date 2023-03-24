@@ -872,7 +872,7 @@ trim the quoted article down as much as possible.)\n\
     g_art = oldart;
 }
 
-int invoke(char *cmd, char *dir)
+int invoke(const char *cmd, const char *dir)
 {
     char oldmode = g_mode;
     int ret = -1;

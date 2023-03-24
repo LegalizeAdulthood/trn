@@ -23,6 +23,6 @@ int supersede_article();
 void reply();
 void forward();
 void followup();
-int invoke(char *cmd, char *dir);
+int invoke(const char *cmd, const char *dir);
 
 #endif
