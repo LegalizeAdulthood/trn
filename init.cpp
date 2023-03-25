@@ -4,49 +4,43 @@
 
 
 #include "common.h"
-#include "list.h"
-#include "env.h"
-#include "util.h"
-#include "util2.h"
-#include "final.h"
-#include "term.h"
-#include "last.h"
-#include "trn.h"
-#include "hash.h"
-#include "ngdata.h"
-#include "nntpclient.h"
-#include "datasrc.h"
-#include "nntp.h"
-#include "nntpinit.h"
-#include "rcstuff.h"
-#include "only.h"
-#include "intrp.h"
+#include "init.h"
+
 #include "addng.h"
-#include "sw.h"
-#include "opt.h"
 #include "art.h"
-#include "artsrch.h"
 #include "artio.h"
+#include "artsrch.h"
 #include "backpage.h"
-#include "cache.h"
 #include "bits.h"
+#include "cache.h"
+#include "color.h"
+#include "datasrc.h"
+#include "decode.h"
+#include "env.h"
+#include "final.h"
 #include "head.h"
 #include "help.h"
-#include "mime.h"
+#include "intrp.h"
 #include "kfile.h"
+#include "last.h"
+#include "mempool.h"
+#include "mime.h"
+#include "ng.h"
+#include "ngdata.h"
 #include "ngsrch.h"
 #include "ngstuff.h"
+#include "nntpinit.h"
+#include "only.h"
+#include "opt.h"
 #include "rcln.h"
+#include "rcstuff.h"
 #include "respond.h"
 #include "rthread.h"
-#include "ng.h"
-#include "decode.h"
-#include "scan.h"
-#include "score.h"
-#include "mempool.h"
-#include "color.h"
+#include "term.h"
+#include "trn.h"
 #include "univ.h"
-#include "init.h"
+#include "util.h"
+#include "util2.h"
 
 #ifdef _WIN32
 #include <process.h>
@@ -56,16 +50,14 @@ long g_our_pid{};
 
 bool initialize(int argc, char *argv[])
 {
-    char* tcbuf;
     bool foundany = false;
 #ifdef NOLINEBUF
     static char std_out_buf[BUFSIZ];	/* must be static or malloced */
 
     setbuf(stdout, std_out_buf);
 #endif
-
-    tcbuf = safemalloc(TCBUF_SIZE);	/* make temp buffer for termcap and */
-					/* other initialization stuff */
+    char *tcbuf = safemalloc(TCBUF_SIZE); /* make temp buffer for termcap and */
+                                          /* other initialization stuff */
 
     g_our_pid = (long)getpid();
 
@@ -169,7 +161,7 @@ bool initialize(int argc, char *argv[])
 
 void newsnews_check()
 {
-    char* newsnewsname = filexp(NEWSNEWSNAME);
+    const char *newsnewsname = filexp(NEWSNEWSNAME);
 
     if ((g_tmpfp = fopen(newsnewsname,"r")) != nullptr) {
 	fstat(fileno(g_tmpfp),&g_filestat);
