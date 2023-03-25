@@ -33,7 +33,7 @@ using DECODE_FUNC = decode_state (*)(FILE *ifp, decode_state state);
 void decode_init();
 char *decode_fix_fname(const char *s);
 char *decode_subject(ART_NUM artnum, int *partp, int *totalp);
-int decode_piece(MIMECAP_ENTRY *mcp, char *first_line);
+bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line);
 DECODE_FUNC decode_function(mime_encoding encoding);
 char *decode_mkdir(const char *filename);
 void decode_rmdir(char *dir);

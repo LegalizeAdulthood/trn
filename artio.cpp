@@ -273,7 +273,7 @@ char *readartbuf(bool view_inline)
 	    int save_term_line = g_term_line;
 	    g_nowait_fork = true;
 	    color_object(COLOR_MIMEDESC, true);
-	    if (decode_piece(mcp,bp) != 0) {
+	    if (decode_piece(mcp,bp)) {
 		strcpy(bp = g_artbuf + g_artbuf_pos, g_art_line);
 		mime_SetState(bp);
 		if (g_mime_state == DECODE_MIME)

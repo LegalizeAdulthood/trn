@@ -230,7 +230,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
 /*
  * Handle a piece of a split file.
  */
-int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
+bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 {
     *g_msg = '\0';
 
@@ -246,7 +246,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	dir = decode_mkdir(filename);
 	if (!dir) {
 	    strcpy(g_msg, "Failed.");
-	    return 0;
+	    return false;
 	}
     }
     else
@@ -275,7 +275,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	fp = fopen(g_buf, "w");
 	if (!fp) {
 	    strcpy(g_msg,"Failed."); /*$$*/
-	    return 0;
+	    return false;
 	}
 	while (readart(g_art_line,sizeof g_art_line)) {
 	    if (mime_EndOfSection(g_art_line))
@@ -311,7 +311,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 		fclose(fp);
 	    }
 	    if (total == 0)
-		return 1;
+		return true;
 	}
 
 	/* Check to see if we have all parts.  Start from the highest numbers
@@ -321,7 +321,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	    sprintf(g_buf, "%s%d", dir, part);
 	    fp = fopen(g_buf, "r");
 	    if (!fp)
-		return 1;
+		return true;
 	    if (part != 1)
 		fclose(fp);
 	}
@@ -344,7 +344,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	    fclose(fp);
 	if (dir)
 	    decode_rmdir(dir);
-	return 0;
+	return false;
     }
 
     /* Handle each part in order */
@@ -355,7 +355,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	    fp = fopen(g_buf, "r");
 	    if (!fp) {
 		/*os_perror(g_buf);*/
-		return 1;
+		return true;
 	    }
 	}
 
@@ -364,7 +364,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	    fclose(fp);
 	if (state == DECODE_ERROR) {
 	    strcpy(g_msg,"Failed."); /*$$*/
-	    return 0;
+	    return false;
 	}
     }
 
@@ -372,7 +372,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	(void) decoder((FILE*)nullptr, DECODE_DONE);
 	if (state != DECODE_MAYBEDONE) {
 	    strcpy(g_msg,"Premature EOF.");
-	    return 0;
+	    return false;
 	}
     }
 
@@ -395,7 +395,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     if (dir)
 	decode_rmdir(dir);
 
-    return 1;
+    return true;
 }
 
 DECODE_FUNC decode_function(mime_encoding encoding)

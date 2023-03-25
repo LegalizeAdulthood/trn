@@ -742,7 +742,7 @@ void mime_DecodeArticle(bool view)
 		}
 	    }
 	    g_mime_state = DECODE_MIME;
-	    if (decode_piece(mcp, *g_art_line == '\n'? nullptr : g_art_line) != 0) {
+	    if (decode_piece(mcp, *g_art_line == '\n'? nullptr : g_art_line)) {
 		mime_SetState(g_art_line);
 		if (g_mime_state == DECODE_MIME)
 		    g_mime_state = SKIP_MIME;

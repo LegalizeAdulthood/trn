@@ -222,7 +222,7 @@ save_result save_article()
 		g_mime_section->encoding = MENCODE_UUE;
 		g_mime_section->part = part;
 		g_mime_section->total = total;
-		if (!decode_piece((MIMECAP_ENTRY*)nullptr,nullptr) && *g_msg) {
+		if (!decode_piece(nullptr,nullptr) && *g_msg) {
 		    newline();
 		    fputs(g_msg,stdout);
 		}
@@ -396,7 +396,7 @@ q to abort.\n\
 #endif
 	    }
 	    if (g_savefrom == 0 && g_art != 0)
-		fprintf(g_tmpfp,"Article: %ld of %s\n", (long)g_art, g_ngname);
+		fprintf(g_tmpfp,"Article: %ld of %s\n", g_art, g_ngname);
 	    seekart(g_savefrom);
 	    while (readart(g_buf,LBUFLEN) != nullptr) {
 		if (quote_From && !strncasecmp(g_buf,"from ",5))
