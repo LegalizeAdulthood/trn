@@ -26,7 +26,6 @@ void only_init()
 
 void setngtodo(const char *pat)
 {
-    char* s;
     int i = g_maxngtodo + s_save_maxngtodo;
 
     if (!*pat)
@@ -38,10 +37,10 @@ void setngtodo(const char *pat)
 #endif
 	init_compex(g_compextodo[i]);
 	compile(g_compextodo[i],pat,true,true);
-        s = ng_comp(g_compextodo[i], pat, true, true);
-        if (s != nullptr)
+        const char *err = ng_comp(g_compextodo[i], pat, true, true);
+        if (err != nullptr)
         {
-	    printf("\n%s\n",s) FLUSH;
+	    printf("\n%s\n",err) FLUSH;
 	    finalize(1);
 	}
 	g_maxngtodo++;

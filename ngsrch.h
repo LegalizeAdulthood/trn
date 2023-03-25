@@ -19,6 +19,6 @@ extern bool g_ng_doempty; /* search empty newsgroups? */
 void ngsrch_init();
 ng_search_result ng_search(char *patbuf, bool get_cmd);
 bool ng_wanted(NGDATA *np);
-char *ng_comp(COMPEX *compex, const char *pattern, bool RE, bool fold);
+const char *ng_comp(COMPEX *compex, const char *pattern, bool RE, bool fold);
 
 #endif

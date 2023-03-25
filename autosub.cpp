@@ -45,7 +45,7 @@ bool matchlist(char *patlist, char *s)
         if (p != nullptr)
 	    *p = '\0';
         /* compile regular expression */
-	char *err = ng_comp(&ilcompex, patlist, true, true);
+	const char *err = ng_comp(&ilcompex, patlist, true, true);
 	if (p)
 	    *p++ = ',';
 

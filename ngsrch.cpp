@@ -65,11 +65,11 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
     ng_search_result ret = NGS_NOTFOUND; /* assume no commands */
     if (cmdlst)
 	ret = NGS_DONE;
-    s = ng_comp(&s_ngcompex, pattern, true, true);
-    if (s != nullptr)
+    const char *err = ng_comp(&s_ngcompex, pattern, true, true);
+    if (err != nullptr)
     {
 					/* compile regular expression */
-	errormsg(s);
+	errormsg(err);
 	ret = NGS_ERROR;
 	goto exit;
     }
@@ -162,7 +162,7 @@ bool ng_wanted(NGDATA *np)
     return execute(&s_ngcompex,np->rcline) != nullptr;
 }
 
-char *ng_comp(COMPEX *compex, const char *pattern, bool RE, bool fold)
+const char *ng_comp(COMPEX *compex, const char *pattern, bool RE, bool fold)
 {
     char ng_pattern[128];
     const char* s = pattern;
