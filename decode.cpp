@@ -232,18 +232,15 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
  */
 int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 {
-    char* dir;
-    FILE* fp;
-    decode_state state;
-
-    char *filename = decode_fix_fname(g_mime_section->filename);
-    int part = g_mime_section->part;
-    int total = g_mime_section->total;
     *g_msg = '\0';
 
+    int part = g_mime_section->part;
+    int total = g_mime_section->total;
     if (!total && g_is_mime)
 	total = part = 1;
 
+    char* dir;
+    char *filename = decode_fix_fname(g_mime_section->filename);
     if (mcp || total != 1 || part != 1) {
 	/* Create directory to store parts and copy this part there. */
 	dir = decode_mkdir(filename);
@@ -262,6 +259,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	}
     }
 
+    FILE* fp;
     if (total != 1 || part != 1) {
 	sprintf(g_buf, "Saving part %d ", part);
 	if (total)
@@ -350,6 +348,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     }
 
     /* Handle each part in order */
+    decode_state state;
     for (state = DECODE_START, part = 1; part <= total; part++) {
 	if (part != 1) {
 	    sprintf(g_buf, "%s%d", dir, part);
