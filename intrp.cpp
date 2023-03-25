@@ -4,32 +4,29 @@
 
 
 #include "common.h"
-#include "list.h"
-#include "env.h"
-#include "util.h"
-#include "util2.h"
-#include "search.h"
-#include "hash.h"
-#include "cache.h"
-#include "bits.h"
-#include "head.h"
-#include "trn.h"
-#include "ngdata.h"
-#include "nntpclient.h"
-#include "datasrc.h"
-#include "nntp.h"
-#include "artsrch.h"
-#include "ng.h"
-#include "respond.h"
-#include "rcstuff.h"
+#include "intrp.h"
+
 #include "artio.h"
-#include "init.h"
-#include "term.h"
+#include "artsrch.h"
+#include "bits.h"
+#include "cache.h"
+#include "datasrc.h"
+#include "env.h"
 #include "final.h"
-#include "rthread.h"
+#include "head.h"
+#include "init.h"
+#include "list.h"
+#include "ng.h"
+#include "ngdata.h"
+#include "nntp.h"
+#include "respond.h"
 #include "rt-select.h"
 #include "rt-util.h"
-#include "intrp.h"
+#include "search.h"
+#include "term.h"
+#include "trn.h"
+#include "util.h"
+#include "util2.h"
 
 #ifdef HAS_UNAME
 #include <sys/utsname.h>
@@ -215,7 +212,6 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
     char* h;
     int i;
     char scrbuf[8192];
-    char spfbuf[512];
     static char* input_str = nullptr;
     static int input_siz = 0;
     bool upper = false;
@@ -234,7 +230,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 
     while (*pattern && (!stoppers || !strchr(stoppers,*pattern))) {
 	if (*pattern == '%' && pattern[1]) {
-	    upper = false;
+            char spfbuf[512];
+            upper = false;
 	    lastcomp = false;
 	    re_quote = false;
 	    tick_quote = 0;
@@ -779,14 +776,12 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		}
 		case 'v': {
-		    int selected, unseen;
 
-		    if (g_in_ng) {
-			selected = g_curr_artp && (g_curr_artp->flags & AF_SEL);
-			unseen = (g_art <= g_lastart) && !was_read(g_art);
-			sprintf(scrbuf,"%ld",(long)g_ngptr->toread-g_selected_count
-						- (!selected && unseen));
-			s = scrbuf;
+                    if (g_in_ng) {
+                        int selected = g_curr_artp && (g_curr_artp->flags & AF_SEL);
+                        int unseen = (g_art <= g_lastart) && !was_read(g_art);
+                        sprintf(scrbuf, "%ld", (long)g_ngptr->toread - g_selected_count - (!selected && unseen));
+                        s = scrbuf;
 		    }
 		    else
 			s = "";
@@ -1091,10 +1086,10 @@ char *interpsearch(char *dest, int destsize, char *pattern, char *cmd)
 
 void normalize_refs(char *refs)
 {
-    char* f;
-    char* t;
+    char* t = refs;
     
-    for (f = t = refs; *f; ) {
+    for (char *f = refs; *f;)
+    {
 	if (*f == '<') {
 	    while (*f && (*t++ = *f++) != '>') ;
 	    while (*f == ' ' || *f == '\t' || *f == '\n' || *f == ',') f++;
