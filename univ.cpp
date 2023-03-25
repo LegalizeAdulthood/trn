@@ -86,11 +86,9 @@ void univ_init()
 
 void univ_startup()
 {
-    bool sys_top_load;
-    bool user_top_load;
 
-    sys_top_load = false;
-    user_top_load = false;
+    bool sys_top_load = false;
+    bool user_top_load = false;
 
     /* later: make user top file an option or environment variable? */
     if (!univ_file_load("%+/univ/top","Top Level",nullptr)) {
@@ -129,10 +127,9 @@ void univ_open()
 
 void univ_close()
 {
-    UNIV_ITEM* node;
     UNIV_ITEM* nextnode;
 
-    for (node = g_first_univ; node; node = nextnode) {
+    for (UNIV_ITEM *node = g_first_univ; node; node = nextnode) {
 	univ_free_data(node);
 	safefree(node->desc);
 	nextnode = node->next;
@@ -160,9 +157,8 @@ void univ_close()
 
 UNIV_ITEM *univ_add(univ_item_type type, const char *desc)
 {
-    UNIV_ITEM* node = g_first_univ;
 
-    node = (UNIV_ITEM*)safemalloc(sizeof (UNIV_ITEM));
+    UNIV_ITEM *node = (UNIV_ITEM*)safemalloc(sizeof(UNIV_ITEM));
 
     node->flags = 0;
     if (desc)
@@ -245,19 +241,16 @@ void univ_add_text(const char *txt)
 /* temp for testing */
 void univ_add_debug(const char *desc, const char *txt)
 {
-    UNIV_ITEM* ui;
     /* later check text for bad things */
-    ui = univ_add(UN_DEBUG1,desc);
+    UNIV_ITEM *ui = univ_add(UN_DEBUG1, desc);
     ui->data.str = savestr(txt);
 }
 
 void univ_add_group(const char *desc, const char *grpname)
 {
     UNIV_ITEM* ui;
-    const char* s;
-    HASHDATUM data;
 
-    s = grpname;
+    const char *s = grpname;
     if (!s)
 	return;
     /* later check grpname for bad things? */
@@ -265,7 +258,7 @@ void univ_add_group(const char *desc, const char *grpname)
     if (!g_univ_ng_hash)
 	g_univ_ng_hash = hashcreate(701, HASH_DEFCMPFUNC);
 
-    data = hashfetch(g_univ_ng_hash,grpname,strlen(grpname));
+    HASHDATUM data = hashfetch(g_univ_ng_hash, grpname, strlen(grpname));
 
     if (data.dat_ptr) {
 	/* group was already added */
@@ -287,9 +280,8 @@ void univ_add_group(const char *desc, const char *grpname)
 
 void univ_add_mask(const char *desc, const char *mask)
 {
-    UNIV_ITEM* ui;
 
-    ui = univ_add(UN_GROUPMASK,desc);
+    UNIV_ITEM *ui = univ_add(UN_GROUPMASK, desc);
     ui->data.gmask.masklist = savestr(mask);
     ui->data.gmask.title = savestr(desc);
 }
@@ -297,9 +289,8 @@ void univ_add_mask(const char *desc, const char *mask)
 //char* fname;				/* May be URL */
 void univ_add_file(const char *desc, const char *fname, const char *label)
 {
-    UNIV_ITEM* ui;
 
-    ui = univ_add(UN_CONFIGFILE,desc);
+    UNIV_ITEM *ui = univ_add(UN_CONFIGFILE, desc);
     ui->data.cfile.title = savestr(desc);
     ui->data.cfile.fname = savestr(fname);
     if (label && *label)
@@ -310,9 +301,8 @@ void univ_add_file(const char *desc, const char *fname, const char *label)
 
 UNIV_ITEM *univ_add_virt_num(const char *desc, const char *grp, ART_NUM art)
 {
-    UNIV_ITEM* ui;
 
-    ui = univ_add(UN_ARTICLE,desc);
+    UNIV_ITEM *ui = univ_add(UN_ARTICLE, desc);
     ui->data.virt.ng = savestr(grp);
     ui->data.virt.num = art;
     ui->data.virt.subj = nullptr;
@@ -323,11 +313,10 @@ UNIV_ITEM *univ_add_virt_num(const char *desc, const char *grp, ART_NUM art)
 void univ_add_textfile(const char *desc, char *name)
 {
     UNIV_ITEM* ui;
-    char* s;
     char* p;
     static char lbuf[1024];
 
-    s = name;
+    char *s = name;
     switch (*s) {
       /* later add URL handling */
       case ':':
@@ -356,7 +345,6 @@ void univ_add_textfile(const char *desc, char *name)
 void univ_add_virtgroup(const char *grpname)
 {
     UNIV_ITEM* ui;
-    HASHDATUM data;
 
     if (!grpname)
 	return;
@@ -368,7 +356,7 @@ void univ_add_virtgroup(const char *grpname)
 	g_univ_vg_hash = hashcreate(701, HASH_DEFCMPFUNC);
 
     s_univ_virt_pass_needed = true;
-    data = hashfetch(g_univ_vg_hash,grpname,strlen(grpname));
+    HASHDATUM data = hashfetch(g_univ_vg_hash, grpname, strlen(grpname));
     if (data.dat_ptr) {
 	/* group was already added */
 	/* perhaps it is marked as deleted? */
@@ -483,11 +471,9 @@ void univ_use_pattern(const char *pattern, int type)
 /* Newsgroup patterns are separated by spaces and/or commas */
 void univ_use_group_line(char *line, int type)
 {
-    char* s;
     char* p;
-    char ch;
 
-    s = line;
+    char *s = line;
     if (!s || !*s)
 	return;
 
@@ -495,7 +481,7 @@ void univ_use_group_line(char *line, int type)
     while (*s) {
 	while (*s == ' ' || *s == ',') s++;
 	for (p = s; *p && *p != ' ' && *p != ','; p++) ;
-	ch = *p;
+	char ch = *p;
 	*p = '\0';
 	univ_use_pattern(s,type);
 	*p = ch;
@@ -507,23 +493,16 @@ void univ_use_group_line(char *line, int type)
 static bool univ_use_file(char *fname, const char *label)
 {
     static char lbuf[LBUFLEN];
-    FILE* fp;
-    char* s;
-    char* p;
-    char* open_name;
-    bool save_temp;
-    bool begin_top;	/* if false, look for "begin group"
-			   before interpreting */
 
-    save_temp = false;
-    begin_top = true;	/* default assumption (might be changed later) */
-    p = nullptr;
+    bool save_temp = false;
+    bool begin_top = true;	/* default assumption (might be changed later) */
+    char *p = nullptr;
 
     if (!fname)
 	return false;	/* bad argument */
 
-    s = fname;
-    open_name = s;
+    char *s = fname;
+    char *open_name = s;
     /* open URLs and translate them into local temporary filenames */
     if (!strncasecmp(fname,"URL:",4)) {
 	s = fname;
@@ -543,7 +522,7 @@ static bool univ_use_file(char *fname, const char *label)
     safefree0(s_univ_begin_label);
     if (label)
 	s_univ_begin_label = savestr(label);
-    fp = fopen(filexp(open_name),"r");
+    FILE *fp = fopen(filexp(open_name), "r");
     if (!fp)
 	return false;		/* unsuccessful (XXX: complain) */
 /* Later considerations:
@@ -570,12 +549,10 @@ static bool univ_use_file(char *fname, const char *label)
 
 static bool univ_include_file(const char *fname)
 {
-    char* old_univ_fname;
-    bool retval;
 
-    old_univ_fname = g_univ_fname;
+    char *old_univ_fname = g_univ_fname;
     g_univ_fname = savestr(fname);	/* LEAK */
-    retval = univ_use_file(g_univ_fname,nullptr);
+    bool retval = univ_use_file(g_univ_fname, nullptr);
     g_univ_fname = old_univ_fname;
     return retval;
 }
@@ -584,13 +561,12 @@ static bool univ_include_file(const char *fname)
 //char* line;			/* may be temporarily edited */
 static void univ_do_line_ext1(const char *desc, char *line)
 {
-    char* s;
     char* p;
     char* q;
     ART_NUM a;
     char ch;
 
-    s = line;
+    char *s = line;
 
     s++;
     switch (*s) {
@@ -653,10 +629,9 @@ static void univ_do_line_ext1(const char *desc, char *line)
 /* returns false when no more lines should be interpreted */
 static bool univ_do_line(char *line)
 {
-    char* s;
     char* p;
 
-    s = line + strlen(line)-1;
+    char *s = line + strlen(line) - 1;
     if (*s == '\n')
 	*s = '\0';				/* delete newline */
 
@@ -789,7 +764,6 @@ static bool univ_do_line(char *line)
 /* level generator */
 bool univ_file_load(char *fname, char *title, char *label)
 {
-    bool flag;
 
     univ_open();
 
@@ -799,7 +773,7 @@ bool univ_file_load(char *fname, char *title, char *label)
 	g_univ_title = savestr(title);
     if (label)
 	g_univ_label = savestr(label);
-    flag = univ_use_file(fname,label);
+    bool flag = univ_use_file(fname, label);
     if (!flag) {
 	univ_close();
     }
@@ -827,13 +801,10 @@ void univ_mask_load(char *mask, const char *title)
 
 void univ_redofile()
 {
-    char* tmp_fname;
-    char* tmp_title;
-    char* tmp_label;
 
-    tmp_fname = (g_univ_fname ? savestr(g_univ_fname) : 0);
-    tmp_title = (g_univ_title ? savestr(g_univ_title) : 0);
-    tmp_label = (g_univ_label ? savestr(g_univ_label) : 0);
+    char *tmp_fname = (g_univ_fname ? savestr(g_univ_fname) : 0);
+    char *tmp_title = (g_univ_title ? savestr(g_univ_title) : 0);
+    char *tmp_label = (g_univ_label ? savestr(g_univ_label) : 0);
 
     univ_close();
     if (g_univ_level)
@@ -849,10 +820,8 @@ void univ_redofile()
 
 static char *univ_edit_new_userfile()
 {
-    char* s;
-    FILE* fp;
 
-    s = savestr(filexp("%+/univ/usertop"));	/* LEAK */
+    char *s = savestr(filexp("%+/univ/usertop"));	/* LEAK */
 
     /* later, create a new user top file, and return its filename.
      * later perhaps ask whether to create or edit current file.
@@ -861,7 +830,7 @@ static char *univ_edit_new_userfile()
      */
 
     /* if the file exists, do not create a new one */
-    fp = fopen(s,"r");
+    FILE *fp = fopen(s, "r");
     if (fp) {
 	fclose(fp);
 	return g_univ_fname;	/* as if this function was not called */
@@ -947,19 +916,15 @@ void univ_ng_virtual()
 
 static void univ_vg_addart(ART_NUM a)
 {
-    char* subj;
-    char* from;
     char lbuf[70];
-    UNIV_ITEM* ui;
-    int score;
 
-    score = sc_score_art(a,false);
+    int score = sc_score_art(a, false);
     if (s_univ_use_min_score && (score<s_univ_min_score))
 	return;
-    subj = fetchsubj(a,false);
+    char *subj = fetchsubj(a, false);
     if (!subj || !*subj)
 	return;
-    from = fetchfrom(a,false);
+    char *from = fetchfrom(a, false);
     if (!from || !*from)
         from = "<No Author>";
 
@@ -967,7 +932,7 @@ static void univ_vg_addart(ART_NUM a)
     /* later scan/replace bad characters */
 
     /* later consider author in description, scoring, etc. */
-    ui = univ_add_virt_num(nullptr,g_ngname,a);
+    UNIV_ITEM *ui = univ_add_virt_num(nullptr, g_ngname, a);
     ui->score = score;
     ui->data.virt.subj = savestr(subj);
     ui->data.virt.from = savestr(from);
@@ -976,10 +941,9 @@ static void univ_vg_addart(ART_NUM a)
 
 static void univ_vg_addgroup()
 {
-    ART_NUM a;
 
-/* later: allow was-read articles, etc... */
-    for (a = article_first(g_firstart); a <= g_lastart; a = article_next(a)) {
+    /* later: allow was-read articles, etc... */
+    for (ART_NUM a = article_first(g_firstart); a <= g_lastart; a = article_next(a)) {
 	if (!article_unread(a))
 	    continue;
 	/* minimum score check */
@@ -990,14 +954,11 @@ static void univ_vg_addgroup()
 /* returns do_newsgroup() value */
 int univ_visit_group_main(const char *gname)
 {
-    int ret;
-    NGDATA* np;
-    bool old_threaded;
 
     if (!gname || !*gname)
 	return NG_ERROR;
 
-    np = find_ng(gname);
+    NGDATA *np = find_ng(gname);
     if (!np) {
 	printf("Univ/Virt: newsgroup %s not found!", gname) FLUSH;
 	return NG_ERROR;
@@ -1012,10 +973,10 @@ int univ_visit_group_main(const char *gname)
 	g_recent_ng = g_current_ng;
 	g_current_ng = np;
     }
-    old_threaded = g_threaded_group;
+    bool old_threaded = g_threaded_group;
     g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
     printf("\nScanning newsgroup %s\n",gname);
-    ret = do_newsgroup("");
+    int ret = do_newsgroup("");
     g_threaded_group = old_threaded;
     return ret;
 }
@@ -1023,12 +984,11 @@ int univ_visit_group_main(const char *gname)
 /* LATER: allow the loop to be interrupted */
 void univ_virt_pass()
 {
-    UNIV_ITEM* ui;
 
     g_univ_ng_virtflag = true;
     s_univ_virt_pass_needed = false;
 
-    for (ui = g_first_univ; ui; ui = ui->next) {
+    for (UNIV_ITEM *ui = g_first_univ; ui; ui = ui->next) {
 	if (input_pending()) {
 	    /* later consider cleaning up the remains */
 	    break;
@@ -1082,13 +1042,12 @@ static int univ_order_score(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2)
 
 void sort_univ()
 {
-    int cnt,i;
+    int i;
     UNIV_ITEM* ui;
     UNIV_ITEM** lp;
-    UNIV_ITEM** univ_sort_list;
     int (*sort_procedure)(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2);
 
-    cnt = 0;
+    int cnt = 0;
     for (ui = g_first_univ; ui; ui = ui->next) {
 	cnt++;
     }
@@ -1106,7 +1065,7 @@ void sort_univ()
 	break;
     }
 
-    univ_sort_list = (UNIV_ITEM**)safemalloc(cnt*sizeof(UNIV_ITEM*));
+    UNIV_ITEM **univ_sort_list = (UNIV_ITEM**)safemalloc(cnt * sizeof(UNIV_ITEM*));
     for (lp = univ_sort_list, ui = g_first_univ; ui; ui = ui->next)
 	*lp++ = ui;
     TRN_ASSERT(lp - univ_sort_list == cnt);
@@ -1128,14 +1087,12 @@ void sort_univ()
 /* do this better later, like the code in sadesc.c */
 const char *univ_article_desc(const UNIV_ITEM *ui)
 {
-    char* s;
-    char* f;
     static char dbuf[200];
     static char sbuf[200];
     static char fbuf[200];
 
-    s = ui->data.virt.subj;
-    f = ui->data.virt.from;
+    char *s = ui->data.virt.subj;
+    const char *f = ui->data.virt.from;
     if (!f) {
 	strcpy(fbuf,"<No Author> ");
     } else {
@@ -1174,14 +1131,12 @@ const char *univ_article_desc(const UNIV_ITEM *ui)
 //int where;	/* what context were we in--use later for key help? */
 void univ_help_main(help_location where)
 {
-    UNIV_ITEM *ui;
-    bool flag;
 
     univ_open();
     g_univ_title = savestr("Extended Help");
 
     /* first add help on current mode */
-    ui = univ_add(UN_HELPKEY, nullptr);
+    UNIV_ITEM *ui = univ_add(UN_HELPKEY, nullptr);
     ui->data.i = where;
 
     /* later, do other mode sensitive stuff */
@@ -1191,7 +1146,7 @@ void univ_help_main(help_location where)
 
     /* read in main help file */
     g_univ_fname = savestr("%X/HelpFiles/top");
-    flag = univ_use_file(g_univ_fname,g_univ_label);
+    bool flag = univ_use_file(g_univ_fname, g_univ_label);
 
     /* later: if flag is not true, then add message? */
 }
