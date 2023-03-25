@@ -5,16 +5,17 @@
  */
 
 #include "common.h"
-#include "list.h"
+#include "scoresave.h"
+
 #include "cache.h"
+#include "env.h" /* get_val */
+#include "list.h"
 #include "ngdata.h"
-#include "util.h"		/* several */
-#include "util2.h"
-#include "env.h"		/* get_val */
 #include "scan.h"
 #include "scanart.h"
 #include "score.h"
-#include "scoresave.h"
+#include "util.h" /* several */
+#include "util2.h"
 
 int g_sc_loaded_count{}; /* how many articles were loaded? */
 

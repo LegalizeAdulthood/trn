@@ -2,20 +2,20 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
-#include "term.h"
-#include "head.h"
+#include "decode.h"
+
 #include "art.h"
 #include "artio.h"
 #include "artstate.h"
-#include "intrp.h"
 #include "final.h"
+#include "head.h"
+#include "intrp.h"
 #include "mime.h"
+#include "term.h"
 #include "util.h"
 #include "util2.h"
 #include "uudecode.h"
-#include "decode.h"
 
 #ifdef MSDOS
 #include <direct.h>

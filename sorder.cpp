@@ -5,11 +5,12 @@
  */
 
 #include "common.h"
-#include "util.h"
+#include "sorder.h"
+
+#include "samisc.h"
 #include "scan.h"
 #include "smisc.h"
-#include "samisc.h"
-#include "sorder.h"
+#include "util.h"
 
 bool g_s_order_changed{}; /* If true, resort next time order is considered */
 

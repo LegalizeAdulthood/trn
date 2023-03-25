@@ -5,9 +5,10 @@
  */
 
 #include "common.h"
+#include "score-easy.h"
+
 #include "term.h"
 #include "util.h"
-#include "score-easy.h"
 
 /* new line to return to the caller. */
 static char s_sc_e_newline[LBUFLEN];

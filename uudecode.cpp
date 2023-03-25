@@ -3,12 +3,12 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include "common.h"
+#include "uudecode.h"
+
 #include "artio.h"
 #include "mime.h"
 #include "term.h"
 #include "util2.h"
-#include "decode.h"
-#include "uudecode.h"
 
 static void uudecodeline(char *line, FILE *ofp);
 

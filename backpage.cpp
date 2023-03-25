@@ -4,9 +4,10 @@
 
 
 #include "common.h"
-#include "util2.h"
-#include "final.h"
 #include "backpage.h"
+
+#include "final.h"
+#include "util2.h"
 
 #ifdef MSDOS
 #include <io.h>

@@ -2,8 +2,9 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include "help.h"
 #include "common.h"
+#include "help.h"
+
 #include "ngdata.h"
 #include "term.h"
 

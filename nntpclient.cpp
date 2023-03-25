@@ -2,12 +2,12 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
+#include "nntpclient.h"
+
 #include "nntp.h"
 #include "nntpauth.h"
 #include "nntpinit.h"
-#include "nntpclient.h"
 
 NNTPLINK g_nntplink{};		/* the current server's file handles */
 bool g_nntp_allow_timeout{};

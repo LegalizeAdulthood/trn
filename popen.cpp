@@ -4,7 +4,7 @@
  */
 
 #include "common.h"
-#include "env.h"
+
 #include "util2.h"
 #include "util3.h"
 

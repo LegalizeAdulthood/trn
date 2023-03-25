@@ -5,21 +5,22 @@
  */
 
 #include "common.h"
-#include "list.h"
+#include "samain.h"
+
 #include "cache.h"
+#include "list.h"
 #include "ngdata.h"
-#include "util.h"
-#include "score.h"
+#include "sadisp.h"
+#include "samisc.h"
+#include "sathread.h"
 #include "scan.h"
+#include "scanart.h"
 #include "scmd.h"
+#include "score.h"
 #include "sdisp.h"
 #include "sorder.h"
 #include "spage.h"
-#include "scanart.h"
-#include "samisc.h"
-#include "sadisp.h"
-#include "sathread.h"
-#include "samain.h"
+#include "util.h"
 
 char g_sa_buf[LBUFLEN];    /* misc. buffer */
 bool g_sa_mode_zoom{};     /* true if in "zoom" (display only selected) mode */

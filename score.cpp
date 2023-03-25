@@ -4,23 +4,23 @@
  */
 
 #include "common.h"
-/* sort the following includes later */
-#include "list.h"
-#include "cache.h"
+#include "score.h"
+
+#include "artio.h" /* for g_openart var.*/
 #include "bits.h"
-#include "artio.h"		/* for g_openart var.*/
-#include "ng.h"			/* g_art */
+#include "cache.h"
+#include "list.h"
+#include "ng.h" /* g_art */
 #include "ngdata.h"
-#include "rt-util.h"		/* spinner */
-#include "term.h"		/* input_pending() */
-#include "scan.h"
-#include "sorder.h"
-#include "scanart.h"
+#include "rt-util.h" /* spinner */
 #include "samisc.h"
+#include "scan.h"
+#include "scanart.h"
+#include "score-easy.h" /* interactive menus and such */
 #include "scorefile.h"
 #include "scoresave.h"
-#include "score-easy.h"		/* interactive menus and such */
-#include "score.h"
+#include "sorder.h"
+#include "term.h" /* input_pending() */
 
 bool g_kill_thresh_active{};
 int g_kill_thresh{LOWSCORE}; /* KILL articles at or below this score */

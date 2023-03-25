@@ -5,16 +5,17 @@
  */
 
 #include "common.h"
-#include "trn.h"
-#include "term.h"
-#include "scanart.h"
+#include "sadisp.h"
+
+#include "color.h"
 #include "samain.h"
 #include "samisc.h"
-#include "score.h"
 #include "scan.h"
+#include "scanart.h"
+#include "score.h"
 #include "sdisp.h"
-#include "color.h"
-#include "sadisp.h"
+#include "term.h"
+#include "trn.h"
 
 void sa_refresh_top()
 {

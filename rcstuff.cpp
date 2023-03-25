@@ -2,30 +2,30 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
-#include "list.h"
-#include "util.h"
-#include "util2.h"
-#include "hash.h"
-#include "cache.h"
+#include "rcstuff.h"
+
+#include "autosub.h"
 #include "bits.h"
-#include "ngdata.h"
-#include "nntpclient.h"
+#include "cache.h"
 #include "datasrc.h"
-#include "nntp.h"
-#include "term.h"
-#include "final.h"
-#include "trn.h"
 #include "env.h"
+#include "final.h"
+#include "hash.h"
 #include "init.h"
+#include "last.h"
+#include "list.h"
+#include "ngdata.h"
+#include "nntp.h"
+#include "nntpclient.h"
 #include "only.h"
 #include "rcln.h"
-#include "last.h"
-#include "autosub.h"
-#include "rt-select.h"
 #include "rt-page.h"
-#include "rcstuff.h"
+#include "rt-select.h"
+#include "term.h"
+#include "trn.h"
+#include "util.h"
+#include "util2.h"
 
 HASHTABLE *g_newsrc_hash{};
 MULTIRC *g_sel_page_mp{};

@@ -2,20 +2,20 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
-#include "ngdata.h"
+#include "ngsrch.h"
+
 #include "addng.h"
-#include "ngstuff.h"
-#include "rcstuff.h"
 #include "final.h"
-#include "search.h"
-#include "util2.h"
-#include "term.h"
+#include "ngdata.h"
+#include "ngstuff.h"
 #include "rcln.h"
+#include "rcstuff.h"
 #include "rt-select.h"
 #include "rt-util.h"
-#include "ngsrch.h"
+#include "search.h"
+#include "term.h"
+#include "util2.h"
 
 bool g_ng_doempty{}; /* search empty newsgroups? */
 

@@ -4,20 +4,21 @@
 
 
 #include "common.h"
-#include "list.h"
-#include "hash.h"
-#include "ngdata.h"
-#include "nntpclient.h"
+#include "addng.h"
+
+#include "autosub.h"
 #include "datasrc.h"
+#include "hash.h"
+#include "list.h"
+#include "ngdata.h"
 #include "nntp.h"
+#include "nntpclient.h"
+#include "only.h"
+#include "rcstuff.h"
+#include "rt-select.h"
+#include "term.h"
 #include "util.h"
 #include "util2.h"
-#include "only.h"
-#include "term.h"
-#include "rcstuff.h"
-#include "autosub.h"
-#include "rt-select.h"
-#include "addng.h"
 
 #include <stdlib.h>
 

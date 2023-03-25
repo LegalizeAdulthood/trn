@@ -4,6 +4,8 @@
 #ifndef UTIL3_H
 #define UTIL3_H
 
+#include "typedef.h"
+
 extern char *g_home_dir;
 
 int doshell(const char *sh, const char *cmd);

@@ -3,18 +3,19 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 #include "common.h"
-#include "cache.h"
-#include "ngdata.h"
+#include "rt-util.h"
+
 #include "artio.h"
-#include "rt-select.h"
-#include "term.h"
+#include "cache.h"
 #include "charsubst.h"
 #include "intrp.h"
 #include "ng.h"
+#include "ngdata.h"
+#include "rt-select.h"
+#include "term.h"
+#include "utf.h"
 #include "util.h"
 #include "util2.h"
-#include "utf.h"
-#include "rt-util.h"
 
 char g_spin_char{' '};  /* char to put back when we're done spinning */
 long g_spin_estimate{}; /* best guess of how much work there is */

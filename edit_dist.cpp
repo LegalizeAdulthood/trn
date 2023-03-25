@@ -6,8 +6,9 @@
  */
 
 #include "common.h"		/* Declare MEM_SIZE */
-#include "util.h"		/* Declare safemalloc() */
 #include "edit_dist.h"
+
+#include "util.h"		/* Declare safemalloc() */
 
 /* edit_dist -- returns the minimum edit distance between two strings
 

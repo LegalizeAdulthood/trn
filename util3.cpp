@@ -2,13 +2,13 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include <stdio.h>
-#include "typedef.h"
+#include "util3.h"
+
 #include "config2.h"
 #include "nntpclient.h"
+#include "typedef.h"
 #include "util2.h"
-#include "util3.h"
 
 bool g_export_nntp_fds{};
 char *g_nntp_password{};

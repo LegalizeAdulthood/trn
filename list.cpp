@@ -3,8 +3,9 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include "common.h"
-#include "util.h"
 #include "list.h"
+
+#include "util.h"
 
 static void def_init_node(LIST *list, LISTNODE *node);
 

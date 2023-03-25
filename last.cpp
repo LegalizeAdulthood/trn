@@ -2,13 +2,13 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
+#include "last.h"
+
+#include "init.h"
 #include "trn.h"
 #include "util.h"
 #include "util2.h"
-#include "init.h"
-#include "last.h"
 
 char *g_lastngname{}; /* last newsgroup read */
 long g_lasttime{};    /* time last we ran */

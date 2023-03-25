@@ -2,30 +2,29 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
-#include "list.h"
-#include "hash.h"
-#include "cache.h"
-#include "bits.h"
-#include "ngdata.h"
-#include "nntpclient.h"
-#include "datasrc.h"
-#include "ng.h"
+#include "rthread.h"
+
 #include "artstate.h"
-#include "kfile.h"
+#include "bits.h"
+#include "cache.h"
+#include "datasrc.h"
+#include "hash.h"
 #include "head.h"
-#include "util.h"
-#include "util2.h"
+#include "kfile.h"
+#include "list.h"
+#include "ng.h"
+#include "ngdata.h"
 #include "rt-mt.h"
 #include "rt-ov.h"
-#include "score.h"
 #include "rt-page.h"
 #include "rt-process.h"
 #include "rt-select.h"
 #include "rt-util.h"
 #include "rt-wumpus.h"
-#include "rthread.h"
+#include "score.h"
+#include "util.h"
+#include "util2.h"
 
 ART_NUM g_obj_count{};
 int g_subject_count{};

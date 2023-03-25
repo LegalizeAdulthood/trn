@@ -4,17 +4,18 @@
 
 
 #include "common.h"
+#include "sw.h"
+
 #include "env.h"
-#include "util.h"
 #include "head.h"
 #include "init.h"
-#include "opt.h"
-#include "only.h"
-#include "term.h"
 #include "intrp.h"
-#include "trn.h"
 #include "ngdata.h"
-#include "sw.h"
+#include "only.h"
+#include "opt.h"
+#include "term.h"
+#include "trn.h"
+#include "util.h"
 
 #ifdef MSDOS
 #include <io.h>

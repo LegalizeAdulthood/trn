@@ -2,23 +2,23 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
-#include "cache.h"
-#include "ng.h"
-#include "head.h"
-#include "util.h"
-#include "util2.h"
-#include "term.h"
-#include "ngdata.h"
+#include "rt-wumpus.h"
+
 #include "artio.h"
 #include "artstate.h"
 #include "backpage.h"
-#include "rthread.h"
-#include "rt-select.h"
+#include "cache.h"
 #include "charsubst.h"
 #include "color.h"
-#include "rt-wumpus.h"
+#include "head.h"
+#include "ng.h"
+#include "ngdata.h"
+#include "rt-select.h"
+#include "rthread.h"
+#include "term.h"
+#include "util.h"
+#include "util2.h"
 
 char g_letters[] = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+";
 

@@ -2,11 +2,11 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
+#include "nntpauth.h"
+
 #include "nntpclient.h"
 #include "util.h"
-#include "nntpauth.h"
 
 int nntp_handle_auth_err()
 {

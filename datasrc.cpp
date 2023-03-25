@@ -3,24 +3,24 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
-#include "list.h"
-#include "trn.h"
-#include "hash.h"
-#include "ngdata.h"
-#include "nntpclient.h"
-#include "term.h"
-#include "env.h"
-#include "util.h"
-#include "util2.h"
-#include "rcstuff.h"
+#include "datasrc.h"
+
 #include "edit_dist.h"
+#include "env.h"
+#include "hash.h"
+#include "list.h"
+#include "ngdata.h"
+#include "nntp.h"
+#include "nntpclient.h"
+#include "rcstuff.h"
 #include "rt-mt.h"
 #include "rt-ov.h"
 #include "rt-util.h"
-#include "nntp.h"
-#include "datasrc.h"
+#include "term.h"
+#include "trn.h"
+#include "util.h"
+#include "util2.h"
 
 #ifdef MSDOS
 #include <io.h>

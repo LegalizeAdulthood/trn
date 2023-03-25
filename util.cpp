@@ -2,19 +2,19 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
-#include "final.h"
-#include "term.h"
-#include "nntpclient.h"
-#include "datasrc.h"
-#include "intrp.h"
-#include "env.h"
-#include "util2.h"
-#include "search.h"
-#include "smisc.h"	/* g_s_default_cmd */
-#include "univ.h"
 #include "util.h"
+
+#include "datasrc.h"
+#include "env.h"
+#include "final.h"
+#include "intrp.h"
+#include "nntpclient.h"
+#include "search.h"
+#include "smisc.h" /* g_s_default_cmd */
+#include "term.h"
+#include "univ.h"
+#include "util2.h"
 
 #ifdef I_SYS_TIMEB
 #include <sys/timeb.h>

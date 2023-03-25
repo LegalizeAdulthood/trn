@@ -4,17 +4,18 @@
  */
 
 #include "common.h"
-#include "list.h"
+#include "spage.h"
+
 #include "cache.h"
+#include "list.h"
 #include "ngdata.h"
-#include "rt-util.h"	/* spinner */
+#include "rt-util.h" /* spinner */
+#include "samain.h"
 #include "scan.h"
-#include "sdisp.h"	/* for display dimension sizes */
+#include "scanart.h"
+#include "sdisp.h" /* for display dimension sizes */
 #include "smisc.h"
 #include "sorder.h"
-#include "scanart.h"
-#include "samain.h"
-#include "spage.h"
 
 /* returns true if successful */
 //long end;		/* entry number to be last on page */

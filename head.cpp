@@ -2,24 +2,24 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
-#include "list.h"
+#include "head.h"
+
 #include "artio.h"
 #include "cache.h"
+#include "datasrc.h"
+#include "final.h"
+#include "list.h"
+#include "mempool.h"
 #include "ng.h"
 #include "ngdata.h"
-#include "nntpclient.h"
-#include "datasrc.h"
 #include "nntp.h"
-#include "util.h"
-#include "util2.h"
+#include "nntpclient.h"
+#include "parsedate.h"
 #include "rt-process.h"
 #include "rt-util.h"
-#include "final.h"
-#include "parsedate.h"
-#include "mempool.h"
-#include "head.h"
+#include "util.h"
+#include "util2.h"
 
 #define HIDDEN    (HT_HIDE|HT_DEFHIDE)
 #define MAGIC_ON  (HT_MAGICOK|HT_MAGIC|HT_DEFMAGIC)

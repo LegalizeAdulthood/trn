@@ -2,7 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
 #include "intrp.h"
 

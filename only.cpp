@@ -2,15 +2,15 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
-#include "search.h"
-#include "util.h"
-#include "util2.h"
+#include "only.h"
+
 #include "final.h"
 #include "ngdata.h"
 #include "ngsrch.h"
-#include "only.h"
+#include "search.h"
+#include "util.h"
+#include "util2.h"
 
 char *g_ngtodo[MAXNGTODO];       /* restrictions in effect */
 COMPEX *g_compextodo[MAXNGTODO]; /* restrictions in compiled form */

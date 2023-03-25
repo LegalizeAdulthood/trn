@@ -26,10 +26,11 @@
 */
 
 #include "common.h"
-#include "term.h"
-#include "final.h"
-#include "util2.h"
 #include "color.h"
+
+#include "final.h"
+#include "term.h"
+#include "util2.h"
 
 struct COLOR_OBJ
 {

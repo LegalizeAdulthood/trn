@@ -2,28 +2,28 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
-#include "list.h"
-#include "term.h"
-#include "env.h"
-#include "util.h"
-#include "util2.h"
-#include "hash.h"
-#include "cache.h"
+#include "kfile.h"
+
 #include "artsrch.h"
+#include "bits.h"
+#include "cache.h"
+#include "color.h"
+#include "env.h"
+#include "hash.h"
+#include "list.h"
 #include "ng.h"
 #include "ngdata.h"
 #include "ngstuff.h"
 #include "rcstuff.h"
-#include "trn.h"
-#include "bits.h"
-#include "rthread.h"
 #include "rt-process.h"
 #include "rt-select.h"
 #include "rt-util.h"
-#include "color.h"
-#include "kfile.h"
+#include "rthread.h"
+#include "term.h"
+#include "trn.h"
+#include "util.h"
+#include "util2.h"
 
 FILE *g_globkfp{};              /* global article killer file */
 FILE *g_localkfp{};             /* local (for this newsgroup) file */

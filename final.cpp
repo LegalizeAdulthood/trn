@@ -2,23 +2,23 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
-#include "list.h"
-#include "env.h"
-#include "util.h"
+#include "final.h"
+
 #include "bits.h"
-#include "term.h"
 #include "color.h"
-#include "nntpclient.h"
-#include "nntpinit.h"
 #include "datasrc.h"
-#include "nntp.h"
-#include "rcstuff.h"
+#include "env.h"
 #include "intrp.h"
 #include "kfile.h"
+#include "list.h"
+#include "nntp.h"
+#include "nntpclient.h"
+#include "nntpinit.h"
+#include "rcstuff.h"
 #include "scoresave.h"
-#include "final.h"
+#include "term.h"
+#include "util.h"
 
 #ifdef MSDOS
 #include <direct.h>

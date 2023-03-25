@@ -2,11 +2,11 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
+#include "rt-ov.h"
+
 #include "list.h"
 #include "trn.h"
-#include "hash.h"
 #include "cache.h"
 #include "bits.h"
 #include "head.h"
@@ -19,13 +19,10 @@
 #include "env.h"
 #include "ng.h"
 #include "term.h"
-#include "intrp.h"
 #include "final.h"
-#include "rthread.h"
 #include "rt-process.h"
 #include "rt-util.h"
 #include "parsedate.h"
-#include "rt-ov.h"
 
 
 /* How many overview lines to read with one NNTP call */

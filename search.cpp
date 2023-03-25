@@ -23,11 +23,15 @@
  */
 
 #include "common.h"
-#include "util.h"
-#include "util2.h"
 #include "search.h"
 
-#define BMAPSIZ (127 / BITSPERBYTE + 1)
+#include "util.h"
+#include "util2.h"
+
+enum
+{
+    BMAPSIZ = (127 / BITSPERBYTE + 1)
+};
 
 enum
 {

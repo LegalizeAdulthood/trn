@@ -3,10 +3,11 @@
  */
 
 #include "common.h"
+#include "mempool.h"
+
 #include "final.h"
 #include "util.h"
 #include "util2.h"
-#include "mempool.h"
 
 static int mp_alloc_frag();
 static void mp_free_frag(int f);

@@ -2,10 +2,10 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
-#include "nntpclient.h"
 #include "nntpinit.h"
+
+#include "nntpclient.h"
 
 #ifdef WIN32
 #include <io.h>

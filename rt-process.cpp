@@ -3,17 +3,18 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include "common.h"
-#include "list.h"
-#include "hash.h"
+#include "rt-process.h"
+
 #include "cache.h"
+#include "hash.h"
+#include "kfile.h"
+#include "list.h"
 #include "ng.h"
 #include "ngdata.h"
+#include "rt-select.h"
+#include "rthread.h"
 #include "util.h"
 #include "util2.h"
-#include "kfile.h"
-#include "rthread.h"
-#include "rt-select.h"
-#include "rt-process.h"
 
 static void fix_msgid(char *msgid);
 static char *valid_message_id(char *start, char *end);

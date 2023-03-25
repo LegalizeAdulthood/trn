@@ -7,16 +7,17 @@
  */
 
 #include "common.h"
-#include "ng.h"		/* variable g_art, the next article to read. */
+#include "scanart.h"
+
+#include "artstate.h" /* for g_reread */
+#include "ng.h"       /* variable g_art, the next article to read. */
 #include "ngdata.h"
-#include "term.h"	/* macro to clear... */
-#include "artstate.h"	/* for g_reread */
-#include "rt-select.h"	/* g_selected_only */
-#include "scan.h"
-#include "smisc.h"
+#include "rt-select.h" /* g_selected_only */
 #include "samain.h"
 #include "samisc.h"
-#include "scanart.h"
+#include "scan.h"
+#include "smisc.h"
+#include "term.h" /* macro to clear... */
 
 SA_ENTRYDATA *g_sa_ents{};
 int g_sa_num_ents{};

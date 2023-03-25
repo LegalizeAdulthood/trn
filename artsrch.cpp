@@ -4,23 +4,24 @@
 
 
 #include "common.h"
+#include "artsrch.h"
+
+#include "artio.h"
+#include "bits.h"
+#include "cache.h"
+#include "final.h"
+#include "head.h"
+#include "intrp.h"
+#include "kfile.h"
 #include "list.h"
+#include "ng.h"
 #include "ngdata.h"
+#include "ngstuff.h"
+#include "rt-select.h"
+#include "rt-util.h"
 #include "search.h"
 #include "term.h"
 #include "util2.h"
-#include "intrp.h"
-#include "cache.h"
-#include "bits.h"
-#include "kfile.h"
-#include "head.h"
-#include "final.h"
-#include "ng.h"
-#include "ngstuff.h"
-#include "artio.h"
-#include "rt-util.h"
-#include "rt-select.h"
-#include "artsrch.h"
 
 std::string g_lastpat;               /* last search pattern */
 COMPEX g_sub_compex{};               /* last compiled subject search */

@@ -4,18 +4,18 @@
  */
 
 #include "common.h"
-#include "list.h"
+#include "sadesc.h"
+
 #include "cache.h"
-#include "head.h"
-/* currently used for fast author fetch when group is threaded */
-#include "term.h"	/* for standout */
-#include "rt-util.h"	/* compress_from() */
-#include "scanart.h"
+#include "head.h" /* currently used for fast author fetch when group is threaded */
+#include "list.h"
+#include "rt-util.h" /* compress_from() */
 #include "samain.h"
 #include "sathread.h"
 #include "scan.h"
+#include "scanart.h"
 #include "score.h"
-#include "sadesc.h"
+#include "term.h" /* for standout */
 
 /* returns statchars in temp space... */
 // int line;		/* which status line (1 = first) */

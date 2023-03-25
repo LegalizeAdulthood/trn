@@ -2,21 +2,21 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
-#include "util2.h"
+#include "nntp.h"
+
+#include "artio.h"
+#include "cache.h"
+#include "datasrc.h"
+#include "final.h"
+#include "head.h"
 #include "init.h"
-#include "trn.h"
 #include "ngdata.h"
 #include "nntpclient.h"
-#include "datasrc.h"
-#include "cache.h"
-#include "head.h"
-#include "term.h"
-#include "final.h"
-#include "artio.h"
 #include "rcstuff.h"
-#include "nntp.h"
+#include "term.h"
+#include "trn.h"
+#include "util2.h"
 
 static int nntp_copybody(char *s, int limit, ART_POS pos);
 

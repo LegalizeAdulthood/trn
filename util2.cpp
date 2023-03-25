@@ -2,12 +2,12 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
+#include "util2.h"
+
 #include "env.h"
 #include "util.h"
 #include "util3.h"
-#include "util2.h"
 
 #ifdef MSDOS
 #include <direct.h>

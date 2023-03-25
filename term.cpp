@@ -3,24 +3,25 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
+#include "term.h"
+
+#include "art.h"
+#include "cache.h"
+#include "color.h"
 #include "env.h"
-#include "util.h"
-#include "util2.h"
 #include "final.h"
 #include "help.h"
-#include "cache.h"
-#include "opt.h"
-#include "intrp.h"
 #include "init.h"
-#include "art.h"
+#include "intrp.h"
+#include "opt.h"
 #include "rt-select.h"
 #include "sdisp.h"
 #include "univ.h"
-#include "color.h"
-#include "term.h"
 #include "utf.h"
+#include "util.h"
+#include "util2.h"
+
 #ifdef MSDOS
 #include <conio.h>
 #endif

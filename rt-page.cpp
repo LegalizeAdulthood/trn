@@ -3,30 +3,28 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
-#include "list.h"
-#include "cache.h"
-#include "term.h"
-#include "ngdata.h"
-#include "nntpclient.h"
-#include "datasrc.h"
-#include "trn.h"
-#include "env.h"
-#include "util.h"
-#include "util2.h"
-#include "utf.h"
-#include "opt.h"
-#include "only.h"
+#include "rt-page.h"
+
 #include "addng.h"
+#include "cache.h"
+#include "color.h"
+#include "datasrc.h"
+#include "env.h"
+#include "list.h"
+#include "ngdata.h"
+#include "only.h"
+#include "opt.h"
 #include "rcln.h"
 #include "rcstuff.h"
-#include "rthread.h"
 #include "rt-select.h"
 #include "rt-util.h"
+#include "rthread.h"
+#include "term.h"
+#include "trn.h"
 #include "univ.h"
-#include "color.h"
-#include "rt-page.h"
+#include "utf.h"
+#include "util.h"
 
 SEL_ITEM g_sel_items[MAX_SEL];
 int g_sel_total_obj_cnt{};

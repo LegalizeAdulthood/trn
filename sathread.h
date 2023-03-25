@@ -5,6 +5,8 @@
 #ifndef SATHREAD_H
 #define SATHREAD_H
 
+#include "scanart.h"
+
 void sa_init_threads();
 long sa_get_subj_thread(long e);
 int sa_subj_thread_count(long a);

@@ -4,11 +4,12 @@
 
 
 #include "common.h"
-#include "search.h"
-#include "ngsrch.h"
+#include "autosub.h"
+
 #include "env.h"
 #include "final.h"
-#include "autosub.h"
+#include "ngsrch.h"
+#include "search.h"
 
 /* Consider the newsgroup specified, and return:	*/
 /* : if we should autosubscribe to it			*/

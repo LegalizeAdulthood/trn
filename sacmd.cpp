@@ -5,27 +5,28 @@
  */
 
 #include "common.h"
-#include "list.h"
-#include "cache.h"
+#include "sacmd.h"
+
 #include "bits.h"
-#include "term.h"	/* for LINES */
-#include "ngdata.h"	/* for g_threaded_group */
+#include "cache.h"
+#include "list.h"
 #include "ng.h"
+#include "ngdata.h" /* for g_threaded_group */
 #include "respond.h"
-#include "scan.h"
-#include "scmd.h"
-#include "smisc.h"	/* needed? */
-#include "sorder.h" 
-#include "spage.h"
-#include "sdisp.h"
-#include "scanart.h"
 #include "samain.h"
 #include "samisc.h"
 #include "sathread.h"
+#include "scan.h"
+#include "scanart.h"
+#include "scmd.h"
 #include "score.h"
+#include "sdisp.h"
+#include "smisc.h" /* needed? */
+#include "sorder.h"
+#include "spage.h"
+#include "term.h" /* for LINES */
 #include "util.h"
 #include "util2.h"
-#include "sacmd.h"
 
 static char *s_sa_extract_dest{}; /* use this command on an extracted file */
 static bool s_sa_extract_junk{};  /* junk articles after extracting them */

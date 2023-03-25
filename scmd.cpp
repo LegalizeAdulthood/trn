@@ -6,20 +6,21 @@
  */
 
 #include "common.h"
+#include "scmd.h"
+
 #include "final.h"
 #include "help.h"
 #include "ng.h"
 #include "ngstuff.h"
-#include "term.h"
+#include "sacmd.h" /* sa_docmd */
+#include "samain.h"
 #include "scan.h"
+#include "sdisp.h"
 #include "smisc.h"
 #include "sorder.h"
 #include "spage.h"
-#include "sdisp.h"
-#include "sacmd.h"	/* sa_docmd */
-#include "samain.h"
+#include "term.h"
 #include "univ.h"
-#include "scmd.h"
 
 void s_go_bot()
 {

@@ -2,16 +2,15 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
-#include "util.h"
-#include "util2.h"
-#include "ngdata.h"
-#include "nntpclient.h"
+#include "rcln.h"
+
 #include "datasrc.h"
+#include "ngdata.h"
 #include "rcstuff.h"
 #include "term.h"
-#include "rcln.h"
+#include "util.h"
+#include "util2.h"
 
 enum
 {

@@ -2,14 +2,14 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
+
 #include "env.h"
+#include "nntpclient.h"
+#include "nntpinit.h"
 #include "util2.h"
 #include "util3.h"
 #include "wildmat.h"
-#include "nntpclient.h"
-#include "nntpinit.h"
 
 void Usage();
 

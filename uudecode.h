@@ -4,6 +4,8 @@
 #ifndef UUDECODE_H
 #define UUDECODE_H
 
+#include "decode.h"
+
 /* Length of a normal uuencoded line, including newline */
 enum
 {

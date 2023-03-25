@@ -5,9 +5,10 @@
 */
 
 #include "common.h"
-#include "util.h"
-#include "final.h"
 #include "hash.h"
+
+#include "final.h"
+#include "util.h"
 
 #define BADTBL(tbl)	((tbl) == nullptr || (tbl)->ht_magic != HASHMAG)
 

@@ -6,21 +6,22 @@
  */
 
 #include "common.h"
-#include "list.h"
+#include "scorefile.h"
+
 #include "cache.h"
+#include "env.h" /* get_val */
 #include "head.h"
-#include "search.h"		/* regex matches */
-#include "ngdata.h"
+#include "list.h"
+#include "mempool.h"
 #include "ng.h"
-#include "term.h"		/* finish_command() */
+#include "ngdata.h"
+#include "rt-util.h"
+#include "score.h"  /* shared stuff... */
+#include "search.h" /* regex matches */
+#include "term.h"   /* finish_command() */
+#include "url.h"
 #include "util.h"
 #include "util2.h"
-#include "env.h"		/* get_val */
-#include "rt-util.h"
-#include "mempool.h"
-#include "score.h"		/* shared stuff... */
-#include "url.h"
-#include "scorefile.h"
 
 int g_sf_num_entries{};   /* # of entries */
 SF_ENTRY *g_sf_entries{}; /* array of entries */

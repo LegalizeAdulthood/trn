@@ -3,22 +3,21 @@
  */
 
 #include "common.h"
-#include "list.h"
-#include "head.h"
+#include "mime.h"
+
 #include "art.h"
 #include "artio.h"
 #include "artstate.h"
-#include "ng.h"
-#include "term.h"
 #include "decode.h"
-#include "respond.h"
 #include "env.h"
+#include "head.h"
+#include "list.h"
+#include "ng.h"
+#include "respond.h"
+#include "term.h"
+#include "utf.h"
 #include "util.h"
 #include "util2.h"
-#include "utf.h"
-#include "backpage.h"
-#include "charsubst.h"
-#include "mime.h"
 
 MIME_SECT g_mime_article{};
 MIME_SECT *g_mime_section{&g_mime_article};
@@ -328,9 +327,11 @@ void mime_SetArticle()
     g_is_mime = g_htype[MIMEVER_LINE].flags & HT_MAGIC
 	    && g_htype[MIMEVER_LINE].minpos >= 0;
 
-    s = fetchlines(g_art,CONTTYPE_LINE);
-    mime_ParseType(g_mime_section,s);
-    free(s);
+    {
+        char *s = fetchlines(g_art, CONTTYPE_LINE);
+        mime_ParseType(g_mime_section,s);
+        free(s);
+    }
 
     if (g_is_mime) {
 	char *s = fetchlines(g_art, CONTXFER_LINE);

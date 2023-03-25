@@ -4,14 +4,14 @@
  */
 
 #include "common.h"
-#include "hash.h"
+#include "sathread.h"
+
 #include "cache.h"
+#include "hash.h"
 #include "mempool.h"
-#include "scanart.h"
-#include "sadesc.h"	/* sa_desc_subject() */
+#include "sadesc.h" /* sa_desc_subject() */
 #include "samisc.h"
 #include "sorder.h"
-#include "sathread.h"
 
 static long s_sa_num_threads{};
 static HASHTABLE *s_sa_thread_hash{};

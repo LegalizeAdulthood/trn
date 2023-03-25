@@ -14,9 +14,9 @@
  */
 
 #include "common.h"
-#include "util2.h"
+
 #include "utf.h"
-#include "charsubst.h"
+#include "util2.h"
 
 /* Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced */
 char *g_charsets{"patm"};

@@ -2,12 +2,12 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
+#include "env.h"
+
 #include "init.h"
 #include "util.h"
 #include "util2.h"
-#include "env.h"
 
 #ifdef HAS_RES_INIT
 #include <netinet/in.h>

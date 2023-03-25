@@ -4,22 +4,22 @@
 
 
 #include "common.h"
-#include "list.h"
-#include "ngdata.h"
-#include "nntpclient.h"
-#include "datasrc.h"
-#include "nntp.h"
-#include "cache.h"
-#include "head.h"
-#include "mime.h"
-#include "term.h"
+#include "artio.h"
+
 #include "art.h"
 #include "artstate.h"
+#include "cache.h"
+#include "color.h"
+#include "datasrc.h"
+#include "decode.h"
+#include "head.h"
+#include "list.h"
+#include "mime.h"
+#include "ngdata.h"
+#include "nntp.h"
+#include "term.h"
 #include "util.h"
 #include "util2.h"
-#include "color.h"
-#include "decode.h"
-#include "artio.h"
 
 ART_POS g_artpos{};   /* byte position in article file */
 ART_LINE g_artline{}; /* current line number in article file */
