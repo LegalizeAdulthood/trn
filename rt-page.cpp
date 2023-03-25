@@ -1246,7 +1246,7 @@ void display_page_title(bool home_only)
 	printf("Newsgroups");
 	for (rp = g_multirc->first, len = 0; rp && len < 34; rp = rp->next) {
 	    if (rp->flags & RF_ACTIVE) {
-		sprintf(g_buf+len, ", %s", rp->datasrc->name);
+		sprintf(g_buf+len, ", %s", rp->datasrc->name.c_str());
 		len += strlen(g_buf+len);
 	    }
 	}
@@ -1322,7 +1322,7 @@ try_again:
 
 	    maybe_eol();
 	    for (rp = mp->first, len = 0; rp && len < 34; rp = rp->next) {
-		sprintf(g_buf+len, ", %s", rp->datasrc->name);
+		sprintf(g_buf+len, ", %s", rp->datasrc->name.c_str());
 		len += strlen(g_buf+len);
 	    }
 	    if (rp)

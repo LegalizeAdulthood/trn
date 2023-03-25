@@ -7,6 +7,8 @@
 #include "nntpclient.h"
 #include "rt-ov.h"
 
+#include <string>
+
 struct SRCFILE
 {
     FILE*	fp;		/* the file pointer to read the data */
@@ -19,7 +21,7 @@ struct SRCFILE
 
 struct DATASRC
 {
-    char*	name;		/* our user-friendly name */
+    std::string name;		/* our user-friendly name */
     char*	newsid;		/* the active file name or host name */
     SRCFILE	act_sf;		/* the active file's hashed contents */
     char*	grpdesc;	/* the newsgroup description file or tmp */

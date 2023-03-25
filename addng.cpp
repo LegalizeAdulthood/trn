@@ -303,7 +303,7 @@ bool scanactive(bool add_matching)
     if (!add_matching)
 	print_lines("Completely unsubscribed newsgroups:\n", STANDOUT);
 
-    for (DATASRC *dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp)) {
+    for (DATASRC *dp = datasrc_first(); dp && !dp->name.empty(); dp = datasrc_next(dp)) {
 	if (!(dp->flags & DF_OPEN))
 	    continue;
 	set_datasrc(dp);

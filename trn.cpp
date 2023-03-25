@@ -514,7 +514,7 @@ input_newsgroup_result input_newsgroup()
 	int len;
 	for (rp = g_multirc->first, len = 0; rp && len < 66; rp = rp->next) {
 	    if (rp->flags & RF_ACTIVE) {
-		sprintf(g_buf+len, ", %s", rp->datasrc->name);
+		sprintf(g_buf+len, ", %s", rp->datasrc->name.c_str());
 		len += strlen(g_buf+len);
 	    }
 	}
@@ -728,7 +728,7 @@ void check_active_refetch(bool force)
     DATASRC* dp;
     time_t now = time((time_t*)nullptr);
 
-    for (dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp)) {
+    for (dp = datasrc_first(); dp && !dp->name.empty(); dp = datasrc_next(dp)) {
 	if (!ALLBITS(dp->flags, DF_OPEN | DF_ACTIVE))
 	    continue;
 	if (dp->act_sf.fp && dp->act_sf.refetch_secs
@@ -756,7 +756,7 @@ void trn_version()
 	for (rp = g_multirc->first; rp; rp = rp->next) {
 	    if (!(rp->flags & RF_ACTIVE))
 		continue;
-	    sprintf(g_msg,"ID %s:\nNewsrc %s.\n",rp->datasrc->name,rp->name);
+	    sprintf(g_msg,"ID %s:\nNewsrc %s.\n",rp->datasrc->name.c_str(),rp->name);
 	    print_lines(g_msg, NOMARKING);
 	    if (rp->datasrc->flags & DF_REMOTE) {
 		sprintf(g_msg,"News from server %s.\n",rp->datasrc->newsid);

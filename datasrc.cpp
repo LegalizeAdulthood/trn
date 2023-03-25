@@ -189,8 +189,8 @@ char *read_datasrcs(char *filename)
 
 DATASRC *get_datasrc(const char *name)
 {
-    for (DATASRC *dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp))
-	if (!strcmp(dp->name,name))
+    for (DATASRC *dp = datasrc_first(); dp && !dp->name.empty(); dp = datasrc_next(dp))
+	if (dp->name == name)
 	    return dp;
     return nullptr;
 }
@@ -206,7 +206,7 @@ DATASRC *new_datasrc(const char *name, char **vals)
     else if (!vals[DI_ACTIVE_FILE])
 	return nullptr; /*$$*/
 
-    dp->name = savestr(name);
+    dp->name = name;
     if (!strcmp(name,"default"))
 	dp->flags |= DF_DEFAULT;
 
@@ -416,7 +416,7 @@ void check_datasrcs()
     time_t now = time((time_t*)nullptr);
 
     if (g_datasrc_list) {
-	for (DATASRC *dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp)) {
+	for (DATASRC *dp = datasrc_first(); dp && !dp->name.empty(); dp = datasrc_next(dp)) {
 	    if ((dp->flags & DF_OPEN) && dp->nntplink.rd_fp != nullptr) {
 		time_t limit = ((dp->flags & DF_ACTIVE) ? 30 * 60 : 10 * 60);
 		if (now - dp->nntplink.last_command > limit) {
@@ -955,7 +955,7 @@ int find_close_match()
     s_ngn = 0;
 
     /* Iterate over all legal newsgroups */
-    for (DATASRC *dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp)) {
+    for (DATASRC *dp = datasrc_first(); dp && !dp->name.empty(); dp = datasrc_next(dp)) {
 	if (dp->flags & DF_OPEN) {
 	    if (dp->act_sf.hp)
 		hashwalk(dp->act_sf.hp, check_distance, 0);
