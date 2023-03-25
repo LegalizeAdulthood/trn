@@ -103,15 +103,13 @@ static int get_near_miss();
 void datasrc_init()
 {
     char** vals = prep_ini_words(s_datasrc_ini);
-    char* machine = nullptr;
     char* actname = nullptr;
-    char* s;
 
     g_datasrc_list = new_list(0,0,sizeof(DATASRC),20,LF_ZERO_MEM,nullptr);
 
     g_nntp_auth_file = savestr(filexp(NNTP_AUTH_FILE));
 
-    machine = getenv("NNTPSERVER");
+    char *machine = getenv("NNTPSERVER");
     if (machine && strcmp(machine,"local")) {
 	vals[DI_NNTP_SERVER] = machine;
 	vals[DI_AUTH_USER] = read_auth_file(g_nntp_auth_file,
@@ -121,7 +119,7 @@ void datasrc_init()
     }
 
     g_trnaccess_mem = read_datasrcs(TRNACCESS);
-    s = read_datasrcs(DEFACCESS);
+    char *s = read_datasrcs(DEFACCESS);
     if (!g_trnaccess_mem)
 	g_trnaccess_mem = s;
     else if (s)
@@ -158,7 +156,6 @@ void datasrc_init()
 char *read_datasrcs(char *filename)
 {
     int fd;
-    char* s;
     char* section;
     char* cond;
     char* filebuf = nullptr;
@@ -167,12 +164,11 @@ char *read_datasrcs(char *filename)
     if ((fd = open(filexp(filename),0)) >= 0) {
 	fstat(fd,&g_filestat);
 	if (g_filestat.st_size) {
-	    int len;
-	    filebuf = safemalloc((MEM_SIZE)g_filestat.st_size+2);
-	    len = read(fd,filebuf,(int)g_filestat.st_size);
+            filebuf = safemalloc((MEM_SIZE)g_filestat.st_size+2);
+	    int len = read(fd, filebuf, (int)g_filestat.st_size);
 	    (filebuf)[len] = '\0';
 	    prep_ini_data(filebuf,filename);
-	    s = filebuf;
+	    char *s = filebuf;
 	    while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
 		if (*cond && !check_ini_cond(cond))
 		    continue;
@@ -191,8 +187,7 @@ char *read_datasrcs(char *filename)
 
 DATASRC *get_datasrc(const char *name)
 {
-    DATASRC* dp;
-    for (dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp))
+    for (DATASRC *dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp))
 	if (!strcmp(dp->name,name))
 	    return dp;
     return nullptr;
@@ -293,10 +288,9 @@ static char *dir_or_none(DATASRC *dp, char *dir, int flag)
 	}
 	if (flag == 0) {
 	    char* cp = strrchr(dp->newsid,'/');
-	    int len;
-	    if (!cp)
+            if (!cp)
 		return nullptr;
-	    len = cp - dp->newsid + 1;
+	    int len = cp - dp->newsid + 1;
 	    cp = safemalloc(len+10+1);
 	    strcpy(cp,dp->newsid);
 	    strcpy(cp+len,"newsgroups");
@@ -406,14 +400,12 @@ void set_datasrc(DATASRC *dp)
 
 void check_datasrcs()
 {
-    DATASRC* dp;
     time_t now = time((time_t*)nullptr);
-    time_t limit;
 
     if (g_datasrc_list) {
-	for (dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp)) {
+	for (DATASRC *dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp)) {
 	    if ((dp->flags & DF_OPEN) && dp->nntplink.rd_fp != nullptr) {
-		limit = ((dp->flags & DF_ACTIVE)? 30*60 : 10*60);
+		time_t limit = ((dp->flags & DF_ACTIVE) ? 30 * 60 : 10 * 60);
 		if (now - dp->nntplink.last_command > limit) {
 		    DATASRC* save_datasrc = g_datasrc;
 		    /*printf("\n*** Closing %s ***\n", dp->name); $$*/
@@ -478,7 +470,6 @@ bool actfile_hash(DATASRC *dp)
 
 bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM high)
 {
-    HASHDATUM data;
     ACT_POS act_pos;
     FILE* fp = dp->act_sf.fp;
     char* lbp;
@@ -487,7 +478,7 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
     /* Do a quick, hashed lookup */
 
     outbuf[0] = '\0';
-    data = hashfetch(dp->act_sf.hp, nam, len);
+    HASHDATUM data = hashfetch(dp->act_sf.hp, nam, len);
     if (data.dat_ptr) {
 	LISTNODE* node = (LISTNODE*)data.dat_ptr;
 	/*dp->act_sf.lp->recent = node;*/
@@ -542,12 +533,11 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
 
     if (lbp_len) {
 	if ((dp->flags & DF_REMOTE) && dp->act_sf.refetch_secs) {
-	    int num;
-	    char* cp;
+            char* cp;
 	    if (high && high != (ART_NUM)atol(cp = lbp+len+1)) {
 		while (isdigit(*cp)) cp++;
 		while (*--cp != ' ') {
-		    num = high % 10;
+		    int num = high % 10;
 		    high = high / 10;
 		    *cp = '0' + (char)num;
 		}
@@ -580,7 +570,6 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
 
 char *find_grpdesc(DATASRC *dp, char *groupname)
 {
-    HASHDATUM data;
     int grouplen;
     int ret;
 
@@ -622,7 +611,7 @@ char *find_grpdesc(DATASRC *dp, char *groupname)
     }
 
     grouplen = strlen(groupname);
-    data = hashfetch(dp->desc_sf.hp, groupname, grouplen);
+    HASHDATUM data = hashfetch(dp->desc_sf.hp, groupname, grouplen);
     if (data.dat_ptr) {
 	LISTNODE* node = (LISTNODE*)data.dat_ptr;
 	/*dp->act_sf.lp->recent = node;*/
@@ -686,9 +675,8 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
     char* s;
     HASHDATUM data;
     long node_low;
-    int keylen, linelen;
+    int linelen;
     FILE* fp;
-    char* lbp;
     time_t now = time((time_t*)nullptr);
     bool use_buffered_nntp_gets = false;
 
@@ -760,7 +748,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
 	return 1;
     }
 
-    lbp = listnum2listitem(sfp->lp, 0);
+    char *lbp = listnum2listitem(sfp->lp, 0);
     data.dat_ptr = (char*)sfp->lp->first;
 
     for (offset = 0, node_low = 0; ; offset += linelen, lbp += linelen) {
@@ -788,7 +776,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
 	    linelen = 0;
 	    continue;
 	}
-	keylen = s - g_buf;
+	int keylen = s - g_buf;
 	if (*++s != '\n' && isspace(*s)) {
 	    while (*++s != '\n' && isspace(*s)) ;
 	    strcpy(g_buf+keylen+1, s);
@@ -837,19 +825,14 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
 
 char *srcfile_append(SRCFILE *sfp, char *bp, int keylen)
 {
-    LISTNODE* node;
-    long pos;
     HASHDATUM data;
-    char* s;
-    char* lbp;
-    int linelen;
 
-    pos = sfp->lp->high + 1;
-    lbp = listnum2listitem(sfp->lp, pos);
-    node = sfp->lp->recent;
+    long pos = sfp->lp->high + 1;
+    char *lbp = listnum2listitem(sfp->lp, pos);
+    LISTNODE *node = sfp->lp->recent;
     data.dat_len = pos - node->low;
 
-    s = bp + keylen + 1;
+    char *s = bp + keylen + 1;
     if (sfp->fp && sfp->refetch_secs && *s != '\n') {
 	fseek(sfp->fp, 0, 2);
 	fputs(bp, sfp->fp);
@@ -861,7 +844,7 @@ char *srcfile_append(SRCFILE *sfp, char *bp, int keylen)
 	s = bp+keylen+1;
     }
     s = adv_then_find_next_nl_and_dectrl(s);
-    linelen = s - bp + 1;
+    const int linelen = s - bp + 1;
     if (*s != '\n') {
 	*s++ = '\n';
 	*s = '\0';
@@ -952,7 +935,6 @@ static int s_best_match; /* Value of best match */
 
 int find_close_match()
 {
-    DATASRC* dp;
     int ret = 0;
 
     s_best_match = -1;
@@ -960,7 +942,7 @@ int find_close_match()
     s_ngn = 0;
 
     /* Iterate over all legal newsgroups */
-    for (dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp)) {
+    for (DATASRC *dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp)) {
 	if (dp->flags & DF_OPEN) {
 	    if (dp->act_sf.hp)
 		hashwalk(dp->act_sf.hp, check_distance, 0);
@@ -1003,7 +985,6 @@ int find_close_match()
 
 static int check_distance(int len, HASHDATUM *data, int newsrc_ptr)
 {
-    int value;
     char* name;
 
     if (newsrc_ptr)
@@ -1021,15 +1002,14 @@ static int check_distance(int len, HASHDATUM *data, int newsrc_ptr)
 	    return 0;
     }
 
-    value = edit_distn(g_ngname, g_ngname_len, name, len);
+    int value = edit_distn(g_ngname, g_ngname_len, name, len);
     if (value > MIN_DIST)
 	return 0;
 
     if (value < s_best_match)
 	s_ngn = 0;
     if (s_best_match < 0 || value <= s_best_match) {
-	int i;
-	for (i = 0; i < s_ngn; i++) {
+        for (int i = 0; i < s_ngn; i++) {
 	    if (!strcmp(name,s_ngptrs[i]))
 		return 0;
 	}

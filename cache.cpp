@@ -11,7 +11,6 @@
 #include "ng.h"
 #include "hash.h"
 #include "ngdata.h"
-#include "nntpclient.h"
 #include "datasrc.h"
 #include "nntp.h"
 #include "term.h"
@@ -69,13 +68,12 @@ static time_t cached_time = 0;
 void build_cache()
 {
     if (cached_ng == g_ngptr && time((time_t*)nullptr) < cached_time + 6*60*60L) {
-	ART_NUM an;
-	cached_time = time((time_t*)nullptr);
+        cached_time = time((time_t*)nullptr);
 	if (g_sel_mode == SM_ARTICLE)
 	    set_selector(g_sel_mode, g_sel_artsort);
 	else
 	    set_selector(g_sel_threadmode, g_sel_threadsort);
-	for (an = g_last_cached+1; an <= g_lastart; an++)
+	for (ART_NUM an = g_last_cached + 1; an <= g_lastart; an++)
 	    article_ptr(an)->flags |= AF_EXISTS;
 	rc_to_bits();
 	g_article_list->high = g_lastart;
@@ -106,7 +104,6 @@ void build_cache()
 
 void close_cache()
 {
-    SUBJECT* sp;
     SUBJECT* next;
 
     nntp_artname(0, false);		/* clear the tmpfile cache */
@@ -120,7 +117,7 @@ void close_cache()
 	s_shortsubj_hash = nullptr;
     }
     /* Free all the subjects. */
-    for (sp = g_first_subject; sp; sp = next) {
+    for (SUBJECT *sp = g_first_subject; sp; sp = next) {
 	next = sp->next;
 	free(sp->str);
 	free((char*)sp);
@@ -213,8 +210,7 @@ void check_for_near_subj(ARTICLE *ap)
     while (sp) {
 	if ((int)strlen(sp->str+4) >= g_join_subject_len && sp->thread) {
 	    SUBJECT* sp2;
-	    HASHDATUM data;
-	    data = hashfetch(s_shortsubj_hash, sp->str+4, g_join_subject_len);
+            HASHDATUM data = hashfetch(s_shortsubj_hash, sp->str + 4, g_join_subject_len);
 	    if (!(sp2 = (SUBJECT*)data.dat_ptr)) {
 		data.dat_ptr = (char*)sp;
 		hashstorelast(data);
@@ -417,7 +413,6 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
 {
     HASHDATUM data;
     SUBJECT* sp;
-    char* newsubj;
     char* subj_start;
     short def_flags = 0;
 
@@ -426,7 +421,7 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
     if ((size -= subj_start - subj) < 0)
 	size = 0;
 
-    newsubj = safemalloc(size + 4 + 1);
+    char *newsubj = safemalloc(size + 4 + 1);
     strcpy(newsubj, "Re: ");
     size = decode_header(newsubj + 4, subj_start, size);
 
@@ -476,12 +471,11 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
 
 int decode_header(char *to, char *from, int size)
 {
-    int i;
     char *s = to; /* save for pass 2 */
     bool pass2needed = false;
 
     /* Pass 1 to decode coded bytes (which might be character fragments - so 1 pass is wrong) */
-    for (i = size; *from && i--; ) {
+    for (int i = size; *from && i--; ) {
 	if (*from == '=' && from[1] == '?') {
 	    char* q = strchr(from+2,'?');
 	    char ch = (q && q[2] == '?')? q[1] : 0;
@@ -562,8 +556,7 @@ void dectrl(char *str)
     for ( ; *str;) {
 	int w = byte_length_at(str);
 	if (at_grey_space(str)) {
-	    int i;
-	    for (i = 0; i < w; i += 1) {
+            for (int i = 0; i < w; i += 1) {
 		str[i] = ' ';
 	    }
 	}

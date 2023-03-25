@@ -88,9 +88,8 @@ void color_init()
     if (g_use_colors) {
 	char* fg;
 	char* bg;
-	int i;
 
-	/* Get default capabilities. */
+        /* Get default capabilities. */
 	if ((fg = tc_color_capability("fg default")) == nullptr) {
 	    fprintf(stderr,"trn: you need a 'fg default' definition in the [termcap] section.\n");
 	    finalize(1);
@@ -101,7 +100,7 @@ void color_init()
 	}
 	if (!strcmp(fg,bg))
 	    bg = "";
-	for (i = 0; i < MAX_COLORS; i++) {
+	for (int i = 0; i < MAX_COLORS; i++) {
 	    if (objects[i].fg == "")
 		objects[i].fg = fg;
 	    if (objects[i].bg == "")
@@ -215,11 +214,10 @@ void color_rc_attribute(const char *object, char *value)
 /* Turn on color attribute for an object. */
 void color_object(int object, bool push)
 {
-    COLOR_OBJ merged;
 
     /* Merge in the colors/attributes that we are not setting
      * from the current object. */
-    merged = s_color_stack[s_stack_pointer].object;
+    COLOR_OBJ merged = s_color_stack[s_stack_pointer].object;
 
     /* Merge in the new colors/attributes. */
     if (objects[object].fg)

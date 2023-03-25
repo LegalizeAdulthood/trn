@@ -107,10 +107,10 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
 {
     static char* subject = nullptr;
     char* filename;
-    char* s;
     char* t;
-    char* end;
-    int part = -1, total = 0, hasdot = 0;
+    int part = -1;
+    int total = 0;
+    int hasdot = 0;
 
     *partp = part;
     *totalp = total;
@@ -120,7 +120,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
 	return nullptr;
 
     /* Skip leading whitespace and other garbage */
-    s = subject;
+    char *s = subject;
     while (*s == ' ' || *s == '\t' || *s == '-') s++;
     if (!strncasecmp(s, "repost", 6)) {
 	for (s += 6; *s == ' ' || *s == '\t'
@@ -138,7 +138,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
      * prefix "v<digit>" ending in ":", since that is a popular volume/issue
      * representation syntax
      */
-    end = s + strlen(s);
+    char *end = s + strlen(s);
     do {
 	while (*s && !isalnum(*s) && *s != '_') s++;
 	filename = t = s;
@@ -233,16 +233,12 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
 int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 {
     char* dir;
-    char* filename;
     FILE* fp;
-    int part;
-    int total;
     decode_state state;
-    DECODE_FUNC decoder;
 
-    filename = decode_fix_fname(g_mime_section->filename);
-    part = g_mime_section->part;
-    total = g_mime_section->total;
+    char *filename = decode_fix_fname(g_mime_section->filename);
+    int part = g_mime_section->part;
+    int total = g_mime_section->total;
     *g_msg = '\0';
 
     if (!total && g_is_mime)
@@ -341,7 +337,7 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	first_line = nullptr;
     }
     g_mime_getc_line = first_line;
-    decoder = decode_function(g_mime_section->encoding);
+    DECODE_FUNC decoder = decode_function(g_mime_section->encoding);
     if (!decoder) {
 	strcpy(g_msg,"Unhandled encoding type -- aborting.");
 	if (fp)
@@ -421,7 +417,6 @@ DECODE_FUNC decode_function(mime_encoding encoding)
 char *decode_mkdir(const char *filename)
 {
     static char dir[LBUFLEN];
-    char* s;
 
 #ifdef MSDOS
     interp(dir, sizeof dir, "%Y/parts/");
@@ -429,7 +424,7 @@ char *decode_mkdir(const char *filename)
     interp(dir, sizeof dir, "%Y/m-prts-%L/");
 #endif
     strcat(dir, filename);
-    s = dir + strlen(dir);
+    char *s = dir + strlen(dir);
     if (s[-1] == '/')
 	return nullptr;
     *s++ = '/';
@@ -441,10 +436,8 @@ char *decode_mkdir(const char *filename)
 
 void decode_rmdir(char *dir)
 {
-    char* s;
-
     /* Remove trailing slash */
-    s = dir + strlen(dir) - 1;
+    char *s = dir + strlen(dir) - 1;
     *s = '\0';
 
     /*$$ conditionalize this */

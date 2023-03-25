@@ -59,9 +59,13 @@ static int s_mz{};
 int edit_distn(char *from, int from_len, char *to, int to_len)
 {
 #ifndef TRN_SPEEDUP
-    int ins, del, ch;	  	/* local copies of edit costs */
+    int ins;
+    int del;
+    int ch;
 #endif
-    int row, col, index;	/* dynamic programming counters */
+    int row;
+    int col;
+    int index;
     int radix;			/* radix for modular indexing */
 #ifdef TRN_SPEEDUP
     int low;

@@ -52,8 +52,8 @@ int putsubstchar(int c, int limit, bool outputok)
 	oc[1] = '\0';
 	if ((i = Latin1toASCII(nc, oc, sizeof nc, t)) <= limit) {
 	    if (outputok) {
-		for (t = 0; t < i; t++)
-		    putchar((char)nc[t]);
+		for (int t2 = 0; t2 < i; t2++)
+		    putchar((char)nc[t2]);
 	    }
 	}
 	else

@@ -64,20 +64,17 @@ static int s_reusables{};
 /* size - a crude guide to size */
 HASHTABLE *hashcreate(unsigned size, HASHCMPFUNC cmpfunc)
 {
-    HASHTABLE* tbl;
-    /* allocate HASHTABLE and (HASHENT*) array together to reduce the
-    ** number of malloc calls. */
-    struct alignalloc {
-	HASHTABLE ht;
-	HASHENT* hepa[1];	/* longer than it looks */
-    }* aap;
 
     if (size < 1)		/* size < 1 is nonsense */
 	size = 1;
-    aap = (struct alignalloc*)
-	safemalloc(sizeof *aap + (size-1)*sizeof (HASHENT*));
+    struct alignalloc
+    {
+        HASHTABLE ht;
+        HASHENT *hepa[1]; /* longer than it looks */
+    };
+    alignalloc *aap = (alignalloc *)safemalloc(sizeof *aap + (size - 1) * sizeof(HASHENT *));
     memset((char*)aap,0,sizeof *aap + (size-1)*sizeof (HASHENT*));
-    tbl = &aap->ht;
+    HASHTABLE *tbl = &aap->ht;
     tbl->ht_size = size;
     tbl->ht_magic = HASHMAG;
     tbl->ht_cmp = cmpfunc == nullptr ? default_cmp : cmpfunc;
@@ -90,18 +87,14 @@ HASHTABLE *hashcreate(unsigned size, HASHCMPFUNC cmpfunc)
 */
 void hashdestroy(HASHTABLE *tbl)
 {
-    unsigned idx;
-    HASHENT* hp;
     HASHENT* next;
-    HASHENT** hepp;
-    int tblsize;
 
     if (BADTBL(tbl))
 	return;
-    tblsize = tbl->ht_size;
-    hepp = tbl->ht_addr;
-    for (idx = 0; idx < tblsize; idx++) {
-	for (hp = hepp[idx]; hp != nullptr; hp = next) {
+    int tblsize = tbl->ht_size;
+    HASHENT **hepp = tbl->ht_addr;
+    for (unsigned idx = 0; idx < tblsize; idx++) {
+	for (HASHENT *hp = hepp[idx]; hp != nullptr; hp = next) {
 	    next = hp->he_next;
 	    hp->he_next = nullptr;
 	    hefree(hp);
@@ -115,11 +108,8 @@ void hashdestroy(HASHTABLE *tbl)
 
 void hashstore(HASHTABLE *tbl, const char *key, int keylen, HASHDATUM data)
 {
-    HASHENT* hp;
-    HASHENT** nextp;
-
-    nextp = hashfind(tbl, key, keylen);
-    hp = *nextp;
+    HASHENT **nextp = hashfind(tbl, key, keylen);
+    HASHENT *hp = *nextp;
     if (hp == nullptr) {			/* absent; allocate an entry */
 	hp = healloc();
 	hp->he_next = nullptr;
@@ -131,11 +121,8 @@ void hashstore(HASHTABLE *tbl, const char *key, int keylen, HASHDATUM data)
 
 void hashdelete(HASHTABLE *tbl, const char *key, int keylen)
 {
-    HASHENT* hp;
-    HASHENT** nextp;
-
-    nextp = hashfind(tbl, key, keylen);
-    hp = *nextp;
+    HASHENT **nextp = hashfind(tbl, key, keylen);
+    HASHENT *hp = *nextp;
     if (hp == nullptr)			/* absent */
 	return;
     *nextp = hp->he_next;		/* skip this entry */
@@ -150,14 +137,12 @@ int slast_keylen;
 /* data corresponding to key */
 HASHDATUM hashfetch(HASHTABLE *tbl, const char *key, int keylen)
 {
-    HASHENT* hp;
-    HASHENT** nextp;
     static HASHDATUM errdatum = { nullptr, 0 };
 
-    nextp = hashfind(tbl, key, keylen);
+    HASHENT **nextp = hashfind(tbl, key, keylen);
     slast_nextp = nextp;
     slast_keylen = keylen;
-    hp = *nextp;
+    HASHENT *hp = *nextp;
     if (hp == nullptr)			/* absent */
 	return errdatum;
     return hp->he_data;
@@ -165,9 +150,7 @@ HASHDATUM hashfetch(HASHTABLE *tbl, const char *key, int keylen)
 
 void hashstorelast(HASHDATUM data)
 {
-    HASHENT* hp;
-
-    hp = *slast_nextp;
+    HASHENT *hp = *slast_nextp;
     if (hp == nullptr) {			/* absent; allocate an entry */
 	hp = healloc();
 	hp->he_next = nullptr;
@@ -182,19 +165,16 @@ void hashstorelast(HASHDATUM data)
 */
 void hashwalk(HASHTABLE *tbl, HASHWALKFUNC nodefunc, int extra)
 {
-    unsigned idx;
-    HASHENT* hp;
     HASHENT* next;
     HASHENT** hepp;
-    int tblsize;
 
     if (BADTBL(tbl))
 	return;
     hepp = tbl->ht_addr;
-    tblsize = tbl->ht_size;
-    for (idx = 0; idx < tblsize; idx++) {
+    int tblsize = tbl->ht_size;
+    for (unsigned idx = 0; idx < tblsize; idx++) {
 	slast_nextp = &hepp[idx];
-	for (hp = *slast_nextp; hp != nullptr; hp = next) {
+	for (HASHENT *hp = *slast_nextp; hp != nullptr; hp = next) {
 	    next = hp->he_next;
 	    if ((*nodefunc)(hp->he_keylen, &hp->he_data, extra) < 0) {
 		*slast_nextp = next;
@@ -214,18 +194,15 @@ void hashwalk(HASHTABLE *tbl, HASHWALKFUNC nodefunc, int extra)
 */
 static HASHENT **hashfind(HASHTABLE *tbl, const char *key, int keylen)
 {
-    HASHENT* hp;
     HASHENT* prevhp = nullptr;
-    HASHENT** hepp;
-    unsigned size; 
 
     if (BADTBL(tbl)) {
 	fputs("Hash table is invalid.",stderr);
 	finalize(1);
     }
-    size = tbl->ht_size;
-    hepp = &tbl->ht_addr[hash(key,keylen) % size];
-    for (hp = *hepp; hp != nullptr; prevhp = hp, hp = hp->he_next) {
+    unsigned size = tbl->ht_size;
+    HASHENT **hepp = &tbl->ht_addr[hash(key, keylen) % size];
+    for (HASHENT *hp = *hepp; hp != nullptr; prevhp = hp, hp = hp->he_next) {
 	if (hp->he_keylen == keylen && !(*tbl->ht_cmp)(key, keylen, hp->he_data))
 	    break;
     }

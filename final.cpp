@@ -87,9 +87,6 @@ void final_init()
 
 [[noreturn]] void finalize(int status)
 {
-    int i;
-    char* s;
-
     sc_sv_savefile();	/* save any scores from memory to disk */
     update_thread_kfile();
     color_default();
@@ -103,12 +100,11 @@ void final_init()
     if (!g_checkflag)
 	unuse_multirc(g_multirc);
     if (g_datasrc_list) {
-	DATASRC* dp;
-	for (dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp))
+        for (DATASRC *dp = datasrc_first(); dp && dp->name; dp = datasrc_next(dp))
 	    close_datasrc(dp);
     }
-    for (i = 0; i < MAX_NNTP_ARTICLES; i++) {
-	s = nntp_tmpname(i);
+    for (int i = 0; i < MAX_NNTP_ARTICLES; i++) {
+	char *s = nntp_tmpname(i);
 	remove(s);
     }
     cleanup_nntp();

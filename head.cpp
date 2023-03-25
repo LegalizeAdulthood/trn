@@ -88,9 +88,7 @@ static short s_htypeix[26] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 void head_init()
 {
-    int i;
-
-    for (i = HEAD_FIRST+1; i < HEAD_LAST; i++)
+    for (int i = HEAD_FIRST + 1; i < HEAD_LAST; i++)
 	s_htypeix[*g_htype[i].name - 'a'] = i;
 
     g_user_htype_max = 10;
@@ -121,7 +119,6 @@ int set_line_type(char *bufptr, const char *colon)
 {
     char* t;
     char* f;
-    int i, len;
 
     if (colon-bufptr > sizeof g_msg)
 	return SOME_LINE;
@@ -134,14 +131,15 @@ int set_line_type(char *bufptr, const char *colon)
     }
     *t = '\0';
     f = g_msg;				/* get g_msg into a register */
-    len = t - f;
+    int len = t - f;
 
     /* now scan the HEADTYPE table, backwards so we don't have to supply an
      * extra terminating value, using first letter as index, and length as
      * optimization to avoid calling subroutine strEQ unnecessarily.  Hauls.
      */
     if (*f >= 'a' && *f <= 'z') {
-	for (i = s_htypeix[*f - 'a']; *g_htype[i].name == *f; i--) {
+        int i;
+        for (i = s_htypeix[*f - 'a']; *g_htype[i].name == *f; i--) {
 	    if (len == g_htype[i].length && !strcmp(f,g_htype[i].name))
 		return i;
 	}
@@ -163,24 +161,21 @@ int set_line_type(char *bufptr, const char *colon)
 int get_header_num(char *s)
 {
     char* end = s + strlen(s);
-    int i;
 
-    i = set_line_type(s, end);	    /* Sets g_msg to lower-cased header name */
+    int i = set_line_type(s, end);	    /* Sets g_msg to lower-cased header name */
 
     if (i <= SOME_LINE && i != CUSTOM_LINE) {
-	char* bp;
-	char ch;
-	if (g_htype[CUSTOM_LINE].name != "")
+        if (g_htype[CUSTOM_LINE].name != "")
 	    free(g_htype[CUSTOM_LINE].name);
 	g_htype[CUSTOM_LINE].name = savestr(g_msg);
 	g_htype[CUSTOM_LINE].length = end - s;
 	g_htype[CUSTOM_LINE].flags = g_htype[i].flags;
 	g_htype[CUSTOM_LINE].minpos = -1;
 	g_htype[CUSTOM_LINE].maxpos = 0;
-	for (bp = g_headbuf; *bp; bp = end) {
+	for (char *bp = g_headbuf; *bp; bp = end) {
 	    if (!(end = strchr(bp,'\n')) || end == bp)
 		break;
-	    ch = *++end;
+	    char ch = *++end;
 	    *end = '\0';
 	    s = strchr(bp,':');
 	    *end = ch;
@@ -204,13 +199,11 @@ int get_header_num(char *s)
 
 void start_header(ART_NUM artnum)
 {
-    int i;
-
 #ifdef DEBUG
     if (debug & DEB_HEADER)
 	dumpheader("start_header\n");
 #endif
-    for (i = 0; i < HEAD_LAST; i++) {
+    for (int i = 0; i < HEAD_LAST; i++) {
 	g_htype[i].minpos = -1;
 	g_htype[i].maxpos = 0;
     }
@@ -230,10 +223,9 @@ void end_header_line()
 	    if (!get_cached_line(g_parsed_artp, g_in_header, true)) {
 		int start = g_htype[g_in_header].minpos
 			  + g_htype[g_in_header].length + 1;
-		MEM_SIZE size;
-		while (g_headbuf[start] == ' ' || g_headbuf[start] == '\t')
+                while (g_headbuf[start] == ' ' || g_headbuf[start] == '\t')
 		    start++;
-		size = g_artpos - start + 1 - 1;	/* pre-strip newline */
+		MEM_SIZE size = g_artpos - start + 1 - 1;	/* pre-strip newline */
 		if (g_in_header == SUBJ_LINE)
 		    set_subj_line(g_parsed_artp,g_headbuf+start,size-1);
 		else {
@@ -248,13 +240,11 @@ void end_header_line()
 
 bool parseline(char *art_buf, int newhide, int oldhide)
 {
-    char* s;
-
     if (*art_buf == ' ' || *art_buf == '\t') /* continuation line? */
 	return oldhide;
 
     end_header_line();
-    s = strchr(art_buf,':');
+    char *s = strchr(art_buf, ':');
     if (s == nullptr) {	/* is it the end of the header? */
 	    /* Did NNTP ship us a mal-formed header line? */
 	    if (s_reading_nntp_header && *art_buf && *art_buf != '\n') {
@@ -328,7 +318,6 @@ void end_header()
 
 bool parseheader(ART_NUM artnum)
 {
-    char* bp;
     int len;
     bool had_nl = true;
     int found_nl;
@@ -356,7 +345,7 @@ bool parseheader(ART_NUM artnum)
 
     start_header(artnum);
     g_artpos = 0;
-    bp = g_headbuf;
+    char *bp = g_headbuf;
     while (g_in_header) {
 	if (g_headbuf_size < g_artpos + LBUFLEN) {
 	    len = bp - g_headbuf;
@@ -405,10 +394,7 @@ bool parseheader(ART_NUM artnum)
 char *fetchlines(ART_NUM artnum, int which_line)
 {
     char* s;
-    char* t;
     ART_POS firstpos;
-    ART_POS lastpos;
-    int size;
 
     /* Only return a cached line if it isn't the current article */
     if (g_parsed_art != artnum) {
@@ -421,9 +407,9 @@ char *fetchlines(ART_NUM artnum, int which_line)
 	return savestr("");
 
     firstpos += g_htype[which_line].length + 1;
-    lastpos = g_htype[which_line].maxpos;
-    size = lastpos - firstpos;
-    t = g_headbuf + firstpos;
+    ART_POS lastpos = g_htype[which_line].maxpos;
+    int size = lastpos - firstpos;
+    char *t = g_headbuf + firstpos;
     while (*t == ' ' || *t == '\t') t++, size--;
 #ifdef DEBUG
     if (debug && (size < 1 || size > 1000)) {
@@ -443,10 +429,7 @@ char *fetchlines(ART_NUM artnum, int which_line)
 char *mp_fetchlines(ART_NUM artnum, int which_line, memory_pool pool)
 {
     char* s;
-    char* t;
     ART_POS firstpos;
-    ART_POS lastpos;
-    int size;
 
     /* Only return a cached line if it isn't the current article */
     if (g_parsed_art != artnum) {
@@ -459,9 +442,9 @@ char *mp_fetchlines(ART_NUM artnum, int which_line, memory_pool pool)
 	return mp_savestr("",pool);
 
     firstpos += g_htype[which_line].length + 1;
-    lastpos = g_htype[which_line].maxpos;
-    size = lastpos - firstpos;
-    t = g_headbuf + firstpos;
+    ART_POS lastpos = g_htype[which_line].maxpos;
+    int size = lastpos - firstpos;
+    char *t = g_headbuf + firstpos;
     while (*t == ' ' || *t == '\t') t++, size--;
 #ifdef DEBUG
     if (debug && (size < 1 || size > 1000)) {
@@ -484,13 +467,11 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
     char* s;
     char* t;
     ART_POS firstpos;
-    ART_POS lastpos;
-    int size;
 
     if ((g_datasrc->flags & DF_REMOTE) && g_parsed_art != artnum) {
 	ARTICLE* ap;
 	int size;
-	ART_NUM num, priornum, lastnum;
+	ART_NUM num, lastnum;
 	bool cached;
  	bool hasxhdr = true;
 
@@ -509,7 +490,7 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 	    size = sizeof g_cmd_buf;
 	}
 	*s = '\0';
-	priornum = artnum-1;
+	ART_NUM priornum = artnum - 1;
 	if ((cached = (g_htype[which_line].flags & HT_CACHED)) != 0) {
 	    lastnum = artnum + PREFETCH_SIZE - 1;
 	    if (lastnum > g_lastart)
@@ -523,11 +504,10 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 	if (nntp_command(g_ser_line) <= 0)
 	    finalize(1); /*$$*/
 	if (nntp_check() > 0) {
-	    char* line;
-	    char* last_buf = g_ser_line;
+            char* last_buf = g_ser_line;
 	    MEM_SIZE last_buflen = sizeof g_ser_line;
 	    for (;;) {
-		line = nntp_get_a_line(last_buf,last_buflen,last_buf!=g_ser_line);
+		char *line = nntp_get_a_line(last_buf, last_buflen, last_buf!=g_ser_line);
 # ifdef DEBUG
 		if (debug & DEB_NNTP)
 		    printf("<%s", line? line : "<EOF>") FLUSH;
@@ -589,8 +569,8 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
     }
 
     firstpos += g_htype[which_line].length + 1;
-    lastpos = g_htype[which_line].maxpos;
-    size = lastpos - firstpos;
+    ART_POS lastpos = g_htype[which_line].maxpos;
+    int size = lastpos - firstpos;
     t = g_headbuf + firstpos;
     while (*t == ' ' || *t == '\t') t++, size--;
     if (copy)
