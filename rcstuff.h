@@ -4,6 +4,8 @@
 #ifndef RCSTUFF_H
 #define RCSTUFF_H
 
+struct HASHTABLE;
+
 #define TR_ONE ((ART_UNREAD) 1)
 #define TR_NONE ((ART_UNREAD) 0)
 #define TR_UNSUB ((ART_UNREAD) -1)

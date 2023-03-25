@@ -21,10 +21,6 @@ struct ADDGROUP;
 struct SUBJECT;
 struct ARTICLE;
 
-/* color.ih */
-
-struct COLOR_OBJ;
-
 /* datasrc.h */
 
 struct SRCFILE;
@@ -33,11 +29,6 @@ struct DATASRC;
 /* hash.h */
 
 struct HASHDATUM;
-
-/* hash.ih */
-
-struct HASHENT;
-struct HASHTABLE;
 
 /* head.h */
 
@@ -69,13 +60,6 @@ struct NNTPLINK;
 struct NEWSRC;
 struct MULTIRC;
 
-/* rt-mt.ih */
-
-struct PACKED_ROOT;
-struct PACKED_ARTICLE;
-struct TOTAL;
-struct BMAP;
-
 /* rt-page.h */
 
 union SEL_UNION;
@@ -98,10 +82,6 @@ struct SF_FILE;
 /* search.h */
 
 struct COMPEX;
-
-/* term.ih */
-
-struct KEYMAP;
 
 /* univ.h */
 

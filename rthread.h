@@ -4,6 +4,8 @@
 #ifndef RTHREAD_H
 #define RTHREAD_H
 
+struct HASHTABLE;
+
 extern ART_NUM g_obj_count;
 extern int g_subject_count;
 extern bool g_output_chase_phrase;

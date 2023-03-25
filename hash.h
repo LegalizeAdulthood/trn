@@ -13,6 +13,8 @@ struct HASHDATUM
     unsigned dat_len;
 };
 
+struct HASHTABLE;
+
 using HASHCMPFUNC = int (*)(const char *key, int keylen, HASHDATUM data);
 using HASHWALKFUNC = int (*)(int keylen, HASHDATUM *data, int extra);
 

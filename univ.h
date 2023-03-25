@@ -8,6 +8,8 @@
 
 #include "help.h"
 
+struct HASHTABLE;
+
 enum univ_item_type
 {
     UN_NONE = 0,          //

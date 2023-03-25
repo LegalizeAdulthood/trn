@@ -7,7 +7,10 @@
 #include "nntpclient.h"
 #include "rt-ov.h"
 
+#include <stdio.h>
 #include <string>
+
+struct HASHTABLE;
 
 struct SRCFILE
 {
