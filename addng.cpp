@@ -70,14 +70,14 @@ void addng_init()
 
 bool find_new_groups()
 {
-    NG_NUM oldcnt = g_newsgroup_cnt;	/* remember # newsgroups */
+    NG_NUM const oldcnt = g_newsgroup_cnt;	/* remember # newsgroups */
 
     /* Skip this check if the -q flag was given. */
     if (g_quickstart)
 	return false
 	;
 
-    for (NEWSRC *rp = g_multirc->first; rp; rp = rp->next) {
+    for (NEWSRC const *rp = g_multirc->first; rp; rp = rp->next) {
 	if (ALLBITS(rp->flags, RF_ADD_NEWGROUPS | RF_ACTIVE)) {
 	    if (rp->datasrc->flags & DF_REMOTE)
 		new_nntp_groups(rp->datasrc);
@@ -129,7 +129,7 @@ static void new_nntp_groups(DATASRC *dp)
 
     set_datasrc(dp);
 
-    time_t server_time = nntp_time();
+    time_t const server_time = nntp_time();
     if (server_time == -2)
 	return; /*$$*/
     if (nntp_newgroups(dp->lastnewgrp) < 1) { /*$$*/
@@ -239,8 +239,7 @@ static void new_local_groups(DATASRC *dp)
 static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch)
 {
     HASHDATUM data;
-    unsigned namelen = strlen(name);
-    
+    unsigned const namelen = strlen(name);
     data.dat_len = namelen + sizeof (ADDGROUP);
     ADDGROUP *node = (ADDGROUP*)safemalloc(data.dat_len);
     data.dat_ptr = (char *)node;
@@ -299,7 +298,7 @@ static void add_to_list(const char *name, int toread, char_int ch)
 
 bool scanactive(bool add_matching)
 {
-    NG_NUM oldcnt = g_newsgroup_cnt;	/* remember # of newsgroups */
+    NG_NUM const oldcnt = g_newsgroup_cnt;	/* remember # of newsgroups */
 
     if (!add_matching)
 	print_lines("Completely unsubscribed newsgroups:\n", STANDOUT);
@@ -342,7 +341,7 @@ bool scanactive(bool add_matching)
 static int list_groups(int keylen, HASHDATUM *data, int add_matching)
 {
     char* bp = ((LISTNODE*)data->dat_ptr)->data + data->dat_len;
-    int linelen = strchr(bp, '\n') - bp + 1;
+    int const linelen = strchr(bp, '\n') - bp + 1;
     (void) memcpy(g_buf,bp,linelen);
     g_buf[linelen] = '\0';
     scanline(g_buf,add_matching);
@@ -381,7 +380,7 @@ static void scanline(char *actline, bool add_matching)
 
 static int agorder_number(const ADDGROUP **app1, const ADDGROUP **app2)
 {
-    ART_NUM eq = (*app1)->num - (*app2)->num;
+    ART_NUM const eq = (*app1)->num - (*app2)->num;
     return eq > 0? g_sel_direction : -g_sel_direction;
 }
 
@@ -392,7 +391,7 @@ static int agorder_groupname(const ADDGROUP **app1, const ADDGROUP **app2)
 
 static int agorder_count(const ADDGROUP **app1, const ADDGROUP **app2)
 {
-    long eq = (*app1)->toread - (*app2)->toread;
+    long const eq = (*app1)->toread - (*app2)->toread;
     if (eq)
 	return eq > 0? g_sel_direction : -g_sel_direction;
     return agorder_groupname(app1, app2);
