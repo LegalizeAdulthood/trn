@@ -23,7 +23,7 @@ enum spin_mode
 char *extract_name(char *name);
 char *compress_name(char *name, int max);
 char *compress_address(char *name, int max);
-char *compress_from(char *from, int size);
+char *compress_from(const char *from, int size);
 char *compress_date(const ARTICLE *ap, int size);
 bool subject_has_Re(char *str, char **strp);
 const char *compress_subj(const ARTICLE *ap, int max);

@@ -458,23 +458,22 @@ char *compress_address(char *name, int max)
 /* Fit the author name in <max> chars.  Uses the comment portion if present
 ** and pads with spaces.
 */
-char *compress_from(char *from, int size)
+char *compress_from(const char *from, int size)
 {
     static char lbuf[LBUFLEN];
-    char* s = from? from : "";
-    int len, vis_len;
 
-    strcharsubst(lbuf, s, sizeof lbuf, *g_charsubst);
-    s = extract_name(lbuf);
+    strcharsubst(lbuf, from ? from : "", sizeof lbuf, *g_charsubst);
+    char *s = extract_name(lbuf);
     if (s != nullptr)
 	s = compress_name(s, size);
     else
 	s = compress_address(lbuf, size);
+
+    int len = strlen(s);
+    int vis_len;
 #ifdef USE_UTF_HACK
-    len = strlen(s);
     vis_len = visual_length_of(s);
 #else
-    len = strlen(s);
     vis_len = len;
 #endif
     if (!len) {
