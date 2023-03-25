@@ -63,23 +63,20 @@ void kfile_init()
 	    g_msgid_hash = hashcreate(1999, msgid_cmp);
 	    while (fgets(g_buf, sizeof g_buf, fp) != nullptr) {
 		if (*g_buf == '<') {
-		    int age;
-		    cp = strchr(g_buf,' ');
+                    cp = strchr(g_buf,' ');
 		    if (!cp)
 			cp = ",";
 		    else
 			*cp++ = '\0';
-		    age = g_kf_daynum - atol(cp+1);
+		    int age = g_kf_daynum - atol(cp + 1);
 		    if (age > KF_MAXDAYS) {
 			g_kf_changethd_cnt++;
 			continue;
 		    }
 		    if ((cp = strchr(s_thread_cmd_ltr, *cp)) != nullptr) {
-			int auto_flag;
-			HASHDATUM data;
 
-			auto_flag = s_thread_cmd_flag[cp-s_thread_cmd_ltr];
-			data = hashfetch(g_msgid_hash,g_buf,strlen(g_buf));
+                        int auto_flag = s_thread_cmd_flag[cp - s_thread_cmd_ltr];
+			HASHDATUM data = hashfetch(g_msgid_hash, g_buf, strlen(g_buf));
 			if (!data.dat_ptr)
 			    data.dat_ptr = savestr(g_buf);
 			else
@@ -146,8 +143,7 @@ int do_kfile(FILE *kfp, int entering)
 	}
 	if (*bp == 'I') {
 	    FILE* incfile;
-	    int ret;
-	    for (cp = bp + 1; *cp && !isspace(*cp); cp++) ;
+            for (cp = bp + 1; *cp && !isspace(*cp); cp++) ;
 	    while (isspace(*cp)) cp++;
 	    if (!*cp)
 		continue;
@@ -158,7 +154,7 @@ int do_kfile(FILE *kfp, int entering)
 		set_ngname(g_ngptr->rcline);
 	    }
 	    if ((incfile = fopen(cp, "r")) != nullptr) {
-		ret = do_kfile(incfile, entering);
+		int ret = do_kfile(incfile, entering);
 		fclose(incfile);
 		if (ret)
 		    return ret;
@@ -321,14 +317,13 @@ static bool kfile_junk(char *ptr, int killmask)
 void kill_unwanted(ART_NUM starting, const char *message, int entering)
 {
     bool intr = false;			/* did we get an interrupt? */
-    ART_NUM oldfirst;
     char oldmode = g_mode;
     bool anytokill = (g_ngptr->toread > 0);
 
     set_mode('r','k');
     if ((entering || s_exitcmds) && (g_localkfp || g_globkfp)) {
 	s_exitcmds = false;
-	oldfirst = g_firstart;
+	ART_NUM oldfirst = g_firstart;
 	g_firstart = starting;
 	clear();
 	if (message && (g_verbose || entering))
@@ -368,9 +363,8 @@ static int write_local_thread_commands(int keylen, HASHDATUM *data, int extra)
     char ch;
 
     if (autofl && ((ap->flags & AF_EXISTS) || ap->child1)) {
-	int i;
-	/* The arrays are in priority order, so find highest priority bit. */
-	for (i = 0; s_thread_cmd_ltr[i]; i++) {
+        /* The arrays are in priority order, so find highest priority bit. */
+	for (int i = 0; s_thread_cmd_ltr[i]; i++) {
 	    if (autofl & s_thread_cmd_flag[i]) {
 		ch = s_thread_cmd_ltr[i];
 		break;
@@ -455,7 +449,7 @@ void rewrite_kfile(ART_NUM thru)
 static int write_global_thread_commands(int keylen, HASHDATUM *data, int appending)
 {
     int autofl;
-    int i, age;
+    int age;
     char* msgid;
     char ch;
 
@@ -477,7 +471,7 @@ static int write_global_thread_commands(int keylen, HASHDATUM *data, int appendi
     }
 
     /* The arrays are in priority order, so find highest priority bit. */
-    for (i = 0; s_thread_cmd_ltr[i]; i++) {
+    for (int i = 0; s_thread_cmd_ltr[i]; i++) {
 	if (autofl & s_thread_cmd_flag[i]) {
 	    ch = s_thread_cmd_ltr[i];
 	    break;
@@ -513,13 +507,11 @@ static int age_thread_commands(int keylen, HASHDATUM *data, int elapsed_days)
 
 void update_thread_kfile()
 {
-    char* cp;
-    int elapsed_days;
 
     if (!(g_kf_state & KFS_GLOBAL_THREADFILE))
 	return;
 
-    elapsed_days = KF_DAYNUM(g_kf_daynum);
+    int elapsed_days = KF_DAYNUM(g_kf_daynum);
     if (elapsed_days) {
 	hashwalk(g_msgid_hash, age_thread_commands, elapsed_days);
 	g_kf_daynum += elapsed_days;
@@ -528,7 +520,7 @@ void update_thread_kfile()
     if (!(g_kf_state & KFS_THREAD_CHANGES))
 	return;
 
-    cp = filexp(get_val("KILLTHREADS", s_killthreads));
+    char *cp = filexp(get_val("KILLTHREADS", s_killthreads));
     makedir(cp,MD_FILE);
     if (g_kf_changethd_cnt*5 > g_kf_thread_cnt) {
 	remove(cp);			/* to prevent file reuse */
@@ -606,8 +598,7 @@ void edit_kfile()
 	if (g_kf_state & KFS_LOCAL_CHANGES)
 	    rewrite_kfile(g_lastart);
 	if (!(g_kf_state & KFS_GLOBAL_THREADFILE)) {
-	    SUBJECT* sp;
-	    for (sp = g_first_subject; sp; sp = sp->next)
+            for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
 		clear_subject(sp);
 	}
 	strcpy(g_buf,filexp(get_val("KILLLOCAL",s_killlocal)));
