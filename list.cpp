@@ -87,16 +87,13 @@ char *listnum2listitem(LIST *list, long num)
 */
 long listitem2listnum(LIST *list, char *ptr)
 {
-    LISTNODE* node;
-    char* cp;
-    int i;
     int item_size = list->item_size;
 
-    for (node = list->recent; ; node = node->next) {
+    for (LISTNODE *node = list->recent; ; node = node->next) {
 	if (!node)
 	    node = list->first;
-	i = node->high - node->low + 1;
-	for (cp = node->data; i--; cp += item_size) {
+	int i = node->high - node->low + 1;
+	for (char *cp = node->data; i--; cp += item_size) {
 	    if (ptr == cp) {
 		list->recent = node;
 		return (ptr - node->data) / list->item_size + node->low;
@@ -110,14 +107,11 @@ long listitem2listnum(LIST *list, char *ptr)
 */
 bool walk_list(LIST *list, bool (*callback)(char *, int), int arg)
 {
-    LISTNODE* node;
-    char* cp;
-    int i;
     int item_size = list->item_size;
 
-    for (node = list->first; node; node = node->next) {
-	i = node->high - node->low + 1;
-	for (cp = node->data; i--; cp += item_size)
+    for (LISTNODE *node = list->first; node; node = node->next) {
+	int i = node->high - node->low + 1;
+	for (char *cp = node->data; i--; cp += item_size)
 	    if (callback(cp, arg))
 		return true;
     }
@@ -213,10 +207,9 @@ char *prev_listitem(LIST *list, char *ptr)
 void delete_list(LIST *list)
 {
     LISTNODE* node = list->first;
-    LISTNODE* prevnode = nullptr;
 
     while (node) {
-	prevnode = node;
+	LISTNODE *prevnode = node;
 	node = node->next;
 	free((char*)prevnode);
     }
