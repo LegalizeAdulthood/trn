@@ -16,6 +16,8 @@ find_package(BISON REQUIRED)
 
 configure()
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 add_library(util
     ${CMAKE_CURRENT_BINARY_DIR}/config.h
     env.cpp env.h
@@ -28,6 +30,7 @@ if(WIN32)
     target_compile_definitions(util PUBLIC _CRT_DECLARE_NONSTDC_NAMES=1 _CRT_INTERNAL_NONSTDC_NAMES=1)
 endif()
 target_include_directories(util PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+set_property(TARGET util PROPERTY FOLDER Libraries)
 
 add_library(nntp
     nntpauth.cpp nntpauth.h
@@ -35,11 +38,13 @@ add_library(nntp
     nntpinit.cpp nntpinit.h
 )
 target_link_libraries(nntp PUBLIC sockets util)
+set_property(TARGET nntp PROPERTY FOLDER Libraries)
 
 add_library(tool
     util3.cpp util3.h
 )
 target_link_libraries(tool PUBLIC nntp)
+set_property(TARGET tool PROPERTY FOLDER Libraries)
 
 bison_target(parsedate parsedate.y ${CMAKE_CURRENT_BINARY_DIR}/parsedate.c)
 
@@ -128,15 +133,19 @@ endif()
 source_group("Header Files" REGULAR_EXPRESSION "^.*\.h$")
 target_include_directories(libtrn PUBLIC .)
 target_link_libraries(libtrn PUBLIC curses nntp)
+set_property(TARGET libtrn PROPERTY FOLDER Libraries)
 
 add_executable(inews inews.cpp)
 target_link_libraries(inews PUBLIC nntp tool)
+set_property(TARGET inews PROPERTY FOLDER Tools)
 
 add_executable(nntplist nntplist.cpp)
 target_link_libraries(nntplist PUBLIC nntp tool)
+set_property(TARGET nntplist PROPERTY FOLDER Tools)
 
 add_executable(trn-artchk trn-artchk.cpp)
 target_link_libraries(trn-artchk PUBLIC nntp tool)
+set_property(TARGET trn-artchk PROPERTY FOLDER Tools)
 
 add_executable(trn main.cpp)
 target_link_libraries(trn PUBLIC libtrn)
