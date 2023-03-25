@@ -411,7 +411,11 @@ char *fetchlines(ART_NUM artnum, int which_line)
     ART_POS lastpos = g_htype[which_line].maxpos;
     int size = lastpos - firstpos;
     char *t = g_headbuf + firstpos;
-    while (*t == ' ' || *t == '\t') t++, size--;
+    while (*t == ' ' || *t == '\t')
+    {
+        t++;
+	size--;
+    }
 #ifdef DEBUG
     if (debug && (size < 1 || size > 1000)) {
 	printf("Firstpos = %ld, lastpos = %ld\n",(long)firstpos,(long)lastpos);
@@ -447,7 +451,11 @@ char *mp_fetchlines(ART_NUM artnum, int which_line, memory_pool pool)
     ART_POS lastpos = g_htype[which_line].maxpos;
     int size = lastpos - firstpos;
     char *t = g_headbuf + firstpos;
-    while (*t == ' ' || *t == '\t') t++, size--;
+    while (*t == ' ' || *t == '\t')
+    {
+        t++;
+	size--;
+    }
 #ifdef DEBUG
     if (debug && (size < 1 || size > 1000)) {
 	printf("Firstpos = %ld, lastpos = %ld\n",(long)firstpos,(long)lastpos);
@@ -577,7 +585,11 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
     ART_POS lastpos = g_htype[which_line].maxpos;
     int size = lastpos - firstpos;
     t = g_headbuf + firstpos;
-    while (*t == ' ' || *t == '\t') t++, size--;
+    while (*t == ' ' || *t == '\t')
+    {
+        t++;
+	size--;
+    }
     if (copy)
 	s = safemalloc((MEM_SIZE)size);
     else {				/* hope this is okay--we're */

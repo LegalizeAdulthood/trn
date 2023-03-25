@@ -194,7 +194,10 @@ beginning:
 	    goto exit;
 	}
 	if (g_verbose && !g_first_subject && !g_datasrc->ov_opened)
-	    printf("\nGetting overview file."), fflush(stdout);
+        {
+            printf("\nGetting overview file.");
+	    fflush(stdout);
+        }
     }
     else if (g_datasrc->ov_opened < started_request - 60*60) {
 	ov_close();
@@ -202,7 +205,10 @@ beginning:
         if (g_datasrc->ov_in == nullptr)
 	    return false;
 	if (g_verbose && !g_first_subject)
-	    printf("\nReading overview file."), fflush(stdout);
+        {
+            printf("\nReading overview file.");
+	    fflush(stdout);
+        }
     }
     if (!g_datasrc->ov_opened) {
 	if (cheating)

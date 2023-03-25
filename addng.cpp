@@ -139,7 +139,8 @@ static void new_nntp_groups(DATASRC *dp)
     HASHTABLE *newngs = hashcreate(33, addng_cmp);
 
     while (true) {
-	high = 0, low = 1;
+        high = 0;
+        low = 1;
 	if (nntp_gets(g_ser_line, sizeof g_ser_line) < 0)
 	    break;
 #ifdef DEBUG
@@ -219,7 +220,9 @@ static void new_local_groups(DATASRC *dp)
 	*s = '\0';
 	if (!find_actgrp(g_datasrc, tmpbuf, g_buf, s - g_buf, (ART_NUM)0))
 	    continue;
-	high = 0, low = 1, ch = 'y';
+        high = 0;
+        low = 1;
+        ch = 'y';
 	sscanf(tmpbuf + (s-g_buf) + 1, "%ld %ld %c", &high, &low, &ch);
 	if (ch == 'x' || ch == '=')
 	    continue;
@@ -359,7 +362,9 @@ static void scanline(char *actline, bool add_matching)
     if (s == nullptr)
 	return;
     *s++ = '\0';		/* this buffer is expendable */
-    high = 0, low = 1, ch = 'y';
+    high = 0;
+    low = 1;
+    ch = 'y';
     sscanf(s, "%ld %ld %c", &high, &low, &ch);
     if (ch == 'x' || !strncmp(actline,"to.",3))
 	return;

@@ -270,9 +270,10 @@ int nntp_finishbody(finishbody_mode bmode)
     else
     if (bmode == FB_OUTPUT) {
 	if (g_verbose)
-	    printf("Receiving the rest of the article..."), fflush(stdout);
-	else
-	    printf("Receiving..."), fflush(stdout);
+            printf("Receiving the rest of the article...");
+        else
+            printf("Receiving...");
+        fflush(stdout);
     }
     if (s_body_end != s_body_pos)
 	fseek(g_artfp, (long)s_body_end, 0);

@@ -541,11 +541,17 @@ int decode_header(char *to, char *from, int size)
 	} else if (*from != '\n')
 	    *to++ = *from++;
 	else
-	    from++, size--;
+        {
+            from++;
+	    size--;
+        }
 	pass2needed = true;
     }
     while (size > 1 && to[-1] == ' ')
-	to--, size--;
+    {
+        to--;
+        size--;
+    }
     *to = '\0';
 
     /* Pass 2 to clear out "control" characters */

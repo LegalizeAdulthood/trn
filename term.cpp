@@ -1778,9 +1778,17 @@ void goto_xy(int to_col, int to_line)
 	while(g_term_line > to_line) up_line();
 
     if (to_col >= g_term_col)
-	while(g_term_col < to_col) g_term_col++, putchar(' ');
+        while (g_term_col < to_col)
+        {
+            g_term_col++;
+            putchar(' ');
+        }
     else
-	while(g_term_col > to_col) g_term_col--, backspace();
+        while (g_term_col > to_col)
+        {
+            g_term_col--;
+	    backspace();
+        }
 }
 
 static void line_col_calcs()
@@ -2133,12 +2141,18 @@ bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 		if (btn == 3)
 		    color_object(COLOR_MOUSE, true);
 		if (s == t) {
-		    for (j = 0; j < 5 && *t; j++, t++)
-			g_term_col++, putchar(*t);
+                    for (j = 0; j < 5 && *t; j++, t++)
+                    {
+                        g_term_col++;
+                        putchar(*t);
+                    }
 		}
 		else {
-		    for (; *t && *t != ' '; t++)
-			g_term_col++, putchar(*t);
+                    for (; *t && *t != ' '; t++)
+                    {
+                        g_term_col++;
+                        putchar(*t);
+                    }
 		}
 		if (btn == 3)
 		    color_pop();	/* of COLOR_MOUSE */

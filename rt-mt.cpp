@@ -190,7 +190,10 @@ int mt_data()
 	    return 0;
 
 	if (g_verbose)
-	    printf("\nGetting thread file."), fflush(stdout);
+        {
+            printf("\nGetting thread file.");
+	    fflush(stdout);
+        }
 	if (nntp_read((char*)&s_total, (long)sizeof (TOTAL)) < sizeof (TOTAL))
 	    goto exit;
     }
@@ -201,7 +204,10 @@ int mt_data()
         if (s_fp == nullptr)
 	    return 0;
 	if (g_verbose)
-	    printf("\nReading thread file."), fflush(stdout);
+        {
+            printf("\nReading thread file.");
+	    fflush(stdout);
+        }
 
 	if (fread((char*)&s_total, 1, sizeof (TOTAL), s_fp) < sizeof (TOTAL))
 	    goto exit;

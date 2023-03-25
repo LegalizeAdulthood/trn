@@ -67,7 +67,8 @@ bool set_sel_mode(char_int ch)
 	    g_thread_always = true;
 	    if (g_sel_rereading)
 		g_firstart = g_absfirst;
-	    printf("\nThreading the group. "), fflush(stdout);
+	    printf("\nThreading the group. ");
+	    fflush(stdout);
 	    termdown(1);
 	    thread_open();
 	    g_thread_always = always_save;

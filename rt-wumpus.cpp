@@ -492,7 +492,8 @@ void entire_tree(ARTICLE* ap)
 
     if (!g_threaded_group) {
 	g_threaded_group = true;
-	printf("Threading the group. "), fflush(stdout);
+	printf("Threading the group. ");
+	fflush(stdout);
 	thread_open();
 	if (!g_threaded_group) {
 	    printf("*failed*\n") FLUSH;
