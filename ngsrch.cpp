@@ -28,24 +28,17 @@ void ngsrch_init()
 
 // patbuf   if patbuf != g_buf, get_cmd must */
 // get_cmd  be set to false!!! */
-ng_search_result ng_search(char *patbuf, int get_cmd)
+ng_search_result ng_search(char *patbuf, bool get_cmd)
 {
-    char cmdchr = *patbuf; /* what kind of search? */
-    char *s;
-    char *pattern;                       /* unparsed pattern */
-    char *cmdlst = nullptr;              /* list of commands to do */
-    ng_search_result ret = NGS_NOTFOUND; /* assume no commands */
-    bool backward = cmdchr == '?';       /* direction of search */
-    bool output_level = (!g_use_threads && g_general_mode != 's');
-    NGDATA *ng_start = g_ngptr;
-
     g_int_count = 0;
     if (get_cmd && g_buf == patbuf)
 	if (!finish_command(false))	/* get rest of command */
 	    return NGS_ABORT;
 
     perform_status_init(g_newsgroup_toread);
-    s = cpytill(g_buf,patbuf+1,cmdchr);	/* ok to cpy g_buf+1 to g_buf */
+    char const cmdchr = *patbuf;         /* what kind of search? */
+    char *s = cpytill(g_buf, patbuf + 1, cmdchr); /* ok to cpy g_buf+1 to g_buf */
+    char *pattern;                                /* unparsed pattern */
     for (pattern = g_buf; *pattern == ' '; pattern++) ;
     if (*pattern)
 	g_ng_doempty = false;
@@ -64,10 +57,12 @@ ng_search_result ng_search(char *patbuf, int get_cmd)
     }
     while (isspace(*s) || *s == ':')
 	s++;
+    char *cmdlst = nullptr; /* list of commands to do */
     if (*s)
 	cmdlst = savestr(s);
     else if (g_general_mode == 's')
 	cmdlst = savestr("+");
+    ng_search_result ret = NGS_NOTFOUND; /* assume no commands */
     if (cmdlst)
 	ret = NGS_DONE;
     s = ng_comp(&s_ngcompex, pattern, true, true);
@@ -83,6 +78,7 @@ ng_search_result ng_search(char *patbuf, int get_cmd)
 	fflush(stdout);
     }
 
+    bool const output_level = (!g_use_threads && g_general_mode != 's');
     if (g_first_addgroup) {
 	ADDGROUP *gp = g_first_addgroup;
 	do {
@@ -100,6 +96,8 @@ ng_search_result ng_search(char *patbuf, int get_cmd)
 	goto exit;
     }
 
+    bool const backward = cmdchr == '?'; /* direction of search */
+    NGDATA const *ng_start = g_ngptr;
     if (backward) {
 	if (!g_ngptr)
 	    ng_start = g_ngptr = g_last_ng;
