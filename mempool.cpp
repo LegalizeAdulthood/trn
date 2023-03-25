@@ -40,8 +40,8 @@ static MP_HEAD s_mpheads[MAX_MEM_POOLS]{};
 void mp_init()
 {
     int i;
-
-    for (i = 1; i < MAX_MEM_FRAGS; i++) {
+    for (i = 1; i < MAX_MEM_FRAGS; i++)
+    {
 	s_mpfrags[i].data = nullptr;
 	s_mpfrags[i].lastfree = nullptr;
 	s_mpfrags[i].bytesfree = 0;
@@ -50,16 +50,14 @@ void mp_init()
     s_mpfrags[i-1].next = 0;
     s_mp_first_free_frag = 1;	/* first free fragment */
 
-    for (i = 0; i < MAX_MEM_POOLS; i++)
+    for (int i = 0; i < MAX_MEM_POOLS; i++)
 	s_mpheads[i].current = 0;
 }
 
 /* returns the fragment number */
 static int mp_alloc_frag()
 {
-    int f;
-
-    f = s_mp_first_free_frag;
+    int f = s_mp_first_free_frag;
     if (f == 0) {
 	printf("trn: out of memory pool fragments!\n");
 	sig_catcher(0);		/* die. */
@@ -94,9 +92,6 @@ static void mp_free_frag(int f)
 
 char *mp_savestr(const char *str, memory_pool pool)
 {
-    int f, oldf;
-    int len;
-    char* s;
 
     if (!str) {
 #if 1
@@ -106,21 +101,21 @@ char *mp_savestr(const char *str, memory_pool pool)
 	return nullptr;		/* only a flesh wound... (;-) */
 #endif
     }
-    len = strlen(str);
+    int len = strlen(str);
     if (len >= FRAG_SIZE) {
 	printf("trn: string too big (len = %d) for memory pool!\n",len);
 	printf("trn: (maximum length allowed is %d)\n",FRAG_SIZE);
 	sig_catcher(0);		/* die. */
     }
-    f = s_mpheads[pool].current;
+    int f = s_mpheads[pool].current;
     /* just to be extra safe, keep 2 bytes unused at end of block */
     if (f == 0 || len >= s_mpfrags[f].bytesfree-2) {
-	oldf = f;
+	int oldf = f;
 	f = mp_alloc_frag();
 	s_mpfrags[f].next = oldf;
 	s_mpheads[pool].current = f;
     }
-    s = s_mpfrags[f].lastfree;
+    char *s = s_mpfrags[f].lastfree;
     safecpy(s,str,len+1);
     s_mpfrags[f].lastfree += len+1;
     s_mpfrags[f].bytesfree -= len+1;
@@ -130,9 +125,6 @@ char *mp_savestr(const char *str, memory_pool pool)
 /* returns a pool-allocated string */
 char *mp_malloc(int len, memory_pool pool)
 {
-    int f,oldf;
-    char* s;
-
     if (len == 0)
 	len = 1;
     if (len >= FRAG_SIZE) {
@@ -140,14 +132,14 @@ char *mp_malloc(int len, memory_pool pool)
 	printf("trn: (maximum length allowed is %d)\n",FRAG_SIZE);
 	sig_catcher(0);		/* die. */
     }
-    f = s_mpheads[pool].current;
+    int f = s_mpheads[pool].current;
     if (f == 0 || len >= s_mpfrags[f].bytesfree) {
-	oldf = f;
+	int oldf = f;
 	f = mp_alloc_frag();
 	s_mpfrags[f].next = oldf;
 	s_mpheads[pool].current = f;
     }
-    s = s_mpfrags[f].lastfree;
+    char *s = s_mpfrags[f].lastfree;
     s_mpfrags[f].lastfree += len+1;
     s_mpfrags[f].bytesfree -= len+1;
     return s;
@@ -156,12 +148,9 @@ char *mp_malloc(int len, memory_pool pool)
 /* free a whole memory pool */
 void mp_free(memory_pool pool)
 {
-    int oldnext;
-    int f;
-
-    f = s_mpheads[pool].current;
+    int f = s_mpheads[pool].current;
     while (f) {
-	oldnext = s_mpfrags[f].next;
+	int oldnext = s_mpfrags[f].next;
 	mp_free_frag(f);
 	f = oldnext;
     }
