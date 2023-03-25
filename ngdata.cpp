@@ -89,7 +89,8 @@ int access_ng()
 	    g_ngptr->toread = TR_BOGUS;
 	    return 0;
 	}
-	if ((g_lastart = getngsize(g_ngptr)) < 0) /* Impossible... */
+        g_lastart = getngsize(g_ngptr);
+        if (g_lastart < 0) /* Impossible... */
 	    return 0;
 	g_absfirst = g_ngptr->abs1st;
 	if (g_absfirst > old_first)
@@ -124,7 +125,8 @@ int access_ng()
 	    printf(g_nocd,g_ngdir) FLUSH;
 	    return 0;
 	}
-	if ((g_lastart = getngsize(g_ngptr)) < 0) /* Impossible... */
+        g_lastart = getngsize(g_ngptr);
+        if (g_lastart < 0) /* Impossible... */
 	    return 0;
 	g_absfirst = g_ngptr->abs1st;
     }
@@ -197,7 +199,8 @@ static int ngorder_groupname(const NGDATA **npp1, const NGDATA **npp2)
 static int ngorder_count(const NGDATA **npp1, const NGDATA **npp2)
 {
     int eq;
-    if ((eq = (int)((*npp1)->toread - (*npp2)->toread)) != 0)
+    eq = (int)((*npp1)->toread - (*npp2)->toread);
+    if (eq != 0)
 	return eq * g_sel_direction;
     return (int)((*npp1)->num - (*npp2)->num);
 }

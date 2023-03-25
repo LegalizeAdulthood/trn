@@ -1630,13 +1630,15 @@ static display_state sel_command(char_int ch)
 		return DS_ASK;
 	    }
 	}
-	if ((ch = another_command(1)) != '\0')
+        ch = another_command(1);
+        if (ch != '\0')
 	    goto do_command;
 	return DS_DISPLAY;
       case 'v':
 	newline();
 	trn_version();
-	if ((ch = another_command(1)) != '\0')
+        ch = another_command(1);
+        if (ch != '\0')
 	    goto do_command;
 	return DS_DISPLAY;
       case '\\':
@@ -1658,7 +1660,8 @@ static display_state sel_command(char_int ch)
 	    erase_line(false);
 	    break;
 	}
-	if ((ch = another_command(1)) != '\0')
+        ch = another_command(1);
+        if (ch != '\0')
 	    goto do_command;
 	return DS_DISPLAY;
       default:
@@ -1678,7 +1681,8 @@ static display_state sel_command(char_int ch)
 	if (s_clean_screen)
 	    return DS_STATUS;
 	printf("\n%s\n",g_msg);
-	if ((ch = another_command(1)) != '\0')
+        ch = another_command(1);
+        if (ch != '\0')
 	    goto do_command;
 	return DS_DISPLAY;
     }
@@ -2114,7 +2118,9 @@ q does nothing.\n\n\
       case 'c':
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
-	if ((ch = ask_catchup()) == 'y' || ch == 'u') {
+        ch = ask_catchup();
+        if (ch == 'y' || ch == 'u')
+        {
 	    count_subjects(CS_UNSELECT);
 	    if (ch != 'u' && g_obj_count) {
 		g_sel_page_sp = nullptr;
@@ -2333,7 +2339,8 @@ q does nothing.\n\n\
 	}
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
-	if ((ch = ask_catchup()) == 'y' || ch == 'u')
+        ch = ask_catchup();
+        if (ch == 'y' || ch == 'u')
 	    return DS_DISPLAY;
 	if (ch != 'N')
 	    return DS_DISPLAY;
@@ -2654,8 +2661,11 @@ static display_state option_commands(char_int ch)
 	if (!finish_command(true))	/* get rest of command */
 	    break;
 	s = cpytill(g_buf,g_buf+1,'/');
-	for (pattern = g_buf; *pattern == ' '; pattern++) ;
-	if ((s = compile(&g_optcompex,pattern,true,true)) != nullptr) {
+        for (pattern = g_buf; *pattern == ' '; pattern++)
+            ;
+        s = compile(&g_optcompex, pattern, true, true);
+        if (s != nullptr)
+        {
 	    strcpy(g_msg,s);
 	    return DS_STATUS;
 	}

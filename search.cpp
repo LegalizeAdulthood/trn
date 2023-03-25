@@ -268,7 +268,8 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
 		    for (i = BMAPSIZ; i; --i)
 			ep[i] = 0;
 		    
-		    if ((c = *strp++) == '^') {
+		    c = *strp++;
+		    if (c == '^') {
 			c = *strp++;
 			*ep++ = NCCL;	/* negated */
 		    }
@@ -350,7 +351,8 @@ char *execute(COMPEX *compex, char *addr)
 		return p1;
 	    p1++;
 	} while (*p1 && !s_err);
-	if (s_err) s_err = 0;
+        if (s_err)
+            s_err = 0;
 	return nullptr;
     }
     else {			/* regular algorithm */
@@ -362,7 +364,8 @@ char *execute(COMPEX *compex, char *addr)
 	    }
 	    p1++;
 	} while (*p1 && !s_err);
-	if (s_err) s_err = 0;
+        if (s_err)
+            s_err = 0;
 	return nullptr;
     }
    /*NOTREACHED*/
@@ -457,7 +460,8 @@ bool advance(COMPEX *compex, char *lp, const char *ep)
 		continue;
  
 	    case CBACK:
-		if (compex->braelist[i = *ep++] == 0) {
+		i = *ep++;
+		if (compex->braelist[i] == 0) {
 		    fputs("bad braces\n",stdout) FLUSH;
 		    s_err = true;
 		    return false;
@@ -469,7 +473,8 @@ bool advance(COMPEX *compex, char *lp, const char *ep)
 		return false;
  
 	    case CBACK | STAR:
-		if (compex->braelist[i = *ep++] == 0) {
+		i = *ep++;
+		if (compex->braelist[i] == 0) {
 		    fputs("bad braces\n",stdout) FLUSH;
 		    s_err = true;
 		    return false;

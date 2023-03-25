@@ -43,10 +43,12 @@ bool env_init(char *tcbuf, bool lax)
 {
     bool fully_successful = true;
 
-    if ((g_home_dir = getenv("HOME")) == nullptr)
+    g_home_dir = getenv("HOME");
+    if (g_home_dir == nullptr)
 	g_home_dir = getenv("LOGDIR");
 
-    if ((g_tmp_dir = getenv("TMPDIR")) == nullptr)
+    g_tmp_dir = getenv("TMPDIR");
+    if (g_tmp_dir == nullptr)
 	g_tmp_dir = get_val("TMP","/tmp");
 
     /* try to set g_login_name */
@@ -166,9 +168,11 @@ bool set_user_name(char *tmpbuf)
 #ifdef BERKJUNK
     while (*s && !isalnum(*s) && *s != '&') s++;
 #endif
-    if ((c = strchr(s, ',')) != nullptr)
+    c = strchr(s, ',');
+    if (c != nullptr)
 	*c = '\0';
-    if ((c = strchr(s, ';')) != nullptr)
+    c = strchr(s, ';');
+    if (c != nullptr)
 	*c = '\0';
     s = cpytill(g_buf,s,'&');
     if (*s == '&') {			/* whoever thought this one up was */
@@ -180,9 +184,11 @@ bool set_user_name(char *tmpbuf)
     }
     g_real_name = savestr(g_buf);
 #else /* !BERKNAMES */
-    if ((c = strchr(s, '(')) != nullptr)
+    c = strchr(s, '(');
+    if (c != nullptr)
 	*c = '\0';
-    if ((c = strchr(s, '-')) != nullptr)
+    c = strchr(s, '-');
+    if (c != nullptr)
 	s = c;
     g_real_name = savestr(s);
 #endif /* !BERKNAMES */
@@ -191,7 +197,9 @@ bool set_user_name(char *tmpbuf)
     {
 	FILE* fp;
 	env_init2(); /* Make sure g_home_dir/g_dot_dir/etc. are set. */
-	if ((fp = fopen(filexp(FULLNAMEFILE),"r")) != nullptr) {
+        fp = fopen(filexp(FULLNAMEFILE), "r");
+        if (fp != nullptr)
+        {
 	    fgets(g_buf,sizeof g_buf,fp);
 	    fclose(fp);
 	    g_buf[strlen(g_buf)-1] = '\0';
@@ -263,7 +271,8 @@ bool set_p_host_name(char *tmpbuf)
     g_p_host_name = PHOSTNAME;
     if (FILE_REF(g_p_host_name) || *g_p_host_name == '~') {
 	g_p_host_name = filexp(g_p_host_name);
-	if ((fp = fopen(g_p_host_name,"r")) == nullptr)
+        fp = fopen(g_p_host_name, "r");
+        if (fp == nullptr)
 	    strcpy(tmpbuf,".");
 	else {
 	    fgets(tmpbuf,TCBUF_SIZE,fp);
@@ -311,9 +320,8 @@ bool set_p_host_name(char *tmpbuf)
 
 char *get_val(const char *nam, char *def)
 {
-    char* val;
-
-    if ((val = getenv(nam)) == nullptr || !*val)
+    char *val = getenv(nam);
+    if (val == nullptr || !*val)
 	return def;
     return val;
 }

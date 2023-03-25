@@ -227,7 +227,9 @@ art_search_result art_search(char *patbuf, int patbufsiz, int get_cmd)
 	}
 #endif
     }
-    if ((s = compile(compex,pattern,true,foldcase)) != nullptr) {
+    s = compile(compex, pattern, true, foldcase);
+    if (s != nullptr)
+    {
 					/* compile regular expression */
 	errormsg(s);
 	ret = SRCH_ABORT;
@@ -409,7 +411,9 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
 		    return true;
 		in_sig = true;
 	    }
-	    if ((nlptr = strchr(s,'\n')) != nullptr) {
+            nlptr = strchr(s, '\n');
+            if (nlptr != nullptr)
+            {
 		ch = *++nlptr;
 		*nlptr = '\0';
 	    }

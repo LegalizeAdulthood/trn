@@ -101,7 +101,8 @@ void mime_ReadMimecap(char *mcname)
     int buflen = 2048;
     int i;
 
-    if ((fp = fopen(filexp(mcname), "r")) == nullptr)
+    fp = fopen(filexp(mcname), "r");
+    if (fp == nullptr)
 	return;
     char *bp = safemalloc(buflen);
     for (i = s_mimecap_list->high; !feof(fp); ) {
@@ -143,7 +144,9 @@ void mime_ReadMimecap(char *mcname)
 	mcp->command = savestr(mime_ParseEntryArg(&s));
 	while (s) {
 	    t = mime_ParseEntryArg(&s);
-	    if ((arg = strchr(t, '=')) != nullptr) {
+            arg = strchr(t, '=');
+            if (arg != nullptr)
+            {
 		char* f = arg+1;
 		while (arg != t && isspace(arg[-1])) arg--;
 		*arg++ = '\0';
@@ -1411,7 +1414,9 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 	    break;
 	  case TAG_OL:
 	    itype = 4;
-	    if ((cp = find_attr(word, "type")) != nullptr) {
+            cp = find_attr(word, "type");
+            if (cp != nullptr)
+            {
 		switch (*cp) {
 		  case 'a':  itype = 5;  break;
 		  case 'A':  itype = 6;  break;
@@ -1424,7 +1429,9 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 	    break;
 	  case TAG_UL:
 	    itype = 1;
-	    if ((cp = find_attr(word, "type")) != nullptr) {
+            cp = find_attr(word, "type");
+            if (cp != nullptr)
+            {
 		switch (*cp) {
 		  case 'd': case 'D':  itype = 1;  break;
 		  case 'c': case 'C':  itype = 2;  break;
@@ -1619,9 +1626,13 @@ static int do_indent(char *t)
     if (t)
 	g_mime_section->html &= ~HF_NEED_INDENT;
 
-    if ((blks = g_mime_section->html_blks) != nullptr) {
+    blks = g_mime_section->html_blks;
+    if (blks != nullptr)
+    {
 	for (int j = 0; j < g_mime_section->html_blkcnt; j++) {
-	    if ((ch = blks[j].indent) != 0) {
+            ch = blks[j].indent;
+            if (ch != 0)
+            {
 		switch (ch) {
 		  case '>':
 		    spaces = 1;

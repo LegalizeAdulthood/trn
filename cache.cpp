@@ -261,7 +261,8 @@ void check_poster(ARTICLE *ap)
 		    ;
 		h[1] = '\0';		/* or strip the comment */
 	    }
-	    if ((h = strchr(s,'%')) != nullptr || (h = strchr(s,'@')) != nullptr) {
+            if ((h = strchr(s, '%')) != nullptr || (h = strchr(s, '@')))
+            {
 		*h++ = '\0';
 		u = s;
 	    } else if ((u = strrchr(s,'!')) != nullptr) {
@@ -308,12 +309,15 @@ void uncache_article(ARTICLE *ap, bool remove_empties)
 
     if (ap->subj) {
 	if (ALLBITS(ap->flags, AF_CACHED | AF_EXISTS)) {
-	    if ((next = ap->subj->articles) == ap)
+            next = ap->subj->articles;
+            if (next == ap)
 		ap->subj->articles = ap->subj_next;
 	    else {
 		ARTICLE* ap2;
 		while (next) {
-		    if ((ap2 = next->subj_next) == ap) {
+                    ap2 = next->subj_next;
+                    if (ap2 == ap)
+                    {
 			next->subj_next = ap->subj_next;
 			break;
 		    }
@@ -452,7 +456,8 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
 	    sp = (SUBJECT*)safemalloc(sizeof (SUBJECT));
 	    memset((char*)sp,0,sizeof (SUBJECT));
 	    g_subject_count++;
-	    if ((sp->prev = g_last_subject) != nullptr)
+            sp->prev = g_last_subject;
+            if (sp->prev != nullptr)
 		sp->prev->next = sp;
 	    else
 		g_first_subject = sp;
@@ -656,7 +661,9 @@ void look_ahead()
 	    termdown(2);
 	}
 #endif
-	if ((s = compile(&s_srchcompex,pattern,true,true)) != nullptr) {
+        s = compile(&s_srchcompex, pattern, true, true);
+        if (s != nullptr)
+        {
 				    /* compile regular expression */
 	    printf("\n%s\n",s) FLUSH;
 	    termdown(2);

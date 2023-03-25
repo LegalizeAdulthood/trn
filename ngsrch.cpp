@@ -70,7 +70,9 @@ ng_search_result ng_search(char *patbuf, int get_cmd)
 	cmdlst = savestr("+");
     if (cmdlst)
 	ret = NGS_DONE;
-    if ((s = ng_comp(&s_ngcompex,pattern,true,true)) != nullptr) {
+    s = ng_comp(&s_ngcompex, pattern, true, true);
+    if (s != nullptr)
+    {
 					/* compile regular expression */
 	errormsg(s);
 	ret = NGS_ERROR;

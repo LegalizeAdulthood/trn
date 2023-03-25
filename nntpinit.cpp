@@ -56,11 +56,15 @@ int server_init(const char *machine)
     ** the socket file descriptor.  Note that we can't just
     ** open a fp for reading and writing -- we have to open
     ** up two separate fp's, one for reading, one for writing. */
-    if ((g_nntplink.rd_fp = fdopen(sockt_rd, "r")) == nullptr) {
+    g_nntplink.rd_fp = fdopen(sockt_rd, "r");
+    if (g_nntplink.rd_fp == nullptr)
+    {
 	perror("server_init: fdopen #1");
 	return -1;
     }
-    if ((g_nntplink.wr_fp = fdopen(sockt_wr, "w")) == nullptr) {
+    g_nntplink.wr_fp = fdopen(sockt_wr, "w");
+    if (g_nntplink.wr_fp == nullptr)
+    {
 	perror("server_init: fdopen #2");
 	g_nntplink.rd_fp = nullptr;
 	return -1;
@@ -159,7 +163,9 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 	sin.sin_port = htons(port);
     else {
 	struct servent* sp;
-	if ((sp = getservbyname(service, "tcp")) == nullptr) {
+        sp = getservbyname(service, "tcp");
+        if (sp == nullptr)
+        {
 	    fprintf(stderr, "%s/tcp: Unknown service.\n", service);
 	    return -1;
 	}

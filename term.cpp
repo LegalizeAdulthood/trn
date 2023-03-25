@@ -535,7 +535,8 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
 	s_topmap = newkeymap();
     if (*line == '#' || *line == '\n')
 	return;
-    if (line[ch = strlen(line)-1] == '\n')
+    ch = strlen(line)-1;
+    if (line[ch] == '\n')
 	line[ch] = '\0';
     /* A 0 length signifies we already parsed the macro into tmpbuf,
     ** so line is just the definition. */
@@ -619,7 +620,8 @@ static void show_keymap(KEYMAP *curmap, char *prefix)
     int kt;
 
     for (i = 0; i < 128; i++) {
-	if ((kt = curmap->km_type[i]) != 0) {
+	kt = curmap->km_type[i];
+	if (kt != 0) {
 	    if (i < ' ')
 		sprintf(next,"^%c",i+64);
 	    else if (i == ' ')
@@ -1741,12 +1743,14 @@ void goto_xy(int to_col, int to_line)
 	cmcost = 9999;
     }
 
-    if ((ycost = (to_line - g_term_line)) < 0)
+    ycost = (to_line - g_term_line);
+    if (ycost < 0)
 	ycost = (s_upcost? -ycost * s_upcost : 7777);
     else if (ycost > 0)
 	g_term_col = 0;
 
-    if ((xcost = (to_col - g_term_col)) < 0) {
+    xcost = (to_col - g_term_col);
+    if (xcost < 0) {
 	if (!to_col && ycost+1 < cmcost) {
 	    carriage_return();
 	    xcost = 0;

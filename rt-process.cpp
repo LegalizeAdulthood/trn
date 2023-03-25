@@ -40,7 +40,9 @@ static void fix_msgid(char *msgid)
 {
     char* cp;
 
-    if ((cp = strchr(msgid, '@')) != nullptr) {
+    cp = strchr(msgid, '@');
+    if (cp != nullptr)
+    {
 	while (*++cp) {
 	    if (isupper(*cp)) {
 		*cp = tolower(*cp);	/* lower-case domain portion */
@@ -78,7 +80,9 @@ bool valid_article(ARTICLE *article)
 		g_kf_changethd_cnt++;
 	    data.dat_len = 0;
 	}
-	if ((fake_ap = (ARTICLE*)data.dat_ptr) == nullptr) {
+        fake_ap = (ARTICLE *)data.dat_ptr;
+        if (fake_ap == nullptr)
+        {
 	    data.dat_ptr = (char*)article;
 	    hashstorelast(data);
 	    fake_had_subj = nullptr;
@@ -108,7 +112,9 @@ bool valid_article(ARTICLE *article)
 		g_recent_artp = article;
 		g_recent_art = article_num(article);
 	    }
-	    if ((ap = article->parent) != nullptr) {
+            ap = article->parent;
+            if (ap != nullptr)
+            {
 		if (ap->child1 == fake_ap)
 		    ap->child1 = article;
 		else {
@@ -125,7 +131,9 @@ bool valid_article(ARTICLE *article)
 		}
 	    } else if (fake_had_subj) {
 		SUBJECT* sp = fake_had_subj;
-		if ((ap = sp->thread) == fake_ap) {
+                ap = sp->thread;
+                if (ap == fake_ap)
+                {
 		    do {
 			sp->thread = article;
 			sp = sp->thread_link;
@@ -271,7 +279,8 @@ void thread_article(ARTICLE *article, char *references)
 	    ** does have a subj.
 	    */
 	    if ((ap->date && !ap->subj) || ap == article) {
-		if ((ap = prev) == article)
+                ap = prev;
+                if (ap == article)
 		    ap = nullptr;
 		goto next;
 	    }
@@ -425,7 +434,9 @@ static void unlink_child(ARTICLE *child)
 
     if (!(last = child->parent)) {
 	SUBJECT* sp = child->subj;
-	if ((last = sp->thread) == child) {
+        last = sp->thread;
+        if (last == child)
+        {
 	    do {
 		sp->thread = child->sibling;
 		sp = sp->thread_link;

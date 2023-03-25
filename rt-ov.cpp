@@ -61,7 +61,8 @@ bool ov_init()
 	/* Just in case... */
 	if (*g_ser_line == NNTP_CLASS_OK)
 	    nntp_finish_list();
-	if ((ret = nntp_list("overview.fmt","",0)) < -1)
+        ret = nntp_list("overview.fmt", "", 0);
+        if (ret < -1)
 	    return false;
 	has_overview_fmt = ret > 0;
     }
@@ -200,7 +201,8 @@ beginning:
     }
     else if (g_datasrc->ov_opened < started_request - 60*60) {
 	ov_close();
-	if ((g_datasrc->ov_in = fopen(ov_name(g_ngname), "r")) == nullptr)
+        g_datasrc->ov_in = fopen(ov_name(g_ngname), "r");
+        if (g_datasrc->ov_in == nullptr)
 	    return false;
 	if (g_verbose && !g_first_subject)
 	    printf("\nReading overview file."), fflush(stdout);
@@ -346,7 +348,8 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 
     memset((char*)fields,0,sizeof fields);
     for (i = 0; cp && i < OV_MAX_FIELDS; cp = tab) {
-	if ((tab = strchr(cp, '\t')) != nullptr)
+        tab = strchr(cp, '\t');
+        if (tab != nullptr)
 	    *tab++ = '\0';
 	fn = fieldnum[i];
 	if (!(fieldflags[fn] & (FF_HAS_FIELD | FF_CHECK4FIELD)))

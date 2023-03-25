@@ -29,7 +29,9 @@ void last_init()
 
 void readlast()
 {
-    if ((g_tmpfp = fopen(s_lastfile,"r")) != nullptr) {
+    g_tmpfp = fopen(s_lastfile, "r");
+    if (g_tmpfp != nullptr)
+    {
 	if (fgets(g_buf,sizeof g_buf,g_tmpfp) != nullptr) {
 	    long old_last = g_lasttime;
 	    g_buf[strlen(g_buf)-1] = '\0';
@@ -53,7 +55,9 @@ void readlast()
 void writelast()
 {
     sprintf(g_buf,"%s.%ld", s_lastfile, g_our_pid);
-    if ((g_tmpfp = fopen(g_buf,"w")) != nullptr) {
+    g_tmpfp = fopen(g_buf, "w");
+    if (g_tmpfp != nullptr)
+    {
 	if (g_lasttime < s_starttime)
 	    g_lasttime = s_starttime;
 	fprintf(g_tmpfp,"%s\n%ld\n%ld\n%ld\n%ld\n",

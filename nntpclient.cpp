@@ -105,7 +105,8 @@ char *nntp_servername(char *name)
 	while (fgets(g_ser_line, sizeof g_ser_line, fp) != nullptr) {
 	    if (*g_ser_line == '\n' || *g_ser_line == '#')
 		continue;
-	    if ((name = strchr(g_ser_line, '\n')) != nullptr)
+            name = strchr(g_ser_line, '\n');
+            if (name != nullptr)
 		*name = '\0';
 	    name = g_ser_line;
 	    break;

@@ -403,7 +403,8 @@ char *fetchlines(ART_NUM artnum, int which_line)
 	if (s)
 	    return savestr(s);
     }
-    if ((firstpos = g_htype[which_line].minpos) < 0)
+    firstpos = g_htype[which_line].minpos;
+    if (firstpos < 0)
 	return savestr("");
 
     firstpos += g_htype[which_line].length + 1;
@@ -438,7 +439,8 @@ char *mp_fetchlines(ART_NUM artnum, int which_line, memory_pool pool)
 	if (s)
 	    return mp_savestr(s,pool);
     }
-    if ((firstpos = g_htype[which_line].minpos) < 0)
+    firstpos = g_htype[which_line].minpos;
+    if (firstpos < 0)
 	return mp_savestr("",pool);
 
     firstpos += g_htype[which_line].length + 1;
@@ -491,7 +493,9 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 	}
 	*s = '\0';
 	ART_NUM priornum = artnum - 1;
-	if ((cached = (g_htype[which_line].flags & HT_CACHED)) != 0) {
+        cached = (g_htype[which_line].flags & HT_CACHED);
+        if (cached != 0)
+        {
 	    lastnum = artnum + PREFETCH_SIZE - 1;
 	    if (lastnum > g_lastart)
 		lastnum = g_lastart;
@@ -516,7 +520,8 @@ char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
 		    break;
 		last_buf = line;
 		last_buflen = g_buflen_last_line_got;
-		if ((t = strchr(line, '\r')) != nullptr)
+                t = strchr(line, '\r');
+                if (t != nullptr)
 		    *t = '\0';
 		if (!(t = strchr(line, ' ')))
 		    continue;

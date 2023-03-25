@@ -123,7 +123,9 @@ do_article_result do_article()
 	(long)g_art,(long)g_lastart);	/* format prompt string */
     g_prompt = prompt_buf;
     g_int_count = 0;		/* interrupt count is 0 */
-    if ((s_firstpage = (g_topline < 0)) != 0) {
+    s_firstpage = (g_topline < 0);
+    if (s_firstpage != 0)
+    {
 	parseheader(g_art);
 	mime_SetArticle();
 	clear_artbuf();
@@ -219,7 +221,9 @@ do_article_result do_article()
 	    else if (g_in_header && *(bufptr = g_headbuf + g_artpos))
 		s_continuation = *bufptr == ' ' || *bufptr == '\t';
 	    else {
-		if ((bufptr = readartbuf(g_auto_view_inline)) == nullptr) {
+                bufptr = readartbuf(g_auto_view_inline);
+                if (bufptr == nullptr)
+                {
 		    s_special = false;
 		    if (g_innersearch)
 			(void)innermore();
@@ -242,7 +246,8 @@ do_article_result do_article()
 	    } else if (notesfiles && g_do_hiding && !s_continuation
 		    && *bufptr == '#' && isupper(bufptr[1])
 		    && bufptr[2] == ':' ) {
-		if ((bufptr = readartbuf(g_auto_view_inline)) == nullptr)
+                bufptr = readartbuf(g_auto_view_inline);
+                if (bufptr == nullptr)
 		    break;
 		for (s = bufptr; *s && *s != '\n' && *s != '!'; s++) ;
 		if (*s != '!')
@@ -258,7 +263,8 @@ do_article_result do_article()
 	    if (g_in_header && g_do_hiding && (g_htype[g_in_header].flags & HT_MAGIC)) {
 		switch (g_in_header) {
 		  case NGS_LINE:
-		    if ((s = strchr(bufptr,'\n')) != nullptr)
+                    s = strchr(bufptr, '\n');
+                    if (s != nullptr)
 			*s = '\0';
 		    hide_this_line = (strchr(bufptr,',') == nullptr)
 			&& !strcmp(bufptr+12,g_ngname);
@@ -277,7 +283,9 @@ do_article_result do_article()
 			safecpy(g_art_line,bufptr,s-bufptr+1);
 		    else
 			safecpy(g_art_line,bufptr,sizeof g_art_line);
-		    if ((s = extract_name(g_art_line+6)) != nullptr) {
+                    s = extract_name(g_art_line + 6);
+                    if (s != nullptr)
+                    {
 			strcpy(g_art_line+6,s);
 			bufptr = g_art_line;
 		    }
@@ -679,7 +687,9 @@ page_switch_result page_switch()
 	    if (pos < g_htype[PAST_HEADER].minpos)
 		break;
 	    seekartbuf(pos);
-	    if ((s = readartbuf(false)) == nullptr) {
+            s = readartbuf(false);
+            if (s == nullptr)
+            {
 		s = LINE_PTR(s_alinebeg);
 		break;
 	    }
@@ -697,7 +707,9 @@ page_switch_result page_switch()
 	    return PS_ASK;
 	s = g_buf+1;
 	if (isspace(*s)) s++;
-	if ((s = compile(&s_gcompex,s,true,true)) != nullptr) {
+        s = compile(&s_gcompex, s, true, true);
+        if (s != nullptr)
+        {
 			    /* compile regular expression */
 	    printf("\n%s\n",s) FLUSH;
 	    termdown(2);
@@ -735,7 +747,9 @@ page_switch_result page_switch()
 	g_innerlight = 0;
 	g_innersearch = 0; /* assume not found */
 	while ((s = readartbuf(false)) != nullptr) {
-	    if ((nlptr = strchr(s,'\n')) != nullptr) {
+            nlptr = strchr(s, '\n');
+            if (nlptr != nullptr)
+            {
 		ch = *++nlptr;
 		*nlptr = '\0';
 	    }
@@ -842,7 +856,9 @@ page_switch_result page_switch()
 		pos = -pos;
 	    if (pos >= g_htype[PAST_HEADER].minpos) {
 		seekartbuf(pos);
-		if ((s = readartbuf(false)) != nullptr) {
+                s = readartbuf(false);
+                if (s != nullptr)
+                {
 		    g_artpos = vrdary(g_topline);
 		    if (g_artpos < 0)
 			g_artpos = -g_artpos;
@@ -1024,7 +1040,8 @@ leave_pager:
 	}
 	return PS_NORM;
       case 'i':
-	if ((g_auto_view_inline = !g_auto_view_inline) != 0)
+        g_auto_view_inline = !g_auto_view_inline;
+        if (g_auto_view_inline != 0)
 	    g_first_view = 0;
 	printf("\nAuto-View inlined mime is %s\n", g_auto_view_inline? "on" : "off");
 	termdown(2);

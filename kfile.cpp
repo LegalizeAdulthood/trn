@@ -59,7 +59,9 @@ void kfile_init()
 	FILE* fp;
 	g_kf_daynum = KF_DAYNUM(0);
 	g_kf_thread_cnt = g_kf_changethd_cnt = 0;
-	if ((fp = fopen(filexp(cp), "r")) != nullptr) {
+        fp = fopen(filexp(cp), "r");
+        if (fp != nullptr)
+        {
 	    g_msgid_hash = hashcreate(1999, msgid_cmp);
 	    while (fgets(g_buf, sizeof g_buf, fp) != nullptr) {
 		if (*g_buf == '<') {
@@ -73,8 +75,9 @@ void kfile_init()
 			g_kf_changethd_cnt++;
 			continue;
 		    }
-		    if ((cp = strchr(s_thread_cmd_ltr, *cp)) != nullptr) {
-
+                    cp = strchr(s_thread_cmd_ltr, *cp);
+                    if (cp != nullptr)
+                    {
                         int auto_flag = s_thread_cmd_flag[cp - s_thread_cmd_ltr];
 			HASHDATUM data = hashfetch(g_msgid_hash, g_buf, strlen(g_buf));
 			if (!data.dat_ptr)
@@ -153,7 +156,9 @@ int do_kfile(FILE *kfp, int entering)
 		cp = filexp(get_val("KILLLOCAL",s_killlocal));
 		set_ngname(g_ngptr->rcline);
 	    }
-	    if ((incfile = fopen(cp, "r")) != nullptr) {
+            incfile = fopen(cp, "r");
+            if (incfile != nullptr)
+            {
 		int ret = do_kfile(incfile, entering);
 		fclose(incfile);
 		if (ret)
@@ -238,11 +243,15 @@ int do_kfile(FILE *kfp, int entering)
 		cp = "T,";
 	    else
 		*cp++ = '\0';
-	    if ((ap = get_article(bp)) != nullptr) {
+            ap = get_article(bp);
+            if (ap != nullptr)
+            {
 		if ((ap->flags & AF_FAKE) && !ap->child1) {
 		    if (*cp == 'T')
 			cp++;
-		    if ((cp = strchr(s_thread_cmd_ltr, *cp)) != nullptr) {
+                    cp = strchr(s_thread_cmd_ltr, *cp);
+                    if (cp != nullptr)
+                    {
 			ap->autofl = s_thread_cmd_flag[cp-s_thread_cmd_ltr];
 			if (ap->autofl & AUTO_KILLS)
 			    thread_kill_cnt++;
@@ -390,7 +399,9 @@ void rewrite_kfile(ART_NUM thru)
 	makedir(killname,MD_FILE);
     remove(killname);			/* to prevent file reuse */
     g_kf_state &= ~(g_kfs_local_change_clear | KFS_NORMAL_LINES);
-    if ((s_newkfp = fopen(killname,"w")) != nullptr) {
+    s_newkfp = fopen(killname, "w");
+    if (s_newkfp != nullptr)
+    {
 	fprintf(s_newkfp,"THRU %s %ld\n",g_ngptr->rc->name,(long)thru);
 	while (g_localkfp && fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
 	    if (!strncmp(g_buf,"THRU",4)) {
@@ -524,13 +535,15 @@ void update_thread_kfile()
     makedir(cp,MD_FILE);
     if (g_kf_changethd_cnt*5 > g_kf_thread_cnt) {
 	remove(cp);			/* to prevent file reuse */
-	if ((s_newkfp = fopen(cp,"w")) == nullptr)
+        s_newkfp = fopen(cp, "w");
+        if (s_newkfp == nullptr)
 	    return; /*$$ Yikes! */
 	g_kf_thread_cnt = g_kf_changethd_cnt = 0;
 	hashwalk(g_msgid_hash, write_global_thread_commands, 0); /* Rewrite */
     }
     else {
-	if ((s_newkfp = fopen(cp, "a")) == nullptr)
+        s_newkfp = fopen(cp, "a");
+        if (s_newkfp == nullptr)
 	    return; /*$$ Yikes! */
 	hashwalk(g_msgid_hash, write_global_thread_commands, 1); /* Append */
     }
@@ -629,10 +642,13 @@ void edit_kfile()
 			cp = ",";
 		    else
 			*cp++ = '\0';
-		    if ((ap = get_article(bp)) != nullptr) {
+                    ap = get_article(bp);
+                    if (ap != nullptr)
+                    {
 			if (*cp == 'T')
 			    cp++;
-			if ((cp = strchr(s_thread_cmd_ltr, *cp)) != nullptr)
+                        cp = strchr(s_thread_cmd_ltr, *cp);
+                        if (cp != nullptr)
 			    ap->autofl |= s_thread_cmd_flag[cp-s_thread_cmd_ltr];
 		    }
 		}
@@ -679,7 +695,9 @@ void kf_append(const char *cmd, bool local)
 	fflush(stdout);
 	if (g_novice_delays)
 	    sleep(2);
-	if ((g_tmpfp = fopen(g_cmd_buf,"a+")) != nullptr) {
+        g_tmpfp = fopen(g_cmd_buf, "a+");
+        if (g_tmpfp != nullptr)
+        {
 	    char ch;
 	    if (fseek(g_tmpfp,-1L,2) < 0)
 		ch = '\n';

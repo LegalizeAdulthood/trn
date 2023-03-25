@@ -68,7 +68,8 @@ bool fetch_http(const char *host, int port, const char *path, const char *outnam
     /* (the old nicebg code caused portability problems) */
     /* later consider larger buffers, spinner */
     while (true) {
-	if ((len = read(sock, s_url_buf, 1024)) < 0) {
+	len = read(sock, s_url_buf, 1024);
+	if (len < 0) {
 	    printf("\nError: reading URL reply\n");
 	    return false;
 	}

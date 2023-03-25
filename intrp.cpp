@@ -301,7 +301,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case '{':
 		    pattern = cpytill(scrbuf,pattern+1,'}');
-		    if ((s = strchr(scrbuf,'-')) != nullptr)
+                    s = strchr(scrbuf, '-');
+                    if (s != nullptr)
 			*s++ = '\0';
 		    else
 			s = "";
@@ -309,7 +310,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case '<':
 		    pattern = cpytill(scrbuf,pattern+1,'>');
-		    if ((s = strchr(scrbuf,'-')) != nullptr)
+                    s = strchr(scrbuf, '-');
+                    if (s != nullptr)
 			*s++ = '\0';
 		    else
 			s = "";
@@ -366,7 +368,9 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			dointerp(scrbuf,sizeof scrbuf,spfbuf,nullptr,cmd);
 			proc_sprintf = false;
 		    }
-		    if ((s = compile(&s_cond_compex,scrbuf,true,true)) != nullptr) {
+                    s = compile(&s_cond_compex, scrbuf, true, true);
+                    if (s != nullptr)
+                    {
 			printf("%s: %s\n",scrbuf,s) FLUSH;
 			pattern += strlen(pattern);
 			free_compex(&s_cond_compex);
@@ -652,7 +656,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			if (g_htype[REFS_LINE].minpos >= 0) {
 			    refs_buf = fetchlines(g_art,REFS_LINE);
 			    normalize_refs(refs_buf);
-			    if ((s = strrchr(refs_buf,'<')) != nullptr)
+                            s = strrchr(refs_buf, '<');
+                            if (s != nullptr)
 				break;
 			}
 		    }
@@ -674,7 +679,9 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			/* no more than 3 prior references PLUS the
 			** root article allowed, including the one
 			** concatenated below */
-			if ((s = strrchr(refs_buf,'<')) != nullptr && s > refs_buf) {
+                        s = strrchr(refs_buf, '<');
+                        if (s != nullptr && s > refs_buf)
+                        {
 			    *s = '\0';
 			    h = strrchr(refs_buf,'<');
 			    *s = '<';
@@ -712,7 +719,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			s = "";
 			break;
 		    }
-		    if ((str = subj_buf) == nullptr)
+                    str = subj_buf;
+                    if (str == nullptr)
 			str = subj_buf = fetchsubj(g_art,true);
 		    subject_has_Re(str,&str);
                     if (*pattern == 's' && (h = in_string(str, "- (nf", true)) != nullptr)

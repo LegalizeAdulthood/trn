@@ -402,8 +402,6 @@ void univ_add_virtgroup(const char *grpname)
 */
 static bool univ_DoMatch(const char *text, const char *p)
 {
-    int	matched;
-
     for ( ; *p; text++, p++) {
 	if (*p == '*') {
 	    while (*++p == '*')
@@ -413,8 +411,10 @@ static bool univ_DoMatch(const char *text, const char *p)
 		/* Trailing star matches everything. */
 		return true;
 	    while (*text)
-		if ((matched = univ_DoMatch(text++, p)) != false)
-		    return matched;
+	    {
+                if (univ_DoMatch(text++, p))
+	            return true;
+	    }
 	    return false;
 	}
 	if (*text != *p) {

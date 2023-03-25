@@ -88,8 +88,11 @@ void sf_init()
 
     /* the main read-in loop */
     for (i = 0; i <= level; i++)
-	if ((s = sf_get_filename(i)) != nullptr)
-	    sf_do_file(s);
+    {
+        s = sf_get_filename(i);
+        if (s != nullptr)
+            sf_do_file(s);
+    }
 
     /* do post-processing (set thresholds and detect extra header usage) */
     s_sf_has_extra_headers = false;
@@ -664,10 +667,12 @@ bool sf_do_line(char *line, bool check)
 	g_sf_entries[g_sf_num_entries-1].str2 = nullptr;
 	/* Note: consider allowing * wildcard on other header filenames */
 	if (j == FROM_LINE) {	/* may have * wildcard */
-	    if ((s2 = strchr(s,'*')) != nullptr) {
-		g_sf_entries[g_sf_num_entries-1].str2 = mp_savestr(s2+1,MP_SCORE1);
-		*s2 = '\0';
-	    }
+            s2 = strchr(s, '*');
+            if (s2 != nullptr)
+            {
+                g_sf_entries[g_sf_num_entries - 1].str2 = mp_savestr(s2 + 1, MP_SCORE1);
+                *s2 = '\0';
+            }
 	}
 	g_sf_entries[g_sf_num_entries-1].str1 = mp_savestr(s,MP_SCORE1);
     }
@@ -736,8 +741,9 @@ int score_match(char *str, int ind)
 	return false;
     }
     /* default case */
-    if ((s3 = strstr(str,s1)) != nullptr && (!s2 || strstr(s3+strlen(s1),s2)))
-	return true;
+    s3 = strstr(str, s1);
+    if (s3 != nullptr && (!s2 || strstr(s3 + strlen(s1), s2)))
+        return true;
     return false;
 }
 
@@ -960,11 +966,13 @@ void sf_append(char *line)
     /* make sure directory exists... */
     makedir(filename,MD_FILE);
     sf_file_clear();
-    if ((fp = fopen(filename,"a")) != nullptr) { /* open (or create) for append */
-	fprintf(fp,"%s\n",scoreline);
-	fclose(fp);
+    fp = fopen(filename, "a");
+    if (fp != nullptr)
+    {
+        fprintf(fp, "%s\n", scoreline); /* open (or create) for append */
+        fclose(fp);
     }
-    else				/* unsuccessful in opening file */
+    else /* unsuccessful in opening file */
 	printf("\nCould not open (for append) file %s\n",filename);
     return;
 }

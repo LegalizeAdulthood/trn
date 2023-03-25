@@ -113,8 +113,8 @@ int doshell(const char *shell, const char *s)
 	else
 	    un_export(s_nntpforce_export);
 	if (g_datasrc->auth_user) {
-	    int fd;
-	    if ((fd = open(g_nntp_auth_file, O_WRONLY|O_CREAT, 0600)) >= 0) {
+	    int fd = open(g_nntp_auth_file, O_WRONLY|O_CREAT, 0600);
+	    if (fd >= 0) {
 		write(fd, g_datasrc->auth_user, strlen(g_datasrc->auth_user));
 		write(fd, "\n", 1);
 		if (g_datasrc->auth_pass) {
@@ -150,13 +150,16 @@ int doshell(const char *shell, const char *s)
     interp(g_buf,64-1+2,"%I");
     g_buf[strlen(g_buf)-1] = '\0';
     re_export(s_quotechars_export, g_buf+1, 64);
-    if (shell == nullptr && (shell = get_val("SHELL",nullptr)) == nullptr)
-	shell = PREFSHELL;
+    if (shell == nullptr)
+        shell = get_val("SHELL", nullptr);
+    if (shell == nullptr)
+        shell = PREFSHELL;
     termlib_reset();
 #ifdef MSDOS
     intptr_t status = spawnl(P_WAIT, shell, shell, "/c", s, nullptr);
 #else
-    if ((pid = vfork()) == 0) {
+    pid = vfork();
+    if (pid == 0) {
 	if (g_datasrc && (g_datasrc->flags & DF_REMOTE)) {
 	    int i;
 	    /* This is necessary to keep the bourne shell from puking */
@@ -343,7 +346,8 @@ static char *trn_getcwd(char *buf, int len)
     FILE* pipefp;
     char* nl;
 
-    if ((pipefp = popen("/bin/pwd","r")) == nullptr) {
+    pipefp = popen("/bin/pwd","r");
+    if (pipefp == nullptr) {
 	printf("Can't popen /bin/pwd\n") FLUSH;
 	return nullptr;
     }
@@ -357,7 +361,8 @@ static char *trn_getcwd(char *buf, int len)
 	printf("/bin/pwd didn't output anything\n") FLUSH;
     	return nullptr;
     }
-    if ((nl = strchr(buf, '\n')) != nullptr)
+    nl = strchr(buf, '\n');
+    if (nl != nullptr)
 	*nl = '\0';
 #endif
     return ret;
@@ -384,7 +389,8 @@ char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp)
 		realloc_ok = true;
 	    }
 	}
-	if ((nextch = getc(fp)) == EOF) {
+	nextch = getc(fp);
+	if ((nextch) == EOF) {
 	    if (!bufix)
 		return nullptr;
 	    break;
@@ -865,17 +871,20 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
 
 bool check_ini_cond(char *cond)
 {
-    int not, equal, upordown, num;
+    int not, num;
     char* s;
     cond = dointerp(g_buf,sizeof g_buf,cond,"!=<>",nullptr);
     s = g_buf + strlen(g_buf);
     while (s != g_buf && isspace(s[-1])) s--;
     *s = '\0';
-    if ((not = (*cond == '!')) != 0)
+    not = (*cond == '!');
+    if (not != 0)
 	cond++;
-    if ((upordown = (*cond=='<'? -1: (*cond=='>'? 1:0))) != 0)
+    int upordown = *cond == '<' ? -1 : (*cond == '>' ? 1 : 0);
+    if (upordown != 0)
 	cond++;
-    if ((equal = (*cond == '=')) != 0)
+    bool equal = (*cond == '=');
+    if (equal)
 	cond++;
     while (isspace(*cond)) cond++;
     if (upordown) {
@@ -886,7 +895,8 @@ bool check_ini_cond(char *cond)
     else if (equal) {
 	COMPEX condcompex;
 	init_compex(&condcompex);
-	if ((s = compile(&condcompex,cond,true,true)) != nullptr) {
+	s = compile(&condcompex,cond,true,true);
+	if (s != nullptr) {
 	    /*warning(s)*/;
 	    equal = false;
 	}

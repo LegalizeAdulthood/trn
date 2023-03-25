@@ -50,7 +50,9 @@ int putsubstchar(int c, int limit, bool outputok)
       doconvert:
 	oc[0] = (Uchar)c;
 	oc[1] = '\0';
-	if ((i = Latin1toASCII(nc, oc, sizeof nc, t)) <= limit) {
+        i = Latin1toASCII(nc, oc, sizeof nc, t);
+        if (i <= limit)
+        {
 	    if (outputok) {
 		for (int t2 = 0; t2 < i; t2++)
 		    putchar((char)nc[t2]);
@@ -157,7 +159,9 @@ int strcharsubst(char *outb, const char *inb, int limit, char_int subst)
       case 'a':
 	return Latin1toASCII((Uchar*)outb, (const Uchar*)inb, limit, 2);
       default:
-	if ((s = strchr(inb,'\n')) != nullptr && s - inb + 1 < limit) {
+          s = strchr(inb, '\n');
+          if (s != nullptr && s - inb + 1 < limit)
+          {
 	    len = s - inb + 1;
 	    limit = len + 1;
 	}

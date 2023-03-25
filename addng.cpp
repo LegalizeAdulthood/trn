@@ -93,14 +93,14 @@ bool find_new_groups()
 
 static void process_list(int flag)
 {
-    ADDGROUP* node;
 
     if (!flag) {
 	sprintf(g_cmd_buf,"\nUnsubscribed but mentioned in your current newsrc%s:\n",
 		g_multirc->first->next? "s" : "");
 	print_lines(g_cmd_buf, STANDOUT);
     }
-    if ((node = g_first_addgroup) != nullptr && flag && g_use_add_selector)
+    ADDGROUP *node = g_first_addgroup;
+    if (node != nullptr && flag && g_use_add_selector)
 	addgroup_selector(flag);
     while (node) {
 	if (!flag) {
@@ -148,7 +148,8 @@ static void new_nntp_groups(DATASRC *dp)
 	if (nntp_at_list_end(g_ser_line))
 	    break;
 	foundSomething = true;
-	if ((s = strchr(g_ser_line, ' ')) != nullptr)
+	s = strchr(g_ser_line, ' ');
+	if (s != nullptr)
 	    len = s - g_ser_line;
 	else
 	    len = strlen(g_ser_line);
@@ -173,7 +174,8 @@ static void new_nntp_groups(DATASRC *dp)
 	    if (*s == 'x' || *s == '=')
 		continue;
 	}
-	if ((np = find_ng(g_ser_line)) != nullptr && np->toread > TR_UNSUB)
+	np = find_ng(g_ser_line);
+	if (np != nullptr && np->toread > TR_UNSUB)
 	    continue;
 	add_to_hash(newngs, g_ser_line, high-low, auto_subscribe(g_ser_line));
     }
@@ -220,8 +222,9 @@ static void new_local_groups(DATASRC *dp)
 	sscanf(tmpbuf + (s-g_buf) + 1, "%ld %ld %c", &high, &low, &ch);
 	if (ch == 'x' || ch == '=')
 	    continue;
-	if ((np = find_ng(g_buf)) != nullptr)
-	    continue;
+        np = find_ng(g_buf);
+        if (np != nullptr)
+            continue;
 	add_to_hash(newngs, g_buf, high-low, auto_subscribe(g_buf));
     }
     fclose(g_tmpfp);
@@ -352,7 +355,8 @@ static void scanline(char *actline, bool add_matching)
     long high, low;
     char ch;
 
-    if ((s = strchr(actline,' ')) == nullptr)
+    s = strchr(actline, ' ');
+    if (s == nullptr)
 	return;
     *s++ = '\0';		/* this buffer is expendable */
     high = 0, low = 1, ch = 'y';
@@ -361,7 +365,8 @@ static void scanline(char *actline, bool add_matching)
 	return;
     if (!inlist(actline))
 	return;
-    if ((np = find_ng(actline)) != nullptr && np->toread > TR_UNSUB)
+    np = find_ng(actline);
+    if (np != nullptr && np->toread > TR_UNSUB)
 	return;
     if (add_matching || np) {
 	/* it's not in a newsrc */

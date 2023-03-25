@@ -283,7 +283,8 @@ char *multirc_name(MULTIRC *mp)
     char* cp;
     if (mp->first->next)
 	return "<each-newsrc>";
-    if ((cp = strrchr(mp->first->name, '/')) != nullptr)
+    cp = strrchr(mp->first->name, '/');
+    if (cp != nullptr)
 	return cp+1;
     return mp->first->name;
 }
@@ -431,7 +432,9 @@ static bool open_newsrc(NEWSRC *rp)
 
     /* make sure the .newsrc file exists */
 
-    if ((rcfp = fopen(rp->name,"r")) == nullptr) {
+    rcfp = fopen(rp->name, "r");
+    if (rcfp == nullptr)
+    {
 	rcfp = fopen(rp->name,"w+");
 	if (rcfp == nullptr) {
 	    printf("\nCan't create %s.\n", rp->name) FLUSH;
@@ -583,12 +586,16 @@ static bool open_newsrc(NEWSRC *rp)
     rp->flags |= RF_RCCHANGED;
 #endif
     if (rp->infoname) {
-	if ((g_tmpfp = fopen(rp->infoname,"r")) != nullptr) {
+        g_tmpfp = fopen(rp->infoname, "r");
+        if (g_tmpfp != nullptr)
+        {
 	    if (fgets(g_buf,sizeof g_buf,g_tmpfp) != nullptr) {
 		long actnum, descnum;
 		char* s;
 		g_buf[strlen(g_buf)-1] = '\0';
-		if ((s = strchr(g_buf, ':')) != nullptr && s[1] == ' ' && s[2]) {
+                s = strchr(g_buf, ':');
+                if (s != nullptr && s[1] == ' ' && s[2])
+                {
 		    safefree0(g_lastngname);
 		    g_lastngname = savestr(s+2);
 		}
@@ -658,7 +665,9 @@ void abandon_ng(NGDATA *np)
     FILE* rcfp;
 
     /* open newsrc backup copy and try to find the prior value for the group. */
-    if ((rcfp = fopen(np->rc->oldname, "r")) != nullptr) {
+    rcfp = fopen(np->rc->oldname, "r");
+    if (rcfp != nullptr)
+    {
 	int length = np->numoffset - 1;
 
 	while ((some_buf = get_a_line(g_buf, LBUFLEN,false,rcfp)) != nullptr) {
@@ -1292,7 +1301,9 @@ bool write_newsrcs(MULTIRC *mptr)
 	    continue;
 
 	if (rp->infoname) {
-	    if ((g_tmpfp = fopen(rp->infoname, "w")) != nullptr) {
+            g_tmpfp = fopen(rp->infoname, "w");
+            if (g_tmpfp != nullptr)
+            {
 		fprintf(g_tmpfp,"Last-Group: %s\nNew-Group-State: %ld,%ld,%ld\n",
 			g_ngname? g_ngname : "",rp->datasrc->lastnewgrp,
 			rp->datasrc->act_sf.recent_cnt,

@@ -18,18 +18,19 @@
  */
 DIR *opendir(const char *name)
 {
-	DIR* dirp;
-	int fd;
+    int fd = open(name, 0);
 
-	if ((fd = open(name, 0)) == -1)
-		return nullptr;
-	if ((dirp = (DIR*)malloc(sizeof(DIR))) == nullptr) {
-		close (fd);
-		return nullptr;
-	}
-	dirp->dd_fd = fd;
-	dirp->dd_loc = 0;
-	return dirp;
+    if (fd == -1)
+        return nullptr;
+    DIR *dirp = (DIR *)malloc(sizeof(DIR));
+    if (dirp == nullptr)
+    {
+        close(fd);
+        return nullptr;
+    }
+    dirp->dd_fd = fd;
+    dirp->dd_loc = 0;
+    return dirp;
 }
 
 /*
@@ -80,7 +81,7 @@ Direntry_t *readdir(DIR *dirp)
 		dir.d_name[ODIRSIZ] = '\0'; /* insure null termination */
 		dir.d_namlen = strlen(dir.d_name);
 		dir.d_reclen = DIRSIZ(&dir);
-		return (&dir);
+		return &dir;
 	}
 }
 

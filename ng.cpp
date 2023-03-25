@@ -190,9 +190,11 @@ do_newsgroup_result do_newsgroup(char *start_command)
 
     /* custom line suppression, custom page ending */
 
-    if ((g_hideline = get_val("HIDELINE",nullptr)) != nullptr)
+    g_hideline = get_val("HIDELINE", nullptr);
+    if (g_hideline != nullptr)
 	compile(&g_hide_compex,g_hideline,true,true);
-    if ((g_pagestop = get_val("PAGESTOP",nullptr)) != nullptr)
+    g_pagestop = get_val("PAGESTOP", nullptr);
+    if (g_pagestop != nullptr)
 	compile(&g_page_compex,g_pagestop,true,true);
 
     /* now read each unread article */
@@ -629,7 +631,8 @@ n or q to change nothing.\n\
 		unkill_thread(g_artp->subj->thread);
 	    else
 		unkill_subject(g_artp->subj);
-	    if ((g_artp = first_art(g_artp->subj)) != nullptr)
+            g_artp = first_art(g_artp->subj);
+            if (g_artp != nullptr)
 		g_art = article_num(g_artp);
 	}
 	else if (*g_buf == 's' && *u_help_thread)
@@ -1078,8 +1081,9 @@ normal_search:
 	s_exit_code = NG_NEXT;
 	return AS_CLEAN;
       case 'i':
-	if ((g_auto_view_inline = !g_auto_view_inline) != 0)
-	    g_first_view = 0;
+        g_auto_view_inline = !g_auto_view_inline;
+        if (g_auto_view_inline != 0)
+            g_first_view = 0;
 	printf("\nAuto-View inlined mime is %s\n", g_auto_view_inline? "on" : "off");
 	termdown(2);
 	break;
@@ -1344,7 +1348,9 @@ run_the_selector:
 		printf("\nSelected all articles in this subject.\n");
 	    }
 	    termdown(2);
-	    if ((g_artp = first_art(g_artp->subj)) != nullptr) {
+            g_artp = first_art(g_artp->subj);
+            if (g_artp != nullptr)
+            {
 		if (g_art == article_num(g_artp))
 		    return AS_ASK;
 		g_art = article_num(g_artp);
@@ -1448,7 +1454,9 @@ reask_catchup:
 	sprintf(g_buf,"Catchup %s?",g_ngname);
     in_char(g_buf,'C',"yn#h");
     printcmd();
-    if ((ch = *g_buf) == 'h' || ch == 'H') {
+    ch = *g_buf;
+    if (ch == 'h' || ch == 'H')
+    {
 	use_one_line = false;
 	if (g_verbose)
 	    fputs("\n\
@@ -1476,7 +1484,8 @@ u to mark all and unsubscribe.\n\n\
     if (ch == '#') {
 	use_one_line = false;
 	in_char("\nEnter approx. number of articles to leave unread: ", 'C', "0");
-	if ((ch = *g_buf) == '0')
+        ch = *g_buf;
+        if (ch == '0')
 	    ch = 'y';
     }
     if (isdigit(ch)) {
@@ -1576,7 +1585,9 @@ bool output_subject(char *ptr, int flag)
     if (flag && !(ap->flags & flag))
 	return false;
     i = article_num(ap);
-    if ((s = fetchsubj(i,false)) != nullptr) {
+    s = fetchsubj(i, false);
+    if (s != nullptr)
+    {
 	sprintf(tmpbuf,"%-5ld ", i);
 	len = strlen(tmpbuf);
 	if (g_subjline != "") {

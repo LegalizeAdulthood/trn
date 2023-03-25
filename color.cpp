@@ -90,11 +90,15 @@ void color_init()
 	char* bg;
 
         /* Get default capabilities. */
-	if ((fg = tc_color_capability("fg default")) == nullptr) {
+        fg = tc_color_capability("fg default");
+        if (fg == nullptr)
+        {
 	    fprintf(stderr,"trn: you need a 'fg default' definition in the [termcap] section.\n");
 	    finalize(1);
 	}
-	if ((bg = tc_color_capability("bg default")) == nullptr) {
+        bg = tc_color_capability("bg default");
+        if (bg == nullptr)
+        {
 	    fprintf(stderr,"trn: you need a 'bg default' definition in the [termcap] section.\n");
 	    finalize(1);
 	}

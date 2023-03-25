@@ -134,7 +134,9 @@ int main(int argc, char *argv[])
 		    action);
 	    exit(1);
 	}
-	if ((in_fp = fopen(filexp(cp), "r")) == nullptr) {
+        in_fp = fopen(filexp(cp), "r");
+        if (in_fp == nullptr)
+        {
 	    fprintf(stderr,"Unable to open `%s'.\n", cp);
 	    exit(1);
 	}

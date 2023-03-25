@@ -623,7 +623,8 @@ void set_option(int num, char *s)
 	break;
       case OI_ARTICLE_TREE_LINES:
 	if (isdigit(*s)) {
-	    if ((g_max_tree_lines = atoi(s)) > 11)
+            g_max_tree_lines = atoi(s);
+            if (g_max_tree_lines > 11)
 		g_max_tree_lines = 11;
 	} else
 	    g_max_tree_lines = YES(s) * 6;
@@ -714,7 +715,9 @@ void save_options(const char *filename)
 	printf(g_cantcreate,g_buf);
 	return;
     }
-    if ((fd_in = open(filename,0)) >= 0) {
+    fd_in = open(filename, 0);
+    if (fd_in >= 0)
+    {
 	char* cp;
 	char* nlp = nullptr;
 	char* comments = nullptr;
@@ -1106,7 +1109,8 @@ static void set_header_list(int flag, int defflag, char *str)
 			? (g_htype[i].flags | flag)
 			: (g_htype[i].flags & ~flag));
     for (;;) {
-	if ((cp = strchr(str,',')) != nullptr)
+        cp = strchr(str, ',');
+        if (cp != nullptr)
 	    *cp = '\0';
 	if (*str == '!') {
 	    setit = false;

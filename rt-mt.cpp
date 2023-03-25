@@ -139,7 +139,8 @@ bool mt_init()
     else
 #endif
     {
-	if ((s_fp = fopen(filexp(DBINIT), FOPEN_RB)) != nullptr)
+        s_fp = fopen(filexp(DBINIT), FOPEN_RB);
+        if (s_fp != nullptr)
 	    size = fread((char*)&s_mt_bmap, 1, sizeof (BMAP), s_fp);
 	else
 	    size = 0;
@@ -200,7 +201,8 @@ int mt_data()
     else
 #endif
     {
-	if ((s_fp = fopen(mt_name(g_ngname), FOPEN_RB)) == nullptr)
+        s_fp = fopen(mt_name(g_ngname), FOPEN_RB);
+        if (s_fp == nullptr)
 	    return 0;
 	if (g_verbose)
 	    printf("\nReading thread file."), fflush(stdout);
@@ -667,7 +669,8 @@ static void tweak_data()
     art_ptr = s_article_array;
     for (count = s_total.article; count--; ) {
 	ap = *art_ptr++;
-	if ((fl = ap->autofl) != 0)
+        fl = ap->autofl;
+        if (fl != 0)
 	    perform_auto_flags(ap, fl, fl, fl);
     }
 

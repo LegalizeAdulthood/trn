@@ -62,7 +62,8 @@ save_result save_article()
     
     if (!finish_command(interactive))	/* get rest of command */
 	return SAVE_ABORT;
-    if ((use_pref = isupper(cmd)) != 0)
+    use_pref = isupper(cmd);
+    if (use_pref != 0)
 	cmd = tolower(cmd);
     parseheader(g_art);
     mime_SetArticle();
@@ -642,8 +643,12 @@ static void follow_it_up()
 	    char* deadart = filexp("%./dead.article");
 	    FILE* fp_in;
 	    FILE* fp_out;
-	    if ((fp_out = fopen(deadart, "a")) != nullptr) {
-		if ((fp_in = fopen(g_headname, "r")) != nullptr) {
+            fp_out = fopen(deadart, "a");
+            if (fp_out != nullptr)
+            {
+                fp_in = fopen(g_headname, "r");
+                if (fp_in != nullptr)
+                {
 		    while (fgets(g_cmd_buf, sizeof g_cmd_buf, fp_in))
 			fputs(g_cmd_buf, fp_out);
 		    fclose(fp_in);
@@ -693,7 +698,8 @@ void reply()
 	seekart(g_htype[PAST_HEADER].minpos);
 	g_wrapped_nl = '\n';
 	while ((s = readartbuf(false)) != nullptr) {
-	    if ((t = strchr(s, '\n')) != nullptr)
+            t = strchr(s, '\n');
+            if (t != nullptr)
 		*t = '\0';
 	    strcharsubst(hbuf,s,sizeof hbuf,*g_charsubst);
 	    fprintf(g_tmpfp,"%s%s\n",g_indstr,hbuf);
@@ -758,7 +764,8 @@ void forward()
 		while (*++s == ' ') ;
 		if (*s == 'b' && !strncasecmp(s, "boundary=\"", 10)) {
 		    mime_boundary = s+10;
-		    if ((s = strchr(mime_boundary, '"')) != nullptr)
+                    s = strchr(mime_boundary, '"');
+                    if (s != nullptr)
 			*s = '\0';
 		    mime_boundary = savestr(mime_boundary);
 		    if (s)
@@ -857,7 +864,8 @@ trim the quoted article down as much as possible.)\n\
 	seekart(g_htype[PAST_HEADER].minpos);
 	g_wrapped_nl = '\n';
 	while ((s = readartbuf(false)) != nullptr) {
-	    if ((t = strchr(s, '\n')) != nullptr)
+            t = strchr(s, '\n');
+            if (t != nullptr)
 		*t = '\0';
 	    strcharsubst(hbuf,s,sizeof hbuf,*g_charsubst);
 	    fprintf(g_tmpfp,"%s%s\n",g_indstr,hbuf);

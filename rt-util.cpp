@@ -62,8 +62,10 @@ char *extract_name(char *name)
 
     if (*name == '"') {
 	name++;
-	while (isspace(*name)) name++;
-	if ((s = strrchr(name, '"')) != nullptr)
+        while (isspace(*name))
+            name++;
+        s = strrchr(name, '"');
+        if (s != nullptr)
 	    *s = '\0';
     }
     return name;
@@ -95,7 +97,8 @@ char *compress_name(char *name, int max)
 try_again:
     /* First remove white space from both ends. */
     while (isspace(*name)) name++;
-    if ((len = strlen(name)) == 0)
+    len = strlen(name);
+    if (len == 0)
 	return name;
     s = name + len - 1;
     while (isspace(*s)) s--;
@@ -385,7 +388,8 @@ char *compress_address(char *name, int max)
 
     /* Remove white space from both ends. */
     while (isspace(*name)) name++;
-    if ((len = strlen(name)) == 0)
+    len = strlen(name);
+    if (len == 0)
 	return name;
     s = name + len - 1;
     while (isspace(*s)) s--;
@@ -395,7 +399,8 @@ char *compress_address(char *name, int max)
 	if (*s == '>')
 	    *s-- = '\0';
     }
-    if ((len = s - name + 1) <= max)
+    len = s - name + 1;
+    if (len <= max)
 	return name;
 
     at = bang = hack = nullptr;
@@ -459,7 +464,8 @@ char *compress_from(char *from, int size)
     int len, vis_len;
 
     strcharsubst(lbuf, s, sizeof lbuf, *g_charsubst);
-    if ((s = extract_name(lbuf)) != nullptr)
+    s = extract_name(lbuf);
+    if (s != nullptr)
 	s = compress_name(s, size);
     else
 	s = compress_address(lbuf, size);
@@ -489,7 +495,8 @@ char *compress_date(const ARTICLE *ap, int size)
     char* t;
 
     strncpy(t = g_cmd_buf, ctime(&ap->date), size);
-    if ((s = strchr(t, '\n')) != nullptr)
+    s = strchr(t, '\n');
+    if (s != nullptr)
 	*s = '\0';
     t[size] = '\0';
     return t;
@@ -563,10 +570,14 @@ const char *compress_subj(const ARTICLE *ap, int max)
     if (!g_unbroken_subjects && len > max) {
 	char* last_word;
 	/* Try to include the last two words on the line while trimming */ 
-	if ((last_word = strrchr(g_buf, ' ')) != nullptr) {
+	last_word = strrchr(g_buf, ' ');
+        if (last_word != nullptr)
+        {
 	    char* next_to_last;
 	    *last_word = '\0';
-	    if ((next_to_last = strrchr(g_buf, ' ')) != nullptr) {
+            next_to_last = strrchr(g_buf, ' ');
+            if (next_to_last != nullptr)
+            {
 		if (next_to_last-g_buf >= len - max + 3 + 10-1)
 		    cp = next_to_last;
 		else
@@ -604,7 +615,8 @@ void setspin(spin_mode mode)
       case SPIN_BACKGROUND:
       case SPIN_BARGRAPH:
 	if (!s_spin_level++) {
-	    if ((s_spin_art = g_openart) != 0 && g_artfp)
+            s_spin_art = g_openart;
+            if (s_spin_art != 0 && g_artfp)
 		s_spin_tell = tellart();
 	    g_spin_count = 0;
 	    s_spin_place = 0;
@@ -791,7 +803,9 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
     if (obj_type)
 	sprintf(cp+=strlen(cp), "%s%s ", obj_type, PLURAL(num));
     cp += strlen(cp);
-    if ((s = modifier) != nullptr) {
+    s = modifier;
+    if (s != nullptr)
+    {
 	*cp++ = ' ';
 	if (num != 1)
 	    while (*s++ != '|') ;

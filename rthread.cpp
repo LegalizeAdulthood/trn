@@ -309,7 +309,8 @@ void inc_art(bool sel_flag, bool rereading)
 	    }
 	} while (ap && ((!rereading && !(ap->flags & AF_UNREAD))
 		     || (sel_flag && !(ap->flags & AF_SEL))));
-	if ((g_artp = ap) != nullptr)
+        g_artp = ap;
+        if (g_artp != nullptr)
 	    g_art = article_num(ap);
 	else {
 	    if (g_art <= g_last_cached)
@@ -398,7 +399,8 @@ void dec_art(bool sel_flag, bool rereading)
 	    }
 	} while (ap && ((!rereading && !(ap->flags & AF_UNREAD))
 		     || (sel_flag && !(ap->flags & AF_SEL))));
-	if ((g_artp = ap) != nullptr)
+        g_artp = ap;
+        if (g_artp != nullptr)
 	    g_art = article_num(ap);
 	else
 	    g_art = g_absfirst-1;
@@ -486,7 +488,8 @@ ARTICLE *prev_art(ARTICLE *ap)
 try_again:
     initial_ap = ap;
     if (!g_threaded_group) {
-	if ((ap = ap->subj->articles) == initial_ap)
+        ap = ap->subj->articles;
+        if (ap == initial_ap)
 	    ap = nullptr;
 	else
 	    while (ap->subj_next != initial_ap)
@@ -1059,7 +1062,9 @@ void visit_next_thread()
 
     sp = (ap? ap->subj : nullptr);
     while ((sp = next_subj(sp, SF_VISIT)) != nullptr) {
-	if ((ap = subj_art(sp)) != nullptr) {
+        ap = subj_art(sp);
+        if (ap != nullptr)
+        {
 	    g_art = article_num(ap);
 	    g_artp = ap;
 	    return;
@@ -1081,7 +1086,9 @@ void visit_prev_thread()
 
     sp = (ap? ap->subj : nullptr);
     while ((sp = prev_subj(sp, SF_VISIT)) != nullptr) {
-	if ((ap = subj_art(sp)) != nullptr) {
+        ap = subj_art(sp);
+        if (ap != nullptr)
+        {
 	    g_art = article_num(ap);
 	    g_artp = ap;
 	    return;
@@ -1146,7 +1153,9 @@ bool find_next_sib()
     for (;;) {
 	while (ta->sibling) {
 	    ta = ta->sibling;
-	    if ((tb = first_sib(ta, ascent)) != nullptr) {
+            tb = first_sib(ta, ascent);
+            if (tb != nullptr)
+            {
 		g_artp = tb;
 		g_art = article_num(tb);
 		return true;
@@ -1198,11 +1207,13 @@ bool find_prev_sib()
 	    ta = ta->parent->child1;
 	else
 	    ta = ta->subj->thread;
-	if ((tb = last_sib(ta, ascent, tb)) != nullptr) {
-	    g_artp = tb;
-	    g_art = article_num(tb);
-	    return true;
-	}
+        tb = last_sib(ta, ascent, tb);
+        if (tb != nullptr)
+        {
+            g_artp = tb;
+            g_art = article_num(tb);
+            return true;
+        }
 	if (!(ta = ta->parent))
 	    break;
 	ascent++;
@@ -1457,8 +1468,9 @@ static int threadorder_lines(const SUBJECT **spp1, const SUBJECT**spp2)
 	}
 	l1 = sp1->articles? sp1->articles->lines : 0;
 	l2 = sp2->articles? sp2->articles->lines : 0;
-	if ((eq = l1 - l2) != 0)
-	    return eq > 0? g_sel_direction : -g_sel_direction;
+        eq = l1 - l2;
+        if (eq != 0)
+            return eq > 0 ? g_sel_direction : -g_sel_direction;
 	eq = sp1->date - sp2->date;
 	return eq? eq > 0? g_sel_direction : -g_sel_direction : 0;
     }

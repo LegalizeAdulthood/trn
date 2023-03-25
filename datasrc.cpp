@@ -161,7 +161,9 @@ char *read_datasrcs(char *filename)
     char* filebuf = nullptr;
     char** vals = INI_VALUES(s_datasrc_ini);
 
-    if ((fd = open(filexp(filename),0)) >= 0) {
+    fd = open(filexp(filename), 0);
+    if (fd >= 0)
+    {
 	fstat(fd,&g_filestat);
 	if (g_filestat.st_size) {
             filebuf = safemalloc((MEM_SIZE)g_filestat.st_size+2);
@@ -208,15 +210,20 @@ DATASRC *new_datasrc(const char *name, char **vals)
     if (!strcmp(name,"default"))
 	dp->flags |= DF_DEFAULT;
 
-    if ((v = vals[DI_NNTP_SERVER]) != nullptr) {
+    v = vals[DI_NNTP_SERVER];
+    if (v != nullptr)
+    {
 	char* cp;
 	dp->newsid = savestr(v);
-	if ((cp = strchr(dp->newsid, ';')) != nullptr) {
+        cp = strchr(dp->newsid, ';');
+        if (cp != nullptr)
+        {
 	    *cp = '\0';
 	    dp->nntplink.port_number = atoi(cp+1);
 	}
 
-	if ((v = vals[DI_ACT_REFETCH]) != nullptr && *v)
+	v = vals[DI_ACT_REFETCH];
+        if (v != nullptr && *v)
 	    dp->act_sf.refetch_secs = text2secs(v,g_def_refetch_secs);
 	else if (!vals[DI_ACTIVE_FILE])
 	    dp->act_sf.refetch_secs = g_def_refetch_secs;
@@ -246,7 +253,8 @@ DATASRC *new_datasrc(const char *name, char **vals)
 		dp->act_sf.refetch_secs = 1;
 	}
 
-	if ((v = vals[DI_DESC_REFETCH]) != nullptr && *v)
+	v = vals[DI_DESC_REFETCH];
+        if (v != nullptr && *v)
 	    dp->desc_sf.refetch_secs = text2secs(v,g_def_refetch_secs);
 	else if (!dp->grpdesc)
 	    dp->desc_sf.refetch_secs = g_def_refetch_secs;
@@ -261,15 +269,20 @@ DATASRC *new_datasrc(const char *name, char **vals)
 		dp->desc_sf.refetch_secs = 1;
 	}
     }
-    if ((v = vals[DI_FORCE_AUTH]) != nullptr && (*v == 'y' || *v == 'Y'))
+    v = vals[DI_FORCE_AUTH];
+    if (v != nullptr && (*v == 'y' || *v == 'Y'))
 	dp->nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
-    if ((v = vals[DI_AUTH_USER]) != nullptr)
+    v = vals[DI_AUTH_USER];
+    if (v != nullptr)
 	dp->auth_user = savestr(v);
-    if ((v = vals[DI_AUTH_PASS]) != nullptr)
+    v = vals[DI_AUTH_PASS];
+    if (v != nullptr)
 	dp->auth_pass = savestr(v);
-    if ((v = vals[DI_XHDR_BROKEN]) != nullptr && (*v == 'y' || *v == 'Y'))
+    v = vals[DI_XHDR_BROKEN];
+    if (v != nullptr && (*v == 'y' || *v == 'Y'))
 	dp->flags |= DF_XHDR_BROKEN;
-    if ((v = vals[DI_XREFS]) != nullptr && (*v == 'n' || *v == 'N'))
+    v = vals[DI_XREFS];
+    if (v != nullptr && (*v == 'n' || *v == 'N'))
 	dp->flags |= DF_NOXREFS;
 
     return dp;

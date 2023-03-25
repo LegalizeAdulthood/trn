@@ -38,7 +38,9 @@ void setngtodo(const char *pat)
 #endif
 	init_compex(g_compextodo[i]);
 	compile(g_compextodo[i],pat,true,true);
-	if ((s = ng_comp(g_compextodo[i],pat,true,true)) != nullptr) {
+        s = ng_comp(g_compextodo[i], pat, true, true);
+        if (s != nullptr)
+        {
 	    printf("\n%s\n",s) FLUSH;
 	    finalize(1);
 	}

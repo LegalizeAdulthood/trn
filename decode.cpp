@@ -302,7 +302,9 @@ int decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	/* Retrieve any previously saved number of the last part */
 	if (total == 0) {
 	    sprintf(g_buf, "%sCT", dir);
-	    if ((fp = fopen(g_buf, "r")) != nullptr) {
+            fp = fopen(g_buf, "r");
+            if (fp != nullptr)
+            {
 		if (fgets(g_buf, sizeof g_buf, fp)) {
 		    total = atoi(g_buf);
 		    if (total < 0)

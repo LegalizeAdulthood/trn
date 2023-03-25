@@ -100,12 +100,16 @@ static void resetpipe(int fd)
     char* bp;
     if (fd >= 0 && fd < _NFILE) {
 	s_pipetype[fd] = 0;
-	if ((bp = s_pipename[fd]) != nullptr) {
+        bp = s_pipename[fd];
+        if (bp != nullptr)
+        {
 	    (void) unlink(bp);
 	    free(bp);
 	    s_pipename[fd] = nullptr;
 	}
-	if ((bp = s_prgname[fd]) != nullptr) {
+        bp = s_prgname[fd];
+        if (bp != nullptr)
+        {
 	    free(bp);
 	    s_prgname[fd] = nullptr;
 	}
@@ -131,7 +135,9 @@ FILE *popen(char *prg, char *type)
     /* Get a unique pipe file name */
     tmpfile = filexp("%Y/");
     strcat(tmpfile, uniquepipe());
-    if ((lineno = setjmp(panic)) != 0) {
+    lineno = setjmp(panic);
+    if (lineno != 0)
+    {
 	/* An error has occurred, so clean up */
 	int E = errno;
 	if (p != nullptr)
@@ -143,7 +149,9 @@ FILE *popen(char *prg, char *type)
     }
     if (strcmp(type, "w") == 0) {
 	/* for write style pipe, pclose handles program execution */
-	if ((p = fopen(tmpfile, "w")) != nullptr) {
+        p = fopen(tmpfile, "w");
+        if (p != nullptr)
+        {
 	    pipefd = fileno(p);
 	    s_pipetype[pipefd] = WRITEIT;
 	    s_pipename[pipefd] = savestr(tmpfile);
@@ -154,7 +162,9 @@ FILE *popen(char *prg, char *type)
 	 * file, and run the program.  note that if the pipe file cannot be
 	 * opened, it'll return a condition indicating pipe failure, which is
 	 * fine. */
-	if ((p = fopen(tmpfile, "w")) != nullptr) {
+        p = fopen(tmpfile, "w");
+        if (p != nullptr)
+        {
 	    int ostdout;
 	    pipefd = fileno(p);
 	    s_pipetype[pipefd]= READIT;
@@ -173,7 +183,8 @@ FILE *popen(char *prg, char *type)
 		longjmp(panic, __LINE__);
 	    if (fclose(p) < 0)
 		longjmp(panic, __LINE__);
-	    if ((p = fopen(tmpfile, "r")) == nullptr)
+            p = fopen(tmpfile, "r");
+            if (p == nullptr)
 		longjmp(panic, __LINE__);
 	}
     } else {
@@ -192,7 +203,9 @@ int pclose(FILE *p)
     int ostdin;			/* Where our stdin points now */
     jmp_buf panic;		/* Context to return to if error */
     int lineno;			/* Line number where panic happened */
-    if ((lineno = setjmp(panic)) != 0) {
+    lineno = setjmp(panic);
+    if (lineno != 0)
+    {
 	/* An error has occurred, so clean up and return */
 	int E = errno;
 	if (p != nullptr)
@@ -209,7 +222,8 @@ int pclose(FILE *p)
     case WRITEIT:
 	/* open the temp file again as read, redirect stdin from that
 	 * file, run the program, then clean up. */
-	if ((p = fopen(s_pipename[pipefd],"r")) == nullptr) 
+        p = fopen(s_pipename[pipefd], "r");
+        if (p == nullptr) 
 	    longjmp(panic, __LINE__);
 	ostdin = dup(fileno(stdin));
 	if (dup2(fileno(stdin), fileno(p)) < 0)

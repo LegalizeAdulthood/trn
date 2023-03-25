@@ -96,10 +96,12 @@ int trn_main(int argc, char *argv[])
     /* Figure out our executable's name. */
 #ifdef MSDOS
     strlwr(argv[0]);
-    if ((s = strrchr(argv[0],'\\')) != nullptr)
+    s = strrchr(argv[0],'\\');
+    if (s != nullptr)
 	*s = '/';
 #endif
-    if ((s = strrchr(argv[0],'/')) == nullptr)
+    s = strrchr(argv[0],'/');
+    if (s == nullptr)
 	s = argv[0];
     else
 	s++;
@@ -192,7 +194,8 @@ void do_multirc()
 	    g_findlast = -1;
 	    g_starthere = nullptr;
 	    if (g_lastngname) {
-		if ((g_ngptr = find_ng(g_lastngname)) == nullptr)
+		g_ngptr = find_ng(g_lastngname);
+		if (g_ngptr == nullptr)
 		    g_ngptr = g_first_ng;
 		else {
 		    set_ngname(g_lastngname);

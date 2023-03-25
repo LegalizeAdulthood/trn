@@ -118,7 +118,9 @@ int main(int argc, char *argv[])
 	len = strlen(cp);
 	found_nl = (len && cp[len-1] == '\n');
 	if (had_nl) {
-	    if ((i = valid_header(cp)) == 0) {
+            i = valid_header(cp);
+            if (i == 0)
+            {
 		fprintf(stderr,"Invalid header:\n%s",cp);
 		exit(1);
 	    }
@@ -135,7 +137,9 @@ int main(int argc, char *argv[])
 	}
 	artpos += len;
 	cp += len;
-	if ((had_nl = found_nl) != 0 && g_server_name) {
+        had_nl = found_nl;
+        if (had_nl != 0 && g_server_name)
+        {
 	    cp[-1] = '\r';
 	    *cp++ = '\n';
 	}
@@ -145,7 +149,9 @@ int main(int argc, char *argv[])
     /* Well, the header looks ok, so let's get on with it. */
 
     if (g_server_name) {
-	if ((cp = getenv("NNTPFDS")) != nullptr) {
+        cp = getenv("NNTPFDS");
+        if (cp != nullptr)
+        {
 	    int rd_fd, wr_fd;
 	    if (sscanf(cp,"%d.%d",&rd_fd,&wr_fd) == 2) {
 		g_nntplink.rd_fp = fdopen(rd_fd, "r");

@@ -205,7 +205,8 @@ int help_ng()
 {
     int cmd;
     page_start();
-    if ((cmd = print_lines("Newsgroup Selection commands:\n", STANDOUT)) != 0)
+    cmd = print_lines("Newsgroup Selection commands:\n", STANDOUT);
+    if (cmd != 0)
         return cmd;
     if (g_ngptr)
     {
@@ -264,7 +265,8 @@ int help_ng()
                            "v	Print version and the address for reporting bugs.\n",
                            NOMARKING)))
         return cmd;
-    if ((cmd = get_anything()) != 0)
+    cmd = get_anything();
+    if (cmd != 0)
         return cmd;
     show_macros();
     return 0;

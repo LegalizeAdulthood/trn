@@ -90,8 +90,12 @@ void init_tree()
     else {
 	if (s_my_depth+2 > s_max_depth)
 	    s_first_depth = s_max_depth - 5;
-	else if ((s_first_depth = s_my_depth - 3) < 0)
-	    s_first_depth = 0;
+	else
+	{
+            s_first_depth = s_my_depth - 3;
+            if (s_first_depth < 0)
+	        s_first_depth = 0;
+	}
 	s_max_depth = s_first_depth + 5;
     }
     if (--s_max_line < g_max_tree_lines)
@@ -99,8 +103,12 @@ void init_tree()
     else {
 	if (s_my_line + g_max_tree_lines/2 > s_max_line)
 	    s_first_line = s_max_line - (g_max_tree_lines-1);
-	else if ((s_first_line = s_my_line - (g_max_tree_lines-1)/2) < 0)
-	    s_first_line = 0;
+	else
+	{
+            s_first_line = s_my_line - (g_max_tree_lines - 1) / 2;
+            if (s_first_line < 0)
+	        s_first_line = 0;
+	}
 	s_max_line = s_first_line + g_max_tree_lines-1;
     }
 
@@ -275,7 +283,8 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
     char ch;
 
     /* Make a modifiable copy of the line */
-    if ((cp = strchr(orig_line, '\n')) != nullptr)
+    cp = strchr(orig_line, '\n');
+    if (cp != nullptr)
 	len = cp - orig_line;
     else
 	len = strlen(orig_line);

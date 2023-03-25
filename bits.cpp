@@ -661,14 +661,18 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
 #ifndef ANCIENT_NEWS
     /* Grab the site from the first component of the Path line */
     sitebuf = fetchlines(artnum,PATH_LINE);
-    if ((s = strchr(sitebuf, '!')) != nullptr) {
+    s = strchr(sitebuf, '!');
+    if (s != nullptr)
+    {
 	*s = '\0';
 	inews_site = savestr(sitebuf);
     }
 #else /* ANCIENT_NEWS */
     /* Grab the site from the Posting-Version line */
     sitebuf = fetchlines(artnum,RVER_LINE);
-    if ((s = instr(sitebuf,"; site ",true)) != nullptr) {
+    s = instr(sitebuf, "; site ", true);
+    if (s != nullptr)
+    {
 	char* t = strchr(s+7, '.');
 	if (t)
 	    *t = '\0';

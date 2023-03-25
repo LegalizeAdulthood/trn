@@ -369,9 +369,12 @@ void set_toread(NGDATA *np, bool lax_high_check)
 	    ;
     for ( ; (c = strchr(s,',')) != nullptr ; s = ++c) {  /* for each range */
 	*c = '\0';			/* keep index from running off */
-	if ((h = strchr(s,'-')) != nullptr)	/* find - in range, if any */
+        h = strchr(s, '-');
+        if (h != nullptr) /* find - in range, if any */
 	    unread -= (newmax = atol(h+1)) - atol(s) + 1;
-	else if ((newmax = atol(s)) != 0)
+        else
+            newmax = atol(s);
+        if (newmax != 0)
 	    unread--;		/* recalculate length */
 	if (newmax > ngsize) {	/* paranoia check */
 	    if (!lax_high_check && newmax > ngsize) {

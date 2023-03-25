@@ -58,7 +58,8 @@ Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>\n");
 	exit(1);
     }
 
-    if ((fp = fopen(argv[1], "r")) == nullptr) {
+    fp = fopen(argv[1], "r");
+    if (fp == nullptr) {
 	fprintf(stderr, "trn-artchk: unable to open article `%s'.\n", argv[1]);
 	exit(1);
     }
@@ -71,7 +72,8 @@ Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>\n");
 	    break;
 	if (*buff == ' ' || *buff == '\t')
 	    continue;
-	if (!(cp = strchr(buff, ':'))) {
+	cp = strchr(buff, ':');
+	if (!cp) {
 	    printf("\nERROR: line %d is an invalid header line:\n%s\n",
 		   line_num, buff);
 	    break;
@@ -93,7 +95,8 @@ Use a comma (,) to separate multiple newsgroup names.\n");
 		continue;
 	    }
 	    while (*cp) {
-		if (!(cp2 = strchr(cp, ',')))
+		cp2 = strchr(cp, ',');
+		if (!cp2)
 		    cp2 = cp + strlen(cp);
 		else
 		    *cp2++ = '\0';
@@ -157,8 +160,8 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 	    g_nntplink.port_number = atoi(cp+1);
 	}
 	g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
-	if ((cp = getenv("NNTP_FORCE_AUTH")) != nullptr
-	 && (*cp == 'y' || *cp == 'Y'))
+	cp = getenv("NNTP_FORCE_AUTH");
+        if (cp != nullptr && (*cp == 'y' || *cp == 'Y'))
 	    g_nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
 	if (init_nntp() < 0)
 	    g_server_name = nullptr;

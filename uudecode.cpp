@@ -284,10 +284,11 @@ end:		if (ofp) {
 /* Decode a uuencoded line to 'ofp' */
 static void uudecodeline(char *line, FILE *ofp)
 {
-    int c, len;
+    int c;
 
     /* Calculate expected length and pad if necessary */
-    if ((len = ((DEC(line[0]) + 2) / 3) * 4) > UULENGTH)
+    int len = ((DEC(line[0]) + 2) / 3) * 4;
+    if (len > UULENGTH)
 	len = UULENGTH;
     for (c = strlen(line) - 1; c <= len; c++)
 	line[c] = ' ';

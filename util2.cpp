@@ -297,11 +297,11 @@ int strncasecmp(const char *s1, const char *s2, int len)
 
 char *read_auth_file(const char *file, char **pass_ptr)
 {
-    FILE* fp;
     char* strptr[2];
     char buf[1024];
     strptr[0] = strptr[1] = nullptr;
-    if ((fp = fopen(file,"r")) != nullptr) {
+    FILE *fp = fopen(file, "r");
+    if (fp != nullptr) {
 	int i;
 	for (i = 0; i < 2; i++) {
 	    if (fgets(buf, sizeof buf, fp) != nullptr) {

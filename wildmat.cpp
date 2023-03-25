@@ -51,9 +51,6 @@ static bool DoMatch(const char *text, const char *p);
 */
 static bool DoMatch(const char *text, const char *p)
 {
-    int	last;
-    int	matched;
-    int	reverse;
 
     for ( ; *p; text++, p++) {
 	if (*text == '\0' && *p != '*')
@@ -78,22 +75,27 @@ static bool DoMatch(const char *text, const char *p)
 		/* Trailing star matches everything. */
 		return true;
 	    while (*text)
-		if ((matched = DoMatch(text++, p)) != false)
-		    return matched;
+	    {
+	        if (DoMatch(text++, p))
+	            return true;
+	    }
 	    return false;
-	case '[':
-	    reverse = p[1] == NEGATE_CLASS ? true : false;
-	    if (reverse)
-		/* Inverted character class. */
-		p++;
-	    for (last = 0400, matched = false; *++p && *p != ']'; last = *p)
-		/* This next line requires a good C compiler. */
-		if (*p == '-' ? *text <= *++p && *text >= last : *text == *p)
-		    matched = true;
-	    if (matched == reverse)
-		return false;
-	    continue;
-	}
+        case '[':
+        {
+            const bool reverse = p[1] == NEGATE_CLASS;
+            if (reverse)
+                /* Inverted character class. */
+                p++;
+            bool matched{};
+            for (int last = 0400; *++p && *p != ']'; last = *p)
+                /* This next line requires a good C compiler. */
+                if (*p == '-' ? *text <= *++p && *text >= last : *text == *p)
+                    matched = true;
+            if (matched == reverse)
+                return false;
+            continue;
+        }
+        }
     }
 
 #ifdef	MATCH_TAR_PATTERN

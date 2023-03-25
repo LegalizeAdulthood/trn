@@ -41,11 +41,13 @@ int nntp_list(const char *type, const char *arg, int len)
 	sprintf(g_ser_line, "LIST %s", type);
     if (nntp_command(g_ser_line) <= 0)
 	return -2;
-    if ((ret = nntp_check()) <= 0)
+    ret = nntp_check();
+    if (ret <= 0)
 	return ret? ret : -1;
     if (!len)
 	return 1;
-    if ((ret = nntp_gets(g_ser_line, sizeof g_ser_line)) < 0)
+    ret = nntp_gets(g_ser_line, sizeof g_ser_line);
+    if (ret < 0)
 	return ret;
 #if defined(DEBUG) && defined(FLUSH)
     if (debug & DEB_NNTP)

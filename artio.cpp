@@ -232,7 +232,9 @@ char *readartbuf(bool view_inline)
 	else if (g_mime_section->encoding == MENCODE_BASE64) {
 	    o = line_offset + extra_offset;
 	    len = b64_decodestring(bp+o, bp+o) + line_offset;
-	    if ((s = strchr(bp+o, '\n')) == nullptr) {
+            s = strchr(bp + o, '\n');
+            if (s == nullptr)
+            {
 		if (read_something >= 0) {
 		    read_offset = line_offset = len;
 		    goto read_more;
