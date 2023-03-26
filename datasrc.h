@@ -8,6 +8,7 @@
 #include "nntpclient.h"
 #include "rt-ov.h"
 
+#include <cstdint>
 #include <stdio.h>
 #include <string>
 
@@ -23,6 +24,59 @@ struct SRCFILE
     time_t	lastfetch;	/* when the data was last fetched */
     time_t	refetch_secs;	/* how long before we refetch this file */
 };
+
+enum datasrc_flags : uint16_t
+{
+    DF_NONE = 0,
+    DF_TRY_OVERVIEW = 0x0001,
+    DF_TRY_THREAD = 0x0002,
+    DF_ADD_OK = 0x0004,
+    DF_DEFAULT = 0x0008,
+    DF_OPEN = 0x0010,
+    DF_ACTIVE = 0x0020,
+    DF_UNAVAILABLE = 0x0040,
+    DF_REMOTE = 0x0080,
+    DF_TMPACTFILE = 0x0100,
+    DF_TMPGRPDESC = 0x0200,
+    DF_USELISTACT = 0x0400,
+    DF_XHDR_BROKEN = 0x0800,
+    DF_NOXGTITLE = 0x1000,
+    DF_NOLISTGROUP = 0x2000,
+    DF_NOXREFS = 0x4000
+};
+inline datasrc_flags operator|(datasrc_flags lhs, datasrc_flags rhs)
+{
+    return static_cast<datasrc_flags>(static_cast<int>(lhs) | static_cast<int>(rhs));
+}
+inline datasrc_flags operator&(datasrc_flags lhs, datasrc_flags rhs)
+{
+    return static_cast<datasrc_flags>(static_cast<int>(lhs) & static_cast<int>(rhs));
+}
+inline datasrc_flags operator^(datasrc_flags lhs, datasrc_flags rhs)
+{
+    return static_cast<datasrc_flags>(static_cast<int>(lhs) ^ static_cast<int>(rhs));
+}
+inline datasrc_flags operator~(datasrc_flags val)
+{
+    // Use uint16_t here because the largest flag fits into a 16-bit unsigned integer,
+    // so don't assume larger storage when flipping all the bits arbitrarily.
+    return static_cast<datasrc_flags>(~static_cast<std::uint16_t>(val));
+}
+inline datasrc_flags &operator|=(datasrc_flags &lhs, datasrc_flags rhs)
+{
+    lhs = lhs | rhs;
+    return lhs;
+}
+inline datasrc_flags &operator&=(datasrc_flags &lhs, datasrc_flags rhs)
+{
+    lhs = lhs & rhs;
+    return lhs;
+}
+inline datasrc_flags &operator^=(datasrc_flags &lhs, datasrc_flags rhs)
+{
+    lhs = lhs ^ rhs;
+    return lhs;
+}
 
 struct DATASRC
 {
@@ -44,26 +98,7 @@ struct DATASRC
     time_t	ov_opened;	/* time overview file was opened */
     ov_field_num fieldnum[OV_MAX_FIELDS];
     Uchar	fieldflags[OV_MAX_FIELDS];
-    int		flags;
-};
-
-enum
-{
-    DF_TRY_OVERVIEW = 0x0001,
-    DF_TRY_THREAD = 0x0002,
-    DF_ADD_OK = 0x0004,
-    DF_DEFAULT = 0x0008,
-    DF_OPEN = 0x0010,
-    DF_ACTIVE = 0x0020,
-    DF_UNAVAILABLE = 0x0040,
-    DF_REMOTE = 0x0080,
-    DF_TMPACTFILE = 0x0100,
-    DF_TMPGRPDESC = 0x0200,
-    DF_USELISTACT = 0x0400,
-    DF_XHDR_BROKEN = 0x0800,
-    DF_NOXGTITLE = 0x1000,
-    DF_NOLISTGROUP = 0x2000,
-    DF_NOXREFS = 0x4000
+    datasrc_flags flags;
 };
 
 enum

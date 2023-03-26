@@ -94,7 +94,7 @@ static INI_WORDS s_datasrc_ini[] =
     // clang-format on
 };
 
-static char *dir_or_none(DATASRC *dp, const char *dir, int flag);
+static char *dir_or_none(DATASRC *dp, const char *dir, datasrc_flags flag);
 static char *file_or_none(char *fn);
 static int srcfile_cmp(const char *key, int keylen, HASHDATUM data);
 static int check_distance(int len, HASHDATUM *data, int newsrc_ptr);
@@ -246,7 +246,7 @@ static DATASRC *new_datasrc(const char *name, char **vals)
     dp->over_dir = dir_or_none(dp,vals[DI_OVERVIEW_DIR],DF_TRY_OVERVIEW);
     dp->over_fmt = file_or_none(vals[DI_OVERVIEW_FMT]);
     dp->thread_dir = dir_or_none(dp,vals[DI_THREAD_DIR],DF_TRY_THREAD);
-    dp->grpdesc = dir_or_none(dp,vals[DI_GROUP_DESC],0);
+    dp->grpdesc = dir_or_none(dp,vals[DI_GROUP_DESC],DF_NONE);
     dp->extra_name = dir_or_none(dp,vals[DI_ACTIVE_TIMES],DF_ADD_OK);
     if (dp->flags & DF_REMOTE) {
 	/* FYI, we know extra_name to be nullptr in this case. */
@@ -297,7 +297,7 @@ static DATASRC *new_datasrc(const char *name, char **vals)
     return dp;
 }
 
-static char *dir_or_none(DATASRC *dp, const char *dir, int flag)
+static char *dir_or_none(DATASRC *dp, const char *dir, datasrc_flags flag)
 {
     if (!dir || !*dir || !strcmp(dir,"remote")) {
 	dp->flags |= flag;
@@ -308,7 +308,7 @@ static char *dir_or_none(DATASRC *dp, const char *dir, int flag)
 	    sprintf(cp,"%s.times",dp->newsid);
 	    return cp;
 	}
-	if (flag == 0) {
+	if (flag == DF_NONE) {
 	    char* cp = strrchr(dp->newsid,'/');
             if (!cp)
 		return nullptr;
