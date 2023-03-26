@@ -38,13 +38,6 @@ struct INI_WORDS
     char* help_str;
 };
 
-#define INI_LEN(words)         (words)[0].checksum
-#define INI_VALUES(words)      ((char**)(words)[0].help_str)
-#define INI_VALUE(words,num)   INI_VALUES(words)[num]
-
-#define safefree(ptr)  if (!ptr) ; else free((char*)(ptr))
-#define safefree0(ptr)  if (!ptr) ; else free((char*)(ptr)), (ptr)=0
-
 void util_init();
 int doshell(const char *sh, const char *cmd);
 #ifndef USE_DEBUGGING_MALLOC
@@ -80,5 +73,34 @@ char *parse_ini_section(char *cp, INI_WORDS words[]);
 bool check_ini_cond(char *cond);
 char menu_get_char();
 int edit_file(char *fname);
+
+inline int ini_len(const INI_WORDS *words)
+{
+    return words[0].checksum;
+}
+inline char **ini_values(INI_WORDS *words)
+{
+    return (char **) words[0].help_str;
+}
+inline char *ini_value(INI_WORDS *words, int num)
+{
+    return ini_values(words)[num];
+}
+
+inline void safefree(void *ptr)
+{
+    if (ptr)
+        free(ptr);
+}
+
+template <typename T>
+void safefree0(T *&ptr)
+{
+    if (ptr)
+    {
+        free(ptr);
+        ptr = nullptr;
+    }
+}
 
 #endif

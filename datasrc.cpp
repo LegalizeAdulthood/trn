@@ -159,7 +159,7 @@ char *read_datasrcs(char *filename)
     char* section;
     char* cond;
     char* filebuf = nullptr;
-    char** vals = INI_VALUES(s_datasrc_ini);
+    char** vals = ini_values(s_datasrc_ini);
 
     fd = open(filexp(filename), 0);
     if (fd >= 0)

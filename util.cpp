@@ -653,7 +653,7 @@ char *get_auth_pass()
 char **prep_ini_words(INI_WORDS words[])
 {
     int checksum;
-    char* cp = (char*)INI_VALUES(words);
+    char* cp = (char*)ini_values(words);
     if (!cp) {
 	int i;
 	for (i = 1; words[i].item != nullptr; i++) {
@@ -675,7 +675,7 @@ char **prep_ini_words(INI_WORDS words[])
 
 void unprep_ini_words(INI_WORDS words[])
 {
-    free((char*)INI_VALUES(words));
+    free(ini_values(words));
     words[0].checksum = 0;
     words[0].help_str = nullptr;
 }

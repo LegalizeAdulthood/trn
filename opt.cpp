@@ -191,7 +191,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     interp(*tcbufptr,TCBUF_SIZE,GLOBINIT);
     opt_file(*tcbufptr,tcbufptr,false);
 
-    g_option_def_vals = (char**)safemalloc(INI_LEN(g_options_ini)*sizeof(char*));
+    g_option_def_vals = (char**)safemalloc(ini_len(g_options_ini)*sizeof(char*));
     memset((char*)g_option_def_vals,0,(g_options_ini)[0].checksum * sizeof (char*));
     /* Set DEFHIDE and DEFMAGIC to current values and clear g_user_htype list */
     set_header_list(HT_DEFHIDE,HT_HIDE,"");
@@ -221,9 +221,9 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 	else
 	    sw_file(tcbufptr);
     }
-    g_option_saved_vals = (char**)safemalloc(INI_LEN(g_options_ini)*sizeof(char*));
+    g_option_saved_vals = (char**)safemalloc(ini_len(g_options_ini)*sizeof(char*));
     memset((char*)g_option_saved_vals,0,(g_options_ini)[0].checksum * sizeof (char*));
-    g_option_flags = (char*)safemalloc(INI_LEN(g_options_ini)*sizeof(char));
+    g_option_flags = (char*)safemalloc(ini_len(g_options_ini)*sizeof(char));
     memset(g_option_flags,0,(g_options_ini)[0].checksum * sizeof (char));
 
     if (argc > 1) {
@@ -259,7 +259,7 @@ void opt_file(char *filename, char **tcbufptr, bool bleat)
 		    s = parse_ini_section(s, g_options_ini);
 		    if (!s)
 			break;
-		    set_options(INI_VALUES(g_options_ini));
+		    set_options(ini_values(g_options_ini));
 		}
 		else if (!strcmp(section,"environment")) {
 		    while (*s && *s != '[') {
@@ -302,7 +302,7 @@ void opt_file(char *filename, char **tcbufptr, bool bleat)
 
 void set_options(char **vals)
 {
-    int limit = INI_LEN(g_options_ini);
+    int limit = ini_len(g_options_ini);
     int i;
     for (i = 1; i < limit; i++) {
 	if (*++vals)

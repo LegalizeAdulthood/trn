@@ -1500,9 +1500,9 @@ try_again:
 	    if (*g_options_ini[op].item == '*')
 		sel = !!(g_option_flags[op] & OF_SEL);
 	    else
-		sel = (INI_VALUE(g_options_ini,op)? 1 :
-		       (g_option_saved_vals[op]? 3 :
-			(g_option_def_vals[op]? 0 : 2)));
+		sel = ini_values(g_options_ini)[op]? 1 :
+                          (g_option_saved_vals[op]? 3 :
+                               (g_option_def_vals[op]? 0 : 2));
 	    g_sel_items[g_sel_page_item_cnt].u.op = op;
 	    g_sel_items[g_sel_page_item_cnt].line = g_term_line;
 	    g_sel_items[g_sel_page_item_cnt].sel = sel;
@@ -1641,9 +1641,9 @@ void update_page()
 	    if (*g_options_ini[u.op].item == '*')
 		sel = !!(g_option_flags[u.op] & OF_SEL);
 	    else
-		sel = (INI_VALUE(g_options_ini,u.op)? 1 :
-		       (g_option_saved_vals[u.op]? 3 :
-			(g_option_def_vals[u.op]? 0 : 2)));
+		sel = ini_value(g_options_ini, u.op)? 1 :
+                          (g_option_saved_vals[u.op]? 3 :
+                               (g_option_def_vals[u.op]? 0 : 2));
 	    break;
 	  case SM_ARTICLE:
 	    sel = !!(u.ap->flags & g_sel_mask) + (u.ap->flags & AF_DEL);
@@ -1891,7 +1891,7 @@ void display_option(int op, int item_index)
 	pre = "  ";
 	item = g_options_ini[op].item;
 	post = "..................................";
-	val = INI_VALUE(g_options_ini,op);
+	val = ini_values(g_options_ini)[op];
 	if (!val)
 	    val = quote_string(option_value(op));
     }

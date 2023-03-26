@@ -546,7 +546,7 @@ char addgroup_selector(int flags)
 char option_selector()
 {
     int i;
-    char** vals = INI_VALUES(g_options_ini);
+    char** vals = ini_values(g_options_ini);
     START_SELECTOR('l');
 
     g_sel_rereading = false;
@@ -1288,7 +1288,7 @@ static bool select_item(SEL_UNION u)
 	u.np->flags = (u.np->flags & ~NF_DEL) | g_sel_mask;
 	break;
       case SM_OPTIONS:
-	if (!select_option(u.op) || !INI_VALUE(g_options_ini,u.op))
+	if (!select_option(u.op) || !ini_value(g_options_ini, u.op))
 	    return false;
 	break;
       case SM_THREAD:
@@ -1368,7 +1368,7 @@ static bool deselect_item(SEL_UNION u)
 	    u.np->flags |= NF_DEL;
 	break;
       case SM_OPTIONS:
-	if (!select_option(u.op) || INI_VALUE(g_options_ini,u.op))
+	if (!select_option(u.op) || ini_value(g_options_ini, u.op))
 	    return false;
 	break;
       case SM_THREAD:
@@ -1395,7 +1395,7 @@ static bool deselect_item(SEL_UNION u)
 static bool select_option(int i)
 {
     bool changed = false;
-    char** vals = INI_VALUES(g_options_ini);
+    char** vals = ini_values(g_options_ini);
     char* val;
     char* oldval;
 
