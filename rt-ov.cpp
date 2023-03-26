@@ -44,7 +44,7 @@ bool ov_init()
 {
     bool has_overview_fmt;
     ov_field_num *fieldnum = g_datasrc->fieldnum;
-    Uchar* fieldflags = g_datasrc->fieldflags;
+    field_flags  *fieldflags = g_datasrc->fieldflags;
     g_datasrc->flags &= ~DF_TRY_OVERVIEW;
     if (!g_datasrc->over_dir) {
 	int ret;
@@ -90,7 +90,7 @@ bool ov_init()
 		char *s = strchr(g_buf,':');
 		fieldnum[i] = ov_num(g_buf,s);
 		fieldflags[fieldnum[i]] = FF_HAS_FIELD |
-		    ((s && !strncasecmp("full",s+1,4))? FF_HAS_HDR : 0);
+		    ((s && !strncasecmp("full",s+1,4))? FF_HAS_HDR : FF_NONE);
 		i++;
 	    }
 	}
@@ -326,16 +326,12 @@ beginning:
 
 static void ov_parse(char *line, ART_NUM artnum, bool remote)
 {
-    ARTICLE* article;
-    int i;
-    int fn;
     ov_field_num *fieldnum = g_datasrc->fieldnum;
-    Uchar* fieldflags = g_datasrc->fieldflags;
-    char* fields[OV_MAX_FIELDS];
-    char* cp;
-    char* tab;
+    field_flags  *fieldflags = g_datasrc->fieldflags;
+    char         *fields[OV_MAX_FIELDS];
+    char         *tab;
 
-    article = article_ptr(artnum);
+    ARTICLE *article = article_ptr(artnum);
     if (article->flags & AF_THREADED) {
 	g_spin_todo--;
 	return;
@@ -347,14 +343,14 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 	else
 	    line[g_len_last_line_got-1] = '\0';
     }
-    cp = line;
+    char *cp = line;
 
     memset((char*)fields,0,sizeof fields);
-    for (i = 0; cp && i < OV_MAX_FIELDS; cp = tab) {
+    for (int i = 0; cp && i < OV_MAX_FIELDS; cp = tab) {
         tab = strchr(cp, '\t');
         if (tab != nullptr)
 	    *tab++ = '\0';
-	fn = fieldnum[i];
+	int fn = fieldnum[i];
 	if (!(fieldflags[fn] & (FF_HAS_FIELD | FF_CHECK4FIELD)))
 	    break;
 	if (fieldflags[fn] & (FF_HAS_HDR | FF_CHECK4HDR)) {
@@ -407,10 +403,8 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 		article->xrefs = "";
 	}
 	else if (fields[OV_XREF]) {
-	    ART_NUM an;
-	    ARTICLE* ap;
-	    for (an=article_first(g_absfirst); an<artnum; an=article_next(an)) {
-		ap = article_ptr(an);
+            for (ART_NUM an = article_first(g_absfirst); an<artnum; an=article_next(an)) {
+		ARTICLE *ap = article_ptr(an);
 		if (!ap->xrefs)
 		    ap->xrefs = "";
 	    }

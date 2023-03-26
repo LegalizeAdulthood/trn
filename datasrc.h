@@ -17,15 +17,15 @@ struct LIST;
 
 struct SRCFILE
 {
-    FILE*	fp;		/* the file pointer to read the data */
-    HASHTABLE*	hp;		/* the hash table for the data */
-    LIST*	lp;		/* the list used to store the data */
-    long	recent_cnt;	/* # lines/bytes this file might be */
-    time_t	lastfetch;	/* when the data was last fetched */
-    time_t	refetch_secs;	/* how long before we refetch this file */
+    FILE      *fp;           /* the file pointer to read the data */
+    HASHTABLE *hp;           /* the hash table for the data */
+    LIST      *lp;           /* the list used to store the data */
+    long       recent_cnt;   /* # lines/bytes this file might be */
+    time_t     lastfetch;    /* when the data was last fetched */
+    time_t     refetch_secs; /* how long before we refetch this file */
 };
 
-enum datasrc_flags : uint16_t
+enum datasrc_flags : std::uint16_t
 {
     DF_NONE = 0,
     DF_TRY_OVERVIEW = 0x0001,
@@ -46,15 +46,15 @@ enum datasrc_flags : uint16_t
 };
 inline datasrc_flags operator|(datasrc_flags lhs, datasrc_flags rhs)
 {
-    return static_cast<datasrc_flags>(static_cast<int>(lhs) | static_cast<int>(rhs));
+    return static_cast<datasrc_flags>(static_cast<std::uint16_t>(lhs) | static_cast<std::uint16_t>(rhs));
 }
 inline datasrc_flags operator&(datasrc_flags lhs, datasrc_flags rhs)
 {
-    return static_cast<datasrc_flags>(static_cast<int>(lhs) & static_cast<int>(rhs));
+    return static_cast<datasrc_flags>(static_cast<std::uint16_t>(lhs) & static_cast<std::uint16_t>(rhs));
 }
 inline datasrc_flags operator^(datasrc_flags lhs, datasrc_flags rhs)
 {
-    return static_cast<datasrc_flags>(static_cast<int>(lhs) ^ static_cast<int>(rhs));
+    return static_cast<datasrc_flags>(static_cast<std::uint16_t>(lhs) ^ static_cast<std::uint16_t>(rhs));
 }
 inline datasrc_flags operator~(datasrc_flags val)
 {
@@ -78,36 +78,68 @@ inline datasrc_flags &operator^=(datasrc_flags &lhs, datasrc_flags rhs)
     return lhs;
 }
 
-struct DATASRC
+enum field_flags : std::uint8_t
 {
-    std::string name;		/* our user-friendly name */
-    char*	newsid;		/* the active file name or host name */
-    SRCFILE	act_sf;		/* the active file's hashed contents */
-    char*	grpdesc;	/* the newsgroup description file or tmp */
-    SRCFILE	desc_sf;	/* the group description's hashed contents */
-    char*	extra_name;	/* local active.times or server's actfile */
-    NNTPLINK	nntplink;
-    char*	spool_dir;
-    char*	over_dir;
-    char*	over_fmt;
-    char*	thread_dir;
-    char*	auth_user;
-    char*	auth_pass;
-    long	lastnewgrp;	/* time of last newgroup check */
-    FILE*	ov_in;		/* the overview's file handle */
-    time_t	ov_opened;	/* time overview file was opened */
-    ov_field_num fieldnum[OV_MAX_FIELDS];
-    Uchar	fieldflags[OV_MAX_FIELDS];
-    datasrc_flags flags;
-};
-
-enum
-{
+    FF_NONE = 0,
     FF_HAS_FIELD = 0x01,
     FF_CHECK4FIELD = 0x02,
     FF_HAS_HDR = 0x04,
     FF_CHECK4HDR = 0x08,
     FF_FILTERSEND = 0x10
+};
+inline field_flags operator|(field_flags lhs, field_flags rhs)
+{
+    return static_cast<field_flags>(static_cast<std::uint8_t>(lhs) | static_cast<std::uint8_t>(rhs));
+}
+inline field_flags operator&(field_flags lhs, field_flags rhs)
+{
+    return static_cast<field_flags>(static_cast<std::uint8_t>(lhs) & static_cast<std::uint8_t>(rhs));
+}
+inline field_flags operator^(field_flags lhs, field_flags rhs)
+{
+    return static_cast<field_flags>(static_cast<std::uint8_t>(lhs) ^ static_cast<std::uint8_t>(rhs));
+}
+inline field_flags operator~(field_flags val)
+{
+    return static_cast<field_flags>(~static_cast<std::uint8_t>(val));
+}
+inline field_flags &operator|=(field_flags &lhs, field_flags rhs)
+{
+    lhs = lhs | rhs;
+    return lhs;
+}
+inline field_flags &operator&=(field_flags &lhs, field_flags rhs)
+{
+    lhs = lhs & rhs;
+    return lhs;
+}
+inline field_flags &operator^=(field_flags &lhs, field_flags rhs)
+{
+    lhs = lhs ^ rhs;
+    return lhs;
+}
+
+struct DATASRC
+{
+    std::string   name;       /* our user-friendly name */
+    char         *newsid;     /* the active file name or host name */
+    SRCFILE       act_sf;     /* the active file's hashed contents */
+    char         *grpdesc;    /* the newsgroup description file or tmp */
+    SRCFILE       desc_sf;    /* the group description's hashed contents */
+    char         *extra_name; /* local active.times or server's actfile */
+    NNTPLINK      nntplink;
+    char         *spool_dir;
+    char         *over_dir;
+    char         *over_fmt;
+    char         *thread_dir;
+    char         *auth_user;
+    char         *auth_pass;
+    long          lastnewgrp; /* time of last newgroup check */
+    FILE         *ov_in;      /* the overview's file handle */
+    time_t        ov_opened;  /* time overview file was opened */
+    ov_field_num  fieldnum[OV_MAX_FIELDS];
+    field_flags   fieldflags[OV_MAX_FIELDS];
+    datasrc_flags flags;
 };
 
 enum
