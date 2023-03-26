@@ -3,8 +3,8 @@
  *
  * (Mostly scan context declarations.)
  */
-#ifndef SCAN_H
-#define SCAN_H
+#ifndef TRN_SCAN_H
+#define TRN_SCAN_H
 
 /* return codes.  First two should be the same as article scan codes */
 enum

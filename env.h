@@ -1,8 +1,8 @@
 /* env.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef ENV_H
-#define ENV_H
+#ifndef TRN_ENV_H
+#define TRN_ENV_H
 
 extern char *g_home_dir;    /* login directory */
 extern char *g_dot_dir;     /* where . files go */

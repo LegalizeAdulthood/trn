@@ -1,8 +1,8 @@
 /* artstate.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef ARTSTATE_H
-#define ARTSTATE_H
+#ifndef TRN_ARTSTATE_H
+#define TRN_ARTSTATE_H
 
 #include "search.h"
 

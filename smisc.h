@@ -1,8 +1,8 @@
 /* This file is Copyright 1993 by Clifford A. Adams */
 /* smisc.h
  */
-#ifndef SMISC_H
-#define SMISC_H
+#ifndef TRN_SMISC_H
+#define TRN_SMISC_H
 
 extern bool g_s_default_cmd; /* true if the last command (run through setdef()) was the default */
 extern bool g_s_follow_temp; /* explicitly follow until end of thread */

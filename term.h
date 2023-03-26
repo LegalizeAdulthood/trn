@@ -1,8 +1,8 @@
 /* term.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef TERM_H
-#define TERM_H
+#ifndef TRN_TERM_H
+#define TRN_TERM_H
 
 /* stuff wanted by terminal mode diddling routines */
 

@@ -1,8 +1,8 @@
 /* nntp.h
 */ 
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef NNTP_H
-#define NNTP_H
+#ifndef TRN_NNTP_H
+#define TRN_NNTP_H
 
 struct DATASRC;
 struct NGDATA;

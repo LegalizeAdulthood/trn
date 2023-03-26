@@ -1,8 +1,8 @@
 /* util2.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef UTIL2_H
-#define UTIL2_H
+#ifndef TRN_UTIL2_H
+#define TRN_UTIL2_H
 
 char *savestr(const char *str);
 char *safecpy(char *to, const char *from, int len);

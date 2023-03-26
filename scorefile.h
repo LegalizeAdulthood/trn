@@ -2,8 +2,8 @@
 /* scorefile.h
  *
  */
-#ifndef SCOREFILE_H
-#define SCOREFILE_H
+#ifndef TRN_SCOREFILE_H
+#define TRN_SCOREFILE_H
 
 #include "head.h"
 

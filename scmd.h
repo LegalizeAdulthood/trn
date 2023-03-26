@@ -3,8 +3,8 @@
  *
  * Scan command interpreter/router
  */
-#ifndef SCMD_H
-#define SCMD_H
+#ifndef TRN_SCMD_H
+#define TRN_SCMD_H
 
 void s_go_bot();
 int s_finish_cmd(const char *string);

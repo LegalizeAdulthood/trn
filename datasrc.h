@@ -1,8 +1,8 @@
 /* datasrc.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef DATASRC_H
-#define DATASRC_H
+#ifndef TRN_DATASRC_H
+#define TRN_DATASRC_H
 
 #include "nntpclient.h"
 #include "rt-ov.h"

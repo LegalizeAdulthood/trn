@@ -1,8 +1,8 @@
 /* artsrch.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef ARTSRCH_H
-#define ARTSRCH_H
+#ifndef TRN_ARTSRCH_H
+#define TRN_ARTSRCH_H
 
 #include "head.h"
 #include "search.h"

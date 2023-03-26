@@ -1,8 +1,8 @@
 /* last.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef LAST_H
-#define LAST_H
+#ifndef TRN_LAST_H
+#define TRN_LAST_H
 
 extern char *g_lastngname; /* last newsgroup read */
 extern long g_lasttime;    /* time last we ran */

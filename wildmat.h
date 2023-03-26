@@ -1,7 +1,7 @@
 /* wildmat.h
  */
-#ifndef WILDMAT_H
-#define WILDMAT_H
+#ifndef TRN_WILDMAT_H
+#define TRN_WILDMAT_H
 
 bool wildmat(const char *text, const char *p);
 

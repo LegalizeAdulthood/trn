@@ -2,8 +2,8 @@
 /* score-easy.h
  *
  */
-#ifndef SCORE_EASY_H
-#define SCORE_EASY_H
+#ifndef TRN_SCORE_EASY_H
+#define TRN_SCORE_EASY_H
 
 char *sc_easy_append();
 const char *sc_easy_command();

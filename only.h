@@ -1,8 +1,8 @@
 /* only.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef ONLY_H
-#define ONLY_H
+#ifndef TRN_ONLY_H
+#define TRN_ONLY_H
 
 #ifndef NBRA
 #include "search.h"

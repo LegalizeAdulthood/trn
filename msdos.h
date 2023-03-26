@@ -1,8 +1,8 @@
 /* msdos.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef MSDOS_H
-#define MSDOS_H
+#ifndef TRN_MSDOS_H
+#define TRN_MSDOS_H
 
 #include <ctype.h>
 #include <stdio.h>

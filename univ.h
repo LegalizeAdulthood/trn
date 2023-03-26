@@ -3,8 +3,8 @@
 /* Universal selector
  *
  */
-#ifndef UNIV_H
-#define UNIV_H
+#ifndef TRN_UNIV_H
+#define TRN_UNIV_H
 
 #include "help.h"
 

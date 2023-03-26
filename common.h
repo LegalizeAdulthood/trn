@@ -1,8 +1,8 @@
 /* common.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef TRN_COMMON_H
+#define TRN_COMMON_H
 
 #include <stdexcept>
 

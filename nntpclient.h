@@ -1,8 +1,8 @@
 /* nntpclient.h
 */ 
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef NNTPCLIENT_H
-#define NNTPCLIENT_H
+#ifndef TRN_NNTPCLIENT_H
+#define TRN_NNTPCLIENT_H
 
 struct NNTPLINK
 {

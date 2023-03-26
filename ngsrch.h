@@ -1,8 +1,8 @@
 /* ngsrch.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef NGSRCH_H
-#define NGSRCH_H
+#ifndef TRN_NGSRCH_H
+#define TRN_NGSRCH_H
 
 struct COMPEX;
 struct NGDATA;

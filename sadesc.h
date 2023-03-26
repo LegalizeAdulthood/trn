@@ -2,8 +2,8 @@
 /* sadesc.h
  *
  */
-#ifndef SADESC_H
-#define SADESC_H
+#ifndef TRN_SADESC_H
+#define TRN_SADESC_H
 
 const char *sa_get_statchars(long a, int line);
 const char *sa_desc_subject(long e);

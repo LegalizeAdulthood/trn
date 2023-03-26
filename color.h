@@ -2,8 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file, and
  * this file is also Copyright 1995 by Gran Larsson <hoh@approve.se>. */
-#ifndef COLOR_H
-#define COLOR_H
+#ifndef TRN_COLOR_H
+#define TRN_COLOR_H
 
 /*
 ** Object numbers.

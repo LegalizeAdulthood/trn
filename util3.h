@@ -1,8 +1,8 @@
 /* util3.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef UTIL3_H
-#define UTIL3_H
+#ifndef TRN_UTIL3_H
+#define TRN_UTIL3_H
 
 #include "typedef.h"
 

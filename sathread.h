@@ -2,8 +2,8 @@
 /* sathread.h
  *
  */
-#ifndef SATHREAD_H
-#define SATHREAD_H
+#ifndef TRN_SATHREAD_H
+#define TRN_SATHREAD_H
 
 #include "scanart.h"
 

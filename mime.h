@@ -1,7 +1,7 @@
 /* mime.h
  */
-#ifndef MIME_H
-#define MIME_H
+#ifndef TRN_MIME_H
+#define TRN_MIME_H
 
 #include "decode.h"
 

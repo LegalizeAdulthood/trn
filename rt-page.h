@@ -1,8 +1,8 @@
 /* rt-page.h
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef RT_PAGE_H
-#define RT_PAGE_H
+#ifndef TRN_RT_PAGE_H
+#define TRN_RT_PAGE_H
 
 #define PRESERVE_PAGE     false
 #define FILL_LAST_PAGE    true

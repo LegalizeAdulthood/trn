@@ -1,8 +1,8 @@
 /* ndir.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef NDIR_H
-#define NDIR_H
+#ifndef TRN_NDIR_H
+#define TRN_NDIR_H
 
 #if defined(I_DIRENT) && !defined(EMULATE_NDIR)
 #include <dirent.h>

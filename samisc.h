@@ -3,8 +3,8 @@
  *
  * smaller functions
  */
-#ifndef SAMISC_H
-#define SAMISC_H
+#ifndef TRN_SAMISC_H
+#define TRN_SAMISC_H
 
 bool sa_basic_elig(long a);
 bool sa_eligible(long a);

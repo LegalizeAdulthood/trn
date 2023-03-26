@@ -1,7 +1,7 @@
 /* nntpinit.h
  */
-#ifndef NNTPINIT_H
-#define NNTPINIT_H
+#ifndef TRN_NNTPINIT_H
+#define TRN_NNTPINIT_H
 
 int init_nntp();
 int server_init(const char *machine);

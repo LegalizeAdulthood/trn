@@ -1,8 +1,8 @@
 /* kfile.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef KFILE_H
-#define KFILE_H
+#ifndef TRN_KFILE_H
+#define TRN_KFILE_H
 
 struct ARTICLE;
 

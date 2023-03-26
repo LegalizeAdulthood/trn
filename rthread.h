@@ -1,8 +1,8 @@
 /* rthread.h
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef RTHREAD_H
-#define RTHREAD_H
+#ifndef TRN_RTHREAD_H
+#define TRN_RTHREAD_H
 
 struct ARTICLE;
 struct HASHTABLE;

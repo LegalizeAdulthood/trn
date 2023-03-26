@@ -3,8 +3,8 @@
  *
  * Interface to rest of [t]rn
  */
-#ifndef SCANART_H
-#define SCANART_H
+#ifndef TRN_SCANART_H
+#define TRN_SCANART_H
 
 /* return codes for sa_main */
 enum sa_main_result

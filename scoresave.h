@@ -2,8 +2,8 @@
 /* scoresave.h
  *
  */
-#ifndef SCORESAVE_H
-#define SCORESAVE_H
+#ifndef TRN_SCORESAVE_H
+#define TRN_SCORESAVE_H
 
 extern int g_sc_loaded_count; /* how many articles were loaded? */
 

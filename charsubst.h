@@ -11,8 +11,8 @@
  * for any use whatsoever, and it is provided as is. Any use of this software
  * is at the user's own risk. 
  */
-#ifndef CHARSUBST_H
-#define CHARSUBST_H
+#ifndef TRN_CHARSUBST_H
+#define TRN_CHARSUBST_H
 
 /* Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced */
 extern char* g_charsets;

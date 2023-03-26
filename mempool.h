@@ -1,8 +1,8 @@
 /*
  * mempool.h
  */
-#ifndef MEMPOOL_H
-#define MEMPOOL_H
+#ifndef TRN_MEMPOOL_H
+#define TRN_MEMPOOL_H
 
 /* memory pool numbers */
 

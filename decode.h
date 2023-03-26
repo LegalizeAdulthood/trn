@@ -1,8 +1,8 @@
 /* decode.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef DECODE_H
-#define DECODE_H
+#ifndef TRN_DECODE_H
+#define TRN_DECODE_H
 
 struct MIMECAP_ENTRY;
 

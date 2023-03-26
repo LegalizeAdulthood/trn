@@ -1,8 +1,8 @@
 /* search.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef SEARCH_H
-#define SEARCH_H
+#ifndef TRN_SEARCH_H
+#define TRN_SEARCH_H
 
 #ifndef NBRA
 #define	NBRA	10		/* the maximum number of meta-brackets in an

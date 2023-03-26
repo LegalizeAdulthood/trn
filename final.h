@@ -1,8 +1,8 @@
 /* final.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef FINAL_H
-#define FINAL_H
+#ifndef TRN_FINAL_H
+#define TRN_FINAL_H
 
 /* cleanup status for fast exits */
 

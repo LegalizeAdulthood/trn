@@ -1,8 +1,8 @@
 /* opt.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef OPT_H
-#define OPT_H
+#ifndef TRN_OPT_H
+#define TRN_OPT_H
 
 #include "search.h"
 #include "util.h"

@@ -1,8 +1,8 @@
 /* rt-process.h
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef RT_PROCESS_H
-#define RT_PROCESS_H
+#ifndef TRN_RT_PROCESS_H
+#define TRN_RT_PROCESS_H
 
 #include "hash.h"
 

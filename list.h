@@ -1,8 +1,8 @@
 /* list.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef LIST_H
-#define LIST_H
+#ifndef TRN_LIST_H
+#define TRN_LIST_H
 
 struct LISTNODE
 {

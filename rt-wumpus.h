@@ -1,8 +1,8 @@
 /* rt-wumpus.h
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef RT_WUMPUS_H
-#define RT_WUMPUS_H
+#ifndef TRN_RT_WUMPUS_H
+#define TRN_RT_WUMPUS_H
 
 struct ARTICLE;
 

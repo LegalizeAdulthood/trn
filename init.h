@@ -1,8 +1,8 @@
 /* init.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef INIT_H
-#define INIT_H
+#ifndef TRN_INIT_H
+#define TRN_INIT_H
 
 enum
 {

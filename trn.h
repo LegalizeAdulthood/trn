@@ -1,8 +1,8 @@
 /* trn.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef TRN_H
-#define TRN_H
+#ifndef TRN_TRN_H
+#define TRN_TRN_H
 
 enum input_newsgroup_result
 {

@@ -1,8 +1,8 @@
 /* rt-select.h
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef RT_SELECT_H
-#define RT_SELECT_H
+#ifndef TRN_RT_SELECT_H
+#define TRN_RT_SELECT_H
 
 #include "help.h"
 

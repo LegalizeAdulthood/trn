@@ -3,8 +3,8 @@
  *
  * scan ordering
  */
-#ifndef SORDER_H
-#define SORDER_H
+#ifndef TRN_SORDER_H
+#define TRN_SORDER_H
 
 extern bool g_s_order_changed; /* If true, resort next time order is considered */
 

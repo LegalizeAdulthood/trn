@@ -1,8 +1,8 @@
 /* rt-ov.h
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef RT_OV_H
-#define RT_OV_H
+#ifndef TRN_RT_OV_H
+#define TRN_RT_OV_H
 
 struct ARTICLE;
 

@@ -1,8 +1,8 @@
 /* rcstuff.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef RCSTUFF_H
-#define RCSTUFF_H
+#ifndef TRN_RCSTUFF_H
+#define TRN_RCSTUFF_H
 
 struct DATASRC;
 struct HASHTABLE;

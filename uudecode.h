@@ -1,8 +1,8 @@
 /* uudecode.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef UUDECODE_H
-#define UUDECODE_H
+#ifndef TRN_UUDECODE_H
+#define TRN_UUDECODE_H
 
 #include "decode.h"
 

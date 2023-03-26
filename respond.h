@@ -1,8 +1,8 @@
 /* respond.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef RESPOND_H
-#define RESPOND_H
+#ifndef TRN_RESPOND_H
+#define TRN_RESPOND_H
 
 extern char *g_savedest;    /* value of %b */
 extern char *g_extractdest; /* value of %E */

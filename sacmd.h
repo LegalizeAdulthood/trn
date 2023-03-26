@@ -3,8 +3,8 @@
  *
  * main command loop
  */
-#ifndef SACMD_H
-#define SACMD_H
+#ifndef TRN_SACMD_H
+#define TRN_SACMD_H
 
 enum sa_cmd
 {

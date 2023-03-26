@@ -1,8 +1,8 @@
 /* ng.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef NG_H
-#define NG_H
+#ifndef TRN_NG_H
+#define TRN_NG_H
 
 struct ARTICLE;
 

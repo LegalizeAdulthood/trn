@@ -1,8 +1,8 @@
 /* ngdata.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef NGDATA_H
-#define NGDATA_H
+#ifndef TRN_NGDATA_H
+#define TRN_NGDATA_H
 
 struct LIST;
 struct NEWSRC;

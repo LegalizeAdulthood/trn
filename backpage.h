@@ -1,8 +1,8 @@
 /* backpage.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef BACKPAGE_H
-#define BACKPAGE_H
+#ifndef TRN_BACKPAGE_H
+#define TRN_BACKPAGE_H
 
 /* things for doing the 'back page' command */
 

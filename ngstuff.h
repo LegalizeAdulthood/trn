@@ -1,8 +1,8 @@
 /* ngstuff.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef NGSTUFF_H
-#define NGSTUFF_H
+#ifndef TRN_NGSTUFF_H
+#define TRN_NGSTUFF_H
 
 struct ADDGROUP;
 

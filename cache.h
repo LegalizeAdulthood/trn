@@ -1,8 +1,8 @@
 /* cache.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef CACHE_H
-#define CACHE_H
+#ifndef TRN_CACHE_H
+#define TRN_CACHE_H
 
 #include "hash.h"
 #include "head.h"

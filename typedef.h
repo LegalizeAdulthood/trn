@@ -1,7 +1,7 @@
 /* typedef.h
  */
-#ifndef TYPEDEF_H
-#define TYPEDEF_H
+#ifndef TRN_TYPEDEF_H
+#define TRN_TYPEDEF_H
 
 /* some important types */
 

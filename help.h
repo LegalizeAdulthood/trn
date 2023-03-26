@@ -1,8 +1,8 @@
 /* help.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef HELP_H
-#define HELP_H
+#ifndef TRN_HELP_H
+#define TRN_HELP_H
 
 /* help locations */
 enum help_location

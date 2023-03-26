@@ -3,8 +3,8 @@
  *
  * Main routines for article-scan mode.
  */
-#ifndef SAMAIN_H
-#define SAMAIN_H
+#ifndef TRN_SAMAIN_H
+#define TRN_SAMAIN_H
 
 /* sa_flags character bitmap:
  * 0: If set, the article is "marked" (for reading).

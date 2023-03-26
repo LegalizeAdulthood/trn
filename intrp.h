@@ -1,10 +1,12 @@
 /* intrp.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef INTRP_H
-#define INTRP_H
+#ifndef TRN_INTRP_H
+#define TRN_INTRP_H
 
+#ifdef HAS_NEWS_ADMIN
 #include <string>
+#endif
 
 extern char *g_origdir;  /* cwd when rn invoked */
 extern char *g_hostname; /* host name to match local postings */

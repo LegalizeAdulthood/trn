@@ -4,8 +4,8 @@
 /* This file is an altered version of a set of hash routines by
  * Geoffrey Collyer.  See hash.c for his copyright.
  */
-#ifndef HASH_H
-#define HASH_H
+#ifndef TRN_HASH_H
+#define TRN_HASH_H
 
 struct HASHDATUM
 {

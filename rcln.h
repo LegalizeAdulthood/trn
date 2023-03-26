@@ -1,8 +1,8 @@
 /* rcln.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef RCLN_H
-#define RCLN_H
+#ifndef TRN_RCLN_H
+#define TRN_RCLN_H
 
 struct DATASRC;
 struct NGDATA;

@@ -1,5 +1,5 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef TRN_CONFIG_H
+#define TRN_CONFIG_H
 
 /* HAS_GETPWENT:
  *	This symbol, if defined, indicates that the getpwent routine is

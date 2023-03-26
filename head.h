@@ -1,8 +1,8 @@
 /* head.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef HEAD_H
-#define HEAD_H
+#ifndef TRN_HEAD_H
+#define TRN_HEAD_H
 
 #include "mempool.h"
 

@@ -3,8 +3,8 @@
  *
  * functions to manage a page of entries.
  */
-#ifndef SPAGE_H
-#define SPAGE_H
+#ifndef TRN_SPAGE_H
+#define TRN_SPAGE_H
 
 bool s_fillpage_backward(long end);
 bool s_fillpage_forward(long start);

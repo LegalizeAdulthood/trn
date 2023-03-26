@@ -1,8 +1,8 @@
 /* bits.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef BITS_H
-#define BITS_H
+#ifndef TRN_BITS_H
+#define TRN_BITS_H
 
 struct ARTICLE;
 

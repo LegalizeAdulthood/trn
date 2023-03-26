@@ -2,8 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#ifndef ADDNG_H
-#define ADDNG_H
+#ifndef TRN_ADDNG_H
+#define TRN_ADDNG_H
 
 struct DATASRC;
 

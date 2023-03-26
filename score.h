@@ -2,8 +2,8 @@
 /* score.h
  *
  */
-#ifndef SCORE_H
-#define SCORE_H
+#ifndef TRN_SCORE_H
+#define TRN_SCORE_H
 
 /* RETHINK LOWSCORE: (especially for 16-bit scores?) */
 /* score given to unavailable articles */

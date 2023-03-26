@@ -3,8 +3,8 @@
  *
  * article scan specific display functions
  */
-#ifndef SADISP_H
-#define SADISP_H
+#ifndef TRN_SADISP_H
+#define TRN_SADISP_H
 
 void sa_refresh_top();
 void sa_refresh_bot();

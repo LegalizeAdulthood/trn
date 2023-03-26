@@ -2,8 +2,8 @@
  * vi: set sw=4 ts=8 ai sm noet :
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef TRN_UTIL_H
+#define TRN_UTIL_H
 
 #include "utf.h"
 

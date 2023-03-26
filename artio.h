@@ -1,8 +1,8 @@
 /* artio.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef ARTIO_H
-#define ARTIO_H
+#ifndef TRN_ARTIO_H
+#define TRN_ARTIO_H
 
 #define WRAPPED_NL  '\003'
 #define AT_NL(c) ((c) == '\n' || (c) == WRAPPED_NL)

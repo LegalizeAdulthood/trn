@@ -1,8 +1,8 @@
 /* rt-util.h
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef RT_UTIL_H
-#define RT_UTIL_H
+#ifndef TRN_RT_UTIL_H
+#define TRN_RT_UTIL_H
 
 struct ARTICLE;
 

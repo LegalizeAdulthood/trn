@@ -1,8 +1,8 @@
 /* art.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef ART_H
-#define ART_H
+#ifndef TRN_ART_H
+#define TRN_ART_H
 
 /* do_article() return values */
 enum do_article_result

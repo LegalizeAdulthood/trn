@@ -1,6 +1,8 @@
 /* config2.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
+#ifndef TRN_CONFIG2_H
+#define TRN_CONFIG2_H
 
 #ifdef HAS_GETPWENT
 #   include <pwd.h>
@@ -57,4 +59,6 @@ inline bool file_ref(const char *s)
 #endif
 #ifndef FOPEN_WB
 #   define FOPEN_WB "w"
+#endif
+
 #endif
