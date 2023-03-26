@@ -66,136 +66,120 @@ char *filexp(char *s)
     char scrbuf[CBUFLEN];
     char* d;
 
-#ifdef DEBUG
-    if (debug & DEB_FILEXP)
-	printf("< %s\n",s) FLUSH;
-#endif
     /* interpret any % escapes */
     dointerp(filename,sizeof filename,s,nullptr,nullptr);
-#ifdef DEBUG
-    if (debug & DEB_FILEXP)
-	printf("%% %s\n",filename) FLUSH;
-#endif
     s = filename;
     if (*s == '~') {	/* does destination start with ~? */
-	if (!*(++s) || *s == '/') {
-	    sprintf(scrbuf,"%s%s",g_home_dir,s);
-				/* swap $HOME for it */
-#ifdef DEBUG
-	    if (debug & DEB_FILEXP)
-		printf("~ %s\n",scrbuf) FLUSH;
-#endif
-	    strcpy(filename,scrbuf);
-	}
-	else if (*s == '~' && (!s[1] || s[1] == '/')) {
-	    d = getenv("TRNPREFIX");
-	    if (!d)
-		d = INSTALLPREFIX;
-	    sprintf(scrbuf,"%s%s",d,s+1);
-#ifdef DEBUG
-	    if (debug & DEB_FILEXP)
-		printf("~~ %s\n",scrbuf) FLUSH;
-#endif
-	}
-	else {
+        if (!*(++s) || *s == '/')
+        {
+            sprintf(scrbuf, "%s%s", g_home_dir, s);
+            /* swap $HOME for it */
+            strcpy(filename, scrbuf);
+        }
+        else if (*s == '~' && (!s[1] || s[1] == '/'))
+        {
+            d = getenv("TRNPREFIX");
+            if (!d)
+                d = INSTALLPREFIX;
+            sprintf(scrbuf, "%s%s", d, s + 1);
+        }
+        else
+        {
 #ifdef TILDENAME
-	    for (d = scrbuf; isalnum(*s); s++, d++) *d = *s;
-	    *d = '\0';
-	    if (s_tildedir && !strcmp(s_tildename,scrbuf)) {
-		strcpy(scrbuf,s_tildedir);
-		strcat(scrbuf, s);
-		strcpy(filename, scrbuf);
-#ifdef DEBUG
-		if (debug & DEB_FILEXP)
-		    printf("r %s %s\n",s_tildename,s_tildedir) FLUSH;
-#endif
-	    }
-	    else {
-		if (s_tildename)
-		    free(s_tildename);
-		if (s_tildedir)
-		    free(s_tildedir);
-		s_tildedir = nullptr;
-		s_tildename = savestr(scrbuf);
+            for (d = scrbuf; isalnum(*s); s++, d++)
+                *d = *s;
+            *d = '\0';
+            if (s_tildedir && !strcmp(s_tildename, scrbuf))
+            {
+                strcpy(scrbuf, s_tildedir);
+                strcat(scrbuf, s);
+                strcpy(filename, scrbuf);
+            }
+            else
+            {
+                if (s_tildename)
+                    free(s_tildename);
+                if (s_tildedir)
+                    free(s_tildedir);
+                s_tildedir = nullptr;
+                s_tildename = savestr(scrbuf);
 #ifdef HAS_GETPWENT	/* getpwnam() is not the paragon of efficiency */
-		{
-		    struct passwd* pwd = getpwnam(s_tildename);
-		    if (pwd == nullptr) {
-			printf("%s is an unknown user. Using default.\n",s_tildename) FLUSH;
-			return nullptr;
-		    }
-		    sprintf(scrbuf,"%s%s",pwd->pw_dir,s);
-		    s_tildedir = savestr(pwd->pw_dir);
-		    strcpy(filename,scrbuf);
-		    endpwent();
-		}
+                {
+                    struct passwd *pwd = getpwnam(s_tildename);
+                    if (pwd == nullptr)
+                    {
+                        printf("%s is an unknown user. Using default.\n", s_tildename) FLUSH;
+                        return nullptr;
+                    }
+                    sprintf(scrbuf, "%s%s", pwd->pw_dir, s);
+                    s_tildedir = savestr(pwd->pw_dir);
+                    strcpy(filename, scrbuf);
+                    endpwent();
+                }
 #else			/* this will run faster, and is less D space */
-		{	/* just be sure LOGDIRFIELD is correct */
-		    FILE* pfp = fopen(filexp(PASSFILE),"r");
-		    char tmpbuf[512];
-		    int i;
+                { /* just be sure LOGDIRFIELD is correct */
+                    FILE *pfp = fopen(filexp(PASSFILE), "r");
+                    char tmpbuf[512];
+                    int i;
 
-		    if (pfp) {
-			while (fgets(tmpbuf,512,pfp) != nullptr) {
-			    d = cpytill(scrbuf,tmpbuf,':');
-#ifdef DEBUG
-			    if (debug & DEB_FILEXP)
-				printf("p %s\n",tmpbuf) FLUSH;
+                    if (pfp)
+                    {
+                        while (fgets(tmpbuf, 512, pfp) != nullptr)
+                        {
+                            d = cpytill(scrbuf, tmpbuf, ':');
+                            if (!strcmp(scrbuf, s_tildename))
+                            {
+                                for (i = LOGDIRFIELD - 2; i; i--)
+                                {
+                                    if (d)
+                                        d = strchr(d + 1, ':');
+                                }
+                                if (d)
+                                {
+                                    cpytill(scrbuf, d + 1, ':');
+                                    s_tildedir = savestr(scrbuf);
+                                    strcat(scrbuf, s);
+                                    strcpy(filename, scrbuf);
+                                }
+                                break;
+                            }
+                        }
+                        fclose(pfp);
+                    }
+                    if (!s_tildedir)
+                    {
+                        printf("%s is an unknown user. Using default.\n", s_tildename) FLUSH;
+                        return nullptr;
+                    }
+                }
 #endif
-			    if (!strcmp(scrbuf,s_tildename)) {
-				for (i=LOGDIRFIELD-2; i; i--) {
-				    if (d)
-					d = strchr(d+1,':');
-				}
-				if (d) {
-				    cpytill(scrbuf,d+1,':');
-				    s_tildedir = savestr(scrbuf);
-				    strcat(scrbuf,s);
-				    strcpy(filename,scrbuf);
-				}
-				break;
-			    }
-			}
-			fclose(pfp);
-		    }
-		    if (!s_tildedir) {
-			printf("%s is an unknown user. Using default.\n",s_tildename) FLUSH;
-			return nullptr;
-		    }
-		}
-#endif
-	    }
+            }
 #else /* !TILDENAME */
-	    if (g_verbose)
-		fputs("~loginname not implemented.\n",stdout) FLUSH;
-	    else
-		fputs("~login not impl.\n",stdout) FLUSH;
+            if (g_verbose)
+                fputs("~loginname not implemented.\n", stdout) FLUSH;
+            else
+                fputs("~login not impl.\n", stdout) FLUSH;
 #endif
-	}
+        }
     }
-    else if (*s == '$') {	/* starts with some env variable? */
-	d = scrbuf;
-	*d++ = '%';
-	if (s[1] == '{')
-	    strcpy(d,s+2);
-	else {
-	    *d++ = '{';
-	    for (s++; isalnum(*s); s++) *d++ = *s;
-				/* skip over token */
-	    *d++ = '}';
-	    strcpy(d,s);
-	}
-#ifdef DEBUG
-	if (debug & DEB_FILEXP)
-	    printf("$ %s\n",scrbuf) FLUSH;
-#endif
-	/* this might do some extra '%'s, but that's how the Mercedes Benz */
-	dointerp(filename,sizeof filename,scrbuf,nullptr,nullptr);
+    else if (*s == '$')
+    { /* starts with some env variable? */
+        d = scrbuf;
+        *d++ = '%';
+        if (s[1] == '{')
+            strcpy(d, s + 2);
+        else
+        {
+            *d++ = '{';
+            for (s++; isalnum(*s); s++)
+                *d++ = *s;
+            /* skip over token */
+            *d++ = '}';
+            strcpy(d, s);
+        }
+        /* this might do some extra '%'s, but that's how the Mercedes Benz */
+        dointerp(filename, sizeof filename, scrbuf, nullptr, nullptr);
     }
-#ifdef DEBUG
-    if (debug & DEB_FILEXP)
-	printf("> %s\n",filename) FLUSH;
-#endif
     return filename;
 }
 
