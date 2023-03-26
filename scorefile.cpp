@@ -350,7 +350,7 @@ bool sf_do_command(char *cmd, bool check)
 	if (check)
 	    return true;
 	sf_grow();
-	g_sf_entries[g_sf_num_entries-1].head_type = SF_KILLTHRESHOLD;
+	g_sf_entries[g_sf_num_entries-1].head_type = static_cast<header_line_type>(SF_KILLTHRESHOLD);
 	g_sf_entries[g_sf_num_entries-1].score = i;
 	return true;
     }
@@ -385,7 +385,7 @@ bool sf_do_command(char *cmd, bool check)
 	if (check)
 	    return true;
 	sf_grow();
-	g_sf_entries[g_sf_num_entries-1].head_type = SF_NEWAUTHOR;
+	g_sf_entries[g_sf_num_entries-1].head_type = static_cast<header_line_type>(SF_NEWAUTHOR);
 	g_sf_entries[g_sf_num_entries-1].score = i;
 	return true;
     }
@@ -453,7 +453,7 @@ bool sf_do_command(char *cmd, bool check)
 	if (check)
 	    return true;
 	sf_grow();
-	g_sf_entries[g_sf_num_entries-1].head_type = SF_REPLY;
+	g_sf_entries[g_sf_num_entries-1].head_type = static_cast<header_line_type>(SF_REPLY);
 	g_sf_entries[g_sf_num_entries-1].score = i;
 	return true;
     }
@@ -555,18 +555,13 @@ char *sf_freeform(char *start1, char *end1)
 //bool check;		/* if true, just check the line, don't act. */
 bool sf_do_line(char *line, bool check)
 {
-    char ch;
-    char* s;
-    char* s2;
-    int i,j;
-
     if (!line || !*line)
 	return true;		/* very empty line */
-    s = line + strlen(line) - 1;
+    char *s = line + strlen(line) - 1;
     if (*s == '\n')
 	*s = '\0';		/* kill the newline */
 
-    ch = line[0];
+    char ch = line[0];
     if (ch == '#')		/* comment */
 	return true;
 
@@ -581,11 +576,11 @@ bool sf_do_line(char *line, bool check)
     if (!*s || *s == '#')
 	return true;	/* line was whitespace or comment after whitespace */
     /* convert line to lowercase (make optional later?) */
-    for (s2 = s; *s2 != '\0'; s2++) {
+    for (char* s2 = s; *s2 != '\0'; s2++) {
 	if (isupper(*s2))
 	    *s2 = tolower(*s2);		/* convert to lower case */
     }
-    i = atoi(s);
+    int i = atoi(s);
     if (i == 0)	{	/* it might not be a number */
 	if (!is_text_zero(s)) {
 	    printf("\nBad scorefile line:\n|%s|\n",s);
@@ -595,8 +590,10 @@ bool sf_do_line(char *line, bool check)
     /* add the line as a scoring entry */
     while (isdigit(*s) || *s == '+' || *s == '-' || *s == ' ' || *s == '\t')
 	s++;	/* skip score */
+    char *s2;
     while (true) {
-	for (s2 = s; *s2 && !(*s2 == ' ' || *s2 == '\t'); s2++) ;
+        for (s2 = s; *s2 && *s2 != ' ' && *s2 != '\t'; s2++)
+            ;
 	s2--;
 	if (*s2 == ':')	/* did header */
 	    break;	/* go to set header routine */
@@ -606,10 +603,9 @@ bool sf_do_line(char *line, bool check)
 	    printf("Line was:\n|%s|\n",line) FLUSH;
 	    return false;	/* error */
 	}
-	s2 = s;
     } /* while */
     /* s is start of header name, s2 points to the ':' character */
-    j = set_line_type(s,s2);
+    int j = set_line_type(s, s2);
     if (j == SOME_LINE) {
 	*s2 = '\0';
 	j = sf_check_extra_headers(s);
@@ -630,7 +626,7 @@ bool sf_do_line(char *line, bool check)
     if (check)
 	return true;		/* limits of check */
     sf_grow();		/* acutally make an entry */
-    g_sf_entries[g_sf_num_entries-1].head_type = j;
+    g_sf_entries[g_sf_num_entries-1].head_type = static_cast<header_line_type>(j);
     g_sf_entries[g_sf_num_entries-1].score = i;
     if (g_sf_pattern_status) {	/* in pattern matching mode */
 	g_sf_entries[g_sf_num_entries-1].flags |= 1;
@@ -689,7 +685,7 @@ void sf_do_file(const char *fname)
     safefilename = savestr(fname);
     /* add end marker to scoring array */
     sf_grow();
-    g_sf_entries[g_sf_num_entries-1].head_type = SF_FILE_MARK_START;
+    g_sf_entries[g_sf_num_entries-1].head_type = static_cast<header_line_type>(SF_FILE_MARK_START);
     /* file_level is 1 to n */
     g_sf_entries[g_sf_num_entries-1].score = s_sf_file_level;
     g_sf_entries[g_sf_num_entries-1].str2 = nullptr;
@@ -702,7 +698,7 @@ void sf_do_file(const char *fname)
     }
     /* add end marker to scoring array */
     sf_grow();
-    g_sf_entries[g_sf_num_entries-1].head_type = SF_FILE_MARK_END;
+    g_sf_entries[g_sf_num_entries-1].head_type = static_cast<header_line_type>(SF_FILE_MARK_END);
     /* file_level is 1 to n */
     g_sf_entries[g_sf_num_entries-1].score = s_sf_file_level;
     g_sf_entries[g_sf_num_entries-1].str2 = nullptr;
@@ -740,28 +736,26 @@ int score_match(char *str, int ind)
 
 int sf_score(ART_NUM a)
 {
-    int sum,i,j;
-    int h;		/* header type */
-    char* s;		/* misc */
-    bool old_untrim;	/* old value of untrim_cache */
-
     if (is_unavailable(a))
 	return LOWSCORE;	/* unavailable arts get low negative score. */
 
     /* if there are no score entries, then the answer is real easy and quick */
     if (g_sf_num_entries == 0)
 	return 0;
-    old_untrim = g_untrim_cache;
+    bool old_untrim = g_untrim_cache;
     g_untrim_cache = true;
     g_sc_scoring = true;		/* loop prevention */
-    sum = 0;
+    int sum = 0;
 
     /* parse the header now if there are extra headers */
     /* (This could save disk accesses.) */
     if (s_sf_has_extra_headers)
 	parseheader(a);
 
-    for (i = 0; i < g_sf_num_entries; i++) {
+    char *s;            /* misc */
+
+    for (int i = 0; i < g_sf_num_entries; i++) {
+        header_line_type h; /* header type */
 	h = g_sf_entries[i].head_type;
 	if (h <= 0)	/* don't use command headers for scoring */
 	    continue;	/* the outer for loop */
@@ -778,7 +772,7 @@ int sf_score(ART_NUM a)
 	    continue;	/* with the g_sf_entries. */
 
 	/* do the matches for this header */
-	for (j = i; j < g_sf_num_entries; j++) {
+	for (int j = i; j < g_sf_num_entries; j++) {
 	    /* see if there is a match */
 	    if (h == g_sf_entries[j].head_type) {
 		if (j != i) {		/* set flag only for future rules */
@@ -969,7 +963,7 @@ void sf_append(char *line)
 }
 
 /* returns a lowercased copy of the header line type h in private buffer */
-char *sf_get_line(ART_NUM a, int h)
+char *sf_get_line(ART_NUM a, header_line_type h)
 {
     static char sf_getline[LBUFLEN];
     char* s;

@@ -348,7 +348,7 @@ void uncache_article(ARTICLE *ap, bool remove_empties)
 
 /* get the header line from an article's cache or parse the article trying */
 
-char *fetchcache(ART_NUM artnum, int which_line, bool fill_cache)
+char *fetchcache(ART_NUM artnum, header_line_type which_line, bool fill_cache)
 {
     char* s;
     ARTICLE* ap;
@@ -371,7 +371,7 @@ char *fetchcache(ART_NUM artnum, int which_line, bool fill_cache)
 /* Return a pointer to a cached header line for the indicated article.
 ** Truncated headers (e.g. from a .thread file) are optionally ignored.
 */
-char *get_cached_line(ARTICLE *ap, int which_line, bool no_truncs)
+char *get_cached_line(ARTICLE *ap, header_line_type which_line, bool no_truncs)
 {
     char* s;
 

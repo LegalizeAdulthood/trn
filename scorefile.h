@@ -5,21 +5,23 @@
 #ifndef SCOREFILE_H
 #define SCOREFILE_H
 
+#include "head.h"
+
 struct COMPEX;
 
 #define DEFAULT_SCOREDIR "%+/scores"
 
 struct SF_ENTRY
 {
-    int head_type;	/* header # (see head.h) */
-    int score;		/* score change */
-    char* str1;		/* first string part */
-    char* str2;		/* second string part */
-    COMPEX* compex;	/* regular expression ptr */
-    char flags;		/* 1: regex is valid
-			 * 2: rule has been applied to the current article.
-			 * 4: use faster rule checking  (later)
-			 */
+    header_line_type head_type; /* header # (see head.h) */
+    int score;                  /* score change */
+    char *str1;                 /* first string part */
+    char *str2;                 /* second string part */
+    COMPEX *compex;             /* regular expression ptr */
+    char flags;                 /* 1: regex is valid
+                                 * 2: rule has been applied to the current article.
+                                 * 4: use faster rule checking  (later)
+                                 */
 };
 /* note that negative header #s are used to indicate special entries... */
 
@@ -73,7 +75,7 @@ int score_match(char *str, int ind);
 int sf_score(ART_NUM a);
 char *sf_missing_score(const char *line);
 void sf_append(char *line);
-char *sf_get_line(ART_NUM a, int h);
+char *sf_get_line(ART_NUM a, header_line_type h);
 void sf_print_match(int indx);
 void sf_exclude_file(const char *fname);
 void sf_edit_file(const char *filespec);

@@ -29,7 +29,7 @@ COMPEX g_art_compex{};               /* last compiled normal search */
 COMPEX *g_bra_compex{&g_art_compex}; /* current compex with brackets */
 const char *g_scopestr{"sfHhbBa"};   //
 art_scope g_art_howmuch{};           /* search scope */
-int g_art_srchhdr{};                 /* specific header number to search */
+header_line_type g_art_srchhdr{};                 /* specific header number to search */
 bool g_art_doread{};                 /* search read articles? */
 
 static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope);
@@ -55,7 +55,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, int get_cmd)
     art_search_result ret = SRCH_NOTFOUND; /* assume no commands */
     int saltaway = 0;			/* store in KILL file? */
     art_scope howmuch;			/* search scope: subj/from/Hdr/head/art */
-    int srchhdr;			/* header to search if Hdr scope */
+    header_line_type srchhdr;           /* header to search if Hdr scope */
     bool topstart = false;
     bool doread;			/* search read articles? */
     bool foldcase = true;		/* fold upper and lower case? */

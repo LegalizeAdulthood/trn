@@ -5,6 +5,7 @@
 #define CACHE_H
 
 #include "hash.h"
+#include "head.h"
 
 struct ARTICLE;
 struct LIST;
@@ -130,8 +131,8 @@ void check_for_near_subj(ARTICLE *ap);
 void change_join_subject_len(int len);
 void check_poster(ARTICLE *ap);
 void uncache_article(ARTICLE *ap, bool remove_empties);
-char *fetchcache(ART_NUM artnum, int which_line, bool fill_cache);
-char *get_cached_line(ARTICLE *ap, int which_line, bool no_truncs);
+char *fetchcache(ART_NUM artnum, header_line_type which_line, bool fill_cache);
+char *get_cached_line(ARTICLE *ap, header_line_type which_line, bool no_truncs);
 void set_subj_line(ARTICLE *ap, char *subj, int size);
 int decode_header(char *to, char *from, int size);
 void dectrl(char *str);

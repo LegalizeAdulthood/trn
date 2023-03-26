@@ -78,18 +78,18 @@ int g_user_htype_cnt{};
 int g_user_htype_max{};
 ART_NUM g_parsed_art{};   /* the article number we've parsed */
 ARTICLE *g_parsed_artp{}; /* the article ptr we've parsed */
-int g_in_header{};        /* are we decoding the header? */
+header_line_type g_in_header{};        /* are we decoding the header? */
 char *g_headbuf;
 long g_headbuf_size;
 
 static bool s_first_one; /* is this the 1st occurance of this header line? */
 static bool s_reading_nntp_header;
-static short s_htypeix[26] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static header_line_type s_htypeix[26]{};
 
 void head_init()
 {
     for (int i = HEAD_FIRST + 1; i < HEAD_LAST; i++)
-	s_htypeix[*g_htype[i].name - 'a'] = i;
+        s_htypeix[*g_htype[i].name - 'a'] = static_cast<header_line_type>(i);
 
     g_user_htype_max = 10;
     g_user_htype = (USER_HEADTYPE*)safemalloc(g_user_htype_max
@@ -115,7 +115,7 @@ void dumpheader(char *where)
 }
 #endif
 
-int set_line_type(char *bufptr, const char *colon)
+header_line_type set_line_type(char *bufptr, const char *colon)
 {
     char* t;
     char* f;
@@ -138,15 +138,15 @@ int set_line_type(char *bufptr, const char *colon)
      * optimization to avoid calling subroutine strEQ unnecessarily.  Hauls.
      */
     if (*f >= 'a' && *f <= 'z') {
-        int i;
-        for (i = s_htypeix[*f - 'a']; *g_htype[i].name == *f; i--) {
-	    if (len == g_htype[i].length && !strcmp(f,g_htype[i].name))
-		return i;
-	}
+        for (int i = s_htypeix[*f - 'a']; *g_htype[i].name == *f; i--)
+        {
+            if (len == g_htype[i].length && !strcmp(f, g_htype[i].name))
+                return static_cast<header_line_type>(i);
+        }
 	if (len == g_htype[CUSTOM_LINE].length
 	 && !strcmp(f,g_htype[(((0+1)+1)+1)].name))
 	    return CUSTOM_LINE;
-	for (i = g_user_htypeix[*f - 'a']; *g_user_htype[i].name == *f; i--) {
+	for (int i = g_user_htypeix[*f - 'a']; *g_user_htype[i].name == *f; i--) {
 	    if (len >= g_user_htype[i].length
 	     && !strncmp(f, g_user_htype[i].name, g_user_htype[i].length)) {
 		if (g_user_htype[i].flags & HT_HIDE)
@@ -158,11 +158,11 @@ int set_line_type(char *bufptr, const char *colon)
     return SOME_LINE;
 }
 
-int get_header_num(char *s)
+header_line_type get_header_num(char *s)
 {
     char* end = s + strlen(s);
 
-    int i = set_line_type(s, end);	    /* Sets g_msg to lower-cased header name */
+    header_line_type i = set_line_type(s, end);	    /* Sets g_msg to lower-cased header name */
 
     if (i <= SOME_LINE && i != CUSTOM_LINE) {
         if (g_htype[CUSTOM_LINE].name != "")
@@ -391,7 +391,7 @@ bool parseheader(ART_NUM artnum)
 
 /* article to get line from */
 /* type of line desired */
-char *fetchlines(ART_NUM artnum, int which_line)
+char *fetchlines(ART_NUM artnum, header_line_type which_line)
 {
     char* s;
     ART_POS firstpos;
@@ -431,7 +431,7 @@ char *fetchlines(ART_NUM artnum, int which_line)
 /* ART_NUM artnum   article to get line from */
 /* int which_line   type of line desired */
 /* int pool         which memory pool to use */
-char *mp_fetchlines(ART_NUM artnum, int which_line, memory_pool pool)
+char *mp_fetchlines(ART_NUM artnum, header_line_type which_line, memory_pool pool)
 {
     char* s;
     ART_POS firstpos;
@@ -472,7 +472,7 @@ char *mp_fetchlines(ART_NUM artnum, int which_line, memory_pool pool)
 // ART_NUM artnum   article to get line from */
 // int which_line   type of line desired */
 // bool copy    do you want it savestr()ed? */
-char *prefetchlines(ART_NUM artnum, int which_line, bool copy)
+char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
 {
     char* s;
     char* t;

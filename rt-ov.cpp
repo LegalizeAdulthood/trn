@@ -31,8 +31,8 @@ enum
     OV_CHUNK_SIZE = 40
 };
 
-static int s_hdrnum[] = {
-    0, SUBJ_LINE, FROM_LINE, DATE_LINE, MSGID_LINE,
+static header_line_type s_hdrnum[] = {
+    PAST_HEADER, SUBJ_LINE, FROM_LINE, DATE_LINE, MSGID_LINE,
     REFS_LINE, BYTES_LINE, LINES_LINE, XREF_LINE
 };
 

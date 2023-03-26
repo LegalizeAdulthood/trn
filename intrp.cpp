@@ -315,11 +315,12 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		case '[':
 		    if (g_in_ng) {
 			pattern = cpytill(scrbuf,pattern+1,']');
-			if (*scrbuf
-			 && (i = get_header_num(scrbuf)) != SOME_LINE) {
-			    safefree(line_buf);
-			    s = line_buf = fetchlines(g_art,i);
-			}
+			header_line_type which_line;
+                        if (*scrbuf && (which_line = get_header_num(scrbuf)) != SOME_LINE)
+                        {
+                            safefree(line_buf);
+                            s = line_buf = fetchlines(g_art, which_line);
+                        }
 			else
 			    s = "";
 		    }
