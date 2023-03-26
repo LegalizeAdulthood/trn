@@ -6,5 +6,5 @@ add_executable(trn-test
     test_init.cpp
     test_interp.cpp
 )
-target_link_libraries(trn-test PUBLIC libtrn GTest::gtest_main)
+target_link_libraries(trn-test PUBLIC libtrn GTest::gmock_main GTest::gtest)
 set_property(TARGET trn-test PROPERTY FOLDER Tests)

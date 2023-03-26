@@ -20,7 +20,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 add_library(util
     ${CMAKE_CURRENT_BINARY_DIR}/config.h
-    env.cpp env.h
+    env.cpp env.h env-internal.h
     util2.cpp util2.h
     wildmat.cpp wildmat.h
     config.h.in

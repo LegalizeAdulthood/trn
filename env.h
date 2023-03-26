@@ -16,12 +16,10 @@ extern char *g_p_host_name; /* host name in a posting */
 extern char *g_local_host;  /* local host name */
 extern int g_net_speed;     /* how fast our net-connection is */
 
-bool env_init(char *tcbuf, bool lax);
-bool set_user_name(char *tmpbuf);
-bool set_p_host_name(char *tmpbuf);
+bool  env_init(char *tcbuf, bool lax);
 char *get_val(const char *nam, char *def);
 char *export_var(const char *nam, const char *val);
-void un_export(char *export_val);
-void re_export(char *export_val, const char *new_val, int limit);
+void  un_export(char *export_val);
+void  re_export(char *export_val, const char *new_val, int limit);
 
 #endif

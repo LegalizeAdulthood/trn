@@ -3,7 +3,7 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include "common.h"
-#include "env.h"
+#include "env-internal.h"
 
 #include "init.h"
 #include "util.h"
@@ -24,6 +24,8 @@
 #include <winsock2.h>
 #endif
 
+#include <memory>
+
 char *g_home_dir{};    /* login directory */
 char *g_dot_dir{};     /* where . files go */
 char *g_trn_dir{};     /* usually %./.trn */
@@ -37,15 +39,20 @@ char *g_local_host{};  /* local host name */
 int g_net_speed{20};   /* how fast our net-connection is */
 
 static void env_init2();
-static int envix(const char *nam, int len);
+static int  envix(const char *nam, int len);
+static bool set_user_name(char *tmpbuf);
+static bool set_p_host_name(char *tmpbuf);
 
-bool env_init(char *tcbuf, bool lax)
+bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &set_user_name_fn,
+              const std::function<bool(char *tmpbuf)> &set_host_name_fn)
 {
     bool fully_successful = true;
 
-    g_home_dir = getenv("HOME");
-    if (g_home_dir == nullptr)
-	g_home_dir = getenv("LOGDIR");
+    const char *home_dir = getenv("HOME");
+    if (home_dir == nullptr)
+	home_dir = getenv("LOGDIR");
+    if (home_dir)
+        g_home_dir = savestr(home_dir);
 
     g_tmp_dir = getenv("TMPDIR");
     if (g_tmp_dir == nullptr)
@@ -53,9 +60,13 @@ bool env_init(char *tcbuf, bool lax)
 
     /* try to set g_login_name */
     if (lax) {
-	g_login_name = getenv("USER");
-	if (!g_login_name)
-	    g_login_name = getenv("LOGNAME");
+	const char *login_name = getenv("USER");
+	if (!login_name)
+	    login_name = getenv("LOGNAME");
+	if (login_name && !g_login_name)
+	{
+	    g_login_name  = savestr(login_name);
+	}
     }
 #ifndef MSDOS
     if (!lax || !g_login_name) {
@@ -65,7 +76,14 @@ bool env_init(char *tcbuf, bool lax)
     }
 #endif
 #ifdef MSDOS
-    g_login_name = getenv("USERNAME");
+    if (!g_login_name)
+    {
+	const char *user_name = getenv("USERNAME");
+	if (user_name)
+	{
+            g_login_name = savestr(user_name);
+	}
+    }
     if (!g_home_dir)
     {
         char *home_drive = getenv("HOMEDRIVE");
@@ -80,18 +98,24 @@ bool env_init(char *tcbuf, bool lax)
 #endif
 
     /* Set g_real_name, and maybe set g_login_name and g_home_dir (if nullptr). */
-    if (!set_user_name(tcbuf)) {
+    if (!set_user_name_fn(tcbuf)) {
 	if (!g_login_name)
-	    g_login_name = "";
+	    g_login_name = savestr("");
 	if (!g_real_name)
-	    g_real_name = "";
+	    g_real_name = savestr("");
 	fully_successful = false;
     }
     env_init2();
 
     /* set g_p_host_name to the hostname of our local machine */
-    if (!set_p_host_name(tcbuf))
-	fully_successful = false;
+    if (!set_host_name_fn(tcbuf))
+    {
+        if (!g_local_host)
+            g_local_host = savestr("");
+        if (!g_p_host_name)
+            g_p_host_name = savestr("");
+        fully_successful = false;
+    }
 
     {
 	char* cp = get_val("NETSPEED","5");
@@ -109,12 +133,17 @@ bool env_init(char *tcbuf, bool lax)
     return fully_successful;
 }
 
+bool env_init(char *tcbuf, bool lax)
+{
+    return env_init(tcbuf, lax, set_user_name, set_p_host_name);
+}
+
 static void env_init2()
 {
     if (g_dot_dir)		/* Avoid running multiple times. */
 	return;
     if (!g_home_dir)
-	g_home_dir = "/";
+	g_home_dir = savestr("/");
     g_dot_dir = get_val("DOTDIR",g_home_dir);
     g_trn_dir = savestr(filexp(get_val("TRNDIR",TRNDIR)));
     g_lib = savestr(filexp(NEWSLIB));
@@ -124,13 +153,13 @@ static void env_init2()
 /* Set g_login_name to the user's login name and g_real_name to the user's
 ** real name.
 */
-bool set_user_name(char *tmpbuf)
+static bool set_user_name(char *tmpbuf)
 {
     char* s;
     char* c;
 
 #ifdef HAS_GETPWENT
-    struct passwd* pwd;
+    passwd* pwd;
 
     if (g_login_name == nullptr)
 	pwd = getpwuid(getuid());
@@ -148,7 +177,7 @@ bool set_user_name(char *tmpbuf)
     int i;
 
     if (getpw(getuid(), tmpbuf+1) != 0)
-	return 0;
+	return false;
     if (!g_login_name) {
 	cpytill(g_buf,tmpbuf+1,':');
 	g_login_name = savestr(g_buf);
@@ -158,7 +187,7 @@ bool set_user_name(char *tmpbuf)
 	    s = strchr(s+1,':');
     }
     if (!s)
-	return 0;
+	return false;
     s = cpytill(tmpbuf,s+1,':');
     if (!g_home_dir) {
 	cpytill(g_buf,s+1,':');
@@ -210,6 +239,18 @@ bool set_user_name(char *tmpbuf)
 	}
     }
 #ifdef WIN32
+    if (g_login_name == nullptr)
+    {
+	DWORD size = 0;
+        GetUserNameExA(NameSamCompatible, nullptr, &size);
+	std::unique_ptr<char> buffer{new char[size]};
+	GetUserNameExA(NameSamCompatible, buffer.get(), &size);
+	std::string value{buffer.get()};
+	std::string::size_type backslash = value.find_last_of('\\');
+	if (backslash != std::string::npos)
+	    value = value.substr(backslash + 1);
+	g_login_name = savestr(value.c_str());
+    }
     if (g_real_name == nullptr)
     {
 	DWORD size = 0;
@@ -229,7 +270,7 @@ bool set_user_name(char *tmpbuf)
     return true;
 }
 
-bool set_p_host_name(char *tmpbuf)
+static bool set_p_host_name(char *tmpbuf)
 {
     FILE* fp;
     bool hostname_ok = true;
@@ -271,34 +312,35 @@ bool set_p_host_name(char *tmpbuf)
 
     /* Build the host name that goes in postings */
 
-    g_p_host_name = PHOSTNAME;
-    if (FILE_REF(g_p_host_name) || *g_p_host_name == '~') {
-	g_p_host_name = filexp(g_p_host_name);
-        fp = fopen(g_p_host_name, "r");
+    const char *filename{PHOSTNAME};
+    if (FILE_REF(filename) || filename[0] == '~')
+    {
+        fp = fopen(filexp(filename), "r");
         if (fp == nullptr)
-	    strcpy(tmpbuf,".");
-	else {
-	    fgets(tmpbuf,TCBUF_SIZE,fp);
-	    fclose(fp);
-	    g_p_host_name = tmpbuf + strlen(tmpbuf) - 1;
-	    if (*g_p_host_name == '\n')
-		*g_p_host_name = '\0';
-	}
+            strcpy(tmpbuf, ".");
+        else
+        {
+            fgets(tmpbuf, TCBUF_SIZE, fp);
+            fclose(fp);
+            char *end = tmpbuf + strlen(tmpbuf) - 1;
+            if (*end == '\n')
+                *end = '\0';
+        }
     }
     else
-	strcpy(tmpbuf,g_p_host_name);
+        strcpy(tmpbuf, PHOSTNAME);
 
-    if (*tmpbuf == '.') {
+    if (tmpbuf[0] == '.') {
 	if (tmpbuf[1] != '\0')
 	    strcpy(g_buf,tmpbuf);
 	else
-	    *g_buf = '\0';
+	    g_buf[0] = '\0';
 	strcpy(tmpbuf,g_local_host);
 	strcat(tmpbuf,g_buf);
     }
 
     if (!strchr(tmpbuf,'.')) {
-	if (*tmpbuf)
+	if (tmpbuf[0])
 	    strcat(tmpbuf, ".");
 #ifdef HAS_RES_INIT
 	if (!(_res.options & RES_INIT))
