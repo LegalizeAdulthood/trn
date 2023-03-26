@@ -380,21 +380,24 @@ typedef struct timeb Timeval; /* Structure used by ftime() */
  *	This symbol contains the name of the directory serving as the news
  *	library.  The program must be prepared to do ~ expansion on it.
  */
+#define NEWSLIB "@NEWSLIB@"		/**/
+
 /* EXTRAINEWS:
  *	Contains the full path and filename of an inews to use for local
  *	postings, or nothing.
  */
+#define EXTRAINEWS "@EXTRAINEWS@"	/**/
+
 /* GROUPDESC:
  *	Contains the full path and filename of the "newsgroups" file for
  *	group descriptions, or nothing.
  */
+#define GROUPDESC "@GROUPDESC@"	/**/
+
 /* SUBSCRIPTIONS:
  *	Contains the full path and filename of the list of default
  *	subscriptions, or nothing.
  */
-#define NEWSLIB "@NEWSLIB@"		/**/
-#define EXTRAINEWS "@EXTRAINEWS@"	/**/
-#define GROUPDESC "@GROUPDESC@"	/**/
 #define SUBSCRIPTIONS "@SUBSCRIPTIONS@"	/**/
 
 /* NEWSSPOOL:
