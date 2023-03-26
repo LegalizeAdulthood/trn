@@ -206,17 +206,9 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
     char* line_buf = nullptr;
     char* line_split = nullptr;
     char* orig_dest = dest;
-    char* s;
     char scrbuf[8192];
     static char* input_str = nullptr;
     static int input_siz = 0;
-    bool upper = false;
-    bool lastcomp = false;
-    bool re_quote = false;
-    int tick_quote = 0;
-    bool address_parse = false;
-    bool comment_parse = false;
-    bool proc_sprintf = false;
     int metabit = 0;
 
     while (*pattern && (!stoppers || !strchr(stoppers, *pattern)))
@@ -224,14 +216,14 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
         if (*pattern == '%' && pattern[1])
         {
             char spfbuf[512];
-            upper = false;
-	    lastcomp = false;
-	    re_quote = false;
-	    tick_quote = 0;
-	    address_parse = false;
-	    comment_parse = false;
-	    proc_sprintf = false;
-	    s = nullptr;
+            bool upper = false;
+	    bool lastcomp = false;
+	    bool re_quote = false;
+	    int tick_quote = 0;
+	    bool address_parse = false;
+	    bool comment_parse = false;
+	    bool proc_sprintf = false;
+	    char *s = nullptr;
 	    while (s == nullptr) {
 		switch (*++pattern) {
 		case '^':
@@ -720,7 +712,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    }
                     str = subj_buf;
                     if (str == nullptr)
-			str = subj_buf = fetchsubj(g_art,true);
+                    {
+                        subj_buf = fetchsubj(g_art, true);
+                        str = subj_buf;
+                    }
 		    subject_has_Re(str,&str);
 		    char *h;
                     if (*pattern == 's' && (h = in_string(str, "- (nf", true)) != nullptr)
