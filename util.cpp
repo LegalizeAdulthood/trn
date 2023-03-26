@@ -559,7 +559,7 @@ double current_time()
 #endif
 }
 
-time_t text2secs(char *s, time_t defSecs)
+time_t text2secs(const char *s, time_t defSecs)
 {
     time_t secs = 0;
     time_t item;

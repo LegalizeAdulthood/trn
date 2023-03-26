@@ -59,7 +59,7 @@ void safelink(char *old, char *new);
 #endif
 void verify_sig();
 double current_time();
-time_t text2secs(char *s, time_t defSecs);
+time_t text2secs(const char *s, time_t defSecs);
 char *secs2text(time_t secs);
 char *temp_filename();
 char *get_auth_user();
