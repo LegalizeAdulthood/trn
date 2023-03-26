@@ -288,7 +288,7 @@ void do_multirc()
 		if (g_verbose)
 		    printf("\n%s %3ld unread article%s in %s -- read now? [%s] ",
 			   g_threaded_group? "======" : "******",
-			   (long)g_ngptr->toread, PLURAL(g_ngptr->toread),
+			   (long)g_ngptr->toread, plural(g_ngptr->toread),
 			   g_ngname, g_dfltcmd);
 		else
 		    printf("\n%s %3ld in %s -- read? [%s] ",
@@ -729,7 +729,7 @@ void check_active_refetch(bool force)
     time_t now = time((time_t*)nullptr);
 
     for (dp = datasrc_first(); dp && !dp->name.empty(); dp = datasrc_next(dp)) {
-	if (!ALLBITS(dp->flags, DF_OPEN | DF_ACTIVE))
+	if (!all_bits(dp->flags, DF_OPEN | DF_ACTIVE))
 	    continue;
 	if (dp->act_sf.fp && dp->act_sf.refetch_secs
 	 && (force || now - dp->act_sf.lastfetch > dp->act_sf.refetch_secs))

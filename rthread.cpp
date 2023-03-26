@@ -532,7 +532,7 @@ bool next_art_with_subj()
 		g_art = g_firstart;
 	    return false;
 	}
-    } while (!ALLBITS(ap->flags, AF_EXISTS | AF_UNREAD)
+    } while (!all_bits(ap->flags, AF_EXISTS | AF_UNREAD)
 	  || (g_selected_only && !(ap->flags & AF_SEL)));
     g_artp = ap;
     g_art = article_num(ap);
@@ -900,7 +900,7 @@ void kill_subthread(ARTICLE *ap, int auto_flags)
     for (; ap != limit; ap = bump_art(ap)) {
 	if (toreturn)
 	    delay_unmark(ap);
-	if (ALLBITS(ap->flags, AF_EXISTS | AF_UNREAD))
+	if (all_bits(ap->flags, AF_EXISTS | AF_UNREAD))
 	    set_read(ap);
 	if (auto_flags)
 	    change_auto_flags(ap, auto_flags);
@@ -916,7 +916,7 @@ void unkill_subject(SUBJECT *subj)
 
     for (ap = subj->articles; ap; ap = ap->subj_next) {
 	if (g_sel_rereading) {
-	    if (ALLBITS(ap->flags, AF_DELSEL | AF_EXISTS)) {
+	    if (all_bits(ap->flags, AF_DELSEL | AF_EXISTS)) {
 		if (!(ap->flags & AF_UNREAD))
 		    g_ngptr->toread++;
 		if (g_selected_only && !(ap->flags & AF_SEL))

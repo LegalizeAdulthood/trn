@@ -309,7 +309,7 @@ void uncache_article(ARTICLE *ap, bool remove_empties)
     ARTICLE* next;
 
     if (ap->subj) {
-	if (ALLBITS(ap->flags, AF_CACHED | AF_EXISTS)) {
+	if (all_bits(ap->flags, AF_CACHED | AF_EXISTS)) {
             next = ap->subj->articles;
             if (next == ap)
 		ap->subj->articles = ap->subj_next;
@@ -926,7 +926,7 @@ bool cache_range(ART_NUM first, ART_NUM last)
     g_spin_estimate = count;
 
     printf("\n%sing %ld article%s.", g_threaded_group? "Thread" : "Cach",
-	   (long)count, PLURAL(count));
+	   (long)count, plural(count));
     termdown(1);
 
     setspin(SPIN_FOREGROUND);

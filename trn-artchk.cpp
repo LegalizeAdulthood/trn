@@ -180,7 +180,7 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
     }
     if (ngcnt && (check_ng || check_active)) {
 	/* Print a note about each newsgroup */
-	printf("\nYour article's newsgroup%s:\n", PLURAL(ngcnt));
+	printf("\nYour article's newsgroup%s:\n", plural(ngcnt));
 	if (!check_active) {
 	    for (i = 0; i < ngcnt; i++) {
 		foundactive[i] = 1;

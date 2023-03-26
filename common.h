@@ -751,8 +751,15 @@ extern char g_general_mode; /* general mode of trn */
 
 extern FILE *g_tmpfp; /* scratch fp used for .rnlock, .rnlast, etc. */
 
-#define PLURAL(num) ((num)==1? "" : "s")
-#define ALLBITS(val,bits) (((val) & (bits)) == (bits))
+inline const char *plural(int num)
+{
+    return num == 1 ? "" : "s";
+}
+
+inline bool all_bits(int val, int bits)
+{
+    return (val & bits) == bits;
+}
 
 /* Factored strings */
 

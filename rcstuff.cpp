@@ -551,10 +551,10 @@ static bool open_newsrc(NEWSRC *rp)
 	    else {
 		if (g_verbose)
 		    printf("Unread news in %-40s %5ld article%s\n",
-			np->rcline,(long)np->toread,PLURAL(np->toread)) FLUSH;
+			np->rcline,(long)np->toread,plural(np->toread)) FLUSH;
 		else
 		    printf("%s: %ld article%s\n",
-			np->rcline,(long)np->toread,PLURAL(np->toread)) FLUSH;
+			np->rcline,(long)np->toread,plural(np->toread)) FLUSH;
 		termdown(1);
 		if (g_int_count) {
 		    g_countdown = 1;
@@ -743,7 +743,7 @@ bool get_ng(const char *what, int flags)
     if (g_ngptr == nullptr) {		/* not in .newsrc? */
 	NEWSRC* rp;
 	for (rp = g_multirc->first; rp; rp = rp->next) {
-	    if (!ALLBITS(rp->flags, RF_ADD_GROUPS | RF_ACTIVE))
+	    if (!all_bits(rp->flags, RF_ADD_GROUPS | RF_ACTIVE))
 		continue;
 	    /*$$ this may scan a datasrc multiple times... */
 	    if (find_actgrp(rp->datasrc,g_buf,g_ngname,g_ngname_len,(ART_NUM)0))

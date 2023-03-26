@@ -801,7 +801,7 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
     }
     sprintf(cp, "%ld ", num);
     if (obj_type)
-	sprintf(cp+=strlen(cp), "%s%s ", obj_type, PLURAL(num));
+	sprintf(cp+=strlen(cp), "%s%s ", obj_type, plural(num));
     cp += strlen(cp);
     s = modifier;
     if (s != nullptr)

@@ -613,17 +613,17 @@ char *secs2text(time_t secs)
     if (secs >= 24L * 60) {
 	items = (int)(secs / (24*60));
 	secs = secs % (24*60);
-	sprintf(s, "%d day%s, ", items, PLURAL(items));
+	sprintf(s, "%d day%s, ", items, plural(items));
 	s += strlen(s);
     }
     if (secs >= 60L) {
 	items = (int)(secs / 60);
 	secs = secs % 60;
-	sprintf(s, "%d hour%s, ", items, PLURAL(items));
+	sprintf(s, "%d hour%s, ", items, plural(items));
 	s += strlen(s);
     }
     if (secs) {
-	sprintf(s, "%d minute%s, ", (int)secs, PLURAL(items));
+	sprintf(s, "%d minute%s, ", (int)secs, plural(items));
 	s += strlen(s);
     }
     s[-2] = '\0';

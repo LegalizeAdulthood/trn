@@ -78,7 +78,7 @@ bool find_new_groups()
 	;
 
     for (NEWSRC const *rp = g_multirc->first; rp; rp = rp->next) {
-	if (ALLBITS(rp->flags, RF_ADD_NEWGROUPS | RF_ACTIVE)) {
+	if (all_bits(rp->flags, RF_ADD_NEWGROUPS | RF_ACTIVE)) {
 	    if (rp->datasrc->flags & DF_REMOTE)
 		new_nntp_groups(rp->datasrc);
 	    else

@@ -503,10 +503,10 @@ void yankback()
 	    ;
 	else if (g_general_mode == 's')
 	    sprintf(g_msg, "Returned %ld Marked article%s.",(long)g_dmcount,
-		PLURAL(g_dmcount));
+		plural(g_dmcount));
 	else {
 	    printf("\nReturning %ld Marked article%s...\n",(long)g_dmcount,
-		PLURAL(g_dmcount)) FLUSH;
+		plural(g_dmcount)) FLUSH;
 	    termdown(2);
 	}
 	article_walk(yank_article, 0);

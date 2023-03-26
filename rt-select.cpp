@@ -235,7 +235,7 @@ char article_selector(char_int cmd)
 	}
 	if (i == g_added_articles)
 	    sprintf(g_msg, "** %ld new article%s arrived **  ",
-		(long)g_added_articles, PLURAL(g_added_articles));
+		(long)g_added_articles, plural(g_added_articles));
 	else
 	    sprintf(g_msg, "** %ld of %ld new articles unread **  ",
 		i, (long)g_added_articles);

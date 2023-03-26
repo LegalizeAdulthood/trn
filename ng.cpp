@@ -305,7 +305,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 			(long)g_obj_count-g_selected_count);
 		else
 		    printf("  (%ld article%s still unread)",
-			(long)g_obj_count,PLURAL(g_obj_count));
+			(long)g_obj_count,plural(g_obj_count));
 	    }
 	    if (g_redirected) {
 		if (g_redirected == "")
