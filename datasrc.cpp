@@ -153,6 +153,15 @@ void datasrc_init()
     unprep_ini_words(s_datasrc_ini);
 }
 
+void datasrc_finalize()
+{
+    if (g_datasrc_list)
+    {
+        for (DATASRC *dp = datasrc_first(); dp && !dp->name.empty(); dp = datasrc_next(dp))
+            close_datasrc(dp);
+    }
+}
+
 char *read_datasrcs(char *filename)
 {
     int fd;

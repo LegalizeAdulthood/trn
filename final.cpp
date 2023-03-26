@@ -99,10 +99,7 @@ void final_init()
     chdir(g_tmp_dir);
     if (!g_checkflag)
 	unuse_multirc(g_multirc);
-    if (g_datasrc_list) {
-        for (DATASRC *dp = datasrc_first(); dp && !dp->name.empty(); dp = datasrc_next(dp))
-	    close_datasrc(dp);
-    }
+    datasrc_finalize();
     for (int i = 0; i < MAX_NNTP_ARTICLES; i++) {
 	char *s = nntp_tmpname(i);
 	remove(s);

@@ -91,6 +91,7 @@ extern char *g_trnaccess_mem;
 extern char *g_nntp_auth_file;
 
 void datasrc_init();
+void datasrc_finalize();
 char *read_datasrcs(char *filename);
 DATASRC *get_datasrc(const char *name);
 DATASRC *new_datasrc(const char *name, char **vals);
