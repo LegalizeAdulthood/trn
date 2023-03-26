@@ -207,7 +207,6 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
     char* line_split = nullptr;
     char* orig_dest = dest;
     char* s;
-    int i;
     char scrbuf[8192];
     static char* input_str = nullptr;
     static int input_siz = 0;
@@ -422,20 +421,22 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		}
 		case '"':
+		{
 		    pattern = dointerp(scrbuf,(sizeof scrbuf),pattern+1,"\"",cmd);
 		    fputs(scrbuf,stdout) FLUSH;
 		    resetty();
 		    fgets(scrbuf, sizeof scrbuf, stdin);
 		    noecho();
 		    crmode();
-		    i = strlen(scrbuf);
+		    int i = strlen(scrbuf);
 		    if (scrbuf[i-1] == '\n') {
-			scrbuf[--i] = '\0';
+		        scrbuf[--i] = '\0';
 		    }
 		    growstr(&input_str, &input_siz, i+1);
 		    safecpy(input_str, scrbuf, i+1);
 		    s = input_str;
 		    break;
+		}
 		case '~':
 		    s = g_home_dir;
 		    break;
@@ -694,7 +695,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			len = 0;
 		    if (!artid_buf)
 			artid_buf = fetchlines(g_art,MSGID_LINE);
-		    i = refs_buf? strlen(refs_buf) : 0;
+		    int i = refs_buf? strlen(refs_buf) : 0;
 		    j = strlen(artid_buf) + (i? 1 : 0)
 		      + (artid_buf[0] == '<'? 0 : 2) + 1;
 		    if (len < i + j)
@@ -748,7 +749,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 					/* should we substitute path? */
 			    s = path_buf = fetchlines(g_art,PATH_LINE);
 			}
-			i = strlen(g_p_host_name);
+			int i = strlen(g_p_host_name);
 			if (!strncmp(g_p_host_name,s,i) && s[i] == '!')
 			    s += i + 1;
 		    }
@@ -902,7 +903,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    *t = toupper(*t);
 	    }
 	    /* Do we have room left? */
-	    i = strlen(s);
+	    int i = strlen(s);
 	    if (destsize <= i)
 		abort_interp();
 	    destsize -= i;	/* adjust the size now. */
@@ -986,7 +987,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		abort_interp();
 	    if (*pattern == '^' && pattern[1]) {
 		pattern++;
-		i = *(Uchar*)pattern;	/* get char after arrow into a register */
+		int i = *(Uchar*)pattern;	/* get char after arrow into a register */
 		if (i == '?')
 		    *dest++ = '\177' | metabit;
 		else if (i == '(') {
