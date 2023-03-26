@@ -755,8 +755,7 @@ int sf_score(ART_NUM a)
     char *s;            /* misc */
 
     for (int i = 0; i < g_sf_num_entries; i++) {
-        header_line_type h; /* header type */
-	h = g_sf_entries[i].head_type;
+        header_line_type h = g_sf_entries[i].head_type;
 	if (h <= 0)	/* don't use command headers for scoring */
 	    continue;	/* the outer for loop */
 	/* if this head_type has been done before, this entry
