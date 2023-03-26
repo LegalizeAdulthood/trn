@@ -130,12 +130,8 @@ bool rcstuff_init()
     return s_foundany;
 }
 
-NEWSRC *new_newsrc(char *name, char *newsrc, char *add_ok)
+NEWSRC *new_newsrc(const char *name, char *newsrc, char *add_ok)
 {
-    char tmpbuf[CBUFLEN];
-    NEWSRC* rp;
-    DATASRC* dp;
-
     if (!name || !*name)
 	return nullptr;
 
@@ -145,14 +141,15 @@ NEWSRC *new_newsrc(char *name, char *newsrc, char *add_ok)
 	    newsrc = RCNAME;
     }
 
-    dp = get_datasrc(name);
+    DATASRC *dp = get_datasrc(name);
     if (!dp)
 	return nullptr;
 
-    rp = (NEWSRC*)safemalloc(sizeof (NEWSRC));
+    NEWSRC *rp = (NEWSRC*)safemalloc(sizeof(NEWSRC));
     memset((char*)rp,0,sizeof (NEWSRC));
     rp->datasrc = dp;
     rp->name = savestr(filexp(newsrc));
+    char tmpbuf[CBUFLEN];
     sprintf(tmpbuf, RCNAME_OLD, rp->name);
     rp->oldname = savestr(tmpbuf);
     sprintf(tmpbuf, RCNAME_NEW, rp->name);
