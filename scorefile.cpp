@@ -174,14 +174,8 @@ void sf_clean()
     s_sf_extra_headers = nullptr;
 }
 
-/* rename g_sf_num_entries (to ?) */
-/* use macro instead of all the "g_sf_entries[g_sf_num_entries-1]"?
- * call it "sf_recent_entry" or "sf_last_entry"?
- */
 void sf_grow()
 {
-    int i;
-
     g_sf_num_entries++;
     if (g_sf_num_entries == 1) {
 	g_sf_entries = (SF_ENTRY*)safemalloc(sizeof (SF_ENTRY));
@@ -189,11 +183,7 @@ void sf_grow()
 	g_sf_entries = (SF_ENTRY*)saferealloc((char*)g_sf_entries,
 			g_sf_num_entries * sizeof (SF_ENTRY));
     }
-    i = g_sf_num_entries-1;
-    g_sf_entries[i].compex = nullptr;	/* init */
-    g_sf_entries[i].flags = 0;
-    g_sf_entries[i].str1 = nullptr;
-    g_sf_entries[i].str2 = nullptr;
+    g_sf_entries[g_sf_num_entries - 1] = SF_ENTRY{}; /* init */
 }
 
 /* Returns -1 if no matching extra header found, otherwise returns offset
