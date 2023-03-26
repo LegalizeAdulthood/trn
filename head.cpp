@@ -76,9 +76,9 @@ USER_HEADTYPE *g_user_htype{};
 short g_user_htypeix[26];
 int g_user_htype_cnt{};
 int g_user_htype_max{};
-ART_NUM g_parsed_art{};   /* the article number we've parsed */
-ARTICLE *g_parsed_artp{}; /* the article ptr we've parsed */
-header_line_type g_in_header{};        /* are we decoding the header? */
+ART_NUM g_parsed_art{};         /* the article number we've parsed */
+ARTICLE *g_parsed_artp{};       /* the article ptr we've parsed */
+header_line_type g_in_header{}; /* are we decoding the header? */
 char *g_headbuf;
 long g_headbuf_size;
 
