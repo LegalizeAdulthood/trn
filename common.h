@@ -756,9 +756,11 @@ inline const char *plural(int num)
     return num == 1 ? "" : "s";
 }
 
-inline bool all_bits(int val, int bits)
+template <typename T, typename U>
+bool all_bits(T val, U bits)
 {
-    return (val & bits) == bits;
+    const T tbits = static_cast<T>(bits);
+    return (val & tbits) == tbits;
 }
 
 /* Factored strings */
