@@ -90,10 +90,6 @@ enum
     PREFETCH_SIZE = 5
 };
 
-#define fetchsubj(artnum,copy) prefetchlines(artnum,SUBJ_LINE,copy)
-#define fetchfrom(artnum,copy) prefetchlines(artnum,FROM_LINE,copy)
-#define fetchxref(artnum,copy) prefetchlines(artnum,XREF_LINE,copy)
-
 void head_init();
 #ifdef DEBUG
 void dumpheader(char *where);
@@ -108,5 +104,19 @@ bool parseheader(ART_NUM artnum);
 char *fetchlines(ART_NUM artnum, int which_line);
 char *mp_fetchlines(ART_NUM artnum, int which_line, memory_pool pool);
 char *prefetchlines(ART_NUM artnum, int which_line, bool copy);
+inline char *fetchsubj(ART_NUM artnum, bool copy)
+{
+    return prefetchlines(artnum, SUBJ_LINE, copy);
+}
+inline char *fetchfrom(ART_NUM artnum, bool copy)
+{
+    return prefetchlines(artnum, FROM_LINE, copy);
+}
+inline char *fetchxref(ART_NUM artnum, bool copy)
+{
+    return prefetchlines(artnum, XREF_LINE, copy);
+}
+
+
 
 #endif
