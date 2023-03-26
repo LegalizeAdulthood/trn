@@ -63,35 +63,29 @@ static int rcline_cmp(const char *key, int keylen, HASHDATUM data);
 bool rcstuff_init()
 {
     MULTIRC* mptr = nullptr;
-    int i;
 
     g_multirc_list = new_list(0,0,sizeof(MULTIRC),20,LF_ZERO_MEM|LF_SPARSE,nullptr);
 
     if (g_trnaccess_mem) {
-	NEWSRC* rp;
-	char* s;
-	char* section;
+        char* section;
 	char* cond;
-	char** vals = prep_ini_words(s_rcgroups_ini);
-	s = g_trnaccess_mem;
+	char**vals = prep_ini_words(s_rcgroups_ini);
+	char *s = g_trnaccess_mem;
 	while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
 	    if (*cond && !check_ini_cond(cond))
 		continue;
 	    if (strncasecmp(section, "group ", 6))
 		continue;
-	    i = atoi(section+6);
+	    int i = atoi(section + 6);
 	    if (i < 0)
 		i = 0;
 	    s = parse_ini_section(s, s_rcgroups_ini);
 	    if (!s)
 		break;
-	    rp = new_newsrc(vals[RI_ID],vals[RI_NEWSRC],vals[RI_ADDGROUPS]);
+	    NEWSRC *rp = new_newsrc(vals[RI_ID], vals[RI_NEWSRC], vals[RI_ADDGROUPS]);
 	    if (rp) {
-		MULTIRC* mp;
-		NEWSRC* prev_rp;
-
-		mp = multirc_ptr(i);
-		prev_rp = mp->first;
+                MULTIRC *mp = multirc_ptr(i);
+		NEWSRC * prev_rp = mp->first;
 		if (!prev_rp)
 		    mp->first = rp;
 		else {
@@ -173,11 +167,10 @@ NEWSRC *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
 
 bool use_multirc(MULTIRC *mp)
 {
-    NEWSRC* rp;
     bool had_trouble = false;
     bool had_success = false;
 
-    for (rp = mp->first; rp; rp = rp->next) {
+    for (NEWSRC *rp = mp->first; rp; rp = rp->next) {
 	if ((rp->datasrc->flags & DF_UNAVAILABLE) || !lock_newsrc(rp)
 	 || !open_datasrc(rp->datasrc) || !open_newsrc(rp)) {
 	    unlock_newsrc(rp);
@@ -203,14 +196,12 @@ bool use_multirc(MULTIRC *mp)
 
 void unuse_multirc(MULTIRC *mptr)
 {
-    NEWSRC* rp;
-
     if (!mptr)
 	return;
 
     write_newsrcs(mptr);
 
-    for (rp = mptr->first; rp; rp = rp->next) {
+    for (NEWSRC *rp = mptr->first; rp; rp = rp->next) {
 	unlock_newsrc(rp);
 	rp->flags &= ~RF_ACTIVE;
 	rp->datasrc->flags &= ~DF_ACTIVE;
@@ -277,10 +268,9 @@ bool use_prev_multirc(MULTIRC *mptr)
 
 char *multirc_name(MULTIRC *mp)
 {
-    char* cp;
     if (mp->first->next)
 	return "<each-newsrc>";
-    cp = strrchr(mp->first->name, '/');
+    char *cp = strrchr(mp->first->name, '/');
     if (cp != nullptr)
 	return cp+1;
     return mp->first->name;
@@ -303,13 +293,11 @@ static bool clear_ngitem(char *cp, int arg)
 static bool lock_newsrc(NEWSRC *rp)
 {
     long processnum = 0;
-    char* runninghost = "(Unknown)";
-    char* s;
 
     if (g_checkflag)
 	return true;
 
-    s = filexp(RCNAME);
+    char *s = filexp(RCNAME);
     if (!strcmp(rp->name,s))
 	rp->lockname = savestr(filexp(LOCKNAME));
     else {
@@ -326,7 +314,7 @@ static bool lock_newsrc(NEWSRC *rp)
 	    if (fgets(g_buf,LBUFLEN,g_tmpfp) && *g_buf
 	     && *(s = g_buf + strlen(g_buf) - 1) == '\n') {
 		*s = '\0';
-		runninghost = g_buf;
+		char *runninghost = g_buf;
 	    }
 	}
 	fclose(g_tmpfp);
@@ -420,15 +408,11 @@ static void unlock_newsrc(NEWSRC *rp)
 
 static bool open_newsrc(NEWSRC *rp)
 {
-    NGDATA* np;
-    NGDATA* prev_np;
-    long length;
-    FILE* rcfp;
-    HASHDATUM data;
+    NGDATA*   prev_np;
 
     /* make sure the .newsrc file exists */
 
-    rcfp = fopen(rp->name, "r");
+    FILE *rcfp = fopen(rp->name, "r");
     if (rcfp == nullptr)
     {
 	rcfp = fopen(rp->name,"w+");
@@ -490,10 +474,10 @@ static bool open_newsrc(NEWSRC *rp)
 
     char* some_buf;
     while ((some_buf = get_a_line(g_buf, LBUFLEN,false,rcfp)) != nullptr) {
-	length = g_len_last_line_got;	/* side effect of get_a_line */
-	if (length <= 1)		/* only a newline??? */
+	long length = g_len_last_line_got; /* side effect of get_a_line */
+	if (length <= 1)                   /* only a newline??? */
 	    continue;
-	np = ngdata_ptr(g_ngdata_cnt++);
+	NGDATA *np = ngdata_ptr(g_ngdata_cnt++);
 	if (prev_np)
 	    prev_np->next = np;
 	else
@@ -521,7 +505,7 @@ static bool open_newsrc(NEWSRC *rp)
 	    continue;
 	}
 	parse_rcline(np);
-	data = hashfetch(g_newsrc_hash, np->rcline, np->numoffset - 1);
+	HASHDATUM data = hashfetch(g_newsrc_hash, np->rcline, np->numoffset - 1);
 	if (data.dat_ptr) {
 	    np->toread = TR_IGNORE;
 	    continue;
@@ -588,9 +572,8 @@ static bool open_newsrc(NEWSRC *rp)
         {
 	    if (fgets(g_buf,sizeof g_buf,g_tmpfp) != nullptr) {
 		long actnum, descnum;
-		char* s;
-		g_buf[strlen(g_buf)-1] = '\0';
-                s = strchr(g_buf, ':');
+                g_buf[strlen(g_buf)-1] = '\0';
+                char *s = strchr(g_buf, ':');
                 if (s != nullptr && s[1] == ' ' && s[2])
                 {
 		    safefree0(g_lastngname);
@@ -636,10 +619,9 @@ static void init_ngnode(LIST *list, LISTNODE *node)
 static void parse_rcline(NGDATA *np)
 {
     char* s;
-    int len;
 
     for (s=np->rcline; *s && *s!=':' && *s!=NEGCHAR && !isspace(*s); s++) ;
-    len = s - np->rcline;
+    int len = s - np->rcline;
     if ((!*s || isspace(*s)) && !g_checkflag) {
 #ifndef lint
 	np->rcline = saferealloc(np->rcline,(MEM_SIZE)len + 3);
@@ -659,10 +641,9 @@ static void parse_rcline(NGDATA *np)
 void abandon_ng(NGDATA *np)
 {
     char* some_buf = nullptr;
-    FILE* rcfp;
 
     /* open newsrc backup copy and try to find the prior value for the group. */
-    rcfp = fopen(np->rc->oldname, "r");
+    FILE *rcfp = fopen(np->rc->oldname, "r");
     if (rcfp != nullptr)
     {
 	int length = np->numoffset - 1;
@@ -876,8 +857,7 @@ reask_unsub:
 	    return false;
 	}
 	else if (*g_buf == 'y') {
-	    char* cp;
-	    cp = g_ngptr->rcline + g_ngptr->numoffset;
+            char *cp = g_ngptr->rcline + g_ngptr->numoffset;
 	    g_ngptr->flags = (*cp && cp[1] == '0' ? NF_UNTHREADED : 0);
 	    g_ngptr->subscribechar = ':';
 	    g_ngptr->rc->flags |= RF_RCCHANGED;
@@ -905,9 +885,7 @@ reask_unsub:
 
 static NGDATA *add_newsgroup(NEWSRC *rp, char *ngn, char_int c)
 {
-    NGDATA* np;
-
-    np = ngdata_ptr(g_ngdata_cnt++);
+    NGDATA *np = ngdata_ptr(g_ngdata_cnt++);
     np->prev = g_last_ng;
     if (g_last_ng)
 	g_last_ng->next = np;
@@ -1135,9 +1113,7 @@ void list_newsgroups()
 
 NGDATA *find_ng(const char *ngnam)
 {
-    HASHDATUM data;
-
-    data = hashfetch(g_newsrc_hash, ngnam, strlen(ngnam));
+    HASHDATUM data = hashfetch(g_newsrc_hash, ngnam, strlen(ngnam));
     return (NGDATA*)data.dat_ptr;
 }
 
@@ -1171,14 +1147,13 @@ void cleanup_newsrc(NEWSRC *rp)
 	termdown(2);
     }
     else if (bogosity) {
-	NGDATA* prev_np;
-	if (g_verbose)
+        if (g_verbose)
 	    printf("Moving bogus newsgroups to the end of '%s'.\n",rp->name) FLUSH;
 	else
 	    fputs("Moving boguses to the end.\n",stdout) FLUSH;
 	termdown(1);
 	while (np) {
-	    prev_np = np->prev;
+	    NGDATA *prev_np = np->prev;
 	    if (np->toread == TR_BOGUS)
 		relocate_newsgroup(np, g_newsgroup_cnt-1);
 	    np = prev_np;
@@ -1278,11 +1253,8 @@ void checkpoint_newsrcs()
 
 bool write_newsrcs(MULTIRC *mptr)
 {
-    NEWSRC* rp;
-    NGDATA* np;
     sel_sort_mode save_sort = g_sel_sort;
-    FILE* rcfp;
-    bool total_success = true;
+    bool          total_success = true;
 
     if (!mptr)
 	return true;
@@ -1293,7 +1265,7 @@ bool write_newsrcs(MULTIRC *mptr)
 	sort_newsgroups();
     }
 
-    for (rp = mptr->first; rp; rp = rp->next) {
+    for (NEWSRC *rp = mptr->first; rp; rp = rp->next) {
 	if (!(rp->flags & RF_ACTIVE))
 	    continue;
 
@@ -1323,7 +1295,7 @@ bool write_newsrcs(MULTIRC *mptr)
 	if (!(rp->flags & RF_RCCHANGED))
 	    continue;
 
-	rcfp = fopen(rp->newname, "w");
+	FILE *rcfp = fopen(rp->newname, "w");
 	if (rcfp == nullptr) {
 	    printf(g_cantrecreate,rp->name) FLUSH;
 	    total_success = false;
@@ -1337,7 +1309,7 @@ bool write_newsrcs(MULTIRC *mptr)
 #endif
 	/* write out each line*/
 
-	for (np = g_first_ng; np; np = np->next) {
+	for (NGDATA *np = g_first_ng; np; np = np->next) {
 	    char* delim;
 	    if (np->rc != rp)
 		continue;
@@ -1394,10 +1366,8 @@ bool write_newsrcs(MULTIRC *mptr)
 
 void get_old_newsrcs(MULTIRC *mptr)
 {
-    NEWSRC* rp;
-
     if (mptr) {
-	for (rp = mptr->first; rp; rp = rp->next) {
+	for (NEWSRC *rp = mptr->first; rp; rp = rp->next) {
 	    if (rp->flags & RF_ACTIVE) {
 		remove(rp->newname);
 		rename(rp->name,rp->newname);
