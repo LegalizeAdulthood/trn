@@ -122,6 +122,12 @@
  */
 #cmakedefine I_SYS_DIR
 
+/* I_SYS_STAT:
+ *	This symbol, if defined, indicates to the C program that it should
+ *	include <sys/stat.h>.
+ */
+#cmakedefine I_SYS_STAT
+
 /* I_SYS_IOCTL:
  *	This symbol, if defined, indicates that <sys/ioctl.h> exists and should
  *	be included. Otherwise, include <sgtty.h> or <termio.h>.
@@ -412,7 +418,7 @@ typedef struct timeb Timeval; /* Structure used by ftime() */
  *	Set to true if we should compare only the domain portion of the
  *	hostname when looking for local articles.
  */
-#define PHOSTNAME "@PHOST@"
+#define PHOSTNAME "@PHOSTNAME@"
 #cmakedefine01 HOSTBITS
 
 /* PRIVLIB:

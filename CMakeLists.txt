@@ -24,7 +24,9 @@ add_library(util
     util2.cpp util2.h
     wildmat.cpp wildmat.h
     config.h.in
+    cmake/Configure.cmake
 )
+source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\.cmake$")
 source_group("Template Files" REGULAR_EXPRESSION "^.*\.in$")
 if(WIN32)
     target_compile_definitions(util PUBLIC _CRT_DECLARE_NONSTDC_NAMES=1 _CRT_INTERNAL_NONSTDC_NAMES=1)
