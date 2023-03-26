@@ -504,7 +504,7 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
 	lbp_len = 0;
     }
     if ((dp->flags & DF_USELISTACT)
-     && (DATASRC_NNTP_FLAGS(dp) & NNTP_NEW_CMD_OK)) {
+     && (datasrc_nntp_flags(dp) & NNTP_NEW_CMD_OK)) {
 	DATASRC* save_datasrc = g_datasrc;
 	set_datasrc(dp);
 	switch (nntp_list("active", nam, len)) {

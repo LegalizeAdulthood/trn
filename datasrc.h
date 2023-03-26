@@ -4,6 +4,7 @@
 #ifndef TRN_DATASRC_H
 #define TRN_DATASRC_H
 
+#include "list.h"
 #include "nntpclient.h"
 #include "rt-ov.h"
 
@@ -74,12 +75,6 @@ enum
     FF_FILTERSEND = 0x10
 };
 
-#define DATASRC_NNTP_FLAGS(dp) (((dp) == g_datasrc? g_nntplink.flags : (dp)->nntplink.flags))
-
-#define datasrc_ptr(n)  ((DATASRC*)listnum2listitem(g_datasrc_list,(long)(n)))
-#define datasrc_first() ((DATASRC*)listnum2listitem(g_datasrc_list,0L))
-#define datasrc_next(p) ((DATASRC*)next_listitem(g_datasrc_list,(char*)(p)))
-
 enum
 {
     LENGTH_HACK = 5, /* Don't bother comparing strings with lengths
@@ -111,5 +106,25 @@ char *srcfile_append(SRCFILE *sfp, char *bp, int keylen);
 void srcfile_end_append(SRCFILE *sfp, const char *filename);
 void srcfile_close(SRCFILE *sfp);
 int find_close_match();
+
+inline int datasrc_nntp_flags(const DATASRC *dp)
+{
+    return dp == g_datasrc ? g_nntplink.flags : dp->nntplink.flags;
+}
+
+inline DATASRC *datasrc_ptr(int n)
+{
+    return (DATASRC *) listnum2listitem(g_datasrc_list, n);
+}
+
+inline DATASRC *datasrc_first()
+{
+    return datasrc_ptr(0);
+}
+
+inline DATASRC *datasrc_next(DATASRC *p)
+{
+    return (DATASRC *) next_listitem(g_datasrc_list, (char *) p);
+}
 
 #endif
