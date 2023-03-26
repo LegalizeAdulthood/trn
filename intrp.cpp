@@ -222,11 +222,6 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
     bool proc_sprintf = false;
     int metabit = 0;
 
-#ifdef DEBUG
-    if (debug & DEB_INTRP)
-	printf(">dointerp: %s (till %s)\n",pattern,stoppers?stoppers:"");
-#endif
-
     while (*pattern && (!stoppers || !strchr(stoppers,*pattern))) {
 	if (*pattern == '%' && pattern[1]) {
             char spfbuf[512];
@@ -907,11 +902,6 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		abort_interp();
 	    destsize -= i;	/* adjust the size now. */
 
-#ifdef DEBUG
-	    if (debug & DEB_INTRP)
-		printf("%% = %s\n",s);
-#endif
-
 	    /* A maze of twisty little conditions, all alike... */
 	    if (address_parse || comment_parse) {
 		if (s != scrbuf) {
@@ -1031,11 +1021,8 @@ getout:
     safefree(follow_buf);
     safefree(dist_buf);
     safefree(line_buf);
-#ifdef DEBUG
-    if (debug & DEB_INTRP)
-	printf("<dointerp: %s\n",orig_dest);
-#endif
-    return pattern;			/* where we left off */
+
+    return pattern; /* where we left off */
 }
 
 char *interp_backslash(char *dest, char *pattern)
