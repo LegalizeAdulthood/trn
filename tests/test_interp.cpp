@@ -4,6 +4,7 @@
 
 #include "common.h"
 #include "intrp.h"
+#include "ng.h"
 
 constexpr int BUFFER_SIZE{4096};
 
@@ -40,4 +41,26 @@ TEST_F(InterpolatorTest, subsequentStopCharacter)
 
     ASSERT_EQ('[', *new_pattern);
     ASSERT_EQ(std::string{"this string contains no escapes "}, std::string{buffer.data()});
+}
+
+TEST_F(InterpolatorTest, articleNumberOutsideNewsgroup)
+{
+    char pattern[]{"Article %a"};
+
+    const char *new_pattern = dointerp(buffer.data(), BUFFER_SIZE, pattern, "", nullptr);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(std::string{"Article "}, std::string{buffer.data()});
+}
+
+TEST_F(InterpolatorTest, articleNumberInsideNewsgroup)
+{
+    char pattern[]{"Article %a"};
+    g_in_ng = true;
+    g_art = 624;
+
+    const char *new_pattern = dointerp(buffer.data(), BUFFER_SIZE, pattern, "", nullptr);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(std::string{"Article 624"}, std::string{buffer.data()});
 }
