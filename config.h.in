@@ -22,11 +22,12 @@
  */
 #cmakedefine HAS_MKDIR
 
-/* NEWS_ADMIN:
- *	This symbol, if defined, contains the login name of the news
- *	administrator.
+/* HAS_NEWS_ADMIN:
+ *	This symbol, if defined, indicates that NEWS_ADMIN contains the login
+ *      name of the news administrator.
  */
-#define NEWS_ADMIN "@NEW_SADMIN@"
+#cmakedefine HAS_NEWS_ADMIN
+#define NEWS_ADMIN "@NEWS_ADMIN@"
 
 /* NOLINEBUF:
  *	This symbol, if defined, indicates that stdout is not buffered, so that

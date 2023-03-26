@@ -4,13 +4,15 @@
 #ifndef INTRP_H
 #define INTRP_H
 
+#include <string>
+
 extern char *g_origdir;  /* cwd when rn invoked */
 extern char *g_hostname; /* host name to match local postings */
 extern char *g_headname;
 extern int g_perform_cnt;
 
-#ifdef NEWS_ADMIN
-extern char g_newsadmin[]; /* news administrator */
+#ifdef HAS_NEWS_ADMIN
+extern const std::string g_newsadmin; /* news administrator */
 extern int g_newsuid;
 #endif
 

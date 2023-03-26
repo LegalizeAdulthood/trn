@@ -42,8 +42,8 @@ char *g_hostname{}; /* host name to match local postings */
 char *g_headname{};
 int g_perform_cnt{};
 
-#ifdef NEWS_ADMIN
-char g_newsadmin[]{NEWS_ADMIN}; /* news administrator */
+#ifdef HAS_NEWS_ADMIN
+const std::string g_newsadmin{NEWS_ADMIN}; /* news administrator */
 int g_newsuid{};
 #endif
 
@@ -64,7 +64,7 @@ void intrp_init(char *tcbuf, int tcbuf_len)
     
     /* get environmental stuff */
 
-#ifdef NEWS_ADMIN
+#ifdef HAS_NEWS_ADMIN
     {
 #ifdef HAS_GETPWENT
 	struct passwd* pwd = getpwnam(NEWS_ADMIN);
@@ -584,8 +584,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    sprintf(scrbuf,"%d",g_just_a_sec*10);
 		    break;
 		case 'l':			/* rn library */
-#ifdef NEWS_ADMIN
-		    s = g_newsadmin;
+#ifdef HAS_NEWS_ADMIN
+		    s = (char*) g_newsadmin.c_str();
 #else
 		    s = "???";
 #endif

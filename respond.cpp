@@ -511,7 +511,7 @@ int cancel_article()
      && (!in_string(from_buf,g_hostname, false)
       || (!in_string(from_buf,g_login_name, true)
        && !in_string(reply_buf,g_login_name, true)
-#ifdef NEWS_ADMIN
+#ifdef HAS_NEWS_ADMIN
        && myuid != g_newsuid
 #endif
        && myuid != ROOTID))) {
@@ -576,7 +576,7 @@ int supersede_article()		/* Supersedes: */
      && (!in_string(from_buf,g_hostname, false)
       || (!in_string(from_buf,g_login_name, true)
        && !in_string(reply_buf,g_login_name, true)
-#ifdef NEWS_ADMIN
+#ifdef HAS_NEWS_ADMIN
        && myuid != g_newsuid
 #endif
        && myuid != ROOTID))) {
