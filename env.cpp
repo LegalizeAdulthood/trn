@@ -66,13 +66,16 @@ bool env_init(char *tcbuf, bool lax)
 #endif
 #ifdef MSDOS
     g_login_name = getenv("USERNAME");
-    char *home_drive = getenv("HOMEDRIVE");
-    char *home_path = getenv("HOMEPATH");
-    if (home_drive != nullptr && home_path != nullptr)
+    if (!g_home_dir)
     {
-	strcpy(tcbuf, home_drive);
-	strcat(tcbuf, home_path);
-	g_home_dir = savestr(tcbuf);
+        char *home_drive = getenv("HOMEDRIVE");
+        char *home_path = getenv("HOMEPATH");
+        if (home_drive != nullptr && home_path != nullptr)
+        {
+            strcpy(tcbuf, home_drive);
+            strcat(tcbuf, home_path);
+            g_home_dir = savestr(tcbuf);
+        }
     }
 #endif
 
