@@ -192,7 +192,6 @@ getout:
 }
 
 /* interpret interpolations */
-
 char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, char *cmd)
 {
     char* subj_buf = nullptr;
@@ -208,7 +207,6 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
     char* line_split = nullptr;
     char* orig_dest = dest;
     char* s;
-    char* h;
     int i;
     char scrbuf[8192];
     static char* input_str = nullptr;
@@ -222,8 +220,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
     bool proc_sprintf = false;
     int metabit = 0;
 
-    while (*pattern && (!stoppers || !strchr(stoppers,*pattern))) {
-	if (*pattern == '%' && pattern[1]) {
+    while (*pattern && (!stoppers || !strchr(stoppers, *pattern)))
+    {
+        if (*pattern == '%' && pattern[1])
+        {
             char spfbuf[512];
             upper = false;
 	    lastcomp = false;
@@ -232,7 +232,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 	    address_parse = false;
 	    comment_parse = false;
 	    proc_sprintf = false;
-	    for (s=nullptr; !s; ) {
+	    s = nullptr;
+	    while (s == nullptr) {
 		switch (*++pattern) {
 		case '^':
 		    upper = true;
@@ -253,18 +254,20 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    comment_parse = true;
 		    break;
 		case ':':
+		{
 		    proc_sprintf = true;
-		    h = spfbuf;
+		    char *h = spfbuf;
 		    *h++ = '%';
 		    pattern++;	/* Skip over ':' */
 		    while (*pattern
-		     && (*pattern=='.' || *pattern=='-' || isdigit(*pattern))) {
-			*h++ = *pattern++;
-		    }
+                     && (*pattern=='.' || *pattern=='-' || isdigit(*pattern))) {
+		        *h++ = *pattern++;
+                     }
 		    *h++ = 's';
 		    *h++ = '\0';
 		    pattern--;
 		    break;
+		}
 		case '/':
 		    s = scrbuf;
 		    if (!cmd || !strchr("/?g",*cmd))
@@ -342,7 +345,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    if (!*pattern)
 			goto getout;
 		    s = scrbuf;
-		    h = spfbuf;
+		    char *h = spfbuf;
 		    proc_sprintf = false;
 		    do {
 			switch (*s) {
@@ -678,7 +681,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
                         if (s != nullptr && s > refs_buf)
                         {
 			    *s = '\0';
-			    h = strrchr(refs_buf,'<');
+			    char *h = strrchr(refs_buf,'<');
 			    *s = '<';
 			    if (h && h > refs_buf) {
 				s = strchr(refs_buf+1,'<');
@@ -718,6 +721,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
                     if (str == nullptr)
 			str = subj_buf = fetchsubj(g_art,true);
 		    subject_has_Re(str,&str);
+		    char *h;
                     if (*pattern == 's' && (h = in_string(str, "- (nf", true)) != nullptr)
 			*h = '\0';
 		    s = str;
@@ -911,7 +915,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		}
 		decode_header(s, s, strlen(s));
 		if (address_parse) {
-		    if ((h=strchr(s,'<')) != nullptr) { /* grab the good part */
+                    char *h = strchr(s, '<');
+		    if (h != nullptr) { /* grab the good part */
 			s = h+1;
 			if ((h=strchr(s,'>')) != nullptr)
 			    *h = '\0';
