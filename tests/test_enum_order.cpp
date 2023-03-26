@@ -235,4 +235,4 @@ TEST_P(DisplayOptions, orderRelationships)
     ASSERT_EQ(param.value, param.type);
 }
 
-INSTANTIATE_TEST_SUITE_P(TestDisplayOptoins, DisplayOptions, testing::ValuesIn(display_options));
+INSTANTIATE_TEST_SUITE_P(TestDisplayOptions, DisplayOptions, testing::ValuesIn(display_options));
