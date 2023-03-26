@@ -164,13 +164,12 @@ void datasrc_finalize()
 
 char *read_datasrcs(char *filename)
 {
-    int fd;
     char* section;
     char* cond;
     char* filebuf = nullptr;
     char** vals = ini_values(s_datasrc_ini);
 
-    fd = open(filexp(filename), 0);
+    int fd = open(filexp(filename), 0);
     if (fd >= 0)
     {
 	fstat(fd,&g_filestat);
@@ -207,7 +206,6 @@ DATASRC *get_datasrc(const char *name)
 DATASRC *new_datasrc(const char *name, char **vals)
 {
     DATASRC* dp = datasrc_ptr(g_datasrc_cnt++);
-    char* v;
 
     if (vals[DI_NNTP_SERVER]) {
 	dp->flags |= DF_REMOTE;
@@ -219,12 +217,11 @@ DATASRC *new_datasrc(const char *name, char **vals)
     if (!strcmp(name,"default"))
 	dp->flags |= DF_DEFAULT;
 
-    v = vals[DI_NNTP_SERVER];
+    char *v = vals[DI_NNTP_SERVER];
     if (v != nullptr)
     {
-	char* cp;
-	dp->newsid = savestr(v);
-        cp = strchr(dp->newsid, ';');
+        dp->newsid = savestr(v);
+        char *cp = strchr(dp->newsid, ';');
         if (cp != nullptr)
         {
 	    *cp = '\0';
