@@ -4,6 +4,8 @@
 #ifndef DECODE_H
 #define DECODE_H
 
+struct MIMECAP_ENTRY;
+
 extern char *g_decode_filename;
 
 enum mime_encoding

@@ -4,6 +4,11 @@
 #ifndef RT_PROCESS_H
 #define RT_PROCESS_H
 
+#include "hash.h"
+
+struct ARTICLE;
+struct SUBJECT;
+
 ARTICLE *allocate_article(ART_NUM artnum);
 int msgid_cmp(const char *key, int keylen, HASHDATUM data);
 bool valid_article(ARTICLE *article);

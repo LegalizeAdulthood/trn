@@ -4,6 +4,9 @@
 #ifndef NNTP_H
 #define NNTP_H
 
+struct DATASRC;
+struct NGDATA;
+
 enum finishbody_mode
 {
     FB_BACKGROUND = 0,

@@ -4,6 +4,8 @@
 #ifndef KFILE_H
 #define KFILE_H
 
+struct ARTICLE;
+
 #define KF_GLOBAL false
 #define KF_LOCAL true
 

@@ -4,9 +4,7 @@
 #ifndef ARTSRCH_H
 #define ARTSRCH_H
 
-#ifndef NBRA
 #include "search.h"
-#endif
 
 #include <string>
 

@@ -4,6 +4,9 @@
 #ifndef RCLN_H
 #define RCLN_H
 
+struct DATASRC;
+struct NGDATA;
+
 /* if true, silence is golden (universal scan mode) */
 extern bool toread_quiet;
 

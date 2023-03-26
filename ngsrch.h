@@ -4,6 +4,9 @@
 #ifndef NGSRCH_H
 #define NGSRCH_H
 
+struct COMPEX;
+struct NGDATA;
+
 enum ng_search_result
 {
     NGS_ABORT = 0,

@@ -4,6 +4,8 @@
 #ifndef ARTSTATE_H
 #define ARTSTATE_H
 
+#include "search.h"
+
 extern bool g_reread;          /* consider current art temporarily unread? */
 extern bool g_do_fseek;        /* should we back up in article file? */
 extern bool g_oldsubject;      /* not 1st art in subject thread */

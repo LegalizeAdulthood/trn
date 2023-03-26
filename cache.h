@@ -4,6 +4,11 @@
 #ifndef CACHE_H
 #define CACHE_H
 
+#include "hash.h"
+
+struct ARTICLE;
+struct LIST;
+
 /* Subjects get their own structure */
 struct SUBJECT
 {

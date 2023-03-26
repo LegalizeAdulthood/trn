@@ -4,6 +4,8 @@
 #ifndef RT_OV_H
 #define RT_OV_H
 
+struct ARTICLE;
+
 /* The usual order for the overview data fields. */
 enum ov_field_num
 {

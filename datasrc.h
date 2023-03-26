@@ -11,6 +11,7 @@
 #include <string>
 
 struct HASHTABLE;
+struct LIST;
 
 struct SRCFILE
 {

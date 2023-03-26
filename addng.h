@@ -5,7 +5,10 @@
 #ifndef ADDNG_H
 #define ADDNG_H
 
-struct ADDGROUP {
+struct DATASRC;
+
+struct ADDGROUP
+{
     ADDGROUP* next;
     ADDGROUP* prev;
     DATASRC* datasrc;

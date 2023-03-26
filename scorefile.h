@@ -5,6 +5,8 @@
 #ifndef SCOREFILE_H
 #define SCOREFILE_H
 
+struct COMPEX;
+
 #define DEFAULT_SCOREDIR "%+/scores"
 
 struct SF_ENTRY

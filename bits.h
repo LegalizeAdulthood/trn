@@ -4,6 +4,8 @@
 #ifndef BITS_H
 #define BITS_H
 
+struct ARTICLE;
+
 extern int g_dmcount;
 
 void bits_init();

@@ -4,6 +4,8 @@
 #ifndef NGSTUFF_H
 #define NGSTUFF_H
 
+struct ADDGROUP;
+
 enum numnum_result
 {
     NN_NORM = 0,

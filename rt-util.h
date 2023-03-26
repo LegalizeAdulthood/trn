@@ -4,6 +4,8 @@
 #ifndef RT_UTIL_H
 #define RT_UTIL_H
 
+struct ARTICLE;
+
 extern char g_spin_char;     /* char to put back when we're done spinning */
 extern long g_spin_estimate; /* best guess of how much work there is */
 extern long g_spin_todo;     /* the max word to do (might decrease) */

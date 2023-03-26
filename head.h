@@ -6,6 +6,7 @@
 
 #include "mempool.h"
 
+struct ARTICLE;
 
 /* types of header lines
  * (These must stay in alphabetic order at least in the first letter.

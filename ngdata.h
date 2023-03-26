@@ -4,6 +4,9 @@
 #ifndef NGDATA_H
 #define NGDATA_H
 
+struct LIST;
+struct NEWSRC;
+
 struct NGDATA
 {
     NGDATA* prev;

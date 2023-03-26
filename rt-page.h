@@ -8,6 +8,13 @@
 #define FILL_LAST_PAGE    true
 #include "rt-select.h"
 
+struct ADDGROUP;
+struct ARTICLE;
+struct MULTIRC;
+struct NGDATA;
+struct SUBJECT;
+struct UNIV_ITEM;
+
 enum
 {
     MAX_SEL = 99

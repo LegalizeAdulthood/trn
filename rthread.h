@@ -4,7 +4,9 @@
 #ifndef RTHREAD_H
 #define RTHREAD_H
 
+struct ARTICLE;
 struct HASHTABLE;
+struct SUBJECT;
 
 extern ART_NUM g_obj_count;
 extern int g_subject_count;

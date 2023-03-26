@@ -4,7 +4,10 @@
 #ifndef RCSTUFF_H
 #define RCSTUFF_H
 
+struct DATASRC;
 struct HASHTABLE;
+struct LIST;
+struct NGDATA;
 
 #define TR_ONE ((ART_UNREAD) 1)
 #define TR_NONE ((ART_UNREAD) 0)
@@ -54,7 +57,8 @@ enum
     RF_RCCHANGED = 0x0400
 };
 
-struct MULTIRC {
+struct MULTIRC
+{
     NEWSRC* first;
     int num;
     int flags;

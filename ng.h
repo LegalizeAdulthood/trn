@@ -4,6 +4,8 @@
 #ifndef NG_H
 #define NG_H
 
+struct ARTICLE;
+
 extern ART_NUM g_art;          /* current or prospective article # */
 extern ART_NUM g_recent_art;   /* previous article # for '-' command */
 extern ART_NUM g_curr_art;     /* current article # */

@@ -4,6 +4,9 @@
 #ifndef OPT_H
 #define OPT_H
 
+#include "search.h"
+#include "util.h"
+
 #define YESorNO(v) g_yesorno[(int)(v)]
 
 /* Display Options */

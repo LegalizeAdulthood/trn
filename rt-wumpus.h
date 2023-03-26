@@ -4,6 +4,8 @@
 #ifndef RT_WUMPUS_H
 #define RT_WUMPUS_H
 
+struct ARTICLE;
+
 void init_tree();
 ARTICLE *get_tree_artp(int x, int y);
 int tree_puts(char *orig_line, ART_LINE header_line, int is_subject);

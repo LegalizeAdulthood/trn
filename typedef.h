@@ -1,5 +1,7 @@
 /* typedef.h
  */
+#ifndef TYPEDEF_H
+#define TYPEDEF_H
 
 /* some important types */
 
@@ -12,88 +14,4 @@ using ACT_POS = long;          /* char position in active file */
 using MEM_SIZE = unsigned int; /* for passing to malloc */
 using Uchar = unsigned char;   /* more space-efficient */
 
-/* addng.h */
-
-struct ADDGROUP;
-
-/* cache.h */
-
-struct SUBJECT;
-struct ARTICLE;
-
-/* datasrc.h */
-
-struct SRCFILE;
-struct DATASRC;
-
-/* hash.h */
-
-struct HASHDATUM;
-
-/* head.h */
-
-struct HEADTYPE;
-struct USER_HEADTYPE;
-
-/* list.h */
-
-struct LISTNODE;
-struct LIST;
-
-/* mime.h */
-
-struct HBLK;
-struct MIME_SECT;
-struct HTML_TAGS;
-struct MIMECAP_ENTRY;
-
-/* ngdata.h */
-
-struct NGDATA;
-
-/* nntpclient.h */
-
-struct NNTPLINK;
-
-/* rcstuff.h */
-
-struct NEWSRC;
-struct MULTIRC;
-
-/* rt-page.h */
-
-union SEL_UNION;
-struct SEL_ITEM;
-
-/* scan.h */
-
-struct PAGE_ENT;
-struct SCONTEXT;
-
-/* scanart.h */
-
-struct SA_ENTRYDATA;
-
-/* scorefile.h */
-
-struct SF_ENTRY;
-struct SF_FILE;
-
-/* search.h */
-
-struct COMPEX;
-
-/* univ.h */
-
-struct UNIV_GROUPMASK_DATA;
-struct UNIV_CONFIGFILE_DATA;
-struct UNIV_VIRT_DATA;
-struct UNIV_VIRT_GROUP;
-struct UNIV_NEWSGROUP;
-struct UNIV_TEXTFILE;
-union UNIV_DATA;
-struct UNIV_ITEM;
-
-/* util.h */
-
-struct INI_WORDS;
+#endif
