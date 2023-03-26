@@ -191,12 +191,6 @@ static void new_nntp_groups(DATASRC *dp)
 
 static void new_local_groups(DATASRC *dp)
 {
-    char* s;
-    NGDATA* np;
-    char tmpbuf[LBUFLEN];
-    long high, low;
-    char ch;
-
     g_datasrc = dp;
 
     /* did active.times file grow? */
@@ -213,20 +207,22 @@ static void new_local_groups(DATASRC *dp)
     time_t lastone = time((time_t*)nullptr) - 24L * 60 * 60 - 1;
     HASHTABLE *newngs = hashcreate(33, addng_cmp);
 
-    while (fgets(g_buf,LBUFLEN,g_tmpfp) != nullptr) {
-	if ((s = strchr(g_buf, ' ')) == nullptr
-	 || (lastone = atol(s+1)) < dp->lastnewgrp)
+    while (fgets(g_buf, LBUFLEN, g_tmpfp) != nullptr)
+    {
+        char *s;
+        if ((s = strchr(g_buf, ' ')) == nullptr || (lastone = atol(s + 1)) < dp->lastnewgrp)
 	    continue;
 	*s = '\0';
+        char tmpbuf[LBUFLEN];
 	if (!find_actgrp(g_datasrc, tmpbuf, g_buf, s - g_buf, (ART_NUM)0))
 	    continue;
-        high = 0;
-        low = 1;
-        ch = 'y';
+        long high;
+        long low;
+        char ch;
 	sscanf(tmpbuf + (s-g_buf) + 1, "%ld %ld %c", &high, &low, &ch);
 	if (ch == 'x' || ch == '=')
 	    continue;
-        np = find_ng(g_buf);
+        NGDATA *np = find_ng(g_buf);
         if (np != nullptr)
             continue;
 	add_to_hash(newngs, g_buf, high-low, auto_subscribe(g_buf));
