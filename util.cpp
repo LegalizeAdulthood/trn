@@ -680,7 +680,7 @@ void unprep_ini_words(INI_WORDS words[])
     words[0].help_str = nullptr;
 }
 
-void prep_ini_data(char *cp, char *filename)
+void prep_ini_data(char *cp, const char *filename)
 {
     char* t = cp;
 

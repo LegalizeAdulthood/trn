@@ -820,7 +820,6 @@ void univ_redofile()
 
 static char *univ_edit_new_userfile()
 {
-
     char *s = savestr(filexp("%+/univ/usertop"));	/* LEAK */
 
     /* later, create a new user top file, and return its filename.

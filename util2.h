@@ -7,7 +7,7 @@
 char *savestr(const char *str);
 char *safecpy(char *to, const char *from, int len);
 char *cpytill(char *to, char *from, int delim);
-char *filexp(char *s);
+char *filexp(const char *s);
 char *in_string(char *big, const char *little, bool case_matters);
 #ifndef HAS_STRCASECMP
 int strcasecmp(const char *s1, const char *s2);

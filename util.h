@@ -66,7 +66,7 @@ char *get_auth_user();
 char *get_auth_pass();
 char **prep_ini_words(INI_WORDS words[]);
 void unprep_ini_words(INI_WORDS words[]);
-void prep_ini_data(char *cp, char *filename);
+void prep_ini_data(char *cp, const char *filename);
 bool parse_string(char **to, char **from);
 char *next_ini_section(char *cp, char **section, char **cond);
 char *parse_ini_section(char *cp, INI_WORDS words[]);

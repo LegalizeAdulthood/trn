@@ -1106,7 +1106,6 @@ void sf_edit_file(const char *filespec)
 {
     char filebuf[LBUFLEN];	/* clean up buffers */
     char filechar;		/* which file to do? */
-    char* fname_noexpand;	/* non-expanded filename */
 
     if (!filespec || !*filespec)
 	return;		/* empty, do nothing (error later?) */
@@ -1131,6 +1130,7 @@ void sf_edit_file(const char *filespec)
 	}
 	strcpy(filebuf,g_sf_abbr[(int)filechar]);
     }
+    char* fname_noexpand;	/* non-expanded filename */
     fname_noexpand = sf_cmd_fname(filebuf);
     strcpy(filebuf,filexp(fname_noexpand));
     /* make sure directory exists... */

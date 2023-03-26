@@ -130,7 +130,7 @@ bool rcstuff_init()
     return s_foundany;
 }
 
-NEWSRC *new_newsrc(const char *name, char *newsrc, char *add_ok)
+NEWSRC *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
 {
     if (!name || !*name)
 	return nullptr;
@@ -422,7 +422,6 @@ static bool open_newsrc(NEWSRC *rp)
 {
     NGDATA* np;
     NGDATA* prev_np;
-    char* some_buf;
     long length;
     FILE* rcfp;
     HASHDATUM data;
@@ -438,7 +437,7 @@ static bool open_newsrc(NEWSRC *rp)
 	    termdown(2);
 	    return false;
 	}
-	some_buf = SUBSCRIPTIONS;
+        const char *some_buf = SUBSCRIPTIONS;
 	if ((rp->datasrc->flags & DF_REMOTE)
 	 && nntp_list("SUBSCRIPTIONS","",0) == 1) {
 	    do {
@@ -489,6 +488,7 @@ static bool open_newsrc(NEWSRC *rp)
 
     /* read in the .newsrc file */
 
+    char* some_buf;
     while ((some_buf = get_a_line(g_buf, LBUFLEN,false,rcfp)) != nullptr) {
 	length = g_len_last_line_got;	/* side effect of get_a_line */
 	if (length <= 1)		/* only a newline??? */

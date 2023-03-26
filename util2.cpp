@@ -60,8 +60,12 @@ char *cpytill(char *to, char *from, int delim)
 /* returns pointer to static area */
 /* Note that there is a 1-deep cache of ~name interpretation */
 
-char *filexp(char *s)
+char *filexp(const char *text)
 {
+    // sbuf exists so that we can have a const input
+    static char sbuf[CBUFLEN];
+    strcpy(sbuf, text);
+    char *s = sbuf;
     static char filename[CBUFLEN];
     char scrbuf[CBUFLEN];
     char* d;

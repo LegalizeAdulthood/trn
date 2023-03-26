@@ -98,19 +98,14 @@ void sc_sv_getfile()
 /* save the memory into the score file */
 void sc_sv_savefile()
 {
-    char* s;
-    FILE* tmpfp;
-    char* savename;
-    int i;
-
     if (s_num_lines == 0)
 	return;
+
     g_waiting = true;	/* don't interrupt */
-    s = get_val("SAVESCOREFILE","%+/savedscores");
-    savename = savestr(filexp(s));
+    char *savename = savestr(filexp(get_val("SAVESCOREFILE", "%+/savedscores")));
     strcpy(s_lbuf,savename);
     strcat(s_lbuf,".tmp");
-    tmpfp = fopen(s_lbuf,"w");
+    FILE *tmpfp = fopen(s_lbuf, "w");
     if (!tmpfp) {
 #if 0
 	printf("Could not open score save temp file %s for writing.\n",
@@ -120,7 +115,7 @@ void sc_sv_savefile()
 	g_waiting = false;
 	return;
     }
-    for (i = 0; i < s_num_lines; i++) {
+    for (int i = 0; i < s_num_lines; i++) {
 	if (s_lines[i])
 	    fprintf(tmpfp,"%s\n",s_lines[i]);
 	if (ferror(tmpfp)) {

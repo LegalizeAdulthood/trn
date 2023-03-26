@@ -1405,7 +1405,7 @@ void setmail(bool force)
     if (force)
 	g_mailcount = 0;
     if (!(g_mailcount++)) {
-	char* mailfile = filexp(get_val("MAILFILE",MAILFILE));
+	const char* mailfile = filexp(get_val("MAILFILE",MAILFILE));
 	
 	if (stat(mailfile,&g_filestat) < 0 || !g_filestat.st_size
 	    || g_filestat.st_atime > g_filestat.st_mtime)

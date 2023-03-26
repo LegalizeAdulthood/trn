@@ -663,10 +663,7 @@ void edit_kfile()
 
 void open_kfile(int local)
 {
-    char* kname = filexp(local ?
-	get_val("KILLLOCAL",s_killlocal) :
-	get_val("KILLGLOBAL",s_killglobal)
-	);
+    const char *kname = filexp(local ? get_val("KILLLOCAL", s_killlocal) : get_val("KILLGLOBAL", s_killglobal));
 
     /* delete the file if it is empty */
     if (stat(kname,&g_filestat) >= 0 && !g_filestat.st_size)
@@ -685,8 +682,7 @@ void open_kfile(int local)
 
 void kf_append(const char *cmd, bool local)
 {
-    strcpy(g_cmd_buf, filexp(local? get_val("KILLLOCAL",s_killlocal)
-				: get_val("KILLGLOBAL",s_killglobal)));
+    strcpy(g_cmd_buf, filexp(local ? get_val("KILLLOCAL", s_killlocal) : get_val("KILLGLOBAL", s_killglobal)));
     if (!makedir(g_cmd_buf,MD_FILE)) {
 	if (g_verbose)
 	    printf("\nDepositing command in %s...",g_cmd_buf);
