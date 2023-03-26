@@ -10,6 +10,15 @@ constexpr int BUFFER_SIZE{4096};
 
 struct InterpolatorTest : public testing::Test
 {
+protected:
+    void SetUp() override
+    {
+        Test::SetUp();
+
+        g_in_ng = false;
+        g_art = 0;
+    }
+
     std::array<char, BUFFER_SIZE> buffer{};
 };
 
@@ -63,4 +72,14 @@ TEST_F(InterpolatorTest, articleNumberInsideNewsgroup)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ(std::string{"Article 624"}, std::string{buffer.data()});
+}
+
+TEST_F(InterpolatorTest, articleNameOutsideNewsgroup)
+{
+    char pattern[]{"Article %A"};
+
+    const char *new_pattern = dointerp(buffer.data(), BUFFER_SIZE, pattern, "", nullptr);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(std::string{"Article "}, std::string{buffer.data()});
 }
