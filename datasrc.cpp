@@ -99,6 +99,7 @@ static char *file_or_none(char *fn);
 static int srcfile_cmp(const char *key, int keylen, HASHDATUM data);
 static int check_distance(int len, HASHDATUM *data, int newsrc_ptr);
 static int get_near_miss();
+static DATASRC *new_datasrc(const char *name, char **vals);
 
 void datasrc_init()
 {
@@ -203,21 +204,22 @@ DATASRC *get_datasrc(const char *name)
     return nullptr;
 }
 
-DATASRC *new_datasrc(const char *name, char **vals)
+static DATASRC *new_datasrc(const char *name, char **vals)
 {
     DATASRC* dp = datasrc_ptr(g_datasrc_cnt++);
 
-    if (vals[DI_NNTP_SERVER]) {
-	dp->flags |= DF_REMOTE;
+    if (vals[DI_NNTP_SERVER])
+    {
+        dp->flags |= DF_REMOTE;
     }
     else if (!vals[DI_ACTIVE_FILE])
-	return nullptr; /*$$*/
+        return nullptr; /*$$*/
 
     dp->name = name;
     if (!strcmp(name,"default"))
 	dp->flags |= DF_DEFAULT;
 
-    char *v = vals[DI_NNTP_SERVER];
+    const char *v = vals[DI_NNTP_SERVER];
     if (v != nullptr)
     {
         dp->newsid = savestr(v);
@@ -237,7 +239,8 @@ DATASRC *new_datasrc(const char *name, char **vals)
     else
 	dp->newsid = savestr(filexp(vals[DI_ACTIVE_FILE]));
 
-    if (!(dp->spool_dir = file_or_none(vals[DI_SPOOL_DIR])))
+    dp->spool_dir = file_or_none(vals[DI_SPOOL_DIR]);
+    if (!dp->spool_dir)
 	dp->spool_dir = savestr(g_tmp_dir);
 
     dp->over_dir = dir_or_none(dp,vals[DI_OVERVIEW_DIR],DF_TRY_OVERVIEW);
