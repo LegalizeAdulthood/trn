@@ -4,9 +4,10 @@
 #ifndef TRN_RCSTUFF_H
 #define TRN_RCSTUFF_H
 
+#include "list.h"
+
 struct DATASRC;
 struct HASHTABLE;
-struct LIST;
 struct NGDATA;
 
 #define TR_ONE ((ART_UNREAD) 1)
@@ -70,12 +71,6 @@ enum
     MF_INCLUDED = 0x0010
 };
 
-#define multirc_ptr(n)  ((MULTIRC*)listnum2listitem(g_multirc_list,(long)(n)))
-#define multirc_low()   ((MULTIRC*)listnum2listitem(g_multirc_list,existing_listnum(g_multirc_list,0L,1)))
-#define multirc_high()  ((MULTIRC*)listnum2listitem(g_multirc_list,existing_listnum(g_multirc_list,g_multirc_list->high,-1)))
-#define multirc_next(p) ((MULTIRC*)next_listitem(g_multirc_list,(char*)(p)))
-#define multirc_prev(p) ((MULTIRC*)prev_listitem(g_multirc_list,(char*)(p)))
-
 extern HASHTABLE *g_newsrc_hash;
 extern MULTIRC *g_sel_page_mp;
 extern MULTIRC *g_sel_next_mp;
@@ -101,5 +96,26 @@ void sethash(NGDATA *np);
 void checkpoint_newsrcs();
 bool write_newsrcs(MULTIRC *mptr);
 void get_old_newsrcs(MULTIRC *mptr);
+
+inline MULTIRC *multirc_ptr(long n)
+{
+    return (MULTIRC *) listnum2listitem(g_multirc_list, n);
+}
+inline MULTIRC *multirc_low()
+{
+    return (MULTIRC *) listnum2listitem(g_multirc_list, existing_listnum(g_multirc_list, 0L, 1));
+}
+inline MULTIRC *multirc_high()
+{
+    return (MULTIRC *) listnum2listitem(g_multirc_list, existing_listnum(g_multirc_list, g_multirc_list->high, -1));
+}
+inline MULTIRC *multirc_next(MULTIRC *p)
+{
+    return (MULTIRC *) next_listitem(g_multirc_list, (char *) p);
+}
+inline MULTIRC *multirc_prev(MULTIRC *p)
+{
+    return (MULTIRC *) prev_listitem(g_multirc_list, (char *) p);
+}
 
 #endif
