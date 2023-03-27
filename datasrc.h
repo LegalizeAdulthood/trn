@@ -4,6 +4,7 @@
 #ifndef TRN_DATASRC_H
 #define TRN_DATASRC_H
 
+#include "enum-flags.h"
 #include "list.h"
 #include "nntpclient.h"
 #include "rt-ov.h"
@@ -44,39 +45,7 @@ enum datasrc_flags : std::uint16_t
     DF_NOLISTGROUP = 0x2000,
     DF_NOXREFS = 0x4000
 };
-inline datasrc_flags operator|(datasrc_flags lhs, datasrc_flags rhs)
-{
-    return static_cast<datasrc_flags>(static_cast<std::uint16_t>(lhs) | static_cast<std::uint16_t>(rhs));
-}
-inline datasrc_flags operator&(datasrc_flags lhs, datasrc_flags rhs)
-{
-    return static_cast<datasrc_flags>(static_cast<std::uint16_t>(lhs) & static_cast<std::uint16_t>(rhs));
-}
-inline datasrc_flags operator^(datasrc_flags lhs, datasrc_flags rhs)
-{
-    return static_cast<datasrc_flags>(static_cast<std::uint16_t>(lhs) ^ static_cast<std::uint16_t>(rhs));
-}
-inline datasrc_flags operator~(datasrc_flags val)
-{
-    // Use uint16_t here because the largest flag fits into a 16-bit unsigned integer,
-    // so don't assume larger storage when flipping all the bits arbitrarily.
-    return static_cast<datasrc_flags>(~static_cast<std::uint16_t>(val));
-}
-inline datasrc_flags &operator|=(datasrc_flags &lhs, datasrc_flags rhs)
-{
-    lhs = lhs | rhs;
-    return lhs;
-}
-inline datasrc_flags &operator&=(datasrc_flags &lhs, datasrc_flags rhs)
-{
-    lhs = lhs & rhs;
-    return lhs;
-}
-inline datasrc_flags &operator^=(datasrc_flags &lhs, datasrc_flags rhs)
-{
-    lhs = lhs ^ rhs;
-    return lhs;
-}
+DECLARE_FLAGS_ENUM(datasrc_flags, std::uint16_t)
 
 enum field_flags : std::uint8_t
 {
@@ -87,37 +56,7 @@ enum field_flags : std::uint8_t
     FF_CHECK4HDR = 0x08,
     FF_FILTERSEND = 0x10
 };
-inline field_flags operator|(field_flags lhs, field_flags rhs)
-{
-    return static_cast<field_flags>(static_cast<std::uint8_t>(lhs) | static_cast<std::uint8_t>(rhs));
-}
-inline field_flags operator&(field_flags lhs, field_flags rhs)
-{
-    return static_cast<field_flags>(static_cast<std::uint8_t>(lhs) & static_cast<std::uint8_t>(rhs));
-}
-inline field_flags operator^(field_flags lhs, field_flags rhs)
-{
-    return static_cast<field_flags>(static_cast<std::uint8_t>(lhs) ^ static_cast<std::uint8_t>(rhs));
-}
-inline field_flags operator~(field_flags val)
-{
-    return static_cast<field_flags>(~static_cast<std::uint8_t>(val));
-}
-inline field_flags &operator|=(field_flags &lhs, field_flags rhs)
-{
-    lhs = lhs | rhs;
-    return lhs;
-}
-inline field_flags &operator&=(field_flags &lhs, field_flags rhs)
-{
-    lhs = lhs & rhs;
-    return lhs;
-}
-inline field_flags &operator^=(field_flags &lhs, field_flags rhs)
-{
-    lhs = lhs ^ rhs;
-    return lhs;
-}
+DECLARE_FLAGS_ENUM(field_flags, std::uint8_t)
 
 struct DATASRC
 {
