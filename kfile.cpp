@@ -25,15 +25,15 @@
 #include "util.h"
 #include "util2.h"
 
-FILE *g_globkfp{};              /* global article killer file */
-FILE *g_localkfp{};             /* local (for this newsgroup) file */
-int g_kf_state{};               /* the state of our kill files */
-int g_kfs_local_change_clear{}; /* bits to clear local changes */
-int g_kfs_thread_change_set{};  /* bits to set for thread changes */
-int g_kf_thread_cnt{};          /* # entries in the thread kfile */
-int g_kf_changethd_cnt{};       /* # entries changed from old to new */
-long g_kf_daynum{};             /* day number for thread killfile */
-ART_NUM g_killfirst{};          /* used as g_firstart when killing */
+FILE               *g_globkfp{};                /* global article killer file */
+FILE               *g_localkfp{};               /* local (for this newsgroup) file */
+killfilestate_flags g_kf_state{};               /* the state of our kill files */
+killfilestate_flags g_kfs_local_change_clear{}; /* bits to clear local changes */
+killfilestate_flags g_kfs_thread_change_set{};  /* bits to set for thread changes */
+int                 g_kf_thread_cnt{};          /* # entries in the thread kfile */
+int                 g_kf_changethd_cnt{};       /* # entries changed from old to new */
+long                g_kf_daynum{};              /* day number for thread killfile */
+ART_NUM             g_killfirst{};              /* used as g_firstart when killing */
 
 static void mention(const char *str);
 static bool kfile_junk(char *ptr, int killmask);
