@@ -4,6 +4,9 @@
 #define TRN_MIME_H
 
 #include "decode.h"
+#include "enum-flags.h"
+
+#include <cstdint>
 
 struct HBLK
 {
@@ -31,6 +34,15 @@ enum mime_state
     ALTERNATE_MIME
 };
 
+enum mimesection_flags : std::uint16_t
+{
+    MFS_NONE = 0x0000,
+    MSF_INLINE = 0x0001,
+    MSF_ALTERNATIVE = 0x0002,
+    MSF_ALTERNADONE = 0x0004
+};
+DECLARE_FLAGS_ENUM(mimesection_flags, std::uint16_t);
+
 struct MIME_SECT
 {
     MIME_SECT *prev;
@@ -45,16 +57,9 @@ struct MIME_SECT
     short part;
     short total;
     short boundary_len;
-    short flags;
+    mimesection_flags flags;
     short html;
     short html_blkcnt;
-};
-
-enum
-{
-    MSF_INLINE = 0x0001,
-    MSF_ALTERNATIVE = 0x0002,
-    MSF_ALTERNADONE = 0x0004
 };
 
 /* Only used with HTMLTEXT_MIME */
