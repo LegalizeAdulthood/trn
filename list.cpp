@@ -16,7 +16,7 @@ void list_init()
 
 /* Create the header for a dynamic list of items.
 */
-LIST *new_list(long low, long high, int item_size, int items_per_node, int flags, void (*init_node)(LIST *, LISTNODE *))
+LIST *new_list(long low, long high, int item_size, int items_per_node, list_flags flags, void (*init_node)(LIST *, LISTNODE *))
 {
     LIST* list = (LIST*)safemalloc(sizeof (LIST));
     list->first = list->recent = nullptr;

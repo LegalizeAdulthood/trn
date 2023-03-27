@@ -87,7 +87,7 @@ void build_cache()
     cached_ng = g_ngptr;
     cached_time = time((time_t*)nullptr);
     g_article_list = new_list(g_absfirst, g_lastart, sizeof (ARTICLE), 371,
-			    LF_SPARSE, init_artnode);
+                              LF_SPARSE, init_artnode);
     s_subj_hash = hashcreate(991, subject_cmp);	/*TODO: pick a better size */
 
     set_firstart(g_ngptr->rcline + g_ngptr->numoffset);

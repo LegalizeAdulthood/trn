@@ -759,7 +759,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
     srcfile_close(sfp);
 
     /* Create a list with one character per item using a large chunk size. */
-    sfp->lp = new_list(0, 0, 1, SRCFILE_CHUNK_SIZE, 0, nullptr);
+    sfp->lp = new_list(0, 0, 1, SRCFILE_CHUNK_SIZE, LF_NONE, nullptr);
     sfp->hp = hashcreate(3001, srcfile_cmp);
     sfp->fp = fp;
 

@@ -461,7 +461,7 @@ static bool open_newsrc(NEWSRC *rp)
 
     if (!g_ngdata_list) {
 	/* allocate memory for rc file globals */
-	g_ngdata_list = new_list(0, 0, sizeof (NGDATA), 200, 0, init_ngnode);
+	g_ngdata_list = new_list(0, 0, sizeof (NGDATA), 200, LF_NONE, init_ngnode);
 	g_newsrc_hash = hashcreate(3001, rcline_cmp);
     }
 
