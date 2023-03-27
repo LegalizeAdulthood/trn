@@ -6,6 +6,8 @@
 
 #include "hash.h"
 #include "head.h"
+#include "list.h"
+#include "ngdata.h"
 
 struct ARTICLE;
 struct LIST;
@@ -87,26 +89,6 @@ enum
 
 /* See kfile.h for the AUTO_* flags */
 
-#define article_ptr(an)      ((ARTICLE*)listnum2listitem(g_article_list,(long)(an)))
-#define article_num(ap)      ((ap)->num)
-#define article_find(an)     ((an) <= g_lastart && article_hasdata(an)? \
-			      article_ptr(an) : nullptr)
-#define article_walk(cb,ag)  walk_list(g_article_list,cb,ag)
-#define article_hasdata(an)  existing_listnum(g_article_list,(long)(an),0)
-#define article_first(an)    existing_listnum(g_article_list,(long)(an),1)
-#define article_next(an)     existing_listnum(g_article_list,(long)(an)+1,1)
-#define article_last(an)     existing_listnum(g_article_list,(long)(an),-1)
-#define article_prev(an)     existing_listnum(g_article_list,(long)(an)-1,-1)
-#define article_nextp(ap)    ((ARTICLE*)next_listitem(g_article_list,(char*)(ap)))
-
-#define article_exists(an)   (article_ptr(an)->flags & AF_EXISTS)
-#define article_unread(an)   (article_ptr(an)->flags & AF_UNREAD)
-
-#define was_read(an)	    (!article_hasdata(an) || !article_unread(an))
-#define is_available(an)    ((an) <= g_lastart && article_hasdata(an) \
-			  && article_exists(an))
-#define is_unavailable(an)  (!is_available(an))
-
 #define DONT_FILL_CACHE	false
 #define FILL_CACHE	true
 
@@ -151,5 +133,66 @@ bool cache_unread_arts();
 bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles);
 bool cache_range(ART_NUM first, ART_NUM last);
 void clear_article(ARTICLE *ap);
+
+inline ARTICLE *article_ptr(ART_NUM an)
+{
+    return (ARTICLE *) listnum2listitem(g_article_list, an);
+}
+inline ART_NUM article_num(const ARTICLE *ap)
+{
+    return ap->num;
+}
+inline bool article_hasdata(ART_NUM an)
+{
+    return existing_listnum(g_article_list, an, 0) != 0;
+}
+inline ARTICLE *article_find(ART_NUM an)
+{
+    return an <= g_lastart && article_hasdata(an) ? article_ptr(an) : nullptr;
+}
+inline bool article_walk(bool (*callback)(char *, int), int arg)
+{
+    return walk_list(g_article_list, callback, arg);
+}
+inline ART_NUM article_first(ART_NUM an)
+{
+    return existing_listnum(g_article_list, an, 1);
+}
+inline ART_NUM article_next(ART_NUM an)
+{
+    return existing_listnum(g_article_list, an + 1, 1);
+}
+inline ART_NUM article_last(ART_NUM an)
+{
+    return existing_listnum(g_article_list, an, -1);
+}
+inline ART_NUM article_prev(ART_NUM an)
+{
+    return existing_listnum(g_article_list, an - 1, -1);
+}
+inline ARTICLE *article_nextp(ARTICLE *ap)
+{
+    return (ARTICLE *) next_listitem(g_article_list, (char *) ap);
+}
+inline bool article_exists(ART_NUM an)
+{
+    return article_ptr(an)->flags & AF_EXISTS;
+}
+inline bool article_unread(ART_NUM an)
+{
+    return article_ptr(an)->flags & AF_UNREAD;
+}
+inline bool was_read(ART_NUM an)
+{
+    return !article_hasdata(an) || !article_unread(an);
+}
+inline bool is_available(ART_NUM an)
+{
+    return an <= g_lastart && article_hasdata(an) && article_exists(an);
+}
+inline bool is_unavailable(ART_NUM an)
+{
+    return !is_available(an);
+}
 
 #endif
