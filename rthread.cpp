@@ -616,7 +616,7 @@ void select_article(ARTICLE *ap, int auto_flags)
 {
     int desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
     bool echo = (auto_flags & ALSO_ECHO) != 0;
-    auto_flags &= AUTO_SELS;
+    auto_flags &= AUTO_SEL_MASK;
     if ((ap->flags & (AF_EXISTS|AF_UNREAD)) == desired_flags) {
 	if (!(ap->flags & static_cast<article_flags>(g_sel_mask))) {
 	    g_selected_count++;
@@ -653,7 +653,7 @@ void select_subject(SUBJECT *subj, int auto_flags)
     int desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
     int old_count = g_selected_count;
 
-    auto_flags &= AUTO_SELS;
+    auto_flags &= AUTO_SEL_MASK;
     for (ap = subj->articles; ap; ap = ap->subj_next) {
 	if ((ap->flags & (AF_EXISTS|AF_UNREAD|g_sel_mask)) == desired_flags) {
 	    ap->flags |= static_cast<article_flags>(g_sel_mask);
@@ -714,7 +714,7 @@ void select_subthread(ARTICLE *ap, int auto_flags)
 	}
     }
 
-    auto_flags &= AUTO_SELS;
+    auto_flags &= AUTO_SEL_MASK;
     for (; ap != limit; ap = bump_art(ap)) {
 	if ((ap->flags & (AF_EXISTS|AF_UNREAD|g_sel_mask)) == desired_flags) {
 	    ap->flags |= static_cast<article_flags>(g_sel_mask);
@@ -735,8 +735,8 @@ void select_subthread(ARTICLE *ap, int auto_flags)
 */
 void deselect_article(ARTICLE *ap, int auto_flags)
 {
-    bool echo = (auto_flags & ALSO_ECHO) != 0;
-    auto_flags &= AUTO_SELS;
+    const bool echo = (auto_flags & ALSO_ECHO) != 0;
+    auto_flags &= AUTO_SEL_MASK;
     if (ap->flags & g_sel_mask) {
 	ap->flags &= ~static_cast<article_flags>(g_sel_mask);
 	if (!g_selected_count--)
@@ -831,7 +831,7 @@ void kill_arts_subject(ARTICLE *ap, int auto_flags)
 	if (auto_flags & SET_TORETURN)
 	    delay_unmark(ap);
 	set_read(ap);
-	auto_flags &= AUTO_KILLS;
+	auto_flags &= AUTO_KILL_MASK;
 	if (auto_flags)
 	    change_auto_flags(ap, auto_flags);
     }
@@ -843,9 +843,9 @@ void kill_subject(SUBJECT *subj, int auto_flags)
 {
     ARTICLE* ap;
     int killmask = (auto_flags & AFFECT_ALL)? 0 : g_sel_mask;
-    char toreturn = (auto_flags & SET_TORETURN) != 0;
+    const bool toreturn = (auto_flags & SET_TORETURN) != 0;
 
-    auto_flags &= AUTO_KILLS;
+    auto_flags &= AUTO_KILL_MASK;
     for (ap = subj->articles; ap; ap = ap->subj_next) {
 	if (toreturn)
 	    delay_unmark(ap);
@@ -885,7 +885,7 @@ void kill_thread(ARTICLE *thread, int auto_flags)
 void kill_subthread(ARTICLE *ap, int auto_flags)
 {
     ARTICLE* limit;
-    char toreturn = (auto_flags & SET_TORETURN) != 0;
+    const bool toreturn = (auto_flags & SET_TORETURN) != 0;
 
     if (!ap)
 	return;
@@ -896,7 +896,7 @@ void kill_subthread(ARTICLE *ap, int auto_flags)
 	}
     }
 
-    auto_flags &= AUTO_KILLS;
+    auto_flags &= AUTO_KILL_MASK;
     for (; ap != limit; ap = bump_art(ap)) {
 	if (toreturn)
 	    delay_unmark(ap);

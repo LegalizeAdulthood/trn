@@ -30,13 +30,13 @@ enum
     AUTO_KILL_SBJ = 0x4000,
     AUTO_KILL_FOL = 0x2000,
     AUTO_KILL_1 = 0x1000,
+    AUTO_KILL_MASK = 0xF000,
     AUTO_SEL_THD = 0x0800,
     AUTO_SEL_SBJ = 0x0400,
     AUTO_SEL_FOL = 0x0200,
     AUTO_SEL_1 = 0x0100,
-    AUTO_OLD = 0x0080,
-    AUTO_KILLS = 0xF000,
-    AUTO_SELS = 0x0F00
+    AUTO_SEL_MASK = 0x0F00,
+    AUTO_OLD = 0x0080
 };
 
 /* The following defines are only valid as flags to function calls, used

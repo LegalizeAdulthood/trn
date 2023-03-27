@@ -253,7 +253,7 @@ int do_kfile(FILE *kfp, int entering)
                     if (cp != nullptr)
                     {
 			ap->autofl = s_thread_cmd_flag[cp-s_thread_cmd_ltr];
-			if (ap->autofl & AUTO_KILLS)
+			if (ap->autofl & AUTO_KILL_MASK)
 			    thread_kill_cnt++;
 			else
 			    thread_select_cnt++;
@@ -262,9 +262,9 @@ int do_kfile(FILE *kfp, int entering)
 		    g_art = article_num(ap);
 		    g_artp = ap;
 		    perform(cp,false);
-		    if (ap->autofl & AUTO_SELS)
+		    if (ap->autofl & AUTO_SEL_MASK)
 			thread_select_cnt++;
-		    else if (ap->autofl & AUTO_KILLS)
+		    else if (ap->autofl & AUTO_KILL_MASK)
 			thread_kill_cnt++;
 		}
 	    }
@@ -554,7 +554,7 @@ void update_thread_kfile()
 
 void change_auto_flags(ARTICLE *ap, int auto_flag)
 {
-    if (auto_flag > (ap->autofl & (AUTO_KILLS|AUTO_SELS))) {
+    if (auto_flag > (ap->autofl & (AUTO_KILL_MASK|AUTO_SEL_MASK))) {
 	if (ap->autofl & AUTO_OLD)
 	    g_kf_changethd_cnt++;
 	ap->autofl = auto_flag;

@@ -97,12 +97,12 @@ void rc_to_bits()
 	for (; i < min; i = article_next(i)) {
 	    ap = article_ptr(i);
 	    if (ap->flags & AF_EXISTS) {
-		if (ap->autofl & AUTO_KILLS)
+		if (ap->autofl & AUTO_KILL_MASK)
 		    ap->flags &= ~AF_UNREAD;
 		else {
 		    ap->flags |= AF_UNREAD;
 		    unread++;
-		    if (ap->autofl & AUTO_SELS)
+		    if (ap->autofl & AUTO_SEL_MASK)
 			select_article(ap, ap->autofl);
 		}
 	    }
@@ -131,12 +131,12 @@ void rc_to_bits()
     for (; i <= g_lastart; i = article_next(i)) {
 	ap = article_ptr(i);
 	if (ap->flags & AF_EXISTS) {
-	    if (ap->autofl & AUTO_KILLS)
+	    if (ap->autofl & AUTO_KILL_MASK)
 		ap->flags &= ~AF_UNREAD;
 	    else {
 		ap->flags |= AF_UNREAD;
 		unread++;
-		if (ap->autofl & AUTO_SELS)
+		if (ap->autofl & AUTO_SEL_MASK)
 		    select_article(ap, ap->autofl);
 	    }
 	}

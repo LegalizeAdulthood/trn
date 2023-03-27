@@ -74,7 +74,7 @@ bool valid_article(ARTICLE *article)
 	data = hashfetch(g_msgid_hash, msgid, strlen(msgid));
 	if (data.dat_len) {
 	    safefree0(data.dat_ptr);
-	    article->autofl = data.dat_len & (AUTO_SELS | AUTO_KILLS);
+	    article->autofl = data.dat_len & (AUTO_SEL_MASK | AUTO_KILL_MASK);
 	    if ((data.dat_len & KF_AGE_MASK) == 0)
 		article->autofl |= AUTO_OLD;
 	    else
@@ -178,7 +178,7 @@ ARTICLE *get_article(char *msgid)
     data = hashfetch(g_msgid_hash, msgid, strlen(msgid));
     if (data.dat_len) {
 	article = allocate_article(0);
-	article->autofl = data.dat_len & (AUTO_SELS | AUTO_KILLS);
+	article->autofl = data.dat_len & (AUTO_SEL_MASK | AUTO_KILL_MASK);
 	if ((data.dat_len & KF_AGE_MASK) == 0)
 	    article->autofl |= AUTO_OLD;
 	else

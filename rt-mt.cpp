@@ -603,7 +603,7 @@ static int read_ids()
 		    HASHDATUM data;
 		    data = hashfetch(g_msgid_hash, article->msgid, len2+len+2);
 		    if (data.dat_len) {
-			article->autofl = data.dat_len&(AUTO_SELS|AUTO_KILLS);
+			article->autofl = data.dat_len&(AUTO_SEL_MASK|AUTO_KILL_MASK);
 			if ((data.dat_len & KF_AGE_MASK) == 0)
 			    article->autofl |= AUTO_OLD;
 			else
