@@ -7,6 +7,7 @@
 #include "enum-flags.h"
 #include "hash.h"
 #include "head.h"
+#include "kfile.h"
 #include "list.h"
 #include "ngdata.h"
 
@@ -97,7 +98,7 @@ struct ARTICLE
     unsigned short scoreflags;
     article_flags  flags;  /* article state flags */
     article_flags2 flags2; /* more state flags */
-    unsigned short autofl; /* auto-processing flags */
+    autokill_flags autofl; /* auto-processing flags */
 };
 
 /* See kfile.h for the AUTO_* flags */

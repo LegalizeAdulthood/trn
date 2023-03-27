@@ -520,7 +520,7 @@ static bool yank_article(char *ptr, int arg)
     if (ap->flags & AF_YANKBACK) {
 	unmark_as_read(ap);
 	if (g_selected_only)
-	    select_article(ap, 0);
+	    select_article(ap, AUTO_KILL_NONE);
 	ap->flags &= ~AF_YANKBACK;
     }
     return false;

@@ -1084,7 +1084,7 @@ reinp_selector:
 	    if (g_sel_items[g_sel_item_index].sel)
 		deselect_subject(ap->subj);
 	    else
-		select_subject(ap->subj, 0);
+		select_subject(ap->subj, AUTO_KILL_NONE);
 	    update_page();
 	}
 	goto position_selector;
@@ -1292,13 +1292,13 @@ static bool select_item(SEL_UNION u)
 	    return false;
 	break;
       case SM_THREAD:
-	select_thread(u.sp->thread, 0);
+	select_thread(u.sp->thread, AUTO_KILL_NONE);
 	break;
       case SM_SUBJECT:
-	select_subject(u.sp, 0);
+	select_subject(u.sp, AUTO_KILL_NONE);
 	break;
       case SM_ARTICLE:
-	select_article(u.ap, 0);
+	select_article(u.ap, AUTO_KILL_NONE);
 	break;
       case SM_UNIVERSAL:
 	if (!(u.un->flags & g_sel_mask))
@@ -1386,7 +1386,7 @@ static bool deselect_item(SEL_UNION u)
 	    u.un->flags |= UF_DEL;
 	break;
       default:
-	deselect_article(u.ap, 0);
+	deselect_article(u.ap, AUTO_KILL_NONE);
 	break;
     }
     return true;

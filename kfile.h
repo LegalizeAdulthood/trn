@@ -24,8 +24,9 @@ enum killfilestate_flags : std::uint16_t
 };
 DECLARE_FLAGS_ENUM(killfilestate_flags, std::uint16_t);
 
-enum
+enum autokill_flags : std::uint16_t
 {
+    AUTO_KILL_NONE = 0x0,
     AUTO_KILL_THD = 0x8000,
     AUTO_KILL_SBJ = 0x4000,
     AUTO_KILL_FOL = 0x2000,
@@ -36,18 +37,15 @@ enum
     AUTO_SEL_FOL = 0x0200,
     AUTO_SEL_1 = 0x0100,
     AUTO_SEL_MASK = 0x0F00,
-    AUTO_OLD = 0x0080
-};
-
-/* The following defines are only valid as flags to function calls, used
- * in combination with the AUTO_* flags above. */
-enum
-{
+    AUTO_OLD = 0x0080,
+    /* The following defines are only valid as flags to function calls, used
+     * in combination with the AUTO_* flags above. */
     AFFECT_UNSEL = 0,
     AFFECT_ALL = 0x0001,
     ALSO_ECHO = 0x0002,   /* only works with [un]select_article() */
     SET_TORETURN = 0x0004 /* only works with kill_*() */
 };
+DECLARE_FLAGS_ENUM(autokill_flags, std::uint16_t);
 
 enum
 {
@@ -75,9 +73,9 @@ int do_kfile(FILE *kfp, int entering);
 void kill_unwanted(ART_NUM starting, const char *message, int entering);
 void rewrite_kfile(ART_NUM thru);
 void update_thread_kfile();
-void change_auto_flags(ARTICLE *ap, int auto_flag);
+void change_auto_flags(ARTICLE *ap, autokill_flags auto_flag);
 void clear_auto_flags(ARTICLE *ap);
-void perform_auto_flags(ARTICLE *ap, int thread_autofl, int subj_autofl, int chain_autofl);
+void perform_auto_flags(ARTICLE *ap, autokill_flags thread_autofl, autokill_flags subj_autofl, autokill_flags chain_autofl);
 void edit_kfile();
 void open_kfile(int local);
 void kf_append(const char *cmd, bool local);

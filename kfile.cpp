@@ -43,7 +43,7 @@ static int age_thread_commands(int keylen, HASHDATUM *data, int elapsed_days);
 
 static bool s_exitcmds{};
 static char s_thread_cmd_ltr[] = "JK,j+S.m";
-static unsigned short s_thread_cmd_flag[] = {
+static autokill_flags s_thread_cmd_flag[] = {
     AUTO_KILL_THD, AUTO_KILL_SBJ, AUTO_KILL_FOL, AUTO_KILL_1, AUTO_SEL_THD, AUTO_SEL_SBJ, AUTO_SEL_FOL, AUTO_SEL_1,
 };
 static char s_killglobal[] = KILLGLOBAL;
@@ -552,7 +552,7 @@ void update_thread_kfile()
     g_kf_state &= ~KFS_THREAD_CHANGES;
 }
 
-void change_auto_flags(ARTICLE *ap, int auto_flag)
+void change_auto_flags(ARTICLE *ap, autokill_flags auto_flag)
 {
     if (auto_flag > (ap->autofl & (AUTO_KILL_MASK|AUTO_SEL_MASK))) {
 	if (ap->autofl & AUTO_OLD)
@@ -567,12 +567,12 @@ void clear_auto_flags(ARTICLE *ap)
     if (ap->autofl) {
 	if (ap->autofl & AUTO_OLD)
 	    g_kf_changethd_cnt++;
-	ap->autofl = 0;
+	ap->autofl = AUTO_KILL_NONE;
 	g_kf_state |= g_kfs_thread_change_set;
     }
 }
 
-void perform_auto_flags(ARTICLE *ap, int thread_autofl, int subj_autofl, int chain_autofl)
+void perform_auto_flags(ARTICLE *ap, autokill_flags thread_autofl, autokill_flags subj_autofl, autokill_flags chain_autofl)
 {
     if (thread_autofl & AUTO_SEL_THD) {
 	if (g_sel_mode == SM_THREAD)

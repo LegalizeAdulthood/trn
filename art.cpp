@@ -1136,7 +1136,7 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 	break;
       case 1:
 	if (ap) {
-	    select_subthread(ap, 0);
+	    select_subthread(ap, AUTO_KILL_NONE);
 	    s_special = true;
 	    s_slines = 1;
 	    pushchar(Ctl('r'));
@@ -1148,7 +1148,7 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 	break;
       case 2:
 	if (ap) {
-	    kill_subthread(ap, 0);
+	    kill_subthread(ap, AUTO_KILL_NONE);
 	    s_special = true;
 	    s_slines = 1;
 	    pushchar(Ctl('r'));

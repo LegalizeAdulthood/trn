@@ -74,7 +74,7 @@ bool valid_article(ARTICLE *article)
 	data = hashfetch(g_msgid_hash, msgid, strlen(msgid));
 	if (data.dat_len) {
 	    safefree0(data.dat_ptr);
-	    article->autofl = data.dat_len & (AUTO_SEL_MASK | AUTO_KILL_MASK);
+	    article->autofl = static_cast<autokill_flags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
 	    if ((data.dat_len & KF_AGE_MASK) == 0)
 		article->autofl |= AUTO_OLD;
 	    else
@@ -178,7 +178,7 @@ ARTICLE *get_article(char *msgid)
     data = hashfetch(g_msgid_hash, msgid, strlen(msgid));
     if (data.dat_len) {
 	article = allocate_article(0);
-	article->autofl = data.dat_len & (AUTO_SEL_MASK | AUTO_KILL_MASK);
+	article->autofl = static_cast<autokill_flags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
 	if ((data.dat_len & KF_AGE_MASK) == 0)
 	    article->autofl |= AUTO_OLD;
 	else
@@ -206,10 +206,11 @@ void thread_article(ARTICLE *article, char *references)
     ARTICLE* prev;
     char* cp;
     char* end;
-    int chain_autofl = (article->autofl
-	| (article->subj->articles? article->subj->articles->autofl : 0));
-    int thread_autofl, subj_autofl = 0;
-    int rethreading = article->flags & AF_THREADED;
+    autokill_flags chain_autofl =
+        article->autofl | (article->subj->articles ? article->subj->articles->autofl : AUTO_KILL_NONE);
+    autokill_flags thread_autofl;
+    autokill_flags subj_autofl = AUTO_KILL_NONE;
+    const bool rethreading = article->flags & AF_THREADED != 0;
 
     /* We're definitely not a fake anymore */
     article->flags = (article->flags & ~AF_FAKE) | AF_THREADED;

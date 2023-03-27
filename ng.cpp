@@ -1342,10 +1342,10 @@ run_the_selector:
 	    if (!g_artp)
 		goto not_threaded;
 	    if (g_threaded_group) {
-		select_arts_thread(g_artp, 0);
+		select_arts_thread(g_artp, AUTO_KILL_NONE);
 		printf("\nSelected all articles in this thread.\n");
 	    } else {
-		select_arts_subject(g_artp, 0);
+		select_arts_subject(g_artp, AUTO_KILL_NONE);
 		printf("\nSelected all articles in this subject.\n");
 	    }
 	    termdown(2);

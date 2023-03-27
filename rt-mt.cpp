@@ -603,7 +603,7 @@ static int read_ids()
 		    HASHDATUM data;
 		    data = hashfetch(g_msgid_hash, article->msgid, len2+len+2);
 		    if (data.dat_len) {
-			article->autofl = data.dat_len&(AUTO_SEL_MASK|AUTO_KILL_MASK);
+			article->autofl = static_cast<autokill_flags>(data.dat_len) &(AUTO_SEL_MASK|AUTO_KILL_MASK);
 			if ((data.dat_len & KF_AGE_MASK) == 0)
 			    article->autofl |= AUTO_OLD;
 			else
@@ -642,7 +642,7 @@ static void tweak_data()
     ARTICLE* ap;
     ARTICLE** art_ptr;
     union { ARTICLE* ap; int num; } uni;
-    int fl;
+    autokill_flags fl;
 
     art_ptr = s_article_array;
     for (count = s_total.article; count--; ) {
@@ -672,7 +672,7 @@ static void tweak_data()
     for (count = s_total.article; count--; ) {
 	ap = *art_ptr++;
         fl = ap->autofl;
-        if (fl != 0)
+        if (fl != AUTO_KILL_NONE)
 	    perform_auto_flags(ap, fl, fl, fl);
     }
 

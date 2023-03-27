@@ -178,7 +178,7 @@ void cache_article(ARTICLE *ap)
 
     if (!!(ap->flags & AF_UNREAD) ^ g_sel_rereading) {
 	if (ap->subj->flags & g_sel_mask)
-	    select_article(ap, 0);
+	    select_article(ap, AUTO_KILL_NONE);
 	else {
 	    if (ap->subj->flags & SF_WASSELECTED) {
 #if 0
@@ -186,7 +186,7 @@ void cache_article(ARTICLE *ap)
 		    ap->flags |= g_sel_mask;
 		else
 #endif
-		    select_article(ap, 0);
+		    select_article(ap, AUTO_KILL_NONE);
 	    }
 	    ap->subj->flags |= SF_VISIT;
 	}

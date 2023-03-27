@@ -403,21 +403,21 @@ int perform(char *cmdlst, int output_level)
 		    fputs("\tJunked",stdout);
 	    }
 	    if (g_sel_rereading)
-		deselect_article(g_artp, output_level? ALSO_ECHO : 0);
+		deselect_article(g_artp, output_level? ALSO_ECHO : AUTO_KILL_NONE);
 	} else if (ch == '+') {
 	    if (savemode || cmdlst[1] == '+') {
 		if (g_sel_mode == SM_THREAD)
-		    select_arts_thread(g_artp, savemode? AUTO_SEL_THD : 0);
+		    select_arts_thread(g_artp, savemode? AUTO_SEL_THD : AUTO_KILL_NONE);
 		else
-		    select_arts_subject(g_artp, savemode? AUTO_SEL_SBJ : 0);
+		    select_arts_subject(g_artp, savemode? AUTO_SEL_SBJ : AUTO_KILL_NONE);
 		if (cmdlst[1] == '+')
 		    cmdlst++;
 	    } else
-		select_article(g_artp, output_level? ALSO_ECHO : 0);
+		select_article(g_artp, output_level? ALSO_ECHO : AUTO_KILL_NONE);
 	} else if (ch == 'S') {
 	    select_arts_subject(g_artp, AUTO_SEL_SBJ);
 	} else if (ch == '.') {
-	    select_subthread(g_artp, savemode? AUTO_SEL_FOL : 0);
+	    select_subthread(g_artp, savemode? AUTO_SEL_FOL : AUTO_KILL_NONE);
 	} else if (ch == '-') {
 	    if (cmdlst[1] == '-') {
 		if (g_sel_mode == SM_THREAD)
@@ -426,16 +426,16 @@ int perform(char *cmdlst, int output_level)
 		    deselect_arts_subject(g_artp);
 		cmdlst++;
 	    } else
-		deselect_article(g_artp, output_level? ALSO_ECHO : 0);
+		deselect_article(g_artp, output_level? ALSO_ECHO : AUTO_KILL_NONE);
 	} else if (ch == ',') {
-	    kill_subthread(g_artp, AFFECT_ALL | (savemode? AUTO_KILL_FOL : 0));
+	    kill_subthread(g_artp, AFFECT_ALL | (savemode? AUTO_KILL_FOL : AUTO_KILL_NONE));
 	} else if (ch == 'J') {
 	    if (g_sel_mode == SM_THREAD)
-		kill_arts_thread(g_artp,AFFECT_ALL|(savemode? AUTO_KILL_THD:0));
+		kill_arts_thread(g_artp,AFFECT_ALL|(savemode? AUTO_KILL_THD:AUTO_KILL_NONE));
 	    else
-		kill_arts_subject(g_artp,AFFECT_ALL|(savemode? AUTO_KILL_SBJ:0));
+		kill_arts_subject(g_artp,AFFECT_ALL|(savemode? AUTO_KILL_SBJ:AUTO_KILL_NONE));
 	} else if (ch == 'K' || ch == 'k') {
-	    kill_arts_subject(g_artp, AFFECT_ALL|(savemode? AUTO_KILL_SBJ : 0));
+	    kill_arts_subject(g_artp, AFFECT_ALL|(savemode? AUTO_KILL_SBJ : AUTO_KILL_NONE));
 	} else if (ch == 'x') {
 	    if (!was_read(g_art)) {
 		oneless(g_artp);
@@ -443,7 +443,7 @@ int perform(char *cmdlst, int output_level)
 		    fputs("\tKilled",stdout);
 	    }
 	    if (g_sel_rereading)
-		deselect_article(g_artp, 0);
+		deselect_article(g_artp, AUTO_KILL_NONE);
 	} else if (ch == 't') {
 	    entire_tree(g_artp);
 	} else if (ch == 'T') {
