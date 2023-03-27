@@ -4,6 +4,7 @@
 #ifndef TRN_RT_SELECT_H
 #define TRN_RT_SELECT_H
 
+#include "addng.h"
 #include "help.h"
 
 enum sel_mode
@@ -49,7 +50,7 @@ extern sel_sort_mode g_sel_univsort;
 extern char *g_sel_sort_string;
 extern int g_sel_direction;
 extern bool g_sel_exclusive;
-extern int g_sel_mask;
+extern addgroup_flags g_sel_mask;
 extern bool g_selected_only;
 extern ART_UNREAD g_selected_count;
 extern int g_selected_subj_cnt;

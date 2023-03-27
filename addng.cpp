@@ -250,7 +250,7 @@ static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch
 	node->flags = AGF_DEL;
 	break;
       default:
-	node->flags = 0;
+	node->flags = AGF_NONE;
 	break;
     }
     node->toread = (toread < 0)? 0 : toread;
@@ -279,7 +279,7 @@ static void add_to_list(const char *name, int toread, char_int ch)
 	node->flags = AGF_DEL;
 	break;
       default:
-	node->flags = 0;
+	node->flags = AGF_NONE;
 	break;
     }
     node->toread = (toread < 0)? 0 : toread;

@@ -5,26 +5,32 @@
 #ifndef TRN_ADDNG_H
 #define TRN_ADDNG_H
 
+#include <cstdint>
+
+#include "enum-flags.h"
+
 struct DATASRC;
 
-struct ADDGROUP
+enum addgroup_flags : std::uint8_t
 {
-    ADDGROUP* next;
-    ADDGROUP* prev;
-    DATASRC* datasrc;
-    ART_NUM toread;	/* number of articles to be read (for sorting) */
-    NG_NUM num;		/* a possible sort order for this group */
-    char flags;
-    char name[1];
-};
-
-enum
-{
+    AGF_NONE = 0x00,
     AGF_SEL = 0x01,
     AGF_DEL = 0x02,
     AGF_DELSEL = 0x04,
     AGF_INCLUDED = 0x10,
     AGF_EXCLUDED = 0x20
+};
+DECLARE_FLAGS_ENUM(addgroup_flags, std::uint8_t);
+
+struct ADDGROUP
+{
+    ADDGROUP      *next;
+    ADDGROUP      *prev;
+    DATASRC       *datasrc;
+    ART_NUM        toread; /* number of articles to be read (for sorting) */
+    NG_NUM         num;    /* a possible sort order for this group */
+    addgroup_flags flags;
+    char           name[1];
 };
 
 extern ADDGROUP* g_first_addgroup;

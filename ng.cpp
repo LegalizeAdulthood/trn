@@ -148,7 +148,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
     /* initialize the newsgroup data structures */
 
     g_sel_rereading = false;
-    g_sel_mask = AF_SEL;
+    g_sel_mask = AGF_SEL;
     ret = access_ng();
     if (ret == -2)
 	return NG_NOSERVER;

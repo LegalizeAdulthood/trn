@@ -67,7 +67,7 @@ sel_sort_mode g_sel_univsort{SS_NATURAL};
 char *g_sel_sort_string{};
 int g_sel_direction{1};
 bool g_sel_exclusive{};
-int g_sel_mask{1};
+addgroup_flags g_sel_mask{AGF_SEL};
 bool g_selected_only{};
 ART_UNREAD g_selected_count{};
 int g_selected_subj_cnt{};
@@ -210,7 +210,7 @@ char article_selector(char_int cmd)
 	s_page_char = '>';
 	g_sel_page_app = nullptr;
 	g_sel_page_sp = nullptr;
-	g_sel_mask = AF_DELSEL;
+	g_sel_mask = AGF_DELSEL;
     } else {
 	s_end_char = g_news_sel_cmds[0];
 	s_page_char = g_news_sel_cmds[1];
@@ -218,7 +218,7 @@ char article_selector(char_int cmd)
 	    g_sel_last_ap = g_curr_artp;
 	    g_sel_last_sp = g_curr_artp->subj;
 	}
-	g_sel_mask = AF_SEL;
+	g_sel_mask = AGF_SEL;
     }
     save_selected_only = g_selected_only;
     g_selected_only = true;
@@ -265,7 +265,7 @@ sel_exit:
 	s_sel_ret = 'Q';
     if (g_sel_rereading) {
 	g_sel_rereading = false;
-	g_sel_mask = AF_SEL;
+	g_sel_mask = AGF_SEL;
     }
     if (g_sel_mode != SM_ARTICLE || g_sel_sort == SS_GROUPS
      || g_sel_sort == SS_STRING) {
@@ -374,7 +374,7 @@ char multirc_selector()
   sel_restart:
     s_end_char = g_newsrc_sel_cmds[0];
     s_page_char = g_newsrc_sel_cmds[1];
-    g_sel_mask = MF_SEL;
+    g_sel_mask = AGF_SEL;
     s_extra_commands = multirc_commands;
 
     init_pages(FILL_LAST_PAGE);
@@ -441,10 +441,10 @@ char newsgroup_selector()
     s_end_char = g_newsgroup_sel_cmds[0];
     s_page_char = g_newsgroup_sel_cmds[1];
     if (g_sel_rereading) {
-	g_sel_mask = NF_DELSEL;
+	g_sel_mask = AGF_DELSEL;
 	g_sel_page_np = nullptr;
     } else
-	g_sel_mask = NF_SEL;
+	g_sel_mask = AGF_SEL;
     s_extra_commands = newsgroup_commands;
 
     init_pages(FILL_LAST_PAGE);
@@ -531,8 +531,8 @@ char addgroup_selector(int flags)
 	int i;
 	g_addnewbydefault = ADDNEW_SUB;
 	for (gp = g_first_addgroup, i = 0; gp; gp = gp->next, i++) {
-	    if (gp->flags & NF_SEL) {
-		gp->flags &= ~NF_SEL;
+	    if (gp->flags & AGF_SEL) {
+		gp->flags &= ~AGF_SEL;
 		get_ng(gp->name,flags);
 	    }
 	}
@@ -560,9 +560,9 @@ char option_selector()
     s_end_char = g_option_sel_cmds[0];
     s_page_char = g_option_sel_cmds[1];
     if (g_sel_rereading)
-	g_sel_mask = AF_DELSEL;
+	g_sel_mask = AGF_DELSEL;
     else
-	g_sel_mask = AF_SEL;
+	g_sel_mask = AGF_SEL;
     g_sel_page_op = -1;
     s_extra_commands = option_commands;
 
@@ -789,9 +789,9 @@ sel_restart:
 
     /* Setup for selecting articles to read or set unread */
     if (g_sel_rereading)
-	g_sel_mask = UF_DELSEL;
+	g_sel_mask = AGF_DELSEL;
     else
-	g_sel_mask = UF_SEL;
+	g_sel_mask = AGF_SEL;
     sel_page_univ = nullptr;
     s_extra_commands = universal_commands;
 
@@ -2526,7 +2526,7 @@ q does nothing.\n\n\
 	    else
 		gp = g_first_addgroup;
 	    while (gp) {
-		if ((!(gp->flags&AGF_SEL) ^ (ch=='J'))
+		if ((!(gp->flags&AGF_SEL) ^ (ch=='J' ? AGF_SEL : AGF_NONE))
 		 || (gp->flags & AGF_DEL)) {
 		    if (ch == 'J' || (gp->flags & AGF_INCLUDED))
 			gp->flags |= AGF_EXCLUDED;
