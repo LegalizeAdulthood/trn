@@ -46,7 +46,7 @@ static HTML_TAGS s_tagattr[LAST_TAG] = {
     {"br",		 2,	TF_NL | TF_BR				},
     {"div",		 3,	TF_BLOCK | TF_NL			},
     {"hr",		 2,	TF_NL					},
-    {"img",		 3,	0					},
+    {"img",		 3,	TF_NONE					},
     {"li",		 2,	TF_NL					},
     {"ol",		 2,	TF_BLOCK | TF_P | TF_NL | TF_LIST	},
     {"p",		 1,	TF_HAS_CLOSE | TF_P | TF_NL		},
