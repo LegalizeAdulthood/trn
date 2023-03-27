@@ -419,7 +419,6 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
     HASHDATUM data;
     SUBJECT* sp;
     char* subj_start;
-    short def_flags = 0;
 
     if (subject_has_Re(subj, &subj_start))
 	ap->flags |= AF_HAS_RE;
@@ -448,7 +447,6 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
 	hashdelete(s_subj_hash, ap->subj->str+4, strlen(ap->subj->str+4));
 	free(ap->subj->str);
 	ap->subj->str = newsubj;
-	ap->subj->flags |= def_flags;
 	data.dat_ptr = (char*)ap->subj;
 	hashstore(s_subj_hash, newsubj + 4, size, data);
     } else {
@@ -465,7 +463,7 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
 	    g_last_subject = sp;
 	    sp->str = newsubj;
 	    sp->thread_link = sp;
-	    sp->flags = def_flags;
+	    sp->flags = SF_NONE;
 
 	    data.dat_ptr = (char*)sp;
 	    hashstorelast(data);

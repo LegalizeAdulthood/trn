@@ -3,6 +3,9 @@
 #include "common.h"
 #include "datasrc.h"
 
+#include <addng.h>
+#include <cache.h>
+
 TEST(DataSrcFlags, bitwiseOr)
 {
     const datasrc_flags val = DF_NONE | DF_ADD_OK;
@@ -128,3 +131,35 @@ TEST(FieldFlags, bitwiseXorEqual)
 
     EXPECT_EQ(FF_CHECK4FIELD, val);
 }
+
+namespace
+{
+
+struct subject_addgroup_flag
+{
+    subject_flags  sf;
+    addgroup_flags agf;
+};
+
+struct SubjectAddGroupFlagEquivalences : testing::TestWithParam<subject_addgroup_flag>
+{
+};
+
+} // namespace
+
+static subject_addgroup_flag equivalences[] =
+{
+    { SF_NONE, AGF_NONE },
+    { SF_DEL, AGF_DEL },
+    { SF_SEL, AGF_SEL },
+    { SF_DELSEL, AGF_DELSEL }
+};
+
+TEST_P(SubjectAddGroupFlagEquivalences, sameValue)
+{
+    subject_addgroup_flag param = GetParam();
+
+    ASSERT_EQ(static_cast<int>(param.sf), static_cast<int>(param.agf));
+}
+
+INSTANTIATE_TEST_SUITE_P(TestSubjectAddGroupFlags, SubjectAddGroupFlagEquivalences, testing::ValuesIn(equivalences));

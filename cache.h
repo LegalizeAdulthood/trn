@@ -4,31 +4,21 @@
 #ifndef TRN_CACHE_H
 #define TRN_CACHE_H
 
+#include "enum-flags.h"
 #include "hash.h"
 #include "head.h"
 #include "list.h"
 #include "ngdata.h"
 
+#include <cstdint>
+
 struct ARTICLE;
 struct LIST;
 
-/* Subjects get their own structure */
-struct SUBJECT
-{
-    SUBJECT* next;
-    SUBJECT* prev;
-    ARTICLE* articles;
-    ARTICLE* thread;
-    SUBJECT* thread_link;
-    char* str;
-    time_t date;
-    short flags;
-    short misc;		/* used for temporary totals and subject numbers */
-};
-
 /* subject flags */
-enum
+enum subject_flags : std::uint16_t
 {
+    SF_NONE = 0x0000,
     SF_SEL = 0x0001,
     SF_DEL = 0x0002,
     SF_DELSEL = 0x0004,
@@ -38,6 +28,21 @@ enum
     SF_WASSELECTED = 0x0400,
     SF_SUBJTRUNCED = 0x1000,
     SF_ISOSUBJ = 0x2000
+};
+DECLARE_FLAGS_ENUM(subject_flags, std::uint16_t);
+
+/* Subjects get their own structure */
+struct SUBJECT
+{
+    SUBJECT      *next;
+    SUBJECT      *prev;
+    ARTICLE      *articles;
+    ARTICLE      *thread;
+    SUBJECT      *thread_link;
+    char         *str;
+    time_t        date;
+    subject_flags flags;
+    short         misc; /* used for temporary totals and subject numbers */
 };
 
 /* This is our article-caching structure */

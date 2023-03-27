@@ -2074,7 +2074,7 @@ q does nothing.\n\n\
 		    SUBJECT* sp;
 		    for (sp = g_first_subject; sp; sp = sp->next) {
 			if (sp->flags & SF_DEL) {
-			    sp->flags = 0;
+			    sp->flags = SF_NONE;
 			    if (g_sel_mode == SM_THREAD)
 				kill_thread(sp->thread, AFFECT_UNSEL);
 			    else
