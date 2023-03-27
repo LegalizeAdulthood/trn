@@ -459,7 +459,7 @@ save_result view_article()
 	    if (*g_art_line <= ' ')
 		continue;	/* Ignore empty or initially-whitespace lines */
 	    if (uue_prescan(g_art_line, &filename, &part, &total)) {
-		MIMECAP_ENTRY* mc = mime_FindMimecapEntry("image/jpeg",0); /*$$ refine this */
+		MIMECAP_ENTRY*mc = mime_FindMimecapEntry("image/jpeg", MCF_NONE); /*$$ refine this */
 		g_savefrom = g_artpos;
 		seekart(g_savefrom);
 		g_mime_section->type = UNHANDLED_MIME;

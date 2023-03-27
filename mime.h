@@ -139,47 +139,49 @@ extern char *g_multipart_separator;
 extern bool g_auto_view_inline;
 extern char *g_mime_getc_line;
 
+enum mimecap_flags : std::uint8_t
+{
+    MCF_NONE = 0x00,
+    MCF_NEEDSTERMINAL = 0x01,
+    MCF_COPIOUSOUTPUT = 0x02
+};
+DECLARE_FLAGS_ENUM(mimecap_flags, std::uint8_t);
+
 struct MIMECAP_ENTRY
 {
-    char* contenttype;
-    char* command;
-    char* testcommand;
-    char* label;
-    int flags;
+    char         *contenttype;
+    char         *command;
+    char         *testcommand;
+    char         *label;
+    mimecap_flags flags;
 };
 
-enum
-{
-    MCF_NEEDSTERMINAL = 0x0001,
-    MCF_COPIOUSOUTPUT = 0x0002
-};
-
-void mime_init();
-void mime_ReadMimecap(char *mcname);
-MIMECAP_ENTRY *mime_FindMimecapEntry(const char *contenttype, int skip_flags);
-bool mime_TypesMatch(const char *ct, const char *pat);
-int mime_Exec(char *cmd);
-void mime_InitSections();
-void mime_PushSection();
-bool mime_PopSection();
-void mime_ClearStruct(MIME_SECT *mp);
-void mime_SetArticle();
-void mime_ParseType(MIME_SECT *mp, char *s);
-void mime_ParseDisposition(MIME_SECT *mp, char *s);
-void mime_ParseEncoding(MIME_SECT *mp, char *s);
-void mime_ParseSubheader(FILE *ifp, char *next_line);
-void mime_SetState(char *bp);
-int mime_EndOfSection(char *bp);
-char *mime_ParseParams(char *str);
-char *mime_FindParam(char *s, char *param);
-char *mime_SkipWhitespace(char *s);
-void mime_DecodeArticle(bool view);
-void mime_Description(MIME_SECT *mp, char *s, int limit);
-int qp_decodestring(char *t, char *f, bool in_header);
-decode_state qp_decode(FILE *ifp, decode_state state);
-int b64_decodestring(char *t, char *f);
-decode_state b64_decode(FILE *ifp, decode_state state);
-decode_state cat_decode(FILE *ifp, decode_state state);
-int filter_html(char *t, char *f);
+void           mime_init();
+void           mime_ReadMimecap(char *mcname);
+MIMECAP_ENTRY *mime_FindMimecapEntry(const char *contenttype, mimecap_flags skip_flags);
+bool           mime_TypesMatch(const char *ct, const char *pat);
+int            mime_Exec(char *cmd);
+void           mime_InitSections();
+void           mime_PushSection();
+bool           mime_PopSection();
+void           mime_ClearStruct(MIME_SECT *mp);
+void           mime_SetArticle();
+void           mime_ParseType(MIME_SECT *mp, char *s);
+void           mime_ParseDisposition(MIME_SECT *mp, char *s);
+void           mime_ParseEncoding(MIME_SECT *mp, char *s);
+void           mime_ParseSubheader(FILE *ifp, char *next_line);
+void           mime_SetState(char *bp);
+int            mime_EndOfSection(char *bp);
+char *         mime_ParseParams(char *str);
+char *         mime_FindParam(char *s, char *param);
+char *         mime_SkipWhitespace(char *s);
+void           mime_DecodeArticle(bool view);
+void           mime_Description(MIME_SECT *mp, char *s, int limit);
+int            qp_decodestring(char *t, char *f, bool in_header);
+decode_state   qp_decode(FILE *ifp, decode_state state);
+int            b64_decodestring(char *t, char *f);
+decode_state   b64_decode(FILE *ifp, decode_state state);
+decode_state   cat_decode(FILE *ifp, decode_state state);
+int            filter_html(char *t, char *f);
 
 #endif

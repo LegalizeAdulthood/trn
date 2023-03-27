@@ -200,7 +200,7 @@ static char *mime_ParseEntryArg(char **cpp)
     return s;
 }
 
-MIMECAP_ENTRY *mime_FindMimecapEntry(const char *contenttype, int skip_flags)
+MIMECAP_ENTRY *mime_FindMimecapEntry(const char *contenttype, mimecap_flags skip_flags)
 {
     for (int i = 0; i <= s_mimecap_list->high; i++) {
 	MIMECAP_ENTRY *mcp = mimecap_ptr(i);
@@ -734,7 +734,7 @@ void mime_DecodeArticle(bool view)
 	  }
 	  default:
 	    if (view) {
-		mcp = mime_FindMimecapEntry(g_mime_section->type_name,0);
+		mcp = mime_FindMimecapEntry(g_mime_section->type_name, MCF_NONE);
 		if (!mcp) {
 		    printf("No view method for %s -- skipping.\n",
 			   g_mime_section->type_name);
