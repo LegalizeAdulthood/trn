@@ -45,31 +45,10 @@ struct SUBJECT
     short         misc; /* used for temporary totals and subject numbers */
 };
 
-/* This is our article-caching structure */
-struct ARTICLE
-{
-    ART_NUM num;
-    time_t date;
-    SUBJECT* subj;
-    char* from;
-    char* msgid;
-    char* xrefs;
-    ARTICLE* parent;		/* parent article */
-    ARTICLE* child1;		/* first child of a chain */
-    ARTICLE* sibling;		/* our next sibling */
-    ARTICLE* subj_next;		/* next article in subject order */
-    long bytes;
-    long lines;
-    int score;
-    unsigned short scoreflags;
-    unsigned short flags;	/* article state flags */
-    unsigned short flags2;	/* more state flags */
-    unsigned short autofl;	/* auto-processing flags */
-};
-
 /* article flags */
-enum
+enum article_flags : std::uint16_t
 {
+    AF_NONE = 0,
     AF_SEL = 0x0001,
     AF_DEL = 0x0002,
     AF_DELSEL = 0x0004,
@@ -86,10 +65,39 @@ enum
     AF_FROMTRUNCED = 0x2000,
     AF_TMPMEM = 0x4000,
     AF_FAKE = 0x8000,
+};
+DECLARE_FLAGS_ENUM(article_flags, std::uint16_t);
+
+enum article_flags2 : std::uint16_t
+{
+    AF2_NONE = 0x0000,
     AF2_WASUNREAD = 0x0001,
     AF2_NODEDRAWN = 0x0002,
     AF2_CHANGED = 0x0004,
     AF2_BOGUS = 0x0008
+};
+DECLARE_FLAGS_ENUM(article_flags2, std::uint16_t);
+
+/* This is our article-caching structure */
+struct ARTICLE
+{
+    ART_NUM        num;
+    time_t         date;
+    SUBJECT       *subj;
+    char          *from;
+    char          *msgid;
+    char          *xrefs;
+    ARTICLE       *parent;    /* parent article */
+    ARTICLE       *child1;    /* first child of a chain */
+    ARTICLE       *sibling;   /* our next sibling */
+    ARTICLE       *subj_next; /* next article in subject order */
+    long           bytes;
+    long           lines;
+    int            score;
+    unsigned short scoreflags;
+    article_flags  flags;  /* article state flags */
+    article_flags2 flags2; /* more state flags */
+    unsigned short autofl; /* auto-processing flags */
 };
 
 /* See kfile.h for the AUTO_* flags */

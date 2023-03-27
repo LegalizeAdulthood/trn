@@ -326,7 +326,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, int get_cmd)
 	    break;
 	}
 	g_artp = article_ptr(g_art);
-	if (doread || (!(g_artp->flags & AF_UNREAD) ^ !g_sel_rereading)) {
+	if (doread || (!(g_artp->flags & AF_UNREAD) ^ (!g_sel_rereading ? AF_SEL : AF_NONE))) {
 	    if (wanted(compex,g_art,howmuch)) {
 				    /* does the shoe fit? */
 		if (!cmdlst)

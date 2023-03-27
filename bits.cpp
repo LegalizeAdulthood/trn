@@ -384,8 +384,8 @@ void onemore(ARTICLE *ap)
 	g_ngptr->toread++;
 	if (ap->subj) {
 	    if (g_selected_only) {
-		if (ap->subj->flags & g_sel_mask) {
-		    ap->flags |= g_sel_mask;
+		if (ap->subj->flags & static_cast<subject_flags>(g_sel_mask)) {
+		    ap->flags |= static_cast<article_flags>(g_sel_mask);
 		    g_selected_count++;
 		}
 	    } else
@@ -401,9 +401,9 @@ void oneless(ARTICLE *ap)
     if (ap->flags & AF_UNREAD) {
 	ap->flags &= ~AF_UNREAD;
 	/* Keep g_selected_count accurate */
-	if (ap->flags & g_sel_mask) {
+	if (ap->flags & static_cast<article_flags>(g_sel_mask)) {
 	    g_selected_count--;
-	    ap->flags &= ~g_sel_mask;
+	    ap->flags &= ~static_cast<article_flags>(g_sel_mask);
 	}
 	if (g_ngptr->toread > TR_NONE)
 	    g_ngptr->toread--;

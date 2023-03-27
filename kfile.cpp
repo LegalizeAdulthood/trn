@@ -316,7 +316,7 @@ static bool kfile_junk(char *ptr, int killmask)
     if ((ap->flags & killmask) == AF_UNREAD)
 	set_read(ap);
     else if (ap->flags & g_sel_mask) {
-	ap->flags &= ~g_sel_mask;
+	ap->flags &= ~static_cast<article_flags>(g_sel_mask);
 	if (!g_selected_count--)
 	    g_selected_count = 0;
     }

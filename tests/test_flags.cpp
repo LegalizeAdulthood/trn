@@ -135,31 +135,56 @@ TEST(FieldFlags, bitwiseXorEqual)
 namespace
 {
 
-struct subject_addgroup_flag
+template <typename T>
+struct addgroup_flag_equivalence
 {
-    subject_flags  sf;
     addgroup_flags agf;
+    T              other;
 };
 
-struct SubjectAddGroupFlagEquivalences : testing::TestWithParam<subject_addgroup_flag>
+using addgroup_subject_flag = addgroup_flag_equivalence<subject_flags>;
+using addgroup_article_flag = addgroup_flag_equivalence<article_flags>;
+
+struct SubjectAddGroupFlagEquivalences : testing::TestWithParam<addgroup_subject_flag>
+{
+};
+
+struct ArticleAddGroupFlagEquivalences : testing::TestWithParam<addgroup_article_flag>
 {
 };
 
 } // namespace
 
-static subject_addgroup_flag equivalences[] =
+static addgroup_subject_flag subject_equivs[] =
 {
-    { SF_NONE, AGF_NONE },
-    { SF_DEL, AGF_DEL },
-    { SF_SEL, AGF_SEL },
-    { SF_DELSEL, AGF_DELSEL }
+    { AGF_NONE, SF_NONE },
+    { AGF_DEL, SF_DEL },
+    { AGF_SEL, SF_SEL },
+    { AGF_DELSEL, SF_DELSEL }
 };
 
 TEST_P(SubjectAddGroupFlagEquivalences, sameValue)
 {
-    subject_addgroup_flag param = GetParam();
+    addgroup_subject_flag param = GetParam();
 
-    ASSERT_EQ(static_cast<int>(param.sf), static_cast<int>(param.agf));
+    ASSERT_EQ(static_cast<int>(param.agf), static_cast<int>(param.other));
 }
 
-INSTANTIATE_TEST_SUITE_P(TestSubjectAddGroupFlags, SubjectAddGroupFlagEquivalences, testing::ValuesIn(equivalences));
+INSTANTIATE_TEST_SUITE_P(TestSubjectAddGroupFlags, SubjectAddGroupFlagEquivalences, testing::ValuesIn(subject_equivs));
+
+static addgroup_article_flag article_equivs[] =
+{
+    { AGF_NONE, AF_NONE },
+    { AGF_DEL, AF_DEL },
+    { AGF_SEL, AF_SEL },
+    { AGF_DELSEL, AF_DELSEL }
+};
+
+TEST_P(ArticleAddGroupFlagEquivalences, sameValue)
+{
+    addgroup_article_flag param = GetParam();
+
+    ASSERT_EQ(static_cast<int>(param.agf), static_cast<int>(param.other));
+}
+
+INSTANTIATE_TEST_SUITE_P(TestSubjectAddGroupFlags, ArticleAddGroupFlagEquivalences, testing::ValuesIn(article_equivs));

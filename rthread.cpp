@@ -618,12 +618,12 @@ void select_article(ARTICLE *ap, int auto_flags)
     bool echo = (auto_flags & ALSO_ECHO) != 0;
     auto_flags &= AUTO_SELS;
     if ((ap->flags & (AF_EXISTS|AF_UNREAD)) == desired_flags) {
-	if (!(ap->flags & g_sel_mask)) {
+	if (!(ap->flags & static_cast<article_flags>(g_sel_mask))) {
 	    g_selected_count++;
 	    if (g_verbose && echo && g_general_mode != 's')
 		fputs("\tSelected",stdout);
 	}
-	ap->flags = (ap->flags & ~AF_DEL) | g_sel_mask;
+	ap->flags = (ap->flags & ~AF_DEL) | static_cast<article_flags>(g_sel_mask);
     }
     if (auto_flags)
 	change_auto_flags(ap, auto_flags);
@@ -656,7 +656,7 @@ void select_subject(SUBJECT *subj, int auto_flags)
     auto_flags &= AUTO_SELS;
     for (ap = subj->articles; ap; ap = ap->subj_next) {
 	if ((ap->flags & (AF_EXISTS|AF_UNREAD|g_sel_mask)) == desired_flags) {
-	    ap->flags |= g_sel_mask;
+	    ap->flags |= static_cast<article_flags>(g_sel_mask);
 	    g_selected_count++;
 	}
 	if (auto_flags)
@@ -717,7 +717,7 @@ void select_subthread(ARTICLE *ap, int auto_flags)
     auto_flags &= AUTO_SELS;
     for (; ap != limit; ap = bump_art(ap)) {
 	if ((ap->flags & (AF_EXISTS|AF_UNREAD|g_sel_mask)) == desired_flags) {
-	    ap->flags |= g_sel_mask;
+	    ap->flags |= static_cast<article_flags>(g_sel_mask);
 	    g_selected_count++;
 	}
 	if (auto_flags)
@@ -738,7 +738,7 @@ void deselect_article(ARTICLE *ap, int auto_flags)
     bool echo = (auto_flags & ALSO_ECHO) != 0;
     auto_flags &= AUTO_SELS;
     if (ap->flags & g_sel_mask) {
-	ap->flags &= ~g_sel_mask;
+	ap->flags &= ~static_cast<article_flags>(g_sel_mask);
 	if (!g_selected_count--)
 	    g_selected_count = 0;
 	if (g_verbose && echo && g_general_mode != 's')
@@ -766,7 +766,7 @@ void deselect_subject(SUBJECT *subj)
 
     for (ap = subj->articles; ap; ap = ap->subj_next) {
 	if (ap->flags & g_sel_mask) {
-	    ap->flags &= ~g_sel_mask;
+	    ap->flags &= ~static_cast<article_flags>(g_sel_mask);
 	    if (!g_selected_count--)
 		g_selected_count = 0;
 	}

@@ -526,7 +526,7 @@ static int read_articles()
 	    article->sibling = nullptr;
 	if (article->subj) {
 	    article->flags |= AF_FROMTRUNCED | AF_THREADED
-		    | ((s_p_article.flags & ROOT_ARTICLE)? 0 : AF_HAS_RE);
+		    | ((s_p_article.flags & ROOT_ARTICLE)? AF_NONE : AF_HAS_RE);
 	    /* Give this subject to any faked parent articles */
 	    while (article->parent && !article->parent->subj) {
 		article->parent->subj = article->subj;
