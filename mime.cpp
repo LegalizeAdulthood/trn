@@ -27,11 +27,11 @@ bool g_auto_view_inline{false};
 char *g_mime_getc_line{nullptr};
 
 static char *mime_ParseEntryArg(char **cpp);
-static int mime_getc(FILE *fp);
+static int   mime_getc(FILE *fp);
 static char *tag_action(char *t, char *word, bool opening_tag);
 static char *output_prep(char *t);
-static char *do_newline(char *t, int flag);
-static int do_indent(char *t);
+static char *do_newline(char *t, html_flags flag);
+static int   do_indent(char *t);
 static char *find_attr(char *str, char *attr);
 
 #ifdef USE_UTF_HACK
@@ -313,9 +313,9 @@ void mime_ClearStruct(MIME_SECT *mp)
     safefree0(mp->html_blks);
     mp->type = NOT_MIME;
     mp->encoding = MENCODE_NONE;
-    mp->part = mp->total = mp->boundary_len = mp->html
-	     = mp->html_blkcnt = 0;
+    mp->part = mp->total = mp->boundary_len = mp->html_blkcnt = 0;
     mp->flags = MFS_NONE;
+    mp->html = HF_NONE;
     mp->html_line_start = 0;
 }
 
@@ -1285,7 +1285,7 @@ int filter_html(char *t, char *f)
 		}
 	    }
 	    if (cp) {
-		int flag_save = g_mime_section->html;
+		const html_flags flag_save = g_mime_section->html;
                 g_mime_section->html |= HF_NL_OK;
 		cp = line_start = do_newline(cp, HF_NL_OK);
 		int fudge = do_indent(nullptr);
@@ -1605,7 +1605,7 @@ static char *output_prep(char *t)
     return t + do_indent(t);
 }
 
-static char *do_newline(char *t, int flag)
+static char *do_newline(char *t, html_flags flag)
 {
     if (g_mime_section->html & flag) {
 	g_mime_section->html &= ~(flag|HF_SPACE_OK);

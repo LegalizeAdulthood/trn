@@ -43,6 +43,26 @@ enum mimesection_flags : std::uint16_t
 };
 DECLARE_FLAGS_ENUM(mimesection_flags, std::uint16_t);
 
+/* Only used with HTMLTEXT_MIME */
+enum html_flags : std::uint16_t
+{
+    HF_NONE = 0x0000,
+    HF_IN_TAG = 0x0001,
+    HF_IN_COMMENT = 0x0002,
+    HF_IN_HIDING = 0x0004,
+    HF_IN_PRE = 0x0008,
+    HF_IN_DQUOTE = 0x0010,
+    HF_IN_SQUOTE = 0x0020,
+    HF_QUEUED_P = 0x0040,
+    HF_P_OK = 0x0080,
+    HF_QUEUED_NL = 0x0100,
+    HF_NL_OK = 0x0200,
+    HF_NEED_INDENT = 0x0400,
+    HF_SPACE_OK = 0x0800,
+    HF_COMPACT = 0x1000
+};
+DECLARE_FLAGS_ENUM(html_flags, std::uint16_t);
+
 struct MIME_SECT
 {
     MIME_SECT *prev;
@@ -58,26 +78,8 @@ struct MIME_SECT
     short total;
     short boundary_len;
     mimesection_flags flags;
-    short html;
+    html_flags html;
     short html_blkcnt;
-};
-
-/* Only used with HTMLTEXT_MIME */
-enum
-{
-    HF_IN_TAG = 0x0001,
-    HF_IN_COMMENT = 0x0002,
-    HF_IN_HIDING = 0x0004,
-    HF_IN_PRE = 0x0008,
-    HF_IN_DQUOTE = 0x0010,
-    HF_IN_SQUOTE = 0x0020,
-    HF_QUEUED_P = 0x0040,
-    HF_P_OK = 0x0080,
-    HF_QUEUED_NL = 0x0100,
-    HF_NL_OK = 0x0200,
-    HF_NEED_INDENT = 0x0400,
-    HF_SPACE_OK = 0x0800,
-    HF_COMPACT = 0x1000
 };
 
 enum
