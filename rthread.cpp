@@ -737,7 +737,7 @@ void deselect_article(ARTICLE *ap, int auto_flags)
 {
     const bool echo = (auto_flags & ALSO_ECHO) != 0;
     auto_flags &= AUTO_SEL_MASK;
-    if (ap->flags & g_sel_mask) {
+    if (ap->flags & static_cast<article_flags>(g_sel_mask)) {
 	ap->flags &= ~static_cast<article_flags>(g_sel_mask);
 	if (!g_selected_count--)
 	    g_selected_count = 0;
