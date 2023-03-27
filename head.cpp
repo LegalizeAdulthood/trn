@@ -26,18 +26,18 @@
 #define MAGIC_OFF (HT_MAGICOK)
 
 #define XREF_CACHED HT_CACHED
-#define NGS_CACHED  0
-#define FILT_CACHED 0
+#define NGS_CACHED  HT_NONE
+#define FILT_CACHED HT_NONE
 
 /* This array must stay in the same order as the enum values header_line_type */
 HEADTYPE g_htype[HEAD_LAST] = {
     /* name             minpos   maxpos  length   flag */
-    {"",/*BODY*/	0,	0,	0,	0		},
-    {"",/*SHOWN*/	0,	0,	0,	0		},
+    {"",/*BODY*/	0,	0,	0,	HT_NONE		},
+    {"",/*SHOWN*/	0,	0,	0,	HT_NONE		},
     {"",/*HIDDEN*/	0,	0,	0,	HIDDEN		},
-    {"",/*CUSTOM*/	0,	0,	0,	0		},
+    {"",/*CUSTOM*/	0,	0,	0,	HT_NONE		},
     {"unrecognized",	0,	0,	12,	HIDDEN		},
-    {"author",		0,	0,	6,	0		},
+    {"author",		0,	0,	6,	HT_NONE		},
     {"bytes",		0,	0,	5,	HIDDEN|HT_CACHED},
     {"content-name",	0,	0,	12,	HIDDEN		},
     {"content-disposition",
@@ -46,22 +46,22 @@ HEADTYPE g_htype[HEAD_LAST] = {
     {"content-transfer-encoding",
 			0,	0,	25,	HIDDEN		},
     {"content-type",	0,	0,	12,	HIDDEN		},
-    {"distribution",	0,	0,	12,	0		},
+    {"distribution",	0,	0,	12,	HT_NONE		},
     {"date",		0,	0,	4,	MAGIC_ON	},
     {"expires",		0,	0,	7,	HIDDEN|MAGIC_ON	},
-    {"followup-to",	0,	0,	11,	0		},
+    {"followup-to",	0,	0,	11,	HT_NONE		},
     {"from",		0,	0,	4,	MAGIC_OFF|HT_CACHED},
     {"in-reply-to",	0,	0,	11,	HIDDEN		},
-    {"keywords",	0,	0,	8,	0		},
+    {"keywords",	0,	0,	8,	HT_NONE		},
     {"lines",		0,	0,	5,	HT_CACHED	},
     {"mime-version",	0,	0,	12,	MAGIC_ON|HIDDEN	},
     {"message-id",	0,	0,	10,	HIDDEN|HT_CACHED},
     {"newsgroups",	0,	0,	10,	MAGIC_ON|HIDDEN|NGS_CACHED},
     {"path",		0,	0,	4,	HIDDEN		},
     {"relay-version",	0,	0,	13,	HIDDEN		},
-    {"reply-to",	0,	0,	8,	0		},
+    {"reply-to",	0,	0,	8,	HT_NONE		},
     {"references",	0,	0,	10,	HIDDEN|FILT_CACHED},
-    {"summary",		0,	0,	7,	0		},
+    {"summary",		0,	0,	7,	HT_NONE		},
     {"subject",		0,	0,	7,	MAGIC_ON|HT_CACHED},
     {"xref",		0,	0,	4,	HIDDEN|XREF_CACHED},
 };

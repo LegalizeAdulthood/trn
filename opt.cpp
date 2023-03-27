@@ -159,8 +159,8 @@ int g_sel_next_op{};
 
 static char* hidden_list();
 static char* magic_list();
-static void set_header_list(int flag, int defflag, char *str);
-static int parse_mouse_buttons(char **cpp, const char *btns);
+static void  set_header_list(headtype_flags flag, headtype_flags defflag, char *str);
+static int   parse_mouse_buttons(char **cpp, const char *btns);
 static char *expand_mouse_buttons(char *cp, int cnt);
 
 void opt_init(int argc, char *argv[], char **tcbufptr)
@@ -1089,7 +1089,7 @@ static char *magic_list()
     return g_buf+1;
 }
 
-static void set_header_list(int flag, int defflag, char *str)
+static void set_header_list(headtype_flags flag, headtype_flags defflag, char *str)
 {
     int i;
     bool setit;
@@ -1126,7 +1126,7 @@ static void set_header_list(int flag, int defflag, char *str)
     }
 }
 
-void set_header(char *s, int flag, bool setit)
+void set_header(char *s, headtype_flags flag, bool setit)
 {
     int i;
     int len = strlen(s);
