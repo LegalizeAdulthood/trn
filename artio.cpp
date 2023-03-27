@@ -43,7 +43,6 @@ void artio_init()
 
 FILE *artopen(ART_NUM artnum, ART_NUM pos)
 {
-    char artname[MAXFILENAME];		/* filename of current article */
     ARTICLE* ap = article_find(artnum);
 
     if (!ap || !artnum || (ap->flags & (AF_EXISTS|AF_FAKE)) != AF_EXISTS) {
@@ -55,26 +54,33 @@ FILE *artopen(ART_NUM artnum, ART_NUM pos)
 	return g_artfp;			/* and say we succeeded */
     }
     artclose();
-retry_open:
-    if (g_datasrc->flags & DF_REMOTE)
-	nntp_body(artnum);
-    else
+
+    while (true)
     {
-	sprintf(artname,"%ld",(long)artnum);
-	g_artfp = fopen(artname,"r");
-	/*artio_setbuf(g_artfp);$$*/
-    }
-    if (!g_artfp) {
+        if (g_datasrc->flags & DF_REMOTE)
+            nntp_body(artnum);
+        else
+        {
+            char artname[MAXFILENAME]; /* filename of current article */
+            sprintf(artname, "%ld", (long) artnum);
+            g_artfp = fopen(artname, "r");
+        }
+        if (!g_artfp)
+        {
 #ifdef ETIMEDOUT
-	if (errno == ETIMEDOUT)
-	    goto retry_open;
+            if (errno == ETIMEDOUT)
+                continue;
 #endif
-	if (errno == EINTR)
-	    goto retry_open;
-	uncache_article(ap,false);
-    } else {
-	g_openart = artnum;		/* remember what we did here */
-	seekart(pos);
+            if (errno == EINTR)
+                continue;
+            uncache_article(ap, false);
+        }
+        else
+        {
+            g_openart = artnum; /* remember what we did here */
+            seekart(pos);
+        }
+        break;
     }
     return g_artfp;			/* and return either fp or nullptr */
 }
