@@ -1,0 +1,6 @@
+#ifndef TRN_TEST_CONFIG_H
+#define TRN_TEST_CONFIG_H
+
+#define TRN_TEST_TEMP_DIR "@CMAKE_CURRENT_BINARY_DIR@/test_data"
+
+#endif
