@@ -46,12 +46,6 @@ protected:
                                                      g_real_name = savestr("Bonzo the Monkey");
                                                      return true;
                                                  }};
-    std::function<bool(char *)>  m_set_host_fn{[](char *)
-                                              {
-                                                  g_local_host = savestr("localhost");
-                                                  g_p_host_name = savestr("news.gmane.io");
-                                                  return true;
-                                              }};
 };
 
 } // namespace
