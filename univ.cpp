@@ -370,7 +370,7 @@ void univ_add_virtgroup(const char *grpname)
 	return;
     }
     ui = univ_add(UN_VGROUP,nullptr);
-    ui->data.vgroup.flags = (char)0;
+    ui->data.vgroup.flags = UF_VG_NONE;
     if (s_univ_use_min_score) {
 	ui->data.vgroup.flags |= UF_VG_MINSCORE;
 	ui->data.vgroup.minscore = s_univ_min_score;

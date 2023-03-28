@@ -9,6 +9,8 @@
 #include "enum-flags.h"
 #include "help.h"
 
+#include <cstdint>
+
 struct HASHTABLE;
 
 enum univ_item_type
@@ -28,13 +30,6 @@ enum univ_item_type
     UN_GROUP_DESEL = -2,  /* group that is deselected (with !group) */
     UN_VGROUP_DESEL = -3, /* virtual newsgroup deselected (with !group) */
     UN_DELETED = -4       /* generic deleted item -- no per-item memory */
-};
-
-/* virtual/merged group flags (UNIV_VIRT_GROUP.flags) */
-enum
-{
-    UF_VG_MINSCORE = 0x01, /* articles use minimum score */
-    UF_VG_MAXSCORE = 0x02  /* articles use maximum score */
 };
 
 struct UNIV_GROUPMASK_DATA
@@ -59,12 +54,21 @@ struct UNIV_VIRT_DATA
     ART_NUM num;
 };
 
+/* virtual/merged group flags (UNIV_VIRT_GROUP.flags) */
+enum virtgroup_flags : std::uint8_t
+{
+    UF_VG_NONE = 0x00,
+    UF_VG_MINSCORE = 0x01, /* articles use minimum score */
+    UF_VG_MAXSCORE = 0x02  /* articles use maximum score */
+};
+DECLARE_FLAGS_ENUM(virtgroup_flags, std::uint8_t);
+
 struct UNIV_VIRT_GROUP
 {
-    char* ng;
-    int minscore;
-    int maxscore;
-    char flags;
+    char           *ng;
+    int             minscore;
+    int             maxscore;
+    virtgroup_flags flags;
 };
 
 struct UNIV_NEWSGROUP
