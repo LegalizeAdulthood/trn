@@ -19,21 +19,20 @@
 #include "util.h"
 #include "util2.h"
 
+#include <cstdint>
+
 enum
 {
     DB_VERSION = 2
 };
 
-using BYTE = unsigned char;
-using WORD = short;
-#ifndef __alpha
-using LONG = long;
-#else
-using LONG = int;
-#endif
+using BYTE = std::uint8_t;
+using WORD = std::uint16_t;
+using LONG = std::uint32_t;
 
-enum
+enum packedarticle_flags
 {
+    PA_NONE = 0x0000,
     ROOT_ARTICLE = 0x0001, /* article flag definitions */
     HAS_XREFS = 0x0004     /* article has an xref line */
 };
@@ -52,7 +51,7 @@ struct PACKED_ARTICLE
     LONG num;
     LONG date;
     WORD subject, author;
-    WORD flags;
+    packedarticle_flags flags;
     WORD child_cnt;
     WORD parent;
     WORD padding;
