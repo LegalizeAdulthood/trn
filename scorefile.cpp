@@ -1001,19 +1001,19 @@ char *sf_get_line(ART_NUM a, header_line_type h)
 /* given an index into g_sf_entries, print information about that index */
 void sf_print_match(int indx)
 {
-    int i,j,k;
-    int level,tmplevel;		/* level is initialized iff used */
-    char* head_name;
-    char* pattern;
+    int  i, k;
+    int  level; /* level is initialized iff used */
+    char*head_name;
+    char*pattern;
 
     for (i = indx; i >= 0; i--) {
-	j = g_sf_entries[i].head_type;
+	int j = g_sf_entries[i].head_type;
 	if (j == SF_FILE_MARK_START)  /* found immediate inclusion. */
 	    break;
 	if (j == SF_FILE_MARK_END) {	/* found included file, skip */
-	    tmplevel = g_sf_entries[i].score;
+	    int tmplevel = g_sf_entries[i].score;
 	    for (k = i; k >= 0; k--) {
-		if (g_sf_entries[k].head_type == SF_FILE_MARK_START
+		if (g_sf_entries[k].head_type == static_cast<header_line_type>(SF_FILE_MARK_START)
 		 && g_sf_entries[k].score == tmplevel)
 		    break;	/* inner for loop */
 	    }
@@ -1024,7 +1024,7 @@ void sf_print_match(int indx)
 	level = g_sf_entries[i].score;
     /* print the file markers. */
     for ( ; i >= 0; i--) {
-	if (g_sf_entries[i].head_type == SF_FILE_MARK_START
+	if (g_sf_entries[i].head_type == static_cast<header_line_type>(SF_FILE_MARK_START)
 	 && g_sf_entries[i].score <= level) {
 	    level--;	/* go out... */
 	    for (k = 0; k < level; k++)
@@ -1057,7 +1057,7 @@ void sf_exclude_file(const char *fname)
     SF_ENTRY* tmp_entries;
 
     for (start = 0; start < g_sf_num_entries; start++)
-	if (g_sf_entries[start].head_type == SF_FILE_MARK_START
+	if (g_sf_entries[start].head_type == static_cast<header_line_type>(SF_FILE_MARK_START)
 	 && !strcmp(g_sf_entries[start].str1,fname))
 	    break;
     if (start == g_sf_num_entries) {
