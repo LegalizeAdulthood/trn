@@ -488,8 +488,8 @@ try_again:
 	    }
 	    if (!ui_elig)
 	        continue;
-	    if (!g_sel_exclusive || (ui->flags & g_sel_mask)) {
-		if (g_sel_rereading && !(ui->flags & g_sel_mask))
+	    if (!g_sel_exclusive || (ui->flags & static_cast<univitem_flags>(g_sel_mask))) {
+		if (g_sel_rereading && !(ui->flags & static_cast<univitem_flags>(g_sel_mask)))
 		    ui->flags |= UF_DEL;
 		ui->flags |= UF_INCLUDED;
 		g_sel_total_obj_cnt++;
@@ -1470,7 +1470,7 @@ try_again:
 	    if (!(ui->flags & UF_INCLUDED))
 		continue;
 
-	    sel = !!(ui->flags & g_sel_mask) + (ui->flags & UF_DEL);
+	    sel = !!(ui->flags & static_cast<univitem_flags>(g_sel_mask)) + (ui->flags & UF_DEL);
 	    g_sel_items[g_sel_page_item_cnt].u.un = ui;
 	    g_sel_items[g_sel_page_item_cnt].line = g_term_line;
 	    g_sel_items[g_sel_page_item_cnt].sel = sel;

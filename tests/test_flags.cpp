@@ -7,6 +7,7 @@
 #include <datasrc.h>
 #include <ngdata.h>
 #include <rcstuff.h>
+#include <univ.h>
 
 TEST(DataSrcFlags, bitwiseOr)
 {
@@ -148,6 +149,7 @@ using addgroup_subject_flag = addgroup_flag_equivalence<subject_flags>;
 using addgroup_article_flag = addgroup_flag_equivalence<article_flags>;
 using addgroup_newsgroup_flag = addgroup_flag_equivalence<newsgroup_flags>;
 using addgroup_multirc_flag = addgroup_flag_equivalence<multirc_flags>;
+using addgroup_univitem_flag = addgroup_flag_equivalence<univitem_flags>;
 
 struct SubjectAddGroupFlagEquivalences : testing::TestWithParam<addgroup_subject_flag>
 {
@@ -165,14 +167,20 @@ struct MultiRCAddGroupFlagEquivalence : testing::TestWithParam<addgroup_multirc_
 {
 };
 
+struct UnivItemAddGroupFlagEquivalence : testing::TestWithParam<addgroup_univitem_flag>
+{
+};
+
 } // namespace
 
 static addgroup_subject_flag subject_equivs[] =
 {
+    // clang-format off
     { AGF_NONE, SF_NONE },
     { AGF_DEL, SF_DEL },
     { AGF_SEL, SF_SEL },
     { AGF_DELSEL, SF_DELSEL }
+    // clang-format on
 };
 
 TEST_P(SubjectAddGroupFlagEquivalences, sameValue)
@@ -186,10 +194,12 @@ INSTANTIATE_TEST_SUITE_P(TestSubjectAddGroupFlags, SubjectAddGroupFlagEquivalenc
 
 static addgroup_article_flag article_equivs[] =
 {
+    // clang-format off
     { AGF_NONE, AF_NONE },
     { AGF_DEL, AF_DEL },
     { AGF_SEL, AF_SEL },
     { AGF_DELSEL, AF_DELSEL }
+    // clang-format on
 };
 
 TEST_P(ArticleAddGroupFlagEquivalences, sameValue)
@@ -203,10 +213,12 @@ INSTANTIATE_TEST_SUITE_P(TestArticleAddGroupFlags, ArticleAddGroupFlagEquivalenc
 
 static addgroup_newsgroup_flag newsgroup_equivs[] =
 {
+    // clang-format off
     { AGF_NONE, NF_NONE },
     { AGF_DEL, NF_DEL },
     { AGF_SEL, NF_SEL },
     { AGF_DELSEL, NF_DELSEL }
+    // clang-format on
 };
 
 TEST_P(NewsgroupAddGroupFlagEquivalence, sameValue)
@@ -220,10 +232,12 @@ INSTANTIATE_TEST_SUITE_P(TestNewsgroupAddGroupFlags, NewsgroupAddGroupFlagEquiva
 
 static addgroup_multirc_flag multirc_equivs[] =
 {
+    // clang-format off
     { AGF_NONE, MF_NONE },
     // { AGF_DEL, MF_DEL },
     { AGF_SEL, MF_SEL },
     // { AGF_DELSEL, MNF_DELSEL }
+    // clang-format on
 };
 
 TEST_P(MultiRCAddGroupFlagEquivalence, sameValue)
@@ -234,3 +248,22 @@ TEST_P(MultiRCAddGroupFlagEquivalence, sameValue)
 }
 
 INSTANTIATE_TEST_SUITE_P(TestMultiRCAddGroupFlags, MultiRCAddGroupFlagEquivalence, testing::ValuesIn(multirc_equivs));
+
+static addgroup_univitem_flag univitem_equivs[] =
+{
+    // clang-format off
+    { AGF_NONE, UF_NONE },
+    { AGF_DEL, UF_DEL },
+    { AGF_SEL, UF_SEL },
+    { AGF_DELSEL, UF_DELSEL }
+    // clang-format on
+};
+
+TEST_P(UnivItemAddGroupFlagEquivalence, sameValue)
+{
+    addgroup_univitem_flag param = GetParam();
+
+    ASSERT_EQ(static_cast<int>(param.agf), static_cast<int>(param.other));
+}
+
+INSTANTIATE_TEST_SUITE_P(TestUnivItemAddGroupFlags, UnivItemAddGroupFlagEquivalence, testing::ValuesIn(univitem_equivs));

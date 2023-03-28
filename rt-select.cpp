@@ -1305,7 +1305,7 @@ static bool select_item(SEL_UNION u)
       case SM_UNIVERSAL:
 	if (!(u.un->flags & g_sel_mask))
 	    g_selected_count++;
-	u.un->flags = (u.un->flags & ~UF_DEL) | g_sel_mask;
+	u.un->flags = (u.un->flags & ~UF_DEL) | static_cast<univitem_flags>(g_sel_mask);
 	break;
     }
     return true;
@@ -1382,8 +1382,8 @@ static bool deselect_item(SEL_UNION u)
 	deselect_subject(u.sp);
 	break;
       case SM_UNIVERSAL:
-	if (u.un->flags & g_sel_mask) {
-	    u.un->flags &= ~g_sel_mask;
+	if (u.un->flags & static_cast<univitem_flags>(g_sel_mask)) {
+	    u.un->flags &= ~static_cast<univitem_flags>(g_sel_mask);
 	    g_selected_count--;
 	}
 	if (g_sel_rereading)

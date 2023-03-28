@@ -6,6 +6,7 @@
 #ifndef TRN_UNIV_H
 #define TRN_UNIV_H
 
+#include "enum-flags.h"
 #include "help.h"
 
 struct HASHTABLE;
@@ -27,16 +28,6 @@ enum univ_item_type
     UN_GROUP_DESEL = -2,  /* group that is deselected (with !group) */
     UN_VGROUP_DESEL = -3, /* virtual newsgroup deselected (with !group) */
     UN_DELETED = -4       /* generic deleted item -- no per-item memory */
-};
-
-/* selector flags */
-enum
-{
-    UF_SEL = 0x01,
-    UF_DEL = 0x02,
-    UF_DELSEL = 0x04,
-    UF_INCLUDED = 0x10,
-    UF_EXCLUDED = 0x20
 };
 
 /* virtual/merged group flags (UNIV_VIRT_GROUP.flags) */
@@ -98,16 +89,28 @@ union UNIV_DATA
     UNIV_TEXTFILE textfile;
 };
 
+/* selector flags */
+enum univitem_flags
+{
+    UF_NONE = 0x00,
+    UF_SEL = 0x01,
+    UF_DEL = 0x02,
+    UF_DELSEL = 0x04,
+    UF_INCLUDED = 0x10,
+    UF_EXCLUDED = 0x20
+};
+DECLARE_FLAGS_ENUM(univitem_flags, int);
+
 struct UNIV_ITEM
 {
-    UNIV_ITEM* next;
-    UNIV_ITEM* prev;
-    int num;                            /* natural order (for sort) */
-    int flags;                          /* for selector */
-    univ_item_type type;                /* what kind of object is it? */
-    char *desc;                         /* default description */
-    int score;
-    UNIV_DATA data;                     /* describes the object */
+    UNIV_ITEM     *next;
+    UNIV_ITEM     *prev;
+    int            num;   /* natural order (for sort) */
+    univitem_flags flags; /* for selector */
+    univ_item_type type;  /* what kind of object is it? */
+    char          *desc;  /* default description */
+    int            score;
+    UNIV_DATA      data; /* describes the object */
 };
 
 extern int g_univ_ever_init;      /* have we ever been initialized? */

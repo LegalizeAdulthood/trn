@@ -160,7 +160,7 @@ UNIV_ITEM *univ_add(univ_item_type type, const char *desc)
 
     UNIV_ITEM *node = (UNIV_ITEM*)safemalloc(sizeof(UNIV_ITEM));
 
-    node->flags = 0;
+    node->flags = UF_NONE;
     if (desc)
 	node->desc = savestr(desc);
     else
