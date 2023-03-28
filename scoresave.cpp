@@ -248,7 +248,7 @@ ART_NUM sc_sv_make_line(ART_NUM a)
     lastscore = 0;
 
     for (a = article_first(a); a <= g_lastart && num_output < 50; a = article_next(a)) {
-	if (article_unread(a) && SCORED(a)) {
+	if (article_unread(a) && article_scored(a)) {
 	    if (s_last != a-1) {
 		if (s_last == a-2) {
 		    *s++ = 's';
@@ -264,7 +264,7 @@ ART_NUM sc_sv_make_line(ART_NUM a)
 	    /* check for repeating scores */
 	    if (score == lastscore && lastscore_valid) {
 		a = article_next(a);
-		for (i = 1; a <= g_lastart && article_unread(a) && SCORED(a)
+		for (i = 1; a <= g_lastart && article_unread(a) && article_scored(a)
 			 && article_ptr(a)->score == score; i++)
 		    a = article_next(a);
 		a = article_prev(a);	/* prepare for the for loop increment */
@@ -375,7 +375,7 @@ void sc_load_scores()
         if (!article_unread(a) && !g_sa_mode_read_elig)
 	    continue;
 	total++;
-	if (SCORED(a))
+	if (article_scored(a))
 	    scored++;
     } /* for */
 

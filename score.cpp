@@ -86,7 +86,7 @@ void sc_init(bool pend_wait)
 	if (g_sc_sf_force_init)
 	    i = g_lastart+1;	/* skip loop */
 	for (i = article_first(i); i <= g_lastart; i = article_next(i)) {
-	    if (!SCORED(i) && (g_sc_fill_read || article_unread(i)))
+	    if (!article_scored(i) && (g_sc_fill_read || article_unread(i)))
 		break;
 	}
 	if (i == g_lastart)	/* all scored */
@@ -100,14 +100,14 @@ void sc_init(bool pend_wait)
 
     g_sc_do_spin = false;
     for (i = article_last(g_lastart); i >= g_absfirst; i = article_prev(i)) {
-	if (SCORED(i))
+	if (article_scored(i))
 	    break;
     }
     if (i < g_absfirst) {			/* none scored yet */
 	/* score one article, or give up */
 	for (a = article_last(g_lastart); a >= g_absfirst; a = article_prev(a)) {
 	    sc_score_art(a,true);	/* I want it *now* */
-	    if (SCORED(a))
+	    if (article_scored(a))
 		break;
 	}
 	if (a < g_absfirst) {		/* no articles scored */
@@ -224,7 +224,7 @@ int sc_score_art(ART_NUM a, bool now)
 	g_sc_sf_force_init = false;
     }
 
-    if (!SCORED(a)) {
+    if (!article_scored(a)) {
 	if (g_sc_sf_delay) {
 	    sf_init();
 	    g_sc_sf_delay = false;
@@ -290,11 +290,11 @@ void sc_lookahead(bool flag, bool nowait)
 	g_sc_fill_max = article_next(g_sc_fill_max);
 	/* skip over some articles quickly */
 	while (g_sc_fill_max < g_lastart
-	 && (SCORED(g_sc_fill_max)
+	 && (article_scored(g_sc_fill_max)
 	  || (!g_sc_fill_read && !article_unread(g_sc_fill_max))))
 	    g_sc_fill_max = article_next(g_sc_fill_max);
 
-	if (SCORED(g_sc_fill_max))
+	if (article_scored(g_sc_fill_max))
 	    continue;
 	if (!g_sc_fill_read)	/* score only unread */
 	    if (!article_unread(g_sc_fill_max))
@@ -323,7 +323,7 @@ int sc_percent_scored()
         if (!article_unread(i) && !g_sa_mode_read_elig)
             continue;
 	total++;
-	if (SCORED(i))
+	if (article_scored(i))
 	    scored++;
     } /* for */
     if (total == 0)

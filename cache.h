@@ -79,6 +79,15 @@ enum article_flags2 : std::uint16_t
 };
 DECLARE_FLAGS_ENUM(article_flags2, std::uint16_t);
 
+/* specific scoreflag meanings:  (note: bad placement, but where else?) */
+enum score_flags
+{
+    SFLAG_NONE = 0x00,
+    SFLAG_AUTHOR = 0x01, /* author has a score (match on FROM: line) */
+    SFLAG_SCORED = 0x10 /* if true, the article has been scored */
+};
+DECLARE_FLAGS_ENUM(score_flags, std::uint16_t)
+
 /* This is our article-caching structure */
 struct ARTICLE
 {
@@ -95,7 +104,7 @@ struct ARTICLE
     long           bytes;
     long           lines;
     int            score;
-    unsigned short scoreflags;
+    score_flags    scoreflags;
     article_flags  flags;  /* article state flags */
     article_flags2 flags2; /* more state flags */
     autokill_flags autofl; /* auto-processing flags */
@@ -207,6 +216,10 @@ inline bool is_available(ART_NUM an)
 inline bool is_unavailable(ART_NUM an)
 {
     return !is_available(an);
+}
+inline bool article_scored(ART_NUM an)
+{
+    return article_ptr(an)->scoreflags & SFLAG_SCORED;
 }
 
 #endif

@@ -12,15 +12,6 @@ enum
     LOWSCORE = -999999
 };
 
-/* specific scoreflag meanings:  (note: bad placement, but where else?) */
-enum
-{
-    SFLAG_AUTHOR = 1, /* author has a score (match on FROM: line) */
-    SFLAG_SCORED = 16 /* if true, the article has been scored */
-};
-
-#define SCORED(a) (article_ptr(a)->scoreflags & SFLAG_SCORED)
-
 extern bool g_kill_thresh_active;
 extern int g_kill_thresh;       /* KILL articles at or below this score */
 extern ART_NUM g_sc_fill_max;   /* maximum art# scored by fill-routine */

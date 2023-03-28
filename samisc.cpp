@@ -39,7 +39,7 @@ bool sa_basic_elig(long a)
     if (g_sa_mode_zoom && !sa_selected1(a))
 	return false;
     if (g_sa_mode_order == 2)	/* score order */
-	if (!SCORED(artnum))
+	if (!article_scored(artnum))
 	    return false;
     /* now just check availability */
     if (is_unavailable(artnum)) {
@@ -160,15 +160,15 @@ int sa_compare(long a, long b)
 	/* do not score the articles here--move the articles to
 	 * the end of the list if unscored.
 	 */
-	if (!SCORED(g_sa_ents[a].artnum)) {                       /* a unscored */
-	    if (!SCORED(g_sa_ents[b].artnum)) { /* a+b unscored */
+	if (!article_scored(g_sa_ents[a].artnum)) {                       /* a unscored */
+	    if (!article_scored(g_sa_ents[b].artnum)) { /* a+b unscored */
 	        if (a < b)                                        /* keep ordering consistent */
 		    return -1;
 		return 1;
 	    }
 	    return 1;		/* move unscored (a) to end */
 	}
-	if (!SCORED(g_sa_ents[b].artnum))	/* only b unscored */
+	if (!article_scored(g_sa_ents[b].artnum))	/* only b unscored */
 	    return -1;		/* move unscored (b) to end */
 
 	i = sc_score_art(g_sa_ents[a].artnum,true);
