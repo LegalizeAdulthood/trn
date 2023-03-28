@@ -1,10 +1,11 @@
 #include <gtest/gtest.h>
 
-#include "common.h"
-#include "datasrc.h"
+#include <common.h>
 
 #include <addng.h>
 #include <cache.h>
+#include <datasrc.h>
+#include <ngdata.h>
 
 TEST(DataSrcFlags, bitwiseOr)
 {
@@ -144,12 +145,17 @@ struct addgroup_flag_equivalence
 
 using addgroup_subject_flag = addgroup_flag_equivalence<subject_flags>;
 using addgroup_article_flag = addgroup_flag_equivalence<article_flags>;
+using addgroup_newsgroup_flag = addgroup_flag_equivalence<newsgroup_flags>;
 
 struct SubjectAddGroupFlagEquivalences : testing::TestWithParam<addgroup_subject_flag>
 {
 };
 
 struct ArticleAddGroupFlagEquivalences : testing::TestWithParam<addgroup_article_flag>
+{
+};
+
+struct NewsgroupAddGroupFlagEquivalence : testing::TestWithParam<addgroup_newsgroup_flag>
 {
 };
 
@@ -188,3 +194,20 @@ TEST_P(ArticleAddGroupFlagEquivalences, sameValue)
 }
 
 INSTANTIATE_TEST_SUITE_P(TestSubjectAddGroupFlags, ArticleAddGroupFlagEquivalences, testing::ValuesIn(article_equivs));
+
+static addgroup_newsgroup_flag newsgroup_equivs[] =
+{
+    { AGF_NONE, NF_NONE },
+    { AGF_DEL, NF_DEL },
+    { AGF_SEL, NF_SEL },
+    { AGF_DELSEL, NF_DELSEL }
+};
+
+TEST_P(NewsgroupAddGroupFlagEquivalence, sameValue)
+{
+    addgroup_newsgroup_flag param = GetParam();
+
+    ASSERT_EQ(static_cast<int>(param.agf), static_cast<int>(param.other));
+}
+
+INSTANTIATE_TEST_SUITE_P(TestSubjectAddGroupFlags, NewsgroupAddGroupFlagEquivalence, testing::ValuesIn(newsgroup_equivs));

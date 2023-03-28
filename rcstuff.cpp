@@ -858,7 +858,7 @@ reask_unsub:
 	}
 	else if (*g_buf == 'y') {
             char *cp = g_ngptr->rcline + g_ngptr->numoffset;
-	    g_ngptr->flags = (*cp && cp[1] == '0' ? NF_UNTHREADED : 0);
+	    g_ngptr->flags = (*cp && cp[1] == '0' ? NF_UNTHREADED : NF_NONE);
 	    g_ngptr->subscribechar = ':';
 	    g_ngptr->rc->flags |= RF_RCCHANGED;
 	    flags &= ~GNG_RELOC;

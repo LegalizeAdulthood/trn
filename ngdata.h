@@ -4,23 +4,39 @@
 #ifndef TRN_NGDATA_H
 #define TRN_NGDATA_H
 
+#include "enum-flags.h"
+
+#include <cstdint>
+
 struct LIST;
 struct NEWSRC;
 
+enum newsgroup_flags : std::uint8_t
+{
+    NF_NONE = 0x00,
+    NF_SEL = 0x01,
+    NF_DEL = 0x02,
+    NF_DELSEL = 0x04,
+    NF_INCLUDED = 0x10,
+    NF_UNTHREADED = 0x40,
+    NF_VISIT = 0x80
+};
+DECLARE_FLAGS_ENUM(newsgroup_flags, std::uint8_t);
+
 struct NGDATA
 {
-    NGDATA* prev;
-    NGDATA* next;
-    NEWSRC* rc;		/* which rc is this line from? */
-    char* rcline;	/* pointer to group's .newsrc line */
-    ART_NUM abs1st;	/* 1st real article in newsgroup */
-    ART_NUM ngmax;	/* high message num for the group */
-    ART_UNREAD toread;	/* number of articles to be read in newsgroup */
-			/* < 0 is invalid or unsubscribed newsgroup */
-    NG_NUM num;		/* a possible sort order for this group */
-    int numoffset;	/* offset from rcline to numbers on line */
-    char subscribechar;	/* holds the character : or ! while spot is \0 */
-    char flags;  	/* flags for each group */
+    NGDATA    *prev;
+    NGDATA    *next;
+    NEWSRC    *rc;                 /* which rc is this line from? */
+    char      *rcline;             /* pointer to group's .newsrc line */
+    ART_NUM    abs1st;             /* 1st real article in newsgroup */
+    ART_NUM    ngmax;              /* high message num for the group */
+    ART_UNREAD toread;             /* number of articles to be read in newsgroup */
+                                   /* < 0 is invalid or unsubscribed newsgroup */
+    NG_NUM          num;           /* a possible sort order for this group */
+    int             numoffset;     /* offset from rcline to numbers on line */
+    char            subscribechar; /* holds the character : or ! while spot is \0 */
+    newsgroup_flags flags;         /* flags for each group */
 };
 
 extern LIST *g_ngdata_list; /* a list of NGDATA */

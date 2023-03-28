@@ -1275,17 +1275,17 @@ static bool select_item(SEL_UNION u)
       case SM_MULTIRC:
 	if (!(u.mp->flags & g_sel_mask))
 	    g_selected_count++;
-	u.mp->flags = (u.mp->flags /*& ~MF_DEL*/) | g_sel_mask;
+	u.mp->flags = (u.mp->flags /*& ~MF_DEL*/) | static_cast<int>(g_sel_mask);
 	break;
       case SM_ADDGROUP:
 	if (!(u.gp->flags & g_sel_mask))
 	    g_selected_count++;
-	u.gp->flags = (u.gp->flags & ~AGF_DEL) | g_sel_mask;
+	u.gp->flags = (u.gp->flags & ~AGF_DEL) | static_cast<addgroup_flags>(g_sel_mask);
 	break;
       case SM_NEWSGROUP:
 	if (!(u.np->flags & g_sel_mask))
 	    g_selected_count++;
-	u.np->flags = (u.np->flags & ~NF_DEL) | g_sel_mask;
+	u.np->flags = (u.np->flags & ~NF_DEL) | static_cast<newsgroup_flags>(g_sel_mask);
 	break;
       case SM_OPTIONS:
 	if (!select_option(u.op) || !ini_value(g_options_ini, u.op))
@@ -1360,8 +1360,8 @@ static bool deselect_item(SEL_UNION u)
 	    u.gp->flags |= AGF_DEL;
 	break;
       case SM_NEWSGROUP:
-	if (u.np->flags & g_sel_mask) {
-	    u.np->flags &= ~g_sel_mask;
+	if (u.np->flags & static_cast<newsgroup_flags>(g_sel_mask)) {
+	    u.np->flags &= ~static_cast<newsgroup_flags>(g_sel_mask);
 	    g_selected_count--;
 	}
 	if (g_sel_rereading)

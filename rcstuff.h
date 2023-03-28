@@ -18,16 +18,6 @@ struct NGDATA;
 #define TR_BOGUS ((ART_UNREAD) -3)
 #define TR_JUNK ((ART_UNREAD) -4)
 
-enum
-{
-    NF_SEL = 0x01,
-    NF_DEL = 0x02,
-    NF_DELSEL = 0x04,
-    NF_INCLUDED = 0x10,
-    NF_UNTHREADED = 0x40,
-    NF_VISIT = 0x80
-};
-
 #define ADDNEW_SUB ':'
 #define ADDNEW_UNSUB '!'
 
