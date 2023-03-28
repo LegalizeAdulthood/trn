@@ -4,21 +4,25 @@
 #ifndef TRN_NNTPCLIENT_H
 #define TRN_NNTPCLIENT_H
 
-struct NNTPLINK
-{
-    FILE*	rd_fp;
-    FILE*	wr_fp;
-    time_t	last_command;
-    int		port_number;
-    int		flags;
-    bool	trailing_CR;
-};
+#include "enum-flags.h"
 
-enum
+enum nntp_flags
 {
+    NNTP_NONE = 0x0000,
     NNTP_NEW_CMD_OK = 0x0001,
     NNTP_FORCE_AUTH_NEEDED = 0x0002,
     NNTP_FORCE_AUTH_NOW = 0x0004
+};
+DECLARE_FLAGS_ENUM(nntp_flags, int);
+
+struct NNTPLINK
+{
+    FILE      *rd_fp;
+    FILE      *wr_fp;
+    time_t     last_command;
+    int        port_number;
+    nntp_flags flags;
+    bool       trailing_CR;
 };
 
 /* RFC 977 defines these, so don't change them */

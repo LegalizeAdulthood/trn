@@ -114,7 +114,7 @@ void srcfile_end_append(SRCFILE *sfp, const char *filename);
 void srcfile_close(SRCFILE *sfp);
 int find_close_match();
 
-inline int datasrc_nntp_flags(const DATASRC *dp)
+inline nntp_flags datasrc_nntp_flags(const DATASRC *dp)
 {
     return dp == g_datasrc ? g_nntplink.flags : dp->nntplink.flags;
 }
