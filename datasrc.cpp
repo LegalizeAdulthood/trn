@@ -160,7 +160,9 @@ void datasrc_finalize()
     {
         for (DATASRC *dp = datasrc_first(); dp && !dp->name.empty(); dp = datasrc_next(dp))
             close_datasrc(dp);
-	safefree0(g_datasrc_list);
+
+	delete_list(g_datasrc_list);
+	g_datasrc_list = nullptr;
     }
 }
 
