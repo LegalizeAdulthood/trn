@@ -62,12 +62,10 @@ void InterpolatorTest::SetUp()
         });
     datasrc_init();
     g_datasrc = datasrc_first();
-    build_cache();
 }
 
 void InterpolatorTest::TearDown()
 {
-    close_cache();
     g_lastart = 0;
     g_art = 0;
     g_in_ng = false;
@@ -170,6 +168,7 @@ TEST_F(InterpolatorTest, articleNameInsideRemoteNewsgroupArticleClosed)
 
 TEST_F(InterpolatorTest, articleNameInsideRemoteNewsgroupArticleOpen)
 {
+    build_cache();
     char pattern[]{"Article %A"};
     g_in_ng = true;
     g_art = 624;
@@ -179,4 +178,6 @@ TEST_F(InterpolatorTest, articleNameInsideRemoteNewsgroupArticleOpen)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ(std::string{"Article 624"}, std::string{m_buffer.data()});
+
+    close_cache();
 }
