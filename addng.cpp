@@ -30,18 +30,18 @@ ADDGROUP* g_sel_next_gp{};
 
 static int s_addgroup_cnt{};
 
-static int addng_cmp(const char *key, int keylen, HASHDATUM data);
-static int build_addgroup_list(int keylen, HASHDATUM *data, int extra);
-static void process_list(int);
+static int  addng_cmp(const char *key, int keylen, HASHDATUM data);
+static int  build_addgroup_list(int keylen, HASHDATUM *data, int extra);
+static void process_list(getnewsgroup_flags);
 static void new_nntp_groups(DATASRC *dp);
 static void new_local_groups(DATASRC *dp);
 static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch);
 static void add_to_list(const char *name, int toread, char_int ch);
-static int list_groups(int keylen, HASHDATUM *data, int add_matching);
+static int  list_groups(int keylen, HASHDATUM *data, int add_matching);
 static void scanline(char *actline, bool add_matching);
-static int agorder_number(const ADDGROUP **app1, const ADDGROUP **app2);
-static int agorder_groupname(const ADDGROUP **app1, const ADDGROUP **app2);
-static int agorder_count(const ADDGROUP **app1, const ADDGROUP **app2);
+static int  agorder_number(const ADDGROUP **app1, const ADDGROUP **app2);
+static int  agorder_groupname(const ADDGROUP **app1, const ADDGROUP **app2);
+static int  agorder_count(const ADDGROUP **app1, const ADDGROUP **app2);
 
 static int addng_cmp(const char *key, int keylen, HASHDATUM data)
 {
@@ -92,19 +92,19 @@ bool find_new_groups()
     return oldcnt != g_newsgroup_cnt;
 }
 
-static void process_list(int flag)
+static void process_list(getnewsgroup_flags flag)
 {
 
-    if (!flag) {
+    if (flag == GNG_NONE) {
 	sprintf(g_cmd_buf,"\nUnsubscribed but mentioned in your current newsrc%s:\n",
 		g_multirc->first->next? "s" : "");
 	print_lines(g_cmd_buf, STANDOUT);
     }
     ADDGROUP *node = g_first_addgroup;
-    if (node != nullptr && flag && g_use_add_selector)
+    if (node != nullptr && flag != GNG_NONE && g_use_add_selector)
 	addgroup_selector(flag);
     while (node) {
-	if (!flag) {
+	if (flag == GNG_NONE) {
 	    sprintf(g_cmd_buf, "%s\n", node->name);
 	    print_lines(g_cmd_buf, NOMARKING);
 	}
@@ -329,7 +329,7 @@ bool scanactive(bool add_matching)
 	}
     }
 
-    process_list(add_matching);
+    process_list(add_matching ? GNG_RELOC : GNG_NONE);
 
     if (g_in_ng) /*$$*/
 	set_datasrc(g_ngptr->rc->datasrc);

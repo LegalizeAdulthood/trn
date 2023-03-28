@@ -381,7 +381,7 @@ input_newsgroup_result input_newsgroup()
       case '-':
 	g_ngptr = g_recent_ng;		/* recall previous newsgroup */
 	if (g_ngptr) {
-	    if (!get_ng(g_ngptr->rcline,0))
+	    if (!get_ng(g_ngptr->rcline,GNG_NONE))
 		set_ng(g_current_ng);
 	    g_addnewbydefault = 0;
 	}
@@ -484,7 +484,7 @@ input_newsgroup_result input_newsgroup()
 	    }
 	}
 	/* try to find newsgroup */
-	if (!get_ng(g_ngname,(*g_buf=='m'?GNG_RELOC:0) | GNG_FUZZY))
+        if (!get_ng(g_ngname, (*g_buf == 'm' ? GNG_RELOC : GNG_NONE) | GNG_FUZZY))
 	    g_ngptr = g_current_ng;	/* if not found, go nowhere */
 	g_addnewbydefault = 0;
 	return ING_SPECIAL;

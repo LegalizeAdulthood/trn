@@ -695,7 +695,7 @@ void abandon_ng(NGDATA *np)
 /* returns true if found or added, false if not. */
 /* assumes that we are chdir'ed to NEWSSPOOL */
 
-bool get_ng(const char *what, int flags)
+bool get_ng(const char *what, getnewsgroup_flags flags)
 {
     char* ntoforget;
     char promptbuf[128];

@@ -482,7 +482,7 @@ char newsgroup_selector()
     return s_sel_ret;
 }
 
-char addgroup_selector(int flags)
+char addgroup_selector(getnewsgroup_flags flags)
 {
     START_SELECTOR('j');
 
@@ -1273,14 +1273,16 @@ static bool select_item(SEL_UNION u)
 {
     switch (g_sel_mode) {
       case SM_MULTIRC:
-	if (!(u.mp->flags & g_sel_mask))
+	// multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
+        TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DELSEL)) == 0);
+	if (!(u.mp->flags & static_cast<multirc_flags>(g_sel_mask)))
 	    g_selected_count++;
-	u.mp->flags = (u.mp->flags /*& ~MF_DEL*/) | static_cast<int>(g_sel_mask);
+	u.mp->flags |= static_cast<multirc_flags>(g_sel_mask);
 	break;
       case SM_ADDGROUP:
 	if (!(u.gp->flags & g_sel_mask))
 	    g_selected_count++;
-	u.gp->flags = (u.gp->flags & ~AGF_DEL) | static_cast<addgroup_flags>(g_sel_mask);
+	u.gp->flags = (u.gp->flags & ~AGF_DEL) | g_sel_mask;
 	break;
       case SM_NEWSGROUP:
 	if (!(u.np->flags & g_sel_mask))
@@ -1342,8 +1344,10 @@ static bool deselect_item(SEL_UNION u)
 {
     switch (g_sel_mode) {
       case SM_MULTIRC:
-	if (u.mp->flags & g_sel_mask) {
-	    u.mp->flags &= ~g_sel_mask;
+	// multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
+        TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DELSEL)) == 0);
+	if (u.mp->flags & static_cast<multirc_flags>(g_sel_mask)) {
+	    u.mp->flags &= ~static_cast<multirc_flags>(g_sel_mask);
 	    g_selected_count--;
 	}
 #if 0

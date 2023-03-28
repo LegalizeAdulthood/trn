@@ -6,6 +6,7 @@
 #include <cache.h>
 #include <datasrc.h>
 #include <ngdata.h>
+#include <rcstuff.h>
 
 TEST(DataSrcFlags, bitwiseOr)
 {
@@ -146,6 +147,7 @@ struct addgroup_flag_equivalence
 using addgroup_subject_flag = addgroup_flag_equivalence<subject_flags>;
 using addgroup_article_flag = addgroup_flag_equivalence<article_flags>;
 using addgroup_newsgroup_flag = addgroup_flag_equivalence<newsgroup_flags>;
+using addgroup_multirc_flag = addgroup_flag_equivalence<multirc_flags>;
 
 struct SubjectAddGroupFlagEquivalences : testing::TestWithParam<addgroup_subject_flag>
 {
@@ -156,6 +158,10 @@ struct ArticleAddGroupFlagEquivalences : testing::TestWithParam<addgroup_article
 };
 
 struct NewsgroupAddGroupFlagEquivalence : testing::TestWithParam<addgroup_newsgroup_flag>
+{
+};
+
+struct MultiRCAddGroupFlagEquivalence : testing::TestWithParam<addgroup_multirc_flag>
 {
 };
 
@@ -193,7 +199,7 @@ TEST_P(ArticleAddGroupFlagEquivalences, sameValue)
     ASSERT_EQ(static_cast<int>(param.agf), static_cast<int>(param.other));
 }
 
-INSTANTIATE_TEST_SUITE_P(TestSubjectAddGroupFlags, ArticleAddGroupFlagEquivalences, testing::ValuesIn(article_equivs));
+INSTANTIATE_TEST_SUITE_P(TestArticleAddGroupFlags, ArticleAddGroupFlagEquivalences, testing::ValuesIn(article_equivs));
 
 static addgroup_newsgroup_flag newsgroup_equivs[] =
 {
@@ -210,4 +216,21 @@ TEST_P(NewsgroupAddGroupFlagEquivalence, sameValue)
     ASSERT_EQ(static_cast<int>(param.agf), static_cast<int>(param.other));
 }
 
-INSTANTIATE_TEST_SUITE_P(TestSubjectAddGroupFlags, NewsgroupAddGroupFlagEquivalence, testing::ValuesIn(newsgroup_equivs));
+INSTANTIATE_TEST_SUITE_P(TestNewsgroupAddGroupFlags, NewsgroupAddGroupFlagEquivalence, testing::ValuesIn(newsgroup_equivs));
+
+static addgroup_multirc_flag multirc_equivs[] =
+{
+    { AGF_NONE, MF_NONE },
+    // { AGF_DEL, MF_DEL },
+    { AGF_SEL, MF_SEL },
+    // { AGF_DELSEL, MNF_DELSEL }
+};
+
+TEST_P(MultiRCAddGroupFlagEquivalence, sameValue)
+{
+    addgroup_multirc_flag param = GetParam();
+
+    ASSERT_EQ(static_cast<int>(param.agf), static_cast<int>(param.other));
+}
+
+INSTANTIATE_TEST_SUITE_P(TestMultiRCAddGroupFlags, MultiRCAddGroupFlagEquivalence, testing::ValuesIn(multirc_equivs));

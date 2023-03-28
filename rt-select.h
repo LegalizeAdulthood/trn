@@ -6,6 +6,7 @@
 
 #include "addng.h"
 #include "help.h"
+#include "rcstuff.h"
 
 enum sel_mode
 {
@@ -64,11 +65,11 @@ extern bool g_art_sel_ilock;
 char article_selector(char_int cmd);
 char multirc_selector();
 char newsgroup_selector();
-char addgroup_selector(int flags);
+char addgroup_selector(getnewsgroup_flags flags);
 char option_selector();
 char universal_selector();
 void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
-int univ_visit_group(const char *gname);
+int  univ_visit_group(const char *gname);
 void univ_visit_help(help_location where);
 
 #endif
