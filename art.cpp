@@ -66,8 +66,14 @@ const char *g_pagestop{}; /* custom page terminator? */
 COMPEX g_hide_compex{};
 COMPEX g_page_compex{};
 
-#define LINE_PTR(pos) (g_artbuf + (pos) - g_htype[PAST_HEADER].minpos)
-#define LINE_OFFSET(ptr) ((ptr) - g_artbuf + g_htype[PAST_HEADER].minpos)
+inline char *line_ptr(ART_POS pos)
+{
+    return g_artbuf + pos - g_htype[PAST_HEADER].minpos;
+}
+inline ART_POS line_offset(char *ptr)
+{
+    return ptr - g_artbuf + g_htype[PAST_HEADER].minpos;
+}
 
 /* page_switch() return values */
 enum page_switch_result
@@ -211,7 +217,7 @@ do_article_result do_article()
 		return DA_NORM;	/* skip out of loops */
 	    }
 	    if (s_restart) {		/* did not finish last line? */
-		bufptr = LINE_PTR(s_restart);/* then start again here */
+		bufptr = line_ptr(s_restart);/* then start again here */
 		s_restart = 0;		/* and reset the flag */
 		s_continuation = true;
 		if (restart_color && g_do_hiding && !g_in_header)
@@ -452,7 +458,7 @@ do_article_result do_article()
 			    break;
 			if (outputok)
 			    fputs("^L",stdout);
-			if (bufptr == LINE_PTR(s_alinebeg) && g_highlight != g_artline)
+			if (bufptr == line_ptr(s_alinebeg) && g_highlight != g_artline)
 			    linenum = 32700;
 			    /* how is that for a magic number? */
 			bufptr++;
@@ -488,7 +494,7 @@ do_article_result do_article()
 		} /* end of column loop */
 
 		if (outpos < 1000) {	/* did line overflow? */
-		    s_restart = LINE_OFFSET(bufptr);/* restart here next time */
+		    s_restart = line_offset(bufptr);/* restart here next time */
 		    if (outputok) {
 			if (!g_tc_AM || g_tc_XN || outpos < g_tc_COLS)
 			    newline();
@@ -678,7 +684,7 @@ page_switch_result page_switch()
       case Ctl('i'): {
 	ART_LINE i = g_artline;
         g_gline = 3;
-	s = LINE_PTR(s_alinebeg);
+	s = line_ptr(s_alinebeg);
 	while (AT_NL(*s) && i >= g_topline) {
 	    ART_POS pos = vrdary(--i);
 	    if (pos < 0)
@@ -689,7 +695,7 @@ page_switch_result page_switch()
             s = readartbuf(false);
             if (s == nullptr)
             {
-		s = LINE_PTR(s_alinebeg);
+		s = line_ptr(s_alinebeg);
 		break;
 	    }
 	}
@@ -1020,7 +1026,7 @@ leave_pager:
 	    s_slines = g_tc_LINES;
 	}
       go_forward:
-          if (*LINE_PTR(s_alinebeg) != '\f' && (!g_pagestop || s_continuation || !execute(&g_page_compex, LINE_PTR(s_alinebeg))))
+          if (*line_ptr(s_alinebeg) != '\f' && (!g_pagestop || s_continuation || !execute(&g_page_compex, line_ptr(s_alinebeg))))
           {
 	    if (!s_special
 	     || (g_marking && (*g_buf!='d' || (g_marking_areas&HALFPAGE_MARKING)))) {
