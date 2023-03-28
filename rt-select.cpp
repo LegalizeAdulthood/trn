@@ -87,21 +87,30 @@ static int s_removed_prompt{};
 static int s_force_sel_pos{};
 static display_state (*s_extra_commands)(char_int){};
 
-#define START_SELECTOR(new_mode)            \
-    const char save_mode = g_mode;          \
-    const char save_gmode = g_general_mode; \
-    do                                      \
-    {                                       \
-        g_bos_on_stop = true;               \
-        set_mode('s', new_mode);            \
-    } while (false)
+namespace {
 
-#define END_SELECTOR()                   \
-    do                                   \
-    {                                    \
-        g_bos_on_stop = false;           \
-        set_mode(save_gmode, save_mode); \
-    } while (false)
+class save_selector_modes
+{
+public:
+    save_selector_modes(char new_mode) :
+        m_save_mode(g_mode),
+        m_save_gmode(g_general_mode)
+    {
+        g_bos_on_stop = true;
+        set_mode('s', new_mode);
+    }
+    ~save_selector_modes()
+    {
+        g_bos_on_stop = false;
+        set_mode(m_save_gmode, m_save_mode);
+    }
+
+private:
+    char m_save_mode;
+    char m_save_gmode;
+};
+
+}
 
 #define PUSH_SELECTOR()                                \
     sel_mode save_sel_mode = g_sel_mode;               \
@@ -187,7 +196,7 @@ static int find_line(int y);
 char article_selector(char_int cmd)
 {
     bool save_selected_only;
-    START_SELECTOR('t');
+    save_selector_modes saver('t');
 
     g_sel_rereading = (cmd == 'U');
 
@@ -292,7 +301,6 @@ sel_exit:
 	g_artp = g_curr_artp;
     } else
 	top_article();
-    END_SELECTOR();
     return s_sel_ret;
 }
 
@@ -363,7 +371,7 @@ static void sel_dogroups()
 
 char multirc_selector()
 {
-    START_SELECTOR('c');
+    save_selector_modes saver('c');
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -410,13 +418,12 @@ char multirc_selector()
 	POP_SELECTOR();
 	goto sel_restart;
     }
-    END_SELECTOR();
     return s_sel_ret;
 }
 
 char newsgroup_selector()
 {
-    START_SELECTOR('w');
+    save_selector_modes saver('w');
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -477,14 +484,13 @@ char newsgroup_selector()
 	s_sel_ret = 'q';
     }
     sel_cleanup();
-    END_SELECTOR();
     end_only();
     return s_sel_ret;
 }
 
 char addgroup_selector(getnewsgroup_flags flags)
 {
-    START_SELECTOR('j');
+    save_selector_modes saver('j');
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -539,7 +545,6 @@ char addgroup_selector(getnewsgroup_flags flags)
 	g_addnewbydefault = 0;
     }
     sel_cleanup();
-    END_SELECTOR();
     return s_sel_ret;
 }
 
@@ -547,7 +552,7 @@ char option_selector()
 {
     int i;
     char** vals = ini_values(g_options_ini);
-    START_SELECTOR('l');
+    save_selector_modes saver('l');
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -594,7 +599,6 @@ char option_selector()
 	    vals[i] = nullptr;
 	}
     }
-    END_SELECTOR();
     return s_sel_ret;
 }
 
@@ -772,7 +776,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
 
 char universal_selector()
 {
-    START_SELECTOR('v');		/* kind of like 'v'irtual... */
+    save_selector_modes saver('v');		/* kind of like 'v'irtual... */
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -836,7 +840,6 @@ sel_restart:
 	goto sel_restart;
     sel_cleanup();
     univ_close();
-    END_SELECTOR();
     return s_sel_ret;
 }
 
