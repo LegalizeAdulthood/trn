@@ -17,6 +17,7 @@ void set_envars()
     putenv("USER=@TRN_TEST_LOGIN_NAME@");
     putenv("DOTDIR=@TRN_TEST_DOT_DIR@");
     putenv("TRNDIR=@TRN_TEST_TRN_DIR@");
+    putenv("NNTPSERVER=@TRN_TEST_NNTPSERVER@");
 }
 
 void reset_envars()
@@ -26,6 +27,7 @@ void reset_envars()
     putenv("USER=");
     putenv("DOTDIR=");
     putenv("TRNDIR=");
+    putenv("NNTPSERVER=");
 }
 
 bool set_name(char *)

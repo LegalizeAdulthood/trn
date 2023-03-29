@@ -20,6 +20,7 @@ function(configure_trn_test_data)
     _mkdir(${TRN_TEST_RN_LIB_DIR})
     set(TRN_TEST_LOCAL_HOST "huey.example.org")
     set(TRN_TEST_P_HOST_NAME "duey.example.org")
+    set(TRN_TEST_NNTPSERVER "news.example.org")
     configure_file(cmake/test_config.h.in test_config.h)
     configure_file(cmake/test_data.cpp.in test_data.cpp)
 
