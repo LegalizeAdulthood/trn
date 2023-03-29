@@ -1114,7 +1114,6 @@ bool innermore()
  */
 void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 {
-
     if (check_mousebar(btn, x,y, btn_clk, x_clk,y_clk))
 	return;
 

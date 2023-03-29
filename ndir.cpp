@@ -58,8 +58,7 @@ struct	olddirect {
  */
 Direntry_t *readdir(DIR *dirp)
 {
-	struct olddirect* dp;
-	static Direntry_t dir;
+    static Direntry_t dir;
 
 	for (;;) {
 		if (dirp->dd_loc == 0) {
@@ -72,7 +71,7 @@ Direntry_t *readdir(DIR *dirp)
 			dirp->dd_loc = 0;
 			continue;
 		}
-		dp = (struct olddirect*)(dirp->dd_buf + dirp->dd_loc);
+		struct olddirect *dp = (struct olddirect*)(dirp->dd_buf + dirp->dd_loc);
 		dirp->dd_loc += sizeof(struct olddirect);
 		if (dp->od_ino == 0)
 			continue;

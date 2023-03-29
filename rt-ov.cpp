@@ -47,8 +47,7 @@ bool ov_init()
     field_flags  *fieldflags = g_datasrc->fieldflags;
     g_datasrc->flags &= ~DF_TRY_OVERVIEW;
     if (!g_datasrc->over_dir) {
-	int ret;
-	/* Check if the server is XOVER compliant */
+        /* Check if the server is XOVER compliant */
 	if (nntp_command("XOVER") <= 0)
 	    return false;
 	if (nntp_check() < 0)
@@ -58,7 +57,7 @@ bool ov_init()
 	/* Just in case... */
 	if (*g_ser_line == NNTP_CLASS_OK)
 	    nntp_finish_list();
-        ret = nntp_list("overview.fmt", "", 0);
+        int ret = nntp_list("overview.fmt", "", 0);
         if (ret < -1)
 	    return false;
 	has_overview_fmt = ret > 0;
@@ -108,8 +107,7 @@ bool ov_init()
 	}
     }
     else {
-	int i;
-	for (i = 0; i < OV_MAX_FIELDS; i++) {
+        for (int i = 0; i < OV_MAX_FIELDS; i++) {
 	    fieldnum[i] = static_cast<ov_field_num>(i);
 	    fieldflags[i] = FF_HAS_FIELD;
 	}
@@ -274,10 +272,9 @@ beginning:
     }
     if (remote) {
 	int cachemask = (g_threaded_group? AF_THREADED : AF_CACHED);
-	ARTICLE* ap;
-	for (ap = article_ptr(article_first(real_first));
-	     ap && article_num(ap) <= artnum;
-	     ap = article_nextp(ap))
+        for (ARTICLE *ap = article_ptr(article_first(real_first));
+             ap && article_num(ap) <= artnum;
+             ap = article_nextp(ap))
 	{
 	    if (!(ap->flags & cachemask))
 		onemissing(ap);
@@ -432,10 +429,8 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 */
 static const char *ov_name(const char *group)
 {
-    char* cp;
-
     strcpy(g_buf, g_datasrc->over_dir);
-    cp = g_buf + strlen(g_buf);
+    char *cp = g_buf + strlen(g_buf);
     *cp++ = '/';
     strcpy(cp, group);
     while ((cp = strchr(cp, '.')))
@@ -462,10 +457,7 @@ char *ov_fieldname(int num)
 
 char *ov_field(ARTICLE *ap, int num)
 {
-    char* s;
-    int fn;
-
-    fn = g_datasrc->fieldnum[num];
+    int fn = g_datasrc->fieldnum[num];
     if (!(g_datasrc->fieldflags[fn] & (FF_HAS_FIELD | FF_CHECK4FIELD)))
 	return nullptr;
 
@@ -479,6 +471,6 @@ char *ov_field(ARTICLE *ap, int num)
 	return g_cmd_buf;
     }
 
-    s = get_cached_line(ap, s_hdrnum[fn], true);
+    char *s = get_cached_line(ap, s_hdrnum[fn], true);
     return s? s : "";
 }

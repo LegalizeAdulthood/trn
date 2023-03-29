@@ -126,8 +126,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 {
     char mode_save = g_mode;
     char gmode_save = g_general_mode;
-    int ret;
-    char* whatnext = "%s%sWhat next? [%s]";
+    char*whatnext = "%s%sWhat next? [%s]";
     bool ng_virtual = false;
 
     set_datasrc(g_ngptr->rc->datasrc);
@@ -149,7 +148,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 
     g_sel_rereading = false;
     g_sel_mask = AGF_SEL;
-    ret = access_ng();
+    int ret = access_ng();
     if (ret == -2)
 	return NG_NOSERVER;
     if (ret <= 0)
@@ -363,8 +362,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 	    /* make sure article is found & open */
 	    if (!artopen(g_art,(ART_POS)0)) {
 		char tmpbuf[256];
-		ART_LINE linenum;
-		/* see if we have tree data for this article anyway */
+                /* see if we have tree data for this article anyway */
 		init_tree();
 		sprintf(tmpbuf,"%s: article is not available.",g_ngname);
 		if (g_artp && !(g_artp->flags & AF_CACHED)) {
@@ -373,7 +371,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 			sprintf(tmpbuf,"%s: article may show up in a moment.",
 				g_ngname);
 		}
-		linenum = tree_puts(tmpbuf,0,0);
+		ART_LINE linenum = tree_puts(tmpbuf, 0, 0);
 		vwtary(g_artline,(ART_POS)0);
 		finish_tree(linenum);
 		g_prompt = whatnext;
@@ -1442,7 +1440,6 @@ void setdfltcmd()
 */
 char ask_catchup()
 {
-    char ch;
     bool use_one_line = (g_general_mode == 's');
     int leave_unread = 0;
 
@@ -1455,7 +1452,7 @@ reask_catchup:
 	sprintf(g_buf,"Catchup %s?",g_ngname);
     in_char(g_buf,'C',"yn#h");
     printcmd();
-    ch = *g_buf;
+    char ch = *g_buf;
     if (ch == 'h' || ch == 'H')
     {
 	use_one_line = false;
@@ -1567,11 +1564,7 @@ static bool mark_all_unREAD(char *ptr, int arg)
 
 bool output_subject(char *ptr, int flag)
 {
-    ARTICLE* ap;
-    ART_NUM i;
     char tmpbuf[256];
-    int len;
-    char* s;
 
     if (g_int_count)
 	return true;
@@ -1582,15 +1575,15 @@ bool output_subject(char *ptr, int flag)
 	    g_subjline = "";
     }
 
-    ap = (ARTICLE*)ptr;
+    ARTICLE *ap = (ARTICLE*)ptr;
     if (flag && !(ap->flags & flag))
 	return false;
-    i = article_num(ap);
-    s = fetchsubj(i, false);
+    ART_NUM i = article_num(ap);
+    char *  s = fetchsubj(i, false);
     if (s != nullptr)
     {
 	sprintf(tmpbuf,"%-5ld ", i);
-	len = strlen(tmpbuf);
+	int len = strlen(tmpbuf);
 	if (g_subjline != "") {
 	    g_art = i;
 	    interp(tmpbuf + len, sizeof tmpbuf - len, g_subjline);

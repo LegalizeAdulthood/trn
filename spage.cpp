@@ -361,9 +361,7 @@ bool s_go_top_ents()
 
 bool s_go_bot_ents()
 {
-    bool flag;
-
-    flag = s_fillpage_backward(s_last());	/* fill backwards */
+    bool flag = s_fillpage_backward(s_last()); /* fill backwards */
     if (!flag)
 	return false;
     s_go_bot_page();
@@ -372,29 +370,23 @@ bool s_go_bot_ents()
 
 void s_go_next_page()
 {
-    long a;
-    bool flag;
-
-    a = s_next_elig(g_page_ents[g_s_bot_ent].entnum);
+    long a = s_next_elig(g_page_ents[g_s_bot_ent].entnum);
     if (!a)
 	return;		/* no next page (we shouldn't have been called) */
     /* the fill-page will set the refresh for the screen */
-    flag = s_fillpage_forward(a);
+    bool flag = s_fillpage_forward(a);
     TRN_ASSERT(flag);		/* I *must* be able to fill a page */
     g_s_ptr_page_line = 0;	/* top of page */
 }
 
 void s_go_prev_page()
 {
-    long a;
-    bool flag;
-
-    a = s_prev_elig(g_page_ents[0].entnum);
+    long a = s_prev_elig(g_page_ents[0].entnum);
     if (!a)
 	return;		/* no prev. page (we shouldn't have been called) */
     /* the fill-page will set the refresh for the screen */
-    flag = s_fillpage_backward(a);	/* fill backward */
-    TRN_ASSERT(flag);		/* be nicer later... */
+    bool flag = s_fillpage_backward(a); /* fill backward */
+    TRN_ASSERT(flag);                   /* be nicer later... */
     /* take care of partially filled previous pages */
     flag = s_refillpage();
     TRN_ASSERT(flag);		/* be nicer later... */

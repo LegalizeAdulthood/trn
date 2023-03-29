@@ -51,11 +51,9 @@ void setngtodo(const char *pat)
 
 bool inlist(char *ngnam)
 {
-    int i;
-
     if (g_maxngtodo == 0)
 	return true;
-    for (i = s_save_maxngtodo; i < g_maxngtodo + s_save_maxngtodo; i++) {
+    for (int i = s_save_maxngtodo; i < g_maxngtodo + s_save_maxngtodo; i++) {
 	if (execute(g_compextodo[i],ngnam))
 	    return true;
     }
@@ -65,14 +63,13 @@ bool inlist(char *ngnam)
 void end_only()
 {
     if (g_maxngtodo) {			/* did they specify newsgroup(s) */
-	int i;
 
-	if (g_verbose)
+        if (g_verbose)
 	    sprintf(g_msg, "Restriction %s%s removed.",g_ngtodo[0],
 		    g_maxngtodo > 1 ? ", etc." : "");
 	else
 	    sprintf(g_msg, "Exiting \"only\".");
-	for (i = s_save_maxngtodo; i < g_maxngtodo + s_save_maxngtodo; i++) {
+	for (int i = s_save_maxngtodo; i < g_maxngtodo + s_save_maxngtodo; i++) {
 	    free(g_ngtodo[i]);
 	    free_compex(g_compextodo[i]);
 #ifndef lint

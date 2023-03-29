@@ -380,9 +380,8 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
 	g_untrim_cache = false;
 	break;
       default: {
-	char* s;
-	char* nlptr;
-	char ch;
+	char*s;
+        char ch;
 	bool success = false, in_sig = false;
 	if (scope != ARTSCOPE_BODY && scope != ARTSCOPE_BODY_NOSIG) {
 	    if (!parseheader(artnum))
@@ -412,7 +411,7 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
 		    return true;
 		in_sig = true;
 	    }
-            nlptr = strchr(s, '\n');
+            char *nlptr = strchr(s, '\n');
             if (nlptr != nullptr)
             {
 		ch = *++nlptr;

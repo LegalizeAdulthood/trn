@@ -93,7 +93,6 @@ static void mp_free_frag(int f)
 
 char *mp_savestr(const char *str, memory_pool pool)
 {
-
     if (!str) {
 #if 1
 	printf("\ntrn: mp_savestr(nullptr,%d) error.\n",pool);

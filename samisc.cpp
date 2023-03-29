@@ -28,9 +28,7 @@ inline int check_article(long a)
 /* ignoring "Fold" (or later recursive) mode(s), is this article eligible? */
 bool sa_basic_elig(long a)
 {
-    ART_NUM artnum;
-
-    artnum = g_sa_ents[a].artnum;
+    ART_NUM artnum = g_sa_ents[a].artnum;
     TRN_ASSERT(check_article(artnum));
 
     /* "run the gauntlet" style (:-) */
@@ -69,8 +67,7 @@ bool sa_eligible(long a)
 /* (There is no easy mapping between entry numbers and article numbers.) */
 long sa_artnum_to_ent(ART_NUM artnum)
 {
-    long i;
-    for (i = 1; i < g_sa_num_ents; i++)
+    for (long i = 1; i < g_sa_num_ents; i++)
 	if (g_sa_ents[i].artnum == artnum)
 	    return i;
     /* this had better not happen (complain?) */
@@ -80,8 +77,6 @@ long sa_artnum_to_ent(ART_NUM artnum)
 /* select1 the articles picked in the TRN thread selector */
 void sa_selthreads()
 {
-    SUBJECT *sp;
-    ARTICLE *ap;
     bool want_unread;
 #if 0
     /* this does not work now, but maybe it will help debugging? */
@@ -89,21 +84,18 @@ void sa_selthreads()
 #endif
     int subj_mask = SF_VISIT;
 
-    long art;
-    long i;
-
     want_unread = !g_sa_mode_read_elig;
 
     /* clear any old selections */
-    for (i = 1; i < g_sa_num_ents; i++)
+    for (long i = 1; i < g_sa_num_ents; i++)
 	g_sa_ents[i].sa_flags =
 	    (g_sa_ents[i].sa_flags & 0xfd);
 
     /* Loop through all (selected) articles. */
-    for (sp = g_first_subject; sp; sp = sp->next) {
+    for (SUBJECT *sp = g_first_subject; sp; sp = sp->next) {
 	if ((sp->flags & subj_mask) == subj_mask) {
-	    for (ap = first_art(sp); ap; ap = next_art(ap)) {
-		art = article_num(ap);
+	    for (ARTICLE *ap = first_art(sp); ap; ap = next_art(ap)) {
+		long art = article_num(ap);
 		if ((ap->flags & AF_SEL)
 		 && (!(ap->flags & AF_UNREAD) ^ want_unread)) {
 		    /* this was a trn-thread selected article */
@@ -120,17 +112,15 @@ void sa_selthreads()
 
 int sa_number_arts()
 {
-    int total;
     long i;
-    ART_NUM a;
 
     if (g_sa_mode_read_elig)
 	i = g_absfirst;
     else
 	i = g_firstart;
-    total = 0;
+    int total = 0;
     for (i = 1; i < g_sa_num_ents; i++) {
-	a = g_sa_ents[i].artnum;
+	ART_NUM a = g_sa_ents[i].artnum;
 	if (is_unavailable(a))
 	    continue;
 	if (!article_unread(a) && !g_sa_mode_read_elig)
@@ -154,8 +144,6 @@ void sa_go_art(long a)
 // long a,b;		/* the entry numbers to compare */
 int sa_compare(long a, long b)
 {
-    long i,j;
-    
     if (g_sa_mode_order == 2) {	/* score order */
 	/* do not score the articles here--move the articles to
 	 * the end of the list if unscored.
@@ -171,8 +159,8 @@ int sa_compare(long a, long b)
 	if (!article_scored(g_sa_ents[b].artnum))	/* only b unscored */
 	    return -1;		/* move unscored (b) to end */
 
-	i = sc_score_art(g_sa_ents[a].artnum,true);
-	j = sc_score_art(g_sa_ents[b].artnum,true);
+	long i = sc_score_art(g_sa_ents[a].artnum, true);
+	long j = sc_score_art(g_sa_ents[b].artnum, true);
 	if (i < j)
 	    return 1;
 	if (i > j)

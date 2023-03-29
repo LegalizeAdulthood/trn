@@ -65,7 +65,6 @@ static int s_reusables{};
 /* size - a crude guide to size */
 HASHTABLE *hashcreate(unsigned size, HASHCMPFUNC cmpfunc)
 {
-
     if (size < 1)		/* size < 1 is nonsense */
 	size = 1;
     struct alignalloc

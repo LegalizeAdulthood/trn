@@ -46,11 +46,11 @@ int s_compare(long a, long b)
 /* Uses a heapsort algorithm with the heap readjustment inlined. */
 void s_sort_basic()
 {
-    int i,n;
+    int i;
     int t1;
     int j;
 
-    n = g_s_ent_sort_max + 1;
+    int n = g_s_ent_sort_max + 1;
     if (n < 1)
 	return;		/* nothing to sort */
 
@@ -98,8 +98,6 @@ void s_sort_basic()
 
 void s_sort()
 {
-    long i;
-
 #ifdef UNDEF
     qsort((void*)g_s_ent_sort,(g_s_ent_sort_max)+1,sizeof(long),s_compare);
 #endif
@@ -107,7 +105,7 @@ void s_sort()
     g_s_ent_sorted_max = g_s_ent_sort_max;  /* whole array is now sorted */
     g_s_order_changed = false;
     /* rebuild the indexes */
-    for (i = 0; i <= g_s_ent_sort_max; i++)
+    for (long i = 0; i <= g_s_ent_sort_max; i++)
 	g_s_ent_index[g_s_ent_sort[i]] = i;
 }
 
@@ -149,8 +147,7 @@ void s_order_add(long ent)
 
     /* grow index list if needed */
     if (ent > g_s_ent_index_max) {
-	long old,i;
-	old = g_s_ent_index_max;
+        long old = g_s_ent_index_max;
 	if (g_s_ent_index_max == -1)
 	    g_s_ent_index_max += 1;
 	g_s_ent_index_max = (ent/100+1) * 100;	/* round up */
@@ -159,7 +156,7 @@ void s_order_add(long ent)
 	/* change the context too */
 	g_s_contexts[g_s_cur_context].ent_index = g_s_ent_index;
 	/* initialize new indexes */
-	for (i = old+1; i < g_s_ent_index_max; i++)
+	for (long i = old + 1; i < g_s_ent_index_max; i++)
 	    g_s_ent_index[i] = -1;	/* -1 == not a legal entry */
     }
     g_s_ent_index[ent] = g_s_ent_sort_max;
@@ -168,13 +165,11 @@ void s_order_add(long ent)
 
 long s_prev(long ent)
 {
-    long tmp;
-
     if (ent < 0 || ent > g_s_ent_index_max || g_s_ent_sorted_max < 0)
 	return 0;
     if (g_s_order_changed)
 	s_sort();
-    tmp = g_s_ent_index[ent];
+    long tmp = g_s_ent_index[ent];
     if (tmp <= 0)
 	return 0;
     return g_s_ent_sort[tmp-1];
@@ -182,13 +177,11 @@ long s_prev(long ent)
 
 long s_next(long ent)
 {
-    long tmp;
-
     if (ent < 0 || ent > g_s_ent_index_max || g_s_ent_sorted_max < 0)
 	return 0;
     if (g_s_order_changed)
 	s_sort();
-    tmp = g_s_ent_index[ent];
+    long tmp = g_s_ent_index[ent];
     if (tmp < 0 || tmp == g_s_ent_sorted_max)
 	return 0;
     return g_s_ent_sort[tmp+1];

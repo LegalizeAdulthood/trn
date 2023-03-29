@@ -21,11 +21,9 @@ char g_buf[LBUFLEN + 1]{}; /* general purpose line buffer */
 int main(int argc, char *argv[])
 {
     char command[32];
-    char* action = nullptr;
-    char* wildarg = nullptr;
-    char* cp;
-    FILE* in_fp;
-    FILE* out_fp = nullptr;
+    char*action = nullptr;
+    char*wildarg = nullptr;
+    FILE*out_fp = nullptr;
 
     while (--argc) {
 	if (**++argv == '-') {
@@ -63,7 +61,7 @@ int main(int argc, char *argv[])
     tcbuf[0] = 0;
     env_init(tcbuf, true);
 
-    cp = getenv("NNTPSERVER");
+    char *cp = getenv("NNTPSERVER");
     if (!cp) {
 	cp = filexp(SERVER_NAME);
 	if (*cp == '/')
@@ -134,7 +132,7 @@ int main(int argc, char *argv[])
 		    action);
 	    exit(1);
 	}
-        in_fp = fopen(filexp(cp), "r");
+        FILE *in_fp = fopen(filexp(cp), "r");
         if (in_fp == nullptr)
         {
 	    fprintf(stderr,"Unable to open `%s'.\n", cp);

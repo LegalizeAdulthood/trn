@@ -75,9 +75,7 @@ static char *s_first_character{};
 
 void search_init()
 {
-    int    i;
-    
-    for (i = 0; i < ASCSIZ; i++)
+    for (int i = 0; i < ASCSIZ; i++)
 	s_trans[i] = i;
 }
 
@@ -138,12 +136,8 @@ void case_fold(bool which)
 
 char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
 {
-    int c;
-    char* ep;
-    char* lastep;
     char  bracket[NBRA];
-    char* bracketp;
-    char** alt = compex->alternatives;
+    char**alt = compex->alternatives;
     char* retmes = "Badly formed search string";
  
     case_fold(compex->do_folding = fold);
@@ -151,22 +145,22 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
 	compex->expbuf = safemalloc(84);
 	compex->eblen = 80;
     }
-    ep = compex->expbuf;		/* point at expression buffer */
-    *alt++ = ep;			/* first alternative starts here */
-    bracketp = bracket;			/* first bracket goes here */
-    if (*strp == 0) {			/* nothing to compile? */
-	if (*ep == 0)			/* nothing there yet? */
+    char *ep = compex->expbuf; /* point at expression buffer */
+    *alt++ = ep;               /* first alternative starts here */
+    char *bracketp = bracket;  /* first bracket goes here */
+    if (*strp == 0) {          /* nothing to compile? */
+	if (*ep == 0)          /* nothing there yet? */
 	    return "Null search string";
 	return nullptr;			/* just keep old expression */
     }
     compex->nbra = 0;			/* no brackets yet */
-    lastep = 0;
+    char *lastep = 0;
     for (;;) {
 	if (ep + 4 - compex->expbuf >= compex->eblen)
 	    ep = grow_eb(compex, ep, alt);
-	c = *strp++;			/* fetch next char of pattern */
-	if (c == 0) {			/* end of pattern? */
-	    if (bracketp != bracket) {	/* balanced brackets? */
+	int c = *strp++;               /* fetch next char of pattern */
+	if (c == 0) {                  /* end of pattern? */
+	    if (bracketp != bracket) { /* balanced brackets? */
 		retmes = "Unbalanced parens";
 		goto cerror;
 	    }
@@ -541,9 +535,7 @@ bool advance(COMPEX *compex, char *lp, const char *ep)
  
 bool backref(COMPEX *compex, int i, const char *lp)
 {
-    char* bp;
- 
-    bp = compex->braslist[i];
+    char *bp = compex->braslist[i];
     while (*lp && *bp == *lp) {
 	bp++;
 	lp++;

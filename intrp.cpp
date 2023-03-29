@@ -779,7 +779,6 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		}
 		case 'v': {
-
                     if (g_in_ng) {
                         int selected = g_curr_artp && (g_curr_artp->flags & AF_SEL);
                         int unseen = (g_art <= g_lastart) && !was_read(g_art);

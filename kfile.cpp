@@ -56,10 +56,9 @@ void kfile_init()
     if (!cp)
 	cp = s_killthreads;
     if (*cp && strcmp(cp,"none")) {
-	FILE* fp;
-	g_kf_daynum = KF_DAYNUM(0);
+        g_kf_daynum = KF_DAYNUM(0);
 	g_kf_thread_cnt = g_kf_changethd_cnt = 0;
-        fp = fopen(filexp(cp), "r");
+        FILE *fp = fopen(filexp(cp), "r");
         if (fp != nullptr)
         {
 	    g_msgid_hash = hashcreate(1999, msgid_cmp);
@@ -145,7 +144,6 @@ int do_kfile(FILE *kfp, int entering)
 	    continue;
 	}
 	if (*bp == 'I') {
-	    FILE* incfile;
             for (cp = bp + 1; *cp && !isspace(*cp); cp++) ;
 	    while (isspace(*cp)) cp++;
 	    if (!*cp)
@@ -156,7 +154,7 @@ int do_kfile(FILE *kfp, int entering)
 		cp = filexp(get_val("KILLLOCAL",s_killlocal));
 		set_ngname(g_ngptr->rcline);
 	    }
-            incfile = fopen(cp, "r");
+            FILE *incfile = fopen(cp, "r");
             if (incfile != nullptr)
             {
 		int ret = do_kfile(incfile, entering);
@@ -225,8 +223,7 @@ int do_kfile(FILE *kfp, int entering)
             }
 	}
 	else if (first_time && *bp == '<') {
-	    ARTICLE* ap;
-	    if (last_kill_type != '<') {
+            if (last_kill_type != '<') {
 		if (last_kill_type) {
 		    if (perform_status_end(g_ngptr->toread,"article")) {
 			s_kill_mentioned = true;
@@ -243,7 +240,7 @@ int do_kfile(FILE *kfp, int entering)
 		cp = "T,";
 	    else
 		*cp++ = '\0';
-            ap = get_article(bp);
+            ARTICLE *ap = get_article(bp);
             if (ap != nullptr)
             {
 		if ((ap->flags & AF_FAKE) && !ap->child1) {
@@ -518,7 +515,6 @@ static int age_thread_commands(int keylen, HASHDATUM *data, int elapsed_days)
 
 void update_thread_kfile()
 {
-
     if (!(g_kf_state & KFS_GLOBAL_THREADFILE))
 	return;
 
@@ -636,13 +632,12 @@ void edit_kfile()
 		if (*bp == '/' || *bp == '*')
 		    g_kf_state |= KFS_NORMAL_LINES;
 		else if (*bp == '<') {
-		    ARTICLE* ap;
-		    char* cp = strchr(bp,' ');
+                    char* cp = strchr(bp,' ');
 		    if (!cp)
 			cp = ",";
 		    else
 			*cp++ = '\0';
-                    ap = get_article(bp);
+                    ARTICLE *ap = get_article(bp);
                     if (ap != nullptr)
                     {
 			if (*cp == 'T')

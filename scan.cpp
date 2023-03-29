@@ -52,15 +52,12 @@ int g_s_mode_vi{};
 
 void s_init_context(int cnum, scontext_type type)
 {
-    SCONTEXT*p;
-    int i;
-
     /* g_s_num_contexts not incremented until last moment */
     if (cnum < 0 || cnum > g_s_num_contexts) {
 	printf("s_init_context: illegal context number %d!\n",cnum) FLUSH;
 	TRN_ASSERT(false);
     }
-    p = g_s_contexts + cnum;
+    SCONTEXT *p = g_s_contexts + cnum;
     p->type = type;
     p->ent_sort = (long*)nullptr;
     p->ent_sort_max = -1;
@@ -86,7 +83,7 @@ void s_init_context(int cnum, scontext_type type)
     p->ptr_page_line = 0;
     p->flags = 0;
     /* clear the page entries */
-    for (i = 0; i < MAX_PAGE_SIZE; i++) {
+    for (int i = 0; i < MAX_PAGE_SIZE; i++) {
 	p->page_ents[i].entnum = 0;
 	p->page_ents[i].lines = 0;
 	p->page_ents[i].start_line = 0;
@@ -128,9 +125,7 @@ int s_new_context(scontext_type type)
 /* saves the current context */
 void s_save_context()
 {
-    SCONTEXT*p;
-
-    p = g_s_contexts + g_s_cur_context;
+    SCONTEXT *p = g_s_contexts + g_s_cur_context;
 
     p->type = g_s_cur_type;
     p->page_ents = g_page_ents;
@@ -165,14 +160,12 @@ void s_save_context()
 // int newcontext;			/* context number to activate */
 void s_change_context(int newcontext)
 {
-    SCONTEXT*p;
-
     if (newcontext < 0 || newcontext >= g_s_num_contexts) {
 	printf("s_change_context: bad context number %d!\n",newcontext) FLUSH;
 	TRN_ASSERT(false);
     }
     g_s_cur_context = newcontext;
-    p = g_s_contexts + newcontext;
+    SCONTEXT *p = g_s_contexts + newcontext;
     g_s_cur_type = p->type;
     g_page_ents = p->page_ents;
 

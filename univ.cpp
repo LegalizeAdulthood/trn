@@ -86,20 +86,16 @@ void univ_init()
 
 void univ_startup()
 {
-
-    bool sys_top_load = false;
-    bool user_top_load = false;
-
     /* later: make user top file an option or environment variable? */
     if (!univ_file_load("%+/univ/top","Top Level",nullptr)) {
-	univ_open();
+        univ_open();
 	g_univ_title = savestr("Top Level");
 	g_univ_fname = savestr("%+/univ/usertop");
 
 	/* read in trn default top file */
 	(void)univ_include_file("%X/sitetop");		/* pure local */
-	sys_top_load = univ_include_file("%X/trn4top");
-	user_top_load = univ_use_file("%+/univ/usertop", nullptr);
+	bool sys_top_load = univ_include_file("%X/trn4top");
+	bool user_top_load = univ_use_file("%+/univ/usertop", nullptr);
 
 	if (!(sys_top_load || user_top_load)) {
 	    /* last resort--all newsgroups */
@@ -157,7 +153,6 @@ void univ_close()
 
 UNIV_ITEM *univ_add(univ_item_type type, const char *desc)
 {
-
     UNIV_ITEM *node = (UNIV_ITEM*)safemalloc(sizeof(UNIV_ITEM));
 
     node->flags = UF_NONE;
@@ -280,7 +275,6 @@ void univ_add_group(const char *desc, const char *grpname)
 
 void univ_add_mask(const char *desc, const char *mask)
 {
-
     UNIV_ITEM *ui = univ_add(UN_GROUPMASK, desc);
     ui->data.gmask.masklist = savestr(mask);
     ui->data.gmask.title = savestr(desc);
@@ -289,7 +283,6 @@ void univ_add_mask(const char *desc, const char *mask)
 //char* fname;				/* May be URL */
 void univ_add_file(const char *desc, const char *fname, const char *label)
 {
-
     UNIV_ITEM *ui = univ_add(UN_CONFIGFILE, desc);
     ui->data.cfile.title = savestr(desc);
     ui->data.cfile.fname = savestr(fname);
@@ -301,7 +294,6 @@ void univ_add_file(const char *desc, const char *fname, const char *label)
 
 UNIV_ITEM *univ_add_virt_num(const char *desc, const char *grp, ART_NUM art)
 {
-
     UNIV_ITEM *ui = univ_add(UN_ARTICLE, desc);
     ui->data.virt.ng = savestr(grp);
     ui->data.virt.num = art;
@@ -494,7 +486,6 @@ static bool univ_use_file(char *fname, const char *label)
 {
     static char lbuf[LBUFLEN];
 
-    bool save_temp = false;
     bool begin_top = true;	/* default assumption (might be changed later) */
     char *p = nullptr;
 
@@ -510,7 +501,7 @@ static bool univ_use_file(char *fname, const char *label)
 	g_univ_tmp_file = open_name;
 	if (!url_get(fname+4,open_name))
 	    open_name = nullptr;
-	save_temp = true;
+	bool save_temp = true;
 	begin_top = false;	/* we will need a "begin group" */
     } else if (*s == ':') {	/* relative to last file's directory */
 	printf("Colon filespec not supported for |%s|\n",s) FLUSH;
@@ -549,7 +540,6 @@ static bool univ_use_file(char *fname, const char *label)
 
 static bool univ_include_file(const char *fname)
 {
-
     char *old_univ_fname = g_univ_fname;
     g_univ_fname = savestr(fname);	/* LEAK */
     bool retval = univ_use_file(g_univ_fname, nullptr);
@@ -764,7 +754,6 @@ static bool univ_do_line(char *line)
 /* level generator */
 bool univ_file_load(char *fname, char *title, char *label)
 {
-
     univ_open();
 
     if (fname)
@@ -801,7 +790,6 @@ void univ_mask_load(char *mask, const char *title)
 
 void univ_redofile()
 {
-
     char *tmp_fname = (g_univ_fname ? savestr(g_univ_fname) : 0);
     char *tmp_title = (g_univ_title ? savestr(g_univ_title) : 0);
     char *tmp_label = (g_univ_label ? savestr(g_univ_label) : 0);
@@ -940,7 +928,6 @@ static void univ_vg_addart(ART_NUM a)
 
 static void univ_vg_addgroup()
 {
-
     /* later: allow was-read articles, etc... */
     for (ART_NUM a = article_first(g_firstart); a <= g_lastart; a = article_next(a)) {
 	if (!article_unread(a))
@@ -953,7 +940,6 @@ static void univ_vg_addgroup()
 /* returns do_newsgroup() value */
 int univ_visit_group_main(const char *gname)
 {
-
     if (!gname || !*gname)
 	return NG_ERROR;
 
@@ -983,7 +969,6 @@ int univ_visit_group_main(const char *gname)
 /* LATER: allow the loop to be interrupted */
 void univ_virt_pass()
 {
-
     g_univ_ng_virtflag = true;
     s_univ_virt_pass_needed = false;
 
@@ -1130,7 +1115,6 @@ const char *univ_article_desc(const UNIV_ITEM *ui)
 //int where;	/* what context were we in--use later for key help? */
 void univ_help_main(help_location where)
 {
-
     univ_open();
     g_univ_title = savestr("Extended Help");
 

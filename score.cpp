@@ -126,9 +126,7 @@ void sc_init(bool pend_wait)
 	    sc_score_art(a,true);
     }
     if (pend_wait) {
-	bool waitflag;		/* if true, use key pause */
-
-	waitflag = true;	/* normal mode: wait for key first */
+        bool waitflag = true; /* normal mode: wait for key first */
 	if (g_sf_verbose && waitflag) {
 #ifdef PENDING
 	    printf("(press key to start reading)");
@@ -177,14 +175,12 @@ void sc_cleanup()
 
 void sc_set_score(ART_NUM a, int score)
 {
-    ARTICLE* ap;
-
     if (is_unavailable(a))	/* newly unavailable */
 	return;
     if (g_kill_thresh_active && score <= g_kill_thresh && article_unread(a))
 	oneless_artnum(a);
 
-    ap = article_ptr(a);
+    ARTICLE *ap = article_ptr(a);
     ap->score = score;	/* update the score */
     ap->scoreflags |= SFLAG_SCORED;
     g_s_order_changed = true;	/* resort */
@@ -194,9 +190,7 @@ void sc_set_score(ART_NUM a, int score)
 /* This is where you should add hooks for new scoring methods. */
 void sc_score_art_basic(ART_NUM a)
 {
-    int score;
-
-    score = 0;
+    int score = 0;
     score += sf_score(a);	/* get a score */
 
     if (g_sc_do_spin)		/* appropriate to spin */
@@ -240,9 +234,7 @@ int sc_score_art(ART_NUM a, bool now)
 /* CONSIDER: option for scoring only unread articles (obey sc_fill_unread?) */
 void sc_fill_scorelist(ART_NUM first, ART_NUM last)
 {
-    int i;
-
-    for (i = article_first(first); i <= last; i = article_next(i))
+    for (int i = article_first(first); i <= last; i = article_next(i))
 	(void)sc_score_art(i,false);	/* will be sorted later... */
 }
 
@@ -307,16 +299,16 @@ void sc_lookahead(bool flag, bool nowait)
 
 int sc_percent_scored()
 {
-    int i,total,scored;
+    int scored;
 
     if (!g_sc_initialized)
 	return 0;	/* none scored */
     if (g_sc_fill_max == g_lastart)
 	return 100;
-    i = g_firstart;
+    int i = g_firstart;
     if (g_sa_mode_read_elig)
 	i = g_absfirst;
-    total = scored = 0;
+    int total = scored = 0;
     for (i = article_first(i); i <= g_lastart; i = article_next(i)) {
 	if (!article_exists(i))
 	    continue;
@@ -333,9 +325,6 @@ int sc_percent_scored()
 
 void sc_rescore_arts()
 {
-    ART_NUM a;
-    bool old_spin;
-
     if (!g_sc_initialized) {
 	if (g_sc_delay) {
 	    g_sc_delay = false;
@@ -352,10 +341,10 @@ void sc_rescore_arts()
 	return;
     }
     /* I think g_sc_do_spin will always be false, but why take chances? */
-    old_spin = g_sc_do_spin;
+    bool old_spin = g_sc_do_spin;
     setspin(SPIN_FOREGROUND);
     g_sc_do_spin = true;				/* amuse the user */
-    for (a = article_first(g_absfirst); a <= g_lastart; a = article_next(a)) {
+    for (ART_NUM a = article_first(g_absfirst); a <= g_lastart; a = article_next(a)) {
 	if (article_exists(a))
 	    sc_score_art_basic(a);		/* rescore it then */
     }
@@ -372,7 +361,6 @@ void sc_rescore_arts()
 /* corrupted (:-) 11/12/92 by CAA for online rescoring */
 void sc_append(char *line)
 {
-    char filechar;
     if (!line)		/* empty line */
 	return;
 
@@ -396,7 +384,7 @@ void sc_append(char *line)
 	if (!line)
 	    return;		/* do nothing with empty string */
     }
-    filechar = *line;			/* first char */
+    char filechar = *line; /* first char */
     sf_append(line);
     if (filechar == '!') {
 	printf("\nRescoring articles...");
@@ -498,9 +486,7 @@ void sc_score_cmd(const char *line)
 //int thresh;		/* kill all articles with this score or lower */
 void sc_kill_threshold(int thresh)
 {
-    ART_NUM a;
-
-    for (a = article_first(g_firstart); a <= g_lastart; a = article_next(a))
+    for (ART_NUM a = article_first(g_firstart); a <= g_lastart; a = article_next(a))
     {
         if (article_ptr(a)->score <= thresh &&
             article_unread(a)

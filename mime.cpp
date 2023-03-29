@@ -94,13 +94,11 @@ void mime_init()
 
 void mime_ReadMimecap(char *mcname)
 {
-    FILE* fp;
-    char* s;
-    char* arg;
-    int buflen = 2048;
-    int i;
+    char*s;
+    int  buflen = 2048;
+    int  i;
 
-    fp = fopen(filexp(mcname), "r");
+    FILE *fp = fopen(filexp(mcname), "r");
     if (fp == nullptr)
 	return;
     char *bp = safemalloc(buflen);
@@ -143,7 +141,7 @@ void mime_ReadMimecap(char *mcname)
 	mcp->command = savestr(mime_ParseEntryArg(&s));
 	while (s) {
 	    t = mime_ParseEntryArg(&s);
-            arg = strchr(t, '=');
+            char *arg = strchr(t, '=');
             if (arg != nullptr)
             {
 		char* f = arg+1;
@@ -1619,8 +1617,7 @@ static char *do_newline(char *t, html_flags flag)
 
 static int do_indent(char *t)
 {
-    HBLK* blks;
-    int ch, spaces, len = 0;
+    int spaces, len = 0;
 
     if (!(g_mime_section->html & HF_NEED_INDENT))
 	return len;
@@ -1628,11 +1625,11 @@ static int do_indent(char *t)
     if (t)
 	g_mime_section->html &= ~HF_NEED_INDENT;
 
-    blks = g_mime_section->html_blks;
+    HBLK *blks = g_mime_section->html_blks;
     if (blks != nullptr)
     {
 	for (int j = 0; j < g_mime_section->html_blkcnt; j++) {
-            ch = blks[j].indent;
+            int ch = blks[j].indent;
             if (ch != 0)
             {
 		switch (ch) {

@@ -43,14 +43,12 @@ int init_nntp()
 
 int server_init(const char *machine)
 {
-    int sockt_rd, sockt_wr;
-
-    sockt_rd = get_tcp_socket(machine, g_nntplink.port_number, "nntp");
+    int sockt_rd = get_tcp_socket(machine, g_nntplink.port_number, "nntp");
 
     if (sockt_rd < 0)
 	return -1;
 
-    sockt_wr = dup(sockt_rd);
+    int sockt_wr = dup(sockt_rd);
 
     /* Now we'll make file pointers (i.e., buffered I/O) out of
     ** the socket file descriptor.  Note that we can't just
@@ -149,9 +147,8 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 #endif
     struct hostent* hp;
 #ifdef h_addr
-    int x = 0;
-    char** cp;
-    static char* alist[1];
+    int         x = 0;
+    static char*alist[1];
 #endif /* h_addr */
     static struct hostent def;
     static struct in_addr defaddr;
@@ -162,8 +159,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
     if (port)
 	sin.sin_port = htons(port);
     else {
-	struct servent* sp;
-        sp = getservbyname(service, "tcp");
+        struct servent *sp = getservbyname(service, "tcp");
         if (sp == nullptr)
         {
 	    fprintf(stderr, "%s/tcp: Unknown service.\n", service);
@@ -200,7 +196,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
     sin.sin_family = hp->h_addrtype;
 
     /* get a socket and initiate connection -- use multiple addresses */
-    for (cp = hp->h_addr_list; cp && *cp; cp++) {
+    for (char **cp = hp->h_addr_list; cp && *cp; cp++) {
 	extern char* inet_ntoa (const struct in_addr);
 	s = socket(hp->h_addrtype, SOCK_STREAM, 0);
 	if (s < 0) {

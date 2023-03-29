@@ -69,12 +69,10 @@ const char *sa_get_statchars(long a, int line)
 
 const char *sa_desc_subject(long e)
 {
-    char* s;
-    char* s1;
     static char sa_subj_buf[256];
 
     /* fetchlines saves its arguments */
-    s = fetchlines(g_sa_ents[e].artnum,SUBJ_LINE);
+    char *s = fetchlines(g_sa_ents[e].artnum, SUBJ_LINE);
 
     if (!s || !*s) {
 	if (s)
@@ -84,7 +82,7 @@ const char *sa_desc_subject(long e)
     }
     strncpy(sa_subj_buf,s,250);
     free(s);
-    s1 = sa_subj_buf;
+    char *s1 = sa_subj_buf;
     if (*s1 == 'r' || *s1 == 'R') {
 	if (*++s1 == 'e' || *s1 == 'E') {
 	    if (*++s1 ==':') {
@@ -102,12 +100,10 @@ const char *sa_desc_subject(long e)
 const char *sa_get_desc(long e, int line, bool trunc)
 {
     static char desc_buf[1024];
-    char* s;
-    bool use_standout;	/* if true, use stdout on line */
-    ART_NUM artnum;
+    char*       s;
 
-    artnum = g_sa_ents[e].artnum;
-    use_standout = false;
+    ART_NUM artnum = g_sa_ents[e].artnum;
+    bool    use_standout = false;
     switch (line) {
       case 1:
 	desc_buf[0] = '\0';	/* initialize the buffer */
@@ -228,11 +224,10 @@ const char *sa_get_desc(long e, int line, bool trunc)
 // long e;			/* the entry number */
 int sa_ent_lines(long e)
 {
-    char* s;
-    ART_NUM artnum;
-    int num = 1;
+    char*s;
+    int  num = 1;
 
-    artnum = g_sa_ents[e].artnum;
+    ART_NUM artnum = g_sa_ents[e].artnum;
     if (g_sa_mode_desc_summary) {
 	s = fetchlines(artnum,SUMRY_LINE);
 	if (s && *s)

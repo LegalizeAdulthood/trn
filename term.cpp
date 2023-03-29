@@ -525,18 +525,17 @@ static void mac_init(char *tcbuf)
 
 void mac_line(char *line, char *tmpbuf, int tbsize)
 {
-    char* s;
-    char* m;
-    KEYMAP* curmap;
-    int ch;
-    int garbage = 0;
+    char*       s;
+    char*       m;
+    KEYMAP*     curmap;
+    int         garbage = 0;
     static char override[] = "\nkeymap overrides string\n";
 
     if (s_topmap == nullptr)
 	s_topmap = newkeymap();
     if (*line == '#' || *line == '\n')
 	return;
-    ch = strlen(line)-1;
+    int ch = strlen(line) - 1;
     if (line[ch] == '\n')
 	line[ch] = '\0';
     /* A 0 length signifies we already parsed the macro into tmpbuf,
@@ -585,7 +584,6 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
 
 static KEYMAP *newkeymap()
 {
-    int i;
     KEYMAP* map;
 
 #ifndef lint
@@ -593,7 +591,7 @@ static KEYMAP *newkeymap()
 #else
     map = nullptr;
 #endif /* lint */
-    for (i = 127; i >= 0; i--) {
+    for (int i = 127; i >= 0; i--) {
 	map->km_ptr[i].km_km = nullptr;
 	map->km_type[i] = KM_NOTHIN;
     }
@@ -616,12 +614,10 @@ void show_macros()
 
 static void show_keymap(KEYMAP *curmap, char *prefix)
 {
-    int i;
     char* next = prefix + strlen(prefix);
-    int kt;
 
-    for (i = 0; i < 128; i++) {
-	kt = curmap->km_type[i];
+    for (int i = 0; i < 128; i++) {
+	int kt = curmap->km_type[i];
 	if (kt != 0) {
 	    if (i < ' ')
 		sprintf(next,"^%c",i+64);
@@ -733,10 +729,9 @@ int buflimit = LBUFLEN;
 
 bool finish_command(int donewline)
 {
-    char* s;
     char gmode_save = g_general_mode;
 
-    s = g_buf;
+    char *s = g_buf;
     if (s[1] != FINISHCMD)		/* someone faking up a command? */
 	return true;
     set_mode('i',g_mode);
@@ -880,11 +875,10 @@ echo_it:
 
 bool finish_dblchar()
 {
-    bool ret;
     int buflimit_save = buflimit;
     int not_echoing_save = not_echoing;
     buflimit = 2;
-    ret = finish_command(false);
+    bool ret = finish_command(false);
     buflimit = buflimit_save;
     not_echoing = not_echoing_save;
     return ret;
@@ -909,9 +903,8 @@ void eat_typeahead()
     if (!g_allow_typeahead && !g_mouse_is_down && !macro_pending()
      && this_time - last_time > 0.3) {
 #ifdef PENDING
-	KEYMAP* curmap = s_topmap;
-	Uchar lc;
-	int i, j;
+	KEYMAP*curmap = s_topmap;
+        int    j;
 	for (j = 0; input_pending(); ) {
 	    errno = 0;
 	    if (read_tty(&g_buf[j],1) < 0) {
@@ -921,14 +914,14 @@ void eat_typeahead()
 		}
 		continue;
 	    }
-	    lc = *(Uchar*)g_buf;
+	    Uchar lc = *(Uchar*)g_buf;
 	    if ((lc & 0200) || curmap == nullptr) {
 		curmap = s_topmap;
 		j = 0;
 		continue;
 	    }
 	    j++;
-	    for (i = (curmap->km_type[lc] >> KM_GSHIFT) & KM_GMASK; i; i--) {
+	    for (int i = (curmap->km_type[lc] >> KM_GSHIFT) & KM_GMASK; i; i--) {
 		if (!input_pending())
 		    goto dbl_break;
 		read_tty(&g_buf[j++],1);
@@ -972,10 +965,8 @@ void eat_typeahead()
 
 void save_typeahead(char *buf, int len)
 {
-    int cnt;
-
     while (input_pending()) {
-	cnt = read_tty(buf, len);
+	int cnt = read_tty(buf, len);
 	buf += cnt;
 	len -= cnt;
     }
@@ -1124,9 +1115,6 @@ void no_ulfire()
 
 void getcmd(char *whatbuf)
 {
-    KEYMAP* curmap;
-    int i;
-    bool no_macros; 
     int times = 0;			/* loop detector */
 
     if (!input_pending()) {
@@ -1137,8 +1125,8 @@ void getcmd(char *whatbuf)
     }
 
 tryagain:
-    curmap = s_topmap;
-    no_macros = (whatbuf != g_buf && !g_xmouse_is_on); 
+    KEYMAP *curmap = s_topmap;
+    bool no_macros = (whatbuf != g_buf && !g_xmouse_is_on); 
     for (;;) {
 	g_int_count = 0;
 	errno = 0;
@@ -1164,7 +1152,7 @@ tryagain:
 	}
 	if (curmap == nullptr)
 	    goto got_canonical;
-	for (i = (curmap->km_type[g_lastchar] >> KM_GSHIFT) & KM_GMASK; i; i--)
+	for (int i = (curmap->km_type[g_lastchar] >> KM_GSHIFT) & KM_GMASK; i; i--)
 	    read_tty(&whatbuf[i],1);
 
 	switch (curmap->km_type[g_lastchar] & KM_TMASK) {
@@ -1209,13 +1197,12 @@ got_canonical:
 
 void pushstring(char *str, char_int bits)
 {
-    int i;
     char tmpbuf[PUSHSIZE];
     char* s = tmpbuf;
 
     TRN_ASSERT(str != nullptr);
     interp(tmpbuf,PUSHSIZE,str);
-    for (i = strlen(s)-1; i >= 0; i--)
+    for (int i = strlen(s) - 1; i >= 0; i--)
 	pushchar(s[i] ^ bits);
 }
 
@@ -1361,11 +1348,10 @@ bool in_choice(const char *prompt, char *value, char *choices, char_int newmode)
 {
     char mode_save = g_mode;
     char gmode_save = g_general_mode;
-    char* bp;
-    char* s;
-    char* prefix = nullptr;
-    int len, number_was = -1, any_val_OK = 0, value_changed;
-    char tmpbuf[80], prefixes[80];
+    char*s;
+    char*prefix = nullptr;
+    int  number_was = -1, any_val_OK = 0, value_changed;
+    char tmpbuf[80],      prefixes[80];
 
     unflush_output();			/* disable any ^O in effect */
     eat_typeahead();
@@ -1409,8 +1395,8 @@ bool in_choice(const char *prompt, char *value, char *choices, char_int newmode)
     strcpy(g_buf,value);
 
 reask_in_choice:
-    len = strlen(g_buf);
-    bp = g_buf;
+    int len = strlen(g_buf);
+    char *bp = g_buf;
     if (*prefixes != '\0') {
 	s = prefix;
 	for (prefix = prefixes; *prefix; prefix += strlen(prefix)) {
@@ -1533,11 +1519,8 @@ reinp_in_choice:
 
 int print_lines(const char *what_to_print, int hilite)
 {
-    const char* s;
-    int i;
-
-    for (s=what_to_print; *s; ) {
-	i = check_page_line();
+    for (const char *s = what_to_print; *s; ) {
+	int i = check_page_line();
 	if (i)
 	    return i;
 	if (hilite == STANDOUT) {
@@ -1639,9 +1622,7 @@ void warnmsg(const char *str)
 
 void pad(int num)
 {
-    int i;
-
-    for (i = num; i; i--)
+    for (int i = num; i; i--)
 	putchar(g_tc_PC);
     fflush(stdout);
 }
@@ -1674,11 +1655,9 @@ void rubout()
 
 void reprint()
 {
-    char* s;
-
     fputs("^R\n",stdout) FLUSH;
     termdown(1);
-    for (s = g_buf; *s; s++)
+    for (char *s = g_buf; *s; s++)
 	echo_char(*s);
     s_screen_is_dirty = true;
 }
@@ -1704,8 +1683,7 @@ void clear()
 	tputs(g_tc_CD,g_tc_LINES,putchr);
     }
     else {
-	int i;
-	for (i = 0; i < g_tc_LINES; i++)
+        for (int i = 0; i < g_tc_LINES; i++)
 	    putchr('\n');
 	home_cursor();
     }
@@ -1731,8 +1709,8 @@ void home_cursor()
 
 void goto_xy(int to_col, int to_line)
 {
-    char* str;
-    int cmcost, xcost, ycost;
+    char*str;
+    int  cmcost;
 
     if (g_term_col == to_col && g_term_line == to_line)
 	return;
@@ -1744,13 +1722,13 @@ void goto_xy(int to_col, int to_line)
 	cmcost = 9999;
     }
 
-    ycost = (to_line - g_term_line);
+    int ycost = (to_line - g_term_line);
     if (ycost < 0)
 	ycost = (s_upcost? -ycost * s_upcost : 7777);
     else if (ycost > 0)
 	g_term_col = 0;
 
-    xcost = (to_col - g_term_col);
+    int xcost = (to_col - g_term_col);
     if (xcost < 0) {
 	if (!to_col && ycost+1 < cmcost) {
 	    carriage_return();
@@ -1889,10 +1867,9 @@ void termlib_reset()
 
 void xmouse_init(const char *progname)
 {
-    char* s;
     if (!g_can_home || !g_use_threads)
 	return;
-    s = getenv("XTERMMOUSE");
+    char *s = getenv("XTERMMOUSE");
     if (s && *s) {
 	interp(g_msg, sizeof g_msg, s);
 	set_option(OI_USE_MOUSE, g_msg);
@@ -1921,9 +1898,7 @@ void xmouse_check()
 	    turn_it_on = (strchr(g_msg, g_mode) != nullptr);
 	}
 	if (turn_it_on) {
-	    char* s;
-	    int i, j;
-	    switch (mmode) {
+            switch (mmode) {
 	      case 'c':
 		g_mousebar_btns = g_newsrc_sel_btns;
 		g_mousebar_cnt = g_newsrc_sel_btn_cnt;
@@ -1957,10 +1932,10 @@ void xmouse_check()
 		/*g_mousebar_cnt = 0;*/
 		break;
 	    }
-	    s = g_mousebar_btns;
+	    char *s = g_mousebar_btns;
 	    g_mousebar_width = 0;
-	    for (i = 0; i < g_mousebar_cnt; i++) {
-		j = strlen(s);
+	    for (int i = 0; i < g_mousebar_cnt; i++) {
+		int j = strlen(s);
 		if (*s == '[') {
 		    g_mousebar_width += j;
 		    s += j + 1;
@@ -2002,8 +1977,6 @@ void xmouse_off()
 void draw_mousebar(int limit, bool restore_cursor)
 {
     int i;
-    char* s;
-    char* t;
     int save_col = g_term_col;
     int save_line = g_term_line;
 
@@ -2011,8 +1984,8 @@ void draw_mousebar(int limit, bool restore_cursor)
     if (g_mousebar_cnt == 0)
 	return;
 
-    s = g_mousebar_btns;
-    t = g_msg;
+    char *s = g_mousebar_btns;
+    char *t = g_msg;
     for (i = 0; i < g_mousebar_cnt; i++) {
 	if (*s == '[') {
 	    while (*++s) *t++ = *s;
@@ -2066,14 +2039,12 @@ static void mouse_input(const char *cp)
 {
     static int last_btn;
     static int last_x, last_y;
-    int btn;
-    int x, y;
 
     if (cp[2] < ' ' || cp[2] > ' '+3)
 	return;
-    btn = (cp[2] & 3);
-    x = cp[1] - 33;
-    y = cp[0] - 33;
+    int btn = (cp[2] & 3);
+    int x = cp[1] - 33;
+    int y = cp[0] - 33;
 
     if (btn != 3) {
 #if defined(HAS_GETTIMEOFDAY) || defined(HAS_FTIME)
@@ -2105,10 +2076,9 @@ static void mouse_input(const char *cp)
 
 bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 {
-    char* s = g_mousebar_btns;
-    char* t;
-    int i, j;
-    int col = g_tc_COLS - g_mousebar_width;
+    char*s = g_mousebar_btns;
+    int  i, j;
+    int  col = g_tc_COLS - g_mousebar_width;
 
     if (g_mousebar_width != 0 && btn_clk == 0 && y_clk == g_tc_LINES-1
      && (x_clk -= col-1) > 0) {
@@ -2120,7 +2090,7 @@ bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 	}
 	while (true) {
 	    i = strlen(s);
-	    t = s;
+	    char *t = s;
 	    if (*s == '[') {
 		s += i + 1;
 		j = 0;
@@ -2207,9 +2177,7 @@ void add_tc_string(const char *capability, const char *string)
 /* Return the named termcap color capability's string. */
 char *tc_color_capability(const char *capability)
 {
-    int c;
-
-    for (c = 0; c < s_tc_string_cnt; c++) {
+    for (int c = 0; c < s_tc_string_cnt; c++) {
 	if (!strcmp(tc_strings[c].capability,capability))
 	    return tc_strings[c].string;
     }

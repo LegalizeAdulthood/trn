@@ -78,8 +78,6 @@ bool g_sa_mode_desc_keyw{};
 
 sa_main_result sa_main()
 {
-    char sa_oldmode;	/* keep mode of caller */
-
     g_sa_in = true;
     g_sa_go = false;	/* ...do not collect $200... */
     g_s_follow_temp = false;
@@ -98,8 +96,7 @@ sa_main_result sa_main()
 
     /* unless "explicit" entry, read any marked articles */
     if (!g_sa_go_explicit) {
-	long a;
-	a = sa_readmarked_elig();
+        long a = sa_readmarked_elig();
 	if (a) {	/* there was an article */
 	    g_art = g_sa_ents[a].artnum;
 	    g_reread = true;
@@ -122,8 +119,8 @@ sa_main_result sa_main()
 	g_s_top_ent = -1;		/* go to top of arts... */
     }
 
-    sa_oldmode = g_mode;			/* save mode */
-    g_mode = 's';				/* for RN macros */
+    char sa_oldmode = g_mode; /* save mode */
+    g_mode = 's';             /* for RN macros */
     sa_main_result i = sa_mainloop();
     g_mode = sa_oldmode;			/* restore mode */
 

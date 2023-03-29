@@ -116,7 +116,6 @@ static void lp_bmap(LONG *buf, int len);
 */
 bool mt_init()
 {
-    int i;
     long size;
     bool success = true;
 
@@ -147,7 +146,7 @@ bool mt_init()
 	    return false;
 	}
 	mybytemap(&s_my_bmap);
-	for (i = 0; i < sizeof (LONG); i++) {
+	for (int i = 0; i < sizeof (LONG); i++) {
 	    if (i < sizeof (WORD)) {
 		if (s_my_bmap.w[i] != s_mt_bmap.w[i])
 		    s_word_same = false;
@@ -179,12 +178,11 @@ int mt_data()
 {
     int ret = 1;
 #ifdef SUPPORT_XTHREAD		/* use remote thread file? */
-    long size;
 
     if (!g_datasrc->thread_dir) {
 	if (nntp_command("XTHREAD THREAD") <= 0)
 	    return 0;
-	size = nntp_readcheck();
+	long size = nntp_readcheck();
 	if (size < 0)
 	    return 0;
 
@@ -281,9 +279,7 @@ static char *s_string_end{};
 */
 static int read_authors()
 {
-    int count;
-    char* string_ptr;
-    char** author_ptr;
+    int   count;
 
     if (!read_item((char**)&s_author_cnts, (MEM_SIZE)s_total.author*sizeof (WORD)))
 	return 0;
@@ -292,7 +288,7 @@ static int read_authors()
     if (!read_item(&s_strings, (MEM_SIZE)s_total.string1))
 	return 0;
 
-    string_ptr = s_strings;
+    char *string_ptr = s_strings;
     s_string_end = string_ptr + s_total.string1;
     if (s_string_end[-1] != '\0') {
 	/*error("first string table is invalid.\n");*/
@@ -303,7 +299,7 @@ static int read_authors()
     ** (the packed values were saved as indexes).
     */
     s_author_array = (char**)safemalloc(s_total.author * sizeof (char*));
-    author_ptr = s_author_array;
+    char **author_ptr = s_author_array;
 
     for (count = s_total.author; count; count--) {
 	if (string_ptr >= s_string_end)
@@ -326,10 +322,8 @@ static int read_authors()
 */
 static int read_subjects()
 {
-    int count;
-    char* string_ptr;
-    SUBJECT** subj_ptr;
-    WORD* subject_cnts;
+    int  count;
+    WORD*subject_cnts;
 
     if (!read_item((char**)&subject_cnts,
 		   (MEM_SIZE)s_total.subject * sizeof (WORD))) {
@@ -340,16 +334,15 @@ static int read_subjects()
 
     /* Use this array when unpacking the article's subject offset. */
     s_subject_array = (SUBJECT**)safemalloc(s_total.subject * sizeof (SUBJECT*));
-    subj_ptr = s_subject_array;
+    SUBJECT **subj_ptr = s_subject_array;
 
-    string_ptr = s_subject_strings;	/* s_string_end is already set */
+    char *string_ptr = s_subject_strings; /* s_string_end is already set */
 
     for (count = s_total.subject; count; count--) {
-	int len;
-	ARTICLE arty;
+        ARTICLE arty;
 	if (string_ptr >= s_string_end)
 	    break;
-	len = strlen(string_ptr);
+	int len = strlen(string_ptr);
 	arty.subj = 0;
 	set_subj_line(&arty, string_ptr, len);
 	if (len == 72)
@@ -370,16 +363,13 @@ static int read_subjects()
 */
 static int read_roots()
 {
-    SUBJECT** subj_ptr;
-    int i;
-    SUBJECT* sp;
-    SUBJECT* prev_sp;
-    int count;
-    int ret;
+    int     i;
+    SUBJECT*sp;
+    int     ret;
 
-    subj_ptr = s_subject_array;
+    SUBJECT **subj_ptr = s_subject_array;
 
-    for (count = s_total.root; count--; ) {
+    for (int count = s_total.root; count--; ) {
 #ifdef SUPPORT_XTHREAD
 	if (!g_datasrc->thread_dir)
 	    ret = nntp_read((char*)&s_p_root, (long)sizeof (PACKED_ROOT));
@@ -402,7 +392,7 @@ static int read_roots()
 	    /*error("root has invalid values.\n");*/
 	    return 0;
 	}
-	for (prev_sp = *subj_ptr; i--; prev_sp = sp, subj_ptr++) {
+	for (SUBJECT *prev_sp = *subj_ptr; i--; prev_sp = sp, subj_ptr++) {
 	    sp = *subj_ptr;
 	    if (sp->thread_link == nullptr) {
 		sp->thread_link = prev_sp->thread_link;
@@ -475,17 +465,15 @@ static ARTICLE *the_article(int relative_offset, int num)
 /* Read the articles into their trees.  Point everything everywhere. */
 static int read_articles()
 {
-    int count;
-    ARTICLE* article;
-    ARTICLE** art_ptr;
-    int ret;
+    ARTICLE*article;
+    int     ret;
 
     /* Build an array to interpret interlinkages of articles. */
     s_article_array = (ARTICLE**)safemalloc(s_total.article * sizeof (ARTICLE*));
-    art_ptr = s_article_array;
+    ARTICLE **art_ptr = s_article_array;
 
     s_invalid_data = false;
-    for (count = 0; count < s_total.article; count++) {
+    for (int count = 0; count < s_total.article; count++) {
 #ifdef SUPPORT_XTHREAD
 	if (!g_datasrc->thread_dir)
 	    ret = nntp_read((char*)&s_p_article, (long)sizeof (PACKED_ARTICLE));
@@ -551,9 +539,7 @@ static int read_articles()
 */
 static int read_ids()
 {
-    ARTICLE* article;
-    char* string_ptr;
-    int i, count, len, len2;
+    int i, count, len;
 
     if (!read_item(&s_strings, (MEM_SIZE)s_total.string2)
      || !read_item((char**)&s_ids,
@@ -562,7 +548,7 @@ static int read_ids()
     }
     wp_bmap(s_ids, s_total.article + s_total.domain + 1);
 
-    string_ptr = s_strings;
+    char *string_ptr = s_strings;
     s_string_end = string_ptr + s_total.string2;
 
     if (s_string_end[-1] != '\0') {
@@ -588,19 +574,18 @@ static int read_ids()
 		/*error("error in id array.\n");*/
 		return 0;
 	    }
-	    article = s_article_array[s_ids[i]];
+	    ARTICLE *article = s_article_array[s_ids[i]];
 	    for (;;) {
 		if (string_ptr >= s_string_end) {
 		    /*error("error unpacking domain strings.\n");*/
 		    return 0;
 		}
-		len2 = strlen(string_ptr);
+		int len2 = strlen(string_ptr);
 		article->msgid = safemalloc(len2 + len + 2 + 1);
 		sprintf(article->msgid, "<%s%s>", string_ptr, g_buf);
 		string_ptr += len2 + 1;
 		if (g_msgid_hash) {
-		    HASHDATUM data;
-		    data = hashfetch(g_msgid_hash, article->msgid, len2+len+2);
+                    HASHDATUM data = hashfetch(g_msgid_hash, article->msgid, len2 + len + 2);
 		    if (data.dat_len) {
 			article->autofl = static_cast<autokill_flags>(data.dat_len) &(AUTO_SEL_MASK|AUTO_KILL_MASK);
 			if ((data.dat_len & KF_AGE_MASK) == 0)
@@ -637,13 +622,11 @@ static int read_ids()
 */
 static void tweak_data()
 {
-    int count;
-    ARTICLE* ap;
-    ARTICLE** art_ptr;
-    union { ARTICLE* ap; int num; } uni;
-    autokill_flags fl;
+    int             count;
+    ARTICLE*        ap;
+    union { ARTICLE*ap; int num; } uni;
 
-    art_ptr = s_article_array;
+    ARTICLE **art_ptr = s_article_array;
     for (count = s_total.article; count--; ) {
 	ap = *art_ptr++;
 	if (ap->child1) {
@@ -670,7 +653,7 @@ static void tweak_data()
     art_ptr = s_article_array;
     for (count = s_total.article; count--; ) {
 	ap = *art_ptr++;
-        fl = ap->autofl;
+        autokill_flags fl = ap->autofl;
         if (fl != AUTO_KILL_NONE)
 	    perform_auto_flags(ap, fl, fl, fl);
     }
@@ -712,11 +695,10 @@ static void mybytemap(BMAP *map)
 	BYTE b[sizeof (LONG)];
 	WORD w;
 	LONG l;
-    } u;
-    BYTE *mp;
-    int i, j;
+    }        u;
+    int      i, j;
 
-    mp = &map->w[sizeof (WORD)];
+    BYTE *mp = &map->w[sizeof(WORD)];
     u.w = 1;
     for (i = sizeof (WORD); i > 0; i--) {
 	for (j = 0; j < sizeof (WORD); j++) {
@@ -760,14 +742,13 @@ static void wp_bmap(WORD *buf, int len)
 	BYTE b[sizeof (WORD)];
 	WORD w;
     } in, out;
-    int i;
 
     if (s_word_same)
 	return;
 
     while (len--) {
 	in.w = *buf;
-	for (i = 0; i < sizeof (WORD); i++)
+	for (int i = 0; i < sizeof (WORD); i++)
 	    out.b[s_my_bmap.w[i]] = in.b[s_mt_bmap.w[i]];
 	*buf++ = out.w;
     }
@@ -781,14 +762,13 @@ static void lp_bmap(LONG *buf, int len)
 	BYTE b[sizeof (LONG)];
 	LONG l;
     } in, out;
-    int i;
 
     if (s_long_same)
 	return;
 
     while (len--) {
 	in.l = *buf;
-	for (i = 0; i < sizeof (LONG); i++)
+	for (int i = 0; i < sizeof (LONG); i++)
 	    out.b[s_my_bmap.l[i]] = in.b[s_mt_bmap.l[i]];
 	*buf++ = out.l;
     }

@@ -48,11 +48,10 @@ void sw_file(char **tcbufptr)
 
 void sw_list(char *swlist)
 {
-    char* s;
     char* p;
     char inquote = 0;
 
-    s = p = swlist;
+    char *s = p = swlist;
     while (*s) {			/* "String, or nothing" */
 	if (!inquote && isspace(*s)) {	/* word delimiter? */
 	    for (;;) {
@@ -378,10 +377,8 @@ void save_init_environment(char *str)
 
 void write_init_environment(FILE *fp)
 {
-    int i;
-    char* s;
-    for (i = 0; i < s_init_environment_cnt; i++) {
-	s = strchr(s_init_environment_strings[i],'=');
+    for (int i = 0; i < s_init_environment_cnt; i++) {
+	char *s = strchr(s_init_environment_strings[i], '=');
 	if (!s)
 	    continue;
 	*s = '\0';

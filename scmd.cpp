@@ -111,10 +111,9 @@ void s_lookahead()
  */
 int s_docmd()
 {
-    long a;		/* entry pointed to */
-    bool flag;		/* misc */
+    bool flag; /* misc */
 
-    a = g_page_ents[g_s_ptr_page_line].entnum;
+    long a = g_page_ents[g_s_ptr_page_line].entnum;
     if (*g_buf == '\f')	/* map form feed to ^l */
 	*g_buf = Ctl('l');
     switch(*g_buf) {
@@ -280,14 +279,12 @@ static char s_search_init{};
 
 bool s_match_description(long ent)
 {
-    int i, lines;
     static char lbuf[LBUFLEN];
-    char* s;
 
-    lines = s_ent_lines(ent);
-    for (i = 1; i <= lines; i++) {
+    int lines = s_ent_lines(ent);
+    for (int i = 1; i <= lines; i++) {
 	strncpy(lbuf,s_get_desc(ent,i,false),LBUFLEN);
-	for (s = lbuf; *s; s++)
+	for (char *s = lbuf; *s; s++)
 	    if (isupper(*s))
 		*s = tolower(*s);		/* convert to lower case */
 	if (strstr(lbuf,s_search_text))
@@ -323,11 +320,8 @@ long s_backward_search(long ent)
 /* perhaps later have a wraparound search? */
 void s_search()
 {
-    int i;
-    int fill_type;    /* 0: forward, 1: backward */
-    long ent;
-    char* s;
-    char* error_msg;
+    int  fill_type; /* 0: forward, 1: backward */
+    char*error_msg;
 
     if (!s_search_init) {
 	s_search_init = true;
@@ -338,7 +332,7 @@ void s_search()
     if (!s_finish_cmd(nullptr))
 	return;
     if (g_buf[1]) {	/* new text */
-	s = g_buf+1;
+	char *s = g_buf + 1;
 	/* make leading space skip an option later? */
 	/* (it isn't too important because substring matching is used) */
 	while (*s == ' ') s++;	/* skip leading spaces */
@@ -357,7 +351,7 @@ void s_search()
     s_go_bot();
     printf("Searching for %s",s_search_text);
     fflush(stdout);
-    ent = g_page_ents[g_s_ptr_page_line].entnum;
+    long ent = g_page_ents[g_s_ptr_page_line].entnum;
     switch (*g_buf) {
       case '/':
 	error_msg = "No matches forward from current point.";
@@ -394,7 +388,7 @@ void s_search()
 	g_s_ref_all = true;
 	return;
     }
-    for (i = 0; i <= g_s_bot_ent; i++)
+    for (int i = 0; i <= g_s_bot_ent; i++)
 	if (g_page_ents[i].entnum == ent) {	/* entry is on same page */
 	    g_s_ptr_page_line = i;
 	    return;
@@ -415,11 +409,8 @@ void s_search()
 
 void s_jumpnum(char_int firstchar)
 {
-    int value;
-    bool jump_verbose;
-
-    jump_verbose = true;
-    value = firstchar - '0';
+    bool jump_verbose = true;
+    int  value = firstchar - '0';
 
     s_rub_ptr();
     if (jump_verbose) {

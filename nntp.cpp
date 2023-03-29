@@ -164,9 +164,7 @@ int nntp_header(ART_NUM artnum)
 
 void nntp_body(ART_NUM artnum)
 {
-    char* artname;
-
-    artname = nntp_artname(artnum, false); /* Is it already in a tmp file? */
+    char *artname = nntp_artname(artnum, false); /* Is it already in a tmp file? */
     if (artname) {
 	if (s_body_pos >= 0)
 	    nntp_finishbody(FB_DISCARD);
@@ -227,12 +225,10 @@ long nntp_artsize()
 
 static int nntp_copybody(char *s, int limit, ART_POS pos)
 {
-    int len;
     bool had_nl = true;
-    int found_nl;
 
     while (pos > s_body_end || !had_nl) {
-	found_nl = nntp_gets(s, limit);
+	int found_nl = nntp_gets(s, limit);
 	if (found_nl < 0)
 	    strcpy(s,"."); /*$$*/
 	if (had_nl) {
@@ -244,7 +240,7 @@ static int nntp_copybody(char *s, int limit, ART_POS pos)
 	    if (s[0] == '.')
 		safecpy(s,s+1,limit);
 	}
-	len = strlen(s);
+	int len = strlen(s);
 	if (found_nl)
 	    strcpy(s+len, "\n");
 	fputs(s, g_artfp);
@@ -339,23 +335,19 @@ static int s_maxdays[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 time_t nntp_time()
 {
-    char* s;
-    int year, month, day, hh, mm;
-    time_t ss;
-
     if (nntp_command("DATE") <= 0)
 	return -2;
     if (nntp_check() <= 0)
 	return time((time_t*)nullptr);
 
-    s = strrchr(g_ser_line, ' ') + 1;
-    month = (s[4] - '0') * 10 + (s[5] - '0');
-    day = (s[6] - '0') * 10 + (s[7] - '0');
-    hh = (s[8] - '0') * 10 + (s[9] - '0');
-    mm = (s[10] - '0') * 10 + (s[11] - '0');
-    ss = (s[12] - '0') * 10 + (s[13] - '0');
+    char * s = strrchr(g_ser_line, ' ') + 1;
+    int    month = (s[4] - '0') * 10 + (s[5] - '0');
+    int    day = (s[6] - '0') * 10 + (s[7] - '0');
+    int    hh = (s[8] - '0') * 10 + (s[9] - '0');
+    int    mm = (s[10] - '0') * 10 + (s[11] - '0');
+    time_t ss = (s[12] - '0') * 10 + (s[13] - '0');
     s[4] = '\0';
-    year = atoi(s);
+    int year = atoi(s);
 
     /* This simple algorithm will be valid until the year 2100 */
     if (year % 4)
@@ -378,9 +370,7 @@ time_t nntp_time()
 
 int nntp_newgroups(time_t t)
 {
-    struct tm *ts;
-
-    ts = gmtime(&t);
+    struct tm *ts = gmtime(&t);
     sprintf(g_ser_line, "NEWGROUPS %02d%02d%02d %02d%02d%02d GMT",
 	ts->tm_year % 100, ts->tm_mon+1, ts->tm_mday,
 	ts->tm_hour, ts->tm_min, ts->tm_sec);
@@ -440,9 +430,9 @@ ART_NUM nntp_find_real_art(ART_NUM after)
 char *nntp_artname(ART_NUM artnum, bool allocate)
 {
     static ART_NUM artnums[MAX_NNTP_ARTICLES];
-    static time_t artages[MAX_NNTP_ARTICLES];
-    time_t now, lowage;
-    int i, j;
+    static time_t  artages[MAX_NNTP_ARTICLES];
+    time_t         lowage;
+    int            i, j;
 
     if (!artnum) {
 	for (i = 0; i < MAX_NNTP_ARTICLES; i++) {
@@ -452,7 +442,7 @@ char *nntp_artname(ART_NUM artnum, bool allocate)
 	return nullptr;
     }
 
-    now = time((time_t*)nullptr);
+    time_t now = time((time_t*)nullptr);
 
     for (i = j = 0, lowage = now; i < MAX_NNTP_ARTICLES; i++) {
 	if (artnums[i] == artnum) {

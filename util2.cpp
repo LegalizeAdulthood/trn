@@ -124,7 +124,6 @@ char *filexp(const char *text)
                 { /* just be sure LOGDIRFIELD is correct */
                     FILE *pfp = fopen(filexp(PASSFILE), "r");
                     char tmpbuf[512];
-                    int i;
 
                     if (pfp)
                     {
@@ -133,7 +132,7 @@ char *filexp(const char *text)
                             d = cpytill(scrbuf, tmpbuf, ':');
                             if (!strcmp(scrbuf, s_tildename))
                             {
-                                for (i = LOGDIRFIELD - 2; i; i--)
+                                for (int i = LOGDIRFIELD - 2; i; i--)
                                 {
                                     if (d)
                                         d = strchr(d + 1, ':');
@@ -191,11 +190,10 @@ char *filexp(const char *text)
 
 char *in_string(char *big, const char *little, bool case_matters)
 {
-    char* t;
     const char* s;
     const char* x;
 
-    for (t = big; *t; t++) {
+    for (char *t = big; *t; t++) {
 	for (x=t,s=little; *s; x++,s++) {
 	    if (!*x)
 		return nullptr;
@@ -290,8 +288,7 @@ char *read_auth_file(const char *file, char **pass_ptr)
     strptr[0] = strptr[1] = nullptr;
     FILE *fp = fopen(file, "r");
     if (fp != nullptr) {
-	int i;
-	for (i = 0; i < 2; i++) {
+        for (int i = 0; i < 2; i++) {
 	    if (fgets(buf, sizeof buf, fp) != nullptr) {
 		char* cp = buf + strlen(buf) - 1;
 		if (*cp == '\n')

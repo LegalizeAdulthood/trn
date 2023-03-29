@@ -94,7 +94,6 @@ bool find_new_groups()
 
 static void process_list(getnewsgroup_flags flag)
 {
-
     if (flag == GNG_NONE) {
 	sprintf(g_cmd_buf,"\nUnsubscribed but mentioned in your current newsrc%s:\n",
 		g_multirc->first->next? "s" : "");
@@ -349,12 +348,10 @@ static int list_groups(int keylen, HASHDATUM *data, int add_matching)
 
 static void scanline(char *actline, bool add_matching)
 {
-    char* s;
-    NGDATA* np;
     long high, low;
     char ch;
 
-    s = strchr(actline, ' ');
+    char *s = strchr(actline, ' ');
     if (s == nullptr)
 	return;
     *s++ = '\0';		/* this buffer is expendable */
@@ -366,7 +363,7 @@ static void scanline(char *actline, bool add_matching)
 	return;
     if (!inlist(actline))
 	return;
-    np = find_ng(actline);
+    NGDATA *np = find_ng(actline);
     if (np != nullptr && np->toread > TR_UNSUB)
 	return;
     if (add_matching || np) {

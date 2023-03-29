@@ -51,7 +51,6 @@ static bool DoMatch(const char *text, const char *p);
 */
 static bool DoMatch(const char *text, const char *p)
 {
-
     for ( ; *p; text++, p++) {
 	if (*text == '\0' && *p != '*')
 	    return false;

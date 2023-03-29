@@ -29,15 +29,14 @@ void append_signature();
 int main(int argc, char *argv[])
 {
     bool has_fromline, in_header, has_pathline;
-    bool found_nl, had_nl;
-    int artpos, headbuf_size, len;
-    char* headbuf;
-    char* line_end;
-    char* cp;
-    int i;
+    bool found_nl,     had_nl;
+    int  artpos,       len;
+    char*line_end;
+    char*cp;
+    int  i;
 
-    headbuf_size = LBUFLEN * 8;
-    headbuf = safemalloc(headbuf_size);
+    int   headbuf_size = LBUFLEN * 8;
+    char *headbuf = safemalloc(headbuf_size);
 
 #ifdef LAX_INEWS
     env_init(headbuf, true);
@@ -256,9 +255,6 @@ int main(int argc, char *argv[])
 /* valid_header -- determine if a line is a valid header line */
 int valid_header(char *h)
 {
-    char* colon;
-    char* space;
-
     /* Blank or tab in first position implies this is a continuation header */
     if (h[0] == ' ' || h[0] == '\t') {
 	while (*++h == ' ' || *h == '\t') ;
@@ -267,8 +263,8 @@ int valid_header(char *h)
 
     /* Just check for initial letter, colon, and space to make
      * sure we discard only invalid headers. */
-    colon = strchr(h, ':');
-    space = strchr(h, ' ');
+    char *colon = strchr(h, ':');
+    char *space = strchr(h, ' ');
     if (isalpha(h[0]) && colon && space == colon + 1)
 	return 1;
 

@@ -108,28 +108,22 @@ void s_place_ptr()
 /* note: descriptions will not (for now) be individually refreshable */
 void s_refresh_status(int line)
 {
-    int i,j;
-    long ent;
-
-    ent = g_page_ents[line].entnum;
+    long ent = g_page_ents[line].entnum;
     TRN_ASSERT(line <= g_s_bot_ent);	/* better be refreshing on-page */
     s_goxy(0,g_s_top_lines+g_page_ents[line].start_line);
-    j = g_page_ents[line].lines;
-    for (i = 1; i <= j; i++)
+    int j = g_page_ents[line].lines;
+    for (int i = 1; i <= j; i++)
 	printf("%s\n",s_get_statchars(ent,i));
     fflush(stdout);
 }
 
 void s_refresh_description(int line)
 {
-    int i,j,startline;
-    long ent;
-
-    ent = g_page_ents[line].entnum;
+    long ent = g_page_ents[line].entnum;
     TRN_ASSERT(line <= g_s_bot_ent);	/* better be refreshing on-page */
-    startline = g_s_top_lines+g_page_ents[line].start_line;
-    j = g_page_ents[line].lines;
-    for (i = 1; i <= j; i++) {
+    int startline = g_s_top_lines + g_page_ents[line].start_line;
+    int j = g_page_ents[line].lines;
+    for (int i = 1; i <= j; i++) {
 	s_goxy(g_s_status_cols+g_s_cursor_cols,(i-1)+startline);
 	/* allow flexible format later? */
 	if (g_s_itemnum_cols) {
@@ -151,15 +145,12 @@ void s_refresh_description(int line)
 //int jump;	/* true means that the cursor should be positioned */
 void s_ref_entry(int line, int jump)
 {
-    int i,j;
-    long ent;
-
-    ent = g_page_ents[line].entnum;
+    long ent = g_page_ents[line].entnum;
     TRN_ASSERT(line <= g_s_bot_ent);	/* better be refreshing on-page */
     if (jump)
 	s_goxy(0,g_s_top_lines+g_page_ents[line].start_line);
-    j = g_page_ents[line].lines;
-    for (i = 1; i <= j; i++) {
+    int j = g_page_ents[line].lines;
+    for (int i = 1; i <= j; i++) {
 /* later replace middle with variable #spaces routine */
 	printf("%s%s",s_get_statchars(ent,i),"  ");
 	if (g_s_itemnum_cols) {
@@ -227,8 +218,7 @@ int s_initscreen()
 /* screen-refresh the status if on-page */
 void s_ref_status_onpage(long ent)
 {
-    int i;
-    for (i = 0; i <= g_s_bot_ent; i++)
+    for (int i = 0; i <= g_s_bot_ent; i++)
 	if (g_page_ents[i].entnum == ent)
 	    s_refresh_status(i);
 }

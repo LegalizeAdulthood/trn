@@ -394,7 +394,6 @@ bool parseheader(ART_NUM artnum)
 char *fetchlines(ART_NUM artnum, header_line_type which_line)
 {
     char* s;
-    ART_POS firstpos;
 
     /* Only return a cached line if it isn't the current article */
     if (g_parsed_art != artnum) {
@@ -403,7 +402,7 @@ char *fetchlines(ART_NUM artnum, header_line_type which_line)
 	if (s)
 	    return savestr(s);
     }
-    firstpos = g_htype[which_line].minpos;
+    ART_POS firstpos = g_htype[which_line].minpos;
     if (firstpos < 0)
 	return savestr("");
 
@@ -434,7 +433,6 @@ char *fetchlines(ART_NUM artnum, header_line_type which_line)
 char *mp_fetchlines(ART_NUM artnum, header_line_type which_line, memory_pool pool)
 {
     char* s;
-    ART_POS firstpos;
 
     /* Only return a cached line if it isn't the current article */
     if (g_parsed_art != artnum) {
@@ -443,7 +441,7 @@ char *mp_fetchlines(ART_NUM artnum, header_line_type which_line, memory_pool poo
 	if (s)
 	    return mp_savestr(s,pool);
     }
-    firstpos = g_htype[which_line].minpos;
+    ART_POS firstpos = g_htype[which_line].minpos;
     if (firstpos < 0)
 	return mp_savestr("",pool);
 
@@ -479,11 +477,10 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
     ART_POS firstpos;
 
     if ((g_datasrc->flags & DF_REMOTE) && g_parsed_art != artnum) {
-	ARTICLE* ap;
-	int size;
+	ARTICLE*ap;
+	int     size;
 	ART_NUM num, lastnum;
-	bool cached;
- 	bool hasxhdr = true;
+        bool    hasxhdr = true;
 
 	s = fetchcache(artnum,which_line, DONT_FILL_CACHE);
 	if (s) {
@@ -501,7 +498,7 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
 	}
 	*s = '\0';
 	ART_NUM priornum = artnum - 1;
-        cached = (g_htype[which_line].flags & HT_CACHED);
+        bool    cached = (g_htype[which_line].flags & HT_CACHED);
         if (cached != 0)
         {
 	    lastnum = artnum + PREFETCH_SIZE - 1;

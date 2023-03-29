@@ -34,14 +34,9 @@ void sa_init_threads()
 //long e;			/* entry number */
 long sa_get_subj_thread(long e)
 {
-    HASHDATUM data;
-    const char* s;
-    bool old_untrim;
-    char* p;
-
-    old_untrim = g_untrim_cache;
+    bool old_untrim = g_untrim_cache;
     g_untrim_cache = true;
-    s = sa_desc_subject(e);
+    const char *s = sa_desc_subject(e);
     g_untrim_cache = old_untrim;
 
     if (!s || !*s)
@@ -52,11 +47,11 @@ long sa_get_subj_thread(long e)
     if (!s_sa_thread_hash) {
 	s_sa_thread_hash = hashcreate(401, HASH_DEFCMPFUNC);
     }
-    data = hashfetch(s_sa_thread_hash,s,strlen(s));
+    HASHDATUM data = hashfetch(s_sa_thread_hash, s, strlen(s));
     if (data.dat_ptr) {
 	return (long)(data.dat_len);
     }
-    p = mp_savestr(s,MP_SATHREAD);
+    char *p = mp_savestr(s, MP_SATHREAD);
     data = hashfetch(s_sa_thread_hash,p,strlen(s));
     data.dat_ptr = p;
     data.dat_len = (unsigned)(s_sa_num_threads+1);
@@ -68,11 +63,8 @@ long sa_get_subj_thread(long e)
 
 int sa_subj_thread_count(long a)
 {
-    int count;
-    long b;
-
-    count = 1;
-    b = a;
+    int  count = 1;
+    long b = a;
 
     while ((b = sa_subj_thread_next(b)) != 0)
 	if (sa_basic_elig(b))
@@ -83,9 +75,9 @@ int sa_subj_thread_count(long a)
 /* returns basic_elig previous subject thread */
 long sa_subj_thread_prev(long a)
 {
-    int i,j;
+    int j;
 
-    i = sa_subj_thread(a);
+    int i = sa_subj_thread(a);
     while ((a = s_prev(a)) != 0) {
 	if (!sa_basic_elig(a))
 	    continue;
@@ -99,9 +91,9 @@ long sa_subj_thread_prev(long a)
 
 long sa_subj_thread_next(long a)
 {
-    int i,j;
+    int j;
 
-    i = sa_subj_thread(a);
+    int i = sa_subj_thread(a);
     while ((a = s_next(a)) != 0) {
 	if (!sa_basic_elig(a))
 	    continue;

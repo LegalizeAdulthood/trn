@@ -32,19 +32,17 @@ char* g_dot_dir;
 
 int main(int argc, char *argv[])
 {
-    FILE* fp;
-    FILE* fp_active = nullptr;
-    FILE* fp_ng = nullptr;
+    FILE*fp_active = nullptr;
+    FILE*fp_ng = nullptr;
     bool check_active = false;
     bool check_ng = false;
     char buff[LBUFLEN];
-    char* cp;
-    char* cp2;
-    char* ngptrs[MAXNGS];
-    int nglens[MAXNGS];
-    int foundactive[MAXNGS];
-    int i, col, max_col_len, line_num = 0, ngcnt = 0, ngleft;
-    int found_newsgroups = 0;
+    char*cp;
+    char*ngptrs[MAXNGS];
+    int  nglens[MAXNGS];
+    int  foundactive[MAXNGS];
+    int  i, max_col_len, line_num = 0, ngcnt = 0, ngleft;
+    int  found_newsgroups = 0;
 
     g_home_dir = getenv("HOME");
     if (g_home_dir == nullptr)
@@ -59,7 +57,7 @@ Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>\n");
 	exit(1);
     }
 
-    fp = fopen(argv[1], "r");
+    FILE *fp = fopen(argv[1], "r");
     if (fp == nullptr) {
 	fprintf(stderr, "trn-artchk: unable to open article `%s'.\n", argv[1]);
 	exit(1);
@@ -96,7 +94,7 @@ Use a comma (,) to separate multiple newsgroup names.\n");
 		continue;
 	    }
 	    while (*cp) {
-		cp2 = strchr(cp, ',');
+		char *cp2 = strchr(cp, ',');
 		if (!cp2)
 		    cp2 = cp + strlen(cp);
 		else
@@ -124,7 +122,7 @@ ERROR: the \"Newsgroups:\" line lists no newsgroups.\n");
     /* Check the body of the article for long lines */
     while (fgets(buff, LBUFLEN, fp)) {
 	line_num++;
-	col = strlen(buff)-1;
+	int col = strlen(buff) - 1;
 	if (buff[col] != '\n')
 	    printf("\n\
 Warning: line %d has no trailing newline character and may get lost.\n",

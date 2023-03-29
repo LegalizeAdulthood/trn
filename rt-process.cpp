@@ -39,9 +39,7 @@ ARTICLE *allocate_article(ART_NUM artnum)
 
 static void fix_msgid(char *msgid)
 {
-    char* cp;
-
-    cp = strchr(msgid, '@');
+    char *cp = strchr(msgid, '@');
     if (cp != nullptr)
     {
 	while (*++cp) {
@@ -64,14 +62,11 @@ SUBJECT* fake_had_subj; /* the fake-turned-real article had this subject */
 
 bool valid_article(ARTICLE *article)
 {
-    ARTICLE* ap;
-    ARTICLE* fake_ap;
     char* msgid = article->msgid;
-    HASHDATUM data;
 
     if (msgid) {
 	fix_msgid(msgid);
-	data = hashfetch(g_msgid_hash, msgid, strlen(msgid));
+	HASHDATUM data = hashfetch(g_msgid_hash, msgid, strlen(msgid));
 	if (data.dat_len) {
 	    safefree0(data.dat_ptr);
 	    article->autofl = static_cast<autokill_flags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
@@ -81,7 +76,7 @@ bool valid_article(ARTICLE *article)
 		g_kf_changethd_cnt++;
 	    data.dat_len = 0;
 	}
-        fake_ap = (ARTICLE *)data.dat_ptr;
+        ARTICLE *fake_ap = (ARTICLE*)data.dat_ptr;
         if (fake_ap == nullptr)
         {
 	    data.dat_ptr = (char*)article;
@@ -113,7 +108,7 @@ bool valid_article(ARTICLE *article)
 		g_recent_artp = article;
 		g_recent_art = article_num(article);
 	    }
-            ap = article->parent;
+            ARTICLE *ap = article->parent;
             if (ap != nullptr)
             {
 		if (ap->child1 == fake_ap)
@@ -171,11 +166,10 @@ bool valid_article(ARTICLE *article)
 ARTICLE *get_article(char *msgid)
 {
     ARTICLE* article;
-    HASHDATUM data;
 
     fix_msgid(msgid);
 
-    data = hashfetch(g_msgid_hash, msgid, strlen(msgid));
+    HASHDATUM data = hashfetch(g_msgid_hash, msgid, strlen(msgid));
     if (data.dat_len) {
 	article = allocate_article(0);
 	article->autofl = static_cast<autokill_flags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
@@ -208,7 +202,6 @@ void thread_article(ARTICLE *article, char *references)
     char* end;
     autokill_flags chain_autofl =
         article->autofl | (article->subj->articles ? article->subj->articles->autofl : AUTO_KILL_NONE);
-    autokill_flags thread_autofl;
     autokill_flags subj_autofl = AUTO_KILL_NONE;
     const bool rethreading = article->flags & AF_THREADED != 0;
 
@@ -219,8 +212,7 @@ void thread_article(ARTICLE *article, char *references)
     ** to try to put it in the best possible spot.
     */
     if (fake_had_subj) {
-	ARTICLE* stopper;
-	if (fake_had_subj->thread != article->subj->thread)
+        if (fake_had_subj->thread != article->subj->thread)
 	    merge_threads(fake_had_subj, article->subj);
 	/* Check for a real or shared-fake parent */
 	ap = article->parent;
@@ -228,7 +220,7 @@ void thread_article(ARTICLE *article, char *references)
 	    prev = ap;
 	    ap = ap->parent;
 	}
-	stopper = ap;
+	ARTICLE *stopper = ap;
 	unlink_child(article);
 	/* We'll assume that this article has as good or better references
 	** than the child that faked us initially.  Free the fake reference-
@@ -355,7 +347,7 @@ void thread_article(ARTICLE *article, char *references)
     }
     if (!(article->flags & AF_CACHED))
 	cache_article(article);
-    thread_autofl = chain_autofl;
+    autokill_flags thread_autofl = chain_autofl;
     if (g_sel_mode == SM_THREAD) {
 	SUBJECT* sp = article->subj->thread_link;
 	while (sp != article->subj) {
@@ -371,9 +363,7 @@ void thread_article(ARTICLE *article, char *references)
 
 void rover_thread(ARTICLE *article, char *s)
 {
-    ARTICLE* prev = article;
-    char* end;
-    char ch;
+    ARTICLE*prev = article;
 
     for (;;) {
 	while (*++s == ' ') ;
@@ -383,10 +373,10 @@ void rover_thread(ARTICLE *article, char *s)
 	    link_child(prev);
 	    break;
 	}
-	end = strchr(s, '>');
+	char *end = strchr(s, '>');
 	if (!end)
 	    return;				/* Impossible! */
-	ch = end[1];
+	char ch = end[1];
 	end[1] = '\0';
 	article = get_article(s);
 	prev->parent = article;
@@ -496,14 +486,10 @@ void link_child(ARTICLE *child)
 */
 void merge_threads(SUBJECT *s1, SUBJECT *s2)
 {
-    SUBJECT* sp;
-    ARTICLE* t1;
-    ARTICLE* t2;
-
-    t1 = s1->thread;
-    t2 = s2->thread;
+    ARTICLE *t1 = s1->thread;
+    ARTICLE *t2 = s2->thread;
     /* Change all of t2's thread pointers to a common lead article */
-    sp = s2;
+    SUBJECT *sp = s2;
     do {
 	sp->thread = t1;
 	sp = sp->thread_link;

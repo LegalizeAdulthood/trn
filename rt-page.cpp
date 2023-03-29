@@ -100,7 +100,6 @@ char *get_sel_order(sel_mode smode)
 bool set_sel_order(sel_mode smode, const char *str)
 {
     bool reverse = false;
-    char ch;
 
     if (*str == 'r' || *str == 'R') {
 	while (*str && *str != ' ') str++;
@@ -108,7 +107,7 @@ bool set_sel_order(sel_mode smode, const char *str)
 	reverse = true;
     }
 
-    ch = *str;
+    char ch = *str;
     if (reverse)
 	ch = islower(ch)? toupper(ch) : ch;
     else
@@ -312,8 +311,7 @@ try_again:
 
     switch (g_sel_mode) {
       case SM_MULTIRC: {
-	MULTIRC* mp;
-	for (mp = multirc_low(); mp; mp = multirc_next(mp)) {
+          for (MULTIRC *mp = multirc_low(); mp; mp = multirc_next(mp)) {
 	    if (mp->first) {
 		mp->flags |= MF_INCLUDED;
 		g_sel_total_obj_cnt++;
@@ -326,13 +324,12 @@ try_again:
 	break;
       }
       case SM_NEWSGROUP: {
-	NGDATA* np;
-	bool save_the_rest = false;
+          bool save_the_rest = false;
 	g_group_init_done = true;
 	sort_newsgroups();
 	g_selected_count = 0;
 	g_obj_count = 0;
-	for (np = g_first_ng; np; np = np->next) {
+	for (NGDATA *np = g_first_ng; np; np = np->next) {
 	    if (g_sel_page_np == np)
 		g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
 	    np->flags &= ~NF_INCLUDED;
@@ -402,10 +399,9 @@ try_again:
 	break;
       }
       case SM_ADDGROUP: {
-	ADDGROUP* gp;
-	sort_addgroups();
+          sort_addgroups();
 	g_obj_count = 0;
-	for (gp = g_first_addgroup; gp; gp = gp->next) {
+	for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next) {
 	    if (g_sel_page_gp == gp)
 		g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
 	    gp->flags &= ~AGF_INCLUDED;
@@ -436,16 +432,14 @@ try_again:
 	break;
       }
       case SM_UNIVERSAL: {
-	UNIV_ITEM* ui;
-	bool ui_elig;
-	g_obj_count = 0;
+          g_obj_count = 0;
 
 	sort_univ();
-	for (ui = g_first_univ; ui; ui = ui->next) {
+	for (UNIV_ITEM *ui = g_first_univ; ui; ui = ui->next) {
 	    if (sel_page_univ == ui)
 		g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
 	    ui->flags &= ~UF_INCLUDED;
-	    ui_elig = true;
+	    bool ui_elig = true;
 	    switch (ui->type) {
 	      case UN_GROUP_DESEL:
 	      case UN_VGROUP_DESEL:
@@ -455,12 +449,11 @@ try_again:
 		ui_elig = false;
 		break;
 	      case UN_NEWSGROUP: {
-		NGDATA* np;
-		if (!ui->data.group.ng) {
+                  if (!ui->data.group.ng) {
 		    ui_elig = false;
 		    break;
 		}
-		np = find_ng(ui->data.group.ng);
+		NGDATA *np = find_ng(ui->data.group.ng);
 		if (!np) {
 		    ui_elig = false;
 		    break;
@@ -513,10 +506,9 @@ try_again:
 	break;
       }
       case SM_OPTIONS: {
-	int op;
-	int included = 0;
+          int included = 0;
 	g_obj_count = 0;
-	for (op = 1; g_options_ini[op].checksum; op++) {
+	for (int op = 1; g_options_ini[op].checksum; op++) {
 	    if (g_sel_page_op == op)
 		g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
 	    if (*g_options_ini[op].item == '*') {
@@ -614,11 +606,7 @@ try_again:
 	break;
       }
       default: {
-	SUBJECT* sp;
-	SUBJECT* group_sp;
-	int group_arts;
-
-	if (g_sel_page_sp) {
+          if (g_sel_page_sp) {
 	    while (g_sel_page_sp && g_sel_page_sp->misc == 0)
 		g_sel_page_sp = g_sel_page_sp->next;
 	    sort_subjects();
@@ -626,12 +614,12 @@ try_again:
 		g_sel_page_sp = g_last_subject;
 	} else
 	    sort_subjects();
-	for (sp = g_first_subject; sp; sp = sp->next) {
+	for (SUBJECT *sp = g_first_subject; sp; sp = sp->next) {
 	    if (g_sel_rereading && !(sp->flags & g_sel_mask))
 		sp->flags |= SF_DEL;
 
-	    group_sp = sp;
-	    group_arts = sp->misc;
+	    SUBJECT *group_sp = sp;
+	    int      group_arts = sp->misc;
 
 	    if (!g_sel_exclusive || (sp->flags & g_sel_mask))
 		sp->flags |= SF_INCLUDED;
@@ -682,8 +670,7 @@ bool first_page()
 
     switch (g_sel_mode) {
       case SM_MULTIRC: {
-	MULTIRC* mp;
-	for (mp = multirc_low(); mp; mp = multirc_next(mp)) {
+          for (MULTIRC *mp = multirc_low(); mp; mp = multirc_next(mp)) {
 	    if (mp->flags & MF_INCLUDED) {
 		if (g_sel_page_mp != mp) {
 		    g_sel_page_mp = mp;
@@ -695,8 +682,7 @@ bool first_page()
 	break;
       }
       case SM_NEWSGROUP: {
-	NGDATA* np;
-	for (np = g_first_ng; np; np = np->next) {
+          for (NGDATA *np = g_first_ng; np; np = np->next) {
 	    if (np->flags & NF_INCLUDED) {
 		if (g_sel_page_np != np) {
 		    g_sel_page_np = np;
@@ -708,8 +694,7 @@ bool first_page()
 	break;
       }
       case SM_ADDGROUP: {
-	ADDGROUP* gp;
-	for (gp = g_first_addgroup; gp; gp = gp->next) {
+          for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next) {
 	    if (gp->flags & AGF_INCLUDED) {
 		if (g_sel_page_gp != gp) {
 		    g_sel_page_gp = gp;
@@ -721,8 +706,7 @@ bool first_page()
 	break;
       }
       case SM_UNIVERSAL: {
-	UNIV_ITEM* ui;
-	for (ui = g_first_univ; ui; ui = ui->next) {
+          for (UNIV_ITEM *ui = g_first_univ; ui; ui = ui->next) {
 	    if (ui->flags & UF_INCLUDED) {
 		if (sel_page_univ != ui) {
 		    sel_page_univ = ui;
@@ -741,11 +725,8 @@ bool first_page()
 	break;
       }
       case SM_ARTICLE: {
-	ARTICLE** app;
-	ARTICLE** limit;
-
-	limit = g_artptr_list + g_artptr_list_size;
-	for (app = g_artptr_list; app < limit; app++) {
+          ARTICLE **limit = g_artptr_list + g_artptr_list_size;
+	for (ARTICLE **app = g_artptr_list; app < limit; app++) {
 	    if ((*app)->flags & AF_INCLUDED) {
 		if (g_sel_page_app != app) {
 		    g_sel_page_app = app;
@@ -757,9 +738,7 @@ bool first_page()
 	break;
       }
       default: {
-	SUBJECT* sp;
-
-	for (sp = g_first_subject; sp; sp = sp->next) {
+          for (SUBJECT *sp = g_first_subject; sp; sp = sp->next) {
 	    if (sp->flags & SF_INCLUDED) {
 		if (g_sel_page_sp != sp) {
 		    g_sel_page_sp = sp;
@@ -1026,10 +1005,9 @@ bool prev_page()
 	break;
       }
       case SM_ARTICLE: {
-	ARTICLE** app;
-	ARTICLE** page_app = g_sel_page_app;
+          ARTICLE** page_app = g_sel_page_app;
 
-	for (app = g_sel_page_app; --app >= g_artptr_list; ) {
+	for (ARTICLE **app = g_sel_page_app; --app >= g_artptr_list; ) {
 	    if ((*app)->flags & AF_INCLUDED) {
 		page_app = app;
 		g_sel_prior_obj_cnt--;
@@ -1043,13 +1021,12 @@ bool prev_page()
 	}
       }
       default: {
-	SUBJECT* sp;
-	SUBJECT* page_sp = g_sel_page_sp;
-	int line_cnt, item_arts, line;
+          SUBJECT*page_sp = g_sel_page_sp;
+	int       line_cnt;
 
-	line = 2;
-	for (sp = (!page_sp? g_last_subject : page_sp->prev); sp; sp=sp->prev) {
-	    item_arts = sp->misc;
+	int line = 2;
+	for (SUBJECT *sp = (!page_sp ? g_last_subject : page_sp->prev); sp; sp=sp->prev) {
+	    int item_arts = sp->misc;
 	    if (g_sel_mode == SM_THREAD) {
 		while (sp->prev && sp->prev->thread == sp->thread) {
 		    sp = sp->prev;
@@ -1421,11 +1398,10 @@ try_again:
 	int max_len = 0;
 	if (*g_sel_grp_dmode == 'l') {
 	    int i = 0;
-	    int len;
-	    for (; gp && i < g_sel_max_per_page; gp = gp->next) {
+            for (; gp && i < g_sel_max_per_page; gp = gp->next) {
 		if (!(gp->flags & AGF_INCLUDED))
 		    continue;
-		len = strlen(gp->name)+2;
+		int len = strlen(gp->name) + 2;
 		if (len > max_len)
 		    max_len = len;
 		i++;
@@ -1521,14 +1497,10 @@ try_again:
 	g_sel_next_op = op;
     }
     else if (g_sel_mode == SM_ARTICLE) {
-	ARTICLE* ap;
-	ARTICLE** app;
-	ARTICLE** limit;
-
-	limit = g_artptr_list + g_artptr_list_size;
-	app = g_sel_page_app;
+        ARTICLE **limit = g_artptr_list + g_artptr_list_size;
+	ARTICLE **app = g_sel_page_app;
 	for (; app < limit && g_sel_page_item_cnt < g_sel_max_per_page; app++) {
-	    ap = *app;
+	    ARTICLE *ap = *app;
 	    if (ap == g_sel_last_ap)
 		g_sel_item_index = g_sel_page_item_cnt;
 	    if (!(ap->flags & AF_INCLUDED))
@@ -1549,12 +1521,11 @@ try_again:
 	g_sel_next_app = app;
     }
     else {
-	SUBJECT* sp;
-	int line_cnt;
+        int line_cnt;
 	int etc = 0;
 	int ix = -1;	/* item # or -1 */
 
-	sp = g_sel_page_sp;
+	SUBJECT *sp = g_sel_page_sp;
 	for (; sp && !etc && g_sel_page_item_cnt<g_sel_max_per_page; sp=sp->next) {
 	    if (sp == g_sel_last_sp)
 		g_sel_item_index = g_sel_page_item_cnt;
@@ -1621,11 +1592,9 @@ try_again:
 
 void update_page()
 {
-    SEL_UNION u;
     int sel;
-    int j;
-    for (j = 0; j < g_sel_page_item_cnt; j++) {
-	u = g_sel_items[j].u;
+    for (int j = 0; j < g_sel_page_item_cnt; j++) {
+	SEL_UNION u = g_sel_items[j].u;
 	switch (g_sel_mode) {
 	  case SM_MULTIRC:
 	    // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
@@ -1711,14 +1680,13 @@ void output_sel(int ix, int sel, bool update)
 */
 static int count_subject_lines(const SUBJECT *subj, int *selptr)
 {
-    ARTICLE* ap;
     int sel;
 
     if (subj->flags & SF_DEL)
 	sel = 2;
     else if (subj->flags & g_sel_mask) {
 	sel = 1;
-	for (ap = subj->articles; ap; ap = ap->subj_next) {
+	for (ARTICLE *ap = subj->articles; ap; ap = ap->subj_next) {
 	    if ((!!(ap->flags&AF_UNREAD) ^ g_sel_rereading)
 	      && !(ap->flags & g_sel_mask)) {
 		sel = 3;
@@ -1790,11 +1758,10 @@ static void display_article(const ARTICLE *ap, int ix, int sel)
 */
 static void display_subject(const SUBJECT *subj, int ix, int sel)
 {
-    ARTICLE* ap;
-    int j, i;
-    int subj_width = g_tc_COLS - 8 - g_use_sel_num;
-    int from_width = g_tc_COLS / 5;
-    int date_width = g_tc_COLS / 5;
+    ARTICLE*ap;
+    int     subj_width = g_tc_COLS - 8 - g_use_sel_num;
+    int     from_width = g_tc_COLS / 5;
+    int     date_width = g_tc_COLS / 5;
 #ifdef USE_UTF_HACK
     utf_init("utf-8", "utf-8"); /* FIXME */
 #endif
@@ -1803,7 +1770,7 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
     if (subj_width < 32)
 	subj_width = 32;
 
-    j = subj->misc;
+    int j = subj->misc;
 
     output_sel(ix, sel, false);
     if (*g_sel_art_dmode == 's' || from_width < 8) {
@@ -1833,7 +1800,7 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
 		   compress_subj(first_ap, subj_width - from_width)) FLUSH;
 	}
 	termdown(1);
-	i = -1;
+	int i = -1;
 	if (*g_sel_art_dmode != 'd' && --j && ap) {
 	    for ( ; ap && j; ap = ap->subj_next) {
 		if ((!(ap->flags&AF_UNREAD) ^ g_sel_rereading)
@@ -1911,18 +1878,15 @@ static void display_univ(const UNIV_ITEM *ui)
     } else {
 	switch(ui->type) {
 	  case UN_NEWSGROUP: {
-	    NGDATA* np;
-
-	    /* later error check the UI? */
-	    np = find_ng(ui->data.group.ng);
+              /* later error check the UI? */
+	    NGDATA *np = find_ng(ui->data.group.ng);
 	    if (!np)
 		printf("!!!!! could not find %s",ui->data.group.ng);
 	    else {
-		int numarts;
-		/* XXX set_toread() can print sometimes... */
+                /* XXX set_toread() can print sometimes... */
 		if (!np->abs1st)
 		    set_toread(np, ST_LAX);
-		numarts = np->toread;
+		int numarts = np->toread;
 		if (numarts >= 0)
 		    printf("%5ld ",(long)numarts);
 		else if (numarts == TR_UNSUB)
@@ -1959,10 +1923,9 @@ static void display_group(DATASRC *dp, char *group, int len, int max_len)
 	char* cp = find_grpdesc(dp, group);
 	if (*cp != '?' && (end = strchr(cp, '\n')) != nullptr
 	 && end != cp) {
-	    char ch;
-	    if (end - cp > g_tc_COLS - max_len - 8 - 1 - g_use_sel_num)
+            if (end - cp > g_tc_COLS - max_len - 8 - 1 - g_use_sel_num)
 		end = cp + g_tc_COLS - max_len - 8 - 1 - g_use_sel_num;
-	    ch = *end;
+	    char ch = *end;
 	    *end = '\0';
 	    if (*g_sel_grp_dmode == 'm')
 		fputs(cp, stdout);

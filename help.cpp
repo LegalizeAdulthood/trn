@@ -204,9 +204,8 @@ int help_art()
 
 int help_ng()
 {
-    int cmd;
     page_start();
-    cmd = print_lines("Newsgroup Selection commands:\n", STANDOUT);
+    int cmd = print_lines("Newsgroup Selection commands:\n", STANDOUT);
     if (cmd != 0)
         return cmd;
     if (g_ngptr)

@@ -44,7 +44,6 @@ void sc_sv_delgroup(const char *gname)
 {
     char* s;
     int i;
-    int start;
 
     for (i = 0; i < s_num_lines; i++) {
 	s = s_lines[i];
@@ -53,7 +52,7 @@ void sc_sv_delgroup(const char *gname)
     }
     if (i == s_num_lines)
 	return;		/* group not found */
-    start = i;
+    int start = i;
     free(s_lines[i]);
     s_lines[i] = nullptr;
     for (i++; i < s_num_lines; i++) {
@@ -74,14 +73,11 @@ void sc_sv_delgroup(const char *gname)
 /* get the file containing scores into memory */
 void sc_sv_getfile()
 {
-    char* s;
-    FILE* fp;
-
     s_num_lines = s_lines_alloc = 0;
     s_lines = nullptr;
 
-    s = get_val("SAVESCOREFILE","%+/savedscores");
-    fp = fopen(filexp(s),"r");
+    char *s = get_val("SAVESCOREFILE", "%+/savedscores");
+    FILE *fp = fopen(filexp(s), "r");
     if (!fp) {
 #if 0
 	printf("Could not open score save file for reading.\n") FLUSH;
@@ -138,14 +134,12 @@ void sc_sv_savefile()
 //ART_NUM a;	/* art number to start with */
 ART_NUM sc_sv_use_line(char *line, ART_NUM a)
 {
-    char* s;
-    char* p;
-    char c1,c2;
-    int score;
-    int x;
+    char*p;
+    char c1, c2;
+    int  x;
 
-    score = 0;	/* get rid of warning */
-    s = line;
+    int   score = 0; /* get rid of warning */
+    char *s = line;
     if (!s)
 	return a;
     while (*s) {
@@ -236,16 +230,14 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
 
 ART_NUM sc_sv_make_line(ART_NUM a)
 {
-    char* s;
     bool lastscore_valid = false;
-    int num_output = 0;
-    int score,lastscore;
-    int i;
+    int  num_output = 0;
+    int  i;
     bool neg_flag;
 
-    s = s_lbuf;
+    char *s = s_lbuf;
     *s++ = '.';
-    lastscore = 0;
+    int lastscore = 0;
 
     for (a = article_first(a); a <= g_lastart && num_output < 50; a = article_next(a)) {
 	if (article_unread(a) && article_scored(a)) {
@@ -260,7 +252,7 @@ ART_NUM sc_sv_make_line(ART_NUM a)
 		}
 	    }
 	    /* print article's score */
-	    score = article_ptr(a)->score;
+	    int score = article_ptr(a)->score;
 	    /* check for repeating scores */
 	    if (score == lastscore && lastscore_valid) {
 		a = article_next(a);
@@ -308,23 +300,21 @@ void sc_load_scores()
 {
 /* lots of cleanup needed here */
     ART_NUM a = 0;
-    char* s;
-    char* gname;
-    int i;
-    int total,scored;
-    bool verbose;
+    char*   s;
+int         i;
+    int     scored;
 
-    s_sc_save_new = -1;		/* just in case we exit early */
+s_sc_save_new = -1;		/* just in case we exit early */
     s_loaded = s_used = 0;
     g_sc_loaded_count = 0;
 
     /* verbosity is only really useful for debugging... */
-    verbose = false;
+    bool verbose = false;
 
     if (s_num_lines == 0)
 	sc_sv_getfile();
 
-    gname = savestr(filexp("%C"));
+    char *gname = savestr(filexp("%C"));
 
     for (i = 0; i < s_num_lines; i++) {
 	s = s_lines[i];
@@ -368,7 +358,7 @@ void sc_load_scores()
     a = g_firstart;
     if (g_sa_mode_read_elig)
 	a = g_absfirst;
-    total = scored = 0;
+    int total = scored = 0;
     for (a = article_first(a); a <= g_lastart; a = article_next(a)) {
 	if (!article_exists(a))
 	    continue;
@@ -391,14 +381,11 @@ void sc_load_scores()
 
 void sc_save_scores()
 {
-    ART_NUM a;
-    char* gname;
-
     s_saved = 0;
     s_last = 0;
 
     g_waiting = true;	/* DON'T interrupt */
-    gname = savestr(filexp("%C"));
+    char *gname = savestr(filexp("%C"));
     /* not being able to open is OK */
     if (s_num_lines > 0) {
 	sc_sv_delgroup(gname);	/* delete old group */
@@ -409,7 +396,7 @@ void sc_save_scores()
     sprintf(s_lbuf2,"!%s",gname);	/* add the header */
     sc_sv_add(s_lbuf2);
 
-    a = g_firstart;
+    ART_NUM a = g_firstart;
     sprintf(s_lbuf2,":%ld",a);
     sc_sv_add(s_lbuf2);
     s_last = a-1;

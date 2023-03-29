@@ -31,23 +31,19 @@ static char *s_pipename[_NFILE]; /* pipe file name */
 
 static int run(char* command)
 {
-    jmp_buf panic;			/* How to recover from errors */
-    char* shell;			/* Command processor */
-    char* s = nullptr;			/* Holds the command */
-    int s_is_malloced = 0;		/* True if need to free 's' */
-    static char* command_com = "COMMAND.COM";
-    int status;				/* Return codes */
-    char* shellpath;			/* Full command processor path */
-    char* bp;				/* Generic string pointer */
+    jmp_buf     panic;             /* How to recover from errors */
+    char*       shell;             /* Command processor */
+    int         s_is_malloced = 0; /* True if need to free 's' */
+    static char*command_com = "COMMAND.COM";
     static char dash_c[] = "/c";
 
-    s = savestr(command);
+    char *s = savestr(command);
     /* Determine the command processor */
     if ((shell = getenv("SHELL")) == nullptr
      && (shell = getenv("COMSPEC")) == nullptr)
 	shell = command_com;
     strupr(shell);
-    shellpath = shell;
+    char *shellpath = shell;
     /* Strip off any leading backslash directories */
     shell = strrchr(shellpath, '\\');
     if (shell != nullptr)
@@ -55,13 +51,11 @@ static int run(char* command)
     else
 	shell = shellpath;
     /* Strip off any leading slash directories */
-    bp = strrchr(shell, '/');
+    char *bp = strrchr(shell, '/');
     if (bp != nullptr)
 	shell = ++bp;
     if (strcmp(shell, command_com) != 0) {
-	/* MKS Shell needs quoted argument */
-	char* bp;
-	bp = s = safemalloc(strlen(command) + 3);
+        char *bp = s = safemalloc(strlen(command) + 3);
 	*bp++ = '\'';
 	while ((*bp++ = *command++) != '\0') ;
 	*(bp - 1) = '\'';
@@ -70,7 +64,7 @@ static int run(char* command)
     } else
 	s = command;
     /* Run the program */
-    status = spawnl(P_WAIT, shellpath, shell, dash_c, s, nullptr);
+    int status = spawnl(P_WAIT, shellpath, shell, dash_c, s, nullptr);
     if (s_is_malloced)
 	free(s);
     return status;
@@ -97,10 +91,9 @@ static char *uniquepipe()
  */
 static void resetpipe(int fd)
 {
-    char* bp;
     if (fd >= 0 && fd < _NFILE) {
 	s_pipetype[fd] = 0;
-        bp = s_pipename[fd];
+        char *bp = s_pipename[fd];
         if (bp != nullptr)
         {
 	    (void) unlink(bp);
@@ -125,17 +118,15 @@ static void resetpipe(int fd)
 //char* type;			/* "w" or "r" */
 FILE *popen(char *prg, char *type)
 { 
-    FILE* p = nullptr;		/* Where we open the pipe */
-    int ostdin;			/* Where our stdin is now */
-    int pipefd = -1;		/* fileno(p) -- for convenience */
-    char* tmpfile;		/* Holds name of pipe file */
-    jmp_buf panic;		/* Where to go if there's an error */
-    int lineno;			/* Line number where panic happened */
+    FILE*   p = nullptr; /* Where we open the pipe */
+    int     ostdin;      /* Where our stdin is now */
+    int     pipefd = -1; /* fileno(p) -- for convenience */
+    jmp_buf panic;       /* Where to go if there's an error */
 
     /* Get a unique pipe file name */
-    tmpfile = filexp("%Y/");
+    char *tmpfile = filexp("%Y/");
     strcat(tmpfile, uniquepipe());
-    lineno = setjmp(panic);
+    int lineno = setjmp(panic);
     if (lineno != 0)
     {
 	/* An error has occurred, so clean up */
@@ -165,12 +156,11 @@ FILE *popen(char *prg, char *type)
         p = fopen(tmpfile, "w");
         if (p != nullptr)
         {
-	    int ostdout;
-	    pipefd = fileno(p);
+            pipefd = fileno(p);
 	    s_pipetype[pipefd]= READIT;
 	    s_pipename[pipefd] = savestr(tmpfile);
 	    /* Redirect stdin for the new command */
-	    ostdout = dup(fileno(stdout));
+	    int ostdout = dup(fileno(stdout));
 	    if (dup2(fileno(stdout), pipefd) < 0) {
 		int E = errno;
 		(void) dup2(fileno(stdout), ostdout);
@@ -198,12 +188,11 @@ FILE *popen(char *prg, char *type)
 /* close a pipe */
 int pclose(FILE *p)
 {
-    int pipefd = -1;		/* Fildes where pipe is opened */
-    int ostdout;		/* Where our stdout points now */
-    int ostdin;			/* Where our stdin points now */
-    jmp_buf panic;		/* Context to return to if error */
-    int lineno;			/* Line number where panic happened */
-    lineno = setjmp(panic);
+    int     pipefd = -1; /* Fildes where pipe is opened */
+    int     ostdout;     /* Where our stdout points now */
+    int     ostdin;      /* Where our stdin points now */
+    jmp_buf panic;       /* Context to return to if error */
+    int     lineno = setjmp(panic);
     if (lineno != 0)
     {
 	/* An error has occurred, so clean up and return */

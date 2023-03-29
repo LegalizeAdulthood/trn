@@ -145,13 +145,11 @@ void chdir_newsdir()
 
 void grow_ng(ART_NUM newlast)
 {
-    ART_NUM tmpfirst;
-
     g_forcegrow = false;
     if (newlast > g_lastart) {
 	ART_NUM tmpart = g_art;
 	g_ngptr->toread += (ART_UNREAD)(newlast-g_lastart);
-	tmpfirst = g_lastart+1;
+	ART_NUM tmpfirst = g_lastart + 1;
 	/* Increase the size of article scan arrays. */
 	sa_grow(g_lastart,newlast);
 	do {
@@ -193,8 +191,7 @@ static int ngorder_groupname(const NGDATA **npp1, const NGDATA **npp2)
 
 static int ngorder_count(const NGDATA **npp1, const NGDATA **npp2)
 {
-    int eq;
-    eq = (int)((*npp1)->toread - (*npp2)->toread);
+    int eq = (int)((*npp1)->toread - (*npp2)->toread);
     if (eq != 0)
 	return eq * g_sel_direction;
     return (int)((*npp1)->num - (*npp2)->num);
@@ -205,10 +202,9 @@ static int ngorder_count(const NGDATA **npp1, const NGDATA **npp2)
 void sort_newsgroups()
 {
     NGDATA* np;
-    int i;
-    NGDATA** lp;
-    NGDATA** ng_list;
-    int (*sort_procedure)(const NGDATA **npp1,const NGDATA **npp2);
+    int     i;
+    NGDATA**lp;
+    int (*  sort_procedure)(const NGDATA **npp1,const NGDATA **npp2);
 
     /* If we don't have at least two newsgroups, we're done! */
     if (!g_first_ng || !g_first_ng->next)
@@ -227,7 +223,7 @@ void sort_newsgroups()
 	break;
     }
 
-    ng_list = (NGDATA**)safemalloc(g_newsgroup_cnt * sizeof (NGDATA*));
+    NGDATA **ng_list = (NGDATA**)safemalloc(g_newsgroup_cnt * sizeof(NGDATA*));
     for (lp = ng_list, np = g_first_ng; np; np = np->next)
 	*lp++ = np;
     TRN_ASSERT(lp - ng_list == g_newsgroup_cnt);
@@ -248,9 +244,7 @@ void sort_newsgroups()
 void ng_skip()
 {
     if (g_datasrc->flags & DF_REMOTE) {
-	ART_NUM artnum;
-
-	clear();
+        clear();
 	if (g_verbose)
 	    fputs("Skipping unavailable article\n",stdout);
 	else
@@ -265,7 +259,7 @@ void ng_skip()
 	do {
 	    /* tries to grab PREFETCH_SIZE XHDRS, flagging missing articles */
 	    (void) fetchsubj(g_art, false);
-	    artnum = g_art+PREFETCH_SIZE-1;
+	    ART_NUM artnum = g_art + PREFETCH_SIZE - 1;
 	    if (artnum > g_lastart)
 		artnum = g_lastart;
 	    while (g_art <= artnum) {
@@ -299,14 +293,12 @@ void ng_skip()
 
 ART_NUM getngsize(NGDATA *gp)
 {
-    int len;
-    char* nam;
     char tmpbuf[LBUFLEN];
     long last, first;
     char ch;
 
-    nam = gp->rcline;
-    len = gp->numoffset - 1;
+    char *nam = gp->rcline;
+    int   len = gp->numoffset - 1;
 
     if (!find_actgrp(gp->rc->datasrc,tmpbuf,nam,len,gp->ngmax)) {
 	if (gp->subscribechar == ':') {

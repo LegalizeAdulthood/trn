@@ -47,15 +47,13 @@ void ngstuff_init()
 
 int escapade()
 {
-    char* s;
     bool interactive = (g_buf[1] == FINISHCMD);
-    bool docd;
     char whereiam[1024];
 
     if (!finish_command(interactive))	/* get remainder of command */
 	return -1;
-    s = g_buf+1;
-    docd = *s != '!';
+    char *s = g_buf + 1;
+    bool  docd = *s != '!';
     if (!docd) {
 	s++;
     }
@@ -249,20 +247,17 @@ numnum_result numnum()
 
 int thread_perform()
 {
-    SUBJECT* sp;
-    ARTICLE* ap;
-    bool want_unread;
-    char* cmdstr;
-    int len;
-    int bits;
-    bool output_level = (!g_use_threads && g_general_mode != 's');
-    bool one_thread = false;
+    SUBJECT*sp;
+    ARTICLE*ap;
+    int     bits;
+    bool    output_level = (!g_use_threads && g_general_mode != 's');
+    bool    one_thread = false;
 
     if (!finish_command(true))	/* get rest of command */
 	return 0;
     if (!g_buf[1])
 	return -1;
-    len = 1;
+    int len = 1;
     if (g_buf[1] == ':') {
 	bits = 0;
 	len++;
@@ -275,8 +270,8 @@ int thread_perform()
 	one_thread = true;
 	len++;
     }
-    cmdstr = savestr(g_buf+len);
-    want_unread = !g_sel_rereading && *cmdstr != 'm';
+    char *cmdstr = savestr(g_buf + len);
+    bool  want_unread = !g_sel_rereading && *cmdstr != 'm';
 
     perform_status_init(g_ngptr->toread);
     len = strlen(cmdstr);
@@ -326,10 +321,9 @@ int thread_perform()
 	/* The rest loop through the articles. */
 	/* Use the explicit article-order if it exists */
 	if (g_artptr_list) {
-	    ARTICLE** app;
-	    ARTICLE** limit = g_artptr_list + g_artptr_list_size;
+            ARTICLE** limit = g_artptr_list + g_artptr_list_size;
 	    sp = (g_sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
-	    for (app = g_artptr_list; app < limit; app++) {
+	    for (ARTICLE **app = g_artptr_list; app < limit; app++) {
 		ap = *app;
 		if (one_thread && ap->subj->thread != sp->thread)
 		    continue;
@@ -537,8 +531,6 @@ int perform(char *cmdlst, int output_level)
 
 int ngsel_perform()
 {
-    char* cmdstr;
-    int len;
     newsgroup_flags bits;
     bool one_group = false;
 
@@ -546,7 +538,7 @@ int ngsel_perform()
 	return 0;
     if (!g_buf[1])
 	return -1;
-    len = 1;
+    int len = 1;
     if (g_buf[1] == ':') {
 	bits = NF_NONE;
 	len++;
@@ -559,7 +551,7 @@ int ngsel_perform()
 	one_group = true;
 	len++;
     }
-    cmdstr = savestr(g_buf+len);
+    char *cmdstr = savestr(g_buf + len);
 
     perform_status_init(g_newsgroup_toread);
     len = strlen(cmdstr);
@@ -651,9 +643,6 @@ int ng_perform(char *cmdlst, int output_level)
 
 int addgrp_sel_perform()
 {
-    ADDGROUP* gp;
-    char* cmdstr;
-    int len;
     int bits;
     bool one_group = false;
 
@@ -661,7 +650,7 @@ int addgrp_sel_perform()
 	return 0;
     if (!g_buf[1])
 	return -1;
-    len = 1;
+    int len = 1;
     if (g_buf[1] == ':') {
 	bits = 0;
 	len++;
@@ -674,7 +663,7 @@ int addgrp_sel_perform()
 	one_group = true;
 	len++;
     }
-    cmdstr = savestr(g_buf+len);
+    char *cmdstr = savestr(g_buf + len);
 
     perform_status_init(g_newsgroup_toread);
     len = strlen(cmdstr);
@@ -684,7 +673,7 @@ int addgrp_sel_perform()
 	goto break_out;
     }
 
-    for (gp = g_first_addgroup; gp; gp = gp->next) {
+    for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next) {
 	if (!(gp->flags & g_sel_mask) ^ !!bits) {
 	    if (addgrp_perform(gp, cmdstr, 0) < 0)
 		break;

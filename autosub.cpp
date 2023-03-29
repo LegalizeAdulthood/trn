@@ -29,8 +29,7 @@ int auto_subscribe(char *name)
 bool matchlist(char *patlist, char *s)
 {
     COMPEX ilcompex;
-    char* p;
-    bool tmpresult;
+    bool   tmpresult;
 
     bool result = false;
     init_compex(&ilcompex);
@@ -41,7 +40,7 @@ bool matchlist(char *patlist, char *s)
 	} else
 	    tmpresult = true;
 
-	p = strchr(patlist, ',');
+	char *p = strchr(patlist, ',');
         if (p != nullptr)
 	    *p = '\0';
         /* compile regular expression */

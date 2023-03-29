@@ -35,16 +35,11 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
 */
 char *extract_name(char *name)
 {
-    char* s;
-    char* lparen;
-    char* rparen;
-    char* langle;
-
     while (isspace(*name)) name++;
 
-    lparen = strchr(name, '(');
-    rparen = strrchr(name, ')');
-    langle = strchr(name, '<');
+    char *lparen = strchr(name, '(');
+    char *rparen = strrchr(name, ')');
+    char *langle = strchr(name, '<');
     if (!lparen && !langle)
 	return nullptr;
     else if (langle && (!lparen || !rparen || lparen>langle || rparen<langle)) {
@@ -65,7 +60,7 @@ char *extract_name(char *name)
 	name++;
         while (isspace(*name))
             name++;
-        s = strrchr(name, '"');
+        char *s = strrchr(name, '"');
         if (s != nullptr)
 	    *s = '\0';
     }
@@ -81,11 +76,19 @@ char *extract_name(char *name)
 */
 char *compress_name(char *name, int max)
 {
-    char* s;
-    char* last;
-    char* mid;
-    char* d;
-    int len, namelen, midlen;
+    char*d;
+    int  midlen;
+    int  notlast;
+
+try_again:
+    /* First remove white space from both ends. */
+    while (isspace(*name)) name++;
+    int len = strlen(name);
+    if (len == 0)
+	return name;
+    char *s = name + len - 1;
+    while (isspace(*s)) s--;
+    s[1] = '\0';
 #ifdef USE_UTF_HACK
     int vis_len, vis_namelen, vis_midlen;
 #else
@@ -93,17 +96,6 @@ char *compress_name(char *name, int max)
 #define vis_namelen namelen
 #define vis_midlen midlen
 #endif
-    int notlast;
-
-try_again:
-    /* First remove white space from both ends. */
-    while (isspace(*name)) name++;
-    len = strlen(name);
-    if (len == 0)
-	return name;
-    s = name + len - 1;
-    while (isspace(*s)) s--;
-    s[1] = '\0';
 #ifdef USE_UTF_HACK
     vis_len = visual_length_between(s, name) + 1;
 #else
@@ -173,22 +165,23 @@ try_again:
 	}
     } while (notlast);
 
-    last = s-- + 1;
+    char *last = s-- + 1;
 
     /* Look for a middle name */
     while (isspace(*s)) {	/* get rid of any extra space */
 	len--;	
 	s--;
     }
-    mid = name;
-    while (!isspace(*mid)) {
+    char *mid = name;
+    while (!isspace(*mid))
+    {
 #ifdef USE_UTF_HACK
 	mid += byte_length_at(mid);
 #else
 	mid++;
 #endif
     }
-    namelen = mid - name + 1;
+    int namelen = mid - name + 1;
 #ifdef USE_UTF_HACK
     vis_namelen = visual_length_between(mid, name) + 1;
 #endif
@@ -380,19 +373,16 @@ try_again:
 */
 char *compress_address(char *name, int max)
 {
-    char* s;
-    char* at;
     char* bang;
     char* hack;
     char* start;
-    int len;
 
     /* Remove white space from both ends. */
     while (isspace(*name)) name++;
-    len = strlen(name);
+    int len = strlen(name);
     if (len == 0)
 	return name;
-    s = name + len - 1;
+    char *s = name + len - 1;
     while (isspace(*s)) s--;
     s[1] = '\0';
     if (*name == '<') {
@@ -404,7 +394,7 @@ char *compress_address(char *name, int max)
     if (len <= max)
 	return name;
 
-    at = bang = hack = nullptr;
+    char *at = bang = hack = nullptr;
     for (s = name + 1; *s; s++) {
 	/* If there's whitespace in the middle then it's probably not
 	** really an email address. */
@@ -491,11 +481,10 @@ char *compress_from(const char *from, int size)
 /* Fit the date in <max> chars. */
 char *compress_date(const ARTICLE *ap, int size)
 {
-    char* s;
     char* t;
 
     strncpy(t = g_cmd_buf, ctime(&ap->date), size);
-    s = strchr(t, '\n');
+    char *s = strchr(t, '\n');
     if (s != nullptr)
 	*s = '\0';
     t[size] = '\0';
@@ -535,16 +524,12 @@ bool subject_has_Re(char *str, char **strp)
 */
 const char *compress_subj(const ARTICLE *ap, int max)
 {
-    char* cp;
-    int len;
-    ARTICLE* first;
-
     if (!ap)
 	return "<MISSING>";
 
     /* Put a preceeding '>' on subjects that are replies to other articles */
-    cp = g_buf;
-    first = (g_threaded_group? ap->subj->thread : ap->subj->articles);
+    char *   cp = g_buf;
+    ARTICLE *first = (g_threaded_group ? ap->subj->thread : ap->subj->articles);
     if (ap != first || (ap->flags & AF_HAS_RE)
      || (!(ap->flags&AF_UNREAD) ^ g_sel_rereading))
 	*cp++ = '>';
@@ -566,16 +551,14 @@ const char *compress_subj(const ARTICLE *ap, int max)
 	    break;
 	}
     }
-    len = strlen(g_buf);
+    int len = strlen(g_buf);
     if (!g_unbroken_subjects && len > max) {
-	char* last_word;
-	/* Try to include the last two words on the line while trimming */ 
-	last_word = strrchr(g_buf, ' ');
+        /* Try to include the last two words on the line while trimming */ 
+	char *last_word = strrchr(g_buf, ' ');
         if (last_word != nullptr)
         {
-	    char* next_to_last;
-	    *last_word = '\0';
-            next_to_last = strrchr(g_buf, ' ');
+            *last_word = '\0';
+            char *next_to_last = strrchr(g_buf, ' ');
             if (next_to_last != nullptr)
             {
 		if (next_to_last-g_buf >= len - max + 3 + 10-1)
@@ -625,10 +608,9 @@ void setspin(spin_mode mode)
 	    mode = SPIN_BARGRAPH;
 	if (mode == SPIN_BARGRAPH) {
 	    if (s_spin_mode != SPIN_BARGRAPH) {
-		int i;
-		g_spin_marks = (g_verbose? 25 : 10);
+                g_spin_marks = (g_verbose? 25 : 10);
 		printf(" [%*s]", g_spin_marks, "");
-		for (i = g_spin_marks + 1; i--; ) backspace();
+		for (int i = g_spin_marks + 1; i--; ) backspace();
 		fflush(stdout);
 	    }
 	    s_spin_pos = 0;
@@ -687,11 +669,9 @@ void spin(int count)
 	}
 	break;
       case SPIN_BARGRAPH: {
-	int new_pos;
-
-	if (g_spin_todo == 0)
+          if (g_spin_todo == 0)
 	    break;		/* bail out rather than crash */
-	new_pos = (int)((long)g_spin_marks * ++g_spin_count / g_spin_todo);
+	int new_pos = (int)((long)g_spin_marks * ++g_spin_count / g_spin_todo);
 	if (s_spin_pos < new_pos && g_spin_count <= g_spin_todo+1) {
 	    do {
 		putchar('*');
@@ -741,9 +721,6 @@ void perform_status_init(long cnt)
 
 void perform_status(long cnt, int spin)
 {
-    long kills, sels, missing;
-    time_t now;
-
     if (!(++g_spin_count % spin)) {
 	putchar(s_spinchars[++s_spin_place % 4]);
 	backspace();
@@ -753,16 +730,16 @@ void perform_status(long cnt, int spin)
     if (g_perform_cnt == s_prior_perform_cnt)
 	return;
 
-    now = time((time_t*)nullptr);
+    time_t now = time((time_t*)nullptr);
     if (now - s_prior_now < 2)
 	return;
 
     s_prior_now = now;
     s_prior_perform_cnt = g_perform_cnt;
 
-    missing = g_missing_count - s_ps_missing;
-    kills = s_ps_cnt - cnt - missing;
-    sels = g_selected_count - s_ps_sel;
+    long missing = g_missing_count - s_ps_missing;
+    long kills = s_ps_cnt - cnt - missing;
+    long sels = g_selected_count - s_ps_sel;
 
     if (!(kills | sels))
 	return;
@@ -786,7 +763,6 @@ void perform_status(long cnt, int spin)
 static char *output_change(char *cp, long num, const char *obj_type, const char *modifier, const char *action)
 {
     bool neg;
-    const char* s;
 
     if (num < 0) {
 	num *= -1;
@@ -803,7 +779,7 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
     if (obj_type)
 	sprintf(cp+=strlen(cp), "%s%s ", obj_type, plural(num));
     cp += strlen(cp);
-    s = modifier;
+    const char *s = modifier;
     if (s != nullptr)
     {
 	*cp++ = ' ';
@@ -827,8 +803,7 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
 
 int perform_status_end(long cnt, const char *obj_type)
 {
-    long kills, sels, missing;
-    char* cp = g_msg;
+    char*cp = g_msg;
     bool article_status = (*obj_type == 'a');
 
     if (g_perform_cnt == 0) {
@@ -836,9 +811,9 @@ int perform_status_end(long cnt, const char *obj_type)
 	return 0;
     }
 
-    missing = g_missing_count - s_ps_missing;
-    kills = s_ps_cnt - cnt - missing;
-    sels = g_selected_count - s_ps_sel;
+    long missing = g_missing_count - s_ps_missing;
+    long kills = s_ps_cnt - cnt - missing;
+    long sels = g_selected_count - s_ps_sel;
 
     if (!g_performed_article_loop)
 	cp = output_change(cp, (long)g_perform_cnt,

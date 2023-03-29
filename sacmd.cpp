@@ -38,14 +38,11 @@ static bool s_sa_extract_junk{};  /* junk articles after extracting them */
  */
 int sa_docmd()
 {
-    long a;		/* article pointed to */
-    long b;		/* misc. artnum */
-    int i;		/* for misc. purposes */
-    /*$$bool flag;*/		/* misc */
-    ART_NUM artnum;
+    long    b; /* misc. artnum */
+    int     i; /* for misc. purposes */
 
-    a = (long)g_page_ents[g_s_ptr_page_line].entnum;
-    artnum = g_sa_ents[a].artnum;
+    long    a = (long)g_page_ents[g_s_ptr_page_line].entnum;
+    ART_NUM artnum = g_sa_ents[a].artnum;
 
     switch(*g_buf) {
       case '+':	/* enter thread selector */
@@ -64,9 +61,10 @@ int sa_docmd()
 	    break;
 	/* make **sure** that there is a number here */
 	i = atoi(g_buf+1);
-	if (i == 0) {			/* it might not be a number */
-	    char* s;
-	    s = g_buf+1;
+	if (i == 0)
+        {
+            /* it might not be a number */
+            char *s = g_buf + 1;
 	    if (*s != '0' && ((*s != '+' && *s != '-') || s[1] != '0')) {
 		/* text was not a numeric 0 */
 		s_beep();
@@ -355,9 +353,10 @@ int sa_docmd()
 	    break;
 	/* make **sure** that there is a number here */
 	i = atoi(g_buf+1);
-	if (i == 0) {			/* it might not be a number */
-	    char* s;
-	    s = g_buf+1;
+	if (i == 0)
+        {
+            /* it might not be a number */
+            char *s = g_buf + 1;
 	    if (*s != '0' && ((*s != '+' && *s != '-') || s[1] != '0')) {
 		/* text was not a numeric 0 */
 		s_beep();
@@ -574,9 +573,7 @@ bool sa_extract_start()
 /* sa_art_cmd primitive: actually does work on an article */
 void sa_art_cmd_prim(sa_cmd cmd, long a)
 {
-    ART_NUM artnum;
-
-    artnum = g_sa_ents[a].artnum;
+    ART_NUM artnum = g_sa_ents[a].artnum;
 /* do more onpage status refreshes when in unread+read mode? */
     switch (cmd) {
       case SA_KILL_MARKED:
@@ -629,12 +626,10 @@ void sa_art_cmd_prim(sa_cmd cmd, long a)
 // long a;		/* article # to affect or start with */
 int sa_art_cmd(int multiple, sa_cmd cmd, long a)
 {
-    long b;
-
     sa_art_cmd_prim(cmd,a);	/* do the first article */
     if (!multiple)
 	return 0;		/* no problem... */
-    b = a;
+    long b = a;
     while ((b = sa_subj_thread_next(b)) != 0)
 	/* if this is basically eligible and the same subject thread# */
 	sa_art_cmd_prim(cmd,b);

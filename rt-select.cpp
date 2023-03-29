@@ -626,7 +626,6 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
 	break;
       }
       case UN_ARTICLE: {
-
           if (g_in_ng) {
 	    /* XXX whine: can't recurse at this time */
 	    break;
@@ -1670,7 +1669,6 @@ static display_state sel_command(char_int ch)
 
 static bool sel_perform_change(long cnt, const char *obj_type)
 {
-
     carriage_return();
     if (g_page_line == 1) {
 	s_disp_status_line = 1;
@@ -2629,10 +2627,9 @@ static display_state option_commands(char_int ch)
 	s_removed_prompt = 3;
 	if (!finish_command(true))	/* get rest of command */
 	    break;
-	char *s = cpytill(g_buf, g_buf + 1, '/');
         for (pattern = g_buf; *pattern == ' '; pattern++)
             ;
-        s = compile(&g_optcompex, pattern, true, true);
+        char *s = compile(&g_optcompex, pattern, true, true);
         if (s != nullptr)
         {
 	    strcpy(g_msg,s);

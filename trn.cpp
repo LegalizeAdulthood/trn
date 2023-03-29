@@ -154,9 +154,8 @@ void do_multirc()
     char gmode_save = g_general_mode;
 
     if (g_use_univ_selector) {
-	char ch;
-	univ_startup();		/* load startup file */
-	ch = universal_selector();
+        univ_startup();		/* load startup file */
+	char ch = universal_selector();
 	if (ch != 'Q') {
 	    /* section copied from bug_out below */
 	    /* now write the newsrc(s) back out */
@@ -725,10 +724,9 @@ reask_abandon:
 
 void check_active_refetch(bool force)
 {
-    DATASRC* dp;
     time_t now = time((time_t*)nullptr);
 
-    for (dp = datasrc_first(); dp && !dp->name.empty(); dp = datasrc_next(dp)) {
+    for (DATASRC *dp = datasrc_first(); dp && !dp->name.empty(); dp = datasrc_next(dp)) {
 	if (!all_bits(dp->flags, DF_OPEN | DF_ACTIVE))
 	    continue;
 	if (dp->act_sf.fp && dp->act_sf.refetch_secs
@@ -749,11 +747,10 @@ void trn_version()
     print_lines(g_msg, NOMARKING);
 
     if (g_multirc) {
-	NEWSRC* rp;
-	newline();
+        newline();
 	sprintf(g_msg,"News source group #%d:\n\n", g_multirc->num);
 	print_lines(g_msg, NOMARKING);
-	for (rp = g_multirc->first; rp; rp = rp->next) {
+	for (NEWSRC *rp = g_multirc->first; rp; rp = rp->next) {
 	    if (!(rp->flags & RF_ACTIVE))
 		continue;
 	    sprintf(g_msg,"ID %s:\nNewsrc %s.\n",rp->datasrc->name.c_str(),rp->name);
@@ -833,11 +830,9 @@ void set_ngname(const char *what)
 
 const char *getngdir(const char *ngnam)
 {
-    char* s;
-
     growstr(&s_myngdir,&s_ngdirlen,strlen(ngnam)+1);
     strcpy(s_myngdir,ngnam);
-    for (s = s_myngdir; *s; s++)
+    for (char *s = s_myngdir; *s; s++)
 	if (*s == '.')
 	    *s = '/';
     return s_myngdir;

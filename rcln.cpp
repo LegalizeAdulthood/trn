@@ -62,7 +62,6 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
 
 int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
 {
-    NGDATA* np;
     char* s;
     char* t;
     char* maxt = nullptr;
@@ -72,7 +71,7 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
 
     if (!artnum)
 	return 0;
-    np = find_ng(ngnam);
+    NGDATA *np = find_ng(ngnam);
     if (np == nullptr)			/* not found in newsrc? */
 	return 0;
     if (dp != np->rc->datasrc) {	/* punt on cross-host xrefs */
@@ -160,11 +159,10 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
     if (morenum) {			/* is there more to life? */
 	if (min == artnum+1) {		/* can we consolidate further? */
 	    bool range_before = (*(t-1) == '-');
-	    bool range_after;
-	    char* nextmax;
+            char*nextmax;
 
 	    for (nextmax = s; isdigit(*nextmax); nextmax++) ;
-	    range_after = *nextmax++ == '-';
+	    bool range_after = *nextmax++ == '-';
 	    
 	    if (range_before)
 		*t = '\0';		/* artnum is redundant */
@@ -327,14 +325,11 @@ void prange(char *where, ART_NUM min, ART_NUM max)
 
 void set_toread(NGDATA *np, bool lax_high_check)
 {
-    char* s;
-    char* c;
-    char* h;
-    char tmpbuf[64];
-    char* mybuf = tmpbuf;
-    char* nums;
-    int length;
-    bool virgin_ng = (!np->abs1st);
+    char*   s;
+    char*   c;
+    char    tmpbuf[64];
+    char*   mybuf = tmpbuf;
+    bool    virgin_ng = (!np->abs1st);
     ART_NUM ngsize = getngsize(np);
     ART_NUM unread = ngsize;
     ART_NUM newmax;
@@ -357,8 +352,8 @@ void set_toread(NGDATA *np, bool lax_high_check)
 	if (strcmp(tmpbuf,np->rcline+np->numoffset))
 	    checkexpired(np,np->abs1st);	/* this might realloc rcline */
     }
-    nums = np->rcline + np->numoffset;
-    length = strlen(nums);
+    char *nums = np->rcline + np->numoffset;
+    int   length = strlen(nums);
     if (length+MAX_DIGITS+1 > sizeof tmpbuf)
 	mybuf = safemalloc((MEM_SIZE)(length+MAX_DIGITS+1));
     strcpy(mybuf,nums);
@@ -368,7 +363,7 @@ void set_toread(NGDATA *np, bool lax_high_check)
 	    ;
     for ( ; (c = strchr(s,',')) != nullptr ; s = ++c) {  /* for each range */
 	*c = '\0';			/* keep index from running off */
-        h = strchr(s, '-');
+        char *h = strchr(s, '-');
         if (h != nullptr) /* find - in range, if any */
 	    unread -= (newmax = atol(h+1)) - atol(s) + 1;
         else
@@ -461,10 +456,9 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
     else {
 	/* s now points to what should follow the first range */
 	char numbuf[32];
-	int nlen;
 
-	sprintf(numbuf," 1-%ld",(long)(a1st - (lastnum != a1st)));
-	nlen = strlen(numbuf) + (len != 0);
+        sprintf(numbuf," 1-%ld",(long)(a1st - (lastnum != a1st)));
+	int nlen = strlen(numbuf) + (len != 0);
 
 	if (s - np->rcline >= np->numoffset + nlen)
 	    mbuf = np->rcline;
@@ -505,7 +499,6 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
 /* could use a better name */
 bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
 {
-    NGDATA* np;
     char* s;
     char* t;
     char* maxt = nullptr;
@@ -513,7 +506,7 @@ bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
 
     if (!artnum)
 	return true;
-    np = find_ng(ngnam);
+    NGDATA *np = find_ng(ngnam);
     if (np == nullptr)			/* not found in newsrc? */
 	return true;
     if (!np->numoffset)		/* no numbers on line */

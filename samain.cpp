@@ -66,8 +66,6 @@ void sa_clean_ents()
 //ART_NUM artnum;		/* article number to be added */
 long sa_add_ent(ART_NUM artnum)
 {
-    long cur;
-
     g_sa_num_ents++;
     if (g_sa_num_ents > g_sa_ents_alloc) {
 	g_sa_ents_alloc += 100;
@@ -81,7 +79,7 @@ long sa_add_ent(ART_NUM artnum)
 			g_sa_ents_alloc * sizeof (SA_ENTRYDATA));
 	}
     }
-    cur = g_sa_num_ents-1;
+    long cur = g_sa_num_ents - 1;
     g_sa_ents[cur].artnum = artnum;
     g_sa_ents[cur].subj_thread_num = 0;
     g_sa_ents[cur].sa_flags = (char)0;
@@ -105,9 +103,7 @@ void sa_cleanmain()
 
 void sa_growarts(long oldlast, long last)
 {
-    int i;
-
-    for (i = oldlast+1; i <= last; i++)
+    for (int i = oldlast + 1; i <= last; i++)
 	(void)sa_add_ent(i);
 }
 
@@ -123,11 +119,9 @@ void sa_init_context()
 
 bool sa_initarts()
 {
-    int a;
-
     sa_init_ents();
     /* add all available articles to entry list */
-    for (a = article_first(g_absfirst); a <= g_lastart; a = article_next(a)) {
+    for (int a = article_first(g_absfirst); a <= g_lastart; a = article_next(a)) {
 	if (article_exists(a))
 	    (void)sa_add_ent(a);
     }
@@ -194,9 +188,7 @@ void sa_lookahead()
 /* Returns first marked entry number, or 0 if no articles are marked. */
 long sa_readmarked_elig()
 {
-    long e;
-
-    e = s_first();
+    long e = s_first();
     if (!e)
 	return 0L;
     for ( ; e; e = s_next(e)) {

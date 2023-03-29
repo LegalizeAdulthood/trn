@@ -226,7 +226,6 @@ int doshell(const char *shell, const char *s)
 #ifndef USE_DEBUGGING_MALLOC
 char *safemalloc(MEM_SIZE size)
 {
-
     char *ptr = (char*)malloc(size ? size : (MEM_SIZE)1);
     if (!ptr) {
 	fputs(s_nomem,stdout) FLUSH;
@@ -521,7 +520,6 @@ void safelink(char *old, char *new)
 /* attempts to verify a cryptographic signature. */
 void verify_sig()
 {
-
     printf("\n");
     /* RIPEM */
     int i = doshell(SH, filexp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));

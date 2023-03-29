@@ -31,9 +31,7 @@ int doshell(const char *sh, const char *cmd)
 #ifndef USE_DEBUGGING_MALLOC
 char *safemalloc(MEM_SIZE size)
 {
-    char* ptr;
-
-    ptr = (char*) malloc(size ? size : (MEM_SIZE)1);
+    char *ptr = (char*)malloc(size ? size : (MEM_SIZE)1);
     if (!ptr) {
 	fputs(s_nomem,stdout);
 	finalize(1);
@@ -47,9 +45,7 @@ char *safemalloc(MEM_SIZE size)
 #ifndef USE_DEBUGGING_MALLOC
 char *saferealloc(char *where, MEM_SIZE size)
 {
-    char* ptr;
-
-    ptr = (char*) realloc(where, size ? size : (MEM_SIZE)1);
+    char *ptr = (char*)realloc(where, size ? size : (MEM_SIZE)1);
     if (!ptr) {
 	fputs(s_nomem,stdout);
 	finalize(1);

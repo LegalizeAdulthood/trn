@@ -63,9 +63,7 @@ static void display_tree(ARTICLE *article, char *cp);
 */
 void init_tree()
 {
-    ARTICLE* thread;
-    SUBJECT* sp;
-    int num;
+    ARTICLE*thread;
 
     while (s_max_line >= 0)		/* free any previous tree data */
 	free(s_tree_lines[s_max_line--]);
@@ -75,8 +73,8 @@ void init_tree()
     if (!(thread = s_tree_article->subj->thread))
 	return;
     /* Enumerate our subjects for display */
-    sp = thread->subj;
-    num = 0;
+    SUBJECT *sp = thread->subj;
+    int      num = 0;
     do {
 	sp->misc = num++;
 	sp = sp->thread_link;
@@ -235,10 +233,9 @@ static int s_find_artp_y{};
 
 ARTICLE *get_tree_artp(int x, int y)
 {
-    ARTICLE* ap;
     if (!s_tree_article || !s_tree_article->subj)
 	return nullptr;
-    ap = s_tree_article->subj->thread;
+    ARTICLE *ap = s_tree_article->subj->thread;
     x -= g_tc_COLS-1 - s_max_depth;
     if (x < 0 || y > s_max_line || !ap)
 	return nullptr;
@@ -273,17 +270,16 @@ static ARTICLE *find_artp(ARTICLE *article, int x)
 */
 int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 {
-    char* tmpbuf;
-    char* line;
-    char* cp;
-    char* end;
-    int pad_cnt, wrap_at;
+    char*    tmpbuf;
+    char*    line;
+    char*    end;
+    int      wrap_at;
     ART_LINE start_line = header_line;
-    int i, len;
-    char ch;
+    int      i, len;
+    char     ch;
 
     /* Make a modifiable copy of the line */
-    cp = strchr(orig_line, '\n');
+    char *cp = strchr(orig_line, '\n');
     if (cp != nullptr)
 	len = cp - orig_line;
     else
@@ -367,7 +363,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	else
 	    wrap_at = g_tc_COLS - s_max_depth - 3;
 	/* Figure padding between header and tree output, wrapping long lines */
-	pad_cnt = wrap_at - (end - line + s_header_indent);
+	int pad_cnt = wrap_at - (end - line + s_header_indent);
 	if (pad_cnt <= 0) {
 	    cp = line + (int)(wrap_at - s_header_indent - 1);
 	    pad_cnt = 1;
@@ -404,10 +400,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	line = cp;
 	/* Check if we've got any tree lines to output */
 	if (wrap_at != g_tc_COLS-1 && header_line <= s_max_line) {
-	    char* cp1;
-	    char* cp2;
-
-	    do {
+            do {
 		putchar(' ');
 	    } while (pad_cnt--);
 	    g_term_col = wrap_at;
@@ -415,8 +408,8 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	    ** and the '@' flagging our prior node.
 	    */
 	    cp = s_tree_lines[header_line];
-	    cp1 = strchr(cp, '*');
-	    cp2 = strchr(cp, '@');
+	    char *cp1 = strchr(cp, '*');
+	    char *cp2 = strchr(cp, '@');
 	    if (cp1 != nullptr)
 		*cp1 = '\0';
 	    if (cp2 != nullptr)
@@ -477,10 +470,6 @@ int  finish_tree(ART_LINE last_line)
 */
 void entire_tree(ARTICLE* ap)
 {
-    ARTICLE* thread;
-    SUBJECT* sp;
-    int num;
-
     if (!ap) {
 	if (g_verbose)
 	    fputs("\nNo article tree to display.\n", stdout) FLUSH;
@@ -508,10 +497,10 @@ void entire_tree(ARTICLE* ap)
     if (check_page_line())
 	return;
     newline();
-    thread = ap->subj->thread;
+    ARTICLE *thread = ap->subj->thread;
     /* Enumerate our subjects for display */
-    sp = thread->subj;
-    num = 0;
+    SUBJECT *sp = thread->subj;
+    int      num = 0;
     do {
 	if (check_page_line())
 	    return;

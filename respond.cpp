@@ -48,7 +48,6 @@ void respond_init()
 
 save_result save_article()
 {
-    bool use_pref;
     char* s;
     char* c;
     char altbuf[CBUFLEN];
@@ -58,7 +57,7 @@ save_result save_article()
     
     if (!finish_command(interactive))	/* get rest of command */
 	return SAVE_ABORT;
-    use_pref = isupper(cmd);
+    bool use_pref = isupper(cmd);
     if (use_pref != 0)
 	cmd = tolower(cmd);
     parseheader(g_art);
@@ -490,11 +489,8 @@ save_result view_article()
 int cancel_article()
 {
     char hbuf[5*LBUFLEN];
-    char* ngs_buf;
-    char* from_buf;
-    char* reply_buf;
-    int myuid = getuid();
-    int r = -1;
+    int  myuid = getuid();
+    int  r = -1;
 
     if (artopen(g_art,(ART_POS)0) == nullptr) {
 	if (g_verbose)
@@ -504,9 +500,9 @@ int cancel_article()
 	termdown(2);
 	return r;
     }
-    reply_buf = fetchlines(g_art,REPLY_LINE);
-    from_buf = fetchlines(g_art,FROM_LINE);
-    ngs_buf = fetchlines(g_art,NGS_LINE);
+    char *reply_buf = fetchlines(g_art, REPLY_LINE);
+    char *from_buf = fetchlines(g_art, FROM_LINE);
+    char *ngs_buf = fetchlines(g_art, NGS_LINE);
     if (strcasecmp(get_val("FROM",""),from_buf)
      && (!in_string(from_buf,g_hostname, false)
       || (!in_string(from_buf,g_login_name, true)
@@ -554,11 +550,8 @@ done:
 int supersede_article()		/* Supersedes: */
 {
     char hbuf[5*LBUFLEN];
-    char* ngs_buf;
-    char* from_buf;
-    char* reply_buf;
-    int myuid = getuid();
-    int r = -1;
+    int  myuid = getuid();
+    int  r = -1;
     bool incl_body = (*g_buf == 'Z');
 
     if (artopen(g_art,(ART_POS)0) == nullptr) {
@@ -569,9 +562,9 @@ int supersede_article()		/* Supersedes: */
 	termdown(2);
 	return r;
     }
-    reply_buf = fetchlines(g_art,REPLY_LINE);
-    from_buf = fetchlines(g_art,FROM_LINE);
-    ngs_buf = fetchlines(g_art,NGS_LINE);
+    char *reply_buf = fetchlines(g_art, REPLY_LINE);
+    char *from_buf = fetchlines(g_art, FROM_LINE);
+    char *ngs_buf = fetchlines(g_art, NGS_LINE);
     if (strcasecmp(get_val("FROM",""),from_buf)
      && (!in_string(from_buf,g_hostname, false)
       || (!in_string(from_buf,g_login_name, true)
@@ -635,14 +628,12 @@ static void follow_it_up()
 	    g_export_nntp_fds = false;
 	}
 	if (ret) {
-	    int appended = 0;
+	    int   appended = 0;
 	    char* deadart = filexp("%./dead.article");
-	    FILE* fp_in;
-	    FILE* fp_out;
-            fp_out = fopen(deadart, "a");
+            FILE *fp_out = fopen(deadart, "a");
             if (fp_out != nullptr)
             {
-                fp_in = fopen(g_headname, "r");
+                FILE *fp_in = fopen(g_headname, "r");
                 if (fp_in != nullptr)
                 {
 		    while (fgets(g_cmd_buf, sizeof g_cmd_buf, fp_in))
@@ -685,8 +676,7 @@ void reply()
     }
     if (incl_body && g_artfp != nullptr) {
 	char* s;
-	char* t;
-	interp(g_buf, (sizeof g_buf), get_val("YOUSAID",YOUSAID));
+        interp(g_buf, (sizeof g_buf), get_val("YOUSAID",YOUSAID));
 	fprintf(g_tmpfp,"%s\n",g_buf);
 	parseheader(g_art);
 	mime_SetArticle();
@@ -694,7 +684,7 @@ void reply()
 	seekart(g_htype[PAST_HEADER].minpos);
 	g_wrapped_nl = '\n';
 	while ((s = readartbuf(false)) != nullptr) {
-            t = strchr(s, '\n');
+            char *t = strchr(s, '\n');
             if (t != nullptr)
 		*t = '\0';
 	    strcharsubst(hbuf,s,sizeof hbuf,*g_charsubst);
@@ -719,7 +709,6 @@ void forward()
 #ifdef REGEX_WORKS_RIGHT
     COMPEX mime_compex;
 #else
-    char* s;
     char* eol;
 #endif
     char* mime_boundary;
@@ -744,7 +733,7 @@ void forward()
 	mime_boundary = nullptr;
 #else
     mime_boundary = nullptr;
-    for (s = hbuf; s; s = eol) {
+    for (char *s = hbuf; s; s = eol) {
 	eol = strchr(s, '\n');
 	if (eol)
 	    eol++;
@@ -846,8 +835,7 @@ void followup()
     fputs(hbuf,g_tmpfp);
     if (incl_body && g_artfp != nullptr) {
 	char* s;
-	char* t;
-	if (g_verbose)
+        if (g_verbose)
 	    fputs("\n\
 (Be sure to double-check the attribution against the signature, and\n\
 trim the quoted article down as much as possible.)\n\
@@ -860,7 +848,7 @@ trim the quoted article down as much as possible.)\n\
 	seekart(g_htype[PAST_HEADER].minpos);
 	g_wrapped_nl = '\n';
 	while ((s = readartbuf(false)) != nullptr) {
-            t = strchr(s, '\n');
+            char *t = strchr(s, '\n');
             if (t != nullptr)
 		*t = '\0';
 	    strcharsubst(hbuf,s,sizeof hbuf,*g_charsubst);

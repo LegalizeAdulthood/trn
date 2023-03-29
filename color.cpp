@@ -87,17 +87,14 @@ static int s_stack_pointer = 0;
 void color_init()
 {
     if (g_use_colors) {
-	char* fg;
-	char* bg;
-
         /* Get default capabilities. */
-        fg = tc_color_capability("fg default");
+        char *fg = tc_color_capability("fg default");
         if (fg == nullptr)
         {
 	    fprintf(stderr,"trn: you need a 'fg default' definition in the [termcap] section.\n");
 	    finalize(1);
 	}
-        bg = tc_color_capability("bg default");
+        char *bg = tc_color_capability("bg default");
         if (bg == nullptr)
         {
 	    fprintf(stderr,"trn: you need a 'bg default' definition in the [termcap] section.\n");
@@ -219,7 +216,6 @@ void color_rc_attribute(const char *object, char *value)
 /* Turn on color attribute for an object. */
 void color_object(int object, bool push)
 {
-
     /* Merge in the colors/attributes that we are not setting
      * from the current object. */
     COLOR_OBJ merged = s_color_stack[s_stack_pointer].object;

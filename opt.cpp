@@ -165,7 +165,6 @@ static char *expand_mouse_buttons(char *cp, int cnt);
 
 void opt_init(int argc, char *argv[], char **tcbufptr)
 {
-    int i;
     char* s;
 
     g_sel_grp_dmode = savestr(g_sel_grp_dmode) + 1;
@@ -227,7 +226,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     memset(g_option_flags,0,(g_options_ini)[0].checksum * sizeof (char));
 
     if (argc > 1) {
-	for (i = 1; i < argc; i++)
+	for (int i = 1; i < argc; i++)
 	    decode_switch(argv[i]);
     }
     init_compex(&g_optcompex);
@@ -235,11 +234,10 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 
 void opt_file(char *filename, char **tcbufptr, bool bleat)
 {
-    char* filebuf = *tcbufptr;
-    char* s;
-    char* section;
-    char* cond;
-    int fd = open(filename,0);
+    char*filebuf = *tcbufptr;
+    char*section;
+    char*cond;
+    int  fd = open(filename,0);
 	
     if (fd >= 0) {
 	fstat(fd,&g_filestat);
@@ -251,7 +249,7 @@ void opt_file(char *filename, char **tcbufptr, bool bleat)
 	    int len = read(fd,filebuf,(int)g_filestat.st_size);
 	    filebuf[len] = '\0';
 	    prep_ini_data(filebuf,filename);
-	    s = filebuf;
+	    char *s = filebuf;
 	    while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
 		if (*cond && !check_ini_cond(cond))
 		    continue;
@@ -303,8 +301,7 @@ void opt_file(char *filename, char **tcbufptr, bool bleat)
 void set_options(char **vals)
 {
     int limit = ini_len(g_options_ini);
-    int i;
-    for (i = 1; i < limit; i++) {
+    for (int i = 1; i < limit; i++) {
 	if (*++vals)
 	    set_option(i, *vals);
     }
@@ -702,20 +699,17 @@ void set_option(int num, char *s)
 
 void save_options(const char *filename)
 {
-    int i;
-    int fd_in;
-    FILE* fp_out;
     char* filebuf = nullptr;
     char* line = nullptr;
     static bool first_time = true;
 
     sprintf(g_buf,"%s.new",filename);
-    fp_out = fopen(g_buf,"w");
+    FILE *fp_out = fopen(g_buf, "w");
     if (!fp_out) {
 	printf(g_cantcreate,g_buf);
 	return;
     }
-    fd_in = open(filename, 0);
+    int fd_in = open(filename, 0);
     if (fd_in >= 0)
     {
 	char* cp;
@@ -723,9 +717,8 @@ void save_options(const char *filename)
 	char* comments = nullptr;
 	fstat(fd_in,&g_filestat);
 	if (g_filestat.st_size) {
-	    int len;
-	    filebuf = safemalloc((MEM_SIZE)g_filestat.st_size+2);
-	    len = read(fd_in,filebuf,(int)g_filestat.st_size);
+            filebuf = safemalloc((MEM_SIZE)g_filestat.st_size+2);
+	    int len = read(fd_in, filebuf, (int)g_filestat.st_size);
 	    filebuf[len] = '\0';
 	}
 	close(fd_in);
@@ -774,7 +767,7 @@ line that sets %sRNINIT.\n", g_ini_file, t, t);
 	fprintf(fp_out, "%sRNINIT = ''\n\n", t);
     }
     fprintf(fp_out,"[options]\n");
-    for (i = 1; g_options_ini[i].checksum; i++) {
+    for (int i = 1; g_options_ini[i].checksum; i++) {
 	if (*g_options_ini[i].item == '*')
 	    fprintf(fp_out,"# ==%s========\n",g_options_ini[i].item+1);
 	else {
@@ -865,10 +858,9 @@ char *option_value(int num)
       case OI_NEWS_SEL_MODE: {
 	const sel_mode save_sel_mode = g_sel_mode;
 	const int save_Threaded = g_threaded_group;
-	char* s;
-	g_threaded_group = true;
+        g_threaded_group = true;
 	set_selector(g_sel_defaultmode, SS_MAGIC_NUMBER);
-	s = g_sel_mode_string;
+	char *s = g_sel_mode_string;
 	g_sel_mode = save_sel_mode;
 	g_threaded_group = save_Threaded;
 	set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
@@ -1064,10 +1056,9 @@ char *option_value(int num)
 
 static char *hidden_list()
 {
-    int i;
     g_buf[0] = '\0';
     g_buf[1] = '\0';
-    for (i = 1; i < g_user_htype_cnt; i++) {
+    for (int i = 1; i < g_user_htype_cnt; i++) {
 	sprintf(g_buf+strlen(g_buf),",%s%s", g_user_htype[i].flags? "" : "!",
 		g_user_htype[i].name);
     }
@@ -1076,10 +1067,9 @@ static char *hidden_list()
 
 static char *magic_list()
 {
-    int i;
     g_buf[0] = '\0';
     g_buf[1] = '\0';
-    for (i = HEAD_FIRST; i < HEAD_LAST; i++) {
+    for (int i = HEAD_FIRST; i < HEAD_LAST; i++) {
 	if (!(g_htype[i].flags & HT_MAGIC) != !(g_htype[i].flags & HT_DEFMAGIC)) {
 	    sprintf(g_buf+strlen(g_buf),",%s%s",
 		    (g_htype[i].flags & HT_DEFMAGIC)? "!" : "",
@@ -1091,9 +1081,7 @@ static char *magic_list()
 
 static void set_header_list(headtype_flags flag, headtype_flags defflag, char *str)
 {
-    int i;
     bool setit;
-    char* cp;
 
     if (flag == HT_HIDE || flag == HT_DEFHIDE) {
 	/* Free old g_user_htype list */
@@ -1104,12 +1092,12 @@ static void set_header_list(headtype_flags flag, headtype_flags defflag, char *s
 
     if (!*str)
 	str = " ";
-    for (i = HEAD_FIRST; i < HEAD_LAST; i++)
+    for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
 	g_htype[i].flags = ((g_htype[i].flags & defflag)
 			? (g_htype[i].flags | flag)
 			: (g_htype[i].flags & ~flag));
     for (;;) {
-        cp = strchr(str, ',');
+        char *cp = strchr(str, ',');
         if (cp != nullptr)
 	    *cp = '\0';
 	if (*str == '!') {

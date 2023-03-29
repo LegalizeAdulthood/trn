@@ -16,16 +16,12 @@ static char s_sc_e_newline[LBUFLEN];
 /* returns new string or nullptr to abort. */
 char *sc_easy_append()
 {
-    char* s;
-    bool q_done;	/* if true, we are finished with current question */
-    char filechar;
-    long score;
     char ch;
 
-    filechar = '\0';	/* GCC warning avoidance */
-    s = s_sc_e_newline;
+    char  filechar = '\0'; /* GCC warning avoidance */
+    char *s = s_sc_e_newline;
     printf("\nScorefile easy append mode.\n") FLUSH;
-    q_done = false;
+    bool q_done = false;
     while (!q_done) {
 	printf("0) Exit.\n") FLUSH;
 	printf("1) List the current scorefile abbreviations.\n");
@@ -119,7 +115,7 @@ char *sc_easy_append()
 	g_buf[0] = ' ';
 	g_buf[1] = FINISHCMD;
 	if (finish_command(true)) {
-	    score = atoi(g_buf+1);
+	    long score = atoi(g_buf + 1);
 	    if (score == 0)
 		if (g_buf[1] != '0')
 		    continue;	/* the while loop */
@@ -167,13 +163,9 @@ char *sc_easy_append()
 /* returns new string or nullptr to abort. */
 const char *sc_easy_command()
 {
-    char* s;
-    bool q_done;	/* if true, we are finished with current question */
-    char ch;
-
-    s = s_sc_e_newline;
+    char *s = s_sc_e_newline;
     printf("\nScoring easy command mode.\n") FLUSH;
-    q_done = false;
+    bool q_done = false;
     while (!q_done) {
 	printf("0) Exit.\n");
 	printf("1) Add something to a scorefile.\n");
@@ -183,7 +175,7 @@ const char *sc_easy_command()
 	printf("4) Edit this newsgroup's scoring rule file.\n");
 	/* later add an option to edit an arbitrary file */
 	printf("5) Continue scoring unscored articles.\n");
-	ch = menu_get_char();
+	char ch = menu_get_char();
 	q_done = true;
 	switch (ch) {
 	  case '0':

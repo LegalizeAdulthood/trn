@@ -146,7 +146,6 @@ int nntp_command(const char *bp)
 
 int nntp_check()
 {
-    int ret;
     int len = 0;
 
  read_it:
@@ -154,7 +153,7 @@ int nntp_check()
     sighold(SIGINT);
 #endif
     errno = 0;
-    ret = (fgets(g_ser_line, sizeof g_ser_line, g_nntplink.rd_fp) == nullptr)? -2 : 0;
+    int ret = (fgets(g_ser_line, sizeof g_ser_line, g_nntplink.rd_fp) == nullptr) ? -2 : 0;
 #ifdef HAS_SIGHOLD
     sigrelse(SIGINT);
 #endif

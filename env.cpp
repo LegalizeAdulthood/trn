@@ -227,9 +227,8 @@ static bool set_user_name(char *tmpbuf)
 #endif
 #ifndef PASSNAMES
     {
-	FILE* fp;
-	env_init2(); /* Make sure g_home_dir/g_dot_dir/etc. are set. */
-        fp = fopen(filexp(FULLNAMEFILE), "r");
+        env_init2(); /* Make sure g_home_dir/g_dot_dir/etc. are set. */
+        FILE *fp = fopen(filexp(FULLNAMEFILE), "r");
         if (fp != nullptr)
         {
 	    fgets(g_buf,sizeof g_buf,fp);
@@ -384,7 +383,6 @@ char *export_var(const char *nam, const char *val)
 
     if (!environ[i]) {			/* does not exist yet */
 	if (s_firstexport) {		/* need we copy environment? */
-	    int j;
 #ifndef lint
 	    char** tmpenv = (char**)	/* point our wand at memory */
 		safemalloc((MEM_SIZE) (i+2) * sizeof(char*));
@@ -393,7 +391,7 @@ char *export_var(const char *nam, const char *val)
 #endif /* lint */
     
 	    s_firstexport = false;
-	    for (j = 0; j < i; j++)	/* copy environment */
+	    for (int j = 0; j < i; j++) /* copy environment */
 		tmpenv[j] = environ[j];
 	    environ = tmpenv;		/* tell exec where it is now */
 	}

@@ -306,17 +306,14 @@ void check_poster(ARTICLE *ap)
 */
 void uncache_article(ARTICLE *ap, bool remove_empties)
 {
-    ARTICLE* next;
-
     if (ap->subj) {
 	if (all_bits(ap->flags, AF_CACHED | AF_EXISTS)) {
-            next = ap->subj->articles;
+            ARTICLE *next = ap->subj->articles;
             if (next == ap)
 		ap->subj->articles = ap->subj_next;
 	    else {
-		ARTICLE* ap2;
-		while (next) {
-                    ap2 = next->subj_next;
+                while (next) {
+                    ARTICLE *ap2 = next->subj_next;
                     if (ap2 == ap)
                     {
 			next->subj_next = ap->subj_next;
