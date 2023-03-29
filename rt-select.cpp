@@ -14,7 +14,6 @@
 #include "final.h"
 #include "intrp.h"
 #include "kfile.h"
-#include "list.h"
 #include "ng.h"
 #include "ngdata.h"
 #include "ngsrch.h"
@@ -237,8 +236,8 @@ char article_selector(char_int cmd)
     g_sel_item_index = 0;
     *g_msg = '\0';
     if (g_added_articles) {
-	long i = g_added_articles, j;
-	for (j = g_lastart-i+1; j <= g_lastart; j++) {
+	long i = g_added_articles;
+	for (long j = g_lastart - i + 1; j <= g_lastart; j++) {
 	    if (!article_unread(j))
 		i--;
 	}
@@ -306,11 +305,10 @@ sel_exit:
 
 static void sel_dogroups()
 {
-    NGDATA* np;
     int ret;
     int save_selected_count = g_selected_count;
 
-    for (np = g_first_ng; np; np = np->next) {
+    for (NGDATA *np = g_first_ng; np; np = np->next) {
 	if (!(np->flags & NF_VISIT))
 	    continue;
       do_group:
@@ -397,14 +395,12 @@ char multirc_selector()
 	clear_rest();
 
     if (s_sel_ret=='\r' || s_sel_ret=='\n' || s_sel_ret=='Z' || s_sel_ret=='\t') {
-	MULTIRC* mp;
-	NEWSRC* rp;
-	PUSH_SELECTOR();
-	for (mp = multirc_low(); mp; mp = multirc_next(mp)) {
+        PUSH_SELECTOR();
+	for (MULTIRC *mp = multirc_low(); mp; mp = multirc_next(mp)) {
 	    if (mp->flags & MF_SEL) {
 		mp->flags &= ~MF_SEL;
 		save_selected_count--;
-		for (rp = mp->first; rp; rp = rp->next)
+		for (NEWSRC *rp = mp->first; rp; rp = rp->next)
 		    rp->datasrc->flags &= ~DF_UNAVAILABLE;
 		if (use_multirc(mp)) {
 		    find_new_groups();
@@ -433,8 +429,7 @@ char newsgroup_selector()
 
   sel_restart:
     if (*g_sel_grp_dmode != 's') {
-	NEWSRC* rp;
-	for (rp = g_multirc->first; rp; rp = rp->next) {
+        for (NEWSRC *rp = g_multirc->first; rp; rp = rp->next) {
 	    if ((rp->flags & RF_ACTIVE) && !rp->datasrc->desc_sf.hp) {
 		find_grpdesc(rp->datasrc, "control");
 		if (rp->datasrc->desc_sf.fp)
@@ -467,9 +462,8 @@ char newsgroup_selector()
 
     if (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == 'Z' || s_sel_ret == '\t' || s_sel_ret == ';')
     {
-	NGDATA* np;
-	PUSH_SELECTOR();
-	for (np = g_first_ng; np; np = np->next) {
+        PUSH_SELECTOR();
+	for (NGDATA *np = g_first_ng; np; np = np->next) {
 	    if ((np->flags & NF_INCLUDED)
 	     && (!g_selected_count || (np->flags & g_sel_mask)))
 		np->flags |= NF_VISIT;
@@ -500,8 +494,7 @@ char addgroup_selector(getnewsgroup_flags flags)
 
   sel_restart:
     if (*g_sel_grp_dmode != 's') {
-	NEWSRC* rp;
-	for (rp = g_multirc->first; rp; rp = rp->next) {
+        for (NEWSRC *rp = g_multirc->first; rp; rp = rp->next) {
 	    if ((rp->flags & RF_ACTIVE) && !rp->datasrc->desc_sf.hp) {
 		find_grpdesc(rp->datasrc, "control");
 		if (!rp->datasrc->desc_sf.fp)
@@ -550,7 +543,6 @@ char addgroup_selector(getnewsgroup_flags flags)
 
 char option_selector()
 {
-    int i;
     char** vals = ini_values(g_options_ini);
     save_selector_modes saver('l');
 
@@ -588,7 +580,7 @@ char option_selector()
 	if (s_sel_ret == 'S')
 	    save_options(g_ini_file);
     }
-    for (i = 1; g_options_ini[i].checksum; i++) {
+    for (int i = 1; g_options_ini[i].checksum; i++) {
 	if (vals[i]) {
 	    if (g_option_saved_vals[i] && !strcmp(vals[i],g_option_saved_vals[i])) {
 		if (g_option_saved_vals[i] != g_option_def_vals[i])
@@ -617,8 +609,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
     printf("\n") FLUSH;			/* prepare for output msgs... */
     switch (ui->type) {
       case UN_DEBUG1: {
-	char* s;
-	s = ui->data.str;
+          char *s = ui->data.str;
 	if (s && *s) {
 	    printf("Not implemented yet (%s)\n",s) FLUSH;
 	    sleep(5);
@@ -627,8 +618,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
 	break;
       }
       case UN_TEXTFILE: {
-	char* s;
-	s = ui->data.textfile.fname;
+          char *s = ui->data.textfile.fname;
 	if (s && *s) {
 	    /* later have some way of getting a return code back */
 	    univ_page_file(s);
@@ -636,16 +626,14 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
 	break;
       }
       case UN_ARTICLE: {
-	int ret;
-	NGDATA* np;
 
-	if (g_in_ng) {
+          if (g_in_ng) {
 	    /* XXX whine: can't recurse at this time */
 	    break;
 	}
 	if (!ui->data.virt.ng)
 	    break;			/* XXX whine */
-	np = find_ng(ui->data.virt.ng);
+	NGDATA *np = find_ng(ui->data.virt.ng);
 
 	if (!np) {
 	    printf("Universal: newsgroup %s not found!",
@@ -662,7 +650,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
 	printf("Virtual: Entering %s:\n", g_ngname) FLUSH;
 	g_ng_go_artnum = ui->data.virt.num;
 	g_univ_read_virtflag = true;
-	ret = do_newsgroup("");
+	int ret = do_newsgroup("");
 	g_univ_read_virtflag = false;
 	switch (ret) {
 	  case NG_NORM:		/* handle more cases later */
@@ -714,15 +702,14 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
       }
       case UN_NEWSGROUP: {
 	int ret;
-	NGDATA* np;
 
-	if (g_in_ng) {
+        if (g_in_ng) {
 	    /* XXX whine: can't recurse at this time */
 	    break;
 	}
 	if (!ui->data.group.ng)
 	    break;			/* XXX whine */
-	np = find_ng(ui->data.group.ng);
+	NGDATA *np = find_ng(ui->data.group.ng);
 
 	if (!np) {
 	    printf("Universal: newsgroup %s not found!",
@@ -877,11 +864,8 @@ static void sel_status_msg(const char *cp)
 static char sel_input()
 {
     int j;
-    int ch, action;
-    char* in_select;
-    int got_dash, got_goto;
+    int got_goto;
     int sel_number;
-    int ch_num1;
 
     /* CAA: TRN proudly continues the state machine traditions of RN.
      *      April 2, 1996: 28 gotos in this function.  Conversion to
@@ -890,12 +874,12 @@ static char sel_input()
     /* If one immediately types a goto command followed by a dash ('-'),
      * the following will be the default action.
      */
-    action = '+';
+    int action = '+';
   reask_selector:
     /* Prompt the user */
     sel_prompt();
   position_selector:
-    got_dash = got_goto = 0;
+    int got_dash = got_goto = 0;
     s_force_sel_pos = -1;
     if (s_removed_prompt & 1) {
 	draw_mousebar(g_tc_COLS,false);
@@ -918,7 +902,7 @@ reinp_selector:
     getcmd(g_buf);
     if (*g_buf == ' ')
 	setdef(g_buf, g_sel_at_end? &s_end_char : &s_page_char);
-    ch = *g_buf;
+    int ch = *g_buf;
     if (errno)
 	ch = Ctl('l');
     if (s_disp_status_line == 2) {
@@ -979,9 +963,9 @@ reinp_selector:
     }
     if (g_sel_mode == SM_OPTIONS && (ch == '\r' || ch == '\n'))
 	ch = '.';
-    in_select = strchr(g_sel_chars, ch);
+    char *in_select = strchr(g_sel_chars, ch);
     if (g_use_sel_num && ch >= '0' && ch <= '9') {
-	ch_num1 = ch;
+	int ch_num1 = ch;
 	/* would be *very* nice to use wait_key_pause() here */
 	if (!input_pending()) {
 	    if (got_dash) {
@@ -1079,11 +1063,10 @@ reinp_selector:
 	else
 	    action = '+';
     } else if (ch == '*' && g_sel_mode == SM_ARTICLE) {
-	ARTICLE* ap;
-	if (!g_sel_page_item_cnt)
+        if (!g_sel_page_item_cnt)
 	    dingaling();
 	else {
-	    ap = g_sel_items[g_sel_item_index].u.ap;
+	    ARTICLE *ap = g_sel_items[g_sel_item_index].u.ap;
 	    if (g_sel_items[g_sel_item_index].sel)
 		deselect_subject(ap->subj);
 	    else
@@ -1401,10 +1384,8 @@ static bool deselect_item(SEL_UNION u)
 
 static bool select_option(int i)
 {
-    bool changed = false;
-    char** vals = ini_values(g_options_ini);
-    char* val;
-    char* oldval;
+    bool  changed = false;
+    char**vals = ini_values(g_options_ini);
 
     if (*g_options_ini[i].item == '*') {
 	g_option_flags[i] ^= OF_SEL;
@@ -1420,8 +1401,8 @@ static bool select_option(int i)
     color_pop();	/* of COLOR_CMD */
     newline();
     *g_buf = '\0';
-    oldval = savestr(quote_string(option_value(i)));
-    val = vals[i]? vals[i] : oldval;
+    char *oldval = savestr(quote_string(option_value(i)));
+    char *val = vals[i] ? vals[i] : oldval;
     s_clean_screen = in_choice("> ", val, g_options_ini[i].help_str, 'z');
     if (strcmp(g_buf,val)) {
 	char* to = g_buf;
@@ -1463,8 +1444,7 @@ static void sel_cleanup()
 	break;
       case SM_ADDGROUP:
 	if (g_sel_rereading) {
-	    ADDGROUP* gp;
-	    for (gp = g_first_addgroup; gp; gp = gp->next) {
+            for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next) {
 		if (gp->flags & AGF_DELSEL) {
 		    if (!(gp->flags & AGF_SEL))
 			g_selected_count++;
@@ -1474,8 +1454,7 @@ static void sel_cleanup()
 	    }
 	}
 	else {
-	    ADDGROUP* gp;
-	    for (gp = g_first_addgroup; gp; gp = gp->next) {
+            for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next) {
 		if (gp->flags & AGF_DEL)
 		    gp->flags = (gp->flags & ~AGF_DEL) | AGF_EXCLUDED;
 	    }
@@ -1483,8 +1462,7 @@ static void sel_cleanup()
 	break;
       case SM_NEWSGROUP:
 	if (g_sel_rereading) {
-	    NGDATA* np;
-	    for (np = g_first_ng; np; np = np->next) {
+            for (NGDATA *np = g_first_ng; np; np = np->next) {
 		if (np->flags & NF_DELSEL) {
 		    if (!(np->flags & NF_SEL))
 			g_selected_count++;
@@ -1494,8 +1472,7 @@ static void sel_cleanup()
 	    }
 	}
 	else {
-	    NGDATA* np;
-	    for (np = g_first_ng; np; np = np->next) {
+            for (NGDATA *np = g_first_ng; np; np = np->next) {
 		if (np->flags & NF_DEL) {
 		    np->flags &= ~NF_DEL;
 		    catch_up(np, 0, 0);
@@ -1510,21 +1487,16 @@ static void sel_cleanup()
 	break;
       default:
 	if (g_sel_rereading) {
-	    /* Turn selections into unread selected articles.  Let
-	    ** count_subjects() fix the counts after we're through.
-	    */
-	    SUBJECT* sp;
-	    g_sel_last_ap = nullptr;
+            g_sel_last_ap = nullptr;
 	    g_sel_last_sp = nullptr;
-	    for (sp = g_first_subject; sp; sp = sp->next)
+	    for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
 		unkill_subject(sp);
 	}
 	else {
 	    if (g_sel_mode == SM_ARTICLE)
 		article_walk(mark_DEL_as_READ, 0);
 	    else {
-		SUBJECT* sp;
-		for (sp = g_first_subject; sp; sp = sp->next) {
+                for (SUBJECT *sp = g_first_subject; sp; sp = sp->next) {
 		    if (sp->flags & SF_DEL) {
 			sp->flags &= ~SF_DEL;
 			if (g_sel_mode == SM_THREAD)
@@ -1698,7 +1670,6 @@ static display_state sel_command(char_int ch)
 
 static bool sel_perform_change(long cnt, const char *obj_type)
 {
-    int ret;
 
     carriage_return();
     if (g_page_line == 1) {
@@ -1714,7 +1685,7 @@ static bool sel_perform_change(long cnt, const char *obj_type)
 	s_clean_screen = g_error_occurred = false;
     }
 
-    ret = perform_status_end(cnt, obj_type);
+    int ret = perform_status_end(cnt, obj_type);
     if (ret)
 	s_disp_status_line = 1; 
     if (s_clean_screen) {
@@ -1773,8 +1744,7 @@ static display_state article_commands(char_int ch)
 	return DS_RESTART;
       case '#':
 	if (g_sel_page_item_cnt) {
-	    SUBJECT* sp;
-	    for (sp = g_first_subject; sp; sp = sp->next)
+            for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
 		sp->flags &= ~SF_SEL;
 	    g_selected_count = 0;
 	    deselect_item(g_sel_items[g_sel_item_index].u);
@@ -1944,16 +1914,14 @@ q does nothing.\n\n\
       case 'X':  case 'D':  case 'J':
 	if (!g_sel_rereading) {
 	    if (g_sel_mode == SM_ARTICLE) {
-		ARTICLE* ap;
-		ARTICLE** app;
-		ARTICLE** limit;
-		limit = g_artptr_list + g_artptr_list_size;
+                ARTICLE** app;
+                ARTICLE **limit = g_artptr_list + g_artptr_list_size;
 		if (ch == 'D')
 		    app = g_sel_page_app;
 		else
 		    app = g_artptr_list;
 		while (app < limit) {
-		    ap = *app;
+		    ARTICLE *ap = *app;
 		    if ((!(ap->flags & AF_SEL) ^ (ch == 'J'))
 		     || (ap->flags & AF_DEL))
 			if (ch == 'J' || !g_sel_exclusive
@@ -1992,8 +1960,7 @@ q does nothing.\n\n\
 	    if (g_artptr_list && g_obj_count)
 		sort_articles();
 	} else if (ch == 'J') {
-	    SUBJECT* sp;
-	    for (sp = g_first_subject; sp; sp = sp->next)
+            for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
 		deselect_subject(sp);
 	    g_selected_subj_cnt = g_selected_count = 0;
 	    return DS_DISPLAY;
@@ -2078,8 +2045,7 @@ q does nothing.\n\n\
 	    if (ch == ':') {
 		thread_perform();
 		if (!g_sel_rereading) {
-		    SUBJECT* sp;
-		    for (sp = g_first_subject; sp; sp = sp->next) {
+                    for (SUBJECT *sp = g_first_subject; sp; sp = sp->next) {
 			if (sp->flags & SF_DEL) {
 			    sp->flags = SF_NONE;
 			    if (g_sel_mode == SM_THREAD)
@@ -2202,18 +2168,16 @@ static display_state newsgroup_commands(char_int ch)
 		}
 	    }
 	} else if (ch == 'J') {
-	    NGDATA* np;
-	    for (np = g_first_ng; np; np = np->next)
+            for (NGDATA *np = g_first_ng; np; np = np->next)
 		np->flags &= ~NF_DELSEL;
 	    g_selected_count = 0;
 	    return DS_DISPLAY;
 	}
 	return DS_QUIT;
       case '=': {
-	NGDATA* np;
-	sel_cleanup();
+          sel_cleanup();
 	g_missing_count = 0;
-	for (np = g_first_ng; np; np = np->next) {
+	for (NGDATA *np = g_first_ng; np; np = np->next) {
 	    if (np->toread > TR_UNSUB && np->toread < g_ng_min_toread)
 		g_newsgroup_toread++;
 	    np->abs1st = 0;
@@ -2551,8 +2515,7 @@ q does nothing.\n\n\
 		}
 	    }
 	} else if (ch == 'J') {
-	    ADDGROUP* gp;
-	    for (gp = g_first_addgroup; gp; gp = gp->next)
+            for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next)
 		gp->flags &= ~AGF_DELSEL;
 	    g_selected_count = 0;
 	    return DS_DISPLAY;
@@ -2660,14 +2623,13 @@ static display_state option_commands(char_int ch)
 	return DS_QUIT;
       case '/': {
 	SEL_UNION u;
-	char* s;
-	char* pattern;
-	int i, j;
+        char*     pattern;
+	int       j;
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
 	if (!finish_command(true))	/* get rest of command */
 	    break;
-	s = cpytill(g_buf,g_buf+1,'/');
+	char *s = cpytill(g_buf, g_buf + 1, '/');
         for (pattern = g_buf; *pattern == ' '; pattern++)
             ;
         s = compile(&g_optcompex, pattern, true, true);
@@ -2676,7 +2638,7 @@ static display_state option_commands(char_int ch)
 	    strcpy(g_msg,s);
 	    return DS_STATUS;
 	}
-	i = j = g_sel_items[g_sel_item_index].u.op;
+	int i = j = g_sel_items[g_sel_item_index].u.op;
 	do {
 	    if (++i > g_obj_count)
 		i = 1;
