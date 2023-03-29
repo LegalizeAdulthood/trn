@@ -1,0 +1,25 @@
+#ifndef TRN_TEST_CONFIG_H
+#define TRN_TEST_CONFIG_H
+
+#define TRN_TEST_HOME_DIR       "@TRN_TEST_HOME_DIR@"
+#define TRN_TEST_TMP_DIR        "@TRN_TEST_TMP_DIR@"
+#define TRN_TEST_TRN_DIR        "@TRN_TEST_TRN_DIR@"
+#define TRN_TEST_LOGIN_NAME     "@TRN_TEST_LOGIN_NAME@"
+#define TRN_TEST_LIB_DIR        "@TRN_TEST_LIB_DIR@"
+#define TRN_TEST_RN_LIB_DIR     "@TRN_TEST_RN_LIB_DIR@"
+
+#define TRN_TEST_ARTICLE_NUM    "@TRN_TEST_ARTICLE_NUM@"
+
+namespace trn {
+namespace testing {
+
+void set_envars();
+void reset_envars();
+bool set_name(char *);
+bool set_host_name(char *);
+void reset_lib_dirs();
+
+} // namespace testing
+} // namespace trn
+
+#endif

@@ -40,26 +40,9 @@ void InterpolatorTest::SetUp()
 {
     Test::SetUp();
 
-    const char *const envars[] = {"HOME=",     "LOGDIR=",    "TMPDIR=",   "TMP=",    "USER=",  "LOGNAME=",
-                                  "USERNAME=", "HOMEDRIVE=", "HOMEPATH=", "DOTDIR=", "TRNDIR="};
-    for (const char *name : envars)
-    {
-        putenv(name);
-    }
-    env_init(
-        m_tcbuf.data(), true,
-        [](char *)
-        {
-            g_login_name = savestr("bonzo");
-            g_real_name = savestr("Bonzo the Monkey");
-            return true;
-        },
-        [](char *)
-        {
-            g_local_host = savestr("localhost");
-            g_p_host_name = savestr("news.gmane.io");
-            return true;
-        });
+    trn::testing::set_envars();
+    env_init(m_tcbuf.data(), true, trn::testing::set_name, trn::testing::set_host_name);
+    trn::testing::reset_lib_dirs();
     datasrc_init();
     g_datasrc = datasrc_first();
 }
@@ -85,6 +68,7 @@ void InterpolatorTest::TearDown()
     g_dot_dir = nullptr;
     safefree0(g_trn_dir);
     safefree0(g_lib);
+    trn::testing::reset_envars();
 
     Test::TearDown();
 }

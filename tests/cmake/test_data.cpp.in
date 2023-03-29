@@ -1,0 +1,62 @@
+#include <common.h>
+#include <env.h>
+#include <util.h>
+#include <util2.h>
+
+#include "test_config.h"
+
+#include <stdlib.h>
+
+namespace trn {
+namespace testing {
+
+void set_envars()
+{
+    putenv("HOME=@TRN_TEST_HOME_DIR@");
+    putenv("TMPDIR=@TRN_TEST_TMP_DIR@");
+    putenv("USER=@TRN_TEST_LOGIN_NAME@");
+    putenv("DOTDIR=@TRN_TEST_DOT_DIR@");
+    putenv("TRNDIR=@TRN_TEST_TRN_DIR@");
+}
+
+void reset_envars()
+{
+    putenv("HOME=");
+    putenv("TMPDIR=");
+    putenv("USER=");
+    putenv("DOTDIR=");
+    putenv("TRNDIR=");
+}
+
+bool set_name(char *)
+{
+    g_login_name = savestr("@TRN_TEST_LOGIN_NAME@");
+    g_real_name = savestr("@TRN_TEST_REAL_NAME@");
+    return true;
+};
+
+bool set_host_name(char *)
+{
+    g_local_host = savestr("@TRN_TEST_LOCAL_HOST@");
+    g_p_host_name = savestr("@TRN_TEST_P_HOST_NAME@");
+    return true;
+};
+
+namespace {
+
+void reset_string(char *&ptr, const char *value)
+{
+    safefree0(ptr);
+    ptr = savestr(value);
+}
+
+} // namespace
+
+void reset_lib_dirs()
+{
+    reset_string(g_lib, "@TRN_TEST_LIB_DIR@");
+    reset_string(g_rn_lib, "@TRN_TEST_RN_LIB_DIR@");
+}
+
+} // namespace testing
+} // namespace trn
