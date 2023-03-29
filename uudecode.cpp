@@ -14,14 +14,10 @@ static void uudecodeline(char *line, FILE *ofp);
 
 int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 {
-    char* s;
-    char* tmpfilename;
-    int tmppart, tmptotal;
-
     if (!strncmp(bp, "begin ", 6)
-     && isdigit(bp[6]) && isdigit(bp[7])
-     && isdigit(bp[8]) && (bp[9] == ' ' ||
-	(bp[6] == '0' && isdigit(bp[9]) && bp[10] == ' '))) {
+        && isdigit(bp[6]) && isdigit(bp[7])
+        && isdigit(bp[8]) && (bp[9] == ' ' ||
+                              (bp[6] == '0' && isdigit(bp[9]) && bp[10] == ' '))) {
 	if (*partp == -1) {
 	    *filenamep = nullptr;
 	    *partp = 1;
@@ -30,8 +26,8 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	return 1;
     }
     if (!strncmp(bp,"section ",8) && isdigit(bp[8])) {
-	s = bp + 8;
-	tmppart = atoi(s);
+        char *s = bp + 8;
+        int   tmppart = atoi(s);
 	if (tmppart == 0)
 	    return 0;
 	while (isdigit(*s)) s++;
@@ -41,7 +37,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	    if (!*s)
 		return 0;
 	    s += 9;
-	    tmpfilename = s;
+            char *tmpfilename = s;
 	    s = strchr(s, ' ');
 	    if (!s)
 		return 0;
@@ -52,13 +48,12 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	    return 1;
 	}
 	if (*s == '/' && isdigit(s[1])) {
-	    /* "section N/M   file F ..." */
-	    tmptotal = atoi(s);
+            int tmptotal = atoi(s);
 	    while (isdigit(*s)) s++;
 	    while (*s && isspace(*s)) s++;
 	    if (tmppart > tmptotal || strncmp(s,"file ",5))
 		return 0;
-	    tmpfilename = s+5;
+            char *tmpfilename = s + 5;
 	    s = strchr(tmpfilename, ' ');
 	    if (!s)
 		return 0;
@@ -70,21 +65,20 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	}
     }
     if (!strncmp(bp, "POST V", 6)) {
-	/* "POST Vd.d.d F (Part N/M)" */
-	s = strchr(bp+6, ' ');
+        char *s = strchr(bp + 6, ' ');
 	if (!s)
 	    return 0;
-	tmpfilename = s+1;
+        char *tmpfilename = s + 1;
 	s = strchr(tmpfilename, ' ');
 	if (!s || strncmp(s, " (Part ", 7))
 	    return 0;
 	*s = '\0';
 	s += 7;
-	tmppart = atoi(s);
+        int tmppart = atoi(s);
 	while (isdigit(*s)) s++;
 	if (tmppart == 0 || *s++ != '/')
 	    return 0;
-	tmptotal = atoi(s);
+        int tmptotal = atoi(s);
 	while (isdigit(*s)) s++;
 	if (tmppart > tmptotal || *s != ')')
 	    return 0;
@@ -94,19 +88,18 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	return 1;
     }
     if (!strncmp(bp, "File: ", 6)) {
-	/* "File: F -- part N of M -- ... */
-	tmpfilename = bp+6;
-	s = strchr(tmpfilename, ' ');
+        char *tmpfilename = bp + 6;
+        char *s = strchr(tmpfilename, ' ');
 	if (!s || strncmp(s, " -- part ", 9))
 	    return 0;
 	*s = '\0';
 	s += 9;
-	tmppart = atoi(s);
+        int tmppart = atoi(s);
 	while (isdigit(*s)) s++;
 	if (tmppart == 0 || strncmp(s, " of ", 4))
 	    return 0;
 	s += 4;
-	tmptotal = atoi(s);
+        int tmptotal = atoi(s);
 	while (isdigit(*s)) s++;
 	if (tmppart > tmptotal || strncmp(s, " -- ", 4))
 	    return 0;
@@ -116,18 +109,17 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	return 1;
     }
     if (!strncmp(bp, "[Section: ", 10)) {
-	/* "[Section: N/M  File: F ..." */
-	s = bp + 10;
-	tmppart = atoi(s);
+        char *s = bp + 10;
+        int   tmppart = atoi(s);
 	if (tmppart == 0)
 	    return 0;
 	while (isdigit(*s)) s++;
-	tmptotal = atoi(++s);
+        int tmptotal = atoi(++s);
 	while (isdigit(*s)) s++;
 	while (*s && isspace(*s)) s++;
 	if (tmppart > tmptotal || strncmp(s, "File: ", 6))
 	    return 0;
-	tmpfilename = s+6;
+        char *tmpfilename = s + 6;
 	s = strchr(tmpfilename, ' ');
 	if (!s)
 	    return 0;
@@ -146,6 +138,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	return 1;
     }
     if (!strncasecmp(bp, "x-file-name: ", 13)) {
+        char *s;
 	for (s = bp + 13; *s && !isspace(*s); s++) ;
 	*s = '\0';
 	safecpy(g_msg, bp+13, sizeof g_msg);
@@ -153,13 +146,13 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	return 0;
     }
     if (!strncasecmp(bp, "x-part: ", 8)) {
-	tmppart = atoi(bp+8);
+        int tmppart = atoi(bp + 8);
 	if (tmppart > 0)
 	    *partp = tmppart;
 	return 0;
     }
     if (!strncasecmp(bp, "x-part-total: ", 14)) {
-	tmptotal = atoi(bp+14);
+        int tmptotal = atoi(bp + 14);
 	if (tmptotal > 0)
 	    *totalp = tmptotal;
 	return 0;
@@ -173,7 +166,6 @@ decode_state uudecode(FILE *ifp, decode_state state)
     static int line_length;
     char lastline[UULENGTH+1];
     char* filename;
-    char* p;
 
     if (state == DECODE_DONE) {
       all_done:
@@ -187,7 +179,7 @@ decode_state uudecode(FILE *ifp, decode_state state)
     while (ifp? fgets(g_buf, sizeof g_buf, ifp) : readart(g_buf, sizeof g_buf)) {
 	if (!ifp && mime_EndOfSection(g_buf))
 	    break;
-	p = strchr(g_buf, '\r');
+	char *p = strchr(g_buf, '\r');
 	if (p) {
 	    p[0] = '\n';
 	    p[1] = '\0';
