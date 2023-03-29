@@ -162,10 +162,8 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 
 decode_state uudecode(FILE *ifp, decode_state state)
 {
-    static FILE* ofp = nullptr;
-    static int line_length;
-    char lastline[UULENGTH+1];
-    char* filename;
+    static FILE *ofp = nullptr;
+    static int   line_length;
 
     if (state == DECODE_DONE) {
       all_done:
@@ -177,7 +175,8 @@ decode_state uudecode(FILE *ifp, decode_state state)
     }
 
     while (ifp? fgets(g_buf, sizeof g_buf, ifp) : readart(g_buf, sizeof g_buf)) {
-	if (!ifp && mime_EndOfSection(g_buf))
+        char lastline[UULENGTH+1];
+        if (!ifp && mime_EndOfSection(g_buf))
 	    break;
 	char *p = strchr(g_buf, '\r');
 	if (p) {
@@ -187,27 +186,29 @@ decode_state uudecode(FILE *ifp, decode_state state)
 	switch (state) {
 	  case DECODE_START:	/* Looking for start of uuencoded file */
 	  case DECODE_MAYBEDONE:
-	    if (strncmp(g_buf, "begin ", 6))
-		break;
-	    /* skip mode */
-	    p = g_buf + 6;
-	    while (*p && !isspace(*p)) p++;
-	    while (*p && isspace(*p)) p++;
-	    filename = p;
-	    while (*p && (!isspace(*p) || *p == ' ')) p++;
-	    *p = '\0';
-	    if (!*filename)
-		return DECODE_ERROR;
-	    filename = decode_fix_fname(filename);
+	  {
+	      if (strncmp(g_buf, "begin ", 6))
+	          break;
+	      /* skip mode */
+	      p = g_buf + 6;
+	      while (*p && !isspace(*p)) p++;
+	      while (*p && isspace(*p)) p++;
+              char *filename = p;
+	      while (*p && (!isspace(*p) || *p == ' ')) p++;
+	      *p = '\0';
+	      if (!*filename)
+	          return DECODE_ERROR;
+	      filename = decode_fix_fname(filename);
 
-	    /* Create output file and start decoding */
-	    ofp = fopen(filename, FOPEN_WB);
-	    if (!ofp)
-		return DECODE_ERROR;
-	    printf("Decoding %s\n", filename);
-	    termdown(1);
-	    state = DECODE_SETLEN;
-	    break;
+	      /* Create output file and start decoding */
+	      ofp = fopen(filename, FOPEN_WB);
+	      if (!ofp)
+	          return DECODE_ERROR;
+	      printf("Decoding %s\n", filename);
+	      termdown(1);
+	      state = DECODE_SETLEN;
+	      break;
+	  }
 	  case DECODE_INACTIVE:	/* Looking for uuencoded data to resume */
 	    if (*g_buf != 'M' || strlen(g_buf) != line_length) {
 		if (*g_buf == 'B' && !strncmp(g_buf, "BEGIN", 5))
@@ -276,18 +277,16 @@ end:		if (ofp) {
 /* Decode a uuencoded line to 'ofp' */
 static void uudecodeline(char *line, FILE *ofp)
 {
-    int c;
-
     /* Calculate expected length and pad if necessary */
     int len = ((DEC(line[0]) + 2) / 3) * 4;
     if (len > UULENGTH)
 	len = UULENGTH;
-    for (c = strlen(line) - 1; c <= len; c++)
+    for (int c = strlen(line) - 1; c <= len; c++)
 	line[c] = ' ';
 
     len = DEC(*line++);
     while (len) {
-	c = DEC(*line) << 2 | DEC(line[1]) >> 4;
+        int c = DEC(*line) << 2 | DEC(line[1]) >> 4;
 	putc(c, ofp);
 	if (--len) {
 	    c = DEC(line[1]) << 4 | DEC(line[2]) >> 2;
