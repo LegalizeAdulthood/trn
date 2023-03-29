@@ -44,11 +44,7 @@ static char s_url_path[1024];
 /* returns true if successful */
 bool fetch_http(const char *host, int port, const char *path, const char *outname)
 {
-    int sock;
-    FILE* fp_out;
-    int len;
-
-    sock = get_tcp_socket(host,port,"http");
+    int sock = get_tcp_socket(host, port, "http");
 
     /* XXX length check */
     /* XXX later consider using HTTP/1.0 format (and user-agent) */
@@ -60,7 +56,7 @@ bool fetch_http(const char *host, int port, const char *path, const char *outnam
 	return false;
     }
 
-    fp_out = fopen(outname,"w");
+    FILE *fp_out = fopen(outname, "w");
     if (!fp_out) {
 	printf("\nURL output file could not be opened.\n");
 	return false;
@@ -69,7 +65,7 @@ bool fetch_http(const char *host, int port, const char *path, const char *outnam
     /* (the old nicebg code caused portability problems) */
     /* later consider larger buffers, spinner */
     while (true) {
-	len = read(sock, s_url_buf, 1024);
+	int len = read(sock, s_url_buf, 1024);
 	if (len < 0) {
 	    printf("\nError: reading URL reply\n");
 	    return false;
@@ -93,13 +89,11 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
     /* buffers used because because filexp overwrites previous call results */
     static char username[128];
     static char userhost[128];
-    char* p;
-    int status;
-    char* cdpath;
-    int x,y,l;
+    int         status;
+    char*       cdpath;
 
     safecpy(path,origpath,510);
-    p = strrchr(path, '/');	/* p points to last slash or nullptr*/
+    char *p = strrchr(path, '/'); /* p points to last slash or nullptr*/
     if (p == nullptr) {
 	printf("Error: URL:ftp path has no '/' character.\n") FLUSH;
 	return false;
@@ -121,10 +115,10 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
 
     /* modified escape_shell_cmd code from NCSA HTTPD util.c */
     /* serious security holes could result without this code */
-    l = strlen(cmdline);
-    for (x = 0; cmdline[x]; x++) {
+    int l = strlen(cmdline);
+    for (int x = 0; cmdline[x]; x++) {
 	if (strchr("&;`'\"|*?~<>^()[]{}$\\",cmdline[x])) {
-	    for (y = l+1; y > x; y--)
+	    for (int y = l + 1; y > x; y--)
 		cmdline[y] = cmdline[y-1];
 	    l++; /* length has been increased */
 	    cmdline[x] = '\\';
@@ -156,7 +150,6 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
 bool parse_url(const char *url)
 {
     const char* s;
-    char* p;
 
     /* consider using 0 as default to look up the service? */
     s_url_port = 80;	/* the default */
@@ -164,7 +157,7 @@ bool parse_url(const char *url)
 	printf("Empty URL -- ignoring.\n") FLUSH;
 	return false;
     }
-    p = s_url_type;
+    char *p = s_url_type;
     for (s = url; *s && *s != ':'; *p++ = *s++) ;
     *p = '\0';
     if (!*s) {
