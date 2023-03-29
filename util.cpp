@@ -226,9 +226,8 @@ int doshell(const char *shell, const char *s)
 #ifndef USE_DEBUGGING_MALLOC
 char *safemalloc(MEM_SIZE size)
 {
-    char* ptr;
 
-    ptr = (char*) malloc(size ? size : (MEM_SIZE)1);
+    char *ptr = (char*)malloc(size ? size : (MEM_SIZE)1);
     if (!ptr) {
 	fputs(s_nomem,stdout) FLUSH;
 	sig_catcher(0);
@@ -522,11 +521,10 @@ void safelink(char *old, char *new)
 /* attempts to verify a cryptographic signature. */
 void verify_sig()
 {
-    int i;
 
     printf("\n");
     /* RIPEM */
-    i = doshell(SH,filexp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
+    int i = doshell(SH, filexp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
     if (!i) {	/* found RIPEM */
 	i = doshell(SH,filexp(get_val("VERIFY_RIPEM",VERIFY_RIPEM)));
 	printf("\nReturned value: %d\n",i) FLUSH;
@@ -562,7 +560,6 @@ double current_time()
 time_t text2secs(const char *s, time_t defSecs)
 {
     time_t secs = 0;
-    time_t item;
 
     if (!isdigit(*s)) {
 	if (*s == 'm' || *s == 'M')	/* "missing" */
@@ -572,7 +569,7 @@ time_t text2secs(const char *s, time_t defSecs)
 	return secs;			/* "never" */
     }
     do {
-	item = atol(s);
+	time_t item = atol(s);
 	while (isdigit(*s)) s++;
 	while (isspace(*s)) s++;
 	if (isalpha(*s)) {
@@ -652,7 +649,6 @@ char *get_auth_pass()
 
 char **prep_ini_words(INI_WORDS words[])
 {
-    int checksum;
     char* cp = (char*)ini_values(words);
     if (!cp) {
 	int i;
@@ -661,7 +657,7 @@ char **prep_ini_words(INI_WORDS words[])
 		words[i].checksum = -1;
 		continue;
 	    }
-	    checksum = 0;
+	    int checksum = 0;
 	    for (cp = words[i].item; *cp; cp++)
 		checksum += (isupper(*cp)? tolower(*cp) : *cp);
 	    words[i].checksum = (checksum << 8) + (cp - words[i].item);
@@ -757,10 +753,10 @@ bool parse_string(char **to, char **from)
     char inquote = 0;
     char* t = *to;
     char* f = *from;
-    char* s;
 
     while (isspace(*f) && *f != '\n') f++;
 
+    char* s;
     for (s = t; *f; f++) {
 	if (inquote) {
 	    if (*f == inquote) {
@@ -825,16 +821,15 @@ char *next_ini_section(char *cp, char **section, char **cond)
 
 char *parse_ini_section(char *cp, INI_WORDS words[])
 {
-    int checksum;
+    if (!*cp)
+	return nullptr;
+
     char* s;
     char** values = prep_ini_words(words);
     int i;
 
-    if (!*cp)
-	return nullptr;
-
     while (*cp && *cp != '[') {
-	checksum = 0;
+	int checksum = 0;
 	for (s = cp; *s; s++) {
 	    if (isupper(*s))
 		*s = tolower(*s);
@@ -871,13 +866,11 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
 
 bool check_ini_cond(char *cond)
 {
-    int not, num;
-    char* s;
     cond = dointerp(g_buf,sizeof g_buf,cond,"!=<>",nullptr);
-    s = g_buf + strlen(g_buf);
+    char *s = g_buf + strlen(g_buf);
     while (s != g_buf && isspace(s[-1])) s--;
     *s = '\0';
-    not = (*cond == '!');
+    int not = (*cond == '!');
     if (not != 0)
 	cond++;
     int upordown = *cond == '<' ? -1 : (*cond == '>' ? 1 : 0);
@@ -888,7 +881,7 @@ bool check_ini_cond(char *cond)
 	cond++;
     while (isspace(*cond)) cond++;
     if (upordown) {
-	num = atoi(cond) - atoi(g_buf);
+	int num = atoi(cond) - atoi(g_buf);
 	if (!((equal && !num) || (upordown * num < 0)) ^ not)
 	    return false;
     }
