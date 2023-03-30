@@ -411,8 +411,6 @@ static void unlock_newsrc(NEWSRC *rp)
 
 static bool open_newsrc(NEWSRC *rp)
 {
-    NGDATA*   prev_np;
-
     /* make sure the .newsrc file exists */
 
     FILE *rcfp = fopen(rp->name, "r");
@@ -468,6 +466,7 @@ static bool open_newsrc(NEWSRC *rp)
 	g_newsrc_hash = hashcreate(3001, rcline_cmp);
     }
 
+    NGDATA*   prev_np;
     if (g_ngdata_cnt)
 	prev_np = ngdata_ptr(g_ngdata_cnt-1);
     else

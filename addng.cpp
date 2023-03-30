@@ -123,7 +123,6 @@ static void new_nntp_groups(DATASRC *dp)
 {
     char* s;
     int len;
-    NGDATA* np;
     bool foundSomething = false;
     long high, low;
 
@@ -176,7 +175,7 @@ static void new_nntp_groups(DATASRC *dp)
 	    if (*s == 'x' || *s == '=')
 		continue;
 	}
-	np = find_ng(g_ser_line);
+        NGDATA *np = find_ng(g_ser_line);
 	if (np != nullptr && np->toread > TR_UNSUB)
 	    continue;
 	add_to_hash(newngs, g_ser_line, high-low, auto_subscribe(g_ser_line));

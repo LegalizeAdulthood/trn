@@ -201,7 +201,6 @@ static int ngorder_count(const NGDATA **npp1, const NGDATA **npp2)
 */
 void sort_newsgroups()
 {
-    NGDATA* np;
     int     i;
     NGDATA**lp;
     int (*  sort_procedure)(const NGDATA **npp1,const NGDATA **npp2);
@@ -224,15 +223,15 @@ void sort_newsgroups()
     }
 
     NGDATA **ng_list = (NGDATA**)safemalloc(g_newsgroup_cnt * sizeof(NGDATA*));
-    for (lp = ng_list, np = g_first_ng; np; np = np->next)
+    lp = ng_list;
+    for (NGDATA* np = g_first_ng; np; np = np->next)
 	*lp++ = np;
     TRN_ASSERT(lp - ng_list == g_newsgroup_cnt);
 
     qsort(ng_list, g_newsgroup_cnt, sizeof (NGDATA*), (int(*)(void const *, void const *))sort_procedure);
 
     g_first_ng = ng_list[0];
-    np = ng_list[0];
-    np->prev = nullptr;
+    g_first_ng->prev = nullptr;
     for (i = g_newsgroup_cnt, lp = ng_list; --i; lp++) {
 	lp[0]->next = lp[1];
 	lp[1]->prev = lp[0];
