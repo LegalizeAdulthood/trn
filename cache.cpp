@@ -63,8 +63,8 @@ void cache_init()
 #endif
 }
 
-static NGDATA* cached_ng = nullptr;
-static time_t cached_time = 0;
+static NGDATA* cached_ng{};
+static time_t cached_time{};
 
 void build_cache()
 {
