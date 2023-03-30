@@ -100,7 +100,10 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
     NGDATA const *ng_start = g_ngptr;
     if (backward) {
 	if (!g_ngptr)
-	    ng_start = g_ngptr = g_last_ng;
+	{
+            g_ngptr = g_last_ng;
+            ng_start = g_last_ng;
+	}
 	else if (!cmdlst) {
 	    if (g_ngptr == g_first_ng)	/* skip current newsgroup */
 		g_ngptr = g_last_ng;
@@ -110,7 +113,10 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
     }
     else {
 	if (!g_ngptr)
-	    ng_start = g_ngptr = g_first_ng;
+	{
+            g_ngptr = g_first_ng;
+            ng_start = g_first_ng;
+	}
 	else if (!cmdlst) {
 	    if (g_ngptr == g_last_ng)	/* skip current newsgroup */
 		g_ngptr = g_first_ng;

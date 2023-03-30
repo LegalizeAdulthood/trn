@@ -74,8 +74,7 @@ bool find_new_groups()
 
     /* Skip this check if the -q flag was given. */
     if (g_quickstart)
-	return false
-	;
+        return false;
 
     for (NEWSRC const *rp = g_multirc->first; rp; rp = rp->next) {
 	if (all_bits(rp->flags, RF_ADD_NEWGROUPS | RF_ACTIVE)) {
@@ -255,7 +254,8 @@ static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch
     node->toread = (toread < 0)? 0 : toread;
     strcpy(node->name, name);
     node->datasrc = g_datasrc;
-    node->next = node->prev = nullptr;
+    node->next = nullptr;
+    node->prev = nullptr;
     hashstore(ng, name, namelen, data);
 }
 
@@ -424,7 +424,8 @@ void sort_addgroups()
 
     qsort(ag_list, s_addgroup_cnt, sizeof(ADDGROUP*), (int(*)(void const *, void const *)) sort_procedure);
 
-    g_first_addgroup = ap = ag_list[0];
+    ap = ag_list[0];
+    g_first_addgroup = ag_list[0];
     ap->prev = nullptr;
     for (i = s_addgroup_cnt, lp = ag_list; --i; lp++) {
 	lp[0]->next = lp[1];

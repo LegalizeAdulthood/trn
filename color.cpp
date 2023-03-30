@@ -161,7 +161,8 @@ void color_rc_attribute(const char *object, char *value)
     }
     for (t = s; *t && !isspace(*t); t++) ;
     if (*t) {
-	*(n = t++) = '\0';
+	n = t++;
+	*n = '\0';
 	while (isspace(*t)) t++;
     }
 
@@ -188,7 +189,8 @@ void color_rc_attribute(const char *object, char *value)
     /* Make sure we have one more parameter. */
     for (s = t; *t && !isspace(*t); t++) ;
     if (*t) {
-	*(n = t++) = '\0';
+	n = t++;
+	*n = '\0';
 	while (isspace(*t)) t++;
     }
     if (!*s || *t) {

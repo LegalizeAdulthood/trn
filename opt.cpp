@@ -1128,8 +1128,9 @@ void set_header(char *s, headtype_flags flag, bool setit)
     }
     if (flag == HT_HIDE && *s && isalpha(*s)) {
 	char ch = isupper(*s)? tolower(*s) : *s;
-	int add_at = 0, killed = 0;
-	bool save_it = true;
+        int  add_at = 0;
+        int  killed = 0;
+        bool save_it = true;
 	for (i = g_user_htypeix[ch - 'a']; *g_user_htype[i].name == ch; i--) {
 	    if (len <= g_user_htype[i].length
 	     && !strncasecmp(s,g_user_htype[i].name,len)) {
@@ -1194,7 +1195,8 @@ static int parse_mouse_buttons(char **cpp, const char *btns)
 
     safefree(t);
     while (*btns == ' ') btns++;
-    t = *cpp = safemalloc(strlen(btns)+1);
+    *cpp = safemalloc(strlen(btns) + 1);
+    t = *cpp;
 
     while (*btns) {
 	if (*btns == '[') {

@@ -279,7 +279,8 @@ sel_exit:
      || g_sel_sort == SS_STRING) {
 	if (g_artptr_list) {
 	    free((char*)g_artptr_list);
-	    g_artptr_list = g_sel_page_app = nullptr;
+            g_artptr_list = nullptr;
+            g_sel_page_app = nullptr;
 	    sort_subjects();
 	}
 	g_artptr = nullptr;
@@ -863,7 +864,6 @@ static void sel_status_msg(const char *cp)
 static char sel_input()
 {
     int j;
-    int got_goto;
     int sel_number;
 
     /* CAA: TRN proudly continues the state machine traditions of RN.
@@ -878,7 +878,8 @@ static char sel_input()
     /* Prompt the user */
     sel_prompt();
   position_selector:
-    int got_dash = got_goto = 0;
+      int got_dash = 0;
+      int got_goto = 0;
     s_force_sel_pos = -1;
     if (s_removed_prompt & 1) {
 	draw_mousebar(g_tc_COLS,false);
@@ -1680,7 +1681,8 @@ static bool sel_perform_change(long cnt, const char *obj_type)
 
     if (g_error_occurred) {
 	print_lines(g_msg, NOMARKING);
-	s_clean_screen = g_error_occurred = false;
+        s_clean_screen = false;
+        g_error_occurred = false;
     }
 
     int ret = perform_status_end(cnt, obj_type);
@@ -1960,7 +1962,8 @@ q does nothing.\n\n\
 	} else if (ch == 'J') {
             for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
 		deselect_subject(sp);
-	    g_selected_subj_cnt = g_selected_count = 0;
+            g_selected_subj_cnt = 0;
+            g_selected_count = 0;
 	    return DS_DISPLAY;
 	}
 	return DS_QUIT;
@@ -2622,8 +2625,7 @@ static display_state option_commands(char_int ch)
       case '/': {
 	SEL_UNION u;
         char*     pattern;
-	int       j;
-	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
+        erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
 	if (!finish_command(true))	/* get rest of command */
 	    break;
@@ -2635,7 +2637,8 @@ static display_state option_commands(char_int ch)
 	    strcpy(g_msg,s);
 	    return DS_STATUS;
 	}
-	int i = j = g_sel_items[g_sel_item_index].u.op;
+        int i = g_sel_items[g_sel_item_index].u.op;
+        int j = g_sel_items[g_sel_item_index].u.op;
 	do {
 	    if (++i > g_obj_count)
 		i = 1;

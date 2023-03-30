@@ -121,7 +121,8 @@ bool mt_init()
 
     g_datasrc->flags &= ~DF_TRY_THREAD;
 
-    s_word_same = s_long_same = true;
+    s_word_same = true;
+    s_long_same = true;
 #ifdef SUPPORT_XTHREAD
     if (!g_datasrc->thread_dir) {
 	if (nntp_command("XTHREAD DBINIT") <= 0)

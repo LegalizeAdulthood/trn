@@ -38,7 +38,8 @@ bool s_fillpage_backward(long end)
     line_on = 0;
 
     /* whatever happens, the entry display will need a full refresh... */
-    g_s_ref_status = g_s_ref_desc = 0;	/* refresh from top entry */
+    g_s_ref_status = 0;
+    g_s_ref_desc = 0;	/* refresh from top entry */
 
     if (end < 1)		/* start from end */
 	end = s_last();
@@ -126,7 +127,8 @@ bool s_fillpage_forward(long start)
     line_on = 0;
 
     /* whatever happens, the entry zone will need a full refresh... */
-    g_s_ref_status = g_s_ref_desc = 0;
+    g_s_ref_status = 0;
+    g_s_ref_desc = 0;
 
     if (start < 0)	/* fill from top */
 	start = s_first();
@@ -252,7 +254,8 @@ bool s_refillpage()
     /* there are fairly good reasons to refresh the last good entry, such
      * as clearing the rest of the screen...
      */
-    g_s_ref_status = g_s_ref_desc = j;
+    g_s_ref_status = j;
+    g_s_ref_desc = j;
 
     /* Now, suppose that the pointer position is off the page.  That would
      * be bad, so lets make sure it doesn't happen.
@@ -390,6 +393,7 @@ void s_go_prev_page()
     /* take care of partially filled previous pages */
     flag = s_refillpage();
     TRN_ASSERT(flag);		/* be nicer later... */
-    g_s_ref_status = g_s_ref_desc = 0;	/* refresh from top */
-    g_s_ptr_page_line = 0;	/* top of page */
+    g_s_ref_status = 0;
+    g_s_ref_desc = 0;      /* refresh from top */
+    g_s_ptr_page_line = 0; /* top of page */
 }

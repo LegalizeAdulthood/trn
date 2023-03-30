@@ -230,7 +230,8 @@ void sort_newsgroups()
 
     qsort(ng_list, g_newsgroup_cnt, sizeof (NGDATA*), (int(*)(void const *, void const *))sort_procedure);
 
-    g_first_ng = np = ng_list[0];
+    g_first_ng = ng_list[0];
+    np = ng_list[0];
     np->prev = nullptr;
     for (i = g_newsgroup_cnt, lp = ng_list; --i; lp++) {
 	lp[0]->next = lp[1];

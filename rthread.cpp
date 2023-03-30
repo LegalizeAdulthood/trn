@@ -90,7 +90,8 @@ void thread_open()
     }
     if ((g_datasrc->flags & DF_TRY_OVERVIEW) && !g_cached_all_in_range) {
 	if (g_thread_always) {
-	    g_spin_todo = g_spin_estimate = g_lastart - g_absfirst + 1;
+            g_spin_todo = g_lastart - g_absfirst + 1;
+            g_spin_estimate = g_lastart - g_absfirst + 1;
 	    (void) ov_data(g_absfirst, g_lastart, false);
 	    if (g_datasrc->ov_opened && find_existing && g_datasrc->over_dir == nullptr) {
 		mark_missing_articles();
@@ -126,7 +127,8 @@ void thread_open()
     if (g_last_cached > g_lastart) {
 	g_ngptr->toread += (ART_UNREAD)(g_last_cached-g_lastart);
 	/* ensure getngsize() knows the new maximum */
-	g_ngptr->ngmax = g_lastart = g_last_cached;
+        g_ngptr->ngmax = g_last_cached;
+        g_lastart = g_last_cached;
     }
     g_article_list->high = g_lastart;
 
@@ -163,7 +165,8 @@ void thread_grow()
 
 void thread_close()
 {
-    g_curr_artp = g_artp = nullptr;
+    g_curr_artp = nullptr;
+    g_artp = nullptr;
     init_tree();			/* free any tree lines */
 
     update_thread_kfile();
@@ -799,11 +802,12 @@ void deselect_all()
 {
     for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
 	deselect_subject(sp);
-    g_selected_count = g_selected_subj_cnt = 0;
-    g_sel_page_sp = 0;
-    g_sel_page_app = 0;
-    g_sel_last_ap = 0;
-    g_sel_last_sp = 0;
+    g_selected_count = 0;
+    g_selected_subj_cnt = 0;
+    g_sel_page_sp = nullptr;
+    g_sel_page_app = nullptr;
+    g_sel_last_ap = nullptr;
+    g_sel_last_sp = nullptr;
     g_selected_only = false;
 }
 
@@ -1215,11 +1219,12 @@ static ARTICLE *last_sib(ARTICLE *ta, int depth, ARTICLE *limit)
 */
 void count_subjects(cs_mode cmode)
 {
-    int     sel_count;
     SUBJECT*sp;
     int     desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
 
-    g_obj_count = g_selected_count = g_selected_subj_cnt = 0;
+    g_obj_count = 0;
+    g_selected_count = 0;
+    g_selected_subj_cnt = 0;
     if (g_last_cached >= g_lastart)
 	g_firstart = g_lastart+1;
 
@@ -1248,8 +1253,9 @@ void count_subjects(cs_mode cmode)
     }
 
     for (sp = g_first_subject; sp; sp = sp->next) {
-	time_t subjdate = 0;
-	int    count = sel_count = 0;
+        time_t subjdate = 0;
+        int    count = 0;
+        int    sel_count = 0;
 	for (ARTICLE *ap = sp->articles; ap; ap = ap->subj_next) {
 	    if ((ap->flags & (AF_EXISTS|AF_UNREAD)) == desired_flags) {
 		count++;
@@ -1452,9 +1458,8 @@ static int thread_score_high(const SUBJECT *tp)
 
 static int threadorder_score(const SUBJECT** spp1, const SUBJECT** spp2)
 {
-    int sc2;
-
-    int sc1 = sc2 = 0;
+    int sc1 = 0;
+    int sc2 = 0;
 
     if ((*spp1)->thread != (*spp2)->thread) {
 	sc1 = thread_score_high(*spp1);
@@ -1510,7 +1515,8 @@ void sort_subjects()
 
     qsort(subj_list, g_subject_count, sizeof (SUBJECT*), ((int(*)(void const *, void const *))sort_procedure));
 
-    g_first_subject = sp = subj_list[0];
+    g_first_subject = subj_list[0];
+    sp = subj_list[0];
     sp->prev = nullptr;
     for (i = g_subject_count, lp = subj_list; --i; lp++) {
 	lp[0]->next = lp[1];

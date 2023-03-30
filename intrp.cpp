@@ -313,7 +313,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
                         if (*scrbuf && (which_line = get_header_num(scrbuf)) != SOME_LINE)
                         {
                             safefree(line_buf);
-                            s = line_buf = fetchlines(g_art, which_line);
+                            line_buf = fetchlines(g_art, which_line);
+                            s = line_buf;
                         }
 			else
 			    s = "";
@@ -508,7 +509,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case 'D':
 		    if (g_in_ng)
-			s = dist_buf = fetchlines(g_art,DIST_LINE);
+		    {
+                        dist_buf = fetchlines(g_art, DIST_LINE);
+                        s = dist_buf;
+		    }
 		    else
 			s = "";
 		    break;
@@ -524,10 +528,16 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			if (g_htype[REPLY_LINE].minpos >= 0 && !comment_parse) {
 						/* was there a reply line? */
 			    if (!(s=reply_buf))
-				s = reply_buf = fetchlines(g_art,REPLY_LINE);
+			    {
+                                reply_buf = fetchlines(g_art, REPLY_LINE);
+                                s = reply_buf;
+			    }
 			}
 			else if (!(s = from_buf))
-			    s = from_buf = fetchlines(g_art,FROM_LINE);
+			{
+                            from_buf = fetchlines(g_art, FROM_LINE);
+                            s = from_buf;
+			}
 		    }
 		    else
 			s = "";
@@ -537,9 +547,15 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			parseheader(g_art);
 			if (g_htype[FOLLOW_LINE].minpos >= 0)
 					/* is there a Followup-To line? */
-			    s = follow_buf = fetchlines(g_art,FOLLOW_LINE);
-			else 
-			    s = ngs_buf = fetchlines(g_art,NGS_LINE);
+			{
+                            follow_buf = fetchlines(g_art, FOLLOW_LINE);
+                            s = follow_buf;
+			}
+			else
+			{
+                            ngs_buf = fetchlines(g_art, NGS_LINE);
+                            s = ngs_buf;
+			}
 		    }
 		    else
 			s = "";
@@ -558,7 +574,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		case 'i':
 		    if (g_in_ng) {
 			if (!(s=artid_buf))
-			    s = artid_buf = fetchlines(g_art,MSGID_LINE);
+			{
+                            artid_buf = fetchlines(g_art, MSGID_LINE);
+                            s = artid_buf;
+			}
 			if (*s && *s != '<') {
 			    sprintf(scrbuf,"<%s>",artid_buf);
 			    s = scrbuf;
@@ -596,7 +615,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case 'n':			/* newsgroups */
 		    if (g_in_ng)
-			s = ngs_buf = fetchlines(g_art,NGS_LINE);
+		    {
+                        ngs_buf = fetchlines(g_art, NGS_LINE);
+                        s = ngs_buf;
+		    }
 		    else
 			s = "";
 		    break;
@@ -733,16 +755,23 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    if (g_htype[REPLY_LINE].minpos >= 0) {
 					/* was there a reply line? */
 			if (!(s=reply_buf))
-			    s = reply_buf = fetchlines(g_art,REPLY_LINE);
+			{
+                            reply_buf = fetchlines(g_art, REPLY_LINE);
+                            s = reply_buf;
+			}
 		    }
 		    else if (!(s = from_buf))
-			s = from_buf = fetchlines(g_art,FROM_LINE);
+		    {
+                        from_buf = fetchlines(g_art, FROM_LINE);
+                        s = from_buf;
+		    }
 		    else
 			s = "noname";
 		    if (*pattern == 'T') {
 			if (g_htype[PATH_LINE].minpos >= 0) {
 					/* should we substitute path? */
-			    s = path_buf = fetchlines(g_art,PATH_LINE);
+                            path_buf = fetchlines(g_art, PATH_LINE);
+                            s = path_buf;
 			}
 			int i = strlen(g_p_host_name);
 			if (!strncmp(g_p_host_name,s,i) && s[i] == '!')

@@ -114,14 +114,18 @@ do_article_result do_article()
     bool outputok = true;
 
     if (g_datasrc->flags & DF_REMOTE)
-	g_artsize = g_raw_artsize = nntp_artsize();
+    {
+        g_raw_artsize = nntp_artsize();
+        g_artsize = nntp_artsize(); 
+    }
     else
     {
 	if (fstat(fileno(g_artfp),&g_filestat))	/* get article file stats */
 	    return DA_CLEAN;
 	if (!S_ISREG(g_filestat.st_mode))
 	    return DA_NORM;
-	g_artsize = g_raw_artsize = g_filestat.st_size;
+        g_raw_artsize = g_filestat.st_size;
+        g_artsize = g_filestat.st_size; 
     }
     sprintf(prompt_buf, g_mousebar_cnt>3? "%%sEnd of art %ld (of %ld) %%s[%%s]"
 	: "%%sEnd of article %ld (of %ld) %%s-- what next? [%%s]",
@@ -259,7 +263,8 @@ do_article_result do_article()
 		    readartbuf(g_auto_view_inline);
 		mime_SetArticle();
 		clear_artbuf();		/* exclude notesfiles droppings */
-		g_artbuf_seek = g_htype[PAST_HEADER].minpos = tellart();
+                g_htype[PAST_HEADER].minpos = tellart();
+                g_artbuf_seek = tellart();
 		hide_this_line = true;	/* and do not print either */
 		notesfiles = false;
 	    }

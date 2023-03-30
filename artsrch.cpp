@@ -382,8 +382,9 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
       default: {
 	char*s;
         char ch;
-	bool success = false, in_sig = false;
-	if (scope != ARTSCOPE_BODY && scope != ARTSCOPE_BODY_NOSIG) {
+        bool success = false;
+        bool in_sig = false;
+        if (scope != ARTSCOPE_BODY && scope != ARTSCOPE_BODY_NOSIG) {
 	    if (!parseheader(artnum))
 		return false;
 	    /* see if it's in the header */

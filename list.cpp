@@ -19,7 +19,8 @@ void list_init()
 LIST *new_list(long low, long high, int item_size, int items_per_node, list_flags flags, void (*init_node)(LIST *, LISTNODE *))
 {
     LIST* list = (LIST*)safemalloc(sizeof (LIST));
-    list->first = list->recent = nullptr;
+    list->first = nullptr;
+    list->recent = nullptr;
     list->init_node = init_node? init_node : def_init_node;
     list->low = low;
     list->high = high;

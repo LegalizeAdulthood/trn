@@ -311,7 +311,9 @@ void mime_ClearStruct(MIME_SECT *mp)
     safefree0(mp->html_blks);
     mp->type = NOT_MIME;
     mp->encoding = MENCODE_NONE;
-    mp->part = mp->total = mp->boundary_len = mp->html_blkcnt = 0;
+    mp->part = mp->total = 0;
+    mp->boundary_len = 0;
+    mp->html_blkcnt = 0;
     mp->flags = MFS_NONE;
     mp->html = HF_NONE;
     mp->html_line_start = 0;
@@ -622,14 +624,15 @@ int mime_EndOfSection(char *bp)
  */
 char *mime_ParseParams(char *str)
 {
-    char* e;
-    char *s = e = mime_SkipWhitespace(str);
+    char *e = mime_SkipWhitespace(str);
+    char *s = e;
     while (*e && *e != ';' && !isspace(*e) && *e != '(') e++;
     char *t = savestr(mime_SkipWhitespace(e));
     *e = '\0';
     if (s != str)
 	safecpy(str, s, e - s + 1);
-    str = s = t;
+    str = t;
+    s = t;
     while (*s == ';') {
 	s = mime_SkipWhitespace(s+1);
 	while (*s && *s != ';' && *s != '(' && *s != '=' && !isspace(*s))
@@ -1124,7 +1127,10 @@ int filter_html(char *t, char *f)
 	s_word_wrap_in_pre = 0;
     }
     else
-	s_word_wrap_in_pre = s_normal_word_wrap = g_tc_COLS - g_word_wrap_offset;
+    {
+        s_normal_word_wrap = g_tc_COLS - g_word_wrap_offset;
+        s_word_wrap_in_pre = s_normal_word_wrap;
+    }
 
     if (s_normal_word_wrap <= 20)
 	s_normal_word_wrap = 0;
@@ -1285,7 +1291,8 @@ int filter_html(char *t, char *f)
 	    if (cp) {
 		const html_flags flag_save = g_mime_section->html;
                 g_mime_section->html |= HF_NL_OK;
-		cp = line_start = do_newline(cp, HF_NL_OK);
+                line_start = do_newline(cp, HF_NL_OK);
+                cp = line_start;
 		int fudge = do_indent(nullptr);
 		while (*cp == ' ' || *cp == '\t') cp++;
 		if ((fudge -= cp - line_start) != 0) {
@@ -1400,7 +1407,8 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 	    break;
 	  case TAG_HR:
 	    t = output_prep(t);
-	    *t++ = '-'; *t++ = '-';
+              *t++ = '-';
+              *t++ = '-';
 	    g_mime_section->html |= HF_NL_OK;
 	    t = do_newline(t, HF_NL_OK);
 	    break;
@@ -1463,7 +1471,10 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 	      case 5: case 6:
 		cnt = blks[j].cnt++;
 		if (cnt >= 26*26)
-		    cnt = blks[j].cnt = 0;
+		{
+                    cnt = 0;
+                    blks[j].cnt = 0;
+		}
 		if (cnt >= 26)
 		    t[-4] = g_letters[ch-5] + cnt / 26 - 1;
 		t[-3] =	g_letters[ch-5] + cnt % 26;

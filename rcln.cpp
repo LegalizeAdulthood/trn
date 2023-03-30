@@ -62,12 +62,14 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
 
 int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
 {
-    char* s;
-    char* t;
-    char* maxt = nullptr;
-    ART_NUM min = 0, max = -1, lastnum = 0;
-    char* mbuf;
-    bool morenum;
+    char*   s;
+    char*   t;
+    char*   maxt = nullptr;
+    ART_NUM min = 0;
+    ART_NUM max = -1;
+    ART_NUM lastnum = 0;
+    char*   mbuf;
+    bool    morenum;
 
     if (!artnum)
 	return 0;
@@ -376,7 +378,8 @@ void set_toread(NGDATA *np, bool lax_high_check)
 		break;
 	    } else {
 		unread += newmax - ngsize;
-		np->ngmax = ngsize = newmax;
+                np->ngmax = newmax;
+                ngsize = newmax;
 	    }
 	}
     }
@@ -444,7 +447,9 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
 		strcpy(mbuf, np->rcline);
 	    }
 	    cp = mbuf + np->numoffset;
-	    *cp++ = ' '; *cp++ = '1'; *cp++ = '-';
+            *cp++ = ' ';
+            *cp++ = '1';
+            *cp++ = '-';
 	    safecpy(cp, s, len+1);
 	    if (np->rcline != mbuf) {
 		free(np->rcline);
@@ -499,10 +504,10 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
 /* could use a better name */
 bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
 {
-    char* s;
-    char* t;
-    char* maxt = nullptr;
-    ART_NUM min = 0, max = -1, lastnum = 0;
+    char*   s;
+    char*   t;
+    ART_NUM min = 0;
+    ART_NUM max = -1;
 
     if (!artnum)
 	return true;
@@ -528,7 +533,9 @@ bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
     while (*s == ' ') s++;		/* skip spaces */
     t = s;
     while (isdigit(*s) && artnum >= (min = atol(s))) {
-					/* while it might have been read */
+        char*   maxt = nullptr;
+        ART_NUM lastnum = 0;
+        /* while it might have been read */
 	for (t = s; isdigit(*t); t++) ;	/* skip number */
 	if (*t == '-') {		/* is it a range? */
 	    t++;			/* skip to next number */

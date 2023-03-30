@@ -41,7 +41,9 @@ int main(int argc, char *argv[])
     char*ngptrs[MAXNGS];
     int  nglens[MAXNGS];
     int  foundactive[MAXNGS];
-    int  i, max_col_len, line_num = 0, ngcnt = 0, ngleft;
+    int  max_col_len;
+    int  line_num = 0;
+    int  ngcnt = 0;
     int  found_newsgroups = 0;
 
     g_home_dir = getenv("HOME");
@@ -177,7 +179,9 @@ Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
 	    check_active = true;
     }
     if (ngcnt && (check_ng || check_active)) {
-	/* Print a note about each newsgroup */
+        int ngleft;
+        int i;
+        /* Print a note about each newsgroup */
 	printf("\nYour article's newsgroup%s:\n", plural(ngcnt));
 	if (!check_active) {
 	    for (i = 0; i < ngcnt; i++) {

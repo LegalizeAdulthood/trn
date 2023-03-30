@@ -285,7 +285,8 @@ char *read_auth_file(const char *file, char **pass_ptr)
 {
     char* strptr[2];
     char buf[1024];
-    strptr[0] = strptr[1] = nullptr;
+    strptr[1] = nullptr;
+    strptr[0] = nullptr;
     FILE *fp = fopen(file, "r");
     if (fp != nullptr) {
         for (int i = 0; i < 2; i++) {

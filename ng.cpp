@@ -160,8 +160,10 @@ do_newsgroup_result do_newsgroup(char *start_command)
     /* FROM HERE ON, RETURN THRU CLEANUP OR WE ARE SCREWED */
 
     g_forcelast = true;			/* if 0 unread, do not bomb out */
-    g_recent_artp = g_curr_artp = nullptr;
-    g_recent_art = g_curr_art = g_lastart+1;
+    g_recent_artp = nullptr;
+    g_curr_artp = nullptr;
+    g_recent_art = g_lastart + 1;
+    g_curr_art = g_lastart + 1;
     g_prompt = whatnext;
     g_charsubst = g_charsets;
 
@@ -258,8 +260,10 @@ do_newsgroup_result do_newsgroup(char *start_command)
 	    }
 	    start_command = nullptr;
 	    if (input_pending()) {
-		g_art = g_curr_art = g_lastart+1;
-		g_artp = g_curr_artp = nullptr;
+                g_art = g_lastart + 1;
+                g_curr_art = g_lastart + 1;
+                g_artp = nullptr;
+                g_curr_artp = nullptr;
 		goto reinp_article;
 	    }
 	}
@@ -1512,7 +1516,9 @@ u to mark all and unsubscribe.\n\n\
 	    g_ngptr->toread = (ART_UNREAD)g_obj_count;
 	}
 	else {
-	    g_selected_count = g_selected_subj_cnt = g_selected_only = false;
+            g_selected_count = false;
+            g_selected_subj_cnt = false;
+            g_selected_only = false;
 	    g_ngptr->toread = 0;
 	    if (g_dmcount)
 		yankback();

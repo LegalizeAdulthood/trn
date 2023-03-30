@@ -491,7 +491,10 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
 
 	spin(20);
 	if (copy)
-	    s = safemalloc((MEM_SIZE)(size = LBUFLEN));
+	{
+	    size = LBUFLEN;
+            s = safemalloc((MEM_SIZE) size);
+	}
 	else {
 	    s = g_cmd_buf;
 	    size = sizeof g_cmd_buf;

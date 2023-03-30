@@ -93,7 +93,8 @@ void s_refresh_entzone()
     clear_rest();
     /* now we need to redraw the bottom status line */
     g_s_ref_bot = true;
-    g_s_ref_status = g_s_ref_desc = -1;
+    g_s_ref_status = -1;
+    g_s_ref_desc = -1;
 }
 
 void s_place_ptr()
@@ -179,7 +180,8 @@ void s_refresh()
 
     if (g_s_ref_all) {
 	clear();	/* make a clean slate */
-	g_s_ref_desc = g_s_ref_status = 0;
+	g_s_ref_desc = 0;
+	g_s_ref_status = 0;
     }
     if ((g_s_ref_all || g_s_ref_top) && g_s_top_lines>0)
 	s_refresh_top();
@@ -195,7 +197,8 @@ void s_refresh()
 		s_refresh_description(i);
 	}
     }
-    g_s_ref_status = g_s_ref_desc = -1;
+    g_s_ref_status = -1;
+    g_s_ref_desc = -1;
     if ((g_s_ref_all || g_s_ref_bot) && g_s_bot_lines > 0)
 	s_refresh_bot();
     g_s_ref_all = false;

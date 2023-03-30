@@ -95,7 +95,8 @@ void build_cache()
     g_last_cached = g_first_cached-1;
     g_cached_all_in_range = false;
 #ifdef PENDING
-    s_subj_to_get = s_xref_to_get = g_firstart;
+    s_subj_to_get = g_firstart;
+    s_xref_to_get = g_firstart;
 #endif
 
     /* Cache as much data in advance as possible, possibly threading
@@ -123,7 +124,8 @@ void close_cache()
 	free(sp->str);
 	free((char*)sp);
     }
-    g_first_subject = g_last_subject = nullptr;
+    g_first_subject = nullptr;
+    g_last_subject = nullptr;
     g_subject_count = 0;			/* just to be sure */
     g_parsed_art = 0;
 
@@ -270,7 +272,10 @@ void check_poster(ARTICLE *ap)
 		*u++ = '\0';
 		h = s;
 	    } else
-		h = u = s;
+	    {
+	        h = s;
+		u = s;
+	    }
 	    if (!strcmp(u,g_login_name)) {
 		if (in_string(h,g_hostname, false)) {
 		    switch (g_auto_select_postings) {

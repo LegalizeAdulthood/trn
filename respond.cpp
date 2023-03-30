@@ -78,10 +78,11 @@ save_result save_article()
     }
     if (cmd == 'e') {		/* is this an extract command? */
 	static bool custom_extract = false;
-	char* cmdstr;
-	int partOpt = 0, totalOpt = 0;
+	char*       cmdstr;
+        int         partOpt = 0;
+        int         totalOpt = 0;
 
-	s = g_buf+1;		/* skip e */
+        s = g_buf+1;		/* skip e */
 	while (*s == ' ') s++;	/* skip leading spaces */
 	if (*s == '-' && isdigit(s[1])) {
 	    partOpt = atoi(s+1);
@@ -143,7 +144,8 @@ save_result save_article()
 	    s = c;			/* absolutize it */
 	}
 	safefree(g_extractdest);
-	s = g_extractdest = savestr(s); /* make it handy for %E */
+        g_extractdest = savestr(s); /* make it handy for %E */
+        s = g_extractdest;
 	if (makedir(s, MD_DIR)) {       /* ensure directory exists */
 	    g_int_count++;
 	    return SAVE_DONE;
@@ -300,8 +302,8 @@ save_result save_article()
 	    s = c;			/* absolutize it */
 	}
 	safefree(g_savedest);
-	s = g_savedest = savestr(s);	/* doesn't move any more */
-					/* make it handy for %b */
+        g_savedest = savestr(s); /* doesn't move any more */
+        s = g_savedest;          /* make it handy for %b */
 	g_tmpfp = nullptr;
 	if (!there) {
 	    if (g_mbox_always)

@@ -140,8 +140,10 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
      */
     char *end = s + strlen(s);
     do {
-	while (*s && !isalnum(*s) && *s != '_') s++;
-	filename = t = s;
+        while (*s && !isalnum(*s) && *s != '_')
+            s++;
+        filename = s;
+	t = s;
 	while (isalnum(*s) || *s == '-' || *s == '+' || *s == '&'
 	      || *s == '_' || *s == '.') {
 	    if (*s++ == '.')
@@ -237,7 +239,10 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     int part = g_mime_section->part;
     int total = g_mime_section->total;
     if (!total && g_is_mime)
-	total = part = 1;
+    {
+        total = 1;
+	part = 1;
+    }
 
     char* dir;
     char *filename = decode_fix_fname(g_mime_section->filename);

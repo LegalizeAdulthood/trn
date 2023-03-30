@@ -299,7 +299,6 @@ void sc_lookahead(bool flag, bool nowait)
 
 int sc_percent_scored()
 {
-    int scored;
 
     if (!g_sc_initialized)
 	return 0;	/* none scored */
@@ -308,7 +307,8 @@ int sc_percent_scored()
     int i = g_firstart;
     if (g_sa_mode_read_elig)
 	i = g_absfirst;
-    int total = scored = 0;
+    int total = 0;
+    int scored = 0;
     for (i = article_first(i); i <= g_lastart; i = article_next(i)) {
 	if (!article_exists(i))
 	    continue;

@@ -334,7 +334,10 @@ char *execute(COMPEX *compex, char *addr)
 	return nullptr;
     if (compex->nbra) {			/* any brackets? */
 	for (c = 0; c <= compex->nbra; c++)
-	    compex->braslist[c] = compex->braelist[c] = nullptr;
+	{
+            compex->braslist[c] = nullptr;
+            compex->braelist[c] = nullptr;
+	}
 	if (compex->brastr)
 	    free(compex->brastr);
 	compex->brastr = savestr(p1);	/* in case p1 is not static */

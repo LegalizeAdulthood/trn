@@ -661,7 +661,8 @@ char **prep_ini_words(INI_WORDS words[])
 	    words[i].checksum = (checksum << 8) + (cp - words[i].item);
 	}
 	words[0].checksum = i;
-	words[0].help_str = cp = safemalloc(i * sizeof (char*));
+        cp = safemalloc(i * sizeof(char *));
+        words[0].help_str = cp;
     }
     memset(cp,0,(words)[0].checksum * sizeof (char*));
     return (char**)cp;

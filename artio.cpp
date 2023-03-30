@@ -122,7 +122,9 @@ char *readart(char *s, int limit)
 void clear_artbuf()
 {
     *g_artbuf = '\0';
-    g_artbuf_pos = g_artbuf_seek = g_artbuf_len = 0;
+    g_artbuf_len = 0;
+    g_artbuf_seek = 0;
+    g_artbuf_pos = 0;
 }
 
 int seekartbuf(ART_POS pos)
@@ -153,7 +155,8 @@ char *readartbuf(bool view_inline)
 
     if (!g_do_hiding) {
 	bp = readart(g_art_line,(sizeof g_art_line)-1);
-	g_artbuf_pos = g_artbuf_seek = tellart() - g_htype[PAST_HEADER].minpos;
+        g_artbuf_seek = tellart() - g_htype[PAST_HEADER].minpos;
+        g_artbuf_pos = g_artbuf_seek;
 	return bp;
     }
     if (g_artbuf_pos == g_artsize - g_htype[PAST_HEADER].minpos)
@@ -169,10 +172,16 @@ char *readartbuf(bool view_inline)
 	    len = s - bp + 1;
 	    goto done;
 	}
-	read_offset = line_offset = filter_offset = s - bp;
+        read_offset = s - bp;
+        line_offset = s - bp;
+        filter_offset = s - bp;
     }
     else
-	read_offset = line_offset = filter_offset = 0;
+    {
+        read_offset = 0;
+        line_offset = 0;
+        filter_offset = 0;
+    }
 
   read_more:
     extra_offset = g_mime_state == HTMLTEXT_MIME? 1024 : 0;
@@ -229,7 +238,8 @@ char *readartbuf(bool view_inline)
 	    len = qp_decodestring(bp+o, bp+o, false) + line_offset;
 	    if (len == line_offset || bp[len+extra_offset-1] != '\n') {
 		if (read_something >= 0) {
-		    read_offset = line_offset = len;
+                    read_offset = len;
+                    line_offset = len;
 		    goto read_more;
 		}
 		strcpy(bp + len++ + extra_offset, "\n");
@@ -242,7 +252,8 @@ char *readartbuf(bool view_inline)
             if (s == nullptr)
             {
 		if (read_something >= 0) {
-		    read_offset = line_offset = len;
+                    read_offset = len;
+                    line_offset = len;
 		    goto read_more;
 		}
 		strcpy(bp + len++ + extra_offset, "\n");
@@ -259,7 +270,9 @@ char *readartbuf(bool view_inline)
 	len = filter_html(bp+filter_offset, bp+o) + filter_offset;
 	if (len == filter_offset || (s = strchr(bp,'\n')) == nullptr) {
 	    if (read_something >= 0) {
-		read_offset = line_offset = filter_offset = len;
+                read_offset = len;
+                line_offset = len;
+                filter_offset = len;
 		goto read_more;
 	    }
 	    strcpy(bp + len++, "\n");
@@ -309,7 +322,9 @@ char *readartbuf(bool view_inline)
 	}
 	else if (read_something >= 0) {
 	    *bp = '\0';
-	    read_offset = line_offset = filter_offset = 0;
+            read_offset = 0;
+            line_offset = 0;
+            filter_offset = 0;
 	    goto read_more;
 	}
 	else
@@ -332,7 +347,8 @@ char *readartbuf(bool view_inline)
 	len = strlen(g_multipart_separator) + 1;
 	if (extra_offset && filter_offset) {
 	    extra_chars = len + 1;
-	    len = o = read_offset + 1;
+            len = read_offset + 1;
+            o = read_offset + 1;
 	    bp[o-1] = '\n';
 	}
 	else {

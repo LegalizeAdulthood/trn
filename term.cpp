@@ -1350,8 +1350,10 @@ bool in_choice(const char *prompt, char *value, char *choices, char_int newmode)
     char gmode_save = g_general_mode;
     char*s;
     char*prefix = nullptr;
-    int  number_was = -1, any_val_OK = 0, value_changed;
-    char tmpbuf[80],      prefixes[80];
+    int  number_was = -1;
+    int  any_val_OK = 0;
+    int  value_changed;
+    char tmpbuf[80], prefixes[80];
 
     unflush_output();			/* disable any ^O in effect */
     eat_typeahead();
@@ -1675,7 +1677,9 @@ void erase_line(bool to_eos)
 
 void clear()
 {
-    g_term_line = g_term_col = g_fire_is_out = 0;
+    g_term_line = 0;
+    g_term_col = 0;
+    g_fire_is_out = 0;
     if (g_tc_CL)
 	tputs(g_tc_CL,g_tc_LINES,putchr);
     else if (g_tc_CD) {
@@ -1704,7 +1708,8 @@ void home_cursor()
 	tputs(g_tc_HO, 1, putchr);/* home via HO */
     }
     carriage_return();	/* Resets kernel's tab column counter to 0 */
-    g_term_line = g_term_col = 0;
+    g_term_line = 0;
+    g_term_col = 0;
 }
 
 void goto_xy(int to_col, int to_line)

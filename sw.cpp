@@ -51,7 +51,8 @@ void sw_list(char *swlist)
     char* p;
     char inquote = 0;
 
-    char *s = p = swlist;
+    char *s = swlist;
+    p = swlist;
     while (*s) {			/* "String, or nothing" */
 	if (!inquote && isspace(*s)) {	/* word delimiter? */
 	    for (;;) {
@@ -385,7 +386,8 @@ void write_init_environment(FILE *fp)
 	fprintf(fp, "%s=%s\n", s_init_environment_strings[i],quote_string(s+1));
 	*s = '=';
     }
-    s_init_environment_cnt = s_init_environment_max = 0;
+    s_init_environment_cnt = 0;
+    s_init_environment_max = 0;
     free((char*)s_init_environment_strings);
     s_init_environment_strings = nullptr;
 }

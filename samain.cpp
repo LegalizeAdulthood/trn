@@ -53,7 +53,8 @@ void sa_init()
 
 void sa_init_ents()
 {
-    g_sa_num_ents = g_sa_ents_alloc = 0;
+    g_sa_num_ents = 0;
+    g_sa_ents_alloc = 0;
     g_sa_ents = (SA_ENTRYDATA*)nullptr;
 }
 

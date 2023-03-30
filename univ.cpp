@@ -113,11 +113,17 @@ void univ_startup()
 
 void univ_open()
 {
-    g_first_univ = g_last_univ = 0;
-    sel_page_univ = g_sel_next_univ = 0;
-    g_univ_fname = g_univ_title = g_univ_label = g_univ_tmp_file = nullptr;
+    g_first_univ = nullptr;
+    g_last_univ = nullptr;
+    sel_page_univ = nullptr;
+    g_sel_next_univ = nullptr;
+    g_univ_fname = nullptr;
+    g_univ_title = nullptr;
+    g_univ_label = nullptr;
+    g_univ_tmp_file = nullptr;
     s_univ_virt_pass_needed = false;
-    g_univ_ng_hash = g_univ_vg_hash = 0;
+    g_univ_ng_hash = nullptr;
+    g_univ_vg_hash = nullptr;
     g_univ_level++;
 }
 
@@ -140,14 +146,16 @@ void univ_close()
     safefree(g_univ_label);
     if (g_univ_ng_hash) {
 	hashdestroy(g_univ_ng_hash);
-	g_univ_ng_hash = 0;
+	g_univ_ng_hash = nullptr;
     }
     if (g_univ_vg_hash) {
 	hashdestroy(g_univ_vg_hash);
-	g_univ_vg_hash = 0;
+	g_univ_vg_hash = nullptr;
     }
-    g_first_univ = g_last_univ = 0;
-    sel_page_univ = g_sel_next_univ = 0;
+    g_first_univ = nullptr;
+    g_last_univ = nullptr;
+    sel_page_univ = nullptr;
+    g_sel_next_univ = nullptr;
     g_univ_level--;
 }
 
@@ -790,9 +798,9 @@ void univ_mask_load(char *mask, const char *title)
 
 void univ_redofile()
 {
-    char *tmp_fname = (g_univ_fname ? savestr(g_univ_fname) : 0);
-    char *tmp_title = (g_univ_title ? savestr(g_univ_title) : 0);
-    char *tmp_label = (g_univ_label ? savestr(g_univ_label) : 0);
+    char *tmp_fname = (g_univ_fname ? savestr(g_univ_fname) : nullptr);
+    char *tmp_title = (g_univ_title ? savestr(g_univ_title) : nullptr);
+    char *tmp_label = (g_univ_label ? savestr(g_univ_label) : nullptr);
 
     univ_close();
     if (g_univ_level)
@@ -1056,7 +1064,7 @@ void sort_univ()
 
     qsort(univ_sort_list, cnt, sizeof(UNIV_ITEM *), (int(*)(void const *, void const *))sort_procedure);
 
-    g_first_univ = ui = univ_sort_list[0];
+    g_first_univ = univ_sort_list[0];
     for (i = cnt, lp = univ_sort_list; --i; lp++) {
 	lp[0]->next = lp[1];
 	lp[1]->prev = lp[0];

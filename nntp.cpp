@@ -203,11 +203,13 @@ void nntp_body(ART_NUM artnum)
     s_body_pos = 0;
     if (g_parsed_art == artnum) {
 	fwrite(g_headbuf, 1, strlen(g_headbuf), g_artfp);
-	g_htype[PAST_HEADER].minpos = s_body_end = (ART_POS)ftell(g_artfp);
+	s_body_end = (ART_POS)ftell(g_artfp);
+	g_htype[PAST_HEADER].minpos = s_body_end;
     }
     else {
 	char b[NNTP_STRLEN];
-	ART_POS prev_pos = s_body_end = 0;
+	s_body_end = 0;
+	ART_POS prev_pos = 0;
 	while (nntp_copybody(b, sizeof b, s_body_end+1) > 0) {
 	    if (*b == '\n' && s_body_end - prev_pos < sizeof b)
 		break;
@@ -450,7 +452,10 @@ char *nntp_artname(ART_NUM artnum, bool allocate)
 	    return nntp_tmpname(i);
 	}
 	if (artages[i] <= lowage)
-	    lowage = artages[j = i];
+	{
+	    j = i;
+	    lowage = artages[j];
+	}
     }
 
     if (allocate) {

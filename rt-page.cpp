@@ -307,7 +307,8 @@ void init_pages(bool fill_last_page)
     no_search.op = -1;
     sel_page_init();
 try_again:
-    g_sel_prior_obj_cnt = g_sel_total_obj_cnt = 0;
+    g_sel_prior_obj_cnt = 0;
+    g_sel_total_obj_cnt = 0;
 
     switch (g_sel_mode) {
       case SM_MULTIRC: {
@@ -351,7 +352,8 @@ try_again:
 		    save_the_rest = (g_sel_rereading ^ (np->toread > TR_NONE));
 	    }
 	    if (g_paranoid) {
-		g_current_ng = g_ngptr = np;
+                g_current_ng = np;
+                g_ngptr = np;
 		/* this may move newsgroups around */
 		cleanup_newsrc(np->rc);
 		goto try_again;
@@ -1334,7 +1336,8 @@ try_again:
 		set_toread(np, ST_LAX);
 		if (g_paranoid) {
 		    newline();
-		    g_current_ng = g_ngptr = np;
+                    g_current_ng = np;
+                    g_ngptr = np;
 		    /* this may move newsgroups around */
 		    cleanup_newsrc(np->rc);
 		    init_pages(PRESERVE_PAGE);

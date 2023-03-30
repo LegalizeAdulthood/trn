@@ -241,7 +241,8 @@ try_again:
 #ifdef USE_UTF_HACK
 	vis_len -= visual_length_between(s, mid) + 2;
 #endif
-	d = s = mid;
+        d = mid;
+        s = mid;
 	while (*s) {
 #ifdef USE_UTF_HACK
 	    int w;
@@ -373,9 +374,7 @@ try_again:
 */
 char *compress_address(char *name, int max)
 {
-    char* bang;
-    char* hack;
-    char* start;
+    char*start;
 
     /* Remove white space from both ends. */
     while (isspace(*name)) name++;
@@ -394,7 +393,9 @@ char *compress_address(char *name, int max)
     if (len <= max)
 	return name;
 
-    char *at = bang = hack = nullptr;
+    char *at = nullptr;
+    char *bang = nullptr;
+    char *hack = nullptr;
     for (s = name + 1; *s; s++) {
 	/* If there's whitespace in the middle then it's probably not
 	** really an email address. */
@@ -570,7 +571,9 @@ const char *compress_subj(const ARTICLE *ap, int max)
 	    *last_word = ' ';
 	    if (cp-g_buf >= len - max + 3 + 10-1) {
 		char* s = g_buf + max - (len-(cp-g_buf)+3);
-		*s++ = '.'; *s++ = '.'; *s++ = '.';
+                *s++ = '.';
+                *s++ = '.';
+                *s++ = '.';
 		safecpy(s, cp + 1, max);
 		len = max;
 	    }

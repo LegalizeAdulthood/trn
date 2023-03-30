@@ -55,7 +55,8 @@ static int run(char* command)
     if (bp != nullptr)
 	shell = ++bp;
     if (strcmp(shell, command_com) != 0) {
-        char *bp = s = safemalloc(strlen(command) + 3);
+	s = safemalloc(strlen(command) + 3);
+        char *bp = s;
 	*bp++ = '\'';
 	while ((*bp++ = *command++) != '\0') ;
 	*(bp - 1) = '\'';

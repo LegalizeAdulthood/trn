@@ -57,7 +57,8 @@ void kfile_init()
 	cp = s_killthreads;
     if (*cp && strcmp(cp,"none")) {
         g_kf_daynum = KF_DAYNUM(0);
-	g_kf_thread_cnt = g_kf_changethd_cnt = 0;
+        g_kf_thread_cnt = 0;
+        g_kf_changethd_cnt = 0;
         FILE *fp = fopen(filexp(cp), "r");
         if (fp != nullptr)
         {
@@ -534,7 +535,8 @@ void update_thread_kfile()
         s_newkfp = fopen(cp, "w");
         if (s_newkfp == nullptr)
 	    return; /*$$ Yikes! */
-	g_kf_thread_cnt = g_kf_changethd_cnt = 0;
+        g_kf_thread_cnt = 0;
+        g_kf_changethd_cnt = 0;
 	hashwalk(g_msgid_hash, write_global_thread_commands, 0); /* Rewrite */
     }
     else {

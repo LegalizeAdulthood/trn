@@ -97,7 +97,9 @@ void sf_init()
     /* do post-processing (set thresholds and detect extra header usage) */
     s_sf_has_extra_headers = false;
     /* set thresholds from the g_sf_entries */
-    g_reply_active = g_newauthor_active = g_kill_thresh_active = false;
+    g_reply_active = false;
+    g_newauthor_active = false;
+    g_kill_thresh_active = false;
     for (i = 0; i < g_sf_num_entries; i++) {
 	if (g_sf_entries[i].head_type >= HEAD_LAST)
 	    s_sf_has_extra_headers = true;

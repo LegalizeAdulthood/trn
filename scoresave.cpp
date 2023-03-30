@@ -73,7 +73,8 @@ void sc_sv_delgroup(const char *gname)
 /* get the file containing scores into memory */
 void sc_sv_getfile()
 {
-    s_num_lines = s_lines_alloc = 0;
+    s_num_lines = 0;
+    s_lines_alloc = 0;
     s_lines = nullptr;
 
     char *s = get_val("SAVESCOREFILE", "%+/savedscores");
@@ -302,10 +303,10 @@ void sc_load_scores()
     ART_NUM a = 0;
     char*   s;
 int         i;
-    int     scored;
 
 s_sc_save_new = -1;		/* just in case we exit early */
-    s_loaded = s_used = 0;
+    s_loaded = 0;
+    s_used = 0;
     g_sc_loaded_count = 0;
 
     /* verbosity is only really useful for debugging... */
@@ -358,7 +359,8 @@ s_sc_save_new = -1;		/* just in case we exit early */
     a = g_firstart;
     if (g_sa_mode_read_elig)
 	a = g_absfirst;
-    int total = scored = 0;
+    int total = 0;
+    int scored = 0;
     for (a = article_first(a); a <= g_lastart; a = article_next(a)) {
 	if (!article_exists(a))
 	    continue;

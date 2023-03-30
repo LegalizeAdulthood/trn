@@ -80,7 +80,11 @@ void init_tree()
 	sp = sp->thread_link;
     } while (sp != thread->subj);
 
-    s_max_depth = s_max_line = s_my_depth = s_my_line = s_node_line_cnt = 0;
+    s_max_depth = 0;
+    s_max_line = 0;
+    s_my_depth = 0;
+    s_my_line = 0;
+    s_node_line_cnt = 0;
     find_depth(thread, 0);
 
     if (s_max_depth <= 5)
@@ -291,7 +295,10 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	line = tmpbuf + len + 1;
     }
     else
-	line = tmpbuf = safemalloc(len + 2);	/* yes, I mean "2" */
+    {
+        tmpbuf = safemalloc(len + 2); /* yes, I mean "2" */
+        line = tmpbuf;
+    }
     if (g_do_hiding)
 	end = line + decode_header(line, orig_line, len);
     else {
