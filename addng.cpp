@@ -348,13 +348,14 @@ static int list_groups(int keylen, HASHDATUM *data, int add_matching)
 
 static void scanline(char *actline, bool add_matching)
 {
-    long high, low;
-    char ch;
-
     char *s = strchr(actline, ' ');
     if (s == nullptr)
 	return;
+
     *s++ = '\0';		/* this buffer is expendable */
+    long high;
+    long low;
+    char ch;
     high = 0;
     low = 1;
     ch = 'y';
