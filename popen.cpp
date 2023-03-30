@@ -14,7 +14,7 @@
 
 #ifndef	_NFILE
 # define _NFILE 5			/* Number of open files */
-#endif	_NFILE
+#endif	//_NFILE
 
 #define READIT	1			/* Read pipe */
 #define WRITEIT	2			/* Write pipe */
