@@ -40,7 +40,7 @@ extern art_scope g_art_howmuch;        /* search scope */
 extern header_line_type g_art_srchhdr; /* specific header number to search */
 extern bool g_art_doread;              /* search read articles? */
 
-void artsrch_init();
-art_search_result art_search(char *patbuf, int patbufsiz, int get_cmd);
+void              artsrch_init();
+art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd);
 
 #endif

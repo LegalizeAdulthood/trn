@@ -43,7 +43,7 @@ void artsrch_init()
 /* search for an article containing some pattern */
 
 /* if patbuf != g_buf, get_cmd must be set to false!!! */
-art_search_result art_search(char *patbuf, int patbufsiz, int get_cmd)
+art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
 {
     char* pattern;			/* unparsed pattern */
     char cmdchr = *patbuf;	/* what kind of search? */
