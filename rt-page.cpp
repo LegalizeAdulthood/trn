@@ -198,7 +198,7 @@ void set_selector(sel_mode smode, sel_sort_mode ssort)
 	    break;
 	}
     }
-    if (ssort > SM_MAGIC_NUMBER) {
+    if (ssort > SS_MAGIC_NUMBER) {
 	g_sel_direction = 1;
 	g_sel_sort = ssort;
     }
