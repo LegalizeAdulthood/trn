@@ -311,7 +311,8 @@ void mime_ClearStruct(MIME_SECT *mp)
     safefree0(mp->html_blks);
     mp->type = NOT_MIME;
     mp->encoding = MENCODE_NONE;
-    mp->part = mp->total = 0;
+    mp->total = 0;
+    mp->part = 0;
     mp->boundary_len = 0;
     mp->html_blkcnt = 0;
     mp->flags = MFS_NONE;
