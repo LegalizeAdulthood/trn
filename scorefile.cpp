@@ -797,8 +797,8 @@ char *sf_missing_score(const char *line)
 
     /* save line since it is probably pointing at (the TRN-global) g_buf */
     char *s = savestr(line);
-    printf("Possibly missing score.\n\
-Type a score now or delete the colon to abort this entry:\n") FLUSH;
+    printf("Possibly missing score.\n"
+           "Type a score now or delete the colon to abort this entry:\n") FLUSH;
     g_buf[0] = ':';
     g_buf[1] = FINISHCMD;
     int i = finish_command(true); /* print the CR */

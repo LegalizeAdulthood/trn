@@ -54,8 +54,7 @@ int main(int argc, char *argv[])
 	g_dot_dir = g_home_dir;
 
     if (argc != 5 || !(max_col_len = atoi(argv[2]))) {
-	fprintf(stderr, "\
-Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>\n");
+	fprintf(stderr, "Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>\n");
 	exit(1);
     }
 
@@ -80,20 +79,20 @@ Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>\n");
 	    break;
 	}
 	if (cp[1] != ' ' && cp[1] != '\0') {
-	    printf("\n\
-ERROR: header on line %d does not have a space after the colon:\n%s\n",
-		   line_num, buff);
+            printf("\n"
+                   "ERROR: header on line %d does not have a space after the colon:\n%s\n",
+                   line_num, buff);
 	}
 	if (cp - buff == 10 && !strncmp(buff, "Newsgroups", 10)) {
 	    found_newsgroups = 1;
 	    for (cp = buff + 11; *cp == ' '; cp++)
 		;
 	    if (strchr(cp, ' ')) {
-		printf("\n\
-ERROR: the \"Newsgroups:\" line has spaces in it that MUST be removed. The\n\
-only allowable space is the one separating the colon (:) from the contents.\n\
-Use a comma (,) to separate multiple newsgroup names.\n");
-		continue;
+                printf("\n"
+                       "ERROR: the \"Newsgroups:\" line has spaces in it that MUST be removed. The\n"
+                       "only allowable space is the one separating the colon (:) from the contents.\n"
+                       "Use a comma (,) to separate multiple newsgroup names.\n");
+                continue;
 	    }
 	    while (*cp) {
 		char *cp2 = strchr(cp, ',');
@@ -111,9 +110,9 @@ Use a comma (,) to separate multiple newsgroup names.\n");
 		cp = cp2;
 	    }
 	    if (!ngcnt) {
-		printf("\n\
-ERROR: the \"Newsgroups:\" line lists no newsgroups.\n");
-		continue;
+                printf("\n"
+                       "ERROR: the \"Newsgroups:\" line lists no newsgroups.\n");
+                continue;
 	    }
 	}
     }
@@ -126,9 +125,9 @@ ERROR: the \"Newsgroups:\" line lists no newsgroups.\n");
 	line_num++;
 	int col = strlen(buff) - 1;
 	if (buff[col] != '\n')
-	    printf("\n\
-Warning: line %d has no trailing newline character and may get lost.\n",
-		   line_num);
+            printf("\n"
+                   "Warning: line %d has no trailing newline character and may get lost.\n",
+                   line_num);
 	else
 	    buff[col] = '\0';
 	col = 0;
@@ -139,9 +138,9 @@ Warning: line %d has no trailing newline character and may get lost.\n",
 		col++;
 	}
 	if (col > max_col_len) {
-	    printf("\n\
-Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
-		   max_col_len, line_num, buff);
+            printf("\n"
+                   "Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
+                   max_col_len, line_num, buff);
 	    break;
 	}
     }

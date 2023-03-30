@@ -580,18 +580,17 @@ static art_switch_result art_switch()
 	}
 	else {
 	    if (g_verbose) {
-		u_prompt = "\n\
-Unkill: +select, thread, subthread, or all?";
-		u_help_thread = "\
-Type t or SP to mark this thread's articles as unread.\n\
-Type s to mark the current article and its descendants as unread.\n";
+                u_prompt = "\n"
+                           "Unkill: +select, thread, subthread, or all?";
+                u_help_thread = "Type t or SP to mark this thread's articles as unread.\n"
+                                "Type s to mark the current article and its descendants as unread.\n";
 	    }
 	    else
 	    {
-		u_prompt = "\nUnkill?";
-		u_help_thread = "\
-t or SP to mark thread unread.\n\
-s to mark subthread unread.\n";
+                u_prompt = "\n"
+                           "Unkill?";
+                u_help_thread = "t or SP to mark thread unread.\n"
+                                "s to mark subthread unread.\n";
 	    }
 	    g_dfltcmd = "+tsanq";
 	}
@@ -602,27 +601,22 @@ s to mark subthread unread.\n";
 	if (*g_buf == 'h') {
 	    if (g_verbose)
 	    {
-		fputs("\
-Type + to enter select thread mode using all the already-read articles.\n\
-(The selected threads will be marked as unread and displayed as usual.)\n\
-",stdout) FLUSH;
-		fputs(u_help_thread,stdout);
-		fputs("\
-Type a to mark all articles in this group as unread.\n\
-Type n or q to change nothing.\n\
-",stdout) FLUSH;
+                fputs("Type + to enter select thread mode using all the already-read articles.\n"
+                      "(The selected threads will be marked as unread and displayed as usual.)\n",
+                      stdout) FLUSH;
+                fputs(u_help_thread, stdout);
+                fputs("Type a to mark all articles in this group as unread.\n"
+                      "Type n or q to change nothing.\n",
+                      stdout) FLUSH;
 		termdown(6);
 	    }
 	    else
 	    {
-		fputs("\
-+ to select threads from the unread.\n\
-",stdout) FLUSH;
+		fputs("+ to select threads from the unread.\n",stdout) FLUSH;
 		fputs(u_help_thread,stdout);
-		fputs("\
-a to mark all articles unread.\n\
-n or q to change nothing.\n\
-",stdout) FLUSH;
+                fputs("a to mark all articles unread.\n"
+                      "n or q to change nothing.\n",
+                      stdout) FLUSH;
 		termdown(5);
 	    }
 	    goto reask_unread;
@@ -696,10 +690,13 @@ not_threaded:
 	if (g_artp && g_threaded_group) {
 	    if (!find_leaf(*g_buf == '}')) {
 		if (g_verbose)
-		    fputs("\n\
-This is the last leaf in this tree.\n",stdout) FLUSH;
+                    fputs("\n"
+                          "This is the last leaf in this tree.\n",
+                          stdout) FLUSH;
 		else
-		    fputs("\nLast leaf.\n",stdout) FLUSH;
+                    fputs("\n"
+                          "Last leaf.\n",
+                          stdout) FLUSH;
 		termdown(2);
 		return AS_ASK;
 	    }
@@ -1461,19 +1458,19 @@ reask_catchup:
     {
 	use_one_line = false;
 	if (g_verbose)
-	    fputs("\n\
-Type y or SP to mark all articles as read.\n\
-Type n to leave articles marked as they are.\n\
-The # means enter a number to mark all but the last # articles as read.\n\
-Type u to mark everything read and unsubscribe.\n\n\
-",stdout) FLUSH;
+            fputs("\n"
+                  "Type y or SP to mark all articles as read.\n"
+                  "Type n to leave articles marked as they are.\n"
+                  "The # means enter a number to mark all but the last # articles as read.\n"
+                  "Type u to mark everything read and unsubscribe.\n\n",
+                  stdout) FLUSH;
 	else
-	    fputs("\n\
-y or SP to mark all read.\n\
-n to forget it.\n\
-# means enter a number to leave unread.\n\
-u to mark all and unsubscribe.\n\n\
-",stdout) FLUSH;
+            fputs("\n"
+                  "y or SP to mark all read.\n"
+                  "n to forget it.\n"
+                  "# means enter a number to leave unread.\n"
+                  "u to mark all and unsubscribe.\n\n",
+                  stdout) FLUSH;
 	termdown(6);
 	goto reask_catchup;
     }
@@ -1651,45 +1648,43 @@ reask_memorize:
     if (ch == 'h' || ch == 'H') {
 	use_one_line = false;
 	if (g_verbose) {
-	    printf("\n\
-Type + or SP to auto-select this %s (i.e. includes future articles).\n\
-Type S to auto-select the current subject.\n\
-Type . to auto-select %s.\n\
-Type m to auto-select the current article.\n\
-Type J to auto-kill (junk) this %s.\n\
-Type K to auto-kill the current subject.\n\
-Type , to auto-kill %s.\n\
-Type j to auto-kill the current article.\n\
-Type C to clear all selection/killing on %s.\n\
-Type c to clear all selection/killing on this %s.\n\
-Type q to abort the operation.\n\
-",mode_string,mode_phrase,mode_string,mode_phrase,mode_phrase,mode_string) FLUSH;
+            printf("\n"
+                   "Type + or SP to auto-select this %s (i.e. includes future articles).\n"
+                   "Type S to auto-select the current subject.\n"
+                   "Type . to auto-select %s.\n"
+                   "Type m to auto-select the current article.\n"
+                   "Type J to auto-kill (junk) this %s.\n"
+                   "Type K to auto-kill the current subject.\n"
+                   "Type , to auto-kill %s.\n"
+                   "Type j to auto-kill the current article.\n"
+                   "Type C to clear all selection/killing on %s.\n"
+                   "Type c to clear all selection/killing on this %s.\n"
+                   "Type q to abort the operation.\n",
+                   mode_string, mode_phrase, mode_string, mode_phrase, mode_phrase, mode_string) FLUSH;
 	    if (!thread_cmd) {
-		printf("\
-Type f to toggle author (from-line) searching.\n\
-Type g to toggle global memorization.\n") FLUSH;
+                printf("Type f to toggle author (from-line) searching.\n"
+                       "Type g to toggle global memorization.\n") FLUSH;
 		termdown(2);
 	    }
 	}
 	else
 	{
-	    printf("\n\
-+ or SP auto-selects this %s.\n\
-S auto-selects the subject.\n\
-. auto-selects %s.\n\
-m auto-selects this article.\n\
-J auto-kills this %s.\n\
-K auto-kills the subject.\n\
-, auto-kills %s.\n\
-j auto-kills the current article.\n\
-C clears auto-commands for %s.\n\
-c clears auto-commands for this %s.\n\
-q aborts.\n\
-",mode_string,mode_phrase,mode_string,mode_phrase,mode_phrase,mode_string) FLUSH;
+            printf("\n"
+                   "+ or SP auto-selects this %s.\n"
+                   "S auto-selects the subject.\n"
+                   ". auto-selects %s.\n"
+                   "m auto-selects this article.\n"
+                   "J auto-kills this %s.\n"
+                   "K auto-kills the subject.\n"
+                   ", auto-kills %s.\n"
+                   "j auto-kills the current article.\n"
+                   "C clears auto-commands for %s.\n"
+                   "c clears auto-commands for this %s.\n"
+                   "q aborts.\n",
+                   mode_string, mode_phrase, mode_string, mode_phrase, mode_phrase, mode_string) FLUSH;
 	    if (!thread_cmd) {
-		printf("\
-f toggles author (from) mode.\n\
-g toggles global memorization.\n");
+                printf("f toggles author (from) mode.\n"
+                       "g toggles global memorization.\n");
 		termdown(2);
 	    }
 	}

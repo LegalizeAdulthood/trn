@@ -156,7 +156,8 @@ int main(int argc, char *argv[])
 
 void Usage()
 {
-    fprintf(stderr, "Usage: nntplist [-x WildSpec] [-o OutputFile] [type]\n\n"
+    fprintf(stderr, "Usage: nntplist [-x WildSpec] [-o OutputFile] [type]\n"
+                    "\n"
                     "Where type is any of the LIST command arguments your server accepts.\n");
     exit(1);
 }

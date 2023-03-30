@@ -1795,20 +1795,20 @@ static display_state article_commands(char_int ch)
 	in_char("Selector mode:  Threads, Subjects, Articles?", 'o', "tsa");
 	printcmd();
 	if (*g_buf == 'h' || *g_buf == 'H') {
-	    if (g_verbose)
-		fputs("\n\
-Type t or SP to display/select thread groups (threads the group, if needed).\n\
-Type s to display/select subject groups.\n\
-Type a to display/select individual articles.\n\
-Type q to leave things as they are.\n\n\
-",stdout) FLUSH;
-	    else
-		fputs("\n\
-t or SP selects thread groups (threads the group too).\n\
-s selects subject groups.\n\
-a selects individual articles.\n\
-q does nothing.\n\n\
-",stdout) FLUSH;
+            if (g_verbose)
+                fputs("\n"
+                      "Type t or SP to display/select thread groups (threads the group, if needed).\n"
+                      "Type s to display/select subject groups.\n"
+                      "Type a to display/select individual articles.\n"
+                      "Type q to leave things as they are.\n\n",
+                      stdout) FLUSH;
+            else
+                fputs("\n"
+                      "t or SP selects thread groups (threads the group too).\n"
+                      "s selects subject groups.\n"
+                      "a selects individual articles.\n"
+                      "q does nothing.\n\n",
+                      stdout) FLUSH;
 	    s_clean_screen = false;
 	    goto reask_output;
 	} else if (*g_buf == 'q') {
@@ -1838,46 +1838,39 @@ q does nothing.\n\n\
 	printcmd();
 	if (*g_buf == 'h' || *g_buf == 'H') {
 	    if (g_verbose) {
-		fputs("\n\
-Type d or SP to order the displayed items by date.\n\
-Type s to order the items by subject.\n\
-Type p to order the items by score points.\n\
-",stdout) FLUSH;
-		if (g_sel_mode == SM_ARTICLE)
-		    fputs("\
-Type a to order the items by author.\n\
-Type n to order the items by number.\n\
-Type g to order the items in subject-groups by date.\n\
-",stdout) FLUSH;
-		else
-		    fputs("\
-Type c to order the items by count.\n\
-",stdout) FLUSH;
-		fputs("\
-Typing your selection in upper case it will reverse the selected order.\n\
-Type q to leave things as they are.\n\n\
-",stdout) FLUSH;
+                fputs("\n"
+                      "Type d or SP to order the displayed items by date.\n"
+                      "Type s to order the items by subject.\n"
+                      "Type p to order the items by score points.\n",
+                      stdout) FLUSH;
+                if (g_sel_mode == SM_ARTICLE)
+                    fputs("Type a to order the items by author.\n"
+                          "Type n to order the items by number.\n"
+                          "Type g to order the items in subject-groups by date.\n",
+                          stdout) FLUSH;
+                else
+                    fputs("Type c to order the items by count.\n", stdout) FLUSH;
+                fputs("Typing your selection in upper case it will reverse the selected order.\n"
+                      "Type q to leave things as they are.\n\n",
+                      stdout) FLUSH;
 	    }
 	    else
 	    {
-		fputs("\n\
-d or SP sorts by date.\n\
-s sorts by subject.\n\
-p sorts by points.\n\
-",stdout) FLUSH;
-		if (g_sel_mode == SM_ARTICLE)
-		    fputs("\
-a sorts by author.\n\
-g sorts in subject-groups by date.\n\
-",stdout) FLUSH;
-		else
-		    fputs("\
-c sorts by count.\n\
-",stdout) FLUSH;
-		fputs("\
-Upper case reverses the sort.\n\
-q does nothing.\n\n\
-",stdout) FLUSH;
+                fputs("\n"
+                      "d or SP sorts by date.\n"
+                      "s sorts by subject.\n"
+                      "p sorts by points.\n",
+                      stdout) FLUSH;
+                if (g_sel_mode == SM_ARTICLE)
+                    fputs("a sorts by author.\n"
+                          "g sorts in subject-groups by date.\n",
+                          stdout) FLUSH;
+                else
+                    fputs("c sorts by count.\n", stdout) FLUSH;
+                fputs("Upper case reverses the sort.\n"
+                      "q does nothing.\n"
+                      "\n",
+                      stdout) FLUSH;
 	    }
 	    s_clean_screen = false;
 	    goto reask_sort;
@@ -2205,27 +2198,23 @@ static display_state newsgroup_commands(char_int ch)
 	    break;
 	  case 'h': case 'H':
 	    if (g_verbose) {
-		fputs("\n\
-Type n or SP to order the newsgroups in the .newsrc order.\n\
-Type g to order the items by group name.\n\
-Type c to order the items by count.\n\
-",stdout) FLUSH;
-		fputs("\
-Typing your selection in upper case it will reverse the selected order.\n\
-Type q to leave things as they are.\n\n\
-",stdout) FLUSH;
+                fputs("\n"
+                      "Type n or SP to order the newsgroups in the .newsrc order.\n"
+                      "Type g to order the items by group name.\n"
+                      "Type c to order the items by count.\n"
+                      "Typing your selection in upper case it will reverse the selected order.\n"
+                      "Type q to leave things as they are.\n\n",
+                      stdout) FLUSH;
 	    }
 	    else
 	    {
-		fputs("\n\
-n or SP sorts by .newsrc.\n\
-g sorts by group name.\n\
-c sorts by count.\n\
-",stdout) FLUSH;
-		fputs("\
-Upper case reverses the sort.\n\
-q does nothing.\n\n\
-",stdout) FLUSH;
+                fputs("\n"
+                      "n or SP sorts by .newsrc.\n"
+                      "g sorts by group name.\n"
+                      "c sorts by count.\n"
+                      "Upper case reverses the sort.\n"
+                      "q does nothing.\n\n",
+                      stdout) FLUSH;
 	    }
 	    s_clean_screen = false;
 	    goto reask_sort;
@@ -2431,27 +2420,23 @@ static display_state addgroup_commands(char_int ch)
 	    break;
 	  case 'h': case 'H':
 	    if (g_verbose) {
-		fputs("\n\
-Type n or SP to order the items in their naturally occurring order.\n\
-Type g to order the items by newsgroup name.\n\
-Type c to order the items by article count.\n\
-",stdout) FLUSH;
-		fputs("\
-Typing your selection in upper case it will reverse the selected order.\n\
-Type q to leave things as they are.\n\n\
-",stdout) FLUSH;
+                fputs("\n"
+                      "Type n or SP to order the items in their naturally occurring order.\n"
+                      "Type g to order the items by newsgroup name.\n"
+                      "Type c to order the items by article count.\n"
+                      "Typing your selection in upper case it will reverse the selected order.\n"
+                      "Type q to leave things as they are.\n\n",
+                      stdout) FLUSH;
 	    }
 	    else
 	    {
-		fputs("\n\
-n or SP sorts by natural order.\n\
-g sorts by newsgroup name.\n\
-c sorts by article count.\n\
-",stdout) FLUSH;
-		fputs("\
-Upper case reverses the sort.\n\
-q does nothing.\n\n\
-",stdout) FLUSH;
+                fputs("\n"
+                      "n or SP sorts by natural order.\n"
+                      "g sorts by newsgroup name.\n"
+                      "c sorts by article count.\n"
+                      "Upper case reverses the sort.\n"
+                      "q does nothing.\n\n",
+                      stdout) FLUSH;
 	    }
 	    s_clean_screen = false;
 	    goto reask_sort;
@@ -2722,25 +2707,21 @@ static display_state universal_commands(char_int ch)
 	printcmd();
 	if (*g_buf == 'h' || *g_buf == 'H') {
 	    if (g_verbose) {
-		fputs("\n\
-Type n or SP to order the items in the natural order.\n\
-Type p to order the items by score points.\n\
-",stdout) FLUSH;
-		fputs("\
-Typing your selection in upper case it will reverse the selected order.\n\
-Type q to leave things as they are.\n\n\
-",stdout) FLUSH;
+                fputs("\n"
+                      "Type n or SP to order the items in the natural order.\n"
+                      "Type p to order the items by score points.\n"
+                      "Typing your selection in upper case it will reverse the selected order.\n"
+                      "Type q to leave things as they are.\n\n",
+                      stdout) FLUSH;
 	    }
 	    else
 	    {
-		fputs("\n\
-n or SP sorts by natural order.\n\
-p sorts by score.\n\
-",stdout) FLUSH;
-		fputs("\
-Upper case reverses the sort.\n\
-q does nothing.\n\n\
-",stdout) FLUSH;
+                fputs("\n"
+                      "n or SP sorts by natural order.\n"
+                      "p sorts by score.\n"
+                      "Upper case reverses the sort.\n"
+                      "q does nothing.\n\n",
+                      stdout) FLUSH;
 	    }
 	    s_clean_screen = false;
 	    goto reask_sort;

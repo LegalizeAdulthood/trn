@@ -329,10 +329,11 @@ static bool lock_newsrc(NEWSRC *rp)
 	termdown(2);
 	if (strcmp(runninghost,g_local_host)) {
 	    if (g_verbose)
-		printf("\n\
-Since that's not the same host as this one (%s), we must\n\
-assume that process still exists.  To override this check, remove\n\
-the lock file: %s\n", g_local_host, rp->lockname) FLUSH;
+                printf("\n"
+                       "Since that's not the same host as this one (%s), we must\n"
+                       "assume that process still exists.  To override this check, remove\n"
+                       "the lock file: %s\n",
+                       g_local_host, rp->lockname) FLUSH;
 	    else
 		printf("\nThis host (%s) doesn't match.\nCan't unlock %s.\n",
 		       g_local_host, rp->lockname) FLUSH;
@@ -343,9 +344,9 @@ the lock file: %s\n", g_local_host, rp->lockname) FLUSH;
 	}
 	if (processnum == g_our_pid) {
 	    if (g_verbose)
-		printf("\n\
-Hey, that *my* pid!  Your access file is trying to use the same newsrc\n\
-more than once.\n") FLUSH;
+                printf("\n"
+                       "Hey, that *my* pid!  Your access file is trying to use the same newsrc\n"
+                       "more than once.\n") FLUSH;
 	    else
 		printf("\nAccess file error (our pid detected).\n") FLUSH;
 	    termdown(2);
@@ -355,10 +356,11 @@ more than once.\n") FLUSH;
 	    /* Process is apparently gone */
 	    sleep(2);
 	    if (g_verbose)
-		fputs("\n\
-That process does not seem to exist anymore.  The count of read articles\n\
-may be incorrect in the last newsgroup accessed by that other (defunct)\n\
-process.\n\n",stdout) FLUSH;
+                fputs("\n"
+                      "That process does not seem to exist anymore.  The count of read articles\n"
+                      "may be incorrect in the last newsgroup accessed by that other (defunct)\n"
+                      "process.\n\n",
+                      stdout) FLUSH;
 	    else
 		fputs("\nProcess crashed.\n",stdout) FLUSH;
 	    if (g_lastngname) {
@@ -374,9 +376,10 @@ process.\n\n",stdout) FLUSH;
 	}
 	else {
 	    if (g_verbose)
-		printf("\n\
-It looks like that process still exists.  To override this, remove\n\
-the lock file: %s\n", rp->lockname) FLUSH;
+                printf("\n"
+                       "It looks like that process still exists.  To override this, remove\n"
+                       "the lock file: %s\n",
+                       rp->lockname) FLUSH;
 	    else
 		printf("\nCan't unlock %s.\n", rp->lockname) FLUSH;
 	    termdown(2);
@@ -772,15 +775,15 @@ reask_add:
 	    newline();
 	    if (*g_buf == 'h') {
 		if (g_verbose) {
-		    printf("Type y or SP to subscribe to %s.\n\
-Type Y to subscribe to this and all remaining new groups.\n\
-Type N to leave all remaining new groups unsubscribed.\n", g_ngname) FLUSH;
+                    printf("Type y or SP to subscribe to %s.\n"
+                           "Type Y to subscribe to this and all remaining new groups.\n"
+                           "Type N to leave all remaining new groups unsubscribed.\n",
+                           g_ngname) FLUSH;
 		    termdown(3);
 		}
 		else
 		{
-		    fputs("\
-y or SP to subscribe, Y to subscribe all new groups, N to unsubscribe all\n",
+		    fputs("y or SP to subscribe, Y to subscribe all new groups, N to unsubscribe all\n",
 			  stdout) FLUSH;
 		    termdown(1);
 		}
@@ -974,33 +977,34 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
 	printcmd();
 	if (*g_buf == 'h') {
 	    if (g_verbose) {
-		printf("\n\n\
-Type ^ to put the newsgroup first (position 0).\n\
-Type $ to put the newsgroup last (position %d).\n", g_newsgroup_cnt-1);
-		printf("\
-Type . to put it before the current newsgroup.\n");
-		printf("\
-Type -newsgroup name to put it before that newsgroup.\n\
-Type +newsgroup name to put it after that newsgroup.\n\
-Type a number between 0 and %d to put it at that position.\n", g_newsgroup_cnt-1);
-		printf("\
-Type L for a listing of newsgroups and their positions.\n\
-Type q to abort the current action.\n") FLUSH;
+                printf("\n"
+                       "\n"
+                       "Type ^ to put the newsgroup first (position 0).\n"
+                       "Type $ to put the newsgroup last (position %d).\n",
+                       g_newsgroup_cnt - 1);
+                printf("Type . to put it before the current newsgroup.\n"
+                       "Type -newsgroup name to put it before that newsgroup.\n"
+                       "Type +newsgroup name to put it after that newsgroup.\n"
+                       "Type a number between 0 and %d to put it at that position.\n",
+                       g_newsgroup_cnt - 1);
+                printf("Type L for a listing of newsgroups and their positions.\n"
+                       "Type q to abort the current action.\n") FLUSH;
 	    }
 	    else
 	    {
-		printf("\n\n\
-^ to put newsgroup first (pos 0).\n\
-$ to put last (pos %d).\n", g_newsgroup_cnt-1);
-		printf("\
-. to put before current newsgroup.\n");
-		printf("\
--newsgroup to put before newsgroup.\n\
-+newsgroup to put after.\n\
-number in 0-%d to put at that pos.\n", g_newsgroup_cnt-1);
-		printf("\
-L for list of newsrc.\n\
-q to abort\n") FLUSH;
+                printf("\n"
+                       "\n"
+                       "^ to put newsgroup first (pos 0).\n"
+                       "$ to put last (pos %d).\n",
+                       g_newsgroup_cnt - 1);
+                printf(". to put before current newsgroup.\n"
+                       "-newsgroup to put before newsgroup.\n"
+                       "+newsgroup to put after.\n"
+                       "number in 0-%d to put at that pos.\n"
+                       "L for list of newsrc.\n"
+                       "q to abort\n",
+                       g_newsgroup_cnt - 1);
+                FLUSH;
 	    }
 	    termdown(10);
 	    goto reask_reloc;
@@ -1165,10 +1169,9 @@ reask_bogus:
 	newline();
 	if (*g_buf == 'h') {
 	    if (g_verbose) {
-		fputs("\
-Type y to delete bogus newsgroups.\n\
-Type n or SP to leave them at the end in case they return.\n\
-",stdout) FLUSH;
+                fputs("Type y to delete bogus newsgroups.\n"
+                      "Type n or SP to leave them at the end in case they return.\n",
+                      stdout) FLUSH;
 		termdown(2);
 	    }
 	    else

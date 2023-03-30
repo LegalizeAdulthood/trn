@@ -755,12 +755,13 @@ void save_options(const char *filename)
     }
     else {
 	char *t = g_use_threads? "T" : "";
-	printf("\n\
-This is the first save of the option file, %s.\n\
-By default this file overrides your %sRNINIT variable, but if you\n\
-want to continue to use an old-style init file (that overrides the\n\
-settings in the option file), edit the option file and change the\n\
-line that sets %sRNINIT.\n", g_ini_file, t, t);
+        printf("\n"
+               "This is the first save of the option file, %s.\n"
+               "By default this file overrides your %sRNINIT variable, but if you\n"
+               "want to continue to use an old-style init file (that overrides the\n"
+               "settings in the option file), edit the option file and change the\n"
+               "line that sets %sRNINIT.\n",
+               g_ini_file, t, t);
 	get_anything();
 	fprintf(fp_out, "# trnrc file auto-generated\n[environment]\n");
 	write_init_environment(fp_out);
@@ -1312,27 +1313,25 @@ void cwd_check()
 		strcpy(tmpbuf,g_cmd_buf);
 	    chdir(tmpbuf);
 	    if (g_verbose)
-		printf("\
-Cannot make directory %s--\n\
-	articles will be saved to %s\n\
-\n\
-",g_cwd,tmpbuf) FLUSH;
+                printf("Cannot make directory %s--\n"
+                       "	articles will be saved to %s\n"
+                       "\n",
+                       g_cwd, tmpbuf) FLUSH;
 	    else
-		printf("\
-Can't make %s--\n\
-	using %s\n\
-\n\
-",g_cwd,tmpbuf) FLUSH;
+                printf("Can't make %s--\n"
+                       "	using %s\n"
+                       "\n",
+                       g_cwd, tmpbuf) FLUSH;
 	}
     }
     free(g_cwd);
     trn_getwd(tmpbuf, sizeof(tmpbuf));
     if (eaccess(tmpbuf,2)) {
-	if (g_verbose)
-	    printf("\
-Current directory %s is not writeable--\n\
-	articles will be saved to home directory\n\n\
-",tmpbuf) FLUSH;
+        if (g_verbose)
+            printf("Current directory %s is not writeable--\n"
+                   "	articles will be saved to home directory\n"
+                   "\n",
+                   tmpbuf) FLUSH;
 	else
 	    printf("%s not writeable--using ~\n\n",tmpbuf) FLUSH;
 	strcpy(tmpbuf,g_home_dir);

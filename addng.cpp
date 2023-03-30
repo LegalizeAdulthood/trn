@@ -94,8 +94,10 @@ bool find_new_groups()
 static void process_list(getnewsgroup_flags flag)
 {
     if (flag == GNG_NONE) {
-	sprintf(g_cmd_buf,"\nUnsubscribed but mentioned in your current newsrc%s:\n",
-		g_multirc->first->next? "s" : "");
+        sprintf(g_cmd_buf,
+                "\n"
+                "Unsubscribed but mentioned in your current newsrc%s:\n",
+                g_multirc->first->next ? "s" : "");
 	print_lines(g_cmd_buf, STANDOUT);
     }
     ADDGROUP *node = g_first_addgroup;

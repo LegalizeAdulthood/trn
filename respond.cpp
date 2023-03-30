@@ -321,17 +321,17 @@ save_result save_article()
 		printcmd();
 		if (*g_buf == 'h') {
 		    if (g_verbose)
-			printf("\n\
-Type y to create %s as a mailbox.\n\
-Type n to create it as a normal file.\n\
-Type q to abort the save.\n\
-",s) FLUSH;
-		    else
-			fputs("\n\
-y to create mailbox.\n\
-n to create normal file.\n\
-q to abort.\n\
-",stdout) FLUSH;
+                        printf("\n"
+                               "Type y to create %s as a mailbox.\n"
+                               "Type n to create it as a normal file.\n"
+                               "Type q to abort the save.\n",
+                               s) FLUSH;
+                    else
+                        fputs("\n"
+                              "y to create mailbox.\n"
+                              "n to create normal file.\n"
+                              "q to abort.\n",
+                              stdout) FLUSH;
 		    termdown(4);
 		    goto reask_save;
 		}
@@ -838,10 +838,10 @@ void followup()
     if (incl_body && g_artfp != nullptr) {
 	char* s;
         if (g_verbose)
-	    fputs("\n\
-(Be sure to double-check the attribution against the signature, and\n\
-trim the quoted article down as much as possible.)\n\
-",stdout) FLUSH;
+            fputs("\n"
+                  "(Be sure to double-check the attribution against the signature, and\n"
+                  "trim the quoted article down as much as possible.)\n",
+                  stdout) FLUSH;
 	interp(g_buf, (sizeof g_buf), get_val("ATTRIBUTION",ATTRIBUTION));
 	fprintf(g_tmpfp,"%s\n",g_buf);
 	parseheader(g_art);

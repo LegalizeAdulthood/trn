@@ -131,10 +131,9 @@ int trn_main(int argc, char *argv[])
 	g_starthere = nullptr;
     else if (!foundany) {		/* nothing to do? */
 	if (g_verbose) {
-	    fputs("\
-No unread news in subscribed-to newsgroups.  To subscribe to a new\n\
-newsgroup use the g<newsgroup> command.\n\
-",stdout) FLUSH;
+            fputs("No unread news in subscribed-to newsgroups.  To subscribe to a new\n"
+                  "newsgroup use the g<newsgroup> command.\n",
+                  stdout) FLUSH;
 	    termdown(2);
 	}
 	g_starthere = g_last_ng;
@@ -811,9 +810,8 @@ void trn_version()
 	}
     }
 
-    print_lines("\
-You can request help from:  trn-users@lists.sourceforge.net\n\
-Send bug reports, suggestions, etc. to:  trn-workers@lists.sourceforge.net\n",
+    print_lines("You can request help from:  trn-users@lists.sourceforge.net\n"
+                "Send bug reports, suggestions, etc. to:  trn-workers@lists.sourceforge.net\n",
                 NOMARKING);
 }
 
