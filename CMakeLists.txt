@@ -49,6 +49,10 @@ target_link_libraries(tool PUBLIC nntp)
 set_property(TARGET tool PROPERTY FOLDER Libraries)
 
 bison_target(parsedate parsedate.y ${CMAKE_CURRENT_BINARY_DIR}/parsedate.c)
+add_library(parsedate
+    ${BISON_parsedate_OUTPUTS} parsedate.h
+)
+set_target_properties(parsedate PROPERTIES FOLDER Libraries)
 
 add_library(libtrn
     ${CMAKE_CURRENT_BINARY_DIR}/config.h
@@ -88,7 +92,6 @@ add_library(libtrn
     nntp.cpp nntp.h
     only.cpp only.h
     opt.cpp opt.h
-    ${BISON_parsedate_OUTPUTS} parsedate.h
     patchlevel.h
     rcln.cpp rcln.h
     rcstuff.cpp rcstuff.h
@@ -134,7 +137,7 @@ if(WIN32)
 endif()
 source_group("Header Files" REGULAR_EXPRESSION "^.*\.h$")
 target_include_directories(libtrn PUBLIC .)
-target_link_libraries(libtrn PUBLIC curses nntp)
+target_link_libraries(libtrn PUBLIC parsedate curses nntp)
 set_property(TARGET libtrn PROPERTY FOLDER Libraries)
 
 add_executable(inews inews.cpp)
