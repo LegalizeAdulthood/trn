@@ -39,7 +39,9 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
     char const cmdchr = *patbuf;         /* what kind of search? */
     char *s = cpytill(g_buf, patbuf + 1, cmdchr); /* ok to cpy g_buf+1 to g_buf */
     char *pattern;                                /* unparsed pattern */
-    for (pattern = g_buf; *pattern == ' '; pattern++) ;
+    for (pattern = g_buf; *pattern == ' '; pattern++)
+    {
+    }
     if (*pattern)
 	g_ng_doempty = false;
 

@@ -860,10 +860,9 @@ void sf_append(char *line)
 
     /* scoretext = first non-whitespace after score# */
     for (scoretext = scoreline;
-	 isdigit(*scoretext) || *scoretext == '+' || *scoretext == '-'
-			     || *scoretext == ' ' || *scoretext == '\t';
-	 scoretext++) {
-	;
+         isdigit(*scoretext) || *scoretext == '+' || *scoretext == '-' || *scoretext == ' ' || *scoretext == '\t';
+         scoretext++)
+    {
     }
     /* special one-character shortcuts */
     if (*scoretext && scoretext[1] == '\0') {

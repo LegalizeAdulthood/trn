@@ -236,5 +236,4 @@ void s_resize_win()
     /* later possibly use the return value for an error abort? */
     g_s_resized = true;
 #endif
-    ;	/* don't have an empty function */
 }

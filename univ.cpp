@@ -778,7 +778,7 @@ bool univ_file_load(char *fname, char *title, char *label)
 	g_int_count = 0;
     }
     if (finput_pending(true)) {
-	;		/* later, *maybe* eat input */
+	/* later, *maybe* eat input */
     }
     return flag;
 }

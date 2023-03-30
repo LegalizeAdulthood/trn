@@ -889,7 +889,7 @@ bool check_ini_cond(char *cond)
 	init_compex(&condcompex);
 	s = compile(&condcompex,cond,true,true);
 	if (s != nullptr) {
-	    /*warning(s)*/;
+	    /*warning(s)*/
 	    equal = false;
 	}
 	else
