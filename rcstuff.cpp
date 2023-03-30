@@ -1119,7 +1119,6 @@ NGDATA *find_ng(const char *ngnam)
 
 void cleanup_newsrc(NEWSRC *rp)
 {
-    NGDATA* np;
     NG_NUM bogosity = 0;
 
     if (g_verbose)
@@ -1127,6 +1126,7 @@ void cleanup_newsrc(NEWSRC *rp)
     else
 	printf("Checking '%s' -- hang on...\n",rp->name) FLUSH;
     termdown(1);
+    NGDATA* np;
     for (np = g_first_ng; np; np = np->next) {
 /*#ifdef CHECK_ALL_BOGUS $$ what is this? */
 	if (np->toread >= TR_UNSUB)
@@ -1137,16 +1137,16 @@ void cleanup_newsrc(NEWSRC *rp)
     }
     for (np = g_last_ng; np && np->toread == TR_BOGUS; np = np->prev)
 	bogosity--;			/* discount already moved ones */
-    if (g_newsgroup_cnt > 5 && bogosity > g_newsgroup_cnt / 2) {
-	fputs(
-"It looks like the active file is messed up.  Contact your news administrator,\n\
-",stdout);
-	fputs(
-"leave the \"bogus\" groups alone, and they may come back to normal.  Maybe.\n\
-",stdout) FLUSH;
-	termdown(2);
+    if (g_newsgroup_cnt > 5 && bogosity > g_newsgroup_cnt / 2)
+    {
+        fputs("It looks like the active file is messed up.  Contact your news administrator,\n",
+              stdout);
+        fputs("leave the \"bogus\" groups alone, and they may come back to normal.  Maybe.\n",
+              stdout) FLUSH;
+        termdown(2);
     }
-    else if (bogosity) {
+    else if (bogosity)
+    {
         if (g_verbose)
 	    printf("Moving bogus newsgroups to the end of '%s'.\n",rp->name) FLUSH;
 	else
