@@ -29,24 +29,23 @@ void last_init()
 
 void readlast()
 {
-    g_tmpfp = fopen(s_lastfile, "r");
-    if (g_tmpfp != nullptr)
+    if (FILE *fp = fopen(s_lastfile, "r"))
     {
-	if (fgets(g_buf,sizeof g_buf,g_tmpfp) != nullptr) {
+	if (fgets(g_buf,sizeof g_buf,fp) != nullptr) {
 	    long old_last = g_lasttime;
 	    g_buf[strlen(g_buf)-1] = '\0';
 	    if (*g_buf) {
 		safefree0(g_lastngname);
 		g_lastngname = savestr(g_buf);
 	    }
-	    fscanf(g_tmpfp,"%ld %ld %ld %ld",&g_lasttime,&g_lastactsiz,
+	    fscanf(fp,"%ld %ld %ld %ld",&g_lasttime,&g_lastactsiz,
 					   &g_lastnewtime,&g_lastextranum);
 	    if (!g_lastnewtime)
 		g_lastnewtime = s_starttime;
 	    if (old_last > g_lasttime)
 		g_lasttime = old_last;
 	}
-	fclose(g_tmpfp);
+	fclose(fp);
     }
 }
 
@@ -55,15 +54,14 @@ void readlast()
 void writelast()
 {
     sprintf(g_buf,"%s.%ld", s_lastfile, g_our_pid);
-    g_tmpfp = fopen(g_buf, "w");
-    if (g_tmpfp != nullptr)
+    if (FILE *fp = fopen(g_buf, "w"))
     {
 	if (g_lasttime < s_starttime)
 	    g_lasttime = s_starttime;
-	fprintf(g_tmpfp,"%s\n%ld\n%ld\n%ld\n%ld\n",
+	fprintf(fp,"%s\n%ld\n%ld\n%ld\n%ld\n",
 		g_ngname? g_ngname : "",g_lasttime,
 		g_lastactsiz,g_lastnewtime,g_lastextranum);
-	fclose(g_tmpfp);
+	fclose(fp);
 	remove(s_lastfile);
 	rename(g_buf,s_lastfile);
     }

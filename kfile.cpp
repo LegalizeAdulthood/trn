@@ -688,7 +688,7 @@ void kf_append(const char *cmd, bool local)
 	fflush(stdout);
 	if (g_novice_delays)
 	    sleep(2);
-        if (FILE*fp = fopen(g_cmd_buf, "a+"))
+        if (FILE *fp = fopen(g_cmd_buf, "a+"))
         {
 	    char ch;
 	    if (fseek(fp,-1L,2) < 0)

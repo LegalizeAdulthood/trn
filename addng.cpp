@@ -197,8 +197,8 @@ static void new_local_groups(DATASRC *dp)
     if (g_filestat.st_size == dp->act_sf.recent_cnt)
 	return;
 
-    g_tmpfp = fopen(dp->extra_name,"r");
-    if (g_tmpfp == nullptr) {
+    FILE *fp = fopen(dp->extra_name, "r");
+    if (fp == nullptr) {
 	printf(g_cantopen,dp->extra_name) FLUSH;
 	termdown(1);
 	return;
@@ -206,7 +206,7 @@ static void new_local_groups(DATASRC *dp)
     time_t lastone = time((time_t*)nullptr) - 24L * 60 * 60 - 1;
     HASHTABLE *newngs = hashcreate(33, addng_cmp);
 
-    while (fgets(g_buf, LBUFLEN, g_tmpfp) != nullptr)
+    while (fgets(g_buf, LBUFLEN, fp) != nullptr)
     {
         char *s;
         if ((s = strchr(g_buf, ' ')) == nullptr || (lastone = atol(s + 1)) < dp->lastnewgrp)
@@ -226,7 +226,7 @@ static void new_local_groups(DATASRC *dp)
             continue;
 	add_to_hash(newngs, g_buf, high-low, auto_subscribe(g_buf));
     }
-    fclose(g_tmpfp);
+    fclose(fp);
 
     hashwalk(newngs, build_addgroup_list, 0);
     hashdestroy(newngs);
