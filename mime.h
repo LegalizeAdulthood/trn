@@ -157,6 +157,7 @@ struct MIMECAP_ENTRY
 };
 
 void           mime_init();
+void           mime_final();
 void           mime_ReadMimecap(char *mcname);
 MIMECAP_ENTRY *mime_FindMimecapEntry(const char *contenttype, mimecap_flags skip_flags);
 bool           mime_TypesMatch(const char *ct, const char *pat);

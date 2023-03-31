@@ -72,7 +72,6 @@ void InterpolatorTest::SetUp()
     art_init();
     artio_init();
     artsrch_init();
-    backpage_init();
     cache_init();
     kfile_init();
     mime_init();
@@ -89,6 +88,7 @@ void InterpolatorTest::TearDown()
     g_in_ng = false;
     g_datasrc = nullptr;
 
+    mime_final();
     artio_final();
     rcstuff_final();
     last_final();

@@ -92,6 +92,12 @@ void mime_init()
     free(mcname);
 }
 
+void mime_final()
+{
+    delete_list(s_mimecap_list);
+    s_mimecap_list = nullptr;
+}
+
 void mime_ReadMimecap(char *mcname)
 {
     char*s;
