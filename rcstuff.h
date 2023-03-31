@@ -80,6 +80,7 @@ extern bool g_paranoid;      /* did we detect some inconsistency in .newsrc? */
 extern int g_addnewbydefault;
 
 bool    rcstuff_init();
+void    rcstuff_final();
 NEWSRC *new_newsrc(const char *name, const char *newsrc, const char *add_ok);
 bool    use_multirc(MULTIRC *mp);
 void    unuse_multirc(MULTIRC *mptr);

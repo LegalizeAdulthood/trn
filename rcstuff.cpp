@@ -124,6 +124,12 @@ bool rcstuff_init()
     return s_foundany;
 }
 
+void rcstuff_final()
+{
+    delete_list(g_multirc_list);
+    g_multirc_list = nullptr;
+}
+
 NEWSRC *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
 {
     if (!name || !*name)
