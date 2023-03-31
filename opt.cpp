@@ -165,8 +165,6 @@ static char *expand_mouse_buttons(char *cp, int cnt);
 
 void opt_init(int argc, char *argv[], char **tcbufptr)
 {
-    char* s;
-
     g_sel_grp_dmode = savestr(g_sel_grp_dmode) + 1;
     g_sel_art_dmode = savestr(g_sel_art_dmode) + 1;
     g_univ_sel_btn_cnt = parse_mouse_buttons(&g_univ_sel_btns,
@@ -196,10 +194,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     set_header_list(HT_DEFHIDE,HT_HIDE,"");
     set_header_list(HT_DEFMAGIC,HT_MAGIC,"");
 
-    if (g_use_threads)
-	s = get_val("TRNRC","%+/trnrc");
-    else
-	s = get_val("RNRC","%+/rnrc");
+    char *s = g_use_threads ? get_val("TRNRC", "%+/trnrc") : get_val("RNRC", "%+/rnrc");
     g_ini_file = savestr(filexp(s));
 
     s = filexp("%+");
@@ -230,6 +225,25 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 	    decode_switch(argv[i]);
     }
     init_compex(&g_optcompex);
+}
+
+void opt_final()
+{
+    safefree0(g_option_flags);
+    safefree0(g_option_saved_vals);
+    safefree0(g_ini_file);
+    safefree0(g_option_def_vals);
+    safefree0(g_art_pager_btns);
+    safefree0(g_news_sel_btns);
+    safefree0(g_newsgroup_sel_btns);
+    safefree0(g_option_sel_btns);
+    safefree0(g_add_sel_btns);
+    safefree0(g_newsrc_sel_btns);
+    safefree0(g_univ_sel_btns);
+    g_sel_art_dmode--;
+    safefree0(g_sel_art_dmode);
+    g_sel_grp_dmode--;
+    safefree0(g_sel_grp_dmode);
 }
 
 void opt_file(char *filename, char **tcbufptr, bool bleat)

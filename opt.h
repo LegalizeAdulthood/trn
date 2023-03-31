@@ -138,6 +138,7 @@ extern int g_sel_page_op;
 extern int g_sel_next_op;
 
 void  opt_init(int argc, char *argv[], char **tcbufptr);
+void  opt_final();
 void  opt_file(char *filename, char **tcbufptr, bool bleat);
 void  set_options(char **vals);
 void  set_option(int num, char *s);
