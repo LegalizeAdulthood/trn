@@ -53,12 +53,12 @@
 
 [xmission]
 NNTP Server = news.xmission.com
-Active File = ~/.trn/active.xmission
+Active File = %./active.xmission
 Active File Refetch = 2 days
 
 [boost]
 NNTP Server = news.gmane.io
-Active File = ~/.trn/active.boost
+Active File = %./active.boost
 Active File Refetch = 1 day
 
 ## This section tells trn what newsrc groups you want to use.  If you
