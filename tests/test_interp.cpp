@@ -1,18 +1,31 @@
 #include <gtest/gtest.h>
 
-#include "test_config.h"
-
 #include <array>
+
+#include "test_config.h"
 
 #include <common.h>
 
+#include <art.h>
+#include <artio.h>
+#include <artsrch.h>
+#include <backpage.h>
 #include <cache.h>
+#include <color.h>
 #include <datasrc.h>
 #include <env-internal.h>
 #include <init.h>
 #include <intrp.h>
+#include <kfile.h>
+#include <last.h>
+#include <mime.h>
 #include <ng.h>
 #include <ngdata.h>
+#include <ngsrch.h>
+#include <opt.h>
+#include <rcstuff.h>
+#include <search.h>
+#include <univ.h>
 #include <util.h>
 #include <util2.h>
 
@@ -40,10 +53,32 @@ void InterpolatorTest::SetUp()
 {
     Test::SetUp();
 
+    mp_init();
+    search_init();
     trn::testing::set_envars();
     env_init(m_tcbuf.data(), true, trn::testing::set_name, trn::testing::set_host_name);
     trn::testing::reset_lib_dirs();
+    head_init();
+    char trn[]{"trn"};
+    char *argv[]{trn};
+    char *tcbuf = m_tcbuf.data();
+    opt_init(1,argv,&tcbuf);
+    color_init();
+    intrp_init(tcbuf, TCBUF_SIZE);
+    last_init();
+    univ_init();
     datasrc_init();
+    rcstuff_init();
+    art_init();
+    artio_init();
+    artsrch_init();
+    backpage_init();
+    cache_init();
+    kfile_init();
+    mime_init();
+    ng_init();
+    ngsrch_init();
+    util_init();
     g_datasrc = datasrc_first();
 }
 
