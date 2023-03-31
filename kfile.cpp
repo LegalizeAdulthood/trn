@@ -688,19 +688,18 @@ void kf_append(const char *cmd, bool local)
 	fflush(stdout);
 	if (g_novice_delays)
 	    sleep(2);
-        g_tmpfp = fopen(g_cmd_buf, "a+");
-        if (g_tmpfp != nullptr)
+        if (FILE*fp = fopen(g_cmd_buf, "a+"))
         {
 	    char ch;
-	    if (fseek(g_tmpfp,-1L,2) < 0)
+	    if (fseek(fp,-1L,2) < 0)
 		ch = '\n';
 	    else
-		ch = getc(g_tmpfp);
-	    fseek(g_tmpfp,0L,2);
+		ch = getc(fp);
+	    fseek(fp,0L,2);
 	    if (ch != '\n')
-		putc('\n', g_tmpfp);
-	    fprintf(g_tmpfp,"%s\n",cmd);
-	    fclose(g_tmpfp);
+		putc('\n', fp);
+	    fprintf(fp,"%s\n",cmd);
+	    fclose(fp);
 	    if (local && !g_localkfp)
 		open_kfile(KF_LOCAL);
 	    fputs("done\n",stdout) FLUSH;

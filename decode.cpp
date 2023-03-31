@@ -291,14 +291,12 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 		/* This is the last part. Remember the fact */
 		total = part;
 		sprintf(g_buf, "%sCT", dir);
-		g_tmpfp = fopen(g_buf, "w");
-		if (!g_tmpfp)
-		    /*os_perror(g_buf)*/;
-		else {
-		    fprintf(g_tmpfp, "%d\n", total);
-		    fclose(g_tmpfp);
-		}
-	    }
+		if (FILE *total_fp = fopen(g_buf, "w"))
+                {
+                    fprintf(total_fp, "%d\n", total);
+                    fclose(total_fp);
+                }
+            }
 	}
 	fclose(fp);
 

@@ -307,17 +307,17 @@ static bool lock_newsrc(NEWSRC *rp)
 	rp->lockname = savestr(g_buf);
     }
 
-    g_tmpfp = fopen(rp->lockname,"r");
-    if (g_tmpfp != nullptr) {
-	if (fgets(g_buf,LBUFLEN,g_tmpfp)) {
+    if (FILE *fp = fopen(rp->lockname, "r"))
+    {
+	if (fgets(g_buf,LBUFLEN,fp)) {
 	    processnum = atol(g_buf);
-	    if (fgets(g_buf,LBUFLEN,g_tmpfp) && *g_buf
+	    if (fgets(g_buf,LBUFLEN,fp) && *g_buf
 	     && *(s = g_buf + strlen(g_buf) - 1) == '\n') {
 		*s = '\0';
 		char *runninghost = g_buf;
 	    }
 	}
-	fclose(g_tmpfp);
+	fclose(fp);
     }
     if (processnum) {
 #ifndef MSDOS
@@ -389,13 +389,13 @@ static bool lock_newsrc(NEWSRC *rp)
 	}
 #endif
     }
-    g_tmpfp = fopen(rp->lockname,"w");
-    if (g_tmpfp == nullptr) {
+    FILE *fp = fopen(rp->lockname, "w");
+    if (fp == nullptr) {
 	printf(g_cantcreate,rp->lockname) FLUSH;
 	sig_catcher(0);
     }
-    fprintf(g_tmpfp,"%ld\n%s\n",g_our_pid,g_local_host);
-    fclose(g_tmpfp);
+    fprintf(fp,"%ld\n%s\n",g_our_pid,g_local_host);
+    fclose(fp);
     return true;
 }
 
@@ -432,11 +432,15 @@ static bool open_newsrc(NEWSRC *rp)
 		    break;
 	    } while (!nntp_at_list_end(g_ser_line));
 	}
-	else if (*some_buf && (g_tmpfp = fopen(filexp(some_buf),"r")) != nullptr) {
-	    while (fgets(g_buf,sizeof g_buf,g_tmpfp))
-		fputs(g_buf,rcfp);
-	    fclose(g_tmpfp);
-	}
+        else if (*some_buf)
+        {
+            if (FILE *fp = fopen(filexp(some_buf), "r"))
+            {
+                while (fgets(g_buf, sizeof g_buf, fp))
+                    fputs(g_buf, rcfp);
+                fclose(fp);
+            }
+        }
 	fseek(rcfp, 0L, 0);
     }
     else {

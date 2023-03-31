@@ -161,17 +161,15 @@ bool initialize(int argc, char *argv[])
 void newsnews_check()
 {
     const char *newsnewsname = filexp(NEWSNEWSNAME);
-
-    g_tmpfp = fopen(newsnewsname, "r");
-    if (g_tmpfp != nullptr)
+    if (FILE *fp = fopen(newsnewsname, "r"))
     {
-	fstat(fileno(g_tmpfp),&g_filestat);
+	fstat(fileno(fp),&g_filestat);
 	if (g_filestat.st_mtime > (time_t)g_lasttime) {
-	    while (fgets(g_buf,sizeof(g_buf),g_tmpfp) != nullptr)
+	    while (fgets(g_buf,sizeof(g_buf),fp) != nullptr)
 		fputs(g_buf,stdout) FLUSH;
 	    get_anything();
 	    putchar('\n') FLUSH;
 	}
-	fclose(g_tmpfp);
+	fclose(fp);
     }
 }
