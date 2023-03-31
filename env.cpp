@@ -138,6 +138,20 @@ bool env_init(char *tcbuf, bool lax)
     return env_init(tcbuf, lax, set_user_name, set_p_host_name);
 }
 
+void env_final()
+{
+    safefree0(g_p_host_name);
+    safefree0(g_local_host);
+    safefree0(g_real_name);
+    safefree0(g_login_name);
+    safefree0(g_home_dir);
+    g_tmp_dir = nullptr;
+    g_dot_dir = nullptr;
+    safefree0(g_trn_dir);
+    safefree0(g_lib);
+    safefree0(g_rn_lib);
+}
+
 static void env_init2()
 {
     if (g_dot_dir)		/* Avoid running multiple times. */

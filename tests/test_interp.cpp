@@ -91,25 +91,12 @@ void InterpolatorTest::TearDown()
     mime_final();
     artio_final();
     rcstuff_final();
+    datasrc_finalize();
     last_final();
     intrp_final();
     opt_final();
     head_final();
-    datasrc_finalize();
-    g_datasrc_cnt = 0;
-
-    safefree0(g_datasrc_list);
-    safefree0(g_nntp_auth_file);
-    safefree0(g_home_dir);
-    safefree0(g_real_name);
-    g_tmp_dir = nullptr;
-    safefree0(g_login_name);
-    safefree0(g_real_name);
-    safefree0(g_local_host);
-    safefree0(g_p_host_name);
-    g_dot_dir = nullptr;
-    safefree0(g_trn_dir);
-    safefree0(g_lib);
+    env_final();
     trn::testing::reset_envars();
 
     Test::TearDown();
