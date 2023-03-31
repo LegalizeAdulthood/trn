@@ -100,6 +100,12 @@ void head_init()
     g_headbuf = safemalloc(g_headbuf_size);
 }
 
+void head_final()
+{
+    safefree0(g_headbuf);
+    safefree0(g_user_htype);
+}
+
 #ifdef DEBUG
 void dumpheader(char *where)
 {

@@ -96,6 +96,8 @@ enum
 };
 
 void head_init();
+void head_final();
+
 #ifdef DEBUG
 void dumpheader(char *where);
 #endif
