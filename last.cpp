@@ -27,6 +27,12 @@ void last_init()
     readlast();
 }
 
+void last_final()
+{
+    safefree0(s_lastfile);
+    safefree0(g_lastngname);
+}
+
 void readlast()
 {
     if (FILE *fp = fopen(s_lastfile, "r"))

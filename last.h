@@ -11,6 +11,7 @@ extern long g_lastnewtime; /* time of last newgroup request */
 extern long g_lastextranum;
 
 void last_init();
+void last_final();
 void readlast();
 void writelast();
 
