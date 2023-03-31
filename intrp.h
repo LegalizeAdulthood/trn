@@ -19,6 +19,7 @@ extern int g_newsuid;
 #endif
 
 void intrp_init(char *tcbuf, int tcbuf_len);
+void intrp_final();
 char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, char *cmd);
 char *interp_backslash(char *dest, char *pattern);
 char *interp(char *dest, int destsize, char *pattern);

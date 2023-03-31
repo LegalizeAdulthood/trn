@@ -113,6 +113,12 @@ void intrp_init(char *tcbuf, int tcbuf_len)
 #endif
 }
 
+void intrp_final()
+{
+    safefree0(g_headname);
+    safefree0(g_origdir);
+}
+
 /* skip interpolations */
 
 static char *skipinterp(char *pattern, const char *stoppers)
