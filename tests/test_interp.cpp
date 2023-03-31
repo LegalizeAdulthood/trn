@@ -89,6 +89,7 @@ void InterpolatorTest::TearDown()
     g_in_ng = false;
     g_datasrc = nullptr;
 
+    artio_final();
     rcstuff_final();
     last_final();
     intrp_final();

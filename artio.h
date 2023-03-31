@@ -19,6 +19,7 @@ extern long g_artbuf_len;
 extern char g_wrapped_nl;
 
 void artio_init();
+void artio_final();
 FILE *artopen(ART_NUM artnum, ART_NUM pos);
 void artclose();
 int seekart(ART_POS pos);

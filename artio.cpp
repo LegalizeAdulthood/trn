@@ -39,6 +39,11 @@ void artio_init()
     clear_artbuf();
 }
 
+void artio_final()
+{
+    safefree0(g_artbuf);
+}
+
 /* open an article, unless it's already open */
 
 FILE *artopen(ART_NUM artnum, ART_NUM pos)
