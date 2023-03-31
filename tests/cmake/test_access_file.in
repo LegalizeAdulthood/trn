@@ -76,10 +76,10 @@ Active File Refetch = 1 day
 
 [Group 1]
 ID = xmission
-Newsrc = ~/.trn/newsrc
+Newsrc = %./newsrc
 Add Groups = yes/no/manual
 
 [Group 2]
 ID = boost
-Newsrc = ~/.trn/newsrc_boost
+Newsrc = %./newsrc_boost
 Add Groups = yes
