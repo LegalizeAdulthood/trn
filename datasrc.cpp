@@ -164,6 +164,8 @@ void datasrc_finalize()
 	delete_list(g_datasrc_list);
 	g_datasrc_list = nullptr;
     }
+    g_datasrc_cnt = 0;
+    safefree0(g_nntp_auth_file);
 }
 
 char *read_datasrcs(const char *filename)
