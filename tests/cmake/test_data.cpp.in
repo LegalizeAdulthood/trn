@@ -56,7 +56,7 @@ void reset_string(char *&ptr, const char *value)
 
 void reset_lib_dirs()
 {
-    reset_string(g_lib, "@TRN_TEST_LIB_DIR@");
+    g_lib = "@TRN_TEST_LIB_DIR@";
     reset_string(g_rn_lib, "@TRN_TEST_RN_LIB_DIR@");
 }
 

@@ -840,7 +840,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = g_datasrc? g_datasrc->thread_dir : s_empty;
 		    break;
 		case 'x':			/* news library */
-		    s = g_lib;
+		    strcpy(scrbuf, g_lib.c_str());
+		    s = scrbuf;
 		    break;
 		case 'X':			/* rn library */
 		    s = g_rn_lib;

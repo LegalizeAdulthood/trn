@@ -29,7 +29,7 @@
 char       *g_home_dir{};    /* login directory */
 std::string g_dot_dir;       /* where . files go */
 std::string g_trn_dir;       /* usually %./.trn */
-char       *g_lib{};         /* news library */
+std::string g_lib{};         /* news library */
 char       *g_rn_lib{};      /* private news program library */
 const char *g_tmp_dir{};     /* where tmp files go */
 char       *g_login_name{};  /* login id of user */
@@ -148,7 +148,7 @@ void env_final()
     g_tmp_dir = nullptr;
     g_dot_dir.clear();
     g_trn_dir.clear();
-    safefree0(g_lib);
+    g_lib.clear();
     safefree0(g_rn_lib);
 }
 
@@ -161,7 +161,7 @@ static void env_init2()
 	g_home_dir = savestr("/");
     g_dot_dir = get_val("DOTDIR",g_home_dir);
     g_trn_dir = filexp(get_val("TRNDIR",TRNDIR));
-    g_lib = savestr(filexp(NEWSLIB));
+    g_lib = filexp(NEWSLIB);
     g_rn_lib = savestr(filexp(PRIVLIB));
 }
 
