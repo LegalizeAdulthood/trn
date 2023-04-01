@@ -494,7 +494,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			s = s_empty;
 		    break;
 		case 'b':
-		    s = g_savedest? g_savedest : s_empty;
+		    strcpy(scrbuf, g_savedest.c_str());
+		    s = scrbuf;
 		    break;
 		case 'B':
 		    s = scrbuf;

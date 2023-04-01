@@ -30,7 +30,7 @@
 #include <direct.h>
 #endif
 
-char *g_savedest{};    /* value of %b */
+std::string g_savedest;    /* value of %b */
 char *g_extractdest{}; /* value of %E */
 char *g_extractprog{}; /* value of %e */
 ART_POS g_savefrom{};  /* value of %B */
@@ -44,6 +44,7 @@ static bool cut_line(char *str);
 
 void respond_init()
 {
+    g_savedest.clear();
 }
 
 save_result save_article()
@@ -240,8 +241,7 @@ save_result save_article()
 	s++;			/* skip the | */
 	while (*s == ' ') s++;
 	safecpy(altbuf,filexp(s),sizeof altbuf);
-	safefree(g_savedest);
-	g_savedest = savestr(altbuf);
+	g_savedest = altbuf;
 	if (g_datasrc->flags & DF_REMOTE)
 	    nntp_finishbody(FB_SILENT);
 	interp(g_cmd_buf, (sizeof g_cmd_buf), get_val("PIPESAVER",PIPESAVER));
@@ -301,9 +301,7 @@ save_result save_article()
 	    sprintf(c, "%s/%s", g_cwd, s);
 	    s = c;			/* absolutize it */
 	}
-	safefree(g_savedest);
-        g_savedest = savestr(s); /* doesn't move any more */
-        s = g_savedest;          /* make it handy for %b */
+        g_savedest = s; /* make it handy for %b */
 	g_tmpfp = nullptr;
 	if (!there) {
 	    if (g_mbox_always)
@@ -384,7 +382,7 @@ save_result save_article()
 	    noecho();		/* make terminal do what we want */
 	    crmode();
 	}
-	else if (g_tmpfp != nullptr || (g_tmpfp = fopen(g_savedest, "a")) != nullptr) {
+	else if (g_tmpfp != nullptr || (g_tmpfp = fopen(g_savedest.c_str(), "a")) != nullptr) {
 	    bool quote_From = false;
 	    fseek(g_tmpfp,0,2);
 	    if (mailbox) {
@@ -418,7 +416,7 @@ save_result save_article()
 	    fputs("Not saved",stdout);
 	else {
 	    printf("%s to %s %s", there? "Appended" : "Saved",
-		   mailbox? "mailbox" : "file", g_savedest);
+		   mailbox? "mailbox" : "file", g_savedest.c_str());
 	}
 	if (interactive)
 	    newline();

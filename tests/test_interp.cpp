@@ -24,6 +24,7 @@
 #include <ngsrch.h>
 #include <opt.h>
 #include <rcstuff.h>
+#include <respond.h>
 #include <search.h>
 #include <term.h>
 #include <univ.h>
@@ -81,6 +82,7 @@ void InterpolatorTest::SetUp()
     mime_init();
     ng_init();
     ngsrch_init();
+    respond_init();
     util_init();
     g_datasrc = datasrc_first();
 }
@@ -258,6 +260,7 @@ TEST_F(InterpolatorTest, environmentVarValueDefault)
 TEST_F(InterpolatorTest, libDir)
 {
     char pattern[]{"%x"};
+
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
@@ -267,8 +270,30 @@ TEST_F(InterpolatorTest, libDir)
 TEST_F(InterpolatorTest, rnLibDir)
 {
     char pattern[]{"%X"};
+
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ(TRN_TEST_RN_LIB_DIR, std::string{m_buffer.data()});
+}
+
+TEST_F(InterpolatorTest, saveDestinationNotSet)
+{
+    char pattern[]{"%b"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(std::string{m_buffer.data()}.empty());
+}
+
+TEST_F(InterpolatorTest, saveDestinationSet)
+{
+    g_savedest = "/tmp/frob";
+    char pattern[]{"%b"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("/tmp/frob", std::string{m_buffer.data()});
 }

@@ -4,7 +4,9 @@
 #ifndef TRN_RESPOND_H
 #define TRN_RESPOND_H
 
-extern char *g_savedest;    /* value of %b */
+#include <string>
+
+extern std::string g_savedest;    /* value of %b */
 extern char *g_extractdest; /* value of %E */
 extern char *g_extractprog; /* value of %e */
 extern ART_POS g_savefrom;  /* value of %B */
