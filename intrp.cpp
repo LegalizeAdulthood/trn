@@ -311,7 +311,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
                     if (s != nullptr)
 			*s++ = '\0';
 		    else
-			s = "";
+			s = s_empty;
 		    interp(scrbuf, 8192, get_val(scrbuf,s));
 		    s = scrbuf;
 		    break;
@@ -326,10 +326,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
                             s = line_buf;
                         }
 			else
-			    s = "";
+			    s = s_empty;
 		    }
 		    else
-			s = "";
+			s = s_empty;
 		    break;
 		case '(': {
 		    COMPEX *oldbra_compex = g_bra_compex;
@@ -478,7 +478,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			sprintf(s,"%ld",(long)g_art);
 		    }
 		    else
-			s = "";
+			s = s_empty;
 		    break;
 		case 'A':
 		    if (g_in_ng) {
@@ -489,27 +489,27 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 					nntp_artname(g_art, false));
 			    }
 			    else
-				s = "";
+				s = s_empty;
 			}
 			else
 			    sprintf(s = scrbuf,"%s/%s/%ld",g_datasrc->spool_dir,
 				    g_ngdir,(long)g_art);
 		    }
 		    else
-			s = "";
+			s = s_empty;
 		    break;
 		case 'b':
-		    s = g_savedest? g_savedest : "";
+		    s = g_savedest? g_savedest : s_empty;
 		    break;
 		case 'B':
 		    s = scrbuf;
 		    sprintf(s,"%ld",(long)g_savefrom);
 		    break;
 		case 'c':
-		    s = g_ngdir? g_ngdir : "";
+		    s = g_ngdir? g_ngdir : s_empty;
 		    break;
 		case 'C':
-		    s = g_ngname? g_ngname : "";
+		    s = g_ngname? g_ngname : s_empty;
 		    break;
 		case 'd':
 		    if (g_ngdir) {
@@ -517,7 +517,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			sprintf(s,"%s/%s",g_datasrc->spool_dir,g_ngdir);
 		    }
 		    else
-			s = "";
+			s = s_empty;
 		    break;
 		case 'D':
 		    if (g_in_ng)
@@ -526,13 +526,16 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
                         s = dist_buf;
 		    }
 		    else
-			s = "";
+			s = s_empty;
 		    break;
 		case 'e':
-		    s = g_extractprog? g_extractprog : "-";
+		{
+		    static char dash[]{"-"};
+		    s = g_extractprog? g_extractprog : dash;
 		    break;
+		}
 		case 'E':
-		    s = g_extractdest? g_extractdest : "";
+		    s = g_extractdest? g_extractdest : s_empty;
 		    break;
 		case 'f':			/* from line */
 		    if (g_in_ng) {
@@ -552,7 +555,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			}
 		    }
 		    else
-			s = "";
+			s = s_empty;
 		    break;
 		case 'F':
 		    if (g_in_ng) {
@@ -570,7 +573,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			}
 		    }
 		    else
-			s = "";
+			s = s_empty;
 		    break;
 		case 'g':			/* general mode */
 		    s = scrbuf;
@@ -596,7 +599,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			}
 		    }
 		    else
-			s = "";
+			s = s_empty;
 		    break;
 		case 'I':			/* indent string for quoting */
 		    s = scrbuf;
@@ -632,7 +635,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
                         s = ngs_buf;
 		    }
 		    else
-			s = "";
+			s = s_empty;
 		    break;
 		case 'N':			/* full name */
 		    s = get_val("NAME",g_real_name);
@@ -659,7 +662,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			    s = scrbuf;
 			}
 			else
-			    s = "";
+			    s = s_empty;
 		    }
 		    break;
 		case 'O':
@@ -669,7 +672,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = g_cwd;
 		    break;
 		case 'P':
-		    s = g_datasrc? g_datasrc->spool_dir : "";
+		    s = g_datasrc? g_datasrc->spool_dir : s_empty;
 		    break;
 		case 'q':
 		    s = input_str;
@@ -686,13 +689,13 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 				break;
 			}
 		    }
-		    s = "";
+		    s = s_empty;
 		    break;
 		case 'R': {
 		    int len, j;
 
 		    if (!g_in_ng) {
-			s = "";
+			s = s_empty;
 			break;
 		    }
 		    parseheader(g_art);
@@ -741,7 +744,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		case 'S': {
 		    char* str;
 		    if (!g_in_ng || !g_art || !g_artp) {
-			s = "";
+			s = s_empty;
 			break;
 		    }
                     str = subj_buf;
@@ -760,7 +763,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		case 't':
 		case 'T':
 		    if (!g_in_ng) {
-			s = "";
+			s = s_empty;
 			break;
 		    }
 		    parseheader(g_art);
@@ -797,13 +800,13 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			s = scrbuf;
 		    }
 		    else
-			s = "";
+			s = s_empty;
 		    break;
 		case 'U': {
 		    int unseen;
 
 		    if (!g_in_ng) {
-			s = "";
+			s = s_empty;
 			break;
 		    }
 		    unseen = (g_art <= g_lastart) && !was_read(g_art);
@@ -827,14 +830,14 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
                         s = scrbuf;
 		    }
 		    else
-			s = "";
+			s = s_empty;
 		    break;
 		}
 		case 'V':
 		    s = g_patchlevel + 1;
 		    break;
 		case 'W':
-		    s = g_datasrc? g_datasrc->thread_dir : "";
+		    s = g_datasrc? g_datasrc->thread_dir : s_empty;
 		    break;
 		case 'x':			/* news library */
 		    s = g_lib;
@@ -844,7 +847,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case 'y':	/* from line with *-shortening */
 		    if (!g_in_ng) {
-			s = "";
+			s = s_empty;
 			break;
 		    }
 		    /* XXX Rewrite this! */
@@ -892,7 +895,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case 'z':
 		    if (!g_in_ng) {
-			s = "";
+			s = s_empty;
 			break;
 		    }
 		    s = scrbuf;
@@ -907,13 +910,13 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = scrbuf;
 		    break;
 		case '\0':
-		    s = "";
+		    s = s_empty;
 		    break;
 		default:
 		    if (--destsize <= 0)
 			abort_interp();
 		    *dest++ = *pattern | metabit;
-		    s = "";
+		    s = s_empty;
 		    break;
 		}
 	    }
@@ -963,7 +966,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    }
 		} else {
 		    if (!(s = extract_name(s)))
-			s = "";
+			s = s_empty;
 		}
 	    }
 	    if (metabit) {
