@@ -104,6 +104,7 @@ void head_final()
 {
     safefree0(g_headbuf);
     safefree0(g_user_htype);
+    g_user_htype_cnt = 0;
 }
 
 #ifdef DEBUG
