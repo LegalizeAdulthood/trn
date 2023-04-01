@@ -142,7 +142,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
     g_killfirst = 0;
 
     safefree0(g_extractdest);
-    safefree0(g_extractprog);
+    g_extractprog.clear();
 
     /* initialize the newsgroup data structures */
 

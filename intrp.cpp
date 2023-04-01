@@ -529,7 +529,13 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		case 'e':
 		{
 		    static char dash[]{"-"};
-		    s = g_extractprog? g_extractprog : dash;
+		    if(g_extractprog.empty())
+			s = dash;
+		    else
+		    {
+			strcpy(scrbuf, g_extractprog.c_str());
+			s = scrbuf;
+		    }
 		    break;
 		}
 		case 'E':

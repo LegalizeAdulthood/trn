@@ -32,7 +32,7 @@
 
 std::string g_savedest;    /* value of %b */
 char *g_extractdest{}; /* value of %E */
-char *g_extractprog{}; /* value of %e */
+std::string g_extractprog; /* value of %e */
 ART_POS g_savefrom{};  /* value of %B */
 
 static char s_nullart[] = "\nEmpty article.\n";
@@ -107,11 +107,14 @@ save_result save_article()
 		s = cmdstr+1;			/* skip | */
 		while (*s == ' ') s++;
 		if (*s)	{			/* if new command, use it */
-		    safefree(g_extractprog);
-		    g_extractprog = savestr(s);	/* put extracter in %e */
+		    g_extractprog = s;	/* put extracter in %e */
 		}
 		else
-		    cmdstr = g_extractprog;
+		{
+		    static char cmdbuff[1024];
+		    strcpy(cmdbuff, g_extractprog.c_str());
+		    cmdstr = cmdbuff;
+		}
 	    }
 	    else
 		cmdstr = nullptr;
@@ -121,7 +124,11 @@ save_result save_article()
 	    if (g_extractdest)
 		strcpy(s, g_extractdest);
 	    if (custom_extract)
-		cmdstr = g_extractprog;
+            {
+                static char cmdbuff[1024];
+                strcpy(cmdbuff, g_extractprog.c_str());
+                cmdstr = cmdbuff;
+            }
 	    else
 		cmdstr = nullptr;
 	}
@@ -157,7 +164,7 @@ save_result save_article()
 	}
 	c = trn_getwd(g_buf, sizeof(g_buf));	/* simplify path for output */
 	if (custom_extract) {
-	    printf("Extracting article into %s using %s\n",c,g_extractprog) FLUSH;
+	    printf("Extracting article into %s using %s\n",c,g_extractprog.c_str()) FLUSH;
 	    termdown(1);
 	    interp(g_cmd_buf, sizeof g_cmd_buf, get_val("CUSTOMSAVER",CUSTOMSAVER));
 	    invoke(g_cmd_buf, nullptr);

@@ -394,3 +394,25 @@ TEST_F(InterpolatorTest, oldDistributionLineNotInNewsgroup)
 //    ASSERT_EQ('\0', *new_pattern);
 //    ASSERT_TRUE(std::string{m_buffer.data()}.empty());
 //}
+
+TEST_F(InterpolatorTest, extractProgramNotSet)
+{
+    g_extractprog.clear();
+    char pattern[]{"%e"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("-", std::string{m_buffer.data()});
+}
+
+TEST_F(InterpolatorTest, extractProgramSet)
+{
+    g_extractprog = "uudecode";
+    char pattern[]{"%e"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("uudecode", std::string{m_buffer.data()});
+}
