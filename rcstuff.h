@@ -79,24 +79,25 @@ extern MULTIRC *g_multirc;   /* the current MULTIRC */
 extern bool g_paranoid;      /* did we detect some inconsistency in .newsrc? */
 extern int g_addnewbydefault;
 
-bool    rcstuff_init();
-void    rcstuff_final();
-NEWSRC *new_newsrc(const char *name, const char *newsrc, const char *add_ok);
-bool    use_multirc(MULTIRC *mp);
-void    unuse_multirc(MULTIRC *mptr);
-bool    use_next_multirc(MULTIRC *mptr);
-bool    use_prev_multirc(MULTIRC *mptr);
-char *  multirc_name(MULTIRC *mp);
-void    abandon_ng(NGDATA *np);
-bool    get_ng(const char *what, getnewsgroup_flags flags);
-bool    relocate_newsgroup(NGDATA *move_np, NG_NUM newnum);
-void    list_newsgroups();
-NGDATA *find_ng(const char *ngnam);
-void    cleanup_newsrc(NEWSRC *rp);
-void    sethash(NGDATA *np);
-void    checkpoint_newsrcs();
-bool    write_newsrcs(MULTIRC *mptr);
-void    get_old_newsrcs(MULTIRC *mptr);
+MULTIRC *rcstuff_init_data();
+bool     rcstuff_init();
+void     rcstuff_final();
+NEWSRC  *new_newsrc(const char *name, const char *newsrc, const char *add_ok);
+bool     use_multirc(MULTIRC *mp);
+void     unuse_multirc(MULTIRC *mptr);
+bool     use_next_multirc(MULTIRC *mptr);
+bool     use_prev_multirc(MULTIRC *mptr);
+char    *multirc_name(MULTIRC *mp);
+void     abandon_ng(NGDATA *np);
+bool     get_ng(const char *what, getnewsgroup_flags flags);
+bool     relocate_newsgroup(NGDATA *move_np, NG_NUM newnum);
+void     list_newsgroups();
+NGDATA  *find_ng(const char *ngnam);
+void     cleanup_newsrc(NEWSRC *rp);
+void     sethash(NGDATA *np);
+void     checkpoint_newsrcs();
+bool     write_newsrcs(MULTIRC *mptr);
+void     get_old_newsrcs(MULTIRC *mptr);
 
 inline MULTIRC *multirc_ptr(long n)
 {

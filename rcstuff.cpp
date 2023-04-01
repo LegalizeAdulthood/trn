@@ -60,7 +60,7 @@ static void parse_rcline(NGDATA *np);
 static NGDATA *add_newsgroup(NEWSRC *rp, char *ngn, char_int c);
 static int rcline_cmp(const char *key, int keylen, HASHDATUM data);
 
-bool rcstuff_init()
+MULTIRC *rcstuff_init_data()
 {
     MULTIRC* mptr = nullptr;
 
@@ -104,6 +104,12 @@ bool rcstuff_init()
 	free((char*)vals);
 	free(g_trnaccess_mem);
     }
+    return mptr;
+}
+
+bool rcstuff_init()
+{
+    MULTIRC *mptr = rcstuff_init_data();
 
     if (g_use_newsrc_selector && !g_checkflag)
 	return true;
