@@ -395,15 +395,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		}
 		case '`': {
-		    FILE* pipefp;
-
 		    pattern = dointerp(scrbuf,(sizeof scrbuf),pattern+1,"`",cmd);
-		    pipefp = popen(scrbuf,"r");
+		    FILE* pipefp = popen(scrbuf,"r");
 		    if (pipefp != nullptr) {
-			int len;
-
-			len = fread(scrbuf,sizeof(char),(sizeof scrbuf)-1,
-			    pipefp);
+                        int len = fread(scrbuf, sizeof(char), (sizeof scrbuf) - 1, pipefp);
 			scrbuf[len] = '\0';
 			pclose(pipefp);
 		    }
