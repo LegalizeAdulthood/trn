@@ -219,3 +219,14 @@ TEST_F(InterpolatorTest, dotDir)
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ(std::string{TRN_TEST_DOT_DIR}, std::string{m_buffer.data()});
 }
+
+TEST_F(InterpolatorTest, processId)
+{
+    g_our_pid = 8642;
+    char pattern[]{"%$"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("8642", std::string{m_buffer.data()});
+}

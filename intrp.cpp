@@ -448,8 +448,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
                     s = scrbuf;
                     break;
                 case '$':
+                    sprintf(scrbuf, "%ld", g_our_pid);
 		    s = scrbuf;
-		    sprintf(s,"%ld",g_our_pid);
 		    break;
 		case '#':
 		    s = scrbuf;
