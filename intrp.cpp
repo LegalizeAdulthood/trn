@@ -488,7 +488,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			}
 			else
 			    sprintf(s = scrbuf,"%s/%s/%ld",g_datasrc->spool_dir,
-				    g_ngdir,(long)g_art);
+				    g_ngdir.c_str(),(long)g_art);
 		    }
 		    else
 			s = s_empty;
@@ -502,15 +502,16 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    sprintf(s,"%ld",(long)g_savefrom);
 		    break;
 		case 'c':
-		    s = g_ngdir? g_ngdir : s_empty;
+		    strcpy(scrbuf, g_ngdir.c_str());
+		    s = scrbuf;
 		    break;
 		case 'C':
 		    s = g_ngname? g_ngname : s_empty;
 		    break;
 		case 'd':
-		    if (g_ngdir) {
+		    if (!g_ngdir.empty()) {
 			s = scrbuf;
-			sprintf(s,"%s/%s",g_datasrc->spool_dir,g_ngdir);
+			sprintf(s,"%s/%s",g_datasrc->spool_dir,g_ngdir.c_str());
 		    }
 		    else
 			s = s_empty;

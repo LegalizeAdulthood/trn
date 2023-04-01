@@ -93,8 +93,8 @@ int access_ng()
     }
     else
     {
-	if (eaccess(g_ngdir,5)) {		/* directory read protected? */
-	    if (eaccess(g_ngdir,0)) {
+	if (eaccess(g_ngdir.c_str(),5)) {		/* directory read protected? */
+	    if (eaccess(g_ngdir.c_str(),0)) {
 		if (g_verbose)
 		    printf("\nNewsgroup %s does not have a spool directory!\n",
 			   g_ngname) FLUSH;
@@ -116,8 +116,8 @@ int access_ng()
 
 	/* chdir to newsgroup subdirectory */
 
-	if (chdir(g_ngdir)) {
-	    printf(g_nocd,g_ngdir) FLUSH;
+	if (chdir(g_ngdir.c_str())) {
+	    printf(g_nocd,g_ngdir.c_str()) FLUSH;
 	    return 0;
 	}
         g_lastart = getngsize(g_ngptr);
@@ -136,9 +136,9 @@ int access_ng()
 
 void chdir_newsdir()
 {
-    if (chdir(g_datasrc->spool_dir) || (!(g_datasrc->flags & DF_REMOTE) && chdir(g_ngdir)))
+    if (chdir(g_datasrc->spool_dir) || (!(g_datasrc->flags & DF_REMOTE) && chdir(g_ngdir.c_str())))
     {
-	printf(g_nocd,g_ngdir) FLUSH;
+	printf(g_nocd,g_ngdir.c_str()) FLUSH;
 	sig_catcher(0);
     }
 }

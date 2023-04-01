@@ -27,6 +27,7 @@
 #include <respond.h>
 #include <search.h>
 #include <term.h>
+#include <trn.h>
 #include <univ.h>
 #include <util.h>
 #include <util2.h>
@@ -83,6 +84,7 @@ void InterpolatorTest::SetUp()
     ng_init();
     ngsrch_init();
     respond_init();
+    trn_init();
     util_init();
     g_datasrc = datasrc_first();
 }
@@ -296,4 +298,15 @@ TEST_F(InterpolatorTest, saveDestinationSet)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ("/tmp/frob", std::string{m_buffer.data()});
+}
+
+TEST_F(InterpolatorTest, newsgroupDir)
+{
+    g_ngdir = "/usr/spool/news/comp/arch";
+    char pattern[]{"%c"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("/usr/spool/news/comp/arch", std::string{m_buffer.data()});
 }

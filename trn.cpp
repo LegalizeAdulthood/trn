@@ -69,24 +69,24 @@
 #include "util.h"
 #include "util2.h"
 
-char *g_ngname{};   /* name of current newsgroup */
-int g_ngnlen{};     /* current malloced size of g_ngname */
-int g_ngname_len{}; /* length of current g_ngname */
-char *g_ngdir{};    /* same thing in directory name form */
-int g_ngdlen{};     /* current malloced size of g_ngdir */
-bool g_write_less{};      /* write .newsrc less often */
-char *g_auto_start_cmd{}; /* command to auto-start with */
-bool g_auto_started{};    /* have we auto-started? */
-bool g_is_strn{};         /* Is this "strn", or trn/rn? */
-char g_patchlevel[]{PATCHLEVEL};
+char       *g_ngname{};         /* name of current newsgroup */
+int         g_ngnlen{};         /* current malloced size of g_ngname */
+int         g_ngname_len{};     /* length of current g_ngname */
+std::string g_ngdir;            /* same thing in directory name form */
+bool        g_write_less{};     /* write .newsrc less often */
+char       *g_auto_start_cmd{}; /* command to auto-start with */
+bool        g_auto_started{};   /* have we auto-started? */
+bool        g_is_strn{};        /* Is this "strn", or trn/rn? */
+char        g_patchlevel[]{PATCHLEVEL};
 
 static bool s_restore_old_newsrc{};
 static bool s_go_forward{true};
-static char *s_myngdir{};
-static int s_ngdirlen{};
+
+static std::string getngdir(const char *ngnam);
 
 void trn_init()
 {
+    g_ngdir.clear();
 }
 
 int trn_main(int argc, char *argv[])
@@ -822,16 +822,14 @@ void set_ngname(const char *what)
 	growstr(&g_ngname,&g_ngnlen,g_ngname_len+1);
 	strcpy(g_ngname,what);
     }
-    growstr(&g_ngdir,&g_ngdlen,g_ngname_len+1);
-    strcpy(g_ngdir,getngdir(g_ngname));
+    g_ngdir = getngdir(g_ngname);
 }
 
-const char *getngdir(const char *ngnam)
+static std::string getngdir(const char *ngnam)
 {
-    growstr(&s_myngdir,&s_ngdirlen,strlen(ngnam)+1);
-    strcpy(s_myngdir,ngnam);
-    for (char *s = s_myngdir; *s; s++)
-	if (*s == '.')
-	    *s = '/';
-    return s_myngdir;
+    std::string dir{ngnam};
+    for (char &c : dir)
+        if (c == '.')
+            c = '/';
+    return dir;
 }
