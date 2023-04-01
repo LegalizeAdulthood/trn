@@ -188,21 +188,22 @@ TEST_F(InterpolatorTest, articleNameInsideRemoteNewsgroupArticleClosed)
     ASSERT_EQ(std::string{"Article "}, std::string{m_buffer.data()});
 }
 
-TEST_F(InterpolatorTest, DISABLED_articleNameInsideRemoteNewsgroupArticleOpen)
-{
-    build_cache();
-    char pattern[]{"Article %A"};
-    g_in_ng = true;
-    g_art = 624;
-    g_lastart = 624;
-
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(std::string{"Article 624"}, std::string{m_buffer.data()});
-
-    close_cache();
-}
+// TODO: figure out how to set active newsgroup
+//TEST_F(InterpolatorTest, articleNameInsideRemoteNewsgroupArticleOpen)
+//{
+//    build_cache();
+//    char pattern[]{"Article %A"};
+//    g_in_ng = true;
+//    g_art = 624;
+//    g_lastart = 624;
+//
+//    const char *new_pattern = interpolate(pattern);
+//
+//    ASSERT_EQ('\0', *new_pattern);
+//    ASSERT_EQ(std::string{"Article 624"}, std::string{m_buffer.data()});
+//
+//    close_cache();
+//}
 
 TEST_F(InterpolatorTest, tilde)
 {
@@ -311,6 +312,17 @@ TEST_F(InterpolatorTest, relativeNewsgroupDir)
     ASSERT_EQ("comp/arch", std::string{m_buffer.data()});
 }
 
+TEST_F(InterpolatorTest, relativeNewsgroupDirNotSet)
+{
+    g_ngdir.clear();
+    char pattern[]{"%c"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(std::string{m_buffer.data()}.empty());
+}
+
 TEST_F(InterpolatorTest, newsgroupNameNotSet)
 {
     g_ngname = nullptr;
@@ -336,3 +348,49 @@ TEST_F(InterpolatorTest, newsgroupNameSet)
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ("comp.arch", std::string{m_buffer.data()});
 }
+
+TEST_F(InterpolatorTest, absoluteNewsgroupDirNotSet)
+{
+    g_ngdir.clear();
+    char pattern[]{"%d"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(std::string{m_buffer.data()}.empty());
+}
+
+// TODO: figure out how to properly set active DATASRC
+//TEST_F(InterpolatorTest, absoluteNewsgroupDirSet)
+//{
+//    g_ngdir = "comp/arch";
+//    char pattern[]{"%d"};
+//
+//    const char *new_pattern = interpolate(pattern);
+//
+//    ASSERT_EQ('\0', *new_pattern);
+//    ASSERT_TRUE(std::string{m_buffer.data()}.empty());
+//}
+
+TEST_F(InterpolatorTest, oldDistributionLineNotInNewsgroup)
+{
+    g_in_ng = false;
+    char pattern[]{"%D"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(std::string{m_buffer.data()}.empty());
+}
+
+// TODO: figure out how to fake up an article
+//TEST_F(InterpolatorTest, oldDistributionLineInNewsgroup)
+//{
+//    g_in_ng = true;
+//    char pattern[]{"%D"};
+//
+//    const char *new_pattern = interpolate(pattern);
+//
+//    ASSERT_EQ('\0', *new_pattern);
+//    ASSERT_TRUE(std::string{m_buffer.data()}.empty());
+//}

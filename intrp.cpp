@@ -509,12 +509,13 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = g_ngname? g_ngname : s_empty;
 		    break;
 		case 'd':
-		    if (!g_ngdir.empty()) {
-			s = scrbuf;
-			sprintf(s,"%s/%s",g_datasrc->spool_dir,g_ngdir.c_str());
-		    }
-		    else
-			s = s_empty;
+                    if (!g_ngdir.empty())
+                    {
+                        sprintf(scrbuf, "%s/%s", g_datasrc->spool_dir, g_ngdir.c_str());
+                        s = scrbuf;
+                    }
+                    else
+                        s = s_empty;
 		    break;
 		case 'D':
 		    if (g_in_ng)
