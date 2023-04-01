@@ -36,7 +36,7 @@ protected:
         g_dot_dir.clear();
         g_trn_dir.clear();
         g_lib.clear();
-        safefree0(g_rn_lib);
+        g_rn_lib.clear();
     }
 
     std::array<char, TCBUF_SIZE> m_tcbuf{};

@@ -254,3 +254,21 @@ TEST_F(InterpolatorTest, environmentVarValueDefault)
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ("not set", std::string{m_buffer.data()});
 }
+
+TEST_F(InterpolatorTest, libDir)
+{
+    char pattern[]{"%x"};
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_LIB_DIR, std::string{m_buffer.data()});
+}
+
+TEST_F(InterpolatorTest, rnLibDir)
+{
+    char pattern[]{"%X"};
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_RN_LIB_DIR, std::string{m_buffer.data()});
+}

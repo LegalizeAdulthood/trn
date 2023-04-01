@@ -844,7 +844,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = scrbuf;
 		    break;
 		case 'X':			/* rn library */
-		    s = g_rn_lib;
+		    strcpy(scrbuf, g_rn_lib.c_str());
+		    s = scrbuf;
 		    break;
 		case 'y':	/* from line with *-shortening */
 		    if (!g_in_ng) {
