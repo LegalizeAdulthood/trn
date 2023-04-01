@@ -209,3 +209,13 @@ TEST_F(InterpolatorTest, tilde)
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ(std::string{TRN_TEST_HOME_DIR}, std::string{m_buffer.data()});
 }
+
+TEST_F(InterpolatorTest, dotDir)
+{
+    char pattern[]{"%."};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(std::string{TRN_TEST_DOT_DIR}, std::string{m_buffer.data()});
+}
