@@ -50,9 +50,10 @@ int g_newsuid{};
 static char *skipinterp(char *pattern, const char *stoppers);
 static void abort_interp();
 
-static char *s_regexp_specials = "^$.*[\\/?%";
-static char s_orgname[] = ORGNAME;
+static char  *s_regexp_specials = "^$.*[\\/?%";
+static char   s_orgname[] = ORGNAME;
 static COMPEX s_cond_compex;
+static char   s_empty[]{""};
 
 void intrp_init(char *tcbuf, int tcbuf_len)
 {
@@ -294,14 +295,16 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = scrbuf;
 		    break;
 		case '{':
+		{
 		    pattern = cpytill(scrbuf,pattern+1,'}');
-                    s = strchr(scrbuf, '-');
-                    if (s != nullptr)
-			*s++ = '\0';
+		    char *m = strchr(scrbuf, '-');
+		    if (m != nullptr)
+		        *m++ = '\0';
 		    else
-			s = "";
-		    s = get_val(scrbuf,s);
+		        m = s_empty;
+		    s = get_val(scrbuf,m);
 		    break;
+		}
 		case '<':
 		    pattern = cpytill(scrbuf,pattern+1,'>');
                     s = strchr(scrbuf, '-');
@@ -452,13 +455,14 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = scrbuf;
 		    break;
 		case '#':
-		    s = scrbuf;
-		    if (upper) {
-			static int counter = 0;
-			sprintf(s,"%d",++counter);
-		    }
-		    else
-			sprintf(s,"%d",g_perform_cnt);
+                    if (upper)
+                    {
+                        static int counter = 0;
+                        sprintf(scrbuf, "%d", ++counter);
+                    }
+                    else
+                        sprintf(scrbuf, "%d", g_perform_cnt);
+                    s = scrbuf;
 		    break;
 		case '?':
 		    s = " ";

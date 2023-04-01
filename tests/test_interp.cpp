@@ -230,3 +230,27 @@ TEST_F(InterpolatorTest, processId)
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ("8642", std::string{m_buffer.data()});
 }
+
+TEST_F(InterpolatorTest, environmentVarValue)
+{
+    putenv("FOO=value");
+    char pattern[]{"%{FOO}"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("value", std::string{m_buffer.data()});
+
+    putenv("FOO=");
+}
+
+TEST_F(InterpolatorTest, environmentVarValueDefault)
+{
+    putenv("FOO=");
+    char pattern[]{"%{FOO-not set}"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("not set", std::string{m_buffer.data()});
+}
