@@ -101,8 +101,8 @@ MULTIRC *rcstuff_init_data()
 	    /*else
 		;$$complain?*/
 	}
-	free((char*)vals);
-	free(g_trnaccess_mem);
+	free(vals);
+	safefree0(g_trnaccess_mem);
     }
     return mptr;
 }
@@ -137,6 +137,8 @@ void rcstuff_final()
         delete_list(g_multirc_list);
         g_multirc_list = nullptr;
     }
+    s_rcgroups_ini[0].checksum = 0;
+    s_rcgroups_ini[0].help_str = nullptr;
 }
 
 NEWSRC *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
