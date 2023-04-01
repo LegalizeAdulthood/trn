@@ -39,8 +39,8 @@ ARTICLE *g_sel_last_ap{};
 SUBJECT *g_sel_page_sp{};
 SUBJECT *g_sel_next_sp{};
 SUBJECT *g_sel_last_sp{};
-char *g_sel_grp_dmode{"*slm"};
-char *g_sel_art_dmode{"*lmds"};
+char *g_sel_grp_dmode{};
+char *g_sel_art_dmode{};
 bool g_group_init_done{true};
 
 static void sel_page_init();

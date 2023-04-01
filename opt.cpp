@@ -165,8 +165,8 @@ static char *expand_mouse_buttons(char *cp, int cnt);
 
 void opt_init(int argc, char *argv[], char **tcbufptr)
 {
-    g_sel_grp_dmode = savestr(g_sel_grp_dmode) + 1;
-    g_sel_art_dmode = savestr(g_sel_art_dmode) + 1;
+    g_sel_grp_dmode = savestr("*slm") + 1;
+    g_sel_art_dmode = savestr("*lmds") + 1;
     g_univ_sel_btn_cnt = parse_mouse_buttons(&g_univ_sel_btns,
                                         "[Top]^ [PgUp]< [PgDn]> [ OK ]^j [Quit]q [Help]?");
     g_newsrc_sel_btn_cnt = parse_mouse_buttons(&g_newsrc_sel_btns,
