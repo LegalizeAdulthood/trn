@@ -81,6 +81,11 @@ void util_init()
     for (cp = g_patchlevel; isspace(*cp); cp++) ;
     export_var("TRN_VERSION", cp);
 }
+
+void util_final()
+{
+    // TODO: undo environment variable exports in util_init
+}
     
 /* fork and exec a shell command */
 
