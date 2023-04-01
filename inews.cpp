@@ -285,7 +285,7 @@ void append_signature()
 #ifdef NO_INEWS_DOTDIR
     g_dot_dir = g_home_dir;
 #endif
-    if (g_dot_dir == nullptr)
+    if (g_dot_dir.empty())
 	return;
 
     fp = fopen(filexp(SIGNATURE_FILE), "r");

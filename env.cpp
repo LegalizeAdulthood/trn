@@ -26,17 +26,17 @@
 
 #include <memory>
 
-char *g_home_dir{};    /* login directory */
-char *g_dot_dir{};     /* where . files go */
-char *g_trn_dir{};     /* usually %./.trn */
-char *g_lib{};         /* news library */
-char *g_rn_lib{};      /* private news program library */
-const char *g_tmp_dir{}; /* where tmp files go */
-char *g_login_name{};  /* login id of user */
-char *g_real_name{};   /* real name of user */
-char *g_p_host_name{}; /* host name in a posting */
-char *g_local_host{};  /* local host name */
-int g_net_speed{20};   /* how fast our net-connection is */
+char       *g_home_dir{};    /* login directory */
+std::string g_dot_dir;       /* where . files go */
+char       *g_trn_dir{};     /* usually %./.trn */
+char       *g_lib{};         /* news library */
+char       *g_rn_lib{};      /* private news program library */
+const char *g_tmp_dir{};     /* where tmp files go */
+char       *g_login_name{};  /* login id of user */
+char       *g_real_name{};   /* real name of user */
+char       *g_p_host_name{}; /* host name in a posting */
+char       *g_local_host{};  /* local host name */
+int         g_net_speed{20}; /* how fast our net-connection is */
 
 static void env_init2();
 static int  envix(const char *nam, int len);
@@ -146,7 +146,7 @@ void env_final()
     safefree0(g_login_name);
     safefree0(g_home_dir);
     g_tmp_dir = nullptr;
-    g_dot_dir = nullptr;
+    g_dot_dir.clear();
     safefree0(g_trn_dir);
     safefree0(g_lib);
     safefree0(g_rn_lib);
@@ -154,8 +154,9 @@ void env_final()
 
 static void env_init2()
 {
-    if (g_dot_dir)		/* Avoid running multiple times. */
+    if (!g_dot_dir.empty()) /* Avoid running multiple times. */
 	return;
+
     if (!g_home_dir)
 	g_home_dir = savestr("/");
     g_dot_dir = get_val("DOTDIR",g_home_dir);

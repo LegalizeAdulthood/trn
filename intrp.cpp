@@ -440,8 +440,11 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = g_home_dir;
 		    break;
 		case '.':
-		    s = g_dot_dir;
+		{
+		    strcpy(scrbuf, g_dot_dir.c_str());
+		    s = scrbuf;
 		    break;
+		}
 		case '+':
 		    s = g_trn_dir;
 		    break;

@@ -17,6 +17,8 @@
 #include "util2.h"
 #include "util3.h"
 
+#include <string>
+
 #define MAXNGS 100
 
 int server_connection();
@@ -28,7 +30,7 @@ char* g_nntp_auth_file;
 int debug = 0;
 
 char* g_home_dir;
-char* g_dot_dir;
+std::string g_dot_dir;
 
 int main(int argc, char *argv[])
 {
@@ -50,7 +52,7 @@ int main(int argc, char *argv[])
     if (g_home_dir == nullptr)
 	g_home_dir = getenv("LOGDIR");
     g_dot_dir = getenv("DOTDIR");
-    if (!g_dot_dir)
+    if (g_dot_dir.empty())
 	g_dot_dir = g_home_dir;
 
     if (argc != 5 || !(max_col_len = atoi(argv[2]))) {

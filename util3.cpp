@@ -2,6 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <string>
+
 #include <stdio.h>
 #include "util3.h"
 
@@ -56,10 +58,10 @@ char *saferealloc(char *where, MEM_SIZE size)
 
 char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, char *cmd)
 {
-    extern char* g_dot_dir;
+    extern std::string g_dot_dir;
     if (*pattern == '%' && pattern[1] == '.') {
-	int len = strlen(g_dot_dir);
-	safecpy(dest, g_dot_dir, destsize);
+	int len = strlen(g_dot_dir.c_str());
+	safecpy(dest, g_dot_dir.c_str(), destsize);
 	if (len < destsize)
 	    safecpy(dest+len, pattern+2, destsize - len);
     }
