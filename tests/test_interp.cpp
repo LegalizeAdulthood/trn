@@ -300,13 +300,39 @@ TEST_F(InterpolatorTest, saveDestinationSet)
     ASSERT_EQ("/tmp/frob", std::string{m_buffer.data()});
 }
 
-TEST_F(InterpolatorTest, newsgroupDir)
+TEST_F(InterpolatorTest, relativeNewsgroupDir)
 {
-    g_ngdir = "/usr/spool/news/comp/arch";
+    g_ngdir = "comp/arch";
     char pattern[]{"%c"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("/usr/spool/news/comp/arch", std::string{m_buffer.data()});
+    ASSERT_EQ("comp/arch", std::string{m_buffer.data()});
+}
+
+TEST_F(InterpolatorTest, newsgroupNameNotSet)
+{
+    g_ngname = nullptr;
+    g_ngnlen = 0;
+    g_ngname_len = 0;
+    char pattern[]{"%C"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(std::string{m_buffer.data()}.empty());
+}
+
+TEST_F(InterpolatorTest, newsgroupNameSet)
+{
+    g_ngname = savestr("comp.arch");
+    g_ngnlen = strlen(g_ngname);
+    g_ngname_len = strlen(g_ngname);
+    char pattern[]{"%C"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("comp.arch", std::string{m_buffer.data()});
 }
