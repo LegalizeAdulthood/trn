@@ -392,6 +392,13 @@ extern char **environ;
 
 char *export_var(const char *nam, const char *val)
 {
+#if 1
+    std::string envar{nam};
+    envar += '=';
+    envar += val;
+    putenv(envar.c_str());
+    return savestr(envar.c_str());
+#else
     int namlen = strlen(nam);
     int i=envix(nam,namlen);	/* where does it go? */
 
@@ -422,6 +429,7 @@ char *export_var(const char *nam, const char *val)
 					/* the old environ structure */
     sprintf(environ[i],"%s=%s",nam,val);/* all that work just for this */
     return environ[i] + namlen + 1;
+#endif
 }
 
 void un_export(char *export_val)
