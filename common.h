@@ -795,4 +795,9 @@ extern const char *g_nocd;
 #define nntp_init_error(str) fputs(str,stdout)
 #define nntp_error(str) fputs(str,stderr)
 
+inline bool empty(const char *str)
+{
+    return str == nullptr || str[0] == '\0';
+}
+
 #endif

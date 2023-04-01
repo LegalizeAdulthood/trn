@@ -39,6 +39,8 @@ struct utimbuf
 };
 #endif
 
+#include <string>
+
 LIST *g_datasrc_list{}; /* a list of all DATASRCs */
 DATASRC *g_datasrc{};   /* the current datasrc */
 int g_datasrc_cnt{};
@@ -154,11 +156,12 @@ void datasrc_init()
     unprep_ini_words(s_datasrc_ini);
 }
 
+
 void datasrc_finalize()
 {
     if (g_datasrc_list)
     {
-        for (DATASRC *dp = datasrc_first(); dp && !dp->name.empty(); dp = datasrc_next(dp))
+        for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
             close_datasrc(dp);
 
 	delete_list(g_datasrc_list);
@@ -203,8 +206,8 @@ char *read_datasrcs(const char *filename)
 
 DATASRC *get_datasrc(const char *name)
 {
-    for (DATASRC *dp = datasrc_first(); dp && !dp->name.empty(); dp = datasrc_next(dp))
-	if (dp->name == name)
+    for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
+	if (dp->name == std::string{name})
 	    return dp;
     return nullptr;
 }
@@ -220,7 +223,7 @@ static DATASRC *new_datasrc(const char *name, char **vals)
     else if (!vals[DI_ACTIVE_FILE])
         return nullptr; /*$$*/
 
-    dp->name = name;
+    dp->name = savestr(name);
     if (!strcmp(name,"default"))
 	dp->flags |= DF_DEFAULT;
 
@@ -430,7 +433,7 @@ void check_datasrcs()
     time_t now = time((time_t*)nullptr);
 
     if (g_datasrc_list) {
-	for (DATASRC *dp = datasrc_first(); dp && !dp->name.empty(); dp = datasrc_next(dp)) {
+	for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp)) {
 	    if ((dp->flags & DF_OPEN) && dp->nntplink.rd_fp != nullptr) {
 		time_t limit = ((dp->flags & DF_ACTIVE) ? 30 * 60 : 10 * 60);
 		if (now - dp->nntplink.last_command > limit) {
@@ -969,7 +972,7 @@ int find_close_match()
     s_ngn = 0;
 
     /* Iterate over all legal newsgroups */
-    for (DATASRC *dp = datasrc_first(); dp && !dp->name.empty(); dp = datasrc_next(dp)) {
+    for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp)) {
 	if (dp->flags & DF_OPEN) {
 	    if (dp->act_sf.hp)
 		hashwalk(dp->act_sf.hp, check_distance, 0);

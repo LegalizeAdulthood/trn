@@ -11,7 +11,6 @@
 
 #include <cstdint>
 #include <stdio.h>
-#include <string>
 
 struct HASHTABLE;
 struct LIST;
@@ -60,7 +59,7 @@ DECLARE_FLAGS_ENUM(field_flags, std::uint8_t)
 
 struct DATASRC
 {
-    std::string   name;       /* our user-friendly name */
+    char         *name;       /* our user-friendly name */
     char         *newsid;     /* the active file name or host name */
     SRCFILE       act_sf;     /* the active file's hashed contents */
     char         *grpdesc;    /* the newsgroup description file or tmp */
