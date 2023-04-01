@@ -25,6 +25,7 @@
 #include <opt.h>
 #include <rcstuff.h>
 #include <search.h>
+#include <term.h>
 #include <univ.h>
 #include <util.h>
 #include <util2.h>
@@ -45,14 +46,16 @@ protected:
         return dointerp(m_buffer.data(), BUFFER_SIZE, pattern, stoppers, nullptr);
     }
 
-    std::array<char, TCBUF_SIZE> m_tcbuf{};
+    std::array<char, TCBUF_SIZE>  m_tcbuf{};
     std::array<char, BUFFER_SIZE> m_buffer{};
+    MULTIRC                      *m_multirc{};
 };
 
 void InterpolatorTest::SetUp()
 {
     Test::SetUp();
 
+    term_init();
     mp_init();
     search_init();
     trn::testing::set_envars();
@@ -65,10 +68,11 @@ void InterpolatorTest::SetUp()
     opt_init(1,argv,&tcbuf);
     color_init();
     intrp_init(tcbuf, TCBUF_SIZE);
+    term_set(tcbuf);
     last_init();
     univ_init();
     datasrc_init();
-    rcstuff_init();
+    m_multirc = rcstuff_init_data();
     art_init();
     artio_init();
     artsrch_init();
