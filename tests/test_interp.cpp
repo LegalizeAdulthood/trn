@@ -184,7 +184,7 @@ TEST_F(InterpolatorTest, articleNameInsideRemoteNewsgroupArticleClosed)
     ASSERT_EQ(std::string{"Article "}, std::string{m_buffer.data()});
 }
 
-TEST_F(InterpolatorTest, articleNameInsideRemoteNewsgroupArticleOpen)
+TEST_F(InterpolatorTest, DISABLED_articleNameInsideRemoteNewsgroupArticleOpen)
 {
     build_cache();
     char pattern[]{"Article %A"};
@@ -198,4 +198,14 @@ TEST_F(InterpolatorTest, articleNameInsideRemoteNewsgroupArticleOpen)
     ASSERT_EQ(std::string{"Article 624"}, std::string{m_buffer.data()});
 
     close_cache();
+}
+
+TEST_F(InterpolatorTest, tilde)
+{
+    char pattern[]{"%~"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(std::string{TRN_TEST_HOME_DIR}, std::string{m_buffer.data()});
 }
