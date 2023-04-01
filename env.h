@@ -8,7 +8,7 @@
 
 extern char       *g_home_dir;    /* login directory */
 extern std::string g_dot_dir;     /* where . files go */
-extern char       *g_trn_dir;     /* usually %./.trn */
+extern std::string g_trn_dir;     /* usually %./.trn */
 extern char       *g_lib;         /* news library */
 extern char       *g_rn_lib;      /* private news program library */
 extern const char *g_tmp_dir;     /* where tmp files go */

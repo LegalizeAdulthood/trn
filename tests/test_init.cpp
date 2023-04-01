@@ -34,7 +34,7 @@ protected:
         safefree0(g_local_host);
         safefree0(g_p_host_name);
         g_dot_dir.clear();
-        safefree0(g_trn_dir);
+        g_trn_dir.clear();
         safefree0(g_lib);
         safefree0(g_rn_lib);
     }
