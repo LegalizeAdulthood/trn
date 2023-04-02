@@ -1026,6 +1026,16 @@ TEST_F(InterpolatorTest, triviallyFalseNoElseIsEmpty)
     ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
 }
 
+TEST_F(InterpolatorTest, escapedPercent)
+{
+    char pattern[]{R"(\%g)"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("%g", buffer());
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
