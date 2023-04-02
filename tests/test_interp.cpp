@@ -1108,6 +1108,16 @@ TEST_F(InterpolatorTest, newlineForLongerThan79CharsLine)
 #undef TRN_TEST_02_SPACES
 #undef TRN_TEST_01_SPACES
 
+TEST_F(InterpolatorTest, regexCapture)
+{
+    char pattern[]{R"pat(%(Abracadabra=^\(Ab\(.*\)bra\)$?0=%0, 1=%1, 2=%2:false))pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("0=Abracadabra, 1=Abracadabra, 2=racada", buffer());
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
