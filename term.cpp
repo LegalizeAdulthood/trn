@@ -652,7 +652,7 @@ static void show_keymap(KEYMAP *curmap, char *prefix)
     }
 }
 
-void set_mode(general_mode new_gmode, char_int new_mode)
+void set_mode(general_mode new_gmode, minor_mode new_mode)
 {
     if (g_general_mode != new_gmode || g_mode != new_mode) {
 	g_general_mode = new_gmode;
@@ -734,7 +734,7 @@ bool finish_command(int donewline)
 	return true;
 
     general_mode gmode_save = g_general_mode;
-    set_mode(GM_INSERT,g_mode);
+    set_mode(GM_INPUT,g_mode);
     if (not_echoing)
 	not_echoing = 2;
     do {
@@ -1209,7 +1209,7 @@ void pushstring(char *str, char_int bits)
 int get_anything()
 {
     char tmpbuf[64];
-    char mode_save = g_mode;
+    minor_mode mode_save = g_mode;
 
 reask_anything:
     unflush_output();			/* disable any ^O in effect */
@@ -1224,7 +1224,7 @@ reask_anything:
     if (g_int_count)
 	return -1;
     cache_until_key();
-    set_mode(g_general_mode, 'K');
+    set_mode(g_general_mode, MM_ANY_KEY_PROMPT);
     getcmd(tmpbuf);
     set_mode(g_general_mode,mode_save);
     if (errno || *tmpbuf == '\f') {
@@ -1259,7 +1259,7 @@ reask_anything:
 
 int pause_getcmd()
 {
-    char mode_save = g_mode;
+    minor_mode mode_save = g_mode;
 
     unflush_output();			/* disable any ^O in effect */
     color_object(COLOR_CMD, true);
@@ -1273,7 +1273,7 @@ int pause_getcmd()
     if (g_int_count)
 	return -1;
     cache_until_key();
-    set_mode(g_general_mode,'K');
+    set_mode(g_general_mode,MM_ANY_KEY_PROMPT);
     getcmd(g_buf);
     set_mode(g_general_mode,mode_save);
     if (errno || *g_buf == '\f')
@@ -1285,12 +1285,12 @@ int pause_getcmd()
     return 0;
 }
 
-void in_char(const char *prompt, char_int newmode, const char *dflt)
+void in_char(const char *prompt, minor_mode newmode, const char *dflt)
 {
-    char mode_save = g_mode;
+    minor_mode   mode_save = g_mode;
     general_mode gmode_save = g_general_mode;
-    const char* s;
-    int newlines;
+    const char  *s;
+    int          newlines;
 
     for (newlines = 0, s = prompt; *s; s++) {
 	if (*s == '\n')
@@ -1313,9 +1313,9 @@ reask_in_char:
     set_mode(gmode_save,mode_save);
 }
 
-void in_answer(const char *prompt, char_int newmode)
+void in_answer(const char *prompt, minor_mode newmode)
 {
-    char mode_save = g_mode;
+    minor_mode   mode_save = g_mode;
     general_mode gmode_save = g_general_mode;
 
 reask_in_answer:
@@ -1323,7 +1323,7 @@ reask_in_answer:
     fputs(prompt,stdout);
     fflush(stdout);
     eat_typeahead();
-    set_mode(GM_INSERT,newmode);
+    set_mode(GM_INPUT,newmode);
 reinp_in_answer:
     getcmd(g_buf);
     if (errno || *g_buf == '\f') {
@@ -1344,9 +1344,9 @@ reinp_in_answer:
 
 /* If this takes more than one line, return false */
 
-bool in_choice(const char *prompt, char *value, char *choices, char_int newmode)
+bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmode)
 {
-    char mode_save = g_mode;
+    minor_mode mode_save = g_mode;
     general_mode gmode_save = g_general_mode;
     char*s;
     char*prefix = nullptr;
@@ -1602,7 +1602,7 @@ void page_start()
 
 void errormsg(const char *str)
 {
-    if (g_general_mode == GM_SELECT) {
+    if (g_general_mode == GM_SELECTOR) {
 	if (str != g_msg)
 	    strcpy(g_msg,str);
 	g_error_occurred = true;
@@ -1615,7 +1615,7 @@ void errormsg(const char *str)
 
 void warnmsg(const char *str)
 {
-    if (g_general_mode != GM_SELECT) {
+    if (g_general_mode != GM_SELECTOR) {
 	printf("\n%s\n", str) FLUSH;
 	termdown(2);
 	pad(g_just_a_sec/3);
@@ -1890,45 +1890,45 @@ void xmouse_check()
     g_mousebar_cnt = 0;
     if (g_use_mouse) {
 	bool turn_it_on;
-	char mmode = g_mode;
+	minor_mode mmode = g_mode;
 	if (g_general_mode == GM_PROMPT) {
 	    turn_it_on = true;
-	    mmode = '\0';
+	    mmode = MM_NONE;
 	}
-	else if (g_general_mode == GM_INSERT || g_general_mode == GM_PROMPT
-	      || (g_muck_up_clear && g_general_mode != GM_SELECT))
+	else if (g_general_mode == GM_INPUT || g_general_mode == GM_PROMPT
+	      || (g_muck_up_clear && g_general_mode != GM_SELECTOR))
 	    turn_it_on = false;
 	else {
 	    interp(g_msg, sizeof g_msg, g_mouse_modes);
-	    turn_it_on = (strchr(g_msg, g_mode) != nullptr);
+	    turn_it_on = (strchr(g_msg, static_cast<char>(g_mode)) != nullptr);
 	}
 	if (turn_it_on) {
             switch (mmode) {
-	      case 'c':
+	      case MM_NEWSRC_SELECTOR:
 		g_mousebar_btns = g_newsrc_sel_btns;
 		g_mousebar_cnt = g_newsrc_sel_btn_cnt;
 		break;
-	      case 'j':
+	      case MM_ADD_GROUP_SELECTOR:
 		g_mousebar_btns = g_add_sel_btns;
 		g_mousebar_cnt = g_add_sel_btn_cnt;
 		break;
-	      case 'l':
+	      case MM_OPTION_SELECTOR:
 		g_mousebar_btns = g_option_sel_btns;
 		g_mousebar_cnt = g_option_sel_btn_cnt;
 		break;
-	      case 't':
+	      case MM_THREAD_SELECTOR:
 		g_mousebar_btns = g_news_sel_btns;
 		g_mousebar_cnt = g_news_sel_btn_cnt;
 		break;
-	      case 'w':
+	      case MM_NEWSGROUP_SELECTOR:
 		g_mousebar_btns = g_newsgroup_sel_btns;
 		g_mousebar_cnt = g_newsgroup_sel_btn_cnt;
 		break;
-	      case 'a':  case 'p':
+	      case MM_ARTICLE:  case MM_PAGER:
 		g_mousebar_btns = g_art_pager_btns;
 		g_mousebar_cnt = g_art_pager_btn_cnt;
 		break;
-	      case 'v':
+	      case MM_UNIVERSAL:
 		g_mousebar_btns = g_univ_sel_btns;
 		g_mousebar_cnt = g_univ_sel_btn_cnt;
 		break;
@@ -2071,9 +2071,9 @@ static void mouse_input(const char *cp)
 	g_mouse_is_down = false;
     }
 
-    if (g_general_mode == GM_SELECT)
+    if (g_general_mode == GM_SELECTOR)
 	selector_mouse(btn, x,y, last_btn, last_x,last_y);
-    else if (g_mode == 'a' || g_mode == 'p')
+    else if (g_mode == MM_ARTICLE || g_mode == MM_PAGER)
 	pager_mouse(btn, x,y, last_btn, last_x,last_y);
     else
 	pushchar(' ');

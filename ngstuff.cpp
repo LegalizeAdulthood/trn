@@ -96,7 +96,7 @@ int switcheroo()
 	    return 0;
 	}
 	g_option_sel_ilock = true;
-	if (g_general_mode != GM_SELECT || g_sel_mode != SM_OPTIONS)/*$$*/
+	if (g_general_mode != GM_SELECTOR || g_sel_mode != SM_OPTIONS)/*$$*/
 	    option_selector();
 	g_option_sel_ilock = false;
 	if (g_savedir != prior_savedir)
@@ -154,7 +154,7 @@ numnum_result numnum()
     char* c;
     ART_NUM oldart = g_art;
     char tmpbuf[LBUFLEN];
-    bool output_level = (!g_use_threads && g_general_mode != GM_SELECT);
+    bool output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
     bool justone = true;		/* assume only one article */
 
     if (!finish_command(true))	/* get rest of command */
@@ -250,7 +250,7 @@ int thread_perform()
     SUBJECT*sp;
     ARTICLE*ap;
     int     bits;
-    bool    output_level = (!g_use_threads && g_general_mode != GM_SELECT);
+    bool    output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
     bool    one_thread = false;
 
     if (!finish_command(true))	/* get rest of command */

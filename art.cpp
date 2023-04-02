@@ -110,7 +110,7 @@ do_article_result do_article()
     int outpos;                  /* column position of output */
     static char prompt_buf[64];  /* place to hold prompt */
     bool notesfiles = false;     /* might there be notesfiles junk? */
-    char oldmode = g_mode;
+    minor_mode oldmode = g_mode;
     bool outputok = true;
 
     if (g_datasrc->flags & DF_REMOTE)
@@ -618,7 +618,7 @@ reask_pager:
 	    goto_xy(s_more_prompt_col,g_term_line);
 	    goto recheck_pager;
 	}
-	set_mode(g_general_mode,'p');
+	set_mode(g_general_mode,MM_PAGER);
 	getcmd(g_buf);
 	if (errno) {
 	    if (g_tc_LINES < 100 && !g_int_count)

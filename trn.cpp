@@ -149,7 +149,7 @@ int trn_main(int argc, char *argv[])
 void do_multirc()
 {
     bool special = false;	/* allow newsgroup with no unread news? */
-    char mode_save = g_mode;
+    minor_mode mode_save = g_mode;
     general_mode gmode_save = g_general_mode;
 
     if (g_use_univ_selector) {
@@ -211,7 +211,7 @@ void do_multirc()
 	    g_ngptr = g_first_ng;
 	for (;;) {			/* for each newsgroup */
 	    if (g_ngptr == nullptr) {	/* after the last newsgroup? */
-		set_mode(GM_READ,'f');
+		set_mode(GM_READ,MM_FINISH_NEWSGROUP_LIST);
 		if (g_maxngtodo) {
 		    if (retry) {
 			if (g_verbose)
@@ -236,7 +236,7 @@ void do_multirc()
 	    else {
 		bool shoe_fits;	/* newsgroup matches restriction? */
 
-		set_mode(GM_READ,'n');
+		set_mode(GM_READ,MM_NEWSGROUP_LIST);
 		if (g_ngptr->toread >= TR_NONE) {	/* recalc toread? */
 		    set_ngname(g_ngptr->rcline);
 		    shoe_fits = inlist(g_ngname);
@@ -386,7 +386,7 @@ input_newsgroup_result input_newsgroup()
 	return ING_SPECIAL;
       case 'x':
 	newline();
-	in_char("Confirm: exit and abandon newsrc changes?", 'A', "yn");
+	in_char("Confirm: exit and abandon newsrc changes?", MM_ADD_NEWSGROUP_PROMPT, "yn");
 	newline();
 	if (*g_buf != 'y')
 	    break;
@@ -399,7 +399,7 @@ input_newsgroup_result input_newsgroup()
 	newline();
 	return ING_QUIT;
       case '^':
-	if (g_general_mode != GM_SELECT)
+	if (g_general_mode != GM_SELECTOR)
 	    newline();
 	g_ngptr = g_first_ng;
 	break;
@@ -564,9 +564,9 @@ input_newsgroup_result input_newsgroup()
 	    break;
 reask_abandon:
 	if (g_verbose)
-	    in_char("\nAbandon changes to current newsgroup?", 'B', "yn");
+	    in_char("\nAbandon changes to current newsgroup?", MM_CONFIRM_ABANDON_PROMPT, "yn");
 	else
-	    in_char("\nAbandon?", 'B', "ynh");
+	    in_char("\nAbandon?", MM_CONFIRM_ABANDON_PROMPT, "ynh");
 	printcmd();
 	newline();
 	if (*g_buf == 'h') {
@@ -624,7 +624,7 @@ reask_abandon:
       }
       case '`':
       case '\\':
-	if (g_general_mode == GM_SELECT)
+	if (g_general_mode == GM_SELECTOR)
 	    return ING_ERASE;
       ng_start_sel:
 	g_use_newsgroup_selector = true;

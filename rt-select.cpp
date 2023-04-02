@@ -91,12 +91,12 @@ namespace {
 class push_selector_modes
 {
 public:
-    push_selector_modes(char new_mode) :
+    push_selector_modes(minor_mode new_mode) :
         m_save_mode(g_mode),
         m_save_gmode(g_general_mode)
     {
         g_bos_on_stop = true;
-        set_mode(GM_SELECT, new_mode);
+        set_mode(GM_SELECTOR, new_mode);
     }
     ~push_selector_modes()
     {
@@ -105,7 +105,7 @@ public:
     }
 
 private:
-    char m_save_mode;
+    minor_mode m_save_mode;
     general_mode m_save_gmode;
 };
 
@@ -195,7 +195,7 @@ static int find_line(int y);
 char article_selector(char_int cmd)
 {
     bool save_selected_only;
-    push_selector_modes saver('t');
+    push_selector_modes saver(MM_THREAD_SELECTOR);
 
     g_sel_rereading = (cmd == 'U');
 
@@ -370,7 +370,7 @@ static void sel_dogroups()
 
 char multirc_selector()
 {
-    push_selector_modes saver('c');
+    push_selector_modes saver(MM_NEWSRC_SELECTOR);
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -420,7 +420,7 @@ char multirc_selector()
 
 char newsgroup_selector()
 {
-    push_selector_modes saver('w');
+    push_selector_modes saver(MM_NEWSGROUP_SELECTOR);
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -485,7 +485,7 @@ char newsgroup_selector()
 
 char addgroup_selector(getnewsgroup_flags flags)
 {
-    push_selector_modes saver('j');
+    push_selector_modes saver(MM_ADD_GROUP_SELECTOR);
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -545,7 +545,7 @@ char addgroup_selector(getnewsgroup_flags flags)
 char option_selector()
 {
     char** vals = ini_values(g_options_ini);
-    push_selector_modes saver('l');
+    push_selector_modes saver(MM_OPTION_SELECTOR);
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -763,7 +763,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
 
 char universal_selector()
 {
-    push_selector_modes saver('v');		/* kind of like 'v'irtual... */
+    push_selector_modes saver(MM_UNIVERSAL);		/* kind of like 'v'irtual... */
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -1403,7 +1403,7 @@ static bool select_option(int i)
     *g_buf = '\0';
     char *oldval = savestr(quote_string(option_value(i)));
     char *val = vals[i] ? vals[i] : oldval;
-    s_clean_screen = in_choice("> ", val, g_options_ini[i].help_str, 'z');
+    s_clean_screen = in_choice("> ", val, g_options_ini[i].help_str, MM_OPTION_EDIT_PROMPT);
     if (strcmp(g_buf,val)) {
 	char* to = g_buf;
 	char* from = g_buf;
@@ -1792,7 +1792,7 @@ static display_state article_commands(char_int ch)
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
       reask_output:
-	in_char("Selector mode:  Threads, Subjects, Articles?", 'o', "tsa");
+	in_char("Selector mode:  Threads, Subjects, Articles?", MM_SELECTOR_ORDER_PROMPT, "tsa");
 	printcmd();
 	if (*g_buf == 'h' || *g_buf == 'H') {
             if (g_verbose)
@@ -1831,10 +1831,10 @@ static display_state article_commands(char_int ch)
 	if (g_sel_mode == SM_ARTICLE)
 	    in_char(
                 "Order by Date,Subject,Author,Number,subj-date Groups,Points?",
-                'q', "dsangpDSANGP");
+                MM_Q, "dsangpDSANGP");
 	else
 	    in_char("Order by Date, Subject, Count, Lines, or Points?",
-                    'q', "dsclpDSCLP");
+                    MM_Q, "dsclpDSCLP");
 	printcmd();
 	if (*g_buf == 'h' || *g_buf == 'H') {
 	    if (g_verbose) {
@@ -2186,7 +2186,7 @@ static display_state newsgroup_commands(char_int ch)
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
       reask_sort:
-	in_char("Order by Newsrc, Group name, or Count?", 'q', "ngcNGC");
+	in_char("Order by Newsrc, Group name, or Count?", MM_Q, "ngcNGC");
 	printcmd();
 	switch (*g_buf) {
 	  case 'n': case 'N':
@@ -2332,7 +2332,7 @@ static display_state newsgroup_commands(char_int ch)
 	    fflush(stdout);
 	}
 	g_dfltcmd = "\\";
-	set_mode(GM_READ,'n');
+	set_mode(GM_READ,MM_NEWSGROUP_LIST);
 	if (ch == '\\') {
 	    putchar(ch);
 	    fflush(stdout);
@@ -2342,7 +2342,7 @@ static display_state newsgroup_commands(char_int ch)
 	do {
 	    ret = input_newsgroup();
 	} while (ret == ING_INPUT);
-	set_mode(GM_SELECT,'w');
+	set_mode(GM_SELECTOR,MM_NEWSGROUP_SELECTOR);
 	POP_SELECTOR();
 	switch (ret) {
 	  case ING_NOSERVER:
@@ -2408,7 +2408,7 @@ static display_state addgroup_commands(char_int ch)
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
       reask_sort:
-	in_char("Order by Natural-order, Group name, or Count?", 'q', "ngcNGC");
+	in_char("Order by Natural-order, Group name, or Count?", MM_Q, "ngcNGC");
 	printcmd();
 	switch (*g_buf) {
 	  case 'n': case 'N':
@@ -2703,7 +2703,7 @@ static display_state universal_commands(char_int ch)
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
 	s_removed_prompt = 3;
       reask_sort:
-	in_char("Order by Natural, or score Points?", 'q', "npNP");
+	in_char("Order by Natural, or score Points?", MM_Q, "npNP");
 	printcmd();
 	if (*g_buf == 'h' || *g_buf == 'H') {
 	    if (g_verbose) {

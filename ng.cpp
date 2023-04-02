@@ -124,7 +124,7 @@ void ng_init()
 // start_command command to fake up first
 do_newsgroup_result do_newsgroup(char *start_command)
 {
-    char mode_save = g_mode;
+    minor_mode mode_save = g_mode;
     general_mode gmode_save = g_general_mode;
     char*whatnext = "%s%sWhat next? [%s]";
     bool ng_virtual = false;
@@ -222,7 +222,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 	g_checkcount = 0;			/* do not checkpoint for a while */
     g_do_fseek = false;			/* start 1st article at top */
     for (; g_art <= g_lastart+1; ) {	/* for each article */
-	set_mode(GM_READ,'a');
+	set_mode(GM_READ,MM_ARTICLE);
 
 	/* do we need to "grow" the newsgroup? */
 
@@ -319,7 +319,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 	    }
 	    else if (!g_obj_count && !g_forcelast)
 		goto cleanup;		/* actually exit newsgroup */
-	    set_mode(g_general_mode,'e');
+	    set_mode(g_general_mode,MM_ARTICLE_END);
 	    g_prompt = whatnext;
 	    g_srchahead = 0;		/* no more subject search mode */
 	    fputs("\n\n",stdout) FLUSH;
@@ -595,7 +595,7 @@ static art_switch_result art_switch()
 	    g_dfltcmd = "+tsanq";
 	}
       reask_unread:
-	in_char(u_prompt,'u',g_dfltcmd);
+	in_char(u_prompt,MM_UNKILL_PROMPT,g_dfltcmd);
 	printcmd();
 	newline();
 	if (*g_buf == 'h') {
@@ -1441,7 +1441,7 @@ void setdfltcmd()
 */
 char ask_catchup()
 {
-    bool use_one_line = (g_general_mode == GM_SELECT);
+    bool use_one_line = (g_general_mode == GM_SELECTOR);
     int leave_unread = 0;
 
     if (!use_one_line)
@@ -1451,7 +1451,7 @@ reask_catchup:
 	sprintf(g_buf,"Mark everything in %s as read?",g_ngname);
     else
 	sprintf(g_buf,"Catchup %s?",g_ngname);
-    in_char(g_buf,'C',"yn#h");
+    in_char(g_buf,MM_CONFIRM_CATCH_UP_PROMPT,"yn#h");
     printcmd();
     char ch = *g_buf;
     if (ch == 'h' || ch == 'H')
@@ -1482,7 +1482,7 @@ reask_catchup:
     }
     if (ch == '#') {
 	use_one_line = false;
-	in_char("\nEnter approx. number of articles to leave unread: ", 'C', "0");
+	in_char("\nEnter approx. number of articles to leave unread: ", MM_CONFIRM_CATCH_UP_PROMPT, "0");
         ch = *g_buf;
         if (ch == '0')
 	    ch = 'y';
@@ -1593,7 +1593,7 @@ bool output_subject(char *ptr, int flag)
 	}
 	else
 	    safecpy(tmpbuf + len, s, sizeof tmpbuf - len);
-	if (g_mode == 'k')
+	if (g_mode == MM_PROCESSING_KILL)
 	    g_page_line = 1;
 	if (print_lines(tmpbuf, NOMARKING) != 0)
 	    return true;
@@ -1619,7 +1619,7 @@ static bool debug_article_output(char *ptr, int arg)
 char ask_memorize(char_int ch)
 {
     bool thread_cmd = (ch == 'T');
-    bool use_one_line = (g_general_mode == GM_SELECT);
+    bool use_one_line = (g_general_mode == GM_SELECTOR);
     bool global_save = false;
     char* mode_string = (thread_cmd? "thread" : "subject");
     char* mode_phrase = (thread_cmd? "replies to this article" :
@@ -1632,7 +1632,7 @@ char ask_memorize(char_int ch)
 reask_memorize:
     sprintf(g_cmd_buf,"%sMemorize %s command:", global_save?"Global-" : "",
 	    mode_string);
-    in_char(g_cmd_buf, 'm', thread_cmd? "+S.mJK,jcC" : "+S.mJK,jcCfg");
+    in_char(g_cmd_buf, MM_MEMORIZE_THREAD_PROMPT, thread_cmd? "+S.mJK,jcC" : "+S.mJK,jcCfg");
     printcmd();
     ch = *g_buf;
     if (!thread_cmd && ch == 'f') {
@@ -1712,7 +1712,7 @@ reask_memorize:
 	    select_arts_thread(g_artp, AUTO_SEL_THD);
 	    ch = (use_one_line? '+' : '.');
 	}
-	if (g_general_mode != GM_SELECT) {
+	if (g_general_mode != GM_SELECTOR) {
 	    printf("\nSelection memorized.\n");
 	    termdown(2);
 	}
@@ -1720,7 +1720,7 @@ reask_memorize:
     else if (ch == 'S') {
 	select_arts_subject(g_artp, AUTO_SEL_SBJ);
 	ch = (use_one_line? '+' : '.');
-	if (g_general_mode != GM_SELECT) {
+	if (g_general_mode != GM_SELECTOR) {
 	    printf("\nSelection memorized.\n");
 	    termdown(2);
 	}
@@ -1734,7 +1734,7 @@ reask_memorize:
 	    select_subthread(g_artp, AUTO_SEL_FOL);
 	    ch = (use_one_line? '+' : '.');
 	}
-	if (g_general_mode != GM_SELECT) {
+	if (g_general_mode != GM_SELECTOR) {
 	    printf("\nSelection memorized.\n");
 	    termdown(2);
 	}
@@ -1743,7 +1743,7 @@ reask_memorize:
 	if (g_artp) {
 	    change_auto_flags(g_artp, AUTO_SEL_1);
 	    ch = (use_one_line? '+' : '.');
-	    if (g_general_mode != GM_SELECT) {
+	    if (g_general_mode != GM_SELECTOR) {
 		printf("\nSelection memorized.\n");
 		termdown(2);
 	    }
@@ -1758,7 +1758,7 @@ reask_memorize:
 	}
 	else
 	    kill_thread(g_artp->subj->thread,AFFECT_ALL|AUTO_KILL_THD);
-	if (g_general_mode != GM_SELECT) {
+	if (g_general_mode != GM_SELECTOR) {
 	    printf("\nKill memorized.\n");
 	    termdown(2);
 	}
@@ -1767,7 +1767,7 @@ reask_memorize:
 	if (g_artp) {
 	    mark_as_read(g_artp);
 	    change_auto_flags(g_artp, AUTO_KILL_1);
-	    if (g_general_mode != GM_SELECT) {
+	    if (g_general_mode != GM_SELECTOR) {
 		printf("\nKill memorized.\n");
 		termdown(2);
 	    }
@@ -1775,7 +1775,7 @@ reask_memorize:
     }
     else if (ch == 'K') {
 	kill_subject(g_artp->subj,AFFECT_ALL|AUTO_KILL_SBJ);
-	if (g_general_mode != GM_SELECT) {
+	if (g_general_mode != GM_SELECTOR) {
 	    printf("\nKill memorized.\n");
 	    termdown(2);
 	}
@@ -1788,7 +1788,7 @@ reask_memorize:
 	}
 	else
 	    kill_subthread(g_artp,AFFECT_ALL|AUTO_KILL_FOL);
-	if (g_general_mode != GM_SELECT) {
+	if (g_general_mode != GM_SELECTOR) {
 	    printf("\nKill memorized.\n");
 	    termdown(2);
 	}

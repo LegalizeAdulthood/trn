@@ -99,6 +99,7 @@ bool g_use_add_selector{true};
 bool g_use_newsgroup_selector{true};
 int g_use_news_selector{SELECT_INIT - 1};
 bool g_use_mouse{};
+// Array of minor_mode characters.
 char g_mouse_modes[32]{"acjlptwvK"};
 bool g_use_colors{};
 bool g_use_tk{};
@@ -107,9 +108,9 @@ bool g_use_sel_num{};
 bool g_sel_num_goto{};
 /* miscellania */
 
-bool g_in_ng{};           /* true if in a newsgroup */
-char g_mode{'i'};         /* current state of trn */
-general_mode g_general_mode{GM_INSERT}; /* general mode of trn */
+bool         g_in_ng{};               /* true if in a newsgroup */
+minor_mode   g_mode{MM_INITIALIZING};         /* current state of trn */
+general_mode g_general_mode{GM_INIT}; /* general mode of trn */
 
 FILE *g_tmpfp{}; /* scratch fp used for .rnlock, .rnlast, etc. */
 

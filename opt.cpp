@@ -470,7 +470,7 @@ void set_option(int num, char *s)
 	    g_auto_arrow_macros = 2;
 	else
 	    g_auto_arrow_macros = !NO(s);
-	if (g_mode != 'i' && g_auto_arrow_macros != prev) {
+	if (g_mode != MM_INITIALIZING && g_auto_arrow_macros != prev) {
 	    char tmpbuf[1024];
 	    arrow_macros(tmpbuf);
 	}
@@ -610,7 +610,7 @@ void set_option(int num, char *s)
 	}
 	break;
       case OI_RESTART_AT_LAST_GROUP:
-	g_findlast = YES(s) * (g_mode == 'i'? 1 : -1);
+	g_findlast = YES(s) * (g_mode == MM_INITIALIZING? 1 : -1);
 	break;
       case OI_SCANMODE_COUNT:
 	if (isdigit(*s))

@@ -324,10 +324,10 @@ static bool kfile_junk(char *ptr, int killmask)
 void kill_unwanted(ART_NUM starting, const char *message, int entering)
 {
     bool intr = false;			/* did we get an interrupt? */
-    char oldmode = g_mode;
+    minor_mode oldmode = g_mode;
     bool anytokill = (g_ngptr->toread > 0);
 
-    set_mode(GM_READ,'k');
+    set_mode(GM_READ,MM_PROCESSING_KILL);
     if ((entering || s_exitcmds) && (g_localkfp || g_globkfp)) {
 	s_exitcmds = false;
 	ART_NUM oldfirst = g_firstart;

@@ -119,8 +119,8 @@ sa_main_result sa_main()
 	g_s_top_ent = -1;		/* go to top of arts... */
     }
 
-    char sa_oldmode = g_mode; /* save mode */
-    g_mode = 's';             /* for RN macros */
+    minor_mode sa_oldmode = g_mode; /* save mode */
+    g_mode = MM_S;             /* for RN macros */
     sa_main_result i = sa_mainloop();
     g_mode = sa_oldmode;			/* restore mode */
 

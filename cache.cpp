@@ -729,7 +729,7 @@ void cache_until_key()
     g_sentinel_artp = g_curr_artp;
 
     /* Prioritize our caching based on what mode we're in */
-    if (g_general_mode == GM_SELECT) {
+    if (g_general_mode == GM_SELECTOR) {
 	if (cache_subjects()) {
 	    if (cache_xrefs()) {
 		if (chase_xrefs(true)) {
@@ -831,7 +831,7 @@ bool cache_all_arts()
     if (g_curr_artp && !(g_curr_artp->flags & AF_CACHED) && !input_pending())
 	pushchar('\f' | 0200);
     /* A completely empty group needs a count & a sort */
-    if (g_general_mode != GM_SELECT && !g_obj_count && !g_selected_only)
+    if (g_general_mode != GM_SELECTOR && !g_obj_count && !g_selected_only)
 	thread_grow();
     return true;
 }

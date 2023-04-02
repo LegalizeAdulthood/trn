@@ -94,7 +94,13 @@ enum
  *	%E	Extract destination directory
  *	%f	Old From: line or Reply-To: line
  *	%F	Newsgroups to followup to from Newsgroups: and Followup-To:
- *      %g      General mode: read: 'r', search: 's', insert: 'i', prompt: 'p', choice: 'c'
+ *      %g      General mode:
+ *              I   Init mode.
+ *              c   Choice mode (multi-choice input).
+ *              i   Input mode (newline terminated).
+ *              p   Prompt mode (single-character input).
+ *              r   Rn mode.
+ *              s   Selector mode.
  *	%h	Name of header file to pass to mail or news poster
  *	%H	Host name (yours)
  *	%i	Old Message-I.D.: line, with <>
@@ -102,7 +108,33 @@ enum
  *	%I	Inclusion indicator
  *	%l	News administrator login name
  *	%L	Login name (yours)
- *	%m	The current mode of trn.
+ *      %m      The current minor mode of trn.
+ *              A   Add this newsgroup?
+ *              B   Abandon confirmation.
+ *              C   Catchup confirmation.
+ *              D   Delete bogus newsgroups?
+ *              F   Is follow-up a new topic?
+ *              K   Press any key prompt.
+ *              M   Use mailbox format?
+ *              R   Resubscribe to this newsgroup?
+ *              a   Article level ("What next?").
+ *              c   Newsrc selector.
+ *              d   Selector mode prompt.
+ *              e   End of the article level.
+ *              f   End (finis) of newsgroup-list level.
+ *              i   Initializing.
+ *              j   Addgroup selector.
+ *              k   Processing memorized (KILL-file) commands.
+ *              l   Option selector.
+ *              m   Memorize thread command prompt.
+ *              n   Newsgroup-list level.
+ *              o   Selector order prompt.
+ *              p   Pager level ("MORE" prompt).
+ *              r   Memorize subject command prompt.
+ *              t   The thread/subject/article selector.
+ *              u   Unkill prompt.
+ *              w   Newsgroup selector.
+ *              z   Option edit prompt.
  *	%M	Number of articles marked with M
  *	%n	Newsgroups from source article
  *	%N	Full name (yours)
@@ -748,17 +780,55 @@ extern bool g_use_sel_num;
 extern bool g_sel_num_goto;
 /* miscellania */
 
+// These identifiers are a best guess based on usage in the code.
 enum general_mode : char
 {
-    GM_READ = 'r',
-    GM_SELECT = 's',
-    GM_INSERT = 'i',
-    GM_PROMPT = 'p',
     GM_CHOICE = 'c',
+    GM_INIT = 'I',
+    GM_INPUT = 'i',
+    GM_PROMPT = 'p',
+    GM_READ = 'r',
+    GM_SELECTOR = 's',
+};
+
+// These identifiers are a best guess based on usage in the code.
+enum minor_mode : char
+{
+    MM_NONE = '\0',
+    MM_ARTICLE = 'a',
+    MM_NEWSRC_SELECTOR = 'c',
+    MM_SELECTOR_MODE_PROMPT = 'd',
+    MM_ARTICLE_END = 'e',
+    MM_FINISH_NEWSGROUP_LIST = 'f',
+    MM_INITIALIZING = 'i',
+    MM_ADD_GROUP_SELECTOR = 'j',
+    MM_PROCESSING_KILL = 'k',
+    MM_OPTION_SELECTOR = 'l',
+    MM_MEMORIZE_THREAD_PROMPT = 'm',
+    MM_NEWSGROUP_LIST = 'n',
+    MM_SELECTOR_ORDER_PROMPT = 'o',
+    MM_PAGER = 'p',
+    MM_Q = 'q',
+    MM_MEMORIZE_SUBJECT_PROMPT = 'r',
+    MM_S = 's',
+    MM_THREAD_SELECTOR = 't',
+    MM_UNKILL_PROMPT = 'u',
+    MM_UNIVERSAL = 'v',
+    MM_NEWSGROUP_SELECTOR = 'w',
+    MM_EXECUTE = 'x',
+    MM_OPTION_EDIT_PROMPT = 'z',
+    MM_ADD_NEWSGROUP_PROMPT = 'A',
+    MM_CONFIRM_ABANDON_PROMPT = 'B',
+    MM_CONFIRM_CATCH_UP_PROMPT = 'C',
+    MM_DELETE_BOGUS_NEWSGROUPS_PROMPT = 'D',
+    MM_FOLLOWUP_NEW_TOPIC_PROMPT = 'F',
+    MM_ANY_KEY_PROMPT = 'K',
+    MM_USE_MAILBOX_FORMAT_PROMPT = 'M',
+    MM_RESUBSCRIBE_PROMPT = 'R',
 };
 
 extern bool         g_in_ng;        /* true if in a newsgroup */
-extern char         g_mode;         /* current state of trn */
+extern minor_mode   g_mode;         /* current state of trn */
 extern general_mode g_general_mode; /* general mode of trn */
 
 extern FILE *g_tmpfp; /* scratch fp used for .rnlock, .rnlast, etc. */

@@ -764,7 +764,7 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
 		sleep(2);
 	    goto check_fuzzy_match;
 	}
-	if (g_mode != 'i' || !(autosub = auto_subscribe(g_ngname)))
+	if (g_mode != MM_INITIALIZING || !(autosub = auto_subscribe(g_ngname)))
 	    autosub = g_addnewbydefault;
 	if (autosub) {
 	    if (g_append_unsub) {
@@ -790,7 +790,7 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
 	    else
 		sprintf(promptbuf,"\nSubscribe %s?",g_ngname);
 reask_add:
-	    in_char(promptbuf,'A',"ynYN");
+	    in_char(promptbuf,MM_ADD_NEWSGROUP_PROMPT,"ynYN");
 	    printcmd();
 	    newline();
 	    if (*g_buf == 'h') {
@@ -853,7 +853,7 @@ reask_add:
 	    }
 	}
     }
-    else if (g_mode == 'i')		/* adding new groups during init? */
+    else if (g_mode == MM_INITIALIZING)		/* adding new groups during init? */
 	return false;
     else if (g_ngptr->subscribechar == NEGCHAR) {/* unsubscribed? */
 	if (g_verbose)
@@ -864,7 +864,7 @@ reask_add:
 	    sprintf(promptbuf,"\nResubscribe %s?",g_ngname)
 	      FLUSH;
 reask_unsub:
-	in_char(promptbuf,'R',"yn");
+	in_char(promptbuf,MM_RESUBSCRIBE_PROMPT,"yn");
 	printcmd();
 	newline();
 	if (*g_buf == 'h') {
@@ -942,7 +942,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
     if (g_sel_newsgroupsort != SS_NATURAL) {
 	if (newnum < 0) {
 	    /* ask if they want to keep the current order */
-	    in_char("Sort newsrc(s) using current sort order?", 'D', "yn"); /*$$ !'D' */
+	    in_char("Sort newsrc(s) using current sort order?",MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "yn"); /*$$ !'D' */
 	    printcmd();
 	    newline();
 	    if (*g_buf == 'y')
@@ -1184,7 +1184,7 @@ void cleanup_newsrc(NEWSRC *rp)
 	}
 	rp->flags |= RF_RCCHANGED;
 reask_bogus:
-	in_char("Delete bogus newsgroups?", 'D', "ny");
+	in_char("Delete bogus newsgroups?", MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "ny");
 	printcmd();
 	newline();
 	if (*g_buf == 'h') {

@@ -60,7 +60,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
     bool doread;			/* search read articles? */
     bool foldcase = true;		/* fold upper and lower case? */
     int ignorethru = 0;			/* should we ignore the thru line? */
-    bool output_level = (!g_use_threads && g_general_mode != GM_SELECT);
+    bool output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
     ART_NUM srchfirst;
 
     g_int_count = 0;
@@ -238,7 +238,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
     }
     if (cmdlst && strchr(cmdlst,'='))
 	ret = SRCH_ERROR;		/* listing subjects is an error? */
-    if (g_general_mode == GM_SELECT) {
+    if (g_general_mode == GM_SELECTOR) {
 	if (!cmdlst) {
 	    if (g_sel_mode == SM_ARTICLE)/* set the selector's default command */
 		cmdlst = savestr("+");
@@ -293,7 +293,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
      && (*cmdlst == '+' || *cmdlst == '.'))
 	ignorethru = 1;
     srchfirst = doread || g_sel_rereading? g_absfirst
-		      : (g_mode != 'k' || ignorethru > 0)? g_firstart : g_killfirst;
+		      : (g_mode != MM_PROCESSING_KILL || ignorethru > 0)? g_firstart : g_killfirst;
     if (topstart || g_art == 0) {
 	g_art = g_lastart+1;
 	topstart = false;

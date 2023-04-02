@@ -20,6 +20,7 @@ extern int    g_res_flg;
 #endif
 #endif
 #endif
+#include "common.h"
 
 extern char          g_erase_char; /* rubout character */
 extern char          g_kill_char;  /* line delete character */
@@ -85,7 +86,7 @@ void  set_macro(char *seq, char *def);
 void  arrow_macros(char *tmpbuf);
 void  mac_line(char *line, char *tmpbuf, int tbsize);
 void  show_macros();
-void  set_mode(general_mode new_gmode, char_int new_mode);
+void  set_mode(general_mode new_gmode, minor_mode new_mode);
 int   putchr(char_int ch);
 void  hide_pending();
 bool  finput_pending(bool check_term);
@@ -112,9 +113,9 @@ void getcmd(char *whatbuf);
 void pushstring(char *str, char_int bits);
 int  get_anything();
 int  pause_getcmd();
-void in_char(const char *prompt, char_int newmode, const char *dflt);
-void in_answer(const char *prompt, char_int newmode);
-bool in_choice(const char *prompt, char *value, char *choices, char_int newmode);
+void in_char(const char *prompt, minor_mode newmode, const char *dflt);
+void in_answer(const char *prompt, minor_mode newmode);
+bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmode);
 int  print_lines(const char *what_to_print, int hilite);
 int  check_page_line();
 void page_start();

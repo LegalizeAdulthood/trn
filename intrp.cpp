@@ -631,7 +631,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case 'm':		/* current mode */
 		    s = scrbuf;
-		    *s = g_mode;
+		    *s = static_cast<char>(g_mode);
 		    s[1] = '\0';
 		    break;
 		case 'M':

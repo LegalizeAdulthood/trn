@@ -1081,7 +1081,7 @@ static int get_near_miss()
     else
 	sprintf(promptbuf, "Which?");
 reask:
-    in_char(promptbuf, 'A', options);
+    in_char(promptbuf, MM_ADD_NEWSGROUP_PROMPT, options);
     printcmd();
     putchar('\n') FLUSH;
     switch (*g_buf) {

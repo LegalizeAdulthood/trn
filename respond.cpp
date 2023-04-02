@@ -325,7 +325,7 @@ save_result save_article()
 		sprintf(g_cmd_buf,
 		"\nFile %s doesn't exist--\n	use mailbox format?",s);
 	      reask_save:
-		in_char(g_cmd_buf, 'M', dflt);
+		in_char(g_cmd_buf, MM_USE_MAILBOX_FORMAT_PROMPT, dflt);
 		newline();
 		printcmd();
 		if (*g_buf == 'h') {
@@ -827,7 +827,7 @@ void followup()
 
     if (!incl_body && g_art <= g_lastart) {
 	termdown(2);
-	in_answer("\n\nAre you starting an unrelated topic? [ynq] ", 'F');
+	in_answer("\n\nAre you starting an unrelated topic? [ynq] ", MM_FOLLOWUP_NEW_TOPIC_PROMPT);
 	setdef(g_buf,"y");
 	if (*g_buf == 'q')  /*TODO: need to add 'h' also */
 	    return;
@@ -877,7 +877,7 @@ void followup()
 
 int invoke(const char *cmd, const char *dir)
 {
-    char oldmode = g_mode;
+    minor_mode oldmode = g_mode;
     int ret = -1;
 
     if (g_datasrc->flags & DF_REMOTE)
@@ -892,7 +892,7 @@ int invoke(const char *cmd, const char *dir)
 	    return ret;
 	}
     }
-    set_mode(g_general_mode,'x');
+    set_mode(g_general_mode,MM_EXECUTE);
     termlib_reset();
     resetty();			/* make terminal well-behaved */
     ret = doshell(SH,cmd);	/* do the command */

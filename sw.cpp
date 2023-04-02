@@ -107,7 +107,7 @@ void decode_switch(char *s)
 #endif
     if (*s != '-' && *s != '+') {	/* newsgroup pattern */
 	setngtodo(s);
-	if (g_mode == 'i')
+	if (g_mode == MM_INITIALIZING)
 	    g_ng_min_toread = 0;
     }
     else {				/* normal switch */
@@ -180,12 +180,12 @@ void decode_switch(char *s)
 	    if (s) {
 		*s++ = '\0';
 		s = export_var(tmpbuf,s) - (s-tmpbuf);
-		if (g_mode == 'i')
+		if (g_mode == MM_INITIALIZING)
 		    save_init_environment(s);
 	    }
 	    else {
 		s = export_var(tmpbuf,"") - strlen(tmpbuf) - 1;
-		if (g_mode == 'i')
+		if (g_mode == MM_INITIALIZING)
 		    save_init_environment(s);
 	    }
 	    break;
@@ -318,14 +318,14 @@ void decode_switch(char *s)
 	    set_option(OI_VERIFY_INPUT, YESorNO(upordown));
 	    break;
 	case 'V':
-	    if (g_mode == 'i') {
+	    if (g_mode == MM_INITIALIZING) {
 		g_tc_LINES = 1000;
 		g_tc_COLS = 1000;
 		g_erase_screen = false;
 	    }
 	    trn_version();
 	    newline();
-	    if (g_mode == 'i')
+	    if (g_mode == MM_INITIALIZING)
 		exit(0);
 	    break;
 	case 'x':
