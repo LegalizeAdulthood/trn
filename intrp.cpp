@@ -761,12 +761,11 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		}
 		case 's':
 		case 'S': {
-		    char* str;
 		    if (!g_in_ng || !g_art || !g_artp) {
 			s = s_empty;
 			break;
 		    }
-                    str = subj_buf;
+                    char *str = subj_buf;
                     if (str == nullptr)
                     {
                         subj_buf = fetchsubj(g_art, true);
