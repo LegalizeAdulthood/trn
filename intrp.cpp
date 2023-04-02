@@ -950,12 +950,11 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 	    if (*pattern)
 		pattern++;
 	    if (upper || lastcomp) {
-		char* t;
-
 		if (s != scrbuf) {
 		    safecpy(scrbuf,s,sizeof scrbuf);
 		    s = scrbuf;
 		}
+		char* t;
 		if (upper || !(t = strrchr(s,'/')))
 		    t = s;
 		while (*t && !isalpha(*t))
