@@ -464,7 +464,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case '0': case '1': case '2': case '3': case '4':
 		case '5': case '6': case '7': case '8': case '9':
-		    s = getbracket(g_bra_compex,*pattern - '0');
+		    strcpy(scrbuf, getbracket(g_bra_compex,*pattern - '0'));
+		    s = scrbuf;
 		    break;
 		case 'a':
 		    if (g_in_ng) {

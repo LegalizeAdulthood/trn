@@ -26,7 +26,7 @@ struct COMPEX
 void search_init();
 void init_compex(COMPEX *compex);
 void free_compex(COMPEX *compex);
-char *getbracket(COMPEX *compex, int n);
+const char *getbracket(COMPEX *compex, int n);
 void case_fold(bool which);
 char *compile(COMPEX *compex, const char *strp, bool RE, bool fold);
 char *grow_eb(COMPEX *compex, char *epp, char **alt);

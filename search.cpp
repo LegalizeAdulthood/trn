@@ -102,7 +102,7 @@ void free_compex(COMPEX *compex)
 static char *s_gbr_str{};
 static int s_gbr_siz{};
 
-char *getbracket(COMPEX *compex, int n)
+const char *getbracket(COMPEX *compex, int n)
 {
     int length = compex->braelist[n] - compex->braslist[n];
 
