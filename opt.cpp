@@ -227,10 +227,13 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 	    decode_switch(argv[i]);
     }
     init_compex(&g_optcompex);
+
+    g_privdir = filexp("~/News");
 }
 
 void opt_final()
 {
+    g_privdir.clear();
     safefree0(g_option_flags);
     safefree0(g_option_saved_vals);
     safefree0(g_ini_file);
@@ -492,11 +495,10 @@ void set_option(int num, char *s)
       case OI_SAVE_DIR:
 	if (!g_checkflag) {
 	    g_savedir = savestr(s);
-	    if (g_cwd) {
-		chdir(g_cwd);
-		free(g_cwd);
+	    if (!g_privdir.empty()) {
+		chdir(g_privdir.c_str());
 	    }
-	    g_cwd = savestr(filexp(s));
+	    g_privdir = filexp(s);
 	}
 	break;
       case OI_ERASE_SCREEN:
@@ -1312,11 +1314,11 @@ void cwd_check()
 {
     char tmpbuf[LBUFLEN];
 
-    if (!g_cwd)
-	g_cwd = savestr(filexp("~/News"));
-    strcpy(tmpbuf,g_cwd);
-    if (chdir(g_cwd) != 0) {
-	safecpy(tmpbuf,filexp(g_cwd),sizeof tmpbuf);
+    if (g_privdir.empty())
+	g_privdir = filexp("~/News");
+    strcpy(tmpbuf,g_privdir.c_str());
+    if (chdir(g_privdir.c_str()) != 0) {
+	safecpy(tmpbuf,filexp(g_privdir.c_str()),sizeof tmpbuf);
 	if (makedir(tmpbuf,MD_DIR) || chdir(tmpbuf) != 0) {
 	    interp(g_cmd_buf, (sizeof g_cmd_buf), "%~/News");
 	    if (makedir(g_cmd_buf,MD_DIR))
@@ -1328,15 +1330,14 @@ void cwd_check()
                 printf("Cannot make directory %s--\n"
                        "	articles will be saved to %s\n"
                        "\n",
-                       g_cwd, tmpbuf) FLUSH;
+                       g_privdir.c_str(), tmpbuf) FLUSH;
 	    else
                 printf("Can't make %s--\n"
                        "	using %s\n"
                        "\n",
-                       g_cwd, tmpbuf) FLUSH;
+                       g_privdir.c_str(), tmpbuf) FLUSH;
 	}
     }
-    free(g_cwd);
     trn_getwd(tmpbuf, sizeof(tmpbuf));
     if (eaccess(tmpbuf,2)) {
         if (g_verbose)
@@ -1348,5 +1349,5 @@ void cwd_check()
 	    printf("%s not writeable--using ~\n\n",tmpbuf) FLUSH;
 	strcpy(tmpbuf,g_home_dir);
     }
-    g_cwd = savestr(tmpbuf);
+    g_privdir = tmpbuf;
 }

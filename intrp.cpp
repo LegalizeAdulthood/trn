@@ -688,7 +688,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = scrbuf;
 		    break;
 		case 'p':
-		    s = g_cwd;
+		    strcpy(scrbuf, g_privdir.c_str());
+		    s = scrbuf;
 		    break;
 		case 'P':
 		    s = g_datasrc? g_datasrc->spool_dir : s_empty;

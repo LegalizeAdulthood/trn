@@ -59,8 +59,8 @@ int escapade()
     }
     else {
 	trn_getwd(whereiam, sizeof(whereiam));
-	if (chdir(g_cwd)) {
-	    printf(g_nocd,g_cwd) FLUSH;
+	if (chdir(g_privdir.c_str())) {
+	    printf(g_nocd,g_privdir.c_str()) FLUSH;
 	    sig_catcher(0);
 	}
     }

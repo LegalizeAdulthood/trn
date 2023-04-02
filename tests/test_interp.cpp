@@ -78,6 +78,7 @@ void InterpolatorTest::SetUp()
     opt_init(1,argv,&tcbuf);
     color_init();
     intrp_init(tcbuf, TCBUF_SIZE);
+    cwd_check();
     term_set(tcbuf);
     last_init();
     univ_init();
@@ -631,10 +632,21 @@ TEST_F(InterpolatorTest, newsOrgFromORGANIZATIONFile)
 TEST_F(InterpolatorTest, originalDirectory)
 {
     char pattern[]{"%O"};
+
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ(g_origdir, buffer());
+}
+
+TEST_F(InterpolatorTest, privateNewsDirectory)
+{
+    char pattern[]{"%p"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(g_privdir, buffer());
 }
 
 #ifdef TEST_ACTIVE_NEWSGROUP

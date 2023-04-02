@@ -74,8 +74,8 @@ save_result save_article()
 	termdown(2);
 	return SAVE_DONE;
     }
-    if (chdir(g_cwd)) {
-	printf(g_nocd,g_cwd) FLUSH;
+    if (chdir(g_privdir.c_str())) {
+	printf(g_nocd,g_privdir.c_str()) FLUSH;
 	sig_catcher(0);
     }
     if (cmd == 'e') {		/* is this an extract command? */
@@ -139,7 +139,7 @@ save_result save_article()
 	    c = (s==g_buf ? altbuf : g_buf);
 	    interp(c, (sizeof g_buf), get_val("SAVEDIR",SAVEDIR));
 	    if (makedir(c,MD_DIR))	/* ensure directory exists */
-		strcpy(c,g_cwd);
+		strcpy(c,g_privdir.c_str());
 	    if (*s) {
 		while (*c) c++;
 		*c++ = '/';
@@ -149,7 +149,7 @@ save_result save_article()
 	}
 	if (!FILE_REF(s)) {	/* path still relative? */
 	    c = (s==g_buf ? altbuf : g_buf);
-	    sprintf(c, "%s/%s", g_cwd, s);
+	    sprintf(c, "%s/%s", g_privdir.c_str(), s);
 	    s = c;			/* absolutize it */
 	}
         g_extractdest = s; /* make it handy for %E */
@@ -288,7 +288,7 @@ save_result save_article()
 	if (!FILE_REF(s)) {
 	    interp(g_buf, (sizeof g_buf), get_val("SAVEDIR",SAVEDIR));
 	    if (makedir(g_buf,MD_DIR))	/* ensure directory exists */
-		strcpy(g_buf,g_cwd);
+		strcpy(g_buf,g_privdir.c_str());
 	    if (*s) {
 		for (c = g_buf; *c; c++) ;
 		*c++ = '/';
@@ -309,7 +309,7 @@ save_result save_article()
 	makedir(s,MD_FILE);
 	if (!FILE_REF(s)) {	/* relative path? */
 	    c = (s==g_buf ? altbuf : g_buf);
-	    sprintf(c, "%s/%s", g_cwd, s);
+	    sprintf(c, "%s/%s", g_privdir.c_str(), s);
 	    s = c;			/* absolutize it */
 	}
         g_savedest = s; /* make it handy for %b */
