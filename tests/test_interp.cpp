@@ -255,26 +255,6 @@ TEST_F(InterpolatorTest, environmentVarValueDefault)
     ASSERT_EQ("not set", buffer());
 }
 
-TEST_F(InterpolatorTest, libDir)
-{
-    char pattern[]{"%x"};
-
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(TRN_TEST_LIB_DIR, buffer());
-}
-
-TEST_F(InterpolatorTest, rnLibDir)
-{
-    char pattern[]{"%X"};
-
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(TRN_TEST_RN_LIB_DIR, buffer());
-}
-
 TEST_F(InterpolatorTest, saveDestinationNotSet)
 {
     char pattern[]{"%b"};
@@ -805,6 +785,26 @@ TEST_F(InterpolatorTest, threadDirNotInNewsgroup)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
+
+TEST_F(InterpolatorTest, libDir)
+{
+    char pattern[]{"%x"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_LIB_DIR, buffer());
+}
+
+TEST_F(InterpolatorTest, rnLibDir)
+{
+    char pattern[]{"%X"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_RN_LIB_DIR, buffer());
 }
 
 #ifdef TEST_ACTIVE_NEWSGROUP
