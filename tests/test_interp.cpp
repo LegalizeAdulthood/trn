@@ -1308,4 +1308,24 @@ TEST_F(InterpolatorTest, numSelectedThreadsInNewsgroupEmpty)
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ("3", buffer());
 }
+
+TEST_F(InterpolatorTest, headerFieldInNewsgroup)
+{
+    char pattern[]{"%[X-Boogie-Nights]"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_HEADER_X_BOOGIE_NIGHTS, buffer());
+}
+
+TEST_F(InterpolatorTest, missingHeaderFieldInNewsgroupIsEmpty)
+{
+    char pattern[]{"%[X-Missing-Header]"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
 #endif
