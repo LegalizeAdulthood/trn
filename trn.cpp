@@ -39,6 +39,8 @@
  *
  */
 
+#include <string>
+
 #include "common.h"
 #include "trn.h"
 
@@ -77,7 +79,7 @@ bool        g_write_less{};     /* write .newsrc less often */
 char       *g_auto_start_cmd{}; /* command to auto-start with */
 bool        g_auto_started{};   /* have we auto-started? */
 bool        g_is_strn{};        /* Is this "strn", or trn/rn? */
-char        g_patchlevel[]{PATCHLEVEL};
+std::string g_patchlevel{PATCHLEVEL};
 
 static bool s_restore_old_newsrc{};
 static bool s_go_forward{true};
@@ -744,7 +746,7 @@ void trn_version()
 #else
             "NNTP (plus individual local access).\n",
 #endif
-            g_patchlevel);
+            g_patchlevel.c_str());
     print_lines(g_msg, NOMARKING);
 
     if (g_multirc) {

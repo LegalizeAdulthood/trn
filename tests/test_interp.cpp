@@ -24,6 +24,7 @@
 #include <ngdata.h>
 #include <ngsrch.h>
 #include <opt.h>
+#include <patchlevel.h>
 #include <rcstuff.h>
 #include <respond.h>
 #include <search.h>
@@ -774,6 +775,16 @@ TEST_F(InterpolatorTest, numUnreadArticlesExceptCurrentNotInNewsgroupEmpty)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
+
+TEST_F(InterpolatorTest, patchLevel)
+{
+    char pattern[]{"%V"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(std::string{PATCHLEVEL}, buffer());
 }
 
 #ifdef TEST_ACTIVE_NEWSGROUP

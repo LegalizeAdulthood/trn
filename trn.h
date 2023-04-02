@@ -30,7 +30,7 @@ extern bool        g_write_less;     /* write .newsrc less often */
 extern char       *g_auto_start_cmd; /* command to auto-start with */
 extern bool        g_auto_started;   /* have we auto-started? */
 extern bool        g_is_strn;        /* Is this "strn", or trn/rn? */
-extern char        g_patchlevel[];
+extern std::string g_patchlevel;
 
 void trn_init();
 void do_multirc();

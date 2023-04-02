@@ -2,6 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <string>
+
 #include "common.h"
 #include "util.h"
 
@@ -63,7 +65,7 @@ static char *s_nntpforce_export = s_null_export + 2;
 
 void util_init()
 {
-    extern char g_patchlevel[];
+    extern std::string g_patchlevel;
     char* cp;
     int i;
     for (i = 0, cp = g_buf; i < 512; i++)
@@ -77,7 +79,7 @@ void util_init()
     s_nntpfds_export = export_var("NNTPFDS", g_buf);
     g_buf[3] = '\0';
     s_nntpforce_export = export_var("NNTP_FORCE_AUTH", g_buf);
-    export_var("TRN_VERSION", g_patchlevel);
+    export_var("TRN_VERSION", g_patchlevel.c_str());
 }
 
 void util_final()

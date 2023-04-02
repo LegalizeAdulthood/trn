@@ -847,7 +847,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		}
 		case 'V':
-		    s = g_patchlevel;
+		    strcpy(scrbuf, g_patchlevel.c_str());
+		    s = scrbuf;
 		    break;
 		case 'W':
 		    s = g_datasrc? g_datasrc->thread_dir : s_empty;
