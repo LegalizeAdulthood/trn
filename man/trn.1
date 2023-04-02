@@ -1862,11 +1862,11 @@ for use in conditional macros.
 .Sp
 .nf
 	I	Init mode.
-	s	Selector mode.
-	r	Rn mode.
+	c	Choice mode (multi-choice input).
 	i	Input mode (newline terminated).
 	p	Prompt mode (single-character input).
-	c	Choice mode (multi-choice input).
+	r	Rn mode.
+	s	Selector mode.
 .fi
 .Ip %h 8
 Name of the header file to pass to the mail or news poster,
@@ -1893,32 +1893,32 @@ The current mode of
 for use in conditional macros.
 .Sp
 .nf
-	i	Initializing.
-	n	Newsgroup-list level.
-	f	End (finis) of newsgroup-list level.
-	t	The thread/subject/article selector.
-	c	Newsrc selector.
-	w	Newsgroup selector.
-	j	Addgroup selector.
-	l	Option selector.
-	a	Article level ("What next?").
-	e	End of the article level.
-	p	Pager level ("MORE" prompt).
-	u	Unkill prompt.
-	d	Selector mode prompt.
-	o	Selector order prompt.
-	m	Memorize thread command prompt.
-	r	Memorize subject command prompt.
-	z	Option edit prompt.
-	k	Processing memorized (KILL-file) commands.
 	A	Add this newsgroup?
 	B	Abandon confirmation.
 	C	Catchup confirmation.
 	D	Delete bogus newsgroups?
 	F	Is follow-up a new topic?
+	K	Press any key prompt.
 	M	Use mailbox format?
 	R	Resubscribe to this newsgroup?
-	K	Press any key prompt.
+	a	Article level ("What next?").
+	c	Newsrc selector.
+	d	Selector mode prompt.
+	e	End of the article level.
+	f	End (finis) of newsgroup-list level.
+	i	Initializing.
+	j	Addgroup selector.
+	k	Processing memorized (KILL-file) commands.
+	l	Option selector.
+	m	Memorize thread command prompt.
+	n	Newsgroup-list level.
+	o	Selector order prompt.
+	p	Pager level ("MORE" prompt).
+	r	Memorize subject command prompt.
+	t	The thread/subject/article selector.
+	u	Unkill prompt.
+	w	Newsgroup selector.
+	z	Option edit prompt.
 .fi
 .Sp
 Note that yes/no questions are all upper-case modes.
