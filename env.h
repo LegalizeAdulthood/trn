@@ -11,7 +11,7 @@ extern std::string g_dot_dir;     /* where . files go */
 extern std::string g_trn_dir;     /* usually %./.trn */
 extern std::string g_lib;         /* news library */
 extern std::string g_rn_lib;      /* private news program library */
-extern const char *g_tmp_dir;     /* where tmp files go */
+extern std::string g_tmp_dir;     /* where tmp files go */
 extern std::string g_login_name;  /* login id of user */
 extern std::string g_real_name;   /* real name of user */
 extern std::string g_p_host_name; /* host name in a posting */

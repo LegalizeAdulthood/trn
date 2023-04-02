@@ -906,8 +906,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    }
 		    break;
 		case 'Y':
-		    from_buf = savestr(g_tmp_dir);
-		    s = from_buf;
+		    strcpy(scrbuf, g_tmp_dir.c_str());
+		    s = scrbuf;
 		    break;
 		case 'z':
 		    if (!g_in_ng) {

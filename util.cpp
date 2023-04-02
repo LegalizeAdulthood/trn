@@ -642,7 +642,7 @@ char *temp_filename()
     static int tmpfile_num = 0;
     char tmpbuf[CBUFLEN];
     extern long g_our_pid;
-    sprintf(tmpbuf,"%s/trn%d.%ld",g_tmp_dir,tmpfile_num++,g_our_pid);
+    sprintf(tmpbuf,"%s/trn%d.%ld",g_tmp_dir.c_str(),tmpfile_num++,g_our_pid);
     return savestr(tmpbuf);
 }
 

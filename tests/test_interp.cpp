@@ -817,6 +817,16 @@ TEST_F(InterpolatorTest, shortenedFromNotInNewsgroupEmpty)
     ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
 }
 
+TEST_F(InterpolatorTest, tmpDir)
+{
+    char pattern[]{"%Y"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_TMP_DIR, buffer());
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 

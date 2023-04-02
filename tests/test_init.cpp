@@ -29,7 +29,7 @@ protected:
     void TearDown() override
     {
         safefree0(g_home_dir);
-        g_tmp_dir = nullptr;
+        g_tmp_dir.clear();
         g_login_name.clear();
         g_real_name.clear();
         safefree0(g_local_host);
@@ -79,7 +79,7 @@ TEST_F(InitTest, tempDirFromTMPDIR)
 
     env_init(m_tcbuf.data(), true);
 
-    ASSERT_EQ(tmp_dir, std::string{g_tmp_dir});
+    ASSERT_EQ(tmp_dir, g_tmp_dir);
 }
 
 TEST_F(InitTest, tempDirFromTMP)
@@ -89,7 +89,7 @@ TEST_F(InitTest, tempDirFromTMP)
 
     env_init(m_tcbuf.data(), true);
 
-    ASSERT_EQ(tmp, std::string{g_tmp_dir});
+    ASSERT_EQ(tmp, g_tmp_dir);
 }
 
 TEST_F(InitTest, tempDirFromDefault)
@@ -98,7 +98,7 @@ TEST_F(InitTest, tempDirFromDefault)
 
     env_init(m_tcbuf.data(), true);
 
-    ASSERT_EQ(default_value, std::string{g_tmp_dir});
+    ASSERT_EQ(default_value, g_tmp_dir);
 }
 
 TEST_F(InitTest, loginNameFromUSER)

@@ -249,7 +249,7 @@ static DATASRC *new_datasrc(const char *name, char **vals)
 
     dp->spool_dir = file_or_none(vals[DI_SPOOL_DIR]);
     if (!dp->spool_dir)
-	dp->spool_dir = savestr(g_tmp_dir);
+	dp->spool_dir = savestr(g_tmp_dir.c_str());
 
     dp->over_dir = dir_or_none(dp,vals[DI_OVERVIEW_DIR],DF_TRY_OVERVIEW);
     dp->over_fmt = file_or_none(vals[DI_OVERVIEW_FMT]);

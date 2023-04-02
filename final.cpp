@@ -96,7 +96,7 @@ void final_init()
     xmouse_off();	/* turn off mouse tracking (if on) */
     fflush(stdout);
 
-    chdir(g_tmp_dir);
+    chdir(g_tmp_dir.c_str());
     if (!g_checkflag)
 	unuse_multirc(g_multirc);
     datasrc_finalize();

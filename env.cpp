@@ -31,7 +31,7 @@ std::string g_dot_dir;       /* where . files go */
 std::string g_trn_dir;       /* usually %./.trn */
 std::string g_lib;           /* news library */
 std::string g_rn_lib;        /* private news program library */
-const char *g_tmp_dir{};     /* where tmp files go */
+std::string g_tmp_dir;       /* where tmp files go */
 std::string g_login_name;    /* login id of user */
 std::string g_real_name;     /* real name of user */
 std::string g_p_host_name;   /* host name in a posting */
@@ -54,9 +54,11 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     if (home_dir)
         g_home_dir = savestr(home_dir);
 
-    g_tmp_dir = getenv("TMPDIR");
-    if (g_tmp_dir == nullptr)
+    const char *val = getenv("TMPDIR");
+    if (val == nullptr)
 	g_tmp_dir = get_val("TMP","/tmp");
+    else
+	g_tmp_dir = val;
 
     /* try to set g_login_name */
     if (lax) {
@@ -140,7 +142,7 @@ void env_final()
     g_real_name.clear();
     g_login_name.clear();
     safefree0(g_home_dir);
-    g_tmp_dir = nullptr;
+    g_tmp_dir.clear();
     g_dot_dir.clear();
     g_trn_dir.clear();
     g_lib.clear();
