@@ -1118,6 +1118,16 @@ TEST_F(InterpolatorTest, regexCapture)
     ASSERT_EQ("0=Abracadabra, 1=Abracadabra, 2=racada", buffer());
 }
 
+TEST_F(InterpolatorTest, escapeSpecialsModifier)
+{
+    char pattern[]{R"pat(%(Regex .* and percent \%p specials.=^\(.*\)$?%\0))pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(R"text(Regex \.\* and percent \%p specials\.)text", buffer());
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
