@@ -1036,6 +1036,16 @@ TEST_F(InterpolatorTest, escapedPercent)
     ASSERT_EQ("%g", buffer());
 }
 
+TEST_F(InterpolatorTest, headerFieldNotInNewsgroupEmpty)
+{
+    char pattern[]{"%[X-Boogie-Nights]"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 

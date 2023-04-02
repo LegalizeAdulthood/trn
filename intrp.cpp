@@ -316,8 +316,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = scrbuf;
 		    break;
 		case '[':
+		    pattern = cpytill(scrbuf, pattern+1, ']');
 		    if (g_in_ng) {
-			pattern = cpytill(scrbuf,pattern+1,']');
 			header_line_type which_line;
                         if (*scrbuf && (which_line = get_header_num(scrbuf)) != SOME_LINE)
                         {
@@ -329,8 +329,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			    s = s_empty;
 		    }
 		    else
-			s = s_empty;
-		    break;
+                        s = s_empty;
+                    break;
 		case '(': {
 		    COMPEX *oldbra_compex = g_bra_compex;
 		    char rch;
