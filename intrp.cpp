@@ -945,7 +945,13 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		}
 	    }
 	    if (proc_sprintf) {
-		sprintf(scrbuf,spfbuf,s);
+		if (s == scrbuf)
+		{
+		    static char scratch[sizeof(scrbuf)];
+		    strcpy(scratch, scrbuf);
+		    s = scratch;
+		}
+                sprintf(scrbuf, spfbuf, s);
 		s = scrbuf;
 	    }
 	    if (*pattern)

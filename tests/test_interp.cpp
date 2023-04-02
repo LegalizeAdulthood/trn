@@ -1188,6 +1188,28 @@ TEST_F(InterpolatorTest, tickModifier)
     ASSERT_EQ(R"text('Isn'\''t this interesting?')text", buffer());
 }
 
+TEST_F(InterpolatorTest, formatModifierLeftJustified)
+{
+    g_general_mode = GM_PROMPT;
+    char pattern[]{"%:-10g"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("p         ", buffer());
+}
+
+TEST_F(InterpolatorTest, formatModifierRightJustified)
+{
+    g_general_mode = GM_PROMPT;
+    char pattern[]{"%:10g"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("         p", buffer());
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
