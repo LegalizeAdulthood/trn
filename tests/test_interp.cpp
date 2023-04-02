@@ -10,6 +10,7 @@
 #include <artio.h>
 #include <artsrch.h>
 #include <backpage.h>
+#include <bits.h>
 #include <cache.h>
 #include <color.h>
 #include <datasrc.h>
@@ -98,6 +99,9 @@ void InterpolatorTest::SetUp()
 
 void InterpolatorTest::TearDown()
 {
+    g_general_mode = GM_INIT;
+    g_mode = MM_INITIALIZING;
+    g_dmcount = 0;
     g_lastart = 0;
     g_art = 0;
     g_in_ng = false;
@@ -436,13 +440,13 @@ TEST_F(InterpolatorTest, followupNotInNewsgroup)
 
 TEST_F(InterpolatorTest, generalMode)
 {
-    g_general_mode = GM_INIT;
+    g_general_mode = GM_PROMPT;
     char pattern[]{"%g"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("I", buffer());
+    ASSERT_EQ("p", buffer());
 }
 
 TEST_F(InterpolatorTest, headerFileName)
@@ -519,12 +523,24 @@ TEST_F(InterpolatorTest, loginName)
 
 TEST_F(InterpolatorTest, minorMode)
 {
+    g_mode = MM_DELETE_BOGUS_NEWSGROUPS_PROMPT;
     char pattern[]{"%m"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("i", buffer());
+    ASSERT_EQ("D", buffer());
+}
+
+TEST_F(InterpolatorTest, markCount)
+{
+    char pattern[]{"%M"};
+    g_dmcount = 96;
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("96", buffer());
 }
 
 #ifdef TEST_ACTIVE_NEWSGROUP
