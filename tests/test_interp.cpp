@@ -1178,6 +1178,16 @@ TEST_F(InterpolatorTest, nameModifierFromQuotedValueStripsTrailingWhitespace)
     ASSERT_EQ("Bob the Builder", buffer());
 }
 
+TEST_F(InterpolatorTest, tickModifier)
+{
+    char pattern[]{R"pat(%(Isn't this interesting?=^\(.*\)$?'%'0'))pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(R"text('Isn'\''t this interesting?')text", buffer());
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
