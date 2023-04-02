@@ -31,7 +31,7 @@
 #endif
 
 std::string g_savedest;    /* value of %b */
-char *g_extractdest{}; /* value of %E */
+std::string g_extractdest; /* value of %E */
 std::string g_extractprog; /* value of %e */
 ART_POS g_savefrom{};  /* value of %B */
 
@@ -45,6 +45,7 @@ static bool cut_line(char *str);
 void respond_init()
 {
     g_savedest.clear();
+    g_extractdest.clear();
 }
 
 save_result save_article()
@@ -121,8 +122,8 @@ save_result save_article()
 	    s = g_buf;
 	}
 	else {
-	    if (g_extractdest)
-		strcpy(s, g_extractdest);
+	    if (!g_extractdest.empty())
+		strcpy(s, g_extractdest.c_str());
 	    if (custom_extract)
             {
                 static char cmdbuff[1024];
@@ -132,7 +133,7 @@ save_result save_article()
 	    else
 		cmdstr = nullptr;
 	}
-	custom_extract = (cmdstr != 0);
+	custom_extract = (cmdstr != nullptr);
 
 	if (!FILE_REF(s)) {	/* relative path? */
 	    c = (s==g_buf ? altbuf : g_buf);
@@ -151,9 +152,12 @@ save_result save_article()
 	    sprintf(c, "%s/%s", g_cwd, s);
 	    s = c;			/* absolutize it */
 	}
-	safefree(g_extractdest);
-        g_extractdest = savestr(s); /* make it handy for %E */
-        s = g_extractdest;
+        g_extractdest = s; /* make it handy for %E */
+        {
+	    static char buff[512];
+	    strcpy(buff, g_extractdest.c_str());
+            s = buff;
+        }
 	if (makedir(s, MD_DIR)) {       /* ensure directory exists */
 	    g_int_count++;
 	    return SAVE_DONE;

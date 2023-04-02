@@ -416,3 +416,25 @@ TEST_F(InterpolatorTest, extractProgramSet)
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ("uudecode", std::string{m_buffer.data()});
 }
+
+TEST_F(InterpolatorTest, extractDestinationNotSet)
+{
+    g_extractdest.clear();
+    char pattern[]{"%E"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(std::string{m_buffer.data()}.empty());
+}
+
+TEST_F(InterpolatorTest, extractDestinationSet)
+{
+    g_extractdest = "/home/users/foo";
+    char pattern[]{"%E"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("/home/users/foo", std::string{m_buffer.data()});
+}

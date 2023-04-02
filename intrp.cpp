@@ -539,7 +539,13 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		}
 		case 'E':
-		    s = g_extractdest? g_extractdest : s_empty;
+		    if (g_extractdest.empty())
+			s = s_empty;
+		    else
+		    {
+			strcpy(scrbuf, g_extractdest.c_str());
+			s = scrbuf;
+		    }
 		    break;
 		case 'f':			/* from line */
 		    if (g_in_ng) {
