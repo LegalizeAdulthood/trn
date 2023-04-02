@@ -686,6 +686,16 @@ TEST_F(InterpolatorTest, newsSpoolDirectory)
     ASSERT_EQ(g_datasrc->spool_dir, buffer());
 }
 
+TEST_F(InterpolatorTest, lastInputStringInitiallyEmpty)
+{
+    char pattern[]{"%q"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 

@@ -2,6 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <string>
+
 #include "common.h"
 #include "intrp.h"
 
@@ -50,17 +52,14 @@ int g_newsuid{};
 static char *skipinterp(char *pattern, const char *stoppers);
 static void abort_interp();
 
-static char  *s_regexp_specials = "^$.*[\\/?%";
-static char   s_orgname[] = ORGNAME;
-static COMPEX s_cond_compex;
-static char   s_empty[]{""};
+static const char *s_regexp_specials = "^$.*[\\/?%";
+static COMPEX      s_cond_compex;
+static char        s_empty[]{""};
+static std::string s_last_input;
 
 void intrp_init(char *tcbuf, int tcbuf_len)
 {
-#if HOSTBITS != 0
-    int i;
-#endif
-
+    s_last_input.clear();
     init_compex(&s_cond_compex);
     
     /* get environmental stuff */
@@ -101,7 +100,7 @@ void intrp_init(char *tcbuf, int tcbuf_len)
 
     /* the hostname to use in local-article comparisons */
 #if HOSTBITS != 0
-    i = (HOSTBITS < 2? 2 : HOSTBITS);
+    int i = (HOSTBITS < 2? 2 : HOSTBITS);
     static char buff[128];
     strcpy(buff, g_p_host_name.c_str());
     g_hostname = buff+strlen(buff)-1;
@@ -217,8 +216,6 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
     char* line_split = nullptr;
     char* orig_dest = dest;
     char scrbuf[8192];
-    static char* input_str = nullptr;
-    static int input_siz = 0;
     int metabit = 0;
 
     while (*pattern && (!stoppers || !strchr(stoppers, *pattern)))
@@ -432,9 +429,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    if (scrbuf[i-1] == '\n') {
 		        scrbuf[--i] = '\0';
 		    }
-		    growstr(&input_str, &input_siz, i+1);
-		    safecpy(input_str, scrbuf, i+1);
-		    s = input_str;
+		    s_last_input = scrbuf;
+		    s = scrbuf;
 		    break;
 		}
 		case '~':
@@ -663,8 +659,11 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = get_val("NEWSORG",s_orgname); 
 #else
 		    s = get_val("NEWSORG",nullptr);
-		    if (s == nullptr) 
-			s = get_val("ORGANIZATION",s_orgname); 
+		    if (s == nullptr)
+		    {
+                        strcpy(scrbuf, ORGNAME);
+                        s = get_val("ORGANIZATION", scrbuf);
+		    }
 #endif
 		    s = filexp(s);
 		    if (FILE_REF(s)) {
@@ -695,7 +694,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
                     s = g_datasrc ? g_datasrc->spool_dir : s_empty;
 		    break;
 		case 'q':
-		    s = input_str;
+		    strcpy(scrbuf, s_last_input.c_str());
+		    s = scrbuf;
 		    break;
 		case 'r':
 		    if (g_in_ng) {
