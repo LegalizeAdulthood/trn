@@ -655,7 +655,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			s = s_empty;
 		    break;
 		case 'N':			/* full name */
-		    s = get_val("NAME",g_real_name);
+                    strcpy(scrbuf, g_real_name.c_str());
+                    s = get_val("NAME", scrbuf);
 		    break;
 		case 'o':			/* organization */
 #ifdef IGNOREORG

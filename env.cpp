@@ -33,7 +33,7 @@ std::string g_lib;           /* news library */
 std::string g_rn_lib;        /* private news program library */
 const char *g_tmp_dir{};     /* where tmp files go */
 std::string g_login_name;    /* login id of user */
-char       *g_real_name{};   /* real name of user */
+std::string g_real_name;     /* real name of user */
 std::string g_p_host_name;   /* host name in a posting */
 char       *g_local_host{};  /* local host name */
 int         g_net_speed{20}; /* how fast our net-connection is */
@@ -99,8 +99,7 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     /* Set g_real_name, and maybe set g_login_name and g_home_dir (if nullptr). */
     if (!set_user_name_fn(tcbuf)) {
 	g_login_name.clear();
-	if (!g_real_name)
-	    g_real_name = savestr("");
+	g_real_name.clear();
 	fully_successful = false;
     }
     env_init2();
@@ -138,7 +137,7 @@ void env_final()
 {
     g_p_host_name.clear();
     safefree0(g_local_host);
-    safefree0(g_real_name);
+    g_real_name.clear();
     g_login_name.clear();
     safefree0(g_home_dir);
     g_tmp_dir = nullptr;
@@ -245,7 +244,7 @@ static bool set_user_name(char *tmpbuf)
 	    fgets(g_buf,sizeof g_buf,fp);
 	    fclose(fp);
 	    g_buf[strlen(g_buf)-1] = '\0';
-	    g_real_name = savestr(g_buf);
+	    g_real_name = g_buf;
 	}
     }
 #ifdef WIN32
@@ -261,21 +260,23 @@ static bool set_user_name(char *tmpbuf)
 	    value = value.substr(backslash + 1);
 	g_login_name = value;
     }
-    if (g_real_name == nullptr)
+    if (g_real_name.empty())
     {
 	DWORD size = 0;
         GetUserNameExA(NameDisplay, nullptr, &size);
-	g_real_name = safemalloc(size);
-	GetUserNameExA(NameDisplay, g_real_name, &size);
+	char *buffer = safemalloc(size);
+	GetUserNameExA(NameDisplay, buffer, &size);
+	g_real_name = buffer;
+	safefree(buffer);
     }
 #endif
 #endif /* !PASSNAMES */
 #ifdef HAS_GETPWENT
     endpwent();
 #endif
-    if (g_real_name == nullptr)
+    if (g_real_name.empty())
     {
-        g_real_name = savestr("PUT_YOUR_NAME_HERE");
+        g_real_name = "PUT_YOUR_NAME_HERE";
     }
     return true;
 }

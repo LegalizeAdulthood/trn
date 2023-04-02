@@ -29,10 +29,9 @@ protected:
     void TearDown() override
     {
         safefree0(g_home_dir);
-        safefree0(g_real_name);
         g_tmp_dir = nullptr;
         g_login_name.clear();
-        safefree0(g_real_name);
+        g_real_name.clear();
         safefree0(g_local_host);
         g_p_host_name.clear();
         g_dot_dir.clear();
@@ -44,11 +43,11 @@ protected:
     std::array<char, TCBUF_SIZE> m_tcbuf{};
     std::function<bool(char *)>  m_failed_set_name_fn{[](char *) { return false; }};
     std::function<bool(char *)>  m_set_name_fn{[](char *)
-                                                 {
-                                                     g_login_name = TRN_TEST_LOGIN_NAME;
-                                                     g_real_name = savestr(TRN_TEST_REAL_NAME);
-                                                     return true;
-                                                 }};
+                                              {
+                                                  g_login_name = TRN_TEST_LOGIN_NAME;
+                                                  g_real_name = TRN_TEST_REAL_NAME;
+                                                  return true;
+                                              }};
 };
 
 } // namespace
@@ -152,7 +151,7 @@ TEST_F(InitTest, namesFromFailedUserNameLookup)
 
     ASSERT_FALSE(fully_successful);
     ASSERT_TRUE(g_login_name.empty()) << "g_login_name = '" << g_login_name << '\'';
-    ASSERT_TRUE(std::string(g_real_name).empty()) << "g_real_name = '" << g_real_name << '\'';
+    ASSERT_TRUE(g_real_name.empty()) << "g_real_name = '" << g_real_name << '\'';
 }
 
 TEST_F(InitTest, namesFromSucessfulUserNameLookup)
@@ -162,7 +161,7 @@ TEST_F(InitTest, namesFromSucessfulUserNameLookup)
     auto user_name_fn = [&](char *)
     {
         g_login_name = login_name;
-        g_real_name = savestr(real_name.c_str());
+        g_real_name = real_name;
         return true;
     };
 

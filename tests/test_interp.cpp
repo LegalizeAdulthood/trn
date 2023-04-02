@@ -553,6 +553,27 @@ TEST_F(InterpolatorTest, newsgroupsLineNotInNewsgroup)
     ASSERT_TRUE(buffer().empty());
 }
 
+TEST_F(InterpolatorTest, realName)
+{
+    char pattern[]{"%N"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_REAL_NAME, buffer());
+}
+
+TEST_F(InterpolatorTest, realNameFromNAME)
+{
+    char pattern[]{"%N"};
+    putenv("NAME=John Yeager");
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("John Yeager", buffer());
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 

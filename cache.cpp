@@ -243,7 +243,7 @@ void check_poster(ARTICLE *ap)
 {
     if (g_auto_select_postings && (ap->flags & AF_EXISTS) && ap->from) {
 	if (ap->flags & AF_FROMTRUNCED) {
-	    strcpy(g_cmd_buf,g_real_name);
+	    strcpy(g_cmd_buf,g_real_name.c_str());
 	    if (!strcmp(ap->from,compress_name(g_cmd_buf,16))) {
 		g_untrim_cache = true;
 		fetchfrom(article_num(ap),false);

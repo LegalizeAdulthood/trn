@@ -28,12 +28,13 @@ void reset_envars()
     putenv("DOTDIR=");
     putenv("TRNDIR=");
     putenv("NNTPSERVER=");
+    putenv("NAME=");
 }
 
 bool set_name(char *)
 {
     g_login_name = "@TRN_TEST_LOGIN_NAME@";
-    g_real_name = savestr("@TRN_TEST_REAL_NAME@");
+    g_real_name = "@TRN_TEST_REAL_NAME@";
     return true;
 };
 
@@ -43,16 +44,6 @@ bool set_host_name(char *)
     g_p_host_name = "@TRN_TEST_P_HOST_NAME@";
     return true;
 };
-
-namespace {
-
-void reset_string(char *&ptr, const char *value)
-{
-    safefree0(ptr);
-    ptr = savestr(value);
-}
-
-} // namespace
 
 void reset_lib_dirs()
 {

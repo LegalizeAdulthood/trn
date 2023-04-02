@@ -188,12 +188,16 @@ int main(int argc, char *argv[])
     if (!has_pathline)
 	fprintf(g_nntplink.wr_fp,"Path: not-for-mail%s",line_end);
     if (!has_fromline) {
+	char buff[80];
+	strcpy(buff, g_real_name.c_str());
 	fprintf(g_nntplink.wr_fp,"From: %s@%s (%s)%s",g_login_name.c_str(),g_p_host_name.c_str(),
-		get_val("NAME",g_real_name),line_end);
+		get_val("NAME",buff),line_end);
     }
     if (!getenv("NO_ORIGINATOR")) {
+	char buff[80];
+	strcpy(buff, g_real_name.c_str());
 	fprintf(g_nntplink.wr_fp,"Originator: %s@%s (%s)%s",g_login_name.c_str(),g_p_host_name.c_str(),
-		get_val("NAME",g_real_name),line_end);
+		get_val("NAME",buff),line_end);
     }
     fprintf(g_nntplink.wr_fp,"%s",line_end);
 
