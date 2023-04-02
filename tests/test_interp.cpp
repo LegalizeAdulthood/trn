@@ -27,6 +27,7 @@
 #include <patchlevel.h>
 #include <rcstuff.h>
 #include <respond.h>
+#include <rt-util.h>
 #include <search.h>
 #include <term.h>
 #include <trn.h>
@@ -97,6 +98,7 @@ void InterpolatorTest::SetUp()
     trn_init();
     util_init();
     g_datasrc = datasrc_first();
+    perform_status_init(0);
 }
 
 void InterpolatorTest::TearDown()
@@ -156,51 +158,6 @@ TEST_F(InterpolatorTest, subsequentStopCharacter)
     ASSERT_EQ("this string contains no escapes ", buffer());
 }
 
-TEST_F(InterpolatorTest, articleNumberOutsideNewsgroup)
-{
-    char pattern[]{"Article %a"};
-
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("Article ", buffer());
-}
-
-TEST_F(InterpolatorTest, articleNumberInsideNewsgroup)
-{
-    char pattern[]{"Article %a"};
-    g_in_ng = true;
-    g_art = 624;
-
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("Article 624", buffer());
-}
-
-TEST_F(InterpolatorTest, articleNameOutsideNewsgroup)
-{
-    char pattern[]{"Article %A"};
-
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("Article ", buffer());
-}
-
-TEST_F(InterpolatorTest, articleNameInsideRemoteNewsgroupArticleClosed)
-{
-    char pattern[]{"Article %A"};
-    g_in_ng = true;
-    g_lastart = 623;
-    g_art = 624;
-
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("Article ", buffer());
-}
-
 TEST_F(InterpolatorTest, tilde)
 {
     char pattern[]{"%~"};
@@ -253,6 +210,51 @@ TEST_F(InterpolatorTest, environmentVarValueDefault)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ("not set", buffer());
+}
+
+TEST_F(InterpolatorTest, articleNumberOutsideNewsgroup)
+{
+    char pattern[]{"Article %a"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("Article ", buffer());
+}
+
+TEST_F(InterpolatorTest, articleNumberInsideNewsgroup)
+{
+    char pattern[]{"Article %a"};
+    g_in_ng = true;
+    g_art = 624;
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("Article 624", buffer());
+}
+
+TEST_F(InterpolatorTest, articleNameOutsideNewsgroup)
+{
+    char pattern[]{"Article %A"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("Article ", buffer());
+}
+
+TEST_F(InterpolatorTest, articleNameInsideRemoteNewsgroupArticleClosed)
+{
+    char pattern[]{"Article %A"};
+    g_in_ng = true;
+    g_lastart = 623;
+    g_art = 624;
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("Article ", buffer());
 }
 
 TEST_F(InterpolatorTest, saveDestinationNotSet)
@@ -845,6 +847,55 @@ TEST_F(InterpolatorTest, numSelectedThreadsNotInNewsgroupEmpty)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
+
+TEST_F(InterpolatorTest, trailingPercentRemains)
+{
+    char pattern[]{"%"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("%", buffer());
+}
+
+TEST_F(InterpolatorTest, performCount)
+{
+    value_saver<int> saved(g_perform_cnt, 86);
+    char pattern[]{"%#"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(std::to_string(g_perform_cnt), buffer());
+}
+
+TEST_F(InterpolatorTest, modifiedPerformCount)
+{
+    value_saver<int> saved(g_perform_cnt, -1);
+    char pattern[]{"%^#"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_NE(std::to_string(g_perform_cnt), buffer());
+}
+
+TEST_F(InterpolatorTest, consecutiveModifiedPerformCountIncreases)
+{
+    value_saver<int> saved(g_perform_cnt, 86);
+    char pattern[]{"%^#,%^#"};
+
+    const char *new_pattern = interpolate(pattern);
+    std::istringstream str{buffer()};
+    int value1;
+    int value2;
+    char comma;
+    str >> value1 >> comma >> value2;
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(',', comma);
+    ASSERT_GT(value2, value1);
 }
 
 #ifdef TEST_ACTIVE_NEWSGROUP
