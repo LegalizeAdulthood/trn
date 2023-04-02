@@ -480,6 +480,16 @@ TEST_F(InterpolatorTest, indentString)
     ASSERT_EQ("'>'", std::string{m_buffer.data()});
 }
 
+TEST_F(InterpolatorTest, approximateBaudRate)
+{
+    char pattern[]{"%j"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(std::to_string(g_just_a_sec*10), std::string{m_buffer.data()});
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
