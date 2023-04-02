@@ -716,6 +716,26 @@ TEST_F(InterpolatorTest, newReferencesNotInNewsgroupEmpty)
     ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
 }
 
+TEST_F(InterpolatorTest, strippedSubjectNotInNewsgroupEmpty)
+{
+    char pattern[]{"%s"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
+
+TEST_F(InterpolatorTest, subjectNotInNewsgroupEmpty)
+{
+    char pattern[]{"%S"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
@@ -857,5 +877,25 @@ TEST_F(InterpolatorNewsgroupTest, newReferencesInNewsgroup)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ("<reference1@flagrant.example.org> <goink1@poster.example.org>", buffer());
+}
+
+TEST_F(InterpolatorNewsgroupTest, strippedSubjectInNewsgroup)
+{
+    char pattern[]{"%s"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("The best red nose", buffer());
+}
+
+TEST_F(InterpolatorNewsgroupTest, subjectInNewsgroup)
+{
+    char pattern[]{"%S"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("Re: The best red nose", buffer());
 }
 #endif
