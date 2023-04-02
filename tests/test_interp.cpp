@@ -1210,6 +1210,126 @@ TEST_F(InterpolatorTest, formatModifierRightJustified)
     ASSERT_EQ("         p", buffer());
 }
 
+TEST_F(InterpolatorTest, bell)
+{
+    char pattern[]{R"pat(\a)pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("\a", buffer());
+}
+
+TEST_F(InterpolatorTest, backspace)
+{
+    char pattern[]{R"pat(\b)pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("\b", buffer());
+}
+
+TEST_F(InterpolatorTest, formFeed)
+{
+    char pattern[]{R"pat(\f)pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("\f", buffer());
+}
+
+TEST_F(InterpolatorTest, newline)
+{
+    char pattern[]{R"pat(\n)pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("\n", buffer());
+}
+
+TEST_F(InterpolatorTest, carriageReturn)
+{
+    char pattern[]{R"pat(\r)pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("\r", buffer());
+}
+
+TEST_F(InterpolatorTest, horizontalTab)
+{
+    char pattern[]{R"pat(\t)pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("\t", buffer());
+}
+
+TEST_F(InterpolatorTest, verticalTab)
+{
+    char pattern[]{R"pat(\v)pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("\v", buffer());
+}
+
+TEST_F(InterpolatorTest, octalEscape)
+{
+    char pattern[]{R"pat(\122)pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("\122", buffer());
+}
+
+TEST_F(InterpolatorTest, octalEscapeOutOfRangeDigits)
+{
+    char pattern[]{R"pat(\4189)pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("!89", buffer());
+}
+
+TEST_F(InterpolatorTest, hexEscapeLowerCase)
+{
+    char pattern[]{R"pat(\x4a)pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("\x4a", buffer());
+}
+
+TEST_F(InterpolatorTest, hexEscapeUpperCase)
+{
+    char pattern[]{R"pat(\x4A)pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("\x4A", buffer());
+}
+
+TEST_F(InterpolatorTest, hexEscapeOutOfRangeDigits)
+{
+    char pattern[]{R"pat(\x4G)pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("\x4G", buffer());
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 

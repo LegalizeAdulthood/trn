@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <cctype>
 #include <string>
 
 #include "common.h"
@@ -1054,19 +1055,18 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		abort_interp();
 	    if (*pattern == '^' && pattern[1]) {
 		pattern++;
-		int i = *(Uchar*)pattern;	/* get char after arrow into a register */
-		if (i == '?')
+		if (*pattern == '?')
 		    *dest++ = '\177' | metabit;
-		else if (i == '(') {
+		else if (*pattern == '(') {
 		    metabit = 0200;
 		    destsize++;
 		}
-		else if (i == ')') {
+		else if (*pattern == ')') {
 		    metabit = 0;
 		    destsize++;
 		}
-		else if (i >= '@')
-		    *dest++ = (i & 037) | metabit;
+		else if (*pattern >= '@')
+		    *dest++ = (*pattern & 037) | metabit;
 		else
 		    *dest++ = *--pattern | metabit;
 		pattern++;
@@ -1113,6 +1113,9 @@ char *interp_backslash(char *dest, char *pattern)
 	return pattern - 1;
     }
     switch (i) {
+    case 'a':
+	*dest = '\a';
+	break;
     case 'b':
 	*dest = '\b';
 	break;
@@ -1127,6 +1130,23 @@ char *interp_backslash(char *dest, char *pattern)
 	break;
     case 't':
 	*dest = '\t';
+	break;
+    case 'v':
+	*dest = '\v';
+	break;
+    case 'x':
+        if (std::isxdigit(pattern[1]))
+        {
+            i = 0;
+            while (i < 01000 && std::isxdigit(*++pattern))
+            {
+                static char hex_digits[17]{"0123456789ABCDEF"};
+                i <<= 4;
+                i += strchr(hex_digits, std::toupper(*pattern)) - hex_digits;
+            }
+            *dest = static_cast<char>(i & 0377);
+            return pattern - 1;
+        }
 	break;
     case '\0':
 	*dest = '\\';
