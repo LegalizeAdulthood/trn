@@ -51,12 +51,14 @@ protected:
     std::array<char, TCBUF_SIZE>  m_tcbuf{};
     std::array<char, BUFFER_SIZE> m_buffer{};
     MULTIRC                      *m_multirc{};
+    long                          m_test_pid{6421};
 };
 
 void InterpolatorTest::SetUp()
 {
     Test::SetUp();
 
+    g_our_pid = m_test_pid;
     term_init();
     mp_init();
     search_init();
@@ -227,13 +229,12 @@ TEST_F(InterpolatorTest, dotDir)
 
 TEST_F(InterpolatorTest, processId)
 {
-    g_our_pid = 8642;
     char pattern[]{"%$"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("8642", std::string{m_buffer.data()});
+    ASSERT_EQ(std::to_string(m_test_pid), std::string{m_buffer.data()});
 }
 
 TEST_F(InterpolatorTest, environmentVarValue)
@@ -526,4 +527,14 @@ TEST_F(InterpolatorTest, generalMode)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ("I", std::string{m_buffer.data()});
+}
+
+TEST_F(InterpolatorTest, headerFileName)
+{
+    char pattern[]{"%h"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(std::string{TRN_TEST_DOT_DIR} + "/.rnhead." + std::to_string(m_test_pid), std::string{m_buffer.data()});
 }

@@ -39,7 +39,7 @@ struct utsname utsn;
 
 char *g_origdir{};  /* cwd when rn invoked */
 char *g_hostname{}; /* host name to match local postings */
-char *g_headname{};
+std::string g_headname;
 int g_perform_cnt{};
 
 #ifdef HAS_NEWS_ADMIN
@@ -97,7 +97,7 @@ void intrp_init(char *tcbuf, int tcbuf_len)
 
     /* name of header file (%h) */
 
-    g_headname = savestr(filexp(HEADNAME));
+    g_headname = filexp(HEADNAME);
 
     /* the hostname to use in local-article comparisons */
 #if HOSTBITS != 0
@@ -116,7 +116,7 @@ void intrp_init(char *tcbuf, int tcbuf_len)
 
 void intrp_final()
 {
-    safefree0(g_headname);
+    g_headname.clear();
     safefree0(g_origdir);
 }
 
@@ -591,7 +591,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = scrbuf;
 		    break;
 		case 'h':			/* header file name */
-		    s = g_headname;
+		    strcpy(scrbuf, g_headname.c_str());
+		    s = scrbuf;
 		    break;
 		case 'H':			/* host name in postings */
 		    s = g_p_host_name;

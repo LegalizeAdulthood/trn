@@ -105,8 +105,8 @@ void final_init()
 	remove(s);
     }
     cleanup_nntp();
-    if (g_headname)
-	remove(g_headname);
+    if (!g_headname.empty())
+	remove(g_headname.c_str());
     if (status < 0) {
 	sigset(SIGILL,SIG_DFL);
 #ifdef HAS_SIGBLOCK

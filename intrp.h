@@ -4,13 +4,11 @@
 #ifndef TRN_INTRP_H
 #define TRN_INTRP_H
 
-#ifdef HAS_NEWS_ADMIN
 #include <string>
-#endif
 
 extern char *g_origdir;  /* cwd when rn invoked */
 extern char *g_hostname; /* host name to match local postings */
-extern char *g_headname;
+extern std::string g_headname;
 extern int g_perform_cnt;
 
 #ifdef HAS_NEWS_ADMIN

@@ -536,9 +536,9 @@ int cancel_article()
 	termdown(2);
     }
     else {
-	g_tmpfp = fopen(g_headname,"w");	/* open header file */
+	g_tmpfp = fopen(g_headname.c_str(),"w");	/* open header file */
 	if (g_tmpfp == nullptr) {
-	    printf(g_cantcreate,g_headname) FLUSH;
+	    printf(g_cantcreate,g_headname.c_str()) FLUSH;
 	    termdown(1);
 	    goto done;
 	}
@@ -598,9 +598,9 @@ int supersede_article()		/* Supersedes: */
 	termdown(2);
     }
     else {
-	g_tmpfp = fopen(g_headname,"w");	/* open header file */
+	g_tmpfp = fopen(g_headname.c_str(),"w");	/* open header file */
 	if (g_tmpfp == nullptr) {
-	    printf(g_cantcreate,g_headname) FLUSH;
+	    printf(g_cantcreate,g_headname.c_str()) FLUSH;
 	    termdown(1);
 	    goto done;
 	}
@@ -644,7 +644,7 @@ static void follow_it_up()
             FILE *fp_out = fopen(deadart, "a");
             if (fp_out != nullptr)
             {
-                FILE *fp_in = fopen(g_headname, "r");
+                FILE *fp_in = fopen(g_headname.c_str(), "r");
                 if (fp_in != nullptr)
                 {
 		    while (fgets(g_cmd_buf, sizeof g_cmd_buf, fp_in))
@@ -669,9 +669,9 @@ void reply()
     char* maildoer = savestr(get_val("MAILPOSTER",MAILPOSTER));
 
     artopen(g_art,(ART_POS)0);
-    g_tmpfp = fopen(g_headname,"w");	/* open header file */
+    g_tmpfp = fopen(g_headname.c_str(),"w");	/* open header file */
     if (g_tmpfp == nullptr) {
-	printf(g_cantcreate,g_headname) FLUSH;
+	printf(g_cantcreate,g_headname.c_str()) FLUSH;
 	termdown(1);
 	goto done;
     }
@@ -679,10 +679,10 @@ void reply()
     fputs(hbuf,g_tmpfp);
     if (!in_string(maildoer,"%h", true)) {
 	if (g_verbose)
-	    printf("\n%s\n(Above lines saved in file %s)\n",g_buf,g_headname)
+	    printf("\n%s\n(Above lines saved in file %s)\n",g_buf,g_headname.c_str())
 	      FLUSH;
 	else
-	    printf("\n%s\n(Header in %s)\n",g_buf,g_headname) FLUSH;
+	    printf("\n%s\n(Header in %s)\n",g_buf,g_headname.c_str()) FLUSH;
 	termdown(3);
     }
     if (incl_body && g_artfp != nullptr) {
@@ -728,9 +728,9 @@ void forward()
     init_compex(&mime_compex);
 #endif
     artopen(g_art,(ART_POS)0);
-    g_tmpfp = fopen(g_headname,"w");	/* open header file */
+    g_tmpfp = fopen(g_headname.c_str(),"w");	/* open header file */
     if (g_tmpfp == nullptr) {
-	printf(g_cantcreate,g_headname) FLUSH;
+	printf(g_cantcreate,g_headname.c_str()) FLUSH;
 	termdown(1);
 	goto done;
     }
@@ -774,10 +774,10 @@ void forward()
 #endif
     if (!in_string(maildoer,"%h", true)) {
 	if (g_verbose)
-	    printf("\n%s\n(Above lines saved in file %s)\n",hbuf,g_headname)
+	    printf("\n%s\n(Above lines saved in file %s)\n",hbuf,g_headname.c_str())
 	      FLUSH;
 	else
-	    printf("\n%s\n(Header in %s)\n",hbuf,g_headname) FLUSH;
+	    printf("\n%s\n(Header in %s)\n",hbuf,g_headname.c_str()) FLUSH;
 	termdown(3);
     }
     if (g_artfp != nullptr) {
@@ -835,9 +835,9 @@ void followup()
 	    g_art = g_lastart + 1;
     }
     artopen(g_art,(ART_POS)0);
-    g_tmpfp = fopen(g_headname,"w");
+    g_tmpfp = fopen(g_headname.c_str(),"w");
     if (g_tmpfp == nullptr) {
-	printf(g_cantcreate,g_headname) FLUSH;
+	printf(g_cantcreate,g_headname.c_str()) FLUSH;
 	termdown(1);
 	g_art = oldart;
 	return;
