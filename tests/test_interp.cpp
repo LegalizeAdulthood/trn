@@ -1056,6 +1056,58 @@ TEST_F(InterpolatorTest, homeDirectoryCapitalized)
     ASSERT_EQ(TRN_TEST_HOME_DIR_CAPITALIZED, buffer());
 }
 
+TEST_F(InterpolatorTest, spaceForShortLine)
+{
+    char pattern[]{"%?"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(" ", buffer());
+}
+
+#define TRN_TEST_01_SPACES " "
+#define TRN_TEST_02_SPACES TRN_TEST_01_SPACES TRN_TEST_01_SPACES
+#define TRN_TEST_04_SPACES TRN_TEST_02_SPACES TRN_TEST_02_SPACES
+#define TRN_TEST_08_SPACES TRN_TEST_04_SPACES TRN_TEST_04_SPACES
+#define TRN_TEST_09_SPACES TRN_TEST_08_SPACES TRN_TEST_01_SPACES
+#define TRN_TEST_10_SPACES TRN_TEST_09_SPACES TRN_TEST_01_SPACES
+#define TRN_TEST_20_SPACES TRN_TEST_10_SPACES TRN_TEST_10_SPACES
+#define TRN_TEST_40_SPACES TRN_TEST_20_SPACES TRN_TEST_20_SPACES
+#define TRN_TEST_70_SPACES TRN_TEST_40_SPACES TRN_TEST_20_SPACES TRN_TEST_10_SPACES
+#define TRN_TEST_79_SPACES TRN_TEST_70_SPACES TRN_TEST_09_SPACES
+TEST_F(InterpolatorTest, newlineFor79CharsLine)
+{
+    char pattern[]{TRN_TEST_79_SPACES "%?"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_79_SPACES "\n", buffer());
+}
+
+#define TRN_TEST_80_SPACES TRN_TEST_40_SPACES TRN_TEST_40_SPACES
+TEST_F(InterpolatorTest, newlineForLongerThan79CharsLine)
+{
+    char pattern[]{TRN_TEST_80_SPACES "%?"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_80_SPACES "\n", buffer());
+}
+#undef TRN_TEST_80_SPACES
+#undef TRN_TEST_79_SPACES
+#undef TRN_TEST_70_SPACES
+#undef TRN_TEST_40_SPACES
+#undef TRN_TEST_20_SPACES
+#undef TRN_TEST_10_SPACES
+#undef TRN_TEST_09_SPACES
+#undef TRN_TEST_08_SPACES
+#undef TRN_TEST_04_SPACES
+#undef TRN_TEST_02_SPACES
+#undef TRN_TEST_01_SPACES
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
