@@ -82,7 +82,13 @@ void util_init()
 
 void util_final()
 {
-    // TODO: undo environment variable exports in util_init
+    putenv("NEWSACTIVE=");
+    putenv("NEWSDESCRIPTIONS=");
+    putenv("NNTPSERVER=");
+    putenv("QUOTECHARS=");
+    putenv("NNTPFDS=");
+    putenv("NNTP_FORCE_AUTH=");
+    putenv("TRN_VERSION=");
 }
     
 /* fork and exec a shell command */
