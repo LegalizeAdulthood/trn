@@ -777,6 +777,16 @@ TEST_F(InterpolatorTest, numUnreadArticlesExceptCurrentNotInNewsgroupEmpty)
     ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
 }
 
+TEST_F(InterpolatorTest, numUnselectedArticlesExceptCurrentNotInNewsgroupEmpty)
+{
+    char pattern[]{"%v"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
+
 TEST_F(InterpolatorTest, patchLevel)
 {
     char pattern[]{"%V"};
@@ -993,6 +1003,16 @@ TEST_F(InterpolatorNewsgroupTest, numUnreadArticlesInNewsgroup)
 TEST_F(InterpolatorNewsgroupTest, numUnreadArticlesExceptCurrentInNewsgroup)
 {
     char pattern[]{"%U"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("2", buffer());
+}
+
+TEST_F(InterpolatorTest, numUnselectedArticlesExceptCurrentInNewsgroupEmpty)
+{
+    char pattern[]{"%v"};
 
     const char *new_pattern = interpolate(pattern);
 
