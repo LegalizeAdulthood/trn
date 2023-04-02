@@ -712,14 +712,13 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = s_empty;
 		    break;
 		case 'R': {
-		    int len, j;
-
-		    if (!g_in_ng) {
+                    if (!g_in_ng) {
 			s = s_empty;
 			break;
 		    }
 		    parseheader(g_art);
 		    safefree0(refs_buf);
+                    int len;
 		    if (g_htype[REFS_LINE].minpos >= 0) {
 			refs_buf = fetchlines(g_art,REFS_LINE);
 			len = strlen(refs_buf)+1;
@@ -745,7 +744,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    if (!artid_buf)
 			artid_buf = fetchlines(g_art,MSGID_LINE);
 		    int i = refs_buf? strlen(refs_buf) : 0;
-		    j = strlen(artid_buf) + (i? 1 : 0)
+		    int j = strlen(artid_buf) + (i? 1 : 0)
 		      + (artid_buf[0] == '<'? 0 : 2) + 1;
 		    if (len < i + j)
 			refs_buf = saferealloc(refs_buf, i + j);

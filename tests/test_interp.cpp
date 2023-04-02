@@ -696,6 +696,16 @@ TEST_F(InterpolatorTest, lastInputStringInitiallyEmpty)
     ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
 }
 
+TEST_F(InterpolatorTest, lastReferenceNotInNewsgroupEmpty)
+{
+    char pattern[]{"%r"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
@@ -809,7 +819,7 @@ TEST_F(InterpolatorNewsgroupTest, messageIdInNewsgroup)
     ASSERT_EQ("<hippityhop@flagrant.example.org>", buffer());
 }
 
-TEST_F(InterpolatorTest, newsgroupsLine)
+TEST_F(InterpolatorNewsgroupTest, newsgroupsLineInNewsgroup)
 {
     char pattern[]{"%n"};
 
@@ -817,5 +827,15 @@ TEST_F(InterpolatorTest, newsgroupsLine)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ("comp.arch", buffer());
+}
+
+TEST_F(InterpolatorNewsgroupTest, lastReferenceInNewsgroup)
+{
+    char pattern[]{"%r"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("<reference1@flagrant.example.org>", buffer());
 }
 #endif

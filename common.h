@@ -143,8 +143,8 @@ enum
  *	%O	Original working directory (where you ran trn from)
  *	%p	Your private news directory (-d switch)
  *	%P	Public news spool directory (NEWSSPOOL)
- *	%r	Last reference (parent article id)
  *	%q	The last quoted input (via %").
+ *	%r	Last reference (parent article id)
  *	%R	New references list
  *	%s	Subject, with all Re's and (nf)'s stripped off
  *	%S	Subject, with one Re stripped off
