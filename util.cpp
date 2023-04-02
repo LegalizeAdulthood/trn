@@ -77,9 +77,7 @@ void util_init()
     s_nntpfds_export = export_var("NNTPFDS", g_buf);
     g_buf[3] = '\0';
     s_nntpforce_export = export_var("NNTP_FORCE_AUTH", g_buf);
-
-    for (cp = g_patchlevel; isspace(*cp); cp++) ;
-    export_var("TRN_VERSION", cp);
+    export_var("TRN_VERSION", g_patchlevel);
 }
 
 void util_final()

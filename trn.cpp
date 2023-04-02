@@ -737,12 +737,14 @@ void check_active_refetch(bool force)
 void trn_version()
 {
     page_start();
-    sprintf(g_msg,"Trn version:%s.\nConfigured for ",g_patchlevel);
-# ifdef HAS_LOCAL_SPOOL
-    strcat(g_msg,"both NNTP and local news access.\n");
-# else
-    strcat(g_msg,"NNTP (plus individual local access).\n");
-# endif
+    sprintf(g_msg,
+            "Trn version: %s.\nConfigured for "
+#ifdef HAS_LOCAL_SPOOL
+            "both NNTP and local news access.\n",
+#else
+            "NNTP (plus individual local access).\n",
+#endif
+            g_patchlevel);
     print_lines(g_msg, NOMARKING);
 
     if (g_multirc) {
