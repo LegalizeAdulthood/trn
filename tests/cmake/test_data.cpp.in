@@ -18,6 +18,9 @@ void set_envars()
     putenv("DOTDIR=@TRN_TEST_DOT_DIR@");
     putenv("TRNDIR=@TRN_TEST_TRN_DIR@");
     putenv("NNTPSERVER=@TRN_TEST_NNTPSERVER@");
+    putenv("NAME=");
+    putenv("NEWSORG=");
+    putenv("ORGANIZATION=");
 }
 
 void reset_envars()
@@ -28,7 +31,6 @@ void reset_envars()
     putenv("DOTDIR=");
     putenv("TRNDIR=");
     putenv("NNTPSERVER=");
-    putenv("NAME=");
 }
 
 bool set_name(char *)

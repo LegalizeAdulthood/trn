@@ -574,6 +574,60 @@ TEST_F(InterpolatorTest, realNameFromNAME)
     ASSERT_EQ("John Yeager", buffer());
 }
 
+TEST_F(InterpolatorTest, newsOrgFromORGNAME)
+{
+    char pattern[]{"%o"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(buffer().empty());
+}
+
+TEST_F(InterpolatorTest, newsOrgFromNEWSORG)
+{
+    char pattern[]{"%o"};
+    putenv((std::string{"NEWSORG="} + TRN_TEST_ORGANIZATION).c_str());
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_ORGANIZATION, buffer());
+}
+
+TEST_F(InterpolatorTest, newsOrgFromNEWSORGFile)
+{
+    char pattern[]{"%o"};
+    putenv((std::string{"NEWSORG="} + TRN_TEST_ORGFILE).c_str());
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_ORGANIZATION, buffer());
+}
+
+TEST_F(InterpolatorTest, newsOrgFromORGANIZATION)
+{
+    char pattern[]{"%o"};
+    putenv((std::string{"ORGANIZATION="} + TRN_TEST_ORGANIZATION).c_str());
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_ORGANIZATION, buffer());
+}
+
+TEST_F(InterpolatorTest, newsOrgFromORGANIZATIONFile)
+{
+    char pattern[]{"%o"};
+    putenv((std::string{"ORGANIZATION="} + TRN_TEST_ORGFILE).c_str());
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_ORGANIZATION, buffer());
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
