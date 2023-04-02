@@ -115,8 +115,8 @@ void final_init()
 	abort();
     }
 #ifdef RESTORE_ORIGDIR
-    if (g_origdir)
-	chdir(g_origdir);
+    if (!g_origdir.empty())
+	chdir(g_origdir.c_str());
 #endif
     exit(status);
 }

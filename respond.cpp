@@ -626,7 +626,7 @@ done:
 static void follow_it_up()
 {
     safecpy(g_cmd_buf,filexp(get_val("NEWSPOSTER",NEWSPOSTER)), sizeof g_cmd_buf);
-    if (invoke(g_cmd_buf,g_origdir) == 42) {
+    if (invoke(g_cmd_buf,g_origdir.c_str()) == 42) {
 	int ret;
 	if ((g_datasrc->flags & DF_REMOTE)
 	 && (nntp_command("DATE") <= 0
@@ -635,7 +635,7 @@ static void follow_it_up()
 	else
 	{
 	    g_export_nntp_fds = true;
-	    ret = invoke(filexp(CALL_INEWS),g_origdir);
+	    ret = invoke(filexp(CALL_INEWS),g_origdir.c_str());
 	    g_export_nntp_fds = false;
 	}
 	if (ret) {
@@ -708,7 +708,7 @@ void reply()
     }
     fclose(g_tmpfp);
     safecpy(g_cmd_buf,filexp(maildoer),sizeof g_cmd_buf);
-    invoke(g_cmd_buf,g_origdir);
+    invoke(g_cmd_buf,g_origdir.c_str());
 done:
     free(maildoer);
 }
@@ -809,7 +809,7 @@ void forward()
     }
     fclose(g_tmpfp);
     safecpy(g_cmd_buf,filexp(maildoer),sizeof g_cmd_buf);
-    invoke(g_cmd_buf,g_origdir);
+    invoke(g_cmd_buf,g_origdir.c_str());
   done:
     free(maildoer);
 #ifdef REGEX_WORKS_RIGHT

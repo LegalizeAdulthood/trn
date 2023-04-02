@@ -6,10 +6,10 @@
 
 #include <string>
 
-extern char *g_origdir;  /* cwd when rn invoked */
-extern char *g_hostname; /* host name to match local postings */
+extern std::string g_origdir;  /* cwd when rn invoked */
+extern char       *g_hostname; /* host name to match local postings */
 extern std::string g_headname;
-extern int g_perform_cnt;
+extern int         g_perform_cnt;
 
 #ifdef HAS_NEWS_ADMIN
 extern const std::string g_newsadmin; /* news administrator */

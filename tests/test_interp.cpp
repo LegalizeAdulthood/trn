@@ -628,6 +628,15 @@ TEST_F(InterpolatorTest, newsOrgFromORGANIZATIONFile)
     ASSERT_EQ(TRN_TEST_ORGANIZATION, buffer());
 }
 
+TEST_F(InterpolatorTest, originalDirectory)
+{
+    char pattern[]{"%O"};
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(g_origdir, buffer());
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 

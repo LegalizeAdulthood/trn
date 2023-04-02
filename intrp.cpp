@@ -37,10 +37,10 @@ struct utsname utsn;
 #define pclose(f) _pclose(f)
 #endif
 
-char *g_origdir{};  /* cwd when rn invoked */
-char *g_hostname{}; /* host name to match local postings */
+std::string g_origdir;    /* cwd when rn invoked */
+char       *g_hostname{}; /* host name to match local postings */
 std::string g_headname;
-int g_perform_cnt{};
+int         g_perform_cnt{};
 
 #ifdef HAS_NEWS_ADMIN
 const std::string g_newsadmin{NEWS_ADMIN}; /* news administrator */
@@ -90,10 +90,10 @@ void intrp_init(char *tcbuf, int tcbuf_len)
 	g_newsuid = getuid();
 #endif
 
-    if (g_checkflag)			/* that getwd below takes ~1/3 sec. */
-	return;				/* and we do not need it for -c */
-    trn_getwd(tcbuf, tcbuf_len);	/* find working directory name */
-    g_origdir = savestr(tcbuf);		/* and remember it */
+    if (g_checkflag)             /* that getwd below takes ~1/3 sec. */
+        return;                  /* and we do not need it for -c */
+    trn_getwd(tcbuf, tcbuf_len); /* find working directory name */
+    g_origdir = tcbuf;           /* and remember it */
 
     /* name of header file (%h) */
 
@@ -120,7 +120,7 @@ void intrp_final()
 {
     g_headname.clear();
     g_hostname = nullptr;
-    safefree0(g_origdir);
+    g_origdir.clear();
 }
 
 /* skip interpolations */
@@ -684,7 +684,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    }
 		    break;
 		case 'O':
-		    s = g_origdir;
+		    strcpy(scrbuf, g_origdir.c_str());
+		    s = scrbuf;
 		    break;
 		case 'p':
 		    s = g_cwd;
