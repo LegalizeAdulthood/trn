@@ -911,6 +911,121 @@ TEST_F(InterpolatorTest, loginNamecCapitalized)
     ASSERT_EQ(static_cast<char>(std::toupper(TRN_TEST_LOGIN_NAME[0])), buffer()[0]);
 }
 
+TEST_F(InterpolatorTest, equalTriviallyTrue)
+{
+    char pattern[]{"%(x=x?true:false)"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("true", buffer());
+}
+
+TEST_F(InterpolatorTest, equalTriviallyFalse)
+{
+    char pattern[]{"%(x=y?true:false)"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("false", buffer());
+}
+
+TEST_F(InterpolatorTest, interpolatedTestEqualTrue)
+{
+    g_general_mode = GM_PROMPT;
+    char pattern[]{"%(%g=p?true:false)"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("true", buffer());
+}
+
+TEST_F(InterpolatorTest, interpolatedTestEqualFalse)
+{
+    g_general_mode = GM_INIT;
+    char pattern[]{"%(%g=p?true:false)"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("false", buffer());
+}
+
+TEST_F(InterpolatorTest, equalInterpolatedTrue)
+{
+    g_general_mode = GM_PROMPT;
+    char pattern[]{"%(x=x?%g:false)"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("p", buffer());
+}
+
+TEST_F(InterpolatorTest, equalInterpolatedFalse)
+{
+    g_general_mode = GM_PROMPT;
+    char pattern[]{"%(x=y?true:%g)"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("p", buffer());
+}
+
+TEST_F(InterpolatorTest, notEqualTriviallyTrue)
+{
+    char pattern[]{"%(x!=y?true:false)"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("true", buffer());
+}
+
+TEST_F(InterpolatorTest, notEqualTriviallyFalse)
+{
+    char pattern[]{"%(x!=x?true:false)"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("false", buffer());
+}
+
+TEST_F(InterpolatorTest, regexMatched)
+{
+    g_general_mode = GM_PROMPT;
+    char pattern[]{"%(%g=^p$?true:false)"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("true", buffer());
+}
+
+TEST_F(InterpolatorTest, triviallyTrueNoElse)
+{
+    char pattern[]{"%(x=x?true)"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("true", buffer());
+}
+
+TEST_F(InterpolatorTest, triviallyFalseNoElseIsEmpty)
+{
+    char pattern[]{"%(x=y?true)"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
