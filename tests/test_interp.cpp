@@ -516,3 +516,14 @@ TEST_F(InterpolatorTest, followupNotInNewsgroup)
 //    ASSERT_EQ('\0', *new_pattern);
 //    ASSERT_EQ("comp.arch", std::string{m_buffer.data()});
 //}
+
+TEST_F(InterpolatorTest, generalMode)
+{
+    g_general_mode = GM_INIT;
+    char pattern[]{"%g"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("I", std::string{m_buffer.data()});
+}
