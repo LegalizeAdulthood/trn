@@ -624,12 +624,13 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = scrbuf;
 		    sprintf(scrbuf,"%d",g_just_a_sec*10);
 		    break;
-		case 'l':			/* rn library */
+		case 'l':			/* news admin login */
 #ifdef HAS_NEWS_ADMIN
-		    s = (char*) g_newsadmin.c_str();
+		    strcpy(scrbuf, g_newsadmin.c_str());
 #else
-		    s = "???";
+		    strcpy(scrbuf, "???");
 #endif
+		    s = scrbuf;
 		    break;
 		case 'L':			/* login id */
 		    s = g_login_name;

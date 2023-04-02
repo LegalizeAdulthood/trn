@@ -490,6 +490,18 @@ TEST_F(InterpolatorTest, approximateBaudRate)
     ASSERT_EQ(std::to_string(g_just_a_sec*10), std::string{m_buffer.data()});
 }
 
+#ifndef HAS_NEWS_ADMIN
+TEST_F(InterpolatorTest, noNewsAdmin)
+{
+    char pattern[]{"%l"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("???", std::string{m_buffer.data()});
+}
+#endif
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
