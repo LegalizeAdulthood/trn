@@ -35,35 +35,49 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
 */
 char *extract_name(char *name)
 {
-    while (isspace(*name)) name++;
+    while (isspace(*name))
+        name++;
 
     char *lparen = strchr(name, '(');
     char *rparen = strrchr(name, ')');
     char *langle = strchr(name, '<');
     if (!lparen && !langle)
 	return nullptr;
-    else if (langle && (!lparen || !rparen || lparen>langle || rparen<langle)) {
-	if (langle == name)
-	    return nullptr;
-	*langle = '\0';
-    } else {
-	name = lparen;
-	*name++ = '\0';
-	while (isspace(*name)) name++;
-	if (name == rparen)
-	    return nullptr;
-	if (rparen != nullptr)
-	    *rparen = '\0';
+
+    if (langle && (!lparen || !rparen || lparen > langle || rparen < langle))
+    {
+        if (langle == name)
+            return nullptr;
+        *langle = '\0';
+    }
+    else
+    {
+        name = lparen;
+        *name++ = '\0';
+        while (isspace(*name))
+            name++;
+        if (name == rparen)
+            return nullptr;
+        if (rparen != nullptr)
+            *rparen = '\0';
     }
 
-    if (*name == '"') {
-	name++;
+    if (*name == '"')
+    {
+        name++;
         while (isspace(*name))
             name++;
         char *s = strrchr(name, '"');
         if (s != nullptr)
-	    *s = '\0';
+            *s = '\0';
     }
+
+    // strip trailing whitespace
+    int len = strlen(name);
+    while (len > 0 && isspace(name[len-1]))
+	len--;
+    name[len] = '\0';
+
     return name;
 }
 

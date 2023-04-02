@@ -1128,6 +1128,56 @@ TEST_F(InterpolatorTest, escapeSpecialsModifier)
     ASSERT_EQ(R"text(Regex \.\* and percent \%p specials\.)text", buffer());
 }
 
+TEST_F(InterpolatorTest, addressModifier)
+{
+    char pattern[]{"%(" TRN_TEST_HEADER_FROM R"pat(=^\(.*\)$?%>0))pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_HEADER_FROM_ADDRESS, buffer());
+}
+
+TEST_F(InterpolatorTest, nameModifier)
+{
+    char pattern[]{"%(" TRN_TEST_HEADER_FROM R"pat(=^\(.*\)$?%)0))pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_HEADER_FROM_NAME, buffer());
+}
+
+TEST_F(InterpolatorTest, nameModifierFromParenValue)
+{
+    char pattern[]{R"pat(%(\(Bob the Builder\) <bob@example.org>=^\(.*\)$?%)0))pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("(Bob the Builder)", buffer());
+}
+
+TEST_F(InterpolatorTest, nameModifierFromQuotedValue)
+{
+    char pattern[]{R"pat(%("Bob the Builder" <bob@example.org>=^\(.*\)$?%)0))pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("Bob the Builder", buffer());
+}
+
+TEST_F(InterpolatorTest, nameModifierFromQuotedValueStripsTrailingWhitespace)
+{
+    char pattern[]{R"pat(%("Bob the Builder    " <bob@example.org>=^\(.*\)$?%)0))pat"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("Bob the Builder", buffer());
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
