@@ -26,6 +26,8 @@ function(configure_trn_test_data)
     set(TRN_TEST_NNTPSERVER "news.example.org")
     set(TRN_TEST_ORGANIZATION "Multi-cellular, biological")
     set(TRN_TEST_ORGFILE "${TRN_TEST_DATA_DIR}/organization")
+    set(TRN_TEST_LOCAL_SPOOL_DIR "${TRN_TEST_DATA_DIR}/spool")
+    _mkdir("${TRN_TEST_LOCAL_SPOOL_DIR}")
 
     # Newsgroup related content.
     set(TRN_TEST_SPOOL_DIR "${TRN_TEST_DATA_DIR}/spool")
@@ -53,12 +55,22 @@ function(configure_trn_test_data)
     set(TRN_TEST_BODY "Pneumatic tubes are killing the Internet.")
     set(TRN_TEST_SIGNATURE "XMission Internet Access - http://www.xmission.com - Voice: 801 539 0852")
 
+    # Access file contents
+    set(TRN_TEST_ACCESS_LOCAL_ACTIVE_FILE   "${TRN_TEST_LOCAL_SPOOL_DIR}/active")
+    set(TRN_TEST_ACCESS_LOCAL_ADD_GROUPS    "yes")
+    set(TRN_TEST_ACCESS_LOCAL_NEWSRC        "${TRN_TEST_HOME_DIR}/local-newsrc")
+    set(TRN_TEST_ACCESS_LOCAL_SPOOL_DIR     "${TRN_TEST_LOCAL_SPOOL_DIR}")
+    set(TRN_TEST_ACCESS_NNTP_ACTIVE_FILE    "${TRN_TEST_HOME_DIR}/nntp-active")
+    set(TRN_TEST_ACCESS_NNTP_ADD_GROUPS     "yes")
+    set(TRN_TEST_ACCESS_NNTP_NEWSRC         "${TRN_TEST_HOME_DIR}/nntp-newsrc")
+    set(TRN_TEST_ACCESS_NNTP_SERVER         "nntp.example.org")
+
     configure_file(cmake/test_article.in                "${TRN_TEST_ARTICLE_FILE}")
     # test_config.h needs the size of the generated article.
     file(SIZE "${TRN_TEST_ARTICLE_FILE}" TRN_TEST_ARTICLE_SIZE)
     configure_file(cmake/test_nntp_auth_file.in         "${TRN_TEST_DOT_DIR}/.nntpauth")
     configure_file(cmake/test_access_file.in            "${TRN_TEST_TRN_DIR}/access")
-    configure_file(cmake/test_default_access_file.in    "${TRN_TEST_RN_LIB_DIR}/access.def")
+    configure_file(cmake/test_access_file.in            "${TRN_TEST_RN_LIB_DIR}/access.def")
     configure_file(cmake/test_organization_file.in      "${TRN_TEST_ORGFILE}")
     configure_file(cmake/test_config.h.in               test_config.h)
     configure_file(cmake/test_data.cpp.in               test_data.cpp)

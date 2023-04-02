@@ -51,14 +51,14 @@
 #Force Auth =
 #XHDR Broken =
 
-[xmission]
-NNTP Server = news.xmission.com
-Active File = %./active.xmission
+[test-local]
+Active File = @TRN_TEST_ACCESS_LOCAL_ACTIVE_FILE@
 Active File Refetch = 2 days
+Spool Dir = @TRN_TEST_ACCESS_LOCAL_SPOOL_DIR@
 
-[boost]
-NNTP Server = news.gmane.io
-Active File = %./active.boost
+[test-nntp]
+NNTP Server = @TRN_TEST_ACCESS_NNTP_SERVER@
+Active File = @TRN_TEST_ACCESS_NNTP_ACTIVE_FILE@
 Active File Refetch = 1 day
 
 ## This section tells trn what newsrc groups you want to use.  If you
@@ -75,11 +75,11 @@ Active File Refetch = 1 day
 ## add groups, specify "manual".  The default is "yes".
 
 [Group 1]
-ID = xmission
-Newsrc = %./newsrc
-Add Groups = yes/no/manual
+ID = test-local
+Newsrc = @TRN_TEST_ACCESS_LOCAL_NEWSRC@
+Add Groups = @TRN_TEST_ACCESS_LOCAL_ADD_GROUPS@
 
 [Group 2]
-ID = boost
-Newsrc = %./newsrc_boost
-Add Groups = yes
+ID = test-nntp
+Newsrc = @TRN_TEST_ACCESS_NNTP_NEWSRC@
+Add Groups = @TRN_TEST_ACCESS_NNTP_ADD_GROUPS@
