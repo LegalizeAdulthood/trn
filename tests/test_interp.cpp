@@ -517,6 +517,16 @@ TEST_F(InterpolatorTest, loginName)
     ASSERT_EQ(TRN_TEST_LOGIN_NAME, buffer());
 }
 
+TEST_F(InterpolatorTest, minorMode)
+{
+    char pattern[]{"%m"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("i", buffer());
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
