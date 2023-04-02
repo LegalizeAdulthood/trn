@@ -692,7 +692,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = scrbuf;
 		    break;
 		case 'P':
-		    s = g_datasrc? g_datasrc->spool_dir : s_empty;
+                    s = g_datasrc ? g_datasrc->spool_dir : s_empty;
 		    break;
 		case 'q':
 		    s = input_str;

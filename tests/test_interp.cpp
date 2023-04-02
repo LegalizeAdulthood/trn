@@ -281,8 +281,7 @@ TEST_F(InterpolatorTest, saveDestinationNotSet)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    const std::string buffer{m_buffer.data()};
-    ASSERT_TRUE(buffer.empty()) << "Contents: '" << buffer << "'";
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
 }
 
 TEST_F(InterpolatorTest, saveDestinationSet)
@@ -315,8 +314,7 @@ TEST_F(InterpolatorTest, relativeNewsgroupDirNotSet)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    const std::string buffer{m_buffer.data()};
-    ASSERT_TRUE(buffer.empty()) << "Contents: '" << buffer << "'";
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
 }
 
 TEST_F(InterpolatorTest, newsgroupNameNotSet)
@@ -329,8 +327,7 @@ TEST_F(InterpolatorTest, newsgroupNameNotSet)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    const std::string buffer{m_buffer.data()};
-    ASSERT_TRUE(buffer.empty()) << "Contents: '" << buffer << "'";
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
 }
 
 TEST_F(InterpolatorTest, newsgroupNameSet)
@@ -354,8 +351,7 @@ TEST_F(InterpolatorTest, absoluteNewsgroupDirNotSet)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    const std::string buffer{m_buffer.data()};
-    ASSERT_TRUE(buffer.empty()) << "Contents: '" << buffer << "'";
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
 }
 
 TEST_F(InterpolatorTest, oldDistributionLineNotInNewsgroup)
@@ -366,8 +362,7 @@ TEST_F(InterpolatorTest, oldDistributionLineNotInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    const std::string buffer{m_buffer.data()};
-    ASSERT_TRUE(buffer.empty()) << "Contents: '" << buffer << "'";
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
 }
 
 TEST_F(InterpolatorTest, extractProgramNotSet)
@@ -400,8 +395,7 @@ TEST_F(InterpolatorTest, extractDestinationNotSet)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    const std::string buffer{m_buffer.data()};
-    ASSERT_TRUE(buffer.empty()) << "Contents: '" << buffer << "'";
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
 }
 
 TEST_F(InterpolatorTest, extractDestinationSet)
@@ -423,8 +417,7 @@ TEST_F(InterpolatorTest, fromLineNotInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    const std::string buffer{m_buffer.data()};
-    ASSERT_TRUE(buffer.empty()) << "Contents: '" << buffer << "'";
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
 }
 
 TEST_F(InterpolatorTest, followupNotInNewsgroup)
@@ -435,8 +428,7 @@ TEST_F(InterpolatorTest, followupNotInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    const std::string buffer{m_buffer.data()};
-    ASSERT_TRUE(buffer.empty()) << "Contents: '" << buffer << "'";
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
 }
 
 TEST_F(InterpolatorTest, generalMode)
@@ -477,7 +469,7 @@ TEST_F(InterpolatorTest, messageIdNotInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty());
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
 }
 
 TEST_F(InterpolatorTest, indentString)
@@ -551,7 +543,7 @@ TEST_F(InterpolatorTest, newsgroupsLineNotInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty());
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
 }
 
 TEST_F(InterpolatorTest, realName)
@@ -582,7 +574,7 @@ TEST_F(InterpolatorTest, newsOrgFromORGNAME)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty());
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
 }
 
 TEST_F(InterpolatorTest, newsOrgFromNEWSORG)
@@ -647,6 +639,51 @@ TEST_F(InterpolatorTest, privateNewsDirectory)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ(g_privdir, buffer());
+}
+
+namespace {
+
+template <typename T>
+class value_saver
+{
+public:
+    value_saver(T &var, T new_value) :
+        m_var(var),
+        m_old_value(var)
+    {
+        m_var = new_value;
+    }
+    ~value_saver()
+    {
+        m_var = m_old_value;
+    }
+
+private:
+    T &m_var;
+    T m_old_value;
+};
+
+} // namespace
+
+TEST_F(InterpolatorTest, newsSpoolDirectoryNoDataSource)
+{
+    value_saver<DATASRC *> datasrc(g_datasrc, nullptr);
+    char                   pattern[]{"%P"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
+
+TEST_F(InterpolatorTest, newsSpoolDirectory)
+{
+    char pattern[]{"%P"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(g_datasrc->spool_dir, buffer());
 }
 
 #ifdef TEST_ACTIVE_NEWSGROUP
