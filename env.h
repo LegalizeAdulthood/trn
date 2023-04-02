@@ -12,7 +12,7 @@ extern std::string g_trn_dir;     /* usually %./.trn */
 extern std::string g_lib;         /* news library */
 extern std::string g_rn_lib;      /* private news program library */
 extern const char *g_tmp_dir;     /* where tmp files go */
-extern char       *g_login_name;  /* login id of user */
+extern std::string g_login_name;  /* login id of user */
 extern char       *g_real_name;   /* real name of user */
 extern std::string g_p_host_name; /* host name in a posting */
 extern char       *g_local_host;  /* local host name */

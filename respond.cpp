@@ -516,8 +516,8 @@ int cancel_article()
     char *ngs_buf = fetchlines(g_art, NGS_LINE);
     if (strcasecmp(get_val("FROM",""),from_buf)
      && (!in_string(from_buf,g_hostname, false)
-      || (!in_string(from_buf,g_login_name, true)
-       && !in_string(reply_buf,g_login_name, true)
+      || (!in_string(from_buf,g_login_name.c_str(), true)
+       && !in_string(reply_buf,g_login_name.c_str(), true)
 #ifdef HAS_NEWS_ADMIN
        && myuid != g_newsuid
 #endif
@@ -578,8 +578,8 @@ int supersede_article()		/* Supersedes: */
     char *ngs_buf = fetchlines(g_art, NGS_LINE);
     if (strcasecmp(get_val("FROM",""),from_buf)
      && (!in_string(from_buf,g_hostname, false)
-      || (!in_string(from_buf,g_login_name, true)
-       && !in_string(reply_buf,g_login_name, true)
+      || (!in_string(from_buf,g_login_name.c_str(), true)
+       && !in_string(reply_buf,g_login_name.c_str(), true)
 #ifdef HAS_NEWS_ADMIN
        && myuid != g_newsuid
 #endif

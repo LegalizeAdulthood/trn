@@ -48,6 +48,11 @@ protected:
         return dointerp(m_buffer.data(), BUFFER_SIZE, pattern, stoppers, nullptr);
     }
 
+    std::string buffer() const
+    {
+        return m_buffer.data();
+    }
+
     std::array<char, TCBUF_SIZE>  m_tcbuf{};
     std::array<char, BUFFER_SIZE> m_buffer{};
     MULTIRC                      *m_multirc{};
@@ -122,7 +127,7 @@ TEST_F(InterpolatorTest, noEscapes)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(std::string{pattern}, std::string{m_buffer.data()});
+    ASSERT_EQ(pattern, buffer());
 }
 
 TEST_F(InterpolatorTest, firstStopCharacter)
@@ -132,7 +137,7 @@ TEST_F(InterpolatorTest, firstStopCharacter)
     const char *new_pattern = interpolate(pattern, "[]");
 
     ASSERT_EQ('[', *new_pattern);
-    ASSERT_EQ(std::string{"this string contains no escapes "}, std::string{m_buffer.data()});
+    ASSERT_EQ("this string contains no escapes ", buffer());
 }
 
 TEST_F(InterpolatorTest, subsequentStopCharacter)
@@ -142,7 +147,7 @@ TEST_F(InterpolatorTest, subsequentStopCharacter)
     const char *new_pattern = interpolate(pattern, "()[]");
 
     ASSERT_EQ('[', *new_pattern);
-    ASSERT_EQ(std::string{"this string contains no escapes "}, std::string{m_buffer.data()});
+    ASSERT_EQ("this string contains no escapes ", buffer());
 }
 
 TEST_F(InterpolatorTest, articleNumberOutsideNewsgroup)
@@ -152,7 +157,7 @@ TEST_F(InterpolatorTest, articleNumberOutsideNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(std::string{"Article "}, std::string{m_buffer.data()});
+    ASSERT_EQ("Article ", buffer());
 }
 
 TEST_F(InterpolatorTest, articleNumberInsideNewsgroup)
@@ -164,7 +169,7 @@ TEST_F(InterpolatorTest, articleNumberInsideNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(std::string{"Article 624"}, std::string{m_buffer.data()});
+    ASSERT_EQ("Article 624", buffer());
 }
 
 TEST_F(InterpolatorTest, articleNameOutsideNewsgroup)
@@ -174,7 +179,7 @@ TEST_F(InterpolatorTest, articleNameOutsideNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(std::string{"Article "}, std::string{m_buffer.data()});
+    ASSERT_EQ("Article ", buffer());
 }
 
 TEST_F(InterpolatorTest, articleNameInsideRemoteNewsgroupArticleClosed)
@@ -187,7 +192,7 @@ TEST_F(InterpolatorTest, articleNameInsideRemoteNewsgroupArticleClosed)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(std::string{"Article "}, std::string{m_buffer.data()});
+    ASSERT_EQ("Article ", buffer());
 }
 
 TEST_F(InterpolatorTest, tilde)
@@ -197,7 +202,7 @@ TEST_F(InterpolatorTest, tilde)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(std::string{TRN_TEST_HOME_DIR}, std::string{m_buffer.data()});
+    ASSERT_EQ(TRN_TEST_HOME_DIR, buffer());
 }
 
 TEST_F(InterpolatorTest, dotDir)
@@ -207,7 +212,7 @@ TEST_F(InterpolatorTest, dotDir)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(std::string{TRN_TEST_DOT_DIR}, std::string{m_buffer.data()});
+    ASSERT_EQ(TRN_TEST_DOT_DIR, buffer());
 }
 
 TEST_F(InterpolatorTest, processId)
@@ -217,7 +222,7 @@ TEST_F(InterpolatorTest, processId)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(std::to_string(m_test_pid), std::string{m_buffer.data()});
+    ASSERT_EQ(std::to_string(m_test_pid), buffer());
 }
 
 TEST_F(InterpolatorTest, environmentVarValue)
@@ -228,7 +233,7 @@ TEST_F(InterpolatorTest, environmentVarValue)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("value", std::string{m_buffer.data()});
+    ASSERT_EQ("value", buffer());
 
     putenv("FOO=");
 }
@@ -241,7 +246,7 @@ TEST_F(InterpolatorTest, environmentVarValueDefault)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("not set", std::string{m_buffer.data()});
+    ASSERT_EQ("not set", buffer());
 }
 
 TEST_F(InterpolatorTest, libDir)
@@ -251,7 +256,7 @@ TEST_F(InterpolatorTest, libDir)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(TRN_TEST_LIB_DIR, std::string{m_buffer.data()});
+    ASSERT_EQ(TRN_TEST_LIB_DIR, buffer());
 }
 
 TEST_F(InterpolatorTest, rnLibDir)
@@ -261,7 +266,7 @@ TEST_F(InterpolatorTest, rnLibDir)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(TRN_TEST_RN_LIB_DIR, std::string{m_buffer.data()});
+    ASSERT_EQ(TRN_TEST_RN_LIB_DIR, buffer());
 }
 
 TEST_F(InterpolatorTest, saveDestinationNotSet)
@@ -283,7 +288,7 @@ TEST_F(InterpolatorTest, saveDestinationSet)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("/tmp/frob", std::string{m_buffer.data()});
+    ASSERT_EQ("/tmp/frob", buffer());
 }
 
 TEST_F(InterpolatorTest, relativeNewsgroupDir)
@@ -294,7 +299,7 @@ TEST_F(InterpolatorTest, relativeNewsgroupDir)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("comp/arch", std::string{m_buffer.data()});
+    ASSERT_EQ("comp/arch", buffer());
 }
 
 TEST_F(InterpolatorTest, relativeNewsgroupDirNotSet)
@@ -333,7 +338,7 @@ TEST_F(InterpolatorTest, newsgroupNameSet)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("comp.arch", std::string{m_buffer.data()});
+    ASSERT_EQ("comp.arch", buffer());
 }
 
 TEST_F(InterpolatorTest, absoluteNewsgroupDirNotSet)
@@ -368,7 +373,7 @@ TEST_F(InterpolatorTest, extractProgramNotSet)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("-", std::string{m_buffer.data()});
+    ASSERT_EQ("-", buffer());
 }
 
 TEST_F(InterpolatorTest, extractProgramSet)
@@ -379,7 +384,7 @@ TEST_F(InterpolatorTest, extractProgramSet)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("uudecode", std::string{m_buffer.data()});
+    ASSERT_EQ("uudecode", buffer());
 }
 
 TEST_F(InterpolatorTest, extractDestinationNotSet)
@@ -402,7 +407,7 @@ TEST_F(InterpolatorTest, extractDestinationSet)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("/home/users/foo", std::string{m_buffer.data()});
+    ASSERT_EQ("/home/users/foo", buffer());
 }
 
 TEST_F(InterpolatorTest, fromLineNotInNewsgroup)
@@ -437,7 +442,7 @@ TEST_F(InterpolatorTest, generalMode)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("I", std::string{m_buffer.data()});
+    ASSERT_EQ("I", buffer());
 }
 
 TEST_F(InterpolatorTest, headerFileName)
@@ -447,7 +452,7 @@ TEST_F(InterpolatorTest, headerFileName)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(std::string{TRN_TEST_DOT_DIR} + "/.rnhead." + std::to_string(m_test_pid), std::string{m_buffer.data()});
+    ASSERT_EQ(std::string{TRN_TEST_DOT_DIR} + "/.rnhead." + std::to_string(m_test_pid), buffer());
 }
 
 TEST_F(InterpolatorTest, hostName)
@@ -457,7 +462,7 @@ TEST_F(InterpolatorTest, hostName)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(std::string{TRN_TEST_P_HOST_NAME}, std::string{m_buffer.data()});
+    ASSERT_EQ(TRN_TEST_P_HOST_NAME, buffer());
 }
 
 TEST_F(InterpolatorTest, messageIdNotInNewsgroup)
@@ -467,7 +472,7 @@ TEST_F(InterpolatorTest, messageIdNotInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(std::string{m_buffer.data()}.empty());
+    ASSERT_TRUE(buffer().empty());
 }
 
 TEST_F(InterpolatorTest, indentString)
@@ -477,7 +482,7 @@ TEST_F(InterpolatorTest, indentString)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("'>'", std::string{m_buffer.data()});
+    ASSERT_EQ("'>'", buffer());
 }
 
 TEST_F(InterpolatorTest, approximateBaudRate)
@@ -487,7 +492,7 @@ TEST_F(InterpolatorTest, approximateBaudRate)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(std::to_string(g_just_a_sec*10), std::string{m_buffer.data()});
+    ASSERT_EQ(std::to_string(g_just_a_sec*10), buffer());
 }
 
 #ifndef HAS_NEWS_ADMIN
@@ -498,9 +503,19 @@ TEST_F(InterpolatorTest, noNewsAdmin)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("???", std::string{m_buffer.data()});
+    ASSERT_EQ("???", buffer());
 }
 #endif
+
+TEST_F(InterpolatorTest, loginName)
+{
+    char pattern[]{"%L"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_LOGIN_NAME, buffer());
+}
 
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
@@ -539,7 +554,7 @@ TEST_F(InterpolatorNewsgroupTest, articleNameInsideRemoteNewsgroupArticleOpen)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(std::string{"Article 624"}, std::string{m_buffer.data()});
+    ASSERT_EQ("Article 624", buffer());
 
     close_cache();
 }
@@ -552,7 +567,7 @@ TEST_F(InterpolatorNewsgroupTest, absoluteNewsgroupDirSet)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("/usr/spool/news/comp/arch", std::string{m_buffer.data()});
+    ASSERT_EQ("/usr/spool/news/comp/arch", buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, oldDistributionLineInNewsgroup)
@@ -562,7 +577,7 @@ TEST_F(InterpolatorNewsgroupTest, oldDistributionLineInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("na", std::string{m_buffer.data()});
+    ASSERT_EQ("na", buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, fromLineInNewsgroupNoReplyTo)
@@ -572,7 +587,7 @@ TEST_F(InterpolatorNewsgroupTest, fromLineInNewsgroupNoReplyTo)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("John Yeager <jyeager@example.org>", std::string{m_buffer.data()});
+    ASSERT_EQ("John Yeager <jyeager@example.org>", buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, fromLineInNewsgroupWithReplyTo)
@@ -582,7 +597,7 @@ TEST_F(InterpolatorNewsgroupTest, fromLineInNewsgroupWithReplyTo)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("Cyrus Longworth <clongworth@example.org>", std::string{m_buffer.data()});
+    ASSERT_EQ("Cyrus Longworth <clongworth@example.org>", buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, followupInNewsgroupWithFollowupToLine)
@@ -592,7 +607,7 @@ TEST_F(InterpolatorNewsgroupTest, followupInNewsgroupWithFollowupToLine)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("alt.flame", std::string{m_buffer.data()});
+    ASSERT_EQ("alt.flame", buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, followupInNewsgroupFromNewsgroupsLine)
@@ -602,7 +617,7 @@ TEST_F(InterpolatorNewsgroupTest, followupInNewsgroupFromNewsgroupsLine)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("comp.arch", std::string{m_buffer.data()});
+    ASSERT_EQ("comp.arch", buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, messageIdInNewsgroup)
@@ -612,6 +627,6 @@ TEST_F(InterpolatorNewsgroupTest, messageIdInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("<hippityhop@flagrant.example.org>", std::string{m_buffer.data()});
+    ASSERT_EQ("<hippityhop@flagrant.example.org>", buffer());
 }
 #endif

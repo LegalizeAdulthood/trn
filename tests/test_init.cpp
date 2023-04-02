@@ -8,6 +8,8 @@
 #include <util.h>
 #include <util2.h>
 
+#include "test_config.h"
+
 namespace
 {
 
@@ -29,7 +31,7 @@ protected:
         safefree0(g_home_dir);
         safefree0(g_real_name);
         g_tmp_dir = nullptr;
-        safefree0(g_login_name);
+        g_login_name.clear();
         safefree0(g_real_name);
         safefree0(g_local_host);
         g_p_host_name.clear();
@@ -43,8 +45,8 @@ protected:
     std::function<bool(char *)>  m_failed_set_name_fn{[](char *) { return false; }};
     std::function<bool(char *)>  m_set_name_fn{[](char *)
                                                  {
-                                                     g_login_name = savestr("bonzo");
-                                                     g_real_name = savestr("Bonzo the Monkey");
+                                                     g_login_name = TRN_TEST_LOGIN_NAME;
+                                                     g_real_name = savestr(TRN_TEST_REAL_NAME);
                                                      return true;
                                                  }};
 };
@@ -102,33 +104,33 @@ TEST_F(InitTest, tempDirFromDefault)
 
 TEST_F(InitTest, loginNameFromUSER)
 {
-    const std::string login_name{"bonzo"};
+    const std::string login_name{TRN_TEST_LOGIN_NAME};
     putenv(("USER=" + login_name).c_str());
 
     env_init(m_tcbuf.data(), true);
 
-    ASSERT_EQ(login_name, std::string{g_login_name});
+    ASSERT_EQ(login_name, g_login_name);
 }
 
 TEST_F(InitTest, loginNameFromLOGNAME)
 {
-    const std::string login_name{"bonzo"};
+    const std::string login_name{TRN_TEST_LOGIN_NAME};
     putenv(("LOGNAME=" + login_name).c_str());
 
     env_init(m_tcbuf.data(), true);
 
-    ASSERT_EQ(login_name, std::string{g_login_name});
+    ASSERT_EQ(login_name, g_login_name);
 }
 
 #ifdef MSDOS
 TEST_F(InitTest, loginNameFromUSERNAME)
 {
-    const std::string login_name{"bonzo"};
+    const std::string login_name{TRN_TEST_LOGIN_NAME};
     putenv(("USERNAME=" + login_name).c_str());
 
     env_init(m_tcbuf.data(), true);
 
-    ASSERT_EQ(login_name, std::string{g_login_name});
+    ASSERT_EQ(login_name, g_login_name);
 }
 
 TEST_F(InitTest, homeDirFromHOMEDRIVEandHOMEPATH)
@@ -149,17 +151,17 @@ TEST_F(InitTest, namesFromFailedUserNameLookup)
     const bool fully_successful = env_init(m_tcbuf.data(), true, m_failed_set_name_fn, m_failed_set_name_fn);
 
     ASSERT_FALSE(fully_successful);
-    ASSERT_TRUE(std::string(g_login_name).empty()) << "g_login_name = '" << g_login_name << '\'';
+    ASSERT_TRUE(g_login_name.empty()) << "g_login_name = '" << g_login_name << '\'';
     ASSERT_TRUE(std::string(g_real_name).empty()) << "g_real_name = '" << g_real_name << '\'';
 }
 
 TEST_F(InitTest, namesFromSucessfulUserNameLookup)
 {
-    const std::string login_name{"bonzo"};
-    const std::string real_name{"Bonzo the Monkey"};
+    const std::string login_name{TRN_TEST_LOGIN_NAME};
+    const std::string real_name{TRN_TEST_REAL_NAME};
     auto user_name_fn = [&](char *)
     {
-        g_login_name = savestr(login_name.c_str());
+        g_login_name = login_name;
         g_real_name = savestr(real_name.c_str());
         return true;
     };

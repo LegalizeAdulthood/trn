@@ -32,7 +32,7 @@ std::string g_trn_dir;       /* usually %./.trn */
 std::string g_lib;           /* news library */
 std::string g_rn_lib;        /* private news program library */
 const char *g_tmp_dir{};     /* where tmp files go */
-char       *g_login_name{};  /* login id of user */
+std::string g_login_name;    /* login id of user */
 char       *g_real_name{};   /* real name of user */
 std::string g_p_host_name;   /* host name in a posting */
 char       *g_local_host{};  /* local host name */
@@ -63,9 +63,9 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
 	const char *login_name = getenv("USER");
 	if (!login_name)
 	    login_name = getenv("LOGNAME");
-	if (login_name && !g_login_name)
+	if (login_name && g_login_name.empty())
 	{
-	    g_login_name  = savestr(login_name);
+	    g_login_name  = login_name;
 	}
     }
 #ifndef MSDOS
@@ -76,12 +76,11 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     }
 #endif
 #ifdef MSDOS
-    if (!g_login_name)
+    if (g_login_name.empty())
     {
-	const char *user_name = getenv("USERNAME");
-	if (user_name)
+	if (const char *user_name = getenv("USERNAME"))
 	{
-            g_login_name = savestr(user_name);
+            g_login_name = user_name;
 	}
     }
     if (!g_home_dir)
@@ -99,8 +98,7 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
 
     /* Set g_real_name, and maybe set g_login_name and g_home_dir (if nullptr). */
     if (!set_user_name_fn(tcbuf)) {
-	if (!g_login_name)
-	    g_login_name = savestr("");
+	g_login_name.clear();
 	if (!g_real_name)
 	    g_real_name = savestr("");
 	fully_successful = false;
@@ -141,7 +139,7 @@ void env_final()
     g_p_host_name.clear();
     safefree0(g_local_host);
     safefree0(g_real_name);
-    safefree0(g_login_name);
+    g_login_name.clear();
     safefree0(g_home_dir);
     g_tmp_dir = nullptr;
     g_dot_dir.clear();
@@ -251,7 +249,7 @@ static bool set_user_name(char *tmpbuf)
 	}
     }
 #ifdef WIN32
-    if (g_login_name == nullptr)
+    if (g_login_name.empty())
     {
 	DWORD size = 0;
         GetUserNameExA(NameSamCompatible, nullptr, &size);
@@ -261,7 +259,7 @@ static bool set_user_name(char *tmpbuf)
 	std::string::size_type backslash = value.find_last_of('\\');
 	if (backslash != std::string::npos)
 	    value = value.substr(backslash + 1);
-	g_login_name = savestr(value.c_str());
+	g_login_name = value;
     }
     if (g_real_name == nullptr)
     {

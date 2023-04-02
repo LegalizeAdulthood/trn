@@ -276,7 +276,7 @@ void check_poster(ARTICLE *ap)
 	        h = s;
 		u = s;
 	    }
-	    if (!strcmp(u,g_login_name)) {
+	    if (!strcmp(u,g_login_name.c_str())) {
 		if (in_string(h,g_hostname, false)) {
 		    switch (g_auto_select_postings) {
 		      case '.':

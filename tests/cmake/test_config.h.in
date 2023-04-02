@@ -5,6 +5,7 @@
 #define TRN_TEST_TMP_DIR        "@TRN_TEST_TMP_DIR@"
 #define TRN_TEST_TRN_DIR        "@TRN_TEST_TRN_DIR@"
 #define TRN_TEST_LOGIN_NAME     "@TRN_TEST_LOGIN_NAME@"
+#define TRN_TEST_REAL_NAME      "@TRN_TEST_REAL_NAME@"
 #define TRN_TEST_DOT_DIR        "@TRN_TEST_DOT_DIR@"
 #define TRN_TEST_LIB_DIR        "@TRN_TEST_LIB_DIR@"
 #define TRN_TEST_RN_LIB_DIR     "@TRN_TEST_RN_LIB_DIR@"

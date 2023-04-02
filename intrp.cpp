@@ -633,7 +633,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = scrbuf;
 		    break;
 		case 'L':			/* login id */
-		    s = g_login_name;
+		    strcpy(scrbuf, g_login_name.c_str());
+		    s = scrbuf;
 		    break;
 		case 'm':		/* current mode */
 		    s = scrbuf;
