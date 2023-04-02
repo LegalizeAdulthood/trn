@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <cctype>
+#include <string>
 
 #include "test_config.h"
 
@@ -870,15 +872,14 @@ TEST_F(InterpolatorTest, performCount)
     ASSERT_EQ(std::to_string(g_perform_cnt), buffer());
 }
 
-TEST_F(InterpolatorTest, modifiedPerformCount)
+TEST_F(InterpolatorTest, modifiedPerformCountNotZero)
 {
-    value_saver<int> saved(g_perform_cnt, -1);
     char pattern[]{"%^#"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_NE(std::to_string(g_perform_cnt), buffer());
+    ASSERT_NE("0", buffer());
 }
 
 TEST_F(InterpolatorTest, consecutiveModifiedPerformCountIncreases)
@@ -894,8 +895,20 @@ TEST_F(InterpolatorTest, consecutiveModifiedPerformCountIncreases)
     str >> value1 >> comma >> value2;
 
     ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(str.eof());
     ASSERT_EQ(',', comma);
     ASSERT_GT(value2, value1);
+}
+
+TEST_F(InterpolatorTest, loginNamecCapitalized)
+{
+    char pattern[]{"%^L"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(!std::isupper(TRN_TEST_LOGIN_NAME[0]));
+    ASSERT_EQ(static_cast<char>(std::toupper(TRN_TEST_LOGIN_NAME[0])), buffer()[0]);
 }
 
 #ifdef TEST_ACTIVE_NEWSGROUP
