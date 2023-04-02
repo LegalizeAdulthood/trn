@@ -190,23 +190,6 @@ TEST_F(InterpolatorTest, articleNameInsideRemoteNewsgroupArticleClosed)
     ASSERT_EQ(std::string{"Article "}, std::string{m_buffer.data()});
 }
 
-// TODO: figure out how to set active newsgroup
-//TEST_F(InterpolatorTest, articleNameInsideRemoteNewsgroupArticleOpen)
-//{
-//    build_cache();
-//    char pattern[]{"Article %A"};
-//    g_in_ng = true;
-//    g_art = 624;
-//    g_lastart = 624;
-//
-//    const char *new_pattern = interpolate(pattern);
-//
-//    ASSERT_EQ('\0', *new_pattern);
-//    ASSERT_EQ(std::string{"Article 624"}, std::string{m_buffer.data()});
-//
-//    close_cache();
-//}
-
 TEST_F(InterpolatorTest, tilde)
 {
     char pattern[]{"%~"};
@@ -365,18 +348,6 @@ TEST_F(InterpolatorTest, absoluteNewsgroupDirNotSet)
     ASSERT_TRUE(buffer.empty()) << "Contents: '" << buffer << "'";
 }
 
-// TODO: figure out how to properly set active DATASRC
-//TEST_F(InterpolatorTest, absoluteNewsgroupDirSet)
-//{
-//    g_ngdir = "comp/arch";
-//    char pattern[]{"%d"};
-//
-//    const char *new_pattern = interpolate(pattern);
-//
-//    ASSERT_EQ('\0', *new_pattern);
-//    ASSERT_EQ("/usr/spool/news/comp/arch", std::string{m_buffer.data()});
-//}
-
 TEST_F(InterpolatorTest, oldDistributionLineNotInNewsgroup)
 {
     g_in_ng = false;
@@ -388,18 +359,6 @@ TEST_F(InterpolatorTest, oldDistributionLineNotInNewsgroup)
     const std::string buffer{m_buffer.data()};
     ASSERT_TRUE(buffer.empty()) << "Contents: '" << buffer << "'";
 }
-
-// TODO: figure out how to fake up an article
-//TEST_F(InterpolatorTest, oldDistributionLineInNewsgroup)
-//{
-//    g_in_ng = true;
-//    char pattern[]{"%D"};
-//
-//    const char *new_pattern = interpolate(pattern);
-//
-//    ASSERT_EQ('\0', *new_pattern);
-//    ASSERT_EQ("na", std::string{m_buffer.data()});
-//}
 
 TEST_F(InterpolatorTest, extractProgramNotSet)
 {
@@ -458,30 +417,6 @@ TEST_F(InterpolatorTest, fromLineNotInNewsgroup)
     ASSERT_TRUE(buffer.empty()) << "Contents: '" << buffer << "'";
 }
 
-// TODO: figure out how to set current article
-//TEST_F(InterpolatorTest, fromLineInNewsgroupNoReplyTo)
-//{
-//    g_in_ng = true;
-//    char pattern[]{"%f"};
-//
-//    const char *new_pattern = interpolate(pattern);
-//
-//    ASSERT_EQ('\0', *new_pattern);
-//    ASSERT_EQ("John Yeager <jyeager@example.org>", std::string{m_buffer.data()});
-//}
-
-// TODO: figure out how to set current article
-//TEST_F(InterpolatorTest, fromLineInNewsgroupWithReplyTo)
-//{
-//    g_in_ng = true;
-//    char pattern[]{"%f"};
-//
-//    const char *new_pattern = interpolate(pattern);
-//
-//    ASSERT_EQ('\0', *new_pattern);
-//    ASSERT_EQ("Cyrus Longworth <clongworth@example.org>", std::string{m_buffer.data()});
-//}
-
 TEST_F(InterpolatorTest, followupNotInNewsgroup)
 {
     g_in_ng = false;
@@ -493,30 +428,6 @@ TEST_F(InterpolatorTest, followupNotInNewsgroup)
     const std::string buffer{m_buffer.data()};
     ASSERT_TRUE(buffer.empty()) << "Contents: '" << buffer << "'";
 }
-
-// TODO: figure out how to set current article
-//TEST_F(InterpolatorTest, followupInNewsgroupWithFollowupToLine)
-//{
-//    g_in_ng = true;
-//    char pattern[]{"%F"};
-//
-//    const char *new_pattern = interpolate(pattern);
-//
-//    ASSERT_EQ('\0', *new_pattern);
-//    ASSERT_EQ("alt.flame", std::string{m_buffer.data()});
-//}
-
-// TODO: figure out how to set current article
-//TEST_F(InterpolatorTest, followupInNewsgroupFromNewsgroupsLine)
-//{
-//    g_in_ng = true;
-//    char pattern[]{"%F"};
-//
-//    const char *new_pattern = interpolate(pattern);
-//
-//    ASSERT_EQ('\0', *new_pattern);
-//    ASSERT_EQ("comp.arch", std::string{m_buffer.data()});
-//}
 
 TEST_F(InterpolatorTest, generalMode)
 {
@@ -548,3 +459,128 @@ TEST_F(InterpolatorTest, hostName)
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ(std::string{TRN_TEST_P_HOST_NAME}, std::string{m_buffer.data()});
 }
+
+TEST_F(InterpolatorTest, messageIdNotInNewsgroup)
+{
+    g_in_ng = false;
+    char pattern[]{"%i"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(std::string{m_buffer.data()}.empty());
+}
+
+#ifdef TEST_ACTIVE_NEWSGROUP
+namespace {
+
+struct InterpolatorNewsgroupTest : InterpolatorTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+};
+
+void InterpolatorNewsgroupTest::SetUp()
+{
+    InterpolatorTest::SetUp();
+    g_in_ng = true;
+    // TODO: figure out how to set active newsgroup
+    // TODO: figure out how to properly set active DATASRC
+    // TODO: figure out how to fake up an article
+}
+
+void InterpolatorNewsgroupTest::TearDown()
+{
+    g_in_ng = false;
+    InterpolatorTest::TearDown();
+}
+
+}
+
+TEST_F(InterpolatorNewsgroupTest, articleNameInsideRemoteNewsgroupArticleOpen)
+{
+    build_cache();
+    char pattern[]{"Article %A"};
+    g_art = 624;
+    g_lastart = 624;
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(std::string{"Article 624"}, std::string{m_buffer.data()});
+
+    close_cache();
+}
+
+TEST_F(InterpolatorNewsgroupTest, absoluteNewsgroupDirSet)
+{
+    g_ngdir = "comp/arch";
+    char pattern[]{"%d"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("/usr/spool/news/comp/arch", std::string{m_buffer.data()});
+}
+
+TEST_F(InterpolatorNewsgroupTest, oldDistributionLineInNewsgroup)
+{
+    char pattern[]{"%D"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("na", std::string{m_buffer.data()});
+}
+
+TEST_F(InterpolatorNewsgroupTest, fromLineInNewsgroupNoReplyTo)
+{
+    char pattern[]{"%f"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("John Yeager <jyeager@example.org>", std::string{m_buffer.data()});
+}
+
+TEST_F(InterpolatorNewsgroupTest, fromLineInNewsgroupWithReplyTo)
+{
+    char pattern[]{"%f"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("Cyrus Longworth <clongworth@example.org>", std::string{m_buffer.data()});
+}
+
+TEST_F(InterpolatorNewsgroupTest, followupInNewsgroupWithFollowupToLine)
+{
+    char pattern[]{"%F"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("alt.flame", std::string{m_buffer.data()});
+}
+
+TEST_F(InterpolatorNewsgroupTest, followupInNewsgroupFromNewsgroupsLine)
+{
+    char pattern[]{"%F"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("comp.arch", std::string{m_buffer.data()});
+}
+
+TEST_F(InterpolatorNewsgroupTest, messageIdInNewsgroup)
+{
+    char pattern[]{"%i"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("<hippityhop@flagrant.example.org>", std::string{m_buffer.data()});
+}
+#endif
