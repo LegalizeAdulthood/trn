@@ -797,6 +797,16 @@ TEST_F(InterpolatorTest, patchLevel)
     ASSERT_EQ(std::string{PATCHLEVEL}, buffer());
 }
 
+TEST_F(InterpolatorTest, threadDirNotInNewsgroup)
+{
+    char pattern[]{"%W"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
@@ -1018,5 +1028,15 @@ TEST_F(InterpolatorTest, numUnselectedArticlesExceptCurrentInNewsgroupEmpty)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ("2", buffer());
+}
+
+TEST_F(InterpolatorTest, threadDirInNewsgroup)
+{
+    char pattern[]{"%W"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_THREAD_DIR, buffer());
 }
 #endif
