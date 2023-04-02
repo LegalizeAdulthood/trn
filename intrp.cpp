@@ -922,8 +922,15 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = scrbuf;
 		    break;
 		case 'Z':
-		    sprintf(scrbuf,"%ld",(long)g_selected_count);
-		    s = scrbuf;
+		    if (!g_in_ng)
+		    {
+		        s = s_empty;
+		    }
+		    else
+		    {
+		        sprintf(scrbuf,"%ld",(long)g_selected_count);
+		        s = scrbuf;
+		    }
 		    break;
 		case '\0':
 		    s = s_empty;
