@@ -94,6 +94,7 @@ enum
  *	%E	Extract destination directory
  *	%f	Old From: line or Reply-To: line
  *	%F	Newsgroups to followup to from Newsgroups: and Followup-To:
+ *      %g      General mode: read: 'r', search: 's', insert: 'i', prompt: 'p', choice: 'c'
  *	%h	Name of header file to pass to mail or news poster
  *	%H	Host name (yours)
  *	%i	Old Message-I.D.: line, with <>
@@ -747,9 +748,18 @@ extern bool g_use_sel_num;
 extern bool g_sel_num_goto;
 /* miscellania */
 
-extern bool g_in_ng; /* true if in a newsgroup */
-extern char g_mode;  /* current state of trn */
-extern char g_general_mode; /* general mode of trn */
+enum general_mode : char
+{
+    GM_READ = 'r',
+    GM_SELECT = 's',
+    GM_INSERT = 'i',
+    GM_PROMPT = 'p',
+    GM_CHOICE = 'c',
+};
+
+extern bool         g_in_ng;        /* true if in a newsgroup */
+extern char         g_mode;         /* current state of trn */
+extern general_mode g_general_mode; /* general mode of trn */
 
 extern FILE *g_tmpfp; /* scratch fp used for .rnlock, .rnlast, etc. */
 

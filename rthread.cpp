@@ -619,7 +619,7 @@ void select_article(ARTICLE *ap, autokill_flags auto_flags)
     if ((ap->flags & (AF_EXISTS|AF_UNREAD)) == desired_flags) {
 	if (!(ap->flags & static_cast<article_flags>(g_sel_mask))) {
 	    g_selected_count++;
-	    if (g_verbose && echo && g_general_mode != 's')
+	    if (g_verbose && echo && g_general_mode != GM_SELECT)
 		fputs("\tSelected",stdout);
 	}
 	ap->flags = (ap->flags & ~AF_DEL) | static_cast<article_flags>(g_sel_mask);
@@ -736,7 +736,7 @@ void deselect_article(ARTICLE *ap, autokill_flags auto_flags)
 	ap->flags &= ~static_cast<article_flags>(g_sel_mask);
 	if (!g_selected_count--)
 	    g_selected_count = 0;
-	if (g_verbose && echo && g_general_mode != 's')
+	if (g_verbose && echo && g_general_mode != GM_SELECT)
 	    fputs("\tDeselected",stdout);
     }
     if (g_sel_rereading && g_sel_mode == SM_ARTICLE)

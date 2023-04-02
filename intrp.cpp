@@ -587,7 +587,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case 'g':			/* general mode */
 		    s = scrbuf;
-		    *s = g_general_mode;
+		    *s = static_cast<char>(g_general_mode);
 		    s[1] = '\0';
 		    break;
 		case 'h':			/* header file name */

@@ -62,7 +62,7 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
     char *cmdlst = nullptr; /* list of commands to do */
     if (*s)
 	cmdlst = savestr(s);
-    else if (g_general_mode == 's')
+    else if (g_general_mode == GM_SELECT)
 	cmdlst = savestr("+");
     ng_search_result ret = NGS_NOTFOUND; /* assume no commands */
     if (cmdlst)
@@ -80,7 +80,7 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
 	fflush(stdout);
     }
 
-    bool const output_level = (!g_use_threads && g_general_mode != 's');
+    bool const output_level = (!g_use_threads && g_general_mode != GM_SELECT);
     if (g_first_addgroup) {
 	ADDGROUP *gp = g_first_addgroup;
 	do {

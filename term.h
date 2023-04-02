@@ -85,7 +85,7 @@ void  set_macro(char *seq, char *def);
 void  arrow_macros(char *tmpbuf);
 void  mac_line(char *line, char *tmpbuf, int tbsize);
 void  show_macros();
-void  set_mode(char_int new_gmode, char_int new_mode);
+void  set_mode(general_mode new_gmode, char_int new_mode);
 int   putchr(char_int ch);
 void  hide_pending();
 bool  finput_pending(bool check_term);

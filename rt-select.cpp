@@ -88,17 +88,17 @@ static display_state (*s_extra_commands)(char_int){};
 
 namespace {
 
-class save_selector_modes
+class push_selector_modes
 {
 public:
-    save_selector_modes(char new_mode) :
+    push_selector_modes(char new_mode) :
         m_save_mode(g_mode),
         m_save_gmode(g_general_mode)
     {
         g_bos_on_stop = true;
-        set_mode('s', new_mode);
+        set_mode(GM_SELECT, new_mode);
     }
-    ~save_selector_modes()
+    ~push_selector_modes()
     {
         g_bos_on_stop = false;
         set_mode(m_save_gmode, m_save_mode);
@@ -106,7 +106,7 @@ public:
 
 private:
     char m_save_mode;
-    char m_save_gmode;
+    general_mode m_save_gmode;
 };
 
 }
@@ -195,7 +195,7 @@ static int find_line(int y);
 char article_selector(char_int cmd)
 {
     bool save_selected_only;
-    save_selector_modes saver('t');
+    push_selector_modes saver('t');
 
     g_sel_rereading = (cmd == 'U');
 
@@ -370,7 +370,7 @@ static void sel_dogroups()
 
 char multirc_selector()
 {
-    save_selector_modes saver('c');
+    push_selector_modes saver('c');
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -420,7 +420,7 @@ char multirc_selector()
 
 char newsgroup_selector()
 {
-    save_selector_modes saver('w');
+    push_selector_modes saver('w');
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -485,7 +485,7 @@ char newsgroup_selector()
 
 char addgroup_selector(getnewsgroup_flags flags)
 {
-    save_selector_modes saver('j');
+    push_selector_modes saver('j');
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -545,7 +545,7 @@ char addgroup_selector(getnewsgroup_flags flags)
 char option_selector()
 {
     char** vals = ini_values(g_options_ini);
-    save_selector_modes saver('l');
+    push_selector_modes saver('l');
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -763,7 +763,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
 
 char universal_selector()
 {
-    save_selector_modes saver('v');		/* kind of like 'v'irtual... */
+    push_selector_modes saver('v');		/* kind of like 'v'irtual... */
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -2332,7 +2332,7 @@ static display_state newsgroup_commands(char_int ch)
 	    fflush(stdout);
 	}
 	g_dfltcmd = "\\";
-	set_mode('r','n');
+	set_mode(GM_READ,'n');
 	if (ch == '\\') {
 	    putchar(ch);
 	    fflush(stdout);
@@ -2342,7 +2342,7 @@ static display_state newsgroup_commands(char_int ch)
 	do {
 	    ret = input_newsgroup();
 	} while (ret == ING_INPUT);
-	set_mode('s','w');
+	set_mode(GM_SELECT,'w');
 	POP_SELECTOR();
 	switch (ret) {
 	  case ING_NOSERVER:

@@ -150,7 +150,7 @@ void do_multirc()
 {
     bool special = false;	/* allow newsgroup with no unread news? */
     char mode_save = g_mode;
-    char gmode_save = g_general_mode;
+    general_mode gmode_save = g_general_mode;
 
     if (g_use_univ_selector) {
         univ_startup();		/* load startup file */
@@ -211,7 +211,7 @@ void do_multirc()
 	    g_ngptr = g_first_ng;
 	for (;;) {			/* for each newsgroup */
 	    if (g_ngptr == nullptr) {	/* after the last newsgroup? */
-		set_mode('r','f');
+		set_mode(GM_READ,'f');
 		if (g_maxngtodo) {
 		    if (retry) {
 			if (g_verbose)
@@ -236,7 +236,7 @@ void do_multirc()
 	    else {
 		bool shoe_fits;	/* newsgroup matches restriction? */
 
-		set_mode('r','n');
+		set_mode(GM_READ,'n');
 		if (g_ngptr->toread >= TR_NONE) {	/* recalc toread? */
 		    set_ngname(g_ngptr->rcline);
 		    shoe_fits = inlist(g_ngname);
@@ -399,7 +399,7 @@ input_newsgroup_result input_newsgroup()
 	newline();
 	return ING_QUIT;
       case '^':
-	if (g_general_mode != 's')
+	if (g_general_mode != GM_SELECT)
 	    newline();
 	g_ngptr = g_first_ng;
 	break;
@@ -624,7 +624,7 @@ reask_abandon:
       }
       case '`':
       case '\\':
-	if (g_general_mode == 's')
+	if (g_general_mode == GM_SELECT)
 	    return ING_ERASE;
       ng_start_sel:
 	g_use_newsgroup_selector = true;

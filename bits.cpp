@@ -501,7 +501,7 @@ void yankback()
     if (g_dmcount) {			/* delayed unmarks pending? */
 	if (g_panic)
 	    ;
-	else if (g_general_mode == 's')
+	else if (g_general_mode == GM_SELECT)
 	    sprintf(g_msg, "Returned %ld Marked article%s.",(long)g_dmcount,
 		plural(g_dmcount));
 	else {

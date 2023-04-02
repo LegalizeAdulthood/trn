@@ -327,7 +327,7 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
     char oldmode = g_mode;
     bool anytokill = (g_ngptr->toread > 0);
 
-    set_mode('r','k');
+    set_mode(GM_READ,'k');
     if ((entering || s_exitcmds) && (g_localkfp || g_globkfp)) {
 	s_exitcmds = false;
 	ART_NUM oldfirst = g_firstart;

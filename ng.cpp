@@ -125,7 +125,7 @@ void ng_init()
 do_newsgroup_result do_newsgroup(char *start_command)
 {
     char mode_save = g_mode;
-    char gmode_save = g_general_mode;
+    general_mode gmode_save = g_general_mode;
     char*whatnext = "%s%sWhat next? [%s]";
     bool ng_virtual = false;
 
@@ -222,7 +222,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 	g_checkcount = 0;			/* do not checkpoint for a while */
     g_do_fseek = false;			/* start 1st article at top */
     for (; g_art <= g_lastart+1; ) {	/* for each article */
-	set_mode('r','a');
+	set_mode(GM_READ,'a');
 
 	/* do we need to "grow" the newsgroup? */
 
@@ -1441,7 +1441,7 @@ void setdfltcmd()
 */
 char ask_catchup()
 {
-    bool use_one_line = (g_general_mode == 's');
+    bool use_one_line = (g_general_mode == GM_SELECT);
     int leave_unread = 0;
 
     if (!use_one_line)
@@ -1619,7 +1619,7 @@ static bool debug_article_output(char *ptr, int arg)
 char ask_memorize(char_int ch)
 {
     bool thread_cmd = (ch == 'T');
-    bool use_one_line = (g_general_mode == 's');
+    bool use_one_line = (g_general_mode == GM_SELECT);
     bool global_save = false;
     char* mode_string = (thread_cmd? "thread" : "subject");
     char* mode_phrase = (thread_cmd? "replies to this article" :
@@ -1712,7 +1712,7 @@ reask_memorize:
 	    select_arts_thread(g_artp, AUTO_SEL_THD);
 	    ch = (use_one_line? '+' : '.');
 	}
-	if (g_general_mode != 's') {
+	if (g_general_mode != GM_SELECT) {
 	    printf("\nSelection memorized.\n");
 	    termdown(2);
 	}
@@ -1720,7 +1720,7 @@ reask_memorize:
     else if (ch == 'S') {
 	select_arts_subject(g_artp, AUTO_SEL_SBJ);
 	ch = (use_one_line? '+' : '.');
-	if (g_general_mode != 's') {
+	if (g_general_mode != GM_SELECT) {
 	    printf("\nSelection memorized.\n");
 	    termdown(2);
 	}
@@ -1734,7 +1734,7 @@ reask_memorize:
 	    select_subthread(g_artp, AUTO_SEL_FOL);
 	    ch = (use_one_line? '+' : '.');
 	}
-	if (g_general_mode != 's') {
+	if (g_general_mode != GM_SELECT) {
 	    printf("\nSelection memorized.\n");
 	    termdown(2);
 	}
@@ -1743,7 +1743,7 @@ reask_memorize:
 	if (g_artp) {
 	    change_auto_flags(g_artp, AUTO_SEL_1);
 	    ch = (use_one_line? '+' : '.');
-	    if (g_general_mode != 's') {
+	    if (g_general_mode != GM_SELECT) {
 		printf("\nSelection memorized.\n");
 		termdown(2);
 	    }
@@ -1758,7 +1758,7 @@ reask_memorize:
 	}
 	else
 	    kill_thread(g_artp->subj->thread,AFFECT_ALL|AUTO_KILL_THD);
-	if (g_general_mode != 's') {
+	if (g_general_mode != GM_SELECT) {
 	    printf("\nKill memorized.\n");
 	    termdown(2);
 	}
@@ -1767,7 +1767,7 @@ reask_memorize:
 	if (g_artp) {
 	    mark_as_read(g_artp);
 	    change_auto_flags(g_artp, AUTO_KILL_1);
-	    if (g_general_mode != 's') {
+	    if (g_general_mode != GM_SELECT) {
 		printf("\nKill memorized.\n");
 		termdown(2);
 	    }
@@ -1775,7 +1775,7 @@ reask_memorize:
     }
     else if (ch == 'K') {
 	kill_subject(g_artp->subj,AFFECT_ALL|AUTO_KILL_SBJ);
-	if (g_general_mode != 's') {
+	if (g_general_mode != GM_SELECT) {
 	    printf("\nKill memorized.\n");
 	    termdown(2);
 	}
@@ -1788,7 +1788,7 @@ reask_memorize:
 	}
 	else
 	    kill_subthread(g_artp,AFFECT_ALL|AUTO_KILL_FOL);
-	if (g_general_mode != 's') {
+	if (g_general_mode != GM_SELECT) {
 	    printf("\nKill memorized.\n");
 	    termdown(2);
 	}

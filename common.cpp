@@ -109,7 +109,7 @@ bool g_sel_num_goto{};
 
 bool g_in_ng{};           /* true if in a newsgroup */
 char g_mode{'i'};         /* current state of trn */
-char g_general_mode{'I'}; /* general mode of trn */
+general_mode g_general_mode{GM_INSERT}; /* general mode of trn */
 
 FILE *g_tmpfp{}; /* scratch fp used for .rnlock, .rnlast, etc. */
 
