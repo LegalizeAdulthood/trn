@@ -6,6 +6,7 @@ function(configure_trn_test_data)
     # Directory and environment related content.
     set(TRN_TEST_DATA_DIR "${CMAKE_CURRENT_BINARY_DIR}/test_data")
     set(TRN_TEST_HOME_DIR "${TRN_TEST_DATA_DIR}/home")
+    set(TRN_TEST_HOME_DIR_CAPITALIZED "${TRN_TEST_DATA_DIR}/Home")
     _mkdir("${TRN_TEST_HOME_DIR}")
     _mkdir("${TRN_TEST_HOME_DIR}/News")
     set(TRN_TEST_TMP_DIR  "${TRN_TEST_DATA_DIR}/tmp")
