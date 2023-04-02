@@ -438,3 +438,37 @@ TEST_F(InterpolatorTest, extractDestinationSet)
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ("/home/users/foo", std::string{m_buffer.data()});
 }
+
+TEST_F(InterpolatorTest, fromLineNotInNewsgroup)
+{
+    g_in_ng = false;
+    char pattern[]{"%f"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(std::string{m_buffer.data()}.empty());
+}
+
+// TODO: figure out how to set current article
+//TEST_F(InterpolatorTest, fromLineInNewsgroupNoReplyTo)
+//{
+//    g_in_ng = true;
+//    char pattern[]{"%f"};
+//
+//    const char *new_pattern = interpolate(pattern);
+//
+//    ASSERT_EQ('\0', *new_pattern);
+//    ASSERT_EQ("John Yeager <jyeager@example.org>", std::string{m_buffer.data()});
+//}
+
+//TEST_F(InterpolatorTest, fromLineInNewsgroupWithReplyTo)
+//{
+//    g_in_ng = true;
+//    char pattern[]{"%f"};
+//
+//    const char *new_pattern = interpolate(pattern);
+//
+//    ASSERT_EQ('\0', *new_pattern);
+//    ASSERT_EQ("Cyrus Longworth <clongworth@example.org>", std::string{m_buffer.data()});
+//}
