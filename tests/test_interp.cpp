@@ -543,6 +543,16 @@ TEST_F(InterpolatorTest, markCount)
     ASSERT_EQ("96", buffer());
 }
 
+TEST_F(InterpolatorTest, newsgroupsLineNotInNewsgroup)
+{
+    char pattern[]{"%n"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(buffer().empty());
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
@@ -654,5 +664,15 @@ TEST_F(InterpolatorNewsgroupTest, messageIdInNewsgroup)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ("<hippityhop@flagrant.example.org>", buffer());
+}
+
+TEST_F(InterpolatorTest, newsgroupsLine)
+{
+    char pattern[]{"%n"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("comp.arch", buffer());
 }
 #endif
