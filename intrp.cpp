@@ -617,8 +617,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 			s = s_empty;
 		    break;
 		case 'I':			/* indent string for quoting */
+		    sprintf(scrbuf,"'%s'",g_indstr.c_str());
 		    s = scrbuf;
-		    sprintf(scrbuf,"'%s'",g_indstr);
 		    break;
 		case 'j':
 		    s = scrbuf;

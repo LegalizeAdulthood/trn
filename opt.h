@@ -137,15 +137,15 @@ extern char *g_option_flags;
 extern int g_sel_page_op;
 extern int g_sel_next_op;
 
-void  opt_init(int argc, char *argv[], char **tcbufptr);
-void  opt_final();
-void  opt_file(char *filename, char **tcbufptr, bool bleat);
-void  set_options(char **vals);
-void  set_option(int num, char *s);
-void  save_options(const char *filename);
-char *option_value(int num);
-void  set_header(char *s, headtype_flags flag, bool setit);
-char *quote_string(char *val);
-void  cwd_check();
+void        opt_init(int argc, char *argv[], char **tcbufptr);
+void        opt_final();
+void        opt_file(char *filename, char **tcbufptr, bool bleat);
+void        set_options(char **vals);
+void        set_option(int num, char *s);
+void        save_options(const char *filename);
+const char *option_value(int num);
+void        set_header(char *s, headtype_flags flag, bool setit);
+const char *quote_string(const char *val);
+void        cwd_check();
 
 #endif

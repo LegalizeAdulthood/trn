@@ -699,7 +699,7 @@ void reply()
             if (t != nullptr)
 		*t = '\0';
 	    strcharsubst(hbuf,s,sizeof hbuf,*g_charsubst);
-	    fprintf(g_tmpfp,"%s%s\n",g_indstr,hbuf);
+	    fprintf(g_tmpfp,"%s%s\n",g_indstr.c_str(),hbuf);
 	    if (t)
 		*t = '\0';
 	}
@@ -863,7 +863,7 @@ void followup()
             if (t != nullptr)
 		*t = '\0';
 	    strcharsubst(hbuf,s,sizeof hbuf,*g_charsubst);
-	    fprintf(g_tmpfp,"%s%s\n",g_indstr,hbuf);
+	    fprintf(g_tmpfp,"%s%s\n",g_indstr.c_str(),hbuf);
 	    if (t)
 		*t = '\0';
 	}

@@ -462,13 +462,22 @@ TEST_F(InterpolatorTest, hostName)
 
 TEST_F(InterpolatorTest, messageIdNotInNewsgroup)
 {
-    g_in_ng = false;
     char pattern[]{"%i"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_TRUE(std::string{m_buffer.data()}.empty());
+}
+
+TEST_F(InterpolatorTest, indentString)
+{
+    char pattern[]{"%I"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("'>'", std::string{m_buffer.data()});
 }
 
 #ifdef TEST_ACTIVE_NEWSGROUP

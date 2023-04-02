@@ -5,6 +5,7 @@
 #define TRN_COMMON_H
 
 #include <stdexcept>
+#include <string>
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -661,10 +662,10 @@ extern struct stat g_filestat;
 
 /* various things of type char */
 
-extern char g_msg[CBUFLEN];     /* general purpose message buffer */
-extern char g_buf[LBUFLEN + 1]; /* general purpose line buffer */
-extern char g_cmd_buf[CBUFLEN]; /* buffer for formatting system commands */
-extern char *g_indstr;          /* indent for old article embedded in followup */
+extern char        g_msg[CBUFLEN];     /* general purpose message buffer */
+extern char        g_buf[LBUFLEN + 1]; /* general purpose line buffer */
+extern char        g_cmd_buf[CBUFLEN]; /* buffer for formatting system commands */
+extern std::string g_indstr;           /* indent for old article embedded in followup */
 
 extern char *g_cwd;     /* current working directory */
 extern char *g_dfltcmd; /* 1st char is default command */

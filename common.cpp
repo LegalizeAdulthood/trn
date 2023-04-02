@@ -10,10 +10,10 @@ struct stat g_filestat;
 
 /* various things of type char */
 
-char g_msg[CBUFLEN];     /* general purpose message buffer */
-char g_buf[LBUFLEN + 1]; /* general purpose line buffer */
-char g_cmd_buf[CBUFLEN]; /* buffer for formatting system commands */
-char *g_indstr{">"};     /* indent for old article embedded in followup */
+char        g_msg[CBUFLEN];     /* general purpose message buffer */
+char        g_buf[LBUFLEN + 1]; /* general purpose line buffer */
+char        g_cmd_buf[CBUFLEN]; /* buffer for formatting system commands */
+std::string g_indstr{">"};      /* indent for old article embedded in followup */
 
 char *g_cwd{};     /* current working directory */
 char *g_dfltcmd{}; /* 1st char is default command */

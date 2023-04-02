@@ -2,6 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <string>
+
 #include "common.h"
 #include "opt.h"
 
@@ -402,7 +404,8 @@ void set_option(int num, char *s)
 	g_newsgroup_sel_btn_cnt = parse_mouse_buttons(&g_newsgroup_sel_btns,s);
 	break;
       case OI_NEWSGROUP_SEL_STYLES:
-	free(option_value(OI_NEWSGROUP_SEL_STYLES)-1);
+        g_sel_grp_dmode--;
+        safefree0(g_sel_grp_dmode);
 	g_sel_grp_dmode = safemalloc(strlen(s)+2);
 	*g_sel_grp_dmode++ = '*';
 	strcpy(g_sel_grp_dmode, s);
@@ -435,7 +438,8 @@ void set_option(int num, char *s)
 	g_news_sel_btn_cnt = parse_mouse_buttons(&g_news_sel_btns,s);
 	break;
       case OI_NEWS_SEL_STYLES:
-	free(option_value(OI_NEWS_SEL_STYLES)-1);
+        g_sel_art_dmode--;
+        safefree0(g_sel_art_dmode);
 	g_sel_art_dmode = safemalloc(strlen(s)+2);
 	*g_sel_art_dmode++ = '*';
 	strcpy(g_sel_art_dmode, s);
@@ -502,7 +506,7 @@ void set_option(int num, char *s)
 	g_novice_delays = YES(s);
 	break;
       case OI_CITED_TEXT_STRING:
-	g_indstr = savestr(s);
+	g_indstr = s;
 	break;
       case OI_GOTO_LINE_NUM:
 	g_gline = atoi(s)-1;
@@ -820,7 +824,7 @@ void save_options(const char *filename)
     rename(g_buf,filename);
 }
 
-char *option_value(int num)
+const char *option_value(int num)
 {
     switch (num) {
       case OI_USE_THREADS:
@@ -923,7 +927,7 @@ char *option_value(int num)
       case OI_NOVICE_DELAYS:
 	return YESorNO(g_novice_delays);
       case OI_CITED_TEXT_STRING:
-	return g_indstr;
+	return g_indstr.c_str();
       case OI_GOTO_LINE_NUM:
 	sprintf(g_buf,"%d",g_gline+1);
 	return g_buf;
@@ -1255,30 +1259,28 @@ static char *expand_mouse_buttons(char *cp, int cnt)
     return g_buf;
 }
 
-char *quote_string(char *val)
+const char *quote_string(const char *val)
 {
-    static char* bufptr = nullptr;
-    char* cp;
-    int needs_quotes = 0;
-    int ticks = 0;
-    int quotes = 0;
-    int backslashes = 0;
+    static std::string buff;
 
-    safefree(bufptr);
-    bufptr = nullptr;
+    bool needs_quotes = false;
+    int  ticks = 0;
+    int  quotes = 0;
+    int  backslashes = 0;
+    buff.clear();
 
     if (isspace(*val))
-	needs_quotes = 1;
-    for (cp = val; *cp; cp++) {
+	needs_quotes = true;
+    for (const char *cp = val; *cp; cp++) {
 	switch (*cp) {
 	  case ' ':
 	  case '\t':
 	    if (!cp[1] || isspace(cp[1]))
-		needs_quotes++;
+		needs_quotes = true;
 	    break;
 	  case '\n':
 	  case '#':
-	    needs_quotes++;
+	    needs_quotes = true;
 	    break;
 	  case '\'':
 	    ticks++;
@@ -1293,19 +1295,15 @@ char *quote_string(char *val)
     }
 
     if (needs_quotes || ticks || quotes || backslashes) {
-	char usequote = quotes > ticks? '\'' : '"';
-	bufptr = safemalloc(strlen(val)+2+(quotes > ticks? ticks : quotes)
-			    +backslashes+1);
-	cp = bufptr;
-	*cp++ = usequote;
+	const char usequote = quotes > ticks? '\'' : '"';
+	buff = usequote;
 	while (*val) {
 	    if (*val == usequote || *val == '\\')
-		*cp++ = '\\';
-	    *cp++ = *val++;
+		buff += '\\';
+	    buff += *val++;
 	}
-	*cp++ = usequote;
-	*cp = '\0';
-	return bufptr;
+	buff += usequote;
+	return buff.c_str();
     }
     return val;
 }
