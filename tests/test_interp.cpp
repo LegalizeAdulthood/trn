@@ -827,6 +827,16 @@ TEST_F(InterpolatorTest, tmpDir)
     ASSERT_EQ(TRN_TEST_TMP_DIR, buffer());
 }
 
+TEST_F(InterpolatorTest, articleSizeNotInNewsgroupEmpty)
+{
+    char pattern[]{"%z"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
@@ -1068,5 +1078,15 @@ TEST_F(InterpolatorTest, shortenedFromInNewsgroup)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ(TRN_TEST_HEADER_FROM, buffer());
+}
+
+TEST_F(InterpolatorTest, articleSizeInNewsgroup)
+{
+    char pattern[]{"%z"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_ARTICLE_SIZE, buffer());
 }
 #endif

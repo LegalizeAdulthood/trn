@@ -14,6 +14,7 @@
 #define TRN_TEST_ORGFILE        "@TRN_TEST_ORGFILE@"
 
 #define TRN_TEST_ARTICLE_NUM    "@TRN_TEST_ARTICLE_NUM@"
+#define TRN_TEST_ARTICLE_SIZE   "@TRN_TEST_ARTICLE_SIZE@"
 
 namespace trn {
 namespace testing {
