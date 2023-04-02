@@ -538,3 +538,13 @@ TEST_F(InterpolatorTest, headerFileName)
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ(std::string{TRN_TEST_DOT_DIR} + "/.rnhead." + std::to_string(m_test_pid), std::string{m_buffer.data()});
 }
+
+TEST_F(InterpolatorTest, hostName)
+{
+    char pattern[]{"%H"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(std::string{TRN_TEST_P_HOST_NAME}, std::string{m_buffer.data()});
+}

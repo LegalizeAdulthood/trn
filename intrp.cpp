@@ -102,21 +102,24 @@ void intrp_init(char *tcbuf, int tcbuf_len)
     /* the hostname to use in local-article comparisons */
 #if HOSTBITS != 0
     i = (HOSTBITS < 2? 2 : HOSTBITS);
-    g_hostname = g_p_host_name+strlen(g_p_host_name)-1;
-    while (i && g_hostname != g_p_host_name) {
+    static char buff[128];
+    strcpy(buff, g_p_host_name.c_str());
+    g_hostname = buff+strlen(buff)-1;
+    while (i && g_hostname != buff) {
 	if (*--g_hostname == '.')
 	    i--;
     }
     if (*g_hostname == '.')
 	g_hostname++;
 #else
-    g_hostname = g_p_host_name;
+    g_hostname = g_p_host_name.c_str();
 #endif
 }
 
 void intrp_final()
 {
     g_headname.clear();
+    g_hostname = nullptr;
     safefree0(g_origdir);
 }
 
@@ -595,7 +598,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = scrbuf;
 		    break;
 		case 'H':			/* host name in postings */
-		    s = g_p_host_name;
+		    strcpy(scrbuf, g_p_host_name.c_str());
+		    s = scrbuf;
 		    break;
 		case 'i':
 		    if (g_in_ng) {
@@ -799,8 +803,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
                             path_buf = fetchlines(g_art, PATH_LINE);
                             s = path_buf;
 			}
-			int i = strlen(g_p_host_name);
-			if (!strncmp(g_p_host_name,s,i) && s[i] == '!')
+			int i = strlen(g_p_host_name.c_str());
+			if (!strncmp(g_p_host_name.c_str(),s,i) && s[i] == '!')
 			    s += i + 1;
 		    }
 		    address_parse = true;	/* just the good part */

@@ -32,7 +32,7 @@ protected:
         safefree0(g_login_name);
         safefree0(g_real_name);
         safefree0(g_local_host);
-        safefree0(g_p_host_name);
+        g_p_host_name.clear();
         g_dot_dir.clear();
         g_trn_dir.clear();
         g_lib.clear();
@@ -177,7 +177,7 @@ TEST_F(InitTest, emptyHostNamesFromFailedHostFn)
 
     ASSERT_FALSE(fully_successful);
     ASSERT_TRUE(std::string{g_local_host}.empty()) << "g_local_host = '" << g_local_host << '\'';
-    ASSERT_TRUE(std::string{g_p_host_name}.empty()) << "g_p_host_name = '" << g_p_host_name << '\'';
+    ASSERT_TRUE(g_p_host_name.empty()) << "g_p_host_name = '" << g_p_host_name << '\'';
 }
 
 TEST_F(InitTest, hostNamesFromSuccessfulHostFn)
@@ -187,7 +187,7 @@ TEST_F(InitTest, hostNamesFromSuccessfulHostFn)
     auto host_name_fn = [&](char *)
     {
         g_local_host = savestr(local_host.c_str());
-        g_p_host_name = savestr(p_host_name.c_str());
+        g_p_host_name = p_host_name;
         return true;
     };
 
@@ -195,7 +195,7 @@ TEST_F(InitTest, hostNamesFromSuccessfulHostFn)
 
     ASSERT_TRUE(fully_successful);
     ASSERT_EQ(local_host, std::string{g_local_host});
-    ASSERT_EQ(p_host_name, std::string{g_p_host_name});
+    ASSERT_EQ(p_host_name, g_p_host_name);
 }
 
 TEST_F(InitTest, homeDirFromInit2)

@@ -34,7 +34,7 @@ std::string g_rn_lib;        /* private news program library */
 const char *g_tmp_dir{};     /* where tmp files go */
 char       *g_login_name{};  /* login id of user */
 char       *g_real_name{};   /* real name of user */
-char       *g_p_host_name{}; /* host name in a posting */
+std::string g_p_host_name;   /* host name in a posting */
 char       *g_local_host{};  /* local host name */
 int         g_net_speed{20}; /* how fast our net-connection is */
 
@@ -112,8 +112,6 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     {
         if (!g_local_host)
             g_local_host = savestr("");
-        if (!g_p_host_name)
-            g_p_host_name = savestr("");
         fully_successful = false;
     }
 
@@ -140,7 +138,7 @@ bool env_init(char *tcbuf, bool lax)
 
 void env_final()
 {
-    safefree0(g_p_host_name);
+    g_p_host_name.clear();
     safefree0(g_local_host);
     safefree0(g_real_name);
     safefree0(g_login_name);
@@ -373,7 +371,7 @@ static bool set_p_host_name(char *tmpbuf)
 	    hostname_ok = false;
 	}
     }
-    g_p_host_name = savestr(tmpbuf);
+    g_p_host_name = tmpbuf;
     return hostname_ok;
 }
 
