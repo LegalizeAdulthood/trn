@@ -736,6 +736,46 @@ TEST_F(InterpolatorTest, subjectNotInNewsgroupEmpty)
     ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
 }
 
+TEST_F(InterpolatorTest, toFromFromReplyToNotInNewsgroupEmpty)
+{
+    char pattern[]{"%t"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
+
+TEST_F(InterpolatorTest, toFromPathNotInNewsgroupEmpty)
+{
+    char pattern[]{"%T"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
+
+TEST_F(InterpolatorTest, numUnreadArticlesNotInNewsgroupEmpty)
+{
+    char pattern[]{"%u"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
+
+TEST_F(InterpolatorTest, numUnreadArticlesExceptCurrentNotInNewsgroupEmpty)
+{
+    char pattern[]{"%U"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+}
+
 #ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
@@ -897,5 +937,55 @@ TEST_F(InterpolatorNewsgroupTest, subjectInNewsgroup)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ("Re: The best red nose", buffer());
+}
+
+TEST_F(InterpolatorNewsgroupTest, toFromReplyToInNewsgroup)
+{
+    char pattern[]{"%t"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("Cyrus Longworth <clongworth@example.org>", buffer());
+}
+
+TEST_F(InterpolatorNewsgroupTest, toFromFromInNewsgroup)
+{
+    char pattern[]{"%t"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("Bozo the Clown <bozo@example.org>", buffer());
+}
+
+TEST_F(InterpolatorNewsgroupTest, toFromPathInNewsgroup)
+{
+    char pattern[]{"%T"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("Bozo the Clown <bozo@example.org>", buffer());
+}
+
+TEST_F(InterpolatorNewsgroupTest, numUnreadArticlesInNewsgroup)
+{
+    char pattern[]{"%u"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("3", buffer());
+}
+
+TEST_F(InterpolatorNewsgroupTest, numUnreadArticlesExceptCurrentInNewsgroup)
+{
+    char pattern[]{"%U"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("2", buffer());
 }
 #endif

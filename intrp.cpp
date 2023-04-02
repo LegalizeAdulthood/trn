@@ -814,29 +814,24 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    break;
 		case 'u':
 		    if (g_in_ng) {
-			sprintf(scrbuf,"%ld",(long)g_ngptr->toread);
-			s = scrbuf;
+                        sprintf(scrbuf, "%ld", g_ngptr->toread);
+                        s = scrbuf;
 		    }
 		    else
 			s = s_empty;
 		    break;
 		case 'U': {
-		    int unseen;
-
 		    if (!g_in_ng) {
 			s = s_empty;
 			break;
 		    }
-		    unseen = (g_art <= g_lastart) && !was_read(g_art);
+		    const bool unseen = g_art <= g_lastart && !was_read(g_art);
 		    if (g_selected_only) {
-			int selected;
-
-			selected = g_curr_artp && (g_curr_artp->flags & AF_SEL);
-			sprintf(scrbuf,"%ld",
-				(long)g_selected_count - (selected && unseen));
+			const bool selected = g_curr_artp != nullptr && (g_curr_artp->flags & AF_SEL) != AF_NONE;
+                        sprintf(scrbuf, "%ld", g_selected_count - (selected && unseen ? 1 : 0));
 		    }
 		    else
-			sprintf(scrbuf,"%ld",(long)g_ngptr->toread - unseen);
+                        sprintf(scrbuf, "%ld", g_ngptr->toread - (unseen ? 1 : 0));
 		    s = scrbuf;
 		    break;
 		}
