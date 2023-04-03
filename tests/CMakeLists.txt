@@ -14,6 +14,7 @@ add_executable(trn-test
     ${CMAKE_CURRENT_BINARY_DIR}/test_data.cpp
     cmake/ConfigureTrnTestData.cmake
     cmake/test_access_file.in
+    cmake/test_active_file.in
     cmake/test_article.in
     cmake/test_config.h.in
     cmake/test_data.cpp.in

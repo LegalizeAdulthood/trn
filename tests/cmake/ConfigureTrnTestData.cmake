@@ -55,6 +55,11 @@ function(configure_trn_test_data)
     set(TRN_TEST_BODY "Pneumatic tubes are killing the Internet.")
     set(TRN_TEST_SIGNATURE "XMission Internet Access - http://www.xmission.com - Voice: 801 539 0852")
 
+    # Active file contents.
+    set(TRN_TEST_NEWSGROUP_HIGH "${TRN_TEST_ARTICLE_NUM}")
+    set(TRN_TEST_NEWSGROUP_LOW "${TRN_TEST_ARTICLE_NUM}")
+    set(TRN_TEST_NEWSGROUP_PERM "y")
+
     # Access file contents
     set(TRN_TEST_ACCESS_LOCAL_ACTIVE_FILE   "${TRN_TEST_LOCAL_SPOOL_DIR}/active")
     set(TRN_TEST_ACCESS_LOCAL_ADD_GROUPS    "yes")
@@ -65,13 +70,17 @@ function(configure_trn_test_data)
     set(TRN_TEST_ACCESS_NNTP_NEWSRC         "${TRN_TEST_HOME_DIR}/nntp-newsrc")
     set(TRN_TEST_ACCESS_NNTP_SERVER         "nntp.example.org")
 
-    configure_file(cmake/test_article.in                "${TRN_TEST_ARTICLE_FILE}")
-    # test_config.h needs the size of the generated article.
-    file(SIZE "${TRN_TEST_ARTICLE_FILE}" TRN_TEST_ARTICLE_SIZE)
-    configure_file(cmake/test_nntp_auth_file.in         "${TRN_TEST_DOT_DIR}/.nntpauth")
+    # Generate test data files.
     configure_file(cmake/test_access_file.in            "${TRN_TEST_TRN_DIR}/access")
     configure_file(cmake/test_access_file.in            "${TRN_TEST_RN_LIB_DIR}/access.def")
+    configure_file(cmake/test_active_file.in            "${TRN_TEST_SPOOL_DIR}/active")
+    configure_file(cmake/test_article.in                "${TRN_TEST_ARTICLE_FILE}")
+    configure_file(cmake/test_nntp_auth_file.in         "${TRN_TEST_DOT_DIR}/.nntpauth")
     configure_file(cmake/test_organization_file.in      "${TRN_TEST_ORGFILE}")
+
+    # Generate test source files.
+    # test_config.h needs the size of the generated article.
+    file(SIZE "${TRN_TEST_ARTICLE_FILE}" TRN_TEST_ARTICLE_SIZE)
     configure_file(cmake/test_config.h.in               test_config.h)
     configure_file(cmake/test_data.cpp.in               test_data.cpp)
 endfunction()

@@ -54,6 +54,7 @@
 [test-local]
 Active File = @TRN_TEST_ACCESS_LOCAL_ACTIVE_FILE@
 Active File Refetch = 2 days
+Active Times = none
 Spool Dir = @TRN_TEST_ACCESS_LOCAL_SPOOL_DIR@
 
 [test-nntp]
