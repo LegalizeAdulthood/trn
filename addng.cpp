@@ -66,7 +66,6 @@ static int build_addgroup_list(int keylen, HASHDATUM *data, int extra)
 
 void addng_init()
 {
-    //
 }
 
 bool find_new_groups()
