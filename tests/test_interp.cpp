@@ -8,6 +8,7 @@
 
 #include <common.h>
 
+#include <addng.h>
 #include <art.h>
 #include <artio.h>
 #include <artsrch.h>
@@ -25,11 +26,15 @@
 #include <ng.h>
 #include <ngdata.h>
 #include <ngsrch.h>
+#include <ngstuff.h>
+#include <only.h>
 #include <opt.h>
 #include <patchlevel.h>
+#include <rcln.h>
 #include <rcstuff.h>
 #include <respond.h>
 #include <rt-util.h>
+#include <rthread.h>
 #include <search.h>
 #include <term.h>
 #include <trn.h>
@@ -56,6 +61,14 @@ protected:
     std::string buffer() const
     {
         return m_buffer.data();
+    }
+
+    testing::AssertionResult bufferIsEmpty() const
+    {
+        if (buffer().empty())
+            return testing::AssertionSuccess();
+
+        return testing::AssertionFailure() << "Contents: '" << buffer() << "'";
     }
 
     std::array<char, TCBUF_SIZE>  m_tcbuf{};
@@ -87,20 +100,30 @@ void InterpolatorTest::SetUp()
     last_init();
     univ_init();
     datasrc_init();
-    m_multirc = rcstuff_init_data();
+    rcstuff_init();
+    addng_init();
     art_init();
     artio_init();
     artsrch_init();
+    backpage_init();
+    bits_init();
     cache_init();
+    help_init();
     kfile_init();
     mime_init();
     ng_init();
     ngsrch_init();
+    ngstuff_init();
+    only_init();
+    rcln_init();
     respond_init();
     trn_init();
+    decode_init();
+    thread_init();
     util_init();
-    g_datasrc = datasrc_first();
-    perform_status_init(0);
+    xmouse_init(argv[0]);
+    //g_datasrc = datasrc_first();
+    //perform_status_init(0);
 }
 
 void InterpolatorTest::TearDown()
@@ -214,49 +237,50 @@ TEST_F(InterpolatorTest, environmentVarValueDefault)
     ASSERT_EQ("not set", buffer());
 }
 
-TEST_F(InterpolatorTest, articleNumberOutsideNewsgroup)
+TEST_F(InterpolatorTest, articleNumberOutsideNewsgroupIsEmpty)
 {
-    char pattern[]{"Article %a"};
+    char pattern[]{"%a"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("Article ", buffer());
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, articleNumberInsideNewsgroup)
 {
-    char pattern[]{"Article %a"};
+    char pattern[]{"%a"};
     g_in_ng = true;
-    g_art = 624;
+    g_art = TRN_TEST_ARTICLE_NUM;
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("Article 624", buffer());
+    ASSERT_EQ(std::to_string(TRN_TEST_ARTICLE_NUM), buffer());
 }
 
 TEST_F(InterpolatorTest, articleNameOutsideNewsgroup)
 {
-    char pattern[]{"Article %A"};
+    char pattern[]{"%A"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("Article ", buffer());
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
-TEST_F(InterpolatorTest, articleNameInsideRemoteNewsgroupArticleClosed)
+TEST_F(InterpolatorTest, articleNameInsideLocalNewsgroupArticleClosed)
 {
-    char pattern[]{"Article %A"};
+    char pattern[]{"%A"};
     g_in_ng = true;
-    g_lastart = 623;
-    g_art = 624;
+    g_ngdir = TRN_TEST_NEWSGROUP_SUBDIR;
+    g_lastart = TRN_TEST_ARTICLE_NUM;
+    g_art = TRN_TEST_ARTICLE_NUM;
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("Article ", buffer());
+    ASSERT_EQ(TRN_TEST_ARTICLE_FILE, buffer());
 }
 
 TEST_F(InterpolatorTest, saveDestinationNotSet)
@@ -266,7 +290,7 @@ TEST_F(InterpolatorTest, saveDestinationNotSet)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, saveDestinationSet)
@@ -299,7 +323,7 @@ TEST_F(InterpolatorTest, relativeNewsgroupDirNotSet)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, newsgroupNameNotSet)
@@ -312,7 +336,7 @@ TEST_F(InterpolatorTest, newsgroupNameNotSet)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, newsgroupNameSet)
@@ -336,7 +360,7 @@ TEST_F(InterpolatorTest, absoluteNewsgroupDirNotSet)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, oldDistributionLineNotInNewsgroup)
@@ -347,7 +371,7 @@ TEST_F(InterpolatorTest, oldDistributionLineNotInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, extractProgramNotSet)
@@ -380,7 +404,7 @@ TEST_F(InterpolatorTest, extractDestinationNotSet)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, extractDestinationSet)
@@ -402,7 +426,7 @@ TEST_F(InterpolatorTest, fromLineNotInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, followupNotInNewsgroup)
@@ -413,7 +437,7 @@ TEST_F(InterpolatorTest, followupNotInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, generalMode)
@@ -454,7 +478,7 @@ TEST_F(InterpolatorTest, messageIdNotInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, indentString)
@@ -528,7 +552,7 @@ TEST_F(InterpolatorTest, newsgroupsLineNotInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, realName)
@@ -559,7 +583,7 @@ TEST_F(InterpolatorTest, newsOrgFromORGNAME)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, newsOrgFromNEWSORG)
@@ -658,7 +682,7 @@ TEST_F(InterpolatorTest, newsSpoolDirectoryNoDataSource)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, newsSpoolDirectory)
@@ -678,7 +702,7 @@ TEST_F(InterpolatorTest, lastInputStringInitiallyEmpty)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, lastReferenceNotInNewsgroupEmpty)
@@ -688,7 +712,7 @@ TEST_F(InterpolatorTest, lastReferenceNotInNewsgroupEmpty)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, newReferencesNotInNewsgroupEmpty)
@@ -698,7 +722,7 @@ TEST_F(InterpolatorTest, newReferencesNotInNewsgroupEmpty)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, strippedSubjectNotInNewsgroupEmpty)
@@ -708,7 +732,7 @@ TEST_F(InterpolatorTest, strippedSubjectNotInNewsgroupEmpty)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, subjectNotInNewsgroupEmpty)
@@ -718,7 +742,7 @@ TEST_F(InterpolatorTest, subjectNotInNewsgroupEmpty)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, toFromFromReplyToNotInNewsgroupEmpty)
@@ -728,7 +752,7 @@ TEST_F(InterpolatorTest, toFromFromReplyToNotInNewsgroupEmpty)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, toFromPathNotInNewsgroupEmpty)
@@ -738,7 +762,7 @@ TEST_F(InterpolatorTest, toFromPathNotInNewsgroupEmpty)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, numUnreadArticlesNotInNewsgroupEmpty)
@@ -748,7 +772,7 @@ TEST_F(InterpolatorTest, numUnreadArticlesNotInNewsgroupEmpty)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, numUnreadArticlesExceptCurrentNotInNewsgroupEmpty)
@@ -758,7 +782,7 @@ TEST_F(InterpolatorTest, numUnreadArticlesExceptCurrentNotInNewsgroupEmpty)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, numUnselectedArticlesExceptCurrentNotInNewsgroupEmpty)
@@ -768,7 +792,7 @@ TEST_F(InterpolatorTest, numUnselectedArticlesExceptCurrentNotInNewsgroupEmpty)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, patchLevel)
@@ -783,12 +807,13 @@ TEST_F(InterpolatorTest, patchLevel)
 
 TEST_F(InterpolatorTest, threadDirNotInNewsgroup)
 {
+    value_saver<DATASRC *> saved(g_datasrc, nullptr);
     char pattern[]{"%W"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, libDir)
@@ -818,7 +843,7 @@ TEST_F(InterpolatorTest, shortenedFromNotInNewsgroupEmpty)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, tmpDir)
@@ -838,7 +863,7 @@ TEST_F(InterpolatorTest, articleSizeNotInNewsgroupEmpty)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, numSelectedThreadsNotInNewsgroupEmpty)
@@ -848,7 +873,7 @@ TEST_F(InterpolatorTest, numSelectedThreadsNotInNewsgroupEmpty)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, trailingPercentRemains)
@@ -1023,7 +1048,7 @@ TEST_F(InterpolatorTest, triviallyFalseNoElseIsEmpty)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, escapedPercent)
@@ -1043,7 +1068,7 @@ TEST_F(InterpolatorTest, headerFieldNotInNewsgroupEmpty)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
 TEST_F(InterpolatorTest, homeDirectoryCapitalized)
@@ -1330,7 +1355,6 @@ TEST_F(InterpolatorTest, hexEscapeOutOfRangeDigits)
     ASSERT_EQ("\x4G", buffer());
 }
 
-#ifdef TEST_ACTIVE_NEWSGROUP
 namespace {
 
 struct InterpolatorNewsgroupTest : InterpolatorTest
@@ -1357,30 +1381,15 @@ void InterpolatorNewsgroupTest::TearDown()
 
 }
 
-TEST_F(InterpolatorNewsgroupTest, articleNameInsideRemoteNewsgroupArticleOpen)
-{
-    build_cache();
-    char pattern[]{"Article %A"};
-    g_art = 624;
-    g_lastart = 624;
-
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("Article 624", buffer());
-
-    close_cache();
-}
-
 TEST_F(InterpolatorNewsgroupTest, absoluteNewsgroupDirSet)
 {
-    g_ngdir = "comp/arch";
+    g_ngdir = TRN_TEST_NEWSGROUP_SUBDIR;
     char pattern[]{"%d"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("/usr/spool/news/comp/arch", buffer());
+    ASSERT_EQ(TRN_TEST_NEWSGROUP_DIR, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, oldDistributionLineInNewsgroup)
@@ -1543,7 +1552,7 @@ TEST_F(InterpolatorNewsgroupTest, numUnreadArticlesExceptCurrentInNewsgroup)
     ASSERT_EQ("2", buffer());
 }
 
-TEST_F(InterpolatorTest, numUnselectedArticlesExceptCurrentInNewsgroupEmpty)
+TEST_F(InterpolatorNewsgroupTest, numUnselectedArticlesExceptCurrentInNewsgroupEmpty)
 {
     char pattern[]{"%v"};
 
@@ -1553,7 +1562,7 @@ TEST_F(InterpolatorTest, numUnselectedArticlesExceptCurrentInNewsgroupEmpty)
     ASSERT_EQ("2", buffer());
 }
 
-TEST_F(InterpolatorTest, threadDirInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, threadDirInNewsgroup)
 {
     char pattern[]{"%W"};
 
@@ -1563,7 +1572,7 @@ TEST_F(InterpolatorTest, threadDirInNewsgroup)
     ASSERT_EQ(TRN_TEST_THREAD_DIR, buffer());
 }
 
-TEST_F(InterpolatorTest, shortenedFromInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, shortenedFromInNewsgroup)
 {
     char pattern[]{"%y"};
 
@@ -1573,17 +1582,17 @@ TEST_F(InterpolatorTest, shortenedFromInNewsgroup)
     ASSERT_EQ(TRN_TEST_HEADER_FROM, buffer());
 }
 
-TEST_F(InterpolatorTest, articleSizeInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, articleSizeInNewsgroup)
 {
     char pattern[]{"%z"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(TRN_TEST_ARTICLE_SIZE, buffer());
+    ASSERT_EQ(std::to_string(TRN_TEST_ARTICLE_SIZE), buffer());
 }
 
-TEST_F(InterpolatorTest, numSelectedThreadsInNewsgroupEmpty)
+TEST_F(InterpolatorNewsgroupTest, numSelectedThreadsInNewsgroupEmpty)
 {
     char pattern[]{"%Z"};
 
@@ -1593,7 +1602,7 @@ TEST_F(InterpolatorTest, numSelectedThreadsInNewsgroupEmpty)
     ASSERT_EQ("3", buffer());
 }
 
-TEST_F(InterpolatorTest, headerFieldInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, headerFieldInNewsgroup)
 {
     char pattern[]{"%[X-Boogie-Nights]"};
 
@@ -1603,13 +1612,12 @@ TEST_F(InterpolatorTest, headerFieldInNewsgroup)
     ASSERT_EQ(TRN_TEST_HEADER_X_BOOGIE_NIGHTS, buffer());
 }
 
-TEST_F(InterpolatorTest, missingHeaderFieldInNewsgroupIsEmpty)
+TEST_F(InterpolatorNewsgroupTest, missingHeaderFieldInNewsgroupIsEmpty)
 {
     char pattern[]{"%[X-Missing-Header]"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(buffer().empty()) << "Contents: '" << buffer() << "'";
+    ASSERT_TRUE(bufferIsEmpty());
 }
-#endif
