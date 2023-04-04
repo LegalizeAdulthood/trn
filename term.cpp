@@ -784,7 +784,7 @@ static bool s_screen_is_dirty{}; /*$$ remove this? */
 
 /* Process the character *s in the buffer g_buf returning the new 's' */
 
-char *edit_buf(char *s, char *cmd)
+char *edit_buf(char *s, const char *cmd)
 {
     static bool quoteone = false;
     if (quoteone) {

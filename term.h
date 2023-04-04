@@ -91,7 +91,7 @@ int   putchr(char_int ch);
 void  hide_pending();
 bool  finput_pending(bool check_term);
 bool  finish_command(int donewline);
-char *edit_buf(char *s, char *cmd);
+char *edit_buf(char *s, const char *cmd);
 bool  finish_dblchar();
 void  eat_typeahead();
 void  save_typeahead(char *buf, int len);
