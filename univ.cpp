@@ -760,7 +760,7 @@ static bool univ_do_line(char *line)
  */
 
 /* level generator */
-bool univ_file_load(char *fname, char *title, char *label)
+bool univ_file_load(char *fname, const char *title, char *label)
 {
     univ_open();
 

@@ -688,7 +688,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
       }
       case UN_CONFIGFILE: {
 	univ_file_load(ui->data.cfile.fname,ui->data.cfile.title,
-		       ui->data.cfile.label);
+                       ui->data.cfile.label);
 	ch = universal_selector();
 	switch (ch) {
 	  case 'q':
