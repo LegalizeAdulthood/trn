@@ -51,14 +51,14 @@ static INI_WORDS s_rcgroups_ini[] = {
 };
 static bool s_foundany{};
 
-static bool clear_ngitem(char *cp, int arg);
-static bool lock_newsrc(NEWSRC *rp);
-static void unlock_newsrc(NEWSRC *rp);
-static bool open_newsrc(NEWSRC *rp);
-static void init_ngnode(LIST *list, LISTNODE *node);
-static void parse_rcline(NGDATA *np);
-static NGDATA *add_newsgroup(NEWSRC *rp, char *ngn, char_int c);
-static int rcline_cmp(const char *key, int keylen, HASHDATUM data);
+static bool    clear_ngitem(char *cp, int arg);
+static bool    lock_newsrc(NEWSRC *rp);
+static void    unlock_newsrc(NEWSRC *rp);
+static bool    open_newsrc(NEWSRC *rp);
+static void    init_ngnode(LIST *list, LISTNODE *node);
+static void    parse_rcline(NGDATA *np);
+static NGDATA *add_newsgroup(NEWSRC *rp, const char *ngn, char_int c);
+static int     rcline_cmp(const char *key, int keylen, HASHDATUM data);
 
 MULTIRC *rcstuff_init_data()
 {
@@ -905,7 +905,7 @@ reask_unsub:
 
 /* add a newsgroup to the newsrc file (eventually) */
 
-static NGDATA *add_newsgroup(NEWSRC *rp, char *ngn, char_int c)
+static NGDATA *add_newsgroup(NEWSRC *rp, const char *ngn, char_int c)
 {
     NGDATA *np = ngdata_ptr(g_ngdata_cnt++);
     np->prev = g_last_ng;
