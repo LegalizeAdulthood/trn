@@ -101,7 +101,7 @@ void mime_final()
     }
 }
 
-void mime_ReadMimecap(char *mcname)
+void mime_ReadMimecap(const char *mcname)
 {
     char*s;
     int  buflen = 2048;
