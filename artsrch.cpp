@@ -147,7 +147,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
     }
     else {
 	int saltmode = patbuf[2] == 'g'? 2 : 1;
-	char *finding_str = patbuf[1] == 'f'? "author" : "subject";
+        const char *finding_str = patbuf[1] == 'f' ? "author" : "subject";
 
 	howmuch = patbuf[1] == 'f'? ARTSCOPE_FROM : ARTSCOPE_SUBJECT;
 	srchhdr = SOME_LINE;
