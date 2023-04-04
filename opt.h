@@ -128,7 +128,7 @@ enum display_option
 #define OF_INCLUDED	0x0010
 
 extern COMPEX g_optcompex;
-extern char* g_ini_file;
+extern std::string g_ini_file;
 extern char* g_yesorno[2];
 extern INI_WORDS g_options_ini[];
 extern char **g_option_def_vals;

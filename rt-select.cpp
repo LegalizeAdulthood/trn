@@ -579,7 +579,7 @@ char option_selector()
     if (s_sel_ret=='Z' || s_sel_ret=='\t' || s_sel_ret == 'S') {
 	set_options(vals);
 	if (s_sel_ret == 'S')
-	    save_options(g_ini_file);
+	    save_options(g_ini_file.c_str());
     }
     for (int i = 1; g_options_ini[i].checksum; i++) {
 	if (vals[i]) {

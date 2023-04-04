@@ -37,7 +37,7 @@
 #endif
 
 COMPEX g_optcompex;
-char *g_ini_file{};
+std::string g_ini_file;
 char *g_yesorno[2] = {"no", "yes"};
 INI_WORDS g_options_ini[] = {
     { 0, "OPTIONS", 0 },
@@ -197,7 +197,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     set_header_list(HT_DEFMAGIC,HT_MAGIC,"");
 
     char *s = g_use_threads ? get_val("TRNRC", "%+/trnrc") : get_val("RNRC", "%+/rnrc");
-    g_ini_file = savestr(filexp(s));
+    g_ini_file = filexp(s);
 
     s = filexp("%+");
     if (stat(s,&g_filestat) < 0 || !S_ISDIR(g_filestat.st_mode)) {
@@ -207,8 +207,8 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 	    finalize(1); /*$$??*/
 	}
     }
-    if (stat(g_ini_file,&g_filestat) == 0)
-	opt_file(g_ini_file,tcbufptr,true);
+    if (stat(g_ini_file.c_str(),&g_filestat) == 0)
+	opt_file(g_ini_file.c_str(),tcbufptr,true);
     if (!g_use_threads || (s = getenv("TRNINIT")) == nullptr)
 	s = getenv("RNINIT");
     if (*safecpy(*tcbufptr,s,TCBUF_SIZE)) {
@@ -236,7 +236,7 @@ void opt_final()
     g_privdir.clear();
     safefree0(g_option_flags);
     safefree0(g_option_saved_vals);
-    safefree0(g_ini_file);
+    g_ini_file.clear();
     safefree0(g_option_def_vals);
     safefree0(g_art_pager_btns);
     safefree0(g_news_sel_btns);
@@ -781,7 +781,7 @@ void save_options(const char *filename)
                "want to continue to use an old-style init file (that overrides the\n"
                "settings in the option file), edit the option file and change the\n"
                "line that sets %sRNINIT.\n",
-               g_ini_file, t, t);
+               g_ini_file.c_str(), t, t);
 	get_anything();
 	fprintf(fp_out, "# trnrc file auto-generated\n[environment]\n");
 	write_init_environment(fp_out);
