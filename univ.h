@@ -133,9 +133,9 @@ extern UNIV_ITEM *g_last_univ;
 extern UNIV_ITEM *sel_page_univ;
 extern UNIV_ITEM *g_sel_next_univ;
 extern char *g_univ_fname;    /* current filename (may be null) */
-extern std::string g_univ_label;    /* current label (may be null) */
+extern std::string g_univ_label;    /* current label (may be empty) */
 extern std::string g_univ_title;    /* title of current level */
-extern char *g_univ_tmp_file; /* temp. file (may be null) */
+extern std::string g_univ_tmp_file; /* temp. file (may be empty) */
 extern HASHTABLE *g_univ_ng_hash;
 extern HASHTABLE *g_univ_vg_hash;
 /* end of items that must be saved */

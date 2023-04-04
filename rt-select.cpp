@@ -142,7 +142,7 @@ private:
     char *const save_univ_fname = g_univ_fname;          \
     std::string const save_univ_label = g_univ_label;    \
     std::string const save_univ_title = g_univ_title;    \
-    char *const save_univ_tmp_file = g_univ_tmp_file;    \
+    std::string const save_univ_tmp_file = g_univ_tmp_file; \
     const char save_sel_ret = s_sel_ret;                 \
     HASHTABLE *const save_univ_ng_hash = g_univ_ng_hash; \
     HASHTABLE *const save_univ_vg_hash = g_univ_vg_hash

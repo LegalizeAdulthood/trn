@@ -51,7 +51,7 @@ UNIV_ITEM *g_sel_next_univ{};
 char *g_univ_fname{};    /* current filename (may be null) */
 std::string g_univ_label;    /* current label (may be null) */
 std::string g_univ_title;    /* title of current level */
-char *g_univ_tmp_file{}; /* temp. file (may be null) */
+std::string g_univ_tmp_file; /* temp. file (may be null) */
 HASHTABLE *g_univ_ng_hash{};
 HASHTABLE *g_univ_vg_hash{};
 /* end of items that must be saved */
@@ -120,7 +120,7 @@ void univ_open()
     g_univ_fname = nullptr;
     g_univ_title.clear();
     g_univ_label.clear();
-    g_univ_tmp_file = nullptr;
+    g_univ_tmp_file.clear();
     s_univ_virt_pass_needed = false;
     g_univ_ng_hash = nullptr;
     g_univ_vg_hash = nullptr;
@@ -137,9 +137,9 @@ void univ_close()
 	nextnode = node->next;
 	free((char*)node);
     }
-    if (g_univ_tmp_file) {
-	remove(g_univ_tmp_file);
-	free(g_univ_tmp_file);
+    if (!g_univ_tmp_file.empty()) {
+	remove(g_univ_tmp_file.c_str());
+	g_univ_tmp_file.clear();
     }
     safefree(g_univ_fname);
     g_univ_title.clear();
@@ -504,12 +504,10 @@ static bool univ_use_file(char *fname, const char *label)
     char *open_name = s;
     /* open URLs and translate them into local temporary filenames */
     if (!strncasecmp(fname,"URL:",4)) {
-	s = fname;
-	open_name = temp_filename();
+        open_name = temp_filename();
 	g_univ_tmp_file = open_name;
 	if (!url_get(fname+4,open_name))
 	    open_name = nullptr;
-	bool save_temp = true;
 	begin_top = false;	/* we will need a "begin group" */
     } else if (*s == ':') {	/* relative to last file's directory */
 	printf("Colon filespec not supported for |%s|\n",s) FLUSH;
@@ -722,8 +720,12 @@ static bool univ_do_line(char *line)
 		/* XXX give an error message later */
 		break;
 	    }
-	    if (g_univ_tmp_file)
-		p = g_univ_tmp_file;
+	    if (!g_univ_tmp_file.empty())
+	    {
+		static char buff[1024];
+		strcpy(buff, g_univ_tmp_file.c_str());
+	        p = buff;
+	    }
 	    else
 		p = g_univ_fname;
 	    univ_add_file(s_univ_line_desc? s_univ_line_desc : s, g_univ_fname, s);
@@ -851,11 +853,11 @@ static char *univ_edit_new_userfile()
 /* XXX problem if elements expand to larger than g_cmd_buf */
 void univ_edit()
 {
-    char* s;
+    const char* s;
 
     if (g_univ_usrtop || !(s_univ_done_startup)) {
-	if (g_univ_tmp_file) {
-	    s = g_univ_tmp_file;
+	if (!g_univ_tmp_file.empty()) {
+	    s = g_univ_tmp_file.c_str();
 	} else {
 	    s = g_univ_fname;
 	}
