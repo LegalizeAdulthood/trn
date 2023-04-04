@@ -49,7 +49,7 @@ void setngtodo(const char *pat)
 
 /* if command line list is non-null, is this newsgroup wanted? */
 
-bool inlist(char *ngnam)
+bool inlist(const char *ngnam)
 {
     if (g_maxngtodo == 0)
 	return true;

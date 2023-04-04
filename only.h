@@ -16,7 +16,7 @@ extern char g_empty_only_char;
 
 void only_init();
 void setngtodo(const char *pat);
-bool inlist(char *ngnam);
+bool inlist(const char *ngnam);
 void end_only();
 void push_only();
 void pop_only();
