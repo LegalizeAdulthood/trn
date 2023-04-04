@@ -68,7 +68,6 @@ char *filexp(const char *text)
     char *s = sbuf;
     static char filename[CBUFLEN];
     char scrbuf[CBUFLEN];
-    char* d;
 
     /* interpret any % escapes */
     dointerp(filename,sizeof filename,s,nullptr,nullptr);
@@ -82,17 +81,20 @@ char *filexp(const char *text)
         }
         else if (*s == '~' && (!s[1] || s[1] == '/'))
         {
-            d = getenv("TRNPREFIX");
-            if (!d)
-                d = INSTALLPREFIX;
-            sprintf(scrbuf, "%s%s", d, s + 1);
+            const char *prefix = getenv("TRNPREFIX");
+            if (!prefix)
+                prefix = INSTALLPREFIX;
+            sprintf(scrbuf, "%s%s", prefix, s + 1);
         }
         else
         {
 #ifdef TILDENAME
-            for (d = scrbuf; isalnum(*s); s++, d++)
-                *d = *s;
-            *d = '\0';
+            {
+                char *d = scrbuf;
+                while (isalnum(*s))
+                    *d++ = *s++;
+                *d = '\0';
+            }
             if (s_tildedir && !strcmp(s_tildename, scrbuf))
             {
                 strcpy(scrbuf, s_tildedir);
@@ -129,7 +131,7 @@ char *filexp(const char *text)
                     {
                         while (fgets(tmpbuf, 512, pfp) != nullptr)
                         {
-                            d = cpytill(scrbuf, tmpbuf, ':');
+                            char *d = cpytill(scrbuf, tmpbuf, ':');
                             if (!strcmp(scrbuf, s_tildename))
                             {
                                 for (int i = LOGDIRFIELD - 2; i; i--)
@@ -167,7 +169,7 @@ char *filexp(const char *text)
     }
     else if (*s == '$')
     { /* starts with some env variable? */
-        d = scrbuf;
+        char *d = scrbuf;
         *d++ = '%';
         if (s[1] == '{')
             strcpy(d, s + 2);
