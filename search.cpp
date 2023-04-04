@@ -71,7 +71,7 @@ using TRANSTABLE = Uchar[ASCSIZ];
 static TRANSTABLE s_trans{};
 static bool s_folding{};
 static int s_err{};
-static char *s_first_character{};
+static const char *s_first_character{};
 
 void search_init()
 {
@@ -324,9 +324,9 @@ char *grow_eb(COMPEX *compex, char *epp, char **alt)
     return epp;
 }
 
-char *execute(COMPEX *compex, char *addr)
+const char *execute(COMPEX *compex, const char *addr)
 {
-    char* p1 = addr;
+    const char* p1 = addr;
     Uchar* trt = s_trans;
     int c;
  
@@ -374,9 +374,9 @@ char *execute(COMPEX *compex, char *addr)
  
 /* advance the match of the regular expression starting at ep along the
    string lp, simulates an NDFSA */
-bool advance(COMPEX *compex, char *lp, const char *ep)
+bool advance(COMPEX *compex, const char *lp, const char *ep)
 {
-    char* curlp;
+    const char* curlp;
     Uchar* trt = s_trans;
     int i;
  
@@ -538,7 +538,7 @@ bool advance(COMPEX *compex, char *lp, const char *ep)
  
 bool backref(COMPEX *compex, int i, const char *lp)
 {
-    char *bp = compex->braslist[i];
+    const char *bp = compex->braslist[i];
     while (*lp && *bp == *lp) {
 	bp++;
 	lp++;

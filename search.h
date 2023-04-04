@@ -14,8 +14,8 @@ struct COMPEX
     char* expbuf;		/* The compiled search string */
     int eblen;			/* Length of above buffer */
     char* alternatives[NALTS+1];/* The list of \| seperated alternatives */
-    char* braslist[NBRA];	/* RE meta-bracket start list */
-    char* braelist[NBRA];	/* RE meta-bracket end list */
+    const char* braslist[NBRA];	/* RE meta-bracket start list */
+    const char* braelist[NBRA];	/* RE meta-bracket end list */
     char* brastr;		/* saved match string after execute() */
     char nbra;			/* The number of meta-brackets int the most
 				   recenlty compiled RE */
@@ -23,16 +23,16 @@ struct COMPEX
 };
 #endif
 
-void search_init();
-void init_compex(COMPEX *compex);
-void free_compex(COMPEX *compex);
+void        search_init();
+void        init_compex(COMPEX *compex);
+void        free_compex(COMPEX *compex);
 const char *getbracket(COMPEX *compex, int n);
-void case_fold(bool which);
-char *compile(COMPEX *compex, const char *strp, bool RE, bool fold);
-char *grow_eb(COMPEX *compex, char *epp, char **alt);
-char *execute(COMPEX *compex, char *addr);
-bool advance(COMPEX *compex, char *lp, const char *ep);
-bool backref(COMPEX *compex, int i, const char *lp);
-bool cclass(const char *set, int c, int af);
+void        case_fold(bool which);
+char       *compile(COMPEX *compex, const char *strp, bool RE, bool fold);
+char       *grow_eb(COMPEX *compex, char *epp, char **alt);
+const char *execute(COMPEX *compex, const char *addr);
+bool        advance(COMPEX *compex, const char *lp, const char *ep);
+bool        backref(COMPEX *compex, int i, const char *lp);
+bool        cclass(const char *set, int c, int af);
 
 #endif

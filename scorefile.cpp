@@ -694,8 +694,8 @@ void sf_do_file(const char *fname)
 //int ind;		/* index into g_sf_entries */
 int score_match(char *str, int ind)
 {
-    char *s1 = g_sf_entries[ind].str1;
-    char *s2 = g_sf_entries[ind].str2;
+    const char *s1 = g_sf_entries[ind].str1;
+    const char *s2 = g_sf_entries[ind].str2;
 
     if (g_sf_entries[ind].flags & 1) {	/* pattern style match */
 	if (g_sf_entries[ind].compex != nullptr) {
@@ -707,7 +707,7 @@ int score_match(char *str, int ind)
 	return false;
     }
     /* default case */
-    char *s3 = strstr(str, s1);
+    const char *s3 = strstr(str, s1);
     if (s3 != nullptr && (!s2 || strstr(s3 + strlen(s1), s2)))
         return true;
     return false;
