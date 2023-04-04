@@ -141,7 +141,7 @@ private:
     UNIV_ITEM *const save_next_univ = g_sel_next_univ;   \
     char *const save_univ_fname = g_univ_fname;          \
     std::string const save_univ_label = g_univ_label;    \
-    char *const save_univ_title = g_univ_title;          \
+    std::string const save_univ_title = g_univ_title;    \
     char *const save_univ_tmp_file = g_univ_tmp_file;    \
     const char save_sel_ret = s_sel_ret;                 \
     HASHTABLE *const save_univ_ng_hash = g_univ_ng_hash; \

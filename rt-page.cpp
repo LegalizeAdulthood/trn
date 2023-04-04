@@ -1212,7 +1212,7 @@ void display_page_title(bool home_only)
     else if (g_sel_mode == SM_UNIVERSAL) {
 	color_object(COLOR_HEADING, true);
 	printf("[%d] %s",g_univ_level,
-	       g_univ_title? g_univ_title : "Universal Selector");
+	       g_univ_title.empty() ? "Universal Selector" : g_univ_title.c_str());
 	color_pop();
     }
     else if (g_in_ng)

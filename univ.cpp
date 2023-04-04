@@ -50,7 +50,7 @@ UNIV_ITEM *sel_page_univ{};
 UNIV_ITEM *g_sel_next_univ{};
 char *g_univ_fname{};    /* current filename (may be null) */
 std::string g_univ_label;    /* current label (may be null) */
-char *g_univ_title{};    /* title of current level */
+std::string g_univ_title;    /* title of current level */
 char *g_univ_tmp_file{}; /* temp. file (may be null) */
 HASHTABLE *g_univ_ng_hash{};
 HASHTABLE *g_univ_vg_hash{};
@@ -89,7 +89,7 @@ void univ_startup()
     /* later: make user top file an option or environment variable? */
     if (!univ_file_load("%+/univ/top","Top Level",nullptr)) {
         univ_open();
-	g_univ_title = savestr("Top Level");
+	g_univ_title = "Top Level";
 	g_univ_fname = savestr("%+/univ/usertop");
 
 	/* read in trn default top file */
@@ -118,7 +118,7 @@ void univ_open()
     sel_page_univ = nullptr;
     g_sel_next_univ = nullptr;
     g_univ_fname = nullptr;
-    g_univ_title = nullptr;
+    g_univ_title.clear();
     g_univ_label.clear();
     g_univ_tmp_file = nullptr;
     s_univ_virt_pass_needed = false;
@@ -142,7 +142,7 @@ void univ_close()
 	free(g_univ_tmp_file);
     }
     safefree(g_univ_fname);
-    safefree(g_univ_title);
+    g_univ_title.clear();
     g_univ_label.clear();
     if (g_univ_ng_hash) {
 	hashdestroy(g_univ_ng_hash);
@@ -767,7 +767,7 @@ bool univ_file_load(char *fname, const char *title, const char *label)
     if (fname)
 	g_univ_fname = savestr(fname);
     if (title)
-	g_univ_title = savestr(title);
+	g_univ_title = title;
     if (label)
 	g_univ_label = label;
     bool flag = univ_use_file(fname, label);
@@ -790,7 +790,7 @@ void univ_mask_load(char *mask, const char *title)
 
     univ_use_group_line(mask,0);
     if (title)
-	g_univ_title = savestr(title);
+	g_univ_title = title;
     if (g_int_count) {
 	g_int_count = 0;
     }
@@ -799,17 +799,16 @@ void univ_mask_load(char *mask, const char *title)
 void univ_redofile()
 {
     char *tmp_fname = (g_univ_fname ? savestr(g_univ_fname) : nullptr);
-    char *tmp_title = (g_univ_title ? savestr(g_univ_title) : nullptr);
+    const std::string tmp_title = g_univ_title;
     const std::string tmp_label = g_univ_label;
 
     univ_close();
     if (g_univ_level)
-	(void)univ_file_load(tmp_fname,tmp_title,tmp_label.c_str());
+	(void)univ_file_load(tmp_fname,tmp_title.c_str(),tmp_label.c_str());
     else
 	univ_startup();
 
     safefree(tmp_fname);
-    safefree(tmp_title);
 }
 
 
@@ -1123,7 +1122,7 @@ const char *univ_article_desc(const UNIV_ITEM *ui)
 void univ_help_main(help_location where)
 {
     univ_open();
-    g_univ_title = savestr("Extended Help");
+    g_univ_title = "Extended Help";
 
     /* first add help on current mode */
     UNIV_ITEM *ui = univ_add(UN_HELPKEY, nullptr);
