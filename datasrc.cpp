@@ -598,16 +598,16 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
     return false;	/* no such group */
 }
 
-char *find_grpdesc(DATASRC *dp, char *groupname)
+const char *find_grpdesc(DATASRC *dp, const char *groupname)
 {
     int grouplen;
-    int ret;
 
     if (!dp->grpdesc)
 	return "";
 
     if (!dp->desc_sf.hp) {
-	if ((dp->flags & DF_REMOTE) && dp->desc_sf.refetch_secs) {
+        int ret;
+        if ((dp->flags & DF_REMOTE) && dp->desc_sf.refetch_secs) {
 	    /*DATASRC* save_datasrc = g_datasrc;*/
 	    set_datasrc(dp);
 	    if ((dp->flags & (DF_TMPGRPDESC|DF_NOXGTITLE)) == DF_TMPGRPDESC

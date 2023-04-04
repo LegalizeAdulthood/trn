@@ -95,23 +95,23 @@ extern int g_datasrc_cnt;
 extern char *g_trnaccess_mem;
 extern char *g_nntp_auth_file;
 
-void datasrc_init();
-void datasrc_finalize();
-char *read_datasrcs(const char *filename);
-DATASRC *get_datasrc(const char *name);
-DATASRC *new_datasrc(const char *name, char **vals);
-bool open_datasrc(DATASRC *dp);
-void set_datasrc(DATASRC *dp);
-void check_datasrcs();
-void close_datasrc(DATASRC *dp);
-bool actfile_hash(DATASRC *dp);
-bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM high);
-char *find_grpdesc(DATASRC *dp, char *groupname);
-int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const char *server);
-char *srcfile_append(SRCFILE *sfp, char *bp, int keylen);
-void srcfile_end_append(SRCFILE *sfp, const char *filename);
-void srcfile_close(SRCFILE *sfp);
-int find_close_match();
+void        datasrc_init();
+void        datasrc_finalize();
+char       *read_datasrcs(const char *filename);
+DATASRC    *get_datasrc(const char *name);
+DATASRC    *new_datasrc(const char *name, char **vals);
+bool        open_datasrc(DATASRC *dp);
+void        set_datasrc(DATASRC *dp);
+void        check_datasrcs();
+void        close_datasrc(DATASRC *dp);
+bool        actfile_hash(DATASRC *dp);
+bool        find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM high);
+const char *find_grpdesc(DATASRC *dp, const char *groupname);
+int         srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const char *server);
+char       *srcfile_append(SRCFILE *sfp, char *bp, int keylen);
+void        srcfile_end_append(SRCFILE *sfp, const char *filename);
+void        srcfile_close(SRCFILE *sfp);
+int         find_close_match();
 
 inline nntp_flags datasrc_nntp_flags(const DATASRC *dp)
 {
