@@ -47,7 +47,6 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
 {
     char* pattern;			/* unparsed pattern */
     char cmdchr = *patbuf;	/* what kind of search? */
-    char* s;
     bool backward = cmdchr == '?' || cmdchr == Ctl('p');
 					/* direction of search */
     COMPEX* compex;			/* which compiled expression */
@@ -79,7 +78,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
 	    srchhdr = g_art_srchhdr;
 	    doread = g_art_doread;
 	}
-	s = cpytill(g_buf,patbuf+1,cmdchr);/* ok to cpy g_buf+1 to g_buf */
+	char *s = cpytill(g_buf,patbuf+1,cmdchr);/* ok to cpy g_buf+1 to g_buf */
 	pattern = g_buf;
 	if (*pattern) {
 	    g_lastpat = pattern;
@@ -228,13 +227,15 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
 	}
 #endif
     }
-    s = compile(compex, pattern, true, foldcase);
-    if (s != nullptr)
     {
-					/* compile regular expression */
-	errormsg(s);
-	ret = SRCH_ABORT;
-	goto exit;
+        const char *s = compile(compex, pattern, true, foldcase);
+        if (s != nullptr)
+        {
+            /* compile regular expression */
+            errormsg(s);
+            ret = SRCH_ABORT;
+            goto exit;
+        }
     }
     if (cmdlst && strchr(cmdlst,'='))
 	ret = SRCH_ERROR;		/* listing subjects is an error? */
@@ -248,10 +249,9 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
 	ret = SRCH_DONE;
     }
     if (saltaway) {
-	char saltbuf[LBUFLEN], *f;
-
-	s = saltbuf;
-	f = pattern;
+        char  saltbuf[LBUFLEN];
+        char *s = saltbuf;
+        const char *f = pattern;
 	*s++ = '/';
 	while (*f) {
 	    if (*f == '/')
