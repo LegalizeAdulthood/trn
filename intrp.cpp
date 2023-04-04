@@ -1166,7 +1166,7 @@ char *interp(char *dest, int destsize, char *pattern)
     return dointerp(dest,destsize,pattern,nullptr,nullptr);
 }
 
-char *interpsearch(char *dest, int destsize, char *pattern, char *cmd)
+char *interpsearch(char *dest, int destsize, char *pattern, const char *cmd)
 {
     return dointerp(dest,destsize,pattern,nullptr,cmd);
 }

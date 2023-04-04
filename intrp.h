@@ -21,7 +21,7 @@ void  intrp_final();
 char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, const char *cmd);
 char *interp_backslash(char *dest, char *pattern);
 char *interp(char *dest, int destsize, char *pattern);
-char *interpsearch(char *dest, int destsize, char *pattern, char *cmd);
+char *interpsearch(char *dest, int destsize, char *pattern, const char *cmd);
 void  normalize_refs(char *refs);
 
 #endif
