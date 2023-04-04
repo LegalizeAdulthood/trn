@@ -9,6 +9,8 @@
 ** Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>
 */
 
+#include <string>
+
 #include "common.h"
 
 #include "env.h"
@@ -25,7 +27,7 @@ int server_connection();
 int nntp_handle_timeout();
 
 char* g_server_name;
-char* g_nntp_auth_file;
+std::string g_nntp_auth_file;
 
 int debug = 0;
 

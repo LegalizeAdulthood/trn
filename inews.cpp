@@ -2,6 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <string>
+
 #include "common.h"
 
 #include "env.h"
@@ -20,7 +22,7 @@ enum
 int debug{};
 int new_connection{};
 char *g_server_name{};
-char *g_nntp_auth_file{};
+std::string g_nntp_auth_file;
 char g_buf[LBUFLEN + 1]{}; /* general purpose line buffer */
 
 int valid_header(char *);

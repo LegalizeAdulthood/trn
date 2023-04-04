@@ -41,11 +41,11 @@ struct utimbuf
 
 #include <string>
 
-LIST *g_datasrc_list{}; /* a list of all DATASRCs */
-DATASRC *g_datasrc{};   /* the current datasrc */
-int g_datasrc_cnt{};
-char *g_trnaccess_mem{};
-char *g_nntp_auth_file{};
+LIST       *g_datasrc_list{}; /* a list of all DATASRCs */
+DATASRC    *g_datasrc{};      /* the current datasrc */
+int         g_datasrc_cnt{};
+char       *g_trnaccess_mem{};
+std::string g_nntp_auth_file;
 
 enum
 {
@@ -110,12 +110,12 @@ void datasrc_init()
 
     g_datasrc_list = new_list(0,0,sizeof(DATASRC),20,LF_ZERO_MEM,nullptr);
 
-    g_nntp_auth_file = savestr(filexp(NNTP_AUTH_FILE));
+    g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
 
     char *machine = getenv("NNTPSERVER");
     if (machine && strcmp(machine,"local")) {
 	vals[DI_NNTP_SERVER] = machine;
-	vals[DI_AUTH_USER] = read_auth_file(g_nntp_auth_file,
+	vals[DI_AUTH_USER] = read_auth_file(g_nntp_auth_file.c_str(),
 					    &vals[DI_AUTH_PASS]);
 	vals[DI_FORCE_AUTH] = getenv("NNTP_FORCE_AUTH");
 	new_datasrc("default",vals);
@@ -147,7 +147,7 @@ void datasrc_init()
 	vals[DI_ACTIVE_TIMES] = ACTIVE_TIMES;
 	vals[DI_GROUP_DESC] = GROUPDESC;
 	if (machine) {
-	    vals[DI_AUTH_USER] = read_auth_file(g_nntp_auth_file,
+	    vals[DI_AUTH_USER] = read_auth_file(g_nntp_auth_file.c_str(),
 						&vals[DI_AUTH_PASS]);
 	    vals[DI_FORCE_AUTH] = getenv("NNTP_FORCE_AUTH");
 	}
@@ -168,7 +168,7 @@ void datasrc_finalize()
 	g_datasrc_list = nullptr;
     }
     g_datasrc_cnt = 0;
-    safefree0(g_nntp_auth_file);
+    g_nntp_auth_file.clear();
 }
 
 char *read_datasrcs(const char *filename)

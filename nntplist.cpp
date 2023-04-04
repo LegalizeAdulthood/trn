@@ -2,6 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <string>
+
 #include "common.h"
 
 #include "env.h"
@@ -14,7 +16,7 @@
 void Usage();
 
 char *g_server_name{};
-char *g_nntp_auth_file{};
+std::string g_nntp_auth_file;
 int debug{};             /* make nntpclient.c happy */
 char g_buf[LBUFLEN + 1]{}; /* general purpose line buffer */
 

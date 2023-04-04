@@ -4,13 +4,14 @@
 #ifndef TRN_DATASRC_H
 #define TRN_DATASRC_H
 
+#include <cstdint>
+#include <stdio.h>
+#include <string>
+
 #include "enum-flags.h"
 #include "list.h"
 #include "nntpclient.h"
 #include "rt-ov.h"
-
-#include <cstdint>
-#include <stdio.h>
 
 struct HASHTABLE;
 struct LIST;
@@ -89,11 +90,11 @@ enum
     DATASRC_ALARM_SECS = (5 * 60)
 };
 
-extern LIST *g_datasrc_list; /* a list of all DATASRCs */
-extern DATASRC *g_datasrc;   /* the current datasrc */
-extern int g_datasrc_cnt;
-extern char *g_trnaccess_mem;
-extern char *g_nntp_auth_file;
+extern LIST       *g_datasrc_list; /* a list of all DATASRCs */
+extern DATASRC    *g_datasrc;      /* the current datasrc */
+extern int         g_datasrc_cnt;
+extern char       *g_trnaccess_mem;
+extern std::string g_nntp_auth_file;
 
 void        datasrc_init();
 void        datasrc_finalize();

@@ -124,7 +124,7 @@ int doshell(const char *shell, const char *s)
 	else
 	    un_export(s_nntpforce_export);
 	if (g_datasrc->auth_user) {
-	    int fd = open(g_nntp_auth_file, O_WRONLY|O_CREAT, 0600);
+	    int fd = open(g_nntp_auth_file.c_str(), O_WRONLY|O_CREAT, 0600);
 	    if (fd >= 0) {
 		write(fd, g_datasrc->auth_user, strlen(g_datasrc->auth_user));
 		write(fd, "\n", 1);
@@ -228,7 +228,7 @@ int doshell(const char *shell, const char *s)
     sigset(SIGTTIN,stop_catcher);
 #endif
     if (g_datasrc && g_datasrc->auth_user)
-	remove(g_nntp_auth_file);
+	remove(g_nntp_auth_file.c_str());
     return ret;
 }
 
