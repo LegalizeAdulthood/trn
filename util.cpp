@@ -927,7 +927,7 @@ char menu_get_char()
 
 /* NOTE: kfile.c uses its own editor function */
 /* used in a few places, now centralized */
-int edit_file(char *fname)
+int edit_file(const char *fname)
 {
     int r = -1;
 

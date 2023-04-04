@@ -58,22 +58,22 @@ void setdef(char *buffer, const char *dflt);
 #ifndef NO_FILELINKS
 void safelink(char *old, char *new);
 #endif
-void verify_sig();
+void   verify_sig();
 double current_time();
 time_t text2secs(const char *s, time_t defSecs);
-char *secs2text(time_t secs);
-char *temp_filename();
-char *get_auth_user();
-char *get_auth_pass();
+char * secs2text(time_t secs);
+char * temp_filename();
+char * get_auth_user();
+char * get_auth_pass();
 char **prep_ini_words(INI_WORDS words[]);
-void unprep_ini_words(INI_WORDS words[]);
-void prep_ini_data(char *cp, const char *filename);
-bool parse_string(char **to, char **from);
-char *next_ini_section(char *cp, char **section, char **cond);
-char *parse_ini_section(char *cp, INI_WORDS words[]);
-bool check_ini_cond(char *cond);
-char menu_get_char();
-int edit_file(char *fname);
+void   unprep_ini_words(INI_WORDS words[]);
+void   prep_ini_data(char *cp, const char *filename);
+bool   parse_string(char **to, char **from);
+char * next_ini_section(char *cp, char **section, char **cond);
+char * parse_ini_section(char *cp, INI_WORDS words[]);
+bool   check_ini_cond(char *cond);
+char   menu_get_char();
+int    edit_file(const char *fname);
 
 inline int ini_len(const INI_WORDS *words)
 {
