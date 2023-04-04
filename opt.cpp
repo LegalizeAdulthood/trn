@@ -251,7 +251,7 @@ void opt_final()
     safefree0(g_sel_grp_dmode);
 }
 
-void opt_file(char *filename, char **tcbufptr, bool bleat)
+void opt_file(const char *filename, char **tcbufptr, bool bleat)
 {
     char*filebuf = *tcbufptr;
     char*section;
