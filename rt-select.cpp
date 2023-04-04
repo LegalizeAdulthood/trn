@@ -63,7 +63,7 @@ sel_sort_mode g_sel_threadsort{SS_DATE};
 sel_sort_mode g_sel_newsgroupsort{SS_NATURAL};
 sel_sort_mode g_sel_addgroupsort{SS_NATURAL};
 sel_sort_mode g_sel_univsort{SS_NATURAL};
-char *g_sel_sort_string{};
+const char *g_sel_sort_string{};
 int g_sel_direction{1};
 bool g_sel_exclusive{};
 addgroup_flags g_sel_mask{AGF_SEL};
