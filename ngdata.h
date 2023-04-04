@@ -4,9 +4,10 @@
 #ifndef TRN_NGDATA_H
 #define TRN_NGDATA_H
 
-#include "enum-flags.h"
-
 #include <cstdint>
+#include <string>
+
+#include "enum-flags.h"
 
 struct LIST;
 struct NEWSRC;
@@ -39,29 +40,29 @@ struct NGDATA
     newsgroup_flags flags;         /* flags for each group */
 };
 
-extern LIST *g_ngdata_list; /* a list of NGDATA */
-extern int g_ngdata_cnt;
-extern NG_NUM g_newsgroup_cnt; /* all newsgroups in our current newsrc(s) */
-extern NG_NUM g_newsgroup_toread;
-extern ART_UNREAD g_ng_min_toread; /* == TR_ONE or TR_NONE */
-extern NGDATA *g_first_ng;
-extern NGDATA *g_last_ng;
-extern NGDATA *g_ngptr;      /* current newsgroup data ptr */
-extern NGDATA *g_current_ng; /* stable current newsgroup so we can ditz with g_ngptr */
-extern NGDATA *g_recent_ng;  /* the prior newsgroup we visited */
-extern NGDATA *g_starthere;  /* set to the first newsgroup with unread news on startup */
-extern NGDATA *g_sel_page_np;
-extern NGDATA *g_sel_next_np;
-extern ART_NUM g_absfirst;         /* 1st real article in current newsgroup */
-extern ART_NUM g_firstart;         /* minimum unread article number in newsgroup */
-extern ART_NUM g_lastart;          /* maximum article number in newsgroup */
-extern ART_UNREAD g_missing_count; /* for reports on missing articles */
-extern char *g_moderated;
-extern char *g_redirected;
-extern bool g_threaded_group;
-extern NGDATA *g_ng_go_ngptr;
-extern ART_NUM g_ng_go_artnum;
-extern char *g_ng_go_msgid;
+extern LIST       *g_ngdata_list;      /* a list of NGDATA */
+extern int         g_ngdata_cnt;       //
+extern NG_NUM      g_newsgroup_cnt;    /* all newsgroups in our current newsrc(s) */
+extern NG_NUM      g_newsgroup_toread; //
+extern ART_UNREAD  g_ng_min_toread;    /* == TR_ONE or TR_NONE */
+extern NGDATA     *g_first_ng;         //
+extern NGDATA     *g_last_ng;          //
+extern NGDATA     *g_ngptr;            /* current newsgroup data ptr */
+extern NGDATA     *g_current_ng;       /* stable current newsgroup so we can ditz with g_ngptr */
+extern NGDATA     *g_recent_ng;        /* the prior newsgroup we visited */
+extern NGDATA     *g_starthere;        /* set to the first newsgroup with unread news on startup */
+extern NGDATA     *g_sel_page_np;      //
+extern NGDATA     *g_sel_next_np;      //
+extern ART_NUM     g_absfirst;         /* 1st real article in current newsgroup */
+extern ART_NUM     g_firstart;         /* minimum unread article number in newsgroup */
+extern ART_NUM     g_lastart;          /* maximum article number in newsgroup */
+extern ART_UNREAD  g_missing_count;    /* for reports on missing articles */
+extern std::string g_moderated;
+extern char       *g_redirected;
+extern bool        g_threaded_group;
+extern NGDATA     *g_ng_go_ngptr;
+extern ART_NUM     g_ng_go_artnum;
+extern char       *g_ng_go_msgid;
 
 #define ngdata_ptr(ngnum) ((NGDATA*)listnum2listitem(g_ngdata_list,(long)(ngnum)))
 

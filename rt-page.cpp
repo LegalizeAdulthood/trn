@@ -1250,7 +1250,7 @@ void display_page_title(bool home_only)
 	       g_sel_total_obj_cnt == 1 ? "" : "s");
 	if (g_sel_exclusive)
 	    printf(" out of %ld", (long)g_obj_count);
-	fputs(g_moderated,stdout);
+	fputs(g_moderated.c_str(),stdout);
     }
     else {
 	printf("       %s%ld group%s",g_group_init_done? "" : "~",

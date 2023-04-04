@@ -48,7 +48,7 @@ ART_NUM g_absfirst{};         /* 1st real article in current newsgroup */
 ART_NUM g_firstart{};         /* minimum unread article number in newsgroup */
 ART_NUM g_lastart{};          /* maximum article number in newsgroup */
 ART_UNREAD g_missing_count{}; /* for reports on missing articles */
-char *g_moderated{};
+std::string g_moderated;
 char *g_redirected{};
 bool g_threaded_group{};
 NGDATA *g_ng_go_ngptr{};
@@ -342,7 +342,7 @@ ART_NUM getngsize(NGDATA *gp)
 	    g_moderated = " (REDIRECTED)";
 	    break;
 	default:
-	    g_moderated = "";
+	    g_moderated.clear();
 	    break;
 	}
     }
