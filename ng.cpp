@@ -126,7 +126,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 {
     minor_mode mode_save = g_mode;
     general_mode gmode_save = g_general_mode;
-    char*whatnext = "%s%sWhat next? [%s]";
+    const char*whatnext = "%s%sWhat next? [%s]";
     bool ng_virtual = false;
 
     set_datasrc(g_ngptr->rc->datasrc);
@@ -413,7 +413,7 @@ reask_article:
 	unflush_output();		/* disable any ^O in effect */
 	/* print prompt, whatever it is */
 	interp(g_cmd_buf, sizeof g_cmd_buf, g_mailcall);
-	sprintf(g_buf,g_prompt,g_cmd_buf,
+	sprintf(g_buf,g_prompt.c_str(),g_cmd_buf,
 		current_charsubst(),
 		g_dfltcmd);
 	draw_mousebar(g_tc_COLS - (g_term_line == g_tc_LINES-1? strlen(g_buf)+5 : 0), true);

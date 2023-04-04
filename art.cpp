@@ -51,20 +51,20 @@ ART_POS g_innersearch{};  /* g_artpos of end of line we want to visit */
 ART_LINE g_innerlight{};  /* highlight position for g_innersearch or 0 */
 char g_hide_everything{}; /* if set, do not write page now, ...but execute char when done with page */
 
-bool g_reread{};          /* consider current art temporarily unread? */
-bool g_do_fseek{};        /* should we back up in article file? */
-bool g_oldsubject{};      /* not 1st art in subject thread */
-ART_LINE g_topline{-1};   /* top line of current screen */
-bool g_do_hiding{true};   /* hide header lines with -h? */
-bool g_is_mime{};         /* process mime in an article? */
-bool g_multimedia_mime{}; /* images/audio to see/hear? */
-bool g_rotate{};          /* has rotation been requested? */
-char *g_prompt;           /* pointer to current prompt */
-char *g_firstline{};      /* s_special first line? */
-const char *g_hideline{};       /* custom line hiding? */
-const char *g_pagestop{}; /* custom page terminator? */
-COMPEX g_hide_compex{};
-COMPEX g_page_compex{};
+bool        g_reread{};          /* consider current art temporarily unread? */
+bool        g_do_fseek{};        /* should we back up in article file? */
+bool        g_oldsubject{};      /* not 1st art in subject thread */
+ART_LINE    g_topline{-1};       /* top line of current screen */
+bool        g_do_hiding{true};   /* hide header lines with -h? */
+bool        g_is_mime{};         /* process mime in an article? */
+bool        g_multimedia_mime{}; /* images/audio to see/hear? */
+bool        g_rotate{};          /* has rotation been requested? */
+std::string g_prompt;            /* current prompt */
+char       *g_firstline{};       /* s_special first line? */
+const char *g_hideline{};        /* custom line hiding? */
+const char *g_pagestop{};        /* custom page terminator? */
+COMPEX      g_hide_compex{};
+COMPEX      g_page_compex{};
 
 inline char *line_ptr(ART_POS pos)
 {
@@ -1001,7 +1001,7 @@ leave_pager:
 	    setdfltcmd();
 	    color_object(COLOR_CMD, true);
 	    interpsearch(g_cmd_buf, sizeof g_cmd_buf, g_mailcall, g_buf);
-	    printf(g_prompt,g_cmd_buf,
+	    printf(g_prompt.c_str(),g_cmd_buf,
 		   current_charsubst(),
 		   g_dfltcmd);	/* print prompt, whatever it is */
 	    color_pop();	/* of COLOR_CMD */
