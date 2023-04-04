@@ -881,7 +881,7 @@ const char *option_value(int num)
 	const int save_Threaded = g_threaded_group;
         g_threaded_group = true;
 	set_selector(g_sel_defaultmode, SS_MAGIC_NUMBER);
-	char *s = g_sel_mode_string;
+	const char *s = g_sel_mode_string;
 	g_sel_mode = save_sel_mode;
 	g_threaded_group = save_Threaded;
 	set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);

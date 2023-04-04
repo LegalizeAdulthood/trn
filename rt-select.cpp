@@ -56,7 +56,7 @@ char g_sel_disp_char[]{" +-*"};
 sel_mode g_sel_mode{};
 sel_mode g_sel_defaultmode{SM_THREAD};
 sel_mode g_sel_threadmode{SM_THREAD};
-char *g_sel_mode_string{};
+const char *g_sel_mode_string{};
 sel_sort_mode g_sel_sort{};
 sel_sort_mode g_sel_artsort{SS_GROUPS};
 sel_sort_mode g_sel_threadsort{SS_DATE};

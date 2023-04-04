@@ -41,7 +41,7 @@ extern char g_sel_disp_char[];
 extern sel_mode g_sel_mode;
 extern sel_mode g_sel_defaultmode;
 extern sel_mode g_sel_threadmode;
-extern char *g_sel_mode_string;
+extern const char *g_sel_mode_string;
 extern sel_sort_mode g_sel_sort;
 extern sel_sort_mode g_sel_artsort;
 extern sel_sort_mode g_sel_threadsort;
