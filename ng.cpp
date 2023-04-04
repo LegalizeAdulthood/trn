@@ -227,7 +227,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 		nntp_finishbody(FB_SILENT);
 	    if (g_datasrc->flags & DF_REMOTE) {
 		if (g_datasrc->act_sf.fp || getngsize(g_ngptr) > g_lastart) {
-		    if (nntp_group(g_ngname,g_ngptr) <= 0) {
+		    if (nntp_group(g_ngname.c_str(),g_ngptr) <= 0) {
 			s_exit_code = NG_NOSERVER;
 			goto cleanup;
 		    }
@@ -292,10 +292,10 @@ do_newsgroup_result do_newsgroup(char *start_command)
 		termdown(2);
 	    }
 	    if (g_verbose)
-		printf("End of newsgroup %s.",g_ngname);
+		printf("End of newsgroup %s.",g_ngname.c_str());
 					/* print pseudo-article */
 	    else
-		printf("End of %s",g_ngname);
+		printf("End of %s",g_ngname.c_str());
 	    if (g_obj_count) {
 		if (g_selected_only)
 		    printf("  (%ld + %ld articles still unread)",
@@ -363,12 +363,12 @@ do_newsgroup_result do_newsgroup(char *start_command)
 		char tmpbuf[256];
                 /* see if we have tree data for this article anyway */
 		init_tree();
-		sprintf(tmpbuf,"%s: article is not available.",g_ngname);
+		sprintf(tmpbuf,"%s: article is not available.",g_ngname.c_str());
 		if (g_artp && !(g_artp->flags & AF_CACHED)) {
 		    if (g_absfirst < g_first_cached || g_last_cached < g_lastart
 		     || !g_cached_all_in_range)
 			sprintf(tmpbuf,"%s: article may show up in a moment.",
-				g_ngname);
+				g_ngname.c_str());
 		}
 		ART_LINE linenum = tree_puts(tmpbuf, 0, 0);
 		vwtary(g_artline,(ART_POS)0);
@@ -1037,7 +1037,7 @@ normal_search:
       }
       case 'u':			/* unsubscribe from this newsgroup? */
 	newline();
-	printf(g_unsubto,g_ngname) FLUSH;
+	printf(g_unsubto,g_ngname.c_str()) FLUSH;
 	termdown(1);
 	g_ngptr->subscribechar = NEGCHAR;
 	g_ngptr->rc->flags |= RF_RCCHANGED;
@@ -1443,9 +1443,9 @@ char ask_catchup()
 	newline();
 reask_catchup:
     if (g_verbose)
-	sprintf(g_buf,"Mark everything in %s as read?",g_ngname);
+	sprintf(g_buf,"Mark everything in %s as read?",g_ngname.c_str());
     else
-	sprintf(g_buf,"Catchup %s?",g_ngname);
+	sprintf(g_buf,"Catchup %s?",g_ngname.c_str());
     in_char(g_buf,MM_CONFIRM_CATCH_UP_PROMPT,"yn#h");
     printcmd();
     char ch = *g_buf;
@@ -1526,7 +1526,7 @@ reask_catchup:
 	g_ngptr->rc->flags |= RF_RCCHANGED;
 	g_newsgroup_toread--;
 	newline();
-	printf(g_unsubto,g_ngname);
+	printf(g_unsubto,g_ngname.c_str());
 	printf("(If you meant to hit 'y' instead of 'u', press '-'.)\n") FLUSH;
 	termdown(2);
     }

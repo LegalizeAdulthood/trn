@@ -1216,7 +1216,7 @@ void display_page_title(bool home_only)
 	color_pop();
     }
     else if (g_in_ng)
-	color_string(COLOR_NGNAME, g_ngname);
+	color_string(COLOR_NGNAME, g_ngname.c_str());
     else if (g_sel_mode == SM_ADDGROUP)
 	color_string(COLOR_HEADING,"ADD newsgroups");
     else {

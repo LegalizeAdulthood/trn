@@ -198,7 +198,7 @@ int mt_data()
     else
 #endif
     {
-        s_fp = fopen(mt_name(g_ngname), FOPEN_RB);
+        s_fp = fopen(mt_name(g_ngname.c_str()), FOPEN_RB);
         if (s_fp == nullptr)
 	    return 0;
 	if (g_verbose)

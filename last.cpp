@@ -64,7 +64,7 @@ void writelast()
 	if (g_lasttime < s_starttime)
 	    g_lasttime = s_starttime;
 	fprintf(fp,"%s\n%ld\n%ld\n%ld\n%ld\n",
-		g_ngname? g_ngname : "",g_lasttime,
+		g_ngname.c_str(),g_lasttime,
 		g_lastactsiz,g_lastnewtime,g_lastextranum);
 	fclose(fp);
 	remove(s_lastfile);

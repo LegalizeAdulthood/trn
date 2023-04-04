@@ -584,7 +584,7 @@ int ng_perform(char *cmdlst, int output_level)
     int ch;
     
     if (output_level == 1) {
-	printf("%s ",g_ngname);
+	printf("%s ",g_ngname.c_str());
 	fflush(stdout);
     }
 

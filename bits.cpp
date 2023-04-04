@@ -613,7 +613,7 @@ static int chase_xref(ART_NUM artnum, int markread)
 	    *xartnum++ = '\0';
 	    if (!(x = atol(xartnum)))
 		continue;
-	    if (!strcmp(tmpbuf,g_ngname)) {/* is this the current newsgroup? */
+	    if (!strcmp(tmpbuf,g_ngname.c_str())) {/* is this the current newsgroup? */
 		if (x < g_absfirst || x > g_lastart)
 		    continue;
 		if (markread)

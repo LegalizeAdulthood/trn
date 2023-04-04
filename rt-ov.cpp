@@ -199,7 +199,7 @@ beginning:
     }
     else if (g_datasrc->ov_opened < started_request - 60*60) {
 	ov_close();
-        g_datasrc->ov_in = fopen(ov_name(g_ngname), "r");
+        g_datasrc->ov_in = fopen(ov_name(g_ngname.c_str()), "r");
         if (g_datasrc->ov_in == nullptr)
 	    return false;
 	if (g_verbose && !g_first_subject)

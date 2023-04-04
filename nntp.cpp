@@ -500,7 +500,7 @@ int nntp_handle_timeout()
     if (nntp_connect(g_datasrc->newsid, false) <= 0)
 	return -2;
     g_datasrc->nntplink = g_nntplink;
-    if (g_in_ng && nntp_group(g_ngname, (NGDATA*)nullptr) <= 0)
+    if (g_in_ng && nntp_group(g_ngname.c_str(), (NGDATA*)nullptr) <= 0)
 	return -2;
     if (nntp_command(last_command_save) <= 0)
 	return -1;

@@ -735,49 +735,49 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
 	if (g_fuzzy_get && (flags & GNG_FUZZY)) {
 	    flags &= ~GNG_FUZZY;
 	    if (find_close_match())
-		what = g_ngname;
+		what = g_ngname.c_str();
 	    else
 		return false;
 	} else
 	    return false;
     }
     set_ngname(what);
-    g_ngptr = find_ng(g_ngname);
+    g_ngptr = find_ng(g_ngname.c_str());
     if (g_ngptr == nullptr) {		/* not in .newsrc? */
 	NEWSRC* rp;
 	for (rp = g_multirc->first; rp; rp = rp->next) {
 	    if (!all_bits(rp->flags, RF_ADD_GROUPS | RF_ACTIVE))
 		continue;
 	    /*$$ this may scan a datasrc multiple times... */
-	    if (find_actgrp(rp->datasrc,g_buf,g_ngname,g_ngname_len,(ART_NUM)0))
+	    if (find_actgrp(rp->datasrc,g_buf,g_ngname.c_str(),g_ngname.length(),(ART_NUM)0))
 		break;  /*$$ let them choose which server */
 	}
 	if (!rp) {
 	    dingaling();
 	    if (g_verbose)
-		printf("\nNewsgroup %s does not exist!\n",g_ngname) FLUSH;
+		printf("\nNewsgroup %s does not exist!\n",g_ngname.c_str()) FLUSH;
 	    else
-		printf("\nNo %s!\n",g_ngname) FLUSH;
+		printf("\nNo %s!\n",g_ngname.c_str()) FLUSH;
 	    termdown(2);
 	    if (g_novice_delays)
 		sleep(2);
 	    goto check_fuzzy_match;
 	}
-	if (g_mode != MM_INITIALIZING || !(autosub = auto_subscribe(g_ngname)))
+	if (g_mode != MM_INITIALIZING || !(autosub = auto_subscribe(g_ngname.c_str())))
 	    autosub = g_addnewbydefault;
 	if (autosub) {
 	    if (g_append_unsub) {
 		printf("(Adding %s to end of your .newsrc %ssubscribed)\n",
-		       g_ngname, (autosub == ADDNEW_SUB)? "" : "un") FLUSH;
+		       g_ngname.c_str(), (autosub == ADDNEW_SUB)? "" : "un") FLUSH;
 		termdown(1);
-		g_ngptr = add_newsgroup(rp, g_ngname, autosub);
+		g_ngptr = add_newsgroup(rp, g_ngname.c_str(), autosub);
 	    } else {
 		if (autosub == ADDNEW_SUB) {
-		    printf("(Subscribing to %s)\n", g_ngname) FLUSH;
+		    printf("(Subscribing to %s)\n", g_ngname.c_str()) FLUSH;
 		    termdown(1);
-		    g_ngptr = add_newsgroup(rp, g_ngname, autosub);
+		    g_ngptr = add_newsgroup(rp, g_ngname.c_str(), autosub);
 		} else {
-		    printf("(Ignoring %s)\n", g_ngname) FLUSH;
+		    printf("(Ignoring %s)\n", g_ngname.c_str()) FLUSH;
 		    termdown(1);
 		    return false;
 		}
@@ -785,9 +785,9 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
 	    flags &= ~GNG_RELOC;
 	} else {
 	    if (g_verbose)
-		sprintf(promptbuf,"\nNewsgroup %s not in .newsrc -- subscribe?",g_ngname);
+		sprintf(promptbuf,"\nNewsgroup %s not in .newsrc -- subscribe?",g_ngname.c_str());
 	    else
-		sprintf(promptbuf,"\nSubscribe %s?",g_ngname);
+		sprintf(promptbuf,"\nSubscribe %s?",g_ngname.c_str());
 reask_add:
 	    in_char(promptbuf,MM_ADD_NEWSGROUP_PROMPT,"ynYN");
 	    printcmd();
@@ -797,7 +797,7 @@ reask_add:
                     printf("Type y or SP to subscribe to %s.\n"
                            "Type Y to subscribe to this and all remaining new groups.\n"
                            "Type N to leave all remaining new groups unsubscribed.\n",
-                           g_ngname) FLUSH;
+                           g_ngname.c_str()) FLUSH;
 		    termdown(3);
 		}
 		else
@@ -812,34 +812,34 @@ reask_add:
 	    }
 	    else if (*g_buf == 'n' || *g_buf == 'q') {
 		if (g_append_unsub)
-		    g_ngptr = add_newsgroup(rp, g_ngname, NEGCHAR);
+		    g_ngptr = add_newsgroup(rp, g_ngname.c_str(), NEGCHAR);
 		return false;
 	    }
 	    else if (*g_buf == 'y') {
-		g_ngptr = add_newsgroup(rp, g_ngname, ':');
+		g_ngptr = add_newsgroup(rp, g_ngname.c_str(), ':');
 		flags |= GNG_RELOC;
 	    }
 	    else if (*g_buf == 'Y') {
 		g_addnewbydefault = ADDNEW_SUB;
 		if (g_append_unsub)
 		    printf("(Adding %s to end of your .newsrc subscribed)\n",
-			   g_ngname) FLUSH;
+			   g_ngname.c_str()) FLUSH;
 		else
-		    printf("(Subscribing to %s)\n", g_ngname) FLUSH;
+		    printf("(Subscribing to %s)\n", g_ngname.c_str()) FLUSH;
 		termdown(1);
-		g_ngptr = add_newsgroup(rp, g_ngname, ':');
+		g_ngptr = add_newsgroup(rp, g_ngname.c_str(), ':');
 		flags &= ~GNG_RELOC;
 	    }
 	    else if (*g_buf == 'N') {
 		g_addnewbydefault = ADDNEW_UNSUB;
 		if (g_append_unsub) {
 		    printf("(Adding %s to end of your .newsrc unsubscribed)\n",
-			   g_ngname) FLUSH;
+			   g_ngname.c_str()) FLUSH;
 		    termdown(1);
-		    g_ngptr = add_newsgroup(rp, g_ngname, NEGCHAR);
+		    g_ngptr = add_newsgroup(rp, g_ngname.c_str(), NEGCHAR);
 		    flags &= ~GNG_RELOC;
 		} else {
-		    printf("(Ignoring %s)\n", g_ngname) FLUSH;
+		    printf("(Ignoring %s)\n", g_ngname.c_str()) FLUSH;
 		    termdown(1);
 		    return false;
 		}
@@ -857,10 +857,10 @@ reask_add:
     else if (g_ngptr->subscribechar == NEGCHAR) {/* unsubscribed? */
 	if (g_verbose)
 	    sprintf(promptbuf,
-"\nNewsgroup %s is unsubscribed -- resubscribe?",g_ngname)
+"\nNewsgroup %s is unsubscribed -- resubscribe?",g_ngname.c_str())
   FLUSH;
 	else
-	    sprintf(promptbuf,"\nResubscribe %s?",g_ngname)
+	    sprintf(promptbuf,"\nResubscribe %s?",g_ngname.c_str())
 	      FLUSH;
 reask_unsub:
 	in_char(promptbuf,MM_RESUBSCRIBE_PROMPT,"yn");
@@ -868,7 +868,7 @@ reask_unsub:
 	newline();
 	if (*g_buf == 'h') {
 	    if (g_verbose)
-		printf("Type y or SP to resubscribe to %s.\n", g_ngname) FLUSH;
+		printf("Type y or SP to resubscribe to %s.\n", g_ngname.c_str()) FLUSH;
 	    else
 		fputs("y or SP to resubscribe.\n",stdout) FLUSH;
 	    fputs(ntoforget,stdout) FLUSH;
@@ -1296,7 +1296,7 @@ bool write_newsrcs(MULTIRC *mptr)
             if (g_tmpfp != nullptr)
             {
 		fprintf(g_tmpfp,"Last-Group: %s\nNew-Group-State: %ld,%ld,%ld\n",
-			g_ngname? g_ngname : "",rp->datasrc->lastnewgrp,
+			g_ngname.c_str(),rp->datasrc->lastnewgrp,
 			rp->datasrc->act_sf.recent_cnt,
 			rp->datasrc->desc_sf.recent_cnt);
 		fclose(g_tmpfp);

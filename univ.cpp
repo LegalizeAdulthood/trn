@@ -927,7 +927,7 @@ static void univ_vg_addart(ART_NUM a)
     /* later scan/replace bad characters */
 
     /* later consider author in description, scoring, etc. */
-    UNIV_ITEM *ui = univ_add_virt_num(nullptr, g_ngname, a);
+    UNIV_ITEM *ui = univ_add_virt_num(nullptr, g_ngname.c_str(), a);
     ui->score = score;
     ui->data.virt.subj = savestr(subj);
     ui->data.virt.from = savestr(from);

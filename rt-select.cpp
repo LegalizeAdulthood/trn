@@ -323,7 +323,7 @@ static void sel_dogroups()
 	    g_current_ng = np;
 	}
 	g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
-	printf("Entering %s:", g_ngname);
+	printf("Entering %s:", g_ngname.c_str());
 	if (s_sel_ret == ';') {
 	    ret = do_newsgroup(savestr(";"));
 	} else
@@ -647,7 +647,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
 	    g_current_ng = np;
 	}
 	g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
-	printf("Virtual: Entering %s:\n", g_ngname) FLUSH;
+	printf("Virtual: Entering %s:\n", g_ngname.c_str()) FLUSH;
 	g_ng_go_artnum = ui->data.virt.num;
 	g_univ_read_virtflag = true;
 	int ret = do_newsgroup("");
@@ -724,7 +724,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
 	    g_current_ng = np;
 	}
 	g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
-	printf("Entering %s:", g_ngname) FLUSH;
+	printf("Entering %s:", g_ngname.c_str()) FLUSH;
 	if (s_sel_ret == ';')
 	    ret = do_newsgroup(savestr(";"));
 	else

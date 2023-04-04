@@ -406,7 +406,7 @@ save_result save_article()
 #endif
 	    }
 	    if (g_savefrom == 0 && g_art != 0)
-		fprintf(g_tmpfp,"Article: %ld of %s\n", g_art, g_ngname);
+		fprintf(g_tmpfp,"Article: %ld of %s\n", g_art, g_ngname.c_str());
 	    seekart(g_savefrom);
 	    while (readart(g_buf,LBUFLEN) != nullptr) {
 		if (quote_From && !strncasecmp(g_buf,"from ",5))

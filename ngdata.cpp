@@ -76,7 +76,7 @@ int access_ng()
     ART_NUM old_first = g_ngptr->abs1st;
 
     if (g_datasrc->flags & DF_REMOTE) {
-	int ret = nntp_group(g_ngname,g_ngptr);
+	int ret = nntp_group(g_ngname.c_str(),g_ngptr);
 	if (ret == -2)
 	    return -2;
 	if (ret <= 0) {
@@ -96,16 +96,16 @@ int access_ng()
 	    if (eaccess(g_ngdir.c_str(),0)) {
 		if (g_verbose)
 		    printf("\nNewsgroup %s does not have a spool directory!\n",
-			   g_ngname) FLUSH;
+			   g_ngname.c_str()) FLUSH;
 		else
-		    printf("\nNo spool for %s!\n",g_ngname) FLUSH;
+		    printf("\nNo spool for %s!\n",g_ngname.c_str()) FLUSH;
 		termdown(2);
 	    } else {
 		if (g_verbose)
 		    printf("\nNewsgroup %s is not currently accessible.\n",
-			   g_ngname) FLUSH;
+			   g_ngname.c_str()) FLUSH;
 		else
-		    printf("\n%s not readable.\n",g_ngname) FLUSH;
+		    printf("\n%s not readable.\n",g_ngname.c_str()) FLUSH;
 		termdown(2);
 	    }
 	    /* make this newsgroup temporarily invisible */

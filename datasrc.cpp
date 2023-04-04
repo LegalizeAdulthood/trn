@@ -1023,16 +1023,17 @@ static int check_distance(int len, HASHDATUM *data, int newsrc_ptr)
 	name = ((LISTNODE*)data->dat_ptr)->data + data->dat_len;
 
     /* Efficiency: don't call edit_dist when the lengths are too different. */
-    if (len < g_ngname_len) {
-	if (g_ngname_len - len > LENGTH_HACK)
+    const int ngname_len = static_cast<int>(g_ngname.length());
+    if (len < ngname_len) {
+	if (ngname_len - len > LENGTH_HACK)
 	    return 0;
     }
     else {
-	if (len - g_ngname_len > LENGTH_HACK)
+	if (len - ngname_len > LENGTH_HACK)
 	    return 0;
     }
 
-    int value = edit_distn(g_ngname, g_ngname_len, name, len);
+    int value = edit_distn(g_ngname.c_str(), ngname_len, name, len);
     if (value > MIN_DIST)
 	return 0;
 

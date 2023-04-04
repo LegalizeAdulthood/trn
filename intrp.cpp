@@ -507,7 +507,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, ch
 		    s = scrbuf;
 		    break;
 		case 'C':
-		    s = g_ngname? g_ngname : s_empty;
+		    strcpy(scrbuf, g_ngname.c_str());
+		    s = scrbuf;
 		    break;
 		case 'd':
                     if (!g_ngdir.empty())

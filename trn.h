@@ -22,9 +22,7 @@ enum input_newsgroup_result
     ING_MESSAGE
 };
 
-extern char       *g_ngname;         /* name of current newsgroup */
-extern int         g_ngnlen;         /* current malloced size of g_ngname */
-extern int         g_ngname_len;     /* length of current g_ngname */
+extern std::string g_ngname;         /* name of current newsgroup */
 extern std::string g_ngdir;          /* same thing in directory name form */
 extern bool        g_write_less;     /* write .newsrc less often */
 extern char       *g_auto_start_cmd; /* command to auto-start with */

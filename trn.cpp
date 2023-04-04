@@ -71,9 +71,7 @@
 #include "util.h"
 #include "util2.h"
 
-char       *g_ngname{};         /* name of current newsgroup */
-int         g_ngnlen{};         /* current malloced size of g_ngname */
-int         g_ngname_len{};     /* length of current g_ngname */
+std::string g_ngname;           /* name of current newsgroup */
 std::string g_ngdir;            /* same thing in directory name form */
 bool        g_write_less{};     /* write .newsrc less often */
 char       *g_auto_start_cmd{}; /* command to auto-start with */
@@ -241,7 +239,7 @@ void do_multirc()
 		set_mode(GM_READ,MM_NEWSGROUP_LIST);
 		if (g_ngptr->toread >= TR_NONE) {	/* recalc toread? */
 		    set_ngname(g_ngptr->rcline);
-		    shoe_fits = inlist(g_ngname);
+		    shoe_fits = inlist(g_ngname.c_str());
 		    if (shoe_fits)
 			set_toread(g_ngptr, ST_LAX);
 		    if (g_paranoid) {
@@ -289,11 +287,11 @@ void do_multirc()
 		    printf("\n%s %3ld unread article%s in %s -- read now? [%s] ",
 			   g_threaded_group? "======" : "******",
 			   (long)g_ngptr->toread, plural(g_ngptr->toread),
-			   g_ngname, g_dfltcmd.c_str());
+			   g_ngname.c_str(), g_dfltcmd.c_str());
 		else
 		    printf("\n%s %3ld in %s -- read? [%s] ",
 			   g_threaded_group? "====" : "****",
-			   (long)g_ngptr->toread,g_ngname,g_dfltcmd.c_str());
+			   (long)g_ngptr->toread,g_ngname.c_str(),g_dfltcmd.c_str());
 		termdown(1);
 	    }
 	    fflush(stdout);
@@ -461,8 +459,8 @@ input_newsgroup_result input_newsgroup()
 	if (!finish_command(false))
 	    return ING_INPUT;
 	for (s = g_buf+1; *s == ' '; s++) ; /* skip leading spaces */
-	if (!*s && *g_buf == 'm' && g_ngname && g_ngptr)
-	    strcpy(s,g_ngname);
+	if (!*s && *g_buf == 'm' && !g_ngname.empty() && g_ngptr)
+	    strcpy(s,g_ngname.c_str());
 	{
 	    char* _s;
 	    for (_s=s; isdigit(*_s); _s++) ;
@@ -484,7 +482,7 @@ input_newsgroup_result input_newsgroup()
 	    }
 	}
 	/* try to find newsgroup */
-        if (!get_ng(g_ngname, (*g_buf == 'm' ? GNG_RELOC : GNG_NONE) | GNG_FUZZY))
+        if (!get_ng(g_ngname.c_str(), (*g_buf == 'm' ? GNG_RELOC : GNG_NONE) | GNG_FUZZY))
 	    g_ngptr = g_current_ng;	/* if not found, go nowhere */
 	g_addnewbydefault = 0;
 	return ING_SPECIAL;
@@ -821,12 +819,15 @@ void trn_version()
 
 void set_ngname(const char *what)
 {
-    if (g_ngname != what) {
-	g_ngname_len = strlen(what);
-	growstr(&g_ngname,&g_ngnlen,g_ngname_len+1);
-	strcpy(g_ngname,what);
+    if (what != nullptr)
+    {
+        if (g_ngname != what)
+            g_ngname = what;
     }
-    g_ngdir = getngdir(g_ngname);
+    else
+        g_ngname.clear();
+
+    g_ngdir = getngdir(g_ngname.c_str());
 }
 
 static std::string getngdir(const char *ngnam)
