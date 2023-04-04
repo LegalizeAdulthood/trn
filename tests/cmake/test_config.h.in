@@ -1,6 +1,7 @@
 #ifndef TRN_TEST_CONFIG_H
 #define TRN_TEST_CONFIG_H
 
+// Directory and environment related content.
 #define TRN_TEST_HOME_DIR                   "@TRN_TEST_HOME_DIR@"
 #define TRN_TEST_HOME_DIR_CAPITALIZED       "@TRN_TEST_HOME_DIR_CAPITALIZED@"
 #define TRN_TEST_TMP_DIR                    "@TRN_TEST_TMP_DIR@"
@@ -14,14 +15,17 @@
 #define TRN_TEST_ORGANIZATION               "@TRN_TEST_ORGANIZATION@"
 #define TRN_TEST_ORGFILE                    "@TRN_TEST_ORGFILE@"
 #define TRN_TEST_THREAD_DIR                 "@TRN_TEST_THREAD_DIR@"
+#define TRN_TEST_LOCAL_SPOOL_DIR            "@TRN_TEST_LOCAL_SPOOL_DIR@"
 
+// Newsgroup related content.
 #define TRN_TEST_NEWSGROUP                  "@TRN_TEST_NEWSGROUP@"
 #define TRN_TEST_NEWSGROUP_DIR              "@TRN_TEST_NEWSGROUP_DIR@"
 #define TRN_TEST_NEWSGROUP_SUBDIR           "@TRN_TEST_NEWSGROUP_SUBDIR@"
+
+// Article content.
 #define TRN_TEST_ARTICLE_NUM                @TRN_TEST_ARTICLE_NUM@
 #define TRN_TEST_ARTICLE_SIZE               @TRN_TEST_ARTICLE_SIZE@
 #define TRN_TEST_ARTICLE_FILE               "@TRN_TEST_ARTICLE_FILE@"
-
 #define TRN_TEST_HEADER_FROM                "@TRN_TEST_HEADER_FROM@"
 #define TRN_TEST_HEADER_FROM_ADDRESS        "@TRN_TEST_HEADER_FROM_ADDRESS@"
 #define TRN_TEST_HEADER_FROM_NAME           "@TRN_TEST_HEADER_FROM_NAME@"
@@ -37,6 +41,11 @@
 #define TRN_TEST_HEADER_LINES               "@TRN_TEST_HEADER_LINES@"
 #define TRN_TEST_BODY                       "@TRN_TEST_BODY@"
 #define TRN_TEST_SIGNATURE                  "@TRN_TEST_SIGNATURE@"
+
+// Active file content.
+#define TRN_TEST_NEWSGROUP_HIGH             @TRN_TEST_NEWSGROUP_HIGH@
+#define TRN_TEST_NEWSGROUP_LOW              @TRN_TEST_NEWSGROUP_LOW@
+#define TRN_TEST_NEWSGROUP_PERM             "@TRN_TEST_NEWSGROUP_PERM@"
 
 namespace trn {
 namespace testing {
