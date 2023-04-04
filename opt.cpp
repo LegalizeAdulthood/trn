@@ -494,7 +494,7 @@ void set_option(int num, char *s)
 	break;
       case OI_SAVE_DIR:
 	if (!g_checkflag) {
-	    g_savedir = savestr(s);
+	    g_savedir = s;
 	    if (!g_privdir.empty()) {
 		chdir(g_privdir.c_str());
 	    }
@@ -923,7 +923,7 @@ const char *option_value(int num)
 	sprintf(g_buf,"%d",g_docheckwhen);
 	return g_buf;
       case OI_SAVE_DIR:
-	return g_savedir? g_savedir : "%./News";
+	return g_savedir.empty() ? "%./News" : g_savedir.c_str();
       case OI_ERASE_SCREEN:
 	return YESorNO(g_erase_screen);
       case OI_NOVICE_DELAYS:

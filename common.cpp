@@ -48,35 +48,35 @@ char *g_news_sel_btns{};
 char *g_option_sel_btns{};
 char *g_art_pager_btns{};
 
-bool g_dont_filter_control{};  /* -j */
-int g_join_subject_len{};      /* -J */
-bool g_kill_thru_kludge{true}; /* -k */
-int g_keep_the_group_static{}; /* -K */
-bool g_mbox_always{};          /* -M */
-bool g_norm_always{};          /* -N */
-bool g_thread_always{};        /* -a */
-int g_auto_arrow_macros{2};    /* -A */
-bool g_breadth_first{};        /* -b */
-bool g_bkgnd_spinner{};        /* -B */
-bool g_novice_delays{true};    /* +f */
-int g_olden_days{};            /* -o */
-char g_auto_select_postings{}; /* -p */
-bool g_checkflag{};            /* -c */
-char *g_savedir{};             /* -d */
-bool g_suppress_cn{};          /* -s */
-int g_countdown{5};            /* how many lines to list before invoking -s */
-bool g_muck_up_clear{};        /* -loco */
-bool g_erase_screen{};         /* -e */
-bool g_can_home{};
-bool g_erase_each_line{};   /* fancy -e */
-int g_findlast{};           /* -r */
-bool g_allow_typeahead{};   /* -T */
-bool g_fuzzy_get{};         /* -G */
-bool g_verbose{true};       /* +t */
-bool g_unbroken_subjects{}; /* -u */
-bool g_unsafe_rc_saves{};   /* -U */
-bool g_verify{};            /* -v */
-bool g_quickstart{};        /* -q */
+bool        g_dont_filter_control{};   /* -j */
+int         g_join_subject_len{};      /* -J */
+bool        g_kill_thru_kludge{true};  /* -k */
+int         g_keep_the_group_static{}; /* -K */
+bool        g_mbox_always{};           /* -M */
+bool        g_norm_always{};           /* -N */
+bool        g_thread_always{};         /* -a */
+int         g_auto_arrow_macros{2};    /* -A */
+bool        g_breadth_first{};         /* -b */
+bool        g_bkgnd_spinner{};         /* -B */
+bool        g_novice_delays{true};     /* +f */
+int         g_olden_days{};            /* -o */
+char        g_auto_select_postings{};  /* -p */
+bool        g_checkflag{};             /* -c */
+std::string g_savedir;                 /* -d */
+bool        g_suppress_cn{};           /* -s */
+int         g_countdown{5};            /* how many lines to list before invoking -s */
+bool        g_muck_up_clear{};         /* -loco */
+bool        g_erase_screen{};          /* -e */
+bool        g_can_home{};              //
+bool        g_erase_each_line{};       /* fancy -e */
+int         g_findlast{};              /* -r */
+bool        g_allow_typeahead{};       /* -T */
+bool        g_fuzzy_get{};             /* -G */
+bool        g_verbose{true};           /* +t */
+bool        g_unbroken_subjects{};     /* -u */
+bool        g_unsafe_rc_saves{};       /* -U */
+bool        g_verify{};                /* -v */
+bool        g_quickstart{};            /* -q */
 
 time_t g_def_refetch_secs{DEFAULT_REFETCH_SECS}; /* -z */
 

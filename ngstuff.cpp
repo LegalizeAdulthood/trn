@@ -90,7 +90,7 @@ int switcheroo()
     if (!finish_command(true)) /* get rest of command */
 	return -1;	/* if rubbed out, try something else */
     if (!g_buf[1]) {
-	char* prior_savedir = g_savedir;
+	const std::string prior_savedir = g_savedir;
 	if (g_option_sel_ilock) {
 	    g_buf[1] = '\0';
 	    return 0;

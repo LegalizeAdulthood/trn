@@ -719,35 +719,35 @@ extern char *g_news_sel_btns;
 extern char *g_option_sel_btns;
 extern char *g_art_pager_btns;
 
-extern bool g_dont_filter_control;  /* -j */
-extern int g_join_subject_len;      /* -J */
-extern bool g_kill_thru_kludge;     /* -k */
-extern int g_keep_the_group_static; /* -K */
-extern bool g_mbox_always;          /* -M */
-extern bool g_norm_always;          /* -N */
-extern bool g_thread_always;        /* -a */
-extern int g_auto_arrow_macros;     /* -A */
-extern bool g_breadth_first;        /* -b */
-extern bool g_bkgnd_spinner;        /* -B */
-extern bool g_novice_delays;        /* +f */
-extern int g_olden_days;            /* -o */
-extern char g_auto_select_postings; /* -p */
-extern bool g_checkflag;            /* -c */
-extern char *g_savedir;             /* -d */
-extern bool g_suppress_cn;          /* -s */
-extern int g_countdown;             /* how many lines to list before invoking -s */
-extern bool g_muck_up_clear;        /* -loco */
-extern bool g_erase_screen;         /* -e */
-extern bool g_can_home;
-extern bool g_erase_each_line;   /* fancy -e */
-extern int g_findlast;           /* -r */
-extern bool g_allow_typeahead;   /* -T */
-extern bool g_fuzzy_get;          /* -G */
-extern bool g_verbose;           /* +t */
-extern bool g_unbroken_subjects; /* -u */
-extern bool g_unsafe_rc_saves;   /* -U */
-extern bool g_verify;            /* -v */
-extern bool g_quickstart;        /* -q */
+extern bool        g_dont_filter_control;   /* -j */
+extern int         g_join_subject_len;      /* -J */
+extern bool        g_kill_thru_kludge;      /* -k */
+extern int         g_keep_the_group_static; /* -K */
+extern bool        g_mbox_always;           /* -M */
+extern bool        g_norm_always;           /* -N */
+extern bool        g_thread_always;         /* -a */
+extern int         g_auto_arrow_macros;     /* -A */
+extern bool        g_breadth_first;         /* -b */
+extern bool        g_bkgnd_spinner;         /* -B */
+extern bool        g_novice_delays;         /* +f */
+extern int         g_olden_days;            /* -o */
+extern char        g_auto_select_postings;  /* -p */
+extern bool        g_checkflag;             /* -c */
+extern std::string g_savedir;               /* -d */
+extern bool        g_suppress_cn;           /* -s */
+extern int         g_countdown;             /* how many lines to list before invoking -s */
+extern bool        g_muck_up_clear;         /* -loco */
+extern bool        g_erase_screen;          /* -e */
+extern bool        g_can_home;              //
+extern bool        g_erase_each_line;       /* fancy -e */
+extern int         g_findlast;              /* -r */
+extern bool        g_allow_typeahead;       /* -T */
+extern bool        g_fuzzy_get;             /* -G */
+extern bool        g_verbose;               /* +t */
+extern bool        g_unbroken_subjects;     /* -u */
+extern bool        g_unsafe_rc_saves;       /* -U */
+extern bool        g_verify;                /* -v */
+extern bool        g_quickstart;            /* -q */
 
 #define DEFAULT_REFETCH_SECS  4L*60*60	/* 4 hours */
 extern time_t g_def_refetch_secs;             /* -z */
