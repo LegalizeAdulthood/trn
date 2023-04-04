@@ -75,7 +75,7 @@ void nntp_finish_list()
 
 /* try to access the specified group */
 
-int nntp_group(char *group, NGDATA *gp)
+int nntp_group(const char *group, NGDATA *gp)
 {
     sprintf(g_ser_line, "GROUP %s", group);
     if (nntp_command(g_ser_line) <= 0)

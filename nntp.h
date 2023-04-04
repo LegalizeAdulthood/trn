@@ -20,22 +20,22 @@ enum
     MAX_NNTP_ARTICLES = 10
 };
 
-int nntp_list(const char *type, const char *arg, int len);
-void nntp_finish_list();
-int nntp_group(char *group, NGDATA *gp);
-int nntp_stat(ART_NUM artnum);
+int     nntp_list(const char *type, const char *arg, int len);
+void    nntp_finish_list();
+int     nntp_group(const char *group, NGDATA *gp);
+int     nntp_stat(ART_NUM artnum);
 ART_NUM nntp_stat_id(char *msgid);
 ART_NUM nntp_next_art();
-int nntp_header(ART_NUM artnum);
-void nntp_body(ART_NUM artnum);
-long nntp_artsize();
-int nntp_finishbody(finishbody_mode bmode);
-int nntp_seekart(ART_POS pos);
+int     nntp_header(ART_NUM artnum);
+void    nntp_body(ART_NUM artnum);
+long    nntp_artsize();
+int     nntp_finishbody(finishbody_mode bmode);
+int     nntp_seekart(ART_POS pos);
 ART_POS nntp_tellart();
-char *nntp_readart(char *s, int limit);
-time_t nntp_time();
-int nntp_newgroups(time_t t);
-int nntp_artnums();
+char *  nntp_readart(char *s, int limit);
+time_t  nntp_time();
+int     nntp_newgroups(time_t t);
+int     nntp_artnums();
 #if 0
 int nntp_rover();
 #endif
