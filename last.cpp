@@ -10,11 +10,11 @@
 #include "util.h"
 #include "util2.h"
 
-char *g_lastngname{}; /* last newsgroup read */
-long g_lasttime{};    /* time last we ran */
-long g_lastactsiz{};  /* last known size of active file */
-long g_lastnewtime{}; /* time of last newgroup request */
-long g_lastextranum{};
+std::string g_lastngname;    /* last newsgroup read */
+long        g_lasttime{};    /* time last we ran */
+long        g_lastactsiz{};  /* last known size of active file */
+long        g_lastnewtime{}; /* time of last newgroup request */
+long        g_lastextranum{};
 
 static char *s_lastfile{}; /* path name of .rnlast file */
 static long s_starttime{};
@@ -30,7 +30,7 @@ void last_init()
 void last_final()
 {
     safefree0(s_lastfile);
-    safefree0(g_lastngname);
+    g_lastngname.clear();
 }
 
 void readlast()
@@ -41,8 +41,7 @@ void readlast()
 	    long old_last = g_lasttime;
 	    g_buf[strlen(g_buf)-1] = '\0';
 	    if (*g_buf) {
-		safefree0(g_lastngname);
-		g_lastngname = savestr(g_buf);
+		g_lastngname = g_buf;
 	    }
 	    fscanf(fp,"%ld %ld %ld %ld",&g_lasttime,&g_lastactsiz,
 					   &g_lastnewtime,&g_lastextranum);

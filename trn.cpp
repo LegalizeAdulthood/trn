@@ -194,12 +194,12 @@ void do_multirc()
 	if (g_findlast > 0) {
 	    g_findlast = -1;
 	    g_starthere = nullptr;
-	    if (g_lastngname) {
-		g_ngptr = find_ng(g_lastngname);
+	    if (!g_lastngname.empty()) {
+		g_ngptr = find_ng(g_lastngname.c_str());
 		if (g_ngptr == nullptr)
 		    g_ngptr = g_first_ng;
 		else {
-		    set_ngname(g_lastngname);
+		    set_ngname(g_lastngname.c_str());
 		    set_toread(g_ngptr, ST_LAX);
 		    if (g_ngptr->toread <= TR_NONE)
 			g_ngptr = g_first_ng;

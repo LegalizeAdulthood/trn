@@ -599,8 +599,7 @@ static bool open_newsrc(NEWSRC *rp)
                 char *s = strchr(g_buf, ':');
                 if (s != nullptr && s[1] == ' ' && s[2])
                 {
-		    safefree0(g_lastngname);
-		    g_lastngname = savestr(s+2);
+		    g_lastngname = s+2;
 		}
 		if (fscanf(g_tmpfp,"New-Group-State: %ld,%ld,%ld",
 			   &g_lastnewtime,&actnum,&descnum) == 3) {
