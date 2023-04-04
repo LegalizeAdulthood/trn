@@ -175,7 +175,7 @@ void           mime_ParseSubheader(FILE *ifp, char *next_line);
 void           mime_SetState(char *bp);
 int            mime_EndOfSection(char *bp);
 char *         mime_ParseParams(char *str);
-char *         mime_FindParam(char *s, char *param);
+char *         mime_FindParam(char *s, const char *param);
 char *         mime_SkipWhitespace(char *s);
 void           mime_DecodeArticle(bool view);
 void           mime_Description(MIME_SECT *mp, char *s, int limit);

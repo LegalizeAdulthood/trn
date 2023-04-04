@@ -667,7 +667,7 @@ char *mime_ParseParams(char *str)
     return str;
 }
 
-char *mime_FindParam(char *s, char *param)
+char *mime_FindParam(char *s, const char *param)
 {
     int param_len = strlen(param);
     while (s && *s) {
