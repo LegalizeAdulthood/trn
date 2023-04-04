@@ -12,6 +12,8 @@
 #include "ngsrch.h"
 #include "search.h"
 
+static bool matchlist(const char *patlist, const char *s);
+
 /* Consider the newsgroup specified, and return:	*/
 /* : if we should autosubscribe to it			*/
 /* ! if we should autounsubscribe to it			*/
@@ -29,7 +31,7 @@ int auto_subscribe(const char *name)
     return 0;
 }
 
-bool matchlist(const char *patlist, const char *s)
+static bool matchlist(const char *patlist, const char *s)
 {
     COMPEX ilcompex;
     bool   tmpresult;
