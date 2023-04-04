@@ -210,11 +210,6 @@ do_newsgroup_result do_newsgroup(char *start_command)
 	}
 	g_ng_go_artnum = 0;
     }
-    else if (g_ng_go_msgid) {
-	/* not implemented yet */
-	ng_virtual = true;
-	g_ng_go_msgid = 0;
-    }
 
     g_doing_ng = true;			/* enter the twilight zone */
     g_ngptr->rc->flags |= RF_RCCHANGED;

@@ -53,7 +53,6 @@ char *g_redirected{};
 bool g_threaded_group{};
 NGDATA *g_ng_go_ngptr{};
 ART_NUM g_ng_go_artnum{};
-char *g_ng_go_msgid{};
 
 static int ngorder_number(const NGDATA **npp1, const NGDATA **npp2);
 static int ngorder_groupname(const NGDATA **npp1, const NGDATA **npp2);

@@ -62,7 +62,6 @@ extern char       *g_redirected;
 extern bool        g_threaded_group;
 extern NGDATA     *g_ng_go_ngptr;
 extern ART_NUM     g_ng_go_artnum;
-extern char       *g_ng_go_msgid;
 
 #define ngdata_ptr(ngnum) ((NGDATA*)listnum2listitem(g_ngdata_list,(long)(ngnum)))
 
