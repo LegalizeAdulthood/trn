@@ -19,8 +19,8 @@
 #include "util2.h"
 
 /* Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced */
-char *g_charsets{"patm"};
-char *g_charsubst{};
+std::string g_charsets{"patm"};
+const char *g_charsubst{};
 
 /* TeX encoding table - gives ISO char for "x (x=32..127) */
 

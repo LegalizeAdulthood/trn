@@ -933,7 +933,7 @@ page_switch_result page_switch()
 	switch (g_buf[1] & 0177) {
 	  case 'C':
 	    if (!*(++g_charsubst))
-		g_charsubst = g_charsets;
+		g_charsubst = g_charsets.c_str();
 	    goto refresh_screen;
 	  default:
 	    break;

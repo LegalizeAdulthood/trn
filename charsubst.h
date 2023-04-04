@@ -14,9 +14,11 @@
 #ifndef TRN_CHARSUBST_H
 #define TRN_CHARSUBST_H
 
+#include <string>
+
 /* Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced */
-extern char* g_charsets;
-extern char* g_charsubst;
+extern std::string g_charsets;
+extern const char* g_charsubst;
 
 #define HEADER_CONV() (g_charsubst[0]=='a' || g_charsubst[0]=='m'? g_charsubst[0] : '\0')
 

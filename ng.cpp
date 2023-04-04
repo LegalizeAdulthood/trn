@@ -165,7 +165,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
     g_recent_art = g_lastart + 1;
     g_curr_art = g_lastart + 1;
     g_prompt = whatnext;
-    g_charsubst = g_charsets;
+    g_charsubst = g_charsets.c_str();
 
     /* see if there are any special searches to do */
 
@@ -283,7 +283,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 		g_curr_art = g_art;		/* set current article # */
 		g_recent_artp = g_curr_artp;
 		g_curr_artp = g_artp;
-		g_charsubst = g_charsets;
+		g_charsubst = g_charsets.c_str();
 		g_first_view = 0;
 	    }
 	    if (g_sa_in) {
@@ -342,7 +342,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 		g_curr_art = g_art;		/* set current article # */
 		g_recent_artp = g_curr_artp;
 		g_curr_artp = g_artp;
-		g_charsubst = g_charsets;
+		g_charsubst = g_charsets.c_str();
 		g_first_view = 0;
 		g_do_hiding = true;
 		g_rotate = false;
@@ -1370,7 +1370,7 @@ run_the_selector:
 	    return AS_ASK;
 	  case 'C':
 	    if (!*(++g_charsubst))
-		g_charsubst = g_charsets;
+		g_charsubst = g_charsets.c_str();
 	    goto refresh_screen;
 	  case 'a':  case 's':  case 't':  case 'T':
 	    *g_buf = g_buf[1];

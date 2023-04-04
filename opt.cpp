@@ -602,7 +602,7 @@ void set_option(int num, char *s)
 	g_empty_only_char = YES(s)? 'o' : 'O';
 	break;
       case OI_CHARSET:
-	g_charsets = savestr(s);
+	g_charsets = s;
 	break;
       case OI_INITIAL_GROUP_LIST:
 	if (isdigit(*s)) {
@@ -1002,7 +1002,7 @@ const char *option_value(int num)
       case OI_RESTRICTION_INCLUDES_EMPTIES:
 	return YESorNO(g_empty_only_char == 'o');
       case OI_CHARSET:
-	return g_charsets;
+	return g_charsets.c_str();
       case OI_INITIAL_GROUP_LIST:
 	if (g_suppress_cn)
 	    return YESorNO(0);
