@@ -3,10 +3,11 @@
 #ifndef TRN_MIME_H
 #define TRN_MIME_H
 
+#include <cstdint>
+#include <string>
+
 #include "decode.h"
 #include "enum-flags.h"
-
-#include <cstdint>
 
 struct HBLK
 {
@@ -135,7 +136,7 @@ struct HTML_TAGS
 extern MIME_SECT g_mime_article;
 extern MIME_SECT *g_mime_section;
 extern mime_state g_mime_state;
-extern char *g_multipart_separator;
+extern std::string g_multipart_separator;
 extern bool g_auto_view_inline;
 extern char *g_mime_getc_line;
 

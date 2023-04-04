@@ -349,7 +349,7 @@ char *readartbuf(bool view_inline)
 	}
 	/* FALL THROUGH */
       case BETWEEN_MIME:
-	len = strlen(g_multipart_separator) + 1;
+	len = strlen(g_multipart_separator.c_str()) + 1;
 	if (extra_offset && filter_offset) {
 	    extra_chars = len + 1;
             len = read_offset + 1;
@@ -361,7 +361,7 @@ char *readartbuf(bool view_inline)
 	    g_artbuf_pos++;
 	    bp++;
 	}
-	sprintf(bp+o,"\002%s\n",g_multipart_separator);
+	sprintf(bp+o,"\002%s\n",g_multipart_separator.c_str());
 	break;
       case UNHANDLED_MIME:
 	g_mime_state = SKIP_MIME;

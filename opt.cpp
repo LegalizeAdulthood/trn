@@ -590,7 +590,7 @@ void set_option(int num, char *s)
 	}
 	break;
       case OI_MULTIPART_SEPARATOR:
-	g_multipart_separator = savestr(s);
+	g_multipart_separator = s;
 	break;
       case OI_AUTO_VIEW_INLINE:
 	g_auto_view_inline = YES(s);
@@ -994,7 +994,7 @@ const char *option_value(int num)
 	}
 	return YESorNO(0);
       case OI_MULTIPART_SEPARATOR:
-	return g_multipart_separator;
+	return g_multipart_separator.c_str();
       case OI_AUTO_VIEW_INLINE:
 	return YESorNO(g_auto_view_inline);
       case OI_NEWGROUP_CHECK:
