@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <string>
 
 #include "common.h"
 #include "autosub.h"
@@ -15,18 +16,20 @@
 /* : if we should autosubscribe to it			*/
 /* ! if we should autounsubscribe to it			*/
 /* \0 if we should ask the user.			*/
-int auto_subscribe(char *name)
+int auto_subscribe(const char *name)
 {
-    char* s;
+    const char *s = get_val("AUTOSUBSCRIBE", nullptr);
+    if (s && matchlist(s, name))
+        return ':';
 
-    if((s = get_val("AUTOSUBSCRIBE", nullptr)) && matchlist(s, name))
-	return ':';
-    if((s = get_val("AUTOUNSUBSCRIBE", nullptr)) && matchlist(s, name))
-	return '!';
+    s = get_val("AUTOUNSUBSCRIBE", nullptr);
+    if (s && matchlist(s, name))
+        return '!';
+
     return 0;
 }
 
-bool matchlist(char *patlist, char *s)
+bool matchlist(const char *patlist, const char *s)
 {
     COMPEX ilcompex;
     bool   tmpresult;
@@ -40,13 +43,15 @@ bool matchlist(char *patlist, char *s)
 	} else
 	    tmpresult = true;
 
-	char *p = strchr(patlist, ',');
+	const char *p = strchr(patlist, ',');
+	std::string pattern;
         if (p != nullptr)
-	    *p = '\0';
-        /* compile regular expression */
-	const char *err = ng_comp(&ilcompex, patlist, true, true);
-	if (p)
-	    *p++ = ',';
+	    pattern.assign(patlist, p);
+	else
+	    pattern.assign(patlist);
+
+	/* compile regular expression */
+	const char *err = ng_comp(&ilcompex, pattern.c_str(), true, true);
 
 	if (err != nullptr) {
 	    printf("\n%s\n", err) FLUSH;
