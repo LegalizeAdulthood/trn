@@ -74,8 +74,6 @@
 std::string g_ngname;           /* name of current newsgroup */
 std::string g_ngdir;            /* same thing in directory name form */
 bool        g_write_less{};     /* write .newsrc less often */
-char       *g_auto_start_cmd{}; /* command to auto-start with */
-bool        g_auto_started{};   /* have we auto-started? */
 bool        g_is_strn{};        /* Is this "strn", or trn/rn? */
 std::string g_patchlevel{PATCHLEVEL};
 
