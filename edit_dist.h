@@ -7,6 +7,6 @@
 #ifndef TRN_EDIT_DIST_H
 #define TRN_EDIT_DIST_H
 
-int edit_distn(char *from, int from_len, char *to, int to_len);
+int edit_distn(const char *from, int from_len, const char *to, int to_len);
 
 #endif

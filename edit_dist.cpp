@@ -45,19 +45,19 @@ HISTORY
 #define min2(x,y) (s_mx = (x), s_my = (y), (s_mx < s_my ? s_mx : s_my))
 
 
-static int s_insert_cost = 1;
-static int s_delete_cost = 1;
-static int s_iswap{};   /* swap_int temp variable */
-static char *s_cswap{}; /* swap_char temp variable */
-static int s_mx{};      /* min2, min3 temp variables */
-static int s_my{};
-static int s_mz{};
+static int         s_insert_cost = 1;
+static int         s_delete_cost = 1;
+static int         s_iswap{}; /* swap_int temp variable */
+static const char *s_cswap{}; /* swap_char temp variable */
+static int         s_mx{};    /* min2, min3 temp variables */
+static int         s_my{};
+static int         s_mz{};
 
 
 /* edit_distn -- returns the edit distance between two strings, or -1 on
    failure */
 
-int edit_distn(char *from, int from_len, char *to, int to_len)
+int edit_distn(const char *from, int from_len, const char *to, int to_len)
 {
 #ifndef TRN_SPEEDUP
     int ins;
