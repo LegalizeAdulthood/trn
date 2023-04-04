@@ -49,7 +49,7 @@ UNIV_ITEM *g_last_univ{};
 UNIV_ITEM *sel_page_univ{};
 UNIV_ITEM *g_sel_next_univ{};
 char *g_univ_fname{};    /* current filename (may be null) */
-char *g_univ_label{};    /* current label (may be null) */
+std::string g_univ_label;    /* current label (may be null) */
 char *g_univ_title{};    /* title of current level */
 char *g_univ_tmp_file{}; /* temp. file (may be null) */
 HASHTABLE *g_univ_ng_hash{};
@@ -119,7 +119,7 @@ void univ_open()
     g_sel_next_univ = nullptr;
     g_univ_fname = nullptr;
     g_univ_title = nullptr;
-    g_univ_label = nullptr;
+    g_univ_label.clear();
     g_univ_tmp_file = nullptr;
     s_univ_virt_pass_needed = false;
     g_univ_ng_hash = nullptr;
@@ -143,7 +143,7 @@ void univ_close()
     }
     safefree(g_univ_fname);
     safefree(g_univ_title);
-    safefree(g_univ_label);
+    g_univ_label.clear();
     if (g_univ_ng_hash) {
 	hashdestroy(g_univ_ng_hash);
 	g_univ_ng_hash = nullptr;
@@ -760,7 +760,7 @@ static bool univ_do_line(char *line)
  */
 
 /* level generator */
-bool univ_file_load(char *fname, const char *title, char *label)
+bool univ_file_load(char *fname, const char *title, const char *label)
 {
     univ_open();
 
@@ -769,7 +769,7 @@ bool univ_file_load(char *fname, const char *title, char *label)
     if (title)
 	g_univ_title = savestr(title);
     if (label)
-	g_univ_label = savestr(label);
+	g_univ_label = label;
     bool flag = univ_use_file(fname, label);
     if (!flag) {
 	univ_close();
@@ -800,17 +800,16 @@ void univ_redofile()
 {
     char *tmp_fname = (g_univ_fname ? savestr(g_univ_fname) : nullptr);
     char *tmp_title = (g_univ_title ? savestr(g_univ_title) : nullptr);
-    char *tmp_label = (g_univ_label ? savestr(g_univ_label) : nullptr);
+    const std::string tmp_label = g_univ_label;
 
     univ_close();
     if (g_univ_level)
-	(void)univ_file_load(tmp_fname,tmp_title,tmp_label);
+	(void)univ_file_load(tmp_fname,tmp_title,tmp_label.c_str());
     else
 	univ_startup();
 
     safefree(tmp_fname);
     safefree(tmp_title);
-    safefree(tmp_label);
 }
 
 
@@ -1137,7 +1136,7 @@ void univ_help_main(help_location where)
 
     /* read in main help file */
     g_univ_fname = savestr("%X/HelpFiles/top");
-    bool flag = univ_use_file(g_univ_fname, g_univ_label);
+    bool flag = univ_use_file(g_univ_fname, g_univ_label.c_str());
 
     /* later: if flag is not true, then add message? */
 }

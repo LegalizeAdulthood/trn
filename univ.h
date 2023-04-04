@@ -6,10 +6,11 @@
 #ifndef TRN_UNIV_H
 #define TRN_UNIV_H
 
+#include <cstdint>
+#include <string>
+
 #include "enum-flags.h"
 #include "help.h"
-
-#include <cstdint>
 
 struct HASHTABLE;
 
@@ -132,7 +133,7 @@ extern UNIV_ITEM *g_last_univ;
 extern UNIV_ITEM *sel_page_univ;
 extern UNIV_ITEM *g_sel_next_univ;
 extern char *g_univ_fname;    /* current filename (may be null) */
-extern char *g_univ_label;    /* current label (may be null) */
+extern std::string g_univ_label;    /* current label (may be null) */
 extern char *g_univ_title;    /* title of current level */
 extern char *g_univ_tmp_file; /* temp. file (may be null) */
 extern HASHTABLE *g_univ_ng_hash;
@@ -155,7 +156,7 @@ void        univ_add_textfile(const char *desc, char *name);
 void        univ_add_virtgroup(const char *grpname);
 void        univ_use_pattern(const char *pattern, int type);
 void        univ_use_group_line(char *line, int type);
-bool        univ_file_load(char *fname, const char *title, char *label);
+bool        univ_file_load(char *fname, const char *title, const char *label);
 void        univ_mask_load(char *mask, const char *title);
 void        univ_redofile();
 void        univ_edit();
