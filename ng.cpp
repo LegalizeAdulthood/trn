@@ -415,7 +415,7 @@ reask_article:
 	interp(g_cmd_buf, sizeof g_cmd_buf, g_mailcall);
 	sprintf(g_buf,g_prompt.c_str(),g_cmd_buf,
 		current_charsubst(),
-		g_dfltcmd);
+		g_dfltcmd.c_str());
 	draw_mousebar(g_tc_COLS - (g_term_line == g_tc_LINES-1? strlen(g_buf)+5 : 0), true);
 	color_string(COLOR_CMD,g_buf);
 	putchar(' ');
@@ -531,7 +531,7 @@ cleanup2:
 
 static art_switch_result art_switch()
 {
-    setdef(g_buf,g_dfltcmd);
+    setdef(g_buf,g_dfltcmd.c_str());
     printcmd();
 
     g_buf[2] = '\0';
@@ -595,7 +595,7 @@ static art_switch_result art_switch()
 	    g_dfltcmd = "+tsanq";
 	}
       reask_unread:
-	in_char(u_prompt,MM_UNKILL_PROMPT,g_dfltcmd);
+	in_char(u_prompt,MM_UNKILL_PROMPT,g_dfltcmd.c_str());
 	printcmd();
 	newline();
 	if (*g_buf == 'h') {

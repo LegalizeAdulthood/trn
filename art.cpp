@@ -1003,7 +1003,7 @@ leave_pager:
 	    interpsearch(g_cmd_buf, sizeof g_cmd_buf, g_mailcall, g_buf);
 	    printf(g_prompt.c_str(),g_cmd_buf,
 		   current_charsubst(),
-		   g_dfltcmd);	/* print prompt, whatever it is */
+		   g_dfltcmd.c_str());	/* print prompt, whatever it is */
 	    color_pop();	/* of COLOR_CMD */
 	    putchar(' ');
 	    fflush(stdout);

@@ -274,26 +274,26 @@ void do_multirc()
     reask_newsgroup:
 	    unflush_output();	/* disable any ^O in effect */
 	    if (g_ngptr == nullptr) {
-		g_dfltcmd = (retry ? "npq" : "qnp");
+		g_dfltcmd = retry ? "npq" : "qnp";
 		if (g_verbose)
 		    printf("\n****** End of newsgroups -- what next? [%s] ",
-			   g_dfltcmd);
+			   g_dfltcmd.c_str());
 		else
-		    printf("\n**** End -- next? [%s] ", g_dfltcmd);
+		    printf("\n**** End -- next? [%s] ", g_dfltcmd.c_str());
 		termdown(1);
 	    } else {
 		g_threaded_group = (g_use_threads && !(g_ngptr->flags&NF_UNTHREADED));
-		g_dfltcmd = (g_use_news_selector >= 0
-		  && g_ngptr->toread >= (ART_UNREAD)g_use_news_selector? "+ynq":"ynq");
+                g_dfltcmd =
+                    (g_use_news_selector >= 0 && g_ngptr->toread >= (ART_UNREAD) g_use_news_selector ? "+ynq" : "ynq");
 		if (g_verbose)
 		    printf("\n%s %3ld unread article%s in %s -- read now? [%s] ",
 			   g_threaded_group? "======" : "******",
 			   (long)g_ngptr->toread, plural(g_ngptr->toread),
-			   g_ngname, g_dfltcmd);
+			   g_ngname, g_dfltcmd.c_str());
 		else
 		    printf("\n%s %3ld in %s -- read? [%s] ",
 			   g_threaded_group? "====" : "****",
-			   (long)g_ngptr->toread,g_ngname,g_dfltcmd);
+			   (long)g_ngptr->toread,g_ngname,g_dfltcmd.c_str());
 		termdown(1);
 	    }
 	    fflush(stdout);
@@ -360,7 +360,7 @@ input_newsgroup_result input_newsgroup()
 	return ING_ASK;
     }
     g_buf[2] = *g_buf;
-    setdef(g_buf,g_dfltcmd);
+    setdef(g_buf,g_dfltcmd.c_str());
     printcmd();
     if (g_ngptr != nullptr)
 	*g_buf = g_buf[2];
