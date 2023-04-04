@@ -120,12 +120,8 @@ void color_init()
 /* Parse a line from the [attribute] section of trnrc. */
 void color_rc_attribute(const char *object, char *value)
 {
-    char* s;
-    char* t;
-    char* n = nullptr;
-    int i;
-
     /* Find the specified object. */
+    int i;
     for (i = 0; i < MAX_COLORS; i++) {
 	if (!strcasecmp(object, objects[i].name))
 	    break;
@@ -152,6 +148,7 @@ void color_rc_attribute(const char *object, char *value)
     }
 
     /* See if they specified a color */
+    char* s;
     for (s = value; *s && !isspace(*s); s++) ;
     while (isspace(*s)) s++;
     if (!*s) {
@@ -159,7 +156,10 @@ void color_rc_attribute(const char *object, char *value)
 	objects[i].bg = "";
 	return;
     }
-    for (t = s; *t && !isspace(*t); t++) ;
+    char* t;
+    for (t = s; *t && !isspace(*t); t++)
+        ;
+    char* n = nullptr;
     if (*t) {
 	n = t++;
 	*n = '\0';

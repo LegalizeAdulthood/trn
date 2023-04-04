@@ -56,7 +56,7 @@ char *saferealloc(char *where, MEM_SIZE size)
 }
 #endif
 
-char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, char *cmd)
+char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, const char *cmd)
 {
     extern std::string g_dot_dir;
     if (*pattern == '%' && pattern[1] == '.') {
