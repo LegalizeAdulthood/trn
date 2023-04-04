@@ -814,7 +814,7 @@ static Uchar index_hex[256] = {
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
 };
 
-int qp_decodestring(char *t, char *f, bool in_header)
+int qp_decodestring(char *t, const char *f, bool in_header)
 {
     char* save_t = t;
     while (*f) {
@@ -921,7 +921,7 @@ static Uchar index_b64[256] = {
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
 };
 
-int b64_decodestring(char *t, char *f)
+int b64_decodestring(char *t, const char *f)
 {
     char* save_t = t;
     Uchar ch2;
@@ -1125,7 +1125,7 @@ static const char* named_entities[] = {
     NULL,	NULL,
 };
 
-int filter_html(char *t, char *f)
+int filter_html(char *t, const char *f)
 {
     static char tagword[32];
     static int tagword_len;
