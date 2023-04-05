@@ -498,7 +498,7 @@ bool actfile_hash(DATASRC *dp)
     }
     else
 	ret = srcfile_open(&dp->act_sf, dp->newsid, nullptr, nullptr);
-    return ret;
+    return ret != 0;
 }
 
 bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM high)
