@@ -200,14 +200,15 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     g_ini_file = filexp(s);
 
     s = filexp("%+");
-    if (stat(s,&g_filestat) < 0 || !S_ISDIR(g_filestat.st_mode)) {
+    stat_t ini_stat{};
+    if (stat(s,&ini_stat) < 0 || !S_ISDIR(ini_stat.st_mode)) {
 	printf("Creating the directory %s.\n",s);
 	if (makedir(s,MD_DIR)) {
 	    printf("Unable to create `%s'.\n",s);
 	    finalize(1); /*$$??*/
 	}
     }
-    if (stat(g_ini_file.c_str(),&g_filestat) == 0)
+    if (stat(g_ini_file.c_str(),&ini_stat) == 0)
 	opt_file(g_ini_file.c_str(),tcbufptr,true);
     if (!g_use_threads || (s = getenv("TRNINIT")) == nullptr)
 	s = getenv("RNINIT");
@@ -259,13 +260,14 @@ void opt_file(const char *filename, char **tcbufptr, bool bleat)
     int  fd = open(filename,0);
 	
     if (fd >= 0) {
-	fstat(fd,&g_filestat);
-	if (g_filestat.st_size >= TCBUF_SIZE-1) {
-	    filebuf = saferealloc(filebuf,(MEM_SIZE)g_filestat.st_size+2);
+	stat_t opt_stat{};
+	fstat(fd,&opt_stat);
+	if (opt_stat.st_size >= TCBUF_SIZE-1) {
+	    filebuf = saferealloc(filebuf,(MEM_SIZE)opt_stat.st_size+2);
 	    *tcbufptr = filebuf;
 	}
-	if (g_filestat.st_size) {
-	    int len = read(fd,filebuf,(int)g_filestat.st_size);
+	if (opt_stat.st_size) {
+	    int len = read(fd,filebuf,(int)opt_stat.st_size);
 	    filebuf[len] = '\0';
 	    prep_ini_data(filebuf,filename);
 	    char *s = filebuf;
@@ -735,10 +737,11 @@ void save_options(const char *filename)
 	char* cp;
 	char* nlp = nullptr;
 	char* comments = nullptr;
-	fstat(fd_in,&g_filestat);
-	if (g_filestat.st_size) {
-            filebuf = safemalloc((MEM_SIZE)g_filestat.st_size+2);
-	    int len = read(fd_in, filebuf, (int)g_filestat.st_size);
+	stat_t opt_stat{};
+	fstat(fd_in,&opt_stat);
+	if (opt_stat.st_size) {
+            filebuf = safemalloc((MEM_SIZE)opt_stat.st_size+2);
+	    int len = read(fd_in, filebuf, (int)opt_stat.st_size);
 	    filebuf[len] = '\0';
 	}
 	close(fd_in);

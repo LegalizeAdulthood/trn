@@ -13,5 +13,6 @@ using ART_LINE = int;          /* line position in article file */
 using ACT_POS = long;          /* char position in active file */
 using MEM_SIZE = unsigned int; /* for passing to malloc */
 using Uchar = unsigned char;   /* more space-efficient */
+using stat_t = struct stat;
 
 #endif

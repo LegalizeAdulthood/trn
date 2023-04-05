@@ -436,7 +436,8 @@ bool makedir(char *dirname, makedir_name_type nametype)
 
     s = end;
     for (;;) {
-	if (stat(dirname,&g_filestat) >= 0 && S_ISDIR(g_filestat.st_mode)) {
+	stat_t dir_stat{};
+	if (stat(dirname,&dir_stat) >= 0 && S_ISDIR(dir_stat.st_mode)) {
 					/* does this much exist as a dir? */
 	    *s = '/';			/* mark this as existing */
 	    break;

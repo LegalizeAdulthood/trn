@@ -296,8 +296,9 @@ save_result save_article()
 	    }
 	    s = g_buf;
 	}
+	stat_t save_dir_stat{};
 	for (i = 0;
-	    (there = stat(s,&g_filestat) >= 0) && S_ISDIR(g_filestat.st_mode);
+	    (there = stat(s,&save_dir_stat) >= 0) && S_ISDIR(save_dir_stat.st_mode);
 	    i++) {			/* is it a directory? */
 
 	    c = (s+strlen(s));
@@ -361,7 +362,7 @@ save_result save_article()
 		}
 	    }
 	}
-	else if (S_ISCHR(g_filestat.st_mode))
+	else if (S_ISCHR(save_dir_stat.st_mode))
 	    mailbox = false;
 	else {
 	    g_tmpfp = fopen(s,"r+");

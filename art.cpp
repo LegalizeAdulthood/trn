@@ -120,12 +120,13 @@ do_article_result do_article()
     }
     else
     {
-	if (fstat(fileno(g_artfp),&g_filestat))	/* get article file stats */
+	stat_t art_stat{};
+	if (fstat(fileno(g_artfp),&art_stat))	/* get article file stats */
 	    return DA_CLEAN;
-	if (!S_ISREG(g_filestat.st_mode))
+	if (!S_ISREG(art_stat.st_mode))
 	    return DA_NORM;
-        g_raw_artsize = g_filestat.st_size;
-        g_artsize = g_filestat.st_size; 
+        g_raw_artsize = art_stat.st_size;
+        g_artsize = art_stat.st_size; 
     }
     sprintf(prompt_buf, g_mousebar_cnt>3? "%%sEnd of art %ld (of %ld) %%s[%%s]"
 	: "%%sEnd of article %ld (of %ld) %%s-- what next? [%%s]",

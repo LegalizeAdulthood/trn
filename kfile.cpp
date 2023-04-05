@@ -663,7 +663,8 @@ void open_kfile(int local)
     const char *kname = filexp(local ? get_val("KILLLOCAL", s_killlocal) : get_val("KILLGLOBAL", s_killglobal));
 
     /* delete the file if it is empty */
-    if (stat(kname,&g_filestat) >= 0 && !g_filestat.st_size)
+    stat_t kill_file_stat{};
+    if (stat(kname,&kill_file_stat) >= 0 && !kill_file_stat.st_size)
 	remove(kname);
     if (local) {
 	if (g_localkfp)

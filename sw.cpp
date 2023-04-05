@@ -30,11 +30,12 @@ void sw_file(char **tcbufptr)
     int initfd = open(*tcbufptr,0);
 
     if (initfd >= 0) {
-	fstat(initfd,&g_filestat);
-	if (g_filestat.st_size >= TCBUF_SIZE-1)
-	    *tcbufptr = saferealloc(*tcbufptr,(MEM_SIZE)g_filestat.st_size+1);
-	if (g_filestat.st_size) {
-	    int len = read(initfd,*tcbufptr,(int)g_filestat.st_size);
+	stat_t switch_file_stat{};
+	fstat(initfd,&switch_file_stat);
+	if (switch_file_stat.st_size >= TCBUF_SIZE-1)
+	    *tcbufptr = saferealloc(*tcbufptr,(MEM_SIZE)switch_file_stat.st_size+1);
+	if (switch_file_stat.st_size) {
+	    int len = read(initfd,*tcbufptr,(int)switch_file_stat.st_size);
 	    (*tcbufptr)[len] = '\0';
 	    sw_list(*tcbufptr);
 	}

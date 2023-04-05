@@ -917,11 +917,13 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
 			s = s_empty;
 			break;
 		    }
-		    s = scrbuf;
-		    sprintf(s,"%ld",(long)g_art);
-		    if (stat(s,&g_filestat) < 0)
-			g_filestat.st_size = 0L;
-		    sprintf(scrbuf,"%5ld",(long)g_filestat.st_size);
+                    sprintf(scrbuf, "%ld", (long) g_art);
+		    {
+                        stat_t art_stat{};
+                        if (stat(scrbuf, &art_stat) < 0)
+                            art_stat.st_size = 0L;
+                        sprintf(scrbuf, "%5ld", (long) art_stat.st_size);
+                    }
 		    s = scrbuf;
 		    break;
 		case 'Z':

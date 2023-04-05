@@ -5,9 +5,6 @@
 
 /* GLOBAL THINGS */
 
-/* file statistics area */
-struct stat g_filestat;
-
 /* various things of type char */
 
 char        g_msg[CBUFLEN];     /* general purpose message buffer */

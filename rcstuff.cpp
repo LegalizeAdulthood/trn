@@ -462,12 +462,13 @@ static bool open_newsrc(NEWSRC *rp)
     }
     else {
 	/* File exists; if zero length and backup isn't, complain */
-	if (fstat(fileno(rcfp),&g_filestat) < 0) {
+	stat_t newsrc_stat{};
+	if (fstat(fileno(rcfp),&newsrc_stat) < 0) {
 	    perror(rp->name);
 	    return false;
 	}
-	if (g_filestat.st_size == 0
-	 && stat(rp->oldname,&g_filestat) >= 0 && g_filestat.st_size > 0) {
+	if (newsrc_stat.st_size == 0
+	 && stat(rp->oldname,&newsrc_stat) >= 0 && newsrc_stat.st_size > 0) {
 	    printf("Warning: %s is zero length but %s is not.\n",
 		   rp->name,rp->oldname);
 	    printf("Either recover your newsrc or else remove the backup copy.\n");

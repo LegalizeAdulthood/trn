@@ -169,8 +169,9 @@ void nntp_body(ART_NUM artnum)
 	if (s_body_pos >= 0)
 	    nntp_finishbody(FB_DISCARD);
 	g_artfp = fopen(artname,"r");
-	if (g_artfp && fstat(fileno(g_artfp),&g_filestat) == 0)
-	    s_body_end = g_filestat.st_size;
+	stat_t art_stat{};
+	if (g_artfp && fstat(fileno(g_artfp),&art_stat) == 0)
+	    s_body_end = art_stat.st_size;
 	return;
     }
 

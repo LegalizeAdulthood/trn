@@ -193,9 +193,10 @@ static void new_local_groups(DATASRC *dp)
     g_datasrc = dp;
 
     /* did active.times file grow? */
-    stat(dp->extra_name,&g_filestat);
-    if (g_filestat.st_size == dp->act_sf.recent_cnt)
-	return;
+    stat_t extra_stat{};
+    stat(dp->extra_name, &extra_stat);
+    if (extra_stat.st_size == dp->act_sf.recent_cnt)
+        return;
 
     FILE *fp = fopen(dp->extra_name, "r");
     if (fp == nullptr) {
@@ -231,7 +232,7 @@ static void new_local_groups(DATASRC *dp)
     hashwalk(newngs, build_addgroup_list, 0);
     hashdestroy(newngs);
     dp->lastnewgrp = lastone+1;
-    dp->act_sf.recent_cnt = g_filestat.st_size;
+    dp->act_sf.recent_cnt = extra_stat.st_size;
 }
 
 static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch)

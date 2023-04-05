@@ -163,8 +163,9 @@ void newsnews_check()
     const char *newsnewsname = filexp(NEWSNEWSNAME);
     if (FILE *fp = fopen(newsnewsname, "r"))
     {
-	fstat(fileno(fp),&g_filestat);
-	if (g_filestat.st_mtime > (time_t)g_lasttime) {
+	stat_t news_news_stat{};
+	fstat(fileno(fp),&news_news_stat);
+	if (news_news_stat.st_mtime > (time_t)g_lasttime) {
 	    while (fgets(g_buf,sizeof(g_buf),fp) != nullptr)
 		fputs(g_buf,stdout) FLUSH;
 	    get_anything();

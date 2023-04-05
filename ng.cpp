@@ -1400,9 +1400,9 @@ void setmail(bool force)
 	g_mailcount = 0;
     if (!(g_mailcount++)) {
 	const char* mailfile = filexp(get_val("MAILFILE",MAILFILE));
-	
-	if (stat(mailfile,&g_filestat) < 0 || !g_filestat.st_size
-	    || g_filestat.st_atime > g_filestat.st_mtime)
+	stat_t mail_file_stat{};
+	if (stat(mailfile,&mail_file_stat) < 0 || !mail_file_stat.st_size
+	    || mail_file_stat.st_atime > mail_file_stat.st_mtime)
 	    g_mailcall = "";
 	else
 	    g_mailcall = get_val("MAILCALL","(Mail) ");

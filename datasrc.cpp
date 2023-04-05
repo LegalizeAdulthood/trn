@@ -181,10 +181,11 @@ char *read_datasrcs(const char *filename)
     int fd = open(filexp(filename), 0);
     if (fd >= 0)
     {
-	fstat(fd,&g_filestat);
-	if (g_filestat.st_size) {
-            filebuf = safemalloc((MEM_SIZE)g_filestat.st_size+2);
-	    int len = read(fd, filebuf, (int)g_filestat.st_size);
+	stat_t datasrc_stat{};
+	fstat(fd,&datasrc_stat);
+	if (datasrc_stat.st_size) {
+            filebuf = safemalloc((MEM_SIZE)datasrc_stat.st_size+2);
+	    int len = read(fd, filebuf, (int)datasrc_stat.st_size);
 	    (filebuf)[len] = '\0';
 	    prep_ini_data(filebuf,filename);
 	    char *s = filebuf;
@@ -260,8 +261,9 @@ static DATASRC *new_datasrc(const char *name, char **vals)
 	/* FYI, we know extra_name to be nullptr in this case. */
 	if (vals[DI_ACTIVE_FILE]) {
 	    dp->extra_name = savestr(filexp(vals[DI_ACTIVE_FILE]));
-	    if (stat(dp->extra_name,&g_filestat) >= 0)
-		dp->act_sf.lastfetch = g_filestat.st_mtime;
+	    stat_t extra_stat{};
+	    if (stat(dp->extra_name,&extra_stat) >= 0)
+		dp->act_sf.lastfetch = extra_stat.st_mtime;
 	}
 	else {
 	    dp->extra_name = temp_filename();
@@ -276,8 +278,9 @@ static DATASRC *new_datasrc(const char *name, char **vals)
 	else if (!dp->grpdesc)
 	    dp->desc_sf.refetch_secs = g_def_refetch_secs;
 	if (dp->grpdesc) {
-	    if (stat(dp->grpdesc,&g_filestat) >= 0)
-		dp->desc_sf.lastfetch = g_filestat.st_mtime;
+	    stat_t desc_stat{};
+	    if (stat(dp->grpdesc,&desc_stat) >= 0)
+		dp->desc_sf.lastfetch = desc_stat.st_mtime;
 	}
 	else {
 	    dp->grpdesc = temp_filename();

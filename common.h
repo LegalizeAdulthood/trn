@@ -658,9 +658,6 @@ inline void reportAssertion(const char *expr, const char *file, unsigned int lin
 
 /* GLOBAL THINGS */
 
-/* file statistics area */
-extern struct stat g_filestat;
-
 /* various things of type char */
 
 extern char        g_msg[CBUFLEN];     /* general purpose message buffer */
