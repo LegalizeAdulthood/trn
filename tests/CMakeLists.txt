@@ -18,7 +18,9 @@ add_executable(trn-test
     cmake/test_article.in
     cmake/test_config.h.in
     cmake/test_data.cpp.in
+    cmake/test_local_newsrc.in
     cmake/test_nntp_auth_file.in
+    cmake/test_nntp_newsrc.in
     cmake/test_organization_file.in
 )
 source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")

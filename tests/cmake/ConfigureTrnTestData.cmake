@@ -65,19 +65,30 @@ function(configure_trn_test_data)
     # Access file contents
     set(TRN_TEST_ACCESS_LOCAL_ACTIVE_FILE   "${TRN_TEST_LOCAL_SPOOL_DIR}/active")
     set(TRN_TEST_ACCESS_LOCAL_ADD_GROUPS    "yes")
-    set(TRN_TEST_ACCESS_LOCAL_NEWSRC        "${TRN_TEST_HOME_DIR}/local-newsrc")
+    set(TRN_TEST_ACCESS_LOCAL_NEWSRC        "${TRN_TEST_DOT_DIR}/local-newsrc")
     set(TRN_TEST_ACCESS_LOCAL_SPOOL_DIR     "${TRN_TEST_LOCAL_SPOOL_DIR}")
     set(TRN_TEST_ACCESS_NNTP_ACTIVE_FILE    "${TRN_TEST_HOME_DIR}/nntp-active")
     set(TRN_TEST_ACCESS_NNTP_ADD_GROUPS     "yes")
-    set(TRN_TEST_ACCESS_NNTP_NEWSRC         "${TRN_TEST_HOME_DIR}/nntp-newsrc")
+    set(TRN_TEST_ACCESS_NNTP_NEWSRC         "${TRN_TEST_DOT_DIR}/nntp-newsrc")
     set(TRN_TEST_ACCESS_NNTP_SERVER         "nntp.example.org")
+
+    # Local newsrc contents
+    math(EXPR _prev_article                     "${TRN_TEST_ARTICLE_NUM}-1")
+    set(TRN_TEST_LOCAL_NEWSGROUP                "${TRN_TEST_NEWSGROUP}")
+    set(TRN_TEST_LOCAL_NEWSGROUP_READ_ARTICLES  "1-${_prev_article}")
+
+    # NNTP newsrc contents
+    set(TRN_TEST_NNTP_NEWSGROUP                 "${TRN_TEST_NEWSGROUP}")
+    set(TRN_TEST_NNTP_NEWSGROUP_READ_ARTICLES   "")
 
     # Generate test data files.
     configure_file(cmake/test_access_file.in            "${TRN_TEST_TRN_DIR}/access")
     configure_file(cmake/test_access_file.in            "${TRN_TEST_RN_LIB_DIR}/access.def")
     configure_file(cmake/test_active_file.in            "${TRN_TEST_SPOOL_DIR}/active")
     configure_file(cmake/test_article.in                "${TRN_TEST_ARTICLE_FILE}")
+    configure_file(cmake/test_local_newsrc.in           "${TRN_TEST_ACCESS_LOCAL_NEWSRC}")
     configure_file(cmake/test_nntp_auth_file.in         "${TRN_TEST_DOT_DIR}/.nntpauth")
+    configure_file(cmake/test_nntp_newsrc.in            "${TRN_TEST_ACCESS_NNTP_NEWSRC}")
     configure_file(cmake/test_organization_file.in      "${TRN_TEST_ORGFILE}")
 
     # Generate test source files.
