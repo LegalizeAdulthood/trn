@@ -84,7 +84,6 @@ add_library(libtrn
     mempool.cpp mempool.h
     mime.cpp mime.h
     msdos.h
-    ndir.cpp ndir.h
     ng.cpp ng.h
     ngdata.cpp ngdata.h
     ngsrch.cpp ngsrch.h
@@ -132,6 +131,8 @@ add_library(libtrn
     util.cpp util.h
     uudecode.cpp uudecode.h
 )
+# We require <filesystem>
+target_compile_features(libtrn PRIVATE cxx_std_17)
 if(WIN32)
     target_sources(libtrn PRIVATE popen.cpp)
 endif()

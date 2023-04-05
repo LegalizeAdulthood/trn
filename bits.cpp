@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <filesystem>
 
 #include "common.h"
 #include "bits.h"
@@ -12,7 +13,6 @@
 #include "head.h"
 #include "kfile.h"
 #include "list.h"
-#include "ndir.h"
 #include "ng.h"
 #include "ngdata.h"
 #include "nntp.h"
@@ -313,25 +313,27 @@ void find_existing_articles()
     }
     else
     {
+	namespace fs = std::filesystem;
 	ART_NUM first = g_lastart+1;
 	ART_NUM last = 0;
-	DIR* dirp;
-	Direntry_t* dp;
+	fs::path cwd(".");
 	char ch;
 	long lnum;
 
-	/* Scan the directory to find which articles are present. */
-
-	if (!(dirp = opendir(".")))
+	fs::directory_iterator entries(cwd);
+	if (fs::directory_iterator() == entries)
 	    return;
 
+	/* Scan the directory to find which articles are present. */
 	for (ap = article_ptr(article_first(g_absfirst));
 	     ap && article_num(ap) <= g_lastart;
 	     ap = article_nextp(ap))
 	    ap->flags &= ~AF_EXISTS;
 
-	while ((dp = readdir(dirp)) != nullptr) {
-	    if (sscanf(dp->d_name, "%ld%c", &lnum, &ch) == 1) {
+	for (const fs::directory_entry &entry : entries)
+	{
+            std::string filename{entry.path().filename().string()};
+	    if (sscanf(filename.c_str(), "%ld%c", &lnum, &ch) == 1) {
 		an = (ART_NUM)lnum;
 		if (an <= g_lastart && an >= g_absfirst) {
 		    if (an < first)
@@ -344,7 +346,6 @@ void find_existing_articles()
 		}
 	    }
 	}
-	closedir(dirp);
 
 	g_ngptr->abs1st = first;
 	g_ngptr->ngmax = last;
