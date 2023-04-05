@@ -371,7 +371,7 @@ do_article_result do_article()
 			    if (bufptr[1] == '\b') {
 				if (outputok && !under_lining
 				 && g_highlight != g_artline) {
-				    under_lining++;
+				    under_lining = true;
 				    if (g_tc_UG) {
 					if (bufptr != g_buf && bufptr[-1]==' ') {
 					    outpos--;
