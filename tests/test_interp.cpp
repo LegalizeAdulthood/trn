@@ -1436,7 +1436,7 @@ TEST_F(InterpolatorNewsgroupTest, oldDistributionLineInNewsgroup)
 
 TEST_F(InterpolatorNewsgroupTest, fromLineInNewsgroupNoReplyTo)
 {
-    g_art = TRN_TEST_ARTICLE_NO_REPLY_TO_NUM;
+    g_art = TRN_TEST_ARTICLE_NO_FALLBACKS_NUM;
     char pattern[]{"%f"};
 
     const char *new_pattern = interpolate(pattern);

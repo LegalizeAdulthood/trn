@@ -79,7 +79,6 @@ extern MULTIRC *g_multirc;   /* the current MULTIRC */
 extern bool g_paranoid;      /* did we detect some inconsistency in .newsrc? */
 extern int g_addnewbydefault;
 
-MULTIRC *rcstuff_init_data();
 bool     rcstuff_init();
 void     rcstuff_final();
 NEWSRC  *new_newsrc(const char *name, const char *newsrc, const char *add_ok);

@@ -172,8 +172,8 @@ header_line_type get_header_num(char *s)
     header_line_type i = set_line_type(s, end);	    /* Sets g_msg to lower-cased header name */
 
     if (i <= SOME_LINE && i != CUSTOM_LINE) {
-        if (g_htype[CUSTOM_LINE].name != "")
-	    free(g_htype[CUSTOM_LINE].name);
+        if (!empty(g_htype[CUSTOM_LINE].name))
+            free(g_htype[CUSTOM_LINE].name);
 	g_htype[CUSTOM_LINE].name = savestr(g_msg);
 	g_htype[CUSTOM_LINE].length = end - s;
 	g_htype[CUSTOM_LINE].flags = g_htype[i].flags;

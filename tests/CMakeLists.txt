@@ -16,7 +16,7 @@ add_executable(trn-test
     cmake/test_access_file.in
     cmake/test_active_file.in
     cmake/test_article.in
-    cmake/test_article_no_reply_to.in
+    cmake/test_article_no_fallbacks.in
     cmake/test_config.h.in
     cmake/test_data.cpp.in
     cmake/test_local_newsrc.in

@@ -44,7 +44,7 @@
 #define TRN_TEST_SIGNATURE                      "@TRN_TEST_SIGNATURE@"
 
 // Article with no Reply-To: line content.
-#define TRN_TEST_ARTICLE_NO_REPLY_TO_NUM        @TRN_TEST_ARTICLE_NO_REPLY_TO_NUM@
+#define TRN_TEST_ARTICLE_NO_FALLBACKS_NUM        @TRN_TEST_ARTICLE_NO_FALLBACKS_NUM@
 
 // Active file content.
 #define TRN_TEST_NEWSGROUP_HIGH                 @TRN_TEST_NEWSGROUP_HIGH@

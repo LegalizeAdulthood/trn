@@ -58,11 +58,11 @@ function(configure_trn_test_data)
     set(TRN_TEST_BODY "Pneumatic tubes are killing the Internet.")
     set(TRN_TEST_SIGNATURE "XMission Internet Access - http://www.xmission.com - Voice: 801 539 0852")
 
-    # Article with no Reply-To: field.
-    set(TRN_TEST_ARTICLE_NO_REPLY_TO_NUM 624)
+    # Article with no fallbacks for other fields, e.g. no Reply-To: for From:.
+    set(TRN_TEST_ARTICLE_NO_FALLBACKS_NUM 624)
 
     # Active file contents.
-    set(TRN_TEST_NEWSGROUP_HIGH "${TRN_TEST_ARTICLE_NO_REPLY_TO_NUM}")
+    set(TRN_TEST_NEWSGROUP_HIGH "${TRN_TEST_ARTICLE_NO_FALLBACKS_NUM}")
     set(TRN_TEST_NEWSGROUP_LOW "${TRN_TEST_ARTICLE_NUM}")
     set(TRN_TEST_NEWSGROUP_PERM "y")
 
@@ -90,7 +90,7 @@ function(configure_trn_test_data)
     configure_file(cmake/test_access_file.in            "${TRN_TEST_RN_LIB_DIR}/access.def")
     configure_file(cmake/test_active_file.in            "${TRN_TEST_SPOOL_DIR}/active")
     configure_file(cmake/test_article.in                "${TRN_TEST_ARTICLE_FILE}")
-    configure_file(cmake/test_article_no_reply_to.in    "${TRN_TEST_NEWSGROUP_DIR}/${TRN_TEST_ARTICLE_NO_REPLY_TO_NUM}")
+    configure_file(cmake/test_article_no_fallbacks.in   "${TRN_TEST_NEWSGROUP_DIR}/${TRN_TEST_ARTICLE_NO_FALLBACKS_NUM}")
     configure_file(cmake/test_local_newsrc.in           "${TRN_TEST_ACCESS_LOCAL_NEWSRC}")
     configure_file(cmake/test_nntp_auth_file.in         "${TRN_TEST_DOT_DIR}/.nntpauth")
     configure_file(cmake/test_nntp_newsrc.in            "${TRN_TEST_ACCESS_NNTP_NEWSRC}")
