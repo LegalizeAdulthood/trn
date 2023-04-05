@@ -1354,25 +1354,60 @@ TEST_F(InterpolatorTest, hexEscapeOutOfRangeDigits)
 
 namespace {
 
+class pushd
+{
+public:
+    pushd() :
+        m_old_dir{}
+    {
+        getcwd(m_old_dir, sizeof(m_old_dir));
+    }
+    pushd(const char *new_dir) :
+        pushd()
+    {
+        chdir(new_dir);
+    }
+    ~pushd()
+    {
+        if (m_old_dir[0] != '\0')
+            chdir(m_old_dir);
+    }
+
+    void push(const char *new_dir)
+    {
+        chdir(new_dir);
+    }
+
+private:
+    char m_old_dir[TCBUF_SIZE];
+};
+
 struct InterpolatorNewsgroupTest : InterpolatorTest
 {
 protected:
     void SetUp() override;
     void TearDown() override;
+
+    pushd m_curdir;
 };
 
 void InterpolatorNewsgroupTest::SetUp()
 {
     InterpolatorTest::SetUp();
     g_in_ng = true;
-    // TODO: figure out how to set active newsgroup
-    // TODO: figure out how to properly set active DATASRC
-    // TODO: figure out how to fake up an article
+    g_art = TRN_TEST_ARTICLE_NUM;
+    g_lastart = TRN_TEST_NEWSGROUP_HIGH;
+    g_ngptr = g_first_ng;
+    m_curdir.push(TRN_TEST_NEWSGROUP_DIR);
+    build_cache();
 }
 
 void InterpolatorNewsgroupTest::TearDown()
 {
     g_in_ng = false;
+    g_art = -1;
+    g_lastart = -1;
+    g_ngptr = nullptr;
     InterpolatorTest::TearDown();
 }
 
@@ -1389,50 +1424,48 @@ TEST_F(InterpolatorNewsgroupTest, absoluteNewsgroupDirSet)
     ASSERT_EQ(TRN_TEST_NEWSGROUP_DIR, buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_oldDistributionLineInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, oldDistributionLineInNewsgroup)
 {
-    g_art = TRN_TEST_ARTICLE_NUM;
-    g_lastart = TRN_TEST_NEWSGROUP_HIGH;
-    build_cache();
     char pattern[]{"%D"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("na", buffer());
+    ASSERT_EQ(TRN_TEST_HEADER_DISTRIBUTION, buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_fromLineInNewsgroupNoReplyTo)
+TEST_F(InterpolatorNewsgroupTest, fromLineInNewsgroupNoReplyTo)
+{
+    g_art = TRN_TEST_ARTICLE_NO_REPLY_TO_NUM;
+    char pattern[]{"%f"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_HEADER_FROM, buffer());
+}
+
+TEST_F(InterpolatorNewsgroupTest, fromLineInNewsgroupWithReplyTo)
 {
     char pattern[]{"%f"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("John Yeager <jyeager@example.org>", buffer());
+    ASSERT_EQ(TRN_TEST_HEADER_REPLY_TO, buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_fromLineInNewsgroupWithReplyTo)
-{
-    char pattern[]{"%f"};
-
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("Cyrus Longworth <clongworth@example.org>", buffer());
-}
-
-TEST_F(InterpolatorNewsgroupTest, DISABLED_followupInNewsgroupWithFollowupToLine)
+TEST_F(InterpolatorNewsgroupTest, followupInNewsgroupWithFollowupToLine)
 {
     char pattern[]{"%F"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("alt.flame", buffer());
+    ASSERT_EQ(TRN_TEST_HEADER_FOLLOWUP_TO, buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_followupInNewsgroupFromNewsgroupsLine)
+TEST_F(InterpolatorNewsgroupTest, followupInNewsgroupFromNewsgroupsLine)
 {
     char pattern[]{"%F"};
 
@@ -1442,7 +1475,7 @@ TEST_F(InterpolatorNewsgroupTest, DISABLED_followupInNewsgroupFromNewsgroupsLine
     ASSERT_EQ("comp.arch", buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_messageIdInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, messageIdInNewsgroup)
 {
     char pattern[]{"%i"};
 
@@ -1452,7 +1485,7 @@ TEST_F(InterpolatorNewsgroupTest, DISABLED_messageIdInNewsgroup)
     ASSERT_EQ("<hippityhop@flagrant.example.org>", buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_newsgroupsLineInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, newsgroupsLineInNewsgroup)
 {
     char pattern[]{"%n"};
 
@@ -1462,7 +1495,7 @@ TEST_F(InterpolatorNewsgroupTest, DISABLED_newsgroupsLineInNewsgroup)
     ASSERT_EQ("comp.arch", buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_lastReferenceInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, lastReferenceInNewsgroup)
 {
     char pattern[]{"%r"};
 
@@ -1472,7 +1505,7 @@ TEST_F(InterpolatorNewsgroupTest, DISABLED_lastReferenceInNewsgroup)
     ASSERT_EQ("<reference1@flagrant.example.org>", buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_newReferencesInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, newReferencesInNewsgroup)
 {
     char pattern[]{"%R"};
 
@@ -1482,7 +1515,7 @@ TEST_F(InterpolatorNewsgroupTest, DISABLED_newReferencesInNewsgroup)
     ASSERT_EQ("<reference1@flagrant.example.org> <goink1@poster.example.org>", buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_strippedSubjectInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, strippedSubjectInNewsgroup)
 {
     char pattern[]{"%s"};
 
@@ -1492,7 +1525,7 @@ TEST_F(InterpolatorNewsgroupTest, DISABLED_strippedSubjectInNewsgroup)
     ASSERT_EQ("The best red nose", buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_subjectInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, subjectInNewsgroup)
 {
     char pattern[]{"%S"};
 
@@ -1502,7 +1535,7 @@ TEST_F(InterpolatorNewsgroupTest, DISABLED_subjectInNewsgroup)
     ASSERT_EQ("Re: The best red nose", buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_toFromReplyToInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, toFromReplyToInNewsgroup)
 {
     char pattern[]{"%t"};
 
@@ -1512,7 +1545,7 @@ TEST_F(InterpolatorNewsgroupTest, DISABLED_toFromReplyToInNewsgroup)
     ASSERT_EQ("Cyrus Longworth <clongworth@example.org>", buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_toFromFromInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, toFromFromInNewsgroup)
 {
     char pattern[]{"%t"};
 
@@ -1522,7 +1555,7 @@ TEST_F(InterpolatorNewsgroupTest, DISABLED_toFromFromInNewsgroup)
     ASSERT_EQ("Bozo the Clown <bozo@example.org>", buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_toFromPathInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, toFromPathInNewsgroup)
 {
     char pattern[]{"%T"};
 
@@ -1532,7 +1565,7 @@ TEST_F(InterpolatorNewsgroupTest, DISABLED_toFromPathInNewsgroup)
     ASSERT_EQ("Bozo the Clown <bozo@example.org>", buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_numUnreadArticlesInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, numUnreadArticlesInNewsgroup)
 {
     char pattern[]{"%u"};
 
@@ -1542,7 +1575,7 @@ TEST_F(InterpolatorNewsgroupTest, DISABLED_numUnreadArticlesInNewsgroup)
     ASSERT_EQ("3", buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_numUnreadArticlesExceptCurrentInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, numUnreadArticlesExceptCurrentInNewsgroup)
 {
     char pattern[]{"%U"};
 
@@ -1552,7 +1585,7 @@ TEST_F(InterpolatorNewsgroupTest, DISABLED_numUnreadArticlesExceptCurrentInNewsg
     ASSERT_EQ("2", buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_numUnselectedArticlesExceptCurrentInNewsgroupEmpty)
+TEST_F(InterpolatorNewsgroupTest, numUnselectedArticlesExceptCurrentInNewsgroupEmpty)
 {
     char pattern[]{"%v"};
 
@@ -1573,7 +1606,7 @@ TEST_F(InterpolatorNewsgroupTest, threadDirInNewsgroup)
     ASSERT_EQ(TRN_TEST_LOCAL_SPOOL_DIR, buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_shortenedFromInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, shortenedFromInNewsgroup)
 {
     char pattern[]{"%y"};
 
@@ -1583,7 +1616,7 @@ TEST_F(InterpolatorNewsgroupTest, DISABLED_shortenedFromInNewsgroup)
     ASSERT_EQ(TRN_TEST_HEADER_FROM, buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_articleSizeInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, articleSizeInNewsgroup)
 {
     char pattern[]{"%z"};
 
@@ -1604,7 +1637,7 @@ TEST_F(InterpolatorNewsgroupTest, numSelectedThreadsInNewsgroupEmpty)
     ASSERT_EQ("66", buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_headerFieldInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, headerFieldInNewsgroup)
 {
     char pattern[]{"%[X-Boogie-Nights]"};
 
@@ -1614,7 +1647,7 @@ TEST_F(InterpolatorNewsgroupTest, DISABLED_headerFieldInNewsgroup)
     ASSERT_EQ(TRN_TEST_HEADER_X_BOOGIE_NIGHTS, buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, DISABLED_missingHeaderFieldInNewsgroupIsEmpty)
+TEST_F(InterpolatorNewsgroupTest, missingHeaderFieldInNewsgroupIsEmpty)
 {
     char pattern[]{"%[X-Missing-Header]"};
 

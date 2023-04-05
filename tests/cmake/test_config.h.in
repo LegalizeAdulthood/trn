@@ -37,10 +37,14 @@
 #define TRN_TEST_HEADER_MESSAGE_ID              "@TRN_TEST_HEADER_MESSAGE_ID@"
 #define TRN_TEST_HEADER_REFERENCES              "@TRN_TEST_HEADER_REFERENCES@"
 #define TRN_TEST_HEADER_X_BOOGIE_NIGHTS         "@TRN_TEST_HEADER_X_BOOGIE_NIGHTS@"
+#define TRN_TEST_HEADER_DISTRIBUTION            "@TRN_TEST_HEADER_DISTRIBUTION@"
 #define TRN_TEST_HEADER_BYTES                   "@TRN_TEST_HEADER_BYTES@"
 #define TRN_TEST_HEADER_LINES                   "@TRN_TEST_HEADER_LINES@"
 #define TRN_TEST_BODY                           "@TRN_TEST_BODY@"
 #define TRN_TEST_SIGNATURE                      "@TRN_TEST_SIGNATURE@"
+
+// Article with no Reply-To: line content.
+#define TRN_TEST_ARTICLE_NO_REPLY_TO_NUM        @TRN_TEST_ARTICLE_NO_REPLY_TO_NUM@
 
 // Active file content.
 #define TRN_TEST_NEWSGROUP_HIGH                 @TRN_TEST_NEWSGROUP_HIGH@
