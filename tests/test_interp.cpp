@@ -2,6 +2,8 @@
 
 #include <array>
 #include <cctype>
+#include <iomanip>
+#include <sstream>
 #include <string>
 
 #include "test_config.h"
@@ -1404,6 +1406,8 @@ void InterpolatorNewsgroupTest::SetUp()
 
 void InterpolatorNewsgroupTest::TearDown()
 {
+    artclose();
+    close_cache();
     g_in_ng = false;
     g_art = -1;
     g_lastart = -1;
@@ -1467,12 +1471,13 @@ TEST_F(InterpolatorNewsgroupTest, followupInNewsgroupWithFollowupToLine)
 
 TEST_F(InterpolatorNewsgroupTest, followupInNewsgroupFromNewsgroupsLine)
 {
+    g_art = TRN_TEST_ARTICLE_NO_FALLBACKS_NUM;
     char pattern[]{"%F"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("comp.arch", buffer());
+    ASSERT_EQ(TRN_TEST_HEADER_NEWSGROUPS, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, messageIdInNewsgroup)
@@ -1482,7 +1487,7 @@ TEST_F(InterpolatorNewsgroupTest, messageIdInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("<hippityhop@flagrant.example.org>", buffer());
+    ASSERT_EQ(TRN_TEST_HEADER_MESSAGE_ID, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, newsgroupsLineInNewsgroup)
@@ -1492,7 +1497,7 @@ TEST_F(InterpolatorNewsgroupTest, newsgroupsLineInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("comp.arch", buffer());
+    ASSERT_EQ(TRN_TEST_HEADER_NEWSGROUPS, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, lastReferenceInNewsgroup)
@@ -1502,7 +1507,16 @@ TEST_F(InterpolatorNewsgroupTest, lastReferenceInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("<reference1@flagrant.example.org>", buffer());
+    ASSERT_EQ(TRN_TEST_HEADER_LAST_REFERENCE, buffer());
+}
+
+TEST(NormalizeReferencesTest, normalize)
+{
+    char buffer[] = TRN_TEST_HEADER_REFERENCES;
+
+    normalize_refs(buffer);
+
+    ASSERT_EQ(TRN_TEST_HEADER_REFERENCES, std::string{buffer});
 }
 
 TEST_F(InterpolatorNewsgroupTest, newReferencesInNewsgroup)
@@ -1512,27 +1526,84 @@ TEST_F(InterpolatorNewsgroupTest, newReferencesInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("<reference1@flagrant.example.org> <goink1@poster.example.org>", buffer());
+    ASSERT_EQ(TRN_TEST_HEADER_REFERENCES " " TRN_TEST_HEADER_MESSAGE_ID, buffer());
 }
 
-TEST_F(InterpolatorNewsgroupTest, strippedSubjectInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, strippedSubjectInNewsgroupNoArticleIsEmpty)
 {
+    g_art = 0;
     char pattern[]{"%s"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("The best red nose", buffer());
+    ASSERT_TRUE(bufferIsEmpty());
 }
 
-TEST_F(InterpolatorNewsgroupTest, subjectInNewsgroup)
+TEST_F(InterpolatorNewsgroupTest, strippedSubjectInNewsgroup)
 {
+    g_artp = article_ptr(g_art);
+    char pattern[]{"%s"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, buffer());
+}
+
+TEST(ReStripTest, noRePresent)
+{
+    char buffer[]{TRN_TEST_HEADER_STRIPPED_SUBJECT};
+    char *interesting{};
+
+    const bool hasRe = subject_has_Re(buffer, &interesting);
+
+    ASSERT_FALSE(hasRe);
+    ASSERT_EQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, std::string{interesting});
+}
+
+TEST(ReStripTest, stripAllRe)
+{
+    char buffer[]{"Re: Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
+    char *interesting{};
+
+    const bool hasRe = subject_has_Re(buffer, &interesting);
+
+    ASSERT_TRUE(hasRe);
+    ASSERT_EQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, std::string{interesting});
+}
+
+TEST(ReStripTest, stripRe3)
+{
+    char buffer[]{"Re^3: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
+    char *interesting{};
+
+    const bool hasRe = subject_has_Re(buffer, &interesting);
+
+    ASSERT_TRUE(hasRe);
+    ASSERT_EQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, std::string{interesting});
+}
+
+TEST(ReStripTest, stripOneRe)
+{
+    char buffer[]{"Re: Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
+    char *interesting{};
+
+    const bool hasRe = strip_one_Re(buffer, &interesting);
+
+    ASSERT_TRUE(hasRe);
+    ASSERT_EQ("Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT, std::string{interesting});
+}
+
+TEST_F(InterpolatorNewsgroupTest, oneReStrippedSubjectInNewsgroup)
+{
+    g_artp = article_ptr(g_art);
     char pattern[]{"%S"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("Re: The best red nose", buffer());
+    ASSERT_EQ(TRN_TEST_HEADER_ONE_RE_SUBJECT, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, toFromReplyToInNewsgroup)
@@ -1542,17 +1613,18 @@ TEST_F(InterpolatorNewsgroupTest, toFromReplyToInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("Cyrus Longworth <clongworth@example.org>", buffer());
+    ASSERT_EQ(TRN_TEST_HEADER_REPLY_TO_ADDRESS, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, toFromFromInNewsgroup)
 {
+    g_art = TRN_TEST_ARTICLE_NO_FALLBACKS_NUM;
     char pattern[]{"%t"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("Bozo the Clown <bozo@example.org>", buffer());
+    ASSERT_EQ(TRN_TEST_HEADER_FROM_ADDRESS, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, toFromPathInNewsgroup)
@@ -1562,7 +1634,7 @@ TEST_F(InterpolatorNewsgroupTest, toFromPathInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("Bozo the Clown <bozo@example.org>", buffer());
+    ASSERT_EQ(TRN_TEST_HEADER_PATH, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, numUnreadArticlesInNewsgroup)
@@ -1572,7 +1644,7 @@ TEST_F(InterpolatorNewsgroupTest, numUnreadArticlesInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("3", buffer());
+    ASSERT_EQ(std::to_string(TRN_TEST_NEWSGROUP_HIGH - TRN_TEST_NEWSGROUP_LOW + 1), buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, numUnreadArticlesExceptCurrentInNewsgroup)
@@ -1582,7 +1654,7 @@ TEST_F(InterpolatorNewsgroupTest, numUnreadArticlesExceptCurrentInNewsgroup)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("2", buffer());
+    ASSERT_EQ(std::to_string(TRN_TEST_NEWSGROUP_HIGH - TRN_TEST_NEWSGROUP_LOW), buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, numUnselectedArticlesExceptCurrentInNewsgroupEmpty)
@@ -1592,7 +1664,7 @@ TEST_F(InterpolatorNewsgroupTest, numUnselectedArticlesExceptCurrentInNewsgroupE
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ("2", buffer());
+    ASSERT_EQ(std::to_string(TRN_TEST_NEWSGROUP_HIGH - TRN_TEST_NEWSGROUP_LOW), buffer());
 }
 
 // TODO: Why is this the SPOOL dir and under what circumstances is it different?
@@ -1618,12 +1690,14 @@ TEST_F(InterpolatorNewsgroupTest, shortenedFromInNewsgroup)
 
 TEST_F(InterpolatorNewsgroupTest, articleSizeInNewsgroup)
 {
+    std::ostringstream str;
+    str << std::setw(5) << TRN_TEST_ARTICLE_SIZE;
     char pattern[]{"%z"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(std::to_string(TRN_TEST_ARTICLE_SIZE), buffer());
+    ASSERT_EQ(str.str(), buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, numSelectedThreadsInNewsgroupEmpty)

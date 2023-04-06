@@ -506,7 +506,41 @@ char *compress_date(const ARTICLE *ap, int size)
     return t;
 }
 
-#define EQ(x,y) ((isupper(x) ? tolower(x) : (x)) == (y))
+inline bool eq_ignore_case(char unknown, char lower)
+{
+    return tolower(unknown) == lower;
+}
+
+bool strip_one_Re(char *str, char **strp)
+{
+    bool has_Re = false;
+    while (*str && at_grey_space(str))
+        str++;
+    if (eq_ignore_case(str[0], 'r') && eq_ignore_case(str[1], 'e')) /* check for Re: */
+    { 
+        char *cp = str + 2;
+        if (*cp == '^') /* allow Re^2: */
+        {
+            do
+            {
+                ++cp;
+            } while (*cp <= '9' && *cp >= '0');
+        }
+        if (*cp == ':')
+        {
+            do
+            {
+                ++cp;
+            } while (*cp && at_grey_space(cp));
+            str = cp;
+            has_Re = true;
+        }
+    }
+    if (strp)
+        *strp = str;
+
+    return has_Re;
+}
 
 /* Parse the subject to look for any "Re[:^]"s at the start.
 ** Returns true if a Re was found.  If strp is non-nullptr, it
@@ -515,20 +549,8 @@ char *compress_date(const ARTICLE *ap, int size)
 bool subject_has_Re(char *str, char **strp)
 {
     bool has_Re = false;
-
-    while (*str && at_grey_space(str)) str++;
-    while (EQ(str[0], 'r') && EQ(str[1], 'e')) {	/* check for Re: */
-      char* cp = str + 2;
-	if (*cp == '^') {				/* allow Re^2: */
-	    while (*++cp <= '9' && *cp >= '0')
-		;
-	}
-	if (*cp != ':')
-	    break;
-	while (*++cp && at_grey_space(cp)) ;
-	str = cp;
+    while (strip_one_Re(str, &str))
 	has_Re = true;
-    }
     if (strp)
 	*strp = str;
     return has_Re;
@@ -555,12 +577,12 @@ const char *compress_subj(const ARTICLE *ap, int max)
     */
     for (cp = g_buf; (cp = strchr(cp+1, '(')) != nullptr;) {
 	while (*++cp == ' ') ;
-	if (EQ(cp[0], 'w') && EQ(cp[1], 'a') && EQ(cp[2], 's')
+	if (eq_ignore_case(cp[0], 'w') && eq_ignore_case(cp[1], 'a') && eq_ignore_case(cp[2], 's')
 	 && (cp[3] == ':' || cp[3] == ' ')) {
 	    *--cp = '\0';
 	    break;
 	}
-	if (EQ(cp[0], 'r') && EQ(cp[1], 'e')
+	if (eq_ignore_case(cp[0], 'r') && eq_ignore_case(cp[1], 'e')
 	 && ((cp[2]==':' && cp[3]==' ') || (cp[2]=='^' && cp[4]==':'))) {
 	    *--cp = '\0';
 	    break;

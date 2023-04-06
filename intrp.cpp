@@ -774,7 +774,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         subj_buf = fetchsubj(g_art, true);
                         str = subj_buf;
                     }
-		    subject_has_Re(str,&str);
+		    if (*pattern == 's')
+                        subject_has_Re(str, &str);
 		    char *h;
                     if (*pattern == 's' && (h = in_string(str, "- (nf", true)) != nullptr)
 			*h = '\0';
@@ -840,9 +841,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
 		}
 		case 'v': {
                     if (g_in_ng) {
-                        int selected = g_curr_artp && (g_curr_artp->flags & AF_SEL);
-                        int unseen = (g_art <= g_lastart) && !was_read(g_art);
-                        sprintf(scrbuf, "%ld", (long)g_ngptr->toread - g_selected_count - (!selected && unseen));
+                        const bool selected = g_curr_artp && g_curr_artp->flags & AF_SEL;
+                        const bool unseen = g_art <= g_lastart && !was_read(g_art);
+                        sprintf(scrbuf, "%ld",
+                                g_ngptr->toread - g_selected_count - (!selected && unseen ? 1 : 0));
                         s = scrbuf;
 		    }
 		    else

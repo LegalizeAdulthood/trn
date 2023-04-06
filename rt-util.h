@@ -27,6 +27,7 @@ char *compress_name(char *name, int max);
 char *compress_address(char *name, int max);
 char *compress_from(const char *from, int size);
 char *compress_date(const ARTICLE *ap, int size);
+bool strip_one_Re(char *str, char **strp);
 bool subject_has_Re(char *str, char **strp);
 const char *compress_subj(const ARTICLE *ap, int max);
 void setspin(spin_mode mode);
