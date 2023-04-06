@@ -23,7 +23,7 @@ add_library(util
     env.cpp env.h env-internal.h
     util2.cpp util2.h
     wildmat.cpp wildmat.h
-    config.h.in
+    cmake/config.h.in
     cmake/Configure.cmake
 )
 source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")
