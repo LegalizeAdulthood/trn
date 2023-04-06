@@ -1,12 +1,16 @@
+#include <string>
+
 #include <gtest/gtest.h>
 
 #include <parsedate.h>
 
-TEST(ParseDateTest, failed)
+TEST(ParseDateTest, oldStyleDate)
 {
-    char date[]{"Wed Dec 3 12:00:00 1980"};
-
-    time_t time = parsedate(date);
+    const time_t time = parsedate("Wed Dec 3 12:23:34 1980");
 
     ASSERT_NE(-1, time);
+    tm *utc_time = gmtime(&time);
+    char buffer[80];
+    asctime_s(buffer, sizeof(buffer), utc_time);
+    ASSERT_EQ("Wed Dec  3 12:23:34 1980\n", std::string{buffer});
 }

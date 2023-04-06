@@ -5,6 +5,6 @@
 
 #include <time.h>
 
-extern "C" time_t parsedate(char *text);
+extern "C" time_t parsedate(const char *text);
 
 #endif

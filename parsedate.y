@@ -301,6 +301,7 @@ udtime	: tUNUMBER ':' tUNUMBER ':' tUNUMBER {
 	    yySeconds = $5;
 	    yyMeridian = MER24;
 	    yyDSTmode = DSToff;
+	    yyTimezone = 0;
 	}
 %%
 
