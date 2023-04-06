@@ -51,7 +51,9 @@ set_property(TARGET tool PROPERTY FOLDER Libraries)
 bison_target(parsedate parsedate.y ${CMAKE_CURRENT_BINARY_DIR}/parsedate.c)
 add_library(parsedate
     ${BISON_parsedate_OUTPUTS} parsedate.h
+    parsedate.y
 )
+source_group("Yacc Files" REGULAR_EXPRESSION "^.*\\.y")
 set_target_properties(parsedate PROPERTIES FOLDER Libraries)
 
 add_library(libtrn
