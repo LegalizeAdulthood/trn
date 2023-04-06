@@ -125,8 +125,6 @@ void InterpolatorTest::SetUp()
     thread_init();
     util_init();
     xmouse_init(argv[0]);
-    //g_datasrc = datasrc_first();
-    //perform_status_init(0);
 }
 
 void InterpolatorTest::TearDown()
@@ -1352,6 +1350,26 @@ TEST_F(InterpolatorTest, hexEscapeOutOfRangeDigits)
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ("\x4G", buffer());
+}
+
+TEST_F(InterpolatorTest, caretEscapeUpperCase)
+{
+    char pattern[]{"^G"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("\a", buffer());
+}
+
+TEST_F(InterpolatorTest, caretEscapeLowerCase)
+{
+    char pattern[]{"^g"};
+
+    const char *new_pattern = interpolate(pattern);
+
+    ASSERT_EQ('\0', *new_pattern);
+    ASSERT_EQ("\a", buffer());
 }
 
 namespace {
