@@ -75,7 +75,7 @@ typedef enum _MERIDIAN {
 **  union, but this is more efficient.  (This routine predates the
 **  yacc %union construct.)
 */
-static char	*yyInput;
+static const char *yyInput;
 static DSTMODE	yyDSTmode;
 static int	yyHaveDate;
 static int	yyHaveRel;
@@ -133,6 +133,10 @@ item	: time {
 	}
 	| rel {
 	    yyHaveRel = 1;
+	}
+	| unixdatestamp {
+	    yyHaveTime++;
+	    yyHaveDate++;
 	}
 	;
 
@@ -283,6 +287,21 @@ o_merid	: /* NULL */ {
 	}
 	;
 
+	/* Sat Apr 24 10:49:30 1982 */
+unixdatestamp: tDAY tMONTH tUNUMBER udtime tUNUMBER {
+	    yyDay = $3;
+	    yyMonth = $2;
+	    yyYear = $5;
+	}
+	;
+
+udtime	: tUNUMBER ':' tUNUMBER ':' tUNUMBER {
+	    yyHour = $1;
+	    yyMinutes = $3;
+	    yySeconds = $5;
+	    yyMeridian = MER24;
+	    yyDSTmode = DSToff;
+	}
 %%
 
 /* Month and day table. */
@@ -722,8 +741,7 @@ date_lex()
 
 
 time_t
-parsedate(p)
-    char		*p;
+parsedate(const char *p)
 {
     extern int		date_parse();
     time_t		Start;
@@ -799,7 +817,7 @@ main(ac, av)
 	    continue;
 	}
 #endif /* YYDEBUG */
-	d = parsedate(buff, (TIMEINFO *)NULL);
+	d = parsedate(buff);
 	if (d == -1)
 	    (void)printf("Bad format - couldn't convert.\n");
 	else

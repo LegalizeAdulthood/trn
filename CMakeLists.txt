@@ -54,6 +54,7 @@ add_library(parsedate
     parsedate.y
 )
 source_group("Yacc Files" REGULAR_EXPRESSION "^.*\\.y")
+target_include_directories(parsedate PUBLIC .)
 set_target_properties(parsedate PROPERTIES FOLDER Libraries)
 
 add_library(libtrn
