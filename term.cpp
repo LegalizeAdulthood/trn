@@ -86,9 +86,9 @@ bool g_tc_AM{};  /* does terminal have automatic margins? */
 bool g_tc_XN{};  /* does it eat 1st newline after automatic wrap? */
 char g_tc_PC{};  /* pad character for use by tputs() */
 #ifdef _POSIX_SOURCE
-speed_t g_outspeed{}; /* terminal output speed, */
+static speed_t s_outspeed{}; /* terminal output speed, */
 #else
-long g_outspeed{}; /* 	for use by tputs() */
+static long s_outspeed{}; /* 	for use by tputs() */
 #endif
 int g_fire_is_out{1};
 int g_tc_LINES{};
@@ -168,7 +168,7 @@ void term_init()
     savetty();				/* remember current tty state */
 
 #ifdef I_TERMIO
-    g_outspeed = g_tty.c_cflag & CBAUD;	/* for tputs() */
+    s_outspeed = g_tty.c_cflag & CBAUD;	/* for tputs() */
     g_erase_char = g_tty.c_cc[VERASE];	/* for finish_command() */
     g_kill_char = g_tty.c_cc[VKILL];		/* for finish_command() */
     if (g_tc_GT = ((g_tty.c_oflag & TABDLY) != TAB3))
@@ -177,7 +177,7 @@ void term_init()
 	g_tty.c_oflag &= ~TAB3;	/* turn off kernel tabbing -- done in rn */
 #else /* !I_TERMIO */
 # ifdef I_TERMIOS
-    g_outspeed = cfgetospeed(&g_tty);	/* for tputs() (output) */
+    s_outspeed = cfgetospeed(&g_tty);	/* for tputs() (output) */
     g_erase_char = g_tty.c_cc[VERASE];	/* for finish_command() */
     g_kill_char = g_tty.c_cc[VKILL];		/* for finish_command() */
 #if 0
@@ -185,7 +185,7 @@ void term_init()
 #endif
 # else /* !I_TERMIOS */
 #  ifdef I_SGTTY
-    g_outspeed = g_tty.sg_ospeed;		/* for tputs() */
+    s_outspeed = g_tty.sg_ospeed;		/* for tputs() */
     g_erase_char = g_tty.sg_erase;		/* for finish_command() */
     g_kill_char = g_tty.sg_kill;		/* for finish_command() */
     if (g_tc_GT = ((g_tty.sg_flags & XTABS) != XTABS))
@@ -194,7 +194,7 @@ void term_init()
 	g_tty.sg_flags &= ~XTABS;
 #  else /* !I_SGTTY */
 #   ifdef MSDOS
-    g_outspeed = B19200;
+    s_outspeed = B19200;
     g_erase_char = '\b';
     g_kill_char = Ctl('u');
     g_tc_GT = 1;
@@ -208,7 +208,7 @@ void term_init()
     /* The following could be a table but I can't be sure that there isn't */
     /* some degree of sparsity out there in the world. */
 
-    switch (g_outspeed) {			/* 1 second of padding */
+    switch (s_outspeed) {			/* 1 second of padding */
 #ifdef BEXTA
         case BEXTA:  g_just_a_sec = 1920; break;
 #else
@@ -1780,9 +1780,9 @@ static void line_col_calcs()
     if (g_tc_LINES > 0) {		/* is this a crt? */
 	if (!g_initlines || !g_option_def_vals[OI_INITIAL_ARTICLE_LINES]) {
 	    /* no -i or unreasonable value for g_initlines */
-	    if (g_outspeed >= B9600) 	/* whole page at >= 9600 baud */
+	    if (s_outspeed >= B9600) 	/* whole page at >= 9600 baud */
 		g_initlines = g_tc_LINES;
-	    else if (g_outspeed >= B4800)	/* 16 lines at 4800 */
+	    else if (s_outspeed >= B4800)	/* 16 lines at 4800 */
 		g_initlines = 16;
 	    else			/* otherwise just header */
 		g_initlines = 8;

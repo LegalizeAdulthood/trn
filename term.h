@@ -59,11 +59,6 @@ extern int   g_tc_UG; /* blanks left by US and UE */
 extern bool  g_tc_AM; /* does terminal have automatic margins? */
 extern bool  g_tc_XN; /* does it eat 1st newline after automatic wrap? */
 extern char  g_tc_PC; /* pad character for use by tputs() */
-#ifdef _POSIX_SOURCE
-extern speed_t g_outspeed; /* terminal output speed, */
-#else
-extern long g_outspeed; /*  for use by tputs() */
-#endif
 extern int   g_fire_is_out;
 extern int   g_tc_LINES;
 extern int   g_tc_COLS;
