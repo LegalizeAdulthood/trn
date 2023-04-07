@@ -70,7 +70,7 @@ char *g_tc_CE{}; /* clear to end of line */
 char *g_tc_TI{}; /* initialize terminal */
 char *g_tc_TE{}; /* reset terminal */
 char *g_tc_KS{}; /* enter `keypad transmit' mode */
-char *g_tc_KE{}; /* exit `keypad transmit' mode */
+static char *s_tc_KE{}; /* exit `keypad transmit' mode */
 char *g_tc_CM{}; /* cursor motion */
 char *g_tc_HO{}; /* home cursor */
 char *g_tc_IL{}; /* insert line */
@@ -283,7 +283,7 @@ void term_set(char *tcbuf)
     g_tc_TI = "";
     g_tc_TE = "";
     g_tc_KS = "";
-    g_tc_KE = "";
+    s_tc_KE = "";
     g_tc_CM = "\033[%d;%dH";
     g_tc_HO = "\033[H";
     g_tc_IL = ""; /*$$*/
@@ -319,7 +319,7 @@ void term_set(char *tcbuf)
     g_tc_TI = Tgetstr("ti");		/* initialize display */
     g_tc_TE = Tgetstr("te");		/* reset display */
     g_tc_KS = Tgetstr("ks");		/* enter `keypad transmit' mode */
-    g_tc_KE = Tgetstr("ke");		/* exit `keypad transmit' mode */
+    s_tc_KE = Tgetstr("ke");		/* exit `keypad transmit' mode */
     g_tc_HO = Tgetstr("ho");		/* home cursor */
     g_tc_IL = Tgetstr("al");		/* insert (add) line */
     g_tc_CM = Tgetstr("cm");		/* cursor motion */
@@ -1864,8 +1864,8 @@ void termlib_reset()
     }
 #endif
 #ifdef USEKSKE
-    if (g_tc_KE && *g_tc_KE) {
-	tputs(g_tc_KE,1,putchr);
+    if (s_tc_KE && *s_tc_KE) {
+	tputs(s_tc_KE,1,putchr);
 	fflush(stdout);
     }
 #endif
