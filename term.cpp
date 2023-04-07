@@ -99,11 +99,11 @@ int g_term_scrolled;           /* how many lines scrolled away */
 int g_just_a_sec{960};         /* 1 sec at current baud rate (number of nulls) */
 int g_page_line{1};            /* line number for paging in print_line (origin 1) */
 bool g_error_occurred{};
-char *g_mousebar_btns;
 int g_mousebar_cnt{};
 int g_mousebar_width{};
 bool g_mouse_is_down{};
 
+static char *s_mousebar_btns{};
 static int s_mousebar_start{};
 static bool s_xmouse_is_on{};
 #endif
@@ -1906,39 +1906,39 @@ void xmouse_check()
 	if (turn_it_on) {
             switch (mmode) {
 	      case MM_NEWSRC_SELECTOR:
-		g_mousebar_btns = g_newsrc_sel_btns;
+		s_mousebar_btns = g_newsrc_sel_btns;
 		g_mousebar_cnt = g_newsrc_sel_btn_cnt;
 		break;
 	      case MM_ADD_GROUP_SELECTOR:
-		g_mousebar_btns = g_add_sel_btns;
+		s_mousebar_btns = g_add_sel_btns;
 		g_mousebar_cnt = g_add_sel_btn_cnt;
 		break;
 	      case MM_OPTION_SELECTOR:
-		g_mousebar_btns = g_option_sel_btns;
+		s_mousebar_btns = g_option_sel_btns;
 		g_mousebar_cnt = g_option_sel_btn_cnt;
 		break;
 	      case MM_THREAD_SELECTOR:
-		g_mousebar_btns = g_news_sel_btns;
+		s_mousebar_btns = g_news_sel_btns;
 		g_mousebar_cnt = g_news_sel_btn_cnt;
 		break;
 	      case MM_NEWSGROUP_SELECTOR:
-		g_mousebar_btns = g_newsgroup_sel_btns;
+		s_mousebar_btns = g_newsgroup_sel_btns;
 		g_mousebar_cnt = g_newsgroup_sel_btn_cnt;
 		break;
 	      case MM_ARTICLE:  case MM_PAGER:
-		g_mousebar_btns = g_art_pager_btns;
+		s_mousebar_btns = g_art_pager_btns;
 		g_mousebar_cnt = g_art_pager_btn_cnt;
 		break;
 	      case MM_UNIVERSAL:
-		g_mousebar_btns = g_univ_sel_btns;
+		s_mousebar_btns = g_univ_sel_btns;
 		g_mousebar_cnt = g_univ_sel_btn_cnt;
 		break;
 	      default:
-		g_mousebar_btns = "";
+		s_mousebar_btns = "";
 		/*g_mousebar_cnt = 0;*/
 		break;
 	    }
-	    char *s = g_mousebar_btns;
+	    char *s = s_mousebar_btns;
 	    g_mousebar_width = 0;
 	    for (int i = 0; i < g_mousebar_cnt; i++) {
 		int j = strlen(s);
@@ -1990,7 +1990,7 @@ void draw_mousebar(int limit, bool restore_cursor)
     if (g_mousebar_cnt == 0)
 	return;
 
-    char *s = g_mousebar_btns;
+    char *s = s_mousebar_btns;
     char *t = g_msg;
     for (i = 0; i < g_mousebar_cnt; i++) {
 	if (*s == '[') {
@@ -2082,7 +2082,7 @@ static void mouse_input(const char *cp)
 
 bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 {
-    char*s = g_mousebar_btns;
+    char*s = s_mousebar_btns;
     int  i, j;
     int  col = g_tc_COLS - g_mousebar_width;
 

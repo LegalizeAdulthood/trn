@@ -73,7 +73,6 @@ extern int   g_term_scrolled; /* how many lines scrolled away */
 extern int   g_just_a_sec;    /* 1 sec at current baud rate (number of nulls) */
 extern int   g_page_line;     /* line number for paging in print_line (origin 1) */
 extern bool  g_error_occurred;
-extern char *g_mousebar_btns;
 extern int   g_mousebar_cnt;
 extern int   g_mousebar_width;
 extern bool  g_mouse_is_down;
