@@ -41,7 +41,6 @@ bool g_univ_read_virtflag{}; /* if true, we are reading an article from a "virtu
 bool g_univ_default_cmd{};   /* "follow"-related stuff (virtual groups) */
 bool g_univ_follow{true};
 bool g_univ_follow_temp{};
-bool g_univ_usrtop{}; /* if true, the user has loaded their own top univ. config file */
 
 /* items which must be saved in context */
 UNIV_ITEM *g_first_univ{};
@@ -65,6 +64,7 @@ static bool s_univ_begin_found{};
 static char *s_univ_begin_label{}; /* label to start working with */
 static char *s_univ_line_desc{};   /* if non-nullptr, the description (printing name) of the entry */
 static UNIV_ITEM *s_current_vg_ui{};
+static bool s_univ_usrtop{}; /* if true, the user has loaded their own top univ. config file */
 
 static void univ_free_data(UNIV_ITEM *ui);
 static bool univ_DoMatch(const char *text, const char *p);
@@ -103,10 +103,10 @@ void univ_startup()
 	    univ_mask_load(savestr("*"),"All Newsgroups");
 	}
 	if (user_top_load) {
-	    g_univ_usrtop = true;
+	    s_univ_usrtop = true;
 	}
     } else {
-	g_univ_usrtop = true;
+	s_univ_usrtop = true;
     }
     s_univ_done_startup = true;
 }
@@ -845,7 +845,7 @@ static char *univ_edit_new_userfile()
     printf("New User Toplevel file created.\n") FLUSH;
     printf("After editing this file, exit and restart trn to use it.\n") FLUSH;
     (void)get_anything();
-    g_univ_usrtop = true;		/* do not overwrite this file */
+    s_univ_usrtop = true;		/* do not overwrite this file */
     return s;
 }
 
@@ -855,7 +855,7 @@ void univ_edit()
 {
     const char* s;
 
-    if (g_univ_usrtop || !(s_univ_done_startup)) {
+    if (s_univ_usrtop || !(s_univ_done_startup)) {
 	if (!g_univ_tmp_file.empty()) {
 	    s = g_univ_tmp_file.c_str();
 	} else {

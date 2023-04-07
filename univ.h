@@ -125,7 +125,6 @@ extern bool g_univ_read_virtflag; /* if true, we are reading an article from a "
 extern bool g_univ_default_cmd;   /* "follow"-related stuff (virtual groups) */
 extern bool g_univ_follow;
 extern bool g_univ_follow_temp;
-extern bool g_univ_usrtop; /* if true, the user has loaded their own top univ. config file */
 
 /* items which must be saved in context */
 extern UNIV_ITEM *g_first_univ;
