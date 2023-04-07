@@ -21,7 +21,6 @@ extern bool g_sc_scoring;       /* are we currently scoring an article (prevents
 extern bool g_score_newfirst;   /* changes order of sorting (artnum comparison) when scores are equal */
 extern bool g_sc_savescores;    /* If true, save the scores for this group on exit. */
 extern bool g_sc_delay;         /* If true, delay initialization of scoring until explicitly required */
-extern bool g_sc_sf_force_init; /* If true, always sf_init() */
 
 void sc_init(bool pend_wait);
 void sc_cleanup();

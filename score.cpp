@@ -31,11 +31,11 @@ bool g_sc_scoring{};         /* are we currently scoring an article (prevents lo
 bool g_score_newfirst{};     /* changes order of sorting (artnum comparison) when scores are equal */
 bool g_sc_savescores{};      /* If true, save the scores for this group on exit. */
 bool g_sc_delay{};           /* If true, delay initialization of scoring until explicitly required */
-bool g_sc_sf_force_init{};   /* If true, always sf_init() */
 
-static bool s_sc_sf_delay{};  /* if true, delay loading rule files */
-static bool s_sc_do_spin{};   /* actually do the score spinner */
-static bool s_sc_rescoring{}; /* are we rescoring now? */
+static bool s_sc_sf_force_init{}; /* If true, always sf_init() */
+static bool s_sc_sf_delay{};      /* if true, delay loading rule files */
+static bool s_sc_do_spin{};       /* actually do the score spinner */
+static bool s_sc_rescoring{};     /* are we rescoring now? */
 
 //bool pend_wait;	/* if true, enter pending mode when scoring... */
 void sc_init(bool pend_wait)
@@ -49,7 +49,7 @@ void sc_init(bool pend_wait)
 #endif
 	return;
     }
-    g_sc_sf_force_init = true;		/* generally force initialization */
+    s_sc_sf_force_init = true;		/* generally force initialization */
     if (g_sc_delay)			/* requested delay? */
 	return;
     s_sc_sf_delay = false;
@@ -83,7 +83,7 @@ void sc_init(bool pend_wait)
 	i = g_firstart;
 	if (g_sc_fill_read)
 	    i = g_absfirst;
-	if (g_sc_sf_force_init)
+	if (s_sc_sf_force_init)
 	    i = g_lastart+1;	/* skip loop */
 	for (i = article_first(i); i <= g_lastart; i = article_next(i)) {
 	    if (!article_scored(i) && (g_sc_fill_read || article_unread(i)))
@@ -92,7 +92,7 @@ void sc_init(bool pend_wait)
 	if (i == g_lastart)	/* all scored */
 	    s_sc_sf_delay = true;
     }
-    if (g_sc_sf_force_init)
+    if (s_sc_sf_force_init)
 	s_sc_sf_delay = false;
 
     if (!s_sc_sf_delay)
@@ -213,9 +213,9 @@ int sc_score_art(ART_NUM a, bool now)
 
     if (g_sc_initialized == false) {
 	g_sc_delay = false;
-	g_sc_sf_force_init = true;
+	s_sc_sf_force_init = true;
 	sc_init(false);
-	g_sc_sf_force_init = false;
+	s_sc_sf_force_init = false;
     }
 
     if (!article_scored(a)) {
@@ -328,9 +328,9 @@ void sc_rescore_arts()
     if (!g_sc_initialized) {
 	if (g_sc_delay) {
 	    g_sc_delay = false;
-	    g_sc_sf_force_init = true;
+	    s_sc_sf_force_init = true;
 	    sc_init(true);
-	    g_sc_sf_force_init = false;
+	    s_sc_sf_force_init = false;
 	}
     } else if (s_sc_sf_delay) {
 	sf_init();
@@ -367,9 +367,9 @@ void sc_append(char *line)
     if (!g_sc_initialized) {
 	if (g_sc_delay) {
 	    g_sc_delay = false;
-	    g_sc_sf_force_init = true;
+	    s_sc_sf_force_init = true;
 	    sc_init(true);
-	    g_sc_sf_force_init = false;
+	    s_sc_sf_force_init = false;
 	}
     } else if (s_sc_sf_delay) {
 	sf_init();
@@ -417,9 +417,9 @@ void sc_score_cmd(const char *line)
     if (!g_sc_initialized) {
 	if (g_sc_delay) {
 	    g_sc_delay = false;
-	    g_sc_sf_force_init = true;
+	    s_sc_sf_force_init = true;
 	    sc_init(true);
-	    g_sc_sf_force_init = false;
+	    s_sc_sf_force_init = false;
 	}
     } else if (s_sc_sf_delay) {
 	sf_init();
