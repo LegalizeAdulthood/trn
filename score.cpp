@@ -31,10 +31,10 @@ bool g_sc_scoring{};         /* are we currently scoring an article (prevents lo
 bool g_score_newfirst{};     /* changes order of sorting (artnum comparison) when scores are equal */
 bool g_sc_savescores{};      /* If true, save the scores for this group on exit. */
 bool g_sc_delay{};           /* If true, delay initialization of scoring until explicitly required */
-bool g_sc_do_spin{};         /* actually do the score spinner */
 bool g_sc_sf_delay{};        /* if true, delay loading rule files */
 bool g_sc_sf_force_init{};   /* If true, always sf_init() */
 
+static bool s_sc_do_spin{};         /* actually do the score spinner */
 static bool s_sc_rescoring{}; /* are we rescoring now? */
 
 //bool pend_wait;	/* if true, enter pending mode when scoring... */
@@ -98,7 +98,7 @@ void sc_init(bool pend_wait)
     if (!g_sc_sf_delay)
 	sf_init();	/* initialize the scorefile code */
 
-    g_sc_do_spin = false;
+    s_sc_do_spin = false;
     for (i = article_last(g_lastart); i >= g_absfirst; i = article_prev(i)) {
 	if (article_scored(i))
 	    break;
@@ -137,11 +137,11 @@ void sc_init(bool pend_wait)
 	}
 	if (waitflag) {
 	    setspin(SPIN_FOREGROUND);
-	    g_sc_do_spin = true;		/* really do it */
+	    s_sc_do_spin = true;		/* really do it */
 	}
 	sc_lookahead(true,waitflag);	/* jump in *now* */
 	if (waitflag) {
-	    g_sc_do_spin = false;
+	    s_sc_do_spin = false;
 	    setspin(SPIN_POP);
 	}
     }
@@ -193,7 +193,7 @@ void sc_score_art_basic(ART_NUM a)
     int score = 0;
     score += sf_score(a);	/* get a score */
 
-    if (g_sc_do_spin)		/* appropriate to spin */
+    if (s_sc_do_spin)		/* appropriate to spin */
 	spin(20);		/* keep the user amused */
     sc_set_score(a,score);	/* set the score */
 }
@@ -340,15 +340,15 @@ void sc_rescore_arts()
 	printf("\nScoring is not initialized, aborting command.\n") FLUSH;
 	return;
     }
-    /* I think g_sc_do_spin will always be false, but why take chances? */
-    bool old_spin = g_sc_do_spin;
+    /* I think s_sc_do_spin will always be false, but why take chances? */
+    bool old_spin = s_sc_do_spin;
     setspin(SPIN_FOREGROUND);
-    g_sc_do_spin = true;				/* amuse the user */
+    s_sc_do_spin = true;				/* amuse the user */
     for (ART_NUM a = article_first(g_absfirst); a <= g_lastart; a = article_next(a)) {
 	if (article_exists(a))
 	    sc_score_art_basic(a);		/* rescore it then */
     }
-    g_sc_do_spin = old_spin;
+    s_sc_do_spin = old_spin;
     setspin(SPIN_POP);
     if (g_sa_in) {
 	g_s_ref_all = true;
@@ -444,9 +444,9 @@ void sc_score_cmd(const char *line)
 	printf("Scoring more articles...");
 	fflush(stdout);	/* print it now */
 	setspin(SPIN_FOREGROUND);
-	g_sc_do_spin = true;
+	s_sc_do_spin = true;
 	sc_lookahead(true,false);
-	g_sc_do_spin = false;
+	s_sc_do_spin = false;
 	setspin(SPIN_POP);
 	/* consider a "done" message later,
 	 * *if* lookahead did all the arts */
