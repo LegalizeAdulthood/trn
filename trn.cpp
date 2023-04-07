@@ -74,7 +74,6 @@
 std::string g_ngname;           /* name of current newsgroup */
 std::string g_ngdir;            /* same thing in directory name form */
 bool        g_write_less{};     /* write .newsrc less often */
-bool        g_is_strn{};        /* Is this "strn", or trn/rn? */
 std::string g_patchlevel{PATCHLEVEL};
 
 static bool s_restore_old_newsrc{};
@@ -111,8 +110,6 @@ int trn_main(int argc, char *argv[])
     else
 	g_use_news_selector = -1;
 #endif
-    if (*s == 's')
-	g_is_strn = true;
     foundany = initialize(argc,argv);
 
     if (g_use_newsrc_selector) {
