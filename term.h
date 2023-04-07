@@ -58,7 +58,6 @@ extern char *g_tc_UC; /* underline a character, if that's how it's done */
 extern int   g_tc_UG; /* blanks left by US and UE */
 extern bool  g_tc_AM; /* does terminal have automatic margins? */
 extern bool  g_tc_XN; /* does it eat 1st newline after automatic wrap? */
-extern char  g_tc_PC; /* pad character for use by tputs() */
 extern int   g_fire_is_out;
 extern int   g_tc_LINES;
 extern int   g_tc_COLS;

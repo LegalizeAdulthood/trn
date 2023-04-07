@@ -84,7 +84,7 @@ char *g_tc_UC{}; /* underline a character, if that's how it's done */
 int g_tc_UG{};   /* blanks left by US and UE */
 bool g_tc_AM{};  /* does terminal have automatic margins? */
 bool g_tc_XN{};  /* does it eat 1st newline after automatic wrap? */
-char g_tc_PC{};  /* pad character for use by tputs() */
+static char s_tc_PC{};  /* pad character for use by tputs() */
 #ifdef _POSIX_SOURCE
 static speed_t s_outspeed{}; /* terminal output speed, */
 #else
@@ -303,7 +303,7 @@ void term_set(char *tcbuf)
     }
     tmpaddr = s_tcarea;			/* set up strange tgetstr pointer */
     s = Tgetstr("pc");			/* get pad character */
-    g_tc_PC = *s;				/* get it where tputs wants it */
+    s_tc_PC = *s;				/* get it where tputs wants it */
     if (!tgetflag("bs")) {		/* is backspace not used? */
 	g_tc_BC = Tgetstr("bc");		/* find out what is */
 	if (g_tc_BC == "") {		/* terminfo grok's 'bs' but not 'bc' */
@@ -1626,7 +1626,7 @@ void warnmsg(const char *str)
 void pad(int num)
 {
     for (int i = num; i; i--)
-	putchar(g_tc_PC);
+	putchar(s_tc_PC);
     fflush(stdout);
 }
 
