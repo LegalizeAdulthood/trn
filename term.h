@@ -34,7 +34,7 @@ extern bool          g_bizarre; /* do we need to restore terminal? */
  *    and the tputs routine, or you'll have to redefine the macros below
  */
 #ifdef HAS_TERMLIB
-extern int   g_tc_GT; /* hardware tabs */
+extern bool  g_tc_GT; /* hardware tabs */
 extern char *g_tc_BC; /* backspace character */
 extern char *g_tc_UP; /* move cursor up one line */
 extern char *g_tc_CR; /* get to left margin, somehow */

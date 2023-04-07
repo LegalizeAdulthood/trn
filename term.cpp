@@ -60,7 +60,7 @@ unsigned char g_lastchar{};
 bool g_bizarre{}; /* do we need to restore terminal? */
 
 #ifdef HAS_TERMLIB
-int g_tc_GT{};   /* hardware tabs */
+bool g_tc_GT{};   /* hardware tabs */
 char *g_tc_BC{}; /* backspace character */
 char *g_tc_UP{}; /* move cursor up one line */
 char *g_tc_CR{}; /* get to left margin, somehow */
@@ -197,7 +197,7 @@ void term_init()
     s_outspeed = B19200;
     g_erase_char = '\b';
     g_kill_char = Ctl('u');
-    g_tc_GT = 1;
+    g_tc_GT = true;
 #   else
     ..."Don't know how to initialize the terminal!"
 #   endif /* !MSDOS */
