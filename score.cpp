@@ -31,10 +31,11 @@ bool g_sc_scoring{};         /* are we currently scoring an article (prevents lo
 bool g_score_newfirst{};     /* changes order of sorting (artnum comparison) when scores are equal */
 bool g_sc_savescores{};      /* If true, save the scores for this group on exit. */
 bool g_sc_delay{};           /* If true, delay initialization of scoring until explicitly required */
-bool g_sc_rescoring{};       /* are we rescoring now? */
 bool g_sc_do_spin{};         /* actually do the score spinner */
 bool g_sc_sf_delay{};        /* if true, delay loading rule files */
 bool g_sc_sf_force_init{};   /* If true, always sf_init() */
+
+static bool s_sc_rescoring{}; /* are we rescoring now? */
 
 //bool pend_wait;	/* if true, enter pending mode when scoring... */
 void sc_init(bool pend_wait)
@@ -77,7 +78,7 @@ void sc_init(bool pend_wait)
 
     g_sc_initialized = true;	/* little white lie for lookahead */
     /* now is a good time to load a saved score-list which may exist */
-    if (!g_sc_rescoring) {	/* don't load if rescoring */
+    if (!s_sc_rescoring) {	/* don't load if rescoring */
 	sc_load_scores();	/* will be quiet if non-existent */
 	i = g_firstart;
 	if (g_sc_fill_read)
@@ -397,14 +398,14 @@ void sc_append(char *line)
 
 void sc_rescore()
 {
-    g_sc_rescoring = true; /* in case routines need to know */
+    s_sc_rescoring = true; /* in case routines need to know */
     sc_cleanup();        /* get rid of the old */
     sc_init(true);       /* enter the new... (wait for rescore) */
     if (g_sa_initialized) {
 	g_s_top_ent = -1;	/* reset top of page */
 	g_s_refill = true;	/* make sure a refill is done */
     }
-    g_sc_rescoring = false;
+    s_sc_rescoring = false;
 }
 
 /* May have a very different interface in the user versions */
