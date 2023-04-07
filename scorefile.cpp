@@ -25,7 +25,6 @@
 
 int g_sf_num_entries{};   /* # of entries */
 SF_ENTRY *g_sf_entries{}; /* array of entries */
-SF_FILE *g_sf_files{};
 int g_sf_score_verbose{};  /* when true, the scoring routine prints lots of info... */
 bool g_sf_verbose{true};   /* if true print more stuff while loading */
 
@@ -41,19 +40,20 @@ enum
     SF_REPLY = -5
 };
 
-static int     s_sf_num_files{};
-static char  **s_sf_abbr{};           /* abbreviations */
-static bool    s_newauthor_active{};  /* if true, s_newauthor is active */
-static int     s_newauthor{};         /* bonus score given to a new (unscored) author */
-static bool    s_sf_pattern_status{}; /* should we match by pattern? */
-static bool    s_reply_active{};      /* if true, s_reply_score is active */
-static int     s_reply_score{};       /* score amount added to an article reply */
-static int     s_sf_file_level{};     /* how deep are we? */
-static char    s_sf_buf[LBUFLEN]{};
-static char  **s_sf_extra_headers{};
-static int     s_sf_num_extra_headers{};
-static bool    s_sf_has_extra_headers{};
-static COMPEX *s_sf_compex{};
+static SF_FILE *s_sf_files{};
+static int      s_sf_num_files{};
+static char   **s_sf_abbr{};           /* abbreviations */
+static bool     s_newauthor_active{};  /* if true, s_newauthor is active */
+static int      s_newauthor{};         /* bonus score given to a new (unscored) author */
+static bool     s_sf_pattern_status{}; /* should we match by pattern? */
+static bool     s_reply_active{};      /* if true, s_reply_score is active */
+static int      s_reply_score{};       /* score amount added to an article reply */
+static int      s_sf_file_level{};     /* how deep are we? */
+static char     s_sf_buf[LBUFLEN]{};
+static char   **s_sf_extra_headers{};
+static int      s_sf_num_extra_headers{};
+static bool     s_sf_has_extra_headers{};
+static COMPEX  *s_sf_compex{};
 
 static int sf_open_file(const char *name);
 static void sf_file_clear();
@@ -1119,20 +1119,20 @@ static int sf_open_file(const char *name)
     if (!name || !*name)
 	return 0;	/* unable to open */
     for (i = 0; i < s_sf_num_files; i++)
-	if (!strcmp(g_sf_files[i].fname,name)) {
-	    if (g_sf_files[i].num_lines < 0)	/* nonexistent */
+	if (!strcmp(s_sf_files[i].fname,name)) {
+	    if (s_sf_files[i].num_lines < 0)	/* nonexistent */
 		return -1;	/* no such file */
-	    g_sf_files[i].line_on = 0;
+	    s_sf_files[i].line_on = 0;
 	    return i;
 	}
     s_sf_num_files++;
-    g_sf_files = (SF_FILE*)saferealloc((char*)g_sf_files,
+    s_sf_files = (SF_FILE*)saferealloc((char*)s_sf_files,
 	s_sf_num_files * sizeof (SF_FILE));
-    g_sf_files[i].fname = savestr(name);
-    g_sf_files[i].num_lines = 0;
-    g_sf_files[i].num_alloc = 0;
-    g_sf_files[i].line_on = 0;
-    g_sf_files[i].lines = nullptr;
+    s_sf_files[i].fname = savestr(name);
+    s_sf_files[i].num_lines = 0;
+    s_sf_files[i].num_alloc = 0;
+    s_sf_files[i].line_on = 0;
+    s_sf_files[i].lines = nullptr;
 
     char *temp_name = nullptr;
     if (!strncasecmp(name,"URL:",4)) {
@@ -1146,22 +1146,22 @@ static int sf_open_file(const char *name)
 	    name = temp_name;
     }
     if (!name) {
-	g_sf_files[i].num_lines = -1;
+	s_sf_files[i].num_lines = -1;
 	return -1;
     }
     FILE *fp = fopen(name, "r");
     if (!fp) {
-	g_sf_files[i].num_lines = -1;
+	s_sf_files[i].num_lines = -1;
 	return -1;
     }
     while ((s = fgets(s_sf_buf,LBUFLEN-4,fp)) != nullptr) {
-	if (g_sf_files[i].num_lines >= g_sf_files[i].num_alloc) {
-	    g_sf_files[i].num_alloc += 100;
-	    g_sf_files[i].lines = (char**)saferealloc((char*)g_sf_files[i].lines,
-		g_sf_files[i].num_alloc*sizeof(char**));
+	if (s_sf_files[i].num_lines >= s_sf_files[i].num_alloc) {
+	    s_sf_files[i].num_alloc += 100;
+	    s_sf_files[i].lines = (char**)saferealloc((char*)s_sf_files[i].lines,
+		s_sf_files[i].num_alloc*sizeof(char**));
 	}
 	/* CAA: I kind of like the next line in a twisted sort of way. */
-	g_sf_files[i].lines[g_sf_files[i].num_lines++] = mp_savestr(s,MP_SCORE2);
+	s_sf_files[i].lines[s_sf_files[i].num_lines++] = mp_savestr(s,MP_SCORE2);
     }
     fclose(fp);
     if (temp_name)
@@ -1172,17 +1172,17 @@ static int sf_open_file(const char *name)
 static void sf_file_clear()
 {
     for (int i = 0; i < s_sf_num_files; i++) {
-	if (g_sf_files[i].fname)
-	    free(g_sf_files[i].fname);
-	if (g_sf_files[i].num_lines > 0) {
+	if (s_sf_files[i].fname)
+	    free(s_sf_files[i].fname);
+	if (s_sf_files[i].num_lines > 0) {
 	    /* memory pool takes care of freeing line contents */
-	    free(g_sf_files[i].lines);
+	    free(s_sf_files[i].lines);
 	}
     }
     mp_free(MP_SCORE2);
-    if (g_sf_files)
-	free(g_sf_files);
-    g_sf_files = (SF_FILE*)nullptr;
+    if (s_sf_files)
+	free(s_sf_files);
+    s_sf_files = (SF_FILE*)nullptr;
     s_sf_num_files = 0;
 }
 
@@ -1190,8 +1190,8 @@ static char *sf_file_getline(int fnum)
 {
     if (fnum < 0 || fnum >= s_sf_num_files)
 	return nullptr;
-    if (g_sf_files[fnum].line_on >= g_sf_files[fnum].num_lines)
+    if (s_sf_files[fnum].line_on >= s_sf_files[fnum].num_lines)
 	return nullptr;		/* past end of file, or empty file */
     /* below: one of the more twisted lines of my career  (:-) */
-    return g_sf_files[fnum].lines[g_sf_files[fnum].line_on++];
+    return s_sf_files[fnum].lines[s_sf_files[fnum].line_on++];
 }

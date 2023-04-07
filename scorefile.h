@@ -37,7 +37,6 @@ struct SF_FILE
 
 extern int       g_sf_num_entries;    /* # of entries */
 extern SF_ENTRY *g_sf_entries;        /* array of entries */
-extern SF_FILE  *g_sf_files;          //
 extern int       g_sf_score_verbose;  /* when true, the scoring routine prints lots of info... */
 extern bool      g_sf_verbose;        /* if true print more stuff while loading */
 
