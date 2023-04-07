@@ -118,7 +118,6 @@ struct UNIV_ITEM
     UNIV_DATA      data; /* describes the object */
 };
 
-extern int g_univ_ever_init;      /* have we ever been initialized? */
 extern int g_univ_level;          /* How deep are we in the tree? */
 extern bool g_univ_ng_virtflag;   /* if true, we are in the "virtual group" second pass */
 extern bool g_univ_read_virtflag; /* if true, we are reading an article from a "virtual group" */

@@ -34,7 +34,6 @@
  * Lots more to do...
  */
 
-int g_univ_ever_init{};      /* have we ever been initialized? */
 int g_univ_level{};          /* How deep are we in the tree? */
 bool g_univ_ng_virtflag{};   /* if true, we are in the "virtual group" second pass */
 bool g_univ_read_virtflag{}; /* if true, we are reading an article from a "virtual group" */
@@ -81,7 +80,6 @@ static int univ_order_score(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2);
 void univ_init()
 {
     g_univ_level = 0;
-    g_univ_ever_init = 1;
 }
 
 void univ_startup()
