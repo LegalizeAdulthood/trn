@@ -35,19 +35,17 @@ struct SF_FILE
     char** lines;
 };
 
-extern int g_sf_num_entries;   /* # of entries */
-extern SF_ENTRY *g_sf_entries; /* array of entries */
-extern SF_FILE *g_sf_files;
-extern int g_sf_num_files;
-extern char **g_sf_abbr;        /* abbreviations */
-extern int g_sf_score_verbose;  /* when true, the scoring routine prints lots of info... */
-extern bool g_sf_verbose;       /* if true print more stuff while loading */
-extern bool g_cached_rescore;   /* if true, only header types that are cached are scored... */
-extern bool g_newauthor_active; /* if true, g_newauthor is active */
-extern int g_newauthor;         /* bonus score given to a new (unscored) author */
-extern bool g_reply_active;     /* if true, g_reply_score is active */
-extern int g_reply_score;       /* score amount added to an article reply */
-extern int g_sf_pattern_status; /* should we match by pattern? */
+extern int       g_sf_num_entries;    /* # of entries */
+extern SF_ENTRY *g_sf_entries;        /* array of entries */
+extern SF_FILE  *g_sf_files;          //
+extern int       g_sf_num_files;      //
+extern char    **g_sf_abbr;           /* abbreviations */
+extern int       g_sf_score_verbose;  /* when true, the scoring routine prints lots of info... */
+extern bool      g_sf_verbose;        /* if true print more stuff while loading */
+extern bool      g_cached_rescore;    /* if true, only header types that are cached are scored... */
+extern bool      g_newauthor_active;  /* if true, g_newauthor is active */
+extern int       g_newauthor;         /* bonus score given to a new (unscored) author */
+extern bool      g_sf_pattern_status; /* should we match by pattern? */
 
 void sf_init();
 void sf_clean();

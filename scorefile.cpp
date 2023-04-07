@@ -33,9 +33,7 @@ bool g_sf_verbose{true};   /* if true print more stuff while loading */
 bool g_cached_rescore{};   /* if true, only header types that are cached are scored... */
 bool g_newauthor_active{}; /* if true, g_newauthor is active */
 int g_newauthor{};         /* bonus score given to a new (unscored) author */
-bool g_reply_active{};     /* if true, g_reply_score is active */
-int g_reply_score{};       /* score amount added to an article reply */
-int g_sf_pattern_status{}; /* should we match by pattern? */
+bool g_sf_pattern_status{}; /* should we match by pattern? */
 
 /* list of score array markers (in g_htype field of score entry) */
 /* entry is a file marker.  Score is the file level */
@@ -49,11 +47,13 @@ enum
     SF_REPLY = -5
 };
 
-static int s_sf_file_level{}; /* how deep are we? */
-static char s_sf_buf[LBUFLEN]{};
-static char **s_sf_extra_headers{};
-static int s_sf_num_extra_headers{};
-static bool s_sf_has_extra_headers{};
+static bool    s_reply_active{};  /* if true, s_reply_score is active */
+static int     s_reply_score{};   /* score amount added to an article reply */
+static int     s_sf_file_level{}; /* how deep are we? */
+static char    s_sf_buf[LBUFLEN]{};
+static char  **s_sf_extra_headers{};
+static int     s_sf_num_extra_headers{};
+static bool    s_sf_has_extra_headers{};
 static COMPEX *s_sf_compex{};
 
 static int sf_open_file(const char *name);
@@ -97,7 +97,7 @@ void sf_init()
     /* do post-processing (set thresholds and detect extra header usage) */
     s_sf_has_extra_headers = false;
     /* set thresholds from the g_sf_entries */
-    g_reply_active = false;
+    s_reply_active = false;
     g_newauthor_active = false;
     g_kill_thresh_active = false;
     for (i = 0; i < g_sf_num_entries; i++) {
@@ -131,8 +131,8 @@ void sf_init()
 	    }
 	    break;
 	  case SF_REPLY:
-	    g_reply_active = true;
-	    g_reply_score = g_sf_entries[i].score;
+	    s_reply_active = true;
+	    s_reply_score = g_sf_entries[i].score;
 	    if (g_sf_verbose) {
 		int j;
 		/* rethink? */
@@ -140,7 +140,7 @@ void sf_init()
 		    if (g_sf_entries[j].head_type == SF_REPLY)
 			break;
 		if (j == g_sf_num_entries) /* no later reply rules */
-		    printf("Reply score: %d\n",g_reply_score) FLUSH;
+		    printf("Reply score: %d\n",s_reply_score) FLUSH;
 	    }
 	    break;
 	}
@@ -773,14 +773,14 @@ int sf_score(ART_NUM a)
 	    /* consider: print which file the bonus came from */
 	}
     }
-    if (g_reply_active) {
+    if (s_reply_active) {
 	/* should be in cache if a rule above used the subject */
 	s = fetchcache(a, SUBJ_LINE, true);
 	/* later: consider other possible reply forms (threading?) */
 	if (s && subject_has_Re(s,nullptr)) {
-	    sum = sum+g_reply_score;
+	    sum = sum+s_reply_score;
 	    if (g_sf_score_verbose) {
-		printf("Reply: %d\n",g_reply_score);
+		printf("Reply: %d\n",s_reply_score);
 		/* consider: print which file the bonus came from */
 	    }
 	}
