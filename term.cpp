@@ -103,8 +103,9 @@ char *g_mousebar_btns;
 int g_mousebar_cnt{};
 int g_mousebar_start{};
 int g_mousebar_width{};
-bool g_xmouse_is_on{};
 bool g_mouse_is_down{};
+
+static bool s_xmouse_is_on{};
 #endif
 
 struct KEYMAP
@@ -1126,7 +1127,7 @@ void getcmd(char *whatbuf)
 
 tryagain:
     KEYMAP *curmap = s_topmap;
-    bool no_macros = (whatbuf != g_buf && !g_xmouse_is_on); 
+    bool no_macros = (whatbuf != g_buf && !s_xmouse_is_on); 
     for (;;) {
 	g_int_count = 0;
 	errno = 0;
@@ -1179,7 +1180,7 @@ tryagain:
 
 got_canonical:
     /* This hack is for mouse support */
-    if (g_xmouse_is_on && *whatbuf == Ctl('c')) {
+    if (s_xmouse_is_on && *whatbuf == Ctl('c')) {
 	mouse_input(whatbuf+1);
 	times = 0;
 	goto tryagain;
@@ -1961,21 +1962,21 @@ void xmouse_check()
 
 void xmouse_on()
 {
-    if (!g_xmouse_is_on) {
+    if (!s_xmouse_is_on) {
 	/* save old highlight mouse tracking and enable mouse tracking */
 	fputs("\033[?1001s\033[?1000h",stdout);
 	fflush(stdout);
-	g_xmouse_is_on = true;
+	s_xmouse_is_on = true;
     }
 }
 
 void xmouse_off()
 {
-    if (g_xmouse_is_on) {
+    if (s_xmouse_is_on) {
 	/* disable mouse tracking and restore old highlight mouse tracking */
 	fputs("\033[?1000l\033[?1001r",stdout);
 	fflush(stdout);
-	g_xmouse_is_on = false;
+	s_xmouse_is_on = false;
     }
 }
 

@@ -77,7 +77,6 @@ extern char *g_mousebar_btns;
 extern int   g_mousebar_cnt;
 extern int   g_mousebar_start;
 extern int   g_mousebar_width;
-extern bool  g_xmouse_is_on;
 extern bool  g_mouse_is_down;
 
 void  term_init();
