@@ -27,7 +27,6 @@ int g_sf_num_entries{};   /* # of entries */
 SF_ENTRY *g_sf_entries{}; /* array of entries */
 SF_FILE *g_sf_files{};
 int g_sf_num_files{};
-char **g_sf_abbr{};        /* abbreviations */
 int g_sf_score_verbose{};  /* when true, the scoring routine prints lots of info... */
 bool g_sf_verbose{true};   /* if true print more stuff while loading */
 
@@ -43,6 +42,7 @@ enum
     SF_REPLY = -5
 };
 
+static char  **s_sf_abbr{};           /* abbreviations */
 static bool    s_newauthor_active{};  /* if true, s_newauthor is active */
 static int     s_newauthor{};         /* bonus score given to a new (unscored) author */
 static bool    s_sf_pattern_status{}; /* should we match by pattern? */
@@ -71,8 +71,8 @@ void sf_init()
     s_sf_num_extra_headers = 0;
 
     /* initialize abbreviation list */
-    g_sf_abbr = (char**)safemalloc(256 * sizeof (char*));
-    memset((char*)g_sf_abbr,0,256 * sizeof (char*));
+    s_sf_abbr = (char**)safemalloc(256 * sizeof (char*));
+    memset((char*)s_sf_abbr,0,256 * sizeof (char*));
 
     if (g_sf_verbose)
 	printf("\nReading score files...\n") FLUSH;
@@ -157,13 +157,13 @@ void sf_clean()
 	}
     }
     mp_free(MP_SCORE1);		/* free memory pool */
-    if (g_sf_abbr) {
+    if (s_sf_abbr) {
 	for (i = 0; i < 256; i++)
-	    if (g_sf_abbr[i]) {
-		free(g_sf_abbr[i]);
-		g_sf_abbr[i] = nullptr;
+	    if (s_sf_abbr[i]) {
+		free(s_sf_abbr[i]);
+		s_sf_abbr[i] = nullptr;
 	    }
-	free(g_sf_abbr);
+	free(s_sf_abbr);
     }
     if (g_sf_entries)
 	free(g_sf_entries);
@@ -460,9 +460,9 @@ bool sf_do_command(char *cmd, bool check)
 	    printf("Bad file command (missing parameters)\n");
 	    return false;
 	}
-	if (g_sf_abbr[(int)ch])
-	    free(g_sf_abbr[(int)ch]);
-	g_sf_abbr[(int)ch] = savestr(sf_cmd_fname(s));
+	if (s_sf_abbr[(int)ch])
+	    free(s_sf_abbr[(int)ch]);
+	s_sf_abbr[(int)ch] = savestr(sf_cmd_fname(s));
 	return true;
     }
     if (!strncmp(cmd,"end",3)) {
@@ -832,8 +832,8 @@ void sf_append(char *line)
 
         printf("List of abbreviation/file pairs\n") ;
 	for (int i = 0; i < 256; i++)
-	    if (g_sf_abbr[i])
-		printf("%c %s\n",(char)i,g_sf_abbr[i]) FLUSH;
+	    if (s_sf_abbr[i])
+		printf("%c %s\n",(char)i,s_sf_abbr[i]) FLUSH;
 	printf("\" [The current newsgroup's score file]\n") FLUSH;
 	printf("* [The global score file]\n") FLUSH;
 	return;
@@ -912,7 +912,7 @@ void sf_append(char *line)
 	strcat(filebuf,"/global");
 	filename = filebuf;
     }
-    else if (!(filename = g_sf_abbr[(int)filechar])) {
+    else if (!(filename = s_sf_abbr[(int)filechar])) {
 	printf("\nBad file abbreviation: %c\n",filechar) FLUSH;
 	return;
     }
@@ -1092,11 +1092,11 @@ void sf_edit_file(const char *filespec)
 	strcat(filebuf,"/global");
     }
     else {	/* abbreviation */
-	if (!g_sf_abbr[(int)filechar]) {
+	if (!s_sf_abbr[(int)filechar]) {
 	    printf("\nBad file abbreviation: %c\n",filechar) FLUSH;
 	    return;
 	}
-	strcpy(filebuf,g_sf_abbr[(int)filechar]);
+	strcpy(filebuf,s_sf_abbr[(int)filechar]);
     }
     char *fname_noexpand = sf_cmd_fname(filebuf);
     strcpy(filebuf,filexp(fname_noexpand));
