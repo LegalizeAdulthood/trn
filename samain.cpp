@@ -28,6 +28,7 @@ bool g_sa_order_read{};    /* if true, the already-read articles have been added
 int g_sa_scan_context{-1}; /* contains the scan-context number for the current article scan */
 
 static int s_sa_ents_alloc{};
+static bool s_sa_context_init{}; /* has context been initialized? */
 
 void sa_init()
 {
@@ -97,7 +98,7 @@ void sa_cleanmain()
     g_sa_mode_zoom = false;	/* doesn't survive across groups */
     /* remove the now-unused scan-context */
     s_delete_context(g_sa_scan_context);
-    g_sa_context_init = false;
+    s_sa_context_init = false;
     g_sa_scan_context = -1;
     /* no longer "in" article scan mode */
     g_sa_mode_read_elig = false;	/* the default */
@@ -113,11 +114,13 @@ void sa_growarts(long oldlast, long last)
 /* Initialize the scan-context to enter article scan mode. */
 void sa_init_context()
 {
-    if (g_sa_context_init)
+    if (s_sa_context_init)
 	return;		/* already initialized */
+
     if (g_sa_scan_context == -1)
 	g_sa_scan_context = s_new_context(S_ART);
     s_change_context(g_sa_scan_context);
+    s_sa_context_init = true;
 }
 
 bool sa_initarts()

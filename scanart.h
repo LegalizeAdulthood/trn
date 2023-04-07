@@ -39,8 +39,6 @@ extern bool g_sa_in; /* Are we "in" SA? */
 extern bool g_sa_go;          /* go to sa.  Do not pass GO (:-) */
 extern bool g_sa_go_explicit; /* want to bypass read-next-marked */
 
-extern bool g_sa_context_init; /* has context been initialized? */
-
 /* used to pass an article number to read soon */
 extern ART_NUM g_sa_art;
 
