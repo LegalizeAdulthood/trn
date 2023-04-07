@@ -101,10 +101,10 @@ int g_page_line{1};            /* line number for paging in print_line (origin 1
 bool g_error_occurred{};
 char *g_mousebar_btns;
 int g_mousebar_cnt{};
-int g_mousebar_start{};
 int g_mousebar_width{};
 bool g_mouse_is_down{};
 
+static int s_mousebar_start{};
 static bool s_xmouse_is_on{};
 #endif
 
@@ -2020,18 +2020,18 @@ void draw_mousebar(int limit, bool restore_cursor)
 	*t++ = '\0';
     }
     g_mousebar_width = t - g_msg;
-    g_mousebar_start = 0;
+    s_mousebar_start = 0;
 
     s = g_msg;
     while (g_mousebar_width > limit) {
 	int len = strlen(s) + 1;
 	s += len;
 	g_mousebar_width -= len;
-	g_mousebar_start++;
+	s_mousebar_start++;
     }
 
     goto_xy(g_tc_COLS - g_mousebar_width - 1, g_tc_LINES-1);
-    for (i = g_mousebar_start; i < g_mousebar_cnt; i++) {
+    for (i = s_mousebar_start; i < g_mousebar_cnt; i++) {
 	putchar(' ');
 	color_string(COLOR_MOUSE,s);
 	s += strlen(s) + 1;
@@ -2089,7 +2089,7 @@ bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
     if (g_mousebar_width != 0 && btn_clk == 0 && y_clk == g_tc_LINES-1
      && (x_clk -= col-1) > 0) {
 	x -= col-1;
-	for (i = 0; i < g_mousebar_start; i++) {
+	for (i = 0; i < s_mousebar_start; i++) {
 	    if (*s == '[')
 		s += strlen(s) + 1;
 	    s += strlen(s) + 1;

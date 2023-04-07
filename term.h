@@ -75,7 +75,6 @@ extern int   g_page_line;     /* line number for paging in print_line (origin 1)
 extern bool  g_error_occurred;
 extern char *g_mousebar_btns;
 extern int   g_mousebar_cnt;
-extern int   g_mousebar_start;
 extern int   g_mousebar_width;
 extern bool  g_mouse_is_down;
 
