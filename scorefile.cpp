@@ -31,8 +31,7 @@ char **g_sf_abbr{};        /* abbreviations */
 int g_sf_score_verbose{};  /* when true, the scoring routine prints lots of info... */
 bool g_sf_verbose{true};   /* if true print more stuff while loading */
 bool g_cached_rescore{};   /* if true, only header types that are cached are scored... */
-bool g_newauthor_active{}; /* if true, g_newauthor is active */
-int g_newauthor{};         /* bonus score given to a new (unscored) author */
+bool g_newauthor_active{}; /* if true, s_newauthor is active */
 
 /* list of score array markers (in g_htype field of score entry) */
 /* entry is a file marker.  Score is the file level */
@@ -46,10 +45,11 @@ enum
     SF_REPLY = -5
 };
 
+static int     s_newauthor{};         /* bonus score given to a new (unscored) author */
 static bool    s_sf_pattern_status{}; /* should we match by pattern? */
-static bool    s_reply_active{};  /* if true, s_reply_score is active */
-static int     s_reply_score{};   /* score amount added to an article reply */
-static int     s_sf_file_level{}; /* how deep are we? */
+static bool    s_reply_active{};      /* if true, s_reply_score is active */
+static int     s_reply_score{};       /* score amount added to an article reply */
+static int     s_sf_file_level{};     /* how deep are we? */
 static char    s_sf_buf[LBUFLEN]{};
 static char  **s_sf_extra_headers{};
 static int     s_sf_num_extra_headers{};
@@ -119,7 +119,7 @@ void sf_init()
 	    break;
 	  case SF_NEWAUTHOR:
 	    g_newauthor_active = true;
-	    g_newauthor = g_sf_entries[i].score;
+	    s_newauthor = g_sf_entries[i].score;
 	    if (g_sf_verbose) {
 		int j;
 		/* rethink? */
@@ -127,7 +127,7 @@ void sf_init()
 		    if (g_sf_entries[j].head_type == SF_NEWAUTHOR)
 			break;
 		if (j == g_sf_num_entries) /* no later newauthors */
-		    printf("New Author score: %d\n",g_newauthor) FLUSH;
+		    printf("New Author score: %d\n",s_newauthor) FLUSH;
 	    }
 	    break;
 	  case SF_REPLY:
@@ -767,9 +767,9 @@ int sf_score(ART_NUM a)
 	}
     }
     if (g_newauthor_active && !(article_ptr(a)->scoreflags & SFLAG_AUTHOR)) {
-	sum = sum+g_newauthor;	/* add new author bonus */
+	sum = sum+s_newauthor;	/* add new author bonus */
 	if (g_sf_score_verbose) {
-	    printf("New Author: %d\n",g_newauthor) FLUSH;
+	    printf("New Author: %d\n",s_newauthor) FLUSH;
 	    /* consider: print which file the bonus came from */
 	}
     }
