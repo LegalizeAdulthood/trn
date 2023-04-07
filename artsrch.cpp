@@ -24,7 +24,6 @@
 #include "util2.h"
 
 std::string g_lastpat;               /* last search pattern */
-COMPEX g_sub_compex{};               /* last compiled subject search */
 COMPEX g_art_compex{};               /* last compiled normal search */
 COMPEX *g_bra_compex{&g_art_compex}; /* current compex with brackets */
 const char *g_scopestr{"sfHhbBa"};   //
@@ -32,11 +31,13 @@ art_scope g_art_howmuch{};           /* search scope */
 header_line_type g_art_srchhdr{};                 /* specific header number to search */
 bool g_art_doread{};                 /* search read articles? */
 
+static COMPEX s_sub_compex{}; /* last compiled subject search */
+
 static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope);
 
 void artsrch_init()
 {
-    init_compex(&g_sub_compex);
+    init_compex(&s_sub_compex);
     init_compex(&g_art_compex);
 }
 
@@ -154,7 +155,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
 	doread = (cmdchr == Ctl('p'));
 	if (cmdchr == Ctl('n'))
 	    ret = SRCH_SUBJDONE;
-	compex = &g_sub_compex;
+	compex = &s_sub_compex;
 	pattern = patbuf+1;
         char *h;
 	if (howmuch == ARTSCOPE_SUBJECT) {

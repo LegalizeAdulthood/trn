@@ -32,7 +32,6 @@ enum art_scope
 };
 
 extern std::string g_lastpat;          /* last search pattern */
-extern COMPEX g_sub_compex;            /* last compiled subject search */
 extern COMPEX g_art_compex;            /* last compiled normal search */
 extern COMPEX *g_bra_compex;           /* current compex with brackets */
 extern const char *g_scopestr;         //
