@@ -33,7 +33,6 @@ bool g_sf_verbose{true};   /* if true print more stuff while loading */
 bool g_cached_rescore{};   /* if true, only header types that are cached are scored... */
 bool g_newauthor_active{}; /* if true, g_newauthor is active */
 int g_newauthor{};         /* bonus score given to a new (unscored) author */
-bool g_sf_pattern_status{}; /* should we match by pattern? */
 
 /* list of score array markers (in g_htype field of score entry) */
 /* entry is a file marker.  Score is the file level */
@@ -47,6 +46,7 @@ enum
     SF_REPLY = -5
 };
 
+static bool    s_sf_pattern_status{}; /* should we match by pattern? */
 static bool    s_reply_active{};  /* if true, s_reply_score is active */
 static int     s_reply_score{};   /* score amount added to an article reply */
 static int     s_sf_file_level{}; /* how deep are we? */
@@ -495,7 +495,7 @@ char *sf_freeform(char *start1, char *end1)
     switch (end1-start1+1) {
       case 7:
 	if (!strncmp(start1,"pattern",7)) {
-	    g_sf_pattern_status = true;
+	    s_sf_pattern_status = true;
 	    break;
 	}
 	error = true;
@@ -552,7 +552,7 @@ bool sf_do_line(char *line, bool check)
 	return true;
 
     /* reset any per-line bitflags */
-    g_sf_pattern_status = false;
+    s_sf_pattern_status = false;
 
     if (isalpha(ch))		/* command line */
 	return sf_do_command(line,check);
@@ -614,7 +614,7 @@ bool sf_do_line(char *line, bool check)
     sf_grow();		/* acutally make an entry */
     g_sf_entries[g_sf_num_entries-1].head_type = static_cast<header_line_type>(j);
     g_sf_entries[g_sf_num_entries-1].score = i;
-    if (g_sf_pattern_status) {	/* in pattern matching mode */
+    if (s_sf_pattern_status) {	/* in pattern matching mode */
 	g_sf_entries[g_sf_num_entries-1].flags |= 1;
 	g_sf_entries[g_sf_num_entries-1].str1 = mp_savestr(s,MP_SCORE1);
 	s_sf_compex = (COMPEX*)safemalloc(sizeof (COMPEX));
