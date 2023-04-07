@@ -23,17 +23,17 @@
 #include "term.h"
 #include "util2.h"
 
+static COMPEX s_sub_compex{}; /* last compiled subject search */
+static COMPEX g_art_compex{}; /* last compiled normal search */
+
+static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope);
+
 std::string g_lastpat;               /* last search pattern */
-COMPEX g_art_compex{};               /* last compiled normal search */
 COMPEX *g_bra_compex{&g_art_compex}; /* current compex with brackets */
 const char *g_scopestr{"sfHhbBa"};   //
 art_scope g_art_howmuch{};           /* search scope */
 header_line_type g_art_srchhdr{};                 /* specific header number to search */
 bool g_art_doread{};                 /* search read articles? */
-
-static COMPEX s_sub_compex{}; /* last compiled subject search */
-
-static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope);
 
 void artsrch_init()
 {
