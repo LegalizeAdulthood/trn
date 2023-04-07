@@ -29,7 +29,6 @@ struct SA_ENTRYDATA
 
 extern SA_ENTRYDATA *g_sa_ents;
 extern int g_sa_num_ents;
-extern int g_sa_ents_alloc;
 
 extern bool g_sa_initialized;       /* Have we initialized? */
 extern bool g_sa_never_initialized; /* Have we ever initialized? */

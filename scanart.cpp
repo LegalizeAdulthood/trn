@@ -21,7 +21,6 @@
 
 SA_ENTRYDATA *g_sa_ents{};
 int g_sa_num_ents{};
-int g_sa_ents_alloc{};
 
 bool g_sa_initialized{};           /* Have we initialized? */
 bool g_sa_never_initialized{true}; /* Have we ever initialized? */

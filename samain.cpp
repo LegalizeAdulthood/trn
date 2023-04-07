@@ -27,6 +27,8 @@ bool g_sa_mode_zoom{};     /* true if in "zoom" (display only selected) mode */
 bool g_sa_order_read{};    /* if true, the already-read articles have been added to the order arrays */
 int g_sa_scan_context{-1}; /* contains the scan-context number for the current article scan */
 
+static int s_sa_ents_alloc{};
+
 void sa_init()
 {
     sa_init_context();
@@ -54,7 +56,7 @@ void sa_init()
 void sa_init_ents()
 {
     g_sa_num_ents = 0;
-    g_sa_ents_alloc = 0;
+    s_sa_ents_alloc = 0;
     g_sa_ents = (SA_ENTRYDATA*)nullptr;
 }
 
@@ -68,16 +70,16 @@ void sa_clean_ents()
 long sa_add_ent(ART_NUM artnum)
 {
     g_sa_num_ents++;
-    if (g_sa_num_ents > g_sa_ents_alloc) {
-	g_sa_ents_alloc += 100;
-	if (g_sa_ents_alloc == 100) {	/* newly allocated */
+    if (g_sa_num_ents > s_sa_ents_alloc) {
+	s_sa_ents_alloc += 100;
+	if (s_sa_ents_alloc == 100) {	/* newly allocated */
 	    /* don't use number 0, just allocate it and skip it */
 	    g_sa_num_ents = 2;
-	    g_sa_ents = (SA_ENTRYDATA*)safemalloc(g_sa_ents_alloc
+	    g_sa_ents = (SA_ENTRYDATA*)safemalloc(s_sa_ents_alloc
 					* sizeof (SA_ENTRYDATA));
         } else {
 	    g_sa_ents = (SA_ENTRYDATA*)saferealloc((char*)g_sa_ents,
-			g_sa_ents_alloc * sizeof (SA_ENTRYDATA));
+			s_sa_ents_alloc * sizeof (SA_ENTRYDATA));
 	}
     }
     long cur = g_sa_num_ents - 1;
