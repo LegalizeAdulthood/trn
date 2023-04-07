@@ -65,7 +65,7 @@ char *g_tc_BC{}; /* backspace character */
 char *g_tc_UP{}; /* move cursor up one line */
 char *g_tc_CR{}; /* get to left margin, somehow */
 char *g_tc_VB{}; /* visible bell */
-char *g_tc_CL{}; /* home and clear screen */
+static char *s_tc_CL{}; /* home and clear screen */
 char *g_tc_CE{}; /* clear to end of line */
 static char *s_tc_TI{}; /* initialize terminal */
 static char *s_tc_TE{}; /* reset terminal */
@@ -278,7 +278,7 @@ void term_set(char *tcbuf)
     g_tc_UP = "\033[A";
     g_tc_CR = "\r";
     g_tc_VB = "";
-    g_tc_CL = "\033[H\033[2J";
+    s_tc_CL = "\033[H\033[2J";
     g_tc_CE = "\033[K";
     s_tc_TI = "";
     s_tc_TE = "";
@@ -314,7 +314,7 @@ void term_set(char *tcbuf)
     } else
 	g_tc_BC = "\b";			/* make a backspace handy */
     g_tc_UP = Tgetstr("up");		/* move up a line */
-    g_tc_CL = Tgetstr("cl");		/* get clear string */
+    s_tc_CL = Tgetstr("cl");		/* get clear string */
     g_tc_CE = Tgetstr("ce");		/* clear to end of line string */
     s_tc_TI = Tgetstr("ti");		/* initialize display */
     s_tc_TE = Tgetstr("te");		/* reset display */
@@ -385,7 +385,7 @@ void term_set(char *tcbuf)
     if (!*g_tc_CD || !g_can_home)		/* can we CE, CD, and home? */
 	g_erase_each_line = false;	/*  no, so disable use of clear eol */
     if (g_muck_up_clear)			/* this is for weird HPs */
-	g_tc_CL = nullptr;
+	s_tc_CL = nullptr;
     s_leftcost = strlen(g_tc_BC);
     s_upcost = strlen(g_tc_UP);
 #else /* !HAS_TERMLIB */
@@ -1681,8 +1681,8 @@ void clear()
     g_term_line = 0;
     g_term_col = 0;
     g_fire_is_out = 0;
-    if (g_tc_CL)
-	tputs(g_tc_CL,g_tc_LINES,putchr);
+    if (s_tc_CL)
+	tputs(s_tc_CL,g_tc_LINES,putchr);
     else if (g_tc_CD) {
 	home_cursor();
 	tputs(g_tc_CD,g_tc_LINES,putchr);
@@ -1793,7 +1793,7 @@ static void line_col_calcs()
     }
     else {				/* not a crt */
 	g_tc_LINES = 30000;		/* so don't page */
-	g_tc_CL = "\n\n";			/* put a couple of lines between */
+	s_tc_CL = "\n\n";			/* put a couple of lines between */
 	if (!g_initlines || !g_option_def_vals[OI_INITIAL_ARTICLE_LINES])
 	    g_initlines = 8;		/* make g_initlines reasonable */
     }

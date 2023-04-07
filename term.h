@@ -39,7 +39,6 @@ extern char *g_tc_BC; /* backspace character */
 extern char *g_tc_UP; /* move cursor up one line */
 extern char *g_tc_CR; /* get to left margin, somehow */
 extern char *g_tc_VB; /* visible bell */
-extern char *g_tc_CL; /* home and clear screen */
 extern char *g_tc_CE; /* clear to end of line */
 extern char *g_tc_CM; /* cursor motion */
 extern char *g_tc_HO; /* home cursor */
