@@ -26,7 +26,6 @@
 int g_sf_num_entries{};   /* # of entries */
 SF_ENTRY *g_sf_entries{}; /* array of entries */
 SF_FILE *g_sf_files{};
-int g_sf_num_files{};
 int g_sf_score_verbose{};  /* when true, the scoring routine prints lots of info... */
 bool g_sf_verbose{true};   /* if true print more stuff while loading */
 
@@ -42,6 +41,7 @@ enum
     SF_REPLY = -5
 };
 
+static int     s_sf_num_files{};
 static char  **s_sf_abbr{};           /* abbreviations */
 static bool    s_newauthor_active{};  /* if true, s_newauthor is active */
 static int     s_newauthor{};         /* bonus score given to a new (unscored) author */
@@ -1118,16 +1118,16 @@ static int sf_open_file(const char *name)
 
     if (!name || !*name)
 	return 0;	/* unable to open */
-    for (i = 0; i < g_sf_num_files; i++)
+    for (i = 0; i < s_sf_num_files; i++)
 	if (!strcmp(g_sf_files[i].fname,name)) {
 	    if (g_sf_files[i].num_lines < 0)	/* nonexistent */
 		return -1;	/* no such file */
 	    g_sf_files[i].line_on = 0;
 	    return i;
 	}
-    g_sf_num_files++;
+    s_sf_num_files++;
     g_sf_files = (SF_FILE*)saferealloc((char*)g_sf_files,
-	g_sf_num_files * sizeof (SF_FILE));
+	s_sf_num_files * sizeof (SF_FILE));
     g_sf_files[i].fname = savestr(name);
     g_sf_files[i].num_lines = 0;
     g_sf_files[i].num_alloc = 0;
@@ -1171,7 +1171,7 @@ static int sf_open_file(const char *name)
 
 static void sf_file_clear()
 {
-    for (int i = 0; i < g_sf_num_files; i++) {
+    for (int i = 0; i < s_sf_num_files; i++) {
 	if (g_sf_files[i].fname)
 	    free(g_sf_files[i].fname);
 	if (g_sf_files[i].num_lines > 0) {
@@ -1183,12 +1183,12 @@ static void sf_file_clear()
     if (g_sf_files)
 	free(g_sf_files);
     g_sf_files = (SF_FILE*)nullptr;
-    g_sf_num_files = 0;
+    s_sf_num_files = 0;
 }
 
 static char *sf_file_getline(int fnum)
 {
-    if (fnum < 0 || fnum >= g_sf_num_files)
+    if (fnum < 0 || fnum >= s_sf_num_files)
 	return nullptr;
     if (g_sf_files[fnum].line_on >= g_sf_files[fnum].num_lines)
 	return nullptr;		/* past end of file, or empty file */
