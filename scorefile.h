@@ -35,10 +35,9 @@ struct SF_FILE
     char** lines;
 };
 
-extern int       g_sf_num_entries;    /* # of entries */
-extern SF_ENTRY *g_sf_entries;        /* array of entries */
-extern int       g_sf_score_verbose;  /* when true, the scoring routine prints lots of info... */
-extern bool      g_sf_verbose;        /* if true print more stuff while loading */
+extern int  g_sf_num_entries;   /* # of entries */
+extern int  g_sf_score_verbose; /* when true, the scoring routine prints lots of info... */
+extern bool g_sf_verbose;       /* if true print more stuff while loading */
 
 void sf_init();
 void sf_clean();
