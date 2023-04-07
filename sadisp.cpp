@@ -47,10 +47,10 @@ void sa_refresh_bot()
     s_mail_and_place();
     printf("(");
     switch (g_sa_mode_order) {
-      case 1:
+      case SA_ORDER_ARRIVAL:
 	s = "arrival";
 	break;
-      case 2:
+      case SA_ORDER_DESCENDING:
 	if (g_score_newfirst)
 	    s = "score (new>old)";
 	else

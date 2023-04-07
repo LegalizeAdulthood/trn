@@ -48,7 +48,7 @@ bool g_sa_mode_read_elig{};
  * 1: Arrival order
  * 2: Descending score
  */
-int g_sa_mode_order{2};
+sa_display_order g_sa_mode_order{SA_ORDER_DESCENDING};
 
 /* if true, don't move the cursor after marking or selecting articles */
 bool g_sa_mark_stay{};

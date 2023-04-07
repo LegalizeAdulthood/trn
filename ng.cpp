@@ -175,7 +175,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
     else
 	kill_unwanted(g_firstart,"Auto-processing...\n\n",true);
 
-    sc_init((g_sa_never_initialized || g_sa_mode_order == 2)
+    sc_init((g_sa_never_initialized || g_sa_mode_order == SA_ORDER_DESCENDING)
             && start_command && *start_command == ';');
 
     if (g_univ_ng_virtflag) {

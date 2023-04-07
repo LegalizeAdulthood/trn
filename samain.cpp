@@ -154,11 +154,11 @@ sa_main_result sa_mainloop()
      * then try to initialize.
      * If that fails then strn will just use arrival ordering.
      */
-    if (!g_sc_initialized && g_sa_mode_order == 2) {
+    if (!g_sc_initialized && g_sa_mode_order == SA_ORDER_DESCENDING) {
 	g_sc_delay = false;	/* yes, actually score... */
 	sc_init(true);		/* wait for articles to score */
 	if (!g_sc_initialized)
-	    g_sa_mode_order = 1;	/* arrival order */
+            g_sa_mode_order = SA_ORDER_ARRIVAL; /* arrival order */
     }
     /* redraw it *all* */
     g_s_ref_all = true;

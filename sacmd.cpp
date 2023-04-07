@@ -151,18 +151,18 @@ int sa_docmd()
 	break;
       case 'o':	/* toggle between score and arrival orders */
 	s_rub_ptr();
-	if (g_sa_mode_order==1)
-	    g_sa_mode_order = 2;
+	if (g_sa_mode_order==SA_ORDER_ARRIVAL)
+	    g_sa_mode_order = SA_ORDER_DESCENDING;
 	else
-	    g_sa_mode_order = 1;
-	if (g_sa_mode_order == 2 && g_sc_delay) {
+	    g_sa_mode_order = SA_ORDER_ARRIVAL;
+	if (g_sa_mode_order == SA_ORDER_DESCENDING && g_sc_delay) {
 	    g_sc_delay = false;
 	    sc_init(true);
 	}
-	if (g_sa_mode_order == 2 && !g_sc_initialized) /* score order */
-	    g_sa_mode_order = 1;	/* nope... (maybe allow later) */
+	if (g_sa_mode_order == SA_ORDER_DESCENDING && !g_sc_initialized) /* score order */
+	    g_sa_mode_order = SA_ORDER_ARRIVAL;	/* nope... (maybe allow later) */
 	/* if we go into score mode, make sure score is displayed */
-	if (g_sa_mode_order == 2 && !g_sa_mode_desc_score)
+	if (g_sa_mode_order == SA_ORDER_DESCENDING && !g_sa_mode_desc_score)
 	    g_sa_mode_desc_score = true;
 	s_sort();
 	s_go_top_ents();
@@ -170,7 +170,7 @@ int sa_docmd()
 	g_s_ref_bot = true;
 	break;
       case 'O':	/* change article sorting order */
-	if (g_sa_mode_order != 2) { /* not in score order */
+	if (g_sa_mode_order != SA_ORDER_DESCENDING) { /* not in score order */
 	    s_beep();
 	    break;
 	}

@@ -56,7 +56,13 @@ extern bool g_sa_mode_read_elig;
  * 1: Arrival order
  * 2: Descending score
  */
-extern int g_sa_mode_order;
+enum sa_display_order
+{
+    SA_ORDER_NONE = 0,
+    SA_ORDER_ARRIVAL = 1,
+    SA_ORDER_DESCENDING = 2,
+};
+extern sa_display_order g_sa_mode_order;
 
 /* if true, don't move the cursor after marking or selecting articles */
 extern bool g_sa_mark_stay;

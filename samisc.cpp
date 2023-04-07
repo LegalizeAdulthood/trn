@@ -36,7 +36,7 @@ bool sa_basic_elig(long a)
 	return false;
     if (g_sa_mode_zoom && !sa_selected1(a))
 	return false;
-    if (g_sa_mode_order == 2)	/* score order */
+    if (g_sa_mode_order == SA_ORDER_DESCENDING)	/* score order */
 	if (!article_scored(artnum))
 	    return false;
     /* now just check availability */
@@ -101,7 +101,7 @@ void sa_selthreads()
 		    /* this was a trn-thread selected article */
 		    sa_select1(sa_artnum_to_ent(art));
     /* if scoring, make sure that this article is scored... */
-		    if (g_sa_mode_order == 2)	/* score order */
+		    if (g_sa_mode_order == SA_ORDER_DESCENDING)	/* score order */
 			sc_score_art(art,false);
 		    }
 		}/* for all articles */
@@ -144,7 +144,8 @@ void sa_go_art(long a)
 // long a,b;		/* the entry numbers to compare */
 int sa_compare(long a, long b)
 {
-    if (g_sa_mode_order == 2) {	/* score order */
+    if (g_sa_mode_order == SA_ORDER_DESCENDING) /* score order */
+    {
 	/* do not score the articles here--move the articles to
 	 * the end of the list if unscored.
 	 */
