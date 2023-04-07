@@ -31,7 +31,6 @@ char **g_sf_abbr{};        /* abbreviations */
 int g_sf_score_verbose{};  /* when true, the scoring routine prints lots of info... */
 bool g_sf_verbose{true};   /* if true print more stuff while loading */
 bool g_cached_rescore{};   /* if true, only header types that are cached are scored... */
-bool g_newauthor_active{}; /* if true, s_newauthor is active */
 
 /* list of score array markers (in g_htype field of score entry) */
 /* entry is a file marker.  Score is the file level */
@@ -45,6 +44,7 @@ enum
     SF_REPLY = -5
 };
 
+static bool    s_newauthor_active{};  /* if true, s_newauthor is active */
 static int     s_newauthor{};         /* bonus score given to a new (unscored) author */
 static bool    s_sf_pattern_status{}; /* should we match by pattern? */
 static bool    s_reply_active{};      /* if true, s_reply_score is active */
@@ -98,7 +98,7 @@ void sf_init()
     s_sf_has_extra_headers = false;
     /* set thresholds from the g_sf_entries */
     s_reply_active = false;
-    g_newauthor_active = false;
+    s_newauthor_active = false;
     g_kill_thresh_active = false;
     for (i = 0; i < g_sf_num_entries; i++) {
 	if (g_sf_entries[i].head_type >= HEAD_LAST)
@@ -118,7 +118,7 @@ void sf_init()
 	    }
 	    break;
 	  case SF_NEWAUTHOR:
-	    g_newauthor_active = true;
+	    s_newauthor_active = true;
 	    s_newauthor = g_sf_entries[i].score;
 	    if (g_sf_verbose) {
 		int j;
@@ -766,7 +766,7 @@ int sf_score(ART_NUM a)
 	    }
 	}
     }
-    if (g_newauthor_active && !(article_ptr(a)->scoreflags & SFLAG_AUTHOR)) {
+    if (s_newauthor_active && !(article_ptr(a)->scoreflags & SFLAG_AUTHOR)) {
 	sum = sum+s_newauthor;	/* add new author bonus */
 	if (g_sf_score_verbose) {
 	    printf("New Author: %d\n",s_newauthor) FLUSH;
