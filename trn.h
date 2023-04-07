@@ -24,7 +24,6 @@ enum input_newsgroup_result
 
 extern std::string g_ngname;         /* name of current newsgroup */
 extern std::string g_ngdir;          /* same thing in directory name form */
-extern bool        g_write_less;     /* write .newsrc less often */
 extern std::string g_patchlevel;
 
 void trn_init();

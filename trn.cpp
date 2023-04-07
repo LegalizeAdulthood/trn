@@ -73,7 +73,6 @@
 
 std::string g_ngname;           /* name of current newsgroup */
 std::string g_ngdir;            /* same thing in directory name form */
-bool        g_write_less{};     /* write .newsrc less often */
 std::string g_patchlevel{PATCHLEVEL};
 
 static bool s_restore_old_newsrc{};
