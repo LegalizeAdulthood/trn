@@ -51,7 +51,6 @@ extern char *g_tc_IL; /* insert line */
 extern char *g_tc_CD; /* clear to end of display */
 extern char *g_tc_SO; /* begin standout mode */
 extern char *g_tc_SE; /* end standout mode */
-extern int   g_tc_SG; /* blanks left by SO and SE */
 extern char *g_tc_US; /* start underline mode */
 extern char *g_tc_UE; /* end underline mode */
 extern char *g_tc_UC; /* underline a character, if that's how it's done */

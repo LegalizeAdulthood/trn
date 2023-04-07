@@ -77,7 +77,7 @@ char *g_tc_IL{}; /* insert line */
 char *g_tc_CD{}; /* clear to end of display */
 char *g_tc_SO{}; /* begin standout mode */
 char *g_tc_SE{}; /* end standout mode */
-int g_tc_SG{};   /* blanks left by SO and SE */
+static int  s_tc_SG{}; /* blanks left by SO and SE */
 char *g_tc_US{}; /* start underline mode */
 char *g_tc_UE{}; /* end underline mode */
 char *g_tc_UC{}; /* underline a character, if that's how it's done */
@@ -328,8 +328,8 @@ void term_set(char *tcbuf)
 	g_tc_CE = g_tc_CD;
     g_tc_SO = Tgetstr("so");		/* begin standout */
     g_tc_SE = Tgetstr("se");		/* end standout */
-    if ((g_tc_SG = tgetnum("sg"))<0)
-	g_tc_SG = 0;			/* blanks left by SG, SE */
+    if ((s_tc_SG = tgetnum("sg"))<0)
+	s_tc_SG = 0;			/* blanks left by SG, SE */
     g_tc_US = Tgetstr("us");		/* start underline */
     g_tc_UE = Tgetstr("ue");		/* end underline */
     if ((g_tc_UG = tgetnum("ug"))<0)
@@ -341,7 +341,7 @@ void term_set(char *tcbuf)
     if (!*g_tc_US && !*g_tc_UC) {		/* no underline mode? */
 	g_tc_US = g_tc_SO;			/* substitute standout mode */
 	g_tc_UE = g_tc_SE;
-	g_tc_UG = g_tc_SG;
+	g_tc_UG = s_tc_SG;
     }
     g_tc_LINES = tgetnum("li");		/* lines per page */
     g_tc_COLS = tgetnum("co");		/* columns on page */
