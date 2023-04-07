@@ -42,7 +42,6 @@ extern int       g_sf_num_files;      //
 extern char    **g_sf_abbr;           /* abbreviations */
 extern int       g_sf_score_verbose;  /* when true, the scoring routine prints lots of info... */
 extern bool      g_sf_verbose;        /* if true print more stuff while loading */
-extern bool      g_cached_rescore;    /* if true, only header types that are cached are scored... */
 
 void sf_init();
 void sf_clean();

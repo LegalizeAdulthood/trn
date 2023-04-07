@@ -30,7 +30,6 @@ int g_sf_num_files{};
 char **g_sf_abbr{};        /* abbreviations */
 int g_sf_score_verbose{};  /* when true, the scoring routine prints lots of info... */
 bool g_sf_verbose{true};   /* if true print more stuff while loading */
-bool g_cached_rescore{};   /* if true, only header types that are cached are scored... */
 
 /* list of score array markers (in g_htype field of score entry) */
 /* entry is a file marker.  Score is the file level */
