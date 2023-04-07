@@ -29,7 +29,6 @@ bool g_sc_fill_read{};       /* true if also scoring read arts... */
 bool g_sc_initialized{};     /* has score been initialized (are we "in" scoring?) */
 bool g_sc_scoring{};         /* are we currently scoring an article (prevents loops) */
 bool g_score_newfirst{};     /* changes order of sorting (artnum comparison) when scores are equal */
-bool g_sc_mode_nicebg{true}; /* if nice background available, use it */
 bool g_sc_savescores{};      /* If true, save the scores for this group on exit. */
 bool g_sc_delay{};           /* If true, delay initialization of scoring until explicitly required */
 bool g_sc_rescoring{};       /* are we rescoring now? */
