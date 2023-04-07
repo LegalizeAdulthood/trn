@@ -67,7 +67,7 @@ char *g_tc_CR{}; /* get to left margin, somehow */
 char *g_tc_VB{}; /* visible bell */
 char *g_tc_CL{}; /* home and clear screen */
 char *g_tc_CE{}; /* clear to end of line */
-char *g_tc_TI{}; /* initialize terminal */
+static char *s_tc_TI{}; /* initialize terminal */
 static char *s_tc_TE{}; /* reset terminal */
 static char *s_tc_KS{}; /* enter `keypad transmit' mode */
 static char *s_tc_KE{}; /* exit `keypad transmit' mode */
@@ -280,7 +280,7 @@ void term_set(char *tcbuf)
     g_tc_VB = "";
     g_tc_CL = "\033[H\033[2J";
     g_tc_CE = "\033[K";
-    g_tc_TI = "";
+    s_tc_TI = "";
     s_tc_TE = "";
     s_tc_KS = "";
     s_tc_KE = "";
@@ -316,7 +316,7 @@ void term_set(char *tcbuf)
     g_tc_UP = Tgetstr("up");		/* move up a line */
     g_tc_CL = Tgetstr("cl");		/* get clear string */
     g_tc_CE = Tgetstr("ce");		/* clear to end of line string */
-    g_tc_TI = Tgetstr("ti");		/* initialize display */
+    s_tc_TI = Tgetstr("ti");		/* initialize display */
     s_tc_TE = Tgetstr("te");		/* reset display */
     s_tc_KS = Tgetstr("ks");		/* enter `keypad transmit' mode */
     s_tc_KE = Tgetstr("ke");		/* exit `keypad transmit' mode */
@@ -1839,8 +1839,8 @@ int dummy;
 void termlib_init()
 {
 #ifdef USETITE
-    if (g_tc_TI && *g_tc_TI) {
-	tputs(g_tc_TI,1,putchr);
+    if (s_tc_TI && *s_tc_TI) {
+	tputs(s_tc_TI,1,putchr);
 	fflush(stdout);
     }
 #endif
