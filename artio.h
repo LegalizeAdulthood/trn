@@ -12,7 +12,6 @@ extern ART_LINE g_artline; /* current line number in article file */
 extern FILE *g_artfp;      /* current article file pointer */
 extern ART_NUM g_openart;  /* the article number we have open */
 extern char *g_artbuf;
-extern long g_artbuf_size;
 extern long g_artbuf_pos;
 extern long g_artbuf_seek;
 extern long g_artbuf_len;

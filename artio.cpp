@@ -26,16 +26,17 @@ ART_LINE g_artline{}; /* current line number in article file */
 FILE *g_artfp{};      /* current article file pointer */
 ART_NUM g_openart{};  /* the article number we have open */
 char *g_artbuf{};
-long g_artbuf_size{};
 long g_artbuf_pos{};
 long g_artbuf_seek{};
 long g_artbuf_len{};
 char g_wrapped_nl{WRAPPED_NL};
 
+static long s_artbuf_size{};
+
 void artio_init()
 {
-    g_artbuf_size = 8 * 1024;
-    g_artbuf = safemalloc(g_artbuf_size);
+    s_artbuf_size = 8 * 1024;
+    g_artbuf = safemalloc(s_artbuf_size);
     clear_artbuf();
 }
 
@@ -191,9 +192,9 @@ char *readartbuf(bool view_inline)
   read_more:
     extra_offset = g_mime_state == HTMLTEXT_MIME? 1024 : 0;
     o = read_offset + extra_offset;
-    if (g_artbuf_size < g_artbuf_pos + o + LBUFLEN) {
-	g_artbuf_size += LBUFLEN * 4;
-	g_artbuf = saferealloc(g_artbuf,g_artbuf_size);
+    if (s_artbuf_size < g_artbuf_pos + o + LBUFLEN) {
+	s_artbuf_size += LBUFLEN * 4;
+	g_artbuf = saferealloc(g_artbuf,s_artbuf_size);
 	bp = g_artbuf + g_artbuf_pos;
     }
     switch (g_mime_state) {
@@ -203,7 +204,7 @@ char *readartbuf(bool view_inline)
       default:
 	read_something = 1;
 	/* The -1 leaves room for appending a newline, if needed */
-	if (!readart(bp+o, g_artbuf_size-g_artbuf_pos-o-1)) {
+	if (!readart(bp+o, s_artbuf_size-g_artbuf_pos-o-1)) {
 	    if (!read_offset) {
 		*bp = '\0';
 		len = 0;
