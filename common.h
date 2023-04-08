@@ -688,7 +688,6 @@ extern int debug; /* -D */
 #   define DEB_FEED_XREF 16384
 #endif
 
-extern bool g_use_colors;
 extern bool g_use_tk;
 extern bool g_use_tcl;
 extern bool g_use_sel_num;

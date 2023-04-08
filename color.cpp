@@ -45,6 +45,8 @@ enum
     STACK_SIZE = 16
 };
 
+static bool s_use_colors{};
+
 static void output_color();
 
 /*
@@ -86,7 +88,7 @@ static int s_stack_pointer = 0;
 /* Initialize color support after trnrc is read. */
 void color_init()
 {
-    if (g_use_colors) {
+    if (s_use_colors) {
         /* Get default capabilities. */
         char *fg = tc_color_capability("fg default");
         if (fg == nullptr)
@@ -167,7 +169,7 @@ void color_rc_attribute(const char *object, char *value)
     }
 
     /* We have both colors and attributes, so turn colors on. */
-    g_use_colors = true;
+    s_use_colors = true;
 
     /* Parse the foreground color. */
     if (*s == '-')
@@ -263,7 +265,7 @@ void color_string(int object, const char *str)
 	str = g_msg;
 	len = 0;
     }
-    if (!g_use_colors && *g_tc_UC && objects[object].attr == UNDERLINE)
+    if (!s_use_colors && *g_tc_UC && objects[object].attr == UNDERLINE)
 	underprint(str);	/* hack for stupid terminals */
     else {
 	color_object(object, true);
@@ -292,7 +294,7 @@ static void output_color()
 	return;
 
     /* Start by turning off any existing colors and/or attributes. */
-    if (g_use_colors) {
+    if (s_use_colors) {
 	if (objects[COLOR_DEFAULT].fg != prior.fg
 	 || objects[COLOR_DEFAULT].bg != prior.bg) {
 	    fputs(prior.fg = objects[COLOR_DEFAULT].fg, stdout);
@@ -311,7 +313,7 @@ static void output_color()
     }
 
     /* For color terminals we set the foreground and background color. */
-    if (g_use_colors) {
+    if (s_use_colors) {
 	if (op->fg != prior.fg)
 	    fputs(prior.fg = op->fg, stdout);
 	if (op->bg != prior.bg)
