@@ -18,7 +18,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 /* switches */
 
 // Array of minor_mode characters.
-char g_mouse_modes[32]{"acjlptwvK"};
 bool g_use_colors{};
 bool g_use_tk{};
 bool g_use_tcl{};

@@ -87,6 +87,7 @@ marking_mode  g_marking{NOMARKING};              /* -m */
 marking_areas g_marking_areas{HALFPAGE_MARKING}; //
 ART_LINE      g_initlines{};                     /* -i */
 bool          g_use_mouse{};                     //
+char          g_mouse_modes[32]{"acjlptwvK"};    //
 
 #ifdef HAS_TERMLIB
 bool g_tc_GT{};   /* hardware tabs */
