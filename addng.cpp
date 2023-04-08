@@ -2,7 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
 #include "addng.h"
 
@@ -23,11 +22,11 @@
 #include <stdlib.h>
 #include <string>
 
-ADDGROUP* g_first_addgroup{};
-ADDGROUP* g_last_addgroup{};
-
-ADDGROUP* g_sel_page_gp{};
-ADDGROUP* g_sel_next_gp{};
+ADDGROUP *g_first_addgroup{};
+ADDGROUP *g_last_addgroup{};
+ADDGROUP *g_sel_page_gp{};
+ADDGROUP *g_sel_next_gp{};
+bool      g_quickstart{}; /* -q */
 
 static int s_addgroup_cnt{};
 

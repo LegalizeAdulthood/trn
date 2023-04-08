@@ -17,8 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-bool        g_quickstart{};            /* -q */
-
 time_t g_def_refetch_secs{DEFAULT_REFETCH_SECS}; /* -z */
 
 int g_word_wrap_offset{8}; /* right-hand column size (0 is off) */

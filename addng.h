@@ -33,10 +33,11 @@ struct ADDGROUP
     char           name[1];
 };
 
-extern ADDGROUP* g_first_addgroup;
-extern ADDGROUP* g_last_addgroup;
-extern ADDGROUP* g_sel_page_gp;
-extern ADDGROUP* g_sel_next_gp;
+extern ADDGROUP *g_first_addgroup;
+extern ADDGROUP *g_last_addgroup;
+extern ADDGROUP *g_sel_page_gp;
+extern ADDGROUP *g_sel_next_gp;
+extern bool      g_quickstart; /* -q */
 
 void addng_init();
 bool find_new_groups();
