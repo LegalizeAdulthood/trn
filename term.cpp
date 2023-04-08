@@ -78,6 +78,7 @@ char *g_art_pager_btns{};
 
 bool g_muck_up_clear{}; /* -loco */
 bool g_erase_screen{};  /* -e */
+bool g_can_home{};      //
 
 #ifdef HAS_TERMLIB
 bool g_tc_GT{};   /* hardware tabs */

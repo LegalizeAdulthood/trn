@@ -45,6 +45,7 @@ extern char *g_art_pager_btns;
 
 extern bool g_muck_up_clear; /* -loco */
 extern bool g_erase_screen;  /* -e */
+extern bool g_can_home;      //
 
 /* termcap stuff */
 
