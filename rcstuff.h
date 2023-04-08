@@ -78,7 +78,8 @@ extern LIST      *g_multirc_list; /* a list of all MULTIRCs */
 extern MULTIRC   *g_multirc;      /* the current MULTIRC */
 extern bool       g_paranoid;     /* did we detect some inconsistency in .newsrc? */
 extern int        g_addnewbydefault;
-extern bool       g_checkflag; /* -c */
+extern bool       g_checkflag;   /* -c */
+extern bool       g_suppress_cn; /* -s */
 
 bool     rcstuff_init();
 void     rcstuff_final();

@@ -34,7 +34,8 @@ LIST      *g_multirc_list{}; /* a list of all MULTIRCs */
 MULTIRC   *g_multirc{};      /* the current MULTIRC */
 bool       g_paranoid{};     /* did we detect some inconsistency in .newsrc? */
 int        g_addnewbydefault{};
-bool       g_checkflag{}; /* -c */
+bool       g_checkflag{};   /* -c */
+bool       g_suppress_cn{}; /* -s */
 
 enum
 {
