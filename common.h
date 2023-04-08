@@ -688,7 +688,6 @@ extern int debug; /* -D */
 #   define DEB_FEED_XREF 16384
 #endif
 
-extern ART_LINE g_initlines; /* -i */
 extern bool g_append_unsub;  /* -I */
 
 extern bool g_use_univ_selector;

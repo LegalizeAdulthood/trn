@@ -17,8 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-ART_LINE g_initlines{}; /* -i */
-
 #ifdef APPEND_UNSUB
 bool g_append_unsub{true}; /* -I */
 #else

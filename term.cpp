@@ -85,6 +85,7 @@ bool          g_allow_typeahead{};               /* -T */
 bool          g_verify{};                        /* -v */
 marking_mode  g_marking{NOMARKING};              /* -m */
 marking_areas g_marking_areas{HALFPAGE_MARKING}; //
+ART_LINE      g_initlines{};                     /* -i */
 
 #ifdef HAS_TERMLIB
 bool g_tc_GT{};   /* hardware tabs */
