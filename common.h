@@ -688,7 +688,6 @@ extern int debug; /* -D */
 #   define DEB_FEED_XREF 16384
 #endif
 
-extern bool        g_erase_screen;          /* -e */
 extern bool        g_can_home;              //
 extern bool        g_erase_each_line;       /* fancy -e */
 extern int         g_findlast;              /* -r */
