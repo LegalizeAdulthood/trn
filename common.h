@@ -688,7 +688,6 @@ extern int debug; /* -D */
 #   define DEB_FEED_XREF 16384
 #endif
 
-extern bool g_use_mouse;
 extern char g_mouse_modes[32];
 extern bool g_use_colors;
 extern bool g_use_tk;
