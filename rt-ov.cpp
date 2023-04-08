@@ -46,6 +46,7 @@ bool ov_init()
     ov_field_num *fieldnum = g_datasrc->fieldnum;
     field_flags  *fieldflags = g_datasrc->fieldflags;
     g_datasrc->flags &= ~DF_TRY_OVERVIEW;
+    FILE *overview;
     if (!g_datasrc->over_dir) {
         /* Check if the server is XOVER compliant */
 	if (nntp_command("XOVER") <= 0)
@@ -65,7 +66,7 @@ bool ov_init()
     else
     {
 	has_overview_fmt = g_datasrc->over_fmt != nullptr
-			&& (g_tmpfp = fopen(g_datasrc->over_fmt, "r")) != nullptr;
+			&& (overview = fopen(g_datasrc->over_fmt, "r")) != nullptr;
     }
 
     if (has_overview_fmt) {
@@ -79,8 +80,8 @@ bool ov_init()
 		if (nntp_at_list_end(g_buf))
 		    break;
 	    }
-	    else if (!fgets(g_buf, sizeof g_buf, g_tmpfp)) {
-		fclose(g_tmpfp);
+	    else if (!fgets(g_buf, sizeof g_buf, overview)) {
+		fclose(overview);
 		break;
 	    }
 	    if (*g_buf == '#')

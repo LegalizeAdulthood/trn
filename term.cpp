@@ -547,13 +547,14 @@ static void mac_init(char *tcbuf)
 
     if (g_auto_arrow_macros)
 	arrow_macros(tmpbuf);
+    FILE *macros;
     if (!g_use_threads
-     || (g_tmpfp = fopen(filexp(get_val("TRNMACRO",TRNMACRO)),"r")) == nullptr)
-	g_tmpfp = fopen(filexp(get_val("RNMACRO",RNMACRO)),"r");
-    if (g_tmpfp) {
-	while (fgets(tcbuf,TCBUF_SIZE,g_tmpfp) != nullptr)
+     || (macros = fopen(filexp(get_val("TRNMACRO",TRNMACRO)),"r")) == nullptr)
+	macros = fopen(filexp(get_val("RNMACRO",RNMACRO)),"r");
+    if (macros) {
+	while (fgets(tcbuf,TCBUF_SIZE,macros) != nullptr)
 	    mac_line(tcbuf,tmpbuf,sizeof tmpbuf);
-	fclose(g_tmpfp);
+	fclose(macros);
     }
 }
 

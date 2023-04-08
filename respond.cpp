@@ -539,15 +539,15 @@ int cancel_article()
 	termdown(2);
     }
     else {
-	g_tmpfp = fopen(g_headname.c_str(),"w");	/* open header file */
-	if (g_tmpfp == nullptr) {
+	FILE *header = fopen(g_headname.c_str(),"w");	/* open header file */
+	if (header == nullptr) {
 	    printf(g_cantcreate,g_headname.c_str()) FLUSH;
 	    termdown(1);
 	    goto done;
 	}
 	interp(hbuf, sizeof hbuf, get_val("CANCELHEADER",CANCELHEADER));
-	fputs(hbuf,g_tmpfp);
-	fclose(g_tmpfp);
+	fputs(hbuf,header);
+	fclose(header);
 	fputs("\nCanceling...\n",stdout) FLUSH;
 	termdown(2);
 	g_export_nntp_fds = true;
@@ -601,21 +601,21 @@ int supersede_article()		/* Supersedes: */
 	termdown(2);
     }
     else {
-	g_tmpfp = fopen(g_headname.c_str(),"w");	/* open header file */
-	if (g_tmpfp == nullptr) {
+	FILE *header = fopen(g_headname.c_str(),"w");	/* open header file */
+	if (header == nullptr) {
 	    printf(g_cantcreate,g_headname.c_str()) FLUSH;
 	    termdown(1);
 	    goto done;
 	}
 	interp(hbuf, sizeof hbuf, get_val("SUPERSEDEHEADER",SUPERSEDEHEADER));
-	fputs(hbuf,g_tmpfp);
+	fputs(hbuf,header);
 	if (incl_body && g_artfp != nullptr) {
 	    parseheader(g_art);
 	    seekart(g_htype[PAST_HEADER].minpos);
 	    while (readart(g_buf,LBUFLEN) != nullptr)
-		fputs(g_buf,g_tmpfp);
+		fputs(g_buf,header);
 	}
-	fclose(g_tmpfp);
+	fclose(header);
 	follow_it_up();
 	r = 0;
     }
@@ -672,14 +672,14 @@ void reply()
     char* maildoer = savestr(get_val("MAILPOSTER",MAILPOSTER));
 
     artopen(g_art,(ART_POS)0);
-    g_tmpfp = fopen(g_headname.c_str(),"w");	/* open header file */
-    if (g_tmpfp == nullptr) {
+    FILE *header = fopen(g_headname.c_str(),"w");	/* open header file */
+    if (header == nullptr) {
 	printf(g_cantcreate,g_headname.c_str()) FLUSH;
 	termdown(1);
 	goto done;
     }
     interp(hbuf, sizeof hbuf, get_val("MAILHEADER",MAILHEADER));
-    fputs(hbuf,g_tmpfp);
+    fputs(hbuf,header);
     if (!in_string(maildoer,"%h", true)) {
 	if (g_verbose)
 	    printf("\n%s\n(Above lines saved in file %s)\n",g_buf,g_headname.c_str())
@@ -691,7 +691,7 @@ void reply()
     if (incl_body && g_artfp != nullptr) {
 	char* s;
         interp(g_buf, (sizeof g_buf), get_val("YOUSAID",YOUSAID));
-	fprintf(g_tmpfp,"%s\n",g_buf);
+	fprintf(header,"%s\n",g_buf);
 	parseheader(g_art);
 	mime_SetArticle();
 	clear_artbuf();
@@ -702,14 +702,14 @@ void reply()
             if (t != nullptr)
 		*t = '\0';
 	    strcharsubst(hbuf,s,sizeof hbuf,*g_charsubst);
-	    fprintf(g_tmpfp,"%s%s\n",g_indstr.c_str(),hbuf);
+	    fprintf(header,"%s%s\n",g_indstr.c_str(),hbuf);
 	    if (t)
 		*t = '\0';
 	}
-	fprintf(g_tmpfp,"\n");
+	fprintf(header,"\n");
 	g_wrapped_nl = WRAPPED_NL;
     }
-    fclose(g_tmpfp);
+    fclose(header);
     safecpy(g_cmd_buf,filexp(maildoer),sizeof g_cmd_buf);
     invoke(g_cmd_buf,g_origdir.c_str());
 done:
@@ -731,14 +731,14 @@ void forward()
     init_compex(&mime_compex);
 #endif
     artopen(g_art,(ART_POS)0);
-    g_tmpfp = fopen(g_headname.c_str(),"w");	/* open header file */
-    if (g_tmpfp == nullptr) {
+    FILE *header = fopen(g_headname.c_str(),"w");	/* open header file */
+    if (header == nullptr) {
 	printf(g_cantcreate,g_headname.c_str()) FLUSH;
 	termdown(1);
 	goto done;
     }
     interp(hbuf, sizeof hbuf, get_val("FORWARDHEADER",FORWARDHEADER));
-    fputs(hbuf,g_tmpfp);
+    fputs(hbuf,header);
 #ifdef REGEX_WORKS_RIGHT
     if (!compile(&mime_compex,"Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"",true,true)
      && execute(&mime_compex,hbuf) != nullptr)
@@ -788,11 +788,11 @@ void forward()
 	if (mime_boundary) {
 	    if (*g_buf && strncasecmp(g_buf, "Content-", 8))
 		strcpy(g_buf, "Content-Type: text/plain\n");
-	    fprintf(g_tmpfp,"--%s\n%s\n[Replace this with your comments.]\n\n--%s\nContent-Type: message/rfc822\n\n",
+	    fprintf(header,"--%s\n%s\n[Replace this with your comments.]\n\n--%s\nContent-Type: message/rfc822\n\n",
 		    mime_boundary,g_buf,mime_boundary);
 	}
 	else if (*g_buf)
-	    fprintf(g_tmpfp,"%s\n",g_buf);
+	    fprintf(header,"%s\n",g_buf);
 	parseheader(g_art);
 	seekart((ART_POS)0);
 	while (readart(g_buf,sizeof g_buf) != nullptr) {
@@ -800,17 +800,17 @@ void forward()
 		putchar('-');
 		putchar(' ');
 	    }
-	    fprintf(g_tmpfp,"%s",g_buf);
+	    fprintf(header,"%s",g_buf);
 	}
 	if (mime_boundary)
-	    fprintf(g_tmpfp,"\n--%s--\n",mime_boundary);
+	    fprintf(header,"\n--%s--\n",mime_boundary);
 	else {
 	    interp(g_buf, (sizeof g_buf), get_val("FORWARDMSGEND",FORWARDMSGEND));
 	    if (*g_buf)
-		fprintf(g_tmpfp,"%s\n",g_buf);
+		fprintf(header,"%s\n",g_buf);
 	}
     }
-    fclose(g_tmpfp);
+    fclose(header);
     safecpy(g_cmd_buf,filexp(maildoer),sizeof g_cmd_buf);
     invoke(g_cmd_buf,g_origdir.c_str());
   done:
@@ -838,15 +838,15 @@ void followup()
 	    g_art = g_lastart + 1;
     }
     artopen(g_art,(ART_POS)0);
-    g_tmpfp = fopen(g_headname.c_str(),"w");
-    if (g_tmpfp == nullptr) {
+    FILE *header = fopen(g_headname.c_str(),"w");
+    if (header == nullptr) {
 	printf(g_cantcreate,g_headname.c_str()) FLUSH;
 	termdown(1);
 	g_art = oldart;
 	return;
     }
     interp(hbuf, sizeof hbuf, get_val("NEWSHEADER",NEWSHEADER));
-    fputs(hbuf,g_tmpfp);
+    fputs(hbuf,header);
     if (incl_body && g_artfp != nullptr) {
 	char* s;
         if (g_verbose)
@@ -855,7 +855,7 @@ void followup()
                   "trim the quoted article down as much as possible.)\n",
                   stdout) FLUSH;
 	interp(g_buf, (sizeof g_buf), get_val("ATTRIBUTION",ATTRIBUTION));
-	fprintf(g_tmpfp,"%s\n",g_buf);
+	fprintf(header,"%s\n",g_buf);
 	parseheader(g_art);
 	mime_SetArticle();
 	clear_artbuf();
@@ -866,14 +866,14 @@ void followup()
             if (t != nullptr)
 		*t = '\0';
 	    strcharsubst(hbuf,s,sizeof hbuf,*g_charsubst);
-	    fprintf(g_tmpfp,"%s%s\n",g_indstr.c_str(),hbuf);
+	    fprintf(header,"%s%s\n",g_indstr.c_str(),hbuf);
 	    if (t)
 		*t = '\0';
 	}
-	fprintf(g_tmpfp,"\n");
+	fprintf(header,"\n");
 	g_wrapped_nl = WRAPPED_NL;
     }
-    fclose(g_tmpfp);
+    fclose(header);
     follow_it_up();
     g_art = oldart;
 }

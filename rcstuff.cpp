@@ -596,10 +596,10 @@ static bool open_newsrc(NEWSRC *rp)
     rp->flags |= RF_RCCHANGED;
 #endif
     if (rp->infoname) {
-        g_tmpfp = fopen(rp->infoname, "r");
-        if (g_tmpfp != nullptr)
+        FILE *info = fopen(rp->infoname, "r");
+        if (info != nullptr)
         {
-	    if (fgets(g_buf,sizeof g_buf,g_tmpfp) != nullptr) {
+	    if (fgets(g_buf,sizeof g_buf,info) != nullptr) {
 		long actnum, descnum;
                 g_buf[strlen(g_buf)-1] = '\0';
                 char *s = strchr(g_buf, ':');
@@ -607,12 +607,13 @@ static bool open_newsrc(NEWSRC *rp)
                 {
 		    g_lastngname = s+2;
 		}
-		if (fscanf(g_tmpfp,"New-Group-State: %ld,%ld,%ld",
+		if (fscanf(info,"New-Group-State: %ld,%ld,%ld",
 			   &g_lastnewtime,&actnum,&descnum) == 3) {
 		    rp->datasrc->act_sf.recent_cnt = actnum;
 		    rp->datasrc->desc_sf.recent_cnt = descnum;
 		}
 	    }
+	    fclose(info);
 	}
     }
     else {
@@ -1298,14 +1299,14 @@ bool write_newsrcs(MULTIRC *mptr)
 	    continue;
 
 	if (rp->infoname) {
-            g_tmpfp = fopen(rp->infoname, "w");
-            if (g_tmpfp != nullptr)
+            FILE *info = fopen(rp->infoname, "w");
+            if (info != nullptr)
             {
-		fprintf(g_tmpfp,"Last-Group: %s\nNew-Group-State: %ld,%ld,%ld\n",
+		fprintf(info,"Last-Group: %s\nNew-Group-State: %ld,%ld,%ld\n",
 			g_ngname.c_str(),rp->datasrc->lastnewgrp,
 			rp->datasrc->act_sf.recent_cnt,
 			rp->datasrc->desc_sf.recent_cnt);
-		fclose(g_tmpfp);
+		fclose(info);
 	    }
 	}
 	else {
