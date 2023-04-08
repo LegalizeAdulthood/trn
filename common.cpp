@@ -17,7 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-bool g_use_newsgroup_selector{true};
 int g_use_news_selector{SELECT_INIT - 1};
 bool g_use_mouse{};
 // Array of minor_mode characters.
