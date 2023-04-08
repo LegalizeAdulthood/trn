@@ -38,6 +38,7 @@ bool       g_checkflag{};       /* -c */
 bool       g_suppress_cn{};     /* -s */
 int        g_countdown{5};      /* how many lines to list before invoking -s */
 bool       g_fuzzy_get{};       /* -G */
+bool       g_append_unsub{};    /* -I */
 
 enum
 {

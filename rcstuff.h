@@ -82,6 +82,7 @@ extern bool       g_checkflag;       /* -c */
 extern bool       g_suppress_cn;     /* -s */
 extern int        g_countdown;       /* how many lines to list before invoking -s */
 extern bool       g_fuzzy_get;       /* -G */
+extern bool       g_append_unsub;    /* -I */
 
 bool     rcstuff_init();
 void     rcstuff_final();

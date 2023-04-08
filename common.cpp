@@ -17,12 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-#ifdef APPEND_UNSUB
-bool g_append_unsub{true}; /* -I */
-#else
-bool g_append_unsub{}; /* -I */
-#endif
-
 bool g_use_univ_selector{};
 bool g_use_newsrc_selector{};
 bool g_use_add_selector{true};
