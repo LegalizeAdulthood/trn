@@ -47,6 +47,7 @@ extern bool g_muck_up_clear;   /* -loco */
 extern bool g_erase_screen;    /* -e */
 extern bool g_can_home;        //
 extern bool g_erase_each_line; /* fancy -e */
+extern bool g_allow_typeahead; /* -T */
 
 /* termcap stuff */
 
