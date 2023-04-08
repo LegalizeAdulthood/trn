@@ -36,27 +36,28 @@ enum sel_sort_mode
     SS_SCORE
 };
 
-extern bool g_sel_rereading;
-extern sel_mode g_sel_mode;
-extern sel_mode g_sel_defaultmode;
-extern sel_mode g_sel_threadmode;
-extern const char *g_sel_mode_string;
-extern sel_sort_mode g_sel_sort;
-extern sel_sort_mode g_sel_artsort;
-extern sel_sort_mode g_sel_threadsort;
-extern sel_sort_mode g_sel_newsgroupsort;
-extern const char *g_sel_sort_string;
-extern int g_sel_direction;
-extern bool g_sel_exclusive;
+extern bool           g_sel_rereading;
+extern sel_mode       g_sel_mode;
+extern sel_mode       g_sel_defaultmode;
+extern sel_mode       g_sel_threadmode;
+extern const char    *g_sel_mode_string;
+extern sel_sort_mode  g_sel_sort;
+extern sel_sort_mode  g_sel_artsort;
+extern sel_sort_mode  g_sel_threadsort;
+extern sel_sort_mode  g_sel_newsgroupsort;
+extern const char    *g_sel_sort_string;
+extern int            g_sel_direction;
+extern bool           g_sel_exclusive;
 extern addgroup_flags g_sel_mask;
-extern bool g_selected_only;
-extern ART_UNREAD g_selected_count;
-extern int g_selected_subj_cnt;
-extern int g_added_articles;
-extern char *g_sel_chars;
-extern int g_sel_item_index;
-extern int g_sel_last_line;
-extern bool g_sel_at_end;
+extern bool           g_selected_only;
+extern ART_UNREAD     g_selected_count;
+extern int            g_selected_subj_cnt;
+extern int            g_added_articles;
+extern char          *g_sel_chars;
+extern int            g_sel_item_index;
+extern int            g_sel_last_line;
+extern bool           g_sel_at_end;
+extern int            g_keep_the_group_static; /* -K */
 
 char article_selector(char_int cmd);
 char multirc_selector();

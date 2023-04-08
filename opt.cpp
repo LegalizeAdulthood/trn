@@ -22,6 +22,7 @@
 #include "ng.h"
 #include "ngdata.h"
 #include "only.h"
+#include "respond.h"
 #include "rt-page.h"
 #include "rt-select.h"
 #include "scan.h"

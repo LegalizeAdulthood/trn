@@ -51,27 +51,28 @@ enum univ_read_result
     UR_ERROR = 3  /* non-normal return */
 };
 
-bool g_sel_rereading{};
-sel_mode g_sel_mode{};
-sel_mode g_sel_defaultmode{SM_THREAD};
-sel_mode g_sel_threadmode{SM_THREAD};
-const char *g_sel_mode_string{};
-sel_sort_mode g_sel_sort{};
-sel_sort_mode g_sel_artsort{SS_GROUPS};
-sel_sort_mode g_sel_threadsort{SS_DATE};
-sel_sort_mode g_sel_newsgroupsort{SS_NATURAL};
-const char *g_sel_sort_string{};
-int g_sel_direction{1};
-bool g_sel_exclusive{};
+bool           g_sel_rereading{};
+sel_mode       g_sel_mode{};
+sel_mode       g_sel_defaultmode{SM_THREAD};
+sel_mode       g_sel_threadmode{SM_THREAD};
+const char    *g_sel_mode_string{};
+sel_sort_mode  g_sel_sort{};
+sel_sort_mode  g_sel_artsort{SS_GROUPS};
+sel_sort_mode  g_sel_threadsort{SS_DATE};
+sel_sort_mode  g_sel_newsgroupsort{SS_NATURAL};
+const char    *g_sel_sort_string{};
+int            g_sel_direction{1};
+bool           g_sel_exclusive{};
 addgroup_flags g_sel_mask{AGF_SEL};
-bool g_selected_only{};
-ART_UNREAD g_selected_count{};
-int g_selected_subj_cnt{};
-int g_added_articles{};
-char *g_sel_chars{};
-int g_sel_item_index{};
-int g_sel_last_line{};
-bool g_sel_at_end{};
+bool           g_selected_only{};
+ART_UNREAD     g_selected_count{};
+int            g_selected_subj_cnt{};
+int            g_added_articles{};
+char          *g_sel_chars{};
+int            g_sel_item_index{};
+int            g_sel_last_line{};
+bool           g_sel_at_end{};
+int            g_keep_the_group_static{}; /* -K */
 
 static char s_sel_ret{};
 static char s_page_char{};

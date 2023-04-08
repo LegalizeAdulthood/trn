@@ -30,10 +30,11 @@
 #include <direct.h>
 #endif
 
-std::string g_savedest;    /* value of %b */
-std::string g_extractdest; /* value of %E */
-std::string g_extractprog; /* value of %e */
-ART_POS g_savefrom{};  /* value of %B */
+std::string g_savedest;      /* value of %b */
+std::string g_extractdest;   /* value of %E */
+std::string g_extractprog;   /* value of %e */
+ART_POS     g_savefrom{};    /* value of %B */
+bool        g_mbox_always{}; /* -M */
 
 static char s_nullart[] = "\nEmpty article.\n";
 

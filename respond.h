@@ -9,7 +9,8 @@
 extern std::string g_savedest;    /* value of %b */
 extern std::string g_extractdest; /* value of %E */
 extern std::string g_extractprog; /* value of %e */
-extern ART_POS g_savefrom;  /* value of %B */
+extern ART_POS     g_savefrom;    /* value of %B */
+extern bool        g_mbox_always; /* -M */
 
 enum save_result
 {

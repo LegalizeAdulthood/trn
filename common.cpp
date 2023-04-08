@@ -28,8 +28,6 @@ char g_newsgroup_sel_cmds[3]{"Z>"};
 char g_news_sel_cmds[3]{"Z>"};
 char g_option_sel_cmds[3]{"Z>"};
 
-int         g_keep_the_group_static{}; /* -K */
-bool        g_mbox_always{};           /* -M */
 bool        g_norm_always{};           /* -N */
 bool        g_thread_always{};         /* -a */
 int         g_auto_arrow_macros{2};    /* -A */
