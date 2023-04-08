@@ -13,6 +13,7 @@
 #include "ngdata.h"
 #include "rt-select.h"
 #include "rthread.h"
+#include "term.h"
 #include "util.h"
 #include "util2.h"
 

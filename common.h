@@ -690,56 +690,6 @@ extern int debug; /* -D */
 
 /* miscellania */
 
-// These identifiers are a best guess based on usage in the code.
-enum general_mode : char
-{
-    GM_CHOICE = 'c',
-    GM_INIT = 'I',
-    GM_INPUT = 'i',
-    GM_PROMPT = 'p',
-    GM_READ = 'r',
-    GM_SELECTOR = 's',
-};
-
-// These identifiers are a best guess based on usage in the code.
-enum minor_mode : char
-{
-    MM_NONE = '\0',
-    MM_ARTICLE = 'a',
-    MM_NEWSRC_SELECTOR = 'c',
-    MM_SELECTOR_MODE_PROMPT = 'd',
-    MM_ARTICLE_END = 'e',
-    MM_FINISH_NEWSGROUP_LIST = 'f',
-    MM_INITIALIZING = 'i',
-    MM_ADD_GROUP_SELECTOR = 'j',
-    MM_PROCESSING_KILL = 'k',
-    MM_OPTION_SELECTOR = 'l',
-    MM_MEMORIZE_THREAD_PROMPT = 'm',
-    MM_NEWSGROUP_LIST = 'n',
-    MM_SELECTOR_ORDER_PROMPT = 'o',
-    MM_PAGER = 'p',
-    MM_Q = 'q',
-    MM_MEMORIZE_SUBJECT_PROMPT = 'r',
-    MM_S = 's',
-    MM_THREAD_SELECTOR = 't',
-    MM_UNKILL_PROMPT = 'u',
-    MM_UNIVERSAL = 'v',
-    MM_NEWSGROUP_SELECTOR = 'w',
-    MM_EXECUTE = 'x',
-    MM_OPTION_EDIT_PROMPT = 'z',
-    MM_ADD_NEWSGROUP_PROMPT = 'A',
-    MM_CONFIRM_ABANDON_PROMPT = 'B',
-    MM_CONFIRM_CATCH_UP_PROMPT = 'C',
-    MM_DELETE_BOGUS_NEWSGROUPS_PROMPT = 'D',
-    MM_FOLLOWUP_NEW_TOPIC_PROMPT = 'F',
-    MM_ANY_KEY_PROMPT = 'K',
-    MM_USE_MAILBOX_FORMAT_PROMPT = 'M',
-    MM_RESUBSCRIBE_PROMPT = 'R',
-};
-
-extern minor_mode   g_mode;         /* current state of trn */
-extern general_mode g_general_mode; /* general mode of trn */
-
 extern FILE *g_tmpfp; /* scratch fp used for .rnlock, .rnlast, etc. */
 
 inline const char *plural(int num)

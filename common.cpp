@@ -19,9 +19,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* miscellania */
 
-minor_mode   g_mode{MM_INITIALIZING};         /* current state of trn */
-general_mode g_general_mode{GM_INIT}; /* general mode of trn */
-
 FILE *g_tmpfp{}; /* scratch fp used for .rnlock, .rnlast, etc. */
 
 /* Factored strings */
