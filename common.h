@@ -688,9 +688,6 @@ extern int debug; /* -D */
 #   define DEB_FEED_XREF 16384
 #endif
 
-#define DEFAULT_REFETCH_SECS  4L*60*60	/* 4 hours */
-extern time_t g_def_refetch_secs;             /* -z */
-
 extern int g_word_wrap_offset; /* right-hand column size (0 is off) */
 
 #define NOMARKING 0

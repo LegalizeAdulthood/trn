@@ -13,6 +13,7 @@
 #include "cache.h"
 #include "charsubst.h"
 #include "color.h"
+#include "datasrc.h"
 #include "env.h"
 #include "final.h"
 #include "head.h"

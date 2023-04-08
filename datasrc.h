@@ -7,11 +7,14 @@
 #include <cstdint>
 #include <stdio.h>
 #include <string>
+#include <time.h>
 
 #include "enum-flags.h"
 #include "list.h"
 #include "nntpclient.h"
 #include "rt-ov.h"
+
+#define DEFAULT_REFETCH_SECS (4L * 60 * 60) /* 4 hours */
 
 struct HASHTABLE;
 struct LIST;
@@ -90,11 +93,12 @@ enum
     DATASRC_ALARM_SECS = (5 * 60)
 };
 
-extern LIST       *g_datasrc_list; /* a list of all DATASRCs */
-extern DATASRC    *g_datasrc;      /* the current datasrc */
-extern int         g_datasrc_cnt;
-extern char       *g_trnaccess_mem;
-extern std::string g_nntp_auth_file;
+extern LIST       *g_datasrc_list;     /* a list of all DATASRCs */
+extern DATASRC    *g_datasrc;          /* the current datasrc */
+extern int         g_datasrc_cnt;      //
+extern char       *g_trnaccess_mem;    //
+extern std::string g_nntp_auth_file;   //
+extern time_t      g_def_refetch_secs; /* -z */
 
 void        datasrc_init();
 void        datasrc_finalize();

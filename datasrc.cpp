@@ -41,11 +41,12 @@ struct utimbuf
 
 #include <string>
 
-LIST       *g_datasrc_list{}; /* a list of all DATASRCs */
-DATASRC    *g_datasrc{};      /* the current datasrc */
-int         g_datasrc_cnt{};
-char       *g_trnaccess_mem{};
-std::string g_nntp_auth_file;
+LIST       *g_datasrc_list{};                         /* a list of all DATASRCs */
+DATASRC    *g_datasrc{};                              /* the current datasrc */
+int         g_datasrc_cnt{};                          //
+char       *g_trnaccess_mem{};                        //
+std::string g_nntp_auth_file;                         //
+time_t      g_def_refetch_secs{DEFAULT_REFETCH_SECS}; /* -z */
 
 enum
 {
