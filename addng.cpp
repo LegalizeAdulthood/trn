@@ -26,7 +26,8 @@ ADDGROUP *g_first_addgroup{};
 ADDGROUP *g_last_addgroup{};
 ADDGROUP *g_sel_page_gp{};
 ADDGROUP *g_sel_next_gp{};
-bool      g_quickstart{}; /* -q */
+bool      g_quickstart{};           /* -q */
+bool      g_use_add_selector{true}; //
 
 static int s_addgroup_cnt{};
 
