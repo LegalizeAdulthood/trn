@@ -97,7 +97,7 @@ void sw_list(char *swlist)
 
 /* decode a single switch */
 
-void decode_switch(char *s)
+void decode_switch(const char *s)
 {
     while (isspace(*s)) s++;		/* ignore leading spaces */
 #ifdef DEBUG
@@ -175,21 +175,24 @@ void decode_switch(char *s)
 	    set_option(OI_ERASE_SCREEN, YESorNO(upordown));
 	    break;
 	case 'E':
-	    if (*++s == '=') s++;
+	{
+            if (*++s == '=')
+                s++;
 	    strcpy(tmpbuf,s);
-	    s = strchr(tmpbuf,'=');
-	    if (s) {
-		*s++ = '\0';
-		s = export_var(tmpbuf,s) - (s-tmpbuf);
-		if (g_mode == MM_INITIALIZING)
-		    save_init_environment(s);
+	    char *tmp = strchr(tmpbuf,'=');
+	    if (tmp) {
+	        *tmp++ = '\0';
+	        tmp = export_var(tmpbuf,tmp) - (tmp-tmpbuf);
+	        if (g_mode == MM_INITIALIZING)
+	            save_init_environment(tmp);
 	    }
 	    else {
-		s = export_var(tmpbuf,"") - strlen(tmpbuf) - 1;
-		if (g_mode == MM_INITIALIZING)
-		    save_init_environment(s);
+	        tmp = export_var(tmpbuf,"") - strlen(tmpbuf) - 1;
+	        if (g_mode == MM_INITIALIZING)
+	            save_init_environment(tmp);
 	    }
 	    break;
+	}
 	case 'f':
 	    set_option(OI_NOVICE_DELAYS, YESorNO(!upordown));
 	    break;

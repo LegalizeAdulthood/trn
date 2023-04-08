@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <memory>
 #include <string>
 
 #include "common.h"
@@ -38,7 +39,6 @@
 
 COMPEX g_optcompex;
 std::string g_ini_file;
-char *g_yesorno[2] = {"no", "yes"};
 INI_WORDS g_options_ini[] = {
     { 0, "OPTIONS", 0 },
 
@@ -161,7 +161,7 @@ int g_sel_next_op{};
 
 static char* hidden_list();
 static char* magic_list();
-static void  set_header_list(headtype_flags flag, headtype_flags defflag, char *str);
+static void  set_header_list(headtype_flags flag, headtype_flags defflag, const char *str);
 static int   parse_mouse_buttons(char **cpp, const char *btns);
 static char *expand_mouse_buttons(char *cp, int cnt);
 
@@ -328,7 +328,7 @@ void set_options(char **vals)
     }
 }
 
-void set_option(int num, char *s)
+void set_option(int num, const char *s)
 {
     if (g_option_saved_vals) {
 	if (!g_option_saved_vals[num]) {
@@ -1103,7 +1103,7 @@ static char *magic_list()
     return g_buf+1;
 }
 
-static void set_header_list(headtype_flags flag, headtype_flags defflag, char *str)
+static void set_header_list(headtype_flags flag, headtype_flags defflag, const char *str)
 {
     bool setit;
 
@@ -1120,25 +1120,28 @@ static void set_header_list(headtype_flags flag, headtype_flags defflag, char *s
 	g_htype[i].flags = ((g_htype[i].flags & defflag)
 			? (g_htype[i].flags | flag)
 			: (g_htype[i].flags & ~flag));
+    std::unique_ptr<char> buffer(new char[strlen(str) + 1]);
+    char *buff = buffer.get();
+    strcpy(buff, str);
     for (;;) {
-        char *cp = strchr(str, ',');
+        char *cp = strchr(buff, ',');
         if (cp != nullptr)
 	    *cp = '\0';
-	if (*str == '!') {
+	if (*buff == '!') {
 	    setit = false;
-	    str++;
+	    buff++;
 	}
 	else
 	    setit = true;
-	set_header(str,flag,setit);
+	set_header(buff,flag,setit);
 	if (!cp)
 	    break;
 	*cp = ',';
-	str = cp+1;
+	buff = cp+1;
     }
 }
 
-void set_header(char *s, headtype_flags flag, bool setit)
+void set_header(const char *s, headtype_flags flag, bool setit)
 {
     int i;
     int len = strlen(s);
@@ -1192,9 +1195,9 @@ void set_header(char *s, headtype_flags flag, bool setit)
 	    g_user_htype[add_at].length = len;
 	    g_user_htype[add_at].flags = setit? flag : 0;
 	    g_user_htype[add_at].name = savestr(s);
-	    for (s = g_user_htype[add_at].name; *s; s++) {
-		if (isupper(*s))
-		    *s = tolower(*s);
+	    for (char *tmp = g_user_htype[add_at].name; *tmp; tmp++) {
+		if (isupper(*tmp))
+		    *tmp = static_cast<char>(tolower(*tmp));
 	    }
 	}
 	if (killed) {

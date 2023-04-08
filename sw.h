@@ -6,7 +6,7 @@
 
 void sw_file(char **tcbufptr);
 void sw_list(char *swlist);
-void decode_switch(char *s);
+void decode_switch(const char *s);
 void save_init_environment(char *str);
 void write_init_environment(FILE *fp);
 

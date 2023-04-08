@@ -8,8 +8,6 @@
 #include "search.h"
 #include "util.h"
 
-#define YESorNO(v) g_yesorno[(int)(v)]
-
 /* Display Options */
 enum display_option
 {
@@ -129,7 +127,6 @@ enum display_option
 
 extern COMPEX g_optcompex;
 extern std::string g_ini_file;
-extern char* g_yesorno[2];
 extern INI_WORDS g_options_ini[];
 extern char **g_option_def_vals;
 extern char **g_option_saved_vals;
@@ -141,11 +138,16 @@ void        opt_init(int argc, char *argv[], char **tcbufptr);
 void        opt_final();
 void        opt_file(const char *filename, char **tcbufptr, bool bleat);
 void        set_options(char **vals);
-void        set_option(int num, char *s);
+void        set_option(int num, const char *s);
 void        save_options(const char *filename);
 const char *option_value(int num);
-void        set_header(char *s, headtype_flags flag, bool setit);
+void        set_header(const char *s, headtype_flags flag, bool setit);
 const char *quote_string(const char *val);
 void        cwd_check();
+
+inline const char *YESorNO(bool v)
+{
+    return v ? "yes" : "no";
+}
 
 #endif
