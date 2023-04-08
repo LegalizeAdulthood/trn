@@ -80,6 +80,7 @@ extern bool  g_error_occurred;
 extern int   g_mousebar_cnt;
 extern int   g_mousebar_width;
 extern bool  g_mouse_is_down;
+extern int   g_auto_arrow_macros; /* -A */
 
 void  term_init();
 void  term_set(char *tcbuf);

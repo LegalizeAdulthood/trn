@@ -118,6 +118,7 @@ bool g_error_occurred{};
 int g_mousebar_cnt{};
 int g_mousebar_width{};
 bool g_mouse_is_down{};
+int  g_auto_arrow_macros{2}; /* -A */
 
 static char *s_mousebar_btns{};
 static int s_mousebar_start{};

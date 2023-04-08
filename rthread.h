@@ -9,10 +9,11 @@ struct ARTICLE;
 struct HASHTABLE;
 struct SUBJECT;
 
-extern ART_NUM g_obj_count;
-extern int g_subject_count;
-extern bool g_output_chase_phrase;
+extern ART_NUM    g_obj_count;
+extern int        g_subject_count;
+extern bool       g_output_chase_phrase;
 extern HASHTABLE *g_msgid_hash;
+extern bool       g_thread_always; /* -a */
 
 /* Values to pass to count_subjects() */
 enum cs_mode

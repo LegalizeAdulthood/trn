@@ -699,8 +699,6 @@ extern char g_newsgroup_sel_cmds[3];
 extern char g_news_sel_cmds[3];
 extern char g_option_sel_cmds[3];
 
-extern bool        g_thread_always;         /* -a */
-extern int         g_auto_arrow_macros;     /* -A */
 extern bool        g_breadth_first;         /* -b */
 extern bool        g_bkgnd_spinner;         /* -B */
 extern bool        g_novice_delays;         /* +f */

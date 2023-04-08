@@ -26,10 +26,11 @@
 #include "util.h"
 #include "util2.h"
 
-ART_NUM g_obj_count{};
-int g_subject_count{};
-bool g_output_chase_phrase{};
+ART_NUM    g_obj_count{};
+int        g_subject_count{};
+bool       g_output_chase_phrase{};
 HASHTABLE *g_msgid_hash{};
+bool       g_thread_always{}; /* -a */
 
 static int cleanup_msgid_hash(int keylen, HASHDATUM *data, int extra);
 static ARTICLE *first_sib(ARTICLE *ta, int depth);
