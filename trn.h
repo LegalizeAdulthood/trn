@@ -22,11 +22,13 @@ enum input_newsgroup_result
     ING_MESSAGE
 };
 
-extern std::string g_ngname;     /* name of current newsgroup */
-extern std::string g_ngdir;      /* same thing in directory name form */
-extern std::string g_patchlevel; //
-extern int         g_findlast;   /* -r */
-extern bool        g_verbose;    /* +t */
+extern std::string g_ngname;              /* name of current newsgroup */
+extern std::string g_ngdir;               /* same thing in directory name form */
+extern std::string g_patchlevel;          //
+extern int         g_findlast;            /* -r */
+extern bool        g_verbose;             /* +t */
+extern bool        g_use_univ_selector;   //
+extern bool        g_use_newsrc_selector; //
 
 void trn_init();
 void do_multirc();
