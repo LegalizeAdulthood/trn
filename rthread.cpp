@@ -31,6 +31,7 @@ int        g_subject_count{};
 bool       g_output_chase_phrase{};
 HASHTABLE *g_msgid_hash{};
 bool       g_thread_always{}; /* -a */
+bool       g_breadth_first{}; /* -b */
 
 static int cleanup_msgid_hash(int keylen, HASHDATUM *data, int extra);
 static ARTICLE *first_sib(ARTICLE *ta, int depth);

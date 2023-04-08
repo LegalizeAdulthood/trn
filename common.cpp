@@ -17,7 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-bool        g_breadth_first{};         /* -b */
 bool        g_bkgnd_spinner{};         /* -B */
 bool        g_novice_delays{true};     /* +f */
 int         g_olden_days{};            /* -o */
