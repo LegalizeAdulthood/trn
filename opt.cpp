@@ -21,6 +21,7 @@
 #include "mime.h"
 #include "ng.h"
 #include "ngdata.h"
+#include "ngstuff.h"
 #include "only.h"
 #include "respond.h"
 #include "rthread.h"

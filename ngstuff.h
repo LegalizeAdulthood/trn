@@ -4,6 +4,8 @@
 #ifndef TRN_NGSTUFF_H
 #define TRN_NGSTUFF_H
 
+#include <string>
+
 struct ADDGROUP;
 
 enum numnum_result
@@ -14,7 +16,8 @@ enum numnum_result
     NN_ASK
 };
 
-extern bool g_one_command; /* no ':' processing in perform() */
+extern bool        g_one_command; /* no ':' processing in perform() */
+extern std::string g_savedir;     /* -d */
 
 void ngstuff_init();
 int escapade();

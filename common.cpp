@@ -17,7 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-std::string g_savedir;                 /* -d */
 bool        g_suppress_cn{};           /* -s */
 int         g_countdown{5};            /* how many lines to list before invoking -s */
 bool        g_muck_up_clear{};         /* -loco */
