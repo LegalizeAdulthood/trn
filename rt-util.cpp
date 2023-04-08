@@ -21,8 +21,9 @@ char g_spin_char{' '};  /* char to put back when we're done spinning */
 long g_spin_estimate{}; /* best guess of how much work there is */
 long g_spin_todo{};     /* the max word to do (might decrease) */
 int g_spin_count{};     /* counter for when to spin */
-int g_spin_marks{25};   /* how many bargraph marks we want */
 bool g_performed_article_loop{};
+
+static int s_spin_marks{25}; /* how many bargraph marks we want */
 
 static char *output_change(char *cp, long num, const char *obj_type, const char *modifier, const char *action);
 
@@ -647,9 +648,9 @@ void setspin(spin_mode mode)
 	    mode = SPIN_BARGRAPH;
 	if (mode == SPIN_BARGRAPH) {
 	    if (s_spin_mode != SPIN_BARGRAPH) {
-                g_spin_marks = (g_verbose? 25 : 10);
-		printf(" [%*s]", g_spin_marks, "");
-		for (int i = g_spin_marks + 1; i--; ) backspace();
+                s_spin_marks = (g_verbose? 25 : 10);
+		printf(" [%*s]", s_spin_marks, "");
+		for (int i = s_spin_marks + 1; i--; ) backspace();
 		fflush(stdout);
 	    }
 	    s_spin_pos = 0;
@@ -710,7 +711,7 @@ void spin(int count)
       case SPIN_BARGRAPH: {
           if (g_spin_todo == 0)
 	    break;		/* bail out rather than crash */
-	int new_pos = (int)((long)g_spin_marks * ++g_spin_count / g_spin_todo);
+	int new_pos = (int)((long)s_spin_marks * ++g_spin_count / g_spin_todo);
 	if (s_spin_pos < new_pos && g_spin_count <= g_spin_todo+1) {
 	    do {
 		putchar('*');
