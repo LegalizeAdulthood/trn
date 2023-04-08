@@ -22,8 +22,8 @@
 #include "final.h"
 #include "rt-process.h"
 #include "rt-util.h"
-#include "parsedate.h"
 
+#include <parsedate/parsedate.h>
 
 /* How many overview lines to read with one NNTP call */
 enum

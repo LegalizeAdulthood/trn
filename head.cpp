@@ -15,11 +15,12 @@
 #include "ngdata.h"
 #include "nntp.h"
 #include "nntpclient.h"
-#include "parsedate.h"
 #include "rt-process.h"
 #include "rt-util.h"
 #include "util.h"
 #include "util2.h"
+
+#include <parsedate/parsedate.h>
 
 #define HIDDEN    (HT_HIDE|HT_DEFHIDE)
 #define MAGIC_ON  (HT_MAGICOK|HT_MAGIC|HT_DEFMAGIC)

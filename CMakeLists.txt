@@ -48,15 +48,6 @@ add_library(tool
 target_link_libraries(tool PUBLIC nntp)
 set_property(TARGET tool PROPERTY FOLDER Libraries)
 
-bison_target(parsedate parsedate.y ${CMAKE_CURRENT_BINARY_DIR}/parsedate.c)
-add_library(parsedate
-    ${BISON_parsedate_OUTPUTS} parsedate.h
-    parsedate.y
-)
-source_group("Yacc Files" REGULAR_EXPRESSION "^.*\\.y")
-target_include_directories(parsedate PUBLIC .)
-set_target_properties(parsedate PROPERTIES FOLDER Libraries)
-
 add_library(libtrn
     ${CMAKE_CURRENT_BINARY_DIR}/config.h
     addng.cpp addng.h
@@ -159,4 +150,5 @@ set_property(TARGET trn-artchk PROPERTY FOLDER Tools)
 add_executable(trn main.cpp)
 target_link_libraries(trn PUBLIC libtrn)
 
+add_subdirectory(parsedate)
 add_subdirectory(tests)
