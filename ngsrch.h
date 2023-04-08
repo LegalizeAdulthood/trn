@@ -17,8 +17,6 @@ enum ng_search_result
     NGS_DONE = 5
 };
 
-extern bool g_ng_doempty; /* search empty newsgroups? */
-
 void ngsrch_init();
 ng_search_result ng_search(char *patbuf, bool get_cmd);
 bool ng_wanted(NGDATA *np);

@@ -17,12 +17,12 @@
 #include "term.h"
 #include "util2.h"
 
-bool g_ng_doempty{}; /* search empty newsgroups? */
-
+static bool s_ng_doempty{}; /* search empty newsgroups? */
 static COMPEX s_ngcompex;
 
 void ngsrch_init()
 {
+    s_ng_doempty = false;
     init_compex(&s_ngcompex);
 }
 
@@ -43,13 +43,13 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
     {
     }
     if (*pattern)
-	g_ng_doempty = false;
+	s_ng_doempty = false;
 
     if (*s) {				/* modifiers or commands? */
 	while (*++s) {
 	    switch (*s) {
 	    case 'r':
-		g_ng_doempty = true;
+		s_ng_doempty = true;
 		break;
 	    default:
 		goto loop_break;
@@ -140,7 +140,7 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
 	if (g_ngptr->toread >= TR_NONE && ng_wanted(g_ngptr)) {
 	    if (g_ngptr->toread == TR_NONE)
 		set_toread(g_ngptr, ST_LAX);
-	    if (g_ng_doempty || ((g_ngptr->toread > TR_NONE) ^ g_sel_rereading)) {
+	    if (s_ng_doempty || ((g_ngptr->toread > TR_NONE) ^ g_sel_rereading)) {
 		if (!cmdlst)
 		    return NGS_FOUND;
 		set_ng(g_ngptr);

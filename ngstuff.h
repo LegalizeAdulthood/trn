@@ -16,12 +16,6 @@ enum numnum_result
 
 extern bool g_one_command; /* no ':' processing in perform() */
 
-/* CAA: given the new and complex universal/help possibilities,
- *      the following interlock variable may save some trouble.
- *      (if true, we are currently processing options)
- */
-extern bool g_option_sel_ilock;
-
 void ngstuff_init();
 int escapade();
 int switcheroo();

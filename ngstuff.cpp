@@ -33,14 +33,16 @@
 #endif
 
 bool g_one_command{}; /* no ':' processing in perform() */
+
 /* CAA: given the new and complex universal/help possibilities,
  *      the following interlock variable may save some trouble.
  *      (if true, we are currently processing options)
  */
-bool g_option_sel_ilock{};
+static bool s_option_sel_ilock{};
 
 void ngstuff_init()
 {
+    s_option_sel_ilock = false;
 }
 
 /* do a shell escape */
@@ -91,14 +93,14 @@ int switcheroo()
 	return -1;	/* if rubbed out, try something else */
     if (!g_buf[1]) {
 	const std::string prior_savedir = g_savedir;
-	if (g_option_sel_ilock) {
+	if (s_option_sel_ilock) {
 	    g_buf[1] = '\0';
 	    return 0;
 	}
-	g_option_sel_ilock = true;
+	s_option_sel_ilock = true;
 	if (g_general_mode != GM_SELECTOR || g_sel_mode != SM_OPTIONS)/*$$*/
 	    option_selector();
-	g_option_sel_ilock = false;
+	s_option_sel_ilock = false;
 	if (g_savedir != prior_savedir)
 	    cwd_check();
 	g_buf[1] = '\0';
