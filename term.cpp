@@ -76,6 +76,8 @@ char *g_news_sel_btns{};
 char *g_option_sel_btns{};
 char *g_art_pager_btns{};
 
+bool g_muck_up_clear{}; /* -loco */
+
 #ifdef HAS_TERMLIB
 bool g_tc_GT{};   /* hardware tabs */
 char *g_tc_BC{}; /* backspace character */

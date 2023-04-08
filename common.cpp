@@ -17,7 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-bool        g_muck_up_clear{};         /* -loco */
 bool        g_erase_screen{};          /* -e */
 bool        g_can_home{};              //
 bool        g_erase_each_line{};       /* fancy -e */

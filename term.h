@@ -43,6 +43,8 @@ extern char *g_news_sel_btns;
 extern char *g_option_sel_btns;
 extern char *g_art_pager_btns;
 
+extern bool g_muck_up_clear; /* -loco */
+
 /* termcap stuff */
 
 /*
