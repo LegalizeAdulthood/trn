@@ -33,18 +33,20 @@
 #include "util.h"
 #include "util2.h"
 
-LIST *g_article_list{nullptr};    /* a list of ARTICLEs */
-ARTICLE **g_artptr_list{nullptr}; /* the article-selector creates this */
-ARTICLE **g_artptr{};             /* ditto -- used for article order */
-ART_NUM g_artptr_list_size{0};
-ART_NUM g_srchahead{0}; /* are we in subject scan mode? (if so, contains art # found or -1) */
-ART_NUM g_first_cached{};
-ART_NUM g_last_cached{};
-bool g_cached_all_in_range{};
-ARTICLE *g_sentinel_artp{};
-SUBJECT *g_first_subject{nullptr};
-SUBJECT *g_last_subject{nullptr};
-bool g_untrim_cache{false};
+LIST     *g_article_list{}; /* a list of ARTICLEs */
+ARTICLE **g_artptr_list{};  /* the article-selector creates this */
+ARTICLE **g_artptr{};       /* ditto -- used for article order */
+ART_NUM   g_artptr_list_size{};
+ART_NUM   g_srchahead{}; /* are we in subject scan mode? (if so, contains art # found or -1) */
+ART_NUM   g_first_cached{};
+ART_NUM   g_last_cached{};
+bool      g_cached_all_in_range{};
+ARTICLE  *g_sentinel_artp{};
+SUBJECT  *g_first_subject{};
+SUBJECT  *g_last_subject{};
+bool      g_untrim_cache{};
+int       g_join_subject_len{}; /* -J */
+
 #ifdef PENDING
 static ART_NUM s_subj_to_get{};
 static ART_NUM s_xref_to_get{};

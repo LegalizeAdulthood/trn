@@ -115,18 +115,19 @@ struct ARTICLE
 #define DONT_FILL_CACHE	false
 #define FILL_CACHE	true
 
-extern LIST *g_article_list;    /* a list of ARTICLEs */
-extern ARTICLE **g_artptr_list; /* the article-selector creates this */
-extern ARTICLE **g_artptr;      /* ditto -- used for article order */
-extern ART_NUM g_artptr_list_size;
-extern ART_NUM g_srchahead; /* are we in subject scan mode? (if so, contains art # found or -1) */
-extern ART_NUM g_first_cached;
-extern ART_NUM g_last_cached;
-extern bool g_cached_all_in_range;
-extern ARTICLE *g_sentinel_artp;
-extern SUBJECT *g_first_subject;
-extern SUBJECT *g_last_subject;
-extern bool g_untrim_cache;
+extern LIST     *g_article_list; /* a list of ARTICLEs */
+extern ARTICLE **g_artptr_list;  /* the article-selector creates this */
+extern ARTICLE **g_artptr;       /* ditto -- used for article order */
+extern ART_NUM   g_artptr_list_size;
+extern ART_NUM   g_srchahead; /* are we in subject scan mode? (if so, contains art # found or -1) */
+extern ART_NUM   g_first_cached;
+extern ART_NUM   g_last_cached;
+extern bool      g_cached_all_in_range;
+extern ARTICLE  *g_sentinel_artp;
+extern SUBJECT  *g_first_subject;
+extern SUBJECT  *g_last_subject;
+extern bool      g_untrim_cache;
+extern int       g_join_subject_len; /* -J */
 
 void cache_init();
 void build_cache();

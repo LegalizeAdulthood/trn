@@ -28,7 +28,6 @@ char g_newsgroup_sel_cmds[3]{"Z>"};
 char g_news_sel_cmds[3]{"Z>"};
 char g_option_sel_cmds[3]{"Z>"};
 
-int         g_join_subject_len{};      /* -J */
 bool        g_kill_thru_kludge{true};  /* -k */
 int         g_keep_the_group_static{}; /* -K */
 bool        g_mbox_always{};           /* -M */
