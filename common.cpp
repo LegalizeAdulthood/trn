@@ -17,7 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-bool g_use_threads{THREAD_INIT}; /* -x */
 int g_max_tree_lines{6};
 
 char g_newsrc_sel_cmds[3]{"Z>"};

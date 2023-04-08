@@ -14,6 +14,7 @@
 #include "help.h"
 #include "init.h"
 #include "intrp.h"
+#include "ng.h"
 #include "opt.h"
 #include "rt-select.h"
 #include "sdisp.h"

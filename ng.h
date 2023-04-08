@@ -22,6 +22,7 @@ extern char *g_mailcall;
 extern bool  g_forcelast; /* ought we show "End of newsgroup"? */
 extern bool  g_forcegrow; /* do we want to recalculate size of newsgroup, e.g. after posting? */
 extern int   g_scanon;    /* -S */
+extern bool  g_use_threads; /* -x */
 
 enum do_newsgroup_result
 {

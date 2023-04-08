@@ -7,6 +7,7 @@
 
 #include "addng.h"
 #include "final.h"
+#include "ng.h"
 #include "ngdata.h"
 #include "ngstuff.h"
 #include "rcln.h"
