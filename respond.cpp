@@ -37,6 +37,7 @@ ART_POS     g_savefrom{};    /* value of %B */
 bool        g_mbox_always{}; /* -M */
 bool        g_norm_always{}; /* -N */
 std::string g_privdir;       /* private news directory */
+std::string g_indstr{">"};   /* indent for old article embedded in followup */
 
 static char  s_nullart[] = "\nEmpty article.\n";
 static FILE *s_tmpfp{};

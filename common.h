@@ -663,7 +663,6 @@ inline void reportAssertion(const char *expr, const char *file, unsigned int lin
 extern char        g_msg[CBUFLEN];     /* general purpose message buffer */
 extern char        g_buf[LBUFLEN + 1]; /* general purpose line buffer */
 extern char        g_cmd_buf[CBUFLEN]; /* buffer for formatting system commands */
-extern std::string g_indstr;           /* indent for old article embedded in followup */
 
 
 /* switches */

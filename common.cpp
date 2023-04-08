@@ -10,8 +10,6 @@
 char        g_msg[CBUFLEN];     /* general purpose message buffer */
 char        g_buf[LBUFLEN + 1]; /* general purpose line buffer */
 char        g_cmd_buf[CBUFLEN]; /* buffer for formatting system commands */
-std::string g_indstr{">"};      /* indent for old article embedded in followup */
-
 
 /* Factored strings */
 const char *g_hforhelp{"Type h for help.\n"};
