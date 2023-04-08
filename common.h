@@ -728,10 +728,6 @@ extern const char *g_nocd;
 #define putchar(c)
 #endif
 
-#define nntp_advise(str) fputs(str,stdout)
-#define nntp_init_error(str) fputs(str,stdout)
-#define nntp_error(str) fputs(str,stderr)
-
 inline bool empty(const char *str)
 {
     return str == nullptr || str[0] == '\0';

@@ -4,6 +4,8 @@
 #ifndef TRN_NNTPCLIENT_H
 #define TRN_NNTPCLIENT_H
 
+#include <stdio.h>
+
 #include "enum-flags.h"
 
 enum nntp_flags
@@ -73,5 +75,18 @@ int nntp_check();
 bool nntp_at_list_end(const char *s);
 int nntp_gets(char *bp, int len);
 void nntp_close(bool send_quit);
+
+inline void nntp_advise(const char *str)
+{
+    fputs(str, stdout);
+}
+inline void nntp_init_error(const char *str)
+{
+    fputs(str, stdout);
+}
+inline void nntp_error(const char *str)
+{
+    fputs(str, stderr);
+}
 
 #endif
