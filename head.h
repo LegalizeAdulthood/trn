@@ -85,10 +85,8 @@ extern short g_user_htypeix[26];
 extern int g_user_htype_cnt;
 extern int g_user_htype_max;
 extern ART_NUM g_parsed_art;         /* the article number we've parsed */
-extern ARTICLE *g_parsed_artp;       /* the article ptr we've parsed */
 extern header_line_type g_in_header; /* are we decoding the header? */
 extern char *g_headbuf;
-extern long g_headbuf_size;
 
 enum
 {

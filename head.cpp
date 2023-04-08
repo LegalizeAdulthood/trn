@@ -77,13 +77,13 @@ short g_user_htypeix[26];
 int g_user_htype_cnt{};
 int g_user_htype_max{};
 ART_NUM g_parsed_art{};         /* the article number we've parsed */
-ARTICLE *g_parsed_artp{};       /* the article ptr we've parsed */
 header_line_type g_in_header{}; /* are we decoding the header? */
 char *g_headbuf;
-long g_headbuf_size;
 
-static bool s_first_one; /* is this the 1st occurance of this header line? */
-static bool s_reading_nntp_header;
+static ARTICLE         *s_parsed_artp{}; /* the article ptr we've parsed */
+static long             s_headbuf_size;
+static bool             s_first_one; /* is this the 1st occurrence of this header line? */
+static bool             s_reading_nntp_header;
 static header_line_type s_htypeix[26]{};
 
 void head_init()
@@ -96,8 +96,8 @@ void head_init()
 					    * sizeof (USER_HEADTYPE));
     g_user_htype[g_user_htype_cnt++].name = "*";
 
-    g_headbuf_size = LBUFLEN * 8;
-    g_headbuf = safemalloc(g_headbuf_size);
+    s_headbuf_size = LBUFLEN * 8;
+    g_headbuf = safemalloc(s_headbuf_size);
 }
 
 void head_final()
@@ -217,7 +217,7 @@ void start_header(ART_NUM artnum)
     g_in_header = SOME_LINE;
     s_first_one = false;
     g_parsed_art = artnum;
-    g_parsed_artp = article_ptr(artnum);
+    s_parsed_artp = article_ptr(artnum);
 }
 
 void end_header_line()
@@ -227,18 +227,18 @@ void end_header_line()
 	/* remember where line left off */
 	g_htype[g_in_header].maxpos = g_artpos;
 	if (g_htype[g_in_header].flags & HT_CACHED) {
-	    if (!get_cached_line(g_parsed_artp, g_in_header, true)) {
+	    if (!get_cached_line(s_parsed_artp, g_in_header, true)) {
 		int start = g_htype[g_in_header].minpos
 			  + g_htype[g_in_header].length + 1;
                 while (g_headbuf[start] == ' ' || g_headbuf[start] == '\t')
 		    start++;
 		MEM_SIZE size = g_artpos - start + 1 - 1;	/* pre-strip newline */
 		if (g_in_header == SUBJ_LINE)
-		    set_subj_line(g_parsed_artp,g_headbuf+start,size-1);
+		    set_subj_line(s_parsed_artp,g_headbuf+start,size-1);
 		else {
 		    char* s = safemalloc(size);
 		    safecpy(s,g_headbuf+start,size);
-		    set_cached_line(g_parsed_artp,g_in_header,s);
+		    set_cached_line(s_parsed_artp,g_in_header,s);
 		}
 	    }
 	}
@@ -266,8 +266,8 @@ bool parseline(char *art_buf, int newhide, int oldhide)
 	    if (s_first_one) {
 		g_htype[g_in_header].minpos = g_artpos;
 		if (g_in_header == DATE_LINE) {
-		    if (!g_parsed_artp->date)
-			g_parsed_artp->date = parsedate(art_buf+6);
+		    if (!s_parsed_artp->date)
+			s_parsed_artp->date = parsedate(art_buf+6);
 		}
 	    }
 #ifdef DEBUG
@@ -282,7 +282,7 @@ bool parseline(char *art_buf, int newhide, int oldhide)
 
 void end_header()
 {
-    ARTICLE* ap = g_parsed_artp;
+    ARTICLE* ap = s_parsed_artp;
 
     end_header_line();
     g_in_header = PAST_HEADER;	/* just to be sure */
@@ -354,10 +354,10 @@ bool parseheader(ART_NUM artnum)
     g_artpos = 0;
     char *bp = g_headbuf;
     while (g_in_header) {
-	if (g_headbuf_size < g_artpos + LBUFLEN) {
+	if (s_headbuf_size < g_artpos + LBUFLEN) {
 	    len = bp - g_headbuf;
-	    g_headbuf_size += LBUFLEN * 4;
-	    g_headbuf = saferealloc(g_headbuf,g_headbuf_size);
+	    s_headbuf_size += LBUFLEN * 4;
+	    g_headbuf = saferealloc(g_headbuf,s_headbuf_size);
 	    bp = g_headbuf + len;
 	}
 	if (s_reading_nntp_header) {
