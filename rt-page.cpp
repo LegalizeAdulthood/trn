@@ -308,7 +308,7 @@ static void sel_page_init()
 void init_pages(bool fill_last_page)
 {
     SEL_UNION no_search;
-    no_search.op = -1;
+    no_search.op = OI_NONE;
     sel_page_init();
 try_again:
     g_sel_prior_obj_cnt = 0;
@@ -1488,7 +1488,7 @@ try_again:
 		sel = ini_values(g_options_ini)[op]? 1 :
                           (g_option_saved_vals[op]? 3 :
                                (g_option_def_vals[op]? 0 : 2));
-	    g_sel_items[g_sel_page_item_cnt].u.op = op;
+	    g_sel_items[g_sel_page_item_cnt].u.op = static_cast<option_index>(op);
 	    g_sel_items[g_sel_page_item_cnt].line = g_term_line;
 	    g_sel_items[g_sel_page_item_cnt].sel = sel;
 	    g_sel_page_obj_cnt++;
@@ -1872,7 +1872,7 @@ void display_option(int op, int item_index)
 	post = "..................................";
 	val = ini_values(g_options_ini)[op];
 	if (!val)
-	    val = quote_string(option_value(op));
+	    val = quote_string(option_value(static_cast<option_index>(op)));
     }
     output_sel(item_index, g_sel_items[item_index].sel, false);
     printf(" %s%s%s %.39s\n", pre, item, post + len, val);

@@ -340,11 +340,11 @@ void set_options(char **vals)
     int limit = ini_len(g_options_ini);
     for (int i = 1; i < limit; i++) {
 	if (*++vals)
-	    set_option(i, *vals);
+	    set_option(static_cast<option_index>(i), *vals);
     }
 }
 
-void set_option(int num, const char *s)
+void set_option(option_index num, const char *s)
 {
     if (g_option_saved_vals) {
 	if (!g_option_saved_vals[num]) {
@@ -814,7 +814,7 @@ void save_options(const char *filename)
 	    fprintf(fp_out,"%s = ",g_options_ini[i].item);
 	    if (!g_option_def_vals[i])
 		fputs("#default of ",fp_out);
-	    fprintf(fp_out,"%s\n",quote_string(option_value(i)));
+	    fprintf(fp_out,"%s\n",quote_string(option_value(static_cast<option_index>(i))));
 	    if (g_option_saved_vals[i]) {
 		if (g_option_saved_vals[i] != g_option_def_vals[i])
 		    free(g_option_saved_vals[i]);
@@ -845,7 +845,7 @@ void save_options(const char *filename)
     rename(g_buf,filename);
 }
 
-const char *option_value(int num)
+const char *option_value(option_index num)
 {
     switch (num) {
       case OI_USE_THREADS:
@@ -1083,10 +1083,8 @@ const char *option_value(int num)
 	return YESorNO(g_sf_verbose);
       case OI_USE_SEL_NUM:
 	return YESorNO(g_use_sel_num);
-	break;
       case OI_SEL_NUM_GOTO:
 	return YESorNO(g_sel_num_goto);
-	break;
       default:
 	printf("*** Internal error: Unknown Option ***\n");
 	break;

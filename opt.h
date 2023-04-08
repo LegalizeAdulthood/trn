@@ -9,8 +9,10 @@
 #include "util.h"
 
 /* Display Options */
-enum display_option
+enum option_index
 {
+    OI_NONE = -1,
+
     OI_TERSE_OUTPUT = 2,
     OI_PAGER_LINE_MARKING,
     OI_ERASE_SCREEN,
@@ -137,9 +139,9 @@ void        opt_init(int argc, char *argv[], char **tcbufptr);
 void        opt_final();
 void        opt_file(const char *filename, char **tcbufptr, bool bleat);
 void        set_options(char **vals);
-void        set_option(int num, const char *s);
+void        set_option(option_index num, const char *s);
 void        save_options(const char *filename);
-const char *option_value(int num);
+const char *option_value(option_index num);
 void        set_header(const char *s, headtype_flags flag, bool setit);
 const char *quote_string(const char *val);
 void        cwd_check();

@@ -165,29 +165,29 @@ private:
         g_univ_vg_hash = save_univ_vg_hash;   \
     } while (false)
 
-static void sel_dogroups();
+static void             sel_dogroups();
 static univ_read_result univ_read(UNIV_ITEM *ui);
-static void sel_display();
-static void sel_status_msg(const char *cp);
-static char sel_input();
-static void sel_prompt();
-static bool select_item(SEL_UNION u);
-static bool delay_return_item(SEL_UNION u);
-static bool deselect_item(SEL_UNION u);
-static bool select_option(int i);
-static void sel_cleanup();
-static bool mark_DEL_as_READ(char *ptr, int arg);
-static display_state sel_command(char_int ch);
-static bool sel_perform_change(long cnt, const char *obj_type);
-static char another_command(char_int ch);
-static display_state article_commands(char_int ch);
-static display_state newsgroup_commands(char_int ch);
-static display_state addgroup_commands(char_int ch);
-static display_state multirc_commands(char_int ch);
-static display_state option_commands(char_int ch);
-static display_state universal_commands(char_int ch);
-static void switch_dmode(char **dmode_cpp);
-static int find_line(int y);
+static void             sel_display();
+static void             sel_status_msg(const char *cp);
+static char             sel_input();
+static void             sel_prompt();
+static bool             select_item(SEL_UNION u);
+static bool             delay_return_item(SEL_UNION u);
+static bool             deselect_item(SEL_UNION u);
+static bool             select_option(option_index i);
+static void             sel_cleanup();
+static bool             mark_DEL_as_READ(char *ptr, int arg);
+static display_state    sel_command(char_int ch);
+static bool             sel_perform_change(long cnt, const char *obj_type);
+static char             another_command(char_int ch);
+static display_state    article_commands(char_int ch);
+static display_state    newsgroup_commands(char_int ch);
+static display_state    addgroup_commands(char_int ch);
+static display_state    multirc_commands(char_int ch);
+static display_state    option_commands(char_int ch);
+static display_state    universal_commands(char_int ch);
+static void             switch_dmode(char **dmode_cpp);
+static int              find_line(int y);
 
 /* Display a menu of threads/subjects/articles for the user to choose from.
 ** If "cmd" is '+' we display all the unread items and allow the user to mark
@@ -1384,7 +1384,7 @@ static bool deselect_item(SEL_UNION u)
     return true;
 }
 
-static bool select_option(int i)
+static bool select_option(option_index i)
 {
     bool  changed = false;
     char**vals = ini_values(g_options_ini);
@@ -2634,7 +2634,7 @@ static display_state option_commands(char_int ch)
 	    if (execute(&g_optcompex,g_options_ini[i].item))
 		break;
 	} while (i != j);
-	u.op = i;
+	u.op = static_cast<option_index>(i);
 	if (!(g_option_flags[i] & OF_INCLUDED)) {
 	    for (j = i-1; *g_options_ini[j].item != '*'; j--) ;
 	    g_option_flags[j] |= OF_SEL;

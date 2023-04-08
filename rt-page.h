@@ -4,9 +4,11 @@
 #ifndef TRN_RT_PAGE_H
 #define TRN_RT_PAGE_H
 
+#include "opt.h"
+#include "rt-select.h"
+
 #define PRESERVE_PAGE     false
 #define FILL_LAST_PAGE    true
-#include "rt-select.h"
 
 struct ADDGROUP;
 struct ARTICLE;
@@ -22,13 +24,13 @@ enum
 
 union SEL_UNION
 {
-    ARTICLE* ap;
-    SUBJECT* sp;
-    ADDGROUP* gp;
-    MULTIRC* mp;
-    NGDATA* np;
-    UNIV_ITEM* un;
-    int op;
+    ARTICLE     *ap;
+    SUBJECT     *sp;
+    ADDGROUP    *gp;
+    MULTIRC     *mp;
+    NGDATA      *np;
+    UNIV_ITEM   *un;
+    option_index op;
 };
 
 struct SEL_ITEM
