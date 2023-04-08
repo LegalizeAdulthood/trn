@@ -63,6 +63,7 @@ extern std::string g_redirected_to;
 extern bool        g_threaded_group;
 extern NGDATA     *g_ng_go_ngptr;
 extern ART_NUM     g_ng_go_artnum;
+extern bool        g_novice_delays; /* +f */
 
 #define ngdata_ptr(ngnum) ((NGDATA*)listnum2listitem(g_ngdata_list,(long)(ngnum)))
 

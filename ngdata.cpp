@@ -31,29 +31,30 @@
 #include <io.h>
 #endif
 
-LIST *g_ngdata_list{}; /* a list of NGDATA */
-int g_ngdata_cnt{};
-NG_NUM g_newsgroup_cnt{}; /* all newsgroups in our current newsrc(s) */
-NG_NUM g_newsgroup_toread{};
-ART_UNREAD g_ng_min_toread{1}; /* == TR_ONE or TR_NONE */
-NGDATA *g_first_ng{};
-NGDATA *g_last_ng{};
-NGDATA *g_ngptr{};      /* current newsgroup data ptr */
-NGDATA *g_current_ng{}; /* stable current newsgroup so we can ditz with g_ngptr */
-NGDATA *g_recent_ng{};  /* the prior newsgroup we visited */
-NGDATA *g_starthere{};  /* set to the first newsgroup with unread news on startup */
-NGDATA *g_sel_page_np{};
-NGDATA *g_sel_next_np{};
-ART_NUM g_absfirst{};         /* 1st real article in current newsgroup */
-ART_NUM g_firstart{};         /* minimum unread article number in newsgroup */
-ART_NUM g_lastart{};          /* maximum article number in newsgroup */
-ART_UNREAD g_missing_count{}; /* for reports on missing articles */
+LIST       *g_ngdata_list{}; /* a list of NGDATA */
+int         g_ngdata_cnt{};
+NG_NUM      g_newsgroup_cnt{}; /* all newsgroups in our current newsrc(s) */
+NG_NUM      g_newsgroup_toread{};
+ART_UNREAD  g_ng_min_toread{1}; /* == TR_ONE or TR_NONE */
+NGDATA     *g_first_ng{};
+NGDATA     *g_last_ng{};
+NGDATA     *g_ngptr{};      /* current newsgroup data ptr */
+NGDATA     *g_current_ng{}; /* stable current newsgroup so we can ditz with g_ngptr */
+NGDATA     *g_recent_ng{};  /* the prior newsgroup we visited */
+NGDATA     *g_starthere{};  /* set to the first newsgroup with unread news on startup */
+NGDATA     *g_sel_page_np{};
+NGDATA     *g_sel_next_np{};
+ART_NUM     g_absfirst{};      /* 1st real article in current newsgroup */
+ART_NUM     g_firstart{};      /* minimum unread article number in newsgroup */
+ART_NUM     g_lastart{};       /* maximum article number in newsgroup */
+ART_UNREAD  g_missing_count{}; /* for reports on missing articles */
 std::string g_moderated;
-bool g_redirected{};
+bool        g_redirected{};
 std::string g_redirected_to;
-bool g_threaded_group{};
-NGDATA *g_ng_go_ngptr{};
-ART_NUM g_ng_go_artnum{};
+bool        g_threaded_group{};
+NGDATA     *g_ng_go_ngptr{};
+ART_NUM     g_ng_go_artnum{};
+bool        g_novice_delays{true}; /* +f */
 
 static int ngorder_number(const NGDATA **npp1, const NGDATA **npp2);
 static int ngorder_groupname(const NGDATA **npp1, const NGDATA **npp2);
