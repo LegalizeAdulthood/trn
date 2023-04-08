@@ -37,7 +37,6 @@ enum sel_sort_mode
 };
 
 extern bool g_sel_rereading;
-extern char g_sel_disp_char[];
 extern sel_mode g_sel_mode;
 extern sel_mode g_sel_defaultmode;
 extern sel_mode g_sel_threadmode;

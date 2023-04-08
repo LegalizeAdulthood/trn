@@ -1669,9 +1669,10 @@ void output_sel(int ix, int sel, bool update)
 	break;
       default:
 	color_object(COLOR_DEFAULT, true);
+	sel = 0;
 	break;
     }
-    putchar(g_sel_disp_char[sel]);
+    putchar(" +-*"[sel]);
     color_pop();	/* of COLOR_PLUS/MINUS/STAR/DEFAULT */
 
     if (update)

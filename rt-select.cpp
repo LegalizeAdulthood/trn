@@ -52,7 +52,6 @@ enum univ_read_result
 };
 
 bool g_sel_rereading{};
-char g_sel_disp_char[]{" +-*"};
 sel_mode g_sel_mode{};
 sel_mode g_sel_defaultmode{SM_THREAD};
 sel_mode g_sel_threadmode{SM_THREAD};
