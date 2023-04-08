@@ -167,9 +167,10 @@ enum
     TC_STRINGS = 48 /* number of colors we can keep track of */
 };
 
-static char s_circlebuf[PUSHSIZE]{};
-static int s_nextin{};
-static int s_nextout{};
+static char        s_circlebuf[PUSHSIZE]{};
+static int         s_nextin{};
+static int         s_nextout{};
+static const char *s_readerr{"rn read error"};
 
 #ifndef MSDOS
 static char s_tcarea[TCSIZE]; /* area for "compiled" termcap strings */
@@ -944,7 +945,7 @@ void eat_typeahead()
 	    errno = 0;
 	    if (read_tty(&g_buf[j],1) < 0) {
 		if (errno && errno != EINTR) {
-		    perror(g_readerr);
+		    perror(s_readerr);
 		    sig_catcher(0);
 		}
 		continue;
@@ -1177,7 +1178,7 @@ tryagain:
 #endif
 		return;
 	    }
-	    perror(g_readerr);
+	    perror(s_readerr);
 	    sig_catcher(0);
 	}
 	g_lastchar = *(Uchar*)whatbuf;

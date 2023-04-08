@@ -702,7 +702,6 @@ extern const char *g_hforhelp;
 #ifdef STRICTCR
 extern char g_badcr[];
 #endif
-extern const char *g_readerr;
 extern const char *g_unsubto;
 extern const char *g_cantopen;
 extern const char *g_cantcreate;
