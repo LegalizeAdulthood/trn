@@ -158,6 +158,8 @@ char **g_option_saved_vals{};
 char *g_option_flags{};
 int g_sel_page_op{};
 
+static char s_univ_sel_cmds[3]{"Z>"};
+
 static char* hidden_list();
 static char* magic_list();
 static void  set_header_list(headtype_flags flag, headtype_flags defflag, const char *str);
@@ -364,9 +366,9 @@ void set_option(int num, const char *s)
 	g_use_univ_selector = YES(s);
 	break;
       case OI_UNIV_SEL_CMDS:
-	*g_univ_sel_cmds = *s;
+	*s_univ_sel_cmds = *s;
 	if (s[1])
-	    g_univ_sel_cmds[1] = s[1];
+	    s_univ_sel_cmds[1] = s[1];
 	break;
       case OI_UNIV_SEL_BTNS:
 	g_univ_sel_btn_cnt = parse_mouse_buttons(&g_univ_sel_btns,s);
@@ -846,7 +848,7 @@ const char *option_value(int num)
       case OI_USE_UNIV_SEL:
 	return YESorNO(g_use_univ_selector);
       case OI_UNIV_SEL_CMDS:
-	return g_univ_sel_cmds;
+	return s_univ_sel_cmds;
       case OI_UNIV_SEL_BTNS:
 	return expand_mouse_buttons(g_univ_sel_btns,g_univ_sel_btn_cnt);
       case OI_UNIV_SEL_ORDER:

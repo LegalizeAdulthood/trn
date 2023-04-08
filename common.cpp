@@ -22,7 +22,6 @@ int g_scanon{}; /* -S */
 bool g_use_threads{THREAD_INIT}; /* -x */
 int g_max_tree_lines{6};
 
-char g_univ_sel_cmds[3]{"Z>"};
 char g_newsrc_sel_cmds[3]{"Z>"};
 char g_add_sel_cmds[3]{"Z>"};
 char g_newsgroup_sel_cmds[3]{"Z>"};

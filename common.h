@@ -693,7 +693,6 @@ extern int g_scanon; /* -S */
 extern bool g_use_threads; /* -x */
 extern int g_max_tree_lines;
 
-extern char g_univ_sel_cmds[3];
 extern char g_newsrc_sel_cmds[3];
 extern char g_add_sel_cmds[3];
 extern char g_newsgroup_sel_cmds[3];
