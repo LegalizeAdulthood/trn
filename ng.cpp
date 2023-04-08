@@ -242,7 +242,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 	if (g_art != 0 || (g_artp && !(g_artp->flags & AF_TMPMEM)))
 	    g_artp = article_find(g_art);
 	if (start_command) {		/* do we have an initial command? */
-	    if (start_command == "") {
+	    if (empty(start_command)) {
 		if (g_use_news_selector >= 0
 		 && !ng_virtual
 		 && g_ngptr->toread >= (ART_UNREAD)g_use_news_selector)
@@ -306,7 +306,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 			(long)g_obj_count,plural(g_obj_count));
 	    }
 	    if (g_redirected) {
-		if (g_redirected == "")
+		if (empty(g_redirected))
 		    printf("\n\n** This group has been disabled by your news admin **");
 		else
 		    printf("\n\n** Please start using %s **", g_redirected);
@@ -1582,7 +1582,7 @@ bool output_subject(char *ptr, int flag)
     {
 	sprintf(tmpbuf,"%-5ld ", i);
 	int len = strlen(tmpbuf);
-	if (g_subjline != "") {
+	if (!empty(g_subjline)) {
 	    g_art = i;
 	    interp(tmpbuf + len, sizeof tmpbuf - len, g_subjline);
 	}

@@ -432,7 +432,7 @@ void unmark_as_read(ARTICLE *ap)
 {
     onemore(ap);
 #ifdef MCHASE
-    if (ap->xrefs != "" && !(ap->flags & AF_MCHASE)) {
+    if (!empty(ap->xrefs) && !(ap->flags & AF_MCHASE)) {
 	ap->flags |= AF_MCHASE;
 	s_chase_count++;
     }
@@ -445,7 +445,7 @@ void unmark_as_read(ARTICLE *ap)
 void set_read(ARTICLE *ap)
 {
     oneless(ap);
-    if (!g_olden_days && ap->xrefs != "" && !(ap->flags & AF_KCHASE)) {
+    if (!g_olden_days && !empty(ap->xrefs) && !(ap->flags & AF_KCHASE)) {
 	ap->flags |= AF_KCHASE;
 	s_chase_count++;
     }
@@ -468,7 +468,7 @@ void delay_unmark(ARTICLE *ap)
 void mark_as_read(ARTICLE *ap)
 {
     oneless(ap);
-    if (ap->xrefs != "" && !(ap->flags & AF_KCHASE)) {
+    if (!empty(ap->xrefs) && !(ap->flags & AF_KCHASE)) {
 	ap->flags |= AF_KCHASE;
 	s_chase_count++;
     }

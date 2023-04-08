@@ -306,9 +306,9 @@ void term_set(char *tcbuf)
     s_tc_PC = *s;				/* get it where tputs wants it */
     if (!tgetflag("bs")) {		/* is backspace not used? */
 	g_tc_BC = Tgetstr("bc");		/* find out what is */
-	if (g_tc_BC == "") {		/* terminfo grok's 'bs' but not 'bc' */
+	if (empty(g_tc_BC)) {		/* terminfo grok's 'bs' but not 'bc' */
 	    g_tc_BC = Tgetstr("le");
-	    if (g_tc_BC == "")
+	    if (empty(g_tc_BC))
 		g_tc_BC = "\b";		/* better than nothing... */
 	}
     } else

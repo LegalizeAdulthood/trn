@@ -103,9 +103,9 @@ void color_init()
 	if (!strcmp(fg,bg))
 	    bg = "";
 	for (int i = 0; i < MAX_COLORS; i++) {
-	    if (objects[i].fg == "")
+	    if (empty(objects[i].fg))
 		objects[i].fg = fg;
-	    if (objects[i].bg == "")
+	    if (empty(objects[i].bg))
 		objects[i].bg = bg;
 	}
     }

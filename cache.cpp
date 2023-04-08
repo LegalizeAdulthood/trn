@@ -590,7 +590,7 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
 	ap->from = s;
 	break;
       case XREF_LINE:
-	if (ap->xrefs && ap->xrefs != "")
+	if (ap->xrefs && !empty(ap->xrefs))
 	    free(ap->xrefs);
 	/* Exclude an xref for just this group or "(none)". */
 	cp = strchr(s, ':');
@@ -956,6 +956,6 @@ void clear_article(ARTICLE *ap)
 	free(ap->from);
     if (ap->msgid)
 	free(ap->msgid);
-    if (ap->xrefs && ap->xrefs != "")
+    if (ap->xrefs && !empty(ap->xrefs))
 	free(ap->xrefs);
 }

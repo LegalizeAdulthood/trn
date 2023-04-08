@@ -318,7 +318,7 @@ ART_NUM getngsize(NGDATA *gp)
 	gp->abs1st = (ART_NUM)first;
     if (!g_in_ng) {
 	if (g_redirected) {
-	    if (g_redirected != "")
+	    if (!empty(g_redirected))
 		free(g_redirected);
 	    g_redirected = nullptr;
 	}
