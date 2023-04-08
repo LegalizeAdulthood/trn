@@ -18,7 +18,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 /* switches */
 
 // Array of minor_mode characters.
-bool g_use_sel_num{};
 bool g_sel_num_goto{};
 /* miscellania */
 
