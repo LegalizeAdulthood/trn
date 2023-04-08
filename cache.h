@@ -128,6 +128,7 @@ extern SUBJECT  *g_first_subject;
 extern SUBJECT  *g_last_subject;
 extern bool      g_untrim_cache;
 extern int       g_join_subject_len; /* -J */
+extern int       g_olden_days;       /* -o */
 
 void cache_init();
 void build_cache();

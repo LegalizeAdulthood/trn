@@ -17,7 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-int         g_olden_days{};            /* -o */
 char        g_auto_select_postings{};  /* -p */
 bool        g_checkflag{};             /* -c */
 std::string g_savedir;                 /* -d */

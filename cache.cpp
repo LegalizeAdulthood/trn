@@ -46,6 +46,7 @@ SUBJECT  *g_first_subject{};
 SUBJECT  *g_last_subject{};
 bool      g_untrim_cache{};
 int       g_join_subject_len{}; /* -J */
+int       g_olden_days{};       /* -o */
 
 #ifdef PENDING
 static ART_NUM s_subj_to_get{};
