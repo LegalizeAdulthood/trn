@@ -699,22 +699,6 @@ extern char g_newsgroup_sel_cmds[3];
 extern char g_news_sel_cmds[3];
 extern char g_option_sel_cmds[3];
 
-extern int g_univ_sel_btn_cnt;
-extern int g_newsrc_sel_btn_cnt;
-extern int g_add_sel_btn_cnt;
-extern int g_newsgroup_sel_btn_cnt;
-extern int g_news_sel_btn_cnt;
-extern int g_option_sel_btn_cnt;
-extern int g_art_pager_btn_cnt;
-
-extern char *g_univ_sel_btns;
-extern char *g_newsrc_sel_btns;
-extern char *g_add_sel_btns;
-extern char *g_newsgroup_sel_btns;
-extern char *g_news_sel_btns;
-extern char *g_option_sel_btns;
-extern char *g_art_pager_btns;
-
 extern bool        g_dont_filter_control;   /* -j */
 extern int         g_join_subject_len;      /* -J */
 extern bool        g_kill_thru_kludge;      /* -k */

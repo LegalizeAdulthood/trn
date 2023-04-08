@@ -27,6 +27,22 @@ extern char          g_kill_char;  /* line delete character */
 extern unsigned char g_lastchar;
 extern bool          g_bizarre; /* do we need to restore terminal? */
 
+extern int g_univ_sel_btn_cnt;
+extern int g_newsrc_sel_btn_cnt;
+extern int g_add_sel_btn_cnt;
+extern int g_newsgroup_sel_btn_cnt;
+extern int g_news_sel_btn_cnt;
+extern int g_option_sel_btn_cnt;
+extern int g_art_pager_btn_cnt;
+
+extern char *g_univ_sel_btns;
+extern char *g_newsrc_sel_btns;
+extern char *g_add_sel_btns;
+extern char *g_newsgroup_sel_btns;
+extern char *g_news_sel_btns;
+extern char *g_option_sel_btns;
+extern char *g_art_pager_btns;
+
 /* termcap stuff */
 
 /*

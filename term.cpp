@@ -59,6 +59,22 @@ char g_kill_char{};  /* line delete character */
 unsigned char g_lastchar{};
 bool g_bizarre{}; /* do we need to restore terminal? */
 
+int g_univ_sel_btn_cnt{};
+int g_newsrc_sel_btn_cnt{};
+int g_add_sel_btn_cnt{};
+int g_newsgroup_sel_btn_cnt{};
+int g_news_sel_btn_cnt{};
+int g_option_sel_btn_cnt{};
+int g_art_pager_btn_cnt{};
+
+char *g_univ_sel_btns{};
+char *g_newsrc_sel_btns{};
+char *g_add_sel_btns{};
+char *g_newsgroup_sel_btns{};
+char *g_news_sel_btns{};
+char *g_option_sel_btns{};
+char *g_art_pager_btns{};
+
 #ifdef HAS_TERMLIB
 bool g_tc_GT{};   /* hardware tabs */
 char *g_tc_BC{}; /* backspace character */

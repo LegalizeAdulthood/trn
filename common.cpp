@@ -28,22 +28,6 @@ char g_newsgroup_sel_cmds[3]{"Z>"};
 char g_news_sel_cmds[3]{"Z>"};
 char g_option_sel_cmds[3]{"Z>"};
 
-int g_univ_sel_btn_cnt;
-int g_newsrc_sel_btn_cnt;
-int g_add_sel_btn_cnt;
-int g_newsgroup_sel_btn_cnt;
-int g_news_sel_btn_cnt;
-int g_option_sel_btn_cnt;
-int g_art_pager_btn_cnt;
-
-char *g_univ_sel_btns{};
-char *g_newsrc_sel_btns{};
-char *g_add_sel_btns{};
-char *g_newsgroup_sel_btns{};
-char *g_news_sel_btns{};
-char *g_option_sel_btns{};
-char *g_art_pager_btns{};
-
 bool        g_dont_filter_control{};   /* -j */
 int         g_join_subject_len{};      /* -J */
 bool        g_kill_thru_kludge{true};  /* -k */
