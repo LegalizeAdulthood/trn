@@ -77,12 +77,14 @@ char *g_news_sel_btns{};
 char *g_option_sel_btns{};
 char *g_art_pager_btns{};
 
-bool g_muck_up_clear{};   /* -loco */
-bool g_erase_screen{};    /* -e */
-bool g_can_home{};        //
-bool g_erase_each_line{}; /* fancy -e */
-bool g_allow_typeahead{}; /* -T */
-bool g_verify{};          /* -v */
+bool          g_muck_up_clear{};                 /* -loco */
+bool          g_erase_screen{};                  /* -e */
+bool          g_can_home{};                      //
+bool          g_erase_each_line{};               /* fancy -e */
+bool          g_allow_typeahead{};               /* -T */
+bool          g_verify{};                        /* -v */
+marking_mode  g_marking{NOMARKING};              /* -m */
+marking_areas g_marking_areas{HALFPAGE_MARKING}; //
 
 #ifdef HAS_TERMLIB
 bool g_tc_GT{};   /* hardware tabs */
@@ -405,7 +407,7 @@ void term_set(char *tcbuf)
 # endif
 #endif
     if (!*g_tc_UP)			/* no UP string? */
-	g_marking = 0;			/* disable any marking */
+        g_marking = NOMARKING;          /* disable any marking */
     if (*g_tc_CM || *g_tc_HO)
 	g_can_home = true;
     if (!*g_tc_CD || !g_can_home)		/* can we CE, CD, and home? */

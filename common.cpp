@@ -17,9 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-int g_marking{NOMARKING}; /* -m */
-int g_marking_areas{HALFPAGE_MARKING};
-
 ART_LINE g_initlines{}; /* -i */
 
 #ifdef APPEND_UNSUB

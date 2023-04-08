@@ -574,7 +574,7 @@ void set_option(int num, const char *s)
 	break;
       case OI_PAGER_LINE_MARKING:
 	if (isdigit(*s))
-	    g_marking_areas = atoi(s);
+	    g_marking_areas = static_cast<marking_areas>(atoi(s));
 	else
 	    g_marking_areas = HALFPAGE_MARKING;
 	if (NO(s))
@@ -987,7 +987,7 @@ const char *option_value(int num)
 	if (g_marking == NOMARKING)
 	    return YESorNO(0);
 	if (g_marking_areas != HALFPAGE_MARKING)
-	    sprintf(g_buf,"%d",g_marking_areas);
+	    sprintf(g_buf,"%d", static_cast<int>(g_marking_areas));
 	else
 	    *g_buf = '\0';
 	if (g_marking == UNDERLINE)

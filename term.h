@@ -21,6 +21,7 @@ extern int    g_res_flg;
 #endif
 #endif
 #include "common.h"
+#include "enum-flags.h"
 
 extern char          g_erase_char; /* rubout character */
 extern char          g_kill_char;  /* line delete character */
@@ -49,6 +50,24 @@ extern bool g_can_home;        //
 extern bool g_erase_each_line; /* fancy -e */
 extern bool g_allow_typeahead; /* -T */
 extern bool g_verify;          /* -v */
+
+enum marking_mode
+{
+    NOMARKING = 0,
+    STANDOUT = 1,
+    UNDERLINE = 2,
+    LASTMARKING = 3
+};
+extern marking_mode g_marking; /* -m */
+
+enum marking_areas
+{
+    NONE = 0,
+    HALFPAGE_MARKING = 1,
+    BACKPAGE_MARKING = 2
+};
+DECLARE_FLAGS_ENUM(marking_areas, int);
+extern marking_areas g_marking_areas;
 
 /* termcap stuff */
 

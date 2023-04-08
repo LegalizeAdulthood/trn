@@ -688,17 +688,6 @@ extern int debug; /* -D */
 #   define DEB_FEED_XREF 16384
 #endif
 
-#define NOMARKING 0
-#define STANDOUT 1
-#define UNDERLINE 2
-#define LASTMARKING 3
-
-extern int g_marking; /* -m */
-
-#define HALFPAGE_MARKING 1
-#define BACKPAGE_MARKING 2
-extern int g_marking_areas;
-
 extern ART_LINE g_initlines; /* -i */
 extern bool g_append_unsub;  /* -I */
 
