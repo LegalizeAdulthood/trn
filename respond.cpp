@@ -37,7 +37,8 @@ ART_POS     g_savefrom{};    /* value of %B */
 bool        g_mbox_always{}; /* -M */
 bool        g_norm_always{}; /* -N */
 
-static char s_nullart[] = "\nEmpty article.\n";
+static char  s_nullart[] = "\nEmpty article.\n";
+static FILE *s_tmpfp{};
 
 static void follow_it_up();
 #if 0
@@ -316,7 +317,7 @@ save_result save_article()
 	    s = c;			/* absolutize it */
 	}
         g_savedest = s; /* make it handy for %b */
-	g_tmpfp = nullptr;
+	s_tmpfp = nullptr;
 	if (!there) {
 	    if (g_mbox_always)
 		mailbox = true;
@@ -367,11 +368,11 @@ save_result save_article()
 	else if (S_ISCHR(save_dir_stat.st_mode))
 	    mailbox = false;
 	else {
-	    g_tmpfp = fopen(s,"r+");
-	    if (!g_tmpfp)
+	    s_tmpfp = fopen(s,"r+");
+	    if (!s_tmpfp)
 		mailbox = false;
 	    else {
-		if (fread(g_buf,1,LBUFLEN,g_tmpfp)) {
+		if (fread(g_buf,1,LBUFLEN,s_tmpfp)) {
 		    c = g_buf;
 		    if (!isspace(MBOXCHAR))   /* if non-zero, */
 			while (isspace(*c))   /* check the first character */
@@ -384,8 +385,8 @@ save_result save_article()
 
 	s = getenv(mailbox ? "MBOXSAVER" : "NORMSAVER");
 	if (s) {
-	    if (g_tmpfp)
-		fclose(g_tmpfp);
+	    if (s_tmpfp)
+		fclose(s_tmpfp);
 	    safecpy(g_cmd_buf, filexp(s), sizeof g_cmd_buf);
 	    if (g_datasrc->flags & DF_REMOTE)
 		nntp_finishbody(FB_SILENT);
@@ -396,32 +397,32 @@ save_result save_article()
 	    noecho();		/* make terminal do what we want */
 	    crmode();
 	}
-	else if (g_tmpfp != nullptr || (g_tmpfp = fopen(g_savedest.c_str(), "a")) != nullptr) {
+	else if (s_tmpfp != nullptr || (s_tmpfp = fopen(g_savedest.c_str(), "a")) != nullptr) {
 	    bool quote_From = false;
-	    fseek(g_tmpfp,0,2);
+	    fseek(s_tmpfp,0,2);
 	    if (mailbox) {
 #if MBOXCHAR == '\001'
-		fprintf(g_tmpfp,"\001\001\001\001\n");
+		fprintf(s_tmpfp,"\001\001\001\001\n");
 #else
 		interp(g_cmd_buf, sizeof g_cmd_buf, "From %t %`LANG= date`\n");
-		fputs(g_cmd_buf, g_tmpfp);
+		fputs(g_cmd_buf, s_tmpfp);
 		quote_From = true;
 #endif
 	    }
 	    if (g_savefrom == 0 && g_art != 0)
-		fprintf(g_tmpfp,"Article: %ld of %s\n", g_art, g_ngname.c_str());
+		fprintf(s_tmpfp,"Article: %ld of %s\n", g_art, g_ngname.c_str());
 	    seekart(g_savefrom);
 	    while (readart(g_buf,LBUFLEN) != nullptr) {
 		if (quote_From && !strncasecmp(g_buf,"from ",5))
-		    putc('>', g_tmpfp);
-		fputs(g_buf, g_tmpfp);
+		    putc('>', s_tmpfp);
+		fputs(g_buf, s_tmpfp);
 	    }
-	    fputs("\n\n", g_tmpfp);
+	    fputs("\n\n", s_tmpfp);
 #if MBOXCHAR == '\001'
 	    if (mailbox)
-		fprintf(g_tmpfp,"\001\001\001\001\n");
+		fprintf(s_tmpfp,"\001\001\001\001\n");
 #endif
-	    fclose(g_tmpfp);
+	    fclose(s_tmpfp);
 	    i = 0; /*$$ set non-zero on write error */
 	}
 	else

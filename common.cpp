@@ -19,7 +19,7 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* miscellania */
 
-FILE *g_tmpfp{}; /* scratch fp used for .rnlock, .rnlast, etc. */
+FILE *s_tmpfp{}; /* scratch fp used for .rnlock, .rnlast, etc. */
 
 /* Factored strings */
 

@@ -690,8 +690,6 @@ extern int debug; /* -D */
 
 /* miscellania */
 
-extern FILE *g_tmpfp; /* scratch fp used for .rnlock, .rnlast, etc. */
-
 inline const char *plural(int num)
 {
     return num == 1 ? "" : "s";
