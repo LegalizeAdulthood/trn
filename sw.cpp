@@ -13,6 +13,7 @@
 #include "ngdata.h"
 #include "only.h"
 #include "opt.h"
+#include "rcstuff.h"
 #include "term.h"
 #include "trn.h"
 #include "util.h"

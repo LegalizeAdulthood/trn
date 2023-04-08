@@ -72,12 +72,13 @@ struct MULTIRC
 };
 
 extern HASHTABLE *g_newsrc_hash;
-extern MULTIRC *g_sel_page_mp;
-extern MULTIRC *g_sel_next_mp;
-extern LIST *g_multirc_list; /* a list of all MULTIRCs */
-extern MULTIRC *g_multirc;   /* the current MULTIRC */
-extern bool g_paranoid;      /* did we detect some inconsistency in .newsrc? */
-extern int g_addnewbydefault;
+extern MULTIRC   *g_sel_page_mp;
+extern MULTIRC   *g_sel_next_mp;
+extern LIST      *g_multirc_list; /* a list of all MULTIRCs */
+extern MULTIRC   *g_multirc;      /* the current MULTIRC */
+extern bool       g_paranoid;     /* did we detect some inconsistency in .newsrc? */
+extern int        g_addnewbydefault;
+extern bool       g_checkflag; /* -c */
 
 bool     rcstuff_init();
 void     rcstuff_final();

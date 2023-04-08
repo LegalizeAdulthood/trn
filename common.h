@@ -688,7 +688,6 @@ extern int debug; /* -D */
 #   define DEB_FEED_XREF 16384
 #endif
 
-extern bool        g_checkflag;             /* -c */
 extern std::string g_savedir;               /* -d */
 extern bool        g_suppress_cn;           /* -s */
 extern int         g_countdown;             /* how many lines to list before invoking -s */
