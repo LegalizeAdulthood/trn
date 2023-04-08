@@ -699,7 +699,6 @@ extern char g_newsgroup_sel_cmds[3];
 extern char g_news_sel_cmds[3];
 extern char g_option_sel_cmds[3];
 
-extern bool        g_dont_filter_control;   /* -j */
 extern int         g_join_subject_len;      /* -J */
 extern bool        g_kill_thru_kludge;      /* -k */
 extern int         g_keep_the_group_static; /* -K */

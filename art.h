@@ -25,6 +25,8 @@ extern ART_LINE g_innerlight;  /* highlight position for g_innersearch or 0 */
 extern char g_hide_everything; /* if set, do not write page now, */
                              /* ...but execute char when done with page */
 
+extern bool g_dont_filter_control; /* -j */
+
 void art_init();
 do_article_result do_article();
 bool maybe_set_color(const char *cp, bool backsearch);

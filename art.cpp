@@ -66,6 +66,8 @@ const char *g_pagestop{};        /* custom page terminator? */
 COMPEX      g_hide_compex{};
 COMPEX      g_page_compex{};
 
+bool g_dont_filter_control{}; /* -j */
+
 inline char *line_ptr(ART_POS pos)
 {
     return g_artbuf + pos - g_htype[PAST_HEADER].minpos;
