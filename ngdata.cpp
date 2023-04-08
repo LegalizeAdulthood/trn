@@ -49,7 +49,8 @@ ART_NUM g_firstart{};         /* minimum unread article number in newsgroup */
 ART_NUM g_lastart{};          /* maximum article number in newsgroup */
 ART_UNREAD g_missing_count{}; /* for reports on missing articles */
 std::string g_moderated;
-char *g_redirected{};
+bool g_redirected{};
+std::string g_redirected_to;
 bool g_threaded_group{};
 NGDATA *g_ng_go_ngptr{};
 ART_NUM g_ng_go_artnum{};
@@ -318,9 +319,8 @@ ART_NUM getngsize(NGDATA *gp)
 	gp->abs1st = (ART_NUM)first;
     if (!g_in_ng) {
 	if (g_redirected) {
-	    if (!empty(g_redirected))
-		free(g_redirected);
-	    g_redirected = nullptr;
+	    g_redirected = false;
+	    g_redirected_to.clear();
 	}
 	switch (ch) {
 	case 'n':
@@ -330,14 +330,16 @@ ART_NUM getngsize(NGDATA *gp)
 	    g_moderated = get_val("MODSTRING", " (moderated)");
 	    break;
 	case 'x':
-	    g_redirected = "";
+	    g_redirected = true;
+	    g_redirected_to.clear();
 	    g_moderated = " (DISABLED)";
 	    break;
 	case '=':
 	    len = strlen(tmpbuf);
 	    if (tmpbuf[len-1] == '\n')
 		tmpbuf[len-1] = '\0';
-	    g_redirected = savestr(strrchr(tmpbuf, '=') + 1);
+	    g_redirected = true;
+	    g_redirected_to = strrchr(tmpbuf, '=') + 1;
 	    g_moderated = " (REDIRECTED)";
 	    break;
 	default:

@@ -58,7 +58,8 @@ extern ART_NUM     g_firstart;         /* minimum unread article number in newsg
 extern ART_NUM     g_lastart;          /* maximum article number in newsgroup */
 extern ART_UNREAD  g_missing_count;    /* for reports on missing articles */
 extern std::string g_moderated;
-extern char       *g_redirected;
+extern bool        g_redirected;
+extern std::string g_redirected_to;
 extern bool        g_threaded_group;
 extern NGDATA     *g_ng_go_ngptr;
 extern ART_NUM     g_ng_go_artnum;

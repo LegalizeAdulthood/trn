@@ -306,10 +306,10 @@ do_newsgroup_result do_newsgroup(char *start_command)
 			(long)g_obj_count,plural(g_obj_count));
 	    }
 	    if (g_redirected) {
-		if (empty(g_redirected))
+		if (g_redirected_to.empty())
 		    printf("\n\n** This group has been disabled by your news admin **");
 		else
-		    printf("\n\n** Please start using %s **", g_redirected);
+		    printf("\n\n** Please start using %s **", g_redirected_to.c_str());
 		termdown(2);
 	    }
 	    else if (!g_obj_count && !g_forcelast)

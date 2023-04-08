@@ -1267,8 +1267,8 @@ void display_page_title(bool home_only)
     home_cursor();
     newline();
     maybe_eol();
-    if (g_in_ng && g_redirected && !empty(g_redirected))
-	printf("\t** Please start using %s **", g_redirected);
+    if (g_in_ng && g_redirected && !g_redirected_to.empty())
+	printf("\t** Please start using %s **", g_redirected_to.c_str());
     newline();
 }
 
