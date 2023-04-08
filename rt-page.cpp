@@ -39,8 +39,8 @@ SUBJECT *g_sel_next_sp{};
 SUBJECT *g_sel_last_sp{};
 char *g_sel_grp_dmode{};
 char *g_sel_art_dmode{};
-bool g_group_init_done{true};
 
+static bool s_group_init_done{true};
 static int s_sel_max_line_cnt{};
 static int s_sel_max_per_page{};
 static sel_sort_mode s_sel_addgroupsort{SS_NATURAL};
@@ -329,7 +329,7 @@ try_again:
       }
       case SM_NEWSGROUP: {
           bool save_the_rest = false;
-	g_group_init_done = true;
+	s_group_init_done = true;
 	sort_newsgroups();
 	g_selected_count = 0;
 	g_obj_count = 0;
@@ -344,7 +344,7 @@ try_again:
 	    if (np->abs1st)
 		;
 	    else if (save_the_rest) {
-		g_group_init_done = false;
+		s_group_init_done = false;
 		np->toread = !g_sel_rereading;
 	    }
 	    else {
@@ -1256,7 +1256,7 @@ void display_page_title(bool home_only)
 	fputs(g_moderated.c_str(),stdout);
     }
     else {
-	printf("       %s%ld group%s",g_group_init_done? "" : "~",
+	printf("       %s%ld group%s",s_group_init_done? "" : "~",
 	    (long)g_sel_total_obj_cnt, plural(g_sel_total_obj_cnt));
 	if (g_sel_exclusive)
 	    printf(" out of %ld", (long)g_obj_count);
@@ -1386,14 +1386,14 @@ try_again:
 		goto try_again;
 	}
 	g_sel_next_np = np;
-	if (!g_group_init_done) {
+	if (!s_group_init_done) {
 	    for (; np; np = np->next) {
 		if (!np->abs1st)
 		    break;
 	    }
 	    if (!np) {
 		int line = g_term_line;
-		g_group_init_done = true;
+		s_group_init_done = true;
 		display_page_title(true);
 		goto_xy(0,line);
 	    }

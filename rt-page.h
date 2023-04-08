@@ -51,7 +51,6 @@ extern SUBJECT *g_sel_next_sp;
 extern SUBJECT *g_sel_last_sp;
 extern char *g_sel_grp_dmode;
 extern char *g_sel_art_dmode;
-extern bool g_group_init_done;
 
 bool set_sel_mode(char_int ch);
 char *get_sel_order(sel_mode smode);
