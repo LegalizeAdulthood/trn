@@ -10,6 +10,7 @@
 #include "head.h"
 #include "init.h"
 #include "intrp.h"
+#include "ng.h"
 #include "ngdata.h"
 #include "only.h"
 #include "opt.h"

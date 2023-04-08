@@ -64,6 +64,7 @@ bool  g_forcelast{};              /* ought we show "End of newsgroup"? */
 bool  g_forcegrow{};              /* do we want to recalculate size of newsgroup, e.g. after posting? */
 int   g_scanon{};                 /* -S */
 bool  g_use_threads{THREAD_INIT}; /* -x */
+bool  g_unsafe_rc_saves{};        /* -U */
 
 /* art_switch() return values */
 enum art_switch_result

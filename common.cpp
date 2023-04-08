@@ -17,7 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-bool        g_unsafe_rc_saves{};       /* -U */
 bool        g_verify{};                /* -v */
 bool        g_quickstart{};            /* -q */
 
