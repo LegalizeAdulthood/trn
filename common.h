@@ -688,7 +688,6 @@ extern int debug; /* -D */
 #   define DEB_FEED_XREF 16384
 #endif
 
-extern char        g_auto_select_postings;  /* -p */
 extern bool        g_checkflag;             /* -c */
 extern std::string g_savedir;               /* -d */
 extern bool        g_suppress_cn;           /* -s */
