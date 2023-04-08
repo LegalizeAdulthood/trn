@@ -157,7 +157,6 @@ char **g_option_def_vals{};
 char **g_option_saved_vals{};
 char *g_option_flags{};
 int g_sel_page_op{};
-int g_sel_next_op{};
 
 static char* hidden_list();
 static char* magic_list();

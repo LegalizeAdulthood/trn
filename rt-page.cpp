@@ -45,6 +45,7 @@ static int s_sel_max_line_cnt{};
 static int s_sel_max_per_page{};
 static sel_sort_mode s_sel_addgroupsort{SS_NATURAL};
 static sel_sort_mode s_sel_univsort{SS_NATURAL};
+static int s_sel_next_op{};
 
 static void sel_page_init();
 static int count_subject_lines(const SUBJECT *subj, int *selptr);
@@ -866,8 +867,8 @@ bool next_page()
 	break;
       }
       case SM_OPTIONS: {
-	if (g_sel_next_op <= g_obj_count) {
-	    g_sel_page_op = g_sel_next_op;
+	if (s_sel_next_op <= g_obj_count) {
+	    g_sel_page_op = s_sel_next_op;
 	    g_sel_prior_obj_cnt += g_sel_page_obj_cnt;
 	    return true;
 	}
@@ -1135,7 +1136,7 @@ try_again:
 		g_sel_page_item_cnt++;
 	}
 	g_sel_page_obj_cnt = g_sel_page_item_cnt;
-	g_sel_next_op = op;
+	s_sel_next_op = op;
 	break;
       }
       case SM_ARTICLE: {
@@ -1500,7 +1501,7 @@ try_again:
 	    if (last_page())
 		goto try_again;
 	}
-	g_sel_next_op = op;
+	s_sel_next_op = op;
     }
     else if (g_sel_mode == SM_ARTICLE) {
         ARTICLE **limit = g_artptr_list + g_artptr_list_size;

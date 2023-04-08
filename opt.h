@@ -132,7 +132,6 @@ extern char **g_option_def_vals;
 extern char **g_option_saved_vals;
 extern char *g_option_flags;
 extern int g_sel_page_op;
-extern int g_sel_next_op;
 
 void        opt_init(int argc, char *argv[], char **tcbufptr);
 void        opt_final();
