@@ -44,6 +44,7 @@ char *g_sel_art_dmode{};
 bool g_group_init_done{true};
 
 static sel_sort_mode s_sel_addgroupsort{SS_NATURAL};
+static sel_sort_mode s_sel_univsort{SS_NATURAL};
 
 static void sel_page_init();
 static int count_subject_lines(const SUBJECT *subj, int *selptr);
@@ -196,7 +197,7 @@ void set_selector(sel_mode smode, sel_sort_mode ssort)
 	    ssort = g_sel_artsort;
 	    break;
 	  case SM_UNIVERSAL:
-	    ssort = g_sel_univsort;
+	    ssort = s_sel_univsort;
 	    break;
 	}
     }
@@ -229,7 +230,7 @@ void set_selector(sel_mode smode, sel_sort_mode ssort)
 	break;
       case SM_UNIVERSAL:
 	g_sel_mode_string = "an item";
-	g_sel_univsort = ssort;
+	s_sel_univsort = ssort;
 	break;
       case SM_THREAD:
 	g_sel_mode_string = "threads";

@@ -60,7 +60,6 @@ sel_sort_mode g_sel_sort{};
 sel_sort_mode g_sel_artsort{SS_GROUPS};
 sel_sort_mode g_sel_threadsort{SS_DATE};
 sel_sort_mode g_sel_newsgroupsort{SS_NATURAL};
-sel_sort_mode g_sel_univsort{SS_NATURAL};
 const char *g_sel_sort_string{};
 int g_sel_direction{1};
 bool g_sel_exclusive{};
