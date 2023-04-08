@@ -71,9 +71,10 @@
 #include "util.h"
 #include "util2.h"
 
-std::string g_ngname;           /* name of current newsgroup */
-std::string g_ngdir;            /* same thing in directory name form */
-std::string g_patchlevel{PATCHLEVEL};
+std::string g_ngname;                 /* name of current newsgroup */
+std::string g_ngdir;                  /* same thing in directory name form */
+std::string g_patchlevel{PATCHLEVEL}; //
+int         g_findlast{};             /* -r */
 
 static bool s_restore_old_newsrc{};
 static bool s_go_forward{true};

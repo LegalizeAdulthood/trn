@@ -17,7 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-int         g_findlast{};              /* -r */
 bool        g_allow_typeahead{};       /* -T */
 bool        g_fuzzy_get{};             /* -G */
 bool        g_verbose{true};           /* +t */

@@ -688,7 +688,6 @@ extern int debug; /* -D */
 #   define DEB_FEED_XREF 16384
 #endif
 
-extern int         g_findlast;              /* -r */
 extern bool        g_allow_typeahead;       /* -T */
 extern bool        g_fuzzy_get;             /* -G */
 extern bool        g_verbose;               /* +t */

@@ -34,6 +34,7 @@
 #include "scorefile.h"
 #include "sw.h"
 #include "term.h"
+#include "trn.h"
 #include "univ.h"
 #include "util.h"
 #include "util2.h"
