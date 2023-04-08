@@ -17,8 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-int g_scanon{}; /* -S */
-
 bool g_use_threads{THREAD_INIT}; /* -x */
 int g_max_tree_lines{6};
 

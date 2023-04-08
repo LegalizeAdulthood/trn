@@ -47,21 +47,22 @@
 #include <direct.h>
 #endif
 
-ART_NUM g_art{};          /* current or prospective article # */
-ART_NUM g_recent_art{};   /* previous article # for '-' command */
-ART_NUM g_curr_art{};     /* current article # */
+ART_NUM  g_art{};         /* current or prospective article # */
+ART_NUM  g_recent_art{};  /* previous article # for '-' command */
+ART_NUM  g_curr_art{};    /* current article # */
 ARTICLE *g_recent_artp{}; /* article_ptr equivilents */
 ARTICLE *g_curr_artp{};
-ARTICLE *g_artp{};     /* the article ptr we use when art is 0 */
-int g_checkcount{};    /* how many articles have we read in the current newsgroup since the last checkpoint? */
-int g_docheckwhen{20}; /* how often to do checkpoint */
-char *g_subjline{};    /* what format to use for '=' */
+ARTICLE *g_artp{};          /* the article ptr we use when art is 0 */
+int      g_checkcount{};    /* how many articles have we read in the current newsgroup since the last checkpoint? */
+int      g_docheckwhen{20}; /* how often to do checkpoint */
+char    *g_subjline{};      /* what format to use for '=' */
 #ifdef MAILCALL
 int g_mailcount{}; /* check for mail when 0 mod 10 */
 #endif
 char *g_mailcall{""};
-bool g_forcelast{}; /* ought we show "End of newsgroup"? */
-bool g_forcegrow{}; /* do we want to recalculate size of newsgroup, e.g. after posting? */
+bool  g_forcelast{}; /* ought we show "End of newsgroup"? */
+bool  g_forcegrow{}; /* do we want to recalculate size of newsgroup, e.g. after posting? */
+int   g_scanon{};    /* -S */
 
 /* art_switch() return values */
 enum art_switch_result

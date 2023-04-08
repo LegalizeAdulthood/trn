@@ -688,8 +688,6 @@ extern int debug; /* -D */
 #   define DEB_FEED_XREF 16384
 #endif
 
-extern int g_scanon; /* -S */
-
 extern bool g_use_threads; /* -x */
 extern int g_max_tree_lines;
 

@@ -6,21 +6,22 @@
 
 struct ARTICLE;
 
-extern ART_NUM g_art;          /* current or prospective article # */
-extern ART_NUM g_recent_art;   /* previous article # for '-' command */
-extern ART_NUM g_curr_art;     /* current article # */
+extern ART_NUM  g_art;         /* current or prospective article # */
+extern ART_NUM  g_recent_art;  /* previous article # for '-' command */
+extern ART_NUM  g_curr_art;    /* current article # */
 extern ARTICLE *g_recent_artp; /* article_ptr equivalents */
 extern ARTICLE *g_curr_artp;
-extern ARTICLE *g_artp;   /* the article ptr we use when g_art is 0 */
-extern int g_checkcount;  /* how many articles have we read in the current newsgroup since the last checkpoint? */
-extern int g_docheckwhen; /* how often to do checkpoint */
-extern char *g_subjline;  /* what format to use for '=' */
+extern ARTICLE *g_artp;        /* the article ptr we use when g_art is 0 */
+extern int      g_checkcount;  /* how many articles have we read in the current newsgroup since the last checkpoint? */
+extern int      g_docheckwhen; /* how often to do checkpoint */
+extern char    *g_subjline;    /* what format to use for '=' */
 #ifdef MAILCALL
 extern int g_mailcount; /* check for mail when 0 mod 5 */
 #endif
 extern char *g_mailcall;
-extern bool g_forcelast; /* ought we show "End of newsgroup"? */
-extern bool g_forcegrow; /* do we want to recalculate size of newsgroup, e.g. after posting? */
+extern bool  g_forcelast; /* ought we show "End of newsgroup"? */
+extern bool  g_forcegrow; /* do we want to recalculate size of newsgroup, e.g. after posting? */
+extern int   g_scanon;    /* -S */
 
 enum do_newsgroup_result
 {
