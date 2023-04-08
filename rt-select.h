@@ -57,7 +57,6 @@ extern char *g_sel_chars;
 extern int g_sel_item_index;
 extern int g_sel_last_line;
 extern bool g_sel_at_end;
-extern bool g_art_sel_ilock;
 
 char article_selector(char_int cmd);
 char multirc_selector();

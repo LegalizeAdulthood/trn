@@ -81,10 +81,10 @@ static bool mark_all_unREAD(char *ptr, int arg);
 #ifdef DEBUG
 static bool debug_article_output(char *ptr, int arg);
 #endif
-
-static do_newsgroup_result s_exit_code = NG_NORM;
-
 static art_switch_result art_switch();
+
+static do_newsgroup_result s_exit_code{NG_NORM};
+static bool s_art_sel_ilock{};
 
 void ng_init()
 {
@@ -1106,7 +1106,7 @@ normal_search:
 	return AS_ASK;
       case '+':			/* enter selection mode */
 run_the_selector:
-	if (g_art_sel_ilock) {
+	if (s_art_sel_ilock) {
 	    printf("\nAlready inside article selector!\n") FLUSH;
 	    termdown(2);
 	    return AS_ASK;
@@ -1116,9 +1116,9 @@ run_the_selector:
 	/* turn on temporary follow */
 	g_s_follow_temp = true;
 	g_univ_follow_temp = true;
-	g_art_sel_ilock = true;
+	s_art_sel_ilock = true;
 	*g_buf = article_selector(*g_buf);
-	g_art_sel_ilock = false;
+	s_art_sel_ilock = false;
 	switch (*g_buf) {
 	  case '+':
 	    newline();

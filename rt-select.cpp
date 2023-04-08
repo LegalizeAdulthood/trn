@@ -72,7 +72,6 @@ char *g_sel_chars{};
 int g_sel_item_index{};
 int g_sel_last_line{};
 bool g_sel_at_end{};
-bool g_art_sel_ilock{};
 
 static char s_sel_ret{};
 static char s_page_char{};
