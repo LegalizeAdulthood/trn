@@ -688,7 +688,6 @@ extern int debug; /* -D */
 #   define DEB_FEED_XREF 16384
 #endif
 
-extern bool        g_fuzzy_get;             /* -G */
 extern bool        g_verbose;               /* +t */
 extern bool        g_unbroken_subjects;     /* -u */
 extern bool        g_unsafe_rc_saves;       /* -U */

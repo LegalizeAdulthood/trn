@@ -17,7 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-bool        g_fuzzy_get{};             /* -G */
 bool        g_verbose{true};           /* +t */
 bool        g_unbroken_subjects{};     /* -u */
 bool        g_unsafe_rc_saves{};       /* -U */

@@ -30,13 +30,14 @@
 HASHTABLE *g_newsrc_hash{};
 MULTIRC   *g_sel_page_mp{};
 MULTIRC   *g_sel_next_mp{};
-LIST      *g_multirc_list{}; /* a list of all MULTIRCs */
-MULTIRC   *g_multirc{};      /* the current MULTIRC */
-bool       g_paranoid{};     /* did we detect some inconsistency in .newsrc? */
-int        g_addnewbydefault{};
-bool       g_checkflag{};   /* -c */
-bool       g_suppress_cn{}; /* -s */
-int        g_countdown{5};  /* how many lines to list before invoking -s */
+LIST      *g_multirc_list{};    /* a list of all MULTIRCs */
+MULTIRC   *g_multirc{};         /* the current MULTIRC */
+bool       g_paranoid{};        /* did we detect some inconsistency in .newsrc? */
+int        g_addnewbydefault{}; //
+bool       g_checkflag{};       /* -c */
+bool       g_suppress_cn{};     /* -s */
+int        g_countdown{5};      /* how many lines to list before invoking -s */
+bool       g_fuzzy_get{};       /* -G */
 
 enum
 {
