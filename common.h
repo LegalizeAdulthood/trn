@@ -737,7 +737,6 @@ enum minor_mode : char
     MM_RESUBSCRIBE_PROMPT = 'R',
 };
 
-extern bool         g_in_ng;        /* true if in a newsgroup */
 extern minor_mode   g_mode;         /* current state of trn */
 extern general_mode g_general_mode; /* general mode of trn */
 

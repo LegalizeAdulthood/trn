@@ -57,13 +57,14 @@ extern ART_NUM     g_absfirst;         /* 1st real article in current newsgroup 
 extern ART_NUM     g_firstart;         /* minimum unread article number in newsgroup */
 extern ART_NUM     g_lastart;          /* maximum article number in newsgroup */
 extern ART_UNREAD  g_missing_count;    /* for reports on missing articles */
-extern std::string g_moderated;
-extern bool        g_redirected;
-extern std::string g_redirected_to;
-extern bool        g_threaded_group;
-extern NGDATA     *g_ng_go_ngptr;
-extern ART_NUM     g_ng_go_artnum;
-extern bool        g_novice_delays; /* +f */
+extern std::string g_moderated;        //
+extern bool        g_redirected;       //
+extern std::string g_redirected_to;    //
+extern bool        g_threaded_group;   //
+extern NGDATA     *g_ng_go_ngptr;      //
+extern ART_NUM     g_ng_go_artnum;     //
+extern bool        g_novice_delays;    /* +f */
+extern bool        g_in_ng;            /* true if in a newsgroup */
 
 #define ngdata_ptr(ngnum) ((NGDATA*)listnum2listitem(g_ngdata_list,(long)(ngnum)))
 
