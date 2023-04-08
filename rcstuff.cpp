@@ -54,7 +54,9 @@ static INI_WORDS s_rcgroups_ini[] = {
     { 0, "Add Groups", 0 },
     { 0, 0, 0 }
 };
-static bool s_foundany{};
+static bool        s_foundany{};
+static const char *s_cantrecreate{"Can't recreate %s -- restoring older version.\n"
+                                  "Perhaps you are near or over quota?\n"};
 
 static bool    clear_ngitem(char *cp, int arg);
 static bool    lock_newsrc(NEWSRC *rp);
@@ -1326,7 +1328,7 @@ bool write_newsrcs(MULTIRC *mptr)
 
 	FILE *rcfp = fopen(rp->newname, "w");
 	if (rcfp == nullptr) {
-	    printf(g_cantrecreate,rp->name) FLUSH;
+	    printf(s_cantrecreate,rp->name) FLUSH;
 	    total_success = false;
 	    continue;
 	}
@@ -1374,7 +1376,7 @@ bool write_newsrcs(MULTIRC *mptr)
 	}
 	if (fclose(rcfp) == EOF) {
 	  write_error:
-	    printf(g_cantrecreate,rp->name) FLUSH;
+	    printf(s_cantrecreate,rp->name) FLUSH;
 	    remove(rp->newname);
 	    total_success = false;
 	    continue;

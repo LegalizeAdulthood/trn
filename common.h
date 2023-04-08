@@ -660,12 +660,9 @@ inline void reportAssertion(const char *expr, const char *file, unsigned int lin
 
 /* various things of type char */
 
-extern char        g_msg[CBUFLEN];     /* general purpose message buffer */
-extern char        g_buf[LBUFLEN + 1]; /* general purpose line buffer */
-extern char        g_cmd_buf[CBUFLEN]; /* buffer for formatting system commands */
-
-
-/* switches */
+extern char g_msg[CBUFLEN];     /* general purpose message buffer */
+extern char g_buf[LBUFLEN + 1]; /* general purpose line buffer */
+extern char g_cmd_buf[CBUFLEN]; /* buffer for formatting system commands */
 
 #ifdef DEBUG
 extern int debug; /* -D */
@@ -709,7 +706,6 @@ extern const char *g_readerr;
 extern const char *g_unsubto;
 extern const char *g_cantopen;
 extern const char *g_cantcreate;
-extern const char *g_cantrecreate;
 extern const char *g_nocd;
 
 #ifdef NOLINEBUF
