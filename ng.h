@@ -18,12 +18,13 @@ extern char    *g_subjline;    /* what format to use for '=' */
 #ifdef MAILCALL
 extern int g_mailcount; /* check for mail when 0 mod 5 */
 #endif
-extern char *g_mailcall;
-extern bool  g_forcelast;       /* ought we show "End of newsgroup"? */
-extern bool  g_forcegrow;       /* do we want to recalculate size of newsgroup, e.g. after posting? */
-extern int   g_scanon;          /* -S */
-extern bool  g_use_threads;     /* -x */
-extern bool  g_unsafe_rc_saves; /* -U */
+extern char       *g_mailcall;
+extern bool        g_forcelast;       /* ought we show "End of newsgroup"? */
+extern bool        g_forcegrow;       /* do we want to recalculate size of newsgroup, e.g. after posting? */
+extern int         g_scanon;          /* -S */
+extern bool        g_use_threads;     /* -x */
+extern bool        g_unsafe_rc_saves; /* -U */
+extern std::string g_dfltcmd;         /* 1st char is default command */
 
 enum do_newsgroup_result
 {

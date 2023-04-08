@@ -666,7 +666,6 @@ extern char        g_cmd_buf[CBUFLEN]; /* buffer for formatting system commands 
 extern std::string g_indstr;           /* indent for old article embedded in followup */
 
 extern std::string g_privdir; /* private news directory */
-extern std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 

@@ -59,12 +59,13 @@ char    *g_subjline{};      /* what format to use for '=' */
 #ifdef MAILCALL
 int g_mailcount{}; /* check for mail when 0 mod 10 */
 #endif
-char *g_mailcall{""};
-bool  g_forcelast{};              /* ought we show "End of newsgroup"? */
-bool  g_forcegrow{};              /* do we want to recalculate size of newsgroup, e.g. after posting? */
-int   g_scanon{};                 /* -S */
-bool  g_use_threads{THREAD_INIT}; /* -x */
-bool  g_unsafe_rc_saves{};        /* -U */
+char       *g_mailcall{""};
+bool        g_forcelast{};              /* ought we show "End of newsgroup"? */
+bool        g_forcegrow{};              /* do we want to recalculate size of newsgroup, e.g. after posting? */
+int         g_scanon{};                 /* -S */
+bool        g_use_threads{THREAD_INIT}; /* -x */
+bool        g_unsafe_rc_saves{};        /* -U */
+std::string g_dfltcmd;                  /* 1st char is default command */
 
 /* art_switch() return values */
 enum art_switch_result
