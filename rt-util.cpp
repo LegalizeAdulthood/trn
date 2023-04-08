@@ -20,8 +20,9 @@
 char g_spin_char{' '};  /* char to put back when we're done spinning */
 long g_spin_estimate{}; /* best guess of how much work there is */
 long g_spin_todo{};     /* the max word to do (might decrease) */
-int g_spin_count{};     /* counter for when to spin */
+int  g_spin_count{};    /* counter for when to spin */
 bool g_performed_article_loop{};
+bool g_bkgnd_spinner{}; /* -B */
 
 static int s_spin_marks{25}; /* how many bargraph marks we want */
 

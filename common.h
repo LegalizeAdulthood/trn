@@ -688,7 +688,6 @@ extern int debug; /* -D */
 #   define DEB_FEED_XREF 16384
 #endif
 
-extern bool        g_bkgnd_spinner;         /* -B */
 extern bool        g_novice_delays;         /* +f */
 extern int         g_olden_days;            /* -o */
 extern char        g_auto_select_postings;  /* -p */

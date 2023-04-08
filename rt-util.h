@@ -9,8 +9,9 @@ struct ARTICLE;
 extern char g_spin_char;     /* char to put back when we're done spinning */
 extern long g_spin_estimate; /* best guess of how much work there is */
 extern long g_spin_todo;     /* the max word to do (might decrease) */
-extern int g_spin_count;     /* counter for when to spin */
+extern int  g_spin_count;    /* counter for when to spin */
 extern bool g_performed_article_loop;
+extern bool g_bkgnd_spinner; /* -B */
 
 enum spin_mode
 {
