@@ -45,7 +45,6 @@ extern sel_sort_mode g_sel_sort;
 extern sel_sort_mode g_sel_artsort;
 extern sel_sort_mode g_sel_threadsort;
 extern sel_sort_mode g_sel_newsgroupsort;
-extern sel_sort_mode g_sel_addgroupsort;
 extern sel_sort_mode g_sel_univsort;
 extern const char *g_sel_sort_string;
 extern int g_sel_direction;

@@ -43,6 +43,8 @@ char *g_sel_grp_dmode{};
 char *g_sel_art_dmode{};
 bool g_group_init_done{true};
 
+static sel_sort_mode s_sel_addgroupsort{SS_NATURAL};
+
 static void sel_page_init();
 static int count_subject_lines(const SUBJECT *subj, int *selptr);
 static int count_thread_lines(const SUBJECT *subj, int *selptr);
@@ -178,7 +180,7 @@ void set_selector(sel_mode smode, sel_sort_mode ssort)
 	    ssort = SS_NATURAL;
 	    break;
 	  case SM_ADDGROUP:
-	    ssort = g_sel_addgroupsort;
+	    ssort = s_sel_addgroupsort;
 	    break;
 	  case SM_NEWSGROUP:
 	    ssort = g_sel_newsgroupsort;
@@ -216,7 +218,7 @@ void set_selector(sel_mode smode, sel_sort_mode ssort)
 	break;
       case SM_ADDGROUP:
 	g_sel_mode_string = "a newsgroup to add";
-	g_sel_addgroupsort = ssort;
+	s_sel_addgroupsort = ssort;
 	break;
       case SM_NEWSGROUP:
 	g_sel_mode_string = "a newsgroup";
