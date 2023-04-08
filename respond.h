@@ -12,6 +12,7 @@ extern std::string g_extractprog; /* value of %e */
 extern ART_POS     g_savefrom;    /* value of %B */
 extern bool        g_mbox_always; /* -M */
 extern bool        g_norm_always; /* -N */
+extern std::string g_privdir;     /* private news directory */
 
 enum save_result
 {

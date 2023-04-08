@@ -665,7 +665,6 @@ extern char        g_buf[LBUFLEN + 1]; /* general purpose line buffer */
 extern char        g_cmd_buf[CBUFLEN]; /* buffer for formatting system commands */
 extern std::string g_indstr;           /* indent for old article embedded in followup */
 
-extern std::string g_privdir; /* private news directory */
 
 /* switches */
 

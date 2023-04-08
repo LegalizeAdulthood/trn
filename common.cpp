@@ -12,16 +12,8 @@ char        g_buf[LBUFLEN + 1]; /* general purpose line buffer */
 char        g_cmd_buf[CBUFLEN]; /* buffer for formatting system commands */
 std::string g_indstr{">"};      /* indent for old article embedded in followup */
 
-std::string g_privdir; /* private news directory */
-
-/* switches */
-
-/* miscellania */
-
-FILE *s_tmpfp{}; /* scratch fp used for .rnlock, .rnlast, etc. */
 
 /* Factored strings */
-
 const char *g_hforhelp{"Type h for help.\n"};
 #ifdef STRICTCR
 char g_badcr[]{"\nUnnecessary CR ignored.\n"};

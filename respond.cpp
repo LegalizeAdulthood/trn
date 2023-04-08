@@ -36,6 +36,7 @@ std::string g_extractprog;   /* value of %e */
 ART_POS     g_savefrom{};    /* value of %B */
 bool        g_mbox_always{}; /* -M */
 bool        g_norm_always{}; /* -N */
+std::string g_privdir;       /* private news directory */
 
 static char  s_nullart[] = "\nEmpty article.\n";
 static FILE *s_tmpfp{};
