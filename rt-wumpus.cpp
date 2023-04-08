@@ -20,6 +20,8 @@
 #include "util.h"
 #include "util2.h"
 
+int g_max_tree_lines{6};
+
 char g_letters[] = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+";
 
 static char s_tree_indent[] = {

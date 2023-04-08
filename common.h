@@ -688,9 +688,6 @@ extern int debug; /* -D */
 #   define DEB_FEED_XREF 16384
 #endif
 
-extern int g_max_tree_lines;
-
-extern char g_newsrc_sel_cmds[3];
 extern char g_add_sel_cmds[3];
 extern char g_newsgroup_sel_cmds[3];
 extern char g_news_sel_cmds[3];

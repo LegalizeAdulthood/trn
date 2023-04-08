@@ -26,6 +26,7 @@
 #include "rthread.h"
 #include "rt-page.h"
 #include "rt-select.h"
+#include "rt-wumpus.h"
 #include "scan.h"
 #include "scanart.h"
 #include "scorefile.h"

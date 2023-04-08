@@ -73,6 +73,7 @@ int            g_sel_item_index{};
 int            g_sel_last_line{};
 bool           g_sel_at_end{};
 int            g_keep_the_group_static{}; /* -K */
+char           g_newsrc_sel_cmds[3]{"Z>"};
 
 static char s_sel_ret{};
 static char s_page_char{};

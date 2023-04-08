@@ -58,6 +58,7 @@ extern int            g_sel_item_index;
 extern int            g_sel_last_line;
 extern bool           g_sel_at_end;
 extern int            g_keep_the_group_static; /* -K */
+extern char           g_newsrc_sel_cmds[3];
 
 char article_selector(char_int cmd);
 char multirc_selector();
