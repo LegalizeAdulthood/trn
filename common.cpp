@@ -28,7 +28,6 @@ char g_newsgroup_sel_cmds[3]{"Z>"};
 char g_news_sel_cmds[3]{"Z>"};
 char g_option_sel_cmds[3]{"Z>"};
 
-bool        g_norm_always{};           /* -N */
 bool        g_thread_always{};         /* -a */
 int         g_auto_arrow_macros{2};    /* -A */
 bool        g_breadth_first{};         /* -b */

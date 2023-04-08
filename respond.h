@@ -11,6 +11,7 @@ extern std::string g_extractdest; /* value of %E */
 extern std::string g_extractprog; /* value of %e */
 extern ART_POS     g_savefrom;    /* value of %B */
 extern bool        g_mbox_always; /* -M */
+extern bool        g_norm_always; /* -N */
 
 enum save_result
 {

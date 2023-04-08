@@ -35,6 +35,7 @@ std::string g_extractdest;   /* value of %E */
 std::string g_extractprog;   /* value of %e */
 ART_POS     g_savefrom{};    /* value of %B */
 bool        g_mbox_always{}; /* -M */
+bool        g_norm_always{}; /* -N */
 
 static char s_nullart[] = "\nEmpty article.\n";
 
