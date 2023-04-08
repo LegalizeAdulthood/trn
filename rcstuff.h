@@ -80,6 +80,7 @@ extern bool       g_paranoid;     /* did we detect some inconsistency in .newsrc
 extern int        g_addnewbydefault;
 extern bool       g_checkflag;   /* -c */
 extern bool       g_suppress_cn; /* -s */
+extern int        g_countdown;   /* how many lines to list before invoking -s */
 
 bool     rcstuff_init();
 void     rcstuff_final();

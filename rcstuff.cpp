@@ -36,6 +36,7 @@ bool       g_paranoid{};     /* did we detect some inconsistency in .newsrc? */
 int        g_addnewbydefault{};
 bool       g_checkflag{};   /* -c */
 bool       g_suppress_cn{}; /* -s */
+int        g_countdown{5};  /* how many lines to list before invoking -s */
 
 enum
 {
