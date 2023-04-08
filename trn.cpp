@@ -71,14 +71,15 @@
 #include "util.h"
 #include "util2.h"
 
-std::string g_ngname;                       /* name of current newsgroup */
-std::string g_ngdir;                        /* same thing in directory name form */
-std::string g_patchlevel{PATCHLEVEL};       //
-int         g_findlast{};                   /* -r */
-bool        g_verbose{true};                /* +t */
-bool        g_use_univ_selector{};          //
-bool        g_use_newsrc_selector{};        //
-bool        g_use_newsgroup_selector{true}; //
+std::string g_ngname;                             /* name of current newsgroup */
+std::string g_ngdir;                              /* same thing in directory name form */
+std::string g_patchlevel{PATCHLEVEL};             //
+int         g_findlast{};                         /* -r */
+bool        g_verbose{true};                      /* +t */
+bool        g_use_univ_selector{};                //
+bool        g_use_newsrc_selector{};              //
+bool        g_use_newsgroup_selector{true};       //
+int         g_use_news_selector{SELECT_INIT - 1}; //
 
 static bool s_restore_old_newsrc{};
 static bool s_go_forward{true};

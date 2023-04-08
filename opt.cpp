@@ -435,7 +435,7 @@ void set_option(int num, const char *s)
 	if (isdigit(*s))
 	    g_use_news_selector = atoi(s);
 	else
-	    g_use_news_selector = YES(s)-1;
+            g_use_news_selector = static_cast<int>(YES(s)) - 1;
 	break;
       case OI_NEWS_SEL_MODE: {
 	const sel_mode save_sel_mode = g_sel_mode;

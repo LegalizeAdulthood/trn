@@ -30,6 +30,7 @@ extern bool        g_verbose;                /* +t */
 extern bool        g_use_univ_selector;      //
 extern bool        g_use_newsrc_selector;    //
 extern bool        g_use_newsgroup_selector; //
+extern int         g_use_news_selector;      //
 
 void trn_init();
 void do_multirc();

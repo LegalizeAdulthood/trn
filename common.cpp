@@ -17,7 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-int g_use_news_selector{SELECT_INIT - 1};
 bool g_use_mouse{};
 // Array of minor_mode characters.
 char g_mouse_modes[32]{"acjlptwvK"};
