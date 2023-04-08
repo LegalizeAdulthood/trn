@@ -17,6 +17,7 @@
 #include "rt-select.h"
 #include "rthread.h"
 #include "term.h"
+#include "trn.h"
 #include "util.h"
 #include "util2.h"
 

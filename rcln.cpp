@@ -9,6 +9,7 @@
 #include "ngdata.h"
 #include "rcstuff.h"
 #include "term.h"
+#include "trn.h"
 #include "util.h"
 #include "util2.h"
 

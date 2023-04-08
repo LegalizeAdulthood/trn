@@ -21,6 +21,7 @@
 #include "rt-util.h"
 #include "search.h"
 #include "term.h"
+#include "trn.h"
 #include "util2.h"
 
 static COMPEX s_sub_compex{}; /* last compiled subject search */

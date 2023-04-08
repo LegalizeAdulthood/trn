@@ -15,6 +15,7 @@
 
 #include "common.h"
 
+#include "trn.h"
 #include "utf.h"
 #include "util2.h"
 

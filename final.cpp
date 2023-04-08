@@ -18,6 +18,7 @@
 #include "rcstuff.h"
 #include "scoresave.h"
 #include "term.h"
+#include "trn.h"
 #include "util.h"
 
 #ifdef MSDOS

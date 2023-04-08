@@ -23,6 +23,7 @@
 #include "rt-util.h"
 #include "rt-wumpus.h"
 #include "score.h"
+#include "trn.h"
 #include "util.h"
 #include "util2.h"
 

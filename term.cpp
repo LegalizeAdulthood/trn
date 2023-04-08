@@ -18,6 +18,7 @@
 #include "opt.h"
 #include "rt-select.h"
 #include "sdisp.h"
+#include "trn.h"
 #include "univ.h"
 #include "utf.h"
 #include "util.h"
