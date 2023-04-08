@@ -23,7 +23,6 @@
 #include "util.h"
 
 bool g_sa_mode_zoom{};     /* true if in "zoom" (display only selected) mode */
-bool g_sa_order_read{};    /* if true, the already-read articles have been added to the order arrays */
 int g_sa_scan_context{-1}; /* contains the scan-context number for the current article scan */
 
 static int s_sa_ents_alloc{};
@@ -130,7 +129,6 @@ bool sa_initarts()
 	if (article_exists(a))
 	    (void)sa_add_ent(a);
     }
-    g_sa_order_read = g_sa_mode_read_elig;
     return true;
 }
 
