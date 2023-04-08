@@ -17,8 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-// Array of minor_mode characters.
-bool g_sel_num_goto{};
 /* miscellania */
 
 bool         g_in_ng{};               /* true if in a newsgroup */

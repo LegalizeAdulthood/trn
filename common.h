@@ -688,7 +688,6 @@ extern int debug; /* -D */
 #   define DEB_FEED_XREF 16384
 #endif
 
-extern bool g_sel_num_goto;
 /* miscellania */
 
 // These identifiers are a best guess based on usage in the code.

@@ -79,6 +79,7 @@ char           g_newsgroup_sel_cmds[3]{"Z>"};
 char           g_news_sel_cmds[3]{"Z>"};
 char           g_option_sel_cmds[3]{"Z>"};
 bool           g_use_sel_num{};
+bool           g_sel_num_goto{};
 
 static char s_sel_ret{};
 static char s_page_char{};
