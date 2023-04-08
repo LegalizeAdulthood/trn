@@ -9,7 +9,6 @@
 #endif
 
 extern char *g_ngtodo[MAXNGTODO];       /* restrictions in effect */
-extern COMPEX *g_compextodo[MAXNGTODO]; /* restrictions in compiled form */
 extern int g_maxngtodo;                 /*  0 => no restrictions */
                                       /* >0 => # of entries in g_ngtodo */
 extern char g_empty_only_char;

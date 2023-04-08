@@ -13,12 +13,12 @@
 #include "util2.h"
 
 char *g_ngtodo[MAXNGTODO];       /* restrictions in effect */
-COMPEX *g_compextodo[MAXNGTODO]; /* restrictions in compiled form */
 int g_maxngtodo{};               /*  0 => no restrictions */
                                  /* >0 => # of entries in g_ngtodo */
 char g_empty_only_char{'o'};
 
 static int s_save_maxngtodo{};
+static COMPEX *s_compextodo[MAXNGTODO]; /* restrictions in compiled form */
 
 void only_init()
 {
@@ -33,11 +33,11 @@ void setngtodo(const char *pat)
     if (i < MAXNGTODO) {
 	g_ngtodo[i] = savestr(pat);
 #ifndef lint
-	g_compextodo[i] = (COMPEX*)safemalloc(sizeof(COMPEX));
+	s_compextodo[i] = (COMPEX*)safemalloc(sizeof(COMPEX));
 #endif
-	init_compex(g_compextodo[i]);
-	compile(g_compextodo[i],pat,true,true);
-        const char *err = ng_comp(g_compextodo[i], pat, true, true);
+	init_compex(s_compextodo[i]);
+	compile(s_compextodo[i],pat,true,true);
+        const char *err = ng_comp(s_compextodo[i], pat, true, true);
         if (err != nullptr)
         {
 	    printf("\n%s\n",err) FLUSH;
@@ -54,7 +54,7 @@ bool inlist(const char *ngnam)
     if (g_maxngtodo == 0)
 	return true;
     for (int i = s_save_maxngtodo; i < g_maxngtodo + s_save_maxngtodo; i++) {
-	if (execute(g_compextodo[i],ngnam))
+	if (execute(s_compextodo[i],ngnam))
 	    return true;
     }
     return false;
@@ -71,9 +71,9 @@ void end_only()
 	    sprintf(g_msg, "Exiting \"only\".");
 	for (int i = s_save_maxngtodo; i < g_maxngtodo + s_save_maxngtodo; i++) {
 	    free(g_ngtodo[i]);
-	    free_compex(g_compextodo[i]);
+	    free_compex(s_compextodo[i]);
 #ifndef lint
-	    free((char*)g_compextodo[i]);
+	    free((char*)s_compextodo[i]);
 #endif
 	}
 	g_maxngtodo = 0;
