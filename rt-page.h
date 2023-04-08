@@ -43,7 +43,6 @@ extern int g_sel_total_obj_cnt;
 extern int g_sel_prior_obj_cnt;
 extern int g_sel_page_obj_cnt;
 extern int g_sel_page_item_cnt;
-extern int g_sel_max_line_cnt;
 extern ARTICLE **g_sel_page_app;
 extern ARTICLE **g_sel_next_app;
 extern ARTICLE *g_sel_last_ap;

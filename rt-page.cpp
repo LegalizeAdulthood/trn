@@ -31,7 +31,6 @@ int g_sel_total_obj_cnt{};
 int g_sel_prior_obj_cnt{};
 int g_sel_page_obj_cnt{};
 int g_sel_page_item_cnt{};
-int g_sel_max_line_cnt{};
 ARTICLE **g_sel_page_app{};
 ARTICLE **g_sel_next_app{};
 ARTICLE *g_sel_last_ap{};
@@ -42,6 +41,7 @@ char *g_sel_grp_dmode{};
 char *g_sel_art_dmode{};
 bool g_group_init_done{true};
 
+static int s_sel_max_line_cnt{};
 static int s_sel_max_per_page{};
 static sel_sort_mode s_sel_addgroupsort{SS_NATURAL};
 static sel_sort_mode s_sel_univsort{SS_NATURAL};
@@ -286,7 +286,7 @@ void set_selector(sel_mode smode, sel_sort_mode ssort)
 
 static void sel_page_init()
 {
-    g_sel_max_line_cnt = g_tc_LINES - (g_tc_COLS - g_mousebar_width < 50? 6 : 5);
+    s_sel_max_line_cnt = g_tc_LINES - (g_tc_COLS - g_mousebar_width < 50? 6 : 5);
     g_sel_chars = get_val("SELECTCHARS", SELECTCHARS);
     /* The numeric option of up to 99 lines will require many adaptations
      * to be able to switch from a large numeric page (more than
@@ -298,8 +298,8 @@ static void sel_page_init()
 	s_sel_max_per_page = strlen(g_sel_chars);
     if (s_sel_max_per_page > MAX_SEL)
 	s_sel_max_per_page = MAX_SEL;
-    if (s_sel_max_per_page > g_sel_max_line_cnt)
-	s_sel_max_per_page = g_sel_max_line_cnt;
+    if (s_sel_max_per_page > s_sel_max_line_cnt)
+	s_sel_max_per_page = s_sel_max_line_cnt;
     g_sel_page_obj_cnt = 0;
     g_sel_page_item_cnt = 0;
 }
@@ -1042,10 +1042,10 @@ bool prev_page()
 		line_cnt = count_subject_lines(sp, (int*)nullptr);
 	    if (!(sp->flags & SF_INCLUDED) || !line_cnt)
 		continue;
-	    if (line_cnt > g_sel_max_line_cnt)
-		line_cnt = g_sel_max_line_cnt;
+	    if (line_cnt > s_sel_max_line_cnt)
+		line_cnt = s_sel_max_line_cnt;
 	    line += line_cnt;
-	    if (line > g_sel_max_line_cnt + 2) {
+	    if (line > s_sel_max_line_cnt + 2) {
 		sp = page_sp;
 		break;
 	    }
@@ -1163,9 +1163,9 @@ try_again:
 		else
 		    line_cnt = count_subject_lines(sp, &sel);
 		if (line_cnt) {
-		    if (line_cnt > g_sel_max_line_cnt)
-			line_cnt = g_sel_max_line_cnt;
-		    if (g_term_line + line_cnt > g_sel_max_line_cnt+2)
+		    if (line_cnt > s_sel_max_line_cnt)
+			line_cnt = s_sel_max_line_cnt;
+		    if (g_term_line + line_cnt > s_sel_max_line_cnt+2)
 			break;
 		    g_sel_page_obj_cnt += sp->misc;
 		    g_sel_page_item_cnt++;
@@ -1546,12 +1546,12 @@ try_again:
 		    /* If this item is too long to fit on the screen all by
 		    ** itself, trim it to fit and set the "etc" flag.
 		    */
-		    if (line_cnt > g_sel_max_line_cnt) {
+		    if (line_cnt > s_sel_max_line_cnt) {
 			etc = line_cnt;
-			line_cnt = g_sel_max_line_cnt;
+			line_cnt = s_sel_max_line_cnt;
 		    }
 		    /* If it doesn't fit, save it for the next page */
-		    if (g_term_line + line_cnt > g_sel_max_line_cnt + 2)
+		    if (g_term_line + line_cnt > s_sel_max_line_cnt + 2)
 			break;
 		    g_sel_items[g_sel_page_item_cnt].u.sp = sp;
 		    g_sel_items[g_sel_page_item_cnt].line = g_term_line;
@@ -1573,7 +1573,7 @@ try_again:
 		    sp = sp->next;
 		    if (!line_cnt || !sp->misc)
 			continue;
-		    if (g_term_line < g_sel_max_line_cnt + 2)
+		    if (g_term_line < s_sel_max_line_cnt + 2)
 			display_subject(sp, ix, sel);
 		    ix = -1;
 		    g_sel_page_obj_cnt += sp->misc;
@@ -1825,7 +1825,7 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
 			if (i == 3 || !i) {
 			    if (i)
 				newline();
-			    if (g_term_line >= g_sel_max_line_cnt + 2)
+			    if (g_term_line >= s_sel_max_line_cnt + 2)
 				return;
 			    maybe_eol();
 			    i = 1;
@@ -1838,7 +1838,7 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
 			continue;
 		    }
 		}
-		if (g_term_line >= g_sel_max_line_cnt + 2)
+		if (g_term_line >= s_sel_max_line_cnt + 2)
 		    return;
 		maybe_eol();
 		if (g_use_sel_num)
