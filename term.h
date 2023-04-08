@@ -48,6 +48,7 @@ extern bool g_erase_screen;    /* -e */
 extern bool g_can_home;        //
 extern bool g_erase_each_line; /* fancy -e */
 extern bool g_allow_typeahead; /* -T */
+extern bool g_verify;          /* -v */
 
 /* termcap stuff */
 

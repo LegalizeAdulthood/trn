@@ -688,7 +688,6 @@ extern int debug; /* -D */
 #   define DEB_FEED_XREF 16384
 #endif
 
-extern bool        g_verify;                /* -v */
 extern bool        g_quickstart;            /* -q */
 
 #define DEFAULT_REFETCH_SECS  4L*60*60	/* 4 hours */

@@ -17,7 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-bool        g_verify{};                /* -v */
 bool        g_quickstart{};            /* -q */
 
 time_t g_def_refetch_secs{DEFAULT_REFETCH_SECS}; /* -z */

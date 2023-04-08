@@ -82,6 +82,7 @@ bool g_erase_screen{};    /* -e */
 bool g_can_home{};        //
 bool g_erase_each_line{}; /* fancy -e */
 bool g_allow_typeahead{}; /* -T */
+bool g_verify{};          /* -v */
 
 #ifdef HAS_TERMLIB
 bool g_tc_GT{};   /* hardware tabs */
