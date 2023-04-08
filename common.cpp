@@ -17,11 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-char g_add_sel_cmds[3]{"Z>"};
-char g_newsgroup_sel_cmds[3]{"Z>"};
-char g_news_sel_cmds[3]{"Z>"};
-char g_option_sel_cmds[3]{"Z>"};
-
 bool        g_breadth_first{};         /* -b */
 bool        g_bkgnd_spinner{};         /* -B */
 bool        g_novice_delays{true};     /* +f */
