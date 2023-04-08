@@ -58,14 +58,10 @@ enum
     KF_MAXDAYS = 30
 };
 
-extern FILE               *g_globkfp;                /* global article killer file */
 extern FILE               *g_localkfp;               /* local (for this newsgroup) file */
 extern killfilestate_flags g_kf_state;               /* the state of our kill files */
-extern killfilestate_flags g_kfs_local_change_clear; /* bits to clear local changes */
 extern killfilestate_flags g_kfs_thread_change_set;  /* bits to set for thread changes */
-extern int                 g_kf_thread_cnt;          /* # entries in the thread kfile */
 extern int                 g_kf_changethd_cnt;       /* # entries changed from old to new */
-extern long                g_kf_daynum;              /* day number for thread killfile */
 extern ART_NUM             g_killfirst;              /* used as g_firstart when killing */
 
 void kfile_init();

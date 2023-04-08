@@ -25,14 +25,10 @@
 #include "util.h"
 #include "util2.h"
 
-FILE               *g_globkfp{};                /* global article killer file */
 FILE               *g_localkfp{};               /* local (for this newsgroup) file */
 killfilestate_flags g_kf_state{};               /* the state of our kill files */
-killfilestate_flags g_kfs_local_change_clear{}; /* bits to clear local changes */
 killfilestate_flags g_kfs_thread_change_set{};  /* bits to set for thread changes */
-int                 g_kf_thread_cnt{};          /* # entries in the thread kfile */
 int                 g_kf_changethd_cnt{};       /* # entries changed from old to new */
-long                g_kf_daynum{};              /* day number for thread killfile */
 ART_NUM             g_killfirst{};              /* used as g_firstart when killing */
 
 static void mention(const char *str);
@@ -40,6 +36,11 @@ static bool kfile_junk(char *ptr, int killmask);
 static int write_local_thread_commands(int keylen, HASHDATUM *data, int extra);
 static int write_global_thread_commands(int keylen, HASHDATUM *data, int appending);
 static int age_thread_commands(int keylen, HASHDATUM *data, int elapsed_days);
+
+static FILE               *s_globkfp{};                /* global article killer file */
+static killfilestate_flags s_kfs_local_change_clear{}; /* bits to clear local changes */
+static int                 s_kf_thread_cnt{};          /* # entries in the thread kfile */
+static long                s_kf_daynum{};              /* day number for thread killfile */
 
 static bool s_exitcmds{};
 static char s_thread_cmd_ltr[] = "JK,j+S.m";
@@ -56,8 +57,8 @@ void kfile_init()
     if (!cp)
 	cp = s_killthreads;
     if (*cp && strcmp(cp,"none")) {
-        g_kf_daynum = KF_DAYNUM(0);
-        g_kf_thread_cnt = 0;
+        s_kf_daynum = KF_DAYNUM(0);
+        s_kf_thread_cnt = 0;
         g_kf_changethd_cnt = 0;
         FILE *fp = fopen(filexp(cp), "r");
         if (fp != nullptr)
@@ -70,7 +71,7 @@ void kfile_init()
 			cp = ",";
 		    else
 			*cp++ = '\0';
-		    int age = g_kf_daynum - atol(cp + 1);
+		    int age = s_kf_daynum - atol(cp + 1);
 		    if (age > KF_MAXDAYS) {
 			g_kf_changethd_cnt++;
 			continue;
@@ -87,17 +88,17 @@ void kfile_init()
 			data.dat_len = auto_flag | age;
 			hashstorelast(data);
 		    }
-		    g_kf_thread_cnt++;
+		    s_kf_thread_cnt++;
 		}
 	    }
 	    fclose(fp);
 	}
 	g_kf_state |= KFS_GLOBAL_THREADFILE;
-	g_kfs_local_change_clear = KFS_LOCAL_CHANGES;
+	s_kfs_local_change_clear = KFS_LOCAL_CHANGES;
 	g_kfs_thread_change_set = KFS_THREAD_CHANGES;
     }
     else {
-	g_kfs_local_change_clear = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
+	s_kfs_local_change_clear = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
 	g_kfs_thread_change_set = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
     }
 }
@@ -328,7 +329,7 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
     bool anytokill = (g_ngptr->toread > 0);
 
     set_mode(GM_READ,MM_PROCESSING_KILL);
-    if ((entering || s_exitcmds) && (g_localkfp || g_globkfp)) {
+    if ((entering || s_exitcmds) && (g_localkfp || s_globkfp)) {
 	s_exitcmds = false;
 	ART_NUM oldfirst = g_firstart;
 	g_firstart = starting;
@@ -343,8 +344,8 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
 	    intr = do_kfile(g_localkfp,entering);
 	}
 	open_kfile(KF_GLOBAL);		/* Just in case the name changed */
-	if (g_globkfp && !intr)
-	    intr = do_kfile(g_globkfp,entering);
+	if (s_globkfp && !intr)
+	    intr = do_kfile(s_globkfp,entering);
 	newline();
 	if (entering && s_kill_mentioned && g_novice_delays) {
 	    if (g_verbose)
@@ -396,7 +397,7 @@ void rewrite_kfile(ART_NUM thru)
     else
 	makedir(killname,MD_FILE);
     remove(killname);			/* to prevent file reuse */
-    g_kf_state &= ~(g_kfs_local_change_clear | KFS_NORMAL_LINES);
+    g_kf_state &= ~(s_kfs_local_change_clear | KFS_NORMAL_LINES);
     s_newkfp = fopen(killname, "w");
     if (s_newkfp != nullptr)
     {
@@ -486,8 +487,8 @@ static int write_global_thread_commands(int keylen, HASHDATUM *data, int appendi
 	    break;
 	}
     }
-    fprintf(s_newkfp,"%s %c %ld\n", msgid, ch, g_kf_daynum - age);
-    g_kf_thread_cnt++;
+    fprintf(s_newkfp,"%s %c %ld\n", msgid, ch, s_kf_daynum - age);
+    s_kf_thread_cnt++;
 
     return 0;
 }
@@ -519,10 +520,10 @@ void update_thread_kfile()
     if (!(g_kf_state & KFS_GLOBAL_THREADFILE))
 	return;
 
-    int elapsed_days = KF_DAYNUM(g_kf_daynum);
+    int elapsed_days = KF_DAYNUM(s_kf_daynum);
     if (elapsed_days) {
 	hashwalk(g_msgid_hash, age_thread_commands, elapsed_days);
-	g_kf_daynum += elapsed_days;
+	s_kf_daynum += elapsed_days;
     }
 
     if (!(g_kf_state & KFS_THREAD_CHANGES))
@@ -530,12 +531,12 @@ void update_thread_kfile()
 
     char *cp = filexp(get_val("KILLTHREADS", s_killthreads));
     makedir(cp,MD_FILE);
-    if (g_kf_changethd_cnt*5 > g_kf_thread_cnt) {
+    if (g_kf_changethd_cnt*5 > s_kf_thread_cnt) {
 	remove(cp);			/* to prevent file reuse */
         s_newkfp = fopen(cp, "w");
         if (s_newkfp == nullptr)
 	    return; /*$$ Yikes! */
-        g_kf_thread_cnt = 0;
+        s_kf_thread_cnt = 0;
         g_kf_changethd_cnt = 0;
 	hashwalk(g_msgid_hash, write_global_thread_commands, 0); /* Rewrite */
     }
@@ -672,9 +673,9 @@ void open_kfile(int local)
 	g_localkfp = fopen(kname,"r");
     }
     else {
-	if (g_globkfp)
-	    fclose(g_globkfp);
-	g_globkfp = fopen(kname,"r");
+	if (s_globkfp)
+	    fclose(s_globkfp);
+	s_globkfp = fopen(kname,"r");
     }
 }
 
