@@ -43,9 +43,10 @@ extern char *g_news_sel_btns;
 extern char *g_option_sel_btns;
 extern char *g_art_pager_btns;
 
-extern bool g_muck_up_clear; /* -loco */
-extern bool g_erase_screen;  /* -e */
-extern bool g_can_home;      //
+extern bool g_muck_up_clear;   /* -loco */
+extern bool g_erase_screen;    /* -e */
+extern bool g_can_home;        //
+extern bool g_erase_each_line; /* fancy -e */
 
 /* termcap stuff */
 
