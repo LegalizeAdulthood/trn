@@ -17,8 +17,6 @@ std::string g_dfltcmd; /* 1st char is default command */
 
 /* switches */
 
-int g_word_wrap_offset{8}; /* right-hand column size (0 is off) */
-
 int g_marking{NOMARKING}; /* -m */
 int g_marking_areas{HALFPAGE_MARKING};
 

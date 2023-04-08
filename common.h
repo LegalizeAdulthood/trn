@@ -688,8 +688,6 @@ extern int debug; /* -D */
 #   define DEB_FEED_XREF 16384
 #endif
 
-extern int g_word_wrap_offset; /* right-hand column size (0 is off) */
-
 #define NOMARKING 0
 #define STANDOUT 1
 #define UNDERLINE 2

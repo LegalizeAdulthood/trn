@@ -9,6 +9,7 @@
 #include "opt.h"
 
 #include "art.h"
+#include "artio.h"
 #include "artsrch.h"
 #include "cache.h"
 #include "charsubst.h"
