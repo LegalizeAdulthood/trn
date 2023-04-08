@@ -315,8 +315,14 @@ void opt_file(const char *filename, char **tcbufptr, bool bleat)
     *filebuf = '\0';
 }
 
-#define YES(s) (*(s) == 'y' || *(s) == 'Y')
-#define NO(s)  (*(s) == 'n' || *(s) == 'N')
+inline bool YES(const char *s)
+{
+    return *s == 'y' || *s == 'Y';
+}
+inline bool NO(const char *s)
+{
+    return *s == 'n' || *s == 'N';
+}
 
 void set_options(char **vals)
 {
