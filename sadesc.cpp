@@ -17,6 +17,8 @@
 #include "score.h"
 #include "term.h" /* for standout */
 
+static char s_sa_buf[LBUFLEN];    /* misc. buffer */
+
 /* returns statchars in temp space... */
 // int line;		/* which status line (1 = first) */
 const char *sa_get_statchars(long a, int line)
@@ -108,25 +110,25 @@ const char *sa_get_desc(long e, int line, bool trunc)
       case 1:
 	desc_buf[0] = '\0';	/* initialize the buffer */
 	if (g_sa_mode_desc_artnum) {
-	    sprintf(g_sa_buf,"%6d ",(int)artnum);
-	    strcat(desc_buf,g_sa_buf);
+	    sprintf(s_sa_buf,"%6d ",(int)artnum);
+	    strcat(desc_buf,s_sa_buf);
 	}
 	if (g_sc_initialized && g_sa_mode_desc_score) {
 	    /* we'd like the score now */
-	    sprintf(g_sa_buf,"[%4d] ",sc_score_art(artnum,true));
-	    strcat(desc_buf,g_sa_buf);
+	    sprintf(s_sa_buf,"[%4d] ",sc_score_art(artnum,true));
+	    strcat(desc_buf,s_sa_buf);
 	}
 	if (g_sa_mode_desc_threadcount) {
-	    sprintf(g_sa_buf,"(%3d) ",sa_subj_thread_count(e));
-	    strcat(desc_buf,g_sa_buf);
+	    sprintf(s_sa_buf,"(%3d) ",sa_subj_thread_count(e));
+	    strcat(desc_buf,s_sa_buf);
 	}
 	if (g_sa_mode_desc_author) {
 #if 0
 	    if (trunc)
-		sprintf(g_sa_buf,"%s ",padspaces(sa_desc_author(e,16),16));
+		sprintf(s_sa_buf,"%s ",padspaces(sa_desc_author(e,16),16));
 	    else
-		sprintf(g_sa_buf,"%s ",sa_desc_author(e,40));
-	    strcat(desc_buf,g_sa_buf);
+		sprintf(s_sa_buf,"%s ",sa_desc_author(e,40));
+	    strcat(desc_buf,s_sa_buf);
 #endif
 	    if (trunc)
 		strcat(desc_buf,compress_from(article_ptr(artnum)->from,16));
@@ -135,8 +137,8 @@ const char *sa_get_desc(long e, int line, bool trunc)
 	    strcat(desc_buf," ");
 	}
 	if (g_sa_mode_desc_subject) {
-	    sprintf(g_sa_buf,"%s",sa_desc_subject(e));
-	    strcat(desc_buf,g_sa_buf);
+	    sprintf(s_sa_buf,"%s",sa_desc_subject(e));
+	    strcat(desc_buf,s_sa_buf);
 	}
 	break;
       case 2:	/* summary line (test) */

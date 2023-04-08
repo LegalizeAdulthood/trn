@@ -29,7 +29,6 @@
 #define sa_clearauthscored(a) (g_sa_ents[a].sa_flags &= 0xf7)
 #define sa_authscored(a) (g_sa_ents[a].sa_flags & 8)
 
-extern char g_sa_buf[LBUFLEN]; /* misc. buffer */
 extern bool g_sa_mode_zoom;    /* true if in "zoom" (display only selected) mode */
 extern bool g_sa_order_read;   /* if true, the already-read articles have been added to the order arrays */
 extern int g_sa_scan_context;  /* contains the scan-context number for the current article scan */
