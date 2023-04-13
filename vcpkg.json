@@ -3,6 +3,7 @@
    "name": "trn",
   "version": "5.0.0",
   "dependencies": [
+    "boost-asio",
     {
       "name": "pdcurses",
       "platform": "windows"

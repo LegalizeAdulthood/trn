@@ -130,7 +130,7 @@ target_compile_features(libtrn PRIVATE cxx_std_17)
 if(WIN32)
     target_sources(libtrn PRIVATE popen.cpp)
 endif()
-source_group("Header Files" REGULAR_EXPRESSION "^.*\.h$")
+source_group("Header Files" REGULAR_EXPRESSION "^.*\\.h$")
 target_include_directories(libtrn PUBLIC .)
 target_link_libraries(libtrn PUBLIC parsedate curses nntp)
 set_property(TARGET libtrn PROPERTY FOLDER Libraries)
@@ -147,7 +147,24 @@ add_executable(trn-artchk trn-artchk.cpp)
 target_link_libraries(trn-artchk PUBLIC nntp tool)
 set_property(TARGET trn-artchk PROPERTY FOLDER Tools)
 
-add_executable(trn main.cpp)
+set(trn_text_files
+    HACKERSGUIDE.txt
+    INIT.txt
+    INSTALL.txt
+    LICENSE.txt
+    MANIFEST.txt
+    README.txt
+)
+add_executable(trn main.cpp
+    vcpkg.json
+    ${trn_text_files}
+    cmake/Findpdcurses.cmake
+    cmake/Findsockets.cmake
+    cmake/FindBoostAsio.cmake
+)
+source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")
+source_group("VcPkg Files" FILES vcpkg.json)
+source_group("Text Files" FILES ${trn_text_files})
 target_link_libraries(trn PUBLIC libtrn)
 
 add_subdirectory(parsedate)
