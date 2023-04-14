@@ -546,7 +546,7 @@ long nntp_readcheck()
 #endif
 
 /* nntp_read -- read data from the server in binary format.  This call must
-** be preceeded by an appropriate binary command and an nntp_readcheck call.
+** be preceded by an appropriate binary command and an nntp_readcheck call.
 */
 #ifdef SUPPORT_XTHREAD
 long nntp_read(char *buf, long n)
@@ -561,16 +561,20 @@ long nntp_read(char *buf, long n)
 
     /* try to read some data from the server */
     if (s_rawbytes) {
-	n = fread(buf, 1, n > s_rawbytes ? s_rawbytes : n, g_nntplink.rd_fp);
+	boost::system::error_code ec;
+	n = g_nntplink.connection->read(buf, n > s_rawbytes ? s_rawbytes : n, ec);
 	s_rawbytes -= n;
     } else
 	n = 0;
 
     /* if no more left, then fetch the end-of-command signature */
-    if (!s_rawbytes) {
+    if (s_rawbytes == 0) {
 	char buf[5];	/* "\r\n.\r\n" */
 
-	fread(buf, 1, 5, g_nntplink.rd_fp);
+	boost::system::error_code ec;
+	int num_remaining = 5;
+	while (num_remaining > 0)
+	    num_remaining -= g_nntplink.connection->read(buf, num_remaining, ec);
 	s_rawbytes = -1;
     }
 #ifdef HAS_SIGHOLD

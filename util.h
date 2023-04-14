@@ -55,7 +55,7 @@ void notincl(const char *feature);
 void growstr(char **strptr, int *curlen, int newlen);
 void setdef(char *buffer, const char *dflt);
 #ifndef NO_FILELINKS
-void safelink(char *old, char *new);
+void safelink(char *old, char *new_name);
 #endif
 void   verify_sig();
 double current_time();

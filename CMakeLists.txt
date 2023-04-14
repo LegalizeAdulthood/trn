@@ -4,15 +4,14 @@ project(trn VERSION 5.0.0 LANGUAGES C CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-include(CheckIncludeFile)
 include(Configure)
 
 if(WIN32)
     find_package(pdcurses REQUIRED)
     add_library(curses ALIAS pdcurses)
 endif()
-find_package(sockets REQUIRED)
 find_package(BISON REQUIRED)
+find_package(BoostAsio REQUIRED)
 
 configure()
 
@@ -39,7 +38,7 @@ add_library(nntp
     nntpclient.cpp nntpclient.h
     nntpinit.cpp nntpinit.h
 )
-target_link_libraries(nntp PUBLIC sockets util)
+target_link_libraries(nntp PUBLIC boost::asio util)
 set_property(TARGET nntp PROPERTY FOLDER Libraries)
 
 add_library(tool
@@ -159,7 +158,6 @@ add_executable(trn main.cpp
     vcpkg.json
     ${trn_text_files}
     cmake/Findpdcurses.cmake
-    cmake/Findsockets.cmake
     cmake/FindBoostAsio.cmake
 )
 source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")

@@ -438,7 +438,7 @@ void check_datasrcs()
 
     if (g_datasrc_list) {
 	for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp)) {
-	    if ((dp->flags & DF_OPEN) && dp->nntplink.rd_fp != nullptr) {
+	    if ((dp->flags & DF_OPEN) && dp->nntplink.connection) {
 		time_t limit = ((dp->flags & DF_ACTIVE) ? 30 * 60 : 10 * 60);
 		if (now - dp->nntplink.last_command > limit) {
 		    DATASRC* save_datasrc = g_datasrc;

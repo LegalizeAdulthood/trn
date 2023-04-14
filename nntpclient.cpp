@@ -20,7 +20,7 @@ int nntp_connect(const char *machine, bool verbose)
 {
     int response;
 
-    if (g_nntplink.rd_fp)
+    if (g_nntplink.connection)
 	return 1;
 
     if (g_nntplink.flags & NNTP_FORCE_AUTH_NEEDED)
@@ -124,7 +124,7 @@ int nntp_command(const char *bp)
 	printf(">%s\n", bp) FLUSH;
 #endif
     strcpy(g_last_command, bp);
-    if (!g_nntplink.rd_fp)
+    if (!g_nntplink.connection)
 	return nntp_handle_timeout();
     if (g_nntplink.flags & NNTP_FORCE_AUTH_NOW) {
 	g_nntplink.flags &= ~NNTP_FORCE_AUTH_NOW;
@@ -135,8 +135,9 @@ int nntp_command(const char *bp)
 	if (ret <= 0)
 	    return ret;
     }
-    if (fprintf(g_nntplink.wr_fp, "%s\r\n", bp) < 0
-     || fflush(g_nntplink.wr_fp) < 0)
+    error_code ec;
+    g_nntplink.connection->writeLine(std::string{bp} + "\r\n", ec);
+    if (ec)
 	return nntp_handle_timeout();
     now = time((time_t*)nullptr);
     s_last_command_diff = now - g_nntplink.last_command;
@@ -146,6 +147,10 @@ int nntp_command(const char *bp)
 
 int nntp_check()
 {
+    error_code ec;
+    if (ec)
+    {
+    }
     int len = 0;
 
  read_it:
@@ -153,7 +158,9 @@ int nntp_check()
     sighold(SIGINT);
 #endif
     errno = 0;
-    int ret = (fgets(g_ser_line, sizeof g_ser_line, g_nntplink.rd_fp) == nullptr) ? -2 : 0;
+    std::string line = g_nntplink.connection->readLine(ec);
+    strncpy(g_ser_line, line.c_str(), sizeof g_ser_line);
+    int ret = ec ? -2 : 0;
 #ifdef HAS_SIGHOLD
     sigrelse(SIGINT);
 #endif
@@ -212,6 +219,23 @@ bool nntp_at_list_end(const char *s)
     return false;
 }
 
+class int_sig_holder
+{
+public:
+    int_sig_holder()
+    {
+#ifdef HAS_SIGHOLD
+        sighold(SIGINT);
+#endif
+    }
+    ~int_sig_holder()
+    {
+#ifdef HAS_SIGHOLD
+        sigrelse(SIGINT);
+#endif
+    }
+};
+
 /* This returns 1 when it reads a full line, 0 if it reads a partial
  * line, and -2 on EOF/error.  The maximum length includes a spot for
  * the null-terminator, and we need room for our "\r\n"-stripping code
@@ -219,66 +243,37 @@ bool nntp_at_list_end(const char *s)
  */
 int nntp_gets(char *bp, int len)
 {
-    int ch, n = 0;
-    char* cp = bp;
+    int_sig_holder holder;
 
-#ifdef HAS_SIGHOLD
-    sighold(SIGINT);
-#endif
-    if (g_nntplink.trailing_CR) {
-	*cp++ = '\r';
-	len--;
-	g_nntplink.trailing_CR = false;
+    error_code ec;
+    static std::string line;
+    if (line.empty())
+    {
+        line = g_nntplink.connection->readLine(ec);
+        if (ec)
+        {
+	    return -2;
+        }
     }
-    while (true) {
-	if (len == 1) {
-	    if (cp[-1] == '\r') {
-		/* Hold a trailing CR until next time because we may need
-		 * to strip it if it is followed by a newline. */
-		cp--;
-		g_nntplink.trailing_CR = true;
-	    }
-	    break;
-	}
-	do {
-	    errno = 0;
-	    ch = fgetc(g_nntplink.rd_fp);
-	} while (errno == EINTR);
-	if (ch == EOF) {
-	    g_nntplink.flags |= NNTP_NEW_CMD_OK;
-	    n = -2;
-	    break;
-	}
-	if (ch == '\n') {
-	    if (cp != bp && cp[-1] == '\r')
-		cp--;
-	    n = 1;
-	    break;
-	}
-	*cp++ = ch;
-	len--;
+
+    strncpy(bp, line.c_str(), len-1);
+    bp[strlen(bp)+1] = '\0';
+    if (len >= static_cast<int>(line.length()))
+    {
+        line.clear();
+        return 1;
     }
-    *cp = '\0';
-#ifdef HAS_SIGHOLD
-    sigrelse(SIGINT);
-#endif
-    return n;
+
+    line = line.substr(len);
+    return 0;
 }
 
 void nntp_close(bool send_quit)
 {
-    if (send_quit && g_nntplink.wr_fp != nullptr && g_nntplink.rd_fp != nullptr) {
+    if (send_quit && g_nntplink.connection) {
 	if (nntp_command("QUIT") > 0)
 	    nntp_check();
     }
-    /* the nntp_check() above might have closed these already. */
-    if (g_nntplink.wr_fp != nullptr) {
-	fclose(g_nntplink.wr_fp);
-	g_nntplink.wr_fp = nullptr;
-    }
-    if (g_nntplink.rd_fp != nullptr) {
-	fclose(g_nntplink.rd_fp);
-	g_nntplink.rd_fp = nullptr;
-    }
+    g_nntplink.connection.reset();
     g_nntplink.flags |= NNTP_NEW_CMD_OK;
 }

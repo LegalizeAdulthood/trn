@@ -28,6 +28,36 @@ char g_buf[LBUFLEN + 1]{}; /* general purpose line buffer */
 int valid_header(char *);
 void append_signature();
 
+static FILE *inews_wr_fp{};
+
+static void inews_fputs(const char *buff)
+{
+    if (inews_wr_fp)
+	fputs(buff, inews_wr_fp);
+    else
+    {
+	boost::system::error_code ec;
+        g_nntplink.connection->write(buff, 0, ec);
+    }
+}
+
+static void inews_fputc(char c)
+{
+    if (inews_wr_fp)
+	fputc(c, inews_wr_fp);
+    else
+    {
+	boost::system::error_code ec;
+	g_nntplink.connection->write(&c, 1, ec);
+    }
+}
+
+static void inews_fflush()
+{
+    if (inews_wr_fp)
+        (void) fflush(inews_wr_fp);
+}
+
 int main(int argc, char *argv[])
 {
     bool has_fromline, in_header, has_pathline;
@@ -150,7 +180,7 @@ int main(int argc, char *argv[])
     /* Well, the header looks ok, so let's get on with it. */
 
     if (g_server_name) {
-	if (!g_nntplink.wr_fp) {
+	if (!g_nntplink.connection) {
 	    if (init_nntp() < 0 || !nntp_connect(g_server_name,false))
 		exit(1);
 	    new_connection = true;
@@ -164,58 +194,65 @@ int main(int argc, char *argv[])
     }
     else {
 	sprintf(g_buf, "%s -h", EXTRAINEWS);
-	g_nntplink.wr_fp = _popen(g_buf,"w");
-	if (!g_nntplink.wr_fp) {
+	inews_wr_fp = _popen(g_buf,"w");
+	if (!inews_wr_fp) {
 	    fprintf(stderr,"Unable to execute inews for local posting.\n");
 	    exit(1);
 	}
     }
 
-    fputs(headbuf, g_nntplink.wr_fp);
+    inews_fputs(headbuf);
     if (!has_pathline)
-	fprintf(g_nntplink.wr_fp,"Path: not-for-mail%s",line_end);
+    {
+        sprintf(g_buf,"Path: not-for-mail%s",line_end);
+	inews_fputs(g_buf);
+    }
     if (!has_fromline) {
 	char buff[80];
 	strcpy(buff, g_real_name.c_str());
-	fprintf(g_nntplink.wr_fp,"From: %s@%s (%s)%s",g_login_name.c_str(),g_p_host_name.c_str(),
-		get_val("NAME",buff),line_end);
+        sprintf(g_buf, "From: %s@%s (%s)%s", g_login_name.c_str(), g_p_host_name.c_str(), get_val("NAME", buff),
+                line_end);
+	inews_fputs(g_buf);
     }
     if (!getenv("NO_ORIGINATOR")) {
 	char buff[80];
 	strcpy(buff, g_real_name.c_str());
-	fprintf(g_nntplink.wr_fp,"Originator: %s@%s (%s)%s",g_login_name.c_str(),g_p_host_name.c_str(),
-		get_val("NAME",buff),line_end);
+        sprintf(g_buf, "Originator: %s@%s (%s)%s", g_login_name.c_str(), g_p_host_name.c_str(), get_val("NAME", buff),
+                line_end);
+	inews_fputs(g_buf);
     }
-    fprintf(g_nntplink.wr_fp,"%s",line_end);
+    sprintf(g_buf, "%s", line_end);
+    inews_fputs(g_buf);
 
     had_nl = true;
     while (fgets(headbuf, headbuf_size, stdin)) {
 	/* Single . is eof, so put in extra one */
 	if (g_server_name && had_nl && *headbuf == '.')
-	    fputc('.', g_nntplink.wr_fp);
+	    inews_fputc('.');
 	/* check on newline */
 	cp = headbuf + strlen(headbuf);
 	if (cp > headbuf && *--cp == '\n') {
 	    *cp = '\0';
-	    fprintf(g_nntplink.wr_fp, "%s%s", headbuf, line_end);
+	    sprintf(g_buf, "%s%s", headbuf, line_end);
+	    inews_fputs(g_buf);
 	    had_nl = true;
 	}
 	else {
-	    fputs(headbuf, g_nntplink.wr_fp);
+	    inews_fputs(headbuf);
 	    had_nl = false;
 	}
     }
 
-    if (!g_server_name)
-	return _pclose(g_nntplink.wr_fp);
+    if (!inews_wr_fp)
+	return _pclose(inews_wr_fp);
 
     if (!had_nl)
-        fputs(line_end, g_nntplink.wr_fp);
+        inews_fputs(line_end);
 
     append_signature();
 
-    fputs(".\r\n",g_nntplink.wr_fp);
-    (void) fflush(g_nntplink.wr_fp);
+    inews_fputs(".\r\n");
+    inews_fflush();
 
     if (nntp_gets(g_ser_line, sizeof g_ser_line) < 0
      || *g_ser_line != NNTP_CLASS_OK) {
@@ -283,7 +320,8 @@ void append_signature()
     if (fp == nullptr)
 	return;
 
-    fprintf(g_nntplink.wr_fp, "-- \r\n");
+    sprintf(g_buf, "-- \r\n");
+    inews_fputs(g_buf);
     while (fgets(g_ser_line, sizeof g_ser_line, fp)) {
 	count++;
 	if (count > MAX_SIGNATURE) {
@@ -297,7 +335,8 @@ void append_signature()
 	cp = g_ser_line + strlen(g_ser_line) - 1;
 	if (cp >= g_ser_line && *cp == '\n')
 	    *cp = '\0';
-	fprintf(g_nntplink.wr_fp, "%s\r\n", g_ser_line);
+	sprintf(g_buf, "%s\r\n", g_ser_line);
+	inews_fputs(g_buf);
     }
     (void) fclose(fp);
 }

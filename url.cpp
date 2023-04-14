@@ -14,25 +14,11 @@
 /* Lower-level net routines grabbed from nntpinit.c.
  */
 
-/* NOTE: If running Winsock, NNTP must be enabled so that the Winsock
- *       initialization will be done.  (common.h will check for this)
- */
-#ifdef WINSOCK
-#include <winsock.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-#ifdef MSDOS
-#include <io.h>
-#endif
+#include <boost/asio.hpp>
 
-#ifndef WINSOCK
-unsigned long inet_addr (char*);
-struct servent* getservbyname();
-struct hostent* gethostbyname();
-#endif
+namespace asio = boost::asio;
+using resolver_results = asio::ip::tcp::resolver::results_type;
+using error_code = boost::system::error_code;
 
 static char s_url_buf[1030];
 /* XXX just a little bit larger than necessary... */
@@ -44,29 +30,38 @@ static char s_url_path[1024];
 /* returns true if successful */
 bool fetch_http(const char *host, int port, const char *path, const char *outname)
 {
-    int sock = get_tcp_socket(host, port, "http");
+    asio::io_context context;
+    asio::ip::tcp::resolver s_resolver(context);
+    error_code ec;
+    std::string service{"http"};
+    if (port)
+	service =std::to_string(port);
+    asio::ip::tcp::resolver::results_type results = s_resolver.resolve(host, service, ec);
+    if (ec)
+	return false;
+
+    asio::ip::tcp::socket socket{context};
+    asio::connect(socket, results, ec);
+    if (ec)
+	return false;
 
     /* XXX length check */
     /* XXX later consider using HTTP/1.0 format (and user-agent) */
-    sprintf(s_url_buf, "GET %s\n",path);
-    /* Should I be writing the 0 char at the end? */
-    if (write(sock, s_url_buf, strlen(s_url_buf)+1) < 0) {
-	printf("\nError: writing on URL socket\n");
-	close(sock);
+    sprintf(s_url_buf, "GET %s\r\n", path);
+    asio::write(socket, asio::buffer(s_url_buf, strlen(s_url_buf)), ec);
+    if (ec)
 	return false;
-    }
 
     FILE *fp_out = fopen(outname, "w");
     if (!fp_out) {
 	printf("\nURL output file could not be opened.\n");
 	return false;
     }
-    /* XXX some kind of URL timeout would be really nice */
-    /* (the old nicebg code caused portability problems) */
-    /* later consider larger buffers, spinner */
-    while (true) {
-	int len = read(sock, s_url_buf, 1024);
-	if (len < 0) {
+    while (true)
+    {
+	size_t len = read(socket, asio::buffer(s_url_buf, sizeof(s_url_buf)), ec);
+	if (ec != asio::error::eof)
+	{
 	    printf("\nError: reading URL reply\n");
 	    return false;
 	}
@@ -76,7 +71,6 @@ bool fetch_http(const char *host, int port, const char *path, const char *outnam
 	fwrite(s_url_buf,1,len,fp_out);
     }
     fclose(fp_out);
-    close(sock);
     return true;
 }
 

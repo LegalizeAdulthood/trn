@@ -5,8 +5,14 @@
 #define TRN_NNTPCLIENT_H
 
 #include <stdio.h>
+#include <memory>
+#include <stdexcept>
+#include <string>
+
+#include <boost/system/error_code.hpp>
 
 #include "enum-flags.h"
+#include "util.h"
 
 enum nntp_flags
 {
@@ -17,14 +23,28 @@ enum nntp_flags
 };
 DECLARE_FLAGS_ENUM(nntp_flags, int);
 
+using error_code = boost::system::error_code;
+
+struct INNTPConnection
+{
+    virtual ~INNTPConnection() = default;
+
+    virtual std::string readLine(error_code &ec) = 0;
+    virtual void        writeLine(const std::string &line, error_code &ec) = 0;
+    virtual void        write(const char *buffer, size_t len, error_code &ec) = 0;
+    virtual size_t      read(char *buf, size_t size, error_code &ec) = 0;
+};
+
+// use a shared_ptr to allow copying of NNTPLINK structure like a value.
+using ConnectionPtr = std::shared_ptr<INNTPConnection>;
+
 struct NNTPLINK
 {
-    FILE      *rd_fp;
-    FILE      *wr_fp;
-    time_t     last_command;
-    int        port_number;
-    nntp_flags flags;
-    bool       trailing_CR;
+    ConnectionPtr connection;
+    time_t        last_command;
+    int           port_number;
+    nntp_flags    flags;
+    bool          trailing_CR;
 };
 
 /* RFC 977 defines these, so don't change them */
@@ -66,7 +86,21 @@ extern bool g_nntp_allow_timeout;
 extern char g_ser_line[NNTP_STRLEN];
 extern char g_last_command[NNTP_STRLEN];
 
-#define nntp_get_a_line(buf, len, realloc) get_a_line(buf, len, realloc, g_nntplink.rd_fp)
+inline char *nntp_get_a_line(char *buffer, int buffer_length, bool realloc_ok)
+{
+    boost::system::error_code ec;
+
+    std::string line = g_nntplink.connection->readLine(ec);
+    if (buffer_length < line.length())
+    {
+        if (realloc_ok)
+            buffer = saferealloc(buffer, (MEM_SIZE) line.length() + 1);
+        else
+            throw std::runtime_error("not implemented");
+    }
+    strncpy(buffer, line.c_str(), line.length() + 1);
+    return buffer;
+}
 
 int nntp_connect(const char *machine, bool verbose);
 char *nntp_servername(char *name);

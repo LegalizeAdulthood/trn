@@ -7,64 +7,99 @@
 
 #include "nntpclient.h"
 
-#ifdef WIN32
+#include <boost/asio.hpp>
+
+#include <iostream>
+#include <map>
+#include <string>
+
+#ifdef MSDOS
 #include <io.h>
 #endif
 
-#ifdef WINSOCK
-#include <winsock.h>
-WSADATA wsaData;
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
+namespace asio = boost::asio;
 
-#ifndef WINSOCK
-unsigned long inet_addr(char *);
-struct servent *getservbyname(void);
-struct hostent *gethostbyname(void);
-#endif
+static asio::io_context s_context;
+static asio::ip::tcp::resolver s_resolver(s_context);
+using resolver_results = asio::ip::tcp::resolver::results_type;
+using error_code = boost::system::error_code;
+
+class NNTPConnection : public INNTPConnection
+{
+public:
+    NNTPConnection(const char *server, const resolver_results &results)
+        : m_server(server)
+    {
+        error_code ec;
+        asio::connect(m_socket, results, ec);
+	if (ec)
+	{
+	    throw std::runtime_error("Couldn't connect socket" + ec.what());
+	}
+    }
+    ~NNTPConnection() override = default;
+
+    std::string readLine(error_code &ec) override;
+    void        writeLine(const std::string &line, error_code &ec) override;
+    void        write(const char *buffer, size_t len, error_code &ec) override;
+    size_t      read(char *buf, size_t size, error_code &ec) override;
+
+private:
+    std::string           m_server;
+    asio::ip::tcp::socket m_socket{s_context};
+    asio::streambuf       m_buffer;
+};
+
+std::string NNTPConnection::readLine(error_code &ec)
+{
+    read_until(m_socket, m_buffer, "\r\n", ec);
+    if (ec)
+	return {};
+
+    std::string line;
+    std::istream istr(&m_buffer);
+    std::getline(istr, line);
+    return line;
+}
+
+void NNTPConnection::writeLine(const std::string &line, error_code &ec)
+{
+    const std::string buffer{line + "\r\n"};
+    write(buffer.c_str(), buffer.size(), ec);
+}
+
+void NNTPConnection::write(const char *buffer, size_t len, error_code &ec)
+{
+    asio::write(m_socket, asio::buffer(buffer, len), ec);
+}
+
+size_t NNTPConnection::read(char *buf, size_t size, error_code &ec)
+{
+    return asio::read(m_socket, asio::buffer(buf, size), ec);
+}
 
 int init_nntp()
 {
-#ifdef WINSOCK
-    if (WSAStartup(0x0101,&wsaData) == 0) {
-	if (wsaData.wVersion == 0x0101)
-	    return 1;
-	WSACleanup();
-    }
-    fprintf(stderr,"Unable to initialize WinSock DLL.\n");
-    return -1;
-#else
     return 1;
-#endif
 }
 
 int server_init(const char *machine)
 {
-    int sockt_rd = get_tcp_socket(machine, g_nntplink.port_number, "nntp");
+    std::string service{"nntp"};
+    if (g_nntplink.port_number)
+        service = std::to_string(g_nntplink.port_number);
 
-    if (sockt_rd < 0)
+    error_code ec;
+    asio::ip::tcp::resolver::results_type results = s_resolver.resolve(machine, service, ec);
+    if (ec)
 	return -1;
 
-    int sockt_wr = dup(sockt_rd);
-
-    /* Now we'll make file pointers (i.e., buffered I/O) out of
-    ** the socket file descriptor.  Note that we can't just
-    ** open a fp for reading and writing -- we have to open
-    ** up two separate fp's, one for reading, one for writing. */
-    g_nntplink.rd_fp = fdopen(sockt_rd, "r");
-    if (g_nntplink.rd_fp == nullptr)
+    try
     {
-	perror("server_init: fdopen #1");
-	return -1;
+	g_nntplink.connection = std::make_shared<NNTPConnection>(machine, results);
     }
-    g_nntplink.wr_fp = fdopen(sockt_wr, "w");
-    if (g_nntplink.wr_fp == nullptr)
+    catch (...)
     {
-	perror("server_init: fdopen #2");
-	g_nntplink.rd_fp = nullptr;
 	return -1;
     }
 
@@ -86,9 +121,6 @@ int server_init(const char *machine)
 
 void cleanup_nntp()
 {
-#ifdef WINSOCK
-    WSACleanup();
-#endif
 }
 
 int get_tcp_socket(const char *machine, int port, const char *service)
