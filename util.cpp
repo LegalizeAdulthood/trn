@@ -45,7 +45,6 @@ using WAIT_STATUS = int;
 
 bool g_waiting{}; /* waiting for subprocess (in doshell)? */
 bool g_nowait_fork{};
-bool g_export_nntp_fds{};
 /* the strlen and the buffer length of "some_buf" after a call to:
  *     some_buf = get_a_line(bufptr,bufsize,realloc,fp); */
 int g_len_last_line_got{};
@@ -60,7 +59,6 @@ static char *s_newsactive_export = s_null_export + 2;
 static char *s_grpdesc_export = s_null_export + 2;
 static char *s_quotechars_export = s_null_export + 2;
 static char *s_nntpserver_export = s_null_export + 2;
-static char *s_nntpfds_export = s_null_export + 2;
 static char *s_nntpforce_export = s_null_export + 2;
 
 void util_init()
@@ -76,7 +74,6 @@ void util_init()
     s_nntpserver_export = export_var("NNTPSERVER", g_buf);
     g_buf[64] = '\0';
     s_quotechars_export = export_var("QUOTECHARS",g_buf);
-    s_nntpfds_export = export_var("NNTPFDS", g_buf);
     g_buf[3] = '\0';
     s_nntpforce_export = export_var("NNTP_FORCE_AUTH", g_buf);
     export_var("TRN_VERSION", g_patchlevel.c_str());
@@ -88,7 +85,6 @@ void util_final()
     putenv("NEWSDESCRIPTIONS=");
     putenv("NNTPSERVER=");
     putenv("QUOTECHARS=");
-    putenv("NNTPFDS=");
     putenv("NNTP_FORCE_AUTH=");
     putenv("TRN_VERSION=");
 }
@@ -111,13 +107,6 @@ int doshell(const char *shell, const char *s)
     sigset(SIGTTIN,SIG_DFL);
 #endif
     if (g_datasrc && (g_datasrc->flags & DF_REMOTE)) {
-	if (!g_export_nntp_fds || !g_nntplink.rd_fp)
-	    un_export(s_nntpfds_export);
-	else {
-	    sprintf(g_buf,"%d.%d",(int)fileno(g_nntplink.rd_fp),
-				(int)fileno(g_nntplink.wr_fp));
-	    re_export(s_nntpfds_export, g_buf, 64);
-	}
 	re_export(s_nntpserver_export,g_datasrc->newsid,512);
 	if (g_datasrc->nntplink.flags & NNTP_FORCE_AUTH_NEEDED)
 	    re_export(s_nntpforce_export,"yes",3);
@@ -146,7 +135,6 @@ int doshell(const char *shell, const char *s)
 	else
 	    re_export(s_newsactive_export, "none", 512);
     } else {
-	un_export(s_nntpfds_export);
 	un_export(s_nntpserver_export);
 	un_export(s_nntpforce_export);
 	if (g_datasrc)

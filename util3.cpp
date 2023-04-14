@@ -12,7 +12,6 @@
 #include "typedef.h"
 #include "util2.h"
 
-bool g_export_nntp_fds{};
 char *g_nntp_password{};
 
 static char s_nomem[] = "trn: out of memory!\n";

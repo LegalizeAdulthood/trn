@@ -150,21 +150,6 @@ int main(int argc, char *argv[])
     /* Well, the header looks ok, so let's get on with it. */
 
     if (g_server_name) {
-        cp = getenv("NNTPFDS");
-        if (cp != nullptr)
-        {
-	    int rd_fd, wr_fd;
-	    if (sscanf(cp,"%d.%d",&rd_fd,&wr_fd) == 2) {
-		g_nntplink.rd_fp = fdopen(rd_fd, "r");
-		if (g_nntplink.rd_fp) {
-		    g_nntplink.wr_fp = fdopen(wr_fd, "w");
-		    if (g_nntplink.wr_fp)
-			g_nntplink.flags |= NNTP_NEW_CMD_OK;
-		    else
-			nntp_close(false);
-		}
-	    }
-	}
 	if (!g_nntplink.wr_fp) {
 	    if (init_nntp() < 0 || !nntp_connect(g_server_name,false))
 		exit(1);

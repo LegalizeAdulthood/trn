@@ -553,9 +553,7 @@ int cancel_article()
 	fclose(header);
 	fputs("\nCanceling...\n",stdout) FLUSH;
 	termdown(2);
-	g_export_nntp_fds = true;
 	r = doshell(SH,filexp(get_val("CANCEL",CALL_INEWS)));
-	g_export_nntp_fds = false;
     }
 done:
     free(ngs_buf);
@@ -640,9 +638,7 @@ static void follow_it_up()
 	    ret = 1;
 	else
 	{
-	    g_export_nntp_fds = true;
 	    ret = invoke(filexp(CALL_INEWS),g_origdir.c_str());
-	    g_export_nntp_fds = false;
 	}
 	if (ret) {
 	    int   appended = 0;
