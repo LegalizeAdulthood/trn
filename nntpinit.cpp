@@ -59,6 +59,7 @@ std::string NNTPConnection::readLine(error_code &ec)
     std::string line;
     std::istream istr(&m_buffer);
     std::getline(istr, line);
+    line += '\n';
     return line;
 }
 

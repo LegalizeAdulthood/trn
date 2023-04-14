@@ -136,7 +136,7 @@ int nntp_command(const char *bp)
 	    return ret;
     }
     error_code ec;
-    g_nntplink.connection->writeLine(std::string{bp} + "\r\n", ec);
+    g_nntplink.connection->writeLine(bp, ec);
     if (ec)
 	return nntp_handle_timeout();
     now = time((time_t*)nullptr);
@@ -147,10 +147,6 @@ int nntp_command(const char *bp)
 
 int nntp_check()
 {
-    error_code ec;
-    if (ec)
-    {
-    }
     int len = 0;
 
  read_it:
@@ -158,6 +154,7 @@ int nntp_check()
     sighold(SIGINT);
 #endif
     errno = 0;
+    error_code ec;
     std::string line = g_nntplink.connection->readLine(ec);
     strncpy(g_ser_line, line.c_str(), sizeof g_ser_line);
     int ret = ec ? -2 : 0;
