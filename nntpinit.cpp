@@ -12,6 +12,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <utility>
 
 #ifdef MSDOS
 #include <io.h>
@@ -19,8 +20,10 @@
 
 namespace asio = boost::asio;
 
-static asio::io_context s_context;
+static asio::io_context        s_context;
 static asio::ip::tcp::resolver s_resolver(s_context);
+static ConnectionFactory       s_nntp_connection_factory;
+
 using resolver_results = asio::ip::tcp::resolver::results_type;
 using error_code = boost::system::error_code;
 
@@ -79,30 +82,45 @@ size_t NNTPConnection::read(char *buf, size_t size, error_code &ec)
     return asio::read(m_socket, asio::buffer(buf, size), ec);
 }
 
+static ConnectionPtr create_nntp_connection(const char *machine, int port, const char *service)
+{
+    std::string service_name{service};
+    if (g_nntplink.port_number)
+        service_name = std::to_string(g_nntplink.port_number);
+
+    error_code ec;
+    asio::ip::tcp::resolver::results_type results = s_resolver.resolve(machine, service_name, ec);
+    if (ec)
+	return nullptr;
+
+    ConnectionPtr connection{};
+    try
+    {
+	connection = std::make_shared<NNTPConnection>(machine, results);
+    }
+    catch (...)
+    {
+	return nullptr;
+    }
+    return connection;
+}
+
+void set_nntp_connection_factory(ConnectionFactory factory)
+{
+    s_nntp_connection_factory = std::move(factory);
+}
+
 int init_nntp()
 {
+    set_nntp_connection_factory(create_nntp_connection);
     return 1;
 }
 
 int server_init(const char *machine)
 {
-    std::string service{"nntp"};
-    if (g_nntplink.port_number)
-        service = std::to_string(g_nntplink.port_number);
-
-    error_code ec;
-    asio::ip::tcp::resolver::results_type results = s_resolver.resolve(machine, service, ec);
-    if (ec)
+    g_nntplink.connection = s_nntp_connection_factory(machine, g_nntplink.port_number, "nntp");
+    if (g_nntplink.connection == nullptr)
 	return -1;
-
-    try
-    {
-	g_nntplink.connection = std::make_shared<NNTPConnection>(machine, results);
-    }
-    catch (...)
-    {
-	return -1;
-    }
 
     /* Now get the server's signon message */
     nntp_check();

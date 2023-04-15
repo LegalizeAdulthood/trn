@@ -10,6 +10,7 @@ add_executable(trn-test
     test_flags.cpp
     test_init.cpp
     test_interp.cpp
+    test_nntp.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/test_config.h
     ${CMAKE_CURRENT_BINARY_DIR}/test_data.cpp
     cmake/ConfigureTrnTestData.cmake

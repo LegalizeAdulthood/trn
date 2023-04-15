@@ -5,6 +5,7 @@
 #define TRN_NNTPCLIENT_H
 
 #include <stdio.h>
+#include <functional>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -37,6 +38,8 @@ struct INNTPConnection
 
 // use a shared_ptr to allow copying of NNTPLINK structure like a value.
 using ConnectionPtr = std::shared_ptr<INNTPConnection>;
+
+using ConnectionFactory = std::function<ConnectionPtr(const char *machine, int pot, const char *service)>;
 
 struct NNTPLINK
 {
@@ -102,6 +105,7 @@ inline char *nntp_get_a_line(char *buffer, int buffer_length, bool realloc_ok)
     return buffer;
 }
 
+void set_nntp_connection_factory(ConnectionFactory factory);
 int nntp_connect(const char *machine, bool verbose);
 char *nntp_servername(char *name);
 int nntp_command(const char *bp);
