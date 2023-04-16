@@ -4,6 +4,8 @@
 #include <nntpclient.h>
 #include <nntpinit.h>
 
+#include <boost/asio/error.hpp>
+
 #include <utility>
 
 using namespace testing;
@@ -122,4 +124,62 @@ TEST_F(NNTPConnectedTest, server_init_permanently_unavailable)
     const int result = server_init(m_machine);
 
     EXPECT_EQ(NNTP_ACCESS_VAL, result);
+}
+
+class NNTPGetStringTest : public Test
+{
+public:
+    ~NNTPGetStringTest() override = default;
+
+protected:
+    void SetUp() override
+    {
+        Test::SetUp();
+        nntp_gets_clear_buffer();
+        m_connection = std::make_shared<StrictMock<MockNNTPConnection>>();
+        g_nntplink.connection = m_connection;
+    }
+
+    void TearDown() override
+    {
+        Test::TearDown();
+        g_nntplink.connection.reset();
+    }
+
+    std::shared_ptr<StrictMock<MockNNTPConnection>> m_connection;
+    boost::system::error_code                       m_ec;
+};
+
+TEST_F(NNTPGetStringTest, line_fits)
+{
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this fits")));
+    char buffer[1024];
+
+    const int result = nntp_gets(buffer, sizeof(buffer));
+
+    EXPECT_EQ(1, result);
+    EXPECT_EQ("this fits", std::string(buffer));
+}
+
+TEST_F(NNTPGetStringTest, partial_line)
+{
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this does not fit")));
+    char buffer[5];
+
+    const int result = nntp_gets(buffer, sizeof(buffer));
+
+    EXPECT_EQ(0, result);
+    EXPECT_EQ("this", std::string(buffer));
+}
+
+TEST_F(NNTPGetStringTest, error)
+{
+    m_ec = boost::asio::error::eof;
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this does not fit")));
+    char buffer[5]{"junk"};
+
+    const int result = nntp_gets(buffer, sizeof(buffer));
+
+    EXPECT_EQ(-2, result);
+    EXPECT_EQ("junk", std::string(buffer));
 }

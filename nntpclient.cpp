@@ -243,6 +243,8 @@ public:
     }
 };
 
+static std::string s_nntp_gets_line;
+
 /* This returns 1 when it reads a full line, 0 if it reads a partial
  * line, and -2 on EOF/error.  The maximum length includes a spot for
  * the null-terminator, and we need room for our "\r\n"-stripping code
@@ -253,26 +255,31 @@ int nntp_gets(char *bp, int len)
     int_sig_holder holder;
 
     error_code ec;
-    static std::string line;
-    if (line.empty())
+    if (s_nntp_gets_line.empty())
     {
-        line = g_nntplink.connection->read_line(ec);
+        s_nntp_gets_line = g_nntplink.connection->read_line(ec);
         if (ec)
         {
 	    return -2;
         }
     }
 
-    strncpy(bp, line.c_str(), len-1);
-    bp[strlen(bp)+1] = '\0';
-    if (len >= static_cast<int>(line.length()))
+    strncpy(bp, s_nntp_gets_line.c_str(), len-1);
+    if (len >= static_cast<int>(s_nntp_gets_line.length()))
     {
-        line.clear();
+	bp[s_nntp_gets_line.length()] = '\0';
+        s_nntp_gets_line.clear();
         return 1;
     }
 
-    line = line.substr(len);
+    bp[len-1] = '\0';
+    s_nntp_gets_line = s_nntp_gets_line.substr(len);
     return 0;
+}
+
+void nntp_gets_clear_buffer()
+{
+    s_nntp_gets_line.clear();
 }
 
 void nntp_close(bool send_quit)
