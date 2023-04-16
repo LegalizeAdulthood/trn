@@ -58,9 +58,30 @@ protected:
     std::shared_ptr<StrictMock<MockNNTPConnection>> m_connection;
 };
 
-TEST_F(NNTPTest, server_init_ok)
+TEST_F(NNTPTest, server_init_connection_failed)
 {
-    configure_factory_create(m_connection);
+    configure_factory_create(nullptr);
+
+    const int result = server_init(m_machine);
+
+    EXPECT_EQ(-1, result);
+}
+
+class NNTPConnectedTest : public NNTPTest
+{
+public:
+    ~NNTPConnectedTest() override = default;
+
+protected:
+    void SetUp() override
+    {
+        NNTPTest::SetUp();
+        configure_factory_create(m_connection);
+    }
+};
+
+TEST_F(NNTPConnectedTest, server_init_ok)
+{
     EXPECT_CALL(*m_connection, read_line(_))
         .WillOnce(Return("200 news.gmane.io InterNetNews NNRP server INN 2.6.3 ready (posting ok)"))
         .WillOnce(Return("200 news.gmane.io InterNetNews NNRP server INN 2.6.3 ready (posting ok)"));
@@ -71,9 +92,8 @@ TEST_F(NNTPTest, server_init_ok)
     EXPECT_EQ(NNTP_POSTOK_VAL, result);
 }
 
-TEST_F(NNTPTest, server_init_posting_prohibited)
+TEST_F(NNTPConnectedTest, server_init_posting_prohibited)
 {
-    configure_factory_create(m_connection);
     EXPECT_CALL(*m_connection, read_line(_))
         .WillOnce(Return("201 news.gmane.io InterNetNews NNRP server INN 2.6.3 ready (posting prohibited)"))
         .WillOnce(Return("201 news.gmane.io InterNetNews NNRP server INN 2.6.3 ready (posting prohibited)"));
@@ -82,13 +102,4 @@ TEST_F(NNTPTest, server_init_posting_prohibited)
     const int result = server_init(m_machine);
 
     EXPECT_EQ(NNTP_NOPOSTOK_VAL, result);
-}
-
-TEST_F(NNTPTest, server_init_connection_failed)
-{
-    configure_factory_create(nullptr);
-
-    const int result = server_init(m_machine);
-
-    EXPECT_EQ(-1, result);
 }
