@@ -103,3 +103,23 @@ TEST_F(NNTPConnectedTest, server_init_posting_prohibited)
 
     EXPECT_EQ(NNTP_NOPOSTOK_VAL, result);
 }
+
+TEST_F(NNTPConnectedTest, server_init_temporarily_unavailable)
+{
+    EXPECT_CALL(*m_connection, read_line(_))
+        .WillOnce(Return("400 news.gmane.io InterNetNews NNRP server INN 2.6.3 temporarily unavailable"));
+
+    const int result = server_init(m_machine);
+
+    EXPECT_EQ(NNTP_GOODBYE_VAL, result);
+}
+
+TEST_F(NNTPConnectedTest, server_init_permanently_unavailable)
+{
+    EXPECT_CALL(*m_connection, read_line(_))
+        .WillOnce(Return("502 news.gmane.io InterNetNews NNRP server INN 2.6.3 permanently unavailable"));
+
+    const int result = server_init(m_machine);
+
+    EXPECT_EQ(NNTP_ACCESS_VAL, result);
+}
