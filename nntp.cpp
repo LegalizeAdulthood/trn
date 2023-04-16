@@ -46,9 +46,8 @@ int nntp_list(const char *type, const char *arg, int len)
 	return ret? ret : -1;
     if (!len)
 	return 1;
-    ret = nntp_gets(g_ser_line, sizeof g_ser_line);
-    if (ret < 0)
-	return ret;
+    if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
+	return -1;
 #if defined(DEBUG) && defined(FLUSH)
     if (debug & DEB_NNTP)
 	printf("<%s\n", g_ser_line) FLUSH;
@@ -60,12 +59,12 @@ int nntp_list(const char *type, const char *arg, int len)
 
 void nntp_finish_list()
 {
-    int ret;
+    nntp_gets_result ret;
     do {
-	while ((ret = nntp_gets(g_ser_line, sizeof g_ser_line)) == 0) {
+	while ((ret = nntp_gets(g_ser_line, sizeof g_ser_line)) == NGSR_PARTIAL_LINE) {
 	    /* A line w/o a newline is too long to be the end of the
 	    ** list, so grab the rest of this line and try again. */
-	    while ((ret = nntp_gets(g_ser_line, sizeof g_ser_line)) == 0)
+	    while ((ret = nntp_gets(g_ser_line, sizeof g_ser_line)) == NGSR_PARTIAL_LINE)
 		;
 	    if (ret < 0)
 		return;
@@ -231,8 +230,8 @@ static int nntp_copybody(char *s, int limit, ART_POS pos)
     bool had_nl = true;
 
     while (pos > s_body_end || !had_nl) {
-	int found_nl = nntp_gets(s, limit);
-	if (found_nl < 0)
+	const int result = nntp_gets(s, limit);
+	if (result == NGSR_ERROR)
 	    strcpy(s,"."); /*$$*/
 	if (had_nl) {
 	    if (nntp_at_list_end(s)) {
@@ -244,11 +243,11 @@ static int nntp_copybody(char *s, int limit, ART_POS pos)
 		safecpy(s,s+1,limit);
 	}
 	int len = strlen(s);
-	if (found_nl)
+	if (result == NGSR_FULL_LINE)
 	    strcpy(s+len, "\n");
 	fputs(s, g_artfp);
 	s_body_end = ftell(g_artfp);
-	had_nl = found_nl;
+	had_nl = result == NGSR_FULL_LINE;
     }
     return 1;
 }

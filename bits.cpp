@@ -265,7 +265,7 @@ void find_existing_articles()
 		 ap = article_nextp(ap))
 		ap->flags &= ~AF_EXISTS;
 	    for (;;) {
-		if (nntp_gets(g_ser_line, sizeof g_ser_line) < 0)
+		if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
 		    break; /*$$*/
 		if (nntp_at_list_end(g_ser_line))
 		    break;

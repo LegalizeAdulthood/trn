@@ -112,9 +112,16 @@ int nntp_command(const char *bp);
 int nntp_xgtitle(const char *groupname);
 int nntp_check();
 bool nntp_at_list_end(const char *s);
-int nntp_gets(char *bp, int len);
-void nntp_gets_clear_buffer();
-void nntp_close(bool send_quit);
+enum nntp_gets_result
+{
+    // NGSR: nntp get string result
+    NGSR_ERROR = -2,
+    NGSR_PARTIAL_LINE = 0,
+    NGSR_FULL_LINE = 1,
+};
+nntp_gets_result nntp_gets(char *bp, int len);
+void             nntp_gets_clear_buffer();
+void             nntp_close(bool send_quit);
 
 inline void nntp_advise(const char *str)
 {

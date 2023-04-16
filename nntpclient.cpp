@@ -250,7 +250,7 @@ static std::string s_nntp_gets_line;
  * the null-terminator, and we need room for our "\r\n"-stripping code
  * to work right, so "len" MUST be at least 3.
  */
-int nntp_gets(char *bp, int len)
+nntp_gets_result nntp_gets(char *bp, int len)
 {
     int_sig_holder holder;
 
@@ -260,7 +260,7 @@ int nntp_gets(char *bp, int len)
         s_nntp_gets_line = g_nntplink.connection->read_line(ec);
         if (ec)
         {
-	    return -2;
+	    return NGSR_ERROR;
         }
     }
 
@@ -269,12 +269,12 @@ int nntp_gets(char *bp, int len)
     {
 	bp[s_nntp_gets_line.length()] = '\0';
         s_nntp_gets_line.clear();
-        return 1;
+        return NGSR_FULL_LINE;
     }
 
     bp[len-1] = '\0';
     s_nntp_gets_line = s_nntp_gets_line.substr(len);
-    return 0;
+    return NGSR_PARTIAL_LINE;
 }
 
 void nntp_gets_clear_buffer()

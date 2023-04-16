@@ -452,7 +452,7 @@ static bool open_newsrc(NEWSRC *rp)
 	    do {
 		fputs(g_ser_line,rcfp);
 		fputc('\n',rcfp);
-		if (nntp_gets(g_ser_line, sizeof g_ser_line) < 0)
+		if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
 		    break;
 	    } while (!nntp_at_list_end(g_ser_line));
 	}

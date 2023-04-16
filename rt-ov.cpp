@@ -75,7 +75,7 @@ bool ov_init()
 	fieldflags[OV_NUM] = FF_HAS_FIELD;
 	for (i = 1;;) {
 	    if (!g_datasrc->over_dir) {
-		if (nntp_gets(g_buf, sizeof g_buf) < 0)
+		if (nntp_gets(g_buf, sizeof g_buf) == NGSR_ERROR)
 		    break;/*$$*/
 		if (nntp_at_list_end(g_buf))
 		    break;

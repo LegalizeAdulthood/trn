@@ -140,7 +140,7 @@ static void new_nntp_groups(DATASRC *dp)
     while (true) {
         high = 0;
         low = 1;
-	if (nntp_gets(g_ser_line, sizeof g_ser_line) < 0)
+	if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
 	    break;
 #ifdef DEBUG
 	if (debug & DEB_NNTP)
@@ -323,7 +323,7 @@ bool scanactive(bool add_matching)
 	    if (nntp_list("active", g_buf, strlen(g_buf)) == 1) {
 		while (!nntp_at_list_end(g_ser_line)) {
 		    scanline(g_ser_line,add_matching);
-		    if (nntp_gets(g_ser_line, sizeof g_ser_line) < 0)
+		    if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
 			break; /*$$*/
 		}
 	    }

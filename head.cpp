@@ -362,7 +362,7 @@ bool parseheader(ART_NUM artnum)
 	    bp = g_headbuf + len;
 	}
 	if (s_reading_nntp_header) {
-	    found_nl = nntp_gets(bp,LBUFLEN);
+	    found_nl = nntp_gets(bp,LBUFLEN) == NGSR_FULL_LINE;
 	    if (found_nl < 0)
 		strcpy(bp,"."); /*$$*/
 	    if (had_nl && *bp == '.') {
