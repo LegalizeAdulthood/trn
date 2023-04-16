@@ -473,6 +473,18 @@ char *mp_fetchlines(ART_NUM artnum, header_line_type which_line, memory_pool poo
     return s;
 }
 
+static int nntp_xhdr(header_line_type which_line, ART_NUM artnum)
+{
+    sprintf(g_ser_line,"XHDR %s %ld",g_htype[which_line].name,artnum);
+    return nntp_command(g_ser_line);
+}
+
+static int nntp_xhdr(header_line_type which_line, ART_NUM artnum, ART_NUM lastnum)
+{
+    sprintf(g_ser_line, "XHDR %s %ld-%ld", g_htype[which_line].name, artnum, lastnum);
+    return nntp_command(g_ser_line);
+}
+
 /* prefetch a header line from one or more articles */
 
 // ART_NUM artnum   article to get line from */
@@ -508,20 +520,20 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
 	    size = sizeof g_cmd_buf;
 	}
 	*s = '\0';
-	ART_NUM priornum = artnum - 1;
+        ART_NUM priornum = artnum - 1;
         bool    cached = (g_htype[which_line].flags & HT_CACHED);
+        int     status;
         if (cached != 0)
         {
 	    lastnum = artnum + PREFETCH_SIZE - 1;
 	    if (lastnum > g_lastart)
 		lastnum = g_lastart;
-	    sprintf(g_ser_line,"XHDR %s %ld-%ld",g_htype[which_line].name,
-		artnum,lastnum);
+	    status = nntp_xhdr(which_line, artnum, lastnum);
 	} else {
 	    lastnum = artnum;
-	    sprintf(g_ser_line,"XHDR %s %ld",g_htype[which_line].name,artnum);
+	    status = nntp_xhdr(which_line, artnum);
 	}
-	if (nntp_command(g_ser_line) <= 0)
+	if (status <= 0)
 	    finalize(1); /*$$*/
 	if (nntp_check() > 0) {
             char* last_buf = g_ser_line;
