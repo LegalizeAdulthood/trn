@@ -275,7 +275,7 @@ do_article_result do_article()
 		hide_this_line = true;
 	    if (g_in_header && g_do_hiding && (g_htype[g_in_header].flags & HT_MAGIC)) {
 		switch (g_in_header) {
-		  case NGS_LINE:
+		  case NEWSGROUPS_LINE:
                     s = strchr(bufptr, '\n');
                     if (s != nullptr)
 			*s = '\0';

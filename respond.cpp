@@ -519,7 +519,7 @@ int cancel_article()
     }
     char *reply_buf = fetchlines(g_art, REPLY_LINE);
     char *from_buf = fetchlines(g_art, FROM_LINE);
-    char *ngs_buf = fetchlines(g_art, NGS_LINE);
+    char *ngs_buf = fetchlines(g_art, NEWSGROUPS_LINE);
     if (strcasecmp(get_val("FROM",""),from_buf)
      && (!in_string(from_buf,g_hostname, false)
       || (!in_string(from_buf,g_login_name.c_str(), true)
@@ -579,7 +579,7 @@ int supersede_article()		/* Supersedes: */
     }
     char *reply_buf = fetchlines(g_art, REPLY_LINE);
     char *from_buf = fetchlines(g_art, FROM_LINE);
-    char *ngs_buf = fetchlines(g_art, NGS_LINE);
+    char *ngs_buf = fetchlines(g_art, NEWSGROUPS_LINE);
     if (strcasecmp(get_val("FROM",""),from_buf)
      && (!in_string(from_buf,g_hostname, false)
       || (!in_string(from_buf,g_login_name.c_str(), true)

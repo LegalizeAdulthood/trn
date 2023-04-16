@@ -40,7 +40,7 @@ enum header_line_type
     LINES_LINE,             /* lines */
     MIMEVER_LINE,           /* mime-version */
     MSGID_LINE,             /* message-id */
-    NGS_LINE,               /* newsgroups */
+    NEWSGROUPS_LINE,        /* newsgroups */
     PATH_LINE,              /* path */
     RVER_LINE,              /* relay-version */
     REPLY_LINE,             /* reply-to */

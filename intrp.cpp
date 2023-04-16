@@ -580,7 +580,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
 			}
 			else
 			{
-                            ngs_buf = fetchlines(g_art, NGS_LINE);
+                            ngs_buf = fetchlines(g_art, NEWSGROUPS_LINE);
                             s = ngs_buf;
 			}
 		    }
@@ -647,7 +647,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
 		case 'n':			/* newsgroups */
 		    if (g_in_ng)
 		    {
-                        ngs_buf = fetchlines(g_art, NGS_LINE);
+                        ngs_buf = fetchlines(g_art, NEWSGROUPS_LINE);
                         s = ngs_buf;
 		    }
 		    else
