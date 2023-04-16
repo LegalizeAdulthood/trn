@@ -109,6 +109,7 @@ void set_nntp_connection_factory(ConnectionFactory factory);
 int nntp_connect(const char *machine, bool verbose);
 char *nntp_servername(char *name);
 int nntp_command(const char *bp);
+int nntp_xgtitle(const char *groupname);
 int nntp_check();
 bool nntp_at_list_end(const char *s);
 int nntp_gets(char *bp, int len);

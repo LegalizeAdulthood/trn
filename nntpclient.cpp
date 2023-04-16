@@ -145,6 +145,16 @@ int nntp_command(const char *bp)
     return 1;
 }
 
+int nntp_xgtitle(const char *groupname)
+{
+    sprintf(g_ser_line, "XGTITLE %s", groupname);
+    const int status = nntp_command(g_ser_line);
+    if (status <= 0)
+        return status;
+
+    return nntp_check();
+}
+
 int nntp_check()
 {
     int len = 0;

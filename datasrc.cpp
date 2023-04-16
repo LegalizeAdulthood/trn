@@ -656,8 +656,7 @@ const char *find_grpdesc(DATASRC *dp, const char *groupname)
 
     if ((dp->flags & (DF_REMOTE|DF_NOXGTITLE)) == DF_REMOTE) {
 	set_datasrc(dp);
-	sprintf(g_ser_line, "XGTITLE %s", groupname);
-	if (nntp_command(g_ser_line) > 0 && nntp_check() > 0) {
+	if (nntp_xgtitle(groupname) > 0) {
 	    nntp_gets(g_buf, sizeof g_buf - 1);
 	    if (nntp_at_list_end(g_buf))
 		sprintf(g_buf, "%s \n", groupname);
