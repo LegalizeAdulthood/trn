@@ -17,13 +17,22 @@ public:
     MOCK_METHOD(size_t, read, (char *, size_t, error_code &), (override));
 };
 
-class MockNNTPConnectionFactory
+class INNTPConnectionFactory
 {
 public:
-    MOCK_METHOD(ConnectionPtr, create, (const char *machine, int port, const char *service));
+    virtual ~INNTPConnectionFactory() = default;
+
+    virtual ConnectionPtr create(const char *machine, int port, const char *service) = 0;
 };
 
-TEST(NNTPTest, server_init)
+class MockNNTPConnectionFactory : public INNTPConnectionFactory
+{
+public:
+    ~MockNNTPConnectionFactory() override = default;
+    MOCK_METHOD(ConnectionPtr, create, (const char *machine, int port, const char *service), (override));
+};
+
+TEST(NNTPTest, server_init_ok)
 {
     const char *const machine{"news.gmane.io"};
     init_nntp();
@@ -37,5 +46,7 @@ TEST(NNTPTest, server_init)
         .WillOnce(Return("200 news.gmane.io InterNetNews NNRP server INN 2.6.3 ready (posting ok)"));
     EXPECT_CALL(*connection, write_line(StrEq("MODE READER"), _)).Times(1);
 
-    server_init(machine);
+    const int result = server_init(machine);
+
+    EXPECT_EQ(NNTP_POSTOK_VAL, result);
 }
