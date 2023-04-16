@@ -23,7 +23,7 @@ static int nntp_copybody(char *s, int limit, ART_POS pos);
 static ART_POS s_body_pos{-1};
 static ART_POS s_body_end{};
 #ifdef SUPPORT_XTHREAD
-static long s_rawbytes{-1}; /* bytes remaining to be transfered */
+static long s_rawbytes{-1}; /* bytes remaining to be transferred */
 #endif
 
 int nntp_list(const char *type, const char *arg, int len)
