@@ -627,15 +627,21 @@ done:
     return r;
 }
 
+static int nntp_date()
+{
+    return nntp_command("DATE");
+}
+
 static void follow_it_up()
 {
     safecpy(g_cmd_buf,filexp(get_val("NEWSPOSTER",NEWSPOSTER)), sizeof g_cmd_buf);
     if (invoke(g_cmd_buf,g_origdir.c_str()) == 42) {
 	int ret;
-	if ((g_datasrc->flags & DF_REMOTE)
-	 && (nntp_command("DATE") <= 0
-	  || (nntp_check() < 0 && atoi(g_ser_line) != NNTP_BAD_COMMAND_VAL)))
-	    ret = 1;
+        if ((g_datasrc->flags & DF_REMOTE) &&
+            (nntp_date() <= 0 || (nntp_check() < 0 && atoi(g_ser_line) != NNTP_BAD_COMMAND_VAL)))
+        {
+            ret = 1;
+        }
 	else
 	{
 	    ret = invoke(filexp(CALL_INEWS),g_origdir.c_str());
