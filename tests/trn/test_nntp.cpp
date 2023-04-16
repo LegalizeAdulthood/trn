@@ -71,6 +71,19 @@ TEST_F(NNTPTest, server_init_ok)
     EXPECT_EQ(NNTP_POSTOK_VAL, result);
 }
 
+TEST_F(NNTPTest, server_init_posting_prohibited)
+{
+    configure_factory_create(m_connection);
+    EXPECT_CALL(*m_connection, read_line(_))
+        .WillOnce(Return("201 news.gmane.io InterNetNews NNRP server INN 2.6.3 ready (posting prohibited)"))
+        .WillOnce(Return("201 news.gmane.io InterNetNews NNRP server INN 2.6.3 ready (posting prohibited)"));
+    EXPECT_CALL(*m_connection, write_line(StrEq("MODE READER"), _)).Times(1);
+
+    const int result = server_init(m_machine);
+
+    EXPECT_EQ(NNTP_NOPOSTOK_VAL, result);
+}
+
 TEST_F(NNTPTest, server_init_connection_failed)
 {
     configure_factory_create(nullptr);
