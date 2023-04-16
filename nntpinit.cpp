@@ -42,8 +42,8 @@ public:
     }
     ~NNTPConnection() override = default;
 
-    std::string readLine(error_code &ec) override;
-    void        writeLine(const std::string &line, error_code &ec) override;
+    std::string read_line(error_code &ec) override;
+    void        write_line(const std::string &line, error_code &ec) override;
     void        write(const char *buffer, size_t len, error_code &ec) override;
     size_t      read(char *buf, size_t size, error_code &ec) override;
 
@@ -53,7 +53,7 @@ private:
     asio::streambuf       m_buffer;
 };
 
-std::string NNTPConnection::readLine(error_code &ec)
+std::string NNTPConnection::read_line(error_code &ec)
 {
     read_until(m_socket, m_buffer, "\r\n", ec);
     if (ec)
@@ -66,7 +66,7 @@ std::string NNTPConnection::readLine(error_code &ec)
     return line;
 }
 
-void NNTPConnection::writeLine(const std::string &line, error_code &ec)
+void NNTPConnection::write_line(const std::string &line, error_code &ec)
 {
     const std::string buffer{line + "\r\n"};
     write(buffer.c_str(), buffer.size(), ec);

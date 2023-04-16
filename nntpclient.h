@@ -30,8 +30,8 @@ struct INNTPConnection
 {
     virtual ~INNTPConnection() = default;
 
-    virtual std::string readLine(error_code &ec) = 0;
-    virtual void        writeLine(const std::string &line, error_code &ec) = 0;
+    virtual std::string read_line(error_code &ec) = 0;
+    virtual void        write_line(const std::string &line, error_code &ec) = 0;
     virtual void        write(const char *buffer, size_t len, error_code &ec) = 0;
     virtual size_t      read(char *buf, size_t size, error_code &ec) = 0;
 };
@@ -93,7 +93,7 @@ inline char *nntp_get_a_line(char *buffer, int buffer_length, bool realloc_ok)
 {
     boost::system::error_code ec;
 
-    std::string line = g_nntplink.connection->readLine(ec);
+    std::string line = g_nntplink.connection->read_line(ec);
     if (buffer_length < line.length())
     {
         if (realloc_ok)

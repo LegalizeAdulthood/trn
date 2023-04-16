@@ -136,7 +136,7 @@ int nntp_command(const char *bp)
 	    return ret;
     }
     error_code ec;
-    g_nntplink.connection->writeLine(bp, ec);
+    g_nntplink.connection->write_line(bp, ec);
     if (ec)
 	return nntp_handle_timeout();
     now = time((time_t*)nullptr);
@@ -165,7 +165,7 @@ int nntp_check()
 #endif
     errno = 0;
     error_code ec;
-    std::string line = g_nntplink.connection->readLine(ec);
+    std::string line = g_nntplink.connection->read_line(ec);
     strncpy(g_ser_line, line.c_str(), sizeof g_ser_line);
     int ret = ec ? -2 : 0;
 #ifdef HAS_SIGHOLD
@@ -256,7 +256,7 @@ int nntp_gets(char *bp, int len)
     static std::string line;
     if (line.empty())
     {
-        line = g_nntplink.connection->readLine(ec);
+        line = g_nntplink.connection->read_line(ec);
         if (ec)
         {
 	    return -2;
