@@ -111,3 +111,4 @@ function(configure_trn_test_data)
     configure_file(cmake/test_config.h.in               test_config.h)
     configure_file(cmake/test_data.cpp.in               test_data.cpp)
 endfunction()
+
