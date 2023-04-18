@@ -394,8 +394,10 @@ char *export_var(const char *nam, const char *val)
     std::string envar{nam};
     envar += '=';
     envar += val;
-    putenv(envar.c_str());
-    return savestr(envar.c_str());
+    char buff[512];
+    strcpy(buff, envar.c_str());
+    putenv(buff);
+    return savestr(buff);
 #else
     int namlen = strlen(nam);
     int i=envix(nam,namlen);	/* where does it go? */
