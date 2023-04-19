@@ -29,7 +29,7 @@
 
 #define XXXXXX INVALID_CODE_POINT
 
-CODE_POINT cp1252_himap[128] = {
+static const CODE_POINT s_cp1252_himap[128] = {
     0x20ac, XXXXXX, 0x201a, 0x0192, 0x201e, 0x2026, 0x2020, 0x2021,	0x02c6, 0x2030, 0x0160, 0x2039, 0x0152, XXXXXX, 0x017d, XXXXXX,
     XXXXXX, 0x2018, 0x2019, 0x201c, 0x201d, 0x00b7, 0x2013, 0x2014,	0x02dc, 0x2122, 0x0161, 0x203a, 0x0153, XXXXXX, 0x017e, 0x0178,
     0x00a0, 0x00a1, 0x00a2, 0x00a3, 0x00a4, 0x00a5, 0x00a6, 0x00a7,	0x00a8, 0x00a9, 0x00aa, 0x00ab, 0x00ac, XXXXXX, 0x00ae, 0x00af,
@@ -40,7 +40,7 @@ CODE_POINT cp1252_himap[128] = {
     0x00f0, 0x00f1, 0x00f2, 0x00f3, 0x00f4, 0x00f5, 0x00f6, 0x00f7,	0x00f8, 0x00f9, 0x00fa, 0x00fb, 0x00fc, 0x00fd, 0x00fe, 0x00ff,
 };
 
-CODE_POINT iso8859_1_himap[128] = {
+static const CODE_POINT s_iso8859_1_himap[128] = {
     XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX,	XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX,
     XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX,	XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX,
     0x00a0, 0x00a1, 0x00a2, 0x00a3, 0x00a4, 0x00a5, 0x00a6, 0x00a7,	0x00a8, 0x00a9, 0x00aa, 0x00ab, 0x00ac, XXXXXX, 0x00ae, 0x00af,
@@ -51,7 +51,7 @@ CODE_POINT iso8859_1_himap[128] = {
     0x00f0, 0x00f1, 0x00f2, 0x00f3, 0x00f4, 0x00f5, 0x00f6, 0x00f7,	0x00f8, 0x00f9, 0x00fa, 0x00fb, 0x00fc, 0x00fd, 0x00fe, 0x00ff,
 };
 
-CODE_POINT iso8859_15_himap[128] = {
+static const CODE_POINT s_iso8859_15_himap[128] = {
     XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX,	XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX,
     XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX,	XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX,
     0x00a0, 0x00a1, 0x00a2, 0x00a3, 0x20ac, 0x00a5, 0x0160, 0x00a7,	0x0161, 0x00a9, 0x00aa, 0x00ab, 0x00ac, XXXXXX, 0x00ae, 0x00af,
@@ -64,12 +64,12 @@ CODE_POINT iso8859_15_himap[128] = {
 
 struct CHARSET_DESC
 {
-    const char *name;
-    int         id;
-    CODE_POINT *himap;
+    const char       *name;
+    int               id;
+    const CODE_POINT *himap;
 };
 
-CHARSET_DESC charset_descs[] = {
+static const CHARSET_DESC s_charset_descs[] = {
     /* Tags defined in utf.h go first; these are short labels for charsubst.c */
     { TAG_ASCII, CHARSET_ASCII, NULL },
     { "us-ascii", CHARSET_ASCII, NULL },
@@ -79,29 +79,29 @@ CHARSET_DESC charset_descs[] = {
     { "utf-8", CHARSET_UTF8, NULL },
     { "utf8", CHARSET_UTF8, NULL },
 
-    { TAG_ISO8859_1, CHARSET_ISO8859_1, iso8859_1_himap },
-    { "iso8859-1", CHARSET_ISO8859_1, iso8859_1_himap },
-    { "iso-8859-1", CHARSET_ISO8859_1, iso8859_1_himap },
+    { TAG_ISO8859_1, CHARSET_ISO8859_1, s_iso8859_1_himap },
+    { "iso8859-1", CHARSET_ISO8859_1, s_iso8859_1_himap },
+    { "iso-8859-1", CHARSET_ISO8859_1, s_iso8859_1_himap },
 
-    { TAG_ISO8859_15, CHARSET_ISO8859_15, iso8859_15_himap },
-    { "iso8859-15", CHARSET_ISO8859_15, iso8859_15_himap },
-    { "iso-8859-15", CHARSET_ISO8859_15, iso8859_15_himap },
+    { TAG_ISO8859_15, CHARSET_ISO8859_15, s_iso8859_15_himap },
+    { "iso8859-15", CHARSET_ISO8859_15, s_iso8859_15_himap },
+    { "iso-8859-15", CHARSET_ISO8859_15, s_iso8859_15_himap },
 
-    { TAG_WINDOWS_1252, CHARSET_WINDOWS_1252, cp1252_himap },
-    { "cp1252", CHARSET_WINDOWS_1252, cp1252_himap },
-    { "windows-1252", CHARSET_WINDOWS_1252, cp1252_himap },
+    { TAG_WINDOWS_1252, CHARSET_WINDOWS_1252, s_cp1252_himap },
+    { "cp1252", CHARSET_WINDOWS_1252, s_cp1252_himap },
+    { "windows-1252", CHARSET_WINDOWS_1252, s_cp1252_himap },
 
-    { NULL, CHARSET_UNKNOWN }
+    { NULL, CHARSET_UNKNOWN, nullptr }
 };
 
 struct gstate {
     int in;
     int out;
-    CODE_POINT* himap_in;
-    CODE_POINT* himap_out;
+    const CODE_POINT* himap_in;
+    const CODE_POINT* himap_out;
 };
 
-struct gstate gs = { CHARSET_UTF8, CHARSET_UTF8, NULL };
+static gstate s_gs = { CHARSET_UTF8, CHARSET_UTF8, NULL, NULL };
 
 
 static int find_charset(const char *s)
@@ -110,13 +110,13 @@ static int find_charset(const char *s)
     if (s) {
 	int i;
 	for (i = 0; ; i += 1) {
-	    const char *name = charset_descs[i].name;
+	    const char *name = s_charset_descs[i].name;
 	    int j;
 	if (name == NULL) break;
 	    for (j = 0; ; j++) {
 	if (tolower(s[j]) != name[j]) break;
 		if (s[j] == 0 && name[j] == 0)
-		    it = charset_descs[i].id;
+		    it = s_charset_descs[i].id;
 	if (s[j] == 0 || name[j] == 0) break;
 	    }
 	if (it != CHARSET_UNKNOWN) break;
@@ -125,12 +125,12 @@ static int find_charset(const char *s)
     return it;
 }
 
-static CHARSET_DESC *find_charset_desc(int id)
+static const CHARSET_DESC *find_charset_desc(int id)
 {
-    CHARSET_DESC *it = NULL;
+    const CHARSET_DESC *it = NULL;
     int i;
     for (i = 0; ; i += 1) {
-	CHARSET_DESC *node = &charset_descs[i];
+	const CHARSET_DESC *node = &s_charset_descs[i];
     if (node->name == NULL) break;
 	if (id == node->id)
 	    it = node;
@@ -144,28 +144,28 @@ int utf_init(const char *f, const char *t)
     int i = find_charset(f);
     int o = find_charset(t);
     if (i != CHARSET_UNKNOWN) {
-	gs.in = i;
-	CHARSET_DESC *node = find_charset_desc(i);
+	s_gs.in = i;
+	const CHARSET_DESC *node = find_charset_desc(i);
 	if (node)
-	    gs.himap_in = node->himap;
+	    s_gs.himap_in = node->himap;
     }
     if (o != CHARSET_UNKNOWN) {
-	gs.out = o;
-	CHARSET_DESC *node = find_charset_desc(o);
+	s_gs.out = o;
+	const CHARSET_DESC *node = find_charset_desc(o);
 	if (node)
-	    gs.himap_out = node->himap;
+	    s_gs.himap_out = node->himap;
     }
     return i;
 }
 
 const char *input_charset_name()
 {
-    return find_charset_desc(gs.in)->name;
+    return find_charset_desc(s_gs.in)->name;
 }
 
 const char *output_charset_name()
 {
-    return find_charset_desc(gs.out)->name;
+    return find_charset_desc(s_gs.out)->name;
 }
 
 int byte_length_at(const char *s)
@@ -173,7 +173,7 @@ int byte_length_at(const char *s)
     int it = s != NULL; /* correct for ASCII */
     if (!it) {
 	;
-    } else if (IS_UTF8(gs.in)) {
+    } else if (IS_UTF8(s_gs.in)) {
 	if ((*s & 0x80) == 0) {
 	    ;
 	} else if ((*s & 0xE0) == 0xC0 && OK(s + 1)) {
@@ -189,9 +189,9 @@ int byte_length_at(const char *s)
 	} else {
 	    /* FIXME - invalid UTF-8 */
 	}
-    } else if (IS_SINGLE_BYTE(gs.in)) {
+    } else if (IS_SINGLE_BYTE(s_gs.in)) {
 	;
-    } else if (IS_DOUBLE_BYTE(gs.in)) {
+    } else if (IS_DOUBLE_BYTE(s_gs.in)) {
 	if (*s & 0x80)
 	    it = 2;
     }
@@ -205,9 +205,9 @@ int visual_width_at(const char *s)
     int it = 1;
     if (c == INVALID_CODE_POINT) {
 	it = 0;
-    } else if (IS_SINGLE_BYTE(gs.in)) {
+    } else if (IS_SINGLE_BYTE(s_gs.in)) {
 	it = 1;
-    } else if (IS_DOUBLE_BYTE(gs.in)) {
+    } else if (IS_DOUBLE_BYTE(s_gs.in)) {
 	it = (c & 0x80)? 2: 1;
     } else if ((c >= 0x00300 && c <= 0x0036F)	/* combining diacritics */
 	    || (c >= 0x01AB0 && c <= 0x01AFF)
@@ -264,7 +264,7 @@ CODE_POINT code_point_at(const char *s)
 {
     CODE_POINT it;
     if (s != NULL) {
-	if (IS_UTF8(gs.in)) {
+	if (IS_UTF8(s_gs.in)) {
 	    size_t n = strlen(s);
 	    if (n > 0 && (*s & 0x80) == 0) {
 		it = *s;
@@ -281,12 +281,12 @@ CODE_POINT code_point_at(const char *s)
 	    } else {
 		it = INVALID_CODE_POINT;
 	    }
-	} else if (gs.in == CHARSET_ASCII) {
+	} else if (s_gs.in == CHARSET_ASCII) {
 	    it = *s & 0x7F;
-	} else if (gs.himap_in != NULL) {
+	} else if (s_gs.himap_in != NULL) {
 	    it = *s & 0xFF; /* I hate signed/unsigned conversions */
 	    if (it & 0x80)
-		it = gs.himap_in[it & 0x7F];
+		it = s_gs.himap_in[it & 0x7F];
 	}
     } else {
 	it = INVALID_CODE_POINT;
@@ -348,13 +348,13 @@ int insert_unicode_at(char *s, CODE_POINT c)
     /* FIXME - should we check if s has enough space? */
     if (s == NULL)
 	it = 0;
-    else if (IS_UTF8(gs.in)) {
+    else if (IS_UTF8(s_gs.in)) {
 	it = insert_utf8_at(s, c);
     } else if (c <= 0x7F) {
 	s[0] = (char)c;
 	it = 1;
-    } else if (gs.himap_in != NULL) {
-	it = insert_utf8_at(s, gs.himap_in[c & 0x7F]);
+    } else if (s_gs.himap_in != NULL) {
+	it = insert_utf8_at(s, s_gs.himap_in[c & 0x7F]);
     }
     return it;
 }
@@ -364,14 +364,14 @@ bool at_norm_char(const char *s)
     int it = s != NULL;
     if (it) { it = *s != 0; }
     if (it) {
-	if (gs.in == CHARSET_UTF8) {
+	if (s_gs.in == CHARSET_UTF8) {
 	    CODE_POINT c = code_point_at(s);
 	    it = c >= 0x20 && !(c >= 0x7F && c < 0xA0) && c != 0x2028 && c != 0x2029;
 	}
 	else if (U(*s) < 0x80)
 	    it = (U(*s) >= ' ' && U(*s) < 0x7F);
-	else if (gs.himap_in != NULL)
-	    it = gs.himap_in[U(*s) & 0x7F] != INVALID_CODE_POINT;
+	else if (s_gs.himap_in != NULL)
+	    it = s_gs.himap_in[U(*s) & 0x7F] != INVALID_CODE_POINT;
     }
     return it;
 }
@@ -383,7 +383,7 @@ int put_char_adv(char **strptr, bool outputok)
 	it = 0;
     } else {
 	char *s = *strptr;
-	if (gs.in == CHARSET_UTF8 || (*s >= ' ' && *s < 0x7F)) {
+	if (s_gs.in == CHARSET_UTF8 || (*s >= ' ' && *s < 0x7F)) {
 	    int w = byte_length_at(s);
 	    int i;
 	    it = visual_width_at(s);
@@ -393,9 +393,9 @@ int put_char_adv(char **strptr, bool outputok)
 		    s++;
 		}
 	    *strptr = s;
-	} else if (gs.himap_in) {
+	} else if (s_gs.himap_in) {
 	    char buf[7];
-	    int w = insert_utf8_at(buf, gs.himap_in[U(*s) & 0x7F]);
+	    int w = insert_utf8_at(buf, s_gs.himap_in[U(*s) & 0x7F]);
 	    int i;
 	    for (i = 0; i < w; i += 1)
 		putchar(buf[i]);
