@@ -62,13 +62,14 @@ CODE_POINT iso8859_15_himap[128] = {
     0x00f0, 0x00f1, 0x00f2, 0x00f3, 0x00f4, 0x00f5, 0x00f6, 0x00f7,	0x00f8, 0x00f9, 0x00fa, 0x00fb, 0x00fc, 0x00fd, 0x00fe, 0x00ff,
 };
 
-typedef struct charset_desc {
+struct CHARSET_DESC
+{
     const char *name;
-    int id;
-    CODE_POINT* himap;
-} charset_desc_t;
+    int         id;
+    CODE_POINT *himap;
+};
 
-charset_desc_t charset_descs[] = {
+CHARSET_DESC charset_descs[] = {
     /* Tags defined in utf.h go first; these are short labels for charsubst.c */
     { TAG_ASCII, CHARSET_ASCII, NULL },
     { "us-ascii", CHARSET_ASCII, NULL },
@@ -124,12 +125,12 @@ static int find_charset(const char *s)
     return it;
 }
 
-static charset_desc_t *find_charset_desc(int id)
+static CHARSET_DESC *find_charset_desc(int id)
 {
-    charset_desc_t *it = NULL;
+    CHARSET_DESC *it = NULL;
     int i;
     for (i = 0; ; i += 1) {
-	charset_desc_t *node = &charset_descs[i];
+	CHARSET_DESC *node = &charset_descs[i];
     if (node->name == NULL) break;
 	if (id == node->id)
 	    it = node;
@@ -144,13 +145,13 @@ int utf_init(const char *f, const char *t)
     int o = find_charset(t);
     if (i != CHARSET_UNKNOWN) {
 	gs.in = i;
-	charset_desc_t *node = find_charset_desc(i);
+	CHARSET_DESC *node = find_charset_desc(i);
 	if (node)
 	    gs.himap_in = node->himap;
     }
     if (o != CHARSET_UNKNOWN) {
 	gs.out = o;
-	charset_desc_t *node = find_charset_desc(o);
+	CHARSET_DESC *node = find_charset_desc(o);
 	if (node)
 	    gs.himap_out = node->himap;
     }
