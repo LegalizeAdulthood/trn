@@ -14,6 +14,17 @@
 
 #include <stdio.h>
 
+#if defined(WIN32)
+inline FILE *popen(const char *path, const char *mode)
+{
+    return _popen(path, mode);
+}
+inline int pclose(FILE *fd)
+{
+    return _pclose(fd);
+}
+#endif
+
 enum
 {
     MAX_SIGNATURE = 4
@@ -194,7 +205,7 @@ int main(int argc, char *argv[])
     }
     else {
 	sprintf(g_buf, "%s -h", EXTRAINEWS);
-	inews_wr_fp = _popen(g_buf,"w");
+	inews_wr_fp = popen(g_buf,"w");
 	if (!inews_wr_fp) {
 	    fprintf(stderr,"Unable to execute inews for local posting.\n");
 	    exit(1);
@@ -244,7 +255,7 @@ int main(int argc, char *argv[])
     }
 
     if (!inews_wr_fp)
-	return _pclose(inews_wr_fp);
+	return pclose(inews_wr_fp);
 
     if (!had_nl)
         inews_fputs(line_end);

@@ -126,9 +126,6 @@ add_library(libtrn
 )
 # We require <filesystem>
 target_compile_features(libtrn PRIVATE cxx_std_17)
-if(WIN32)
-    target_sources(libtrn PRIVATE popen.cpp)
-endif()
 source_group("Header Files" REGULAR_EXPRESSION "^.*\\.h$")
 target_include_directories(libtrn PUBLIC .)
 target_link_libraries(libtrn PUBLIC parsedate curses nntp)

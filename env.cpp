@@ -303,7 +303,6 @@ static bool set_p_host_name(char *tmpbuf)
 # else
 #  ifdef PHOSTCMD
     {
-	FILE* popen();
 	FILE* pipefp = popen(PHOSTCMD,"r");
 	
 	if (pipefp == nullptr) {

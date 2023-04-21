@@ -36,8 +36,14 @@ struct utsname utsn;
 #endif
 #ifdef MSDOS
 #include <stdio.h>
-#define popen(s,m) _popen(s,m)
-#define pclose(f) _pclose(f)
+inline FILE *popen(const char *path, const char *mode)
+{
+    return _popen(path, mode);
+}
+inline int pclose(FILE *fd)
+{
+    return _pclose(fd);
+}
 #endif
 
 std::string g_origdir;    /* cwd when rn invoked */
