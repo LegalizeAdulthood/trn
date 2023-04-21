@@ -9,6 +9,7 @@
 #include "art.h"
 #include "cache.h"
 #include "color.h"
+#include "datasrc.h"
 #include "env.h"
 #include "final.h"
 #include "help.h"
@@ -189,12 +190,6 @@ static int echo_char(char_int ch);
 static void line_col_calcs();
 static void mouse_input(const char *cp);
 
-/* guarantee capability pointer != nullptr */
-/* (I believe terminfo will ignore the &tmpaddr argument.) */
-
-char* tgetstr();
-#define Tgetstr(key) ((tmpstr = tgetstr(key,&tmpaddr)) ? tmpstr : "")
-
 /* terminal initialization */
 
 void term_init()
@@ -273,6 +268,20 @@ void term_init()
 # if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(MSDOS)
 int devtty;
 # endif
+#endif
+
+#ifdef HAS_TERMLIB
+#ifndef MSDOS
+/* guarantee capability pointer != nullptr */
+/* (I believe terminfo will ignore the &tmpaddr argument.) */
+inline char *Tgetstr(const char *key)
+{
+    char *tmpaddr{};
+    char *temp = tgetstr(key, &tmpaddr);
+    static char s_empty[1]{};
+    return temp ? temp : s_empty;
+}
+#endif
 #endif
 
 /* set terminal characteristics */
