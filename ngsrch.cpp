@@ -73,8 +73,9 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
     {
 					/* compile regular expression */
 	errormsg(err);
-	ret = NGS_ERROR;
-	goto exit;
+        if (cmdlst)
+	    free(cmdlst);
+        return NGS_ERROR;
     }
     if (!cmdlst) {
 	fputs("\nSearching...",stdout);	/* give them something to read */
@@ -96,7 +97,9 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
 	    if (!output_level && g_page_line == 1)
 		perform_status(g_newsgroup_toread, 50);
 	} while ((gp = gp->next) != nullptr);
-	goto exit;
+        if (cmdlst)
+	    free(cmdlst);
+        return ret;
     }
 
     bool const backward = cmdchr == '?'; /* direction of search */
@@ -160,7 +163,7 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
     } while ((g_ngptr = (backward? (g_ngptr->prev? g_ngptr->prev : g_last_ng)
 			       : (g_ngptr->next? g_ngptr->next : g_first_ng)))
 		!= ng_start);
-exit:
+
     if (cmdlst)
 	free(cmdlst);
     return ret;
