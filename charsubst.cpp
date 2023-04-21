@@ -223,12 +223,15 @@ static char* iso2asc[ISO_TABLES][96] = {
  */
 static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t)
 {
-    Uchar*s = asc;
+    Uchar *s = asc;
 
     if (iso == nullptr || asc == nullptr || limit <= 0)
 	return 0;
     if (limit == 1)
-	goto done;
+    {
+        *s = '\0';
+        return s - asc;
+    }
     t--;	/* offset correction -ot */
     char **tab = iso2asc[t] - 0xa0;
     while (*iso) {
@@ -238,7 +241,10 @@ static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t)
 		while (*p) {
 		    *s++ = *p++;
 		    if (!--limit)
-			goto done;
+		    {
+                        *s = '\0';
+                        return s - asc;
+		    }
 		}
 	    }
 	}
@@ -253,7 +259,6 @@ static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t)
 		break;
 	}
     }
-  done:
     *s = '\0';
     return s - asc;
 }
