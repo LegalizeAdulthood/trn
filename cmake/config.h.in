@@ -125,6 +125,11 @@
  */
 #cmakedefine I_SYS_WAIT
 
+/* I_TERMCAP
+ *      This symbol, if defined, indicates that <termcap.h> should be included.
+ */
+#cmakedefine I_TERMCAP
+
 /* I_TERMIO:
  *	This symbol, if defined, indicates that the program should include
  *	<termio.h> rather than <sgtty.h>.  There are also differences in

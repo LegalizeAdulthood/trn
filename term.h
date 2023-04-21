@@ -6,6 +6,9 @@
 
 /* stuff wanted by terminal mode diddling routines */
 
+#ifdef I_TERMCAP
+#include <termcap.h>
+#endif
 #ifdef I_TERMIO
 extern termio g_tty;
 extern termio g_oldtty;
