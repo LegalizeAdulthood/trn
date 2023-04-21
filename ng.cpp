@@ -655,7 +655,7 @@ static art_switch_result art_switch()
       case '{':			/* goto thread's root article */
 	if (g_artp && g_threaded_group) {
 	    if (!find_parent(*g_buf == '{')) {
-		char* cp = (*g_buf=='['?"parent":"root");
+		const char* cp = (*g_buf=='['?"parent":"root");
 		if (g_verbose)
 		    printf("\nThere is no %s article prior to this one.\n",
 			cp) FLUSH;
@@ -709,7 +709,7 @@ not_threaded:
       case ')':			/* goto next sibling */
 	if (g_artp && g_threaded_group) {
 	    if (!(*g_buf == '(' ? find_prev_sib() : find_next_sib())) {
-		char* cp = (*g_buf == '(' ? "previous" : "next");
+		const char* cp = (*g_buf == '(' ? "previous" : "next");
 		if (g_verbose)
 		    printf("\nThis article has no %s sibling.\n",cp) FLUSH;
 		else
@@ -1620,8 +1620,8 @@ char ask_memorize(char_int ch)
     bool thread_cmd = (ch == 'T');
     bool use_one_line = (g_general_mode == GM_SELECTOR);
     bool global_save = false;
-    char* mode_string = (thread_cmd? "thread" : "subject");
-    char* mode_phrase = (thread_cmd? "replies to this article" :
+    const char* mode_string = (thread_cmd? "thread" : "subject");
+    const char* mode_phrase = (thread_cmd? "replies to this article" :
 				     "this subject and all replies");
     ART_NUM art_hold = g_art;
     ARTICLE* artp_hold = g_artp;
