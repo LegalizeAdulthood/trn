@@ -11,6 +11,8 @@ extern termio g_tty;
 extern termio g_oldtty;
 #else
 #ifdef I_TERMIOS
+#include <termios.h>
+
 extern termios g_tty;
 extern termios g_oldtty;
 #else
@@ -463,7 +465,7 @@ inline void unflush_output()
 inline void forceme(const char *c)
 {
 #ifdef TIOCSTI
-    ioctl(g_tty_ch, TIOCSTI, c) /* pass character in " " */
+    ioctl(g_tty_ch, TIOCSTI, c); /* pass character in " " */
 #endif
 }
 
