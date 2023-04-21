@@ -159,17 +159,6 @@ int doshell(const char *shell, const char *s)
 #else
     pid = vfork();
     if (pid == 0) {
-	if (g_datasrc && (g_datasrc->flags & DF_REMOTE)) {
-	    int i;
-	    /* This is necessary to keep the bourne shell from puking */
-	    for (i = 3; i < 10; ++i) {
-		if (g_nntplink.rd_fp
-		 && (i == fileno(g_nntplink.rd_fp)
-		  || i == fileno(g_nntplink.wr_fp)))
-		    continue;
-		close(i);
-	    }
-	}
 	if (g_nowait_fork) {
 	    close(1);
 	    close(2);
@@ -499,15 +488,15 @@ void setdef(char *buffer, const char *dflt)
 }
 
 #ifndef NO_FILELINKS
-void safelink(char *old, char *new)
+void safelink(char *old_name, char *new_name)
 {
 #if 0
     extern int sys_nerr;
     extern char* sys_errlist[];
 #endif
 
-    if (link(old,new)) {
-	printf("Can't link backup (%s) to .newsrc (%s)\n", old, new) FLUSH;
+    if (link(old_name,new_name)) {
+	printf("Can't link backup (%s) to .newsrc (%s)\n", old_name, new_name) FLUSH;
 #if 0
 	if (errno>0 && errno<sys_nerr)
 	    printf("%s\n", sys_errlist[errno]);
