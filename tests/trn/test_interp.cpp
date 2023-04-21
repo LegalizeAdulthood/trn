@@ -74,8 +74,15 @@ protected:
         return testing::AssertionFailure() << "Contents: '" << buffer() << "'";
     }
 
+    void setenv(const char *value)
+    {
+        strcpy(m_scratch.data(), value);
+        putenv(m_scratch.data());
+    }
+
     std::array<char, TCBUF_SIZE>  m_tcbuf{};
     std::array<char, BUFFER_SIZE> m_buffer{};
+    std::array<char, BUFFER_SIZE> m_scratch{};
     MULTIRC                      *m_multirc{};
     long                          m_test_pid{6421};
 };
@@ -216,7 +223,7 @@ TEST_F(InterpolatorTest, processId)
 
 TEST_F(InterpolatorTest, environmentVarValue)
 {
-    putenv("FOO=value");
+    setenv("FOO=value");
     char pattern[]{"%{FOO}"};
 
     const char *new_pattern = interpolate(pattern);
@@ -224,12 +231,12 @@ TEST_F(InterpolatorTest, environmentVarValue)
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ("value", buffer());
 
-    putenv("FOO=");
+    setenv("FOO=");
 }
 
 TEST_F(InterpolatorTest, environmentVarValueDefault)
 {
-    putenv("FOO=");
+    setenv("FOO=");
     char pattern[]{"%{FOO-not set}"};
 
     const char *new_pattern = interpolate(pattern);
@@ -565,7 +572,7 @@ TEST_F(InterpolatorTest, realName)
 TEST_F(InterpolatorTest, realNameFromNAME)
 {
     char pattern[]{"%N"};
-    putenv("NAME=John Yeager");
+    setenv("NAME=John Yeager");
 
     const char *new_pattern = interpolate(pattern);
 
@@ -586,7 +593,7 @@ TEST_F(InterpolatorTest, newsOrgFromORGNAME)
 TEST_F(InterpolatorTest, newsOrgFromNEWSORG)
 {
     char pattern[]{"%o"};
-    putenv((std::string{"NEWSORG="} + TRN_TEST_ORGANIZATION).c_str());
+    setenv((std::string{"NEWSORG="} + TRN_TEST_ORGANIZATION).c_str());
 
     const char *new_pattern = interpolate(pattern);
 
@@ -597,7 +604,7 @@ TEST_F(InterpolatorTest, newsOrgFromNEWSORG)
 TEST_F(InterpolatorTest, newsOrgFromNEWSORGFile)
 {
     char pattern[]{"%o"};
-    putenv((std::string{"NEWSORG="} + TRN_TEST_ORGFILE).c_str());
+    setenv((std::string{"NEWSORG="} + TRN_TEST_ORGFILE).c_str());
 
     const char *new_pattern = interpolate(pattern);
 
@@ -608,7 +615,7 @@ TEST_F(InterpolatorTest, newsOrgFromNEWSORGFile)
 TEST_F(InterpolatorTest, newsOrgFromORGANIZATION)
 {
     char pattern[]{"%o"};
-    putenv((std::string{"ORGANIZATION="} + TRN_TEST_ORGANIZATION).c_str());
+    setenv((std::string{"ORGANIZATION="} + TRN_TEST_ORGANIZATION).c_str());
 
     const char *new_pattern = interpolate(pattern);
 
@@ -619,7 +626,7 @@ TEST_F(InterpolatorTest, newsOrgFromORGANIZATION)
 TEST_F(InterpolatorTest, newsOrgFromORGANIZATIONFile)
 {
     char pattern[]{"%o"};
-    putenv((std::string{"ORGANIZATION="} + TRN_TEST_ORGFILE).c_str());
+    setenv((std::string{"ORGANIZATION="} + TRN_TEST_ORGFILE).c_str());
 
     const char *new_pattern = interpolate(pattern);
 

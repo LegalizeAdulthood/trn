@@ -13,6 +13,8 @@
 namespace
 {
 
+constexpr int BUFFER_SIZE{4096};
+
 struct InitTest : testing::Test
 {
 protected:
@@ -22,7 +24,7 @@ protected:
                                     "USERNAME=", "HOMEDRIVE=", "HOMEPATH=", "DOTDIR=", "TRNDIR="};
         for (const char *name : vars)
         {
-            putenv(name);
+            setenv(name);
         }
     }
 
@@ -40,7 +42,14 @@ protected:
         g_rn_lib.clear();
     }
 
-    std::array<char, TCBUF_SIZE> m_tcbuf{};
+    void setenv(const char *value)
+    {
+        strcpy(m_scratch.data(), value);
+        putenv(m_scratch.data());
+    }
+
+    std::array<char, TCBUF_SIZE>  m_tcbuf{};
+    std::array<char, BUFFER_SIZE> m_scratch{};
     std::function<bool(char *)>  m_failed_set_name_fn{[](char *) { return false; }};
     std::function<bool(char *)>  m_set_name_fn{[](char *)
                                               {
@@ -55,7 +64,7 @@ protected:
 TEST_F(InitTest, homeDirFromHOME)
 {
     const std::string home{"C:\\users\\bonzo"};
-    putenv(("HOME=" + home).c_str());
+    setenv(("HOME=" + home).c_str());
 
     env_init(m_tcbuf.data(), true);
 
@@ -65,7 +74,7 @@ TEST_F(InitTest, homeDirFromHOME)
 TEST_F(InitTest, homeDirFromLOGDIR)
 {
     const std::string log_dir{"C:\\users\\bonzo"};
-    putenv(("LOGDIR=" + log_dir).c_str());
+    setenv(("LOGDIR=" + log_dir).c_str());
 
     env_init(m_tcbuf.data(), true);
 
@@ -75,7 +84,7 @@ TEST_F(InitTest, homeDirFromLOGDIR)
 TEST_F(InitTest, tempDirFromTMPDIR)
 {
     const std::string tmp_dir{"C:\\tmp"};
-    putenv(("TMPDIR=" + tmp_dir).c_str());
+    setenv(("TMPDIR=" + tmp_dir).c_str());
 
     env_init(m_tcbuf.data(), true);
 
@@ -85,7 +94,7 @@ TEST_F(InitTest, tempDirFromTMPDIR)
 TEST_F(InitTest, tempDirFromTMP)
 {
     const std::string tmp{"C:\\tmp"};
-    putenv(("TMP=" + tmp).c_str());
+    setenv(("TMP=" + tmp).c_str());
 
     env_init(m_tcbuf.data(), true);
 
@@ -104,7 +113,7 @@ TEST_F(InitTest, tempDirFromDefault)
 TEST_F(InitTest, loginNameFromUSER)
 {
     const std::string login_name{TRN_TEST_LOGIN_NAME};
-    putenv(("USER=" + login_name).c_str());
+    setenv(("USER=" + login_name).c_str());
 
     env_init(m_tcbuf.data(), true);
 
@@ -114,7 +123,7 @@ TEST_F(InitTest, loginNameFromUSER)
 TEST_F(InitTest, loginNameFromLOGNAME)
 {
     const std::string login_name{TRN_TEST_LOGIN_NAME};
-    putenv(("LOGNAME=" + login_name).c_str());
+    setenv(("LOGNAME=" + login_name).c_str());
 
     env_init(m_tcbuf.data(), true);
 
@@ -125,7 +134,7 @@ TEST_F(InitTest, loginNameFromLOGNAME)
 TEST_F(InitTest, loginNameFromUSERNAME)
 {
     const std::string login_name{TRN_TEST_LOGIN_NAME};
-    putenv(("USERNAME=" + login_name).c_str());
+    setenv(("USERNAME=" + login_name).c_str());
 
     env_init(m_tcbuf.data(), true);
 
@@ -136,8 +145,8 @@ TEST_F(InitTest, homeDirFromHOMEDRIVEandHOMEPATH)
 {
     const std::string home_drive{"C:"};
     const std::string home_path{"\\Users\\Bonzo"};
-    putenv(("HOMEDRIVE=" + home_drive).c_str());
-    putenv(("HOMEPATH=" + home_path).c_str());
+    setenv(("HOMEDRIVE=" + home_drive).c_str());
+    setenv(("HOMEPATH=" + home_path).c_str());
 
     env_init(m_tcbuf.data(), true);
 
@@ -209,7 +218,7 @@ TEST_F(InitTest, homeDirFromInit2)
 TEST_F(InitTest, dotDirFromDOTDIR)
 {
     const std::string dot_dir{"/home/users/bonzo"};
-    putenv(("DOTDIR=" + dot_dir).c_str());
+    setenv(("DOTDIR=" + dot_dir).c_str());
 
     env_init(m_tcbuf.data(), true, m_failed_set_name_fn, m_failed_set_name_fn);
 
@@ -219,7 +228,7 @@ TEST_F(InitTest, dotDirFromDOTDIR)
 TEST_F(InitTest, trnDirFromTRNDIR)
 {
     const std::string trn_dir{"/home/users/bonzo/.trn"};
-    putenv(("TRNDIR=" + trn_dir).c_str());
+    setenv(("TRNDIR=" + trn_dir).c_str());
 
     env_init(m_tcbuf.data(), true, m_failed_set_name_fn, m_failed_set_name_fn);
 
@@ -230,7 +239,7 @@ TEST_F(InitTest, trnDirFromDefaultValue)
 {
     // Default value is expanded from %.
     const std::string dot_dir{"/home/users/bonzo"};
-    putenv(("DOTDIR=" + dot_dir).c_str());
+    setenv(("DOTDIR=" + dot_dir).c_str());
     const std::string trn_dir{dot_dir + "/.trn"};
 
     env_init(m_tcbuf.data(), true, m_failed_set_name_fn, m_failed_set_name_fn);
