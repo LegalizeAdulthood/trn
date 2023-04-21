@@ -68,7 +68,7 @@ TEST_P(TestInputCharsetName, tag_from_name)
     ASSERT_STREQ(expected, after);
 }
 
-INSTANTIATE_TEST_SUITE_P(CharsetNames, TestInputCharsetName, ValuesIn(charsets));
+INSTANTIATE_TEST_SUITE_P(UTFCharsetNames, TestInputCharsetName, ValuesIn(charsets));
 
 class TestOutputCharsetName : public TestWithParam<CharsetParam>
 {
@@ -85,7 +85,7 @@ TEST_P(TestOutputCharsetName, tag_from_name)
     EXPECT_STREQ(expected, after);
 }
 
-INSTANTIATE_TEST_SUITE_P(CharsetNames, TestOutputCharsetName, ValuesIn(charsets));
+INSTANTIATE_TEST_SUITE_P(UTFCharsetNames, TestOutputCharsetName, ValuesIn(charsets));
 
 constexpr const char *const ARBITRARY_ASCII{"a"};
 constexpr const char *const ARBITRARY_ISO8859D1_1{"\303\241"};
@@ -96,70 +96,70 @@ constexpr const char *const ASCII_DEL{"\177"};
 constexpr const char *const ASCII_SPACE{" "};
 constexpr const char *const ASCII_TILDE{"~"};
 
-TEST(ByteLengthTest, length_at_null)
+TEST(UTFByteLengthTest, length_at_null)
 {
     ASSERT_EQ(0, byte_length_at(nullptr));
 }
 
-TEST(ByteLengthTest, length_at_ascii)
+TEST(UTFByteLengthTest, length_at_ascii)
 {
     ASSERT_EQ(1, byte_length_at(ARBITRARY_ASCII));
 }
 
-TEST(ByteLengthTest, length_at_iso8859_1)
+TEST(UTFByteLengthTest, length_at_iso8859_1)
 {
     ASSERT_EQ(2, byte_length_at(ARBITRARY_ISO8859D1_1));
     ASSERT_EQ(2, byte_length_at(ARBITRARY_ISO8859D1_2));
 }
 
-TEST(ByteLengthTest, byte_length_at_cjk_basic)
+TEST(UTFByteLengthTest, byte_length_at_cjk_basic)
 {
     ASSERT_EQ(3, byte_length_at(ARBITRARY_CJK_BASIC));
 }
 
-TEST(AtNormalCharacterTest, nullptr)
+TEST(UTFAtNormalCharacterTest, nullptr)
 {
     ASSERT_FALSE(at_norm_char(nullptr));
 }
 
-TEST(AtNormalCharacterTest, SOH)
+TEST(UTFAtNormalCharacterTest, SOH)
 {
     ASSERT_FALSE(at_norm_char(ASCII_SOH));
 }
 
-TEST(AtNormalCharacterTest, space)
+TEST(UTFAtNormalCharacterTest, space)
 {
     ASSERT_TRUE(at_norm_char(ASCII_SPACE));
 }
 
-TEST(AtNormalCharacterTest, tilde)
+TEST(UTFAtNormalCharacterTest, tilde)
 {
     ASSERT_TRUE(at_norm_char(ASCII_TILDE));
 }
 
-TEST(AtNormalCharacterTest, DEL)
+TEST(UTFAtNormalCharacterTest, DEL)
 {
     ASSERT_FALSE(at_norm_char(ASCII_DEL));
 }
 
-TEST(AtNormalCharacterTest, iso8859_1)
+TEST(UTFAtNormalCharacterTest, iso8859_1)
 {
     ASSERT_TRUE(at_norm_char(ARBITRARY_ISO8859D1_1));
     ASSERT_TRUE(at_norm_char(ARBITRARY_ISO8859D1_2));
 }
 
-TEST(AtNormalCharacterTest, cjk_basic)
+TEST(UTFAtNormalCharacterTest, cjk_basic)
 {
     ASSERT_TRUE(at_norm_char(ARBITRARY_CJK_BASIC));
 }
 
-TEST(VisualAdvanceWidthTest, nullptr)
+TEST(UTFVisualAdvanceWidthTest, nullptr)
 {
     ASSERT_EQ(0, put_char_adv(nullptr, false));
     ASSERT_EQ(0, put_char_adv(nullptr, true));
 }
 
-TEST(VisualAdvanceWidthTest, ascii)
+TEST(UTFVisualAdvanceWidthTest, ascii)
 {
     char sp0[80];
     strcpy(sp0, ARBITRARY_ASCII);
@@ -171,7 +171,7 @@ TEST(VisualAdvanceWidthTest, ascii)
     ASSERT_EQ(1, sp - sp0) << "put_char_adv(" << sp0 << ")";
 }
 
-TEST(VisualAdvanceWidthTest, iso8859_1)
+TEST(UTFVisualAdvanceWidthTest, iso8859_1)
 {
     char sp0[80];
     strcpy(sp0, ARBITRARY_ISO8859D1_1);
@@ -183,7 +183,7 @@ TEST(VisualAdvanceWidthTest, iso8859_1)
     ASSERT_EQ(2, sp - sp0) << "put_char_adv(" << sp0 << ")";
 }
 
-TEST(VisualAdvanceWidthTest, cjk_basic)
+TEST(UTFVisualAdvanceWidthTest, cjk_basic)
 {
     char sp0[80];
     strcpy(sp0, ARBITRARY_CJK_BASIC);
@@ -196,7 +196,7 @@ TEST(VisualAdvanceWidthTest, cjk_basic)
 }
 
 /* code point decoding */
-TEST(CodePointDecodingTest, nullptr)
+TEST(UTFCodePointDecodingTest, nullptr)
 {
     ASSERT_EQ(INVALID_CODE_POINT, code_point_at(nullptr));
 }
@@ -208,47 +208,47 @@ constexpr CODE_POINT CJK_SHIN_CODE_POINT = 0x05E9;
 constexpr CODE_POINT OY_CODE_POINT = 0x18B0;
 constexpr CODE_POINT KISSING_FACE_WITH_CLOSED_EYES_CODE_POINT = 0x1F61A;
 
-TEST(CodePointDecodingTest, ascii_space)
+TEST(UTFCodePointDecodingTest, ascii_space)
 {
     ASSERT_EQ(ASCII_SPACE_CODE_POINT, code_point_at(" "));
 }
 
-TEST(CodePointDecodingTest, ascii_5)
+TEST(UTFCodePointDecodingTest, ascii_5)
 {
     ASSERT_EQ(ASCII_5_CODE_POINT, code_point_at("5"));
 }
 
-TEST(CodePointDecodingTest, eth)
+TEST(UTFCodePointDecodingTest, eth)
 {
     ASSERT_EQ(ISO8859D1_ETH_CODE_POINT, code_point_at("\303\260"));
 }
 
-TEST(CodePointDecodingTest, shin)
+TEST(UTFCodePointDecodingTest, shin)
 {
     ASSERT_EQ(CJK_SHIN_CODE_POINT, code_point_at("\327\251"));
 }
 
-TEST(CodePointDecodingTest, oy)
+TEST(UTFCodePointDecodingTest, oy)
 {
     ASSERT_EQ(OY_CODE_POINT, code_point_at("\341\242\260"));
 }
 
-TEST(CodePointDecodingTest, kissing_face_with_closed_eyes)
+TEST(UTFCodePointDecodingTest, kissing_face_with_closed_eyes)
 {
     ASSERT_EQ(KISSING_FACE_WITH_CLOSED_EYES_CODE_POINT, code_point_at("\360\237\230\232"));
 }
 
-TEST(VisualLengthTest, nullptr)
+TEST(UTFVisualLengthTest, nullptr)
 {
     ASSERT_EQ(0, visual_length_of(nullptr));
 }
 
-TEST(VisualLengthTest, ascii)
+TEST(UTFVisualLengthTest, ascii)
 {
     ASSERT_EQ(3, visual_length_of("cat"));
 }
 
-TEST(VisualLengthTest, iso_8859_1)
+TEST(UTFVisualLengthTest, iso_8859_1)
 {
     ASSERT_EQ(7, visual_length_of("libert\303\251"));
     ASSERT_EQ(4, visual_length_of("b\303\251b\303\251"));
@@ -256,17 +256,18 @@ TEST(VisualLengthTest, iso_8859_1)
     ASSERT_EQ(0 /* combining acute */, visual_length_of("\314\201"));
 }
 
-TEST(VisualLengthTest, cjk)
+TEST(UTFVisualLengthTest, cjk)
 {
     ASSERT_EQ(4, visual_length_of("\350\211\257\345\277\203"));
+    ASSERT_EQ(8, visual_length_of("\257\247\345\214\226\351\243\233\347\201\260"));
 }
 
-TEST(InsertUnicodeAtTest, null)
+TEST(UTFInsertUnicodeAtTest, null)
 {
     ASSERT_EQ(0, insert_unicode_at(nullptr, 0x40));
 }
 
-TEST(InsertUnicodeAtTest, ascii)
+TEST(UTFInsertUnicodeAtTest, ascii)
 {
     char buf[8]{};
 
@@ -275,7 +276,7 @@ TEST(InsertUnicodeAtTest, ascii)
     ASSERT_EQ(std::string{"d"}, buf);
 }
 
-TEST(InsertUnicodeAtTest, iso_8859_1)
+TEST(UTFInsertUnicodeAtTest, iso_8859_1)
 {
     char buf[8]{};
 
@@ -284,7 +285,7 @@ TEST(InsertUnicodeAtTest, iso_8859_1)
     ASSERT_EQ(std::string{"\303\244"}, buf);
 }
 
-TEST(InsertUnicodeAtTest, cjk_basic)
+TEST(UTFInsertUnicodeAtTest, cjk_basic)
 {
     char buf[8]{};
 
@@ -293,7 +294,7 @@ TEST(InsertUnicodeAtTest, cjk_basic)
     ASSERT_EQ(std::string{"\344\270\200"}, buf);
 }
 
-TEST(InsertUnicodeAtTest, kissing_face_with_closed_eyes)
+TEST(UTFInsertUnicodeAtTest, kissing_face_with_closed_eyes)
 {
     char buf[8]{};
 
@@ -350,7 +351,7 @@ TEST_F(CreateUTF8CopyTest, iso8859_1)
 }
 
 /* terminate string at nth visual column instead of at the nth byte */
-class TerminateStringAtVisualIndexTest : public Test
+class UTFTerminateStringAtVisualIndexTest : public Test
 {
 protected:
     void configure_before_after(const char *before, const char *after)
@@ -372,12 +373,12 @@ protected:
     const char *m_after{};
 };
 
-TEST_F(TerminateStringAtVisualIndexTest, nullptr_doesnt_crash)
+TEST_F(UTFTerminateStringAtVisualIndexTest, nullptr_doesnt_crash)
 {
     terminate_string_at_visual_index(nullptr, 1);
 }
 
-TEST_F(TerminateStringAtVisualIndexTest, negative_index)
+TEST_F(UTFTerminateStringAtVisualIndexTest, negative_index)
 {
     configure_before_after("abcdefg", "");
 
@@ -386,7 +387,7 @@ TEST_F(TerminateStringAtVisualIndexTest, negative_index)
     ASSERT_STREQ(m_after, m_buffer) << "terminate_string_at_visual_index(-12345)";
 }
 
-TEST_F(TerminateStringAtVisualIndexTest, ascii)
+TEST_F(UTFTerminateStringAtVisualIndexTest, ascii)
 {
     configure_before_after("abcdefg", "abcde");
 
@@ -395,7 +396,7 @@ TEST_F(TerminateStringAtVisualIndexTest, ascii)
     EXPECT_STREQ(m_after, m_buffer) <<  "terminate_string_at_visual_index(5)";
 }
 
-TEST_F(TerminateStringAtVisualIndexTest, iso8859_1)
+TEST_F(UTFTerminateStringAtVisualIndexTest, iso8859_1)
 {
     configure_before_after("\303\241\303\255\303\272\303\251\303\263\303\244\303\257\303\274\303\253\303\266",
                            "\303\241\303\255\303\272\303\251\303\263");
@@ -405,7 +406,7 @@ TEST_F(TerminateStringAtVisualIndexTest, iso8859_1)
     EXPECT_STREQ(m_after, m_buffer) << "terminate_string_at_visual_index(5)";
 }
 
-TEST_F(TerminateStringAtVisualIndexTest, cjk_basic)
+TEST_F(UTFTerminateStringAtVisualIndexTest, cjk_basic)
 {
     configure_before_after(
         "\257\247\345\214\226\351\243\233\347\201\260\344\270\215\344\275\234\346\265\256\345\241\265",
@@ -416,7 +417,7 @@ TEST_F(TerminateStringAtVisualIndexTest, cjk_basic)
     EXPECT_STREQ(m_after, m_buffer) << "terminate_string_at_visual_index(8)";
 }
 
-TEST_F(TerminateStringAtVisualIndexTest, cjk_basic_at_wrong_boundary)
+TEST_F(UTFTerminateStringAtVisualIndexTest, cjk_basic_at_wrong_boundary)
 {
     configure_before_after(
         "\345\257\247\345\214\226\351\243\233\347\201\260\344\270\215\344\275\234\346\265\256\345\241\265",
