@@ -645,14 +645,14 @@ const char *find_grpdesc(DATASRC *dp, const char *groupname)
     }
 
     grouplen = strlen(groupname);
-    HASHDATUM data = hashfetch(dp->desc_sf.hp, groupname, grouplen);
-    if (data.dat_ptr) {
-	LISTNODE* node = (LISTNODE*)data.dat_ptr;
-	/*dp->act_sf.lp->recent = node;*/
-	return node->data + data.dat_len + grouplen + 1;
+    if (HASHDATUM data = hashfetch(dp->desc_sf.hp, groupname, grouplen); data.dat_ptr)
+    {
+        LISTNODE*node = (LISTNODE*)data.dat_ptr;
+        /*dp->act_sf.lp->recent = node;*/
+        return node->data + data.dat_len + grouplen + 1;
     }
 
-  try_xgtitle:
+try_xgtitle:
 
     if ((dp->flags & (DF_REMOTE|DF_NOXGTITLE)) == DF_REMOTE) {
 	set_datasrc(dp);
