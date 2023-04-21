@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 #else
     if (!env_init(headbuf, false)) {
 	fprintf(stderr,"Can't get %s information. Please contact your system adminstrator.\n",
-		(*g_login_name || !*g_real_name)? "user" : "host");
+		(!g_login_name.empty() || g_real_name.empty())? "user" : "host");
 	exit(1);
     }
 #endif
