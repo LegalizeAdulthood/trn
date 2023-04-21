@@ -24,7 +24,7 @@ enum ov_field_num
 bool ov_init();
 bool ov_data(ART_NUM first, ART_NUM last, bool cheating);
 void ov_close();
-char *ov_fieldname(int num);
-char *ov_field(ARTICLE *ap, int num);
+const char *ov_fieldname(int num);
+const char *ov_field(ARTICLE *ap, int num);
 
 #endif

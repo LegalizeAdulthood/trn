@@ -451,14 +451,14 @@ void ov_close()
     }
 }
 
-char *ov_fieldname(int num)
+const char *ov_fieldname(int num)
 {
     return g_htype[s_hdrnum[num]].name;
 }
 
-char *ov_field(ARTICLE *ap, int num)
+const char *ov_field(ARTICLE *ap, int num)
 {
-    int fn = g_datasrc->fieldnum[num];
+    ov_field_num fn = g_datasrc->fieldnum[num];
     if (!(g_datasrc->fieldflags[fn] & (FF_HAS_FIELD | FF_CHECK4FIELD)))
 	return nullptr;
 
@@ -472,6 +472,6 @@ char *ov_field(ARTICLE *ap, int num)
 	return g_cmd_buf;
     }
 
-    char *s = get_cached_line(ap, s_hdrnum[fn], true);
-    return s? s : "";
+    const char *s = get_cached_line(ap, s_hdrnum[fn], true);
+    return s ? s : "";
 }
