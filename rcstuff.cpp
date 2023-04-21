@@ -331,6 +331,7 @@ static bool lock_newsrc(NEWSRC *rp)
 	rp->lockname = savestr(g_buf);
     }
 
+    char *runninghost;
     if (FILE *fp = fopen(rp->lockname, "r"))
     {
 	if (fgets(g_buf,LBUFLEN,fp)) {
@@ -338,7 +339,7 @@ static bool lock_newsrc(NEWSRC *rp)
 	    if (fgets(g_buf,LBUFLEN,fp) && *g_buf
 	     && *(s = g_buf + strlen(g_buf) - 1) == '\n') {
 		*s = '\0';
-		char *runninghost = g_buf;
+		runninghost = g_buf;
 	    }
 	}
 	fclose(fp);
@@ -387,12 +388,12 @@ static bool lock_newsrc(NEWSRC *rp)
                       stdout) FLUSH;
 	    else
 		fputs("\nProcess crashed.\n",stdout) FLUSH;
-	    if (g_lastngname) {
+	    if (!g_lastngname.empty()) {
 		if (g_verbose)
 		    printf("(The last newsgroup accessed was %s.)\n\n",
-			   g_lastngname) FLUSH;
+			   g_lastngname.c_str()) FLUSH;
 		else
-		    printf("(In %s.)\n\n",g_lastngname) FLUSH;
+		    printf("(In %s.)\n\n",g_lastngname.c_str()) FLUSH;
 	    }
 	    termdown(2);
 	    get_anything();
@@ -1333,9 +1334,10 @@ bool write_newsrcs(MULTIRC *mptr)
 	    continue;
 	}
 #ifndef MSDOS
-	if (stat(rp->name,&g_filestat)>=0) { /* preserve permissions */
-	    chmod(rp->newname,g_filestat.st_mode&0666);
-	    chown(rp->newname,g_filestat.st_uid,g_filestat.st_gid);
+	stat_t perms;
+	if (stat(rp->name,&perms)>=0) { /* preserve permissions */
+	    chmod(rp->newname,perms.st_mode&0666);
+	    chown(rp->newname,perms.st_uid,g_filestat.st_gid);
 	}
 #endif
 	/* write out each line*/
