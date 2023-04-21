@@ -31,9 +31,6 @@
 #ifndef S_ISREG
 #   define S_ISREG(m)  ( ((m) & S_IFMT) == S_IFREG )
 #endif
-#ifndef isalnum
-#   define isalnum(c) (isalpha(c) || isdigit(c))
-#endif
 
 #ifdef MSDOS
 #include "msdos.h"
