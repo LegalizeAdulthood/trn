@@ -10,27 +10,34 @@
 namespace trn {
 namespace testing {
 
+void setenv(const char *value)
+{
+    static char buffer[1024];
+    strcpy(buffer, value);
+    putenv(buffer);
+}
+
 void set_envars()
 {
-    putenv("HOME=@TRN_TEST_HOME_DIR@");
-    putenv("TMPDIR=@TRN_TEST_TMP_DIR@");
-    putenv("USER=@TRN_TEST_LOGIN_NAME@");
-    putenv("DOTDIR=@TRN_TEST_DOT_DIR@");
-    putenv("TRNDIR=@TRN_TEST_TRN_DIR@");
-    putenv("NNTPSERVER=");
-    putenv("NAME=");
-    putenv("NEWSORG=");
-    putenv("ORGANIZATION=");
+    setenv("HOME=@TRN_TEST_HOME_DIR@");
+    setenv("TMPDIR=@TRN_TEST_TMP_DIR@");
+    setenv("USER=@TRN_TEST_LOGIN_NAME@");
+    setenv("DOTDIR=@TRN_TEST_DOT_DIR@");
+    setenv("TRNDIR=@TRN_TEST_TRN_DIR@");
+    setenv("NNTPSERVER=");
+    setenv("NAME=");
+    setenv("NEWSORG=");
+    setenv("ORGANIZATION=");
 }
 
 void reset_envars()
 {
-    putenv("HOME=");
-    putenv("TMPDIR=");
-    putenv("USER=");
-    putenv("DOTDIR=");
-    putenv("TRNDIR=");
-    putenv("NNTPSERVER=");
+    setenv("HOME=");
+    setenv("TMPDIR=");
+    setenv("USER=");
+    setenv("DOTDIR=");
+    setenv("TRNDIR=");
+    setenv("NNTPSERVER=");
 }
 
 bool set_name(char *)
