@@ -92,7 +92,7 @@ void intrp_init(char *tcbuf, int tcbuf_len)
 
     /* if this is the news admin then load his UID into g_newsuid */
 
-    if (!strcmp(g_login_name,""))
+    if (!g_login_name.empty())
 	g_newsuid = getuid();
 #endif
 
