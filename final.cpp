@@ -12,6 +12,7 @@
 #include "intrp.h"
 #include "kfile.h"
 #include "list.h"
+#include "ng.h"
 #include "nntp.h"
 #include "nntpclient.h"
 #include "nntpinit.h"
@@ -261,7 +262,7 @@ Signal_t stop_catcher(int signo)
 	kill(0,signo);		/* and do the stop */
     	savetty();
 #ifdef MAILCALL
-    	mailcount = 0;			/* force recheck */
+    	g_mailcount = 0;			/* force recheck */
 #endif
     	if (!g_panic) {
 	    if (!g_waiting) {
