@@ -104,7 +104,6 @@ void        datasrc_init();
 void        datasrc_finalize();
 char       *read_datasrcs(const char *filename);
 DATASRC    *get_datasrc(const char *name);
-DATASRC    *new_datasrc(const char *name, char **vals);
 bool        open_datasrc(DATASRC *dp);
 void        set_datasrc(DATASRC *dp);
 void        check_datasrcs();
