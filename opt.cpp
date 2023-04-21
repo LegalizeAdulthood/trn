@@ -793,7 +793,7 @@ void save_options(const char *filename)
 	    line = comments;
     }
     else {
-	char *t = g_use_threads? "T" : "";
+	const char *t = g_use_threads? "T" : "";
         printf("\n"
                "This is the first save of the option file, %s.\n"
                "By default this file overrides your %sRNINIT variable, but if you\n"
