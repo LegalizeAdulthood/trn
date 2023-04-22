@@ -1576,50 +1576,6 @@ TEST_F(InterpolatorNewsgroupTest, strippedSubjectInNewsgroup)
     ASSERT_EQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, buffer());
 }
 
-TEST(ReStripTest, noRePresent)
-{
-    char buffer[]{TRN_TEST_HEADER_STRIPPED_SUBJECT};
-    char *interesting{};
-
-    const bool hasRe = subject_has_Re(buffer, &interesting);
-
-    ASSERT_FALSE(hasRe);
-    ASSERT_EQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, std::string{interesting});
-}
-
-TEST(ReStripTest, stripAllRe)
-{
-    char buffer[]{"Re: Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
-    char *interesting{};
-
-    const bool hasRe = subject_has_Re(buffer, &interesting);
-
-    ASSERT_TRUE(hasRe);
-    ASSERT_EQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, std::string{interesting});
-}
-
-TEST(ReStripTest, stripRe3)
-{
-    char buffer[]{"Re^3: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
-    char *interesting{};
-
-    const bool hasRe = subject_has_Re(buffer, &interesting);
-
-    ASSERT_TRUE(hasRe);
-    ASSERT_EQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, std::string{interesting});
-}
-
-TEST(ReStripTest, stripOneRe)
-{
-    char buffer[]{"Re: Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
-    char *interesting{};
-
-    const bool hasRe = strip_one_Re(buffer, &interesting);
-
-    ASSERT_TRUE(hasRe);
-    ASSERT_EQ("Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT, std::string{interesting});
-}
-
 TEST_F(InterpolatorNewsgroupTest, oneReStrippedSubjectInNewsgroup)
 {
     g_artp = article_ptr(g_art);

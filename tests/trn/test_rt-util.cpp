@@ -2,78 +2,186 @@
  * vi: set sw=4 ts=8 ai sm noet :
  */
 
-#include <stdio.h>
+#include <gtest/gtest.h>
 
-#include "minunit.h"
+#include <string.h>
 
-#include "EXTERN.h"
 #include "common.h"
-#include "utf.h"
-#include "INTERN.h"
+#include "rt-util.h"
 
-int tests_run = 0;
+#include "test_config.h"
 
-#define NAME_MAX 29
+using namespace testing;
 
+enum
+{
+    NAME_MAX = 29
+};
 
-static char *test_compress_name__SAIC () {
-    char *before = "School of the Art Institute of Chicago";
-    char *after = strdup(before);
-    char *expected = "School o t A I o Chicago";
-    compress_name(after, NAME_MAX);
-    printf("Test %d:\n", tests_run);
-    printf("Before   : \"%s\"\n", before);
-    printf("After    : \"%s\"\n", after);
-    printf("Expected : \"%s\"\n", expected);
-    mu_assert("error, compress_name(\"School of the Art Institute of Chicago\") != \"School o t A I o Chicago\"", strcmp(after, expected) == 0);
-    free(after);
-    return 0;
-}
-
-static char *test_compress_name__PCS () {
-    char *before = "IEEE Professional Communication Society";
-    char *after = strdup(before);
-    char *expected = "IEEE P C Society";
-    compress_name(after, NAME_MAX);
-    printf("Test %d:\n", tests_run);
-    printf("Before   : \"%s\"\n", before);
-    printf("After    : \"%s\"\n", after);
-    printf("Expected : \"%s\"\n", expected);
-    mu_assert("error, compress_name(\"IEEE Professional Communication Society\") != \"IEEE P C Society\"", strcmp(after, expected) == 0);
-    free(after);
-    return 0;
-}
-
-static char *test_subject_has_Re__1 () {
-    char *before = "Re: followup";
-    char *after;
-    char *expected = "followup";
-    subject_has_Re(before, &after);
-    printf("Test %d:\n", tests_run);
-    printf("Before   : \"%s\"\n", before);
-    printf("After    : \"%s\"\n", after);
-    printf("Expected : \"%s\"\n", expected);
-    mu_assert("error, \"followup\" != \"followup\"", strcmp(after, expected) == 0);
-    return 0;
-}
-
-
-/* main loop */
-
-static char *all_tests() {
-    mu_run_test(test_subject_has_Re__1);
-    mu_run_test(test_compress_name__SAIC);
-    mu_run_test(test_compress_name__PCS);
-    return 0;
-}
-
-int main(int argc, char **argv) {
-    char *result = all_tests();
-    if (result != 0) {
-	printf("%s\n", result);
-    } else {
-	printf("ALL TESTS PASSED\n");
+class CompressNameTest : public Test
+{
+protected:
+    void configure_before_expected(const char *before, const char *expected)
+    {
+        m_before = before;
+        m_buffer = strdup(m_before);
+        m_expected = expected;
     }
-    printf("Tests run: %d\n", tests_run);
-    return result != 0;
+
+    void TearDown() override
+    {
+        free(m_buffer);
+    }
+
+    const char *m_before{};
+    char       *m_buffer{};
+    const char *m_expected{};
+};
+
+TEST_F(CompressNameTest, middleInitial)
+{
+    configure_before_expected("Ross Douglas Ridge", "Ross D Ridge");
+
+    char *result = compress_name(m_buffer, strlen(m_expected)+1);
+
+    EXPECT_EQ(result, m_buffer);
+    EXPECT_STREQ(m_expected, m_buffer);
+}
+
+TEST_F(CompressNameTest, dropMiddleName)
+{
+    configure_before_expected("Ross Douglas Ridge", "Ross Ridge");
+
+    char *result = compress_name(m_buffer, strlen(m_expected)+1);
+
+    EXPECT_EQ(result, m_buffer);
+    EXPECT_STREQ(m_expected, m_buffer);
+}
+
+TEST_F(CompressNameTest, DISABLED_firstMiddleInitials)
+{
+    configure_before_expected("Ross Douglas Ridge", "R D Ridge");
+
+    char *result = compress_name(m_buffer, strlen(m_expected)+1);
+
+    EXPECT_EQ(result, m_buffer);
+    EXPECT_STREQ(m_expected, m_buffer);
+}
+
+TEST_F(CompressNameTest, firstInitial)
+{
+    configure_before_expected("Ross Douglas Ridge", "R Ridge");
+
+    char *result = compress_name(m_buffer, strlen(m_expected)+1);
+
+    EXPECT_EQ(result, m_buffer);
+    EXPECT_STREQ(m_expected, m_buffer);
+}
+
+TEST_F(CompressNameTest, DISABLED_truncated)
+{
+    configure_before_expected("Ross Douglas Ridge", "R Ridg");
+
+    char *result = compress_name(m_buffer, strlen(m_expected)+1);
+
+    EXPECT_EQ(result, m_buffer);
+    EXPECT_STREQ(m_expected, m_buffer);
+}
+
+TEST_F(CompressNameTest, DISABLED_firstInitialDropped)
+{
+    configure_before_expected("R. Douglas Ridge", "Douglas Ridge");
+
+    char *result = compress_name(m_buffer, strlen(m_expected)+1);
+
+    EXPECT_EQ(result, m_buffer);
+    EXPECT_STREQ(m_expected, m_buffer);
+}
+
+TEST_F(CompressNameTest, ddsDropped)
+{
+    configure_before_expected("Ross Douglas Ridge D.D.S.", "Ross Douglas Ridge");
+
+    char *result = compress_name(m_buffer, strlen(m_expected)+1);
+
+    EXPECT_EQ(result, m_buffer);
+    EXPECT_STREQ(m_expected, m_buffer);
+}
+
+TEST_F(CompressNameTest, SAIC)
+{
+    configure_before_expected("School of the Art Institute of Chicago", "School o t A I o Chicago");
+
+    char *result = compress_name(m_buffer, NAME_MAX);
+
+    EXPECT_EQ(result, m_buffer);
+    EXPECT_STREQ(m_expected, m_buffer);
+}
+
+TEST_F(CompressNameTest, PCS)
+{
+    configure_before_expected("IEEE Professional Communication Society", "IEEE P C Society");
+
+    char *result = compress_name(m_buffer, NAME_MAX);
+
+    EXPECT_EQ(result, m_buffer);
+    EXPECT_STREQ(m_expected, m_buffer);
+}
+
+TEST(SubjectHasReTest, one)
+{
+    char *before = strdup("Re: followup");
+    char *after{};
+    const char *expected = "followup";
+
+    const bool hasRe = subject_has_Re(before, &after);
+
+    EXPECT_TRUE(hasRe);
+    EXPECT_STREQ(expected, after);
+
+    free(before);
+}
+
+TEST(SubjectHasReTest, noRePresent)
+{
+    char buffer[]{TRN_TEST_HEADER_STRIPPED_SUBJECT};
+    char *interesting{};
+
+    const bool hasRe = subject_has_Re(buffer, &interesting);
+
+    ASSERT_FALSE(hasRe);
+    ASSERT_STREQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, interesting);
+}
+
+TEST(SubjectHasReTest, stripAllRe)
+{
+    char buffer[]{"Re: Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
+    char *interesting{};
+
+    const bool hasRe = subject_has_Re(buffer, &interesting);
+
+    ASSERT_TRUE(hasRe);
+    ASSERT_STREQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, interesting);
+}
+
+TEST(SubjectHasReTest, stripRe3)
+{
+    char buffer[]{"Re^3: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
+    char *interesting{};
+
+    const bool hasRe = subject_has_Re(buffer, &interesting);
+
+    ASSERT_TRUE(hasRe);
+    ASSERT_STREQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, interesting);
+}
+
+TEST(SubjectHasReTest, stripOneRe)
+{
+    char buffer[]{"Re: Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
+    char *interesting{};
+
+    const bool hasRe = strip_one_Re(buffer, &interesting);
+
+    ASSERT_TRUE(hasRe);
+    ASSERT_STREQ("Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT, interesting);
 }
