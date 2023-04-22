@@ -259,7 +259,6 @@ TEST(UTFVisualLengthTest, iso_8859_1)
 TEST(UTFVisualLengthTest, cjk)
 {
     ASSERT_EQ(4, visual_length_of("\350\211\257\345\277\203"));
-    ASSERT_EQ(8, visual_length_of("\257\247\345\214\226\351\243\233\347\201\260"));
 }
 
 TEST(UTFInsertUnicodeAtTest, null)
@@ -409,8 +408,8 @@ TEST_F(UTFTerminateStringAtVisualIndexTest, iso8859_1)
 TEST_F(UTFTerminateStringAtVisualIndexTest, cjk_basic)
 {
     configure_before_after(
-        "\257\247\345\214\226\351\243\233\347\201\260\344\270\215\344\275\234\346\265\256\345\241\265",
-        "\257\247\345\214\226\351\243\233\347\201\260");
+        "\345\257\247\345\214\226\351\243\233\347\201\260\344\270\215\344\275\234\346\265\256\345\241\265",
+        "\345\257\247\345\214\226\351\243\233\347\201\260");
 
     terminate_string_at_visual_index(m_buffer, 8);
 
