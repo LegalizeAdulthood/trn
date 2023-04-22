@@ -858,19 +858,19 @@ bool check_ini_cond(char *cond)
     char *s = g_buf + strlen(g_buf);
     while (s != g_buf && isspace(s[-1])) s--;
     *s = '\0';
-    int not = (*cond == '!');
-    if (not != 0)
+    const int negate = *cond == '!' ? 1 : 0;
+    if (negate != 0)
 	cond++;
-    int upordown = *cond == '<' ? -1 : (*cond == '>' ? 1 : 0);
+    const int upordown = *cond == '<' ? -1 : (*cond == '>' ? 1 : 0);
     if (upordown != 0)
 	cond++;
-    bool equal = (*cond == '=');
+    bool equal = *cond == '=';
     if (equal)
 	cond++;
     while (isspace(*cond)) cond++;
     if (upordown) {
-	int num = atoi(cond) - atoi(g_buf);
-	if (!((equal && !num) || (upordown * num < 0)) ^ not)
+	const int num = atoi(cond) - atoi(g_buf);
+	if (!((equal && !num) || (upordown * num < 0)) ^ negate)
 	    return false;
     }
     else if (equal) {
