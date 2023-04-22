@@ -24,8 +24,9 @@ std::string g_charsets{"patm"};
 const char *g_charsubst{};
 
 /* TeX encoding table - gives ISO char for "x (x=32..127) */
-
-static Uchar s_textbl[96] = {
+static Uchar s_textbl[96] =
+// clang-format off
+{
     0,  0,'"',  0,  0,  0,  0,'"',  0,  0,  0,  0,  0,  0,  0,  0,
     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
     0,196,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,214,
@@ -33,22 +34,22 @@ static Uchar s_textbl[96] = {
   '"',228,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,246,
     0,  0,  0,223,  0,252,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
 };
+// clang-format on
 static char s_texchar = '\0';
 
 static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t);
 
 int putsubstchar(int c, int limit, bool outputok)
 {
-    Uchar d, oc[2], nc[5];
-    int t, i = 0;
-    switch (*g_charsubst) {
-      case 'm':
-	t = 1;
-	goto doconvert;
-      case 'a': 
-	t = 2;
-	/* FALL THROUGH */
-      doconvert:
+    Uchar oc[2];
+    Uchar nc[5];
+    int   t;
+    int   i = 0;
+    switch (*g_charsubst)
+    {
+    case 'm':
+    case 'a': 
+	t = *g_charsubst == 'm' ? 1 : 2;
 	oc[0] = (Uchar)c;
 	oc[1] = '\0';
         i = Latin1toASCII(nc, oc, sizeof nc, t);
@@ -62,7 +63,7 @@ int putsubstchar(int c, int limit, bool outputok)
 	else
 	    i = -1;
 	break;
-      case 't':
+    case 't':
 	if (c == '\\' || c == '"') {
 	    if (s_texchar && (c == '\\' || s_texchar != '\\')) {
 		if (outputok)
@@ -82,7 +83,8 @@ int putsubstchar(int c, int limit, bool outputok)
 	    i++;
 	}
 	else if (s_texchar == '"') {
-	    if (c < 32 || c > 128)
+            Uchar d;
+            if (c < 32 || c > 128)
 		d = '\0';
 	    else
 		d = s_textbl[c-32];
@@ -100,7 +102,7 @@ int putsubstchar(int c, int limit, bool outputok)
 	    }
 	}
 	/* FALL THROUGH */
-      default: 
+    default: 
 	if (outputok)
 	    putchar(c);
 	i++;
@@ -197,23 +199,27 @@ int strcharsubst(char *outb, const char *inb, int limit, char_int subst)
 
 #define SUB nullptr       /* used if no reasonable ASCII string is possible */
 
-static char* iso2asc[ISO_TABLES][96] = {
- {
-  " ","!","c",SUB,SUB,"Y","|",SUB,"\"","c","a","<","-","-","R","-",
-  " ",SUB,"2","3","'","u","P",".",",","1","o",">",SUB,SUB,SUB,"?",
-  "A","A","A","A","A","A","A","C","E","E","E","E","I","I","I","I",
-  "D","N","O","O","O","O","O","x","O","U","U","U","U","Y","T","s",
-  "a","a","a","a","a","a","a","c","e","e","e","e","i","i","i","i",
-  "d","n","o","o","o","o","o",":","o","u","u","u","u","y","t","y"
- },{
-  " ","!","c",SUB,SUB,"Y","|",SUB,"\"","(c)","a","<<","-","-","(R)","-",
-  " ","+/-","2","3","'","u","P",".",",","1","o",">>"," 1/4"," 1/2"," 3/4","?",
-  "A","A","A","A","Ae","Aa","AE","C","E","E","E","E","I","I","I","I",
-  "D","N","O","O","O","O","Oe","x","Oe","U","U","U","Ue","Y","Th","ss",
-  "a","a","a","a","ae","aa","ae","c","e","e","e","e","i","i","i","i",
-  "d","n","o","o","o","o","oe",":","oe","u","u","u","ue","y","th","ij"
- }
+static const char* s_iso2asc[ISO_TABLES][96] =
+// clang-format off
+{
+    {
+        " ", "!", "c", SUB, SUB, "Y", "|", SUB, "\"", "c", "a", "<", "-", "-", "R", "-",
+        " ", SUB, "2", "3", "'", "u", "P", ".", ",",  "1", "o", ">", SUB, SUB, SUB, "?",
+        "A", "A", "A", "A", "A", "A", "A", "C", "E",  "E", "E", "E", "I", "I", "I", "I",
+        "D", "N", "O", "O", "O", "O", "O", "x", "O",  "U", "U", "U", "U", "Y", "T", "s",
+        "a", "a", "a", "a", "a", "a", "a", "c", "e",  "e", "e", "e", "i", "i", "i", "i",
+        "d", "n", "o", "o", "o", "o", "o", ":", "o",  "u", "u", "u", "u", "y", "t", "y"
+    },
+    {
+        " ", "!",   "c", SUB, SUB,  "Y",  "|",  SUB, "\"", "(c)", "a", "<<", "-",    "-",    "(R)",  "-",
+        " ", "+/-", "2", "3", "'",  "u",  "P",  ".", ",",  "1",   "o", ">>", " 1/4", " 1/2", " 3/4", "?",
+        "A", "A",   "A", "A", "Ae", "Aa", "AE", "C", "E",  "E",   "E", "E",  "I",    "I",    "I",    "I",
+        "D", "N",   "O", "O", "O",  "O",  "Oe", "x", "Oe", "U",   "U", "U",  "Ue",   "Y",    "Th",   "ss",
+        "a", "a",   "a", "a", "ae", "aa", "ae", "c", "e",  "e",   "e", "e",  "i",    "i",    "i",    "i",
+        "d", "n",   "o", "o", "o",  "o",  "oe", ":", "oe", "u",   "u", "u",  "ue",   "y",    "th",   "ij"
+    }
 };
+// clang-format on
 
 /*
  *  Transform an 8-bit ISO Latin 1 string iso into a 7-bit ASCII string asc
@@ -233,10 +239,10 @@ static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t)
         return s - asc;
     }
     t--;	/* offset correction -ot */
-    char **tab = iso2asc[t] - 0xa0;
+    const char **tab = s_iso2asc[t] - 0xa0;
     while (*iso) {
 	if (*iso > 0x9f) {
-	    char *p = tab[*iso++];
+	    const char *p = tab[*iso++];
 	    if (p) {
 		while (*p) {
 		    *s++ = *p++;
