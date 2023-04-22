@@ -1337,7 +1337,7 @@ bool write_newsrcs(MULTIRC *mptr)
 	stat_t perms;
 	if (stat(rp->name,&perms)>=0) { /* preserve permissions */
 	    chmod(rp->newname,perms.st_mode&0666);
-	    chown(rp->newname,perms.st_uid,g_filestat.st_gid);
+	    chown(rp->newname,perms.st_uid,perms.st_gid);
 	}
 #endif
 	/* write out each line*/
