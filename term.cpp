@@ -1801,9 +1801,7 @@ static void line_col_calcs()
 }
 
 #ifdef SIGWINCH
-Signal_t
-winch_catcher(dummy)
-int dummy;
+Signal_t winch_catcher(int dummy)
 {
     /* Reset signal in case of System V dain bramage */
     sigset(SIGWINCH, winch_catcher);
