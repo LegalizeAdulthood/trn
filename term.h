@@ -9,21 +9,11 @@
 #ifdef I_TERMCAP
 #include <termcap.h>
 #endif
-#ifdef I_TERMIO
-extern termio g_tty;
-extern termio g_oldtty;
-#else
 #ifdef I_TERMIOS
 #include <termios.h>
 
 extern termios g_tty;
 extern termios g_oldtty;
-#else
-#ifdef I_SGTTY
-extern sgttyb g_tty;
-extern int    g_res_flg;
-#endif
-#endif
 #endif
 #include "common.h"
 #include "enum-flags.h"
@@ -235,64 +225,6 @@ char *tgoto(char *str, int x, int y);
 
 /* terminal mode diddling routines */
 
-#ifdef I_TERMIO
-extern int g_tty_ch;
-
-inline void crmode()
-{
-    g_bizarre = true;
-    g_tty.c_lflag &= ~ICANON;
-    g_tty.c_cc[VMIN] = 1;
-    ioctl(g_tty_ch, TCSETAF, &g_tty);
-}
-inline void nocrmode()
-{
-    g_bizarre = true;
-    g_tty.c_lflag |= ICANON;
-    g_tty.c_cc[VEOF] = CEOF;
-    stty(g_tty_ch, &g_tty);
-}
-inline void echo()
-{
-    g_bizarre = true;
-    g_tty.c_lflag |= ECHO;
-    ioctl(g_tty_ch, TCSETA, &g_tty);
-}
-inline void noecho()
-{
-    g_bizarre = true;
-    g_tty.c_lflag &= ~ECHO;
-    ioctl(g_tty_ch, TCSETA, &g_tty);
-}
-inline void nl()
-{
-    g_bizarre = true;
-    g_tty.c_iflag |= ICRNL;
-    g_tty.c_oflag |= ONLCR;
-    ioctl(g_tty_ch, TCSETAW, &g_tty);
-}
-inline void nonl()
-{
-    g_bizarre = true;
-    g_tty.c_iflag &= ~ICRNL;
-    g_tty.c_oflag &= ~ONLCR;
-    ioctl(g_tty_ch, TCSETAW, &g_tty);
-}
-inline void savetty()
-{
-    ioctl(g_tty_ch, TCGETA, &g_oldtty);
-    ioctl(g_tty_ch, TCGETA, &g_tty);
-}
-inline void resetty()
-{
-    g_bizarre = false;
-    ioctl(g_tty_ch, TCSETAF, &g_oldtty);
-}
-inline void unflush_output()
-{
-}
-
-#else /* !I_TERMIO */
 #ifdef I_TERMIOS
 extern int  g_tty_ch;
 
@@ -351,76 +283,6 @@ inline void unflush_output()
 }
 
 #else /* !I_TERMIOS */
-#ifdef I_SGTTY
-extern int g_tty_ch;
-
-inline void raw()
-{
-    g_bizarre = true;
-    g_tty.sg_flags |= RAW;
-    stty(g_tty_ch, &g_tty);
-}
-inline void noraw()
-{
-    g_bizarre = true;
-    g_tty.sg_flags &= ~RAW;
-    stty(g_tty_ch, &g_tty);
-}
-inline void crmode()
-{
-    g_bizarre = true;
-    g_tty.sg_flags |= CBREAK;
-    stty(g_tty_ch, &g_tty);
-}
-inline void nocrmode()
-{
-    g_bizarre = true;
-    g_tty.sg_flags &= ~CBREAK;
-    stty(g_tty_ch, &g_tty);
-}
-inline void echo()
-{
-    g_bizarre = true;
-    g_tty.sg_flags |= ECHO;
-    stty(g_tty_ch, &g_tty);
-}
-inline void noecho()
-{
-    g_bizarre = true;
-    g_tty.sg_flags &= ~ECHO;
-    stty(g_tty_ch, &g_tty);
-}
-inline void nl()
-{
-    g_bizarre = true;
-    g_tty.sg_flags |= CRMOD;
-    stty(g_tty_ch, &g_tty);
-}
-inline void nonl()
-{
-    g_bizarre = true;
-    g_tty.sg_flags &= ~CRMOD;
-    stty(g_tty_ch, &g_tty);
-}
-inline void savetty()
-{
-    gtty(g_tty_ch, &g_tty);
-    g_res_flg = g_tty.sg_flags;
-}
-inline void resetty()
-{
-    g_bizarre = false;
-    g_tty.sg_flags = g_res_flg;
-    stty(g_tty_ch, &g_tty);
-}
-inline void unflush_output()
-{
-#ifdef LFLUSHO
-    extern int g_lflusho;
-    ioctl(g_tty_ch, TIOCLBIC, &g_lflusho);
-#endif
-}
-#else
 #ifdef MSDOS
 
 inline void crmode()
@@ -460,10 +322,7 @@ inline void unflush_output()
 #else  /* !MSDOS */
 // ..."Don't know how to define the term macros!"
 #endif /* !MSDOS */
-#endif /* !I_SGTTY */
 #endif /* !I_TERMIOS */
-
-#endif /* !I_TERMIO */
 
 inline void forceme(const char *c)
 {

@@ -36,25 +36,10 @@
 #undef	USETITE		/* use terminal init/exit seqences (not recommended) */
 #undef	USEKSKE		/* use keypad start/end sequences */
 
-#ifdef I_TERMIO
-termio g_tty;
-termio g_oldtty;
-int g_tty_ch{2};
-#else
-# ifdef I_TERMIOS
+#ifdef I_TERMIOS
 termios g_tty;
 termios g_oldtty;
-int g_tty_ch{2};
-# else
-#  ifdef I_SGTTY
-sgttyb g_tty;
-int g_tty_ch{2};
-int g_res_flg{};
-#   ifdef LFLUSHO
-extern int g_lflusho{LFLUSHO};
-#   endif
-#  endif
-# endif
+int     g_tty_ch{2};
 #endif
 
 char g_erase_char{}; /* rubout character */
@@ -196,43 +181,20 @@ void term_init()
 {
     savetty();				/* remember current tty state */
 
-#ifdef I_TERMIO
-    s_outspeed = g_tty.c_cflag & CBAUD;	/* for tputs() */
-    g_erase_char = g_tty.c_cc[VERASE];	/* for finish_command() */
-    g_kill_char = g_tty.c_cc[VKILL];		/* for finish_command() */
-    if (g_tc_GT = ((g_tty.c_oflag & TABDLY) != TAB3))
-	/* we have tabs, so that's OK */;
-    else
-	g_tty.c_oflag &= ~TAB3;	/* turn off kernel tabbing -- done in rn */
-#else /* !I_TERMIO */
-# ifdef I_TERMIOS
-    s_outspeed = cfgetospeed(&g_tty);	/* for tputs() (output) */
-    g_erase_char = g_tty.c_cc[VERASE];	/* for finish_command() */
-    g_kill_char = g_tty.c_cc[VKILL];		/* for finish_command() */
-#if 0
-    g_tty.c_oflag &= ~OXTABS;	/* turn off kernel tabbing-done in rn */
-#endif
-# else /* !I_TERMIOS */
-#  ifdef I_SGTTY
-    s_outspeed = g_tty.sg_ospeed;		/* for tputs() */
-    g_erase_char = g_tty.sg_erase;		/* for finish_command() */
-    g_kill_char = g_tty.sg_kill;		/* for finish_command() */
-    if (g_tc_GT = ((g_tty.sg_flags & XTABS) != XTABS))
-	/* we have tabs, so that's OK */;
-    else
-	g_tty.sg_flags &= ~XTABS;
-#  else /* !I_SGTTY */
-#   ifdef MSDOS
+#ifdef I_TERMIOS
+    s_outspeed = cfgetospeed(&g_tty);  /* for tputs() (output) */
+    g_erase_char = g_tty.c_cc[VERASE]; /* for finish_command() */
+    g_kill_char = g_tty.c_cc[VKILL];   /* for finish_command() */
+#else /* !I_TERMIOS */
+#ifdef MSDOS
     s_outspeed = B19200;
     g_erase_char = '\b';
     g_kill_char = Ctl('u');
     g_tc_GT = true;
-#   else
+#else
     ..."Don't know how to initialize the terminal!"
-#   endif /* !MSDOS */
-#  endif /* !I_SGTTY */
-# endif /* !I_TERMIOS */
-#endif /* !I_TERMIO */
+#endif /* !MSDOS */
+#endif /* !I_TERMIOS */
 
     /* The following could be a table but I can't be sure that there isn't */
     /* some degree of sparsity out there in the world. */
@@ -990,19 +952,11 @@ void eat_typeahead()
 	    pushstring(g_buf,0);
 	}
 #else /* this is probably v7 */
-# ifdef I_SGTTY
-	ioctl(g_tty_ch,TIOCSETP,&g_tty);
-# else
-#  ifdef I_TERMIO
-	ioctl(g_tty_ch,TCSETAW,&g_tty);
-#  else
-#   ifdef I_TERMIOS
-	tcsetattr(g_tty_ch,TCSAFLUSH,&g_tty);
-#   else
-	..."Don't know how to eat typeahead!"
-#   endif
-#  endif
-# endif
+#ifdef I_TERMIOS
+        tcsetattr(g_tty_ch, TCSAFLUSH, &g_tty);
+#else
+        ... "Don't know how to eat typeahead!"
+#endif
 #endif
     }
     last_time = this_time;

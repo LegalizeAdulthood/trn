@@ -32,19 +32,11 @@
 #endif
 #include <fcntl.h>
 
-#ifdef I_TERMIO
-# include <termio.h>
-#else
-# ifdef I_TERMIOS
-#   include <termios.h>
-#   if !defined (O_NDELAY)
-#     define O_NDELAY O_NONBLOCK	/* Posix-style non-blocking i/o */
-#   endif
-# else
-#   ifdef I_SGTTY
-#     include <sgtty.h>
-#   endif
-# endif
+#ifdef I_TERMIOS
+#include <termios.h>
+#if !defined(O_NDELAY)
+#define O_NDELAY O_NONBLOCK /* Posix-style non-blocking i/o */
+#endif
 #endif
 
 #ifdef I_PTEM
