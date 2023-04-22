@@ -1,102 +1,102 @@
 /* test_cache.c - unit tests for the changed portions of cache.c
  * vi: set sw=4 ts=8 ai sm noet :
  */
+#include <gtest/gtest.h>
 
-#include <stdio.h>
 #include <string.h>
 
-#include "minunit.h"
-
-#include "EXTERN.h"
 #include "common.h"
-#include "intrp.h"
-#include "hash.h"
-#include "nntpclient.h"
-#include "datasrc.h"
-#include "term.h"
 #include "cache.h"
-#include "util.h"
-#include "utf.h"
-#include "INTERN.h"
 
-int tests_run = 0;
+using namespace testing;
 
-static char *test_dectrl__null () {
-    dectrl(NULL);
-    mu_assert("error, dectrl(NULL) should not crash", 1);
-    return 0;
-}
-
-static char *test_dectrl__ascii_all_printable () {
-    char *before = "This is a test.";
-    char *after = strdup(before);
-    dectrl(after);
-    printf("Test %d:\n", tests_run);
-    printf("Before   : \"%s\"\n", before);
-    printf("After    : \"%s\"\n", after);
-    printf("\n");
-    mu_assert("error, dectrl changed an ASCII string with all-printable characters", strcmp(before, after) == 0);
-    free(after);
-    return 0;
-}
-
-static char *test_dectrl__ascii_some_nonprintable () {
-    char *before = "This\tis\fa\177test.";
-    char *after = strdup(before);
-    char *expected = "This is a test.";
-    dectrl(after);
-    printf("Test %d:\n", tests_run);
-    printf("Before   : \"%s\"\n", before);
-    printf("After    : \"%s\"\n", after);
-    printf("Expected : \"%s\"\n", expected);
-    printf("\n");
-    mu_assert("error, dectrl did not change an ASCII string with some nonprintable characters", strcmp(after, expected) == 0);
-    free(after);
-    return 0;
-}
-
-static char *test_dectrl__iso_8859_1 () {
-    char *before = "« La Liberté guidant le peuple. »";
-    char *after = strdup(before);
-    dectrl(after);
-    printf("Test %d:\n", tests_run);
-    printf("Before   : \"%s\"\n", before);
-    printf("After    : \"%s\"\n", after);
-    printf("\n");
-    mu_assert("error, dectrl changed an ISO8859-1 string with all-printable characters", strcmp(before, after) == 0);
-    free(after);
-    return 0;
-}
-
-static char *test_dectrl__cjk_basic () {
-    char *before = "寧化飛灰，不作浮塵";
-    char *after = strdup(before);
-    dectrl(after);
-    printf("Test %d:\n", tests_run);
-    printf("Before   : \"%s\"\n", before);
-    printf("After    : \"%s\"\n", after);
-    printf("\n");
-    mu_assert("error, dectrl changed a CJK string with all-printable characters", strcmp(before, after) == 0);
-    free(after);
-    return 0;
-}
-
-static char *all_tests() {
-    mu_run_test(test_dectrl__null);
-    mu_run_test(test_dectrl__ascii_all_printable);
-    mu_run_test(test_dectrl__ascii_some_nonprintable);
-    mu_run_test(test_dectrl__iso_8859_1);
-    mu_run_test(test_dectrl__cjk_basic);
-    return 0;
-}
-
-int main(int argc, char **argv) {
-    char *result = all_tests();
-    if (result != 0) {
-	printf("%s\n", result);
-    } else {
-	printf("ALL TESTS PASSED\n");
+class DectrlTest : public Test
+{
+protected:
+    void TearDown() override
+    {
+        if (m_buffer != nullptr)
+            free(m_buffer);
     }
-    printf("Tests run: %d\n", tests_run);
-    return result != 0;
+
+    void configure_unchanged(const char *before)
+    {
+        m_before = before;
+        m_buffer = strdup(m_before);
+        m_expected = before;
+    }
+    void configure_before_expected(const char *before, const char *expected)
+    {
+        m_before = before;
+        m_buffer = strdup(m_before);
+        m_expected = expected;
+    }
+
+    const char *m_before{};
+    char *m_buffer{};
+    const char *m_expected{};
+};
+
+TEST_F(DectrlTest, nullptr)
+{
+    dectrl(nullptr);
+}
+
+TEST_F(DectrlTest, ascii_all_printable)
+{
+    configure_unchanged("This is a test.");
+
+    dectrl(m_buffer);
+
+    ASSERT_STREQ(m_expected, m_buffer) << "dectrl changed an ASCII string with all-printable characters";
+}
+
+TEST_F(DectrlTest, ascii_some_nonprintable)
+{
+    configure_before_expected("This\tis\fa\177test.", "This is a test.");
+
+    dectrl(m_buffer);
+
+    ASSERT_STREQ(m_expected, m_buffer) << "dectrl did not change an ASCII string with some non-printable characters";
+}
+
+TEST_F(DectrlTest, iso_8859_1)
+{
+    configure_unchanged("\302\253\302\240 La Libert\303\251 guidant le peuple. \302\240\302\273");
+
+    dectrl(m_buffer);
+
+    ASSERT_STREQ(m_expected, m_buffer) << "dectrl changed an ISO8859-1 string with all-printable characters";
+}
+
+TEST_F(DectrlTest, iso_8859_1_non_printable)
+{
+    configure_before_expected("\302\253\302\240 La Libert\303\251 guidant\tle peuple. \302\240\302\273",
+                              "\302\253\302\240 La Libert\303\251 guidant le peuple. \302\240\302\273");
+
+    dectrl(m_buffer);
+
+    ASSERT_STREQ(m_expected, m_buffer) << "dectrl did not change an ISO8859-1 string with non-printable characters";
+}
+
+TEST_F(DectrlTest, cjk_basic)
+{
+    configure_unchanged(
+        "\345\257\247\345\214\226\351\243\233\347\201\260\357\274\214\344\270\215\344\275\234\346\265\256\345\241\265");
+
+    dectrl(m_buffer);
+
+    ASSERT_STREQ(m_expected, m_buffer) << "dectrl changed a CJK string with all-printable characters";
+}
+
+TEST_F(DectrlTest, cjk_basic_non_printable)
+{
+    configure_before_expected("\345\257\247\345\214\226\351\243\233\347\201\260\357\274\214\t"
+                              "\344\270\215\344\275\234\346\265\256\345\241\265",
+                              "\345\257\247\345\214\226\351\243\233\347\201\260\357\274\214 "
+                              "\344\270\215\344\275\234\346\265\256\345\241\265");
+
+    dectrl(m_buffer);
+
+    ASSERT_STREQ(m_expected, m_buffer) << "dectrl did not change a CJK string with non-printable characters";
 }

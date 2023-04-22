@@ -6,6 +6,7 @@ include(ConfigureTrnTestData)
 configure_trn_test_data()
 
 add_executable(trn-test
+    test_cache.cpp
     test_enum_order.cpp
     test_flags.cpp
     test_init.cpp
