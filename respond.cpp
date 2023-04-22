@@ -308,8 +308,8 @@ save_result save_article()
 
 	    c = (s+strlen(s));
 	    *c++ = '/';			/* put a slash before filename */
-	    interp(c, s==g_buf?(sizeof g_buf):(sizeof altbuf),
-		i ? "News" : savename );
+	    static char s_news[] = "News";
+            interp(c, s == g_buf ? (sizeof g_buf) : (sizeof altbuf), i ? s_news : savename);
 				/* generate a default name somehow or other */
 	}
 	makedir(s,MD_FILE);
@@ -326,7 +326,7 @@ save_result save_article()
 	    else if (g_norm_always)
 		mailbox = false;
 	    else {
-		char* dflt = (in_string(savename,"%a", true) ? "nyq" : "ynq");
+		const char* dflt = (in_string(savename,"%a", true) ? "nyq" : "ynq");
 		
 		sprintf(g_cmd_buf,
 		"\nFile %s doesn't exist--\n	use mailbox format?",s);
