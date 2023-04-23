@@ -44,8 +44,8 @@ protected:
 
     void setenv(const char *value)
     {
-        strcpy(m_scratch.data(), value);
-        putenv(m_scratch.data());
+        // Note: this intentionally leaks a little memory.
+        putenv(strdup(value));
     }
 
     std::array<char, TCBUF_SIZE>  m_tcbuf{};
