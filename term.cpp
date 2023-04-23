@@ -1374,26 +1374,29 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
     else
         *prefixes = '\0';
 
-    char*s;
-    for (s = tmpbuf; *cp; ) {
-	if (*cp == '/') {
-	    *s++ = '\0';
-	    cp++;
-	}
-	else if (*cp == '<') {
-	    do {
-		*s++ = *cp;
-	    } while (*cp++ != '>');
-	    any_val_OK = 1;		/* flag that '<' was found */
-	}
-	else
-	    *s++ = *cp++;
+    {
+        char *dest;
+        for (dest = tmpbuf; *cp; ) {
+            if (*cp == '/') {
+                *dest++ = '\0';
+                cp++;
+            }
+            else if (*cp == '<') {
+                do {
+                    *dest++ = *cp;
+                } while (*cp++ != '>');
+                any_val_OK = 1;		/* flag that '<' was found */
+            }
+            else
+                *dest++ = *cp++;
+        }
+        cp = dest;
+        *dest++ = '\0';
+        *dest = '\0';
+        strcpy(g_buf,value);
     }
-    cp = s;
-    *s++ = '\0';
-    *s = '\0';
-    strcpy(g_buf,value);
 
+    char *s;
 reask_in_choice:
     int len = strlen(g_buf);
     char *bp = g_buf;
