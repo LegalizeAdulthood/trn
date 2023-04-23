@@ -1,0 +1,27 @@
+# Lines beginning with '#' are comments and are ignored
+#
+# In parameter values the following % interpolations can be used:
+#   %s      The path to the decoded file
+#   %t      The content type string
+#   %{name} The named MIME section parameter
+#   %%      A literal percent
+
+# Blank lines are ignored
+
+@TRN_TEST_MIME_IMAGE_GIF_CONTENT_TYPE@; @TRN_TEST_MIME_IMAGE_GIF_COMMAND@; description="@TRN_TEST_MIME_IMAGE_GIF_DESCRIPTION@"
+# 'label' is the legacy description name.
+@TRN_TEST_MIME_IMAGE_ANY_CONTENT_TYPE@; @TRN_TEST_MIME_IMAGE_ANY_COMMAND@; label="@TRN_TEST_MIME_IMAGE_ANY_DESCRIPTION@"
+
+# Trailing backslash continues entry on the next line.
+# The 'compose' parameter is skipped.
+@TRN_TEST_MIME_APPLEFILE_CONTENT_TYPE@; @TRN_TEST_MIME_APPLEFILE_COMMAND@; compose="sendAppleSingle %s"; \
+    description="@TRN_TEST_MIME_APPLEFILE_DESCRIPTION@"
+
+# 'needsterminal' and 'copiousoutput' parameters have no value and set flags in the entry.
+@TRN_TEST_MIME_TEXT_PLAIN_CONTENT_TYPE@; @TRN_TEST_MIME_TEXT_PLAIN_COMMAND@; needsterminal; copiousoutput; \
+    description="@TRN_TEST_MIME_TEXT_PLAIN_DESCRIPTION@"
+
+# 'test' parameter can validate a file is indeed of a particular content type.
+@TRN_TEST_MIME_PDF_CONTENT_TYPE@; @TRN_TEST_MIME_PDF_COMMAND@; \
+    description="@TRN_TEST_MIME_PDF_DESCRIPTION@"; \
+    test="@TRN_TEST_MIME_PDF_TEST_COMMAND@"

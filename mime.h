@@ -153,7 +153,7 @@ struct MIMECAP_ENTRY
     char         *contenttype;
     char         *command;
     char         *testcommand;
-    char         *label;
+    char         *description;
     mimecap_flags flags;
 };
 

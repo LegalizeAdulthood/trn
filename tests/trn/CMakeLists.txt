@@ -12,11 +12,13 @@ add_executable(trn-test
     test_flags.cpp
     test_init.cpp
     test_interp.cpp
+    test_mime.cpp
     test_nntp.cpp
     test_rt-util.cpp
     test_utf.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/test_config.h
     ${CMAKE_CURRENT_BINARY_DIR}/test_data.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/test_mime.h
     cmake/ConfigureTrnTestData.cmake
     cmake/test_access_file.in
     cmake/test_active_file.in
@@ -25,6 +27,8 @@ add_executable(trn-test
     cmake/test_config.h.in
     cmake/test_data.cpp.in
     cmake/test_local_newsrc.in
+    cmake/test_mime.h.in
+    cmake/test_mimecap_file.in
     cmake/test_nntp_auth_file.in
     cmake/test_nntp_newsrc.in
     cmake/test_organization_file.in

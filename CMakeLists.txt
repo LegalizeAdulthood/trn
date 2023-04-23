@@ -75,7 +75,7 @@ add_library(libtrn
     last.cpp last.h
     list.cpp list.h
     mempool.cpp mempool.h
-    mime.cpp mime.h
+    mime.cpp mime.h mime-internal.h
     msdos.h
     ng.cpp ng.h
     ngdata.cpp ngdata.h

@@ -1,3 +1,12 @@
+# In parameter values the following % interpolations can be used:
+#   %s      The path to the decoded file
+#   %t      The content type string
+#   %{name} The named MIME section parameter
+#   %%      A literal percent
+#
+# Content type and MIME section parameter values are surrounded
+# by single quotes during interpolation.
+#
 # Xgif tends to load much faster than xv, so use it for .gif files.
 image/gif; xgif %s; description="A gif image"
 image/*; xv %s; description="A jpeg image"

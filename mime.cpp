@@ -3,7 +3,7 @@
  */
 
 #include "common.h"
-#include "mime.h"
+#include "mime-internal.h"
 
 #include "art.h"
 #include "artio.h"
@@ -62,6 +62,7 @@ static HTML_TAGS s_tagattr[LAST_TAG] = {
 };
 static LIST *s_mimecap_list{};
 static char s_text_plain[] = "text/plain";
+static MimeExecutor s_executor;
 
 constexpr bool CLOSING_TAG = false;
 constexpr bool OPENING_TAG = true;
@@ -71,8 +72,14 @@ inline MIMECAP_ENTRY *mimecap_ptr(long n)
     return (MIMECAP_ENTRY *)listnum2listitem(s_mimecap_list, n);
 }
 
+void mime_set_executor(MimeExecutor executor)
+{
+    s_executor = std::move(executor);
+}
+
 void mime_init()
 {
+    s_executor = doshell;
     s_mimecap_list = new_list(0,-1,sizeof(MIMECAP_ENTRY),40,LF_ZERO_MEM,nullptr);
 
     char *mcname = getenv("MIMECAPS");
@@ -169,10 +176,8 @@ void mime_ReadMimecap(const char *mcname)
 		    mcp->flags |= MCF_COPIOUSOUTPUT;
 		else if (arg && !strcasecmp(t, "test"))
 		    mcp->testcommand = savestr(arg);
-		else if (arg && !strcasecmp(t, "description"))
-		    mcp->label = savestr(arg);
-		else if (arg && !strcasecmp(t, "label")) 
-		    mcp->label = savestr(arg); /* bogus old name for description */
+		else if (arg && (!strcasecmp(t, "description") || !strcasecmp(t, "label")))
+		    mcp->description = savestr(arg); /* 'label' is the legacy name for description */
 	    }
 	}
     }
@@ -278,7 +283,7 @@ int mime_Exec(char *cmd)
     }
     *t = '\0';
 
-    return doshell(SH, g_cmd_buf);
+    return s_executor(SH, g_cmd_buf);
 }
 
 void mime_InitSections()
