@@ -3,6 +3,7 @@
 #include <util.h>
 #include <util2.h>
 
+#include "mock_env.h"
 #include "test_config.h"
 
 #include <stdlib.h>
@@ -10,34 +11,13 @@
 namespace trn {
 namespace testing {
 
-void setenv(const char *value)
+void set_envars(MockEnvironment &env)
 {
-    static char buffer[1024];
-    strcpy(buffer, value);
-    putenv(buffer);
-}
-
-void set_envars()
-{
-    setenv("HOME=@TRN_TEST_HOME_DIR@");
-    setenv("TMPDIR=@TRN_TEST_TMP_DIR@");
-    setenv("USER=@TRN_TEST_LOGIN_NAME@");
-    setenv("DOTDIR=@TRN_TEST_DOT_DIR@");
-    setenv("TRNDIR=@TRN_TEST_TRN_DIR@");
-    setenv("NNTPSERVER=");
-    setenv("NAME=");
-    setenv("NEWSORG=");
-    setenv("ORGANIZATION=");
-}
-
-void reset_envars()
-{
-    setenv("HOME=");
-    setenv("TMPDIR=");
-    setenv("USER=");
-    setenv("DOTDIR=");
-    setenv("TRNDIR=");
-    setenv("NNTPSERVER=");
+    env.expect_env("HOME", "@TRN_TEST_HOME_DIR@");
+    env.expect_env("TMPDIR", "@TRN_TEST_TMP_DIR@");
+    env.expect_env("USER", "@TRN_TEST_LOGIN_NAME@");
+    env.expect_env("DOTDIR", "@TRN_TEST_DOT_DIR@");
+    env.expect_env("TRNDIR", "@TRN_TEST_TRN_DIR@");
 }
 
 bool set_name(char *)

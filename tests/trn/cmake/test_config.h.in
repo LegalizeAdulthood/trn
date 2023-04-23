@@ -73,8 +73,9 @@
 namespace trn {
 namespace testing {
 
-void set_envars();
-void reset_envars();
+struct MockEnvironment;
+
+void set_envars(MockEnvironment &env);
 bool set_name(char *);
 bool set_host_name(char *);
 void reset_lib_dirs();

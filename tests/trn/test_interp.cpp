@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 
+#include "mock_env.h"
 #include "test_config.h"
 
 #include <common.h>
@@ -47,11 +48,17 @@
 
 constexpr int BUFFER_SIZE{4096};
 
+using namespace testing;
+
 namespace
 {
 
-struct InterpolatorTest : testing::Test
+using Environment = StrictMock<trn::testing::MockEnvironment>;
+
+struct InterpolatorTest : Test
 {
+    ~InterpolatorTest() override = default;
+
 protected:
     void SetUp() override;
     void TearDown() override;
@@ -66,24 +73,17 @@ protected:
         return m_buffer.data();
     }
 
-    testing::AssertionResult bufferIsEmpty() const
+    AssertionResult bufferIsEmpty() const
     {
         if (buffer().empty())
-            return testing::AssertionSuccess();
+            return AssertionSuccess();
 
-        return testing::AssertionFailure() << "Contents: '" << buffer() << "'";
+        return AssertionFailure() << "Contents: '" << buffer() << "'";
     }
 
-    void setenv(const char *value)
-    {
-        // Note: this intentionally leaks a little memory.
-        putenv(strdup(value));
-    }
-
+    Environment                   m_env;
     std::array<char, TCBUF_SIZE>  m_tcbuf{};
     std::array<char, BUFFER_SIZE> m_buffer{};
-    std::array<char, BUFFER_SIZE> m_scratch{};
-    MULTIRC                      *m_multirc{};
     long                          m_test_pid{6421};
 };
 
@@ -95,7 +95,12 @@ void InterpolatorTest::SetUp()
     term_init();
     mp_init();
     search_init();
-    trn::testing::set_envars();
+    trn::testing::set_envars(m_env);
+    m_env.expect_no_envar("NETSPEED");
+    m_env.expect_no_envar("RNRC");
+    m_env.expect_no_envar("RNMACRO");
+    m_env.expect_no_envar("MAILCAPS");
+    m_env.expect_no_envar("KILLGLOBAL");
     env_init(m_tcbuf.data(), true, trn::testing::set_name, trn::testing::set_host_name);
     trn::testing::reset_lib_dirs();
     head_init();
@@ -154,7 +159,6 @@ void InterpolatorTest::TearDown()
     opt_final();
     head_final();
     env_final();
-    trn::testing::reset_envars();
 
     Test::TearDown();
 }
@@ -223,20 +227,18 @@ TEST_F(InterpolatorTest, processId)
 
 TEST_F(InterpolatorTest, environmentVarValue)
 {
-    setenv("FOO=value");
+    m_env.expect_env("FOO", "value");
     char pattern[]{"%{FOO}"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ("value", buffer());
-
-    setenv("FOO=");
 }
 
 TEST_F(InterpolatorTest, environmentVarValueDefault)
 {
-    setenv("FOO=");
+    m_env.expect_no_envar("FOO");
     char pattern[]{"%{FOO-not set}"};
 
     const char *new_pattern = interpolate(pattern);
@@ -562,6 +564,7 @@ TEST_F(InterpolatorTest, newsgroupsLineNotInNewsgroup)
 TEST_F(InterpolatorTest, realName)
 {
     char pattern[]{"%N"};
+    m_env.expect_no_envar("NAME");
 
     const char *new_pattern = interpolate(pattern);
 
@@ -572,7 +575,7 @@ TEST_F(InterpolatorTest, realName)
 TEST_F(InterpolatorTest, realNameFromNAME)
 {
     char pattern[]{"%N"};
-    setenv("NAME=John Yeager");
+    m_env.expect_env("NAME", "John Yeager");
 
     const char *new_pattern = interpolate(pattern);
 
@@ -583,6 +586,9 @@ TEST_F(InterpolatorTest, realNameFromNAME)
 TEST_F(InterpolatorTest, newsOrgFromORGNAME)
 {
     char pattern[]{"%o"};
+    m_env.expect_no_envar("NEWSORG");
+    m_env.expect_no_envar("ORGANIZATION");
+    // TODO: configure %X/organization contents
 
     const char *new_pattern = interpolate(pattern);
 
@@ -593,7 +599,7 @@ TEST_F(InterpolatorTest, newsOrgFromORGNAME)
 TEST_F(InterpolatorTest, newsOrgFromNEWSORG)
 {
     char pattern[]{"%o"};
-    setenv((std::string{"NEWSORG="} + TRN_TEST_ORGANIZATION).c_str());
+    m_env.expect_env("NEWSORG", TRN_TEST_ORGANIZATION);
 
     const char *new_pattern = interpolate(pattern);
 
@@ -604,7 +610,7 @@ TEST_F(InterpolatorTest, newsOrgFromNEWSORG)
 TEST_F(InterpolatorTest, newsOrgFromNEWSORGFile)
 {
     char pattern[]{"%o"};
-    setenv((std::string{"NEWSORG="} + TRN_TEST_ORGFILE).c_str());
+    m_env.expect_env("NEWSORG", TRN_TEST_ORGFILE);
 
     const char *new_pattern = interpolate(pattern);
 
@@ -615,7 +621,8 @@ TEST_F(InterpolatorTest, newsOrgFromNEWSORGFile)
 TEST_F(InterpolatorTest, newsOrgFromORGANIZATION)
 {
     char pattern[]{"%o"};
-    setenv((std::string{"ORGANIZATION="} + TRN_TEST_ORGANIZATION).c_str());
+    m_env.expect_no_envar("NEWSORG");
+    m_env.expect_env("ORGANIZATION", TRN_TEST_ORGANIZATION);
 
     const char *new_pattern = interpolate(pattern);
 
@@ -626,7 +633,8 @@ TEST_F(InterpolatorTest, newsOrgFromORGANIZATION)
 TEST_F(InterpolatorTest, newsOrgFromORGANIZATIONFile)
 {
     char pattern[]{"%o"};
-    setenv((std::string{"ORGANIZATION="} + TRN_TEST_ORGFILE).c_str());
+    m_env.expect_no_envar("NEWSORG");
+    m_env.expect_env("ORGANIZATION", TRN_TEST_ORGFILE);
 
     const char *new_pattern = interpolate(pattern);
 

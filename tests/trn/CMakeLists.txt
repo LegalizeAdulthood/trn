@@ -6,6 +6,7 @@ include(ConfigureTrnTestData)
 configure_trn_test_data()
 
 add_executable(trn-test
+    mock_env.h
     test_cache.cpp
     test_enum_order.cpp
     test_flags.cpp
@@ -30,6 +31,6 @@ add_executable(trn-test
 )
 source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")
 source_group("Template Files" REGULAR_EXPRESSION "^.*\\.in$")
-target_include_directories(trn-test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+target_include_directories(trn-test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}" .)
 target_link_libraries(trn-test PUBLIC libtrn GTest::gmock_main GTest::gtest)
 set_property(TARGET trn-test PROPERTY FOLDER Tests)

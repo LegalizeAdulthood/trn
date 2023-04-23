@@ -38,23 +38,32 @@ std::string g_p_host_name;   /* host name in a posting */
 char       *g_local_host{};  /* local host name */
 int         g_net_speed{20}; /* how fast our net-connection is */
 
+static std::function<char *(const char *name)> s_getenv_fn = getenv;
 static void env_init2();
 static int  envix(const char *nam, int len);
 static bool set_user_name(char *tmpbuf);
 static bool set_p_host_name(char *tmpbuf);
+
+void set_environment(std::function<char *(const char *)> getenv_fn)
+{
+    if (getenv_fn)
+        s_getenv_fn = std::move(getenv_fn);
+    else
+        s_getenv_fn = getenv;
+}
 
 bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &set_user_name_fn,
               const std::function<bool(char *tmpbuf)> &set_host_name_fn)
 {
     bool fully_successful = true;
 
-    const char *home_dir = getenv("HOME");
+    const char *home_dir = s_getenv_fn("HOME");
     if (home_dir == nullptr)
-	home_dir = getenv("LOGDIR");
+	home_dir = s_getenv_fn("LOGDIR");
     if (home_dir)
         g_home_dir = savestr(home_dir);
 
-    const char *val = getenv("TMPDIR");
+    const char *val = s_getenv_fn("TMPDIR");
     if (val == nullptr)
 	g_tmp_dir = get_val("TMP","/tmp");
     else
@@ -62,9 +71,9 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
 
     /* try to set g_login_name */
     if (lax) {
-	const char *login_name = getenv("USER");
+	const char *login_name = s_getenv_fn("USER");
 	if (!login_name)
-	    login_name = getenv("LOGNAME");
+	    login_name = s_getenv_fn("LOGNAME");
 	if (login_name && g_login_name.empty())
 	{
 	    g_login_name  = login_name;
@@ -79,15 +88,15 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
 #ifdef MSDOS
     if (g_login_name.empty())
     {
-	if (const char *user_name = getenv("USERNAME"))
+	if (const char *user_name = s_getenv_fn("USERNAME"))
 	{
             g_login_name = user_name;
 	}
     }
     if (!g_home_dir)
     {
-        char *home_drive = getenv("HOMEDRIVE");
-        char *home_path = getenv("HOMEPATH");
+        char *home_drive = s_getenv_fn("HOMEDRIVE");
+        char *home_path = s_getenv_fn("HOMEPATH");
         if (home_drive != nullptr && home_path != nullptr)
         {
             strcpy(tcbuf, home_drive);
@@ -376,7 +385,7 @@ static bool set_p_host_name(char *tmpbuf)
 
 char *get_val(const char *nam, char *def)
 {
-    char *val = getenv(nam);
+    char *val = s_getenv_fn(nam);
     if (val == nullptr || !*val)
 	return def;
     return val;
