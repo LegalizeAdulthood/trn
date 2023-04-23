@@ -48,7 +48,9 @@
 
 COMPEX g_optcompex;
 std::string g_ini_file;
-INI_WORDS g_options_ini[] = {
+INI_WORDS g_options_ini[] =
+// clang-format off
+{
     { 0, "OPTIONS", nullptr },
 
     { 0, "*Display Options", nullptr },
@@ -162,6 +164,7 @@ INI_WORDS g_options_ini[] = {
 
     { 0, nullptr, nullptr }
 };
+// clang-format on
 char **g_option_def_vals{};
 char **g_option_saved_vals{};
 char *g_option_flags{};
