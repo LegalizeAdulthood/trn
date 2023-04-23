@@ -496,7 +496,7 @@ int decode_header(char *to, char *from, int size)
 		const char* old_ocs = output_charset_name();
 #ifdef USE_UTF_HACK
 		*q = '\0';
-		utf_init(from+2, "utf-8"); /*FIXME*/
+		utf_init(from+2, CHARSET_NAME_UTF8); /*FIXME*/
 		*q = '?';
 #endif
 		e = q+2;

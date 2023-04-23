@@ -13,7 +13,7 @@ using namespace testing;
 
 TEST(UTFInitTest, charset_null_utf8)
 {
-    ASSERT_EQ(CHARSET_UNKNOWN, utf_init(NULL, "utf8"));
+    ASSERT_EQ(CHARSET_UNKNOWN, utf_init(nullptr, "utf8"));
 }
 
 TEST(UTFInitTest, charset_ascii_utf8)
@@ -38,20 +38,31 @@ TEST(UTFInitTest, charset_utf_dash_8_utf8)
 
 struct CharsetParam
 {
+    const char *value;
     const char *name;
-    const char *tag;
 };
 
 constexpr CharsetParam charsets[] = {
     // clang-format off
-    { "us-ascii",     TAG_ASCII },
-    { "ascii",        TAG_ASCII },
-    { "iso8859-1",    TAG_ISO8859_1 },
-    { "WiNdOwS-1252", TAG_WINDOWS_1252 },
-    { "utf8",         TAG_UTF8 },
-    { "UTF-8",        TAG_UTF8 },
+    { "us-ascii",     CHARSET_NAME_ASCII },
+    { "ascii",        CHARSET_NAME_ASCII },
+    { "iso8859-1",    CHARSET_NAME_ISO8859_1 },
+    { "WiNdOwS-1252", CHARSET_NAME_WINDOWS_1252 },
+    { "utf8",         CHARSET_NAME_UTF8 },
+    { "UTF-8",        CHARSET_NAME_UTF8 },
+
+    { CHARSET_NAME_ASCII,        CHARSET_NAME_ASCII },
+    { CHARSET_NAME_UTF8,         CHARSET_NAME_UTF8 },
+    { CHARSET_NAME_ISO8859_1,    CHARSET_NAME_ISO8859_1 },
+    { CHARSET_NAME_ISO8859_15,   CHARSET_NAME_ISO8859_15 },
+    { CHARSET_NAME_WINDOWS_1252, CHARSET_NAME_WINDOWS_1252 },
     // clang-format on
 };
+
+void PrintTo(const CharsetParam &value, std::ostream *str)
+{
+    *str << value.value << ", " << value.name;
+}
 
 class TestInputCharsetName : public TestWithParam<CharsetParam>
 {
@@ -59,9 +70,9 @@ class TestInputCharsetName : public TestWithParam<CharsetParam>
 
 TEST_P(TestInputCharsetName, tag_from_name)
 {
-    const char *before = GetParam().name;
-    const char *expected = GetParam().tag;
-    utf_init(before, "utf8");
+    const char *before = GetParam().value;
+    const char *expected = GetParam().name;
+    utf_init(before, CHARSET_NAME_UTF8);
 
     const char *after = input_charset_name();
 
@@ -76,9 +87,9 @@ class TestOutputCharsetName : public TestWithParam<CharsetParam>
 
 TEST_P(TestOutputCharsetName, tag_from_name)
 {
-    const char *before = GetParam().name;
-    const char *expected = GetParam().tag;
-    utf_init("utf8", before);
+    const char *before = GetParam().value;
+    const char *expected = GetParam().name;
+    utf_init(CHARSET_NAME_UTF8, before);
 
     const char *after = output_charset_name();
 
@@ -311,6 +322,7 @@ protected:
     {
         if (m_after)
             free(m_after);
+        utf_init(CHARSET_NAME_UTF8, CHARSET_NAME_UTF8);
 
         Test::TearDown();
     }
@@ -339,7 +351,7 @@ TEST_F(CreateUTF8CopyTest, iso8859_1)
 {
     strcpy(m_before, "Quoi, le biblioth\350que est ferm\351\240!");
     const char *expected = "Quoi, le biblioth\303\250que est ferm\303\251\302\240!";
-    utf_init("iso8859-1", "utf8");
+    utf_init(CHARSET_NAME_ISO8859_1, CHARSET_NAME_UTF8);
 
     m_after = create_utf8_copy(m_before);
 
@@ -358,6 +370,11 @@ protected:
         m_before = before;
         m_buffer = strdup(before);
         m_after = after;
+    }
+
+    void SetUp() override
+    {
+        utf_init(CHARSET_NAME_UTF8, CHARSET_NAME_UTF8);
     }
 
     void TearDown() override

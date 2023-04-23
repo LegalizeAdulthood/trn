@@ -1771,7 +1771,7 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
     int     from_width = g_tc_COLS / 5;
     int     date_width = g_tc_COLS / 5;
 #ifdef USE_UTF_HACK
-    utf_init("utf-8", "utf-8"); /* FIXME */
+    utf_init(CHARSET_NAME_UTF8, CHARSET_NAME_UTF8); /* FIXME */
 #endif
 
     maybe_eol();

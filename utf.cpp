@@ -71,30 +71,30 @@ static const CODE_POINT s_iso8859_15_himap[128] = {
 struct CHARSET_DESC
 {
     const char       *name;
-    int               id;
+    charset_type      id;
     const CODE_POINT *himap;
 };
 
 static const CHARSET_DESC s_charset_descs[] = {
     /* Tags defined in utf.h go first; these are short labels for charsubst.c */
     // clang-format off
-    { TAG_ASCII, CHARSET_ASCII, nullptr },
+    { CHARSET_NAME_ASCII, CHARSET_ASCII, nullptr },
     { "us-ascii", CHARSET_ASCII, nullptr },
     { "ascii", CHARSET_ASCII, nullptr },
 
-    { TAG_UTF8, CHARSET_UTF8, nullptr },
+    { CHARSET_NAME_UTF8, CHARSET_UTF8, nullptr },
     { "utf-8", CHARSET_UTF8, nullptr },
     { "utf8", CHARSET_UTF8, nullptr },
 
-    { TAG_ISO8859_1, CHARSET_ISO8859_1, s_iso8859_1_himap },
+    { CHARSET_NAME_ISO8859_1, CHARSET_ISO8859_1, s_iso8859_1_himap },
     { "iso8859-1", CHARSET_ISO8859_1, s_iso8859_1_himap },
     { "iso-8859-1", CHARSET_ISO8859_1, s_iso8859_1_himap },
 
-    { TAG_ISO8859_15, CHARSET_ISO8859_15, s_iso8859_15_himap },
+    { CHARSET_NAME_ISO8859_15, CHARSET_ISO8859_15, s_iso8859_15_himap },
     { "iso8859-15", CHARSET_ISO8859_15, s_iso8859_15_himap },
     { "iso-8859-15", CHARSET_ISO8859_15, s_iso8859_15_himap },
 
-    { TAG_WINDOWS_1252, CHARSET_WINDOWS_1252, s_cp1252_himap },
+    { CHARSET_NAME_WINDOWS_1252, CHARSET_WINDOWS_1252, s_cp1252_himap },
     { "cp1252", CHARSET_WINDOWS_1252, s_cp1252_himap },
     { "windows-1252", CHARSET_WINDOWS_1252, s_cp1252_himap },
 
@@ -102,33 +102,40 @@ static const CHARSET_DESC s_charset_descs[] = {
     // clang-format on
 };
 
-struct gstate {
-    int in;
-    int out;
-    const CODE_POINT* himap_in;
-    const CODE_POINT* himap_out;
+struct gstate
+{
+    charset_type      in;
+    charset_type      out;
+    const CODE_POINT *himap_in;
+    const CODE_POINT *himap_out;
 };
 
 static gstate s_gs = { CHARSET_UTF8, CHARSET_UTF8, nullptr, nullptr };
 
-
-static int find_charset(const char *s)
+static charset_type find_charset(const char *s)
 {
-    int it = CHARSET_UNKNOWN;
-    if (s) {
-	int i;
-	for (i = 0; ; i += 1) {
-	    const char *name = s_charset_descs[i].name;
-	    int j;
-	if (name == nullptr) break;
-	    for (j = 0; ; j++) {
-	if (tolower(s[j]) != name[j]) break;
-		if (s[j] == 0 && name[j] == 0)
-		    it = s_charset_descs[i].id;
-	if (s[j] == 0 || name[j] == 0) break;
-	    }
-	if (it != CHARSET_UNKNOWN) break;
-	}
+    if (!s)
+    {
+	return CHARSET_UNKNOWN;
+    }
+
+    charset_type it = CHARSET_UNKNOWN;
+    for (int i = 0;; ++i)
+    {
+        const char *name = s_charset_descs[i].name;
+        if (name == nullptr)
+            break;
+        for (int j = 0;; ++j)
+        {
+            if (tolower(s[j]) != tolower(name[j]))
+                break;
+            if (s[j] == 0 && name[j] == 0)
+                it = s_charset_descs[i].id;
+            if (s[j] == 0 || name[j] == 0)
+                break;
+        }
+        if (it != CHARSET_UNKNOWN)
+            break;
     }
     return it;
 }
@@ -136,34 +143,38 @@ static int find_charset(const char *s)
 static const CHARSET_DESC *find_charset_desc(int id)
 {
     const CHARSET_DESC *it = nullptr;
-    int i;
-    for (i = 0; ; i += 1) {
-	const CHARSET_DESC *node = &s_charset_descs[i];
-    if (node->name == nullptr) break;
-	if (id == node->id)
-	    it = node;
-    if (it != nullptr) break;
+    for (int i = 0;; i += 1)
+    {
+        const CHARSET_DESC *node = &s_charset_descs[i];
+        if (node->name == nullptr)
+            break;
+        if (id == node->id)
+            it = node;
+        if (it != nullptr)
+            break;
     }
     return it;
 }
 
-int utf_init(const char *f, const char *t)
+charset_type utf_init(const char *from, const char *to)
 {
-    int i = find_charset(f);
-    int o = find_charset(t);
-    if (i != CHARSET_UNKNOWN) {
-	s_gs.in = i;
-	const CHARSET_DESC *node = find_charset_desc(i);
-	if (node)
-	    s_gs.himap_in = node->himap;
+    charset_type in = find_charset(from);
+    charset_type out = find_charset(to);
+    if (in != CHARSET_UNKNOWN)
+    {
+        s_gs.in = in;
+        const CHARSET_DESC *node = find_charset_desc(in);
+        if (node)
+            s_gs.himap_in = node->himap;
     }
-    if (o != CHARSET_UNKNOWN) {
-	s_gs.out = o;
-	const CHARSET_DESC *node = find_charset_desc(o);
-	if (node)
-	    s_gs.himap_out = node->himap;
+    if (out != CHARSET_UNKNOWN)
+    {
+        s_gs.out = out;
+        const CHARSET_DESC *node = find_charset_desc(out);
+        if (node)
+            s_gs.himap_out = node->himap;
     }
-    return i;
+    return in;
 }
 
 const char *input_charset_name()

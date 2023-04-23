@@ -386,7 +386,7 @@ void mime_ParseType(MIME_SECT *mp, char *s)
 	if (*s++ != '/')
 	    return;
 #ifdef USE_UTF_HACK
-	utf_init(mime_FindParam(mp->type_params,"charset"), "utf-8"); /*FIXME*/
+	utf_init(mime_FindParam(mp->type_params,"charset"), CHARSET_NAME_UTF8); /*FIXME*/
 #endif
 	if (!strncasecmp(s, "html", 4))
 	    mp->type = HTMLTEXT_MIME;
