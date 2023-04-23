@@ -67,15 +67,15 @@ static bool s_univ_usrtop{}; /* if true, the user has loaded their own top univ.
 
 static void univ_free_data(UNIV_ITEM *ui);
 static bool univ_DoMatch(const char *text, const char *p);
-static bool univ_use_file(char *fname, const char *label);
+static bool univ_use_file(const char *fname, const char *label);
 static bool univ_include_file(const char *fname);
 static void univ_do_line_ext1(const char *desc, char *line);
 static bool univ_do_line(char *line);
-static char* univ_edit_new_userfile();
+static char*univ_edit_new_userfile();
 static void univ_vg_addart(ART_NUM a);
 static void univ_vg_addgroup();
-static int univ_order_number(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2);
-static int univ_order_score(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2);
+static int  univ_order_number(const UNIV_ITEM**ui1, const UNIV_ITEM**ui2);
+static int  univ_order_score(const UNIV_ITEM**ui1, const UNIV_ITEM**ui2);
 
 void univ_init()
 {
@@ -488,7 +488,7 @@ void univ_use_group_line(char *line, int type)
 }
 
 /* returns true on success, false otherwise */
-static bool univ_use_file(char *fname, const char *label)
+static bool univ_use_file(const char *fname, const char *label)
 {
     static char lbuf[LBUFLEN];
 
@@ -498,8 +498,8 @@ static bool univ_use_file(char *fname, const char *label)
     if (!fname)
 	return false;	/* bad argument */
 
-    char *s = fname;
-    char *open_name = s;
+    const char *s = fname;
+    const char *open_name = fname;
     /* open URLs and translate them into local temporary filenames */
     if (!strncasecmp(fname,"URL:",4)) {
         open_name = temp_filename();
@@ -524,10 +524,8 @@ static bool univ_use_file(char *fname, const char *label)
  * 1. Long lines
  * 2. Backslash continuations
  */
-    while ((s = fgets(lbuf,sizeof lbuf,fp)) != nullptr) {
-	if (!s)		/* end of file */
-	    break;
-	if (!univ_do_line(s))
+    while (fgets(lbuf,sizeof lbuf,fp) != nullptr) {
+	if (!univ_do_line(lbuf))
 	    break;	/* end of useful file */
     }
     fclose(fp);
@@ -760,7 +758,7 @@ static bool univ_do_line(char *line)
  */
 
 /* level generator */
-bool univ_file_load(char *fname, const char *title, const char *label)
+bool univ_file_load(const char *fname, const char *title, const char *label)
 {
     univ_open();
 

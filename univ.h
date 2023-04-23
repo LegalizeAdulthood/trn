@@ -154,7 +154,7 @@ void        univ_add_textfile(const char *desc, char *name);
 void        univ_add_virtgroup(const char *grpname);
 void        univ_use_pattern(const char *pattern, int type);
 void        univ_use_group_line(char *line, int type);
-bool        univ_file_load(char *fname, const char *title, const char *label);
+bool        univ_file_load(const char *fname, const char *title, const char *label);
 void        univ_mask_load(char *mask, const char *title);
 void        univ_redofile();
 void        univ_edit();
