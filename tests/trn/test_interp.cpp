@@ -95,7 +95,7 @@ void InterpolatorTest::SetUp()
     term_init();
     mp_init();
     search_init();
-    trn::testing::set_envars(m_env);
+    set_envars(m_env);
     m_env.expect_no_envar("NETSPEED");
     m_env.expect_no_envar("RNRC");
     m_env.expect_no_envar("RNMACRO");
@@ -159,6 +159,7 @@ void InterpolatorTest::TearDown()
     opt_final();
     head_final();
     env_final();
+    resetty();
 
     Test::TearDown();
 }
