@@ -49,9 +49,9 @@
 COMPEX g_optcompex;
 std::string g_ini_file;
 INI_WORDS g_options_ini[] = {
-    { 0, "OPTIONS", 0 },
+    { 0, "OPTIONS", nullptr },
 
-    { 0, "*Display Options", 0 },
+    { 0, "*Display Options", nullptr },
     { 0, "Terse Output", "yes/no" },
     { 0, "Pager Line-Marking", "standout/underline/no" },
     { 0, "Erase Screen", "yes/no" },
@@ -61,7 +61,7 @@ INI_WORDS g_options_ini[] = {
     { 0, "Charset", "<e.g. patm>" },
     { 0, "Filter Control Characters", "yes/no" },
 
-    { 0, "*Selector Options", 0 },
+    { 0, "*Selector Options", nullptr },
     { 0, "Use Universal Selector", "yes/no" },
     { 0, "Universal Selector Order", "natural/points" },
     { 0, "Universal Selector article follow", "yes/no" },
@@ -83,7 +83,7 @@ INI_WORDS g_options_ini[] = {
     { 0, "Use Selector Numbers", "yes/no" },
     { 0, "Selector Number Auto-Goto", "yes/no" },
 
-    { 0, "*Newsreading Options", 0 },
+    { 0, "*Newsreading Options", nullptr },
     { 0, "Use Threads", "yes/no" },
     { 0, "Select My Postings", "subthread/parent/thread/no" },
     { 0, "Initial Article Lines", "no/<# lines>" },
@@ -100,19 +100,19 @@ INI_WORDS g_options_ini[] = {
     { 0, "Header Magic", "<[!]header,...>" },
     { 0, "Header Hiding", "<[!]header,...>" },
 
-    { 0, "*Posting Options", 0 },
+    { 0, "*Posting Options", nullptr },
     { 0, "Cited Text String", "<e.g. '>'>" },
 #if 0
     { 0, "Attribute string", "<e.g. ...>" },
     { 0, "Reply To", "<e.g. ...>" },
 #endif
 
-    { 0, "*Save Options", 0 },
+    { 0, "*Save Options", nullptr },
     { 0, "Save Dir", "<directory path>" },
     { 0, "Auto Savename", "yes/no" },
     { 0, "Default Savefile Type", "norm/mail/ask" },
 
-    { 0, "*Mouse Options", 0 },
+    { 0, "*Mouse Options", nullptr },
     { 0, "Use XTerm Mouse", "yes/no" },
     { 0, "Mouse Modes", "<e.g. acjlptwK>" },
     { 0, "Universal Selector Mousebar", "<e.g. [PgUp]< [PgDn]> Z [Quit]q>" },
@@ -123,11 +123,11 @@ INI_WORDS g_options_ini[] = {
     { 0, "Option Selector Mousebar", "<e.g. [Save]S [Use]^I [Abandon]q>" },
     { 0, "Article Pager Mousebar", "<e.g. [Next]n J [Sel]+ [Quit]q>" },
 
-    { 0, "*MIME Options", 0 },
+    { 0, "*MIME Options", nullptr },
     { 0, "Multipart Separator", "<string>" },
     { 0, "Auto-View Inline", "yes/no" },
 
-    { 0, "*Misc Options", 0 },
+    { 0, "*Misc Options", nullptr },
     { 0, "Check for New Groups", "yes/no" },
     { 0, "Restriction Includes Empty Groups", "yes/no" },
     { 0, "Append Unsubscribed Groups", "yes/no" },
@@ -142,7 +142,7 @@ INI_WORDS g_options_ini[] = {
     { 0, "Novice Delays", "yes/no" },
     { 0, "Old Mthreads Database", "yes/no" },
 
-    { 0, "*Article Scan Mode Options", 0 },
+    { 0, "*Article Scan Mode Options", nullptr },
     { 0, "Follow Threads", "yes/no" },
     { 0, "Fold Subjects", "yes/no" },
     { 0, "Re-fold Subjects", "yes/no" },
@@ -157,10 +157,10 @@ INI_WORDS g_options_ini[] = {
     { 0, "Display Summary", "yes/no" },
     { 0, "Display Keywords", "yes/no" },
 
-    { 0, "*Scoring Options", 0 },
+    { 0, "*Scoring Options", nullptr },
     { 0, "Verbose scoring", "yes/no" },
 
-    { 0, 0, 0 }
+    { 0, nullptr, nullptr }
 };
 char **g_option_def_vals{};
 char **g_option_saved_vals{};

@@ -48,11 +48,11 @@ enum
 };
 
 static INI_WORDS s_rcgroups_ini[] = {
-    { 0, "RCGROUPS", 0 },
-    { 0, "ID", 0 },
-    { 0, "Newsrc", 0 },
-    { 0, "Add Groups", 0 },
-    { 0, 0, 0 }
+    { 0, "RCGROUPS", nullptr },
+    { 0, "ID", nullptr },
+    { 0, "Newsrc", nullptr },
+    { 0, "Add Groups", nullptr },
+    { 0, nullptr, nullptr }
 };
 static bool        s_foundany{};
 static const char *s_cantrecreate{"Can't recreate %s -- restoring older version.\n"
