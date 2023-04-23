@@ -87,7 +87,8 @@ void final_init()
 #endif
 }
 
-[[noreturn]] void finalize(int status)
+[[noreturn]] //
+void finalize(int status)
 {
     sc_sv_savefile();	/* save any scores from memory to disk */
     update_thread_kfile();
