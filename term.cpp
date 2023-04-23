@@ -2144,10 +2144,12 @@ bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 
 static int s_tc_string_cnt{};
 
-static struct {
-	char* capability;	/* name of capability, e.g. "forground red" */
-	char* string;		/* escape sequence, e.g. "\033[31m" */
-} tc_strings[TC_STRINGS];
+struct COLOR_CAPABILITY
+{
+    char *capability; /* name of capability, e.g. "foreground red" */
+    char *string;     /* escape sequence, e.g. "\033[31m" */
+};
+static COLOR_CAPABILITY s_tc_strings[TC_STRINGS];
 
 /* Parse a line from the [termcap] section of trnrc. */
 void add_tc_string(const char *capability, const char *string)
@@ -2155,8 +2157,8 @@ void add_tc_string(const char *capability, const char *string)
     int i;
 
     for (i = 0; i < s_tc_string_cnt; i++) {
-	if (!strcmp(capability,tc_strings[i].capability)) {
-	    free(tc_strings[i].string);
+	if (!strcmp(capability,s_tc_strings[i].capability)) {
+	    free(s_tc_strings[i].string);
 	    break;
 	}
     }
@@ -2167,18 +2169,18 @@ void add_tc_string(const char *capability, const char *string)
 	    finalize(1);
 	}
 	s_tc_string_cnt++;
-	tc_strings[i].capability = savestr(capability);
+	s_tc_strings[i].capability = savestr(capability);
     }
 
-    tc_strings[i].string = savestr(string);
+    s_tc_strings[i].string = savestr(string);
 }
 
 /* Return the named termcap color capability's string. */
 char *tc_color_capability(const char *capability)
 {
     for (int c = 0; c < s_tc_string_cnt; c++) {
-	if (!strcmp(tc_strings[c].capability,capability))
-	    return tc_strings[c].string;
+	if (!strcmp(s_tc_strings[c].capability,capability))
+	    return s_tc_strings[c].string;
     }
     return nullptr;
 }
