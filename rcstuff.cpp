@@ -139,6 +139,11 @@ bool rcstuff_init()
 
 void rcstuff_final()
 {
+    if (g_multirc)
+    {
+	unuse_multirc(g_multirc);
+	g_multirc = nullptr;
+    }
     if (g_multirc_list)
     {
         delete_list(g_multirc_list);
