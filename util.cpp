@@ -645,9 +645,10 @@ char **prep_ini_words(INI_WORDS words[])
 		continue;
 	    }
 	    int checksum = 0;
-	    for (cp = words[i].item; *cp; cp++)
-		checksum += (isupper(*cp)? tolower(*cp) : *cp);
-	    words[i].checksum = (checksum << 8) + (cp - words[i].item);
+	    const char *item;
+	    for (item = words[i].item; *item; item++)
+		checksum += (isupper(*item)? tolower(*item) : *item);
+	    words[i].checksum = (checksum << 8) + (item - words[i].item);
 	}
 	words[0].checksum = i;
         cp = safemalloc(i * sizeof(char *));

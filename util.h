@@ -32,9 +32,9 @@ enum makedir_name_type
 
 struct INI_WORDS
 {
-    int checksum;
-    char* item;
-    char* help_str;
+    int         checksum;
+    const char *item;
+    char       *help_str;
 };
 
 void util_init();
