@@ -1344,7 +1344,6 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
 {
     minor_mode mode_save = g_mode;
     general_mode gmode_save = g_general_mode;
-    char*s;
     char*prefix = nullptr;
     int  number_was = -1;
     int  any_val_OK = 0;
@@ -1358,21 +1357,24 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
 
     char *cp = choices;
     if (*cp == '[') {
-	for (s = prefixes, cp++; *cp != ']'; ) {
-	    if (*cp == '/') {
-		*s++ = '\0';
-		cp++;
-	    }
-	    else
-		*s++ = *cp++;
-	}
-	*s++ = '\0';
-	*s = '\0';
-	if (*++cp == ' ')
-	    cp++;
+        char *dest;
+        for (dest = prefixes, cp++; *cp != ']'; ) {
+            if (*cp == '/') {
+                *dest++ = '\0';
+                cp++;
+            }
+            else
+                *dest++ = *cp++;
+        }
+        *dest++ = '\0';
+        *dest = '\0';
+        if (*++cp == ' ')
+            cp++;
     }
     else
-	*prefixes = '\0';
+        *prefixes = '\0';
+
+    char*s;
     for (s = tmpbuf; *cp; ) {
 	if (*cp == '/') {
 	    *s++ = '\0';
