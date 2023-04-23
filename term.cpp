@@ -1396,12 +1396,11 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
         strcpy(g_buf,value);
     }
 
-    char *s;
 reask_in_choice:
     int len = strlen(g_buf);
     char *bp = g_buf;
     if (*prefixes != '\0') {
-	s = prefix;
+	const char *start = prefix;
 	for (prefix = prefixes; *prefix; prefix += strlen(prefix)) {
 	    if (*prefix == *g_buf)
 		break;
@@ -1412,13 +1411,13 @@ reask_in_choice:
 	}
 	else
 	    prefix = nullptr;
-	value_changed = prefix != s;
+	value_changed = prefix != start;
     }
     else {
 	prefix = nullptr;
 	value_changed = 0;
     }
-    s = cp;
+    char *s = cp;
     for (;;) {
 	cp += strlen(cp) + 1;
 	if (!*cp)
