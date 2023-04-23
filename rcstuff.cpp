@@ -1127,7 +1127,7 @@ void list_newsgroups()
     NGDATA* np;
     NG_NUM i;
     char tmpbuf[2048];
-    static char* status[] = {"(READ)","(UNSUB)","(DUP)","(BOGUS)","(JUNK)"};
+    static const char* status[] = {"(READ)","(UNSUB)","(DUP)","(BOGUS)","(JUNK)"};
 
     page_start();
     print_lines("  #  Status  Newsgroup\n", STANDOUT);
