@@ -123,7 +123,6 @@ TEST_F(InitTest, loginNameFromUSER)
 TEST_F(InitTest, loginNameFromLOGNAME)
 {
     const std::string login_name{TRN_TEST_LOGIN_NAME};
-    setenv("USER=");
     setenv(("LOGNAME=" + login_name).c_str());
 
     env_init(m_tcbuf.data(), true);
