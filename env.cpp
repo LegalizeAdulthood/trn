@@ -72,7 +72,8 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     }
 #ifndef MSDOS
     if (!lax || g_login_name.empty()) {
-	g_login_name = getlogin();
+	if (const char *login = getlogin(); login)
+	    g_login_name = login;
     }
 #endif
 #ifdef MSDOS
