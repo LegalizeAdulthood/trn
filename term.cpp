@@ -1357,8 +1357,9 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
 
     char *cp = choices;
     if (*cp == '[') {
-        char *dest;
-        for (dest = prefixes, cp++; *cp != ']'; ) {
+        char *dest = prefixes;
+        ++cp;
+        while (*cp != ']') {
             if (*cp == '/') {
                 *dest++ = '\0';
                 cp++;
