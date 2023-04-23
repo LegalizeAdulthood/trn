@@ -34,7 +34,7 @@
 
 struct COLOR_OBJ
 {
-    char* name;
+    const char* name;
     char* fg;
     char* bg;
     int attr;
@@ -56,7 +56,9 @@ static void output_color();
 ** or just a few, lines in the [attribute] section.
 */
 
-static COLOR_OBJ objects[MAX_COLORS] = {
+static COLOR_OBJ s_objects[MAX_COLORS] =
+// clang-format off
+{
     { "default",	"", "", NOMARKING	},
     { "ngname",		"", "", STANDOUT	},
     { "plus",		"", "", LASTMARKING	},
@@ -78,6 +80,7 @@ static COLOR_OBJ objects[MAX_COLORS] = {
     { "cited text",	"", "", LASTMARKING	},
     { "body text",	"", "", NOMARKING	},
 };
+// clang-format on
 
 /* The attribute stack.  The 0th element is always the "normal" object. */
 static struct {
@@ -105,15 +108,15 @@ void color_init()
 	if (!strcmp(fg,bg))
 	    bg = "";
 	for (int i = 0; i < MAX_COLORS; i++) {
-	    if (empty(objects[i].fg))
-		objects[i].fg = fg;
-	    if (empty(objects[i].bg))
-		objects[i].bg = bg;
+	    if (empty(s_objects[i].fg))
+		s_objects[i].fg = fg;
+	    if (empty(s_objects[i].bg))
+		s_objects[i].bg = bg;
 	}
     }
 
-    if (objects[COLOR_DEFAULT].attr == LASTMARKING)
-	objects[COLOR_DEFAULT].attr = NOMARKING;
+    if (s_objects[COLOR_DEFAULT].attr == LASTMARKING)
+	s_objects[COLOR_DEFAULT].attr = NOMARKING;
 
     /* Set color to default. */
     color_default();
@@ -125,7 +128,7 @@ void color_rc_attribute(const char *object, char *value)
     /* Find the specified object. */
     int i;
     for (i = 0; i < MAX_COLORS; i++) {
-	if (!strcasecmp(object, objects[i].name))
+	if (!strcasecmp(object, s_objects[i].name))
 	    break;
     }
     if (i >= MAX_COLORS) {
@@ -136,13 +139,13 @@ void color_rc_attribute(const char *object, char *value)
 
     /* Parse the video attribute. */
     if (*value == 's' || *value == 'S')
-	objects[i].attr = STANDOUT;
+	s_objects[i].attr = STANDOUT;
     else if (*value == 'u' || *value == 'U')
-	objects[i].attr = UNDERLINE;
+	s_objects[i].attr = UNDERLINE;
     else if (*value == 'n' || *value == 'N')
-	objects[i].attr = NOMARKING;
+	s_objects[i].attr = NOMARKING;
     else if (*value == '-')
-	objects[i].attr = LASTMARKING;
+	s_objects[i].attr = LASTMARKING;
     else {
 	fprintf(stderr,"trn: bad attribute '%s' for %s in [attribute] section.\n",
 		value, object);
@@ -154,8 +157,8 @@ void color_rc_attribute(const char *object, char *value)
     for (s = value; *s && !isspace(*s); s++) ;
     while (isspace(*s)) s++;
     if (!*s) {
-	objects[i].fg = "";
-	objects[i].bg = "";
+	s_objects[i].fg = "";
+	s_objects[i].bg = "";
 	return;
     }
     char* t;
@@ -173,11 +176,11 @@ void color_rc_attribute(const char *object, char *value)
 
     /* Parse the foreground color. */
     if (*s == '-')
-	objects[i].fg = nullptr;
+	s_objects[i].fg = nullptr;
     else {
 	sprintf(g_buf, "fg %s", s);
-	objects[i].fg = tc_color_capability(g_buf);
-	if (objects[i].fg == nullptr) {
+	s_objects[i].fg = tc_color_capability(g_buf);
+	if (s_objects[i].fg == nullptr) {
 	    fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
 		    g_buf, object);
 	    finalize(1);
@@ -203,11 +206,11 @@ void color_rc_attribute(const char *object, char *value)
 
     /* Parse the background color. */
     if (*s == '-')
-	objects[i].bg = nullptr;
+	s_objects[i].bg = nullptr;
     else {
 	sprintf(g_buf, "bg %s", s);
-	objects[i].bg = tc_color_capability(g_buf);
-	if (objects[i].bg == nullptr) {
+	s_objects[i].bg = tc_color_capability(g_buf);
+	if (s_objects[i].bg == nullptr) {
 	    fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
 		    g_buf, object);
 	    finalize(1);
@@ -225,12 +228,12 @@ void color_object(int object, bool push)
     COLOR_OBJ merged = s_color_stack[s_stack_pointer].object;
 
     /* Merge in the new colors/attributes. */
-    if (objects[object].fg)
-	merged.fg = objects[object].fg;
-    if (objects[object].bg)
-	merged.bg = objects[object].bg;
-    if (objects[object].attr != LASTMARKING)
-	merged.attr = objects[object].attr;
+    if (s_objects[object].fg)
+	merged.fg = s_objects[object].fg;
+    if (s_objects[object].bg)
+	merged.bg = s_objects[object].bg;
+    if (s_objects[object].attr != LASTMARKING)
+	merged.attr = s_objects[object].attr;
 
     /* Push onto stack. */
     if (push && ++s_stack_pointer >= STACK_SIZE) {
@@ -265,7 +268,7 @@ void color_string(int object, const char *str)
 	str = g_msg;
 	len = 0;
     }
-    if (!s_use_colors && *g_tc_UC && objects[object].attr == UNDERLINE)
+    if (!s_use_colors && *g_tc_UC && s_objects[object].attr == UNDERLINE)
 	underprint(str);	/* hack for stupid terminals */
     else {
 	color_object(object, true);
@@ -279,7 +282,7 @@ void color_string(int object, const char *str)
 /* Turn off color attribute. */
 void color_default()
 {
-    s_color_stack[s_stack_pointer].object = objects[COLOR_DEFAULT];
+    s_color_stack[s_stack_pointer].object = s_objects[COLOR_DEFAULT];
     output_color();
 }
 
@@ -295,10 +298,10 @@ static void output_color()
 
     /* Start by turning off any existing colors and/or attributes. */
     if (s_use_colors) {
-	if (objects[COLOR_DEFAULT].fg != prior.fg
-	 || objects[COLOR_DEFAULT].bg != prior.bg) {
-	    fputs(prior.fg = objects[COLOR_DEFAULT].fg, stdout);
-	    fputs(prior.bg = objects[COLOR_DEFAULT].bg, stdout);
+	if (s_objects[COLOR_DEFAULT].fg != prior.fg
+	 || s_objects[COLOR_DEFAULT].bg != prior.bg) {
+	    fputs(prior.fg = s_objects[COLOR_DEFAULT].fg, stdout);
+	    fputs(prior.bg = s_objects[COLOR_DEFAULT].bg, stdout);
 	}
     }
     switch (prior.attr) {
