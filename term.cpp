@@ -83,31 +83,19 @@ char *g_tc_BC{}; /* backspace character */
 char *g_tc_UP{}; /* move cursor up one line */
 char *g_tc_CR{}; /* get to left margin, somehow */
 char *g_tc_VB{}; /* visible bell */
-static char *s_tc_CL{}; /* home and clear screen */
 char *g_tc_CE{}; /* clear to end of line */
-static char *s_tc_TI{}; /* initialize terminal */
-static char *s_tc_TE{}; /* reset terminal */
-static char *s_tc_KS{}; /* enter `keypad transmit' mode */
-static char *s_tc_KE{}; /* exit `keypad transmit' mode */
 char *g_tc_CM{}; /* cursor motion */
 char *g_tc_HO{}; /* home cursor */
 char *g_tc_IL{}; /* insert line */
 char *g_tc_CD{}; /* clear to end of display */
 char *g_tc_SO{}; /* begin standout mode */
 char *g_tc_SE{}; /* end standout mode */
-static int  s_tc_SG{}; /* blanks left by SO and SE */
 char *g_tc_US{}; /* start underline mode */
 char *g_tc_UE{}; /* end underline mode */
 char *g_tc_UC{}; /* underline a character, if that's how it's done */
-int g_tc_UG{};   /* blanks left by US and UE */
+bool g_tc_UG{};   /* blanks left by US and UE */
 bool g_tc_AM{};  /* does terminal have automatic margins? */
 bool g_tc_XN{};  /* does it eat 1st newline after automatic wrap? */
-static char s_tc_PC{};  /* pad character for use by tputs() */
-#ifdef _POSIX_SOURCE
-static speed_t s_outspeed{}; /* terminal output speed, */
-#else
-static long s_outspeed{}; /* 	for use by tputs() */
-#endif
 int g_fire_is_out{1};
 int g_tc_LINES{};
 int g_tc_COLS{};
@@ -125,6 +113,17 @@ int  g_auto_arrow_macros{2}; /* -A */
 static char *s_mousebar_btns{};
 static int s_mousebar_start{};
 static bool s_xmouse_is_on{};
+static char *s_tc_CL{}; /* home and clear screen */
+static char *s_tc_TI{}; /* initialize terminal */
+static char *s_tc_TE{}; /* reset terminal */
+static char *s_tc_KS{}; /* enter `keypad transmit' mode */
+static char *s_tc_KE{}; /* exit `keypad transmit' mode */
+static char s_tc_PC{};  /* pad character for use by tputs() */
+#ifdef _POSIX_SOURCE
+static speed_t s_outspeed{}; /* terminal output speed, */
+#else
+static long s_outspeed{}; /* 	for use by tputs() */
+#endif
 #endif
 
 struct KEYMAP
@@ -333,12 +332,10 @@ void term_set(char *tcbuf)
 	g_tc_CE = g_tc_CD;
     g_tc_SO = Tgetstr("so");		/* begin standout */
     g_tc_SE = Tgetstr("se");		/* end standout */
-    if ((s_tc_SG = tgetnum("sg"))<0)
-	s_tc_SG = 0;			/* blanks left by SG, SE */
+    const bool tc_SG = tgetnum("sg") > 0; // standout glitch; blanks left by SG, SE
     g_tc_US = Tgetstr("us");		/* start underline */
     g_tc_UE = Tgetstr("ue");		/* end underline */
-    if ((g_tc_UG = tgetnum("ug"))<0)
-	g_tc_UG = 0;			/* blanks left by US, UE */
+    g_tc_UG = tgetnum("ug") > 0;        // underline glitch
     if (*g_tc_US)
 	g_tc_UC = "";		/* UC must not be nullptr */
     else
@@ -346,7 +343,7 @@ void term_set(char *tcbuf)
     if (!*g_tc_US && !*g_tc_UC) {		/* no underline mode? */
 	g_tc_US = g_tc_SO;			/* substitute standout mode */
 	g_tc_UE = g_tc_SE;
-	g_tc_UG = s_tc_SG;
+	g_tc_UG = tc_SG;
     }
     g_tc_LINES = tgetnum("li");		/* lines per page */
     g_tc_COLS = tgetnum("co");		/* columns on page */
