@@ -138,8 +138,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	return 1;
     }
     if (!strncasecmp(bp, "x-file-name: ", 13)) {
-        char *s;
-	for (s = bp + 13; *s && !isspace(*s); s++) ;
+        char *s = skip_non_space(bp + 13);
 	*s = '\0';
 	safecpy(g_msg, bp+13, sizeof g_msg);
 	*filenamep = g_msg;
@@ -190,8 +189,7 @@ decode_state uudecode(FILE *ifp, decode_state state)
 	      if (strncmp(g_buf, "begin ", 6))
 	          break;
 	      /* skip mode */
-	      p = g_buf + 6;
-	      while (*p && !isspace(*p)) p++;
+	      p = skip_non_space(g_buf + 6);
 	      p = skip_space(p);
               char *filename = p;
 	      while (*p && (!isspace(*p) || *p == ' ')) p++;

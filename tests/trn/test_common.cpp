@@ -182,3 +182,29 @@ TEST_F(CommonTest, skipSpaceMiddle)
 
     ASSERT_STREQ(m_after, pos);
 }
+
+TEST_F(CommonTest, skipNonSpaceNullPtr)
+{
+    const char *buffer{};
+
+    ASSERT_EQ(nullptr, skip_non_space(buffer));
+}
+
+TEST_F(CommonTest, skipNonSpaceNoChange)
+{
+    configure_before_after("No change.", "No change.");
+
+    const char *pos = skip_non_space(m_buffer);
+
+    ASSERT_STREQ(m_after, pos);
+}
+
+TEST_F(CommonTest, skipNonSpaceMiddle)
+{
+    configure_before_after("Hello, world!", "world!");
+
+    const char *pos = skip_non_space(m_buffer);
+
+    ASSERT_STREQ(m_after, pos);
+}
+

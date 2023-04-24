@@ -153,17 +153,14 @@ void color_rc_attribute(const char *object, char *value)
     }
 
     /* See if they specified a color */
-    char* s;
-    for (s = value; *s && !isspace(*s); s++) ;
+    char *s = skip_non_space(value);
     s = skip_space(s);
     if (!*s) {
 	s_objects[i].fg = "";
 	s_objects[i].bg = "";
 	return;
     }
-    char* t;
-    for (t = s; *t && !isspace(*t); t++)
-        ;
+    char *t = skip_non_space(s);
     char* n = nullptr;
     if (*t) {
 	n = t++;
@@ -192,7 +189,8 @@ void color_rc_attribute(const char *object, char *value)
     }
 
     /* Make sure we have one more parameter. */
-    for (s = t; *t && !isspace(*t); t++) ;
+    s = t;
+    t = skip_non_space(t);
     if (*t) {
 	n = t++;
 	*n = '\0';

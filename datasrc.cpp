@@ -804,7 +804,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
 	else if (!fgets(g_buf, sizeof g_buf, fp))
 	    break;
 
-	for (s = g_buf; *s && !isspace(*s); s++) ;
+	s = skip_non_space(g_buf);
 	if (!*s) {
 	    linelen = 0;
 	    continue;

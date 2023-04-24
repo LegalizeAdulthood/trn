@@ -752,4 +752,13 @@ Char *skip_space(Char *str)
     return str;
 }
 
+template <typename Char>
+Char *skip_non_space(Char *str)
+{
+    if (str)
+        while (*str && !isspace(static_cast<unsigned char>(*str)))
+            ++str;
+    return str;
+}
+
 #endif

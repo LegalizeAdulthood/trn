@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 	}
 	while (fgets(g_ser_line, sizeof g_ser_line, in_fp)) {
 	    if (wildarg) {
-		for (cp = g_ser_line; *cp && !isspace(*cp); cp++) ;
+		cp = skip_non_space(g_ser_line);
 		if (!cp)
 		    continue;
 		*cp = '\0';

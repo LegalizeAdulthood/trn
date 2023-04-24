@@ -145,7 +145,7 @@ int do_kfile(FILE *kfp, int entering)
 	    continue;
 	}
 	if (*bp == 'I') {
-            for (cp = bp + 1; *cp && !isspace(*cp); cp++) ;
+	    cp = skip_non_space(bp + 1);
 	    cp = skip_space(cp);
 	    if (!*cp)
 		continue;
