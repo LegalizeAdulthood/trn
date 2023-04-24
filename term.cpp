@@ -1376,8 +1376,8 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
         *prefixes = '\0';
 
     {
-        char *dest;
-        for (dest = tmpbuf; *cp; ) {
+        char *dest = tmpbuf;
+        while (*cp) {
             if (*cp == '/') {
                 *dest++ = '\0';
                 cp++;
@@ -1419,7 +1419,7 @@ reask_in_choice:
 	value_changed = 0;
     }
     char *s = cp;
-    for (;;) {
+    while (true) {
 	cp += strlen(cp) + 1;
 	if (!*cp)
 	    cp = tmpbuf;
