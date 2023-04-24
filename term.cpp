@@ -1346,13 +1346,14 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
     general_mode gmode_save = g_general_mode;
     char*prefix = nullptr;
     int  number_was = -1;
-    char tmpbuf[80], prefixes[80];
+    char tmpbuf[80];
 
     unflush_output();			/* disable any ^O in effect */
     eat_typeahead();
     set_mode(GM_CHOICE,newmode);
     s_screen_is_dirty = false;
 
+    char prefixes[80];
     char *cp = choices;
     if (*cp == '[') {
         char *dest = prefixes;
@@ -1371,7 +1372,7 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
             cp++;
     }
     else
-        *prefixes = '\0';
+        prefixes[0] = '\0';
 
     bool any_val_OK{};
     {
