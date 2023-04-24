@@ -22,6 +22,7 @@
 #include "rt-util.h"
 #include "rt-wumpus.h"
 #include "rthread.h"
+#include "string-algos.h"
 #include "sw.h"
 #include "term.h"
 #include "trn.h"

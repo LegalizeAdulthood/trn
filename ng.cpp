@@ -37,6 +37,7 @@
 #include "scanart.h"
 #include "score.h"
 #include "smisc.h"
+#include "string-algos.h"
 #include "term.h"
 #include "trn.h"
 #include "univ.h"

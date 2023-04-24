@@ -22,6 +22,7 @@
 #include "rt-select.h"
 #include "rt-util.h"
 #include "rthread.h"
+#include "string-algos.h"
 #include "term.h"
 #include "trn.h"
 #include "util.h"

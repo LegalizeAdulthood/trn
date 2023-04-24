@@ -17,6 +17,7 @@
 #include "nntpclient.h"
 #include "rt-process.h"
 #include "rt-util.h"
+#include "string-algos.h"
 #include "util.h"
 #include "util2.h"
 

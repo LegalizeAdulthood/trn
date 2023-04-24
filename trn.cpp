@@ -64,6 +64,7 @@
 #include "rcln.h"
 #include "rcstuff.h"
 #include "rt-select.h"
+#include "string-algos.h"
 #include "sw.h"
 #include "term.h"
 #include "univ.h"

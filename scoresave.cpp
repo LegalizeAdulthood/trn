@@ -14,6 +14,7 @@
 #include "scan.h"
 #include "scanart.h"
 #include "score.h"
+#include "string-algos.h"
 #include "util.h" /* several */
 #include "util2.h"
 

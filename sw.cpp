@@ -15,6 +15,7 @@
 #include "only.h"
 #include "opt.h"
 #include "rcstuff.h"
+#include "string-algos.h"
 #include "term.h"
 #include "trn.h"
 #include "util.h"

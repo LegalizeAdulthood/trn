@@ -8,7 +8,6 @@ configure_trn_test_data()
 add_executable(trn-test
     mock_env.h
     test_cache.cpp
-    test_common.cpp
     test_enum_order.cpp
     test_flags.cpp
     test_init.cpp
@@ -16,6 +15,7 @@ add_executable(trn-test
     test_mime.cpp
     test_nntp.cpp
     test_rt-util.cpp
+    test_string-algos.cpp
     test_utf.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/test_config.h
     ${CMAKE_CURRENT_BINARY_DIR}/test_data.cpp

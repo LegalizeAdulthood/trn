@@ -34,6 +34,7 @@
 #include "scan.h"
 #include "scanart.h"
 #include "scorefile.h"
+#include "string-algos.h"
 #include "sw.h"
 #include "term.h"
 #include "trn.h"

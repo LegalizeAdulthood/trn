@@ -20,6 +20,7 @@
 #include "ngdata.h"
 #include "nntp.h"
 #include "nntpclient.h"
+#include "string-algos.h"
 #include "term.h"
 #include "trn.h"
 #include "util.h"

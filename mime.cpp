@@ -14,6 +14,7 @@
 #include "list.h"
 #include "ng.h"
 #include "respond.h"
+#include "string-algos.h"
 #include "term.h"
 #include "utf.h"
 #include "util.h"

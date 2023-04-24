@@ -12,6 +12,7 @@
 #include "ng.h"
 #include "ngdata.h"
 #include "rt-select.h"
+#include "string-algos.h"
 #include "term.h"
 #include "trn.h"
 #include "utf.h"

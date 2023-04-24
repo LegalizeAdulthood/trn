@@ -8,6 +8,7 @@
 #include "artio.h"
 #include "mime.h"
 #include "term.h"
+#include "string-algos.h"
 #include "util2.h"
 
 static void uudecodeline(char *line, FILE *ofp);

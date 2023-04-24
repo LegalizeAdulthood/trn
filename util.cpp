@@ -14,6 +14,7 @@
 #include "nntpclient.h"
 #include "search.h"
 #include "smisc.h" /* g_s_default_cmd */
+#include "string-algos.h"
 #include "term.h"
 #include "univ.h"
 #include "util2.h"
@@ -573,7 +574,7 @@ time_t text2secs(const char *s, time_t defSecs)
 		item = 0;
 		break;
 	    }
-	    while (isalpha(*s)) s++;
+	    s = skip_alpha(s);
 	    if (*s == ',') s++;
 	    s = skip_space(s);
 	}

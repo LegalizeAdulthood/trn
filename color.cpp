@@ -29,6 +29,7 @@
 #include "color.h"
 
 #include "final.h"
+#include "string-algos.h"
 #include "term.h"
 #include "util2.h"
 
