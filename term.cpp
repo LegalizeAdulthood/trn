@@ -1346,7 +1346,6 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
     general_mode gmode_save = g_general_mode;
     char*prefix = nullptr;
     int  number_was = -1;
-    int  value_changed;
     char tmpbuf[80], prefixes[80];
 
     unflush_output();			/* disable any ^O in effect */
@@ -1397,6 +1396,7 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
         strcpy(g_buf,value);
     }
 
+    bool value_changed;
 reask_in_choice:
     int len = strlen(g_buf);
     char *bp = g_buf;
@@ -1416,7 +1416,7 @@ reask_in_choice:
     }
     else {
 	prefix = nullptr;
-	value_changed = 0;
+	value_changed = false;
     }
     char *s = cp;
     while (true) {
