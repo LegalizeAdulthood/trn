@@ -11,7 +11,8 @@ inline bool empty(const char *str)
     return str == nullptr || str[0] == '\0';
 }
 
-inline char *skip_ne(char *str, char delim)
+template <typename Char>
+Char *skip_ne(Char *str, char delim)
 {
     if (str)
         while (*str && *str != delim)
@@ -19,7 +20,8 @@ inline char *skip_ne(char *str, char delim)
     return str;
 }
 
-inline char *skip_eq(char *str, char delim)
+template <typename Char>
+Char *skip_eq(Char *str, char delim)
 {
     if (str)
         while (*str && *str == delim)
