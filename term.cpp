@@ -1346,7 +1346,6 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
     general_mode gmode_save = g_general_mode;
     char*prefix = nullptr;
     int  number_was = -1;
-    int  any_val_OK = 0;
     int  value_changed;
     char tmpbuf[80], prefixes[80];
 
@@ -1375,6 +1374,7 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
     else
         *prefixes = '\0';
 
+    bool any_val_OK{};
     {
         char *dest = tmpbuf;
         while (*cp) {
@@ -1386,7 +1386,7 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
                 do {
                     *dest++ = *cp;
                 } while (*cp++ != '>');
-                any_val_OK = 1;		/* flag that '<' was found */
+                any_val_OK = true; /* flag that '<' was found */
             }
             else
                 *dest++ = *cp++;
@@ -1437,7 +1437,7 @@ reask_in_choice:
 	    }
 	    break;
 	}
-	if (!*bp || !strncmp(cp,bp,any_val_OK? len : 1))
+	if (!*bp || !strncmp(cp,bp,any_val_OK ? len : 1))
 	    break;
     }
 
