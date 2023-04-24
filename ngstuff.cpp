@@ -68,8 +68,7 @@ int escapade()
 	    sig_catcher(0);
 	}
     }
-    while (*s == ' ') s++;
-					/* skip leading spaces */
+    s = skip_eq(s, ' ');                /* skip leading spaces */
     interp(g_cmd_buf, (sizeof g_cmd_buf), s);/* interpret any % escapes */
     resetty();				/* make sure tty is friendly */
     doshell(nullptr,g_cmd_buf);	/* invoke the shell */

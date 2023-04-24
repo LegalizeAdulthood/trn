@@ -22,6 +22,7 @@
 #include "final.h"
 #include "rt-process.h"
 #include "rt-util.h"
+#include "string-algos.h"
 
 #include <parsedate/parsedate.h>
 
@@ -365,7 +366,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 		 || strncasecmp(cp,g_htype[s_hdrnum[fn]].name,g_htype[s_hdrnum[fn]].length))
 		    continue;
 		cp = s;
-		while (*++cp == ' ') ;
+                cp = skip_eq(++cp, ' ');
 	    }
 	}
 	fields[fn] = cp;

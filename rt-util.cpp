@@ -577,7 +577,7 @@ const char *compress_subj(const ARTICLE *ap, int max)
     ** Also match "(Re: oldsubject)".  Allow possible spaces after the ('s.
     */
     for (cp = g_buf; (cp = strchr(cp+1, '(')) != nullptr;) {
-	while (*++cp == ' ') ;
+	cp = skip_eq(++cp, ' ');
 	if (eq_ignore_case(cp[0], 'w') && eq_ignore_case(cp[1], 'a') && eq_ignore_case(cp[2], 's')
 	 && (cp[3] == ':' || cp[3] == ' ')) {
 	    *--cp = '\0';
@@ -824,17 +824,17 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
     {
 	*cp++ = ' ';
 	if (num != 1)
-	    while (*s++ != '|') ;
-	while (*s && *s != '|') *cp++ = *s++;
+            s = skip_ne(s, '|');
+        while (*s && *s != '|') *cp++ = *s++;
 	*cp++ = ' ';
     }
     s = action;
     if (!neg)
-	while (*s++ != '|') ;
+        s = skip_ne(s, '|');
     while (*s && *s != '|') *cp++ = *s++;
     s++;
     if (neg)
-	while (*s++ != '|') ;
+        s = skip_ne(s, '|');
     while (*s) *cp++ = *s++;
 
     *cp = '\0';

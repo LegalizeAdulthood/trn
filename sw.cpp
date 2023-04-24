@@ -63,7 +63,7 @@ void sw_list(char *swlist)
 		s = skip_space(s);
 		if (*s != '#')
 		    break;
-		while (*s && *s++ != '\n') ;
+		s = skip_ne(s, '\n');
 	    }
 	    if (p != swlist)
 		*p++ = '\0';		/* chop here */

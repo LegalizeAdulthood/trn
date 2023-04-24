@@ -16,6 +16,7 @@
 #include "ngdata.h"
 #include "rt-select.h"
 #include "rthread.h"
+#include "string-algos.h"
 #include "term.h"
 #include "trn.h"
 #include "util.h"
@@ -355,7 +356,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	    i = 0;
 	} else {
 	    /* Skip whitespace of continuation lines and prepare to indent */
-	    while (*++line == ' ') ;
+	    line = skip_eq(++line, ' ');
 	    i = s_header_indent;
 	}
     }

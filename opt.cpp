@@ -1239,7 +1239,7 @@ static int parse_mouse_buttons(char **cpp, const char *btns)
     int cnt = 0;
 
     safefree(t);
-    while (*btns == ' ') btns++;
+    btns = skip_eq(btns, ' ');
     *cpp = safemalloc(strlen(btns) + 1);
     t = *cpp;
 
@@ -1256,10 +1256,11 @@ static int parse_mouse_buttons(char **cpp, const char *btns)
 	    }
 	    *t++ = '\0';
 	    if (*btns)
-		while (*++btns == ' ') ;
+                btns = skip_eq(++btns, ' ');
 	}
-	while (*btns && *btns != ' ') *t++ = *btns++;
-	while (*btns == ' ') btns++;
+        while (*btns && *btns != ' ')
+            *t++ = *btns++;
+	btns = skip_eq(btns, ' ');
 	*t++ = '\0';
 	cnt++;
     }

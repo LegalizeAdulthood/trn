@@ -25,6 +25,7 @@
 #include "rt-select.h"
 #include "rt-util.h"
 #include "search.h"
+#include "string-algos.h"
 #include "term.h"
 #include "trn.h"
 #include "util.h"
@@ -1039,7 +1040,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
 		    else if (re_quote && *s == ' ' && s[1] == ' ') {
 			*dest++ = ' ';
 			*dest++ = '*';
-			while (*++s == ' ') ;
+			s = skip_eq(++s, ' ');
 			continue;
 		    }
 		    else if (tick_quote && *s == '\'') {

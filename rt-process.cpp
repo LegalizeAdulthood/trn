@@ -13,6 +13,7 @@
 #include "ngdata.h"
 #include "rt-select.h"
 #include "rthread.h"
+#include "string-algos.h"
 #include "term.h"
 #include "util.h"
 #include "util2.h"
@@ -367,7 +368,7 @@ void rover_thread(ARTICLE *article, char *s)
     ARTICLE*prev = article;
 
     for (;;) {
-	while (*++s == ' ') ;
+	s = skip_eq(++s, ' ');
 	if (isdigit(*s)) {
 	    article = article_ptr(atol(s));
 	    prev->parent = article;

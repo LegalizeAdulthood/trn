@@ -91,14 +91,15 @@ save_result save_article()
         int         totalOpt = 0;
 
         s = g_buf+1;		/* skip e */
-	while (*s == ' ') s++;	/* skip leading spaces */
+	s = skip_eq(s, ' ');	/* skip leading spaces */
 	if (*s == '-' && isdigit(s[1])) {
 	    partOpt = atoi(s+1);
 	    do s++; while (isdigit(*s));
 	    if (*s == '/') {
-		totalOpt = atoi(s+1);
-		do s++; while (isdigit(*s));
-		while (*s == ' ') s++;
+		++s;
+		totalOpt = atoi(s);
+		s = skip_digits(s);
+		s = skip_eq(s, ' ');
 	    }
 	    else
 		totalOpt = partOpt;
@@ -112,7 +113,7 @@ save_result save_article()
 	    *++s = '\0';
 	    if (*cmdstr) {
 		s = cmdstr+1;			/* skip | */
-		while (*s == ' ') s++;
+		s = skip_eq(s, ' ');
 		if (*s)	{			/* if new command, use it */
 		    g_extractprog = s;	/* put extracter in %e */
 		}
@@ -256,7 +257,7 @@ save_result save_article()
     }
     else if ((s = strchr(g_buf,'|')) != nullptr) { /* is it a pipe command? */
 	s++;			/* skip the | */
-	while (*s == ' ') s++;
+	s = skip_eq(s, ' ');
 	safecpy(altbuf,filexp(s),sizeof altbuf);
 	g_savedest = altbuf;
 	if (g_datasrc->flags & DF_REMOTE)
@@ -765,7 +766,7 @@ void forward()
 		}
 		if (*s != ';')
 		    break;
-		while (*++s == ' ') ;
+		s = skip_eq(++s, ' ');
 		if (*s == 'b' && !strncasecmp(s, "boundary=\"", 10)) {
 		    mime_boundary = s+10;
                     s = strchr(mime_boundary, '"');

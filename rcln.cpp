@@ -116,8 +116,7 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
 	  np->rcline + np->numoffset) FLUSH;
     }
 #endif
-    s = np->rcline + np->numoffset;
-    while (*s == ' ') s++;		/* skip spaces */
+    s = skip_eq(np->rcline + np->numoffset, ' '); /* skip spaces */
     t = s;
     while (isdigit(*s) && artnum >= (min = atol(s))) {
 					/* while it might have been read */
@@ -223,7 +222,7 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
     }
 #endif
     s = np->rcline + np->numoffset;
-    while (*s == ' ') s++;		/* skip spaces */
+    s = skip_eq(s, ' ');		/* skip spaces */
     
     /* a little optimization, since it is almost always the last number */
     
@@ -529,8 +528,7 @@ bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
     if (artnum > np->ngmax) {
         return false;		/* probably doesn't exist, however */
     }
-    s = np->rcline + np->numoffset;
-    while (*s == ' ') s++;		/* skip spaces */
+    s = skip_eq(np->rcline + np->numoffset, ' '); /* skip spaces */
     t = s;
     while (isdigit(*s) && artnum >= (min = atol(s))) {
         char*   maxt = nullptr;
@@ -544,7 +542,7 @@ bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
 	    lastnum = max;		/* remember it */
 	    maxt = t;			/* remember position in case we */
 					/* want to overwrite the max */
-	    while (isdigit(*t)) t++;	/* skip second number */
+            t = skip_digits(t);         /* skip second number */
 	}
 	else {
 	    if (artnum == min)		/* explicitly a read article? */

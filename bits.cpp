@@ -156,8 +156,7 @@ void rc_to_bits()
 
 bool set_firstart(const char *s)
 {
-    while (*s == ' ') s++;
-
+    s = skip_eq(s, ' ');
     if (!strncmp(s,"1-",2)) {		/* can we save some time here? */
 	g_firstart = atol(s+2)+1;		/* process first range thusly */
 	if (g_firstart < g_absfirst)

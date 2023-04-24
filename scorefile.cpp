@@ -18,6 +18,7 @@
 #include "rt-util.h"
 #include "score.h"  /* shared stuff... */
 #include "search.h" /* regex matches */
+#include "string-algos.h"
 #include "term.h"   /* finish_command() */
 #include "url.h"
 #include "util.h"
@@ -291,7 +292,7 @@ char *sf_get_filename(int level)
 	while (level--) {
 	    if (*s == '\0')	/* no more name to match */
 		return nullptr;
-	    while (*s && *s != '.') s++;
+	    s = skip_ne(s, '.');
 	    if (*s && level)
 		s++;
 	}

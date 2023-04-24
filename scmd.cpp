@@ -19,6 +19,7 @@
 #include "smisc.h"
 #include "sorder.h"
 #include "spage.h"
+#include "string-algos.h"
 #include "term.h"
 #include "univ.h"
 
@@ -335,7 +336,7 @@ void s_search()
 	char *s = g_buf + 1;
 	/* make leading space skip an option later? */
 	/* (it isn't too important because substring matching is used) */
-	while (*s == ' ') s++;	/* skip leading spaces */
+        s = skip_eq(s, ' '); /* skip leading spaces */
 	strncpy(s_search_text,s,LBUFLEN);
 	for (s = s_search_text; *s != '\0'; s++)
 	    if (isupper(*s))

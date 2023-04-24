@@ -24,7 +24,9 @@ protected:
 
 TEST_F(StringAlgosTest, skipEqNullPtr)
 {
-    const char *pos = skip_eq(nullptr, ' ');
+    const char *buffer{};
+
+    const char *pos = skip_eq(buffer, ' ');
 
     ASSERT_EQ(nullptr, pos);
 }
@@ -58,7 +60,9 @@ TEST_F(StringAlgosTest, skipEqEnd)
 
 TEST_F(StringAlgosTest, skipNeNullPtr)
 {
-    const char *pos = skip_ne(nullptr, ' ');
+    const char *buffer{};
+
+    const char *pos = skip_ne(buffer, ' ');
 
     ASSERT_EQ(nullptr, pos);
 }

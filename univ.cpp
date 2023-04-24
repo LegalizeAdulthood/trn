@@ -392,9 +392,7 @@ static bool univ_DoMatch(const char *text, const char *p)
 {
     for ( ; *p; text++, p++) {
 	if (*p == '*') {
-	    while (*++p == '*')
-		/* Consecutive stars act just like one. */
-		continue;
+            p = skip_eq(p, '*'); /* Consecutive stars act just like one. */
 	    if (*p == '\0')
 		/* Trailing star matches everything. */
 		return true;

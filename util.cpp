@@ -729,11 +729,11 @@ void prep_ini_data(char *cp, const char *filename)
 		*t = '\0';
 		printf("Invalid section in %s: %s\n", filename, s);
 		t = s;
-		while (*cp && *cp++ != '\n') ;
+		cp = skip_ne(cp, '\n');
 	    }
 	}
 	else
-	    while (*cp && *cp++ != '\n') ;
+	    cp = skip_ne(cp, '\n');
     }
     *t = '\0';
 }
@@ -762,7 +762,7 @@ bool parse_string(char **to, char **from)
 	    continue;
 	}
 	else if (*f == '#') {
-	    while (*++f && *f != '\n') ;
+	    f = skip_ne(f, '\n');
 	    break;
 	}
 	if (*f == '\\') {

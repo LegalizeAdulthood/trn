@@ -20,6 +20,7 @@
 #include "rt-select.h"
 #include "rt-util.h"
 #include "rthread.h"
+#include "string-algos.h"
 #include "term.h"
 #include "trn.h"
 #include "univ.h"
@@ -106,8 +107,8 @@ bool set_sel_order(sel_mode smode, const char *str)
     bool reverse = false;
 
     if (*str == 'r' || *str == 'R') {
-	while (*str && *str != ' ') str++;
-	while (*str == ' ') str++;
+	str = skip_ne(str, ' ');
+	str = skip_eq(str, ' ');
 	reverse = true;
     }
 
