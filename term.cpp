@@ -1346,7 +1346,6 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
     general_mode gmode_save = g_general_mode;
     char*prefix = nullptr;
     int  number_was = -1;
-    char tmpbuf[80];
 
     unflush_output();			/* disable any ^O in effect */
     eat_typeahead();
@@ -1375,6 +1374,7 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
         prefixes[0] = '\0';
 
     bool any_val_OK{};
+    char tmpbuf[80];
     {
         char *dest = tmpbuf;
         while (*cp) {
