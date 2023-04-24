@@ -185,7 +185,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
 	/* skip over versioning */
 	if (*s == 'v' && isdigit(s[1])) {
 	    s++;
-	    while (isdigit(*s)) s++;
+	    s = skip_digits(s);
 	}
 	/* look for "1/6" or "1 / 6" or "1 of 6" or "1-of-6" or "1o6" */
 	if (isdigit(*s)
@@ -198,7 +198,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
 	    part = atoi(t);
 	    while (*++s != '\0' && *s != '\n' && !isdigit(*s)) ;
 	    total = isdigit(*s)? atoi(s) : 0;
-	    while (isdigit(*s)) s++;
+	    s = skip_digits(s);
 	    /* We don't break here because we want the last item on the line */
 	}
 

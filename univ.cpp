@@ -574,8 +574,7 @@ static void univ_do_line_ext1(const char *desc, char *line)
 	    /* XXX error checking */
 	    s++;
 	    while (isspace(*s)) s++;
-	    p = s;
-	    while (isdigit(*p)) p++;
+	    p = skip_digits(s);
 	    ch = *p;
 	    *p = '\0';
 	    a = (ART_NUM)atoi(s);
@@ -592,7 +591,7 @@ static void univ_do_line_ext1(const char *desc, char *line)
 	    q = p;
 	    if ((*p=='+') || (*p=='-'))
 	      p++;
-	    while (isdigit(*p)) p++;
+	    p = skip_digits(p);
 	    if (isspace(*p)) {
 	      *p = '\0';
 	      s_univ_min_score = atoi(q);

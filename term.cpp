@@ -1447,9 +1447,7 @@ reask_in_choice:
 	    if (number_was >= 0)
 		sprintf(g_buf, "%d", number_was);
 	    else {
-		s = g_buf;
-                while (isdigit(*s))
-                    ++s;
+		s = skip_digits(g_buf);
                 *s = '\0';
 	    }
 	}

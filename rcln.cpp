@@ -120,7 +120,7 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
     t = s;
     while (isdigit(*s) && artnum >= (min = atol(s))) {
 					/* while it might have been read */
-	for (t = s; isdigit(*t); t++) ;	/* skip number */
+        t = skip_digits(s);             /* skip number */
 	if (*t == '-') {		/* is it a range? */
 	    t++;			/* skip to next number */
 	    if (artnum <= (max = atol(t)))
@@ -128,7 +128,7 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
 	    lastnum = max;		/* remember it */
 	    maxt = t;			/* remember position in case we */
 					/* want to overwrite the max */
-	    while (isdigit(*t)) t++;	/* skip second number */
+            t = skip_digits(t);         /* skip second number */
 	}
 	else {
 	    if (artnum == min)		/* explicitly a read article? */
@@ -162,10 +162,8 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
     if (morenum) {			/* is there more to life? */
 	if (min == artnum+1) {		/* can we consolidate further? */
 	    bool range_before = (*(t-1) == '-');
-            char*nextmax;
-
-	    for (nextmax = s; isdigit(*nextmax); nextmax++) ;
-	    bool range_after = *nextmax++ == '-';
+            char *nextmax = skip_digits(s);
+	    bool  range_after = *nextmax++ == '-';
 	    
 	    if (range_before)
 		*t = '\0';		/* artnum is redundant */
@@ -246,11 +244,11 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
 
     while (isdigit(*s) && artnum >= (min = atol(s))) {
 					/* while it might have been read */
-	for (t = s; isdigit(*t); t++) ;	/* skip number */
+        t = skip_digits(s);             /* skip number */
 	if (*t == '-') {		/* is it a range? */
 	    t++;			/* skip to next number */
 	    max = atol(t);
-	    while (isdigit(*t)) t++;	/* skip second number */
+	    t = skip_digit(t);          /* skip second number */
 	    if (artnum <= max) {
 					/* it is in range => already read */
 		if (artnum == min) {
@@ -434,7 +432,7 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
 #endif
     for (s = np->rcline + np->numoffset; isspace(*s); s++) ;
     while (*s && (num = atol(s)) <= a1st) {
-	while (isdigit(*s)) s++;
+	s = skip_digits(s);
 	while (*s && !isdigit(*s)) s++;
 	lastnum = num;
     }

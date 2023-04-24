@@ -513,7 +513,7 @@ char *sf_freeform(char *start1, char *end1)
 	    }
 	    datenum = atoi(s);
 	    printf("Date: %d\n",datenum) FLUSH;
-	    while (isdigit(*s)) s++;	/* skip datenum */
+	    s = skip_digits(s);	/* skip datenum */
 	    end1 = s;		/* end of key data */
 	    break;
 	}

@@ -86,3 +86,47 @@ TEST_F(CommonTest, emptyChars)
 {
     ASSERT_FALSE(empty("There be chars here!"));
 }
+
+TEST_F(CommonTest, skipDigitsNullPtr)
+{
+    char *p = nullptr;
+
+    ASSERT_EQ(nullptr, skip_digits(p));
+}
+
+TEST_F(CommonTest, skipDigitsMiddle)
+{
+    configure_before_after("1965 was a good year for television.", " was a good year for television.");
+
+    const char *pos = skip_digits(m_buffer);
+
+    ASSERT_STREQ(m_after, pos);
+}
+
+TEST_F(CommonTest, skipDigitsEnd)
+{
+    configure_before_after("1965", "");
+
+    const char *pos = skip_digits(m_buffer);
+
+    ASSERT_STREQ(m_after, pos);
+}
+
+TEST_F(CommonTest, skipConstDigitsEnd)
+{
+    configure_before_after("1965", "");
+    const char *buffer = m_buffer;
+
+    const char *pos = skip_digits(buffer);
+
+    ASSERT_STREQ(m_after, pos);
+}
+
+TEST_F(CommonTest, skipMutableDigitsEnd)
+{
+    configure_before_after("1965", "");
+
+    char *pos = skip_digits(m_buffer);
+
+    ASSERT_STREQ(m_after, pos);
+}

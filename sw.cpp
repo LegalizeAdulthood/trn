@@ -338,7 +338,7 @@ void decode_switch(const char *s)
 	    if (*++s == '=') s++;
 	    if (isdigit(*s)) {
 		set_option(OI_ARTICLE_TREE_LINES, s);
-		while (isdigit(*s)) s++;
+		s = skip_digits(s);
 	    }
 	    if (*s)
 		set_option(OI_NEWS_SEL_STYLES, s);
@@ -348,7 +348,7 @@ void decode_switch(const char *s)
 	    if (*++s == '=') s++;
 	    if (isdigit(*s)) {
 		set_option(OI_USE_NEWS_SEL, s);
-		while (isdigit(*s)) s++;
+		s = skip_digits(s);
 	    }
 	    else
 		set_option(OI_USE_NEWS_SEL, YESorNO(upordown));

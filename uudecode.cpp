@@ -30,7 +30,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
         int   tmppart = atoi(s);
 	if (tmppart == 0)
 	    return 0;
-	while (isdigit(*s)) s++;
+	s = skip_digits(s);
 	if (!strncmp(s, " of ", 4)) {
 	    /* "section N of ... of file F ..." */
 	    for (s += 4; *s && strncmp(s," of file ",9); s++) ;
@@ -49,7 +49,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	}
 	if (*s == '/' && isdigit(s[1])) {
             int tmptotal = atoi(s);
-	    while (isdigit(*s)) s++;
+	    s = skip_digits(s);
 	    while (*s && isspace(*s)) s++;
 	    if (tmppart > tmptotal || strncmp(s,"file ",5))
 		return 0;
@@ -75,11 +75,11 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	*s = '\0';
 	s += 7;
         int tmppart = atoi(s);
-	while (isdigit(*s)) s++;
+	s = skip_digits(s);
 	if (tmppart == 0 || *s++ != '/')
 	    return 0;
         int tmptotal = atoi(s);
-	while (isdigit(*s)) s++;
+	s = skip_digits(s);
 	if (tmppart > tmptotal || *s != ')')
 	    return 0;
 	*filenamep = tmpfilename;
@@ -95,12 +95,12 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	*s = '\0';
 	s += 9;
         int tmppart = atoi(s);
-	while (isdigit(*s)) s++;
+	s = skip_digits(s);
 	if (tmppart == 0 || strncmp(s, " of ", 4))
 	    return 0;
 	s += 4;
         int tmptotal = atoi(s);
-	while (isdigit(*s)) s++;
+	s = skip_digits(s);
 	if (tmppart > tmptotal || strncmp(s, " -- ", 4))
 	    return 0;
 	*filenamep = tmpfilename;
@@ -113,9 +113,9 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
         int   tmppart = atoi(s);
 	if (tmppart == 0)
 	    return 0;
-	while (isdigit(*s)) s++;
+	s = skip_digits(s);
         int tmptotal = atoi(++s);
-	while (isdigit(*s)) s++;
+	s = skip_digits(s);
 	while (*s && isspace(*s)) s++;
 	if (tmppart > tmptotal || strncmp(s, "File: ", 6))
 	    return 0;

@@ -569,7 +569,7 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
 	if ((dp->flags & DF_REMOTE) && dp->act_sf.refetch_secs) {
             char* cp;
 	    if (high && high != (ART_NUM)atol(cp = lbp+len+1)) {
-		while (isdigit(*cp)) cp++;
+		cp = skip_digits(cp);
 		while (*--cp != ' ') {
 		    int num = high % 10;
 		    high = high / 10;

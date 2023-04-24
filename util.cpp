@@ -557,7 +557,7 @@ time_t text2secs(const char *s, time_t defSecs)
     }
     do {
 	time_t item = atol(s);
-	while (isdigit(*s)) s++;
+	s = skip_digits(s);
 	while (isspace(*s)) s++;
 	if (isalpha(*s)) {
 	    switch (*s) {

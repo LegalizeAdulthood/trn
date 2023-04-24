@@ -734,4 +734,13 @@ inline char *skip_eq(char *str, char delim)
     return str;
 }
 
+template <typename Char>
+Char *skip_digits(Char *str)
+{
+    if (str)
+        while (*str && isdigit(static_cast<unsigned char>(*str)))
+            ++str;
+    return str;
+}
+
 #endif

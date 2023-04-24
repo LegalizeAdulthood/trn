@@ -152,7 +152,7 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
 	    c1 = *s;
 	    *s = '0' + ('J' - *s);	/* convert to first digit */
 	    s++;
-	    while (isdigit(*s)) s++;
+	    s = skip_digits(s);
 	    c2 = *s;
 	    *s = '\0';
 	    score = 0 - atoi(p);
@@ -172,7 +172,7 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
 	    c1 = *s;
 	    *s = '0' + (*s - 'J');	/* convert to first digit */
 	    s++;
-	    while (isdigit(*s)) s++;
+	    s = skip_digits(s);
 	    c2 = *s;
 	    *s = '\0';
 	    score = atoi(p);
@@ -193,7 +193,7 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
 		x = 1;
 	    } else {
 		s++;
-		while (isdigit(*s)) s++;
+		s = skip_digits(s);
 		c1 = *s;
 		*s = '\0';
 		x = atoi(p);
@@ -216,7 +216,7 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
 		a += 1;
 	    } else {
 		s++;
-		while (isdigit(*s)) s++;
+		s = skip_digits(s);
 		c1 = *s;
 		*s = '\0';
 		x = atoi(p);

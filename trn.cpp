@@ -462,8 +462,7 @@ input_newsgroup_result input_newsgroup()
 	if (!*s && *g_buf == 'm' && !g_ngname.empty() && g_ngptr)
 	    strcpy(s,g_ngname.c_str());
 	{
-	    char* _s;
-	    for (_s=s; isdigit(*_s); _s++) ;
+	    char* _s = skip_digits(s);
 	    if (*_s)
 		/* found non-digit before hitting end */
 		set_ngname(s);
