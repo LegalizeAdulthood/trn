@@ -16,6 +16,7 @@
 #include "env.h"
 #include "nntpclient.h"
 #include "nntpinit.h"
+#include "string-algos.h"
 #include "util2.h"
 #include "util3.h"
 
@@ -74,7 +75,7 @@ int main(int argc, char *argv[])
 	buff[strlen(buff)-1] = '\0';
 	if (!*buff)
 	    break;
-	if (*buff == ' ' || *buff == '\t')
+	if (is_hor_space(*buff))
 	    continue;
 	cp = strchr(buff, ':');
 	if (!cp) {
@@ -198,7 +199,7 @@ int main(int argc, char *argv[])
 		    break;
 		for (i = 0; i < ngcnt; i++) {
 		    if (!foundactive[i]) {
-			if ((buff[nglens[i]] == '\t' || buff[nglens[i]] == ' ')
+			if (is_hor_space(buff[nglens[i]])
 			  && !strncmp(ngptrs[i], buff, nglens[i])) {
 			    foundactive[i] = 1;
 			    ngleft--;
@@ -265,12 +266,11 @@ int main(int argc, char *argv[])
 		    break;
 		for (i = 0; i < ngcnt; i++) {
 		    if (foundactive[i] && ngptrs[i]) {
-			if ((buff[nglens[i]] == '\t' || buff[nglens[i]] == ' ')
+			if (is_hor_space(buff[nglens[i]])
 			  && !strncmp(ngptrs[i], buff, nglens[i])) {
 			    cp = &buff[nglens[i]];
 			    *cp++ = '\0';
-			    while (*cp == ' ' || *cp == '\t')
-				cp++;
+			    cp = skip_hor_space(cp);
 			    if (cp[0] == '?' && cp[1] == '?')
 				cp = "[no description available]\n";
 			    printf("%-23s %s", buff, cp);

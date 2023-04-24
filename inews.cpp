@@ -9,6 +9,7 @@
 #include "env.h"
 #include "nntpclient.h"
 #include "nntpinit.h"
+#include "string-algos.h"
 #include "util2.h"
 #include "util3.h"
 
@@ -295,8 +296,8 @@ int main(int argc, char *argv[])
 int valid_header(char *h)
 {
     /* Blank or tab in first position implies this is a continuation header */
-    if (h[0] == ' ' || h[0] == '\t') {
-	while (*++h == ' ' || *h == '\t') ;
+    if (is_hor_space(h[0])) {
+        h = skip_hor_space(h);
 	return *h && *h != '\n'? 1 : 2;
     }
 

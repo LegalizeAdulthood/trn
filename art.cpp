@@ -33,6 +33,7 @@
 #include "rt-wumpus.h"
 #include "rthread.h"
 #include "search.h"
+#include "string-algos.h"
 #include "term.h"
 #include "trn.h"
 #include "utf.h"
@@ -231,7 +232,7 @@ do_article_result do_article()
 		    maybe_set_color(bufptr, true);
 	    }
 	    else if (g_in_header && *(bufptr = g_headbuf + g_artpos))
-		s_continuation = *bufptr == ' ' || *bufptr == '\t';
+		s_continuation = is_hor_space(*bufptr);
 	    else {
                 bufptr = readartbuf(g_auto_view_inline);
                 if (bufptr == nullptr)
@@ -670,7 +671,7 @@ bool maybe_set_color(const char *cp, bool backsearch)
 	return true;
     }
     else {
-	while (*cp == ' ' || *cp == '\t') cp++;
+        cp = skip_hor_space(cp);
 	if (strchr(">}]#!:|", *cp))
 	    color_object(COLOR_CITEDTEXT, false);
 	else

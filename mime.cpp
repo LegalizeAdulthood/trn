@@ -535,7 +535,7 @@ void mime_ParseSubheader(FILE *ifp, char *next_line)
 		break;
 	    if (line[0] == '\n')
 		break;
-	    if (pos && line[pos] != ' ' && line[pos] != '\t') {
+	    if (pos && !is_hor_space(line[pos])) {
 		next_line = line + pos;
 		line[pos-1] = '\0';
 		break;
@@ -1292,11 +1292,11 @@ int filter_html(char *t, const char *f)
 	if (s_word_wrap && t - g_artbuf - g_mime_section->html_line_start > g_tc_COLS) {
 	    char* line_start = g_mime_section->html_line_start + g_artbuf;
 	    for (cp = line_start + s_word_wrap;
-		 cp > line_start && *cp != ' ' && *cp != '\t';
+		 cp > line_start && !is_hor_space(*cp);
 		 cp--) ;
 	    if (cp == line_start) {
 		for (cp = line_start + s_word_wrap;
-		     cp - line_start <= g_tc_COLS && *cp != ' ' && *cp != '\t';
+		     cp - line_start <= g_tc_COLS && !is_hor_space(*cp);
 		     cp++) ;
 		if (cp - line_start > g_tc_COLS) {
 		    g_mime_section->html_line_start += g_tc_COLS;
@@ -1307,9 +1307,8 @@ int filter_html(char *t, const char *f)
 		const html_flags flag_save = g_mime_section->html;
                 g_mime_section->html |= HF_NL_OK;
                 line_start = do_newline(cp, HF_NL_OK);
-                cp = line_start;
-		int fudge = do_indent(nullptr);
-		while (*cp == ' ' || *cp == '\t') cp++;
+                int fudge = do_indent(nullptr);
+                cp = skip_hor_space(line_start);
 		if ((fudge -= cp - line_start) != 0) {
 		    if (fudge < 0) {
 			if (t - cp > 0)

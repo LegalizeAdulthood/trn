@@ -262,3 +262,62 @@ TEST_F(StringAlgosTest, skipNonAlphaMiddle)
 
     ASSERT_STREQ(m_after, pos);
 }
+
+TEST_F(StringAlgosTest, skipHorSpaceNullPtr)
+{
+    const char *buffer{};
+
+    ASSERT_EQ(nullptr, skip_hor_space(buffer));
+}
+
+TEST_F(StringAlgosTest, skipHorSpaceNoChange)
+{
+    configure_before_after("No change.", "No change.");
+
+    const char *pos = skip_hor_space(m_buffer);
+
+    ASSERT_STREQ(m_after, pos);
+}
+
+TEST_F(StringAlgosTest, skipHorSpaceMiddleTab)
+{
+    configure_before_after("\t\t\tHello, world!", "Hello, world!");
+
+    const char *pos = skip_hor_space(m_buffer);
+
+    ASSERT_STREQ(m_after, pos);
+}
+
+TEST_F(StringAlgosTest, skipHorSpaceMiddleSpace)
+{
+    configure_before_after("   Hello, world!", "Hello, world!");
+
+    const char *pos = skip_hor_space(m_buffer);
+
+    ASSERT_STREQ(m_after, pos);
+}
+
+TEST_F(StringAlgosTest, isHorSpaceNul)
+{
+    ASSERT_FALSE(is_hor_space('\0'));
+}
+
+TEST_F(StringAlgosTest, isHorSpaceSpaceTab)
+{
+    ASSERT_TRUE(is_hor_space(' '));
+    ASSERT_TRUE(is_hor_space('\t'));
+}
+
+TEST_F(StringAlgosTest, isHorSpaceOtherWhiteSpace)
+{
+    ASSERT_FALSE(is_hor_space('\r'));
+    ASSERT_FALSE(is_hor_space('\n'));
+    ASSERT_FALSE(is_hor_space('\v'));
+}
+
+TEST_F(StringAlgosTest, isHorSpacePrintable)
+{
+    ASSERT_FALSE(is_hor_space('a'));
+    ASSERT_FALSE(is_hor_space('!'));
+    ASSERT_FALSE(is_hor_space('B'));
+}

@@ -122,10 +122,9 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
 
     /* Skip leading whitespace and other garbage */
     char *s = subject;
-    while (*s == ' ' || *s == '\t' || *s == '-') s++;
+    while (is_hor_space(*s) || *s == '-') s++;
     if (!strncasecmp(s, "repost", 6)) {
-	for (s += 6; *s == ' ' || *s == '\t'
-	     || *s == ':' || *s == '-'; s++);
+	for (s += 6; is_hor_space(*s) || *s == ':' || *s == '-'; s++);
     }
 
     while (!strncasecmp(s, "re:", 3)) {

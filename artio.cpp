@@ -16,6 +16,7 @@
 #include "mime.h"
 #include "ngdata.h"
 #include "nntp.h"
+#include "string-algos.h"
 #include "term.h"
 #include "util.h"
 #include "util2.h"
@@ -404,9 +405,9 @@ char *readartbuf(bool view_inline)
 	    if (s - cp > g_tc_COLS) {
 		char* t;
 		do {
-		    for (t = cp+word_wrap; *t!=' ' && *t!='\t' && t > cp; t--) ;
+		    for (t = cp+word_wrap; !is_hor_space(*t) && t > cp; t--) ;
 		    if (t == cp) {
-			for (t = cp+word_wrap; *t!=' ' && *t!='\t' && t<=cp+g_tc_COLS; t++) ;
+			for (t = cp+word_wrap; !is_hor_space(*t) && t<=cp+g_tc_COLS; t++) ;
 			if (t > cp+g_tc_COLS) {
 			    t = cp + g_tc_COLS - 1;
 			    continue;
@@ -418,7 +419,7 @@ char *readartbuf(bool view_inline)
 			extra_chars -= len;
 		    }
 		    *t = g_wrapped_nl;
-		    if (t[1] == ' ' || t[1] == '\t') {
+		    if (is_hor_space(t[1])) {
 			int spaces = 1;
 			for (t++; *++t == ' ' || *t == '\t'; spaces++) ;
 			safecpy(t-spaces,t,extra_chars);

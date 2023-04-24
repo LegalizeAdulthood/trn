@@ -257,7 +257,7 @@ char *sf_get_extra_header(ART_NUM art, int hnum)
 	    if (!s)
 		return "";
 	    s++;	/* skip the colon */
-	    while (*s == ' ' || *s == '\t') s++;
+            s = skip_hor_space(s);
 	    if (!*s)
 		return "";
 	    head = s;		/* now point to start of new text */
@@ -326,7 +326,7 @@ bool sf_do_command(char *cmd, bool check)
 
     if (!strncmp(cmd,"killthreshold",13)) {
 	/* skip whitespace and = sign */
-	for (s = cmd+13; *s && (*s == ' ' || *s == '\t' || *s == '='); s++) ;
+	for (s = cmd+13; *s && (is_hor_space(*s) || *s == '='); s++) ;
 
 	/* make **sure** that there is a number here */
 	i = atoi(s);
@@ -344,7 +344,7 @@ bool sf_do_command(char *cmd, bool check)
     }
     if (!strncmp(cmd,"savescores",10)) {
 	/* skip whitespace and = sign */
-	for (s = cmd+10; *s && (*s == ' ' || *s == '\t' || *s == '='); s++) ; 
+	for (s = cmd+10; *s && (is_hor_space(*s) || *s == '='); s++) ; 
 	if (!strncmp(s,"off",3)) {
 	    if (!check)
 		g_sc_savescores = false;
@@ -361,7 +361,7 @@ bool sf_do_command(char *cmd, bool check)
     }
     if (!strncmp(cmd,"newauthor",9)) {
 	/* skip whitespace and = sign */
-	for (s = cmd+9; *s && (*s == ' ' || *s == '\t' || *s == '='); s++) ;
+	for (s = cmd+9; *s && (is_hor_space(*s) || *s == '='); s++) ;
 
 	/* make **sure** that there is a number here */
 	i = atoi(s);
@@ -380,8 +380,7 @@ bool sf_do_command(char *cmd, bool check)
     if (!strncmp(cmd,"include",7)) {
 	if (check)
 	    return true;
-	s = cmd+7;
-	while (*s == ' ' || *s == '\t') s++;	/* skip whitespace */
+        s = skip_hor_space(cmd + 7); /* skip whitespace */
 	if (!*s) {
 	    printf("Bad include command (missing filename)\n");
 	    return false;
@@ -392,8 +391,7 @@ bool sf_do_command(char *cmd, bool check)
     if (!strncmp(cmd,"exclude",7)) {
 	if (check)
 	    return true;
-	s = cmd+7;
-	while (*s == ' ' || *s == '\t') s++;	/* skip whitespace */
+        s = skip_hor_space(cmd + 7); /* skip whitespace */
 	if (!*s) {
 	    printf("Bad exclude command (missing filename)\n");
 	    return false;
@@ -402,11 +400,8 @@ bool sf_do_command(char *cmd, bool check)
 	return true;
     }
     if (!strncmp(cmd,"header",6)) {
-	char* s2;
-
-	s = cmd+7;
-	while (*s == ' ' || *s == '\t') s++;	/* skip whitespace */
-	for (s2 = s; *s2 && *s2 != ':'; s2++) ;
+        s = skip_hor_space(cmd + 7); /* skip whitespace */
+        char *s2 = skip_ne(s, ':');
 	if (!s2) {
 	    printf("\nBad header command (missing :)\n%s\n",cmd) FLUSH;
 	    return false;
@@ -419,8 +414,7 @@ bool sf_do_command(char *cmd, bool check)
 	return true;
     }
     if (!strncmp(cmd,"begin",5)) {
-	s = cmd+6;
-	while (*s == ' ' || *s == '\t') s++;	/* skip whitespace */
+        s = skip_hor_space(cmd + 6); /* skip whitespace */
 	if (!strncmp(s,"score",5)) {
 	    /* do something useful later */
 	    return true;
@@ -429,7 +423,7 @@ bool sf_do_command(char *cmd, bool check)
     }
     if (!strncmp(cmd,"reply",5)) {
 	/* skip whitespace and = sign */
-	for (s = cmd+5; *s && (*s == ' ' || *s == '\t' || *s == '='); s++) ;
+	for (s = cmd+5; *s && (is_hor_space(*s) || *s == '='); s++) ;
 
 	/* make **sure** that there is a number here */
 	i = atoi(s);
@@ -448,15 +442,13 @@ bool sf_do_command(char *cmd, bool check)
     if (!strncmp(cmd,"file",4)) {
 	if (check)
 	    return true;
-	s = cmd+4;
-	while (*s == ' ' || *s == '\t') s++;	/* skip whitespace */
+        s = skip_hor_space(cmd + 4); /* skip whitespace */
 	if (!*s) {
 	    printf("Bad file command (missing parameters)\n");
 	    return false;
 	}
 	char ch = *s++;
-	while (*s == ' ' || *s == '\t')
-	    s++;			/* skip whitespace */
+        s = skip_hor_space(s); /* skip whitespace */
 	if (!*s) {
 	    printf("Bad file command (missing parameters)\n");
 	    return false;
@@ -467,8 +459,7 @@ bool sf_do_command(char *cmd, bool check)
 	return true;
     }
     if (!strncmp(cmd,"end",3)) {
-	s = cmd+4;
-	while (*s == ' ' || *s == '\t') s++;	/* skip whitespace */
+        s = skip_hor_space(cmd + 4); /* skip whitespace */
 	if (!strncmp(s,"score",5)) {
 	    /* do something useful later */
 	    return true;
@@ -507,7 +498,7 @@ char *sf_freeform(char *start1, char *end1)
 	    char* s1;
 	    int datenum;
 	    /* skip whitespace and = sign */
-	    for (s = end1+1; *s && (*s == ' ' || *s == '\t'); s++) ;
+            s = skip_hor_space(end1 + 1);
 	    if (!*s) {	/* ran out of line */
 		printf("freeform: date keyword: ran out of input\n");
 		return s;
@@ -534,8 +525,7 @@ char *sf_freeform(char *start1, char *end1)
 	return nullptr;	/* error indicated */
     }
     /* no error, so skip whitespace at end of key */
-    for (s = end1+1; *s && (*s == ' ' || *s == '\t'); s++) ;
-    return s;
+    return skip_hor_space(end1 + 1);
 }
 
 //bool check;		/* if true, just check the line, don't act. */
@@ -558,7 +548,7 @@ bool sf_do_line(char *line, bool check)
 	return sf_do_command(line,check);
 
     /* skip whitespace */
-    for (s = line; *s && (*s == ' ' || *s == '\t'); s++) ;
+    s = skip_hor_space(line);
     if (!*s || *s == '#')
 	return true;	/* line was whitespace or comment after whitespace */
     /* convert line to lowercase (make optional later?) */
@@ -574,11 +564,11 @@ bool sf_do_line(char *line, bool check)
 	}
     }
     /* add the line as a scoring entry */
-    while (isdigit(*s) || *s == '+' || *s == '-' || *s == ' ' || *s == '\t')
+    while (isdigit(*s) || *s == '+' || *s == '-' || is_hor_space(*s))
 	s++;	/* skip score */
     char *s2;
     while (true) {
-        for (s2 = s; *s2 && *s2 != ' ' && *s2 != '\t'; s2++)
+        for (s2 = s; *s2 && !is_hor_space(*s2); s2++)
             ;
 	s2--;
 	if (*s2 == ':')	/* did header */
@@ -604,7 +594,7 @@ bool sf_do_line(char *line, bool check)
 	}
     }
     /* skip whitespace */
-    for (s = ++s2; *s && (*s == ' ' || *s == '\t'); s++) ;
+    s = skip_hor_space(++s2);
     if (!*s) {	/* no pattern */
 	printf("Empty score pattern.  Line follows:\n|%s|\n",line) FLUSH;
 	return false;
@@ -841,8 +831,7 @@ void sf_append(char *line)
     }
 
     /* skip whitespace after filechar */
-    char *scoreline = line + 1;
-    while (*scoreline == ' ' || *scoreline == '\t') scoreline++;
+    char *scoreline = skip_hor_space(line + 1);
 
     char ch = *scoreline; /* first non-whitespace after filechar */
     /* If the scorefile line does not begin with a number,
@@ -860,7 +849,7 @@ void sf_append(char *line)
 
     /* scoretext = first non-whitespace after score# */
     for (scoretext = scoreline;
-         isdigit(*scoretext) || *scoretext == '+' || *scoretext == '-' || *scoretext == ' ' || *scoretext == '\t';
+         isdigit(*scoretext) || *scoretext == '+' || *scoretext == '-' || is_hor_space(*scoretext);
          scoretext++)
     {
     }

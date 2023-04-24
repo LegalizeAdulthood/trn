@@ -532,8 +532,7 @@ int decode_header(char *to, char *from, int size)
 		    to += len;
 		    size += len;
 		    /* If the next character is whitespace we should eat it now */
-		    while (*from == ' ' || *from == '\t')
-			from++;
+                    from = skip_hor_space(from);
 		}
 		else
 		    *to++ = *from++;

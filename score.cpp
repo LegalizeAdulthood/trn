@@ -19,6 +19,7 @@
 #include "score-easy.h" /* interactive menus and such */
 #include "scorefile.h"
 #include "scoresave.h"
+#include "string-algos.h"
 #include "sorder.h"
 #include "term.h" /* input_pending() */
 
@@ -472,7 +473,7 @@ void sc_score_cmd(const char *line)
 	printf("Total score is %ld\n",i) FLUSH;
 	break;
       case 'e':	/* edit scorefile or other file */
-	for (s = line+1; *s == ' ' || *s == '\t'; s++) ;
+        s = skip_hor_space(line+1);
 	if (!*s)                /* empty name for scorefile */
 	    sf_edit_file("\""); /* edit local scorefile */
 	else

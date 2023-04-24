@@ -191,7 +191,7 @@ header_line_type get_header_num(char *s)
 	    if (!s || (i = set_line_type(bp,s)) != CUSTOM_LINE)
 		continue;
 	    g_htype[CUSTOM_LINE].minpos = bp - g_headbuf;
-	    while (*end == ' ' || *end == '\t') {
+	    while (is_hor_space(*end)) {
 		if (!(end = strchr(end, '\n'))) {
 		    end = bp + strlen(bp);
 		    break;
@@ -232,7 +232,7 @@ void end_header_line()
 	    if (!get_cached_line(s_parsed_artp, g_in_header, true)) {
 		int start = g_htype[g_in_header].minpos
 			  + g_htype[g_in_header].length + 1;
-                while (g_headbuf[start] == ' ' || g_headbuf[start] == '\t')
+                while (is_hor_space(g_headbuf[start]))
 		    start++;
 		MEM_SIZE size = g_artpos - start + 1 - 1;	/* pre-strip newline */
 		if (g_in_header == SUBJ_LINE)
@@ -249,7 +249,7 @@ void end_header_line()
 
 bool parseline(char *art_buf, int newhide, int oldhide)
 {
-    if (*art_buf == ' ' || *art_buf == '\t') /* continuation line? */
+    if (is_hor_space(*art_buf)) /* continuation line? */
 	return oldhide;
 
     end_header_line();
@@ -419,7 +419,7 @@ char *fetchlines(ART_NUM artnum, header_line_type which_line)
     ART_POS lastpos = g_htype[which_line].maxpos;
     int size = lastpos - firstpos;
     char *t = g_headbuf + firstpos;
-    while (*t == ' ' || *t == '\t')
+    while (is_hor_space(*t))
     {
         t++;
 	size--;
@@ -458,7 +458,7 @@ char *mp_fetchlines(ART_NUM artnum, header_line_type which_line, memory_pool poo
     ART_POS lastpos = g_htype[which_line].maxpos;
     int size = lastpos - firstpos;
     char *t = g_headbuf + firstpos;
-    while (*t == ' ' || *t == '\t')
+    while (is_hor_space(*t))
     {
         t++;
 	size--;
@@ -606,7 +606,7 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
     ART_POS lastpos = g_htype[which_line].maxpos;
     int size = lastpos - firstpos;
     t = g_headbuf + firstpos;
-    while (*t == ' ' || *t == '\t')
+    while (is_hor_space(*t))
     {
         t++;
 	size--;

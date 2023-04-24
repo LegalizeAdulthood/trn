@@ -551,7 +551,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
 	m = line;
     if (!*m)
 	return;
-    while (*m == ' ' || *m == '\t') m++;
+    m = skip_hor_space(m);
     for (s=tmpbuf,curmap=s_topmap; *s; s++) {
 	ch = *s & 0177;
 	if (s[1] == '+' && isdigit(s[2])) {
@@ -1496,7 +1496,7 @@ reinp_in_choice:
 	*s = '\0';
 	for (s = g_buf; *s && *s != ' '; s++) ;
 	if (*s == ' ') s++;
-	if (ch == ' ' || ch == '\t') {
+	if (is_hor_space(ch)) {
 	    if (prefix)
 		*s = '\0';
 	    else

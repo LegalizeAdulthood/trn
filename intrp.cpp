@@ -1192,7 +1192,7 @@ void normalize_refs(char *refs)
     {
 	if (*f == '<') {
 	    while (*f && (*t++ = *f++) != '>') ;
-	    while (*f == ' ' || *f == '\t' || *f == '\n' || *f == ',') f++;
+	    while (is_hor_space(*f) || *f == '\n' || *f == ',') f++;
 	    if (f != t)
 		*t++ = ' ';
 	}

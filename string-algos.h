@@ -74,4 +74,18 @@ Char *skip_non_alpha(Char *str)
     return str;
 }
 
+inline bool is_hor_space(char c)
+{
+    return c == ' ' || c == '\t';
+}
+
+template <typename Char>
+Char *skip_hor_space(Char *str)
+{
+    if (str)
+        while (*str && is_hor_space(*str))
+            ++str;
+    return str;
+}
+
 #endif

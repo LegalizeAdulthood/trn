@@ -22,6 +22,7 @@
 #include "rcln.h"
 #include "rt-page.h"
 #include "rt-select.h"
+#include "string-algos.h"
 #include "term.h"
 #include "trn.h"
 #include "util.h"
@@ -534,7 +535,7 @@ static bool open_newsrc(NEWSRC *rp)
 #endif
 	    np->rcline = some_buf;
 	}
-	if (*some_buf == ' ' || *some_buf == '\t'
+	if (is_hor_space(*some_buf)
 	 || !strncmp(some_buf,"options",7)) {	/* non-useful line? */
 	    np->toread = TR_JUNK;
 	    np->subscribechar = ' ';
