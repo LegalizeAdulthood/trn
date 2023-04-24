@@ -377,8 +377,7 @@ save_result save_article()
 		if (fread(g_buf,1,LBUFLEN,s_tmpfp)) {
 		    c = g_buf;
 		    if (!isspace(MBOXCHAR))   /* if non-zero, */
-			while (isspace(*c))   /* check the first character */
-			    c++;
+			c = skip_space(c);   /* check the first character */
 		    mailbox = (*c == MBOXCHAR);
 		} else
 		    mailbox = g_mbox_always;    /* if zero length, recheck -M */

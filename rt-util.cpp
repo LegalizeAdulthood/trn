@@ -39,9 +39,7 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
 */
 char *extract_name(char *name)
 {
-    while (isspace(*name))
-        name++;
-
+    name = skip_space(name);
     char *lparen = strchr(name, '(');
     char *rparen = strrchr(name, ')');
     char *langle = strchr(name, '<');
@@ -58,8 +56,7 @@ char *extract_name(char *name)
     {
         name = lparen;
         *name++ = '\0';
-        while (isspace(*name))
-            name++;
+        name = skip_space(name);
         if (name == rparen)
             return nullptr;
         if (rparen != nullptr)
@@ -69,8 +66,7 @@ char *extract_name(char *name)
     if (*name == '"')
     {
         name++;
-        while (isspace(*name))
-            name++;
+        name = skip_space(name);
         char *s = strrchr(name, '"');
         if (s != nullptr)
             *s = '\0';
@@ -100,7 +96,7 @@ char *compress_name(char *name, int max)
 
 try_again:
     /* First remove white space from both ends. */
-    while (isspace(*name)) name++;
+    name = skip_space(name);
     int len = strlen(name);
     if (len == 0)
 	return name;
@@ -292,7 +288,7 @@ try_again:
 		s++;
 #endif
 	    }
-	    while (isspace(*s)) s++;
+	    s = skip_space(s);
 	}
 	if (d != mid) {
 	    *d = '\0';
@@ -395,7 +391,7 @@ char *compress_address(char *name, int max)
     char*start;
 
     /* Remove white space from both ends. */
-    while (isspace(*name)) name++;
+    name = skip_space(name);
     int len = strlen(name);
     if (len == 0)
 	return name;

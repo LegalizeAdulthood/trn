@@ -770,9 +770,9 @@ void save_options(const char *filename)
 	    nlp = strchr(cp, '\n');
 	    if (nlp)
 		*nlp++ = '\0';
-	    while (isspace(*cp)) cp++;
+	    cp = skip_space(cp);
 	    if (*cp == '[' && !strncmp(cp+1,"options]",8)) {
-		for (cp += 9; isspace(*cp); cp++) ;
+		cp = skip_space(cp + 9);
 		if (!*cp)
 		    break;
 	    }

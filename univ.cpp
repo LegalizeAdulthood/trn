@@ -573,7 +573,7 @@ static void univ_do_line_ext1(const char *desc, char *line)
 	  case '1':		/* "desc" $v1 1500 news.admin */
 	    /* XXX error checking */
 	    s++;
-	    while (isspace(*s)) s++;
+	    s = skip_space(s);
 	    p = skip_digits(s);
 	    ch = *p;
 	    *p = '\0';
@@ -587,7 +587,7 @@ static void univ_do_line_ext1(const char *desc, char *line)
 	  case 'g':		/* $vg [scorenum] news.* !news.foo.* */
 	    p = s;
 	    p++;
-	    while (isspace(*p)) p++;
+	    p = skip_space(p);
 	    q = p;
 	    if ((*p=='+') || (*p=='-'))
 	      p++;
@@ -626,8 +626,7 @@ static bool univ_do_line(char *line)
     if (*s == '\n')
 	*s = '\0';				/* delete newline */
 
-    s = line;
-    while (isspace(*s)) s++;
+    s = skip_space(line);
     if (*s == '\0')
 	return true;	/* empty line */
 
@@ -653,7 +652,7 @@ static bool univ_do_line(char *line)
 	s_univ_line_desc = savestr(s);
 	s = p+1;
     }
-    while (isspace(*s)) s++;
+    s = skip_space(s);
     if (!strncasecmp(s,"end group",9))
 	return false;
     if (!strncasecmp(s,"URL:",4)) {

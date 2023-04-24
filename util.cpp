@@ -558,7 +558,7 @@ time_t text2secs(const char *s, time_t defSecs)
     do {
 	time_t item = atol(s);
 	s = skip_digits(s);
-	while (isspace(*s)) s++;
+	s = skip_space(s);
 	if (isalpha(*s)) {
 	    switch (*s) {
 	      case 'd': case 'D':
@@ -575,7 +575,7 @@ time_t text2secs(const char *s, time_t defSecs)
 	    }
 	    while (isalpha(*s)) s++;
 	    if (*s == ',') s++;
-	    while (isspace(*s)) s++;
+	    s = skip_space(s);
 	}
 	secs += item;
     } while (isdigit(*s));
@@ -675,7 +675,7 @@ void prep_ini_data(char *cp, const char *filename)
 #endif
 
     while (*cp) {
-	while (isspace(*cp)) cp++;
+	cp = skip_space(cp);
 
 	if (*cp == '[') {
 	    char* s = t;
@@ -689,7 +689,7 @@ void prep_ini_data(char *cp, const char *filename)
 		    cp++;
 
 		while (*cp) {
-		    while (isspace(*cp)) cp++;
+		    cp = skip_space(cp);
 		    if (*cp == '[')
 			break;
 		    if (*cp == '#')
@@ -868,7 +868,7 @@ bool check_ini_cond(char *cond)
     bool equal = *cond == '=';
     if (equal)
 	cond++;
-    while (isspace(*cond)) cond++;
+    cond = skip_space(cond);
     if (upordown) {
 	const int num = atoi(cond) - atoi(g_buf);
 	if (!((equal && !num) || (upordown * num < 0)) ^ negate)

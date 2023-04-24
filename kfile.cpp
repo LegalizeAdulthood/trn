@@ -131,11 +131,10 @@ int do_kfile(FILE *kfp, int entering)
     while (fgets(g_buf,LBUFLEN,kfp) != nullptr) {
 	if (*(cp = g_buf + strlen(g_buf) - 1) == '\n')
 	    *cp = '\0';
-	for (bp = g_buf; isspace(*bp); bp++) ;
+	bp = skip_space(g_buf);
 	if (!strncmp(bp,"THRU",4)) {
 	    int len = strlen(g_ngptr->rc->name);
-	    cp = bp + 4;
-	    while (isspace(*cp)) cp++;
+            cp = skip_space(bp + 4);
 	    if (strncmp(cp, g_ngptr->rc->name, len) || !isspace(cp[len]))
 		continue;
 	    g_killfirst = atol(cp+len+1)+1;
@@ -147,7 +146,7 @@ int do_kfile(FILE *kfp, int entering)
 	}
 	if (*bp == 'I') {
             for (cp = bp + 1; *cp && !isspace(*cp); cp++) ;
-	    while (isspace(*cp)) cp++;
+	    cp = skip_space(cp);
 	    if (!*cp)
 		continue;
 	    cp = filexp(cp);
@@ -406,7 +405,7 @@ void rewrite_kfile(ART_NUM thru)
 	    if (!strncmp(g_buf,"THRU",4)) {
 		char* cp = g_buf+4;
 		int len = strlen(g_ngptr->rc->name);
-		while (isspace(*cp)) cp++;
+		cp = skip_space(cp);
 		if (isdigit(*cp))
 		    continue;
 		if (strncmp(cp, g_ngptr->rc->name, len)
@@ -416,7 +415,7 @@ void rewrite_kfile(ART_NUM thru)
 		}
 		continue;
 	    }
-	    for (bp = g_buf; isspace(*bp); bp++) ;
+	    bp = skip_space(g_buf);
 	    /* Leave out any outdated thread commands */
 	    if (*bp == 'T' || *bp == '<')
 		continue;
@@ -434,7 +433,7 @@ void rewrite_kfile(ART_NUM thru)
 	if (has_star_commands) {
 	    fseek(g_localkfp,0L,0);			/* rewind file */
 	    while (fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
-		for (bp = g_buf; isspace(*bp); bp++) ;
+		bp = skip_space(g_buf);
 		if (*bp == '*') {
 		    fputs(g_buf,s_newkfp);
 		    needs_newline = !strchr(bp,'\n');
@@ -631,7 +630,7 @@ void edit_kfile()
 	    fseek(g_localkfp,0L,0);			/* rewind file */
 	    g_kf_state &= ~KFS_NORMAL_LINES;
 	    while (fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
-		for (bp = g_buf; isspace(*bp); bp++) ;
+		bp = skip_space(g_buf);
 		if (*bp == '/' || *bp == '*')
 		    g_kf_state |= KFS_NORMAL_LINES;
 		else if (*bp == '<') {

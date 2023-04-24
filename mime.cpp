@@ -144,7 +144,7 @@ void mime_ReadMimecap(const char *mcname)
 
 	    s = bp + linelen;
 	}
-	for (s = bp; isspace(*s); s++) ;
+	s = skip_space(bp);
 	if (!*s)
 	    continue;
 	char *t = mime_ParseEntryArg(&s);
@@ -163,7 +163,7 @@ void mime_ReadMimecap(const char *mcname)
 		char* f = arg+1;
 		while (arg != t && isspace(arg[-1])) arg--;
 		*arg++ = '\0';
-		while (isspace(*f)) f++;
+		f = skip_space(f);
 		if (*f == '"')
 		    f = cpytill(arg,f+1,'"');
 		else
@@ -188,11 +188,10 @@ void mime_ReadMimecap(const char *mcname)
 
 static char *mime_ParseEntryArg(char **cpp)
 {
-    char* s = *cpp;
-    char* f;
-    char* t;
+    char*f;
+    char*t;
 
-    while (isspace(*s)) s++;
+    char *s = skip_space(*cpp);
 
     for (f = t = s; *f && *f != ';'; ) {
 	if (*f == '\\') {

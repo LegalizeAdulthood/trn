@@ -128,8 +128,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
     }
 
     while (!strncasecmp(s, "re:", 3)) {
-	s += 3;
-	while (isspace(*s)) s++;
+	s = skip_space(s + 3);
     }
 
     /* Get filename */
@@ -159,7 +158,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
      */
     if (!hasdot) {
     	while (*(t = s) != '\0' && *s != '\n') {
-	    while (isspace(*t)) t++;
+	    t = skip_space(t);
 	    for (s = t; isalnum(*s) || *s == '-' || *s == '+'
 		 || *s == '&' || *s == '_' || *s == '.'; s++) {
 		if (*s == '.' && 

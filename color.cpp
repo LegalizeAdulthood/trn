@@ -155,7 +155,7 @@ void color_rc_attribute(const char *object, char *value)
     /* See if they specified a color */
     char* s;
     for (s = value; *s && !isspace(*s); s++) ;
-    while (isspace(*s)) s++;
+    s = skip_space(s);
     if (!*s) {
 	s_objects[i].fg = "";
 	s_objects[i].bg = "";
@@ -168,7 +168,7 @@ void color_rc_attribute(const char *object, char *value)
     if (*t) {
 	n = t++;
 	*n = '\0';
-	while (isspace(*t)) t++;
+	t = skip_space(t);
     }
 
     /* We have both colors and attributes, so turn colors on. */
@@ -196,7 +196,7 @@ void color_rc_attribute(const char *object, char *value)
     if (*t) {
 	n = t++;
 	*n = '\0';
-	while (isspace(*t)) t++;
+	t = skip_space(t);
     }
     if (!*s || *t) {
 	fprintf(stderr,"trn: wrong number of parameters for %s in [attribute] section.\n",

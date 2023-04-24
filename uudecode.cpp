@@ -50,7 +50,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	if (*s == '/' && isdigit(s[1])) {
             int tmptotal = atoi(s);
 	    s = skip_digits(s);
-	    while (*s && isspace(*s)) s++;
+	    s = skip_space(s);
 	    if (tmppart > tmptotal || strncmp(s,"file ",5))
 		return 0;
             char *tmpfilename = s + 5;
@@ -116,7 +116,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 	s = skip_digits(s);
         int tmptotal = atoi(++s);
 	s = skip_digits(s);
-	while (*s && isspace(*s)) s++;
+	s = skip_space(s);
 	if (tmppart > tmptotal || strncmp(s, "File: ", 6))
 	    return 0;
         char *tmpfilename = s + 6;
@@ -192,7 +192,7 @@ decode_state uudecode(FILE *ifp, decode_state state)
 	      /* skip mode */
 	      p = g_buf + 6;
 	      while (*p && !isspace(*p)) p++;
-	      while (*p && isspace(*p)) p++;
+	      p = skip_space(p);
               char *filename = p;
 	      while (*p && (!isspace(*p) || *p == ' ')) p++;
 	      *p = '\0';

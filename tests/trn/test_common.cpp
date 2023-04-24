@@ -28,6 +28,15 @@ TEST_F(CommonTest, skipEqNullPtr)
     ASSERT_EQ(nullptr, pos);
 }
 
+TEST_F(CommonTest, skipEqNoChange)
+{
+    configure_before_after("No change.", "No change.");
+
+    const char *pos = skip_eq(m_buffer, ' ');
+
+    ASSERT_STREQ(m_after, pos);
+}
+
 TEST_F(CommonTest, skipEqMiddle)
 {
     configure_before_after("   This is a test.", "This is a test.");
@@ -51,6 +60,15 @@ TEST_F(CommonTest, skipNeNullPtr)
     const char *pos = skip_ne(nullptr, ' ');
 
     ASSERT_EQ(nullptr, pos);
+}
+
+TEST_F(CommonTest, skipNeNoChange)
+{
+    configure_before_after("No change.", "No change.");
+
+    const char *pos = skip_ne(m_buffer, 'N');
+
+    ASSERT_STREQ(m_after, pos);
 }
 
 TEST_F(CommonTest, skipNeMiddle)
@@ -89,9 +107,18 @@ TEST_F(CommonTest, emptyChars)
 
 TEST_F(CommonTest, skipDigitsNullPtr)
 {
-    char *p = nullptr;
+    char *p{};
 
     ASSERT_EQ(nullptr, skip_digits(p));
+}
+
+TEST_F(CommonTest, skipDigitsNoChange)
+{
+    configure_before_after("No change.", "No change.");
+
+    const char *pos = skip_digits(m_buffer);
+
+    ASSERT_STREQ(m_after, pos);
 }
 
 TEST_F(CommonTest, skipDigitsMiddle)
@@ -127,6 +154,31 @@ TEST_F(CommonTest, skipMutableDigitsEnd)
     configure_before_after("1965", "");
 
     char *pos = skip_digits(m_buffer);
+
+    ASSERT_STREQ(m_after, pos);
+}
+
+TEST_F(CommonTest, skipSpaceNullPtr)
+{
+    const char *buffer{};
+
+    ASSERT_EQ(nullptr, skip_space(buffer));
+}
+
+TEST_F(CommonTest, skipSpaceNoChange)
+{
+    configure_before_after("No change.", "No change.");
+
+    const char *pos = skip_space(m_buffer);
+
+    ASSERT_STREQ(m_after, pos);
+}
+
+TEST_F(CommonTest, skipSpaceMiddle)
+{
+    configure_before_after(" \t\f\v\r\nThere's plenty of space in here.", "There's plenty of space in here.");
+
+    const char *pos = skip_space(m_buffer);
 
     ASSERT_STREQ(m_after, pos);
 }

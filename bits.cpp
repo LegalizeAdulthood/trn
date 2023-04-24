@@ -633,8 +633,7 @@ static int chase_xref(ART_NUM artnum, int markread)
 		    subartnum(g_datasrc,x,tmpbuf);
 # endif
 	    }
-	    while (*curxref && isspace(*curxref))
-		curxref++;
+	    curxref = skip_space(curxref);
 	}
     }
     free(xref_buf);

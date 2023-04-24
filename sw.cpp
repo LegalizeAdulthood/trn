@@ -59,7 +59,7 @@ void sw_list(char *swlist)
     while (*s) {			/* "String, or nothing" */
 	if (!inquote && isspace(*s)) {	/* word delimiter? */
 	    for (;;) {
-		while (isspace(*s)) s++;
+		s = skip_space(s);
 		if (*s != '#')
 		    break;
 		while (*s && *s++ != '\n') ;
@@ -101,7 +101,7 @@ void sw_list(char *swlist)
 
 void decode_switch(const char *s)
 {
-    while (isspace(*s)) s++;		/* ignore leading spaces */
+    s = skip_space(s);		/* ignore leading spaces */
 #ifdef DEBUG
     if (debug) {
 	printf("Switch: %s\n",s) FLUSH;

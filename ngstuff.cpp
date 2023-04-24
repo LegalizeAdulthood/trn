@@ -113,9 +113,7 @@ int switcheroo()
 	}
 	else {
 	    char tmpbuf[LBUFLEN];
-	    char* s;
-
-	    for (s=g_buf+2; isspace(*s); s++);
+            char *s = skip_space(g_buf + 2);
 	    mac_line(s,tmpbuf,(sizeof tmpbuf));
 	}
     }
