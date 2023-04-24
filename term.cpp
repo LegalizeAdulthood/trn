@@ -1344,8 +1344,6 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
 {
     minor_mode mode_save = g_mode;
     general_mode gmode_save = g_general_mode;
-    char*prefix = nullptr;
-    int  number_was = -1;
 
     unflush_output();			/* disable any ^O in effect */
     eat_typeahead();
@@ -1397,7 +1395,9 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
         strcpy(g_buf,value);
     }
 
-    bool value_changed;
+    bool  value_changed;
+    int   number_was = -1;
+    char *prefix = nullptr;
 reask_in_choice:
     int len = strlen(g_buf);
     char *bp = g_buf;
@@ -1408,8 +1408,8 @@ reask_in_choice:
 		break;
 	}
 	if (*prefix) {
-	    for (bp = g_buf; *bp && *bp != ' '; bp++) ;
-	    while (*bp == ' ') bp++;
+	    bp = skip_ne(g_buf, ' ');
+	    bp = skip_eq(bp, ' ');
 	}
 	else
 	    prefix = nullptr;
@@ -1424,8 +1424,8 @@ reask_in_choice:
 	cp += strlen(cp) + 1;
 	if (!*cp)
 	    cp = tmpbuf;
-	if (*cp == '<'
-	 && (*g_buf == '<' || cp[1] != '#' || isdigit(*g_buf) || !*s)) {
+        if (*cp == '<' && (*g_buf == '<' || cp[1] != '#' || isdigit(*g_buf) || !*s))
+        {
 	    prefix = nullptr;
 	    break;
 	}
@@ -1447,8 +1447,10 @@ reask_in_choice:
 	    if (number_was >= 0)
 		sprintf(g_buf, "%d", number_was);
 	    else {
-		for (s = g_buf; isdigit(*s); s++) ;
-		*s = '\0';
+		s = g_buf;
+                while (isdigit(*s))
+                    ++s;
+                *s = '\0';
 	    }
 	}
     }
