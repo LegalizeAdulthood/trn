@@ -4,6 +4,8 @@
 #ifndef TRN_AUTOSUB_H
 #define TRN_AUTOSUB_H
 
-int auto_subscribe(const char *name);
+#include "rcstuff.h"
+
+addnew_type auto_subscribe(const char *name);
 
 #endif

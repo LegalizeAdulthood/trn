@@ -382,7 +382,7 @@ input_newsgroup_result input_newsgroup()
 	if (g_ngptr) {
 	    if (!get_ng(g_ngptr->rcline,GNG_NONE))
 		set_ng(g_current_ng);
-	    g_addnewbydefault = 0;
+	    g_addnewbydefault = ADDNEW_ASK;
 	}
 	return ING_SPECIAL;
       case 'x':
@@ -484,7 +484,7 @@ input_newsgroup_result input_newsgroup()
 	/* try to find newsgroup */
         if (!get_ng(g_ngname.c_str(), (*g_buf == 'm' ? GNG_RELOC : GNG_NONE) | GNG_FUZZY))
 	    g_ngptr = g_current_ng;	/* if not found, go nowhere */
-	g_addnewbydefault = 0;
+	g_addnewbydefault = ADDNEW_ASK;
 	return ING_SPECIAL;
 #ifdef DEBUG
       case 'D':

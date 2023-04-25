@@ -540,7 +540,7 @@ char addgroup_selector(getnewsgroup_flags flags)
 		get_ng(gp->name,flags);
 	    }
 	}
-	g_addnewbydefault = 0;
+	g_addnewbydefault = ADDNEW_ASK;
     }
     sel_cleanup();
     return s_sel_ret;

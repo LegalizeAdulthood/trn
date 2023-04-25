@@ -85,7 +85,7 @@ bool find_new_groups()
 		new_local_groups(rp->datasrc);
 	}
     }
-    g_addnewbydefault = 0;
+    g_addnewbydefault = ADDNEW_ASK;
 
     process_list(GNG_RELOC);
 

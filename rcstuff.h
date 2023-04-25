@@ -19,8 +19,9 @@ struct NGDATA;
 #define TR_BOGUS ((ART_UNREAD) -3)
 #define TR_JUNK ((ART_UNREAD) -4)
 
-enum
+enum addnew_type : char
 {
+    ADDNEW_ASK = '\0',
     ADDNEW_SUB = ':',
     ADDNEW_UNSUB = '!'
 };
@@ -71,18 +72,18 @@ struct MULTIRC
     multirc_flags flags;
 };
 
-extern HASHTABLE *g_newsrc_hash;
-extern MULTIRC   *g_sel_page_mp;
-extern MULTIRC   *g_sel_next_mp;
-extern LIST      *g_multirc_list;    /* a list of all MULTIRCs */
-extern MULTIRC   *g_multirc;         /* the current MULTIRC */
-extern bool       g_paranoid;        /* did we detect some inconsistency in .newsrc? */
-extern int        g_addnewbydefault; //
-extern bool       g_checkflag;       /* -c */
-extern bool       g_suppress_cn;     /* -s */
-extern int        g_countdown;       /* how many lines to list before invoking -s */
-extern bool       g_fuzzy_get;       /* -G */
-extern bool       g_append_unsub;    /* -I */
+extern HASHTABLE  *g_newsrc_hash;
+extern MULTIRC    *g_sel_page_mp;
+extern MULTIRC    *g_sel_next_mp;
+extern LIST       *g_multirc_list;    /* a list of all MULTIRCs */
+extern MULTIRC    *g_multirc;         /* the current MULTIRC */
+extern bool        g_paranoid;        /* did we detect some inconsistency in .newsrc? */
+extern addnew_type g_addnewbydefault; //
+extern bool        g_checkflag;       /* -c */
+extern bool        g_suppress_cn;     /* -s */
+extern int         g_countdown;       /* how many lines to list before invoking -s */
+extern bool        g_fuzzy_get;       /* -G */
+extern bool        g_append_unsub;    /* -I */
 
 bool     rcstuff_init();
 void     rcstuff_final();
