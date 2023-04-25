@@ -75,7 +75,6 @@ int main(int argc, char *argv[])
     bool has_fromline, in_header, has_pathline;
     bool found_nl,     had_nl;
     int  artpos,       len;
-    char*line_end;
     char*cp;
     int  i;
 
@@ -112,6 +111,7 @@ int main(int argc, char *argv[])
 	if (FILE_REF(cp))
 	    cp = nntp_servername(cp);
     }
+    const char *line_end;
     if (cp && *cp && strcmp(cp,"local")) {
 	g_server_name = savestr(cp);
 	cp = strchr(g_server_name, ';');
