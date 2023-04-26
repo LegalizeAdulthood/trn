@@ -66,8 +66,6 @@ extern ART_NUM     g_ng_go_artnum;     //
 extern bool        g_novice_delays;    /* +f */
 extern bool        g_in_ng;            /* true if in a newsgroup */
 
-#define ngdata_ptr(ngnum) ((NGDATA*)listnum2listitem(g_ngdata_list,(long)(ngnum)))
-
 void ngdata_init();
 void set_ng(NGDATA *np);
 int access_ng();

@@ -68,6 +68,11 @@ static void    parse_rcline(NGDATA *np);
 static NGDATA *add_newsgroup(NEWSRC *rp, const char *ngn, char_int c);
 static int     rcline_cmp(const char *key, int keylen, HASHDATUM data);
 
+inline NGDATA *ngdata_ptr(int ngnum)
+{
+    return (NGDATA *) listnum2listitem(g_ngdata_list, ngnum);
+}
+
 static MULTIRC *rcstuff_init_data()
 {
     MULTIRC* mptr = nullptr;
