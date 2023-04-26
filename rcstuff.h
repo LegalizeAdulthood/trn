@@ -11,13 +11,15 @@ struct DATASRC;
 struct HASHTABLE;
 struct NGDATA;
 
-#define TR_ONE ((ART_UNREAD) 1)
-#define TR_NONE ((ART_UNREAD) 0)
-#define TR_UNSUB ((ART_UNREAD) -1)
-			/* keep this one as -1, some tests use >= TR_UNSUB */
-#define TR_IGNORE ((ART_UNREAD) -2)
-#define TR_BOGUS ((ART_UNREAD) -3)
-#define TR_JUNK ((ART_UNREAD) -4)
+enum : ART_UNREAD
+{
+    TR_ONE = (ART_UNREAD) 1,
+    TR_NONE = (ART_UNREAD) 0,
+    TR_UNSUB = (ART_UNREAD) -1, /* keep this one as -1, some tests use >= TR_UNSUB */
+    TR_IGNORE = (ART_UNREAD) -2,
+    TR_BOGUS = (ART_UNREAD) -3,
+    TR_JUNK = (ART_UNREAD) -4,
+};
 
 enum addnew_type : char
 {
