@@ -40,7 +40,11 @@
 
 using char_int = int;
 
-#define Ctl(ch) (ch & 037)
+// Ctl('c') is Ctrl+C, e.g. '\003'
+inline char Ctl(char ch)
+{
+    return ch & 037;
+}
 
 #ifndef FILE_REF
 inline bool file_ref(const char *s)
