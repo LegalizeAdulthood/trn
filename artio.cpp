@@ -174,7 +174,7 @@ char *readartbuf(bool view_inline)
 	g_artbuf_pos++;
     }
     if (*bp) {
-	for (s = bp; *s && !AT_NL(*s); s++) ;
+	for (s = bp; *s && !at_nl(*s); s++) ;
 	if (*s) {
 	    len = s - bp + 1;
 	    goto done;

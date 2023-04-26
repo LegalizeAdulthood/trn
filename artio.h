@@ -4,8 +4,15 @@
 #ifndef TRN_ARTIO_H
 #define TRN_ARTIO_H
 
-#define WRAPPED_NL  '\003'
-#define AT_NL(c) ((c) == '\n' || (c) == WRAPPED_NL)
+enum : char
+{
+    WRAPPED_NL = '\003'
+};
+
+inline bool at_nl(char c)
+{
+    return c == '\n' || c == WRAPPED_NL;
+}
 
 extern ART_POS  g_artpos;  /* byte position in article file */
 extern ART_LINE g_artline; /* current line number in article file */

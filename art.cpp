@@ -434,7 +434,7 @@ do_article_result do_article()
 		    skip_put:
 			bufptr++;
 		    }
-		    else if (AT_NL(*bufptr) || !*bufptr) {    /* newline? */
+		    else if (at_nl(*bufptr) || !*bufptr) {    /* newline? */
 			if (under_lining) {
 			    under_lining = false;
 			    un_underline();
@@ -510,7 +510,7 @@ do_article_result do_article()
 			else
 			    g_term_line++;
 		    }
-		    if (AT_NL(*bufptr))		/* skip the newline */
+		    if (at_nl(*bufptr))		/* skip the newline */
 			s_restart = 0;
 		}
 
@@ -694,7 +694,7 @@ page_switch_result page_switch()
 	ART_LINE i = g_artline;
         g_gline = 3;
 	s = line_ptr(s_alinebeg);
-	while (AT_NL(*s) && i >= g_topline) {
+	while (at_nl(*s) && i >= g_topline) {
 	    ART_POS pos = vrdary(--i);
 	    if (pos < 0)
 		pos = -pos;
@@ -877,7 +877,7 @@ page_switch_result page_switch()
 		    if (g_artpos < 0)
 			g_artpos = -g_artpos;
 		    maybe_set_color(s, true);
-		    for (pos = g_artpos - pos; pos-- && !AT_NL(*s); s++)
+		    for (pos = g_artpos - pos; pos-- && !at_nl(*s); s++)
 			putchar(*s);
 		    color_default();
 		    putchar('\n') FLUSH;
