@@ -10,8 +10,11 @@
 
 struct ARTICLE;
 
-#define KF_GLOBAL false
-#define KF_LOCAL true
+enum : bool
+{
+    KF_GLOBAL = false,
+    KF_LOCAL = true
+};
 
 enum killfilestate_flags : std::uint16_t
 {
@@ -51,7 +54,6 @@ enum
 {
     KF_AGE_MASK = 0x003F
 };
-#define KF_DAYNUM(x)	((long)time((time_t*)nullptr) / 86400 - 10490 - (x))
 
 enum
 {

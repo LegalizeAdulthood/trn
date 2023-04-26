@@ -52,13 +52,18 @@ static char s_killglobal[] = KILLGLOBAL;
 static char s_killlocal[] = KILLLOCAL;
 static char s_killthreads[] = KILLTHREADS;
 
+inline long killfile_daynum(long x)
+{
+    return (long) time(nullptr) / 86400 - 10490 - x;
+}
+
 void kfile_init()
 {
     char* cp = getenv("KILLTHREADS");
     if (!cp)
 	cp = s_killthreads;
     if (*cp && strcmp(cp,"none")) {
-        s_kf_daynum = KF_DAYNUM(0);
+        s_kf_daynum = killfile_daynum(0);
         s_kf_thread_cnt = 0;
         g_kf_changethd_cnt = 0;
         FILE *fp = fopen(filexp(cp), "r");
@@ -520,7 +525,7 @@ void update_thread_kfile()
     if (!(g_kf_state & KFS_GLOBAL_THREADFILE))
 	return;
 
-    int elapsed_days = KF_DAYNUM(s_kf_daynum);
+    int elapsed_days = killfile_daynum(s_kf_daynum);
     if (elapsed_days) {
 	hashwalk(g_msgid_hash, age_thread_commands, elapsed_days);
 	s_kf_daynum += elapsed_days;
