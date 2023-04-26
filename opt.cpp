@@ -168,7 +168,7 @@ INI_WORDS g_options_ini[] =
 // clang-format on
 char **g_option_def_vals{};
 char **g_option_saved_vals{};
-char *g_option_flags{};
+option_flags *g_option_flags{};
 int g_sel_page_op{};
 
 static char s_univ_sel_cmds[3]{"Z>"};
@@ -234,8 +234,8 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     }
     g_option_saved_vals = (char**)safemalloc(ini_len(g_options_ini)*sizeof(char*));
     memset((char*)g_option_saved_vals,0,(g_options_ini)[0].checksum * sizeof (char*));
-    g_option_flags = (char*)safemalloc(ini_len(g_options_ini)*sizeof(char));
-    memset(g_option_flags,0,(g_options_ini)[0].checksum * sizeof (char));
+    g_option_flags = (option_flags*)safemalloc(ini_len(g_options_ini)*sizeof(option_flags));
+    memset(g_option_flags,0,(g_options_ini)[0].checksum * sizeof (option_flags));
 
     if (argc > 1) {
 	for (int i = 1; i < argc; i++)

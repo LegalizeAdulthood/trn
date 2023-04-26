@@ -4,6 +4,7 @@
 #ifndef TRN_OPT_H
 #define TRN_OPT_H
 
+#include "enum-flags.h"
 #include "head.h"
 #include "search.h"
 #include "util.h"
@@ -124,15 +125,19 @@ enum option_index
     OI_SCORE_LAST = OI_SC_VERBOSE,
 };
 
-#define OF_SEL		0x0001
-#define OF_INCLUDED	0x0010
+enum option_flags : char
+{
+    OF_SEL = 0x0001,
+    OF_INCLUDED = 0x0010
+};
+DECLARE_FLAGS_ENUM(option_flags, char);
 
 extern COMPEX g_optcompex;
 extern std::string g_ini_file;
 extern INI_WORDS g_options_ini[];
 extern char **g_option_def_vals;
 extern char **g_option_saved_vals;
-extern char *g_option_flags;
+extern option_flags *g_option_flags;
 extern int g_sel_page_op;
 
 void        opt_init(int argc, char *argv[], char **tcbufptr);
