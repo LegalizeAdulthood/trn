@@ -14,7 +14,10 @@
 #include "nntpclient.h"
 #include "rt-ov.h"
 
-#define DEFAULT_REFETCH_SECS (4L * 60 * 60) /* 4 hours */
+enum
+{
+    DEFAULT_REFETCH_SECS = 4L * 60 * 60 /* 4 hours */
+};
 
 struct HASHTABLE;
 struct LIST;
