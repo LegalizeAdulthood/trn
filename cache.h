@@ -111,9 +111,11 @@ struct ARTICLE
 };
 
 /* See kfile.h for the AUTO_* flags */
-
-#define DONT_FILL_CACHE	false
-#define FILL_CACHE	true
+enum : bool
+{
+    DONT_FILL_CACHE = false,
+    FILL_CACHE = true
+};
 
 extern LIST     *g_article_list; /* a list of ARTICLEs */
 extern ARTICLE **g_artptr_list;  /* the article-selector creates this */
