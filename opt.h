@@ -127,8 +127,9 @@ enum option_index
 
 enum option_flags : char
 {
-    OF_SEL = 0x0001,
-    OF_INCLUDED = 0x0010
+    OF_NONE = 0x00,
+    OF_SEL = 0x01,
+    OF_INCLUDED = 0x10
 };
 DECLARE_FLAGS_ENUM(option_flags, char);
 

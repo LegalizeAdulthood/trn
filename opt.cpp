@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <algorithm>
 #include <memory>
 #include <string>
 
@@ -204,7 +205,8 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     interp(*tcbufptr,TCBUF_SIZE,GLOBINIT);
     opt_file(*tcbufptr,tcbufptr,false);
 
-    g_option_def_vals = (char**)safemalloc(ini_len(g_options_ini)*sizeof(char*));
+    const int len = ini_len(g_options_ini);
+    g_option_def_vals = (char**)safemalloc(len*sizeof(char*));
     memset((char*)g_option_def_vals,0,(g_options_ini)[0].checksum * sizeof (char*));
     /* Set DEFHIDE and DEFMAGIC to current values and clear g_user_htype list */
     set_header_list(HT_DEFHIDE,HT_HIDE,"");
@@ -232,10 +234,10 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 	else
 	    sw_file(tcbufptr);
     }
-    g_option_saved_vals = (char**)safemalloc(ini_len(g_options_ini)*sizeof(char*));
+    g_option_saved_vals = (char**)safemalloc(len*sizeof(char*));
     memset((char*)g_option_saved_vals,0,(g_options_ini)[0].checksum * sizeof (char*));
-    g_option_flags = (option_flags*)safemalloc(ini_len(g_options_ini)*sizeof(option_flags));
-    memset(g_option_flags,0,(g_options_ini)[0].checksum * sizeof (option_flags));
+    g_option_flags = new option_flags[len];
+    std::fill_n(g_option_flags, len, OF_NONE);
 
     if (argc > 1) {
 	for (int i = 1; i < argc; i++)
@@ -249,7 +251,8 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 void opt_final()
 {
     g_privdir.clear();
-    safefree0(g_option_flags);
+    delete[] g_option_flags;
+    g_option_flags = nullptr;
     safefree0(g_option_saved_vals);
     g_ini_file.clear();
     safefree0(g_option_def_vals);
