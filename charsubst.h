@@ -20,8 +20,6 @@
 extern std::string g_charsets;
 extern const char* g_charsubst;
 
-#define HEADER_CONV() (g_charsubst[0]=='a' || g_charsubst[0]=='m'? g_charsubst[0] : '\0')
-
 int putsubstchar(int c, int limit, bool outputok);
 const char *current_charsubst();
 int strcharsubst(char *outb, const char *inb, int limit, char_int subst);

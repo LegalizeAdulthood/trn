@@ -273,6 +273,11 @@ static ARTICLE *find_artp(ARTICLE *article, int x)
     return nullptr;
 }
 
+inline bool header_conv()
+{
+    return g_charsubst[0] == 'a' || g_charsubst[0] == 'm';
+}
+
 /* Output a header line with possible tree display on the right hand side.
 ** Does automatic wrapping of lines that are too long.
 */
@@ -294,7 +299,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	len = strlen(orig_line);
 
     /* Copy line, filtering encoded and control characters. */
-    if (HEADER_CONV()) {
+    if (header_conv()) {
 	tmpbuf = safemalloc(len * 2 + 2);
 	line = tmpbuf + len + 1;
     }
@@ -310,7 +315,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	dectrl(line);
 	end = line + len;
     }
-    if (HEADER_CONV()) {
+    if (header_conv()) {
 	end = tmpbuf + strcharsubst(tmpbuf, line, len*2+2, *g_charsubst);
 	line = tmpbuf;
     }
