@@ -10,8 +10,11 @@ struct NGDATA;
 /* if true, silence is golden (universal scan mode) */
 extern bool toread_quiet;
 
-#define ST_STRICT	false
-#define ST_LAX		true
+enum : bool
+{
+    ST_STRICT = false,
+    ST_LAX = true
+};
 
 void rcln_init();
 void catch_up(NGDATA *np, int leave_count, int output_level);
