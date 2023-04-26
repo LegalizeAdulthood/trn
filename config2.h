@@ -41,7 +41,7 @@
 using char_int = int;
 
 // Ctl('c') is Ctrl+C, e.g. '\003'
-inline char Ctl(char ch)
+constexpr char Ctl(char ch)
 {
     return ch & 037;
 }
