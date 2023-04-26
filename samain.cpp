@@ -84,7 +84,7 @@ long sa_add_ent(ART_NUM artnum)
     long cur = g_sa_num_ents - 1;
     g_sa_ents[cur].artnum = artnum;
     g_sa_ents[cur].subj_thread_num = 0;
-    g_sa_ents[cur].sa_flags = (char)0;
+    g_sa_ents[cur].sa_flags = SAF_NONE;
     s_order_add(cur);
     return cur;
 }

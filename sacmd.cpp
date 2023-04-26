@@ -87,7 +87,7 @@ int sa_docmd()
 /* consider: should it start reading? */
 	b = sa_readmarked_elig();
 	if (b) {
-	    sa_clearmark(b);
+	    sa_clear_mark(b);
 	    return b;
 	}
 	g_s_ref_top = true;	/* refresh # of articles */
@@ -137,7 +137,7 @@ int sa_docmd()
 	}
 	b = sa_readmarked_elig();
 	if (b) {
-	    sa_clearmark(b);
+	    sa_clear_mark(b);
 	    return b;
 	}
 	g_s_refill = true;
@@ -243,7 +243,7 @@ int sa_docmd()
 	break;
       case 'Z':	/* Zero (wipe) selections... */
 	for (i = 1; i < g_sa_num_ents; i++)
-	    g_sa_ents[i].sa_flags = (g_sa_ents[i].sa_flags & 0xfd);
+            sa_clear_select1(i);
 	g_s_ref_status = 0;
 	if (!g_sa_mode_zoom)
 	    break;
@@ -380,7 +380,7 @@ int sa_docmd()
       case ' ':
 	b = sa_readmarked_elig();
 	if (b) {
-	    sa_clearmark(b);
+	    sa_clear_mark(b);
 	    return b;
 	}
 	/* FALL THROUGH */
@@ -578,7 +578,7 @@ void sa_art_cmd_prim(sa_cmd cmd, long a)
     switch (cmd) {
       case SA_KILL_MARKED:
 	if (sa_marked(a)) {
-	    sa_clearmark(a);
+	    sa_clear_mark(a);
 	    oneless_artnum(artnum);
 	}
 	break;
@@ -588,19 +588,19 @@ void sa_art_cmd_prim(sa_cmd cmd, long a)
 	oneless_artnum(artnum);
 	break;
       case SA_KILL:		/* junk this article */
-	sa_clearmark(a);	/* clearing should be fast */
+	sa_clear_mark(a);	/* clearing should be fast */
 	oneless_artnum(artnum);
 	break;
       case SA_MARK:		/* mark this article */
 	if (sa_marked(a))
-	    sa_clearmark(a);
+	    sa_clear_mark(a);
 	else
 	    sa_mark(a);
 	s_ref_status_onpage(a);
 	break;
       case SA_SELECT:		/* select this article */
 	if (sa_selected1(a)) {
-	    sa_clearselect1(a);
+	    sa_clear_select1(a);
 	    if (g_sa_mode_zoom)
 		g_s_refill = true;	/* article is now ineligible */
 	} else
@@ -608,7 +608,7 @@ void sa_art_cmd_prim(sa_cmd cmd, long a)
 	s_ref_status_onpage(a);
 	break;
       case SA_EXTRACT:
-	sa_clearmark(a);
+	sa_clear_mark(a);
 	g_art = artnum;
 	*g_buf = 'e';		/* fake up the extract command */
 	safecpy(g_buf+1,s_sa_extract_dest,LBUFLEN);

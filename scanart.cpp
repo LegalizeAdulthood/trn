@@ -97,7 +97,7 @@ sa_main_result sa_main()
 	if (a) {	/* there was an article */
 	    g_art = g_sa_ents[a].artnum;
 	    g_reread = true;
-	    sa_clearmark(a);
+	    sa_clear_mark(a);
 	    /* trn 3.x won't read an unselected article if g_selected_only */
 	    g_selected_only = false;
 	    s_save_context();

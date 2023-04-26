@@ -88,8 +88,7 @@ void sa_selthreads()
 
     /* clear any old selections */
     for (long i = 1; i < g_sa_num_ents; i++)
-	g_sa_ents[i].sa_flags =
-	    (g_sa_ents[i].sa_flags & 0xfd);
+	sa_clear_select1(i);
 
     /* Loop through all (selected) articles. */
     for (SUBJECT *sp = g_first_subject; sp; sp = sp->next) {
