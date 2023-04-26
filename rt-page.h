@@ -7,8 +7,11 @@
 #include "opt.h"
 #include "rt-select.h"
 
-#define PRESERVE_PAGE     false
-#define FILL_LAST_PAGE    true
+enum : bool
+{
+    PRESERVE_PAGE = false,
+    FILL_LAST_PAGE = true
+};
 
 struct ADDGROUP;
 struct ARTICLE;
