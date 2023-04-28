@@ -11,6 +11,7 @@
 #include "cache.h"
 #include "color.h"
 #include "datasrc.h"
+#include "enum-flags.h"
 #include "final.h"
 #include "intrp.h"
 #include "kfile.h"
@@ -81,12 +82,21 @@ char           g_option_sel_cmds[3]{"Z>"};
 bool           g_use_sel_num{};
 bool           g_sel_num_goto{};
 
+enum removed_prompt
+{
+    RP_NONE = 0,
+    RP_MOUSEBAR = 1,
+    RP_NEWLINE = 2,
+    RP_ALL = 3,
+};
+DECLARE_FLAGS_ENUM(removed_prompt, int);
+
 static char s_sel_ret{};
 static char s_page_char{};
 static char s_end_char{};
 static int s_disp_status_line{};
 static bool s_clean_screen{};
-static int s_removed_prompt{};
+static removed_prompt s_removed_prompt{};
 static int s_force_sel_pos{};
 static display_state (*s_extra_commands)(char_int){};
 
@@ -885,15 +895,15 @@ static char sel_input()
       int got_dash = 0;
       int got_goto = 0;
     s_force_sel_pos = -1;
-    if (s_removed_prompt & 1) {
+    if (s_removed_prompt & RP_MOUSEBAR) {
 	draw_mousebar(g_tc_COLS,false);
-	s_removed_prompt &= ~1;
+	s_removed_prompt &= ~RP_MOUSEBAR;
     }
     if (g_can_home)
 	goto_xy(0,g_sel_items[g_sel_item_index].line);
 
 reinp_selector:
-    if (s_removed_prompt & 1)
+    if (s_removed_prompt & RP_MOUSEBAR)
 	goto position_selector;	/* (CAA: TRN considered harmful? :-) */
     /* Grab some commands from the user */
     fflush(stdout);
@@ -914,7 +924,7 @@ reinp_selector:
 	    goto_xy(0,g_sel_last_line+1);
 	    erase_line(false);
 	    if (g_term_line == g_tc_LINES-1)
-		s_removed_prompt |= 1;
+		s_removed_prompt |= RP_MOUSEBAR;
 	}
 	s_disp_status_line = 0;
     }
@@ -948,7 +958,7 @@ reinp_selector:
 		goto_xy(0,g_sel_last_line+1);
 		erase_line(false);
 		if (g_term_line == g_tc_LINES-1)
-		    s_removed_prompt |= 1;
+		    s_removed_prompt |= RP_MOUSEBAR;
 	    }
 	    s_disp_status_line = 0;
 	}
@@ -997,7 +1007,7 @@ reinp_selector:
 		goto_xy(0,g_sel_last_line+1);
 		erase_line(false);
 		if (g_term_line == g_tc_LINES-1)
-		    s_removed_prompt |= 1;
+		    s_removed_prompt |= RP_MOUSEBAR;
 	    }
 	    s_disp_status_line = 0;
 	}
@@ -1116,7 +1126,7 @@ reinp_selector:
 		sel_display();
 		goto reask_selector;
 	    }
-	    if (s_removed_prompt & 2) {
+	    if (s_removed_prompt & RP_NEWLINE) {
 		carriage_return();
 		goto reask_selector;
 	    }
@@ -1133,9 +1143,9 @@ reinp_selector:
 		newline();
 		fputs(g_msg,stdout);
 		g_term_col = strlen(g_msg);
-		if (s_removed_prompt & 1) {
+		if (s_removed_prompt & RP_MOUSEBAR) {
 		    draw_mousebar(g_tc_COLS,false);
-		    s_removed_prompt &= ~1;
+		    s_removed_prompt &= ~RP_MOUSEBAR;
 		}
 		s_disp_status_line = 2;
 	    }
@@ -1157,7 +1167,7 @@ reinp_selector:
 
 	    if (!g_can_home)
 		newline();
-	    if (s_removed_prompt & 2)
+	    if (s_removed_prompt & RP_NEWLINE)
 		goto reask_selector;
 	    goto position_selector;
 	}
@@ -1256,7 +1266,7 @@ static void sel_prompt()
 	    g_sel_direction<0? "reverse " : "", g_sel_sort_string, g_cmd_buf);
     color_string(COLOR_CMD,g_msg);
     g_term_col = strlen(g_msg);
-    s_removed_prompt = 0;
+    s_removed_prompt = RP_NONE;
 }
 
 static bool select_item(SEL_UNION u)
@@ -1568,7 +1578,7 @@ static display_state sel_command(char_int ch)
 	return DS_DISPLAY;
       case Ctl('^'):
 	erase_line(false);		/* erase the prompt */
-	s_removed_prompt |= 2;
+	s_removed_prompt |= RP_NEWLINE;
 #ifdef MAILCALL
 	setmail(true);		/* force a mail check */
 #endif
@@ -1593,7 +1603,7 @@ static display_state sel_command(char_int ch)
 	return DS_DISPLAY;
       case '&':  case '!':
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
-	s_removed_prompt = 3;
+	s_removed_prompt = RP_ALL;
 	if (!finish_command(true)) {	/* get rest of command */
 	    if (s_clean_screen)
 		break;
@@ -1626,7 +1636,7 @@ static display_state sel_command(char_int ch)
 	return DS_DISPLAY;
       case '\\':
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
-	s_removed_prompt = 3;
+	s_removed_prompt = RP_ALL;
 	if (g_sel_mode == SM_NEWSGROUP)
 	    printf("[%s] Cmd: ", g_ngptr? g_ngptr->rcline : "*End*");
 	else
@@ -1794,7 +1804,7 @@ static display_state article_commands(char_int ch)
 	if (!g_sel_rereading)
 	    sel_cleanup();
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
-	s_removed_prompt = 3;
+	s_removed_prompt = RP_ALL;
       reask_output:
 	in_char("Selector mode:  Threads, Subjects, Articles?", MM_SELECTOR_ORDER_PROMPT, "tsa");
 	printcmd();
@@ -1830,7 +1840,7 @@ static display_state article_commands(char_int ch)
 	if (!g_sel_rereading)
 	    sel_cleanup();
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
-	s_removed_prompt = 3;
+	s_removed_prompt = RP_ALL;
       reask_sort:
 	if (g_sel_mode == SM_ARTICLE)
 	    in_char(
@@ -1976,7 +1986,7 @@ static display_state article_commands(char_int ch)
 	    break;
 	}
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
-	s_removed_prompt = 3;
+	s_removed_prompt = RP_ALL;
 	if (g_sel_mode == SM_ARTICLE)
 	    g_artp = g_sel_items[g_sel_item_index].u.ap;
 	else {
@@ -2034,7 +2044,7 @@ static display_state article_commands(char_int ch)
 	/* FALL THROUGH */
       case '/':
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
-	s_removed_prompt = 3;
+	s_removed_prompt = RP_ALL;
 	if (!finish_command(true)) {	/* get rest of command */
 	    if (s_clean_screen)
 		break;
@@ -2088,7 +2098,7 @@ static display_state article_commands(char_int ch)
 	return DS_DISPLAY;
       case 'c':
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
-	s_removed_prompt = 3;
+	s_removed_prompt = RP_ALL;
         ch = ask_catchup();
         if (ch == 'y' || ch == 'u')
         {
@@ -2188,7 +2198,7 @@ static display_state newsgroup_commands(char_int ch)
 	if (!g_sel_rereading)
 	    sel_cleanup();
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
-	s_removed_prompt = 3;
+	s_removed_prompt = RP_ALL;
       reask_sort:
 	in_char("Order by Newsrc, Group name, or Count?", MM_Q, "ngcNGC");
 	printcmd();
@@ -2256,7 +2266,7 @@ static display_state newsgroup_commands(char_int ch)
 #endif
       case '/':
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
-	s_removed_prompt = 3;
+	s_removed_prompt = RP_ALL;
 	if (!finish_command(true)) {	/* get rest of command */
 	    if (s_clean_screen)
 		break;
@@ -2303,7 +2313,7 @@ static display_state newsgroup_commands(char_int ch)
 	    g_current_ng = g_ngptr;
 	}
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
-	s_removed_prompt = 3;
+	s_removed_prompt = RP_ALL;
         ch = ask_catchup();
         if (ch == 'y' || ch == 'u')
 	    return DS_DISPLAY;
@@ -2329,9 +2339,9 @@ static display_state newsgroup_commands(char_int ch)
 	input_newsgroup_result ret;
 	bool was_at_top = !g_sel_prior_obj_cnt;
 	PUSH_SELECTOR();
-	if (!(s_removed_prompt & 2)) {
+	if (!(s_removed_prompt & RP_NEWLINE)) {
 	    erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
-	    s_removed_prompt = 3;
+	    s_removed_prompt = RP_ALL;
 	    printf("[%s] Cmd: ", g_ngptr? g_ngptr->rcline : "*End*");
 	    fflush(stdout);
 	}
@@ -2410,7 +2420,7 @@ static display_state addgroup_commands(char_int ch)
 	if (!g_sel_rereading)
 	    sel_cleanup();
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
-	s_removed_prompt = 3;
+	s_removed_prompt = RP_ALL;
       reask_sort:
 	in_char("Order by Natural-order, Group name, or Count?", MM_Q, "ngcNGC");
 	printcmd();
@@ -2514,7 +2524,7 @@ static display_state addgroup_commands(char_int ch)
       case ':':
       case '/':
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
-	s_removed_prompt = 3;
+	s_removed_prompt = RP_ALL;
 	if (!finish_command(true)) {	/* get rest of command */
 	    if (s_clean_screen)
 		break;
@@ -2615,7 +2625,7 @@ static display_state option_commands(char_int ch)
 	SEL_UNION u;
         char*     pattern;
         erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
-	s_removed_prompt = 3;
+	s_removed_prompt = RP_ALL;
 	if (!finish_command(true))	/* get rest of command */
 	    break;
         for (pattern = g_buf; *pattern == ' '; pattern++)
@@ -2705,7 +2715,7 @@ static display_state universal_commands(char_int ch)
 	if (!g_sel_rereading)
 	    sel_cleanup();
 	erase_line(g_mousebar_cnt > 0);	/* erase the prompt */
-	s_removed_prompt = 3;
+	s_removed_prompt = RP_ALL;
       reask_sort:
 	in_char("Order by Natural, or score Points?", MM_Q, "npNP");
 	printcmd();
