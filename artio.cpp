@@ -400,8 +400,7 @@ char *readartbuf(bool view_inline)
   done:
     word_wrap = g_tc_COLS - g_word_wrap_offset;
     if (read_something && g_word_wrap_offset >= 0 && word_wrap > 20 && bp) {
-	char* cp;
-	for (cp = bp; *cp && (s = strchr(cp, '\n')) != nullptr; cp = s+1) {
+	for (char* cp = bp; *cp && (s = strchr(cp, '\n')) != nullptr; cp = s+1) {
 	    if (s - cp > g_tc_COLS) {
 		char* t;
 		do {
