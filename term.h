@@ -394,7 +394,8 @@ inline void insert_line()
 }
 inline void carriage_return()
 {
-    g_term_col = 0, tputs(g_tc_CR, 1, putchr) FLUSH;
+    g_term_col = 0;
+    tputs(g_tc_CR, 1, putchr) FLUSH;
 }
 inline void dingaling()
 {
