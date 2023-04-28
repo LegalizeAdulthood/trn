@@ -404,7 +404,6 @@ static int agorder_count(const ADDGROUP **app1, const ADDGROUP **app2)
 void sort_addgroups()
 {
     ADDGROUP* ap;
-    int i;
     ADDGROUP** lp;
     int (*sort_procedure)(const ADDGROUP**, const ADDGROUP**);
 
@@ -431,7 +430,8 @@ void sort_addgroups()
     ap = ag_list[0];
     g_first_addgroup = ag_list[0];
     ap->prev = nullptr;
-    for (i = s_addgroup_cnt, lp = ag_list; --i; lp++) {
+    lp = ag_list;
+    for (int i = s_addgroup_cnt; --i; ++lp) {
 	lp[0]->next = lp[1];
 	lp[1]->prev = lp[0];
     }
