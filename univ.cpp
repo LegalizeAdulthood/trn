@@ -656,7 +656,7 @@ static bool univ_do_line(char *line)
     if (!strncasecmp(s,"end group",9))
 	return false;
     if (!strncasecmp(s,"URL:",4)) {
-	for (p = s; *p && *p != '>'; p++) ;
+        p = skip_ne(s, '>');
 	if (*p) {
 	    p++;
 	    if (!*p)		/* empty label */
@@ -689,14 +689,14 @@ static bool univ_do_line(char *line)
 	  case '~':	/* ...or full file names */
 	  case '%':
 	  case '/':
-	    for (p = s; *p && *p != '>'; p++) ;
+            p = skip_ne(s, '>');
 	    if (*p) {
 		if (strlen(s) < 1020) {
 		    static char lbuf[1024];
 		    strcpy(lbuf,s);
 		    s = lbuf;
 
-		    for (p = s; *p && *p != '>'; p++) ; /* XXX Ick! */
+		    p = skip_ne(s, '>'); /* XXX Ick! */
 		    *p++ = '\0';	/* separate label */
 
 		    if (!*p)		/* empty label */
