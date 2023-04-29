@@ -76,15 +76,15 @@ int sa_docmd()
 	g_s_ref_top = true;	/* refresh # of articles */
 	break;
       case 'D':	/* kill unmarked "on" page */
-	for (i = 0; i <= g_s_bot_ent; i++)
-    /* This is a difficult decision, with no obviously good behavior. */
-    /* Do not kill threads with the first article marked, as it is probably
-     * not what the user wanted.
-     */
+	for (int i = 0; i <= g_s_bot_ent; i++)
+            /* This is a difficult decision, with no obviously good behavior. */
+            /* Do not kill threads with the first article marked, as it is probably
+             * not what the user wanted.
+             */
 	    if (!sa_marked(g_page_ents[i].entnum) || !g_sa_mode_fold)
 		(void)sa_art_cmd(g_sa_mode_fold,SA_KILL_UNMARKED,
                                  g_page_ents[i].entnum);
-/* consider: should it start reading? */
+        /* consider: should it start reading? */
 	b = sa_readmarked_elig();
 	if (b) {
 	    sa_clear_mark(b);
@@ -96,12 +96,12 @@ int sa_docmd()
       case 'J':	/* kill marked "on" page */
 	/* If in "fold" mode, kill threads with the first article marked */
 	if (g_sa_mode_fold) {
-	    for (i = 0; i <= g_s_bot_ent; i++) {
+	    for (int i = 0; i <= g_s_bot_ent; i++) {
 		if (sa_marked(g_page_ents[i].entnum))
 		    (void)sa_art_cmd(true,SA_KILL,g_page_ents[i].entnum);
 	    }
 	} else
-	    for (i = 0; i <= g_s_bot_ent; i++)
+	    for (int i = 0; i <= g_s_bot_ent; i++)
 		(void)sa_art_cmd(false,SA_KILL_MARKED,g_page_ents[i].entnum);
 	g_s_refill = true;
 	g_s_ref_top = true;	/* refresh # of articles */
@@ -214,7 +214,7 @@ int sa_docmd()
       case 'U':	/* toggle unread/unread+read mode */
 	g_sa_mode_read_elig = !g_sa_mode_read_elig;
 /* maybe later use the flag to not do this more than once per newsgroup */
-	for (i = 1; i < g_sa_num_ents; i++)
+	for (int i = 1; i < g_sa_num_ents; i++)
 	    s_order_add(i);		/* duplicates ignored */
 	if (sa_eligible(s_first()) || s_next_elig(s_first())) {
 #ifdef PENDING
@@ -242,7 +242,7 @@ int sa_docmd()
 	g_s_ref_top = true;
 	break;
       case 'Z':	/* Zero (wipe) selections... */
-	for (i = 1; i < g_sa_num_ents; i++)
+	for (int i = 1; i < g_sa_num_ents; i++)
             sa_clear_select1(i);
 	g_s_ref_status = 0;
 	if (!g_sa_mode_zoom)
@@ -298,7 +298,7 @@ int sa_docmd()
 	    s_beep();
 	    return 0;
 	}
-	for (i = g_s_ptr_page_line+1; i <= g_s_bot_ent; i++)
+	for (int i = g_s_ptr_page_line+1; i <= g_s_bot_ent; i++)
 	    if (g_page_ents[i].entnum == b) {	/* art is on same page */
 		s_rub_ptr();
 		g_s_ptr_page_line = i;
@@ -316,7 +316,7 @@ int sa_docmd()
 	    s_beep();
 	    return 0;
 	}
-	for (i = 0; i <= g_s_bot_ent; i++)
+	for (int i = 0; i <= g_s_bot_ent; i++)
 	    if (g_page_ents[i].entnum == b) {	/* art is on same page */
 		s_rub_ptr();
 		g_s_ptr_page_line = i;
@@ -335,7 +335,7 @@ int sa_docmd()
 	    s_beep();
 	    return 0;
 	}
-	for (i = g_s_ptr_page_line-1; i >= 0; i--)
+	for (int i = g_s_ptr_page_line-1; i >= 0; i--)
 	    if (g_page_ents[i].entnum == b) {	/* art is on same page */
 		s_rub_ptr();
 		g_s_ptr_page_line = i;
