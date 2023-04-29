@@ -111,14 +111,8 @@ void sa_selthreads()
 
 int sa_number_arts()
 {
-    long i;
-
-    if (g_sa_mode_read_elig)
-	i = g_absfirst;
-    else
-	i = g_firstart;
     int total = 0;
-    for (i = 1; i < g_sa_num_ents; i++) {
+    for (int i = 1; i < g_sa_num_ents; i++) {
 	ART_NUM a = g_sa_ents[i].artnum;
 	if (is_unavailable(a))
 	    continue;
