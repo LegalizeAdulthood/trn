@@ -217,8 +217,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
 	    g_srchahead = -1;
 
 	{			/* compensate for notesfiles */
-	    int i;
-	    for (i = 24; *h && i--; h++)
+	    for (int i = 24; *h && i--; h++)
 		if (*h == '\\')
 		    h++;
 	    *h = '\0';
