@@ -652,10 +652,9 @@ static bool open_newsrc(NEWSRC *rp)
 /* Initialize the memory for an entire node's worth of article's */
 static void init_ngnode(LIST *list, LISTNODE *node)
 {
-    ART_NUM i;
-    NGDATA* np;
     memset(node->data,0,list->items_per_node * list->item_size);
-    for (i = node->low, np = (NGDATA*)node->data; i <= node->high; i++, np++)
+    NGDATA *np = (NGDATA*)node->data;
+    for (ART_NUM i = node->low; i <= node->high; i++, np++)
 	np->num = i;
 }
 
