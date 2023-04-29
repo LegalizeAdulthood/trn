@@ -411,7 +411,7 @@ char *compress_address(char *name, int max)
     char *at = nullptr;
     char *bang = nullptr;
     char *hack = nullptr;
-    for (s = name + 1; *s; s++) {
+    for (char *s = name + 1; *s; s++) {
 	/* If there's whitespace in the middle then it's probably not
 	** really an email address. */
 	if (isspace(*s)) {
