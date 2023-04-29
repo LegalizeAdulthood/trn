@@ -1164,9 +1164,8 @@ static void set_header_list(headtype_flags flag, headtype_flags defflag, const c
 
 void set_header(const char *s, headtype_flags flag, bool setit)
 {
-    int i;
     int len = strlen(s);
-    for (i = HEAD_FIRST; i < HEAD_LAST; i++) {
+    for (int i = HEAD_FIRST; i < HEAD_LAST; i++) {
 	if (!len || !strncasecmp(s,g_htype[i].name,len)) {
 	    if (setit && (flag != HT_MAGIC || (g_htype[i].flags & HT_MAGICOK)))
 		g_htype[i].flags |= flag;
@@ -1179,7 +1178,7 @@ void set_header(const char *s, headtype_flags flag, bool setit)
         int  add_at = 0;
         int  killed = 0;
         bool save_it = true;
-	for (i = g_user_htypeix[ch - 'a']; *g_user_htype[i].name == ch; i--) {
+	for (int i = g_user_htypeix[ch - 'a']; *g_user_htype[i].name == ch; i--) {
 	    if (len <= g_user_htype[i].length
 	     && !strncasecmp(s,g_user_htype[i].name,len)) {
 		free(g_user_htype[i].name);
@@ -1207,7 +1206,7 @@ void set_header(const char *s, headtype_flags flag, bool setit)
 		    if (add_at == 1)
 			add_at = g_user_htype_cnt;
 		}
-		for (i = g_user_htype_cnt; i > add_at; i--)
+		for (int i = g_user_htype_cnt; i > add_at; i--)
 		    g_user_htype[i] = g_user_htype[i-1];
 		g_user_htype_cnt++;
 	    }
@@ -1224,14 +1223,14 @@ void set_header(const char *s, headtype_flags flag, bool setit)
 	if (killed) {
 	    while (killed < g_user_htype_cnt && g_user_htype[killed].name != nullptr)
 		killed++;
-	    for (i = killed+1; i < g_user_htype_cnt; i++) {
+	    for (int i = killed+1; i < g_user_htype_cnt; i++) {
 		if (g_user_htype[i].name != nullptr)
 		    g_user_htype[killed++] = g_user_htype[i];
 	    }
 	    g_user_htype_cnt = killed;
 	}
 	memset((char*)g_user_htypeix,0,sizeof g_user_htypeix);
-	for (i = 1; i < g_user_htype_cnt; i++)
+	for (int i = 1; i < g_user_htype_cnt; i++)
 	    g_user_htypeix[*g_user_htype[i].name - 'a'] = i;
     }
 }
