@@ -1028,19 +1028,15 @@ static int univ_order_score(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2)
 
 void sort_univ()
 {
-    int i;
-    UNIV_ITEM* ui;
-    UNIV_ITEM** lp;
-    int (*sort_procedure)(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2);
-
     int cnt = 0;
-    for (ui = g_first_univ; ui; ui = ui->next) {
+    for (const UNIV_ITEM *i = g_first_univ; i; i = i->next) {
 	cnt++;
     }
 
     if (cnt<=1)
 	return;
 
+    int (*sort_procedure)(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2);
     switch (g_sel_sort) {
       case SS_SCORE:
 	sort_procedure = univ_order_score;
@@ -1052,14 +1048,16 @@ void sort_univ()
     }
 
     UNIV_ITEM **univ_sort_list = (UNIV_ITEM**)safemalloc(cnt * sizeof(UNIV_ITEM*));
-    for (lp = univ_sort_list, ui = g_first_univ; ui; ui = ui->next)
+    UNIV_ITEM** lp = univ_sort_list;
+    for (UNIV_ITEM *ui = g_first_univ; ui; ui = ui->next)
 	*lp++ = ui;
     TRN_ASSERT(lp - univ_sort_list == cnt);
 
     qsort(univ_sort_list, cnt, sizeof(UNIV_ITEM *), (int(*)(void const *, void const *))sort_procedure);
 
     g_first_univ = univ_sort_list[0];
-    for (i = cnt, lp = univ_sort_list; --i; lp++) {
+    lp = univ_sort_list;
+    for (int i = cnt; --i; lp++) {
 	lp[0]->next = lp[1];
 	lp[1]->prev = lp[0];
     }
@@ -1100,9 +1098,9 @@ const char *univ_article_desc(const UNIV_ITEM *ui)
     fbuf[16] = '\0';
     sbuf[55] = '\0';
     sprintf(dbuf,"[%3d] %16s %s",ui->score,fbuf,sbuf);
-    for (s = dbuf; *s; s++) {
-	if ((*s==Ctl('h')) || (*s=='\t') || (*s=='\n') || (*s=='\r')) {
-	    *s = ' ';
+    for (char *t = dbuf; *t; t++) {
+	if ((*t==Ctl('h')) || (*t=='\t') || (*t=='\n') || (*t=='\r')) {
+	    *t = ' ';
 	}
     }
     dbuf[70] = '\0';
