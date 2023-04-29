@@ -234,7 +234,8 @@ void sort_newsgroups()
 
     g_first_ng = ng_list[0];
     g_first_ng->prev = nullptr;
-    for (i = g_newsgroup_cnt, lp = ng_list; --i; lp++) {
+    lp = ng_list;
+    for (int i = g_newsgroup_cnt; --i; lp++) {
 	lp[0]->next = lp[1];
 	lp[1]->prev = lp[0];
     }
