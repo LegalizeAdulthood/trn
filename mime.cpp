@@ -33,7 +33,7 @@ static char *tag_action(char *t, char *word, bool opening_tag);
 static char *output_prep(char *t);
 static char *do_newline(char *t, html_flags flag);
 static int   do_indent(char *t);
-static char *find_attr(char *str, char *attr);
+static char *find_attr(char *str, const char *attr);
 
 #ifdef USE_UTF_HACK
 #define CODE_POINT_MAX	0x7FFFFFFFL
@@ -1690,7 +1690,7 @@ static int do_indent(char *t)
     return len;
 }
 
-static char *find_attr(char *str, char *attr)
+static char *find_attr(char *str, const char *attr)
 {
     int len = strlen(attr);
     char* cp = str;
