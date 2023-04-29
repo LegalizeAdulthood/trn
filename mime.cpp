@@ -1337,7 +1337,7 @@ static int  s_roman_values[]  = {1000, 500, 100,  50, 10,   5,   1 };
 static char *tag_action(char *t, char *word, bool opening_tag)
 {
     char* cp;
-    int i, j, tnum, itype, cnt, num;
+    int j, tnum, itype, cnt, num;
     bool match = false;
     HBLK* blks = g_mime_section->html_blks;
 
@@ -1459,7 +1459,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 		}
 	    }
 	    else {
-		for (i = 0; i < g_mime_section->html_blkcnt; i++) {
+		for (int i = 0; i < g_mime_section->html_blkcnt; i++) {
 		    if (blks[i].indent && blks[i].indent < ' ') {
 			if (++itype == 3)
 			    break;
@@ -1493,20 +1493,20 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 		t[-2] = '.';
 		break;
 	      case 7:
-		for (i = 0; i < 7; i++) {
+		for (int i = 0; i < 7; i++) {
 		    if (isupper(s_roman_letters[i]))
 			s_roman_letters[i] = tolower(s_roman_letters[i]);
 		}
 		goto roman_numerals;
 	      case 8:
-		for (i = 0; i < 7; i++) {
+		for (int i = 0; i < 7; i++) {
 		    if (islower(s_roman_letters[i]))
 			s_roman_letters[i] = toupper(s_roman_letters[i]);
 		}
 	      roman_numerals:
 		cp = t - 6;
 		cnt = ++blks[j].cnt;
-		for (i = 0; cnt && i < 7; i++) {
+		for (int i = 0; cnt && i < 7; i++) {
 		    num = s_roman_values[i];
 		    while (cnt >= num) {
 			*cp++ = s_roman_letters[i];
@@ -1549,7 +1549,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 	if (s_tagattr[tnum].flags & TF_BLOCK) {
 	    for (j = g_mime_section->html_blkcnt; j--; ) {
 		if (blks[j].tnum == tnum) {
-		    for (i = g_mime_section->html_blkcnt; --i > j; ) {
+		    for (int i = g_mime_section->html_blkcnt; --i > j; ) {
 			t = tag_action(t, s_tagattr[blks[i].tnum].name,
                                        CLOSING_TAG);
 		    }
