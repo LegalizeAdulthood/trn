@@ -117,15 +117,13 @@ const char *getbracket(COMPEX *compex, int n)
 
 void case_fold(bool which)
 {
-    int i;
-
     if (which != s_folding) {
 	if (which) {
-	    for (i = 'A'; i <= 'Z'; i++)
+	    for (int i = 'A'; i <= 'Z'; i++)
 		s_trans[i] = tolower(i);
 	}
 	else {
-	    for (i = 'A'; i <= 'Z'; i++)
+	    for (int i = 'A'; i <= 'Z'; i++)
 		s_trans[i] = i;
 	}
 	s_folding = which;
@@ -258,12 +256,10 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
 		    continue;
  
 		case '[': {		/* character class */
-		    int i;
-		    
 		    if (ep - compex->expbuf >= compex->eblen - BMAPSIZ)
 			ep = grow_eb(compex, ep, alt); /* reserve bitmap */
 
-		    for (i = BMAPSIZ; i; --i)
+		    for (int i = BMAPSIZ; i; --i)
 			ep[i] = 0;
 		    
 		    c = *strp++;
@@ -274,7 +270,7 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
 		    else
 			*ep++ = CCL;	/* normal */
 		    
-		    i = 0;		/* remember oldchar */
+		    int i = 0;		/* remember oldchar */
 		    do {
 			if (c == '\0') {
 			    retmes = "Missing ]";
@@ -328,15 +324,14 @@ const char *execute(COMPEX *compex, const char *addr)
 {
     const char* p1 = addr;
     Uchar* trt = s_trans;
-    int c;
- 
+
     if (addr == nullptr || compex->expbuf == nullptr)
 	return nullptr;
     if (compex->nbra) {			/* any brackets? */
-	for (c = 0; c <= compex->nbra; c++)
+	for (int i = 0; i <= compex->nbra; i++)
 	{
-            compex->braslist[c] = nullptr;
-            compex->braelist[c] = nullptr;
+            compex->braslist[i] = nullptr;
+            compex->braelist[i] = nullptr;
 	}
 	if (compex->brastr)
 	    free(compex->brastr);
@@ -346,7 +341,7 @@ const char *execute(COMPEX *compex, const char *addr)
     case_fold(compex->do_folding);	/* make sure table is correct */
     s_first_character = p1;		/* for ^ tests */
     if (compex->expbuf[0] == CCHR && !compex->alternatives[1]) {
-	c = trt[*(Uchar*)(compex->expbuf+1)]; /* fast check for first char */
+	int c = trt[*(Uchar*)(compex->expbuf + 1)]; /* fast check for first char */
 	do {
 	    if (trt[*(Uchar*)p1] == c && advance(compex, p1, compex->expbuf))
 		return p1;
