@@ -540,7 +540,7 @@ static int read_articles()
 */
 static int read_ids()
 {
-    int i, count, len;
+    int len;
 
     if (!read_item(&s_strings, (MEM_SIZE)s_total.string2)
      || !read_item((char**)&s_ids,
@@ -557,7 +557,7 @@ static int read_ids()
 	return 0;
     }
 
-    for (i = 0, count = s_total.domain + 1; count--; i++) {
+    for (int i = 0, count = s_total.domain + 1; count--; i++) {
 	if (i) {
 	    if (string_ptr >= s_string_end) {
 		/*error("error unpacking domain strings.\n");*/
@@ -697,11 +697,11 @@ static void mybytemap(BMAP *map)
 	WORD w;
 	LONG l;
     }        u;
-    int      i, j;
+    int      j;
 
     BYTE *mp = &map->w[sizeof(WORD)];
     u.w = 1;
-    for (i = sizeof (WORD); i > 0; i--) {
+    for (int i = sizeof (WORD); i > 0; i--) {
 	for (j = 0; j < sizeof (WORD); j++) {
 	    if (u.b[j] != 0)
 		break;
@@ -715,7 +715,7 @@ static void mybytemap(BMAP *map)
 
     mp = &map->l[sizeof (LONG)];
     u.l = 1;
-    for (i = sizeof (LONG); i > 0; i--) {
+    for (int i = sizeof (LONG); i > 0; i--) {
 	for (j = 0; j < sizeof (LONG); j++) {
 	    if (u.b[j] != 0)
 		break;
@@ -723,10 +723,10 @@ static void mybytemap(BMAP *map)
 	if (j == sizeof (LONG)) {
 	  bad_news:
 	    /* trouble -- set both to *something* consistent */
-	    for (j = 0; j < sizeof (WORD); j++)
-		map->w[j] = j;
-	    for (j = 0; j < sizeof (LONG); j++)
-		map->l[j] = j;
+	    for (int k = 0; k < sizeof (WORD); k++)
+		map->w[k] = k;
+	    for (int k = 0; k < sizeof (LONG); k++)
+		map->l[k] = k;
 	    return;
 	}
 	*--mp = j;
