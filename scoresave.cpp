@@ -241,27 +241,27 @@ ART_NUM sc_sv_make_line(ART_NUM a)
     *s++ = '.';
     int lastscore = 0;
 
-    for (a = article_first(a); a <= g_lastart && num_output < 50; a = article_next(a)) {
-	if (article_unread(a) && article_scored(a)) {
-	    if (s_last != a-1) {
-		if (s_last == a-2) {
+    for (ART_NUM art = article_first(a); art <= g_lastart && num_output < 50; art = article_next(art)) {
+	if (article_unread(art) && article_scored(art)) {
+	    if (s_last != art-1) {
+		if (s_last == art-2) {
 		    *s++ = 's';
 		    num_output++;
 		} else {
-		    sprintf(s,"s%ld",(a-s_last)-1);
+		    sprintf(s,"s%ld",(art-s_last)-1);
 		    s = s_lbuf + strlen(s_lbuf);
 		    num_output++;
 		}
 	    }
 	    /* print article's score */
-	    int score = article_ptr(a)->score;
+	    int score = article_ptr(art)->score;
 	    /* check for repeating scores */
 	    if (score == lastscore && lastscore_valid) {
-		a = article_next(a);
-		for (i = 1; a <= g_lastart && article_unread(a) && article_scored(a)
-			 && article_ptr(a)->score == score; i++)
-		    a = article_next(a);
-		a = article_prev(a);	/* prepare for the for loop increment */
+		art = article_next(art);
+		for (i = 1; art <= g_lastart && article_unread(art) && article_scored(art)
+			 && article_ptr(art)->score == score; i++)
+		    art = article_next(art);
+		art = article_prev(art);	/* prepare for the for loop increment */
 		if (i == 1) {
 		    *s++ = 'r';		/* repeat one */
 		    num_output++;
@@ -289,7 +289,7 @@ ART_NUM sc_sv_make_line(ART_NUM a)
 		lastscore_valid = true;
 	    }
 	    lastscore = score;
-	    s_last = a;
+	    s_last = art;
 	    s_saved++;
 	} /* if */
     } /* for */
@@ -300,12 +300,11 @@ ART_NUM sc_sv_make_line(ART_NUM a)
 
 void sc_load_scores()
 {
-/* lots of cleanup needed here */
+    /* lots of cleanup needed here */
     ART_NUM a = 0;
     char*   s;
-int         i;
 
-s_sc_save_new = -1;		/* just in case we exit early */
+    s_sc_save_new = -1;		/* just in case we exit early */
     s_loaded = 0;
     s_used = 0;
     g_sc_loaded_count = 0;
@@ -318,6 +317,7 @@ s_sc_save_new = -1;		/* just in case we exit early */
 
     char *gname = savestr(filexp("%C"));
 
+    int i;
     for (i = 0; i < s_num_lines; i++) {
 	s = s_lines[i];
 	if (s && *s == '!' && !strcmp(s+1,gname))
@@ -362,13 +362,13 @@ s_sc_save_new = -1;		/* just in case we exit early */
 	a = g_absfirst;
     int total = 0;
     int scored = 0;
-    for (a = article_first(a); a <= g_lastart; a = article_next(a)) {
-	if (!article_exists(a))
+    for (ART_NUM art = article_first(a); art <= g_lastart; art = article_next(art)) {
+	if (!article_exists(art))
 	    continue;
-        if (!article_unread(a) && !g_sa_mode_read_elig)
+        if (!article_unread(art) && !g_sa_mode_read_elig)
 	    continue;
 	total++;
-	if (article_scored(a))
+	if (article_scored(art))
 	    scored++;
     } /* for */
 
