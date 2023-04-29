@@ -184,11 +184,10 @@ int main(int argc, char *argv[])
     }
     if (ngcnt && (check_ng || check_active)) {
         int ngleft;
-        int i;
         /* Print a note about each newsgroup */
 	printf("\nYour article's newsgroup%s:\n", plural(ngcnt));
 	if (!check_active) {
-	    for (i = 0; i < ngcnt; i++) {
+	    for (int i = 0; i < ngcnt; i++) {
 		foundactive[i] = 1;
 	    }
 	}
@@ -197,7 +196,7 @@ int main(int argc, char *argv[])
 	    while (fgets(buff, LBUFLEN, fp_active)) {
 		if (!ngleft)
 		    break;
-		for (i = 0; i < ngcnt; i++) {
+		for (int i = 0; i < ngcnt; i++) {
 		    if (!foundactive[i]) {
 			if (is_hor_space(buff[nglens[i]])
 			  && !strncmp(ngptrs[i], buff, nglens[i])) {
@@ -211,7 +210,7 @@ int main(int argc, char *argv[])
 	}
 	else if (g_server_name) {
 	    int listactive_works = 1;
-	    for (i = 0; i < ngcnt; i++) {
+	    for (int i = 0; i < ngcnt; i++) {
 		if (listactive_works) {
 		    sprintf(g_ser_line, "list active %s", ngptrs[i]);
 		    if (nntp_command(g_ser_line) <= 0)
@@ -241,7 +240,7 @@ int main(int argc, char *argv[])
 	    fp_ng = fopen(argv[3], "w+");
 	    unlink(argv[3]);
 	    if (fp_ng != nullptr) {
-		for (i = 0; i < ngcnt; i++) {
+		for (int i = 0; i < ngcnt; i++) {
 		    /* issue a description list command */
 		    sprintf(g_ser_line, "XGTITLE %s", ngptrs[i]);
 		    if (nntp_command(g_ser_line) <= 0)
@@ -264,7 +263,7 @@ int main(int argc, char *argv[])
 	    while (fgets(buff, LBUFLEN, fp_ng)) {
 		if (!ngleft)
 		    break;
-		for (i = 0; i < ngcnt; i++) {
+		for (int i = 0; i < ngcnt; i++) {
 		    if (foundactive[i] && ngptrs[i]) {
 			if (is_hor_space(buff[nglens[i]])
 			  && !strncmp(ngptrs[i], buff, nglens[i])) {
@@ -283,7 +282,7 @@ int main(int argc, char *argv[])
 	    }
 	    fclose(fp_ng);
 	}
-	for (i = 0; i < ngcnt; i++) {
+	for (int i = 0; i < ngcnt; i++) {
 	    if (!foundactive[i]) {
 		printf("%-23s ** invalid news group -- check spelling **\n",
 		   ngptrs[i]);
