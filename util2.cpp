@@ -192,11 +192,9 @@ char *filexp(const char *text)
 
 char *in_string(char *big, const char *little, bool case_matters)
 {
-    const char* s;
-    const char* x;
-
     for (char *t = big; *t; t++) {
-	for (x=t,s=little; *s; x++,s++) {
+        const char *s = little;
+	for (const char *x=t; *s; x++,s++) {
 	    if (!*x)
 		return nullptr;
 	    if (case_matters == true) {
