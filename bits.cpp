@@ -45,16 +45,15 @@ void bits_init()
 
 void rc_to_bits()
 {
-    char* mybuf = g_buf;			/* place to decode rc line */
-    char* s;
-    char* c;
-    char* h;
+    char*   mybuf = g_buf; /* place to decode rc line */
+    char*   c;
+    char*   h;
     ART_NUM unread;
-    ARTICLE* ap;
+    ARTICLE*ap;
 
     /* modify the article flags to reflect what has already been read */
 
-    for (s = g_ngptr->rcline + g_ngptr->numoffset; *s == ' '; s++) ;
+    char *s = skip_eq(g_ngptr->rcline + g_ngptr->numoffset, ' ');
 					/* find numbers in rc line */
     long i = strlen(s);
 #ifndef lint
