@@ -74,20 +74,19 @@ void s_refresh_bot()
 /* refresh both status and description */
 void s_refresh_entzone()
 {
-    int i;
     int start;		/* starting page_arts index to refresh... */
 
     if (g_s_ref_status < g_s_ref_desc) {
-	/* refresh status characters up to (not including) desc_line */
-	for (i = g_s_ref_status; i <= g_s_bot_ent && i < g_s_ref_desc; i++)
+        /* refresh status characters up to (not including) desc_line */
+	for (int i = g_s_ref_status; i <= g_s_bot_ent && i < g_s_ref_desc; i++)
 	    s_refresh_description(i);
-	start = i;
+	start = g_s_ref_desc;
     } else {
-	for (i = g_s_ref_desc; i <= g_s_bot_ent && i < g_s_ref_status; i++)
+        for (int i = g_s_ref_desc; i <= g_s_bot_ent && i < g_s_ref_status; i++)
 	    s_refresh_status(i);
-	start = i;
+	start = g_s_ref_status;
     }
-    for (i = start; i <= g_s_bot_ent; i++)
+    for (int i = start; i <= g_s_bot_ent; i++)
 	s_ref_entry(i,i==start);
     /* clear to end of screen */
     clear_rest();
@@ -176,8 +175,6 @@ void s_rub_ptr()
 
 void s_refresh()
 {
-    int i;
-
     if (g_s_ref_all) {
 	clear();	/* make a clean slate */
 	g_s_ref_desc = 0;
@@ -189,11 +186,11 @@ void s_refresh()
 	s_refresh_entzone();
     else {
 	if (g_s_ref_status>=0) {
-	    for (i = g_s_ref_status; i <= g_s_bot_ent; i++)
+	    for (int i = g_s_ref_status; i <= g_s_bot_ent; i++)
 		s_refresh_status(i);
 	}
 	if (g_s_ref_desc >= 0) {
-	    for (i = g_s_ref_desc; i <= g_s_bot_ent; i++)
+	    for (int i = g_s_ref_desc; i <= g_s_bot_ent; i++)
 		s_refresh_description(i);
 	}
     }
