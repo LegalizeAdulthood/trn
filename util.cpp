@@ -65,9 +65,9 @@ static char *s_nntpforce_export = s_null_export + 2;
 void util_init()
 {
     extern std::string g_patchlevel;
-    char* cp;
-    int i;
-    for (i = 0, cp = g_buf; i < 512; i++)
+
+    char *cp = g_buf;
+    for (int i = 0; i < 512; i++)
 	*cp++ = 'X';
     *cp = '\0';
     s_newsactive_export = export_var("NEWSACTIVE", g_buf);
@@ -816,7 +816,6 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
 
     char* s;
     char** values = prep_ini_words(words);
-    int i;
 
     while (*cp && *cp != '[') {
 	int checksum = 0;
@@ -827,6 +826,7 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
 	}
 	checksum = (checksum << 8) + (s++ - cp);
 	if (*s) {
+            int i;
 	    for (i = 1; words[i].checksum; i++) {
 		if (words[i].checksum == checksum
 		 && !strcasecmp(cp,words[i].item)) {
@@ -845,7 +845,7 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
 #ifdef DEBUG
     if (debug & DEB_RCFILES) {
 	printf("Ini_words: %s\n", words[0].item);
-	for (i = 1; words[i].checksum; i++)
+	for (int i = 1; words[i].checksum; i++)
 	    if (values[i])
 		printf("%s=%s\n",words[i].item,values[i]);
     }
