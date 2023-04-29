@@ -59,7 +59,6 @@ save_result save_article()
     char* s;
     char* c;
     char altbuf[CBUFLEN];
-    int i;
     bool interactive = (g_buf[1] == FINISHCMD);
     char cmd = *g_buf;
     
@@ -304,7 +303,7 @@ save_result save_article()
 	    s = g_buf;
 	}
 	stat_t save_dir_stat{};
-	for (i = 0;
+	for (int i = 0;
 	    (there = stat(s,&save_dir_stat) >= 0) && S_ISDIR(save_dir_stat.st_mode);
 	    i++) {			/* is it a directory? */
 
@@ -387,6 +386,7 @@ save_result save_article()
 	}
 
 	s = getenv(mailbox ? "MBOXSAVER" : "NORMSAVER");
+        int i;
 	if (s) {
 	    if (s_tmpfp)
 		fclose(s_tmpfp);
