@@ -211,13 +211,13 @@ const char *sa_get_desc(long e, int line, bool trunc)
 	strcat(desc_buf,g_tc_SE);	/* end standout mode */
 #endif
     /* take out bad characters (replace with one space) */
-    for (s = desc_buf; *s; s++)
-	switch (*s) {
+    for (char *t = desc_buf; *t; t++)
+	switch (*t) {
 	  case Ctl('h'):
 	  case '\t':
 	  case '\n':
 	  case '\r':
-	    *s = ' ';
+	    *t = ' ';
 	}
     return desc_buf;
 }
