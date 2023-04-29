@@ -530,7 +530,6 @@ static void mac_init(char *tcbuf)
 
 void mac_line(char *line, char *tmpbuf, int tbsize)
 {
-    char*       s;
     char*       m;
     KEYMAP*     curmap;
     int         garbage = 0;
@@ -552,7 +551,9 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
     if (!*m)
 	return;
     m = skip_hor_space(m);
-    for (s=tmpbuf,curmap=s_topmap; *s; s++) {
+    curmap=s_topmap;
+    for (char *s = tmpbuf; *s; s++)
+    {
 	ch = *s & 0177;
 	if (s[1] == '+' && isdigit(s[2])) {
 	    s += 2;
@@ -1494,7 +1495,7 @@ reinp_in_choice:
 	    }
 	}
 	*s = '\0';
-	for (s = g_buf; *s && *s != ' '; s++) ;
+        s = skip_ne(g_buf, ' ');
 	if (*s == ' ') s++;
 	if (is_hor_space(ch)) {
 	    if (prefix)
@@ -1982,7 +1983,6 @@ void xmouse_off()
 
 void draw_mousebar(int limit, bool restore_cursor)
 {
-    int i;
     int save_col = g_term_col;
     int save_line = g_term_line;
 
@@ -1992,7 +1992,7 @@ void draw_mousebar(int limit, bool restore_cursor)
 
     char *s = s_mousebar_btns;
     char *t = g_msg;
-    for (i = 0; i < g_mousebar_cnt; i++) {
+    for (int i = 0; i < g_mousebar_cnt; i++) {
 	if (*s == '[') {
 	    while (*++s) *t++ = *s;
 	    s++;
@@ -2031,7 +2031,7 @@ void draw_mousebar(int limit, bool restore_cursor)
     }
 
     goto_xy(g_tc_COLS - g_mousebar_width - 1, g_tc_LINES-1);
-    for (i = s_mousebar_start; i < g_mousebar_cnt; i++) {
+    for (int i = s_mousebar_start; i < g_mousebar_cnt; i++) {
 	putchar(' ');
 	color_string(COLOR_MOUSE,s);
 	s += strlen(s) + 1;
@@ -2083,19 +2083,19 @@ static void mouse_input(const char *cp)
 bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 {
     char*s = s_mousebar_btns;
-    int  i, j;
     int  col = g_tc_COLS - g_mousebar_width;
 
     if (g_mousebar_width != 0 && btn_clk == 0 && y_clk == g_tc_LINES-1
      && (x_clk -= col-1) > 0) {
-	x -= col-1;
-	for (i = 0; i < s_mousebar_start; i++) {
+        x -= col-1;
+	for (int i = 0; i < s_mousebar_start; i++) {
 	    if (*s == '[')
 		s += strlen(s) + 1;
 	    s += strlen(s) + 1;
 	}
 	while (true) {
-	    i = strlen(s);
+            int j;
+	    int i = strlen(s);
 	    char *t = s;
 	    if (*s == '[') {
 		s += i + 1;
@@ -2117,7 +2117,7 @@ bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 		if (btn == 3)
 		    color_object(COLOR_MOUSE, true);
 		if (s == t) {
-                    for (j = 0; j < 5 && *t; j++, t++)
+                    for (int k = 0; k < 5 && *t; k++, t++)
                     {
                         g_term_col++;
                         putchar(*t);
