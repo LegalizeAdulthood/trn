@@ -46,7 +46,6 @@ int s_compare(long a, long b)
 /* Uses a heapsort algorithm with the heap readjustment inlined. */
 void s_sort_basic()
 {
-    int i;
     int t1;
     int j;
 
@@ -54,7 +53,7 @@ void s_sort_basic()
     if (n < 1)
 	return;		/* nothing to sort */
 
-    for (i = n/2; i >= 1; i--) {
+    for (int i = n/2; i >= 1; i--) {
 	/* begin heap readjust */
 	t1 = g_s_ent_sort[SOFF(i)];
 	j = 2*i;
@@ -73,7 +72,7 @@ void s_sort_basic()
 	/* end heap readjust */
     } /* for */
 
-    for (i = n-1; i >= 1; i--) {
+    for (int i = n-1; i >= 1; i--) {
 	t1 = g_s_ent_sort[SOFF(i+1)];
 	g_s_ent_sort[SOFF(i+1)] = g_s_ent_sort[SOFF(1)];
 	g_s_ent_sort[SOFF(1)] = t1;
