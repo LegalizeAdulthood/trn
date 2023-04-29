@@ -459,7 +459,7 @@ input_newsgroup_result input_newsgroup()
       case 'g':	/* goto named newsgroup */
 	if (!finish_command(false))
 	    return ING_INPUT;
-	for (s = g_buf+1; *s == ' '; s++) ; /* skip leading spaces */
+	s = skip_eq(g_buf+1, ' '); /* skip leading spaces */
 	if (!*s && *g_buf == 'm' && !g_ngname.empty() && g_ngptr)
 	    strcpy(s,g_ngname.c_str());
 	{
@@ -613,7 +613,7 @@ reask_abandon:
       case 'l': {		/* list other newsgroups */
 	if (!finish_command(true)) /* get rest of command */
 	    return ING_INPUT;	/* if rubbed out, try something else */
-	for (s = g_buf+1; *s == ' '; s++) ; /* skip leading spaces */
+        s = skip_eq(g_buf+1, ' '); /* skip leading spaces */
 	push_only();
 	if (*s)
 	    sw_list(s);
