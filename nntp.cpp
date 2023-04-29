@@ -434,10 +434,9 @@ char *nntp_artname(ART_NUM artnum, bool allocate)
     static ART_NUM artnums[MAX_NNTP_ARTICLES];
     static time_t  artages[MAX_NNTP_ARTICLES];
     time_t         lowage;
-    int            i, j;
 
     if (!artnum) {
-	for (i = 0; i < MAX_NNTP_ARTICLES; i++) {
+	for (int i = 0; i < MAX_NNTP_ARTICLES; i++) {
 	    artnums[i] = 0;
 	    artages[i] = 0;
 	}
@@ -446,7 +445,9 @@ char *nntp_artname(ART_NUM artnum, bool allocate)
 
     time_t now = time((time_t*)nullptr);
 
-    for (i = j = 0, lowage = now; i < MAX_NNTP_ARTICLES; i++) {
+    int j = 0;
+    lowage = now;
+    for (int i = 0; i < MAX_NNTP_ARTICLES; i++) {
 	if (artnums[i] == artnum) {
 	    artages[i] = now;
 	    return nntp_tmpname(i);
