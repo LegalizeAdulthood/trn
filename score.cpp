@@ -42,7 +42,6 @@ static bool s_sc_rescoring{};     /* are we rescoring now? */
 void sc_init(bool pend_wait)
 {
     int i;
-    ART_NUM a;
 
     if (g_lastart == 0 || g_lastart < g_absfirst) {
 #if 0
@@ -106,6 +105,7 @@ void sc_init(bool pend_wait)
     }
     if (i < g_absfirst) {			/* none scored yet */
 	/* score one article, or give up */
+        ART_NUM a;
 	for (a = article_last(g_lastart); a >= g_absfirst; a = article_prev(a)) {
 	    sc_score_art(a,true);	/* I want it *now* */
 	    if (article_scored(a))
@@ -123,8 +123,8 @@ void sc_init(bool pend_wait)
     /* XXX will be bad if later methods are added. */
     if (!g_sf_num_entries) {
 	/* score everything really fast */
-	for (a = article_last(g_lastart); a >= g_absfirst; a = article_prev(a))
-	    sc_score_art(a,true);
+	for (ART_NUM art = article_last(g_lastart); art >= g_absfirst; art = article_prev(art))
+	    sc_score_art(art,true);
     }
     if (pend_wait) {
         bool waitflag = true; /* normal mode: wait for key first */
@@ -300,23 +300,22 @@ void sc_lookahead(bool flag, bool nowait)
 
 int sc_percent_scored()
 {
-
     if (!g_sc_initialized)
 	return 0;	/* none scored */
     if (g_sc_fill_max == g_lastart)
 	return 100;
-    int i = g_firstart;
+    ART_NUM i = g_firstart;
     if (g_sa_mode_read_elig)
 	i = g_absfirst;
     int total = 0;
     int scored = 0;
-    for (i = article_first(i); i <= g_lastart; i = article_next(i)) {
-	if (!article_exists(i))
+    for (ART_NUM art = article_first(i); art <= g_lastart; art = article_next(art)) {
+	if (!article_exists(art))
 	    continue;
-        if (!article_unread(i) && !g_sa_mode_read_elig)
+        if (!article_unread(art) && !g_sa_mode_read_elig)
             continue;
 	total++;
-	if (article_scored(i))
+	if (article_scored(art))
 	    scored++;
     } /* for */
     if (total == 0)
