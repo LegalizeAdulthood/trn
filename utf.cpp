@@ -404,10 +404,9 @@ int put_char_adv(char **strptr, bool outputok)
 	char *s = *strptr;
 	if (s_gs.in == CHARSET_UTF8 || (*s >= ' ' && *s < 0x7F)) {
 	    int w = byte_length_at(s);
-	    int i;
-	    it = visual_width_at(s);
+            it = visual_width_at(s);
 	    if (outputok)
-		for (i = 0; i < w; i += 1) {
+		for (int i = 0; i < w; i += 1) {
 		    putchar(*s);
 		    s++;
 		}
@@ -415,8 +414,7 @@ int put_char_adv(char **strptr, bool outputok)
 	} else if (s_gs.himap_in) {
 	    char buf[7];
 	    int w = insert_utf8_at(buf, s_gs.himap_in[U(*s) & 0x7F]);
-	    int i;
-	    for (i = 0; i < w; i += 1)
+            for (int i = 0; i < w; i += 1)
 		putchar(buf[i]);
 	    it = 1;
 	    s++;
@@ -430,10 +428,9 @@ char *create_utf8_copy(char *s)
 {
     char *it = s;
     if (s != nullptr) {
-	int slen;
-	int tlen;
-	int i;
-	char buf[7];
+	int  slen;
+	int  tlen;
+        char buf[7];
 
 	/* Precalculate size of required space */
 	for (slen = tlen = 0; s[slen]; ) {
@@ -446,8 +443,8 @@ char *create_utf8_copy(char *s)
 	/* Create the actual copy */
 	it = (char*) malloc(tlen + 1);
 	if (it) {
-	    char *bufptr = it;
-	    for (i = 0; s[i]; ) {
+            char *bufptr = it;
+	    for (int i = 0; s[i]; ) {
 		int sw = byte_length_at(s+i);
 		bufptr += insert_utf8_at(bufptr, code_point_at(s+i));
 		i += sw;
