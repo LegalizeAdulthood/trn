@@ -656,8 +656,7 @@ void look_ahead()
 	h = pattern + strlen(pattern);
 	interp(h,(sizeof g_buf) - (h-g_buf),"%\\s");
 	{			/* compensate for notesfiles */
-	    int i;
-	    for (i = 24; *h && i--; h++)
+	    for (int i = 24; *h && i--; h++)
 		if (*h == '\\')
 		    h++;
 	    *h = '\0';
