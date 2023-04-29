@@ -92,9 +92,9 @@ void sw_list(char *swlist)
 	printf("Unmatched %c in switch\n",inquote) FLUSH;
 	termdown(1);
     }
-    for (p = swlist; *p; /* p += strlen(p)+1 */ ) {
-	decode_switch(p);
-	while (*p++) ;			/* point at null + 1 */
+    for (char *c = swlist; *c; /* p += strlen(p)+1 */ ) {
+	decode_switch(c);
+	while (*c++) ;			/* point at null + 1 */
     }
 }
 
