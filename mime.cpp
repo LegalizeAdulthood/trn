@@ -239,10 +239,9 @@ bool mime_TypesMatch(const char *ct, const char *pat)
 
 int mime_Exec(char *cmd)
 {
-    char* f;
-    char* t;
+    char* t = g_cmd_buf;
 
-    for (f = cmd, t = g_cmd_buf; *f && t-g_cmd_buf < CBUFLEN-2; f++) {
+    for (char *f = cmd; *f && t-g_cmd_buf < CBUFLEN-2; f++) {
 	if (*f == '%') {
 	    switch (*++f) {
 	      case 's':
@@ -1250,12 +1249,13 @@ int filter_html(char *t, const char *f)
 	    if (entity_found) break;
 	    }
 	    if (entity_found) {
-		int j;
-		for (j = 0; ; j++) {
-		    char c = named_entities[i + 1][j];
-		if (c == '\0') break;
-		    *t++ = c;
-		}
+                for (int j = 0;; j++)
+                {
+                    char c = named_entities[i + 1][j];
+                    if (c == '\0')
+                        break;
+                    *t++ = c;
+                }
 		f += entity_found;
 	    } else
 		*t++ = *f;
@@ -1281,9 +1281,8 @@ int filter_html(char *t, const char *f)
 	}
 	else {
 	    int w = byte_length_at(f);
-	    int i;
-	    t = output_prep(t);
-	    for (i = 0; i < w; i++)
+            t = output_prep(t);
+	    for (int i = 0; i < w; i++)
 		*t++ = *f++;
 	    f--;
 	    g_mime_section->html |= HF_NL_OK|HF_P_OK|HF_SPACE_OK;
