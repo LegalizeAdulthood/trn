@@ -77,10 +77,10 @@ bool s_fillpage_backward(long end)
     /* also set start_line entries */
     j = 0;
     line_on = 0;
-    for (i = min_page_ents+1; i < MAX_PAGE_SIZE; i++) {
-	g_page_ents[j].entnum = g_page_ents[i].entnum;
+    for (int k = min_page_ents+1; k < MAX_PAGE_SIZE; k++) {
+	g_page_ents[j].entnum = g_page_ents[k].entnum;
 	g_page_ents[j].pageflags = (char)0;
-	g_page_ents[j].lines = g_page_ents[i].lines;
+	g_page_ents[j].lines = g_page_ents[k].lines;
 	g_page_ents[j].start_line = line_on;
 	line_on = line_on + g_page_ents[j].lines;
 	j++;
@@ -314,8 +314,8 @@ int s_fillpage()
      * not be found until they are in the page.  In this case just
      * refill the page.
      */
-    for (i = 0; i <= g_s_bot_ent; i++)
-	if (!s_eligible(g_page_ents[i].entnum))
+    for (int j = 0; j <= g_s_bot_ent; j++)
+	if (!s_eligible(g_page_ents[j].entnum))
 	    return s_fillpage();  /* ineligible won't be chosen again */
     if (g_s_cur_type != S_ART)
 	return 1;
