@@ -1411,10 +1411,8 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 
 	switch (tnum) {
 	  case TAG_BLOCKQUOTE:
-	    if (((cp = find_attr(word, "type")) != nullptr
-	      && !strncasecmp(cp, "cite", 4))
-	     || ((cp = find_attr(word, "style")) != nullptr
-	      && !strncasecmp(cp, "border-left:", 12)))
+            if (((cp = find_attr(word, "type")) != nullptr && !strncasecmp(cp, "cite", 4)) ||
+                ((cp = find_attr(word, "style")) != nullptr && !strncasecmp(cp, "border-left:", 12)))
 		blks[j].indent = '>';
 	    else
 		blks[j].indent = ' ';
