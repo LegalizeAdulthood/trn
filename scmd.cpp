@@ -333,14 +333,13 @@ void s_search()
     if (!s_finish_cmd(nullptr))
 	return;
     if (g_buf[1]) {	/* new text */
-	char *s = g_buf + 1;
 	/* make leading space skip an option later? */
 	/* (it isn't too important because substring matching is used) */
-        s = skip_eq(s, ' '); /* skip leading spaces */
+        char *s = skip_eq(g_buf + 1, ' '); /* skip leading spaces */
 	strncpy(s_search_text,s,LBUFLEN);
-	for (s = s_search_text; *s != '\0'; s++)
-	    if (isupper(*s))
-		*s = tolower(*s);		/* convert to lower case */
+	for (char *t = s_search_text; *t != '\0'; t++)
+	    if (isupper(*t))
+		*t = tolower(*t);		/* convert to lower case */
     }
     if (!*s_search_text) {
 	s_beep();
