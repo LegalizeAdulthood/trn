@@ -326,7 +326,6 @@ void prange(char *where, ART_NUM min, ART_NUM max)
 
 void set_toread(NGDATA *np, bool lax_high_check)
 {
-    char*   s;
     char*   c;
     char    tmpbuf[64];
     char*   mybuf = tmpbuf;
@@ -360,7 +359,7 @@ void set_toread(NGDATA *np, bool lax_high_check)
     strcpy(mybuf,nums);
     mybuf[length++] = ',';
     mybuf[length] = '\0';
-    for (s = mybuf; isspace(*s); s++)
+    char *s = skip_space(mybuf);
 	    ;
     for ( ; (c = strchr(s,',')) != nullptr ; s = ++c) {  /* for each range */
 	*c = '\0';			/* keep index from running off */
@@ -430,7 +429,7 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
 	  np->rcline + np->numoffset) FLUSH;
     }
 #endif
-    for (s = np->rcline + np->numoffset; isspace(*s); s++) ;
+    s = skip_space(np->rcline + np->numoffset);
     while (*s && (num = atol(s)) <= a1st) {
 	s = skip_digits(s);
 	while (*s && !isdigit(*s)) s++;
@@ -534,7 +533,7 @@ bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
         char*   maxt = nullptr;
         ART_NUM lastnum = 0;
         /* while it might have been read */
-	for (t = s; isdigit(*t); t++) ;	/* skip number */
+        t = skip_digits(s);             /* skip number */
 	if (*t == '-') {		/* is it a range? */
 	    t++;			/* skip to next number */
 	    if (artnum <= (max = atol(t)))
