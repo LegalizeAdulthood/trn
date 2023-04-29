@@ -112,11 +112,9 @@ void head_final()
 #ifdef DEBUG
 void dumpheader(char *where)
 {
-    int i;
-
     printf("header: %ld %s", (long)g_parsed_art, where);
 
-    for (i = HEAD_FIRST-1; i < HEAD_LAST; i++) {
+    for (int i = HEAD_FIRST-1; i < HEAD_LAST; i++) {
 	printf("%15s %4ld %4ld %03o\n",g_htype[i].name,
 	       (long)g_htype[i].minpos, (long)g_htype[i].maxpos,
 	       g_htype[i].flags) FLUSH;
