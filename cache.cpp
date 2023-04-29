@@ -152,11 +152,10 @@ void close_cache()
 /* Initialize the memory for an entire node's worth of article's */
 static void init_artnode(LIST *list, LISTNODE *node)
 {
-    ART_NUM i;
-    ARTICLE* ap;
-    memset(node->data,0,list->items_per_node * list->item_size);
-    for (i = node->low, ap = (ARTICLE*)node->data; i <= node->high; i++, ap++)
-	ap->num = i;
+    memset(node->data, 0, list->items_per_node * list->item_size);
+    ARTICLE *ap = (ARTICLE *) node->data;
+    for (ART_NUM i = node->low; i <= node->high; i++, ap++)
+        ap->num = i;
 }
 
 static bool clear_artitem(char *cp, int arg)
