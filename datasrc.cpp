@@ -693,8 +693,7 @@ char *adv_then_find_next_nl_and_dectrl(char *s)
     for (s++; *s && *s != '\n';) {
 	int w = byte_length_at(s);
 	if (at_grey_space(s)) {
-	    int i;
-	    for (i = 0; i < w; i += 1) {
+            for (int i = 0; i < w; i += 1) {
 		s[i] = ' ';
 	    }
 	}
@@ -1063,13 +1062,12 @@ static int get_near_miss()
     char promptbuf[256];
     char options[MAX_NG+10];
     char* op = options;
-    int i;
 
     if (g_verbose)
 	printf("However, here are some close matches:\n") FLUSH;
     if (s_ngn > 9)
 	s_ngn = 9;	/* Since we're using single digits.... */
-    for (i = 0; i < s_ngn; i++) {
+    for (int i = 0; i < s_ngn; i++) {
 	char* cp = strchr(s_ngptrs[i], ' ');
 	if (cp)
 	    *cp = '\0';
@@ -1108,7 +1106,7 @@ reask:
 	    if (isdigit(*g_buf)) {
 		char* s = strchr(options, *g_buf);
 
-		i = s ? (s - options) : s_ngn;
+		int i = s ? (s - options) : s_ngn;
 		if (i >= 0 && i < s_ngn) {
 		    char* cp = strchr(s_ngptrs[i], ' ');
 		    if (cp)
