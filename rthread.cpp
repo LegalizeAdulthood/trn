@@ -1522,7 +1522,8 @@ void sort_subjects()
     g_first_subject = subj_list[0];
     sp = subj_list[0];
     sp->prev = nullptr;
-    for (i = g_subject_count, lp = subj_list; --i; lp++) {
+    lp = subj_list;
+    for (int i = g_subject_count; --i; lp++) {
 	lp[0]->next = lp[1];
 	lp[1]->prev = lp[0];
 	if (g_sel_mode == SM_THREAD) {
