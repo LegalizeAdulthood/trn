@@ -1212,13 +1212,15 @@ int filter_html(char *t, const char *f)
 	    int is_hex = f[2] == 'x';
 	    int base = is_hex? 16: 10;
 	    int i;
-	    for (i = 0; ; i++) {
-		int c = f[2 + is_hex + i];
-		int v = index_hex[c];
-	    if (c == '\0' || v == XX || v > base) break;
-		ncr *= base;
-		ncr += v;
-	    }
+            for (i = 0;; i++)
+            {
+                int c = f[2 + is_hex + i];
+                int v = index_hex[c];
+                if (c == '\0' || v == XX || v > base)
+                    break;
+                ncr *= base;
+                ncr += v;
+            }
 	    if (i) {
 		char det = f[2 + is_hex + i];
 		if (det == ';')
@@ -1237,17 +1239,20 @@ int filter_html(char *t, const char *f)
 	    int i;
 	    int entity_found = 0;
 	    t = output_prep(t);
-	    for (i = 0; named_entities[i] != NULL; i += 2) {
-		int n = strlen(named_entities[i]);
-		if (!strncasecmp(f+1,named_entities[i],n)) {
-		    char det = f[n+1];
-		    if (det == ';')
-			entity_found = n + 1;
-		    else if (!(det == '-' || isalnum(det))) /* see html-spec.txt 3.2.1 */
-			entity_found = n;
-		}
-	    if (entity_found) break;
-	    }
+            for (i = 0; named_entities[i] != NULL; i += 2)
+            {
+                int n = strlen(named_entities[i]);
+                if (!strncasecmp(f + 1, named_entities[i], n))
+                {
+                    char det = f[n + 1];
+                    if (det == ';')
+                        entity_found = n + 1;
+                    else if (!(det == '-' || isalnum(det))) /* see html-spec.txt 3.2.1 */
+                        entity_found = n;
+                }
+                if (entity_found)
+                    break;
+            }
 	    if (entity_found) {
                 for (int j = 0;; j++)
                 {
