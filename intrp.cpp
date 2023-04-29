@@ -414,12 +414,12 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
 			printf("\nCan't run %s\n",scrbuf);
 			*scrbuf = '\0';
 		    }
-		    for (s=scrbuf; *s; s++) {
-			if (*s == '\n') {
-			    if (s[1])
-				*s = ' ';
+		    for (char *t=scrbuf; *t; t++) {
+			if (*t == '\n') {
+			    if (t[1])
+				*t = ' ';
 			    else
-				*s = '\0';
+				*t = '\0';
 			}
 		    }
 		    s = scrbuf;
