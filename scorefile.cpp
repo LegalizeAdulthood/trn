@@ -63,11 +63,7 @@ static char *sf_file_getline(int fnum);
 /* Must be called before any other sf_ routine (once for each group) */
 void sf_init()
 {
-    int i;
-    char* s;
-
     g_sf_num_entries = 0;
-    int level = 0;
     s_sf_extra_headers = nullptr;
     s_sf_num_extra_headers = 0;
 
@@ -80,16 +76,16 @@ void sf_init()
     s_sf_file_level = 0;
     /* find # of levels */
     strcpy(s_sf_buf,filexp("%C"));
-    level = 0;
-    for (s = s_sf_buf; *s; s++)
+    int level = 0;
+    for (char *s = s_sf_buf; *s; s++)
 	if (*s == '.')
 	    level++;		/* count dots in group name */
     level++;
 
     /* the main read-in loop */
-    for (i = 0; i <= level; i++)
+    for (int i = 0; i <= level; i++)
     {
-        s = sf_get_filename(i);
+        char *s = sf_get_filename(i);
         if (s != nullptr)
             sf_do_file(s);
     }
@@ -100,7 +96,7 @@ void sf_init()
     s_reply_active = false;
     s_newauthor_active = false;
     g_kill_thresh_active = false;
-    for (i = 0; i < g_sf_num_entries; i++) {
+    for (int i = 0; i < g_sf_num_entries; i++) {
 	if (s_sf_entries[i].head_type >= HEAD_LAST)
 	    s_sf_has_extra_headers = true;
 	switch (s_sf_entries[i].head_type) {
@@ -149,9 +145,7 @@ void sf_init()
 
 void sf_clean()
 {
-    int i;
-
-    for (i = 0; i < g_sf_num_entries; i++) {
+    for (int i = 0; i < g_sf_num_entries; i++) {
 	if (s_sf_entries[i].compex != nullptr) {
 	    free_compex(s_sf_entries[i].compex);
 	    free(s_sf_entries[i].compex);
@@ -159,7 +153,7 @@ void sf_clean()
     }
     mp_free(MP_SCORE1);		/* free memory pool */
     if (s_sf_abbr) {
-	for (i = 0; i < 256; i++)
+	for (int i = 0; i < 256; i++)
 	    if (s_sf_abbr[i]) {
 		free(s_sf_abbr[i]);
 		s_sf_abbr[i] = nullptr;
@@ -169,7 +163,7 @@ void sf_clean()
     if (s_sf_entries)
 	free(s_sf_entries);
     s_sf_entries = nullptr;
-    for (i = 0; i < s_sf_num_extra_headers; i++)
+    for (int i = 0; i < s_sf_num_extra_headers; i++)
 	free(s_sf_extra_headers[i]);
     s_sf_num_extra_headers = 0;
     s_sf_extra_headers = nullptr;
@@ -951,17 +945,16 @@ char *sf_get_line(ART_NUM a, header_line_type h)
     else
 	safecpy(sf_getline,s,sizeof sf_getline - 1);
 
-    for (s = sf_getline; *s; s++)
-	if (isupper(*s))
-	    *s = tolower(*s);
-	*s = tolower(*s);
+    for (char *t = sf_getline; *t; t++)
+        if (isupper(*t))
+            *t = tolower(*t);
     return sf_getline;
 }
 
 /* given an index into s_sf_entries, print information about that index */
 void sf_print_match(int indx)
 {
-    int  i, k;
+    int  i;
     int  level; /* level is initialized iff used */
     char*head_name;
     char*pattern;
@@ -972,6 +965,7 @@ void sf_print_match(int indx)
 	    break;
 	if (j == SF_FILE_MARK_END) {	/* found included file, skip */
 	    int tmplevel = s_sf_entries[i].score;
+            int k;
 	    for (k = i; k >= 0; k--) {
 		if (s_sf_entries[k].head_type == static_cast<header_line_type>(SF_FILE_MARK_START)
 		 && s_sf_entries[k].score == tmplevel)
@@ -987,7 +981,7 @@ void sf_print_match(int indx)
 	if (s_sf_entries[i].head_type == static_cast<header_line_type>(SF_FILE_MARK_START)
 	 && s_sf_entries[i].score <= level) {
 	    level--;	/* go out... */
-	    for (k = 0; k < level; k++)
+	    for (int k = 0; k < level; k++)
 		printf(".");		/* make putchar later? */
 	    printf("From file: %s\n",s_sf_entries[i].str1);
 	    if (level == 0)		/* top level */
