@@ -185,25 +185,25 @@ numnum_result numnum()
 	printf("Processing...");
 	fflush(stdout);
     }
-    for (s = tmpbuf; (c = strchr(s,',')) != nullptr; s = ++c) {
+    for (char *t = tmpbuf; (c = strchr(t,',')) != nullptr; t = ++c) {
 	*c = '\0';
-	if (*s == '.')
+	if (*t == '.')
 	    min = oldart;
 	else
-	    min = atol(s);
+	    min = atol(t);
 	if (min < g_absfirst) {
 	    min = g_absfirst;
 	    sprintf(g_msg,"(First article is %ld)",(long)g_absfirst);
 	    warnmsg(g_msg);
 	}
-	if ((s=strchr(s,'-')) != nullptr) {
-	    s++;
-	    if (*s == '$')
+	if ((t=strchr(t,'-')) != nullptr) {
+	    t++;
+	    if (*t == '$')
 		max = g_lastart;
-	    else if (*s == '.')
+	    else if (*t == '.')
 		max = oldart;
 	    else
-		max = atol(s);
+		max = atol(t);
 	}
 	else
 	    max = min;
