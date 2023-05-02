@@ -226,8 +226,8 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     }
     if (stat(g_ini_file.c_str(),&ini_stat) == 0)
 	opt_file(g_ini_file.c_str(),tcbufptr,true);
-    if (!g_use_threads || (s = getenv("TRNINIT")) == nullptr)
-	s = getenv("RNINIT");
+    if (!g_use_threads || (s = get_val("TRNINIT")) == nullptr)
+	s = get_val("RNINIT");
     if (*safecpy(*tcbufptr,s,TCBUF_SIZE)) {
 	if (*s == '-' || *s == '+' || isspace(*s))
 	    sw_list(*tcbufptr);

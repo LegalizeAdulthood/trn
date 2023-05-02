@@ -165,7 +165,7 @@ NEWSRC *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
 	return nullptr;
 
     if (!newsrc || !*newsrc) {
-	newsrc = getenv("NEWSRC");
+	newsrc = get_val("NEWSRC");
 	if (!newsrc)
 	    newsrc = RCNAME;
     }

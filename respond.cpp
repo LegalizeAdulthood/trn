@@ -385,7 +385,7 @@ save_result save_article()
 	    }
 	}
 
-	s = getenv(mailbox ? "MBOXSAVER" : "NORMSAVER");
+	s = get_val(mailbox ? "MBOXSAVER" : "NORMSAVER");
         int i;
 	if (s) {
 	    if (s_tmpfp)

@@ -27,13 +27,10 @@
 int server_connection();
 int nntp_handle_timeout();
 
-char* g_server_name;
+char       *g_server_name{};
 std::string g_nntp_auth_file;
-
-int debug = 0;
-
-char* g_home_dir;
-std::string g_dot_dir;
+int         debug{};
+char        g_buf[LBUFLEN + 1]; /* general purpose line buffer */
 
 int main(int argc, char *argv[])
 {

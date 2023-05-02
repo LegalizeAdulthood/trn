@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
 	}
     }
 
-    cp = getenv("NNTPSERVER");
+    cp = get_val("NNTPSERVER");
     if (!cp) {
 	cp = filexp(SERVER_NAME);
 	if (FILE_REF(cp))

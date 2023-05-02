@@ -59,7 +59,7 @@ inline long killfile_daynum(long x)
 
 void kfile_init()
 {
-    char* cp = getenv("KILLTHREADS");
+    char* cp = get_val("KILLTHREADS");
     if (!cp)
 	cp = s_killthreads;
     if (*cp && strcmp(cp,"none")) {

@@ -83,7 +83,7 @@ void mime_init()
     s_executor = doshell;
     s_mimecap_list = new_list(0,-1,sizeof(MIMECAP_ENTRY),40,LF_ZERO_MEM,nullptr);
 
-    char *mcname = getenv("MIMECAPS");
+    char *mcname = get_val("MIMECAPS");
     if (mcname == nullptr)
         mcname = get_val("MAILCAPS", MIMECAP);
     mcname = savestr(mcname);

@@ -1876,7 +1876,7 @@ void xmouse_init(const char *progname)
 {
     if (!g_can_home || !g_use_threads)
 	return;
-    char *s = getenv("XTERMMOUSE");
+    char *s = get_val("XTERMMOUSE");
     if (s && *s) {
 	interp(g_msg, sizeof g_msg, s);
 	set_option(OI_USE_MOUSE, g_msg);

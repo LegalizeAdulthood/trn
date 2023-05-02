@@ -114,12 +114,12 @@ void datasrc_init()
 
     g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
 
-    char *machine = getenv("NNTPSERVER");
+    char *machine = get_val("NNTPSERVER");
     if (machine && strcmp(machine,"local")) {
 	vals[DI_NNTP_SERVER] = machine;
 	vals[DI_AUTH_USER] = read_auth_file(g_nntp_auth_file.c_str(),
 					    &vals[DI_AUTH_PASS]);
-	vals[DI_FORCE_AUTH] = getenv("NNTP_FORCE_AUTH");
+	vals[DI_FORCE_AUTH] = get_val("NNTP_FORCE_AUTH");
 	new_datasrc("default",vals);
     }
 
@@ -151,7 +151,7 @@ void datasrc_init()
 	if (machine) {
 	    vals[DI_AUTH_USER] = read_auth_file(g_nntp_auth_file.c_str(),
 						&vals[DI_AUTH_PASS]);
-	    vals[DI_FORCE_AUTH] = getenv("NNTP_FORCE_AUTH");
+	    vals[DI_FORCE_AUTH] = get_val("NNTP_FORCE_AUTH");
 	}
 	new_datasrc("default",vals);
     }
