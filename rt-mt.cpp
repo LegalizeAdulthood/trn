@@ -721,7 +721,7 @@ static void mybytemap(BMAP *map)
 		break;
 	}
 	if (j == sizeof (LONG)) {
-	  bad_news:
+bad_news:
 	    /* trouble -- set both to *something* consistent */
 	    for (int k = 0; k < sizeof (WORD); k++)
 		map->w[k] = k;
