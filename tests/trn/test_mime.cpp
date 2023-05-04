@@ -13,11 +13,6 @@ using namespace testing;
 
 namespace {
 
-struct MockExecutor
-{
-    MOCK_METHOD(int, execute, (const char *shell, const char *cmd), (const));
-};
-
 struct MimeTest : Test
 {
     ~MimeTest() override = default;
@@ -26,7 +21,7 @@ protected:
     void SetUp() override
     {
         mime_init();
-        mime_set_executor([this](const char *shell, const char *cmd) { return m_exec.execute(shell, cmd); });
+        mime_set_executor(m_exec.AsStdFunction());
         mime_ReadMimecap(TRN_TEST_MIMECAP_FILE);
     }
     void TearDown() override
@@ -34,7 +29,7 @@ protected:
         mime_final();
     }
 
-    StrictMock<MockExecutor> m_exec;
+    StrictMock<MockFunction<int(const char *shell, const char *cmd)>> m_exec;
 };
 
 } // namespace
@@ -117,7 +112,7 @@ protected:
 
 TEST_F(MimeExecTest, applicationPdfSuccessfulTestCommand)
 {
-    EXPECT_CALL(m_exec, execute(_, StrEq(TRN_TEST_MIME_PDF_TEST_EXEC_COMMAND))).WillOnce(Return(0));
+    EXPECT_CALL(m_exec, Call(_, StrEq(TRN_TEST_MIME_PDF_TEST_EXEC_COMMAND))).WillOnce(Return(0));
 
     MIMECAP_ENTRY *cap = mime_FindMimecapEntry(TRN_TEST_MIME_PDF_CONTENT_TYPE, MCF_NONE);
 
@@ -131,7 +126,7 @@ TEST_F(MimeExecTest, applicationPdfSuccessfulTestCommand)
 
 TEST_F(MimeExecTest, applicationPdfFailedTestCommand)
 {
-    EXPECT_CALL(m_exec, execute(_, _)).WillOnce(Return(1));
+    EXPECT_CALL(m_exec, Call(_, _)).WillOnce(Return(1));
 
     MIMECAP_ENTRY *cap = mime_FindMimecapEntry(TRN_TEST_MIME_PDF_CONTENT_TYPE, MCF_NONE);
 

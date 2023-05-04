@@ -18,24 +18,24 @@ struct MockEnvironment
 {
     MockEnvironment()
     {
-        set_environment([this](const char *name) { return get(name); });
+        set_environment(getter.AsStdFunction());
     }
     virtual ~MockEnvironment()
     {
         set_environment(nullptr);
     }
 
-    MOCK_METHOD(char *, get, (const char *), (const));
+    ::testing::StrictMock<::testing::MockFunction<char*(const char *)>> getter;
 
     void expect_env(const char *name, const char *value)
     {
         using namespace ::testing;
-        EXPECT_CALL(*this, get(StrEq(name))).WillOnce(Return(const_cast<char *>(value)));
+        EXPECT_CALL(getter, Call(StrEq(name))).WillOnce(Return(const_cast<char *>(value)));
     }
     void expect_no_envar(const char *name)
     {
         using namespace ::testing;
-        EXPECT_CALL(*this, get(StrEq(name))).WillOnce(Return(nullptr));
+        EXPECT_CALL(getter, Call(StrEq(name))).WillOnce(Return(nullptr));
     }
     void expect_no_envars(std::initializer_list<const char *> envars)
     {

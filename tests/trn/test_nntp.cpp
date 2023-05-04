@@ -21,20 +21,8 @@ public:
     MOCK_METHOD(size_t, read, (char *, size_t, error_code &), (override));
 };
 
-class INNTPConnectionFactory
-{
-public:
-    virtual ~INNTPConnectionFactory() = default;
-
-    virtual ConnectionPtr create(const char *machine, int port, const char *service) = 0;
-};
-
-class MockNNTPConnectionFactory : public INNTPConnectionFactory
-{
-public:
-    ~MockNNTPConnectionFactory() override = default;
-    MOCK_METHOD(ConnectionPtr, create, (const char *machine, int port, const char *service), (override));
-};
+using MockNNTPConnectionFactory =
+    StrictMock<MockFunction<ConnectionPtr(const char *machine, int port, const char *service)>>;
 
 class NNTPTest : public Test
 {
@@ -45,18 +33,17 @@ protected:
     void SetUp() override
     {
         init_nntp();
-        set_nntp_connection_factory([this](const char *machine, int port, const char *service)
-                                    { return m_factory.create(machine, port, service); });
+        set_nntp_connection_factory(m_factory.AsStdFunction());
         m_connection = std::make_shared<StrictMock<MockNNTPConnection>>();
     }
 
     void configure_factory_create(ConnectionPtr result)
     {
-        EXPECT_CALL(m_factory, create(StrEq(m_machine), _, StrEq("nntp"))).WillOnce(Return(std::move(result)));
+        EXPECT_CALL(m_factory, Call(StrEq(m_machine), _, StrEq("nntp"))).WillOnce(Return(std::move(result)));
     }
 
     const char *const                               m_machine{"news.gmane.io"};
-    StrictMock<MockNNTPConnectionFactory>           m_factory;
+    MockNNTPConnectionFactory                       m_factory;
     std::shared_ptr<StrictMock<MockNNTPConnection>> m_connection;
 };
 
