@@ -96,11 +96,7 @@ void InterpolatorTest::SetUp()
     mp_init();
     search_init();
     set_envars(m_env);
-    m_env.expect_no_envar("NETSPEED");
-    m_env.expect_no_envar("RNRC");
-    m_env.expect_no_envar("RNMACRO");
-    m_env.expect_no_envar("MAILCAPS");
-    m_env.expect_no_envar("KILLGLOBAL");
+    m_env.expect_no_envars({"KILLGLOBAL", "KILLTHREADS", "MAILCAPS", "MIMECAPS", "NETSPEED", "NNTP_FORCE_AUTH", "NNTPSERVER", "RNINIT", "RNMACRO", "RNRC"});
     env_init(m_tcbuf.data(), true, trn::testing::set_name, trn::testing::set_host_name);
     trn::testing::reset_lib_dirs();
     head_init();
