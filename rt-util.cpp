@@ -91,18 +91,19 @@ char *extract_name(char *name)
 */
 char *compress_name(char *name, int max)
 {
-    char*d;
-    int  midlen;
-    int  notlast;
+    char *d;
+    int   midlen;
+    int   notlast;
 
 try_again:
     /* First remove white space from both ends. */
     name = skip_space(name);
     int len = strlen(name);
     if (len == 0)
-	return name;
+        return name;
     char *s = name + len - 1;
-    while (isspace(*s)) s--;
+    while (isspace(*s))
+        s--;
     s[1] = '\0';
 #ifdef USE_UTF_HACK
     int vis_len, vis_namelen, vis_midlen;
@@ -117,12 +118,12 @@ try_again:
     vis_len = s - name + 1;
 #endif
     if (vis_len <= max)
-	return name;
+        return name;
 
     /* Look for characters that likely mean the end of the name
     ** and the start of some hopefully uninteresting additional info.
-    ** Spliting at a comma is somewhat questionalble, but since
-    ** "Ross Ridge, The Great HTMU" comes up much more often than 
+    ** Splitting at a comma is somewhat questionable, but since
+    ** "Ross Ridge, The Great HTMU" comes up much more often than
     ** "Ridge, Ross" and since "R HTMU" is worse than "Ridge" we do
     ** it anyways.
     */
@@ -131,251 +132,285 @@ try_again:
 #else
     d = name + 1;
 #endif
-    for (d = name ; ; ) {
+    for (d = name;;)
+    {
 #ifdef USE_UTF_HACK
-	int w = byte_length_at(d);
-	int x = byte_length_at(d + w);
+        int w = byte_length_at(d);
+        int x = byte_length_at(d + w);
 #else
-	int w = 1;
-	int x = 2;
+        int w = 1;
+        int x = 2;
 #endif
-	char ch = d[w];
-	char next = d[x];
-    if (!ch) break;
-	if (ch == ',' || ch == ';' || ch == '(' || ch == '@'
-	 || (ch == '-' && (next == '-' || next == ' '))) {
-	    *d = '\0';
-	    s = d;
-	    break;
-	}
-	d += w;
+        char ch = d[w];
+        char next = d[x];
+        if (!ch)
+            break;
+        if (ch == ',' || ch == ';' || ch == '(' || ch == '@' || (ch == '-' && (next == '-' || next == ' ')))
+        {
+            *d = '\0';
+            s = d;
+            break;
+        }
+        d += w;
     }
 
     /* Find the last name */
-    do {
-	notlast = 0;
-	while (isspace(*s)) s--;
-	s[1] = '\0';
-	len = s - name + 1;
+    do
+    {
+        notlast = 0;
+        while (isspace(*s))
+            s--;
+        s[1] = '\0';
+        len = s - name + 1;
 #ifdef USE_UTF_HACK
-	vis_len = visual_length_between(s, name) + 1;
+        vis_len = visual_length_between(s, name) + 1;
 #endif
-	if (vis_len <= max)
-	    return name;
-	/* If the last name is an abbreviation it's not the one we want. */
-	if (*s == '.')
-	    notlast = 1;
-	while (!isspace(*s)) {
-	    if (s == name) {	/* only one name */
+        if (vis_len <= max)
+            return name;
+        /* If the last name is an abbreviation it's not the one we want. */
+        if (*s == '.')
+            notlast = 1;
+        while (!isspace(*s))
+        {
+            if (s == name) /* only one name */
+            {
 #ifdef USE_UTF_HACK
-		terminate_string_at_visual_index(name, max);
+                terminate_string_at_visual_index(name, max);
 #else
-		name[max] = '\0';
+                name[max] = '\0';
 #endif
-		return name;
-	    }
-	    if (isdigit(*s))	/* probably a phone number */
-		notlast = 1;	/* so chuck it */
-	    s--;
-	}
+                return name;
+            }
+            if (isdigit(*s)) /* probably a phone number */
+                notlast = 1; /* so chuck it */
+            s--;
+        }
     } while (notlast);
 
     char *last = s-- + 1;
 
     /* Look for a middle name */
-    while (isspace(*s)) {	/* get rid of any extra space */
-	len--;	
-	s--;
+    while (isspace(*s)) /* get rid of any extra space */
+    {
+        len--;
+        s--;
     }
     char *mid = name;
     while (!isspace(*mid))
     {
 #ifdef USE_UTF_HACK
-	mid += byte_length_at(mid);
+        mid += byte_length_at(mid);
 #else
-	mid++;
+        mid++;
 #endif
     }
     int namelen = mid - name + 1;
 #ifdef USE_UTF_HACK
     vis_namelen = visual_length_between(mid, name) + 1;
 #endif
-    if (mid == s+1) {	/* no middle name */
-	mid = nullptr;
-	midlen = 0;
-    } else {
-	*mid++ = '\0';
-	while (isspace(*mid)) {
-	    len--;
+    if (mid == s + 1) /* no middle name */
+    {
+        mid = nullptr;
+        midlen = 0;
+    }
+    else
+    {
+        *mid++ = '\0';
+        while (isspace(*mid))
+        {
+            len--;
 #ifdef USE_UTF_HACK
-	    mid += byte_length_at(mid);
+            mid += byte_length_at(mid);
 #else
-	    mid++;
+            mid++;
 #endif
-	}
-	midlen = s - mid + 2;
+        }
+        midlen = s - mid + 2;
 #ifdef USE_UTF_HACK
-	vis_midlen = visual_length_between(s, mid) + 2;
+        vis_midlen = visual_length_between(s, mid) + 2;
 #endif
-	/* If first name is an initial and middle isn't and it all fits
-	** without the first initial, drop it. */
-	if (vis_len > max && mid != s) {
-	    if (vis_len - vis_namelen <= max
-	     && ((mid[1] != '.' && (!name[1] || (name[1] == '.' && !name[2])))
-	      || (*mid == '"' && *s == '"'))) {
-		len -= namelen;
-		name = mid;
-		namelen = midlen;
+        /* If first name is an initial and middle isn't and it all fits
+        ** without the first initial, drop it. */
+        if (vis_len > max && mid != s)
+        {
+            if (vis_len - vis_namelen <= max &&
+                ((mid[1] != '.' && (!name[1] || (name[1] == '.' && !name[2]))) || (*mid == '"' && *s == '"')))
+            {
+                len -= namelen;
+                name = mid;
+                namelen = midlen;
 #ifdef USE_UTF_HACK
-		vis_len = vis_namelen;
-		vis_namelen = vis_midlen;
+                vis_len = vis_namelen;
+                vis_namelen = vis_midlen;
 #endif
-		mid = nullptr;
-	    }
-	    else if (*mid == '"' && *s == '"') {
-		if (vis_midlen > max) {
-		    name = mid+1;
-		    *s = '\0';
-		    goto try_again;
-		}
-		len = midlen;
-		last = mid;
-		namelen = 0;
-		mid = nullptr;
+                mid = nullptr;
+            }
+            else if (*mid == '"' && *s == '"')
+            {
+                if (vis_midlen > max)
+                {
+                    name = mid + 1;
+                    *s = '\0';
+                    goto try_again;
+                }
+                len = midlen;
+                last = mid;
+                namelen = 0;
+                mid = nullptr;
 #ifdef USE_UTF_HACK
-		vis_len = vis_midlen;
-		vis_namelen = 0;
+                vis_len = vis_midlen;
+                vis_namelen = 0;
 #endif
-	    }
-	}
+            }
+        }
     }
     s[1] = '\0';
-    if (mid && vis_len > max) {
-	/* Turn middle names into intials */
-	len -= s - mid + 2;
+    if (mid && vis_len > max)
+    {
+        /* Turn middle names into intials */
+        len -= s - mid + 2;
 #ifdef USE_UTF_HACK
-	vis_len -= visual_length_between(s, mid) + 2;
+        vis_len -= visual_length_between(s, mid) + 2;
 #endif
         d = mid;
         s = mid;
-	while (*s) {
+        while (*s)
+        {
 #ifdef USE_UTF_HACK
-	    int w;
-	    int v;
+            int w;
+            int v;
 #endif
-	    if (isalpha(*s)) {
-		if (d != mid) {
+            if (isalpha(*s))
+            {
+                if (d != mid)
+                {
 #ifdef USE_UTF_HACK
-		    int w = byte_length_at(s);
-		    memset(d, ' ', w);
-		    d += w;
+                    int w = byte_length_at(s);
+                    memset(d, ' ', w);
+                    d += w;
 #else
-		    *d++ = ' ';
+                    *d++ = ' ';
 #endif
-		}
+                }
 #ifdef USE_UTF_HACK
-		w = byte_length_at(s);
-		memcpy(d,s,w);
-		d += w;
-		s += w;
+                w = byte_length_at(s);
+                memcpy(d, s, w);
+                d += w;
+                s += w;
 #else
-		*d++ = *s++;
+                *d++ = *s++;
 #endif
-	    }
-	    while (*s && !isspace(*s)) {
+            }
+            while (*s && !isspace(*s))
+            {
 #ifdef USE_UTF_HACK
-		s += byte_length_at(s);
+                s += byte_length_at(s);
 #else
-		s++;
+                s++;
 #endif
-	    }
-	    s = skip_space(s);
-	}
-	if (d != mid) {
-	    *d = '\0';
-	    midlen = d - mid + 1;
-	    len += midlen;
+            }
+            s = skip_space(s);
+        }
+        if (d != mid)
+        {
+            *d = '\0';
+            midlen = d - mid + 1;
+            len += midlen;
 #ifdef USE_UTF_HACK
-	    vis_midlen = visual_length_between(d, mid) + 1;
-	    vis_len += vis_midlen;
+            vis_midlen = visual_length_between(d, mid) + 1;
+            vis_len += vis_midlen;
 #endif
-	} else
-	    mid = nullptr;
+        }
+        else
+            mid = nullptr;
     }
-    if (vis_len > max) {
-	/* If the first name fits without the middle initials, drop them */
-	if (mid && vis_len - vis_midlen <= max) {
-	    len -= midlen;
+    if (vis_len > max)
+    {
+        /* If the first name fits without the middle initials, drop them */
+        if (mid && vis_len - vis_midlen <= max)
+        {
+            len -= midlen;
 #ifdef USE_UTF_HACK
-	    vis_len -= vis_midlen;
+            vis_len -= vis_midlen;
 #endif
-	    mid = nullptr;
-	} else if (namelen > 0) {
-	    /* Turn the first name into an initial */
+            mid = nullptr;
+        }
+        else if (namelen > 0)
+        {
+            /* Turn the first name into an initial */
 #ifdef USE_UTF_HACK
-	    int w = byte_length_at(name);
-	    len -= namelen - (w + 1);
-	    name[w] = '\0';
-	    namelen = w + 1;
-	    vis_namelen = visual_width_at(name) + 1;
+            int w = byte_length_at(name);
+            len -= namelen - (w + 1);
+            name[w] = '\0';
+            namelen = w + 1;
+            vis_namelen = visual_width_at(name) + 1;
 #else
-	    len -= namelen - 2;
-	    name[1] = '\0';
-	    namelen = 2;
+            len -= namelen - 2;
+            name[1] = '\0';
+            namelen = 2;
 #endif
-	    if (vis_len > max) {
-		/* Dump the middle initials (if present) */
-		if (mid) {
-		    len -= midlen;
+            if (vis_len > max)
+            {
+                /* Dump the middle initials (if present) */
+                if (mid)
+                {
+                    len -= midlen;
 #ifdef USE_UTF_HACK
-		    vis_len -= vis_midlen;
+                    vis_len -= vis_midlen;
 #endif
-		    mid = nullptr;
-		}
-		if (vis_len > max) {
-		    /* Finally just truncate the last name */
+                    mid = nullptr;
+                }
+                if (vis_len > max)
+                {
+                    /* Finally just truncate the last name */
 #ifdef USE_UTF_HACK
-		    terminate_string_at_visual_index(last, max - 2);
+                    terminate_string_at_visual_index(last, max - 2);
 #else
-		    last[max - 2] = '\0';
+                    last[max - 2] = '\0';
 #endif
-		}
-	    }
-	} else {
-	    namelen = 0;
+                }
+            }
+        }
+        else
+        {
+            namelen = 0;
 #ifdef USE_UTF_HACK
-	    vis_namelen = 0;
+            vis_namelen = 0;
 #endif
-	}
+        }
     }
 
     /* Paste the names back together */
     d = name + namelen;
     if (namelen)
-	d[-1] = ' ';
-    if (mid) {
-	if (d != mid)
-	    strcpy(d, mid);
-	d += midlen;
-	d[-1] = ' ';
+        d[-1] = ' ';
+    if (mid)
+    {
+        if (d != mid)
+            strcpy(d, mid);
+        d += midlen;
+        d[-1] = ' ';
     }
 #ifdef USE_UTF_HACK
     /* FIXME - need to move into some function */
-    do {
-	int i;
-	int j;
-	for (i = j = 0; last[i] && j < max; ) {
-	    int w = byte_length_at(last + i);
-	    int v = visual_width_at(last + i);
-	if (w == 0 || j + v > max) break;
-	    memcpy(d+i,last+i,w);
-	    i += w;
-	    j += v;
-	}
-	d[i] = '\0';
+    do
+    {
+        int i;
+        int j;
+        for (i = j = 0; last[i] && j < max;)
+        {
+            int w = byte_length_at(last + i);
+            int v = visual_width_at(last + i);
+            if (w == 0 || j + v > max)
+                break;
+            memcpy(d + i, last + i, w);
+            i += w;
+            j += v;
+        }
+        d[i] = '\0';
     } while (0);
 #else
-    safecpy(d, last, max);	/* "max - (d-name)" would be overkill */
+    safecpy(d, last, max); /* "max - (d-name)" would be overkill */
 #endif
     return name;
 }
