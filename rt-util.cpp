@@ -139,7 +139,7 @@ try_again:
         int x = byte_length_at(d + w);
 #else
         int w = 1;
-        int x = 2;
+        int x = w + 1;
 #endif
         char ch = d[w];
         char next = d[x];
@@ -147,7 +147,7 @@ try_again:
             break;
         if (ch == ',' || ch == ';' || ch == '(' || ch == '@' || (ch == '-' && (next == '-' || next == ' ')))
         {
-            *d = '\0';
+            d[w] = '\0';
             s = d;
             break;
         }

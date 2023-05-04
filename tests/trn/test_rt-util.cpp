@@ -43,6 +43,76 @@ protected:
     const char *m_expected{};
 };
 
+TEST_F(CompressNameTest, dropTrailingJunkComma)
+{
+    configure_before_expected("Ross Douglas Ridge, The Great HTMU", "Ross Douglas Ridge");
+
+    char *result = run_compress_name();
+
+    EXPECT_EQ(result, m_buffer);
+    EXPECT_STREQ(m_expected, m_buffer);
+}
+
+TEST_F(CompressNameTest, dropTrailingJunkSemi)
+{
+    configure_before_expected("Ross Douglas Ridge; The Great HTMU", "Ross Douglas Ridge");
+
+    char *result = run_compress_name();
+
+    EXPECT_EQ(result, m_buffer);
+    EXPECT_STREQ(m_expected, m_buffer);
+}
+
+TEST_F(CompressNameTest, dropTrailingJunkAt)
+{
+    configure_before_expected("Ross Douglas Ridge @ The Great HTMU", "Ross Douglas Ridge");
+
+    char *result = run_compress_name();
+
+    EXPECT_EQ(result, m_buffer);
+    EXPECT_STREQ(m_expected, m_buffer);
+}
+
+TEST_F(CompressNameTest, dropTrailingJunkDashDash)
+{
+    configure_before_expected("Ross Douglas Ridge--The Great HTMU", "Ross Douglas Ridge");
+
+    char *result = run_compress_name();
+
+    EXPECT_EQ(result, m_buffer);
+    EXPECT_STREQ(m_expected, m_buffer);
+}
+
+TEST_F(CompressNameTest, dropTrailingJunkDashSpace)
+{
+    configure_before_expected("Ross Douglas Ridge- The Great HTMU", "Ross Douglas Ridge");
+
+    char *result = run_compress_name();
+
+    EXPECT_EQ(result, m_buffer);
+    EXPECT_STREQ(m_expected, m_buffer);
+}
+
+TEST_F(CompressNameTest, dropTrailingJunkOpenParen)
+{
+    configure_before_expected("Ross Douglas Ridge (The Great HTMU)", "Ross Douglas Ridge");
+
+    char *result = run_compress_name();
+
+    EXPECT_EQ(result, m_buffer);
+    EXPECT_STREQ(m_expected, m_buffer);
+}
+
+TEST_F(CompressNameTest, keepTrailingJunkDollaDolla)
+{
+    configure_before_expected("Ross Douglas Ridge $$ The Great HTMU", "Ross D R T G HTMU");
+
+    char *result = run_compress_name();
+
+    EXPECT_EQ(result, m_buffer);
+    EXPECT_STREQ(m_expected, m_buffer);
+}
+
 TEST_F(CompressNameTest, middleInitial)
 {
     configure_before_expected("Ross Douglas Ridge", "Ross D Ridge");
