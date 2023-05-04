@@ -201,7 +201,7 @@ try_again:
     vis_namelen = visual_length_between(mid, name) + 1;
 #endif
     if (mid == s+1) {	/* no middle name */
-	mid = 0;
+	mid = nullptr;
 	midlen = 0;
     } else {
 	*mid++ = '\0';
@@ -230,7 +230,7 @@ try_again:
 		vis_len = vis_namelen;
 		vis_namelen = vis_midlen;
 #endif
-		mid = 0;
+		mid = nullptr;
 	    }
 	    else if (*mid == '"' && *s == '"') {
 		if (vis_midlen > max) {
@@ -241,7 +241,7 @@ try_again:
 		len = midlen;
 		last = mid;
 		namelen = 0;
-		mid = 0;
+		mid = nullptr;
 #ifdef USE_UTF_HACK
 		vis_len = vis_midlen;
 		vis_namelen = 0;
@@ -300,7 +300,7 @@ try_again:
 	    vis_len += vis_midlen;
 #endif
 	} else
-	    mid = 0;
+	    mid = nullptr;
     }
     if (vis_len > max) {
 	/* If the first name fits without the middle initials, drop them */
@@ -309,7 +309,7 @@ try_again:
 #ifdef USE_UTF_HACK
 	    vis_len -= vis_midlen;
 #endif
-	    mid = 0;
+	    mid = nullptr;
 	} else if (namelen > 0) {
 	    /* Turn the first name into an initial */
 #ifdef USE_UTF_HACK
@@ -330,7 +330,7 @@ try_again:
 #ifdef USE_UTF_HACK
 		    vis_len -= vis_midlen;
 #endif
-		    mid = 0;
+		    mid = nullptr;
 		}
 		if (vis_len > max) {
 		    /* Finally just truncate the last name */
