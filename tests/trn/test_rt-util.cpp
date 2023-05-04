@@ -33,6 +33,11 @@ protected:
         free(m_buffer);
     }
 
+    char *run_compress_name()
+    {
+        return compress_name(m_buffer, strlen(m_expected) + 1);
+    }
+
     const char *m_before{};
     char       *m_buffer{};
     const char *m_expected{};
@@ -42,7 +47,7 @@ TEST_F(CompressNameTest, middleInitial)
 {
     configure_before_expected("Ross Douglas Ridge", "Ross D Ridge");
 
-    char *result = compress_name(m_buffer, strlen(m_expected)+1);
+    char *result = run_compress_name();
 
     EXPECT_EQ(result, m_buffer);
     EXPECT_STREQ(m_expected, m_buffer);
@@ -52,7 +57,7 @@ TEST_F(CompressNameTest, dropMiddleName)
 {
     configure_before_expected("Ross Douglas Ridge", "Ross Ridge");
 
-    char *result = compress_name(m_buffer, strlen(m_expected)+1);
+    char *result = run_compress_name();
 
     EXPECT_EQ(result, m_buffer);
     EXPECT_STREQ(m_expected, m_buffer);
@@ -62,7 +67,7 @@ TEST_F(CompressNameTest, DISABLED_firstMiddleInitials)
 {
     configure_before_expected("Ross Douglas Ridge", "R D Ridge");
 
-    char *result = compress_name(m_buffer, strlen(m_expected)+1);
+    char *result = run_compress_name();
 
     EXPECT_EQ(result, m_buffer);
     EXPECT_STREQ(m_expected, m_buffer);
@@ -72,7 +77,7 @@ TEST_F(CompressNameTest, firstInitial)
 {
     configure_before_expected("Ross Douglas Ridge", "R Ridge");
 
-    char *result = compress_name(m_buffer, strlen(m_expected)+1);
+    char *result = run_compress_name();
 
     EXPECT_EQ(result, m_buffer);
     EXPECT_STREQ(m_expected, m_buffer);
@@ -82,7 +87,7 @@ TEST_F(CompressNameTest, DISABLED_truncated)
 {
     configure_before_expected("Ross Douglas Ridge", "R Ridg");
 
-    char *result = compress_name(m_buffer, strlen(m_expected)+1);
+    char *result = run_compress_name();
 
     EXPECT_EQ(result, m_buffer);
     EXPECT_STREQ(m_expected, m_buffer);
@@ -92,7 +97,7 @@ TEST_F(CompressNameTest, DISABLED_firstInitialDropped)
 {
     configure_before_expected("R. Douglas Ridge", "Douglas Ridge");
 
-    char *result = compress_name(m_buffer, strlen(m_expected)+1);
+    char *result = run_compress_name();
 
     EXPECT_EQ(result, m_buffer);
     EXPECT_STREQ(m_expected, m_buffer);
@@ -102,7 +107,7 @@ TEST_F(CompressNameTest, ddsDropped)
 {
     configure_before_expected("Ross Douglas Ridge D.D.S.", "Ross Douglas Ridge");
 
-    char *result = compress_name(m_buffer, strlen(m_expected)+1);
+    char *result = run_compress_name();
 
     EXPECT_EQ(result, m_buffer);
     EXPECT_STREQ(m_expected, m_buffer);
