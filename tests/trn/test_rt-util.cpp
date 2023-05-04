@@ -183,6 +183,16 @@ TEST_F(CompressNameTest, ddsDropped)
     EXPECT_STREQ(m_expected, m_buffer);
 }
 
+TEST_F(CompressNameTest, DISABLED_quotedMiddleDropsQuotes)
+{
+    configure_before_expected(R"(Ross "Douglas" Ridge)", "Ross Douglas Ridge");
+
+    char *result = run_compress_name();
+
+    EXPECT_EQ(result, m_buffer);
+    EXPECT_STREQ(m_expected, m_buffer);
+}
+
 TEST_F(CompressNameTest, SAIC)
 {
     configure_before_expected("School of the Art Institute of Chicago", "School o t A I o Chicago");
