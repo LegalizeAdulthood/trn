@@ -93,7 +93,7 @@ char *compress_name(char *name, int max)
 {
     char *d;
     int   midlen;
-    int   notlast;
+    bool  notlast;
 
 try_again:
     /* First remove white space from both ends. */
@@ -157,7 +157,7 @@ try_again:
     /* Find the last name */
     do
     {
-        notlast = 0;
+        notlast = false;
         while (isspace(*s))
             s--;
         s[1] = '\0';
@@ -169,7 +169,7 @@ try_again:
             return name;
         /* If the last name is an abbreviation it's not the one we want. */
         if (*s == '.')
-            notlast = 1;
+            notlast = true;
         while (!isspace(*s))
         {
             if (s == name) /* only one name */
@@ -181,8 +181,8 @@ try_again:
 #endif
                 return name;
             }
-            if (isdigit(*s)) /* probably a phone number */
-                notlast = 1; /* so chuck it */
+            if (isdigit(*s))    /* probably a phone number */
+                notlast = true; /* so chuck it */
             s--;
         }
     } while (notlast);
