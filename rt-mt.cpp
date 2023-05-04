@@ -686,6 +686,15 @@ static int read_item(char **dest, MEM_SIZE len)
     return 1;
 }
 
+static void set_default_bytemap(BMAP *map)
+{
+    /* trouble -- set both to *something* consistent */
+    for (int k = 0; k < sizeof(WORD); k++)
+        map->w[k] = k;
+    for (int k = 0; k < sizeof(LONG); k++)
+        map->l[k] = k;
+}
+
 /* Determine this machine's byte map for WORDs and LONGs.  A byte map is an
 ** array of BYTEs (sizeof (WORD) or sizeof (LONG) of them) with the 0th BYTE
 ** being the byte number of the high-order byte in my <type>, and so forth.
@@ -707,7 +716,10 @@ static void mybytemap(BMAP *map)
 		break;
 	}
 	if (j == sizeof (WORD))
-	    goto bad_news;
+	{
+            set_default_bytemap(map);
+            return;
+	}
 	*--mp = j;
 	while (u.b[j] != 0 && u.w)
 	    u.w <<= 1;
@@ -721,13 +733,8 @@ static void mybytemap(BMAP *map)
 		break;
 	}
 	if (j == sizeof (LONG)) {
-bad_news:
-	    /* trouble -- set both to *something* consistent */
-	    for (int k = 0; k < sizeof (WORD); k++)
-		map->w[k] = k;
-	    for (int k = 0; k < sizeof (LONG); k++)
-		map->l[k] = k;
-	    return;
+            set_default_bytemap(map);
+            return;
 	}
 	*--mp = j;
 	while (u.b[j] != 0 && u.l)
