@@ -265,7 +265,7 @@ try_again:
     s[1] = '\0';
     if (mid && vis_len > max)
     {
-        /* Turn middle names into intials */
+        /* Turn middle names into initials */
         len -= s - mid + 2;
 #ifdef USE_UTF_HACK
         vis_len -= visual_length_between(s, mid) + 2;
