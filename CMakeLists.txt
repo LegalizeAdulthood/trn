@@ -125,7 +125,7 @@ add_library(libtrn
     uudecode.cpp uudecode.h
 )
 # We require <filesystem>
-target_compile_features(libtrn PRIVATE cxx_std_17)
+target_compile_features(libtrn PUBLIC cxx_std_17)
 source_group("Header Files" REGULAR_EXPRESSION "^.*\\.h$")
 target_include_directories(libtrn PUBLIC .)
 target_link_libraries(libtrn PUBLIC parsedate curses nntp)
