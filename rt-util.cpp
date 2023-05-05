@@ -105,8 +105,11 @@ try_again:
     while (isspace(*s))
         s--;
     s[1] = '\0';
+
 #ifdef USE_UTF_HACK
-    int vis_len, vis_namelen, vis_midlen;
+    int vis_len;
+    int vis_namelen;
+    int vis_midlen;
 #else
 #define vis_len len
 #define vis_namelen namelen
@@ -127,11 +130,6 @@ try_again:
     ** "Ridge, Ross" and since "R HTMU" is worse than "Ridge" we do
     ** it anyways.
     */
-#ifdef USE_UTF_HACK
-    d = name + byte_length_at(name);
-#else
-    d = name + 1;
-#endif
     for (d = name;;)
     {
 #ifdef USE_UTF_HACK
