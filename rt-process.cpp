@@ -205,7 +205,7 @@ void thread_article(ARTICLE *article, char *references)
     autokill_flags chain_autofl =
         article->autofl | (article->subj->articles ? article->subj->articles->autofl : AUTO_KILL_NONE);
     autokill_flags subj_autofl = AUTO_KILL_NONE;
-    const bool rethreading = article->flags & AF_THREADED != 0;
+    const bool rethreading = (article->flags & AF_THREADED) != 0;
 
     /* We're definitely not a fake anymore */
     article->flags = (article->flags & ~AF_FAKE) | AF_THREADED;
