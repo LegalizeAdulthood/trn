@@ -63,7 +63,6 @@ enum article_flags : std::uint16_t
     AF_KCHASE = 0x0400,
     AF_MCHASE = 0x0800,
     AF_YANKBACK = 0x1000,
-    AF_FROMTRUNCED = 0x2000,
     AF_TMPMEM = 0x4000,
     AF_FAKE = 0x8000,
 };

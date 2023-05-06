@@ -15,7 +15,6 @@
 #include "list.h"
 #include "ng.h"
 #include "ngdata.h"
-#include "rt-mt.h"
 #include "rt-ov.h"
 #include "rt-page.h"
 #include "rt-process.h"
@@ -88,10 +87,6 @@ void thread_open()
     else
 	set_selector(g_sel_threadmode, g_sel_threadsort);
 
-    if ((g_datasrc->flags & DF_TRY_THREAD) && !g_first_subject) {
-	if (mt_data() < 0)
-	    return;
-    }
     if ((g_datasrc->flags & DF_TRY_OVERVIEW) && !g_cached_all_in_range) {
 	if (g_thread_always) {
             g_spin_todo = g_lastart - g_absfirst + 1;

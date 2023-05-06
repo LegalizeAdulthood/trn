@@ -246,15 +246,7 @@ void change_join_subject_len(int len)
 void check_poster(ARTICLE *ap)
 {
     if (g_auto_select_postings && (ap->flags & AF_EXISTS) && ap->from) {
-	if (ap->flags & AF_FROMTRUNCED) {
-	    strcpy(g_cmd_buf,g_real_name.c_str());
-	    if (!strcmp(ap->from,compress_name(g_cmd_buf,16))) {
-		g_untrim_cache = true;
-		fetchfrom(article_num(ap),false);
-		g_untrim_cache = false;
-	    }
-	}
-	if (!(ap->flags & AF_FROMTRUNCED)) {
+	{
 	    char* s = g_cmd_buf;
 	    char* u;
 	    char* h;
@@ -389,10 +381,7 @@ char *get_cached_line(ARTICLE *ap, header_line_type which_line, bool no_truncs)
 	    s = ap->subj->str + ((ap->flags & AF_HAS_RE) ? 0 : 4);
 	break;
       case FROM_LINE:
-	if (no_truncs && (ap->flags & AF_FROMTRUNCED))
-	    s = nullptr;
-	else
-	    s = ap->from;
+	s = ap->from;
 	break;
       case XREF_LINE:
 	s = ap->xrefs;
@@ -586,7 +575,6 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
     /* SUBJ_LINE is handled specially above */
     switch (which_line) {
       case FROM_LINE:
-	ap->flags &= ~AF_FROMTRUNCED;
 	if (ap->from)
 	    free(ap->from);
 	decode_header(s, s, strlen(s));

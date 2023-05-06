@@ -14,7 +14,6 @@
 #include "nntp.h"
 #include "nntpclient.h"
 #include "rcstuff.h"
-#include "rt-mt.h"
 #include "rt-ov.h"
 #include "rt-util.h"
 #include "string-algos.h"
@@ -414,8 +413,6 @@ bool open_datasrc(DATASRC *dp)
 	dp->flags |= DF_OPEN;
 	if (dp->flags & DF_TRY_OVERVIEW)
 	    ov_init();
-	if (dp->flags & DF_TRY_THREAD)
-	    mt_init();
     }
     else
 	dp->flags |= DF_UNAVAILABLE;

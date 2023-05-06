@@ -88,7 +88,6 @@ add_library(libtrn
     rcln.cpp rcln.h
     rcstuff.cpp rcstuff.h
     respond.cpp respond.h
-    rt-mt.cpp rt-mt.h
     rt-ov.cpp rt-ov.h
     rt-page.cpp rt-page.h
     rt-process.cpp rt-process.h

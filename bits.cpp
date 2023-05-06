@@ -421,7 +421,7 @@ void onemissing(ARTICLE *ap)
 {
     g_missing_count += (ap->flags & AF_UNREAD) != 0;
     oneless(ap);
-    ap->flags = (ap->flags & ~(AF_HAS_RE|AF_YANKBACK|AF_FROMTRUNCED|AF_EXISTS))
+    ap->flags = (ap->flags & ~(AF_HAS_RE|AF_YANKBACK|AF_EXISTS))
 	      | AF_CACHED|AF_THREADED;
 }
 
