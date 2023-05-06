@@ -19,7 +19,7 @@ enum
     MAX_DIGITS = 7
 };
 
-bool toread_quiet{};
+bool g_toread_quiet{};
 
 void rcln_init()
 {
@@ -335,7 +335,7 @@ void set_toread(NGDATA *np, bool lax_high_check)
     ART_NUM newmax;
 
     if (ngsize == TR_BOGUS) {
-	if (!toread_quiet) {
+	if (!g_toread_quiet) {
 	    printf("\nInvalid (bogus) newsgroup found: %s\n",np->rcline)
 	      FLUSH;
 	}
@@ -383,7 +383,7 @@ void set_toread(NGDATA *np, bool lax_high_check)
     }
     if (unread < 0) {			/* SOMEONE RESET THE NEWSGROUP!!! */
 	unread = (ART_UNREAD)ngsize;	/* assume nothing carried over */
-	if (!toread_quiet) {
+	if (!g_toread_quiet) {
 	    printf("\nSomebody reset %s -- assuming nothing read.\n",
 		   np->rcline) FLUSH;
 	}

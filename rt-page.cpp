@@ -466,9 +466,9 @@ try_again:
 		    break;
 		}
 		if (!np->abs1st) {
-		    toread_quiet = true;
+		    g_toread_quiet = true;
 		    set_toread(np, ST_LAX);
-		    toread_quiet = false;
+		    g_toread_quiet = false;
 		}
 		if (!(g_sel_rereading ^ (np->toread>TR_NONE))) {
 		    ui_elig = false;
