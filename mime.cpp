@@ -20,12 +20,12 @@
 #include "util.h"
 #include "util2.h"
 
-MIME_SECT g_mime_article{};
-MIME_SECT *g_mime_section{&g_mime_article};
-mime_state g_mime_state{};
+MIME_SECT   g_mime_article{};
+MIME_SECT  *g_mime_section{&g_mime_article};
+mime_state  g_mime_state{};
 std::string g_multipart_separator{"-=-=-=-=-=-"};
-bool g_auto_view_inline{false};
-char *g_mime_getc_line{nullptr};
+bool        g_auto_view_inline{};
+char       *g_mime_getc_line{};
 
 static char *mime_ParseEntryArg(char **cpp);
 static int   mime_getc(FILE *fp);

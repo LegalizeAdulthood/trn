@@ -20,27 +20,16 @@
 #include "term.h" /* macro to clear... */
 
 SA_ENTRYDATA *g_sa_ents{};
-int g_sa_num_ents{};
-
-bool g_sa_initialized{};           /* Have we initialized? */
-bool g_sa_never_initialized{true}; /* Have we ever initialized? */
-
+int           g_sa_num_ents{};
+bool          g_sa_initialized{};           /* Have we initialized? */
+bool          g_sa_never_initialized{true}; /* Have we ever initialized? */
 /* note: g_sa_in should be checked for returning to SA */
-bool g_sa_in{}; /* Are we "in" SA? */
-
-bool g_sa_go{};          /* go to sa.  Do not pass GO (:-) */
-bool g_sa_go_explicit{}; /* want to bypass read-next-marked */
-
-/* used to pass an article number to read soon */
-ART_NUM g_sa_art{};
-
-/* reimplement later */
-/* select threads from TRN thread selector */
-bool g_sa_do_selthreads{};
-
-/* true if read articles are eligible */
-/* in scanart.h for world-visibilty */
-bool g_sa_mode_read_elig{};
+bool    g_sa_in{};             /* Are we "in" SA? */
+bool    g_sa_go{};             /* go to sa.  Do not pass GO (:-) */
+bool    g_sa_go_explicit{};    /* want to bypass read-next-marked */
+ART_NUM g_sa_art{};            /* used to pass an article number to read soon */
+bool    g_sa_do_selthreads{};  /* select threads from TRN thread selector; re-implement later */
+bool    g_sa_mode_read_elig{}; /* true if read articles are eligible in scanart.h for world-visibilty */
 
 /* Options */
 /* Display order variable:

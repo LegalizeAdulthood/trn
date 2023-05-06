@@ -27,19 +27,19 @@
 #include "utf.h"
 #include "util.h"
 
-SEL_ITEM g_sel_items[MAX_SEL];
-int g_sel_total_obj_cnt{};
-int g_sel_prior_obj_cnt{};
-int g_sel_page_obj_cnt{};
-int g_sel_page_item_cnt{};
+SEL_ITEM  g_sel_items[MAX_SEL];
+int       g_sel_total_obj_cnt{};
+int       g_sel_prior_obj_cnt{};
+int       g_sel_page_obj_cnt{};
+int       g_sel_page_item_cnt{};
 ARTICLE **g_sel_page_app{};
 ARTICLE **g_sel_next_app{};
-ARTICLE *g_sel_last_ap{};
-SUBJECT *g_sel_page_sp{};
-SUBJECT *g_sel_next_sp{};
-SUBJECT *g_sel_last_sp{};
-char *g_sel_grp_dmode{};
-char *g_sel_art_dmode{};
+ARTICLE  *g_sel_last_ap{};
+SUBJECT  *g_sel_page_sp{};
+SUBJECT  *g_sel_next_sp{};
+SUBJECT  *g_sel_last_sp{};
+char     *g_sel_grp_dmode{};
+char     *g_sel_art_dmode{};
 
 static bool s_group_init_done{true};
 static int s_sel_max_line_cnt{};

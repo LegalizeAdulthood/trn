@@ -36,7 +36,7 @@
  * Lots more to do...
  */
 
-int g_univ_level{};          /* How deep are we in the tree? */
+int  g_univ_level{};         /* How deep are we in the tree? */
 bool g_univ_ng_virtflag{};   /* if true, we are in the "virtual group" second pass */
 bool g_univ_read_virtflag{}; /* if true, we are reading an article from a "virtual group" */
 bool g_univ_default_cmd{};   /* "follow"-related stuff (virtual groups) */
@@ -44,16 +44,16 @@ bool g_univ_follow{true};
 bool g_univ_follow_temp{};
 
 /* items which must be saved in context */
-UNIV_ITEM *g_first_univ{};
-UNIV_ITEM *g_last_univ{};
-UNIV_ITEM *sel_page_univ{};
-UNIV_ITEM *g_sel_next_univ{};
-char *g_univ_fname{};    /* current filename (may be null) */
+UNIV_ITEM  *g_first_univ{};
+UNIV_ITEM  *g_last_univ{};
+UNIV_ITEM  *sel_page_univ{};
+UNIV_ITEM  *g_sel_next_univ{};
+char       *g_univ_fname{};  /* current filename (may be null) */
 std::string g_univ_label;    /* current label (may be null) */
 std::string g_univ_title;    /* title of current level */
 std::string g_univ_tmp_file; /* temp. file (may be null) */
-HASHTABLE *g_univ_ng_hash{};
-HASHTABLE *g_univ_vg_hash{};
+HASHTABLE  *g_univ_ng_hash{};
+HASHTABLE  *g_univ_vg_hash{};
 /* end of items that must be saved */
 
 static bool s_univ_virt_pass_needed{};

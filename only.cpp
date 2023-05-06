@@ -13,9 +13,9 @@
 #include "util.h"
 #include "util2.h"
 
-char *g_ngtodo[MAXNGTODO];       /* restrictions in effect */
-int g_maxngtodo{};               /*  0 => no restrictions */
-                                 /* >0 => # of entries in g_ngtodo */
+char *g_ngtodo[MAXNGTODO]; /* restrictions in effect */
+int   g_maxngtodo{};       /*  0 => no restrictions */
+                           /* >0 => # of entries in g_ngtodo */
 char g_empty_only_char{'o'};
 
 static int s_save_maxngtodo{};

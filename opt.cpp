@@ -48,11 +48,10 @@
 #include <io.h>
 #endif
 
-COMPEX g_optcompex;
+COMPEX      g_optcompex;
 std::string g_ini_file;
-INI_WORDS g_options_ini[] =
-// clang-format off
-{
+INI_WORDS   g_options_ini[] = {
+    // clang-format off
     { 0, "OPTIONS", nullptr },
 
     { 0, "*Display Options", nullptr },
@@ -167,10 +166,10 @@ INI_WORDS g_options_ini[] =
     { 0, nullptr, nullptr }
 };
 // clang-format on
-char **g_option_def_vals{};
-char **g_option_saved_vals{};
+char        **g_option_def_vals{};
+char        **g_option_saved_vals{};
 option_flags *g_option_flags{};
-int g_sel_page_op{};
+int           g_sel_page_op{};
 
 static char s_univ_sel_cmds[3]{"Z>"};
 

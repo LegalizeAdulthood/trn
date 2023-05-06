@@ -14,9 +14,9 @@
 #include "sorder.h"
 #include "term.h"
 
-int g_scr_height{}; /* height of screen in characters */
-int g_scr_width{};  /* width of screen in characters */
-bool g_s_resized{}; /* has the window been resized? */
+int  g_scr_height{}; /* height of screen in characters */
+int  g_scr_width{};  /* width of screen in characters */
+bool g_s_resized{};  /* has the window been resized? */
 
 void s_goxy(int x, int y)
 {

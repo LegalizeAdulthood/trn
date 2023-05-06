@@ -48,7 +48,7 @@ bool g_waiting{}; /* waiting for subprocess (in doshell)? */
 bool g_nowait_fork{};
 /* the strlen and the buffer length of "some_buf" after a call to:
  *     some_buf = get_a_line(bufptr,bufsize,realloc,fp); */
-int g_len_last_line_got{};
+int      g_len_last_line_got{};
 MEM_SIZE g_buflen_last_line_got{};
 
 #ifndef USE_DEBUGGING_MALLOC

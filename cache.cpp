@@ -34,18 +34,18 @@
 #include "util.h"
 #include "util2.h"
 
-LIST     *g_article_list{}; /* a list of ARTICLEs */
-ARTICLE **g_artptr_list{};  /* the article-selector creates this */
-ARTICLE **g_artptr{};       /* ditto -- used for article order */
-ART_NUM   g_artptr_list_size{};
-ART_NUM   g_srchahead{}; /* are we in subject scan mode? (if so, contains art # found or -1) */
-ART_NUM   g_first_cached{};
-ART_NUM   g_last_cached{};
-bool      g_cached_all_in_range{};
-ARTICLE  *g_sentinel_artp{};
-SUBJECT  *g_first_subject{};
-SUBJECT  *g_last_subject{};
-bool      g_untrim_cache{};
+LIST     *g_article_list{};         /* a list of ARTICLEs */
+ARTICLE **g_artptr_list{};          /* the article-selector creates this */
+ARTICLE **g_artptr{};               /* ditto -- used for article order */
+ART_NUM   g_artptr_list_size{};     //
+ART_NUM   g_srchahead{};            /* are we in subject scan mode? (if so, contains art # found or -1) */
+ART_NUM   g_first_cached{};         //
+ART_NUM   g_last_cached{};          //
+bool      g_cached_all_in_range{};  //
+ARTICLE  *g_sentinel_artp{};        //
+SUBJECT  *g_first_subject{};        //
+SUBJECT  *g_last_subject{};         //
+bool      g_untrim_cache{};         //
 int       g_join_subject_len{};     /* -J */
 int       g_olden_days{};           /* -o */
 char      g_auto_select_postings{}; /* -p */

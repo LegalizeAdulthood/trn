@@ -43,27 +43,24 @@ termios g_oldtty;
 int     g_tty_ch{2};
 #endif
 
-char g_erase_char{}; /* rubout character */
-char g_kill_char{};  /* line delete character */
-unsigned char g_lastchar{};
-bool g_bizarre{}; /* do we need to restore terminal? */
-
-int g_univ_sel_btn_cnt{};
-int g_newsrc_sel_btn_cnt{};
-int g_add_sel_btn_cnt{};
-int g_newsgroup_sel_btn_cnt{};
-int g_news_sel_btn_cnt{};
-int g_option_sel_btn_cnt{};
-int g_art_pager_btn_cnt{};
-
-char *g_univ_sel_btns{};
-char *g_newsrc_sel_btns{};
-char *g_add_sel_btns{};
-char *g_newsgroup_sel_btns{};
-char *g_news_sel_btns{};
-char *g_option_sel_btns{};
-char *g_art_pager_btns{};
-
+char          g_erase_char{}; /* rubout character */
+char          g_kill_char{};  /* line delete character */
+unsigned char g_lastchar{};   //
+bool          g_bizarre{};    /* do we need to restore terminal? */
+int           g_univ_sel_btn_cnt{};
+int           g_newsrc_sel_btn_cnt{};
+int           g_add_sel_btn_cnt{};
+int           g_newsgroup_sel_btn_cnt{};
+int           g_news_sel_btn_cnt{};
+int           g_option_sel_btn_cnt{};
+int           g_art_pager_btn_cnt{};
+char         *g_univ_sel_btns{};
+char         *g_newsrc_sel_btns{};
+char         *g_add_sel_btns{};
+char         *g_newsgroup_sel_btns{};
+char         *g_news_sel_btns{};
+char         *g_option_sel_btns{};
+char         *g_art_pager_btns{};
 bool          g_muck_up_clear{};                 /* -loco */
 bool          g_erase_screen{};                  /* -e */
 bool          g_can_home{};                      //
@@ -79,37 +76,37 @@ minor_mode    g_mode{MM_INITIALIZING};           /* current state of trn */
 general_mode  g_general_mode{GM_INIT};           /* general mode of trn */
 
 #ifdef HAS_TERMLIB
-bool g_tc_GT{};   /* hardware tabs */
-char *g_tc_BC{}; /* backspace character */
-char *g_tc_UP{}; /* move cursor up one line */
-char *g_tc_CR{}; /* get to left margin, somehow */
-char *g_tc_VB{}; /* visible bell */
-char *g_tc_CE{}; /* clear to end of line */
-char *g_tc_CM{}; /* cursor motion */
-char *g_tc_HO{}; /* home cursor */
-char *g_tc_IL{}; /* insert line */
-char *g_tc_CD{}; /* clear to end of display */
-char *g_tc_SO{}; /* begin standout mode */
-char *g_tc_SE{}; /* end standout mode */
-char *g_tc_US{}; /* start underline mode */
-char *g_tc_UE{}; /* end underline mode */
-char *g_tc_UC{}; /* underline a character, if that's how it's done */
-bool g_tc_UG{};   /* blanks left by US and UE */
-bool g_tc_AM{};  /* does terminal have automatic margins? */
-bool g_tc_XN{};  /* does it eat 1st newline after automatic wrap? */
-int g_fire_is_out{1};
-int g_tc_LINES{};
-int g_tc_COLS{};
-int g_term_line;
-int g_term_col;
-int g_term_scrolled;           /* how many lines scrolled away */
-int g_just_a_sec{960};         /* 1 sec at current baud rate (number of nulls) */
-int g_page_line{1};            /* line number for paging in print_line (origin 1) */
-bool g_error_occurred{};
-int g_mousebar_cnt{};
-int g_mousebar_width{};
-bool g_mouse_is_down{};
-int  g_auto_arrow_macros{2}; /* -A */
+bool  g_tc_GT{};              /* hardware tabs */
+char *g_tc_BC{};              /* backspace character */
+char *g_tc_UP{};              /* move cursor up one line */
+char *g_tc_CR{};              /* get to left margin, somehow */
+char *g_tc_VB{};              /* visible bell */
+char *g_tc_CE{};              /* clear to end of line */
+char *g_tc_CM{};              /* cursor motion */
+char *g_tc_HO{};              /* home cursor */
+char *g_tc_IL{};              /* insert line */
+char *g_tc_CD{};              /* clear to end of display */
+char *g_tc_SO{};              /* begin standout mode */
+char *g_tc_SE{};              /* end standout mode */
+char *g_tc_US{};              /* start underline mode */
+char *g_tc_UE{};              /* end underline mode */
+char *g_tc_UC{};              /* underline a character, if that's how it's done */
+bool  g_tc_UG{};              /* blanks left by US and UE */
+bool  g_tc_AM{};              /* does terminal have automatic margins? */
+bool  g_tc_XN{};              /* does it eat 1st newline after automatic wrap? */
+int   g_fire_is_out{1};       //
+int   g_tc_LINES{};           //
+int   g_tc_COLS{};            //
+int   g_term_line;            //
+int   g_term_col;             //
+int   g_term_scrolled;        /* how many lines scrolled away */
+int   g_just_a_sec{960};      /* 1 sec at current baud rate (number of nulls) */
+int   g_page_line{1};         /* line number for paging in print_line (origin 1) */
+bool  g_error_occurred{};     //
+int   g_mousebar_cnt{};       //
+int   g_mousebar_width{};     //
+bool  g_mouse_is_down{};      //
+int   g_auto_arrow_macros{2}; /* -A */
 
 static char *s_mousebar_btns{};
 static int s_mousebar_start{};

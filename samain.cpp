@@ -22,8 +22,8 @@
 #include "spage.h"
 #include "util.h"
 
-bool g_sa_mode_zoom{};     /* true if in "zoom" (display only selected) mode */
-int g_sa_scan_context{-1}; /* contains the scan-context number for the current article scan */
+bool g_sa_mode_zoom{};      /* true if in "zoom" (display only selected) mode */
+int  g_sa_scan_context{-1}; /* contains the scan-context number for the current article scan */
 
 static int s_sa_ents_alloc{};
 static bool s_sa_context_init{}; /* has context been initialized? */

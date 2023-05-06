@@ -48,11 +48,11 @@
 #include <direct.h>
 #endif
 
-ART_NUM  g_art{};         /* current or prospective article # */
-ART_NUM  g_recent_art{};  /* previous article # for '-' command */
-ART_NUM  g_curr_art{};    /* current article # */
-ARTICLE *g_recent_artp{}; /* article_ptr equivilents */
-ARTICLE *g_curr_artp{};
+ART_NUM  g_art{};           /* current or prospective article # */
+ART_NUM  g_recent_art{};    /* previous article # for '-' command */
+ART_NUM  g_curr_art{};      /* current article # */
+ARTICLE *g_recent_artp{};   /* article_ptr equivilents */
+ARTICLE *g_curr_artp{};     //
 ARTICLE *g_artp{};          /* the article ptr we use when art is 0 */
 int      g_checkcount{};    /* how many articles have we read in the current newsgroup since the last checkpoint? */
 int      g_docheckwhen{20}; /* how often to do checkpoint */

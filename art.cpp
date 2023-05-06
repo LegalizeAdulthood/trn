@@ -42,32 +42,30 @@
 
 #include <time.h>
 
-ART_LINE g_highlight{-1}; /* next line to be highlighted */
-ART_LINE g_first_view{};
-ART_POS g_raw_artsize{};  /* size in bytes of raw article */
-ART_POS g_artsize{};      /* size in bytes of article */
-char g_art_line[LBUFLEN]; /* place for article lines */
-int g_gline{};
-ART_POS g_innersearch{};  /* g_artpos of end of line we want to visit */
-ART_LINE g_innerlight{};  /* highlight position for g_innersearch or 0 */
-char g_hide_everything{}; /* if set, do not write page now, ...but execute char when done with page */
-
-bool        g_reread{};          /* consider current art temporarily unread? */
-bool        g_do_fseek{};        /* should we back up in article file? */
-bool        g_oldsubject{};      /* not 1st art in subject thread */
-ART_LINE    g_topline{-1};       /* top line of current screen */
-bool        g_do_hiding{true};   /* hide header lines with -h? */
-bool        g_is_mime{};         /* process mime in an article? */
-bool        g_multimedia_mime{}; /* images/audio to see/hear? */
-bool        g_rotate{};          /* has rotation been requested? */
-std::string g_prompt;            /* current prompt */
-char       *g_firstline{};       /* s_special first line? */
-const char *g_hideline{};        /* custom line hiding? */
-const char *g_pagestop{};        /* custom page terminator? */
-COMPEX      g_hide_compex{};
-COMPEX      g_page_compex{};
-
-bool g_dont_filter_control{}; /* -j */
+ART_LINE    g_highlight{-1};         /* next line to be highlighted */
+ART_LINE    g_first_view{};          //
+ART_POS     g_raw_artsize{};         /* size in bytes of raw article */
+ART_POS     g_artsize{};             /* size in bytes of article */
+char        g_art_line[LBUFLEN];     /* place for article lines */
+int         g_gline{};               //
+ART_POS     g_innersearch{};         /* g_artpos of end of line we want to visit */
+ART_LINE    g_innerlight{};          /* highlight position for g_innersearch or 0 */
+char        g_hide_everything{};     /* if set, do not write page now, ...but execute char when done with page */
+bool        g_reread{};              /* consider current art temporarily unread? */
+bool        g_do_fseek{};            /* should we back up in article file? */
+bool        g_oldsubject{};          /* not 1st art in subject thread */
+ART_LINE    g_topline{-1};           /* top line of current screen */
+bool        g_do_hiding{true};       /* hide header lines with -h? */
+bool        g_is_mime{};             /* process mime in an article? */
+bool        g_multimedia_mime{};     /* images/audio to see/hear? */
+bool        g_rotate{};              /* has rotation been requested? */
+std::string g_prompt;                /* current prompt */
+char       *g_firstline{};           /* s_special first line? */
+const char *g_hideline{};            /* custom line hiding? */
+const char *g_pagestop{};            /* custom page terminator? */
+COMPEX      g_hide_compex{};         //
+COMPEX      g_page_compex{};         //
+bool        g_dont_filter_control{}; /* -j */
 
 inline char *line_ptr(ART_POS pos)
 {

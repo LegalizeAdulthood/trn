@@ -32,8 +32,9 @@
 #define FILT_CACHED HT_NONE
 
 /* This array must stay in the same order as the enum values header_line_type */
+// clang-format off
 HEADTYPE g_htype[HEAD_LAST] = {
-    /* name             minpos   maxpos  length   flag */
+    /* name             minpos  maxpos  length   flag */
     {"",/*BODY*/	0,	0,	0,	HT_NONE		},
     {"",/*SHOWN*/	0,	0,	0,	HT_NONE		},
     {"",/*HIDDEN*/	0,	0,	0,	HIDDEN		},
@@ -67,6 +68,7 @@ HEADTYPE g_htype[HEAD_LAST] = {
     {"subject",		0,	0,	7,	MAGIC_ON|HT_CACHED},
     {"xref",		0,	0,	4,	HIDDEN|XREF_CACHED},
 };
+// clang-format on
 
 #undef HIDDEN
 #undef MAGIC_ON
@@ -74,13 +76,13 @@ HEADTYPE g_htype[HEAD_LAST] = {
 #undef NGS_CACHED
 #undef XREF_CACHED
 
-USER_HEADTYPE *g_user_htype{};
-short g_user_htypeix[26];
-int g_user_htype_cnt{};
-int g_user_htype_max{};
-ART_NUM g_parsed_art{};         /* the article number we've parsed */
-header_line_type g_in_header{}; /* are we decoding the header? */
-char *g_headbuf;
+USER_HEADTYPE   *g_user_htype{};
+short            g_user_htypeix[26];
+int              g_user_htype_cnt{};
+int              g_user_htype_max{};
+ART_NUM          g_parsed_art{}; /* the article number we've parsed */
+header_line_type g_in_header{};  /* are we decoding the header? */
+char            *g_headbuf;
 
 static ARTICLE         *s_parsed_artp{}; /* the article ptr we've parsed */
 static long             s_headbuf_size;

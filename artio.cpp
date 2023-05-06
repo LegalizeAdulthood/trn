@@ -21,16 +21,16 @@
 #include "util.h"
 #include "util2.h"
 
-ART_POS  g_artpos{};  /* byte position in article file */
-ART_LINE g_artline{}; /* current line number in article file */
-FILE    *g_artfp{};   /* current article file pointer */
-ART_NUM  g_openart{}; /* the article number we have open */
-char    *g_artbuf{};
-long     g_artbuf_pos{};
-long     g_artbuf_seek{};
-long     g_artbuf_len{};
-char     g_wrapped_nl{WRAPPED_NL};
-int      g_word_wrap_offset{8}; /* right-hand column size (0 is off) */
+ART_POS  g_artpos{};               /* byte position in article file */
+ART_LINE g_artline{};              /* current line number in article file */
+FILE    *g_artfp{};                /* current article file pointer */
+ART_NUM  g_openart{};              /* the article number we have open */
+char    *g_artbuf{};               //
+long     g_artbuf_pos{};           //
+long     g_artbuf_seek{};          //
+long     g_artbuf_len{};           //
+char     g_wrapped_nl{WRAPPED_NL}; //
+int      g_word_wrap_offset{8};    /* right-hand column size (0 is off) */
 
 static long s_artbuf_size{};
 

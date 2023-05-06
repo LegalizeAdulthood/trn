@@ -28,10 +28,9 @@
 #include "util.h"
 #include "util2.h"
 
-int g_dmcount{0};
+int g_dmcount{};
 
 static long s_chase_count{0};
-
 static bool yank_article(char *ptr, int arg);
 static bool check_chase(char *ptr, int until_key);
 static int chase_xref(ART_NUM artnum, int markread);

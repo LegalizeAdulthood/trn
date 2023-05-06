@@ -8,7 +8,7 @@ struct DATASRC;
 struct NGDATA;
 
 /* if true, silence is golden (universal scan mode) */
-extern bool toread_quiet;
+extern bool g_toread_quiet;
 
 enum : bool
 {
