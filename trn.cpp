@@ -802,12 +802,6 @@ void trn_version()
 					     : "the server");
 		print_lines(g_msg, NOMARKING);
 	    }
-	    if (rp->datasrc->flags & DF_TRY_THREAD) {
-		sprintf(g_msg,"Thread files from %s.\n",
-			rp->datasrc->thread_dir? rp->datasrc->thread_dir
-					       : "the server");
-		print_lines(g_msg, NOMARKING);
-	    }
 	    print_lines("\n", NOMARKING);
 	}
     }

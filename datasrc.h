@@ -36,7 +36,6 @@ enum datasrc_flags : std::uint16_t
 {
     DF_NONE = 0,
     DF_TRY_OVERVIEW = 0x0001,
-    DF_TRY_THREAD = 0x0002,
     DF_ADD_OK = 0x0004,
     DF_DEFAULT = 0x0008,
     DF_OPEN = 0x0010,
@@ -76,7 +75,6 @@ struct DATASRC
     char         *spool_dir;
     char         *over_dir;
     char         *over_fmt;
-    char         *thread_dir;
     char         *auth_user;
     char         *auth_pass;
     long          lastnewgrp; /* time of last newgroup check */

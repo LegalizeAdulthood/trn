@@ -147,7 +147,6 @@ enum
  *	%U	Number of unread articles disregarding current article
  *	%v	Number of unselected articles disregarding current article
  *      %V      Version string
- *	%W	The thread directory root
  *	%x	News library directory, usually /usr/lib/news
  *	%X	Trn's private library directory, usually %x/trn
  *	%y	From line with domain shortening (name@*.domain.nam)

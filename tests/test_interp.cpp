@@ -815,17 +815,6 @@ TEST_F(InterpolatorTest, patchLevel)
     ASSERT_EQ(std::string{PATCHLEVEL}, buffer());
 }
 
-TEST_F(InterpolatorTest, threadDirNotInNewsgroup)
-{
-    value_saver<DATASRC *> saved(g_datasrc, nullptr);
-    char pattern[]{"%W"};
-
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
-    ASSERT_TRUE(bufferIsEmpty());
-}
-
 TEST_F(InterpolatorTest, libDir)
 {
     char pattern[]{"%x"};
@@ -1652,17 +1641,6 @@ TEST_F(InterpolatorNewsgroupTest, numUnselectedArticlesExceptCurrentInNewsgroupE
 
     ASSERT_EQ('\0', *new_pattern);
     ASSERT_EQ(std::to_string(TRN_TEST_NEWSGROUP_HIGH - TRN_TEST_NEWSGROUP_LOW), buffer());
-}
-
-// TODO: Why is this the SPOOL dir and under what circumstances is it different?
-TEST_F(InterpolatorNewsgroupTest, threadDirInNewsgroup)
-{
-    char pattern[]{"%W"};
-
-    const char *new_pattern = interpolate(pattern);
-
-    ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(TRN_TEST_LOCAL_SPOOL_DIR, buffer());
 }
 
 TEST_F(InterpolatorNewsgroupTest, shortenedFromInNewsgroup)

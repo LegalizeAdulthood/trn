@@ -862,9 +862,6 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
 		    strcpy(scrbuf, g_patchlevel.c_str());
 		    s = scrbuf;
 		    break;
-		case 'W':
-                    s = g_datasrc ? g_datasrc->thread_dir : s_empty;
-		    break;
 		case 'x':			/* news library */
 		    strcpy(scrbuf, g_lib.c_str());
 		    s = scrbuf;

@@ -59,7 +59,6 @@ enum datasrc_ini_index
     DI_ACTIVE_FILE,
     DI_ACT_REFETCH,
     DI_SPOOL_DIR,
-    DI_THREAD_DIR,
     DI_OVERVIEW_DIR,
     DI_ACTIVE_TIMES,
     DI_GROUP_DESC,
@@ -142,7 +141,6 @@ void datasrc_init()
 	vals[DI_NNTP_SERVER] = machine;
 	vals[DI_ACTIVE_FILE] = actname;
 	vals[DI_SPOOL_DIR] = NEWSSPOOL;
-	vals[DI_THREAD_DIR] = THREAD_DIR;
 	vals[DI_OVERVIEW_DIR] = OVERVIEW_DIR;
 	vals[DI_OVERVIEW_FMT] = OVERVIEW_FMT;
 	vals[DI_ACTIVE_TIMES] = ACTIVE_TIMES;
@@ -255,7 +253,6 @@ static DATASRC *new_datasrc(const char *name, char **vals)
 
     dp->over_dir = dir_or_none(dp,vals[DI_OVERVIEW_DIR],DF_TRY_OVERVIEW);
     dp->over_fmt = file_or_none(vals[DI_OVERVIEW_FMT]);
-    dp->thread_dir = dir_or_none(dp,vals[DI_THREAD_DIR],DF_TRY_THREAD);
     dp->grpdesc = dir_or_none(dp,vals[DI_GROUP_DESC],DF_NONE);
     dp->extra_name = dir_or_none(dp,vals[DI_ACTIVE_TIMES],DF_ADD_OK);
     if (dp->flags & DF_REMOTE) {

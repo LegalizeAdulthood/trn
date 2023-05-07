@@ -17,10 +17,9 @@ cat >access.def <<!GROK!THIS!
 # to the appropriate interval (e.g. "1 day, 5 hours, 3 minutes").
 #   When defining a local news source (even NFS mounted), set "Active File"
 # and "Spool Dir".
-#   Specify "none" for "Overview Dir" and/or "Thread Dir" to disable support
-# for that database type, omit or leave blank for the default access (either
-# "Spool Dir" for local or XOVER/XTHREAD for remote), or enter a custom
-# hierarchy path name.
+#   Specify "none" for "Overview Dir" to disable support for the overview
+# database , omit or leave blank for the default access (XOVER/XTHREAD
+# for remote).
 #   Specify "none" for "Active Times" if the host has no new-group support,
 # leave it blank for the default (either active + ".times" for local access
 # or the NEWGROUPS command for remote), or enter a custom file name for your
@@ -37,7 +36,6 @@ cat >access.def <<!GROK!THIS!
 #Active File = $active
 #Active File Refetch = [never|1 day, 4 hours, 5 mins]
 #Spool Dir = $newsspool
-#Thread Dir = $threaddir
 #Overview Dir = $overviewdir
 #Overview Format File = $overviewfmt
 #Active Times = $acttimes

@@ -14,7 +14,6 @@
 #define TRN_TEST_P_HOST_NAME                    "@TRN_TEST_P_HOST_NAME@"
 #define TRN_TEST_ORGANIZATION                   "@TRN_TEST_ORGANIZATION@"
 #define TRN_TEST_ORGFILE                        "@TRN_TEST_ORGFILE@"
-#define TRN_TEST_THREAD_DIR                     "@TRN_TEST_THREAD_DIR@"
 #define TRN_TEST_LOCAL_SPOOL_DIR                "@TRN_TEST_LOCAL_SPOOL_DIR@"
 
 // Newsgroup related content.
