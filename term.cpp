@@ -109,14 +109,14 @@ bool  g_mouse_is_down{};      //
 int   g_auto_arrow_macros{2}; /* -A */
 
 static char *s_mousebar_btns{};
-static int s_mousebar_start{};
-static bool s_xmouse_is_on{};
+static int   s_mousebar_start{};
+static bool  s_xmouse_is_on{};
 static char *s_tc_CL{}; /* home and clear screen */
 static char *s_tc_TI{}; /* initialize terminal */
 static char *s_tc_TE{}; /* reset terminal */
 static char *s_tc_KS{}; /* enter `keypad transmit' mode */
 static char *s_tc_KE{}; /* exit `keypad transmit' mode */
-static char s_tc_PC{};  /* pad character for use by tputs() */
+static char  s_tc_PC{}; /* pad character for use by tputs() */
 #ifdef _POSIX_SOURCE
 static speed_t s_outspeed{}; /* terminal output speed, */
 #else
@@ -159,11 +159,11 @@ static const char *s_readerr{"rn read error"};
 static char s_tcarea[TCSIZE]; /* area for "compiled" termcap strings */
 #endif
 static KEYMAP *s_topmap{};
-static char *s_lines_export{};
-static char *s_cols_export{};
-static int s_leftcost{};
-static int s_upcost{};
-static bool s_got_a_char{}; /* true if we got a char since eating */
+static char   *s_lines_export{};
+static char   *s_cols_export{};
+static int     s_leftcost{};
+static int     s_upcost{};
+static bool    s_got_a_char{}; /* true if we got a char since eating */
 
 static void mac_init(char *tcbuf);
 static KEYMAP* newkeymap();

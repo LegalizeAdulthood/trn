@@ -20,15 +20,15 @@
 
 int g_sc_loaded_count{}; /* how many articles were loaded? */
 
-static long s_sc_save_new{}; /* new articles (unloaded) */
-static int s_num_lines{};
-static int s_lines_alloc{};
-static char **s_lines{};
-static char s_lbuf[LBUFLEN]{};
-static char s_lbuf2[LBUFLEN]{}; /* what's another buffer between... */
-static int s_loaded{};
-static int s_used{};
-static int s_saved{};
+static long    s_sc_save_new{}; /* new articles (unloaded) */
+static int     s_num_lines{};
+static int     s_lines_alloc{};
+static char  **s_lines{};
+static char    s_lbuf[LBUFLEN]{};
+static char    s_lbuf2[LBUFLEN]{}; /* what's another buffer between... */
+static int     s_loaded{};
+static int     s_used{};
+static int     s_saved{};
 static ART_NUM s_last{};
 
 void sc_sv_add(const char *str)

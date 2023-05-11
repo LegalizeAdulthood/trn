@@ -41,12 +41,12 @@ SUBJECT  *g_sel_last_sp{};
 char     *g_sel_grp_dmode{};
 char     *g_sel_art_dmode{};
 
-static bool s_group_init_done{true};
-static int s_sel_max_line_cnt{};
-static int s_sel_max_per_page{};
+static bool          s_group_init_done{true};
+static int           s_sel_max_line_cnt{};
+static int           s_sel_max_per_page{};
 static sel_sort_mode s_sel_addgroupsort{SS_NATURAL};
 static sel_sort_mode s_sel_univsort{SS_NATURAL};
-static int s_sel_next_op{};
+static int           s_sel_next_op{};
 
 static void sel_page_init();
 static int count_subject_lines(const SUBJECT *subj, int *selptr);

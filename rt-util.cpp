@@ -656,13 +656,13 @@ const char *compress_subj(const ARTICLE *ap, int max)
 
 /* Modified version of a spinner originally found in Clifford Adams' strn. */
 
-static char *s_spinchars{};
-static int s_spin_level{}; /* used to allow non-interfering nested spins */
+static char     *s_spinchars{};
+static int       s_spin_level{}; /* used to allow non-interfering nested spins */
 static spin_mode s_spin_mode{};
-static int s_spin_place{}; /* represents place in s_spinchars array */
-static int s_spin_pos{};   /* the last spinbar position we drew */
-static ART_NUM s_spin_art{};
-static ART_POS s_spin_tell{};
+static int       s_spin_place{}; /* represents place in s_spinchars array */
+static int       s_spin_pos{};   /* the last spinbar position we drew */
+static ART_NUM   s_spin_art{};
+static ART_POS   s_spin_tell{};
 
 void setspin(spin_mode mode)
 {
@@ -767,11 +767,11 @@ bool inbackground()
     return s_spin_mode == SPIN_BACKGROUND;
 }
 
-static int s_prior_perform_cnt{};
+static int    s_prior_perform_cnt{};
 static time_t s_prior_now{};
-static long s_ps_sel{};
-static long s_ps_cnt{};
-static long s_ps_missing{};
+static long   s_ps_sel{};
+static long   s_ps_cnt{};
+static long   s_ps_missing{};
 
 void perform_status_init(long cnt)
 {

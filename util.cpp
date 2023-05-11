@@ -55,7 +55,7 @@ MEM_SIZE g_buflen_last_line_got{};
 static char s_nomem[] = "trn: out of memory!\n";
 #endif
 
-static char s_null_export[] = "_=X";/* Just in case doshell precedes util_init */
+static char  s_null_export[] = "_=X"; /* Just in case doshell precedes util_init */
 static char *s_newsactive_export = s_null_export + 2;
 static char *s_grpdesc_export = s_null_export + 2;
 static char *s_quotechars_export = s_null_export + 2;

@@ -27,20 +27,13 @@ std::string g_multipart_separator{"-=-=-=-=-=-"};
 bool        g_auto_view_inline{};
 char       *g_mime_getc_line{};
 
-static char *mime_ParseEntryArg(char **cpp);
-static int   mime_getc(FILE *fp);
-static char *tag_action(char *t, char *word, bool opening_tag);
-static char *output_prep(char *t);
-static char *do_newline(char *t, html_flags flag);
-static int   do_indent(char *t);
-static char *find_attr(char *str, const char *attr);
-
 #ifdef USE_UTF_HACK
 #define CODE_POINT_MAX	0x7FFFFFFFL
 #else
 #define CODE_POINT_MAX	0x7F
 #endif
 
+// clang-format off
 static HTML_TAGS s_tagattr[LAST_TAG] = {
  /* name               length   flags */
     {"blockquote",	10,	TF_BLOCK | TF_P | TF_NL			},
@@ -61,12 +54,21 @@ static HTML_TAGS s_tagattr[LAST_TAG] = {
     {"ul",		 2,	TF_BLOCK | TF_P | TF_NL | TF_LIST	},
     {"xml",		 3,	TF_BLOCK | TF_HIDE			}, /* non-standard but seen in the wild */
 };
-static LIST *s_mimecap_list{};
-static char s_text_plain[] = "text/plain";
+// clang-format on
+static LIST        *s_mimecap_list{};
+static char         s_text_plain[] = "text/plain";
 static MimeExecutor s_executor;
 
 constexpr bool CLOSING_TAG = false;
 constexpr bool OPENING_TAG = true;
+
+static char *mime_ParseEntryArg(char **cpp);
+static int   mime_getc(FILE *fp);
+static char *tag_action(char *t, char *word, bool opening_tag);
+static char *output_prep(char *t);
+static char *do_newline(char *t, html_flags flag);
+static int   do_indent(char *t);
+static char *find_attr(char *str, const char *attr);
 
 inline MIMECAP_ENTRY *mimecap_ptr(long n)
 {
@@ -1089,7 +1091,8 @@ static int s_word_wrap_in_pre{};
 static int s_normal_word_wrap{};
 static int s_word_wrap{};
 
-static const char* named_entities[] = {
+// clang-format off
+static const char* s_named_entities[] = {
     "lt",	"<",
     "gt",	">",
     "amp",	"&",
@@ -1126,8 +1129,9 @@ static const char* named_entities[] = {
     "ccedil",	"ç",
     "eacute",	"é",
 #endif
-    NULL,	NULL,
+    nullptr,    nullptr,
 };
+// clang-format on
 
 int filter_html(char *t, const char *f)
 {
@@ -1239,10 +1243,10 @@ int filter_html(char *t, const char *f)
 	    int i;
 	    int entity_found = 0;
 	    t = output_prep(t);
-            for (i = 0; named_entities[i] != NULL; i += 2)
+            for (i = 0; s_named_entities[i] != nullptr; i += 2)
             {
-                int n = strlen(named_entities[i]);
-                if (!strncasecmp(f + 1, named_entities[i], n))
+                int n = strlen(s_named_entities[i]);
+                if (!strncasecmp(f + 1, s_named_entities[i], n))
                 {
                     char det = f[n + 1];
                     if (det == ';')
@@ -1256,7 +1260,7 @@ int filter_html(char *t, const char *f)
 	    if (entity_found) {
                 for (int j = 0;; j++)
                 {
-                    char c = named_entities[i + 1][j];
+                    char c = s_named_entities[i + 1][j];
                     if (c == '\0')
                         break;
                     *t++ = c;

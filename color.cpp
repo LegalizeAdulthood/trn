@@ -87,7 +87,7 @@ static COLOR_OBJ s_objects[MAX_COLORS] =
 static struct {
     COLOR_OBJ object;
 } s_color_stack[STACK_SIZE];
-static int s_stack_pointer = 0;
+static int s_stack_pointer{};
 
 /* Initialize color support after trnrc is read. */
 void color_init()

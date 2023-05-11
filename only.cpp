@@ -18,7 +18,7 @@ int   g_maxngtodo{};       /*  0 => no restrictions */
                            /* >0 => # of entries in g_ngtodo */
 char g_empty_only_char{'o'};
 
-static int s_save_maxngtodo{};
+static int     s_save_maxngtodo{};
 static COMPEX *s_compextodo[MAXNGTODO]; /* restrictions in compiled form */
 
 void only_init()

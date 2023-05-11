@@ -18,7 +18,7 @@
 #include "term.h"
 #include "util2.h"
 
-static bool s_ng_doempty{}; /* search empty newsgroups? */
+static bool   s_ng_doempty{}; /* search empty newsgroups? */
 static COMPEX s_ngcompex;
 
 void ngsrch_init()

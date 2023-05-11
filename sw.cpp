@@ -25,8 +25,8 @@
 #endif
 
 static char **s_init_environment_strings{};
-static int s_init_environment_cnt{};
-static int s_init_environment_max{};
+static int    s_init_environment_cnt{};
+static int    s_init_environment_max{};
 
 void sw_file(char **tcbufptr)
 {

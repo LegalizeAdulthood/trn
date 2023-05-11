@@ -9,9 +9,6 @@
 #include "util.h"
 #include "util2.h"
 
-static int mp_alloc_frag();
-static void mp_free_frag(int f);
-
 /* any of these defines can be increased arbitrarily */
 enum
 {
@@ -35,8 +32,11 @@ struct MP_HEAD
 };
 
 static MP_FRAG s_mpfrags[MAX_MEM_FRAGS]{}; /* zero is unused */
-static int s_mp_first_free_frag{};
+static int     s_mp_first_free_frag{};
 static MP_HEAD s_mpheads[MAX_MEM_POOLS]{};
+
+static int mp_alloc_frag();
+static void mp_free_frag(int f);
 
 void mp_init()
 {

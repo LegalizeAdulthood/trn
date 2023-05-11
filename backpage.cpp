@@ -13,9 +13,9 @@
 #include <io.h>
 #endif
 
-static int s_varyfd{0};             /* virtual array file for storing  file offsets */
+static int     s_varyfd{0};         /* virtual array file for storing  file offsets */
 static ART_POS s_varybuf[VARYSIZE]; /* current window onto virtual array */
-static long s_oldoffset{-1};        /* offset to block currently in window */
+static long    s_oldoffset{-1};     /* offset to block currently in window */
 
 void backpage_init()
 {

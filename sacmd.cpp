@@ -29,7 +29,7 @@
 #include "util2.h"
 
 static char *s_sa_extract_dest{}; /* use this command on an extracted file */
-static bool s_sa_extract_junk{};  /* junk articles after extracting them */
+static bool  s_sa_extract_junk{}; /* junk articles after extracting them */
 
 /* several basic commands are already done by s_docmd (Scan level) */
 /* interprets command in g_buf, returning 0 to continue looping,

@@ -91,13 +91,13 @@ enum removed_prompt
 };
 DECLARE_FLAGS_ENUM(removed_prompt, int);
 
-static char s_sel_ret{};
-static char s_page_char{};
-static char s_end_char{};
-static int s_disp_status_line{};
-static bool s_clean_screen{};
+static char           s_sel_ret{};
+static char           s_page_char{};
+static char           s_end_char{};
+static int            s_disp_status_line{};
+static bool           s_clean_screen{};
 static removed_prompt s_removed_prompt{};
-static int s_force_sel_pos{};
+static int            s_force_sel_pos{};
 static display_state (*s_extra_commands)(char_int){};
 
 namespace {

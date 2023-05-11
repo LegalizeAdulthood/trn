@@ -26,6 +26,7 @@ int g_max_tree_lines{6};
 
 char g_letters[] = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+";
 
+// clang-format off
 static char s_tree_indent[] = {
     ' ', 0,
     ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
@@ -43,20 +44,21 @@ static char s_tree_indent[] = {
     ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0,
     ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0
 };
+// clang-format on
 static ARTICLE *s_tree_article{};
-static int s_max_depth{};
-static int s_max_line{-1};
-static int s_first_depth{};
-static int s_first_line{};
-static int s_my_depth{};
-static int s_my_line{};
-static bool s_node_on_line{};
-static int s_node_line_cnt{};
-static int s_line_num{};
-static int s_header_indent{};
-static char *s_tree_lines[11]{};
-static char s_tree_buff[128]{};
-static char *s_str{};
+static int      s_max_depth{};
+static int      s_max_line{-1};
+static int      s_first_depth{};
+static int      s_first_line{};
+static int      s_my_depth{};
+static int      s_my_line{};
+static bool     s_node_on_line{};
+static int      s_node_line_cnt{};
+static int      s_line_num{};
+static int      s_header_indent{};
+static char    *s_tree_lines[11]{};
+static char     s_tree_buff[128]{};
+static char    *s_str{};
 
 static void find_depth(ARTICLE *article, int depth);
 static void cache_tree(ARTICLE *ap, int depth, char *cp);

@@ -39,6 +39,7 @@ char       *g_local_host{};  /* local host name */
 int         g_net_speed{20}; /* how fast our net-connection is */
 
 static std::function<char *(const char *name)> s_getenv_fn = getenv;
+
 static void env_init2();
 static int  envix(const char *nam, int len);
 static bool set_user_name(char *tmpbuf);

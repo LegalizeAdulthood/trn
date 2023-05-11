@@ -42,15 +42,16 @@ static FILE               *s_globkfp{};                /* global article killer 
 static killfilestate_flags s_kfs_local_change_clear{}; /* bits to clear local changes */
 static int                 s_kf_thread_cnt{};          /* # entries in the thread kfile */
 static long                s_kf_daynum{};              /* day number for thread killfile */
-
-static bool s_exitcmds{};
-static char s_thread_cmd_ltr[] = "JK,j+S.m";
-static autokill_flags s_thread_cmd_flag[] = {
-    AUTO_KILL_THD, AUTO_KILL_SBJ, AUTO_KILL_FOL, AUTO_KILL_1, AUTO_SEL_THD, AUTO_SEL_SBJ, AUTO_SEL_FOL, AUTO_SEL_1,
+static bool                s_exitcmds{};
+static char                s_thread_cmd_ltr[] = "JK,j+S.m";
+static autokill_flags      s_thread_cmd_flag[] = {
+         AUTO_KILL_THD, AUTO_KILL_SBJ, AUTO_KILL_FOL, AUTO_KILL_1, AUTO_SEL_THD, AUTO_SEL_SBJ, AUTO_SEL_FOL, AUTO_SEL_1,
 };
-static char s_killglobal[] = KILLGLOBAL;
-static char s_killlocal[] = KILLLOCAL;
-static char s_killthreads[] = KILLTHREADS;
+static char  s_killglobal[] = KILLGLOBAL;
+static char  s_killlocal[] = KILLLOCAL;
+static char  s_killthreads[] = KILLTHREADS;
+static bool  s_kill_mentioned;
+static FILE *s_newkfp{};
 
 inline long killfile_daynum(long x)
 {
@@ -119,8 +120,6 @@ static void mention(const char *str)
 	putchar('.');
     fflush(stdout);
 }
-
-static bool s_kill_mentioned;
 
 int do_kfile(FILE *kfp, int entering)
 {
@@ -366,8 +365,6 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
 	rewrite_kfile(g_lastart);
     set_mode(g_general_mode,oldmode);
 }
-
-static FILE *s_newkfp{};
 
 static int write_local_thread_commands(int keylen, HASHDATUM *data, int extra)
 {

@@ -17,7 +17,7 @@ long        g_lastnewtime{}; /* time of last newgroup request */
 long        g_lastextranum{};
 
 static char *s_lastfile{}; /* path name of .rnlast file */
-static long s_starttime{};
+static long  s_starttime{};
 
 void last_init()
 {

@@ -89,7 +89,7 @@ static bool debug_article_output(char *ptr, int arg);
 static art_switch_result art_switch();
 
 static do_newsgroup_result s_exit_code{NG_NORM};
-static bool s_art_sel_ilock{};
+static bool                s_art_sel_ilock{};
 
 void ng_init()
 {

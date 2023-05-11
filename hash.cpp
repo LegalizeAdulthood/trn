@@ -60,7 +60,7 @@ enum
 };
 
 static HASHENT *s_hereuse{};
-static int s_reusables{};
+static int      s_reusables{};
 
 /* size - a crude guide to size */
 HASHTABLE *hashcreate(unsigned size, HASHCMPFUNC cmpfunc)

@@ -956,9 +956,9 @@ static int srcfile_cmp(const char *key, int keylen, HASHDATUM data)
  * or not they had precisely the same edit distance, but oh well.
  */
 
-static char **s_ngptrs;  /* List of potential matches */
-static int s_ngn;        /* Length of list in s_ngptrs[] */
-static int s_best_match; /* Value of best match */
+static char **s_ngptrs{};     /* List of potential matches */
+static int    s_ngn{};        /* Length of list in s_ngptrs[] */
+static int    s_best_match{}; /* Value of best match */
 
 int find_close_match()
 {

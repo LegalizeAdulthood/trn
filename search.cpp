@@ -68,9 +68,9 @@ enum
 };
 using TRANSTABLE = Uchar[ASCSIZ];
 
-static TRANSTABLE s_trans{};
-static bool s_folding{};
-static int s_err{};
+static TRANSTABLE  s_trans{};
+static bool        s_folding{};
+static int         s_err{};
 static const char *s_first_character{};
 
 void search_init()
@@ -100,7 +100,7 @@ void free_compex(COMPEX *compex)
 }
 
 static char *s_gbr_str{};
-static int s_gbr_siz{};
+static int   s_gbr_siz{};
 
 const char *getbracket(COMPEX *compex, int n)
 {

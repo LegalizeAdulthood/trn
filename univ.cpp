@@ -56,16 +56,16 @@ HASHTABLE  *g_univ_ng_hash{};
 HASHTABLE  *g_univ_vg_hash{};
 /* end of items that must be saved */
 
-static bool s_univ_virt_pass_needed{};
-static int s_univ_item_counter{1};
-static bool s_univ_done_startup{};
-static int s_univ_min_score{}; /* this score is part of the line format, so it is not ifdefed */
-static bool s_univ_use_min_score{};
-static bool s_univ_begin_found{};
-static char *s_univ_begin_label{}; /* label to start working with */
-static char *s_univ_line_desc{};   /* if non-nullptr, the description (printing name) of the entry */
-static UNIV_ITEM *s_current_vg_ui{};
-static bool s_univ_usrtop{}; /* if true, the user has loaded their own top univ. config file */
+static bool       s_univ_virt_pass_needed{}; //
+static int        s_univ_item_counter{1};    //
+static bool       s_univ_done_startup{};     //
+static int        s_univ_min_score{};        /* this score is part of the line format, so it is not ifdefed */
+static bool       s_univ_use_min_score{};    //
+static bool       s_univ_begin_found{};      //
+static char      *s_univ_begin_label{};      /* label to start working with */
+static char      *s_univ_line_desc{};        /* if non-nullptr, the description (printing name) of the entry */
+static UNIV_ITEM *s_current_vg_ui{};         //
+static bool       s_univ_usrtop{};           /* if true, the user has loaded their own top univ. config file */
 
 static void univ_free_data(UNIV_ITEM *ui);
 static bool univ_DoMatch(const char *text, const char *p);

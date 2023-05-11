@@ -25,12 +25,12 @@
 #include "util2.h"
 
 static COMPEX s_sub_compex{}; /* last compiled subject search */
-static COMPEX g_art_compex{}; /* last compiled normal search */
+static COMPEX s_art_compex{}; /* last compiled normal search */
 
 static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope);
 
 std::string      g_lastpat;                   /* last search pattern */
-COMPEX          *g_bra_compex{&g_art_compex}; /* current compex with brackets */
+COMPEX          *g_bra_compex{&s_art_compex}; /* current compex with brackets */
 const char      *g_scopestr{"sfHhbBa"};       //
 art_scope        g_art_howmuch{};             /* search scope */
 header_line_type g_art_srchhdr{};             /* specific header number to search */
@@ -40,7 +40,7 @@ bool             g_kill_thru_kludge{true};    /* -k */
 void artsrch_init()
 {
     init_compex(&s_sub_compex);
-    init_compex(&g_art_compex);
+    init_compex(&s_art_compex);
 }
 
 /* search for an article containing some pattern */
@@ -70,7 +70,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
 	if (get_cmd && g_buf == patbuf)
 	    if (!finish_command(false))	/* get rest of command */
 		return SRCH_ABORT;
-	compex = &g_art_compex;
+	compex = &s_art_compex;
 	if (patbuf[1]) {
 	    howmuch = ARTSCOPE_SUBJECT;
 	    srchhdr = SOME_LINE;

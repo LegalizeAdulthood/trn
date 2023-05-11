@@ -13,7 +13,7 @@
 #include "samisc.h"
 #include "sorder.h"
 
-static long s_sa_num_threads{};
+static long       s_sa_num_threads{};
 static HASHTABLE *s_sa_thread_hash{};
 
 void sa_init_threads()

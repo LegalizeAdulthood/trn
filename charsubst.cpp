@@ -35,7 +35,7 @@ static Uchar s_textbl[96] =
     0,  0,  0,223,  0,252,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
 };
 // clang-format on
-static char s_texchar = '\0';
+static char s_texchar{};
 
 static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t);
 

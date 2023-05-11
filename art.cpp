@@ -85,15 +85,15 @@ enum page_switch_result
     PS_TOEND = 3
 };
 
-static bool s_special{};        /* is next page special length? */
-static int s_slines{};          /* how long to make page when special */
-static ART_POS s_restart{};     /* if nonzero, the place where last line left off on line split */
-static ART_POS s_alinebeg{};    /* where in file current line began */
-static int s_more_prompt_col{}; /* non-zero when the more prompt is indented */
-static ART_LINE s_isrchline{};  /* last line to display */
-static COMPEX s_gcompex{};      /* in article search pattern */
-static bool s_firstpage{};      /* is this the 1st page of article? */
-static bool s_continuation{};   /* this line/header is being continued */
+static bool     s_special{};         /* is next page special length? */
+static int      s_slines{};          /* how long to make page when special */
+static ART_POS  s_restart{};         /* if nonzero, the place where last line left off on line split */
+static ART_POS  s_alinebeg{};        /* where in file current line began */
+static int      s_more_prompt_col{}; /* non-zero when the more prompt is indented */
+static ART_LINE s_isrchline{};       /* last line to display */
+static COMPEX   s_gcompex{};         /* in article search pattern */
+static bool     s_firstpage{};       /* is this the 1st page of article? */
+static bool     s_continuation{};    /* this line/header is being continued */
 
 static page_switch_result page_switch();
 
