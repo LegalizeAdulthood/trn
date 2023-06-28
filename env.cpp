@@ -261,24 +261,33 @@ static bool set_user_name(char *tmpbuf)
 #ifdef WIN32
     if (g_login_name.empty())
     {
-	DWORD size = 0;
+        DWORD size = 0;
         GetUserNameExA(NameSamCompatible, nullptr, &size);
-	std::unique_ptr<char> buffer{new char[size]};
-	GetUserNameExA(NameSamCompatible, buffer.get(), &size);
-	std::string value{buffer.get()};
-	std::string::size_type backslash = value.find_last_of('\\');
-	if (backslash != std::string::npos)
-	    value = value.substr(backslash + 1);
-	g_login_name = value;
+        std::unique_ptr<char> buffer{new char[size]};
+        GetUserNameExA(NameSamCompatible, buffer.get(), &size);
+        std::string            value{buffer.get()};
+        std::string::size_type backslash = value.find_last_of('\\');
+        if (backslash != std::string::npos)
+            value = value.substr(backslash + 1);
+        g_login_name = value;
     }
     if (g_real_name.empty())
     {
-	DWORD size = 0;
-        GetUserNameExA(NameDisplay, nullptr, &size);
-	char *buffer = safemalloc(size);
-	GetUserNameExA(NameDisplay, buffer, &size);
-	g_real_name = buffer;
-	safefree(buffer);
+        DWORD size = 0;
+        if (!GetUserNameExA(NameDisplay, nullptr, &size))
+        {
+            if (GetLastError() == ERROR_MORE_DATA)
+            {
+                char *buffer = safemalloc(size);
+                GetUserNameExA(NameDisplay, buffer, &size);
+                g_real_name = buffer;
+                safefree(buffer);
+            }
+        }
+    }
+    if (g_real_name.empty())
+    {
+        g_real_name = "?Unknown";
     }
 #endif
 #endif /* !PASSNAMES */
