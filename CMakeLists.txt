@@ -14,12 +14,6 @@ find_package(BISON REQUIRED)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-add_library(tool
-    util3.cpp util3.h
-)
-target_link_libraries(tool PUBLIC nntp)
-set_property(TARGET tool PROPERTY FOLDER Libraries)
-
 add_library(libtrn
     addng.cpp addng.h
     art.cpp art.h
@@ -132,6 +126,7 @@ target_link_libraries(trn PUBLIC libtrn)
 add_subdirectory(config)
 add_subdirectory(nntp)
 add_subdirectory(parsedate)
+add_subdirectory(tool)
 add_subdirectory(util)
 if(BUILD_TESTING)
     add_subdirectory(tests)
