@@ -4,7 +4,6 @@ project(trn VERSION 5.0.0 LANGUAGES C CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-include(Configure)
 include(CTest)
 
 if(WIN32)
@@ -14,17 +13,12 @@ endif()
 find_package(BISON REQUIRED)
 find_package(BoostAsio REQUIRED)
 
-configure()
-
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 add_library(util
-    ${CMAKE_CURRENT_BINARY_DIR}/config.h
     env.cpp env.h env-internal.h
     util2.cpp util2.h
     wildmat.cpp wildmat.h
-    cmake/config.h.in
-    cmake/Configure.cmake
 )
 source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")
 source_group("Template Files" REGULAR_EXPRESSION "^.*\\.in$")
@@ -32,6 +26,7 @@ if(WIN32)
     target_compile_definitions(util PUBLIC _CRT_DECLARE_NONSTDC_NAMES=1 _CRT_INTERNAL_NONSTDC_NAMES=1)
 endif()
 target_include_directories(util PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(util PUBLIC config)
 set_property(TARGET util PROPERTY FOLDER Libraries)
 
 add_library(nntp
@@ -49,7 +44,6 @@ target_link_libraries(tool PUBLIC nntp)
 set_property(TARGET tool PROPERTY FOLDER Libraries)
 
 add_library(libtrn
-    ${CMAKE_CURRENT_BINARY_DIR}/config.h
     addng.cpp addng.h
     art.cpp art.h
     artio.cpp artio.h
@@ -61,8 +55,6 @@ add_library(libtrn
     cache.cpp cache.h
     charsubst.cpp charsubst.h
     color.cpp color.h
-    common.cpp common.h
-    config2.h
     datasrc.cpp datasrc.h
     decode.cpp decode.h
     edit_dist.cpp edit_dist.h
@@ -77,7 +69,6 @@ add_library(libtrn
     list.cpp list.h
     mempool.cpp mempool.h
     mime.cpp mime.h mime-internal.h
-    msdos.h
     ng.cpp ng.h
     ngdata.cpp ngdata.h
     ngsrch.cpp ngsrch.h
@@ -117,7 +108,6 @@ add_library(libtrn
     sw.cpp sw.h
     term.cpp term.h
     trn.cpp trn.h
-    typedef.h
     utf.cpp utf.h
     univ.cpp univ.h
     url.cpp url.h
@@ -162,6 +152,7 @@ source_group("VcPkg Files" FILES vcpkg.json)
 source_group("Text Files" FILES ${trn_text_files})
 target_link_libraries(trn PUBLIC libtrn)
 
+add_subdirectory(config)
 add_subdirectory(parsedate)
 if(BUILD_TESTING)
     add_subdirectory(tests)
