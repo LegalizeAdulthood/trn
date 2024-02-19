@@ -1,3 +1,5 @@
+find_package(BISON REQUIRED)
+
 bison_target(parsedate parsedate.y ${CMAKE_CURRENT_BINARY_DIR}/parsedate.c)
 add_library(parsedate
     ${BISON_parsedate_OUTPUTS}

@@ -10,7 +10,6 @@ if(WIN32)
     find_package(pdcurses REQUIRED)
     add_library(curses ALIAS pdcurses)
 endif()
-find_package(BISON REQUIRED)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
