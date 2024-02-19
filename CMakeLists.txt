@@ -11,17 +11,8 @@ if(WIN32)
     add_library(curses ALIAS pdcurses)
 endif()
 find_package(BISON REQUIRED)
-find_package(BoostAsio REQUIRED)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-add_library(nntp
-    nntpauth.cpp nntpauth.h
-    nntpclient.cpp nntpclient.h
-    nntpinit.cpp nntpinit.h
-)
-target_link_libraries(nntp PUBLIC boost::asio util)
-set_property(TARGET nntp PROPERTY FOLDER Libraries)
 
 add_library(tool
     util3.cpp util3.h
@@ -139,6 +130,7 @@ source_group("Text Files" FILES ${trn_text_files})
 target_link_libraries(trn PUBLIC libtrn)
 
 add_subdirectory(config)
+add_subdirectory(nntp)
 add_subdirectory(parsedate)
 add_subdirectory(util)
 if(BUILD_TESTING)
