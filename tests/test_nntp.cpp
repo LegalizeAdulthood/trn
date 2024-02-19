@@ -66,7 +66,6 @@ protected:
     {
         NNTPTest::SetUp();
         configure_factory_create(m_connection);
-        Mock::AllowLeak(m_connection.get());
     }
 };
 

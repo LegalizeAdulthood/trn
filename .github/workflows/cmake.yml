@@ -24,7 +24,7 @@ jobs:
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
     - name: CMake workflow
-      run: cmake --workflow --preset default
+      run: cmake --workflow --preset ci-linux
 
   windows-build:
     runs-on: windows-latest
