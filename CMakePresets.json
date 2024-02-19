@@ -92,8 +92,8 @@
           "name": "default"
         },
         {
-          "type": "ci-linux-test",
-          "name": "default"
+          "type": "test",
+          "name": "ci-linux-test"
         }
       ]
     }
