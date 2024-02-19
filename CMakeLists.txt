@@ -13,11 +13,6 @@ endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-add_executable(inews inews.cpp)
-target_include_directories(inews PRIVATE libtrn)
-target_link_libraries(inews PUBLIC nntp tool)
-set_property(TARGET inews PROPERTY FOLDER Tools)
-
 add_executable(nntplist nntplist.cpp)
 target_include_directories(nntplist PRIVATE libtrn)
 target_link_libraries(nntplist PUBLIC nntp tool)
@@ -48,6 +43,7 @@ source_group("Text Files" FILES ${trn_text_files})
 target_link_libraries(trn PUBLIC libtrn)
 
 add_subdirectory(config)
+add_subdirectory(inews)
 add_subdirectory(libtrn)
 add_subdirectory(nntp)
 add_subdirectory(parsedate)
