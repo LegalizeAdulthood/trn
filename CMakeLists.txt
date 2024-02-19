@@ -15,20 +15,6 @@ find_package(BoostAsio REQUIRED)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-add_library(util
-    env.cpp env.h env-internal.h
-    util2.cpp util2.h
-    wildmat.cpp wildmat.h
-)
-source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")
-source_group("Template Files" REGULAR_EXPRESSION "^.*\\.in$")
-if(WIN32)
-    target_compile_definitions(util PUBLIC _CRT_DECLARE_NONSTDC_NAMES=1 _CRT_INTERNAL_NONSTDC_NAMES=1)
-endif()
-target_include_directories(util PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(util PUBLIC config)
-set_property(TARGET util PROPERTY FOLDER Libraries)
-
 add_library(nntp
     nntpauth.cpp nntpauth.h
     nntpclient.cpp nntpclient.h
@@ -154,6 +140,7 @@ target_link_libraries(trn PUBLIC libtrn)
 
 add_subdirectory(config)
 add_subdirectory(parsedate)
+add_subdirectory(util)
 if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
