@@ -5,6 +5,7 @@ project(trn VERSION 5.0.0 LANGUAGES C CXX)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(Configure)
+include(CTest)
 
 if(WIN32)
     find_package(pdcurses REQUIRED)
@@ -162,4 +163,6 @@ source_group("Text Files" FILES ${trn_text_files})
 target_link_libraries(trn PUBLIC libtrn)
 
 add_subdirectory(parsedate)
-add_subdirectory(tests)
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()

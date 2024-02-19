@@ -1,3 +1,5 @@
+include(GoogleTest)
+
 find_package(GTest CONFIG REQUIRED)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -39,3 +41,4 @@ source_group("Template Files" REGULAR_EXPRESSION "^.*\\.in$")
 target_include_directories(trn-test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}" .)
 target_link_libraries(trn-test PUBLIC libtrn GTest::gmock_main GTest::gtest)
 set_property(TARGET trn-test PROPERTY FOLDER Tests)
+gtest_discover_tests(trn-test PROPERTIES LABELS trn)
