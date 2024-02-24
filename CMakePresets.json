@@ -11,7 +11,7 @@
       "hidden": true,
       "description": "Sets the project name based on the preset",
       "cacheVariables": {
-        "ID_PROJECT_NAME": {
+        "TRN_PROJECT_NAME": {
           "type": "STRING",
           "value": "trn ${presetName}"
         }
