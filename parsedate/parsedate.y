@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <ctype.h>
+#include <string.h>
 #include <time.h>
 
 #define yyparse		date_parse
