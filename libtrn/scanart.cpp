@@ -17,7 +17,7 @@
 #include "samisc.h"
 #include "scan.h"
 #include "smisc.h"
-#include "term.h" /* macro to clear... */
+#include "terminal.h" /* macro to clear... */
 
 SA_ENTRYDATA *g_sa_ents{};
 int           g_sa_num_ents{};

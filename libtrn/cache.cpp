@@ -29,7 +29,7 @@
 #include "score.h"
 #include "search.h"
 #include "string-algos.h"
-#include "term.h"
+#include "terminal.h"
 #include "utf.h"
 #include "util.h"
 #include "util2.h"

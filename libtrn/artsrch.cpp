@@ -20,7 +20,7 @@
 #include "rt-select.h"
 #include "rt-util.h"
 #include "search.h"
-#include "term.h"
+#include "terminal.h"
 #include "trn.h"
 #include "util2.h"
 

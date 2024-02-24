@@ -30,7 +30,7 @@
 
 #include "final.h"
 #include "string-algos.h"
-#include "term.h"
+#include "terminal.h"
 #include "util2.h"
 
 struct COLOR_OBJ

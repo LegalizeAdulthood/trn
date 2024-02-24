@@ -18,7 +18,7 @@
 #include "nntpinit.h"
 #include "rcstuff.h"
 #include "scoresave.h"
-#include "term.h"
+#include "terminal.h"
 #include "trn.h"
 #include "util.h"
 

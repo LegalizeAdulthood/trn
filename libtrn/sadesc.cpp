@@ -15,7 +15,7 @@
 #include "scan.h"
 #include "scanart.h"
 #include "score.h"
-#include "term.h" /* for standout */
+#include "terminal.h" /* for standout */
 
 static char s_sa_buf[LBUFLEN];    /* misc. buffer */
 

@@ -24,7 +24,7 @@
 #include "smisc.h" /* needed? */
 #include "sorder.h"
 #include "spage.h"
-#include "term.h" /* for LINES */
+#include "terminal.h" /* for LINES */
 #include "util.h"
 #include "util2.h"
 

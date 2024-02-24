@@ -21,7 +21,7 @@
 #include "scoresave.h"
 #include "string-algos.h"
 #include "sorder.h"
-#include "term.h" /* input_pending() */
+#include "terminal.h" /* input_pending() */
 
 bool    g_kill_thresh_active{};  //
 int     g_kill_thresh{LOWSCORE}; /* KILL articles at or below this score */

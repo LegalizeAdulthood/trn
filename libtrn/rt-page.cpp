@@ -21,7 +21,7 @@
 #include "rt-util.h"
 #include "rthread.h"
 #include "string-algos.h"
-#include "term.h"
+#include "terminal.h"
 #include "trn.h"
 #include "univ.h"
 #include "utf.h"

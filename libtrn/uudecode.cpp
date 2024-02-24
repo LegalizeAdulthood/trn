@@ -7,7 +7,7 @@
 
 #include "artio.h"
 #include "mime.h"
-#include "term.h"
+#include "terminal.h"
 #include "string-algos.h"
 #include "util2.h"
 

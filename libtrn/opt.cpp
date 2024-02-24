@@ -37,7 +37,7 @@
 #include "scorefile.h"
 #include "string-algos.h"
 #include "sw.h"
-#include "term.h"
+#include "terminal.h"
 #include "trn.h"
 #include "univ.h"
 #include "util.h"

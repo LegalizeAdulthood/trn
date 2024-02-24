@@ -63,7 +63,7 @@ add_library(libtrn
     spage.cpp spage.h
     string-algos.h
     sw.cpp sw.h
-    term.cpp term.h
+    terminal.cpp terminal.h
     trn.cpp trn.h
     utf.cpp utf.h
     univ.cpp univ.h

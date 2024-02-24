@@ -66,7 +66,7 @@
 #include "rt-select.h"
 #include "string-algos.h"
 #include "sw.h"
-#include "term.h"
+#include "terminal.h"
 #include "univ.h"
 #include "utf.h"
 #include "util.h"

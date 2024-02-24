@@ -14,7 +14,7 @@
 #include "scanart.h"
 #include "score.h"
 #include "sdisp.h"
-#include "term.h"
+#include "terminal.h"
 #include "trn.h"
 
 void sa_refresh_top()

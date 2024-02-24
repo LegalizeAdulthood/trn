@@ -15,7 +15,7 @@
 #include "search.h"
 #include "smisc.h" /* g_s_default_cmd */
 #include "string-algos.h"
-#include "term.h"
+#include "terminal.h"
 #include "univ.h"
 #include "util2.h"
 

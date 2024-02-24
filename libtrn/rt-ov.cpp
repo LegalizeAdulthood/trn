@@ -18,7 +18,7 @@
 #include "util2.h"
 #include "env.h"
 #include "ng.h"
-#include "term.h"
+#include "terminal.h"
 #include "final.h"
 #include "rt-process.h"
 #include "rt-util.h"

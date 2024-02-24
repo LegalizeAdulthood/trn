@@ -7,7 +7,7 @@
 #include "common.h"
 #include "score-easy.h"
 
-#include "term.h"
+#include "terminal.h"
 #include "util.h"
 
 /* new line to return to the caller. */

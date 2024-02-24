@@ -20,7 +20,7 @@
 #include "sorder.h"
 #include "spage.h"
 #include "string-algos.h"
-#include "term.h"
+#include "terminal.h"
 #include "univ.h"
 
 void s_go_bot()

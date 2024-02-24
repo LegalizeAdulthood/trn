@@ -6,7 +6,7 @@
 #include "help.h"
 
 #include "ngdata.h"
-#include "term.h"
+#include "terminal.h"
 
 void help_init()
 {

@@ -34,7 +34,7 @@
 #include "rthread.h"
 #include "search.h"
 #include "string-algos.h"
-#include "term.h"
+#include "terminal.h"
 #include "trn.h"
 #include "utf.h"
 #include "util.h"

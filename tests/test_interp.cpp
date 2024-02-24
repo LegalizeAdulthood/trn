@@ -40,7 +40,7 @@
 #include <rt-util.h>
 #include <rthread.h>
 #include <search.h>
-#include <term.h>
+#include <terminal.h>
 #include <trn.h>
 #include <univ.h>
 #include <util.h>

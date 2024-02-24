@@ -12,7 +12,7 @@
 #include "scan.h"
 #include "smisc.h"
 #include "sorder.h"
-#include "term.h"
+#include "terminal.h"
 
 int  g_scr_height{}; /* height of screen in characters */
 int  g_scr_width{};  /* width of screen in characters */

@@ -22,7 +22,7 @@
 #include "rt-util.h"
 #include "score.h"
 #include "string-algos.h"
-#include "term.h"
+#include "terminal.h"
 #include "trn.h"
 #include "url.h"
 #include "util.h"
