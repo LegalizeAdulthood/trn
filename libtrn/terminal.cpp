@@ -1252,7 +1252,7 @@ reask_anything:
     else {
 	g_page_line = 1;
 	if (g_erase_screen)		/* -e? */
-	    clear();			/* clear screen */
+	    clear_screen();			/* clear screen */
 	else
 	    erase_line(false);		/* erase the prompt */
     }
@@ -1603,7 +1603,7 @@ void page_start()
 {
     g_page_line = 1;
     if (g_erase_screen)
-	clear();
+	clear_screen();
     else
 	output_newline();
 }
@@ -1683,7 +1683,7 @@ void erase_line(bool to_eos)
     fflush(stdout);
 }
 
-void clear()
+void clear_screen()
 {
     g_term_line = 0;
     g_term_col = 0;

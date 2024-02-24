@@ -205,7 +205,7 @@ void printcmd();
 void rubout();
 void reprint();
 void erase_line(bool to_eos);
-void clear();
+void clear_screen();
 void home_cursor();
 void goto_xy(int to_col, int to_line);
 #ifdef SIGWINCH

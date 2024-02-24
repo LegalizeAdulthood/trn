@@ -1209,7 +1209,7 @@ void display_page_title(bool home_only)
     if (home_only || (g_erase_screen && g_erase_each_line))
 	home_cursor();
     else
-	clear();
+	clear_screen();
     if (g_sel_mode == SM_MULTIRC)
 	color_string(COLOR_HEADING,"Newsrcs");
     else if (g_sel_mode == SM_OPTIONS)
