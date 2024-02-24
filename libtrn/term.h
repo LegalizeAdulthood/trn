@@ -6,6 +6,9 @@
 
 /* stuff wanted by terminal mode diddling routines */
 
+#ifdef I_SYS_IOCTL
+#include <sys/ioctl.h>
+#endif
 #ifdef I_TERMCAP
 #include <termcap.h>
 #endif
