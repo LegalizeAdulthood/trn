@@ -26,6 +26,12 @@
 #include "util.h"
 #include "util2.h"
 
+#ifdef HAS_TERMLIB
+#ifndef MSDOS
+#include <term.h>
+#endif
+#endif
+
 #ifdef MSDOS
 #include <conio.h>
 #endif
