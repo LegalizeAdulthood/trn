@@ -28,6 +28,7 @@
 
 #ifdef HAS_TERMLIB
 #ifndef MSDOS
+#include <curses.h>
 #include <term.h>
 #endif
 #endif
