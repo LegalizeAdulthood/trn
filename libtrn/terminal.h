@@ -340,7 +340,7 @@ inline void termdown(int x)
     g_term_line += x;
     g_term_col = 0;
 }
-inline void newline()
+inline void output_newline()
 {
     g_term_line++;
     g_term_col = 0;
@@ -395,7 +395,7 @@ inline void insert_line()
 {
     tputs(g_tc_IL, 1, putchr) FLUSH;
 }
-inline void carriage_return()
+inline void output_carriage_return()
 {
     g_term_col = 0;
     tputs(g_tc_CR, 1, putchr) FLUSH;

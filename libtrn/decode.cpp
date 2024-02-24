@@ -273,7 +273,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 	if (g_nowait_fork)
 	    fflush(stdout);
 	else
-	    newline();
+	    output_newline();
 
 	sprintf(g_buf, "%s%d", dir, part);
 	fp = fopen(g_buf, "w");

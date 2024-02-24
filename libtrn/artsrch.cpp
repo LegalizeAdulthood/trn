@@ -284,7 +284,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
     }
     if (get_cmd) {
 	if (g_use_threads)
-	    newline();
+	    output_newline();
 	else {
 	    fputs("\nSearching...\n",stdout) FLUSH;
 	    termdown(2);

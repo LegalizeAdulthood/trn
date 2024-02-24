@@ -817,7 +817,7 @@ void perform_status(long cnt, int spin)
     if (!(kills | sels))
 	return;
 
-    carriage_return();
+    output_carriage_return();
     if (g_perform_cnt != sels  && g_perform_cnt != -sels
      && g_perform_cnt != kills && g_perform_cnt != -kills)
 	printf("M:%d ", g_perform_cnt);

@@ -811,7 +811,7 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
 reask_add:
 	    in_char(promptbuf,MM_ADD_NEWSGROUP_PROMPT,"ynYN");
 	    printcmd();
-	    newline();
+	    output_newline();
 	    if (*g_buf == 'h') {
 		if (g_verbose) {
                     printf("Type y or SP to subscribe to %s.\n"
@@ -885,7 +885,7 @@ reask_add:
 reask_unsub:
 	in_char(promptbuf,MM_RESUBSCRIBE_PROMPT,"yn");
 	printcmd();
-	newline();
+	output_newline();
 	if (*g_buf == 'h') {
 	    if (g_verbose)
 		printf("Type y or SP to resubscribe to %s.\n", g_ngname.c_str()) FLUSH;
@@ -963,7 +963,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
 	    /* ask if they want to keep the current order */
 	    in_char("Sort newsrc(s) using current sort order?",MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "yn"); /*$$ !'D' */
 	    printcmd();
-	    newline();
+	    output_newline();
 	    if (*g_buf == 'y')
 		set_selector(SM_NEWSGROUP, SS_NATURAL);
 	    else {
@@ -1051,7 +1051,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
 	else if (*g_buf == 'q')
 	    return false;
 	else if (*g_buf == 'L') {
-	    newline();
+	    output_newline();
 	    list_newsgroups();
 	    goto reask_reloc;
 	}
@@ -1065,14 +1065,14 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
 		newnum = g_newsgroup_cnt-1;
 	}
 	else if (*g_buf == '^') {
-	    newline();
+	    output_newline();
 	    newnum = 0;
 	}
 	else if (*g_buf == '$') {
 	    newnum = g_newsgroup_cnt-1;
 	}
 	else if (*g_buf == '.') {
-	    newline();
+	    output_newline();
 	    newnum = g_current_ng->num;
 	}
 	else if (*g_buf == '-' || *g_buf == '+') {
@@ -1205,7 +1205,7 @@ void cleanup_newsrc(NEWSRC *rp)
 reask_bogus:
 	in_char("Delete bogus newsgroups?", MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "ny");
 	printcmd();
-	newline();
+	output_newline();
 	if (*g_buf == 'h') {
 	    if (g_verbose) {
                 fputs("Type y to delete bogus newsgroups.\n"

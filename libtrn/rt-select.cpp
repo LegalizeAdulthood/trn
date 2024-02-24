@@ -276,7 +276,7 @@ char article_selector(char_int cmd)
 	goto sel_restart;
 
     sel_cleanup();
-    newline();
+    output_newline();
     if (g_mousebar_cnt)
 	clear_rest();
 
@@ -405,7 +405,7 @@ char multirc_selector()
     if (sel_input() == 'R')
 	goto sel_restart;
 
-    newline();
+    output_newline();
     if (g_mousebar_cnt)
 	clear_rest();
 
@@ -471,7 +471,7 @@ char newsgroup_selector()
     if (sel_input() == 'R')
 	goto sel_restart;
 
-    newline();
+    output_newline();
     if (g_mousebar_cnt)
 	clear_rest();
 
@@ -536,7 +536,7 @@ char addgroup_selector(getnewsgroup_flags flags)
 	goto sel_restart;
 
     g_selected_count = 0;
-    newline();
+    output_newline();
     if (g_mousebar_cnt)
 	clear_rest();
 
@@ -586,7 +586,7 @@ char option_selector()
 	goto sel_restart;
 
     g_selected_count = 0;
-    newline();
+    output_newline();
     if (g_mousebar_cnt)
 	clear_rest();
 
@@ -807,7 +807,7 @@ sel_restart:
     if (sel_input() == 'R')
 	goto sel_restart;
 
-    newline();
+    output_newline();
     if (g_mousebar_cnt)
 	clear_rest();
 
@@ -855,7 +855,7 @@ static void sel_display()
 	g_sel_item_index = 0;
 
     if (s_disp_status_line == 1) {
-	newline();
+	output_newline();
 	fputs(g_msg, stdout);
 	g_term_col = strlen(g_msg);
 	s_disp_status_line = 2;
@@ -867,7 +867,7 @@ static void sel_status_msg(const char *cp)
     if (g_can_home)
 	goto_xy(0,g_sel_last_line+1);
     else
-	newline();
+	output_newline();
     fputs(cp, stdout);
     g_term_col = strlen(cp);
     goto_xy(0,g_sel_items[g_sel_item_index].line);
@@ -1127,7 +1127,7 @@ reinp_selector:
 		goto reask_selector;
 	    }
 	    if (s_removed_prompt & RP_NEWLINE) {
-		carriage_return();
+		output_carriage_return();
 		goto reask_selector;
 	    }
 	    goto position_selector;
@@ -1140,7 +1140,7 @@ reinp_selector:
 		goto reask_selector;
 	    }
 	    if (s_disp_status_line == 1) {
-		newline();
+		output_newline();
 		fputs(g_msg,stdout);
 		g_term_col = strlen(g_msg);
 		if (s_removed_prompt & RP_MOUSEBAR) {
@@ -1166,7 +1166,7 @@ reinp_selector:
 	    sel_status_msg(g_msg);
 
 	    if (!g_can_home)
-		newline();
+		output_newline();
 	    if (s_removed_prompt & RP_NEWLINE)
 		goto reask_selector;
 	    goto position_selector;
@@ -1234,7 +1234,7 @@ reinp_selector:
 	  }
 	}
 	if (g_can_home)
-	    carriage_return();
+	    output_carriage_return();
 	fflush(stdout);
 	if (++g_sel_item_index == g_sel_page_item_cnt)
 	    g_sel_item_index = 0;
@@ -1413,7 +1413,7 @@ static bool select_option(option_index i)
     color_object(COLOR_CMD, true);
     printf("Change `%s' (%s)",g_options_ini[i].item, g_options_ini[i].help_str);
     color_pop();	/* of COLOR_CMD */
-    newline();
+    output_newline();
     *g_buf = '\0';
     char *oldval = savestr(quote_string(option_value(i)));
     char *val = vals[i] ? vals[i] : oldval;
@@ -1628,7 +1628,7 @@ static display_state sel_command(char_int ch)
 	    goto do_command;
 	return DS_DISPLAY;
       case 'v':
-	newline();
+	output_newline();
 	trn_version();
         ch = another_command(1);
         if (ch != '\0')
@@ -1684,7 +1684,7 @@ static display_state sel_command(char_int ch)
 
 static bool sel_perform_change(long cnt, const char *obj_type)
 {
-    carriage_return();
+    output_carriage_return();
     if (g_page_line == 1) {
 	s_disp_status_line = 1;
 	if (g_term_line != g_sel_last_line+1 || g_term_scrolled)
@@ -2122,7 +2122,7 @@ static display_state article_commands(char_int ch)
 	univ_help(UHELP_ARTSEL);
 	return DS_RESTART;
       case 'H':
-	newline();
+	output_newline();
 	if (another_command(help_artsel()))
 	    return DS_DOCOMMAND;
         return DS_DISPLAY;
@@ -2146,7 +2146,7 @@ static display_state newsgroup_commands(char_int ch)
       case 'L':
 	switch_dmode(&g_sel_grp_dmode);	    /* sets g_msg */
 	if (*g_sel_grp_dmode != 's' && !g_multirc->first->datasrc->desc_sf.hp) {
-	    newline();
+	    output_newline();
 	    return DS_RESTART;
 	}
 	return DS_DISPLAY;
@@ -2327,7 +2327,7 @@ static display_state newsgroup_commands(char_int ch)
 	univ_help(UHELP_NGSEL);
 	return DS_RESTART;
       case 'H':
-	newline();
+	output_newline();
 	if (another_command(help_ngsel()))
 	    return DS_DOCOMMAND;
         return DS_DISPLAY;
@@ -2381,7 +2381,7 @@ static display_state newsgroup_commands(char_int ch)
 	    if (!save_sel_mode)
 		return DS_RESTART;
 	    if (g_term_line == g_sel_last_line)
-		newline();
+		output_newline();
 	    if (g_term_line != g_sel_last_line+1 || g_term_scrolled)
 		s_clean_screen = false;
 	    break;
@@ -2404,7 +2404,7 @@ static display_state newsgroup_commands(char_int ch)
 	    (void) first_page();
 	if (s_clean_screen)
 	    return DS_ASK;
-	newline();
+	output_newline();
 	if (another_command(1))
 	    return DS_DOCOMMAND;
 	return DS_DISPLAY;
@@ -2485,7 +2485,7 @@ static display_state addgroup_commands(char_int ch)
       case 'L':
 	switch_dmode(&g_sel_grp_dmode);	    /* sets g_msg */
 	if (*g_sel_grp_dmode != 's' && !g_datasrc->desc_sf.hp) {
-	    newline();
+	    output_newline();
 	    return DS_RESTART;
 	}
 	return DS_DISPLAY;
@@ -2561,7 +2561,7 @@ static display_state addgroup_commands(char_int ch)
 	univ_help(UHELP_ADDSEL);
 	return DS_RESTART;
       case 'H':
-	newline();
+	output_newline();
 	if (another_command(help_addsel()))
 	    return DS_DOCOMMAND;
         return DS_DISPLAY;
@@ -2594,7 +2594,7 @@ static display_state multirc_commands(char_int ch)
 	univ_help(UHELP_MULTIRC);
 	return DS_RESTART;
       case 'H':
-	newline();
+	output_newline();
 	if (another_command(help_multirc()))
 	    return DS_DOCOMMAND;
         return DS_DISPLAY;
@@ -2663,7 +2663,7 @@ static display_state option_commands(char_int ch)
 	univ_help(UHELP_OPTIONS);
 	return DS_RESTART;
       case 'H':
-	newline();
+	output_newline();
 	if (another_command(help_options()))
 	    return DS_DOCOMMAND;
         return DS_DISPLAY;
@@ -2707,7 +2707,7 @@ static display_state universal_commands(char_int ch)
 	univ_help(UHELP_UNIV);
 	return DS_RESTART;
       case 'H':
-	newline();
+	output_newline();
 	if (another_command(help_univ()))
 	    return DS_DOCOMMAND;
         return DS_DISPLAY;

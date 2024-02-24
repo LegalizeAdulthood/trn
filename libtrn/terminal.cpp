@@ -768,7 +768,7 @@ bool finish_command(int donewline)
     *s = '\0';				/* terminate the string nicely */
 
     if (donewline)
-	newline();
+	output_newline();
 
     set_mode(gmode_save,g_mode);
     return true;			/* retrn success */
@@ -1092,10 +1092,10 @@ void no_sofire()
 {
     /* should we disable fireworks? */
     if (!(g_fire_is_out & STANDOUT) && (g_term_line|g_term_col)==0 && *g_tc_UP && *g_tc_SE) {
-	newline();
+	output_newline();
 	un_standout();
 	up_line();
-	carriage_return();
+	output_carriage_return();
     }
 }
 #endif
@@ -1105,10 +1105,10 @@ void no_ulfire()
 {
     /* should we disable fireworks? */
     if (!(g_fire_is_out & UNDERLINE) && (g_term_line|g_term_col)==0 && *g_tc_UP && *g_tc_US) {
-	newline();
+	output_newline();
 	un_underline();
 	up_line();
-	carriage_return();
+	output_carriage_return();
     }
 }
 #endif
@@ -1230,7 +1230,7 @@ reask_anything:
     getcmd(tmpbuf);
     set_mode(g_general_mode,mode_save);
     if (errno || *tmpbuf == '\f') {
-	newline();			/* if return from stop signal */
+	output_newline();			/* if return from stop signal */
 	goto reask_anything;		/* give them a prompt again */
     }
     if (*tmpbuf == 'h') {
@@ -1308,7 +1308,7 @@ reask_in_char:
     set_mode(GM_PROMPT,newmode);
     getcmd(g_buf);
     if (errno || *g_buf == '\f') {
-	newline();			/* if return from stop signal */
+	output_newline();			/* if return from stop signal */
 	goto reask_in_char;		/* give them a prompt again */
     }
     setdef(g_buf,dflt);
@@ -1329,7 +1329,7 @@ reask_in_answer:
 reinp_in_answer:
     getcmd(g_buf);
     if (errno || *g_buf == '\f') {
-	newline();			/* if return from stop signal */
+	output_newline();			/* if return from stop signal */
 	goto reask_in_answer;		/* give them a prompt again */
     }
     if (*g_buf == g_erase_char)
@@ -1340,7 +1340,7 @@ reinp_in_answer:
     }
     else
 	g_buf[1] = '\0';
-    newline();
+    output_newline();
     set_mode(gmode_save,mode_save);
 }
 
@@ -1467,7 +1467,7 @@ reask_in_choice:
 	    strcpy(g_buf,cp);
     }
     s = g_buf + strlen(g_buf);
-    carriage_return();
+    output_carriage_return();
     erase_line(false);
     fputs(prompt,stdout);
     fputs(g_buf,stdout);
@@ -1576,7 +1576,7 @@ int print_lines(const char *what_to_print, int hilite)
 	    if (g_tc_AM && i == g_tc_COLS)
 		fflush(stdout);
 	    else
-		newline();
+		output_newline();
 	}
     }
     return 0;
@@ -1605,7 +1605,7 @@ void page_start()
     if (g_erase_screen)
 	clear();
     else
-	newline();
+	output_newline();
 }
 
 void errormsg(const char *str)
@@ -1674,12 +1674,12 @@ void reprint()
 
 void erase_line(bool to_eos)
 {
-    carriage_return();
+    output_carriage_return();
     if (to_eos)
 	clear_rest();
     else
 	erase_eol();
-    carriage_return();		/* Resets kernel's tab column counter to 0 */
+    output_carriage_return();		/* Resets kernel's tab column counter to 0 */
     fflush(stdout);
 }
 
@@ -1715,7 +1715,7 @@ void home_cursor()
     else {			/* we have home sequence */
 	tputs(g_tc_HO, 1, putchr);/* home via HO */
     }
-    carriage_return();	/* Resets kernel's tab column counter to 0 */
+    output_carriage_return();	/* Resets kernel's tab column counter to 0 */
     g_term_line = 0;
     g_term_col = 0;
 }
@@ -1744,7 +1744,7 @@ void goto_xy(int to_col, int to_line)
     int xcost = (to_col - g_term_col);
     if (xcost < 0) {
 	if (!to_col && ycost+1 < cmcost) {
-	    carriage_return();
+	    output_carriage_return();
 	    xcost = 0;
 	}
 	else
@@ -1764,7 +1764,7 @@ void goto_xy(int to_col, int to_line)
 	home_cursor();
 
     if (to_line >= g_term_line)
-	while(g_term_line < to_line) newline();
+	while(g_term_line < to_line) output_newline();
     else
 	while(g_term_line > to_line) up_line();
 

@@ -331,7 +331,7 @@ void decode_switch(const char *s)
 		g_erase_screen = false;
 	    }
 	    trn_version();
-	    newline();
+	    output_newline();
 	    if (g_mode == MM_INITIALIZING)
 		exit(0);
 	    break;

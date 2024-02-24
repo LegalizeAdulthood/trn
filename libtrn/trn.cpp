@@ -326,7 +326,7 @@ void do_multirc()
 	    case ING_NORM:
 		break;
 	    case ING_DISPLAY:
-		newline();
+		output_newline();
 		break;
 	    case ING_MESSAGE:
 		printf("\n%s\n", g_msg) FLUSH;
@@ -355,7 +355,7 @@ input_newsgroup_result input_newsgroup()
     eat_typeahead();
     getcmd(g_buf);
     if (errno || *g_buf == '\f') {
-	newline();		/* if return from stop signal */
+	output_newline();		/* if return from stop signal */
 	return ING_ASK;
     }
     g_buf[2] = *g_buf;
@@ -386,9 +386,9 @@ input_newsgroup_result input_newsgroup()
 	}
 	return ING_SPECIAL;
       case 'x':
-	newline();
+	output_newline();
 	in_char("Confirm: exit and abandon newsrc changes?", MM_ADD_NEWSGROUP_PROMPT, "yn");
-	newline();
+	output_newline();
 	if (*g_buf != 'y')
 	    break;
 	printf("\nThe abandoned changes are in %s.new.\n",
@@ -397,17 +397,17 @@ input_newsgroup_result input_newsgroup()
 	s_restore_old_newsrc = true;
 	return ING_QUIT;
       case 'q': case 'Q':	/* quit? */
-	newline();
+	output_newline();
 	return ING_QUIT;
       case '^':
 	if (g_general_mode != GM_SELECTOR)
-	    newline();
+	    output_newline();
 	g_ngptr = g_first_ng;
 	break;
       case 'N':			/* goto next newsgroup */
       case 'n':			/* find next unread newsgroup */
 	if (g_ngptr == nullptr) {
-	    newline();
+	    output_newline();
 	    return ING_BREAK;
 	}
 	g_ngptr = g_ngptr->next;
@@ -499,12 +499,12 @@ input_newsgroup_result input_newsgroup()
 	return ING_ASK;
       case Ctl('n'):		/* next newsrc list */
 	end_only();
-	newline();
+	output_newline();
 	use_next_multirc(g_multirc);
 	goto display_multirc;
       case Ctl('p'):		/* prev newsrc list */
 	end_only();
-	newline();
+	output_newline();
 	use_next_multirc(g_multirc);
       display_multirc:
       {
@@ -543,7 +543,7 @@ input_newsgroup_result input_newsgroup()
 	return ING_SPECIAL;
       case 'u':			/* unsubscribe */
 	if (g_ngptr && g_ngptr->toread >= TR_NONE) {/* unsubscribable? */
-	    newline();
+	    output_newline();
 	    printf(g_unsubto,g_ngptr->rcline) FLUSH;
 	    termdown(1);
 	    g_ngptr->subscribechar = NEGCHAR;	/* unsubscribe it */
@@ -568,7 +568,7 @@ reask_abandon:
 	else
 	    in_char("\nAbandon?", MM_CONFIRM_ABANDON_PROMPT, "ynh");
 	printcmd();
-	newline();
+	output_newline();
 	if (*g_buf == 'h') {
 	    printf("Type y or SP to abandon the changes to this group since you started trn.\n");
 	    printf("Type n to leave the group as it is.\n");
@@ -706,11 +706,11 @@ reask_abandon:
 	if (!ngsel_perform())
 	    return ING_INPUT;
 	g_page_line = 1;
-	newline();
+	output_newline();
 	set_ng(g_current_ng);
 	return ING_ASK;
       case 'v':
-	newline();
+	output_newline();
 	trn_version();
 	return ING_ASK;
       default:
@@ -748,7 +748,7 @@ void trn_version()
     print_lines(g_msg, NOMARKING);
 
     if (g_multirc) {
-        newline();
+        output_newline();
 	sprintf(g_msg,"News source group #%d:\n\n", g_multirc->num);
 	print_lines(g_msg, NOMARKING);
 	for (NEWSRC *rp = g_multirc->first; rp; rp = rp->next) {

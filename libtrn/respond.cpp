@@ -242,10 +242,10 @@ save_result save_article()
 		g_mime_section->part = part;
 		g_mime_section->total = total;
 		if (!decode_piece(nullptr,nullptr) && *g_msg) {
-		    newline();
+		    output_newline();
 		    fputs(g_msg,stdout);
 		}
-		newline();
+		output_newline();
 		break;
 	      default:
 		printf("Unable to determine type of file.\n") FLUSH;
@@ -333,7 +333,7 @@ save_result save_article()
 		"\nFile %s doesn't exist--\n	use mailbox format?",s);
 	      reask_save:
 		in_char(g_cmd_buf, MM_USE_MAILBOX_FORMAT_PROMPT, dflt);
-		newline();
+		output_newline();
 		printcmd();
 		if (*g_buf == 'h') {
 		    if (g_verbose)
@@ -437,7 +437,7 @@ save_result save_article()
 		   mailbox? "mailbox" : "file", g_savedest.c_str());
 	}
 	if (interactive)
-	    newline();
+	    output_newline();
     }
 s_bomb:
     chdir_newsdir();
@@ -486,10 +486,10 @@ save_result view_article()
 		g_mime_section->part = part;
 		g_mime_section->total = total;
 		if (mc && !decode_piece(mc,nullptr) && *g_msg) {
-		    newline();
+		    output_newline();
 		    fputs(g_msg,stdout);
 		}
-		newline();
+		output_newline();
 		cnt = 0;
 	    }
 	    else if (++cnt == 300)

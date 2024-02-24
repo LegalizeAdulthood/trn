@@ -436,7 +436,7 @@ reinp_article:
 	    if (g_tc_LINES < 100 && !g_int_count)
 		*g_buf = '\f';		/* on CONT fake up refresh */
 	    else {
-		newline();		/* but only on a crt */
+		output_newline();		/* but only on a crt */
 		goto reask_article;
 	    }
 	}
@@ -502,7 +502,7 @@ cleanup:
     g_in_ng = false;			/* leave newsgroup state */
     artclose();
     if (!g_univ_ng_virtflag)
-	newline();
+	output_newline();
     deselect_all();
     yankback();				/* do a Y command */
     bits_to_rc();			/* reconstitute .newsrc line */
@@ -597,7 +597,7 @@ static art_switch_result art_switch()
       reask_unread:
 	in_char(u_prompt,MM_UNKILL_PROMPT,g_dfltcmd.c_str());
 	printcmd();
-	newline();
+	output_newline();
 	if (*g_buf == 'h') {
 	    if (g_verbose)
 	    {
@@ -787,10 +787,10 @@ not_threaded:
 	g_page_line = 1;
 	if (!thread_perform())
 	    return AS_INP;
-	carriage_return();
+	output_carriage_return();
 	perform_status_end(g_ngptr->toread, "article");
 	fputs(g_msg, stdout);
-	newline();
+	output_newline();
 	g_art = g_curr_art;
 	g_artp = g_curr_artp;
 	return AS_ASK;
@@ -956,7 +956,7 @@ not_threaded:
 		perform_status_end(g_ngptr->toread, "article");
 		fputs(g_msg, stdout) FLUSH;
 	    }
-	    newline();
+	    output_newline();
 	    return AS_ASK;
 	}
 	return AS_NORM;
@@ -1041,7 +1041,7 @@ normal_search:
 	return AS_NORM;
       }
       case 'u':			/* unsubscribe from this newsgroup? */
-	newline();
+	output_newline();
 	printf(g_unsubto,g_ngname.c_str()) FLUSH;
 	termdown(1);
 	g_ngptr->subscribechar = NEGCHAR;
@@ -1088,7 +1088,7 @@ normal_search:
 	termdown(2);
 	break;
       case 'j':
-	newline();
+	output_newline();
 	if (g_art >= g_absfirst && g_art <= g_lastart)
 	    mark_as_read(g_artp);
 	return AS_ASK;
@@ -1126,7 +1126,7 @@ run_the_selector:
 	s_art_sel_ilock = false;
 	switch (*g_buf) {
 	  case '+':
-	    newline();
+	    output_newline();
 	    g_term_scrolled = g_tc_LINES;
 	    g_term_line = g_tc_LINES-1;
 	    return AS_ASK;
@@ -1307,7 +1307,7 @@ run_the_selector:
 	return AS_ASK;
 #endif
       case 'a':			/* attachment-view command */
-	newline();
+	output_newline();
 	if (view_article() == SAVE_ABORT)
 	    return AS_INP;
 	g_int_count = 0;
@@ -1445,7 +1445,7 @@ char ask_catchup()
     int leave_unread = 0;
 
     if (!use_one_line)
-	newline();
+	output_newline();
 reask_catchup:
     if (g_verbose)
 	sprintf(g_buf,"Mark everything in %s as read?",g_ngname.c_str());
@@ -1477,7 +1477,7 @@ reask_catchup:
     if (ch == 'n' || ch == 'q') {
 	if (use_one_line)
 	    return 'N';
-	newline();
+	output_newline();
 	return 'n';
     }
     if (ch == '#') {
@@ -1491,7 +1491,7 @@ reask_catchup:
 	g_buf[1] = FINISHCMD;
 	if (!finish_command(false)) {
 	    use_one_line = false;
-	    newline();
+	    output_newline();
 	    goto reask_catchup;
 	}
 	else {
@@ -1520,17 +1520,17 @@ reask_catchup:
 	    if (g_dmcount)
 		yankback();
 	}
-	newline();
+	output_newline();
     }
     else {
-	newline();
+	output_newline();
 	catch_up(g_ngptr, leave_unread, 1);
     }
     if (ch == 'u') {
 	g_ngptr->subscribechar = NEGCHAR;
 	g_ngptr->rc->flags |= RF_RCCHANGED;
 	g_newsgroup_toread--;
-	newline();
+	output_newline();
 	printf(g_unsubto,g_ngname.c_str());
 	printf("(If you meant to hit 'y' instead of 'u', press '-'.)\n") FLUSH;
 	termdown(2);
@@ -1628,7 +1628,7 @@ char ask_memorize(char_int ch)
     ARTICLE* artp_hold = g_artp;
 
     if (!use_one_line)
-	newline();
+	output_newline();
 reask_memorize:
     sprintf(g_cmd_buf,"%sMemorize %s command:", global_save?"Global-" : "",
 	    mode_string);
@@ -1688,14 +1688,14 @@ reask_memorize:
 		termdown(2);
 	    }
 	}
-	newline();
+	output_newline();
 	termdown(9);
 	goto reask_memorize;
     }
     if (ch == 'q') {
 	if (use_one_line)
 	    return 'Q';
-	newline();
+	output_newline();
 	return 'q';
     }
     if (!thread_cmd) {
@@ -1819,6 +1819,6 @@ reask_memorize:
 	goto reask_memorize;
     }
     if (!use_one_line)
-	newline();
+	output_newline();
     return ch;
 }

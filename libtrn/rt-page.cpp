@@ -387,7 +387,7 @@ try_again:
 	    if (g_maxngtodo) {
 		end_only();
 		fputs(g_msg, stdout);
-		newline();
+		output_newline();
 		if (fill_last_page)
 		    get_anything();
 		g_sel_page_np = nullptr;
@@ -1266,11 +1266,11 @@ void display_page_title(bool home_only)
 	    printf(" (Restriction)");
     }
     home_cursor();
-    newline();
+    output_newline();
     maybe_eol();
     if (g_in_ng && g_redirected && !g_redirected_to.empty())
 	printf("\t** Please start using %s **", g_redirected_to.c_str());
-    newline();
+    output_newline();
 }
 
 void display_page()
@@ -1340,7 +1340,7 @@ try_again:
 	    if (!np->abs1st) {
 		set_toread(np, ST_LAX);
 		if (g_paranoid) {
-		    newline();
+		    output_newline();
                     g_current_ng = np;
                     g_ngptr = np;
 		    /* this may move newsgroups around */
@@ -1594,7 +1594,7 @@ try_again:
     g_sel_last_sp = nullptr;
     g_sel_at_end = (g_sel_prior_obj_cnt + g_sel_page_obj_cnt == g_sel_total_obj_cnt);
     maybe_eol();
-    newline();
+    output_newline();
     g_sel_last_line = g_term_line;
 }
 
@@ -1821,12 +1821,12 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
 		else if (*g_sel_art_dmode == 'm') {
 		    if (!j) {
 			if (i)
-			    newline();
+			    output_newline();
 		    }
 		    else {
 			if (i == 3 || !i) {
 			    if (i)
-				newline();
+				output_newline();
 			    if (g_term_line >= s_sel_max_line_cnt + 2)
 				return;
 			    maybe_eol();
@@ -1904,20 +1904,20 @@ static void display_univ(const UNIV_ITEM *ui)
 		    printf("***** ");
 		fputs(ui->data.group.ng,stdout);
 	    }
-	    newline();
+	    output_newline();
 	    break;
 	  }
 	  case UN_ARTICLE:
 	    printf("      %s",ui->desc? ui->desc : univ_article_desc(ui));
-	    newline();
+	    output_newline();
 	    break;
 	  case UN_HELPKEY:
 	    printf("      Help on the %s",univ_keyhelp_modestr(ui));
-	    newline();
+	    output_newline();
 	    break;
 	  default:
 	    printf("      %s",ui->desc? ui->desc : "[No Description]");
-	    newline();
+	    output_newline();
 	    break;
 	}
     }
@@ -1953,5 +1953,5 @@ static void display_group(DATASRC *dp, char *group, int len, int max_len)
 	else
 	    fputs(group, stdout);
     }
-    newline();
+    output_newline();
 }
