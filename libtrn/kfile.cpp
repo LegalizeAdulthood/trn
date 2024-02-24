@@ -114,7 +114,7 @@ static void mention(const char *str)
 {
     if (g_verbose) {
 	color_string(COLOR_NOTICE,str);
-	output_newline();
+	newline();
     }
     else
 	putchar('.');
@@ -193,9 +193,9 @@ int do_kfile(FILE *kfp, int entering)
 	    if (last_kill_type) {
 		if (perform_status_end(g_ngptr->toread,"article")) {
 		    s_kill_mentioned = true;
-		    output_carriage_return();
+		    carriage_return();
 		    fputs(g_msg, stdout);
-		    output_newline();
+		    newline();
 		}
 	    }
 	    perform_status_init(g_ngptr->toread);
@@ -233,9 +233,9 @@ int do_kfile(FILE *kfp, int entering)
 		if (last_kill_type) {
 		    if (perform_status_end(g_ngptr->toread,"article")) {
 			s_kill_mentioned = true;
-			output_carriage_return();
+			carriage_return();
 			fputs(g_msg, stdout);
-			output_newline();
+			newline();
 		    }
 		}
 		perform_status_init(g_ngptr->toread);
@@ -305,9 +305,9 @@ int do_kfile(FILE *kfp, int entering)
     if (last_kill_type) {
 	if (perform_status_end(g_ngptr->toread,"article")) {
 	    s_kill_mentioned = true;
-	    output_carriage_return();
+	    carriage_return();
 	    fputs(g_msg, stdout);
-	    output_newline();
+	    newline();
 	}
     }
     return 0;
@@ -350,7 +350,7 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
 	open_kfile(KF_GLOBAL);		/* Just in case the name changed */
 	if (s_globkfp && !intr)
 	    intr = do_kfile(s_globkfp,entering);
-	output_newline();
+	newline();
 	if (entering && s_kill_mentioned && g_novice_delays) {
 	    if (g_verbose)
 		get_anything();

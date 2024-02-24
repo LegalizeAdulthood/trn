@@ -461,7 +461,7 @@ int perform(char *cmdlst, int output_level)
 		fputs("\tWill return",stdout);
 	}
 	else if (ch == '=') {
-	    output_carriage_return();
+	    carriage_return();
 	    output_subject((char*)g_artp,0);
 	    output_level = 0;
 	}
@@ -507,7 +507,7 @@ int perform(char *cmdlst, int output_level)
 		    view_article();
 		else
 		    save_article();
-		output_newline();
+		newline();
 		output_level = 0;
 	    }
 	}
@@ -522,7 +522,7 @@ int perform(char *cmdlst, int output_level)
 	    break;
     }
     if (output_level && g_verbose)
-	output_newline();
+	newline();
     if (g_int_count) {
 	g_int_count = 0;
 	return -1;
@@ -634,7 +634,7 @@ int ng_perform(char *cmdlst, int output_level)
 	    break;
     }
     if (output_level && g_verbose)
-	output_newline();
+	newline();
     if (g_int_count) {
 	g_int_count = 0;
 	return -1;
@@ -718,7 +718,7 @@ int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level)
 	    break;
     }
     if (output_level && g_verbose)
-	output_newline();
+	newline();
     if (g_int_count) {
 	g_int_count = 0;
 	return -1;

@@ -767,12 +767,12 @@ void mime_DecodeArticle(bool view)
 	    }
 	    else {
 		if (*g_msg) {
-		    output_newline();
+		    newline();
 		    fputs(g_msg,stdout);
 		}
 		g_mime_state = SKIP_MIME;
 	    }
-	    output_newline();
+	    newline();
 	    break;
 	}
     }
@@ -877,7 +877,7 @@ decode_state qp_decode(FILE *ifp, decode_state state)
 	if (g_nowait_fork)
 	    fflush(stdout);
 	else
-	    output_newline();
+	    newline();
     }
 
     while ((c1 = mime_getc(ifp)) != EOF) {
@@ -982,7 +982,7 @@ decode_state b64_decode(FILE *ifp, decode_state state)
 	if (g_nowait_fork)
 	    fflush(stdout);
 	else
-	    output_newline();
+	    newline();
 	state = DECODE_ACTIVE;
     }
 
@@ -1069,7 +1069,7 @@ decode_state cat_decode(FILE *ifp, decode_state state)
 	if (g_nowait_fork)
 	    fflush(stdout);
 	else
-	    output_newline();
+	    newline();
     }
 
     if (ifp) {

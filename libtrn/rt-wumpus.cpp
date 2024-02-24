@@ -457,7 +457,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 	    }/* while */
 	    color_pop();	/* of COLOR_TREE */
 	}/* if */
-	output_newline();
+	newline();
 	header_line++;
     }/* for remainder of line */
 
@@ -508,13 +508,13 @@ void entire_tree(ARTICLE* ap)
 	    return;
 	}
 	count_subjects(CS_NORM);
-	output_newline();
+	newline();
     }
     if (!(ap->flags & AF_THREADED))
 	parseheader(article_num(ap));
     if (check_page_line())
 	return;
-    output_newline();
+    newline();
     ARTICLE *thread = ap->subj->thread;
     /* Enumerate our subjects for display */
     SUBJECT *sp = thread->subj;
@@ -529,7 +529,7 @@ void entire_tree(ARTICLE* ap)
     } while (sp != thread->subj);
     if (check_page_line())
 	return;
-    output_newline();
+    newline();
     if (check_page_line())
 	return;
     putchar(' ');
@@ -538,7 +538,7 @@ void entire_tree(ARTICLE* ap)
 
     if (check_page_line())
 	return;
-    output_newline();
+    newline();
 }
 
 /* A recursive routine to output the entire article tree.
@@ -585,7 +585,7 @@ static void display_tree(ARTICLE *article, char *cp)
 	    color_object(COLOR_TREE, true);
 	    cp[1] = '\0';
 	} else
-	    output_newline();
+	    newline();
 	if (!(article = article->sibling))
 	    break;
 	if (!article->sibling)

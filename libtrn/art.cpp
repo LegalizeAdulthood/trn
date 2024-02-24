@@ -216,7 +216,7 @@ do_article_result do_article()
 	   : (linenum < g_tc_LINES);
 	     linenum++) {		/* for each line on page */
 	    if (g_int_count) {	/* exit via interrupt? */
-		output_newline();	/* get to left margin */
+		newline();	/* get to left margin */
 		g_int_count = 0;	/* reset interrupt count */
 		set_mode(g_general_mode,oldmode);
 		s_special = false;
@@ -358,7 +358,7 @@ do_article_result do_article()
 			    no_ulfire();
 #endif
 			underline();
-			output_carriage_return();
+			carriage_return();
 		    }
 		    if (*bufptr == '\n')
 			putchar(' ');
@@ -409,7 +409,7 @@ do_article_result do_article()
 			    int i;
 #ifdef USE_UTF_HACK
 			    if (outpos + visual_width_at(bufptr) > g_tc_COLS) { /* will line overflow? */
-				output_newline();
+				newline();
 				outpos = 0;
 				linenum++;
 			    }
@@ -445,7 +445,7 @@ do_article_result do_article()
 			}
 #endif
 			if (outputok)
-			    output_newline();
+			    newline();
 			s_restart = 0;
 			outpos = 1000;	/* signal normal \n */
 		    }
@@ -504,7 +504,7 @@ do_article_result do_article()
 		    s_restart = line_offset(bufptr);/* restart here next time */
 		    if (outputok) {
 			if (!g_tc_AM || g_tc_XN || outpos < g_tc_COLS)
-			    output_newline();
+			    newline();
 			else
 			    g_term_line++;
 		    }
@@ -520,7 +520,7 @@ do_article_result do_article()
 			un_standout();
 		    else
 			un_underline();
-		    output_carriage_return();
+		    carriage_return();
 		    g_highlight = -1;	/* no more we are */
 		    /* in case terminal highlighted rest of line earlier */
 		    /* when we did an eol with highlight turned on: */
@@ -862,7 +862,7 @@ page_switch_result page_switch()
 	if (*g_tc_IL && *g_tc_HO) {
             home_cursor();
 	    insert_line();
-	    output_carriage_return();
+	    carriage_return();
 	    ART_POS pos = vrdary(g_topline - 1);
 	    if (pos < 0)
 		pos = -pos;

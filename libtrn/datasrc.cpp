@@ -843,7 +843,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
 	    srcfile_close(sfp);
 	    return 0;
 	}
-	output_newline();
+	newline();
     }
     fseek(fp,0L,0);
 
