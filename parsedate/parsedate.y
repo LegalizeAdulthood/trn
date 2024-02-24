@@ -23,6 +23,10 @@
 #include <string.h>
 #include <time.h>
 
+int         date_parse();
+int         date_lex();
+static void date_error();
+
 #define yyparse		date_parse
 #define yylex		date_lex
 #define yyerror		date_error
@@ -92,8 +96,6 @@ static time_t	yyRelSeconds;
 
 
 extern struct tm	*localtime();
-
-static void		date_error();
 %}
 
 %union {
