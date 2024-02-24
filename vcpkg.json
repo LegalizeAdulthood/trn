@@ -5,6 +5,10 @@
   "dependencies": [
     "boost-asio",
     {
+      "name": "ncurses",
+      "platform": "!windows"
+    },
+    {
       "name": "pdcurses",
       "platform": "windows"
     },
