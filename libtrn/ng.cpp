@@ -291,7 +291,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 		goto article_level;
 	    }
 	    if (g_erase_screen)
-		clear_screen();			/* clear the screen */
+		clear();			/* clear the screen */
 	    else {
 		fputs("\n\n",stdout) FLUSH;
 		termdown(2);
@@ -352,7 +352,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 		g_topline = -1;		/* and remember top line of screen */
 					/*  (line # within article file) */
 	    }
-	    clear_screen();			/* clear screen */
+	    clear();			/* clear screen */
 	    if (g_art == 0 && g_artp && g_artp->msgid && (g_datasrc->flags&DF_REMOTE)
 	     && !(g_artp->flags & AF_CACHED)) {
 		g_art = nntp_stat_id(g_artp->msgid);
@@ -1206,7 +1206,7 @@ run_the_selector:
       refresh_screen:
 	if (g_art <= g_lastart) {
 	    g_reread = true;
-	    clear_screen();
+	    clear();
 	    g_do_fseek = true;
 	    g_artline = g_topline;
 	    if (g_artline < 0)
@@ -1245,7 +1245,7 @@ run_the_selector:
 	    ART_LINE target;
 
 	    g_reread = true;
-	    clear_screen();
+	    clear();
 	    g_do_fseek = true;
 	    if (*g_buf == 'B')
 		target = g_topline - 1;

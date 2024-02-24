@@ -337,7 +337,7 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
 	s_exitcmds = false;
 	ART_NUM oldfirst = g_firstart;
 	g_firstart = starting;
-	clear_screen();
+	clear();
 	if (message && (g_verbose || entering))
 	    fputs(message,stdout) FLUSH;
 

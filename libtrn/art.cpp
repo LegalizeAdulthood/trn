@@ -833,7 +833,7 @@ page_switch_result page_switch()
 	    fgets(g_buf, sizeof g_buf, stdin);
 	}
 #endif
-	clear_screen();
+	clear();
 	g_do_fseek = true;
 	g_artline = g_topline;
 	if (g_artline < 0)
@@ -901,7 +901,7 @@ page_switch_result page_switch()
 	if (g_erase_each_line)
 	    home_cursor();
 	else
-	    clear_screen();
+	    clear();
 
 	g_do_fseek = true;	/* reposition article file */
 	if (*g_buf == 'B')
@@ -1025,7 +1025,7 @@ leave_pager:
 	    if (g_erase_each_line)
 		home_cursor();
 	    else
-		clear_screen();	/* clear screen */
+		clear();	/* clear screen */
 	    fflush(stdout);
 	}
 	else {

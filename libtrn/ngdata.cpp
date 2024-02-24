@@ -247,7 +247,7 @@ void sort_newsgroups()
 void ng_skip()
 {
     if (g_datasrc->flags & DF_REMOTE) {
-        clear_screen();
+        clear();
 	if (g_verbose)
 	    fputs("Skipping unavailable article\n",stdout);
 	else
@@ -276,7 +276,7 @@ void ng_skip()
     else
     {
 	if (errno != ENOENT) {	/* has it not been deleted? */
-	    clear_screen();
+	    clear();
 	    if (g_verbose)
 		printf("\n(Article %ld exists but is unreadable.)\n",(long)g_art)
 			FLUSH;

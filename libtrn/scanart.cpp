@@ -139,6 +139,6 @@ void sa_cleanup()
 	return;
 
     sa_cleanmain();
-    clear_screen();		/* should something else clear the screen? */
+    clear();		/* should something else clear the screen? */
     g_sa_initialized = false;		/* goodbye... */
 }

@@ -176,7 +176,7 @@ void s_rub_ptr()
 void s_refresh()
 {
     if (g_s_ref_all) {
-	clear_screen();	/* make a clean slate */
+	clear();	/* make a clean slate */
 	g_s_ref_desc = 0;
 	g_s_ref_status = 0;
     }
