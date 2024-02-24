@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(trn VERSION 5.0.0 LANGUAGES C CXX)
+set(TRN_PROJECT_NAME "trn" CACHE STRING "Project name for IDEs")
+
+project("${TRN_PROJECT_NAME}" VERSION 5.0.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
