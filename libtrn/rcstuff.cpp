@@ -408,7 +408,7 @@ static bool lock_newsrc(NEWSRC *rp)
 	    }
 	    termdown(2);
 	    get_anything();
-	    newline();
+	    output_newline();
 	}
 	else {
 	    if (g_verbose)
