@@ -1303,7 +1303,7 @@ run_the_selector:
 	if (decode_fp)
 	    decode_end();
 	else
-	    output_newline();
+	    newline();
 	return AS_ASK;
 #endif
       case 'a':			/* attachment-view command */
