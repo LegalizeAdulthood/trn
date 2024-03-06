@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(CTest)
+include(GnuInstallDirs)
 
 if(WIN32)
     find_package(pdcurses REQUIRED)
@@ -17,6 +18,8 @@ if(WIN32)
 endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+set(CMAKE_INSTALL_PREFIX "install")
 
 set(trn_text_files
     HACKERSGUIDE.txt
@@ -36,6 +39,7 @@ source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")
 source_group("VcPkg Files" FILES vcpkg.json)
 source_group("Text Files" FILES ${trn_text_files})
 target_link_libraries(trn PUBLIC libtrn)
+install(TARGETS trn DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_subdirectory(config)
 add_subdirectory(inews)
