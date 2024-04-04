@@ -23,6 +23,9 @@ jobs:
           core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
+    - name: CMake version
+      run: cmake --version
+
     - name: CMake workflow
       run: cmake --workflow --preset ci-linux
 
