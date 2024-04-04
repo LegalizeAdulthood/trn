@@ -75,5 +75,8 @@ jobs:
         7z x -y ${{env.BISON_ZIP_PATH}}
         Add-Content $env:GITHUB_PATH "${{env.BISON_PATH}}/bin"
 
+    - name: CMake version
+      run: cmake --version
+
     - name: CMake workflow
       run: cmake --workflow --preset default
