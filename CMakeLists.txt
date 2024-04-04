@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(CTest)
-include(GnuInstallDirs)
+include(GNUInstallDirs)
 
 if(WIN32)
     find_package(pdcurses REQUIRED)
