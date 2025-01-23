@@ -3,3 +3,6 @@
 
 # CMake build dir
 ./build
+
+# VS Open Folder project dir
+.vs
