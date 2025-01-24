@@ -5,7 +5,7 @@
  */
 #ifndef TRN_SDISP_H
 #define TRN_SDISP_H
-	
+
 extern int g_scr_height; /* height of screen in characters */
 extern int g_scr_width;  /* width of screen in characters */
 extern bool g_s_resized; /* has the window been resized? */

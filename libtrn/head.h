@@ -74,9 +74,9 @@ struct HEADTYPE
 
 struct USER_HEADTYPE
 {
-    char* name;			/* user-defined headers */
-    char length;		/* the header's string length */
-    char flags;			/* the header's flags */
+char* name;                 /* user-defined headers */
+    char length;            /* the header's string length */
+    char flags;             /* the header's flags */
 };
 
 extern HEADTYPE g_htype[HEAD_LAST];

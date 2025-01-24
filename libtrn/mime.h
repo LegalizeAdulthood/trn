@@ -11,7 +11,7 @@
 
 struct HBLK
 {
-    int	    tnum;
+    int     tnum;
     short   cnt;
     char    indent;
 };

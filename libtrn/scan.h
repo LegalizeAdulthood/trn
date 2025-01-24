@@ -32,10 +32,10 @@ enum scontext_type
 
 struct PAGE_ENT
 {
-    long entnum;	/* entry (article/message/newsgroup) number */
-    short lines;	/* how many screen lines to describe? */
-    short start_line;	/* screen line (0 = line under top status bar) */
-    char pageflags;	/* not currently used. */
+    long entnum;        /* entry (article/message/newsgroup) number */
+    short lines;        /* how many screen lines to describe? */
+    short start_line;   /* screen line (0 = line under top status bar) */
+    char pageflags;     /* not currently used. */
 };
 
 struct SCONTEXT
@@ -43,35 +43,35 @@ struct SCONTEXT
     scontext_type type; /* context type */
 
     /* ordering information */
-    long* ent_sort;		/* sorted list of entries in the context */
-    long ent_sort_max;		/* maximum index of sorted array */
-    long ent_sorted_max;	/* maximum index *that is sorted* */
-    long* ent_index;		/* indexes into ent_sorted */
-    long ent_index_max;		/* maximum entry number added */
+    long* ent_sort;             /* sorted list of entries in the context */
+    long ent_sort_max;          /* maximum index of sorted array */
+    long ent_sorted_max;        /* maximum index *that is sorted* */
+    long* ent_index;            /* indexes into ent_sorted */
+    long ent_index_max;         /* maximum entry number added */
 
-    int page_size;		/* number of entries allocated for page */
-				/* (usually fixed, > max screen lines) */
-    PAGE_ENT* page_ents;	/* array of entries on page */
+    int page_size;              /* number of entries allocated for page */
+                                /* (usually fixed, > max screen lines) */
+    PAGE_ENT* page_ents;        /* array of entries on page */
     /* -1 means not initialized for top and bottom entry */
-    long top_ent;		/* top entry on page */
-    long bot_ent;		/* bottom entry (note change) */
-    bool refill;		/* does the page need refilling? */
+    long top_ent;               /* top entry on page */
+    long bot_ent;               /* bottom entry (note change) */
+    bool refill;                /* does the page need refilling? */
     /* refresh entries */
-    bool ref_all;		/* refresh all on page */
-    bool ref_top;		/* top status bar */
-    bool ref_bot;		/* bottom status bar */
+    bool ref_all;               /* refresh all on page */
+    bool ref_top;               /* top status bar */
+    bool ref_bot;               /* bottom status bar */
     /* -1 for the next two entries means don't refresh */
-    short ref_status;		/* line to start refreshing status from */
-    short ref_desc;		/* line to start refreshing descript. from */
+    short ref_status;           /* line to start refreshing status from */
+    short ref_desc;             /* line to start refreshing descript. from */
     /* screen sizes */
-    short top_lines;		/* lines for top status bar */
-    short bot_lines;		/* lines for bottom status bar */
-    short status_cols;		/* characters for status column */
-    short cursor_cols;		/* characters for cursor column */
-    short itemnum_cols;		/* characters for item number column */
-    short desc_cols;		/* characters for description column */
+    short top_lines;            /* lines for top status bar */
+    short bot_lines;            /* lines for bottom status bar */
+    short status_cols;          /* characters for status column */
+    short cursor_cols;          /* characters for cursor column */
+    short itemnum_cols;         /* characters for item number column */
+    short desc_cols;            /* characters for description column */
     /* pointer info */
-    short ptr_page_line;	/* page_ent index */
+    short ptr_page_line;        /* page_ent index */
     long flags;
 };
 
