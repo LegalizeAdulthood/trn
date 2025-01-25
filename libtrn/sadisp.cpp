@@ -25,16 +25,16 @@ void sa_refresh_top()
     printf(" %d",sa_number_arts());
 
     if (g_sa_mode_read_elig)
-	printf(" unread+read");
+        printf(" unread+read");
     else
-	printf(" unread");
+        printf(" unread");
     if (g_sa_mode_zoom)
-	printf(" zoom");
+        printf(" zoom");
     if (g_sa_mode_fold)
-	printf(" Fold");
+        printf(" Fold");
     if (g_sa_follow)
-	printf(" follow");
-    color_pop();	/* of COLOR_SCORE */
+        printf(" follow");
+    color_pop();        /* of COLOR_SCORE */
     erase_eol();
     printf("\n") FLUSH;
 }
@@ -48,22 +48,22 @@ void sa_refresh_bot()
     printf("(");
     switch (g_sa_mode_order) {
       case SA_ORDER_ARRIVAL:
-	s = "arrival";
-	break;
+        s = "arrival";
+        break;
       case SA_ORDER_DESCENDING:
-	if (g_score_newfirst)
-	    s = "score (new>old)";
-	else
-	    s = "score (old>new)";
-	break;
+        if (g_score_newfirst)
+            s = "score (new>old)";
+        else
+            s = "score (old>new)";
+        break;
       default:
-	s = "unknown";
-	break;
+        s = "unknown";
+        break;
     }
     printf("%s order",s);
     printf(", %d%% scored",sc_percent_scored());
     printf(")");
-    color_pop();	/* of COLOR_SCORE */
+    color_pop();        /* of COLOR_SCORE */
     fflush(stdout);
 }
 
@@ -78,9 +78,9 @@ void sa_set_screen()
     g_s_cursor_cols = 2;
 
     if (g_s_itemnum)
-	g_s_itemnum_cols = 3;
+        g_s_itemnum_cols = 3;
     else
-	g_s_itemnum_cols = 0;
+        g_s_itemnum_cols = 0;
 
     /* (g_scr_width-1) keeps last character blank. */
     g_s_desc_cols = (g_scr_width-1) -g_s_status_cols -g_s_cursor_cols -g_s_itemnum_cols;
