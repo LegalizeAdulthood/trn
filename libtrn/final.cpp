@@ -28,7 +28,7 @@
 #endif
 
 #ifndef sigmask
-#define sigmask(m)	(1 << ((m)-1))
+#define sigmask(m)      (1 << ((m)-1))
 #endif
 
 bool g_panic{};       /* we got hung up or something-- so leave tty alone */
@@ -39,14 +39,14 @@ bool g_bos_on_stop{}; /* set when handling the stop signal would leave the scree
 void final_init()
 {
 #ifdef SIGTSTP
-    sigset(SIGTSTP, stop_catcher);	/* job control signals */
-    sigset(SIGTTOU, stop_catcher);	/* job control signals */
-    sigset(SIGTTIN, stop_catcher);	/* job control signals */
+    sigset(SIGTSTP, stop_catcher);      /* job control signals */
+    sigset(SIGTTOU, stop_catcher);      /* job control signals */
+    sigset(SIGTTIN, stop_catcher);      /* job control signals */
 #endif
 
-    sigset(SIGINT, int_catcher);	/* always catch interrupts */
+    sigset(SIGINT, int_catcher);        /* always catch interrupts */
 #ifdef SIGHUP
-    sigset(SIGHUP, sig_catcher);	/* and hangups */
+    sigset(SIGHUP, sig_catcher);        /* and hangups */
 #endif
 #ifdef SIGWINCH
     sigset(SIGWINCH, winch_catcher);
@@ -57,14 +57,14 @@ void final_init()
 
 #ifndef lint
 #ifdef SIGEMT
-    sigignore(SIGEMT);		/* Ignore EMT signals from old [t]rn's */
+    sigignore(SIGEMT);          /* Ignore EMT signals from old [t]rn's */
 #endif
 #endif
 
 #ifdef DEBUG
     /* sometimes we WANT a core dump */
     if (debug & DEB_COREDUMPSOK)
-	return;
+        return;
 #endif
     sigset(SIGILL, sig_catcher);
 #ifdef SIGTRAP
@@ -90,36 +90,36 @@ void final_init()
 [[noreturn]] //
 void finalize(int status)
 {
-    sc_sv_savefile();	/* save any scores from memory to disk */
+    sc_sv_savefile();   /* save any scores from memory to disk */
     update_thread_kfile();
     color_default();
     termlib_reset();
     if (g_bizarre)
-	resetty();
-    xmouse_off();	/* turn off mouse tracking (if on) */
+        resetty();
+    xmouse_off();       /* turn off mouse tracking (if on) */
     fflush(stdout);
 
     chdir(g_tmp_dir.c_str());
     if (!g_checkflag)
-	unuse_multirc(g_multirc);
+        unuse_multirc(g_multirc);
     datasrc_finalize();
     for (int i = 0; i < MAX_NNTP_ARTICLES; i++) {
-	char *s = nntp_tmpname(i);
-	remove(s);
+        char *s = nntp_tmpname(i);
+        remove(s);
     }
     cleanup_nntp();
     if (!g_headname.empty())
-	remove(g_headname.c_str());
+        remove(g_headname.c_str());
     if (status < 0) {
-	sigset(SIGILL,SIG_DFL);
+        sigset(SIGILL,SIG_DFL);
 #ifdef HAS_SIGBLOCK
-	sigsetmask(sigblock(0) & ~(sigmask(SIGILL) | sigmask(SIGIOT)));
+        sigsetmask(sigblock(0) & ~(sigmask(SIGILL) | sigmask(SIGIOT)));
 #endif
-	abort();
+        abort();
     }
 #ifdef RESTORE_ORIGDIR
     if (!g_origdir.empty())
-	chdir(g_origdir.c_str());
+        chdir(g_origdir.c_str());
 #endif
     exit(status);
 }
@@ -131,16 +131,16 @@ Signal_t int_catcher(int dummy)
     sigset(SIGINT,int_catcher);
 #ifdef DEBUG
     if (debug)
-	write(2,"int_catcher\n",12);
+        write(2,"int_catcher\n",12);
 #endif
     if (!g_waiting) {
-	if (g_int_count++) {		/* was there already an interrupt? */
-	    if (g_int_count == 3 || g_int_count > 5) {
-		write(2,"\nBye-bye.\n",10);
-		sig_catcher(0);		/* emulate the other signals */
-	    }
-	    write(2,"\n(Interrupt -- one more to kill trn)\n",37);
-	}
+        if (g_int_count++) {            /* was there already an interrupt? */
+            if (g_int_count == 3 || g_int_count > 5) {
+                write(2,"\nBye-bye.\n",10);
+                sig_catcher(0);         /* emulate the other signals */
+            }
+            write(2,"\n(Interrupt -- one more to kill trn)\n",37);
+        }
     }
 }
 
@@ -149,72 +149,72 @@ Signal_t int_catcher(int dummy)
 Signal_t sig_catcher(int signo)
 {
     static char* signame[] = {
-	"",
-	"HUP",
-	"INT",
-	"QUIT",
-	"ILL",
-	"TRAP",
-	"IOT",
-	"EMT",
-	"FPE",
-	"KILL",
-	"BUS",
-	"SEGV",
-	"SYS",
-	"PIPE",
-	"ALRM",
-	"TERM",
-	"???"
+        "",
+        "HUP",
+        "INT",
+        "QUIT",
+        "ILL",
+        "TRAP",
+        "IOT",
+        "EMT",
+        "FPE",
+        "KILL",
+        "BUS",
+        "SEGV",
+        "SYS",
+        "PIPE",
+        "ALRM",
+        "TERM",
+        "???"
 #ifdef SIGTSTP
-	,"STOP",
-	"TSTP",
-	"CONT",
-	"CHLD",
-	"TTIN",
-	"TTOU",
-	"TINT",
-	"XCPU",
-	"XFSZ"
+        ,"STOP",
+        "TSTP",
+        "CONT",
+        "CHLD",
+        "TTIN",
+        "TTOU",
+        "TINT",
+        "XCPU",
+        "XFSZ"
 #ifdef SIGPROF
-	,"VTALARM",
-	"PROF"
+        ,"VTALARM",
+        "PROF"
 #endif
 #endif
-	};
+        };
 
 #ifdef DEBUG
     if (debug) {
-	printf("\nSIG%s--.newsrc not restored in debug\n",signame[signo]);
-	finalize(-1);
+        printf("\nSIG%s--.newsrc not restored in debug\n",signame[signo]);
+        finalize(-1);
     }
 #endif
     if (g_panic) {
 #ifdef HAS_SIGBLOCK
-	sigsetmask(sigblock(0) & ~(sigmask(SIGILL) | sigmask(SIGIOT)));
+        sigsetmask(sigblock(0) & ~(sigmask(SIGILL) | sigmask(SIGIOT)));
 #endif
-	abort();
+        abort();
     }
     (void) sigset(SIGILL,SIG_DFL);
-    g_panic = true;			/* disable terminal I/O */
-    if (g_doing_ng) {			/* need we reconstitute rc line? */
-	yankback();
-	bits_to_rc();			/* then do so (hope this works) */
+    g_panic = true;                     /* disable terminal I/O */
+    if (g_doing_ng) {                   /* need we reconstitute rc line? */
+        yankback();
+        bits_to_rc();                   /* then do so (hope this works) */
     }
     g_doing_ng = false;
-    if (!write_newsrcs(g_multirc)) {	/* write anything that's changed */
-	/*$$ get_old_newsrcs(g_multirc);  ?? */
+    if (!write_newsrcs(g_multirc)) {    /* write anything that's changed */
+        /*$$ get_old_newsrcs(g_multirc);  ?? */
     }
     update_thread_kfile();
 
 #ifdef SIGHUP
     if (signo != SIGHUP) {
 #endif
-	if (g_verbose)
-	    printf("\nCaught %s%s--.newsrc restored\n",
-		signo ? "a SIG" : "an internal error", signame[signo]);
-	else
-	    printf("\nSignal %d--bye bye\n",signo);
+        if (g_verbose)
+            printf("\nCaught %s%s--.newsrc restored\n",
+                signo ? "a SIG" : "an internal error", signame[signo]);
+        else
+            printf("\nSignal %d--bye bye\n",signo);
 #ifdef SIGHUP
     }
 #endif
@@ -224,9 +224,9 @@ Signal_t sig_catcher(int signo)
 #endif
     case SIGILL:
     case SIGSEGV:
-	finalize(-signo);
+        finalize(-signo);
     }
-    finalize(1);				/* and blow up */
+    finalize(1);                                /* and blow up */
 }
 
 Signal_t pipe_catcher(int signo)
@@ -243,40 +243,40 @@ Signal_t pipe_catcher(int signo)
 Signal_t stop_catcher(int signo)
 {
     if (!g_waiting) {
-	xmouse_off();
-	checkpoint_newsrcs();	/* good chance of crash while stopped */
-	if (g_bos_on_stop) {
-	    goto_xy(0, g_tc_LINES-1);
-	    putchar('\n') FLUSH;
-	}
-	termlib_reset();
-	resetty();		/* this is the point of all this */
+        xmouse_off();
+        checkpoint_newsrcs();   /* good chance of crash while stopped */
+        if (g_bos_on_stop) {
+            goto_xy(0, g_tc_LINES-1);
+            putchar('\n') FLUSH;
+        }
+        termlib_reset();
+        resetty();              /* this is the point of all this */
 #ifdef DEBUG
-	if (debug)
-	    write(2,"stop_catcher\n",13);
+        if (debug)
+            write(2,"stop_catcher\n",13);
 #endif
-	fflush(stdout);
-	sigset(signo,SIG_DFL);	/* enable stop */
+        fflush(stdout);
+        sigset(signo,SIG_DFL);  /* enable stop */
 #ifdef HAS_SIGBLOCK
-	sigsetmask(sigblock(0) & ~(1 << (signo-1)));
+        sigsetmask(sigblock(0) & ~(1 << (signo-1)));
 #endif
-	kill(0,signo);		/* and do the stop */
-    	savetty();
+        kill(0,signo);          /* and do the stop */
+            savetty();
 #ifdef MAILCALL
-    	g_mailcount = 0;			/* force recheck */
+            g_mailcount = 0;                    /* force recheck */
 #endif
-    	if (!g_panic) {
-	    if (!g_waiting) {
-		termlib_init();
-		noecho();			/* set no echo */
-		crmode();			/* set cbreak mode */
-		forceme("\f");			/* cause a refresh */
-						/* (defined only if TIOCSTI defined) */
-		errno = 0;			/* needed for getcmd */
-	    }
-    	}
-	xmouse_check();
+            if (!g_panic) {
+            if (!g_waiting) {
+                termlib_init();
+                noecho();                       /* set no echo */
+                crmode();                       /* set cbreak mode */
+                forceme("\f");                  /* cause a refresh */
+                                                /* (defined only if TIOCSTI defined) */
+                errno = 0;                      /* needed for getcmd */
+            }
+            }
+        xmouse_check();
     }
-    sigset(signo,stop_catcher);	/* unenable the stop */
+    sigset(signo,stop_catcher); /* unenable the stop */
 }
 #endif
