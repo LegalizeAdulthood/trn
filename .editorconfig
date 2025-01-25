@@ -2,7 +2,7 @@
 
 root = true
 
-[{*.{cpp,c,h,txt}}]
+[{*.{cpp,c,h,txt,h.in}}]
 insert_final_newline = true
 indent_style = space
 indent_size = 4
