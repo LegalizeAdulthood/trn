@@ -18,10 +18,10 @@ bool s_eligible(long ent)
 {
     switch (g_s_cur_type) {
       case S_ART:
-	return sa_eligible(ent);
+        return sa_eligible(ent);
       default:
-	printf("s_eligible: current type is bad!\n") FLUSH;
-	return false;
+        printf("s_eligible: current type is bad!\n") FLUSH;
+        return false;
     }
 }
 
@@ -34,12 +34,12 @@ void s_beep()
 const char *s_get_statchars(long ent, int line)
 {
     if (g_s_status_cols == 0)
-	return "";
+        return "";
     switch (g_s_cur_type) {
       case S_ART:
-	return sa_get_statchars(ent,line);
+        return sa_get_statchars(ent,line);
       default:
-	return nullptr;
+        return nullptr;
     }
 }
 
@@ -47,9 +47,9 @@ const char *s_get_desc(long ent, int line, bool trunc)
 {
     switch (g_s_cur_type) {
       case S_ART:
-	return sa_get_desc(ent,line,trunc);
+        return sa_get_desc(ent,line,trunc);
       default:
-	return nullptr;
+        return nullptr;
     }
 }
 
@@ -57,8 +57,8 @@ int s_ent_lines(long ent)
 {
     switch (g_s_cur_type) {
       case S_ART:
-	return sa_ent_lines(ent);
+        return sa_ent_lines(ent);
       default:
-	return 1;
+        return 1;
     }
 }
