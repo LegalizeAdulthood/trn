@@ -34,8 +34,8 @@ char *safemalloc(MEM_SIZE size)
 {
     char *ptr = (char*)malloc(size ? size : (MEM_SIZE)1);
     if (!ptr) {
-	fputs(s_nomem,stdout);
-	finalize(1);
+        fputs(s_nomem,stdout);
+        finalize(1);
     }
     return ptr;
 }
@@ -48,8 +48,8 @@ char *saferealloc(char *where, MEM_SIZE size)
 {
     char *ptr = (char*)realloc(where, size ? size : (MEM_SIZE)1);
     if (!ptr) {
-	fputs(s_nomem,stdout);
-	finalize(1);
+        fputs(s_nomem,stdout);
+        finalize(1);
     }
     return ptr;
 }
@@ -59,13 +59,13 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
 {
     extern std::string g_dot_dir;
     if (*pattern == '%' && pattern[1] == '.') {
-	int len = strlen(g_dot_dir.c_str());
-	safecpy(dest, g_dot_dir.c_str(), destsize);
-	if (len < destsize)
-	    safecpy(dest+len, pattern+2, destsize - len);
+        int len = strlen(g_dot_dir.c_str());
+        safecpy(dest, g_dot_dir.c_str(), destsize);
+        if (len < destsize)
+            safecpy(dest+len, pattern+2, destsize - len);
     }
     else
-	safecpy(dest, pattern, destsize);
+        safecpy(dest, pattern, destsize);
     return nullptr; /* This is wrong on purpose */
 }
 
