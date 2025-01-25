@@ -21,8 +21,8 @@ void sa_init_threads()
     mp_free(MP_SATHREAD);
     s_sa_num_threads = 0;
     if (s_sa_thread_hash) {
-	hashdestroy(s_sa_thread_hash);
-	s_sa_thread_hash = 0;
+        hashdestroy(s_sa_thread_hash);
+        s_sa_thread_hash = 0;
     }
 }
 
@@ -31,7 +31,7 @@ void sa_init_threads()
  * the default comparison function, so it can be used for a number.
  * later: write a custom comparison function.
  */
-//long e;			/* entry number */
+//long e;                       /* entry number */
 long sa_get_subj_thread(long e)
 {
     bool old_untrim = g_untrim_cache;
@@ -42,14 +42,14 @@ long sa_get_subj_thread(long e)
     if (!s || !*s)
       return -2;
     if ((*s == '>') && (s[1] == ' '))
-	s += 2;
+        s += 2;
 
     if (!s_sa_thread_hash) {
-	s_sa_thread_hash = hashcreate(401, HASH_DEFCMPFUNC);
+        s_sa_thread_hash = hashcreate(401, HASH_DEFCMPFUNC);
     }
     HASHDATUM data = hashfetch(s_sa_thread_hash, s, strlen(s));
     if (data.dat_ptr) {
-	return (long)(data.dat_len);
+        return (long)(data.dat_len);
     }
     char *p = mp_savestr(s, MP_SATHREAD);
     data = hashfetch(s_sa_thread_hash,p,strlen(s));
@@ -67,8 +67,8 @@ int sa_subj_thread_count(long a)
     long b = a;
 
     while ((b = sa_subj_thread_next(b)) != 0)
-	if (sa_basic_elig(b))
-	    count++;
+        if (sa_basic_elig(b))
+            count++;
     return count;
 }
 
@@ -79,12 +79,12 @@ long sa_subj_thread_prev(long a)
 
     int i = sa_subj_thread(a);
     while ((a = s_prev(a)) != 0) {
-	if (!sa_basic_elig(a))
-	    continue;
-	if (!(j = g_sa_ents[a].subj_thread_num))
-	    j = sa_subj_thread(a);
-	if (i == j)
-	    return a;
+        if (!sa_basic_elig(a))
+            continue;
+        if (!(j = g_sa_ents[a].subj_thread_num))
+            j = sa_subj_thread(a);
+        if (i == j)
+            return a;
     }
     return 0L;
 }
@@ -95,12 +95,12 @@ long sa_subj_thread_next(long a)
 
     int i = sa_subj_thread(a);
     while ((a = s_next(a)) != 0) {
-	if (!sa_basic_elig(a))
-	    continue;
-	if (!(j = g_sa_ents[a].subj_thread_num))
-	    j = sa_subj_thread(a);
-	if (i == j)
-	    return a;
+        if (!sa_basic_elig(a))
+            continue;
+        if (!(j = g_sa_ents[a].subj_thread_num))
+            j = sa_subj_thread(a);
+        if (i == j)
+            return a;
     }
     return 0L;
 }
