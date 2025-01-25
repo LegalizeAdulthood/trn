@@ -5,6 +5,10 @@
 #ifndef TRN_UTIL_H
 #define TRN_UTIL_H
 
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "typedef.h"
 #include "utf.h"
 
 extern bool g_waiting; /* waiting for subprocess (in doshell)? */
