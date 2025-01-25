@@ -45,7 +45,7 @@ char *extract_name(char *name)
     char *rparen = strrchr(name, ')');
     char *langle = strchr(name, '<');
     if (!lparen && !langle)
-	return nullptr;
+        return nullptr;
 
     if (langle && (!lparen || !rparen || lparen > langle || rparen < langle))
     {
@@ -76,7 +76,7 @@ char *extract_name(char *name)
     // strip trailing whitespace
     int len = strlen(name);
     while (len > 0 && isspace(name[len-1]))
-	len--;
+        len--;
     name[len] = '\0';
 
     return name;
@@ -428,69 +428,69 @@ char *compress_address(char *name, int max)
     name = skip_space(name);
     int len = strlen(name);
     if (len == 0)
-	return name;
+        return name;
     char *s = name + len - 1;
     while (isspace(*s)) s--;
     s[1] = '\0';
     if (*name == '<') {
-	name++;
-	if (*s == '>')
-	    *s-- = '\0';
+        name++;
+        if (*s == '>')
+            *s-- = '\0';
     }
     len = s - name + 1;
     if (len <= max)
-	return name;
+        return name;
 
     char *at = nullptr;
     char *bang = nullptr;
     char *hack = nullptr;
     for (char *s = name + 1; *s; s++) {
-	/* If there's whitespace in the middle then it's probably not
-	** really an email address. */
-	if (isspace(*s)) {
-	    name[max] = '\0';
-	    return name;
-	}
-	switch (*s) {
-	  case '@':
-	    if (at == nullptr) {
-		at = s;
-	    }
-	    break;
-	  case '!':
-	    if (at == nullptr) {
-		bang = s;
-		hack = nullptr;
-	    }
-	    break;
-	  case '%':
-	    if (at == nullptr && hack == nullptr)
-		hack = s;
-	    break;
-	}
+        /* If there's whitespace in the middle then it's probably not
+        ** really an email address. */
+        if (isspace(*s)) {
+            name[max] = '\0';
+            return name;
+        }
+        switch (*s) {
+          case '@':
+            if (at == nullptr) {
+                at = s;
+            }
+            break;
+          case '!':
+            if (at == nullptr) {
+                bang = s;
+                hack = nullptr;
+            }
+            break;
+          case '%':
+            if (at == nullptr && hack == nullptr)
+                hack = s;
+            break;
+        }
     }
     if (at == nullptr)
-	at = name + len;
+        at = name + len;
 
     if (hack != nullptr) {
-	if (bang != nullptr) {
-	    if (at - bang - 1 >= max)
-		start = bang + 1;
-	    else if (at - name >= max)
-		start = at - max;
-	    else
-		start = name;
-	} else
-	    start = name;
+        if (bang != nullptr) {
+            if (at - bang - 1 >= max)
+                start = bang + 1;
+            else if (at - name >= max)
+                start = at - max;
+            else
+                start = name;
+        } else
+            start = name;
     } else if (bang != nullptr) {
-	if (at - name >= max)
-	    start = at - max;
-	else
-	    start = name;
+        if (at - name >= max)
+            start = at - max;
+        else
+            start = name;
     } else
-	start = name;
+        start = name;
     if (len - (start - name) > max)
-	start[max] = '\0';
+        start[max] = '\0';
     return start;
 }
 
@@ -504,9 +504,9 @@ char *compress_from(const char *from, int size)
     strcharsubst(lbuf, from ? from : "", sizeof lbuf, *g_charsubst);
     char *s = extract_name(lbuf);
     if (s != nullptr)
-	s = compress_name(s, size);
+        s = compress_name(s, size);
     else
-	s = compress_address(lbuf, size);
+        s = compress_address(lbuf, size);
 
     int len = strlen(s);
     int vis_len;
@@ -516,12 +516,12 @@ char *compress_from(const char *from, int size)
     vis_len = len;
 #endif
     if (!len) {
-	strcpy(s,"NO NAME");
-	len = 7;
+        strcpy(s,"NO NAME");
+        len = 7;
     }
     while (vis_len < size && len < sizeof lbuf - 1) {
-	s[len++] = ' ';
-	vis_len++;
+        s[len++] = ' ';
+        vis_len++;
     }
     s[len] = '\0';
     return s;
@@ -535,7 +535,7 @@ char *compress_date(const ARTICLE *ap, int size)
     strncpy(t = g_cmd_buf, ctime(&ap->date), size);
     char *s = strchr(t, '\n');
     if (s != nullptr)
-	*s = '\0';
+        *s = '\0';
     t[size] = '\0';
     return t;
 }
@@ -584,9 +584,9 @@ bool subject_has_Re(char *str, char **strp)
 {
     bool has_Re = false;
     while (strip_one_Re(str, &str))
-	has_Re = true;
+        has_Re = true;
     if (strp)
-	*strp = str;
+        *strp = str;
     return has_Re;
 }
 
@@ -596,61 +596,61 @@ bool subject_has_Re(char *str, char **strp)
 const char *compress_subj(const ARTICLE *ap, int max)
 {
     if (!ap)
-	return "<MISSING>";
+        return "<MISSING>";
 
     /* Put a preceeding '>' on subjects that are replies to other articles */
     char *   cp = g_buf;
     ARTICLE *first = (g_threaded_group ? ap->subj->thread : ap->subj->articles);
     if (ap != first || (ap->flags & AF_HAS_RE)
      || (!(ap->flags&AF_UNREAD) ^ g_sel_rereading))
-	*cp++ = '>';
+        *cp++ = '>';
     strcharsubst(cp, ap->subj->str + 4, (sizeof g_buf) - (cp-g_buf), *g_charsubst);
 
     /* Remove "(was: oldsubject)", because we already know the old subjects.
     ** Also match "(Re: oldsubject)".  Allow possible spaces after the ('s.
     */
     for (cp = g_buf; (cp = strchr(cp+1, '(')) != nullptr;) {
-	cp = skip_eq(++cp, ' ');
-	if (eq_ignore_case(cp[0], 'w') && eq_ignore_case(cp[1], 'a') && eq_ignore_case(cp[2], 's')
-	 && (cp[3] == ':' || cp[3] == ' ')) {
-	    *--cp = '\0';
-	    break;
-	}
-	if (eq_ignore_case(cp[0], 'r') && eq_ignore_case(cp[1], 'e')
-	 && ((cp[2]==':' && cp[3]==' ') || (cp[2]=='^' && cp[4]==':'))) {
-	    *--cp = '\0';
-	    break;
-	}
+        cp = skip_eq(++cp, ' ');
+        if (eq_ignore_case(cp[0], 'w') && eq_ignore_case(cp[1], 'a') && eq_ignore_case(cp[2], 's')
+         && (cp[3] == ':' || cp[3] == ' ')) {
+            *--cp = '\0';
+            break;
+        }
+        if (eq_ignore_case(cp[0], 'r') && eq_ignore_case(cp[1], 'e')
+         && ((cp[2]==':' && cp[3]==' ') || (cp[2]=='^' && cp[4]==':'))) {
+            *--cp = '\0';
+            break;
+        }
     }
     int len = strlen(g_buf);
     if (!g_unbroken_subjects && len > max) {
         /* Try to include the last two words on the line while trimming */ 
-	char *last_word = strrchr(g_buf, ' ');
+        char *last_word = strrchr(g_buf, ' ');
         if (last_word != nullptr)
         {
             *last_word = '\0';
             char *next_to_last = strrchr(g_buf, ' ');
             if (next_to_last != nullptr)
             {
-		if (next_to_last-g_buf >= len - max + 3 + 10-1)
-		    cp = next_to_last;
-		else
-		    cp = last_word;
-	    } else
-		cp = last_word;
-	    *last_word = ' ';
-	    if (cp-g_buf >= len - max + 3 + 10-1) {
-		char* s = g_buf + max - (len-(cp-g_buf)+3);
+                if (next_to_last-g_buf >= len - max + 3 + 10-1)
+                    cp = next_to_last;
+                else
+                    cp = last_word;
+            } else
+                cp = last_word;
+            *last_word = ' ';
+            if (cp-g_buf >= len - max + 3 + 10-1) {
+                char* s = g_buf + max - (len-(cp-g_buf)+3);
                 *s++ = '.';
                 *s++ = '.';
                 *s++ = '.';
-		safecpy(s, cp + 1, max);
-		len = max;
-	    }
-	}
+                safecpy(s, cp + 1, max);
+                len = max;
+            }
+        }
     }
     if (len > max)
-	g_buf[max] = '\0';
+        g_buf[max] = '\0';
     return g_buf;
 }
 
@@ -670,53 +670,53 @@ void setspin(spin_mode mode)
       case SPIN_FOREGROUND:
       case SPIN_BACKGROUND:
       case SPIN_BARGRAPH:
-	if (!s_spin_level++) {
+        if (!s_spin_level++) {
             s_spin_art = g_openart;
             if (s_spin_art != 0 && g_artfp)
-		s_spin_tell = tellart();
-	    g_spin_count = 0;
-	    s_spin_place = 0;
-	}
-	if (s_spin_mode == SPIN_BARGRAPH)
-	    mode = SPIN_BARGRAPH;
-	if (mode == SPIN_BARGRAPH) {
-	    if (s_spin_mode != SPIN_BARGRAPH) {
+                s_spin_tell = tellart();
+            g_spin_count = 0;
+            s_spin_place = 0;
+        }
+        if (s_spin_mode == SPIN_BARGRAPH)
+            mode = SPIN_BARGRAPH;
+        if (mode == SPIN_BARGRAPH) {
+            if (s_spin_mode != SPIN_BARGRAPH) {
                 s_spin_marks = (g_verbose? 25 : 10);
-		printf(" [%*s]", s_spin_marks, "");
-		for (int i = s_spin_marks + 1; i--; ) backspace();
-		fflush(stdout);
-	    }
-	    s_spin_pos = 0;
-	}
-	s_spinchars = "|/-\\";
-	s_spin_mode = mode;
-	break;
+                printf(" [%*s]", s_spin_marks, "");
+                for (int i = s_spin_marks + 1; i--; ) backspace();
+                fflush(stdout);
+            }
+            s_spin_pos = 0;
+        }
+        s_spinchars = "|/-\\";
+        s_spin_mode = mode;
+        break;
       case SPIN_POP:
       case SPIN_OFF:
-	if (s_spin_mode == SPIN_BARGRAPH) {
-	    s_spin_level = 1;
-	    spin(10000);
-	    if (g_spin_count >= g_spin_todo)
-		g_spin_char = ']';
-	    g_spin_count--;
-	    s_spin_mode = SPIN_FOREGROUND;
-	}
-	if (mode == SPIN_POP && --s_spin_level > 0)
-	    break;
-	s_spin_level = 0;
-	if (s_spin_place) {	/* we have spun at least once */
-	    putchar(g_spin_char); /* get rid of spin character */
-	    backspace();
-	    fflush(stdout);
-	    s_spin_place = 0;
-	}
-	if (s_spin_art) {
-	    artopen(s_spin_art,s_spin_tell);   /* do not screw up the pager */
-	    s_spin_art = 0;
-	}
-	s_spin_mode = SPIN_OFF;
-	g_spin_char = ' ';
-	break;
+        if (s_spin_mode == SPIN_BARGRAPH) {
+            s_spin_level = 1;
+            spin(10000);
+            if (g_spin_count >= g_spin_todo)
+                g_spin_char = ']';
+            g_spin_count--;
+            s_spin_mode = SPIN_FOREGROUND;
+        }
+        if (mode == SPIN_POP && --s_spin_level > 0)
+            break;
+        s_spin_level = 0;
+        if (s_spin_place) {     /* we have spun at least once */
+            putchar(g_spin_char); /* get rid of spin character */
+            backspace();
+            fflush(stdout);
+            s_spin_place = 0;
+        }
+        if (s_spin_art) {
+            artopen(s_spin_art,s_spin_tell);   /* do not screw up the pager */
+            s_spin_art = 0;
+        }
+        s_spin_mode = SPIN_OFF;
+        g_spin_char = ' ';
+        break;
     }
 }
 
@@ -724,40 +724,40 @@ void setspin(spin_mode mode)
 void spin(int count)
 {
     if (!s_spin_level)
-	return;
+        return;
     switch (s_spin_mode) {
       case SPIN_BACKGROUND:
-	if (!g_bkgnd_spinner)
-	    return;
-	if (!(++g_spin_count % count)) {
-	    putchar(s_spinchars[++s_spin_place % 4]);
-	    backspace();
-	    fflush(stdout);
-	}
-	break;
+        if (!g_bkgnd_spinner)
+            return;
+        if (!(++g_spin_count % count)) {
+            putchar(s_spinchars[++s_spin_place % 4]);
+            backspace();
+            fflush(stdout);
+        }
+        break;
       case SPIN_FOREGROUND:
-	if (!(++g_spin_count % count)) {
-	    putchar('.');
-	    fflush(stdout);
-	}
-	break;
+        if (!(++g_spin_count % count)) {
+            putchar('.');
+            fflush(stdout);
+        }
+        break;
       case SPIN_BARGRAPH: {
           if (g_spin_todo == 0)
-	    break;		/* bail out rather than crash */
-	int new_pos = (int)((long)s_spin_marks * ++g_spin_count / g_spin_todo);
-	if (s_spin_pos < new_pos && g_spin_count <= g_spin_todo+1) {
-	    do {
-		putchar('*');
-	    } while (++s_spin_pos < new_pos);
-	    s_spin_place = 0;
-	    fflush(stdout);
-	}
-	else if (!(g_spin_count % count)) {
-	    putchar(s_spinchars[++s_spin_place % 4]);
-	    backspace();
-	    fflush(stdout);
-	}
-	break;
+            break;              /* bail out rather than crash */
+        int new_pos = (int)((long)s_spin_marks * ++g_spin_count / g_spin_todo);
+        if (s_spin_pos < new_pos && g_spin_count <= g_spin_todo+1) {
+            do {
+                putchar('*');
+            } while (++s_spin_pos < new_pos);
+            s_spin_place = 0;
+            fflush(stdout);
+        }
+        else if (!(g_spin_count % count)) {
+            putchar(s_spinchars[++s_spin_place % 4]);
+            backspace();
+            fflush(stdout);
+        }
+        break;
       }
     }
 }
@@ -795,17 +795,17 @@ void perform_status_init(long cnt)
 void perform_status(long cnt, int spin)
 {
     if (!(++g_spin_count % spin)) {
-	putchar(s_spinchars[++s_spin_place % 4]);
-	backspace();
-	fflush(stdout);
+        putchar(s_spinchars[++s_spin_place % 4]);
+        backspace();
+        fflush(stdout);
     }
 
     if (g_perform_cnt == s_prior_perform_cnt)
-	return;
+        return;
 
     time_t now = time((time_t*)nullptr);
     if (now - s_prior_now < 2)
-	return;
+        return;
 
     s_prior_now = now;
     s_prior_perform_cnt = g_perform_cnt;
@@ -815,19 +815,19 @@ void perform_status(long cnt, int spin)
     long sels = g_selected_count - s_ps_sel;
 
     if (!(kills | sels))
-	return;
+        return;
 
     carriage_return();
     if (g_perform_cnt != sels  && g_perform_cnt != -sels
      && g_perform_cnt != kills && g_perform_cnt != -kills)
-	printf("M:%d ", g_perform_cnt);
+        printf("M:%d ", g_perform_cnt);
     if (kills)
-	printf("K:%ld ", kills);
+        printf("K:%ld ", kills);
     if (sels)
-	printf("S:%ld ", sels);
+        printf("S:%ld ", sels);
 #if 0
     if (missing > 0)
-	printf("(M: %ld) ", missing);
+        printf("(M: %ld) ", missing);
 #endif
     erase_eol();
     fflush(stdout);
@@ -838,28 +838,28 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
     bool neg;
 
     if (num < 0) {
-	num *= -1;
-	neg = true;
+        num *= -1;
+        neg = true;
     }
     else
-	neg = false;
+        neg = false;
 
     if (cp != g_msg) {
-	*cp++ = ',';
-	*cp++ = ' ';
+        *cp++ = ',';
+        *cp++ = ' ';
     }
     sprintf(cp, "%ld ", num);
     if (obj_type)
-	sprintf(cp+=strlen(cp), "%s%s ", obj_type, plural(num));
+        sprintf(cp+=strlen(cp), "%s%s ", obj_type, plural(num));
     cp += strlen(cp);
     const char *s = modifier;
     if (s != nullptr)
     {
-	*cp++ = ' ';
-	if (num != 1)
+        *cp++ = ' ';
+        if (num != 1)
             s = skip_ne(s, '|');
         while (*s && *s != '|') *cp++ = *s++;
-	*cp++ = ' ';
+        *cp++ = ' ';
     }
     s = action;
     if (!neg)
@@ -880,8 +880,8 @@ int perform_status_end(long cnt, const char *obj_type)
     bool article_status = (*obj_type == 'a');
 
     if (g_perform_cnt == 0) {
-	sprintf(g_msg, "No %ss affected.", obj_type);
-	return 0;
+        sprintf(g_msg, "No %ss affected.", obj_type);
+        return 0;
     }
 
     long missing = g_missing_count - s_ps_missing;
@@ -889,28 +889,28 @@ int perform_status_end(long cnt, const char *obj_type)
     long sels = g_selected_count - s_ps_sel;
 
     if (!g_performed_article_loop)
-	cp = output_change(cp, (long)g_perform_cnt,
+        cp = output_change(cp, (long)g_perform_cnt,
                            g_sel_mode == SM_THREAD? "thread" : "subject",
                            nullptr, "ERR|match|ed");
     else if (g_perform_cnt != sels  && g_perform_cnt != -sels
-	  && g_perform_cnt != kills && g_perform_cnt != -kills) {
-	cp = output_change(cp, (long)g_perform_cnt, obj_type, nullptr,
+          && g_perform_cnt != kills && g_perform_cnt != -kills) {
+        cp = output_change(cp, (long)g_perform_cnt, obj_type, nullptr,
                            "ERR|match|ed");
-	obj_type = nullptr;
+        obj_type = nullptr;
     }
     if (kills) {
-	cp = output_change(cp, kills, obj_type, nullptr,
+        cp = output_change(cp, kills, obj_type, nullptr,
                            article_status? "un||killed" : "more|less|");
-	obj_type = nullptr;
+        obj_type = nullptr;
     }
     if (sels) {
-	cp = output_change(cp, sels, obj_type, nullptr, "de||selected");
-	obj_type = nullptr;
+        cp = output_change(cp, sels, obj_type, nullptr, "de||selected");
+        obj_type = nullptr;
     }
     if (article_status && missing > 0) {
-	*cp++ = '(';
-	cp = output_change(cp, missing, obj_type, "was|were", "ERR|missing|");
-	*cp++ = ')';
+        *cp++ = '(';
+        cp = output_change(cp, missing, obj_type, "was|were", "ERR|missing|");
+        *cp++ = ')';
     }
 
     strcpy(cp, ".");
