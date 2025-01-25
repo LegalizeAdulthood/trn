@@ -65,33 +65,33 @@ bool g_sa_mode_desc_keyw{};
 sa_main_result sa_main()
 {
     g_sa_in = true;
-    g_sa_go = false;	/* ...do not collect $200... */
+    g_sa_go = false;    /* ...do not collect $200... */
     g_s_follow_temp = false;
 
     if (g_lastart < g_absfirst) {
-	s_beep();
-	return SA_QUIT;
+        s_beep();
+        return SA_QUIT;
     }
     if (!g_sa_initialized) {
-	sa_init();
-	if (!g_sa_initialized)		/* still not working... */
-	    return SA_ERR;		/* we don't belong here */
-	g_sa_never_initialized = false;	/* we have entered at least once */
+        sa_init();
+        if (!g_sa_initialized)          /* still not working... */
+            return SA_ERR;              /* we don't belong here */
+        g_sa_never_initialized = false; /* we have entered at least once */
     } else
-	s_change_context(g_sa_scan_context);
+        s_change_context(g_sa_scan_context);
 
     /* unless "explicit" entry, read any marked articles */
     if (!g_sa_go_explicit) {
         long a = sa_readmarked_elig();
-	if (a) {	/* there was an article */
-	    g_art = g_sa_ents[a].artnum;
-	    g_reread = true;
-	    sa_clear_mark(a);
-	    /* trn 3.x won't read an unselected article if g_selected_only */
-	    g_selected_only = false;
-	    s_save_context();
-	    return SA_NORM;
-	}
+        if (a) {        /* there was an article */
+            g_art = g_sa_ents[a].artnum;
+            g_reread = true;
+            sa_clear_mark(a);
+            /* trn 3.x won't read an unselected article if g_selected_only */
+            g_selected_only = false;
+            s_save_context();
+            return SA_NORM;
+        }
     }
     g_sa_go_explicit = false;
 
@@ -99,26 +99,26 @@ sa_main_result sa_main()
      * selected there, "select" the articles and enter the zoom mode.
      */
     if (g_sa_do_selthreads) {
-	sa_selthreads();
-	g_sa_do_selthreads = false;
-	g_sa_mode_zoom = true;		/* zoom in by default */
-	g_s_top_ent = -1;		/* go to top of arts... */
+        sa_selthreads();
+        g_sa_do_selthreads = false;
+        g_sa_mode_zoom = true;          /* zoom in by default */
+        g_s_top_ent = -1;               /* go to top of arts... */
     }
 
     minor_mode sa_oldmode = g_mode; /* save mode */
     g_mode = MM_S;             /* for RN macros */
     sa_main_result i = sa_mainloop();
-    g_mode = sa_oldmode;			/* restore mode */
+    g_mode = sa_oldmode;                        /* restore mode */
 
     if (i == SA_NORM || i == SA_FAKE) {
-	g_art = g_sa_art;
-	/* trn 3.x won't read an unselected article if g_selected_only */
-	g_selected_only = false;
-	if (g_sa_mode_read_elig)
-	    g_reread = true;
+        g_art = g_sa_art;
+        /* trn 3.x won't read an unselected article if g_selected_only */
+        g_selected_only = false;
+        if (g_sa_mode_read_elig)
+            g_reread = true;
     }
     if (g_sa_scan_context >= 0)
-	s_save_context();
+        s_save_context();
     return i;
 }
 
@@ -126,7 +126,7 @@ sa_main_result sa_main()
 void sa_grow(ART_NUM oldlast, ART_NUM last)
 {
     if (!g_sa_initialized)
-	return;
+        return;
     sa_growarts(oldlast,last);
 }
 
@@ -136,9 +136,9 @@ void sa_cleanup()
      * about the scan status
      */
     if (!g_sa_initialized)
-	return;
+        return;
 
     sa_cleanmain();
-    clear();		/* should something else clear the screen? */
-    g_sa_initialized = false;		/* goodbye... */
+    clear();            /* should something else clear the screen? */
+    g_sa_initialized = false;           /* goodbye... */
 }
