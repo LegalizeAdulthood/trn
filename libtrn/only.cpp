@@ -30,21 +30,21 @@ void setngtodo(const char *pat)
     int i = g_maxngtodo + s_save_maxngtodo;
 
     if (!*pat)
-	return;
+        return;
     if (i < MAXNGTODO) {
-	g_ngtodo[i] = savestr(pat);
+        g_ngtodo[i] = savestr(pat);
 #ifndef lint
-	s_compextodo[i] = (COMPEX*)safemalloc(sizeof(COMPEX));
+        s_compextodo[i] = (COMPEX*)safemalloc(sizeof(COMPEX));
 #endif
-	init_compex(s_compextodo[i]);
-	compile(s_compextodo[i],pat,true,true);
+        init_compex(s_compextodo[i]);
+        compile(s_compextodo[i],pat,true,true);
         const char *err = ng_comp(s_compextodo[i], pat, true, true);
         if (err != nullptr)
         {
-	    printf("\n%s\n",err) FLUSH;
-	    finalize(1);
-	}
-	g_maxngtodo++;
+            printf("\n%s\n",err) FLUSH;
+            finalize(1);
+        }
+        g_maxngtodo++;
     }
 }
 
@@ -53,32 +53,32 @@ void setngtodo(const char *pat)
 bool inlist(const char *ngnam)
 {
     if (g_maxngtodo == 0)
-	return true;
+        return true;
     for (int i = s_save_maxngtodo; i < g_maxngtodo + s_save_maxngtodo; i++) {
-	if (execute(s_compextodo[i],ngnam))
-	    return true;
+        if (execute(s_compextodo[i],ngnam))
+            return true;
     }
     return false;
 }
 
 void end_only()
 {
-    if (g_maxngtodo) {			/* did they specify newsgroup(s) */
+    if (g_maxngtodo) {                  /* did they specify newsgroup(s) */
 
         if (g_verbose)
-	    sprintf(g_msg, "Restriction %s%s removed.",g_ngtodo[0],
-		    g_maxngtodo > 1 ? ", etc." : "");
-	else
-	    sprintf(g_msg, "Exiting \"only\".");
-	for (int i = s_save_maxngtodo; i < g_maxngtodo + s_save_maxngtodo; i++) {
-	    free(g_ngtodo[i]);
-	    free_compex(s_compextodo[i]);
+            sprintf(g_msg, "Restriction %s%s removed.",g_ngtodo[0],
+                    g_maxngtodo > 1 ? ", etc." : "");
+        else
+            sprintf(g_msg, "Exiting \"only\".");
+        for (int i = s_save_maxngtodo; i < g_maxngtodo + s_save_maxngtodo; i++) {
+            free(g_ngtodo[i]);
+            free_compex(s_compextodo[i]);
 #ifndef lint
-	    free((char*)s_compextodo[i]);
+            free((char*)s_compextodo[i]);
 #endif
-	}
-	g_maxngtodo = 0;
-	g_ng_min_toread = 1;
+        }
+        g_maxngtodo = 0;
+        g_ng_min_toread = 1;
     }
 }
 
