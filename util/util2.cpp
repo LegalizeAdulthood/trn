@@ -34,8 +34,8 @@ char *safecpy(char *to, const char *from, int len)
     char* dest = to;
 
     if (from) {
-	while (--len && *from)
-	    *dest++ = *from++;
+        while (--len && *from)
+            *dest++ = *from++;
     }
     *dest = '\0';
 
@@ -46,11 +46,11 @@ char *safecpy(char *to, const char *from, int len)
 char *cpytill(char *to, char *from, int delim)
 {
     while (*from) {
-	if (*from == '\\' && from[1] == delim)
-	    from++;
-	else if (*from == delim)
-	    break;
-	*to++ = *from++;
+        if (*from == '\\' && from[1] == delim)
+            from++;
+        else if (*from == delim)
+            break;
+        *to++ = *from++;
     }
     *to = '\0';
     return from;
@@ -72,7 +72,7 @@ char *filexp(const char *text)
     /* interpret any % escapes */
     dointerp(filename,sizeof filename,s,nullptr,nullptr);
     s = filename;
-    if (*s == '~') {	/* does destination start with ~? */
+    if (*s == '~') {    /* does destination start with ~? */
         if (!*(++s) || *s == '/')
         {
             sprintf(scrbuf, "%s%s", g_home_dir, s);
@@ -109,7 +109,7 @@ char *filexp(const char *text)
                     free(s_tildedir);
                 s_tildedir = nullptr;
                 s_tildename = savestr(scrbuf);
-#ifdef HAS_GETPWENT	/* getpwnam() is not the paragon of efficiency */
+#ifdef HAS_GETPWENT     /* getpwnam() is not the paragon of efficiency */
                 {
                     struct passwd *pwd = getpwnam(s_tildename);
                     if (pwd == nullptr)
@@ -122,7 +122,7 @@ char *filexp(const char *text)
                     strcpy(filename, scrbuf);
                     endpwent();
                 }
-#else			/* this will run faster, and is less D space */
+#else                   /* this will run faster, and is less D space */
                 { /* just be sure LOGDIRFIELD is correct */
                     FILE *pfp = fopen(filexp(PASSFILE), "r");
                     char tmpbuf[512];
@@ -194,28 +194,28 @@ char *in_string(char *big, const char *little, bool case_matters)
 {
     for (char *t = big; *t; t++) {
         const char *s = little;
-	for (const char *x=t; *s; x++,s++) {
-	    if (!*x)
-		return nullptr;
-	    if (case_matters == true) {
-		if (*s != *x)
-		    break;
-	    } else {
-		char c,d;
-		if (isupper(*s)) 
-		    c = tolower(*s);
-		else
-		    c = *s;
-		if (isupper(*x)) 
-		    d = tolower(*x);
-		else
-		    d = *x;
-		if ( c != d )
-		    break;
-	   }
-	}
-	if (!*s)
-	    return t;
+        for (const char *x=t; *s; x++,s++) {
+            if (!*x)
+                return nullptr;
+            if (case_matters == true) {
+                if (*s != *x)
+                    break;
+            } else {
+                char c,d;
+                if (isupper(*s)) 
+                    c = tolower(*s);
+                else
+                    c = *s;
+                if (isupper(*x)) 
+                    d = tolower(*x);
+                else
+                    d = *x;
+                if ( c != d )
+                    break;
+           }
+        }
+        if (!*s)
+            return t;
     }
     return nullptr;
 }
@@ -261,8 +261,8 @@ static Uchar casemap[256] = {
 int strcasecmp(const char *s1, const char *s2)
 {
     do {
-	if (casemap[(Uchar)*s1++] != casemap[(Uchar)*s2])
-	    return casemap[(Uchar)s1[-1]] - casemap[(Uchar)*s2];
+        if (casemap[(Uchar)*s1++] != casemap[(Uchar)*s2])
+            return casemap[(Uchar)s1[-1]] - casemap[(Uchar)*s2];
     } while (*s2++ != '\0');
     return 0;
 }
@@ -272,10 +272,10 @@ int strcasecmp(const char *s1, const char *s2)
 int strncasecmp(const char *s1, const char *s2, int len)
 {
     while (len--) {
-	if (casemap[(Uchar)*s1++] != casemap[(Uchar)*s2])
-	    return casemap[(Uchar)s1[-1]] - casemap[(Uchar)*s2];
-	if (*s2++ == '\0')
-	    break;
+        if (casemap[(Uchar)*s1++] != casemap[(Uchar)*s2])
+            return casemap[(Uchar)s1[-1]] - casemap[(Uchar)*s2];
+        if (*s2++ == '\0')
+            break;
     }
     return 0;
 }
@@ -290,14 +290,14 @@ char *read_auth_file(const char *file, char **pass_ptr)
     FILE *fp = fopen(file, "r");
     if (fp != nullptr) {
         for (int i = 0; i < 2; i++) {
-	    if (fgets(buf, sizeof buf, fp) != nullptr) {
-		char* cp = buf + strlen(buf) - 1;
-		if (*cp == '\n')
-		    *cp = '\0';
-		strptr[i] = savestr(buf);
-	    }
-	}
-	fclose(fp);
+            if (fgets(buf, sizeof buf, fp) != nullptr) {
+                char* cp = buf + strlen(buf) - 1;
+                if (*cp == '\n')
+                    *cp = '\0';
+                strptr[i] = savestr(buf);
+            }
+        }
+        fclose(fp);
     }
     *pass_ptr = strptr[1];
     return strptr[0];

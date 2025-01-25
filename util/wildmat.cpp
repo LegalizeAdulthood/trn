@@ -11,9 +11,9 @@
 **
 **  Special thanks to Lars Mathiesen <thorinn@diku.dk> for the ABORT code.
 **  This can greatly speed up failing wildcard patterns.  For example:
-**	pattern: -*-*-*-*-*-*-12-*-*-*-m-*-*-*
-**	text 1:	 -adobe-courier-bold-o-normal--12-120-75-75-m-70-iso8859-1
-**	text 2:	 -adobe-courier-bold-o-normal--12-120-75-75-X-70-iso8859-1
+**      pattern: -*-*-*-*-*-*-12-*-*-*-m-*-*-*
+**      text 1:  -adobe-courier-bold-o-normal--12-120-75-75-m-70-iso8859-1
+**      text 2:  -adobe-courier-bold-o-normal--12-120-75-75-X-70-iso8859-1
 **  Text 1 matches with 51 calls, while text 2 fails with 54 calls.  Without
 **  the ABORT, then it takes 22310 calls to fail.  Ugh.  The following
 **  explanation is from Lars:
@@ -39,7 +39,7 @@
 #include "wildmat.h"
 
     /* What character marks an inverted character class? */
-#define NEGATE_CLASS		'^'
+#define NEGATE_CLASS            '^'
 
 #define OPTIMIZE_JUST_STAR /* Is "*" a common pattern? */
 #undef MATCH_TAR_PATTERN   /* Do tar(1) matching rules, which ignore a trailing slash? */
@@ -52,33 +52,33 @@ static bool DoMatch(const char *text, const char *p);
 static bool DoMatch(const char *text, const char *p)
 {
     for ( ; *p; text++, p++) {
-	if (*text == '\0' && *p != '*')
-	    return false;
-	switch (*p) {
-	case '\\':
-	    /* Literal match with following character. */
-	    p++;
-	    /* FALLTHROUGH */
-	default:
-	    if (*text != *p)
-		return false;
-	    continue;
-	case '?':
-	    /* Match anything. */
-	    continue;
-	case '*':
-	    while (*++p == '*')
-		/* Consecutive stars act just like one. */
-		continue;
-	    if (*p == '\0')
-		/* Trailing star matches everything. */
-		return true;
-	    while (*text)
-	    {
-	        if (DoMatch(text++, p))
-	            return true;
-	    }
-	    return false;
+        if (*text == '\0' && *p != '*')
+            return false;
+        switch (*p) {
+        case '\\':
+            /* Literal match with following character. */
+            p++;
+            /* FALLTHROUGH */
+        default:
+            if (*text != *p)
+                return false;
+            continue;
+        case '?':
+            /* Match anything. */
+            continue;
+        case '*':
+            while (*++p == '*')
+                /* Consecutive stars act just like one. */
+                continue;
+            if (*p == '\0')
+                /* Trailing star matches everything. */
+                return true;
+            while (*text)
+            {
+                if (DoMatch(text++, p))
+                    return true;
+            }
+            return false;
         case '[':
         {
             const bool reverse = p[1] == NEGATE_CLASS;
@@ -97,10 +97,10 @@ static bool DoMatch(const char *text, const char *p)
         }
     }
 
-#ifdef	MATCH_TAR_PATTERN
+#ifdef  MATCH_TAR_PATTERN
     if (*text == '/')
-	return true;
-#endif	/* MATCH_TAR_ATTERN */
+        return true;
+#endif  /* MATCH_TAR_ATTERN */
     return *text == '\0';
 }
 
@@ -110,44 +110,44 @@ static bool DoMatch(const char *text, const char *p)
 */
 bool wildmat(const char *text, const char *p)
 {
-#ifdef	OPTIMIZE_JUST_STAR
+#ifdef  OPTIMIZE_JUST_STAR
     if (p[0] == '*' && p[1] == '\0')
-	return true;
-#endif	/* OPTIMIZE_JUST_STAR */
+        return true;
+#endif  /* OPTIMIZE_JUST_STAR */
     return DoMatch(text, p) == true;
 }
 
-#ifdef	TEST
+#ifdef  TEST
 #include <stdio.h>
 
 int main()
 {
     /* Yes, we use gets not fgets.  Sue me. */
     extern char* gets();
-    char	 p[80];
-    char	 text[80];
+    char         p[80];
+    char         text[80];
 
     printf("Wildmat tester.  Enter pattern, then strings to test.\n");
     printf("A blank line gets prompts for a new pattern; a blank pattern\n");
     printf("exits the program.\n");
 
     for ( ; ; ) {
-	printf("\nEnter pattern:  ");
-	(void)fflush(stdout);
-	if (gets(p) == nullptr || p[0] == '\0')
-	    break;
-	for ( ; ; ) {
-	    printf("Enter text:  ");
-	    (void)fflush(stdout);
-	    if (gets(text) == nullptr)
-		exit(0);
-	    if (text[0] == '\0')
-		/* Blank line; go back and get a new pattern. */
-		break;
-	    printf("      %s\n", wildmat(text, p) ? "YES" : "NO");
-	}
+        printf("\nEnter pattern:  ");
+        (void)fflush(stdout);
+        if (gets(p) == nullptr || p[0] == '\0')
+            break;
+        for ( ; ; ) {
+            printf("Enter text:  ");
+            (void)fflush(stdout);
+            if (gets(text) == nullptr)
+                exit(0);
+            if (text[0] == '\0')
+                /* Blank line; go back and get a new pattern. */
+                break;
+            printf("      %s\n", wildmat(text, p) ? "YES" : "NO");
+        }
     }
 
     return 0;
 }
-#endif	/* TEST */
+#endif  /* TEST */

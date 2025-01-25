@@ -60,39 +60,39 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
 
     const char *home_dir = s_getenv_fn("HOME");
     if (home_dir == nullptr)
-	home_dir = s_getenv_fn("LOGDIR");
+        home_dir = s_getenv_fn("LOGDIR");
     if (home_dir)
         g_home_dir = savestr(home_dir);
 
     const char *val = s_getenv_fn("TMPDIR");
     if (val == nullptr)
-	g_tmp_dir = get_val("TMP","/tmp");
+        g_tmp_dir = get_val("TMP","/tmp");
     else
-	g_tmp_dir = val;
+        g_tmp_dir = val;
 
     /* try to set g_login_name */
     if (lax) {
-	const char *login_name = s_getenv_fn("USER");
-	if (!login_name)
-	    login_name = s_getenv_fn("LOGNAME");
-	if (login_name && g_login_name.empty())
-	{
-	    g_login_name  = login_name;
-	}
+        const char *login_name = s_getenv_fn("USER");
+        if (!login_name)
+            login_name = s_getenv_fn("LOGNAME");
+        if (login_name && g_login_name.empty())
+        {
+            g_login_name  = login_name;
+        }
     }
 #ifndef MSDOS
     if (!lax || g_login_name.empty()) {
-	if (const char *login = getlogin(); login)
-	    g_login_name = login;
+        if (const char *login = getlogin(); login)
+            g_login_name = login;
     }
 #endif
 #ifdef MSDOS
     if (g_login_name.empty())
     {
-	if (const char *user_name = s_getenv_fn("USERNAME"))
-	{
+        if (const char *user_name = s_getenv_fn("USERNAME"))
+        {
             g_login_name = user_name;
-	}
+        }
     }
     if (!g_home_dir)
     {
@@ -109,9 +109,9 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
 
     /* Set g_real_name, and maybe set g_login_name and g_home_dir (if nullptr). */
     if (!set_user_name_fn(tcbuf)) {
-	g_login_name.clear();
-	g_real_name.clear();
-	fully_successful = false;
+        g_login_name.clear();
+        g_real_name.clear();
+        fully_successful = false;
     }
     env_init2();
 
@@ -124,16 +124,16 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     }
 
     {
-	char* cp = get_val("NETSPEED","5");
-	if (*cp == 'f')
-	    g_net_speed = 10;
-	else if (*cp == 's')
-	    g_net_speed = 1;
-	else {
-	    g_net_speed = atoi(cp);
-	    if (g_net_speed < 1)
-		g_net_speed = 1;
-	}
+        char* cp = get_val("NETSPEED","5");
+        if (*cp == 'f')
+            g_net_speed = 10;
+        else if (*cp == 's')
+            g_net_speed = 1;
+        else {
+            g_net_speed = atoi(cp);
+            if (g_net_speed < 1)
+                g_net_speed = 1;
+        }
     }
 
     return fully_successful;
@@ -161,10 +161,10 @@ void env_final()
 static void env_init2()
 {
     if (!g_dot_dir.empty()) /* Avoid running multiple times. */
-	return;
+        return;
 
     if (!g_home_dir)
-	g_home_dir = savestr("/");
+        g_home_dir = savestr("/");
     g_dot_dir = get_val("DOTDIR",g_home_dir);
     g_trn_dir = filexp(get_val("TRNDIR",TRNDIR));
     g_lib = filexp(NEWSLIB);
@@ -183,36 +183,36 @@ static bool set_user_name(char *tmpbuf)
     passwd* pwd;
 
     if (g_login_name == nullptr)
-	pwd = getpwuid(getuid());
+        pwd = getpwuid(getuid());
     else
-	pwd = getpwnam(g_login_name);
+        pwd = getpwnam(g_login_name);
     if (!pwd)
-	return 0;
+        return 0;
     if (!g_login_name)
-	g_login_name = savestr(pwd->pw_name);
+        g_login_name = savestr(pwd->pw_name);
     if (!g_home_dir)
-	g_home_dir = savestr(pwd->pw_dir);
+        g_home_dir = savestr(pwd->pw_dir);
     s = pwd->pw_gecos;
 #endif
 #ifdef HAS_GETPW
     int i;
 
     if (getpw(getuid(), tmpbuf+1) != 0)
-	return false;
+        return false;
     if (!g_login_name) {
-	cpytill(g_buf,tmpbuf+1,':');
-	g_login_name = savestr(g_buf);
+        cpytill(g_buf,tmpbuf+1,':');
+        g_login_name = savestr(g_buf);
     }
     for (s = tmpbuf, i = GCOSFIELD-1; i; i--) {
-	if (s)
-	    s = strchr(s+1,':');
+        if (s)
+            s = strchr(s+1,':');
     }
     if (!s)
-	return false;
+        return false;
     s = cpytill(tmpbuf,s+1,':');
     if (!g_home_dir) {
-	cpytill(g_buf,s+1,':');
-	g_home_dir = savestr(g_buf);
+        cpytill(g_buf,s+1,':');
+        g_home_dir = savestr(g_buf);
     }
     s = tmpbuf;
 #endif
@@ -223,26 +223,26 @@ static bool set_user_name(char *tmpbuf)
 #endif
     c = strchr(s, ',');
     if (c != nullptr)
-	*c = '\0';
+        *c = '\0';
     c = strchr(s, ';');
     if (c != nullptr)
-	*c = '\0';
+        *c = '\0';
     s = cpytill(g_buf,s,'&');
-    if (*s == '&') {			/* whoever thought this one up was */
-	c = g_buf + strlen(g_buf);		/* in the middle of the night */
-	strcat(c,g_login_name);		/* before the morning after */
-	strcat(c,s+1);
-	if (islower(*c))
-	    *c = toupper(*c);		/* gack and double gack */
+    if (*s == '&') {                    /* whoever thought this one up was */
+        c = g_buf + strlen(g_buf);      /* in the middle of the night */
+        strcat(c,g_login_name);         /* before the morning after */
+        strcat(c,s+1);
+        if (islower(*c))
+            *c = toupper(*c);           /* gack and double gack */
     }
     g_real_name = savestr(g_buf);
 #else /* !BERKNAMES */
     c = strchr(s, '(');
     if (c != nullptr)
-	*c = '\0';
+        *c = '\0';
     c = strchr(s, '-');
     if (c != nullptr)
-	s = c;
+        s = c;
     g_real_name = savestr(s);
 #endif /* !BERKNAMES */
 #endif
@@ -252,11 +252,11 @@ static bool set_user_name(char *tmpbuf)
         FILE *fp = fopen(filexp(FULLNAMEFILE), "r");
         if (fp != nullptr)
         {
-	    fgets(g_buf,sizeof g_buf,fp);
-	    fclose(fp);
-	    g_buf[strlen(g_buf)-1] = '\0';
-	    g_real_name = g_buf;
-	}
+            fgets(g_buf,sizeof g_buf,fp);
+            fclose(fp);
+            g_buf[strlen(g_buf)-1] = '\0';
+            g_real_name = g_buf;
+        }
     }
 #ifdef WIN32
     if (g_login_name.empty())
@@ -323,15 +323,15 @@ static bool set_p_host_name(char *tmpbuf)
 # else
 #  ifdef PHOSTCMD
     {
-	FILE* pipefp = popen(PHOSTCMD,"r");
-	
-	if (pipefp == nullptr) {
-	    printf("Can't find hostname\n");
-	    finalize(1);
-	}
-	fgets(tmpbuf,TCBUF_SIZE,pipefp);
-	tmpbuf[strlen(tmpbuf)-1] = '\0';	/* wipe out newline */
-	pclose(pipefp);
+        FILE* pipefp = popen(PHOSTCMD,"r");
+        
+        if (pipefp == nullptr) {
+            printf("Can't find hostname\n");
+            finalize(1);
+        }
+        fgets(tmpbuf,TCBUF_SIZE,pipefp);
+        tmpbuf[strlen(tmpbuf)-1] = '\0';        /* wipe out newline */
+        pclose(pipefp);
     }
 #  else
     strcpy(tmpbuf, "!INVALID!");
@@ -361,33 +361,33 @@ static bool set_p_host_name(char *tmpbuf)
         strcpy(tmpbuf, PHOSTNAME);
 
     if (tmpbuf[0] == '.') {
-	if (tmpbuf[1] != '\0')
-	    strcpy(g_buf,tmpbuf);
-	else
-	    g_buf[0] = '\0';
-	strcpy(tmpbuf,g_local_host);
-	strcat(tmpbuf,g_buf);
+        if (tmpbuf[1] != '\0')
+            strcpy(g_buf,tmpbuf);
+        else
+            g_buf[0] = '\0';
+        strcpy(tmpbuf,g_local_host);
+        strcat(tmpbuf,g_buf);
     }
 
     if (!strchr(tmpbuf,'.')) {
-	if (tmpbuf[0])
-	    strcat(tmpbuf, ".");
+        if (tmpbuf[0])
+            strcat(tmpbuf, ".");
 #ifdef HAS_RES_INIT
-	if (!(_res.options & RES_INIT))
-	    res_init();
-	if (_res.defdname != nullptr)
-	    strcat(tmpbuf,_res.defdname);
-	else
+        if (!(_res.options & RES_INIT))
+            res_init();
+        if (_res.defdname != nullptr)
+            strcat(tmpbuf,_res.defdname);
+        else
 #endif
 #ifdef HAS_GETDOMAINNAME
-	if (getdomainname(g_buf,LBUFLEN) == 0)
-	    strcat(tmpbuf,g_buf);
-	else
+        if (getdomainname(g_buf,LBUFLEN) == 0)
+            strcat(tmpbuf,g_buf);
+        else
 #endif
-	{
-	    strcat(tmpbuf,"UNKNOWN.HOST");
-	    hostname_ok = false;
-	}
+        {
+            strcat(tmpbuf,"UNKNOWN.HOST");
+            hostname_ok = false;
+        }
     }
     g_p_host_name = tmpbuf;
     return hostname_ok;
@@ -397,7 +397,7 @@ char *get_val(const char *nam, char *def)
 {
     char *val = s_getenv_fn(nam);
     if (val == nullptr || !*val)
-	return def;
+        return def;
     return val;
 }
 
@@ -418,33 +418,33 @@ char *export_var(const char *nam, const char *val)
     return buff;
 #else
     int namlen = strlen(nam);
-    int i=envix(nam,namlen);	/* where does it go? */
+    int i=envix(nam,namlen);    /* where does it go? */
 
-    if (!environ[i]) {			/* does not exist yet */
-	if (s_firstexport) {		/* need we copy environment? */
+    if (!environ[i]) {                  /* does not exist yet */
+        if (s_firstexport) {            /* need we copy environment? */
 #ifndef lint
-	    char** tmpenv = (char**)	/* point our wand at memory */
-		safemalloc((MEM_SIZE) (i+2) * sizeof(char*));
+            char** tmpenv = (char**)    /* point our wand at memory */
+                safemalloc((MEM_SIZE) (i+2) * sizeof(char*));
 #else
-	    char** tmpenv = nullptr;
+            char** tmpenv = nullptr;
 #endif /* lint */
     
-	    s_firstexport = false;
-	    for (int j = 0; j < i; j++) /* copy environment */
-		tmpenv[j] = environ[j];
-	    environ = tmpenv;		/* tell exec where it is now */
-	}
+            s_firstexport = false;
+            for (int j = 0; j < i; j++) /* copy environment */
+                tmpenv[j] = environ[j];
+            environ = tmpenv;           /* tell exec where it is now */
+        }
 #ifndef lint
-	else
-	    environ = (char**) saferealloc((char*) environ,
-		(MEM_SIZE) (i+2) * sizeof(char*));
-					/* just expand it a bit */
+        else
+            environ = (char**) saferealloc((char*) environ,
+                (MEM_SIZE) (i+2) * sizeof(char*));
+                                        /* just expand it a bit */
 #endif /* lint */
-	environ[i+1] = nullptr;	/* make sure it's null terminated */
+        environ[i+1] = nullptr; /* make sure it's null terminated */
     }
     environ[i] = safemalloc((MEM_SIZE)(namlen + strlen(val) + 2));
-					/* this may or may not be in */
-					/* the old environ structure */
+                                        /* this may or may not be in */
+                                        /* the old environ structure */
     sprintf(environ[i],"%s=%s",nam,val);/* all that work just for this */
     return environ[i] + namlen + 1;
 #endif
@@ -453,16 +453,16 @@ char *export_var(const char *nam, const char *val)
 void un_export(char *export_val)
 {
     if (export_val[-1] == '=' && export_val[-2] != '_') {
-	export_val[0] = export_val[-2];
-	export_val[1] = '\0';
-	export_val[-2] = '_';
+        export_val[0] = export_val[-2];
+        export_val[1] = '\0';
+        export_val[-2] = '_';
     }
 }
 
 void re_export(char *export_val, const char *new_val, int limit)
 {
     if (export_val[-1] == '=' && export_val[-2] == '_' && !export_val[1])
-	export_val[-2] = export_val[0];
+        export_val[-2] = export_val[0];
     safecpy(export_val, new_val, limit+1);
 }
 
@@ -471,8 +471,8 @@ static int envix(const char *nam, int len)
     int i;
 
     for (i = 0; environ[i]; i++) {
-	if (!strncmp(environ[i],nam,len) && environ[i][len] == '=')
-	    break;			/* strncmp must come first to avoid */
-    }					/* potential SEGV's */
+        if (!strncmp(environ[i],nam,len) && environ[i][len] == '=')
+            break;                      /* strncmp must come first to avoid */
+    }                                   /* potential SEGV's */
     return i;
 }
