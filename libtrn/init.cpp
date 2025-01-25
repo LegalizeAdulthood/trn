@@ -51,7 +51,7 @@ bool initialize(int argc, char *argv[])
 {
     bool foundany = false;
 #ifdef NOLINEBUF
-    static char std_out_buf[BUFSIZ];	/* must be static or malloced */
+    static char std_out_buf[BUFSIZ];    /* must be static or malloced */
 
     setbuf(stdout, std_out_buf);
 #endif
@@ -62,10 +62,10 @@ bool initialize(int argc, char *argv[])
 
     /* init terminal */
 
-    term_init();			/* must precede opt_init() so that */
-					/* ospeed is set for baud-rate */
-					/* switches.  Actually terminal */
-					/* mode setting is in term_set() */
+    term_init();                        /* must precede opt_init() so that */
+                                        /* ospeed is set for baud-rate */
+                                        /* switches.  Actually terminal */
+                                        /* mode setting is in term_set() */
     mp_init();
 
     /* init syntax etc. for searching (must also precede opt_init()) */
@@ -79,8 +79,8 @@ bool initialize(int argc, char *argv[])
 
     /* decode switches */
 
-    opt_init(argc,argv,&tcbuf);		/* must not do % interps! */
-					/* (but may mung environment) */
+    opt_init(argc,argv,&tcbuf);         /* must not do % interps! */
+                                        /* (but may mung environment) */
     color_init();
 
     /* init signals, status flags */
@@ -94,28 +94,28 @@ bool initialize(int argc, char *argv[])
     /* now make sure we have a current working directory */
 
     if (!g_checkflag)
-	cwd_check();
+        cwd_check();
 
     if (init_nntp() < 0)
-	finalize(1);
+        finalize(1);
 
     /* if we aren't just checking, turn off echo */
 
     if (!g_checkflag)
-	term_set(tcbuf);
+        term_set(tcbuf);
 
     /* get info on last trn run, if any */
 
     last_init();
 
-    free(tcbuf);			/* recover 1024 bytes */
+    free(tcbuf);                        /* recover 1024 bytes */
 
     univ_init();
 
     /* check for news news */
 
     if (!g_checkflag)
-	newsnews_check();
+        newsnews_check();
 
     /* process the newsid(s) and associate the newsrc(s) */
 
@@ -150,10 +150,10 @@ bool initialize(int argc, char *argv[])
     util_init();
     xmouse_init(argv[0]);
 
-    writelast();	/* remember last runtime in .rnlast */
+    writelast();        /* remember last runtime in .rnlast */
 
-    if (g_maxngtodo)			/* patterns on command line? */
-	foundany |= scanactive(true);
+    if (g_maxngtodo)                    /* patterns on command line? */
+        foundany |= scanactive(true);
 
     return foundany;
 }
@@ -163,14 +163,14 @@ void newsnews_check()
     const char *newsnewsname = filexp(NEWSNEWSNAME);
     if (FILE *fp = fopen(newsnewsname, "r"))
     {
-	stat_t news_news_stat{};
-	fstat(fileno(fp),&news_news_stat);
-	if (news_news_stat.st_mtime > (time_t)g_lasttime) {
-	    while (fgets(g_buf,sizeof(g_buf),fp) != nullptr)
-		fputs(g_buf,stdout) FLUSH;
-	    get_anything();
-	    putchar('\n') FLUSH;
-	}
-	fclose(fp);
+        stat_t news_news_stat{};
+        fstat(fileno(fp),&news_news_stat);
+        if (news_news_stat.st_mtime > (time_t)g_lasttime) {
+            while (fgets(g_buf,sizeof(g_buf),fp) != nullptr)
+                fputs(g_buf,stdout) FLUSH;
+            get_anything();
+            putchar('\n') FLUSH;
+        }
+        fclose(fp);
     }
 }
