@@ -49,64 +49,64 @@ int putsubstchar(int c, int limit, bool outputok)
     {
     case 'm':
     case 'a': 
-	t = *g_charsubst == 'm' ? 1 : 2;
-	oc[0] = (Uchar)c;
-	oc[1] = '\0';
+        t = *g_charsubst == 'm' ? 1 : 2;
+        oc[0] = (Uchar)c;
+        oc[1] = '\0';
         i = Latin1toASCII(nc, oc, sizeof nc, t);
         if (i <= limit)
         {
-	    if (outputok) {
-		for (int t2 = 0; t2 < i; t2++)
-		    putchar((char)nc[t2]);
-	    }
-	}
-	else
-	    i = -1;
-	break;
+            if (outputok) {
+                for (int t2 = 0; t2 < i; t2++)
+                    putchar((char)nc[t2]);
+            }
+        }
+        else
+            i = -1;
+        break;
     case 't':
-	if (c == '\\' || c == '"') {
-	    if (s_texchar && (c == '\\' || s_texchar != '\\')) {
-		if (outputok)
-		    putchar(s_texchar);
-		i++;
-	    }
-	    s_texchar = (char)c;
-	    break;
-	}
-	else if (s_texchar == '\\') {
-	    if (outputok)
-		putchar('\\');
-	    if (limit == 1) {
-		i = -2;
-		break;
-	    }
-	    i++;
-	}
-	else if (s_texchar == '"') {
+        if (c == '\\' || c == '"') {
+            if (s_texchar && (c == '\\' || s_texchar != '\\')) {
+                if (outputok)
+                    putchar(s_texchar);
+                i++;
+            }
+            s_texchar = (char)c;
+            break;
+        }
+        else if (s_texchar == '\\') {
+            if (outputok)
+                putchar('\\');
+            if (limit == 1) {
+                i = -2;
+                break;
+            }
+            i++;
+        }
+        else if (s_texchar == '"') {
             Uchar d;
             if (c < 32 || c > 128)
-		d = '\0';
-	    else
-		d = s_textbl[c-32];
-	    s_texchar = '\0'; 
-	    if (d)
-		c = d;
-	    else {
-		if (outputok)
-		    putchar('"');
-		if (limit == 1) {
-		    i = -2;
-		    break;
-		}
-		i++;
-	    }
-	}
-	/* FALL THROUGH */
+                d = '\0';
+            else
+                d = s_textbl[c-32];
+            s_texchar = '\0'; 
+            if (d)
+                c = d;
+            else {
+                if (outputok)
+                    putchar('"');
+                if (limit == 1) {
+                    i = -2;
+                    break;
+                }
+                i++;
+            }
+        }
+        /* FALL THROUGH */
     default: 
-	if (outputok)
-	    putchar(c);
-	i++;
-	break;
+        if (outputok)
+            putchar(c);
+        i++;
+        break;
     }
     return i;
 }
@@ -119,34 +119,34 @@ const char *current_charsubst()
     const char* ocs = output_charset_name();
     int maxlen = (sizeof show - 5)/2;
     if (strcmp(ics, ocs) == 0)
-	sprintf(show, "[%.*s]", maxlen, ics, maxlen, ocs);
+        sprintf(show, "[%.*s]", maxlen, ics, maxlen, ocs);
     else
-	sprintf(show, "[%.*s->%.*s]", maxlen, ics, maxlen, ocs);
+        sprintf(show, "[%.*s->%.*s]", maxlen, ics, maxlen, ocs);
 #else /*!USE_UTF_HACK */
     static const char* show;
 
     switch (*g_charsubst) {
       case 'm':
-	if (g_verbose)
-	    show = "[ISO->USmono] ";
-	else
-	    show = "[M] ";
-	break;
+        if (g_verbose)
+            show = "[ISO->USmono] ";
+        else
+            show = "[M] ";
+        break;
       case 'a':
-	if (g_verbose)
-	    show = "[ISO->US] ";
-	else
-	    show = "[U] ";
-	break;
+        if (g_verbose)
+            show = "[ISO->US] ";
+        else
+            show = "[U] ";
+        break;
       case 't':
-	if (g_verbose)
-	    show = "[TeX->ISO] ";
-	else
-	    show = "[T] ";
-	break;
+        if (g_verbose)
+            show = "[TeX->ISO] ";
+        else
+            show = "[T] ";
+        break;
       default:
-	show = "";
-	break;
+        show = "";
+        break;
     }
 #endif
     return show;
@@ -157,20 +157,20 @@ int strcharsubst(char *outb, const char *inb, int limit, char_int subst)
     int len;
     switch (subst) {
       case 'm':
-	return Latin1toASCII((Uchar*)outb, (const Uchar*)inb, limit, 1);
+        return Latin1toASCII((Uchar*)outb, (const Uchar*)inb, limit, 1);
       case 'a':
-	return Latin1toASCII((Uchar*)outb, (const Uchar*)inb, limit, 2);
+        return Latin1toASCII((Uchar*)outb, (const Uchar*)inb, limit, 2);
       default:
           const char *s = strchr(inb, '\n');
           if (s != nullptr && s - inb + 1 < limit)
           {
-	    len = s - inb + 1;
-	    limit = len + 1;
-	}
-	else
-	    len = strlen(inb);
-	safecpy(outb, inb, limit);
-	return len;
+            len = s - inb + 1;
+            limit = len + 1;
+        }
+        else
+            len = strlen(inb);
+        safecpy(outb, inb, limit);
+        return len;
     }
 }
 
@@ -232,38 +232,38 @@ static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t)
     Uchar *s = asc;
 
     if (iso == nullptr || asc == nullptr || limit <= 0)
-	return 0;
+        return 0;
     if (limit == 1)
     {
         *s = '\0';
         return s - asc;
     }
-    t--;	/* offset correction -ot */
+    t--;        /* offset correction -ot */
     const char **tab = s_iso2asc[t] - 0xa0;
     while (*iso) {
-	if (*iso > 0x9f) {
-	    const char *p = tab[*iso++];
-	    if (p) {
-		while (*p) {
-		    *s++ = *p++;
-		    if (!--limit)
-		    {
+        if (*iso > 0x9f) {
+            const char *p = tab[*iso++];
+            if (p) {
+                while (*p) {
+                    *s++ = *p++;
+                    if (!--limit)
+                    {
                         *s = '\0';
                         return s - asc;
-		    }
-		}
-	    }
-	}
-	else {
-	    if (*iso < 0x80)
-		*s++ = *iso++;
-	    else {
-		*s++ = ' ';
-		iso++;
-	    }
-	    if (!--limit)
-		break;
-	}
+                    }
+                }
+            }
+        }
+        else {
+            if (*iso < 0x80)
+                *s++ = *iso++;
+            else {
+                *s++ = ' ';
+                iso++;
+            }
+            if (!--limit)
+                break;
+        }
     }
     *s = '\0';
     return s - asc;
