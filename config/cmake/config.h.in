@@ -245,12 +245,6 @@
 #define SERVER_NAME "@SERVER_NAME@"
 #cmakedefine HAS_LOCAL_SPOOL
 
-/* I_SYS_TIME:
- *      This symbol, if defined, indicates to the C program that it should
- *      include <sys/time.h>.
- */
-#cmakedefine I_SYS_TIME
-
 /* MIMECAP:
  *      This symbol contains the pathname of mimecap file, which controls
  *      what programs get run when handling mime articles.  It is often
