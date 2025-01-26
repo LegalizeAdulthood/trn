@@ -3,6 +3,7 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include <cctype>
+#include <filesystem>
 #include <string>
 
 #include "common.h"
@@ -924,13 +925,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         s = s_empty;
                         break;
                     }
-                    sprintf(scrbuf, "%ld", (long) g_art);
-                    {
-                        stat_t art_stat{};
-                        if (stat(scrbuf, &art_stat) < 0)
-                            art_stat.st_size = 0L;
-                        sprintf(scrbuf, "%5ld", (long) art_stat.st_size);
-                    }
+                    sprintf(scrbuf, "%5s", std::to_string(std::filesystem::file_size(std::to_string(g_art))).c_str());
                     s = scrbuf;
                     break;
                 case 'Z':
