@@ -132,7 +132,7 @@ TEST_F(InitTest, loginNameFromLOGNAME)
     expect_env("LOGNAME", login_name);
     expect_no_envars({"DOTDIR", "HOME", HOMEDRIVE, HOMEPATH, "LOGDIR", "NETSPEED", "TMP", "TMPDIR", "TRNDIR", "USER"});
 
-    env_init(m_tcbuf.data(), true);
+    env_init(m_tcbuf.data(), true, m_succeeded_fn, m_failed_fn);
 
     ASSERT_EQ(login_name, g_login_name);
 }
