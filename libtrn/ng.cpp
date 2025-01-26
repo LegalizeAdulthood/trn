@@ -137,7 +137,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
     set_datasrc(g_ngptr->rc->datasrc);
 
     if (chdir(g_datasrc->spool_dir)) {
-        printf(g_nocd,g_datasrc->spool_dir) FLUSH;
+        printf(g_nocd,g_datasrc->spool_dir);
         return NG_ERROR;
     }
 
@@ -293,7 +293,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
             if (g_erase_screen)
                 clear();                        /* clear the screen */
             else {
-                fputs("\n\n",stdout) FLUSH;
+                fputs("\n\n",stdout);
                 termdown(2);
             }
             if (g_verbose)
@@ -322,7 +322,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
             set_mode(g_general_mode,MM_ARTICLE_END);
             g_prompt = whatnext;
             g_srchahead = 0;                /* no more subject search mode */
-            fputs("\n\n",stdout) FLUSH;
+            fputs("\n\n",stdout);
             termdown(2);
         }
         else if (!g_reread && (was_read(g_art)
@@ -603,20 +603,20 @@ static art_switch_result art_switch()
             {
                 fputs("Type + to enter select thread mode using all the already-read articles.\n"
                       "(The selected threads will be marked as unread and displayed as usual.)\n",
-                      stdout) FLUSH;
+                      stdout);
                 fputs(u_help_thread, stdout);
                 fputs("Type a to mark all articles in this group as unread.\n"
                       "Type n or q to change nothing.\n",
-                      stdout) FLUSH;
+                      stdout);
                 termdown(6);
             }
             else
             {
-                fputs("+ to select threads from the unread.\n",stdout) FLUSH;
+                fputs("+ to select threads from the unread.\n",stdout);
                 fputs(u_help_thread,stdout);
                 fputs("a to mark all articles unread.\n"
                       "n or q to change nothing.\n",
-                      stdout) FLUSH;
+                      stdout);
                 termdown(5);
             }
             goto reask_unread;
@@ -645,7 +645,7 @@ static art_switch_result art_switch()
             goto run_the_selector;
         }
         else {
-            fputs(g_hforhelp,stdout) FLUSH;
+            fputs(g_hforhelp,stdout);
             termdown(1);
             settle_down();
             goto reask_unread;
@@ -659,9 +659,9 @@ static art_switch_result art_switch()
                 const char* cp = (*g_buf=='['?"parent":"root");
                 if (g_verbose)
                     printf("\nThere is no %s article prior to this one.\n",
-                        cp) FLUSH;
+                        cp);
                 else
-                    printf("\nNo prior %s.\n",cp) FLUSH;
+                    printf("\nNo prior %s.\n",cp);
                 termdown(2);
                 return AS_ASK;
             }
@@ -673,16 +673,16 @@ static art_switch_result art_switch()
 not_threaded:
         if (!g_artp) {
             if (g_verbose)
-                fputs("\nYou're at the end of the group.\n",stdout) FLUSH;
+                fputs("\nYou're at the end of the group.\n",stdout);
             else
-                fputs("\nEnd of group.\n",stdout) FLUSH;
+                fputs("\nEnd of group.\n",stdout);
             termdown(2);
             return AS_ASK;
         }
         if (g_verbose)
-            fputs("\nThis group is not threaded.\n",stdout) FLUSH;
+            fputs("\nThis group is not threaded.\n",stdout);
         else
-            fputs("\nUnthreaded group.\n",stdout) FLUSH;
+            fputs("\nUnthreaded group.\n",stdout);
         termdown(2);
         return AS_ASK;
       case ']':                 /* goto child article */
@@ -692,11 +692,11 @@ not_threaded:
                 if (g_verbose)
                     fputs("\n"
                           "This is the last leaf in this tree.\n",
-                          stdout) FLUSH;
+                          stdout);
                 else
                     fputs("\n"
                           "Last leaf.\n",
-                          stdout) FLUSH;
+                          stdout);
                 termdown(2);
                 return AS_ASK;
             }
@@ -712,9 +712,9 @@ not_threaded:
             if (!(*g_buf == '(' ? find_prev_sib() : find_next_sib())) {
                 const char* cp = (*g_buf == '(' ? "previous" : "next");
                 if (g_verbose)
-                    printf("\nThis article has no %s sibling.\n",cp) FLUSH;
+                    printf("\nThis article has no %s sibling.\n",cp);
                 else
-                    printf("\nNo %s sibling.\n",cp) FLUSH;
+                    printf("\nNo %s sibling.\n",cp);
                 termdown(2);
                 return AS_ASK;
             }
@@ -814,11 +814,11 @@ not_threaded:
             if (g_verbose)
                 printf("\nThere are no%s%s articles prior to this one.\n",
                         *g_buf=='P'?"":" unread",
-                        g_selected_only?" selected":"") FLUSH;
+                        g_selected_only?" selected":"");
             else
                 printf("\nNo previous%s%s articles\n",
                         *g_buf=='P'?"":" unread",
-                        g_selected_only?" selected":"") FLUSH;
+                        g_selected_only?" selected":"");
             termdown(2);
             g_art = g_curr_art;
             g_artp = g_curr_artp;
@@ -954,7 +954,7 @@ not_threaded:
             if (g_use_threads) {
                 erase_line(false);
                 perform_status_end(g_ngptr->toread, "article");
-                fputs(g_msg, stdout) FLUSH;
+                fputs(g_msg, stdout);
             }
             newline();
             return AS_ASK;
@@ -995,9 +995,9 @@ normal_search:
             return AS_INP;
           case SRCH_INTR:
             if (g_verbose)
-                printf("\n(Interrupted at article %ld)\n",(long)g_art) FLUSH;
+                printf("\n(Interrupted at article %ld)\n",(long)g_art);
             else
-                printf("\n(Intr at %ld)\n",(long)g_art) FLUSH;
+                printf("\n(Intr at %ld)\n",(long)g_art);
             termdown(2);
             g_art = g_curr_art;     /* restore to current article */
             return AS_ASK;
@@ -1005,10 +1005,10 @@ normal_search:
             if (g_use_threads) {
                 erase_line(false);
                 perform_status_end(g_ngptr->toread, "article");
-                printf("%s\n",g_msg) FLUSH;
+                printf("%s\n",g_msg);
             }
             else
-                fputs("done\n",stdout) FLUSH;
+                fputs("done\n",stdout);
             termdown(1);
             pad(g_just_a_sec/3);        /* 1/3 second */
             if (!g_srchahead) {
@@ -1025,7 +1025,7 @@ normal_search:
             g_reread = false;
             return AS_NORM;
           case SRCH_NOTFOUND:
-            fputs("\n\n\n\nNot found.\n",stdout) FLUSH;
+            fputs("\n\n\n\nNot found.\n",stdout);
             termdown(5);
             g_art = g_curr_art;  /* restore to current article */
             if (g_sa_in)
@@ -1042,7 +1042,7 @@ normal_search:
       }
       case 'u':                 /* unsubscribe from this newsgroup? */
         newline();
-        printf(g_unsubto,g_ngname.c_str()) FLUSH;
+        printf(g_unsubto,g_ngname.c_str());
         termdown(1);
         g_ngptr->subscribechar = NEGCHAR;
         g_ngptr->rc->flags |= RF_RCCHANGED;
@@ -1052,14 +1052,14 @@ normal_search:
         if (g_art <= g_lastart) {
             delay_unmark(g_artp);
             oneless(g_artp);
-            printf("\nArticle %ld will return.\n",(long)g_art) FLUSH;
+            printf("\nArticle %ld will return.\n",(long)g_art);
             termdown(2);
         }
         return AS_ASK;
       case 'm':
         if (g_art >= g_absfirst && g_art <= g_lastart) {
             unmark_as_read(g_artp);
-            printf("\nArticle %ld marked as still unread.\n",(long)g_art) FLUSH;
+            printf("\nArticle %ld marked as still unread.\n",(long)g_art);
             termdown(2);
         }
         return AS_ASK;
@@ -1104,15 +1104,15 @@ normal_search:
         return AS_ASK;
       case '#':
         if (g_verbose)
-            printf("\nThe last article is %ld.\n",(long)g_lastart) FLUSH;
+            printf("\nThe last article is %ld.\n",(long)g_lastart);
         else
-            printf("\n%ld\n",(long)g_lastart) FLUSH;
+            printf("\n%ld\n",(long)g_lastart);
         termdown(2);
         return AS_ASK;
       case '+':                 /* enter selection mode */
 run_the_selector:
         if (s_art_sel_ilock) {
-            printf("\nAlready inside article selector!\n") FLUSH;
+            printf("\nAlready inside article selector!\n");
             termdown(2);
             return AS_ASK;
         }
@@ -1167,7 +1167,7 @@ run_the_selector:
         return AS_NORM;
 #ifdef DEBUG
       case 'D':
-        printf("\nFirst article: %ld\n",(long)g_firstart) FLUSH;
+        printf("\nFirst article: %ld\n",(long)g_firstart);
         termdown(2);
         article_walk(debug_article_output, 0);
         g_int_count = 0;
@@ -1318,7 +1318,7 @@ run_the_selector:
         return AS_NORM;                 /* pretend nothing happened */
 #ifdef STRICTCR
       case '\n':   case '\r':
-        fputs(g_badcr,stdout) FLUSH;
+        fputs(g_badcr,stdout);
         return AS_ASK;
 #endif
       case '_':
@@ -1388,7 +1388,7 @@ run_the_selector:
         }
         /* FALL THROUGH */
       default:
-        printf("\n%s",g_hforhelp) FLUSH;
+        printf("\n%s",g_hforhelp);
         termdown(2);
         settle_down();
         break;
@@ -1463,14 +1463,14 @@ reask_catchup:
                   "Type n to leave articles marked as they are.\n"
                   "The # means enter a number to mark all but the last # articles as read.\n"
                   "Type u to mark everything read and unsubscribe.\n\n",
-                  stdout) FLUSH;
+                  stdout);
         else
             fputs("\n"
                   "y or SP to mark all read.\n"
                   "n to forget it.\n"
                   "# means enter a number to leave unread.\n"
                   "u to mark all and unsubscribe.\n\n",
-                  stdout) FLUSH;
+                  stdout);
         termdown(6);
         goto reask_catchup;
     }
@@ -1501,7 +1501,7 @@ reask_catchup:
     }
     if (ch != 'y' && ch != 'u') {
         use_one_line = false;
-        printf("\n%s\n", g_hforhelp) FLUSH;
+        printf("\n%s\n", g_hforhelp);
         termdown(3);
         settle_down();
         goto reask_catchup;
@@ -1532,7 +1532,7 @@ reask_catchup:
         g_newsgroup_toread--;
         newline();
         printf(g_unsubto,g_ngname.c_str());
-        printf("(If you meant to hit 'y' instead of 'u', press '-'.)\n") FLUSH;
+        printf("(If you meant to hit 'y' instead of 'u', press '-'.)\n");
         termdown(2);
     }
     return ch;
@@ -1609,7 +1609,7 @@ static bool debug_article_output(char *ptr, int arg)
         return 1;
     if (article_num(ap) >= g_firstart && ap->subj) {
         printf("%5ld %c %s\n", article_num(ap),
-               (ap->flags & AF_UNREAD)? 'y' : 'n', ap->subj->str) FLUSH;
+               (ap->flags & AF_UNREAD)? 'y' : 'n', ap->subj->str);
         termdown(1);
     }
     return 0;
@@ -1660,10 +1660,10 @@ reask_memorize:
                    "Type C to clear all selection/killing on %s.\n"
                    "Type c to clear all selection/killing on this %s.\n"
                    "Type q to abort the operation.\n",
-                   mode_string, mode_phrase, mode_string, mode_phrase, mode_phrase, mode_string) FLUSH;
+                   mode_string, mode_phrase, mode_string, mode_phrase, mode_phrase, mode_string);
             if (!thread_cmd) {
                 printf("Type f to toggle author (from-line) searching.\n"
-                       "Type g to toggle global memorization.\n") FLUSH;
+                       "Type g to toggle global memorization.\n");
                 termdown(2);
             }
         }
@@ -1681,7 +1681,7 @@ reask_memorize:
                    "C clears auto-commands for %s.\n"
                    "c clears auto-commands for this %s.\n"
                    "q aborts.\n",
-                   mode_string, mode_phrase, mode_string, mode_phrase, mode_phrase, mode_string) FLUSH;
+                   mode_string, mode_phrase, mode_string, mode_phrase, mode_phrase, mode_string);
             if (!thread_cmd) {
                 printf("f toggles author (from) mode.\n"
                        "g toggles global memorization.\n");
@@ -1813,7 +1813,7 @@ reask_memorize:
 #endif
     else {
         use_one_line = false;
-        printf("\n%s\n", g_hforhelp) FLUSH;
+        printf("\n%s\n", g_hforhelp);
         termdown(3);
         settle_down();
         goto reask_memorize;

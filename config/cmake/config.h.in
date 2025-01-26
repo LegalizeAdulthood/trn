@@ -15,12 +15,6 @@
 #cmakedefine HAS_NEWS_ADMIN
 #define NEWS_ADMIN "@NEWS_ADMIN@"
 
-/* NOLINEBUF:
- *      This symbol, if defined, indicates that stdout is not buffered, so that
- *      the program can call setbuf() or setlinebuf() for efficiency.
- */
-#cmakedefine NOLINEBUF
-
 /* NORMSIG:
  *      This symbol, if defined, indicates that normal signal handling routines
  *      should be used, as opposed to the ones in 4.1bsd (sigset, etc.).

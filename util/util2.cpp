@@ -114,7 +114,7 @@ char *filexp(const char *text)
                     struct passwd *pwd = getpwnam(s_tildename);
                     if (pwd == nullptr)
                     {
-                        printf("%s is an unknown user. Using default.\n", s_tildename) FLUSH;
+                        printf("%s is an unknown user. Using default.\n", s_tildename);
                         return nullptr;
                     }
                     sprintf(scrbuf, "%s%s", pwd->pw_dir, s);
@@ -153,7 +153,7 @@ char *filexp(const char *text)
                     }
                     if (!s_tildedir)
                     {
-                        printf("%s is an unknown user. Using default.\n", s_tildename) FLUSH;
+                        printf("%s is an unknown user. Using default.\n", s_tildename);
                         return nullptr;
                     }
                 }
@@ -161,9 +161,9 @@ char *filexp(const char *text)
             }
 #else /* !TILDENAME */
             if (g_verbose)
-                fputs("~loginname not implemented.\n", stdout) FLUSH;
+                fputs("~loginname not implemented.\n", stdout);
             else
-                fputs("~login not impl.\n", stdout) FLUSH;
+                fputs("~login not impl.\n", stdout);
 #endif
         }
     }

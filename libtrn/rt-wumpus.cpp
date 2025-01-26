@@ -490,9 +490,9 @@ void entire_tree(ARTICLE* ap)
 {
     if (!ap) {
         if (g_verbose)
-            fputs("\nNo article tree to display.\n", stdout) FLUSH;
+            fputs("\nNo article tree to display.\n", stdout);
         else
-            fputs("\nNo tree.\n", stdout) FLUSH;
+            fputs("\nNo tree.\n", stdout);
         termdown(2);
         return;
     }
@@ -503,7 +503,7 @@ void entire_tree(ARTICLE* ap)
         fflush(stdout);
         thread_open();
         if (!g_threaded_group) {
-            printf("*failed*\n") FLUSH;
+            printf("*failed*\n");
             termdown(1);
             return;
         }
@@ -522,7 +522,7 @@ void entire_tree(ARTICLE* ap)
     do {
         if (check_page_line())
             return;
-        printf("[%c] %s\n",g_letters[num>9+26+26? 9+26+26:num],sp->str+4) FLUSH;
+        printf("[%c] %s\n",g_letters[num>9+26+26? 9+26+26:num],sp->str+4);
         termdown(1);
         sp->misc = num++;
         sp = sp->thread_link;

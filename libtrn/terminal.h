@@ -345,64 +345,63 @@ inline void newline()
     g_term_line++;
     g_term_col = 0;
     putchar('\n');
-    FLUSH;
 }
 inline void backspace()
 {
-    tputs(g_tc_BC, 0, putchr) FLUSH;
+    tputs(g_tc_BC, 0, putchr);
 }
 inline void erase_eol()
 {
-    tputs(g_tc_CE, 1, putchr) FLUSH;
+    tputs(g_tc_CE, 1, putchr);
 }
 inline void clear_rest()
 {
-    tputs(g_tc_CD, g_tc_LINES, putchr) FLUSH;
+    tputs(g_tc_CD, g_tc_LINES, putchr);
 }
 inline void maybe_eol()
 {
     if (g_erase_screen && g_erase_each_line)
-        tputs(g_tc_CE, 1, putchr) FLUSH;
+        tputs(g_tc_CE, 1, putchr);
 }
 inline void underline()
 {
-    tputs(g_tc_US, 1, putchr) FLUSH;
+    tputs(g_tc_US, 1, putchr);
 }
 inline void un_underline()
 {
     g_fire_is_out |= UNDERLINE;
-    tputs(g_tc_UE, 1, putchr) FLUSH;
+    tputs(g_tc_UE, 1, putchr);
 }
 inline void underchar()
 {
-    tputs(g_tc_UC, 0, putchr) FLUSH;
+    tputs(g_tc_UC, 0, putchr);
 }
 inline void standout()
 {
-    tputs(g_tc_SO, 1, putchr) FLUSH;
+    tputs(g_tc_SO, 1, putchr);
 }
 inline void un_standout()
 {
     g_fire_is_out |= STANDOUT;
-    tputs(g_tc_SE, 1, putchr) FLUSH;
+    tputs(g_tc_SE, 1, putchr);
 }
 inline void up_line()
 {
     g_term_line--;
-    tputs(g_tc_UP, 1, putchr) FLUSH;
+    tputs(g_tc_UP, 1, putchr);
 }
 inline void insert_line()
 {
-    tputs(g_tc_IL, 1, putchr) FLUSH;
+    tputs(g_tc_IL, 1, putchr);
 }
 inline void carriage_return()
 {
     g_term_col = 0;
-    tputs(g_tc_CR, 1, putchr) FLUSH;
+    tputs(g_tc_CR, 1, putchr);
 }
 inline void dingaling()
 {
-    tputs(g_tc_VB, 1, putchr) FLUSH;
+    tputs(g_tc_VB, 1, putchr);
 }
 #else  /* !HAS_TERMLIB */
 //..."Don't know how to define the term macros!"

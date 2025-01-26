@@ -60,8 +60,6 @@ SYSTEM DEPENDENCIES AS DETERMINED BY THE CONFIGURE SCRIPT.
 * Don't use %d anywhere that someone might need a %ld.  (Just because YOU
     typedefed it as an int doesn't mean someone else won't need a long.)
 * Don't use %D, that's archaic.
-* Put FLUSHes after printf()s, fputs()es and putchar('\n')s for our poor
-    brethern and sistern without line buffering.
 * Declare the type of every function.  Use void, even if your C compiler
     doesn't.
 * Follow the style that trn already uses!  This is my pet peeve.  Well, one

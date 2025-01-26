@@ -49,12 +49,6 @@ long g_our_pid{};
 
 bool initialize(int argc, char *argv[])
 {
-    bool foundany = false;
-#ifdef NOLINEBUF
-    static char std_out_buf[BUFSIZ];    /* must be static or malloced */
-
-    setbuf(stdout, std_out_buf);
-#endif
     char *tcbuf = safemalloc(TCBUF_SIZE); /* make temp buffer for termcap and */
                                           /* other initialization stuff */
 
@@ -124,7 +118,7 @@ bool initialize(int argc, char *argv[])
 
     /* now read in the .newsrc file(s) */
 
-    foundany = rcstuff_init();
+    bool foundany = rcstuff_init();
 
     /* it looks like we will actually read something, so init everything */
 
@@ -167,9 +161,9 @@ void newsnews_check()
         fstat(fileno(fp),&news_news_stat);
         if (news_news_stat.st_mtime > (time_t)g_lasttime) {
             while (fgets(g_buf,sizeof(g_buf),fp) != nullptr)
-                fputs(g_buf,stdout) FLUSH;
+                fputs(g_buf,stdout);
             get_anything();
-            putchar('\n') FLUSH;
+            putchar('\n');
         }
         fclose(fp);
     }

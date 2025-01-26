@@ -617,16 +617,16 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
 
     g_univ_follow_temp = false;
     if (!ui) {
-        printf("nullptr UI passed to reader!\n") FLUSH;
+        printf("nullptr UI passed to reader!\n");
         sleep(5);
         return exit_code;
     }
-    printf("\n") FLUSH;                 /* prepare for output msgs... */
+    printf("\n");                 /* prepare for output msgs... */
     switch (ui->type) {
       case UN_DEBUG1: {
           char *s = ui->data.str;
         if (s && *s) {
-            printf("Not implemented yet (%s)\n",s) FLUSH;
+            printf("Not implemented yet (%s)\n",s);
             sleep(5);
             return exit_code;
         }
@@ -651,7 +651,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
 
         if (!np) {
             printf("Universal: newsgroup %s not found!",
-                   ui->data.virt.ng) FLUSH;
+                   ui->data.virt.ng);
             sleep(5);
             return exit_code;
         }
@@ -661,7 +661,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
             g_current_ng = np;
         }
         g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
-        printf("Virtual: Entering %s:\n", g_ngname.c_str()) FLUSH;
+        printf("Virtual: Entering %s:\n", g_ngname.c_str());
         g_ng_go_artnum = ui->data.virt.num;
         g_univ_read_virtflag = true;
         int ret = do_newsgroup("");
@@ -727,7 +727,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
 
         if (!np) {
             printf("Universal: newsgroup %s not found!",
-                   ui->data.group.ng) FLUSH;
+                   ui->data.group.ng);
             sleep(5);
             return exit_code;
         }
@@ -738,7 +738,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
             g_current_ng = np;
         }
         g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
-        printf("Entering %s:", g_ngname.c_str()) FLUSH;
+        printf("Entering %s:", g_ngname.c_str());
         if (s_sel_ret == ';')
             ret = do_newsgroup(savestr(";"));
         else
@@ -1815,14 +1815,14 @@ static display_state article_commands(char_int ch)
                       "Type s to display/select subject groups.\n"
                       "Type a to display/select individual articles.\n"
                       "Type q to leave things as they are.\n\n",
-                      stdout) FLUSH;
+                      stdout);
             else
                 fputs("\n"
                       "t or SP selects thread groups (threads the group too).\n"
                       "s selects subject groups.\n"
                       "a selects individual articles.\n"
                       "q does nothing.\n\n",
-                      stdout) FLUSH;
+                      stdout);
             s_clean_screen = false;
             goto reask_output;
         } else if (*g_buf == 'q') {
@@ -1856,17 +1856,17 @@ static display_state article_commands(char_int ch)
                       "Type d or SP to order the displayed items by date.\n"
                       "Type s to order the items by subject.\n"
                       "Type p to order the items by score points.\n",
-                      stdout) FLUSH;
+                      stdout);
                 if (g_sel_mode == SM_ARTICLE)
                     fputs("Type a to order the items by author.\n"
                           "Type n to order the items by number.\n"
                           "Type g to order the items in subject-groups by date.\n",
-                          stdout) FLUSH;
+                          stdout);
                 else
-                    fputs("Type c to order the items by count.\n", stdout) FLUSH;
+                    fputs("Type c to order the items by count.\n", stdout);
                 fputs("Typing your selection in upper case it will reverse the selected order.\n"
                       "Type q to leave things as they are.\n\n",
-                      stdout) FLUSH;
+                      stdout);
             }
             else
             {
@@ -1874,17 +1874,17 @@ static display_state article_commands(char_int ch)
                       "d or SP sorts by date.\n"
                       "s sorts by subject.\n"
                       "p sorts by points.\n",
-                      stdout) FLUSH;
+                      stdout);
                 if (g_sel_mode == SM_ARTICLE)
                     fputs("a sorts by author.\n"
                           "g sorts in subject-groups by date.\n",
-                          stdout) FLUSH;
+                          stdout);
                 else
-                    fputs("c sorts by count.\n", stdout) FLUSH;
+                    fputs("c sorts by count.\n", stdout);
                 fputs("Upper case reverses the sort.\n"
                       "q does nothing.\n"
                       "\n",
-                      stdout) FLUSH;
+                      stdout);
             }
             s_clean_screen = false;
             goto reask_sort;
@@ -2218,7 +2218,7 @@ static display_state newsgroup_commands(char_int ch)
                       "Type c to order the items by count.\n"
                       "Typing your selection in upper case it will reverse the selected order.\n"
                       "Type q to leave things as they are.\n\n",
-                      stdout) FLUSH;
+                      stdout);
             }
             else
             {
@@ -2228,7 +2228,7 @@ static display_state newsgroup_commands(char_int ch)
                       "c sorts by count.\n"
                       "Upper case reverses the sort.\n"
                       "q does nothing.\n\n",
-                      stdout) FLUSH;
+                      stdout);
             }
             s_clean_screen = false;
             goto reask_sort;
@@ -2440,7 +2440,7 @@ static display_state addgroup_commands(char_int ch)
                       "Type c to order the items by article count.\n"
                       "Typing your selection in upper case it will reverse the selected order.\n"
                       "Type q to leave things as they are.\n\n",
-                      stdout) FLUSH;
+                      stdout);
             }
             else
             {
@@ -2450,7 +2450,7 @@ static display_state addgroup_commands(char_int ch)
                       "c sorts by article count.\n"
                       "Upper case reverses the sort.\n"
                       "q does nothing.\n\n",
-                      stdout) FLUSH;
+                      stdout);
             }
             s_clean_screen = false;
             goto reask_sort;
@@ -2726,7 +2726,7 @@ static display_state universal_commands(char_int ch)
                       "Type p to order the items by score points.\n"
                       "Typing your selection in upper case it will reverse the selected order.\n"
                       "Type q to leave things as they are.\n\n",
-                      stdout) FLUSH;
+                      stdout);
             }
             else
             {
@@ -2735,7 +2735,7 @@ static display_state universal_commands(char_int ch)
                       "p sorts by score.\n"
                       "Upper case reverses the sort.\n"
                       "q does nothing.\n\n",
-                      stdout) FLUSH;
+                      stdout);
             }
             s_clean_screen = false;
             goto reask_sort;

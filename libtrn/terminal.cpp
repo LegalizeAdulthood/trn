@@ -264,7 +264,7 @@ void term_set(char *tcbuf)
     if (isatty(devtty)) {
         devtty = open("/dev/tty",0);
         if (devtty < 0) {
-            printf(cantopen,"/dev/tty") FLUSH;
+            printf(cantopen,"/dev/tty");
             finalize(1);
         }
         fcntl(devtty,F_SETFL,O_NDELAY);
@@ -300,7 +300,7 @@ void term_set(char *tcbuf)
     s = getenv("TERM");
     status = tgetent(tcbuf,s? s : "dumb");      /* get termcap entry */
     if (status < 1) {
-        printf("No termcap %s found.\n", status ? "file" : "entry") FLUSH;
+        printf("No termcap %s found.\n", status ? "file" : "entry");
         finalize(1);
     }
     tmpaddr = s_tcarea;                 /* set up strange tgetstr pointer */
@@ -561,7 +561,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
         if (s[1]) {
             if ((curmap->km_type[ch] & KM_TMASK) == KM_STRING) {
                 if (tbsize) {
-                    fputs(override,stdout) FLUSH;
+                    fputs(override,stdout);
                     termdown(2);
                 }
                 free(curmap->km_ptr[ch].km_str);
@@ -574,7 +574,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
         }
         else {
             if (tbsize && (curmap->km_type[ch] & KM_TMASK) == KM_KEYMAP) {
-                fputs(override,stdout) FLUSH;
+                fputs(override,stdout);
                 termdown(2);
             }
             else {
@@ -1041,7 +1041,7 @@ void pushchar(char_int c)
     if (s_nextout < 0)
         s_nextout = PUSHSIZE - 1;
     if (s_nextout == s_nextin) {
-        fputs("\npushback buffer overflow\n",stdout) FLUSH;
+        fputs("\npushback buffer overflow\n",stdout);
         sig_catcher(0);
     }
     s_circlebuf[s_nextout] = c;
@@ -1228,9 +1228,9 @@ reask_anything:
     }
     if (*tmpbuf == 'h') {
         if (g_verbose)
-            fputs("\nType q to quit or space to continue.\n",stdout) FLUSH;
+            fputs("\nType q to quit or space to continue.\n",stdout);
         else
-            fputs("\nq to quit, space to continue.\n",stdout) FLUSH;
+            fputs("\nq to quit, space to continue.\n",stdout);
         termdown(2);
         goto reask_anything;
     }
@@ -1609,7 +1609,7 @@ void errormsg(const char *str)
         g_error_occurred = true;
     }
     else if (*str) {
-        printf("\n%s\n", str) FLUSH;
+        printf("\n%s\n", str);
         termdown(2);
     }
 }
@@ -1617,7 +1617,7 @@ void errormsg(const char *str)
 void warnmsg(const char *str)
 {
     if (g_general_mode != GM_SELECTOR) {
-        printf("\n%s\n", str) FLUSH;
+        printf("\n%s\n", str);
         termdown(2);
         pad(g_just_a_sec/3);
     }
@@ -1658,7 +1658,7 @@ void rubout()
 
 void reprint()
 {
-    fputs("^R\n",stdout) FLUSH;
+    fputs("^R\n",stdout);
     termdown(1);
     for (char *s = g_buf; *s; s++)
         echo_char(*s);
@@ -1692,7 +1692,7 @@ void clear()
             putchr('\n');
         home_cursor();
     }
-    tputs(g_tc_CR,1,putchr) FLUSH;
+    tputs(g_tc_CR,1,putchr);
 }
 
 void home_cursor()

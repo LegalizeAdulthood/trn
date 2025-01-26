@@ -258,7 +258,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 
     if (mcp) {
         if (chdir(dir)) {
-            printf(g_nocd,dir) FLUSH;
+            printf(g_nocd,dir);
             sig_catcher(0);
         }
     }

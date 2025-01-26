@@ -458,7 +458,7 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
             case CBACK:
                 i = *ep++;
                 if (compex->braelist[i] == 0) {
-                    fputs("bad braces\n",stdout) FLUSH;
+                    fputs("bad braces\n",stdout);
                     s_err = true;
                     return false;
                 }
@@ -471,7 +471,7 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
             case CBACK | STAR:
                 i = *ep++;
                 if (compex->braelist[i] == 0) {
-                    fputs("bad braces\n",stdout) FLUSH;
+                    fputs("bad braces\n",stdout);
                     s_err = true;
                     return false;
                 }
@@ -523,7 +523,7 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                 return false;
  
             default:
-                fputs("Badly compiled pattern\n",stdout) FLUSH;
+                fputs("Badly compiled pattern\n",stdout);
                 s_err = true;
                 return false;
         }

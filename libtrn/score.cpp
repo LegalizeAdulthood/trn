@@ -45,7 +45,7 @@ void sc_init(bool pend_wait)
 
     if (g_lastart == 0 || g_lastart < g_absfirst) {
 #if 0
-        printf("No articles exist to be scored.\n") FLUSH;
+        printf("No articles exist to be scored.\n");
 #endif
         return;
     }
@@ -147,7 +147,7 @@ void sc_init(bool pend_wait)
         }
     }
     if (g_sf_verbose)
-        putchar('\n') FLUSH;
+        putchar('\n');
 
     g_sc_initialized = true;
 }
@@ -171,7 +171,7 @@ void sc_cleanup()
     g_sc_initialized = false;
 
     if (g_sf_verbose)
-        printf("Done.\n") FLUSH;
+        printf("Done.\n");
 }
 
 void sc_set_score(ART_NUM a, int score)
@@ -205,7 +205,7 @@ int sc_score_art(ART_NUM a, bool now)
 {
     if (a < g_absfirst || a > g_lastart) {
 #if 0
-         printf("\nsc_score_art: illegal article# %d\n",a) FLUSH;
+         printf("\nsc_score_art: illegal article# %d\n",a);
 #endif
         return LOWSCORE;                /* definitely unavailable */
     }
@@ -337,7 +337,7 @@ void sc_rescore_arts()
         s_sc_sf_delay = false;
     }
     if (!g_sc_initialized) {
-        printf("\nScoring is not initialized, aborting command.\n") FLUSH;
+        printf("\nScoring is not initialized, aborting command.\n");
         return;
     }
     /* I think s_sc_do_spin will always be false, but why take chances? */
@@ -376,7 +376,7 @@ void sc_append(char *line)
         s_sc_sf_delay = false;
     }
     if (!g_sc_initialized) {
-        printf("\nScoring is not initialized, aborting command.\n") FLUSH;
+        printf("\nScoring is not initialized, aborting command.\n");
         return;
     }
     if (!*line) {
@@ -390,7 +390,7 @@ void sc_append(char *line)
         printf("\nRescoring articles...");
         fflush(stdout);
         sc_rescore_arts();
-        printf("Done.\n") FLUSH;
+        printf("Done.\n");
         if (g_sa_initialized)
             g_s_top_ent = -1;           /* reset top of page */
     }
@@ -426,7 +426,7 @@ void sc_score_cmd(const char *line)
         s_sc_sf_delay = false;
     }
     if (!g_sc_initialized) {
-        printf("\nScoring is not initialized, aborting command.\n") FLUSH;
+        printf("\nScoring is not initialized, aborting command.\n");
         return;
     }
     if (!*line) {
@@ -450,10 +450,10 @@ void sc_score_cmd(const char *line)
         setspin(SPIN_POP);
         /* consider a "done" message later,
          * *if* lookahead did all the arts */
-        putchar('\n') FLUSH;
+        putchar('\n');
         break;
       case 'r': /* rescore */
-        printf("Rescoring articles...\n") FLUSH;
+        printf("Rescoring articles...\n");
         sc_rescore();
         break;
       case 's': /* verbose score for this article */
@@ -467,9 +467,9 @@ void sc_score_cmd(const char *line)
         j = sc_score_art(g_art,true);
         if (i != j) {
             /* Consider resubmitting article to filter? */
-            printf("Other scoring total: %ld\n", j - i) FLUSH;
+            printf("Other scoring total: %ld\n", j - i);
         }
-        printf("Total score is %ld\n",i) FLUSH;
+        printf("Total score is %ld\n",i);
         break;
       case 'e': /* edit scorefile or other file */
         s = skip_hor_space(line+1);

@@ -379,7 +379,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     s = compile(&s_cond_compex, scrbuf, true, true);
                     if (s != nullptr)
                     {
-                        printf("%s: %s\n",scrbuf,s) FLUSH;
+                        printf("%s: %s\n",scrbuf,s);
                         pattern += strlen(pattern);
                         free_compex(&s_cond_compex);
                         goto getout;
@@ -429,7 +429,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 case '"':
                 {
                     pattern = dointerp(scrbuf,(sizeof scrbuf),pattern+1,"\"",cmd);
-                    fputs(scrbuf,stdout) FLUSH;
+                    fputs(scrbuf,stdout);
                     resetty();
                     fgets(scrbuf, sizeof scrbuf, stdin);
                     noecho();
@@ -1204,6 +1204,6 @@ void normalize_refs(char *refs)
 
 static void abort_interp()
 {
-    fputs("\n% interp buffer overflow!\n",stdout) FLUSH;
+    fputs("\n% interp buffer overflow!\n",stdout);
     sig_catcher(0);
 }

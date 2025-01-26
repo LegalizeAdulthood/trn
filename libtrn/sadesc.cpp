@@ -27,7 +27,7 @@ const char *sa_get_statchars(long a, int line)
 
 /* Debug */
 #if 0
-    printf("entry: sa_get_statchars(%d,%d)\n",(int)a,line) FLUSH;
+    printf("entry: sa_get_statchars(%d,%d)\n",(int)a,line);
 #endif
 
 #if 0

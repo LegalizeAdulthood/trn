@@ -74,7 +74,7 @@ int nntp_connect(const char *machine, bool verbose)
         break;
     case NNTP_POSTOK_VAL:
         if (verbose)
-            printf("Done.\n") FLUSH;
+            printf("Done.\n");
         response = 1;
         break;
     default:
@@ -121,7 +121,7 @@ int nntp_command(const char *bp)
     time_t now;
 #if defined(DEBUG) && defined(FLUSH)
     if (debug & DEB_NNTP)
-        printf(">%s\n", bp) FLUSH;
+        printf(">%s\n", bp);
 #endif
     strcpy(g_last_command, bp);
     if (!g_nntplink.connection)
@@ -206,7 +206,7 @@ int nntp_check()
         g_ser_line[len-2] = '\0';
 #if defined(DEBUG) && defined(FLUSH)
     if (debug & DEB_NNTP)
-        printf("<%s\n", g_ser_line) FLUSH;
+        printf("<%s\n", g_ser_line);
 #endif
     if (atoi(g_ser_line) == NNTP_AUTH_NEEDED_VAL) {
         ret = nntp_handle_auth_err();

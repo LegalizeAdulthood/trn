@@ -324,7 +324,7 @@ void opt_file(const char *filename, char **tcbufptr, bool bleat)
         close(fd);
     }
     else if (bleat) {
-        printf(g_cantopen,filename) FLUSH;
+        printf(g_cantopen,filename);
         /*termdown(1);*/
     }
 
@@ -1355,12 +1355,12 @@ void cwd_check()
                 printf("Cannot make directory %s--\n"
                        "        articles will be saved to %s\n"
                        "\n",
-                       g_privdir.c_str(), tmpbuf) FLUSH;
+                       g_privdir.c_str(), tmpbuf);
             else
                 printf("Can't make %s--\n"
                        "        using %s\n"
                        "\n",
-                       g_privdir.c_str(), tmpbuf) FLUSH;
+                       g_privdir.c_str(), tmpbuf);
         }
     }
     trn_getwd(tmpbuf, sizeof(tmpbuf));
@@ -1369,9 +1369,9 @@ void cwd_check()
             printf("Current directory %s is not writeable--\n"
                    "        articles will be saved to home directory\n"
                    "\n",
-                   tmpbuf) FLUSH;
+                   tmpbuf);
         else
-            printf("%s not writeable--using ~\n\n",tmpbuf) FLUSH;
+            printf("%s not writeable--using ~\n\n",tmpbuf);
         strcpy(tmpbuf,g_home_dir);
     }
     g_privdir = tmpbuf;

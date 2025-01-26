@@ -82,7 +82,7 @@ void sc_sv_getfile()
     FILE *fp = fopen(filexp(s), "r");
     if (!fp) {
 #if 0
-        printf("Could not open score save file for reading.\n") FLUSH;
+        printf("Could not open score save file for reading.\n");
 #endif
         return;
     }
@@ -107,7 +107,7 @@ void sc_sv_savefile()
     if (!tmpfp) {
 #if 0
         printf("Could not open score save temp file %s for writing.\n",
-               s_lbuf) FLUSH;
+               s_lbuf);
 #endif
         free(savename);
         g_waiting = false;
@@ -119,7 +119,7 @@ void sc_sv_savefile()
         if (ferror(tmpfp)) {
             fclose(tmpfp);
             free(savename);
-            printf("\nWrite error in temporary save file %s\n",s_lbuf) FLUSH;
+            printf("\nWrite error in temporary save file %s\n",s_lbuf);
             printf("(keeping old saved scores)\n");
             remove(s_lbuf);
             g_waiting = false;
@@ -375,7 +375,7 @@ void sc_load_scores()
     /* sloppy plurals (:-) */
     if (verbose)
         printf("(%d/%d/%d scores loaded/used/unscored)\n",
-               s_loaded,s_used,total-scored) FLUSH;
+               s_loaded,s_used,total-scored);
 
     s_sc_save_new = total-scored;
     if (g_sa_initialized)

@@ -76,11 +76,11 @@ void rc_to_bits()
     unread = 0;
 #ifdef DEBUG
     if (debug & DEB_CTLAREA_BITMAP) {
-        printf("\n%s\n",mybuf) FLUSH;
+        printf("\n%s\n",mybuf);
         termdown(2);
         for (i = article_first(g_absfirst); i < g_firstart; i = article_next(i)) {
             if (article_unread(i))
-                printf("%ld ",(long)i) FLUSH;
+                printf("%ld ",(long)i);
         }
     }
 #endif
@@ -118,11 +118,11 @@ void rc_to_bits()
             article_ptr(i)->flags &= ~AF_UNREAD;
 #ifdef DEBUG
         if (debug & DEB_CTLAREA_BITMAP) {
-            printf("\n%s\n",s) FLUSH;
+            printf("\n%s\n",s);
             termdown(2);
             for (i = g_absfirst; i <= g_lastart; i++) {
                 if (!was_read(i))
-                    printf("%ld ",(long)i) FLUSH;
+                    printf("%ld ",(long)i);
             }
         }
 #endif
@@ -143,7 +143,7 @@ void rc_to_bits()
     }
 #ifdef DEBUG
     if (debug & DEB_CTLAREA_BITMAP) {
-        fputs("\n(hit CR)",stdout) FLUSH;
+        fputs("\n(hit CR)",stdout);
         termdown(1);
         fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
     }
@@ -225,8 +225,8 @@ void bits_to_rc()
     *s++ = '\0';                        /* and terminate string */
 #ifdef DEBUG
     if ((debug & DEB_NEWSRC_LINE) && !g_panic) {
-        printf("%s: %s\n",g_ngptr->rcline,g_ngptr->rcline+g_ngptr->numoffset) FLUSH;
-        printf("%s\n",mybuf) FLUSH;
+        printf("%s: %s\n",g_ngptr->rcline,g_ngptr->rcline+g_ngptr->numoffset);
+        printf("%s\n",mybuf);
         termdown(2);
     }
 #endif
@@ -506,7 +506,7 @@ void yankback()
                 plural(g_dmcount));
         else {
             printf("\nReturning %ld Marked article%s...\n",(long)g_dmcount,
-                plural(g_dmcount)) FLUSH;
+                plural(g_dmcount));
             termdown(2);
         }
         article_walk(yank_article, 0);
@@ -596,7 +596,7 @@ static int chase_xref(ART_NUM artnum, int markread)
     xref_buf = savestr(xref_buf);
 # ifdef DEBUG
     if (debug & DEB_XREF_MARKER) {
-        printf("Xref: %s\n",xref_buf) FLUSH;
+        printf("Xref: %s\n",xref_buf);
         termdown(1);
     }
 # endif
@@ -688,7 +688,7 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
 
 #ifdef DEBUG
     if (debug) {
-        printf("Xref not from %s -- ignoring\n",inews_site) FLUSH;
+        printf("Xref not from %s -- ignoring\n",inews_site);
         termdown(1);
     }
 #endif

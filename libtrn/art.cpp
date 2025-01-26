@@ -723,7 +723,7 @@ page_switch_result page_switch()
         if (s != nullptr)
         {
                             /* compile regular expression */
-            printf("\n%s\n",s) FLUSH;
+            printf("\n%s\n", s);
             termdown(2);
             return PS_ASK;
         }
@@ -740,8 +740,7 @@ page_switch_result page_switch()
             g_gline = g_tc_LINES-2;
 #ifdef DEBUG
         if (debug & DEB_INNERSRCH) {
-            printf("Start here? %d  >=? %d\n",g_topline + g_gline + 1,g_artline)
-              FLUSH;
+            printf("Start here? %d  >=? %d\n",g_topline + g_gline + 1,g_artline);
             termdown(1);
         }
 #endif
@@ -767,7 +766,7 @@ page_switch_result page_switch()
             }
 #ifdef DEBUG
             if (debug & DEB_INNERSRCH)
-                printf("Test %s\n",s) FLUSH;
+                printf("Test %s\n",s);
 #endif
             success = execute(&s_gcompex,s) != nullptr;
             if (nlptr)
@@ -779,14 +778,13 @@ page_switch_result page_switch()
         }
         if (!g_innersearch) {
             seekartbuf(g_artpos);
-            fputs("(Not found)",stdout) FLUSH;
+            fputs("(Not found)", stdout);
             g_term_col = 11;
             return PS_ASK;
         }
 #ifdef DEBUG
         if (debug & DEB_INNERSRCH) {
-            printf("On page? %ld <=? %ld\n",(long)g_innersearch,(long)g_artpos)
-              FLUSH;
+            printf("On page? %ld <=? %ld\n",(long)g_innersearch,(long)g_artpos);
             termdown(1);
         }
 #endif
@@ -799,7 +797,7 @@ page_switch_result page_switch()
             g_highlight = g_artline - 1;
 #ifdef DEBUG
             if (debug & DEB_INNERSRCH) {
-                printf("@ %d\n",g_highlight) FLUSH;
+                printf("@ %d\n",g_highlight);
                 termdown(1);
             }
 #endif
@@ -829,7 +827,7 @@ page_switch_result page_switch()
       refresh_screen:
 #ifdef DEBUG
         if (debug & DEB_INNERSRCH) {
-            printf("Topline = %d",g_topline) FLUSH;
+            printf("Topline = %d",g_topline);
             fgets(g_buf, sizeof g_buf, stdin);
         }
 #endif
@@ -878,7 +876,7 @@ page_switch_result page_switch()
                     for (pos = g_artpos - pos; pos-- && !at_nl(*s); s++)
                         putchar(*s);
                     color_default();
-                    putchar('\n') FLUSH;
+                    putchar('\n');
                     g_topline--;
                     g_artpos = vrdary(--g_artline);
                     if (g_artpos < 0)
@@ -1061,7 +1059,7 @@ leave_pager:
       case 'q': /* quit this article? */
         return PS_TOEND;
       default:
-        fputs(g_hforhelp,stdout) FLUSH;
+        fputs(g_hforhelp,stdout);
         termdown(1);
         settle_down();
         return PS_ASK;
@@ -1074,8 +1072,7 @@ bool innermore()
     if (g_artpos < g_innersearch) {             /* not even on page yet? */
 #ifdef DEBUG
         if (debug & DEB_INNERSRCH)
-            printf("Not on page %ld < %ld\n",(long)g_artpos,(long)g_innersearch)
-              FLUSH;
+            printf("Not on page %ld < %ld\n",(long)g_artpos,(long)g_innersearch);
 #endif
         return true;
     }
@@ -1088,7 +1085,7 @@ bool innermore()
 #ifdef DEBUG
         if (debug & DEB_INNERSRCH) {
             printf("There it is %ld = %ld, %d @ %d\n",(long)g_artpos,
-                (long)g_innersearch,g_hide_everything,g_highlight) FLUSH;
+                (long)g_innersearch,g_hide_everything,g_highlight);
             termdown(1);
         }
 #endif
@@ -1101,8 +1098,7 @@ bool innermore()
     }
 #ifdef DEBUG
     if (debug & DEB_INNERSRCH) {
-        printf("Not far enough? %d <? %d + %d\n",g_artline,s_isrchline,g_gline)
-          FLUSH;
+        printf("Not far enough? %d <? %d + %d\n",g_artline,s_isrchline,g_gline);
         termdown(1);
     }
 #endif

@@ -64,7 +64,7 @@ int escapade()
     else {
         trn_getwd(whereiam, sizeof(whereiam));
         if (chdir(g_privdir.c_str())) {
-            printf(g_nocd,g_privdir.c_str()) FLUSH;
+            printf(g_nocd,g_privdir.c_str());
             sig_catcher(0);
         }
     }
@@ -76,7 +76,7 @@ int escapade()
     crmode();                           /*   unfriendly again */
     if (docd) {
         if (chdir(whereiam)) {
-            printf(g_nocd,whereiam) FLUSH;
+            printf(g_nocd,whereiam);
             sig_catcher(0);
         }
     }
@@ -137,7 +137,7 @@ int switcheroo()
         if (docd) {
             cwd_check();
             if (chdir(whereami)) {              /* -d does chdirs */
-                printf(g_nocd,whereami) FLUSH;
+                printf(g_nocd,whereami);
                 sig_catcher(0);
             }
         }
@@ -211,7 +211,7 @@ numnum_result numnum()
             max = g_lastart;
             if (min > max)
                 min = max;
-            sprintf(g_msg,"(Last article is %ld)",(long)g_lastart) FLUSH;
+            sprintf(g_msg,"(Last article is %ld)",(long)g_lastart);
             warnmsg(g_msg);
         }
         if (max < min) {
@@ -614,7 +614,7 @@ int ng_perform(char *cmdlst, int output_level)
             break;
           case 'u':
             if (output_level && g_verbose) {
-                printf(g_unsubto,g_ngptr->rcline) FLUSH;
+                printf(g_unsubto,g_ngptr->rcline);
                 termdown(1);
             }
             g_ngptr->subscribechar = NEGCHAR;

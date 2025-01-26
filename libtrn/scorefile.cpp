@@ -72,7 +72,7 @@ void sf_init()
     memset((char*)s_sf_abbr,0,256 * sizeof (char*));
 
     if (g_sf_verbose)
-        printf("\nReading score files...\n") FLUSH;
+        printf("\nReading score files...\n");
     s_sf_file_level = 0;
     /* find # of levels */
     strcpy(s_sf_buf,filexp("%C"));
@@ -110,7 +110,7 @@ void sf_init()
                     if (s_sf_entries[j].head_type == SF_KILLTHRESHOLD)
                         break;
                 if (j == g_sf_num_entries) /* no later thresholds */
-                    printf("killthreshold %d\n",g_kill_thresh) FLUSH;
+                    printf("killthreshold %d\n",g_kill_thresh);
             }
             break;
           case SF_NEWAUTHOR:
@@ -123,7 +123,7 @@ void sf_init()
                     if (s_sf_entries[j].head_type == SF_NEWAUTHOR)
                         break;
                 if (j == g_sf_num_entries) /* no later newauthors */
-                    printf("New Author score: %d\n",s_newauthor) FLUSH;
+                    printf("New Author score: %d\n",s_newauthor);
             }
             break;
           case SF_REPLY:
@@ -136,7 +136,7 @@ void sf_init()
                     if (s_sf_entries[j].head_type == SF_REPLY)
                         break;
                 if (j == g_sf_num_entries) /* no later reply rules */
-                    printf("Reply score: %d\n",s_reply_score) FLUSH;
+                    printf("Reply score: %d\n",s_reply_score);
             }
             break;
         }
@@ -350,7 +350,7 @@ bool sf_do_command(char *cmd, bool check)
             g_sc_savescores = true;
             return true;
         }
-        printf("Bad savescores command: |%s|\n",cmd) FLUSH;
+        printf("Bad savescores command: |%s|\n",cmd);
         return false;
     }
     if (!strncmp(cmd,"newauthor",9)) {
@@ -397,7 +397,7 @@ bool sf_do_command(char *cmd, bool check)
         s = skip_hor_space(cmd + 7); /* skip whitespace */
         char *s2 = skip_ne(s, ':');
         if (!s2) {
-            printf("\nBad header command (missing :)\n%s\n",cmd) FLUSH;
+            printf("\nBad header command (missing :)\n%s\n",cmd);
             return false;
         }
         if (check)
@@ -461,11 +461,11 @@ bool sf_do_command(char *cmd, bool check)
         return true;
     }
     if (!strncmp(cmd,"newsclip",8)) {
-        printf("Newsclip is no longer supported.\n") FLUSH;
+        printf("Newsclip is no longer supported.\n");
         return false;
     }
     /* no command matched */
-    printf("Unknown command: |%s|\n",cmd) FLUSH;
+    printf("Unknown command: |%s|\n",cmd);
     return false;
 }
 
@@ -498,7 +498,7 @@ char *sf_freeform(char *start1, char *end1)
                 return s;
             }
             datenum = atoi(s);
-            printf("Date: %d\n",datenum) FLUSH;
+            printf("Date: %d\n",datenum);
             s = skip_digits(s); /* skip datenum */
             end1 = s;           /* end of key data */
             break;
@@ -514,7 +514,7 @@ char *sf_freeform(char *start1, char *end1)
         s = end1+1;
         char ch = *s;
         *s = '\0';
-        printf("Scorefile freeform: unknown key: |%s|\n",start1) FLUSH;
+        printf("Scorefile freeform: unknown key: |%s|\n",start1);
         *s = ch;
         return nullptr; /* error indicated */
     }
@@ -570,7 +570,7 @@ bool sf_do_line(char *line, bool check)
         s = sf_freeform(s,s2);
         if (!s || !*s) {        /* used up all the line's text, or error */
             printf("Scorefile entry error error (freeform parse).  ");
-            printf("Line was:\n|%s|\n",line) FLUSH;
+            printf("Line was:\n|%s|\n",line);
             return false;       /* error */
         }
     } /* while */
@@ -590,7 +590,7 @@ bool sf_do_line(char *line, bool check)
     /* skip whitespace */
     s = skip_hor_space(++s2);
     if (!*s) {  /* no pattern */
-        printf("Empty score pattern.  Line follows:\n|%s|\n",line) FLUSH;
+        printf("Empty score pattern.  Line follows:\n|%s|\n",line);
         return false;
     }
     if (check)
@@ -610,8 +610,8 @@ bool sf_do_line(char *line, bool check)
         /* 4th is true for case-insensitivity */
         s2 = compile(s_sf_compex,s,true,true);
         if (s2 != nullptr) {
-            printf("Bad pattern : |%s|\n",s) FLUSH;
-            printf("Compex returns: |%s|\n",s2) FLUSH;
+            printf("Bad pattern : |%s|\n",s);
+            printf("Compex returns: |%s|\n",s2);
             free_compex(s_sf_compex);
             free(s_sf_compex);
             s_sf_entries[g_sf_num_entries-1].compex = nullptr;
@@ -647,7 +647,7 @@ void sf_do_file(const char *fname)
     if (g_sf_verbose) {
         for (int i = 1; i < s_sf_file_level; i++)
             printf(".");                /* maybe later putchar... */
-        printf("Score file: %s\n",fname) FLUSH;
+        printf("Score file: %s\n",fname);
     }
     char *safefilename = savestr(fname);
     /* add end marker to scoring array */
@@ -753,7 +753,7 @@ int sf_score(ART_NUM a)
     if (s_newauthor_active && !(article_ptr(a)->scoreflags & SFLAG_AUTHOR)) {
         sum = sum+s_newauthor;  /* add new author bonus */
         if (g_sf_score_verbose) {
-            printf("New Author: %d\n",s_newauthor) FLUSH;
+            printf("New Author: %d\n",s_newauthor);
             /* consider: print which file the bonus came from */
         }
     }
@@ -782,7 +782,7 @@ char *sf_missing_score(const char *line)
     /* save line since it is probably pointing at (the TRN-global) g_buf */
     char *s = savestr(line);
     printf("Possibly missing score.\n"
-           "Type a score now or delete the colon to abort this entry:\n") FLUSH;
+           "Type a score now or delete the colon to abort this entry:\n");
     g_buf[0] = ':';
     g_buf[1] = FINISHCMD;
     int i = finish_command(true); /* print the CR */
@@ -818,9 +818,9 @@ void sf_append(char *line)
         printf("List of abbreviation/file pairs\n") ;
         for (int i = 0; i < 256; i++)
             if (s_sf_abbr[i])
-                printf("%c %s\n",(char)i,s_sf_abbr[i]) FLUSH;
-        printf("\" [The current newsgroup's score file]\n") FLUSH;
-        printf("* [The global score file]\n") FLUSH;
+                printf("%c %s\n",(char)i,s_sf_abbr[i]);
+        printf("\" [The current newsgroup's score file]\n");
+        printf("* [The global score file]\n");
         return;
     }
 
@@ -835,7 +835,7 @@ void sf_append(char *line)
         if (!sf_do_line(scoreline,true)) {  /* just checking */
             scoreline = sf_missing_score(scoreline);
             if (!scoreline) {   /* no score typed */
-                printf("Score entry aborted.\n") FLUSH;
+                printf("Score entry aborted.\n");
                 return;
             }
         }
@@ -871,15 +871,15 @@ void sf_append(char *line)
             scoreline = lbuf;
             break;
           default:
-            printf("\nBad scorefile line: |%s| (not added)\n", line) FLUSH;
+            printf("\nBad scorefile line: |%s| (not added)\n", line);
             return;
         }
-        printf("%s\n",scoreline) FLUSH;
+        printf("%s\n",scoreline);
     }
 
     /* test the scoring line unless filechar is '!' (meaning do it now) */
     if (!sf_do_line(scoreline,filechar!='!')) {
-        printf("Bad score line (ignored)\n") FLUSH;
+        printf("Bad score line (ignored)\n");
         return;
     }
     if (filechar == '!')
@@ -897,7 +897,7 @@ void sf_append(char *line)
         filename = filebuf;
     }
     else if (!(filename = s_sf_abbr[(int)filechar])) {
-        printf("\nBad file abbreviation: %c\n",filechar) FLUSH;
+        printf("\nBad file abbreviation: %c\n",filechar);
         return;
     }
     filename = filexp(sf_cmd_fname(filename));  /* allow shortcuts */
@@ -922,8 +922,8 @@ char *sf_get_line(ART_NUM a, header_line_type h)
     char* s;
 
     if (h <= SOME_LINE) {
-        printf("sf_get_line(%d,%d): bad header type\n",(int)a,h) FLUSH;
-        printf("(Internal error: header number too low)\n") FLUSH;
+        printf("sf_get_line(%d,%d): bad header type\n",(int)a,h);
+        printf("(Internal error: header number too low)\n");
         *sf_getline = '\0';
         return sf_getline;
     }
@@ -931,8 +931,8 @@ char *sf_get_line(ART_NUM a, header_line_type h)
         if (h-HEAD_LAST < s_sf_num_extra_headers)
             s = sf_get_extra_header(a,h-HEAD_LAST);
         else {
-            printf("sf_get_line(%d,%d): bad header type\n",(int)a,h) FLUSH;
-            printf("(Internal error: header number too high)\n") FLUSH;
+            printf("sf_get_line(%d,%d): bad header type\n",(int)a,h);
+            printf("(Internal error: header number too high)\n");
             *sf_getline = '\0';
             return sf_getline;
         }
@@ -1014,7 +1014,7 @@ void sf_exclude_file(const char *fname)
          && !strcmp(s_sf_entries[start].str1,fname))
             break;
     if (start == g_sf_num_entries) {
-        printf("Exclude: file |%s| was not included\n",fname) FLUSH;
+        printf("Exclude: file |%s| was not included\n",fname);
         return;
     }
     for (end = start+1; end < g_sf_num_entries; end++)
@@ -1023,7 +1023,7 @@ void sf_exclude_file(const char *fname)
             break;
     if (end == g_sf_num_entries) {
         printf("Exclude: file |%s| is incomplete at exclusion command\n",
-                fname) FLUSH;
+                fname);
         /* insert more explanation later? */
         return;
     }
@@ -1051,7 +1051,7 @@ void sf_exclude_file(const char *fname)
     s_sf_entries = tmp_entries;
     g_sf_num_entries = newnum;
     if (g_sf_verbose)
-        printf("Excluded file: %s\n",fname) FLUSH;
+        printf("Excluded file: %s\n",fname);
 }
 
 //char* filespec;               /* file abbrev. or name */
@@ -1077,7 +1077,7 @@ void sf_edit_file(const char *filespec)
     }
     else {      /* abbreviation */
         if (!s_sf_abbr[(int)filechar]) {
-            printf("\nBad file abbreviation: %c\n",filechar) FLUSH;
+            printf("\nBad file abbreviation: %c\n",filechar);
             return;
         }
         strcpy(filebuf,s_sf_abbr[(int)filechar]);
@@ -1090,7 +1090,7 @@ void sf_edit_file(const char *filespec)
         sf_file_clear();
     }
     else
-        printf("Can't make %s\n",filebuf) FLUSH;
+        printf("Can't make %s\n",filebuf);
 }
 
 /* returns file number */

@@ -50,7 +50,7 @@ int nntp_list(const char *type, const char *arg, int len)
         return -1;
 #if defined(DEBUG) && defined(FLUSH)
     if (debug & DEB_NNTP)
-        printf("<%s\n", g_ser_line) FLUSH;
+        printf("<%s\n", g_ser_line);
 #endif
     if (nntp_at_list_end(g_ser_line))
         return 0;
@@ -258,7 +258,7 @@ int nntp_finishbody(finishbody_mode bmode)
     if (s_body_pos < 0)
         return 0;
     if (bmode == FB_DISCARD) {
-        /*printf("Discarding the rest of the article...\n") FLUSH; $$*/
+        /*printf("Discarding the rest of the article...\n"); $$*/
 #if 0
         /* Implement this if flushing the data becomes possible */
         nntp_artname(g_openart, -1); /* Or something... */

@@ -71,7 +71,7 @@ void writelast()
         rename(g_buf,s_lastfile);
     }
     else {
-        printf(g_cantcreate,g_buf) FLUSH;
+        printf(g_cantcreate,g_buf);
         /*termdown(1);*/
     }
 }

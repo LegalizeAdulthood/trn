@@ -145,7 +145,7 @@ static void new_nntp_groups(DATASRC *dp)
             break;
 #ifdef DEBUG
         if (debug & DEB_NNTP)
-            printf("<%s\n", g_ser_line) FLUSH;
+            printf("<%s\n", g_ser_line);
 #endif
         if (nntp_at_list_end(g_ser_line))
             break;
@@ -201,7 +201,7 @@ static void new_local_groups(DATASRC *dp)
 
     FILE *fp = fopen(dp->extra_name, "r");
     if (fp == nullptr) {
-        printf(g_cantopen,dp->extra_name) FLUSH;
+        printf(g_cantopen, dp->extra_name);
         termdown(1);
         return;
     }

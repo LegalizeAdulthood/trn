@@ -699,17 +699,4 @@ extern const char *g_cantopen;
 extern const char *g_cantcreate;
 extern const char *g_nocd;
 
-#ifdef NOLINEBUF
-#define FLUSH ,fflush(stdout)
-#else
-#define FLUSH
-#endif
-
-#ifdef lint
-#undef FLUSH
-#define FLUSH
-#undef putchar
-#define putchar(c)
-#endif
-
 #endif

@@ -247,7 +247,7 @@ Signal_t stop_catcher(int signo)
         checkpoint_newsrcs();   /* good chance of crash while stopped */
         if (g_bos_on_stop) {
             goto_xy(0, g_tc_LINES-1);
-            putchar('\n') FLUSH;
+            putchar('\n');
         }
         termlib_reset();
         resetty();              /* this is the point of all this */

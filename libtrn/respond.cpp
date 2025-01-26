@@ -74,14 +74,14 @@ save_result save_article()
     g_savefrom = (cmd == 'w' || cmd == 'e')? g_htype[PAST_HEADER].minpos : 0;
     if (artopen(g_art,g_savefrom) == nullptr) {
         if (g_verbose)
-            fputs("\nCan't save an empty article.\n",stdout) FLUSH;
+            fputs("\nCan't save an empty article.\n",stdout);
         else
-            fputs(s_nullart,stdout) FLUSH;
+            fputs(s_nullart,stdout);
         termdown(2);
         return SAVE_DONE;
     }
     if (chdir(g_privdir.c_str())) {
-        printf(g_nocd,g_privdir.c_str()) FLUSH;
+        printf(g_nocd,g_privdir.c_str());
         sig_catcher(0);
     }
     if (cmd == 'e') {           /* is this an extract command? */
@@ -170,18 +170,18 @@ save_result save_article()
             return SAVE_DONE;
         }
         if (chdir(s)) {
-            printf(g_nocd,s) FLUSH;
+            printf(g_nocd,s);
             sig_catcher(0);
         }
         c = trn_getwd(g_buf, sizeof(g_buf));    /* simplify path for output */
         if (custom_extract) {
-            printf("Extracting article into %s using %s\n",c,g_extractprog.c_str()) FLUSH;
+            printf("Extracting article into %s using %s\n",c,g_extractprog.c_str());
             termdown(1);
             interp(g_cmd_buf, sizeof g_cmd_buf, get_val("CUSTOMSAVER",CUSTOMSAVER));
             invoke(g_cmd_buf, nullptr);
         }
         else if (g_is_mime) {
-            printf("Extracting MIME article into %s:\n", c) FLUSH;
+            printf("Extracting MIME article into %s:\n", c);
             termdown(1);
             mime_DecodeArticle(false);
         }
@@ -228,13 +228,13 @@ save_result save_article()
             }/* for */
             switch (decode_type) {
               case 1:
-                printf("Extracting shar into %s:\n", c) FLUSH;
+                printf("Extracting shar into %s:\n", c);
                 termdown(1);
                 interp(g_cmd_buf,(sizeof g_cmd_buf),get_val("SHARSAVER",SHARSAVER));
                 invoke(g_cmd_buf, nullptr);
                 break;
               case 2:
-                printf("Extracting uuencoded file into %s:\n", c) FLUSH;
+                printf("Extracting uuencoded file into %s:\n", c);
                 termdown(1);
                 g_mime_section->type = IMAGE_MIME;
                 safefree(g_mime_section->filename);
@@ -249,7 +249,7 @@ save_result save_article()
                 newline();
                 break;
               default:
-                printf("Unable to determine type of file.\n") FLUSH;
+                printf("Unable to determine type of file.\n");
                 termdown(1);
                 break;
             }
@@ -282,10 +282,9 @@ save_result save_article()
         s = g_buf+1;            /* skip s or S */
         if (*s == '-') {        /* if they are confused, skip - also */
             if (g_verbose)
-                fputs("Warning: '-' ignored.  This isn't readnews.\n",stdout)
-                  FLUSH;
+                fputs("Warning: '-' ignored.  This isn't readnews.\n", stdout);
             else
-                fputs("'-' ignored.\n",stdout) FLUSH;
+                fputs("'-' ignored.\n", stdout);
             termdown(1);
             s++;
         }
@@ -342,13 +341,13 @@ save_result save_article()
                                "Type y to create %s as a mailbox.\n"
                                "Type n to create it as a normal file.\n"
                                "Type q to abort the save.\n",
-                               s) FLUSH;
+                               s);
                     else
                         fputs("\n"
                               "y to create mailbox.\n"
                               "n to create normal file.\n"
                               "q to abort.\n",
-                              stdout) FLUSH;
+                              stdout);
                     termdown(4);
                     goto reask_save;
                 }
@@ -362,7 +361,7 @@ save_result save_article()
                     goto s_bomb;
                 }
                 else {
-                    fputs(g_hforhelp,stdout) FLUSH;
+                    fputs(g_hforhelp,stdout);
                     termdown(1);
                     settle_down();
                     goto reask_save;
@@ -453,13 +452,13 @@ save_result view_article()
     g_savefrom = g_htype[PAST_HEADER].minpos;
     if (artopen(g_art,g_savefrom) == nullptr) {
         if (g_verbose)
-            fputs("\nNo attatchments on an empty article.\n",stdout) FLUSH;
+            fputs("\nNo attatchments on an empty article.\n",stdout);
         else
-            fputs(s_nullart,stdout) FLUSH;
+            fputs(s_nullart,stdout);
         termdown(2);
         return SAVE_DONE;
     }
-    printf("Processing attachments...\n") FLUSH;
+    printf("Processing attachments...\n");
     termdown(1);
     if (g_is_mime)
         mime_DecodeArticle(true);
@@ -497,7 +496,7 @@ save_result view_article()
                 break;
         }/* for */
         if (cnt) {
-            printf("Unable to determine type of file.\n") FLUSH;
+            printf("Unable to determine type of file.\n");
             termdown(1);
         }
     }
@@ -513,9 +512,9 @@ int cancel_article()
 
     if (artopen(g_art,(ART_POS)0) == nullptr) {
         if (g_verbose)
-            fputs("\nCan't cancel an empty article.\n",stdout) FLUSH;
+            fputs("\nCan't cancel an empty article.\n",stdout);
         else
-            fputs(s_nullart,stdout) FLUSH;
+            fputs(s_nullart,stdout);
         termdown(2);
         return r;
     }
@@ -532,28 +531,28 @@ int cancel_article()
        && myuid != ROOTID))) {
 #ifdef DEBUG
         if (debug) {
-            printf("\n%s@%s != %s\n",g_login_name.c_str(),g_hostname,from_buf) FLUSH;
-            printf("%s != %s\n",get_val("FROM",""),from_buf) FLUSH;
+            printf("\n%s@%s != %s\n",g_login_name.c_str(),g_hostname,from_buf);
+            printf("%s != %s\n",get_val("FROM",""),from_buf);
             termdown(3);
         }
 #endif
         if (g_verbose)
-            fputs("\nYou can't cancel someone else's article\n",stdout) FLUSH;
+            fputs("\nYou can't cancel someone else's article\n",stdout);
         else
-            fputs("\nNot your article\n",stdout) FLUSH;
+            fputs("\nNot your article\n",stdout);
         termdown(2);
     }
     else {
         FILE *header = fopen(g_headname.c_str(),"w");   /* open header file */
         if (header == nullptr) {
-            printf(g_cantcreate,g_headname.c_str()) FLUSH;
+            printf(g_cantcreate,g_headname.c_str());
             termdown(1);
             goto done;
         }
         interp(hbuf, sizeof hbuf, get_val("CANCELHEADER",CANCELHEADER));
         fputs(hbuf,header);
         fclose(header);
-        fputs("\nCanceling...\n",stdout) FLUSH;
+        fputs("\nCanceling...\n",stdout);
         termdown(2);
         r = doshell(SH,filexp(get_val_const("CANCEL",CALL_INEWS)));
     }
@@ -573,9 +572,9 @@ int supersede_article()         /* Supersedes: */
 
     if (artopen(g_art,(ART_POS)0) == nullptr) {
         if (g_verbose)
-            fputs("\nCan't supersede an empty article.\n",stdout) FLUSH;
+            fputs("\nCan't supersede an empty article.\n",stdout);
         else
-            fputs(s_nullart,stdout) FLUSH;
+            fputs(s_nullart,stdout);
         termdown(2);
         return r;
     }
@@ -592,21 +591,21 @@ int supersede_article()         /* Supersedes: */
        && myuid != ROOTID))) {
 #ifdef DEBUG
         if (debug) {
-            printf("\n%s@%s != %s\n",g_login_name.c_str(),g_hostname,from_buf) FLUSH;
-            printf("%s != %s\n",get_val("FROM",""),from_buf) FLUSH;
+            printf("\n%s@%s != %s\n",g_login_name.c_str(),g_hostname,from_buf);
+            printf("%s != %s\n",get_val("FROM",""),from_buf);
             termdown(3);
         }
 #endif
         if (g_verbose)
-            fputs("\nYou can't supersede someone else's article\n",stdout) FLUSH;
+            fputs("\nYou can't supersede someone else's article\n",stdout);
         else
-            fputs("\nNot your article\n",stdout) FLUSH;
+            fputs("\nNot your article\n",stdout);
         termdown(2);
     }
     else {
         FILE *header = fopen(g_headname.c_str(),"w");   /* open header file */
         if (header == nullptr) {
-            printf(g_cantcreate,g_headname.c_str()) FLUSH;
+            printf(g_cantcreate,g_headname.c_str());
             termdown(1);
             goto done;
         }
@@ -665,9 +664,9 @@ static void follow_it_up()
                 fclose(fp_out);
             }
             if (appended)
-                printf("Article appended to %s\n", deadart) FLUSH;
+                printf("Article appended to %s\n", deadart);
             else
-                printf("Unable to append article to %s\n", deadart) FLUSH;
+                printf("Unable to append article to %s\n", deadart);
         }
     }
 }
@@ -681,7 +680,7 @@ void reply()
     artopen(g_art,(ART_POS)0);
     FILE *header = fopen(g_headname.c_str(),"w");       /* open header file */
     if (header == nullptr) {
-        printf(g_cantcreate,g_headname.c_str()) FLUSH;
+        printf(g_cantcreate,g_headname.c_str());
         termdown(1);
         goto done;
     }
@@ -689,10 +688,9 @@ void reply()
     fputs(hbuf,header);
     if (!in_string(maildoer,"%h", true)) {
         if (g_verbose)
-            printf("\n%s\n(Above lines saved in file %s)\n",g_buf,g_headname.c_str())
-              FLUSH;
+            printf("\n%s\n(Above lines saved in file %s)\n", g_buf, g_headname.c_str());
         else
-            printf("\n%s\n(Header in %s)\n",g_buf,g_headname.c_str()) FLUSH;
+            printf("\n%s\n(Header in %s)\n", g_buf, g_headname.c_str());
         termdown(3);
     }
     if (incl_body && g_artfp != nullptr) {
@@ -740,7 +738,7 @@ void forward()
     artopen(g_art,(ART_POS)0);
     FILE *header = fopen(g_headname.c_str(),"w");       /* open header file */
     if (header == nullptr) {
-        printf(g_cantcreate,g_headname.c_str()) FLUSH;
+        printf(g_cantcreate,g_headname.c_str());
         termdown(1);
         goto done;
     }
@@ -784,10 +782,9 @@ void forward()
 #endif
     if (!in_string(maildoer,"%h", true)) {
         if (g_verbose)
-            printf("\n%s\n(Above lines saved in file %s)\n",hbuf,g_headname.c_str())
-              FLUSH;
+            printf("\n%s\n(Above lines saved in file %s)\n", hbuf, g_headname.c_str());
         else
-            printf("\n%s\n(Header in %s)\n",hbuf,g_headname.c_str()) FLUSH;
+            printf("\n%s\n(Header in %s)\n", hbuf, g_headname.c_str());
         termdown(3);
     }
     if (g_artfp != nullptr) {
@@ -847,7 +844,7 @@ void followup()
     artopen(g_art,(ART_POS)0);
     FILE *header = fopen(g_headname.c_str(),"w");
     if (header == nullptr) {
-        printf(g_cantcreate,g_headname.c_str()) FLUSH;
+        printf(g_cantcreate,g_headname.c_str());
         termdown(1);
         g_art = oldart;
         return;
@@ -860,7 +857,7 @@ void followup()
             fputs("\n"
                   "(Be sure to double-check the attribution against the signature, and\n"
                   "trim the quoted article down as much as possible.)\n",
-                  stdout) FLUSH;
+                  stdout);
         interp(g_buf, (sizeof g_buf), get_val("ATTRIBUTION",ATTRIBUTION));
         fprintf(header,"%s\n",g_buf);
         parseheader(g_art);
@@ -898,7 +895,7 @@ int invoke(const char *cmd, const char *dir)
 #endif
     if (dir) {
         if (chdir(dir)) {
-            printf(g_nocd,dir) FLUSH;
+            printf(g_nocd,dir);
             return ret;
         }
     }

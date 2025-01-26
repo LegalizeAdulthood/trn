@@ -20,7 +20,7 @@ bool s_eligible(long ent)
       case S_ART:
         return sa_eligible(ent);
       default:
-        printf("s_eligible: current type is bad!\n") FLUSH;
+        printf("s_eligible: current type is bad!\n");
         return false;
     }
 }

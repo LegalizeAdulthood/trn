@@ -219,7 +219,7 @@ char *safemalloc(MEM_SIZE size)
 {
     char *ptr = (char*)malloc(size ? size : (MEM_SIZE)1);
     if (!ptr) {
-        fputs(s_nomem,stdout) FLUSH;
+        fputs(s_nomem,stdout);
         sig_catcher(0);
     }
     return ptr;
@@ -238,7 +238,7 @@ char *saferealloc(char *where, MEM_SIZE size)
     else
         ptr = (char*) realloc(where, size ? size : (MEM_SIZE)1);
     if (!ptr) {
-        fputs(s_nomem,stdout) FLUSH;
+        fputs(s_nomem,stdout);
         sig_catcher(0);
     }
     return ptr;
@@ -307,7 +307,7 @@ char *trn_getwd(char *buf, int buflen)
     ret = trn_getcwd(buf, buflen);
 #endif
     if (!ret) {
-        printf("Cannot determine current working directory!\n") FLUSH;
+        printf("Cannot determine current working directory!\n");
         finalize(1);
     }
 #ifdef MSDOS
@@ -327,7 +327,7 @@ static char *trn_getcwd(char *buf, int len)
     ret = getwd(buf);
     if (buf[len-1]) {
         /* getwd() overwrote the end of the buffer */
-        printf("getwd() buffer overrun!\n") FLUSH;
+        printf("getwd() buffer overrun!\n");
         finalize(1);
     }
 #else
@@ -337,17 +337,17 @@ static char *trn_getcwd(char *buf, int len)
 
     pipefp = popen("/bin/pwd","r");
     if (pipefp == nullptr) {
-        printf("Can't popen /bin/pwd\n") FLUSH;
+        printf("Can't popen /bin/pwd\n");
         return nullptr;
     }
     buf[0] = 0;
     fgets(ret = buf, len, pipefp);
     if (pclose(pipefp) == EOF) {
-        printf("Failed to run /bin/pwd\n") FLUSH;
+        printf("Failed to run /bin/pwd\n");
         return nullptr;
     }
     if (!buf[0]) {
-        printf("/bin/pwd didn't output anything\n") FLUSH;
+        printf("/bin/pwd didn't output anything\n");
             return nullptr;
     }
     nl = strchr(buf, '\n');
@@ -406,7 +406,7 @@ bool makedir(const char *dirname, makedir_name_type nametype)
 
 void notincl(const char *feature)
 {
-    printf("\nNo room for feature \"%s\" on this machine.\n",feature) FLUSH;
+    printf("\nNo room for feature \"%s\" on this machine.\n",feature);
 }
 
 /* grow a static string to at least a certain length */
@@ -450,7 +450,7 @@ void safelink(char *old_name, char *new_name)
 #endif
 
     if (link(old_name,new_name)) {
-        printf("Can't link backup (%s) to .newsrc (%s)\n", old_name, new_name) FLUSH;
+        printf("Can't link backup (%s) to .newsrc (%s)\n", old_name, new_name);
 #if 0
         if (errno>0 && errno<sys_nerr)
             printf("%s\n", sys_errlist[errno]);
@@ -468,17 +468,17 @@ void verify_sig()
     int i = doshell(SH, filexp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
     if (!i) {   /* found RIPEM */
         i = doshell(SH,filexp(get_val_const("VERIFY_RIPEM",VERIFY_RIPEM)));
-        printf("\nReturned value: %d\n",i) FLUSH;
+        printf("\nReturned value: %d\n",i);
         return;
     }
     /* PGP */
     i = doshell(SH,filexp("grep -s \"BEGIN PGP\" %A"));
     if (!i) {   /* found PGP */
         i = doshell(SH,filexp(get_val_const("VERIFY_PGP",VERIFY_PGP)));
-        printf("\nReturned value: %d\n",i) FLUSH;
+        printf("\nReturned value: %d\n",i);
         return;
     }
-    printf("No PGP/RIPEM signatures detected.\n") FLUSH;
+    printf("No PGP/RIPEM signatures detected.\n");
 }
 
 double current_time()
@@ -844,7 +844,7 @@ char menu_get_char()
     fflush(stdout);
     eat_typeahead();
     getcmd(g_buf);
-    printf("%c\n",*g_buf) FLUSH;
+    printf("%c\n",*g_buf);
     return(*g_buf);
 }
 

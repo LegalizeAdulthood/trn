@@ -56,7 +56,7 @@ static bool matchlist(const char *patlist, const char *s)
         const char *err = ng_comp(&ilcompex, pattern.c_str(), true, true);
 
         if (err != nullptr) {
-            printf("\n%s\n", err) FLUSH;
+            printf("\n%s\n", err);
             finalize(1);
         }
         

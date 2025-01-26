@@ -99,16 +99,16 @@ int access_ng()
             if (eaccess(g_ngdir.c_str(),0)) {
                 if (g_verbose)
                     printf("\nNewsgroup %s does not have a spool directory!\n",
-                           g_ngname.c_str()) FLUSH;
+                           g_ngname.c_str());
                 else
-                    printf("\nNo spool for %s!\n",g_ngname.c_str()) FLUSH;
+                    printf("\nNo spool for %s!\n",g_ngname.c_str());
                 termdown(2);
             } else {
                 if (g_verbose)
                     printf("\nNewsgroup %s is not currently accessible.\n",
-                           g_ngname.c_str()) FLUSH;
+                           g_ngname.c_str());
                 else
-                    printf("\n%s not readable.\n",g_ngname.c_str()) FLUSH;
+                    printf("\n%s not readable.\n",g_ngname.c_str());
                 termdown(2);
             }
             /* make this newsgroup temporarily invisible */
@@ -119,7 +119,7 @@ int access_ng()
         /* chdir to newsgroup subdirectory */
 
         if (chdir(g_ngdir.c_str())) {
-            printf(g_nocd,g_ngdir.c_str()) FLUSH;
+            printf(g_nocd,g_ngdir.c_str());
             return 0;
         }
         g_lastart = getngsize(g_ngptr);
@@ -140,7 +140,7 @@ void chdir_newsdir()
 {
     if (chdir(g_datasrc->spool_dir) || (!(g_datasrc->flags & DF_REMOTE) && chdir(g_ngdir.c_str())))
     {
-        printf(g_nocd,g_ngdir.c_str()) FLUSH;
+        printf(g_nocd,g_ngdir.c_str());
         sig_catcher(0);
     }
 }
@@ -278,10 +278,9 @@ void ng_skip()
         if (errno != ENOENT) {  /* has it not been deleted? */
             clear();
             if (g_verbose)
-                printf("\n(Article %ld exists but is unreadable.)\n",(long)g_art)
-                        FLUSH;
+                printf("\n(Article %ld exists but is unreadable.)\n",(long)g_art);
             else
-                printf("\n(%ld unreadable.)\n",(long)g_art) FLUSH;
+                printf("\n(%ld unreadable.)\n",(long)g_art);
             termdown(2);
             if (g_novice_delays) {
                 pad(g_just_a_sec);

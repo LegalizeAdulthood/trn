@@ -726,7 +726,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
                     use_buffered_nntp_gets = true;
                 else if (nntp_list(fetchcmd, "", 0) < 0) {
                     printf("\nCan't get %s file from server: \n%s\n",
-                           fetchcmd, g_ser_line) FLUSH;
+                           fetchcmd, g_ser_line);
                     termdown(2);
                     fclose(fp);
                     return 0;
@@ -755,7 +755,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
     }
 
     if (filename && fp == nullptr) {
-        printf(g_cantopen, filename) FLUSH;
+        printf(g_cantopen, filename);
         termdown(1);
         return 0;
     }
@@ -783,7 +783,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
             if (use_buffered_nntp_gets)
                 use_buffered_nntp_gets = false;
             else if (nntp_gets(g_buf, sizeof g_buf - 1) == NGSR_ERROR) {
-                printf("\nError getting %s file.\n", fetchcmd) FLUSH;
+                printf("\nError getting %s file.\n", fetchcmd);
                 termdown(2);
                 srcfile_close(sfp);
                 setspin(SPIN_OFF);
@@ -838,7 +838,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
     if (server) {
         fflush(fp);
         if (ferror(fp)) {
-            printf("\nError writing the %s file %s.\n",fetchcmd,filename) FLUSH;
+            printf("\nError writing the %s file %s.\n",fetchcmd,filename);
             termdown(2);
             srcfile_close(sfp);
             return 0;
@@ -993,9 +993,9 @@ int find_close_match()
             if (cp)
                 *cp = '\0';
             if (g_verbose)
-                printf("(I assume you meant %s)\n", s_ngptrs[0]) FLUSH;
+                printf("(I assume you meant %s)\n", s_ngptrs[0]);
             else
-                printf("(Using %s)\n", s_ngptrs[0]) FLUSH;
+                printf("(Using %s)\n", s_ngptrs[0]);
             set_ngname(s_ngptrs[0]);
             if (cp)
                 *cp = ' ';
@@ -1058,7 +1058,7 @@ static int get_near_miss()
     char* op = options;
 
     if (g_verbose)
-        printf("However, here are some close matches:\n") FLUSH;
+        printf("However, here are some close matches:\n");
     if (s_ngn > 9)
         s_ngn = 9;      /* Since we're using single digits.... */
     for (int i = 0; i < s_ngn; i++) {
@@ -1080,7 +1080,7 @@ static int get_near_miss()
 reask:
     in_char(promptbuf, MM_ADD_NEWSGROUP_PROMPT, options);
     printcmd();
-    putchar('\n') FLUSH;
+    putchar('\n');
     switch (*g_buf) {
         case 'n':
         case 'N':
@@ -1092,9 +1092,9 @@ reask:
         case 'h':
         case 'H':
             if (g_verbose)
-                fputs("  You entered an illegal newsgroup name, and these are the nearest possible\n  matches.  If you want one of these, then enter its number.  Otherwise\n  just say 'n'.\n", stdout) FLUSH;
+                fputs("  You entered an illegal newsgroup name, and these are the nearest possible\n  matches.  If you want one of these, then enter its number.  Otherwise\n  just say 'n'.\n", stdout);
             else
-                fputs("Illegal newsgroup, enter a number or 'n'.\n", stdout) FLUSH;
+                fputs("Illegal newsgroup, enter a number or 'n'.\n", stdout);
             goto reask;
         default:
             if (isdigit(*g_buf)) {
@@ -1111,7 +1111,7 @@ reask:
                     return 1;
                 }
             }
-            fputs(g_hforhelp, stdout) FLUSH;
+            fputs(g_hforhelp, stdout);
             break;
     }
 

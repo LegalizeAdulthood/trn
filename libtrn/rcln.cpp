@@ -33,9 +33,9 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
         if (output_level) {
             if (g_verbose)
                 printf("\nMarking all but %d articles in %s as read.\n",
-                       leave_count,np->rcline) FLUSH;
+                       leave_count,np->rcline);
             else
-                printf("\nAll but %d marked as read.\n",leave_count) FLUSH;
+                printf("\nAll but %d marked as read.\n",leave_count);
         }
         checkexpired(np, getngsize(np) - leave_count + 1);
         set_toread(np, ST_STRICT);
@@ -43,9 +43,9 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
     else {
         if (output_level) {
             if (g_verbose)
-                printf("\nMarking %s as all read.\n",np->rcline) FLUSH;
+                printf("\nMarking %s as all read.\n",np->rcline);
             else
-                fputs("\nMarked read\n",stdout) FLUSH;
+                fputs("\nMarked read\n",stdout);
         }
         sprintf(tmpbuf,"%s: 1-%ld", np->rcline,(long)getngsize(np));
         free(np->rcline);
@@ -81,7 +81,7 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
     if (dp != np->rc->datasrc) {        /* punt on cross-host xrefs */
 #ifdef DEBUG
         if (debug & DEB_XREF_MARKER)
-            printf("Cross-host xref to group %s ignored.\n",ngnam) FLUSH;
+            printf("Cross-host xref to group %s ignored.\n",ngnam);
 #endif
         return 0;
     }
@@ -97,7 +97,7 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
     if (artnum > np->ngmax + 200) {     /* allow for incoming articles */
         printf("\nCorrupt Xref line!!!  %ld --> %s(1..%ld)\n",
             artnum,ngnam,
-            np->ngmax) FLUSH;
+            np->ngmax);
         g_paranoid = true;              /* paranoia reigns supreme */
         return -1;                      /* hope this was the first newsgroup */
     }
@@ -113,7 +113,7 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
 #ifdef DEBUG
     if (debug & DEB_XREF_MARKER) {
         printf("%ld->\n%s%c%s\n",(long)artnum,np->rcline, np->subscribechar,
-          np->rcline + np->numoffset) FLUSH;
+          np->rcline + np->numoffset);
     }
 #endif
     s = skip_eq(np->rcline + np->numoffset, ' '); /* skip spaces */
@@ -183,7 +183,7 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
     strcat(t,s);                        /* copy remainder of line */
 #ifdef DEBUG
     if (debug & DEB_XREF_MARKER)
-        printf("%s\n",mbuf) FLUSH;
+        printf("%s\n",mbuf);
 #endif
     free(np->rcline);
     np->rcline = mbuf;          /* pull the switcheroo */
@@ -218,7 +218,7 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
 #ifdef DEBUG
     if (debug & DEB_XREF_MARKER) {
         printf("%ld<-\n%s%c%s\n",(long)artnum,np->rcline,np->subscribechar,
-          np->rcline + np->numoffset) FLUSH;
+          np->rcline + np->numoffset);
     }
 #endif
     s = np->rcline + np->numoffset;
@@ -235,7 +235,7 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
             ++np->toread;
 #ifdef DEBUG
         if (debug & DEB_XREF_MARKER)
-            printf("%s%c %s\n",np->rcline,np->subscribechar,s) FLUSH;
+            printf("%s%c %s\n",np->rcline,np->subscribechar,s);
 #endif
         return;
     }
@@ -276,7 +276,7 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
                 strcat(s,t);            /* copy remainder over */
 #ifdef DEBUG
                 if (debug & DEB_XREF_MARKER) {
-                    printf("%s\n",mbuf) FLUSH;
+                    printf("%s\n",mbuf);
                 }
 #endif
                 free(np->rcline);
@@ -302,7 +302,7 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
 #ifdef DEBUG
                 if (debug & DEB_XREF_MARKER) {
                     printf("%s%c%s\n",np->rcline,np->subscribechar,
-                      np->rcline + np->numoffset) FLUSH;
+                      np->rcline + np->numoffset);
                 }
 #endif
                 return;
@@ -336,8 +336,7 @@ void set_toread(NGDATA *np, bool lax_high_check)
 
     if (ngsize == TR_BOGUS) {
         if (!g_toread_quiet) {
-            printf("\nInvalid (bogus) newsgroup found: %s\n",np->rcline)
-              FLUSH;
+            printf("\nInvalid (bogus) newsgroup found: %s\n",np->rcline);
         }
         g_paranoid = true;
         if (virgin_ng || np->toread >= g_ng_min_toread) {
@@ -385,7 +384,7 @@ void set_toread(NGDATA *np, bool lax_high_check)
         unread = (ART_UNREAD)ngsize;    /* assume nothing carried over */
         if (!g_toread_quiet) {
             printf("\nSomebody reset %s -- assuming nothing read.\n",
-                   np->rcline) FLUSH;
+                   np->rcline);
         }
         *(np->rcline + np->numoffset) = '\0';
         g_paranoid = true;          /* enough to make a guy paranoid */
@@ -426,7 +425,7 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
 #ifdef DEBUG
     if (debug & DEB_XREF_MARKER) {
         printf("1-%ld->\n%s%c%s\n",(long)(a1st-1),np->rcline,np->subscribechar,
-          np->rcline + np->numoffset) FLUSH;
+          np->rcline + np->numoffset);
     }
 #endif
     s = skip_space(np->rcline + np->numoffset);
@@ -493,7 +492,7 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
 #ifdef DEBUG
     if (debug & DEB_XREF_MARKER) {
         printf("%s%c%s\n",np->rcline,np->subscribechar,
-          np->rcline + np->numoffset) FLUSH;
+          np->rcline + np->numoffset);
     }
 #endif
 }

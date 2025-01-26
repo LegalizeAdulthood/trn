@@ -418,7 +418,7 @@ void univ_use_pattern(const char *pattern, int type)
     UNIV_ITEM* ui;
 
     if (!s || !*s) {
-        printf("\ngroup pattern: empty regular expression\n") FLUSH;
+        printf("\ngroup pattern: empty regular expression\n");
         return;
     }
     /* XXX later: match all newsgroups in current datasrc to the pattern. */
@@ -508,7 +508,7 @@ static bool univ_use_file(const char *fname, const char *label)
             open_name = nullptr;
         begin_top = false;      /* we will need a "begin group" */
     } else if (*s == ':') {     /* relative to last file's directory */
-        printf("Colon filespec not supported for |%s|\n",s) FLUSH;
+        printf("Colon filespec not supported for |%s|\n",s);
         open_name = nullptr;
     }
     if (!open_name)
@@ -530,7 +530,7 @@ static bool univ_use_file(const char *fname, const char *label)
     }
     fclose(fp);
     if (!s_univ_begin_found)
-        printf("\"begin group\" not found.\n") FLUSH;
+        printf("\"begin group\" not found.\n");
     if (s_univ_begin_label)
         printf("label not found: %s\n",s_univ_begin_label);
     if (s_univ_virt_pass_needed) {
@@ -645,7 +645,7 @@ static bool univ_do_line(char *line)
     if (*s == '"') {    /* description name */
         p = cpytill(s,s+1,'"');
         if (!*p) {
-            printf("univ: unmatched quote in string:\n\"%s\"\n", s) FLUSH;
+            printf("univ: unmatched quote in string:\n\"%s\"\n", s);
             return true;
         }
         *p = '\0';
@@ -830,14 +830,14 @@ static char *univ_edit_new_userfile()
     fp = fopen(s,"w");
     if (!fp) {
         printf("Could not create new user file.\n");
-        printf("Editing current system file\n") FLUSH;
+        printf("Editing current system file\n");
         (void)get_anything();
         return g_univ_fname;
     }
     fprintf(fp,"# User Toplevel (Universal Selector)\n");
     fclose(fp);
-    printf("New User Toplevel file created.\n") FLUSH;
-    printf("After editing this file, exit and restart trn to use it.\n") FLUSH;
+    printf("New User Toplevel file created.\n");
+    printf("After editing this file, exit and restart trn to use it.\n");
     (void)get_anything();
     s_univ_usrtop = true;               /* do not overwrite this file */
     return s;
@@ -947,7 +947,7 @@ int univ_visit_group_main(const char *gname)
 
     NGDATA *np = find_ng(gname);
     if (!np) {
-        printf("Univ/Virt: newsgroup %s not found!", gname) FLUSH;
+        printf("Univ/Virt: newsgroup %s not found!", gname);
         return NG_ERROR;
     }
     /* unsubscribed, bogus, etc. groups are not visited */

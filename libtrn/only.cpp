@@ -41,7 +41,7 @@ void setngtodo(const char *pat)
         const char *err = ng_comp(s_compextodo[i], pat, true, true);
         if (err != nullptr)
         {
-            printf("\n%s\n",err) FLUSH;
+            printf("\n%s\n",err);
             finalize(1);
         }
         g_maxngtodo++;

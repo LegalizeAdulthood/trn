@@ -20,10 +20,10 @@ char *sc_easy_append()
 
     char  filechar = '\0'; /* GCC warning avoidance */
     char *s = s_sc_e_newline;
-    printf("\nScorefile easy append mode.\n") FLUSH;
+    printf("\nScorefile easy append mode.\n");
     bool q_done = false;
     while (!q_done) {
-        printf("0) Exit.\n") FLUSH;
+        printf("0) Exit.\n");
         printf("1) List the current scorefile abbreviations.\n");
         printf("2) Add an entry to the global scorefile.\n");
         printf("3) Add an entry to this newsgroup's scorefile.\n");
@@ -50,7 +50,7 @@ char *sc_easy_append()
             filechar = '!';
             break;
           case 'h':
-            printf("No help available (yet).\n") FLUSH;
+            printf("No help available (yet).\n");
             q_done = false;
             break;
           default:
@@ -63,7 +63,7 @@ char *sc_easy_append()
         fflush(stdout);
         eat_typeahead();
         getcmd(g_buf);
-        printf("%c\n",*g_buf) FLUSH;
+        printf("%c\n",*g_buf);
         filechar = *g_buf;
         /* If error checking is done later, then an error should set
          * filechar to '\0' and continue the while loop.
@@ -100,7 +100,7 @@ char *sc_easy_append()
             q_done = false;
             break;
           case 'h':
-            printf("No help available (yet).\n") FLUSH;
+            printf("No help available (yet).\n");
             q_done = false;
             break;
           default:
@@ -124,7 +124,7 @@ char *sc_easy_append()
             *s++ = ' ';
             q_done = true;
         } else
-            printf("\n") FLUSH;
+            printf("\n");
     }
     q_done = false;
     while (!q_done) {
@@ -148,7 +148,7 @@ char *sc_easy_append()
             *s++ = '\0';
             return s_sc_e_newline;
           case 'h':
-            printf("No help available (yet).\n") FLUSH;
+            printf("No help available (yet).\n");
             q_done = false;
             break;
           default:
@@ -164,7 +164,7 @@ char *sc_easy_append()
 const char *sc_easy_command()
 {
     char *s = s_sc_e_newline;
-    printf("\nScoring easy command mode.\n") FLUSH;
+    printf("\nScoring easy command mode.\n");
     bool q_done = false;
     while (!q_done) {
         printf("0) Exit.\n");
@@ -192,7 +192,7 @@ const char *sc_easy_command()
           case '5':
             return "f";
           case 'h':
-            printf("No help available (yet).\n") FLUSH;
+            printf("No help available (yet).\n");
             q_done = false;
             break;
           default:

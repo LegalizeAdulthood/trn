@@ -134,7 +134,7 @@ int trn_main(int argc, char *argv[])
         if (g_verbose) {
             fputs("No unread news in subscribed-to newsgroups.  To subscribe to a new\n"
                   "newsgroup use the g<newsgroup> command.\n",
-                  stdout) FLUSH;
+                  stdout);
             termdown(2);
         }
         g_starthere = g_last_ng;
@@ -217,18 +217,18 @@ void do_multirc()
                     if (retry) {
                         if (g_verbose)
                             printf("\nRestriction %s%s still in effect.\n",
-                                   g_ngtodo[0], g_maxngtodo > 1 ? ", etc." : "") FLUSH;
+                                   g_ngtodo[0], g_maxngtodo > 1 ? ", etc." : "");
                          else
-                            fputs("\n(\"Only\" mode.)\n",stdout) FLUSH;
+                            fputs("\n(\"Only\" mode.)\n",stdout);
                         termdown(2);
                     } else {
                         if (g_verbose)
-                            fputs("\nNo articles under restriction.", stdout) FLUSH;
+                            fputs("\nNo articles under restriction.", stdout);
                         else
-                            fputs("\nNo \"only\" articles.",stdout) FLUSH;
+                            fputs("\nNo \"only\" articles.",stdout);
                         termdown(2);
                         end_only();     /* release the restriction */
-                        printf("\n%s\n", g_msg) FLUSH;
+                        printf("\n%s\n", g_msg);
                         termdown(2);
                         retry = true;
                     }
@@ -306,7 +306,7 @@ void do_multirc()
             case ING_ERASE:
                 goto reinp_newsgroup;
             case ING_ERROR:
-                printf("\n%s",g_hforhelp) FLUSH;
+                printf("\n%s",g_hforhelp);
                 termdown(2);
                 settle_down();
                 goto reask_newsgroup;
@@ -329,7 +329,7 @@ void do_multirc()
                 newline();
                 break;
             case ING_MESSAGE:
-                printf("\n%s\n", g_msg) FLUSH;
+                printf("\n%s\n", g_msg);
                 termdown(2);
                 break;
             }
@@ -392,7 +392,7 @@ input_newsgroup_result input_newsgroup()
         if (*g_buf != 'y')
             break;
         printf("\nThe abandoned changes are in %s.new.\n",
-               multirc_name(g_multirc)) FLUSH;
+               multirc_name(g_multirc));
         termdown(2);
         s_restore_old_newsrc = true;
         return ING_QUIT;
@@ -433,9 +433,9 @@ input_newsgroup_result input_newsgroup()
             return ING_INPUT;
           case NGS_INTR:
             if (g_verbose)
-                fputs("\n(Interrupted)\n",stdout) FLUSH;
+                fputs("\n(Interrupted)\n",stdout);
             else
-                fputs("\n(Intr)\n",stdout) FLUSH;
+                fputs("\n(Intr)\n",stdout);
             termdown(2);
             set_ng(g_current_ng);
             return ING_ASK;
@@ -444,9 +444,9 @@ input_newsgroup_result input_newsgroup()
           case NGS_NOTFOUND:
             if (g_verbose)
                 fputs("\n\nNot found -- use a or g to add newsgroups\n",
-                      stdout) FLUSH;
+                      stdout);
             else
-                fputs("\n\nNot found\n",stdout) FLUSH;
+                fputs("\n\nNot found\n",stdout);
             termdown(3);
             return ING_ASK;
           case NGS_DONE:
@@ -474,7 +474,7 @@ input_newsgroup_result input_newsgroup()
                         break;
                 if (!g_ngptr) {
                     g_ngptr = g_current_ng;
-                    printf("\nOnly %d groups. Try again.\n", g_newsgroup_cnt) FLUSH;
+                    printf("\nOnly %d groups. Try again.\n", g_newsgroup_cnt);
                     termdown(2);
                     return ING_ASK;
                 }
@@ -536,7 +536,7 @@ input_newsgroup_result input_newsgroup()
             bool read_unthreaded = !(g_ngptr->flags&NF_UNTHREADED);
             g_ngptr->flags ^= NF_UNTHREADED;
             printf("\n\n%s will be read %sthreaded.\n",
-                   g_ngptr->rcline, read_unthreaded? "un" : "") FLUSH;
+                   g_ngptr->rcline, read_unthreaded? "un" : "");
             set_toread(g_ngptr, ST_LAX);
         }
         termdown(3);
@@ -544,7 +544,7 @@ input_newsgroup_result input_newsgroup()
       case 'u':                 /* unsubscribe */
         if (g_ngptr && g_ngptr->toread >= TR_NONE) {/* unsubscribable? */
             newline();
-            printf(g_unsubto,g_ngptr->rcline) FLUSH;
+            printf(g_unsubto,g_ngptr->rcline);
             termdown(1);
             g_ngptr->subscribechar = NEGCHAR;   /* unsubscribe it */
             g_ngptr->toread = TR_UNSUB;         /* and make line invisible */
@@ -575,7 +575,7 @@ reask_abandon:
             termdown(2);
             goto reask_abandon;
         } else if (*g_buf != 'y' && *g_buf != 'n' && *g_buf != 'q') {
-            fputs(g_hforhelp,stdout) FLUSH;
+            fputs(g_hforhelp,stdout);
             termdown(1);
             settle_down();
             goto reask_abandon;
@@ -648,7 +648,7 @@ reask_abandon:
       case 'y': case 'Y': case '\t': /* do normal thing */
       case ' ': case '\r': case '\n':
         if (!g_ngptr) {
-            fputs("\nNot on a newsgroup.",stdout) FLUSH;
+            fputs("\nNot on a newsgroup.",stdout);
             termdown(1);
             return ING_ASK;
         }

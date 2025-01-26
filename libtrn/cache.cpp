@@ -662,7 +662,7 @@ void look_ahead()
         if (s != nullptr)
         {
                                     /* compile regular expression */
-            printf("\n%s\n",s) FLUSH;
+            printf("\n%s\n",s);
             termdown(2);
             g_srchahead = 0;
         }

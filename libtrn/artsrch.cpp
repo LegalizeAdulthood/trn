@@ -207,9 +207,9 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
             }
             if (g_verbose) {
                 if (cmdchr != '+' && cmdchr != '.')
-                    printf("\nMarking %s \"%s\" as read.\n",finding_str,h) FLUSH;
+                    printf("\nMarking %s \"%s\" as read.\n",finding_str,h);
                 else
-                    printf("\nSelecting %s \"%s\".\n",finding_str,h) FLUSH;
+                    printf("\nSelecting %s \"%s\".\n",finding_str,h);
                 termdown(2);
             }
         }
@@ -224,7 +224,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
         }
 #ifdef DEBUG
         if (debug) {
-            printf("\npattern = %s\n",pattern) FLUSH;
+            printf("\npattern = %s\n",pattern);
             termdown(2);
         }
 #endif
@@ -286,7 +286,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
         if (g_use_threads)
             newline();
         else {
-            fputs("\nSearching...\n",stdout) FLUSH;
+            fputs("\nSearching...\n",stdout);
             termdown(2);
         }
                                         /* give them something to read */
@@ -368,7 +368,7 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
         strncpy(g_buf+9,fetchsubj(artnum,false),256);
 #ifdef DEBUG
         if (debug & DEB_SEARCH_AHEAD)
-            printf("%s\n",g_buf) FLUSH;
+            printf("%s\n",g_buf);
 #endif
         break;
       case ARTSCOPE_FROM:

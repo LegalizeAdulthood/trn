@@ -119,7 +119,7 @@ void dumpheader(char *where)
     for (int i = HEAD_FIRST-1; i < HEAD_LAST; i++) {
         printf("%15s %4ld %4ld %03o\n",g_htype[i].name,
                (long)g_htype[i].minpos, (long)g_htype[i].maxpos,
-               g_htype[i].flags) FLUSH;
+               g_htype[i].flags);
     }
 }
 #endif
@@ -543,7 +543,7 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
                 char *line = nntp_get_a_line(last_buf, last_buflen, last_buf!=g_ser_line);
 # ifdef DEBUG
                 if (debug & DEB_NNTP)
-                    printf("<%s", line? line : "<EOF>") FLUSH;
+                    printf("<%s", line? line : "<EOF>");
 # endif
                 if (nntp_at_list_end(line))
                     break;

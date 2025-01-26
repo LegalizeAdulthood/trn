@@ -1750,15 +1750,15 @@ static void display_article(const ARTICLE *ap, int ix, int sel)
     
     output_sel(ix, sel, false);
     if (*g_sel_art_dmode == 's' || from_width < 8)
-        printf("  %s\n",compress_subj(ap->subj->articles,subj_width)) FLUSH;
+        printf("  %s\n",compress_subj(ap->subj->articles,subj_width));
     else if (*g_sel_art_dmode == 'd') {
           printf("%s  %s\n",
                compress_date(ap, date_width),
-               compress_subj(ap, subj_width - date_width)) FLUSH;
+               compress_subj(ap, subj_width - date_width));
     } else {
         printf("%s  %s\n",
                compress_from(ap->from, from_width),
-               compress_subj(ap, subj_width - from_width)) FLUSH;
+               compress_subj(ap, subj_width - from_width));
     }
     termdown(1);
 }
@@ -1783,7 +1783,7 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
 
     output_sel(ix, sel, false);
     if (*g_sel_art_dmode == 's' || from_width < 8) {
-        printf("%3d  %s\n",j,compress_subj(subj->articles,subj_width)) FLUSH;
+        printf("%3d  %s\n",j,compress_subj(subj->articles,subj_width));
         termdown(1);
     }
     else {
@@ -1802,11 +1802,11 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
         if (*g_sel_art_dmode == 'd') {
             printf("%s%3d  %s\n",
                    compress_date(first_ap, date_width), j,
-                   compress_subj(first_ap, subj_width - date_width)) FLUSH;
+                   compress_subj(first_ap, subj_width - date_width));
         } else {
             printf("%s%3d  %s\n",
                    compress_from(first_ap? first_ap->from : nullptr, from_width), j,
-                   compress_subj(first_ap, subj_width - from_width)) FLUSH;
+                   compress_subj(first_ap, subj_width - from_width));
         }
         termdown(1);
         int i = -1;
@@ -1836,7 +1836,7 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
                         if (g_use_sel_num)
                             putchar(' ');
                         printf("  %s      ",
-                               compress_from(ap? ap->from : nullptr, from_width)) FLUSH;
+                               compress_from(ap? ap->from : nullptr, from_width));
                         continue;
                     }
                 }
@@ -1845,7 +1845,7 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
                 maybe_eol();
                 if (g_use_sel_num)
                     putchar(' ');
-                printf("  %s\n", compress_from(ap? ap->from : nullptr, from_width)) FLUSH;
+                printf("  %s\n", compress_from(ap? ap->from : nullptr, from_width));
                 termdown(1);
             }
         }

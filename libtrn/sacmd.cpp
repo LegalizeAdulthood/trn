@@ -185,7 +185,7 @@ int sa_docmd()
         /* clear to end of screen */
         clear_rest();
         g_s_ref_all = true;     /* refresh everything */
-        printf("\nRescoring articles...\n") FLUSH;
+        printf("\nRescoring articles...\n");
         sc_rescore();
         s_sort();
         s_go_top_ents();
@@ -446,17 +446,17 @@ int sa_docmd()
         g_s_ref_all = true;
         s_go_bot();
         if (decode_fp) {
-            printf("\nIncomplete file: %s\n",decode_dest) FLUSH;
+            printf("\nIncomplete file: %s\n",decode_dest);
             printf("Continue with command? [ny]");
             fflush(stdout);
             getcmd(g_buf);
-            printf("\n") FLUSH;
+            printf("\n");
             if (*g_buf == 'n' || *g_buf == ' ' || *g_buf == '\n')
                 break;
                 printf("Remove this file? [ny]");
             fflush(stdout);
             getcmd(g_buf);
-            printf("\n") FLUSH;
+            printf("\n");
             if (*g_buf == 'y' || *g_buf == 'Y') {
                 decode_end();   /* will remove file */
                 break;
@@ -470,14 +470,14 @@ int sa_docmd()
             *sa_extracted_use = '\0';
         }
         if (!*decode_dest) {
-            printf("\nTrn doesn't remember an extracted file name.\n") FLUSH;
+            printf("\nTrn doesn't remember an extracted file name.\n");
             *g_buf = ' ';
             if (!s_finish_cmd("Please enter a file to use:"))
                 break;
             if (!g_buf[1])      /* user just typed return */
                 break;
             safecpy(decode_dest,g_buf+1,MAXFILENAME);
-            printf("\n") FLUSH;
+            printf("\n");
         }
         if (s_sa_extract_dest == nullptr) {
             s_sa_extract_dest = (char*)safemalloc(LBUFLEN);
@@ -489,9 +489,9 @@ int sa_docmd()
             safecpy(decode_dest,g_buf,MAXFILENAME);
         }
         if (*sa_extracted_use)
-            printf("Use command (default %s):\n",sa_extracted_use) FLUSH;
+            printf("Use command (default %s):\n",sa_extracted_use);
         else
-            printf("Use command (no default):\n") FLUSH;
+            printf("Use command (no default):\n");
         *g_buf = ':';                   /* cosmetic */
         if (!s_finish_cmd(nullptr))
             break;      /* command rubbed out */
@@ -500,7 +500,7 @@ int sa_docmd()
         if (*sa_extracted_use == '\0')  /* no command */
             break;
         sprintf(g_buf,"!%s %s",sa_extracted_use,decode_dest);
-        printf("\n%s\n",g_buf+1) FLUSH;
+        printf("\n%s\n",g_buf+1);
         (void)escapade();
         (void)get_anything();
         eat_typeahead();
@@ -514,7 +514,7 @@ int sa_docmd()
         g_buf[1] = FINISHCMD;
         if (!finish_command(false))
             break;
-        printf("\n") FLUSH;
+        printf("\n");
         sa_go_art(artnum);
         sc_append(g_buf+1);
         (void)get_anything();
@@ -528,7 +528,7 @@ int sa_docmd()
         g_buf[1] = FINISHCMD;
         if (!finish_command(false))
             break;
-        printf("\n") FLUSH;
+        printf("\n");
         sa_go_art(artnum);
         sc_score_cmd(g_buf+1);
         g_s_ref_all = true;
@@ -549,7 +549,7 @@ bool sa_extract_start()
         safecpy(s_sa_extract_dest,filexp("%p"),LBUFLEN);
     }
     s_go_bot();
-    printf("To directory (default %s)\n",s_sa_extract_dest) FLUSH;
+    printf("To directory (default %s)\n",s_sa_extract_dest);
     *g_buf = ':';                       /* cosmetic */
     if (!s_finish_cmd(nullptr))
         return false;           /* command rubbed out */
@@ -561,7 +561,7 @@ bool sa_extract_start()
     printf("\nMark extracted articles as read? [yn]");
     fflush(stdout);
     getcmd(g_buf);
-    printf("\n") FLUSH;
+    printf("\n");
     if (*g_buf == 'y' || *g_buf == ' ' || *g_buf == '\n')
         s_sa_extract_junk = true;
     else

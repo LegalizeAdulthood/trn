@@ -1616,7 +1616,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
     if (g_mime_section->html & HF_NEED_INDENT)  printf("HF_NEED_INDENT ");
     if (g_mime_section->html & HF_SPACE_OK)     printf("HF_SPACE_OK ");
     if (g_mime_section->html & HF_COMPACT)      printf("HF_COMPACT ");
-    printf("\n") FLUSH;
+    printf("\n");
 #endif
     return t;
 }

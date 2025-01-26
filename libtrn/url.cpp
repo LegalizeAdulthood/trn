@@ -89,11 +89,11 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
     safecpy(path,origpath,510);
     char *p = strrchr(path, '/'); /* p points to last slash or nullptr*/
     if (p == nullptr) {
-        printf("Error: URL:ftp path has no '/' character.\n") FLUSH;
+        printf("Error: URL:ftp path has no '/' character.\n");
         return false;
     }
     if (p[1] == '\0') {
-        printf("Error: URL:ftp path has no final filename.\n") FLUSH;
+        printf("Error: URL:ftp path has no final filename.\n");
         return false;
     }
     safecpy(username,filexp("%L"),120);
@@ -127,7 +127,7 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
     *p = '/';
     status = doshell(nullptr,cmdline);
 #if 0
-    printf("\nFTP command status is %d\n",status) FLUSH;
+    printf("\nFTP command status is %d\n",status);
     while (!input_pending()) ;
     eat_typeahead();
 #endif
@@ -148,14 +148,14 @@ bool parse_url(const char *url)
     /* consider using 0 as default to look up the service? */
     s_url_port = 80;    /* the default */
     if (!url || !*url) {
-        printf("Empty URL -- ignoring.\n") FLUSH;
+        printf("Empty URL -- ignoring.\n");
         return false;
     }
     char *p = s_url_type;
     for (s = url; *s && *s != ':'; *p++ = *s++) ;
     *p = '\0';
     if (!*s) {
-        printf("Incomplete URL: %s\n",url) FLUSH;
+        printf("Incomplete URL: %s\n",url);
         return false;
     }
     s++;
@@ -168,7 +168,7 @@ bool parse_url(const char *url)
             while (*s && *s != ']')
                 *p++ = *s++;
             if (!*s) {
-                printf("Bad address literal: %s\n",url) FLUSH;
+                printf("Bad address literal: %s\n",url);
                 return false;
             }
             s++;        /* skip ] */
@@ -176,14 +176,14 @@ bool parse_url(const char *url)
             while (*s && *s != '/' && *s != ':') *p++ = *s++;
         *p = '\0';
         if (!*s) {
-            printf("Incomplete URL: %s\n",url) FLUSH;
+            printf("Incomplete URL: %s\n",url);
             return false;
         }
         if (*s == ':') {
             s++;
             p = s_url_buf;      /* temp space */
             if (!isdigit(*s)) {
-                printf("Bad URL (non-numeric portnum): %s\n",url) FLUSH;
+                printf("Bad URL (non-numeric portnum): %s\n",url);
                 return false;
             }
             while (isdigit(*s)) *p++ = *s++;
@@ -198,7 +198,7 @@ bool parse_url(const char *url)
     }
     /* finally, just do the path */
     if (*s != '/') {
-        printf("Bad URL (path does not start with /): %s\n",url) FLUSH;
+        printf("Bad URL (path does not start with /): %s\n",url);
         return false;
     }
     strcpy(s_url_path,s);
@@ -218,7 +218,7 @@ bool url_get(const char *url, const char *outfile)
         flag = fetch_ftp(s_url_host,s_url_path,outfile);
     else {
         if (s_url_type)
-            printf("\nURL type %s not supported (yet?)\n",s_url_type) FLUSH;
+            printf("\nURL type %s not supported (yet?)\n",s_url_type);
         flag = false;
     }
     return flag;

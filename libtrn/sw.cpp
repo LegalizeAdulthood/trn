@@ -89,7 +89,7 @@ void sw_list(char *swlist)
     *p++ = '\0';
     *p = '\0';                          /* put an extra null on the end */
     if (inquote) {
-        printf("Unmatched %c in switch\n",inquote) FLUSH;
+        printf("Unmatched %c in switch\n",inquote);
         termdown(1);
     }
     for (char *c = swlist; *c; /* p += strlen(p)+1 */ ) {
@@ -105,7 +105,7 @@ void decode_switch(const char *s)
     s = skip_space(s);          /* ignore leading spaces */
 #ifdef DEBUG
     if (debug) {
-        printf("Switch: %s\n",s) FLUSH;
+        printf("Switch: %s\n",s);
         termdown(1);
     }
 #endif
@@ -170,7 +170,7 @@ void decode_switch(const char *s)
                     debug = 0;
             }
 #else
-            printf("Trn was not compiled with -DDEBUG.\n") FLUSH;
+            printf("Trn was not compiled with -DDEBUG.\n");
             termdown(1);
 #endif
             break;
@@ -363,9 +363,9 @@ void decode_switch(const char *s)
             break;
         default:
             if (g_verbose)
-                printf("\nIgnoring unrecognized switch: -%c\n", *s) FLUSH;
+                printf("\nIgnoring unrecognized switch: -%c\n", *s);
             else
-                printf("\nIgnoring -%c\n", *s) FLUSH;
+                printf("\nIgnoring -%c\n", *s);
             termdown(2);
             break;
         }

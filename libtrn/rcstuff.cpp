@@ -359,9 +359,9 @@ static bool lock_newsrc(NEWSRC *rp)
 #ifndef MSDOS
         if (g_verbose)
             printf("\nThe requested newsrc is locked by process %ld on host %s.\n",
-                   processnum, runninghost) FLUSH;
+                   processnum, runninghost);
         else
-            printf("\nNewsrc locked by %ld on host %s.\n",processnum,runninghost) FLUSH;
+            printf("\nNewsrc locked by %ld on host %s.\n",processnum,runninghost);
         termdown(2);
         if (strcmp(runninghost,g_local_host)) {
             if (g_verbose)
@@ -369,10 +369,10 @@ static bool lock_newsrc(NEWSRC *rp)
                        "Since that's not the same host as this one (%s), we must\n"
                        "assume that process still exists.  To override this check, remove\n"
                        "the lock file: %s\n",
-                       g_local_host, rp->lockname) FLUSH;
+                       g_local_host, rp->lockname);
             else
                 printf("\nThis host (%s) doesn't match.\nCan't unlock %s.\n",
-                       g_local_host, rp->lockname) FLUSH;
+                       g_local_host, rp->lockname);
             termdown(2);
             if (g_bizarre)
                 resetty();
@@ -382,9 +382,9 @@ static bool lock_newsrc(NEWSRC *rp)
             if (g_verbose)
                 printf("\n"
                        "Hey, that *my* pid!  Your access file is trying to use the same newsrc\n"
-                       "more than once.\n") FLUSH;
+                       "more than once.\n");
             else
-                printf("\nAccess file error (our pid detected).\n") FLUSH;
+                printf("\nAccess file error (our pid detected).\n");
             termdown(2);
             return false;
         }
@@ -396,15 +396,15 @@ static bool lock_newsrc(NEWSRC *rp)
                       "That process does not seem to exist anymore.  The count of read articles\n"
                       "may be incorrect in the last newsgroup accessed by that other (defunct)\n"
                       "process.\n\n",
-                      stdout) FLUSH;
+                      stdout);
             else
-                fputs("\nProcess crashed.\n",stdout) FLUSH;
+                fputs("\nProcess crashed.\n",stdout);
             if (!g_lastngname.empty()) {
                 if (g_verbose)
                     printf("(The last newsgroup accessed was %s.)\n\n",
-                           g_lastngname.c_str()) FLUSH;
+                           g_lastngname.c_str());
                 else
-                    printf("(In %s.)\n\n",g_lastngname.c_str()) FLUSH;
+                    printf("(In %s.)\n\n",g_lastngname.c_str());
             }
             termdown(2);
             get_anything();
@@ -415,9 +415,9 @@ static bool lock_newsrc(NEWSRC *rp)
                 printf("\n"
                        "It looks like that process still exists.  To override this, remove\n"
                        "the lock file: %s\n",
-                       rp->lockname) FLUSH;
+                       rp->lockname);
             else
-                printf("\nCan't unlock %s.\n", rp->lockname) FLUSH;
+                printf("\nCan't unlock %s.\n", rp->lockname);
             termdown(2);
             if (g_bizarre)
                 resetty();
@@ -427,7 +427,7 @@ static bool lock_newsrc(NEWSRC *rp)
     }
     FILE *fp = fopen(rp->lockname, "w");
     if (fp == nullptr) {
-        printf(g_cantcreate,rp->lockname) FLUSH;
+        printf(g_cantcreate,rp->lockname);
         sig_catcher(0);
     }
     fprintf(fp,"%ld\n%s\n",g_our_pid,g_local_host);
@@ -454,7 +454,7 @@ static bool open_newsrc(NEWSRC *rp)
     {
         rcfp = fopen(rp->name,"w+");
         if (rcfp == nullptr) {
-            printf("\nCan't create %s.\n", rp->name) FLUSH;
+            printf("\nCan't create %s.\n", rp->name);
             termdown(2);
             return false;
         }
@@ -578,10 +578,10 @@ static bool open_newsrc(NEWSRC *rp)
             else {
                 if (g_verbose)
                     printf("Unread news in %-40s %5ld article%s\n",
-                        np->rcline,(long)np->toread,plural(np->toread)) FLUSH;
+                        np->rcline,(long)np->toread,plural(np->toread));
                 else
                     printf("%s: %ld article%s\n",
-                        np->rcline,(long)np->toread,plural(np->toread)) FLUSH;
+                        np->rcline,(long)np->toread,plural(np->toread));
                 termdown(1);
                 if (g_int_count) {
                     g_countdown = 1;
@@ -589,7 +589,7 @@ static bool open_newsrc(NEWSRC *rp)
                 }
                 if (g_countdown) {
                     if (!--g_countdown) {
-                        fputs("etc.\n",stdout) FLUSH;
+                        fputs("etc.\n",stdout);
                         if (g_checkflag)
                             finalize(1);
                         g_suppress_cn = true;
@@ -703,7 +703,7 @@ void abandon_ng(NGDATA *np)
         }
         fclose(rcfp);
     } else if (errno != ENOENT) {
-        printf("Unable to open %s.\n", np->rc->oldname) FLUSH;
+        printf("Unable to open %s.\n", np->rc->oldname);
         termdown(1);
         return;
     }
@@ -748,7 +748,7 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
         ntoforget = "n to forget it.\n";
     if (strchr(what,'/')) {
         dingaling();
-        printf("\nBad newsgroup name.\n") FLUSH;
+        printf("\nBad newsgroup name.\n");
         termdown(2);
       check_fuzzy_match:
         if (g_fuzzy_get && (flags & GNG_FUZZY)) {
@@ -774,9 +774,9 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
         if (!rp) {
             dingaling();
             if (g_verbose)
-                printf("\nNewsgroup %s does not exist!\n",g_ngname.c_str()) FLUSH;
+                printf("\nNewsgroup %s does not exist!\n",g_ngname.c_str());
             else
-                printf("\nNo %s!\n",g_ngname.c_str()) FLUSH;
+                printf("\nNo %s!\n",g_ngname.c_str());
             termdown(2);
             if (g_novice_delays)
                 sleep(2);
@@ -788,16 +788,16 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
         if (autosub) {
             if (g_append_unsub) {
                 printf("(Adding %s to end of your .newsrc %ssubscribed)\n",
-                       g_ngname.c_str(), (autosub == ADDNEW_SUB)? "" : "un") FLUSH;
+                       g_ngname.c_str(), (autosub == ADDNEW_SUB)? "" : "un");
                 termdown(1);
                 g_ngptr = add_newsgroup(rp, g_ngname.c_str(), autosub);
             } else {
                 if (autosub == ADDNEW_SUB) {
-                    printf("(Subscribing to %s)\n", g_ngname.c_str()) FLUSH;
+                    printf("(Subscribing to %s)\n", g_ngname.c_str());
                     termdown(1);
                     g_ngptr = add_newsgroup(rp, g_ngname.c_str(), autosub);
                 } else {
-                    printf("(Ignoring %s)\n", g_ngname.c_str()) FLUSH;
+                    printf("(Ignoring %s)\n", g_ngname.c_str());
                     termdown(1);
                     return false;
                 }
@@ -817,16 +817,16 @@ reask_add:
                     printf("Type y or SP to subscribe to %s.\n"
                            "Type Y to subscribe to this and all remaining new groups.\n"
                            "Type N to leave all remaining new groups unsubscribed.\n",
-                           g_ngname.c_str()) FLUSH;
+                           g_ngname.c_str());
                     termdown(3);
                 }
                 else
                 {
                     fputs("y or SP to subscribe, Y to subscribe all new groups, N to unsubscribe all\n",
-                          stdout) FLUSH;
+                          stdout);
                     termdown(1);
                 }
-                fputs(ntoforget,stdout) FLUSH;
+                fputs(ntoforget,stdout);
                 termdown(1);
                 goto reask_add;
             }
@@ -843,9 +843,9 @@ reask_add:
                 g_addnewbydefault = ADDNEW_SUB;
                 if (g_append_unsub)
                     printf("(Adding %s to end of your .newsrc subscribed)\n",
-                           g_ngname.c_str()) FLUSH;
+                           g_ngname.c_str());
                 else
-                    printf("(Subscribing to %s)\n", g_ngname.c_str()) FLUSH;
+                    printf("(Subscribing to %s)\n", g_ngname.c_str());
                 termdown(1);
                 g_ngptr = add_newsgroup(rp, g_ngname.c_str(), ':');
                 flags &= ~GNG_RELOC;
@@ -854,18 +854,18 @@ reask_add:
                 g_addnewbydefault = ADDNEW_UNSUB;
                 if (g_append_unsub) {
                     printf("(Adding %s to end of your .newsrc unsubscribed)\n",
-                           g_ngname.c_str()) FLUSH;
+                           g_ngname.c_str());
                     termdown(1);
                     g_ngptr = add_newsgroup(rp, g_ngname.c_str(), NEGCHAR);
                     flags &= ~GNG_RELOC;
                 } else {
-                    printf("(Ignoring %s)\n", g_ngname.c_str()) FLUSH;
+                    printf("(Ignoring %s)\n", g_ngname.c_str());
                     termdown(1);
                     return false;
                 }
             }
             else {
-                fputs(g_hforhelp,stdout) FLUSH;
+                fputs(g_hforhelp,stdout);
                 termdown(1);
                 settle_down();
                 goto reask_add;
@@ -876,22 +876,19 @@ reask_add:
         return false;
     else if (g_ngptr->subscribechar == NEGCHAR) {/* unsubscribed? */
         if (g_verbose)
-            sprintf(promptbuf,
-"\nNewsgroup %s is unsubscribed -- resubscribe?",g_ngname.c_str())
-  FLUSH;
+            sprintf(promptbuf, "\nNewsgroup %s is unsubscribed -- resubscribe?", g_ngname.c_str());
         else
-            sprintf(promptbuf,"\nResubscribe %s?",g_ngname.c_str())
-              FLUSH;
+            sprintf(promptbuf, "\nResubscribe %s?", g_ngname.c_str());
 reask_unsub:
         in_char(promptbuf,MM_RESUBSCRIBE_PROMPT,"yn");
         printcmd();
         newline();
         if (*g_buf == 'h') {
             if (g_verbose)
-                printf("Type y or SP to resubscribe to %s.\n", g_ngname.c_str()) FLUSH;
+                printf("Type y or SP to resubscribe to %s.\n", g_ngname.c_str());
             else
-                fputs("y or SP to resubscribe.\n",stdout) FLUSH;
-            fputs(ntoforget,stdout) FLUSH;
+                fputs("y or SP to resubscribe.\n",stdout);
+            fputs(ntoforget,stdout);
             termdown(2);
             goto reask_unsub;
         }
@@ -906,7 +903,7 @@ reask_unsub:
             flags &= ~GNG_RELOC;
         }
         else {
-            fputs(g_hforhelp,stdout) FLUSH;
+            fputs(g_hforhelp,stdout);
             termdown(1);
             settle_down();
             goto reask_unsub;
@@ -1027,7 +1024,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
                        "Type a number between 0 and %d to put it at that position.\n",
                        g_newsgroup_cnt - 1);
                 printf("Type L for a listing of newsgroups and their positions.\n"
-                       "Type q to abort the current action.\n") FLUSH;
+                       "Type q to abort the current action.\n");
             }
             else
             {
@@ -1043,7 +1040,6 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
                        "L for list of newsrc.\n"
                        "q to abort\n",
                        g_newsgroup_cnt - 1);
-                FLUSH;
             }
             termdown(10);
             goto reask_reloc;
@@ -1080,7 +1076,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
                 goto reinp_reloc;
             np = find_ng(g_buf+1);
             if (np == nullptr) {
-                fputs("Not found.",stdout) FLUSH;
+                fputs("Not found.",stdout);
                 goto reask_reloc;
             }
             newnum = np->num;
@@ -1088,7 +1084,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
                 newnum++;
         }
         else {
-            printf("\n%s",g_hforhelp) FLUSH;
+            printf("\n%s",g_hforhelp);
             termdown(2);
             settle_down();
             goto reask_reloc;
@@ -1165,9 +1161,9 @@ void cleanup_newsrc(NEWSRC *rp)
     NG_NUM bogosity = 0;
 
     if (g_verbose)
-        printf("Checking out '%s' -- hang on a second...\n",rp->name) FLUSH;
+        printf("Checking out '%s' -- hang on a second...\n",rp->name);
     else
-        printf("Checking '%s' -- hang on...\n",rp->name) FLUSH;
+        printf("Checking '%s' -- hang on...\n",rp->name);
     termdown(1);
     NGDATA* np;
     for (np = g_first_ng; np; np = np->next) {
@@ -1185,15 +1181,15 @@ void cleanup_newsrc(NEWSRC *rp)
         fputs("It looks like the active file is messed up.  Contact your news administrator,\n",
               stdout);
         fputs("leave the \"bogus\" groups alone, and they may come back to normal.  Maybe.\n",
-              stdout) FLUSH;
+              stdout);
         termdown(2);
     }
     else if (bogosity)
     {
         if (g_verbose)
-            printf("Moving bogus newsgroups to the end of '%s'.\n",rp->name) FLUSH;
+            printf("Moving bogus newsgroups to the end of '%s'.\n",rp->name);
         else
-            fputs("Moving boguses to the end.\n",stdout) FLUSH;
+            fputs("Moving boguses to the end.\n",stdout);
         termdown(1);
         while (np) {
             NGDATA *prev_np = np->prev;
@@ -1210,12 +1206,12 @@ reask_bogus:
             if (g_verbose) {
                 fputs("Type y to delete bogus newsgroups.\n"
                       "Type n or SP to leave them at the end in case they return.\n",
-                      stdout) FLUSH;
+                      stdout);
                 termdown(2);
             }
             else
             {
-                fputs("y to delete, n to keep\n",stdout) FLUSH;
+                fputs("y to delete, n to keep\n",stdout);
                 termdown(1);
             }
             goto reask_bogus;
@@ -1244,7 +1240,7 @@ reask_bogus:
                 g_sel_page_np = nullptr;
         }
         else {
-            fputs(g_hforhelp,stdout) FLUSH;
+            fputs(g_hforhelp,stdout);
             termdown(1);
             settle_down();
             goto reask_bogus;
@@ -1339,7 +1335,7 @@ bool write_newsrcs(MULTIRC *mptr)
 
         FILE *rcfp = fopen(rp->newname, "w");
         if (rcfp == nullptr) {
-            printf(s_cantrecreate,rp->name) FLUSH;
+            printf(s_cantrecreate,rp->name);
             total_success = false;
             continue;
         }
@@ -1366,7 +1362,7 @@ bool write_newsrcs(MULTIRC *mptr)
                 delim = nullptr;
 #ifdef DEBUG
             if (debug & DEB_NEWSRC_LINE) {
-                printf("%s\n",np->rcline) FLUSH;
+                printf("%s\n",np->rcline);
                 termdown(1);
             }
 #endif
@@ -1388,7 +1384,7 @@ bool write_newsrcs(MULTIRC *mptr)
         }
         if (fclose(rcfp) == EOF) {
           write_error:
-            printf(s_cantrecreate,rp->name) FLUSH;
+            printf(s_cantrecreate,rp->name);
             remove(rp->newname);
             total_success = false;
             continue;
