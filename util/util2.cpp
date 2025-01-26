@@ -9,10 +9,6 @@
 #include "util.h"
 #include "util3.h"
 
-#ifdef MSDOS
-#include <direct.h>
-#endif
-
 #ifdef TILDENAME
 static char *s_tildename{};
 static char *s_tildedir{};
