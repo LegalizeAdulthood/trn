@@ -8,7 +8,7 @@ inline int string_case_compare(const char *s1, const char *s2)
 }
 inline int string_case_compare(const char *s1, const char *s2, int len)
 {
-    return strncasecmp(s1, s2, int len);
+    return strncasecmp(s1, s2, len);
 }
 inline bool string_case_equal(const char *s1, const char *s2)
 {
