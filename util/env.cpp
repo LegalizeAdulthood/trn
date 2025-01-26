@@ -66,7 +66,7 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
 
     const char *val = s_getenv_fn("TMPDIR");
     if (val == nullptr)
-        g_tmp_dir = get_val("TMP","/tmp");
+        g_tmp_dir = get_val_const("TMP","/tmp");
     else
         g_tmp_dir = val;
 
@@ -127,7 +127,7 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     }
 
     {
-        char* cp = get_val("NETSPEED","5");
+        const char* cp = get_val_const("NETSPEED","5");
         if (*cp == 'f')
             g_net_speed = 10;
         else if (*cp == 's')
@@ -168,8 +168,8 @@ static void env_init2()
 
     if (!g_home_dir)
         g_home_dir = savestr("/");
-    g_dot_dir = get_val("DOTDIR",g_home_dir);
-    g_trn_dir = filexp(get_val("TRNDIR",TRNDIR));
+    g_dot_dir = get_val_const("DOTDIR",g_home_dir);
+    g_trn_dir = filexp(get_val_const("TRNDIR",TRNDIR));
     g_lib = filexp(NEWSLIB);
     g_rn_lib = filexp(PRIVLIB);
 }
@@ -380,6 +380,12 @@ char *get_val(const char *nam, char *def)
     if (val == nullptr || !*val)
         return def;
     return val;
+}
+
+const char *get_val_const(const char *nam, const char *def)
+{
+    const char *val = s_getenv_fn(nam);
+    return val == nullptr || !*val ? def : val;
 }
 
 static bool s_firstexport = true;

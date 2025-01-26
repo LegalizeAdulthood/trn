@@ -78,7 +78,7 @@ void sc_sv_getfile()
     s_lines_alloc = 0;
     s_lines = nullptr;
 
-    char *s = get_val("SAVESCOREFILE", "%+/savedscores");
+    const char *s = get_val_const("SAVESCOREFILE", "%+/savedscores");
     FILE *fp = fopen(filexp(s), "r");
     if (!fp) {
 #if 0
@@ -100,7 +100,7 @@ void sc_sv_savefile()
         return;
 
     g_waiting = true;   /* don't interrupt */
-    char *savename = savestr(filexp(get_val("SAVESCOREFILE", "%+/savedscores")));
+    char *savename = savestr(filexp(get_val_const("SAVESCOREFILE", "%+/savedscores")));
     strcpy(s_lbuf,savename);
     strcat(s_lbuf,".tmp");
     FILE *tmpfp = fopen(s_lbuf, "w");

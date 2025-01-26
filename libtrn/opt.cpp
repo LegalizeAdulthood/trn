@@ -211,10 +211,9 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     set_header_list(HT_DEFHIDE,HT_HIDE,"");
     set_header_list(HT_DEFMAGIC,HT_MAGIC,"");
 
-    char *s = g_use_threads ? get_val("TRNRC", "%+/trnrc") : get_val("RNRC", "%+/rnrc");
-    g_ini_file = filexp(s);
+    g_ini_file = filexp(g_use_threads ? get_val_const("TRNRC", "%+/trnrc") : get_val_const("RNRC", "%+/rnrc"));
 
-    s = filexp("%+");
+    char *s = filexp("%+");
     stat_t ini_stat{};
     if (stat(s,&ini_stat) < 0 || !S_ISDIR(ini_stat.st_mode)) {
         printf("Creating the directory %s.\n",s);
@@ -485,8 +484,8 @@ void set_option(option_index num, const char *s)
                 export_var("SAVEDIR",  "%p/%c");
                 export_var("SAVENAME", "%a");
             }
-            else if (!strcmp(get_val("SAVEDIR",""),"%p/%c")
-                  && !strcmp(get_val("SAVENAME",""),"%a")) {
+            else if (!strcmp(get_val_const("SAVEDIR",""),"%p/%c")
+                  && !strcmp(get_val_const("SAVENAME",""),"%a")) {
                 export_var("SAVEDIR", "%p");
                 export_var("SAVENAME", "%^C");
             }
@@ -928,7 +927,7 @@ const char *option_value(option_index num)
       case OI_OPTION_SEL_BTNS:
         return expand_mouse_buttons(g_option_sel_btns,g_option_sel_btn_cnt);
       case OI_AUTO_SAVE_NAME:
-        return YESorNO(!strcmp(get_val("SAVEDIR",SAVEDIR),"%p/%c"));
+        return YESorNO(!strcmp(get_val_const("SAVEDIR",SAVEDIR),"%p/%c"));
       case OI_BKGND_THREADING:
         return YESorNO(!g_thread_always);
       case OI_AUTO_ARROW_MACROS:

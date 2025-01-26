@@ -222,14 +222,14 @@ int main(int argc, char *argv[])
     if (!has_fromline) {
         char buff[80];
         strcpy(buff, g_real_name.c_str());
-        sprintf(g_buf, "From: %s@%s (%s)%s", g_login_name.c_str(), g_p_host_name.c_str(), get_val("NAME", buff),
+        sprintf(g_buf, "From: %s@%s (%s)%s", g_login_name.c_str(), g_p_host_name.c_str(), get_val_const("NAME", buff),
                 line_end);
         inews_fputs(g_buf);
     }
     if (!getenv("NO_ORIGINATOR")) {
         char buff[80];
         strcpy(buff, g_real_name.c_str());
-        sprintf(g_buf, "Originator: %s@%s (%s)%s", g_login_name.c_str(), g_p_host_name.c_str(), get_val("NAME", buff),
+        sprintf(g_buf, "Originator: %s@%s (%s)%s", g_login_name.c_str(), g_p_host_name.c_str(), get_val_const("NAME", buff),
                 line_end);
         inews_fputs(g_buf);
     }

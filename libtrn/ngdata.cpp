@@ -327,10 +327,10 @@ ART_NUM getngsize(NGDATA *gp)
         }
         switch (ch) {
         case 'n':
-            g_moderated = get_val("NOPOSTRING"," (no posting)");
+            g_moderated = get_val_const("NOPOSTRING"," (no posting)");
             break;
         case 'm':
-            g_moderated = get_val("MODSTRING", " (moderated)");
+            g_moderated = get_val_const("MODSTRING", " (moderated)");
             break;
         case 'x':
             g_redirected = true;

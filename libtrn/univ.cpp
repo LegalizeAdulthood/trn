@@ -870,7 +870,7 @@ void univ_page_file(char *fname)
         return;
 
     sprintf(g_cmd_buf,"%s ",
-            filexp(get_val("HELPPAGER",get_val("PAGER","more"))));
+            filexp(get_val_const("HELPPAGER",get_val_const("PAGER","more"))));
     strcat(g_cmd_buf, filexp(fname));
     termdown(3);
     resetty();                  /* make sure tty is friendly */

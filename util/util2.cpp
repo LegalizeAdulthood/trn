@@ -81,7 +81,7 @@ char *filexp(const char *text)
         }
         else if (*s == '~' && (!s[1] || s[1] == '/'))
         {
-            const char *prefix = get_val("TRNPREFIX");
+            const char *prefix = get_val_const("TRNPREFIX");
             if (!prefix)
                 prefix = INSTALLPREFIX;
             sprintf(scrbuf, "%s%s", prefix, s + 1);

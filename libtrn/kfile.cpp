@@ -157,7 +157,7 @@ int do_kfile(FILE *kfp, int entering)
             cp = filexp(cp);
             if (!strchr(cp,'/')) {
                 set_ngname(cp);
-                cp = filexp(get_val("KILLLOCAL",s_killlocal));
+                cp = filexp(get_val_const("KILLLOCAL",s_killlocal));
                 set_ngname(g_ngptr->rcline);
             }
             FILE *incfile = fopen(cp, "r");
@@ -391,7 +391,7 @@ void rewrite_kfile(ART_NUM thru)
                                  == KFS_THREAD_LINES;
     bool has_star_commands = false;
     bool needs_newline = false;
-    char* killname = filexp(get_val("KILLLOCAL",s_killlocal));
+    char* killname = filexp(get_val_const("KILLLOCAL",s_killlocal));
     char* bp;
 
     if (g_localkfp)
@@ -531,7 +531,7 @@ void update_thread_kfile()
     if (!(g_kf_state & KFS_THREAD_CHANGES))
         return;
 
-    char *cp = filexp(get_val("KILLTHREADS", s_killthreads));
+    char *cp = filexp(get_val_const("KILLTHREADS", s_killthreads));
     makedir(cp, MD_FILE);
     if (g_kf_changethd_cnt*5 > s_kf_thread_cnt) {
         remove(cp);                     /* to prevent file reuse */
@@ -615,12 +615,12 @@ void edit_kfile()
             for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
                 clear_subject(sp);
         }
-        strcpy(g_buf,filexp(get_val("KILLLOCAL",s_killlocal)));
+        strcpy(g_buf,filexp(get_val_const("KILLLOCAL",s_killlocal)));
     } else
-        strcpy(g_buf,filexp(get_val("KILLGLOBAL",s_killglobal)));
+        strcpy(g_buf,filexp(get_val_const("KILLGLOBAL",s_killglobal)));
     if (!makedir(g_buf, MD_FILE)) {
         sprintf(g_cmd_buf,"%s %s",
-            filexp(get_val("VISUAL",get_val("EDITOR",DEFEDITOR))),g_buf);
+            filexp(get_val_const("VISUAL",get_val_const("EDITOR",DEFEDITOR))),g_buf);
         printf("\nEditing %s KILL file:\n%s\n",
             (g_in_ng?"local":"global"),g_cmd_buf) FLUSH;
         termdown(3);
@@ -663,7 +663,7 @@ void edit_kfile()
 
 void open_kfile(int local)
 {
-    const char *kname = filexp(local ? get_val("KILLLOCAL", s_killlocal) : get_val("KILLGLOBAL", s_killglobal));
+    const char *kname = filexp(local ? get_val_const("KILLLOCAL", s_killlocal) : get_val_const("KILLGLOBAL", s_killglobal));
 
     /* delete the file if it is empty */
     stat_t kill_file_stat{};
@@ -683,7 +683,7 @@ void open_kfile(int local)
 
 void kf_append(const char *cmd, bool local)
 {
-    strcpy(g_cmd_buf, filexp(local ? get_val("KILLLOCAL", s_killlocal) : get_val("KILLGLOBAL", s_killglobal)));
+    strcpy(g_cmd_buf, filexp(local ? get_val_const("KILLLOCAL", s_killlocal) : get_val_const("KILLGLOBAL", s_killglobal)));
     if (!makedir(g_cmd_buf, MD_FILE)) {
         if (g_verbose)
             printf("\nDepositing command in %s...",g_cmd_buf);

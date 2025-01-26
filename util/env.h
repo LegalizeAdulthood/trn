@@ -21,6 +21,7 @@ extern int         g_net_speed;   /* how fast our net-connection is */
 bool  env_init(char *tcbuf, bool lax);
 void  env_final();
 char *get_val(const char *nam, char *def = nullptr);
+const char *get_val_const(const char *nam, const char *def = nullptr);
 char *export_var(const char *nam, const char *val);
 void  un_export(char *export_val);
 void  re_export(char *export_val, const char *new_val, int limit);

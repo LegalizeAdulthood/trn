@@ -197,10 +197,10 @@ do_newsgroup_result do_newsgroup(char *start_command)
 
     /* custom line suppression, custom page ending */
 
-    g_hideline = get_val("HIDELINE", nullptr);
+    g_hideline = get_val_const("HIDELINE", nullptr);
     if (g_hideline != nullptr)
         compile(&g_hide_compex,g_hideline,true,true);
-    g_pagestop = get_val("PAGESTOP", nullptr);
+    g_pagestop = get_val_const("PAGESTOP", nullptr);
     if (g_pagestop != nullptr)
         compile(&g_page_compex,g_pagestop,true,true);
 
@@ -1404,7 +1404,7 @@ void setmail(bool force)
     if (force)
         g_mailcount = 0;
     if (!(g_mailcount++)) {
-        const char* mailfile = filexp(get_val("MAILFILE",MAILFILE));
+        const char* mailfile = filexp(get_val_const("MAILFILE",MAILFILE));
         stat_t mail_file_stat{};
         if (stat(mailfile,&mail_file_stat) < 0 || !mail_file_stat.st_size
             || mail_file_stat.st_atime > mail_file_stat.st_mtime)

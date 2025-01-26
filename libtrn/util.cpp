@@ -153,7 +153,7 @@ int doshell(const char *shell, const char *s)
     g_buf[strlen(g_buf)-1] = '\0';
     re_export(s_quotechars_export, g_buf+1, 64);
     if (shell == nullptr)
-        shell = get_val("SHELL", nullptr);
+        shell = get_val_const("SHELL", nullptr);
     if (shell == nullptr)
         shell = PREFSHELL;
     termlib_reset();
@@ -467,14 +467,14 @@ void verify_sig()
     /* RIPEM */
     int i = doshell(SH, filexp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
     if (!i) {   /* found RIPEM */
-        i = doshell(SH,filexp(get_val("VERIFY_RIPEM",VERIFY_RIPEM)));
+        i = doshell(SH,filexp(get_val_const("VERIFY_RIPEM",VERIFY_RIPEM)));
         printf("\nReturned value: %d\n",i) FLUSH;
         return;
     }
     /* PGP */
     i = doshell(SH,filexp("grep -s \"BEGIN PGP\" %A"));
     if (!i) {   /* found PGP */
-        i = doshell(SH,filexp(get_val("VERIFY_PGP",VERIFY_PGP)));
+        i = doshell(SH,filexp(get_val_const("VERIFY_PGP",VERIFY_PGP)));
         printf("\nReturned value: %d\n",i) FLUSH;
         return;
     }
@@ -859,7 +859,7 @@ int edit_file(const char *fname)
 
     /* XXX paranoia check on length */
     sprintf(g_cmd_buf,"%s ",
-            filexp(get_val("VISUAL",get_val("EDITOR",DEFEDITOR))));
+            filexp(get_val_const("VISUAL",get_val_const("EDITOR",DEFEDITOR))));
     strcat(g_cmd_buf, filexp(fname));
     termdown(3);
     resetty();                  /* make sure tty is friendly */

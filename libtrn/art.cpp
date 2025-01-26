@@ -306,7 +306,7 @@ do_article_result do_article()
                     if (g_curr_artp->date != -1) {
                         strncpy(g_art_line,bufptr,6);
                         strftime(g_art_line+6, (sizeof g_art_line)-6,
-                                 get_val("LOCALTIMEFMT", LOCALTIMEFMT),
+                                 get_val_const("LOCALTIMEFMT", LOCALTIMEFMT),
                                  localtime(&g_curr_artp->date));
                         bufptr = g_art_line;
                     }

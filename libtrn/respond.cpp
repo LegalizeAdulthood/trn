@@ -522,7 +522,7 @@ int cancel_article()
     char *reply_buf = fetchlines(g_art, REPLY_LINE);
     char *from_buf = fetchlines(g_art, FROM_LINE);
     char *ngs_buf = fetchlines(g_art, NEWSGROUPS_LINE);
-    if (strcasecmp(get_val("FROM",""),from_buf)
+    if (strcasecmp(get_val_const("FROM",""),from_buf)
      && (!in_string(from_buf,g_hostname, false)
       || (!in_string(from_buf,g_login_name.c_str(), true)
        && !in_string(reply_buf,g_login_name.c_str(), true)
@@ -555,7 +555,7 @@ int cancel_article()
         fclose(header);
         fputs("\nCanceling...\n",stdout) FLUSH;
         termdown(2);
-        r = doshell(SH,filexp(get_val("CANCEL",CALL_INEWS)));
+        r = doshell(SH,filexp(get_val_const("CANCEL",CALL_INEWS)));
     }
 done:
     free(ngs_buf);
@@ -582,7 +582,7 @@ int supersede_article()         /* Supersedes: */
     char *reply_buf = fetchlines(g_art, REPLY_LINE);
     char *from_buf = fetchlines(g_art, FROM_LINE);
     char *ngs_buf = fetchlines(g_art, NEWSGROUPS_LINE);
-    if (strcasecmp(get_val("FROM",""),from_buf)
+    if (strcasecmp(get_val_const("FROM",""),from_buf)
      && (!in_string(from_buf,g_hostname, false)
       || (!in_string(from_buf,g_login_name.c_str(), true)
        && !in_string(reply_buf,g_login_name.c_str(), true)
@@ -636,7 +636,7 @@ static int nntp_date()
 
 static void follow_it_up()
 {
-    safecpy(g_cmd_buf,filexp(get_val("NEWSPOSTER",NEWSPOSTER)), sizeof g_cmd_buf);
+    safecpy(g_cmd_buf,filexp(get_val_const("NEWSPOSTER",NEWSPOSTER)), sizeof g_cmd_buf);
     if (invoke(g_cmd_buf,g_origdir.c_str()) == 42) {
         int ret;
         if ((g_datasrc->flags & DF_REMOTE) &&
@@ -676,7 +676,7 @@ void reply()
 {
     char hbuf[5*LBUFLEN];
     bool incl_body = (*g_buf == 'R' && g_art);
-    char* maildoer = savestr(get_val("MAILPOSTER",MAILPOSTER));
+    char* maildoer = savestr(get_val_const("MAILPOSTER",MAILPOSTER));
 
     artopen(g_art,(ART_POS)0);
     FILE *header = fopen(g_headname.c_str(),"w");       /* open header file */
@@ -726,7 +726,7 @@ done:
 void forward()
 {
     char hbuf[5*LBUFLEN];
-    char* maildoer = savestr(get_val("FORWARDPOSTER",FORWARDPOSTER));
+    char* maildoer = savestr(get_val_const("FORWARDPOSTER",FORWARDPOSTER));
 #ifdef REGEX_WORKS_RIGHT
     COMPEX mime_compex;
 #else

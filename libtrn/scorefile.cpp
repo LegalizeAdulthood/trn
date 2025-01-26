@@ -274,7 +274,7 @@ static char s_sf_file[LBUFLEN];
 /* filenames of type a/b/c/foo.bar.misc for group foo.bar.misc */
 char *sf_get_filename(int level)
 {
-    strcpy(s_sf_file,filexp(get_val("SCOREDIR",DEFAULT_SCOREDIR)));
+    strcpy(s_sf_file,filexp(get_val_const("SCOREDIR",DEFAULT_SCOREDIR)));
     strcat(s_sf_file,"/");
     if (!level) {
         /* allow environment variable later... */
@@ -304,7 +304,7 @@ char *sf_cmd_fname(char *s)
     if (s1)
         return s;
     /* no slashes in this filename */
-    strcpy(lbuf,get_val("SCOREDIR",DEFAULT_SCOREDIR));
+    strcpy(lbuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
     strcat(lbuf,"/");
     strcat(lbuf,s);
     return lbuf;
@@ -886,13 +886,13 @@ void sf_append(char *line)
         return;         /* don't actually append to file */
     if (filechar == '"') {      /* do local group */
 /* Note: should probably be changed to use sf_ file functions */
-        strcpy(filebuf,get_val("SCOREDIR",DEFAULT_SCOREDIR));
+        strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
         strcat(filebuf,"/%C");
         filename = filebuf;
     }
     else if (filechar == '*') { /* do global scorefile */
 /* Note: should probably be changed to use sf_ file functions */
-        strcpy(filebuf,get_val("SCOREDIR",DEFAULT_SCOREDIR));
+        strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
         strcat(filebuf,"/global");
         filename = filebuf;
     }
@@ -1067,12 +1067,12 @@ void sf_edit_file(const char *filespec)
         strcpy(filebuf,filespec);
     else if (filechar == '"') { /* edit local group */
 /* Note: should probably be changed to use sf_ file functions */
-        strcpy(filebuf,get_val("SCOREDIR",DEFAULT_SCOREDIR));
+        strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
         strcat(filebuf,"/%C");
     }
     else if (filechar == '*') { /* edit global scorefile */
 /* Note: should probably be changed to use sf_ file functions */
-        strcpy(filebuf,get_val("SCOREDIR",DEFAULT_SCOREDIR));
+        strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
         strcat(filebuf,"/global");
     }
     else {      /* abbreviation */

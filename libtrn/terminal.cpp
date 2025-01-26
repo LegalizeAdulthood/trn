@@ -516,8 +516,8 @@ static void mac_init(char *tcbuf)
         arrow_macros(tmpbuf);
     FILE *macros;
     if (!g_use_threads
-     || (macros = fopen(filexp(get_val("TRNMACRO",TRNMACRO)),"r")) == nullptr)
-        macros = fopen(filexp(get_val("RNMACRO",RNMACRO)),"r");
+     || (macros = fopen(filexp(get_val_const("TRNMACRO",TRNMACRO)),"r")) == nullptr)
+        macros = fopen(filexp(get_val_const("RNMACRO",RNMACRO)),"r");
     if (macros) {
         while (fgets(tcbuf,TCBUF_SIZE,macros) != nullptr)
             mac_line(tcbuf,tmpbuf,sizeof tmpbuf);
