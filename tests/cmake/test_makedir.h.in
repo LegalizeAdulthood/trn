@@ -1,0 +1,3 @@
+#pragma once
+
+constexpr const char *TEST_MAKEDIR_BASE{"@TEST_MAKEDIR_BASE@"};

@@ -14,6 +14,7 @@ add_executable(trn-test
     test_flags.cpp
     test_init.cpp
     test_interp.cpp
+    test_makedir.cpp
     test_mime.cpp
     test_nntp.cpp
     test_rt-util.cpp
@@ -30,6 +31,7 @@ add_executable(trn-test
     cmake/test_config.h.in
     cmake/test_data.cpp.in
     cmake/test_local_newsrc.in
+    cmake/test_makedir.h.in
     cmake/test_mime.h.in
     cmake/test_mimecap_file.in
     cmake/test_nntp_auth_file.in
@@ -37,7 +39,7 @@ add_executable(trn-test
     cmake/test_organization_file.in
 )
 source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")
-source_group("Template Files" REGULAR_EXPRESSION "^.*\\.in$")
+source_group("CMake Templates" REGULAR_EXPRESSION "^.*\\.in$")
 target_include_directories(trn-test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}" .)
 target_link_libraries(trn-test PUBLIC libtrn GTest::gmock_main GTest::gtest)
 set_property(TARGET trn-test PROPERTY FOLDER Tests)
