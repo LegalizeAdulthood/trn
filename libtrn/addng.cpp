@@ -2,6 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <filesystem>
+
 #include <string_case_compare.h>
 
 #include "common.h"
@@ -195,11 +197,12 @@ static void new_local_groups(DATASRC *dp)
 {
     g_datasrc = dp;
 
+    const long file_size{static_cast<long>(std::filesystem::file_size(dp->extra_name))};
     /* did active.times file grow? */
-    stat_t extra_stat{};
-    stat(dp->extra_name, &extra_stat);
-    if (extra_stat.st_size == dp->act_sf.recent_cnt)
+    if (file_size == dp->act_sf.recent_cnt)
+    {
         return;
+    }
 
     FILE *fp = fopen(dp->extra_name, "r");
     if (fp == nullptr) {
@@ -235,7 +238,7 @@ static void new_local_groups(DATASRC *dp)
     hashwalk(newngs, build_addgroup_list, 0);
     hashdestroy(newngs);
     dp->lastnewgrp = lastone+1;
-    dp->act_sf.recent_cnt = extra_stat.st_size;
+    dp->act_sf.recent_cnt = file_size;
 }
 
 static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch)
