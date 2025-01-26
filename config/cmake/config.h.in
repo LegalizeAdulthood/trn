@@ -245,12 +245,6 @@
 #define SERVER_NAME "@SERVER_NAME@"
 #cmakedefine HAS_LOCAL_SPOOL
 
-/* I_PTEM:
- *      This symbol, if defined, indicates to the C program that it should
- *      include ptem.h.
- */
-#cmakedefine I_PTEM
-
 /* I_TIME:
  *      This symbol, if defined, indicates to the C program that it should
  *      include <time.h>.

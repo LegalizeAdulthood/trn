@@ -39,11 +39,6 @@
 #endif
 #endif
 
-#ifdef I_PTEM
-#include <sys/stream.h>
-#include <sys/ptem.h>
-#endif
-
 #ifdef I_TIME
 #include <time.h>
 #endif
