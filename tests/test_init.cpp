@@ -47,7 +47,8 @@ protected:
 
     Environment                  m_env;
     std::array<char, TCBUF_SIZE> m_tcbuf{};
-    std::function<bool(char *)>  m_failed_set_name_fn{[](char *) { return false; }};
+    std::function<bool(char *)>  m_failed_fn{[](char *) { return false; }};
+    std::function<bool(char *)>  m_succeeded_fn{[](char *) { return true; }};
     std::function<bool(char *)>  m_set_name_fn{[](char *)
                                               {
                                                   g_login_name = TRN_TEST_LOGIN_NAME;
@@ -117,13 +118,12 @@ TEST_F(InitTest, tempDirFromDefault)
 
 TEST_F(InitTest, loginNameFromUSER)
 {
-    const char *login_name{TRN_TEST_LOGIN_NAME};
-    expect_env("USER", login_name);
+    expect_env("USER", TRN_TEST_LOGIN_NAME);
     expect_no_envars({"DOTDIR", "HOME", HOMEDRIVE, HOMEPATH, "LOGDIR", "NETSPEED", "TMP", "TMPDIR", "TRNDIR"});
 
-    env_init(m_tcbuf.data(), true);
+    env_init(m_tcbuf.data(), true, m_succeeded_fn, m_failed_fn);
 
-    ASSERT_EQ(login_name, g_login_name);
+    ASSERT_EQ(TRN_TEST_LOGIN_NAME, g_login_name);
 }
 
 TEST_F(InitTest, loginNameFromLOGNAME)
@@ -169,7 +169,7 @@ TEST_F(InitTest, namesFromFailedUserNameLookup)
     expect_no_envars({"DOTDIR", "HOME", HOMEDRIVE, HOMEPATH, "LOGDIR", "LOGNAME", "NETSPEED", "TMP", "TMPDIR", "TRNDIR",
                       "USER", USERNAME});
 
-    const bool fully_successful = env_init(m_tcbuf.data(), true, m_failed_set_name_fn, m_failed_set_name_fn);
+    const bool fully_successful = env_init(m_tcbuf.data(), true, m_failed_fn, m_failed_fn);
 
     ASSERT_FALSE(fully_successful);
     ASSERT_TRUE(g_login_name.empty()) << "g_login_name = '" << g_login_name << '\'';
@@ -189,7 +189,7 @@ TEST_F(InitTest, namesFromSucessfulUserNameLookup)
     expect_no_envars({"DOTDIR", "HOME", HOMEDRIVE, HOMEPATH, "LOGDIR", "LOGNAME", "NETSPEED", "TMP", "TMPDIR", "TRNDIR",
                       "USER", USERNAME});
 
-    const bool fully_successful = env_init(m_tcbuf.data(), true, user_name_fn, m_failed_set_name_fn);
+    const bool fully_successful = env_init(m_tcbuf.data(), true, user_name_fn, m_failed_fn);
 
     ASSERT_FALSE(fully_successful);
     ASSERT_EQ(login_name, g_login_name);
@@ -201,7 +201,7 @@ TEST_F(InitTest, emptyHostNamesFromFailedHostFn)
     expect_no_envars({"DOTDIR", "HOME", HOMEDRIVE, HOMEPATH, "LOGDIR", "LOGNAME", "NETSPEED", "TMP", "TMPDIR", "TRNDIR",
                       "USER", USERNAME});
 
-    const bool fully_successful = env_init(m_tcbuf.data(), true, m_set_name_fn, m_failed_set_name_fn);
+    const bool fully_successful = env_init(m_tcbuf.data(), true, m_set_name_fn, m_failed_fn);
 
     ASSERT_FALSE(fully_successful);
     ASSERT_TRUE(std::string{g_local_host}.empty()) << "g_local_host = '" << g_local_host << '\'';
@@ -233,7 +233,7 @@ TEST_F(InitTest, homeDirFromInit2)
     expect_no_envars({"DOTDIR", "HOME", HOMEDRIVE, HOMEPATH, "LOGDIR", "LOGNAME", "NETSPEED", "TMP", "TMPDIR", "TRNDIR",
                       "USER", USERNAME});
 
-    env_init(m_tcbuf.data(), true, m_failed_set_name_fn, m_failed_set_name_fn);
+    env_init(m_tcbuf.data(), true, m_failed_fn, m_failed_fn);
 
     ASSERT_EQ(std::string{"/"}, g_home_dir);
 }
@@ -245,7 +245,7 @@ TEST_F(InitTest, dotDirFromDOTDIR)
     expect_no_envars(
         {"HOME", HOMEDRIVE, HOMEPATH, "LOGDIR", "LOGNAME", "NETSPEED", "TMP", "TMPDIR", "TRNDIR", "USER", USERNAME});
 
-    env_init(m_tcbuf.data(), true, m_failed_set_name_fn, m_failed_set_name_fn);
+    env_init(m_tcbuf.data(), true, m_failed_fn, m_failed_fn);
 
     ASSERT_EQ(dot_dir, g_dot_dir);
 }
@@ -257,7 +257,7 @@ TEST_F(InitTest, trnDirFromTRNDIR)
     expect_no_envars(
         {"DOTDIR", "HOME", HOMEDRIVE, HOMEPATH, "LOGDIR", "LOGNAME", "NETSPEED", "TMP", "TMPDIR", "USER", USERNAME});
 
-    env_init(m_tcbuf.data(), true, m_failed_set_name_fn, m_failed_set_name_fn);
+    env_init(m_tcbuf.data(), true, m_failed_fn, m_failed_fn);
 
     ASSERT_EQ(trn_dir, g_trn_dir);
 }
@@ -271,7 +271,7 @@ TEST_F(InitTest, trnDirFromDefaultValue)
     expect_no_envars(
         {"HOME", HOMEDRIVE, HOMEPATH, "LOGDIR", "LOGNAME", "NETSPEED", "TMP", "TMPDIR", "TRNDIR", "USER", USERNAME});
 
-    env_init(m_tcbuf.data(), true, m_failed_set_name_fn, m_failed_set_name_fn);
+    env_init(m_tcbuf.data(), true, m_failed_fn, m_failed_fn);
 
     ASSERT_EQ(trn_dir, g_trn_dir);
 }
@@ -282,7 +282,7 @@ TEST_F(InitTest, libDirFromConfiguration)
     expect_no_envars({"DOTDIR", "HOME", HOMEDRIVE, HOMEPATH, "LOGDIR", "LOGNAME", "NETSPEED", "TMP", "TMPDIR", "TRNDIR",
                       "USER", USERNAME});
 
-    env_init(m_tcbuf.data(), true, m_failed_set_name_fn, m_failed_set_name_fn);
+    env_init(m_tcbuf.data(), true, m_failed_fn, m_failed_fn);
 
     ASSERT_EQ(lib_dir, g_lib);
 }
@@ -293,7 +293,7 @@ TEST_F(InitTest, rnLibDirFromConfiguration)
     expect_no_envars({"DOTDIR", "HOME", HOMEDRIVE, HOMEPATH, "LOGDIR", "LOGNAME", "NETSPEED", "TMP", "TMPDIR", "TRNDIR",
                       "USER", USERNAME});
 
-    env_init(m_tcbuf.data(), true, m_failed_set_name_fn, m_failed_set_name_fn);
+    env_init(m_tcbuf.data(), true, m_failed_fn, m_failed_fn);
 
     ASSERT_EQ(rn_lib_dir, g_rn_lib);
 }
