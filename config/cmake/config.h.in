@@ -222,17 +222,6 @@
 #cmakedefine HAS_RES_INIT
 #cmakedefine HAS_GETDOMAINNAME
 
-/* HAS_GETWD:
- *      This symbol, if defined, indicates that the getwd routine is
- *      available to get the working directory.
- */
-/* HAS_GETCWD:
- *      This symbol, if defined, indicates that the getcwd routine is
- *      available to get the working directory.
- */
-#cmakedefine HAS_GETWD
-#cmakedefine HAS_GETCWD
-
 /* HAS_TERMLIB:
  *      This symbol, when defined, indicates that termlib-style routines
  *      are available.  There is nothing to include.

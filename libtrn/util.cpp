@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <cctype>
 #include <chrono>
 #include <filesystem>
 #include <string>
@@ -301,64 +302,29 @@ int mod;
  */
 char *trn_getwd(char *buf, int buflen)
 {
-    char* ret;
-
-#ifdef HAS_GETCWD
-    ret = getcwd(buf, buflen);
-#else
-    ret = trn_getcwd(buf, buflen);
-#endif
-    if (!ret) {
+    std::error_code       ec;
+    std::filesystem::path cwd{std::filesystem::current_path(ec)};
+    if (ec)
+    {
         printf("Cannot determine current working directory!\n");
         finalize(1);
     }
-#ifdef MSDOS
-    strlwr(buf);
-    while ((buf = strchr(buf,'\\')) != nullptr)
-        *buf++ = '/';
+    strncpy(buf, cwd.string().c_str(), buflen);
+#ifdef _WIN32
+    if (buf[1] == ':')
+    {
+        buf[0] = std::toupper(buf[0]);
+    }
+    for (int i = 0; i < buflen; ++i)
+    {
+        if (buf[i] == '\\')
+        {
+            buf[i] = '/';
+        }
+    }
 #endif
-    return ret;
+    return buf;
 }
-
-#ifndef HAS_GETCWD
-static char *trn_getcwd(char *buf, int len)
-{
-    char* ret;
-#ifdef HAS_GETWD
-    buf[len-1] = 0;
-    ret = getwd(buf);
-    if (buf[len-1]) {
-        /* getwd() overwrote the end of the buffer */
-        printf("getwd() buffer overrun!\n");
-        finalize(1);
-    }
-#else
-    FILE* popen();
-    FILE* pipefp;
-    char* nl;
-
-    pipefp = popen("/bin/pwd","r");
-    if (pipefp == nullptr) {
-        printf("Can't popen /bin/pwd\n");
-        return nullptr;
-    }
-    buf[0] = 0;
-    fgets(ret = buf, len, pipefp);
-    if (pclose(pipefp) == EOF) {
-        printf("Failed to run /bin/pwd\n");
-        return nullptr;
-    }
-    if (!buf[0]) {
-        printf("/bin/pwd didn't output anything\n");
-            return nullptr;
-    }
-    nl = strchr(buf, '\n');
-    if (nl != nullptr)
-        *nl = '\0';
-#endif
-    return ret;
-}
-#endif
 
 /* just like fgets but will make bigger buffer as necessary */
 
