@@ -532,7 +532,7 @@ int cancel_article()
        && myuid != ROOTID))) {
 #ifdef DEBUG
         if (debug) {
-            printf("\n%s@%s != %s\n",g_login_name,g_hostname,from_buf) FLUSH;
+            printf("\n%s@%s != %s\n",g_login_name.c_str(),g_hostname,from_buf) FLUSH;
             printf("%s != %s\n",get_val("FROM",""),from_buf) FLUSH;
             termdown(3);
         }
@@ -592,7 +592,7 @@ int supersede_article()         /* Supersedes: */
        && myuid != ROOTID))) {
 #ifdef DEBUG
         if (debug) {
-            printf("\n%s@%s != %s\n",g_login_name,g_hostname,from_buf) FLUSH;
+            printf("\n%s@%s != %s\n",g_login_name.c_str(),g_hostname,from_buf) FLUSH;
             printf("%s != %s\n",get_val("FROM",""),from_buf) FLUSH;
             termdown(3);
         }

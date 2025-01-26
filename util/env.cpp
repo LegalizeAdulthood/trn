@@ -32,7 +32,7 @@ std::string g_trn_dir;       /* usually %./.trn */
 std::string g_lib;           /* news library */
 std::string g_rn_lib;        /* private news program library */
 std::string g_tmp_dir;       /* where tmp files go */
-std::string g_login_name;    /* login id of user */
+std::string g_login_name;    /* login name of user */
 std::string g_real_name;     /* real name of user */
 std::string g_p_host_name;   /* host name in a posting */
 char       *g_local_host{};  /* local host name */
@@ -81,9 +81,12 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
         }
     }
 #ifndef MSDOS
-    if (!lax || g_login_name.empty()) {
-        if (const char *login = getlogin(); login)
+    if (!lax || g_login_name.empty())
+    {
+        if (const char *login = getlogin())
+        {
             g_login_name = login;
+        }
     }
 #endif
 #ifdef MSDOS
@@ -208,12 +211,12 @@ static bool set_user_name(char *tmpbuf)
     s = cpytill(g_buf,s,'&');
     if (*s == '&') {                    /* whoever thought this one up was */
         c = g_buf + strlen(g_buf);      /* in the middle of the night */
-        strcat(c,g_login_name);         /* before the morning after */
+        strcat(c, g_login_name.c_str()); /* before the morning after */
         strcat(c,s+1);
         if (islower(*c))
             *c = toupper(*c);           /* gack and double gack */
     }
-    g_real_name = savestr(g_buf);
+    g_real_name = g_buf;
 #else /* !BERKNAMES */
     c = strchr(s, '(');
     if (c != nullptr)
@@ -221,7 +224,7 @@ static bool set_user_name(char *tmpbuf)
     c = strchr(s, '-');
     if (c != nullptr)
         s = c;
-    g_real_name = savestr(s);
+    g_real_name = s;
 #endif /* !BERKNAMES */
 #endif
 #ifndef PASSNAMES
