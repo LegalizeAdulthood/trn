@@ -35,7 +35,6 @@
 #include <process.h>
 #endif
 #ifdef _WIN32
-#include <direct.h>
 #include <sys/types.h>
 #endif
 
