@@ -24,9 +24,7 @@
 #include "trn.h"
 #include "util.h"
 
-#ifdef MSDOS
-#include <direct.h>
-#endif
+#include <filesystem>
 
 #ifndef sigmask
 #define sigmask(m)      (1 << ((m)-1))
@@ -100,7 +98,7 @@ void finalize(int status)
     xmouse_off();       /* turn off mouse tracking (if on) */
     fflush(stdout);
 
-    chdir(g_tmp_dir.c_str());
+    std::filesystem::current_path(g_tmp_dir.c_str());
     if (!g_checkflag)
         unuse_multirc(g_multirc);
     datasrc_finalize();
@@ -120,7 +118,7 @@ void finalize(int status)
     }
 #ifdef RESTORE_ORIGDIR
     if (!g_origdir.empty())
-        chdir(g_origdir.c_str());
+        std::filesystem::current_path(g_origdir.c_str());
 #endif
     exit(status);
 }
