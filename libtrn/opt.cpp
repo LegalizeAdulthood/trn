@@ -46,9 +46,7 @@
 #include "util.h"
 #include "util2.h"
 
-#ifdef MSDOS
-#include <direct.h>
-#endif
+#include <filesystem>
 
 COMPEX      g_optcompex;
 std::string g_ini_file;
@@ -521,7 +519,7 @@ void set_option(option_index num, const char *s)
         if (!g_checkflag) {
             g_savedir = s;
             if (!g_privdir.empty()) {
-                chdir(g_privdir.c_str());
+                std::filesystem::current_path(g_privdir);
             }
             g_privdir = filexp(s);
         }
@@ -1344,15 +1342,21 @@ void cwd_check()
     if (g_privdir.empty())
         g_privdir = filexp("~/News");
     strcpy(tmpbuf,g_privdir.c_str());
-    if (chdir(g_privdir.c_str()) != 0) {
+    const auto change_dir{[](const std::filesystem::path &path)
+                          {
+                              std::error_code ec;
+                              current_path(path, ec);
+                              return ec;
+                          }};
+    if (change_dir(g_privdir)) {
         safecpy(tmpbuf,filexp(g_privdir.c_str()),sizeof tmpbuf);
-        if (makedir(tmpbuf, MD_DIR) || chdir(tmpbuf) != 0) {
+        if (makedir(tmpbuf, MD_DIR) || change_dir(tmpbuf)) {
             interp(g_cmd_buf, (sizeof g_cmd_buf), "%~/News");
             if (makedir(g_cmd_buf, MD_DIR))
                 strcpy(tmpbuf,g_home_dir);
             else
                 strcpy(tmpbuf,g_cmd_buf);
-            chdir(tmpbuf);
+            change_dir(tmpbuf);
             if (g_verbose)
                 printf("Cannot make directory %s--\n"
                        "        articles will be saved to %s\n"
