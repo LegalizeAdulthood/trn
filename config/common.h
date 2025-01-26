@@ -39,10 +39,6 @@
 #endif
 #endif
 
-#ifdef I_SYS_TIME
-#include <sys/time.h>
-#endif
-
 #include "typedef.h"
 
 enum
