@@ -54,12 +54,4 @@ inline bool file_ref(const char *s)
 #   define FILE_REF(s) file_ref(s)
 #endif
 
-/* how to open binary format files */
-#ifndef FOPEN_RB
-#   define FOPEN_RB "r"
-#endif
-#ifndef FOPEN_WB
-#   define FOPEN_WB "w"
-#endif
-
 #endif

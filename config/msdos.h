@@ -14,9 +14,6 @@ inline bool file_ref(const char *s)
 
 #define FILE_REF(s) file_ref(s)
 
-#define FOPEN_RB "rb"
-#define FOPEN_WB "wb"
-
 #define B19200  19200
 #define B9600   9600
 #define B4800   4800

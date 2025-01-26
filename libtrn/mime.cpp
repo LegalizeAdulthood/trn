@@ -871,7 +871,7 @@ decode_state qp_decode(FILE *ifp, decode_state state)
 
     if (state == DECODE_START) {
         char* filename = decode_fix_fname(g_mime_section->filename);
-        ofp = fopen(filename, FOPEN_WB);
+        ofp = fopen(filename, "wb");
         if (!ofp)
             return DECODE_ERROR;
         erase_line(false);
@@ -977,7 +977,7 @@ decode_state b64_decode(FILE *ifp, decode_state state)
 
     if (state == DECODE_START) {
         char* filename = decode_fix_fname(g_mime_section->filename);
-        ofp = fopen(filename, FOPEN_WB);
+        ofp = fopen(filename, "wb");
         if (!ofp)
             return DECODE_ERROR;
         printf("Decoding %s", filename);
@@ -1064,7 +1064,7 @@ decode_state cat_decode(FILE *ifp, decode_state state)
 
     if (state == DECODE_START) {
         char* filename = decode_fix_fname(g_mime_section->filename);
-        ofp = fopen(filename, FOPEN_WB);
+        ofp = fopen(filename, "wb");
         if (!ofp)
             return DECODE_ERROR;
         printf("Decoding %s", filename);

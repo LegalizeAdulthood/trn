@@ -202,7 +202,7 @@ decode_state uudecode(FILE *ifp, decode_state state)
               filename = decode_fix_fname(filename);
 
               /* Create output file and start decoding */
-              ofp = fopen(filename, FOPEN_WB);
+              ofp = fopen(filename, "wb");
               if (!ofp)
                   return DECODE_ERROR;
               printf("Decoding %s\n", filename);
