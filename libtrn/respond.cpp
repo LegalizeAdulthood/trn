@@ -30,9 +30,7 @@
 #include "util2.h"
 #include "uudecode.h"
 
-#ifdef MSDOS
-#include <direct.h>
-#endif
+#include <filesystem>
 
 std::string g_savedest;      /* value of %b */
 std::string g_extractdest;   /* value of %E */
@@ -50,6 +48,13 @@ static void follow_it_up();
 #if 0
 static bool cut_line(char *str);
 #endif
+
+inline bool change_dir(const std::filesystem::path &path)
+{
+    std::error_code ec;
+    current_path(path, ec);
+    return static_cast<bool>(ec);
+}
 
 void respond_init()
 {
@@ -82,7 +87,7 @@ save_result save_article()
         termdown(2);
         return SAVE_DONE;
     }
-    if (chdir(g_privdir.c_str())) {
+    if (change_dir(g_privdir)) {
         printf(g_nocd,g_privdir.c_str());
         sig_catcher(0);
     }
@@ -171,7 +176,7 @@ save_result save_article()
             g_int_count++;
             return SAVE_DONE;
         }
-        if (chdir(s)) {
+        if (change_dir(s)) {
             printf(g_nocd,s);
             sig_catcher(0);
         }
@@ -896,7 +901,7 @@ int invoke(const char *cmd, const char *dir)
         printf("\nInvoking command: %s\n",cmd);
 #endif
     if (dir) {
-        if (chdir(dir)) {
+        if (change_dir(dir)) {
             printf(g_nocd,dir);
             return ret;
         }
