@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <fdio.h>
 
 #include "common.h"
 #include "sw.h"
@@ -19,10 +20,6 @@
 #include "terminal.h"
 #include "trn.h"
 #include "util.h"
-
-#ifdef MSDOS
-#include <io.h>
-#endif
 
 static char **s_init_environment_strings{};
 static int    s_init_environment_cnt{};

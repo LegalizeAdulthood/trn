@@ -3,6 +3,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <fdio.h>
 #include <string_case_compare.h>
 
 #include "common.h"
@@ -24,9 +25,6 @@
 #include "util.h"
 #include "util2.h"
 
-#ifdef MSDOS
-#include <io.h>
-#endif
 #ifdef I_UTIME
 #include <utime.h>
 #endif

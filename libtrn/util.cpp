@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <string>
 
+#include <fdio.h>
 #include <string_case_compare.h>
 
 #include "common.h"
@@ -35,7 +36,6 @@
 #endif
 #ifdef _WIN32
 #include <direct.h>
-#include <io.h>
 #include <sys/types.h>
 #endif
 

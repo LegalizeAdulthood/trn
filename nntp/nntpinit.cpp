@@ -2,6 +2,8 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <fdio.h>
+
 #include "common.h"
 #include "nntpinit.h"
 
@@ -13,10 +15,6 @@
 #include <map>
 #include <string>
 #include <utility>
-
-#ifdef MSDOS
-#include <io.h>
-#endif
 
 namespace asio = boost::asio;
 

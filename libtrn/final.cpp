@@ -2,6 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <fdio.h>
+
 #include "common.h"
 #include "final.h"
 
@@ -24,7 +26,6 @@
 
 #ifdef MSDOS
 #include <direct.h>
-#include <io.h>
 #endif
 
 #ifndef sigmask

@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <fdio.h>
 #include <string_case_compare.h>
 
 #include "common.h"
@@ -30,7 +31,6 @@
 
 #ifdef MSDOS
 #include <direct.h>
-#include <io.h>
 #endif
 
 LIST       *g_ngdata_list{};       /* a list of NGDATA */

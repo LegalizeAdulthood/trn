@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <fdio.h>
 
 #include "common.h"
 #include "backpage.h"
@@ -9,9 +10,6 @@
 #include "final.h"
 #include "util2.h"
 
-#ifdef MSDOS
-#include <io.h>
-#endif
 
 static int     s_varyfd{0};         /* virtual array file for storing  file offsets */
 static ART_POS s_varybuf[VARYSIZE]; /* current window onto virtual array */

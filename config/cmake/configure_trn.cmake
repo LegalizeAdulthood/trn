@@ -67,11 +67,14 @@ function(configure_trn)
     if(NOT HAS_STRCASECMP)
         set(STRING_CASE_COMPARE_SOURCES "string_case_compare.cpp")
     endif()
-    set(STRING_CASE_COMPARE_H "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/string_case_compare.${CMAKE_HOST_SYSTEM_NAME}.h.in")
-    if(NOT EXISTS "${STRING_CASE_COMPARE_H}")
+    if((NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux") AND (NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows"))
         message(FATAL_ERROR "Unknown system ${CMAKE_HOST_SYSTEM_NAME}; expected 'Linux' or 'Windows'")
     endif()
-    configure_file("${STRING_CASE_COMPARE_H}" "include/string_case_compare.h")
+    configure_file(
+        "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/fdio.${CMAKE_HOST_SYSTEM_NAME}.h.in"
+        "include/fdio.h")
+    configure_file(
+        "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/string_case_compare.${CMAKE_HOST_SYSTEM_NAME}.h.in"
+        "include/string_case_compare.h")
     set(STRING_CASE_COMPARE_SOURCES "${STRING_CASE_COMPARE_SOURCES}" PARENT_SCOPE)
-    set(STRING_CASE_COMPARE_H "${STRING_CASE_COMPARE_H}" PARENT_SCOPE)
 endfunction()

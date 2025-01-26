@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 
+#include <fdio.h>
 #include <string_case_compare.h>
 
 #include "common.h"
@@ -47,7 +48,6 @@
 
 #ifdef MSDOS
 #include <direct.h>
-#include <io.h>
 #endif
 
 COMPEX      g_optcompex;
