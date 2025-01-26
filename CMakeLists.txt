@@ -40,6 +40,7 @@ source_group("VcPkg Files" FILES vcpkg.json)
 source_group("Text Files" FILES ${trn_text_files})
 target_link_libraries(trn PUBLIC libtrn)
 install(TARGETS trn DESTINATION ${CMAKE_INSTALL_BINDIR})
+set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT trn)
 
 add_subdirectory(config)
 add_subdirectory(inews)
