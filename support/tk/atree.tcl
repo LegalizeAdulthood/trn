@@ -567,5 +567,5 @@ $atree bind node <1> {
     #the following is safe even if the id is not found]
     set anum [$trn_treeclick_ap artnum]
     trn_go_article $anum
-    #possibly later do things like update the tree, etc...    
+    #possibly later do things like update the tree, etc...
 }

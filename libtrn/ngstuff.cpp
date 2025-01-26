@@ -583,7 +583,7 @@ int ngsel_perform()
 int ng_perform(char *cmdlst, int output_level)
 {
     int ch;
-    
+
     if (output_level == 1) {
         printf("%s ",g_ngname.c_str());
         fflush(stdout);
@@ -690,7 +690,7 @@ int addgrp_sel_perform()
 int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level)
 {
     int ch;
-    
+
     if (output_level == 1) {
         printf("%s ",gp->name);
         fflush(stdout);

@@ -643,7 +643,7 @@ long sa_wrap_next_author(long a)
     long b;
     char* s;
     char* s2;
-    
+
     s = (char*)sa_desc_author(a,20);    /* 20 characters should be enough */
     for (b = s_next_elig(a); b; b = s_next_elig(b))
         if (strstr(get_from_line(b),s))

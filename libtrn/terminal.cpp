@@ -271,7 +271,7 @@ void term_set(char *tcbuf)
     }
 #endif
 #endif
-    
+
     /* get all that good termcap stuff */
 
 #ifdef HAS_TERMLIB
@@ -354,7 +354,7 @@ void term_set(char *tcbuf)
         }
     }
 #endif
-        
+
     g_tc_AM = tgetflag("am");           /* terminal wraps automatically? */
     g_tc_XN = tgetflag("xn");           /* then eats next newline? */
     g_tc_VB = Tgetstr("vb");

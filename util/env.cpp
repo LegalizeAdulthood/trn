@@ -305,7 +305,7 @@ static bool set_p_host_name(char *tmpbuf)
 #  ifdef PHOSTCMD
     {
         FILE* pipefp = popen(PHOSTCMD,"r");
-        
+
         if (pipefp == nullptr) {
             printf("Can't find hostname\n");
             finalize(1);
@@ -415,7 +415,7 @@ char *export_var(const char *nam, const char *val)
 #else
             char** tmpenv = nullptr;
 #endif /* lint */
-    
+
             s_firstexport = false;
             for (int j = 0; j < i; j++) /* copy environment */
                 tmpenv[j] = environ[j];

@@ -262,7 +262,7 @@ EOM
     $echo "The Cc: line should have the poster's requested return address."
     ;;
 esac
-  
+
 # play recorded message
 if $test -s ${lib}/recording ; then
      for ng in $hdr_newsgroups ; do
@@ -835,7 +835,7 @@ EOH
 	;;
     ''|$loc|$org|$city|$state|$multistate|$cntry|$cont|$defdist)
 	;;
-    *)  
+    *)
 	if $test -f $lib/distributions && \
 	  $egrep "^$dist[ 	]" $lib/distributions >$tmpart && \
 	  $test -s $tmpart; then

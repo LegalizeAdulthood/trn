@@ -70,7 +70,7 @@ void intrp_init(char *tcbuf, int tcbuf_len)
 {
     s_last_input.clear();
     init_compex(&s_cond_compex);
-    
+
     /* get environmental stuff */
 
 #ifdef HAS_NEWS_ADMIN
@@ -344,7 +344,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     COMPEX *oldbra_compex = g_bra_compex;
                     char rch;
                     bool matched;
-                    
+
                     pattern = dointerp(dest,destsize,pattern+1,"!=",cmd);
                     rch = *pattern;
                     if (rch == '!')
@@ -1185,7 +1185,7 @@ char *interpsearch(char *dest, int destsize, char *pattern, const char *cmd)
 void normalize_refs(char *refs)
 {
     char* t = refs;
-    
+
     for (char *f = refs; *f;)
     {
         if (*f == '<') {

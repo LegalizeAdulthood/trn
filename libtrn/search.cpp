@@ -261,7 +261,7 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
 
                     for (int i = BMAPSIZ; i; --i)
                         ep[i] = 0;
-                    
+
                     c = *strp++;
                     if (c == '^') {
                         c = *strp++;
@@ -269,7 +269,7 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
                     }
                     else
                         *ep++ = CCL;    /* normal */
-                    
+
                     int i = 0;          /* remember oldchar */
                     do {
                         if (c == '\0') {

@@ -64,7 +64,7 @@ save_result save_article()
     char altbuf[CBUFLEN];
     bool interactive = (g_buf[1] == FINISHCMD);
     char cmd = *g_buf;
-    
+
     if (!finish_command(interactive))   /* get rest of command */
         return SAVE_ABORT;
     bool use_pref = isupper(cmd);
@@ -330,7 +330,7 @@ save_result save_article()
                 mailbox = false;
             else {
                 const char* dflt = (in_string(savename,"%a", true) ? "nyq" : "ynq");
-                
+
                 sprintf(g_cmd_buf,
                 "\nFile %s doesn't exist--\n        use mailbox format?",s);
               reask_save:
@@ -722,7 +722,7 @@ void reply()
 done:
     free(maildoer);
 }
-  
+
 void forward()
 {
     char hbuf[5*LBUFLEN];

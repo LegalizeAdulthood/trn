@@ -255,7 +255,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
             return -1;
         }
         memcpy((char*)&sin.sin_addr,*cp,hp->h_length);
-                
+
         if (x < 0)
             fprintf(stderr, "trying %s\n", inet_ntoa(sin.sin_addr));
         x = connect(s, (struct sockaddr*)&sin, sizeof (sin));

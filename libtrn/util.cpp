@@ -93,7 +93,7 @@ void util_final()
     putenv("NNTP_FORCE_AUTH=");
     putenv("TRN_VERSION=");
 }
-    
+
 /* fork and exec a shell command */
 
 int doshell(const char *shell, const char *s)
@@ -280,7 +280,7 @@ char* filename;
 int mod;
 {
     int protection, euid;
-    
+
     mod &= 7;                           /* remove extraneous garbage */
     if (stat(filename, &g_filestat) < 0)
         return -1;

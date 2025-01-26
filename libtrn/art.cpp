@@ -497,7 +497,7 @@ do_article_result do_article()
                         }
                         bufptr++;
                     }
-                    
+
                 } /* end of column loop */
 
                 if (outpos < 1000) {    /* did line overflow? */
@@ -579,7 +579,7 @@ recheck_pager:
 
 /* not done with this article, so pretend we are a pager */
 
-reask_pager:                    
+reask_pager:
         if (g_term_line >= g_tc_LINES) {
             g_term_scrolled += g_term_line - g_tc_LINES + 1;
             g_term_line = g_tc_LINES-1;

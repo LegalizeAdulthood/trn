@@ -27,7 +27,7 @@ void backpage_init()
         printf(g_cantopen,varyname);
         sig_catcher(0);
     }
-    
+
 }
 
 /* virtual array read */

@@ -927,7 +927,7 @@ bool prev_page()
       case SM_NEWSGROUP: {
         NGDATA* np = g_sel_page_np;
         NGDATA* page_np = g_sel_page_np;
-        
+
         if (!np)
             np = g_last_ng;
         else
@@ -1747,7 +1747,7 @@ static void display_article(const ARTICLE *ap, int ix, int sel)
     maybe_eol();
     if (subj_width < 32)
         subj_width = 32;
-    
+
     output_sel(ix, sel, false);
     if (*g_sel_art_dmode == 's' || from_width < 8)
         printf("  %s\n",compress_subj(ap->subj->articles,subj_width));

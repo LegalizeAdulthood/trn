@@ -10,7 +10,7 @@ practice, but you must realize that my goal was to make a better mousetrap,
 so certain conscious tradeoffs were made in the design of trn right from the
 start.  In particular, if you want to hack on trn (and I wouldn't blame you,
 it's fun), beware of the following:
-  
+
   * buf and cmd_buf are reused all over the place.  11-squishing is a good
     term for it.  No, I'm on a Vax now, but I've been there.
 
@@ -35,7 +35,7 @@ it's fun), beware of the following:
     reader is examining the header, cacheing up subjects while the user
     is reading, checkpointing the .newsrc only while the reader is in the
     middle of an interesting article, are some of the strategies employed.
-  
+
   * There are plenty of goto's.  Most of them involve going back to reprompt,
     to reask for input, or to just plain do the unstructured things people
     want to do when they are glaring at a terminal.  If they bother you

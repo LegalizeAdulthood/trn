@@ -275,7 +275,7 @@ void opt_file(const char *filename, char **tcbufptr, bool bleat)
     char*section;
     char*cond;
     int  fd = open(filename,0);
-        
+
     if (fd >= 0) {
         stat_t opt_stat{};
         fstat(fd,&opt_stat);

@@ -154,7 +154,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
             return nullptr;
     } while (t == s || (t[0] == 'v' && isdigit(t[1]) && *s == ':'));
     *s++ = '\0';
-    
+
     /* Try looking for a filename with a "." in it later in the subject line.
      * Exclude <digit>.<digit>, since that is usually a version number.
      */

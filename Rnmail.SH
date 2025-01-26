@@ -128,14 +128,14 @@ EOH
 	h)
 	    $cat <<'EOH'
 
-Type the title for your message.  
+Type the title for your message.
 EOH
 	    ;;
 	esac
     done
 
 # now build a file with a header for them to edit
-    
+
     case $orgname in
     /*) orgname=`$cat $orgname` ;;
     esac

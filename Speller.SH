@@ -80,7 +80,7 @@ while $test "X$1" != X; do
 				keephdr = 1;
 				print $0 > Body;
 				next;
-			    }  
+			    }
 			}
 	/^[ \t]/	{
 			    if (inhdr) {

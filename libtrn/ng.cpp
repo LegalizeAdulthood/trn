@@ -485,7 +485,7 @@ article_level:
             goto article_level;
         }
     }                                   /* end of article selection loop */
-    
+
 /* shut down newsgroup */
 
 cleanup:
@@ -983,7 +983,7 @@ not_threaded:
 normal_search:
       {         /* search for article by pattern */
         char cmd = *g_buf;
-        
+
         g_reread = true;                /* assume this */
         g_page_line = 1;
         switch (art_search(g_buf, (sizeof g_buf), true)) {

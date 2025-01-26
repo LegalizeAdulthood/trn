@@ -28,7 +28,7 @@ void rcln_init()
 void catch_up(NGDATA *np, int leave_count, int output_level)
 {
     char tmpbuf[128];
-    
+
     if (leave_count) {
         if (output_level) {
             if (g_verbose)
@@ -164,12 +164,12 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
             bool range_before = (*(t-1) == '-');
             char *nextmax = skip_digits(s);
             bool  range_after = *nextmax++ == '-';
-            
+
             if (range_before)
                 *t = '\0';              /* artnum is redundant */
             else
                 sprintf(t,"%ld-",(long)artnum);/* artnum will be new min */
-            
+
             if (range_after)
                 s = nextmax;            /* *s is redundant */
         /*  else
@@ -223,9 +223,9 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
 #endif
     s = np->rcline + np->numoffset;
     s = skip_eq(s, ' ');                /* skip spaces */
-    
+
     /* a little optimization, since it is almost always the last number */
-    
+
     for (t=s; *t; t++) ;                /* find end of string */
     curlen = t - np->rcline;
     for (t--; isdigit(*t); t--) ;       /* find previous delim */

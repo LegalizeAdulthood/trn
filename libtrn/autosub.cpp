@@ -59,7 +59,7 @@ static bool matchlist(const char *patlist, const char *s)
             printf("\n%s\n", err);
             finalize(1);
         }
-        
+
         if (execute(&ilcompex,s) != nullptr)
             result = tmpresult;
         patlist = p;

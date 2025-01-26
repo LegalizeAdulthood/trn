@@ -230,7 +230,7 @@ int sc_score_art(ART_NUM a, bool now)
         return LOWSCORE;
     return article_ptr(a)->score;
 }
-        
+
 /* scores articles in a range */
 /* CONSIDER: option for scoring only unread articles (obey sc_fill_unread?) */
 void sc_fill_scorelist(ART_NUM first, ART_NUM last)

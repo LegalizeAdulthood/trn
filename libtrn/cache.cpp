@@ -761,7 +761,7 @@ bool cache_subjects()
     for (an=article_first(s_subj_to_get); an <= g_lastart; an=article_next(an)) {
         if (input_pending())
             break;
-        
+
         if (article_unread(an))
             fetchsubj(an,false);
     }
