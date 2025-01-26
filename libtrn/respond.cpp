@@ -23,6 +23,7 @@
 #include "string-algos.h"
 #include "terminal.h"
 #include "trn.h"
+#include "user_id.h"
 #include "util.h"
 #include "util2.h"
 #include "uudecode.h"
@@ -507,7 +508,7 @@ save_result view_article()
 int cancel_article()
 {
     char hbuf[5*LBUFLEN];
-    int  myuid = getuid();
+    int  myuid = current_user_id();
     int  r = -1;
 
     if (artopen(g_art,(ART_POS)0) == nullptr) {
@@ -566,7 +567,7 @@ done:
 int supersede_article()         /* Supersedes: */
 {
     char hbuf[5*LBUFLEN];
-    int  myuid = getuid();
+    int  myuid = current_user_id();
     int  r = -1;
     bool incl_body = (*g_buf == 'Z');
 

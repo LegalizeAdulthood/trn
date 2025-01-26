@@ -28,6 +28,7 @@
 #include "string-algos.h"
 #include "terminal.h"
 #include "trn.h"
+#include "user_id.h"
 #include "util.h"
 #include "util2.h"
 

@@ -302,10 +302,3 @@ char *read_auth_file(const char *file, char **pass_ptr)
     *pass_ptr = strptr[1];
     return strptr[0];
 }
-
-#ifdef MSDOS
-int getuid()
-{
-    return 2;
-}
-#endif

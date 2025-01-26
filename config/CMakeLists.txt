@@ -7,6 +7,7 @@ add_library(config
     config2.h
     msdos.h
     typedef.h
+    user_id.h
     cmake/config.h.in
     cmake/configure_trn.cmake
     "${CMAKE_CURRENT_BINARY_DIR}/include/config.h")
