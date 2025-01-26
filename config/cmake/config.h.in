@@ -245,11 +245,6 @@
 #define SERVER_NAME "@SERVER_NAME@"
 #cmakedefine HAS_LOCAL_SPOOL
 
-/* size_t:
- *      This symbol is defined as an int if no size_t definition exists.
- */
-#cmakedefine size_t int
-
 /* I_PTEM:
  *      This symbol, if defined, indicates to the C program that it should
  *      include ptem.h.
