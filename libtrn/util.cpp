@@ -484,7 +484,7 @@ void verify_sig()
 double current_time()
 {
     using namespace std::chrono;
-    auto result{duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch()).count()};
+    auto result{duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count()};
     return static_cast<double>(result) / 1000.0;
 }
 

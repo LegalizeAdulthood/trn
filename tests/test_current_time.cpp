@@ -9,7 +9,7 @@ TEST(TestCurrentTime, msAccuracy)
 {
     using namespace std::chrono_literals;
     const double start{current_time()};
-    std::this_thread::sleep_for(100ms);
+    std::this_thread::sleep_for(150ms);
 
     const double now{current_time()};
 
