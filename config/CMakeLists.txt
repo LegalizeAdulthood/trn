@@ -8,6 +8,7 @@ add_library(config
     config2.h
     "${CMAKE_CURRENT_BINARY_DIR}/include/fdio.h"
     msdos.h
+    "${CMAKE_CURRENT_BINARY_DIR}/include/pipe_io.h"
     "${CMAKE_CURRENT_BINARY_DIR}/include/string_case_compare.h" ${STRING_CASE_COMPARE_SOURCES}
     typedef.h
     user_id.h
@@ -15,6 +16,8 @@ add_library(config
     cmake/configure_trn.cmake
     cmake/fdio.Linux.h.in
     cmake/fdio.Windows.h.in
+    cmake/pipe_io.Linux.h.in
+    cmake/pipe_io.Windows.h.in
     cmake/string_case_compare.Linux.h.in
     cmake/string_case_compare.Windows.h.in
 )

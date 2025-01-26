@@ -1,0 +1,4 @@
+#pragma once
+
+// Include header that provides popen
+#include <stdio.h>

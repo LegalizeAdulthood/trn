@@ -1,6 +1,12 @@
 include(CheckIncludeFile)
 include(CheckSymbolExists)
 
+function(configure_system_header name)
+    configure_file(
+        "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/${name}.${CMAKE_HOST_SYSTEM_NAME}.h.in"
+        "include/${name}.h")
+endfunction()
+
 function(configure_trn)
     #
     # Perform inspections of the system and configure accordingly.
@@ -70,11 +76,8 @@ function(configure_trn)
     if((NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux") AND (NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows"))
         message(FATAL_ERROR "Unknown system ${CMAKE_HOST_SYSTEM_NAME}; expected 'Linux' or 'Windows'")
     endif()
-    configure_file(
-        "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/fdio.${CMAKE_HOST_SYSTEM_NAME}.h.in"
-        "include/fdio.h")
-    configure_file(
-        "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/string_case_compare.${CMAKE_HOST_SYSTEM_NAME}.h.in"
-        "include/string_case_compare.h")
+    configure_system_header("fdio")
+    configure_system_header("pipe_io")
+    configure_system_header("string_case_compare")
     set(STRING_CASE_COMPARE_SOURCES "${STRING_CASE_COMPARE_SOURCES}" PARENT_SCOPE)
 endfunction()

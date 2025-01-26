@@ -1,0 +1,13 @@
+#pragma once
+
+// On Windows, <stdio.h> provides _popen/_pclose not popen/pclose
+#include <stdio.h>
+
+inline FILE *popen(const char *path, const char *mode)
+{
+    return _popen(path, mode);
+}
+inline int pclose(FILE *fd)
+{
+    return _pclose(fd);
+}

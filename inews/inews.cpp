@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include <pipe_io.h>
 #include <string_case_compare.h>
 
 #include "common.h"
@@ -14,19 +15,6 @@
 #include "string-algos.h"
 #include "util2.h"
 #include "util3.h"
-
-#include <stdio.h>
-
-#if defined(WIN32)
-inline FILE *popen(const char *path, const char *mode)
-{
-    return _popen(path, mode);
-}
-inline int pclose(FILE *fd)
-{
-    return _pclose(fd);
-}
-#endif
 
 enum
 {

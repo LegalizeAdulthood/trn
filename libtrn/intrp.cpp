@@ -6,6 +6,8 @@
 #include <filesystem>
 #include <string>
 
+#include <pipe_io.h>
+
 #include "common.h"
 #include "intrp.h"
 
@@ -36,17 +38,6 @@
 #ifdef HAS_UNAME
 #include <sys/utsname.h>
 struct utsname utsn;
-#endif
-#ifdef MSDOS
-#include <stdio.h>
-inline FILE *popen(const char *path, const char *mode)
-{
-    return _popen(path, mode);
-}
-inline int pclose(FILE *fd)
-{
-    return _pclose(fd);
-}
 #endif
 
 std::string g_origdir;    /* cwd when rn invoked */
