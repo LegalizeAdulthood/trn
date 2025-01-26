@@ -222,10 +222,10 @@
 #cmakedefine HAS_GETTIMEOFDAY
 #cmakedefine I_SYS_TIMEB
 #ifdef HAS_GETTIMEOFDAY
-typedef struct timeval Timeval; /* Structure used by gettimeofday() */
+using Timeval = struct timeval; /* Structure used by gettimeofday() */
 #endif
 #if defined(HAS_FTIME) && !defined(Timeval)
-typedef struct timeb Timeval; /* Structure used by ftime() */
+using Timeval = struct timeb;   /* Structure used by ftime() */
 #endif
 
 /* HAS_GETHOSTNAME:
