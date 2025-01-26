@@ -10,8 +10,5 @@ char *cpytill(char *to, char *from, int delim);
 char *filexp(const char *s);
 char *in_string(char *big, const char *little, bool case_matters);
 char *read_auth_file(const char *file, char **pass_ptr);
-#ifdef MSDOS
-int getuid();
-#endif
 
 #endif
