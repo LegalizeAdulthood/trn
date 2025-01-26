@@ -26,7 +26,6 @@ set(trn_text_files
     INIT.txt
     INSTALL.txt
     LICENSE.txt
-    MANIFEST.txt
     README.txt
 )
 add_executable(trn main.cpp
