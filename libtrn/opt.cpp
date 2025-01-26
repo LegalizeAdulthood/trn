@@ -218,7 +218,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     stat_t ini_stat{};
     if (stat(s,&ini_stat) < 0 || !S_ISDIR(ini_stat.st_mode)) {
         printf("Creating the directory %s.\n",s);
-        if (makedir(s,MD_DIR)) {
+        if (makedir(s, MD_DIR)) {
             printf("Unable to create `%s'.\n",s);
             finalize(1); /*$$??*/
         }
@@ -1345,9 +1345,9 @@ void cwd_check()
     strcpy(tmpbuf,g_privdir.c_str());
     if (chdir(g_privdir.c_str()) != 0) {
         safecpy(tmpbuf,filexp(g_privdir.c_str()),sizeof tmpbuf);
-        if (makedir(tmpbuf,MD_DIR) || chdir(tmpbuf) != 0) {
+        if (makedir(tmpbuf, MD_DIR) || chdir(tmpbuf) != 0) {
             interp(g_cmd_buf, (sizeof g_cmd_buf), "%~/News");
-            if (makedir(g_cmd_buf,MD_DIR))
+            if (makedir(g_cmd_buf, MD_DIR))
                 strcpy(tmpbuf,g_home_dir);
             else
                 strcpy(tmpbuf,g_cmd_buf);

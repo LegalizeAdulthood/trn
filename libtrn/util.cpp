@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <filesystem>
 #include <string>
 
 #include "common.h"
@@ -390,65 +391,16 @@ char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp)
     return buffer;
 }
 
-bool makedir(char *dirname, makedir_name_type nametype)
+bool makedir(const char *dirname, makedir_name_type nametype)
 {
-    char* end;
-    char* s;
-# ifdef HAS_MKDIR
-    bool status{};
-# else
-    char tmpbuf[1024];
-    char* tbptr = tmpbuf+5;
-# endif
-
-    for (end = dirname; *end; end++) ;  /* find the end */
-    if (nametype == MD_FILE) {          /* not to create last component? */
-        for (--end; end != dirname && *end != '/'; --end) ;
-        if (*end != '/')
-            return false;               /* nothing to make */
-        *end = '\0';                    /* isolate file name */
+    std::filesystem::path dir{dirname};
+    if (nametype == MD_FILE)
+    {
+        dir = dir.parent_path();
     }
-# ifndef HAS_MKDIR
-    strcpy(tmpbuf,"mkdir");
-# endif
-
-    s = end;
-    for (;;) {
-        stat_t dir_stat{};
-        if (stat(dirname,&dir_stat) >= 0 && S_ISDIR(dir_stat.st_mode)) {
-                                        /* does this much exist as a dir? */
-            *s = '/';                   /* mark this as existing */
-            break;
-        }
-        s = strrchr(dirname,'/');       /* shorten name */
-        if (!s)                         /* relative path! */
-            break;                      /* hope they know what they are doing */
-        *s = '\0';                      /* mark as not existing */
-    }
-    
-    for (s=dirname; s <= end; s++) {    /* this is grody but efficient */
-        if (!*s) {                      /* something to make? */
-# ifdef HAS_MKDIR
-#ifdef _WIN32
-            status = status || mkdir(dirname) != 0;
-#else
-            status = status || mkdir(dirname,0777);
-#endif
-# else
-            sprintf(tbptr," %s",dirname);
-            tbptr += strlen(tbptr);     /* make it, sort of */
-# endif
-            *s = '/';                   /* mark it made */
-        }
-    }
-    if (nametype == MD_DIR)             /* don't need final slash unless */
-        *end = '\0';                    /*  a filename follows the dir name */
-
-# ifdef HAS_MKDIR
-    return status;
-# else
-    return tbptr == tmpbuf + 5 ? false : doshell(SH, tmpbuf) != 0; /* exercise our faith */
-# endif
+    std::error_code ec;
+    create_directories(dir, ec);
+    return static_cast<bool>(ec);
 }
 
 void notincl(const char *feature)

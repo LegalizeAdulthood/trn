@@ -825,7 +825,7 @@ static char *univ_edit_new_userfile()
         return g_univ_fname;    /* as if this function was not called */
     }
 
-    makedir(s,MD_FILE);
+    makedir(s, MD_FILE);
 
     fp = fopen(s,"w");
     if (!fp) {

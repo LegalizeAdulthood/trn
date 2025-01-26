@@ -902,7 +902,7 @@ void sf_append(char *line)
     }
     filename = filexp(sf_cmd_fname(filename));  /* allow shortcuts */
     /* make sure directory exists... */
-    makedir(filename,MD_FILE);
+    makedir(filename, MD_FILE);
     sf_file_clear();
     FILE *fp = fopen(filename, "a");
     if (fp != nullptr)
@@ -1085,7 +1085,7 @@ void sf_edit_file(const char *filespec)
     char *fname_noexpand = sf_cmd_fname(filebuf);
     strcpy(filebuf,filexp(fname_noexpand));
     /* make sure directory exists... */
-    if (!makedir(filebuf,MD_FILE)) {
+    if (!makedir(filebuf, MD_FILE)) {
         (void)edit_file(fname_noexpand);
         sf_file_clear();
     }

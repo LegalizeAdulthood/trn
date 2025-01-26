@@ -397,7 +397,7 @@ void rewrite_kfile(ART_NUM thru)
     if (g_localkfp)
         fseek(g_localkfp,0L,0);         /* rewind current file */
     else
-        makedir(killname,MD_FILE);
+        makedir(killname, MD_FILE);
     remove(killname);                   /* to prevent file reuse */
     g_kf_state &= ~(s_kfs_local_change_clear | KFS_NORMAL_LINES);
     s_newkfp = fopen(killname, "w");
@@ -532,7 +532,7 @@ void update_thread_kfile()
         return;
 
     char *cp = filexp(get_val("KILLTHREADS", s_killthreads));
-    makedir(cp,MD_FILE);
+    makedir(cp, MD_FILE);
     if (g_kf_changethd_cnt*5 > s_kf_thread_cnt) {
         remove(cp);                     /* to prevent file reuse */
         s_newkfp = fopen(cp, "w");
@@ -684,7 +684,7 @@ void open_kfile(int local)
 void kf_append(const char *cmd, bool local)
 {
     strcpy(g_cmd_buf, filexp(local ? get_val("KILLLOCAL", s_killlocal) : get_val("KILLGLOBAL", s_killglobal)));
-    if (!makedir(g_cmd_buf,MD_FILE)) {
+    if (!makedir(g_cmd_buf, MD_FILE)) {
         if (g_verbose)
             printf("\nDepositing command in %s...",g_cmd_buf);
         else

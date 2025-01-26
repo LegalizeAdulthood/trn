@@ -144,7 +144,7 @@ save_result save_article()
         if (!FILE_REF(s)) {     /* relative path? */
             c = (s==g_buf ? altbuf : g_buf);
             interp(c, (sizeof g_buf), get_val("SAVEDIR",SAVEDIR));
-            if (makedir(c,MD_DIR))      /* ensure directory exists */
+            if (makedir(c, MD_DIR))      /* ensure directory exists */
                 strcpy(c,g_privdir.c_str());
             if (*s) {
                 while (*c) c++;
@@ -293,7 +293,7 @@ save_result save_article()
         s = altbuf;
         if (!FILE_REF(s)) {
             interp(g_buf, (sizeof g_buf), get_val("SAVEDIR",SAVEDIR));
-            if (makedir(g_buf,MD_DIR))  /* ensure directory exists */
+            if (makedir(g_buf, MD_DIR))  /* ensure directory exists */
                 strcpy(g_buf,g_privdir.c_str());
             if (*s) {
                 for (c = g_buf; *c; c++) ;
@@ -313,7 +313,7 @@ save_result save_article()
             interp(c, s == g_buf ? (sizeof g_buf) : (sizeof altbuf), i ? s_news : savename);
                                 /* generate a default name somehow or other */
         }
-        makedir(s,MD_FILE);
+        makedir(s, MD_FILE);
         if (!FILE_REF(s)) {     /* relative path? */
             c = (s==g_buf ? altbuf : g_buf);
             sprintf(c, "%s/%s", g_privdir.c_str(), s);

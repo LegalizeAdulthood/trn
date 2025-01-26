@@ -54,7 +54,7 @@ int eaccess(char *, int);
 #endif
 char *trn_getwd(char *buf, int buflen);
 char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp);
-bool makedir(char *dirname, makedir_name_type nametype);
+bool makedir(const char *dirname, makedir_name_type nametype);
 void notincl(const char *feature);
 void growstr(char **strptr, int *curlen, int newlen);
 void setdef(char *buffer, const char *dflt);

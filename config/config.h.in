@@ -15,13 +15,6 @@
  */
 #cmakedefine HAS_GETPW
 
-/* HAS_MKDIR:
- *      This symbol, if defined, indicates that the mkdir routine is available
- *      to create directories.  Otherwise you should fork off a new process to
- *      exec /bin/mkdir.
- */
-#cmakedefine HAS_MKDIR
-
 /* HAS_NEWS_ADMIN:
  *      This symbol, if defined, indicates that NEWS_ADMIN contains the login
  *      name of the news administrator.
