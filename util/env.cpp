@@ -182,14 +182,14 @@ static bool set_user_name(char *tmpbuf)
 #ifdef HAS_GETPWENT
     passwd* pwd;
 
-    if (g_login_name == nullptr)
+    if (g_login_name.empty())
         pwd = getpwuid(getuid());
     else
-        pwd = getpwnam(g_login_name);
+        pwd = getpwnam(g_login_name.c_str());
     if (!pwd)
         return 0;
-    if (!g_login_name)
-        g_login_name = savestr(pwd->pw_name);
+    if (g_login_name.empty())
+        g_login_name = pwd->pw_name;
     if (!g_home_dir)
         g_home_dir = savestr(pwd->pw_dir);
     s = pwd->pw_gecos;
