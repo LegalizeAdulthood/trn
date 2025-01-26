@@ -42,6 +42,7 @@ struct utimbuf
 #endif
 
 #include <string>
+#include <time.h>
 
 LIST       *g_datasrc_list{};                         /* a list of all DATASRCs */
 DATASRC    *g_datasrc{};                              /* the current datasrc */

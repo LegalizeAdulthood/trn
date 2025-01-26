@@ -72,6 +72,8 @@
 #include "util.h"
 #include "util2.h"
 
+#include <time.h>
+
 std::string g_ngname;                             /* name of current newsgroup */
 std::string g_ngdir;                              /* same thing in directory name form */
 std::string g_patchlevel{PATCHLEVEL};             //

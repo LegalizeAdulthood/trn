@@ -3,6 +3,7 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include <filesystem>
+#include <time.h>
 
 #include "common.h"
 #include "kfile.h"

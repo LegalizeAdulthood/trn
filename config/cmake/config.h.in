@@ -245,15 +245,10 @@
 #define SERVER_NAME "@SERVER_NAME@"
 #cmakedefine HAS_LOCAL_SPOOL
 
-/* I_TIME:
- *      This symbol, if defined, indicates to the C program that it should
- *      include <time.h>.
- */
 /* I_SYS_TIME:
  *      This symbol, if defined, indicates to the C program that it should
  *      include <sys/time.h>.
  */
-#cmakedefine I_TIME
 #cmakedefine I_SYS_TIME
 
 /* MIMECAP:

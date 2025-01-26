@@ -10,6 +10,8 @@
 #include "util.h"
 #include "util2.h"
 
+#include <time.h>
+
 std::string g_lastngname;    /* last newsgroup read */
 long        g_lasttime{};    /* time last we ran */
 long        g_lastactsiz{};  /* last known size of active file */

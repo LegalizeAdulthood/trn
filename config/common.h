@@ -39,9 +39,6 @@
 #endif
 #endif
 
-#ifdef I_TIME
-#include <time.h>
-#endif
 #ifdef I_SYS_TIME
 #include <sys/time.h>
 #endif

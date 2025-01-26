@@ -19,6 +19,8 @@
 #include "util.h"
 #include "util2.h"
 
+#include <time.h>
+
 char g_spin_char{' '};           /* char to put back when we're done spinning */
 long g_spin_estimate{};          /* best guess of how much work there is */
 long g_spin_todo{};              /* the max word to do (might decrease) */

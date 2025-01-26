@@ -20,6 +20,8 @@
 #include "trn.h"
 #include "util2.h"
 
+#include <time.h>
+
 static int nntp_copybody(char *s, int limit, ART_POS pos);
 
 static ART_POS s_body_pos{-1};

@@ -9,6 +9,8 @@
 #include "nntpauth.h"
 #include "nntpinit.h"
 
+#include <time.h>
+
 NNTPLINK g_nntplink{};          /* the current server's file handles */
 bool g_nntp_allow_timeout{};
 char g_ser_line[NNTP_STRLEN]{};

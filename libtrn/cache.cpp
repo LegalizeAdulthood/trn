@@ -3,7 +3,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-
 #include "common.h"
 #include "cache.h"
 
@@ -33,6 +32,8 @@
 #include "utf.h"
 #include "util.h"
 #include "util2.h"
+
+#include <time.h>
 
 LIST     *g_article_list{};         /* a list of ARTICLEs */
 ARTICLE **g_artptr_list{};          /* the article-selector creates this */

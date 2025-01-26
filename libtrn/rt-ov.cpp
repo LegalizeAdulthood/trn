@@ -28,6 +28,8 @@
 
 #include <parsedate/parsedate.h>
 
+#include <time.h>
+
 /* How many overview lines to read with one NNTP call */
 enum
 {

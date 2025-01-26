@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include <filesystem>
-
 #include <string_case_compare.h>
 
 #include "common.h"
@@ -24,8 +22,10 @@
 #include "util.h"
 #include "util2.h"
 
+#include <filesystem>
 #include <stdlib.h>
 #include <string>
+#include <time.h>
 
 ADDGROUP *g_first_addgroup{};
 ADDGROUP *g_last_addgroup{};
