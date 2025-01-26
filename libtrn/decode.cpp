@@ -10,6 +10,7 @@
 #include "art.h"
 #include "artio.h"
 #include "artstate.h"
+#include "change_dir.h"
 #include "final.h"
 #include "head.h"
 #include "intrp.h"
@@ -28,8 +29,6 @@
 #else
 #define BADCHARS "!$&*()|\'\";<>[]{}?/`\\ \t"
 #endif
-
-#include <filesystem>
 
 char *g_decode_filename{};
 
@@ -257,8 +256,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
         dir = nullptr;
 
     if (mcp) {
-        std::error_code ec;
-        if (std::filesystem::current_path(dir, ec); ec) {
+        if (change_dir(dir)) {
             printf(g_nocd,dir);
             sig_catcher(0);
         }
@@ -392,7 +390,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     if (mcp) {
         mime_Exec(mcp->command);
         remove(g_decode_filename);
-        std::filesystem::current_path("..");
+        change_dir("..");
     }
 
     if (dir)

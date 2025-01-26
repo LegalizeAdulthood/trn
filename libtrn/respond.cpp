@@ -10,6 +10,7 @@
 #include "art.h"
 #include "artio.h"
 #include "artstate.h"
+#include "change_dir.h"
 #include "charsubst.h"
 #include "datasrc.h"
 #include "decode.h"
@@ -30,8 +31,6 @@
 #include "util2.h"
 #include "uudecode.h"
 
-#include <filesystem>
-
 std::string g_savedest;      /* value of %b */
 std::string g_extractdest;   /* value of %E */
 std::string g_extractprog;   /* value of %e */
@@ -48,13 +47,6 @@ static void follow_it_up();
 #if 0
 static bool cut_line(char *str);
 #endif
-
-inline bool change_dir(const std::filesystem::path &path)
-{
-    std::error_code ec;
-    current_path(path, ec);
-    return static_cast<bool>(ec);
-}
 
 void respond_init()
 {

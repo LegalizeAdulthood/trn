@@ -12,6 +12,7 @@
 #include "backpage.h"
 #include "bits.h"
 #include "cache.h"
+#include "change_dir.h"
 #include "charsubst.h"
 #include "color.h"
 #include "datasrc.h"
@@ -43,8 +44,6 @@
 #include "univ.h"
 #include "util.h"
 #include "util2.h"
-
-#include <filesystem>
 
 ART_NUM  g_art{};           /* current or prospective article # */
 ART_NUM  g_recent_art{};    /* previous article # for '-' command */
@@ -134,8 +133,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 
     set_datasrc(g_ngptr->rc->datasrc);
 
-    std::error_code ec;
-    if (std::filesystem::current_path(g_datasrc->spool_dir, ec); ec) {
+    if (change_dir(g_datasrc->spool_dir)) {
         printf(g_nocd,g_datasrc->spool_dir);
         return NG_ERROR;
     }

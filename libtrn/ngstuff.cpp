@@ -8,6 +8,7 @@
 #include "addng.h"
 #include "bits.h"
 #include "cache.h"
+#include "change_dir.h"
 #include "final.h"
 #include "intrp.h"
 #include "kfile.h"
@@ -28,8 +29,6 @@
 #include "trn.h"
 #include "util.h"
 #include "util2.h"
-
-#include <filesystem>
 
 bool        g_one_command{}; /* no ':' processing in perform() */
 std::string g_savedir;       /* -d */
@@ -61,8 +60,7 @@ int escapade()
     }
     else {
         trn_getwd(whereiam, sizeof(whereiam));
-        std::error_code ec;
-        if (std::filesystem::current_path(g_privdir, ec); ec) {
+        if (change_dir(g_privdir)) {
             printf(g_nocd,g_privdir.c_str());
             sig_catcher(0);
         }
@@ -74,8 +72,7 @@ int escapade()
     noecho();                           /* and make terminal */
     crmode();                           /*   unfriendly again */
     if (docd) {
-        std::error_code ec;
-        if (std::filesystem::current_path(whereiam, ec); ec) {
+        if (change_dir(whereiam)) {
             printf(g_nocd,whereiam);
             sig_catcher(0);
         }
@@ -136,8 +133,7 @@ int switcheroo()
         }
         if (docd) {
             cwd_check();
-            std::error_code ec;
-            if (std::filesystem::current_path(whereami, ec); ec) {              /* -d does chdirs */
+            if (change_dir(whereami)) {              /* -d does chdirs */
                 printf(g_nocd,whereami);
                 sig_catcher(0);
             }

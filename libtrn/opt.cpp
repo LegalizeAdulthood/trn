@@ -16,6 +16,7 @@
 #include "artio.h"
 #include "artsrch.h"
 #include "cache.h"
+#include "change_dir.h"
 #include "charsubst.h"
 #include "color.h"
 #include "datasrc.h"
@@ -30,11 +31,11 @@
 #include "ngstuff.h"
 #include "only.h"
 #include "respond.h"
-#include "rthread.h"
 #include "rt-page.h"
 #include "rt-select.h"
 #include "rt-util.h"
 #include "rt-wumpus.h"
+#include "rthread.h"
 #include "scan.h"
 #include "scanart.h"
 #include "scorefile.h"
@@ -45,8 +46,6 @@
 #include "univ.h"
 #include "util.h"
 #include "util2.h"
-
-#include <filesystem>
 
 COMPEX      g_optcompex;
 std::string g_ini_file;
@@ -519,7 +518,7 @@ void set_option(option_index num, const char *s)
         if (!g_checkflag) {
             g_savedir = s;
             if (!g_privdir.empty()) {
-                std::filesystem::current_path(g_privdir);
+                change_dir(g_privdir);
             }
             g_privdir = filexp(s);
         }
@@ -1342,12 +1341,6 @@ void cwd_check()
     if (g_privdir.empty())
         g_privdir = filexp("~/News");
     strcpy(tmpbuf,g_privdir.c_str());
-    const auto change_dir{[](const std::filesystem::path &path)
-                          {
-                              std::error_code ec;
-                              current_path(path, ec);
-                              return ec;
-                          }};
     if (change_dir(g_privdir)) {
         safecpy(tmpbuf,filexp(g_privdir.c_str()),sizeof tmpbuf);
         if (makedir(tmpbuf, MD_DIR) || change_dir(tmpbuf)) {

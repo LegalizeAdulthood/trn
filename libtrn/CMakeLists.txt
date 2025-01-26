@@ -8,6 +8,7 @@ add_library(libtrn
     backpage.cpp backpage.h
     bits.cpp bits.h
     cache.cpp cache.h
+    change_dir.h
     charsubst.cpp charsubst.h
     color.cpp color.h
     datasrc.cpp datasrc.h

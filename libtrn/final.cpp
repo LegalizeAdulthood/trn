@@ -8,6 +8,7 @@
 #include "final.h"
 
 #include "bits.h"
+#include "change_dir.h"
 #include "color.h"
 #include "datasrc.h"
 #include "env.h"
@@ -23,8 +24,6 @@
 #include "terminal.h"
 #include "trn.h"
 #include "util.h"
-
-#include <filesystem>
 
 #ifndef sigmask
 #define sigmask(m)      (1 << ((m)-1))
@@ -98,7 +97,7 @@ void finalize(int status)
     xmouse_off();       /* turn off mouse tracking (if on) */
     fflush(stdout);
 
-    std::filesystem::current_path(g_tmp_dir.c_str());
+    change_dir(g_tmp_dir);
     if (!g_checkflag)
         unuse_multirc(g_multirc);
     datasrc_finalize();
@@ -118,7 +117,7 @@ void finalize(int status)
     }
 #ifdef RESTORE_ORIGDIR
     if (!g_origdir.empty())
-        std::filesystem::current_path(g_origdir.c_str());
+        change_dir(g_origdir);
 #endif
     exit(status);
 }
