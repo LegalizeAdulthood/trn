@@ -29,9 +29,7 @@
 #include "util.h"
 #include "util2.h"
 
-#ifdef MSDOS
-#include <direct.h>
-#endif
+#include <filesystem>
 
 bool        g_one_command{}; /* no ':' processing in perform() */
 std::string g_savedir;       /* -d */
@@ -63,7 +61,8 @@ int escapade()
     }
     else {
         trn_getwd(whereiam, sizeof(whereiam));
-        if (chdir(g_privdir.c_str())) {
+        std::error_code ec;
+        if (std::filesystem::current_path(g_privdir, ec); ec) {
             printf(g_nocd,g_privdir.c_str());
             sig_catcher(0);
         }
@@ -75,7 +74,8 @@ int escapade()
     noecho();                           /* and make terminal */
     crmode();                           /*   unfriendly again */
     if (docd) {
-        if (chdir(whereiam)) {
+        std::error_code ec;
+        if (std::filesystem::current_path(whereiam, ec); ec) {
             printf(g_nocd,whereiam);
             sig_catcher(0);
         }
@@ -136,7 +136,8 @@ int switcheroo()
         }
         if (docd) {
             cwd_check();
-            if (chdir(whereami)) {              /* -d does chdirs */
+            std::error_code ec;
+            if (std::filesystem::current_path(whereami, ec); ec) {              /* -d does chdirs */
                 printf(g_nocd,whereami);
                 sig_catcher(0);
             }
