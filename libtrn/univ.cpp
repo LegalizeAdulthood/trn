@@ -5,6 +5,8 @@
  *
  */
 
+#include <string_case_compare.h>
+
 #include "common.h"
 #include "univ.h"
 
@@ -501,7 +503,7 @@ static bool univ_use_file(const char *fname, const char *label)
     const char *s = fname;
     const char *open_name = fname;
     /* open URLs and translate them into local temporary filenames */
-    if (!strncasecmp(fname,"URL:",4)) {
+    if (!string_case_compare(fname,"URL:",4)) {
         open_name = temp_filename();
         g_univ_tmp_file = open_name;
         if (!url_get(fname+4,open_name))
@@ -631,7 +633,7 @@ static bool univ_do_line(char *line)
         return true;    /* empty line */
 
     if (!s_univ_begin_found) {
-        if (strncasecmp(s,"begin group",11))
+        if (string_case_compare(s,"begin group",11))
             return true;        /* wait until "begin group" is found */
         s_univ_begin_found = true;
     }
@@ -653,9 +655,9 @@ static bool univ_do_line(char *line)
         s = p+1;
     }
     s = skip_space(s);
-    if (!strncasecmp(s,"end group",9))
+    if (!string_case_compare(s,"end group",9))
         return false;
-    if (!strncasecmp(s,"URL:",4)) {
+    if (!string_case_compare(s,"URL:",4)) {
         p = skip_ne(s, '>');
         if (*p) {
             p++;

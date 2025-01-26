@@ -5,6 +5,8 @@
  * (yeah, right. :)
  */
 
+#include <string_case_compare.h>
+
 #include "common.h"
 #include "scorefile.h"
 
@@ -246,7 +248,7 @@ char *sf_get_extra_header(ART_NUM art, int hnum)
     int   len = strlen(head);
 
     for (char *s = g_headbuf; s && *s && *s != '\n'; s++) {
-        if (!strncasecmp(head,s,len)) {
+        if (!string_case_compare(head,s,len)) {
             s = strchr(s,':');
             if (!s)
                 return "";
@@ -1119,7 +1121,7 @@ static int sf_open_file(const char *name)
     s_sf_files[i].lines = nullptr;
 
     char *temp_name = nullptr;
-    if (!strncasecmp(name,"URL:",4)) {
+    if (!string_case_compare(name,"URL:",4)) {
         char lbuf[1024];
         safecpy(lbuf,name,sizeof lbuf - 4);
         name = lbuf;

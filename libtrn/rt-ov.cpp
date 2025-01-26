@@ -2,6 +2,8 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <string_case_compare.h>
+
 #include "common.h"
 #include "rt-ov.h"
 
@@ -91,7 +93,7 @@ bool ov_init()
                 char *s = strchr(g_buf,':');
                 fieldnum[i] = ov_num(g_buf,s);
                 fieldflags[fieldnum[i]] = FF_HAS_FIELD |
-                    ((s && !strncasecmp("full",s+1,4))? FF_HAS_HDR : FF_NONE);
+                    ((s && !string_case_compare("full",s+1,4))? FF_HAS_HDR : FF_NONE);
                 i++;
             }
         }
@@ -363,7 +365,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
                 if (!s)
                     break;
                 if (s - cp != g_htype[s_hdrnum[fn]].length
-                 || strncasecmp(cp,g_htype[s_hdrnum[fn]].name,g_htype[s_hdrnum[fn]].length))
+                 || string_case_compare(cp,g_htype[s_hdrnum[fn]].name,g_htype[s_hdrnum[fn]].length))
                     continue;
                 cp = s;
                 cp = skip_eq(++cp, ' ');

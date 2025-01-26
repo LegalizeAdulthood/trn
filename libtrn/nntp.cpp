@@ -2,6 +2,8 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <string_case_compare.h>
+
 #include "common.h"
 #include "nntp.h"
 
@@ -30,12 +32,12 @@ int nntp_list(const char *type, const char *arg, int len)
 {
     int ret;
 #ifdef DEBUG /*$$*/
-    if (len && (debug & 1) && !strcasecmp(type,"active"))
+    if (len && (debug & 1) && !string_case_compare(type,"active"))
         return -1;
 #endif
     if (len)
         sprintf(g_ser_line, "LIST %s %.*s", type, len, arg);
-    else if (!strcasecmp(type,"active"))
+    else if (!string_case_compare(type,"active"))
         strcpy(g_ser_line, "LIST");
     else
         sprintf(g_ser_line, "LIST %s", type);
@@ -477,7 +479,7 @@ char *nntp_tmpname(int ndx)
 
 int nntp_handle_nested_lists()
 {
-    if (!strcasecmp(g_last_command,"quit"))
+    if (!string_case_compare(g_last_command,"quit"))
         return 0; /*$$ flush data needed? */
     if (nntp_finishbody(FB_DISCARD))
         return 1;
@@ -490,7 +492,7 @@ int nntp_handle_timeout()
     static bool handling_timeout = false;
     char last_command_save[NNTP_STRLEN];
 
-    if (!strcasecmp(g_last_command,"quit"))
+    if (!string_case_compare(g_last_command,"quit"))
         return 0;
     if (handling_timeout)
         return -1;

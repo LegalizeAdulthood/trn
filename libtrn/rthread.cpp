@@ -2,6 +2,8 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <string_case_compare.h>
+
 #include "common.h"
 #include "rthread.h"
 
@@ -1305,7 +1307,7 @@ void count_subjects(cs_mode cmode)
 
 static int subjorder_subject(const SUBJECT **spp1, const SUBJECT**spp2)
 {
-    return strcasecmp((*spp1)->str+4, (*spp2)->str+4) * g_sel_direction;
+    return string_case_compare((*spp1)->str+4, (*spp2)->str+4) * g_sel_direction;
 }
 
 static int subjorder_date(const SUBJECT **spp1, const SUBJECT**spp2)
@@ -1364,7 +1366,7 @@ static int threadorder_subject(const SUBJECT **spp1, const SUBJECT**spp2)
     ARTICLE* t1 = (*spp1)->thread;
     ARTICLE* t2 = (*spp2)->thread;
     if (t1 != t2 && t1 && t2)
-        return strcasecmp(t1->subj->str+4, t2->subj->str+4) * g_sel_direction;
+        return string_case_compare(t1->subj->str+4, t2->subj->str+4) * g_sel_direction;
     return subjorder_date(spp1, spp2);
 }
 
@@ -1385,7 +1387,7 @@ static int threadorder_date(const SUBJECT **spp1, const SUBJECT**spp2)
                 if (sp2->misc)
                     break;
         if (!(eq = sp1->date - sp2->date))
-            return strcasecmp(sp1->str+4, sp2->str+4);
+            return string_case_compare(sp1->str+4, sp2->str+4);
         return eq > 0? g_sel_direction : -g_sel_direction;
     }
     return subjorder_date(spp1, spp2);
@@ -1547,13 +1549,13 @@ static int artorder_subject(const ARTICLE **art1, const ARTICLE **art2)
 {
     if ((*art1)->subj == (*art2)->subj)
         return artorder_date(art1, art2);
-    return strcasecmp((*art1)->subj->str + 4, (*art2)->subj->str + 4)
+    return string_case_compare((*art1)->subj->str + 4, (*art2)->subj->str + 4)
         * g_sel_direction;
 }
 
 static int artorder_author(const ARTICLE **art1, const ARTICLE **art2)
 {
-    int eq = strcasecmp((*art1)->from, (*art2)->from);
+    int eq = string_case_compare((*art1)->from, (*art2)->from);
     return eq? eq * g_sel_direction : artorder_date(art1, art2);
 }
 

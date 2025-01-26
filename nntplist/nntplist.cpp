@@ -4,6 +4,8 @@
 
 #include <string>
 
+#include <string_case_compare.h>
+
 #include "common.h"
 
 #include "env.h"
@@ -55,7 +57,7 @@ int main(int argc, char *argv[])
         else
             Usage();
     }
-    if (action && !strcasecmp(action,"active"))
+    if (action && !string_case_compare(action,"active"))
         action = nullptr;
     if (!out_fp)
         out_fp = stdout;
@@ -122,13 +124,13 @@ int main(int argc, char *argv[])
         cp = nullptr;
         if (!action)
             cp = ACTIVE;
-        else if (!strcasecmp(action,"active.times"))
+        else if (!string_case_compare(action,"active.times"))
             cp = ACTIVE_TIMES;
-        else if (!strcasecmp(action,"newsgroups"))
+        else if (!string_case_compare(action,"newsgroups"))
             cp = GROUPDESC;
-        else if (!strcasecmp(action,"subscriptions"))
+        else if (!string_case_compare(action,"subscriptions"))
             cp = SUBSCRIPTIONS;
-        else if (!strcasecmp(action,"overview.fmt"))
+        else if (!string_case_compare(action,"overview.fmt"))
             cp = OVERVIEW_FMT;
         if (!cp || !*cp) {
             fprintf(stderr, "Don't know how to list `%s' from your local system.\n",

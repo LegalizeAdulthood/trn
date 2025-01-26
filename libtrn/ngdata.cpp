@@ -2,6 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <string_case_compare.h>
+
 #include "common.h"
 #include "ngdata.h"
 
@@ -188,7 +190,7 @@ static int ngorder_number(const NGDATA **npp1, const NGDATA **npp2)
 
 static int ngorder_groupname(const NGDATA **npp1, const NGDATA **npp2)
 {
-    return strcasecmp((*npp1)->rcline, (*npp2)->rcline) * g_sel_direction;
+    return string_case_compare((*npp1)->rcline, (*npp2)->rcline) * g_sel_direction;
 }
 
 static int ngorder_count(const NGDATA **npp1, const NGDATA **npp2)

@@ -2,6 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <string_case_compare.h>
+
 #include "common.h"
 #include "addng.h"
 
@@ -388,7 +390,7 @@ static int agorder_number(const ADDGROUP **app1, const ADDGROUP **app2)
 
 static int agorder_groupname(const ADDGROUP **app1, const ADDGROUP **app2)
 {
-    return strcasecmp((*app1)->name, (*app2)->name) * g_sel_direction;
+    return string_case_compare((*app1)->name, (*app2)->name) * g_sel_direction;
 }
 
 static int agorder_count(const ADDGROUP **app1, const ADDGROUP **app2)

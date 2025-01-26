@@ -1,0 +1,4 @@
+#pragma once
+
+int string_case_compare(const char *s1, const char *s2);
+int string_case_compare(const char *s1, const char *s2, int len);

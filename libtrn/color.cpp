@@ -25,6 +25,8 @@
 ** are used, otherwise only normal monochrome video attributes.
 */
 
+#include <string_case_compare.h>
+
 #include "common.h"
 #include "color.h"
 
@@ -127,7 +129,7 @@ void color_rc_attribute(const char *object, char *value)
     /* Find the specified object. */
     int i;
     for (i = 0; i < MAX_COLORS; i++) {
-        if (!strcasecmp(object, s_objects[i].name))
+        if (!string_case_compare(object, s_objects[i].name))
             break;
     }
     if (i >= MAX_COLORS) {

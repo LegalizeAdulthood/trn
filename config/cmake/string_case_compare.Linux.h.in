@@ -1,0 +1,12 @@
+#pragma once
+
+#include <strings.h>
+
+inline int string_case_compare(const char *s1, const char *s2)
+{
+    return strcasecmp(s1, s2);
+}
+inline int string_case_compare(const char *s1, const char *s2, int len)
+{
+    return strncasecmp(s1, s2, int len);
+}

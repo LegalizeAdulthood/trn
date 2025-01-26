@@ -6,6 +6,8 @@
 #include <memory>
 #include <string>
 
+#include <string_case_compare.h>
+
 #include "common.h"
 #include "opt.h"
 
@@ -1164,7 +1166,7 @@ void set_header(const char *s, headtype_flags flag, bool setit)
 {
     int len = strlen(s);
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++) {
-        if (!len || !strncasecmp(s,g_htype[i].name,len)) {
+        if (!len || !string_case_compare(s,g_htype[i].name,len)) {
             if (setit && (flag != HT_MAGIC || (g_htype[i].flags & HT_MAGICOK)))
                 g_htype[i].flags |= flag;
             else
@@ -1178,13 +1180,13 @@ void set_header(const char *s, headtype_flags flag, bool setit)
         bool save_it = true;
         for (int i = g_user_htypeix[ch - 'a']; *g_user_htype[i].name == ch; i--) {
             if (len <= g_user_htype[i].length
-             && !strncasecmp(s,g_user_htype[i].name,len)) {
+             && !string_case_compare(s,g_user_htype[i].name,len)) {
                 free(g_user_htype[i].name);
                 g_user_htype[i].name = nullptr;
                 killed = i;
             }
             else if (len > g_user_htype[i].length
-                  && !strncasecmp(s,g_user_htype[i].name,g_user_htype[i].length)) {
+                  && !string_case_compare(s,g_user_htype[i].name,g_user_htype[i].length)) {
                 if (!add_at) {
                     if (g_user_htype[i].flags == (setit? flag : 0))
                         save_it = false;

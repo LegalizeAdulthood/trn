@@ -2,6 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <string_case_compare.h>
+
 #include "common.h"
 #include "rcstuff.h"
 
@@ -87,7 +89,7 @@ static MULTIRC *rcstuff_init_data()
         while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
             if (*cond && !check_ini_cond(cond))
                 continue;
-            if (strncasecmp(section, "group ", 6))
+            if (string_case_compare(section, "group ", 6))
                 continue;
             int i = atoi(section + 6);
             if (i < 0)

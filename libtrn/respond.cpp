@@ -2,6 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <string_case_compare.h>
+
 #include "common.h"
 #include "respond.h"
 
@@ -416,7 +418,7 @@ save_result save_article()
                 fprintf(s_tmpfp,"Article: %ld of %s\n", g_art, g_ngname.c_str());
             seekart(g_savefrom);
             while (readart(g_buf,LBUFLEN) != nullptr) {
-                if (quote_From && !strncasecmp(g_buf,"from ",5))
+                if (quote_From && !string_case_compare(g_buf,"from ",5))
                     putc('>', s_tmpfp);
                 fputs(g_buf, s_tmpfp);
             }
@@ -521,7 +523,7 @@ int cancel_article()
     char *reply_buf = fetchlines(g_art, REPLY_LINE);
     char *from_buf = fetchlines(g_art, FROM_LINE);
     char *ngs_buf = fetchlines(g_art, NEWSGROUPS_LINE);
-    if (strcasecmp(get_val_const("FROM",""),from_buf)
+    if (string_case_compare(get_val_const("FROM",""),from_buf)
      && (!in_string(from_buf,g_hostname, false)
       || (!in_string(from_buf,g_login_name.c_str(), true)
        && !in_string(reply_buf,g_login_name.c_str(), true)
@@ -581,7 +583,7 @@ int supersede_article()         /* Supersedes: */
     char *reply_buf = fetchlines(g_art, REPLY_LINE);
     char *from_buf = fetchlines(g_art, FROM_LINE);
     char *ngs_buf = fetchlines(g_art, NEWSGROUPS_LINE);
-    if (strcasecmp(get_val_const("FROM",""),from_buf)
+    if (string_case_compare(get_val_const("FROM",""),from_buf)
      && (!in_string(from_buf,g_hostname, false)
       || (!in_string(from_buf,g_login_name.c_str(), true)
        && !in_string(reply_buf,g_login_name.c_str(), true)
@@ -756,7 +758,7 @@ void forward()
         eol = strchr(s, '\n');
         if (eol)
             eol++;
-        if (*s == 'C' && !strncasecmp(s, "Content-Type: multipart/", 24)) {
+        if (*s == 'C' && !string_case_compare(s, "Content-Type: multipart/", 24)) {
             s += 24;
             for (;;) {
                 for ( ; *s && *s != ';'; s++) {
@@ -766,7 +768,7 @@ void forward()
                 if (*s != ';')
                     break;
                 s = skip_eq(++s, ' ');
-                if (*s == 'b' && !strncasecmp(s, "boundary=\"", 10)) {
+                if (*s == 'b' && !string_case_compare(s, "boundary=\"", 10)) {
                     mime_boundary = s+10;
                     s = strchr(mime_boundary, '"');
                     if (s != nullptr)
@@ -790,7 +792,7 @@ void forward()
     if (g_artfp != nullptr) {
         interp(g_buf, sizeof g_buf, get_val("FORWARDMSG",FORWARDMSG));
         if (mime_boundary) {
-            if (*g_buf && strncasecmp(g_buf, "Content-", 8))
+            if (*g_buf && string_case_compare(g_buf, "Content-", 8))
                 strcpy(g_buf, "Content-Type: text/plain\n");
             fprintf(header,"--%s\n%s\n[Replace this with your comments.]\n\n--%s\nContent-Type: message/rfc822\n\n",
                     mime_boundary,g_buf,mime_boundary);

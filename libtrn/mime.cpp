@@ -2,6 +2,8 @@
  * vi: set sw=4 ts=8 ai sm noet:
  */
 
+#include <string_case_compare.h>
+
 #include "common.h"
 #include "mime-internal.h"
 
@@ -173,13 +175,13 @@ void mime_ReadMimecap(const char *mcname)
                     arg = f;
             }
             if (*t) {
-                if (!strcasecmp(t, "needsterminal"))
+                if (!string_case_compare(t, "needsterminal"))
                     mcp->flags |= MCF_NEEDSTERMINAL;
-                else if (!strcasecmp(t, "copiousoutput"))
+                else if (!string_case_compare(t, "copiousoutput"))
                     mcp->flags |= MCF_COPIOUSOUTPUT;
-                else if (arg && !strcasecmp(t, "test"))
+                else if (arg && !string_case_compare(t, "test"))
                     mcp->testcommand = savestr(arg);
-                else if (arg && (!strcasecmp(t, "description") || !strcasecmp(t, "label")))
+                else if (arg && (!string_case_compare(t, "description") || !string_case_compare(t, "label")))
                     mcp->description = savestr(arg); /* 'label' is the legacy name for description */
             }
         }
@@ -235,8 +237,8 @@ bool mime_TypesMatch(const char *ct, const char *pat)
     int len = s? s - pat : strlen(pat);
     bool iswild = !s || !strcmp(s+1,"*");
 
-    return !strcasecmp(ct,pat)
-        || (iswild && !strncasecmp(ct,pat,len) && ct[len] == '/');
+    return !string_case_compare(ct,pat)
+        || (iswild && !string_case_compare(ct,pat,len) && ct[len] == '/');
 }
 
 int mime_Exec(char *cmd)
@@ -386,7 +388,7 @@ void mime_ParseType(MIME_SECT *mp, char *s)
         mp->filename = savestr(t);
     }
 
-    if (!strncasecmp(s, "text", 4)) {
+    if (!string_case_compare(s, "text", 4)) {
         mp->type = TEXT_MIME;
         s += 4;
         if (*s++ != '/')
@@ -394,17 +396,17 @@ void mime_ParseType(MIME_SECT *mp, char *s)
 #ifdef USE_UTF_HACK
         utf_init(mime_FindParam(mp->type_params,"charset"), CHARSET_NAME_UTF8); /*FIXME*/
 #endif
-        if (!strncasecmp(s, "html", 4))
+        if (!string_case_compare(s, "html", 4))
             mp->type = HTMLTEXT_MIME;
-        else if (!strncasecmp(s, "x-vcard", 7))
+        else if (!string_case_compare(s, "x-vcard", 7))
             mp->type = UNHANDLED_MIME;
         return;
     }
 
-    if (!strncasecmp(s, "message/", 8)) {
+    if (!string_case_compare(s, "message/", 8)) {
         s += 8;
         mp->type = MESSAGE_MIME;
-        if (!strcasecmp(s, "partial")) {
+        if (!string_case_compare(s, "partial")) {
             t = mime_FindParam(mp->type_params,"id");
             if (!t)
                 return;
@@ -425,14 +427,14 @@ void mime_ParseType(MIME_SECT *mp, char *s)
         return;
     }
 
-    if (!strncasecmp(s, "multipart/", 10)) {
+    if (!string_case_compare(s, "multipart/", 10)) {
         s += 10;
         t = mime_FindParam(mp->type_params,"boundary");
         if (!t) {
             mp->type = UNHANDLED_MIME;
             return;
         }
-        if (!strncasecmp(s, "alternative", 11))
+        if (!string_case_compare(s, "alternative", 11))
             mp->flags |= MSF_ALTERNATIVE;
         safefree(mp->boundary);
         mp->boundary = savestr(t);
@@ -441,12 +443,12 @@ void mime_ParseType(MIME_SECT *mp, char *s)
         return;
     }
 
-    if (!strncasecmp(s, "image/", 6)) {
+    if (!string_case_compare(s, "image/", 6)) {
         mp->type = IMAGE_MIME;
         return;
     }
 
-    if (!strncasecmp(s, "audio/", 6)) {
+    if (!string_case_compare(s, "audio/", 6)) {
         mp->type = AUDIO_MIME;
         return;
     }
@@ -458,7 +460,7 @@ void mime_ParseType(MIME_SECT *mp, char *s)
 void mime_ParseDisposition(MIME_SECT *mp, char *s)
 {
     char *params = mime_ParseParams(s);
-    if (!strcasecmp(s,"inline"))
+    if (!string_case_compare(s,"inline"))
         mp->flags |= MSF_INLINE;
 
     s = mime_FindParam(params,"filename");
@@ -478,27 +480,27 @@ void mime_ParseEncoding(MIME_SECT *mp, char *s)
         return;
     }
     if (*s == '7' || *s == '8') {
-        if (!strncasecmp(s+1, "bit", 3)) {
+        if (!string_case_compare(s+1, "bit", 3)) {
             s += 4;
             mp->encoding = MENCODE_NONE;
         }
     }
-    else if (!strncasecmp(s, "quoted-printable", 16)) {
+    else if (!string_case_compare(s, "quoted-printable", 16)) {
         s += 16;
         mp->encoding = MENCODE_QPRINT;
     }
-    else if (!strncasecmp(s, "binary", 6)) {
+    else if (!string_case_compare(s, "binary", 6)) {
         s += 6;
         mp->encoding = MENCODE_NONE;
     }
-    else if (!strncasecmp(s, "base64", 6)) {
+    else if (!string_case_compare(s, "base64", 6)) {
         s += 6;
         mp->encoding = MENCODE_BASE64;
     }
-    else if (!strncasecmp(s, "x-uue", 5)) {
+    else if (!string_case_compare(s, "x-uue", 5)) {
         s += 5;
         mp->encoding = MENCODE_UUE;
-        if (!strncasecmp(s, "ncode", 5))
+        if (!string_case_compare(s, "ncode", 5))
             s += 5;
     }
     else {
@@ -677,7 +679,7 @@ char *mime_FindParam(char *s, const char *param)
 {
     int param_len = strlen(param);
     while (s && *s) {
-        if (!strncasecmp(s, param, param_len) && s[param_len] == '=')
+        if (!string_case_compare(s, param, param_len) && s[param_len] == '=')
             return s + param_len + 1;
         s += strlen(s) + 1;
     }
@@ -1246,7 +1248,7 @@ int filter_html(char *t, const char *f)
             for (i = 0; s_named_entities[i] != nullptr; i += 2)
             {
                 int n = strlen(s_named_entities[i]);
-                if (!strncasecmp(f + 1, s_named_entities[i], n))
+                if (!string_case_compare(f + 1, s_named_entities[i], n))
                 {
                     char det = f[n + 1];
                     if (det == ';')
@@ -1358,7 +1360,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
     for (tnum = 0; tnum < LAST_TAG && *s_tagattr[tnum].name != ch; tnum++) ;
     for ( ; tnum < LAST_TAG && *s_tagattr[tnum].name == ch; tnum++) {
         if (len == s_tagattr[tnum].length
-         && !strncasecmp(word, s_tagattr[tnum].name, len)) {
+         && !string_case_compare(word, s_tagattr[tnum].name, len)) {
             match = true;
             break;
         }
@@ -1419,8 +1421,8 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 
         switch (tnum) {
           case TAG_BLOCKQUOTE:
-            if (((cp = find_attr(word, "type")) != nullptr && !strncasecmp(cp, "cite", 4)) ||
-                ((cp = find_attr(word, "style")) != nullptr && !strncasecmp(cp, "border-left:", 12)))
+            if (((cp = find_attr(word, "type")) != nullptr && !string_case_compare(cp, "cite", 4)) ||
+                ((cp = find_attr(word, "style")) != nullptr && !string_case_compare(cp, "border-left:", 12)))
                 blks[j].indent = '>';
             else
                 blks[j].indent = ' ';
@@ -1705,7 +1707,7 @@ static char *find_attr(char *str, const char *attr)
     while ((cp = strchr(cp+1, '=')) != nullptr) {
         for (s = cp; s[-1] == ' '; s--) ;
         while (cp[1] == ' ') cp++;
-        if (s - str > len && s[-len-1] == ' ' && !strncasecmp(s-len,attr,len))
+        if (s - str > len && s[-len-1] == ' ' && !string_case_compare(s-len,attr,len))
             return cp+1;
     }
     return nullptr;
