@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <chrono>
 #include <filesystem>
 #include <string>
 
@@ -482,19 +483,9 @@ void verify_sig()
 
 double current_time()
 {
-#ifdef HAS_GETTIMEOFDAY
-    Timeval t;
-    (void) gettimeofday(&t, (struct timezone*)nullptr);
-    return (double)t.tv_usec / 1000000. + t.tv_sec;
-#else
-# ifdef HAS_FTIME
-    Timeval t;
-    ftime(&t);
-    return (double)t.millitm / 1000. + t.time;
-# else
-    return (double)time((time_t*)nullptr);
-# endif
-#endif
+    using namespace std::chrono;
+    auto result{duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count()};
+    return static_cast<double>(result) / 1000.0;
 }
 
 time_t text2secs(const char *s, time_t defSecs)

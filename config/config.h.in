@@ -206,28 +206,6 @@
 #define ACTIVE "@ACTIVE@"
 #define ACTIVE_TIMES "@ACT_TIMES@"
 
-/* HAS_FTIME:
- *      This symbol, if defined, indicates that the ftime() routine exists.
- *      It is basically a sub-second accuracy clock, but is less accurate
- *      than gettimeofday(2) anyway. The type "Timeval" should be used to
- *      refer to "struct timeb".
- */
-/* HAS_GETTIMEOFDAY:
- *      This symbol, if defined, indicates that the gettimeofday() system
- *      call is available for a sub-second accuracy clock. Usually, the file
- *      <sys/resource.h> needs to be included (see I_SYS_RESOURCE).
- *      The type "Timeval" should be used to refer to "struct timeval".
- */
-#cmakedefine HAS_FTIME
-#cmakedefine HAS_GETTIMEOFDAY
-#cmakedefine I_SYS_TIMEB
-#ifdef HAS_GETTIMEOFDAY
-using Timeval = struct timeval; /* Structure used by gettimeofday() */
-#endif
-#if defined(HAS_FTIME) && !defined(Timeval)
-using Timeval = struct timeb;   /* Structure used by ftime() */
-#endif
-
 /* HAS_GETHOSTNAME:
  *      This symbol, if defined, indicates that the C program may use the
  *      gethostname() routine to derive the host name.

@@ -5,11 +5,9 @@ function(configure_trn)
     #
     # Perform inspections of the system and configure accordingly.
     #
-    check_symbol_exists(ftime "sys/types.h;sys/timeb.h" HAS_FTIME)
     check_include_file(sgtty.h I_SGTTY)
     check_include_file(sys/filio.h I_SYS_FILIO)
     check_include_file(sys/ioctl.h I_SYS_IOCTL)
-    check_include_file(sys/timeb.h I_SYS_TIMEB)
     check_include_file(sys/utime.h I_SYS_UTIME)
     check_include_file(sys/wait.h I_SYS_WAIT)
     check_include_file(termios.h I_TERMIOS)

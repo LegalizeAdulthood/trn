@@ -2050,14 +2050,12 @@ static void mouse_input(const char *cp)
     int y = cp[0] - 33;
 
     if (btn != 3) {
-#if defined(HAS_GETTIMEOFDAY) || defined(HAS_FTIME)
         static double last_time = 0.;
         double this_time = current_time();
         if (last_btn == btn && last_y == y && this_time - last_time <= 0.75
          && (last_x == x || last_x == x-1 || last_x == x+1))
             btn |= 4;
         last_time = this_time;
-#endif /* HAS_GETTIMEOFDAY || HAS_FTIME */
         last_btn = (btn & 3);
         last_x = x;
         last_y = y;
