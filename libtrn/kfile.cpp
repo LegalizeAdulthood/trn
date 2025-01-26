@@ -2,6 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <filesystem>
+
 #include "common.h"
 #include "kfile.h"
 
@@ -665,9 +667,10 @@ void open_kfile(int local)
     const char *kname = filexp(local ? get_val_const("KILLLOCAL", s_killlocal) : get_val_const("KILLGLOBAL", s_killglobal));
 
     /* delete the file if it is empty */
-    stat_t kill_file_stat{};
-    if (stat(kname,&kill_file_stat) >= 0 && !kill_file_stat.st_size)
-        remove(kname);
+    if (std::filesystem::exists(kname) && std::filesystem::file_size(kname) == 0)
+    {
+        std::filesystem::remove(kname);
+    }
     if (local) {
         if (g_localkfp)
             fclose(g_localkfp);
