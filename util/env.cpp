@@ -194,28 +194,6 @@ static bool set_user_name(char *tmpbuf)
         g_home_dir = savestr(pwd->pw_dir);
     s = pwd->pw_gecos;
 #endif
-#ifdef HAS_GETPW
-    int i;
-
-    if (getpw(getuid(), tmpbuf+1) != 0)
-        return false;
-    if (!g_login_name) {
-        cpytill(g_buf,tmpbuf+1,':');
-        g_login_name = savestr(g_buf);
-    }
-    for (s = tmpbuf, i = GCOSFIELD-1; i; i--) {
-        if (s)
-            s = strchr(s+1,':');
-    }
-    if (!s)
-        return false;
-    s = cpytill(tmpbuf,s+1,':');
-    if (!g_home_dir) {
-        cpytill(g_buf,s+1,':');
-        g_home_dir = savestr(g_buf);
-    }
-    s = tmpbuf;
-#endif
 #ifdef PASSNAMES
 #ifdef BERKNAMES
 #ifdef BERKJUNK

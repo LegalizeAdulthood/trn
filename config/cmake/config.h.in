@@ -8,13 +8,6 @@
  */
 #cmakedefine HAS_GETPWENT
 
-/* HAS_GETPW:
- *      This symbol, if defined, indicates that the getpw routine is
- *      available for sequential access of the passwd database.
- *      If this is not available, the older getpw() function may be available.
- */
-#cmakedefine HAS_GETPW
-
 /* HAS_NEWS_ADMIN:
  *      This symbol, if defined, indicates that NEWS_ADMIN contains the login
  *      name of the news administrator.
