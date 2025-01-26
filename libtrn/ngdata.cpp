@@ -29,9 +29,7 @@
 #include "util.h"
 #include "util2.h"
 
-#ifdef MSDOS
-#include <direct.h>
-#endif
+#include <filesystem>
 
 LIST       *g_ngdata_list{};       /* a list of NGDATA */
 int         g_ngdata_cnt{};        //
@@ -119,8 +117,8 @@ int access_ng()
         }
 
         /* chdir to newsgroup subdirectory */
-
-        if (chdir(g_ngdir.c_str())) {
+        std::error_code ec;
+        if (std::filesystem::current_path(g_ngdir, ec); ec) {
             printf(g_nocd,g_ngdir.c_str());
             return 0;
         }
@@ -140,7 +138,13 @@ int access_ng()
 
 void chdir_newsdir()
 {
-    if (chdir(g_datasrc->spool_dir) || (!(g_datasrc->flags & DF_REMOTE) && chdir(g_ngdir.c_str())))
+    const auto change_dir{[](const std::filesystem::path &path)
+                          {
+                              std::error_code ec;
+                              current_path(path);
+                              return ec;
+                          }};
+    if (change_dir(g_datasrc->spool_dir) || (!(g_datasrc->flags & DF_REMOTE) && change_dir(g_ngdir)))
     {
         printf(g_nocd,g_ngdir.c_str());
         sig_catcher(0);
