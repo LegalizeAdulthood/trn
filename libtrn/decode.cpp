@@ -85,15 +85,15 @@ static bool bad_filename(const char *filename)
     int len = strlen(filename);
 #ifdef MSDOS
     if (len == 3) {
-        if (!string_case_compare(filename, "aux") || !string_case_compare(filename, "con")
-         || !string_case_compare(filename, "nul") || !string_case_compare(filename, "prn"))
+        if (string_case_equal(filename, "aux") || string_case_equal(filename, "con")
+         || string_case_equal(filename, "nul") || string_case_equal(filename, "prn"))
             return true;
     }
     else if (len == 4) {
-        if (!string_case_compare(filename, "com1") || !string_case_compare(filename, "com2")
-         || !string_case_compare(filename, "com3") || !string_case_compare(filename, "com4")
-         || !string_case_compare(filename, "lpt1") || !string_case_compare(filename, "lpt2")
-         || !string_case_compare(filename, "lpt3"))
+        if (string_case_equal(filename, "com1") || string_case_equal(filename, "com2")
+         || string_case_equal(filename, "com3") || string_case_equal(filename, "com4")
+         || string_case_equal(filename, "lpt1") || string_case_equal(filename, "lpt2")
+         || string_case_equal(filename, "lpt3"))
             return true;
     }
 #else
@@ -125,11 +125,11 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
     /* Skip leading whitespace and other garbage */
     char *s = subject;
     while (is_hor_space(*s) || *s == '-') s++;
-    if (!string_case_compare(s, "repost", 6)) {
+    if (string_case_equal(s, "repost", 6)) {
         for (s += 6; is_hor_space(*s) || *s == ':' || *s == '-'; s++);
     }
 
-    while (!string_case_compare(s, "re:", 3)) {
+    while (string_case_equal(s, "re:", 3)) {
         s = skip_space(s + 3);
     }
 
@@ -204,7 +204,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
         }
 
         /* look for "6 parts" or "part 1" */
-        if (!string_case_compare("part", s, 4)) {
+        if (string_case_equal("part", s, 4)) {
             if (s[4] == 's') {
                 for (t = s; t >= subject && !isdigit(*t); t--);
                 if (t > subject) {

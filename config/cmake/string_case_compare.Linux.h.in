@@ -10,3 +10,11 @@ inline int string_case_compare(const char *s1, const char *s2, int len)
 {
     return strncasecmp(s1, s2, int len);
 }
+inline bool string_case_equal(const char *s1, const char *s2)
+{
+    return string_case_compare(s1, s2) == 0;
+}
+inline int string_case_equal(const char *s1, const char *s2, int len)
+{
+    return string_case_compare(s1, s2, len) == 0;
+}

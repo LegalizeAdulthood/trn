@@ -140,20 +140,20 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
          */
         return 1;
     }
-    if (!string_case_compare(bp, "x-file-name: ", 13)) {
+    if (string_case_equal(bp, "x-file-name: ", 13)) {
         char *s = skip_non_space(bp + 13);
         *s = '\0';
         safecpy(g_msg, bp+13, sizeof g_msg);
         *filenamep = g_msg;
         return 0;
     }
-    if (!string_case_compare(bp, "x-part: ", 8)) {
+    if (string_case_equal(bp, "x-part: ", 8)) {
         int tmppart = atoi(bp + 8);
         if (tmppart > 0)
             *partp = tmppart;
         return 0;
     }
-    if (!string_case_compare(bp, "x-part-total: ", 14)) {
+    if (string_case_equal(bp, "x-part-total: ", 14)) {
         int tmptotal = atoi(bp + 14);
         if (tmptotal > 0)
             *totalp = tmptotal;

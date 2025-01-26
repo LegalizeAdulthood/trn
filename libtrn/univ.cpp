@@ -503,7 +503,7 @@ static bool univ_use_file(const char *fname, const char *label)
     const char *s = fname;
     const char *open_name = fname;
     /* open URLs and translate them into local temporary filenames */
-    if (!string_case_compare(fname,"URL:",4)) {
+    if (string_case_equal(fname, "URL:",4)) {
         open_name = temp_filename();
         g_univ_tmp_file = open_name;
         if (!url_get(fname+4,open_name))
@@ -655,9 +655,9 @@ static bool univ_do_line(char *line)
         s = p+1;
     }
     s = skip_space(s);
-    if (!string_case_compare(s,"end group",9))
+    if (string_case_equal(s, "end group",9))
         return false;
-    if (!string_case_compare(s,"URL:",4)) {
+    if (string_case_equal(s, "URL:",4)) {
         p = skip_ne(s, '>');
         if (*p) {
             p++;

@@ -93,7 +93,7 @@ bool ov_init()
                 char *s = strchr(g_buf,':');
                 fieldnum[i] = ov_num(g_buf,s);
                 fieldflags[fieldnum[i]] = FF_HAS_FIELD |
-                    ((s && !string_case_compare("full",s+1,4))? FF_HAS_HDR : FF_NONE);
+                    ((s && string_case_equal("full", s+1,4))? FF_HAS_HDR : FF_NONE);
                 i++;
             }
         }

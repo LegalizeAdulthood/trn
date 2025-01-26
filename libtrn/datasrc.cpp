@@ -193,7 +193,7 @@ char *read_datasrcs(const char *filename)
             while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
                 if (*cond && !check_ini_cond(cond))
                     continue;
-                if (!string_case_compare(section, "group ", 6))
+                if (string_case_equal(section, "group ", 6))
                     continue;
                 s = parse_ini_section(s, s_datasrc_ini);
                 if (!s)

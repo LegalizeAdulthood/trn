@@ -175,9 +175,9 @@ int main(int argc, char *argv[])
                 break;
             }
             in_header = true;
-            if (!string_case_compare(cp, "From:", 5))
+            if (string_case_equal(cp, "From:", 5))
                 has_fromline = true;
-            else if (!string_case_compare(cp, "Path:", 5))
+            else if (string_case_equal(cp, "Path:", 5))
                 has_pathline = true;
         }
         artpos += len;
@@ -361,7 +361,7 @@ int nntp_handle_timeout()
         static bool handling_timeout = false;
         char last_command_save[NNTP_STRLEN];
 
-        if (!string_case_compare(g_last_command,"quit"))
+        if (string_case_equal(g_last_command, "quit"))
             return 0;
         if (handling_timeout)
             return -1;

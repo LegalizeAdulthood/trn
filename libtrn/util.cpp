@@ -774,7 +774,7 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
             int i;
             for (i = 1; words[i].checksum; i++) {
                 if (words[i].checksum == checksum
-                 && !string_case_compare(cp,words[i].item)) {
+                 && string_case_equal(cp, words[i].item)) {
                     values[i] = s;
                     break;
                 }

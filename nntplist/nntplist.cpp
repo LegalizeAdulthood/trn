@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
         else
             Usage();
     }
-    if (action && !string_case_compare(action,"active"))
+    if (action && string_case_equal(action, "active"))
         action = nullptr;
     if (!out_fp)
         out_fp = stdout;
@@ -124,13 +124,13 @@ int main(int argc, char *argv[])
         cp = nullptr;
         if (!action)
             cp = ACTIVE;
-        else if (!string_case_compare(action,"active.times"))
+        else if (string_case_equal(action, "active.times"))
             cp = ACTIVE_TIMES;
-        else if (!string_case_compare(action,"newsgroups"))
+        else if (string_case_equal(action, "newsgroups"))
             cp = GROUPDESC;
-        else if (!string_case_compare(action,"subscriptions"))
+        else if (string_case_equal(action, "subscriptions"))
             cp = SUBSCRIPTIONS;
-        else if (!string_case_compare(action,"overview.fmt"))
+        else if (string_case_equal(action, "overview.fmt"))
             cp = OVERVIEW_FMT;
         if (!cp || !*cp) {
             fprintf(stderr, "Don't know how to list `%s' from your local system.\n",

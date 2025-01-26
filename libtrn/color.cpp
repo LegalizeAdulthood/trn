@@ -129,7 +129,7 @@ void color_rc_attribute(const char *object, char *value)
     /* Find the specified object. */
     int i;
     for (i = 0; i < MAX_COLORS; i++) {
-        if (!string_case_compare(object, s_objects[i].name))
+        if (string_case_equal(object, s_objects[i].name))
             break;
     }
     if (i >= MAX_COLORS) {
