@@ -28,20 +28,6 @@ jobs:
           core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
-    - name: Download bison for Windows
-      if: ${{matrix.os == 'windows-latest'}}
-      shell: powershell
-      env:
-        BISON_ZIP_URL: http://user.xmission.com/~legalize/trn/bison-2.4.1.zip
-        BISON_ZIP_PATH: ${{github.workspace}}/../bison-2.4.1.zip
-        BISON_PATH: ${{github.workspace}}/../bison
-      run: |
-        Invoke-WebRequest -Uri ${{env.BISON_ZIP_URL}} -OutFile "${{env.BISON_ZIP_PATH}}"
-        mkdir ${{env.BISON_PATH}}
-        cd ${{env.BISON_PATH}}
-        7z x -y ${{env.BISON_ZIP_PATH}}
-        Add-Content $env:GITHUB_PATH "${{env.BISON_PATH}}/bin"
-
     - name: CMake version
       run: cmake --version
 
