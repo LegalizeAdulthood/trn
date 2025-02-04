@@ -29,6 +29,7 @@ set(trn_text_files
     README.txt
 )
 add_executable(trn main.cpp
+    ReadMe.md
     vcpkg.json
     ${trn_text_files}
     cmake/Findpdcurses.cmake
@@ -37,6 +38,7 @@ add_executable(trn main.cpp
 source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")
 source_group("VcPkg Files" FILES vcpkg.json)
 source_group("Text Files" FILES ${trn_text_files})
+source_group("Markdown Files" FILES ReadMe.md)
 target_link_libraries(trn PUBLIC libtrn)
 install(TARGETS trn DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT trn)
