@@ -25,7 +25,7 @@ You may copy trn in whole or in part as long as you don't try to
 make money off it, or pretend that you wrote it.
 
 See the file INSTALL for installation instructions.  Failure to do so
-may void your warranty. :-)
+may void your warranty. `:-)`
 
 # Version 5.0
 
