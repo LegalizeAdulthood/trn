@@ -212,9 +212,10 @@ void start_header(ART_NUM artnum)
     if (debug & DEB_HEADER)
         dumpheader("start_header\n");
 #endif
-    for (int i = 0; i < HEAD_LAST; i++) {
-        g_htype[i].minpos = -1;
-        g_htype[i].maxpos = 0;
+    for (HEADTYPE &i : g_htype)
+    {
+        i.minpos = -1;
+        i.maxpos = 0;
     }
     g_in_header = SOME_LINE;
     s_first_one = false;

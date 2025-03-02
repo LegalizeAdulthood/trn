@@ -51,8 +51,8 @@ void mp_init()
     s_mpfrags[i-1].next = 0;
     s_mp_first_free_frag = 1;   /* first free fragment */
 
-    for (int j = 0; j < MAX_MEM_POOLS; j++)
-        s_mpheads[j].current = 0;
+    for (MP_HEAD &pool : s_mpheads)
+        pool.current = 0;
 }
 
 /* returns the fragment number */

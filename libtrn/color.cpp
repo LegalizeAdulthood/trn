@@ -108,11 +108,12 @@ void color_init()
         }
         if (!strcmp(fg,bg))
             bg = "";
-        for (int i = 0; i < MAX_COLORS; i++) {
-            if (empty(s_objects[i].fg))
-                s_objects[i].fg = fg;
-            if (empty(s_objects[i].bg))
-                s_objects[i].bg = bg;
+        for (COLOR_OBJ &obj : s_objects)
+        {
+            if (empty(obj.fg))
+                obj.fg = fg;
+            if (empty(obj.bg))
+                obj.bg = bg;
         }
     }
 
