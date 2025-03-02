@@ -137,30 +137,25 @@ const char *current_charsubst()
     const char* ocs = output_charset_name();
     int maxlen = (sizeof show - 5)/2;
     if (strcmp(ics, ocs) == 0)
+    {
         sprintf(show, "[%.*s]", maxlen, ics, maxlen, ocs);
+    }
     else
+    {
         sprintf(show, "[%.*s->%.*s]", maxlen, ics, maxlen, ocs);
+    }
 #else /*!USE_UTF_HACK */
     static const char* show;
 
     switch (*g_charsubst) {
       case 'm':
-        if (g_verbose)
-            show = "[ISO->USmono] ";
-        else
-            show = "[M] ";
+        show = g_verbose ? "[ISO->USmono] " : "[M] ";
         break;
       case 'a':
-        if (g_verbose)
-            show = "[ISO->US] ";
-        else
-            show = "[U] ";
+        show = g_verbose ? "[ISO->US] " : "[U] ";
         break;
       case 't':
-        if (g_verbose)
-            show = "[TeX->ISO] ";
-        else
-            show = "[T] ";
+        show = g_verbose ? "[TeX->ISO] " : "[T] ";
         break;
       default:
         show = "";
