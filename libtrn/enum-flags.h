@@ -53,7 +53,7 @@ inline T &operator_xor_equal(T &lhs, T rhs)
     }
 
 #define DECLARE_ENUM_UNOP(Enum_, Base_, op_, fn_) \
-    inline Enum_ op_(Enum_ val)                    \
+    inline Enum_ op_(Enum_ val)                   \
     {                                             \
         return fn_<Enum_, Base_>(val);            \
     }
