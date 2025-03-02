@@ -12,11 +12,11 @@
  * for any use whatsoever, and it is provided as is. Any use of this software
  * is at the user's own risk. 
  */
+#include "charsubst.h"
 
-#include "common.h"
-
+#include "config2.h"
 #include "trn.h"
-#include "utf.h"
+#include "typedef.h"
 #include "util2.h"
 
 /* Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced */
