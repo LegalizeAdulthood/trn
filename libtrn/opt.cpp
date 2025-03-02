@@ -936,7 +936,7 @@ const char *option_value(option_index num)
           case 1:
             return "alternate";
           default:
-            return YESorNO(0);
+            return YESorNO(false);
         }
       case OI_READ_BREADTH_FIRST:
         return YESorNO(g_breadth_first);
@@ -976,7 +976,7 @@ const char *option_value(option_index num)
             sprintf(g_buf,"%d",g_join_subject_len);
             return g_buf;
         }
-        return YESorNO(0);
+        return YESorNO(false);
       case OI_IGNORE_THRU_ON_SELECT:
         return YESorNO(g_kill_thru_kludge);
       case OI_AUTO_GROW_GROUPS:
@@ -989,7 +989,7 @@ const char *option_value(option_index num)
         return g_mbox_always? "mail" : (g_norm_always? "norm" : "ask");
       case OI_PAGER_LINE_MARKING:
         if (g_marking == NOMARKING)
-            return YESorNO(0);
+            return YESorNO(false);
         if (g_marking_areas != HALFPAGE_MARKING)
             sprintf(g_buf,"%d", static_cast<int>(g_marking_areas));
         else
@@ -1015,7 +1015,7 @@ const char *option_value(option_index num)
           default:
             break;
         }
-        return YESorNO(0);
+        return YESorNO(false);
       case OI_MULTIPART_SEPARATOR:
         return g_multipart_separator.c_str();
       case OI_AUTO_VIEW_INLINE:
@@ -1028,7 +1028,7 @@ const char *option_value(option_index num)
         return g_charsets.c_str();
       case OI_INITIAL_GROUP_LIST:
         if (g_suppress_cn)
-            return YESorNO(0);
+            return YESorNO(false);
         sprintf(g_buf,"%d",g_countdown);
         return g_buf;
       case OI_RESTART_AT_LAST_GROUP:
@@ -1052,7 +1052,7 @@ const char *option_value(option_index num)
             sprintf(g_buf,"%d",g_word_wrap_offset);
             return g_buf;
         }
-        return YESorNO(0);
+        return YESorNO(false);
       case OI_DEFAULT_REFETCH_TIME:
         return secs2text(g_def_refetch_secs);
       case OI_ART_PAGER_BTNS:

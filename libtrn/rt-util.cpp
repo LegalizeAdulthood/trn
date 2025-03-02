@@ -408,7 +408,7 @@ try_again:
             j += v;
         }
         d[i] = '\0';
-    } while (0);
+    } while (false);
 #else
     safecpy(d, last, max); /* "max - (d-name)" would be overkill */
 #endif
