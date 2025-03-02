@@ -12,8 +12,7 @@
 #include "typedef.h"
 #include "util2.h"
 
-char *g_nntp_password{};
-
+static char *s_nntp_password{};
 static char s_nomem[] = "trn: out of memory!\n";
 
 int doshell(const char *sh, const char *cmd)
@@ -78,10 +77,10 @@ int nntp_handle_nested_lists()
 char *get_auth_user()
 {
     extern std::string g_nntp_auth_file;
-    return read_auth_file(g_nntp_auth_file.c_str(), &g_nntp_password);
+    return read_auth_file(g_nntp_auth_file.c_str(), &s_nntp_password);
 }
 
 char *get_auth_pass()
 {
-    return g_nntp_password;
+    return s_nntp_password;
 }

@@ -131,8 +131,8 @@ void hashdelete(HASHTABLE *tbl, const char *key, int keylen)
     hefree(hp);
 }
 
-HASHENT** slast_nextp;
-int slast_keylen;
+static HASHENT **s_slast_nextp{};
+static int       s_slast_keylen{};
 
 /* data corresponding to key */
 HASHDATUM hashfetch(HASHTABLE *tbl, const char *key, int keylen)
@@ -140,8 +140,8 @@ HASHDATUM hashfetch(HASHTABLE *tbl, const char *key, int keylen)
     static HASHDATUM errdatum = { nullptr, 0 };
 
     HASHENT **nextp = hashfind(tbl, key, keylen);
-    slast_nextp = nextp;
-    slast_keylen = keylen;
+    s_slast_nextp = nextp;
+    s_slast_keylen = keylen;
     HASHENT *hp = *nextp;
     if (hp == nullptr)                  /* absent */
         return errdatum;
@@ -150,12 +150,12 @@ HASHDATUM hashfetch(HASHTABLE *tbl, const char *key, int keylen)
 
 void hashstorelast(HASHDATUM data)
 {
-    HASHENT *hp = *slast_nextp;
+    HASHENT *hp = *s_slast_nextp;
     if (hp == nullptr) {                        /* absent; allocate an entry */
         hp = healloc();
         hp->he_next = nullptr;
-        hp->he_keylen = slast_keylen;
-        *slast_nextp = hp;              /* append to hash chain */
+        hp->he_keylen = s_slast_keylen;
+        *s_slast_nextp = hp;              /* append to hash chain */
     }
     hp->he_data = data;         /* supersede any old data for this key */
 }
@@ -173,16 +173,16 @@ void hashwalk(HASHTABLE *tbl, HASHWALKFUNC nodefunc, int extra)
     hepp = tbl->ht_addr;
     int tblsize = tbl->ht_size;
     for (unsigned idx = 0; idx < tblsize; idx++) {
-        slast_nextp = &hepp[idx];
-        for (HASHENT *hp = *slast_nextp; hp != nullptr; hp = next) {
+        s_slast_nextp = &hepp[idx];
+        for (HASHENT *hp = *s_slast_nextp; hp != nullptr; hp = next) {
             next = hp->he_next;
             if ((*nodefunc)(hp->he_keylen, &hp->he_data, extra) < 0) {
-                *slast_nextp = next;
+                *s_slast_nextp = next;
                 hp->he_next = nullptr;
                 hefree(hp);
             }
             else
-                slast_nextp = &hp->he_next;
+                s_slast_nextp = &hp->he_next;
         }
     }
 }

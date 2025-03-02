@@ -60,7 +60,7 @@ int msgid_cmp(const char *key, int keylen, HASHDATUM data)
     return memcmp(key, ((ARTICLE*)data.dat_ptr)->msgid, keylen);
 }
 
-SUBJECT* fake_had_subj; /* the fake-turned-real article had this subject */
+static SUBJECT *s_fake_had_subj; /* the fake-turned-real article had this subject */
 
 bool valid_article(ARTICLE *article)
 {
@@ -83,11 +83,11 @@ bool valid_article(ARTICLE *article)
         {
             data.dat_ptr = (char*)article;
             hashstorelast(data);
-            fake_had_subj = nullptr;
+            s_fake_had_subj = nullptr;
             return true;
         }
         if (fake_ap == article) {
-            fake_had_subj = nullptr;
+            s_fake_had_subj = nullptr;
             return true;
         }
 
@@ -97,7 +97,7 @@ bool valid_article(ARTICLE *article)
             article->parent = fake_ap->parent;
             article->child1 = fake_ap->child1;
             article->sibling = fake_ap->sibling;
-            fake_had_subj = fake_ap->subj;
+            s_fake_had_subj = fake_ap->subj;
             if (fake_ap->autofl) {
                 article->autofl |= fake_ap->autofl;
                 g_kf_state |= g_kfs_thread_change_set;
@@ -127,15 +127,15 @@ bool valid_article(ARTICLE *article)
                     }
                     /* End of slibling-search code */
                 }
-            } else if (fake_had_subj) {
-                SUBJECT* sp = fake_had_subj;
+            } else if (s_fake_had_subj) {
+                SUBJECT* sp = s_fake_had_subj;
                 ap = sp->thread;
                 if (ap == fake_ap)
                 {
                     do {
                         sp->thread = article;
                         sp = sp->thread_link;
-                    } while (sp != fake_had_subj);
+                    } while (sp != s_fake_had_subj);
                 } else {
                     /* This sibling-search code is duplicated above */
                     while (ap->sibling) {
@@ -213,9 +213,9 @@ void thread_article(ARTICLE *article, char *references)
     /* If the article was already part of an existing thread, unlink it
     ** to try to put it in the best possible spot.
     */
-    if (fake_had_subj) {
-        if (fake_had_subj->thread != article->subj->thread)
-            merge_threads(fake_had_subj, article->subj);
+    if (s_fake_had_subj) {
+        if (s_fake_had_subj->thread != article->subj->thread)
+            merge_threads(s_fake_had_subj, article->subj);
         /* Check for a real or shared-fake parent */
         ap = article->parent;
         while (ap && (ap->flags & AF_FAKE) && !ap->child1->sibling) {

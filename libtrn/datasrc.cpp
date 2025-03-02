@@ -682,7 +682,7 @@ try_xgtitle:
  * Because we need to keep track of s we can't really reuse dectrl()
  * from cache.c; if we want to factor further we need a new function.
  */
-char *adv_then_find_next_nl_and_dectrl(char *s)
+static char *adv_then_find_next_nl_and_dectrl(char *s)
 {
     if (s == NULL)
         return s;

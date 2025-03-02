@@ -427,28 +427,28 @@ void set_macro(char *seq, char *def)
     }
 }
 
-char* up[] = {
+static char* s_up[] = {
     "^@",
     /* '(' at article or pager, '[' in thread sel, 'p' otherwise */
     "%(%m=[ap]?\\(:%(%m=t?[:p))",
     /* '(' at article or pager, '[' in thread sel, 'p' otherwise */
     "%(%m=[ap]?\\(:%(%m=t?[:p))"
 };
-char* down[] = {
+static char *s_down[] = {
     "^@",
     /* ')' at article or pager, ']' in thread sel, 'n' otherwise */
     "%(%m=[ap]?\\):%(%m=t?]:n))",
     /* ')' at article or pager, ']' in thread sel, 'n' otherwise */
     "%(%m=[ap]?\\):%(%m=t?]:n))"
 };
-char* left[] = {
+static char *s_left[] = {
     "^@",
     /* '[' at article or pager, 'Q' otherwise */
     "%(%m=[ap]?\\[:Q)",
     /* '[' at article or pager, '<' otherwise */
     "%(%m=[ap]?\\[:<)"
 };
-char* right[] = {
+static char *s_right[] = {
     "^@",
     /* ']' at article or pager, CR otherwise */
     "%(%m=[ap]?\\]:^j)",
@@ -477,7 +477,7 @@ void arrow_macros(char *tmpbuf)
     strcpy(lbuf,Tgetstr("ku"));         /* up */
 #endif
     if ((int)strlen(lbuf) > 1)
-        set_macro(lbuf,up[g_auto_arrow_macros]);
+        set_macro(lbuf,s_up[g_auto_arrow_macros]);
 
 #ifdef MSDOS
     strcpy(lbuf,"\035\120");
@@ -485,7 +485,7 @@ void arrow_macros(char *tmpbuf)
     strcpy(lbuf,Tgetstr("kd"));         /* down */
 #endif
     if ((int)strlen(lbuf) > 1)
-        set_macro(lbuf,down[g_auto_arrow_macros]);
+        set_macro(lbuf,s_down[g_auto_arrow_macros]);
 
 #ifdef MSDOS
     strcpy(lbuf,"\035\113");
@@ -493,7 +493,7 @@ void arrow_macros(char *tmpbuf)
     strcpy(lbuf,Tgetstr("kl"));         /* left */
 #endif
     if ((int)strlen(lbuf) > 1)
-        set_macro(lbuf,left[g_auto_arrow_macros]);
+        set_macro(lbuf,s_left[g_auto_arrow_macros]);
 
 #ifdef MSDOS
     strcpy(lbuf,"\035\115");
@@ -501,7 +501,7 @@ void arrow_macros(char *tmpbuf)
     strcpy(lbuf,Tgetstr("kr"));         /* right */
 #endif
     if ((int)strlen(lbuf) > 1)
-        set_macro(lbuf,right[g_auto_arrow_macros]);
+        set_macro(lbuf,s_right[g_auto_arrow_macros]);
 
     if (*lbuf == '\033')
         set_macro("\033\033", "\033");
@@ -676,11 +676,11 @@ int putchr(char_int ch)
     return 0;
 }
 
-int not_echoing = 0;
+static int s_not_echoing{};
 
 void hide_pending()
 {
-    not_echoing = 1;
+    s_not_echoing = 1;
     pushchar(0200);
 }
 
@@ -689,17 +689,17 @@ bool finput_pending(bool check_term)
     while (s_nextout != s_nextin) {
         if (s_circlebuf[s_nextout] != '\200')
             return true;
-        switch (not_echoing) {
+        switch (s_not_echoing) {
           case 0:
             return true;
           case 1:
             s_nextout++;
             s_nextout %= PUSHSIZE;
-            not_echoing = 0;
+            s_not_echoing = 0;
             break;
           default:
             s_circlebuf[s_nextout] = '\n';
-            not_echoing = 0;
+            s_not_echoing = 0;
             return true;
         }
     }
@@ -728,7 +728,7 @@ bool finput_pending(bool check_term)
 /* input the 2nd and succeeding characters of a multi-character command */
 /* returns true if command finished, false if they rubbed out first character */
 
-int buflimit = LBUFLEN;
+static int s_buff_limit = LBUFLEN;
 
 bool finish_command(int donewline)
 {
@@ -738,8 +738,8 @@ bool finish_command(int donewline)
 
     general_mode gmode_save = g_general_mode;
     set_mode(GM_INPUT,g_mode);
-    if (not_echoing)
-        not_echoing = 2;
+    if (s_not_echoing)
+        s_not_echoing = 2;
     do {
         s = edit_buf(s, g_buf);
         if (s == g_buf) {                       /* entire string gone? */
@@ -747,7 +747,7 @@ bool finish_command(int donewline)
             set_mode(gmode_save,g_mode);
             return false;
         }
-        if (s - g_buf == buflimit)
+        if (s - g_buf == s_buff_limit)
             break;
         fflush(stdout);
         getcmd(s);
@@ -871,19 +871,19 @@ char *edit_buf(char *s, const char *cmd)
         quoteone = true;
 
 echo_it:
-    if (!not_echoing)
+    if (!s_not_echoing)
         echo_char(*s);
     return s+1;
 }
 
 bool finish_dblchar()
 {
-    int buflimit_save = buflimit;
-    int not_echoing_save = not_echoing;
-    buflimit = 2;
+    int buflimit_save = s_buff_limit;
+    int not_echoing_save = s_not_echoing;
+    s_buff_limit = 2;
     bool ret = finish_command(false);
-    buflimit = buflimit_save;
-    not_echoing = not_echoing_save;
+    s_buff_limit = buflimit_save;
+    s_not_echoing = not_echoing_save;
     return ret;
 }
 
@@ -974,11 +974,11 @@ void settle_down()
     fflush(stdout);
     /*sleep(1);*/
     s_nextout = s_nextin;                       /* empty s_circlebuf */
-    not_echoing = 0;
+    s_not_echoing = 0;
     eat_typeahead();
 }
 
-bool ignore_EINTR = false;
+static bool s_ignore_EINTR = false;
 
 #ifdef SIGALRM
 Signal_t alarm_catcher(int signo)
@@ -1125,12 +1125,12 @@ tryagain:
     for (;;) {
         g_int_count = 0;
         errno = 0;
-        ignore_EINTR = false;
+        s_ignore_EINTR = false;
         if (read_tty(whatbuf,1) < 0) {
             if (!errno)
                 errno = EINTR;
             if (errno == EINTR) {
-                if (ignore_EINTR)
+                if (s_ignore_EINTR)
                     continue;
 #ifdef SIGALRM
                 (void) alarm(0);
