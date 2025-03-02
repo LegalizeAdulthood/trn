@@ -123,9 +123,9 @@ void decode_switch(const char *s)
             set_option(OI_USE_ADD_SEL, YESorNO(upordown));
             set_option(OI_USE_NEWSGROUP_SEL, YESorNO(upordown));
             if (upordown)
-                set_option(OI_INITIAL_GROUP_LIST, YESorNO(0));
+                set_option(OI_INITIAL_GROUP_LIST, YESorNO(false));
             else
-                set_option(OI_USE_NEWSRC_SEL, YESorNO(0));
+                set_option(OI_USE_NEWSRC_SEL, YESorNO(false));
             break;
         case 'a':
             set_option(OI_BKGND_THREADING, YESorNO(!upordown));
@@ -272,7 +272,7 @@ void decode_switch(const char *s)
         case 'p':
             if (*++s == '=') s++;
             if (!upordown)
-                s = YESorNO(0);
+                s = YESorNO(false);
             else {
                 switch (*s) {
                 case '+':
@@ -300,7 +300,7 @@ void decode_switch(const char *s)
             break;
         case 's':
             if (*++s == '=') s++;
-            set_option(OI_INITIAL_GROUP_LIST, isdigit(*s)? s : YESorNO(0));
+            set_option(OI_INITIAL_GROUP_LIST, isdigit(*s)? s : YESorNO(false));
             break;
         case 'S':
             if (*++s == '=') s++;
