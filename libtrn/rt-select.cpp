@@ -1795,7 +1795,7 @@ static display_state article_commands(char_int ch)
             g_sel_page_sp = g_sel_page_app? g_sel_page_app[0]->subj : nullptr;
         } else {
             set_selector(SM_ARTICLE, SS_MAGIC_NUMBER);
-            g_sel_page_app = 0;
+            g_sel_page_app = nullptr;
         }
         count_subjects(CS_NORM);
         g_sel_item_index = 0;

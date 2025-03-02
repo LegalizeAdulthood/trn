@@ -555,7 +555,7 @@ int decode_header(char *to, char *from, int size)
 
 void dectrl(char *str)
 {
-    if (str == NULL)
+    if (str == nullptr)
         return;
 
     for ( ; *str;) {

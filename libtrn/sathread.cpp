@@ -22,7 +22,7 @@ void sa_init_threads()
     s_sa_num_threads = 0;
     if (s_sa_thread_hash) {
         hashdestroy(s_sa_thread_hash);
-        s_sa_thread_hash = 0;
+        s_sa_thread_hash = nullptr;
     }
 }
 

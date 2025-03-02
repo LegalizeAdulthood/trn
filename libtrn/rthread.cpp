@@ -146,8 +146,8 @@ void thread_open()
     thread_grow();          /* thread any new articles not yet in the database */
     g_datasrc->ov_opened = save_ov_opened;
     g_added_articles = 0;
-    g_sel_page_sp = 0;
-    g_sel_page_app = 0;
+    g_sel_page_sp = nullptr;
+    g_sel_page_app = nullptr;
 }
 
 /* Update the group's thread info.
@@ -173,10 +173,10 @@ void thread_close()
     update_thread_kfile();
     if (g_msgid_hash)
         hashwalk(g_msgid_hash, cleanup_msgid_hash, 0);
-    g_sel_page_sp = 0;
-    g_sel_page_app = 0;
-    g_sel_last_ap = 0;
-    g_sel_last_sp = 0;
+    g_sel_page_sp = nullptr;
+    g_sel_page_app = nullptr;
+    g_sel_last_ap = nullptr;
+    g_sel_last_sp = nullptr;
     g_selected_only = false;
     g_sel_exclusive = false;
     ov_close();
@@ -1627,7 +1627,7 @@ void sort_articles()
         sort_procedure = artorder_score;
         break;
     }
-    g_sel_page_app = 0;
+    g_sel_page_app = nullptr;
     qsort(g_artptr_list, g_artptr_list_size, sizeof (ARTICLE*), ((int(*)(void const *, void const *))sort_procedure));
 }
 

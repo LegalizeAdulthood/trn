@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
                                 cp = "[no description available]\n";
                             printf("%-23s %s", buff, cp);
                             free(ngptrs[i]);
-                            ngptrs[i] = 0;
+                            ngptrs[i] = nullptr;
                             ngleft--;
                         }
                     }

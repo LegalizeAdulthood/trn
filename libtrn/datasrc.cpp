@@ -684,7 +684,7 @@ try_xgtitle:
  */
 static char *adv_then_find_next_nl_and_dectrl(char *s)
 {
-    if (s == NULL)
+    if (s == nullptr)
         return s;
 
     for (s++; *s && *s != '\n';) {

@@ -152,7 +152,7 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
         return nullptr;                 /* just keep old expression */
     }
     compex->nbra = 0;                   /* no brackets yet */
-    char *lastep = 0;
+    char *lastep = nullptr;
     for (;;) {
         if (ep + 4 - compex->expbuf >= compex->eblen)
             ep = grow_eb(compex, ep, alt);
@@ -163,7 +163,7 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
                 goto cerror;
             }
             *ep++ = CEND;               /* terminate expression */
-            *alt++ = 0;                 /* terminal alternative list */
+            *alt++ = nullptr;           /* terminal alternative list */
             return nullptr;             /* return success */
         }
         if (c != '*')
@@ -236,9 +236,9 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
                     continue;
  
                 case '*':
-                    if (lastep == 0 || *lastep == CBRA || *lastep == CKET
-                        || *lastep == CIRC
-                        || (*lastep&STAR)|| *lastep>NWORD)
+                    if (lastep == nullptr || *lastep == CBRA || *lastep == CKET //
+                        || *lastep == CIRC                                      //
+                        || (*lastep & STAR) || *lastep > NWORD)
                         goto defchar;
                     *lastep |= STAR;
                     continue;
@@ -457,7 +457,7 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
  
             case CBACK:
                 i = *ep++;
-                if (compex->braelist[i] == 0) {
+                if (compex->braelist[i] == nullptr) {
                     fputs("bad braces\n",stdout);
                     s_err = true;
                     return false;
@@ -470,7 +470,7 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
  
             case CBACK | STAR:
                 i = *ep++;
-                if (compex->braelist[i] == 0) {
+                if (compex->braelist[i] == nullptr) {
                     fputs("bad braces\n",stdout);
                     s_err = true;
                     return false;

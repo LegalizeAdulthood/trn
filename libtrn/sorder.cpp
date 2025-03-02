@@ -118,7 +118,7 @@ void s_order_clean()
     g_s_ent_sort = nullptr;
     g_s_contexts[g_s_cur_context].ent_sort = g_s_ent_sort;
 
-    g_s_ent_index = (long*)0;
+    g_s_ent_index = nullptr;
     g_s_contexts[g_s_cur_context].ent_index = g_s_ent_index;
 
     g_s_ent_sort_max = -1;
