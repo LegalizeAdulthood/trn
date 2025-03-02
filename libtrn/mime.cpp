@@ -803,7 +803,7 @@ void mime_Description(MIME_SECT *mp, char *s, int limit)
 }
 
 #define XX 255
-static Uchar index_hex[256] = {
+static Uchar s_index_hex[256] = {
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
@@ -840,8 +840,8 @@ int qp_decodestring(char *t, const char *f, bool in_header)
                 f += 2;
                 break;
             }
-            if (index_hex[(Uchar)f[1]] != XX && index_hex[(Uchar)f[2]] != XX) {
-                *t = (index_hex[(Uchar)f[1]] << 4) + index_hex[(Uchar)f[2]];
+            if (s_index_hex[(Uchar)f[1]] != XX && s_index_hex[(Uchar)f[2]] != XX) {
+                *t = (s_index_hex[(Uchar)f[1]] << 4) + s_index_hex[(Uchar)f[2]];
                 f += 3;
                 if (*t != '\r')
                     t++;
@@ -888,18 +888,18 @@ decode_state qp_decode(FILE *ifp, decode_state state)
             c1 = mime_getc(ifp);
             if (c1 == '\n')
                 continue;
-            if (index_hex[(Uchar)c1] == XX) {
+            if (s_index_hex[(Uchar)c1] == XX) {
                 putc('=', ofp);
                 goto check_c1;
             }
             int c2 = mime_getc(ifp);
-            if (index_hex[(Uchar)c2] == XX) {
+            if (s_index_hex[(Uchar)c2] == XX) {
                 putc('=', ofp);
                 putc(c1, ofp);
                 c1 = c2;
                 goto check_c1;
             }
-            c1 = index_hex[(Uchar)c1] << 4 | index_hex[(Uchar)c2];
+            c1 = s_index_hex[(Uchar)c1] << 4 | s_index_hex[(Uchar)c2];
             if (c1 != '\r')
                 putc(c1, ofp);
         }
@@ -910,7 +910,7 @@ decode_state qp_decode(FILE *ifp, decode_state state)
     return DECODE_MAYBEDONE;
 }
 
-static Uchar index_b64[256] = {
+static Uchar s_index_b64[256] = {
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,62, XX,XX,XX,63,
@@ -935,25 +935,25 @@ int b64_decodestring(char *t, const char *f)
     Uchar ch2;
 
     while (*f && *f != '=') {
-        Uchar ch1 = index_b64[(Uchar)*f++];
+        Uchar ch1 = s_index_b64[(Uchar)*f++];
         if (ch1 == XX)
             continue;
         do {
             if (!*f || *f == '=')
                 goto dbl_break;
-            ch2 = index_b64[(Uchar)*f++];
+            ch2 = s_index_b64[(Uchar)*f++];
         } while (ch2 == XX);
         *t++ = ch1 << 2 | ch2 >> 4;
         do {
             if (!*f || *f == '=')
                 goto dbl_break;
-            ch1 = index_b64[(Uchar)*f++];
+            ch1 = s_index_b64[(Uchar)*f++];
         } while (ch1 == XX);
         *t++ = (ch2 & 0x0f) << 4 | ch1 >> 2;
         do {
             if (!*f || *f == '=')
                 goto dbl_break;
-            ch2 = index_b64[(Uchar)*f++];
+            ch2 = s_index_b64[(Uchar)*f++];
         } while (ch2 == XX);
         *t++ = (ch1 & 0x03) << 6 | ch2;
     }
@@ -989,43 +989,43 @@ decode_state b64_decode(FILE *ifp, decode_state state)
     }
 
     while ((c1 = mime_getc(ifp)) != EOF) {
-        if (c1 != '=' && index_b64[c1] == XX)
+        if (c1 != '=' && s_index_b64[c1] == XX)
             continue;
         do {
             c2 = mime_getc(ifp);
             if (c2 == EOF)
                 return state;
-        } while (c2 != '=' && index_b64[c2] == XX);
+        } while (c2 != '=' && s_index_b64[c2] == XX);
         do {
             c3 = mime_getc(ifp);
             if (c3 == EOF)
                 return state;
-        } while (c3 != '=' && index_b64[c3] == XX);
+        } while (c3 != '=' && s_index_b64[c3] == XX);
         do {
             c4 = mime_getc(ifp);
             if (c4 == EOF)
                 return state;
-        } while (c4 != '=' && index_b64[c4] == XX);
+        } while (c4 != '=' && s_index_b64[c4] == XX);
         if (c1 == '=' || c2 == '=') {
             state = DECODE_DONE;
             break;
         }
-        c1 = index_b64[c1];
-        c2 = index_b64[c2];
+        c1 = s_index_b64[c1];
+        c2 = s_index_b64[c2];
         c1 = c1 << 2 | c2 >> 4;
         putc(c1, ofp);
         if (c3 == '=') {
             state = DECODE_DONE;
             break;
         }
-        c3 = index_b64[c3];
+        c3 = s_index_b64[c3];
         c2 = (c2 & 0x0f) << 4 | c3 >> 2;
         putc(c2, ofp);
         if (c4 == '=') {
             state = DECODE_DONE;
             break;
         }
-        c4 = index_b64[c4];
+        c4 = s_index_b64[c4];
         c3 = (c3 & 0x03) << 6 | c4;
         putc(c3, ofp);
     }
@@ -1221,7 +1221,7 @@ int filter_html(char *t, const char *f)
             for (i = 0;; i++)
             {
                 int c = f[2 + is_hex + i];
-                int v = index_hex[c];
+                int v = s_index_hex[c];
                 if (c == '\0' || v == XX || v > base)
                     break;
                 ncr *= base;
@@ -1340,7 +1340,7 @@ int filter_html(char *t, const char *f)
 #undef XX
 
 static char s_bullets[3] = {'*', 'o', '+'};
-static char g_letters[2] = {'a', 'A'};
+static char s_letters[2] = {'a', 'A'};
 static char s_roman_letters[] = { 'M', 'D', 'C', 'L', 'X', 'V', 'I'};
 static int  s_roman_values[]  = {1000, 500, 100,  50, 10,   5,   1 };
 
@@ -1498,8 +1498,8 @@ static char *tag_action(char *t, char *word, bool opening_tag)
                     blks[j].cnt = 0;
                 }
                 if (cnt >= 26)
-                    t[-4] = g_letters[ch-5] + cnt / 26 - 1;
-                t[-3] = g_letters[ch-5] + cnt % 26;
+                    t[-4] = s_letters[ch-5] + cnt / 26 - 1;
+                t[-3] = s_letters[ch-5] + cnt % 26;
                 t[-2] = '.';
                 break;
               case 7:

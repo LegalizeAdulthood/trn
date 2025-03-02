@@ -69,13 +69,13 @@ void cache_init()
 #endif
 }
 
-static NGDATA* cached_ng{};
-static time_t cached_time{};
+static NGDATA* s_cached_ng{};
+static time_t s_cached_time{};
 
 void build_cache()
 {
-    if (cached_ng == g_ngptr && time((time_t*)nullptr) < cached_time + 6*60*60L) {
-        cached_time = time((time_t*)nullptr);
+    if (s_cached_ng == g_ngptr && time((time_t*)nullptr) < s_cached_time + 6*60*60L) {
+        s_cached_time = time((time_t*)nullptr);
         if (g_sel_mode == SM_ARTICLE)
             set_selector(g_sel_mode, g_sel_artsort);
         else
@@ -90,8 +90,8 @@ void build_cache()
 
     close_cache();
 
-    cached_ng = g_ngptr;
-    cached_time = time((time_t*)nullptr);
+    s_cached_ng = g_ngptr;
+    s_cached_time = time((time_t*)nullptr);
     g_article_list = new_list(g_absfirst, g_lastart, sizeof (ARTICLE), 371,
                               LF_SPARSE, init_artnode);
     s_subj_hash = hashcreate(991, subject_cmp); /*TODO: pick a better size */
@@ -147,7 +147,7 @@ void close_cache()
         delete_list(g_article_list);
         g_article_list = nullptr;
     }
-    cached_ng = nullptr;
+    s_cached_ng = nullptr;
 }
 
 /* Initialize the memory for an entire node's worth of article's */

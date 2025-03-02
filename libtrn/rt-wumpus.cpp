@@ -24,7 +24,7 @@
 
 int g_max_tree_lines{6};
 
-char g_letters[] = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+";
+static char s_letters[] = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+";
 
 // clang-format off
 static char s_tree_indent[] = {
@@ -522,7 +522,7 @@ void entire_tree(ARTICLE* ap)
     do {
         if (check_page_line())
             return;
-        printf("[%c] %s\n",g_letters[num>9+26+26? 9+26+26:num],sp->str+4);
+        printf("[%c] %s\n",s_letters[num>9+26+26? 9+26+26:num],sp->str+4);
         termdown(1);
         sp->misc = num++;
         sp = sp->thread_link;
@@ -614,5 +614,5 @@ char thread_letter(ARTICLE *ap)
         return '?';
     if (!(ap->flags & AF_EXISTS))
         return ' ';
-    return g_letters[subj > 9+26+26 ? 9+26+26 : subj];
+    return s_letters[subj > 9+26+26 ? 9+26+26 : subj];
 }
