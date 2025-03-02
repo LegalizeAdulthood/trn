@@ -39,14 +39,14 @@ static void date_error();
 #define DST_OFFSET	1
 #define SECSPERDAY	(24L * 60L * 60L)
     /* Readability for TABLE stuff. */
-#define HOUR(x)		(x * 60)
+#define HOUR(x)		((x) * 60)
 
 #define LPAREN		'('
 #define RPAREN		')'
 #define IS7BIT(x)	((unsigned int)(x) < 0200)
 
-#define SIZEOF(array)	((int)(sizeof array / sizeof array[0]))
-#define ENDOF(array)	(&array[SIZEOF(array)])
+#define SIZEOF(array)	((int)(sizeof (array) / sizeof (array)[0]))
+#define ENDOF(array)	(&(array)[SIZEOF(array)])
 
 
 /*
