@@ -93,13 +93,17 @@ void finalize(int status)
     color_default();
     termlib_reset();
     if (g_bizarre)
+    {
         resetty();
+    }
     xmouse_off();       /* turn off mouse tracking (if on) */
     fflush(stdout);
 
     change_dir(g_tmp_dir);
     if (!g_checkflag)
+    {
         unuse_multirc(g_multirc);
+    }
     datasrc_finalize();
     for (int i = 0; i < MAX_NNTP_ARTICLES; i++) {
         char *s = nntp_tmpname(i);
@@ -107,7 +111,9 @@ void finalize(int status)
     }
     cleanup_nntp();
     if (!g_headname.empty())
+    {
         remove(g_headname.c_str());
+    }
     if (status < 0) {
         sigset(SIGILL,SIG_DFL);
 #ifdef HAS_SIGBLOCK
@@ -117,7 +123,9 @@ void finalize(int status)
     }
 #ifdef RESTORE_ORIGDIR
     if (!g_origdir.empty())
+    {
         change_dir(g_origdir);
+    }
 #endif
     exit(status);
 }
@@ -209,10 +217,13 @@ Signal_t sig_catcher(int signo)
     if (signo != SIGHUP) {
 #endif
         if (g_verbose)
-            printf("\nCaught %s%s--.newsrc restored\n",
-                signo ? "a SIG" : "an internal error", signame[signo]);
+        {
+            printf("\nCaught %s%s--.newsrc restored\n", signo ? "a SIG" : "an internal error", signame[signo]);
+        }
         else
-            printf("\nSignal %d--bye bye\n",signo);
+        {
+            printf("\nSignal %d--bye bye\n", signo);
+        }
 #ifdef SIGHUP
     }
 #endif

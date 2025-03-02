@@ -52,7 +52,9 @@ int escapade()
     char whereiam[1024];
 
     if (!finish_command(interactive))   /* get remainder of command */
+    {
         return -1;
+    }
     char *s = g_buf + 1;
     bool  docd = *s != '!';
     if (!docd) {
@@ -88,7 +90,9 @@ int escapade()
 int switcheroo()
 {
     if (!finish_command(true)) /* get rest of command */
+    {
         return -1;      /* if rubbed out, try something else */
+    }
     if (!g_buf[1]) {
         const std::string prior_savedir = g_savedir;
         if (s_option_sel_ilock) {
@@ -96,11 +100,15 @@ int switcheroo()
             return 0;
         }
         s_option_sel_ilock = true;
-        if (g_general_mode != GM_SELECTOR || g_sel_mode != SM_OPTIONS)/*$$*/
+        if (g_general_mode != GM_SELECTOR || g_sel_mode != SM_OPTIONS) /*$$*/
+        {
             option_selector();
+        }
         s_option_sel_ilock = false;
         if (g_savedir != prior_savedir)
+        {
             cwd_check();
+        }
         g_buf[1] = '\0';
     }
     else if (g_buf[1] == '&') {
@@ -120,7 +128,9 @@ int switcheroo()
         char tmpbuf[LBUFLEN+16];
 
         if (docd)
+        {
             trn_getwd(whereami, sizeof(whereami));
+        }
         if (g_buf[1] == '-' || g_buf[1] == '+') {
             strcpy(tmpbuf,g_buf+1);
             sw_list(tmpbuf);
@@ -156,25 +166,35 @@ numnum_result numnum()
     bool justone = true;                /* assume only one article */
 
     if (!finish_command(true))  /* get rest of command */
+    {
         return NN_INP;
+    }
     if (g_lastart < 1) {
         errormsg("No articles");
         return NN_ASK;
     }
     if (g_srchahead)
+    {
         g_srchahead = -1;
+    }
 
     perform_status_init(g_ngptr->toread);
 
     for (s=g_buf; *s && (isdigit(*s) || strchr(" ,-.$",*s)); s++)
+    {
         if (!isdigit(*s))
+        {
             justone = false;
+        }
+    }
     if (*s) {
         cmdlst = savestr(s);
         justone = false;
     }
     else if (!justone)
+    {
         cmdlst = savestr("m");
+    }
     *s++ = ',';
     *s = '\0';
     safecpy(tmpbuf,g_buf,LBUFLEN);
@@ -185,9 +205,13 @@ numnum_result numnum()
     for (char *t = tmpbuf; (c = strchr(t,',')) != nullptr; t = ++c) {
         *c = '\0';
         if (*t == '.')
+        {
             min = oldart;
+        }
         else
+        {
             min = atol(t);
+        }
         if (min < g_absfirst) {
             min = g_absfirst;
             sprintf(g_msg,"(First article is %ld)",(long)g_absfirst);
@@ -196,25 +220,37 @@ numnum_result numnum()
         if ((t=strchr(t,'-')) != nullptr) {
             t++;
             if (*t == '$')
+            {
                 max = g_lastart;
+            }
             else if (*t == '.')
+            {
                 max = oldart;
+            }
             else
+            {
                 max = atol(t);
+            }
         }
         else
+        {
             max = min;
+        }
         if (max>g_lastart) {
             max = g_lastart;
             if (min > max)
+            {
                 min = max;
+            }
             sprintf(g_msg,"(Last article is %ld)",(long)g_lastart);
             warnmsg(g_msg);
         }
         if (max < min) {
             errormsg("Bad range");
             if (cmdlst)
+            {
                 free(cmdlst);
+            }
             return NN_ASK;
         }
         if (justone) {
@@ -225,21 +261,31 @@ numnum_result numnum()
             g_artp = article_ptr(g_art);
             if (perform(cmdlst,output_level && g_page_line == 1) < 0) {
                 if (g_verbose)
-                    sprintf(g_msg,"(Interrupted at article %ld)",(long)g_art);
+                {
+                    sprintf(g_msg, "(Interrupted at article %ld)", (long) g_art);
+                }
                 else
-                    sprintf(g_msg,"(Intr at %ld)",(long)g_art);
+                {
+                    sprintf(g_msg, "(Intr at %ld)", (long) g_art);
+                }
                 errormsg(g_msg);
                 if (cmdlst)
+                {
                     free(cmdlst);
+                }
                 return NN_ASK;
             }
             if (!output_level)
+            {
                 perform_status(g_ngptr->toread, 50);
+            }
         }
     }
     g_art = oldart;
     if (cmdlst)
+    {
         free(cmdlst);
+    }
     return NN_NORM;
 }
 
@@ -252,19 +298,27 @@ int thread_perform()
     bool    one_thread = false;
 
     if (!finish_command(true))  /* get rest of command */
+    {
         return 0;
+    }
     if (!g_buf[1])
+    {
         return -1;
+    }
     int len = 1;
     if (g_buf[1] == ':') {
         bits = 0;
         len++;
     }
     else
+    {
         bits = SF_VISIT;
+    }
     if (g_buf[len] == '.') {
         if (!g_artp)
+        {
             return -1;
+        }
         one_thread = true;
         len++;
     }
@@ -285,12 +339,18 @@ int thread_perform()
        || *cmdstr == 'T' || *cmdstr == 'A'))) {
         g_performed_article_loop = false;
         if (one_thread)
-            sp = (g_sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
+        {
+            sp = (g_sel_mode == SM_THREAD ? g_artp->subj->thread->subj : g_artp->subj);
+        }
         else
-            sp = next_subj((SUBJECT*)nullptr,bits);
+        {
+            sp = next_subj((SUBJECT *) nullptr, bits);
+        }
         for ( ; sp; sp = next_subj(sp,bits)) {
             if ((!(sp->flags & g_sel_mask) ^ !bits) || !sp->misc)
+            {
                 continue;
+            }
             g_artp = first_art(sp);
             if (g_artp) {
                 g_art = article_num(g_artp);
@@ -300,13 +360,17 @@ int thread_perform()
                 }
             }
             if (one_thread)
+            {
                 break;
+            }
         }
 #if 0
     } else if (!strcmp(cmdstr, "E")) {
         /* The 'E'nd-decode command doesn't do any looping at all. */
         if (decode_fp)
+        {
             decode_end();
+        }
 #endif
     } else if (*cmdstr == 'p') {
         ART_NUM oldart = g_art;
@@ -324,7 +388,9 @@ int thread_perform()
             for (ARTICLE **app = g_artptr_list; app < limit; app++) {
                 ap = *app;
                 if (one_thread && ap->subj->thread != sp->thread)
+                {
                     continue;
+                }
                 if ((!(ap->flags & AF_UNREAD) ^ want_unread)
                  && !(ap->flags & g_sel_mask) ^ !!bits) {
                     g_art = article_num(ap);
@@ -335,17 +401,25 @@ int thread_perform()
                     }
                 }
                 if (!output_level)
+                {
                     perform_status(g_ngptr->toread, 50);
+                }
             }
         } else {
             if (one_thread)
-                sp = (g_sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
+            {
+                sp = (g_sel_mode == SM_THREAD ? g_artp->subj->thread->subj : g_artp->subj);
+            }
             else
-                sp = next_subj((SUBJECT*)nullptr,bits);
+            {
+                sp = next_subj((SUBJECT *) nullptr, bits);
+            }
             for ( ; sp; sp = next_subj(sp,bits)) {
                 for (ap = first_art(sp); ap; ap = next_art(ap))
+                {
                     if ((!(ap->flags & AF_UNREAD) ^ want_unread)
-                     && !(ap->flags & g_sel_mask) ^ !!bits) {
+                        && !(ap->flags & g_sel_mask) ^ !!bits)
+                    {
                         g_art = article_num(ap);
                         g_artp = ap;
                         if (perform(cmdstr,output_level && g_page_line==1) < 0) {
@@ -353,10 +427,15 @@ int thread_perform()
                             goto break_out;
                         }
                     }
+                }
                 if (one_thread)
+                {
                     break;
+                }
                 if (!output_level)
+                {
                     perform_status(g_ngptr->toread, 50);
+                }
             }
         }
     }
@@ -383,7 +462,9 @@ int perform(char *cmdlst, int output_level)
     g_perform_cnt++;
     for (; (ch = *cmdlst) != 0; cmdlst++) {
         if (isspace(ch) || ch == ':')
+        {
             continue;
+        }
         if (ch == 'j') {
             if (savemode) {
                 mark_as_read(g_artp);
@@ -392,20 +473,32 @@ int perform(char *cmdlst, int output_level)
             else if (!was_read(g_art)) {
                 mark_as_read(g_artp);
                 if (output_level && g_verbose)
-                    fputs("\tJunked",stdout);
+                {
+                    fputs("\tJunked", stdout);
+                }
             }
             if (g_sel_rereading)
-                deselect_article(g_artp, output_level? ALSO_ECHO : AUTO_KILL_NONE);
+            {
+                deselect_article(g_artp, output_level ? ALSO_ECHO : AUTO_KILL_NONE);
+            }
         } else if (ch == '+') {
             if (savemode || cmdlst[1] == '+') {
                 if (g_sel_mode == SM_THREAD)
-                    select_arts_thread(g_artp, savemode? AUTO_SEL_THD : AUTO_KILL_NONE);
+                {
+                    select_arts_thread(g_artp, savemode ? AUTO_SEL_THD : AUTO_KILL_NONE);
+                }
                 else
-                    select_arts_subject(g_artp, savemode? AUTO_SEL_SBJ : AUTO_KILL_NONE);
+                {
+                    select_arts_subject(g_artp, savemode ? AUTO_SEL_SBJ : AUTO_KILL_NONE);
+                }
                 if (cmdlst[1] == '+')
+                {
                     cmdlst++;
+                }
             } else
-                select_article(g_artp, output_level? ALSO_ECHO : AUTO_KILL_NONE);
+            {
+                select_article(g_artp, output_level ? ALSO_ECHO : AUTO_KILL_NONE);
+            }
         } else if (ch == 'S') {
             select_arts_subject(g_artp, AUTO_SEL_SBJ);
         } else if (ch == '.') {
@@ -413,29 +506,43 @@ int perform(char *cmdlst, int output_level)
         } else if (ch == '-') {
             if (cmdlst[1] == '-') {
                 if (g_sel_mode == SM_THREAD)
+                {
                     deselect_arts_thread(g_artp);
+                }
                 else
+                {
                     deselect_arts_subject(g_artp);
+                }
                 cmdlst++;
             } else
-                deselect_article(g_artp, output_level? ALSO_ECHO : AUTO_KILL_NONE);
+            {
+                deselect_article(g_artp, output_level ? ALSO_ECHO : AUTO_KILL_NONE);
+            }
         } else if (ch == ',') {
             kill_subthread(g_artp, AFFECT_ALL | (savemode? AUTO_KILL_FOL : AUTO_KILL_NONE));
         } else if (ch == 'J') {
             if (g_sel_mode == SM_THREAD)
-                kill_arts_thread(g_artp,AFFECT_ALL|(savemode? AUTO_KILL_THD:AUTO_KILL_NONE));
+            {
+                kill_arts_thread(g_artp, AFFECT_ALL | (savemode ? AUTO_KILL_THD : AUTO_KILL_NONE));
+            }
             else
-                kill_arts_subject(g_artp,AFFECT_ALL|(savemode? AUTO_KILL_SBJ:AUTO_KILL_NONE));
+            {
+                kill_arts_subject(g_artp, AFFECT_ALL | (savemode ? AUTO_KILL_SBJ : AUTO_KILL_NONE));
+            }
         } else if (ch == 'K' || ch == 'k') {
             kill_arts_subject(g_artp, AFFECT_ALL|(savemode? AUTO_KILL_SBJ : AUTO_KILL_NONE));
         } else if (ch == 'x') {
             if (!was_read(g_art)) {
                 oneless(g_artp);
                 if (output_level && g_verbose)
-                    fputs("\tKilled",stdout);
+                {
+                    fputs("\tKilled", stdout);
+                }
             }
             if (g_sel_rereading)
+            {
                 deselect_article(g_artp, AUTO_KILL_NONE);
+            }
         } else if (ch == 't') {
             entire_tree(g_artp);
         } else if (ch == 'T') {
@@ -444,18 +551,24 @@ int perform(char *cmdlst, int output_level)
             savemode = 2;
         } else if (ch == 'm') {
             if (savemode)
+            {
                 change_auto_flags(g_artp, AUTO_SEL_1);
+            }
             else if ((g_artp->flags & (AF_UNREAD|AF_EXISTS)) == AF_EXISTS) {
                 unmark_as_read(g_artp);
                 if (output_level && g_verbose)
-                    fputs("\tMarked unread",stdout);
+                {
+                    fputs("\tMarked unread", stdout);
+                }
             }
         }
         else if (ch == 'M') {
             delay_unmark(g_artp);
             oneless(g_artp);
             if (output_level && g_verbose)
-                fputs("\tWill return",stdout);
+            {
+                fputs("\tWill return", stdout);
+            }
         }
         else if (ch == '=') {
             carriage_return();
@@ -465,35 +578,53 @@ int perform(char *cmdlst, int output_level)
         else if (ch == 'C') {
             int ret = cancel_article();
             if (output_level && g_verbose)
-                printf("\t%sanceled",ret? "Not c" : "C");
+            {
+                printf("\t%sanceled", ret ? "Not c" : "C");
+            }
         }
         else if (ch == '%') {
             char tmpbuf[512];
 
             if (g_one_command)
+            {
                 interp(tmpbuf, (sizeof tmpbuf), cmdlst);
+            }
             else
-                cmdlst = dointerp(tmpbuf,sizeof tmpbuf,cmdlst,":",nullptr) - 1;
+            {
+                cmdlst = dointerp(tmpbuf, sizeof tmpbuf, cmdlst, ":", nullptr) - 1;
+            }
             g_perform_cnt--;
             if (perform(tmpbuf,output_level?2:0) < 0)
+            {
                 return -1;
+            }
         }
         else if (strchr("!&sSwWae|",ch)) {
             if (g_one_command)
-                strcpy(g_buf,cmdlst);
+            {
+                strcpy(g_buf, cmdlst);
+            }
             else
-                cmdlst = cpytill(g_buf,cmdlst,':') - 1;
+            {
+                cmdlst = cpytill(g_buf, cmdlst, ':') - 1;
+            }
             /* we now have the command in g_buf */
             if (ch == '!') {
                 escapade();
                 if (output_level && g_verbose)
-                    fputs("\tShell escaped",stdout);
+                {
+                    fputs("\tShell escaped", stdout);
+                }
             }
             else if (ch == '&') {
                 switcheroo();
                 if (output_level && g_verbose)
+                {
                     if (g_buf[1] && g_buf[1] != '&')
-                        fputs("\tSwitched",stdout);
+                    {
+                        fputs("\tSwitched", stdout);
+                    }
+                }
             }
             else {
                 if (output_level != 1) {
@@ -501,9 +632,13 @@ int perform(char *cmdlst, int output_level)
                     printf("%-6ld ",g_art);
                 }
                 if (ch == 'a')
+                {
                     view_article();
+                }
                 else
+                {
                     save_article();
+                }
                 newline();
                 output_level = 0;
             }
@@ -514,12 +649,18 @@ int perform(char *cmdlst, int output_level)
             return -1;
         }
         if (output_level && g_verbose)
+        {
             fflush(stdout);
+        }
         if (g_one_command)
+        {
             break;
+        }
     }
     if (output_level && g_verbose)
+    {
         newline();
+    }
     if (g_int_count) {
         g_int_count = 0;
         return -1;
@@ -533,19 +674,27 @@ int ngsel_perform()
     bool one_group = false;
 
     if (!finish_command(true))  /* get rest of command */
+    {
         return 0;
+    }
     if (!g_buf[1])
+    {
         return -1;
+    }
     int len = 1;
     if (g_buf[1] == ':') {
         bits = NF_NONE;
         len++;
     }
     else
+    {
         bits = NF_INCLUDED;
+    }
     if (g_buf[len] == '.') {
         if (!g_ngptr)
+        {
             return -1;
+        }
         one_group = true;
         len++;
     }
@@ -562,12 +711,16 @@ int ngsel_perform()
     for (g_ngptr = g_first_ng; g_ngptr; g_ngptr = g_ngptr->next) {
         if (g_sel_rereading? g_ngptr->toread != TR_NONE
                          : g_ngptr->toread < g_ng_min_toread)
+        {
             continue;
+        }
         set_ng(g_ngptr);
         if ((g_ngptr->flags & bits) == bits
          && (!(g_ngptr->flags & static_cast<newsgroup_flags>(g_sel_mask)) ^ !!bits)) {
             if (ng_perform(cmdstr, 0) < 0)
+            {
                 break;
+            }
         }
         perform_status(g_newsgroup_toread, 50);
     }
@@ -589,7 +742,9 @@ int ng_perform(char *cmdlst, int output_level)
     g_perform_cnt++;
     for (; (ch = *cmdlst) != 0; cmdlst++) {
         if (isspace(ch) || ch == ':')
+        {
             continue;
+        }
         switch (ch) {
           case '+':
             if (!(g_ngptr->flags & static_cast<newsgroup_flags>(g_sel_mask))) {
@@ -605,7 +760,9 @@ int ng_perform(char *cmdlst, int output_level)
             if (g_ngptr->flags & static_cast<newsgroup_flags>(g_sel_mask)) {
                 g_ngptr->flags &= ~static_cast<newsgroup_flags>(g_sel_mask);
                 if (g_sel_rereading)
+                {
                     g_ngptr->flags |= NF_DEL;
+                }
                 g_selected_count--;
             }
             break;
@@ -626,12 +783,18 @@ int ng_perform(char *cmdlst, int output_level)
             return -1;
         }
         if (output_level && g_verbose)
+        {
             fflush(stdout);
+        }
         if (g_one_command)
+        {
             break;
+        }
     }
     if (output_level && g_verbose)
+    {
         newline();
+    }
     if (g_int_count) {
         g_int_count = 0;
         return -1;
@@ -645,19 +808,27 @@ int addgrp_sel_perform()
     bool one_group = false;
 
     if (!finish_command(true))  /* get rest of command */
+    {
         return 0;
+    }
     if (!g_buf[1])
+    {
         return -1;
+    }
     int len = 1;
     if (g_buf[1] == ':') {
         bits = 0;
         len++;
     }
     else
+    {
         bits = g_sel_mask;
+    }
     if (g_buf[len] == '.') {
         if (g_first_addgroup) /*$$*/
+        {
             return -1;
+        }
         one_group = true;
         len++;
     }
@@ -674,7 +845,9 @@ int addgrp_sel_perform()
     for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next) {
         if (!(gp->flags & g_sel_mask) ^ !!bits) {
             if (addgrp_perform(gp, cmdstr, 0) < 0)
+            {
                 break;
+            }
         }
         perform_status(g_newsgroup_toread, 50);
     }
@@ -696,7 +869,9 @@ int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level)
     g_perform_cnt++;
     for (; (ch = *cmdlst) != 0; cmdlst++) {
         if (isspace(ch) || ch == ':')
+        {
             continue;
+        }
         if (ch == '+') {
             gp->flags |= AGF_SEL;
             g_selected_count++;
@@ -710,12 +885,18 @@ int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level)
             return -1;
         }
         if (output_level && g_verbose)
+        {
             fflush(stdout);
+        }
         if (g_one_command)
+        {
             break;
+        }
     }
     if (output_level && g_verbose)
+    {
         newline();
+    }
     if (g_int_count) {
         g_int_count = 0;
         return -1;

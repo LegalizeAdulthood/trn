@@ -57,17 +57,23 @@ int putsubstchar(int c, int limit, bool outputok)
         {
             if (outputok) {
                 for (int t2 = 0; t2 < i; t2++)
-                    putchar((char)nc[t2]);
+                {
+                    putchar((char) nc[t2]);
+                }
             }
         }
         else
+        {
             i = -1;
+        }
         break;
     case 't':
         if (c == '\\' || c == '"') {
             if (s_texchar && (c == '\\' || s_texchar != '\\')) {
                 if (outputok)
+                {
                     putchar(s_texchar);
+                }
                 i++;
             }
             s_texchar = (char)c;
@@ -75,7 +81,9 @@ int putsubstchar(int c, int limit, bool outputok)
         }
         else if (s_texchar == '\\') {
             if (outputok)
+            {
                 putchar('\\');
+            }
             if (limit == 1) {
                 i = -2;
                 break;
@@ -85,15 +93,23 @@ int putsubstchar(int c, int limit, bool outputok)
         else if (s_texchar == '"') {
             Uchar d;
             if (c < 32 || c > 128)
+            {
                 d = '\0';
+            }
             else
-                d = s_textbl[c-32];
+            {
+                d = s_textbl[c - 32];
+            }
             s_texchar = '\0'; 
             if (d)
+            {
                 c = d;
+            }
             else {
                 if (outputok)
+                {
                     putchar('"');
+                }
                 if (limit == 1) {
                     i = -2;
                     break;
@@ -104,7 +120,9 @@ int putsubstchar(int c, int limit, bool outputok)
         /* FALL THROUGH */
     default: 
         if (outputok)
+        {
             putchar(c);
+        }
         i++;
         break;
     }
@@ -168,7 +186,9 @@ int strcharsubst(char *outb, const char *inb, int limit, char_int subst)
             limit = len + 1;
         }
         else
+        {
             len = strlen(inb);
+        }
         safecpy(outb, inb, limit);
         return len;
     }
@@ -232,7 +252,9 @@ static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t)
     Uchar *s = asc;
 
     if (iso == nullptr || asc == nullptr || limit <= 0)
+    {
         return 0;
+    }
     if (limit == 1)
     {
         *s = '\0';
@@ -256,13 +278,17 @@ static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t)
         }
         else {
             if (*iso < 0x80)
+            {
                 *s++ = *iso++;
+            }
             else {
                 *s++ = ' ';
                 iso++;
             }
             if (!--limit)
+            {
                 break;
+            }
         }
     }
     *s = '\0';

@@ -42,7 +42,9 @@ ART_POS vrdary(ART_LINE indx)
     }
 #endif
     if (indx < 0)
+    {
         return 0;
+    }
     subindx = indx % VARYSIZE;
     offset = (indx - subindx) * sizeof(s_varybuf[0]);
     if (offset != s_oldoffset) {

@@ -97,8 +97,12 @@ int s_new_context(scontext_type type)
 
     /* check for deleted contexts */
     for (i = 0; i < g_s_num_contexts; i++)
+    {
         if (g_s_contexts[i].type == S_NONE)     /* deleted context */
+        {
             break;
+        }
+    }
     if (i < g_s_num_contexts) { /* a deleted one was found */
         s_init_context(i,type);
         return i;

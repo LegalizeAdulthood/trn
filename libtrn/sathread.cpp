@@ -40,9 +40,13 @@ long sa_get_subj_thread(long e)
     g_untrim_cache = old_untrim;
 
     if (!s || !*s)
+    {
       return -2;
+    }
     if ((*s == '>') && (s[1] == ' '))
+    {
         s += 2;
+    }
 
     if (!s_sa_thread_hash) {
         s_sa_thread_hash = hashcreate(401, HASH_DEFCMPFUNC);
@@ -67,8 +71,12 @@ int sa_subj_thread_count(long a)
     long b = a;
 
     while ((b = sa_subj_thread_next(b)) != 0)
+    {
         if (sa_basic_elig(b))
+        {
             count++;
+        }
+    }
     return count;
 }
 
@@ -80,11 +88,17 @@ long sa_subj_thread_prev(long a)
     int i = sa_subj_thread(a);
     while ((a = s_prev(a)) != 0) {
         if (!sa_basic_elig(a))
+        {
             continue;
+        }
         if (!(j = g_sa_ents[a].subj_thread_num))
+        {
             j = sa_subj_thread(a);
+        }
         if (i == j)
+        {
             return a;
+        }
     }
     return 0L;
 }
@@ -96,11 +110,17 @@ long sa_subj_thread_next(long a)
     int i = sa_subj_thread(a);
     while ((a = s_next(a)) != 0) {
         if (!sa_basic_elig(a))
+        {
             continue;
+        }
         if (!(j = g_sa_ents[a].subj_thread_num))
+        {
             j = sa_subj_thread(a);
+        }
         if (i == j)
+        {
             return a;
+        }
     }
     return 0L;
 }

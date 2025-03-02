@@ -72,12 +72,18 @@ void init_tree()
     ARTICLE*thread;
 
     while (s_max_line >= 0)             /* free any previous tree data */
+    {
         free(s_tree_lines[s_max_line--]);
+    }
 
     if (!(s_tree_article = g_curr_artp) || !s_tree_article->subj)
+    {
         return;
+    }
     if (!(thread = s_tree_article->subj->thread))
+    {
         return;
+    }
     /* Enumerate our subjects for display */
     SUBJECT *sp = thread->subj;
     int      num = 0;
@@ -94,10 +100,14 @@ void init_tree()
     find_depth(thread, 0);
 
     if (s_max_depth <= 5)
+    {
         s_first_depth = 0;
+    }
     else {
         if (s_my_depth+2 > s_max_depth)
+        {
             s_first_depth = s_max_depth - 5;
+        }
         else
         {
             s_first_depth = s_my_depth - 3;
@@ -107,10 +117,14 @@ void init_tree()
         s_max_depth = s_first_depth + 5;
     }
     if (--s_max_line < g_max_tree_lines)
+    {
         s_first_line = 0;
+    }
     else {
         if (s_my_line + g_max_tree_lines/2 > s_max_line)
-            s_first_line = s_max_line - (g_max_tree_lines-1);
+        {
+            s_first_line = s_max_line - (g_max_tree_lines - 1);
+        }
         else
         {
             s_first_line = s_my_line - (g_max_tree_lines - 1) / 2;
@@ -131,7 +145,9 @@ void init_tree()
     s_max_line -= s_first_line;                 /* turn s_max_line into count */
     /* shorten tree if lower lines aren't visible */
     if (s_node_line_cnt < s_max_line)
+    {
         s_max_line = s_node_line_cnt + 1;
+    }
 }
 
 /* A recursive routine to find the maximum tree extents and where we are.
@@ -146,11 +162,17 @@ static void find_depth(ARTICLE *article, int depth)
             s_my_line = s_max_line;
         }
         if (article->child1)
-            find_depth(article->child1, depth+1);
+        {
+            find_depth(article->child1, depth + 1);
+        }
         else
+        {
             s_max_line++;
+        }
         if (!(article = article->sibling))
+        {
             break;
+        }
     }
 }
 
@@ -165,7 +187,9 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
         cp += 5;
         depth_mode = 1;
     } else if (depth+1 == s_first_depth)
+    {
         depth_mode = 2;
+    }
     else {
         cp = s_tree_indent;
         depth_mode = 0;
@@ -177,7 +201,9 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
 
             *s_str++ = ((ap->flags & AF_HAS_RE) || ap->parent) ? '-' : ' ';
             if (ap == s_tree_article)
+            {
                 *s_str++ = '*';
+            }
             if (!(ap->flags & AF_UNREAD)) {
                 *s_str++ = '(';
                 ch = ')';
@@ -189,15 +215,23 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
                 ch = '>';
             }
             if (ap == g_recent_artp && ap != s_tree_article)
+            {
                 *s_str++ = '@';
+            }
             *s_str++ = thread_letter(ap);
             *s_str++ = ch;
             if (ap->child1)
-                *s_str++ = (ap->child1->sibling? '+' : '-');
+            {
+                *s_str++ = (ap->child1->sibling ? '+' : '-');
+            }
             if (ap->sibling)
+            {
                 *cp = '|';
+            }
             else
+            {
                 *cp = ' ';
+            }
             s_node_on_line = true;
             break;
         }
@@ -213,10 +247,14 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
             cp[1] = '\0';
         } else {
             if (!s_node_on_line && s_first_line == s_line_num)
+            {
                 s_first_line++;
+            }
             if (s_line_num >= s_first_line) {
                 if (s_str[-1] == ' ')
+                {
                     s_str--;
+                }
                 *s_str = '\0';
                 s_tree_lines[s_line_num-s_first_line]
                         = safemalloc(s_str-s_tree_buff + 1);
@@ -229,11 +267,17 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
             s_node_on_line = false;
         }
         if (!(ap = ap->sibling) || s_line_num > s_max_line)
+        {
             break;
+        }
         if (!ap->sibling)
+        {
             *cp = '\\';
+        }
         if (!s_first_depth)
+        {
             s_tree_indent[5] = ' ';
+        }
         strcpy(s_tree_buff, s_tree_indent+5);
         s_str = s_tree_buff + strlen(s_tree_buff);
     }
@@ -244,11 +288,15 @@ static int s_find_artp_y{};
 ARTICLE *get_tree_artp(int x, int y)
 {
     if (!s_tree_article || !s_tree_article->subj)
+    {
         return nullptr;
+    }
     ARTICLE *ap = s_tree_article->subj->thread;
     x -= g_tc_COLS-1 - s_max_depth;
     if (x < 0 || y > s_max_line || !ap)
+    {
         return nullptr;
+    }
     x = (x-(x==s_max_depth))/5 + s_first_depth;
     s_find_artp_y = y + s_first_line;
     ap = find_artp(ap, x);
@@ -261,16 +309,24 @@ static ARTICLE *find_artp(ARTICLE *article, int x)
 {
     for (;;) {
         if (!x && !s_find_artp_y)
+        {
             return article;
+        }
         if (article->child1) {
             ARTICLE* ap = find_artp(article->child1, x-1);
             if (ap)
+            {
                 return ap;
+            }
         }
         else if (!s_find_artp_y--)
+        {
             return nullptr;
+        }
         if (!(article = article->sibling))
+        {
             break;
+        }
     }
     return nullptr;
 }
@@ -296,9 +352,13 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
     /* Make a modifiable copy of the line */
     char *cp = strchr(orig_line, '\n');
     if (cp != nullptr)
+    {
         len = cp - orig_line;
+    }
     else
+    {
         len = strlen(orig_line);
+    }
 
     /* Copy line, filtering encoded and control characters. */
     if (header_conv()) {
@@ -311,7 +371,9 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
         line = tmpbuf;
     }
     if (g_do_hiding)
+    {
         end = line + decode_header(line, orig_line, len);
+    }
     else {
         safecpy(line, orig_line, len+1);
         dectrl(line);
@@ -350,7 +412,9 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
             ** _except_ for the first line, which is a non-standard header.
             */
             if (!header_line || !(cp = strchr(line, ':')) || *++cp != ' ')
+            {
                 s_header_indent = 0;
+            }
             else {
                 *cp = '\0';
                 fputs(line, stdout);
@@ -358,7 +422,9 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
                 s_header_indent = ++cp - line;
                 line = cp;
                 if (!*line)
+                {
                     *--line = ' ';
+                }
             }
             i = 0;
         } else {
@@ -372,14 +438,20 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
         if (i) {
             putchar('+');
             while (--i)
+            {
                 putchar(' ');
+            }
         }
         g_term_col = s_header_indent;
         /* If no (more) tree lines, wrap at g_tc_COLS-1 */
         if (s_max_line < 0 || header_line > s_max_line+1)
-            wrap_at = g_tc_COLS-1;
+        {
+            wrap_at = g_tc_COLS - 1;
+        }
         else
+        {
             wrap_at = g_tc_COLS - s_max_depth - 3;
+        }
         /* Figure padding between header and tree output, wrapping long lines */
         int pad_cnt = wrap_at - (end - line + s_header_indent);
         if (pad_cnt <= 0) {
@@ -406,15 +478,23 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
             ch = '\0';
         }
         if (is_subject)
+        {
             color_string(COLOR_SUBJECT, line);
+        }
         else if (s_header_indent == 0 && *line != '+')
+        {
             color_string(COLOR_ARTLINE1, line);
+        }
         else
+        {
             fputs(line, stdout);
+        }
         *cp = ch;
         /* Skip whitespace in wrapped line */
         while (*cp == ' ')
+        {
             cp++;
+        }
         line = cp;
         /* Check if we've got any tree lines to output */
         if (wrap_at != g_tc_COLS-1 && header_line <= s_max_line) {
@@ -429,9 +509,13 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
             char *cp1 = strchr(cp, '*');
             char *cp2 = strchr(cp, '@');
             if (cp1 != nullptr)
+            {
                 *cp1 = '\0';
+            }
             if (cp2 != nullptr)
+            {
                 *cp2 = '\0';
+            }
             color_object(COLOR_TREE, true);
             fputs(cp, stdout);
             /* Handle standout output for '*' and '@' marked nodes, then
@@ -453,7 +537,9 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
                 putchar(*cp++);
                 color_pop();    /* of COLOR_TREE_MARK */
                 if (*cp)
+                {
                     fputs(cp, stdout);
+                }
             }/* while */
             color_pop();        /* of COLOR_TREE */
         }/* if */
@@ -490,9 +576,13 @@ void entire_tree(ARTICLE* ap)
 {
     if (!ap) {
         if (g_verbose)
+        {
             fputs("\nNo article tree to display.\n", stdout);
+        }
         else
+        {
             fputs("\nNo tree.\n", stdout);
+        }
         termdown(2);
         return;
     }
@@ -511,9 +601,13 @@ void entire_tree(ARTICLE* ap)
         newline();
     }
     if (!(ap->flags & AF_THREADED))
+    {
         parseheader(article_num(ap));
+    }
     if (check_page_line())
+    {
         return;
+    }
     newline();
     ARTICLE *thread = ap->subj->thread;
     /* Enumerate our subjects for display */
@@ -521,23 +615,31 @@ void entire_tree(ARTICLE* ap)
     int      num = 0;
     do {
         if (check_page_line())
+        {
             return;
+        }
         printf("[%c] %s\n",s_letters[num>9+26+26? 9+26+26:num],sp->str+4);
         termdown(1);
         sp->misc = num++;
         sp = sp->thread_link;
     } while (sp != thread->subj);
     if (check_page_line())
+    {
         return;
+    }
     newline();
     if (check_page_line())
+    {
         return;
+    }
     putchar(' ');
     g_buf[3] = '\0';
     display_tree(thread, s_tree_indent);
 
     if (check_page_line())
+    {
         return;
+    }
     newline();
 }
 
@@ -546,7 +648,9 @@ void entire_tree(ARTICLE* ap)
 static void display_tree(ARTICLE *article, char *cp)
 {
     if (cp - s_tree_indent > g_tc_COLS || g_page_line < 0)
+    {
         return;
+    }
     cp[1] = ' ';
     cp += 5;
     color_object(COLOR_TREE, true);
@@ -572,12 +676,16 @@ static void display_tree(ARTICLE *article, char *cp)
             color_pop();        /* of COLOR_TREE_MARK */
             putchar(g_buf[2]);
         } else
+        {
             fputs(g_buf, stdout);
+        }
 
         if (article->sibling) {
             *cp = '|';
         } else
+        {
             *cp = ' ';
+        }
         if (article->child1) {
             putchar((article->child1->sibling)? '+' : '-');
             color_pop();        /* of COLOR_TREE */
@@ -585,11 +693,17 @@ static void display_tree(ARTICLE *article, char *cp)
             color_object(COLOR_TREE, true);
             cp[1] = '\0';
         } else
+        {
             newline();
+        }
         if (!(article = article->sibling))
+        {
             break;
+        }
         if (!article->sibling)
+        {
             *cp = '\\';
+        }
         s_tree_indent[5] = ' ';
         if (check_page_line()) {
             color_pop();
@@ -611,8 +725,12 @@ char thread_letter(ARTICLE *ap)
     if (!(ap->flags & AF_CACHED)
      && (g_absfirst < g_first_cached || g_last_cached < g_lastart
       || !g_cached_all_in_range))
+    {
         return '?';
+    }
     if (!(ap->flags & AF_EXISTS))
+    {
         return ' ';
+    }
     return s_letters[subj > 9+26+26 ? 9+26+26 : subj];
 }

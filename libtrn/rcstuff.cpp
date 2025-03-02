@@ -88,30 +88,43 @@ static MULTIRC *rcstuff_init_data()
         char *s = g_trnaccess_mem;
         while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
             if (*cond && !check_ini_cond(cond))
+            {
                 continue;
+            }
             if (string_case_compare(section, "group ", 6))
+            {
                 continue;
+            }
             int i = atoi(section + 6);
             if (i < 0)
+            {
                 i = 0;
+            }
             s = parse_ini_section(s, s_rcgroups_ini);
             if (!s)
+            {
                 break;
+            }
             NEWSRC *rp = new_newsrc(vals[RI_ID], vals[RI_NEWSRC], vals[RI_ADDGROUPS]);
             if (rp) {
                 MULTIRC *mp = multirc_ptr(i);
                 NEWSRC * prev_rp = mp->first;
                 if (!prev_rp)
+                {
                     mp->first = rp;
+                }
                 else {
                     while (prev_rp->next)
+                    {
                         prev_rp = prev_rp->next;
+                    }
                     prev_rp->next = rp;
                 }
                 mp->num = i;
                 if (!mptr)
+                {
                     mptr = mp;
-                /*rp->flags |= RF_USED;*/
+                }
             }
             /*else
                 ;$$complain?*/
@@ -127,11 +140,15 @@ bool rcstuff_init()
     MULTIRC *mptr = rcstuff_init_data();
 
     if (g_use_newsrc_selector && !g_checkflag)
+    {
         return true;
+    }
 
     s_foundany = false;
     if (mptr && !use_multirc(mptr))
+    {
         use_next_multirc(mptr);
+    }
     if (!g_multirc) {
         mptr = multirc_ptr(0);
         mptr->first = new_newsrc("default",nullptr,nullptr);
@@ -141,7 +158,9 @@ bool rcstuff_init()
         }
     }
     if (g_checkflag)                    /* were we just checking? */
+    {
         finalize(s_foundany);           /* tell them what we found */
+    }
     return s_foundany;
 }
 
@@ -164,17 +183,23 @@ void rcstuff_final()
 NEWSRC *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
 {
     if (!name || !*name)
+    {
         return nullptr;
+    }
 
     if (!newsrc || !*newsrc) {
         newsrc = get_val_const("NEWSRC");
         if (!newsrc)
+        {
             newsrc = RCNAME;
+        }
     }
 
     DATASRC *dp = get_datasrc(name);
     if (!dp)
+    {
         return nullptr;
+    }
 
     NEWSRC *rp = (NEWSRC*)safemalloc(sizeof(NEWSRC));
     memset((char*)rp,0,sizeof (NEWSRC));
@@ -192,7 +217,9 @@ NEWSRC *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
         break;
     default:
         if (dp->flags & DF_ADD_OK)
+        {
             rp->flags |= RF_ADD_NEWGROUPS;
+        }
         /* FALL THROUGH */
     case 'm':
     case 'M':
@@ -220,13 +247,19 @@ bool use_multirc(MULTIRC *mp)
         }
     }
     if (had_trouble)
+    {
         get_anything();
+    }
     if (!had_success)
+    {
         return false;
+    }
     g_multirc = mp;
 #ifdef NO_FILELINKS
     if (!write_newsrcs(g_multirc))
+    {
         get_anything();
+    }
 #endif
     return true;
 }
@@ -234,7 +267,9 @@ bool use_multirc(MULTIRC *mp)
 void unuse_multirc(MULTIRC *mptr)
 {
     if (!mptr)
+    {
         return;
+    }
 
     write_newsrcs(mptr);
 
@@ -272,13 +307,17 @@ bool use_next_multirc(MULTIRC *mptr)
     for (;;) {
         mp = multirc_next(mp);
         if (!mp)
+        {
             mp = multirc_low();
+        }
         if (mp == mptr) {
             use_multirc(mptr);
             return false;
         }
         if (use_multirc(mp))
+        {
             break;
+        }
     }
     return true;
 }
@@ -292,13 +331,17 @@ bool use_prev_multirc(MULTIRC *mptr)
     for (;;) {
         mp = multirc_prev(mp);
         if (!mp)
+        {
             mp = multirc_high();
+        }
         if (mp == mptr) {
             use_multirc(mptr);
             return false;
         }
         if (use_multirc(mp))
+        {
             break;
+        }
     }
     return true;
 }
@@ -306,10 +349,14 @@ bool use_prev_multirc(MULTIRC *mptr)
 char *multirc_name(MULTIRC *mp)
 {
     if (mp->first->next)
+    {
         return "<each-newsrc>";
+    }
     char *cp = strrchr(mp->first->name, '/');
     if (cp != nullptr)
-        return cp+1;
+    {
+        return cp + 1;
+    }
     return mp->first->name;
 }
 
@@ -319,7 +366,9 @@ static bool clear_ngitem(char *cp, int arg)
 
     if (ncp->rcline != nullptr) {
         if (!g_checkflag)
+        {
             free(ncp->rcline);
+        }
         ncp->rcline = nullptr;
     }
     return false;
@@ -332,11 +381,15 @@ static bool lock_newsrc(NEWSRC *rp)
     long processnum = 0;
 
     if (g_checkflag)
+    {
         return true;
+    }
 
     char *s = filexp(RCNAME);
     if (!strcmp(rp->name,s))
+    {
         rp->lockname = savestr(filexp(LOCKNAME));
+    }
     else {
         sprintf(g_buf, RCNAME_INFO, rp->name);
         rp->infoname = savestr(g_buf);
@@ -467,7 +520,9 @@ static bool open_newsrc(NEWSRC *rp)
                 fputs(g_ser_line,rcfp);
                 fputc('\n',rcfp);
                 if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
+                {
                     break;
+                }
             } while (!nntp_at_list_end(g_ser_line));
         }
         else if (*some_buf)
@@ -475,7 +530,9 @@ static bool open_newsrc(NEWSRC *rp)
             if (FILE *fp = fopen(filexp(some_buf), "r"))
             {
                 while (fgets(g_buf, sizeof g_buf, fp))
+                {
                     fputs(g_buf, rcfp);
+                }
                 fclose(fp);
             }
         }
@@ -511,9 +568,13 @@ static bool open_newsrc(NEWSRC *rp)
 
     NGDATA*   prev_np;
     if (g_ngdata_cnt)
-        prev_np = ngdata_ptr(g_ngdata_cnt-1);
+    {
+        prev_np = ngdata_ptr(g_ngdata_cnt - 1);
+    }
     else
+    {
         prev_np = nullptr;
+    }
 
     /* read in the .newsrc file */
 
@@ -521,20 +582,30 @@ static bool open_newsrc(NEWSRC *rp)
     while ((some_buf = get_a_line(g_buf, LBUFLEN,false,rcfp)) != nullptr) {
         long length = g_len_last_line_got; /* side effect of get_a_line */
         if (length <= 1)                   /* only a newline??? */
+        {
             continue;
+        }
         NGDATA *np = ngdata_ptr(g_ngdata_cnt++);
         if (prev_np)
+        {
             prev_np->next = np;
+        }
         else
+        {
             g_first_ng = np;
+        }
         np->prev = prev_np;
         prev_np = np;
         np->rc = rp;
         g_newsgroup_cnt++;
         if (some_buf[length-1] == '\n')
+        {
             some_buf[--length] = '\0';  /* wipe out newline */
+        }
         if (some_buf == g_buf)
+        {
             np->rcline = savestr(some_buf);  /* make semipermanent copy */
+        }
         else {
             /*NOSTRICT*/
 #ifndef lint
@@ -565,9 +636,13 @@ static bool open_newsrc(NEWSRC *rp)
         /* now find out how much there is to read */
 
         if (!inlist(g_buf) || (g_suppress_cn && s_foundany && !g_paranoid))
+        {
             np->toread = TR_NONE;       /* no need to calculate now */
+        }
         else
+        {
             set_toread(np, ST_LAX);
+        }
         if (np->toread > TR_NONE) {     /* anything unread? */
             if (!s_foundany) {
                 g_starthere = np;
@@ -575,15 +650,21 @@ static bool open_newsrc(NEWSRC *rp)
             }
             if (g_suppress_cn) {        /* if no listing desired */
                 if (g_checkflag)        /* if that is all they wanted */
+                {
                     finalize(1);        /* then bomb out */
+                }
             }
             else {
                 if (g_verbose)
+                {
                     printf("Unread news in %-40s %5ld article%s\n",
                         np->rcline,(long)np->toread,plural(np->toread));
+                }
                 else
+                {
                     printf("%s: %ld article%s\n",
                         np->rcline,(long)np->toread,plural(np->toread));
+                }
                 termdown(1);
                 if (g_int_count) {
                     g_countdown = 1;
@@ -593,7 +674,9 @@ static bool open_newsrc(NEWSRC *rp)
                     if (!--g_countdown) {
                         fputs("etc.\n",stdout);
                         if (g_checkflag)
+                        {
                             finalize(1);
+                        }
                         g_suppress_cn = true;
                     }
                 }
@@ -647,7 +730,9 @@ static bool open_newsrc(NEWSRC *rp)
     rp->datasrc->lastnewgrp = g_lastnewtime;
 
     if (g_paranoid && !g_checkflag)
+    {
         cleanup_newsrc(rp);
+    }
     return true;
 }
 
@@ -657,14 +742,18 @@ static void init_ngnode(LIST *list, LISTNODE *node)
     memset(node->data,0,list->items_per_node * list->item_size);
     NGDATA *np = (NGDATA*)node->data;
     for (ART_NUM i = node->low; i <= node->high; i++, np++)
+    {
         np->num = i;
+    }
 }
 
 static void parse_rcline(NGDATA *np)
 {
     char* s;
 
-    for (s=np->rcline; *s && *s!=':' && *s!=NEGCHAR && !isspace(*s); s++) ;
+    for (s=np->rcline; *s && *s!=':' && *s!=NEGCHAR && !isspace(*s); s++)
+    {
+    }
     int len = s - np->rcline;
     if ((!*s || isspace(*s)) && !g_checkflag) {
 #ifndef lint
@@ -694,14 +783,18 @@ void abandon_ng(NGDATA *np)
 
         while ((some_buf = get_a_line(g_buf, LBUFLEN,false,rcfp)) != nullptr) {
             if (g_len_last_line_got <= 0)
+            {
                 continue;
+            }
             some_buf[g_len_last_line_got-1] = '\0'; /* wipe out newline */
             if ((some_buf[length] == ':' || some_buf[length] == NEGCHAR)
              && !strncmp(np->rcline, some_buf, length)) {
                 break;
             }
             if (some_buf != g_buf)
+            {
                 free(some_buf);
+            }
         }
         fclose(rcfp);
     } else if (errno != ENOENT) {
@@ -712,14 +805,18 @@ void abandon_ng(NGDATA *np)
     if (some_buf == nullptr) {
         some_buf = np->rcline + np->numoffset;
         if (*some_buf == ' ')
+        {
             some_buf++;
+        }
         *some_buf = '\0';
         np->abs1st = 0;         /* force group to be re-calculated */
     }
     else {
         free(np->rcline);
         if (some_buf == g_buf)
+        {
             np->rcline = savestr(some_buf);
+        }
         else {
             /*NOSTRICT*/
 #ifndef lint
@@ -730,7 +827,9 @@ void abandon_ng(NGDATA *np)
     }
     parse_rcline(np);
     if (np->subscribechar == NEGCHAR)
+    {
         np->subscribechar = ':';
+    }
     np->rc->flags |= RF_RCCHANGED;
     set_toread(np, ST_LAX);
 }
@@ -745,9 +844,13 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
     char promptbuf[128];
 
     if (g_verbose)
+    {
         ntoforget = "Type n to forget about this newsgroup.\n";
+    }
     else
+    {
         ntoforget = "n to forget it.\n";
+    }
     if (strchr(what,'/')) {
         dingaling();
         printf("\nBad newsgroup name.\n");
@@ -756,11 +859,17 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
         if (g_fuzzy_get && (flags & GNG_FUZZY)) {
             flags &= ~GNG_FUZZY;
             if (find_close_match())
+            {
                 what = g_ngname.c_str();
+            }
             else
+            {
                 return false;
+            }
         } else
+        {
             return false;
+        }
     }
     set_ngname(what);
     g_ngptr = find_ng(g_ngname.c_str());
@@ -768,25 +877,37 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
         NEWSRC* rp;
         for (rp = g_multirc->first; rp; rp = rp->next) {
             if (!all_bits(rp->flags, RF_ADD_GROUPS | RF_ACTIVE))
+            {
                 continue;
+            }
             /*$$ this may scan a datasrc multiple times... */
             if (find_actgrp(rp->datasrc,g_buf,g_ngname.c_str(),g_ngname.length(),(ART_NUM)0))
-                break;  /*$$ let them choose which server */
+            {
+                break; /*$$ let them choose which server */
+            }
         }
         if (!rp) {
             dingaling();
             if (g_verbose)
-                printf("\nNewsgroup %s does not exist!\n",g_ngname.c_str());
+            {
+                printf("\nNewsgroup %s does not exist!\n", g_ngname.c_str());
+            }
             else
-                printf("\nNo %s!\n",g_ngname.c_str());
+            {
+                printf("\nNo %s!\n", g_ngname.c_str());
+            }
             termdown(2);
             if (g_novice_delays)
+            {
                 sleep(2);
+            }
             goto check_fuzzy_match;
         }
         addnew_type autosub;
         if (g_mode != MM_INITIALIZING || !(autosub = auto_subscribe(g_ngname.c_str())))
+        {
             autosub = g_addnewbydefault;
+        }
         if (autosub) {
             if (g_append_unsub) {
                 printf("(Adding %s to end of your .newsrc %ssubscribed)\n",
@@ -807,9 +928,13 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
             flags &= ~GNG_RELOC;
         } else {
             if (g_verbose)
-                sprintf(promptbuf,"\nNewsgroup %s not in .newsrc -- subscribe?",g_ngname.c_str());
+            {
+                sprintf(promptbuf, "\nNewsgroup %s not in .newsrc -- subscribe?", g_ngname.c_str());
+            }
             else
+            {
                 sprintf(promptbuf,"\nSubscribe %s?",g_ngname.c_str());
+            }
 reask_add:
             in_char(promptbuf,MM_ADD_NEWSGROUP_PROMPT,"ynYN");
             printcmd();
@@ -834,7 +959,9 @@ reask_add:
             }
             else if (*g_buf == 'n' || *g_buf == 'q') {
                 if (g_append_unsub)
+                {
                     g_ngptr = add_newsgroup(rp, g_ngname.c_str(), NEGCHAR);
+                }
                 return false;
             }
             else if (*g_buf == 'y') {
@@ -844,10 +971,14 @@ reask_add:
             else if (*g_buf == 'Y') {
                 g_addnewbydefault = ADDNEW_SUB;
                 if (g_append_unsub)
+                {
                     printf("(Adding %s to end of your .newsrc subscribed)\n",
                            g_ngname.c_str());
+                }
                 else
+                {
                     printf("(Subscribing to %s)\n", g_ngname.c_str());
+                }
                 termdown(1);
                 g_ngptr = add_newsgroup(rp, g_ngname.c_str(), ':');
                 flags &= ~GNG_RELOC;
@@ -875,21 +1006,31 @@ reask_add:
         }
     }
     else if (g_mode == MM_INITIALIZING)         /* adding new groups during init? */
+    {
         return false;
+    }
     else if (g_ngptr->subscribechar == NEGCHAR) {/* unsubscribed? */
         if (g_verbose)
+        {
             sprintf(promptbuf, "\nNewsgroup %s is unsubscribed -- resubscribe?", g_ngname.c_str());
+        }
         else
+        {
             sprintf(promptbuf, "\nResubscribe %s?", g_ngname.c_str());
+        }
 reask_unsub:
         in_char(promptbuf,MM_RESUBSCRIBE_PROMPT,"yn");
         printcmd();
         newline();
         if (*g_buf == 'h') {
             if (g_verbose)
+            {
                 printf("Type y or SP to resubscribe to %s.\n", g_ngname.c_str());
+            }
             else
-                fputs("y or SP to resubscribe.\n",stdout);
+            {
+                fputs("y or SP to resubscribe.\n", stdout);
+            }
             fputs(ntoforget,stdout);
             termdown(2);
             goto reask_unsub;
@@ -917,7 +1058,9 @@ reask_unsub:
     set_toread(g_ngptr, ST_STRICT);
     if (flags & GNG_RELOC) {
         if (!relocate_newsgroup(g_ngptr,-1))
+        {
             return false;
+        }
     }
     return g_ngptr->toread >= TR_NONE;
 }
@@ -929,9 +1072,13 @@ static NGDATA *add_newsgroup(NEWSRC *rp, const char *ngn, char_int c)
     NGDATA *np = ngdata_ptr(g_ngdata_cnt++);
     np->prev = g_last_ng;
     if (g_last_ng)
+    {
         g_last_ng->next = np;
+    }
     else
+    {
         g_first_ng = np;
+    }
     np->next = nullptr;
     g_last_ng = np;
     g_newsgroup_cnt++;
@@ -943,7 +1090,9 @@ static NGDATA *add_newsgroup(NEWSRC *rp, const char *ngn, char_int c)
     strcpy(np->rcline + np->numoffset, " ");
     np->subscribechar = c;              /* subscribe or unsubscribe */
     if (c != NEGCHAR)
+    {
         g_newsgroup_toread++;
+    }
     np->toread = TR_NONE;               /* just for prettiness */
     sethash(np);                        /* so we can find it again */
     rp->flags |= RF_RCCHANGED;
@@ -964,7 +1113,9 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
             printcmd();
             newline();
             if (*g_buf == 'y')
+            {
                 set_selector(SM_NEWSGROUP, SS_NATURAL);
+            }
             else {
                 g_sel_sort = SS_NATURAL;
                 g_sel_direction = 1;
@@ -981,9 +1132,13 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
     g_starthere = nullptr;                      /* Disable this optimization */
     if (move_np != g_last_ng) {
         if (move_np->prev)
+        {
             move_np->prev->next = move_np->next;
+        }
         else
+        {
             g_first_ng = move_np->next;
+        }
         move_np->next->prev = move_np->prev;
 
         move_np->prev = g_last_ng;
@@ -994,23 +1149,31 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
 
     /* Renumber the groups according to current order */
     for (np = g_first_ng, i = 0; np; np = np->next, i++)
+    {
         np->num = i;
+    }
     move_np->rc->flags |= RF_RCCHANGED;
 
     if (newnum < 0) {
       reask_reloc:
         unflush_output();               /* disable any ^O in effect */
         if (g_verbose)
+        {
             printf("\nPut newsgroup where? [%s] ", dflt);
+        }
         else
+        {
             printf("\nPut where? [%s] ", dflt);
+        }
         fflush(stdout);
         termdown(1);
       reinp_reloc:
         eat_typeahead();
         getcmd(g_buf);
         if (errno || *g_buf == '\f')    /* if return from stop signal */
+        {
             goto reask_reloc;           /* give them a prompt again */
+        }
         setdef(g_buf,dflt);
         printcmd();
         if (*g_buf == 'h') {
@@ -1047,7 +1210,9 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
             goto reask_reloc;
         }
         else if (*g_buf == 'q')
+        {
             return false;
+        }
         else if (*g_buf == 'L') {
             newline();
             list_newsgroups();
@@ -1055,12 +1220,18 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
         }
         else if (isdigit(*g_buf)) {
             if (!finish_command(true))  /* get rest of command */
+            {
                 goto reinp_reloc;
+            }
             newnum = atol(g_buf);
             if (newnum < 0)
+            {
                 newnum = 0;
+            }
             if (newnum >= g_newsgroup_cnt)
-                newnum = g_newsgroup_cnt-1;
+            {
+                newnum = g_newsgroup_cnt - 1;
+            }
         }
         else if (*g_buf == '^') {
             newline();
@@ -1075,7 +1246,9 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
         }
         else if (*g_buf == '-' || *g_buf == '+') {
             if (!finish_command(true))  /* get rest of command */
+            {
                 goto reinp_reloc;
+            }
             np = find_ng(g_buf+1);
             if (np == nullptr) {
                 fputs("Not found.",stdout);
@@ -1083,7 +1256,9 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
             }
             newnum = np->num;
             if (*g_buf == '+')
+            {
                 newnum++;
+            }
         }
         else {
             printf("\n%s",g_hforhelp);
@@ -1094,10 +1269,16 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
     }
     if (newnum < g_newsgroup_cnt-1) {
         for (np = g_first_ng; np; np = np->next)
+        {
             if (np->num >= newnum)
+            {
                 break;
+            }
+        }
         if (!np || np == move_np)
+        {
             return false;               /* This can't happen... */
+        }
 
         g_last_ng = move_np->prev;
         g_last_ng->next = nullptr;
@@ -1106,14 +1287,20 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
         move_np->next = np;
 
         if (np->prev)
+        {
             np->prev->next = move_np;
+        }
         else
+        {
             g_first_ng = move_np;
+        }
         np->prev = move_np;
 
         move_np->num = newnum++;
         for (; np; np = np->next, newnum++)
+        {
             np->num = newnum;
+        }
     }
     if (g_sel_newsgroupsort != SS_NATURAL) {
         g_sel_sort = g_sel_newsgroupsort;
@@ -1136,16 +1323,24 @@ void list_newsgroups()
     print_lines("  #  Status  Newsgroup\n", STANDOUT);
     for (np = g_first_ng, i = 0; np && !g_int_count; np = np->next, i++) {
         if (np->toread >= 0)
+        {
             set_toread(np, ST_LAX);
+        }
         *(np->rcline + np->numoffset - 1) = np->subscribechar;
         if (np->toread > 0)
-            sprintf(tmpbuf,"%3d %6ld   ",i,(long)np->toread);
+        {
+            sprintf(tmpbuf, "%3d %6ld   ", i, (long) np->toread);
+        }
         else
-            sprintf(tmpbuf,"%3d %7s  ",i,status[-np->toread]);
+        {
+            sprintf(tmpbuf, "%3d %7s  ", i, status[-np->toread]);
+        }
         safecpy(tmpbuf+13, np->rcline, sizeof tmpbuf - 13);
         *(np->rcline + np->numoffset - 1) = '\0';
         if (print_lines(tmpbuf, NOMARKING) != 0)
+        {
             break;
+        }
     }
     g_int_count = 0;
 }
@@ -1163,21 +1358,31 @@ void cleanup_newsrc(NEWSRC *rp)
     NG_NUM bogosity = 0;
 
     if (g_verbose)
-        printf("Checking out '%s' -- hang on a second...\n",rp->name);
+    {
+        printf("Checking out '%s' -- hang on a second...\n", rp->name);
+    }
     else
-        printf("Checking '%s' -- hang on...\n",rp->name);
+    {
+        printf("Checking '%s' -- hang on...\n", rp->name);
+    }
     termdown(1);
     NGDATA* np;
     for (np = g_first_ng; np; np = np->next) {
 /*#ifdef CHECK_ALL_BOGUS $$ what is this? */
         if (np->toread >= TR_UNSUB)
+        {
             set_toread(np, ST_LAX); /* this may reset the group or declare it bogus */
+        }
 /*#endif*/
         if (np->toread == TR_BOGUS)
+        {
             bogosity++;
+        }
     }
     for (np = g_last_ng; np && np->toread == TR_BOGUS; np = np->prev)
+    {
         bogosity--;                     /* discount already moved ones */
+    }
     if (g_newsgroup_cnt > 5 && bogosity > g_newsgroup_cnt / 2)
     {
         fputs("It looks like the active file is messed up.  Contact your news administrator,\n",
@@ -1189,14 +1394,20 @@ void cleanup_newsrc(NEWSRC *rp)
     else if (bogosity)
     {
         if (g_verbose)
-            printf("Moving bogus newsgroups to the end of '%s'.\n",rp->name);
+        {
+            printf("Moving bogus newsgroups to the end of '%s'.\n", rp->name);
+        }
         else
-            fputs("Moving boguses to the end.\n",stdout);
+        {
+            fputs("Moving boguses to the end.\n", stdout);
+        }
         termdown(1);
         while (np) {
             NGDATA *prev_np = np->prev;
             if (np->toread == TR_BOGUS)
-                relocate_newsgroup(np, g_newsgroup_cnt-1);
+            {
+                relocate_newsgroup(np, g_newsgroup_cnt - 1);
+            }
             np = prev_np;
         }
         rp->flags |= RF_RCCHANGED;
@@ -1219,7 +1430,8 @@ reask_bogus:
             goto reask_bogus;
         }
         else if (*g_buf == 'n' || *g_buf == 'q')
-            ;
+        {
+        }
         else if (*g_buf == 'y') {
             for (np = g_last_ng; np && np->toread == TR_BOGUS; np = np->prev) {
                 hashdelete(g_newsrc_hash, np->rcline, np->numoffset - 1);
@@ -1229,17 +1441,29 @@ reask_bogus:
             rp->flags |= RF_RCCHANGED; /*$$ needed? */
             g_last_ng = np;
             if (np)
+            {
                 np->next = nullptr;
+            }
             else
+            {
                 g_first_ng = nullptr;
+            }
             if (g_current_ng && !g_current_ng->rcline)
+            {
                 g_current_ng = g_first_ng;
+            }
             if (g_recent_ng && !g_recent_ng->rcline)
+            {
                 g_recent_ng = g_first_ng;
+            }
             if (g_ngptr && !g_ngptr->rcline)
+            {
                 g_ngptr = g_first_ng;
+            }
             if (g_sel_page_np && !g_sel_page_np->rcline)
+            {
                 g_sel_page_np = nullptr;
+            }
         }
         else {
             fputs(g_hforhelp,stdout);
@@ -1278,9 +1502,13 @@ void checkpoint_newsrcs()
     }
 #endif
     if (g_doing_ng)
+    {
         bits_to_rc();                   /* do not restore M articles */
+    }
     if (!write_newsrcs(g_multirc))
+    {
         get_anything();
+    }
 #ifdef DEBUG
     if (debug & DEB_CHECKPOINTING) {
         fputs("(done)",stdout);
@@ -1297,7 +1525,9 @@ bool write_newsrcs(MULTIRC *mptr)
     bool          total_success = true;
 
     if (!mptr)
+    {
         return true;
+    }
 
     if (g_sel_newsgroupsort != SS_NATURAL) {
         g_sel_sort = SS_NATURAL;
@@ -1307,7 +1537,9 @@ bool write_newsrcs(MULTIRC *mptr)
 
     for (NEWSRC *rp = mptr->first; rp; rp = rp->next) {
         if (!(rp->flags & RF_ACTIVE))
+        {
             continue;
+        }
 
         if (rp->infoname) {
             FILE *info = fopen(rp->infoname, "w");
@@ -1327,13 +1559,17 @@ bool write_newsrcs(MULTIRC *mptr)
                 g_lastextranum = rp->datasrc->desc_sf.recent_cnt;
             }
             else
+            {
                 g_lastextranum = rp->datasrc->act_sf.recent_cnt;
+            }
             g_lastnewtime = rp->datasrc->lastnewgrp;
             writelast();
         }
 
         if (!(rp->flags & RF_RCCHANGED))
+        {
             continue;
+        }
 
         FILE *rcfp = fopen(rp->newname, "w");
         if (rcfp == nullptr) {
@@ -1353,15 +1589,21 @@ bool write_newsrcs(MULTIRC *mptr)
         for (NGDATA *np = g_first_ng; np; np = np->next) {
             char* delim;
             if (np->rc != rp)
+            {
                 continue;
+            }
             if (np->numoffset) {
                 delim = np->rcline + np->numoffset - 1;
                 *delim = np->subscribechar;
                 if ((np->flags & NF_UNTHREADED) && delim[2] == '1')
+                {
                     delim[2] = '0';
+                }
             }
             else
+            {
                 delim = nullptr;
+            }
 #ifdef DEBUG
             if (debug & DEB_NEWSRC_LINE) {
                 printf("%s\n",np->rcline);
@@ -1375,7 +1617,9 @@ bool write_newsrcs(MULTIRC *mptr)
             if (delim) {
                 *delim = '\0';          /* might still need this line */
                 if ((np->flags & NF_UNTHREADED) && delim[2] == '0')
+                {
                     delim[2] = '1';
+                }
             }
         }
         fflush(rcfp);

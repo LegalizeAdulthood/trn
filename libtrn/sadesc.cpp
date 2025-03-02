@@ -53,13 +53,21 @@ const char *sa_get_statchars(long a, int line)
       case 1:
         strcpy(char_buf,"...");
         if (sa_marked(a))
+        {
             char_buf[2] = 'x';
+        }
         if (sa_selected1(a))
+        {
             char_buf[1] = '*';
+        }
         if (was_read(g_sa_ents[a].artnum))
+        {
             char_buf[0] = '-';
+        }
         else
+        {
             char_buf[0] = '+';
+        }
         break;
       default:
         strcpy(char_buf,"   ");
@@ -78,7 +86,9 @@ const char *sa_desc_subject(long e)
 
     if (!s || !*s) {
         if (s)
+        {
             free(s);
+        }
         sprintf(sa_subj_buf,"(no subject)");
         return sa_subj_buf;
     }
@@ -131,9 +141,13 @@ const char *sa_get_desc(long e, int line, bool trunc)
             strcat(desc_buf,s_sa_buf);
 #endif
             if (trunc)
-                strcat(desc_buf,compress_from(article_ptr(artnum)->from,16));
+            {
+                strcat(desc_buf, compress_from(article_ptr(artnum)->from, 16));
+            }
             else
-                strcat(desc_buf,compress_from(article_ptr(artnum)->from,200));
+            {
+                strcat(desc_buf, compress_from(article_ptr(artnum)->from, 200));
+            }
             strcat(desc_buf," ");
         }
         if (g_sa_mode_desc_subject) {
@@ -154,19 +168,32 @@ const char *sa_get_desc(long e, int line, bool trunc)
             i = 0;
             /* if variable widths used later, use them */
             if (g_sa_mode_desc_artnum)
+            {
                 i += 7;
+            }
             if (g_sc_initialized && g_sa_mode_desc_score)
+            {
                 i += 7;
+            }
             if (g_sa_mode_desc_threadcount)
+            {
                 i += 6;
+            }
             s2 = desc_buf;
-            while (i--) *s2++ = ' ';
+            while (i--)
+            {
+                *s2++ = ' ';
+            }
 #ifdef HAS_TERMLIB
             if (use_standout)
-                sprintf(s2,"Summary: %s%s",g_tc_SO,s);
+            {
+                sprintf(s2, "Summary: %s%s", g_tc_SO, s);
+            }
             else
 #endif
+            {
                 sprintf(s2,"Summary: %s",s);
+            }
             break;
         }
         /* otherwise, we might have had a keyword */
@@ -183,19 +210,32 @@ const char *sa_get_desc(long e, int line, bool trunc)
             i = 0;
             /* if variable widths used later, use them */
             if (g_sa_mode_desc_artnum)
+            {
                 i += 7;
+            }
             if (g_sc_initialized && g_sa_mode_desc_score)
+            {
                 i += 7;
+            }
             if (g_sa_mode_desc_threadcount)
+            {
                 i += 6;
+            }
             s2 = desc_buf;
-            while (i--) *s2++ = ' ';
+            while (i--)
+            {
+                *s2++ = ' ';
+            }
 #ifdef HAS_TERMLIB
             if (use_standout)
-                sprintf(s2,"Keys: %s%s",g_tc_SO,s);
+            {
+                sprintf(s2, "Keys: %s%s", g_tc_SO, s);
+            }
             else
 #endif
+            {
                 sprintf(s2,"Keys: %s",s);
+            }
             break;
         }
         /* FALL THROUGH */
@@ -205,13 +245,18 @@ const char *sa_get_desc(long e, int line, bool trunc)
         break;
     } /* switch (line) */
     if (trunc)
+    {
         desc_buf[g_s_desc_cols] = '\0'; /* make sure it's not too long */
+    }
 #ifdef HAS_TERMLIB
     if (use_standout)
+    {
         strcat(desc_buf,g_tc_SE);       /* end standout mode */
+    }
 #endif
     /* take out bad characters (replace with one space) */
     for (char *t = desc_buf; *t; t++)
+    {
         switch (*t) {
           case Ctl('h'):
           case '\t':
@@ -219,6 +264,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
           case '\r':
             *t = ' ';
         }
+    }
     return desc_buf;
 }
 
@@ -233,16 +279,24 @@ int sa_ent_lines(long e)
     if (g_sa_mode_desc_summary) {
         s = fetchlines(artnum,SUMRY_LINE);
         if (s && *s)
+        {
             num++;      /* just a test */
+        }
         if (s)
+        {
             free(s);
+        }
     }
     if (g_sa_mode_desc_keyw) {
         s = fetchlines(artnum,KEYW_LINE);
         if (s && *s)
+        {
             num++;      /* just a test */
+        }
         if (s)
+        {
             free(s);
+        }
     }
     return num;
 }

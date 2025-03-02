@@ -32,10 +32,14 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
     if (leave_count) {
         if (output_level) {
             if (g_verbose)
+            {
                 printf("\nMarking all but %d articles in %s as read.\n",
-                       leave_count,np->rcline);
+                      leave_count,np->rcline);
+            }
             else
-                printf("\nAll but %d marked as read.\n",leave_count);
+            {
+                printf("\nAll but %d marked as read.\n", leave_count);
+            }
         }
         checkexpired(np, getngsize(np) - leave_count + 1);
         set_toread(np, ST_STRICT);
@@ -43,21 +47,29 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
     else {
         if (output_level) {
             if (g_verbose)
-                printf("\nMarking %s as all read.\n",np->rcline);
+            {
+                printf("\nMarking %s as all read.\n", np->rcline);
+            }
             else
-                fputs("\nMarked read\n",stdout);
+            {
+                fputs("\nMarked read\n", stdout);
+            }
         }
         sprintf(tmpbuf,"%s: 1-%ld", np->rcline,(long)getngsize(np));
         free(np->rcline);
         np->rcline = savestr(tmpbuf);
         *(np->rcline + np->numoffset - 1) = '\0';
         if (g_ng_min_toread > TR_NONE && np->toread > TR_NONE)
+        {
             g_newsgroup_toread--;
+        }
         np->toread = TR_NONE;
     }
     np->rc->flags |= RF_RCCHANGED;
     if (!write_newsrcs(g_multirc))
+    {
         get_anything();
+    }
 }
 
 /* add an article number to a newsgroup, if it isn't already read */
@@ -74,19 +86,27 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
     bool    morenum;
 
     if (!artnum)
+    {
         return 0;
+    }
     NGDATA *np = find_ng(ngnam);
     if (np == nullptr)                  /* not found in newsrc? */
+    {
         return 0;
+    }
     if (dp != np->rc->datasrc) {        /* punt on cross-host xrefs */
 #ifdef DEBUG
         if (debug & DEB_XREF_MARKER)
+        {
             printf("Cross-host xref to group %s ignored.\n",ngnam);
+        }
 #endif
         return 0;
     }
     if (!np->numoffset)
+    {
         return 0;
+    }
 #ifndef ANCIENT_NEWS
     if (!np->abs1st) {
         /* Trim down the list due to expires if we haven't done so yet. */
@@ -104,10 +124,14 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
 #endif
 
     if (np->toread == TR_BOGUS)
+    {
         return 0;
+    }
     if (artnum > np->ngmax) {
         if (np->toread > TR_NONE)
+        {
             np->toread += artnum - np->ngmax;
+        }
         np->ngmax = artnum;
     }
 #ifdef DEBUG
@@ -124,7 +148,9 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
         if (*t == '-') {                /* is it a range? */
             t++;                        /* skip to next number */
             if (artnum <= (max = atol(t)))
+            {
                 return 0;               /* it is in range => already read */
+            }
             lastnum = max;              /* remember it */
             maxt = t;                   /* remember position in case we */
                                         /* want to overwrite the max */
@@ -132,11 +158,16 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
         }
         else {
             if (artnum == min)          /* explicitly a read article? */
+            {
                 return 0;
+            }
             lastnum = min;              /* remember what the number was */
             maxt = nullptr;             /* last one was not a range */
         }
-        while (*t && !isdigit(*t)) t++; /* skip comma and any spaces */
+        while (*t && !isdigit(*t))
+        {
+            t++;                        /* skip comma and any spaces */
+        }
         s = t;
     }
 
@@ -147,16 +178,22 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
     mbuf = safemalloc((MEM_SIZE)(strlen(s)+(s - np->rcline)+MAX_DIGITS+2+1));
     strcpy(mbuf,np->rcline);            /* make new rc line */
     if (maxt && lastnum && artnum == lastnum+1)
-                                            /* can we just extend last range? */
+                                        /* can we just extend last range? */
+    {
         t = mbuf + (maxt - np->rcline); /* then overwrite previous max */
+    }
     else {
         t = mbuf + (t - np->rcline);    /* point t into new line instead */
         if (lastnum) {                  /* have we parsed any line? */
             if (!morenum)               /* are we adding to the tail? */
+            {
                 *t++ = ',';             /* supply comma before */
+            }
             if (!maxt && artnum == lastnum+1 && *(t-1) == ',')
                                         /* adjacent singletons? */
+            {
                 *(t-1) = '-';           /* turn them into a range */
+            }
         }
     }
     if (morenum) {                      /* is there more to life? */
@@ -166,31 +203,43 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
             bool  range_after = *nextmax++ == '-';
 
             if (range_before)
+            {
                 *t = '\0';              /* artnum is redundant */
+            }
             else
+            {
                 sprintf(t,"%ld-",(long)artnum);/* artnum will be new min */
+            }
 
             if (range_after)
+            {
                 s = nextmax;            /* *s is redundant */
-        /*  else
-                s = s */                /* *s is new max */
+            }
         }
         else
+        {
             sprintf(t,"%ld,",(long)artnum);     /* put the number and comma */
+        }
     }
     else
+    {
         sprintf(t,"%ld",(long)artnum);  /* put the number there (wherever) */
+    }
     strcat(t,s);                        /* copy remainder of line */
 #ifdef DEBUG
     if (debug & DEB_XREF_MARKER)
+    {
         printf("%s\n",mbuf);
+    }
 #endif
     free(np->rcline);
     np->rcline = mbuf;          /* pull the switcheroo */
     *(np->rcline + np->numoffset - 1) = '\0';
                                         /* wipe out : or ! */
     if (np->toread > TR_NONE)   /* lest we turn unsub into bogus */
+    {
         np->toread--;
+    }
     return 0;
 }
 
@@ -349,12 +398,16 @@ void set_toread(NGDATA *np, bool lax_high_check)
     if (virgin_ng) {
         sprintf(tmpbuf," 1-%ld",(long)ngsize);
         if (strcmp(tmpbuf,np->rcline+np->numoffset) != 0)
+        {
             checkexpired(np,np->abs1st);        /* this might realloc rcline */
+        }
     }
     char *nums = np->rcline + np->numoffset;
     int   length = strlen(nums);
     if (length+MAX_DIGITS+1 > sizeof tmpbuf)
-        mybuf = safemalloc((MEM_SIZE)(length+MAX_DIGITS+1));
+    {
+        mybuf = safemalloc((MEM_SIZE) (length + MAX_DIGITS + 1));
+    }
     strcpy(mybuf,nums);
     mybuf[length++] = ',';
     mybuf[length] = '\0';
@@ -364,11 +417,17 @@ void set_toread(NGDATA *np, bool lax_high_check)
         *c = '\0';                  /* keep index from running off */
         char *h = strchr(s, '-');
         if (h != nullptr) /* find - in range, if any */
-            unread -= (newmax = atol(h+1)) - atol(s) + 1;
+        {
+            unread -= (newmax = atol(h + 1)) - atol(s) + 1;
+        }
         else
+        {
             newmax = atol(s);
+        }
         if (newmax != 0)
+        {
             unread--;           /* recalculate length */
+        }
         if (newmax > ngsize) {  /* paranoia check */
             if (!lax_high_check && newmax > ngsize) {
                 unread = -1;
@@ -391,23 +450,31 @@ void set_toread(NGDATA *np, bool lax_high_check)
         np->rc->flags |= RF_RCCHANGED;
     }
     if (np->subscribechar == NEGCHAR)
+    {
         unread = TR_UNSUB;
+    }
 
     if (unread >= g_ng_min_toread) {
         if (!virgin_ng && np->toread < g_ng_min_toread)
+        {
             g_newsgroup_toread++;
+        }
     }
     else if (unread <= 0) {
         if (np->toread > g_ng_min_toread) {
             g_newsgroup_toread--;
             if (virgin_ng)
+            {
                 g_missing_count++;
+            }
         }
     }
     np->toread = (ART_UNREAD)unread;    /* remember how many are left */
 
     if (mybuf != tmpbuf)
+    {
         free(mybuf);
+    }
 }
 
 /* make sure expired articles are marked as read */
@@ -421,7 +488,9 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
     int len;
 
     if (a1st<=1)
+    {
         return;
+    }
 #ifdef DEBUG
     if (debug & DEB_XREF_MARKER) {
         printf("1-%ld->\n%s%c%s\n",(long)(a1st-1),np->rcline,np->subscribechar,
@@ -431,14 +500,19 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
     s = skip_space(np->rcline + np->numoffset);
     while (*s && (num = atol(s)) <= a1st) {
         s = skip_digits(s);
-        while (*s && !isdigit(*s)) s++;
+        while (*s && !isdigit(*s))
+        {
+            s++;
+        }
         lastnum = num;
     }
     len = strlen(s);
     if (len && s[-1] == '-') {                  /* landed in a range? */
         if (lastnum != 1) {
             if (3+len <= (int)strlen(np->rcline+np->numoffset))
+            {
                 mbuf = np->rcline;
+            }
             else {
                 mbuf = safemalloc((MEM_SIZE)(np->numoffset+3+len+1));
                 strcpy(mbuf, np->rcline);
@@ -463,7 +537,9 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
         int nlen = strlen(numbuf) + (len != 0);
 
         if (s - np->rcline >= np->numoffset + nlen)
+        {
             mbuf = np->rcline;
+        }
         else {
             mbuf = safemalloc((MEM_SIZE)(np->numoffset+nlen+len+1));
             strcpy(mbuf,np->rcline);
@@ -476,14 +552,20 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
         if (len) {
             cp[-1] = ',';
             if (cp != s)
-                safecpy(cp,s,len+1);
+            {
+                safecpy(cp, s, len + 1);
+            }
         }
 
         if (!g_checkflag && np->rcline == mbuf)
-            np->rcline = saferealloc(np->rcline, (MEM_SIZE)(cp-mbuf+len+1));
+        {
+            np->rcline = saferealloc(np->rcline, (MEM_SIZE) (cp - mbuf + len + 1));
+        }
         else {
             if (!g_checkflag)
+            {
                 free(np->rcline);
+            }
             np->rcline = mbuf;
         }
         np->rc->flags |= RF_RCCHANGED;
@@ -507,12 +589,18 @@ bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
     ART_NUM max = -1;
 
     if (!artnum)
+    {
         return true;
+    }
     NGDATA *np = find_ng(ngnam);
     if (np == nullptr)          /* not found in newsrc? */
+    {
         return true;
+    }
     if (!np->numoffset)         /* no numbers on line */
+    {
         return false;
+    }
 #if 0
     /* consider this code later */
     if (!np->abs1st) {
@@ -522,7 +610,9 @@ bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
 #endif
 
     if (np->toread == TR_BOGUS)
+    {
         return true;
+    }
     if (artnum > np->ngmax) {
         return false;           /* probably doesn't exist, however */
     }
@@ -536,7 +626,9 @@ bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
         if (*t == '-') {                /* is it a range? */
             t++;                        /* skip to next number */
             if (artnum <= (max = atol(t)))
+            {
                 return true;            /* it is in range => already read */
+            }
             lastnum = max;              /* remember it */
             maxt = t;                   /* remember position in case we */
                                         /* want to overwrite the max */
@@ -544,11 +636,16 @@ bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
         }
         else {
             if (artnum == min)          /* explicitly a read article? */
+            {
                 return true;
+            }
             lastnum = min;              /* remember what the number was */
             maxt = nullptr;             /* last one was not a range */
         }
-        while (*t && !isdigit(*t)) t++; /* skip comma and any spaces */
+        while (*t && !isdigit(*t))
+        {
+            t++;                        /* skip comma and any spaces */
+        }
         s = t;
     }
 

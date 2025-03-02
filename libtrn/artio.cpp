@@ -65,7 +65,9 @@ FILE *artopen(ART_NUM artnum, ART_NUM pos)
     while (true)
     {
         if (g_datasrc->flags & DF_REMOTE)
+        {
             nntp_body(artnum);
+        }
         else
         {
             char artname[MAXFILENAME]; /* filename of current article */
@@ -76,10 +78,14 @@ FILE *artopen(ART_NUM artnum, ART_NUM pos)
         {
 #ifdef ETIMEDOUT
             if (errno == ETIMEDOUT)
+            {
                 continue;
+            }
 #endif
             if (errno == EINTR)
+            {
                 continue;
+            }
             uncache_article(ap, false);
         }
         else
@@ -96,7 +102,9 @@ void artclose()
 {
     if (g_artfp != nullptr) {           /* article still open? */
         if (g_datasrc->flags & DF_REMOTE)
+        {
             nntp_finishbody(FB_DISCARD);
+        }
         fclose(g_artfp);                        /* close it */
         g_artfp = nullptr;                      /* and tell the world */
         g_openart = 0;
@@ -107,7 +115,9 @@ void artclose()
 int seekart(ART_POS pos)
 {
     if (g_datasrc->flags & DF_REMOTE)
+    {
         return nntp_seekart(pos);
+    }
     return fseek(g_artfp,(long)pos,0);
 }
 
@@ -115,14 +125,18 @@ ART_POS
 tellart()
 {
     if (g_datasrc->flags & DF_REMOTE)
+    {
         return nntp_tellart();
+    }
     return (ART_POS)ftell(g_artfp);
 }
 
 char *readart(char *s, int limit)
 {
     if (g_datasrc->flags & DF_REMOTE)
-        return nntp_readart(s,limit);
+    {
+        return nntp_readart(s, limit);
+    }
     return fgets(s,limit,g_artfp);
 }
 
@@ -137,14 +151,18 @@ void clear_artbuf()
 int seekartbuf(ART_POS pos)
 {
     if (!g_do_hiding)
+    {
         return seekart(pos);
+    }
 
     pos -= g_htype[PAST_HEADER].minpos;
     g_artbuf_pos = g_artbuf_len;
 
     while (g_artbuf_pos < pos) {
         if (!readartbuf(false))
+        {
             return -1;
+        }
     }
 
     g_artbuf_pos = pos;
@@ -167,14 +185,18 @@ char *readartbuf(bool view_inline)
         return bp;
     }
     if (g_artbuf_pos == g_artsize - g_htype[PAST_HEADER].minpos)
+    {
         return nullptr;
+    }
     bp = g_artbuf + g_artbuf_pos;
     if (*bp == '\001' || *bp == '\002') {
         bp++;
         g_artbuf_pos++;
     }
     if (*bp) {
-        for (s = bp; *s && !at_nl(*s); s++) ;
+        for (s = bp; *s && !at_nl(*s); s++)
+        {
+        }
         if (*s) {
             len = s - bp + 1;
             goto done;
@@ -224,7 +246,9 @@ char *readartbuf(bool view_inline)
             strcpy(bp + len++ + extra_offset, "\n");
         }
         if (!g_is_mime)
+        {
             goto done;
+        }
         o = line_offset + extra_offset;
         mime_SetState(bp+o);
         if (bp[o] == '\0') {
@@ -272,7 +296,9 @@ char *readartbuf(bool view_inline)
             }
         }
         if (g_mime_state != HTMLTEXT_MIME)
+        {
             break;
+        }
         o = filter_offset + extra_offset;
         len = filter_html(bp+filter_offset, bp+o) + filter_offset;
         if (len == filter_offset || (s = strchr(bp,'\n')) == nullptr) {
@@ -303,10 +329,14 @@ char *readartbuf(bool view_inline)
                 strcpy(bp = g_artbuf + g_artbuf_pos, g_art_line);
                 mime_SetState(bp);
                 if (g_mime_state == DECODE_MIME)
+                {
                     g_mime_state = SKIP_MIME;
+                }
             }
             else
+            {
                 g_mime_state = SKIP_MIME;
+            }
             color_pop();
             chdir_newsdir();
             erase_line(false);
@@ -314,13 +344,17 @@ char *readartbuf(bool view_inline)
             g_first_view = g_artline;
             g_term_line = save_term_line;
             if (g_mime_state != SKIP_MIME)
+            {
                 goto mime_switch;
+            }
         }
         /* FALL THROUGH */
       }
       case SKIP_MIME: {
         MIME_SECT* mp = g_mime_section;
-        while ((mp = mp->prev) != nullptr && !mp->boundary_len) ;
+        while ((mp = mp->prev) != nullptr && !mp->boundary_len)
+        {
+        }
         if (!mp) {
             g_artbuf_len = g_artbuf_pos;
             g_artsize = g_artbuf_len + g_htype[PAST_HEADER].minpos;
@@ -335,13 +369,17 @@ char *readartbuf(bool view_inline)
             goto read_more;
         }
         else
+        {
             *bp = '\0';
+        }
         len = 0;
         break;
       }
     case END_OF_MIME:
         if (g_mime_section->prev)
+        {
             g_mime_state = SKIP_MIME;
+        }
         else {
             if (g_datasrc->flags & DF_REMOTE) {
                 nntp_finishbody(FB_SILENT);
@@ -382,14 +420,20 @@ char *readartbuf(bool view_inline)
       case IMAGE_MIME:
       case AUDIO_MIME:
         if (!g_mime_article.total && !g_multimedia_mime)
+        {
             g_multimedia_mime = true;
+        }
         /* FALL THROUGH */
       default:
         if (view_inline && g_first_view < g_artline
          && (g_mime_section->flags & MSF_INLINE))
+        {
             g_mime_state = DECODE_MIME;
+        }
         else
+        {
             g_mime_state = SKIP_MIME;
+        }
         *bp++ = '\001';
         g_artbuf_pos++;
         mime_Description(g_mime_section,bp,g_tc_COLS);
@@ -404,9 +448,13 @@ char *readartbuf(bool view_inline)
             if (s - cp > g_tc_COLS) {
                 char* t;
                 do {
-                    for (t = cp+word_wrap; !is_hor_space(*t) && t > cp; t--) ;
+                    for (t = cp+word_wrap; !is_hor_space(*t) && t > cp; t--)
+                    {
+                    }
                     if (t == cp) {
-                        for (t = cp+word_wrap; !is_hor_space(*t) && t<=cp+g_tc_COLS; t++) ;
+                        for (t = cp+word_wrap; !is_hor_space(*t) && t<=cp+g_tc_COLS; t++)
+                        {
+                        }
                         if (t > cp+g_tc_COLS) {
                             t = cp + g_tc_COLS - 1;
                             continue;
@@ -420,7 +468,9 @@ char *readartbuf(bool view_inline)
                     *t = g_wrapped_nl;
                     if (is_hor_space(t[1])) {
                         int spaces = 1;
-                        for (t++; *++t == ' ' || *t == '\t'; spaces++) ;
+                        for (t++; *++t == ' ' || *t == '\t'; spaces++)
+                        {
+                        }
                         safecpy(t-spaces,t,extra_chars);
                         extra_chars -= spaces;
                         t -= spaces + 1;
@@ -431,10 +481,12 @@ char *readartbuf(bool view_inline)
     }
     g_artbuf_pos += len;
     if (read_something) {
-            g_artbuf_seek = tellart();
+        g_artbuf_seek = tellart();
         g_artbuf_len = g_artbuf_pos + extra_chars;
         if (g_artsize >= 0)
-            g_artsize = g_raw_artsize-g_artbuf_seek+g_artbuf_len+g_htype[PAST_HEADER].minpos;
+        {
+            g_artsize = g_raw_artsize - g_artbuf_seek + g_artbuf_len + g_htype[PAST_HEADER].minpos;
+        }
     }
 
     return bp;

@@ -52,7 +52,9 @@ void mp_init()
     s_mp_first_free_frag = 1;   /* first free fragment */
 
     for (MP_HEAD &pool : s_mpheads)
+    {
         pool.current = 0;
+    }
 }
 
 /* returns the fragment number */
@@ -65,7 +67,9 @@ static int mp_alloc_frag()
     }
     s_mp_first_free_frag = s_mpfrags[f].next;
     if (s_mpfrags[f].bytesfree)
+    {
         return f;       /* already allocated */
+    }
     s_mpfrags[f].data = (char*)safemalloc(FRAG_SIZE);
     s_mpfrags[f].lastfree = s_mpfrags[f].data;
     s_mpfrags[f].bytesfree = FRAG_SIZE;
@@ -126,7 +130,9 @@ char *mp_savestr(const char *str, memory_pool pool)
 char *mp_malloc(int len, memory_pool pool)
 {
     if (len == 0)
+    {
         len = 1;
+    }
     if (len >= FRAG_SIZE) {
         printf("trn: malloc size too big (len = %d) for memory pool!\n",len);
         printf("trn: (maximum length allowed is %d)\n",FRAG_SIZE);

@@ -48,9 +48,13 @@ void readlast()
             fscanf(fp,"%ld %ld %ld %ld",&g_lasttime,&g_lastactsiz,
                                            &g_lastnewtime,&g_lastextranum);
             if (!g_lastnewtime)
+            {
                 g_lastnewtime = s_starttime;
+            }
             if (old_last > g_lasttime)
+            {
                 g_lasttime = old_last;
+            }
         }
         fclose(fp);
     }

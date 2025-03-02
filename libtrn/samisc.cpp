@@ -33,16 +33,26 @@ bool sa_basic_elig(long a)
 
     /* "run the gauntlet" style (:-) */
     if (!g_sa_mode_read_elig && was_read(artnum))
+    {
         return false;
+    }
     if (g_sa_mode_zoom && !sa_selected1(a))
+    {
         return false;
+    }
     if (g_sa_mode_order == SA_ORDER_DESCENDING) /* score order */
+    {
         if (!article_scored(artnum))
+        {
             return false;
+        }
+    }
     /* now just check availability */
     if (is_unavailable(artnum)) {
         if (!was_read(artnum))
+        {
             oneless_artnum(artnum);
+        }
         return false;           /* don't try positively unavailable */
     }
     /* consider later positively checking availability */
@@ -53,12 +63,18 @@ bool sa_eligible(long a)
 {
     TRN_ASSERT(check_article(g_sa_ents[a].artnum));
     if (!sa_basic_elig(a))
+    {
         return false;           /* must always be basic-eligible */
+    }
     if (!g_sa_mode_fold)
+    {
         return true;            /* just use basic-eligible */
+    }
     else {
         if (sa_subj_thread_prev(a))
+        {
             return false;       /* there was an earlier match */
+        }
         return true;            /* no prior matches */
     }
 }
@@ -68,8 +84,12 @@ bool sa_eligible(long a)
 long sa_artnum_to_ent(ART_NUM artnum)
 {
     for (long i = 1; i < g_sa_num_ents; i++)
+    {
         if (g_sa_ents[i].artnum == artnum)
+        {
             return i;
+        }
+    }
     /* this had better not happen (complain?) */
     return -1;
 }
@@ -88,7 +108,9 @@ void sa_selthreads()
 
     /* clear any old selections */
     for (long i = 1; i < g_sa_num_ents; i++)
+    {
         sa_clear_select1(i);
+    }
 
     /* Loop through all (selected) articles. */
     for (SUBJECT *sp = g_first_subject; sp; sp = sp->next) {
@@ -101,8 +123,10 @@ void sa_selthreads()
                     sa_select1(sa_artnum_to_ent(art));
     /* if scoring, make sure that this article is scored... */
                     if (g_sa_mode_order == SA_ORDER_DESCENDING) /* score order */
+                    {
                         sc_score_art(art,false);
                     }
+                }
                 }/* for all articles */
             }/* if selected */
         }/* for all threads */
@@ -115,9 +139,13 @@ int sa_number_arts()
     for (int i = 1; i < g_sa_num_ents; i++) {
         ART_NUM a = g_sa_ents[i].artnum;
         if (is_unavailable(a))
+        {
             continue;
+        }
         if (!article_unread(a) && !g_sa_mode_read_elig)
+        {
             continue;
+        }
         total++;
     }
     return total;
@@ -131,7 +159,9 @@ void sa_go_art(long a)
     g_art = a;
     (void)article_find(g_art);
     if (g_openart != g_art)
-        artopen(g_art,(ART_POS)0);
+    {
+        artopen(g_art, (ART_POS) 0);
+    }
 }
 
 // long a,b;            /* the entry numbers to compare */
@@ -145,32 +175,46 @@ int sa_compare(long a, long b)
         if (!article_scored(g_sa_ents[a].artnum)) {                       /* a unscored */
             if (!article_scored(g_sa_ents[b].artnum)) { /* a+b unscored */
                 if (a < b)                                        /* keep ordering consistent */
+                {
                     return -1;
+                }
                 return 1;
             }
             return 1;           /* move unscored (a) to end */
         }
         if (!article_scored(g_sa_ents[b].artnum))       /* only b unscored */
+        {
             return -1;          /* move unscored (b) to end */
+        }
 
         long i = sc_score_art(g_sa_ents[a].artnum, true);
         long j = sc_score_art(g_sa_ents[b].artnum, true);
         if (i < j)
+        {
             return 1;
+        }
         if (i > j)
+        {
             return -1;
+        }
         /* i == j */
         if (g_score_newfirst) {
             if (a < b)
+            {
                 return 1;
+            }
             return -1;
         } else {
             if (a < b)
+            {
                 return -1;
+            }
             return 1;
         }
     }
     if (a < b)
+    {
         return -1;
+    }
     return 1;
 }

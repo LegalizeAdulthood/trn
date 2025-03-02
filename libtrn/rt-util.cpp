@@ -47,12 +47,16 @@ char *extract_name(char *name)
     char *rparen = strrchr(name, ')');
     char *langle = strchr(name, '<');
     if (!lparen && !langle)
+    {
         return nullptr;
+    }
 
     if (langle && (!lparen || !rparen || lparen > langle || rparen < langle))
     {
         if (langle == name)
+        {
             return nullptr;
+        }
         *langle = '\0';
     }
     else
@@ -61,9 +65,13 @@ char *extract_name(char *name)
         *name++ = '\0';
         name = skip_space(name);
         if (name == rparen)
+        {
             return nullptr;
+        }
         if (rparen != nullptr)
+        {
             *rparen = '\0';
+        }
     }
 
     if (*name == '"')
@@ -72,13 +80,17 @@ char *extract_name(char *name)
         name = skip_space(name);
         char *s = strrchr(name, '"');
         if (s != nullptr)
+        {
             *s = '\0';
+        }
     }
 
     // strip trailing whitespace
     int len = strlen(name);
     while (len > 0 && isspace(name[len-1]))
+    {
         len--;
+    }
     name[len] = '\0';
 
     return name;
@@ -102,10 +114,14 @@ try_again:
     name = skip_space(name);
     int len = strlen(name);
     if (len == 0)
+    {
         return name;
+    }
     char *s = name + len - 1;
     while (isspace(*s))
+    {
         s--;
+    }
     s[1] = '\0';
 
 #ifdef USE_UTF_HACK
@@ -123,7 +139,9 @@ try_again:
     vis_len = s - name + 1;
 #endif
     if (vis_len <= max)
+    {
         return name;
+    }
 
     /* Look for characters that likely mean the end of the name
     ** and the start of some hopefully uninteresting additional info.
@@ -144,7 +162,9 @@ try_again:
         char ch = d[w];
         char next = d[x];
         if (!ch)
+        {
             break;
+        }
         if (ch == ',' || ch == ';' || ch == '(' || ch == '@' || (ch == '-' && (next == '-' || next == ' ')))
         {
             d[w] = '\0';
@@ -159,17 +179,23 @@ try_again:
     {
         notlast = false;
         while (isspace(*s))
+        {
             s--;
+        }
         s[1] = '\0';
         len = s - name + 1;
 #ifdef USE_UTF_HACK
         vis_len = visual_length_between(s, name) + 1;
 #endif
         if (vis_len <= max)
+        {
             return name;
+        }
         /* If the last name is an abbreviation it's not the one we want. */
         if (*s == '.')
+        {
             notlast = true;
+        }
         while (!isspace(*s))
         {
             if (s == name) /* only one name */
@@ -182,7 +208,9 @@ try_again:
                 return name;
             }
             if (isdigit(*s))    /* probably a phone number */
+            {
                 notlast = true; /* so chuck it */
+            }
             s--;
         }
     } while (notlast);
@@ -322,7 +350,9 @@ try_again:
 #endif
         }
         else
+        {
             mid = nullptr;
+        }
     }
     if (vis_len > max)
     {
@@ -383,11 +413,15 @@ try_again:
     /* Paste the names back together */
     d = name + namelen;
     if (namelen)
+    {
         d[-1] = ' ';
+    }
     if (mid)
     {
         if (d != mid)
+        {
             strcpy(d, mid);
+        }
         d += midlen;
         d[-1] = ' ';
     }
@@ -402,7 +436,9 @@ try_again:
             int w = byte_length_at(last + i);
             int v = visual_width_at(last + i);
             if (w == 0 || j + v > max)
+            {
                 break;
+            }
             memcpy(d + i, last + i, w);
             i += w;
             j += v;
@@ -430,18 +466,27 @@ char *compress_address(char *name, int max)
     name = skip_space(name);
     int len = strlen(name);
     if (len == 0)
+    {
         return name;
+    }
     char *s = name + len - 1;
-    while (isspace(*s)) s--;
+    while (isspace(*s))
+    {
+        s--;
+    }
     s[1] = '\0';
     if (*name == '<') {
         name++;
         if (*s == '>')
+        {
             *s-- = '\0';
+        }
     }
     len = s - name + 1;
     if (len <= max)
+    {
         return name;
+    }
 
     char *at = nullptr;
     char *bang = nullptr;
@@ -467,32 +512,52 @@ char *compress_address(char *name, int max)
             break;
           case '%':
             if (at == nullptr && hack == nullptr)
+            {
                 hack = s;
+            }
             break;
         }
     }
     if (at == nullptr)
+    {
         at = name + len;
+    }
 
     if (hack != nullptr) {
         if (bang != nullptr) {
             if (at - bang - 1 >= max)
+            {
                 start = bang + 1;
+            }
             else if (at - name >= max)
+            {
                 start = at - max;
+            }
             else
+            {
                 start = name;
+            }
         } else
+        {
             start = name;
+        }
     } else if (bang != nullptr) {
         if (at - name >= max)
+        {
             start = at - max;
+        }
         else
+        {
             start = name;
+        }
     } else
+    {
         start = name;
+    }
     if (len - (start - name) > max)
+    {
         start[max] = '\0';
+    }
     return start;
 }
 
@@ -506,9 +571,13 @@ char *compress_from(const char *from, int size)
     strcharsubst(lbuf, from ? from : "", sizeof lbuf, *g_charsubst);
     char *s = extract_name(lbuf);
     if (s != nullptr)
+    {
         s = compress_name(s, size);
+    }
     else
+    {
         s = compress_address(lbuf, size);
+    }
 
     int len = strlen(s);
     int vis_len;
@@ -537,7 +606,9 @@ char *compress_date(const ARTICLE *ap, int size)
     strncpy(t = g_cmd_buf, ctime(&ap->date), size);
     char *s = strchr(t, '\n');
     if (s != nullptr)
+    {
         *s = '\0';
+    }
     t[size] = '\0';
     return t;
 }
@@ -551,7 +622,9 @@ bool strip_one_Re(char *str, char **strp)
 {
     bool has_Re = false;
     while (*str && at_grey_space(str))
+    {
         str++;
+    }
     if (eq_ignore_case(str[0], 'r') && eq_ignore_case(str[1], 'e')) /* check for Re: */
     { 
         char *cp = str + 2;
@@ -573,7 +646,9 @@ bool strip_one_Re(char *str, char **strp)
         }
     }
     if (strp)
+    {
         *strp = str;
+    }
 
     return has_Re;
 }
@@ -586,9 +661,13 @@ bool subject_has_Re(char *str, char **strp)
 {
     bool has_Re = false;
     while (strip_one_Re(str, &str))
+    {
         has_Re = true;
+    }
     if (strp)
+    {
         *strp = str;
+    }
     return has_Re;
 }
 
@@ -598,14 +677,18 @@ bool subject_has_Re(char *str, char **strp)
 const char *compress_subj(const ARTICLE *ap, int max)
 {
     if (!ap)
+    {
         return "<MISSING>";
+    }
 
     /* Put a preceeding '>' on subjects that are replies to other articles */
     char *   cp = g_buf;
     ARTICLE *first = (g_threaded_group ? ap->subj->thread : ap->subj->articles);
     if (ap != first || (ap->flags & AF_HAS_RE)
      || (!(ap->flags&AF_UNREAD) ^ g_sel_rereading))
+    {
         *cp++ = '>';
+    }
     strcharsubst(cp, ap->subj->str + 4, (sizeof g_buf) - (cp-g_buf), *g_charsubst);
 
     /* Remove "(was: oldsubject)", because we already know the old subjects.
@@ -635,11 +718,17 @@ const char *compress_subj(const ARTICLE *ap, int max)
             if (next_to_last != nullptr)
             {
                 if (next_to_last-g_buf >= len - max + 3 + 10-1)
+                {
                     cp = next_to_last;
+                }
                 else
+                {
                     cp = last_word;
+                }
             } else
+            {
                 cp = last_word;
+            }
             *last_word = ' ';
             if (cp-g_buf >= len - max + 3 + 10-1) {
                 char* s = g_buf + max - (len-(cp-g_buf)+3);
@@ -652,7 +741,9 @@ const char *compress_subj(const ARTICLE *ap, int max)
         }
     }
     if (len > max)
+    {
         g_buf[max] = '\0';
+    }
     return g_buf;
 }
 
@@ -675,17 +766,24 @@ void setspin(spin_mode mode)
         if (!s_spin_level++) {
             s_spin_art = g_openart;
             if (s_spin_art != 0 && g_artfp)
+            {
                 s_spin_tell = tellart();
+            }
             g_spin_count = 0;
             s_spin_place = 0;
         }
         if (s_spin_mode == SPIN_BARGRAPH)
+        {
             mode = SPIN_BARGRAPH;
+        }
         if (mode == SPIN_BARGRAPH) {
             if (s_spin_mode != SPIN_BARGRAPH) {
                 s_spin_marks = (g_verbose? 25 : 10);
                 printf(" [%*s]", s_spin_marks, "");
-                for (int i = s_spin_marks + 1; i--; ) backspace();
+                for (int i = s_spin_marks + 1; i--; )
+                {
+                    backspace();
+                }
                 fflush(stdout);
             }
             s_spin_pos = 0;
@@ -699,12 +797,16 @@ void setspin(spin_mode mode)
             s_spin_level = 1;
             spin(10000);
             if (g_spin_count >= g_spin_todo)
+            {
                 g_spin_char = ']';
+            }
             g_spin_count--;
             s_spin_mode = SPIN_FOREGROUND;
         }
         if (mode == SPIN_POP && --s_spin_level > 0)
+        {
             break;
+        }
         s_spin_level = 0;
         if (s_spin_place) {     /* we have spun at least once */
             putchar(g_spin_char); /* get rid of spin character */
@@ -726,11 +828,15 @@ void setspin(spin_mode mode)
 void spin(int count)
 {
     if (!s_spin_level)
+    {
         return;
+    }
     switch (s_spin_mode) {
       case SPIN_BACKGROUND:
         if (!g_bkgnd_spinner)
+        {
             return;
+        }
         if (!(++g_spin_count % count)) {
             putchar(s_spinchars[++s_spin_place % 4]);
             backspace();
@@ -745,7 +851,9 @@ void spin(int count)
         break;
       case SPIN_BARGRAPH: {
           if (g_spin_todo == 0)
+          {
             break;              /* bail out rather than crash */
+          }
         int new_pos = (int)((long)s_spin_marks * ++g_spin_count / g_spin_todo);
         if (s_spin_pos < new_pos && g_spin_count <= g_spin_todo+1) {
             do {
@@ -803,11 +911,15 @@ void perform_status(long cnt, int spin)
     }
 
     if (g_perform_cnt == s_prior_perform_cnt)
+    {
         return;
+    }
 
     time_t now = time((time_t*)nullptr);
     if (now - s_prior_now < 2)
+    {
         return;
+    }
 
     s_prior_now = now;
     s_prior_perform_cnt = g_perform_cnt;
@@ -817,19 +929,29 @@ void perform_status(long cnt, int spin)
     long sels = g_selected_count - s_ps_sel;
 
     if (!(kills | sels))
+    {
         return;
+    }
 
     carriage_return();
     if (g_perform_cnt != sels  && g_perform_cnt != -sels
      && g_perform_cnt != kills && g_perform_cnt != -kills)
+    {
         printf("M:%d ", g_perform_cnt);
+    }
     if (kills)
+    {
         printf("K:%ld ", kills);
+    }
     if (sels)
+    {
         printf("S:%ld ", sels);
+    }
 #if 0
     if (missing > 0)
+    {
         printf("(M: %ld) ", missing);
+    }
 #endif
     erase_eol();
     fflush(stdout);
@@ -844,7 +966,9 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
         neg = true;
     }
     else
+    {
         neg = false;
+    }
 
     if (cp != g_msg) {
         *cp++ = ',';
@@ -852,25 +976,42 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
     }
     sprintf(cp, "%ld ", num);
     if (obj_type)
-        sprintf(cp+=strlen(cp), "%s%s ", obj_type, plural(num));
+    {
+        sprintf(cp += strlen(cp), "%s%s ", obj_type, plural(num));
+    }
     cp += strlen(cp);
     const char *s = modifier;
     if (s != nullptr)
     {
         *cp++ = ' ';
         if (num != 1)
+        {
             s = skip_ne(s, '|');
-        while (*s && *s != '|') *cp++ = *s++;
+        }
+        while (*s && *s != '|')
+        {
+            *cp++ = *s++;
+        }
         *cp++ = ' ';
     }
     s = action;
     if (!neg)
+    {
         s = skip_ne(s, '|');
-    while (*s && *s != '|') *cp++ = *s++;
+    }
+    while (*s && *s != '|')
+    {
+        *cp++ = *s++;
+    }
     s++;
     if (neg)
+    {
         s = skip_ne(s, '|');
-    while (*s) *cp++ = *s++;
+    }
+    while (*s)
+    {
+        *cp++ = *s++;
+    }
 
     *cp = '\0';
     return cp;
@@ -891,9 +1032,11 @@ int perform_status_end(long cnt, const char *obj_type)
     long sels = g_selected_count - s_ps_sel;
 
     if (!g_performed_article_loop)
+    {
         cp = output_change(cp, (long)g_perform_cnt,
                            g_sel_mode == SM_THREAD? "thread" : "subject",
                            nullptr, "ERR|match|ed");
+    }
     else if (g_perform_cnt != sels  && g_perform_cnt != -sels
           && g_perform_cnt != kills && g_perform_cnt != -kills) {
         cp = output_change(cp, (long)g_perform_cnt, obj_type, nullptr,

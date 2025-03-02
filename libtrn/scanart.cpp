@@ -75,10 +75,14 @@ sa_main_result sa_main()
     if (!g_sa_initialized) {
         sa_init();
         if (!g_sa_initialized)          /* still not working... */
+        {
             return SA_ERR;              /* we don't belong here */
+        }
         g_sa_never_initialized = false; /* we have entered at least once */
     } else
+    {
         s_change_context(g_sa_scan_context);
+    }
 
     /* unless "explicit" entry, read any marked articles */
     if (!g_sa_go_explicit) {
@@ -115,10 +119,14 @@ sa_main_result sa_main()
         /* trn 3.x won't read an unselected article if g_selected_only */
         g_selected_only = false;
         if (g_sa_mode_read_elig)
+        {
             g_reread = true;
+        }
     }
     if (g_sa_scan_context >= 0)
+    {
         s_save_context();
+    }
     return i;
 }
 
@@ -126,7 +134,9 @@ sa_main_result sa_main()
 void sa_grow(ART_NUM oldlast, ART_NUM last)
 {
     if (!g_sa_initialized)
+    {
         return;
+    }
     sa_growarts(oldlast,last);
 }
 

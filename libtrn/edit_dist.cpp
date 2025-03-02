@@ -82,13 +82,17 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
 
     if (from == nullptr || !from_len) {
         if (to == nullptr || !to_len)
+        {
             return 0;
+        }
         return to_len * s_insert_cost;
     }
     if (to == nullptr || !to_len)
+    {
         return from_len * s_delete_cost;
+    }
 
-/* Initialize registers */
+    /* Initialize registers */
 
     radix = 2 * from_len + 3;
 #ifdef TRN_SPEEDUP
@@ -116,41 +120,45 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
 /* Allocate the array storage (from the heap if necessary) */
 
     if (from_len <= STRLENTHRESHOLD)
+    {
         buffer = store;
+    }
     else
-        buffer = (int*)safemalloc((MEM_SIZE) radix * sizeof (int));
+    {
+        buffer = (int *) safemalloc((MEM_SIZE) radix * sizeof(int));
+    }
 
-/* Here's where the fun begins.  We will find the minimum edit distance
-   using dynamic programming.  We only need to store two rows of the matrix
-   at a time, since we always progress down the matrix.  For example,
-   given the strings "one" and "two", and insert, delete and change costs
-   equal to 1:
+    /* Here's where the fun begins.  We will find the minimum edit distance
+       using dynamic programming.  We only need to store two rows of the matrix
+       at a time, since we always progress down the matrix.  For example,
+       given the strings "one" and "two", and insert, delete and change costs
+       equal to 1:
 
-           _  o  n  e
-        _  0  1  2  3
-        t  1  1  2  3
-        w  2  2  2  3
-        o  3  2  3  3
+               _  o  n  e
+            _  0  1  2  3
+            t  1  1  2  3
+            w  2  2  2  3
+            o  3  2  3  3
 
-   The dynamic programming recursion is defined as follows:
+       The dynamic programming recursion is defined as follows:
 
-        ar(x,0) := x * s_insert_cost
-        ar(0,y) := y * s_delete_cost
-        ar(x,y) := min(a(x - 1, y - 1) + (from[x] == to[y] ? 0 : change),
-                       a(x - 1, y) + s_insert_cost,
-                       a(x, y - 1) + s_delete_cost,
-                       a(x - 2, y - 2) + (from[x] == to[y-1] &&
-                                          from[x-1] == to[y] ? swap_cost :
-                                          infinity))
+            ar(x,0) := x * s_insert_cost
+            ar(0,y) := y * s_delete_cost
+            ar(x,y) := min(a(x - 1, y - 1) + (from[x] == to[y] ? 0 : change),
+                           a(x - 1, y) + s_insert_cost,
+                           a(x, y - 1) + s_delete_cost,
+                           a(x - 2, y - 2) + (from[x] == to[y-1] &&
+                                              from[x-1] == to[y] ? swap_cost :
+                                              infinity))
 
-   Since this only looks at most two rows and three columns back, we need
-   only store the values for the two preceeding rows.  In this
-   implementation, we do not explicitly store the zero column, so only 2 *
-   from_len + 2   words are needed.  However, in the implementation of the
-   swap_cost   check, the current matrix value is used as a buffer; we
-   can't overwrite the earlier value until the   swap_cost   check has
-   been performed.  So we use   2 * from_len + 3   elements in the buffer.
-*/
+       Since this only looks at most two rows and three columns back, we need
+       only store the values for the two preceeding rows.  In this
+       implementation, we do not explicitly store the zero column, so only 2 *
+       from_len + 2   words are needed.  However, in the implementation of the
+       swap_cost   check, the current matrix value is used as a buffer; we
+       can't overwrite the earlier value until the   swap_cost   check has
+       been performed.  So we use   2 * from_len + 3   elements in the buffer.
+    */
 
 #define ar(x,y,index) (((x) == 0) ? (y) * del : (((y) == 0) ? (x) * ins : \
         buffer[mod(index)]))
@@ -219,17 +227,19 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
                     NW(row, col) + ((from[col] == to[row]) ? 0 : ch),
                     N(row, col + 1) + ins,
                     W(row + 1, col) + del);
-            if (from[col] == to[row - 1] && col > 0 &&
-                    from[col - 1] == to[row])
-                buffer[index] = min2(buffer[index],
-                        NNWW(row - 1, col - 1) + swap_cost);
+            if (from[col] == to[row - 1] && col > 0 && from[col - 1] == to[row])
+            {
+                buffer[index] = min2(buffer[index], NNWW(row - 1, col - 1) + swap_cost);
+            }
 
 #ifdef DEBUG_EDITDIST
             printf("%2d ", buffer[index]);
 #endif
 #ifdef TRN_SPEEDUP
             if (buffer[index] < low || col == 0)
+            {
                 low = buffer[index];
+            }
 #endif
 
             index = mod(index + 1);
@@ -242,12 +252,16 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
 #endif
 #ifdef TRN_SPEEDUP
         if (low > MIN_DIST)
+        {
             break;
+        }
 #endif
     } /* for row = 1 */
 
     row = buffer[mod(index + radix - 1)];
     if (buffer != store)
-        free((char*)buffer);
+    {
+        free((char *) buffer);
+    }
     return row;
 } /* edit_distn */

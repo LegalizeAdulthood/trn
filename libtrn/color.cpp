@@ -107,18 +107,26 @@ void color_init()
             finalize(1);
         }
         if (!strcmp(fg,bg))
+        {
             bg = "";
+        }
         for (COLOR_OBJ &obj : s_objects)
         {
             if (empty(obj.fg))
+            {
                 obj.fg = fg;
+            }
             if (empty(obj.bg))
+            {
                 obj.bg = bg;
+            }
         }
     }
 
     if (s_objects[COLOR_DEFAULT].attr == LASTMARKING)
+    {
         s_objects[COLOR_DEFAULT].attr = NOMARKING;
+    }
 
     /* Set color to default. */
     color_default();
@@ -131,7 +139,9 @@ void color_rc_attribute(const char *object, char *value)
     int i;
     for (i = 0; i < MAX_COLORS; i++) {
         if (string_case_equal(object, s_objects[i].name))
+        {
             break;
+        }
     }
     if (i >= MAX_COLORS) {
         fprintf(stderr,"trn: unknown object '%s' in [attribute] section.\n",
@@ -141,13 +151,21 @@ void color_rc_attribute(const char *object, char *value)
 
     /* Parse the video attribute. */
     if (*value == 's' || *value == 'S')
+    {
         s_objects[i].attr = STANDOUT;
+    }
     else if (*value == 'u' || *value == 'U')
+    {
         s_objects[i].attr = UNDERLINE;
+    }
     else if (*value == 'n' || *value == 'N')
+    {
         s_objects[i].attr = NOMARKING;
+    }
     else if (*value == '-')
+    {
         s_objects[i].attr = LASTMARKING;
+    }
     else {
         fprintf(stderr,"trn: bad attribute '%s' for %s in [attribute] section.\n",
                 value, object);
@@ -175,7 +193,9 @@ void color_rc_attribute(const char *object, char *value)
 
     /* Parse the foreground color. */
     if (*s == '-')
+    {
         s_objects[i].fg = nullptr;
+    }
     else {
         sprintf(g_buf, "fg %s", s);
         s_objects[i].fg = tc_color_capability(g_buf);
@@ -206,7 +226,9 @@ void color_rc_attribute(const char *object, char *value)
 
     /* Parse the background color. */
     if (*s == '-')
+    {
         s_objects[i].bg = nullptr;
+    }
     else {
         sprintf(g_buf, "bg %s", s);
         s_objects[i].bg = tc_color_capability(g_buf);
@@ -217,7 +239,9 @@ void color_rc_attribute(const char *object, char *value)
         }
     }
     if (n)
+    {
         *n = ' ';
+    }
 }
 
 /* Turn on color attribute for an object. */
@@ -229,11 +253,17 @@ void color_object(int object, bool push)
 
     /* Merge in the new colors/attributes. */
     if (s_objects[object].fg)
+    {
         merged.fg = s_objects[object].fg;
+    }
     if (s_objects[object].bg)
+    {
         merged.bg = s_objects[object].bg;
+    }
     if (s_objects[object].attr != LASTMARKING)
+    {
         merged.attr = s_objects[object].attr;
+    }
 
     /* Push onto stack. */
     if (push && ++s_stack_pointer >= STACK_SIZE) {
@@ -253,9 +283,13 @@ void color_pop()
 {
     /* Trying to pop an empty stack? */
     if (--s_stack_pointer < 0)
+    {
         s_stack_pointer = 0;
+    }
     else
+    {
         output_color();
+    }
 }
 
 /* Color a string with the given object's color/attribute. */
@@ -269,14 +303,18 @@ void color_string(int object, const char *str)
         len = 0;
     }
     if (!s_use_colors && *g_tc_UC && s_objects[object].attr == UNDERLINE)
+    {
         underprint(str);        /* hack for stupid terminals */
+    }
     else {
         color_object(object, true);
         fputs(str, stdout);
         color_pop();
     }
     if (!len)
+    {
         putchar('\n');
+    }
 }
 
 /* Turn off color attribute. */
@@ -294,7 +332,9 @@ static void output_color()
 
     /* If no change, just return. */
     if (op->attr == prior.attr && op->fg == prior.fg && op->bg == prior.bg)
+    {
         return;
+    }
 
     /* Start by turning off any existing colors and/or attributes. */
     if (s_use_colors) {
@@ -318,9 +358,13 @@ static void output_color()
     /* For color terminals we set the foreground and background color. */
     if (s_use_colors) {
         if (op->fg != prior.fg)
+        {
             fputs(prior.fg = op->fg, stdout);
+        }
         if (op->bg != prior.bg)
+        {
             fputs(prior.bg = op->bg, stdout);
+        }
     }
 
     /* For both monochrome and color terminals we set the video attribute. */

@@ -77,11 +77,17 @@ void build_cache()
     if (s_cached_ng == g_ngptr && time((time_t*)nullptr) < s_cached_time + 6*60*60L) {
         s_cached_time = time((time_t*)nullptr);
         if (g_sel_mode == SM_ARTICLE)
+        {
             set_selector(g_sel_mode, g_sel_artsort);
+        }
         else
+        {
             set_selector(g_sel_threadmode, g_sel_threadsort);
+        }
         for (ART_NUM an = g_last_cached + 1; an <= g_lastart; an++)
+        {
             article_ptr(an)->flags |= AF_EXISTS;
+        }
         rc_to_bits();
         g_article_list->high = g_lastart;
         thread_grow();
@@ -156,7 +162,9 @@ static void init_artnode(LIST *list, LISTNODE *node)
     memset(node->data, 0, list->items_per_node * list->item_size);
     ARTICLE *ap = (ARTICLE *) node->data;
     for (ART_NUM i = node->low; i <= node->high; i++, ap++)
+    {
         ap->num = i;
+    }
 }
 
 static bool clear_artitem(char *cp, int arg)
@@ -174,10 +182,13 @@ void cache_article(ARTICLE *ap)
     ARTICLE* ap2;
 
     if (!(next = ap->subj->articles) || ap->date < next->date)
+    {
         ap->subj->articles = ap;
+    }
     else {
         while ((next = (ap2 = next)->subj_next) && next->date <= ap->date)
-            ;
+        {
+        }
         ap2->subj_next = ap;
     }
     ap->subj_next = next;
@@ -185,7 +196,9 @@ void cache_article(ARTICLE *ap)
 
     if (!!(ap->flags & AF_UNREAD) ^ g_sel_rereading) {
         if (ap->subj->flags & g_sel_mask)
+        {
             select_article(ap, AUTO_KILL_NONE);
+        }
         else {
             if (ap->subj->flags & SF_WASSELECTED) {
 #if 0
@@ -200,7 +213,9 @@ void cache_article(ARTICLE *ap)
     }
 
     if (g_join_subject_len != 0)
+    {
         check_for_near_subj(ap);
+    }
 }
 
 void check_for_near_subj(ARTICLE *ap)
@@ -213,7 +228,9 @@ void check_for_near_subj(ARTICLE *ap)
     else {
         sp = ap->subj;
         if (sp->next)
+        {
             sp = nullptr;
+        }
     }
     while (sp) {
         if ((int)strlen(sp->str+4) >= g_join_subject_len && sp->thread) {
@@ -240,7 +257,9 @@ void change_join_subject_len(int len)
         }
         g_join_subject_len = len;
         if (len && g_first_subject && g_first_subject->articles)
+        {
             check_for_near_subj(g_first_subject->articles);
+        }
     }
 }
 
@@ -255,10 +274,13 @@ void check_poster(ARTICLE *ap)
             if ((h=strchr(s,'<')) != nullptr) { /* grab the good part */
                 s = h+1;
                 if ((h=strchr(s,'>')) != nullptr)
+                {
                     *h = '\0';
+                }
             } else if ((h=strchr(s,'(')) != nullptr) {
                 while (h-- != s && *h == ' ')
-                    ;
+                {
+                }
                 h[1] = '\0';            /* or strip the comment */
             }
             if ((h = strchr(s, '%')) != nullptr || (h = strchr(s, '@')))
@@ -284,9 +306,13 @@ void check_poster(ARTICLE *ap)
                         break;
                       case 'p':
                         if (ap->parent)
+                        {
                             select_subthread(ap->parent,AUTO_SEL_FOL);
+                        }
                         else
+                        {
                             select_subthread(ap,AUTO_SEL_FOL);
+                        }
                         break;
                     }
                 } else {
@@ -312,7 +338,9 @@ void uncache_article(ARTICLE *ap, bool remove_empties)
         if (all_bits(ap->flags, AF_CACHED | AF_EXISTS)) {
             ARTICLE *next = ap->subj->articles;
             if (next == ap)
+            {
                 ap->subj->articles = ap->subj_next;
+            }
             else {
                 while (next) {
                     ARTICLE *ap2 = next->subj_next;
@@ -328,13 +356,21 @@ void uncache_article(ARTICLE *ap, bool remove_empties)
         if (remove_empties && !ap->subj->articles) {
             SUBJECT* sp = ap->subj;
             if (sp == g_first_subject)
+            {
                 g_first_subject = sp->next;
+            }
             else
+            {
                 sp->prev->next = sp->next;
+            }
             if (sp == g_last_subject)
+            {
                 g_last_subject = sp->prev;
+            }
             else
+            {
                 sp->next->prev = sp->prev;
+            }
             hashdelete(s_subj_hash, sp->str+4, strlen(sp->str+4));
             free((char*)sp);
             ap->subj = nullptr;
@@ -355,15 +391,25 @@ char *fetchcache(ART_NUM artnum, header_line_type which_line, bool fill_cache)
 
     /* article_find() returns a nullptr if the artnum value is invalid */
     if (!(ap = article_find(artnum)) || !(ap->flags & AF_EXISTS))
+    {
         return "";
+    }
     if (cached && (s=get_cached_line(ap,which_line,g_untrim_cache)) != nullptr)
+    {
         return s;
+    }
     if (!fill_cache)
+    {
         return nullptr;
+    }
     if (!parseheader(artnum))
+    {
         return "";
+    }
     if (cached)
-        return get_cached_line(ap,which_line,g_untrim_cache);
+    {
+        return get_cached_line(ap, which_line, g_untrim_cache);
+    }
     return nullptr;
 }
 
@@ -377,9 +423,13 @@ char *get_cached_line(ARTICLE *ap, header_line_type which_line, bool no_truncs)
     switch (which_line) {
       case SUBJ_LINE:
         if (!ap->subj || (no_truncs && (ap->subj->flags & SF_SUBJTRUNCED)))
+        {
             s = nullptr;
+        }
         else
+        {
             s = ap->subj->str + ((ap->flags & AF_HAS_RE) ? 0 : 4);
+        }
         break;
       case FROM_LINE:
         s = ap->from;
@@ -417,9 +467,13 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
     char* subj_start;
 
     if (subject_has_Re(subj, &subj_start))
+    {
         ap->flags |= AF_HAS_RE;
+    }
     if ((size -= subj_start - subj) < 0)
+    {
         size = 0;
+    }
 
     char *newsubj = safemalloc(size + 4 + 1);
     strcpy(newsubj, "Re: ");
@@ -427,11 +481,15 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
 
     /* Do the Re:-stripping over again, just in case it was encoded. */
     if (subject_has_Re(newsubj + 4, &subj_start))
+    {
         ap->flags |= AF_HAS_RE;
+    }
     if (subj_start != newsubj + 4) {
         safecpy(newsubj + 4, subj_start, size);
         if ((size -= subj_start - newsubj - 4) < 0)
+        {
             size = 0;
+        }
     }
     if (ap->subj && !strncmp(ap->subj->str+4, newsubj+4, size)) {
         free(newsubj);
@@ -453,9 +511,13 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
             g_subject_count++;
             sp->prev = g_last_subject;
             if (sp->prev != nullptr)
+            {
                 sp->prev->next = sp;
+            }
             else
+            {
                 g_first_subject = sp;
+            }
             g_last_subject = sp;
             sp->str = newsubj;
             sp->thread_link = sp;
@@ -464,7 +526,9 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
             data.dat_ptr = (char*)sp;
             hashstorelast(data);
         } else
+        {
             free(newsubj);
+        }
         ap->subj = sp;
     }
 }
@@ -504,9 +568,13 @@ int decode_header(char *to, char *from, int size)
                     from = e+2;
                     *e = '\0';
                     if (ch == 'q' || ch == 'Q')
+                    {
                         len = qp_decodestring(to, q, true);
+                    }
                     else
+                    {
                         len = b64_decodestring(to, q);
+                    }
 #ifdef USE_UTF_HACK
                     d = create_utf8_copy(to);
                     if (d) {
@@ -524,15 +592,21 @@ int decode_header(char *to, char *from, int size)
                     from = skip_hor_space(from);
                 }
                 else
+                {
                     *to++ = *from++;
+                }
 #ifdef USE_UTF_HACK
                 utf_init(old_ics, old_ocs);
 #endif
             }
             else
+            {
                 *to++ = *from++;
+            }
         } else if (*from != '\n')
+        {
             *to++ = *from++;
+        }
         else
         {
             from++;
@@ -549,14 +623,18 @@ int decode_header(char *to, char *from, int size)
 
     /* Pass 2 to clear out "control" characters */
     if (pass2needed)
+    {
         dectrl(s);
+    }
     return size;
 }
 
 void dectrl(char *str)
 {
     if (str == nullptr)
+    {
         return;
+    }
 
     for ( ; *str;) {
         int w = byte_length_at(str);
@@ -577,13 +655,17 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
     switch (which_line) {
       case FROM_LINE:
         if (ap->from)
+        {
             free(ap->from);
+        }
         decode_header(s, s, strlen(s));
         ap->from = s;
         break;
       case XREF_LINE:
         if (ap->xrefs && !empty(ap->xrefs))
+        {
             free(ap->xrefs);
+        }
         /* Exclude an xref for just this group or "(none)". */
         cp = strchr(s, ':');
         if (!cp || !strchr(cp+1, ':')) {
@@ -594,7 +676,9 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
         break;
       case MSGID_LINE:
         if (ap->msgid)
+        {
             free(ap->msgid);
+        }
         ap->msgid = s;
         break;
       case LINES_LINE:
@@ -633,7 +717,9 @@ void look_ahead()
         g_artp = g_curr_artp;
         inc_art(g_selected_only,false);
         if (g_artp)
+        {
             parseheader(g_art);
+        }
     }
     else
 #ifdef ARTSEARCH
@@ -646,8 +732,12 @@ void look_ahead()
         interp(h,(sizeof g_buf) - (h-g_buf),"%\\s");
         {                       /* compensate for notesfiles */
             for (int i = 24; *h && i--; h++)
+            {
                 if (*h == '\\')
+                {
                     h++;
+                }
+            }
             *h = '\0';
         }
 #ifdef DEBUG
@@ -674,7 +764,9 @@ void look_ahead()
                 if (g_srchahead > g_lastart) { /* out of articles? */
 #ifdef DEBUG
                     if (debug)
+                    {
                         fputs("(not found)",stdout);
+                    }
 #endif
                     break;
                 }
@@ -683,13 +775,17 @@ void look_ahead()
                                     /* does the shoe fit? */
 #ifdef DEBUG
                     if (debug)
+                    {
                         printf("(%ld)",(long)g_srchahead);
+                    }
 #endif
                     parseheader(g_srchahead);
                     break;
                 }
                 if (input_pending())
+                {
                     break;
+                }
             }
             fflush(stdout);
         }
@@ -698,7 +794,9 @@ void look_ahead()
 #endif /* ARTSEARCH */
     {
         if (article_next(g_art) <= g_lastart)   /* how about a pre-fetch? */
+        {
             parseheader(article_next(g_art));   /* look for the next article */
+        }
     }
 }
 #endif /* PENDING */
@@ -708,13 +806,19 @@ void look_ahead()
 void cache_until_key()
 {
     if (!g_in_ng)
+    {
         return;
+    }
 #ifdef PENDING
     if (input_pending())
+    {
         return;
+    }
 
     if ((g_datasrc->flags & DF_REMOTE) && nntp_finishbody(FB_BACKGROUND))
+    {
         return;
+    }
 
     g_untrim_cache = true;
     g_sentinel_artp = g_curr_artp;
@@ -725,9 +829,13 @@ void cache_until_key()
             if (cache_xrefs()) {
                 if (chase_xrefs(true)) {
                     if (g_threaded_group)
+                    {
                         cache_all_arts();
+                    }
                     else
+                    {
                         cache_unread_arts();
+                    }
                 }
             }
         }
@@ -736,14 +844,18 @@ void cache_until_key()
             if (cache_subjects()) {
                 if (cache_unread_arts()) {
                     if (cache_xrefs())
+                    {
                         chase_xrefs(true);
+                    }
                 }
             }
         }
     }
 
     if (!input_pending() && g_sc_initialized)
-        sc_lookahead(true,true);
+    {
+        sc_lookahead(true, true);
+    }
 
     setspin(SPIN_OFF);
     g_untrim_cache = false;
@@ -757,14 +869,20 @@ bool cache_subjects()
     ART_NUM an;
 
     if (s_subj_to_get > g_lastart)
+    {
         return true;
+    }
     setspin(SPIN_BACKGROUND);
     for (an=article_first(s_subj_to_get); an <= g_lastart; an=article_next(an)) {
         if (input_pending())
+        {
             break;
+        }
 
         if (article_unread(an))
-            fetchsubj(an,false);
+        {
+            fetchsubj(an, false);
+        }
     }
     s_subj_to_get = an;
     return s_subj_to_get > g_lastart;
@@ -775,13 +893,19 @@ bool cache_xrefs()
     ART_NUM an;
 
     if (g_olden_days || (g_datasrc->flags & DF_NOXREFS) || s_xref_to_get > g_lastart)
+    {
         return true;
+    }
     setspin(SPIN_BACKGROUND);
     for (an=article_first(s_xref_to_get); an <= g_lastart; an=article_next(an)) {
         if (input_pending())
+        {
             break;
+        }
         if (article_unread(an))
-            fetchxref(an,false);
+        {
+            fetchxref(an, false);
+        }
     }
     s_xref_to_get = an;
     return s_xref_to_get > g_lastart;
@@ -791,15 +915,21 @@ bool cache_all_arts()
 {
     int old_last_cached = g_last_cached;
     if (!g_cached_all_in_range)
-        g_last_cached = g_first_cached-1;
+    {
+        g_last_cached = g_first_cached - 1;
+    }
     if (g_last_cached >= g_lastart && g_first_cached <= g_absfirst)
+    {
         return true;
+    }
 
     /* turn it on as late as possible to avoid fseek()ing openart */
     setspin(SPIN_BACKGROUND);
     if (g_last_cached < g_lastart) {
         if (g_datasrc->ov_opened)
-            ov_data(g_last_cached+1, g_lastart, true);
+        {
+            ov_data(g_last_cached + 1, g_lastart, true);
+        }
         if (!art_data(g_last_cached+1, g_lastart, true, true)) {
             g_last_cached = old_last_cached;
             return false;
@@ -808,9 +938,13 @@ bool cache_all_arts()
     }
     if (g_first_cached > g_absfirst) {
         if (g_datasrc->ov_opened)
-            ov_data(g_absfirst, g_first_cached-1, true);
+        {
+            ov_data(g_absfirst, g_first_cached - 1, true);
+        }
         else
-            art_data(g_absfirst, g_first_cached-1, true, true);
+        {
+            art_data(g_absfirst, g_first_cached - 1, true, true);
+        }
         /* If we got interrupted, make a quick exit */
         if (g_first_cached > g_absfirst) {
             g_last_cached = old_last_cached;
@@ -820,17 +954,23 @@ bool cache_all_arts()
     /* We're all done threading the group, so if the current article is
     ** still in doubt, tell them it's missing. */
     if (g_curr_artp && !(g_curr_artp->flags & AF_CACHED) && !input_pending())
+    {
         pushchar('\f' | 0200);
+    }
     /* A completely empty group needs a count & a sort */
     if (g_general_mode != GM_SELECTOR && !g_obj_count && !g_selected_only)
+    {
         thread_grow();
+    }
     return true;
 }
 
 bool cache_unread_arts()
 {
     if (g_last_cached >= g_lastart)
+    {
         return true;
+    }
     setspin(SPIN_BACKGROUND);
     return art_data(g_last_cached+1, g_lastart, true, false);
 }
@@ -846,7 +986,9 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
     int cachemask2 = (all_articles? 0 : AF_UNREAD);
 
     if (cheating)
+    {
         setspin(SPIN_BACKGROUND);
+    }
     else {
         int lots2do = ((g_datasrc->flags & DF_REMOTE)? g_net_speed : 20) * 25;
         setspin(g_spin_estimate > lots2do? SPIN_BARGRAPH : SPIN_FOREGROUND);
@@ -854,7 +996,9 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
     /*TRN_ASSERT(first >= g_absfirst && last <= g_lastart);*/
     for (i = article_first(first); i <= last; i = article_next(i)) {
         if ((article_ptr(i)->flags & cachemask) ^ cachemask2)
+        {
             continue;
+        }
 
         g_spin_todo -= i - expected_i;
         expected_i = i + 1;
@@ -868,7 +1012,9 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
         }
         if (cheating) {
             if (input_pending())
+            {
                 break;
+            }
             /* If the current article is no longer a '?', let them know. */
             if (g_curr_artp != g_sentinel_artp) {
                 pushchar('\f' | 0200);
@@ -900,19 +1046,29 @@ bool cache_range(ART_NUM first, ART_NUM last)
         g_last_cached = first-1;
     }
     if (first < g_first_cached)
-        count = g_first_cached-first;
+    {
+        count = g_first_cached - first;
+    }
     if (last > g_last_cached)
-        count += last-g_last_cached;
+    {
+        count += last - g_last_cached;
+    }
     if (!count)
+    {
         return true;
+    }
     g_spin_todo = count;
 
     if (g_first_cached > g_last_cached) {
         if (g_sel_rereading) {
             if (g_first_subject)
+            {
                 count -= g_ngptr->toread;
+            }
         } else if (first == g_firstart && last == g_lastart && !all_arts)
+        {
             count = g_ngptr->toread;
+        }
     }
     g_spin_estimate = count;
 
@@ -933,7 +1089,9 @@ bool cache_range(ART_NUM first, ART_NUM last)
     }
     if (success && g_last_cached < last) {
         if (g_datasrc->ov_opened)
-            ov_data(g_last_cached+1, last, false);
+        {
+            ov_data(g_last_cached + 1, last, false);
+        }
         success = art_data(g_last_cached+1, last, false, all_arts);
         g_cached_all_in_range = (all_arts && success);
     }
@@ -944,9 +1102,15 @@ bool cache_range(ART_NUM first, ART_NUM last)
 void clear_article(ARTICLE *ap)
 {
     if (ap->from)
+    {
         free(ap->from);
+    }
     if (ap->msgid)
+    {
         free(ap->msgid);
+    }
     if (ap->xrefs && !empty(ap->xrefs))
+    {
         free(ap->xrefs);
+    }
 }

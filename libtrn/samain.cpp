@@ -32,16 +32,24 @@ void sa_init()
 {
     sa_init_context();
     if (g_lastart == 0 || g_absfirst > g_lastart)
+    {
         return;         /* no articles */
+    }
     if (s_initscreen())         /* If not able to init screen...*/
+    {
         return;                         /* ...most likely dumb terminal */
+    }
     sa_initmode();                      /*      mode differences */
     sa_init_threads();
     g_sa_mode_read_elig = false;
     if (g_firstart > g_lastart)         /* none unread */
+    {
         g_sa_mode_read_elig = true;     /* unread+read in some situations */
+    }
     if (!sa_initarts())                 /* init article array(s) */
+    {
         return;                         /* ... no articles */
+    }
 #ifdef PENDING
     if (g_sa_mode_read_elig) {
         g_sc_fill_read = true;
@@ -106,17 +114,23 @@ void sa_cleanmain()
 void sa_growarts(long oldlast, long last)
 {
     for (int i = oldlast + 1; i <= last; i++)
+    {
         (void)sa_add_ent(i);
+    }
 }
 
 /* Initialize the scan-context to enter article scan mode. */
 void sa_init_context()
 {
     if (s_sa_context_init)
+    {
         return;         /* already initialized */
+    }
 
     if (g_sa_scan_context == -1)
+    {
         g_sa_scan_context = s_new_context(S_ART);
+    }
     s_change_context(g_sa_scan_context);
     s_sa_context_init = true;
 }
@@ -127,7 +141,9 @@ bool sa_initarts()
     /* add all available articles to entry list */
     for (int a = article_first(g_absfirst); a <= g_lastart; a = article_next(a)) {
         if (article_exists(a))
+        {
             (void)sa_add_ent(a);
+        }
     }
     return true;
 }
@@ -155,12 +171,16 @@ sa_main_result sa_mainloop()
         g_sc_delay = false;     /* yes, actually score... */
         sc_init(true);          /* wait for articles to score */
         if (!g_sc_initialized)
+        {
             g_sa_mode_order = SA_ORDER_ARRIVAL; /* arrival order */
+        }
     }
     /* redraw it *all* */
     g_s_ref_all = true;
     if (g_s_top_ent < 1)
+    {
         g_s_top_ent = s_first();
+    }
     int i = s_fillpage();
     if (i == -1 || i == 0) {
         /* for now just quit if no page could be filled. */
@@ -193,12 +213,18 @@ long sa_readmarked_elig()
 {
     long e = s_first();
     if (!e)
+    {
         return 0L;
+    }
     for ( ; e; e = s_next(e)) {
         if (!sa_basic_elig(e))
+        {
             continue;
+        }
         if (sa_marked(e))
+        {
             return e;
+        }
     }
     /* This is possible since the marked articles might not be eligible. */
     return 0;

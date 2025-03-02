@@ -69,7 +69,9 @@ int help_page()
                            "\n"
                            "(To return to the middle of the article after one of these commands, type ^L.)\n",
                            NOMARKING)))
+    {
         return cmd;
+    }
     return 0;
 }
 
@@ -198,7 +200,9 @@ int help_art()
                            "'s      Show scoring rules which contributed to this article's score.\n"
                            "'t      Test command: may do varying things.  (will usually be disabled)\n",
                            NOMARKING)))
+    {
         return cmd;
+    }
     return 0;
 }
 
@@ -207,7 +211,9 @@ int help_ng()
     page_start();
     int cmd = print_lines("Newsgroup Selection commands:\n", STANDOUT);
     if (cmd != 0)
+    {
         return cmd;
+    }
     if (g_ngptr)
     {
         if ((cmd = print_lines("\n"
@@ -223,7 +229,9 @@ int help_ng()
                                "^N      Switch to next news source (the numbered GROUPs in ~/.trn/access).\n"
                                "^P      Switch to the previous news source.\n",
                                NOMARKING)))
+        {
             return cmd;
+        }
     }
     if ((cmd = print_lines("t       Toggle the newsgroup between threaded and unthreaded reading.\n"
                            "c       Catch up (mark all articles as read).\n"
@@ -264,10 +272,14 @@ int help_ng()
                            "        pattern in every newsgroup.\n"
                            "v       Print version and the address for reporting bugs.\n",
                            NOMARKING)))
+    {
         return cmd;
+    }
     cmd = get_anything();
     if (cmd != 0)
+    {
         return cmd;
+    }
     show_macros();
     return 0;
 }
@@ -324,7 +336,9 @@ int help_ngsel()
                            "q       Quit trn.\n"
                            "Q       Quit the selector and return to the rn-style group selector.\n",
                            NOMARKING)))
+    {
         return cmd;
+    }
     return 0;
 }
 
@@ -363,7 +377,9 @@ int help_addsel()
                            "h, ?    Enter online help browser.\n"
                            "q       Quit the selector.\n",
                            NOMARKING)))
+    {
         return cmd;
+    }
     return 0;
 }
 
@@ -443,7 +459,9 @@ int help_subs()
                            "Put \\ in the middle to quote regexp and % characters in the resulting string\n"
                            "Put :FMT in the middle to format the result printf-style:  %:-30.30t\n",
                            NOMARKING)))
+    {
         return cmd;
+    }
     return 0;
 }
 
@@ -525,7 +543,9 @@ int help_artsel()
                            "q       Quit the selector and the group.\n"
                            "Q       Quit group and return to news group selection prompt for this group.\n",
                            NOMARKING)))
+    {
         return cmd;
+    }
     return 0;
 }
 
@@ -558,7 +578,9 @@ int help_multirc()
                            "h, ?    Enter online help browser.\n"
                            "q       Quit trn.\n",
                            NOMARKING)))
+    {
         return cmd;
+    }
     return 0;
 }
 
@@ -658,7 +680,9 @@ int help_options()
                            "Checkpoint Newsrc Frequency... [# articles]\n"
                            "Active File Refetch Mins...... no/[# mins]\n",
                            NOMARKING)))
+    {
         return cmd;
+    }
     return 0;
 }
 
@@ -793,7 +817,9 @@ int help_scanart()
                            "'s      Show scoring rules which contributed to this article's score.\n"
                            "'t      Test command: may do varying things.  (will usually be disabled)\n",
                            NOMARKING)))
+    {
         return cmd;
+    }
 #endif /* !UNDEF (later the !doshell part) */
     return 0;
 }
@@ -833,7 +859,9 @@ int help_univ()
                            "q       Quit current level.  At top level, leave trn.\n"
                            "Q       Quit the current level.  At top level, go to the next selector.\n",
                            NOMARKING)))
+    {
         return cmd;
+    }
     return 0;
 }
 

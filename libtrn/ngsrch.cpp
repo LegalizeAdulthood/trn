@@ -33,8 +33,12 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
 {
     g_int_count = 0;
     if (get_cmd && g_buf == patbuf)
+    {
         if (!finish_command(false))     /* get rest of command */
+        {
             return NGS_ABORT;
+        }
+    }
 
     perform_status_init(g_newsgroup_toread);
     char const cmdchr = *patbuf;         /* what kind of search? */
@@ -44,7 +48,9 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
     {
     }
     if (*pattern)
+    {
         s_ng_doempty = false;
+    }
 
     if (*s) {                           /* modifiers or commands? */
         while (*++s) {
@@ -59,22 +65,32 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
       loop_break:;
     }
     while (isspace(*s) || *s == ':')
+    {
         s++;
+    }
     char *cmdlst = nullptr; /* list of commands to do */
     if (*s)
+    {
         cmdlst = savestr(s);
+    }
     else if (g_general_mode == GM_SELECTOR)
+    {
         cmdlst = savestr("+");
+    }
     ng_search_result ret = NGS_NOTFOUND; /* assume no commands */
     if (cmdlst)
+    {
         ret = NGS_DONE;
+    }
     const char *err = ng_comp(&s_ngcompex, pattern, true, true);
     if (err != nullptr)
     {
                                         /* compile regular expression */
         errormsg(err);
         if (cmdlst)
+        {
             free(cmdlst);
+        }
         return NGS_ERROR;
     }
     if (!cmdlst) {
@@ -88,17 +104,23 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
         do {
             if (execute(&s_ngcompex,gp->name) != nullptr) {
                 if (!cmdlst)
+                {
                     return NGS_FOUND;
+                }
                 if (addgrp_perform(gp,cmdlst,output_level && g_page_line==1)<0) {
                     free(cmdlst);
                     return NGS_INTR;
                 }
             }
             if (!output_level && g_page_line == 1)
+            {
                 perform_status(g_newsgroup_toread, 50);
+            }
         } while ((gp = gp->next) != nullptr);
         if (cmdlst)
+        {
             free(cmdlst);
+        }
         return ret;
     }
 
@@ -112,9 +134,13 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
         }
         else if (!cmdlst) {
             if (g_ngptr == g_first_ng)  /* skip current newsgroup */
+            {
                 g_ngptr = g_last_ng;
+            }
             else
+            {
                 g_ngptr = g_ngptr->prev;
+            }
         }
     }
     else {
@@ -125,14 +151,20 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
         }
         else if (!cmdlst) {
             if (g_ngptr == g_last_ng)   /* skip current newsgroup */
+            {
                 g_ngptr = g_first_ng;
+            }
             else
+            {
                 g_ngptr = g_ngptr->next;
+            }
         }
     }
 
     if (!g_ngptr)
+    {
         return NGS_NOTFOUND;
+    }
 
     do {
         if (g_int_count) {
@@ -143,10 +175,14 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
 
         if (g_ngptr->toread >= TR_NONE && ng_wanted(g_ngptr)) {
             if (g_ngptr->toread == TR_NONE)
+            {
                 set_toread(g_ngptr, ST_LAX);
+            }
             if (s_ng_doempty || ((g_ngptr->toread > TR_NONE) ^ g_sel_rereading)) {
                 if (!cmdlst)
+                {
                     return NGS_FOUND;
+                }
                 set_ng(g_ngptr);
                 if (ng_perform(cmdlst,output_level && g_page_line == 1) < 0) {
                     free(cmdlst);
@@ -159,13 +195,17 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
             }
         }
         if (!output_level && g_page_line == 1)
+        {
             perform_status(g_newsgroup_toread, 50);
+        }
     } while ((g_ngptr = (backward? (g_ngptr->prev? g_ngptr->prev : g_last_ng)
                                : (g_ngptr->next? g_ngptr->next : g_first_ng)))
                 != ng_start);
 
     if (cmdlst)
+    {
         free(cmdlst);
+    }
     return ret;
 }
 
@@ -182,7 +222,9 @@ const char *ng_comp(COMPEX *compex, const char *pattern, bool RE, bool fold)
 
     if (!*s) {
         if (compile(compex, "", RE, fold))
+        {
             return "No previous search pattern";
+        }
         return nullptr;                 /* reuse old pattern */
     }
     for (; *s; s++) {
@@ -198,7 +240,9 @@ const char *ng_comp(COMPEX *compex, const char *pattern, bool RE, bool fold)
             *d++ = *s;
         }
         else
+        {
             *d++ = *s;
+        }
     }
     *d = '\0';
     return compile(compex,ng_pattern,RE,fold);

@@ -88,15 +88,21 @@ bool initialize(int argc, char *argv[])
     /* now make sure we have a current working directory */
 
     if (!g_checkflag)
+    {
         cwd_check();
+    }
 
     if (init_nntp() < 0)
+    {
         finalize(1);
+    }
 
     /* if we aren't just checking, turn off echo */
 
     if (!g_checkflag)
+    {
         term_set(tcbuf);
+    }
 
     /* get info on last trn run, if any */
 
@@ -109,7 +115,9 @@ bool initialize(int argc, char *argv[])
     /* check for news news */
 
     if (!g_checkflag)
+    {
         newsnews_check();
+    }
 
     /* process the newsid(s) and associate the newsrc(s) */
 
@@ -147,7 +155,9 @@ bool initialize(int argc, char *argv[])
     writelast();        /* remember last runtime in .rnlast */
 
     if (g_maxngtodo)                    /* patterns on command line? */
+    {
         foundany |= scanactive(true);
+    }
 
     return foundany;
 }
@@ -161,7 +171,9 @@ void newsnews_check()
         fstat(fileno(fp),&news_news_stat);
         if (news_news_stat.st_mtime > (time_t)g_lasttime) {
             while (fgets(g_buf,sizeof(g_buf),fp) != nullptr)
-                fputs(g_buf,stdout);
+            {
+                fputs(g_buf, stdout);
+            }
             get_anything();
             putchar('\n');
         }

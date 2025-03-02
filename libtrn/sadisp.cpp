@@ -25,15 +25,25 @@ void sa_refresh_top()
     printf(" %d",sa_number_arts());
 
     if (g_sa_mode_read_elig)
+    {
         printf(" unread+read");
+    }
     else
+    {
         printf(" unread");
+    }
     if (g_sa_mode_zoom)
+    {
         printf(" zoom");
+    }
     if (g_sa_mode_fold)
+    {
         printf(" Fold");
+    }
     if (g_sa_follow)
+    {
         printf(" follow");
+    }
     color_pop();        /* of COLOR_SCORE */
     erase_eol();
     printf("\n");
@@ -52,9 +62,13 @@ void sa_refresh_bot()
         break;
       case SA_ORDER_DESCENDING:
         if (g_score_newfirst)
+        {
             s = "score (new>old)";
+        }
         else
+        {
             s = "score (old>new)";
+        }
         break;
       default:
         s = "unknown";
@@ -78,9 +92,13 @@ void sa_set_screen()
     g_s_cursor_cols = 2;
 
     if (g_s_itemnum)
+    {
         g_s_itemnum_cols = 3;
+    }
     else
+    {
         g_s_itemnum_cols = 0;
+    }
 
     /* (g_scr_width-1) keeps last character blank. */
     g_s_desc_cols = (g_scr_width-1) -g_s_status_cols -g_s_cursor_cols -g_s_itemnum_cols;

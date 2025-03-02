@@ -199,7 +199,9 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 
     prep_ini_words(g_options_ini);
     if (argc >= 2 && !strcmp(argv[1],"-c"))
+    {
         g_checkflag=true;                       /* so we can optimize for -c */
+    }
     interp(*tcbufptr,TCBUF_SIZE,GLOBINIT);
     opt_file(*tcbufptr,tcbufptr,false);
 
@@ -222,14 +224,22 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
         }
     }
     if (stat(g_ini_file.c_str(),&ini_stat) == 0)
-        opt_file(g_ini_file.c_str(),tcbufptr,true);
+    {
+        opt_file(g_ini_file.c_str(), tcbufptr, true);
+    }
     if (!g_use_threads || (s = get_val("TRNINIT")) == nullptr)
+    {
         s = get_val("RNINIT");
+    }
     if (*safecpy(*tcbufptr,s,TCBUF_SIZE)) {
         if (*s == '-' || *s == '+' || isspace(*s))
+        {
             sw_list(*tcbufptr);
+        }
         else
+        {
             sw_file(tcbufptr);
+        }
     }
     g_option_saved_vals = (char**)safemalloc(len*sizeof(char*));
     memset((char*)g_option_saved_vals,0,(g_options_ini)[0].checksum * sizeof (char*));
@@ -238,7 +248,9 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 
     if (argc > 1) {
         for (int i = 1; i < argc; i++)
+        {
             decode_switch(argv[i]);
+        }
     }
     init_compex(&g_optcompex);
 
@@ -287,11 +299,15 @@ void opt_file(const char *filename, char **tcbufptr, bool bleat)
             char *s = filebuf;
             while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
                 if (*cond && !check_ini_cond(cond))
+                {
                     continue;
+                }
                 if (!strcmp(section,"options")) {
                     s = parse_ini_section(s, g_options_ini);
                     if (!s)
+                    {
                         break;
+                    }
                     set_options(ini_values(g_options_ini));
                 }
                 else if (!strcmp(section,"environment")) {
@@ -344,7 +360,9 @@ void set_options(char **vals)
     int limit = ini_len(g_options_ini);
     for (int i = 1; i < limit; i++) {
         if (*++vals)
+        {
             set_option(static_cast<option_index>(i), *vals);
+        }
     }
 }
 
@@ -354,12 +372,16 @@ void set_option(option_index num, const char *s)
         if (!g_option_saved_vals[num]) {
             g_option_saved_vals[num] = savestr(option_value(num));
             if (!g_option_def_vals[num])
+            {
                 g_option_def_vals[num] = g_option_saved_vals[num];
+            }
         }
     }
     else if (g_option_def_vals) {
         if (!g_option_def_vals[num])
+        {
             g_option_def_vals[num] = savestr(option_value(num));
+        }
     }
     switch (num) {
       case OI_USE_THREADS:
@@ -381,7 +403,9 @@ void set_option(option_index num, const char *s)
       case OI_UNIV_SEL_CMDS:
         *s_univ_sel_cmds = *s;
         if (s[1])
+        {
             s_univ_sel_cmds[1] = s[1];
+        }
         break;
       case OI_UNIV_SEL_BTNS:
         g_univ_sel_btn_cnt = parse_mouse_buttons(&g_univ_sel_btns,s);
@@ -398,7 +422,9 @@ void set_option(option_index num, const char *s)
       case OI_NEWSRC_SEL_CMDS:
         *g_newsrc_sel_cmds = *s;
         if (s[1])
+        {
             g_newsrc_sel_cmds[1] = s[1];
+        }
         break;
       case OI_NEWSRC_SEL_BTNS:
         g_newsrc_sel_btn_cnt = parse_mouse_buttons(&g_newsrc_sel_btns,s);
@@ -409,7 +435,9 @@ void set_option(option_index num, const char *s)
       case OI_ADD_SEL_CMDS:
         *g_add_sel_cmds = *s;
         if (s[1])
+        {
             g_add_sel_cmds[1] = s[1];
+        }
         break;
       case OI_ADD_SEL_BTNS:
         g_add_sel_btn_cnt = parse_mouse_buttons(&g_add_sel_btns,s);
@@ -423,7 +451,9 @@ void set_option(option_index num, const char *s)
       case OI_NEWSGROUP_SEL_CMDS:
         *g_newsgroup_sel_cmds = *s;
         if (s[1])
+        {
             g_newsgroup_sel_cmds[1] = s[1];
+        }
         break;
       case OI_NEWSGROUP_SEL_BTNS:
         g_newsgroup_sel_btn_cnt = parse_mouse_buttons(&g_newsgroup_sel_btns,s);
@@ -437,9 +467,13 @@ void set_option(option_index num, const char *s)
         break;
       case OI_USE_NEWS_SEL:
         if (isdigit(*s))
+        {
             g_use_news_selector = atoi(s);
+        }
         else
+        {
             g_use_news_selector = static_cast<int>(YES(s)) - 1;
+        }
         break;
       case OI_NEWS_SEL_MODE: {
         const sel_mode save_sel_mode = g_sel_mode;
@@ -457,7 +491,9 @@ void set_option(option_index num, const char *s)
       case OI_NEWS_SEL_CMDS:
         *g_news_sel_cmds = *s;
         if (s[1])
+        {
             g_news_sel_cmds[1] = s[1];
+        }
         break;
       case OI_NEWS_SEL_BTNS:
         g_news_sel_btn_cnt = parse_mouse_buttons(&g_news_sel_btns,s);
@@ -472,7 +508,9 @@ void set_option(option_index num, const char *s)
       case OI_OPTION_SEL_CMDS:
         *g_option_sel_cmds = *s;
         if (s[1])
+        {
             g_option_sel_cmds[1] = s[1];
+        }
         break;
       case OI_OPTION_SEL_BTNS:
         g_option_sel_btn_cnt = parse_mouse_buttons(&g_option_sel_btns,s);
@@ -496,9 +534,13 @@ void set_option(option_index num, const char *s)
       case OI_AUTO_ARROW_MACROS: {
         int prev = g_auto_arrow_macros;
         if (YES(s) || *s == 'r' || *s == 'R')
+        {
             g_auto_arrow_macros = 2;
+        }
         else
+        {
             g_auto_arrow_macros = !NO(s);
+        }
         if (g_mode != MM_INITIALIZING && g_auto_arrow_macros != prev) {
             char tmpbuf[1024];
             arrow_macros(tmpbuf);
@@ -540,7 +582,9 @@ void set_option(option_index num, const char *s)
         break;
       case OI_HEADER_MAGIC:
         if (!g_checkflag)
+        {
             set_header_list(HT_MAGIC, HT_DEFMAGIC, s);
+        }
         break;
       case OI_HEADER_HIDING:
         set_header_list(HT_HIDE, HT_DEFHIDE, s);
@@ -556,9 +600,13 @@ void set_option(option_index num, const char *s)
         break;
       case OI_JOIN_SUBJECT_LINES:
         if (isdigit(*s))
+        {
             change_join_subject_len(atoi(s));
+        }
         else
+        {
             change_join_subject_len(YES(s)? 30 : 0);
+        }
         break;
       case OI_IGNORE_THRU_ON_SELECT:
         g_kill_thru_kludge = YES(s);
@@ -578,25 +626,41 @@ void set_option(option_index num, const char *s)
         break;
       case OI_PAGER_LINE_MARKING:
         if (isdigit(*s))
+        {
             g_marking_areas = static_cast<marking_areas>(atoi(s));
+        }
         else
+        {
             g_marking_areas = HALFPAGE_MARKING;
+        }
         if (NO(s))
+        {
             g_marking = NOMARKING;
+        }
         else if (*s == 'u')
+        {
             g_marking = UNDERLINE;
+        }
         else
+        {
             g_marking = STANDOUT;
+        }
         break;
       case OI_OLD_MTHREADS_DATABASE:
         if (isdigit(*s))
+        {
             g_olden_days = atoi(s);
+        }
         else
+        {
             g_olden_days = YES(s);
+        }
         break;
       case OI_SELECT_MY_POSTS:
         if (NO(s))
+        {
             g_auto_select_postings = 0;
+        }
         else {
             switch (*s) {
               case 't':
@@ -634,7 +698,9 @@ void set_option(option_index num, const char *s)
         else {
             g_suppress_cn = NO(s);
             if (!g_suppress_cn)
+            {
                 g_countdown = 5;
+            }
         }
         break;
       case OI_RESTART_AT_LAST_GROUP:
@@ -642,14 +708,20 @@ void set_option(option_index num, const char *s)
         break;
       case OI_SCANMODE_COUNT:
         if (isdigit(*s))
+        {
             g_scanon = atoi(s);
+        }
         else
+        {
             g_scanon = YES(s)*3;
+        }
         break;
       case OI_TERSE_OUTPUT:
         g_verbose = !YES(s);
         if (!g_verbose)
+        {
             g_novice_delays = false;
+        }
         break;
       case OI_EAT_TYPEAHEAD:
         g_allow_typeahead = !YES(s);
@@ -664,17 +736,27 @@ void set_option(option_index num, const char *s)
         if (isdigit(*s)) {
             g_max_tree_lines = atoi(s);
             if (g_max_tree_lines > 11)
+            {
                 g_max_tree_lines = 11;
+            }
         } else
+        {
             g_max_tree_lines = YES(s) * 6;
+        }
         break;
       case OI_WORD_WRAP_MARGIN:
         if (isdigit(*s))
+        {
             g_word_wrap_offset = atoi(s);
+        }
         else if (YES(s))
+        {
             g_word_wrap_offset = 8;
+        }
         else
+        {
             g_word_wrap_offset = -1;
+        }
         break;
       case OI_DEFAULT_REFETCH_TIME:
         g_def_refetch_secs = text2secs(s, DEFAULT_REFETCH_SECS);
@@ -770,12 +852,16 @@ void save_options(const char *filename)
             cp = line;
             nlp = strchr(cp, '\n');
             if (nlp)
+            {
                 *nlp++ = '\0';
+            }
             cp = skip_space(cp);
             if (*cp == '[' && !strncmp(cp+1,"options]",8)) {
                 cp = skip_space(cp + 9);
                 if (!*cp)
+                {
                     break;
+                }
             }
             fputs(line, fp_out);
             fputc('\n', fp_out);
@@ -784,17 +870,30 @@ void save_options(const char *filename)
             cp = line;
             nlp = strchr(cp, '\n');
             if (nlp)
+            {
                 nlp++;
-            while (*cp != '\n' && isspace(*cp)) cp++;
+            }
+            while (*cp != '\n' && isspace(*cp))
+            {
+                cp++;
+            }
             if (*cp == '[')
+            {
                 break;
+            }
             if (isalpha(*cp))
+            {
                 comments = nullptr;
+            }
             else if (!comments)
+            {
                 comments = line;
+            }
         }
         if (comments)
+        {
             line = comments;
+        }
     }
     else {
         const char *t = g_use_threads? "T" : "";
@@ -813,15 +912,21 @@ void save_options(const char *filename)
     fprintf(fp_out,"[options]\n");
     for (int i = 1; g_options_ini[i].checksum; i++) {
         if (*g_options_ini[i].item == '*')
-            fprintf(fp_out,"# ==%s========\n",g_options_ini[i].item+1);
+        {
+            fprintf(fp_out, "# ==%s========\n", g_options_ini[i].item + 1);
+        }
         else {
             fprintf(fp_out,"%s = ",g_options_ini[i].item);
             if (!g_option_def_vals[i])
-                fputs("#default of ",fp_out);
+            {
+                fputs("#default of ", fp_out);
+            }
             fprintf(fp_out,"%s\n",quote_string(option_value(static_cast<option_index>(i))));
             if (g_option_saved_vals[i]) {
                 if (g_option_saved_vals[i] != g_option_def_vals[i])
+                {
                     free(g_option_saved_vals[i]);
+                }
                 g_option_saved_vals[i] = nullptr;
             }
         }
@@ -843,7 +948,9 @@ void save_options(const char *filename)
         first_time = false;
     }
     else
+    {
         remove(filename);
+    }
 
     sprintf(g_buf,"%s.new",filename);
     rename(g_buf,filename);
@@ -891,12 +998,17 @@ const char *option_value(option_index num)
         return expand_mouse_buttons(g_newsgroup_sel_btns,g_newsgroup_sel_btn_cnt);
       case OI_NEWSGROUP_SEL_STYLES: {
         char* s = g_sel_grp_dmode;
-        while (s[-1] != '*') s--;
+        while (s[-1] != '*')
+        {
+            s--;
+        }
         return s;
       }
       case OI_USE_NEWS_SEL:
         if (g_use_news_selector < 1)
+        {
             return YESorNO(g_use_news_selector+1);
+        }
         sprintf(g_buf,"%d",g_use_news_selector);
         return g_buf;
       case OI_NEWS_SEL_MODE: {
@@ -918,7 +1030,10 @@ const char *option_value(option_index num)
         return expand_mouse_buttons(g_news_sel_btns,g_news_sel_btn_cnt);
       case OI_NEWS_SEL_STYLES: {
         char* s = g_sel_art_dmode;
-        while (s[-1] != '*') s--;
+        while (s[-1] != '*')
+        {
+            s--;
+        }
         return s;
       }
       case OI_OPTION_SEL_CMDS:
@@ -964,9 +1079,11 @@ const char *option_value(option_index num)
         return hidden_list();
       case OI_INITIAL_ARTICLE_LINES:
         if (!g_option_def_vals[OI_INITIAL_ARTICLE_LINES])
+        {
             return "$LINES";
+        }
         sprintf(g_buf,"%d",g_initlines);
-            return g_buf;
+        return g_buf;
       case OI_APPEND_UNSUBSCRIBED_GROUPS:
         return YESorNO(g_append_unsub);
       case OI_FILTER_CONTROL_CHARACTERS:
@@ -989,19 +1106,31 @@ const char *option_value(option_index num)
         return g_mbox_always? "mail" : (g_norm_always? "norm" : "ask");
       case OI_PAGER_LINE_MARKING:
         if (g_marking == NOMARKING)
+        {
             return YESorNO(false);
+        }
         if (g_marking_areas != HALFPAGE_MARKING)
+        {
             sprintf(g_buf,"%d", static_cast<int>(g_marking_areas));
+        }
         else
+        {
             *g_buf = '\0';
+        }
         if (g_marking == UNDERLINE)
+        {
             strcat(g_buf,"underline");
+        }
         else
+        {
             strcat(g_buf,"standout");
+        }
         return g_buf;
       case OI_OLD_MTHREADS_DATABASE:
         if (g_olden_days <= 1)
+        {
             return YESorNO(g_olden_days);
+        }
         sprintf(g_buf,"%d",g_olden_days);
         return g_buf;
       case OI_SELECT_MY_POSTS:
@@ -1028,7 +1157,9 @@ const char *option_value(option_index num)
         return g_charsets.c_str();
       case OI_INITIAL_GROUP_LIST:
         if (g_suppress_cn)
+        {
             return YESorNO(false);
+        }
         sprintf(g_buf,"%d",g_countdown);
         return g_buf;
       case OI_RESTART_AT_LAST_GROUP:
@@ -1128,32 +1259,44 @@ static void set_header_list(headtype_flags flag, headtype_flags defflag, const c
     if (flag == HT_HIDE || flag == HT_DEFHIDE) {
         /* Free old g_user_htype list */
         while (g_user_htype_cnt > 1)
+        {
             free(g_user_htype[--g_user_htype_cnt].name);
+        }
         memset((char*)g_user_htypeix,0,sizeof g_user_htypeix);
     }
 
     if (!*str)
+    {
         str = " ";
+    }
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
+    {
         g_htype[i].flags = ((g_htype[i].flags & defflag)
-                        ? (g_htype[i].flags | flag)
-                        : (g_htype[i].flags & ~flag));
+                       ? (g_htype[i].flags | flag)
+                       : (g_htype[i].flags & ~flag));
+    }
     std::unique_ptr<char[]> buffer(new char[strlen(str) + 1]);
     char *buff = buffer.get();
     strcpy(buff, str);
     for (;;) {
         char *cp = strchr(buff, ',');
         if (cp != nullptr)
+        {
             *cp = '\0';
+        }
         if (*buff == '!') {
             setit = false;
             buff++;
         }
         else
+        {
             setit = true;
+        }
         set_header(buff,flag,setit);
         if (!cp)
+        {
             break;
+        }
         *cp = ',';
         buff = cp+1;
     }
@@ -1165,9 +1308,13 @@ void set_header(const char *s, headtype_flags flag, bool setit)
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++) {
         if (!len || string_case_equal(s, g_htype[i].name,len)) {
             if (setit && (flag != HT_MAGIC || (g_htype[i].flags & HT_MAGICOK)))
+            {
                 g_htype[i].flags |= flag;
+            }
             else
+            {
                 g_htype[i].flags &= ~flag;
+            }
         }
     }
     if (flag == HT_HIDE && *s && isalpha(*s)) {
@@ -1186,7 +1333,9 @@ void set_header(const char *s, headtype_flags flag, bool setit)
                   && string_case_equal(s, g_user_htype[i].name,g_user_htype[i].length)) {
                 if (!add_at) {
                     if (g_user_htype[i].flags == (setit? flag : 0))
+                    {
                         save_it = false;
+                    }
                     add_at = i+1;
                 }
             }
@@ -1201,34 +1350,48 @@ void set_header(const char *s, headtype_flags flag, bool setit)
                 if (!add_at) {
                     add_at = g_user_htypeix[ch - 'a']+1;
                     if (add_at == 1)
+                    {
                         add_at = g_user_htype_cnt;
+                    }
                 }
                 for (int i = g_user_htype_cnt; i > add_at; i--)
-                    g_user_htype[i] = g_user_htype[i-1];
+                {
+                    g_user_htype[i] = g_user_htype[i - 1];
+                }
                 g_user_htype_cnt++;
             }
             else if (!add_at)
+            {
                 add_at = killed;
+            }
             g_user_htype[add_at].length = len;
             g_user_htype[add_at].flags = setit? flag : 0;
             g_user_htype[add_at].name = savestr(s);
             for (char *tmp = g_user_htype[add_at].name; *tmp; tmp++) {
                 if (isupper(*tmp))
+                {
                     *tmp = static_cast<char>(tolower(*tmp));
+                }
             }
         }
         if (killed) {
             while (killed < g_user_htype_cnt && g_user_htype[killed].name != nullptr)
+            {
                 killed++;
+            }
             for (int i = killed+1; i < g_user_htype_cnt; i++) {
                 if (g_user_htype[i].name != nullptr)
+                {
                     g_user_htype[killed++] = g_user_htype[i];
+                }
             }
             g_user_htype_cnt = killed;
         }
         memset((char*)g_user_htypeix,0,sizeof g_user_htypeix);
         for (int i = 1; i < g_user_htype_cnt; i++)
+        {
             g_user_htypeix[*g_user_htype[i].name - 'a'] = i;
+        }
     }
 }
 
@@ -1245,20 +1408,30 @@ static int parse_mouse_buttons(char **cpp, const char *btns)
     while (*btns) {
         if (*btns == '[') {
             if (!btns[1])
+            {
                 break;
+            }
             while (*btns) {
                 if (*btns == '\\' && btns[1])
+                {
                     btns++;
+                }
                 else if (*btns == ']')
+                {
                     break;
+                }
                 *t++ = *btns++;
             }
             *t++ = '\0';
             if (*btns)
+            {
                 btns = skip_eq(++btns, ' ');
+            }
         }
         while (*btns && *btns != ' ')
+        {
             *t++ = *btns++;
+        }
         btns = skip_eq(btns, ' ');
         *t++ = '\0';
         cnt++;
@@ -1279,7 +1452,9 @@ static char *expand_mouse_buttons(char *cp, int cnt)
             *cp++ = '\0';
         }
         else
-            safecat(g_buf,cp,sizeof g_buf);
+        {
+            safecat(g_buf, cp, sizeof g_buf);
+        }
         cp += strlen(cp)+1;
     }
     return g_buf;
@@ -1296,13 +1471,17 @@ const char *quote_string(const char *val)
     buff.clear();
 
     if (isspace(*val))
+    {
         needs_quotes = true;
+    }
     for (const char *cp = val; *cp; cp++) {
         switch (*cp) {
           case ' ':
           case '\t':
             if (!cp[1] || isspace(cp[1]))
+            {
                 needs_quotes = true;
+            }
             break;
           case '\n':
           case '#':
@@ -1325,7 +1504,9 @@ const char *quote_string(const char *val)
         buff = usequote;
         while (*val) {
             if (*val == usequote || *val == '\\')
+            {
                 buff += '\\';
+            }
             buff += *val++;
         }
         buff += usequote;
@@ -1339,38 +1520,52 @@ void cwd_check()
     char tmpbuf[LBUFLEN];
 
     if (g_privdir.empty())
+    {
         g_privdir = filexp("~/News");
+    }
     strcpy(tmpbuf,g_privdir.c_str());
     if (change_dir(g_privdir)) {
         safecpy(tmpbuf,filexp(g_privdir.c_str()),sizeof tmpbuf);
         if (makedir(tmpbuf, MD_DIR) || change_dir(tmpbuf)) {
             interp(g_cmd_buf, (sizeof g_cmd_buf), "%~/News");
             if (makedir(g_cmd_buf, MD_DIR))
-                strcpy(tmpbuf,g_home_dir);
+            {
+                strcpy(tmpbuf, g_home_dir);
+            }
             else
-                strcpy(tmpbuf,g_cmd_buf);
+            {
+                strcpy(tmpbuf, g_cmd_buf);
+            }
             change_dir(tmpbuf);
             if (g_verbose)
+            {
                 printf("Cannot make directory %s--\n"
-                       "        articles will be saved to %s\n"
-                       "\n",
-                       g_privdir.c_str(), tmpbuf);
+                      "        articles will be saved to %s\n"
+                      "\n",
+                      g_privdir.c_str(), tmpbuf);
+            }
             else
+            {
                 printf("Can't make %s--\n"
-                       "        using %s\n"
-                       "\n",
-                       g_privdir.c_str(), tmpbuf);
+                      "        using %s\n"
+                      "\n",
+                      g_privdir.c_str(), tmpbuf);
+            }
         }
     }
     trn_getwd(tmpbuf, sizeof(tmpbuf));
     if (eaccess(tmpbuf,2)) {
         if (g_verbose)
+        {
             printf("Current directory %s is not writeable--\n"
-                   "        articles will be saved to home directory\n"
-                   "\n",
-                   tmpbuf);
+                  "        articles will be saved to home directory\n"
+                  "\n",
+                  tmpbuf);
+        }
         else
-            printf("%s not writeable--using ~\n\n",tmpbuf);
+        {
+            printf("%s not writeable--using ~\n\n", tmpbuf);
+        }
         strcpy(tmpbuf,g_home_dir);
     }
     g_privdir = tmpbuf;

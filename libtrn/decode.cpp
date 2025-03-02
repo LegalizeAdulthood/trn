@@ -46,18 +46,25 @@ char *decode_fix_fname(const char *s)
 #endif
 
     if (!s)
+    {
         s = "unknown";
+    }
 
     safefree(g_decode_filename);
     g_decode_filename = safemalloc(strlen(s) + 2);
 
 /*$$ we need to eliminate any "../"s from the string */
-    while (*s == '/' || *s == '~') s++;
+    while (*s == '/' || *s == '~')
+    {
+        s++;
+    }
     for (t = g_decode_filename; *s; s++) {
 #ifdef MSDOS
 /*$$ we should also handle backslashes here */
         if (*s == '.' && (t == g_decode_filename || dotcount++))
+        {
             continue;
+        }
 #endif
         if (isprint(*s)
 #ifdef GOODCHARS
@@ -66,7 +73,9 @@ char *decode_fix_fname(const char *s)
          && !strchr(BADCHARS, *s)
 #endif
         )
+        {
             *t++ = *s;
+        }
     }
     *t = '\0';
     if (t == g_decode_filename || bad_filename(g_decode_filename)) {
@@ -84,19 +93,25 @@ static bool bad_filename(const char *filename)
     if (len == 3) {
         if (string_case_equal(filename, "aux") || string_case_equal(filename, "con")
          || string_case_equal(filename, "nul") || string_case_equal(filename, "prn"))
+        {
             return true;
+        }
     }
     else if (len == 4) {
         if (string_case_equal(filename, "com1") || string_case_equal(filename, "com2")
          || string_case_equal(filename, "com3") || string_case_equal(filename, "com4")
          || string_case_equal(filename, "lpt1") || string_case_equal(filename, "lpt2")
          || string_case_equal(filename, "lpt3"))
+        {
             return true;
+        }
     }
 #else
     if (len <= 2) {
         if (*filename == '.' && (*filename == '\0' || *filename == '.'))
+        {
             return true;
+        }
     }
 #endif
     return false;
@@ -117,13 +132,20 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
     safefree(subject);
     subject = fetchsubj(artnum,true);
     if (!*subject)
+    {
         return nullptr;
+    }
 
     /* Skip leading whitespace and other garbage */
     char *s = subject;
-    while (is_hor_space(*s) || *s == '-') s++;
+    while (is_hor_space(*s) || *s == '-')
+    {
+        s++;
+    }
     if (string_case_equal(s, "repost", 6)) {
-        for (s += 6; is_hor_space(*s) || *s == ':' || *s == '-'; s++);
+        for (s += 6; is_hor_space(*s) || *s == ':' || *s == '-'; s++)
+        {
+        }
     }
 
     while (string_case_equal(s, "re:", 3)) {
@@ -139,16 +161,22 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
     char *end = s + strlen(s);
     do {
         while (*s && !isalnum(*s) && *s != '_')
+        {
             s++;
+        }
         filename = s;
         t = s;
         while (isalnum(*s) || *s == '-' || *s == '+' || *s == '&'
               || *s == '_' || *s == '.') {
             if (*s++ == '.')
+            {
                 hasdot = 1;
+            }
         }
         if (!*s || *s == '\n')
+        {
             return nullptr;
+        }
     } while (t == s || (t[0] == 'v' && isdigit(t[1]) && *s == ':'));
     *s++ = '\0';
 
@@ -156,7 +184,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
      * Exclude <digit>.<digit>, since that is usually a version number.
      */
     if (!hasdot) {
-            while (*(t = s) != '\0' && *s != '\n') {
+        while (*(t = s) != '\0' && *s != '\n') {
             t = skip_space(t);
             for (s = t; isalnum(*s) || *s == '-' || *s == '+'
                  || *s == '&' || *s == '_' || *s == '.'; s++) {
@@ -170,13 +198,18 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
                 *s++ = '\0';
                 break;
             }
-            while (*s && *s != '\n' && !isalnum(*s)) s++;
+            while (*s && *s != '\n' && !isalnum(*s))
+            {
+                s++;
             }
-            s = filename + strlen(filename) + 1;
+        }
+        s = filename + strlen(filename) + 1;
     }
 
     if (s >= end)
+    {
         return nullptr;
+    }
 
     /* Get part number */
     while (*s && *s != '\n') {
@@ -192,9 +225,13 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
           || (s[1] == ' ' && s[2] == 'o' && s[3] == 'f')
           || (s[1] == '-' && s[2] == 'o' && s[3] == 'f')
           || (s[1] == 'o' && isdigit(s[2])))) {
-            for (t = s; isdigit(t[-1]); t--) ;
+            for (t = s; isdigit(t[-1]); t--)
+            {
+            }
             part = atoi(t);
-            while (*++s != '\0' && *s != '\n' && !isdigit(*s)) ;
+            while (*++s != '\0' && *s != '\n' && !isdigit(*s))
+            {
+            }
             total = isdigit(*s)? atoi(s) : 0;
             s = skip_digits(s);
             /* We don't break here because we want the last item on the line */
@@ -203,25 +240,39 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
         /* look for "6 parts" or "part 1" */
         if (string_case_equal("part", s, 4)) {
             if (s[4] == 's') {
-                for (t = s; t >= subject && !isdigit(*t); t--);
+                for (t = s; t >= subject && !isdigit(*t); t--)
+                {
+                }
                 if (t > subject) {
-                    while (t > subject && isdigit(t[-1])) t--;
+                    while (t > subject && isdigit(t[-1]))
+                    {
+                        t--;
+                    }
                     total = atoi(t);
                 }
             }
             else {
-                while (*s && *s != '\n' && !isdigit(*s)) s++;
+                while (*s && *s != '\n' && !isdigit(*s))
+                {
+                    s++;
+                }
                 if (isdigit(*s))
+                {
                     part = atoi(s);
+                }
                 s--;
             }
         }
         if (*s)
+        {
             s++;
+        }
     }
 
     if (total == 0 || part == -1 || part > total)
+    {
         return nullptr;
+    }
     *partp = part;
     *totalp = total;
     return filename;
@@ -253,7 +304,9 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
         }
     }
     else
+    {
         dir = nullptr;
+    }
 
     if (mcp) {
         if (change_dir(dir)) {
@@ -266,13 +319,19 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     if (total != 1 || part != 1) {
         sprintf(g_buf, "Saving part %d ", part);
         if (total)
-            sprintf(g_buf+strlen(g_buf), "of %d ", total);
+        {
+            sprintf(g_buf + strlen(g_buf), "of %d ", total);
+        }
         strcat(g_buf, filename);
         fputs(g_buf,stdout);
         if (g_nowait_fork)
+        {
             fflush(stdout);
+        }
         else
+        {
             newline();
+        }
 
         sprintf(g_buf, "%s%d", dir, part);
         fp = fopen(g_buf, "w");
@@ -282,7 +341,9 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
         }
         while (readart(g_art_line,sizeof g_art_line)) {
             if (mime_EndOfSection(g_art_line))
+            {
                 break;
+            }
             fputs(g_art_line,fp);
             if (total == 0 && *g_art_line == 'e' && g_art_line[1] == 'n'
              && g_art_line[2] == 'd' && isspace(g_art_line[3])) {
@@ -312,7 +373,9 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
                 fclose(fp);
             }
             if (total == 0)
+            {
                 return true;
+            }
         }
 
         /* Check to see if we have all parts.  Start from the highest numbers
@@ -322,9 +385,13 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
             sprintf(g_buf, "%s%d", dir, part);
             fp = fopen(g_buf, "r");
             if (!fp)
+            {
                 return true;
+            }
             if (part != 1)
+            {
                 fclose(fp);
+            }
         }
     }
     else {
@@ -342,9 +409,13 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     if (!decoder) {
         strcpy(g_msg,"Unhandled encoding type -- aborting.");
         if (fp)
+        {
             fclose(fp);
+        }
         if (dir)
+        {
             decode_rmdir(dir);
+        }
         return false;
     }
 
@@ -362,7 +433,9 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 
         state = decoder(fp, state);
         if (fp)
+        {
             fclose(fp);
+        }
         if (state == DECODE_ERROR) {
             strcpy(g_msg,"Failed."); /*$$*/
             return false;
@@ -394,7 +467,9 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     }
 
     if (dir)
+    {
         decode_rmdir(dir);
+    }
 
     return true;
 }
@@ -428,11 +503,15 @@ char *decode_mkdir(const char *filename)
     strcat(dir, filename);
     char *s = dir + strlen(dir);
     if (s[-1] == '/')
+    {
         return nullptr;
+    }
     *s++ = '/';
     *s = '\0';
     if (makedir(dir, MD_FILE))
+    {
         return nullptr;
+    }
     return dir;
 }
 

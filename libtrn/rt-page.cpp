@@ -71,14 +71,18 @@ bool set_sel_mode(char_int ch)
             g_threaded_group = true;
             g_thread_always = true;
             if (g_sel_rereading)
+            {
                 g_firstart = g_absfirst;
+            }
             printf("\nThreading the group. ");
             fflush(stdout);
             termdown(1);
             thread_open();
             g_thread_always = always_save;
             if (g_last_cached < g_lastart)
+            {
                 g_threaded_group = false;
+            }
         }
         /* FALL THROUGH */
       case 'T':
@@ -114,9 +118,13 @@ bool set_sel_order(sel_mode smode, const char *str)
 
     char ch = *str;
     if (reverse)
-        ch = islower(ch)? toupper(ch) : ch;
+    {
+        ch = islower(ch) ? toupper(ch) : ch;
+    }
     else
-        ch = isupper(ch)? tolower(ch) : ch;
+    {
+        ch = isupper(ch) ? tolower(ch) : ch;
+    }
 
     return set_sel_sort(smode,ch);
 }
@@ -157,9 +165,13 @@ bool set_sel_sort(sel_mode smode, char_int ch)
 
     g_sel_mode = smode;
     if (isupper(ch))
+    {
         set_selector(SM_MAGIC_NUMBER, static_cast<sel_sort_mode>(-ssort));
+    }
     else
+    {
         set_selector(SM_MAGIC_NUMBER, ssort);
+    }
 
     if (g_sel_mode != save_sel_mode) {
         g_sel_mode = save_sel_mode;
@@ -172,11 +184,15 @@ void set_selector(sel_mode smode, sel_sort_mode ssort)
 {
     if (smode == SM_MAGIC_NUMBER) {
         if (g_sel_mode == SM_SUBJECT)
+        {
             g_sel_mode = g_sel_threadmode;
+        }
         smode = g_sel_mode;
     }
     else
+    {
         g_sel_mode = smode;
+    }
     if (!ssort) {
         switch (g_sel_mode) {
           case SM_MULTIRC:
@@ -213,7 +229,9 @@ void set_selector(sel_mode smode, sel_sort_mode ssort)
     }
 
     if (g_sel_mode == SM_THREAD && !g_threaded_group)
+    {
         g_sel_mode = SM_SUBJECT;
+    }
 
     switch (g_sel_mode) {
       case SM_MULTIRC:
@@ -245,13 +263,17 @@ void set_selector(sel_mode smode, sel_sort_mode ssort)
         g_sel_threadsort = ssort;
      thread_subj_sort:
           if (g_sel_sort == SS_AUTHOR || g_sel_sort == SS_GROUPS || g_sel_sort == SS_NATURAL)
-            g_sel_sort = SS_DATE;
+          {
+              g_sel_sort = SS_DATE;
+          }
         break;
       case SM_ARTICLE:
         g_sel_mode_string = "articles";
         g_sel_artsort = ssort;
         if (g_sel_sort == SS_COUNT)
+        {
             g_sel_sort = SS_DATE;
+        }
         break;
     }
 
@@ -276,9 +298,13 @@ void set_selector(sel_mode smode, sel_sort_mode ssort)
         break;
       case SS_GROUPS:
         if (g_sel_mode == SM_NEWSGROUP)
+        {
             g_sel_sort_string = "group name";
+        }
         else
+        {
             g_sel_sort_string = "SubjDate";
+        }
         break;
       case SS_SCORE:
         g_sel_sort_string = "points";
@@ -295,13 +321,21 @@ static void sel_page_init()
      * strlen(g_sel_chars) lines) to an alphanumeric page. XXX
      */
     if (g_use_sel_num)
+    {
         s_sel_max_per_page = 99;
+    }
     else
+    {
         s_sel_max_per_page = strlen(g_sel_chars);
+    }
     if (s_sel_max_per_page > MAX_SEL)
+    {
         s_sel_max_per_page = MAX_SEL;
+    }
     if (s_sel_max_per_page > s_sel_max_line_cnt)
+    {
         s_sel_max_per_page = s_sel_max_line_cnt;
+    }
     g_sel_page_obj_cnt = 0;
     g_sel_page_item_cnt = 0;
 }
@@ -323,10 +357,14 @@ try_again:
                 g_sel_total_obj_cnt++;
             }
             else
+            {
                 mp->flags &= ~MF_INCLUDED;
+            }
         }
         if (g_sel_page_mp == nullptr)
+        {
             (void) first_page();
+        }
         break;
       }
       case SM_NEWSGROUP: {
@@ -337,14 +375,21 @@ try_again:
         g_obj_count = 0;
         for (NGDATA *np = g_first_ng; np; np = np->next) {
             if (g_sel_page_np == np)
+            {
                 g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
+            }
             np->flags &= ~NF_INCLUDED;
             if (np->toread < TR_NONE)
+            {
                 continue;
+            }
             if (!inlist(np->rcline))
+            {
                 continue;
+            }
             if (np->abs1st)
-                ;
+            {
+            }
             else if (save_the_rest) {
                 s_group_init_done = false;
                 np->toread = !g_sel_rereading;
@@ -354,7 +399,9 @@ try_again:
                 /*set_ngname(np->rcline);*/
                 set_toread(np, ST_LAX);
                 if (!np->rc->datasrc->act_sf.fp)
+                {
                     save_the_rest = (g_sel_rereading ^ (np->toread > TR_NONE));
+                }
             }
             if (g_paranoid) {
                 g_current_ng = np;
@@ -366,14 +413,20 @@ try_again:
             if (!(np->flags & g_sel_mask)
              && (g_sel_rereading? np->toread != TR_NONE
                               : np->toread < g_ng_min_toread))
+            {
                 continue;
+            }
             g_obj_count++;
 
             if (!g_sel_exclusive || (np->flags & g_sel_mask)) {
                 if (np->flags & g_sel_mask)
+                {
                     g_selected_count++;
+                }
                 else if (g_sel_rereading)
+                {
                     np->flags |= NF_DEL;
+                }
                 np->flags |= NF_INCLUDED;
                 g_sel_total_obj_cnt++;
             }
@@ -389,19 +442,27 @@ try_again:
                 fputs(g_msg, stdout);
                 newline();
                 if (fill_last_page)
+                {
                     get_anything();
+                }
                 g_sel_page_np = nullptr;
                 goto try_again;
             }
         }
         if (!g_sel_page_np)
+        {
             (void) first_page();
+        }
         else if (g_sel_page_np == g_last_ng)
+        {
             (void) last_page();
+        }
         else if (g_sel_prior_obj_cnt && fill_last_page) {
             calc_page(no_search);
             if (g_sel_prior_obj_cnt + g_sel_page_obj_cnt == g_sel_total_obj_cnt)
+            {
                 (void) last_page();
+            }
         }
         break;
       }
@@ -410,13 +471,19 @@ try_again:
         g_obj_count = 0;
         for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next) {
             if (g_sel_page_gp == gp)
+            {
                 g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
+            }
             gp->flags &= ~AGF_INCLUDED;
             if (!g_sel_rereading ^ !(gp->flags & AGF_EXCLUDED))
+            {
                 continue;
+            }
             if (!g_sel_exclusive || (gp->flags & g_sel_mask)) {
                 if (g_sel_rereading && !(gp->flags & g_sel_mask))
+                {
                     gp->flags |= AGF_DEL;
+                }
                 gp->flags |= AGF_INCLUDED;
                 g_sel_total_obj_cnt++;
             }
@@ -428,13 +495,19 @@ try_again:
             goto try_again;
         }
         if (g_sel_page_gp == nullptr)
+        {
             (void) first_page();
+        }
         else if (g_sel_page_gp == g_last_addgroup)
+        {
             (void) last_page();
+        }
         else if (g_sel_prior_obj_cnt && fill_last_page) {
             calc_page(no_search);
             if (g_sel_prior_obj_cnt + g_sel_page_obj_cnt == g_sel_total_obj_cnt)
+            {
                 (void) last_page();
+            }
         }
         break;
       }
@@ -444,7 +517,9 @@ try_again:
         sort_univ();
         for (UNIV_ITEM *ui = g_first_univ; ui; ui = ui->next) {
             if (sel_page_univ == ui)
+            {
                 g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
+            }
             ui->flags &= ~UF_INCLUDED;
             bool ui_elig = true;
             switch (ui->type) {
@@ -480,17 +555,23 @@ try_again:
                 ui_elig = !was_read_group(g_datasrc, ui->data.virt.num,
                                           ui->data.virt.ng);
                 if (g_sel_rereading)
+                {
                     ui_elig = !ui_elig;
+                }
                 break;
               default:
                 ui_elig = !g_sel_rereading;
                 break;
             }
             if (!ui_elig)
+            {
                 continue;
+            }
             if (!g_sel_exclusive || (ui->flags & static_cast<univitem_flags>(g_sel_mask))) {
                 if (g_sel_rereading && !(ui->flags & static_cast<univitem_flags>(g_sel_mask)))
+                {
                     ui->flags |= UF_DEL;
+                }
                 ui->flags |= UF_INCLUDED;
                 g_sel_total_obj_cnt++;
             }
@@ -502,13 +583,19 @@ try_again:
             goto try_again;
         }
         if (sel_page_univ == nullptr)
+        {
             (void) first_page();
+        }
         else if (sel_page_univ == g_last_univ)
+        {
             (void) last_page();
+        }
         else if (g_sel_prior_obj_cnt && fill_last_page) {
             calc_page(no_search);
             if (g_sel_prior_obj_cnt + g_sel_page_obj_cnt == g_sel_total_obj_cnt)
+            {
                 (void) last_page();
+            }
         }
         break;
       }
@@ -517,7 +604,9 @@ try_again:
         g_obj_count = 0;
         for (int op = 1; g_options_ini[op].checksum; op++) {
             if (g_sel_page_op == op)
+            {
                 g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
+            }
             if (*g_options_ini[op].item == '*') {
                 included = (g_option_flags[op] & OF_SEL);
                 g_sel_total_obj_cnt++;
@@ -528,7 +617,9 @@ try_again:
                 g_option_flags[op] |= OF_INCLUDED;
             }
             else
+            {
                 g_option_flags[op] &= ~OF_INCLUDED;
+            }
             g_obj_count++;
         }
 #if 0
@@ -539,13 +630,19 @@ try_again:
         }
 #endif
         if (g_sel_page_op < 1)
+        {
             (void) first_page();
+        }
         else if (g_sel_page_op >= g_obj_count)
+        {
             (void) last_page();
+        }
         else if (g_sel_prior_obj_cnt && fill_last_page) {
             calc_page(no_search);
             if (g_sel_prior_obj_cnt + g_sel_page_obj_cnt == g_sel_total_obj_cnt)
+            {
                 (void) last_page();
+            }
         }
         break;
       }
@@ -561,11 +658,15 @@ try_again:
             for (app = g_sel_page_app; app < limit; app++) {
                 ap = *app;
                 if ((ap->flags & (AF_EXISTS|AF_UNREAD)) == desired_flags)
+                {
                     break;
+                }
             }
             sort_articles();
             if (ap == nullptr)
+            {
                 g_sel_page_app = g_artptr_list + g_artptr_list_size;
+            }
             else {
                 for (app = g_artptr_list; app < limit; app++) {
                     if (*app == ap) {
@@ -575,16 +676,22 @@ try_again:
                 }
             }
         } else
+        {
             sort_articles();
+        }
 
         while (g_sel_page_sp && g_sel_page_sp->misc == 0)
+        {
             g_sel_page_sp = g_sel_page_sp->next;
+        }
         /* The g_artptr_list contains only unread or read articles, never both */
         limit = g_artptr_list + g_artptr_list_size;
         for (app = g_artptr_list; app < limit; app++) {
             ap = *app;
             if (g_sel_rereading && !(ap->flags & g_sel_mask))
+            {
                 ap->flags |= AF_DEL;
+            }
             if (g_sel_page_app == app
              || (!g_sel_page_app && ap->subj == g_sel_page_sp)) {
                 g_sel_page_app = app;
@@ -594,7 +701,9 @@ try_again:
                 g_sel_total_obj_cnt++;
                 ap->flags |= AF_INCLUDED;
             } else
+            {
                 ap->flags &= ~AF_INCLUDED;
+            }
         }
         if (g_sel_exclusive && !g_sel_total_obj_cnt) {
             g_sel_exclusive = false;
@@ -602,39 +711,59 @@ try_again:
             goto try_again;
         }
         if (!g_sel_page_app)
+        {
             (void) first_page();
+        }
         else if (g_sel_page_app >= limit)
+        {
             (void) last_page();
+        }
         else if (g_sel_prior_obj_cnt && fill_last_page) {
             calc_page(no_search);
             if (g_sel_prior_obj_cnt + g_sel_page_obj_cnt == g_sel_total_obj_cnt)
+            {
                 (void) last_page();
+            }
         }
         break;
       }
       default: {
           if (g_sel_page_sp) {
             while (g_sel_page_sp && g_sel_page_sp->misc == 0)
+            {
                 g_sel_page_sp = g_sel_page_sp->next;
+            }
             sort_subjects();
             if (!g_sel_page_sp)
+            {
                 g_sel_page_sp = g_last_subject;
+            }
         } else
+        {
             sort_subjects();
+        }
         for (SUBJECT *sp = g_first_subject; sp; sp = sp->next) {
             if (g_sel_rereading && !(sp->flags & g_sel_mask))
+            {
                 sp->flags |= SF_DEL;
+            }
 
             SUBJECT *group_sp = sp;
             int      group_arts = sp->misc;
 
             if (!g_sel_exclusive || (sp->flags & g_sel_mask))
+            {
                 sp->flags |= SF_INCLUDED;
+            }
             else
+            {
                 sp->flags &= ~SF_INCLUDED;
+            }
 
             if (g_sel_page_sp == group_sp)
+            {
                 g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
+            }
             if (g_sel_mode == SM_THREAD) {
                 while (sp->next && sp->next->thread == sp->thread) {
                     sp = sp->next;
@@ -644,14 +773,20 @@ try_again:
                     }
                     sp->flags &= ~SF_INCLUDED;
                     if (sp->flags & g_sel_mask)
+                    {
                         group_sp->flags |= SF_INCLUDED;
+                    }
                     else if (g_sel_rereading)
+                    {
                         sp->flags |= SF_DEL;
+                    }
                     group_arts += sp->misc;
                 }
             }
             if (group_sp->flags & SF_INCLUDED)
+            {
                 g_sel_total_obj_cnt += group_arts;
+            }
         }
         if (g_sel_exclusive && !g_sel_total_obj_cnt) {
             g_sel_exclusive = false;
@@ -659,13 +794,19 @@ try_again:
             goto try_again;
         }
         if (!g_sel_page_sp)
+        {
             (void) first_page();
+        }
         else if (g_sel_page_sp == g_last_subject)
+        {
             (void) last_page();
+        }
         else if (g_sel_prior_obj_cnt && fill_last_page) {
             calc_page(no_search);
             if (g_sel_prior_obj_cnt + g_sel_page_obj_cnt == g_sel_total_obj_cnt)
+            {
                 (void) last_page();
+            }
         }
       }
     }
@@ -769,63 +910,91 @@ bool last_page()
         MULTIRC* mp = g_sel_page_mp;
         g_sel_page_mp = nullptr;
         if (!prev_page())
+        {
             g_sel_page_mp = mp;
+        }
         else if (mp != g_sel_page_mp)
+        {
             return true;
+        }
         break;
       }
       case SM_NEWSGROUP: {
         NGDATA* np = g_sel_page_np;
         g_sel_page_np = nullptr;
         if (!prev_page())
+        {
             g_sel_page_np = np;
+        }
         else if (np != g_sel_page_np)
+        {
             return true;
+        }
         break;
       }
       case SM_ADDGROUP: {
         ADDGROUP* gp = g_sel_page_gp;
         g_sel_page_gp = nullptr;
         if (!prev_page())
+        {
             g_sel_page_gp = gp;
+        }
         else if (gp != g_sel_page_gp)
+        {
             return true;
+        }
         break;
       }
       case SM_UNIVERSAL: {
         UNIV_ITEM* ui = sel_page_univ;
         sel_page_univ = nullptr;
         if (!prev_page())
+        {
             sel_page_univ = ui;
+        }
         else if (ui != sel_page_univ)
+        {
             return true;
+        }
         break;
       }
       case SM_OPTIONS: {
         int op = g_sel_page_op;
         g_sel_page_op = g_obj_count+1;
         if (!prev_page())
+        {
             g_sel_page_op = op;
+        }
         else if (op != g_sel_page_op)
+        {
             return true;
+        }
         break;
       }
       case SM_ARTICLE: {
         ARTICLE** app = g_sel_page_app;
         g_sel_page_app = g_artptr_list + g_artptr_list_size;
         if (!prev_page())
+        {
             g_sel_page_app = app;
+        }
         else if (app != g_sel_page_app)
+        {
             return true;
+        }
         break;
       }
       default: {
         SUBJECT* sp = g_sel_page_sp;
         g_sel_page_sp = nullptr;
         if (!prev_page())
+        {
             g_sel_page_sp = sp;
+        }
         else if (sp != g_sel_page_sp)
+        {
             return true;
+        }
         break;
       }
     }
@@ -906,15 +1075,21 @@ bool prev_page()
         MULTIRC* page_mp = g_sel_page_mp;
 
         if (!mp)
+        {
             mp = multirc_high();
+        }
         else
+        {
             mp = multirc_prev(multirc_ptr(mp->num));
+        }
         while (mp) {
             if (mp->flags & MF_INCLUDED) {
                 page_mp = mp;
                 g_sel_prior_obj_cnt--;
                 if (++item_cnt >= s_sel_max_per_page)
+                {
                     break;
+                }
             }
             mp = multirc_prev(mp);
         }
@@ -929,15 +1104,21 @@ bool prev_page()
         NGDATA* page_np = g_sel_page_np;
 
         if (!np)
+        {
             np = g_last_ng;
+        }
         else
+        {
             np = np->prev;
+        }
         while (np) {
             if (np->flags & NF_INCLUDED) {
                 page_np = np;
                 g_sel_prior_obj_cnt--;
                 if (++item_cnt >= s_sel_max_per_page)
+                {
                     break;
+                }
             }
             np = np->prev;
         }
@@ -952,15 +1133,21 @@ bool prev_page()
         ADDGROUP* page_gp = g_sel_page_gp;
 
         if (!gp)
+        {
             gp = g_last_addgroup;
+        }
         else
+        {
             gp = gp->prev;
+        }
         while (gp) {
             if (gp->flags & AGF_INCLUDED) {
                 page_gp = gp;
                 g_sel_prior_obj_cnt--;
                 if (++item_cnt >= s_sel_max_per_page)
+                {
                     break;
+                }
             }
             gp = gp->prev;
         }
@@ -975,15 +1162,21 @@ bool prev_page()
         UNIV_ITEM* page_ui = sel_page_univ;
 
         if (!ui)
+        {
             ui = g_last_univ;
+        }
         else
+        {
             ui = ui->prev;
+        }
         while (ui) {
             if (ui->flags & UF_INCLUDED) {
                 page_ui = ui;
                 g_sel_prior_obj_cnt--;
                 if (++item_cnt >= s_sel_max_per_page)
+                {
                     break;
+                }
             }
             ui = ui->prev;
         }
@@ -1002,7 +1195,9 @@ bool prev_page()
                 page_op = op;
                 g_sel_prior_obj_cnt--;
                 if (++item_cnt >= s_sel_max_per_page)
+                {
                     break;
+                }
             }
         }
         if (g_sel_page_op != page_op) {
@@ -1019,7 +1214,9 @@ bool prev_page()
                 page_app = app;
                 g_sel_prior_obj_cnt--;
                 if (++item_cnt >= s_sel_max_per_page)
+                {
                     break;
+                }
             }
         }
         if (g_sel_page_app != page_app) {
@@ -1041,11 +1238,17 @@ bool prev_page()
                 }
                 line_cnt = count_thread_lines(sp, (int*)nullptr);
             } else
-                line_cnt = count_subject_lines(sp, (int*)nullptr);
+            {
+                line_cnt = count_subject_lines(sp, (int *) nullptr);
+            }
             if (!(sp->flags & SF_INCLUDED) || !line_cnt)
+            {
                 continue;
+            }
             if (line_cnt > s_sel_max_line_cnt)
+            {
                 line_cnt = s_sel_max_line_cnt;
+            }
             line += line_cnt;
             if (line > s_sel_max_line_cnt + 2) {
                 sp = page_sp;
@@ -1054,7 +1257,9 @@ bool prev_page()
             g_sel_prior_obj_cnt -= item_arts;
             page_sp = sp;
             if (++item_cnt >= s_sel_max_per_page)
+            {
                 break;
+            }
         }
         if (g_sel_page_sp != page_sp) {
             g_sel_page_sp = (page_sp? page_sp : g_first_subject);
@@ -1071,7 +1276,9 @@ bool calc_page(SEL_UNION u)
 {
     int ret = false;
     if (u.op != -1)
+    {
         g_sel_item_index = -1;
+    }
 try_again:
     g_sel_page_obj_cnt = 0;
     g_sel_page_item_cnt = 0;
@@ -1081,12 +1288,18 @@ try_again:
       case SM_MULTIRC: {
         MULTIRC* mp = g_sel_page_mp;
         if (mp)
+        {
             (void) multirc_ptr(mp->num);
+        }
         for (; mp && g_sel_page_item_cnt<s_sel_max_per_page; mp=multirc_next(mp)) {
             if (mp == u.mp)
+            {
                 g_sel_item_index = g_sel_page_item_cnt;
+            }
             if (mp->flags & MF_INCLUDED)
+            {
                 g_sel_page_item_cnt++;
+            }
         }
         g_sel_page_obj_cnt = g_sel_page_item_cnt;
         g_sel_next_mp = mp;
@@ -1096,9 +1309,13 @@ try_again:
         NGDATA* np = g_sel_page_np;
         for (; np && g_sel_page_item_cnt < s_sel_max_per_page; np = np->next) {
             if (np == u.np)
+            {
                 g_sel_item_index = g_sel_page_item_cnt;
+            }
             if (np->flags & NF_INCLUDED)
+            {
                 g_sel_page_item_cnt++;
+            }
         }
         g_sel_page_obj_cnt = g_sel_page_item_cnt;
         g_sel_next_np = np;
@@ -1108,9 +1325,13 @@ try_again:
         ADDGROUP* gp = g_sel_page_gp;
         for (; gp && g_sel_page_item_cnt < s_sel_max_per_page; gp = gp->next) {
             if (gp == u.gp)
+            {
                 g_sel_item_index = g_sel_page_item_cnt;
+            }
             if (gp->flags & AGF_INCLUDED)
+            {
                 g_sel_page_item_cnt++;
+            }
         }
         g_sel_page_obj_cnt = g_sel_page_item_cnt;
         g_sel_next_gp = gp;
@@ -1120,9 +1341,13 @@ try_again:
         UNIV_ITEM* ui = sel_page_univ;
         for (; ui && g_sel_page_item_cnt < s_sel_max_per_page; ui = ui->next) {
             if (ui == u.un)
+            {
                 g_sel_item_index = g_sel_page_item_cnt;
+            }
             if (ui->flags & UF_INCLUDED)
+            {
                 g_sel_page_item_cnt++;
+            }
         }
         g_sel_page_obj_cnt = g_sel_page_item_cnt;
         g_sel_next_univ = ui;
@@ -1132,9 +1357,13 @@ try_again:
         int op = g_sel_page_op;
         for (; op <= g_obj_count && g_sel_page_item_cnt < s_sel_max_per_page; op++) {
             if (op == u.op)
+            {
                 g_sel_item_index = g_sel_page_item_cnt;
+            }
             if (g_option_flags[op] & OF_INCLUDED)
+            {
                 g_sel_page_item_cnt++;
+            }
         }
         g_sel_page_obj_cnt = g_sel_page_item_cnt;
         s_sel_next_op = op;
@@ -1145,9 +1374,13 @@ try_again:
         ARTICLE** limit = g_artptr_list + g_artptr_list_size;
         for (; app < limit && g_sel_page_item_cnt < s_sel_max_per_page; app++) {
             if (*app == u.ap)
+            {
                 g_sel_item_index = g_sel_page_item_cnt;
+            }
             if ((*app)->flags & AF_INCLUDED)
+            {
                 g_sel_page_item_cnt++;
+            }
         }
         g_sel_page_obj_cnt = g_sel_page_item_cnt;
         g_sel_next_app = app;
@@ -1158,27 +1391,41 @@ try_again:
         int line_cnt, sel;
         for (; sp && g_sel_page_item_cnt < s_sel_max_per_page; sp = sp->next) {
             if (sp == u.sp)
+            {
                 g_sel_item_index = g_sel_page_item_cnt;
+            }
             if (sp->flags & SF_INCLUDED) {
                 if (g_sel_mode == SM_THREAD)
+                {
                     line_cnt = count_thread_lines(sp, &sel);
+                }
                 else
+                {
                     line_cnt = count_subject_lines(sp, &sel);
+                }
                 if (line_cnt) {
                     if (line_cnt > s_sel_max_line_cnt)
+                    {
                         line_cnt = s_sel_max_line_cnt;
+                    }
                     if (g_term_line + line_cnt > s_sel_max_line_cnt+2)
+                    {
                         break;
+                    }
                     g_sel_page_obj_cnt += sp->misc;
                     g_sel_page_item_cnt++;
                 }
             } else
+            {
                 line_cnt = 0;
+            }
             if (g_sel_mode == SM_THREAD) {
                 while (sp->next && sp->next->thread == sp->thread) {
                     sp = sp->next;
                     if (!line_cnt || !sp->misc)
+                    {
                         continue;
+                    }
                     g_sel_page_obj_cnt += sp->misc;
                 }
             }
@@ -1207,13 +1454,21 @@ try_again:
 void display_page_title(bool home_only)
 {
     if (home_only || (g_erase_screen && g_erase_each_line))
+    {
         home_cursor();
+    }
     else
+    {
         clear();
+    }
     if (g_sel_mode == SM_MULTIRC)
-        color_string(COLOR_HEADING,"Newsrcs");
+    {
+        color_string(COLOR_HEADING, "Newsrcs");
+    }
     else if (g_sel_mode == SM_OPTIONS)
-        color_string(COLOR_HEADING,"Options");
+    {
+        color_string(COLOR_HEADING, "Options");
+    }
     else if (g_sel_mode == SM_UNIVERSAL) {
         color_object(COLOR_HEADING, true);
         printf("[%d] %s",g_univ_level,
@@ -1221,9 +1476,13 @@ void display_page_title(bool home_only)
         color_pop();
     }
     else if (g_in_ng)
+    {
         color_string(COLOR_NGNAME, g_ngname.c_str());
+    }
     else if (g_sel_mode == SM_ADDGROUP)
-        color_string(COLOR_HEADING,"ADD newsgroups");
+    {
+        color_string(COLOR_HEADING, "ADD newsgroups");
+    }
     else {
         int len;
         NEWSRC* rp;
@@ -1236,40 +1495,58 @@ void display_page_title(bool home_only)
             }
         }
         if (rp)
-            strcpy(g_buf+len, ", ...");
+        {
+            strcpy(g_buf + len, ", ...");
+        }
         if (strcmp(g_buf+2,"default") != 0)
-            printf(" (group #%d: %s)",g_multirc->num, g_buf+2);
+        {
+            printf(" (group #%d: %s)", g_multirc->num, g_buf + 2);
+        }
         color_pop();    /* of COLOR_HEADING */
     }
     if (home_only || (g_erase_screen && g_erase_each_line))
+    {
         erase_eol();
+    }
     if (g_sel_mode == SM_MULTIRC)
-        ;
+    {
+    }
     else if (g_sel_mode == SM_UNIVERSAL)
-        ;
+    {
+    }
     else if (g_sel_mode == SM_OPTIONS)
+    {
         printf("      (Press 'S' to save changes, 'q' to abandon, or TAB to use.)");
+    }
     else if (g_in_ng) {
         printf("          %ld %sarticle%s", (long)g_sel_total_obj_cnt,
                g_sel_rereading? "read " : "",
                g_sel_total_obj_cnt == 1 ? "" : "s");
         if (g_sel_exclusive)
-            printf(" out of %ld", (long)g_obj_count);
+        {
+            printf(" out of %ld", (long) g_obj_count);
+        }
         fputs(g_moderated.c_str(),stdout);
     }
     else {
         printf("       %s%ld group%s",s_group_init_done? "" : "~",
             (long)g_sel_total_obj_cnt, plural(g_sel_total_obj_cnt));
         if (g_sel_exclusive)
-            printf(" out of %ld", (long)g_obj_count);
+        {
+            printf(" out of %ld", (long) g_obj_count);
+        }
         if (g_maxngtodo)
+        {
             printf(" (Restriction)");
+        }
     }
     home_cursor();
     newline();
     maybe_eol();
     if (g_in_ng && g_redirected && !g_redirected_to.empty())
+    {
         printf("\t** Please start using %s **", g_redirected_to.c_str());
+    }
     newline();
 }
 
@@ -1283,21 +1560,28 @@ try_again:
     sel_page_init();
 
     if (!g_sel_total_obj_cnt)
-        ;
+    {
+    }
     else if (g_sel_mode == SM_MULTIRC) {
         MULTIRC* mp = g_sel_page_mp;
         NEWSRC* rp;
         int len;
         if (mp)
+        {
             (void) multirc_ptr(mp->num);
+        }
         for (; mp && g_sel_page_item_cnt<s_sel_max_per_page; mp=multirc_next(mp)) {
 #if 0
             if (mp == g_multirc)
+            {
                 g_sel_item_index = g_sel_page_item_cnt;
+            }
 #endif
 
             if (!(mp->flags & MF_INCLUDED))
+            {
                 continue;
+            }
 
             // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
             TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DELSEL)) == 0);
@@ -1313,7 +1597,9 @@ try_again:
                 len += strlen(g_buf+len);
             }
             if (rp)
-                strcpy(g_buf+len, ", ...");
+            {
+                strcpy(g_buf + len, ", ...");
+            }
             output_sel(g_sel_page_item_cnt, sel, false);
             printf("%5d %s\n", mp->num, g_buf+2);
             termdown(1);
@@ -1321,7 +1607,9 @@ try_again:
         }
         if (!g_sel_page_obj_cnt) {
             if (last_page())
+            {
                 goto try_again;
+            }
         }
         g_sel_next_mp = mp;
     }
@@ -1332,10 +1620,14 @@ try_again:
       start_of_loop:
         for (np = g_sel_page_np; np; np = np->next) {
             if (np == g_ngptr)
+            {
                 g_sel_item_index = g_sel_page_item_cnt;
+            }
 
             if (!(np->flags & NF_INCLUDED))
+            {
                 continue;
+            }
 
             if (!np->abs1st) {
                 set_toread(np, ST_LAX);
@@ -1360,7 +1652,9 @@ try_again:
             }
 
             if (g_sel_page_item_cnt >= s_sel_max_per_page)
+            {
                 break;
+            }
 
             if (outputting) {
                 sel = !!(np->flags & g_sel_mask) + (np->flags & NF_DEL);
@@ -1375,7 +1669,9 @@ try_again:
                 display_group(np->rc->datasrc,np->rcline,np->numoffset-1,max_len);
             }
             else if (np->numoffset >= max_len)
+            {
                 max_len = np->numoffset + 1;
+            }
             g_sel_page_item_cnt++;
         }
         if (!outputting) {
@@ -1385,13 +1681,17 @@ try_again:
         }
         if (!g_sel_page_obj_cnt) {
             if (last_page())
+            {
                 goto try_again;
+            }
         }
         g_sel_next_np = np;
         if (!s_group_init_done) {
             for (; np; np = np->next) {
                 if (!np->abs1st)
+                {
                     break;
+                }
             }
             if (!np) {
                 int line = g_term_line;
@@ -1408,10 +1708,14 @@ try_again:
             int i = 0;
             for (; gp && i < s_sel_max_per_page; gp = gp->next) {
                 if (!(gp->flags & AGF_INCLUDED))
+                {
                     continue;
+                }
                 int len = strlen(gp->name) + 2;
                 if (len > max_len)
+                {
                     max_len = len;
+                }
                 i++;
             }
             gp = g_sel_page_gp;
@@ -1423,7 +1727,9 @@ try_again:
 #endif
 
             if (!(gp->flags & AGF_INCLUDED))
+            {
                 continue;
+            }
 
             sel = !!(gp->flags & g_sel_mask) + (gp->flags & AGF_DEL);
             g_sel_items[g_sel_page_item_cnt].u.gp = gp;
@@ -1439,7 +1745,9 @@ try_again:
         }
         if (!g_sel_page_obj_cnt) {
             if (last_page())
+            {
                 goto try_again;
+            }
         }
         g_sel_next_gp = gp;
     }
@@ -1452,7 +1760,9 @@ try_again:
 #endif
 
             if (!(ui->flags & UF_INCLUDED))
+            {
                 continue;
+            }
 
             sel = !!(ui->flags & static_cast<univitem_flags>(g_sel_mask)) + (ui->flags & UF_DEL);
             g_sel_items[g_sel_page_item_cnt].u.un = ui;
@@ -1468,7 +1778,9 @@ try_again:
         }
         if (!g_sel_page_obj_cnt) {
             if (last_page())
+            {
                 goto try_again;
+            }
         }
         g_sel_next_univ = ui;
     }
@@ -1481,14 +1793,20 @@ try_again:
 #endif
 
             if (!(g_option_flags[op] & OF_INCLUDED))
+            {
                 continue;
+            }
 
             if (*g_options_ini[op].item == '*')
+            {
                 sel = !!(g_option_flags[op] & OF_SEL);
+            }
             else
+            {
                 sel = ini_values(g_options_ini)[op]? 1 :
                           (g_option_saved_vals[op]? 3 :
                                (g_option_def_vals[op]? 0 : 2));
+            }
             g_sel_items[g_sel_page_item_cnt].u.op = static_cast<option_index>(op);
             g_sel_items[g_sel_page_item_cnt].line = g_term_line;
             g_sel_items[g_sel_page_item_cnt].sel = sel;
@@ -1500,7 +1818,9 @@ try_again:
         }
         if (!g_sel_page_obj_cnt) {
             if (last_page())
+            {
                 goto try_again;
+            }
         }
         s_sel_next_op = op;
     }
@@ -1510,9 +1830,13 @@ try_again:
         for (; app < limit && g_sel_page_item_cnt < s_sel_max_per_page; app++) {
             ARTICLE *ap = *app;
             if (ap == g_sel_last_ap)
+            {
                 g_sel_item_index = g_sel_page_item_cnt;
+            }
             if (!(ap->flags & AF_INCLUDED))
+            {
                 continue;
+            }
             sel = !!(ap->flags & g_sel_mask) + (ap->flags & AF_DEL);
             g_sel_items[g_sel_page_item_cnt].u.ap = ap;
             g_sel_items[g_sel_page_item_cnt].line = g_term_line;
@@ -1524,7 +1848,9 @@ try_again:
         }
         if (!g_sel_page_obj_cnt) {
             if (last_page())
+            {
                 goto try_again;
+            }
         }
         g_sel_next_app = app;
     }
@@ -1536,14 +1862,20 @@ try_again:
         SUBJECT *sp = g_sel_page_sp;
         for (; sp && !etc && g_sel_page_item_cnt<s_sel_max_per_page; sp=sp->next) {
             if (sp == g_sel_last_sp)
+            {
                 g_sel_item_index = g_sel_page_item_cnt;
+            }
 
             if (sp->flags & SF_INCLUDED) {
                 /* Compute how many lines we need to display this group */
                 if (g_sel_mode == SM_THREAD)
+                {
                     line_cnt = count_thread_lines(sp, &sel);
+                }
                 else
+                {
                     line_cnt = count_subject_lines(sp, &sel);
+                }
                 if (line_cnt) {
                     /* If this item is too long to fit on the screen all by
                     ** itself, trim it to fit and set the "etc" flag.
@@ -1554,7 +1886,9 @@ try_again:
                     }
                     /* If it doesn't fit, save it for the next page */
                     if (g_term_line + line_cnt > s_sel_max_line_cnt + 2)
+                    {
                         break;
+                    }
                     g_sel_items[g_sel_page_item_cnt].u.sp = sp;
                     g_sel_items[g_sel_page_item_cnt].line = g_term_line;
                     g_sel_items[g_sel_page_item_cnt].sel = sel;
@@ -1569,24 +1903,34 @@ try_again:
                     }
                 }
             } else
+            {
                 line_cnt = 0;
+            }
             if (g_sel_mode == SM_THREAD) {
                 while (sp->next && sp->next->thread == sp->thread) {
                     sp = sp->next;
                     if (!line_cnt || !sp->misc)
+                    {
                         continue;
+                    }
                     if (g_term_line < s_sel_max_line_cnt + 2)
+                    {
                         display_subject(sp, ix, sel);
+                    }
                     ix = -1;
                     g_sel_page_obj_cnt += sp->misc;
                 }
             }
             if (etc)
+            {
                 printf("     ... etc. [%d lines total]", etc);
+            }
         }
         if (!g_sel_page_obj_cnt) {
             if (last_page())
+            {
                 goto try_again;
+            }
         }
         g_sel_next_sp = sp;
     }
@@ -1620,11 +1964,15 @@ void update_page()
             break;
           case SM_OPTIONS:
             if (*g_options_ini[u.op].item == '*')
+            {
                 sel = !!(g_option_flags[u.op] & OF_SEL);
+            }
             else
+            {
                 sel = ini_value(g_options_ini, u.op)? 1 :
                           (g_option_saved_vals[u.op]? 3 :
                                (g_option_def_vals[u.op]? 0 : 2));
+            }
             break;
           case SM_ARTICLE:
             sel = !!(u.ap->flags & g_sel_mask) + (u.ap->flags & AF_DEL);
@@ -1637,20 +1985,26 @@ void update_page()
             break;
         }
         if (sel == g_sel_items[j].sel)
+        {
             continue;
+        }
         goto_xy(0,g_sel_items[j].line);
         g_sel_item_index = j;
         output_sel(g_sel_item_index, sel, true);
     }
     if (++g_sel_item_index == g_sel_page_item_cnt)
+    {
         g_sel_item_index = 0;
+    }
 }
 
 void output_sel(int ix, int sel, bool update)
 {
     if (ix < 0) {
         if (g_use_sel_num)
+        {
             putchar(' ');
+        }
         putchar(' ');
         putchar(' ');
         return;
@@ -1660,7 +2014,9 @@ void output_sel(int ix, int sel, bool update)
         /* later consider no-leading-zero option */
         printf("%02d",ix+1);
     } else
+    {
         putchar(g_sel_chars[ix]);
+    }
 
     switch (sel) {
       case 1:                   /* '+' */
@@ -1681,7 +2037,9 @@ void output_sel(int ix, int sel, bool update)
     color_pop();        /* of COLOR_PLUS/MINUS/STAR/DEFAULT */
 
     if (update)
+    {
         g_sel_items[ix].sel = sel;
+    }
 }
 
 /* Counts the number of lines needed to output a subject, including
@@ -1692,7 +2050,9 @@ static int count_subject_lines(const SUBJECT *subj, int *selptr)
     int sel;
 
     if (subj->flags & SF_DEL)
+    {
         sel = 2;
+    }
     else if (subj->flags & g_sel_mask) {
         sel = 1;
         for (ARTICLE *ap = subj->articles; ap; ap = ap->subj_next) {
@@ -1703,13 +2063,21 @@ static int count_subject_lines(const SUBJECT *subj, int *selptr)
             }
         }
     } else
+    {
         sel = 0;
+    }
     if (selptr)
+    {
         *selptr = sel;
+    }
     if (*g_sel_art_dmode == 'l')
+    {
         return subj->misc;
+    }
     if (*g_sel_art_dmode == 'm')
-        return (subj->misc <= 4? subj->misc : (subj->misc - 4) / 3 + 4);
+    {
+        return (subj->misc <= 4 ? subj->misc : (subj->misc - 4) / 3 + 4);
+    }
     return (subj->misc != 0);
 }
 
@@ -1726,13 +2094,19 @@ static int count_thread_lines(const SUBJECT *subj, int *selptr)
         if (subj->misc) {
             total += count_subject_lines(subj, &subj_sel);
             if (sel < 0)
+            {
                 sel = subj_sel;
+            }
             else if (sel != subj_sel)
+            {
                 sel = 3;
+            }
         }
     } while ((subj = subj->next) != nullptr && subj->thread == thread);
     if (selptr)
-        *selptr = (sel < 0? 0 : sel);
+    {
+        *selptr = (sel < 0 ? 0 : sel);
+    }
     return total;
 }
 
@@ -1750,7 +2124,9 @@ static void display_article(const ARTICLE *ap, int ix, int sel)
 
     output_sel(ix, sel, false);
     if (*g_sel_art_dmode == 's' || from_width < 8)
-        printf("  %s\n",compress_subj(ap->subj->articles,subj_width));
+    {
+        printf("  %s\n", compress_subj(ap->subj->articles, subj_width));
+    }
     else if (*g_sel_art_dmode == 'd') {
           printf("%s  %s\n",
                compress_date(ap, date_width),
@@ -1792,13 +2168,19 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
         if ((first_ap = subj->thread) != nullptr
          && (first_ap->subj != subj || first_ap->from == nullptr
           || (!(first_ap->flags&AF_UNREAD) ^ g_sel_rereading)))
+        {
             first_ap = nullptr;
+        }
         for (ap = subj->articles; ap; ap = ap->subj_next) {
             if (!!(ap->flags&AF_UNREAD) ^ g_sel_rereading)
+            {
                 break;
+            }
         }
         if (!first_ap)
+        {
             first_ap = ap;
+        }
         if (*g_sel_art_dmode == 'd') {
             printf("%s%3d  %s\n",
                    compress_date(first_ap, date_width), j,
@@ -1814,37 +2196,55 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
             for ( ; ap && j; ap = ap->subj_next) {
                 if ((!(ap->flags&AF_UNREAD) ^ g_sel_rereading)
                  || ap == first_ap)
+                {
                     continue;
+                }
                 j--;
                 if (i < 0)
+                {
                     i = 0;
+                }
                 else if (*g_sel_art_dmode == 'm') {
                     if (!j) {
                         if (i)
+                        {
                             newline();
+                        }
                     }
                     else {
                         if (i == 3 || !i) {
                             if (i)
+                            {
                                 newline();
+                            }
                             if (g_term_line >= s_sel_max_line_cnt + 2)
+                            {
                                 return;
+                            }
                             maybe_eol();
                             i = 1;
                         } else
+                        {
                             i++;
+                        }
                         if (g_use_sel_num)
+                        {
                             putchar(' ');
+                        }
                         printf("  %s      ",
                                compress_from(ap? ap->from : nullptr, from_width));
                         continue;
                     }
                 }
                 if (g_term_line >= s_sel_max_line_cnt + 2)
+                {
                     return;
+                }
                 maybe_eol();
                 if (g_use_sel_num)
+                {
                     putchar(' ');
+                }
                 printf("  %s\n", compress_from(ap? ap->from : nullptr, from_width));
                 termdown(1);
             }
@@ -1873,7 +2273,9 @@ void display_option(int op, int item_index)
         post = "..................................";
         val = ini_values(g_options_ini)[op];
         if (!val)
+        {
             val = quote_string(option_value(static_cast<option_index>(op)));
+        }
     }
     output_sel(item_index, g_sel_items[item_index].sel, false);
     printf(" %s%s%s %.39s\n", pre, item, post + len, val);
@@ -1890,18 +2292,28 @@ static void display_univ(const UNIV_ITEM *ui)
               /* later error check the UI? */
             NGDATA *np = find_ng(ui->data.group.ng);
             if (!np)
-                printf("!!!!! could not find %s",ui->data.group.ng);
+            {
+                printf("!!!!! could not find %s", ui->data.group.ng);
+            }
             else {
                 /* XXX set_toread() can print sometimes... */
                 if (!np->abs1st)
+                {
                     set_toread(np, ST_LAX);
+                }
                 int numarts = np->toread;
                 if (numarts >= 0)
-                    printf("%5ld ",(long)numarts);
+                {
+                    printf("%5ld ", (long) numarts);
+                }
                 else if (numarts == TR_UNSUB)
+                {
                     printf("UNSUB ");
+                }
                 else
+                {
                     printf("***** ");
+                }
                 fputs(ui->data.group.ng,stdout);
             }
             newline();
@@ -1926,7 +2338,9 @@ static void display_univ(const UNIV_ITEM *ui)
 static void display_group(DATASRC *dp, char *group, int len, int max_len)
 {
     if (*g_sel_grp_dmode == 's')
+    {
         fputs(group, stdout);
+    }
     else {
         char* end;
         char buff[256];
@@ -1935,11 +2349,15 @@ static void display_group(DATASRC *dp, char *group, int len, int max_len)
         if (*cp != '?' && (end = strchr(cp, '\n')) != nullptr
          && end != cp) {
             if (end - cp > g_tc_COLS - max_len - 8 - 1 - g_use_sel_num)
+            {
                 end = cp + g_tc_COLS - max_len - 8 - 1 - g_use_sel_num;
+            }
             char ch = *end;
             *end = '\0';
             if (*g_sel_grp_dmode == 'm')
+            {
                 fputs(cp, stdout);
+            }
             else {
                 int i = max_len - len;
                 fputs(group, stdout);
@@ -1951,7 +2369,9 @@ static void display_group(DATASRC *dp, char *group, int len, int max_len)
             *end = ch;
         }
         else
+        {
             fputs(group, stdout);
+        }
     }
     newline();
 }
