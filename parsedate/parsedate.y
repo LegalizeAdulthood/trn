@@ -495,10 +495,10 @@ static time_t Convert(time_t Month, time_t Day, time_t Year, time_t Hours, time_
 	1972, 1976, 1980, 1984, 1988, 1992, 1996,
 	2000, 2004, 2008, 2012, 2016, 2020, 2024, 2028, 2032, 2036
     };
-    register int	*yp;
-    register int	*mp;
-    register time_t	Julian;
-    register int	i;
+    int	*yp;
+    int	*mp;
+    time_t	Julian;
+    int	i;
     time_t		tod;
 
     if (Year < 0)
@@ -566,10 +566,10 @@ static time_t RelativeMonth(time_t Start, time_t RelMonth)
 
 static int LookupWord(char *buff, int length)
 {
-    register char	*p;
-    register char	*q;
-    register TABLE	*tp;
-    register int	c;
+    char	*p;
+    char	*q;
+    TABLE	*tp;
+    int	c;
 
     p = buff;
     c = p[0];
@@ -656,12 +656,12 @@ static int LookupWord(char *buff, int length)
 int
 date_lex()
 {
-    register char	c;
-    register char	*p;
+    char	c;
+    char	*p;
     char		buff[20];
-    register int	sign;
-    register int	i;
-    register int	nesting;
+    int	sign;
+    int	i;
+    int	nesting;
 
     for ( ; ; ) {
 	/* Get first character after the whitespace. */
