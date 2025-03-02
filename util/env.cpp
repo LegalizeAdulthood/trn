@@ -246,7 +246,7 @@ static bool set_user_name(char *tmpbuf)
     {
         DWORD size = 0;
         GetUserNameExA(NameSamCompatible, nullptr, &size);
-        std::unique_ptr<char> buffer{new char[size]};
+        std::unique_ptr<char[]> buffer{new char[size]};
         GetUserNameExA(NameSamCompatible, buffer.get(), &size);
         std::string            value{buffer.get()};
         std::string::size_type backslash = value.find_last_of('\\');

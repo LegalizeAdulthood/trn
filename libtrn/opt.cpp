@@ -1138,7 +1138,7 @@ static void set_header_list(headtype_flags flag, headtype_flags defflag, const c
         g_htype[i].flags = ((g_htype[i].flags & defflag)
                         ? (g_htype[i].flags | flag)
                         : (g_htype[i].flags & ~flag));
-    std::unique_ptr<char> buffer(new char[strlen(str) + 1]);
+    std::unique_ptr<char[]> buffer(new char[strlen(str) + 1]);
     char *buff = buffer.get();
     strcpy(buff, str);
     for (;;) {
