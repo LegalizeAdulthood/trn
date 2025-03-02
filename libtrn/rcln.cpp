@@ -348,7 +348,7 @@ void set_toread(NGDATA *np, bool lax_high_check)
     }
     if (virgin_ng) {
         sprintf(tmpbuf," 1-%ld",(long)ngsize);
-        if (strcmp(tmpbuf,np->rcline+np->numoffset))
+        if (strcmp(tmpbuf,np->rcline+np->numoffset) != 0)
             checkexpired(np,np->abs1st);        /* this might realloc rcline */
     }
     char *nums = np->rcline + np->numoffset;

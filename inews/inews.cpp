@@ -102,7 +102,8 @@ int main(int argc, char *argv[])
             cp = nntp_servername(cp);
     }
     const char *line_end;
-    if (cp && *cp && strcmp(cp,"local")) {
+    if (cp && *cp && strcmp(cp,"local") != 0)
+    {
         g_server_name = savestr(cp);
         cp = strchr(g_server_name, ';');
         if (cp) {

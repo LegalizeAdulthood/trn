@@ -114,7 +114,8 @@ void datasrc_init()
     g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
 
     char *machine = get_val("NNTPSERVER");
-    if (machine && strcmp(machine,"local")) {
+    if (machine && strcmp(machine,"local") != 0)
+    {
         vals[DI_NNTP_SERVER] = machine;
         vals[DI_AUTH_USER] = read_auth_file(g_nntp_auth_file.c_str(),
                                             &vals[DI_AUTH_PASS]);
@@ -367,7 +368,8 @@ bool open_datasrc(DATASRC *dp)
         if (dp->act_sf.refetch_secs) {
             switch (nntp_list("active", "control", 7)) {
             case 1:
-                if (strncmp(g_ser_line, "control ", 8)) {
+                if (strncmp(g_ser_line, "control ", 8) != 0)
+                {
                     strcpy(g_buf, g_ser_line);
                     dp->act_sf.lastfetch = 0;
                     success = actfile_hash(dp);

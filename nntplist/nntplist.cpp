@@ -72,7 +72,8 @@ int main(int argc, char *argv[])
         if (*cp == '/')
             cp = nntp_servername(cp);
     }
-    if (strcmp(cp,"local")) {
+    if (strcmp(cp,"local") != 0)
+    {
         g_server_name = savestr(cp);
         cp = strchr(g_server_name, ';');
         if (!cp)

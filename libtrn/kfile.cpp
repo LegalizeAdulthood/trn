@@ -66,7 +66,8 @@ void kfile_init()
     char* cp = get_val("KILLTHREADS");
     if (!cp)
         cp = s_killthreads;
-    if (*cp && strcmp(cp,"none")) {
+    if (*cp && strcmp(cp,"none") != 0)
+    {
         s_kf_daynum = killfile_daynum(0);
         s_kf_thread_cnt = 0;
         g_kf_changethd_cnt = 0;
@@ -143,7 +144,7 @@ int do_kfile(FILE *kfp, int entering)
         if (!strncmp(bp,"THRU",4)) {
             int len = strlen(g_ngptr->rc->name);
             cp = skip_space(bp + 4);
-            if (strncmp(cp, g_ngptr->rc->name, len) || !isspace(cp[len]))
+            if (strncmp(cp, g_ngptr->rc->name, len) != 0 || !isspace(cp[len]))
                 continue;
             g_killfirst = atol(cp+len+1)+1;
             if (g_killfirst < g_firstart)
@@ -413,8 +414,8 @@ void rewrite_kfile(ART_NUM thru)
                 cp = skip_space(cp);
                 if (isdigit(*cp))
                     continue;
-                if (strncmp(cp, g_ngptr->rc->name, len)
-                 || (cp[len] && !isspace(cp[len]))) {
+                if (strncmp(cp, g_ngptr->rc->name, len) != 0 || (cp[len] && !isspace(cp[len])))
+                {
                     fputs(g_buf,s_newkfp);
                     needs_newline = !strchr(g_buf,'\n');
                 }

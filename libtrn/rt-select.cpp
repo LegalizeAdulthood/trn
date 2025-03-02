@@ -1418,8 +1418,9 @@ static bool select_option(option_index i)
     char *oldval = savestr(quote_string(option_value(i)));
     char *val = vals[i] ? vals[i] : oldval;
     s_clean_screen = in_choice("> ", val, g_options_ini[i].help_str, MM_OPTION_EDIT_PROMPT);
-    if (strcmp(g_buf,val)) {
-        char* to = g_buf;
+    if (strcmp(g_buf,val) != 0)
+    {
+        char * to = g_buf;
         char* from = g_buf;
         parse_string(&to, &from);
         changed = true;

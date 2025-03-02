@@ -36,7 +36,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
         s = skip_digits(s);
         if (!strncmp(s, " of ", 4)) {
             /* "section N of ... of file F ..." */
-            for (s += 4; *s && strncmp(s," of file ",9); s++) ;
+            for (s += 4; *s && strncmp(s," of file ",9) != 0; s++) ;
             if (!*s)
                 return 0;
             s += 9;
@@ -54,7 +54,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
             int tmptotal = atoi(s);
             s = skip_digits(s);
             s = skip_space(s);
-            if (tmppart > tmptotal || strncmp(s,"file ",5))
+            if (tmppart > tmptotal || strncmp(s,"file ",5) != 0)
                 return 0;
             char *tmpfilename = s + 5;
             s = strchr(tmpfilename, ' ');
@@ -73,7 +73,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
             return 0;
         char *tmpfilename = s + 1;
         s = strchr(tmpfilename, ' ');
-        if (!s || strncmp(s, " (Part ", 7))
+        if (!s || strncmp(s, " (Part ", 7) != 0)
             return 0;
         *s = '\0';
         s += 7;
@@ -93,18 +93,18 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
     if (!strncmp(bp, "File: ", 6)) {
         char *tmpfilename = bp + 6;
         char *s = strchr(tmpfilename, ' ');
-        if (!s || strncmp(s, " -- part ", 9))
+        if (!s || strncmp(s, " -- part ", 9) != 0)
             return 0;
         *s = '\0';
         s += 9;
         int tmppart = atoi(s);
         s = skip_digits(s);
-        if (tmppart == 0 || strncmp(s, " of ", 4))
+        if (tmppart == 0 || strncmp(s, " of ", 4) != 0)
             return 0;
         s += 4;
         int tmptotal = atoi(s);
         s = skip_digits(s);
-        if (tmppart > tmptotal || strncmp(s, " -- ", 4))
+        if (tmppart > tmptotal || strncmp(s, " -- ", 4) != 0)
             return 0;
         *filenamep = tmpfilename;
         *partp = tmppart;
@@ -120,7 +120,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
         int tmptotal = atoi(++s);
         s = skip_digits(s);
         s = skip_space(s);
-        if (tmppart > tmptotal || strncmp(s, "File: ", 6))
+        if (tmppart > tmptotal || strncmp(s, "File: ", 6) != 0)
             return 0;
         char *tmpfilename = s + 6;
         s = strchr(tmpfilename, ' ');
@@ -189,7 +189,7 @@ decode_state uudecode(FILE *ifp, decode_state state)
           case DECODE_START:    /* Looking for start of uuencoded file */
           case DECODE_MAYBEDONE:
           {
-              if (strncmp(g_buf, "begin ", 6))
+              if (strncmp(g_buf, "begin ", 6) != 0)
                   break;
               /* skip mode */
               p = skip_non_space(g_buf + 6);

@@ -1237,7 +1237,7 @@ void display_page_title(bool home_only)
         }
         if (rp)
             strcpy(g_buf+len, ", ...");
-        if (strcmp(g_buf+2,"default"))
+        if (strcmp(g_buf+2,"default") != 0)
             printf(" (group #%d: %s)",g_multirc->num, g_buf+2);
         color_pop();    /* of COLOR_HEADING */
     }
