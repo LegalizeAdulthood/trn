@@ -69,10 +69,8 @@ void s_sort_basic()
             {
                 break;          /* out of while loop */
             }
-            else {
-                g_s_ent_sort[SOFF(j/2)] = g_s_ent_sort[SOFF(j)];
-                j = j*2;
-            }
+            g_s_ent_sort[SOFF(j/2)] = g_s_ent_sort[SOFF(j)];
+            j = j*2;
         } /* while */
         g_s_ent_sort[SOFF(j/2)] = t1;
         /* end heap readjust */
@@ -94,10 +92,8 @@ void s_sort_basic()
             {
                 break;  /* out of while */
             }
-            else {
-                g_s_ent_sort[SOFF(j/2)] = g_s_ent_sort[SOFF(j)];
-                j = j*2;
-            }
+            g_s_ent_sort[SOFF(j/2)] = g_s_ent_sort[SOFF(j)];
+            j = j*2;
         } /* while */
         g_s_ent_sort[SOFF(j/2)] = t1;
         /* end heap readjust */

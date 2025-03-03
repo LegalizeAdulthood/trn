@@ -70,13 +70,11 @@ bool sa_eligible(long a)
     {
         return true;            /* just use basic-eligible */
     }
-    else {
-        if (sa_subj_thread_prev(a))
-        {
-            return false;       /* there was an earlier match */
-        }
-        return true;            /* no prior matches */
+    if (sa_subj_thread_prev(a))
+    {
+        return false;           /* there was an earlier match */
     }
+    return true;                /* no prior matches */
 }
 
 /* given an article number, return the entry number for that article */
@@ -204,13 +202,12 @@ int sa_compare(long a, long b)
                 return 1;
             }
             return -1;
-        } else {
-            if (a < b)
-            {
-                return -1;
-            }
-            return 1;
         }
+        if (a < b)
+        {
+            return -1;
+        }
+        return 1;
     }
     if (a < b)
     {

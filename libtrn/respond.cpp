@@ -249,13 +249,13 @@ save_result save_article()
                     decode_type = 1;
                     break;
                 }
-                else if (uue_prescan(g_art_line,&filename,&part,&total)) {
+                if (uue_prescan(g_art_line,&filename,&part,&total)) {
                     g_savefrom = g_artpos;
                     seekart(g_savefrom);
                     decode_type = 2;
                     break;
                 }
-                else if (++cnt == 300)
+                if (++cnt == 300)
                 {
                     break;
                 }

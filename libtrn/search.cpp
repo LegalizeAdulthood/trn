@@ -398,26 +398,23 @@ const char *execute(COMPEX *compex, const char *addr)
         }
         return nullptr;
     }
-    else {                              /* regular algorithm */
-        do {
-            char** alt = compex->alternatives;
-            while (*alt) {
-                if (advance(compex, p1, *alt++))
-                {
-                    return p1;
-                }
+    do {                                /* regular algorithm */
+        char** alt = compex->alternatives;
+        while (*alt) {
+            if (advance(compex, p1, *alt++))
+            {
+                return p1;
             }
-            p1++;
-        } while (*p1 && !s_err);
-        if (s_err)
-        {
-            s_err = 0;
         }
-        return nullptr;
+        p1++;
+    } while (*p1 && !s_err);
+    if (s_err)
+    {
+        s_err = 0;
     }
-   /*NOTREACHED*/
+    return nullptr;
 }
- 
+
 /* advance the match of the regular expression starting at ep along the
    string lp, simulates an NDFSA */
 bool advance(COMPEX *compex, const char *lp, const char *ep)

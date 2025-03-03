@@ -729,8 +729,8 @@ bool sf_do_line(char *line, bool check)
             free(s_sf_compex);
             s_sf_entries[g_sf_num_entries-1].compex = nullptr;
             return false;
-        } else
-            s_sf_entries[g_sf_num_entries-1].compex = s_sf_compex;
+        }
+        s_sf_entries[g_sf_num_entries-1].compex = s_sf_compex;
     }
     else {
         s_sf_entries[g_sf_num_entries-1].flags &= 0xfe;
