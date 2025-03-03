@@ -1710,7 +1710,9 @@ try_again:
         for (; gp && g_sel_page_item_cnt < s_sel_max_per_page; gp = gp->next) {
 #if 0
             if (gp == xx)
+            {
                 g_sel_item_index = g_sel_page_item_cnt;
+            }
 #endif
 
             if (!(gp->flags & AGF_INCLUDED))
@@ -1743,7 +1745,9 @@ try_again:
         for (; ui && g_sel_page_item_cnt < s_sel_max_per_page; ui = ui->next) {
 #if 0
             if (ui == xx)
+            {
                 g_sel_item_index = g_sel_page_item_cnt;
+            }
 #endif
 
             if (!(ui->flags & UF_INCLUDED))
@@ -1776,7 +1780,9 @@ try_again:
         for (; op <= g_obj_count && g_sel_page_item_cnt<s_sel_max_per_page; op++) {
 #if 0
             if (op == xx)
+            {
                 g_sel_item_index = g_sel_page_item_cnt;
+            }
 #endif
 
             if (!(g_option_flags[op] & OF_INCLUDED))

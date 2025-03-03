@@ -181,15 +181,23 @@ void decode_switch(const char *s)
             if (*++s == '=') s++;
             if (*s) {
                 if (upordown)
+                {
                     debug |= atoi(s);
+                }
                 else
+                {
                     debug &= ~atoi(s);
+                }
             }
             else {
                 if (upordown)
+                {
                     debug |= 1;
+                }
                 else
+                {
                     debug = 0;
+                }
             }
 #else
             printf("Trn was not compiled with -DDEBUG.\n");

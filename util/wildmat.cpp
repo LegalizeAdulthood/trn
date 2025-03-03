@@ -116,7 +116,9 @@ static bool DoMatch(const char *text, const char *p)
 
 #ifdef  MATCH_TAR_PATTERN
     if (*text == '/')
+    {
         return true;
+    }
 #endif  /* MATCH_TAR_ATTERN */
     return *text == '\0';
 }
@@ -154,15 +156,21 @@ int main()
         printf("\nEnter pattern:  ");
         (void)fflush(stdout);
         if (gets(p) == nullptr || p[0] == '\0')
+        {
             break;
+        }
         for ( ; ; ) {
             printf("Enter text:  ");
             (void)fflush(stdout);
             if (gets(text) == nullptr)
+            {
                 exit(0);
+            }
             if (text[0] == '\0')
+            {
                 /* Blank line; go back and get a new pattern. */
                 break;
+            }
             printf("      %s\n", wildmat(text, p) ? "YES" : "NO");
         }
     }

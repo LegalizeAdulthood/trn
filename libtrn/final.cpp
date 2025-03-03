@@ -139,7 +139,9 @@ Signal_t int_catcher(int dummy)
     sigset(SIGINT,int_catcher);
 #ifdef DEBUG
     if (debug)
+    {
         write(2,"int_catcher\n",12);
+    }
 #endif
     if (!g_waiting) {
         if (g_int_count++) {            /* was there already an interrupt? */
@@ -264,7 +266,9 @@ Signal_t stop_catcher(int signo)
         resetty();              /* this is the point of all this */
 #ifdef DEBUG
         if (debug)
+        {
             write(2,"stop_catcher\n",13);
+        }
 #endif
         fflush(stdout);
         sigset(signo,SIG_DFL);  /* enable stop */
@@ -272,11 +276,11 @@ Signal_t stop_catcher(int signo)
         sigsetmask(sigblock(0) & ~(1 << (signo-1)));
 #endif
         kill(0,signo);          /* and do the stop */
-            savetty();
+        savetty();
 #ifdef MAILCALL
-            g_mailcount = 0;                    /* force recheck */
+        g_mailcount = 0;                    /* force recheck */
 #endif
-            if (!g_panic) {
+        if (!g_panic) {
             if (!g_waiting) {
                 termlib_init();
                 noecho();                       /* set no echo */
@@ -285,7 +289,7 @@ Signal_t stop_catcher(int signo)
                                                 /* (defined only if TIOCSTI defined) */
                 errno = 0;                      /* needed for getcmd */
             }
-            }
+        }
         xmouse_check();
     }
     sigset(signo,stop_catcher); /* unenable the stop */

@@ -168,7 +168,9 @@ int get_tcp_socket(const char *machine, int port, const char *service)
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = 0;
     if (port)
+    {
         sprintf(service = portstr, "%d", port);
+    }
     error = getaddrinfo(machine, service, &hints, &res0);
     if (error) {
         fprintf(stderr, "%s", gai_strerror(error));
@@ -184,10 +186,14 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 
         inet_ntop(res->ai_family, res->ai_addr, buf, sizeof buf);
         if (res != res0)
+        {
             fprintf(stderr, "trying %s...", buf);
+        }
 
         if (connect(s, res->ai_addr, res->ai_addrlen) >= 0)
+        {
             break;  /* okay we got one */
+        }
 
         fprintf(stderr, "connection to %s: ", buf);
         perror("");

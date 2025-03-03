@@ -109,7 +109,9 @@ int nntp_connect(const char *machine, bool verbose)
 #if 0
     if (!response) {
         if (handle_no_connect() > 0)
+        {
             goto try_to_connect;
+        }
     }
 #endif
     return response;
@@ -143,7 +145,9 @@ int nntp_command(const char *bp)
     time_t now;
 #if defined(DEBUG) && defined(FLUSH)
     if (debug & DEB_NNTP)
+    {
         printf(">%s\n", bp);
+    }
 #endif
     strcpy(g_last_command, bp);
     if (!g_nntplink.connection)

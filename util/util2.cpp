@@ -173,9 +173,13 @@ char *filexp(const char *text)
             }
 #else /* !TILDENAME */
             if (g_verbose)
+            {
                 fputs("~loginname not implemented.\n", stdout);
+            }
             else
+            {
                 fputs("~login not impl.\n", stdout);
+            }
 #endif
         }
     }

@@ -771,17 +771,29 @@ long sa_wrap_next_author(long a)
 
     s = (char*)sa_desc_author(a,20);    /* 20 characters should be enough */
     for (b = s_next_elig(a); b; b = s_next_elig(b))
+    {
         if (strstr(get_from_line(b),s))
+        {
             break;      /* out of the for loop */
+        }
+    }
     if (b)      /* found it */
+    {
         return b;
+    }
     /* search from first article (maybe return original art) */
     b = s_first();
     if (!sa_eligible(b))
+    {
         b = s_next_elig(b);
+    }
     for ( ; b; b = s_next_elig(b))
+    {
         if (strstr(get_from_line(b),s))
+        {
             break;      /* out of the for loop */
+        }
+    }
     return b;
 #else
     return a;           /* feature is disabled */

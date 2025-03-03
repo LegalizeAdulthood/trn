@@ -318,7 +318,9 @@ void term_set(char *tcbuf)
             }
         }
     } else
+    {
         g_tc_BC = "\b";                 /* make a backspace handy */
+    }
     g_tc_UP = Tgetstr("up");            /* move up a line */
     s_tc_CL = Tgetstr("cl");            /* get clear string */
     g_tc_CE = Tgetstr("ce");            /* clear to end of line string */

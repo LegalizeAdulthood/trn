@@ -213,44 +213,67 @@ static bool set_user_name(char *tmpbuf)
     passwd* pwd;
 
     if (g_login_name.empty())
+    {
         pwd = getpwuid(getuid());
+    }
     else
+    {
         pwd = getpwnam(g_login_name.c_str());
+    }
     if (!pwd)
+    {
         return 0;
+    }
     if (g_login_name.empty())
+    {
         g_login_name = pwd->pw_name;
+    }
     if (!g_home_dir)
+    {
         g_home_dir = savestr(pwd->pw_dir);
+    }
     s = pwd->pw_gecos;
 #endif
 #ifdef PASSNAMES
 #ifdef BERKNAMES
 #ifdef BERKJUNK
-    while (*s && !isalnum(*s) && *s != '&') s++;
+    while (*s && !isalnum(*s) && *s != '&')
+    {
+        s++;
+    }
 #endif
     c = strchr(s, ',');
     if (c != nullptr)
+    {
         *c = '\0';
+    }
     c = strchr(s, ';');
     if (c != nullptr)
+    {
         *c = '\0';
+    }
     s = cpytill(g_buf,s,'&');
     if (*s == '&') {                    /* whoever thought this one up was */
         c = g_buf + strlen(g_buf);      /* in the middle of the night */
         strcat(c, g_login_name.c_str()); /* before the morning after */
         strcat(c,s+1);
         if (islower(*c))
+        {
             *c = toupper(*c);           /* gack and double gack */
+        }
     }
     g_real_name = g_buf;
 #else /* !BERKNAMES */
     c = strchr(s, '(');
     if (c != nullptr)
+    {
         *c = '\0';
+    }
     c = strchr(s, '-');
     if (c != nullptr)
+    {
         s = c;
+    }
     g_real_name = s;
 #endif /* !BERKNAMES */
 #endif
@@ -467,14 +490,18 @@ char *export_var(const char *nam, const char *val)
 
             s_firstexport = false;
             for (int j = 0; j < i; j++) /* copy environment */
+            {
                 tmpenv[j] = environ[j];
+            }
             environ = tmpenv;           /* tell exec where it is now */
         }
 #ifndef lint
         else
+        {
             environ = (char**) saferealloc((char*) environ,
                 (MEM_SIZE) (i+2) * sizeof(char*));
                                         /* just expand it a bit */
+        }
 #endif /* lint */
         environ[i+1] = nullptr; /* make sure it's null terminated */
     }

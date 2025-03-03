@@ -205,10 +205,14 @@ void cache_article(ARTICLE *ap)
             if (ap->subj->flags & SF_WASSELECTED) {
 #if 0
                 if (g_selected_only)
+                {
                     ap->flags |= g_sel_mask;
+                }
                 else
 #endif
+                {
                     select_article(ap, AUTO_KILL_NONE);
+                }
             }
             ap->subj->flags |= SF_VISIT;
         }
@@ -321,7 +325,9 @@ void check_poster(ARTICLE *ap)
 #ifdef REPLYTO_POSTER_CHECKING
                     char* reply_buf = fetchlines(article_num(ap),REPLY_LINE);
                     if (in_string(reply_buf, g_login_name.c_str(), true))
+                    {
                         select_subthread(ap,AUTO_SEL_FOL);
+                    }
                     free(reply_buf);
 #endif
                 }

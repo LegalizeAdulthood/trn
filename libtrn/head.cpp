@@ -230,7 +230,9 @@ void start_header(ART_NUM artnum)
 {
 #ifdef DEBUG
     if (debug & DEB_HEADER)
+    {
         dumpheader("start_header\n");
+    }
 #endif
     for (HEADTYPE &i : g_htype)
     {
@@ -303,7 +305,9 @@ bool parseline(char *art_buf, int newhide, int oldhide)
             }
 #ifdef DEBUG
             if (debug & DEB_HEADER)
+            {
                 dumpheader(art_buf);
+            }
 #endif
             if (g_htype[g_in_header].flags & HT_HIDE)
             {

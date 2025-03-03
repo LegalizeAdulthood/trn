@@ -140,7 +140,9 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
     status = doshell(nullptr,cmdline);
 #if 0
     printf("\nFTP command status is %d\n",status);
-    while (!input_pending()) ;
+    while (!input_pending())
+    {
+    }
     eat_typeahead();
 #endif
     return true;

@@ -275,7 +275,9 @@ static void hefree(HASHENT *hp)
 {
 #ifdef HASH_FREE_ENTRIES
     if (s_reusables >= RETAIN)          /* compost heap is full? */
+    {
         free((char*)hp);                /* yup, just pitch this one */
+    }
     else {                              /* no, just stash for reuse */
         ++s_reusables;
         hp->he_next = s_hereuse;

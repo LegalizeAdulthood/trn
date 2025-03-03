@@ -71,12 +71,18 @@ void vwtary(ART_LINE indx, ART_POS newvalue)
 
 #ifdef DEBUG
     if (indx < 0)
+    {
         printf("vwtary(%ld)\n",(long)indx);
+    }
     if (!indx)
+    {
         maxindx = 0;
+    }
     if (indx > maxindx) {
         if (indx != maxindx + 1)
+        {
             printf("indx skipped %d-%d\n",maxindx+1,indx-1);
+        }
         maxindx = indx;
     }
 #endif

@@ -173,11 +173,15 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
 #ifdef DEBUG_EDITDIST
     printf("      ");
     for (col = 0; col < from_len; col++)
+    {
         printf(" %c ", from[col]);
+    }
     printf("\n   ");
 
     for (col = 0; col <= from_len; col++)
+    {
         printf("%2d ", col * del);
+    }
 #endif
 
 /* Row 0 is handled implicitly; its value at a given column is   col*del.
@@ -245,9 +249,13 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
         } /* for col = 1 */
 #ifdef DEBUG_EDITDIST
         if (row < to_len - 1)
+        {
             printf("\n %c %2d ", to[row+1], (row + 2) * ins);
+        }
         else
+        {
             printf("\n");
+        }
 #endif
 #ifdef TRN_SPEEDUP
         if (low > MIN_DIST)

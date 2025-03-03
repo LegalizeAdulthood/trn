@@ -333,14 +333,20 @@ int mod;
 
     mod &= 7;                           /* remove extraneous garbage */
     if (stat(filename, &g_filestat) < 0)
+    {
         return -1;
+    }
     euid = geteuid();
     if (euid == ROOTID)
+    {
         return 0;
+    }
     protection = 7 & ( g_filestat.st_mode >> (g_filestat.st_uid == euid ?
                         6 : (g_filestat.st_gid == getegid() ? 3 : 0)) );
     if ((mod & protection) == mod)
+    {
         return 0;
+    }
     errno = EACCES;
     return -1;
 }
@@ -480,7 +486,9 @@ void safelink(char *old_name, char *new_name)
         printf("Can't link backup (%s) to .newsrc (%s)\n", old_name, new_name);
 #if 0
         if (errno>0 && errno<sys_nerr)
+        {
             printf("%s\n", sys_errlist[errno]);
+        }
 #endif
         finalize(1);
     }
@@ -655,7 +663,9 @@ void prep_ini_data(char *cp, const char *filename)
 
 #ifdef DEBUG
     if (debug & DEB_RCFILES)
+    {
         printf("Read %d bytes from %s\n",strlen(cp),filename);
+    }
 #endif
 
     while (*cp) {
@@ -829,8 +839,10 @@ char *next_ini_section(char *cp, char **section, char **cond)
     cp += strlen(cp) + 1;
 #ifdef DEBUG
     if (debug & DEB_RCFILES)
+    {
         printf("Section [%s] (condition: %s)\n",*section,
                **cond? *cond : "<none>");
+    }
 #endif
     return cp;
 }

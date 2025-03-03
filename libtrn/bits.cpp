@@ -90,7 +90,9 @@ void rc_to_bits()
         termdown(2);
         for (i = article_first(g_absfirst); i < g_firstart; i = article_next(i)) {
             if (article_unread(i))
+            {
                 printf("%ld ",(long)i);
+            }
         }
     }
 #endif
@@ -637,7 +639,9 @@ static bool check_chase(char *ptr, int until_key)
         chase_xref(article_num(ap),true);
         ap->flags &= ~AF_MCHASE;
         if (!--s_chase_count)
+        {
             return 1;
+        }
     }
 #endif
     if (until_key && input_pending())
@@ -785,16 +789,22 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
     {
         char* t = strchr(s+7, '.');
         if (t)
+        {
             *t = '\0';
+        }
         inews_site = savestr(s+7);
     }
 #endif /* ANCIENT_NEWS */
     else
+    {
         inews_site = savestr("");
+    }
     free(sitebuf);
 
     if (!strcmp(site,inews_site))
+    {
         return true;
+    }
 
 #ifdef DEBUG
     if (debug) {

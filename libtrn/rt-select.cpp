@@ -1569,7 +1569,9 @@ static bool deselect_item(SEL_UNION u)
         }
 #if 0
         if (g_sel_rereading)
+        {
             u.mp->flags |= MF_DEL;
+        }
 #endif
         break;
       case SM_ADDGROUP:

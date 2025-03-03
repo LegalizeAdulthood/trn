@@ -256,14 +256,22 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
     int curlen;
 
     if (!artnum)
+    {
         return;
+    }
     np = find_ng(ngnam);
     if (np == nullptr)                  /* not found in newsrc? */
+    {
         return;
+    }
     if (dp != np->rc->g_datasrc)                /* punt on cross-host xrefs */
+    {
         return;
+    }
     if (!np->numoffset)
+    {
         return;
+    }
 #ifdef DEBUG
     if (debug & DEB_XREF_MARKER) {
         printf("%ld<-\n%s%c%s\n",(long)artnum,np->rcline,np->subscribechar,
@@ -275,16 +283,24 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
 
     /* a little optimization, since it is almost always the last number */
 
-    for (t=s; *t; t++) ;                /* find end of string */
+    for (t=s; *t; t++)                  /* find end of string */
+    {
+    }
     curlen = t - np->rcline;
-    for (t--; isdigit(*t); t--) ;       /* find previous delim */
+    for (t--; isdigit(*t); t--)         /* find previous delim */
+    {
+    }
     if (*t == ',' && atol(t+1) == artnum) {
         *t = '\0';
         if (np->toread >= TR_NONE)
+        {
             ++np->toread;
+        }
 #ifdef DEBUG
         if (debug & DEB_XREF_MARKER)
+        {
             printf("%s%c %s\n",np->rcline,np->subscribechar,s);
+        }
 #endif
         return;
     }
@@ -321,7 +337,9 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
                     prange(s,artnum+1,max);
                 }
                 else                    /* only one range */
+                {
                     prange(s,min,max);
+                }
                 strcat(s,t);            /* copy remainder over */
 #ifdef DEBUG
                 if (debug & DEB_XREF_MARKER) {
@@ -333,21 +351,31 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
                 *(np->rcline + np->numoffset - 1) = '\0';
                                         /* wipe out : or ! */
                 if (np->toread >= TR_NONE)
+                {
                     np->toread++;
+                }
                 return;
             }
         }
         else {
             if (artnum == min) {        /* explicitly a read article? */
                 if (*t == ',')          /* pick a comma, any comma */
+                {
                     t++;
+                }
                 else if (s[-1] == ',')
+                {
                     s--;
+                }
                 else if (s[-2] == ',')  /* (in case of space) */
+                {
                     s -= 2;
+                }
                 strcpy(s,t);            /* no need to realloc */
                 if (np->toread >= TR_NONE)
+                {
                     np->toread++;
+                }
 #ifdef DEBUG
                 if (debug & DEB_XREF_MARKER) {
                     printf("%s%c%s\n",np->rcline,np->subscribechar,
@@ -357,7 +385,10 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
                 return;
             }
         }
-        while (*t && !isdigit(*t)) t++; /* skip comma and any spaces */
+        while (*t && !isdigit(*t))      /* skip comma and any spaces */
+        {
+            t++;
+        }
         s = t;
     }
 }
@@ -365,9 +396,13 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
 void prange(char *where, ART_NUM min, ART_NUM max)
 {
     if (min == max)
+    {
         sprintf(where,"%ld",(long)min);
+    }
     else
+    {
         sprintf(where,"%ld-%ld",(long)min,(long)max);
+    }
 }
 #endif
 

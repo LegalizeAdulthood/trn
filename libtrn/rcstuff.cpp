@@ -412,33 +412,47 @@ static bool lock_newsrc(NEWSRC *rp)
     if (processnum) {
 #ifndef MSDOS
         if (g_verbose)
+        {
             printf("\nThe requested newsrc is locked by process %ld on host %s.\n",
                    processnum, runninghost);
+        }
         else
+        {
             printf("\nNewsrc locked by %ld on host %s.\n",processnum,runninghost);
+        }
         termdown(2);
         if (strcmp(runninghost,g_local_host)) {
             if (g_verbose)
+            {
                 printf("\n"
                        "Since that's not the same host as this one (%s), we must\n"
                        "assume that process still exists.  To override this check, remove\n"
                        "the lock file: %s\n",
                        g_local_host, rp->lockname);
+            }
             else
+            {
                 printf("\nThis host (%s) doesn't match.\nCan't unlock %s.\n",
                        g_local_host, rp->lockname);
+            }
             termdown(2);
             if (g_bizarre)
+            {
                 resetty();
+            }
             finalize(0);
         }
         if (processnum == g_our_pid) {
             if (g_verbose)
+            {
                 printf("\n"
                        "Hey, that *my* pid!  Your access file is trying to use the same newsrc\n"
                        "more than once.\n");
+            }
             else
+            {
                 printf("\nAccess file error (our pid detected).\n");
+            }
             termdown(2);
             return false;
         }
@@ -446,19 +460,27 @@ static bool lock_newsrc(NEWSRC *rp)
             /* Process is apparently gone */
             sleep(2);
             if (g_verbose)
+            {
                 fputs("\n"
                       "That process does not seem to exist anymore.  The count of read articles\n"
                       "may be incorrect in the last newsgroup accessed by that other (defunct)\n"
                       "process.\n\n",
                       stdout);
+            }
             else
+            {
                 fputs("\nProcess crashed.\n",stdout);
+            }
             if (!g_lastngname.empty()) {
                 if (g_verbose)
+                {
                     printf("(The last newsgroup accessed was %s.)\n\n",
                            g_lastngname.c_str());
+                }
                 else
+                {
                     printf("(In %s.)\n\n",g_lastngname.c_str());
+                }
             }
             termdown(2);
             get_anything();
@@ -466,15 +488,21 @@ static bool lock_newsrc(NEWSRC *rp)
         }
         else {
             if (g_verbose)
+            {
                 printf("\n"
                        "It looks like that process still exists.  To override this, remove\n"
                        "the lock file: %s\n",
                        rp->lockname);
+            }
             else
+            {
                 printf("\nCan't unlock %s.\n", rp->lockname);
+            }
             termdown(2);
             if (g_bizarre)
+            {
                 resetty();
+            }
             finalize(0);
         }
 #endif

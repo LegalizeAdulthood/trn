@@ -36,13 +36,21 @@ const char *sa_get_statchars(long a, int line)
       case 1:
         strcpy(char_buf,".....");
         if (sa_marked(a))
+        {
             char_buf[4] = 'x';
+        }
         if (sa_selected1(a))
+        {
             char_buf[3] = '+';
+        }
         if (was_read(g_sa_ents[a].artnum))
+        {
             char_buf[0] = '-';
+        }
         else
+        {
             char_buf[0] = '+';
+        }
         break;
       default:
         strcpy(char_buf,"     ");
@@ -135,9 +143,13 @@ const char *sa_get_desc(long e, int line, bool trunc)
         if (g_sa_mode_desc_author) {
 #if 0
             if (trunc)
+            {
                 sprintf(s_sa_buf,"%s ",padspaces(sa_desc_author(e,16),16));
+            }
             else
+            {
                 sprintf(s_sa_buf,"%s ",sa_desc_author(e,40));
+            }
             strcat(desc_buf,s_sa_buf);
 #endif
             if (trunc)

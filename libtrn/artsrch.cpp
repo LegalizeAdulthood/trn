@@ -447,7 +447,9 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
         strncpy(g_buf+9,fetchsubj(artnum,false),256);
 #ifdef DEBUG
         if (debug & DEB_SEARCH_AHEAD)
+        {
             printf("%s\n",g_buf);
+        }
 #endif
         break;
       case ARTSCOPE_FROM:

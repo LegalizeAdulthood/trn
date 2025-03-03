@@ -71,7 +71,9 @@ void intrp_init(char *tcbuf, int tcbuf_len)
         struct passwd* pwd = getpwnam(NEWS_ADMIN);
 
         if (pwd != nullptr)
+        {
             g_newsuid = pwd->pw_uid;
+        }
 #else
 #ifdef TILDENAME
         char tildenews[2+sizeof NEWS_ADMIN];
@@ -135,7 +137,9 @@ static char *skipinterp(char *pattern, const char *stoppers)
 {
 #ifdef DEBUG
     if (debug & DEB_INTRP)
+    {
         printf("skipinterp %s (till %s)\n",pattern,stoppers?stoppers:"");
+    }
 #endif
 
     while (*pattern && (!stoppers || !strchr(stoppers,*pattern))) {

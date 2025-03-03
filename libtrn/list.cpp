@@ -204,7 +204,9 @@ char *next_listitem(LIST *list, char *ptr)
 #if 0
     if (node->high > list->high) {
         if ((ptr - node->data) / list->item_size + node->low >= list->high)
+        {
             return nullptr;
+        }
     }
 #endif
     return ptr += list->item_size;

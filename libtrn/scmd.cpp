@@ -264,7 +264,9 @@ int s_docmd()
         s_go_bot();
         g_s_ref_all = true;                     /* will need refresh */
         if (!switcheroo())              /* XXX same semantics in trn4? */
+        {
             (void)get_anything();
+        }
         eat_typeahead();
         break;
 #endif

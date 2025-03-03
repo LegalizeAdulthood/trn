@@ -498,7 +498,9 @@ save_result save_article()
             fputs("\n\n", s_tmpfp);
 #if MBOXCHAR == '\001'
             if (mailbox)
+            {
                 fprintf(s_tmpfp,"\001\001\001\001\n");
+            }
 #endif
             fclose(s_tmpfp);
             i = 0; /*$$ set non-zero on write error */
@@ -870,9 +872,13 @@ void forward()
 #ifdef REGEX_WORKS_RIGHT
     if (!compile(&mime_compex,"Content-Type: multipart/.*; *boundary=\"\\([^\"]*\\)\"",true,true)
      && execute(&mime_compex,hbuf) != nullptr)
+    {
         mime_boundary = getbracket(&mime_compex,1);
+    }
     else
+    {
         mime_boundary = nullptr;
+    }
 #else
     mime_boundary = nullptr;
     for (char *s = hbuf; s; s = eol) {
@@ -1107,7 +1113,9 @@ static bool cut_line(char *str)
             break;
         case '/':
             if (*(cp+1) != '*')
+            {
                 break;
+            }
         case '"':
         case '\'':
         case '(':
@@ -1123,15 +1131,21 @@ static bool cut_line(char *str)
         }
     }
     if (dash_cnt < 4 && equal_cnt < 6)
+    {
         return false;
+    }
 
     got_flag = 0;
 
     for (*(cp = word) = '\0'; *str; str++) {
         if (islower(*str))
+        {
             *cp++ = *str;
+        }
         else if (isupper(*str))
+        {
             *cp++ = tolower(*str);
+        }
         else {
             if (*word) {
                 *cp = '\0';
@@ -1140,7 +1154,9 @@ static bool cut_line(char *str)
                     if (!strcmp(word, "line")
                      || !strcmp(word, "here"))
                         if ((other_cnt -= 4) <= 20)
+                        {
                             return true;
+                        }
                     break;
                 case 1:
                     if (!strcmp(word, "this")) {
@@ -1151,7 +1167,9 @@ static bool cut_line(char *str)
                         other_cnt -= 4;
                         if ((dash_cnt >= 6 || equal_cnt >= 6)
                          && other_cnt <= 20)
+                        {
                             return true;
+                        }
                         dash_cnt = 6;
                         got_flag = 0;
                     }

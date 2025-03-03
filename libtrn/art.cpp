@@ -186,7 +186,9 @@ do_article_result do_article()
         ART_LINE linenum = 1;
 #if 0 /* This causes a bug (headers displayed twice sometimes when you press v then ^R) */
         if (!g_do_hiding)
+        {
             g_is_mime = false;
+        }
 #endif
         if (s_firstpage) {
             if (g_firstline) {
@@ -501,7 +503,7 @@ do_article_result do_article()
 #ifdef DEBUG
                         if (debug & DEB_INNERSRCH && outpos < g_tc_COLS - 6) {
                             standout();
-                            printf("%4d",g_artline); 
+                            printf("%4d",g_artline);
                             un_standout();
                         }
 #endif
@@ -1253,7 +1255,9 @@ bool innermore()
     if (g_artpos < g_innersearch) {             /* not even on page yet? */
 #ifdef DEBUG
         if (debug & DEB_INNERSRCH)
+        {
             printf("Not on page %ld < %ld\n",(long)g_artpos,(long)g_innersearch);
+        }
 #endif
         return true;
     }

@@ -35,7 +35,9 @@ int nntp_list(const char *type, const char *arg, int len)
     int ret;
 #ifdef DEBUG /*$$*/
     if (len && (debug & 1) && string_case_equal(type, "active"))
+    {
         return -1;
+    }
 #endif
     if (len)
     {
@@ -666,7 +668,9 @@ long nntp_readcheck()
 
     /* try to get the number of bytes being transfered */
     if (sscanf(g_ser_line, "%*d%ld", &s_rawbytes) != 1)
+    {
         return s_rawbytes = -1;
+    }
     return s_rawbytes;
 }
 #endif
@@ -679,7 +683,9 @@ long nntp_read(char *buf, long n)
 {
     /* if no bytes to read, then just return EOF */
     if (s_rawbytes < 0)
+    {
         return 0;
+    }
 
 #ifdef HAS_SIGHOLD
     sighold(SIGINT);
@@ -691,7 +697,9 @@ long nntp_read(char *buf, long n)
         n = g_nntplink.connection->read(buf, n > s_rawbytes ? s_rawbytes : n, ec);
         s_rawbytes -= n;
     } else
+    {
         n = 0;
+    }
 
     /* if no more left, then fetch the end-of-command signature */
     if (s_rawbytes == 0) {
@@ -700,7 +708,9 @@ long nntp_read(char *buf, long n)
         boost::system::error_code ec;
         int num_remaining = 5;
         while (num_remaining > 0)
+        {
             num_remaining -= g_nntplink.connection->read(buf, num_remaining, ec);
+        }
         s_rawbytes = -1;
     }
 #ifdef HAS_SIGHOLD
