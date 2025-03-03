@@ -74,7 +74,6 @@ static bool DoMatch(const char *text, const char *p)
             while (*++p == '*')
             {
                 /* Consecutive stars act just like one. */
-                continue;
             }
             if (*p == '\0')
             {

@@ -1057,7 +1057,6 @@ void sf_append(char *line)
     {
         printf("\nCould not open (for append) file %s\n",filename);
     }
-    return;
 }
 
 /* returns a lowercased copy of the header line type h in private buffer */
