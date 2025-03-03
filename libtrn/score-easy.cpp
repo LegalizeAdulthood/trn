@@ -169,7 +169,6 @@ char *sc_easy_append()
 /* returns new string or nullptr to abort. */
 const char *sc_easy_command()
 {
-    char *s = s_sc_e_newline;
     printf("\nScoring easy command mode.\n");
     bool q_done = false;
     while (!q_done) {

@@ -530,7 +530,6 @@ static bool univ_use_file(const char *fname, const char *label)
     static char lbuf[LBUFLEN];
 
     bool begin_top = true;      /* default assumption (might be changed later) */
-    char *p = nullptr;
 
     if (!fname)
     {
