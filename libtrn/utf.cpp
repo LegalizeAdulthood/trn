@@ -250,9 +250,9 @@ int visual_width_at(const char *s)
     } else if ((c >= 0x00300 && c <= 0x0036F)   /* combining diacritics */
             || (c >= 0x01AB0 && c <= 0x01AFF)
             || (c >= 0x01DC0 && c <= 0x01DFF)
-            || (c == 0x0200B && c <= 0x0200F)   /* zwsp, zwnj, zwj, lrm, rlm */
-            || (c == 0x0202A && c <= 0x0202E)   /* lre, rle, pdf, lro, rlo */
-            || (c == 0x02060 && c <= 0x02064)) { /* wj,..., invisible plus */
+            || (c >= 0x0200B && c <= 0x0200F)   /* zwsp, zwnj, zwj, lrm, rlm */
+            || (c >= 0x0202A && c <= 0x0202E)   /* lre, rle, pdf, lro, rlo */
+            || (c >= 0x02060 && c <= 0x02064)) { /* wj,..., invisible plus */
         it = 0;
     } else if ((c >= 0x02E80 && c <= 0x04DBF)   /* CJK misc, kana, hangul */
             || (c >= 0x04E00 && c <= 0x09FFF)   /* CJK ideographs */
