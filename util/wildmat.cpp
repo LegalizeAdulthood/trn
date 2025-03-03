@@ -133,7 +133,7 @@ bool wildmat(const char *text, const char *p)
         return true;
     }
 #endif  /* OPTIMIZE_JUST_STAR */
-    return DoMatch(text, p) == true;
+    return DoMatch(text, p);
 }
 
 #ifdef  TEST

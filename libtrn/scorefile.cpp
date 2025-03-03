@@ -811,9 +811,7 @@ int score_match(char *str, int ind)
     }
     /* default case */
     const char *s3 = strstr(str, s1);
-    if (s3 != nullptr && (!s2 || strstr(s3 + strlen(s1), s2)))
-        return true;
-    return false;
+    return s3 != nullptr && (!s2 || strstr(s3 + strlen(s1), s2));
 }
 
 int sf_score(ART_NUM a)

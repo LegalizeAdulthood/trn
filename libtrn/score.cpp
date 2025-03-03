@@ -68,10 +68,7 @@ void sc_init(bool pend_wait)
 
 /* CONSIDER: (for sc_init callers) is g_lastart properly set yet? */
     g_sc_fill_max = g_absfirst - 1;
-    if (g_sa_mode_read_elig || g_firstart > g_lastart)
-        g_sc_fill_read = true;
-    else
-        g_sc_fill_read = false;
+    g_sc_fill_read = g_sa_mode_read_elig || g_firstart > g_lastart;
 
     if (g_sf_verbose) {
         printf("\nScoring articles...");
@@ -252,7 +249,7 @@ int sc_score_art(ART_NUM a, bool now)
         return LOWSCORE;
     }
 
-    if (g_sc_initialized == false) {
+    if (!g_sc_initialized) {
         g_sc_delay = false;
         s_sc_sf_force_init = true;
         sc_init(false);

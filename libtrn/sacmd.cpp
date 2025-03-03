@@ -674,14 +674,7 @@ bool sa_extract_start()
     fflush(stdout);
     getcmd(g_buf);
     printf("\n");
-    if (*g_buf == 'y' || *g_buf == ' ' || *g_buf == '\n')
-    {
-        s_sa_extract_junk = true;
-    }
-    else
-    {
-        s_sa_extract_junk = false;
-    }
+    s_sa_extract_junk = *g_buf == 'y' || *g_buf == ' ' || *g_buf == '\n';
     return true;
 }
 

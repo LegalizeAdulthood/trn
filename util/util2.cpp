@@ -215,7 +215,7 @@ char *in_string(char *big, const char *little, bool case_matters)
             {
                 return nullptr;
             }
-            if (case_matters == true) {
+            if (case_matters) {
                 if (*s != *x)
                 {
                     break;

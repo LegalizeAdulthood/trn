@@ -460,7 +460,7 @@ void univ_use_pattern(const char *pattern, int type)
           case 0:
             for (ui = g_first_univ; ui; ui = ui->next) {
                 if (ui->type == UN_NEWSGROUP && ui->data.group.ng
-                  && univ_DoMatch(ui->data.group.ng,s) == true) {
+                  && univ_DoMatch(ui->data.group.ng, s)) {
                     ui->type = UN_GROUP_DESEL;
                 }
             }
@@ -468,7 +468,7 @@ void univ_use_pattern(const char *pattern, int type)
           case 1:
             for (ui = g_first_univ; ui; ui = ui->next) {
                 if (ui->type == UN_VGROUP && ui->data.vgroup.ng
-                  && univ_DoMatch(ui->data.vgroup.ng,s) == true) {
+                  && univ_DoMatch(ui->data.vgroup.ng, s)) {
                     ui->type = UN_VGROUP_DESEL;
                 }
             }
@@ -479,14 +479,14 @@ void univ_use_pattern(const char *pattern, int type)
         switch (type) {
           case 0:
             for (np = g_first_ng; np; np = np->next) {
-                if (univ_DoMatch(np->rcline,s) == true) {
+                if (univ_DoMatch(np->rcline, s)) {
                     univ_add_group(np->rcline,np->rcline);
                 }
             }
             break;
           case 1:
             for (np = g_first_ng; np; np = np->next) {
-                if (univ_DoMatch(np->rcline,s) == true) {
+                if (univ_DoMatch(np->rcline, s)) {
                     univ_add_virtgroup(np->rcline);
                 }
             }

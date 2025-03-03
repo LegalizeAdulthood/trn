@@ -1407,14 +1407,7 @@ reinp_selector:
             {
                 delay_return_item(g_sel_items[g_sel_item_index].u);
             }
-            if (ch == '-')
-            {
-                g_sel_rereading = false;
-            }
-            else
-            {
-                g_sel_rereading = true;
-            }
+            g_sel_rereading = ch != '-';
             if (deselect_item(g_sel_items[g_sel_item_index].u))
             {
                 output_sel(g_sel_item_index, ch == '-' ? 0 : 2, true);
