@@ -21,8 +21,8 @@ protected:
 
     void setup_buffer(const std::filesystem::path &path);
 
-    std::filesystem::path path{TEST_MAKEDIR_BASE};
-    char buffer[256]{};
+    std::filesystem::path m_path{TEST_MAKEDIR_BASE};
+    char m_buffer[256]{};
 };
 
 void TestMakeDir::SetUp()
@@ -38,8 +38,8 @@ void TestMakeDir::TearDown()
 
 void TestMakeDir::setup_buffer(const std::filesystem::path &path)
 {
-    std::strcpy(buffer, path.string().c_str());
-    for (char *backslash = std::strchr(buffer, '\\'); backslash != nullptr; backslash = std::strchr(buffer, '\\'))
+    std::strcpy(m_buffer, path.string().c_str());
+    for (char *backslash = std::strchr(m_buffer, '\\'); backslash != nullptr; backslash = std::strchr(m_buffer, '\\'))
     {
         *backslash = '/';
     }
@@ -49,9 +49,9 @@ void TestMakeDir::setup_buffer(const std::filesystem::path &path)
 
 TEST_F(TestMakeDir, directoryExists)
 {
-    setup_buffer(path);
+    setup_buffer(m_path);
 
-    bool result{makedir(buffer, MD_DIR)};
+    bool result{makedir(m_buffer, MD_DIR)};
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(exists(std::filesystem::path{TEST_MAKEDIR_BASE}));
@@ -63,7 +63,7 @@ TEST_F(TestMakeDir, fileDirectoryExists)
     file /= "file.txt";
     setup_buffer(file);
 
-    bool result{makedir(buffer, MD_FILE)};
+    bool result{makedir(m_buffer, MD_FILE)};
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(std::filesystem::exists(TEST_MAKEDIR_BASE));
@@ -78,7 +78,7 @@ TEST_F(TestMakeDir, createDirectory)
     ASSERT_FALSE(exists(dir));
     setup_buffer(dir);
 
-    bool result{makedir(buffer, MD_DIR)};
+    bool result{makedir(m_buffer, MD_DIR)};
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(exists(dir));
@@ -94,7 +94,7 @@ TEST_F(TestMakeDir, fileCreateDirectory)
     ASSERT_FALSE(exists(file));
     setup_buffer(file);
 
-    bool result{makedir(buffer, MD_FILE)};
+    bool result{makedir(m_buffer, MD_FILE)};
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(exists(dir));
@@ -111,7 +111,7 @@ TEST_F(TestMakeDir, createSubDirectory)
     ASSERT_FALSE(exists(dir));
     setup_buffer(dir);
 
-    bool result{makedir(buffer, MD_DIR)};
+    bool result{makedir(m_buffer, MD_DIR)};
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(exists(dir));
@@ -127,7 +127,7 @@ TEST_F(TestMakeDir, fileCreateSubDirectory)
     ASSERT_FALSE(exists(file));
     setup_buffer(file);
 
-    bool result{makedir(buffer, MD_FILE)};
+    bool result{makedir(m_buffer, MD_FILE)};
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(exists(dir));

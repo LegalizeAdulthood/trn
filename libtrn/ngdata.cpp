@@ -223,7 +223,6 @@ static int ngorder_count(const NGDATA **npp1, const NGDATA **npp2)
 */
 void sort_newsgroups()
 {
-    int     i;
     NGDATA**lp;
     int (*  sort_procedure)(const NGDATA **npp1,const NGDATA **npp2);
 

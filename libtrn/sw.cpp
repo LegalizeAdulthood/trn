@@ -315,9 +315,9 @@ void decode_switch(const char *s)
             }
             set_option(OI_NEWS_SEL_MODE, s);
             if (*++s) {
-                char tmpbuf[4];
-                sprintf(tmpbuf, "%s%c", isupper(*s)? "r " : "", *s);
-                set_option(OI_NEWS_SEL_ORDER, tmpbuf);
+                char tmpbuf2[4];
+                sprintf(tmpbuf2, "%s%c", isupper(*s)? "r " : "", *s);
+                set_option(OI_NEWS_SEL_ORDER, tmpbuf2);
             }
             break;
         case 'p':

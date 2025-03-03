@@ -1793,7 +1793,6 @@ static int threadorder_score(const SUBJECT** spp1, const SUBJECT** spp2)
 void sort_subjects()
 {
     SUBJECT* sp;
-    int      i;
     SUBJECT**lp;
     int (*   sort_procedure)(const SUBJECT **spp1, const SUBJECT**spp2);
 

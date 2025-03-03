@@ -304,10 +304,6 @@ try_again:
         s = mid;
         while (*s)
         {
-#ifdef USE_UTF_HACK
-            int w;
-            int v;
-#endif
             if (isalpha(*s))
             {
                 if (d != mid)
@@ -321,7 +317,7 @@ try_again:
 #endif
                 }
 #ifdef USE_UTF_HACK
-                w = byte_length_at(s);
+                int w = byte_length_at(s);
                 memcpy(d, s, w);
                 d += w;
                 s += w;
@@ -469,23 +465,25 @@ char *compress_address(char *name, int max)
     {
         return name;
     }
-    char *s = name + len - 1;
-    while (isspace(*s))
     {
-        s--;
-    }
-    s[1] = '\0';
-    if (*name == '<') {
-        name++;
-        if (*s == '>')
+        char *s = name + len - 1;
+        while (isspace(*s))
         {
-            *s-- = '\0';
+            s--;
         }
-    }
-    len = s - name + 1;
-    if (len <= max)
-    {
-        return name;
+        s[1] = '\0';
+        if (*name == '<') {
+            name++;
+            if (*s == '>')
+            {
+                *s-- = '\0';
+            }
+        }
+        len = s - name + 1;
+        if (len <= max)
+        {
+            return name;
+        }
     }
 
     char *at = nullptr;
