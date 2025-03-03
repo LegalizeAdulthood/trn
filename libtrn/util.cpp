@@ -38,10 +38,6 @@
 #include <sys/types.h>
 #endif
 
-#ifndef HAS_GETCWD
-static char *trn_getcwd(char *buf, int len);
-#endif
-
 #ifdef UNION_WAIT
 using WAIT_STATUS = union wait;
 #else
