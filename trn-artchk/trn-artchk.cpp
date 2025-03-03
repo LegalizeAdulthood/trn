@@ -20,8 +20,6 @@
 #include "util2.h"
 #include "util3.h"
 
-#include <string>
-
 #define MAXNGS 100
 
 int server_connection();
