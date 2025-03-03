@@ -37,8 +37,6 @@ HISTORY
                                    when this # of bytes is exceeded */
 #define STRLENTHRESHOLD ((int) ((THRESHOLD / sizeof (int) - 3) / 2))
 
-#define SAFE_ASSIGN(x,y) (((x) != nullptr) ? (*(x) = (y)) : (y))
-
 #define swap_int(x,y)  (s_iswap = (x), (x) = (y), (y) = s_iswap)
 #define swap_char(x,y) (s_cswap = (x), (x) = (y), (y) = s_cswap)
 #define min3(x,y,z) (s_mx = (x), s_my = (y), s_mz = (z), (s_mx < s_my ? (s_mx < s_mz ? s_mx : s_mz) : (s_mz < s_my) ? s_mz : s_my))
