@@ -15,7 +15,7 @@
 static char *s_nntp_password{};
 static char s_nomem[] = "trn: out of memory!\n";
 
-int doshell(const char *sh, const char *cmd)
+int doshell(const char *shell, const char *cmd)
 {
     return system(cmd);
 }

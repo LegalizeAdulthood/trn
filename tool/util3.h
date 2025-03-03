@@ -8,7 +8,7 @@
 
 extern char *g_home_dir;
 
-int doshell(const char *sh, const char *cmd);
+int doshell(const char *shell, const char *cmd);
 [[noreturn]] void finalize(int num);
 #ifndef USE_DEBUGGING_MALLOC
 char *safemalloc(MEM_SIZE size);

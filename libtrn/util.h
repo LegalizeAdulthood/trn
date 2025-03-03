@@ -43,7 +43,7 @@ struct INI_WORDS
 
 void util_init();
 void util_final();
-int doshell(const char *sh, const char *cmd);
+int doshell(const char *shell, const char *cmd);
 #ifndef USE_DEBUGGING_MALLOC
 char *safemalloc(MEM_SIZE size);
 char *saferealloc(char *where, MEM_SIZE size);

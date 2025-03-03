@@ -94,7 +94,7 @@ void util_final()
 
 /* fork and exec a shell command */
 
-int doshell(const char *shell, const char *s)
+int doshell(const char *shell, const char *cmd)
 {
 #ifndef MSDOS
     WAIT_STATUS status;
@@ -180,7 +180,7 @@ int doshell(const char *shell, const char *s)
     }
     termlib_reset();
 #ifdef MSDOS
-    intptr_t status = spawnl(P_WAIT, shell, shell, "/c", s, nullptr);
+    intptr_t status = spawnl(P_WAIT, shell, shell, "/c", cmd, nullptr);
 #else
     pid = vfork();
     if (pid == 0) {
