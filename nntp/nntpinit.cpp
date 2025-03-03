@@ -234,7 +234,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
         def.h_addr = (char*)&defaddr;
         def.h_length = sizeof (struct in_addr);
         def.h_addrtype = AF_INET;
-        def.h_aliases = 0;
+        def.h_aliases = nullptr;
         hp = &def;
     }
     if (hp == nullptr) {
