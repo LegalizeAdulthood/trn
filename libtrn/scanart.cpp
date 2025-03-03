@@ -146,7 +146,9 @@ void sa_cleanup()
      * about the scan status
      */
     if (!g_sa_initialized)
+    {
         return;
+    }
 
     sa_cleanmain();
     clear();            /* should something else clear the screen? */

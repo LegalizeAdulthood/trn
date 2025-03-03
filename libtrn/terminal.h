@@ -361,7 +361,9 @@ inline void clear_rest()
 inline void maybe_eol()
 {
     if (g_erase_screen && g_erase_each_line)
+    {
         tputs(g_tc_CE, 1, putchr);
+    }
 }
 inline void underline()
 {

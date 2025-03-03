@@ -66,7 +66,9 @@ int s_cmdloop()
             char ch = *g_buf;
             i = s_fillpage();
             if (i == -1 || i == 0)      /* can't fillpage */
+            {
                 return S_QUIT;
+            }
             *g_buf = Ctl('l');
             (void)s_docmd();
             *g_buf = ch;
@@ -84,11 +86,15 @@ int s_cmdloop()
             }
         }
         if (i != 0)     /* either an entry # or a return code */
+        {
             return i;
+        }
         if (g_s_refill) {
             i = s_fillpage();
             if (i == -1 || i == 0)      /* can't fillpage */
+            {
                 return S_QUIT;
+            }
         }
         /* otherwise just keep on looping... */
     }
@@ -116,17 +122,23 @@ int s_docmd()
 
     long a = g_page_ents[g_s_ptr_page_line].entnum;
     if (*g_buf == '\f') /* map form feed to ^l */
+    {
         *g_buf = Ctl('l');
+    }
     switch(*g_buf) {
       case 'j':         /* vi mode */
         if (!g_s_mode_vi)
+        {
             return S_NOTFOUND;
+        }
         /* FALL THROUGH */
       case 'n':         /* next art */
       case ']':
         s_rub_ptr();
         if (g_s_ptr_page_line < g_s_bot_ent)    /* more on page... */
+        {
             g_s_ptr_page_line +=1;
+        }
         else {
             if (!s_next_elig(g_page_ents[g_s_bot_ent].entnum)) {
                 s_beep();
@@ -138,13 +150,17 @@ int s_docmd()
         break;
       case 'k': /* vi mode */
         if (!g_s_mode_vi)
+        {
             return S_NOTFOUND;
+        }
         /* FALL THROUGH */
       case 'p': /* previous art */
       case '[':
         s_rub_ptr();
         if (g_s_ptr_page_line > 0)      /* more on page... */
+        {
             g_s_ptr_page_line = g_s_ptr_page_line - 1;
+        }
         else {
             if (s_prev_elig(g_page_ents[0].entnum)) {
                 s_go_prev_page();
@@ -185,14 +201,18 @@ int s_docmd()
         s_rub_ptr();
         flag = s_go_top_ents();
         if (!flag)              /* failure */
+        {
             return S_QUIT;
+        }
         break;
       case 'B': /* bottom of ents */
       case '$':
         s_rub_ptr();
         flag = s_go_bot_ents();
         if (!flag)
+        {
             return S_QUIT;
+        }
         break;
       case Ctl('r'):    /* refresh screen */
       case Ctl('l'):
@@ -230,7 +250,9 @@ int s_docmd()
         s_go_bot();
         g_s_ref_all = true;                     /* will need refresh */
         if (!escapade())
+        {
             (void)get_anything();
+        }
         eat_typeahead();
         break;
 #if 0
@@ -286,10 +308,16 @@ bool s_match_description(long ent)
     for (int i = 1; i <= lines; i++) {
         strncpy(lbuf,s_get_desc(ent,i,false),LBUFLEN);
         for (char *s = lbuf; *s; s++)
+        {
             if (isupper(*s))
+            {
                 *s = tolower(*s);               /* convert to lower case */
+            }
+        }
         if (strstr(lbuf,s_search_text))
+        {
             return true;
+        }
     }
     return false;
 }
@@ -297,24 +325,40 @@ bool s_match_description(long ent)
 long s_forward_search(long ent)
 {
     if (ent)
+    {
         ent = s_next_elig(ent);
+    }
     else
+    {
         ent = s_first();
+    }
     for ( ; ent; ent = s_next_elig(ent))
+    {
         if (s_match_description(ent))
+        {
             break;
+        }
+    }
     return ent;
 }
 
 long s_backward_search(long ent)
 {
     if (ent)
+    {
         ent = s_prev_elig(ent);
+    }
     else
+    {
         ent = s_last();
+    }
     for ( ; ent; ent = s_prev_elig(ent))
+    {
         if (s_match_description(ent))
+        {
             break;
+        }
+    }
     return ent;
 }
 
@@ -331,15 +375,21 @@ void s_search()
     s_rub_ptr();
     g_buf[1] = '\0';
     if (!s_finish_cmd(nullptr))
+    {
         return;
+    }
     if (g_buf[1]) {     /* new text */
         /* make leading space skip an option later? */
         /* (it isn't too important because substring matching is used) */
         char *s = skip_eq(g_buf + 1, ' '); /* skip leading spaces */
         strncpy(s_search_text,s,LBUFLEN);
         for (char *t = s_search_text; *t != '\0'; t++)
+        {
             if (isupper(*t))
+            {
                 *t = tolower(*t);               /* convert to lower case */
+            }
+        }
     }
     if (!*s_search_text) {
         s_beep();
@@ -372,7 +422,9 @@ void s_search()
                 ent = 0;
                 error_msg = "No other entry matches.";
             } else
+            {
                 error_msg = "No matches.";
+            }
         }
         fill_type = 0;          /* forwards fill */
         break;
@@ -389,10 +441,12 @@ void s_search()
         return;
     }
     for (int i = 0; i <= g_s_bot_ent; i++)
+    {
         if (g_page_ents[i].entnum == ent) {             /* entry is on same page */
             g_s_ptr_page_line = i;
             return;
         }
+    }
     /* entry is not on page... */
     if (fill_type == 1) {
         (void)s_fillpage_backward(ent);
@@ -421,7 +475,9 @@ void s_jumpnum(char_int firstchar)
     }
     getcmd(g_buf);
     if (*g_buf == g_erase_char)
+    {
         return;
+    }
     switch (*g_buf) {
       case '0': case '1': case '2': case '3': case '4':
       case '5': case '6': case '7': case '8': case '9':

@@ -39,13 +39,21 @@ void s_mail_and_place()
     previous = (0 != s_prev_elig(g_page_ents[0].entnum));
     next = (0 != s_next_elig(g_page_ents[g_s_bot_ent].entnum));
     if (previous && next)
+    {
         printf("-MIDDLE-");             /* middle of entries */
+    }
     else if (next && !previous)
+    {
         printf("-TOP-");
+    }
     else if (previous && !next)
+    {
         printf("-BOTTOM-");
+    }
     else        /* !previous && !next */
+    {
         printf("-ALL-");
+    }
 }
 
 void s_refresh_top()
@@ -79,15 +87,21 @@ void s_refresh_entzone()
     if (g_s_ref_status < g_s_ref_desc) {
         /* refresh status characters up to (not including) desc_line */
         for (int i = g_s_ref_status; i <= g_s_bot_ent && i < g_s_ref_desc; i++)
+        {
             s_refresh_description(i);
+        }
         start = g_s_ref_desc;
     } else {
         for (int i = g_s_ref_desc; i <= g_s_bot_ent && i < g_s_ref_status; i++)
+        {
             s_refresh_status(i);
+        }
         start = g_s_ref_status;
     }
     for (int i = start; i <= g_s_bot_ent; i++)
+    {
         s_ref_entry(i,i==start);
+    }
     /* clear to end of screen */
     clear_rest();
     /* now we need to redraw the bottom status line */
@@ -113,7 +127,9 @@ void s_refresh_status(int line)
     s_goxy(0,g_s_top_lines+g_page_ents[line].start_line);
     int j = g_page_ents[line].lines;
     for (int i = 1; i <= j; i++)
+    {
         printf("%s\n",s_get_statchars(ent,i));
+    }
     fflush(stdout);
 }
 
@@ -129,11 +145,17 @@ void s_refresh_description(int line)
         if (g_s_itemnum_cols) {
             if (i == 1) {       /* first description line */
                 if (line < 99)
+                {
                     printf("%2d ",line+1);
+                }
                 else
+                {
                     printf("** ");      /* too big */
+                }
             } else
+            {
                 printf("   ");
+            }
         }
         printf("%s",s_get_desc(ent,i,true));
         erase_eol();
@@ -148,7 +170,9 @@ void s_ref_entry(int line, int jump)
     long ent = g_page_ents[line].entnum;
     TRN_ASSERT(line <= g_s_bot_ent);    /* better be refreshing on-page */
     if (jump)
+    {
         s_goxy(0,g_s_top_lines+g_page_ents[line].start_line);
+    }
     int j = g_page_ents[line].lines;
     for (int i = 1; i <= j; i++) {
 /* later replace middle with variable #spaces routine */
@@ -156,11 +180,17 @@ void s_ref_entry(int line, int jump)
         if (g_s_itemnum_cols) {
             if (i == 1) {       /* first description line */
                 if (line < 99)
+                {
                     printf("%2d ",line+1);
+                }
                 else
+                {
                     printf("** ");      /* too big */
+                }
             } else
+            {
                 printf("   ");
+            }
         }
         printf("%s",s_get_desc(ent,i,true));
         erase_eol();
@@ -181,23 +211,33 @@ void s_refresh()
         g_s_ref_status = 0;
     }
     if ((g_s_ref_all || g_s_ref_top) && g_s_top_lines>0)
+    {
         s_refresh_top();
+    }
     if (g_s_ref_all || ((g_s_ref_status>=0) && (g_s_ref_desc>=0)))
+    {
         s_refresh_entzone();
+    }
     else {
         if (g_s_ref_status>=0) {
             for (int i = g_s_ref_status; i <= g_s_bot_ent; i++)
+            {
                 s_refresh_status(i);
+            }
         }
         if (g_s_ref_desc >= 0) {
             for (int i = g_s_ref_desc; i <= g_s_bot_ent; i++)
+            {
                 s_refresh_description(i);
+            }
         }
     }
     g_s_ref_status = -1;
     g_s_ref_desc = -1;
     if ((g_s_ref_all || g_s_ref_bot) && g_s_bot_lines > 0)
+    {
         s_refresh_bot();
+    }
     g_s_ref_all = false;
 }
 
@@ -211,7 +251,9 @@ int s_initscreen()
     g_scr_height = g_tc_LINES;
     g_scr_width = g_tc_COLS;
     if (g_scr_height > 2 && g_scr_width > 1)    /* current dependencies */
+    {
         return 0;       /* everything is OK. */
+    }
     return 1;   /* we can't play with this... */
 }
 
@@ -219,8 +261,12 @@ int s_initscreen()
 void s_ref_status_onpage(long ent)
 {
     for (int i = 0; i <= g_s_bot_ent; i++)
+    {
         if (g_page_ents[i].entnum == ent)
+        {
             s_refresh_status(i);
+        }
+    }
 }
 
 

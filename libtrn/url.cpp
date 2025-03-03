@@ -35,22 +35,30 @@ bool fetch_http(const char *host, int port, const char *path, const char *outnam
     error_code ec;
     std::string service{"http"};
     if (port)
+    {
         service =std::to_string(port);
+    }
     asio::ip::tcp::resolver::results_type results = s_resolver.resolve(host, service, ec);
     if (ec)
+    {
         return false;
+    }
 
     asio::ip::tcp::socket socket{context};
     asio::connect(socket, results, ec);
     if (ec)
+    {
         return false;
+    }
 
     /* XXX length check */
     /* XXX later consider using HTTP/1.0 format (and user-agent) */
     sprintf(s_url_buf, "GET %s\r\n", path);
     asio::write(socket, asio::buffer(s_url_buf, strlen(s_url_buf)), ec);
     if (ec)
+    {
         return false;
+    }
 
     FILE *fp_out = fopen(outname, "w");
     if (!fp_out) {
@@ -102,7 +110,9 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
         *p = '\0';
         cdpath = path;
     } else
+    {
         cdpath = "/";
+    }
 
     sprintf(cmdline,"%s/ftpgrab %s ftp %s@%s %s %s %s",
             filexp("%X"),host,username,userhost,cdpath,p+1,outname);
@@ -113,7 +123,9 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
     for (int x = 0; cmdline[x]; x++) {
         if (strchr("&;`'\"|*?~<>^()[]{}$\\",cmdline[x])) {
             for (int y = l + 1; y > x; y--)
+            {
                 cmdline[y] = cmdline[y-1];
+            }
             l++; /* length has been increased */
             cmdline[x] = '\\';
             x++; /* skip the character */
@@ -152,7 +164,9 @@ bool parse_url(const char *url)
         return false;
     }
     char *p = s_url_type;
-    for (s = url; *s && *s != ':'; *p++ = *s++) ;
+    for (s = url; *s && *s != ':'; *p++ = *s++)
+    {
+    }
     *p = '\0';
     if (!*s) {
         printf("Incomplete URL: %s\n",url);
@@ -166,14 +180,21 @@ bool parse_url(const char *url)
         /* check for address literal: news://[ip:v6:address]:port/ */
         if (*s == '[') {
             while (*s && *s != ']')
+            {
                 *p++ = *s++;
+            }
             if (!*s) {
                 printf("Bad address literal: %s\n",url);
                 return false;
             }
             s++;        /* skip ] */
         } else
-            while (*s && *s != '/' && *s != ':') *p++ = *s++;
+        {
+            while (*s && *s != '/' && *s != ':')
+            {
+                *p++ = *s++;
+            }
+        }
         *p = '\0';
         if (!*s) {
             printf("Incomplete URL: %s\n",url);
@@ -186,7 +207,10 @@ bool parse_url(const char *url)
                 printf("Bad URL (non-numeric portnum): %s\n",url);
                 return false;
             }
-            while (isdigit(*s)) *p++ = *s++;
+            while (isdigit(*s))
+            {
+                *p++ = *s++;
+            }
             *p = '\0';
             s_url_port = atoi(s_url_buf);
         }
@@ -210,15 +234,23 @@ bool url_get(const char *url, const char *outfile)
     bool flag;
 
     if (!parse_url(url))
+    {
         return false;
+    }
 
     if (!strcmp(s_url_type,"http"))
+    {
         flag = fetch_http(s_url_host,s_url_port,s_url_path,outfile);
+    }
     else if (!strcmp(s_url_type,"ftp"))
+    {
         flag = fetch_ftp(s_url_host,s_url_path,outfile);
+    }
     else {
         if (s_url_type)
+        {
             printf("\nURL type %s not supported (yet?)\n",s_url_type);
+        }
         flag = false;
     }
     return flag;

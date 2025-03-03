@@ -31,7 +31,9 @@ char *safecpy(char *to, const char *from, int len)
 
     if (from) {
         while (--len && *from)
+        {
             *dest++ = *from++;
+        }
     }
     *dest = '\0';
 
@@ -43,9 +45,13 @@ char *cpytill(char *to, char *from, int delim)
 {
     while (*from) {
         if (*from == '\\' && from[1] == delim)
+        {
             from++;
+        }
         else if (*from == delim)
+        {
             break;
+        }
         *to++ = *from++;
     }
     *to = '\0';
@@ -79,7 +85,9 @@ char *filexp(const char *text)
         {
             const char *prefix = get_val_const("TRNPREFIX");
             if (!prefix)
+            {
                 prefix = INSTALLPREFIX;
+            }
             sprintf(scrbuf, "%s%s", prefix, s + 1);
         }
         else
@@ -88,7 +96,9 @@ char *filexp(const char *text)
             {
                 char *d = scrbuf;
                 while (isalnum(*s))
+                {
                     *d++ = *s++;
+                }
                 *d = '\0';
             }
             if (s_tildedir && !strcmp(s_tildename, scrbuf))
@@ -100,9 +110,13 @@ char *filexp(const char *text)
             else
             {
                 if (s_tildename)
+                {
                     free(s_tildename);
+                }
                 if (s_tildedir)
+                {
                     free(s_tildedir);
+                }
                 s_tildedir = nullptr;
                 s_tildename = savestr(scrbuf);
 #ifdef HAS_GETPWENT     /* getpwnam() is not the paragon of efficiency */
@@ -133,7 +147,9 @@ char *filexp(const char *text)
                                 for (int i = LOGDIRFIELD - 2; i; i--)
                                 {
                                     if (d)
+                                    {
                                         d = strchr(d + 1, ':');
+                                    }
                                 }
                                 if (d)
                                 {
@@ -168,12 +184,16 @@ char *filexp(const char *text)
         char *d = scrbuf;
         *d++ = '%';
         if (s[1] == '{')
+        {
             strcpy(d, s + 2);
+        }
         else
         {
             *d++ = '{';
             for (s++; isalnum(*s); s++)
+            {
                 *d++ = *s;
+            }
             /* skip over token */
             *d++ = '}';
             strcpy(d, s);
@@ -192,26 +212,42 @@ char *in_string(char *big, const char *little, bool case_matters)
         const char *s = little;
         for (const char *x=t; *s; x++,s++) {
             if (!*x)
+            {
                 return nullptr;
+            }
             if (case_matters == true) {
                 if (*s != *x)
+                {
                     break;
+                }
             } else {
                 char c,d;
-                if (isupper(*s)) 
+                if (isupper(*s))
+                {
                     c = tolower(*s);
+                }
                 else
+                {
                     c = *s;
-                if (isupper(*x)) 
+                }
+                if (isupper(*x))
+                {
                     d = tolower(*x);
+                }
                 else
+                {
                     d = *x;
+                }
                 if ( c != d )
+                {
                     break;
+                }
            }
         }
         if (!*s)
+        {
             return t;
+        }
     }
     return nullptr;
 }
@@ -228,7 +264,9 @@ char *read_auth_file(const char *file, char **pass_ptr)
             if (fgets(buf, sizeof buf, fp) != nullptr) {
                 char* cp = buf + strlen(buf) - 1;
                 if (*cp == '\n')
+                {
                     *cp = '\0';
+                }
                 strptr[i] = savestr(buf);
             }
         }

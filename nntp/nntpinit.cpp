@@ -55,7 +55,9 @@ std::string NNTPConnection::read_line(error_code &ec)
 {
     read_until(m_socket, m_buffer, "\r\n", ec);
     if (ec)
+    {
         return {};
+    }
 
     std::string line;
     std::istream istr(&m_buffer);
@@ -84,12 +86,16 @@ static ConnectionPtr create_nntp_connection(const char *machine, int port, const
 {
     std::string service_name{service};
     if (g_nntplink.port_number)
+    {
         service_name = std::to_string(g_nntplink.port_number);
+    }
 
     error_code ec;
     asio::ip::tcp::resolver::results_type results = s_resolver.resolve(machine, service_name, ec);
     if (ec)
+    {
         return nullptr;
+    }
 
     ConnectionPtr connection{};
     try
@@ -118,7 +124,9 @@ int server_init(const char *machine)
 {
     g_nntplink.connection = s_nntp_connection_factory(machine, g_nntplink.port_number, "nntp");
     if (g_nntplink.connection == nullptr)
+    {
         return -1;
+    }
 
     /* Now get the server's signon message */
     nntp_check();
@@ -129,9 +137,13 @@ int server_init(const char *machine)
         /* Try MODE READER just in case we're talking to innd.
         ** If it is not an invalid command, use the new reply. */
         if (nntp_command("MODE READER") <= 0)
+        {
             sprintf(g_ser_line, "%d failed to send MODE READER\n", NNTP_ACCESS_VAL);
+        }
         else if (nntp_check() <= 0 && atoi(g_ser_line) == NNTP_BAD_COMMAND_VAL)
+        {
             strcpy(g_ser_line, save_line);
+        }
     }
     return atoi(g_ser_line);
 }
@@ -206,7 +218,9 @@ int get_tcp_socket(const char *machine, int port, const char *service)
     memset((char*)&sin,0,sizeof sin);
 
     if (port)
+    {
         sin.sin_port = htons(port);
+    }
     else {
         struct servent *sp = getservbyname(service, "tcp");
         if (sp == nullptr)
@@ -223,7 +237,9 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 #else
      || (long)(defaddr.s_addr = inet_addr(machine)) == -1)
 #endif
+    {
         hp = gethostbyname(machine);
+    }
     else {
         /* Raw ip address, fake  */
         (void) strcpy(namebuf, machine);
@@ -255,10 +271,14 @@ int get_tcp_socket(const char *machine, int port, const char *service)
         memcpy((char*)&sin.sin_addr,*cp,hp->h_length);
 
         if (x < 0)
+        {
             fprintf(stderr, "trying %s\n", inet_ntoa(sin.sin_addr));
+        }
         x = connect(s, (struct sockaddr*)&sin, sizeof (sin));
         if (x == 0)
+        {
             break;
+        }
         fprintf(stderr, "connection to %s: ", inet_ntoa(sin.sin_addr));
         perror("");
         (void) close(s);

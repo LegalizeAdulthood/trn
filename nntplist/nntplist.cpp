@@ -35,7 +35,9 @@ int main(int argc, char *argv[])
             switch (*++*argv) {
             case 'o':
                 if (out_fp || !--argc)
+                {
                     Usage();
+                }
                 out_fp = fopen(*++argv, "w");
                 if (out_fp == nullptr) {
                     perror(*argv);
@@ -44,7 +46,9 @@ int main(int argc, char *argv[])
                 break;
             case 'x':
                 if (wildarg || !--argc)
+                {
                     Usage();
+                }
                 wildarg = *++argv;
                 break;
             default:
@@ -53,14 +57,22 @@ int main(int argc, char *argv[])
             }
         }
         else if (!action)
+        {
             action = *argv;
+        }
         else
+        {
             Usage();
+        }
     }
     if (action && string_case_equal(action, "active"))
+    {
         action = nullptr;
+    }
     if (!out_fp)
+    {
         out_fp = stdout;
+    }
 
     char tcbuf[1024];
     tcbuf[0] = 0;
@@ -70,14 +82,18 @@ int main(int argc, char *argv[])
     if (!cp) {
         cp = filexp(SERVER_NAME);
         if (*cp == '/')
+        {
             cp = nntp_servername(cp);
+        }
     }
     if (strcmp(cp,"local") != 0)
     {
         g_server_name = savestr(cp);
         cp = strchr(g_server_name, ';');
         if (!cp)
+        {
             cp = strchr(g_server_name, ':');
+        }
         if (cp) {
             *cp = '\0';
             g_nntplink.port_number = atoi(cp+1);
@@ -85,21 +101,33 @@ int main(int argc, char *argv[])
         g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
         if ((cp = getenv("NNTP_FORCE_AUTH")) != nullptr
          && (*cp == 'y' || *cp == 'Y'))
+        {
             g_nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
+        }
     }
 
     if (g_server_name) {
         if (init_nntp() < 0
          || nntp_connect(g_server_name,false) <= 0)
+        {
             exit(1);
+        }
         if (action)
+        {
             sprintf(command,"LIST %s",action);
+        }
         else
+        {
             strcpy(command,"LIST");
+        }
         if (wildarg)
+        {
             sprintf(command+strlen(command)," %s",wildarg);
+        }
         if (nntp_command(command) <= 0)
+        {
             exit(1);
+        }
 #ifdef HAS_SIGHOLD
         sighold(SIGINT);
 #endif
@@ -110,7 +138,9 @@ int main(int argc, char *argv[])
         }
         while (nntp_gets(g_ser_line, sizeof g_ser_line) == 1) {
             if (nntp_at_list_end(g_ser_line))
+            {
                 break;
+            }
             fputs(g_ser_line, out_fp);
             putc('\n', out_fp);
         }
@@ -124,15 +154,25 @@ int main(int argc, char *argv[])
     else {
         cp = nullptr;
         if (!action)
+        {
             cp = ACTIVE;
+        }
         else if (string_case_equal(action, "active.times"))
+        {
             cp = ACTIVE_TIMES;
+        }
         else if (string_case_equal(action, "newsgroups"))
+        {
             cp = GROUPDESC;
+        }
         else if (string_case_equal(action, "subscriptions"))
+        {
             cp = SUBSCRIPTIONS;
+        }
         else if (string_case_equal(action, "overview.fmt"))
+        {
             cp = OVERVIEW_FMT;
+        }
         if (!cp || !*cp) {
             fprintf(stderr, "Don't know how to list `%s' from your local system.\n",
                     action);
@@ -148,10 +188,14 @@ int main(int argc, char *argv[])
             if (wildarg) {
                 cp = skip_non_space(g_ser_line);
                 if (!cp)
+                {
                     continue;
+                }
                 *cp = '\0';
                 if (!wildmat(g_ser_line, wildarg))
+                {
                     continue;
+                }
                 *cp = ' ';
             }
             fputs(g_ser_line, out_fp);

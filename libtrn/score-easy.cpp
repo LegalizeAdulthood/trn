@@ -117,14 +117,20 @@ char *sc_easy_append()
         if (finish_command(true)) {
             long score = atoi(g_buf + 1);
             if (score == 0)
+            {
                 if (g_buf[1] != '0')
+                {
                     continue;   /* the while loop */
+                }
+            }
             sprintf(s,"%ld",score);
             s = s_sc_e_newline+strlen(s_sc_e_newline); /* point at terminator  */
             *s++ = ' ';
             q_done = true;
         } else
+        {
             printf("\n");
+        }
     }
     q_done = false;
     while (!q_done) {

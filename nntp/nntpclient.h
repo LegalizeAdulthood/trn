@@ -97,9 +97,13 @@ inline char *nntp_get_a_line(char *buffer, int buffer_length, bool realloc_ok)
     if (buffer_length < line.length())
     {
         if (realloc_ok)
+        {
             buffer = saferealloc(buffer, (MEM_SIZE) line.length() + 1);
+        }
         else
+        {
             throw std::runtime_error("not implemented");
+        }
     }
     strncpy(buffer, line.c_str(), line.length() + 1);
     return buffer;

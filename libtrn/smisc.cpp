@@ -34,7 +34,9 @@ void s_beep()
 const char *s_get_statchars(long ent, int line)
 {
     if (g_s_status_cols == 0)
+    {
         return "";
+    }
     switch (g_s_cur_type) {
       case S_ART:
         return sa_get_statchars(ent,line);

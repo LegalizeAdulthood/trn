@@ -35,7 +35,9 @@ static FILE *inews_wr_fp{};
 static void inews_fputs(const char *buff)
 {
     if (inews_wr_fp)
+    {
         fputs(buff, inews_wr_fp);
+    }
     else
     {
         boost::system::error_code ec;
@@ -46,7 +48,9 @@ static void inews_fputs(const char *buff)
 static void inews_fputc(char c)
 {
     if (inews_wr_fp)
+    {
         fputc(c, inews_wr_fp);
+    }
     else
     {
         boost::system::error_code ec;
@@ -57,7 +61,9 @@ static void inews_fputc(char c)
 static void inews_fflush()
 {
     if (inews_wr_fp)
+    {
         (void) fflush(inews_wr_fp);
+    }
 }
 
 int main(int argc, char *argv[])
@@ -84,7 +90,9 @@ int main(int argc, char *argv[])
     argv++;
     while (argc > 1) {
         if (*argv[0] != '-')
+        {
             break;
+        }
         argv++;
         argc--;
     }
@@ -99,7 +107,9 @@ int main(int argc, char *argv[])
     if (!cp) {
         cp = filexp(SERVER_NAME);
         if (FILE_REF(cp))
+        {
             cp = nntp_servername(cp);
+        }
     }
     const char *line_end;
     if (cp && *cp && strcmp(cp,"local") != 0)
@@ -114,7 +124,9 @@ int main(int argc, char *argv[])
         g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
         if ((cp = getenv("NNTP_FORCE_AUTH")) != nullptr
          && (*cp == 'y' || *cp == 'Y'))
+        {
             g_nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
+        }
     } else {
         g_server_name = nullptr;
         line_end = "\n";
@@ -136,11 +148,15 @@ int main(int argc, char *argv[])
         }
         i = getc(stdin);
         if (g_server_name && had_nl && i == '.')
+        {
             *cp++ = '.';
+        }
 
         if (i == '\n') {
             if (!in_header)
+            {
                 continue;
+            }
             break;
         }
         else if (i == EOF || !fgets(cp+1, LBUFLEN-1, stdin)) {
@@ -160,14 +176,20 @@ int main(int argc, char *argv[])
             }
             if (i == 2) {
                 if (!in_header)
+                {
                     continue;
+                }
                 break;
             }
             in_header = true;
             if (string_case_equal(cp, "From:", 5))
+            {
                 has_fromline = true;
+            }
             else if (string_case_equal(cp, "Path:", 5))
+            {
                 has_pathline = true;
+            }
         }
         artpos += len;
         cp += len;
@@ -185,12 +207,16 @@ int main(int argc, char *argv[])
     if (g_server_name) {
         if (!g_nntplink.connection) {
             if (init_nntp() < 0 || !nntp_connect(g_server_name,false))
+            {
                 exit(1);
+            }
             new_connection = true;
         }
         if (nntp_command("POST") <= 0 || nntp_check() <= 0) {
             if (new_connection)
+            {
                 nntp_close(true);
+            }
             fprintf(stderr,"Sorry, you can't post from this machine.\n");
             exit(1);
         }
@@ -231,7 +257,9 @@ int main(int argc, char *argv[])
     while (fgets(headbuf, headbuf_size, stdin)) {
         /* Single . is eof, so put in extra one */
         if (g_server_name && had_nl && *headbuf == '.')
+        {
             inews_fputc('.');
+        }
         /* check on newline */
         cp = headbuf + strlen(headbuf);
         if (cp > headbuf && *--cp == '\n') {
@@ -247,10 +275,14 @@ int main(int argc, char *argv[])
     }
 
     if (!inews_wr_fp)
+    {
         return pclose(inews_wr_fp);
+    }
 
     if (!had_nl)
+    {
         inews_fputs(line_end);
+    }
 
     append_signature();
 
@@ -263,21 +295,31 @@ int main(int argc, char *argv[])
             fprintf(stderr,"Article not accepted by server; not posted:\n");
             for (cp = g_ser_line + 4; *cp && *cp != '\r'; cp++) {
                 if (*cp == '\\')
+                {
                     fputc('\n',stderr);
+                }
                 else
+                {
                     fputc(*cp,stderr);
+                }
             }
             fputc('\n', stderr);
         }
         else
+        {
             fprintf(stderr, "Remote error: %s\n", g_ser_line);
+        }
         if (new_connection)
+        {
             nntp_close(true);
+        }
         exit(1);
     }
 
     if (new_connection)
+    {
         nntp_close(true);
+    }
     cleanup_nntp();
 
     return 0;
@@ -297,7 +339,9 @@ int valid_header(char *h)
     char *colon = strchr(h, ':');
     char *space = strchr(h, ' ');
     if (isalpha(h[0]) && colon && space == colon + 1)
+    {
         return 1;
+    }
 
     /* Anything else is a bad header */
     return 0;
@@ -317,11 +361,15 @@ void append_signature()
     g_dot_dir = g_home_dir;
 #endif
     if (g_dot_dir.empty())
+    {
         return;
+    }
 
     fp = fopen(filexp(SIGNATURE_FILE), "r");
     if (fp == nullptr)
+    {
         return;
+    }
 
     sprintf(g_buf, "-- \r\n");
     inews_fputs(g_buf);
@@ -337,7 +385,9 @@ void append_signature()
         /* Strip trailing newline */
         cp = g_ser_line + strlen(g_ser_line) - 1;
         if (cp >= g_ser_line && *cp == '\n')
+        {
             *cp = '\0';
+        }
         sprintf(g_buf, "%s\r\n", g_ser_line);
         inews_fputs(g_buf);
     }
@@ -351,16 +401,24 @@ int nntp_handle_timeout()
         char last_command_save[NNTP_STRLEN];
 
         if (string_case_equal(g_last_command, "quit"))
+        {
             return 0;
+        }
         if (handling_timeout)
+        {
             return -1;
+        }
         handling_timeout = true;
         strcpy(last_command_save, g_last_command);
         nntp_close(false);
         if (init_nntp() < 0 || nntp_connect(g_server_name,false) <= 0)
+        {
             exit(1);
+        }
         if (nntp_command(last_command_save) <= 0)
+        {
             return -1;
+        }
         handling_timeout = false;
         new_connection = true;
         return 1;

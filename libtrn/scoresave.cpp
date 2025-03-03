@@ -49,17 +49,23 @@ void sc_sv_delgroup(const char *gname)
     for (i = 0; i < s_num_lines; i++) {
         s = s_lines[i];
         if (s && *s == '!' && !strcmp(gname,s+1))
+        {
             break;
+        }
     }
     if (i == s_num_lines)
+    {
         return;         /* group not found */
+    }
     int start = i;
     free(s_lines[i]);
     s_lines[i] = nullptr;
     for (i++; i < s_num_lines; i++) {
         s = s_lines[i];
         if (s && *s == '!')
+        {
             break;
+        }
         if (s) {
             free(s);
             s_lines[i] = nullptr;
@@ -67,7 +73,9 @@ void sc_sv_delgroup(const char *gname)
     }
     /* copy into the hole (if any) */
     for ( ; i < s_num_lines; i++)
+    {
         s_lines[start++] = s_lines[i];
+    }
     s_num_lines -= (i-start);
 }
 
@@ -97,7 +105,9 @@ void sc_sv_getfile()
 void sc_sv_savefile()
 {
     if (s_num_lines == 0)
+    {
         return;
+    }
 
     g_waiting = true;   /* don't interrupt */
     char *savename = savestr(filexp(get_val_const("SAVESCOREFILE", "%+/savedscores")));
@@ -115,7 +125,9 @@ void sc_sv_savefile()
     }
     for (int i = 0; i < s_num_lines; i++) {
         if (s_lines[i])
+        {
             fprintf(tmpfp,"%s\n",s_lines[i]);
+        }
         if (ferror(tmpfp)) {
             fclose(tmpfp);
             free(savename);
@@ -143,7 +155,9 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
     int   score = 0; /* get rid of warning */
     char *s = line;
     if (!s)
+    {
         return a;
+    }
     while (*s) {
         switch(*s) {
           case 'A': case 'B': case 'C': case 'D': case 'E':
@@ -260,7 +274,9 @@ ART_NUM sc_sv_make_line(ART_NUM a)
                 art = article_next(art);
                 for (i = 1; art <= g_lastart && article_unread(art) && article_scored(art)
                          && article_ptr(art)->score == score; i++)
+                {
                     art = article_next(art);
+                }
                 art = article_prev(art);        /* prepare for the for loop increment */
                 if (i == 1) {
                     *s++ = 'r';         /* repeat one */
@@ -277,13 +293,19 @@ ART_NUM sc_sv_make_line(ART_NUM a)
                     neg_flag = true;
                     i = 0 - i;
                 } else
+                {
                     neg_flag = false;
+                }
                 sprintf(s,"%d",i);
                 i = (*s - '0');
                 if (neg_flag)
+                {
                     *s++ = 'J' - i;
+                }
                 else
+                {
                     *s++ = 'J' + i;
+                }
                 s = s_lbuf + strlen(s_lbuf);
                 num_output++;
                 lastscore_valid = true;
@@ -313,7 +335,9 @@ void sc_load_scores()
     bool verbose = false;
 
     if (s_num_lines == 0)
+    {
         sc_sv_getfile();
+    }
 
     char *gname = savestr(filexp("%C"));
 
@@ -321,10 +345,14 @@ void sc_load_scores()
     for (i = 0; i < s_num_lines; i++) {
         s = s_lines[i];
         if (s && *s == '!' && !strcmp(s+1,gname))
+        {
             break;
+        }
     }
     if (i == s_num_lines)
+    {
         return;         /* no scores loaded */
+    }
     i++;
 
     if (verbose) {
@@ -334,7 +362,9 @@ void sc_load_scores()
     while (i < s_num_lines) {
         s = s_lines[i++];
         if (!s)
+        {
             continue;
+        }
         switch (*s) {
           case ':':
             a = atoi(s+1);      /* set the article # */
@@ -359,27 +389,39 @@ void sc_load_scores()
     g_sc_loaded_count = s_loaded;
     a = g_firstart;
     if (g_sa_mode_read_elig)
+    {
         a = g_absfirst;
+    }
     int total = 0;
     int scored = 0;
     for (ART_NUM art = article_first(a); art <= g_lastart; art = article_next(art)) {
         if (!article_exists(art))
+        {
             continue;
+        }
         if (!article_unread(art) && !g_sa_mode_read_elig)
+        {
             continue;
+        }
         total++;
         if (article_scored(art))
+        {
             scored++;
+        }
     } /* for */
 
     /* sloppy plurals (:-) */
     if (verbose)
+    {
         printf("(%d/%d/%d scores loaded/used/unscored)\n",
                s_loaded,s_used,total-scored);
+    }
 
     s_sc_save_new = total-scored;
     if (g_sa_initialized)
+    {
         g_s_top_ent = -1;       /* reset top of page */
+    }
 }
 
 void sc_save_scores()
@@ -404,6 +446,8 @@ void sc_save_scores()
     sc_sv_add(s_lbuf2);
     s_last = a-1;
     while (a <= g_lastart)
+    {
         a = sc_sv_make_line(a);
+    }
     g_waiting = false;
 }

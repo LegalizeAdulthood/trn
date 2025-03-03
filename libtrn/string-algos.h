@@ -15,8 +15,12 @@ template <typename Char>
 Char *skip_ne(Char *str, char delim)
 {
     if (str)
+    {
         while (*str && *str != delim)
+        {
             ++str;
+        }
+    }
     return str;
 }
 
@@ -24,8 +28,12 @@ template <typename Char>
 Char *skip_eq(Char *str, char delim)
 {
     if (str)
+    {
         while (*str && *str == delim)
+        {
             ++str;
+        }
+    }
     return str;
 }
 
@@ -33,8 +41,12 @@ template <typename Char>
 Char *skip_digits(Char *str)
 {
     if (str)
+    {
         while (*str && isdigit(static_cast<unsigned char>(*str)))
+        {
             ++str;
+        }
+    }
     return str;
 }
 
@@ -42,8 +54,12 @@ template <typename Char>
 Char *skip_space(Char *str)
 {
     if (str)
+    {
         while (*str && isspace(static_cast<unsigned char>(*str)))
+        {
             ++str;
+        }
+    }
     return str;
 }
 
@@ -51,8 +67,12 @@ template <typename Char>
 Char *skip_non_space(Char *str)
 {
     if (str)
+    {
         while (*str && !isspace(static_cast<unsigned char>(*str)))
+        {
             ++str;
+        }
+    }
     return str;
 }
 
@@ -60,8 +80,12 @@ template <typename Char>
 Char *skip_alpha(Char *str)
 {
     if (str)
+    {
         while (*str && isalpha(static_cast<unsigned char>(*str)))
+        {
             ++str;
+        }
+    }
     return str;
 }
 
@@ -69,8 +93,12 @@ template <typename Char>
 Char *skip_non_alpha(Char *str)
 {
     if (str)
+    {
         while (*str && !isalpha(static_cast<unsigned char>(*str)))
+        {
             ++str;
+        }
+    }
     return str;
 }
 
@@ -83,8 +111,12 @@ template <typename Char>
 Char *skip_hor_space(Char *str)
 {
     if (str)
+    {
         while (*str && is_hor_space(*str))
+        {
             ++str;
+        }
+    }
     return str;
 }
 

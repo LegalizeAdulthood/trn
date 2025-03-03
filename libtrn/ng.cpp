@@ -700,7 +700,9 @@ static art_switch_result art_switch()
             }
             g_artp = first_art(g_artp->subj);
             if (g_artp != nullptr)
+            {
                 g_art = article_num(g_artp);
+            }
         }
         else if (*g_buf == 's' && *u_help_thread)
         {

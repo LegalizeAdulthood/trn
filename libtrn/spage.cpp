@@ -42,15 +42,25 @@ bool s_fillpage_backward(long end)
     g_s_ref_desc = 0;   /* refresh from top entry */
 
     if (end < 1)                /* start from end */
+    {
         end = s_last();
+    }
     if (end == 0)               /* no entries */
+    {
         return false;
+    }
     if (s_eligible(end))
+    {
         a = end;
+    }
     else
+    {
         a = s_prev_elig(end);
+    }
     if (!a)     /* no eligible entries */
+    {
         return false;
+    }
     /* at this point we *know* that there is at least one eligible */
 
 /* what if the "first" one for the page has a description too long? */
@@ -69,7 +79,9 @@ bool s_fillpage_backward(long end)
         line_on = line_on+i;
         a = s_prev_elig(a);
         if (!a)         /* no more eligible */
+        {
             break;      /* get out of loop and finish up... */
+        }
     }
 /* what if none on page? (desc. too long) Fix later */
     setspin(SPIN_POP);  /* turn off spin on cache misses */
@@ -91,18 +103,28 @@ bool s_fillpage_backward(long end)
      * be bad, so lets make sure it doesn't happen.
      */
     if (g_s_ptr_page_line > g_s_bot_ent)
+    {
         g_s_ptr_page_line = g_s_bot_ent;
+    }
     if (g_s_cur_type != S_ART)
+    {
         return true;
+    }
     /* temporary fix.  Under some conditions ineligible entries will
      * not be found until they are in the page.  In this case just
      * refill the page.
      */
     for (i = 0; i <= g_s_bot_ent; i++)
+    {
         if (is_unavailable(g_sa_ents[g_page_ents[i].entnum].artnum))
+        {
             break;
+        }
+    }
     if (i <= g_s_bot_ent)
+    {
         return s_fillpage_backward(end);
+    }
 /* next time the unavail won't be chosen */
     return true;        /* we have a page... */
 }
@@ -131,16 +153,26 @@ bool s_fillpage_forward(long start)
     g_s_ref_desc = 0;
 
     if (start < 0)      /* fill from top */
+    {
         start = s_first();
+    }
     if (start == 0)     /* no entries */
+    {
         return false;
+    }
 
     if (s_eligible(start))
+    {
         a = start;
+    }
     else
+    {
         a = s_next_elig(start);
+    }
     if (!a)     /* no eligible entries */
+    {
         return false;
+    }
     /* at this point we *know* that there is at least one eligible */
 
 /* what if the first entry for the page has a description too long? */
@@ -158,7 +190,9 @@ bool s_fillpage_forward(long start)
         line_on = line_on+i;
         a = s_next_elig(a);
         if (!a)         /* no more eligible */
+        {
             break;      /* get out of loop and finish up... */
+        }
     }
     setspin(SPIN_POP);  /* turn off spin on cache misses */
     /* Now, suppose that the pointer position is off the page.  That would
@@ -167,18 +201,28 @@ bool s_fillpage_forward(long start)
     /* set new g_s_top_ent */
     g_s_top_ent = g_page_ents[0].entnum;
     if (g_s_ptr_page_line > g_s_bot_ent)
+    {
         g_s_ptr_page_line = g_s_bot_ent;
+    }
     if (g_s_cur_type != S_ART)
+    {
         return true;
+    }
     /* temporary fix.  Under some conditions ineligible entries will
      * not be found until they are in the page.  In this case just
      * refill the page.
      */
     for (i = 0; i <= g_s_bot_ent; i++)
+    {
         if (is_unavailable(g_sa_ents[g_page_ents[i].entnum].artnum))
+        {
             break;
+        }
+    }
     if (i <= g_s_bot_ent)
+    {
         return s_fillpage_forward(start);
+    }
     /* next time the unavail won't be chosen */
     return true;        /* we have a page... */
 }
@@ -212,7 +256,9 @@ bool s_refillpage()
      || g_s_top_ent != g_page_ents[0].entnum || !s_eligible(g_page_ents[0].entnum)
      || g_page_ents[0].start_line != 0
      || g_page_ents[0].lines != s_ent_lines(g_page_ents[0].entnum))
+    {
         return s_fillpage_forward(g_s_top_ent);
+    }
 
     i = 1;
     /* CAA misc note: I used to have
@@ -261,18 +307,28 @@ bool s_refillpage()
      * be bad, so lets make sure it doesn't happen.
      */
     if (g_s_ptr_page_line > g_s_bot_ent)
+    {
         g_s_ptr_page_line = g_s_bot_ent;
+    }
     if (g_s_cur_type != S_ART)
+    {
         return true;
+    }
     /* temporary fix.  Under some conditions ineligible entries will
      * not be found until they are in the page.  In this case just
      * refill the page.
      */
     for (i = 0; i <= g_s_bot_ent; i++)
+    {
         if (is_unavailable(g_sa_ents[g_page_ents[i].entnum].artnum))
+        {
             break;
+        }
+    }
     if (i <= g_s_bot_ent)
+    {
         return s_refillpage();  /* next time the unavail won't be chosen */
+    }
     return true;        /* we have a page... */
 }
 
@@ -289,10 +345,15 @@ int s_fillpage()
 
     g_s_refill = false; /* we don't need one now */
     if (g_s_top_ent < 1)        /* set top to first entry */
+    {
         g_s_top_ent = s_first();
+    }
     if (g_s_top_ent == 0)       /* no entries */
+    {
         return 0;       /* failure */
+    }
     if (!s_refillpage())        /* try for efficient refill */
+    {
         if (!s_fillpage_backward(g_s_top_ent)) {
             /* downgrade eligibility standards */
             switch (g_s_cur_type) {
@@ -301,7 +362,9 @@ int s_fillpage()
                     g_s_ref_top = true; /* for "FOLD" display */
                     g_sa_mode_zoom = false;     /* zoom out */
                     if (g_sa_unzoomrefold)
+                    {
                         g_sa_mode_fold = true;
+                    }
                     (void)s_go_top_ents();      /* go to top (ents and page) */
                     return s_fillpage();
                 }
@@ -310,21 +373,34 @@ int s_fillpage()
                 return -1;              /* there just aren't entries! */
             } /* switch */
         } /* if */
+    }
     /* temporary fix.  Under some conditions ineligible entries will
      * not be found until they are in the page.  In this case just
      * refill the page.
      */
     for (int j = 0; j <= g_s_bot_ent; j++)
+    {
         if (!s_eligible(g_page_ents[j].entnum))
+        {
             return s_fillpage();  /* ineligible won't be chosen again */
+        }
+    }
     if (g_s_cur_type != S_ART)
+    {
         return 1;
+    }
     /* be extra cautious about the article scan pages */
     for (i = 0; i <= g_s_bot_ent; i++)
+    {
         if (is_unavailable(g_sa_ents[g_page_ents[i].entnum].artnum))
+        {
             break;
+        }
+    }
     if (i <= g_s_bot_ent)
+    {
         return s_fillpage();    /* next time the unavail won't be chosen */
+    }
     return 1;   /* I guess everything worked :-) */
 }
 
@@ -346,16 +422,24 @@ bool s_go_top_ents()
 {
     g_s_top_ent = s_first();
     if (!g_s_top_ent)
+    {
         printf("s_go_top_ents(): no first entry\n");
+    }
     TRN_ASSERT(g_s_top_ent);    /* be nicer later */
     if (!s_eligible(g_s_top_ent))       /* this may save a redraw...*/
+    {
         g_s_top_ent = s_next_elig(g_s_top_ent);
+    }
     if (!g_s_top_ent) { /* none eligible */
         /* just go to the top of all the entries */
         if (g_s_cur_type == S_ART)
+        {
             g_s_top_ent = g_absfirst;
+        }
         else
+        {
             g_s_top_ent = 1;    /* not very nice coding */
+        }
     }
     g_s_refill = true;
     s_go_top_page();
@@ -366,7 +450,9 @@ bool s_go_bot_ents()
 {
     bool flag = s_fillpage_backward(s_last()); /* fill backwards */
     if (!flag)
+    {
         return false;
+    }
     s_go_bot_page();
     return true;
 }
@@ -375,7 +461,9 @@ void s_go_next_page()
 {
     long a = s_next_elig(g_page_ents[g_s_bot_ent].entnum);
     if (!a)
+    {
         return;         /* no next page (we shouldn't have been called) */
+    }
     /* the fill-page will set the refresh for the screen */
     bool flag = s_fillpage_forward(a);
     TRN_ASSERT(flag);           /* I *must* be able to fill a page */
@@ -386,7 +474,9 @@ void s_go_prev_page()
 {
     long a = s_prev_elig(g_page_ents[0].entnum);
     if (!a)
+    {
         return;         /* no prev. page (we shouldn't have been called) */
+    }
     /* the fill-page will set the refresh for the screen */
     bool flag = s_fillpage_backward(a); /* fill backward */
     TRN_ASSERT(flag);                   /* be nicer later... */

@@ -124,18 +124,28 @@ static charset_type find_charset(const char *s)
     {
         const char *name = s_charset_descs[i].name;
         if (name == nullptr)
+        {
             break;
+        }
         for (int j = 0;; ++j)
         {
             if (tolower(s[j]) != tolower(name[j]))
+            {
                 break;
+            }
             if (s[j] == 0 && name[j] == 0)
+            {
                 it = s_charset_descs[i].id;
+            }
             if (s[j] == 0 || name[j] == 0)
+            {
                 break;
+            }
         }
         if (it != CHARSET_UNKNOWN)
+        {
             break;
+        }
     }
     return it;
 }
@@ -147,11 +157,17 @@ static const CHARSET_DESC *find_charset_desc(int id)
     {
         const CHARSET_DESC *node = &s_charset_descs[i];
         if (node->name == nullptr)
+        {
             break;
+        }
         if (id == node->id)
+        {
             it = node;
+        }
         if (it != nullptr)
+        {
             break;
+        }
     }
     return it;
 }
@@ -165,14 +181,18 @@ charset_type utf_init(const char *from, const char *to)
         s_gs.in = in;
         const CHARSET_DESC *node = find_charset_desc(in);
         if (node)
+        {
             s_gs.himap_in = node->himap;
+        }
     }
     if (out != CHARSET_UNKNOWN)
     {
         s_gs.out = out;
         const CHARSET_DESC *node = find_charset_desc(out);
         if (node)
+        {
             s_gs.himap_out = node->himap;
+        }
     }
     return in;
 }
@@ -304,7 +324,9 @@ CODE_POINT code_point_at(const char *s)
         } else if (s_gs.himap_in != nullptr) {
             it = *s & 0xFF; /* I hate signed/unsigned conversions */
             if (it & 0x80)
+            {
                 it = s_gs.himap_in[it & 0x7F];
+            }
         }
     } else {
         it = INVALID_CODE_POINT;
@@ -317,7 +339,9 @@ static int insert_utf8_at(char *s, CODE_POINT c)
     int it;
     /* FIXME - should we check if s has enough space? */
     if (s == nullptr)
+    {
         it = 0;
+    }
     else if (c <= 0x0000007F) {
         s[0] = (char)c;
         it = 1;
@@ -365,7 +389,9 @@ int insert_unicode_at(char *s, CODE_POINT c)
     int it;
     /* FIXME - should we check if s has enough space? */
     if (s == nullptr)
+    {
         it = 0;
+    }
     else if (IS_UTF8(s_gs.in)) {
         it = insert_utf8_at(s, c);
     } else if (c <= 0x7F) {
@@ -387,9 +413,13 @@ bool at_norm_char(const char *s)
             it = c >= 0x20 && !(c >= 0x7F && c < 0xA0) && c != 0x2028 && c != 0x2029;
         }
         else if (U(*s) < 0x80)
+        {
             it = (U(*s) >= ' ' && U(*s) < 0x7F);
+        }
         else if (s_gs.himap_in != nullptr)
+        {
             it = s_gs.himap_in[U(*s) & 0x7F] != INVALID_CODE_POINT;
+        }
     }
     return it;
 }
@@ -405,16 +435,20 @@ int put_char_adv(char **strptr, bool outputok)
             int w = byte_length_at(s);
             it = visual_width_at(s);
             if (outputok)
+            {
                 for (int i = 0; i < w; i += 1) {
                     putchar(*s);
                     s++;
                 }
+            }
             *strptr = s;
         } else if (s_gs.himap_in) {
             char buf[7];
             int w = insert_utf8_at(buf, s_gs.himap_in[U(*s) & 0x7F]);
             for (int i = 0; i < w; i += 1)
+            {
                 putchar(buf[i]);
+            }
             it = 1;
             s++;
             *strptr = s;
@@ -461,13 +495,20 @@ void terminate_string_at_visual_index(char *s, int i)
         for (j = 0; *s; ) {
             int w = byte_length_at(s);
             int v = visual_width_at(s);
-        if (w == 0 || j + v > i) break;
+            if (w == 0 || j + v > i)
+            {
+                break;
+            }
             s += w;
             j += v;
         }
         if (j + 1 == i && *s)
+        {
             *s++ = ' ';
+        }
         if (*s)
+        {
             *s = '\0';
+        }
     }
 }

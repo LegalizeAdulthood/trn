@@ -42,7 +42,9 @@ struct MockEnvironment
         for (const char *envar : envars)
         {
             if (envar)
+            {
                 expect_no_envar(envar);
+            }
         }
     }
 };

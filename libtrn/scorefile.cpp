@@ -74,14 +74,20 @@ void sf_init()
     memset((char*)s_sf_abbr,0,256 * sizeof (char*));
 
     if (g_sf_verbose)
+    {
         printf("\nReading score files...\n");
+    }
     s_sf_file_level = 0;
     /* find # of levels */
     strcpy(s_sf_buf,filexp("%C"));
     int level = 0;
     for (char *s = s_sf_buf; *s; s++)
+    {
         if (*s == '.')
+        {
             level++;            /* count dots in group name */
+        }
+    }
     level++;
 
     /* the main read-in loop */
@@ -89,7 +95,9 @@ void sf_init()
     {
         char *s = sf_get_filename(i);
         if (s != nullptr)
+        {
             sf_do_file(s);
+        }
     }
 
     /* do post-processing (set thresholds and detect extra header usage) */
@@ -100,7 +108,9 @@ void sf_init()
     g_kill_thresh_active = false;
     for (int i = 0; i < g_sf_num_entries; i++) {
         if (s_sf_entries[i].head_type >= HEAD_LAST)
+        {
             s_sf_has_extra_headers = true;
+        }
         switch (s_sf_entries[i].head_type) {
           case SF_KILLTHRESHOLD:
             g_kill_thresh_active = true;
@@ -109,10 +119,16 @@ void sf_init()
                 int j;
                 /* rethink? */
                 for (j = i+1; j < g_sf_num_entries; j++)
+                {
                     if (s_sf_entries[j].head_type == SF_KILLTHRESHOLD)
+                    {
                         break;
+                    }
+                }
                 if (j == g_sf_num_entries) /* no later thresholds */
+                {
                     printf("killthreshold %d\n",g_kill_thresh);
+                }
             }
             break;
           case SF_NEWAUTHOR:
@@ -122,10 +138,16 @@ void sf_init()
                 int j;
                 /* rethink? */
                 for (j = i+1; j < g_sf_num_entries; j++)
+                {
                     if (s_sf_entries[j].head_type == SF_NEWAUTHOR)
+                    {
                         break;
+                    }
+                }
                 if (j == g_sf_num_entries) /* no later newauthors */
+                {
                     printf("New Author score: %d\n",s_newauthor);
+                }
             }
             break;
           case SF_REPLY:
@@ -135,10 +157,16 @@ void sf_init()
                 int j;
                 /* rethink? */
                 for (j = i+1; j < g_sf_num_entries; j++)
+                {
                     if (s_sf_entries[j].head_type == SF_REPLY)
+                    {
                         break;
+                    }
+                }
                 if (j == g_sf_num_entries) /* no later reply rules */
+                {
                     printf("Reply score: %d\n",s_reply_score);
+                }
             }
             break;
         }
@@ -156,17 +184,23 @@ void sf_clean()
     mp_free(MP_SCORE1);         /* free memory pool */
     if (s_sf_abbr) {
         for (int i = 0; i < 256; i++)
+        {
             if (s_sf_abbr[i]) {
                 free(s_sf_abbr[i]);
                 s_sf_abbr[i] = nullptr;
             }
+        }
         free(s_sf_abbr);
     }
     if (s_sf_entries)
+    {
         free(s_sf_entries);
+    }
     s_sf_entries = nullptr;
     for (int i = 0; i < s_sf_num_extra_headers; i++)
+    {
         free(s_sf_extra_headers[i]);
+    }
     s_sf_num_extra_headers = 0;
     s_sf_extra_headers = nullptr;
 }
@@ -195,11 +229,15 @@ int sf_check_extra_headers(const char *head)
     safecpy(lbuf,head,sizeof lbuf - 1);
     for (char *s = lbuf; *s; s++) {
         if (isalpha(*s) && isupper(*s))
+        {
             *s = tolower(*s);           /* convert to lower case */
+        }
     }
     for (int i = 0; i < s_sf_num_extra_headers; i++) {
         if (!strcmp(s_sf_extra_headers[i],lbuf))
+        {
             return i;
+        }
     }
     return -1;
 }
@@ -220,10 +258,14 @@ void sf_add_extra_header(const char *head)
     lbuf[len+1] = '\0';
     char *colonptr = lbuf + len;
     if (set_line_type(lbuf,colonptr) != SOME_LINE)
+    {
         return;         /* known types should be interpreted in normal way */
+    }
     /* then check to see if it's a known extra header */
     if (sf_check_extra_headers(head) >= 0)
+    {
         return;
+    }
 
     s_sf_num_extra_headers++;
     s_sf_extra_headers = (char**)saferealloc((char*)s_sf_extra_headers,
@@ -231,7 +273,9 @@ void sf_add_extra_header(const char *head)
     char *s = savestr(head);
     for (char *s2 = s; *s2; s2++) {
         if (isalpha(*s2) && isupper(*s2))
+        {
             *s2 = tolower(*s2);         /* convert to lower case */
+        }
     }
     s_sf_extra_headers[s_sf_num_extra_headers-1] = s;
 }
@@ -251,15 +295,21 @@ char *sf_get_extra_header(ART_NUM art, int hnum)
         if (string_case_equal(head, s,len)) {
             s = strchr(s,':');
             if (!s)
+            {
                 return "";
+            }
             s++;        /* skip the colon */
             s = skip_hor_space(s);
             if (!*s)
+            {
                 return "";
+            }
             head = s;           /* now point to start of new text */
             s = strchr(s,'\n');
             if (!s)
+            {
                 return "";
+            }
             *s = '\0';
             safecpy(lbuf,head,sizeof lbuf - 1);
             *s = '\n';
@@ -287,10 +337,14 @@ char *sf_get_filename(int level)
         /* maybe redo this logic later... */
         while (level--) {
             if (*s == '\0')     /* no more name to match */
+            {
                 return nullptr;
+            }
             s = skip_ne(s, '.');
             if (*s && level)
+            {
                 s++;
+            }
         }
         *s = '\0';      /* cut end of score file */
     }
@@ -304,7 +358,9 @@ char *sf_cmd_fname(char *s)
 
     char *s1 = strchr(s, '/');
     if (s1)
+    {
         return s;
+    }
     /* no slashes in this filename */
     strcpy(lbuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
     strcat(lbuf,"/");
@@ -322,17 +378,23 @@ bool sf_do_command(char *cmd, bool check)
 
     if (!strncmp(cmd,"killthreshold",13)) {
         /* skip whitespace and = sign */
-        for (s = cmd+13; *s && (is_hor_space(*s) || *s == '='); s++) ;
+        for (s = cmd+13; *s && (is_hor_space(*s) || *s == '='); s++)
+        {
+        }
 
         /* make **sure** that there is a number here */
         i = atoi(s);
         if (i == 0)             /* it might not be a number */
+        {
             if (!is_text_zero(s)) {
                 printf("\nBad killthreshold: %s",cmd);
                 return false;   /* continue looping */
             }
+        }
         if (check)
+        {
             return true;
+        }
         sf_grow();
         s_sf_entries[g_sf_num_entries-1].head_type = static_cast<header_line_type>(SF_KILLTHRESHOLD);
         s_sf_entries[g_sf_num_entries-1].score = i;
@@ -340,15 +402,21 @@ bool sf_do_command(char *cmd, bool check)
     }
     if (!strncmp(cmd,"savescores",10)) {
         /* skip whitespace and = sign */
-        for (s = cmd+10; *s && (is_hor_space(*s) || *s == '='); s++) ; 
+        for (s = cmd+10; *s && (is_hor_space(*s) || *s == '='); s++)
+        {
+        }
         if (!strncmp(s,"off",3)) {
             if (!check)
+            {
                 g_sc_savescores = false;
+            }
             return true;
         }
         if (*s) {       /* there is some argument */
             if (check)
+            {
                 return true;
+            }
             g_sc_savescores = true;
             return true;
         }
@@ -357,17 +425,23 @@ bool sf_do_command(char *cmd, bool check)
     }
     if (!strncmp(cmd,"newauthor",9)) {
         /* skip whitespace and = sign */
-        for (s = cmd+9; *s && (is_hor_space(*s) || *s == '='); s++) ;
+        for (s = cmd+9; *s && (is_hor_space(*s) || *s == '='); s++)
+        {
+        }
 
         /* make **sure** that there is a number here */
         i = atoi(s);
         if (i == 0)             /* it might not be a number */
+        {
             if (!is_text_zero(s)) {
                 printf("\nBad newauthor: %s",cmd);
                 return false;   /* continue looping */
             }
+        }
         if (check)
+        {
             return true;
+        }
         sf_grow();
         s_sf_entries[g_sf_num_entries-1].head_type = static_cast<header_line_type>(SF_NEWAUTHOR);
         s_sf_entries[g_sf_num_entries-1].score = i;
@@ -375,7 +449,9 @@ bool sf_do_command(char *cmd, bool check)
     }
     if (!strncmp(cmd,"include",7)) {
         if (check)
+        {
             return true;
+        }
         s = skip_hor_space(cmd + 7); /* skip whitespace */
         if (!*s) {
             printf("Bad include command (missing filename)\n");
@@ -386,7 +462,9 @@ bool sf_do_command(char *cmd, bool check)
     }
     if (!strncmp(cmd,"exclude",7)) {
         if (check)
+        {
             return true;
+        }
         s = skip_hor_space(cmd + 7); /* skip whitespace */
         if (!*s) {
             printf("Bad exclude command (missing filename)\n");
@@ -403,7 +481,9 @@ bool sf_do_command(char *cmd, bool check)
             return false;
         }
         if (check)
+        {
             return true;
+        }
         *s2 = '\0';
         sf_add_extra_header(s);
         *s2 = ':';
@@ -419,17 +499,23 @@ bool sf_do_command(char *cmd, bool check)
     }
     if (!strncmp(cmd,"reply",5)) {
         /* skip whitespace and = sign */
-        for (s = cmd+5; *s && (is_hor_space(*s) || *s == '='); s++) ;
+        for (s = cmd+5; *s && (is_hor_space(*s) || *s == '='); s++)
+        {
+        }
 
         /* make **sure** that there is a number here */
         i = atoi(s);
         if (i == 0)             /* it might not be a number */
+        {
             if (!is_text_zero(s)) {
                 printf("\nBad reply command: %s\n",cmd);
                 return false;   /* continue looping */
             }
+        }
         if (check)
+        {
             return true;
+        }
         sf_grow();
         s_sf_entries[g_sf_num_entries-1].head_type = static_cast<header_line_type>(SF_REPLY);
         s_sf_entries[g_sf_num_entries-1].score = i;
@@ -437,7 +523,9 @@ bool sf_do_command(char *cmd, bool check)
     }
     if (!strncmp(cmd,"file",4)) {
         if (check)
+        {
             return true;
+        }
         s = skip_hor_space(cmd + 4); /* skip whitespace */
         if (!*s) {
             printf("Bad file command (missing parameters)\n");
@@ -450,7 +538,9 @@ bool sf_do_command(char *cmd, bool check)
             return false;
         }
         if (s_sf_abbr[(int)ch])
+        {
             free(s_sf_abbr[(int)ch]);
+        }
         s_sf_abbr[(int)ch] = savestr(sf_cmd_fname(s));
         return true;
     }
@@ -528,29 +618,41 @@ char *sf_freeform(char *start1, char *end1)
 bool sf_do_line(char *line, bool check)
 {
     if (!line || !*line)
+    {
         return true;            /* very empty line */
+    }
     char *s = line + strlen(line) - 1;
     if (*s == '\n')
+    {
         *s = '\0';              /* kill the newline */
+    }
 
     char ch = line[0];
     if (ch == '#')              /* comment */
+    {
         return true;
+    }
 
     /* reset any per-line bitflags */
     s_sf_pattern_status = false;
 
     if (isalpha(ch))            /* command line */
+    {
         return sf_do_command(line,check);
+    }
 
     /* skip whitespace */
     s = skip_hor_space(line);
     if (!*s || *s == '#')
+    {
         return true;    /* line was whitespace or comment after whitespace */
+    }
     /* convert line to lowercase (make optional later?) */
     for (char* s2 = s; *s2 != '\0'; s2++) {
         if (isupper(*s2))
+        {
             *s2 = tolower(*s2);         /* convert to lower case */
+        }
     }
     int i = atoi(s);
     if (i == 0) {       /* it might not be a number */
@@ -561,14 +663,19 @@ bool sf_do_line(char *line, bool check)
     }
     /* add the line as a scoring entry */
     while (isdigit(*s) || *s == '+' || *s == '-' || is_hor_space(*s))
+    {
         s++;    /* skip score */
+    }
     char *s2;
     while (true) {
         for (s2 = s; *s2 && !is_hor_space(*s2); s2++)
-            ;
+        {
+        }
         s2--;
         if (*s2 == ':') /* did header */
+        {
             break;      /* go to set header routine */
+        }
         s = sf_freeform(s,s2);
         if (!s || !*s) {        /* used up all the line's text, or error */
             printf("Scorefile entry error error (freeform parse).  ");
@@ -583,7 +690,9 @@ bool sf_do_line(char *line, bool check)
         j = sf_check_extra_headers(s);
         *s2 = ':';
         if (j >= 0)
+        {
             j += HEAD_LAST;
+        }
         else {
             printf("Unknown score header type.  Line follows:\n|%s|\n",line);
             return false;
@@ -596,7 +705,9 @@ bool sf_do_line(char *line, bool check)
         return false;
     }
     if (check)
+    {
         return true;            /* limits of check */
+    }
     sf_grow();          /* acutally make an entry */
     s_sf_entries[g_sf_num_entries-1].head_type = static_cast<header_line_type>(j);
     s_sf_entries[g_sf_num_entries-1].score = i;
@@ -644,11 +755,15 @@ void sf_do_file(const char *fname)
 
     int sf_fp = sf_open_file(fname);
     if (sf_fp < 0)
+    {
         return;
+    }
     s_sf_file_level++;
     if (g_sf_verbose) {
         for (int i = 1; i < s_sf_file_level; i++)
+        {
             printf(".");                /* maybe later putchar... */
+        }
         printf("Score file: %s\n",fname);
     }
     char *safefilename = savestr(fname);
@@ -688,7 +803,9 @@ int score_match(char *str, int ind)
         /* we have a good pattern */
             s2 = execute(s_sf_entries[ind].compex,str);
             if (s2 != nullptr)
+            {
                 return true;
+            }
         }
         return false;
     }
@@ -702,11 +819,15 @@ int score_match(char *str, int ind)
 int sf_score(ART_NUM a)
 {
     if (is_unavailable(a))
+    {
         return LOWSCORE;        /* unavailable arts get low negative score. */
+    }
 
     /* if there are no score entries, then the answer is real easy and quick */
     if (g_sf_num_entries == 0)
+    {
         return 0;
+    }
     bool old_untrim = g_untrim_cache;
     g_untrim_cache = true;
     g_sc_scoring = true;                /* loop prevention */
@@ -715,14 +836,18 @@ int sf_score(ART_NUM a)
     /* parse the header now if there are extra headers */
     /* (This could save disk accesses.) */
     if (s_sf_has_extra_headers)
+    {
         parseheader(a);
+    }
 
     char *s;            /* misc */
 
     for (int i = 0; i < g_sf_num_entries; i++) {
         header_line_type h = s_sf_entries[i].head_type;
         if (h <= 0)     /* don't use command headers for scoring */
+        {
             continue;   /* the outer for loop */
+        }
         /* if this head_type has been done before, this entry
            has already been done */
         if (s_sf_entries[i].flags & 2) {        /* rule has been applied */
@@ -733,7 +858,9 @@ int sf_score(ART_NUM a)
         /* sf_get_line will return ptr to buffer (already lowercased string) */
         s = sf_get_line(a,h);
         if (!s || !*s)  /* no such line for the article */
+        {
             continue;   /* with the s_sf_entries. */
+        }
 
         /* do the matches for this header */
         for (int j = i; j < g_sf_num_entries; j++) {
@@ -745,9 +872,13 @@ int sf_score(ART_NUM a)
                 if (score_match(s,j)) {
                     sum = sum + s_sf_entries[j].score;
                     if (h == FROM_LINE)
+                    {
                         article_ptr(a)->scoreflags |= SFLAG_AUTHOR;
+                    }
                     if (g_sf_score_verbose)
+                    {
                         sf_print_match(j);
+                    }
                 }
             }
         }
@@ -811,7 +942,9 @@ void sf_append(char *line)
     char*       s;
 
     if (!line)
+    {
         return;         /* do nothing with empty string */
+    }
 
     char filechar = *line; /* ch is file abbreviation */
 
@@ -819,8 +952,12 @@ void sf_append(char *line)
 
         printf("List of abbreviation/file pairs\n") ;
         for (int i = 0; i < 256; i++)
+        {
             if (s_sf_abbr[i])
+            {
                 printf("%c %s\n",(char)i,s_sf_abbr[i]);
+            }
+        }
         printf("\" [The current newsgroup's score file]\n");
         printf("* [The global score file]\n");
         return;
@@ -867,7 +1004,9 @@ void sf_append(char *line)
                 return;
             }
             if (s[0] == 'R' && s[1] == 'e' && s[2] == ':' && s[3] == ' ')
+            {
                 s += 4;
+            }
             /* change this next line if LBUFLEN changes */
             sprintf(lbuf+(strlen(lbuf)-1),"subject: %.900s",s);
             scoreline = lbuf;
@@ -885,7 +1024,9 @@ void sf_append(char *line)
         return;
     }
     if (filechar == '!')
+    {
         return;         /* don't actually append to file */
+    }
     if (filechar == '"') {      /* do local group */
 /* Note: should probably be changed to use sf_ file functions */
         strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
@@ -913,7 +1054,9 @@ void sf_append(char *line)
         fclose(fp);
     }
     else /* unsuccessful in opening file */
+    {
         printf("\nCould not open (for append) file %s\n",filename);
+    }
     return;
 }
 
@@ -931,7 +1074,9 @@ char *sf_get_line(ART_NUM a, header_line_type h)
     }
     if (h >= HEAD_LAST) {
         if (h-HEAD_LAST < s_sf_num_extra_headers)
+        {
             s = sf_get_extra_header(a,h-HEAD_LAST);
+        }
         else {
             printf("sf_get_line(%d,%d): bad header type\n",(int)a,h);
             printf("(Internal error: header number too high)\n");
@@ -939,17 +1084,29 @@ char *sf_get_line(ART_NUM a, header_line_type h)
             return sf_getline;
         }
     } else if (h == SUBJ_LINE)
+    {
         s = fetchcache(a,h,true);       /* get compressed copy */
+    }
     else
+    {
         s = prefetchlines(a,h,false);   /* don't make a copy */
+    }
     if (!s)
+    {
         *sf_getline = '\0';
+    }
     else
+    {
         safecpy(sf_getline,s,sizeof sf_getline - 1);
+    }
 
     for (char *t = sf_getline; *t; t++)
+    {
         if (isupper(*t))
+        {
             *t = tolower(*t);
+        }
+    }
     return sf_getline;
 }
 
@@ -964,45 +1121,65 @@ void sf_print_match(int indx)
     for (i = indx; i >= 0; i--) {
         int j = s_sf_entries[i].head_type;
         if (j == SF_FILE_MARK_START)  /* found immediate inclusion. */
+        {
             break;
+        }
         if (j == SF_FILE_MARK_END) {    /* found included file, skip */
             int tmplevel = s_sf_entries[i].score;
             int k;
             for (k = i; k >= 0; k--) {
                 if (s_sf_entries[k].head_type == static_cast<header_line_type>(SF_FILE_MARK_START)
                  && s_sf_entries[k].score == tmplevel)
+                {
                     break;      /* inner for loop */
+                }
             }
             i = k;      /* will be decremented again */
         }
     }
     if (i >= 0)
+    {
         level = s_sf_entries[i].score;
+    }
     /* print the file markers. */
     for ( ; i >= 0; i--) {
         if (s_sf_entries[i].head_type == static_cast<header_line_type>(SF_FILE_MARK_START)
          && s_sf_entries[i].score <= level) {
             level--;    /* go out... */
             for (int k = 0; k < level; k++)
+            {
                 printf(".");            /* make putchar later? */
+            }
             printf("From file: %s\n",s_sf_entries[i].str1);
             if (level == 0)             /* top level */
+            {
                 break;          /* out of the big for loop */
+            }
         }
     }
     if (s_sf_entries[indx].flags & 1)   /* regex type */
+    {
         pattern = "pattern ";
+    }
     else
+    {
         pattern = "";
+    }
 
     if (s_sf_entries[indx].head_type >= HEAD_LAST)
+    {
         head_name = s_sf_extra_headers[s_sf_entries[indx].head_type-HEAD_LAST];
+    }
     else
+    {
         head_name = g_htype[s_sf_entries[indx].head_type].name;
+    }
     printf("%d %s%s: %s", s_sf_entries[indx].score,pattern,head_name,
            s_sf_entries[indx].str1);
     if (s_sf_entries[indx].str2)
+    {
         printf("*%s",s_sf_entries[indx].str2);
+    }
     printf("\n");
 }
 
@@ -1012,17 +1189,25 @@ void sf_exclude_file(const char *fname)
     SF_ENTRY*tmp_entries;
 
     for (start = 0; start < g_sf_num_entries; start++)
+    {
         if (s_sf_entries[start].head_type == static_cast<header_line_type>(SF_FILE_MARK_START)
          && !strcmp(s_sf_entries[start].str1,fname))
+        {
             break;
+        }
+    }
     if (start == g_sf_num_entries) {
         printf("Exclude: file |%s| was not included\n",fname);
         return;
     }
     for (end = start+1; end < g_sf_num_entries; end++)
+    {
         if (s_sf_entries[end].head_type==SF_FILE_MARK_END
          && !strcmp(s_sf_entries[end].str1,fname))
+        {
             break;
+        }
+    }
     if (end == g_sf_num_entries) {
         printf("Exclude: file |%s| is incomplete at exclusion command\n",
                 fname);
@@ -1046,14 +1231,20 @@ void sf_exclude_file(const char *fname)
     tmp_entries = (SF_ENTRY*)safemalloc(newnum*sizeof(SF_ENTRY));
     /* copy the parts into tmp_entries */
     if (start > 0)
+    {
         memcpy((char*)tmp_entries,(char*)s_sf_entries,start * sizeof (SF_ENTRY));
+    }
     if (end < g_sf_num_entries-1)
+    {
         memcpy((char*)(tmp_entries+start),(char*)(s_sf_entries+end+1),(g_sf_num_entries-end-1) * sizeof (SF_ENTRY));
+    }
     free(s_sf_entries);
     s_sf_entries = tmp_entries;
     g_sf_num_entries = newnum;
     if (g_sf_verbose)
+    {
         printf("Excluded file: %s\n",fname);
+    }
 }
 
 //char* filespec;               /* file abbrev. or name */
@@ -1062,11 +1253,15 @@ void sf_edit_file(const char *filespec)
     char filebuf[LBUFLEN];      /* clean up buffers */
 
     if (!filespec || !*filespec)
+    {
         return;         /* empty, do nothing (error later?) */
+    }
     char filechar = *filespec;
     /* if more than one character use as filename */
     if (filespec[1])
+    {
         strcpy(filebuf,filespec);
+    }
     else if (filechar == '"') { /* edit local group */
 /* Note: should probably be changed to use sf_ file functions */
         strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
@@ -1092,7 +1287,9 @@ void sf_edit_file(const char *filespec)
         sf_file_clear();
     }
     else
+    {
         printf("Can't make %s\n",filebuf);
+    }
 }
 
 /* returns file number */
@@ -1103,14 +1300,20 @@ static int sf_open_file(const char *name)
     int i;
 
     if (!name || !*name)
+    {
         return 0;       /* unable to open */
+    }
     for (i = 0; i < s_sf_num_files; i++)
+    {
         if (!strcmp(s_sf_files[i].fname,name)) {
             if (s_sf_files[i].num_lines < 0)    /* nonexistent */
+            {
                 return -1;      /* no such file */
+            }
             s_sf_files[i].line_on = 0;
             return i;
         }
+    }
     s_sf_num_files++;
     s_sf_files = (SF_FILE*)saferealloc((char*)s_sf_files,
         s_sf_num_files * sizeof (SF_FILE));
@@ -1127,9 +1330,13 @@ static int sf_open_file(const char *name)
         name = lbuf;
         temp_name = temp_filename();
         if (!url_get(name+4,temp_name))
+        {
             name = nullptr;
+        }
         else
+        {
             name = temp_name;
+        }
     }
     if (!name) {
         s_sf_files[i].num_lines = -1;
@@ -1151,7 +1358,9 @@ static int sf_open_file(const char *name)
     }
     fclose(fp);
     if (temp_name)
+    {
         remove(temp_name);
+    }
     return i;
 }
 
@@ -1159,7 +1368,9 @@ static void sf_file_clear()
 {
     for (int i = 0; i < s_sf_num_files; i++) {
         if (s_sf_files[i].fname)
+        {
             free(s_sf_files[i].fname);
+        }
         if (s_sf_files[i].num_lines > 0) {
             /* memory pool takes care of freeing line contents */
             free(s_sf_files[i].lines);
@@ -1167,7 +1378,9 @@ static void sf_file_clear()
     }
     mp_free(MP_SCORE2);
     if (s_sf_files)
+    {
         free(s_sf_files);
+    }
     s_sf_files = (SF_FILE*)nullptr;
     s_sf_num_files = 0;
 }
@@ -1175,9 +1388,13 @@ static void sf_file_clear()
 static char *sf_file_getline(int fnum)
 {
     if (fnum < 0 || fnum >= s_sf_num_files)
+    {
         return nullptr;
+    }
     if (s_sf_files[fnum].line_on >= s_sf_files[fnum].num_lines)
+    {
         return nullptr;         /* past end of file, or empty file */
+    }
     /* below: one of the more twisted lines of my career  (:-) */
     return s_sf_files[fnum].lines[s_sf_files[fnum].line_on++];
 }

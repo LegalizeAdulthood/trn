@@ -76,7 +76,9 @@ protected:
     AssertionResult bufferIsEmpty() const
     {
         if (buffer().empty())
+        {
             return AssertionSuccess();
+        }
 
         return AssertionFailure() << "Contents: '" << buffer() << "'";
     }
@@ -1392,7 +1394,9 @@ public:
     ~pushd()
     {
         if (m_old_dir[0] != '\0')
+        {
             chdir(m_old_dir);
+        }
     }
 
     void push(const char *new_dir)

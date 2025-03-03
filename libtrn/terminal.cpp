@@ -379,13 +379,21 @@ void term_set(char *tcbuf)
 # endif
 #endif
     if (!*g_tc_UP)                      /* no UP string? */
+    {
         g_marking = NOMARKING;          /* disable any marking */
+    }
     if (*g_tc_CM || *g_tc_HO)
+    {
         g_can_home = true;
+    }
     if (!*g_tc_CD || !g_can_home)               /* can we CE, CD, and home? */
+    {
         g_erase_each_line = false;      /*  no, so disable use of clear eol */
+    }
     if (g_muck_up_clear)                        /* this is for weird HPs */
+    {
         s_tc_CL = nullptr;
+    }
     s_leftcost = strlen(g_tc_BC);
     s_upcost = strlen(g_tc_UP);
 #else /* !HAS_TERMLIB */
@@ -477,7 +485,9 @@ void arrow_macros(char *tmpbuf)
     strcpy(lbuf,Tgetstr("ku"));         /* up */
 #endif
     if ((int)strlen(lbuf) > 1)
+    {
         set_macro(lbuf,s_up[g_auto_arrow_macros]);
+    }
 
 #ifdef MSDOS
     strcpy(lbuf,"\035\120");
@@ -485,7 +495,9 @@ void arrow_macros(char *tmpbuf)
     strcpy(lbuf,Tgetstr("kd"));         /* down */
 #endif
     if ((int)strlen(lbuf) > 1)
+    {
         set_macro(lbuf,s_down[g_auto_arrow_macros]);
+    }
 
 #ifdef MSDOS
     strcpy(lbuf,"\035\113");
@@ -493,7 +505,9 @@ void arrow_macros(char *tmpbuf)
     strcpy(lbuf,Tgetstr("kl"));         /* left */
 #endif
     if ((int)strlen(lbuf) > 1)
+    {
         set_macro(lbuf,s_left[g_auto_arrow_macros]);
+    }
 
 #ifdef MSDOS
     strcpy(lbuf,"\035\115");
@@ -501,10 +515,14 @@ void arrow_macros(char *tmpbuf)
     strcpy(lbuf,Tgetstr("kr"));         /* right */
 #endif
     if ((int)strlen(lbuf) > 1)
+    {
         set_macro(lbuf,s_right[g_auto_arrow_macros]);
+    }
 
     if (*lbuf == '\033')
+    {
         set_macro("\033\033", "\033");
+    }
 #endif
 }
 
@@ -513,14 +531,20 @@ static void mac_init(char *tcbuf)
     char tmpbuf[1024];
 
     if (g_auto_arrow_macros)
+    {
         arrow_macros(tmpbuf);
+    }
     FILE *macros;
     if (!g_use_threads
      || (macros = fopen(filexp(get_val_const("TRNMACRO",TRNMACRO)),"r")) == nullptr)
+    {
         macros = fopen(filexp(get_val_const("RNMACRO",RNMACRO)),"r");
+    }
     if (macros) {
         while (fgets(tcbuf,TCBUF_SIZE,macros) != nullptr)
+        {
             mac_line(tcbuf,tmpbuf,sizeof tmpbuf);
+        }
         fclose(macros);
     }
 }
@@ -533,20 +557,32 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
     static char override[] = "\nkeymap overrides string\n";
 
     if (s_topmap == nullptr)
+    {
         s_topmap = newkeymap();
+    }
     if (*line == '#' || *line == '\n')
+    {
         return;
+    }
     int ch = strlen(line) - 1;
     if (line[ch] == '\n')
+    {
         line[ch] = '\0';
+    }
     /* A 0 length signifies we already parsed the macro into tmpbuf,
     ** so line is just the definition. */
     if (tbsize)
+    {
         m = dointerp(tmpbuf,tbsize,line," \t",nullptr);
+    }
     else
+    {
         m = line;
+    }
     if (!*m)
+    {
         return;
+    }
     m = skip_hor_space(m);
     curmap=s_topmap;
     for (char *s = tmpbuf; *s; s++)
@@ -557,7 +593,9 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
             garbage = (*s & KM_GMASK) << KM_GSHIFT;
         }
         else
+        {
             garbage = 0;
+        }
         if (s[1]) {
             if ((curmap->km_type[ch] & KM_TMASK) == KM_STRING) {
                 if (tbsize) {
@@ -569,7 +607,9 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
             }
             curmap->km_type[ch] = KM_KEYMAP + garbage;
             if (curmap->km_ptr[ch].km_km == nullptr)
+            {
                 curmap->km_ptr[ch].km_km = newkeymap();
+            }
             curmap = curmap->km_ptr[ch].km_km;
         }
         else {
@@ -623,13 +663,21 @@ static void show_keymap(KEYMAP *curmap, char *prefix)
         int kt = curmap->km_type[i];
         if (kt != 0) {
             if (i < ' ')
+            {
                 sprintf(next,"^%c",i+64);
+            }
             else if (i == ' ')
+            {
                 strcpy(next,"\\040");
+            }
             else if (i == 127)
+            {
                 strcpy(next,"^?");
+            }
             else
+            {
                 sprintf(next,"%c",i);
+            }
             if ((kt >> KM_GSHIFT) & KM_GMASK) {
                 sprintf(g_cmd_buf,"+%d", (kt >> KM_GSHIFT) & KM_GMASK);
                 strcat(next,g_cmd_buf);
@@ -688,7 +736,9 @@ bool finput_pending(bool check_term)
 {
     while (s_nextout != s_nextin) {
         if (s_circlebuf[s_nextout] != '\200')
+        {
             return true;
+        }
         switch (s_not_echoing) {
           case 0:
             return true;
@@ -734,12 +784,16 @@ bool finish_command(int donewline)
 {
     char *s = g_buf;
     if (s[1] != FINISHCMD)              /* someone faking up a command? */
+    {
         return true;
+    }
 
     general_mode gmode_save = g_general_mode;
     set_mode(GM_INPUT,g_mode);
     if (s_not_echoing)
+    {
         s_not_echoing = 2;
+    }
     do {
         s = edit_buf(s, g_buf);
         if (s == g_buf) {                       /* entire string gone? */
@@ -748,7 +802,9 @@ bool finish_command(int donewline)
             return false;
         }
         if (s - g_buf == s_buff_limit)
+        {
             break;
+        }
         fflush(stdout);
         getcmd(s);
         if (errno || *s == '\f') {
@@ -757,11 +813,16 @@ bool finish_command(int donewline)
     } while (*s != '\r' && *s != '\n'); /* until CR or NL (not echoed) */
     g_mouse_is_down = false;
 
-    while (s[-1] == ' ') s--;
+    while (s[-1] == ' ')
+    {
+        s--;
+    }
     *s = '\0';                          /* terminate the string nicely */
 
     if (donewline)
+    {
         newline();
+    }
 
     set_mode(gmode_save,g_mode);
     return true;                        /* retrn success */
@@ -793,7 +854,9 @@ char *edit_buf(char *s, const char *cmd)
     if (quoteone) {
         quoteone = false;
         if (s != g_buf)
+        {
             goto echo_it;
+        }
     }
     if (*s == '\033') {         /* substitution desired? */
         char tmpbuf[4], *cpybuf;
@@ -872,7 +935,9 @@ char *edit_buf(char *s, const char *cmd)
 
 echo_it:
     if (!s_not_echoing)
+    {
         echo_char(*s);
+    }
     return s+1;
 }
 
@@ -896,10 +961,14 @@ void eat_typeahead()
 
     /* do not eat typeahead while creating virtual group */
     if (g_univ_ng_virtflag)
+    {
       return;
+    }
     /* Don't eat twice before getting a character */
     if (!s_got_a_char)
+    {
         return;
+    }
     s_got_a_char = false;
 
     /* cancel only keyboard stuff */
@@ -926,7 +995,9 @@ void eat_typeahead()
             j++;
             for (int i = (curmap->km_type[lc] >> KM_GSHIFT) & KM_GMASK; i; i--) {
                 if (!input_pending())
+                {
                     goto dbl_break;
+                }
                 read_tty(&g_buf[j++],1);
             }
 
@@ -1003,7 +1074,9 @@ int read_tty(char *addr, int size)
 #ifdef MSDOS
     *addr = getch();
     if (*addr == '\0')
+    {
         *addr = Ctl('\035');
+    }
     size = 1;
 #else
     size = read(0,addr,size);
@@ -1039,7 +1112,9 @@ void pushchar(char_int c)
 {
     s_nextout--;
     if (s_nextout < 0)
+    {
         s_nextout = PUSHSIZE - 1;
+    }
     if (s_nextout == s_nextin) {
         fputs("\npushback buffer overflow\n",stdout);
         sig_catcher(0);
@@ -1073,7 +1148,9 @@ void underprint(const char *s)
     else {              /* start and stop underline */
         underline();    /* start underlining */
         while (*s)
+        {
             echo_char(*s++);
+        }
         un_underline(); /* stop underlining */
     }
 }
@@ -1128,10 +1205,14 @@ tryagain:
         s_ignore_EINTR = false;
         if (read_tty(whatbuf,1) < 0) {
             if (!errno)
+            {
                 errno = EINTR;
+            }
             if (errno == EINTR) {
                 if (s_ignore_EINTR)
+                {
                     continue;
+                }
 #ifdef SIGALRM
                 (void) alarm(0);
 #endif
@@ -1146,14 +1227,20 @@ tryagain:
             goto got_canonical;
         }
         if (curmap == nullptr)
+        {
             goto got_canonical;
+        }
         for (int i = (curmap->km_type[g_lastchar] >> KM_GSHIFT) & KM_GMASK; i; i--)
+        {
             read_tty(&whatbuf[i],1);
+        }
 
         switch (curmap->km_type[g_lastchar] & KM_TMASK) {
           case KM_NOTHIN:               /* no entry? */
             if (curmap == s_topmap)     /* unmapped canonical */
+            {
                 goto got_canonical;
+            }
             settle_down();
             goto tryagain;
           case KM_KEYMAP:               /* another keymap? */
@@ -1184,7 +1271,9 @@ got_canonical:
         *whatbuf = '\n';
 #endif
     if (whatbuf == g_buf)
+    {
         whatbuf[1] = FINISHCMD;         /* tell finish_command to work */
+    }
 #ifdef SIGALRM
     (void) alarm(0);
 #endif
@@ -1198,7 +1287,9 @@ void pushstring(char *str, char_int bits)
     TRN_ASSERT(str != nullptr);
     interp(tmpbuf,PUSHSIZE,str);
     for (int i = strlen(s) - 1; i >= 0; i--)
+    {
         pushchar(s[i] ^ bits);
+    }
 }
 
 int get_anything()
@@ -1210,14 +1301,20 @@ reask_anything:
     unflush_output();                   /* disable any ^O in effect */
     color_object(COLOR_MORE, true);
     if (g_verbose)
+    {
         fputs("[Type space to continue] ",stdout);
+    }
     else
+    {
         fputs("[MORE] ",stdout);
+    }
     color_pop();        /* of COLOR_MORE */
     fflush(stdout);
     eat_typeahead();
     if (g_int_count)
+    {
         return -1;
+    }
     cache_until_key();
     set_mode(g_general_mode, MM_ANY_KEY_PROMPT);
     getcmd(tmpbuf);
@@ -1228,9 +1325,13 @@ reask_anything:
     }
     if (*tmpbuf == 'h') {
         if (g_verbose)
+        {
             fputs("\nType q to quit or space to continue.\n",stdout);
+        }
         else
+        {
             fputs("\nq to quit, space to continue.\n",stdout);
+        }
         termdown(2);
         goto reask_anything;
     }
@@ -1245,9 +1346,13 @@ reask_anything:
     else {
         g_page_line = 1;
         if (g_erase_screen)             /* -e? */
+        {
             clear();                    /* clear screen */
+        }
         else
+        {
             erase_line(false);          /* erase the prompt */
+        }
     }
     return 0;
 }
@@ -1259,20 +1364,28 @@ int pause_getcmd()
     unflush_output();                   /* disable any ^O in effect */
     color_object(COLOR_CMD, true);
     if (g_verbose)
+    {
         fputs("[Type space or a command] ",stdout);
+    }
     else
+    {
         fputs("[CMD] ",stdout);
+    }
     color_pop();        /* of COLOR_CMD */
     fflush(stdout);
     eat_typeahead();
     if (g_int_count)
+    {
         return -1;
+    }
     cache_until_key();
     set_mode(g_general_mode,MM_ANY_KEY_PROMPT);
     getcmd(g_buf);
     set_mode(g_general_mode,mode_save);
     if (errno || *g_buf == '\f')
+    {
         return 0;                       /* if return from stop signal */
+    }
     if (*g_buf != ' ') {
         erase_line(false);      /* erase the prompt */
         return *g_buf;
@@ -1289,7 +1402,9 @@ void in_char(const char *prompt, minor_mode newmode, const char *dflt)
 
     for (newlines = 0, s = prompt; *s; s++) {
         if (*s == '\n')
+        {
             newlines++;
+        }
     }
 
 reask_in_char:
@@ -1326,13 +1441,19 @@ reinp_in_answer:
         goto reask_in_answer;           /* give them a prompt again */
     }
     if (*g_buf == g_erase_char)
+    {
         goto reinp_in_answer;
+    }
     if (*g_buf != '\n' && *g_buf != ' ') {
         if (!finish_command(false))
+        {
             goto reinp_in_answer;
+        }
     }
     else
+    {
         g_buf[1] = '\0';
+    }
     newline();
     set_mode(gmode_save,mode_save);
 }
@@ -1360,15 +1481,21 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
                 cp++;
             }
             else
+            {
                 *dest++ = *cp++;
+            }
         }
         *dest++ = '\0';
         *dest = '\0';
         if (*++cp == ' ')
+        {
             cp++;
+        }
     }
     else
+    {
         prefixes[0] = '\0';
+    }
 
     bool any_val_OK{};
     char tmpbuf[80];
@@ -1386,7 +1513,9 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
                 any_val_OK = true; /* flag that '<' was found */
             }
             else
+            {
                 *dest++ = *cp++;
+            }
         }
         cp = dest;
         *dest++ = '\0';
@@ -1404,14 +1533,18 @@ reask_in_choice:
         const char *start = prefix;
         for (prefix = prefixes; *prefix; prefix += strlen(prefix)) {
             if (*prefix == *g_buf)
+            {
                 break;
+            }
         }
         if (*prefix) {
             bp = skip_ne(g_buf, ' ');
             bp = skip_eq(bp, ' ');
         }
         else
+        {
             prefix = nullptr;
+        }
         value_changed = prefix != start;
     }
     else {
@@ -1422,7 +1555,9 @@ reask_in_choice:
     while (true) {
         cp += strlen(cp) + 1;
         if (!*cp)
+        {
             cp = tmpbuf;
+        }
         if (*cp == '<' && (*g_buf == '<' || cp[1] != '#' || isdigit(*g_buf) || !*s))
         {
             prefix = nullptr;
@@ -1431,20 +1566,28 @@ reask_in_choice:
         if (s == cp) {
             if (!value_changed) {
                 if (prefix)
+                {
                     prefix = nullptr;
+                }
                 else
+                {
                     dingaling();
+                }
             }
             break;
         }
         if (!*bp || !strncmp(cp,bp,any_val_OK ? len : 1))
+        {
             break;
+        }
     }
 
     if (*cp == '<') {
         if (*g_buf == '<' || cp[1] == '#') {
             if (number_was >= 0)
+            {
                 sprintf(g_buf, "%d", number_was);
+            }
             else {
                 s = skip_digits(g_buf);
                 *s = '\0';
@@ -1457,7 +1600,9 @@ reask_in_choice:
             strcat(g_buf,cp);
         }
         else
+        {
             strcpy(g_buf,cp);
+        }
     }
     s = g_buf + strlen(g_buf);
     carriage_return();
@@ -1469,11 +1614,15 @@ reask_in_choice:
 
 reinp_in_choice:
     if ((s-g_buf) + len >= g_tc_COLS)
+    {
         s_screen_is_dirty = true;
+    }
     fflush(stdout);
     getcmd(s);
     if (errno || *s == '\f')            /* if return from stop signal */
+    {
         *s = '\n';
+    }
     if (*s != '\n') {
         char ch = *s;
         if (*cp == '<' && ch != '\t' && (ch != ' ' || g_buf != s)) {
@@ -1481,9 +1630,13 @@ reinp_in_choice:
                 s = edit_buf(s, nullptr);
                 if (s != g_buf) {
                     if (isdigit(s[-1]))
+                    {
                         goto reinp_in_choice;
+                    }
                     else
+                    {
                         number_was = atoi(g_buf);
+                    }
                 }
             }
             else {
@@ -1493,18 +1646,27 @@ reinp_in_choice:
         }
         *s = '\0';
         s = skip_ne(g_buf, ' ');
-        if (*s == ' ') s++;
+        if (*s == ' ')
+        {
+            s++;
+        }
         if (is_hor_space(ch)) {
             if (prefix)
+            {
                 *s = '\0';
+            }
             else
+            {
                 *g_buf = '\0';
+            }
         }
         else {
             char ch1 = g_buf[0];
             if (prefix) {
                 if (ch == ch1)
+                {
                     ch = *s;
+                }
                 else {
                     ch1 = ch;
                     ch = g_buf[0];
@@ -1525,18 +1687,24 @@ int print_lines(const char *what_to_print, int hilite)
     for (const char *s = what_to_print; *s; ) {
         int i = check_page_line();
         if (i)
+        {
             return i;
+        }
         if (hilite == STANDOUT) {
 #ifdef NOFIREWORKS
             if (g_erase_screen)
+            {
                 no_sofire();
+            }
 #endif
             standout();
         }
         else if (hilite == UNDERLINE) {
 #ifdef NOFIREWORKS
             if (g_erase_screen)
+            {
                 no_ulfire();
+            }
 #endif
             underline();
         }
@@ -1563,13 +1731,21 @@ int print_lines(const char *what_to_print, int hilite)
         }
         if (i) {
             if (hilite == STANDOUT)
+            {
                 un_standout();
+            }
             else if (hilite == UNDERLINE)
+            {
                 un_underline();
+            }
             if (g_tc_AM && i == g_tc_COLS)
+            {
                 fflush(stdout);
+            }
             else
+            {
                 newline();
+            }
         }
     }
     return 0;
@@ -1578,13 +1754,17 @@ int print_lines(const char *what_to_print, int hilite)
 int check_page_line()
 {
     if (g_page_line < 0)
+    {
         return -1;
+    }
     if (g_page_line >= g_tc_LINES || g_int_count) {
         int cmd = -1;
         if (g_int_count || (cmd = get_anything())) {
             g_page_line = -1;           /* disable further printing */
             if (cmd > 0)
+            {
                 pushchar(cmd);
+            }
             return cmd;
         }
     }
@@ -1596,16 +1776,22 @@ void page_start()
 {
     g_page_line = 1;
     if (g_erase_screen)
+    {
         clear();
+    }
     else
+    {
         newline();
+    }
 }
 
 void errormsg(const char *str)
 {
     if (g_general_mode == GM_SELECTOR) {
         if (str != g_msg)
+        {
             strcpy(g_msg,str);
+        }
         g_error_occurred = true;
     }
     else if (*str) {
@@ -1626,7 +1812,9 @@ void warnmsg(const char *str)
 void pad(int num)
 {
     for (int i = num; i; i--)
+    {
         putchar(s_tc_PC);
+    }
     fflush(stdout);
 }
 
@@ -1661,7 +1849,9 @@ void reprint()
     fputs("^R\n",stdout);
     termdown(1);
     for (char *s = g_buf; *s; s++)
+    {
         echo_char(*s);
+    }
     s_screen_is_dirty = true;
 }
 
@@ -1669,9 +1859,13 @@ void erase_line(bool to_eos)
 {
     carriage_return();
     if (to_eos)
+    {
         clear_rest();
+    }
     else
+    {
         erase_eol();
+    }
     carriage_return();          /* Resets kernel's tab column counter to 0 */
     fflush(stdout);
 }
@@ -1682,14 +1876,18 @@ void clear()
     g_term_col = 0;
     g_fire_is_out = 0;
     if (s_tc_CL)
+    {
         tputs(s_tc_CL,g_tc_LINES,putchr);
+    }
     else if (g_tc_CD) {
         home_cursor();
         tputs(g_tc_CD,g_tc_LINES,putchr);
     }
     else {
         for (int i = 0; i < g_tc_LINES; i++)
+        {
             putchr('\n');
+        }
         home_cursor();
     }
     tputs(g_tc_CR,1,putchr);
@@ -1719,7 +1917,9 @@ void goto_xy(int to_col, int to_line)
     int  cmcost;
 
     if (g_term_col == to_col && g_term_line == to_line)
+    {
         return;
+    }
     if (*g_tc_CM && !g_muck_up_clear) {
         str = tgoto(g_tc_CM,to_col,to_line);
         cmcost = strlen(str);
@@ -1730,9 +1930,13 @@ void goto_xy(int to_col, int to_line)
 
     int ycost = (to_line - g_term_line);
     if (ycost < 0)
+    {
         ycost = (s_upcost? -ycost * s_upcost : 7777);
+    }
     else if (ycost > 0)
+    {
         g_term_col = 0;
+    }
 
     int xcost = (to_col - g_term_col);
     if (xcost < 0) {
@@ -1741,10 +1945,14 @@ void goto_xy(int to_col, int to_line)
             xcost = 0;
         }
         else
+        {
             xcost = -xcost * s_leftcost;
+        }
     }
     else if (xcost > 0 && cmcost < 9999)
+    {
         xcost = 9999;
+    }
 
     if (cmcost <= xcost + ycost) {
         tputs(str,1,putchr);
@@ -1754,25 +1962,41 @@ void goto_xy(int to_col, int to_line)
     }
 
     if (ycost == 7777)
+    {
         home_cursor();
+    }
 
     if (to_line >= g_term_line)
-        while(g_term_line < to_line) newline();
+    {
+        while(g_term_line < to_line)
+        {
+            newline();
+        }
+    }
     else
-        while(g_term_line > to_line) up_line();
+    {
+        while(g_term_line > to_line)
+        {
+            up_line();
+        }
+    }
 
     if (to_col >= g_term_col)
+    {
         while (g_term_col < to_col)
         {
             g_term_col++;
             putchar(' ');
         }
+    }
     else
+    {
         while (g_term_col > to_col)
         {
             g_term_col--;
             backspace();
         }
+    }
 }
 
 static void line_col_calcs()
@@ -1781,24 +2005,36 @@ static void line_col_calcs()
         if (!g_initlines || !g_option_def_vals[OI_INITIAL_ARTICLE_LINES]) {
             /* no -i or unreasonable value for g_initlines */
             if (s_outspeed >= B9600)    /* whole page at >= 9600 baud */
+            {
                 g_initlines = g_tc_LINES;
+            }
             else if (s_outspeed >= B4800)       /* 16 lines at 4800 */
+            {
                 g_initlines = 16;
+            }
             else                        /* otherwise just header */
+            {
                 g_initlines = 8;
+            }
         }
         /* Check for g_initlines bigger than the screen and fix it! */
         if (g_initlines > g_tc_LINES)
+        {
             g_initlines = g_tc_LINES;
+        }
     }
     else {                              /* not a crt */
         g_tc_LINES = 30000;             /* so don't page */
         s_tc_CL = "\n\n";                       /* put a couple of lines between */
         if (!g_initlines || !g_option_def_vals[OI_INITIAL_ARTICLE_LINES])
+        {
             g_initlines = 8;            /* make g_initlines reasonable */
+        }
     }
     if (g_tc_COLS <= 0)
+    {
         g_tc_COLS = 80;
+    }
     s_resize_win();     /* let various parts know */
 }
 
@@ -1872,7 +2108,9 @@ void termlib_reset()
 void xmouse_init(const char *progname)
 {
     if (!g_can_home || !g_use_threads)
+    {
         return;
+    }
     char *s = get_val("XTERMMOUSE");
     if (s && *s) {
         interp(g_msg, sizeof g_msg, s);
@@ -1896,7 +2134,9 @@ void xmouse_check()
         }
         else if (g_general_mode == GM_INPUT || g_general_mode == GM_PROMPT
               || (g_muck_up_clear && g_general_mode != GM_SELECTOR))
+        {
             turn_it_on = false;
+        }
         else {
             interp(g_msg, sizeof g_msg, g_mouse_modes);
             turn_it_on = (strchr(g_msg, static_cast<char>(g_mode)) != nullptr);
@@ -1946,14 +2186,18 @@ void xmouse_check()
                     j = strlen(s);
                 }
                 else
+                {
                     g_mousebar_width += (j < 2? 3+1 : (j == 2? 4+1
                                                      : (j < 5? j: 5+1)));
+                }
                 s += j + 1;
             }
             xmouse_on();
         }
         else
+        {
             xmouse_off();
+        }
         g_mouse_is_down = false;
     }
 }
@@ -1985,13 +2229,18 @@ void draw_mousebar(int limit, bool restore_cursor)
 
     g_mousebar_width = 0;
     if (g_mousebar_cnt == 0)
+    {
         return;
+    }
 
     char *s = s_mousebar_btns;
     char *t = g_msg;
     for (int i = 0; i < g_mousebar_cnt; i++) {
         if (*s == '[') {
-            while (*++s) *t++ = *s;
+            while (*++s)
+            {
+                *t++ = *s;
+            }
             s++;
         }
         else {
@@ -2001,11 +2250,17 @@ void draw_mousebar(int limit, bool restore_cursor)
                 /* FALL THROUGH */
               case 1:  case 2:
                 *t++ = ' ';
-                while (*s) *t++ = *s++;
+                while (*s)
+                {
+                    *t++ = *s++;
+                }
                 *t++ = ' ';
                 break;
               case 3:  case 4:
-                while (*s) *t++ = *s++;
+                while (*s)
+                {
+                    *t++ = *s++;
+                }
                 break;
               default:
                 strncpy(t, s, 5);
@@ -2035,7 +2290,9 @@ void draw_mousebar(int limit, bool restore_cursor)
     }
     g_term_col = g_tc_COLS-1;
     if (restore_cursor)
+    {
         goto_xy(save_col, save_line);
+    }
 }
 
 static void mouse_input(const char *cp)
@@ -2044,7 +2301,9 @@ static void mouse_input(const char *cp)
     static int last_x, last_y;
 
     if (cp[2] < ' ' || cp[2] > ' '+3)
+    {
         return;
+    }
     int btn = (cp[2] & 3);
     int x = cp[1] - 33;
     int y = cp[0] - 33;
@@ -2054,7 +2313,9 @@ static void mouse_input(const char *cp)
         double this_time = current_time();
         if (last_btn == btn && last_y == y && this_time - last_time <= 0.75
          && (last_x == x || last_x == x-1 || last_x == x+1))
+        {
             btn |= 4;
+        }
         last_time = this_time;
         last_btn = (btn & 3);
         last_x = x;
@@ -2063,16 +2324,24 @@ static void mouse_input(const char *cp)
     }
     else {
         if (!g_mouse_is_down)
+        {
             return;
+        }
         g_mouse_is_down = false;
     }
 
     if (g_general_mode == GM_SELECTOR)
+    {
         selector_mouse(btn, x,y, last_btn, last_x,last_y);
+    }
     else if (g_mode == MM_ARTICLE || g_mode == MM_PAGER)
+    {
         pager_mouse(btn, x,y, last_btn, last_x,last_y);
+    }
     else
+    {
         pushchar(' ');
+    }
 }
 
 bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
@@ -2085,7 +2354,9 @@ bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         x -= col-1;
         for (int i = 0; i < s_mousebar_start; i++) {
             if (*s == '[')
+            {
                 s += strlen(s) + 1;
+            }
             s += strlen(s) + 1;
         }
         while (true) {
@@ -2095,7 +2366,10 @@ bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             if (*s == '[') {
                 s += i + 1;
                 j = 0;
-                while (*++t == ' ') j++;
+                while (*++t == ' ')
+                {
+                    j++;
+                }
             }
             else if (i <= 2) {
                 i = 3 + (i==2) + 1;
@@ -2110,7 +2384,9 @@ bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                 int tline = g_term_line;
                 goto_xy(col+j,g_tc_LINES-1);
                 if (btn == 3)
+                {
                     color_object(COLOR_MOUSE, true);
+                }
                 if (s == t) {
                     for (int k = 0; k < 5 && *t; k++, t++)
                     {
@@ -2126,15 +2402,21 @@ bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                     }
                 }
                 if (btn == 3)
+                {
                     color_pop();        /* of COLOR_MOUSE */
+                }
                 goto_xy(tcol,tline);
                 fflush(stdout);
                 if (btn == 3 && x > 0 && x < i)
+                {
                     pushstring(s,0);
+                }
                 break;
             }
             if (!(x_clk -= i))
+            {
                 break;
+            }
             x -= i;
             col += i;
             s += strlen(s) + 1;
@@ -2182,7 +2464,9 @@ char *tc_color_capability(const char *capability)
 {
     for (int c = 0; c < s_tc_string_cnt; c++) {
         if (!strcmp(s_tc_strings[c].capability,capability))
+        {
             return s_tc_strings[c].string;
+        }
     }
     return nullptr;
 }

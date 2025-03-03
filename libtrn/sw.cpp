@@ -33,14 +33,18 @@ void sw_file(char **tcbufptr)
         stat_t switch_file_stat{};
         fstat(initfd,&switch_file_stat);
         if (switch_file_stat.st_size >= TCBUF_SIZE-1)
+        {
             *tcbufptr = saferealloc(*tcbufptr,(MEM_SIZE)switch_file_stat.st_size+1);
+        }
         if (switch_file_stat.st_size) {
             int len = read(initfd,*tcbufptr,(int)switch_file_stat.st_size);
             (*tcbufptr)[len] = '\0';
             sw_list(*tcbufptr);
         }
         else
+        {
             **tcbufptr = '\0';
+        }
         close(initfd);
     }
 }
@@ -59,11 +63,15 @@ void sw_list(char *swlist)
             for (;;) {
                 s = skip_space(s);
                 if (*s != '#')
+                {
                     break;
+                }
                 s = skip_ne(s, '\n');
             }
             if (p != swlist)
+            {
                 *p++ = '\0';            /* chop here */
+            }
         }
         else if (inquote == *s) {
             s++;                        /* delete trailing quote */
@@ -81,7 +89,9 @@ void sw_list(char *swlist)
             s++;
         }
         else
+        {
             *p++ = *s++;                /* normal char */
+        }
     }
     *p++ = '\0';
     *p = '\0';                          /* put an extra null on the end */
@@ -91,7 +101,10 @@ void sw_list(char *swlist)
     }
     for (char *c = swlist; *c; /* p += strlen(p)+1 */ ) {
         decode_switch(c);
-        while (*c++) ;                  /* point at null + 1 */
+        while (*c++)
+        {
+                                        /* point at null + 1 */
+        }
     }
 }
 
@@ -109,7 +122,9 @@ void decode_switch(const char *s)
     if (*s != '-' && *s != '+') {       /* newsgroup pattern */
         setngtodo(s);
         if (g_mode == MM_INITIALIZING)
+        {
             g_ng_min_toread = 0;
+        }
     }
     else {                              /* normal switch */
         bool upordown = *s == '-' ? true : false;
@@ -123,9 +138,13 @@ void decode_switch(const char *s)
             set_option(OI_USE_ADD_SEL, YESorNO(upordown));
             set_option(OI_USE_NEWSGROUP_SEL, YESorNO(upordown));
             if (upordown)
+            {
                 set_option(OI_INITIAL_GROUP_LIST, YESorNO(false));
+            }
             else
+            {
                 set_option(OI_USE_NEWSRC_SEL, YESorNO(false));
+            }
             break;
         case 'a':
             set_option(OI_BKGND_THREADING, YESorNO(!upordown));
@@ -143,11 +162,17 @@ void decode_switch(const char *s)
             g_checkflag = upordown;
             break;
         case 'C':
-            if (*++s == '=') s++;
+            if (*++s == '=')
+            {
+                s++;
+            }
             set_option(OI_CHECKPOINT_NEWSRC_FREQUENCY, s);
             break;
         case 'd': {
-            if (*++s == '=') s++;
+            if (*++s == '=')
+            {
+                s++;
+            }
             set_option(OI_SAVE_DIR, s);
             break;
         }
@@ -177,19 +202,25 @@ void decode_switch(const char *s)
         case 'E':
         {
             if (*++s == '=')
+            {
                 s++;
+            }
             strcpy(tmpbuf,s);
             char *tmp = strchr(tmpbuf,'=');
             if (tmp) {
                 *tmp++ = '\0';
                 tmp = export_var(tmpbuf,tmp) - (tmp-tmpbuf);
                 if (g_mode == MM_INITIALIZING)
+                {
                     save_init_environment(tmp);
+                }
             }
             else {
                 tmp = export_var(tmpbuf,"") - strlen(tmpbuf) - 1;
                 if (g_mode == MM_INITIALIZING)
+                {
                     save_init_environment(tmp);
+                }
             }
             break;
         }
@@ -209,17 +240,24 @@ void decode_switch(const char *s)
             if (!s[1]) {
                 /* Free old g_user_htype list */
                 while (g_user_htype_cnt > 1)
+                {
                     free(g_user_htype[--g_user_htype_cnt].name);
+                }
                 memset((char*)g_user_htypeix,0,26);
             }
             /* FALL THROUGH */
         case 'H':
             if (g_checkflag)
+            {
                 break;
+            }
             set_header(s+1,*s == 'h'? HT_HIDE : HT_MAGIC, upordown);
             break;
         case 'i':
-            if (*++s == '=') s++;
+            if (*++s == '=')
+            {
+                s++;
+            }
             set_option(OI_INITIAL_ARTICLE_LINES, s);
             break;
         case 'I':
@@ -229,7 +267,10 @@ void decode_switch(const char *s)
             set_option(OI_FILTER_CONTROL_CHARACTERS, YESorNO(!upordown));
             break;
         case 'J':
-            if (*++s == '=') s++;
+            if (*++s == '=')
+            {
+                s++;
+            }
             set_option(OI_JOIN_SUBJECT_LINES,
                        upordown && *s? s : YESorNO(upordown));
             break;
@@ -247,21 +288,31 @@ void decode_switch(const char *s)
             break;
         case 'M':
             if (upordown)
+            {
                 set_option(OI_SAVEFILE_TYPE, "mail");
+            }
             break;
         case 'm':
             set_option(OI_PAGER_LINE_MARKING, s+1);
             break;
         case 'N':
             if (upordown)
+            {
                 set_option(OI_SAVEFILE_TYPE, "norm");
+            }
             break;
         case 'o':
-            if (*++s == '=') s++;
+            if (*++s == '=')
+            {
+                s++;
+            }
             set_option(OI_OLD_MTHREADS_DATABASE, s);
             break;
         case 'O':
-            if (*++s == '=') s++;
+            if (*++s == '=')
+            {
+                s++;
+            }
             set_option(OI_NEWS_SEL_MODE, s);
             if (*++s) {
                 char tmpbuf[4];
@@ -270,9 +321,14 @@ void decode_switch(const char *s)
             }
             break;
         case 'p':
-            if (*++s == '=') s++;
+            if (*++s == '=')
+            {
+                s++;
+            }
             if (!upordown)
+            {
                 s = YESorNO(false);
+            }
             else {
                 switch (*s) {
                 case '+':
@@ -292,18 +348,27 @@ void decode_switch(const char *s)
             set_option(OI_NEWGROUP_CHECK, YESorNO(!upordown));
             break;
         case 'Q':
-            if (*++s == '=') s++;
+            if (*++s == '=')
+            {
+                s++;
+            }
             set_option(OI_CHARSET, s);
             break;
         case 'r':
             set_option(OI_RESTART_AT_LAST_GROUP, YESorNO(upordown));
             break;
         case 's':
-            if (*++s == '=') s++;
+            if (*++s == '=')
+            {
+                s++;
+            }
             set_option(OI_INITIAL_GROUP_LIST, isdigit(*s)? s : YESorNO(false));
             break;
         case 'S':
-            if (*++s == '=') s++;
+            if (*++s == '=')
+            {
+                s++;
+            }
             set_option(OI_SCANMODE_COUNT, s);
             break;
         case 't':
@@ -330,39 +395,60 @@ void decode_switch(const char *s)
             trn_version();
             newline();
             if (g_mode == MM_INITIALIZING)
+            {
                 exit(0);
+            }
             break;
         case 'x':
-            if (*++s == '=') s++;
+            if (*++s == '=')
+            {
+                s++;
+            }
             if (isdigit(*s)) {
                 set_option(OI_ARTICLE_TREE_LINES, s);
                 s = skip_digits(s);
             }
             if (*s)
+            {
                 set_option(OI_NEWS_SEL_STYLES, s);
+            }
             set_option(OI_USE_THREADS, YESorNO(upordown));
             break;
         case 'X':
-            if (*++s == '=') s++;
+            if (*++s == '=')
+            {
+                s++;
+            }
             if (isdigit(*s)) {
                 set_option(OI_USE_NEWS_SEL, s);
                 s = skip_digits(s);
             }
             else
+            {
                 set_option(OI_USE_NEWS_SEL, YESorNO(upordown));
+            }
             if (*s)
+            {
                 set_option(OI_NEWS_SEL_CMDS, s);
+            }
             break;
         case 'z':
-            if (*++s == '=') s++;
+            if (*++s == '=')
+            {
+                s++;
+            }
             set_option(OI_DEFAULT_REFETCH_TIME,
                        upordown && *s? s : YESorNO(upordown));
             break;
         default:
             if (g_verbose)
+            {
                 printf("\nIgnoring unrecognized switch: -%c\n", *s);
+            }
             else
+            {
                 printf("\nIgnoring -%c\n", *s);
+            }
             termdown(2);
             break;
         }
@@ -385,7 +471,9 @@ void write_init_environment(FILE *fp)
     for (int i = 0; i < s_init_environment_cnt; i++) {
         char *s = strchr(s_init_environment_strings[i], '=');
         if (!s)
+        {
             continue;
+        }
         *s = '\0';
         fprintf(fp, "%s=%s\n", s_init_environment_strings[i],quote_string(s+1));
         *s = '=';

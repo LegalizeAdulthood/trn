@@ -53,7 +53,9 @@ static bool DoMatch(const char *text, const char *p)
 {
     for ( ; *p; text++, p++) {
         if (*text == '\0' && *p != '*')
+        {
             return false;
+        }
         switch (*p) {
         case '\\':
             /* Literal match with following character. */
@@ -61,37 +63,53 @@ static bool DoMatch(const char *text, const char *p)
             /* FALLTHROUGH */
         default:
             if (*text != *p)
+            {
                 return false;
+            }
             continue;
         case '?':
             /* Match anything. */
             continue;
         case '*':
             while (*++p == '*')
+            {
                 /* Consecutive stars act just like one. */
                 continue;
+            }
             if (*p == '\0')
+            {
                 /* Trailing star matches everything. */
                 return true;
+            }
             while (*text)
             {
                 if (DoMatch(text++, p))
+                {
                     return true;
+                }
             }
             return false;
         case '[':
         {
             const bool reverse = p[1] == NEGATE_CLASS;
             if (reverse)
+            {
                 /* Inverted character class. */
                 p++;
+            }
             bool matched{};
             for (int last = 0400; *++p && *p != ']'; last = *p)
+            {
                 /* This next line requires a good C compiler. */
                 if (*p == '-' ? *text <= *++p && *text >= last : *text == *p)
+                {
                     matched = true;
+                }
+            }
             if (matched == reverse)
+            {
                 return false;
+            }
             continue;
         }
         }
@@ -112,7 +130,9 @@ bool wildmat(const char *text, const char *p)
 {
 #ifdef  OPTIMIZE_JUST_STAR
     if (p[0] == '*' && p[1] == '\0')
+    {
         return true;
+    }
 #endif  /* OPTIMIZE_JUST_STAR */
     return DoMatch(text, p) == true;
 }

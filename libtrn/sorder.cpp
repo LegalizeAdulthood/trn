@@ -51,7 +51,9 @@ void s_sort_basic()
 
     int n = g_s_ent_sort_max + 1;
     if (n < 1)
+    {
         return;         /* nothing to sort */
+    }
 
     for (int i = n/2; i >= 1; i--) {
         /* begin heap readjust */
@@ -60,9 +62,13 @@ void s_sort_basic()
         while (j <= n) {
             if (j < n
              && s_compare(g_s_ent_sort[SOFF(j)],g_s_ent_sort[SOFF(j+1)]) < 0)
+            {
                 j++;
+            }
             if (s_compare(t1,g_s_ent_sort[SOFF(j)]) > 0)
+            {
                 break;          /* out of while loop */
+            }
             else {
                 g_s_ent_sort[SOFF(j/2)] = g_s_ent_sort[SOFF(j)];
                 j = j*2;
@@ -81,9 +87,13 @@ void s_sort_basic()
         while (j <= i) {
             if (j < i
              && s_compare(g_s_ent_sort[SOFF(j)],g_s_ent_sort[SOFF(j+1)]) < 0)
+            {
                 j++;
+            }
             if (s_compare(t1,g_s_ent_sort[SOFF(j)]) > 0)
+            {
                 break;  /* out of while */
+            }
             else {
                 g_s_ent_sort[SOFF(j/2)] = g_s_ent_sort[SOFF(j)];
                 j = j*2;
@@ -105,15 +115,21 @@ void s_sort()
     g_s_order_changed = false;
     /* rebuild the indexes */
     for (long i = 0; i <= g_s_ent_sort_max; i++)
+    {
         g_s_ent_index[g_s_ent_sort[i]] = i;
+    }
 }
 
 void s_order_clean()
 {
     if (g_s_ent_sort)
+    {
         free(g_s_ent_sort);
+    }
     if (g_s_ent_index)
+    {
         free(g_s_ent_index);
+    }
 
     g_s_ent_sort = nullptr;
     g_s_contexts[g_s_cur_context].ent_sort = g_s_ent_sort;
@@ -132,7 +148,9 @@ void s_order_add(long ent)
     long size;
 
     if (ent < g_s_ent_index_max && g_s_ent_index[ent] >= 0)
+    {
         return;         /* entry is already in the list */
+    }
 
     /* add entry to end of sorted list */
     g_s_ent_sort_max += 1;
@@ -148,7 +166,9 @@ void s_order_add(long ent)
     if (ent > g_s_ent_index_max) {
         long old = g_s_ent_index_max;
         if (g_s_ent_index_max == -1)
+        {
             g_s_ent_index_max += 1;
+        }
         g_s_ent_index_max = (ent/100+1) * 100;  /* round up */
         size = (g_s_ent_index_max + 1) * sizeof (long);
         g_s_ent_index = (long*)saferealloc((char*)g_s_ent_index,size);
@@ -156,7 +176,9 @@ void s_order_add(long ent)
         g_s_contexts[g_s_cur_context].ent_index = g_s_ent_index;
         /* initialize new indexes */
         for (long i = old + 1; i < g_s_ent_index_max; i++)
+        {
             g_s_ent_index[i] = -1;      /* -1 == not a legal entry */
+        }
     }
     g_s_ent_index[ent] = g_s_ent_sort_max;
     g_s_order_changed = true;
@@ -165,24 +187,36 @@ void s_order_add(long ent)
 long s_prev(long ent)
 {
     if (ent < 0 || ent > g_s_ent_index_max || g_s_ent_sorted_max < 0)
+    {
         return 0;
+    }
     if (g_s_order_changed)
+    {
         s_sort();
+    }
     long tmp = g_s_ent_index[ent];
     if (tmp <= 0)
+    {
         return 0;
+    }
     return g_s_ent_sort[tmp-1];
 }
 
 long s_next(long ent)
 {
     if (ent < 0 || ent > g_s_ent_index_max || g_s_ent_sorted_max < 0)
+    {
         return 0;
+    }
     if (g_s_order_changed)
+    {
         s_sort();
+    }
     long tmp = g_s_ent_index[ent];
     if (tmp < 0 || tmp == g_s_ent_sorted_max)
+    {
         return 0;
+    }
     return g_s_ent_sort[tmp+1];
 }
 
@@ -191,8 +225,12 @@ long s_next(long ent)
 long s_prev_elig(long a)
 {
     while ((a = s_prev(a)) != 0)
+    {
         if (s_eligible(a))
+        {
             return a;
+        }
+    }
     return 0L;
 }
 
@@ -201,25 +239,37 @@ long s_prev_elig(long a)
 long s_next_elig(long a)
 {
     while ((a = s_next(a)) != 0)
+    {
         if (s_eligible(a))
+        {
             return a;
+        }
+    }
     return 0L;
 }
 
 long s_first()
 {
     if (g_s_order_changed)
+    {
         s_sort();
+    }
     if (g_s_ent_sorted_max < 0)
+    {
         return 0;
+    }
     return g_s_ent_sort[0];
 }
 
 long s_last()
 {
     if (g_s_order_changed)
+    {
         s_sort();
+    }
     if (g_s_ent_sorted_max < 0)
+    {
         return 0;
+    }
     return g_s_ent_sort[g_s_ent_sorted_max];
 }

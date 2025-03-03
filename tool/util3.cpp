@@ -61,10 +61,14 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
         int len = strlen(g_dot_dir.c_str());
         safecpy(dest, g_dot_dir.c_str(), destsize);
         if (len < destsize)
+        {
             safecpy(dest+len, pattern+2, destsize - len);
+        }
     }
     else
+    {
         safecpy(dest, pattern, destsize);
+    }
     return nullptr; /* This is wrong on purpose */
 }
 

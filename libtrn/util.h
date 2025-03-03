@@ -94,7 +94,9 @@ inline char *ini_value(INI_WORDS *words, int num)
 inline void safefree(void *ptr)
 {
     if (ptr)
+    {
         free(ptr);
+    }
 }
 
 template <typename T>

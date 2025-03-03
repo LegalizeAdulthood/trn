@@ -321,7 +321,9 @@ protected:
     void TearDown() override
     {
         if (m_after)
+        {
             free(m_after);
+        }
         utf_init(CHARSET_NAME_UTF8, CHARSET_NAME_UTF8);
 
         Test::TearDown();
@@ -380,7 +382,9 @@ protected:
     void TearDown() override
     {
         if (m_buffer)
+        {
             free(m_buffer);
+        }
         Test::TearDown();
     }
 

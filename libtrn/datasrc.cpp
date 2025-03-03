@@ -1237,7 +1237,9 @@ static int get_near_miss()
     for (int i = 0; i < s_ngn; i++) {
         char* cp = strchr(s_ngptrs[i], ' ');
         if (cp)
+        {
             *cp = '\0';
+        }
         printf("  %d.  %s\n", i+1, s_ngptrs[i]);
         sprintf(op++, "%d", i+1);       /* Expensive, but avoids ASCII deps */
         if (cp)

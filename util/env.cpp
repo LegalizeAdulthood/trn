@@ -50,9 +50,13 @@ static bool set_p_host_name(char *tmpbuf);
 void set_environment(std::function<char *(const char *)> getenv_fn)
 {
     if (getenv_fn)
+    {
         s_getenv_fn = std::move(getenv_fn);
+    }
     else
+    {
         s_getenv_fn = getenv;
+    }
 }
 
 bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &set_user_name_fn,
@@ -62,21 +66,31 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
 
     const char *home_dir = s_getenv_fn("HOME");
     if (home_dir == nullptr)
+    {
         home_dir = s_getenv_fn("LOGDIR");
+    }
     if (home_dir)
+    {
         g_home_dir = savestr(home_dir);
+    }
 
     const char *val = s_getenv_fn("TMPDIR");
     if (val == nullptr)
+    {
         g_tmp_dir = get_val_const("TMP","/tmp");
+    }
     else
+    {
         g_tmp_dir = val;
+    }
 
     /* try to set g_login_name */
     if (lax) {
         const char *login_name = s_getenv_fn("USER");
         if (!login_name)
+        {
             login_name = s_getenv_fn("LOGNAME");
+        }
         if (login_name && g_login_name.empty())
         {
             g_login_name  = login_name;
@@ -124,16 +138,22 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     if (!set_host_name_fn(tcbuf))
     {
         if (!g_local_host)
+        {
             g_local_host = savestr("");
+        }
         fully_successful = false;
     }
 
     {
         const char* cp = get_val_const("NETSPEED","5");
         if (*cp == 'f')
+        {
             g_net_speed = 10;
+        }
         else if (*cp == 's')
+        {
             g_net_speed = 1;
+        }
         else {
             g_net_speed = atoi(cp);
             if (g_net_speed < 1)
@@ -166,10 +186,14 @@ void env_final()
 static void env_init2()
 {
     if (!g_dot_dir.empty()) /* Avoid running multiple times. */
+    {
         return;
+    }
 
     if (!g_home_dir)
+    {
         g_home_dir = savestr("/");
+    }
     g_dot_dir = get_val_const("DOTDIR",g_home_dir);
     g_trn_dir = filexp(get_val_const("TRNDIR",TRNDIR));
     g_lib = filexp(NEWSLIB);
@@ -251,7 +275,9 @@ static bool set_user_name(char *tmpbuf)
         std::string            value{buffer.get()};
         std::string::size_type backslash = value.find_last_of('\\');
         if (backslash != std::string::npos)
+        {
             value = value.substr(backslash + 1);
+        }
         g_login_name = value;
     }
     if (g_real_name.empty())
@@ -330,41 +356,59 @@ static bool set_p_host_name(char *tmpbuf)
     {
         fp = fopen(filexp(filename), "r");
         if (fp == nullptr)
+        {
             strcpy(tmpbuf, ".");
+        }
         else
         {
             fgets(tmpbuf, TCBUF_SIZE, fp);
             fclose(fp);
             char *end = tmpbuf + strlen(tmpbuf) - 1;
             if (*end == '\n')
+            {
                 *end = '\0';
+            }
         }
     }
     else
+    {
         strcpy(tmpbuf, PHOSTNAME);
+    }
 
     if (tmpbuf[0] == '.') {
         if (tmpbuf[1] != '\0')
+        {
             strcpy(g_buf,tmpbuf);
+        }
         else
+        {
             g_buf[0] = '\0';
+        }
         strcpy(tmpbuf,g_local_host);
         strcat(tmpbuf,g_buf);
     }
 
     if (!strchr(tmpbuf,'.')) {
         if (tmpbuf[0])
+        {
             strcat(tmpbuf, ".");
+        }
 #ifdef HAS_RES_INIT
         if (!(_res.options & RES_INIT))
+        {
             res_init();
+        }
         if (_res.defdname != nullptr)
+        {
             strcat(tmpbuf,_res.defdname);
+        }
         else
 #endif
 #ifdef HAS_GETDOMAINNAME
         if (getdomainname(g_buf,LBUFLEN) == 0)
+        {
             strcat(tmpbuf,g_buf);
+        }
         else
 #endif
         {
@@ -380,7 +424,9 @@ char *get_val(const char *nam, char *def)
 {
     char *val = s_getenv_fn(nam);
     if (val == nullptr || !*val)
+    {
         return def;
+    }
     return val;
 }
 
@@ -451,7 +497,9 @@ void un_export(char *export_val)
 void re_export(char *export_val, const char *new_val, int limit)
 {
     if (export_val[-1] == '=' && export_val[-2] == '_' && !export_val[1])
+    {
         export_val[-2] = export_val[0];
+    }
     safecpy(export_val, new_val, limit+1);
 }
 
@@ -461,7 +509,9 @@ static int envix(const char *nam, int len)
 
     for (i = 0; environ[i]; i++) {
         if (!strncmp(environ[i],nam,len) && environ[i][len] == '=')
+        {
             break;                      /* strncmp must come first to avoid */
+        }
     }                                   /* potential SEGV's */
     return i;
 }

@@ -68,7 +68,9 @@ void util_init()
 
     char *cp = g_buf;
     for (int i = 0; i < 512; i++)
+    {
         *cp++ = 'X';
+    }
     *cp = '\0';
     s_newsactive_export = export_var("NEWSACTIVE", g_buf);
     s_grpdesc_export = export_var("NEWSDESCRIPTIONS", g_buf);
@@ -110,9 +112,13 @@ int doshell(const char *shell, const char *s)
     if (g_datasrc && (g_datasrc->flags & DF_REMOTE)) {
         re_export(s_nntpserver_export,g_datasrc->newsid,512);
         if (g_datasrc->nntplink.flags & NNTP_FORCE_AUTH_NEEDED)
+        {
             re_export(s_nntpforce_export,"yes",3);
+        }
         else
+        {
             un_export(s_nntpforce_export);
+        }
         if (g_datasrc->auth_user) {
             int fd = open(g_nntp_auth_file.c_str(), O_WRONLY|O_CREAT, 0600);
             if (fd >= 0) {
@@ -129,31 +135,49 @@ int doshell(const char *shell, const char *s)
             int len = strlen(s_nntpserver_export);
             sprintf(g_buf,";%d",g_nntplink.port_number);
             if (len + (int)strlen(g_buf) < 511)
+            {
                 strcpy(s_nntpserver_export+len, g_buf);
+            }
         }
         if (g_datasrc->act_sf.fp)
+        {
             re_export(s_newsactive_export, g_datasrc->extra_name, 512);
+        }
         else
+        {
             re_export(s_newsactive_export, "none", 512);
+        }
     } else {
         un_export(s_nntpserver_export);
         un_export(s_nntpforce_export);
         if (g_datasrc)
+        {
             re_export(s_newsactive_export, g_datasrc->newsid, 512);
+        }
         else
+        {
             un_export(s_newsactive_export);
+        }
     }
     if (g_datasrc)
+    {
         re_export(s_grpdesc_export, g_datasrc->grpdesc, 512);
+    }
     else
+    {
         un_export(s_grpdesc_export);
+    }
     interp(g_buf,64-1+2,"%I");
     g_buf[strlen(g_buf)-1] = '\0';
     re_export(s_quotechars_export, g_buf+1, 64);
     if (shell == nullptr)
+    {
         shell = get_val_const("SHELL", nullptr);
+    }
     if (shell == nullptr)
+    {
         shell = PREFSHELL;
+    }
     termlib_reset();
 #ifdef MSDOS
     intptr_t status = spawnl(P_WAIT, shell, shell, "/c", s, nullptr);
@@ -167,9 +191,13 @@ int doshell(const char *shell, const char *s)
         }
 
         if (*s)
+        {
             execl(shell, shell, "-c", s, nullptr);
+        }
         else
+        {
             execl(shell, shell, nullptr, nullptr, nullptr);
+        }
         _exit(127);
     }
     sigignore(SIGINT);
@@ -178,11 +206,18 @@ int doshell(const char *shell, const char *s)
 #endif 
     g_waiting = true;
     while ((w = wait(&status)) != pid)
+    {
         if (w == -1 && errno != EINTR)
+        {
             break;
+        }
+    }
     if (w == -1)
+    {
         ret = -1;
+    }
     else
+    {
 #ifdef USE_WIFSTAT
         ret = WEXITSTATUS(status);
 #else
@@ -192,6 +227,7 @@ int doshell(const char *shell, const char *s)
         ret = status;
 #endif /* UNION_WAIT */
 #endif /* USE_WIFSTAT */
+    }
 #endif /* !MSDOS */
     termlib_init();
     xmouse_check();
@@ -206,7 +242,9 @@ int doshell(const char *shell, const char *s)
     sigset(SIGTTIN,stop_catcher);
 #endif
     if (g_datasrc && g_datasrc->auth_user)
+    {
         remove(g_nntp_auth_file.c_str());
+    }
     return ret;
 }
 
@@ -232,9 +270,13 @@ char *saferealloc(char *where, MEM_SIZE size)
     char* ptr;
 
     if (!where)
+    {
         ptr = (char*) malloc(size ? size : (MEM_SIZE)1);
+    }
     else
+    {
         ptr = (char*) realloc(where, size ? size : (MEM_SIZE)1);
+    }
     if (!ptr) {
         fputs(s_nomem,stdout);
         sig_catcher(0);
@@ -251,18 +293,30 @@ char *safecat(char *to, const char *from, int len)
 
     len--;                              /* leave room for null */
     if (*dest) {
-        while (len && *dest++) len--;
+        while (len && *dest++)
+        {
+            len--;
+        }
         if (len) {
             len--;
             *(dest-1) = ' ';
         }
     }
     if (from)
-        while (len && (*dest++ = *from++)) len--;
+    {
+        while (len && (*dest++ = *from++))
+        {
+            len--;
+        }
+    }
     if (len)
+    {
         dest--;
+    }
     if (*(dest-1) == '\n')
+    {
         dest--;
+    }
     *dest = '\0';
     return to;
 }
@@ -344,7 +398,9 @@ char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp)
         nextch = getc(fp);
         if ((nextch) == EOF) {
             if (!bufix)
+            {
                 return nullptr;
+            }
             break;
         }
         buffer[bufix++] = (char)nextch;
@@ -378,9 +434,13 @@ void growstr(char **strptr, int *curlen, int newlen)
 {
     if (newlen > *curlen) {             /* need more room? */
         if (*curlen)
+        {
             *strptr = saferealloc(*strptr,(MEM_SIZE)newlen);
+        }
         else
+        {
             *strptr = safemalloc((MEM_SIZE)newlen);
+        }
         *curlen = newlen;
     }
 }
@@ -397,9 +457,13 @@ void setdef(char *buffer, const char *dflt)
         g_s_default_cmd = true;
         g_univ_default_cmd = true;
         if (*dflt == '^' && isupper(dflt[1]))
+        {
             pushchar(Ctl(dflt[1]));
+        }
         else
+        {
             pushchar(*dflt);
+        }
         getcmd(buffer);
     }
 }
@@ -457,9 +521,13 @@ time_t text2secs(const char *s, time_t defSecs)
 
     if (!isdigit(*s)) {
         if (*s == 'm' || *s == 'M')     /* "missing" */
+        {
             return 2;
+        }
         if (*s == 'y' || *s == 'Y')     /* "yes" */
+        {
             return defSecs;
+        }
         return secs;                    /* "never" */
     }
     do {
@@ -481,7 +549,10 @@ time_t text2secs(const char *s, time_t defSecs)
                 break;
             }
             s = skip_alpha(s);
-            if (*s == ',') s++;
+            if (*s == ',')
+            {
+                s++;
+            }
             s = skip_space(s);
         }
         secs += item;
@@ -496,9 +567,13 @@ char *secs2text(time_t secs)
     int items;
 
     if (!secs || (secs & 1))
+    {
         return "never";
+    }
     if (secs & 2)
+    {
         return "missing";
+    }
 
     secs /= 60;
     if (secs >= 24L * 60) {
@@ -554,7 +629,9 @@ char **prep_ini_words(INI_WORDS words[])
             int checksum = 0;
             const char *item;
             for (item = words[i].item; *item; item++)
+            {
                 checksum += (isupper(*item)? tolower(*item) : *item);
+            }
             words[i].checksum = (checksum << 8) + (item - words[i].item);
         }
         words[0].checksum = i;
@@ -593,42 +670,67 @@ void prep_ini_data(char *cp, const char *filename)
                 *t++ = '\0';
                 cp++;
                 if (parse_string(&t, &cp))
+                {
                     cp++;
+                }
 
                 while (*cp) {
                     cp = skip_space(cp);
                     if (*cp == '[')
+                    {
                         break;
+                    }
                     if (*cp == '#')
+                    {
                         s = cp;
+                    }
                     else {
                         s = t;
                         while (*cp && *cp != '\n') {
                             if (*cp == '=')
+                            {
                                 break;
+                            }
                             if (isspace(*cp)) {
                                 if (s == t || t[-1] != ' ')
+                                {
                                     *t++ = ' ';
+                                }
                                 cp++;
                             }
                             else
+                            {
                                 *t++ = *cp++;
+                            }
                         }
                         if (*cp == '=' && t != s) {
-                            while (t != s && isspace(t[-1])) t--;
+                            while (t != s && isspace(t[-1]))
+                            {
+                                t--;
+                            }
                             *t++ = '\0';
                             cp++;
                             if (parse_string(&t, &cp))
+                            {
                                 s = nullptr;
+                            }
                             else
+                            {
                                 s = cp;
+                            }
                         }
                         else
+                        {
                             s = cp;
+                        }
                     }
                     cp++;
                     if (s)
-                        for (cp = s; *cp && *cp++ != '\n'; ) ;
+                    {
+                        for (cp = s; *cp && *cp++ != '\n'; )
+                        {
+                        }
+                    }
                 }
             }
             else {
@@ -639,7 +741,9 @@ void prep_ini_data(char *cp, const char *filename)
             }
         }
         else
+        {
             cp = skip_ne(cp, '\n');
+        }
     }
     *t = '\0';
 }
@@ -650,7 +754,10 @@ bool parse_string(char **to, char **from)
     char* t = *to;
     char* f = *from;
 
-    while (isspace(*f) && *f != '\n') f++;
+    while (isspace(*f) && *f != '\n')
+    {
+        f++;
+    }
 
     char* s;
     for (s = t; *f; f++) {
@@ -662,7 +769,9 @@ bool parse_string(char **to, char **from)
             }
         }
         else if (*f == '\n')
+        {
             break;
+        }
         else if (*f == '\'' || *f == '"') {
             inquote = *f;
             continue;
@@ -673,20 +782,29 @@ bool parse_string(char **to, char **from)
         }
         if (*f == '\\') {
             if (*++f == '\n')
+            {
                 continue;
+            }
             f = interp_backslash(t, f);
             t++;
         }
         else
+        {
             *t++ = *f;
+        }
     }
 #if 0
     if (inquote)
+    {
         printf("Unbalanced quotes.\n");
+    }
 #endif
     inquote = (*f != '\0');
 
-    while (t != s && isspace(t[-1])) t--;
+    while (t != s && isspace(t[-1]))
+    {
+        t--;
+    }
     *t++ = '\0';
 
     *to = t;
@@ -699,7 +817,9 @@ char *next_ini_section(char *cp, char **section, char **cond)
 {
     while (*cp != '[') {
         if (!*cp)
+        {
             return nullptr;
+        }
         cp += strlen(cp) + 1;
         cp += strlen(cp) + 1;
     }
@@ -718,7 +838,9 @@ char *next_ini_section(char *cp, char **section, char **cond)
 char *parse_ini_section(char *cp, INI_WORDS words[])
 {
     if (!*cp)
+    {
         return nullptr;
+    }
 
     char* s;
     char** values = prep_ini_words(words);
@@ -727,7 +849,9 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
         int checksum = 0;
         for (s = cp; *s; s++) {
             if (isupper(*s))
+            {
                 *s = tolower(*s);
+            }
             checksum += *s;
         }
         checksum = (checksum << 8) + (s++ - cp);
@@ -741,19 +865,27 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
                 }
             }
             if (!words[i].checksum)
+            {
                 printf("Unknown option: `%s'.\n",cp);
+            }
             cp = s + strlen(s) + 1;
         }
         else
+        {
             cp = s + 1;
+        }
     }
 
 #ifdef DEBUG
     if (debug & DEB_RCFILES) {
         printf("Ini_words: %s\n", words[0].item);
         for (int i = 1; words[i].checksum; i++)
+        {
             if (values[i])
+            {
                 printf("%s=%s\n",words[i].item,values[i]);
+            }
+        }
     }
 #endif
 
@@ -764,22 +896,33 @@ bool check_ini_cond(char *cond)
 {
     cond = dointerp(g_buf,sizeof g_buf,cond,"!=<>",nullptr);
     char *s = g_buf + strlen(g_buf);
-    while (s != g_buf && isspace(s[-1])) s--;
+    while (s != g_buf && isspace(s[-1]))
+    {
+        s--;
+    }
     *s = '\0';
     const int negate = *cond == '!' ? 1 : 0;
     if (negate != 0)
+    {
         cond++;
+    }
     const int upordown = *cond == '<' ? -1 : (*cond == '>' ? 1 : 0);
     if (upordown != 0)
+    {
         cond++;
+    }
     bool equal = *cond == '=';
     if (equal)
+    {
         cond++;
+    }
     cond = skip_space(cond);
     if (upordown) {
         const int num = atoi(cond) - atoi(g_buf);
         if (!((equal && !num) || (upordown * num < 0)) ^ negate)
+        {
             return false;
+        }
     }
     else if (equal) {
         COMPEX condcompex;
@@ -790,12 +933,16 @@ bool check_ini_cond(char *cond)
             equal = false;
         }
         else
+        {
             equal = execute(&condcompex,g_buf) != nullptr;
+        }
         free_compex(&condcompex);
         return equal;
     }
     else
+    {
         return false;
+    }
     return true;
 }
 
@@ -818,7 +965,9 @@ int edit_file(const char *fname)
     int r = -1;
 
     if (!fname || !*fname)
+    {
         return r;
+    }
 
     /* XXX paranoia check on length */
     sprintf(g_cmd_buf,"%s ",

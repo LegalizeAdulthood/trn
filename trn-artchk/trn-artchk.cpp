@@ -50,10 +50,14 @@ int main(int argc, char *argv[])
 
     g_home_dir = getenv("HOME");
     if (g_home_dir == nullptr)
+    {
         g_home_dir = getenv("LOGDIR");
+    }
     g_dot_dir = getenv("DOTDIR");
     if (g_dot_dir.empty())
+    {
         g_dot_dir = g_home_dir;
+    }
 
     if (argc != 5 || !(max_col_len = atoi(argv[2]))) {
         fprintf(stderr, "Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>\n");
@@ -71,9 +75,13 @@ int main(int argc, char *argv[])
         line_num++;
         buff[strlen(buff)-1] = '\0';
         if (!*buff)
+        {
             break;
+        }
         if (is_hor_space(*buff))
+        {
             continue;
+        }
         cp = strchr(buff, ':');
         if (!cp) {
             printf("\nERROR: line %d is an invalid header line:\n%s\n",
@@ -88,7 +96,8 @@ int main(int argc, char *argv[])
         if (cp - buff == 10 && !strncmp(buff, "Newsgroups", 10)) {
             found_newsgroups = 1;
             for (cp = buff + 11; *cp == ' '; cp++)
-                ;
+            {
+            }
             if (strchr(cp, ' ')) {
                 printf("\n"
                        "ERROR: the \"Newsgroups:\" line has spaces in it that MUST be removed. The\n"
@@ -99,9 +108,13 @@ int main(int argc, char *argv[])
             while (*cp) {
                 char *cp2 = strchr(cp, ',');
                 if (!cp2)
+                {
                     cp2 = cp + strlen(cp);
+                }
                 else
+                {
                     *cp2++ = '\0';
+                }
                 if (ngcnt < MAXNGS) {
                     nglens[ngcnt] = strlen(cp);
                     foundactive[ngcnt] = 0;
@@ -127,17 +140,25 @@ int main(int argc, char *argv[])
         line_num++;
         int col = strlen(buff) - 1;
         if (buff[col] != '\n')
+        {
             printf("\n"
                    "Warning: line %d has no trailing newline character and may get lost.\n",
                    line_num);
+        }
         else
+        {
             buff[col] = '\0';
+        }
         col = 0;
         for (cp = buff; *cp; cp++) {
             if (*cp == '\t')
+            {
                 col += 8 - (col%8);
+            }
             else
+            {
                 col++;
+            }
         }
         if (col > max_col_len) {
             printf("\n"
@@ -150,14 +171,18 @@ int main(int argc, char *argv[])
     if (!cp) {
         cp = filexp(SERVER_NAME);
         if (FILE_REF(cp))
+        {
             cp = nntp_servername(cp);
+        }
     }
     if (strcmp(cp,"local") != 0)
     {
         g_server_name = savestr(cp);
         cp = strchr(g_server_name, ';');
         if (!cp)
+        {
             cp = strchr(g_server_name, ':');
+        }
         if (cp) {
             *cp = '\0';
             g_nntplink.port_number = atoi(cp+1);
@@ -165,20 +190,32 @@ int main(int argc, char *argv[])
         g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
         cp = getenv("NNTP_FORCE_AUTH");
         if (cp != nullptr && (*cp == 'y' || *cp == 'Y'))
+        {
             g_nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
+        }
         if (init_nntp() < 0)
+        {
             g_server_name = nullptr;
+        }
     }
     if (ngcnt) {
         struct stat st;
         if (stat(argv[3], &st) != -1)
+        {
             check_ng = st.st_size > 0 && (fp_ng = fopen(argv[3], "r")) != nullptr;
+        }
         else if (g_server_name && server_connection())
+        {
             check_ng = true;
+        }
         if (stat(argv[4], &st) != -1)
+        {
             check_active = st.st_size > 0 && (fp_active = fopen(argv[4], "r")) != nullptr;
+        }
         else if (g_server_name && server_connection())
+        {
             check_active = true;
+        }
     }
     if (ngcnt && (check_ng || check_active)) {
         int ngleft;
@@ -193,7 +230,9 @@ int main(int argc, char *argv[])
             ngleft = ngcnt;
             while (fgets(buff, LBUFLEN, fp_active)) {
                 if (!ngleft)
+                {
                     break;
+                }
                 for (int i = 0; i < ngcnt; i++) {
                     if (!foundactive[i]) {
                         if (is_hor_space(buff[nglens[i]])
@@ -212,11 +251,15 @@ int main(int argc, char *argv[])
                 if (listactive_works) {
                     sprintf(g_ser_line, "list active %s", ngptrs[i]);
                     if (nntp_command(g_ser_line) <= 0)
+                    {
                         break;
+                    }
                     if (nntp_check() > 0) {
                         while (nntp_gets(g_ser_line, sizeof g_ser_line) >= 0) {
                             if (nntp_at_list_end(g_ser_line))
+                            {
                                 break;
+                            }
                             foundactive[i] = 1;
                         }
                     }
@@ -228,9 +271,13 @@ int main(int argc, char *argv[])
                 else {
                     sprintf(g_ser_line, "GROUP %s", ngptrs[i]);
                     if (nntp_command(g_ser_line) <= 0)
+                    {
                         break;
+                    }
                     if (nntp_check() > 0)
+                    {
                         foundactive[i] = 1;
+                    }
                 }
             }
         }
@@ -242,13 +289,17 @@ int main(int argc, char *argv[])
                     /* issue a description list command */
                     sprintf(g_ser_line, "XGTITLE %s", ngptrs[i]);
                     if (nntp_command(g_ser_line) <= 0)
+                    {
                         break;
+                    }
                     /*$$ use list newsgroups if this fails...? */
                     if (nntp_check() > 0) {
                         /* write results to fp_ng */
                         while (nntp_gets(g_ser_line, sizeof g_ser_line) >= 0) {
                             if (nntp_at_list_end(g_ser_line))
+                            {
                                 break;
+                            }
                             fprintf(fp_ng, "%s\n", g_ser_line);
                         }
                     }
@@ -260,7 +311,9 @@ int main(int argc, char *argv[])
             ngleft = ngcnt;
             while (fgets(buff, LBUFLEN, fp_ng)) {
                 if (!ngleft)
+                {
                     break;
+                }
                 for (int i = 0; i < ngcnt; i++) {
                     if (foundactive[i] && ngptrs[i]) {
                         if (is_hor_space(buff[nglens[i]])
@@ -269,7 +322,9 @@ int main(int argc, char *argv[])
                             *cp++ = '\0';
                             cp = skip_hor_space(cp);
                             if (cp[0] == '?' && cp[1] == '?')
+                            {
                                 cp = "[no description available]\n";
+                            }
                             printf("%-23s %s", buff, cp);
                             free(ngptrs[i]);
                             ngptrs[i] = nullptr;
@@ -295,7 +350,9 @@ int main(int argc, char *argv[])
 
     nntp_close(true);
     if (g_server_name)
+    {
         cleanup_nntp();
+    }
 
     return 0;
 }
@@ -305,9 +362,13 @@ int server_connection()
     static int server_stat = 0;
     if (!server_stat) {
         if (nntp_connect(g_server_name,false) > 0)
+        {
             server_stat = 1;
+        }
         else
+        {
             server_stat = -1;
+        }
     }
     return server_stat == 1;
 }

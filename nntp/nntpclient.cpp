@@ -23,10 +23,14 @@ int nntp_connect(const char *machine, bool verbose)
     int response;
 
     if (g_nntplink.connection)
+    {
         return 1;
+    }
 
     if (g_nntplink.flags & NNTP_FORCE_AUTH_NEEDED)
+    {
         g_nntplink.flags |= NNTP_FORCE_AUTH_NOW;
+    }
     g_nntplink.flags |= NNTP_NEW_CMD_OK;
 #if 0
   try_to_connect:
@@ -40,7 +44,9 @@ int nntp_connect(const char *machine, bool verbose)
         if (atoi(g_ser_line) == response) {
             char tmpbuf[LBUFLEN];
             if (verbose)
+            {
                 printf("failed: %s\n",&g_ser_line[4]);
+            }
             else {
                 sprintf(tmpbuf,"News server \"%s\" is unavailable: %s\n",
                         machine,&g_ser_line[4]);
@@ -51,7 +57,9 @@ int nntp_connect(const char *machine, bool verbose)
         }
     case -1:
         if (verbose)
+        {
             printf("failed.\n");
+        }
         else {
             sprintf(g_ser_line,"News server \"%s\" is unavailable.\n",machine);
             nntp_init_error(g_ser_line);
@@ -60,7 +68,9 @@ int nntp_connect(const char *machine, bool verbose)
         break;
     case NNTP_ACCESS_VAL:
         if (verbose)
+        {
             printf("access denied.\n");
+        }
         else {
             sprintf(g_ser_line,
                     "This machine does not have permission to use the %s news server.\n\n",
@@ -71,17 +81,23 @@ int nntp_connect(const char *machine, bool verbose)
         break;
     case NNTP_NOPOSTOK_VAL:
         if (verbose)
+        {
             printf("Done (but no posting).\n\n");
+        }
         response = 1;
         break;
     case NNTP_POSTOK_VAL:
         if (verbose)
+        {
             printf("Done.\n");
+        }
         response = 1;
         break;
     default:
         if (verbose)
+        {
             printf("unknown response: %d.\n",response);
+        }
         else {
             sprintf(g_ser_line,"\nUnknown response code %d from %s.\n",
                     response,machine);
@@ -106,10 +122,14 @@ char *nntp_servername(char *name)
     if (FILE_REF(name) && (fp = fopen(name, "r")) != nullptr) {
         while (fgets(g_ser_line, sizeof g_ser_line, fp) != nullptr) {
             if (*g_ser_line == '\n' || *g_ser_line == '#')
+            {
                 continue;
+            }
             name = strchr(g_ser_line, '\n');
             if (name != nullptr)
+            {
                 *name = '\0';
+            }
             name = g_ser_line;
             break;
         }
@@ -127,7 +147,9 @@ int nntp_command(const char *bp)
 #endif
     strcpy(g_last_command, bp);
     if (!g_nntplink.connection)
+    {
         return nntp_handle_timeout();
+    }
     if (g_nntplink.flags & NNTP_FORCE_AUTH_NOW) {
         g_nntplink.flags &= ~NNTP_FORCE_AUTH_NOW;
         return nntp_handle_auth_err();
@@ -135,12 +157,16 @@ int nntp_command(const char *bp)
     if (!(g_nntplink.flags & NNTP_NEW_CMD_OK)) {
         int ret = nntp_handle_nested_lists();
         if (ret <= 0)
+        {
             return ret;
+        }
     }
     error_code ec;
     g_nntplink.connection->write_line(bp, ec);
     if (ec)
+    {
         return nntp_handle_timeout();
+    }
     now = time((time_t*)nullptr);
     s_last_command_diff = now - g_nntplink.last_command;
     g_nntplink.last_command = now;
@@ -152,7 +178,9 @@ int nntp_xgtitle(const char *groupname)
     sprintf(g_ser_line, "XGTITLE %s", groupname);
     const int status = nntp_command(g_ser_line);
     if (status <= 0)
+    {
         return status;
+    }
 
     return nntp_check();
 }
@@ -175,7 +203,9 @@ int nntp_check()
 #endif
     if (ret < 0) {
         if (errno == EINTR)
+        {
             goto read_it;
+        }
         strcpy(g_ser_line, "503 Server closed connection.");
     }
     if (len == 0 && atoi(g_ser_line) == NNTP_TMPERR_VAL
@@ -194,26 +224,40 @@ int nntp_check()
     }
     else
     if (*g_ser_line <= NNTP_CLASS_CONT && *g_ser_line >= NNTP_CLASS_INF)
+    {
         ret = 1;                        /* (this includes NNTP_CLASS_OK) */
+    }
     else if (*g_ser_line == NNTP_CLASS_FATAL)
+    {
         ret = -1;
+    }
     /* Even though the following check doesn't catch all possible lists, the
      * bit will get set right when the caller checks nntp_at_list_end(). */
     if (atoi(g_ser_line) == NNTP_LIST_FOLLOWS_VAL)
+    {
         g_nntplink.flags &= ~NNTP_NEW_CMD_OK;
+    }
     else
+    {
         g_nntplink.flags |= NNTP_NEW_CMD_OK;
+    }
     len = strlen(g_ser_line);
     if (len >= 2 && g_ser_line[len-1] == '\n' && g_ser_line[len-2] == '\r')
+    {
         g_ser_line[len-2] = '\0';
+    }
 #if defined(DEBUG) && defined(FLUSH)
     if (debug & DEB_NNTP)
+    {
         printf("<%s\n", g_ser_line);
+    }
 #endif
     if (atoi(g_ser_line) == NNTP_AUTH_NEEDED_VAL) {
         ret = nntp_handle_auth_err();
         if (ret > 0)
+        {
             goto read_it;
+        }
     }
     return ret;
 }
@@ -288,7 +332,9 @@ void nntp_close(bool send_quit)
 {
     if (send_quit && g_nntplink.connection) {
         if (nntp_command("QUIT") > 0)
+        {
             nntp_check();
+        }
     }
     g_nntplink.connection.reset();
     g_nntplink.flags |= NNTP_NEW_CMD_OK;

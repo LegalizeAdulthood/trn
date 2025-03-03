@@ -16,7 +16,9 @@ protected:
     void TearDown() override
     {
         if (m_buffer != nullptr)
+        {
             free(m_buffer);
+        }
     }
 
     void configure_unchanged(const char *before)
