@@ -35,6 +35,8 @@
 
 #include <time.h>
 
+#include <algorithm>
+
 LIST     *g_article_list{};         /* a list of ARTICLEs */
 ARTICLE **g_artptr_list{};          /* the article-selector creates this */
 ARTICLE **g_artptr{};               /* ditto -- used for article order */
@@ -1023,13 +1025,10 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
         }
     }
     setspin(SPIN_POP);
-    if (i > last)
-        i = last;
-    if (i > g_last_cached)
-        g_last_cached = i;
+    i = std::min(i, last);
+    g_last_cached = std::max(i, g_last_cached);
     if (i == last) {
-        if (first < g_first_cached)
-            g_first_cached = first;
+        g_first_cached = std::min(first, g_first_cached);
         return true;
     }
     return false;

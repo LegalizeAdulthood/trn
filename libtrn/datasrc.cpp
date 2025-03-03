@@ -39,6 +39,7 @@ struct utimbuf
 };
 #endif
 
+#include <algorithm>
 #include <string>
 #include <time.h>
 
@@ -1230,10 +1231,7 @@ static int get_near_miss()
     {
         printf("However, here are some close matches:\n");
     }
-    if (s_ngn > 9)
-    {
-        s_ngn = 9;      /* Since we're using single digits.... */
-    }
+    s_ngn = std::min(s_ngn, 9);         /* Since we're using single digits.... */
     for (int i = 0; i < s_ngn; i++) {
         char* cp = strchr(s_ngptrs[i], ' ');
         if (cp)

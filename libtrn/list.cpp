@@ -7,6 +7,8 @@
 
 #include "util.h"
 
+#include <algorithm>
+
 static void def_init_node(LIST *list, LISTNODE *node);
 
 void list_init()
@@ -68,10 +70,7 @@ char *listnum2listitem(LIST *list, long num)
             node->high = node->low + list->items_per_node - 1;
             node->data_high = node->data
                             + (list->items_per_node - 1) * list->item_size;
-            if (node->high > list->high)
-            {
-                list->high = node->high;
-            }
+            list->high = std::max(node->high, list->high);
             if (prevnode) {
                 node->next = prevnode->next;
                 prevnode->next = node;
@@ -153,10 +152,7 @@ long existing_listnum(LIST *list, long num, int direction)
     while (node) {
         if (num <= node->high) {
             if (direction > 0) {
-                if (num < node->low)
-                {
-                    num = node->low;
-                }
+                num = std::max(num, node->low);
             }
             else if (direction == 0) {
                 if (num < node->low)

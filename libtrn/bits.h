@@ -1,8 +1,9 @@
 /* bits.h
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#ifndef TRN_BITS_H
-#define TRN_BITS_H
+#pragma once
+
+#include "typedef.h"
 
 struct ARTICLE;
 
@@ -25,5 +26,3 @@ void mark_missing_articles();
 void check_first(ART_NUM min);
 void yankback();
 bool chase_xrefs(bool until_key);
-
-#endif

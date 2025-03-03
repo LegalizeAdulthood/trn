@@ -45,6 +45,8 @@
 #include "util.h"
 #include "util2.h"
 
+#include <algorithm>
+
 ART_NUM  g_art{};           /* current or prospective article # */
 ART_NUM  g_recent_art{};    /* previous article # for '-' command */
 ART_NUM  g_curr_art{};      /* current article # */
@@ -1414,8 +1416,7 @@ run_the_selector:
             clear();
             g_do_fseek = true;
             g_artline = g_topline;
-            if (g_artline < 0)
-                g_artline = 0;
+            g_artline = std::max(g_artline, 0);
         }
         return AS_NORM;
       case Ctl('^'):
@@ -1471,10 +1472,7 @@ run_the_selector:
                 } while (g_artline >= 0 && g_artline > target && vrdary(g_artline - 1) >= 0);
             }
             g_topline = g_artline;
-            if (g_artline < 0)
-            {
-                g_artline = 0;
-            }
+            g_artline = std::max(g_artline, 0);
         }
         return AS_NORM;
       case '!':                 /* shell escape */

@@ -12,6 +12,8 @@
 
 #include <time.h>
 
+#include <algorithm>
+
 std::string g_lastngname;    /* last newsgroup read */
 long        g_lasttime{};    /* time last we ran */
 long        g_lastactsiz{};  /* last known size of active file */
@@ -51,10 +53,7 @@ void readlast()
             {
                 g_lastnewtime = s_starttime;
             }
-            if (old_last > g_lasttime)
-            {
-                g_lasttime = old_last;
-            }
+            g_lasttime = std::max(old_last, g_lasttime);
         }
         fclose(fp);
     }
@@ -67,8 +66,7 @@ void writelast()
     sprintf(g_buf,"%s.%ld", s_lastfile, g_our_pid);
     if (FILE *fp = fopen(g_buf, "w"))
     {
-        if (g_lasttime < s_starttime)
-            g_lasttime = s_starttime;
+        g_lasttime = std::max(g_lasttime, s_starttime);
         fprintf(fp,"%s\n%ld\n%ld\n%ld\n%ld\n",
                 g_ngname.c_str(),g_lasttime,
                 g_lastactsiz,g_lastnewtime,g_lastextranum);

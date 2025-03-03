@@ -30,6 +30,8 @@
 #include "util.h"
 #include "util2.h"
 
+#include <algorithm>
+
 LIST       *g_ngdata_list{};       /* a list of NGDATA */
 int         g_ngdata_cnt{};        //
 NG_NUM      g_newsgroup_cnt{};     /* all newsgroups in our current newsrc(s) */
@@ -289,8 +291,7 @@ void ng_skip()
             /* tries to grab PREFETCH_SIZE XHDRS, flagging missing articles */
             (void) fetchsubj(g_art, false);
             ART_NUM artnum = g_art + PREFETCH_SIZE - 1;
-            if (artnum > g_lastart)
-                artnum = g_lastart;
+            artnum = std::min(artnum, g_lastart);
             while (g_art <= artnum) {
                 if (g_artp->flags & AF_EXISTS)
                 {

@@ -30,6 +30,8 @@
 
 #include <time.h>
 
+#include <algorithm>
+
 /* How many overview lines to read with one NNTP call */
 enum
 {
@@ -253,8 +255,7 @@ beginning:
         }
         else {
             int lots2do = ((g_datasrc->flags & DF_REMOTE)? g_net_speed : 20) * 100;
-            if (g_spin_estimate > g_spin_todo)
-                g_spin_estimate = g_spin_todo;
+            g_spin_estimate = std::min(g_spin_estimate, g_spin_todo);
             setspin(g_spin_estimate > lots2do? SPIN_BARGRAPH : SPIN_FOREGROUND);
         }
         g_datasrc->ov_opened = started_request;

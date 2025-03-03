@@ -29,6 +29,8 @@
 #include "util.h"
 #include "util2.h"
 
+#include <algorithm>
+
 ART_NUM    g_obj_count{};
 int        g_subject_count{};
 bool       g_output_chase_phrase{};
@@ -1536,10 +1538,7 @@ void count_subjects(cs_mode cmode)
                 {
                     subjdate = ap->date;
                 }
-                if (article_num(ap) < g_firstart)
-                {
-                    g_firstart = article_num(ap);
-                }
+                g_firstart = std::min(article_num(ap), g_firstart);
             }
         }
         sp->misc = count;

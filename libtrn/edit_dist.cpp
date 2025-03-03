@@ -10,6 +10,8 @@
 
 #include "util.h"               /* Declare safemalloc() */
 
+#include <algorithm>
+
 /* edit_dist -- returns the minimum edit distance between two strings
 
         Program by:  Mark Maimone   CMU Computer Science   13 Nov 89
@@ -202,8 +204,7 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
                 (col + 1) * del + ins,
                 buffer[index - 1] + del);
 #ifdef TRN_SPEEDUP
-        if (buffer[index] < low)
-            low = buffer[index];
+        low = std::min(buffer[index], low);
 #endif
         index++;
 

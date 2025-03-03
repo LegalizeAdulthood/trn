@@ -30,6 +30,8 @@
 #include <conio.h>
 #endif
 
+#include <algorithm>
+
 #ifdef u3b2
 #undef TIOCGWINSZ
 #endif
@@ -2050,10 +2052,7 @@ static void line_col_calcs()
             }
         }
         /* Check for g_initlines bigger than the screen and fix it! */
-        if (g_initlines > g_tc_LINES)
-        {
-            g_initlines = g_tc_LINES;
-        }
+        g_initlines = std::min(g_initlines, g_tc_LINES);
     }
     else {                              /* not a crt */
         g_tc_LINES = 30000;             /* so don't page */

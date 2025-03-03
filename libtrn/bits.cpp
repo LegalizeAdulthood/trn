@@ -2,9 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include <filesystem>
-
 #include "common.h"
+
 #include "bits.h"
 
 #include "cache.h"
@@ -27,6 +26,9 @@
 #include "trn.h"
 #include "util.h"
 #include "util2.h"
+
+#include <algorithm>
+#include <filesystem>
 
 int g_dmcount{};
 
@@ -98,10 +100,7 @@ void rc_to_bits()
         *c = '\0';                      /* do not let index see past comma */
         h = strchr(s,'-');
         ART_NUM min = atol(s);
-        if (min < g_firstart)           /* make sure range is in range */
-        {
-            min = g_firstart;
-        }
+        min = std::max(min, g_firstart);    /* make sure range is in range */
         if (min > g_lastart)
         {
             min = g_lastart + 1;
@@ -131,10 +130,7 @@ void rc_to_bits()
         {
             max = min - 1;
         }
-        if (max > g_lastart)
-        {
-            max = g_lastart;
-        }
+        max = std::min(max, g_lastart);
         /* mark all arts in range as read */
         for ( ; i <= max; i = article_next(i))
         {
@@ -190,8 +186,7 @@ bool set_firstart(const char *s)
     s = skip_eq(s, ' ');
     if (!strncmp(s,"1-",2)) {                   /* can we save some time here? */
         g_firstart = atol(s+2)+1;               /* process first range thusly */
-        if (g_firstart < g_absfirst)
-            g_firstart = g_absfirst;
+        g_firstart = std::max(g_firstart, g_absfirst);
         return true;
     }
 
@@ -406,10 +401,8 @@ void find_existing_articles()
             if (sscanf(filename.c_str(), "%ld%c", &lnum, &ch) == 1) {
                 an = (ART_NUM)lnum;
                 if (an <= g_lastart && an >= g_absfirst) {
-                    if (an < first)
-                        first = an;
-                    if (an > last)
-                        last = an;
+                    first = std::min(an, first);
+                    last = std::max(an, last);
                     ap = article_ptr(an);
                     if (!(ap->flags2 & AF2_BOGUS))
                     {
@@ -435,18 +428,12 @@ void find_existing_articles()
         g_lastart = last;
     }
 
-    if (g_firstart < g_absfirst)
-    {
-        g_firstart = g_absfirst;
-    }
+    g_firstart = std::max(g_firstart, g_absfirst);
     if (g_firstart > g_lastart)
     {
         g_firstart = g_lastart + 1;
     }
-    if (g_first_cached < g_absfirst)
-    {
-        g_first_cached = g_absfirst;
-    }
+    g_first_cached = std::max(g_first_cached, g_absfirst);
     if (g_last_cached < g_absfirst)
     {
         g_last_cached = g_absfirst - 1;
@@ -578,10 +565,8 @@ void mark_missing_articles()
 
 void check_first(ART_NUM min)
 {
-    if (min < g_absfirst)
-        min = g_absfirst;
-    if (min < g_firstart)
-        g_firstart = min;
+    min = std::max(min, g_absfirst);
+    g_firstart = std::min(min, g_firstart);
 }
 
 /* bring back articles marked with M */

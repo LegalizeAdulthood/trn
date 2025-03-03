@@ -17,6 +17,8 @@
 #include "smisc.h"
 #include "sorder.h"
 
+#include <algorithm>
+
 /* returns true if successful */
 //long end;             /* entry number to be last on page */
 bool s_fillpage_backward(long end)
@@ -102,10 +104,7 @@ bool s_fillpage_backward(long end)
     /* Now, suppose that the pointer position is off the page.  That would
      * be bad, so lets make sure it doesn't happen.
      */
-    if (g_s_ptr_page_line > g_s_bot_ent)
-    {
-        g_s_ptr_page_line = g_s_bot_ent;
-    }
+    g_s_ptr_page_line = std::min<long>(g_s_ptr_page_line, g_s_bot_ent);
     if (g_s_cur_type != S_ART)
     {
         return true;
@@ -200,10 +199,7 @@ bool s_fillpage_forward(long start)
      */
     /* set new g_s_top_ent */
     g_s_top_ent = g_page_ents[0].entnum;
-    if (g_s_ptr_page_line > g_s_bot_ent)
-    {
-        g_s_ptr_page_line = g_s_bot_ent;
-    }
+    g_s_ptr_page_line = std::min<long>(g_s_ptr_page_line, g_s_bot_ent);
     if (g_s_cur_type != S_ART)
     {
         return true;
@@ -306,10 +302,7 @@ bool s_refillpage()
     /* Now, suppose that the pointer position is off the page.  That would
      * be bad, so lets make sure it doesn't happen.
      */
-    if (g_s_ptr_page_line > g_s_bot_ent)
-    {
-        g_s_ptr_page_line = g_s_bot_ent;
-    }
+    g_s_ptr_page_line = std::min<long>(g_s_ptr_page_line, g_s_bot_ent);
     if (g_s_cur_type != S_ART)
     {
         return true;

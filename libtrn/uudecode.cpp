@@ -13,6 +13,8 @@
 #include "string-algos.h"
 #include "util2.h"
 
+#include <algorithm>
+
 static void uudecodeline(char *line, FILE *ofp);
 
 int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
@@ -345,10 +347,7 @@ static void uudecodeline(char *line, FILE *ofp)
 {
     /* Calculate expected length and pad if necessary */
     int len = ((DEC(line[0]) + 2) / 3) * 4;
-    if (len > UULENGTH)
-    {
-        len = UULENGTH;
-    }
+    len = std::min(len, static_cast<int>(UULENGTH));
     for (int c = strlen(line) - 1; c <= len; c++)
     {
         line[c] = ' ';

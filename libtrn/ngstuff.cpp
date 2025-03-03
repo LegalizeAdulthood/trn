@@ -30,6 +30,8 @@
 #include "util.h"
 #include "util2.h"
 
+#include <algorithm>
+
 bool        g_one_command{}; /* no ':' processing in perform() */
 std::string g_savedir;       /* -d */
 
@@ -238,10 +240,7 @@ numnum_result numnum()
         }
         if (max>g_lastart) {
             max = g_lastart;
-            if (min > max)
-            {
-                min = max;
-            }
+            min = std::min(min, max);
             sprintf(g_msg,"(Last article is %ld)",(long)g_lastart);
             warnmsg(g_msg);
         }

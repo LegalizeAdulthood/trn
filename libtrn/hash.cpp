@@ -10,6 +10,8 @@
 #include "final.h"
 #include "util.h"
 
+#include <algorithm>
+
 #define BADTBL(tbl)     ((tbl) == nullptr || (tbl)->ht_magic != HASHMAG)
 
 #define HASHMAG  ((char)0257)
@@ -65,8 +67,7 @@ static int      s_reusables{};
 /* size - a crude guide to size */
 HASHTABLE *hashcreate(unsigned size, HASHCMPFUNC cmpfunc)
 {
-    if (size < 1)               /* size < 1 is nonsense */
-        size = 1;
+    size = std::max(size, 1U);  /* size < 1 is nonsense */
     struct alignalloc
     {
         HASHTABLE ht;

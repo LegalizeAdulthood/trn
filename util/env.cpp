@@ -19,6 +19,7 @@
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <Windows.h>
 #define SECURITY_WIN32
 #include <security.h>
@@ -26,6 +27,7 @@
 #include <winsock2.h>
 #endif
 
+#include <algorithm>
 #include <memory>
 
 char       *g_home_dir{};    /* login directory */
@@ -156,8 +158,7 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
         }
         else {
             g_net_speed = atoi(cp);
-            if (g_net_speed < 1)
-                g_net_speed = 1;
+            g_net_speed = std::max(g_net_speed, 1);
         }
     }
 

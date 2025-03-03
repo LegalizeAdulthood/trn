@@ -23,6 +23,8 @@
 
 #include <parsedate/parsedate.h>
 
+#include <algorithm>
+
 #define HIDDEN    (HT_HIDE|HT_DEFHIDE)
 #define MAGIC_ON  (HT_MAGICOK|HT_MAGIC|HT_DEFMAGIC)
 #define MAGIC_OFF (HT_MAGICOK)
@@ -588,8 +590,7 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
         if (cached != 0)
         {
             lastnum = artnum + PREFETCH_SIZE - 1;
-            if (lastnum > g_lastart)
-                lastnum = g_lastart;
+            lastnum = std::min(lastnum, g_lastart);
             status = nntp_xhdr(which_line, artnum, lastnum);
         } else {
             lastnum = artnum;
@@ -708,8 +709,7 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
     }
     else {                              /* hope this is okay--we're */
         s = g_cmd_buf;                  /* really scraping for space here */
-        if (size > sizeof g_cmd_buf)
-            size = sizeof g_cmd_buf;
+        size = std::min(size, static_cast<int>(sizeof g_cmd_buf));
     }
     safecpy(s,t,size);
     return s;

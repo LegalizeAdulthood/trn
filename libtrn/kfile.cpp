@@ -2,6 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <algorithm>
 #include <filesystem>
 #include <time.h>
 
@@ -163,10 +164,7 @@ int do_kfile(FILE *kfp, int entering)
                 continue;
             }
             g_killfirst = atol(cp+len+1)+1;
-            if (g_killfirst < g_firstart)
-            {
-                g_killfirst = g_firstart;
-            }
+            g_killfirst = std::max(g_killfirst, g_firstart);
             if (g_killfirst > g_lastart)
             {
                 g_killfirst = g_lastart + 1;

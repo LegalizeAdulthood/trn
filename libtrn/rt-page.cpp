@@ -27,6 +27,8 @@
 #include "utf.h"
 #include "util.h"
 
+#include <algorithm>
+
 SEL_ITEM  g_sel_items[MAX_SEL];
 int       g_sel_total_obj_cnt{};
 int       g_sel_prior_obj_cnt{};
@@ -328,14 +330,8 @@ static void sel_page_init()
     {
         s_sel_max_per_page = strlen(g_sel_chars);
     }
-    if (s_sel_max_per_page > MAX_SEL)
-    {
-        s_sel_max_per_page = MAX_SEL;
-    }
-    if (s_sel_max_per_page > s_sel_max_line_cnt)
-    {
-        s_sel_max_per_page = s_sel_max_line_cnt;
-    }
+    s_sel_max_per_page = std::min(s_sel_max_per_page, static_cast<int>(MAX_SEL));
+    s_sel_max_per_page = std::min(s_sel_max_per_page, s_sel_max_line_cnt);
     g_sel_page_obj_cnt = 0;
     g_sel_page_item_cnt = 0;
 }
@@ -1245,10 +1241,7 @@ bool prev_page()
             {
                 continue;
             }
-            if (line_cnt > s_sel_max_line_cnt)
-            {
-                line_cnt = s_sel_max_line_cnt;
-            }
+            line_cnt = std::min(line_cnt, s_sel_max_line_cnt);
             line += line_cnt;
             if (line > s_sel_max_line_cnt + 2) {
                 sp = page_sp;
@@ -1404,10 +1397,7 @@ try_again:
                     line_cnt = count_subject_lines(sp, &sel);
                 }
                 if (line_cnt) {
-                    if (line_cnt > s_sel_max_line_cnt)
-                    {
-                        line_cnt = s_sel_max_line_cnt;
-                    }
+                    line_cnt = std::min(line_cnt, s_sel_max_line_cnt);
                     if (g_term_line + line_cnt > s_sel_max_line_cnt+2)
                     {
                         break;
@@ -1712,10 +1702,7 @@ try_again:
                     continue;
                 }
                 int len = strlen(gp->name) + 2;
-                if (len > max_len)
-                {
-                    max_len = len;
-                }
+                max_len = std::max(len, max_len);
                 i++;
             }
             gp = g_sel_page_gp;
@@ -2119,8 +2106,7 @@ static void display_article(const ARTICLE *ap, int ix, int sel)
     int date_width = g_tc_COLS / 5;
 
     maybe_eol();
-    if (subj_width < 32)
-        subj_width = 32;
+    subj_width = std::max(subj_width, 32);
 
     output_sel(ix, sel, false);
     if (*g_sel_art_dmode == 's' || from_width < 8)
@@ -2152,8 +2138,7 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
 #endif
 
     maybe_eol();
-    if (subj_width < 32)
-        subj_width = 32;
+    subj_width = std::max(subj_width, 32);
 
     int j = subj->misc;
 

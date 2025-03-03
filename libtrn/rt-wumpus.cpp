@@ -22,6 +22,8 @@
 #include "util.h"
 #include "util2.h"
 
+#include <algorithm>
+
 int g_max_tree_lines{6};
 
 static char s_letters[] = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+";
@@ -111,8 +113,7 @@ void init_tree()
         else
         {
             s_first_depth = s_my_depth - 3;
-            if (s_first_depth < 0)
-                s_first_depth = 0;
+            s_first_depth = std::max(s_first_depth, 0);
         }
         s_max_depth = s_first_depth + 5;
     }
@@ -128,8 +129,7 @@ void init_tree()
         else
         {
             s_first_line = s_my_line - (g_max_tree_lines - 1) / 2;
-            if (s_first_line < 0)
-                s_first_line = 0;
+            s_first_line = std::max(s_first_line, 0);
         }
         s_max_line = s_first_line + g_max_tree_lines-1;
     }
@@ -154,8 +154,7 @@ void init_tree()
 */
 static void find_depth(ARTICLE *article, int depth)
 {
-    if (depth > s_max_depth)
-        s_max_depth = depth;
+    s_max_depth = std::max(depth, s_max_depth);
     for (;;) {
         if (article == s_tree_article) {
             s_my_depth = depth;

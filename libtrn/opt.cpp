@@ -2,10 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include <algorithm>
-#include <memory>
-#include <string>
-
 #include <fdio.h>
 #include <string_case_compare.h>
 
@@ -46,6 +42,10 @@
 #include "univ.h"
 #include "util.h"
 #include "util2.h"
+
+#include <algorithm>
+#include <memory>
+#include <string>
 
 COMPEX      g_optcompex;
 std::string g_ini_file;
@@ -735,10 +735,7 @@ void set_option(option_index num, const char *s)
       case OI_ARTICLE_TREE_LINES:
         if (isdigit(*s)) {
             g_max_tree_lines = atoi(s);
-            if (g_max_tree_lines > 11)
-            {
-                g_max_tree_lines = 11;
-            }
+            g_max_tree_lines = std::min(g_max_tree_lines, 11);
         } else
         {
             g_max_tree_lines = YES(s) * 6;

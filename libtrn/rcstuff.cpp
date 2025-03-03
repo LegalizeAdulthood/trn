@@ -30,6 +30,8 @@
 #include "util.h"
 #include "util2.h"
 
+#include <algorithm>
+
 HASHTABLE  *g_newsrc_hash{};
 MULTIRC    *g_sel_page_mp{};
 MULTIRC    *g_sel_next_mp{};
@@ -96,10 +98,7 @@ static MULTIRC *rcstuff_init_data()
                 continue;
             }
             int i = atoi(section + 6);
-            if (i < 0)
-            {
-                i = 0;
-            }
+            i = std::max(i, 0);
             s = parse_ini_section(s, s_rcgroups_ini);
             if (!s)
             {
@@ -1224,10 +1223,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
                 goto reinp_reloc;
             }
             newnum = atol(g_buf);
-            if (newnum < 0)
-            {
-                newnum = 0;
-            }
+            newnum = std::max(newnum, 0);
             if (newnum >= g_newsgroup_cnt)
             {
                 newnum = g_newsgroup_cnt - 1;

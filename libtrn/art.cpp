@@ -42,6 +42,8 @@
 
 #include <time.h>
 
+#include <algorithm>
+
 ART_LINE    g_highlight{-1};         /* next line to be highlighted */
 ART_LINE    g_first_view{};          //
 ART_POS     g_raw_artsize{};         /* size in bytes of raw article */
@@ -620,12 +622,9 @@ do_article_result do_article()
                     }
                 }
                 g_artline++;    /* count the line just printed */
-                if (g_artline - g_tc_LINES + 1 > g_topline)
                             /* did we just scroll top line off? */
-                {
-                    g_topline = g_artline - g_tc_LINES + 1;
                             /* then recompute top line # */
-                }
+                g_topline = std::max(g_artline - g_tc_LINES + 1, g_topline);
             }
 
             /* determine actual position in file */
@@ -890,10 +889,7 @@ page_switch_result page_switch()
                 start_where = -start_where;
             }
         }
-        if (start_where < g_htype[PAST_HEADER].minpos)
-        {
-            start_where = g_htype[PAST_HEADER].minpos;
-        }
+        start_where = std::max(start_where, g_htype[PAST_HEADER].minpos);
         seekartbuf(start_where);
         g_innerlight = 0;
         g_innersearch = 0; /* assume not found */
@@ -948,10 +944,7 @@ page_switch_result page_switch()
             }
 #endif
             g_topline = g_highlight - g_gline;
-            if (g_topline < -1)
-            {
-                g_topline = -1;
-            }
+            g_topline = std::max(g_topline, -1);
             *g_buf = '\f';              /* fake up a refresh */
             g_innersearch = 0;
             return page_switch();
@@ -980,8 +973,7 @@ page_switch_result page_switch()
         clear();
         g_do_fseek = true;
         g_artline = g_topline;
-        if (g_artline < 0)
-            g_artline = 0;
+        g_artline = std::max(g_artline, 0);
         s_firstpage = (g_topline < 0);
         return PS_NORM;
       case Ctl('e'):
@@ -1085,8 +1077,7 @@ page_switch_result page_switch()
         }
         g_topline = g_artline;  /* remember top line of screen */
                                 /*  (line # within article file) */
-        if (g_artline < 0)
-            g_artline = 0;
+        g_artline = std::max(g_artline, 0);
         s_firstpage = (g_topline < 0);
         return PS_NORM;
     }
@@ -1284,9 +1275,7 @@ bool innermore()
         }
 #endif
         if (g_hide_everything) {        /* forced refresh? */
-            g_topline = g_artline - g_gline - 1;
-            if (g_topline < -1)
-                g_topline = -1;
+            g_topline = std::max(g_artline - g_gline - 1, -1);
             return false;               /* let refresh do it all */
         }
     }

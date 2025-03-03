@@ -21,6 +21,8 @@
 #include "util2.h"
 #include "uudecode.h"
 
+#include <algorithm>
+
 #ifdef MSDOS
 #define GOODCHARS                \
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ" \
@@ -367,8 +369,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
             {
                 if (fgets(g_buf, sizeof g_buf, fp)) {
                     total = atoi(g_buf);
-                    if (total < 0)
-                        total = 0;
+                    total = std::max(total, 0);
                 }
                 fclose(fp);
             }
