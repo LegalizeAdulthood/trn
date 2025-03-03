@@ -952,10 +952,8 @@ page_switch_result page_switch()
             g_innersearch = 0;
             return page_switch();
         }
-        else {                          /* who knows how many lines it is? */
-            g_do_fseek = true;
-            g_hide_everything = '\f';
-        }
+        g_do_fseek = true;              /* who knows how many lines it is? */
+        g_hide_everything = '\f';
         return PS_NORM;
       }
       case '\n':                        /* one line down */

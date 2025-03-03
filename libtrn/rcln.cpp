@@ -431,11 +431,10 @@ void set_toread(NGDATA *np, bool lax_high_check)
             if (!lax_high_check && newmax > ngsize) {
                 unread = -1;
                 break;
-            } else {
-                unread += newmax - ngsize;
-                np->ngmax = newmax;
-                ngsize = newmax;
             }
+            unread += newmax - ngsize;
+            np->ngmax = newmax;
+            ngsize = newmax;
         }
     }
     if (unread < 0) {                   /* SOMEONE RESET THE NEWSGROUP!!! */
