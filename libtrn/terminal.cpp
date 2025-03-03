@@ -311,7 +311,9 @@ void term_set(char *tcbuf)
         if (empty(g_tc_BC)) {           /* terminfo grok's 'bs' but not 'bc' */
             g_tc_BC = Tgetstr("le");
             if (empty(g_tc_BC))
+            {
                 g_tc_BC = "\b";         /* better than nothing... */
+            }
         }
     } else
         g_tc_BC = "\b";                 /* make a backspace handy */
@@ -327,7 +329,9 @@ void term_set(char *tcbuf)
     g_tc_CM = Tgetstr("cm");            /* cursor motion */
     g_tc_CD = Tgetstr("cd");            /* clear to end of display */
     if (!*g_tc_CE)
+    {
         g_tc_CE = g_tc_CD;
+    }
     g_tc_SO = Tgetstr("so");            /* begin standout */
     g_tc_SE = Tgetstr("se");            /* end standout */
     const bool tc_SG = tgetnum("sg") > 0; // standout glitch; blanks left by SG, SE
@@ -335,9 +339,13 @@ void term_set(char *tcbuf)
     g_tc_UE = Tgetstr("ue");            /* end underline */
     g_tc_UG = tgetnum("ug") > 0;        // underline glitch
     if (*g_tc_US)
+    {
         g_tc_UC = "";           /* UC must not be nullptr */
+    }
     else
+    {
         g_tc_UC = Tgetstr("uc");                /* underline a character */
+    }
     if (!*g_tc_US && !*g_tc_UC) {               /* no underline mode? */
         g_tc_US = g_tc_SO;                      /* substitute standout mode */
         g_tc_UE = g_tc_SE;
@@ -359,7 +367,9 @@ void term_set(char *tcbuf)
     g_tc_XN = tgetflag("xn");           /* then eats next newline? */
     g_tc_VB = Tgetstr("vb");
     if (!*g_tc_VB)
+    {
         g_tc_VB = "\007";
+    }
     g_tc_CR = Tgetstr("cr");
     if (!*g_tc_CR) {
         if (tgetflag("nc") && *g_tc_UP) {
@@ -367,15 +377,21 @@ void term_set(char *tcbuf)
             sprintf(g_tc_CR,"%s\r",g_tc_UP);
         }
         else
+        {
             g_tc_CR = "\r";
+        }
     }
 #ifdef TIOCGWINSZ
-        if (ioctl(1, TIOCGWINSZ, &winsize) >= 0) {
-                if (winsize.ws_row > 0)
-                    g_tc_LINES = winsize.ws_row;
-                if (winsize.ws_col > 0)
-                    g_tc_COLS = winsize.ws_col;
+    if (ioctl(1, TIOCGWINSZ, &winsize) >= 0) {
+        if (winsize.ws_row > 0)
+        {
+            g_tc_LINES = winsize.ws_row;
         }
+        if (winsize.ws_col > 0)
+        {
+            g_tc_COLS = winsize.ws_col;
+        }
+    }
 # endif
 #endif
     if (!*g_tc_UP)                      /* no UP string? */
@@ -892,7 +908,9 @@ char *edit_buf(char *s, const char *cmd)
             rubout();
             s--;                        /* discount the char rubbed out */
             if (!at_norm_char(s))
+            {
                 rubout();
+            }
         }
         return s;
     }
@@ -901,20 +919,28 @@ char *edit_buf(char *s, const char *cmd)
             rubout();
             s--;
             if (!at_norm_char(s))
+            {
                 rubout();
+            }
         }
         return s;
     }
     else if (*s == Ctl('w')) {          /* wipe out one word? */
         if (s == g_buf)
+        {
             return s;
+        }
         *s-- = ' ';
         while (!isspace(*s) || isspace(s[1])) {
             rubout();
             if (!at_norm_char(s))
+            {
                 rubout();
+            }
             if (s == g_buf)
+            {
                 return g_buf;
+            }
             s--;
         }
         return s+1;
@@ -931,7 +957,9 @@ char *edit_buf(char *s, const char *cmd)
         getcmd(s);
     }
     else if (*s == '\\')
+    {
         quoteone = true;
+    }
 
 echo_it:
     if (!s_not_echoing)
@@ -1098,7 +1126,9 @@ int circfill()
     Howmany = read(devtty,s_circlebuf+s_nextin,1);
 
     if (Howmany < 0 && (errno == EAGAIN || errno == EINTR))
+    {
         Howmany = 0;
+    }
     if (Howmany) {
         s_nextin += Howmany;
         s_nextin %= PUSHSIZE;
@@ -1268,7 +1298,9 @@ got_canonical:
     }
 #ifdef I_SGTTY
     if (*whatbuf == '\r')
+    {
         *whatbuf = '\n';
+    }
 #endif
     if (whatbuf == g_buf)
     {
