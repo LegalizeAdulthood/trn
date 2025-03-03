@@ -207,10 +207,11 @@ int byte_length_at(const char *s)
             /* FIXME - invalid UTF-8 */
         }
     } else if (IS_SINGLE_BYTE(s_gs.in)) {
-        ;
     } else if (IS_DOUBLE_BYTE(s_gs.in)) {
         if (*s & 0x80)
+        {
             it = 2;
+        }
     }
     return it;
 }
