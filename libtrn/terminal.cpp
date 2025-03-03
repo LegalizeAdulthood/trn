@@ -903,7 +903,7 @@ char *edit_buf(char *s, const char *cmd)
         }
         return s;
     }
-    else if (*s == g_erase_char) {              /* they want to rubout a char? */
+    if (*s == g_erase_char) {              /* they want to rubout a char? */
         if (s != g_buf) {
             rubout();
             s--;                        /* discount the char rubbed out */
@@ -914,7 +914,7 @@ char *edit_buf(char *s, const char *cmd)
         }
         return s;
     }
-    else if (*s == g_kill_char) {               /* wipe out the whole line? */
+    if (*s == g_kill_char) {               /* wipe out the whole line? */
         while (s != g_buf) {            /* emulate that many ERASEs */
             rubout();
             s--;
@@ -925,7 +925,7 @@ char *edit_buf(char *s, const char *cmd)
         }
         return s;
     }
-    else if (*s == Ctl('w')) {          /* wipe out one word? */
+    if (*s == Ctl('w')) {          /* wipe out one word? */
         if (s == g_buf)
         {
             return s;
@@ -945,12 +945,12 @@ char *edit_buf(char *s, const char *cmd)
         }
         return s+1;
     }
-    else if (*s == Ctl('r')) {
+    if (*s == Ctl('r')) {
         *s = '\0';
         reprint();
         return s;
     }
-    else if (*s == Ctl('v')) {
+    if (*s == Ctl('v')) {
         putchar('^');
         backspace();
         fflush(stdout);

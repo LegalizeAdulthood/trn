@@ -1135,10 +1135,7 @@ static int univ_order_score(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2)
     {
         return (int)((*ui2)->score - (*ui1)->score) * g_sel_direction;
     }
-    else
-    {
-        return (int)((*ui1)->num - (*ui2)->num) * g_sel_direction;
-    }
+    return (int)((*ui1)->num - (*ui2)->num) * g_sel_direction;
 }
 
 void sort_univ()

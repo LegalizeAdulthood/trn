@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
             }
             break;
         }
-        else if (i == EOF || !fgets(cp+1, LBUFLEN-1, stdin)) {
+        if (i == EOF || !fgets(cp+1, LBUFLEN-1, stdin)) {
             /* Still in header after EOF?  Hmm... */
             fprintf(stderr,"Article was all header -- no body.\n");
             exit(1);
