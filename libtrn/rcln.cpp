@@ -412,7 +412,6 @@ void set_toread(NGDATA *np, bool lax_high_check)
     mybuf[length++] = ',';
     mybuf[length] = '\0';
     char *s = skip_space(mybuf);
-            ;
     for ( ; (c = strchr(s,',')) != nullptr ; s = ++c) {  /* for each range */
         *c = '\0';                  /* keep index from running off */
         char *h = strchr(s, '-');

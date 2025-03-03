@@ -191,10 +191,8 @@ int byte_length_at(const char *s)
 {
     int it = s != nullptr; /* correct for ASCII */
     if (!it) {
-        ;
     } else if (IS_UTF8(s_gs.in)) {
         if ((*s & 0x80) == 0) {
-            ;
         } else if ((*s & 0xE0) == 0xC0 && OK(s + 1)) {
             it = 2;
         } else if ((*s & 0xF0) == 0xE0 && OK(s + 1) && OK(s + 2)) {
