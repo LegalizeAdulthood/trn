@@ -244,7 +244,7 @@ void do_multirc()
                             printf("\nRestriction %s%s still in effect.\n",
                                    g_ngtodo[0], g_maxngtodo > 1 ? ", etc." : "");
                         }
-                         else
+                        else
                         {
                             fputs("\n(\"Only\" mode.)\n",stdout);
                         }

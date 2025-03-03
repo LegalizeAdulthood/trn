@@ -167,26 +167,28 @@ const char *current_charsubst()
 
 int strcharsubst(char *outb, const char *inb, int limit, char_int subst)
 {
-    int len;
-    switch (subst) {
-      case 'm':
-        return Latin1toASCII((Uchar*)outb, (const Uchar*)inb, limit, 1);
-      case 'a':
-        return Latin1toASCII((Uchar*)outb, (const Uchar*)inb, limit, 2);
-      default:
-          const char *s = strchr(inb, '\n');
-          if (s != nullptr && s - inb + 1 < limit)
-          {
-            len = s - inb + 1;
-            limit = len + 1;
-        }
-        else
-        {
-            len = strlen(inb);
-        }
-        safecpy(outb, inb, limit);
-        return len;
+    switch (subst)
+    {
+    case 'm':
+        return Latin1toASCII((Uchar *) outb, (const Uchar *) inb, limit, 1);
+    case 'a':
+        return Latin1toASCII((Uchar *) outb, (const Uchar *) inb, limit, 2);
+    default:
+        break;
     }
+    const char *s = strchr(inb, '\n');
+    int len;
+    if (s != nullptr && s - inb + 1 < limit)
+    {
+        len = s - inb + 1;
+        limit = len + 1;
+    }
+    else
+    {
+        len = strlen(inb);
+    }
+    safecpy(outb, inb, limit);
+    return len;
 }
 
 /* The following is an adapted version of iso2asc by Markus Kuhn, 

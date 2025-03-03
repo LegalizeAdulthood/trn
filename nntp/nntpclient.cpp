@@ -222,8 +222,7 @@ int nntp_check()
             break;
         }
     }
-    else
-    if (*g_ser_line <= NNTP_CLASS_CONT && *g_ser_line >= NNTP_CLASS_INF)
+    else if (*g_ser_line <= NNTP_CLASS_CONT && *g_ser_line >= NNTP_CLASS_INF)
     {
         ret = 1;                        /* (this includes NNTP_CLASS_OK) */
     }

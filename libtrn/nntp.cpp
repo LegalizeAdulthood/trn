@@ -326,8 +326,7 @@ int nntp_finishbody(finishbody_mode bmode)
         g_openart = 0;  /* Since we didn't finish the art, forget its number */
 #endif
     }
-    else
-    if (bmode == FB_OUTPUT) {
+    else if (bmode == FB_OUTPUT) {
         if (g_verbose)
         {
             printf("Receiving the rest of the article...");
