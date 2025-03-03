@@ -65,7 +65,6 @@ extern char           g_news_sel_cmds[3];
 extern char           g_option_sel_cmds[3];
 extern bool           g_use_sel_num;
 extern bool           g_sel_num_goto;
-extern bool           g_sel_num_goto;
 
 char article_selector(char_int cmd);
 char multirc_selector();
