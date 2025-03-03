@@ -23,8 +23,8 @@
 #include <string.h>
 #include <time.h>
 
-int         date_parse();
-int         date_lex();
+int         date_parse(void);
+int         date_lex(void);
 static void date_error(char *s);
 
 #define yyparse         date_parse
@@ -654,7 +654,7 @@ static int LookupWord(char *buff, int length)
 
 
 int
-date_lex()
+date_lex(void)
 {
     char        c;
     char        *p;
@@ -719,7 +719,6 @@ date_lex()
 time_t
 parsedate(const char *p)
 {
-    extern int          date_parse();
     time_t              Start;
 
     yyInput = p;
