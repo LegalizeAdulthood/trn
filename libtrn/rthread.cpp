@@ -43,7 +43,7 @@ static int subjorder_subject(const SUBJECT **spp1, const SUBJECT **spp2);
 static int subjorder_date(const SUBJECT **spp1, const SUBJECT **spp2);
 static int subjorder_count(const SUBJECT **spp1, const SUBJECT **spp2);
 static int subjorder_lines(const SUBJECT **spp1, const SUBJECT **spp2);
-static int subject_score_high(const SUBJECT *);
+static int subject_score_high(const SUBJECT *sp);
 static int subjorder_score(const SUBJECT **spp1, const SUBJECT **spp2);
 static int threadorder_subject(const SUBJECT **spp1, const SUBJECT **spp2);
 static int threadorder_date(const SUBJECT **spp1, const SUBJECT **spp2);

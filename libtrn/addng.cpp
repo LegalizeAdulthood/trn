@@ -38,7 +38,7 @@ static int s_addgroup_cnt{};
 
 static int  addng_cmp(const char *key, int keylen, HASHDATUM data);
 static int  build_addgroup_list(int keylen, HASHDATUM *data, int extra);
-static void process_list(getnewsgroup_flags);
+static void process_list(getnewsgroup_flags flag);
 static void new_nntp_groups(DATASRC *dp);
 static void new_local_groups(DATASRC *dp);
 static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch);

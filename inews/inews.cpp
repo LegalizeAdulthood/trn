@@ -27,7 +27,7 @@ char *g_server_name{};
 std::string g_nntp_auth_file;
 char g_buf[LBUFLEN + 1]{}; /* general purpose line buffer */
 
-int valid_header(char *);
+int valid_header(char *h);
 void append_signature();
 
 static FILE *inews_wr_fp{};
