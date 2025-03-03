@@ -906,7 +906,9 @@ page_switch_result page_switch()
             }
 #ifdef DEBUG
             if (debug & DEB_INNERSRCH)
+            {
                 printf("Test %s\n",s);
+            }
 #endif
             success = execute(&s_gcompex,s) != nullptr;
             if (nlptr)
@@ -947,7 +949,9 @@ page_switch_result page_switch()
 #endif
             g_topline = g_highlight - g_gline;
             if (g_topline < -1)
+            {
                 g_topline = -1;
+            }
             *g_buf = '\f';              /* fake up a refresh */
             g_innersearch = 0;
             return page_switch();

@@ -256,7 +256,9 @@ save_result save_article()
                     break;
                 }
                 else if (++cnt == 300)
+                {
                     break;
+                }
             }/* for */
             switch (decode_type) {
               case 1:
