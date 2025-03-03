@@ -25,8 +25,10 @@
 #include "trn.h"
 #include "util.h"
 
+#ifdef HAS_SIGBLOCK
 #ifndef sigmask
 #define sigmask(m)      (1 << ((m)-1))
+#endif
 #endif
 
 bool g_panic{};       /* we got hung up or something-- so leave tty alone */
