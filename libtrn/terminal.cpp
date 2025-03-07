@@ -1087,7 +1087,7 @@ static bool s_ignore_EINTR = false;
 Signal_t alarm_catcher(int signo)
 {
     /*printf("\n*** In alarm catcher **\n"); $$*/
-    ignore_EINTR = true;
+    s_ignore_EINTR = true;
     check_datasrcs();
     sigset(SIGALRM,alarm_catcher);
     (void) alarm(DATASRC_ALARM_SECS);
