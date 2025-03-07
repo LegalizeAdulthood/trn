@@ -190,9 +190,9 @@ int doshell(const char *shell, const char *cmd)
             dup(open("/dev/null",1));
         }
 
-        if (*s)
+        if (*cmd)
         {
-            execl(shell, shell, "-c", s, nullptr);
+            execl(shell, shell, "-c", cmd, nullptr);
         }
         else
         {
