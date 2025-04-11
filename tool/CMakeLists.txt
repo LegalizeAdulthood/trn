@@ -4,4 +4,4 @@ add_library(tool
 target_include_directories(tool PUBLIC .)
 target_include_directories(tool PRIVATE ../libtrn)
 target_link_libraries(tool PUBLIC nntp)
-set_property(TARGET tool PROPERTY FOLDER Libraries)
+target_folder(tool "Libraries")

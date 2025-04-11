@@ -22,7 +22,7 @@ add_library(config
     cmake/string_case_compare.Windows.h.in
 )
 target_include_directories(config PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/include" .)
-set_target_properties(config PROPERTIES FOLDER "Libraries")
+target_folder(config "Libraries")
 source_group("CMake Templates" REGULAR_EXPRESSION "^.*\\.in$")
 source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")
 

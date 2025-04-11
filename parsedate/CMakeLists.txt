@@ -18,7 +18,7 @@ add_library(parsedate
 )
 source_group("Yacc Files" REGULAR_EXPRESSION "^.*\\.y")
 target_include_directories(parsedate PUBLIC include)
-set_target_properties(parsedate PROPERTIES FOLDER Libraries)
+target_folder(parsedate "Libraries")
 
 if(BUILD_TESTING)
     add_subdirectory(tests)

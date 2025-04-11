@@ -8,4 +8,4 @@ add_library(nntp
 target_include_directories(nntp PUBLIC .)
 target_include_directories(nntp PRIVATE ../libtrn)
 target_link_libraries(nntp PUBLIC boost::asio util)
-set_property(TARGET nntp PROPERTY FOLDER Libraries)
+target_folder(nntp "Libraries")

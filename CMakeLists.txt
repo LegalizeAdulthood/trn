@@ -4,20 +4,19 @@ set(TRN_PROJECT_NAME "trn" CACHE STRING "Project name for IDEs")
 
 project("${TRN_PROJECT_NAME}" VERSION 5.0.0 LANGUAGES C CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
+include(set_cxx_standard)
+include(target_folder)
+include(vs_startup_project)
 include(CTest)
 include(GNUInstallDirs)
+
+set_cxx_standard(17)
 
 if(WIN32)
     find_package(pdcurses REQUIRED)
     add_library(curses ALIAS pdcurses)
 endif()
-
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(CMAKE_INSTALL_PREFIX "install")
 
@@ -41,7 +40,7 @@ source_group("Text Files" FILES ${trn_text_files})
 source_group("Markdown Files" FILES ReadMe.md)
 target_link_libraries(trn PUBLIC libtrn)
 install(TARGETS trn DESTINATION ${CMAKE_INSTALL_BINDIR})
-set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT trn)
+vs_startup_project(trn)
 
 add_subdirectory(config)
 add_subdirectory(inews)

@@ -6,6 +6,6 @@ add_executable(parsedate-test
     test.cpp
 )
 target_link_libraries(parsedate-test PUBLIC parsedate GTest::gtest_main)
-set_property(TARGET parsedate-test PROPERTY FOLDER Tests)
+target_folder(parsedate-test "Tests")
 
 gtest_discover_tests(parsedate-test PROPERTIES LABEL parsedate)
