@@ -54,3 +54,42 @@ add_subdirectory(util)
 if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
+
+add_custom_target(Miscellaneous)
+target_sources(Miscellaneous PRIVATE
+    ".clang-format"
+    ".editorconfig"
+    ".github/workflows/cmake.yml"
+    ".gitignore"
+    ".gitmodules"
+    "CMakePresets.json"
+    "HACKERSGUIDE.txt"
+    "INIT.txt"
+    "INSTALL.txt"
+    "LICENSE.txt"
+    "README.txt"
+    "ReadMe.md"
+    "vcpkg.json"
+    "cmake/FindBoostAsio.cmake"
+    "cmake/Findpdcurses.cmake"
+    "cmake/set_cxx_standard.cmake"
+    "cmake/target_folder.cmake"
+    "cmake/vs_startup_project.cmake"
+)
+source_group("CMake Scripts" FILES
+    "cmake/FindBoostAsio.cmake"
+    "cmake/Findpdcurses.cmake"
+    "cmake/set_cxx_standard.cmake"
+    "cmake/target_folder.cmake"
+    "cmake/vs_startup_project.cmake")
+source_group("Editing" FILES
+    ".clang-format"
+    ".editorconfig")
+source_group("Git" FILES
+    ".gitignore"
+    ".gitmodules")
+source_group("GitHub" FILES
+    ".github/workflows/cmake.yml"
+    "LICENSE.txt")
+source_group("VcPkg" FILES
+    "vcpkg.json")
