@@ -17,7 +17,7 @@
 #include "env.h"
 #include "final.h"
 #include "intrp.h"
-#include "nntpclient.h"
+#include "nntp/nntpclient.h"
 #include "search.h"
 #include "smisc.h" /* g_s_default_cmd */
 #include "string-algos.h"

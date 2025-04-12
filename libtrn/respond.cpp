@@ -22,7 +22,7 @@
 #include "ng.h"
 #include "ngdata.h"
 #include "nntp.h"
-#include "nntpclient.h"
+#include "nntp/nntpclient.h"
 #include "string-algos.h"
 #include "terminal.h"
 #include "trn.h"

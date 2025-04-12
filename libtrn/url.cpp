@@ -7,7 +7,7 @@
 #include "config/common.h"
 #include "url.h"
 
-#include "nntpinit.h"
+#include "nntp/nntpinit.h"
 #include "util.h"
 #include "util2.h"
 

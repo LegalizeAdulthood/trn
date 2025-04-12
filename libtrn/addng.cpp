@@ -13,7 +13,7 @@
 #include "list.h"
 #include "ngdata.h"
 #include "nntp.h"
-#include "nntpclient.h"
+#include "nntp/nntpclient.h"
 #include "only.h"
 #include "rcstuff.h"
 #include "rt-select.h"

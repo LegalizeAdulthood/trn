@@ -14,7 +14,7 @@
 #include "ng.h"
 #include "ngdata.h"
 #include "nntp.h"
-#include "nntpclient.h"
+#include "nntp/nntpclient.h"
 #include "rt-process.h"
 #include "rt-util.h"
 #include "string-algos.h"

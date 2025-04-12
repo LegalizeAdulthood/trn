@@ -27,7 +27,7 @@
 #include "ngdata.h"
 #include "ngstuff.h"
 #include "nntp.h"
-#include "nntpclient.h"
+#include "nntp/nntpclient.h"
 #include "rcln.h"
 #include "rcstuff.h"
 #include "respond.h"

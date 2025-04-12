@@ -13,7 +13,7 @@
 #include "bits.h"
 #include "head.h"
 #include "ngdata.h"
-#include "nntpclient.h"
+#include "nntp/nntpclient.h"
 #include "datasrc.h"
 #include "nntp.h"
 #include "util.h"

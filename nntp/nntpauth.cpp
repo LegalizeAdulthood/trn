@@ -3,9 +3,9 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include "config/common.h"
-#include "nntpauth.h"
+#include "nntp/nntpauth.h"
 
-#include "nntpclient.h"
+#include "nntp/nntpclient.h"
 #include "util.h"
 
 int nntp_handle_auth_err()

@@ -1,8 +1,8 @@
 #include <gmock/gmock.h>
 
 #include <config/common.h>
-#include <nntpclient.h>
-#include <nntpinit.h>
+#include <nntp/nntpclient.h>
+#include <nntp/nntpinit.h>
 
 #include <boost/asio/error.hpp>
 

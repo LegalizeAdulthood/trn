@@ -57,7 +57,7 @@
 #include "ngsrch.h"
 #include "ngstuff.h"
 #include "nntp.h"
-#include "nntpclient.h"
+#include "nntp/nntpclient.h"
 #include "only.h"
 #include "opt.h"
 #include "patchlevel.h"

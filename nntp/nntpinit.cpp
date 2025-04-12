@@ -5,9 +5,9 @@
 #include <config/fdio.h>
 
 #include "config/common.h"
-#include "nntpinit.h"
+#include "nntp/nntpinit.h"
 
-#include "nntpclient.h"
+#include "nntp/nntpclient.h"
 
 #include <boost/asio.hpp>
 

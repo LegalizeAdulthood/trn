@@ -28,7 +28,7 @@
 #include "ngdata.h"
 #include "ngsrch.h"
 #include "ngstuff.h"
-#include "nntpinit.h"
+#include "nntp/nntpinit.h"
 #include "only.h"
 #include "opt.h"
 #include "rcln.h"

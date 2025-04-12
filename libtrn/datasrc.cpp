@@ -15,7 +15,7 @@
 #include "list.h"
 #include "ngdata.h"
 #include "nntp.h"
-#include "nntpclient.h"
+#include "nntp/nntpclient.h"
 #include "rcstuff.h"
 #include "rt-ov.h"
 #include "rt-util.h"

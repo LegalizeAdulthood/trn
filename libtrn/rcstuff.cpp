@@ -19,7 +19,7 @@
 #include "list.h"
 #include "ngdata.h"
 #include "nntp.h"
-#include "nntpclient.h"
+#include "nntp/nntpclient.h"
 #include "only.h"
 #include "rcln.h"
 #include "rt-page.h"

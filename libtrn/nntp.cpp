@@ -14,7 +14,7 @@
 #include "head.h"
 #include "init.h"
 #include "ngdata.h"
-#include "nntpclient.h"
+#include "nntp/nntpclient.h"
 #include "rcstuff.h"
 #include "terminal.h"
 #include "trn.h"

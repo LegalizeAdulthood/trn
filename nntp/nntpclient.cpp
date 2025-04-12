@@ -3,11 +3,11 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include "config/common.h"
-#include "nntpclient.h"
+#include "nntp/nntpclient.h"
 
 #include "nntp.h"
-#include "nntpauth.h"
-#include "nntpinit.h"
+#include "nntp/nntpauth.h"
+#include "nntp/nntpinit.h"
 
 #include <time.h>
 

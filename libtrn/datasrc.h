@@ -11,7 +11,7 @@
 
 #include "enum-flags.h"
 #include "list.h"
-#include "nntpclient.h"
+#include "nntp/nntpclient.h"
 #include "rt-ov.h"
 
 enum
