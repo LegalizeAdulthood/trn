@@ -3,9 +3,9 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include "config/common.h"
-#include "list.h"
+#include "trn/list.h"
 
-#include "util.h"
+#include "trn/util.h"
 
 #include <algorithm>
 

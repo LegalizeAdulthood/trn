@@ -3,10 +3,10 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include "config/common.h"
-#include "help.h"
+#include "trn/help.h"
 
-#include "ngdata.h"
-#include "terminal.h"
+#include "trn/ngdata.h"
+#include "trn/terminal.h"
 
 void help_init()
 {

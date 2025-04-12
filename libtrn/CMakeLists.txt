@@ -1,80 +1,80 @@
 add_library(libtrn
-    addng.cpp addng.h
-    art.cpp art.h
-    artio.cpp artio.h
-    artsrch.cpp artsrch.h
-    artstate.h
-    autosub.cpp autosub.h
-    backpage.cpp backpage.h
-    bits.cpp bits.h
-    cache.cpp cache.h
-    change_dir.h
-    charsubst.cpp charsubst.h
-    color.cpp color.h
-    datasrc.cpp datasrc.h
-    decode.cpp decode.h
-    edit_dist.cpp edit_dist.h
-    enum-flags.h
-    final.cpp final.h
-    hash.cpp hash.h
-    head.cpp head.h
-    help.cpp help.h
-    init.cpp init.h
-    intrp.cpp intrp.h
-    kfile.cpp kfile.h
-    last.cpp last.h
-    list.cpp list.h
-    mempool.cpp mempool.h
-    mime.cpp mime.h mime-internal.h
-    ng.cpp ng.h
-    ngdata.cpp ngdata.h
-    ngsrch.cpp ngsrch.h
-    ngstuff.cpp ngstuff.h
-    nntp.cpp nntp.h
-    only.cpp only.h
-    opt.cpp opt.h
-    patchlevel.h
-    rcln.cpp rcln.h
-    rcstuff.cpp rcstuff.h
-    respond.cpp respond.h
-    rt-ov.cpp rt-ov.h
-    rt-page.cpp rt-page.h
-    rt-process.cpp rt-process.h
-    rt-select.cpp rt-select.h
-    rt-util.cpp rt-util.h
-    rt-wumpus.cpp rt-wumpus.h
-    rthread.cpp rthread.h
-    sacmd.cpp sacmd.h
-    sadesc.cpp sadesc.h
-    sadisp.cpp sadisp.h
-    samain.cpp samain.h
-    samisc.cpp samisc.h
-    sathread.cpp sathread.h
-    scan.cpp scan.h
-    scanart.cpp scanart.h
-    scmd.cpp scmd.h
-    score-easy.cpp score-easy.h
-    score.cpp score.h
-    scorefile.cpp scorefile.h
-    scoresave.cpp scoresave.h
-    sdisp.cpp sdisp.h
-    search.cpp search.h
-    smisc.cpp smisc.h
-    sorder.cpp sorder.h
-    spage.cpp spage.h
-    string-algos.h
-    sw.cpp sw.h
-    terminal.cpp terminal.h
-    trn.cpp trn.h
-    utf.cpp utf.h
-    univ.cpp univ.h
-    url.cpp url.h
-    util.cpp util.h
-    uudecode.cpp uudecode.h
+    addng.cpp include/trn/addng.h
+    art.cpp include/trn/art.h
+    artio.cpp include/trn/artio.h
+    artsrch.cpp include/trn/artsrch.h
+    include/trn/artstate.h
+    autosub.cpp include/trn/autosub.h
+    backpage.cpp include/trn/backpage.h
+    bits.cpp include/trn/bits.h
+    cache.cpp include/trn/cache.h
+    include/trn/change_dir.h
+    charsubst.cpp include/trn/charsubst.h
+    color.cpp include/trn/color.h
+    datasrc.cpp include/trn/datasrc.h
+    decode.cpp include/trn/decode.h
+    edit_dist.cpp include/trn/edit_dist.h
+    include/trn/enum-flags.h
+    final.cpp include/trn/final.h
+    hash.cpp include/trn/hash.h
+    head.cpp include/trn/head.h
+    help.cpp include/trn/help.h
+    init.cpp include/trn/init.h
+    intrp.cpp include/trn/intrp.h
+    kfile.cpp include/trn/kfile.h
+    last.cpp include/trn/last.h
+    list.cpp include/trn/list.h
+    mempool.cpp include/trn/mempool.h
+    mime.cpp include/trn/mime.h include/trn/mime-internal.h
+    ng.cpp include/trn/ng.h
+    ngdata.cpp include/trn/ngdata.h
+    ngsrch.cpp include/trn/ngsrch.h
+    ngstuff.cpp include/trn/ngstuff.h
+    nntp.cpp include/trn/nntp.h
+    only.cpp include/trn/only.h
+    opt.cpp include/trn/opt.h
+    include/trn/patchlevel.h
+    rcln.cpp include/trn/rcln.h
+    rcstuff.cpp include/trn/rcstuff.h
+    respond.cpp include/trn/respond.h
+    rt-ov.cpp include/trn/rt-ov.h
+    rt-page.cpp include/trn/rt-page.h
+    rt-process.cpp include/trn/rt-process.h
+    rt-select.cpp include/trn/rt-select.h
+    rt-util.cpp include/trn/rt-util.h
+    rt-wumpus.cpp include/trn/rt-wumpus.h
+    rthread.cpp include/trn/rthread.h
+    sacmd.cpp include/trn/sacmd.h
+    sadesc.cpp include/trn/sadesc.h
+    sadisp.cpp include/trn/sadisp.h
+    samain.cpp include/trn/samain.h
+    samisc.cpp include/trn/samisc.h
+    sathread.cpp include/trn/sathread.h
+    scan.cpp include/trn/scan.h
+    scanart.cpp include/trn/scanart.h
+    scmd.cpp include/trn/scmd.h
+    score-easy.cpp include/trn/score-easy.h
+    score.cpp include/trn/score.h
+    scorefile.cpp include/trn/scorefile.h
+    scoresave.cpp include/trn/scoresave.h
+    sdisp.cpp include/trn/sdisp.h
+    search.cpp include/trn/search.h
+    smisc.cpp include/trn/smisc.h
+    sorder.cpp include/trn/sorder.h
+    spage.cpp include/trn/spage.h
+    include/trn/string-algos.h
+    sw.cpp include/trn/sw.h
+    terminal.cpp include/trn/terminal.h
+    trn.cpp include/trn/trn.h
+    utf.cpp include/trn/utf.h
+    univ.cpp include/trn/univ.h
+    url.cpp include/trn/url.h
+    util.cpp include/trn/util.h
+    uudecode.cpp include/trn/uudecode.h
 )
 # We require <filesystem>
 target_compile_features(libtrn PUBLIC cxx_std_17)
 source_group("Header Files" REGULAR_EXPRESSION "^.*\\.h$")
-target_include_directories(libtrn PUBLIC .)
+target_include_directories(libtrn PUBLIC include)
 target_link_libraries(libtrn PUBLIC parsedate curses nntp)
 target_folder(libtrn "Libraries")

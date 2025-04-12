@@ -5,27 +5,27 @@
  */
 
 #include "config/common.h"
-#include "sacmd.h"
+#include "trn/sacmd.h"
 
-#include "bits.h"
-#include "cache.h"
-#include "list.h"
-#include "ng.h"
-#include "ngdata.h" /* for g_threaded_group */
-#include "respond.h"
-#include "samain.h"
-#include "samisc.h"
-#include "sathread.h"
-#include "scan.h"
-#include "scanart.h"
-#include "scmd.h"
-#include "score.h"
-#include "sdisp.h"
-#include "smisc.h" /* needed? */
-#include "sorder.h"
-#include "spage.h"
-#include "terminal.h" /* for LINES */
-#include "util.h"
+#include "trn/bits.h"
+#include "trn/cache.h"
+#include "trn/list.h"
+#include "trn/ng.h"
+#include "trn/ngdata.h" /* for g_threaded_group */
+#include "trn/respond.h"
+#include "trn/samain.h"
+#include "trn/samisc.h"
+#include "trn/sathread.h"
+#include "trn/scan.h"
+#include "trn/scanart.h"
+#include "trn/scmd.h"
+#include "trn/score.h"
+#include "trn/sdisp.h"
+#include "trn/smisc.h" /* needed? */
+#include "trn/sorder.h"
+#include "trn/spage.h"
+#include "trn/terminal.h" /* for LINES */
+#include "trn/util.h"
 #include "util/util2.h"
 
 static char *s_sa_extract_dest{}; /* use this command on an extracted file */

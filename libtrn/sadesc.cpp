@@ -4,18 +4,18 @@
  */
 
 #include "config/common.h"
-#include "sadesc.h"
+#include "trn/sadesc.h"
 
-#include "cache.h"
-#include "head.h" /* currently used for fast author fetch when group is threaded */
-#include "list.h"
-#include "rt-util.h" /* compress_from() */
-#include "samain.h"
-#include "sathread.h"
-#include "scan.h"
-#include "scanart.h"
-#include "score.h"
-#include "terminal.h" /* for standout */
+#include "trn/cache.h"
+#include "trn/head.h" /* currently used for fast author fetch when group is threaded */
+#include "trn/list.h"
+#include "trn/rt-util.h" /* compress_from() */
+#include "trn/samain.h"
+#include "trn/sathread.h"
+#include "trn/scan.h"
+#include "trn/scanart.h"
+#include "trn/score.h"
+#include "trn/terminal.h" /* for standout */
 
 static char s_sa_buf[LBUFLEN];    /* misc. buffer */
 

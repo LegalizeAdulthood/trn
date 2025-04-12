@@ -28,11 +28,11 @@
 #include <config/string_case_compare.h>
 
 #include "config/common.h"
-#include "color.h"
+#include "trn/color.h"
 
-#include "final.h"
-#include "string-algos.h"
-#include "terminal.h"
+#include "trn/final.h"
+#include "trn/string-algos.h"
+#include "trn/terminal.h"
 #include "util/util2.h"
 
 struct COLOR_OBJ

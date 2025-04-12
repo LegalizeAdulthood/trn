@@ -12,8 +12,8 @@
 
 #include <boost/system/error_code.hpp>
 
-#include "enum-flags.h"
-#include "util.h"
+#include "trn/enum-flags.h"
+#include "trn/util.h"
 
 enum nntp_flags
 {

@@ -5,7 +5,7 @@
 #include "config/common.h"
 #include "nntp/nntpclient.h"
 
-#include "nntp.h"
+#include "trn/nntp.h"
 #include "nntp/nntpauth.h"
 #include "nntp/nntpinit.h"
 

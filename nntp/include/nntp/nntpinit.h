@@ -1,4 +1,4 @@
-/* nntpinit.h
+/* nntptrn/init.h
  */
 #ifndef TRN_NNTPINIT_H
 #define TRN_NNTPINIT_H

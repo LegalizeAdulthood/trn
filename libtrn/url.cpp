@@ -5,10 +5,10 @@
  */
 
 #include "config/common.h"
-#include "url.h"
+#include "trn/url.h"
 
 #include "nntp/nntpinit.h"
-#include "util.h"
+#include "trn/util.h"
 #include "util/util2.h"
 
 /* Lower-level net routines grabbed from nntpinit.c.

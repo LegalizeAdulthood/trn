@@ -7,8 +7,8 @@
 #include "config/common.h"
 #include "util/env-internal.h"
 
-#include "init.h"
-#include "util.h"
+#include "trn/init.h"
+#include "trn/util.h"
 #include "util/util2.h"
 
 #ifdef HAS_RES_INIT

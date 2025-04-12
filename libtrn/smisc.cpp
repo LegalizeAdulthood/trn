@@ -5,11 +5,11 @@
  */
 
 #include "config/common.h"
-#include "smisc.h"
+#include "trn/smisc.h"
 
-#include "sadesc.h"
-#include "samisc.h"
-#include "scan.h"
+#include "trn/sadesc.h"
+#include "trn/samisc.h"
+#include "trn/scan.h"
 
 bool g_s_default_cmd{}; /* true if the last command (run through setdef()) was the default */
 bool g_s_follow_temp{}; /* explicitly follow until end of thread */

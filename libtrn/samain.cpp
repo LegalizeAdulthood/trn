@@ -5,22 +5,22 @@
  */
 
 #include "config/common.h"
-#include "samain.h"
+#include "trn/samain.h"
 
-#include "cache.h"
-#include "list.h"
-#include "ngdata.h"
-#include "sadisp.h"
-#include "samisc.h"
-#include "sathread.h"
-#include "scan.h"
-#include "scanart.h"
-#include "scmd.h"
-#include "score.h"
-#include "sdisp.h"
-#include "sorder.h"
-#include "spage.h"
-#include "util.h"
+#include "trn/cache.h"
+#include "trn/list.h"
+#include "trn/ngdata.h"
+#include "trn/sadisp.h"
+#include "trn/samisc.h"
+#include "trn/sathread.h"
+#include "trn/scan.h"
+#include "trn/scanart.h"
+#include "trn/scmd.h"
+#include "trn/score.h"
+#include "trn/sdisp.h"
+#include "trn/sorder.h"
+#include "trn/spage.h"
+#include "trn/util.h"
 
 bool g_sa_mode_zoom{};      /* true if in "zoom" (display only selected) mode */
 int  g_sa_scan_context{-1}; /* contains the scan-context number for the current article scan */

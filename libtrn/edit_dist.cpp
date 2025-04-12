@@ -6,9 +6,9 @@
  */
 
 #include "config/common.h"             /* Declare MEM_SIZE */
-#include "edit_dist.h"
+#include "trn/edit_dist.h"
 
-#include "util.h"               /* Declare safemalloc() */
+#include "trn/util.h"               /* Declare safemalloc() */
 
 #include <algorithm>
 

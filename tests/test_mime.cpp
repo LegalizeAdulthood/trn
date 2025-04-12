@@ -2,9 +2,9 @@
 #include <gtest/gtest.h>
 
 #include <config/common.h>
-#include <mime-internal.h>
+#include <trn/mime-internal.h>
 
-#include <util.h>
+#include <trn/util.h>
 #include <util/util2.h>
 
 #include "test_mime.h"

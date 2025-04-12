@@ -3,11 +3,11 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include "config/common.h"
-#include "last.h"
+#include "trn/last.h"
 
-#include "init.h"
-#include "trn.h"
-#include "util.h"
+#include "trn/init.h"
+#include "trn/trn.h"
+#include "trn/util.h"
 #include "util/util2.h"
 
 #include <time.h>

@@ -7,17 +7,17 @@
  */
 
 #include "config/common.h"
-#include "scanart.h"
+#include "trn/scanart.h"
 
-#include "artstate.h" /* for g_reread */
-#include "ng.h"       /* variable g_art, the next article to read. */
-#include "ngdata.h"
-#include "rt-select.h" /* g_selected_only */
-#include "samain.h"
-#include "samisc.h"
-#include "scan.h"
-#include "smisc.h"
-#include "terminal.h" /* macro to clear... */
+#include "trn/artstate.h" /* for g_reread */
+#include "trn/ng.h"       /* variable g_art, the next article to read. */
+#include "trn/ngdata.h"
+#include "trn/rt-select.h" /* g_selected_only */
+#include "trn/samain.h"
+#include "trn/samisc.h"
+#include "trn/scan.h"
+#include "trn/smisc.h"
+#include "trn/terminal.h" /* macro to clear... */
 
 SA_ENTRYDATA *g_sa_ents{};
 int           g_sa_num_ents{};
@@ -29,7 +29,7 @@ bool    g_sa_go{};             /* go to sa.  Do not pass GO (:-) */
 bool    g_sa_go_explicit{};    /* want to bypass read-next-marked */
 ART_NUM g_sa_art{};            /* used to pass an article number to read soon */
 bool    g_sa_do_selthreads{};  /* select threads from TRN thread selector; re-implement later */
-bool    g_sa_mode_read_elig{}; /* true if read articles are eligible in scanart.h for world-visibilty */
+bool    g_sa_mode_read_elig{}; /* true if read articles are eligible in trn/scanart.h for world-visibilty */
 
 /* Options */
 /* Display order variable:

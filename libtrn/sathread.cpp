@@ -4,14 +4,14 @@
  */
 
 #include "config/common.h"
-#include "sathread.h"
+#include "trn/sathread.h"
 
-#include "cache.h"
-#include "hash.h"
-#include "mempool.h"
-#include "sadesc.h" /* sa_desc_subject() */
-#include "samisc.h"
-#include "sorder.h"
+#include "trn/cache.h"
+#include "trn/hash.h"
+#include "trn/mempool.h"
+#include "trn/sadesc.h" /* sa_desc_subject() */
+#include "trn/samisc.h"
+#include "trn/sorder.h"
 
 static long       s_sa_num_threads{};
 static HASHTABLE *s_sa_thread_hash{};

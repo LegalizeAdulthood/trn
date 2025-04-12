@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
 #include "config/common.h"
-#include "color.h"
-#include "opt.h"
-#include "head.h"
+#include "trn/color.h"
+#include "trn/opt.h"
+#include "trn/head.h"
 
 template <typename Enum>
 struct enum_values

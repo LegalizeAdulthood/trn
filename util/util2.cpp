@@ -6,7 +6,7 @@
 #include "util/util2.h"
 
 #include "util/env.h"
-#include "util.h"
+#include "trn/util.h"
 #include "util3.h"
 
 #ifdef TILDENAME

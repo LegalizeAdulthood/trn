@@ -5,19 +5,19 @@
 #include <config/string_case_compare.h>
 
 #include "config/common.h"
-#include "nntp.h"
+#include "trn/nntp.h"
 
-#include "artio.h"
-#include "cache.h"
-#include "datasrc.h"
-#include "final.h"
-#include "head.h"
-#include "init.h"
-#include "ngdata.h"
+#include "trn/artio.h"
+#include "trn/cache.h"
+#include "trn/datasrc.h"
+#include "trn/final.h"
+#include "trn/head.h"
+#include "trn/init.h"
+#include "trn/ngdata.h"
 #include "nntp/nntpclient.h"
-#include "rcstuff.h"
-#include "terminal.h"
-#include "trn.h"
+#include "trn/rcstuff.h"
+#include "trn/terminal.h"
+#include "trn/trn.h"
 #include "util/util2.h"
 
 #include <time.h>

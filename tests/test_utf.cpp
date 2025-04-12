@@ -7,7 +7,7 @@
 #include <string.h>
 
 #include "config/common.h"
-#include "utf.h"
+#include "trn/utf.h"
 
 using namespace testing;
 

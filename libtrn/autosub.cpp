@@ -5,12 +5,12 @@
 #include <string>
 
 #include "config/common.h"
-#include "autosub.h"
+#include "trn/autosub.h"
 
 #include "util/env.h"
-#include "final.h"
-#include "ngsrch.h"
-#include "search.h"
+#include "trn/final.h"
+#include "trn/ngsrch.h"
+#include "trn/search.h"
 
 static bool matchlist(const char *patlist, const char *s);
 

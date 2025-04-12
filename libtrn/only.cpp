@@ -3,14 +3,14 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include "config/common.h"
-#include "only.h"
+#include "trn/only.h"
 
-#include "final.h"
-#include "ngdata.h"
-#include "ngsrch.h"
-#include "search.h"
-#include "trn.h"
-#include "util.h"
+#include "trn/final.h"
+#include "trn/ngdata.h"
+#include "trn/ngsrch.h"
+#include "trn/search.h"
+#include "trn/trn.h"
+#include "trn/util.h"
 #include "util/util2.h"
 
 char *g_ngtodo[MAXNGTODO]; /* restrictions in effect */

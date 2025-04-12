@@ -4,18 +4,18 @@
  */
 
 #include "config/common.h"
-#include "spage.h"
+#include "trn/spage.h"
 
-#include "cache.h"
-#include "list.h"
-#include "ngdata.h"
-#include "rt-util.h" /* spinner */
-#include "samain.h"
-#include "scan.h"
-#include "scanart.h"
-#include "sdisp.h" /* for display dimension sizes */
-#include "smisc.h"
-#include "sorder.h"
+#include "trn/cache.h"
+#include "trn/list.h"
+#include "trn/ngdata.h"
+#include "trn/rt-util.h" /* spinner */
+#include "trn/samain.h"
+#include "trn/scan.h"
+#include "trn/scanart.h"
+#include "trn/sdisp.h" /* for display dimension sizes */
+#include "trn/smisc.h"
+#include "trn/sorder.h"
 
 #include <algorithm>
 

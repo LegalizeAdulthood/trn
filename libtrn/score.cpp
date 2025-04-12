@@ -4,24 +4,24 @@
  */
 
 #include "config/common.h"
-#include "score.h"
+#include "trn/score.h"
 
-#include "artio.h" /* for g_openart var.*/
-#include "bits.h"
-#include "cache.h"
-#include "list.h"
-#include "ng.h" /* g_art */
-#include "ngdata.h"
-#include "rt-util.h" /* spinner */
-#include "samisc.h"
-#include "scan.h"
-#include "scanart.h"
-#include "score-easy.h" /* interactive menus and such */
-#include "scorefile.h"
-#include "scoresave.h"
-#include "string-algos.h"
-#include "sorder.h"
-#include "terminal.h" /* input_pending() */
+#include "trn/artio.h" /* for g_openart var.*/
+#include "trn/bits.h"
+#include "trn/cache.h"
+#include "trn/list.h"
+#include "trn/ng.h" /* g_art */
+#include "trn/ngdata.h"
+#include "trn/rt-util.h" /* spinner */
+#include "trn/samisc.h"
+#include "trn/scan.h"
+#include "trn/scanart.h"
+#include "trn/score-easy.h" /* interactive menus and such */
+#include "trn/scorefile.h"
+#include "trn/scoresave.h"
+#include "trn/string-algos.h"
+#include "trn/sorder.h"
+#include "trn/terminal.h" /* input_pending() */
 
 bool    g_kill_thresh_active{};  //
 int     g_kill_thresh{LOWSCORE}; /* KILL articles at or below this score */

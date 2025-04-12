@@ -6,22 +6,22 @@
  */
 
 #include "config/common.h"
-#include "scmd.h"
+#include "trn/scmd.h"
 
-#include "final.h"
-#include "help.h"
-#include "ng.h"
-#include "ngstuff.h"
-#include "sacmd.h" /* sa_docmd */
-#include "samain.h"
-#include "scan.h"
-#include "sdisp.h"
-#include "smisc.h"
-#include "sorder.h"
-#include "spage.h"
-#include "string-algos.h"
-#include "terminal.h"
-#include "univ.h"
+#include "trn/final.h"
+#include "trn/help.h"
+#include "trn/ng.h"
+#include "trn/ngstuff.h"
+#include "trn/sacmd.h" /* sa_docmd */
+#include "trn/samain.h"
+#include "trn/scan.h"
+#include "trn/sdisp.h"
+#include "trn/smisc.h"
+#include "trn/sorder.h"
+#include "trn/spage.h"
+#include "trn/string-algos.h"
+#include "trn/terminal.h"
+#include "trn/univ.h"
 
 void s_go_bot()
 {

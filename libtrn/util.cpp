@@ -11,18 +11,18 @@
 #include <config/string_case_compare.h>
 
 #include "config/common.h"
-#include "util.h"
+#include "trn/util.h"
 
-#include "datasrc.h"
+#include "trn/datasrc.h"
 #include "util/env.h"
-#include "final.h"
-#include "intrp.h"
+#include "trn/final.h"
+#include "trn/intrp.h"
 #include "nntp/nntpclient.h"
-#include "search.h"
-#include "smisc.h" /* g_s_default_cmd */
-#include "string-algos.h"
-#include "terminal.h"
-#include "univ.h"
+#include "trn/search.h"
+#include "trn/smisc.h" /* g_s_default_cmd */
+#include "trn/string-algos.h"
+#include "trn/terminal.h"
+#include "trn/univ.h"
 #include "util/util2.h"
 
 #ifdef I_SYS_TIMEB

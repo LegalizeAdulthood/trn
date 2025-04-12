@@ -5,10 +5,10 @@
 */
 
 #include "config/common.h"
-#include "hash.h"
+#include "trn/hash.h"
 
-#include "final.h"
-#include "util.h"
+#include "trn/final.h"
+#include "trn/util.h"
 
 #include <algorithm>
 

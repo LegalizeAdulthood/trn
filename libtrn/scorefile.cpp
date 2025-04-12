@@ -8,22 +8,22 @@
 #include <config/string_case_compare.h>
 
 #include "config/common.h"
-#include "scorefile.h"
+#include "trn/scorefile.h"
 
-#include "cache.h"
+#include "trn/cache.h"
 #include "util/env.h" /* get_val */
-#include "head.h"
-#include "list.h"
-#include "mempool.h"
-#include "ng.h"
-#include "ngdata.h"
-#include "rt-util.h"
-#include "score.h"  /* shared stuff... */
-#include "search.h" /* regex matches */
-#include "string-algos.h"
-#include "terminal.h" /* finish_command() */
-#include "url.h"
-#include "util.h"
+#include "trn/head.h"
+#include "trn/list.h"
+#include "trn/mempool.h"
+#include "trn/ng.h"
+#include "trn/ngdata.h"
+#include "trn/rt-util.h"
+#include "trn/score.h"  /* shared stuff... */
+#include "trn/search.h" /* regex matches */
+#include "trn/string-algos.h"
+#include "trn/terminal.h" /* finish_command() */
+#include "trn/url.h"
+#include "trn/util.h"
 #include "util/util2.h"
 
 int  g_sf_num_entries{};   /* # of entries */

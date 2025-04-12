@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <config/common.h>
-#include <string-algos.h>
+#include <trn/string-algos.h>
 
 using namespace testing;
 

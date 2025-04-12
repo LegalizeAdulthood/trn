@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 #include "config/common.h"
-#include "utf.h"
+#include "trn/utf.h"
 
 /* OK - valid second and subsequent bytes in UTF-8 */
 #define OK(s) ((*(s) & 0xC0) == 0x80)
@@ -76,7 +76,7 @@ struct CHARSET_DESC
 };
 
 static const CHARSET_DESC s_charset_descs[] = {
-    /* Tags defined in utf.h go first; these are short labels for charsubst.c */
+    /* Tags defined in trn/utf.h go first; these are short labels for charsubst.c */
     // clang-format off
     { CHARSET_NAME_ASCII, CHARSET_ASCII, nullptr },
     { "us-ascii", CHARSET_ASCII, nullptr },

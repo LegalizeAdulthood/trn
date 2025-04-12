@@ -5,21 +5,21 @@
 #include <config/string_case_compare.h>
 
 #include "config/common.h"
-#include "decode.h"
+#include "trn/decode.h"
 
-#include "art.h"
-#include "artio.h"
-#include "artstate.h"
-#include "change_dir.h"
-#include "final.h"
-#include "head.h"
-#include "intrp.h"
-#include "mime.h"
-#include "string-algos.h"
-#include "terminal.h"
-#include "util.h"
+#include "trn/art.h"
+#include "trn/artio.h"
+#include "trn/artstate.h"
+#include "trn/change_dir.h"
+#include "trn/final.h"
+#include "trn/head.h"
+#include "trn/intrp.h"
+#include "trn/mime.h"
+#include "trn/string-algos.h"
+#include "trn/terminal.h"
+#include "trn/util.h"
 #include "util/util2.h"
-#include "uudecode.h"
+#include "trn/uudecode.h"
 
 #include <algorithm>
 

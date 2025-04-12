@@ -1,4 +1,4 @@
-#include "trn.h"
+#include "trn/trn.h"
 
 int main(int argc, char *argv[])
 {

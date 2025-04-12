@@ -5,12 +5,12 @@
 #include <config/string_case_compare.h>
 
 #include "config/common.h"
-#include "uudecode.h"
+#include "trn/uudecode.h"
 
-#include "artio.h"
-#include "mime.h"
-#include "terminal.h"
-#include "string-algos.h"
+#include "trn/artio.h"
+#include "trn/mime.h"
+#include "trn/terminal.h"
+#include "trn/string-algos.h"
 #include "util/util2.h"
 
 #include <algorithm>

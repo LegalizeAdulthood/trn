@@ -3,19 +3,19 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include "config/common.h"
-#include "ngsrch.h"
+#include "trn/ngsrch.h"
 
-#include "addng.h"
-#include "final.h"
-#include "ng.h"
-#include "ngdata.h"
-#include "ngstuff.h"
-#include "rcln.h"
-#include "rcstuff.h"
-#include "rt-select.h"
-#include "rt-util.h"
-#include "search.h"
-#include "terminal.h"
+#include "trn/addng.h"
+#include "trn/final.h"
+#include "trn/ng.h"
+#include "trn/ngdata.h"
+#include "trn/ngstuff.h"
+#include "trn/rcln.h"
+#include "trn/rcstuff.h"
+#include "trn/rt-select.h"
+#include "trn/rt-util.h"
+#include "trn/search.h"
+#include "trn/terminal.h"
 #include "util/util2.h"
 
 static bool   s_ng_doempty{}; /* search empty newsgroups? */

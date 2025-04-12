@@ -5,14 +5,14 @@
  */
 
 #include "config/common.h"
-#include "sdisp.h"
+#include "trn/sdisp.h"
 
-#include "ng.h" /* g_mailcall */
-#include "sadisp.h"
-#include "scan.h"
-#include "smisc.h"
-#include "sorder.h"
-#include "terminal.h"
+#include "trn/ng.h" /* g_mailcall */
+#include "trn/sadisp.h"
+#include "trn/scan.h"
+#include "trn/smisc.h"
+#include "trn/sorder.h"
+#include "trn/terminal.h"
 
 int  g_scr_height{}; /* height of screen in characters */
 int  g_scr_width{};  /* width of screen in characters */

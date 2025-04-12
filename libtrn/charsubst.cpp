@@ -12,10 +12,10 @@
  * for any use whatsoever, and it is provided as is. Any use of this software
  * is at the user's own risk. 
  */
-#include "charsubst.h"
+#include "trn/charsubst.h"
 
 #include "config/config2.h"
-#include "trn.h"
+#include "trn/trn.h"
 #include "config/typedef.h"
 #include "util/util2.h"
 

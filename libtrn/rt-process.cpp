@@ -3,19 +3,19 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include "config/common.h"
-#include "rt-process.h"
+#include "trn/rt-process.h"
 
-#include "cache.h"
-#include "hash.h"
-#include "kfile.h"
-#include "list.h"
-#include "ng.h"
-#include "ngdata.h"
-#include "rt-select.h"
-#include "rthread.h"
-#include "string-algos.h"
-#include "terminal.h"
-#include "util.h"
+#include "trn/cache.h"
+#include "trn/hash.h"
+#include "trn/kfile.h"
+#include "trn/list.h"
+#include "trn/ng.h"
+#include "trn/ngdata.h"
+#include "trn/rt-select.h"
+#include "trn/rthread.h"
+#include "trn/string-algos.h"
+#include "trn/terminal.h"
+#include "trn/util.h"
 #include "util/util2.h"
 
 static void fix_msgid(char *msgid);

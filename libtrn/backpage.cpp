@@ -5,9 +5,9 @@
 #include <config/fdio.h>
 
 #include "config/common.h"
-#include "backpage.h"
+#include "trn/backpage.h"
 
-#include "final.h"
+#include "trn/final.h"
 #include "util/util2.h"
 
 

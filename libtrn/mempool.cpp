@@ -3,10 +3,10 @@
  */
 
 #include "config/common.h"
-#include "mempool.h"
+#include "trn/mempool.h"
 
-#include "final.h"
-#include "util.h"
+#include "trn/final.h"
+#include "trn/util.h"
 #include "util/util2.h"
 
 /* any of these defines can be increased arbitrarily */

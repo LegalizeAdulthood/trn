@@ -1,6 +1,6 @@
 #include <config/common.h>
 #include <util/env.h>
-#include <util.h>
+#include <trn/util.h>
 #include <util/util2.h>
 
 #include "mock_env.h"

@@ -6,7 +6,7 @@
 #include "nntp/nntpauth.h"
 
 #include "nntp/nntpclient.h"
-#include "util.h"
+#include "trn/util.h"
 
 int nntp_handle_auth_err()
 {

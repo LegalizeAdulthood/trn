@@ -3,15 +3,15 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include "config/common.h"
-#include "rcln.h"
+#include "trn/rcln.h"
 
-#include "datasrc.h"
-#include "ngdata.h"
-#include "rcstuff.h"
-#include "string-algos.h"
-#include "terminal.h"
-#include "trn.h"
-#include "util.h"
+#include "trn/datasrc.h"
+#include "trn/ngdata.h"
+#include "trn/rcstuff.h"
+#include "trn/string-algos.h"
+#include "trn/terminal.h"
+#include "trn/trn.h"
+#include "trn/util.h"
 #include "util/util2.h"
 
 enum

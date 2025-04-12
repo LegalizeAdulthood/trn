@@ -5,10 +5,10 @@
  */
 
 #include "config/common.h"
-#include "score-easy.h"
+#include "trn/score-easy.h"
 
-#include "terminal.h"
-#include "util.h"
+#include "trn/terminal.h"
+#include "trn/util.h"
 
 /* new line to return to the caller. */
 static char s_sc_e_newline[LBUFLEN];

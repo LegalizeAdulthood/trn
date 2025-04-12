@@ -5,20 +5,20 @@
  */
 
 #include "config/common.h"
-#include "samisc.h"
+#include "trn/samisc.h"
 
-#include "artio.h" /* g_openart */
-#include "bits.h"
-#include "cache.h"
-#include "list.h"
-#include "ng.h"     /* for "g_art" */
-#include "ngdata.h" /* several */
-#include "rthread.h"
-#include "samain.h"
-#include "sathread.h"
-#include "scanart.h"
-#include "score.h"
-#include "sorder.h"
+#include "trn/artio.h" /* g_openart */
+#include "trn/bits.h"
+#include "trn/cache.h"
+#include "trn/list.h"
+#include "trn/ng.h"     /* for "g_art" */
+#include "trn/ngdata.h" /* several */
+#include "trn/rthread.h"
+#include "trn/samain.h"
+#include "trn/sathread.h"
+#include "trn/scanart.h"
+#include "trn/score.h"
+#include "trn/sorder.h"
 
 inline int check_article(long a)
 {

@@ -3,20 +3,20 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 #include "config/common.h"
-#include "rt-util.h"
+#include "trn/rt-util.h"
 
-#include "artio.h"
-#include "cache.h"
-#include "charsubst.h"
-#include "intrp.h"
-#include "ng.h"
-#include "ngdata.h"
-#include "rt-select.h"
-#include "string-algos.h"
-#include "terminal.h"
-#include "trn.h"
-#include "utf.h"
-#include "util.h"
+#include "trn/artio.h"
+#include "trn/cache.h"
+#include "trn/charsubst.h"
+#include "trn/intrp.h"
+#include "trn/ng.h"
+#include "trn/ngdata.h"
+#include "trn/rt-select.h"
+#include "trn/string-algos.h"
+#include "trn/terminal.h"
+#include "trn/trn.h"
+#include "trn/utf.h"
+#include "trn/util.h"
 #include "util/util2.h"
 
 #include <time.h>

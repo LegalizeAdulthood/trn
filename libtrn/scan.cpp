@@ -7,10 +7,10 @@
 /* CLEANUP: make a scontext file for the scan context stuff. */
 
 #include "config/common.h"
-#include "scan.h"
+#include "trn/scan.h"
 
-#include "sorder.h"
-#include "util.h" /* allocation */
+#include "trn/sorder.h"
+#include "trn/util.h" /* allocation */
 
 /* the current values */
 long     *g_s_ent_sort{};       /* sorted list of entries in the context */

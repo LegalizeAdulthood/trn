@@ -2,12 +2,12 @@
 
 #include <config/common.h>
 
-#include <addng.h>
-#include <cache.h>
-#include <datasrc.h>
-#include <ngdata.h>
-#include <rcstuff.h>
-#include <univ.h>
+#include <trn/addng.h>
+#include <trn/cache.h>
+#include <trn/datasrc.h>
+#include <trn/ngdata.h>
+#include <trn/rcstuff.h>
+#include <trn/univ.h>
 
 TEST(DataSrcFlags, bitwiseOr)
 {

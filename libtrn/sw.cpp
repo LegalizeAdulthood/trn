@@ -5,21 +5,21 @@
 #include <config/fdio.h>
 
 #include "config/common.h"
-#include "sw.h"
+#include "trn/sw.h"
 
 #include "util/env.h"
-#include "head.h"
-#include "init.h"
-#include "intrp.h"
-#include "ng.h"
-#include "ngdata.h"
-#include "only.h"
-#include "opt.h"
-#include "rcstuff.h"
-#include "string-algos.h"
-#include "terminal.h"
-#include "trn.h"
-#include "util.h"
+#include "trn/head.h"
+#include "trn/init.h"
+#include "trn/intrp.h"
+#include "trn/ng.h"
+#include "trn/ngdata.h"
+#include "trn/only.h"
+#include "trn/opt.h"
+#include "trn/rcstuff.h"
+#include "trn/string-algos.h"
+#include "trn/terminal.h"
+#include "trn/trn.h"
+#include "trn/util.h"
 
 static char **s_init_environment_strings{};
 static int    s_init_environment_cnt{};

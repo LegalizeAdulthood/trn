@@ -23,9 +23,9 @@
  */
 
 #include "config/common.h"
-#include "search.h"
+#include "trn/search.h"
 
-#include "util.h"
+#include "trn/util.h"
 #include "util/util2.h"
 
 enum
