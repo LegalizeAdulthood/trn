@@ -13,7 +13,7 @@
 #include "nntp/nntpinit.h"
 #include "trn/string-algos.h"
 #include "util/util2.h"
-#include "util3.h"
+#include "tool/util3.h"
 #include "util/wildmat.h"
 
 void Usage();

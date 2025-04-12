@@ -5,7 +5,7 @@
 #include <string>
 
 #include <stdio.h>
-#include "util3.h"
+#include "tool/util3.h"
 
 #include "config/config2.h"
 #include "nntp/nntpclient.h"

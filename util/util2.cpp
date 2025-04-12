@@ -7,7 +7,7 @@
 
 #include "util/env.h"
 #include "trn/util.h"
-#include "util3.h"
+#include "tool/util3.h"
 
 #ifdef TILDENAME
 static char *s_tildename{};
