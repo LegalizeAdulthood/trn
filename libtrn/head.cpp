@@ -565,7 +565,8 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
     if ((g_datasrc->flags & DF_REMOTE) && g_parsed_art != artnum) {
         ARTICLE*ap;
         int     size;
-        ART_NUM num, lastnum;
+        ART_NUM num;
+        ART_NUM lastnum;
         bool    hasxhdr = true;
 
         s = fetchcache(artnum,which_line, DONT_FILL_CACHE);

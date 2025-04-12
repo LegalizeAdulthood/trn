@@ -514,9 +514,10 @@ void set_toread(NGDATA *np, bool lax_high_check)
 
 void checkexpired(NGDATA *np, ART_NUM a1st)
 {
-    char* s;
-    ART_NUM num, lastnum = 0;
-    char* mbuf;
+    char   *s;
+    ART_NUM num;
+    ART_NUM lastnum = 0;
+    char   * mbuf;
     char* cp;
     int len;
 

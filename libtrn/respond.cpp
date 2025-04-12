@@ -212,8 +212,9 @@ save_result save_article()
             mime_DecodeArticle(false);
         }
         else {
-            char* filename;
-            int part, total;
+            char *filename;
+            int   part;
+            int   total;
             int decode_type = 0;
             int cnt = 0;
 
@@ -316,8 +317,9 @@ save_result save_article()
         termlib_init();
     }
     else {                      /* normal save */
-        bool there, mailbox;
-        char* savename = get_val("SAVENAME",SAVENAME);
+        bool  there;
+        bool  mailbox;
+        char * savename = get_val("SAVENAME",SAVENAME);
 
         s = g_buf+1;            /* skip s or S */
         if (*s == '-') {        /* if they are confused, skip - also */
@@ -552,8 +554,9 @@ save_result view_article()
         mime_DecodeArticle(true);
     }
     else {
-        char* filename;
-        int part, total;
+        char *filename;
+        int   part;
+        int   total;
         int cnt = 0;
 
         /* Scan subject for filename and part number information */

@@ -142,8 +142,9 @@ static void new_nntp_groups(DATASRC *dp)
 {
     char* s;
     int len;
-    bool foundSomething = false;
-    long high, low;
+    bool  foundSomething = false;
+    long  high;
+    long  low;
 
     set_datasrc(dp);
 

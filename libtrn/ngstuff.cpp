@@ -158,8 +158,9 @@ int switcheroo()
 
 numnum_result numnum()
 {
-    ART_NUM min, max;
-    char* cmdlst = nullptr;
+    ART_NUM min;
+    ART_NUM max;
+    char   * cmdlst = nullptr;
     char* s;
     char* c;
     ART_NUM oldart = g_art;

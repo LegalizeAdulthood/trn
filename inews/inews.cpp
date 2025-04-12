@@ -68,10 +68,14 @@ static void inews_fflush()
 
 int main(int argc, char *argv[])
 {
-    bool has_fromline, in_header, has_pathline;
-    bool found_nl,     had_nl;
-    int  artpos,       len;
-    char*cp;
+    bool has_fromline;
+    bool in_header;
+    bool has_pathline;
+    bool found_nl;
+    bool  had_nl;
+    int   artpos;
+    int   len;
+    char *cp;
     int  i;
 
     int   headbuf_size = LBUFLEN * 8;

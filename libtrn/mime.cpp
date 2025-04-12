@@ -1120,8 +1120,11 @@ int b64_decodestring(char *t, const char *f)
 
 decode_state b64_decode(FILE *ifp, decode_state state)
 {
-    static FILE* ofp = nullptr;
-    int c1, c2, c3, c4;
+    static FILE *ofp = nullptr;
+    int          c1;
+    int          c2;
+    int          c3;
+    int          c4;
 
     if (state == DECODE_DONE) {
       all_done:
@@ -1597,8 +1600,12 @@ static int  s_roman_values[]  = {1000, 500, 100,  50, 10,   5,   1 };
 
 static char *tag_action(char *t, char *word, bool opening_tag)
 {
-    char* cp;
-    int j, tnum, itype, cnt, num;
+    char *cp;
+    int   j;
+    int   tnum;
+    int   itype;
+    int   cnt;
+    int   num;
     bool match = false;
     HBLK* blks = g_mime_section->html_blks;
 
@@ -1951,7 +1958,8 @@ static char *do_newline(char *t, html_flags flag)
 
 static int do_indent(char *t)
 {
-    int spaces, len = 0;
+    int spaces;
+    int len = 0;
 
     if (!(g_mime_section->html & HF_NEED_INDENT))
     {

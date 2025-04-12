@@ -328,7 +328,8 @@ void ng_skip()
 ART_NUM getngsize(NGDATA *gp)
 {
     char tmpbuf[LBUFLEN];
-    long last, first;
+    long last;
+    long first;
     char ch;
 
     char *nam = gp->rcline;

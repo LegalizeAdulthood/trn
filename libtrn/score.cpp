@@ -498,7 +498,8 @@ void sc_rescore()
 /* May have a very different interface in the user versions */
 void sc_score_cmd(const char *line)
 {
-    long i, j;
+    long        i;
+    long        j;
     const char* s;
 
     if (!g_sc_initialized) {

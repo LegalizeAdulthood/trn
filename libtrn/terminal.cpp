@@ -879,7 +879,8 @@ char *edit_buf(char *s, const char *cmd)
         }
     }
     if (*s == '\033') {         /* substitution desired? */
-        char tmpbuf[4], *cpybuf;
+        char  tmpbuf[4];
+        char *cpybuf;
 
         tmpbuf[0] = '%';
         read_tty(&tmpbuf[1],1);
@@ -2331,7 +2332,8 @@ void draw_mousebar(int limit, bool restore_cursor)
 static void mouse_input(const char *cp)
 {
     static int last_btn;
-    static int last_x, last_y;
+    static int last_x;
+    static int last_y;
 
     if (cp[2] < ' ' || cp[2] > ' '+3)
     {

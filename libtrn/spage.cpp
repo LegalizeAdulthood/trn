@@ -24,7 +24,8 @@
 bool s_fillpage_backward(long end)
 {
     int min_page_ents;  /* current minimum */
-    int i,j;
+    int  i;
+    int  j;
     long a;             /* misc entry number */
     int page_lines;     /* lines available on page */
     int line_on;        /* line # currently on: 0=line after top status bar */
@@ -231,7 +232,8 @@ bool s_fillpage_forward(long start)
 /* returns true on success */
 bool s_refillpage()
 {
-    int i,j;
+    int  i;
+    int  j;
     long a;
     int page_lines;     /* lines available on page */
     int line_on;        /* line # currently on: 0=line after top status bar */

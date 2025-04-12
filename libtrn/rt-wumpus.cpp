@@ -345,7 +345,8 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
     char*    end;
     int      wrap_at;
     ART_LINE start_line = header_line;
-    int      i, len;
+    int      i;
+    int      len;
     char     ch;
 
     /* Make a modifiable copy of the line */

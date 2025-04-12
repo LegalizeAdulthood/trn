@@ -1182,8 +1182,9 @@ void sf_print_match(int indx)
 
 void sf_exclude_file(const char *fname)
 {
-    int      start, end;
-    SF_ENTRY*tmp_entries;
+    int       start;
+    int       end;
+    SF_ENTRY *tmp_entries;
 
     for (start = 0; start < g_sf_num_entries; start++)
     {

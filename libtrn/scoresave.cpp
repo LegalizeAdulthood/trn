@@ -148,8 +148,9 @@ void sc_sv_savefile()
 //ART_NUM a;    /* art number to start with */
 ART_NUM sc_sv_use_line(char *line, ART_NUM a)
 {
-    char*p;
-    char c1, c2;
+    char *p;
+    char  c1;
+    char  c2;
     int  x;
 
     int   score = 0; /* get rid of warning */

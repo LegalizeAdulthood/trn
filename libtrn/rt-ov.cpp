@@ -180,8 +180,9 @@ ov_field_num ov_num(char *hdr, char *end)
 */
 bool ov_data(ART_NUM first, ART_NUM last, bool cheating)
 {
-    ART_NUM artnum, an;
-    char* line;
+    ART_NUM  artnum;
+    ART_NUM  an;
+    char    * line;
     char* last_buf = g_buf;
     MEM_SIZE last_buflen = LBUFLEN;
     bool success = true;

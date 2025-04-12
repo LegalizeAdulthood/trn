@@ -127,7 +127,9 @@ int nntp_group(const char *group, NGDATA *gp)
       }
     }
     if (gp) {
-        long count, first, last;
+        long count;
+        long first;
+        long last;
 
         (void) sscanf(g_ser_line,"%*d%ld%ld%ld",&count,&first,&last);
         /* NNTP mangles the high/low values when no articles are present. */

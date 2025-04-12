@@ -1380,9 +1380,10 @@ try_again:
         break;
       }
       default: {
-        SUBJECT* sp = g_sel_page_sp;
-        int line_cnt, sel;
-        for (; sp && g_sel_page_item_cnt < s_sel_max_per_page; sp = sp->next) {
+        SUBJECT *sp = g_sel_page_sp;
+          int      line_cnt;
+          int      sel;
+          for (; sp && g_sel_page_item_cnt < s_sel_max_per_page; sp = sp->next) {
             if (sp == u.sp)
             {
                 g_sel_item_index = g_sel_page_item_cnt;
@@ -2080,8 +2081,9 @@ static int count_subject_lines(const SUBJECT *subj, int *selptr)
 static int count_thread_lines(const SUBJECT *subj, int *selptr)
 {
     int total = 0;
-    const ARTICLE* thread = subj->thread;
-    int sel = -1, subj_sel;
+    const ARTICLE *thread = subj->thread;
+    int            sel = -1;
+    int            subj_sel;
 
     do {
         if (subj->misc) {

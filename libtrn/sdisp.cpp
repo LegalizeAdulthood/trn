@@ -29,7 +29,8 @@ void s_goxy(int x, int y)
  */
 void s_mail_and_place()
 {
-    bool previous,next;
+    bool previous;
+    bool next;
 
 #ifdef MAILCALL
     setmail(false);             /* another chance to check mail */

@@ -726,7 +726,8 @@ static bool open_newsrc(NEWSRC *rp)
         if (info != nullptr)
         {
             if (fgets(g_buf,sizeof g_buf,info) != nullptr) {
-                long actnum, descnum;
+                long actnum;
+                long descnum;
                 g_buf[strlen(g_buf)-1] = '\0';
                 char *s = strchr(g_buf, ':');
                 if (s != nullptr && s[1] == ' ' && s[2])

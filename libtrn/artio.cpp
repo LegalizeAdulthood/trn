@@ -173,9 +173,15 @@ int seekartbuf(ART_POS pos)
 char *readartbuf(bool view_inline)
 {
     char* bp;
-    char* s;
-    int read_offset, line_offset, filter_offset, extra_offset, len, o;
-    int word_wrap, extra_chars = 0;
+    char *s;
+    int   read_offset;
+    int   line_offset;
+    int   filter_offset;
+    int   extra_offset;
+    int   len;
+    int   o;
+    int   word_wrap;
+    int   extra_chars = 0;
     int read_something = 0;
 
     if (!g_do_hiding) {

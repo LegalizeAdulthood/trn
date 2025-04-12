@@ -225,7 +225,8 @@ char *in_string(char *big, const char *little, bool case_matters)
                     break;
                 }
             } else {
-                char c,d;
+                char c;
+                char d;
                 if (isupper(*s))
                 {
                     c = tolower(*s);
