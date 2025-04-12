@@ -4,7 +4,7 @@
 
 #include <string>
 
-#include "common.h"
+#include "config/common.h"
 #include "autosub.h"
 
 #include "env.h"

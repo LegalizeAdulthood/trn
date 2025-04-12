@@ -1,6 +1,6 @@
-#include "string_case_compare.h"
+#include "config/string_case_compare.h"
 
-#include "typedef.h"
+#include "config/typedef.h"
 
 static Uchar casemap[256] = {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, //

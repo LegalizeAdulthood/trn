@@ -5,9 +5,9 @@
  * (yeah, right. :)
  */
 
-#include <string_case_compare.h>
+#include <config/string_case_compare.h>
 
-#include "common.h"
+#include "config/common.h"
 #include "scorefile.h"
 
 #include "cache.h"

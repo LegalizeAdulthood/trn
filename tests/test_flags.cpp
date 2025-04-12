@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <common.h>
+#include <config/common.h>
 
 #include <addng.h>
 #include <cache.h>

@@ -5,7 +5,7 @@
  * is at the user's own risk. 
  */
 
-#include "common.h"             /* Declare MEM_SIZE */
+#include "config/common.h"             /* Declare MEM_SIZE */
 #include "edit_dist.h"
 
 #include "util.h"               /* Declare safemalloc() */

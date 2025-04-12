@@ -2,9 +2,9 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include <pipe_io.h>
+#include <config/pipe_io.h>
 
-#include "common.h"
+#include "config/common.h"
 #include "env-internal.h"
 
 #include "init.h"

@@ -4,7 +4,7 @@
  * scan ordering
  */
 
-#include "common.h"
+#include "config/common.h"
 #include "sorder.h"
 
 #include "samisc.h"

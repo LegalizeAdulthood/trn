@@ -2,10 +2,10 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include <fdio.h>
-#include <string_case_compare.h>
+#include <config/fdio.h>
+#include <config/string_case_compare.h>
 
-#include "common.h"
+#include "config/common.h"
 #include "opt.h"
 
 #include "art.h"

@@ -6,7 +6,7 @@
 
 /* CLEANUP: make a scontext file for the scan context stuff. */
 
-#include "common.h"
+#include "config/common.h"
 #include "scan.h"
 
 #include "sorder.h"

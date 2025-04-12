@@ -2,9 +2,9 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include <string_case_compare.h>
+#include <config/string_case_compare.h>
 
-#include "common.h"
+#include "config/common.h"
 #include "respond.h"
 
 #include "art.h"
@@ -26,7 +26,7 @@
 #include "string-algos.h"
 #include "terminal.h"
 #include "trn.h"
-#include "user_id.h"
+#include "config/user_id.h"
 #include "util.h"
 #include "util2.h"
 #include "uudecode.h"

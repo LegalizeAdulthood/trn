@@ -4,10 +4,10 @@
 
 #include <string>
 
-#include <pipe_io.h>
-#include <string_case_compare.h>
+#include <config/pipe_io.h>
+#include <config/string_case_compare.h>
 
-#include "common.h"
+#include "config/common.h"
 
 #include "env.h"
 #include "nntpclient.h"

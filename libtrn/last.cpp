@@ -2,7 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include "common.h"
+#include "config/common.h"
 #include "last.h"
 
 #include "init.h"

@@ -2,9 +2,9 @@
  * vi: set sw=4 ts=8 ai sm noet:
  */
 
-#include <string_case_compare.h>
+#include <config/string_case_compare.h>
 
-#include "common.h"
+#include "config/common.h"
 #include "mime-internal.h"
 
 #include "art.h"

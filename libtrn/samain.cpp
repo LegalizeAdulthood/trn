@@ -4,7 +4,7 @@
  * main working routines  (may change later)
  */
 
-#include "common.h"
+#include "config/common.h"
 #include "samain.h"
 
 #include "cache.h"

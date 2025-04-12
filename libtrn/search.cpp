@@ -22,7 +22,7 @@
  *      Correct spurious matching, eg. /: re: .*\bfoo/ matched ": re: bar".
  */
 
-#include "common.h"
+#include "config/common.h"
 #include "search.h"
 
 #include "util.h"

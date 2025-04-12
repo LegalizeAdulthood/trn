@@ -3,7 +3,7 @@
  *
  */
 
-#include "common.h"
+#include "config/common.h"
 #include "sathread.h"
 
 #include "cache.h"

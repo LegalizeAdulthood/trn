@@ -1,6 +1,6 @@
 #pragma once
 
-#include "config.h"
+#include "config/config.h"
 
 #ifdef I_UNISTD
 #include <unistd.h>

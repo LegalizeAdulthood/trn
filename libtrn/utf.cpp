@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 
-#include "common.h"
+#include "config/common.h"
 #include "utf.h"
 
 /* OK - valid second and subsequent bytes in UTF-8 */

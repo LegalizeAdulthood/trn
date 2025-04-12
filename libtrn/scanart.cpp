@@ -6,7 +6,7 @@
  * Interface routines to the rest of trn
  */
 
-#include "common.h"
+#include "config/common.h"
 #include "scanart.h"
 
 #include "artstate.h" /* for g_reread */

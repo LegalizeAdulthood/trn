@@ -9,7 +9,7 @@
 #include "mock_env.h"
 #include "test_config.h"
 
-#include <common.h>
+#include <config/common.h>
 
 #include <addng.h>
 #include <art.h>

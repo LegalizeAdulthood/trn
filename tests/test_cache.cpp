@@ -5,7 +5,7 @@
 
 #include <string.h>
 
-#include "common.h"
+#include "config/common.h"
 #include "cache.h"
 
 using namespace testing;

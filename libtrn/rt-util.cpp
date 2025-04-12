@@ -2,7 +2,7 @@
 *  vi: set sw=4 ts=8 ai sm noet :
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
-#include "common.h"
+#include "config/common.h"
 #include "rt-util.h"
 
 #include "artio.h"

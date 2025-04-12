@@ -4,7 +4,7 @@
  * display stuff
  */
 
-#include "common.h"
+#include "config/common.h"
 #include "sdisp.h"
 
 #include "ng.h" /* g_mailcall */

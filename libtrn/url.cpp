@@ -4,7 +4,7 @@
  * Routines for handling WWW URL references.
  */
 
-#include "common.h"
+#include "config/common.h"
 #include "url.h"
 
 #include "nntpinit.h"

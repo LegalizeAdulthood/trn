@@ -1,4 +1,4 @@
-#include <string_case_compare.h>
+#include <config/string_case_compare.h>
 
 #include <gtest/gtest.h>
 

@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "typedef.h"
+#include "config/typedef.h"
 #include "utf.h"
 
 extern bool g_waiting; /* waiting for subprocess (in doshell)? */

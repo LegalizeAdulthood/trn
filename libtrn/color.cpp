@@ -25,9 +25,9 @@
 ** are used, otherwise only normal monochrome video attributes.
 */
 
-#include <string_case_compare.h>
+#include <config/string_case_compare.h>
 
-#include "common.h"
+#include "config/common.h"
 #include "color.h"
 
 #include "final.h"

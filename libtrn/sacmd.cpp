@@ -4,7 +4,7 @@
  * main command loop
  */
 
-#include "common.h"
+#include "config/common.h"
 #include "sacmd.h"
 
 #include "bits.h"

@@ -3,7 +3,7 @@
  *
  */
 
-#include "common.h"
+#include "config/common.h"
 #include "spage.h"
 
 #include "cache.h"

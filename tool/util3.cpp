@@ -7,9 +7,9 @@
 #include <stdio.h>
 #include "util3.h"
 
-#include "config2.h"
+#include "config/config2.h"
 #include "nntpclient.h"
-#include "typedef.h"
+#include "config/typedef.h"
 #include "util2.h"
 
 static char *s_nntp_password{};

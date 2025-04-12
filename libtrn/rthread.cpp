@@ -2,9 +2,9 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include <string_case_compare.h>
+#include <config/string_case_compare.h>
 
-#include "common.h"
+#include "config/common.h"
 #include "rthread.h"
 
 #include "artstate.h"

@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <time.h>
 
-#include "common.h"
+#include "config/common.h"
 #include "kfile.h"
 
 #include "artsrch.h"

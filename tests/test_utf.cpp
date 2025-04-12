@@ -6,7 +6,7 @@
 
 #include <string.h>
 
-#include "common.h"
+#include "config/common.h"
 #include "utf.h"
 
 using namespace testing;

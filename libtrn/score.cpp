@@ -3,7 +3,7 @@
  *
  */
 
-#include "common.h"
+#include "config/common.h"
 #include "score.h"
 
 #include "artio.h" /* for g_openart var.*/

@@ -1,7 +1,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <common.h>
+#include <config/common.h>
 #include <mime-internal.h>
 
 #include <util.h>

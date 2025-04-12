@@ -14,7 +14,7 @@
 #ifndef TRN_CHARSUBST_H
 #define TRN_CHARSUBST_H
 
-#include "config2.h"
+#include "config/config2.h"
 
 #include <string>
 

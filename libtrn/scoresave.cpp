@@ -4,7 +4,7 @@
  * Saving/restoring scores from a file.
  */
 
-#include "common.h"
+#include "config/common.h"
 #include "scoresave.h"
 
 #include "cache.h"

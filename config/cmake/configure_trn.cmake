@@ -4,7 +4,7 @@ include(CheckSymbolExists)
 function(configure_system_header name)
     configure_file(
         "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/${name}.${CMAKE_HOST_SYSTEM_NAME}.h.in"
-        "include/${name}.h")
+        "include/config/${name}.h")
 endfunction()
 
 function(configure_trn)
@@ -68,7 +68,7 @@ function(configure_trn)
     set(GROUPDESC "")
     set(NEWSSPOOL "%X/spool")
 
-    configure_file("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/config.h.in" include/config.h)
+    configure_file("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/config.h.in" include/config/config.h)
     set(STRING_CASE_COMPARE_SOURCES "")
     if(NOT HAS_STRCASECMP)
         set(STRING_CASE_COMPARE_SOURCES "string_case_compare.cpp")

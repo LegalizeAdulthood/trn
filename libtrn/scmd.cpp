@@ -5,7 +5,7 @@
  * Does some simple commands, and passes the rest to context-specific routines.
  */
 
-#include "common.h"
+#include "config/common.h"
 #include "scmd.h"
 
 #include "final.h"

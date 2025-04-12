@@ -6,7 +6,7 @@
 
 #include <string.h>
 
-#include "common.h"
+#include "config/common.h"
 #include "rt-util.h"
 
 #include "test_config.h"

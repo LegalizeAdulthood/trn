@@ -18,7 +18,7 @@
 extern termios g_tty;
 extern termios g_oldtty;
 #endif
-#include "common.h"
+#include "config/common.h"
 #include "enum-flags.h"
 
 extern char          g_erase_char; /* rubout character */

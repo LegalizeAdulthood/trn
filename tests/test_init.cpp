@@ -3,7 +3,7 @@
 
 #include <array>
 
-#include <common.h>
+#include <config/common.h>
 #include <env-internal.h>
 #include <init.h>
 #include <util.h>

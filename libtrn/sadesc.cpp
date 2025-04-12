@@ -3,7 +3,7 @@
  *
  */
 
-#include "common.h"
+#include "config/common.h"
 #include "sadesc.h"
 
 #include "cache.h"

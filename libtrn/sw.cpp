@@ -2,9 +2,9 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include <fdio.h>
+#include <config/fdio.h>
 
-#include "common.h"
+#include "config/common.h"
 #include "sw.h"
 
 #include "env.h"

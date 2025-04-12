@@ -7,10 +7,10 @@
 #include <filesystem>
 #include <string>
 
-#include <fdio.h>
-#include <string_case_compare.h>
+#include <config/fdio.h>
+#include <config/string_case_compare.h>
 
-#include "common.h"
+#include "config/common.h"
 #include "util.h"
 
 #include "datasrc.h"

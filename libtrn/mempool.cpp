@@ -2,7 +2,7 @@
  * mempool.c
  */
 
-#include "common.h"
+#include "config/common.h"
 #include "mempool.h"
 
 #include "final.h"

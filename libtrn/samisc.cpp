@@ -4,7 +4,7 @@
  * lower-level routines
  */
 
-#include "common.h"
+#include "config/common.h"
 #include "samisc.h"
 
 #include "artio.h" /* g_openart */

@@ -4,7 +4,7 @@
  * Lots of misc. stuff.
  */
 
-#include "common.h"
+#include "config/common.h"
 #include "smisc.h"
 
 #include "sadesc.h"

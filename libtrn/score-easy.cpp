@@ -4,7 +4,7 @@
  * Simple interactive menus for scorefile tasks.
  */
 
-#include "common.h"
+#include "config/common.h"
 #include "score-easy.h"
 
 #include "terminal.h"

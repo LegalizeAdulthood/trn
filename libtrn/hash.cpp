@@ -4,7 +4,7 @@
 ** Geoffrey Collyer.  See the end of the file for his copyright.
 */
 
-#include "common.h"
+#include "config/common.h"
 #include "hash.h"
 
 #include "final.h"

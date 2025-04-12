@@ -41,7 +41,7 @@
 
 #include <string>
 
-#include "common.h"
+#include "config/common.h"
 #include "trn.h"
 
 #include "addng.h"

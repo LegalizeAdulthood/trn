@@ -3,7 +3,7 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include "common.h"
+#include "config/common.h"
 #include "rt-page.h"
 
 #include "addng.h"

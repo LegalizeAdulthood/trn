@@ -1,6 +1,6 @@
 #include <gmock/gmock.h>
 
-#include <common.h>
+#include <config/common.h>
 #include <nntpclient.h>
 #include <nntpinit.h>
 
