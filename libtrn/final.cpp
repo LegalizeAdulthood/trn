@@ -11,7 +11,7 @@
 #include "change_dir.h"
 #include "color.h"
 #include "datasrc.h"
-#include "env.h"
+#include "util/env.h"
 #include "intrp.h"
 #include "kfile.h"
 #include "list.h"

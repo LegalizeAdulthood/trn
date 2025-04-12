@@ -19,7 +19,7 @@
 #include "rt-util.h"
 #include "string-algos.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 #include <parsedate/parsedate.h>
 

@@ -10,7 +10,7 @@
 #include "datasrc.h"
 
 #include "edit_dist.h"
-#include "env.h"
+#include "util/env.h"
 #include "hash.h"
 #include "list.h"
 #include "ngdata.h"
@@ -23,7 +23,7 @@
 #include "terminal.h"
 #include "trn.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 #ifdef I_UTIME
 #include <utime.h>

@@ -3,9 +3,9 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 
 #include "config/common.h"
-#include "util2.h"
+#include "util/util2.h"
 
-#include "env.h"
+#include "util/env.h"
 #include "util.h"
 #include "util3.h"
 

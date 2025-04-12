@@ -22,7 +22,7 @@
 #include "search.h"
 #include "terminal.h"
 #include "trn.h"
-#include "util2.h"
+#include "util/util2.h"
 
 static COMPEX s_sub_compex{}; /* last compiled subject search */
 static COMPEX s_art_compex{}; /* last compiled normal search */

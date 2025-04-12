@@ -33,7 +33,7 @@
 #include "final.h"
 #include "string-algos.h"
 #include "terminal.h"
-#include "util2.h"
+#include "util/util2.h"
 
 struct COLOR_OBJ
 {

@@ -11,7 +11,7 @@
 #include "univ.h"
 
 #include "cache.h"
-#include "env.h"
+#include "util/env.h"
 #include "final.h"
 #include "hash.h"
 #include "head.h"
@@ -28,7 +28,7 @@
 #include "trn.h"
 #include "url.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 /* TODO:
  *

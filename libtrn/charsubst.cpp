@@ -17,7 +17,7 @@
 #include "config/config2.h"
 #include "trn.h"
 #include "config/typedef.h"
-#include "util2.h"
+#include "util/util2.h"
 
 /* Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced */
 std::string g_charsets{"patm"};

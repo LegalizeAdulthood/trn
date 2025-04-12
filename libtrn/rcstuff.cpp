@@ -11,7 +11,7 @@
 #include "bits.h"
 #include "cache.h"
 #include "datasrc.h"
-#include "env.h"
+#include "util/env.h"
 #include "final.h"
 #include "hash.h"
 #include "init.h"
@@ -28,7 +28,7 @@
 #include "terminal.h"
 #include "trn.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 #include <algorithm>
 

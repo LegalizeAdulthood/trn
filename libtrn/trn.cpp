@@ -70,7 +70,7 @@
 #include "univ.h"
 #include "utf.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 #include <time.h>
 

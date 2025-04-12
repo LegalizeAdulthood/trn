@@ -36,7 +36,7 @@
 **  on.
 */
 
-#include "wildmat.h"
+#include "util/wildmat.h"
 
     /* What character marks an inverted character class? */
 #define NEGATE_CLASS            '^'

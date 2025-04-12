@@ -20,7 +20,7 @@
 #include <cache.h>
 #include <color.h>
 #include <datasrc.h>
-#include <env-internal.h>
+#include <util/env-internal.h>
 #include <init.h>
 #include <intrp.h>
 #include <kfile.h>
@@ -44,7 +44,7 @@
 #include <trn.h>
 #include <univ.h>
 #include <util.h>
-#include <util2.h>
+#include <util/util2.h>
 
 constexpr int BUFFER_SIZE{4096};
 

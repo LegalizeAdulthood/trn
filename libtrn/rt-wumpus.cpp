@@ -20,7 +20,7 @@
 #include "terminal.h"
 #include "trn.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 #include <algorithm>
 

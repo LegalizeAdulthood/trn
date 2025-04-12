@@ -14,7 +14,7 @@
 #include "charsubst.h"
 #include "datasrc.h"
 #include "decode.h"
-#include "env.h"
+#include "util/env.h"
 #include "final.h"
 #include "head.h"
 #include "intrp.h"
@@ -28,7 +28,7 @@
 #include "trn.h"
 #include "config/user_id.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 #include "uudecode.h"
 
 std::string g_savedest;      /* value of %b */

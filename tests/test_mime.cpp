@@ -5,7 +5,7 @@
 #include <mime-internal.h>
 
 #include <util.h>
-#include <util2.h>
+#include <util/util2.h>
 
 #include "test_mime.h"
 

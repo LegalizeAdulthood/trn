@@ -19,7 +19,7 @@
 #include "string-algos.h"
 #include "terminal.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 ART_POS  g_artpos{};               /* byte position in article file */
 ART_LINE g_artline{};              /* current line number in article file */

@@ -16,7 +16,7 @@
 #include "string-algos.h"
 #include "terminal.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 static void fix_msgid(char *msgid);
 static char *valid_message_id(char *start, char *end);

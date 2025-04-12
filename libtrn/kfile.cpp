@@ -13,7 +13,7 @@
 #include "bits.h"
 #include "cache.h"
 #include "color.h"
-#include "env.h"
+#include "util/env.h"
 #include "hash.h"
 #include "list.h"
 #include "ng.h"
@@ -28,7 +28,7 @@
 #include "terminal.h"
 #include "trn.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 FILE               *g_localkfp{};               /* local (for this newsgroup) file */
 killfilestate_flags g_kf_state{};               /* the state of our kill files */

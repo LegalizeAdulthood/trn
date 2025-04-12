@@ -10,7 +10,7 @@
 #include "cache.h"
 #include "color.h"
 #include "datasrc.h"
-#include "env.h"
+#include "util/env.h"
 #include "list.h"
 #include "ngdata.h"
 #include "only.h"

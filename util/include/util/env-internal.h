@@ -1,7 +1,7 @@
 #ifndef TRN_ENV_INTERNAL_H
 #define TRN_ENV_INTERNAL_H
 
-#include "env.h"
+#include "util/env.h"
 
 // Internal entry points exposed for the purposes of unit testing.
 

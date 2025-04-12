@@ -7,7 +7,7 @@
 
 #include "final.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 /* any of these defines can be increased arbitrarily */
 enum

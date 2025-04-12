@@ -9,7 +9,7 @@
 
 #include "nntp/nntpinit.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 /* Lower-level net routines grabbed from nntpinit.c.
  */

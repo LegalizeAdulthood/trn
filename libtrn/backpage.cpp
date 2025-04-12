@@ -8,7 +8,7 @@
 #include "backpage.h"
 
 #include "final.h"
-#include "util2.h"
+#include "util/util2.h"
 
 
 static int     s_varyfd{0};         /* virtual array file for storing  file offsets */

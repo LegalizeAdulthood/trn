@@ -16,7 +16,7 @@
 #include "rt-util.h"
 #include "search.h"
 #include "terminal.h"
-#include "util2.h"
+#include "util/util2.h"
 
 static bool   s_ng_doempty{}; /* search empty newsgroups? */
 static COMPEX s_ngcompex;

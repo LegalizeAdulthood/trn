@@ -7,7 +7,7 @@
 #include "config/common.h"
 #include "autosub.h"
 
-#include "env.h"
+#include "util/env.h"
 #include "final.h"
 #include "ngsrch.h"
 #include "search.h"

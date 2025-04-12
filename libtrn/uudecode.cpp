@@ -11,7 +11,7 @@
 #include "mime.h"
 #include "terminal.h"
 #include "string-algos.h"
-#include "util2.h"
+#include "util/util2.h"
 
 #include <algorithm>
 

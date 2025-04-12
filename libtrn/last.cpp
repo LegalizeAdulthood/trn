@@ -8,7 +8,7 @@
 #include "init.h"
 #include "trn.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 #include <time.h>
 

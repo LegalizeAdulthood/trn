@@ -16,7 +16,7 @@
 #include "bits.h"
 #include "cache.h"
 #include "datasrc.h"
-#include "env.h"
+#include "util/env.h"
 #include "final.h"
 #include "head.h"
 #include "init.h"
@@ -33,7 +33,7 @@
 #include "trn.h"
 #include "config/user_id.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 #ifdef HAS_UNAME
 #include <sys/utsname.h>

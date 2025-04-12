@@ -7,7 +7,7 @@
 #include <string>
 
 #include <config/common.h>
-#include <env-internal.h>
+#include <util/env-internal.h>
 
 namespace trn
 {

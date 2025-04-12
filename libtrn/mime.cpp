@@ -11,7 +11,7 @@
 #include "artio.h"
 #include "artstate.h"
 #include "decode.h"
-#include "env.h"
+#include "util/env.h"
 #include "head.h"
 #include "list.h"
 #include "ng.h"
@@ -20,7 +20,7 @@
 #include "terminal.h"
 #include "utf.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 MIME_SECT   g_mime_article{};
 MIME_SECT  *g_mime_section{&g_mime_article};

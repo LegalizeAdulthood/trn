@@ -10,7 +10,7 @@
 #include "config/config2.h"
 #include "nntp/nntpclient.h"
 #include "config/typedef.h"
-#include "util2.h"
+#include "util/util2.h"
 
 static char *s_nntp_password{};
 static char s_nomem[] = "trn: out of memory!\n";

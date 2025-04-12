@@ -5,11 +5,11 @@
 #include <config/pipe_io.h>
 
 #include "config/common.h"
-#include "env-internal.h"
+#include "util/env-internal.h"
 
 #include "init.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 #ifdef HAS_RES_INIT
 #include <netinet/in.h>

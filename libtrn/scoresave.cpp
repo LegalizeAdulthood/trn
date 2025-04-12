@@ -8,7 +8,7 @@
 #include "scoresave.h"
 
 #include "cache.h"
-#include "env.h" /* get_val */
+#include "util/env.h" /* get_val */
 #include "list.h"
 #include "ngdata.h"
 #include "scan.h"
@@ -16,7 +16,7 @@
 #include "score.h"
 #include "string-algos.h"
 #include "util.h" /* several */
-#include "util2.h"
+#include "util/util2.h"
 
 int g_sc_loaded_count{}; /* how many articles were loaded? */
 

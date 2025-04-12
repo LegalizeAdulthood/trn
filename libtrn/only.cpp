@@ -11,7 +11,7 @@
 #include "search.h"
 #include "trn.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 char *g_ngtodo[MAXNGTODO]; /* restrictions in effect */
 int   g_maxngtodo{};       /*  0 => no restrictions */

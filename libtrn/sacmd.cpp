@@ -26,7 +26,7 @@
 #include "spage.h"
 #include "terminal.h" /* for LINES */
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 static char *s_sa_extract_dest{}; /* use this command on an extracted file */
 static bool  s_sa_extract_junk{}; /* junk articles after extracting them */

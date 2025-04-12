@@ -1,7 +1,7 @@
 #include <config/common.h>
-#include <env.h>
+#include <util/env.h>
 #include <util.h>
-#include <util2.h>
+#include <util/util2.h>
 
 #include "mock_env.h"
 #include "test_config.h"

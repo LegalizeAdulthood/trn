@@ -18,7 +18,7 @@
 #include "string-algos.h"
 #include "terminal.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 #include "uudecode.h"
 
 #include <algorithm>

@@ -16,7 +16,7 @@
 #include "charsubst.h"
 #include "color.h"
 #include "datasrc.h"
-#include "env.h"
+#include "util/env.h"
 #include "final.h"
 #include "head.h"
 #include "help.h"
@@ -43,7 +43,7 @@
 #include "trn.h"
 #include "univ.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 #include <algorithm>
 

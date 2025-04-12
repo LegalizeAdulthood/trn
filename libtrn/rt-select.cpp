@@ -31,7 +31,7 @@
 #include "trn.h"
 #include "univ.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 enum display_state
 {

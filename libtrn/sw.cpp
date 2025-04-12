@@ -7,7 +7,7 @@
 #include "config/common.h"
 #include "sw.h"
 
-#include "env.h"
+#include "util/env.h"
 #include "head.h"
 #include "init.h"
 #include "intrp.h"

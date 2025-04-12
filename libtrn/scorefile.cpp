@@ -11,7 +11,7 @@
 #include "scorefile.h"
 
 #include "cache.h"
-#include "env.h" /* get_val */
+#include "util/env.h" /* get_val */
 #include "head.h"
 #include "list.h"
 #include "mempool.h"
@@ -24,7 +24,7 @@
 #include "terminal.h" /* finish_command() */
 #include "url.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 int  g_sf_num_entries{};   /* # of entries */
 int  g_sf_score_verbose{}; /* when true, the scoring routine prints lots of info... */

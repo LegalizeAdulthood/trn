@@ -12,7 +12,7 @@
 #include "cache.h"
 #include "change_dir.h"
 #include "datasrc.h"
-#include "env.h"
+#include "util/env.h"
 #include "final.h"
 #include "head.h"
 #include "kfile.h"
@@ -28,7 +28,7 @@
 #include "terminal.h"
 #include "trn.h"
 #include "util.h"
-#include "util2.h"
+#include "util/util2.h"
 
 #include <algorithm>
 

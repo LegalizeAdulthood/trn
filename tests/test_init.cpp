@@ -4,10 +4,10 @@
 #include <array>
 
 #include <config/common.h>
-#include <env-internal.h>
+#include <util/env-internal.h>
 #include <init.h>
 #include <util.h>
-#include <util2.h>
+#include <util/util2.h>
 
 #include "mock_env.h"
 #include "test_config.h"

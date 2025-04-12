@@ -9,11 +9,11 @@
 
 #include "config/common.h"
 
-#include "env.h"
+#include "util/env.h"
 #include "nntp/nntpclient.h"
 #include "nntp/nntpinit.h"
 #include "string-algos.h"
-#include "util2.h"
+#include "util/util2.h"
 #include "util3.h"
 
 enum
