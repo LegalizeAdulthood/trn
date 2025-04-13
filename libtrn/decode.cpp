@@ -302,7 +302,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
         /* Create directory to store parts and copy this part there. */
         dir = decode_mkdir(filename);
         if (!dir) {
-            strcpy(g_msg, "Failed.");
+            std::strcpy(g_msg, "Failed.");
             return false;
         }
     }
@@ -325,7 +325,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
         {
             sprintf(g_buf + std::strlen(g_buf), "of %d ", total);
         }
-        strcat(g_buf, filename);
+        std::strcat(g_buf, filename);
         fputs(g_buf,stdout);
         if (g_nowait_fork)
         {
@@ -339,7 +339,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
         sprintf(g_buf, "%s%d", dir, part);
         fp = fopen(g_buf, "w");
         if (!fp) {
-            strcpy(g_msg,"Failed."); /*$$*/
+            std::strcpy(g_msg,"Failed."); /*$$*/
             return false;
         }
         while (readart(g_art_line,sizeof g_art_line)) {
@@ -409,7 +409,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     g_mime_getc_line = first_line;
     DECODE_FUNC decoder = decode_function(g_mime_section->encoding);
     if (!decoder) {
-        strcpy(g_msg,"Unhandled encoding type -- aborting.");
+        std::strcpy(g_msg,"Unhandled encoding type -- aborting.");
         if (fp)
         {
             fclose(fp);
@@ -439,7 +439,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
             fclose(fp);
         }
         if (state == DECODE_ERROR) {
-            strcpy(g_msg,"Failed."); /*$$*/
+            std::strcpy(g_msg,"Failed."); /*$$*/
             return false;
         }
     }
@@ -447,7 +447,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     if (state != DECODE_DONE) {
         (void) decoder((FILE*)nullptr, DECODE_DONE);
         if (state != DECODE_MAYBEDONE) {
-            strcpy(g_msg,"Premature EOF.");
+            std::strcpy(g_msg,"Premature EOF.");
             return false;
         }
     }
@@ -502,7 +502,7 @@ char *decode_mkdir(const char *filename)
 #else
     interp(dir, sizeof dir, "%Y/m-prts-%L/");
 #endif
-    strcat(dir, filename);
+    std::strcat(dir, filename);
     char *s = dir + std::strlen(dir);
     if (s[-1] == '/')
     {

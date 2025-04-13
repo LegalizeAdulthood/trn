@@ -178,7 +178,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
         pattern = patbuf+1;
         char *h;
         if (howmuch == ARTSCOPE_SUBJECT) {
-            strcpy(pattern,": *");
+            std::strcpy(pattern,": *");
             h = pattern + std::strlen(pattern);
             interp(h,patbufsiz - (h-patbuf),"%\\s");  /* fetch current subject */
         }
@@ -445,8 +445,8 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
 
     switch (scope) {
       case ARTSCOPE_SUBJECT:
-        strcpy(g_buf,"Subject: ");
-        strncpy(g_buf+9,fetchsubj(artnum,false),256);
+        std::strcpy(g_buf,"Subject: ");
+        std::strncpy(g_buf+9,fetchsubj(artnum,false),256);
 #ifdef DEBUG
         if (debug & DEB_SEARCH_AHEAD)
         {
@@ -455,8 +455,8 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
 #endif
         break;
       case ARTSCOPE_FROM:
-        strcpy(g_buf, "From: ");
-        strncpy(g_buf+6,fetchfrom(artnum,false),256);
+        std::strcpy(g_buf, "From: ");
+        std::strncpy(g_buf+6,fetchfrom(artnum,false),256);
         break;
       case ARTSCOPE_ONEHDR:
         g_untrim_cache = true;

@@ -7,7 +7,7 @@
 #include "config/common.h"
 #include "trn/utf.h"
 
-#include <string.h>
+#include <cstring>
 
 using namespace testing;
 
@@ -173,7 +173,7 @@ TEST(UTFVisualAdvanceWidthTest, nullptr)
 TEST(UTFVisualAdvanceWidthTest, ascii)
 {
     char sp0[80];
-    strcpy(sp0, ARBITRARY_ASCII);
+    std::strcpy(sp0, ARBITRARY_ASCII);
     char *sp = sp0;
 
     int retval = put_char_adv(&sp, true);
@@ -185,7 +185,7 @@ TEST(UTFVisualAdvanceWidthTest, ascii)
 TEST(UTFVisualAdvanceWidthTest, iso8859_1)
 {
     char sp0[80];
-    strcpy(sp0, ARBITRARY_ISO8859D1_1);
+    std::strcpy(sp0, ARBITRARY_ISO8859D1_1);
     char *sp = sp0;
 
     int retval = put_char_adv(&sp, true);
@@ -197,7 +197,7 @@ TEST(UTFVisualAdvanceWidthTest, iso8859_1)
 TEST(UTFVisualAdvanceWidthTest, cjk_basic)
 {
     char sp0[80];
-    strcpy(sp0, ARBITRARY_CJK_BASIC);
+    std::strcpy(sp0, ARBITRARY_CJK_BASIC);
     char *sp = sp0;
 
     int retval = put_char_adv(&sp, true);
@@ -340,7 +340,7 @@ TEST_F(CreateUTF8CopyTest, nullptr)
 
 TEST_F(CreateUTF8CopyTest, ascii)
 {
-    strcpy(m_before, "Lorem ipsum");
+    std::strcpy(m_before, "Lorem ipsum");
 
     m_after = create_utf8_copy(m_before);
 
@@ -351,7 +351,7 @@ TEST_F(CreateUTF8CopyTest, ascii)
 
 TEST_F(CreateUTF8CopyTest, iso8859_1)
 {
-    strcpy(m_before, "Quoi, le biblioth\350que est ferm\351\240!");
+    std::strcpy(m_before, "Quoi, le biblioth\350que est ferm\351\240!");
     const char *expected = "Quoi, le biblioth\303\250que est ferm\303\251\302\240!";
     utf_init(CHARSET_NAME_ISO8859_1, CHARSET_NAME_UTF8);
 

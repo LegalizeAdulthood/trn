@@ -23,6 +23,8 @@
 #include "trn/terminal.h"
 #include "trn/univ.h"
 
+#include <cstring>
+
 void s_go_bot()
 {
     g_s_ref_bot = true;                 /* help uses whole screen */
@@ -308,7 +310,7 @@ bool s_match_description(long ent)
 
     int lines = s_ent_lines(ent);
     for (int i = 1; i <= lines; i++) {
-        strncpy(lbuf,s_get_desc(ent,i,false),LBUFLEN);
+        std::strncpy(lbuf,s_get_desc(ent,i,false),LBUFLEN);
         for (char *s = lbuf; *s; s++)
         {
             if (isupper(*s))
@@ -316,7 +318,7 @@ bool s_match_description(long ent)
                 *s = tolower(*s);               /* convert to lower case */
             }
         }
-        if (strstr(lbuf,s_search_text))
+        if (std::strstr(lbuf,s_search_text))
         {
             return true;
         }
@@ -384,7 +386,7 @@ void s_search()
         /* make leading space skip an option later? */
         /* (it isn't too important because substring matching is used) */
         char *s = skip_eq(g_buf + 1, ' '); /* skip leading spaces */
-        strncpy(s_search_text,s,LBUFLEN);
+        std::strncpy(s_search_text,s,LBUFLEN);
         for (char *t = s_search_text; *t != '\0'; t++)
         {
             if (isupper(*t))

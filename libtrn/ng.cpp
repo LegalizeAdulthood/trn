@@ -298,7 +298,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
             if (!g_forcelast && g_ngptr->toread && g_selected_only && !g_selected_count) {
                 g_art = g_curr_art;
                 g_artp = g_curr_artp;
-                strcpy(g_buf, "+");
+                std::strcpy(g_buf, "+");
                 goto article_level;
             }
             count_subjects(CS_RETAIN);

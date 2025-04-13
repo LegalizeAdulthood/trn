@@ -299,7 +299,7 @@ void color_string(int object, const char *str)
 {
     int len = std::strlen(str);
     if (str[len-1] == '\n') {
-        strcpy(g_msg, str);
+        std::strcpy(g_msg, str);
         g_msg[len-1] = '\0';
         str = g_msg;
         len = 0;

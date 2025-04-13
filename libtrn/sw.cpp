@@ -215,7 +215,7 @@ void decode_switch(const char *s)
             {
                 s++;
             }
-            strcpy(tmpbuf,s);
+            std::strcpy(tmpbuf,s);
             char *tmp = std::strchr(tmpbuf,'=');
             if (tmp) {
                 *tmp++ = '\0';

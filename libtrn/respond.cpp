@@ -137,7 +137,7 @@ save_result save_article()
                 else
                 {
                     static char cmdbuff[1024];
-                    strcpy(cmdbuff, g_extractprog.c_str());
+                    std::strcpy(cmdbuff, g_extractprog.c_str());
                     cmdstr = cmdbuff;
                 }
             }
@@ -150,12 +150,12 @@ save_result save_article()
         else {
             if (!g_extractdest.empty())
             {
-                strcpy(s, g_extractdest.c_str());
+                std::strcpy(s, g_extractdest.c_str());
             }
             if (custom_extract)
             {
                 static char cmdbuff[1024];
-                strcpy(cmdbuff, g_extractprog.c_str());
+                std::strcpy(cmdbuff, g_extractprog.c_str());
                 cmdstr = cmdbuff;
             }
             else
@@ -170,7 +170,7 @@ save_result save_article()
             interp(c, (sizeof g_buf), get_val("SAVEDIR",SAVEDIR));
             if (makedir(c, MD_DIR))      /* ensure directory exists */
             {
-                strcpy(c,g_privdir.c_str());
+                std::strcpy(c,g_privdir.c_str());
             }
             if (*s) {
                 while (*c)
@@ -178,7 +178,7 @@ save_result save_article()
                     c++;
                 }
                 *c++ = '/';
-                strcpy(c,s);            /* add filename */
+                std::strcpy(c,s);            /* add filename */
             }
             s = (s==g_buf ? altbuf : g_buf);
         }
@@ -190,7 +190,7 @@ save_result save_article()
         g_extractdest = s; /* make it handy for %E */
         {
             static char buff[512];
-            strcpy(buff, g_extractdest.c_str());
+            std::strcpy(buff, g_extractdest.c_str());
             s = buff;
         }
         if (makedir(s, MD_DIR)) {       /* ensure directory exists */
@@ -346,14 +346,14 @@ save_result save_article()
             interp(g_buf, (sizeof g_buf), get_val("SAVEDIR",SAVEDIR));
             if (makedir(g_buf, MD_DIR))  /* ensure directory exists */
             {
-                strcpy(g_buf, g_privdir.c_str());
+                std::strcpy(g_buf, g_privdir.c_str());
             }
             if (*s) {
                 for (c = g_buf; *c; c++)
                 {
                 }
                 *c++ = '/';
-                strcpy(c,s);            /* add filename */
+                std::strcpy(c,s);            /* add filename */
             }
             s = g_buf;
         }
@@ -940,7 +940,7 @@ void forward()
         if (mime_boundary) {
             if (*g_buf && string_case_compare(g_buf, "Content-", 8))
             {
-                strcpy(g_buf, "Content-Type: text/plain\n");
+                std::strcpy(g_buf, "Content-Type: text/plain\n");
             }
             fprintf(header,"--%s\n%s\n[Replace this with your comments.]\n\n--%s\nContent-Type: message/rfc822\n\n",
                     mime_boundary,g_buf,mime_boundary);

@@ -535,15 +535,15 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 */
 static const char *ov_name(const char *group)
 {
-    strcpy(g_buf, g_datasrc->over_dir);
+    std::strcpy(g_buf, g_datasrc->over_dir);
     char *cp = g_buf + std::strlen(g_buf);
     *cp++ = '/';
-    strcpy(cp, group);
+    std::strcpy(cp, group);
     while ((cp = std::strchr(cp, '.')))
     {
         *cp = '/';
     }
-    strcat(g_buf, OV_FILE_NAME);
+    std::strcat(g_buf, OV_FILE_NAME);
     return g_buf;
 }
 

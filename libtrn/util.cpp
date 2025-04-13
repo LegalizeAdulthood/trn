@@ -137,7 +137,7 @@ int doshell(const char *shell, const char *cmd)
             sprintf(g_buf,";%d",g_nntplink.port_number);
             if (len + (int)std::strlen(g_buf) < 511)
             {
-                strcpy(s_nntpserver_export+len, g_buf);
+                std::strcpy(s_nntpserver_export+len, g_buf);
             }
         }
         if (g_datasrc->act_sf.fp)
@@ -365,7 +365,7 @@ char *trn_getwd(char *buf, int buflen)
         printf("Cannot determine current working directory!\n");
         finalize(1);
     }
-    strncpy(buf, cwd.string().c_str(), buflen);
+    std::strncpy(buf, cwd.string().c_str(), buflen);
 #ifdef _WIN32
     if (buf[1] == ':')
     {
@@ -397,7 +397,7 @@ char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp)
             }
             else {
                 char* tmp = safemalloc((MEM_SIZE)buffer_length+1);
-                strncpy(tmp,buffer,buffer_length/2);
+                std::strncpy(tmp,buffer,buffer_length/2);
                 buffer = tmp;
                 realloc_ok = true;
             }
@@ -985,7 +985,7 @@ int edit_file(const char *fname)
     /* XXX paranoia check on length */
     sprintf(g_cmd_buf,"%s ",
             filexp(get_val_const("VISUAL",get_val_const("EDITOR",DEFEDITOR))));
-    strcat(g_cmd_buf, filexp(fname));
+    std::strcat(g_cmd_buf, filexp(fname));
     termdown(3);
     resetty();                  /* make sure tty is friendly */
     r = doshell(SH,g_cmd_buf);  /* invoke the shell */

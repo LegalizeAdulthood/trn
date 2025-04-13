@@ -213,7 +213,7 @@ int do_kfile(FILE *kfp, int entering)
             mention(bp);
             if (bp > g_buf)
             {
-                strcpy(g_buf, bp);
+                std::strcpy(g_buf, bp);
             }
             switcheroo();
         }
@@ -741,10 +741,10 @@ void edit_kfile()
                 clear_subject(sp);
             }
         }
-        strcpy(g_buf,filexp(get_val_const("KILLLOCAL",s_killlocal)));
+        std::strcpy(g_buf,filexp(get_val_const("KILLLOCAL",s_killlocal)));
     } else
     {
-        strcpy(g_buf, filexp(get_val_const("KILLGLOBAL", s_killglobal)));
+        std::strcpy(g_buf, filexp(get_val_const("KILLGLOBAL", s_killglobal)));
     }
     if (!makedir(g_buf, MD_FILE)) {
         sprintf(g_cmd_buf,"%s %s",
@@ -826,7 +826,7 @@ void open_kfile(int local)
 
 void kf_append(const char *cmd, bool local)
 {
-    strcpy(g_cmd_buf, filexp(local ? get_val_const("KILLLOCAL", s_killlocal) : get_val_const("KILLGLOBAL", s_killglobal)));
+    std::strcpy(g_cmd_buf, filexp(local ? get_val_const("KILLLOCAL", s_killlocal) : get_val_const("KILLGLOBAL", s_killglobal)));
     if (!makedir(g_cmd_buf, MD_FILE)) {
         if (g_verbose)
         {

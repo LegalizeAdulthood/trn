@@ -135,7 +135,7 @@ int switcheroo()
             trn_getwd(whereami, sizeof(whereami));
         }
         if (g_buf[1] == '-' || g_buf[1] == '+') {
-            strcpy(tmpbuf,g_buf+1);
+            std::strcpy(tmpbuf,g_buf+1);
             sw_list(tmpbuf);
         }
         else {
@@ -603,7 +603,7 @@ int perform(char *cmdlst, int output_level)
         else if (std::strchr("!&sSwWae|",ch)) {
             if (g_one_command)
             {
-                strcpy(g_buf, cmdlst);
+                std::strcpy(g_buf, cmdlst);
             }
             else
             {

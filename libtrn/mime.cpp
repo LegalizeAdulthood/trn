@@ -922,14 +922,14 @@ void mime_Description(MIME_SECT *mp, char *s, int limit)
     }
     else if (len+3 >= limit)
     {
-        strcpy(s + limit - 3, "...]\n");
+        std::strcpy(s + limit - 3, "...]\n");
     }
     else {
 #if 0
         sprintf(s+len, "...%s]\n", fn + flen - (limit-(len+3)));
 #else
         safecpy(s+len, fn, limit - (len+3));
-        strcat(s, "...]\n");
+        std::strcat(s, "...]\n");
 #endif
     }
 }
@@ -1726,7 +1726,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
             {
                 *t++ = ' ';
             }
-            strcpy(t, "[Image] ");
+            std::strcpy(t, "[Image] ");
             t += 8;
             g_mime_section->html &= ~HF_SPACE_OK;
             break;

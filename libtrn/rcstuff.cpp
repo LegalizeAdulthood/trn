@@ -789,7 +789,7 @@ static void parse_rcline(NGDATA *np)
         np->rcline = saferealloc(np->rcline,(MEM_SIZE)len + 3);
 #endif
         s = np->rcline + len;
-        strcpy(s, ": ");
+        std::strcpy(s, ": ");
     }
     if (*s == ':' && s[1] && s[2] == '0') {
         np->flags |= NF_UNTHREADED;
@@ -1115,8 +1115,8 @@ static NGDATA *add_newsgroup(NEWSRC *rp, const char *ngn, char_int c)
     np->rc = rp;
     np->numoffset = std::strlen(ngn) + 1;
     np->rcline = safemalloc((MEM_SIZE)(np->numoffset + 2));
-    strcpy(np->rcline,ngn);             /* and copy over the name */
-    strcpy(np->rcline + np->numoffset, " ");
+    std::strcpy(np->rcline,ngn);             /* and copy over the name */
+    std::strcpy(np->rcline + np->numoffset, " ");
     np->subscribechar = c;              /* subscribe or unsubscribe */
     if (c != NEGCHAR)
     {

@@ -9,6 +9,8 @@
 
 #include "test_mime.h"
 
+#include <cstring>
+
 using namespace testing;
 
 namespace {
@@ -91,7 +93,7 @@ protected:
     {
         MimeTest::SetUp();
         g_decode_filename = safemalloc(1024);
-        strcpy(g_decode_filename, TRN_TEST_MIME_PDF_DECODE_FILE);
+        std::strcpy(g_decode_filename, TRN_TEST_MIME_PDF_DECODE_FILE);
         m_mime_section.type_name = savestr(TRN_TEST_MIME_PDF_CONTENT_TYPE);
         m_mime_section.type_params = mime_ParseParams(savestr(TRN_TEST_MIME_PDF_SECTION_PARAMS));
         g_mime_section = &m_mime_section;

@@ -371,7 +371,7 @@ static bool set_p_host_name(char *tmpbuf)
         pclose(pipefp);
     }
 #  else
-    strcpy(tmpbuf, "!INVALID!");
+    std::strcpy(tmpbuf, "!INVALID!");
 #  endif /* PHOSTCMD */
 # endif /* HAS_UNAME */
 #endif /* HAS_GETHOSTNAME */

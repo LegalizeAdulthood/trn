@@ -178,7 +178,7 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
     morenum = isdigit(*s);              /* will it need a comma after? */
     *(np->rcline + np->numoffset - 1) = np->subscribechar;
     mbuf = safemalloc((MEM_SIZE)(std::strlen(s)+(s - np->rcline)+MAX_DIGITS+2+1));
-    strcpy(mbuf,np->rcline);            /* make new rc line */
+    std::strcpy(mbuf,np->rcline);            /* make new rc line */
     if (maxt && lastnum && artnum == lastnum+1)
                                         /* can we just extend last range? */
     {
@@ -227,7 +227,7 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
     {
         sprintf(t,"%ld",(long)artnum);  /* put the number there (wherever) */
     }
-    strcat(t,s);                        /* copy remainder of line */
+    std::strcat(t,s);                        /* copy remainder of line */
 #ifdef DEBUG
     if (debug & DEB_XREF_MARKER)
     {
@@ -329,7 +329,7 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
                 *(np->rcline + np->numoffset - 1) = np->subscribechar;
                 mbuf = safemalloc((MEM_SIZE)(curlen+(artnum?(MAX_DIGITS+1)*2+1:1+1)));
                 *s = '\0';
-                strcpy(mbuf,np->rcline);        /* make new rc line */
+                std::strcpy(mbuf,np->rcline);        /* make new rc line */
                 s = mbuf + (s - np->rcline);
                                         /* point s into mbuf now */
                 if (artnum) {           /* split into two ranges? */
@@ -342,7 +342,7 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
                 {
                     prange(s,min,max);
                 }
-                strcat(s,t);            /* copy remainder over */
+                std::strcat(s,t);            /* copy remainder over */
 #ifdef DEBUG
                 if (debug & DEB_XREF_MARKER) {
                     printf("%s\n",mbuf);
@@ -373,7 +373,7 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
                 {
                     s -= 2;
                 }
-                strcpy(s,t);            /* no need to realloc */
+                std::strcpy(s,t);            /* no need to realloc */
                 if (np->toread >= TR_NONE)
                 {
                     np->toread++;
@@ -445,7 +445,7 @@ void set_toread(NGDATA *np, bool lax_high_check)
     {
         mybuf = safemalloc((MEM_SIZE) (length + MAX_DIGITS + 1));
     }
-    strcpy(mybuf,nums);
+    std::strcpy(mybuf,nums);
     mybuf[length++] = ',';
     mybuf[length] = '\0';
     char *s = skip_space(mybuf);
@@ -551,7 +551,7 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
             }
             else {
                 mbuf = safemalloc((MEM_SIZE)(np->numoffset+3+len+1));
-                strcpy(mbuf, np->rcline);
+                std::strcpy(mbuf, np->rcline);
             }
             cp = mbuf + np->numoffset;
             *cp++ = ' ';
@@ -578,11 +578,11 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
         }
         else {
             mbuf = safemalloc((MEM_SIZE)(np->numoffset+nlen+len+1));
-            strcpy(mbuf,np->rcline);
+            std::strcpy(mbuf,np->rcline);
         }
 
         cp = mbuf + np->numoffset;
-        strcpy(cp, numbuf);
+        std::strcpy(cp, numbuf);
         cp += nlen;
 
         if (len) {

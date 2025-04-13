@@ -276,7 +276,7 @@ void check_poster(ARTICLE *ap)
             char* s = g_cmd_buf;
             char* u;
             char* h;
-            strcpy(s,ap->from);
+            std::strcpy(s,ap->from);
             if ((h=std::strchr(s,'<')) != nullptr) { /* grab the good part */
                 s = h+1;
                 if ((h=std::strchr(s,'>')) != nullptr)
@@ -484,7 +484,7 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
     }
 
     char *newsubj = safemalloc(size + 4 + 1);
-    strcpy(newsubj, "Re: ");
+    std::strcpy(newsubj, "Re: ");
     size = decode_header(newsubj + 4, subj_start, size);
 
     /* Do the Re:-stripping over again, just in case it was encoded. */
@@ -735,7 +735,7 @@ void look_ahead()
         char* pattern;
 
         pattern = g_buf+1;
-        strcpy(pattern,": *");
+        std::strcpy(pattern,": *");
         h = pattern + std::strlen(pattern);
         interp(h,(sizeof g_buf) - (h-g_buf),"%\\s");
         {                       /* compensate for notesfiles */

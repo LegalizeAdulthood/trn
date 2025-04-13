@@ -383,8 +383,8 @@ static char *dir_or_none(DATASRC *dp, const char *dir, datasrc_flags flag)
             }
             int len = cp - dp->newsid + 1;
             cp = safemalloc(len+10+1);
-            strcpy(cp,dp->newsid);
-            strcpy(cp+len,"newsgroups");
+            std::strcpy(cp,dp->newsid);
+            std::strcpy(cp+len,"newsgroups");
             return cp;
         }
         return dp->spool_dir;
@@ -438,7 +438,7 @@ bool open_datasrc(DATASRC *dp)
             case 1:
                 if (strncmp(g_ser_line, "control ", 8) != 0)
                 {
-                    strcpy(g_buf, g_ser_line);
+                    std::strcpy(g_buf, g_ser_line);
                     dp->act_sf.lastfetch = 0;
                     success = actfile_hash(dp);
                     break;
@@ -778,7 +778,7 @@ try_xgtitle:
             }
             else {
                 nntp_finish_list();
-                strcat(g_buf, "\n");
+                std::strcat(g_buf, "\n");
             }
             groupname = srcfile_append(&dp->desc_sf, g_buf, grouplen);
             return groupname+grouplen+1;
@@ -928,7 +928,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
             {
                 break;
             }
-            strcat(g_buf,"\n");
+            std::strcat(g_buf,"\n");
             fputs(g_buf, fp);
             spin(200 * g_net_speed);
         }
@@ -947,7 +947,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
             while (*++s != '\n' && isspace(*s))
             {
             }
-            strcpy(g_buf+keylen+1, s);
+            std::strcpy(g_buf+keylen+1, s);
             s = g_buf+keylen+1;
         }
         s = adv_then_find_next_nl_and_dectrl(s);
@@ -1010,7 +1010,7 @@ char *srcfile_append(SRCFILE *sfp, char *bp, int keylen)
         while (*++s != '\n' && isspace(*s))
         {
         }
-        strcpy(bp+keylen+1, s);
+        std::strcpy(bp+keylen+1, s);
         s = bp+keylen+1;
     }
     s = adv_then_find_next_nl_and_dectrl(s);

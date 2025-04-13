@@ -1488,7 +1488,7 @@ void display_page_title(bool home_only)
         }
         if (rp)
         {
-            strcpy(g_buf + len, ", ...");
+            std::strcpy(g_buf + len, ", ...");
         }
         if (strcmp(g_buf+2,"default") != 0)
         {
@@ -1590,7 +1590,7 @@ try_again:
             }
             if (rp)
             {
-                strcpy(g_buf + len, ", ...");
+                std::strcpy(g_buf + len, ", ...");
             }
             output_sel(g_sel_page_item_cnt, sel, false);
             printf("%5d %s\n", mp->num, g_buf+2);
@@ -2338,7 +2338,7 @@ static void display_group(DATASRC *dp, char *group, int len, int max_len)
     else {
         char* end;
         char buff[256];
-        strcpy(buff, find_grpdesc(dp, group));
+        std::strcpy(buff, find_grpdesc(dp, group));
         char* cp = buff;
         if (*cp != '?' && (end = std::strchr(cp, '\n')) != nullptr
          && end != cp) {

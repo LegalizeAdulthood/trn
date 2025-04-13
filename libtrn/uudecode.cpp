@@ -284,7 +284,7 @@ decode_state uudecode(FILE *ifp, decode_state state)
                 break;
             }
             /* May be nearing end of file, so save this line */
-            strcpy(lastline, g_buf);
+            std::strcpy(lastline, g_buf);
             /* some encoders put the end line right after the last M line */
             if (!strncmp(g_buf, "end", 3))
             {

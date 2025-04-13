@@ -113,8 +113,8 @@ void sc_sv_savefile()
 
     g_waiting = true;   /* don't interrupt */
     char *savename = savestr(filexp(get_val_const("SAVESCOREFILE", "%+/savedscores")));
-    strcpy(s_lbuf,savename);
-    strcat(s_lbuf,".tmp");
+    std::strcpy(s_lbuf,savename);
+    std::strcat(s_lbuf,".tmp");
     FILE *tmpfp = fopen(s_lbuf, "w");
     if (!tmpfp) {
 #if 0

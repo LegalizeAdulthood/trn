@@ -3,6 +3,8 @@
 #include <config/common.h>
 #include <trn/string-algos.h>
 
+#include <cstring>
+
 using namespace testing;
 
 namespace {
@@ -12,7 +14,7 @@ struct StringAlgosTest : Test
 protected:
     void configure_before_after(const char *before, const char *after)
     {
-        strncpy(m_buffer, before, LBUFLEN);
+        std::strncpy(m_buffer, before, LBUFLEN);
         m_after = after;
     }
 

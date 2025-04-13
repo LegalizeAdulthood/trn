@@ -542,7 +542,7 @@ input_newsgroup_result input_newsgroup()
         s = skip_eq(g_buf+1, ' '); /* skip leading spaces */
         if (!*s && *g_buf == 'm' && !g_ngname.empty() && g_ngptr)
         {
-            strcpy(s,g_ngname.c_str());
+            std::strcpy(s,g_ngname.c_str());
         }
         {
             char* _s = skip_digits(s);
@@ -610,7 +610,7 @@ input_newsgroup_result input_newsgroup()
         }
         if (rp)
         {
-            strcpy(g_buf+len, ", ...");
+            std::strcpy(g_buf+len, ", ...");
         }
         printf("\nUsing newsrc group #%d: %s.\n",g_multirc->num,g_buf+2);
         termdown(3);
@@ -900,7 +900,7 @@ void trn_version()
                 if (rp->datasrc->act_sf.fp) {
                     if (rp->datasrc->flags & DF_TMPACTFILE)
                     {
-                        strcpy(g_msg,"Copy of remote active file");
+                        std::strcpy(g_msg,"Copy of remote active file");
                     }
                     else
                     {
@@ -910,7 +910,7 @@ void trn_version()
                 }
                 else
                 {
-                    strcpy(g_msg,"Dynamic active file");
+                    std::strcpy(g_msg,"Dynamic active file");
                 }
                 if (rp->datasrc->act_sf.refetch_secs) {
                     char* cp = secs2text(rp->datasrc->act_sf.refetch_secs);
@@ -920,7 +920,7 @@ void trn_version()
                                 " (refetch%s %s)",*cp == 'm'? " if" : ":", cp);
                     }
                 }
-                strcat(g_msg,".\n");
+                std::strcat(g_msg,".\n");
             }
             else
             {
@@ -931,11 +931,11 @@ void trn_version()
             if (rp->datasrc->grpdesc) {
                 if (!rp->datasrc->desc_sf.fp && rp->datasrc->desc_sf.hp)
                 {
-                    strcpy(g_msg,"Dynamic group desc. file");
+                    std::strcpy(g_msg,"Dynamic group desc. file");
                 }
                 else if (rp->datasrc->flags & DF_TMPGRPDESC)
                 {
-                    strcpy(g_msg,"Copy of remote group desc. file");
+                    std::strcpy(g_msg,"Copy of remote group desc. file");
                 }
                 else
                 {
@@ -949,7 +949,7 @@ void trn_version()
                                 " (refetch%s %s)",*cp == 'm'? " if" : ":", cp);
                     }
                 }
-                strcat(g_msg,".\n");
+                std::strcat(g_msg,".\n");
                 print_lines(g_msg, NOMARKING);
             }
             if (rp->datasrc->flags & DF_TRY_OVERVIEW) {

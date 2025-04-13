@@ -416,14 +416,14 @@ bool parseheader(ART_NUM artnum)
             found_nl = nntp_gets(bp,LBUFLEN) == NGSR_FULL_LINE;
             if (found_nl < 0)
             {
-                strcpy(bp, "."); /*$$*/
+                std::strcpy(bp, "."); /*$$*/
             }
             if (had_nl && *bp == '.') {
                 if (!bp[1]) {
                     *bp++ = '\n';       /* tag the end with an empty line */
                     break;
                 }
-                strcpy(bp,bp+1);
+                std::strcpy(bp,bp+1);
             }
             len = std::strlen(bp);
             if (found_nl)

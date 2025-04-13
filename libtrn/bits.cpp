@@ -65,7 +65,7 @@ void rc_to_bits()
         mybuf = safemalloc((MEM_SIZE) (i + 2));
     }
 #endif
-    strcpy(mybuf,s);                    /* make scratch copy of line */
+    std::strcpy(mybuf,s);                    /* make scratch copy of line */
     if (mybuf[0])
     {
         mybuf[i++] = ',';               /* put extra comma on the end */
@@ -206,7 +206,7 @@ void bits_to_rc()
     ART_NUM count=0;
     int safelen = LBUFLEN - 32;
 
-    strcpy(g_buf,g_ngptr->rcline);            /* start with the newsgroup name */
+    std::strcpy(g_buf,g_ngptr->rcline);            /* start with the newsgroup name */
     char *s = g_buf + g_ngptr->numoffset - 1; /* use s for buffer pointer */
     *s++ = g_ngptr->subscribechar;            /* put the requisite : or !*/
     for (i = article_first(g_absfirst); i <= g_lastart; i = article_next(i)) {
@@ -223,7 +223,7 @@ void bits_to_rc()
             if (mybuf == g_buf) {       /* currently static? */
                 *s = '\0';
                 mybuf = safemalloc((MEM_SIZE)safelen + 32);
-                strcpy(mybuf,g_buf);    /* so we must copy it */
+                std::strcpy(mybuf,g_buf);    /* so we must copy it */
                 s = mybuf + (s-g_buf);
                                         /* fix the pointer, too */
             }
@@ -275,7 +275,7 @@ void bits_to_rc()
     if (mybuf == g_buf) {
         g_ngptr->rcline = safemalloc((MEM_SIZE)(s-g_buf)+1);
                                         /* grab a new rc line */
-        strcpy(g_ngptr->rcline, g_buf); /* and load it */
+        std::strcpy(g_ngptr->rcline, g_buf); /* and load it */
     }
     else {
         mybuf = saferealloc(mybuf,(MEM_SIZE)(s-mybuf)+1);

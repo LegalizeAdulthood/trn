@@ -28,6 +28,8 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cstring>
+
 static char *s_sa_extract_dest{}; /* use this command on an extracted file */
 static bool  s_sa_extract_junk{}; /* junk articles after extracting them */
 
@@ -772,7 +774,7 @@ long sa_wrap_next_author(long a)
     s = (char*)sa_desc_author(a,20);    /* 20 characters should be enough */
     for (b = s_next_elig(a); b; b = s_next_elig(b))
     {
-        if (strstr(get_from_line(b),s))
+        if (std::strstr(get_from_line(b),s))
         {
             break;      /* out of the for loop */
         }
@@ -789,7 +791,7 @@ long sa_wrap_next_author(long a)
     }
     for ( ; b; b = s_next_elig(b))
     {
-        if (strstr(get_from_line(b),s))
+        if (std::strstr(get_from_line(b),s))
         {
             break;      /* out of the for loop */
         }

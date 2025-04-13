@@ -17,6 +17,8 @@
 #include "trn/score.h"
 #include "trn/terminal.h" /* for standout */
 
+#include <cstring>
+
 static char s_sa_buf[LBUFLEN];    /* misc. buffer */
 
 /* returns statchars in temp space... */
@@ -34,7 +36,7 @@ const char *sa_get_statchars(long a, int line)
     /* old 5-column status */
     switch (line) {
       case 1:
-        strcpy(char_buf,".....");
+        std::strcpy(char_buf,".....");
         if (sa_marked(a))
         {
             char_buf[4] = 'x';
@@ -53,13 +55,13 @@ const char *sa_get_statchars(long a, int line)
         }
         break;
       default:
-        strcpy(char_buf,"     ");
+        std::strcpy(char_buf,"     ");
         break;
     } /* switch */
 #else
     switch (line) {
       case 1:
-        strcpy(char_buf,"...");
+        std::strcpy(char_buf,"...");
         if (sa_marked(a))
         {
             char_buf[2] = 'x';
@@ -78,7 +80,7 @@ const char *sa_get_statchars(long a, int line)
         }
         break;
       default:
-        strcpy(char_buf,"   ");
+        std::strcpy(char_buf,"   ");
         break;
     } /* switch */
 #endif
@@ -100,7 +102,7 @@ const char *sa_desc_subject(long e)
         sprintf(sa_subj_buf,"(no subject)");
         return sa_subj_buf;
     }
-    strncpy(sa_subj_buf,s,250);
+    std::strncpy(sa_subj_buf,s,250);
     free(s);
     char *s1 = sa_subj_buf;
     if (*s1 == 'r' || *s1 == 'R') {
@@ -129,16 +131,16 @@ const char *sa_get_desc(long e, int line, bool trunc)
         desc_buf[0] = '\0';     /* initialize the buffer */
         if (g_sa_mode_desc_artnum) {
             sprintf(s_sa_buf,"%6d ",(int)artnum);
-            strcat(desc_buf,s_sa_buf);
+            std::strcat(desc_buf,s_sa_buf);
         }
         if (g_sc_initialized && g_sa_mode_desc_score) {
             /* we'd like the score now */
             sprintf(s_sa_buf,"[%4d] ",sc_score_art(artnum,true));
-            strcat(desc_buf,s_sa_buf);
+            std::strcat(desc_buf,s_sa_buf);
         }
         if (g_sa_mode_desc_threadcount) {
             sprintf(s_sa_buf,"(%3d) ",sa_subj_thread_count(e));
-            strcat(desc_buf,s_sa_buf);
+            std::strcat(desc_buf,s_sa_buf);
         }
         if (g_sa_mode_desc_author) {
 #if 0
@@ -150,21 +152,21 @@ const char *sa_get_desc(long e, int line, bool trunc)
             {
                 sprintf(s_sa_buf,"%s ",sa_desc_author(e,40));
             }
-            strcat(desc_buf,s_sa_buf);
+            std::strcat(desc_buf,s_sa_buf);
 #endif
             if (trunc)
             {
-                strcat(desc_buf, compress_from(article_ptr(artnum)->from, 16));
+                std::strcat(desc_buf, compress_from(article_ptr(artnum)->from, 16));
             }
             else
             {
-                strcat(desc_buf, compress_from(article_ptr(artnum)->from, 200));
+                std::strcat(desc_buf, compress_from(article_ptr(artnum)->from, 200));
             }
-            strcat(desc_buf," ");
+            std::strcat(desc_buf," ");
         }
         if (g_sa_mode_desc_subject) {
             sprintf(s_sa_buf,"%s",sa_desc_subject(e));
-            strcat(desc_buf,s_sa_buf);
+            std::strcat(desc_buf,s_sa_buf);
         }
         break;
       case 2:   /* summary line (test) */
@@ -263,7 +265,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
 #ifdef HAS_TERMLIB
     if (use_standout)
     {
-        strcat(desc_buf,g_tc_SE);       /* end standout mode */
+        std::strcat(desc_buf,g_tc_SE);       /* end standout mode */
     }
 #endif
     /* take out bad characters (replace with one space) */

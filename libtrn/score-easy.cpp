@@ -37,7 +37,7 @@ char *sc_easy_append()
           case '0':
             return nullptr;
           case '1':
-            strcpy(s_sc_e_newline,"?");
+            std::strcpy(s_sc_e_newline,"?");
             return s_sc_e_newline;
           case '2':
             filechar = '*';

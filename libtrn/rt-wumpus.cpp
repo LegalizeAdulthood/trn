@@ -258,7 +258,7 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
                 *s_str = '\0';
                 s_tree_lines[s_line_num-s_first_line]
                         = safemalloc(s_str-s_tree_buff + 1);
-                strcpy(s_tree_lines[s_line_num - s_first_line], s_tree_buff);
+                std::strcpy(s_tree_lines[s_line_num - s_first_line], s_tree_buff);
                 if (s_node_on_line) {
                     s_node_line_cnt = s_line_num - s_first_line;
                 }
@@ -278,7 +278,7 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
         {
             s_tree_indent[5] = ' ';
         }
-        strcpy(s_tree_buff, s_tree_indent+5);
+        std::strcpy(s_tree_buff, s_tree_indent+5);
         s_str = s_tree_buff + std::strlen(s_tree_buff);
     }
 }
@@ -386,7 +386,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
     }
 
     if (!*line) {
-        strcpy(line, " ");
+        std::strcpy(line, " ");
         end = line+1;
     }
 

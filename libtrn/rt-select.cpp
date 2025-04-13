@@ -1951,7 +1951,7 @@ static display_state sel_command(char_int ch)
           default:
             return ret;
         }
-        strcpy(g_msg,"Type ? for help.");
+        std::strcpy(g_msg,"Type ? for help.");
         settle_down();
         if (s_clean_screen)
         {
@@ -2076,7 +2076,7 @@ static display_state article_commands(char_int ch)
         return DS_DISPLAY;
       case 'Y':
         if (!g_dmcount) {
-            strcpy(g_msg,"No marked articles to yank back.");
+            std::strcpy(g_msg,"No marked articles to yank back.");
             return DS_STATUS;
         }
         yankback();
@@ -2329,7 +2329,7 @@ static display_state article_commands(char_int ch)
         return DS_QUIT;
       case 'T':
         if (!g_threaded_group) {
-            strcpy(g_msg,"Group is not threaded.");
+            std::strcpy(g_msg,"Group is not threaded.");
             return DS_STATUS;
         }
         /* FALL THROUGH */
@@ -2360,15 +2360,15 @@ static display_state article_commands(char_int ch)
           case 'J': case 'j': case 'K':  case ',':
             count_subjects(g_sel_rereading? CS_NORM : CS_UNSELECT);
             init_pages(PRESERVE_PAGE);
-            strcpy(g_msg,"Kill memorized.");
+            std::strcpy(g_msg,"Kill memorized.");
             s_disp_status_line = 1;
             return DS_DISPLAY;
           case '+': case '.': case 'S': case 'm':
-            strcpy(g_msg,"Selection memorized.");
+            std::strcpy(g_msg,"Selection memorized.");
             s_disp_status_line = 1;
             return DS_UPDATE;
           case 'c':  case 'C':
-            strcpy(g_msg,"Auto-commands cleared.");
+            std::strcpy(g_msg,"Auto-commands cleared.");
             s_disp_status_line = 1;
             return DS_UPDATE;
           case 'q':
@@ -2717,7 +2717,7 @@ static display_state newsgroup_commands(char_int ch)
             set_ng(g_sel_items[g_sel_item_index].u.np);
         }
         else {
-            strcpy(g_msg, "No newsgroup to catchup.");
+            std::strcpy(g_msg, "No newsgroup to catchup.");
             s_disp_status_line = 1;
             return DS_UPDATE;
         }
@@ -3109,7 +3109,7 @@ static display_state option_commands(char_int ch)
         char *s = compile(&g_optcompex, pattern, true, true);
         if (s != nullptr)
         {
-            strcpy(g_msg,s);
+            std::strcpy(g_msg,s);
             return DS_STATUS;
         }
         int i = g_sel_items[g_sel_item_index].u.op;

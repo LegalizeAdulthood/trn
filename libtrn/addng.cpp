@@ -309,7 +309,7 @@ static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch
         break;
     }
     node->toread = (toread < 0)? 0 : toread;
-    strcpy(node->name, name);
+    std::strcpy(node->name, name);
     node->datasrc = g_datasrc;
     node->next = nullptr;
     node->prev = nullptr;
@@ -342,7 +342,7 @@ static void add_to_list(const char *name, int toread, char_int ch)
     }
     node->toread = (toread < 0)? 0 : toread;
     node->num = s_addgroup_cnt++;
-    strcpy(node->name, name);
+    std::strcpy(node->name, name);
     node->datasrc = g_datasrc;
     node->next = nullptr;
     node->prev = g_last_addgroup;
@@ -379,7 +379,7 @@ bool scanactive(bool add_matching)
         else {
             if (g_maxngtodo != 1)
             {
-                strcpy(g_buf, "*");
+                std::strcpy(g_buf, "*");
             }
             else {
                 if (g_ngtodo[0][0] == '^')
@@ -461,7 +461,7 @@ static void scanline(char *actline, bool add_matching)
         add_to_list(actline, high-low, 0);
     }
     else {
-        strcat(actline,"\n");
+        std::strcat(actline,"\n");
         print_lines(actline, NOMARKING);
     }
 }

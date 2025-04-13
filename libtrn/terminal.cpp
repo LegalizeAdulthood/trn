@@ -444,13 +444,13 @@ void set_macro(char *seq, char *def)
      */
     if (seq[0] == '\033' && seq[1] == '[' && seq[2]) {
         char lbuf[LBUFLEN];     /* copy of possibly non-writable string */
-        strcpy(lbuf,seq);
+        std::strcpy(lbuf,seq);
         lbuf[1] = 'O';
         mac_line(def,lbuf,0);
     }
     if (seq[0] == '\033' && seq[1] == 'O' && seq[2]) {
         char lbuf[LBUFLEN];     /* copy of possibly non-writable string */
-        strcpy(lbuf,seq);
+        std::strcpy(lbuf,seq);
         lbuf[1] = '[';
         mac_line(def,lbuf,0);
     }
@@ -501,9 +501,9 @@ void arrow_macros(char *tmpbuf)
      * want to redefine them.  (The tvi912c defines kl as ^H)
      */
 #ifdef MSDOS
-    strcpy(lbuf,"\035\110");
+    std::strcpy(lbuf,"\035\110");
 #else
-    strcpy(lbuf,Tgetstr("ku"));         /* up */
+    std::strcpy(lbuf,Tgetstr("ku"));         /* up */
 #endif
     if ((int)std::strlen(lbuf) > 1)
     {
@@ -511,9 +511,9 @@ void arrow_macros(char *tmpbuf)
     }
 
 #ifdef MSDOS
-    strcpy(lbuf,"\035\120");
+    std::strcpy(lbuf,"\035\120");
 #else
-    strcpy(lbuf,Tgetstr("kd"));         /* down */
+    std::strcpy(lbuf,Tgetstr("kd"));         /* down */
 #endif
     if ((int)std::strlen(lbuf) > 1)
     {
@@ -521,9 +521,9 @@ void arrow_macros(char *tmpbuf)
     }
 
 #ifdef MSDOS
-    strcpy(lbuf,"\035\113");
+    std::strcpy(lbuf,"\035\113");
 #else
-    strcpy(lbuf,Tgetstr("kl"));         /* left */
+    std::strcpy(lbuf,Tgetstr("kl"));         /* left */
 #endif
     if ((int)std::strlen(lbuf) > 1)
     {
@@ -531,9 +531,9 @@ void arrow_macros(char *tmpbuf)
     }
 
 #ifdef MSDOS
-    strcpy(lbuf,"\035\115");
+    std::strcpy(lbuf,"\035\115");
 #else
-    strcpy(lbuf,Tgetstr("kr"));         /* right */
+    std::strcpy(lbuf,Tgetstr("kr"));         /* right */
 #endif
     if ((int)std::strlen(lbuf) > 1)
     {
@@ -689,11 +689,11 @@ static void show_keymap(KEYMAP *curmap, char *prefix)
             }
             else if (i == ' ')
             {
-                strcpy(next,"\\040");
+                std::strcpy(next,"\\040");
             }
             else if (i == 127)
             {
-                strcpy(next,"^?");
+                std::strcpy(next,"^?");
             }
             else
             {
@@ -701,7 +701,7 @@ static void show_keymap(KEYMAP *curmap, char *prefix)
             }
             if ((kt >> KM_GSHIFT) & KM_GMASK) {
                 sprintf(g_cmd_buf,"+%d", (kt >> KM_GSHIFT) & KM_GMASK);
-                strcat(next,g_cmd_buf);
+                std::strcat(next,g_cmd_buf);
             }
             switch (kt & KM_TMASK) {
               case KM_NOTHIN:
@@ -1558,7 +1558,7 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
         cp = dest;
         *dest++ = '\0';
         *dest = '\0';
-        strcpy(g_buf,value);
+        std::strcpy(g_buf,value);
     }
 
     bool  value_changed;
@@ -1635,11 +1635,11 @@ reask_in_choice:
     else {
         if (prefix) {
             sprintf(g_buf, "%s ", prefix);
-            strcat(g_buf,cp);
+            std::strcat(g_buf,cp);
         }
         else
         {
-            strcpy(g_buf,cp);
+            std::strcpy(g_buf,cp);
         }
     }
     s = g_buf + std::strlen(g_buf);
@@ -1828,7 +1828,7 @@ void errormsg(const char *str)
     if (g_general_mode == GM_SELECTOR) {
         if (str != g_msg)
         {
-            strcpy(g_msg,str);
+            std::strcpy(g_msg,str);
         }
         g_error_occurred = true;
     }
@@ -2298,7 +2298,7 @@ void draw_mousebar(int limit, bool restore_cursor)
                 }
                 break;
               default:
-                strncpy(t, s, 5);
+                std::strncpy(t, s, 5);
                 t += 5;
                 break;
             }

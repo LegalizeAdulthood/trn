@@ -81,7 +81,7 @@ void sf_init()
     }
     s_sf_file_level = 0;
     /* find # of levels */
-    strcpy(s_sf_buf,filexp("%C"));
+    std::strcpy(s_sf_buf,filexp("%C"));
     int level = 0;
     for (char *s = s_sf_buf; *s; s++)
     {
@@ -328,13 +328,13 @@ static char s_sf_file[LBUFLEN];
 /* filenames of type a/b/c/foo.bar.misc for group foo.bar.misc */
 char *sf_get_filename(int level)
 {
-    strcpy(s_sf_file,filexp(get_val_const("SCOREDIR",DEFAULT_SCOREDIR)));
-    strcat(s_sf_file,"/");
+    std::strcpy(s_sf_file,filexp(get_val_const("SCOREDIR",DEFAULT_SCOREDIR)));
+    std::strcat(s_sf_file,"/");
     if (!level) {
         /* allow environment variable later... */
-        strcat(s_sf_file,"global");
+        std::strcat(s_sf_file,"global");
     } else {
-        strcat(s_sf_file,filexp("%C"));
+        std::strcat(s_sf_file,filexp("%C"));
         char *s = std::strrchr(s_sf_file, '/');
         /* maybe redo this logic later... */
         while (level--) {
@@ -364,9 +364,9 @@ char *sf_cmd_fname(char *s)
         return s;
     }
     /* no slashes in this filename */
-    strcpy(lbuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
-    strcat(lbuf,"/");
-    strcat(lbuf,s);
+    std::strcpy(lbuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
+    std::strcat(lbuf,"/");
+    std::strcat(lbuf,s);
     return lbuf;
 }
 
@@ -778,7 +778,7 @@ void sf_do_file(const char *fname)
     s_sf_entries[g_sf_num_entries-1].str1 = savestr(safefilename);
 
     while ((s = sf_file_getline(sf_fp)) != nullptr) {
-        strcpy(s_sf_buf,s);
+        std::strcpy(s_sf_buf,s);
         s = s_sf_buf;
         (void)sf_do_line(s,false);
     }
@@ -812,8 +812,8 @@ int score_match(char *str, int ind)
         return false;
     }
     /* default case */
-    const char *s3 = strstr(str, s1);
-    return s3 != nullptr && (!s2 || strstr(s3 + std::strlen(s1), s2));
+    const char *s3 = std::strstr(str, s1);
+    return s3 != nullptr && (!s2 || std::strstr(s3 + std::strlen(s1), s2));
 }
 
 int sf_score(ART_NUM a)
@@ -923,11 +923,11 @@ char *sf_missing_score(const char *line)
         free(s);
         return nullptr;
     }
-    strcpy(lbuf,g_buf+1);
+    std::strcpy(lbuf,g_buf+1);
     i = std::strlen(lbuf);
     lbuf[i] = ' ';
     lbuf[i+1] = '\0';
-    strcat(lbuf,s);
+    std::strcat(lbuf,s);
     free(s);
     return lbuf;
 }
@@ -991,13 +991,13 @@ void sf_append(char *line)
         static char lbuf[LBUFLEN];
         switch(*scoretext) {
           case 'F':     /* domain-shortened FROM line */
-            strcpy(lbuf,scoreline);
+            std::strcpy(lbuf,scoreline);
             lbuf[std::strlen(lbuf)-1] = '\0';
-            strcat(lbuf,filexp("from: %y"));
+            std::strcat(lbuf,filexp("from: %y"));
             scoreline = lbuf;
             break;
           case 'S':     /* current subject */
-            strcpy(lbuf,scoreline);
+            std::strcpy(lbuf,scoreline);
             s = fetchcache(g_art, SUBJ_LINE,true);
             if (!s || !*s) {
                 printf("No subject: score entry aborted.\n");
@@ -1029,14 +1029,14 @@ void sf_append(char *line)
     }
     if (filechar == '"') {      /* do local group */
 /* Note: should probably be changed to use sf_ file functions */
-        strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
-        strcat(filebuf,"/%C");
+        std::strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
+        std::strcat(filebuf,"/%C");
         filename = filebuf;
     }
     else if (filechar == '*') { /* do global scorefile */
 /* Note: should probably be changed to use sf_ file functions */
-        strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
-        strcat(filebuf,"/global");
+        std::strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
+        std::strcat(filebuf,"/global");
         filename = filebuf;
     }
     else if (!(filename = s_sf_abbr[(int)filechar])) {
@@ -1260,27 +1260,27 @@ void sf_edit_file(const char *filespec)
     /* if more than one character use as filename */
     if (filespec[1])
     {
-        strcpy(filebuf,filespec);
+        std::strcpy(filebuf,filespec);
     }
     else if (filechar == '"') { /* edit local group */
 /* Note: should probably be changed to use sf_ file functions */
-        strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
-        strcat(filebuf,"/%C");
+        std::strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
+        std::strcat(filebuf,"/%C");
     }
     else if (filechar == '*') { /* edit global scorefile */
 /* Note: should probably be changed to use sf_ file functions */
-        strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
-        strcat(filebuf,"/global");
+        std::strcpy(filebuf,get_val_const("SCOREDIR",DEFAULT_SCOREDIR));
+        std::strcat(filebuf,"/global");
     }
     else {      /* abbreviation */
         if (!s_sf_abbr[(int)filechar]) {
             printf("\nBad file abbreviation: %c\n",filechar);
             return;
         }
-        strcpy(filebuf,s_sf_abbr[(int)filechar]);
+        std::strcpy(filebuf,s_sf_abbr[(int)filechar]);
     }
     char *fname_noexpand = sf_cmd_fname(filebuf);
-    strcpy(filebuf,filexp(fname_noexpand));
+    std::strcpy(filebuf,filexp(fname_noexpand));
     /* make sure directory exists... */
     if (!makedir(filebuf, MD_FILE)) {
         (void)edit_file(fname_noexpand);

@@ -229,7 +229,7 @@ bool parse_url(const char *url)
         printf("Bad URL (path does not start with /): %s\n",url);
         return false;
     }
-    strcpy(s_url_path,s);
+    std::strcpy(s_url_path,s);
     return true;
 }
 

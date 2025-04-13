@@ -46,7 +46,7 @@ int nntp_list(const char *type, const char *arg, int len)
     }
     else if (string_case_equal(type, "active"))
     {
-        strcpy(g_ser_line, "LIST");
+        std::strcpy(g_ser_line, "LIST");
     }
     else
     {
@@ -291,7 +291,7 @@ static int nntp_copybody(char *s, int limit, ART_POS pos)
         const int result = nntp_gets(s, limit);
         if (result == NGSR_ERROR)
         {
-            strcpy(s, "."); /*$$*/
+            std::strcpy(s, "."); /*$$*/
         }
         if (had_nl) {
             if (nntp_at_list_end(s)) {
@@ -307,7 +307,7 @@ static int nntp_copybody(char *s, int limit, ART_POS pos)
         int len = std::strlen(s);
         if (result == NGSR_FULL_LINE)
         {
-            strcpy(s + len, "\n");
+            std::strcpy(s + len, "\n");
         }
         fputs(s, g_artfp);
         s_body_end = ftell(g_artfp);
@@ -618,7 +618,7 @@ int nntp_handle_timeout()
         return -1;
     }
     handling_timeout = true;
-    strcpy(last_command_save, g_last_command);
+    std::strcpy(last_command_save, g_last_command);
     nntp_close(false);
     g_datasrc->nntplink = g_nntplink;
     if (nntp_connect(g_datasrc->newsid, false) <= 0)
@@ -634,7 +634,7 @@ int nntp_handle_timeout()
     {
         return -1;
     }
-    strcpy(g_last_command, last_command_save); /*$$ Is this really needed? */
+    std::strcpy(g_last_command, last_command_save); /*$$ Is this really needed? */
     handling_timeout = false;
     return 1;
 }

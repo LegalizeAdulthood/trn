@@ -345,14 +345,14 @@ void univ_add_textfile(const char *desc, char *name)
         s++;
       default:
         /* XXX later have error checking on length */
-        strcpy(lbuf,g_univ_fname);
+        std::strcpy(lbuf,g_univ_fname);
         for (p = lbuf+std::strlen(lbuf); p > lbuf && *p != '/'; p--)
         {
         }
         if (p) {
             *p++ = '/';
             *p = '\0';
-            strcat(lbuf,s);
+            std::strcat(lbuf,s);
             s = lbuf;
         }
         /* FALL THROUGH */
@@ -743,7 +743,7 @@ static bool univ_do_line(char *line)
             /* XXX hack the variable and fall through */
             if (g_univ_fname && std::strlen(g_univ_fname)+std::strlen(s) < 1020) {
                 static char lbuf[1024];
-                strcpy(lbuf,g_univ_fname);
+                std::strcpy(lbuf,g_univ_fname);
                 for (p = lbuf+std::strlen(lbuf); p > lbuf && *p != '/'; p--)
                 {
                 }
@@ -751,7 +751,7 @@ static bool univ_do_line(char *line)
                     *p++ = '/';
                     *p = '\0';
                     s++;
-                    strcat(lbuf,s);
+                    std::strcat(lbuf,s);
                     s = lbuf;
                 }
             } /* XXX later have else which will complain */
@@ -763,7 +763,7 @@ static bool univ_do_line(char *line)
             if (*p) {
                 if (std::strlen(s) < 1020) {
                     static char lbuf[1024];
-                    strcpy(lbuf,s);
+                    std::strcpy(lbuf,s);
                     s = lbuf;
 
                     p = skip_ne(s, '>'); /* XXX Ick! */
@@ -791,7 +791,7 @@ static bool univ_do_line(char *line)
             if (!g_univ_tmp_file.empty())
             {
                 static char buff[1024];
-                strcpy(buff, g_univ_tmp_file.c_str());
+                std::strcpy(buff, g_univ_tmp_file.c_str());
                 p = buff;
             }
             else
@@ -963,7 +963,7 @@ void univ_page_file(char *fname)
 
     sprintf(g_cmd_buf,"%s ",
             filexp(get_val_const("HELPPAGER",get_val_const("PAGER","more"))));
-    strcat(g_cmd_buf, filexp(fname));
+    std::strcat(g_cmd_buf, filexp(fname));
     termdown(3);
     resetty();                  /* make sure tty is friendly */
     doshell(SH,g_cmd_buf);      /* invoke the shell */
@@ -1195,12 +1195,12 @@ const char *univ_article_desc(const UNIV_ITEM *ui)
     char *s = ui->data.virt.subj;
     const char *f = ui->data.virt.from;
     if (!f) {
-        strcpy(fbuf,"<No Author> ");
+        std::strcpy(fbuf,"<No Author> ");
     } else {
         safecpy(fbuf,compress_from(f,16),17);
     }
     if (!s) {
-        strcpy(sbuf,"<No Subject>");
+        std::strcpy(sbuf,"<No Subject>");
     } else {
         if ((s[0] == 'R') &&
             (s[1] == 'e') &&

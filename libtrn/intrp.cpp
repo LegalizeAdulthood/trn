@@ -78,8 +78,8 @@ void intrp_init(char *tcbuf, int tcbuf_len)
 #else
 #ifdef TILDENAME
         char tildenews[2+sizeof NEWS_ADMIN];
-        strcpy(tildenews, "~");
-        strcat(tildenews, NEWS_ADMIN);
+        std::strcpy(tildenews, "~");
+        std::strcat(tildenews, NEWS_ADMIN);
         (void) filexp(tildenews);
 #else
         ... "Define either HAS_GETPWENT or TILDENAME to get NEWS_ADMIN"
@@ -108,7 +108,7 @@ void intrp_init(char *tcbuf, int tcbuf_len)
 #if HOSTBITS != 0
     int i = (HOSTBITS < 2? 2 : HOSTBITS);
     static char buff[128];
-    strcpy(buff, g_p_host_name.c_str());
+    std::strcpy(buff, g_p_host_name.c_str());
     g_hostname = buff+std::strlen(buff)-1;
     while (i && g_hostname != buff) {
         if (*--g_hostname == '.')
@@ -308,7 +308,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     {
                         *s++ = '/';
                     }
-                    strcpy(s,g_lastpat.c_str());
+                    std::strcpy(s,g_lastpat.c_str());
                     s += std::strlen(s);
                     if (!cmd || *cmd != 'g') {
                         if (cmd && std::strchr("/?",*cmd))
@@ -513,11 +513,11 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     s = g_home_dir;
                     break;
                 case '.':
-                    strcpy(scrbuf, g_dot_dir.c_str());
+                    std::strcpy(scrbuf, g_dot_dir.c_str());
                     s = scrbuf;
                     break;
                 case '+':
-                    strcpy(scrbuf, g_trn_dir.c_str());
+                    std::strcpy(scrbuf, g_trn_dir.c_str());
                     s = scrbuf;
                     break;
                 case '$':
@@ -542,7 +542,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     break;
                 case '0': case '1': case '2': case '3': case '4':
                 case '5': case '6': case '7': case '8': case '9':
-                    strcpy(scrbuf, getbracket(g_bra_compex,*pattern - '0'));
+                    std::strcpy(scrbuf, getbracket(g_bra_compex,*pattern - '0'));
                     s = scrbuf;
                     break;
                 case 'a':
@@ -579,7 +579,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     break;
                 case 'b':
-                    strcpy(scrbuf, g_savedest.c_str());
+                    std::strcpy(scrbuf, g_savedest.c_str());
                     s = scrbuf;
                     break;
                 case 'B':
@@ -587,11 +587,11 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     sprintf(s,"%ld",(long)g_savefrom);
                     break;
                 case 'c':
-                    strcpy(scrbuf, g_ngdir.c_str());
+                    std::strcpy(scrbuf, g_ngdir.c_str());
                     s = scrbuf;
                     break;
                 case 'C':
-                    strcpy(scrbuf, g_ngname.c_str());
+                    std::strcpy(scrbuf, g_ngname.c_str());
                     s = scrbuf;
                     break;
                 case 'd':
@@ -625,7 +625,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     else
                     {
-                        strcpy(scrbuf, g_extractprog.c_str());
+                        std::strcpy(scrbuf, g_extractprog.c_str());
                         s = scrbuf;
                     }
                     break;
@@ -637,7 +637,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     else
                     {
-                        strcpy(scrbuf, g_extractdest.c_str());
+                        std::strcpy(scrbuf, g_extractdest.c_str());
                         s = scrbuf;
                     }
                     break;
@@ -689,11 +689,11 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     s = scrbuf;
                     break;
                 case 'h':                       /* header file name */
-                    strcpy(scrbuf, g_headname.c_str());
+                    std::strcpy(scrbuf, g_headname.c_str());
                     s = scrbuf;
                     break;
                 case 'H':                       /* host name in postings */
-                    strcpy(scrbuf, g_p_host_name.c_str());
+                    std::strcpy(scrbuf, g_p_host_name.c_str());
                     s = scrbuf;
                     break;
                 case 'i':
@@ -723,14 +723,14 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     break;
                 case 'l':                       /* news admin login */
 #ifdef HAS_NEWS_ADMIN
-                    strcpy(scrbuf, g_newsadmin.c_str());
+                    std::strcpy(scrbuf, g_newsadmin.c_str());
 #else
-                    strcpy(scrbuf, "???");
+                    std::strcpy(scrbuf, "???");
 #endif
                     s = scrbuf;
                     break;
                 case 'L':                       /* login id */
-                    strcpy(scrbuf, g_login_name.c_str());
+                    std::strcpy(scrbuf, g_login_name.c_str());
                     s = scrbuf;
                     break;
                 case 'm':               /* current mode */
@@ -754,7 +754,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     break;
                 case 'N':                       /* full name */
-                    strcpy(scrbuf, g_real_name.c_str());
+                    std::strcpy(scrbuf, g_real_name.c_str());
                     s = get_val("NAME", scrbuf);
                     break;
                 case 'o':                       /* organization */
@@ -764,7 +764,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     s = get_val("NEWSORG",nullptr);
                     if (s == nullptr)
                     {
-                        strcpy(scrbuf, ORGNAME);
+                        std::strcpy(scrbuf, ORGNAME);
                         s = get_val("ORGANIZATION", scrbuf);
                     }
 #endif
@@ -792,18 +792,18 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     break;
                 case 'O':
-                    strcpy(scrbuf, g_origdir.c_str());
+                    std::strcpy(scrbuf, g_origdir.c_str());
                     s = scrbuf;
                     break;
                 case 'p':
-                    strcpy(scrbuf, g_privdir.c_str());
+                    std::strcpy(scrbuf, g_privdir.c_str());
                     s = scrbuf;
                     break;
                 case 'P':
                     s = g_datasrc ? g_datasrc->spool_dir : s_empty;
                     break;
                 case 'q':
-                    strcpy(scrbuf, s_last_input.c_str());
+                    std::strcpy(scrbuf, s_last_input.c_str());
                     s = scrbuf;
                     break;
                 case 'r':
@@ -873,7 +873,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     if (artid_buf[0] == '<')
                     {
-                        strcpy(refs_buf + i, artid_buf);
+                        std::strcpy(refs_buf + i, artid_buf);
                     }
                     else if (artid_buf[0])
                     {
@@ -990,15 +990,15 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     break;
                 }
                 case 'V':
-                    strcpy(scrbuf, g_patchlevel.c_str());
+                    std::strcpy(scrbuf, g_patchlevel.c_str());
                     s = scrbuf;
                     break;
                 case 'x':                           /* news library */
-                    strcpy(scrbuf, g_lib.c_str());
+                    std::strcpy(scrbuf, g_lib.c_str());
                     s = scrbuf;
                     break;
                 case 'X':                           /* rn library */
-                    strcpy(scrbuf, g_rn_lib.c_str());
+                    std::strcpy(scrbuf, g_rn_lib.c_str());
                     s = scrbuf;
                     break;
                 case 'y':       /* from line with *-shortening */
@@ -1014,7 +1014,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         int i = 0;
 
                         s2 = fetchlines(g_art,FROM_LINE);
-                        strcpy(tmpbuf,s2);
+                        std::strcpy(tmpbuf,s2);
                         free(s2);
                         for (s2 = tmpbuf; (*s2 && (*s2 != '@') && (*s2 != ' ')); s2++)
                         {
@@ -1043,8 +1043,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                             *s2 = '\0';
                             from_buf = (char*)safemalloc(
                                 (std::strlen(tmpbuf)+std::strlen(s3)+1)*sizeof(char));
-                            strcpy(from_buf,tmpbuf);
-                            strcat(from_buf,s3);
+                            std::strcpy(from_buf,tmpbuf);
+                            std::strcat(from_buf,s3);
                         } else {
                             from_buf = savestr(tmpbuf);
                         }
@@ -1052,7 +1052,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     break;
                 case 'Y':
-                    strcpy(scrbuf, g_tmp_dir.c_str());
+                    std::strcpy(scrbuf, g_tmp_dir.c_str());
                     s = scrbuf;
                     break;
                 case 'z':
@@ -1091,7 +1091,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 if (s == scrbuf)
                 {
                     static char scratch[sizeof(scrbuf)];
-                    strcpy(scratch, scrbuf);
+                    std::strcpy(scratch, scrbuf);
                     s = scratch;
                 }
                 sprintf(scrbuf, spfbuf, s);

@@ -1,8 +1,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <array>
-
 #include <config/common.h>
 #include <util/env-internal.h>
 #include <trn/init.h>
@@ -11,6 +9,8 @@
 
 #include "mock_env.h"
 #include "test_config.h"
+
+#include <array>
 
 using namespace testing;
 

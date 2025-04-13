@@ -242,7 +242,7 @@ char *readartbuf(bool view_inline)
                 bp = nullptr;
                 goto done;
             }
-            strcpy(bp+o, "\n");
+            std::strcpy(bp+o, "\n");
             read_something = -1;
         }
         len = std::strlen(bp+o) + read_offset;
@@ -251,7 +251,7 @@ char *readartbuf(bool view_inline)
                 read_offset = len;
                 goto read_more;
             }
-            strcpy(bp + len++ + extra_offset, "\n");
+            std::strcpy(bp + len++ + extra_offset, "\n");
         }
         if (!g_is_mime)
         {
@@ -260,7 +260,7 @@ char *readartbuf(bool view_inline)
         o = line_offset + extra_offset;
         mime_SetState(bp+o);
         if (bp[o] == '\0') {
-            strcpy(bp+o, "\n");
+            std::strcpy(bp+o, "\n");
             len = line_offset+1;
         }
         break;
@@ -281,7 +281,7 @@ char *readartbuf(bool view_inline)
                     line_offset = len;
                     goto read_more;
                 }
-                strcpy(bp + len++ + extra_offset, "\n");
+                std::strcpy(bp + len++ + extra_offset, "\n");
             }
         }
         else if (g_mime_section->encoding == MENCODE_BASE64) {
@@ -295,7 +295,7 @@ char *readartbuf(bool view_inline)
                     line_offset = len;
                     goto read_more;
                 }
-                strcpy(bp + len++ + extra_offset, "\n");
+                std::strcpy(bp + len++ + extra_offset, "\n");
             }
             else {
                 extra_chars += len;
@@ -316,7 +316,7 @@ char *readartbuf(bool view_inline)
                 filter_offset = len;
                 goto read_more;
             }
-            strcpy(bp + len++, "\n");
+            std::strcpy(bp + len++, "\n");
             extra_chars = 0;
         }
         else {
@@ -334,7 +334,7 @@ char *readartbuf(bool view_inline)
             g_nowait_fork = true;
             color_object(COLOR_MIMEDESC, true);
             if (decode_piece(mcp,bp)) {
-                strcpy(bp = g_artbuf + g_artbuf_pos, g_art_line);
+                std::strcpy(bp = g_artbuf + g_artbuf_pos, g_art_line);
                 mime_SetState(bp);
                 if (g_mime_state == DECODE_MIME)
                 {

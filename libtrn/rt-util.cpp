@@ -417,7 +417,7 @@ try_again:
     {
         if (d != mid)
         {
-            strcpy(d, mid);
+            std::strcpy(d, mid);
         }
         d += midlen;
         d[-1] = ' ';
@@ -586,7 +586,7 @@ char *compress_from(const char *from, int size)
     vis_len = len;
 #endif
     if (!len) {
-        strcpy(s,"NO NAME");
+        std::strcpy(s,"NO NAME");
         len = 7;
     }
     while (vis_len < size && len < sizeof lbuf - 1) {
@@ -602,7 +602,7 @@ char *compress_date(const ARTICLE *ap, int size)
 {
     char* t;
 
-    strncpy(t = g_cmd_buf, ctime(&ap->date), size);
+    std::strncpy(t = g_cmd_buf, ctime(&ap->date), size);
     char *s = std::strchr(t, '\n');
     if (s != nullptr)
     {
@@ -1057,7 +1057,7 @@ int perform_status_end(long cnt, const char *obj_type)
         *cp++ = ')';
     }
 
-    strcpy(cp, ".");
+    std::strcpy(cp, ".");
 
     /* If we only selected/deselected things, return 1, else 2 */
     return (kills | missing) == 0? 1 : 2;

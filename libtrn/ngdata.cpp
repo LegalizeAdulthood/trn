@@ -186,7 +186,7 @@ void grow_ng(ART_NUM newlast)
         }
         else                    /* my, my, how clever we are */
         {
-            strcpy(g_buf, "More news -- auto-processing...\n\n");
+            std::strcpy(g_buf, "More news -- auto-processing...\n\n");
         }
         termdown(2);
         if (g_kf_state & KFS_NORMAL_LINES) {

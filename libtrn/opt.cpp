@@ -464,7 +464,7 @@ void set_option(option_index num, const char *s)
         safefree0(g_sel_grp_dmode);
         g_sel_grp_dmode = safemalloc(std::strlen(s)+2);
         *g_sel_grp_dmode++ = '*';
-        strcpy(g_sel_grp_dmode, s);
+        std::strcpy(g_sel_grp_dmode, s);
         break;
       case OI_USE_NEWS_SEL:
         if (isdigit(*s))
@@ -504,7 +504,7 @@ void set_option(option_index num, const char *s)
         safefree0(g_sel_art_dmode);
         g_sel_art_dmode = safemalloc(std::strlen(s)+2);
         *g_sel_art_dmode++ = '*';
-        strcpy(g_sel_art_dmode, s);
+        std::strcpy(g_sel_art_dmode, s);
         break;
       case OI_OPTION_SEL_CMDS:
         *g_option_sel_cmds = *s;
@@ -1117,11 +1117,11 @@ const char *option_value(option_index num)
         }
         if (g_marking == UNDERLINE)
         {
-            strcat(g_buf,"underline");
+            std::strcat(g_buf,"underline");
         }
         else
         {
-            strcat(g_buf,"standout");
+            std::strcat(g_buf,"standout");
         }
         return g_buf;
       case OI_OLD_MTHREADS_DATABASE:
@@ -1275,7 +1275,7 @@ static void set_header_list(headtype_flags flag, headtype_flags defflag, const c
     }
     std::unique_ptr<char[]> buffer(new char[std::strlen(str) + 1]);
     char *buff = buffer.get();
-    strcpy(buff, str);
+    std::strcpy(buff, str);
     for (;;) {
         char *cp = std::strchr(buff, ',');
         if (cp != nullptr)
@@ -1521,18 +1521,18 @@ void cwd_check()
     {
         g_privdir = filexp("~/News");
     }
-    strcpy(tmpbuf,g_privdir.c_str());
+    std::strcpy(tmpbuf,g_privdir.c_str());
     if (change_dir(g_privdir)) {
         safecpy(tmpbuf,filexp(g_privdir.c_str()),sizeof tmpbuf);
         if (makedir(tmpbuf, MD_DIR) || change_dir(tmpbuf)) {
             interp(g_cmd_buf, (sizeof g_cmd_buf), "%~/News");
             if (makedir(g_cmd_buf, MD_DIR))
             {
-                strcpy(tmpbuf, g_home_dir);
+                std::strcpy(tmpbuf, g_home_dir);
             }
             else
             {
-                strcpy(tmpbuf, g_cmd_buf);
+                std::strcpy(tmpbuf, g_cmd_buf);
             }
             change_dir(tmpbuf);
             if (g_verbose)
@@ -1564,7 +1564,7 @@ void cwd_check()
         {
             printf("%s not writeable--using ~\n\n", tmpbuf);
         }
-        strcpy(tmpbuf,g_home_dir);
+        std::strcpy(tmpbuf,g_home_dir);
     }
     g_privdir = tmpbuf;
 }
