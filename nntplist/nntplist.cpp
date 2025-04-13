@@ -2,19 +2,17 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include <string>
-
+#include <config/common.h>
 #include <config/string_case_compare.h>
+#include <nntp/nntpclient.h>
+#include <nntp/nntpinit.h>
+#include <tool/util3.h>
+#include <trn/string-algos.h>
+#include <util/env.h>
+#include <util/util2.h>
+#include <util/wildmat.h>
 
-#include "config/common.h"
-
-#include "util/env.h"
-#include "nntp/nntpclient.h"
-#include "nntp/nntpinit.h"
-#include "trn/string-algos.h"
-#include "util/util2.h"
-#include "tool/util3.h"
-#include "util/wildmat.h"
+#include <string>
 
 void Usage();
 
