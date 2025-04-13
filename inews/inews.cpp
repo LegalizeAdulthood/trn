@@ -389,7 +389,7 @@ void append_signature()
             break;
         }
         /* Strip trailing newline */
-        cp = g_ser_line + strlen(g_ser_line) - 1;
+        cp = g_ser_line + std::strlen(g_ser_line) - 1;
         if (cp >= g_ser_line && *cp == '\n')
         {
             *cp = '\0';

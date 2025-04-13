@@ -28,6 +28,7 @@
 #include "util/util2.h"
 
 #include <algorithm>
+#include <cstring>
 #include <filesystem>
 
 int g_dmcount{};
@@ -57,7 +58,7 @@ void rc_to_bits()
 
     char *s = skip_eq(g_ngptr->rcline + g_ngptr->numoffset, ' ');
                                         /* find numbers in rc line */
-    long i = strlen(s);
+    long i = std::strlen(s);
 #ifndef lint
     if (i >= LBUFLEN-2)                 /* bigger than g_buf? */
     {
@@ -215,7 +216,7 @@ void bits_to_rc()
         }
     }
     sprintf(s," 1-%ld,",(long)i-1);
-    s += strlen(s);
+    s += std::strlen(s);
     for (; i<=g_lastart; i++) { /* for each article in newsgroup */
         if (s-mybuf > safelen) {        /* running out of room? */
             safelen *= 2;
@@ -239,7 +240,7 @@ void bits_to_rc()
         else {                          /* article was read */
 
             sprintf(s,"%ld",(long)i); /* put out the min of the range */
-            s += strlen(s);           /* keeping house */
+            s += std::strlen(s);           /* keeping house */
             ART_NUM oldi = i;         /* remember this spot */
             do
             {
@@ -250,7 +251,7 @@ void bits_to_rc()
             if (i > oldi) {             /* range of more than 1? */
                 sprintf(s,"-%ld,",(long)i);
                                         /* then it out as a range */
-                s += strlen(s);         /* and housekeep */
+                s += std::strlen(s);         /* and housekeep */
             }
             else
             {

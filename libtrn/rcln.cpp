@@ -14,6 +14,8 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cstring>
+
 enum
 {
     MAX_DIGITS = 7
@@ -175,7 +177,7 @@ int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
 
     morenum = isdigit(*s);              /* will it need a comma after? */
     *(np->rcline + np->numoffset - 1) = np->subscribechar;
-    mbuf = safemalloc((MEM_SIZE)(strlen(s)+(s - np->rcline)+MAX_DIGITS+2+1));
+    mbuf = safemalloc((MEM_SIZE)(std::strlen(s)+(s - np->rcline)+MAX_DIGITS+2+1));
     strcpy(mbuf,np->rcline);            /* make new rc line */
     if (maxt && lastnum && artnum == lastnum+1)
                                         /* can we just extend last range? */
@@ -332,7 +334,7 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
                                         /* point s into mbuf now */
                 if (artnum) {           /* split into two ranges? */
                     prange(s,min,artnum-1);
-                    s += strlen(s);
+                    s += std::strlen(s);
                     *s++ = ',';
                     prange(s,artnum+1,max);
                 }
@@ -438,7 +440,7 @@ void set_toread(NGDATA *np, bool lax_high_check)
         }
     }
     char *nums = np->rcline + np->numoffset;
-    int   length = strlen(nums);
+    int   length = std::strlen(nums);
     if (length+MAX_DIGITS+1 > sizeof tmpbuf)
     {
         mybuf = safemalloc((MEM_SIZE) (length + MAX_DIGITS + 1));
@@ -540,10 +542,10 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
         }
         lastnum = num;
     }
-    len = strlen(s);
+    len = std::strlen(s);
     if (len && s[-1] == '-') {                  /* landed in a range? */
         if (lastnum != 1) {
-            if (3+len <= (int)strlen(np->rcline+np->numoffset))
+            if (3+len <= (int)std::strlen(np->rcline+np->numoffset))
             {
                 mbuf = np->rcline;
             }
@@ -568,7 +570,7 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
         char numbuf[32];
 
         sprintf(numbuf," 1-%ld",(long)(a1st - (lastnum != a1st)));
-        int nlen = strlen(numbuf) + (len != 0);
+        int nlen = std::strlen(numbuf) + (len != 0);
 
         if (s - np->rcline >= np->numoffset + nlen)
         {

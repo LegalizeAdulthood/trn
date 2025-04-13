@@ -22,6 +22,8 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cstring>
+
 MIME_SECT   g_mime_article{};
 MIME_SECT  *g_mime_section{&g_mime_article};
 mime_state  g_mime_state{};
@@ -139,7 +141,7 @@ void mime_ReadMimecap(const char *mcname)
             {
                 continue;
             }
-            linelen += strlen(s);
+            linelen += std::strlen(s);
             if (linelen == 0)
             {
                 continue;
@@ -281,7 +283,7 @@ MIMECAP_ENTRY *mime_FindMimecapEntry(const char *contenttype, mimecap_flags skip
 bool mime_TypesMatch(const char *ct, const char *pat)
 {
     const char* s = strchr(pat,'/');
-    int len = s? s - pat : strlen(pat);
+    int len = s? s - pat : std::strlen(pat);
     bool iswild = !s || !strcmp(s+1,"*");
 
     return string_case_equal(ct, pat)
@@ -297,12 +299,12 @@ int mime_Exec(char *cmd)
             switch (*++f) {
               case 's':
                 safecpy(t, g_decode_filename, CBUFLEN-(t-g_cmd_buf));
-                t += strlen(t);
+                t += std::strlen(t);
                 break;
               case 't':
                 *t++ = '\'';
                 safecpy(t, g_mime_section->type_name, CBUFLEN-(t-g_cmd_buf)-1);
-                t += strlen(t);
+                t += std::strlen(t);
                 *t++ = '\'';
                 break;
               case '{': {
@@ -318,7 +320,7 @@ int mime_Exec(char *cmd)
                 f = s;
                 *t++ = '\'';
                 safecpy(t, p, CBUFLEN-(t-g_cmd_buf)-1);
-                t += strlen(t);
+                t += std::strlen(t);
                 *t++ = '\'';
                 break;
               }
@@ -509,7 +511,7 @@ void mime_ParseType(MIME_SECT *mp, char *s)
         }
         safefree(mp->boundary);
         mp->boundary = savestr(t);
-        mp->boundary_len = (short)strlen(t);
+        mp->boundary_len = (short)std::strlen(t);
         mp->type = MULTIPART_MIME;
         return;
     }
@@ -597,8 +599,8 @@ void mime_ParseSubheader(FILE *ifp, char *next_line)
     mime_ClearStruct(g_mime_section);
     g_mime_section->type = TEXT_MIME;
     for (;;) {
-        for (int pos = 0; ; pos += strlen(line+pos)) {
-            int len = pos + (next_line ? strlen(next_line) : 0) + LBUFLEN;
+        for (int pos = 0; ; pos += std::strlen(line+pos)) {
+            int len = pos + (next_line ? std::strlen(next_line) : 0) + LBUFLEN;
             if (line_size < len) {
                 line_size = len + LBUFLEN;
                 line = saferealloc(line, line_size);
@@ -771,7 +773,7 @@ char *mime_ParseParams(char *str)
                 {
                     s++;
                 }
-                t += strlen(t);
+                t += std::strlen(t);
             }
             else
             {
@@ -789,13 +791,13 @@ char *mime_ParseParams(char *str)
 
 char *mime_FindParam(char *s, const char *param)
 {
-    int param_len = strlen(param);
+    int param_len = std::strlen(param);
     while (s && *s) {
         if (string_case_equal(s, param, param_len) && s[param_len] == '=')
         {
             return s + param_len + 1;
         }
-        s += strlen(s) + 1;
+        s += std::strlen(s) + 1;
     }
     return nullptr;
 }
@@ -909,11 +911,11 @@ void mime_DecodeArticle(bool view)
 void mime_Description(MIME_SECT *mp, char *s, int limit)
 {
     char* fn = decode_fix_fname(mp->filename);
-    int flen = strlen(fn);
+    int flen = std::strlen(fn);
 
     limit -= 2;  /* leave room for the trailing ']' and '\n' */
     sprintf(s, "[Attachment type=%s, name=", mp->type_name);
-    int len = strlen(s);
+    int len = std::strlen(s);
     if (len + flen <= limit)
     {
         sprintf(s + len, "%s]\n", fn);
@@ -1475,7 +1477,7 @@ int filter_html(char *t, const char *f)
             t = output_prep(t);
             for (i = 0; s_named_entities[i] != nullptr; i += 2)
             {
-                int n = strlen(s_named_entities[i]);
+                int n = std::strlen(s_named_entities[i]);
                 if (string_case_equal(f + 1, s_named_entities[i], n))
                 {
                     char det = f[n + 1];
@@ -1777,7 +1779,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
                 sprintf(t-4, "%2d. ", ++blks[j].cnt);
                 if (*t)
                 {
-                    t += strlen(t);
+                    t += std::strlen(t);
                 }
                 break;
               case 5: case 6:
@@ -2015,7 +2017,7 @@ static int do_indent(char *t)
 
 static char *find_attr(char *str, const char *attr)
 {
-    int len = strlen(attr);
+    int len = std::strlen(attr);
     char* cp = str;
     char* s;
 

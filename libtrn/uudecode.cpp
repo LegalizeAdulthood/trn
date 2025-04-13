@@ -14,6 +14,7 @@
 #include "util/util2.h"
 
 #include <algorithm>
+#include <cstring>
 
 static void uudecodeline(char *line, FILE *ofp);
 
@@ -168,7 +169,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
     }
     if (*filenamep && *partp > 0 && *totalp > 0 && *partp <= *totalp
      && (!strncmp(bp,"BEGIN",5) || !strncmp(bp,"--- BEGIN ---",12)
-      || (bp[0] == 'M' && strlen(bp) == UULENGTH))) {
+      || (bp[0] == 'M' && std::strlen(bp) == UULENGTH))) {
         /* Found the start of a section of uuencoded data
          * and have the part N of M information.
          */
@@ -260,7 +261,7 @@ decode_state uudecode(FILE *ifp, decode_state state)
               break;
           }
           case DECODE_INACTIVE: /* Looking for uuencoded data to resume */
-            if (*g_buf != 'M' || strlen(g_buf) != line_length) {
+            if (*g_buf != 'M' || std::strlen(g_buf) != line_length) {
                 if (*g_buf == 'B' && !strncmp(g_buf, "BEGIN", 5))
                 {
                     state = DECODE_ACTIVE;
@@ -270,15 +271,15 @@ decode_state uudecode(FILE *ifp, decode_state state)
             state = DECODE_ACTIVE;
             /* FALL THROUGH */
           case DECODE_SETLEN:
-            line_length = strlen(g_buf);
+            line_length = std::strlen(g_buf);
             state = DECODE_ACTIVE;
             /* FALL THROUGH */
           case DECODE_ACTIVE:   /* Decoding data */
-            if (*g_buf == 'M' && strlen(g_buf) == line_length) {
+            if (*g_buf == 'M' && std::strlen(g_buf) == line_length) {
                 uudecodeline(g_buf, ofp);
                 break;
             }
-            if ((int)strlen(g_buf) > line_length) {
+            if ((int)std::strlen(g_buf) > line_length) {
                 state = DECODE_INACTIVE;
                 break;
             }
@@ -348,7 +349,7 @@ static void uudecodeline(char *line, FILE *ofp)
     /* Calculate expected length and pad if necessary */
     int len = ((DEC(line[0]) + 2) / 3) * 4;
     len = std::min(len, static_cast<int>(UULENGTH));
-    for (int c = strlen(line) - 1; c <= len; c++)
+    for (int c = std::strlen(line) - 1; c <= len; c++)
     {
         line[c] = ' ';
     }

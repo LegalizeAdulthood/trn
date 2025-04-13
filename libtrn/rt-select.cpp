@@ -33,6 +33,8 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cstring>
+
 enum display_state
 {
     DS_ASK = 1,
@@ -271,7 +273,7 @@ char article_selector(char_int cmd)
     }
     g_added_articles = 0;
     if (cmd && g_selected_count) {
-        sprintf(g_msg+strlen(g_msg), "%ld article%s selected.",
+        sprintf(g_msg+std::strlen(g_msg), "%ld article%s selected.",
                 (long)g_selected_count, g_selected_count == 1? " is" : "s are");
         s_disp_status_line = 1;
     }
@@ -955,7 +957,7 @@ static void sel_display()
     if (s_disp_status_line == 1) {
         newline();
         fputs(g_msg, stdout);
-        g_term_col = strlen(g_msg);
+        g_term_col = std::strlen(g_msg);
         s_disp_status_line = 2;
     }
 }
@@ -971,7 +973,7 @@ static void sel_status_msg(const char *cp)
         newline();
     }
     fputs(cp, stdout);
-    g_term_col = strlen(cp);
+    g_term_col = std::strlen(cp);
     goto_xy(0,g_sel_items[g_sel_item_index].line);
     fflush(stdout);     /* CAA: otherwise may not be visible */
     s_disp_status_line = 2;
@@ -1304,7 +1306,7 @@ reinp_selector:
             if (s_disp_status_line == 1) {
                 newline();
                 fputs(g_msg,stdout);
-                g_term_col = strlen(g_msg);
+                g_term_col = std::strlen(g_msg);
                 if (s_removed_prompt & RP_MOUSEBAR) {
                     draw_mousebar(g_tc_COLS,false);
                     s_removed_prompt &= ~RP_MOUSEBAR;
@@ -1464,7 +1466,7 @@ static void sel_prompt()
             g_sel_exclusive && g_in_ng? "SELECTED" : "Select", g_sel_mode_string,
             g_sel_direction<0? "reverse " : "", g_sel_sort_string, g_cmd_buf);
     color_string(COLOR_CMD,g_msg);
-    g_term_col = strlen(g_msg);
+    g_term_col = std::strlen(g_msg);
     s_removed_prompt = RP_NONE;
 }
 

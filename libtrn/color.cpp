@@ -35,6 +35,8 @@
 #include "trn/terminal.h"
 #include "util/util2.h"
 
+#include <cstring>
+
 struct COLOR_OBJ
 {
     const char* name;
@@ -295,7 +297,7 @@ void color_pop()
 /* Color a string with the given object's color/attribute. */
 void color_string(int object, const char *str)
 {
-    int len = strlen(str);
+    int len = std::strlen(str);
     if (str[len-1] == '\n') {
         strcpy(g_msg, str);
         g_msg[len-1] = '\0';

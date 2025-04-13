@@ -16,6 +16,8 @@
 
 #include <boost/asio.hpp>
 
+#include <cstring>
+
 namespace asio = boost::asio;
 using resolver_results = asio::ip::tcp::resolver::results_type;
 using error_code = boost::system::error_code;
@@ -54,7 +56,7 @@ bool fetch_http(const char *host, int port, const char *path, const char *outnam
     /* XXX length check */
     /* XXX later consider using HTTP/1.0 format (and user-agent) */
     sprintf(s_url_buf, "GET %s\r\n", path);
-    asio::write(socket, asio::buffer(s_url_buf, strlen(s_url_buf)), ec);
+    asio::write(socket, asio::buffer(s_url_buf, std::strlen(s_url_buf)), ec);
     if (ec)
     {
         return false;
@@ -119,7 +121,7 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
 
     /* modified escape_shell_cmd code from NCSA HTTPD util.c */
     /* serious security holes could result without this code */
-    int l = strlen(cmdline);
+    int l = std::strlen(cmdline);
     for (int x = 0; cmdline[x]; x++) {
         if (strchr("&;`'\"|*?~<>^()[]{}$\\",cmdline[x])) {
             for (int y = l + 1; y > x; y--)

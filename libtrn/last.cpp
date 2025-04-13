@@ -10,9 +10,9 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
-#include <time.h>
-
 #include <algorithm>
+#include <cstring>
+#include <time.h>
 
 std::string g_lastngname;    /* last newsgroup read */
 long        g_lasttime{};    /* time last we ran */
@@ -43,7 +43,7 @@ void readlast()
     {
         if (fgets(g_buf,sizeof g_buf,fp) != nullptr) {
             long old_last = g_lasttime;
-            g_buf[strlen(g_buf)-1] = '\0';
+            g_buf[std::strlen(g_buf)-1] = '\0';
             if (*g_buf) {
                 g_lastngname = g_buf;
             }

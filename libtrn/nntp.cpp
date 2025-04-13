@@ -20,6 +20,7 @@
 #include "trn/trn.h"
 #include "util/util2.h"
 
+#include <cstring>
 #include <time.h>
 
 static int nntp_copybody(char *s, int limit, ART_POS pos);
@@ -257,7 +258,7 @@ void nntp_body(ART_NUM artnum)
     }
     s_body_pos = 0;
     if (g_parsed_art == artnum) {
-        fwrite(g_headbuf, 1, strlen(g_headbuf), g_artfp);
+        fwrite(g_headbuf, 1, std::strlen(g_headbuf), g_artfp);
         s_body_end = (ART_POS)ftell(g_artfp);
         g_htype[PAST_HEADER].minpos = s_body_end;
     }
@@ -303,7 +304,7 @@ static int nntp_copybody(char *s, int limit, ART_POS pos)
                 safecpy(s, s + 1, limit);
             }
         }
-        int len = strlen(s);
+        int len = std::strlen(s);
         if (result == NGSR_FULL_LINE)
         {
             strcpy(s + len, "\n");

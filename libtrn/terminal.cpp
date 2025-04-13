@@ -31,6 +31,7 @@
 #endif
 
 #include <algorithm>
+#include <cstring>
 
 #ifdef u3b2
 #undef TIOCGWINSZ
@@ -377,7 +378,7 @@ void term_set(char *tcbuf)
     g_tc_CR = Tgetstr("cr");
     if (!*g_tc_CR) {
         if (tgetflag("nc") && *g_tc_UP) {
-            g_tc_CR = safemalloc((MEM_SIZE)strlen(g_tc_UP)+2);
+            g_tc_CR = safemalloc((MEM_SIZE)std::strlen(g_tc_UP)+2);
             sprintf(g_tc_CR,"%s\r",g_tc_UP);
         }
         else
@@ -414,8 +415,8 @@ void term_set(char *tcbuf)
     {
         s_tc_CL = nullptr;
     }
-    s_leftcost = strlen(g_tc_BC);
-    s_upcost = strlen(g_tc_UP);
+    s_leftcost = std::strlen(g_tc_BC);
+    s_upcost = std::strlen(g_tc_UP);
 #else /* !HAS_TERMLIB */
     ..."Don't know how to set the terminal!"
 #endif /* !HAS_TERMLIB */
@@ -504,7 +505,7 @@ void arrow_macros(char *tmpbuf)
 #else
     strcpy(lbuf,Tgetstr("ku"));         /* up */
 #endif
-    if ((int)strlen(lbuf) > 1)
+    if ((int)std::strlen(lbuf) > 1)
     {
         set_macro(lbuf,s_up[g_auto_arrow_macros]);
     }
@@ -514,7 +515,7 @@ void arrow_macros(char *tmpbuf)
 #else
     strcpy(lbuf,Tgetstr("kd"));         /* down */
 #endif
-    if ((int)strlen(lbuf) > 1)
+    if ((int)std::strlen(lbuf) > 1)
     {
         set_macro(lbuf,s_down[g_auto_arrow_macros]);
     }
@@ -524,7 +525,7 @@ void arrow_macros(char *tmpbuf)
 #else
     strcpy(lbuf,Tgetstr("kl"));         /* left */
 #endif
-    if ((int)strlen(lbuf) > 1)
+    if ((int)std::strlen(lbuf) > 1)
     {
         set_macro(lbuf,s_left[g_auto_arrow_macros]);
     }
@@ -534,7 +535,7 @@ void arrow_macros(char *tmpbuf)
 #else
     strcpy(lbuf,Tgetstr("kr"));         /* right */
 #endif
-    if ((int)strlen(lbuf) > 1)
+    if ((int)std::strlen(lbuf) > 1)
     {
         set_macro(lbuf,s_right[g_auto_arrow_macros]);
     }
@@ -584,7 +585,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
     {
         return;
     }
-    int ch = strlen(line) - 1;
+    int ch = std::strlen(line) - 1;
     if (line[ch] == '\n')
     {
         line[ch] = '\0';
@@ -677,7 +678,7 @@ void show_macros()
 
 static void show_keymap(KEYMAP *curmap, char *prefix)
 {
-    char* next = prefix + strlen(prefix);
+    char* next = prefix + std::strlen(prefix);
 
     for (int i = 0; i < 128; i++) {
         int kt = curmap->km_type[i];
@@ -898,13 +899,13 @@ char *edit_buf(char *s, const char *cmd)
             cpybuf = savestr(g_buf);
             interpsearch(g_buf, sizeof g_buf, cpybuf, cmd);
             free(cpybuf);
-            s = g_buf + strlen(g_buf);
+            s = g_buf + std::strlen(g_buf);
             reprint();
         }
         else {
             interpsearch(s, sizeof g_buf - (s-g_buf), tmpbuf, cmd);
             fputs(s,stdout);
-            s += strlen(s);
+            s += std::strlen(s);
         }
         return s;
     }
@@ -1323,7 +1324,7 @@ void pushstring(char *str, char_int bits)
 
     TRN_ASSERT(str != nullptr);
     interp(tmpbuf,PUSHSIZE,str);
-    for (int i = strlen(s) - 1; i >= 0; i--)
+    for (int i = std::strlen(s) - 1; i >= 0; i--)
     {
         pushchar(s[i] ^ bits);
     }
@@ -1564,11 +1565,11 @@ bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmod
     int   number_was = -1;
     char *prefix = nullptr;
 reask_in_choice:
-    int len = strlen(g_buf);
+    int len = std::strlen(g_buf);
     char *bp = g_buf;
     if (*prefixes != '\0') {
         const char *start = prefix;
-        for (prefix = prefixes; *prefix; prefix += strlen(prefix)) {
+        for (prefix = prefixes; *prefix; prefix += std::strlen(prefix)) {
             if (*prefix == *g_buf)
             {
                 break;
@@ -1590,7 +1591,7 @@ reask_in_choice:
     }
     char *s = cp;
     while (true) {
-        cp += strlen(cp) + 1;
+        cp += std::strlen(cp) + 1;
         if (!*cp)
         {
             cp = tmpbuf;
@@ -1641,12 +1642,12 @@ reask_in_choice:
             strcpy(g_buf,cp);
         }
     }
-    s = g_buf + strlen(g_buf);
+    s = g_buf + std::strlen(g_buf);
     carriage_return();
     erase_line(false);
     fputs(prompt,stdout);
     fputs(g_buf,stdout);
-    len = strlen(prompt);
+    len = std::strlen(prompt);
     number_was = -1;
 
 reinp_in_choice:
@@ -1959,7 +1960,7 @@ void goto_xy(int to_col, int to_line)
     }
     if (*g_tc_CM && !g_muck_up_clear) {
         str = tgoto(g_tc_CM,to_col,to_line);
-        cmcost = strlen(str);
+        cmcost = std::strlen(str);
     } else {
         str = nullptr;
         cmcost = 9999;
@@ -2150,7 +2151,7 @@ void xmouse_init(const char *progname)
         interp(g_msg, sizeof g_msg, s);
         set_option(OI_USE_MOUSE, g_msg);
     }
-    else if (progname[strlen(progname)-1] == 'x') {
+    else if (progname[std::strlen(progname)-1] == 'x') {
         /* an 'x' at the end means enable Xterm mouse tracking */
         set_option(OI_USE_MOUSE, "y");
     }
@@ -2213,11 +2214,11 @@ void xmouse_check()
             char *s = s_mousebar_btns;
             g_mousebar_width = 0;
             for (int i = 0; i < g_mousebar_cnt; i++) {
-                int j = strlen(s);
+                int j = std::strlen(s);
                 if (*s == '[') {
                     g_mousebar_width += j;
                     s += j + 1;
-                    j = strlen(s);
+                    j = std::strlen(s);
                 }
                 else
                 {
@@ -2278,7 +2279,7 @@ void draw_mousebar(int limit, bool restore_cursor)
             s++;
         }
         else {
-            switch (strlen(s)) {
+            switch (std::strlen(s)) {
               case 0:
                 *t++ = ' ';
                 /* FALL THROUGH */
@@ -2302,7 +2303,7 @@ void draw_mousebar(int limit, bool restore_cursor)
                 break;
             }
         }
-        s += strlen(s) + 1;
+        s += std::strlen(s) + 1;
         *t++ = '\0';
     }
     g_mousebar_width = t - g_msg;
@@ -2310,7 +2311,7 @@ void draw_mousebar(int limit, bool restore_cursor)
 
     s = g_msg;
     while (g_mousebar_width > limit) {
-        int len = strlen(s) + 1;
+        int len = std::strlen(s) + 1;
         s += len;
         g_mousebar_width -= len;
         s_mousebar_start++;
@@ -2320,7 +2321,7 @@ void draw_mousebar(int limit, bool restore_cursor)
     for (int i = s_mousebar_start; i < g_mousebar_cnt; i++) {
         putchar(' ');
         color_string(COLOR_MOUSE,s);
-        s += strlen(s) + 1;
+        s += std::strlen(s) + 1;
     }
     g_term_col = g_tc_COLS-1;
     if (restore_cursor)
@@ -2390,13 +2391,13 @@ bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         for (int i = 0; i < s_mousebar_start; i++) {
             if (*s == '[')
             {
-                s += strlen(s) + 1;
+                s += std::strlen(s) + 1;
             }
-            s += strlen(s) + 1;
+            s += std::strlen(s) + 1;
         }
         while (true) {
             int j;
-            int i = strlen(s);
+            int i = std::strlen(s);
             char *t = s;
             if (*s == '[') {
                 s += i + 1;
@@ -2454,7 +2455,7 @@ bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             }
             x -= i;
             col += i;
-            s += strlen(s) + 1;
+            s += std::strlen(s) + 1;
         }
         return true;
     }

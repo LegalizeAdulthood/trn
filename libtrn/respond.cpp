@@ -31,6 +31,8 @@
 #include "util/util2.h"
 #include "trn/uudecode.h"
 
+#include <cstring>
+
 std::string g_savedest;      /* value of %b */
 std::string g_extractdest;   /* value of %E */
 std::string g_extractprog;   /* value of %e */
@@ -120,7 +122,7 @@ save_result save_article()
         s = altbuf;
         if (*s) {
             cmdstr = cpytill(g_buf,s,'|');      /* check for | */
-            s = g_buf + strlen(g_buf)-1;
+            s = g_buf + std::strlen(g_buf)-1;
             while (*s == ' ')
             {
                 s--;                            /* trim trailing spaces */
@@ -360,7 +362,7 @@ save_result save_article()
             (there = stat(s,&save_dir_stat) >= 0) && S_ISDIR(save_dir_stat.st_mode);
             i++) {                      /* is it a directory? */
 
-            c = (s+strlen(s));
+            c = (s+std::strlen(s));
             *c++ = '/';                 /* put a slash before filename */
             static char s_news[] = "News";
             interp(c, s == g_buf ? (sizeof g_buf) : (sizeof altbuf), i ? s_news : savename);
@@ -1182,7 +1184,7 @@ static bool cut_line(char *str)
                      || !strcmp(word, "snip")
                      || !strcmp(word, "tear")) {
                         got_flag = 1;
-                        other_cnt -= strlen(word);
+                        other_cnt -= std::strlen(word);
                     }
                     break;
                 }

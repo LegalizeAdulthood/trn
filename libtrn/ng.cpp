@@ -46,6 +46,7 @@
 #include "util/util2.h"
 
 #include <algorithm>
+#include <cstring>
 
 ART_NUM  g_art{};           /* current or prospective article # */
 ART_NUM  g_recent_art{};    /* previous article # for '-' command */
@@ -462,11 +463,11 @@ reask_article:
         sprintf(g_buf,g_prompt.c_str(),g_cmd_buf,
                 current_charsubst(),
                 g_dfltcmd.c_str());
-        draw_mousebar(g_tc_COLS - (g_term_line == g_tc_LINES-1? strlen(g_buf)+5 : 0), true);
+        draw_mousebar(g_tc_COLS - (g_term_line == g_tc_LINES-1? std::strlen(g_buf)+5 : 0), true);
         color_string(COLOR_CMD,g_buf);
         putchar(' ');
         fflush(stdout);
-        g_term_col = strlen(g_buf) + 1;
+        g_term_col = std::strlen(g_buf) + 1;
 reinp_article:
         g_reread = false;
         g_forcelast = false;
@@ -1865,7 +1866,7 @@ bool output_subject(char *ptr, int flag)
     if (s != nullptr)
     {
         sprintf(tmpbuf,"%-5ld ", i);
-        int len = strlen(tmpbuf);
+        int len = std::strlen(tmpbuf);
         if (!empty(g_subjline)) {
             g_art = i;
             interp(tmpbuf + len, sizeof tmpbuf - len, g_subjline);

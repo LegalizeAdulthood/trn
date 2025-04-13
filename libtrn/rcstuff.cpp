@@ -31,6 +31,7 @@
 #include "util/util2.h"
 
 #include <algorithm>
+#include <cstring>
 
 HASHTABLE  *g_newsrc_hash{};
 MULTIRC    *g_sel_page_mp{};
@@ -402,7 +403,7 @@ static bool lock_newsrc(NEWSRC *rp)
         if (fgets(g_buf,LBUFLEN,fp)) {
             processnum = atol(g_buf);
             if (fgets(g_buf,LBUFLEN,fp) && *g_buf
-             && *(s = g_buf + strlen(g_buf) - 1) == '\n') {
+             && *(s = g_buf + std::strlen(g_buf) - 1) == '\n') {
                 *s = '\0';
                 runninghost = g_buf;
             }
@@ -728,7 +729,7 @@ static bool open_newsrc(NEWSRC *rp)
             if (fgets(g_buf,sizeof g_buf,info) != nullptr) {
                 long actnum;
                 long descnum;
-                g_buf[strlen(g_buf)-1] = '\0';
+                g_buf[std::strlen(g_buf)-1] = '\0';
                 char *s = strchr(g_buf, ':');
                 if (s != nullptr && s[1] == ' ' && s[2])
                 {
@@ -1112,7 +1113,7 @@ static NGDATA *add_newsgroup(NEWSRC *rp, const char *ngn, char_int c)
     g_newsgroup_cnt++;
 
     np->rc = rp;
-    np->numoffset = strlen(ngn) + 1;
+    np->numoffset = std::strlen(ngn) + 1;
     np->rcline = safemalloc((MEM_SIZE)(np->numoffset + 2));
     strcpy(np->rcline,ngn);             /* and copy over the name */
     strcpy(np->rcline + np->numoffset, " ");
@@ -1374,7 +1375,7 @@ void list_newsgroups()
 
 NGDATA *find_ng(const char *ngnam)
 {
-    HASHDATUM data = hashfetch(g_newsrc_hash, ngnam, strlen(ngnam));
+    HASHDATUM data = hashfetch(g_newsrc_hash, ngnam, std::strlen(ngnam));
     return (NGDATA*)data.dat_ptr;
 }
 

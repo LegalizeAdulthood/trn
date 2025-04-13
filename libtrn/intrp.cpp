@@ -2,10 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include <cctype>
-#include <filesystem>
-#include <string>
-
 #include <config/pipe_io.h>
 
 #include "config/common.h"
@@ -39,6 +35,11 @@
 #include <sys/utsname.h>
 struct utsname utsn;
 #endif
+
+#include <cctype>
+#include <cstring>
+#include <filesystem>
+#include <string>
 
 std::string g_origdir;    /* cwd when rn invoked */
 char       *g_hostname{}; /* host name to match local postings */
@@ -108,7 +109,7 @@ void intrp_init(char *tcbuf, int tcbuf_len)
     int i = (HOSTBITS < 2? 2 : HOSTBITS);
     static char buff[128];
     strcpy(buff, g_p_host_name.c_str());
-    g_hostname = buff+strlen(buff)-1;
+    g_hostname = buff+std::strlen(buff)-1;
     while (i && g_hostname != buff) {
         if (*--g_hostname == '.')
         {
@@ -308,7 +309,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         *s++ = '/';
                     }
                     strcpy(s,g_lastpat.c_str());
-                    s += strlen(s);
+                    s += std::strlen(s);
                     if (!cmd || *cmd != 'g') {
                         if (cmd && strchr("/?",*cmd))
                         {
@@ -436,7 +437,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     if (s != nullptr)
                     {
                         printf("%s: %s\n",scrbuf,s);
-                        pattern += strlen(pattern);
+                        pattern += std::strlen(pattern);
                         free_compex(&s_cond_compex);
                         goto getout;
                     }
@@ -500,7 +501,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     fgets(scrbuf, sizeof scrbuf, stdin);
                     noecho();
                     crmode();
-                    int i = strlen(scrbuf);
+                    int i = std::strlen(scrbuf);
                     if (scrbuf[i-1] == '\n') {
                         scrbuf[--i] = '\0';
                     }
@@ -777,7 +778,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                                 *scrbuf = '\0';
                             }
                             fclose(ofp);
-                            s = scrbuf+strlen(scrbuf)-1;
+                            s = scrbuf+std::strlen(scrbuf)-1;
                             if (*scrbuf && *s == '\n')
                             {
                                 *s = '\0';
@@ -831,7 +832,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     int len;
                     if (g_htype[REFS_LINE].minpos >= 0) {
                         refs_buf = fetchlines(g_art,REFS_LINE);
-                        len = strlen(refs_buf)+1;
+                        len = std::strlen(refs_buf)+1;
                         normalize_refs(refs_buf);
                         /* no more than 3 prior references PLUS the
                         ** root article allowed, including the one
@@ -859,8 +860,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     {
                         artid_buf = fetchlines(g_art, MSGID_LINE);
                     }
-                    int i = refs_buf? strlen(refs_buf) : 0;
-                    int j = strlen(artid_buf) + (i? 1 : 0)
+                    int i = refs_buf? std::strlen(refs_buf) : 0;
+                    int j = std::strlen(artid_buf) + (i? 1 : 0)
                       + (artid_buf[0] == '<'? 0 : 2) + 1;
                     if (len < i + j)
                     {
@@ -939,7 +940,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                             path_buf = fetchlines(g_art, PATH_LINE);
                             s = path_buf;
                         }
-                        int i = strlen(g_p_host_name.c_str());
+                        int i = std::strlen(g_p_host_name.c_str());
                         if (!strncmp(g_p_host_name.c_str(),s,i) && s[i] == '!')
                         {
                             s += i + 1;
@@ -1041,7 +1042,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                             s2++;
                             *s2 = '\0';
                             from_buf = (char*)safemalloc(
-                                (strlen(tmpbuf)+strlen(s3)+1)*sizeof(char));
+                                (std::strlen(tmpbuf)+std::strlen(s3)+1)*sizeof(char));
                             strcpy(from_buf,tmpbuf);
                             strcat(from_buf,s3);
                         } else {
@@ -1120,7 +1121,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 }
             }
             /* Do we have room left? */
-            int i = strlen(s);
+            int i = std::strlen(s);
             if (destsize <= i)
             {
                 abort_interp();
@@ -1133,7 +1134,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     safecpy(scrbuf,s,sizeof scrbuf);
                     s = scrbuf;
                 }
-                decode_header(s, s, strlen(s));
+                decode_header(s, s, std::strlen(s));
                 if (address_parse) {
                     char *h = strchr(s, '<');
                     if (h != nullptr) { /* grab the good part */
@@ -1261,7 +1262,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
     *dest = '\0';
     if (line_split != nullptr)
     {
-        if ((int) strlen(orig_dest) > 79)
+        if ((int) std::strlen(orig_dest) > 79)
         {
             *line_split = '\n';
         }

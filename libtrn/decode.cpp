@@ -22,6 +22,7 @@
 #include "trn/uudecode.h"
 
 #include <algorithm>
+#include <cstring>
 
 #ifdef MSDOS
 #define GOODCHARS                \
@@ -53,7 +54,7 @@ char *decode_fix_fname(const char *s)
     }
 
     safefree(g_decode_filename);
-    g_decode_filename = safemalloc(strlen(s) + 2);
+    g_decode_filename = safemalloc(std::strlen(s) + 2);
 
 /*$$ we need to eliminate any "../"s from the string */
     while (*s == '/' || *s == '~')
@@ -90,7 +91,7 @@ char *decode_fix_fname(const char *s)
 /* Returns nonzero if "filename" is a bad choice */
 static bool bad_filename(const char *filename)
 {
-    int len = strlen(filename);
+    int len = std::strlen(filename);
 #ifdef MSDOS
     if (len == 3) {
         if (string_case_equal(filename, "aux") || string_case_equal(filename, "con")
@@ -160,7 +161,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
      * prefix "v<digit>" ending in ":", since that is a popular volume/issue
      * representation syntax
      */
-    char *end = s + strlen(s);
+    char *end = s + std::strlen(s);
     do {
         while (*s && !isalnum(*s) && *s != '_')
         {
@@ -205,7 +206,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
                 s++;
             }
         }
-        s = filename + strlen(filename) + 1;
+        s = filename + std::strlen(filename) + 1;
     }
 
     if (s >= end)
@@ -322,7 +323,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
         sprintf(g_buf, "Saving part %d ", part);
         if (total)
         {
-            sprintf(g_buf + strlen(g_buf), "of %d ", total);
+            sprintf(g_buf + std::strlen(g_buf), "of %d ", total);
         }
         strcat(g_buf, filename);
         fputs(g_buf,stdout);
@@ -502,7 +503,7 @@ char *decode_mkdir(const char *filename)
     interp(dir, sizeof dir, "%Y/m-prts-%L/");
 #endif
     strcat(dir, filename);
-    char *s = dir + strlen(dir);
+    char *s = dir + std::strlen(dir);
     if (s[-1] == '/')
     {
         return nullptr;
@@ -519,7 +520,7 @@ char *decode_mkdir(const char *filename)
 void decode_rmdir(char *dir)
 {
     /* Remove trailing slash */
-    char *s = dir + strlen(dir) - 1;
+    char *s = dir + std::strlen(dir) - 1;
     *s = '\0';
 
     /*$$ conditionalize this */

@@ -10,6 +10,8 @@
 #include "trn/terminal.h"
 #include "trn/util.h"
 
+#include <cstring>
+
 /* new line to return to the caller. */
 static char s_sc_e_newline[LBUFLEN];
 
@@ -124,7 +126,7 @@ char *sc_easy_append()
                 }
             }
             sprintf(s,"%ld",score);
-            s = s_sc_e_newline+strlen(s_sc_e_newline); /* point at terminator  */
+            s = s_sc_e_newline+std::strlen(s_sc_e_newline); /* point at terminator  */
             *s++ = ' ';
             q_done = true;
         } else

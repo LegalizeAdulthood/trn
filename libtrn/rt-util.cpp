@@ -19,6 +19,7 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cstring>
 #include <time.h>
 
 char g_spin_char{' '};           /* char to put back when we're done spinning */
@@ -86,7 +87,7 @@ char *extract_name(char *name)
     }
 
     // strip trailing whitespace
-    int len = strlen(name);
+    int len = std::strlen(name);
     while (len > 0 && isspace(name[len-1]))
     {
         len--;
@@ -112,7 +113,7 @@ char *compress_name(char *name, int max)
 try_again:
     /* First remove white space from both ends. */
     name = skip_space(name);
-    int len = strlen(name);
+    int len = std::strlen(name);
     if (len == 0)
     {
         return name;
@@ -460,7 +461,7 @@ char *compress_address(char *name, int max)
 
     /* Remove white space from both ends. */
     name = skip_space(name);
-    int len = strlen(name);
+    int len = std::strlen(name);
     if (len == 0)
     {
         return name;
@@ -577,7 +578,7 @@ char *compress_from(const char *from, int size)
         s = compress_address(lbuf, size);
     }
 
-    int len = strlen(s);
+    int len = std::strlen(s);
     int vis_len;
 #ifdef USE_UTF_HACK
     vis_len = visual_length_of(s);
@@ -705,7 +706,7 @@ const char *compress_subj(const ARTICLE *ap, int max)
             break;
         }
     }
-    int len = strlen(g_buf);
+    int len = std::strlen(g_buf);
     if (!g_unbroken_subjects && len > max) {
         /* Try to include the last two words on the line while trimming */ 
         char *last_word = strrchr(g_buf, ' ');
@@ -975,9 +976,9 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
     sprintf(cp, "%ld ", num);
     if (obj_type)
     {
-        sprintf(cp += strlen(cp), "%s%s ", obj_type, plural(num));
+        sprintf(cp += std::strlen(cp), "%s%s ", obj_type, plural(num));
     }
-    cp += strlen(cp);
+    cp += std::strlen(cp);
     const char *s = modifier;
     if (s != nullptr)
     {

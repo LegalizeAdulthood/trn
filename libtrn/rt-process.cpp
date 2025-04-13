@@ -18,6 +18,8 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cstring>
+
 static void fix_msgid(char *msgid);
 static char *valid_message_id(char *start, char *end);
 static void unlink_child(ARTICLE *child);
@@ -72,7 +74,7 @@ bool valid_article(ARTICLE *article)
 
     if (msgid) {
         fix_msgid(msgid);
-        HASHDATUM data = hashfetch(g_msgid_hash, msgid, strlen(msgid));
+        HASHDATUM data = hashfetch(g_msgid_hash, msgid, std::strlen(msgid));
         if (data.dat_len) {
             safefree0(data.dat_ptr);
             article->autofl = static_cast<autokill_flags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
@@ -183,7 +185,7 @@ ARTICLE *get_article(char *msgid)
 
     fix_msgid(msgid);
 
-    HASHDATUM data = hashfetch(g_msgid_hash, msgid, strlen(msgid));
+    HASHDATUM data = hashfetch(g_msgid_hash, msgid, std::strlen(msgid));
     if (data.dat_len) {
         article = allocate_article(0);
         article->autofl = static_cast<autokill_flags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
@@ -267,7 +269,7 @@ void thread_article(ARTICLE *article, char *references)
         if ((cp = strrchr(references, '<')) == nullptr
          || (end = strchr(cp+1, ' ')) == nullptr)
         {
-            end = references + strlen(references) - 1;
+            end = references + std::strlen(references) - 1;
         }
         while (cp) {
             while (end >= cp && end > references

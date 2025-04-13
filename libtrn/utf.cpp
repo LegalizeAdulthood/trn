@@ -10,6 +10,8 @@
 #include "config/common.h"
 #include "trn/utf.h"
 
+#include <cstring>
+
 /* OK - valid second and subsequent bytes in UTF-8 */
 #define OK(s) ((*(s) & 0xC0) == 0x80)
 #define U(c) (((Uchar)(c)) & 0xFF)
@@ -303,7 +305,7 @@ CODE_POINT code_point_at(const char *s)
     CODE_POINT it;
     if (s != nullptr) {
         if (IS_UTF8(s_gs.in)) {
-            size_t n = strlen(s);
+            size_t n = std::strlen(s);
             if (n > 0 && (*s & 0x80) == 0) {
                 it = *s;
             } else if (n > 1 && (*s & 0xE0) == 0xC0 && OK(s + 1)) {

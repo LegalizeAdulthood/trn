@@ -21,6 +21,8 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cstring>
+
 ART_POS  g_artpos{};               /* byte position in article file */
 ART_LINE g_artline{};              /* current line number in article file */
 FILE    *g_artfp{};                /* current article file pointer */
@@ -243,7 +245,7 @@ char *readartbuf(bool view_inline)
             strcpy(bp+o, "\n");
             read_something = -1;
         }
-        len = strlen(bp+o) + read_offset;
+        len = std::strlen(bp+o) + read_offset;
         if (bp[len+extra_offset-1] != '\n') {
             if (read_something >= 0) {
                 read_offset = len;
@@ -395,7 +397,7 @@ char *readartbuf(bool view_inline)
         }
         /* FALL THROUGH */
       case BETWEEN_MIME:
-        len = strlen(g_multipart_separator.c_str()) + 1;
+        len = std::strlen(g_multipart_separator.c_str()) + 1;
         if (extra_offset && filter_offset) {
             extra_chars = len + 1;
             len = read_offset + 1;
@@ -414,14 +416,14 @@ char *readartbuf(bool view_inline)
         *bp++ = '\001';
         g_artbuf_pos++;
         mime_Description(g_mime_section,bp,g_tc_COLS);
-        len = strlen(bp);
+        len = std::strlen(bp);
         break;
       case ALTERNATE_MIME:
         g_mime_state = SKIP_MIME;
         *bp++ = '\001';
         g_artbuf_pos++;
         sprintf(bp,"[Alternative: %s]\n", g_mime_section->type_name);
-        len = strlen(bp);
+        len = std::strlen(bp);
         break;
       case IMAGE_MIME:
       case AUDIO_MIME:
@@ -443,7 +445,7 @@ char *readartbuf(bool view_inline)
         *bp++ = '\001';
         g_artbuf_pos++;
         mime_Description(g_mime_section,bp,g_tc_COLS);
-        len = strlen(bp);
+        len = std::strlen(bp);
         break;
     }
 

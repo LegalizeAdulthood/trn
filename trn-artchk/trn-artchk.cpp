@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
     /* Check the header for proper format and report on the newsgroups */
     while (std::fgets(buff, LBUFLEN, fp)) {
         line_num++;
-        buff[strlen(buff)-1] = '\0';
+        buff[std::strlen(buff)-1] = '\0';
         if (!*buff)
         {
             break;

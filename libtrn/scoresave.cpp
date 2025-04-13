@@ -18,6 +18,8 @@
 #include "trn/util.h" /* several */
 #include "util/util2.h"
 
+#include <cstring>
+
 int g_sc_loaded_count{}; /* how many articles were loaded? */
 
 static long    s_sc_save_new{}; /* new articles (unloaded) */
@@ -95,7 +97,7 @@ void sc_sv_getfile()
         return;
     }
     while (fgets(s_lbuf,LBUFLEN-2,fp)) {
-        s_lbuf[strlen(s_lbuf)-1] = '\0';        /* strip \n */
+        s_lbuf[std::strlen(s_lbuf)-1] = '\0';        /* strip \n */
         sc_sv_add(s_lbuf);
     }
     fclose(fp);
@@ -264,7 +266,7 @@ ART_NUM sc_sv_make_line(ART_NUM a)
                     num_output++;
                 } else {
                     sprintf(s,"s%ld",(art-s_last)-1);
-                    s = s_lbuf + strlen(s_lbuf);
+                    s = s_lbuf + std::strlen(s_lbuf);
                     num_output++;
                 }
             }
@@ -284,7 +286,7 @@ ART_NUM sc_sv_make_line(ART_NUM a)
                     num_output++;
                 } else {
                     sprintf(s,"r%d",i); /* repeat >one */
-                    s = s_lbuf + strlen(s_lbuf);
+                    s = s_lbuf + std::strlen(s_lbuf);
                     num_output++;
                 }
                 s_saved += i-1;
@@ -307,7 +309,7 @@ ART_NUM sc_sv_make_line(ART_NUM a)
                 {
                     *s++ = 'J' + i;
                 }
-                s = s_lbuf + strlen(s_lbuf);
+                s = s_lbuf + std::strlen(s_lbuf);
                 num_output++;
                 lastscore_valid = true;
             }

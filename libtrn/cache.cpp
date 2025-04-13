@@ -33,9 +33,9 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
-#include <time.h>
-
 #include <algorithm>
+#include <cstring>
+#include <time.h>
 
 LIST     *g_article_list{};         /* a list of ARTICLEs */
 ARTICLE **g_artptr_list{};          /* the article-selector creates this */
@@ -239,7 +239,7 @@ void check_for_near_subj(ARTICLE *ap)
         }
     }
     while (sp) {
-        if ((int)strlen(sp->str+4) >= g_join_subject_len && sp->thread) {
+        if ((int)std::strlen(sp->str+4) >= g_join_subject_len && sp->thread) {
             SUBJECT* sp2;
             HASHDATUM data = hashfetch(s_shortsubj_hash, sp->str + 4, g_join_subject_len);
             if (!(sp2 = (SUBJECT*)data.dat_ptr)) {
@@ -379,7 +379,7 @@ void uncache_article(ARTICLE *ap, bool remove_empties)
             {
                 sp->next->prev = sp->prev;
             }
-            hashdelete(s_subj_hash, sp->str+4, strlen(sp->str+4));
+            hashdelete(s_subj_hash, sp->str+4, std::strlen(sp->str+4));
             free((char*)sp);
             ap->subj = nullptr;
             g_subject_count--;
@@ -506,7 +506,7 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
 
     if (ap->subj) {
         /* This only happens when we freshen truncated subjects */
-        hashdelete(s_subj_hash, ap->subj->str+4, strlen(ap->subj->str+4));
+        hashdelete(s_subj_hash, ap->subj->str+4, std::strlen(ap->subj->str+4));
         free(ap->subj->str);
         ap->subj->str = newsubj;
         data.dat_ptr = (char*)ap->subj;
@@ -666,7 +666,7 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
         {
             free(ap->from);
         }
-        decode_header(s, s, strlen(s));
+        decode_header(s, s, std::strlen(s));
         ap->from = s;
         break;
       case XREF_LINE:
@@ -736,7 +736,7 @@ void look_ahead()
 
         pattern = g_buf+1;
         strcpy(pattern,": *");
-        h = pattern + strlen(pattern);
+        h = pattern + std::strlen(pattern);
         interp(h,(sizeof g_buf) - (h-g_buf),"%\\s");
         {                       /* compensate for notesfiles */
             for (int i = 24; *h && i--; h++)

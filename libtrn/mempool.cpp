@@ -9,6 +9,8 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cstring>
+
 /* any of these defines can be increased arbitrarily */
 enum
 {
@@ -107,7 +109,7 @@ char *mp_savestr(const char *str, memory_pool pool)
         return nullptr;         /* only a flesh wound... (;-) */
 #endif
     }
-    int len = strlen(str);
+    int len = std::strlen(str);
     if (len >= FRAG_SIZE) {
         printf("trn: string too big (len = %d) for memory pool!\n",len);
         printf("trn: (maximum length allowed is %d)\n",FRAG_SIZE);

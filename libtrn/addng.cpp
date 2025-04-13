@@ -22,6 +22,7 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cstring>
 #include <filesystem>
 #include <stdlib.h>
 #include <string>
@@ -184,7 +185,7 @@ static void new_nntp_groups(DATASRC *dp)
         }
         else
         {
-            len = strlen(g_ser_line);
+            len = std::strlen(g_ser_line);
         }
         if (dp->act_sf.fp) {
             if (find_actgrp(dp, g_buf, g_ser_line, len, (ART_NUM)0)) {
@@ -292,7 +293,7 @@ static void new_local_groups(DATASRC *dp)
 static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch)
 {
     HASHDATUM data;
-    unsigned const namelen = strlen(name);
+    unsigned const namelen = std::strlen(name);
     data.dat_len = namelen + sizeof (ADDGROUP);
     ADDGROUP *node = (ADDGROUP*)safemalloc(data.dat_len);
     data.dat_ptr = (char *)node;
@@ -327,7 +328,7 @@ static void add_to_list(const char *name, int toread, char_int ch)
         node = node->next;
     }
 
-    node = (ADDGROUP*)safemalloc(strlen(name) + sizeof (ADDGROUP));
+    node = (ADDGROUP*)safemalloc(std::strlen(name) + sizeof (ADDGROUP));
     switch (ch) {
       case ':':
         node->flags = AGF_SEL;
@@ -389,12 +390,12 @@ bool scanactive(bool add_matching)
                 {
                     sprintf(g_buf, "*%s*", g_ngtodo[0]);
                 }
-                if (g_buf[strlen(g_buf)-2] == '$')
+                if (g_buf[std::strlen(g_buf)-2] == '$')
                 {
-                    g_buf[strlen(g_buf) - 2] = '\0';
+                    g_buf[std::strlen(g_buf) - 2] = '\0';
                 }
             }
-            if (nntp_list("active", g_buf, strlen(g_buf)) == 1) {
+            if (nntp_list("active", g_buf, std::strlen(g_buf)) == 1) {
                 while (!nntp_at_list_end(g_ser_line)) {
                     scanline(g_ser_line,add_matching);
                     if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)

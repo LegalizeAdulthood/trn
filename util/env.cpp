@@ -258,7 +258,7 @@ static bool set_user_name(char *tmpbuf)
     }
     s = cpytill(g_buf,s,'&');
     if (*s == '&') {                    /* whoever thought this one up was */
-        c = g_buf + strlen(g_buf);      /* in the middle of the night */
+        c = g_buf + std::strlen(g_buf);      /* in the middle of the night */
         std::strcat(c, g_login_name.c_str()); /* before the morning after */
         std::strcat(c,s+1);
         if (std::islower(*c))
@@ -289,7 +289,7 @@ static bool set_user_name(char *tmpbuf)
         {
             std::fgets(g_buf,sizeof g_buf,fp);
             std::fclose(fp);
-            g_buf[strlen(g_buf)-1] = '\0';
+            g_buf[std::strlen(g_buf)-1] = '\0';
             g_real_name = g_buf;
         }
     }
@@ -367,7 +367,7 @@ static bool set_p_host_name(char *tmpbuf)
             finalize(1);
         }
         std::fgets(tmpbuf,TCBUF_SIZE,pipefp);
-        tmpbuf[strlen(tmpbuf)-1] = '\0';        /* wipe out newline */
+        tmpbuf[std::strlen(tmpbuf)-1] = '\0';        /* wipe out newline */
         pclose(pipefp);
     }
 #  else
@@ -391,7 +391,7 @@ static bool set_p_host_name(char *tmpbuf)
         {
             std::fgets(tmpbuf, TCBUF_SIZE, fp);
             std::fclose(fp);
-            char *end = tmpbuf + strlen(tmpbuf) - 1;
+            char *end = tmpbuf + std::strlen(tmpbuf) - 1;
             if (*end == '\n')
             {
                 *end = '\0';
@@ -509,7 +509,7 @@ char *export_var(const char *nam, const char *val)
 #endif /* lint */
         environ[i+1] = nullptr; /* make sure it's null terminated */
     }
-    environ[i] = safemalloc((MEM_SIZE)(namlen + strlen(val) + 2));
+    environ[i] = safemalloc((MEM_SIZE)(namlen + std::strlen(val) + 2));
                                         /* this may or may not be in */
                                         /* the old environ structure */
     std::sprintf(environ[i],"%s=%s",nam,val);/* all that work just for this */

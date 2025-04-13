@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
         }
         if (wildarg)
         {
-            std::sprintf(command+strlen(command)," %s",wildarg);
+            std::sprintf(command+std::strlen(command)," %s",wildarg);
         }
         if (nntp_command(command) <= 0)
         {

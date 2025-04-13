@@ -31,6 +31,7 @@
 #include "util/util2.h"
 
 #include <algorithm>
+#include <cstring>
 
 bool        g_one_command{}; /* no ':' processing in perform() */
 std::string g_savedir;       /* -d */
@@ -326,7 +327,7 @@ int thread_perform()
     bool  want_unread = !g_sel_rereading && *cmdstr != 'm';
 
     perform_status_init(g_ngptr->toread);
-    len = strlen(cmdstr);
+    len = std::strlen(cmdstr);
 
     if (!output_level && !one_thread) {
         printf("Processing...");
@@ -701,7 +702,7 @@ int ngsel_perform()
     char *cmdstr = savestr(g_buf + len);
 
     perform_status_init(g_newsgroup_toread);
-    len = strlen(cmdstr);
+    len = std::strlen(cmdstr);
 
     if (one_group) {
         ng_perform(cmdstr, 0);
@@ -835,7 +836,7 @@ int addgrp_sel_perform()
     char *cmdstr = savestr(g_buf + len);
 
     perform_status_init(g_newsgroup_toread);
-    len = strlen(cmdstr);
+    len = std::strlen(cmdstr);
 
     if (one_group) {
         /*addgrp_perform(gp, cmdstr, 0);$$*/

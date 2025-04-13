@@ -44,6 +44,7 @@
 #include "util/util2.h"
 
 #include <algorithm>
+#include <cstring>
 #include <memory>
 #include <string>
 
@@ -313,25 +314,25 @@ void opt_file(const char *filename, char **tcbufptr, bool bleat)
                 else if (!strcmp(section,"environment")) {
                     while (*s && *s != '[') {
                         section = s;
-                        s += strlen(s) + 1;
+                        s += std::strlen(s) + 1;
                         export_var(section,s);
-                        s += strlen(s) + 1;
+                        s += std::strlen(s) + 1;
                     }
                 }
                 else if (!strcmp(section,"termcap")) {
                     while (*s && *s != '[') {
                         section = s;
-                        s += strlen(s) + 1;
+                        s += std::strlen(s) + 1;
                         add_tc_string(section, s);
-                        s += strlen(s) + 1;
+                        s += std::strlen(s) + 1;
                     }
                 }
                 else if (!strcmp(section,"attribute")) {
                     while (*s && *s != '[') {
                         section = s;
-                        s += strlen(s) + 1;
+                        s += std::strlen(s) + 1;
                         color_rc_attribute(section, s);
-                        s += strlen(s) + 1;
+                        s += std::strlen(s) + 1;
                     }
                 }
             }
@@ -461,7 +462,7 @@ void set_option(option_index num, const char *s)
       case OI_NEWSGROUP_SEL_STYLES:
         g_sel_grp_dmode--;
         safefree0(g_sel_grp_dmode);
-        g_sel_grp_dmode = safemalloc(strlen(s)+2);
+        g_sel_grp_dmode = safemalloc(std::strlen(s)+2);
         *g_sel_grp_dmode++ = '*';
         strcpy(g_sel_grp_dmode, s);
         break;
@@ -501,7 +502,7 @@ void set_option(option_index num, const char *s)
       case OI_NEWS_SEL_STYLES:
         g_sel_art_dmode--;
         safefree0(g_sel_art_dmode);
-        g_sel_art_dmode = safemalloc(strlen(s)+2);
+        g_sel_art_dmode = safemalloc(std::strlen(s)+2);
         *g_sel_art_dmode++ = '*';
         strcpy(g_sel_art_dmode, s);
         break;
@@ -1229,7 +1230,7 @@ static char *hidden_list()
     g_buf[0] = '\0';
     g_buf[1] = '\0';
     for (int i = 1; i < g_user_htype_cnt; i++) {
-        sprintf(g_buf+strlen(g_buf),",%s%s", g_user_htype[i].flags? "" : "!",
+        sprintf(g_buf+std::strlen(g_buf),",%s%s", g_user_htype[i].flags? "" : "!",
                 g_user_htype[i].name);
     }
     return g_buf+1;
@@ -1241,7 +1242,7 @@ static char *magic_list()
     g_buf[1] = '\0';
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++) {
         if (!(g_htype[i].flags & HT_MAGIC) != !(g_htype[i].flags & HT_DEFMAGIC)) {
-            sprintf(g_buf+strlen(g_buf),",%s%s",
+            sprintf(g_buf+std::strlen(g_buf),",%s%s",
                     (g_htype[i].flags & HT_DEFMAGIC)? "!" : "",
                     g_htype[i].name);
         }
@@ -1272,7 +1273,7 @@ static void set_header_list(headtype_flags flag, headtype_flags defflag, const c
                        ? (g_htype[i].flags | flag)
                        : (g_htype[i].flags & ~flag));
     }
-    std::unique_ptr<char[]> buffer(new char[strlen(str) + 1]);
+    std::unique_ptr<char[]> buffer(new char[std::strlen(str) + 1]);
     char *buff = buffer.get();
     strcpy(buff, str);
     for (;;) {
@@ -1301,7 +1302,7 @@ static void set_header_list(headtype_flags flag, headtype_flags defflag, const c
 
 void set_header(const char *s, headtype_flags flag, bool setit)
 {
-    int len = strlen(s);
+    int len = std::strlen(s);
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++) {
         if (!len || string_case_equal(s, g_htype[i].name,len)) {
             if (setit && (flag != HT_MAGIC || (g_htype[i].flags & HT_MAGICOK)))
@@ -1399,7 +1400,7 @@ static int parse_mouse_buttons(char **cpp, const char *btns)
 
     safefree(t);
     btns = skip_eq(btns, ' ');
-    *cpp = safemalloc(strlen(btns) + 1);
+    *cpp = safemalloc(std::strlen(btns) + 1);
     t = *cpp;
 
     while (*btns) {
@@ -1442,7 +1443,7 @@ static char *expand_mouse_buttons(char *cp, int cnt)
     *g_buf = '\0';
     while (cnt--) {
         if (*cp == '[') {
-            int len = strlen(cp);
+            int len = std::strlen(cp);
             cp[len] = ']';
             safecat(g_buf,cp,sizeof g_buf);
             cp += len;
@@ -1452,7 +1453,7 @@ static char *expand_mouse_buttons(char *cp, int cnt)
         {
             safecat(g_buf, cp, sizeof g_buf);
         }
-        cp += strlen(cp)+1;
+        cp += std::strlen(cp)+1;
     }
     return g_buf;
 }

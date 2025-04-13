@@ -13,6 +13,8 @@
 #include "trn/samisc.h"
 #include "trn/sorder.h"
 
+#include <cstring>
+
 static long       s_sa_num_threads{};
 static HASHTABLE *s_sa_thread_hash{};
 
@@ -51,12 +53,12 @@ long sa_get_subj_thread(long e)
     if (!s_sa_thread_hash) {
         s_sa_thread_hash = hashcreate(401, HASH_DEFCMPFUNC);
     }
-    HASHDATUM data = hashfetch(s_sa_thread_hash, s, strlen(s));
+    HASHDATUM data = hashfetch(s_sa_thread_hash, s, std::strlen(s));
     if (data.dat_ptr) {
         return (long)(data.dat_len);
     }
     char *p = mp_savestr(s, MP_SATHREAD);
-    data = hashfetch(s_sa_thread_hash,p,strlen(s));
+    data = hashfetch(s_sa_thread_hash,p,std::strlen(s));
     data.dat_ptr = p;
     data.dat_len = (unsigned)(s_sa_num_threads+1);
     hashstorelast(data);

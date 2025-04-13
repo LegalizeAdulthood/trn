@@ -30,6 +30,8 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cstring>
+
 /* TODO:
  *
  * Be friendlier when a file has no contents.
@@ -277,7 +279,7 @@ void univ_add_group(const char *desc, const char *grpname)
         g_univ_ng_hash = hashcreate(701, HASH_DEFCMPFUNC);
     }
 
-    HASHDATUM data = hashfetch(g_univ_ng_hash, grpname, strlen(grpname));
+    HASHDATUM data = hashfetch(g_univ_ng_hash, grpname, std::strlen(grpname));
 
     if (data.dat_ptr) {
         /* group was already added */
@@ -344,7 +346,7 @@ void univ_add_textfile(const char *desc, char *name)
       default:
         /* XXX later have error checking on length */
         strcpy(lbuf,g_univ_fname);
-        for (p = lbuf+strlen(lbuf); p > lbuf && *p != '/'; p--)
+        for (p = lbuf+std::strlen(lbuf); p > lbuf && *p != '/'; p--)
         {
         }
         if (p) {
@@ -382,7 +384,7 @@ void univ_add_virtgroup(const char *grpname)
     }
 
     s_univ_virt_pass_needed = true;
-    HASHDATUM data = hashfetch(g_univ_vg_hash, grpname, strlen(grpname));
+    HASHDATUM data = hashfetch(g_univ_vg_hash, grpname, std::strlen(grpname));
     if (data.dat_ptr) {
         /* group was already added */
         /* perhaps it is marked as deleted? */
@@ -676,7 +678,7 @@ static bool univ_do_line(char *line)
 {
     char* p;
 
-    char *s = line + strlen(line) - 1;
+    char *s = line + std::strlen(line) - 1;
     if (*s == '\n')
     {
         *s = '\0';                              /* delete newline */
@@ -739,10 +741,10 @@ static bool univ_do_line(char *line)
             break;
           case ':':     /* relative to g_univ_fname */
             /* XXX hack the variable and fall through */
-            if (g_univ_fname && strlen(g_univ_fname)+strlen(s) < 1020) {
+            if (g_univ_fname && std::strlen(g_univ_fname)+std::strlen(s) < 1020) {
                 static char lbuf[1024];
                 strcpy(lbuf,g_univ_fname);
-                for (p = lbuf+strlen(lbuf); p > lbuf && *p != '/'; p--)
+                for (p = lbuf+std::strlen(lbuf); p > lbuf && *p != '/'; p--)
                 {
                 }
                 if (p) {
@@ -759,7 +761,7 @@ static bool univ_do_line(char *line)
           case '/':
             p = skip_ne(s, '>');
             if (*p) {
-                if (strlen(s) < 1020) {
+                if (std::strlen(s) < 1020) {
                     static char lbuf[1024];
                     strcpy(lbuf,s);
                     s = lbuf;

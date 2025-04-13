@@ -39,8 +39,6 @@
  *
  */
 
-#include <string>
-
 #include "config/common.h"
 #include "trn/trn.h"
 
@@ -72,6 +70,8 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cstring>
+#include <string>
 #include <time.h>
 
 std::string g_ngname;                             /* name of current newsgroup */
@@ -605,7 +605,7 @@ input_newsgroup_result input_newsgroup()
         for (rp = g_multirc->first, len = 0; rp && len < 66; rp = rp->next) {
             if (rp->flags & RF_ACTIVE) {
                 sprintf(g_buf+len, ", %s", rp->datasrc->name);
-                len += strlen(g_buf+len);
+                len += std::strlen(g_buf+len);
             }
         }
         if (rp)
@@ -916,7 +916,7 @@ void trn_version()
                     char* cp = secs2text(rp->datasrc->act_sf.refetch_secs);
                     if (*cp != 'n')
                     {
-                        sprintf(g_msg+strlen(g_msg),
+                        sprintf(g_msg+std::strlen(g_msg),
                                 " (refetch%s %s)",*cp == 'm'? " if" : ":", cp);
                     }
                 }
@@ -945,7 +945,7 @@ void trn_version()
                     char* cp = secs2text(rp->datasrc->desc_sf.refetch_secs);
                     if (*cp != 'n')
                     {
-                        sprintf(g_msg+strlen(g_msg),
+                        sprintf(g_msg+std::strlen(g_msg),
                                 " (refetch%s %s)",*cp == 'm'? " if" : ":", cp);
                     }
                 }

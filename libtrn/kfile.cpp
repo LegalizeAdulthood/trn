@@ -2,10 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include <algorithm>
-#include <filesystem>
-#include <time.h>
-
 #include "config/common.h"
 #include "trn/kfile.h"
 
@@ -29,6 +25,11 @@
 #include "trn/trn.h"
 #include "trn/util.h"
 #include "util/util2.h"
+
+#include <algorithm>
+#include <cstring>
+#include <filesystem>
+#include <time.h>
 
 FILE               *g_localkfp{};               /* local (for this newsgroup) file */
 killfilestate_flags g_kf_state{};               /* the state of our kill files */
@@ -98,7 +99,7 @@ void kfile_init()
                     if (cp != nullptr)
                     {
                         int auto_flag = s_thread_cmd_flag[cp - s_thread_cmd_ltr];
-                        HASHDATUM data = hashfetch(g_msgid_hash, g_buf, strlen(g_buf));
+                        HASHDATUM data = hashfetch(g_msgid_hash, g_buf, std::strlen(g_buf));
                         if (!data.dat_ptr)
                         {
                             data.dat_ptr = savestr(g_buf);
@@ -151,13 +152,13 @@ int do_kfile(FILE *kfp, int entering)
     g_killfirst = g_firstart;
     fseek(kfp,0L,0);                    /* rewind file */
     while (fgets(g_buf,LBUFLEN,kfp) != nullptr) {
-        if (*(cp = g_buf + strlen(g_buf) - 1) == '\n')
+        if (*(cp = g_buf + std::strlen(g_buf) - 1) == '\n')
         {
             *cp = '\0';
         }
         bp = skip_space(g_buf);
         if (!strncmp(bp,"THRU",4)) {
-            int len = strlen(g_ngptr->rc->name);
+            int len = std::strlen(g_ngptr->rc->name);
             cp = skip_space(bp + 4);
             if (strncmp(cp, g_ngptr->rc->name, len) != 0 || !isspace(cp[len]))
             {
@@ -478,7 +479,7 @@ void rewrite_kfile(ART_NUM thru)
         while (g_localkfp && fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
             if (!strncmp(g_buf,"THRU",4)) {
                 char* cp = g_buf+4;
-                int len = strlen(g_ngptr->rc->name);
+                int len = std::strlen(g_ngptr->rc->name);
                 cp = skip_space(cp);
                 if (isdigit(*cp))
                 {

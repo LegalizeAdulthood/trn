@@ -21,6 +21,8 @@
 #include "trn/trn.h"
 #include "trn/util.h"
 
+#include <cstring>
+
 static char **s_init_environment_strings{};
 static int    s_init_environment_cnt{};
 static int    s_init_environment_max{};
@@ -224,7 +226,7 @@ void decode_switch(const char *s)
                 }
             }
             else {
-                tmp = export_var(tmpbuf,"") - strlen(tmpbuf) - 1;
+                tmp = export_var(tmpbuf,"") - std::strlen(tmpbuf) - 1;
                 if (g_mode == MM_INITIALIZING)
                 {
                     save_init_environment(tmp);

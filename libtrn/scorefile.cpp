@@ -26,6 +26,8 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cstring>
+
 int  g_sf_num_entries{};   /* # of entries */
 int  g_sf_score_verbose{}; /* when true, the scoring routine prints lots of info... */
 bool g_sf_verbose{true};   /* if true print more stuff while loading */
@@ -253,7 +255,7 @@ void sf_add_extra_header(const char *head)
     /* check to see if it's already known */
     /* first see if it is a known system header */
     safecpy(lbuf,head,sizeof lbuf - 2);
-    int len = strlen(lbuf);
+    int len = std::strlen(lbuf);
     lbuf[len] = ':';
     lbuf[len+1] = '\0';
     char *colonptr = lbuf + len;
@@ -289,7 +291,7 @@ char *sf_get_extra_header(ART_NUM art, int hnum)
     parseheader(art);   /* fast if already parsed */
 
     char *head = s_sf_extra_headers[hnum];
-    int   len = strlen(head);
+    int   len = std::strlen(head);
 
     for (char *s = g_headbuf; s && *s && *s != '\n'; s++) {
         if (string_case_equal(head, s,len)) {
@@ -621,7 +623,7 @@ bool sf_do_line(char *line, bool check)
     {
         return true;            /* very empty line */
     }
-    char *s = line + strlen(line) - 1;
+    char *s = line + std::strlen(line) - 1;
     if (*s == '\n')
     {
         *s = '\0';              /* kill the newline */
@@ -811,7 +813,7 @@ int score_match(char *str, int ind)
     }
     /* default case */
     const char *s3 = strstr(str, s1);
-    return s3 != nullptr && (!s2 || strstr(s3 + strlen(s1), s2));
+    return s3 != nullptr && (!s2 || strstr(s3 + std::strlen(s1), s2));
 }
 
 int sf_score(ART_NUM a)
@@ -922,7 +924,7 @@ char *sf_missing_score(const char *line)
         return nullptr;
     }
     strcpy(lbuf,g_buf+1);
-    i = strlen(lbuf);
+    i = std::strlen(lbuf);
     lbuf[i] = ' ';
     lbuf[i+1] = '\0';
     strcat(lbuf,s);
@@ -990,7 +992,7 @@ void sf_append(char *line)
         switch(*scoretext) {
           case 'F':     /* domain-shortened FROM line */
             strcpy(lbuf,scoreline);
-            lbuf[strlen(lbuf)-1] = '\0';
+            lbuf[std::strlen(lbuf)-1] = '\0';
             strcat(lbuf,filexp("from: %y"));
             scoreline = lbuf;
             break;
@@ -1006,7 +1008,7 @@ void sf_append(char *line)
                 s += 4;
             }
             /* change this next line if LBUFLEN changes */
-            sprintf(lbuf+(strlen(lbuf)-1),"subject: %.900s",s);
+            sprintf(lbuf+(std::strlen(lbuf)-1),"subject: %.900s",s);
             scoreline = lbuf;
             break;
           default:

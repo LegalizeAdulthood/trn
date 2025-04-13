@@ -24,6 +24,7 @@
 #include <parsedate/parsedate.h>
 
 #include <algorithm>
+#include <cstring>
 
 #define HIDDEN    (HT_HIDE|HT_DEFHIDE)
 #define MAGIC_ON  (HT_MAGICOK|HT_MAGIC|HT_DEFMAGIC)
@@ -183,7 +184,7 @@ header_line_type set_line_type(char *bufptr, const char *colon)
 
 header_line_type get_header_num(char *s)
 {
-    char* end = s + strlen(s);
+    char* end = s + std::strlen(s);
 
     header_line_type i = set_line_type(s, end);     /* Sets g_msg to lower-cased header name */
 
@@ -213,7 +214,7 @@ header_line_type get_header_num(char *s)
             g_htype[CUSTOM_LINE].minpos = bp - g_headbuf;
             while (is_hor_space(*end)) {
                 if (!(end = strchr(end, '\n'))) {
-                    end = bp + strlen(bp);
+                    end = bp + std::strlen(bp);
                     break;
                 }
                 end++;
@@ -347,8 +348,8 @@ void end_header()
             ARTICLE* artp_hold = g_artp;
             char* references = fetchlines(g_parsed_art, REFS_LINE);
             char* inreply = fetchlines(g_parsed_art, INREPLY_LINE);
-            int reflen = strlen(references) + 1;
-            growstr(&references, &reflen, reflen + strlen(inreply) + 1);
+            int reflen = std::strlen(references) + 1;
+            growstr(&references, &reflen, reflen + std::strlen(inreply) + 1);
             safecat(references, inreply, reflen);
             thread_article(ap, references);
             free(inreply);
@@ -424,7 +425,7 @@ bool parseheader(ART_NUM artnum)
                 }
                 strcpy(bp,bp+1);
             }
-            len = strlen(bp);
+            len = std::strlen(bp);
             if (found_nl)
             {
                 bp[len++] = '\n';
@@ -437,7 +438,7 @@ bool parseheader(ART_NUM artnum)
             {
                 break;
             }
-            len = strlen(bp);
+            len = std::strlen(bp);
             found_nl = (bp[len-1] == '\n');
         }
         if (had_nl)
@@ -644,7 +645,7 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
                 ap = article_find(num);
                 if (which_line == SUBJ_LINE)
                 {
-                    set_subj_line(ap, t, strlen(t));
+                    set_subj_line(ap, t, std::strlen(t));
                 }
                 else if (cached)
                 {
@@ -676,7 +677,7 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
         }
         if (copy)
         {
-            s = saferealloc(s, (MEM_SIZE) strlen(s) + 1);
+            s = saferealloc(s, (MEM_SIZE) std::strlen(s) + 1);
         }
         return s;
     }

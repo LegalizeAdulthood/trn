@@ -11,6 +11,7 @@
 #include <trn/nntp.h>
 
 #include <cstdio>
+#include <cstring>
 #include <ctime>
 
 NNTPLINK g_nntplink{};          /* the current server's file handles */

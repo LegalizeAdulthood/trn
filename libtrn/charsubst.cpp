@@ -19,6 +19,8 @@
 #include "config/typedef.h"
 #include "util/util2.h"
 
+#include <cstring>
+
 /* Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced */
 std::string g_charsets{"patm"};
 const char *g_charsubst{};
@@ -185,7 +187,7 @@ int strcharsubst(char *outb, const char *inb, int limit, char_int subst)
     }
     else
     {
-        len = strlen(inb);
+        len = std::strlen(inb);
     }
     safecpy(outb, inb, limit);
     return len;

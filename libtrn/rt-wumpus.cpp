@@ -23,6 +23,7 @@
 #include "util/util2.h"
 
 #include <algorithm>
+#include <cstring>
 
 int g_max_tree_lines{6};
 
@@ -278,7 +279,7 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
             s_tree_indent[5] = ' ';
         }
         strcpy(s_tree_buff, s_tree_indent+5);
-        s_str = s_tree_buff + strlen(s_tree_buff);
+        s_str = s_tree_buff + std::strlen(s_tree_buff);
     }
 }
 
@@ -357,7 +358,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
     }
     else
     {
-        len = strlen(orig_line);
+        len = std::strlen(orig_line);
     }
 
     /* Copy line, filtering encoded and control characters. */

@@ -40,9 +40,9 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
-#include <time.h>
-
 #include <algorithm>
+#include <cstring>
+#include <time.h>
 
 ART_LINE    g_highlight{-1};         /* next line to be highlighted */
 ART_LINE    g_first_view{};          //
@@ -202,18 +202,18 @@ do_article_result do_article()
                 sprintf(g_art_line,"%s%s #%ld",g_ngname.c_str(),g_moderated.c_str(),(long)g_art);
                 if (g_selected_only) {
                     i = g_selected_count - (unseen && selected);
-                    sprintf(g_art_line+strlen(g_art_line)," (%ld + %ld more)",
+                    sprintf(g_art_line+std::strlen(g_art_line)," (%ld + %ld more)",
                             (long)i,(long)g_ngptr->toread - g_selected_count
                                         - (!selected && unseen));
                 }
                 else if ((i = (ART_NUM)(g_ngptr->toread - unseen)) != 0
                        || (!g_threaded_group && g_dmcount)) {
-                    sprintf(g_art_line+strlen(g_art_line),
+                    sprintf(g_art_line+std::strlen(g_art_line),
                             " (%ld more)",(long)i);
                 }
                 if (!g_threaded_group && g_dmcount)
                 {
-                    sprintf(g_art_line + strlen(g_art_line) - 1, " + %ld Marked to return)", (long) g_dmcount);
+                    sprintf(g_art_line + std::strlen(g_art_line) - 1, " + %ld Marked to return)", (long) g_dmcount);
                 }
                 linenum += tree_puts(g_art_line,linenum+g_topline,0);
             }
@@ -362,7 +362,7 @@ do_article_result do_article()
                     linenum--;
                 }
                 else {
-                    int length = strlen(bufptr+1);
+                    int length = std::strlen(bufptr+1);
                     notesfiles = in_string(&bufptr[length-10]," - (nf", true)!=nullptr;
                     g_artline++;
                     if (!s)
@@ -703,7 +703,7 @@ reask_pager:
             sprintf(g_cmd_buf, "%ld", (long) (g_artpos * 100 / g_artsize));
         }
         sprintf(g_buf,"%s--MORE--(%s%%)",current_charsubst(),g_cmd_buf);
-        outpos = g_term_col + strlen(g_buf);
+        outpos = g_term_col + std::strlen(g_buf);
         draw_mousebar(g_tc_COLS - (g_term_line == g_tc_LINES-1? outpos+5 : 0), true);
         color_string(COLOR_MORE,g_buf);
         fflush(stdout);

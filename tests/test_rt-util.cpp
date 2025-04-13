@@ -4,12 +4,12 @@
 
 #include <gtest/gtest.h>
 
-#include <string.h>
-
 #include "config/common.h"
 #include "trn/rt-util.h"
 
 #include "test_config.h"
+
+#include <cstring>
 
 using namespace testing;
 
@@ -35,7 +35,7 @@ protected:
 
     char *run_compress_name()
     {
-        return compress_name(m_buffer, strlen(m_expected) + 1);
+        return compress_name(m_buffer, std::strlen(m_expected) + 1);
     }
 
     const char *m_before{};

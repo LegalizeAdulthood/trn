@@ -28,9 +28,9 @@
 
 #include <parsedate/parsedate.h>
 
-#include <time.h>
-
 #include <algorithm>
+#include <cstring>
+#include <time.h>
 
 /* How many overview lines to read with one NNTP call */
 enum
@@ -151,7 +151,7 @@ ov_field_num ov_num(char *hdr, char *end)
 {
     if (!end)
     {
-        end = hdr + strlen(hdr);
+        end = hdr + std::strlen(hdr);
     }
 
     switch (set_line_type(hdr,end)) {
@@ -456,7 +456,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 
     if (!article->subj)
     {
-        set_subj_line(article, fields[OV_SUBJ], strlen(fields[OV_SUBJ]));
+        set_subj_line(article, fields[OV_SUBJ], std::strlen(fields[OV_SUBJ]));
     }
     if (!article->msgid)
     {
@@ -536,7 +536,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 static const char *ov_name(const char *group)
 {
     strcpy(g_buf, g_datasrc->over_dir);
-    char *cp = g_buf + strlen(g_buf);
+    char *cp = g_buf + std::strlen(g_buf);
     *cp++ = '/';
     strcpy(cp, group);
     while ((cp = strchr(cp, '.')))

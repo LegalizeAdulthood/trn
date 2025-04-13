@@ -28,6 +28,7 @@
 #include "trn/util.h"
 
 #include <algorithm>
+#include <cstring>
 
 SEL_ITEM  g_sel_items[MAX_SEL];
 int       g_sel_total_obj_cnt{};
@@ -328,7 +329,7 @@ static void sel_page_init()
     }
     else
     {
-        s_sel_max_per_page = strlen(g_sel_chars);
+        s_sel_max_per_page = std::strlen(g_sel_chars);
     }
     s_sel_max_per_page = std::min(s_sel_max_per_page, static_cast<int>(MAX_SEL));
     s_sel_max_per_page = std::min(s_sel_max_per_page, s_sel_max_line_cnt);
@@ -1482,7 +1483,7 @@ void display_page_title(bool home_only)
         for (rp = g_multirc->first, len = 0; rp && len < 34; rp = rp->next) {
             if (rp->flags & RF_ACTIVE) {
                 sprintf(g_buf+len, ", %s", rp->datasrc->name);
-                len += strlen(g_buf+len);
+                len += std::strlen(g_buf+len);
             }
         }
         if (rp)
@@ -1585,7 +1586,7 @@ try_again:
             maybe_eol();
             for (rp = mp->first, len = 0; rp && len < 34; rp = rp->next) {
                 sprintf(g_buf+len, ", %s", rp->datasrc->name);
-                len += strlen(g_buf+len);
+                len += std::strlen(g_buf+len);
             }
             if (rp)
             {
@@ -1702,7 +1703,7 @@ try_again:
                 {
                     continue;
                 }
-                int len = strlen(gp->name) + 2;
+                int len = std::strlen(gp->name) + 2;
                 max_len = std::max(len, max_len);
                 i++;
             }
@@ -1730,7 +1731,7 @@ try_again:
             maybe_eol();
             output_sel(g_sel_page_item_cnt, sel, false);
             printf("%5ld ", (long)gp->toread);
-            display_group(gp->datasrc, gp->name, strlen(gp->name), max_len);
+            display_group(gp->datasrc, gp->name, std::strlen(gp->name), max_len);
             g_sel_page_item_cnt++;
         }
         if (!g_sel_page_obj_cnt) {
@@ -2253,7 +2254,7 @@ void display_option(int op, int item_index)
     const char *post;
     const char *val;
     if (*g_options_ini[op].item == '*') {
-        len = strlen(g_options_ini[op].item+1);
+        len = std::strlen(g_options_ini[op].item+1);
         pre = "==";
         item = g_options_ini[op].item+1;
         post = "==================================";

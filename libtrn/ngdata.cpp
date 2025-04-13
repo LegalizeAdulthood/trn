@@ -31,6 +31,7 @@
 #include "util/util2.h"
 
 #include <algorithm>
+#include <cstring>
 
 LIST       *g_ngdata_list{};       /* a list of NGDATA */
 int         g_ngdata_cnt{};        //
@@ -372,7 +373,7 @@ ART_NUM getngsize(NGDATA *gp)
             g_moderated = " (DISABLED)";
             break;
         case '=':
-            len = strlen(tmpbuf);
+            len = std::strlen(tmpbuf);
             if (tmpbuf[len-1] == '\n')
             {
                 tmpbuf[len - 1] = '\0';

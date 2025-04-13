@@ -40,6 +40,7 @@ struct utimbuf
 #endif
 
 #include <algorithm>
+#include <cstring>
 #include <string>
 #include <time.h>
 
@@ -370,7 +371,7 @@ static char *dir_or_none(DATASRC *dp, const char *dir, datasrc_flags flag)
             return nullptr;
         }
         if (flag == DF_ADD_OK) {
-            char* cp = safemalloc(strlen(dp->newsid)+6+1);
+            char* cp = safemalloc(std::strlen(dp->newsid)+6+1);
             sprintf(cp,"%s.times",dp->newsid);
             return cp;
         }
@@ -727,7 +728,7 @@ const char *find_grpdesc(DATASRC *dp, const char *groupname)
              && g_net_speed < 5) {
                 (void)srcfile_open(&dp->desc_sf,nullptr, /*$$check return?*/
                                    nullptr,nullptr);
-                grouplen = strlen(groupname);
+                grouplen = std::strlen(groupname);
                 goto try_xgtitle;
             }
             g_spin_todo = dp->desc_sf.recent_cnt;
@@ -757,7 +758,7 @@ const char *find_grpdesc(DATASRC *dp, const char *groupname)
         }
     }
 
-    grouplen = strlen(groupname);
+    grouplen = std::strlen(groupname);
     if (HASHDATUM data = hashfetch(dp->desc_sf.hp, groupname, grouplen); data.dat_ptr)
     {
         LISTNODE*node = (LISTNODE*)data.dat_ptr;

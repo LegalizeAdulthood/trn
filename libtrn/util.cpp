@@ -2,11 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include <cctype>
-#include <chrono>
-#include <filesystem>
-#include <string>
-
 #include <config/fdio.h>
 #include <config/string_case_compare.h>
 
@@ -37,6 +32,12 @@
 #ifdef _WIN32
 #include <sys/types.h>
 #endif
+
+#include <cctype>
+#include <chrono>
+#include <cstring>
+#include <filesystem>
+#include <string>
 
 #ifdef UNION_WAIT
 using WAIT_STATUS = union wait;
@@ -122,19 +123,19 @@ int doshell(const char *shell, const char *cmd)
         if (g_datasrc->auth_user) {
             int fd = open(g_nntp_auth_file.c_str(), O_WRONLY|O_CREAT, 0600);
             if (fd >= 0) {
-                write(fd, g_datasrc->auth_user, strlen(g_datasrc->auth_user));
+                write(fd, g_datasrc->auth_user, std::strlen(g_datasrc->auth_user));
                 write(fd, "\n", 1);
                 if (g_datasrc->auth_pass) {
-                    write(fd, g_datasrc->auth_pass, strlen(g_datasrc->auth_pass));
+                    write(fd, g_datasrc->auth_pass, std::strlen(g_datasrc->auth_pass));
                     write(fd, "\n", 1);
                 }
                 close(fd);
             }
         }
         if (g_nntplink.port_number) {
-            int len = strlen(s_nntpserver_export);
+            int len = std::strlen(s_nntpserver_export);
             sprintf(g_buf,";%d",g_nntplink.port_number);
-            if (len + (int)strlen(g_buf) < 511)
+            if (len + (int)std::strlen(g_buf) < 511)
             {
                 strcpy(s_nntpserver_export+len, g_buf);
             }
@@ -168,7 +169,7 @@ int doshell(const char *shell, const char *cmd)
         un_export(s_grpdesc_export);
     }
     interp(g_buf,64-1+2,"%I");
-    g_buf[strlen(g_buf)-1] = '\0';
+    g_buf[std::strlen(g_buf)-1] = '\0';
     re_export(s_quotechars_export, g_buf+1, 64);
     if (shell == nullptr)
     {
@@ -588,17 +589,17 @@ char *secs2text(time_t secs)
         items = (int)(secs / (24*60));
         secs = secs % (24*60);
         sprintf(s, "%d day%s, ", items, plural(items));
-        s += strlen(s);
+        s += std::strlen(s);
     }
     if (secs >= 60L) {
         items = (int)(secs / 60);
         secs = secs % 60;
         sprintf(s, "%d hour%s, ", items, plural(items));
-        s += strlen(s);
+        s += std::strlen(s);
     }
     if (secs) {
         sprintf(s, "%d minute%s, ", (int)secs, plural(items));
-        s += strlen(s);
+        s += std::strlen(s);
     }
     s[-2] = '\0';
     return g_buf;
@@ -664,7 +665,7 @@ void prep_ini_data(char *cp, const char *filename)
 #ifdef DEBUG
     if (debug & DEB_RCFILES)
     {
-        printf("Read %d bytes from %s\n",strlen(cp),filename);
+        printf("Read %d bytes from %s\n",std::strlen(cp),filename);
     }
 #endif
 
@@ -830,13 +831,13 @@ char *next_ini_section(char *cp, char **section, char **cond)
         {
             return nullptr;
         }
-        cp += strlen(cp) + 1;
-        cp += strlen(cp) + 1;
+        cp += std::strlen(cp) + 1;
+        cp += std::strlen(cp) + 1;
     }
     *section = cp+1;
-    cp += strlen(cp) + 1;
+    cp += std::strlen(cp) + 1;
     *cond = cp;
-    cp += strlen(cp) + 1;
+    cp += std::strlen(cp) + 1;
 #ifdef DEBUG
     if (debug & DEB_RCFILES)
     {
@@ -880,7 +881,7 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
             {
                 printf("Unknown option: `%s'.\n",cp);
             }
-            cp = s + strlen(s) + 1;
+            cp = s + std::strlen(s) + 1;
         }
         else
         {
@@ -907,7 +908,7 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
 bool check_ini_cond(char *cond)
 {
     cond = dointerp(g_buf,sizeof g_buf,cond,"!=<>",nullptr);
-    char *s = g_buf + strlen(g_buf);
+    char *s = g_buf + std::strlen(g_buf);
     while (s != g_buf && isspace(s[-1]))
     {
         s--;

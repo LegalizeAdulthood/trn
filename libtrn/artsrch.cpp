@@ -24,6 +24,8 @@
 #include "trn/trn.h"
 #include "util/util2.h"
 
+#include <cstring>
+
 static COMPEX s_sub_compex{}; /* last compiled subject search */
 static COMPEX s_art_compex{}; /* last compiled normal search */
 
@@ -177,7 +179,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
         char *h;
         if (howmuch == ARTSCOPE_SUBJECT) {
             strcpy(pattern,": *");
-            h = pattern + strlen(pattern);
+            h = pattern + std::strlen(pattern);
             interp(h,patbufsiz - (h-patbuf),"%\\s");  /* fetch current subject */
         }
         else {
