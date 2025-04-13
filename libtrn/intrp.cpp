@@ -813,7 +813,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         if (g_htype[REFS_LINE].minpos >= 0) {
                             refs_buf = fetchlines(g_art,REFS_LINE);
                             normalize_refs(refs_buf);
-                            s = strrchr(refs_buf, '<');
+                            s = std::strrchr(refs_buf, '<');
                             if (s != nullptr)
                             {
                                 break;
@@ -837,11 +837,11 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         /* no more than 3 prior references PLUS the
                         ** root article allowed, including the one
                         ** concatenated below */
-                        s = strrchr(refs_buf, '<');
+                        s = std::strrchr(refs_buf, '<');
                         if (s != nullptr && s > refs_buf)
                         {
                             *s = '\0';
-                            char *h = strrchr(refs_buf,'<');
+                            char *h = std::strrchr(refs_buf,'<');
                             *s = '<';
                             if (h && h > refs_buf) {
                                 s = std::strchr(refs_buf+1,'<');
@@ -1107,7 +1107,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     s = scrbuf;
                 }
                 char* t;
-                if (upper || !(t = strrchr(s,'/')))
+                if (upper || !(t = std::strrchr(s,'/')))
                 {
                     t = s;
                 }

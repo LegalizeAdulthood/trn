@@ -335,7 +335,7 @@ char *sf_get_filename(int level)
         strcat(s_sf_file,"global");
     } else {
         strcat(s_sf_file,filexp("%C"));
-        char *s = strrchr(s_sf_file, '/');
+        char *s = std::strrchr(s_sf_file, '/');
         /* maybe redo this logic later... */
         while (level--) {
             if (*s == '\0')     /* no more name to match */

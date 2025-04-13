@@ -376,7 +376,7 @@ static char *dir_or_none(DATASRC *dp, const char *dir, datasrc_flags flag)
             return cp;
         }
         if (flag == DF_NONE) {
-            char* cp = strrchr(dp->newsid,'/');
+            char* cp = std::strrchr(dp->newsid,'/');
             if (!cp)
             {
                 return nullptr;
@@ -649,7 +649,7 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
 # ifndef ANCIENT_NEWS
         /* Safely update the low-water mark */
         {
-            char* f = strrchr(outbuf, ' ');
+            char* f = std::strrchr(outbuf, ' ');
             char* t = lbp + lbp_len;
             while (*--t != ' ')
             {

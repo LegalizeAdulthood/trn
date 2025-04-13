@@ -266,7 +266,7 @@ void thread_article(ARTICLE *article, char *references)
     if (references && *references) {
         prev = article;
         ap = nullptr;
-        if ((cp = strrchr(references, '<')) == nullptr
+        if ((cp = std::strrchr(references, '<')) == nullptr
          || (end = std::strchr(cp+1, ' ')) == nullptr)
         {
             end = references + std::strlen(references) - 1;
@@ -338,7 +338,7 @@ void thread_article(ARTICLE *article, char *references)
             {
                 end = cp;
             }
-            cp = strrchr(references, '<');
+            cp = std::strrchr(references, '<');
         }
         if (!ap)
         {

@@ -433,7 +433,7 @@ time_t nntp_time()
         return time((time_t *) nullptr);
     }
 
-    char * s = strrchr(g_ser_line, ' ') + 1;
+    char * s = std::strrchr(g_ser_line, ' ') + 1;
     int    month = (s[4] - '0') * 10 + (s[5] - '0');
     int    day = (s[6] - '0') * 10 + (s[7] - '0');
     int    hh = (s[8] - '0') * 10 + (s[9] - '0');

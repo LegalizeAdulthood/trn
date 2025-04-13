@@ -45,7 +45,7 @@ char *extract_name(char *name)
 {
     name = skip_space(name);
     char *lparen = std::strchr(name, '(');
-    char *rparen = strrchr(name, ')');
+    char *rparen = std::strrchr(name, ')');
     char *langle = std::strchr(name, '<');
     if (!lparen && !langle)
     {
@@ -79,7 +79,7 @@ char *extract_name(char *name)
     {
         name++;
         name = skip_space(name);
-        char *s = strrchr(name, '"');
+        char *s = std::strrchr(name, '"');
         if (s != nullptr)
         {
             *s = '\0';
@@ -709,11 +709,11 @@ const char *compress_subj(const ARTICLE *ap, int max)
     int len = std::strlen(g_buf);
     if (!g_unbroken_subjects && len > max) {
         /* Try to include the last two words on the line while trimming */ 
-        char *last_word = strrchr(g_buf, ' ');
+        char *last_word = std::strrchr(g_buf, ' ');
         if (last_word != nullptr)
         {
             *last_word = '\0';
-            char *next_to_last = strrchr(g_buf, ' ');
+            char *next_to_last = std::strrchr(g_buf, ' ');
             if (next_to_last != nullptr)
             {
                 if (next_to_last-g_buf >= len - max + 3 + 10-1)

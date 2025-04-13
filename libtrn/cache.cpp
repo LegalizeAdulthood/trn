@@ -293,7 +293,7 @@ void check_poster(ARTICLE *ap)
             {
                 *h++ = '\0';
                 u = s;
-            } else if ((u = strrchr(s,'!')) != nullptr) {
+            } else if ((u = std::strrchr(s,'!')) != nullptr) {
                 *u++ = '\0';
                 h = s;
             } else

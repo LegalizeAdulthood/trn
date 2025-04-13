@@ -102,13 +102,13 @@ int trn_main(int argc, char *argv[])
     /* Figure out our executable's name. */
 #ifdef MSDOS
     strlwr(argv[0]);
-    s = strrchr(argv[0],'\\');
+    s = std::strrchr(argv[0],'\\');
     if (s != nullptr)
     {
         *s = '/';
     }
 #endif
-    s = strrchr(argv[0],'/');
+    s = std::strrchr(argv[0],'/');
     if (s == nullptr)
     {
         s = argv[0];

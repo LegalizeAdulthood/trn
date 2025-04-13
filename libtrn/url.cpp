@@ -97,7 +97,7 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
     char*       cdpath;
 
     safecpy(path,origpath,510);
-    char *p = strrchr(path, '/'); /* p points to last slash or nullptr*/
+    char *p = std::strrchr(path, '/'); /* p points to last slash or nullptr*/
     if (p == nullptr) {
         printf("Error: URL:ftp path has no '/' character.\n");
         return false;

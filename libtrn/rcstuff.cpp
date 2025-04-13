@@ -352,7 +352,7 @@ char *multirc_name(MULTIRC *mp)
     {
         return "<each-newsrc>";
     }
-    char *cp = strrchr(mp->first->name, '/');
+    char *cp = std::strrchr(mp->first->name, '/');
     if (cp != nullptr)
     {
         return cp + 1;

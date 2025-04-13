@@ -379,7 +379,7 @@ ART_NUM getngsize(NGDATA *gp)
                 tmpbuf[len - 1] = '\0';
             }
             g_redirected = true;
-            g_redirected_to = strrchr(tmpbuf, '=') + 1;
+            g_redirected_to = std::strrchr(tmpbuf, '=') + 1;
             g_moderated = " (REDIRECTED)";
             break;
         default:
