@@ -12,6 +12,9 @@
 #include <util/util2.h>
 #include <util/wildmat.h>
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 
 void Usage();
@@ -26,7 +29,7 @@ int main(int argc, char *argv[])
     char command[32];
     char*action = nullptr;
     char*wildarg = nullptr;
-    FILE*out_fp = nullptr;
+    std::FILE *out_fp{};
 
     while (--argc) {
         if (**++argv == '-') {
@@ -36,10 +39,10 @@ int main(int argc, char *argv[])
                 {
                     Usage();
                 }
-                out_fp = fopen(*++argv, "w");
+                out_fp = std::fopen(*++argv, "w");
                 if (out_fp == nullptr) {
-                    perror(*argv);
-                    exit(1);
+                    std::perror(*argv);
+                    std::exit(1);
                 }
                 break;
             case 'x':
@@ -76,7 +79,7 @@ int main(int argc, char *argv[])
     tcbuf[0] = 0;
     env_init(tcbuf, true);
 
-    char *cp = getenv("NNTPSERVER");
+    char *cp = std::getenv("NNTPSERVER");
     if (!cp) {
         cp = filexp(SERVER_NAME);
         if (*cp == '/')
@@ -84,17 +87,17 @@ int main(int argc, char *argv[])
             cp = nntp_servername(cp);
         }
     }
-    if (strcmp(cp,"local") != 0)
+    if (std::strcmp(cp,"local") != 0)
     {
         g_server_name = savestr(cp);
-        cp = strchr(g_server_name, ';');
+        cp = std::strchr(g_server_name, ';');
         if (!cp)
         {
-            cp = strchr(g_server_name, ':');
+            cp = std::strchr(g_server_name, ':');
         }
         if (cp) {
             *cp = '\0';
-            g_nntplink.port_number = atoi(cp+1);
+            g_nntplink.port_number = std::atoi(cp+1);
         }
         g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
         if ((cp = getenv("NNTP_FORCE_AUTH")) != nullptr
@@ -108,30 +111,30 @@ int main(int argc, char *argv[])
         if (init_nntp() < 0
          || nntp_connect(g_server_name,false) <= 0)
         {
-            exit(1);
+            std::exit(1);
         }
         if (action)
         {
-            sprintf(command,"LIST %s",action);
+            std::sprintf(command,"LIST %s",action);
         }
         else
         {
-            strcpy(command,"LIST");
+            std::strcpy(command,"LIST");
         }
         if (wildarg)
         {
-            sprintf(command+strlen(command)," %s",wildarg);
+            std::sprintf(command+strlen(command)," %s",wildarg);
         }
         if (nntp_command(command) <= 0)
         {
-            exit(1);
+            std::exit(1);
         }
 #ifdef HAS_SIGHOLD
         sighold(SIGINT);
 #endif
         if (nntp_check() <= 0) {
-            fprintf(stderr,"nntplist: Can't get %s file from server.\n",action? action : "active");
-            fprintf(stderr, "Server said: %s\n", g_ser_line);
+            std::fprintf(stderr,"nntplist: Can't get %s file from server.\n",action? action : "active");
+            std::fprintf(stderr, "Server said: %s\n", g_ser_line);
             finalize(1);
         }
         while (nntp_gets(g_ser_line, sizeof g_ser_line) == 1) {
@@ -139,8 +142,8 @@ int main(int argc, char *argv[])
             {
                 break;
             }
-            fputs(g_ser_line, out_fp);
-            putc('\n', out_fp);
+            std::fputs(g_ser_line, out_fp);
+            std::putc('\n', out_fp);
         }
 
 #ifdef HAS_SIGHOLD
@@ -172,17 +175,17 @@ int main(int argc, char *argv[])
             cp = OVERVIEW_FMT;
         }
         if (!cp || !*cp) {
-            fprintf(stderr, "Don't know how to list `%s' from your local system.\n",
+            std::fprintf(stderr, "Don't know how to list `%s' from your local system.\n",
                     action);
             exit(1);
         }
-        FILE *in_fp = fopen(filexp(cp), "r");
+        std::FILE *in_fp{std::fopen(filexp(cp), "r")};
         if (in_fp == nullptr)
         {
-            fprintf(stderr,"Unable to open `%s'.\n", cp);
-            exit(1);
+            std::fprintf(stderr,"Unable to open `%s'.\n", cp);
+            std::exit(1);
         }
-        while (fgets(g_ser_line, sizeof g_ser_line, in_fp)) {
+        while (std::fgets(g_ser_line, sizeof g_ser_line, in_fp)) {
             if (wildarg) {
                 cp = skip_non_space(g_ser_line);
                 if (!cp)
@@ -196,7 +199,7 @@ int main(int argc, char *argv[])
                 }
                 *cp = ' ';
             }
-            fputs(g_ser_line, out_fp);
+            std::fputs(g_ser_line, out_fp);
         }
     }
     return 0;
@@ -204,14 +207,14 @@ int main(int argc, char *argv[])
 
 void Usage()
 {
-    fprintf(stderr, "Usage: nntplist [-x WildSpec] [-o OutputFile] [type]\n"
+    std::fprintf(stderr, "Usage: nntplist [-x WildSpec] [-o OutputFile] [type]\n"
                     "\n"
                     "Where type is any of the LIST command arguments your server accepts.\n");
-    exit(1);
+    std::exit(1);
 }
 
 int nntp_handle_timeout()
 {
-    fputs("\n503 Server timed out.\n",stderr);
+    std::fputs("\n503 Server timed out.\n",stderr);
     return -2;
 }
