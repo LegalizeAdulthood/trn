@@ -4,7 +4,7 @@
 #ifndef TRN_UTIL3_H
 #define TRN_UTIL3_H
 
-#include "config/typedef.h"
+#include <config/typedef.h>
 
 extern char *g_home_dir;
 

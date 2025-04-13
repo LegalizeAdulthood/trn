@@ -2,28 +2,28 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include <tool/util3.h>
+
+#include <nntp/nntpclient.h>
+#include <util/util2.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
-
-#include <stdio.h>
-#include "tool/util3.h"
-
-#include "config/config2.h"
-#include "nntp/nntpclient.h"
-#include "config/typedef.h"
-#include "util/util2.h"
 
 static char *s_nntp_password{};
 static char s_nomem[] = "trn: out of memory!\n";
 
 int doshell(const char *shell, const char *cmd)
 {
-    return system(cmd);
+    return std::system(cmd);
 }
 
 [[noreturn]] void finalize(int num)
 {
     nntp_close(true);
-    exit(num);
+    std::exit(num);
 }
 
 /* paranoid version of malloc */
@@ -31,9 +31,9 @@ int doshell(const char *shell, const char *cmd)
 #ifndef USE_DEBUGGING_MALLOC
 char *safemalloc(MEM_SIZE size)
 {
-    char *ptr = (char*)malloc(size ? size : (MEM_SIZE)1);
+    char *ptr = (char*)std::malloc(size ? size : (MEM_SIZE)1);
     if (!ptr) {
-        fputs(s_nomem,stdout);
+        std::fputs(s_nomem,stdout);
         finalize(1);
     }
     return ptr;
@@ -45,9 +45,9 @@ char *safemalloc(MEM_SIZE size)
 #ifndef USE_DEBUGGING_MALLOC
 char *saferealloc(char *where, MEM_SIZE size)
 {
-    char *ptr = (char*)realloc(where, size ? size : (MEM_SIZE)1);
+    char *ptr = (char*)std::realloc(where, size ? size : (MEM_SIZE)1);
     if (!ptr) {
-        fputs(s_nomem,stdout);
+        std::fputs(s_nomem,stdout);
         finalize(1);
     }
     return ptr;
@@ -58,7 +58,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
 {
     extern std::string g_dot_dir;
     if (*pattern == '%' && pattern[1] == '.') {
-        int len = strlen(g_dot_dir.c_str());
+        int len = std::strlen(g_dot_dir.c_str());
         safecpy(dest, g_dot_dir.c_str(), destsize);
         if (len < destsize)
         {
@@ -74,7 +74,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
 
 int nntp_handle_nested_lists()
 {
-    fputs("Programming error! Nested NNTP calls detected.\n",stderr);
+    std::fputs("Programming error! Nested NNTP calls detected.\n",stderr);
     return -1;
 }
 
