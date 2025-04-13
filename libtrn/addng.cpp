@@ -22,9 +22,11 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
-#include <stdlib.h>
 #include <string>
 #include <time.h>
 
@@ -110,7 +112,7 @@ bool find_new_groups()
 static void process_list(getnewsgroup_flags flag)
 {
     if (flag == GNG_NONE) {
-        sprintf(g_cmd_buf,
+        std::sprintf(g_cmd_buf,
                 "\n"
                 "Unsubscribed but mentioned in your current newsrc%s:\n",
                 g_multirc->first->next ? "s" : "");
@@ -123,7 +125,7 @@ static void process_list(getnewsgroup_flags flag)
     }
     while (node) {
         if (flag == GNG_NONE) {
-            sprintf(g_cmd_buf, "%s\n", node->name);
+            std::sprintf(g_cmd_buf, "%s\n", node->name);
             print_lines(g_cmd_buf, NOMARKING);
         }
         else if (!g_use_add_selector)
@@ -132,7 +134,7 @@ static void process_list(getnewsgroup_flags flag)
         }
         ADDGROUP *prevnode = node;
         node = node->next;
-        free((char*)prevnode);
+        std::free((char*)prevnode);
     }
     g_first_addgroup = nullptr;
     g_last_addgroup = nullptr;
@@ -155,7 +157,7 @@ static void new_nntp_groups(DATASRC *dp)
         return; /*$$*/
     }
     if (nntp_newgroups(dp->lastnewgrp) < 1) { /*$$*/
-        printf("Can't get new groups from server:\n%s\n", g_ser_line);
+        std::printf("Can't get new groups from server:\n%s\n", g_ser_line);
         return;
     }
     HASHTABLE *newngs = hashcreate(33, addng_cmp);
@@ -170,7 +172,7 @@ static void new_nntp_groups(DATASRC *dp)
 #ifdef DEBUG
         if (debug & DEB_NNTP)
         {
-            printf("<%s\n", g_ser_line);
+            std::printf("<%s\n", g_ser_line);
         }
 #endif
         if (nntp_at_list_end(g_ser_line))
@@ -198,19 +200,19 @@ static void new_nntp_groups(DATASRC *dp)
                 char ch = 'y';
                 if (s)
                 {
-                    sscanf(s + 1, "%ld %ld %c", &high, &low, &ch);
+                    std::sscanf(s + 1, "%ld %ld %c", &high, &low, &ch);
                 }
                 else
                 {
                     s = g_ser_line + len;
                 }
-                sprintf(s, " %010ld %05ld %c\n", high, low, ch);
+                std::sprintf(s, " %010ld %05ld %c\n", high, low, ch);
                 (void) srcfile_append(&dp->act_sf, g_ser_line, len);
             }
         }
         if (s) {
             *s++ = '\0';
-            while (isdigit(*s) || isspace(*s))
+            while (std::isdigit(*s) || std::isspace(*s))
             {
                 s++;
             }
@@ -245,19 +247,19 @@ static void new_local_groups(DATASRC *dp)
         return;
     }
 
-    FILE *fp = fopen(dp->extra_name, "r");
+    std::FILE *fp = std::fopen(dp->extra_name, "r");
     if (fp == nullptr) {
-        printf(g_cantopen, dp->extra_name);
+        std::printf(g_cantopen, dp->extra_name);
         termdown(1);
         return;
     }
-    time_t lastone = time((time_t*)nullptr) - 24L * 60 * 60 - 1;
+    time_t lastone = time(nullptr) - 24L * 60 * 60 - 1;
     HASHTABLE *newngs = hashcreate(33, addng_cmp);
 
-    while (fgets(g_buf, LBUFLEN, fp) != nullptr)
+    while (std::fgets(g_buf, LBUFLEN, fp) != nullptr)
     {
         char *s;
-        if ((s = std::strchr(g_buf, ' ')) == nullptr || (lastone = atol(s + 1)) < dp->lastnewgrp)
+        if ((s = std::strchr(g_buf, ' ')) == nullptr || (lastone = std::atol(s + 1)) < dp->lastnewgrp)
         {
             continue;
         }
@@ -270,7 +272,7 @@ static void new_local_groups(DATASRC *dp)
         long high;
         long low;
         char ch;
-        sscanf(tmpbuf + (s-g_buf) + 1, "%ld %ld %c", &high, &low, &ch);
+        std::sscanf(tmpbuf + (s-g_buf) + 1, "%ld %ld %c", &high, &low, &ch);
         if (ch == 'x' || ch == '=')
         {
             continue;
@@ -282,7 +284,7 @@ static void new_local_groups(DATASRC *dp)
         }
         add_to_hash(newngs, g_buf, high-low, auto_subscribe(g_buf));
     }
-    fclose(fp);
+    std::fclose(fp);
 
     hashwalk(newngs, build_addgroup_list, 0);
     hashdestroy(newngs);
@@ -321,7 +323,7 @@ static void add_to_list(const char *name, int toread, char_int ch)
     ADDGROUP* node = g_first_addgroup;
 
     while (node) {
-        if (!strcmp(node->name,name))
+        if (!std::strcmp(node->name,name))
         {
             return;
         }
@@ -384,11 +386,11 @@ bool scanactive(bool add_matching)
             else {
                 if (g_ngtodo[0][0] == '^')
                 {
-                    sprintf(g_buf, "%s*", &g_ngtodo[0][1]);
+                    std::sprintf(g_buf, "%s*", &g_ngtodo[0][1]);
                 }
                 else
                 {
-                    sprintf(g_buf, "*%s*", g_ngtodo[0]);
+                    std::sprintf(g_buf, "*%s*", g_ngtodo[0]);
                 }
                 if (g_buf[std::strlen(g_buf)-2] == '$')
                 {
@@ -442,8 +444,8 @@ static void scanline(char *actline, bool add_matching)
     high = 0;
     low = 1;
     ch = 'y';
-    sscanf(s, "%ld %ld %c", &high, &low, &ch);
-    if (ch == 'x' || !strncmp(actline,"to.",3))
+    std::sscanf(s, "%ld %ld %c", &high, &low, &ch);
+    if (ch == 'x' || !std::strncmp(actline,"to.",3))
     {
         return;
     }
@@ -527,5 +529,5 @@ void sort_addgroups()
     }
     g_last_addgroup = lp[0];
     g_last_addgroup->next = nullptr;
-    free((char*)ag_list);
+    std::free((char*)ag_list);
 }
