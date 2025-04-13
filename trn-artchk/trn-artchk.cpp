@@ -9,16 +9,15 @@
 ** Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>
 */
 
+#include <config/common.h>
+#include <nntp/nntpclient.h>
+#include <nntp/nntpinit.h>
+#include <tool/util3.h>
+#include <trn/string-algos.h>
+#include <util/env.h>
+#include <util/util2.h>
+
 #include <string>
-
-#include "config/common.h"
-
-#include "util/env.h"
-#include "nntp/nntpclient.h"
-#include "nntp/nntpinit.h"
-#include "trn/string-algos.h"
-#include "util/util2.h"
-#include "tool/util3.h"
 
 #define MAXNGS 100
 
