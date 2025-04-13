@@ -119,7 +119,7 @@ do_article_result do_article()
     if (g_datasrc->flags & DF_REMOTE)
     {
         g_raw_artsize = nntp_artsize();
-        g_artsize = nntp_artsize(); 
+        g_artsize = nntp_artsize();
     }
     else
     {
@@ -133,7 +133,7 @@ do_article_result do_article()
             return DA_NORM;
         }
         g_raw_artsize = art_stat.st_size;
-        g_artsize = art_stat.st_size; 
+        g_artsize = art_stat.st_size;
     }
     sprintf(prompt_buf, g_mousebar_cnt>3? "%%sEnd of art %ld (of %ld) %%s[%%s]"
         : "%%sEnd of article %ld (of %ld) %%s-- what next? [%%s]",

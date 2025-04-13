@@ -191,7 +191,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
             t = skip_space(t);
             for (s = t; isalnum(*s) || *s == '-' || *s == '+'
                  || *s == '&' || *s == '_' || *s == '.'; s++) {
-                if (*s == '.' && 
+                if (*s == '.' &&
                     (!isdigit(s[-1]) || !isdigit(s[1]))) {
                     hasdot = 1;
                 }

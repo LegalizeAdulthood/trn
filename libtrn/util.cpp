@@ -204,7 +204,7 @@ int doshell(const char *shell, const char *cmd)
     sigignore(SIGINT);
 #ifdef SIGQUIT
     sigignore(SIGQUIT);
-#endif 
+#endif
     g_waiting = true;
     while ((w = wait(&status)) != pid)
     {
@@ -236,7 +236,7 @@ int doshell(const char *shell, const char *cmd)
     sigset(SIGINT,int_catcher);
 #ifdef SIGQUIT
     sigset(SIGQUIT,SIG_DFL);
-#endif 
+#endif
 #ifdef SIGTSTP
     sigset(SIGTSTP,stop_catcher);
     sigset(SIGTTOU,stop_catcher);

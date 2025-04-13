@@ -1,5 +1,5 @@
 /* trn/nntp.h
-*/ 
+*/
 /* This software is copyrighted as detailed in the LICENSE file. */
 #ifndef TRN_NNTP_H
 #define TRN_NNTP_H

@@ -2,9 +2,9 @@
  */
 
 /* string search routines */
- 
+
 /*              Copyright (c) 1981,1980 James Gosling           */
- 
+
 /* Modified Aug. 12, 1981 by Tom London to include regular expressions
    as in ed.  RE stuff hacked over by jag to correct a few major problems,
    mainly dealing with searching within the buffer rather than copying
@@ -39,7 +39,7 @@ enum
                           indicate that the metacharacter can match
                           a null string.  advance() uses this. */
 };
- 
+
 /* meta characters in the "compiled" form of a regular expression */
 #define CBRA    (2|MNULL)       /* \( -- begin bracket */
 #define CCHR    4               /* a vanilla character */
@@ -57,7 +57,7 @@ enum
 #define NWORD   34              /* matches non-word characer \W */
 #define WBOUND  (36|MNULL)      /* matches word boundary \b */
 #define NWBOUND (38|MNULL)      /* matches non-(word boundary) \B */
- 
+
 enum
 {
     STAR = 01, /* * -- Kleene star, repeats the previous
@@ -147,7 +147,7 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
     char  bracket[NBRA];
     char**alt = compex->alternatives;
     char* retmes = "Badly formed search string";
- 
+
     case_fold(compex->do_folding = fold);
     if (!compex->eblen) {
         compex->expbuf = safemalloc(84);
@@ -252,7 +252,7 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
                 case '.':
                     *ep++ = CDOT;
                     continue;
- 
+
                 case '*':
                     if (lastep == nullptr || *lastep == CBRA || *lastep == CKET //
                         || *lastep == CIRC                                      //
@@ -262,7 +262,7 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
                     }
                     *lastep |= STAR;
                     continue;
- 
+
                 case '^':
                     if (ep != compex->expbuf && ep[-1] != CEND)
                     {
@@ -270,7 +270,7 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
                     }
                     *ep++ = CIRC;
                     continue;
- 
+
                 case '$':
                     if (*strp != 0 && (*strp != '\\' || strp[1] != '|'))
                     {
@@ -278,7 +278,7 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
                     }
                     *ep++ = CDOL;
                     continue;
- 
+
                 case '[': {             /* character class */
                     if (ep - compex->expbuf >= compex->eblen - BMAPSIZ)
                     {
@@ -328,7 +328,7 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
                     ep += BMAPSIZ;
                     continue;
                 }
- 
+
             defchar:
                 default:
                     *ep++ = CCHR;
@@ -422,10 +422,10 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
     const char* curlp;
     Uchar* trt = s_trans;
     int i;
- 
+
     while (*lp || (*ep & (STAR|MNULL))) {
         switch (*ep++) {
- 
+
             case CCHR:
                 if (trt[*(Uchar*)ep++] != trt[*(Uchar*)lp])
                 {
@@ -433,7 +433,7 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                 }
                 lp++;
                 continue;
- 
+
             case CDOT:
                 if (*lp == '\n')
                 {
@@ -441,35 +441,35 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                 }
                 lp++;
                 continue;
- 
+
             case CDOL:
                 if (!*lp || *lp == '\n')
                 {
                     continue;
                 }
                 return false;
- 
+
             case CIRC:
                 if (lp == s_first_character || lp[-1]=='\n')
                 {
                     continue;
                 }
                 return false;
- 
+
             case WORD:
                 if (isalnum(*lp)) {
                     lp++;
                     continue;
                 }
                 return false;
- 
+
             case NWORD:
                 if (!isalnum(*lp)) {
                     lp++;
                     continue;
                 }
                 return false;
- 
+
             case WBOUND:
                 if ((lp == s_first_character || !isalnum(lp[-1])) !=
                         (!*lp || !isalnum(*lp)) )
@@ -477,7 +477,7 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                     continue;
                 }
                 return false;
- 
+
             case NWBOUND:
                 if ((lp == s_first_character || !isalnum(lp[-1])) ==
                         (!*lp || !isalnum(*lp)))
@@ -485,10 +485,10 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                     continue;
                 }
                 return false;
- 
+
             case CEND:
                 return true;
- 
+
             case CCL:
                 if (cclass(ep, *lp, 1)) {
                     ep += BMAPSIZ;
@@ -496,7 +496,7 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                     continue;
                 }
                 return false;
- 
+
             case NCCL:
                 if (cclass(ep, *lp, 0)) {
                     ep += BMAPSIZ;
@@ -504,18 +504,18 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                     continue;
                 }
                 return false;
- 
+
             case CBRA:
                 compex->braslist[(unsigned char)*ep++] = lp;
                 continue;
- 
+
             case CKET:
                 i = *ep++;
                 compex->braelist[i] = lp;
                 compex->braelist[0] = lp;
                 compex->braslist[0] = compex->braslist[i];
                 continue;
- 
+
             case CBACK:
                 i = *ep++;
                 if (compex->braelist[i] == nullptr) {
@@ -528,7 +528,7 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                     continue;
                 }
                 return false;
- 
+
             case CBACK | STAR:
                 i = *ep++;
                 if (compex->braelist[i] == nullptr) {
@@ -548,28 +548,28 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                     lp -= compex->braelist[i] - compex->braslist[i];
                 }
                 continue;
- 
+
             case CDOT | STAR:
                 curlp = lp;
                 while (*lp++ && lp[-1] != '\n')
                 {
                 }
                 goto star;
- 
+
             case WORD | STAR:
                 curlp = lp;
                 while (*lp++ && isalnum(lp[-1]))
                 {
                 }
                 goto star;
- 
+
             case NWORD | STAR:
                 curlp = lp;
                 while (*lp++ && !isalnum(lp[-1]))
                 {
                 }
                 goto star;
- 
+
             case CCHR | STAR:
                 curlp = lp;
                 while (*lp++ && trt[*(Uchar*)(lp-1)] == trt[*(Uchar*)ep])
@@ -577,7 +577,7 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                 }
                 ep++;
                 goto star;
- 
+
             case CCL | STAR:
             case NCCL | STAR:
                 curlp = lp;
@@ -586,7 +586,7 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                 }
                 ep += BMAPSIZ;
                 goto star;
- 
+
         star:
                 do {
                     lp--;
@@ -596,7 +596,7 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                     }
                 } while (lp > curlp);
                 return false;
- 
+
             default:
                 fputs("Badly compiled pattern\n",stdout);
                 s_err = true;
@@ -605,7 +605,7 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
     }
     return false;
 }
- 
+
 bool backref(COMPEX *compex, int i, const char *lp)
 {
     const char *bp = compex->braslist[i];

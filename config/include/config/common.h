@@ -148,7 +148,7 @@ enum
  *      %^#     ever-increasing number (from 1 to n)
  *      %$      current process number
  *      %{name} Environment variable "name".  %{name-default} form allowed.
- *      %[name] Header line beginning with "Name: ", without "Name: " 
+ *      %[name] Header line beginning with "Name: ", without "Name: "
  *      %"prompt"
  *              Print prompt and insert what is typed.
  *      %`command`
@@ -651,7 +651,7 @@ extern int debug; /* -D */
 #   define DEB_INTRP 8
 #   define DEB_NNTP 16
 #   define DEB_INNERSRCH 32
-#   define DEB_FILEXP 64 
+#   define DEB_FILEXP 64
 #   define DEB_HASH 128
 #   define DEB_XREF_MARKER 256
 #   define DEB_CTLAREA_BITMAP 512

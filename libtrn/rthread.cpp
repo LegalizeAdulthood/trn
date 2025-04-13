@@ -412,7 +412,7 @@ void inc_art(bool sel_flag, bool rereading)
         {
             break;
         }
-    } 
+    }
     g_artp = ap;
 }
 

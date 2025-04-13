@@ -969,7 +969,7 @@ int qp_decodestring(char *t, const char *f, bool in_header)
                 *t++ = *f++;
             }
             break;
-          case '=':     /* decode a hex-value */ 
+          case '=':     /* decode a hex-value */
             if (f[1] == '\n') {
                 f += 2;
                 break;

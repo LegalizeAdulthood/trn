@@ -328,7 +328,7 @@ void sc_lookahead(bool flag, bool nowait)
 #ifdef PENDING
      && !input_pending()
 #endif
-    ) { 
+    ) {
 #ifndef PENDING
         if (g_int_count > 0) {
             g_int_count = 0;

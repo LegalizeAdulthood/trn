@@ -429,7 +429,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
                 case DA_CLEAN:          /* quit newsgroup */
                     goto cleanup;
                 case DA_TOEND:          /* do not mark as read */
-                    goto reask_article; 
+                    goto reask_article;
                 case DA_RAISE:          /* reparse command at end of art */
                     goto article_level;
                 case DA_NORM:           /* normal end of article */

@@ -5,11 +5,11 @@
  * use this software as long as: there is no monetary profit gained
  * specifically from the use or reproduction of this software, it is not
  * sold, rented, traded or otherwise marketed, and this copyright notice is
- * included prominently in any copy made. 
+ * included prominently in any copy made.
  *
  * The authors make no claims as to the fitness or correctness of this software
  * for any use whatsoever, and it is provided as is. Any use of this software
- * is at the user's own risk. 
+ * is at the user's own risk.
  */
 #ifndef TRN_CHARSUBST_H
 #define TRN_CHARSUBST_H

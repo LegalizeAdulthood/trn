@@ -8,7 +8,7 @@
 #define NBRA    10              /* the maximum number of meta-brackets in an
                                    RE -- \( \) */
 #define NALTS   10              /* the maximum number of \|'s */
- 
+
 struct COMPEX
 {
     char* expbuf;               /* The compiled search string */

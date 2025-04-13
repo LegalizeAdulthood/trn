@@ -1234,7 +1234,7 @@ void getcmd(char *whatbuf)
 
 tryagain:
     KEYMAP *curmap = s_topmap;
-    bool no_macros = (whatbuf != g_buf && !s_xmouse_is_on); 
+    bool no_macros = (whatbuf != g_buf && !s_xmouse_is_on);
     for (;;) {
         g_int_count = 0;
         errno = 0;
@@ -1754,7 +1754,7 @@ int print_lines(const char *what_to_print, int hilite)
             else if (*s == '\t') {
                 putchar(*s);
                 s++;
-                i = ((i+8) & ~7); 
+                i = ((i+8) & ~7);
             }
             else if (*s == '\n') {
                 s++;

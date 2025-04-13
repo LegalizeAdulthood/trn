@@ -6,11 +6,11 @@
  * use this software as long as: there is no monetary profit gained
  * specifically from the use or reproduction of this software, it is not
  * sold, rented, traded or otherwise marketed, and this copyright notice is
- * included prominently in any copy made. 
+ * included prominently in any copy made.
  *
  * The authors make no claims as to the fitness or correctness of this software
  * for any use whatsoever, and it is provided as is. Any use of this software
- * is at the user's own risk. 
+ * is at the user's own risk.
  */
 #include "trn/charsubst.h"
 
@@ -50,7 +50,7 @@ int putsubstchar(int c, int limit, bool outputok)
     switch (*g_charsubst)
     {
     case 'm':
-    case 'a': 
+    case 'a':
         t = *g_charsubst == 'm' ? 1 : 2;
         oc[0] = (Uchar)c;
         oc[1] = '\0';
@@ -102,7 +102,7 @@ int putsubstchar(int c, int limit, bool outputok)
             {
                 d = s_textbl[c - 32];
             }
-            s_texchar = '\0'; 
+            s_texchar = '\0';
             if (d)
             {
                 c = d;
@@ -120,7 +120,7 @@ int putsubstchar(int c, int limit, bool outputok)
             }
         }
         /* FALL THROUGH */
-    default: 
+    default:
         if (outputok)
         {
             putchar(c);
@@ -193,7 +193,7 @@ int strcharsubst(char *outb, const char *inb, int limit, char_int subst)
     return len;
 }
 
-/* The following is an adapted version of iso2asc by Markus Kuhn, 
+/* The following is an adapted version of iso2asc by Markus Kuhn,
    University of Erlangen, Germany <mskuhn@immd4.uni-erlangen.de>
 */
 

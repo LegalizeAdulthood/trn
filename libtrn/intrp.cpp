@@ -1384,7 +1384,7 @@ void normalize_refs(char *refs)
         t--;
     }
     *t = '\0';
-} 
+}
 
 static void abort_interp()
 {

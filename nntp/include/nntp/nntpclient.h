@@ -1,5 +1,5 @@
 /* nntpclient.h
-*/ 
+*/
 /* This software is copyrighted as detailed in the LICENSE file. */
 #ifndef TRN_NNTPCLIENT_H
 #define TRN_NNTPCLIENT_H

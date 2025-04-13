@@ -625,7 +625,7 @@ bool strip_one_Re(char *str, char **strp)
         str++;
     }
     if (eq_ignore_case(str[0], 'r') && eq_ignore_case(str[1], 'e')) /* check for Re: */
-    { 
+    {
         char *cp = str + 2;
         if (*cp == '^') /* allow Re^2: */
         {
@@ -708,7 +708,7 @@ const char *compress_subj(const ARTICLE *ap, int max)
     }
     int len = std::strlen(g_buf);
     if (!g_unbroken_subjects && len > max) {
-        /* Try to include the last two words on the line while trimming */ 
+        /* Try to include the last two words on the line while trimming */
         char *last_word = std::strrchr(g_buf, ' ');
         if (last_word != nullptr)
         {

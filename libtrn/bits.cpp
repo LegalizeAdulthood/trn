@@ -760,7 +760,7 @@ static int chase_xref(ART_NUM artnum, int markread)
  * check again.  This is so that if the new administrator decides
  * to change the system name as known to inews, rn will still do
  * Xrefs correctly--each article need only match itself to be valid.
- */ 
+ */
 # ifdef VALIDATE_XREF_SITE
 static bool valid_xref_site(ART_NUM artnum, char *site)
 {
