@@ -4,6 +4,11 @@
 #ifndef TRN_TERMINAL_H
 #define TRN_TERMINAL_H
 
+#include <config/common.h>
+#include <config/config.h>
+
+#include "trn/enum-flags.h"
+
 /* stuff wanted by terminal mode diddling routines */
 
 #ifdef I_SYS_IOCTL
@@ -18,8 +23,6 @@
 extern termios g_tty;
 extern termios g_oldtty;
 #endif
-#include "config/common.h"
-#include "trn/enum-flags.h"
 
 extern char          g_erase_char; /* rubout character */
 extern char          g_kill_char;  /* line delete character */
