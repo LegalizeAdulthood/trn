@@ -9,6 +9,8 @@
 #include "trn/search.h"
 #include "trn/util.h"
 
+#include <string>
+
 /* Display Options */
 enum option_index
 {

@@ -5,9 +5,11 @@
 #ifndef TRN_ADDNG_H
 #define TRN_ADDNG_H
 
-#include <cstdint>
+#include <config/typedef.h>
 
 #include "trn/enum-flags.h"
+
+#include <cstdint>
 
 struct DATASRC;
 

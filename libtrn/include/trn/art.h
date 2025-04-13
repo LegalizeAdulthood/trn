@@ -4,6 +4,9 @@
 #ifndef TRN_ART_H
 #define TRN_ART_H
 
+#include <config/common.h>
+#include <config/typedef.h>
+
 /* do_article() return values */
 enum do_article_result
 {

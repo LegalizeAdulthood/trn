@@ -4,6 +4,8 @@
 #ifndef TRN_RCSTUFF_H
 #define TRN_RCSTUFF_H
 
+#include <config/typedef.h>
+
 #include "trn/enum-flags.h"
 #include "trn/list.h"
 

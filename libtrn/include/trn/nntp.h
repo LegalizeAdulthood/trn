@@ -4,6 +4,10 @@
 #ifndef TRN_NNTP_H
 #define TRN_NNTP_H
 
+#include <config/typedef.h>
+
+#include <time.h>
+
 struct DATASRC;
 struct NGDATA;
 

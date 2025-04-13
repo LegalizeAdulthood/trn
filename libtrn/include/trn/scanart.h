@@ -6,6 +6,8 @@
 #ifndef TRN_SCANART_H
 #define TRN_SCANART_H
 
+#include <config/typedef.h>
+
 #include "trn/enum-flags.h"
 
 /* return codes for sa_main */

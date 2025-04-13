@@ -4,6 +4,8 @@
 #ifndef TRN_SW_H
 #define TRN_SW_H
 
+#include <stdio.h>
+
 void sw_file(char **tcbufptr);
 void sw_list(char *swlist);
 void decode_switch(const char *s);

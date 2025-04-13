@@ -4,10 +4,12 @@
 #ifndef TRN_NGDATA_H
 #define TRN_NGDATA_H
 
-#include <cstdint>
-#include <string>
+#include <config/typedef.h>
 
 #include "trn/enum-flags.h"
+
+#include <cstdint>
+#include <string>
 
 struct LIST;
 struct NEWSRC;

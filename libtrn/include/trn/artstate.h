@@ -4,9 +4,11 @@
 #ifndef TRN_ARTSTATE_H
 #define TRN_ARTSTATE_H
 
-#include <string>
+#include <config/typedef.h>
 
 #include "trn/search.h"
+
+#include <string>
 
 extern bool        g_reread;          /* consider current art temporarily unread? */
 extern bool        g_do_fseek;        /* should we back up in article file? */

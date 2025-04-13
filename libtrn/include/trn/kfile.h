@@ -4,9 +4,12 @@
 #ifndef TRN_KFILE_H
 #define TRN_KFILE_H
 
+#include <config/typedef.h>
+
 #include "trn/enum-flags.h"
 
 #include <cstdint>
+#include <stdio.h>
 
 struct ARTICLE;
 

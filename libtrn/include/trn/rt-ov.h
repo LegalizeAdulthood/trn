@@ -4,6 +4,8 @@
 #ifndef TRN_RT_OV_H
 #define TRN_RT_OV_H
 
+#include <config/typedef.h>
+
 struct ARTICLE;
 
 /* The usual order for the overview data fields. */

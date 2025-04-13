@@ -5,6 +5,8 @@
 #ifndef TRN_SCORE_H
 #define TRN_SCORE_H
 
+#include <config/typedef.h>
+
 /* RETHINK LOWSCORE: (especially for 16-bit scores?) */
 /* score given to unavailable articles */
 enum

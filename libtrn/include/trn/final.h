@@ -4,6 +4,8 @@
 #ifndef TRN_FINAL_H
 #define TRN_FINAL_H
 
+#include <config/config.h>
+
 /* cleanup status for fast exits */
 
 extern bool g_panic;       /* we got hung up or something-- so leave tty alone */

@@ -5,6 +5,8 @@
 #ifndef TRN_SCORESAVE_H
 #define TRN_SCORESAVE_H
 
+#include <config/typedef.h>
+
 extern int g_sc_loaded_count; /* how many articles were loaded? */
 
 void sc_sv_add(const char *str);

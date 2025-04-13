@@ -4,6 +4,8 @@
 #ifndef TRN_RT_WUMPUS_H
 #define TRN_RT_WUMPUS_H
 
+#include <config/typedef.h>
+
 struct ARTICLE;
 
 extern int g_max_tree_lines;

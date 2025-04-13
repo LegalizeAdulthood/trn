@@ -6,6 +6,8 @@
 #ifndef TRN_SAMISC_H
 #define TRN_SAMISC_H
 
+#include <config/typedef.h>
+
 bool sa_basic_elig(long a);
 bool sa_eligible(long a);
 long sa_artnum_to_ent(ART_NUM artnum);

@@ -6,11 +6,13 @@
 #ifndef TRN_UNIV_H
 #define TRN_UNIV_H
 
-#include <cstdint>
-#include <string>
+#include <config/typedef.h>
 
 #include "trn/enum-flags.h"
 #include "trn/help.h"
+
+#include <cstdint>
+#include <string>
 
 struct HASHTABLE;
 

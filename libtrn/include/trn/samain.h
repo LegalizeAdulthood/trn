@@ -6,6 +6,8 @@
 #ifndef TRN_SAMAIN_H
 #define TRN_SAMAIN_H
 
+#include <config/typedef.h>
+
 extern bool g_sa_mode_zoom;    /* true if in "zoom" (display only selected) mode */
 extern int g_sa_scan_context;  /* contains the scan-context number for the current article scan */
 

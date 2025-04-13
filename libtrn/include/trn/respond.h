@@ -4,6 +4,8 @@
 #ifndef TRN_RESPOND_H
 #define TRN_RESPOND_H
 
+#include <config/typedef.h>
+
 #include <string>
 
 extern std::string g_savedest;    /* value of %b */

@@ -4,6 +4,8 @@
 #ifndef TRN_BACKPAGE_H
 #define TRN_BACKPAGE_H
 
+#include <config/typedef.h>
+
 /* things for doing the 'back page' command */
 
 void backpage_init();

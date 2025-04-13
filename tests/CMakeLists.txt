@@ -46,3 +46,5 @@ target_include_directories(trn-test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}" .)
 target_link_libraries(trn-test PUBLIC libtrn GTest::gmock_main GTest::gtest)
 target_folder(trn-test "Tests")
 gtest_discover_tests(trn-test PROPERTIES LABELS trn)
+
+add_subdirectory(headers)

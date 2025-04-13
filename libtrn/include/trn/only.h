@@ -4,6 +4,8 @@
 #ifndef TRN_ONLY_H
 #define TRN_ONLY_H
 
+#include <config/common.h>
+
 #ifndef NBRA
 #include "trn/search.h"
 #endif

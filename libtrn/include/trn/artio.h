@@ -4,6 +4,10 @@
 #ifndef TRN_ARTIO_H
 #define TRN_ARTIO_H
 
+#include <config/typedef.h>
+
+#include <stdio.h>
+
 enum : char
 {
     WRAPPED_NL = '\003'

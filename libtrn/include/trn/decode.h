@@ -4,6 +4,10 @@
 #ifndef TRN_DECODE_H
 #define TRN_DECODE_H
 
+#include <config/typedef.h>
+
+#include <stdio.h>
+
 struct MIMECAP_ENTRY;
 
 extern char *g_decode_filename;

@@ -4,6 +4,8 @@
 #ifndef TRN_RT_PROCESS_H
 #define TRN_RT_PROCESS_H
 
+#include <config/typedef.h>
+
 #include "trn/hash.h"
 
 struct ARTICLE;

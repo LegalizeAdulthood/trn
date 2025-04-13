@@ -4,6 +4,8 @@
 #ifndef TRN_RCLN_H
 #define TRN_RCLN_H
 
+#include <config/typedef.h>
+
 struct DATASRC;
 struct NGDATA;
 

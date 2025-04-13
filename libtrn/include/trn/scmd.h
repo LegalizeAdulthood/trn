@@ -6,6 +6,8 @@
 #ifndef TRN_SCMD_H
 #define TRN_SCMD_H
 
+#include <config/config2.h>
+
 void s_go_bot();
 int s_finish_cmd(const char *string);
 int s_cmdloop();
