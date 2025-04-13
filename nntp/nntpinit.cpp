@@ -2,15 +2,19 @@
 */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include <config/fdio.h>
-
-#include "config/common.h"
 #include "nntp/nntpinit.h"
 
 #include "nntp/nntpclient.h"
 
+#include <config/common.h>
+#include <config/fdio.h>
+
 #include <boost/asio.hpp>
 
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <map>
 #include <string>
@@ -133,19 +137,19 @@ int server_init(const char *machine)
 
     if (*g_ser_line == NNTP_CLASS_OK) {
         char save_line[NNTP_STRLEN];
-        strcpy(save_line, g_ser_line);
+        std::strcpy(save_line, g_ser_line);
         /* Try MODE READER just in case we're talking to innd.
         ** If it is not an invalid command, use the new reply. */
         if (nntp_command("MODE READER") <= 0)
         {
-            sprintf(g_ser_line, "%d failed to send MODE READER\n", NNTP_ACCESS_VAL);
+            std::sprintf(g_ser_line, "%d failed to send MODE READER\n", NNTP_ACCESS_VAL);
         }
         else if (nntp_check() <= 0 && atoi(g_ser_line) == NNTP_BAD_COMMAND_VAL)
         {
-            strcpy(g_ser_line, save_line);
+            std::strcpy(g_ser_line, save_line);
         }
     }
-    return atoi(g_ser_line);
+    return std::atoi(g_ser_line);
 }
 
 void cleanup_nntp()
@@ -221,7 +225,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
     static struct in_addr defaddr;
     static char namebuf[256];
 
-    memset((char*)&sin,0,sizeof sin);
+    std::memset((char*)&sin,0,sizeof sin);
 
     if (port)
     {
@@ -231,13 +235,13 @@ int get_tcp_socket(const char *machine, int port, const char *service)
         struct servent *sp = getservbyname(service, "tcp");
         if (sp == nullptr)
         {
-            fprintf(stderr, "%s/tcp: Unknown service.\n", service);
+            std::fprintf(stderr, "%s/tcp: Unknown service.\n", service);
             return -1;
         }
         sin.sin_port = sp->s_port;
     }
     /* If not a raw ip address, try nameserver */
-    if (!isdigit(*machine)
+    if (!std::isdigit(*machine)
 #ifdef INADDR_NONE
      || (defaddr.s_addr = inet_addr(machine)) == INADDR_NONE)
 #else
@@ -248,7 +252,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
     }
     else {
         /* Raw ip address, fake  */
-        (void) strcpy(namebuf, machine);
+        (void) std::strcpy(namebuf, machine);
         def.h_name = namebuf;
 #ifdef h_addr
         def.h_addr_list = alist;
@@ -260,7 +264,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
         hp = &def;
     }
     if (hp == nullptr) {
-        fprintf(stderr, "%s: Unknown host.\n", machine);
+        std::fprintf(stderr, "%s: Unknown host.\n", machine);
         return -1;
     }
 
@@ -270,26 +274,26 @@ int get_tcp_socket(const char *machine, int port, const char *service)
     for (char **cp = hp->h_addr_list; cp && *cp; cp++) {
         s = socket(hp->h_addrtype, SOCK_STREAM, 0);
         if (s < 0) {
-            perror("socket");
+            std::perror("socket");
             return -1;
         }
-        memcpy((char*)&sin.sin_addr,*cp,hp->h_length);
+        std::memcpy((char*)&sin.sin_addr,*cp,hp->h_length);
 
         if (x < 0)
         {
-            fprintf(stderr, "trying %s\n", inet_ntoa(sin.sin_addr));
+            std::fprintf(stderr, "trying %s\n", inet_ntoa(sin.sin_addr));
         }
         x = connect(s, (struct sockaddr*)&sin, sizeof (sin));
         if (x == 0)
         {
             break;
         }
-        fprintf(stderr, "connection to %s: ", inet_ntoa(sin.sin_addr));
-        perror("");
+        std::fprintf(stderr, "connection to %s: ", inet_ntoa(sin.sin_addr));
+        std::perror("");
         (void) close(s);
     }
     if (x < 0) {
-        fprintf(stderr, "giving up...\n");
+        std::fprintf(stderr, "giving up...\n");
         return -1;
     }
 #endif /* !INET6 */

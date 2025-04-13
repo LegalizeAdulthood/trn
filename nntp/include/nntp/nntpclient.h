@@ -4,16 +4,18 @@
 #ifndef TRN_NNTPCLIENT_H
 #define TRN_NNTPCLIENT_H
 
-#include <stdio.h>
-#include <functional>
-#include <memory>
-#include <stdexcept>
-#include <string>
+#include "trn/enum-flags.h"
+#include "trn/util.h"
 
 #include <boost/system/error_code.hpp>
 
-#include "trn/enum-flags.h"
-#include "trn/util.h"
+#include <cstdio>
+#include <cstring>
+#include <functional>
+#include <memory>
+#include <stdexcept>
+#include <stdlib.h> // size_t
+#include <string>
 
 enum nntp_flags
 {
@@ -105,7 +107,7 @@ inline char *nntp_get_a_line(char *buffer, int buffer_length, bool realloc_ok)
             throw std::runtime_error("not implemented");
         }
     }
-    strncpy(buffer, line.c_str(), line.length() + 1);
+    std::strncpy(buffer, line.c_str(), line.length() + 1);
     return buffer;
 }
 
@@ -129,15 +131,15 @@ void             nntp_close(bool send_quit);
 
 inline void nntp_advise(const char *str)
 {
-    fputs(str, stdout);
+    std::fputs(str, stdout);
 }
 inline void nntp_init_error(const char *str)
 {
-    fputs(str, stdout);
+    std::fputs(str, stdout);
 }
 inline void nntp_error(const char *str)
 {
-    fputs(str, stderr);
+    std::fputs(str, stderr);
 }
 
 #endif
