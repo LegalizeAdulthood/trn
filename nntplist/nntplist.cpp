@@ -17,12 +17,11 @@
 #include <cstring>
 #include <string>
 
-void Usage();
+static void usage();
 
-char *g_server_name{};
+static char *s_server_name{};
 std::string g_nntp_auth_file;
-int debug{};             /* make nntpclient.c happy */
-char g_buf[LBUFLEN + 1]{}; /* general purpose line buffer */
+int debug{};             /* make nntpclient happy */
 
 int main(int argc, char *argv[])
 {
@@ -37,7 +36,7 @@ int main(int argc, char *argv[])
             case 'o':
                 if (out_fp || !--argc)
                 {
-                    Usage();
+                    usage();
                 }
                 out_fp = std::fopen(*++argv, "w");
                 if (out_fp == nullptr) {
@@ -48,12 +47,12 @@ int main(int argc, char *argv[])
             case 'x':
                 if (wildarg || !--argc)
                 {
-                    Usage();
+                    usage();
                 }
                 wildarg = *++argv;
                 break;
             default:
-                Usage();
+                usage();
                 /* NO RETURN */
             }
         }
@@ -63,7 +62,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            Usage();
+            usage();
         }
     }
     if (action && string_case_equal(action, "active"))
@@ -89,11 +88,11 @@ int main(int argc, char *argv[])
     }
     if (std::strcmp(cp,"local") != 0)
     {
-        g_server_name = savestr(cp);
-        cp = std::strchr(g_server_name, ';');
+        s_server_name = savestr(cp);
+        cp = std::strchr(s_server_name, ';');
         if (!cp)
         {
-            cp = std::strchr(g_server_name, ':');
+            cp = std::strchr(s_server_name, ':');
         }
         if (cp) {
             *cp = '\0';
@@ -107,9 +106,9 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (g_server_name) {
+    if (s_server_name) {
         if (init_nntp() < 0
-         || nntp_connect(g_server_name,false) <= 0)
+         || nntp_connect(s_server_name,false) <= 0)
         {
             std::exit(1);
         }
@@ -205,7 +204,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void Usage()
+static void usage()
 {
     std::fprintf(stderr, "Usage: nntplist [-x WildSpec] [-o OutputFile] [type]\n"
                     "\n"
