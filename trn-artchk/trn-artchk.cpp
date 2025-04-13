@@ -19,7 +19,10 @@
 
 #include <string>
 
-#define MAXNGS 100
+enum
+{
+    MAX_NGS = 100
+};
 
 int server_connection();
 int nntp_handle_timeout();
@@ -37,9 +40,9 @@ int main(int argc, char *argv[])
     bool check_ng = false;
     char buff[LBUFLEN];
     char*cp;
-    char*ngptrs[MAXNGS];
-    int  nglens[MAXNGS];
-    int  foundactive[MAXNGS];
+    char*ngptrs[MAX_NGS];
+    int  nglens[MAX_NGS];
+    int  foundactive[MAX_NGS];
     int  max_col_len;
     int  line_num = 0;
     int  ngcnt = 0;
@@ -112,7 +115,7 @@ int main(int argc, char *argv[])
                 {
                     *cp2++ = '\0';
                 }
-                if (ngcnt < MAXNGS) {
+                if (ngcnt < MAX_NGS) {
                     nglens[ngcnt] = strlen(cp);
                     foundactive[ngcnt] = 0;
                     ngptrs[ngcnt] = safemalloc(nglens[ngcnt]+1);
