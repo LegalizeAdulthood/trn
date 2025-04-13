@@ -216,7 +216,7 @@ void decode_switch(const char *s)
                 s++;
             }
             strcpy(tmpbuf,s);
-            char *tmp = strchr(tmpbuf,'=');
+            char *tmp = std::strchr(tmpbuf,'=');
             if (tmp) {
                 *tmp++ = '\0';
                 tmp = export_var(tmpbuf,tmp) - (tmp-tmpbuf);
@@ -479,7 +479,7 @@ void save_init_environment(char *str)
 void write_init_environment(FILE *fp)
 {
     for (int i = 0; i < s_init_environment_cnt; i++) {
-        char *s = strchr(s_init_environment_strings[i], '=');
+        char *s = std::strchr(s_init_environment_strings[i], '=');
         if (!s)
         {
             continue;

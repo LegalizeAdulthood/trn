@@ -351,7 +351,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
     char     ch;
 
     /* Make a modifiable copy of the line */
-    char *cp = strchr(orig_line, '\n');
+    char *cp = std::strchr(orig_line, '\n');
     if (cp != nullptr)
     {
         len = cp - orig_line;
@@ -412,7 +412,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
             /* A "normal" header line -- output keyword and set s_header_indent
             ** _except_ for the first line, which is a non-standard header.
             */
-            if (!header_line || !(cp = strchr(line, ':')) || *++cp != ' ')
+            if (!header_line || !(cp = std::strchr(line, ':')) || *++cp != ' ')
             {
                 s_header_indent = 0;
             }
@@ -507,8 +507,8 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
             ** and the '@' flagging our prior node.
             */
             cp = s_tree_lines[header_line];
-            char *cp1 = strchr(cp, '*');
-            char *cp2 = strchr(cp, '@');
+            char *cp1 = std::strchr(cp, '*');
+            char *cp2 = std::strchr(cp, '@');
             if (cp1 != nullptr)
             {
                 *cp1 = '\0';

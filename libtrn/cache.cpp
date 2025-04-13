@@ -277,19 +277,19 @@ void check_poster(ARTICLE *ap)
             char* u;
             char* h;
             strcpy(s,ap->from);
-            if ((h=strchr(s,'<')) != nullptr) { /* grab the good part */
+            if ((h=std::strchr(s,'<')) != nullptr) { /* grab the good part */
                 s = h+1;
-                if ((h=strchr(s,'>')) != nullptr)
+                if ((h=std::strchr(s,'>')) != nullptr)
                 {
                     *h = '\0';
                 }
-            } else if ((h=strchr(s,'(')) != nullptr) {
+            } else if ((h=std::strchr(s,'(')) != nullptr) {
                 while (h-- != s && *h == ' ')
                 {
                 }
                 h[1] = '\0';            /* or strip the comment */
             }
-            if ((h = strchr(s, '%')) != nullptr || (h = strchr(s, '@')))
+            if ((h = std::strchr(s, '%')) != nullptr || (h = std::strchr(s, '@')))
             {
                 *h++ = '\0';
                 u = s;
@@ -549,7 +549,7 @@ int decode_header(char *to, char *from, int size)
     /* Pass 1 to decode coded bytes (which might be character fragments - so 1 pass is wrong) */
     for (int i = size; *from && i--; ) {
         if (*from == '=' && from[1] == '?') {
-            char* q = strchr(from+2,'?');
+            char* q = std::strchr(from+2,'?');
             char ch = (q && q[2] == '?')? q[1] : 0;
             char* e;
 
@@ -563,7 +563,7 @@ int decode_header(char *to, char *from, int size)
 #endif
                 e = q+2;
                 do {
-                    e = strchr(e+1, '?');
+                    e = std::strchr(e+1, '?');
                 } while (e && e[1] != '=');
                 if (e) {
                     int len = e - from + 2;
@@ -675,8 +675,8 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
             free(ap->xrefs);
         }
         /* Exclude an xref for just this group or "(none)". */
-        cp = strchr(s, ':');
-        if (!cp || !strchr(cp+1, ':')) {
+        cp = std::strchr(s, ':');
+        if (!cp || !std::strchr(cp+1, ':')) {
             free(s);
             s = "";
         }

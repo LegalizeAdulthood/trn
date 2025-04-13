@@ -295,7 +295,7 @@ char *sf_get_extra_header(ART_NUM art, int hnum)
 
     for (char *s = g_headbuf; s && *s && *s != '\n'; s++) {
         if (string_case_equal(head, s,len)) {
-            s = strchr(s,':');
+            s = std::strchr(s,':');
             if (!s)
             {
                 return "";
@@ -307,7 +307,7 @@ char *sf_get_extra_header(ART_NUM art, int hnum)
                 return "";
             }
             head = s;           /* now point to start of new text */
-            s = strchr(s,'\n');
+            s = std::strchr(s,'\n');
             if (!s)
             {
                 return "";
@@ -317,7 +317,7 @@ char *sf_get_extra_header(ART_NUM art, int hnum)
             *s = '\n';
             return lbuf;
         }
-        s = strchr(s,'\n');     /* '\n' will be skipped on loop increment */
+        s = std::strchr(s,'\n');     /* '\n' will be skipped on loop increment */
     }
     return "";
 }
@@ -358,7 +358,7 @@ char *sf_cmd_fname(char *s)
 {
     static char lbuf[LBUFLEN];
 
-    char *s1 = strchr(s, '/');
+    char *s1 = std::strchr(s, '/');
     if (s1)
     {
         return s;
@@ -739,7 +739,7 @@ bool sf_do_line(char *line, bool check)
         s_sf_entries[g_sf_num_entries-1].str2 = nullptr;
         /* Note: consider allowing * wildcard on other header filenames */
         if (j == FROM_LINE) {   /* may have * wildcard */
-            s2 = strchr(s, '*');
+            s2 = std::strchr(s, '*');
             if (s2 != nullptr)
             {
                 s_sf_entries[g_sf_num_entries - 1].str2 = mp_savestr(s2 + 1, MP_SCORE1);

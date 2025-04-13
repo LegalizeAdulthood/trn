@@ -110,7 +110,7 @@ bool ov_init()
                 continue;
             }
             if (i < OV_MAX_FIELDS) {
-                char *s = strchr(g_buf,':');
+                char *s = std::strchr(g_buf,':');
                 fieldnum[i] = ov_num(g_buf,s);
                 fieldflags[fieldnum[i]] = FF_HAS_FIELD |
                     ((s && string_case_equal("full", s+1,4))? FF_HAS_HDR : FF_NONE);
@@ -412,7 +412,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
 
     memset((char*)fields,0,sizeof fields);
     for (int i = 0; cp && i < OV_MAX_FIELDS; cp = tab) {
-        tab = strchr(cp, '\t');
+        tab = std::strchr(cp, '\t');
         if (tab != nullptr)
         {
             *tab++ = '\0';
@@ -423,7 +423,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
             break;
         }
         if (fieldflags[fn] & (FF_HAS_HDR | FF_CHECK4HDR)) {
-            char* s = strchr(cp, ':');
+            char* s = std::strchr(cp, ':');
             if (fieldflags[fn] & FF_CHECK4HDR) {
                 if (s)
                 {
@@ -482,8 +482,8 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
     if (fieldflags[OV_XREF] & (FF_HAS_FIELD | FF_CHECK4FIELD)) {
         if (!article->xrefs && fields[OV_XREF]) {
             /* Exclude an xref for just this group */
-            cp = strchr(fields[OV_XREF], ':');
-            if (cp && strchr(cp+1, ':'))
+            cp = std::strchr(fields[OV_XREF], ':');
+            if (cp && std::strchr(cp+1, ':'))
             {
                 article->xrefs = savestr(fields[OV_XREF]);
             }
@@ -539,7 +539,7 @@ static const char *ov_name(const char *group)
     char *cp = g_buf + std::strlen(g_buf);
     *cp++ = '/';
     strcpy(cp, group);
-    while ((cp = strchr(cp, '.')))
+    while ((cp = std::strchr(cp, '.')))
     {
         *cp = '/';
     }

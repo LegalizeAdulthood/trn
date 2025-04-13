@@ -2174,7 +2174,7 @@ void xmouse_check()
         }
         else {
             interp(g_msg, sizeof g_msg, g_mouse_modes);
-            turn_it_on = (strchr(g_msg, static_cast<char>(g_mode)) != nullptr);
+            turn_it_on = (std::strchr(g_msg, static_cast<char>(g_mode)) != nullptr);
         }
         if (turn_it_on) {
             switch (mmode) {

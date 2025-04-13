@@ -45,7 +45,7 @@ ARTICLE *allocate_article(ART_NUM artnum)
 
 static void fix_msgid(char *msgid)
 {
-    char *cp = strchr(msgid, '@');
+    char *cp = std::strchr(msgid, '@');
     if (cp != nullptr)
     {
         while (*++cp) {
@@ -267,7 +267,7 @@ void thread_article(ARTICLE *article, char *references)
         prev = article;
         ap = nullptr;
         if ((cp = strrchr(references, '<')) == nullptr
-         || (end = strchr(cp+1, ' ')) == nullptr)
+         || (end = std::strchr(cp+1, ' ')) == nullptr)
         {
             end = references + std::strlen(references) - 1;
         }
@@ -429,7 +429,7 @@ void rover_thread(ARTICLE *article, char *s)
             link_child(prev);
             break;
         }
-        char *end = strchr(s, '>');
+        char *end = std::strchr(s, '>');
         if (!end)
         {
             return;                             /* Impossible! */
@@ -473,7 +473,7 @@ static char *valid_message_id(char *start, char *end)
         *(end--) = '\0';
     }
     /* Id must be "<...@...>" */
-    if (*start != '<' || *end != '>' || (mid = strchr(start, '@')) == nullptr
+    if (*start != '<' || *end != '>' || (mid = std::strchr(start, '@')) == nullptr
      || mid == start+1 || mid+1 == end) {
         return nullptr;
     }

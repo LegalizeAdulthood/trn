@@ -1107,7 +1107,7 @@ reinp_selector:
     {
         ch = '.';
     }
-    char *in_select = strchr(g_sel_chars, ch);
+    char *in_select = std::strchr(g_sel_chars, ch);
     if (g_use_sel_num && ch >= '0' && ch <= '9') {
         int ch_num1 = ch;
         /* would be *very* nice to use wait_key_pause() here */
@@ -2030,8 +2030,8 @@ static char another_command(char_int ch)
     if (ch != 0 && ch != '\n' && ch != '\r' && (!skip_q || ch != 'q')) {
         if (ch > 0) {
             /* try to optimize the screen update for some commands. */
-            if (!strchr(g_sel_chars, ch)
-             && (strchr(SPECIAL_CMD_LETTERS, ch) || ch == Ctl('k'))) {
+            if (!std::strchr(g_sel_chars, ch)
+             && (std::strchr(SPECIAL_CMD_LETTERS, ch) || ch == Ctl('k'))) {
                 s_sel_ret = ch;
                 return ch;
             }

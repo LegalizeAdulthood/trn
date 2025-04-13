@@ -287,7 +287,7 @@ char *readartbuf(bool view_inline)
         else if (g_mime_section->encoding == MENCODE_BASE64) {
             o = line_offset + extra_offset;
             len = b64_decodestring(bp+o, bp+o) + line_offset;
-            s = strchr(bp + o, '\n');
+            s = std::strchr(bp + o, '\n');
             if (s == nullptr)
             {
                 if (read_something >= 0) {
@@ -309,7 +309,7 @@ char *readartbuf(bool view_inline)
         }
         o = filter_offset + extra_offset;
         len = filter_html(bp+filter_offset, bp+o) + filter_offset;
-        if (len == filter_offset || (s = strchr(bp,'\n')) == nullptr) {
+        if (len == filter_offset || (s = std::strchr(bp,'\n')) == nullptr) {
             if (read_something >= 0) {
                 read_offset = len;
                 line_offset = len;
@@ -452,7 +452,7 @@ char *readartbuf(bool view_inline)
   done:
     word_wrap = g_tc_COLS - g_word_wrap_offset;
     if (read_something && g_word_wrap_offset >= 0 && word_wrap > 20 && bp) {
-        for (char* cp = bp; *cp && (s = strchr(cp, '\n')) != nullptr; cp = s+1) {
+        for (char* cp = bp; *cp && (s = std::strchr(cp, '\n')) != nullptr; cp = s+1) {
             if (s - cp > g_tc_COLS) {
                 char* t;
                 do {

@@ -71,9 +71,9 @@ char *decode_fix_fname(const char *s)
 #endif
         if (isprint(*s)
 #ifdef GOODCHARS
-         && strchr(GOODCHARS, *s)
+         && std::strchr(GOODCHARS, *s)
 #else
-         && !strchr(BADCHARS, *s)
+         && !std::strchr(BADCHARS, *s)
 #endif
         )
         {

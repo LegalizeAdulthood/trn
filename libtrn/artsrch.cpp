@@ -280,7 +280,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
             goto exit;
         }
     }
-    if (cmdlst && strchr(cmdlst,'='))
+    if (cmdlst && std::strchr(cmdlst,'='))
     {
         ret = SRCH_ERROR;               /* listing subjects is an error? */
     }
@@ -511,7 +511,7 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
                 }
                 in_sig = true;
             }
-            char *nlptr = strchr(s, '\n');
+            char *nlptr = std::strchr(s, '\n');
             if (nlptr != nullptr)
             {
                 ch = *++nlptr;

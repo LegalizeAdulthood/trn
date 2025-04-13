@@ -730,7 +730,7 @@ static bool open_newsrc(NEWSRC *rp)
                 long actnum;
                 long descnum;
                 g_buf[std::strlen(g_buf)-1] = '\0';
-                char *s = strchr(g_buf, ':');
+                char *s = std::strchr(g_buf, ':');
                 if (s != nullptr && s[1] == ' ' && s[2])
                 {
                     g_lastngname = s+2;
@@ -880,7 +880,7 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
     {
         ntoforget = "n to forget it.\n";
     }
-    if (strchr(what,'/')) {
+    if (std::strchr(what,'/')) {
         dingaling();
         printf("\nBad newsgroup name.\n");
         termdown(2);

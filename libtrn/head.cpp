@@ -199,13 +199,13 @@ header_line_type get_header_num(char *s)
         g_htype[CUSTOM_LINE].minpos = -1;
         g_htype[CUSTOM_LINE].maxpos = 0;
         for (char *bp = g_headbuf; *bp; bp = end) {
-            if (!(end = strchr(bp,'\n')) || end == bp)
+            if (!(end = std::strchr(bp,'\n')) || end == bp)
             {
                 break;
             }
             char ch = *++end;
             *end = '\0';
-            s = strchr(bp,':');
+            s = std::strchr(bp,':');
             *end = ch;
             if (!s || (i = set_line_type(bp,s)) != CUSTOM_LINE)
             {
@@ -213,7 +213,7 @@ header_line_type get_header_num(char *s)
             }
             g_htype[CUSTOM_LINE].minpos = bp - g_headbuf;
             while (is_hor_space(*end)) {
-                if (!(end = strchr(end, '\n'))) {
+                if (!(end = std::strchr(end, '\n'))) {
                     end = bp + std::strlen(bp);
                     break;
                 }
@@ -283,7 +283,7 @@ bool parseline(char *art_buf, int newhide, int oldhide)
     }
 
     end_header_line();
-    char *s = strchr(art_buf, ':');
+    char *s = std::strchr(art_buf, ':');
     if (s == nullptr) { /* is it the end of the header? */
             /* Did NNTP ship us a mal-formed header line? */
             if (s_reading_nntp_header && *art_buf && *art_buf != '\n') {
@@ -621,12 +621,12 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
                 }
                 last_buf = line;
                 last_buflen = g_buflen_last_line_got;
-                t = strchr(line, '\r');
+                t = std::strchr(line, '\r');
                 if (t != nullptr)
                 {
                     *t = '\0';
                 }
-                if (!(t = strchr(line, ' ')))
+                if (!(t = std::strchr(line, ' ')))
                 {
                     continue;
                 }

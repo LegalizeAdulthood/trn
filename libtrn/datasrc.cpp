@@ -257,7 +257,7 @@ static DATASRC *new_datasrc(const char *name, char **vals)
     if (v != nullptr)
     {
         dp->newsid = savestr(v);
-        char *cp = strchr(dp->newsid, ';');
+        char *cp = std::strchr(dp->newsid, ';');
         if (cp != nullptr)
         {
             *cp = '\0';
@@ -616,7 +616,7 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
         /*dp->act_sf.lp->recent = node;*/
         act_pos = node->low + data.dat_len;
         lbp = node->data + data.dat_len;
-        lbp_len = strchr(lbp, '\n') - lbp + 1;
+        lbp_len = std::strchr(lbp, '\n') - lbp + 1;
     }
     else {
         lbp = nullptr;
@@ -1136,7 +1136,7 @@ int find_close_match()
         case 0:
             break;
         case 1: {
-            char* cp = strchr(s_ngptrs[0], ' ');
+            char* cp = std::strchr(s_ngptrs[0], ' ');
             if (cp)
             {
                 *cp = '\0';
@@ -1234,7 +1234,7 @@ static int get_near_miss()
     }
     s_ngn = std::min(s_ngn, 9);         /* Since we're using single digits.... */
     for (int i = 0; i < s_ngn; i++) {
-        char* cp = strchr(s_ngptrs[i], ' ');
+        char* cp = std::strchr(s_ngptrs[i], ' ');
         if (cp)
         {
             *cp = '\0';
@@ -1285,11 +1285,11 @@ reask:
             goto reask;
         default:
             if (isdigit(*g_buf)) {
-                char* s = strchr(options, *g_buf);
+                char* s = std::strchr(options, *g_buf);
 
                 int i = s ? (s - options) : s_ngn;
                 if (i >= 0 && i < s_ngn) {
-                    char* cp = strchr(s_ngptrs[i], ' ');
+                    char* cp = std::strchr(s_ngptrs[i], ' ');
                     if (cp)
                     {
                         *cp = '\0';

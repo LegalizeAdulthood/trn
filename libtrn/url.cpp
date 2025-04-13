@@ -123,7 +123,7 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
     /* serious security holes could result without this code */
     int l = std::strlen(cmdline);
     for (int x = 0; cmdline[x]; x++) {
-        if (strchr("&;`'\"|*?~<>^()[]{}$\\",cmdline[x])) {
+        if (std::strchr("&;`'\"|*?~<>^()[]{}$\\",cmdline[x])) {
             for (int y = l + 1; y > x; y--)
             {
                 cmdline[y] = cmdline[y-1];

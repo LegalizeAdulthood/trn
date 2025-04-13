@@ -308,12 +308,12 @@ do_article_result do_article()
             if (g_in_header && g_do_hiding && (g_htype[g_in_header].flags & HT_MAGIC)) {
                 switch (g_in_header) {
                   case NEWSGROUPS_LINE:
-                    s = strchr(bufptr, '\n');
+                    s = std::strchr(bufptr, '\n');
                     if (s != nullptr)
                     {
                         *s = '\0';
                     }
-                    hide_this_line = (strchr(bufptr,',') == nullptr)
+                    hide_this_line = (std::strchr(bufptr,',') == nullptr)
                         && !strcmp(bufptr+12,g_ngname.c_str());
                     if (s != nullptr)
                     {
@@ -327,7 +327,7 @@ do_article_result do_article()
                     }
                     break;
                  case FROM_LINE:
-                    if ((s = strchr(bufptr,'\n')) != nullptr
+                    if ((s = std::strchr(bufptr,'\n')) != nullptr
                      && s-bufptr < sizeof g_art_line)
                     {
                         safecpy(g_art_line,bufptr,s-bufptr+1);
@@ -637,7 +637,7 @@ do_article_result do_article()
             }
             else if (g_in_header)
             {
-                g_artpos = strchr(g_headbuf + g_artpos, '\n') - g_headbuf + 1;
+                g_artpos = std::strchr(g_headbuf + g_artpos, '\n') - g_headbuf + 1;
             }
             else
             {
@@ -790,7 +790,7 @@ bool maybe_set_color(const char *cp, bool backsearch)
     }
     else {
         cp = skip_hor_space(cp);
-        if (strchr(">}]#!:|", *cp))
+        if (std::strchr(">}]#!:|", *cp))
         {
             color_object(COLOR_CITEDTEXT, false);
         }
@@ -896,7 +896,7 @@ page_switch_result page_switch()
         g_innerlight = 0;
         g_innersearch = 0; /* assume not found */
         while ((s = readartbuf(false)) != nullptr) {
-            nlptr = strchr(s, '\n');
+            nlptr = std::strchr(s, '\n');
             if (nlptr != nullptr)
             {
                 ch = *++nlptr;
@@ -1163,8 +1163,8 @@ page_switch_result page_switch()
                case '\b': case '\177':
 leave_pager:
         g_reread = false;
-        if (strchr("nNpP\016\020",*g_buf) == nullptr
-         && strchr("wWsSe:!&|/?123456789.",*g_buf) != nullptr) {
+        if (std::strchr("nNpP\016\020",*g_buf) == nullptr
+         && std::strchr("wWsSe:!&|/?123456789.",*g_buf) != nullptr) {
             setdfltcmd();
             color_object(COLOR_CMD, true);
             interpsearch(g_cmd_buf, sizeof g_cmd_buf, g_mailcall, g_buf);

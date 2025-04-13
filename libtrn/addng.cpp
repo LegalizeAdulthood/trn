@@ -178,7 +178,7 @@ static void new_nntp_groups(DATASRC *dp)
             break;
         }
         foundSomething = true;
-        s = strchr(g_ser_line, ' ');
+        s = std::strchr(g_ser_line, ' ');
         if (s != nullptr)
         {
             len = s - g_ser_line;
@@ -257,7 +257,7 @@ static void new_local_groups(DATASRC *dp)
     while (fgets(g_buf, LBUFLEN, fp) != nullptr)
     {
         char *s;
-        if ((s = strchr(g_buf, ' ')) == nullptr || (lastone = atol(s + 1)) < dp->lastnewgrp)
+        if ((s = std::strchr(g_buf, ' ')) == nullptr || (lastone = atol(s + 1)) < dp->lastnewgrp)
         {
             continue;
         }
@@ -420,7 +420,7 @@ bool scanactive(bool add_matching)
 static int list_groups(int keylen, HASHDATUM *data, int add_matching)
 {
     char* bp = ((LISTNODE*)data->dat_ptr)->data + data->dat_len;
-    int const linelen = strchr(bp, '\n') - bp + 1;
+    int const linelen = std::strchr(bp, '\n') - bp + 1;
     (void) memcpy(g_buf,bp,linelen);
     g_buf[linelen] = '\0';
     scanline(g_buf,add_matching);
@@ -429,7 +429,7 @@ static int list_groups(int keylen, HASHDATUM *data, int add_matching)
 
 static void scanline(char *actline, bool add_matching)
 {
-    char *s = strchr(actline, ' ');
+    char *s = std::strchr(actline, ' ');
     if (s == nullptr)
     {
         return;

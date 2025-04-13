@@ -81,7 +81,7 @@ void kfile_init()
             g_msgid_hash = hashcreate(1999, msgid_cmp);
             while (fgets(g_buf, sizeof g_buf, fp) != nullptr) {
                 if (*g_buf == '<') {
-                    cp = strchr(g_buf,' ');
+                    cp = std::strchr(g_buf,' ');
                     if (!cp)
                     {
                         cp = ",";
@@ -95,7 +95,7 @@ void kfile_init()
                         g_kf_changethd_cnt++;
                         continue;
                     }
-                    cp = strchr(s_thread_cmd_ltr, *cp);
+                    cp = std::strchr(s_thread_cmd_ltr, *cp);
                     if (cp != nullptr)
                     {
                         int auto_flag = s_thread_cmd_flag[cp - s_thread_cmd_ltr];
@@ -180,7 +180,7 @@ int do_kfile(FILE *kfp, int entering)
                 continue;
             }
             cp = filexp(cp);
-            if (!strchr(cp,'/')) {
+            if (!std::strchr(cp,'/')) {
                 set_ngname(cp);
                 cp = filexp(get_val_const("KILLLOCAL",s_killlocal));
                 set_ngname(g_ngptr->rcline);
@@ -277,7 +277,7 @@ int do_kfile(FILE *kfp, int entering)
                 perform_status_init(g_ngptr->toread);
                 last_kill_type = '<';
             }
-            cp = strchr(bp,' ');
+            cp = std::strchr(bp,' ');
             if (!cp)
             {
                 cp = "T,";
@@ -294,7 +294,7 @@ int do_kfile(FILE *kfp, int entering)
                     {
                         cp++;
                     }
-                    cp = strchr(s_thread_cmd_ltr, *cp);
+                    cp = std::strchr(s_thread_cmd_ltr, *cp);
                     if (cp != nullptr)
                     {
                         ap->autofl = s_thread_cmd_flag[cp-s_thread_cmd_ltr];
@@ -488,7 +488,7 @@ void rewrite_kfile(ART_NUM thru)
                 if (strncmp(cp, g_ngptr->rc->name, len) != 0 || (cp[len] && !isspace(cp[len])))
                 {
                     fputs(g_buf,s_newkfp);
-                    needs_newline = !strchr(g_buf,'\n');
+                    needs_newline = !std::strchr(g_buf,'\n');
                 }
                 continue;
             }
@@ -505,7 +505,7 @@ void rewrite_kfile(ART_NUM thru)
             }
             else {
                 fputs(g_buf,s_newkfp);
-                needs_newline = !strchr(bp,'\n');
+                needs_newline = !std::strchr(bp,'\n');
             }
             has_content = true;
         }
@@ -519,7 +519,7 @@ void rewrite_kfile(ART_NUM thru)
                 bp = skip_space(g_buf);
                 if (*bp == '*') {
                     fputs(g_buf,s_newkfp);
-                    needs_newline = !strchr(bp,'\n');
+                    needs_newline = !std::strchr(bp,'\n');
                 }
             }
             if (needs_newline)
@@ -767,7 +767,7 @@ void edit_kfile()
                     g_kf_state |= KFS_NORMAL_LINES;
                 }
                 else if (*bp == '<') {
-                    char* cp = strchr(bp,' ');
+                    char* cp = std::strchr(bp,' ');
                     if (!cp)
                     {
                         cp = ",";
@@ -783,7 +783,7 @@ void edit_kfile()
                         {
                             cp++;
                         }
-                        cp = strchr(s_thread_cmd_ltr, *cp);
+                        cp = std::strchr(s_thread_cmd_ltr, *cp);
                         if (cp != nullptr)
                         {
                             ap->autofl |= s_thread_cmd_flag[cp - s_thread_cmd_ltr];

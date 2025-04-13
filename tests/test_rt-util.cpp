@@ -10,6 +10,7 @@
 #include "test_config.h"
 
 #include <cstring>
+#include <string.h>
 
 using namespace testing;
 

@@ -449,9 +449,9 @@ void set_toread(NGDATA *np, bool lax_high_check)
     mybuf[length++] = ',';
     mybuf[length] = '\0';
     char *s = skip_space(mybuf);
-    for ( ; (c = strchr(s,',')) != nullptr ; s = ++c) {  /* for each range */
+    for ( ; (c = std::strchr(s,',')) != nullptr ; s = ++c) {  /* for each range */
         *c = '\0';                  /* keep index from running off */
-        char *h = strchr(s, '-');
+        char *h = std::strchr(s, '-');
         if (h != nullptr) /* find - in range, if any */
         {
             unread -= (newmax = atol(h + 1)) - atol(s) + 1;

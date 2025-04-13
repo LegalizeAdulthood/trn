@@ -73,7 +73,7 @@ void rc_to_bits()
     mybuf[i] = '\0';
     s = mybuf;                          /* initialize the for loop below */
     if (set_firstart(s)) {
-        s = strchr(s,',') + 1;
+        s = std::strchr(s,',') + 1;
         for (i = article_first(g_absfirst); i < g_firstart; i = article_next(i))
         {
             article_ptr(i)->flags &= ~AF_UNREAD;
@@ -98,10 +98,10 @@ void rc_to_bits()
     }
 #endif
     i = g_firstart;
-    for ( ; (c = strchr(s,',')) != nullptr; s = ++c) {  /* for each range */
+    for ( ; (c = std::strchr(s,',')) != nullptr; s = ++c) {  /* for each range */
         ART_NUM max;
         *c = '\0';                      /* do not let index see past comma */
-        h = strchr(s,'-');
+        h = std::strchr(s,'-');
         ART_NUM min = atol(s);
         min = std::max(min, g_firstart);    /* make sure range is in range */
         if (min > g_lastart)
@@ -330,7 +330,7 @@ void find_existing_articles()
                     ap->flags |= AF_EXISTS;
                 }
 #if 0
-                s = strchr(g_ser_line, ' ');
+                s = std::strchr(g_ser_line, ' ');
                 if (s)
                 {
                     rover_thread(article_ptr(an), s);
@@ -708,7 +708,7 @@ static int chase_xref(ART_NUM artnum, int markread)
     {
         while (*curxref) {          /* for each newsgroup */
             curxref = cpytill(tmpbuf,curxref,' ');
-            xartnum = strchr(tmpbuf,':');
+            xartnum = std::strchr(tmpbuf,':');
             if (!xartnum)
             {
                 break;
@@ -776,7 +776,7 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
 #ifndef ANCIENT_NEWS
     /* Grab the site from the first component of the Path line */
     sitebuf = fetchlines(artnum,PATH_LINE);
-    s = strchr(sitebuf, '!');
+    s = std::strchr(sitebuf, '!');
     if (s != nullptr)
     {
         *s = '\0';
@@ -788,7 +788,7 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
     s = instr(sitebuf, "; site ", true);
     if (s != nullptr)
     {
-        char* t = strchr(s+7, '.');
+        char* t = std::strchr(s+7, '.');
         if (t)
         {
             *t = '\0';

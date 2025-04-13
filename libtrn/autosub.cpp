@@ -2,8 +2,6 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include <string>
-
 #include "config/common.h"
 #include "trn/autosub.h"
 
@@ -11,6 +9,9 @@
 #include "trn/final.h"
 #include "trn/ngsrch.h"
 #include "trn/search.h"
+
+#include <cstring>
+#include <string>
 
 static bool matchlist(const char *patlist, const char *s);
 
@@ -51,7 +52,7 @@ static bool matchlist(const char *patlist, const char *s)
             tmpresult = true;
         }
 
-        const char *p = strchr(patlist, ',');
+        const char *p = std::strchr(patlist, ',');
         std::string pattern;
         if (p != nullptr)
         {

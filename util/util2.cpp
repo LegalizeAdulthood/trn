@@ -153,7 +153,7 @@ char *filexp(const char *text)
                                 {
                                     if (d)
                                     {
-                                        d = strchr(d + 1, ':');
+                                        d = std::strchr(d + 1, ':');
                                     }
                                 }
                                 if (d)

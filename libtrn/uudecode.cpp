@@ -50,7 +50,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
             }
             s += 9;
             char *tmpfilename = s;
-            s = strchr(s, ' ');
+            s = std::strchr(s, ' ');
             if (!s)
             {
                 return 0;
@@ -70,7 +70,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
                 return 0;
             }
             char *tmpfilename = s + 5;
-            s = strchr(tmpfilename, ' ');
+            s = std::strchr(tmpfilename, ' ');
             if (!s)
             {
                 return 0;
@@ -83,13 +83,13 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
         }
     }
     if (!strncmp(bp, "POST V", 6)) {
-        char *s = strchr(bp + 6, ' ');
+        char *s = std::strchr(bp + 6, ' ');
         if (!s)
         {
             return 0;
         }
         char *tmpfilename = s + 1;
-        s = strchr(tmpfilename, ' ');
+        s = std::strchr(tmpfilename, ' ');
         if (!s || strncmp(s, " (Part ", 7) != 0)
         {
             return 0;
@@ -115,7 +115,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
     }
     if (!strncmp(bp, "File: ", 6)) {
         char *tmpfilename = bp + 6;
-        char *s = strchr(tmpfilename, ' ');
+        char *s = std::strchr(tmpfilename, ' ');
         if (!s || strncmp(s, " -- part ", 9) != 0)
         {
             return 0;
@@ -156,7 +156,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
             return 0;
         }
         char *tmpfilename = s + 6;
-        s = strchr(tmpfilename, ' ');
+        s = std::strchr(tmpfilename, ' ');
         if (!s)
         {
             return 0;
@@ -221,7 +221,7 @@ decode_state uudecode(FILE *ifp, decode_state state)
         {
             break;
         }
-        char *p = strchr(g_buf, '\r');
+        char *p = std::strchr(g_buf, '\r');
         if (p) {
             p[0] = '\n';
             p[1] = '\0';

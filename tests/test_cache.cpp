@@ -3,10 +3,10 @@
  */
 #include <gtest/gtest.h>
 
-#include <string.h>
-
 #include "config/common.h"
 #include "trn/cache.h"
+
+#include <string.h>
 
 using namespace testing;
 

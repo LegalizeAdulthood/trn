@@ -848,7 +848,7 @@ void save_options(const char *filename)
 
         for (line = filebuf; line && *line; line = nlp) {
             cp = line;
-            nlp = strchr(cp, '\n');
+            nlp = std::strchr(cp, '\n');
             if (nlp)
             {
                 *nlp++ = '\0';
@@ -866,7 +866,7 @@ void save_options(const char *filename)
         }
         for (line = nlp; line && *line; line = nlp) {
             cp = line;
-            nlp = strchr(cp, '\n');
+            nlp = std::strchr(cp, '\n');
             if (nlp)
             {
                 nlp++;
@@ -1277,7 +1277,7 @@ static void set_header_list(headtype_flags flag, headtype_flags defflag, const c
     char *buff = buffer.get();
     strcpy(buff, str);
     for (;;) {
-        char *cp = strchr(buff, ',');
+        char *cp = std::strchr(buff, ',');
         if (cp != nullptr)
         {
             *cp = '\0';

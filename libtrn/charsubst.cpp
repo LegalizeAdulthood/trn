@@ -178,7 +178,7 @@ int strcharsubst(char *outb, const char *inb, int limit, char_int subst)
     default:
         break;
     }
-    const char *s = strchr(inb, '\n');
+    const char *s = std::strchr(inb, '\n');
     int len;
     if (s != nullptr && s - inb + 1 < limit)
     {

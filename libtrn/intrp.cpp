@@ -143,7 +143,7 @@ static char *skipinterp(char *pattern, const char *stoppers)
     }
 #endif
 
-    while (*pattern && (!stoppers || !strchr(stoppers,*pattern))) {
+    while (*pattern && (!stoppers || !std::strchr(stoppers,*pattern))) {
         if (*pattern == '%' && pattern[1]) {
         switch_again:
             switch (*++pattern) {
@@ -254,7 +254,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
     char scrbuf[8192];
     int metabit = 0;
 
-    while (*pattern && (!stoppers || !strchr(stoppers, *pattern)))
+    while (*pattern && (!stoppers || !std::strchr(stoppers, *pattern)))
     {
         if (*pattern == '%' && pattern[1])
         {
@@ -304,14 +304,14 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 }
                 case '/':
                     s = scrbuf;
-                    if (!cmd || !strchr("/?g",*cmd))
+                    if (!cmd || !std::strchr("/?g",*cmd))
                     {
                         *s++ = '/';
                     }
                     strcpy(s,g_lastpat.c_str());
                     s += std::strlen(s);
                     if (!cmd || *cmd != 'g') {
-                        if (cmd && strchr("/?",*cmd))
+                        if (cmd && std::strchr("/?",*cmd))
                         {
                             *s++ = *cmd;
                         }
@@ -328,7 +328,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                             if (g_art_howmuch == ARTSCOPE_ONEHDR) {
                                 safecpy(s,g_htype[g_art_srchhdr].name,
                                         (sizeof scrbuf) - (s-scrbuf));
-                                if (!(s = strchr(s,':')))
+                                if (!(s = std::strchr(s,':')))
                                 {
                                     s = scrbuf + (sizeof scrbuf) - 1;
                                 }
@@ -345,7 +345,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 case '{':
                 {
                     pattern = cpytill(scrbuf,pattern+1,'}');
-                    char *m = strchr(scrbuf, '-');
+                    char *m = std::strchr(scrbuf, '-');
                     if (m != nullptr)
                     {
                         *m++ = '\0';
@@ -359,7 +359,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 }
                 case '<':
                     pattern = cpytill(scrbuf,pattern+1,'>');
-                    s = strchr(scrbuf, '-');
+                    s = std::strchr(scrbuf, '-');
                     if (s != nullptr)
                     {
                         *s++ = '\0';
@@ -844,7 +844,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                             char *h = strrchr(refs_buf,'<');
                             *s = '<';
                             if (h && h > refs_buf) {
-                                s = strchr(refs_buf+1,'<');
+                                s = std::strchr(refs_buf+1,'<');
                                 if (s < h)
                                 {
                                     safecpy(s, h, len);
@@ -1136,14 +1136,14 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 }
                 decode_header(s, s, std::strlen(s));
                 if (address_parse) {
-                    char *h = strchr(s, '<');
+                    char *h = std::strchr(s, '<');
                     if (h != nullptr) { /* grab the good part */
                         s = h+1;
-                        if ((h=strchr(s,'>')) != nullptr)
+                        if ((h=std::strchr(s,'>')) != nullptr)
                         {
                             *h = '\0';
                         }
-                    } else if ((h=strchr(s,'(')) != nullptr) {
+                    } else if ((h=std::strchr(s,'(')) != nullptr) {
                         while (h-- != s && *h == ' ')
                         {
                         }
@@ -1182,7 +1182,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                 }
                 while (*s) {
-                    if ((re_quote && strchr(s_regexp_specials, *s))
+                    if ((re_quote && std::strchr(s_regexp_specials, *s))
                      || (tick_quote == 2 && *s == '"')) {
                         if (--destsize <= 0)
                         {
@@ -1325,7 +1325,7 @@ char *interp_backslash(char *dest, char *pattern)
             {
                 static char hex_digits[17]{"0123456789ABCDEF"};
                 i <<= 4;
-                i += strchr(hex_digits, std::toupper(*pattern)) - hex_digits;
+                i += std::strchr(hex_digits, std::toupper(*pattern)) - hex_digits;
             }
             *dest = static_cast<char>(i & 0377);
             return pattern - 1;

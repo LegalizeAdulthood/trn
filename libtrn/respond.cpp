@@ -292,7 +292,7 @@ save_result save_article()
             }
         }/* if */
     }
-    else if ((s = strchr(g_buf,'|')) != nullptr) { /* is it a pipe command? */
+    else if ((s = std::strchr(g_buf,'|')) != nullptr) { /* is it a pipe command? */
         s++;                    /* skip the | */
         s = skip_eq(s, ' ');
         safecpy(altbuf,filexp(s),sizeof altbuf);
@@ -829,7 +829,7 @@ void reply()
         seekart(g_htype[PAST_HEADER].minpos);
         g_wrapped_nl = '\n';
         while ((s = readartbuf(false)) != nullptr) {
-            char *t = strchr(s, '\n');
+            char *t = std::strchr(s, '\n');
             if (t != nullptr)
             {
                 *t = '\0';
@@ -887,7 +887,7 @@ void forward()
 #else
     mime_boundary = nullptr;
     for (char *s = hbuf; s; s = eol) {
-        eol = strchr(s, '\n');
+        eol = std::strchr(s, '\n');
         if (eol)
         {
             eol++;
@@ -908,7 +908,7 @@ void forward()
                 s = skip_eq(++s, ' ');
                 if (*s == 'b' && string_case_equal(s, "boundary=\"", 10)) {
                     mime_boundary = s+10;
-                    s = strchr(mime_boundary, '"');
+                    s = std::strchr(mime_boundary, '"');
                     if (s != nullptr)
                     {
                         *s = '\0';
@@ -1028,7 +1028,7 @@ void followup()
         seekart(g_htype[PAST_HEADER].minpos);
         g_wrapped_nl = '\n';
         while ((s = readartbuf(false)) != nullptr) {
-            char *t = strchr(s, '\n');
+            char *t = std::strchr(s, '\n');
             if (t != nullptr)
             {
                 *t = '\0';

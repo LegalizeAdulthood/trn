@@ -184,7 +184,7 @@ numnum_result numnum()
 
     perform_status_init(g_ngptr->toread);
 
-    for (s=g_buf; *s && (isdigit(*s) || strchr(" ,-.$",*s)); s++)
+    for (s=g_buf; *s && (isdigit(*s) || std::strchr(" ,-.$",*s)); s++)
     {
         if (!isdigit(*s))
         {
@@ -206,7 +206,7 @@ numnum_result numnum()
         printf("Processing...");
         fflush(stdout);
     }
-    for (char *t = tmpbuf; (c = strchr(t,',')) != nullptr; t = ++c) {
+    for (char *t = tmpbuf; (c = std::strchr(t,',')) != nullptr; t = ++c) {
         *c = '\0';
         if (*t == '.')
         {
@@ -221,7 +221,7 @@ numnum_result numnum()
             sprintf(g_msg,"(First article is %ld)",(long)g_absfirst);
             warnmsg(g_msg);
         }
-        if ((t=strchr(t,'-')) != nullptr) {
+        if ((t=std::strchr(t,'-')) != nullptr) {
             t++;
             if (*t == '$')
             {
@@ -600,7 +600,7 @@ int perform(char *cmdlst, int output_level)
                 return -1;
             }
         }
-        else if (strchr("!&sSwWae|",ch)) {
+        else if (std::strchr("!&sSwWae|",ch)) {
             if (g_one_command)
             {
                 strcpy(g_buf, cmdlst);

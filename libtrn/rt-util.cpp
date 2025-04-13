@@ -44,9 +44,9 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
 char *extract_name(char *name)
 {
     name = skip_space(name);
-    char *lparen = strchr(name, '(');
+    char *lparen = std::strchr(name, '(');
     char *rparen = strrchr(name, ')');
-    char *langle = strchr(name, '<');
+    char *langle = std::strchr(name, '<');
     if (!lparen && !langle)
     {
         return nullptr;
@@ -603,7 +603,7 @@ char *compress_date(const ARTICLE *ap, int size)
     char* t;
 
     strncpy(t = g_cmd_buf, ctime(&ap->date), size);
-    char *s = strchr(t, '\n');
+    char *s = std::strchr(t, '\n');
     if (s != nullptr)
     {
         *s = '\0';
@@ -693,7 +693,7 @@ const char *compress_subj(const ARTICLE *ap, int max)
     /* Remove "(was: oldsubject)", because we already know the old subjects.
     ** Also match "(Re: oldsubject)".  Allow possible spaces after the ('s.
     */
-    for (cp = g_buf; (cp = strchr(cp+1, '(')) != nullptr;) {
+    for (cp = g_buf; (cp = std::strchr(cp+1, '(')) != nullptr;) {
         cp = skip_eq(++cp, ' ');
         if (eq_ignore_case(cp[0], 'w') && eq_ignore_case(cp[1], 'a') && eq_ignore_case(cp[2], 's')
          && (cp[3] == ':' || cp[3] == ' ')) {

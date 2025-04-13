@@ -4,10 +4,10 @@
 
 #include <gtest/gtest.h>
 
-#include <string.h>
-
 #include "config/common.h"
 #include "trn/utf.h"
+
+#include <string.h>
 
 using namespace testing;
 

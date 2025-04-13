@@ -98,7 +98,7 @@ void mime_init()
     char *s = mcname;
     do
     {
-        char *t = strchr(s, ':');
+        char *t = std::strchr(s, ':');
         if (t != nullptr)
         {
             *t++ = '\0';
@@ -180,7 +180,7 @@ void mime_ReadMimecap(const char *mcname)
         mcp->command = savestr(mime_ParseEntryArg(&s));
         while (s) {
             t = mime_ParseEntryArg(&s);
-            char *arg = strchr(t, '=');
+            char *arg = std::strchr(t, '=');
             if (arg != nullptr)
             {
                 char* f = arg+1;
@@ -282,7 +282,7 @@ MIMECAP_ENTRY *mime_FindMimecapEntry(const char *contenttype, mimecap_flags skip
 
 bool mime_TypesMatch(const char *ct, const char *pat)
 {
-    const char* s = strchr(pat,'/');
+    const char* s = std::strchr(pat,'/');
     int len = s? s - pat : std::strlen(pat);
     bool iswild = !s || !strcmp(s+1,"*");
 
@@ -308,7 +308,7 @@ int mime_Exec(char *cmd)
                 *t++ = '\'';
                 break;
               case '{': {
-                char* s = strchr(f, '}');
+                char* s = std::strchr(f, '}');
                 if (!s)
                 {
                     return -1;
@@ -629,7 +629,7 @@ void mime_ParseSubheader(FILE *ifp, char *next_line)
                 break;
             }
         }
-        char *s = strchr(line, ':');
+        char *s = std::strchr(line, ':');
         if (s == nullptr)
         {
             break;
@@ -2021,7 +2021,7 @@ static char *find_attr(char *str, const char *attr)
     char* cp = str;
     char* s;
 
-    while ((cp = strchr(cp+1, '=')) != nullptr) {
+    while ((cp = std::strchr(cp+1, '=')) != nullptr) {
         for (s = cp; s[-1] == ' '; s--)
         {
         }
