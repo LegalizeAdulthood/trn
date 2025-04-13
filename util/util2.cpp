@@ -2,12 +2,17 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include "config/common.h"
 #include "util/util2.h"
 
-#include "util/env.h"
-#include "trn/util.h"
-#include "tool/util3.h"
+#include <config/common.h>
+#include <tool/util3.h>
+#include <trn/util.h>
+#include <util/env.h>
+
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #ifdef TILDENAME
 static char *s_tildename{};
@@ -18,9 +23,9 @@ static char *s_tildedir{};
 
 char *savestr(const char *str)
 {
-    char* newaddr = safemalloc((MEM_SIZE)(strlen(str)+1));
+    char* newaddr = safemalloc((MEM_SIZE)(std::strlen(str)+1));
 
-    strcpy(newaddr,str);
+    std::strcpy(newaddr,str);
     return newaddr;
 }
 
@@ -66,7 +71,7 @@ char *filexp(const char *text)
 {
     // sbuf exists so that we can have a const input
     static char sbuf[CBUFLEN];
-    strcpy(sbuf, text);
+    std::strcpy(sbuf, text);
     char *s = sbuf;
     static char filename[CBUFLEN];
     char scrbuf[CBUFLEN];
@@ -77,9 +82,9 @@ char *filexp(const char *text)
     if (*s == '~') {    /* does destination start with ~? */
         if (!*(++s) || *s == '/')
         {
-            sprintf(scrbuf, "%s%s", g_home_dir, s);
+            std::sprintf(scrbuf, "%s%s", g_home_dir, s);
             /* swap $HOME for it */
-            strcpy(filename, scrbuf);
+            std::strcpy(filename, scrbuf);
         }
         else if (*s == '~' && (!s[1] || s[1] == '/'))
         {
@@ -88,7 +93,7 @@ char *filexp(const char *text)
             {
                 prefix = INSTALLPREFIX;
             }
-            sprintf(scrbuf, "%s%s", prefix, s + 1);
+            std::sprintf(scrbuf, "%s%s", prefix, s + 1);
         }
         else
         {
@@ -103,19 +108,19 @@ char *filexp(const char *text)
             }
             if (s_tildedir && !strcmp(s_tildename, scrbuf))
             {
-                strcpy(scrbuf, s_tildedir);
-                strcat(scrbuf, s);
-                strcpy(filename, scrbuf);
+                std::strcpy(scrbuf, s_tildedir);
+                std::strcat(scrbuf, s);
+                std::strcpy(filename, scrbuf);
             }
             else
             {
                 if (s_tildename)
                 {
-                    free(s_tildename);
+                    std::free(s_tildename);
                 }
                 if (s_tildedir)
                 {
-                    free(s_tildedir);
+                    std::free(s_tildedir);
                 }
                 s_tildedir = nullptr;
                 s_tildename = savestr(scrbuf);
@@ -124,25 +129,25 @@ char *filexp(const char *text)
                     struct passwd *pwd = getpwnam(s_tildename);
                     if (pwd == nullptr)
                     {
-                        printf("%s is an unknown user. Using default.\n", s_tildename);
+                        std::printf("%s is an unknown user. Using default.\n", s_tildename);
                         return nullptr;
                     }
-                    sprintf(scrbuf, "%s%s", pwd->pw_dir, s);
+                    std::sprintf(scrbuf, "%s%s", pwd->pw_dir, s);
                     s_tildedir = savestr(pwd->pw_dir);
-                    strcpy(filename, scrbuf);
+                    std::strcpy(filename, scrbuf);
                     endpwent();
                 }
 #else                   /* this will run faster, and is less D space */
                 { /* just be sure LOGDIRFIELD is correct */
-                    FILE *pfp = fopen(filexp(PASSFILE), "r");
+                    std::FILE *pfp = std::fopen(filexp(PASSFILE), "r");
                     char tmpbuf[512];
 
                     if (pfp)
                     {
-                        while (fgets(tmpbuf, 512, pfp) != nullptr)
+                        while (std::fgets(tmpbuf, 512, pfp) != nullptr)
                         {
                             char *d = cpytill(scrbuf, tmpbuf, ':');
-                            if (!strcmp(scrbuf, s_tildename))
+                            if (!std::strcmp(scrbuf, s_tildename))
                             {
                                 for (int i = LOGDIRFIELD - 2; i; i--)
                                 {
@@ -155,17 +160,17 @@ char *filexp(const char *text)
                                 {
                                     cpytill(scrbuf, d + 1, ':');
                                     s_tildedir = savestr(scrbuf);
-                                    strcat(scrbuf, s);
-                                    strcpy(filename, scrbuf);
+                                    std::strcat(scrbuf, s);
+                                    std::strcpy(filename, scrbuf);
                                 }
                                 break;
                             }
                         }
-                        fclose(pfp);
+                        std::fclose(pfp);
                     }
                     if (!s_tildedir)
                     {
-                        printf("%s is an unknown user. Using default.\n", s_tildename);
+                        std::printf("%s is an unknown user. Using default.\n", s_tildename);
                         return nullptr;
                     }
                 }
@@ -174,11 +179,11 @@ char *filexp(const char *text)
 #else /* !TILDENAME */
             if (g_verbose)
             {
-                fputs("~loginname not implemented.\n", stdout);
+                std::fputs("~loginname not implemented.\n", stdout);
             }
             else
             {
-                fputs("~login not impl.\n", stdout);
+                std::fputs("~login not impl.\n", stdout);
             }
 #endif
         }
@@ -189,18 +194,18 @@ char *filexp(const char *text)
         *d++ = '%';
         if (s[1] == '{')
         {
-            strcpy(d, s + 2);
+            std::strcpy(d, s + 2);
         }
         else
         {
             *d++ = '{';
-            for (s++; isalnum(*s); s++)
+            for (s++; std::isalnum(*s); s++)
             {
                 *d++ = *s;
             }
             /* skip over token */
             *d++ = '}';
-            strcpy(d, s);
+            std::strcpy(d, s);
         }
         /* this might do some extra '%'s, but that's how the Mercedes Benz */
         dointerp(filename, sizeof filename, scrbuf, nullptr, nullptr);
@@ -227,17 +232,17 @@ char *in_string(char *big, const char *little, bool case_matters)
             } else {
                 char c;
                 char d;
-                if (isupper(*s))
+                if (std::isupper(*s))
                 {
-                    c = tolower(*s);
+                    c = std::tolower(*s);
                 }
                 else
                 {
                     c = *s;
                 }
-                if (isupper(*x))
+                if (std::isupper(*x))
                 {
-                    d = tolower(*x);
+                    d = std::tolower(*x);
                 }
                 else
                 {
@@ -263,11 +268,11 @@ char *read_auth_file(const char *file, char **pass_ptr)
     char buf[1024];
     strptr[1] = nullptr;
     strptr[0] = nullptr;
-    FILE *fp = fopen(file, "r");
+    std::FILE *fp = std::fopen(file, "r");
     if (fp != nullptr) {
         for (int i = 0; i < 2; i++) {
-            if (fgets(buf, sizeof buf, fp) != nullptr) {
-                char* cp = buf + strlen(buf) - 1;
+            if (std::fgets(buf, sizeof buf, fp) != nullptr) {
+                char* cp = buf + std::strlen(buf) - 1;
                 if (*cp == '\n')
                 {
                     *cp = '\0';
@@ -275,7 +280,7 @@ char *read_auth_file(const char *file, char **pass_ptr)
                 strptr[i] = savestr(buf);
             }
         }
-        fclose(fp);
+        std::fclose(fp);
     }
     *pass_ptr = strptr[1];
     return strptr[0];

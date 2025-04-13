@@ -2,18 +2,17 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include <config/pipe_io.h>
-
-#include "config/common.h"
 #include "util/env-internal.h"
 
-#include "trn/init.h"
-#include "trn/util.h"
-#include "util/util2.h"
+#include <config/common.h>
+#include <config/pipe_io.h>
+#include <trn/init.h>
+#include <trn/util.h>
+#include <util/util2.h>
 
 #ifdef HAS_RES_INIT
-#include <netinet/in.h>
 #include <arpa/nameser.h>
+#include <netinet/in.h>
 #include <resolv.h>
 #endif
 
@@ -28,6 +27,11 @@
 #endif
 
 #include <algorithm>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <functional>
 #include <memory>
 
 char       *g_home_dir{};    /* login directory */
@@ -42,7 +46,7 @@ std::string g_p_host_name;   /* host name in a posting */
 char       *g_local_host{};  /* local host name */
 int         g_net_speed{20}; /* how fast our net-connection is */
 
-static std::function<char *(const char *name)> s_getenv_fn = getenv;
+static std::function<char *(const char *name)> s_getenv_fn = std::getenv;
 
 static void env_init2();
 static int  envix(const char *nam, int len);
@@ -57,7 +61,7 @@ void set_environment(std::function<char *(const char *)> getenv_fn)
     }
     else
     {
-        s_getenv_fn = getenv;
+        s_getenv_fn = std::getenv;
     }
 }
 
@@ -121,8 +125,8 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
         char *home_path = s_getenv_fn("HOMEPATH");
         if (home_drive != nullptr && home_path != nullptr)
         {
-            strcpy(tcbuf, home_drive);
-            strcat(tcbuf, home_path);
+            std::strcpy(tcbuf, home_drive);
+            std::strcat(tcbuf, home_path);
             g_home_dir = savestr(tcbuf);
         }
     }
@@ -157,7 +161,7 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
             g_net_speed = 1;
         }
         else {
-            g_net_speed = atoi(cp);
+            g_net_speed = std::atoi(cp);
             g_net_speed = std::max(g_net_speed, 1);
         }
     }
@@ -242,12 +246,12 @@ static bool set_user_name(char *tmpbuf)
         s++;
     }
 #endif
-    c = strchr(s, ',');
+    c = std::strchr(s, ',');
     if (c != nullptr)
     {
         *c = '\0';
     }
-    c = strchr(s, ';');
+    c = std::strchr(s, ';');
     if (c != nullptr)
     {
         *c = '\0';
@@ -255,21 +259,21 @@ static bool set_user_name(char *tmpbuf)
     s = cpytill(g_buf,s,'&');
     if (*s == '&') {                    /* whoever thought this one up was */
         c = g_buf + strlen(g_buf);      /* in the middle of the night */
-        strcat(c, g_login_name.c_str()); /* before the morning after */
-        strcat(c,s+1);
-        if (islower(*c))
+        std::strcat(c, g_login_name.c_str()); /* before the morning after */
+        std::strcat(c,s+1);
+        if (std::islower(*c))
         {
-            *c = toupper(*c);           /* gack and double gack */
+            *c = std::toupper(*c);           /* gack and double gack */
         }
     }
     g_real_name = g_buf;
 #else /* !BERKNAMES */
-    c = strchr(s, '(');
+    c = std::strchr(s, '(');
     if (c != nullptr)
     {
         *c = '\0';
     }
-    c = strchr(s, '-');
+    c = std::strchr(s, '-');
     if (c != nullptr)
     {
         s = c;
@@ -280,11 +284,11 @@ static bool set_user_name(char *tmpbuf)
 #ifndef PASSNAMES
     {
         env_init2(); /* Make sure g_home_dir/g_dot_dir/etc. are set. */
-        FILE *fp = fopen(filexp(FULLNAMEFILE), "r");
+        std::FILE *fp = std::fopen(filexp(FULLNAMEFILE), "r");
         if (fp != nullptr)
         {
-            fgets(g_buf,sizeof g_buf,fp);
-            fclose(fp);
+            std::fgets(g_buf,sizeof g_buf,fp);
+            std::fclose(fp);
             g_buf[strlen(g_buf)-1] = '\0';
             g_real_name = g_buf;
         }
@@ -336,7 +340,7 @@ static bool set_user_name(char *tmpbuf)
 
 static bool set_p_host_name(char *tmpbuf)
 {
-    FILE* fp;
+    std::FILE* fp;
     bool hostname_ok = true;
 
     /* Find the local hostname */
@@ -352,17 +356,17 @@ static bool set_p_host_name(char *tmpbuf)
 # ifdef HAS_UNAME
     /* get sysname */
     uname(&utsn);
-    strcpy(tmpbuf,utsn.nodename);
+    std::strcpy(tmpbuf,utsn.nodename);
 # else
 #  ifdef PHOSTCMD
     {
-        FILE* pipefp = popen(PHOSTCMD,"r");
+        std::FILE* pipefp = popen(PHOSTCMD,"r");
 
         if (pipefp == nullptr) {
-            printf("Can't find hostname\n");
+            std::printf("Can't find hostname\n");
             finalize(1);
         }
-        fgets(tmpbuf,TCBUF_SIZE,pipefp);
+        std::fgets(tmpbuf,TCBUF_SIZE,pipefp);
         tmpbuf[strlen(tmpbuf)-1] = '\0';        /* wipe out newline */
         pclose(pipefp);
     }
@@ -378,15 +382,15 @@ static bool set_p_host_name(char *tmpbuf)
     const char *filename{PHOSTNAME};
     if (FILE_REF(filename) || filename[0] == '~')
     {
-        fp = fopen(filexp(filename), "r");
+        fp = std::fopen(filexp(filename), "r");
         if (fp == nullptr)
         {
-            strcpy(tmpbuf, ".");
+            std::strcpy(tmpbuf, ".");
         }
         else
         {
-            fgets(tmpbuf, TCBUF_SIZE, fp);
-            fclose(fp);
+            std::fgets(tmpbuf, TCBUF_SIZE, fp);
+            std::fclose(fp);
             char *end = tmpbuf + strlen(tmpbuf) - 1;
             if (*end == '\n')
             {
@@ -396,26 +400,26 @@ static bool set_p_host_name(char *tmpbuf)
     }
     else
     {
-        strcpy(tmpbuf, PHOSTNAME);
+        std::strcpy(tmpbuf, PHOSTNAME);
     }
 
     if (tmpbuf[0] == '.') {
         if (tmpbuf[1] != '\0')
         {
-            strcpy(g_buf,tmpbuf);
+            std::strcpy(g_buf,tmpbuf);
         }
         else
         {
             g_buf[0] = '\0';
         }
-        strcpy(tmpbuf,g_local_host);
-        strcat(tmpbuf,g_buf);
+        std::strcpy(tmpbuf,g_local_host);
+        std::strcat(tmpbuf,g_buf);
     }
 
-    if (!strchr(tmpbuf,'.')) {
+    if (!std::strchr(tmpbuf,'.')) {
         if (tmpbuf[0])
         {
-            strcat(tmpbuf, ".");
+            std::strcat(tmpbuf, ".");
         }
 #ifdef HAS_RES_INIT
         if (!(_res.options & RES_INIT))
@@ -424,19 +428,19 @@ static bool set_p_host_name(char *tmpbuf)
         }
         if (_res.defdname != nullptr)
         {
-            strcat(tmpbuf,_res.defdname);
+            std::strcat(tmpbuf,_res.defdname);
         }
         else
 #endif
 #ifdef HAS_GETDOMAINNAME
         if (getdomainname(g_buf,LBUFLEN) == 0)
         {
-            strcat(tmpbuf,g_buf);
+            std::strcat(tmpbuf,g_buf);
         }
         else
 #endif
         {
-            strcat(tmpbuf,"UNKNOWN.HOST");
+            std::strcat(tmpbuf,"UNKNOWN.HOST");
             hostname_ok = false;
         }
     }
@@ -476,7 +480,7 @@ char *export_var(const char *nam, const char *val)
     putenv(buff);
     return buff;
 #else
-    int namlen = strlen(nam);
+    int namlen = std::strlen(nam);
     int i=envix(nam,namlen);    /* where does it go? */
 
     if (!environ[i]) {                  /* does not exist yet */
@@ -508,7 +512,7 @@ char *export_var(const char *nam, const char *val)
     environ[i] = safemalloc((MEM_SIZE)(namlen + strlen(val) + 2));
                                         /* this may or may not be in */
                                         /* the old environ structure */
-    sprintf(environ[i],"%s=%s",nam,val);/* all that work just for this */
+    std::sprintf(environ[i],"%s=%s",nam,val);/* all that work just for this */
     return environ[i] + namlen + 1;
 #endif
 }
@@ -536,7 +540,7 @@ static int envix(const char *nam, int len)
     int i;
 
     for (i = 0; environ[i]; i++) {
-        if (!strncmp(environ[i],nam,len) && environ[i][len] == '=')
+        if (!std::strncmp(environ[i],nam,len) && environ[i][len] == '=')
         {
             break;                      /* strncmp must come first to avoid */
         }
