@@ -13,6 +13,9 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cstdio>
+#include <cstdlib>
+
 char *g_ngtodo[MAXNGTODO]; /* restrictions in effect */
 int   g_maxngtodo{};       /*  0 => no restrictions */
                            /* >0 => # of entries in g_ngtodo */
@@ -43,7 +46,7 @@ void setngtodo(const char *pat)
         const char *err = ng_comp(s_compextodo[i], pat, true, true);
         if (err != nullptr)
         {
-            printf("\n%s\n",err);
+            std::printf("\n%s\n",err);
             finalize(1);
         }
         g_maxngtodo++;
@@ -73,18 +76,18 @@ void end_only()
 
         if (g_verbose)
         {
-            sprintf(g_msg, "Restriction %s%s removed.",g_ngtodo[0],
+            std::sprintf(g_msg, "Restriction %s%s removed.",g_ngtodo[0],
                    g_maxngtodo > 1 ? ", etc." : "");
         }
         else
         {
-            sprintf(g_msg, "Exiting \"only\".");
+            std::sprintf(g_msg, "Exiting \"only\".");
         }
         for (int i = s_save_maxngtodo; i < g_maxngtodo + s_save_maxngtodo; i++) {
-            free(g_ngtodo[i]);
+            std::free(g_ngtodo[i]);
             free_compex(s_compextodo[i]);
 #ifndef lint
-            free((char*)s_compextodo[i]);
+            std::free((char*)s_compextodo[i]);
 #endif
         }
         g_maxngtodo = 0;
