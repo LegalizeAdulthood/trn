@@ -6,6 +6,8 @@
 
 #include "trn/decode.h"
 
+#include <cstdio>
+
 /* Length of a normal uuencoded line, including newline */
 enum
 {
@@ -13,6 +15,6 @@ enum
 };
 
 int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp);
-decode_state uudecode(FILE *ifp, decode_state state);
+decode_state uudecode(std::FILE *ifp, decode_state state);
 
 #endif
