@@ -17,36 +17,38 @@
 #include "trn/terminal.h"
 #include "trn/trn.h"
 
+#include <cstdio>
+
 void sa_refresh_top()
 {
     color_object(COLOR_SCORE, true);
-    printf("%s |",g_ngname.c_str());
+    std::printf("%s |",g_ngname.c_str());
 /* # of articles might be optional later */
-    printf(" %d",sa_number_arts());
+    std::printf(" %d",sa_number_arts());
 
     if (g_sa_mode_read_elig)
     {
-        printf(" unread+read");
+        std::printf(" unread+read");
     }
     else
     {
-        printf(" unread");
+        std::printf(" unread");
     }
     if (g_sa_mode_zoom)
     {
-        printf(" zoom");
+        std::printf(" zoom");
     }
     if (g_sa_mode_fold)
     {
-        printf(" Fold");
+        std::printf(" Fold");
     }
     if (g_sa_follow)
     {
-        printf(" follow");
+        std::printf(" follow");
     }
     color_pop();        /* of COLOR_SCORE */
     erase_eol();
-    printf("\n");
+    std::printf("\n");
 }
 
 void sa_refresh_bot()
@@ -55,7 +57,7 @@ void sa_refresh_bot()
 
     color_object(COLOR_SCORE, true);
     s_mail_and_place();
-    printf("(");
+    std::printf("(");
     switch (g_sa_mode_order) {
       case SA_ORDER_ARRIVAL:
         s = "arrival";
@@ -74,11 +76,11 @@ void sa_refresh_bot()
         s = "unknown";
         break;
     }
-    printf("%s order",s);
-    printf(", %d%% scored",sc_percent_scored());
-    printf(")");
+    std::printf("%s order",s);
+    std::printf(", %d%% scored",sc_percent_scored());
+    std::printf(")");
     color_pop();        /* of COLOR_SCORE */
-    fflush(stdout);
+    std::fflush(stdout);
 }
 
 /* set up various screen dimensions */
