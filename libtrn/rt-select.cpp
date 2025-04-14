@@ -33,7 +33,11 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <string>
 
 enum display_state
 {
@@ -261,19 +265,19 @@ char article_selector(char_int cmd)
         }
         if (i == g_added_articles)
         {
-            sprintf(g_msg, "** %ld new article%s arrived **  ",
+            std::sprintf(g_msg, "** %ld new article%s arrived **  ",
                (long)g_added_articles, plural(g_added_articles));
         }
         else
         {
-            sprintf(g_msg, "** %ld of %ld new articles unread **  ",
+            std::sprintf(g_msg, "** %ld of %ld new articles unread **  ",
                i, (long)g_added_articles);
         }
         s_disp_status_line = 1;
     }
     g_added_articles = 0;
     if (cmd && g_selected_count) {
-        sprintf(g_msg+std::strlen(g_msg), "%ld article%s selected.",
+        std::sprintf(g_msg+std::strlen(g_msg), "%ld article%s selected.",
                 (long)g_selected_count, g_selected_count == 1? " is" : "s are");
         s_disp_status_line = 1;
     }
@@ -308,7 +312,7 @@ sel_exit:
     if (g_sel_mode != SM_ARTICLE || g_sel_sort == SS_GROUPS
      || g_sel_sort == SS_STRING) {
         if (g_artptr_list) {
-            free((char*)g_artptr_list);
+            std::free((char*)g_artptr_list);
             g_artptr_list = nullptr;
             g_sel_page_app = nullptr;
             sort_subjects();
@@ -363,7 +367,7 @@ static void sel_dogroups()
             g_current_ng = np;
         }
         g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
-        printf("Entering %s:", g_ngname.c_str());
+        std::printf("Entering %s:", g_ngname.c_str());
         if (s_sel_ret == ';') {
             ret = do_newsgroup(savestr(";"));
         } else
@@ -674,11 +678,11 @@ char option_selector()
             if (g_option_saved_vals[i] && !strcmp(vals[i],g_option_saved_vals[i])) {
                 if (g_option_saved_vals[i] != g_option_def_vals[i])
                 {
-                    free(g_option_saved_vals[i]);
+                    std::free(g_option_saved_vals[i]);
                 }
                 g_option_saved_vals[i] = nullptr;
             }
-            free(vals[i]);
+            std::free(vals[i]);
             vals[i] = nullptr;
         }
     }
@@ -693,16 +697,16 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
 
     g_univ_follow_temp = false;
     if (!ui) {
-        printf("nullptr UI passed to reader!\n");
+        std::printf("nullptr UI passed to reader!\n");
         sleep(5);
         return exit_code;
     }
-    printf("\n");                 /* prepare for output msgs... */
+    std::printf("\n");                 /* prepare for output msgs... */
     switch (ui->type) {
       case UN_DEBUG1: {
           char *s = ui->data.str;
         if (s && *s) {
-            printf("Not implemented yet (%s)\n",s);
+            std::printf("Not implemented yet (%s)\n",s);
             sleep(5);
             return exit_code;
         }
@@ -728,7 +732,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
         NGDATA *np = find_ng(ui->data.virt.ng);
 
         if (!np) {
-            printf("Universal: newsgroup %s not found!",
+            std::printf("Universal: newsgroup %s not found!",
                    ui->data.virt.ng);
             sleep(5);
             return exit_code;
@@ -739,7 +743,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
             g_current_ng = np;
         }
         g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
-        printf("Virtual: Entering %s:\n", g_ngname.c_str());
+        std::printf("Virtual: Entering %s:\n", g_ngname.c_str());
         g_ng_go_artnum = ui->data.virt.num;
         g_univ_read_virtflag = true;
         int ret = do_newsgroup("");
@@ -806,7 +810,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
         NGDATA *np = find_ng(ui->data.group.ng);
 
         if (!np) {
-            printf("Universal: newsgroup %s not found!",
+            std::printf("Universal: newsgroup %s not found!",
                    ui->data.group.ng);
             sleep(5);
             return exit_code;
@@ -818,7 +822,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
             g_current_ng = np;
         }
         g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
-        printf("Entering %s:", g_ngname.c_str());
+        std::printf("Entering %s:", g_ngname.c_str());
         if (s_sel_ret == ';')
         {
             ret = do_newsgroup(savestr(";"));
@@ -956,7 +960,7 @@ static void sel_display()
 
     if (s_disp_status_line == 1) {
         newline();
-        fputs(g_msg, stdout);
+        std::fputs(g_msg, stdout);
         g_term_col = std::strlen(g_msg);
         s_disp_status_line = 2;
     }
@@ -972,10 +976,10 @@ static void sel_status_msg(const char *cp)
     {
         newline();
     }
-    fputs(cp, stdout);
+    std::fputs(cp, stdout);
     g_term_col = std::strlen(cp);
     goto_xy(0,g_sel_items[g_sel_item_index].line);
-    fflush(stdout);     /* CAA: otherwise may not be visible */
+    std::fflush(stdout);     /* CAA: otherwise may not be visible */
     s_disp_status_line = 2;
 }
 
@@ -1014,7 +1018,7 @@ reinp_selector:
         goto position_selector; /* (CAA: TRN considered harmful? :-) */
     }
     /* Grab some commands from the user */
-    fflush(stdout);
+    std::fflush(stdout);
     eat_typeahead();
     if (g_use_sel_num)
     {
@@ -1054,18 +1058,18 @@ reinp_selector:
                 j = (g_sel_item_index > 0? g_sel_item_index : g_sel_page_item_cnt);
                 if (g_use_sel_num)
                 {
-                    sprintf(g_msg, "Range: %d-", j);
+                    std::sprintf(g_msg, "Range: %d-", j);
                 }
                 else
                 {
-                    sprintf(g_msg, "Range: %c-", g_sel_chars[j - 1]);
+                    std::sprintf(g_msg, "Range: %c-", g_sel_chars[j - 1]);
                 }
                 sel_status_msg(g_msg);
             }
         }
         else {
-            putchar('-');
-            fflush(stdout);
+            std::putchar('-');
+            std::fflush(stdout);
         }
         goto reinp_selector;
     }
@@ -1119,12 +1123,12 @@ reinp_selector:
                 {
                     j = g_sel_page_item_cnt;
                 }
-                sprintf(g_msg,"Range: %d-%c", j, ch);
+                std::sprintf(g_msg,"Range: %d-%c", j, ch);
             } else {
                 if (got_goto) {
-                    sprintf(g_msg,"Go to number: %c", ch);
+                    std::sprintf(g_msg,"Go to number: %c", ch);
                 } else {
-                    sprintf(g_msg,"%c", ch);
+                    std::sprintf(g_msg,"%c", ch);
                 }
             }
             sel_status_msg(g_msg);
@@ -1162,7 +1166,7 @@ reinp_selector:
                 {
                     j = g_sel_page_item_cnt;
                 }
-                sprintf(g_msg,"Range: %d- ", j);
+                std::sprintf(g_msg,"Range: %d- ", j);
                 sel_status_msg(g_msg);
                 goto reinp_selector;
             }
@@ -1183,7 +1187,7 @@ reinp_selector:
         j = sel_number-1;
         if ((j < 0) || (j >= g_sel_page_item_cnt)) {
             dingaling();
-            sprintf(g_msg, "No item %c%c on this page.", ch_num1, ch);
+            std::sprintf(g_msg, "No item %c%c on this page.", ch_num1, ch);
             sel_status_msg(g_msg);
             goto position_selector;
         }
@@ -1206,7 +1210,7 @@ reinp_selector:
         j = in_select - g_sel_chars;
         if (j >= g_sel_page_item_cnt) {
             dingaling();
-            sprintf(g_msg, "No item '%c' on this page.", ch);
+            std::sprintf(g_msg, "No item '%c' on this page.", ch);
             sel_status_msg(g_msg);
             goto position_selector;
         }
@@ -1305,7 +1309,7 @@ reinp_selector:
             }
             if (s_disp_status_line == 1) {
                 newline();
-                fputs(g_msg,stdout);
+                std::fputs(g_msg,stdout);
                 g_term_col = std::strlen(g_msg);
                 if (s_removed_prompt & RP_MOUSEBAR) {
                     draw_mousebar(g_tc_COLS,false);
@@ -1426,7 +1430,7 @@ reinp_selector:
         {
             carriage_return();
         }
-        fflush(stdout);
+        std::fflush(stdout);
         if (++g_sel_item_index == g_sel_page_item_cnt)
         {
             g_sel_item_index = 0;
@@ -1451,18 +1455,18 @@ static void sel_prompt()
 #endif
     if (g_sel_at_end)
     {
-        sprintf(g_cmd_buf, "%s [%c%c] --",
+        std::sprintf(g_cmd_buf, "%s [%c%c] --",
                 (!g_sel_prior_obj_cnt? "All" : "Bot"), s_end_char, s_page_char);
     }
     else
     {
-        sprintf(g_cmd_buf, "%s%ld%% [%c%c] --",
+        std::sprintf(g_cmd_buf, "%s%ld%% [%c%c] --",
                 (!g_sel_prior_obj_cnt? "Top " : ""),
                 (long)((g_sel_prior_obj_cnt+g_sel_page_obj_cnt)*100 / g_sel_total_obj_cnt),
                 s_page_char, s_end_char);
     }
     interp(g_buf, sizeof g_buf, g_mailcall);
-    sprintf(g_msg, "%s-- %s %s (%s%s order) -- %s", g_buf,
+    std::sprintf(g_msg, "%s-- %s %s (%s%s order) -- %s", g_buf,
             g_sel_exclusive && g_in_ng? "SELECTED" : "Select", g_sel_mode_string,
             g_sel_direction<0? "reverse " : "", g_sel_sort_string, g_cmd_buf);
     color_string(COLOR_CMD,g_msg);
@@ -1640,24 +1644,24 @@ static bool select_option(option_index i)
     goto_xy(0,g_sel_last_line);
     erase_line(g_mousebar_cnt > 0);     /* erase the prompt */
     color_object(COLOR_CMD, true);
-    printf("Change `%s' (%s)",g_options_ini[i].item, g_options_ini[i].help_str);
+    std::printf("Change `%s' (%s)",g_options_ini[i].item, g_options_ini[i].help_str);
     color_pop();        /* of COLOR_CMD */
     newline();
     *g_buf = '\0';
     char *oldval = savestr(quote_string(option_value(i)));
     char *val = vals[i] ? vals[i] : oldval;
     s_clean_screen = in_choice("> ", val, g_options_ini[i].help_str, MM_OPTION_EDIT_PROMPT);
-    if (strcmp(g_buf,val) != 0)
+    if (std::strcmp(g_buf,val) != 0)
     {
         char * to = g_buf;
         char* from = g_buf;
         parse_string(&to, &from);
         changed = true;
         if (vals[i]) {
-            free(vals[i]);
+            std::free(vals[i]);
             g_selected_count--;
         }
-        if (val != oldval && !strcmp(g_buf,oldval))
+        if (val != oldval && !std::strcmp(g_buf,oldval))
         {
             vals[i] = nullptr;
         }
@@ -1666,7 +1670,7 @@ static bool select_option(option_index i)
             g_selected_count++;
         }
     }
-    free(oldval);
+    std::free(oldval);
     if (s_clean_screen) {
         up_line();
         erase_line(true);
@@ -1913,13 +1917,13 @@ static display_state sel_command(char_int ch)
         s_removed_prompt = RP_ALL;
         if (g_sel_mode == SM_NEWSGROUP)
         {
-            printf("[%s] Cmd: ", g_ngptr ? g_ngptr->rcline : "*End*");
+            std::printf("[%s] Cmd: ", g_ngptr ? g_ngptr->rcline : "*End*");
         }
         else
         {
-            fputs("Cmd: ", stdout);
+            std::fputs("Cmd: ", stdout);
         }
-        fflush(stdout);
+        std::fflush(stdout);
         getcmd(g_buf);
         if (*g_buf == '\\')
         {
@@ -1957,7 +1961,7 @@ static display_state sel_command(char_int ch)
         {
             return DS_STATUS;
         }
-        printf("\n%s\n",g_msg);
+        std::printf("\n%s\n",g_msg);
         ch = another_command(1);
         if (ch != '\0')
         {
@@ -2119,7 +2123,7 @@ static display_state article_commands(char_int ch)
         if (*g_buf == 'h' || *g_buf == 'H') {
             if (g_verbose)
             {
-                fputs("\n"
+                std::fputs("\n"
                       "Type t or SP to display/select thread groups (threads the group, if needed).\n"
                       "Type s to display/select subject groups.\n"
                       "Type a to display/select individual articles.\n"
@@ -2128,7 +2132,7 @@ static display_state article_commands(char_int ch)
             }
             else
             {
-                fputs("\n"
+                std::fputs("\n"
                       "t or SP selects thread groups (threads the group too).\n"
                       "s selects subject groups.\n"
                       "a selects individual articles.\n"
@@ -2144,9 +2148,9 @@ static display_state article_commands(char_int ch)
             }
             return DS_ASK;
         }
-        if (isupper(*g_buf))
+        if (std::isupper(*g_buf))
         {
-            *g_buf = tolower(*g_buf);
+            *g_buf = std::tolower(*g_buf);
         }
         set_sel_mode(*g_buf);
         count_subjects(CS_NORM);
@@ -2174,44 +2178,44 @@ static display_state article_commands(char_int ch)
         printcmd();
         if (*g_buf == 'h' || *g_buf == 'H') {
             if (g_verbose) {
-                fputs("\n"
+                std::fputs("\n"
                       "Type d or SP to order the displayed items by date.\n"
                       "Type s to order the items by subject.\n"
                       "Type p to order the items by score points.\n",
                       stdout);
                 if (g_sel_mode == SM_ARTICLE)
                 {
-                    fputs("Type a to order the items by author.\n"
+                    std::fputs("Type a to order the items by author.\n"
                           "Type n to order the items by number.\n"
                           "Type g to order the items in subject-groups by date.\n",
                           stdout);
                 }
                 else
                 {
-                    fputs("Type c to order the items by count.\n", stdout);
+                    std::fputs("Type c to order the items by count.\n", stdout);
                 }
-                fputs("Typing your selection in upper case it will reverse the selected order.\n"
+                std::fputs("Typing your selection in upper case it will reverse the selected order.\n"
                       "Type q to leave things as they are.\n\n",
                       stdout);
             }
             else
             {
-                fputs("\n"
+                std::fputs("\n"
                       "d or SP sorts by date.\n"
                       "s sorts by subject.\n"
                       "p sorts by points.\n",
                       stdout);
                 if (g_sel_mode == SM_ARTICLE)
                 {
-                    fputs("a sorts by author.\n"
+                    std::fputs("a sorts by author.\n"
                           "g sorts in subject-groups by date.\n",
                           stdout);
                 }
                 else
                 {
-                    fputs("c sorts by count.\n", stdout);
+                    std::fputs("c sorts by count.\n", stdout);
                 }
-                fputs("Upper case reverses the sort.\n"
+                std::fputs("Upper case reverses the sort.\n"
                       "q does nothing.\n"
                       "\n",
                       stdout);
@@ -2609,7 +2613,7 @@ static display_state newsgroup_commands(char_int ch)
             break;
           case 'h': case 'H':
             if (g_verbose) {
-                fputs("\n"
+                std::fputs("\n"
                       "Type n or SP to order the newsgroups in the .newsrc order.\n"
                       "Type g to order the items by group name.\n"
                       "Type c to order the items by count.\n"
@@ -2619,7 +2623,7 @@ static display_state newsgroup_commands(char_int ch)
             }
             else
             {
-                fputs("\n"
+                std::fputs("\n"
                       "n or SP sorts by .newsrc.\n"
                       "g sorts by group name.\n"
                       "c sorts by count.\n"
@@ -2763,14 +2767,14 @@ static display_state newsgroup_commands(char_int ch)
         if (!(s_removed_prompt & RP_NEWLINE)) {
             erase_line(g_mousebar_cnt > 0);     /* erase the prompt */
             s_removed_prompt = RP_ALL;
-            printf("[%s] Cmd: ", g_ngptr? g_ngptr->rcline : "*End*");
-            fflush(stdout);
+            std::printf("[%s] Cmd: ", g_ngptr? g_ngptr->rcline : "*End*");
+            std::fflush(stdout);
         }
         g_dfltcmd = "\\";
         set_mode(GM_READ,MM_NEWSGROUP_LIST);
         if (ch == '\\') {
-            putchar(ch);
-            fflush(stdout);
+            std::putchar(ch);
+            std::fflush(stdout);
         }
         else
         {
@@ -2875,7 +2879,7 @@ static display_state addgroup_commands(char_int ch)
             break;
           case 'h': case 'H':
             if (g_verbose) {
-                fputs("\n"
+                std::fputs("\n"
                       "Type n or SP to order the items in their naturally occurring order.\n"
                       "Type g to order the items by newsgroup name.\n"
                       "Type c to order the items by article count.\n"
@@ -2885,7 +2889,7 @@ static display_state addgroup_commands(char_int ch)
             }
             else
             {
-                fputs("\n"
+                std::fputs("\n"
                       "n or SP sorts by natural order.\n"
                       "g sorts by newsgroup name.\n"
                       "c sorts by article count.\n"
@@ -3215,7 +3219,7 @@ static display_state universal_commands(char_int ch)
         printcmd();
         if (*g_buf == 'h' || *g_buf == 'H') {
             if (g_verbose) {
-                fputs("\n"
+                std::fputs("\n"
                       "Type n or SP to order the items in the natural order.\n"
                       "Type p to order the items by score points.\n"
                       "Typing your selection in upper case it will reverse the selected order.\n"
@@ -3224,7 +3228,7 @@ static display_state universal_commands(char_int ch)
             }
             else
             {
-                fputs("\n"
+                std::fputs("\n"
                       "n or SP sorts by natural order.\n"
                       "p sorts by score.\n"
                       "Upper case reverses the sort.\n"
@@ -3234,7 +3238,7 @@ static display_state universal_commands(char_int ch)
             s_clean_screen = false;
             goto reask_sort;
         } else if (*g_buf == 'q' ||
-                   (tolower(*g_buf) != 'n' && tolower(*g_buf) != 'p')) {
+                   (std::tolower(*g_buf) != 'n' && std::tolower(*g_buf) != 'p')) {
             if (g_can_home)
             {
                 erase_line(false);
@@ -3279,7 +3283,7 @@ static void switch_dmode(char **dmode_cpp)
         s = "long";
         break;
     }
-    sprintf(g_msg,"(%s display style)",s);
+    std::sprintf(g_msg,"(%s display style)",s);
     s_disp_status_line = 1;
 }
 
