@@ -28,6 +28,8 @@
 #include "util/util2.h"
 
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 
@@ -87,12 +89,12 @@ void rc_to_bits()
     unread = 0;
 #ifdef DEBUG
     if (debug & DEB_CTLAREA_BITMAP) {
-        printf("\n%s\n",mybuf);
+        std::printf("\n%s\n",mybuf);
         termdown(2);
         for (i = article_first(g_absfirst); i < g_firstart; i = article_next(i)) {
             if (article_unread(i))
             {
-                printf("%ld ",(long)i);
+                std::printf("%ld ",(long)i);
             }
         }
     }
@@ -102,7 +104,7 @@ void rc_to_bits()
         ART_NUM max;
         *c = '\0';                      /* do not let index see past comma */
         h = std::strchr(s,'-');
-        ART_NUM min = atol(s);
+        ART_NUM min = std::atol(s);
         min = std::max(min, g_firstart);    /* make sure range is in range */
         if (min > g_lastart)
         {
@@ -129,7 +131,7 @@ void rc_to_bits()
         {
             max = min;
         }
-        else if ((max = atol(h+1)) < min)
+        else if ((max = std::atol(h+1)) < min)
         {
             max = min - 1;
         }
@@ -141,12 +143,12 @@ void rc_to_bits()
         }
 #ifdef DEBUG
         if (debug & DEB_CTLAREA_BITMAP) {
-            printf("\n%s\n",s);
+            std::printf("\n%s\n",s);
             termdown(2);
             for (i = g_absfirst; i <= g_lastart; i++) {
                 if (!was_read(i))
                 {
-                    printf("%ld ",(long)i);
+                    std::printf("%ld ",(long)i);
                 }
             }
         }
@@ -172,14 +174,14 @@ void rc_to_bits()
     }
 #ifdef DEBUG
     if (debug & DEB_CTLAREA_BITMAP) {
-        fputs("\n(hit CR)",stdout);
+        std::fputs("\n(hit CR)",stdout);
         termdown(1);
-        fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
+        std::fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
     }
 #endif
     if (mybuf != g_buf)
     {
-        free(mybuf);
+        std::free(mybuf);
     }
     g_ngptr->toread = unread;
 }
@@ -187,8 +189,8 @@ void rc_to_bits()
 bool set_firstart(const char *s)
 {
     s = skip_eq(s, ' ');
-    if (!strncmp(s,"1-",2)) {                   /* can we save some time here? */
-        g_firstart = atol(s+2)+1;               /* process first range thusly */
+    if (!std::strncmp(s,"1-",2)) {                   /* can we save some time here? */
+        g_firstart = std::atol(s+2)+1;               /* process first range thusly */
         g_firstart = std::max(g_firstart, g_absfirst);
         return true;
     }
@@ -215,7 +217,7 @@ void bits_to_rc()
             break;
         }
     }
-    sprintf(s," 1-%ld,",(long)i-1);
+    std::sprintf(s," 1-%ld,",(long)i-1);
     s += std::strlen(s);
     for (; i<=g_lastart; i++) { /* for each article in newsgroup */
         if (s-mybuf > safelen) {        /* running out of room? */
@@ -239,7 +241,7 @@ void bits_to_rc()
         }
         else {                          /* article was read */
 
-            sprintf(s,"%ld",(long)i); /* put out the min of the range */
+            std::sprintf(s,"%ld",(long)i); /* put out the min of the range */
             s += std::strlen(s);           /* keeping house */
             ART_NUM oldi = i;         /* remember this spot */
             do
@@ -249,7 +251,7 @@ void bits_to_rc()
                                         /* find 1st unread article or end */
             i--;                        /* backup to last read article */
             if (i > oldi) {             /* range of more than 1? */
-                sprintf(s,"-%ld,",(long)i);
+                std::sprintf(s,"-%ld,",(long)i);
                                         /* then it out as a range */
                 s += std::strlen(s);         /* and housekeep */
             }
@@ -266,12 +268,12 @@ void bits_to_rc()
     *s++ = '\0';                        /* and terminate string */
 #ifdef DEBUG
     if ((debug & DEB_NEWSRC_LINE) && !g_panic) {
-        printf("%s: %s\n",g_ngptr->rcline,g_ngptr->rcline+g_ngptr->numoffset);
-        printf("%s\n",mybuf);
+        std::printf("%s: %s\n",g_ngptr->rcline,g_ngptr->rcline+g_ngptr->numoffset);
+        std::printf("%s\n",mybuf);
         termdown(2);
     }
 #endif
-    free(g_ngptr->rcline);              /* return old rc line */
+    std::free(g_ngptr->rcline);              /* return old rc line */
     if (mybuf == g_buf) {
         g_ngptr->rcline = safemalloc((MEM_SIZE)(s-g_buf)+1);
                                         /* grab a new rc line */
@@ -319,7 +321,7 @@ void find_existing_articles()
                 {
                     break;
                 }
-                an = (ART_NUM)atol(g_ser_line);
+                an = (ART_NUM)std::atol(g_ser_line);
                 if (an < g_absfirst)
                 {
                     continue;   /* Ignore some wacked-out NNTP servers */
@@ -401,7 +403,7 @@ void find_existing_articles()
         for (const fs::directory_entry &entry : entries)
         {
             std::string filename{entry.path().filename().string()};
-            if (sscanf(filename.c_str(), "%ld%c", &lnum, &ch) == 1) {
+            if (std::sscanf(filename.c_str(), "%ld%c", &lnum, &ch) == 1) {
                 an = (ART_NUM)lnum;
                 if (an <= g_lastart && an >= g_absfirst) {
                     first = std::min(an, first);
@@ -581,10 +583,10 @@ void yankback()
         }
         else if (g_general_mode == GM_SELECTOR)
         {
-            sprintf(g_msg, "Returned %ld Marked article%s.", (long) g_dmcount, plural(g_dmcount));
+            std::sprintf(g_msg, "Returned %ld Marked article%s.", (long) g_dmcount, plural(g_dmcount));
         }
         else {
-            printf("\nReturning %ld Marked article%s...\n",(long)g_dmcount,
+            std::printf("\nReturning %ld Marked article%s...\n",(long)g_dmcount,
                 plural(g_dmcount));
             termdown(2);
         }
@@ -675,17 +677,17 @@ static int chase_xref(ART_NUM artnum, int markread)
         if (g_output_chase_phrase) {
             if (g_verbose)
             {
-                fputs("\nChasing xrefs", stdout);
+                std::fputs("\nChasing xrefs", stdout);
             }
             else
             {
-                fputs("\nXrefs", stdout);
+                std::fputs("\nXrefs", stdout);
             }
             termdown(1);
             g_output_chase_phrase = false;
         }
-        putchar('.');
-        fflush(stdout);
+        std::putchar('.');
+        std::fflush(stdout);
     }
 
     char *xref_buf = fetchcache(artnum, XREF_LINE, FILL_CACHE);
@@ -697,7 +699,7 @@ static int chase_xref(ART_NUM artnum, int markread)
     xref_buf = savestr(xref_buf);
 # ifdef DEBUG
     if (debug & DEB_XREF_MARKER) {
-        printf("Xref: %s\n",xref_buf);
+        std::printf("Xref: %s\n",xref_buf);
         termdown(1);
     }
 # endif
@@ -714,11 +716,11 @@ static int chase_xref(ART_NUM artnum, int markread)
                 break;
             }
             *xartnum++ = '\0';
-            if (!(x = atol(xartnum)))
+            if (!(x = std::atol(xartnum)))
             {
                 continue;
             }
-            if (!strcmp(tmpbuf,g_ngname.c_str())) {/* is this the current newsgroup? */
+            if (!std::strcmp(tmpbuf,g_ngname.c_str())) {/* is this the current newsgroup? */
                 if (x < g_absfirst || x > g_lastart)
                 {
                     continue;
@@ -750,7 +752,7 @@ static int chase_xref(ART_NUM artnum, int markread)
             curxref = skip_space(curxref);
         }
     }
-    free(xref_buf);
+    std::free(xref_buf);
     return 0;
 }
 
@@ -772,7 +774,7 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
         return true;
 
     if (inews_site)
-        free(inews_site);
+        std::free(inews_site);
 #ifndef ANCIENT_NEWS
     /* Grab the site from the first component of the Path line */
     sitebuf = fetchlines(artnum,PATH_LINE);
@@ -800,16 +802,16 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
     {
         inews_site = savestr("");
     }
-    free(sitebuf);
+    std::free(sitebuf);
 
-    if (!strcmp(site,inews_site))
+    if (std::!strcmp(site,inews_site))
     {
         return true;
     }
 
 #ifdef DEBUG
     if (debug) {
-        printf("Xref not from %s -- ignoring\n",inews_site);
+        std::printf("Xref not from %s -- ignoring\n",inews_site);
         termdown(1);
     }
 #endif
