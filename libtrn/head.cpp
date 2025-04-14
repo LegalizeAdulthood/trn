@@ -24,6 +24,9 @@
 #include <parsedate/parsedate.h>
 
 #include <algorithm>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 #define HIDDEN    (HT_HIDE|HT_DEFHIDE)
@@ -119,10 +122,10 @@ void head_final()
 #ifdef DEBUG
 void dumpheader(char *where)
 {
-    printf("header: %ld %s", (long)g_parsed_art, where);
+    std::printf("header: %ld %s", (long)g_parsed_art, where);
 
     for (int i = HEAD_FIRST-1; i < HEAD_LAST; i++) {
-        printf("%15s %4ld %4ld %03o\n",g_htype[i].name,
+        std::printf("%15s %4ld %4ld %03o\n",g_htype[i].name,
                (long)g_htype[i].minpos, (long)g_htype[i].maxpos,
                g_htype[i].flags);
     }
@@ -141,11 +144,11 @@ header_line_type set_line_type(char *bufptr, const char *colon)
 
     for (t = g_msg, f = bufptr; f < colon; f++, t++) {
         /* guard against space before : */
-        if (isspace(*f))
+        if (std::isspace(*f))
         {
             return SOME_LINE;
         }
-        *t = isupper(*f) ? static_cast<char>(tolower(*f)) : *f;
+        *t = std::isupper(*f) ? static_cast<char>(std::tolower(*f)) : *f;
     }
     *t = '\0';
     f = g_msg;                          /* get g_msg into a register */
@@ -158,19 +161,19 @@ header_line_type set_line_type(char *bufptr, const char *colon)
     if (*f >= 'a' && *f <= 'z') {
         for (int i = s_htypeix[*f - 'a']; *g_htype[i].name == *f; i--)
         {
-            if (len == g_htype[i].length && !strcmp(f, g_htype[i].name))
+            if (len == g_htype[i].length && !std::strcmp(f, g_htype[i].name))
             {
                 return static_cast<header_line_type>(i);
             }
         }
         if (len == g_htype[CUSTOM_LINE].length
-         && !strcmp(f,g_htype[(((0+1)+1)+1)].name))
+         && !std::strcmp(f,g_htype[(((0+1)+1)+1)].name))
         {
             return CUSTOM_LINE;
         }
         for (int i = g_user_htypeix[*f - 'a']; *g_user_htype[i].name == *f; i--) {
             if (len >= g_user_htype[i].length
-             && !strncmp(f, g_user_htype[i].name, g_user_htype[i].length)) {
+             && !std::strncmp(f, g_user_htype[i].name, g_user_htype[i].length)) {
                 if (g_user_htype[i].flags & HT_HIDE)
                 {
                     return HIDDEN_LINE;
@@ -191,7 +194,7 @@ header_line_type get_header_num(char *s)
     if (i <= SOME_LINE && i != CUSTOM_LINE) {
         if (!empty(g_htype[CUSTOM_LINE].name))
         {
-            free(g_htype[CUSTOM_LINE].name);
+            std::free(g_htype[CUSTOM_LINE].name);
         }
         g_htype[CUSTOM_LINE].name = savestr(g_msg);
         g_htype[CUSTOM_LINE].length = end - s;
@@ -352,8 +355,8 @@ void end_header()
             growstr(&references, &reflen, reflen + std::strlen(inreply) + 1);
             safecat(references, inreply, reflen);
             thread_article(ap, references);
-            free(inreply);
-            free(references);
+            std::free(inreply);
+            std::free(references);
             g_artp = artp_hold;
             check_poster(ap);
         }
@@ -488,8 +491,8 @@ char *fetchlines(ART_NUM artnum, header_line_type which_line)
     }
 #ifdef DEBUG
     if (debug && (size < 1 || size > 1000)) {
-        printf("Firstpos = %ld, lastpos = %ld\n",(long)firstpos,(long)lastpos);
-        fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
+        std::printf("Firstpos = %ld, lastpos = %ld\n",(long)firstpos,(long)lastpos);
+        std::fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
     }
 #endif
     s = safemalloc((MEM_SIZE)size);
@@ -531,8 +534,8 @@ char *mp_fetchlines(ART_NUM artnum, header_line_type which_line, memory_pool poo
     }
 #ifdef DEBUG
     if (debug && (size < 1 || size > 1000)) {
-        printf("Firstpos = %ld, lastpos = %ld\n",(long)firstpos,(long)lastpos);
-        fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
+        std::printf("Firstpos = %ld, lastpos = %ld\n",(long)firstpos,(long)lastpos);
+        std::fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
     }
 #endif
     s = mp_malloc(size,pool);
@@ -542,13 +545,13 @@ char *mp_fetchlines(ART_NUM artnum, header_line_type which_line, memory_pool poo
 
 static int nntp_xhdr(header_line_type which_line, ART_NUM artnum)
 {
-    sprintf(g_ser_line,"XHDR %s %ld",g_htype[which_line].name,artnum);
+    std::sprintf(g_ser_line,"XHDR %s %ld",g_htype[which_line].name,artnum);
     return nntp_command(g_ser_line);
 }
 
 static int nntp_xhdr(header_line_type which_line, ART_NUM artnum, ART_NUM lastnum)
 {
-    sprintf(g_ser_line, "XHDR %s %ld-%ld", g_htype[which_line].name, artnum, lastnum);
+    std::sprintf(g_ser_line, "XHDR %s %ld-%ld", g_htype[which_line].name, artnum, lastnum);
     return nntp_command(g_ser_line);
 }
 
@@ -613,7 +616,7 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
                 char *line = nntp_get_a_line(last_buf, last_buflen, last_buf!=g_ser_line);
 # ifdef DEBUG
                 if (debug & DEB_NNTP)
-                    printf("<%s", line? line : "<EOF>");
+                    std::printf("<%s", line? line : "<EOF>");
 # endif
                 if (nntp_at_list_end(line))
                 {
@@ -631,7 +634,7 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
                     continue;
                 }
                 t++;
-                num = atol(line);
+                num = std::atol(line);
                 if (num < artnum || num > lastnum)
                 {
                     continue;
@@ -658,13 +661,13 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
             }
             if (last_buf != g_ser_line)
             {
-                free(last_buf);
+                std::free(last_buf);
             }
         } else {
             hasxhdr = false;
             lastnum = artnum;
             if (!parseheader(artnum)) {
-                fprintf(stderr,"\nBad NNTP response.\n");
+                std::fprintf(stderr,"\nBad NNTP response.\n");
                 finalize(1);
             }
             s = fetchlines(artnum,which_line);
