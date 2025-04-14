@@ -274,7 +274,7 @@ beginning:
             }
             line_cnt++;
         }
-        else if (!(line = get_a_line(last_buf,last_buflen,last_buf!=g_buf,g_datasrc->ov_in)))
+        else if (!(line = get_a_line(last_buf, last_buflen, last_buf != g_buf, g_datasrc->ov_in)))
         {
             break;
         }

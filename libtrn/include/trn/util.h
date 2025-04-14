@@ -5,12 +5,11 @@
 #ifndef TRN_UTIL_H
 #define TRN_UTIL_H
 
-#include <stdlib.h>
-#include <stdio.h>
-
 #include "config/typedef.h"
 #include "trn/utf.h"
 
+#include <cstdio>
+#include <cstdlib>
 #include <ctime>
 
 extern bool g_waiting; /* waiting for subprocess (in doshell)? */
@@ -55,7 +54,7 @@ char *safecat(char *to, const char *from, int len);
 int eaccess(char *, int);
 #endif
 char *trn_getwd(char *buf, int buflen);
-char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp);
+char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, std::FILE *fp);
 bool makedir(const char *dirname, makedir_name_type nametype);
 void notincl(const char *feature);
 void growstr(char **strptr, int *curlen, int newlen);
@@ -97,7 +96,7 @@ inline void safefree(void *ptr)
 {
     if (ptr)
     {
-        free(ptr);
+        std::free(ptr);
     }
 }
 
@@ -106,7 +105,7 @@ void safefree0(T *&ptr)
 {
     if (ptr)
     {
-        free(ptr);
+        std::free(ptr);
         ptr = nullptr;
     }
 }

@@ -35,9 +35,13 @@
 
 #include <cctype>
 #include <chrono>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <filesystem>
 #include <string>
+#include <system_error>
 
 #ifdef UNION_WAIT
 using WAIT_STATUS = union wait;
@@ -134,7 +138,7 @@ int doshell(const char *shell, const char *cmd)
         }
         if (g_nntplink.port_number) {
             int len = std::strlen(s_nntpserver_export);
-            sprintf(g_buf,";%d",g_nntplink.port_number);
+            std::sprintf(g_buf,";%d",g_nntplink.port_number);
             if (len + (int)std::strlen(g_buf) < 511)
             {
                 std::strcpy(s_nntpserver_export+len, g_buf);
@@ -254,9 +258,9 @@ int doshell(const char *shell, const char *cmd)
 #ifndef USE_DEBUGGING_MALLOC
 char *safemalloc(MEM_SIZE size)
 {
-    char *ptr = (char*)malloc(size ? size : (MEM_SIZE)1);
+    char *ptr = (char*)std::malloc(size ? size : (MEM_SIZE)1);
     if (!ptr) {
-        fputs(s_nomem,stdout);
+        std::fputs(s_nomem,stdout);
         sig_catcher(0);
     }
     return ptr;
@@ -272,14 +276,14 @@ char *saferealloc(char *where, MEM_SIZE size)
 
     if (!where)
     {
-        ptr = (char*) malloc(size ? size : (MEM_SIZE)1);
+        ptr = (char*) std::malloc(size ? size : (MEM_SIZE)1);
     }
     else
     {
-        ptr = (char*) realloc(where, size ? size : (MEM_SIZE)1);
+        ptr = (char*) std::realloc(where, size ? size : (MEM_SIZE)1);
     }
     if (!ptr) {
-        fputs(s_nomem,stdout);
+        std::fputs(s_nomem,stdout);
         sig_catcher(0);
     }
     return ptr;
@@ -362,7 +366,7 @@ char *trn_getwd(char *buf, int buflen)
     std::filesystem::path cwd{std::filesystem::current_path(ec)};
     if (ec)
     {
-        printf("Cannot determine current working directory!\n");
+        std::printf("Cannot determine current working directory!\n");
         finalize(1);
     }
     std::strncpy(buf, cwd.string().c_str(), buflen);
@@ -384,7 +388,7 @@ char *trn_getwd(char *buf, int buflen)
 
 /* just like fgets but will make bigger buffer as necessary */
 
-char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp)
+char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, std::FILE *fp)
 {
     int bufix = 0;
     int nextch;
@@ -402,7 +406,7 @@ char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, FILE *fp)
                 realloc_ok = true;
             }
         }
-        nextch = getc(fp);
+        nextch = std::getc(fp);
         if ((nextch) == EOF) {
             if (!bufix)
             {
@@ -432,7 +436,7 @@ bool makedir(const char *dirname, makedir_name_type nametype)
 
 void notincl(const char *feature)
 {
-    printf("\nNo room for feature \"%s\" on this machine.\n",feature);
+    std::printf("\nNo room for feature \"%s\" on this machine.\n",feature);
 }
 
 /* grow a static string to at least a certain length */
@@ -463,7 +467,7 @@ void setdef(char *buffer, const char *dflt)
     ) {
         g_s_default_cmd = true;
         g_univ_default_cmd = true;
-        if (*dflt == '^' && isupper(dflt[1]))
+        if (*dflt == '^' && std::isupper(dflt[1]))
         {
             pushchar(Ctl(dflt[1]));
         }
@@ -484,11 +488,11 @@ void safelink(char *old_name, char *new_name)
 #endif
 
     if (link(old_name,new_name)) {
-        printf("Can't link backup (%s) to .newsrc (%s)\n", old_name, new_name);
+        std::printf("Can't link backup (%s) to .newsrc (%s)\n", old_name, new_name);
 #if 0
         if (errno>0 && errno<sys_nerr)
         {
-            printf("%s\n", sys_errlist[errno]);
+            std::printf("%s\n", sys_errlist[errno]);
         }
 #endif
         finalize(1);
@@ -499,22 +503,22 @@ void safelink(char *old_name, char *new_name)
 /* attempts to verify a cryptographic signature. */
 void verify_sig()
 {
-    printf("\n");
+    std::printf("\n");
     /* RIPEM */
     int i = doshell(SH, filexp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
     if (!i) {   /* found RIPEM */
         i = doshell(SH,filexp(get_val_const("VERIFY_RIPEM",VERIFY_RIPEM)));
-        printf("\nReturned value: %d\n",i);
+        std::printf("\nReturned value: %d\n",i);
         return;
     }
     /* PGP */
     i = doshell(SH,filexp("grep -s \"BEGIN PGP\" %A"));
     if (!i) {   /* found PGP */
         i = doshell(SH,filexp(get_val_const("VERIFY_PGP",VERIFY_PGP)));
-        printf("\nReturned value: %d\n",i);
+        std::printf("\nReturned value: %d\n",i);
         return;
     }
-    printf("No PGP/RIPEM signatures detected.\n");
+    std::printf("No PGP/RIPEM signatures detected.\n");
 }
 
 double current_time()
@@ -524,11 +528,11 @@ double current_time()
     return static_cast<double>(result) / 1000.0;
 }
 
-time_t text2secs(const char *s, std::time_t defSecs)
+std::time_t text2secs(const char *s, std::time_t defSecs)
 {
     std::time_t secs = 0;
 
-    if (!isdigit(*s)) {
+    if (!std::isdigit(*s)) {
         if (*s == 'm' || *s == 'M')     /* "missing" */
         {
             return 2;
@@ -540,10 +544,10 @@ time_t text2secs(const char *s, std::time_t defSecs)
         return secs;                    /* "never" */
     }
     do {
-        std::time_t item = atol(s);
+        std::time_t item = std::atol(s);
         s = skip_digits(s);
         s = skip_space(s);
-        if (isalpha(*s)) {
+        if (std::isalpha(*s)) {
             switch (*s) {
               case 'd': case 'D':
                 item *= 24 * 60L;
@@ -565,7 +569,7 @@ time_t text2secs(const char *s, std::time_t defSecs)
             s = skip_space(s);
         }
         secs += item;
-    } while (isdigit(*s));
+    } while (std::isdigit(*s));
 
     return secs * 60;
 }
@@ -588,17 +592,17 @@ char *secs2text(std::time_t secs)
     if (secs >= 24L * 60) {
         items = (int)(secs / (24*60));
         secs = secs % (24*60);
-        sprintf(s, "%d day%s, ", items, plural(items));
+        std::sprintf(s, "%d day%s, ", items, plural(items));
         s += std::strlen(s);
     }
     if (secs >= 60L) {
         items = (int)(secs / 60);
         secs = secs % 60;
-        sprintf(s, "%d hour%s, ", items, plural(items));
+        std::sprintf(s, "%d hour%s, ", items, plural(items));
         s += std::strlen(s);
     }
     if (secs) {
-        sprintf(s, "%d minute%s, ", (int)secs, plural(items));
+        std::sprintf(s, "%d minute%s, ", (int)secs, plural(items));
         s += std::strlen(s);
     }
     s[-2] = '\0';
@@ -611,7 +615,7 @@ char *temp_filename()
     static int tmpfile_num = 0;
     char tmpbuf[CBUFLEN];
     extern long g_our_pid;
-    sprintf(tmpbuf,"%s/trn%d.%ld",g_tmp_dir.c_str(),tmpfile_num++,g_our_pid);
+    std::sprintf(tmpbuf,"%s/trn%d.%ld",g_tmp_dir.c_str(),tmpfile_num++,g_our_pid);
     return savestr(tmpbuf);
 }
 
@@ -639,7 +643,7 @@ char **prep_ini_words(INI_WORDS words[])
             const char *item;
             for (item = words[i].item; *item; item++)
             {
-                checksum += (isupper(*item)? tolower(*item) : *item);
+                checksum += (std::isupper(*item)? std::tolower(*item) : *item);
             }
             words[i].checksum = (checksum << 8) + (item - words[i].item);
         }
@@ -647,13 +651,13 @@ char **prep_ini_words(INI_WORDS words[])
         cp = safemalloc(i * sizeof(char *));
         words[0].help_str = cp;
     }
-    memset(cp,0,(words)[0].checksum * sizeof (char*));
+    std::memset(cp,0,(words)[0].checksum * sizeof (char*));
     return (char**)cp;
 }
 
 void unprep_ini_words(INI_WORDS words[])
 {
-    free(ini_values(words));
+    std::free(ini_values(words));
     words[0].checksum = 0;
     words[0].help_str = nullptr;
 }
@@ -665,7 +669,7 @@ void prep_ini_data(char *cp, const char *filename)
 #ifdef DEBUG
     if (debug & DEB_RCFILES)
     {
-        printf("Read %d bytes from %s\n",std::strlen(cp),filename);
+        std::printf("Read %d bytes from %s\n",std::strlen(cp),filename);
     }
 #endif
 
@@ -702,7 +706,7 @@ void prep_ini_data(char *cp, const char *filename)
                             {
                                 break;
                             }
-                            if (isspace(*cp)) {
+                            if (std::isspace(*cp)) {
                                 if (s == t || t[-1] != ' ')
                                 {
                                     *t++ = ' ';
@@ -715,7 +719,7 @@ void prep_ini_data(char *cp, const char *filename)
                             }
                         }
                         if (*cp == '=' && t != s) {
-                            while (t != s && isspace(t[-1]))
+                            while (t != s && std::isspace(t[-1]))
                             {
                                 t--;
                             }
@@ -746,7 +750,7 @@ void prep_ini_data(char *cp, const char *filename)
             }
             else {
                 *t = '\0';
-                printf("Invalid section in %s: %s\n", filename, s);
+                std::printf("Invalid section in %s: %s\n", filename, s);
                 t = s;
                 cp = skip_ne(cp, '\n');
             }
@@ -765,7 +769,7 @@ bool parse_string(char **to, char **from)
     char* t = *to;
     char* f = *from;
 
-    while (isspace(*f) && *f != '\n')
+    while (std::isspace(*f) && *f != '\n')
     {
         f++;
     }
@@ -807,12 +811,12 @@ bool parse_string(char **to, char **from)
 #if 0
     if (inquote)
     {
-        printf("Unbalanced quotes.\n");
+        std::printf("Unbalanced quotes.\n");
     }
 #endif
     inquote = (*f != '\0');
 
-    while (t != s && isspace(t[-1]))
+    while (t != s && std::isspace(t[-1]))
     {
         t--;
     }
@@ -841,7 +845,7 @@ char *next_ini_section(char *cp, char **section, char **cond)
 #ifdef DEBUG
     if (debug & DEB_RCFILES)
     {
-        printf("Section [%s] (condition: %s)\n",*section,
+        std::printf("Section [%s] (condition: %s)\n",*section,
                **cond? *cond : "<none>");
     }
 #endif
@@ -861,9 +865,9 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
     while (*cp && *cp != '[') {
         int checksum = 0;
         for (s = cp; *s; s++) {
-            if (isupper(*s))
+            if (std::isupper(*s))
             {
-                *s = tolower(*s);
+                *s = std::tolower(*s);
             }
             checksum += *s;
         }
@@ -879,7 +883,7 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
             }
             if (!words[i].checksum)
             {
-                printf("Unknown option: `%s'.\n",cp);
+                std::printf("Unknown option: `%s'.\n",cp);
             }
             cp = s + std::strlen(s) + 1;
         }
@@ -891,12 +895,12 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
 
 #ifdef DEBUG
     if (debug & DEB_RCFILES) {
-        printf("Ini_words: %s\n", words[0].item);
+        std::printf("Ini_words: %s\n", words[0].item);
         for (int i = 1; words[i].checksum; i++)
         {
             if (values[i])
             {
-                printf("%s=%s\n",words[i].item,values[i]);
+                std::printf("%s=%s\n",words[i].item,values[i]);
             }
         }
     }
@@ -909,7 +913,7 @@ bool check_ini_cond(char *cond)
 {
     cond = dointerp(g_buf,sizeof g_buf,cond,"!=<>",nullptr);
     char *s = g_buf + std::strlen(g_buf);
-    while (s != g_buf && isspace(s[-1]))
+    while (s != g_buf && std::isspace(s[-1]))
     {
         s--;
     }
@@ -931,7 +935,7 @@ bool check_ini_cond(char *cond)
     }
     cond = skip_space(cond);
     if (upordown) {
-        const int num = atoi(cond) - atoi(g_buf);
+        const int num = std::atoi(cond) - std::atoi(g_buf);
         if (!((equal && !num) || (upordown * num < 0)) ^ negate)
         {
             return false;
@@ -963,11 +967,11 @@ bool check_ini_cond(char *cond)
 /* Ask for a single character (improve the prompt?) */
 char menu_get_char()
 {
-    printf("Enter your choice: ");
-    fflush(stdout);
+    std::printf("Enter your choice: ");
+    std::fflush(stdout);
     eat_typeahead();
     getcmd(g_buf);
-    printf("%c\n",*g_buf);
+    std::printf("%c\n",*g_buf);
     return(*g_buf);
 }
 
@@ -983,7 +987,7 @@ int edit_file(const char *fname)
     }
 
     /* XXX paranoia check on length */
-    sprintf(g_cmd_buf,"%s ",
+    std::sprintf(g_cmd_buf,"%s ",
             filexp(get_val_const("VISUAL",get_val_const("EDITOR",DEFEDITOR))));
     std::strcat(g_cmd_buf, filexp(fname));
     termdown(3);

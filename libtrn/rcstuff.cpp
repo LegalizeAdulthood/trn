@@ -610,7 +610,7 @@ static bool open_newsrc(NEWSRC *rp)
     /* read in the .newsrc file */
 
     char* some_buf;
-    while ((some_buf = get_a_line(g_buf, LBUFLEN,false,rcfp)) != nullptr) {
+    while ((some_buf = get_a_line(g_buf, LBUFLEN, false, rcfp)) != nullptr) {
         long length = g_len_last_line_got; /* side effect of get_a_line */
         if (length <= 1)                   /* only a newline??? */
         {
@@ -813,7 +813,7 @@ void abandon_ng(NGDATA *np)
     {
         int length = np->numoffset - 1;
 
-        while ((some_buf = get_a_line(g_buf, LBUFLEN,false,rcfp)) != nullptr) {
+        while ((some_buf = get_a_line(g_buf, LBUFLEN, false, rcfp)) != nullptr) {
             if (g_len_last_line_got <= 0)
             {
                 continue;
