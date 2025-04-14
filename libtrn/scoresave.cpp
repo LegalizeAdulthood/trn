@@ -18,6 +18,9 @@
 #include "trn/util.h" /* several */
 #include "util/util2.h"
 
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 int g_sc_loaded_count{}; /* how many articles were loaded? */
@@ -50,7 +53,7 @@ void sc_sv_delgroup(const char *gname)
 
     for (i = 0; i < s_num_lines; i++) {
         s = s_lines[i];
-        if (s && *s == '!' && !strcmp(gname,s+1))
+        if (s && *s == '!' && !std::strcmp(gname,s+1))
         {
             break;
         }
@@ -60,7 +63,7 @@ void sc_sv_delgroup(const char *gname)
         return;         /* group not found */
     }
     int start = i;
-    free(s_lines[i]);
+    std::free(s_lines[i]);
     s_lines[i] = nullptr;
     for (i++; i < s_num_lines; i++) {
         s = s_lines[i];
@@ -69,7 +72,7 @@ void sc_sv_delgroup(const char *gname)
             break;
         }
         if (s) {
-            free(s);
+            std::free(s);
             s_lines[i] = nullptr;
         }
     }
@@ -89,18 +92,18 @@ void sc_sv_getfile()
     s_lines = nullptr;
 
     const char *s = get_val_const("SAVESCOREFILE", "%+/savedscores");
-    FILE *fp = fopen(filexp(s), "r");
+    std::FILE *fp = std::fopen(filexp(s), "r");
     if (!fp) {
 #if 0
-        printf("Could not open score save file for reading.\n");
+        std::printf("Could not open score save file for reading.\n");
 #endif
         return;
     }
-    while (fgets(s_lbuf,LBUFLEN-2,fp)) {
+    while (std::fgets(s_lbuf,LBUFLEN-2,fp)) {
         s_lbuf[std::strlen(s_lbuf)-1] = '\0';        /* strip \n */
         sc_sv_add(s_lbuf);
     }
-    fclose(fp);
+    std::fclose(fp);
 }
 
 /* save the memory into the score file */
@@ -115,32 +118,32 @@ void sc_sv_savefile()
     char *savename = savestr(filexp(get_val_const("SAVESCOREFILE", "%+/savedscores")));
     std::strcpy(s_lbuf,savename);
     std::strcat(s_lbuf,".tmp");
-    FILE *tmpfp = fopen(s_lbuf, "w");
+    std::FILE *tmpfp = std::fopen(s_lbuf, "w");
     if (!tmpfp) {
 #if 0
-        printf("Could not open score save temp file %s for writing.\n",
+        std::printf("Could not open score save temp file %s for writing.\n",
                s_lbuf);
 #endif
-        free(savename);
+        std::free(savename);
         g_waiting = false;
         return;
     }
     for (int i = 0; i < s_num_lines; i++) {
         if (s_lines[i])
         {
-            fprintf(tmpfp,"%s\n",s_lines[i]);
+            std::fprintf(tmpfp,"%s\n",s_lines[i]);
         }
-        if (ferror(tmpfp)) {
-            fclose(tmpfp);
-            free(savename);
-            printf("\nWrite error in temporary save file %s\n",s_lbuf);
-            printf("(keeping old saved scores)\n");
+        if (std::ferror(tmpfp)) {
+            std::fclose(tmpfp);
+            std::free(savename);
+            std::printf("\nWrite error in temporary save file %s\n",s_lbuf);
+            std::printf("(keeping old saved scores)\n");
             remove(s_lbuf);
             g_waiting = false;
             return;
         }
     }
-    fclose(tmpfp);
+    std::fclose(tmpfp);
     remove(savename);
     rename(s_lbuf,savename);
     g_waiting = false;
@@ -173,7 +176,7 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
             s = skip_digits(s);
             c2 = *s;
             *s = '\0';
-            score = 0 - atoi(p);
+            score = 0 - std::atoi(p);
             *p = c1;
             *s = c2;
             s_loaded++;
@@ -193,7 +196,7 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
             s = skip_digits(s);
             c2 = *s;
             *s = '\0';
-            score = atoi(p);
+            score = std::atoi(p);
             *p = c1;
             *s = c2;
             s_loaded++;
@@ -206,7 +209,7 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
           case 'r':     /* repeat */
             s++;
             p = s;
-            if (!isdigit(*s)) {
+            if (!std::isdigit(*s)) {
                 /* simple case, just "r" */
                 x = 1;
             } else {
@@ -214,7 +217,7 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
                 s = skip_digits(s);
                 c1 = *s;
                 *s = '\0';
-                x = atoi(p);
+                x = std::atoi(p);
                 *s = c1;
             }
             for ( ; x; x--) {
@@ -229,7 +232,7 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
           case 's':     /* skip */
             s++;
             p = s;
-            if (!isdigit(*s)) {
+            if (!std::isdigit(*s)) {
                 /* simple case, just "s" */
                 a += 1;
             } else {
@@ -237,7 +240,7 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
                 s = skip_digits(s);
                 c1 = *s;
                 *s = '\0';
-                x = atoi(p);
+                x = std::atoi(p);
                 *s = c1;
                 a += x;
             }
@@ -265,7 +268,7 @@ ART_NUM sc_sv_make_line(ART_NUM a)
                     *s++ = 's';
                     num_output++;
                 } else {
-                    sprintf(s,"s%ld",(art-s_last)-1);
+                    std::sprintf(s,"s%ld",(art-s_last)-1);
                     s = s_lbuf + std::strlen(s_lbuf);
                     num_output++;
                 }
@@ -285,7 +288,7 @@ ART_NUM sc_sv_make_line(ART_NUM a)
                     *s++ = 'r';         /* repeat one */
                     num_output++;
                 } else {
-                    sprintf(s,"r%d",i); /* repeat >one */
+                    std::sprintf(s,"r%d",i); /* repeat >one */
                     s = s_lbuf + std::strlen(s_lbuf);
                     num_output++;
                 }
@@ -299,7 +302,7 @@ ART_NUM sc_sv_make_line(ART_NUM a)
                 {
                     neg_flag = false;
                 }
-                sprintf(s,"%d",i);
+                std::sprintf(s,"%d",i);
                 i = (*s - '0');
                 if (neg_flag)
                 {
@@ -347,7 +350,7 @@ void sc_load_scores()
     int i;
     for (i = 0; i < s_num_lines; i++) {
         s = s_lines[i];
-        if (s && *s == '!' && !strcmp(s+1,gname))
+        if (s && *s == '!' && !std::strcmp(s+1,gname))
         {
             break;
         }
@@ -359,8 +362,8 @@ void sc_load_scores()
     i++;
 
     if (verbose) {
-        printf("\nLoading scores...");
-        fflush(stdout);
+        std::printf("\nLoading scores...");
+        std::fflush(stdout);
     }
     while (i < s_num_lines) {
         s = s_lines[i++];
@@ -370,7 +373,7 @@ void sc_load_scores()
         }
         switch (*s) {
           case ':':
-            a = atoi(s+1);      /* set the article # */
+            a = std::atoi(s+1);      /* set the article # */
             break;
           case '.':                     /* longer score line */
             a = sc_sv_use_line(s+1,a);
@@ -416,7 +419,7 @@ void sc_load_scores()
     /* sloppy plurals (:-) */
     if (verbose)
     {
-        printf("(%d/%d/%d scores loaded/used/unscored)\n",
+        std::printf("(%d/%d/%d scores loaded/used/unscored)\n",
                s_loaded,s_used,total-scored);
     }
 
@@ -441,11 +444,11 @@ void sc_save_scores()
         sc_sv_add("#STRN saved score file.");
         sc_sv_add("v1.0");
     }
-    sprintf(s_lbuf2,"!%s",gname);       /* add the header */
+    std::sprintf(s_lbuf2,"!%s",gname);       /* add the header */
     sc_sv_add(s_lbuf2);
 
     ART_NUM a = g_firstart;
-    sprintf(s_lbuf2,":%ld",a);
+    std::sprintf(s_lbuf2,":%ld",a);
     sc_sv_add(s_lbuf2);
     s_last = a-1;
     while (a <= g_lastart)
