@@ -21,18 +21,20 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cerrno>
+#include <cstdio>
 #include <cstring>
 
-ART_POS  g_artpos{};               /* byte position in article file */
-ART_LINE g_artline{};              /* current line number in article file */
-FILE    *g_artfp{};                /* current article file pointer */
-ART_NUM  g_openart{};              /* the article number we have open */
-char    *g_artbuf{};               //
-long     g_artbuf_pos{};           //
-long     g_artbuf_seek{};          //
-long     g_artbuf_len{};           //
-char     g_wrapped_nl{WRAPPED_NL}; //
-int      g_word_wrap_offset{8};    /* right-hand column size (0 is off) */
+ART_POS    g_artpos{};               /* byte position in article file */
+ART_LINE   g_artline{};              /* current line number in article file */
+std::FILE *g_artfp{};                /* current article file pointer */
+ART_NUM    g_openart{};              /* the article number we have open */
+char      *g_artbuf{};               //
+long       g_artbuf_pos{};           //
+long       g_artbuf_seek{};          //
+long       g_artbuf_len{};           //
+char       g_wrapped_nl{WRAPPED_NL}; //
+int        g_word_wrap_offset{8};    /* right-hand column size (0 is off) */
 
 static long s_artbuf_size{};
 
@@ -50,7 +52,7 @@ void artio_final()
 
 /* open an article, unless it's already open */
 
-FILE *artopen(ART_NUM artnum, ART_NUM pos)
+std::FILE *artopen(ART_NUM artnum, ART_NUM pos)
 {
     ARTICLE* ap = article_find(artnum);
 
@@ -73,8 +75,8 @@ FILE *artopen(ART_NUM artnum, ART_NUM pos)
         else
         {
             char artname[MAXFILENAME]; /* filename of current article */
-            sprintf(artname, "%ld", (long) artnum);
-            g_artfp = fopen(artname, "r");
+            std::sprintf(artname, "%ld", (long) artnum);
+            g_artfp = std::fopen(artname, "r");
         }
         if (!g_artfp)
         {
@@ -107,7 +109,7 @@ void artclose()
         {
             nntp_finishbody(FB_DISCARD);
         }
-        fclose(g_artfp);                        /* close it */
+        std::fclose(g_artfp);                        /* close it */
         g_artfp = nullptr;                      /* and tell the world */
         g_openart = 0;
         clear_artbuf();
@@ -120,7 +122,7 @@ int seekart(ART_POS pos)
     {
         return nntp_seekart(pos);
     }
-    return fseek(g_artfp,(long)pos,0);
+    return std::fseek(g_artfp,(long)pos,0);
 }
 
 ART_POS
@@ -130,7 +132,7 @@ tellart()
     {
         return nntp_tellart();
     }
-    return (ART_POS)ftell(g_artfp);
+    return (ART_POS)std::ftell(g_artfp);
 }
 
 char *readart(char *s, int limit)
@@ -139,7 +141,7 @@ char *readart(char *s, int limit)
     {
         return nntp_readart(s, limit);
     }
-    return fgets(s,limit,g_artfp);
+    return std::fgets(s,limit,g_artfp);
 }
 
 void clear_artbuf()
@@ -409,7 +411,7 @@ char *readartbuf(bool view_inline)
             g_artbuf_pos++;
             bp++;
         }
-        sprintf(bp+o,"\002%s\n",g_multipart_separator.c_str());
+        std::sprintf(bp+o,"\002%s\n",g_multipart_separator.c_str());
         break;
       case UNHANDLED_MIME:
         g_mime_state = SKIP_MIME;
@@ -422,7 +424,7 @@ char *readartbuf(bool view_inline)
         g_mime_state = SKIP_MIME;
         *bp++ = '\001';
         g_artbuf_pos++;
-        sprintf(bp,"[Alternative: %s]\n", g_mime_section->type_name);
+        std::sprintf(bp,"[Alternative: %s]\n", g_mime_section->type_name);
         len = std::strlen(bp);
         break;
       case IMAGE_MIME:
