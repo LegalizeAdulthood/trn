@@ -6,7 +6,7 @@
 
 #include <config/typedef.h>
 
-#include <stdio.h>
+#include <cstdio>
 
 struct MIMECAP_ENTRY;
 
@@ -34,7 +34,7 @@ enum decode_state
     DECODE_ERROR = 8
 };
 
-using DECODE_FUNC = decode_state (*)(FILE *ifp, decode_state state);
+using DECODE_FUNC = decode_state (*)(std::FILE *ifp, decode_state state);
 
 void decode_init();
 char *decode_fix_fname(const char *s);

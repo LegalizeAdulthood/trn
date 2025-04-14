@@ -69,7 +69,7 @@ char *decode_fix_fname(const char *s)
             continue;
         }
 #endif
-        if (isprint(*s)
+        if (std::isprint(*s)
 #ifdef GOODCHARS
          && std::strchr(GOODCHARS, *s)
 #else
@@ -163,13 +163,13 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
      */
     char *end = s + std::strlen(s);
     do {
-        while (*s && !isalnum(*s) && *s != '_')
+        while (*s && !std::isalnum(*s) && *s != '_')
         {
             s++;
         }
         filename = s;
         t = s;
-        while (isalnum(*s) || *s == '-' || *s == '+' || *s == '&'
+        while (std::isalnum(*s) || *s == '-' || *s == '+' || *s == '&'
               || *s == '_' || *s == '.') {
             if (*s++ == '.')
             {
@@ -180,7 +180,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
         {
             return nullptr;
         }
-    } while (t == s || (t[0] == 'v' && isdigit(t[1]) && *s == ':'));
+    } while (t == s || (t[0] == 'v' && std::isdigit(t[1]) && *s == ':'));
     *s++ = '\0';
 
     /* Try looking for a filename with a "." in it later in the subject line.
@@ -189,10 +189,10 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
     if (!hasdot) {
         while (*(t = s) != '\0' && *s != '\n') {
             t = skip_space(t);
-            for (s = t; isalnum(*s) || *s == '-' || *s == '+'
+            for (s = t; std::isalnum(*s) || *s == '-' || *s == '+'
                  || *s == '&' || *s == '_' || *s == '.'; s++) {
                 if (*s == '.' &&
-                    (!isdigit(s[-1]) || !isdigit(s[1]))) {
+                    (!std::isdigit(s[-1]) || !std::isdigit(s[1]))) {
                     hasdot = 1;
                 }
             }
@@ -201,7 +201,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
                 *s++ = '\0';
                 break;
             }
-            while (*s && *s != '\n' && !isalnum(*s))
+            while (*s && *s != '\n' && !std::isalnum(*s))
             {
                 s++;
             }
@@ -217,25 +217,25 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
     /* Get part number */
     while (*s && *s != '\n') {
         /* skip over versioning */
-        if (*s == 'v' && isdigit(s[1])) {
+        if (*s == 'v' && std::isdigit(s[1])) {
             s++;
             s = skip_digits(s);
         }
         /* look for "1/6" or "1 / 6" or "1 of 6" or "1-of-6" or "1o6" */
-        if (isdigit(*s)
+        if (std::isdigit(*s)
          && (s[1] == '/'
           || (s[1] == ' ' && s[2] == '/')
           || (s[1] == ' ' && s[2] == 'o' && s[3] == 'f')
           || (s[1] == '-' && s[2] == 'o' && s[3] == 'f')
-          || (s[1] == 'o' && isdigit(s[2])))) {
-            for (t = s; isdigit(t[-1]); t--)
+          || (s[1] == 'o' && std::isdigit(s[2])))) {
+            for (t = s; std::isdigit(t[-1]); t--)
             {
             }
-            part = atoi(t);
-            while (*++s != '\0' && *s != '\n' && !isdigit(*s))
+            part = std::atoi(t);
+            while (*++s != '\0' && *s != '\n' && !std::isdigit(*s))
             {
             }
-            total = isdigit(*s)? atoi(s) : 0;
+            total = std::isdigit(*s)? std::atoi(s) : 0;
             s = skip_digits(s);
             /* We don't break here because we want the last item on the line */
         }
@@ -243,25 +243,25 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
         /* look for "6 parts" or "part 1" */
         if (string_case_equal("part", s, 4)) {
             if (s[4] == 's') {
-                for (t = s; t >= subject && !isdigit(*t); t--)
+                for (t = s; t >= subject && !std::isdigit(*t); t--)
                 {
                 }
                 if (t > subject) {
-                    while (t > subject && isdigit(t[-1]))
+                    while (t > subject && std::isdigit(t[-1]))
                     {
                         t--;
                     }
-                    total = atoi(t);
+                    total = std::atoi(t);
                 }
             }
             else {
-                while (*s && *s != '\n' && !isdigit(*s))
+                while (*s && *s != '\n' && !std::isdigit(*s))
                 {
                     s++;
                 }
-                if (isdigit(*s))
+                if (std::isdigit(*s))
                 {
-                    part = atoi(s);
+                    part = std::atoi(s);
                 }
                 s--;
             }
@@ -313,31 +313,31 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 
     if (mcp) {
         if (change_dir(dir)) {
-            printf(g_nocd,dir);
+            std::printf(g_nocd,dir);
             sig_catcher(0);
         }
     }
 
-    FILE* fp;
+    std::FILE* fp;
     if (total != 1 || part != 1) {
-        sprintf(g_buf, "Saving part %d ", part);
+        std::sprintf(g_buf, "Saving part %d ", part);
         if (total)
         {
-            sprintf(g_buf + std::strlen(g_buf), "of %d ", total);
+            std::sprintf(g_buf + std::strlen(g_buf), "of %d ", total);
         }
         std::strcat(g_buf, filename);
-        fputs(g_buf,stdout);
+        std::fputs(g_buf,stdout);
         if (g_nowait_fork)
         {
-            fflush(stdout);
+            std::fflush(stdout);
         }
         else
         {
             newline();
         }
 
-        sprintf(g_buf, "%s%d", dir, part);
-        fp = fopen(g_buf, "w");
+        std::sprintf(g_buf, "%s%d", dir, part);
+        fp = std::fopen(g_buf, "w");
         if (!fp) {
             std::strcpy(g_msg,"Failed."); /*$$*/
             return false;
@@ -347,32 +347,32 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
             {
                 break;
             }
-            fputs(g_art_line,fp);
+            std::fputs(g_art_line,fp);
             if (total == 0 && *g_art_line == 'e' && g_art_line[1] == 'n'
-             && g_art_line[2] == 'd' && isspace(g_art_line[3])) {
+             && g_art_line[2] == 'd' && std::isspace(g_art_line[3])) {
                 /* This is the last part. Remember the fact */
                 total = part;
-                sprintf(g_buf, "%sCT", dir);
-                if (FILE *total_fp = fopen(g_buf, "w"))
+                std::sprintf(g_buf, "%sCT", dir);
+                if (std::FILE *total_fp = std::fopen(g_buf, "w"))
                 {
-                    fprintf(total_fp, "%d\n", total);
-                    fclose(total_fp);
+                    std::fprintf(total_fp, "%d\n", total);
+                    std::fclose(total_fp);
                 }
             }
         }
-        fclose(fp);
+        std::fclose(fp);
 
         /* Retrieve any previously saved number of the last part */
         if (total == 0) {
-            sprintf(g_buf, "%sCT", dir);
-            fp = fopen(g_buf, "r");
+            std::sprintf(g_buf, "%sCT", dir);
+            fp = std::fopen(g_buf, "r");
             if (fp != nullptr)
             {
-                if (fgets(g_buf, sizeof g_buf, fp)) {
-                    total = atoi(g_buf);
+                if (std::fgets(g_buf, sizeof g_buf, fp)) {
+                    total = std::atoi(g_buf);
                     total = std::max(total, 0);
                 }
-                fclose(fp);
+                std::fclose(fp);
             }
             if (total == 0)
             {
@@ -384,15 +384,15 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
          * as we are more likely not to have them.
          */
         for (part = total; part; part--) {
-            sprintf(g_buf, "%s%d", dir, part);
-            fp = fopen(g_buf, "r");
+            std::sprintf(g_buf, "%s%d", dir, part);
+            fp = std::fopen(g_buf, "r");
             if (!fp)
             {
                 return true;
             }
             if (part != 1)
             {
-                fclose(fp);
+                std::fclose(fp);
             }
         }
     }
@@ -412,7 +412,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
         std::strcpy(g_msg,"Unhandled encoding type -- aborting.");
         if (fp)
         {
-            fclose(fp);
+            std::fclose(fp);
         }
         if (dir)
         {
@@ -425,8 +425,8 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     decode_state state;
     for (state = DECODE_START, part = 1; part <= total; part++) {
         if (part != 1) {
-            sprintf(g_buf, "%s%d", dir, part);
-            fp = fopen(g_buf, "r");
+            std::sprintf(g_buf, "%s%d", dir, part);
+            fp = std::fopen(g_buf, "r");
             if (!fp) {
                 /*os_perror(g_buf);*/
                 return true;
@@ -436,7 +436,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
         state = decoder(fp, state);
         if (fp)
         {
-            fclose(fp);
+            std::fclose(fp);
         }
         if (state == DECODE_ERROR) {
             std::strcpy(g_msg,"Failed."); /*$$*/
@@ -455,10 +455,10 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     if (fp) {
         /* Cleanup all the pieces */
         for (part = 0; part <= total; part++) {
-            sprintf(g_buf, "%s%d", dir, part);
+            std::sprintf(g_buf, "%s%d", dir, part);
             remove(g_buf);
         }
-        sprintf(g_buf, "%sCT", dir);
+        std::sprintf(g_buf, "%sCT", dir);
         remove(g_buf);
     }
 
