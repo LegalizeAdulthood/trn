@@ -18,6 +18,10 @@
 #include "trn/terminal.h"
 #include "util/util2.h"
 
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
+
 static bool   s_ng_doempty{}; /* search empty newsgroups? */
 static COMPEX s_ngcompex;
 
@@ -64,7 +68,7 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
         }
       loop_break:;
     }
-    while (isspace(*s) || *s == ':')
+    while (std::isspace(*s) || *s == ':')
     {
         s++;
     }
@@ -89,13 +93,13 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
         errormsg(err);
         if (cmdlst)
         {
-            free(cmdlst);
+            std::free(cmdlst);
         }
         return NGS_ERROR;
     }
     if (!cmdlst) {
-        fputs("\nSearching...",stdout); /* give them something to read */
-        fflush(stdout);
+        std::fputs("\nSearching...",stdout); /* give them something to read */
+        std::fflush(stdout);
     }
 
     bool const output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
@@ -108,7 +112,7 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
                     return NGS_FOUND;
                 }
                 if (addgrp_perform(gp,cmdlst,output_level && g_page_line==1)<0) {
-                    free(cmdlst);
+                    std::free(cmdlst);
                     return NGS_INTR;
                 }
             }
@@ -119,7 +123,7 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
         } while ((gp = gp->next) != nullptr);
         if (cmdlst)
         {
-            free(cmdlst);
+            std::free(cmdlst);
         }
         return ret;
     }
@@ -185,13 +189,13 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
                 }
                 set_ng(g_ngptr);
                 if (ng_perform(cmdlst,output_level && g_page_line == 1) < 0) {
-                    free(cmdlst);
+                    std::free(cmdlst);
                     return NGS_INTR;
                 }
             }
             if (output_level && !cmdlst) {
-                printf("\n[0 unread in %s -- skipping]",g_ngptr->rcline);
-                fflush(stdout);
+                std::printf("\n[0 unread in %s -- skipping]",g_ngptr->rcline);
+                std::fflush(stdout);
             }
         }
         if (!output_level && g_page_line == 1)
@@ -204,7 +208,7 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
 
     if (cmdlst)
     {
-        free(cmdlst);
+        std::free(cmdlst);
     }
     return ret;
 }
