@@ -12,6 +12,8 @@
 #include "trn/sorder.h"
 #include "trn/util.h" /* allocation */
 
+#include <cstdio>
+
 /* the current values */
 long     *g_s_ent_sort{};       /* sorted list of entries in the context */
 long      g_s_ent_sort_max{};   /* maximum index of sorted array */
@@ -51,7 +53,7 @@ void s_init_context(int cnum, scontext_type type)
 {
     /* g_s_num_contexts not incremented until last moment */
     if (cnum < 0 || cnum > g_s_num_contexts) {
-        printf("s_init_context: illegal context number %d!\n",cnum);
+        std::printf("s_init_context: illegal context number %d!\n",cnum);
         TRN_ASSERT(false);
     }
     SCONTEXT *p = g_s_contexts + cnum;
@@ -162,7 +164,7 @@ void s_save_context()
 void s_change_context(int newcontext)
 {
     if (newcontext < 0 || newcontext >= g_s_num_contexts) {
-        printf("s_change_context: bad context number %d!\n",newcontext);
+        std::printf("s_change_context: bad context number %d!\n",newcontext);
         TRN_ASSERT(false);
     }
     g_s_cur_context = newcontext;
@@ -205,7 +207,7 @@ void s_clean_contexts()
 void s_delete_context(int cnum)
 {
     if (cnum < 0 || cnum >= g_s_num_contexts) {
-        printf("s_delete_context: illegal context number %d!\n",cnum);
+        std::printf("s_delete_context: illegal context number %d!\n",cnum);
         TRN_ASSERT(false);
     }
     s_order_clean();
