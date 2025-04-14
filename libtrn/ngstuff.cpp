@@ -66,7 +66,7 @@ int escapade()
     else {
         trn_getwd(whereiam, sizeof(whereiam));
         if (change_dir(g_privdir)) {
-            printf(g_nocd,g_privdir.c_str());
+            std::printf(g_nocd,g_privdir.c_str());
             sig_catcher(0);
         }
     }
@@ -78,7 +78,7 @@ int escapade()
     crmode();                           /*   unfriendly again */
     if (docd) {
         if (change_dir(whereiam)) {
-            printf(g_nocd,whereiam);
+            std::printf(g_nocd,whereiam);
             sig_catcher(0);
         }
     }
@@ -139,7 +139,7 @@ int switcheroo()
             sw_list(tmpbuf);
         }
         else {
-            sprintf(tmpbuf,"[options]\n%s\n",g_buf+1);
+            std::sprintf(tmpbuf,"[options]\n%s\n",g_buf+1);
             prep_ini_data(tmpbuf,"'&' input");
             parse_ini_section(tmpbuf+10,g_options_ini);
             set_options(ini_values(g_options_ini));
@@ -147,7 +147,7 @@ int switcheroo()
         if (docd) {
             cwd_check();
             if (change_dir(whereami)) {              /* -d does chdirs */
-                printf(g_nocd,whereami);
+                std::printf(g_nocd,whereami);
                 sig_catcher(0);
             }
         }
@@ -184,9 +184,9 @@ numnum_result numnum()
 
     perform_status_init(g_ngptr->toread);
 
-    for (s=g_buf; *s && (isdigit(*s) || std::strchr(" ,-.$",*s)); s++)
+    for (s=g_buf; *s && (std::isdigit(*s) || std::strchr(" ,-.$",*s)); s++)
     {
-        if (!isdigit(*s))
+        if (!std::isdigit(*s))
         {
             justone = false;
         }
@@ -203,8 +203,8 @@ numnum_result numnum()
     *s = '\0';
     safecpy(tmpbuf,g_buf,LBUFLEN);
     if (!output_level && !justone) {
-        printf("Processing...");
-        fflush(stdout);
+        std::printf("Processing...");
+        std::fflush(stdout);
     }
     for (char *t = tmpbuf; (c = std::strchr(t,',')) != nullptr; t = ++c) {
         *c = '\0';
@@ -214,11 +214,11 @@ numnum_result numnum()
         }
         else
         {
-            min = atol(t);
+            min = std::atol(t);
         }
         if (min < g_absfirst) {
             min = g_absfirst;
-            sprintf(g_msg,"(First article is %ld)",(long)g_absfirst);
+            std::sprintf(g_msg,"(First article is %ld)",(long)g_absfirst);
             warnmsg(g_msg);
         }
         if ((t=std::strchr(t,'-')) != nullptr) {
@@ -233,7 +233,7 @@ numnum_result numnum()
             }
             else
             {
-                max = atol(t);
+                max = std::atol(t);
             }
         }
         else
@@ -243,14 +243,14 @@ numnum_result numnum()
         if (max>g_lastart) {
             max = g_lastart;
             min = std::min(min, max);
-            sprintf(g_msg,"(Last article is %ld)",(long)g_lastart);
+            std::sprintf(g_msg,"(Last article is %ld)",(long)g_lastart);
             warnmsg(g_msg);
         }
         if (max < min) {
             errormsg("Bad range");
             if (cmdlst)
             {
-                free(cmdlst);
+                std::free(cmdlst);
             }
             return NN_ASK;
         }
@@ -263,16 +263,16 @@ numnum_result numnum()
             if (perform(cmdlst,output_level && g_page_line == 1) < 0) {
                 if (g_verbose)
                 {
-                    sprintf(g_msg, "(Interrupted at article %ld)", (long) g_art);
+                    std::sprintf(g_msg, "(Interrupted at article %ld)", (long) g_art);
                 }
                 else
                 {
-                    sprintf(g_msg, "(Intr at %ld)", (long) g_art);
+                    std::sprintf(g_msg, "(Intr at %ld)", (long) g_art);
                 }
                 errormsg(g_msg);
                 if (cmdlst)
                 {
-                    free(cmdlst);
+                    std::free(cmdlst);
                 }
                 return NN_ASK;
             }
@@ -330,8 +330,8 @@ int thread_perform()
     len = std::strlen(cmdstr);
 
     if (!output_level && !one_thread) {
-        printf("Processing...");
-        fflush(stdout);
+        std::printf("Processing...");
+        std::fflush(stdout);
     }
     /* A few commands can just loop through the subjects. */
     if ((len == 1 && (*cmdstr == 't' || *cmdstr == 'J'))
@@ -366,7 +366,7 @@ int thread_perform()
             }
         }
 #if 0
-    } else if (!strcmp(cmdstr, "E")) {
+    } else if (!std::strcmp(cmdstr, "E")) {
         /* The 'E'nd-decode command doesn't do any looping at all. */
         if (decode_fp)
         {
@@ -441,7 +441,7 @@ int thread_perform()
         }
     }
   break_out:
-    free(cmdstr);
+    std::free(cmdstr);
     return 1;
 }
 
@@ -456,13 +456,13 @@ int perform(char *cmdlst, int output_level)
     cmdlst = tbuf;
 
     if (output_level == 1) {
-        printf("%-6ld ",g_art);
-        fflush(stdout);
+        std::printf("%-6ld ",g_art);
+        std::fflush(stdout);
     }
 
     g_perform_cnt++;
     for (; (ch = *cmdlst) != 0; cmdlst++) {
-        if (isspace(ch) || ch == ':')
+        if (std::isspace(ch) || ch == ':')
         {
             continue;
         }
@@ -475,7 +475,7 @@ int perform(char *cmdlst, int output_level)
                 mark_as_read(g_artp);
                 if (output_level && g_verbose)
                 {
-                    fputs("\tJunked", stdout);
+                    std::fputs("\tJunked", stdout);
                 }
             }
             if (g_sel_rereading)
@@ -537,7 +537,7 @@ int perform(char *cmdlst, int output_level)
                 oneless(g_artp);
                 if (output_level && g_verbose)
                 {
-                    fputs("\tKilled", stdout);
+                    std::fputs("\tKilled", stdout);
                 }
             }
             if (g_sel_rereading)
@@ -559,7 +559,7 @@ int perform(char *cmdlst, int output_level)
                 unmark_as_read(g_artp);
                 if (output_level && g_verbose)
                 {
-                    fputs("\tMarked unread", stdout);
+                    std::fputs("\tMarked unread", stdout);
                 }
             }
         }
@@ -568,7 +568,7 @@ int perform(char *cmdlst, int output_level)
             oneless(g_artp);
             if (output_level && g_verbose)
             {
-                fputs("\tWill return", stdout);
+                std::fputs("\tWill return", stdout);
             }
         }
         else if (ch == '=') {
@@ -580,7 +580,7 @@ int perform(char *cmdlst, int output_level)
             int ret = cancel_article();
             if (output_level && g_verbose)
             {
-                printf("\t%sanceled", ret ? "Not c" : "C");
+                std::printf("\t%sanceled", ret ? "Not c" : "C");
             }
         }
         else if (ch == '%') {
@@ -614,7 +614,7 @@ int perform(char *cmdlst, int output_level)
                 escapade();
                 if (output_level && g_verbose)
                 {
-                    fputs("\tShell escaped", stdout);
+                    std::fputs("\tShell escaped", stdout);
                 }
             }
             else if (ch == '&') {
@@ -623,14 +623,14 @@ int perform(char *cmdlst, int output_level)
                 {
                     if (g_buf[1] && g_buf[1] != '&')
                     {
-                        fputs("\tSwitched", stdout);
+                        std::fputs("\tSwitched", stdout);
                     }
                 }
             }
             else {
                 if (output_level != 1) {
                     erase_line(false);
-                    printf("%-6ld ",g_art);
+                    std::printf("%-6ld ",g_art);
                 }
                 if (ch == 'a')
                 {
@@ -645,13 +645,13 @@ int perform(char *cmdlst, int output_level)
             }
         }
         else {
-            sprintf(g_msg,"Unknown command: %s",cmdlst);
+            std::sprintf(g_msg,"Unknown command: %s",cmdlst);
             errormsg(g_msg);
             return -1;
         }
         if (output_level && g_verbose)
         {
-            fflush(stdout);
+            std::fflush(stdout);
         }
         if (g_one_command)
         {
@@ -727,7 +727,7 @@ int ngsel_perform()
     }
 
   break_out:
-    free(cmdstr);
+    std::free(cmdstr);
     return 1;
 }
 
@@ -736,13 +736,13 @@ int ng_perform(char *cmdlst, int output_level)
     int ch;
 
     if (output_level == 1) {
-        printf("%s ",g_ngname.c_str());
-        fflush(stdout);
+        std::printf("%s ",g_ngname.c_str());
+        std::fflush(stdout);
     }
 
     g_perform_cnt++;
     for (; (ch = *cmdlst) != 0; cmdlst++) {
-        if (isspace(ch) || ch == ':')
+        if (std::isspace(ch) || ch == ':')
         {
             continue;
         }
@@ -769,7 +769,7 @@ int ng_perform(char *cmdlst, int output_level)
             break;
           case 'u':
             if (output_level && g_verbose) {
-                printf(g_unsubto,g_ngptr->rcline);
+                std::printf(g_unsubto,g_ngptr->rcline);
                 termdown(1);
             }
             g_ngptr->subscribechar = NEGCHAR;
@@ -779,13 +779,13 @@ int ng_perform(char *cmdlst, int output_level)
             g_newsgroup_toread--;
             goto deselect;
           default:
-            sprintf(g_msg,"Unknown command: %s",cmdlst);
+            std::sprintf(g_msg,"Unknown command: %s",cmdlst);
             errormsg(g_msg);
             return -1;
         }
         if (output_level && g_verbose)
         {
-            fflush(stdout);
+            std::fflush(stdout);
         }
         if (g_one_command)
         {
@@ -863,13 +863,13 @@ int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level)
     int ch;
 
     if (output_level == 1) {
-        printf("%s ",gp->name);
-        fflush(stdout);
+        std::printf("%s ",gp->name);
+        std::fflush(stdout);
     }
 
     g_perform_cnt++;
     for (; (ch = *cmdlst) != 0; cmdlst++) {
-        if (isspace(ch) || ch == ':')
+        if (std::isspace(ch) || ch == ':')
         {
             continue;
         }
@@ -881,13 +881,13 @@ int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level)
             g_selected_count--;
         }
         else {
-            sprintf(g_msg,"Unknown command: %s",cmdlst);
+            std::sprintf(g_msg,"Unknown command: %s",cmdlst);
             errormsg(g_msg);
             return -1;
         }
         if (output_level && g_verbose)
         {
-            fflush(stdout);
+            std::fflush(stdout);
         }
         if (g_one_command)
         {
