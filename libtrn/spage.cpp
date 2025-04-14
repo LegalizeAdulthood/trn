@@ -18,6 +18,7 @@
 #include "trn/sorder.h"
 
 #include <algorithm>
+#include <cstdio>
 
 /* returns true if successful */
 //long end;             /* entry number to be last on page */
@@ -32,7 +33,7 @@ bool s_fillpage_backward(long end)
 
 /* Debug */
 #if 0
-    printf("entry: s_fillpage_backward(%d)\n",end);
+    std::printf("entry: s_fillpage_backward(%d)\n",end);
 #endif
 
     page_lines = g_scr_height - g_s_top_lines - g_s_bot_lines;
@@ -141,7 +142,7 @@ bool s_fillpage_forward(long start)
 
 /* Debug */
 #if 0
-    printf("entry: s_fillpage_forward(%d)\n",start);
+    std::printf("entry: s_fillpage_forward(%d)\n",start);
 #endif
 
     page_lines = g_scr_height - g_s_top_lines - g_s_bot_lines;
@@ -240,7 +241,7 @@ bool s_refillpage()
 
 /* Debug */
 #if 0
-    printf("entry: s_refillpage\n");
+    std::printf("entry: s_refillpage\n");
 #endif
 
     page_lines = g_scr_height - g_s_top_lines - g_s_bot_lines;
@@ -418,7 +419,7 @@ bool s_go_top_ents()
     g_s_top_ent = s_first();
     if (!g_s_top_ent)
     {
-        printf("s_go_top_ents(): no first entry\n");
+        std::printf("s_go_top_ents(): no first entry\n");
     }
     TRN_ASSERT(g_s_top_ent);    /* be nicer later */
     if (!s_eligible(g_s_top_ent))       /* this may save a redraw...*/
