@@ -28,6 +28,7 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cstdio>
 #include <cstring>
 
 static char *s_sa_extract_dest{}; /* use this command on an extracted file */
@@ -64,7 +65,7 @@ int sa_docmd()
             break;
         }
         /* make **sure** that there is a number here */
-        i = atoi(g_buf+1);
+        i = std::atoi(g_buf+1);
         if (i == 0)
         {
             /* it might not be a number */
@@ -227,7 +228,7 @@ int sa_docmd()
         /* clear to end of screen */
         clear_rest();
         g_s_ref_all = true;     /* refresh everything */
-        printf("\nRescoring articles...\n");
+        std::printf("\nRescoring articles...\n");
         sc_rescore();
         s_sort();
         s_go_top_ents();
@@ -424,7 +425,7 @@ int sa_docmd()
             break;
         }
         /* make **sure** that there is a number here */
-        i = atoi(g_buf+1);
+        i = std::atoi(g_buf+1);
         if (i == 0)
         {
             /* it might not be a number */
@@ -536,24 +537,24 @@ int sa_docmd()
         g_s_ref_all = true;
         s_go_bot();
         if (decode_fp) {
-            printf("\nIncomplete file: %s\n",decode_dest);
-            printf("Continue with command? [ny]");
-            fflush(stdout);
+            std::printf("\nIncomplete file: %s\n",decode_dest);
+            std::printf("Continue with command? [ny]");
+            std::fflush(stdout);
             getcmd(g_buf);
-            printf("\n");
+            std::printf("\n");
             if (*g_buf == 'n' || *g_buf == ' ' || *g_buf == '\n')
             {
                 break;
             }
-            printf("Remove this file? [ny]");
-            fflush(stdout);
+            std::printf("Remove this file? [ny]");
+            std::fflush(stdout);
             getcmd(g_buf);
-            printf("\n");
+            std::printf("\n");
             if (*g_buf == 'y' || *g_buf == 'Y') {
                 decode_end();   /* will remove file */
                 break;
             }
-            fclose(decode_fp);
+            std::fclose(decode_fp);
             decode_fp = 0;
         }
         if (!sa_extracted_use) {
@@ -562,7 +563,7 @@ int sa_docmd()
             *sa_extracted_use = '\0';
         }
         if (!*decode_dest) {
-            printf("\nTrn doesn't remember an extracted file name.\n");
+            std::printf("\nTrn doesn't remember an extracted file name.\n");
             *g_buf = ' ';
             if (!s_finish_cmd("Please enter a file to use:"))
             {
@@ -573,7 +574,7 @@ int sa_docmd()
                 break;
             }
             safecpy(decode_dest,g_buf+1,MAXFILENAME);
-            printf("\n");
+            std::printf("\n");
         }
         if (s_sa_extract_dest == nullptr) {
             s_sa_extract_dest = (char*)safemalloc(LBUFLEN);
@@ -581,16 +582,16 @@ int sa_docmd()
         }
         if (*decode_dest != '/' && *decode_dest != '~'
          && *decode_dest != '%') {
-            sprintf(g_buf,"%s/%s",s_sa_extract_dest,decode_dest);
+            std::sprintf(g_buf,"%s/%s",s_sa_extract_dest,decode_dest);
             safecpy(decode_dest,g_buf,MAXFILENAME);
         }
         if (*sa_extracted_use)
         {
-            printf("Use command (default %s):\n",sa_extracted_use);
+            std::printf("Use command (default %s):\n",sa_extracted_use);
         }
         else
         {
-            printf("Use command (no default):\n");
+            std::printf("Use command (no default):\n");
         }
         *g_buf = ':';                   /* cosmetic */
         if (!s_finish_cmd(nullptr))
@@ -605,8 +606,8 @@ int sa_docmd()
         {
             break;
         }
-        sprintf(g_buf,"!%s %s",sa_extracted_use,decode_dest);
-        printf("\n%s\n",g_buf+1);
+        std::sprintf(g_buf,"!%s %s",sa_extracted_use,decode_dest);
+        std::printf("\n%s\n",g_buf+1);
         (void)escapade();
         (void)get_anything();
         eat_typeahead();
@@ -615,14 +616,14 @@ int sa_docmd()
       case '"':                 /* append to local SCORE file */
         s_go_bot();
         g_s_ref_all = true;
-        printf("Enter score append command or type RETURN for a menu\n");
+        std::printf("Enter score append command or type RETURN for a menu\n");
         g_buf[0] = ':';
         g_buf[1] = FINISHCMD;
         if (!finish_command(false))
         {
             break;
         }
-        printf("\n");
+        std::printf("\n");
         sa_go_art(artnum);
         sc_append(g_buf+1);
         (void)get_anything();
@@ -631,14 +632,14 @@ int sa_docmd()
       case '\'':                        /* execute scoring command */
         s_go_bot();
         g_s_ref_all = true;
-        printf("\nEnter scoring command or type RETURN for a menu\n");
+        std::printf("\nEnter scoring command or type RETURN for a menu\n");
         g_buf[0] = ':';
         g_buf[1] = FINISHCMD;
         if (!finish_command(false))
         {
             break;
         }
-        printf("\n");
+        std::printf("\n");
         sa_go_art(artnum);
         sc_score_cmd(g_buf+1);
         g_s_ref_all = true;
@@ -659,7 +660,7 @@ bool sa_extract_start()
         safecpy(s_sa_extract_dest,filexp("%p"),LBUFLEN);
     }
     s_go_bot();
-    printf("To directory (default %s)\n",s_sa_extract_dest);
+    std::printf("To directory (default %s)\n",s_sa_extract_dest);
     *g_buf = ':';                       /* cosmetic */
     if (!s_finish_cmd(nullptr))
     {
@@ -672,10 +673,10 @@ bool sa_extract_start()
         safecpy(s_sa_extract_dest,filexp(g_buf+1),LBUFLEN);
     }
     /* set a mode for this later? */
-    printf("\nMark extracted articles as read? [yn]");
-    fflush(stdout);
+    std::printf("\nMark extracted articles as read? [yn]");
+    std::fflush(stdout);
     getcmd(g_buf);
-    printf("\n");
+    std::printf("\n");
     s_sa_extract_junk = *g_buf == 'y' || *g_buf == ' ' || *g_buf == '\n';
     return true;
 }
