@@ -9,6 +9,8 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 /* any of these defines can be increased arbitrarily */
@@ -64,7 +66,7 @@ static int mp_alloc_frag()
 {
     int f = s_mp_first_free_frag;
     if (f == 0) {
-        printf("trn: out of memory pool fragments!\n");
+        std::printf("trn: out of memory pool fragments!\n");
         sig_catcher(0);         /* die. */
     }
     s_mp_first_free_frag = s_mpfrags[f].next;
@@ -86,7 +88,7 @@ static void mp_free_frag(int f)
     /* old code to actually free the blocks */
     if (s_mpfrags[f].data)
     {
-        free(s_mpfrags[f].data);
+        std::free(s_mpfrags[f].data);
     }
     s_mpfrags[f].lastfree = nullptr;
     s_mpfrags[f].bytesfree = 0;
@@ -103,7 +105,7 @@ char *mp_savestr(const char *str, memory_pool pool)
 {
     if (!str) {
 #if 1
-        printf("\ntrn: mp_savestr(nullptr,%d) error.\n",pool);
+        std::printf("\ntrn: mp_savestr(nullptr,%d) error.\n",pool);
         TRN_ASSERT(false);
 #else
         return nullptr;         /* only a flesh wound... (;-) */
@@ -111,8 +113,8 @@ char *mp_savestr(const char *str, memory_pool pool)
     }
     int len = std::strlen(str);
     if (len >= FRAG_SIZE) {
-        printf("trn: string too big (len = %d) for memory pool!\n",len);
-        printf("trn: (maximum length allowed is %d)\n",FRAG_SIZE);
+        std::printf("trn: string too big (len = %d) for memory pool!\n",len);
+        std::printf("trn: (maximum length allowed is %d)\n",FRAG_SIZE);
         sig_catcher(0);         /* die. */
     }
     int f = s_mpheads[pool].current;
@@ -138,8 +140,8 @@ char *mp_malloc(int len, memory_pool pool)
         len = 1;
     }
     if (len >= FRAG_SIZE) {
-        printf("trn: malloc size too big (len = %d) for memory pool!\n",len);
-        printf("trn: (maximum length allowed is %d)\n",FRAG_SIZE);
+        std::printf("trn: malloc size too big (len = %d) for memory pool!\n",len);
+        std::printf("trn: (maximum length allowed is %d)\n",FRAG_SIZE);
         sig_catcher(0);         /* die. */
     }
     int f = s_mpheads[pool].current;
