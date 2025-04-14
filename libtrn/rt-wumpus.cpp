@@ -23,6 +23,9 @@
 #include "util/util2.h"
 
 #include <algorithm>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 int g_max_tree_lines{6};
@@ -76,7 +79,7 @@ void init_tree()
 
     while (s_max_line >= 0)             /* free any previous tree data */
     {
-        free(s_tree_lines[s_max_line--]);
+        std::free(s_tree_lines[s_max_line--]);
     }
 
     if (!(s_tree_article = g_curr_artp) || !s_tree_article->subj)
@@ -392,18 +395,18 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 
     color_object(COLOR_HEADER, true);
     /* If this is the first subject line, output it with a preceeding [1] */
-    if (is_subject && !isspace(*line)) {
+    if (is_subject && !std::isspace(*line)) {
         if (g_threaded_group) {
             color_object(COLOR_TREE_MARK, true);
-            putchar('[');
-            putchar(thread_letter(g_curr_artp));
-            putchar(']');
+            std::putchar('[');
+            std::putchar(thread_letter(g_curr_artp));
+            std::putchar(']');
             color_pop();
-            putchar(' ');
+            std::putchar(' ');
             s_header_indent = 4;
         }
         else {
-            fputs("Subject: ", stdout);
+            std::fputs("Subject: ", stdout);
             s_header_indent = 9;
         }
         i = 0;
@@ -418,8 +421,8 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
             }
             else {
                 *cp = '\0';
-                fputs(line, stdout);
-                putchar(' ');
+                std::fputs(line, stdout);
+                std::putchar(' ');
                 s_header_indent = ++cp - line;
                 line = cp;
                 if (!*line)
@@ -437,10 +440,10 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
     for ( ; *line; i = s_header_indent) {
         maybe_eol();
         if (i) {
-            putchar('+');
+            std::putchar('+');
             while (--i)
             {
-                putchar(' ');
+                std::putchar(' ');
             }
         }
         g_term_col = s_header_indent;
@@ -488,7 +491,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
         }
         else
         {
-            fputs(line, stdout);
+            std::fputs(line, stdout);
         }
         *cp = ch;
         /* Skip whitespace in wrapped line */
@@ -500,7 +503,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
         /* Check if we've got any tree lines to output */
         if (wrap_at != g_tc_COLS-1 && header_line <= s_max_line) {
             do {
-                putchar(' ');
+                std::putchar(' ');
             } while (pad_cnt--);
             g_term_col = wrap_at;
             /* Check string for the '*' flagging our current node
@@ -518,7 +521,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
                 *cp2 = '\0';
             }
             color_object(COLOR_TREE, true);
-            fputs(cp, stdout);
+            std::fputs(cp, stdout);
             /* Handle standout output for '*' and '@' marked nodes, then
             ** continue with the rest of the line.
             */
@@ -528,18 +531,18 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
                     cp = cp1;
                     cp1 = nullptr;
                     *cp++ = '*';
-                    putchar(*cp++);
-                    putchar(*cp++);
+                    std::putchar(*cp++);
+                    std::putchar(*cp++);
                 } else {
                     cp = cp2;
                     cp2 = nullptr;
                     *cp++ = '@';
                 }
-                putchar(*cp++);
+                std::putchar(*cp++);
                 color_pop();    /* of COLOR_TREE_MARK */
                 if (*cp)
                 {
-                    fputs(cp, stdout);
+                    std::fputs(cp, stdout);
                 }
             }/* while */
             color_pop();        /* of COLOR_TREE */
@@ -549,7 +552,7 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
     }/* for remainder of line */
 
     /* free allocated copy of line */
-    free(tmpbuf);
+    std::free(tmpbuf);
 
     color_pop();        /* of COLOR_HEADER */
     /* return number of lines displayed */
@@ -578,11 +581,11 @@ void entire_tree(ARTICLE* ap)
     if (!ap) {
         if (g_verbose)
         {
-            fputs("\nNo article tree to display.\n", stdout);
+            std::fputs("\nNo article tree to display.\n", stdout);
         }
         else
         {
-            fputs("\nNo tree.\n", stdout);
+            std::fputs("\nNo tree.\n", stdout);
         }
         termdown(2);
         return;
@@ -590,11 +593,11 @@ void entire_tree(ARTICLE* ap)
 
     if (!g_threaded_group) {
         g_threaded_group = true;
-        printf("Threading the group. ");
-        fflush(stdout);
+        std::printf("Threading the group. ");
+        std::fflush(stdout);
         thread_open();
         if (!g_threaded_group) {
-            printf("*failed*\n");
+            std::printf("*failed*\n");
             termdown(1);
             return;
         }
@@ -619,7 +622,7 @@ void entire_tree(ARTICLE* ap)
         {
             return;
         }
-        printf("[%c] %s\n",s_letters[num>9+26+26? 9+26+26:num],sp->str+4);
+        std::printf("[%c] %s\n",s_letters[num>9+26+26? 9+26+26:num],sp->str+4);
         termdown(1);
         sp->misc = num++;
         sp = sp->thread_link;
@@ -633,7 +636,7 @@ void entire_tree(ARTICLE* ap)
     {
         return;
     }
-    putchar(' ');
+    std::putchar(' ');
     g_buf[3] = '\0';
     display_tree(thread, s_tree_indent);
 
@@ -656,7 +659,7 @@ static void display_tree(ARTICLE *article, char *cp)
     cp += 5;
     color_object(COLOR_TREE, true);
     for (;;) {
-        putchar(((article->flags&AF_HAS_RE) || article->parent) ? '-' : ' ');
+        std::putchar(((article->flags&AF_HAS_RE) || article->parent) ? '-' : ' ');
         if (!(article->flags & AF_UNREAD)) {
             g_buf[0] = '(';
             g_buf[2] = ')';
@@ -671,14 +674,14 @@ static void display_tree(ARTICLE *article, char *cp)
         if (article == g_curr_artp) {
             color_string(COLOR_TREE_MARK,g_buf);
         } else if (article == g_recent_artp) {
-            putchar(g_buf[0]);
+            std::putchar(g_buf[0]);
             color_object(COLOR_TREE_MARK, true);
-            putchar(g_buf[1]);
+            std::putchar(g_buf[1]);
             color_pop();        /* of COLOR_TREE_MARK */
-            putchar(g_buf[2]);
+            std::putchar(g_buf[2]);
         } else
         {
-            fputs(g_buf, stdout);
+            std::fputs(g_buf, stdout);
         }
 
         if (article->sibling) {
@@ -688,7 +691,7 @@ static void display_tree(ARTICLE *article, char *cp)
             *cp = ' ';
         }
         if (article->child1) {
-            putchar((article->child1->sibling)? '+' : '-');
+            std::putchar((article->child1->sibling)? '+' : '-');
             color_pop();        /* of COLOR_TREE */
             display_tree(article->child1, cp);
             color_object(COLOR_TREE, true);
@@ -710,7 +713,7 @@ static void display_tree(ARTICLE *article, char *cp)
             color_pop();
             return;
         }
-        fputs(s_tree_indent+5, stdout);
+        std::fputs(s_tree_indent+5, stdout);
     }
     color_pop();        /* of COLOR_TREE */
 }
