@@ -4,7 +4,7 @@
 #ifndef TRN_STRING_ALGOS_H
 #define TRN_STRING_ALGOS_H
 
-#include <ctype.h>
+#include <cctype>
 
 inline bool empty(const char *str)
 {
@@ -42,7 +42,7 @@ Char *skip_digits(Char *str)
 {
     if (str)
     {
-        while (*str && isdigit(static_cast<unsigned char>(*str)))
+        while (*str && std::isdigit(static_cast<unsigned char>(*str)))
         {
             ++str;
         }
@@ -55,7 +55,7 @@ Char *skip_space(Char *str)
 {
     if (str)
     {
-        while (*str && isspace(static_cast<unsigned char>(*str)))
+        while (*str && std::isspace(static_cast<unsigned char>(*str)))
         {
             ++str;
         }
@@ -68,7 +68,7 @@ Char *skip_non_space(Char *str)
 {
     if (str)
     {
-        while (*str && !isspace(static_cast<unsigned char>(*str)))
+        while (*str && !std::isspace(static_cast<unsigned char>(*str)))
         {
             ++str;
         }
@@ -81,7 +81,7 @@ Char *skip_alpha(Char *str)
 {
     if (str)
     {
-        while (*str && isalpha(static_cast<unsigned char>(*str)))
+        while (*str && std::isalpha(static_cast<unsigned char>(*str)))
         {
             ++str;
         }
@@ -94,7 +94,7 @@ Char *skip_non_alpha(Char *str)
 {
     if (str)
     {
-        while (*str && !isalpha(static_cast<unsigned char>(*str)))
+        while (*str && !std::isalpha(static_cast<unsigned char>(*str)))
         {
             ++str;
         }
