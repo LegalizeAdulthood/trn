@@ -28,6 +28,8 @@
 #include "trn/util.h"
 
 #include <algorithm>
+#include <cctype>
+#include <cstdio>
 #include <cstring>
 
 SEL_ITEM  g_sel_items[MAX_SEL];
@@ -77,8 +79,8 @@ bool set_sel_mode(char_int ch)
             {
                 g_firstart = g_absfirst;
             }
-            printf("\nThreading the group. ");
-            fflush(stdout);
+            std::printf("\nThreading the group. ");
+            std::fflush(stdout);
             termdown(1);
             thread_open();
             g_thread_always = always_save;
@@ -102,7 +104,7 @@ char *get_sel_order(sel_mode smode)
 {
     sel_mode save_sel_mode = g_sel_mode;
     set_selector(smode, SS_MAGIC_NUMBER);
-    sprintf(g_buf,"%s%s", g_sel_direction < 0? "reverse " : "",
+    std::sprintf(g_buf,"%s%s", g_sel_direction < 0? "reverse " : "",
             g_sel_sort_string);
     g_sel_mode = save_sel_mode;
     set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
@@ -122,11 +124,11 @@ bool set_sel_order(sel_mode smode, const char *str)
     char ch = *str;
     if (reverse)
     {
-        ch = islower(ch) ? toupper(ch) : ch;
+        ch = std::islower(ch) ? std::toupper(ch) : ch;
     }
     else
     {
-        ch = isupper(ch) ? tolower(ch) : ch;
+        ch = std::isupper(ch) ? std::tolower(ch) : ch;
     }
 
     return set_sel_sort(smode,ch);
@@ -167,7 +169,7 @@ bool set_sel_sort(sel_mode smode, char_int ch)
     }
 
     g_sel_mode = smode;
-    if (isupper(ch))
+    if (std::isupper(ch))
     {
         set_selector(SM_MAGIC_NUMBER, static_cast<sel_sort_mode>(-ssort));
     }
@@ -436,7 +438,7 @@ try_again:
             }
             if (g_maxngtodo) {
                 end_only();
-                fputs(g_msg, stdout);
+                std::fputs(g_msg, stdout);
                 newline();
                 if (fill_last_page)
                 {
@@ -1463,7 +1465,7 @@ void display_page_title(bool home_only)
     }
     else if (g_sel_mode == SM_UNIVERSAL) {
         color_object(COLOR_HEADING, true);
-        printf("[%d] %s",g_univ_level,
+        std::printf("[%d] %s",g_univ_level,
                g_univ_title.empty() ? "Universal Selector" : g_univ_title.c_str());
         color_pop();
     }
@@ -1479,10 +1481,10 @@ void display_page_title(bool home_only)
         int len;
         NEWSRC* rp;
         color_object(COLOR_HEADING, true);
-        printf("Newsgroups");
+        std::printf("Newsgroups");
         for (rp = g_multirc->first, len = 0; rp && len < 34; rp = rp->next) {
             if (rp->flags & RF_ACTIVE) {
-                sprintf(g_buf+len, ", %s", rp->datasrc->name);
+                std::sprintf(g_buf+len, ", %s", rp->datasrc->name);
                 len += std::strlen(g_buf+len);
             }
         }
@@ -1490,9 +1492,9 @@ void display_page_title(bool home_only)
         {
             std::strcpy(g_buf + len, ", ...");
         }
-        if (strcmp(g_buf+2,"default") != 0)
+        if (std::strcmp(g_buf+2,"default") != 0)
         {
-            printf(" (group #%d: %s)", g_multirc->num, g_buf + 2);
+            std::printf(" (group #%d: %s)", g_multirc->num, g_buf + 2);
         }
         color_pop();    /* of COLOR_HEADING */
     }
@@ -1508,28 +1510,28 @@ void display_page_title(bool home_only)
     }
     else if (g_sel_mode == SM_OPTIONS)
     {
-        printf("      (Press 'S' to save changes, 'q' to abandon, or TAB to use.)");
+        std::printf("      (Press 'S' to save changes, 'q' to abandon, or TAB to use.)");
     }
     else if (g_in_ng) {
-        printf("          %ld %sarticle%s", (long)g_sel_total_obj_cnt,
+        std::printf("          %ld %sarticle%s", (long)g_sel_total_obj_cnt,
                g_sel_rereading? "read " : "",
                g_sel_total_obj_cnt == 1 ? "" : "s");
         if (g_sel_exclusive)
         {
-            printf(" out of %ld", (long) g_obj_count);
+            std::printf(" out of %ld", (long) g_obj_count);
         }
-        fputs(g_moderated.c_str(),stdout);
+        std::fputs(g_moderated.c_str(),stdout);
     }
     else {
-        printf("       %s%ld group%s",s_group_init_done? "" : "~",
+        std::printf("       %s%ld group%s",s_group_init_done? "" : "~",
             (long)g_sel_total_obj_cnt, plural(g_sel_total_obj_cnt));
         if (g_sel_exclusive)
         {
-            printf(" out of %ld", (long) g_obj_count);
+            std::printf(" out of %ld", (long) g_obj_count);
         }
         if (g_maxngtodo)
         {
-            printf(" (Restriction)");
+            std::printf(" (Restriction)");
         }
     }
     home_cursor();
@@ -1537,7 +1539,7 @@ void display_page_title(bool home_only)
     maybe_eol();
     if (g_in_ng && g_redirected && !g_redirected_to.empty())
     {
-        printf("\t** Please start using %s **", g_redirected_to.c_str());
+        std::printf("\t** Please start using %s **", g_redirected_to.c_str());
     }
     newline();
 }
@@ -1585,7 +1587,7 @@ try_again:
 
             maybe_eol();
             for (rp = mp->first, len = 0; rp && len < 34; rp = rp->next) {
-                sprintf(g_buf+len, ", %s", rp->datasrc->name);
+                std::sprintf(g_buf+len, ", %s", rp->datasrc->name);
                 len += std::strlen(g_buf+len);
             }
             if (rp)
@@ -1593,7 +1595,7 @@ try_again:
                 std::strcpy(g_buf + len, ", ...");
             }
             output_sel(g_sel_page_item_cnt, sel, false);
-            printf("%5d %s\n", mp->num, g_buf+2);
+            std::printf("%5d %s\n", mp->num, g_buf+2);
             termdown(1);
             g_sel_page_item_cnt++;
         }
@@ -1657,7 +1659,7 @@ try_again:
 
                 maybe_eol();
                 output_sel(g_sel_page_item_cnt, sel, false);
-                printf("%5ld ", (long)np->toread);
+                std::printf("%5ld ", (long)np->toread);
                 display_group(np->rc->datasrc,np->rcline,np->numoffset-1,max_len);
             }
             else if (np->numoffset >= max_len)
@@ -1730,7 +1732,7 @@ try_again:
 
             maybe_eol();
             output_sel(g_sel_page_item_cnt, sel, false);
-            printf("%5ld ", (long)gp->toread);
+            std::printf("%5ld ", (long)gp->toread);
             display_group(gp->datasrc, gp->name, std::strlen(gp->name), max_len);
             g_sel_page_item_cnt++;
         }
@@ -1765,7 +1767,7 @@ try_again:
 
             maybe_eol();
             output_sel(g_sel_page_item_cnt, sel, false);
-            putchar(' ');
+            std::putchar(' ');
             display_univ(ui);
             g_sel_page_item_cnt++;
         }
@@ -1918,7 +1920,7 @@ try_again:
             }
             if (etc)
             {
-                printf("     ... etc. [%d lines total]", etc);
+                std::printf("     ... etc. [%d lines total]", etc);
             }
         }
         if (!g_sel_page_obj_cnt) {
@@ -1998,19 +2000,19 @@ void output_sel(int ix, int sel, bool update)
     if (ix < 0) {
         if (g_use_sel_num)
         {
-            putchar(' ');
+            std::putchar(' ');
         }
-        putchar(' ');
-        putchar(' ');
+        std::putchar(' ');
+        std::putchar(' ');
         return;
     }
 
     if (g_use_sel_num) {
         /* later consider no-leading-zero option */
-        printf("%02d",ix+1);
+        std::printf("%02d",ix+1);
     } else
     {
-        putchar(g_sel_chars[ix]);
+        std::putchar(g_sel_chars[ix]);
     }
 
     switch (sel) {
@@ -2028,7 +2030,7 @@ void output_sel(int ix, int sel, bool update)
         sel = 0;
         break;
     }
-    putchar(" +-*"[sel]);
+    std::putchar(" +-*"[sel]);
     color_pop();        /* of COLOR_PLUS/MINUS/STAR/DEFAULT */
 
     if (update)
@@ -2120,14 +2122,14 @@ static void display_article(const ARTICLE *ap, int ix, int sel)
     output_sel(ix, sel, false);
     if (*g_sel_art_dmode == 's' || from_width < 8)
     {
-        printf("  %s\n", compress_subj(ap->subj->articles, subj_width));
+        std::printf("  %s\n", compress_subj(ap->subj->articles, subj_width));
     }
     else if (*g_sel_art_dmode == 'd') {
-          printf("%s  %s\n",
+          std::printf("%s  %s\n",
                compress_date(ap, date_width),
                compress_subj(ap, subj_width - date_width));
     } else {
-        printf("%s  %s\n",
+        std::printf("%s  %s\n",
                compress_from(ap->from, from_width),
                compress_subj(ap, subj_width - from_width));
     }
@@ -2153,7 +2155,7 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
 
     output_sel(ix, sel, false);
     if (*g_sel_art_dmode == 's' || from_width < 8) {
-        printf("%3d  %s\n",j,compress_subj(subj->articles,subj_width));
+        std::printf("%3d  %s\n",j,compress_subj(subj->articles,subj_width));
         termdown(1);
     }
     else {
@@ -2176,11 +2178,11 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
             first_ap = ap;
         }
         if (*g_sel_art_dmode == 'd') {
-            printf("%s%3d  %s\n",
+            std::printf("%s%3d  %s\n",
                    compress_date(first_ap, date_width), j,
                    compress_subj(first_ap, subj_width - date_width));
         } else {
-            printf("%s%3d  %s\n",
+            std::printf("%s%3d  %s\n",
                    compress_from(first_ap? first_ap->from : nullptr, from_width), j,
                    compress_subj(first_ap, subj_width - from_width));
         }
@@ -2223,9 +2225,9 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
                         }
                         if (g_use_sel_num)
                         {
-                            putchar(' ');
+                            std::putchar(' ');
                         }
-                        printf("  %s      ",
+                        std::printf("  %s      ",
                                compress_from(ap? ap->from : nullptr, from_width));
                         continue;
                     }
@@ -2237,9 +2239,9 @@ static void display_subject(const SUBJECT *subj, int ix, int sel)
                 maybe_eol();
                 if (g_use_sel_num)
                 {
-                    putchar(' ');
+                    std::putchar(' ');
                 }
-                printf("  %s\n", compress_from(ap? ap->from : nullptr, from_width));
+                std::printf("  %s\n", compress_from(ap? ap->from : nullptr, from_width));
                 termdown(1);
             }
         }
@@ -2272,14 +2274,14 @@ void display_option(int op, int item_index)
         }
     }
     output_sel(item_index, g_sel_items[item_index].sel, false);
-    printf(" %s%s%s %.39s\n", pre, item, post + len, val);
+    std::printf(" %s%s%s %.39s\n", pre, item, post + len, val);
     termdown(1);
 }
 
 static void display_univ(const UNIV_ITEM *ui)
 {
     if (!ui) {
-        fputs("****EMPTY****",stdout);
+        std::fputs("****EMPTY****",stdout);
     } else {
         switch(ui->type) {
           case UN_NEWSGROUP: {
@@ -2287,7 +2289,7 @@ static void display_univ(const UNIV_ITEM *ui)
             NGDATA *np = find_ng(ui->data.group.ng);
             if (!np)
             {
-                printf("!!!!! could not find %s", ui->data.group.ng);
+                std::printf("!!!!! could not find %s", ui->data.group.ng);
             }
             else {
                 /* XXX set_toread() can print sometimes... */
@@ -2298,31 +2300,31 @@ static void display_univ(const UNIV_ITEM *ui)
                 int numarts = np->toread;
                 if (numarts >= 0)
                 {
-                    printf("%5ld ", (long) numarts);
+                    std::printf("%5ld ", (long) numarts);
                 }
                 else if (numarts == TR_UNSUB)
                 {
-                    printf("UNSUB ");
+                    std::printf("UNSUB ");
                 }
                 else
                 {
-                    printf("***** ");
+                    std::printf("***** ");
                 }
-                fputs(ui->data.group.ng,stdout);
+                std::fputs(ui->data.group.ng,stdout);
             }
             newline();
             break;
           }
           case UN_ARTICLE:
-            printf("      %s",ui->desc? ui->desc : univ_article_desc(ui));
+            std::printf("      %s",ui->desc? ui->desc : univ_article_desc(ui));
             newline();
             break;
           case UN_HELPKEY:
-            printf("      Help on the %s",univ_keyhelp_modestr(ui));
+            std::printf("      Help on the %s",univ_keyhelp_modestr(ui));
             newline();
             break;
           default:
-            printf("      %s",ui->desc? ui->desc : "[No Description]");
+            std::printf("      %s",ui->desc? ui->desc : "[No Description]");
             newline();
             break;
         }
@@ -2333,7 +2335,7 @@ static void display_group(DATASRC *dp, char *group, int len, int max_len)
 {
     if (*g_sel_grp_dmode == 's')
     {
-        fputs(group, stdout);
+        std::fputs(group, stdout);
     }
     else {
         char* end;
@@ -2350,21 +2352,21 @@ static void display_group(DATASRC *dp, char *group, int len, int max_len)
             *end = '\0';
             if (*g_sel_grp_dmode == 'm')
             {
-                fputs(cp, stdout);
+                std::fputs(cp, stdout);
             }
             else {
                 int i = max_len - len;
-                fputs(group, stdout);
+                std::fputs(group, stdout);
                 do {
-                    putchar(' ');
+                    std::putchar(' ');
                 } while (--i > 0);
-                fputs(cp, stdout);
+                std::fputs(cp, stdout);
             }
             *end = ch;
         }
         else
         {
-            fputs(group, stdout);
+            std::fputs(group, stdout);
         }
     }
     newline();
