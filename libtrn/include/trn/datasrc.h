@@ -4,15 +4,15 @@
 #ifndef TRN_DATASRC_H
 #define TRN_DATASRC_H
 
-#include <cstdint>
-#include <stdio.h>
-#include <string>
-#include <time.h>
-
 #include "trn/enum-flags.h"
 #include "trn/list.h"
 #include "nntp/nntpclient.h"
 #include "trn/rt-ov.h"
+
+#include <cstdint>
+#include <cstdio>
+#include <ctime>
+#include <string>
 
 enum
 {
@@ -24,12 +24,12 @@ struct LIST;
 
 struct SRCFILE
 {
-    FILE      *fp;           /* the file pointer to read the data */
-    HASHTABLE *hp;           /* the hash table for the data */
-    LIST      *lp;           /* the list used to store the data */
-    long       recent_cnt;   /* # lines/bytes this file might be */
-    time_t     lastfetch;    /* when the data was last fetched */
-    time_t     refetch_secs; /* how long before we refetch this file */
+    std::FILE  *fp;           /* the file pointer to read the data */
+    HASHTABLE  *hp;           /* the hash table for the data */
+    LIST       *lp;           /* the list used to store the data */
+    long        recent_cnt;   /* # lines/bytes this file might be */
+    std::time_t lastfetch;    /* when the data was last fetched */
+    std::time_t refetch_secs; /* how long before we refetch this file */
 };
 
 enum datasrc_flags : std::uint16_t
@@ -78,8 +78,8 @@ struct DATASRC
     char         *auth_user;
     char         *auth_pass;
     long          lastnewgrp; /* time of last newgroup check */
-    FILE         *ov_in;      /* the overview's file handle */
-    time_t        ov_opened;  /* time overview file was opened */
+    std::FILE    *ov_in;      /* the overview's file handle */
+    std::time_t   ov_opened;  /* time overview file was opened */
     ov_field_num  fieldnum[OV_MAX_FIELDS];
     field_flags   fieldflags[OV_MAX_FIELDS];
     datasrc_flags flags;
@@ -99,7 +99,7 @@ extern DATASRC    *g_datasrc;          /* the current datasrc */
 extern int         g_datasrc_cnt;      //
 extern char       *g_trnaccess_mem;    //
 extern std::string g_nntp_auth_file;   //
-extern time_t      g_def_refetch_secs; /* -z */
+extern std::time_t g_def_refetch_secs; /* -z */
 
 void        datasrc_init();
 void        datasrc_finalize();

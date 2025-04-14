@@ -40,9 +40,12 @@ struct utimbuf
 #endif
 
 #include <algorithm>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <string>
-#include <time.h>
 
 LIST       *g_datasrc_list{};                         /* a list of all DATASRCs */
 DATASRC    *g_datasrc{};                              /* the current datasrc */
@@ -116,7 +119,7 @@ void datasrc_init()
     g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
 
     char *machine = get_val("NNTPSERVER");
-    if (machine && strcmp(machine,"local") != 0)
+    if (machine && std::strcmp(machine,"local") != 0)
     {
         vals[DI_NNTP_SERVER] = machine;
         vals[DI_AUTH_USER] = read_auth_file(g_nntp_auth_file.c_str(),
@@ -133,7 +136,7 @@ void datasrc_init()
     }
     else if (s)
     {
-        free(s);
+        std::free(s);
     }
 
     if (!machine) {
@@ -142,7 +145,7 @@ void datasrc_init()
         {
             machine = nntp_servername(machine);
         }
-        if (!strcmp(machine,"local")) {
+        if (!std::strcmp(machine,"local")) {
             machine = nullptr;
             actname = ACTIVE;
         }
@@ -248,7 +251,7 @@ static DATASRC *new_datasrc(const char *name, char **vals)
     }
 
     dp->name = savestr(name);
-    if (!strcmp(name,"default"))
+    if (!std::strcmp(name,"default"))
     {
         dp->flags |= DF_DEFAULT;
     }
@@ -261,7 +264,7 @@ static DATASRC *new_datasrc(const char *name, char **vals)
         if (cp != nullptr)
         {
             *cp = '\0';
-            dp->nntplink.port_number = atoi(cp+1);
+            dp->nntplink.port_number = std::atoi(cp+1);
         }
 
         v = vals[DI_ACT_REFETCH];
@@ -364,7 +367,7 @@ static DATASRC *new_datasrc(const char *name, char **vals)
 
 static char *dir_or_none(DATASRC *dp, const char *dir, datasrc_flags flag)
 {
-    if (!dir || !*dir || !strcmp(dir,"remote")) {
+    if (!dir || !*dir || !std::strcmp(dir,"remote")) {
         dp->flags |= flag;
         if (dp->flags & DF_REMOTE)
         {
@@ -372,7 +375,7 @@ static char *dir_or_none(DATASRC *dp, const char *dir, datasrc_flags flag)
         }
         if (flag == DF_ADD_OK) {
             char* cp = safemalloc(std::strlen(dp->newsid)+6+1);
-            sprintf(cp,"%s.times",dp->newsid);
+            std::sprintf(cp,"%s.times",dp->newsid);
             return cp;
         }
         if (flag == DF_NONE) {
@@ -390,14 +393,14 @@ static char *dir_or_none(DATASRC *dp, const char *dir, datasrc_flags flag)
         return dp->spool_dir;
     }
 
-    if (!strcmp(dir,"none"))
+    if (!std::strcmp(dir,"none"))
     {
         return nullptr;
     }
 
     dp->flags |= flag;
     dir = filexp(dir);
-    if (!strcmp(dir,dp->spool_dir))
+    if (!std::strcmp(dir,dp->spool_dir))
     {
         return dp->spool_dir;
     }
@@ -406,7 +409,7 @@ static char *dir_or_none(DATASRC *dp, const char *dir, datasrc_flags flag)
 
 static char *file_or_none(char *fn)
 {
-    if (!fn || !*fn || !strcmp(fn,"none") || !strcmp(fn,"remote"))
+    if (!fn || !*fn || !std::strcmp(fn,"none") || !std::strcmp(fn,"remote"))
     {
         return nullptr;
     }
@@ -436,7 +439,7 @@ bool open_datasrc(DATASRC *dp)
         if (dp->act_sf.refetch_secs) {
             switch (nntp_list("active", "control", 7)) {
             case 1:
-                if (strncmp(g_ser_line, "control ", 8) != 0)
+                if (std::strncmp(g_ser_line, "control ", 8) != 0)
                 {
                     std::strcpy(g_buf, g_ser_line);
                     dp->act_sf.lastfetch = 0;
@@ -454,7 +457,7 @@ bool open_datasrc(DATASRC *dp)
                 dp->flags |= DF_USELISTACT;
                 if (dp->flags & DF_TMPACTFILE) {
                     dp->flags &= ~DF_TMPACTFILE;
-                    free(dp->extra_name);
+                    std::free(dp->extra_name);
                     dp->extra_name = nullptr;
                     dp->act_sf.refetch_secs = 0;
                     success = srcfile_open(&dp->act_sf,nullptr,
@@ -466,7 +469,7 @@ bool open_datasrc(DATASRC *dp)
                 }
                 break;
             case -2:
-                printf("Failed to open news server %s:\n%s\n", dp->newsid, g_ser_line);
+                std::printf("Failed to open news server %s:\n%s\n", dp->newsid, g_ser_line);
                 termdown(2);
                 success = false;
                 break;
@@ -516,12 +519,12 @@ void set_datasrc(DATASRC *dp)
 
 void check_datasrcs()
 {
-    time_t now = time((time_t*)nullptr);
+    std::time_t now = std::time(nullptr);
 
     if (g_datasrc_list) {
         for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp)) {
             if ((dp->flags & DF_OPEN) && dp->nntplink.connection) {
-                time_t limit = ((dp->flags & DF_ACTIVE) ? 30 * 60 : 10 * 60);
+                std::time_t limit = ((dp->flags & DF_ACTIVE) ? 30 * 60 : 10 * 60);
                 if (now - dp->nntplink.last_command > limit) {
                     DATASRC* save_datasrc = g_datasrc;
                     /*printf("\n*** Closing %s ***\n", dp->name); $$*/
@@ -631,7 +634,7 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
             set_datasrc(save_datasrc);
             return false;
         case 1:
-            sprintf(outbuf, "%s\n", g_ser_line);
+            std::sprintf(outbuf, "%s\n", g_ser_line);
             nntp_finish_list();
             break;
         case -2:
@@ -670,40 +673,40 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
             }
         }
 # endif
-        high = (ART_NUM)atol(outbuf+len+1);
+        high = (ART_NUM)std::atol(outbuf+len+1);
     }
 
     if (lbp_len) {
         if ((dp->flags & DF_REMOTE) && dp->act_sf.refetch_secs) {
             char* cp;
-            if (high && high != (ART_NUM)atol(cp = lbp+len+1)) {
+            if (high && high != (ART_NUM)std::atol(cp = lbp+len+1)) {
                 cp = skip_digits(cp);
                 while (*--cp != ' ') {
                     int num = high % 10;
                     high = high / 10;
                     *cp = '0' + (char)num;
                 }
-                fseek(fp, act_pos, 0);
-                fwrite(lbp, 1, lbp_len, fp);
+                std::fseek(fp, act_pos, 0);
+                std::fwrite(lbp, 1, lbp_len, fp);
             }
             goto use_cache;
         }
 
         /* hopefully this forces a reread */
-        fseek(fp,2000000000L,1);
+        std::fseek(fp,2000000000L,1);
 
         /*$$ if line has changed length or is not there, we should
          * discard/close the active file, and re-open it. $$*/
-        if (fseek(fp, act_pos, 0) >= 0
-         && fgets(outbuf, LBUFLEN, fp) != nullptr
-         && !strncmp(outbuf, nam, len) && outbuf[len] == ' ') {
+        if (std::fseek(fp, act_pos, 0) >= 0
+         && std::fgets(outbuf, LBUFLEN, fp) != nullptr
+         && !std::strncmp(outbuf, nam, len) && outbuf[len] == ' ') {
             /* Remember the latest info in our cache. */
-            (void) memcpy(lbp,outbuf,lbp_len);
+            (void) std::memcpy(lbp,outbuf,lbp_len);
             return true;
         }
       use_cache:
         /* Return our cached version */
-        (void) memcpy(outbuf,lbp,lbp_len);
+        (void) std::memcpy(outbuf,lbp,lbp_len);
         outbuf[lbp_len] = '\0';
         return true;
     }
@@ -748,7 +751,7 @@ const char *find_grpdesc(DATASRC *dp, const char *groupname)
                 dp->flags &= ~DF_TMPGRPDESC;
                 remove(dp->grpdesc);
             }
-            free(dp->grpdesc);
+            std::free(dp->grpdesc);
             dp->grpdesc = nullptr;
             return "";
         }
@@ -774,7 +777,7 @@ try_xgtitle:
             nntp_gets(g_buf, sizeof g_buf - 1); // TODO: check return value?
             if (nntp_at_list_end(g_buf))
             {
-                sprintf(g_buf, "%s \n", groupname);
+                std::sprintf(g_buf, "%s \n", groupname);
             }
             else {
                 nntp_finish_list();
@@ -790,7 +793,7 @@ try_xgtitle:
             {
                 return find_grpdesc(dp, groupname);
             }
-            free(dp->grpdesc);
+            std::free(dp->grpdesc);
             dp->grpdesc = nullptr;
         }
     }
@@ -828,8 +831,8 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
     HASHDATUM data;
     long node_low;
     int linelen;
-    FILE* fp;
-    time_t now = time((time_t*)nullptr);
+    std::FILE* fp;
+    std::time_t now = std::time(nullptr);
     bool use_buffered_nntp_gets = false;
 
     if (!filename)
@@ -839,25 +842,25 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
     else if (server) {
         if (!sfp->refetch_secs) {
             server = nullptr;
-            fp = fopen(filename, "r");
+            fp = std::fopen(filename, "r");
             g_spin_todo = 0;
         }
         else if (now - sfp->lastfetch > sfp->refetch_secs && (sfp->refetch_secs != 2 || !sfp->lastfetch))
         {
-            fp = fopen(filename, "w+");
+            fp = std::fopen(filename, "w+");
             if (fp) {
-                printf("Getting %s file from %s.", fetchcmd, server);
-                fflush(stdout);
+                std::printf("Getting %s file from %s.", fetchcmd, server);
+                std::fflush(stdout);
                 /* tell server we want the file */
                 if (!(g_nntplink.flags & NNTP_NEW_CMD_OK))
                 {
                     use_buffered_nntp_gets = true;
                 }
                 else if (nntp_list(fetchcmd, "", 0) < 0) {
-                    printf("\nCan't get %s file from server: \n%s\n",
+                    std::printf("\nCan't get %s file from server: \n%s\n",
                            fetchcmd, g_ser_line);
                     termdown(2);
-                    fclose(fp);
+                    std::fclose(fp);
                     return 0;
                 }
                 sfp->lastfetch = now;
@@ -869,10 +872,10 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
         }
         else {
             server = nullptr;
-            fp = fopen(filename, "r+");
+            fp = std::fopen(filename, "r+");
             if (!fp) {
                 sfp->refetch_secs = 0;
-                fp = fopen(filename, "r");
+                fp = std::fopen(filename, "r");
             }
             g_spin_todo = 0;
         }
@@ -883,12 +886,12 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
     }
     else
     {
-        fp = fopen(filename, "r");
+        fp = std::fopen(filename, "r");
         g_spin_todo = 0;
     }
 
     if (filename && fp == nullptr) {
-        printf(g_cantopen, filename);
+        std::printf(g_cantopen, filename);
         termdown(1);
         return 0;
     }
@@ -918,7 +921,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
                 use_buffered_nntp_gets = false;
             }
             else if (nntp_gets(g_buf, sizeof g_buf - 1) == NGSR_ERROR) {
-                printf("\nError getting %s file.\n", fetchcmd);
+                std::printf("\nError getting %s file.\n", fetchcmd);
                 termdown(2);
                 srcfile_close(sfp);
                 setspin(SPIN_OFF);
@@ -929,10 +932,10 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
                 break;
             }
             std::strcat(g_buf,"\n");
-            fputs(g_buf, fp);
+            std::fputs(g_buf, fp);
             spin(200 * g_net_speed);
         }
-        else if (!fgets(g_buf, sizeof g_buf, fp))
+        else if (!std::fgets(g_buf, sizeof g_buf, fp))
         {
             break;
         }
@@ -943,8 +946,8 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
             continue;
         }
         int keylen = s - g_buf;
-        if (*++s != '\n' && isspace(*s)) {
-            while (*++s != '\n' && isspace(*s))
+        if (*++s != '\n' && std::isspace(*s)) {
+            while (*++s != '\n' && std::isspace(*s))
             {
             }
             std::strcpy(g_buf+keylen+1, s);
@@ -970,23 +973,23 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
             data.dat_ptr = (char*)sfp->lp->recent;
         }
         data.dat_len = offset;
-        (void) memcpy(lbp,g_buf,linelen);
+        (void) std::memcpy(lbp,g_buf,linelen);
         hashstore(sfp->hp, g_buf, keylen, data);
     }
     sfp->lp->high = node_low + offset - 1;
     setspin(SPIN_OFF);
 
     if (server) {
-        fflush(fp);
-        if (ferror(fp)) {
-            printf("\nError writing the %s file %s.\n",fetchcmd,filename);
+        std::fflush(fp);
+        if (std::ferror(fp)) {
+            std::printf("\nError writing the %s file %s.\n",fetchcmd,filename);
             termdown(2);
             srcfile_close(sfp);
             return 0;
         }
         newline();
     }
-    fseek(fp,0L,0);
+    std::fseek(fp,0L,0);
 
     return server? 2 : 1;
 }
@@ -1002,12 +1005,12 @@ char *srcfile_append(SRCFILE *sfp, char *bp, int keylen)
 
     char *s = bp + keylen + 1;
     if (sfp->fp && sfp->refetch_secs && *s != '\n') {
-        fseek(sfp->fp, 0, 2);
-        fputs(bp, sfp->fp);
+        std::fseek(sfp->fp, 0, 2);
+        std::fputs(bp, sfp->fp);
     }
 
-    if (*s != '\n' && isspace(*s)) {
-        while (*++s != '\n' && isspace(*s))
+    if (*s != '\n' && std::isspace(*s)) {
+        while (*++s != '\n' && std::isspace(*s))
         {
         }
         std::strcpy(bp+keylen+1, s);
@@ -1027,7 +1030,7 @@ char *srcfile_append(SRCFILE *sfp, char *bp, int keylen)
         data.dat_len = 0;
     }
     data.dat_ptr = (char*)node;
-    (void) memcpy(lbp,bp,linelen);
+    (void) std::memcpy(lbp,bp,linelen);
     hashstore(sfp->hp, bp, keylen, data);
     sfp->lp->high = pos + linelen - 1;
 
@@ -1037,11 +1040,11 @@ char *srcfile_append(SRCFILE *sfp, char *bp, int keylen)
 void srcfile_end_append(SRCFILE *sfp, const char *filename)
 {
     if (sfp->fp && sfp->refetch_secs) {
-        fflush(sfp->fp);
+        std::fflush(sfp->fp);
 
         if (sfp->lastfetch) {
             struct utimbuf ut;
-            time(&ut.actime);
+            std::time(&ut.actime);
             ut.modtime = sfp->lastfetch;
             (void) utime(filename, &ut);
         }
@@ -1051,7 +1054,7 @@ void srcfile_end_append(SRCFILE *sfp, const char *filename)
 void srcfile_close(SRCFILE *sfp)
 {
     if (sfp->fp) {
-        fclose(sfp->fp);
+        std::fclose(sfp->fp);
         sfp->fp = nullptr;
     }
     if (sfp->lp) {
@@ -1067,7 +1070,7 @@ void srcfile_close(SRCFILE *sfp)
 static int srcfile_cmp(const char *key, int keylen, HASHDATUM data)
 {
     /* We already know that the lengths are equal, just compare the strings */
-    return memcmp(key, ((LISTNODE*)data.dat_ptr)->data + data.dat_len, keylen);
+    return std::memcmp(key, ((LISTNODE*)data.dat_ptr)->data + data.dat_len, keylen);
 }
 
 /* Edit Distance extension to trn
@@ -1143,11 +1146,11 @@ int find_close_match()
             }
             if (g_verbose)
             {
-                printf("(I assume you meant %s)\n", s_ngptrs[0]);
+                std::printf("(I assume you meant %s)\n", s_ngptrs[0]);
             }
             else
             {
-                printf("(Using %s)\n", s_ngptrs[0]);
+                std::printf("(Using %s)\n", s_ngptrs[0]);
             }
             set_ngname(s_ngptrs[0]);
             if (cp)
@@ -1161,7 +1164,7 @@ int find_close_match()
             ret = get_near_miss();
             break;
     }
-    free((char*)s_ngptrs);
+    std::free((char*)s_ngptrs);
     return ret;
 }
 
@@ -1205,7 +1208,7 @@ static int check_distance(int len, HASHDATUM *data, int newsrc_ptr)
     }
     if (s_best_match < 0 || value <= s_best_match) {
         for (int i = 0; i < s_ngn; i++) {
-            if (!strcmp(name,s_ngptrs[i]))
+            if (!std::strcmp(name,s_ngptrs[i]))
             {
                 return 0;
             }
@@ -1230,7 +1233,7 @@ static int get_near_miss()
 
     if (g_verbose)
     {
-        printf("However, here are some close matches:\n");
+        std::printf("However, here are some close matches:\n");
     }
     s_ngn = std::min(s_ngn, 9);         /* Since we're using single digits.... */
     for (int i = 0; i < s_ngn; i++) {
@@ -1239,8 +1242,8 @@ static int get_near_miss()
         {
             *cp = '\0';
         }
-        printf("  %d.  %s\n", i+1, s_ngptrs[i]);
-        sprintf(op++, "%d", i+1);       /* Expensive, but avoids ASCII deps */
+        std::printf("  %d.  %s\n", i+1, s_ngptrs[i]);
+        std::sprintf(op++, "%d", i+1);       /* Expensive, but avoids ASCII deps */
         if (cp)
         {
             *cp = ' ';
@@ -1251,16 +1254,16 @@ static int get_near_miss()
 
     if (g_verbose)
     {
-        sprintf(promptbuf, "Which of these would you like?");
+        std::sprintf(promptbuf, "Which of these would you like?");
     }
     else
     {
-        sprintf(promptbuf, "Which?");
+        std::sprintf(promptbuf, "Which?");
     }
 reask:
     in_char(promptbuf, MM_ADD_NEWSGROUP_PROMPT, options);
     printcmd();
-    putchar('\n');
+    std::putchar('\n');
     switch (*g_buf) {
         case 'n':
         case 'N':
@@ -1273,18 +1276,18 @@ reask:
         case 'H':
             if (g_verbose)
             {
-                fputs("  You entered an illegal newsgroup name, and these are the nearest possible\n"
+                std::fputs("  You entered an illegal newsgroup name, and these are the nearest possible\n"
                       "  matches.  If you want one of these, then enter its number.  Otherwise\n"
                       "  just say 'n'.\n",
                       stdout);
             }
             else
             {
-                fputs("Illegal newsgroup, enter a number or 'n'.\n", stdout);
+                std::fputs("Illegal newsgroup, enter a number or 'n'.\n", stdout);
             }
             goto reask;
         default:
-            if (isdigit(*g_buf)) {
+            if (std::isdigit(*g_buf)) {
                 char* s = std::strchr(options, *g_buf);
 
                 int i = s ? (s - options) : s_ngn;
@@ -1302,7 +1305,7 @@ reask:
                     return 1;
                 }
             }
-            fputs(g_hforhelp, stdout);
+            std::fputs(g_hforhelp, stdout);
             break;
     }
 
