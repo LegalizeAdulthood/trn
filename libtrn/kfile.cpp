@@ -27,11 +27,13 @@
 #include "util/util2.h"
 
 #include <algorithm>
+#include <cctype>
+#include <cstdio>
 #include <cstring>
-#include <filesystem>
 #include <ctime>
+#include <filesystem>
 
-FILE               *g_localkfp{};               /* local (for this newsgroup) file */
+std::FILE          *g_localkfp{};               /* local (for this newsgroup) file */
 killfilestate_flags g_kf_state{};               /* the state of our kill files */
 killfilestate_flags g_kfs_thread_change_set{};  /* bits to set for thread changes */
 int                 g_kf_changethd_cnt{};       /* # entries changed from old to new */
@@ -43,7 +45,7 @@ static int write_local_thread_commands(int keylen, HASHDATUM *data, int extra);
 static int write_global_thread_commands(int keylen, HASHDATUM *data, int appending);
 static int age_thread_commands(int keylen, HASHDATUM *data, int elapsed_days);
 
-static FILE               *s_globkfp{};                /* global article killer file */
+static std::FILE          *s_globkfp{};                /* global article killer file */
 static killfilestate_flags s_kfs_local_change_clear{}; /* bits to clear local changes */
 static int                 s_kf_thread_cnt{};          /* # entries in the thread kfile */
 static long                s_kf_daynum{};              /* day number for thread killfile */
@@ -56,7 +58,7 @@ static char  s_killglobal[] = KILLGLOBAL;
 static char  s_killlocal[] = KILLLOCAL;
 static char  s_killthreads[] = KILLTHREADS;
 static bool  s_kill_mentioned;
-static FILE *s_newkfp{};
+static std::FILE *s_newkfp{};
 
 inline long killfile_daynum(long x)
 {
@@ -70,16 +72,16 @@ void kfile_init()
     {
         cp = s_killthreads;
     }
-    if (*cp && strcmp(cp,"none") != 0)
+    if (*cp && std::strcmp(cp,"none") != 0)
     {
         s_kf_daynum = killfile_daynum(0);
         s_kf_thread_cnt = 0;
         g_kf_changethd_cnt = 0;
-        FILE *fp = fopen(filexp(cp), "r");
+        std::FILE *fp = std::fopen(filexp(cp), "r");
         if (fp != nullptr)
         {
             g_msgid_hash = hashcreate(1999, msgid_cmp);
-            while (fgets(g_buf, sizeof g_buf, fp) != nullptr) {
+            while (std::fgets(g_buf, sizeof g_buf, fp) != nullptr) {
                 if (*g_buf == '<') {
                     cp = std::strchr(g_buf,' ');
                     if (!cp)
@@ -90,7 +92,7 @@ void kfile_init()
                     {
                         *cp++ = '\0';
                     }
-                    int age = s_kf_daynum - atol(cp + 1);
+                    int age = s_kf_daynum - std::atol(cp + 1);
                     if (age > KF_MAXDAYS) {
                         g_kf_changethd_cnt++;
                         continue;
@@ -114,7 +116,7 @@ void kfile_init()
                     s_kf_thread_cnt++;
                 }
             }
-            fclose(fp);
+            std::fclose(fp);
         }
         g_kf_state |= KFS_GLOBAL_THREADFILE;
         s_kfs_local_change_clear = KFS_LOCAL_CHANGES;
@@ -134,12 +136,12 @@ static void mention(const char *str)
     }
     else
     {
-        putchar('.');
+        std::putchar('.');
     }
-    fflush(stdout);
+    std::fflush(stdout);
 }
 
-int do_kfile(FILE *kfp, int entering)
+int do_kfile(std::FILE *kfp, int entering)
 {
     bool first_time = (entering && !g_killfirst);
     char last_kill_type = '\0';
@@ -150,21 +152,21 @@ int do_kfile(FILE *kfp, int entering)
 
     g_art = g_lastart+1;
     g_killfirst = g_firstart;
-    fseek(kfp,0L,0);                    /* rewind file */
-    while (fgets(g_buf,LBUFLEN,kfp) != nullptr) {
+    std::fseek(kfp,0L,0);                    /* rewind file */
+    while (std::fgets(g_buf,LBUFLEN,kfp) != nullptr) {
         if (*(cp = g_buf + std::strlen(g_buf) - 1) == '\n')
         {
             *cp = '\0';
         }
         bp = skip_space(g_buf);
-        if (!strncmp(bp,"THRU",4)) {
+        if (!std::strncmp(bp,"THRU",4)) {
             int len = std::strlen(g_ngptr->rc->name);
             cp = skip_space(bp + 4);
-            if (strncmp(cp, g_ngptr->rc->name, len) != 0 || !isspace(cp[len]))
+            if (std::strncmp(cp, g_ngptr->rc->name, len) != 0 || !std::isspace(cp[len]))
             {
                 continue;
             }
-            g_killfirst = atol(cp+len+1)+1;
+            g_killfirst = std::atol(cp+len+1)+1;
             g_killfirst = std::max(g_killfirst, g_firstart);
             if (g_killfirst > g_lastart)
             {
@@ -185,11 +187,11 @@ int do_kfile(FILE *kfp, int entering)
                 cp = filexp(get_val_const("KILLLOCAL",s_killlocal));
                 set_ngname(g_ngptr->rcline);
             }
-            FILE *incfile = fopen(cp, "r");
+            std::FILE *incfile = std::fopen(cp, "r");
             if (incfile != nullptr)
             {
                 int ret = do_kfile(incfile, entering);
-                fclose(incfile);
+                std::fclose(incfile);
                 if (ret)
                 {
                     return ret;
@@ -227,7 +229,7 @@ int do_kfile(FILE *kfp, int entering)
                 if (perform_status_end(g_ngptr->toread,"article")) {
                     s_kill_mentioned = true;
                     carriage_return();
-                    fputs(g_msg, stdout);
+                    std::fputs(g_msg, stdout);
                     newline();
                 }
             }
@@ -241,24 +243,24 @@ int do_kfile(FILE *kfp, int entering)
             case SRCH_INTR:
                 if (g_verbose)
                 {
-                    printf("\n(Interrupted at article %ld)\n", (long) g_art);
+                    std::printf("\n(Interrupted at article %ld)\n", (long) g_art);
                 }
                 else
                 {
-                    printf("\n(Intr at %ld)\n", (long) g_art);
+                    std::printf("\n(Intr at %ld)\n", (long) g_art);
                 }
                 termdown(2);
                 return -1;
             case SRCH_DONE:
                 break;
             case SRCH_SUBJDONE:
-                /*fputs("\tsubject not found (?)\n",stdout);*/
+                /*std::fputs("\tsubject not found (?)\n",stdout);*/
                 break;
             case SRCH_NOTFOUND:
-                /*fputs("\tnot found\n",stdout);*/
+                /*std::fputs("\tnot found\n",stdout);*/
                 break;
             case SRCH_FOUND:
-                /*fputs("\tfound\n",stdout);*/
+                /*std::fputs("\tfound\n",stdout);*/
                 break;
             case SRCH_ERROR:
                 break;
@@ -270,7 +272,7 @@ int do_kfile(FILE *kfp, int entering)
                     if (perform_status_end(g_ngptr->toread,"article")) {
                         s_kill_mentioned = true;
                         carriage_return();
-                        fputs(g_msg, stdout);
+                        std::fputs(g_msg, stdout);
                         newline();
                     }
                 }
@@ -341,13 +343,13 @@ int do_kfile(FILE *kfp, int entering)
         }
     }
     if (thread_kill_cnt) {
-        sprintf(g_buf,"%ld auto-kill command%s.", (long)thread_kill_cnt,
+        std::sprintf(g_buf,"%ld auto-kill command%s.", (long)thread_kill_cnt,
                 plural(thread_kill_cnt));
         mention(g_buf);
         s_kill_mentioned = true;
     }
     if (thread_select_cnt) {
-        sprintf(g_buf,"%ld auto-select command%s.", (long)thread_select_cnt,
+        std::sprintf(g_buf,"%ld auto-select command%s.", (long)thread_select_cnt,
                 plural(thread_select_cnt));
         mention(g_buf);
         s_kill_mentioned = true;
@@ -356,7 +358,7 @@ int do_kfile(FILE *kfp, int entering)
         if (perform_status_end(g_ngptr->toread,"article")) {
             s_kill_mentioned = true;
             carriage_return();
-            fputs(g_msg, stdout);
+            std::fputs(g_msg, stdout);
             newline();
         }
     }
@@ -394,7 +396,7 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
         clear();
         if (message && (g_verbose || entering))
         {
-            fputs(message, stdout);
+            std::fputs(message, stdout);
         }
 
         s_kill_mentioned = false;
@@ -403,7 +405,7 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
             {
                 g_kf_state |= KFS_LOCAL_CHANGES;
             }
-            intr = do_kfile(g_localkfp,entering);
+            intr = do_kfile(g_localkfp, entering);
         }
         open_kfile(KF_GLOBAL);          /* Just in case the name changed */
         if (s_globkfp && !intr)
@@ -448,7 +450,7 @@ static int write_local_thread_commands(int keylen, HASHDATUM *data, int extra)
                 break;
             }
         }
-        fprintf(s_newkfp,"%s T%c\n", ap->msgid, ch);
+        std::fprintf(s_newkfp,"%s T%c\n", ap->msgid, ch);
     }
     return 0;
 }
@@ -464,7 +466,7 @@ void rewrite_kfile(ART_NUM thru)
 
     if (g_localkfp)
     {
-        fseek(g_localkfp, 0L, 0);       /* rewind current file */
+        std::fseek(g_localkfp, 0L, 0);       /* rewind current file */
     }
     else
     {
@@ -472,22 +474,22 @@ void rewrite_kfile(ART_NUM thru)
     }
     remove(killname);                   /* to prevent file reuse */
     g_kf_state &= ~(s_kfs_local_change_clear | KFS_NORMAL_LINES);
-    s_newkfp = fopen(killname, "w");
+    s_newkfp = std::fopen(killname, "w");
     if (s_newkfp != nullptr)
     {
-        fprintf(s_newkfp,"THRU %s %ld\n",g_ngptr->rc->name,(long)thru);
-        while (g_localkfp && fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
-            if (!strncmp(g_buf,"THRU",4)) {
+        std::fprintf(s_newkfp,"THRU %s %ld\n",g_ngptr->rc->name,(long)thru);
+        while (g_localkfp && std::fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
+            if (!std::strncmp(g_buf,"THRU",4)) {
                 char* cp = g_buf+4;
                 int len = std::strlen(g_ngptr->rc->name);
                 cp = skip_space(cp);
-                if (isdigit(*cp))
+                if (std::isdigit(*cp))
                 {
                     continue;
                 }
-                if (strncmp(cp, g_ngptr->rc->name, len) != 0 || (cp[len] && !isspace(cp[len])))
+                if (std::strncmp(cp, g_ngptr->rc->name, len) != 0 || (cp[len] && !std::isspace(cp[len])))
                 {
-                    fputs(g_buf,s_newkfp);
+                    std::fputs(g_buf,s_newkfp);
                     needs_newline = !std::strchr(g_buf,'\n');
                 }
                 continue;
@@ -504,34 +506,34 @@ void rewrite_kfile(ART_NUM thru)
                 has_star_commands = true;
             }
             else {
-                fputs(g_buf,s_newkfp);
+                std::fputs(g_buf,s_newkfp);
                 needs_newline = !std::strchr(bp,'\n');
             }
             has_content = true;
         }
         if (needs_newline)
         {
-            putc('\n', s_newkfp);
+            std::putc('\n', s_newkfp);
         }
         if (has_star_commands) {
-            fseek(g_localkfp,0L,0);                     /* rewind file */
-            while (fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
+            std::fseek(g_localkfp,0L,0);                     /* rewind file */
+            while (std::fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
                 bp = skip_space(g_buf);
                 if (*bp == '*') {
-                    fputs(g_buf,s_newkfp);
+                    std::fputs(g_buf,s_newkfp);
                     needs_newline = !std::strchr(bp,'\n');
                 }
             }
             if (needs_newline)
             {
-                putc('\n', s_newkfp);
+                std::putc('\n', s_newkfp);
             }
         }
         if (!(g_kf_state & KFS_GLOBAL_THREADFILE)) {
             /* Append all the still-valid thread commands */
             hashwalk(g_msgid_hash, write_local_thread_commands, 0);
         }
-        fclose(s_newkfp);
+        std::fclose(s_newkfp);
         if (!has_content)
         {
             remove(killname);
@@ -540,7 +542,7 @@ void rewrite_kfile(ART_NUM thru)
     }
     else
     {
-        printf(g_cantcreate, g_buf);
+        std::printf(g_cantcreate, g_buf);
     }
 }
 
@@ -579,7 +581,7 @@ static int write_global_thread_commands(int keylen, HASHDATUM *data, int appendi
             break;
         }
     }
-    fprintf(s_newkfp,"%s %c %ld\n", msgid, ch, s_kf_daynum - age);
+    std::fprintf(s_newkfp,"%s %c %ld\n", msgid, ch, s_kf_daynum - age);
     s_kf_thread_cnt++;
 
     return 0;
@@ -590,7 +592,7 @@ static int age_thread_commands(int keylen, HASHDATUM *data, int elapsed_days)
     if (data->dat_len) {
         int age = (data->dat_len & KF_AGE_MASK) + elapsed_days;
         if (age > KF_MAXDAYS) {
-            free(data->dat_ptr);
+            std::free(data->dat_ptr);
             g_kf_changethd_cnt++;
             return -1;
         }
@@ -629,7 +631,7 @@ void update_thread_kfile()
     makedir(cp, MD_FILE);
     if (g_kf_changethd_cnt*5 > s_kf_thread_cnt) {
         remove(cp);                     /* to prevent file reuse */
-        s_newkfp = fopen(cp, "w");
+        s_newkfp = std::fopen(cp, "w");
         if (s_newkfp == nullptr)
         {
             return; /*$$ Yikes! */
@@ -639,14 +641,14 @@ void update_thread_kfile()
         hashwalk(g_msgid_hash, write_global_thread_commands, 0); /* Rewrite */
     }
     else {
-        s_newkfp = fopen(cp, "a");
+        s_newkfp = std::fopen(cp, "a");
         if (s_newkfp == nullptr)
         {
             return; /*$$ Yikes! */
         }
         hashwalk(g_msgid_hash, write_global_thread_commands, 1); /* Append */
     }
-    fclose(s_newkfp);
+    std::fclose(s_newkfp);
 
     g_kf_state &= ~KFS_THREAD_CHANGES;
 }
@@ -747,9 +749,9 @@ void edit_kfile()
         std::strcpy(g_buf, filexp(get_val_const("KILLGLOBAL", s_killglobal)));
     }
     if (!makedir(g_buf, MD_FILE)) {
-        sprintf(g_cmd_buf,"%s %s",
+        std::sprintf(g_cmd_buf,"%s %s",
             filexp(get_val_const("VISUAL",get_val_const("EDITOR",DEFEDITOR))),g_buf);
-        printf("\nEditing %s KILL file:\n%s\n",
+        std::printf("\nEditing %s KILL file:\n%s\n",
             (g_in_ng?"local":"global"),g_cmd_buf);
         termdown(3);
         resetty();                      /* make sure tty is friendly */
@@ -758,9 +760,9 @@ void edit_kfile()
         crmode();                       /*   unfriendly again */
         open_kfile(g_in_ng);
         if (g_localkfp) {
-            fseek(g_localkfp,0L,0);     /* rewind file */
+            std::fseek(g_localkfp,0L,0);     /* rewind file */
             g_kf_state &= ~KFS_NORMAL_LINES;
-            while (fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
+            while (std::fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
                 bp = skip_space(g_buf);
                 if (*bp == '/' || *bp == '*')
                 {
@@ -794,7 +796,7 @@ void edit_kfile()
         }
     }
     else {
-        printf("Can't make %s\n",g_buf);
+        std::printf("Can't make %s\n",g_buf);
         termdown(1);
     }
 }
@@ -811,16 +813,16 @@ void open_kfile(int local)
     if (local) {
         if (g_localkfp)
         {
-            fclose(g_localkfp);
+            std::fclose(g_localkfp);
         }
-        g_localkfp = fopen(kname,"r");
+        g_localkfp = std::fopen(kname,"r");
     }
     else {
         if (s_globkfp)
         {
-            fclose(s_globkfp);
+            std::fclose(s_globkfp);
         }
-        s_globkfp = fopen(kname,"r");
+        s_globkfp = std::fopen(kname,"r");
     }
 }
 
@@ -830,44 +832,44 @@ void kf_append(const char *cmd, bool local)
     if (!makedir(g_cmd_buf, MD_FILE)) {
         if (g_verbose)
         {
-            printf("\nDepositing command in %s...", g_cmd_buf);
+            std::printf("\nDepositing command in %s...", g_cmd_buf);
         }
         else
         {
-            printf("\n--> %s...", g_cmd_buf);
+            std::printf("\n--> %s...", g_cmd_buf);
         }
-        fflush(stdout);
+        std::fflush(stdout);
         if (g_novice_delays)
         {
             sleep(2);
         }
-        if (FILE *fp = fopen(g_cmd_buf, "a+"))
+        if (std::FILE *fp = std::fopen(g_cmd_buf, "a+"))
         {
             char ch;
-            if (fseek(fp,-1L,2) < 0)
+            if (std::fseek(fp,-1L,2) < 0)
             {
                 ch = '\n';
             }
             else
             {
-                ch = getc(fp);
+                ch = std::getc(fp);
             }
-            fseek(fp,0L,2);
+            std::fseek(fp,0L,2);
             if (ch != '\n')
             {
-                putc('\n', fp);
+                std::putc('\n', fp);
             }
-            fprintf(fp,"%s\n",cmd);
-            fclose(fp);
+            std::fprintf(fp,"%s\n",cmd);
+            std::fclose(fp);
             if (local && !g_localkfp)
             {
                 open_kfile(KF_LOCAL);
             }
-            fputs("done\n",stdout);
+            std::fputs("done\n",stdout);
         }
         else
         {
-            printf(g_cantopen, g_cmd_buf);
+            std::printf(g_cantopen, g_cmd_buf);
         }
         termdown(2);
     }

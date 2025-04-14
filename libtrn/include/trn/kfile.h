@@ -9,7 +9,7 @@
 #include "trn/enum-flags.h"
 
 #include <cstdint>
-#include <stdio.h>
+#include <cstdio>
 
 struct ARTICLE;
 
@@ -63,14 +63,14 @@ enum
     KF_MAXDAYS = 30
 };
 
-extern FILE               *g_localkfp;               /* local (for this newsgroup) file */
+extern std::FILE          *g_localkfp;               /* local (for this newsgroup) file */
 extern killfilestate_flags g_kf_state;               /* the state of our kill files */
 extern killfilestate_flags g_kfs_thread_change_set;  /* bits to set for thread changes */
 extern int                 g_kf_changethd_cnt;       /* # entries changed from old to new */
 extern ART_NUM             g_killfirst;              /* used as g_firstart when killing */
 
 void kfile_init();
-int do_kfile(FILE *kfp, int entering);
+int do_kfile(std::FILE *kfp, int entering);
 void kill_unwanted(ART_NUM starting, const char *message, int entering);
 void rewrite_kfile(ART_NUM thru);
 void update_thread_kfile();
