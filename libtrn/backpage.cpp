@@ -10,6 +10,7 @@
 #include "trn/final.h"
 #include "util/util2.h"
 
+#include <cstdio>
 
 static int     s_varyfd{0};         /* virtual array file for storing  file offsets */
 static ART_POS s_varybuf[VARYSIZE]; /* current window onto virtual array */
@@ -22,7 +23,7 @@ void backpage_init()
     s_varyfd = open(varyname,2);
     remove(varyname);
     if (s_varyfd < 0) {
-        printf(g_cantopen,varyname);
+        std::printf(g_cantopen,varyname);
         sig_catcher(0);
     }
 
@@ -37,7 +38,7 @@ ART_POS vrdary(ART_LINE indx)
 
 #ifdef DEBUG
     if (indx > maxindx) {
-        printf("vrdary(%ld) > %ld\n",(long)indx, (long)maxindx);
+        std::printf("vrdary(%ld) > %ld\n",(long)indx, (long)maxindx);
         return 0;
     }
 #endif
@@ -72,7 +73,7 @@ void vwtary(ART_LINE indx, ART_POS newvalue)
 #ifdef DEBUG
     if (indx < 0)
     {
-        printf("vwtary(%ld)\n",(long)indx);
+        std::printf("vwtary(%ld)\n",(long)indx);
     }
     if (!indx)
     {
@@ -81,7 +82,7 @@ void vwtary(ART_LINE indx, ART_POS newvalue)
     if (indx > maxindx) {
         if (indx != maxindx + 1)
         {
-            printf("indx skipped %d-%d\n",maxindx+1,indx-1);
+            std::printf("indx skipped %d-%d\n",maxindx+1,indx-1);
         }
         maxindx = indx;
     }
