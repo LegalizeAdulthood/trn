@@ -3,6 +3,7 @@
 /* This software is copyrighted as detailed in the LICENSE file. */
 #ifndef TRN_RTHREAD_H
 #define TRN_RTHREAD_H
+
 #include "trn/kfile.h"
 
 struct ARTICLE;

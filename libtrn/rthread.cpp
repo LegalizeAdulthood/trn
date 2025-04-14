@@ -30,6 +30,9 @@
 #include "util/util2.h"
 
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
 
 ART_NUM    g_obj_count{};
 int        g_subject_count{};
@@ -222,7 +225,7 @@ static int cleanup_msgid_hash(int keylen, HASHDATUM *data, int extra)
         }
         if (ap->flags & AF_TMPMEM) {
             clear_article(ap);
-            free((char*)ap);
+            std::free(ap);
         }
     }
     return ret;
@@ -756,7 +759,7 @@ void select_article(ARTICLE *ap, autokill_flags auto_flags)
             g_selected_count++;
             if (g_verbose && echo && g_general_mode != GM_SELECTOR)
             {
-                fputs("\tSelected", stdout);
+                std::fputs("\tSelected", stdout);
             }
         }
         ap->flags = (ap->flags & ~AF_DEL) | static_cast<article_flags>(g_sel_mask);
@@ -901,7 +904,7 @@ void deselect_article(ARTICLE *ap, autokill_flags auto_flags)
         }
         if (g_verbose && echo && g_general_mode != GM_SELECTOR)
         {
-            fputs("\tDeselected", stdout);
+            std::fputs("\tDeselected", stdout);
         }
     }
     if (g_sel_rereading && g_sel_mode == SM_ARTICLE)
@@ -1860,7 +1863,7 @@ void sort_subjects()
     {
         g_last_subject->thread_link = sp;
     }
-    free((char*)subj_list);
+    std::free((char*)subj_list);
 }
 
 static int artorder_date(const ARTICLE **art1, const ARTICLE **art2)
