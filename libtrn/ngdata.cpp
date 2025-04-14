@@ -31,7 +31,10 @@
 #include "util/util2.h"
 
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <string>
 
 LIST       *g_ngdata_list{};       /* a list of NGDATA */
 int         g_ngdata_cnt{};        //
@@ -109,21 +112,21 @@ int access_ng()
             if (eaccess(g_ngdir.c_str(),0)) {
                 if (g_verbose)
                 {
-                    printf("\nNewsgroup %s does not have a spool directory!\n", g_ngname.c_str());
+                    std::printf("\nNewsgroup %s does not have a spool directory!\n", g_ngname.c_str());
                 }
                 else
                 {
-                    printf("\nNo spool for %s!\n", g_ngname.c_str());
+                    std::printf("\nNo spool for %s!\n", g_ngname.c_str());
                 }
                 termdown(2);
             } else {
                 if (g_verbose)
                 {
-                    printf("\nNewsgroup %s is not currently accessible.\n", g_ngname.c_str());
+                    std::printf("\nNewsgroup %s is not currently accessible.\n", g_ngname.c_str());
                 }
                 else
                 {
-                    printf("\n%s not readable.\n", g_ngname.c_str());
+                    std::printf("\n%s not readable.\n", g_ngname.c_str());
                 }
                 termdown(2);
             }
@@ -134,7 +137,7 @@ int access_ng()
 
         /* chdir to newsgroup subdirectory */
         if (change_dir(g_ngdir)) {
-            printf(g_nocd,g_ngdir.c_str());
+            std::printf(g_nocd,g_ngdir.c_str());
             return 0;
         }
         g_lastart = getngsize(g_ngptr);
@@ -157,7 +160,7 @@ void chdir_newsdir()
 {
     if (change_dir(g_datasrc->spool_dir) || (!(g_datasrc->flags & DF_REMOTE) && change_dir(g_ngdir)))
     {
-        printf(g_nocd,g_ngdir.c_str());
+        std::printf(g_nocd,g_ngdir.c_str());
         sig_catcher(0);
     }
 }
@@ -181,7 +184,7 @@ void grow_ng(ART_NUM newlast)
         sc_fill_scorelist(tmpfirst,newlast);
         if (g_verbose)
         {
-            sprintf(g_buf, "%ld more article%s arrived -- processing memorized commands...\n\n",
+            std::sprintf(g_buf, "%ld more article%s arrived -- processing memorized commands...\n\n",
                     (long) (g_lastart - tmpfirst + 1), (g_lastart > tmpfirst ? "s have" : " has"));
         }
         else                    /* my, my, how clever we are */
@@ -265,7 +268,7 @@ void sort_newsgroups()
     }
     g_last_ng = lp[0];
     g_last_ng->next = nullptr;
-    free((char*)ng_list);
+    std::free((char*)ng_list);
 }
 
 void ng_skip()
@@ -274,11 +277,11 @@ void ng_skip()
         clear();
         if (g_verbose)
         {
-            fputs("Skipping unavailable article\n", stdout);
+            std::fputs("Skipping unavailable article\n", stdout);
         }
         else
         {
-            fputs("Skipping\n", stdout);
+            std::fputs("Skipping\n", stdout);
         }
         termdown(1);
         if (g_novice_delays) {
@@ -308,11 +311,11 @@ void ng_skip()
             clear();
             if (g_verbose)
             {
-                printf("\n(Article %ld exists but is unreadable.)\n", (long) g_art);
+                std::printf("\n(Article %ld exists but is unreadable.)\n", (long) g_art);
             }
             else
             {
-                printf("\n(%ld unreadable.)\n", (long) g_art);
+                std::printf("\n(%ld unreadable.)\n", (long) g_art);
             }
             termdown(2);
             if (g_novice_delays) {
@@ -346,10 +349,10 @@ ART_NUM getngsize(NGDATA *gp)
     }
 
 #ifdef ANCIENT_NEWS
-    sscanf(tmpbuf+len+1, "%ld %c", &last, &ch);
+    std::sscanf(tmpbuf+len+1, "%ld %c", &last, &ch);
     first = 1;
 #else
-    sscanf(tmpbuf+len+1, "%ld %ld %c", &last, &first, &ch);
+    std::sscanf(tmpbuf+len+1, "%ld %ld %c", &last, &first, &ch);
 #endif
     if (!gp->abs1st)
     {
