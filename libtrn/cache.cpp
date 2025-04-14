@@ -34,8 +34,9 @@
 #include "util/util2.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <cstring>
-#include <time.h>
+#include <ctime>
 
 LIST     *g_article_list{};         /* a list of ARTICLEs */
 ARTICLE **g_artptr_list{};          /* the article-selector creates this */
@@ -72,12 +73,12 @@ void cache_init()
 }
 
 static NGDATA* s_cached_ng{};
-static time_t s_cached_time{};
+static std::time_t s_cached_time{};
 
 void build_cache()
 {
-    if (s_cached_ng == g_ngptr && time((time_t*)nullptr) < s_cached_time + 6*60*60L) {
-        s_cached_time = time((time_t*)nullptr);
+    if (s_cached_ng == g_ngptr && std::time(nullptr) < s_cached_time + 6*60*60L) {
+        s_cached_time = std::time(nullptr);
         if (g_sel_mode == SM_ARTICLE)
         {
             set_selector(g_sel_mode, g_sel_artsort);
@@ -99,7 +100,7 @@ void build_cache()
     close_cache();
 
     s_cached_ng = g_ngptr;
-    s_cached_time = time((time_t*)nullptr);
+    s_cached_time = std::time(nullptr);
     g_article_list = new_list(g_absfirst, g_lastart, sizeof (ARTICLE), 371,
                               LF_SPARSE, init_artnode);
     s_subj_hash = hashcreate(991, subject_cmp); /*TODO: pick a better size */
@@ -135,8 +136,8 @@ void close_cache()
     /* Free all the subjects. */
     for (SUBJECT *sp = g_first_subject; sp; sp = next) {
         next = sp->next;
-        free(sp->str);
-        free((char*)sp);
+        std::free(sp->str);
+        std::free(sp);
     }
     g_first_subject = nullptr;
     g_last_subject = nullptr;
@@ -144,7 +145,7 @@ void close_cache()
     g_parsed_art = 0;
 
     if (g_artptr_list) {
-        free((char*)g_artptr_list);
+        std::free(g_artptr_list);
         g_artptr_list = nullptr;
     }
     g_artptr = nullptr;
@@ -161,7 +162,7 @@ void close_cache()
 /* Initialize the memory for an entire node's worth of article's */
 static void init_artnode(LIST *list, LISTNODE *node)
 {
-    memset(node->data, 0, list->items_per_node * list->item_size);
+    std::memset(node->data, 0, list->items_per_node * list->item_size);
     ARTICLE *ap = (ARTICLE *) node->data;
     for (ART_NUM i = node->low; i <= node->high; i++, ap++)
     {
@@ -301,7 +302,7 @@ void check_poster(ARTICLE *ap)
                 h = s;
                 u = s;
             }
-            if (!strcmp(u,g_login_name.c_str())) {
+            if (!std::strcmp(u,g_login_name.c_str())) {
                 if (in_string(h,g_hostname, false)) {
                     switch (g_auto_select_postings) {
                       case '.':
@@ -328,7 +329,7 @@ void check_poster(ARTICLE *ap)
                     {
                         select_subthread(ap,AUTO_SEL_FOL);
                     }
-                    free(reply_buf);
+                    std::free(reply_buf);
 #endif
                 }
             }
@@ -380,7 +381,7 @@ void uncache_article(ARTICLE *ap, bool remove_empties)
                 sp->next->prev = sp->prev;
             }
             hashdelete(s_subj_hash, sp->str+4, std::strlen(sp->str+4));
-            free((char*)sp);
+            std::free((char*)sp);
             ap->subj = nullptr;
             g_subject_count--;
         }
@@ -450,13 +451,13 @@ char *get_cached_line(ARTICLE *ap, header_line_type which_line, bool no_truncs)
         break;
       case LINES_LINE: {
         static char linesbuf[32];
-        sprintf(linesbuf, "%ld", ap->lines);
+        std::sprintf(linesbuf, "%ld", ap->lines);
         s = linesbuf;
         break;
       }
       case BYTES_LINE: {
         static char bytesbuf[32];
-        sprintf(bytesbuf, "%ld", ap->bytes);
+        std::sprintf(bytesbuf, "%ld", ap->bytes);
         s = bytesbuf;
         break;
       }
@@ -499,15 +500,15 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
             size = 0;
         }
     }
-    if (ap->subj && !strncmp(ap->subj->str+4, newsubj+4, size)) {
-        free(newsubj);
+    if (ap->subj && !std::strncmp(ap->subj->str+4, newsubj+4, size)) {
+        std::free(newsubj);
         return;
     }
 
     if (ap->subj) {
         /* This only happens when we freshen truncated subjects */
         hashdelete(s_subj_hash, ap->subj->str+4, std::strlen(ap->subj->str+4));
-        free(ap->subj->str);
+        std::free(ap->subj->str);
         ap->subj->str = newsubj;
         data.dat_ptr = (char*)ap->subj;
         hashstore(s_subj_hash, newsubj + 4, size, data);
@@ -515,7 +516,7 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
         data = hashfetch(s_subj_hash, newsubj + 4, size);
         if (!(sp = (SUBJECT*)data.dat_ptr)) {
             sp = (SUBJECT*)safemalloc(sizeof (SUBJECT));
-            memset((char*)sp,0,sizeof (SUBJECT));
+            std::memset((char*)sp,0,sizeof (SUBJECT));
             g_subject_count++;
             sp->prev = g_last_subject;
             if (sp->prev != nullptr)
@@ -535,7 +536,7 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
             hashstorelast(data);
         } else
         {
-            free(newsubj);
+            std::free(newsubj);
         }
         ap->subj = sp;
     }
@@ -590,7 +591,7 @@ int decode_header(char *to, char *from, int size)
                             to[len] = d[len];
                             len++;
                         }
-                        free(d);
+                        std::free(d);
                     }
 #endif
                     *e = '?';
@@ -664,7 +665,7 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
       case FROM_LINE:
         if (ap->from)
         {
-            free(ap->from);
+            std::free(ap->from);
         }
         decode_header(s, s, std::strlen(s));
         ap->from = s;
@@ -672,12 +673,12 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
       case XREF_LINE:
         if (ap->xrefs && !empty(ap->xrefs))
         {
-            free(ap->xrefs);
+            std::free(ap->xrefs);
         }
         /* Exclude an xref for just this group or "(none)". */
         cp = std::strchr(s, ':');
         if (!cp || !std::strchr(cp+1, ':')) {
-            free(s);
+            std::free(s);
             s = "";
         }
         ap->xrefs = s;
@@ -685,15 +686,15 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
       case MSGID_LINE:
         if (ap->msgid)
         {
-            free(ap->msgid);
+            std::free(ap->msgid);
         }
         ap->msgid = s;
         break;
       case LINES_LINE:
-        ap->lines = atol(s);
+        ap->lines = std::atol(s);
         break;
       case BYTES_LINE:
-        ap->bytes = atol(s);
+        ap->bytes = std::atol(s);
         break;
     }
 }
@@ -701,7 +702,7 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
 int subject_cmp(const char *key, int keylen, HASHDATUM data)
 {
     /* We already know that the lengths are equal, just compare the strings */
-    return memcmp(key, ((SUBJECT*)data.dat_ptr)->str+4, keylen);
+    return std::memcmp(key, ((SUBJECT*)data.dat_ptr)->str+4, keylen);
 }
 
 /* see what we can do while they are reading */
@@ -715,8 +716,8 @@ void look_ahead()
 
 #ifdef DEBUG
     if (debug && g_srchahead) {
-        printf("(%ld)",(long)g_srchahead);
-        fflush(stdout);
+        std::printf("(%ld)",(long)g_srchahead);
+        std::fflush(stdout);
     }
 #endif
 #endif
@@ -750,10 +751,10 @@ void look_ahead()
         }
 #ifdef DEBUG
         if (debug & DEB_SEARCH_AHEAD) {
-            fputs("(hit CR)",stdout);
-            fflush(stdout);
-            fgets(g_buf+128, sizeof g_buf-128, stdin);
-            printf("\npattern = %s\n",pattern);
+            std::fputs("(hit CR)",stdout);
+            std::fflush(stdout);
+            std::fgets(g_buf+128, sizeof g_buf-128, stdin);
+            std::printf("\npattern = %s\n",pattern);
             termdown(2);
         }
 #endif
@@ -761,7 +762,7 @@ void look_ahead()
         if (s != nullptr)
         {
                                     /* compile regular expression */
-            printf("\n%s\n",s);
+            std::printf("\n%s\n",s);
             termdown(2);
             g_srchahead = 0;
         }
@@ -773,7 +774,7 @@ void look_ahead()
 #ifdef DEBUG
                     if (debug)
                     {
-                        fputs("(not found)",stdout);
+                        std::fputs("(not found)",stdout);
                     }
 #endif
                     break;
@@ -784,7 +785,7 @@ void look_ahead()
 #ifdef DEBUG
                     if (debug)
                     {
-                        printf("(%ld)",(long)g_srchahead);
+                        std::printf("(%ld)",(long)g_srchahead);
                     }
 #endif
                     parseheader(g_srchahead);
@@ -795,7 +796,7 @@ void look_ahead()
                     break;
                 }
             }
-            fflush(stdout);
+            std::fflush(stdout);
         }
     }
     else
@@ -1077,7 +1078,7 @@ bool cache_range(ART_NUM first, ART_NUM last)
     }
     g_spin_estimate = count;
 
-    printf("\n%sing %ld article%s.", g_threaded_group? "Thread" : "Cach",
+    std::printf("\n%sing %ld article%s.", g_threaded_group? "Thread" : "Cach",
            (long)count, plural(count));
     termdown(1);
 
@@ -1108,14 +1109,14 @@ void clear_article(ARTICLE *ap)
 {
     if (ap->from)
     {
-        free(ap->from);
+        std::free(ap->from);
     }
     if (ap->msgid)
     {
-        free(ap->msgid);
+        std::free(ap->msgid);
     }
     if (ap->xrefs && !empty(ap->xrefs))
     {
-        free(ap->xrefs);
+        std::free(ap->xrefs);
     }
 }
