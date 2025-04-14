@@ -5,11 +5,12 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include <stdio.h>
-
 #include "config/common.h"
 #include "trn/utf.h"
 
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 /* OK - valid second and subsequent bytes in UTF-8 */
@@ -131,7 +132,7 @@ static charset_type find_charset(const char *s)
         }
         for (int j = 0;; ++j)
         {
-            if (tolower(s[j]) != tolower(name[j]))
+            if (std::tolower(s[j]) != std::tolower(name[j]))
             {
                 break;
             }
@@ -439,7 +440,7 @@ int put_char_adv(char **strptr, bool outputok)
             if (outputok)
             {
                 for (int i = 0; i < w; i += 1) {
-                    putchar(*s);
+                    std::putchar(*s);
                     s++;
                 }
             }
@@ -449,7 +450,7 @@ int put_char_adv(char **strptr, bool outputok)
             int w = insert_utf8_at(buf, s_gs.himap_in[U(*s) & 0x7F]);
             for (int i = 0; i < w; i += 1)
             {
-                putchar(buf[i]);
+                std::putchar(buf[i]);
             }
             it = 1;
             s++;
@@ -476,7 +477,7 @@ char *create_utf8_copy(char *s)
         }
 
         /* Create the actual copy */
-        it = (char*) malloc(tlen + 1);
+        it = (char*) std::malloc(tlen + 1);
         if (it) {
             char *bufptr = it;
             for (int i = 0; s[i]; ) {
