@@ -19,6 +19,8 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cctype>
+#include <cstdio>
 #include <cstring>
 #include <ctime>
 
@@ -88,7 +90,7 @@ char *extract_name(char *name)
 
     // strip trailing whitespace
     int len = std::strlen(name);
-    while (len > 0 && isspace(name[len-1]))
+    while (len > 0 && std::isspace(name[len-1]))
     {
         len--;
     }
@@ -119,7 +121,7 @@ try_again:
         return name;
     }
     char *s = name + len - 1;
-    while (isspace(*s))
+    while (std::isspace(*s))
     {
         s--;
     }
@@ -179,7 +181,7 @@ try_again:
     do
     {
         notlast = false;
-        while (isspace(*s))
+        while (std::isspace(*s))
         {
             s--;
         }
@@ -197,7 +199,7 @@ try_again:
         {
             notlast = true;
         }
-        while (!isspace(*s))
+        while (!std::isspace(*s))
         {
             if (s == name) /* only one name */
             {
@@ -208,7 +210,7 @@ try_again:
 #endif
                 return name;
             }
-            if (isdigit(*s))    /* probably a phone number */
+            if (std::isdigit(*s))    /* probably a phone number */
             {
                 notlast = true; /* so chuck it */
             }
@@ -219,13 +221,13 @@ try_again:
     char *last = s-- + 1;
 
     /* Look for a middle name */
-    while (isspace(*s)) /* get rid of any extra space */
+    while (std::isspace(*s)) /* get rid of any extra space */
     {
         len--;
         s--;
     }
     char *mid = name;
-    while (!isspace(*mid))
+    while (!std::isspace(*mid))
     {
 #ifdef USE_UTF_HACK
         mid += byte_length_at(mid);
@@ -245,7 +247,7 @@ try_again:
     else
     {
         *mid++ = '\0';
-        while (isspace(*mid))
+        while (std::isspace(*mid))
         {
             len--;
 #ifdef USE_UTF_HACK
@@ -305,13 +307,13 @@ try_again:
         s = mid;
         while (*s)
         {
-            if (isalpha(*s))
+            if (std::isalpha(*s))
             {
                 if (d != mid)
                 {
 #ifdef USE_UTF_HACK
                     int w = byte_length_at(s);
-                    memset(d, ' ', w);
+                    std::memset(d, ' ', w);
                     d += w;
 #else
                     *d++ = ' ';
@@ -319,14 +321,14 @@ try_again:
                 }
 #ifdef USE_UTF_HACK
                 int w = byte_length_at(s);
-                memcpy(d, s, w);
+                std::memcpy(d, s, w);
                 d += w;
                 s += w;
 #else
                 *d++ = *s++;
 #endif
             }
-            while (*s && !isspace(*s))
+            while (*s && !std::isspace(*s))
             {
 #ifdef USE_UTF_HACK
                 s += byte_length_at(s);
@@ -436,7 +438,7 @@ try_again:
             {
                 break;
             }
-            memcpy(d + i, last + i, w);
+            std::memcpy(d + i, last + i, w);
             i += w;
             j += v;
         }
@@ -468,7 +470,7 @@ char *compress_address(char *name, int max)
     }
     {
         char *s = name + len - 1;
-        while (isspace(*s))
+        while (std::isspace(*s))
         {
             s--;
         }
@@ -493,7 +495,7 @@ char *compress_address(char *name, int max)
     for (char *s = name + 1; *s; s++) {
         /* If there's whitespace in the middle then it's probably not
         ** really an email address. */
-        if (isspace(*s)) {
+        if (std::isspace(*s)) {
             name[max] = '\0';
             return name;
         }
@@ -602,7 +604,7 @@ char *compress_date(const ARTICLE *ap, int size)
 {
     char* t;
 
-    std::strncpy(t = g_cmd_buf, ctime(&ap->date), size);
+    std::strncpy(t = g_cmd_buf, std::ctime(&ap->date), size);
     char *s = std::strchr(t, '\n');
     if (s != nullptr)
     {
@@ -614,7 +616,7 @@ char *compress_date(const ARTICLE *ap, int size)
 
 inline bool eq_ignore_case(char unknown, char lower)
 {
-    return tolower(unknown) == lower;
+    return std::tolower(unknown) == lower;
 }
 
 bool strip_one_Re(char *str, char **strp)
@@ -778,12 +780,12 @@ void setspin(spin_mode mode)
         if (mode == SPIN_BARGRAPH) {
             if (s_spin_mode != SPIN_BARGRAPH) {
                 s_spin_marks = (g_verbose? 25 : 10);
-                printf(" [%*s]", s_spin_marks, "");
+                std::printf(" [%*s]", s_spin_marks, "");
                 for (int i = s_spin_marks + 1; i--; )
                 {
                     backspace();
                 }
-                fflush(stdout);
+                std::fflush(stdout);
             }
             s_spin_pos = 0;
         }
@@ -808,9 +810,9 @@ void setspin(spin_mode mode)
         }
         s_spin_level = 0;
         if (s_spin_place) {     /* we have spun at least once */
-            putchar(g_spin_char); /* get rid of spin character */
+            std::putchar(g_spin_char); /* get rid of spin character */
             backspace();
-            fflush(stdout);
+            std::fflush(stdout);
             s_spin_place = 0;
         }
         if (s_spin_art) {
@@ -837,15 +839,15 @@ void spin(int count)
             return;
         }
         if (!(++g_spin_count % count)) {
-            putchar(s_spinchars[++s_spin_place % 4]);
+            std::putchar(s_spinchars[++s_spin_place % 4]);
             backspace();
-            fflush(stdout);
+            std::fflush(stdout);
         }
         break;
       case SPIN_FOREGROUND:
         if (!(++g_spin_count % count)) {
-            putchar('.');
-            fflush(stdout);
+            std::putchar('.');
+            std::fflush(stdout);
         }
         break;
       case SPIN_BARGRAPH: {
@@ -856,15 +858,15 @@ void spin(int count)
         int new_pos = (int)((long)s_spin_marks * ++g_spin_count / g_spin_todo);
         if (s_spin_pos < new_pos && g_spin_count <= g_spin_todo+1) {
             do {
-                putchar('*');
+                std::putchar('*');
             } while (++s_spin_pos < new_pos);
             s_spin_place = 0;
-            fflush(stdout);
+            std::fflush(stdout);
         }
         else if (!(g_spin_count % count)) {
-            putchar(s_spinchars[++s_spin_place % 4]);
+            std::putchar(s_spinchars[++s_spin_place % 4]);
             backspace();
-            fflush(stdout);
+            std::fflush(stdout);
         }
         break;
       }
@@ -904,9 +906,9 @@ void perform_status_init(long cnt)
 void perform_status(long cnt, int spin)
 {
     if (!(++g_spin_count % spin)) {
-        putchar(s_spinchars[++s_spin_place % 4]);
+        std::putchar(s_spinchars[++s_spin_place % 4]);
         backspace();
-        fflush(stdout);
+        std::fflush(stdout);
     }
 
     if (g_perform_cnt == s_prior_perform_cnt)
@@ -914,7 +916,7 @@ void perform_status(long cnt, int spin)
         return;
     }
 
-    std::time_t now = std::time((std::time_t*)nullptr);
+    std::time_t now = std::time(nullptr);
     if (now - s_prior_now < 2)
     {
         return;
@@ -936,24 +938,24 @@ void perform_status(long cnt, int spin)
     if (g_perform_cnt != sels  && g_perform_cnt != -sels
      && g_perform_cnt != kills && g_perform_cnt != -kills)
     {
-        printf("M:%d ", g_perform_cnt);
+        std::printf("M:%d ", g_perform_cnt);
     }
     if (kills)
     {
-        printf("K:%ld ", kills);
+        std::printf("K:%ld ", kills);
     }
     if (sels)
     {
-        printf("S:%ld ", sels);
+        std::printf("S:%ld ", sels);
     }
 #if 0
     if (missing > 0)
     {
-        printf("(M: %ld) ", missing);
+        std::printf("(M: %ld) ", missing);
     }
 #endif
     erase_eol();
-    fflush(stdout);
+    std::fflush(stdout);
 }
 
 static char *output_change(char *cp, long num, const char *obj_type, const char *modifier, const char *action)
@@ -973,10 +975,10 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
         *cp++ = ',';
         *cp++ = ' ';
     }
-    sprintf(cp, "%ld ", num);
+    std::sprintf(cp, "%ld ", num);
     if (obj_type)
     {
-        sprintf(cp += std::strlen(cp), "%s%s ", obj_type, plural(num));
+        std::sprintf(cp += std::strlen(cp), "%s%s ", obj_type, plural(num));
     }
     cp += std::strlen(cp);
     const char *s = modifier;
@@ -1022,7 +1024,7 @@ int perform_status_end(long cnt, const char *obj_type)
     bool article_status = (*obj_type == 'a');
 
     if (g_perform_cnt == 0) {
-        sprintf(g_msg, "No %ss affected.", obj_type);
+        std::sprintf(g_msg, "No %ss affected.", obj_type);
         return 0;
     }
 
