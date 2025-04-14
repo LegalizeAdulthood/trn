@@ -14,6 +14,8 @@
 #include "trn/sorder.h"
 #include "trn/terminal.h"
 
+#include <cstdio>
+
 int  g_scr_height{}; /* height of screen in characters */
 int  g_scr_width{};  /* width of screen in characters */
 bool g_s_resized{};  /* has the window been resized? */
@@ -34,26 +36,26 @@ void s_mail_and_place()
 
 #ifdef MAILCALL
     setmail(false);             /* another chance to check mail */
-    printf("%s",g_mailcall);
+    std::printf("%s",g_mailcall);
 #endif /* MAILCALL */
     /* print page status wrt all entries */
     previous = (0 != s_prev_elig(g_page_ents[0].entnum));
     next = (0 != s_next_elig(g_page_ents[g_s_bot_ent].entnum));
     if (previous && next)
     {
-        printf("-MIDDLE-");             /* middle of entries */
+        std::printf("-MIDDLE-");             /* middle of entries */
     }
     else if (next && !previous)
     {
-        printf("-TOP-");
+        std::printf("-TOP-");
     }
     else if (previous && !next)
     {
-        printf("-BOTTOM-");
+        std::printf("-BOTTOM-");
     }
     else        /* !previous && !next */
     {
-        printf("-ALL-");
+        std::printf("-ALL-");
     }
 }
 
@@ -115,8 +117,8 @@ void s_place_ptr()
 {
     s_goxy(g_s_status_cols,
             g_s_top_lines+g_page_ents[g_s_ptr_page_line].start_line);
-    putchar('>');
-    fflush(stdout);
+    std::putchar('>');
+    std::fflush(stdout);
 }
 
 /* refresh the status line for an article on screen page */
@@ -129,9 +131,9 @@ void s_refresh_status(int line)
     int j = g_page_ents[line].lines;
     for (int i = 1; i <= j; i++)
     {
-        printf("%s\n",s_get_statchars(ent,i));
+        std::printf("%s\n",s_get_statchars(ent,i));
     }
-    fflush(stdout);
+    std::fflush(stdout);
 }
 
 void s_refresh_description(int line)
@@ -147,22 +149,22 @@ void s_refresh_description(int line)
             if (i == 1) {       /* first description line */
                 if (line < 99)
                 {
-                    printf("%2d ",line+1);
+                    std::printf("%2d ",line+1);
                 }
                 else
                 {
-                    printf("** ");      /* too big */
+                    std::printf("** ");      /* too big */
                 }
             } else
             {
-                printf("   ");
+                std::printf("   ");
             }
         }
-        printf("%s",s_get_desc(ent,i,true));
+        std::printf("%s",s_get_desc(ent,i,true));
         erase_eol();
-        putchar('\n');
+        std::putchar('\n');
     }
-    fflush(stdout);
+    std::fflush(stdout);
 }
 
 //int jump;     /* true means that the cursor should be positioned */
@@ -177,25 +179,25 @@ void s_ref_entry(int line, int jump)
     int j = g_page_ents[line].lines;
     for (int i = 1; i <= j; i++) {
 /* later replace middle with variable #spaces routine */
-        printf("%s%s",s_get_statchars(ent,i),"  ");
+        std::printf("%s%s",s_get_statchars(ent,i),"  ");
         if (g_s_itemnum_cols) {
             if (i == 1) {       /* first description line */
                 if (line < 99)
                 {
-                    printf("%2d ",line+1);
+                    std::printf("%2d ",line+1);
                 }
                 else
                 {
-                    printf("** ");      /* too big */
+                    std::printf("** ");      /* too big */
                 }
             } else
             {
-                printf("   ");
+                std::printf("   ");
             }
         }
-        printf("%s",s_get_desc(ent,i,true));
+        std::printf("%s",s_get_desc(ent,i,true));
         erase_eol();
-        putchar('\n');
+        std::putchar('\n');
     }
 }
 
@@ -269,7 +271,6 @@ void s_ref_status_onpage(long ent)
         }
     }
 }
-
 
 void s_resize_win()
 {
