@@ -46,7 +46,10 @@
 #include "util/util2.h"
 
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <string>
 
 ART_NUM  g_art{};           /* current or prospective article # */
 ART_NUM  g_recent_art{};    /* previous article # for '-' command */
@@ -137,7 +140,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
     set_datasrc(g_ngptr->rc->datasrc);
 
     if (change_dir(g_datasrc->spool_dir)) {
-        printf(g_nocd,g_datasrc->spool_dir);
+        std::printf(g_nocd,g_datasrc->spool_dir);
         return NG_ERROR;
     }
 
@@ -282,7 +285,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
             else {
                 hide_pending();
                 pushstring(start_command, 0);
-                free(start_command);
+                std::free(start_command);
             }
             start_command = nullptr;
             if (input_pending()) {
@@ -321,37 +324,37 @@ do_newsgroup_result do_newsgroup(char *start_command)
                 clear();                        /* clear the screen */
             }
             else {
-                fputs("\n\n",stdout);
+                std::fputs("\n\n",stdout);
                 termdown(2);
             }
             if (g_verbose)
             {
-                printf("End of newsgroup %s.",g_ngname.c_str());
+                std::printf("End of newsgroup %s.",g_ngname.c_str());
                                         /* print pseudo-article */
             }
             else
             {
-                printf("End of %s", g_ngname.c_str());
+                std::printf("End of %s", g_ngname.c_str());
             }
             if (g_obj_count) {
                 if (g_selected_only)
                 {
-                    printf("  (%ld + %ld articles still unread)", (long) g_selected_count,
+                    std::printf("  (%ld + %ld articles still unread)", (long) g_selected_count,
                            (long) g_obj_count - g_selected_count);
                 }
                 else
                 {
-                    printf("  (%ld article%s still unread)", (long) g_obj_count, plural(g_obj_count));
+                    std::printf("  (%ld article%s still unread)", (long) g_obj_count, plural(g_obj_count));
                 }
             }
             if (g_redirected) {
                 if (g_redirected_to.empty())
                 {
-                    printf("\n\n** This group has been disabled by your news admin **");
+                    std::printf("\n\n** This group has been disabled by your news admin **");
                 }
                 else
                 {
-                    printf("\n\n** Please start using %s **", g_redirected_to.c_str());
+                    std::printf("\n\n** Please start using %s **", g_redirected_to.c_str());
                 }
                 termdown(2);
             }
@@ -362,7 +365,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
             set_mode(g_general_mode,MM_ARTICLE_END);
             g_prompt = whatnext;
             g_srchahead = 0;                /* no more subject search mode */
-            fputs("\n\n",stdout);
+            std::fputs("\n\n",stdout);
             termdown(2);
         }
         else if (!g_reread && (was_read(g_art)
@@ -410,12 +413,12 @@ do_newsgroup_result do_newsgroup(char *start_command)
                 char tmpbuf[256];
                 /* see if we have tree data for this article anyway */
                 init_tree();
-                sprintf(tmpbuf,"%s: article is not available.",g_ngname.c_str());
+                std::sprintf(tmpbuf,"%s: article is not available.",g_ngname.c_str());
                 if (g_artp && !(g_artp->flags & AF_CACHED)) {
                     if (g_absfirst < g_first_cached || g_last_cached < g_lastart
                      || !g_cached_all_in_range)
                     {
-                        sprintf(tmpbuf, "%s: article may show up in a moment.", g_ngname.c_str());
+                        std::sprintf(tmpbuf, "%s: article may show up in a moment.", g_ngname.c_str());
                     }
                 }
                 ART_LINE linenum = tree_puts(tmpbuf, 0, 0);
@@ -460,13 +463,13 @@ reask_article:
         unflush_output();               /* disable any ^O in effect */
         /* print prompt, whatever it is */
         interp(g_cmd_buf, sizeof g_cmd_buf, g_mailcall);
-        sprintf(g_buf,g_prompt.c_str(),g_cmd_buf,
+        std::sprintf(g_buf,g_prompt.c_str(),g_cmd_buf,
                 current_charsubst(),
                 g_dfltcmd.c_str());
         draw_mousebar(g_tc_COLS - (g_term_line == g_tc_LINES-1? std::strlen(g_buf)+5 : 0), true);
         color_string(COLOR_CMD,g_buf);
-        putchar(' ');
-        fflush(stdout);
+        std::putchar(' ');
+        std::fflush(stdout);
         g_term_col = std::strlen(g_buf) + 1;
 reinp_article:
         g_reread = false;
@@ -579,7 +582,7 @@ cleanup2:
     }
 
     if (g_localkfp) {
-        fclose(g_localkfp);
+        std::fclose(g_localkfp);
         g_localkfp = nullptr;
     }
     set_mode(gmode_save,mode_save);
@@ -604,9 +607,9 @@ static art_switch_result art_switch()
       case '"':                 /* append to local SCORE file */
         g_buf[0] = ':';         /* enter command on next line */
         g_buf[1] = FINISHCMD;
-        printf("\nEnter score append command or type RETURN for a menu\n");
+        std::printf("\nEnter score append command or type RETURN for a menu\n");
         termdown(2);
-        fflush(stdout);
+        std::fflush(stdout);
         if (finish_command(true))       /* command entered successfully */
         {
             sc_append(g_buf + 1);
@@ -615,9 +618,9 @@ static art_switch_result art_switch()
       case '\'':                /* execute scoring command */
         g_buf[0] = ':';
         g_buf[1] = FINISHCMD;
-        printf("\nEnter scoring command or type RETURN for a menu\n");
+        std::printf("\nEnter scoring command or type RETURN for a menu\n");
         termdown(2);
-        fflush(stdout);
+        std::fflush(stdout);
         if (finish_command(true))       /* command entered successfully */
         {
             sc_score_cmd(g_buf + 1);
@@ -668,20 +671,20 @@ static art_switch_result art_switch()
         if (*g_buf == 'h') {
             if (g_verbose)
             {
-                fputs("Type + to enter select thread mode using all the already-read articles.\n"
+                std::fputs("Type + to enter select thread mode using all the already-read articles.\n"
                       "(The selected threads will be marked as unread and displayed as usual.)\n",
                       stdout);
-                fputs(u_help_thread, stdout);
-                fputs("Type a to mark all articles in this group as unread.\n"
+                std::fputs(u_help_thread, stdout);
+                std::fputs("Type a to mark all articles in this group as unread.\n"
                       "Type n or q to change nothing.\n",
                       stdout);
                 termdown(6);
             }
             else
             {
-                fputs("+ to select threads from the unread.\n",stdout);
-                fputs(u_help_thread,stdout);
-                fputs("a to mark all articles unread.\n"
+                std::fputs("+ to select threads from the unread.\n",stdout);
+                std::fputs(u_help_thread,stdout);
+                std::fputs("a to mark all articles unread.\n"
                       "n or q to change nothing.\n",
                       stdout);
                 termdown(5);
@@ -722,7 +725,7 @@ static art_switch_result art_switch()
             goto run_the_selector;
         }
         else {
-            fputs(g_hforhelp,stdout);
+            std::fputs(g_hforhelp,stdout);
             termdown(1);
             settle_down();
             goto reask_unread;
@@ -736,11 +739,11 @@ static art_switch_result art_switch()
                 const char* cp = (*g_buf=='['?"parent":"root");
                 if (g_verbose)
                 {
-                    printf("\nThere is no %s article prior to this one.\n", cp);
+                    std::printf("\nThere is no %s article prior to this one.\n", cp);
                 }
                 else
                 {
-                    printf("\nNo prior %s.\n", cp);
+                    std::printf("\nNo prior %s.\n", cp);
                 }
                 termdown(2);
                 return AS_ASK;
@@ -754,22 +757,22 @@ not_threaded:
         if (!g_artp) {
             if (g_verbose)
             {
-                fputs("\nYou're at the end of the group.\n", stdout);
+                std::fputs("\nYou're at the end of the group.\n", stdout);
             }
             else
             {
-                fputs("\nEnd of group.\n", stdout);
+                std::fputs("\nEnd of group.\n", stdout);
             }
             termdown(2);
             return AS_ASK;
         }
         if (g_verbose)
         {
-            fputs("\nThis group is not threaded.\n", stdout);
+            std::fputs("\nThis group is not threaded.\n", stdout);
         }
         else
         {
-            fputs("\nUnthreaded group.\n", stdout);
+            std::fputs("\nUnthreaded group.\n", stdout);
         }
         termdown(2);
         return AS_ASK;
@@ -779,13 +782,13 @@ not_threaded:
             if (!find_leaf(*g_buf == '}')) {
                 if (g_verbose)
                 {
-                    fputs("\n"
+                    std::fputs("\n"
                           "This is the last leaf in this tree.\n",
                           stdout);
                 }
                 else
                 {
-                    fputs("\n"
+                    std::fputs("\n"
                           "Last leaf.\n",
                           stdout);
                 }
@@ -805,11 +808,11 @@ not_threaded:
                 const char* cp = (*g_buf == '(' ? "previous" : "next");
                 if (g_verbose)
                 {
-                    printf("\nThis article has no %s sibling.\n", cp);
+                    std::printf("\nThis article has no %s sibling.\n", cp);
                 }
                 else
                 {
-                    printf("\nNo %s sibling.\n", cp);
+                    std::printf("\nNo %s sibling.\n", cp);
                 }
                 termdown(2);
                 return AS_ASK;
@@ -911,7 +914,7 @@ not_threaded:
         }
         carriage_return();
         perform_status_end(g_ngptr->toread, "article");
-        fputs(g_msg, stdout);
+        std::fputs(g_msg, stdout);
         newline();
         g_art = g_curr_art;
         g_artp = g_curr_artp;
@@ -937,13 +940,13 @@ not_threaded:
         if (g_art < g_absfirst) {
             if (g_verbose)
             {
-                printf("\nThere are no%s%s articles prior to this one.\n",
+                std::printf("\nThere are no%s%s articles prior to this one.\n",
                        *g_buf=='P'?"":" unread",
                        g_selected_only?" selected":"");
             }
             else
             {
-                printf("\nNo previous%s%s articles\n",
+                std::printf("\nNo previous%s%s articles\n",
                        *g_buf=='P'?"":" unread",
                        g_selected_only?" selected":"");
             }
@@ -1124,7 +1127,7 @@ not_threaded:
             if (g_use_threads) {
                 erase_line(false);
                 perform_status_end(g_ngptr->toread, "article");
-                fputs(g_msg, stdout);
+                std::fputs(g_msg, stdout);
             }
             newline();
             return AS_ASK;
@@ -1174,11 +1177,11 @@ normal_search:
           case SRCH_INTR:
             if (g_verbose)
             {
-                printf("\n(Interrupted at article %ld)\n",(long)g_art);
+                std::printf("\n(Interrupted at article %ld)\n",(long)g_art);
             }
             else
             {
-                printf("\n(Intr at %ld)\n",(long)g_art);
+                std::printf("\n(Intr at %ld)\n",(long)g_art);
             }
             termdown(2);
             g_art = g_curr_art;     /* restore to current article */
@@ -1187,11 +1190,11 @@ normal_search:
             if (g_use_threads) {
                 erase_line(false);
                 perform_status_end(g_ngptr->toread, "article");
-                printf("%s\n",g_msg);
+                std::printf("%s\n",g_msg);
             }
             else
             {
-                fputs("done\n",stdout);
+                std::fputs("done\n",stdout);
             }
             termdown(1);
             pad(g_just_a_sec/3);        /* 1/3 second */
@@ -1211,7 +1214,7 @@ normal_search:
             g_reread = false;
             return AS_NORM;
           case SRCH_NOTFOUND:
-            fputs("\n\n\n\nNot found.\n",stdout);
+            std::fputs("\n\n\n\nNot found.\n",stdout);
             termdown(5);
             g_art = g_curr_art;  /* restore to current article */
             if (g_sa_in)
@@ -1230,7 +1233,7 @@ normal_search:
       }
       case 'u':                 /* unsubscribe from this newsgroup? */
         newline();
-        printf(g_unsubto,g_ngname.c_str());
+        std::printf(g_unsubto,g_ngname.c_str());
         termdown(1);
         g_ngptr->subscribechar = NEGCHAR;
         g_ngptr->rc->flags |= RF_RCCHANGED;
@@ -1240,14 +1243,14 @@ normal_search:
         if (g_art <= g_lastart) {
             delay_unmark(g_artp);
             oneless(g_artp);
-            printf("\nArticle %ld will return.\n",(long)g_art);
+            std::printf("\nArticle %ld will return.\n",(long)g_art);
             termdown(2);
         }
         return AS_ASK;
       case 'm':
         if (g_art >= g_absfirst && g_art <= g_lastart) {
             unmark_as_read(g_artp);
-            printf("\nArticle %ld marked as still unread.\n",(long)g_art);
+            std::printf("\nArticle %ld marked as still unread.\n",(long)g_art);
             termdown(2);
         }
         return AS_ASK;
@@ -1274,7 +1277,7 @@ normal_search:
         {
             g_first_view = 0;
         }
-        printf("\nAuto-View inlined mime is %s\n", g_auto_view_inline? "on" : "off");
+        std::printf("\nAuto-View inlined mime is %s\n", g_auto_view_inline? "on" : "off");
         termdown(2);
         break;
       case 'j':
@@ -1299,18 +1302,18 @@ normal_search:
       case '#':
         if (g_verbose)
         {
-            printf("\nThe last article is %ld.\n",(long)g_lastart);
+            std::printf("\nThe last article is %ld.\n",(long)g_lastart);
         }
         else
         {
-            printf("\n%ld\n",(long)g_lastart);
+            std::printf("\n%ld\n",(long)g_lastart);
         }
         termdown(2);
         return AS_ASK;
       case '+':                 /* enter selection mode */
 run_the_selector:
         if (s_art_sel_ilock) {
-            printf("\nAlready inside article selector!\n");
+            std::printf("\nAlready inside article selector!\n");
             termdown(2);
             return AS_ASK;
         }
@@ -1367,7 +1370,7 @@ run_the_selector:
         return AS_NORM;
 #ifdef DEBUG
       case 'D':
-        printf("\nFirst article: %ld\n",(long)g_firstart);
+        std::printf("\nFirst article: %ld\n",(long)g_firstart);
         termdown(2);
         article_walk(debug_article_output, 0);
         g_int_count = 0;
@@ -1540,7 +1543,7 @@ run_the_selector:
         return AS_NORM;                 /* pretend nothing happened */
 #ifdef STRICTCR
       case '\n':   case '\r':
-        fputs(g_badcr,stdout);
+        std::fputs(g_badcr,stdout);
         return AS_ASK;
 #endif
       case '_':
@@ -1574,10 +1577,10 @@ run_the_selector:
             }
             if (g_threaded_group) {
                 select_arts_thread(g_artp, AUTO_KILL_NONE);
-                printf("\nSelected all articles in this thread.\n");
+                std::printf("\nSelected all articles in this thread.\n");
             } else {
                 select_arts_subject(g_artp, AUTO_KILL_NONE);
-                printf("\nSelected all articles in this subject.\n");
+                std::printf("\nSelected all articles in this subject.\n");
             }
             termdown(2);
             g_artp = first_art(g_artp->subj);
@@ -1597,10 +1600,10 @@ run_the_selector:
             }
             if (g_sel_mode == SM_THREAD) {
                 deselect_arts_thread(g_artp);
-                printf("\nDeselected all articles in this thread.\n");
+                std::printf("\nDeselected all articles in this thread.\n");
             } else {
                 deselect_arts_subject(g_artp);
-                printf("\nDeselected all articles in this subject.\n");
+                std::printf("\nDeselected all articles in this subject.\n");
             }
             termdown(2);
             return AS_ASK;
@@ -1630,7 +1633,7 @@ run_the_selector:
         }
         /* FALL THROUGH */
       default:
-        printf("\n%s",g_hforhelp);
+        std::printf("\n%s",g_hforhelp);
         termdown(2);
         settle_down();
         break;
@@ -1705,11 +1708,11 @@ char ask_catchup()
 reask_catchup:
     if (g_verbose)
     {
-        sprintf(g_buf, "Mark everything in %s as read?", g_ngname.c_str());
+        std::sprintf(g_buf, "Mark everything in %s as read?", g_ngname.c_str());
     }
     else
     {
-        sprintf(g_buf, "Catchup %s?", g_ngname.c_str());
+        std::sprintf(g_buf, "Catchup %s?", g_ngname.c_str());
     }
     in_char(g_buf,MM_CONFIRM_CATCH_UP_PROMPT,"yn#h");
     printcmd();
@@ -1719,7 +1722,7 @@ reask_catchup:
         use_one_line = false;
         if (g_verbose)
         {
-            fputs("\n"
+            std::fputs("\n"
                  "Type y or SP to mark all articles as read.\n"
                  "Type n to leave articles marked as they are.\n"
                  "The # means enter a number to mark all but the last # articles as read.\n"
@@ -1728,7 +1731,7 @@ reask_catchup:
         }
         else
         {
-            fputs("\n"
+            std::fputs("\n"
                  "y or SP to mark all read.\n"
                  "n to forget it.\n"
                  "# means enter a number to leave unread.\n"
@@ -1769,7 +1772,7 @@ reask_catchup:
     }
     if (ch != 'y' && ch != 'u') {
         use_one_line = false;
-        printf("\n%s\n", g_hforhelp);
+        std::printf("\n%s\n", g_hforhelp);
         termdown(3);
         settle_down();
         goto reask_catchup;
@@ -1801,8 +1804,8 @@ reask_catchup:
         g_ngptr->rc->flags |= RF_RCCHANGED;
         g_newsgroup_toread--;
         newline();
-        printf(g_unsubto,g_ngname.c_str());
-        printf("(If you meant to hit 'y' instead of 'u', press '-'.)\n");
+        std::printf(g_unsubto,g_ngname.c_str());
+        std::printf("(If you meant to hit 'y' instead of 'u', press '-'.)\n");
         termdown(2);
     }
     return ch;
@@ -1865,7 +1868,7 @@ bool output_subject(char *ptr, int flag)
     char *  s = fetchsubj(i, false);
     if (s != nullptr)
     {
-        sprintf(tmpbuf,"%-5ld ", i);
+        std::sprintf(tmpbuf,"%-5ld ", i);
         int len = std::strlen(tmpbuf);
         if (!empty(g_subjline)) {
             g_art = i;
@@ -1896,7 +1899,7 @@ static bool debug_article_output(char *ptr, int arg)
         return 1;
     }
     if (article_num(ap) >= g_firstart && ap->subj) {
-        printf("%5ld %c %s\n", article_num(ap),
+        std::printf("%5ld %c %s\n", article_num(ap),
                (ap->flags & AF_UNREAD)? 'y' : 'n', ap->subj->str);
         termdown(1);
     }
@@ -1920,7 +1923,7 @@ char ask_memorize(char_int ch)
         newline();
     }
 reask_memorize:
-    sprintf(g_cmd_buf,"%sMemorize %s command:", global_save?"Global-" : "",
+    std::sprintf(g_cmd_buf,"%sMemorize %s command:", global_save?"Global-" : "",
             mode_string);
     in_char(g_cmd_buf, MM_MEMORIZE_THREAD_PROMPT, thread_cmd? "+S.mJK,jcC" : "+S.mJK,jcCfg");
     printcmd();
@@ -1938,7 +1941,7 @@ reask_memorize:
     if (ch == 'h' || ch == 'H') {
         use_one_line = false;
         if (g_verbose) {
-            printf("\n"
+            std::printf("\n"
                    "Type + or SP to auto-select this %s (i.e. includes future articles).\n"
                    "Type S to auto-select the current subject.\n"
                    "Type . to auto-select %s.\n"
@@ -1952,14 +1955,14 @@ reask_memorize:
                    "Type q to abort the operation.\n",
                    mode_string, mode_phrase, mode_string, mode_phrase, mode_phrase, mode_string);
             if (!thread_cmd) {
-                printf("Type f to toggle author (from-line) searching.\n"
+                std::printf("Type f to toggle author (from-line) searching.\n"
                        "Type g to toggle global memorization.\n");
                 termdown(2);
             }
         }
         else
         {
-            printf("\n"
+            std::printf("\n"
                    "+ or SP auto-selects this %s.\n"
                    "S auto-selects the subject.\n"
                    ". auto-selects %s.\n"
@@ -1973,7 +1976,7 @@ reask_memorize:
                    "q aborts.\n",
                    mode_string, mode_phrase, mode_string, mode_phrase, mode_phrase, mode_string);
             if (!thread_cmd) {
-                printf("f toggles author (from) mode.\n"
+                std::printf("f toggles author (from) mode.\n"
                        "g toggles global memorization.\n");
                 termdown(2);
             }
@@ -2005,7 +2008,7 @@ reask_memorize:
             ch = (use_one_line? '+' : '.');
         }
         if (g_general_mode != GM_SELECTOR) {
-            printf("\nSelection memorized.\n");
+            std::printf("\nSelection memorized.\n");
             termdown(2);
         }
     }
@@ -2013,7 +2016,7 @@ reask_memorize:
         select_arts_subject(g_artp, AUTO_SEL_SBJ);
         ch = (use_one_line? '+' : '.');
         if (g_general_mode != GM_SELECTOR) {
-            printf("\nSelection memorized.\n");
+            std::printf("\nSelection memorized.\n");
             termdown(2);
         }
     }
@@ -2027,7 +2030,7 @@ reask_memorize:
             ch = (use_one_line? '+' : '.');
         }
         if (g_general_mode != GM_SELECTOR) {
-            printf("\nSelection memorized.\n");
+            std::printf("\nSelection memorized.\n");
             termdown(2);
         }
     }
@@ -2036,7 +2039,7 @@ reask_memorize:
             change_auto_flags(g_artp, AUTO_SEL_1);
             ch = (use_one_line? '+' : '.');
             if (g_general_mode != GM_SELECTOR) {
-                printf("\nSelection memorized.\n");
+                std::printf("\nSelection memorized.\n");
                 termdown(2);
             }
         }
@@ -2053,7 +2056,7 @@ reask_memorize:
             kill_thread(g_artp->subj->thread, AFFECT_ALL | AUTO_KILL_THD);
         }
         if (g_general_mode != GM_SELECTOR) {
-            printf("\nKill memorized.\n");
+            std::printf("\nKill memorized.\n");
             termdown(2);
         }
     }
@@ -2062,7 +2065,7 @@ reask_memorize:
             mark_as_read(g_artp);
             change_auto_flags(g_artp, AUTO_KILL_1);
             if (g_general_mode != GM_SELECTOR) {
-                printf("\nKill memorized.\n");
+                std::printf("\nKill memorized.\n");
                 termdown(2);
             }
         }
@@ -2070,7 +2073,7 @@ reask_memorize:
     else if (ch == 'K') {
         kill_subject(g_artp->subj,AFFECT_ALL|AUTO_KILL_SBJ);
         if (g_general_mode != GM_SELECTOR) {
-            printf("\nKill memorized.\n");
+            std::printf("\nKill memorized.\n");
             termdown(2);
         }
     }
@@ -2085,7 +2088,7 @@ reask_memorize:
             kill_subthread(g_artp, AFFECT_ALL | AUTO_KILL_FOL);
         }
         if (g_general_mode != GM_SELECTOR) {
-            printf("\nKill memorized.\n");
+            std::printf("\nKill memorized.\n");
             termdown(2);
         }
     }
@@ -2113,7 +2116,7 @@ reask_memorize:
 #endif
     else {
         use_one_line = false;
-        printf("\n%s\n", g_hforhelp);
+        std::printf("\n%s\n", g_hforhelp);
         termdown(3);
         settle_down();
         goto reask_memorize;
