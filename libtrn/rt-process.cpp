@@ -18,6 +18,8 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cctype>
+#include <cstdlib>
 #include <cstring>
 
 static void fix_msgid(char *msgid);
@@ -37,7 +39,7 @@ ARTICLE *allocate_article(ART_NUM artnum)
     }
     else {
         article = (ARTICLE*)safemalloc(sizeof (ARTICLE));
-        memset((char*)article,0,sizeof (ARTICLE));
+        std::memset((char*)article,0,sizeof (ARTICLE));
         article->flags |= AF_FAKE|AF_TMPMEM;
     }
     return article;
@@ -49,8 +51,8 @@ static void fix_msgid(char *msgid)
     if (cp != nullptr)
     {
         while (*++cp) {
-            if (isupper(*cp)) {
-                *cp = tolower(*cp);     /* lower-case domain portion */
+            if (std::isupper(*cp)) {
+                *cp = std::tolower(*cp);     /* lower-case domain portion */
             }
         }
     }
@@ -61,9 +63,9 @@ int msgid_cmp(const char *key, int keylen, HASHDATUM data)
     /* We already know that the lengths are equal, just compare the strings */
     if (data.dat_len)
     {
-        return memcmp(key, data.dat_ptr, keylen);
+        return std::memcmp(key, data.dat_ptr, keylen);
     }
-    return memcmp(key, ((ARTICLE*)data.dat_ptr)->msgid, keylen);
+    return std::memcmp(key, ((ARTICLE*)data.dat_ptr)->msgid, keylen);
 }
 
 static SUBJECT *s_fake_had_subj; /* the fake-turned-real article had this subject */
@@ -165,7 +167,7 @@ bool valid_article(ARTICLE *article)
                 ap->parent = article;
             }
             clear_article(fake_ap);
-            free((char*)fake_ap);
+            std::free(fake_ap);
             data.dat_ptr = (char*)article;
             hashstorelast(data);
             return true;
@@ -423,8 +425,8 @@ void rover_thread(ARTICLE *article, char *s)
 
     for (;;) {
         s = skip_eq(++s, ' ');
-        if (isdigit(*s)) {
-            article = article_ptr(atol(s));
+        if (std::isdigit(*s)) {
+            article = article_ptr(std::atol(s));
             prev->parent = article;
             link_child(prev);
             break;
