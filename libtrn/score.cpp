@@ -23,6 +23,8 @@
 #include "trn/sorder.h"
 #include "trn/terminal.h" /* input_pending() */
 
+#include <cstdio>
+
 bool    g_kill_thresh_active{};  //
 int     g_kill_thresh{LOWSCORE}; /* KILL articles at or below this score */
 ART_NUM g_sc_fill_max;           /* maximum art# scored by fill-routine */
@@ -45,7 +47,7 @@ void sc_init(bool pend_wait)
 
     if (g_lastart == 0 || g_lastart < g_absfirst) {
 #if 0
-        printf("No articles exist to be scored.\n");
+        std::printf("No articles exist to be scored.\n");
 #endif
         return;
     }
@@ -71,8 +73,8 @@ void sc_init(bool pend_wait)
     g_sc_fill_read = g_sa_mode_read_elig || g_firstart > g_lastart;
 
     if (g_sf_verbose) {
-        printf("\nScoring articles...");
-        fflush(stdout);         /* print it *now* */
+        std::printf("\nScoring articles...");
+        std::fflush(stdout);         /* print it *now* */
     }
 
     g_sc_initialized = true;    /* little white lie for lookahead */
@@ -129,7 +131,7 @@ void sc_init(bool pend_wait)
         if (a < g_absfirst) {           /* no articles scored */
             if (g_sf_verbose)
             {
-                printf("\nNo articles available for scoring\n");
+                std::printf("\nNo articles available for scoring\n");
             }
             sc_cleanup();
             return;
@@ -149,11 +151,11 @@ void sc_init(bool pend_wait)
         bool waitflag = true; /* normal mode: wait for key first */
         if (g_sf_verbose && waitflag) {
 #ifdef PENDING
-            printf("(press key to start reading)");
+            std::printf("(press key to start reading)");
 #else
-            printf("(interrupt to start reading)");
+            std::printf("(interrupt to start reading)");
 #endif
-            fflush(stdout);
+            std::fflush(stdout);
         }
         if (waitflag) {
             setspin(SPIN_FOREGROUND);
@@ -167,7 +169,7 @@ void sc_init(bool pend_wait)
     }
     if (g_sf_verbose)
     {
-        putchar('\n');
+        std::putchar('\n');
     }
 
     g_sc_initialized = true;
@@ -187,8 +189,8 @@ void sc_cleanup()
     g_sc_loaded_count = 0;
 
     if (g_sf_verbose) {
-        printf("\nCleaning up scoring...");
-        fflush(stdout);
+        std::printf("\nCleaning up scoring...");
+        std::fflush(stdout);
     }
 
     if (!s_sc_sf_delay)
@@ -199,7 +201,7 @@ void sc_cleanup()
 
     if (g_sf_verbose)
     {
-        printf("Done.\n");
+        std::printf("Done.\n");
     }
 }
 
@@ -240,7 +242,7 @@ int sc_score_art(ART_NUM a, bool now)
 {
     if (a < g_absfirst || a > g_lastart) {
 #if 0
-         printf("\nsc_score_art: illegal article# %d\n",a);
+         std::printf("\nsc_score_art: illegal article# %d\n",a);
 #endif
         return LOWSCORE;                /* definitely unavailable */
     }
@@ -416,7 +418,7 @@ void sc_rescore_arts()
         s_sc_sf_delay = false;
     }
     if (!g_sc_initialized) {
-        printf("\nScoring is not initialized, aborting command.\n");
+        std::printf("\nScoring is not initialized, aborting command.\n");
         return;
     }
     /* I think s_sc_do_spin will always be false, but why take chances? */
@@ -459,7 +461,7 @@ void sc_append(char *line)
         s_sc_sf_delay = false;
     }
     if (!g_sc_initialized) {
-        printf("\nScoring is not initialized, aborting command.\n");
+        std::printf("\nScoring is not initialized, aborting command.\n");
         return;
     }
     if (!*line) {
@@ -472,10 +474,10 @@ void sc_append(char *line)
     char filechar = *line; /* first char */
     sf_append(line);
     if (filechar == '!') {
-        printf("\nRescoring articles...");
-        fflush(stdout);
+        std::printf("\nRescoring articles...");
+        std::fflush(stdout);
         sc_rescore_arts();
-        printf("Done.\n");
+        std::printf("Done.\n");
         if (g_sa_initialized)
         {
             g_s_top_ent = -1;           /* reset top of page */
@@ -514,7 +516,7 @@ void sc_score_cmd(const char *line)
         s_sc_sf_delay = false;
     }
     if (!g_sc_initialized) {
-        printf("\nScoring is not initialized, aborting command.\n");
+        std::printf("\nScoring is not initialized, aborting command.\n");
         return;
     }
     if (!*line) {
@@ -531,8 +533,8 @@ void sc_score_cmd(const char *line)
     }
     switch (*line) {
       case 'f': /* fill (useful when PENDING is unavailable) */
-        printf("Scoring more articles...");
-        fflush(stdout); /* print it now */
+        std::printf("Scoring more articles...");
+        std::fflush(stdout); /* print it now */
         setspin(SPIN_FOREGROUND);
         s_sc_do_spin = true;
         sc_lookahead(true,false);
@@ -540,10 +542,10 @@ void sc_score_cmd(const char *line)
         setspin(SPIN_POP);
         /* consider a "done" message later,
          * *if* lookahead did all the arts */
-        putchar('\n');
+        std::putchar('\n');
         break;
       case 'r': /* rescore */
-        printf("Rescoring articles...\n");
+        std::printf("Rescoring articles...\n");
         sc_rescore();
         break;
       case 's': /* verbose score for this article */
@@ -552,14 +554,14 @@ void sc_score_cmd(const char *line)
         g_sf_score_verbose = true;
         j = sf_score(g_art);
         g_sf_score_verbose = false;
-        printf("Scorefile total score: %ld\n",j);
+        std::printf("Scorefile total score: %ld\n",j);
         i += j;
         j = sc_score_art(g_art,true);
         if (i != j) {
             /* Consider resubmitting article to filter? */
-            printf("Other scoring total: %ld\n", j - i);
+            std::printf("Other scoring total: %ld\n", j - i);
         }
-        printf("Total score is %ld\n",i);
+        std::printf("Total score is %ld\n",i);
         break;
       case 'e': /* edit scorefile or other file */
         s = skip_hor_space(line+1);
@@ -573,7 +575,7 @@ void sc_score_cmd(const char *line)
         }
         break;
       default:
-        printf("Unknown scoring command |%s|\n",line);
+        std::printf("Unknown scoring command |%s|\n",line);
     } /* switch */
 }
 
