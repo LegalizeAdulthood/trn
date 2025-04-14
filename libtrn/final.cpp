@@ -25,6 +25,10 @@
 #include "trn/trn.h"
 #include "trn/util.h"
 
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
+
 #ifdef HAS_SIGBLOCK
 #ifndef sigmask
 #define sigmask(m)      (1 << ((m)-1))
@@ -99,7 +103,7 @@ void finalize(int status)
         resetty();
     }
     xmouse_off();       /* turn off mouse tracking (if on) */
-    fflush(stdout);
+    std::fflush(stdout);
 
     change_dir(g_tmp_dir);
     if (!g_checkflag)
@@ -121,7 +125,7 @@ void finalize(int status)
 #ifdef HAS_SIGBLOCK
         sigsetmask(sigblock(0) & ~(sigmask(SIGILL) | sigmask(SIGIOT)));
 #endif
-        abort();
+        std::abort();
     }
 #ifdef RESTORE_ORIGDIR
     if (!g_origdir.empty())
@@ -129,7 +133,7 @@ void finalize(int status)
         change_dir(g_origdir);
     }
 #endif
-    exit(status);
+    std::exit(status);
 }
 
 /* come here on interrupt */
@@ -195,7 +199,7 @@ Signal_t sig_catcher(int signo)
 
 #ifdef DEBUG
     if (debug) {
-        printf("\nSIG%s--.newsrc not restored in debug\n",signame[signo]);
+        std::printf("\nSIG%s--.newsrc not restored in debug\n",signame[signo]);
         finalize(-1);
     }
 #endif
@@ -203,7 +207,7 @@ Signal_t sig_catcher(int signo)
 #ifdef HAS_SIGBLOCK
         sigsetmask(sigblock(0) & ~(sigmask(SIGILL) | sigmask(SIGIOT)));
 #endif
-        abort();
+        std::abort();
     }
     (void) sigset(SIGILL,SIG_DFL);
     g_panic = true;                     /* disable terminal I/O */
@@ -222,11 +226,11 @@ Signal_t sig_catcher(int signo)
 #endif
         if (g_verbose)
         {
-            printf("\nCaught %s%s--.newsrc restored\n", signo ? "a SIG" : "an internal error", signame[signo]);
+            std::printf("\nCaught %s%s--.newsrc restored\n", signo ? "a SIG" : "an internal error", signame[signo]);
         }
         else
         {
-            printf("\nSignal %d--bye bye\n", signo);
+            std::printf("\nSignal %d--bye bye\n", signo);
         }
 #ifdef SIGHUP
     }
@@ -260,7 +264,7 @@ Signal_t stop_catcher(int signo)
         checkpoint_newsrcs();   /* good chance of crash while stopped */
         if (g_bos_on_stop) {
             goto_xy(0, g_tc_LINES-1);
-            putchar('\n');
+            std::putchar('\n');
         }
         termlib_reset();
         resetty();              /* this is the point of all this */
@@ -270,7 +274,7 @@ Signal_t stop_catcher(int signo)
             write(2,"stop_catcher\n",13);
         }
 #endif
-        fflush(stdout);
+        std::fflush(stdout);
         sigset(signo,SIG_DFL);  /* enable stop */
 #ifdef HAS_SIGBLOCK
         sigsetmask(sigblock(0) & ~(1 << (signo-1)));
