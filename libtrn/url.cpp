@@ -16,7 +16,11 @@
 
 #include <boost/asio.hpp>
 
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <string>
 
 namespace asio = boost::asio;
 using resolver_results = asio::ip::tcp::resolver::results_type;
@@ -55,16 +59,16 @@ bool fetch_http(const char *host, int port, const char *path, const char *outnam
 
     /* XXX length check */
     /* XXX later consider using HTTP/1.0 format (and user-agent) */
-    sprintf(s_url_buf, "GET %s\r\n", path);
+    std::sprintf(s_url_buf, "GET %s\r\n", path);
     asio::write(socket, asio::buffer(s_url_buf, std::strlen(s_url_buf)), ec);
     if (ec)
     {
         return false;
     }
 
-    FILE *fp_out = fopen(outname, "w");
+    std::FILE *fp_out = std::fopen(outname, "w");
     if (!fp_out) {
-        printf("\nURL output file could not be opened.\n");
+        std::printf("\nURL output file could not be opened.\n");
         return false;
     }
     while (true)
@@ -72,15 +76,15 @@ bool fetch_http(const char *host, int port, const char *path, const char *outnam
         size_t len = read(socket, asio::buffer(s_url_buf, sizeof(s_url_buf)), ec);
         if (ec != asio::error::eof)
         {
-            printf("\nError: reading URL reply\n");
+            std::printf("\nError: reading URL reply\n");
             return false;
         }
         if (len == 0) {
             break;      /* no data, end connection */
         }
-        fwrite(s_url_buf,1,len,fp_out);
+        std::fwrite(s_url_buf,1,len,fp_out);
     }
-    fclose(fp_out);
+    std::fclose(fp_out);
     return true;
 }
 
@@ -99,11 +103,11 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
     safecpy(path,origpath,510);
     char *p = std::strrchr(path, '/'); /* p points to last slash or nullptr*/
     if (p == nullptr) {
-        printf("Error: URL:ftp path has no '/' character.\n");
+        std::printf("Error: URL:ftp path has no '/' character.\n");
         return false;
     }
     if (p[1] == '\0') {
-        printf("Error: URL:ftp path has no final filename.\n");
+        std::printf("Error: URL:ftp path has no final filename.\n");
         return false;
     }
     safecpy(username,filexp("%L"),120);
@@ -116,7 +120,7 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
         cdpath = "/";
     }
 
-    sprintf(cmdline,"%s/ftpgrab %s ftp %s@%s %s %s %s",
+    std::sprintf(cmdline,"%s/ftpgrab %s ftp %s@%s %s %s %s",
             filexp("%X"),host,username,userhost,cdpath,p+1,outname);
 
     /* modified escape_shell_cmd code from NCSA HTTPD util.c */
@@ -135,13 +139,13 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
     }
 
 #if 0
-    printf("ftpgrab command:\n|%s|\n",cmdline);
+    std::printf("ftpgrab command:\n|%s|\n",cmdline);
 #endif
 
     *p = '/';
     status = doshell(nullptr,cmdline);
 #if 0
-    printf("\nFTP command status is %d\n",status);
+    std::printf("\nFTP command status is %d\n",status);
     while (!input_pending())
     {
     }
@@ -149,7 +153,7 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
 #endif
     return true;
 #else
-    printf("\nThis copy of trn does not have URL:ftp support.\n");
+    std::printf("\nThis copy of trn does not have URL:ftp support.\n");
     return false;
 #endif
 }
@@ -164,7 +168,7 @@ bool parse_url(const char *url)
     /* consider using 0 as default to look up the service? */
     s_url_port = 80;    /* the default */
     if (!url || !*url) {
-        printf("Empty URL -- ignoring.\n");
+        std::printf("Empty URL -- ignoring.\n");
         return false;
     }
     char *p = s_url_type;
@@ -173,11 +177,11 @@ bool parse_url(const char *url)
     }
     *p = '\0';
     if (!*s) {
-        printf("Incomplete URL: %s\n",url);
+        std::printf("Incomplete URL: %s\n",url);
         return false;
     }
     s++;
-    if (!strncmp(s,"//",2)) {
+    if (!std::strncmp(s,"//",2)) {
         /* normal URL type, will have host (optional portnum) */
         s += 2;
         p = s_url_host;
@@ -188,7 +192,7 @@ bool parse_url(const char *url)
                 *p++ = *s++;
             }
             if (!*s) {
-                printf("Bad address literal: %s\n",url);
+                std::printf("Bad address literal: %s\n",url);
                 return false;
             }
             s++;        /* skip ] */
@@ -201,32 +205,32 @@ bool parse_url(const char *url)
         }
         *p = '\0';
         if (!*s) {
-            printf("Incomplete URL: %s\n",url);
+            std::printf("Incomplete URL: %s\n",url);
             return false;
         }
         if (*s == ':') {
             s++;
             p = s_url_buf;      /* temp space */
-            if (!isdigit(*s)) {
-                printf("Bad URL (non-numeric portnum): %s\n",url);
+            if (!std::isdigit(*s)) {
+                std::printf("Bad URL (non-numeric portnum): %s\n",url);
                 return false;
             }
-            while (isdigit(*s))
+            while (std::isdigit(*s))
             {
                 *p++ = *s++;
             }
             *p = '\0';
-            s_url_port = atoi(s_url_buf);
+            s_url_port = std::atoi(s_url_buf);
         }
     } else {
-        if (!!strcmp(s_url_type,"news")) {
-            printf("URL needs a hostname: %s\n",url);
+        if (!!std::strcmp(s_url_type,"news")) {
+            std::printf("URL needs a hostname: %s\n",url);
             return false;
         }
     }
     /* finally, just do the path */
     if (*s != '/') {
-        printf("Bad URL (path does not start with /): %s\n",url);
+        std::printf("Bad URL (path does not start with /): %s\n",url);
         return false;
     }
     std::strcpy(s_url_path,s);
@@ -242,18 +246,18 @@ bool url_get(const char *url, const char *outfile)
         return false;
     }
 
-    if (!strcmp(s_url_type,"http"))
+    if (!std::strcmp(s_url_type,"http"))
     {
         flag = fetch_http(s_url_host,s_url_port,s_url_path,outfile);
     }
-    else if (!strcmp(s_url_type,"ftp"))
+    else if (!std::strcmp(s_url_type,"ftp"))
     {
         flag = fetch_ftp(s_url_host,s_url_path,outfile);
     }
     else {
         if (s_url_type)
         {
-            printf("\nURL type %s not supported (yet?)\n",s_url_type);
+            std::printf("\nURL type %s not supported (yet?)\n",s_url_type);
         }
         flag = false;
     }
