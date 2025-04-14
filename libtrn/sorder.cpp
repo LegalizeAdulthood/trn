@@ -106,7 +106,7 @@ void s_sort_basic()
 void s_sort()
 {
 #ifdef UNDEF
-    qsort((void*)g_s_ent_sort,(g_s_ent_sort_max)+1,sizeof(long),s_compare);
+    std::qsort((void*)g_s_ent_sort,(g_s_ent_sort_max)+1,sizeof(long),s_compare);
 #endif
     s_sort_basic();
     g_s_ent_sorted_max = g_s_ent_sort_max;  /* whole array is now sorted */

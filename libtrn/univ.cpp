@@ -30,7 +30,10 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <cctype>
 
 /* TODO:
  *
@@ -139,7 +142,7 @@ void univ_close()
         univ_free_data(node);
         safefree(node->desc);
         nextnode = node->next;
-        free((char*)node);
+        std::free((char*)node);
     }
     if (!g_univ_tmp_file.empty()) {
         remove(g_univ_tmp_file.c_str());
@@ -390,7 +393,7 @@ void univ_add_virtgroup(const char *grpname)
         /* perhaps it is marked as deleted? */
         for (ui = g_first_univ; ui; ui = ui->next) {
             if ((ui->type == UN_VGROUP_DESEL) && ui->data.vgroup.ng
-             && !strcmp(ui->data.vgroup.ng,grpname)) {
+             && !std::strcmp(ui->data.vgroup.ng,grpname)) {
                 /* undelete the newsgroup */
                 ui->type = UN_VGROUP;
             }
@@ -450,7 +453,7 @@ void univ_use_pattern(const char *pattern, int type)
     UNIV_ITEM* ui;
 
     if (!s || !*s) {
-        printf("\ngroup pattern: empty regular expression\n");
+        std::printf("\ngroup pattern: empty regular expression\n");
         return;
     }
     /* XXX later: match all newsgroups in current datasrc to the pattern. */
@@ -550,7 +553,7 @@ static bool univ_use_file(const char *fname, const char *label)
         }
         begin_top = false;      /* we will need a "begin group" */
     } else if (*s == ':') {     /* relative to last file's directory */
-        printf("Colon filespec not supported for |%s|\n",s);
+        std::printf("Colon filespec not supported for |%s|\n",s);
         open_name = nullptr;
     }
     if (!open_name)
@@ -563,7 +566,7 @@ static bool univ_use_file(const char *fname, const char *label)
     {
         s_univ_begin_label = savestr(label);
     }
-    FILE *fp = fopen(filexp(open_name), "r");
+    std::FILE *fp = std::fopen(filexp(open_name), "r");
     if (!fp)
     {
         return false;           /* unsuccessful (XXX: complain) */
@@ -572,20 +575,20 @@ static bool univ_use_file(const char *fname, const char *label)
  * 1. Long lines
  * 2. Backslash continuations
  */
-    while (fgets(lbuf,sizeof lbuf,fp) != nullptr) {
+    while (std::fgets(lbuf,sizeof lbuf,fp) != nullptr) {
         if (!univ_do_line(lbuf))
         {
             break;      /* end of useful file */
         }
     }
-    fclose(fp);
+    std::fclose(fp);
     if (!s_univ_begin_found)
     {
-        printf("\"begin group\" not found.\n");
+        std::printf("\"begin group\" not found.\n");
     }
     if (s_univ_begin_label)
     {
-        printf("label not found: %s\n",s_univ_begin_label);
+        std::printf("label not found: %s\n",s_univ_begin_label);
     }
     if (s_univ_virt_pass_needed) {
         univ_virt_pass();
@@ -648,9 +651,9 @@ static void univ_do_line_ext1(const char *desc, char *line)
               p++;
             }
             p = skip_digits(p);
-            if (isspace(*p)) {
+            if (std::isspace(*p)) {
               *p = '\0';
-              s_univ_min_score = atoi(q);
+              s_univ_min_score = std::atoi(q);
               s_univ_use_min_score = true;
               s = p;
               s++;
@@ -698,7 +701,7 @@ static bool univ_do_line(char *line)
         s_univ_begin_found = true;
     }
     if (s_univ_begin_label) {
-        if (*s == '>' && s[1] == ':' && !strcmp(s+2,s_univ_begin_label)) {
+        if (*s == '>' && s[1] == ':' && !std::strcmp(s+2,s_univ_begin_label)) {
             safefree0(s_univ_begin_label); /* interpret starting at next line */
         }
         return true;
@@ -707,7 +710,7 @@ static bool univ_do_line(char *line)
     if (*s == '"') {    /* description name */
         p = cpytill(s,s+1,'"');
         if (!*p) {
-            printf("univ: unmatched quote in string:\n\"%s\"\n", s);
+            std::printf("univ: unmatched quote in string:\n\"%s\"\n", s);
             return true;
         }
         *p = '\0';
@@ -909,25 +912,25 @@ static char *univ_edit_new_userfile()
      */
 
     /* if the file exists, do not create a new one */
-    FILE *fp = fopen(s, "r");
+    std::FILE *fp = std::fopen(s, "r");
     if (fp) {
-        fclose(fp);
+        std::fclose(fp);
         return g_univ_fname;    /* as if this function was not called */
     }
 
     makedir(s, MD_FILE);
 
-    fp = fopen(s,"w");
+    fp = std::fopen(s,"w");
     if (!fp) {
-        printf("Could not create new user file.\n");
-        printf("Editing current system file\n");
+        std::printf("Could not create new user file.\n");
+        std::printf("Editing current system file\n");
         (void)get_anything();
         return g_univ_fname;
     }
-    fprintf(fp,"# User Toplevel (Universal Selector)\n");
-    fclose(fp);
-    printf("New User Toplevel file created.\n");
-    printf("After editing this file, exit and restart trn to use it.\n");
+    std::fprintf(fp,"# User Toplevel (Universal Selector)\n");
+    std::fclose(fp);
+    std::printf("New User Toplevel file created.\n");
+    std::printf("After editing this file, exit and restart trn to use it.\n");
     (void)get_anything();
     s_univ_usrtop = true;               /* do not overwrite this file */
     return s;
@@ -961,7 +964,7 @@ void univ_page_file(char *fname)
         return;
     }
 
-    sprintf(g_cmd_buf,"%s ",
+    std::sprintf(g_cmd_buf,"%s ",
             filexp(get_val_const("HELPPAGER",get_val_const("PAGER","more"))));
     std::strcat(g_cmd_buf, filexp(fname));
     termdown(3);
@@ -972,7 +975,7 @@ void univ_page_file(char *fname)
     /* later: consider something else that will return the key, and
      *        returning different codes based on the key.
      */
-    if (!strncmp(g_cmd_buf,"more ",5))
+    if (!std::strncmp(g_cmd_buf,"more ",5))
     {
         get_anything();
     }
@@ -1051,7 +1054,7 @@ int univ_visit_group_main(const char *gname)
 
     NGDATA *np = find_ng(gname);
     if (!np) {
-        printf("Univ/Virt: newsgroup %s not found!", gname);
+        std::printf("Univ/Virt: newsgroup %s not found!", gname);
         return NG_ERROR;
     }
     /* unsubscribed, bogus, etc. groups are not visited */
@@ -1068,7 +1071,7 @@ int univ_visit_group_main(const char *gname)
     }
     bool old_threaded = g_threaded_group;
     g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
-    printf("\nScanning newsgroup %s\n",gname);
+    std::printf("\nScanning newsgroup %s\n",gname);
     int ret = do_newsgroup("");
     g_threaded_group = old_threaded;
     return ret;
@@ -1170,7 +1173,7 @@ void sort_univ()
     }
     TRN_ASSERT(lp - univ_sort_list == cnt);
 
-    qsort(univ_sort_list, cnt, sizeof(UNIV_ITEM *), (int(*)(void const *, void const *))sort_procedure);
+    std::qsort(univ_sort_list, cnt, sizeof(UNIV_ITEM *), (int(*)(void const *, void const *))sort_procedure);
 
     g_first_univ = univ_sort_list[0];
     lp = univ_sort_list;
@@ -1181,7 +1184,7 @@ void sort_univ()
     g_last_univ = lp[0];
     g_last_univ->next = nullptr;
 
-    free((char*)univ_sort_list);
+    std::free((char*)univ_sort_list);
 }
 
 /* return a description of the article */
@@ -1214,7 +1217,7 @@ const char *univ_article_desc(const UNIV_ITEM *ui)
     }
     fbuf[16] = '\0';
     sbuf[55] = '\0';
-    sprintf(dbuf,"[%3d] %16s %s",ui->score,fbuf,sbuf);
+    std::sprintf(dbuf,"[%3d] %16s %s",ui->score,fbuf,sbuf);
     for (char *t = dbuf; *t; t++) {
         if ((*t==Ctl('h')) || (*t=='\t') || (*t=='\n') || (*t=='\r')) {
             *t = ' ';

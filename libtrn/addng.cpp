@@ -517,7 +517,7 @@ void sort_addgroups()
     }
     TRN_ASSERT(lp - ag_list == s_addgroup_cnt);
 
-    qsort(ag_list, s_addgroup_cnt, sizeof(ADDGROUP*), (int(*)(void const *, void const *)) sort_procedure);
+    std::qsort(ag_list, s_addgroup_cnt, sizeof(ADDGROUP*), (int(*)(void const *, void const *)) sort_procedure);
 
     ap = ag_list[0];
     g_first_addgroup = ag_list[0];
