@@ -10,6 +10,7 @@
 #include "trn/ngsrch.h"
 #include "trn/search.h"
 
+#include <cstdio>
 #include <cstring>
 #include <string>
 
@@ -67,7 +68,7 @@ static bool matchlist(const char *patlist, const char *s)
         const char *err = ng_comp(&ilcompex, pattern.c_str(), true, true);
 
         if (err != nullptr) {
-            printf("\n%s\n", err);
+            std::printf("\n%s\n", err);
             finalize(1);
         }
 
