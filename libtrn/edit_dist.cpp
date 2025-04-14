@@ -11,6 +11,7 @@
 #include "trn/util.h"               /* Declare safemalloc() */
 
 #include <algorithm>
+#include <cstdlib>
 
 /* edit_dist -- returns the minimum edit distance between two strings
 
@@ -268,7 +269,7 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
     row = buffer[mod(index + radix - 1)];
     if (buffer != store)
     {
-        free((char *) buffer);
+        std::free((char *) buffer);
     }
     return row;
 } /* edit_distn */
