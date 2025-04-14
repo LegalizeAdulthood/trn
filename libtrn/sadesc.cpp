@@ -17,6 +17,8 @@
 #include "trn/score.h"
 #include "trn/terminal.h" /* for standout */
 
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 static char s_sa_buf[LBUFLEN];    /* misc. buffer */
@@ -29,7 +31,7 @@ const char *sa_get_statchars(long a, int line)
 
 /* Debug */
 #if 0
-    printf("entry: sa_get_statchars(%d,%d)\n",(int)a,line);
+    std::printf("entry: sa_get_statchars(%d,%d)\n",(int)a,line);
 #endif
 
 #if 0
@@ -97,13 +99,13 @@ const char *sa_desc_subject(long e)
     if (!s || !*s) {
         if (s)
         {
-            free(s);
+            std::free(s);
         }
-        sprintf(sa_subj_buf,"(no subject)");
+        std::sprintf(sa_subj_buf,"(no subject)");
         return sa_subj_buf;
     }
     std::strncpy(sa_subj_buf,s,250);
-    free(s);
+    std::free(s);
     char *s1 = sa_subj_buf;
     if (*s1 == 'r' || *s1 == 'R') {
         if (*++s1 == 'e' || *s1 == 'E') {
@@ -130,27 +132,27 @@ const char *sa_get_desc(long e, int line, bool trunc)
       case 1:
         desc_buf[0] = '\0';     /* initialize the buffer */
         if (g_sa_mode_desc_artnum) {
-            sprintf(s_sa_buf,"%6d ",(int)artnum);
+            std::sprintf(s_sa_buf,"%6d ",(int)artnum);
             std::strcat(desc_buf,s_sa_buf);
         }
         if (g_sc_initialized && g_sa_mode_desc_score) {
             /* we'd like the score now */
-            sprintf(s_sa_buf,"[%4d] ",sc_score_art(artnum,true));
+            std::sprintf(s_sa_buf,"[%4d] ",sc_score_art(artnum,true));
             std::strcat(desc_buf,s_sa_buf);
         }
         if (g_sa_mode_desc_threadcount) {
-            sprintf(s_sa_buf,"(%3d) ",sa_subj_thread_count(e));
+            std::sprintf(s_sa_buf,"(%3d) ",sa_subj_thread_count(e));
             std::strcat(desc_buf,s_sa_buf);
         }
         if (g_sa_mode_desc_author) {
 #if 0
             if (trunc)
             {
-                sprintf(s_sa_buf,"%s ",padspaces(sa_desc_author(e,16),16));
+                std::sprintf(s_sa_buf,"%s ",padspaces(sa_desc_author(e,16),16));
             }
             else
             {
-                sprintf(s_sa_buf,"%s ",sa_desc_author(e,40));
+                std::sprintf(s_sa_buf,"%s ",sa_desc_author(e,40));
             }
             std::strcat(desc_buf,s_sa_buf);
 #endif
@@ -165,7 +167,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
             std::strcat(desc_buf," ");
         }
         if (g_sa_mode_desc_subject) {
-            sprintf(s_sa_buf,"%s",sa_desc_subject(e));
+            std::sprintf(s_sa_buf,"%s",sa_desc_subject(e));
             std::strcat(desc_buf,s_sa_buf);
         }
         break;
@@ -201,12 +203,12 @@ const char *sa_get_desc(long e, int line, bool trunc)
 #ifdef HAS_TERMLIB
             if (use_standout)
             {
-                sprintf(s2, "Summary: %s%s", g_tc_SO, s);
+                std::sprintf(s2, "Summary: %s%s", g_tc_SO, s);
             }
             else
 #endif
             {
-                sprintf(s2,"Summary: %s",s);
+                std::sprintf(s2,"Summary: %s",s);
             }
             break;
         }
@@ -243,19 +245,19 @@ const char *sa_get_desc(long e, int line, bool trunc)
 #ifdef HAS_TERMLIB
             if (use_standout)
             {
-                sprintf(s2, "Keys: %s%s", g_tc_SO, s);
+                std::sprintf(s2, "Keys: %s%s", g_tc_SO, s);
             }
             else
 #endif
             {
-                sprintf(s2,"Keys: %s",s);
+                std::sprintf(s2,"Keys: %s",s);
             }
             break;
         }
         /* FALL THROUGH */
       default:  /* no line I know of */
         /* later return nullptr */
-        sprintf(desc_buf,"Entry %ld: Nonimplemented Description LINE",e);
+        std::sprintf(desc_buf,"Entry %ld: Nonimplemented Description LINE",e);
         break;
     } /* switch (line) */
     if (trunc)
@@ -298,7 +300,7 @@ int sa_ent_lines(long e)
         }
         if (s)
         {
-            free(s);
+            std::free(s);
         }
     }
     if (g_sa_mode_desc_keyw) {
@@ -309,7 +311,7 @@ int sa_ent_lines(long e)
         }
         if (s)
         {
-            free(s);
+            std::free(s);
         }
     }
     return num;
