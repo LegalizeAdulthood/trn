@@ -45,6 +45,9 @@
 #include <process.h>
 #endif
 
+#include <cstdio>
+#include <cstdlib>
+
 long g_our_pid{};
 
 bool initialize(int argc, char *argv[])
@@ -108,7 +111,7 @@ bool initialize(int argc, char *argv[])
 
     last_init();
 
-    free(tcbuf);                        /* recover 1024 bytes */
+    std::free(tcbuf);                        /* recover 1024 bytes */
 
     univ_init();
 
@@ -165,18 +168,18 @@ bool initialize(int argc, char *argv[])
 void newsnews_check()
 {
     const char *newsnewsname = filexp(NEWSNEWSNAME);
-    if (FILE *fp = fopen(newsnewsname, "r"))
+    if (std::FILE *fp = std::fopen(newsnewsname, "r"))
     {
         stat_t news_news_stat{};
         fstat(fileno(fp),&news_news_stat);
         if (news_news_stat.st_mtime > (time_t)g_lasttime) {
-            while (fgets(g_buf,sizeof(g_buf),fp) != nullptr)
+            while (std::fgets(g_buf,sizeof(g_buf),fp) != nullptr)
             {
-                fputs(g_buf, stdout);
+                std::fputs(g_buf, stdout);
             }
             get_anything();
-            putchar('\n');
+            std::putchar('\n');
         }
-        fclose(fp);
+        std::fclose(fp);
     }
 }
