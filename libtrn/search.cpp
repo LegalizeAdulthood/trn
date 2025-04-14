@@ -28,6 +28,10 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
+
 enum
 {
     BMAPSIZ = (127 / BITSPERBYTE + 1)
@@ -92,11 +96,11 @@ void init_compex(COMPEX *compex)
 void free_compex(COMPEX *compex)
 {
     if (compex->eblen) {
-        free(compex->expbuf);
+        std::free(compex->expbuf);
         compex->eblen = 0;
     }
     if (compex->brastr) {
-        free(compex->brastr);
+        std::free(compex->brastr);
         compex->brastr = nullptr;
     }
 }
@@ -127,7 +131,7 @@ void case_fold(bool which)
         if (which) {
             for (int i = 'A'; i <= 'Z'; i++)
             {
-                s_trans[i] = tolower(i);
+                s_trans[i] = std::tolower(i);
             }
         }
         else {
@@ -316,7 +320,7 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
                         }
                         while (c <= i) {
                             ep[c / BITSPERBYTE] |= 1 << (c % BITSPERBYTE);
-                            if (fold && isalpha(c))
+                            if (fold && std::isalpha(c))
                             {
                                 ep[(c ^ 32) / BITSPERBYTE] |=
                                     1 << ((c ^ 32) % BITSPERBYTE);
@@ -376,7 +380,7 @@ const char *execute(COMPEX *compex, const char *addr)
         }
         if (compex->brastr)
         {
-            free(compex->brastr);
+            std::free(compex->brastr);
         }
         compex->brastr = savestr(p1);   /* in case p1 is not static */
         p1 = compex->brastr;            /* ! */
@@ -457,30 +461,30 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                 return false;
 
             case WORD:
-                if (isalnum(*lp)) {
+                if (std::isalnum(*lp)) {
                     lp++;
                     continue;
                 }
                 return false;
 
             case NWORD:
-                if (!isalnum(*lp)) {
+                if (!std::isalnum(*lp)) {
                     lp++;
                     continue;
                 }
                 return false;
 
             case WBOUND:
-                if ((lp == s_first_character || !isalnum(lp[-1])) !=
-                        (!*lp || !isalnum(*lp)) )
+                if ((lp == s_first_character || !std::isalnum(lp[-1])) !=
+                        (!*lp || !std::isalnum(*lp)) )
                 {
                     continue;
                 }
                 return false;
 
             case NWBOUND:
-                if ((lp == s_first_character || !isalnum(lp[-1])) ==
-                        (!*lp || !isalnum(*lp)))
+                if ((lp == s_first_character || !std::isalnum(lp[-1])) ==
+                        (!*lp || !std::isalnum(*lp)))
                 {
                     continue;
                 }
@@ -519,7 +523,7 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
             case CBACK:
                 i = *ep++;
                 if (compex->braelist[i] == nullptr) {
-                    fputs("bad braces\n",stdout);
+                    std::fputs("bad braces\n",stdout);
                     s_err = true;
                     return false;
                 }
@@ -532,7 +536,7 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
             case CBACK | STAR:
                 i = *ep++;
                 if (compex->braelist[i] == nullptr) {
-                    fputs("bad braces\n",stdout);
+                    std::fputs("bad braces\n",stdout);
                     s_err = true;
                     return false;
                 }
@@ -558,14 +562,14 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
 
             case WORD | STAR:
                 curlp = lp;
-                while (*lp++ && isalnum(lp[-1]))
+                while (*lp++ && std::isalnum(lp[-1]))
                 {
                 }
                 goto star;
 
             case NWORD | STAR:
                 curlp = lp;
-                while (*lp++ && !isalnum(lp[-1]))
+                while (*lp++ && !std::isalnum(lp[-1]))
                 {
                 }
                 goto star;
@@ -598,7 +602,7 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                 return false;
 
             default:
-                fputs("Badly compiled pattern\n",stdout);
+                std::fputs("Badly compiled pattern\n",stdout);
                 s_err = true;
                 return false;
         }
