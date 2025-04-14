@@ -22,6 +22,8 @@
 #include "trn/spage.h"
 #include "trn/util.h"
 
+#include <cstdlib>
+
 bool g_sa_mode_zoom{};      /* true if in "zoom" (display only selected) mode */
 int  g_sa_scan_context{-1}; /* contains the scan-context number for the current article scan */
 
@@ -69,7 +71,7 @@ void sa_init_ents()
 
 void sa_clean_ents()
 {
-    free(g_sa_ents);
+    std::free(g_sa_ents);
 }
 
 /* returns entry number that was added */
