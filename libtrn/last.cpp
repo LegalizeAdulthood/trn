@@ -11,8 +11,10 @@
 #include "util/util2.h"
 
 #include <algorithm>
+#include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <string>
 
 std::string g_lastngname;    /* last newsgroup read */
 long        g_lasttime{};    /* time last we ran */
@@ -27,7 +29,7 @@ void last_init()
 {
     s_lastfile = savestr(filexp(LASTNAME));
 
-    s_starttime = (long)std::time((std::time_t*)nullptr);
+    s_starttime = (long)std::time(nullptr);
     readlast();
 }
 
@@ -39,15 +41,15 @@ void last_final()
 
 void readlast()
 {
-    if (FILE *fp = fopen(s_lastfile, "r"))
+    if (std::FILE *fp = std::fopen(s_lastfile, "r"))
     {
-        if (fgets(g_buf,sizeof g_buf,fp) != nullptr) {
+        if (std::fgets(g_buf,sizeof g_buf,fp) != nullptr) {
             long old_last = g_lasttime;
             g_buf[std::strlen(g_buf)-1] = '\0';
             if (*g_buf) {
                 g_lastngname = g_buf;
             }
-            fscanf(fp,"%ld %ld %ld %ld",&g_lasttime,&g_lastactsiz,
+            std::fscanf(fp,"%ld %ld %ld %ld",&g_lasttime,&g_lastactsiz,
                                            &g_lastnewtime,&g_lastextranum);
             if (!g_lastnewtime)
             {
@@ -55,7 +57,7 @@ void readlast()
             }
             g_lasttime = std::max(old_last, g_lasttime);
         }
-        fclose(fp);
+        std::fclose(fp);
     }
 }
 
@@ -63,19 +65,19 @@ void readlast()
 
 void writelast()
 {
-    sprintf(g_buf,"%s.%ld", s_lastfile, g_our_pid);
-    if (FILE *fp = fopen(g_buf, "w"))
+    std::sprintf(g_buf,"%s.%ld", s_lastfile, g_our_pid);
+    if (std::FILE *fp = std::fopen(g_buf, "w"))
     {
         g_lasttime = std::max(g_lasttime, s_starttime);
-        fprintf(fp,"%s\n%ld\n%ld\n%ld\n%ld\n",
+        std::fprintf(fp,"%s\n%ld\n%ld\n%ld\n%ld\n",
                 g_ngname.c_str(),g_lasttime,
                 g_lastactsiz,g_lastnewtime,g_lastextranum);
-        fclose(fp);
+        std::fclose(fp);
         remove(s_lastfile);
         rename(g_buf,s_lastfile);
     }
     else {
-        printf(g_cantcreate,g_buf);
+        std::printf(g_cantcreate,g_buf);
         /*termdown(1);*/
     }
 }
