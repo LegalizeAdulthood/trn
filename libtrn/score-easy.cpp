@@ -10,6 +10,7 @@
 #include "trn/terminal.h"
 #include "trn/util.h"
 
+#include <cstdio>
 #include <cstring>
 
 /* new line to return to the caller. */
@@ -22,15 +23,15 @@ char *sc_easy_append()
 
     char  filechar = '\0'; /* GCC warning avoidance */
     char *s = s_sc_e_newline;
-    printf("\nScorefile easy append mode.\n");
+    std::printf("\nScorefile easy append mode.\n");
     bool q_done = false;
     while (!q_done) {
-        printf("0) Exit.\n");
-        printf("1) List the current scorefile abbreviations.\n");
-        printf("2) Add an entry to the global scorefile.\n");
-        printf("3) Add an entry to this newsgroup's scorefile.\n");
-        printf("4) Add an entry to another scorefile.\n");
-        printf("5) Use a temporary scoring rule.\n");
+        std::printf("0) Exit.\n");
+        std::printf("1) List the current scorefile abbreviations.\n");
+        std::printf("2) Add an entry to the global scorefile.\n");
+        std::printf("3) Add an entry to this newsgroup's scorefile.\n");
+        std::printf("4) Add an entry to another scorefile.\n");
+        std::printf("5) Use a temporary scoring rule.\n");
         ch = menu_get_char();
         q_done = true;
         switch (ch) {
@@ -52,7 +53,7 @@ char *sc_easy_append()
             filechar = '!';
             break;
           case 'h':
-            printf("No help available (yet).\n");
+            std::printf("No help available (yet).\n");
             q_done = false;
             break;
           default:
@@ -61,11 +62,11 @@ char *sc_easy_append()
         }
     }
     while (filechar == '\0') {  /* choose one */
-        printf("Type the (single character) abbreviation of the scorefile:");
-        fflush(stdout);
+        std::printf("Type the (single character) abbreviation of the scorefile:");
+        std::fflush(stdout);
         eat_typeahead();
         getcmd(g_buf);
-        printf("%c\n",*g_buf);
+        std::printf("%c\n",*g_buf);
         filechar = *g_buf;
         /* If error checking is done later, then an error should set
          * filechar to '\0' and continue the while loop.
@@ -75,13 +76,13 @@ char *sc_easy_append()
     *s++ = ' ';
     q_done = false;
     while (!q_done) {
-        printf("What type of line do you want to add?\n");
-        printf("0) Exit.\n");
-        printf("1) A scoring rule line.\n");
-        printf("   (for the current article's author/subject)\n");
-        printf("2) A command, comment, or other kind of line.\n");
-        printf("   (use this for any other kind of line)\n");
-        printf("\n[Other line formats will be supported later.]\n");
+        std::printf("What type of line do you want to add?\n");
+        std::printf("0) Exit.\n");
+        std::printf("1) A scoring rule line.\n");
+        std::printf("   (for the current article's author/subject)\n");
+        std::printf("2) A command, comment, or other kind of line.\n");
+        std::printf("   (use this for any other kind of line)\n");
+        std::printf("\n[Other line formats will be supported later.]\n");
         ch = menu_get_char();
         q_done = true;
         switch (ch) {
@@ -90,19 +91,19 @@ char *sc_easy_append()
           case '1':
             break;
           case '2':
-            printf("Enter the line below:\n");
-            fflush(stdout);
+            std::printf("Enter the line below:\n");
+            std::fflush(stdout);
             g_buf[0] = '>';
             g_buf[1] = FINISHCMD;
             if (finish_command(true)) {
-                sprintf(s,"%s",g_buf+1);
+                std::sprintf(s,"%s",g_buf+1);
                 return s_sc_e_newline;
             }
-            printf("\n");
+            std::printf("\n");
             q_done = false;
             break;
           case 'h':
-            printf("No help available (yet).\n");
+            std::printf("No help available (yet).\n");
             q_done = false;
             break;
           default:
@@ -112,8 +113,8 @@ char *sc_easy_append()
     }
     q_done = false;
     while (!q_done) {
-        printf("Enter a score amount (like 10 or -6):");
-        fflush(stdout);
+        std::printf("Enter a score amount (like 10 or -6):");
+        std::fflush(stdout);
         g_buf[0] = ' ';
         g_buf[1] = FINISHCMD;
         if (finish_command(true)) {
@@ -125,21 +126,21 @@ char *sc_easy_append()
                     continue;   /* the while loop */
                 }
             }
-            sprintf(s,"%ld",score);
+            std::sprintf(s,"%ld",score);
             s = s_sc_e_newline+std::strlen(s_sc_e_newline); /* point at terminator  */
             *s++ = ' ';
             q_done = true;
         } else
         {
-            printf("\n");
+            std::printf("\n");
         }
     }
     q_done = false;
     while (!q_done) {
-        printf("Do you want to:\n");
-        printf("0) Exit.\n");
-        printf("1) Give the score to the current subject.\n");
-        printf("2) Give the score to the current author.\n");
+        std::printf("Do you want to:\n");
+        std::printf("0) Exit.\n");
+        std::printf("1) Give the score to the current subject.\n");
+        std::printf("2) Give the score to the current author.\n");
 /* add some more options here later */
 /* perhaps fold regular-expression question here? */
         ch = menu_get_char();
@@ -156,7 +157,7 @@ char *sc_easy_append()
             *s++ = '\0';
             return s_sc_e_newline;
           case 'h':
-            printf("No help available (yet).\n");
+            std::printf("No help available (yet).\n");
             q_done = false;
             break;
           default:
@@ -171,17 +172,17 @@ char *sc_easy_append()
 /* returns new string or nullptr to abort. */
 const char *sc_easy_command()
 {
-    printf("\nScoring easy command mode.\n");
+    std::printf("\nScoring easy command mode.\n");
     bool q_done = false;
     while (!q_done) {
-        printf("0) Exit.\n");
-        printf("1) Add something to a scorefile.\n");
-        printf("2) Rescore the articles in the current newsgroup.\n");
-        printf("3) Explain the current article's score.\n");
-        printf("   (show the rules that matched this article)\n");
-        printf("4) Edit this newsgroup's scoring rule file.\n");
+        std::printf("0) Exit.\n");
+        std::printf("1) Add something to a scorefile.\n");
+        std::printf("2) Rescore the articles in the current newsgroup.\n");
+        std::printf("3) Explain the current article's score.\n");
+        std::printf("   (show the rules that matched this article)\n");
+        std::printf("4) Edit this newsgroup's scoring rule file.\n");
         /* later add an option to edit an arbitrary file */
-        printf("5) Continue scoring unscored articles.\n");
+        std::printf("5) Continue scoring unscored articles.\n");
         char ch = menu_get_char();
         q_done = true;
         switch (ch) {
@@ -199,7 +200,7 @@ const char *sc_easy_command()
           case '5':
             return "f";
           case 'h':
-            printf("No help available (yet).\n");
+            std::printf("No help available (yet).\n");
             q_done = false;
             break;
           default:
