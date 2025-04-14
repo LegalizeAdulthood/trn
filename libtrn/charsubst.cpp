@@ -19,7 +19,9 @@
 #include "config/typedef.h"
 #include "util/util2.h"
 
+#include <cstdio>
 #include <cstring>
+#include <string>
 
 /* Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced */
 std::string g_charsets{"patm"};
@@ -60,7 +62,7 @@ int putsubstchar(int c, int limit, bool outputok)
             if (outputok) {
                 for (int t2 = 0; t2 < i; t2++)
                 {
-                    putchar((char) nc[t2]);
+                    std::putchar((char) nc[t2]);
                 }
             }
         }
@@ -74,7 +76,7 @@ int putsubstchar(int c, int limit, bool outputok)
             if (s_texchar && (c == '\\' || s_texchar != '\\')) {
                 if (outputok)
                 {
-                    putchar(s_texchar);
+                    std::putchar(s_texchar);
                 }
                 i++;
             }
@@ -84,7 +86,7 @@ int putsubstchar(int c, int limit, bool outputok)
         else if (s_texchar == '\\') {
             if (outputok)
             {
-                putchar('\\');
+                std::putchar('\\');
             }
             if (limit == 1) {
                 i = -2;
@@ -110,7 +112,7 @@ int putsubstchar(int c, int limit, bool outputok)
             else {
                 if (outputok)
                 {
-                    putchar('"');
+                    std::putchar('"');
                 }
                 if (limit == 1) {
                     i = -2;
@@ -123,7 +125,7 @@ int putsubstchar(int c, int limit, bool outputok)
     default:
         if (outputok)
         {
-            putchar(c);
+            std::putchar(c);
         }
         i++;
         break;
@@ -138,13 +140,13 @@ const char *current_charsubst()
     const char* ics = input_charset_name();
     const char* ocs = output_charset_name();
     int maxlen = (sizeof show - 5)/2;
-    if (strcmp(ics, ocs) == 0)
+    if (std::strcmp(ics, ocs) == 0)
     {
-        sprintf(show, "[%.*s]", maxlen, ics, maxlen, ocs);
+        std::sprintf(show, "[%.*s]", maxlen, ics, maxlen, ocs);
     }
     else
     {
-        sprintf(show, "[%.*s->%.*s]", maxlen, ics, maxlen, ocs);
+        std::sprintf(show, "[%.*s->%.*s]", maxlen, ics, maxlen, ocs);
     }
 #else /*!USE_UTF_HACK */
     static const char* show;
