@@ -11,6 +11,8 @@
 #include "trn/samisc.h"
 #include "trn/scan.h"
 
+#include <cstdio>
+
 bool g_s_default_cmd{}; /* true if the last command (run through setdef()) was the default */
 bool g_s_follow_temp{}; /* explicitly follow until end of thread */
 
@@ -20,15 +22,15 @@ bool s_eligible(long ent)
       case S_ART:
         return sa_eligible(ent);
       default:
-        printf("s_eligible: current type is bad!\n");
+        std::printf("s_eligible: current type is bad!\n");
         return false;
     }
 }
 
 void s_beep()
 {
-    putchar(7);
-    fflush(stdout);
+    std::putchar(7);
+    std::fflush(stdout);
 }
 
 const char *s_get_statchars(long ent, int line)
