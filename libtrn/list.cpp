@@ -8,13 +8,14 @@
 #include "trn/util.h"
 
 #include <algorithm>
+#include <cstdlib>
+#include <cstring>
 
 static void def_init_node(LIST *list, LISTNODE *node);
 
 void list_init()
 {
 }
-
 
 /* Create the header for a dynamic list of items.
 */
@@ -38,7 +39,7 @@ static void def_init_node(LIST *list, LISTNODE *node)
 {
     if (list->flags & LF_ZERO_MEM)
     {
-        memset(node->data, 0, list->items_per_node * list->item_size);
+        std::memset(node->data, 0, list->items_per_node * list->item_size);
     }
 }
 
@@ -246,7 +247,7 @@ void delete_list(LIST *list)
     while (node) {
         LISTNODE *prevnode = node;
         node = node->next;
-        free((char*)prevnode);
+        std::free((char*)prevnode);
     }
-    free((char*)list);
+    std::free((char*)list);
 }

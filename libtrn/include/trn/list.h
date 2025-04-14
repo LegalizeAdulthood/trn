@@ -4,9 +4,9 @@
 #ifndef TRN_LIST_H
 #define TRN_LIST_H
 
-#include <cstdint>
-
 #include "trn/enum-flags.h"
+
+#include <cstdint>
 
 enum list_flags : std::uint8_t
 {
