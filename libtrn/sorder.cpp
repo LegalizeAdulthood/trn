@@ -12,6 +12,8 @@
 #include "trn/smisc.h"
 #include "trn/util.h"
 
+#include <cstdlib>
+
 bool g_s_order_changed{}; /* If true, resort next time order is considered */
 
 #ifdef UNDEF
@@ -120,11 +122,11 @@ void s_order_clean()
 {
     if (g_s_ent_sort)
     {
-        free(g_s_ent_sort);
+        std::free(g_s_ent_sort);
     }
     if (g_s_ent_index)
     {
-        free(g_s_ent_index);
+        std::free(g_s_ent_index);
     }
 
     g_s_ent_sort = nullptr;
