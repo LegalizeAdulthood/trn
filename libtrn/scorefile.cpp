@@ -26,6 +26,9 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 int  g_sf_num_entries{};   /* # of entries */
@@ -73,11 +76,11 @@ void sf_init()
 
     /* initialize abbreviation list */
     s_sf_abbr = (char**)safemalloc(256 * sizeof (char*));
-    memset((char*)s_sf_abbr,0,256 * sizeof (char*));
+    std::memset((char*)s_sf_abbr,0,256 * sizeof (char*));
 
     if (g_sf_verbose)
     {
-        printf("\nReading score files...\n");
+        std::printf("\nReading score files...\n");
     }
     s_sf_file_level = 0;
     /* find # of levels */
@@ -129,7 +132,7 @@ void sf_init()
                 }
                 if (j == g_sf_num_entries) /* no later thresholds */
                 {
-                    printf("killthreshold %d\n",g_kill_thresh);
+                    std::printf("killthreshold %d\n",g_kill_thresh);
                 }
             }
             break;
@@ -148,7 +151,7 @@ void sf_init()
                 }
                 if (j == g_sf_num_entries) /* no later newauthors */
                 {
-                    printf("New Author score: %d\n",s_newauthor);
+                    std::printf("New Author score: %d\n",s_newauthor);
                 }
             }
             break;
@@ -167,7 +170,7 @@ void sf_init()
                 }
                 if (j == g_sf_num_entries) /* no later reply rules */
                 {
-                    printf("Reply score: %d\n",s_reply_score);
+                    std::printf("Reply score: %d\n",s_reply_score);
                 }
             }
             break;
@@ -180,7 +183,7 @@ void sf_clean()
     for (int i = 0; i < g_sf_num_entries; i++) {
         if (s_sf_entries[i].compex != nullptr) {
             free_compex(s_sf_entries[i].compex);
-            free(s_sf_entries[i].compex);
+            std::free(s_sf_entries[i].compex);
         }
     }
     mp_free(MP_SCORE1);         /* free memory pool */
@@ -188,20 +191,20 @@ void sf_clean()
         for (int i = 0; i < 256; i++)
         {
             if (s_sf_abbr[i]) {
-                free(s_sf_abbr[i]);
+                std::free(s_sf_abbr[i]);
                 s_sf_abbr[i] = nullptr;
             }
         }
-        free(s_sf_abbr);
+        std::free(s_sf_abbr);
     }
     if (s_sf_entries)
     {
-        free(s_sf_entries);
+        std::free(s_sf_entries);
     }
     s_sf_entries = nullptr;
     for (int i = 0; i < s_sf_num_extra_headers; i++)
     {
-        free(s_sf_extra_headers[i]);
+        std::free(s_sf_extra_headers[i]);
     }
     s_sf_num_extra_headers = 0;
     s_sf_extra_headers = nullptr;
@@ -230,13 +233,13 @@ int sf_check_extra_headers(const char *head)
     /* convert to lower case */
     safecpy(lbuf,head,sizeof lbuf - 1);
     for (char *s = lbuf; *s; s++) {
-        if (isalpha(*s) && isupper(*s))
+        if (std::isalpha(*s) && std::isupper(*s))
         {
-            *s = tolower(*s);           /* convert to lower case */
+            *s = std::tolower(*s);           /* convert to lower case */
         }
     }
     for (int i = 0; i < s_sf_num_extra_headers; i++) {
-        if (!strcmp(s_sf_extra_headers[i],lbuf))
+        if (!std::strcmp(s_sf_extra_headers[i],lbuf))
         {
             return i;
         }
@@ -274,9 +277,9 @@ void sf_add_extra_header(const char *head)
         s_sf_num_extra_headers * sizeof (char*));
     char *s = savestr(head);
     for (char *s2 = s; *s2; s2++) {
-        if (isalpha(*s2) && isupper(*s2))
+        if (std::isalpha(*s2) && std::isupper(*s2))
         {
-            *s2 = tolower(*s2);         /* convert to lower case */
+            *s2 = std::tolower(*s2);         /* convert to lower case */
         }
     }
     s_sf_extra_headers[s_sf_num_extra_headers-1] = s;
@@ -378,18 +381,18 @@ bool sf_do_command(char *cmd, bool check)
     char* s;
     int i;
 
-    if (!strncmp(cmd,"killthreshold",13)) {
+    if (!std::strncmp(cmd,"killthreshold",13)) {
         /* skip whitespace and = sign */
         for (s = cmd+13; *s && (is_hor_space(*s) || *s == '='); s++)
         {
         }
 
         /* make **sure** that there is a number here */
-        i = atoi(s);
+        i = std::atoi(s);
         if (i == 0)             /* it might not be a number */
         {
             if (!is_text_zero(s)) {
-                printf("\nBad killthreshold: %s",cmd);
+                std::printf("\nBad killthreshold: %s",cmd);
                 return false;   /* continue looping */
             }
         }
@@ -402,12 +405,12 @@ bool sf_do_command(char *cmd, bool check)
         s_sf_entries[g_sf_num_entries-1].score = i;
         return true;
     }
-    if (!strncmp(cmd,"savescores",10)) {
+    if (!std::strncmp(cmd,"savescores",10)) {
         /* skip whitespace and = sign */
         for (s = cmd+10; *s && (is_hor_space(*s) || *s == '='); s++)
         {
         }
-        if (!strncmp(s,"off",3)) {
+        if (!std::strncmp(s,"off",3)) {
             if (!check)
             {
                 g_sc_savescores = false;
@@ -422,21 +425,21 @@ bool sf_do_command(char *cmd, bool check)
             g_sc_savescores = true;
             return true;
         }
-        printf("Bad savescores command: |%s|\n",cmd);
+        std::printf("Bad savescores command: |%s|\n",cmd);
         return false;
     }
-    if (!strncmp(cmd,"newauthor",9)) {
+    if (!std::strncmp(cmd,"newauthor",9)) {
         /* skip whitespace and = sign */
         for (s = cmd+9; *s && (is_hor_space(*s) || *s == '='); s++)
         {
         }
 
         /* make **sure** that there is a number here */
-        i = atoi(s);
+        i = std::atoi(s);
         if (i == 0)             /* it might not be a number */
         {
             if (!is_text_zero(s)) {
-                printf("\nBad newauthor: %s",cmd);
+                std::printf("\nBad newauthor: %s",cmd);
                 return false;   /* continue looping */
             }
         }
@@ -449,37 +452,37 @@ bool sf_do_command(char *cmd, bool check)
         s_sf_entries[g_sf_num_entries-1].score = i;
         return true;
     }
-    if (!strncmp(cmd,"include",7)) {
+    if (!std::strncmp(cmd,"include",7)) {
         if (check)
         {
             return true;
         }
         s = skip_hor_space(cmd + 7); /* skip whitespace */
         if (!*s) {
-            printf("Bad include command (missing filename)\n");
+            std::printf("Bad include command (missing filename)\n");
             return false;
         }
         sf_do_file(filexp(sf_cmd_fname(s)));
         return true;
     }
-    if (!strncmp(cmd,"exclude",7)) {
+    if (!std::strncmp(cmd,"exclude",7)) {
         if (check)
         {
             return true;
         }
         s = skip_hor_space(cmd + 7); /* skip whitespace */
         if (!*s) {
-            printf("Bad exclude command (missing filename)\n");
+            std::printf("Bad exclude command (missing filename)\n");
             return false;
         }
         sf_exclude_file(filexp(sf_cmd_fname(s)));
         return true;
     }
-    if (!strncmp(cmd,"header",6)) {
+    if (!std::strncmp(cmd,"header",6)) {
         s = skip_hor_space(cmd + 7); /* skip whitespace */
         char *s2 = skip_ne(s, ':');
         if (!s2) {
-            printf("\nBad header command (missing :)\n%s\n",cmd);
+            std::printf("\nBad header command (missing :)\n%s\n",cmd);
             return false;
         }
         if (check)
@@ -491,26 +494,26 @@ bool sf_do_command(char *cmd, bool check)
         *s2 = ':';
         return true;
     }
-    if (!strncmp(cmd,"begin",5)) {
+    if (!std::strncmp(cmd,"begin",5)) {
         s = skip_hor_space(cmd + 6); /* skip whitespace */
-        if (!strncmp(s,"score",5)) {
+        if (!std::strncmp(s,"score",5)) {
             /* do something useful later */
             return true;
         }
         return true;
     }
-    if (!strncmp(cmd,"reply",5)) {
+    if (!std::strncmp(cmd,"reply",5)) {
         /* skip whitespace and = sign */
         for (s = cmd+5; *s && (is_hor_space(*s) || *s == '='); s++)
         {
         }
 
         /* make **sure** that there is a number here */
-        i = atoi(s);
+        i = std::atoi(s);
         if (i == 0)             /* it might not be a number */
         {
             if (!is_text_zero(s)) {
-                printf("\nBad reply command: %s\n",cmd);
+                std::printf("\nBad reply command: %s\n",cmd);
                 return false;   /* continue looping */
             }
         }
@@ -523,43 +526,43 @@ bool sf_do_command(char *cmd, bool check)
         s_sf_entries[g_sf_num_entries-1].score = i;
         return true;
     }
-    if (!strncmp(cmd,"file",4)) {
+    if (!std::strncmp(cmd,"file",4)) {
         if (check)
         {
             return true;
         }
         s = skip_hor_space(cmd + 4); /* skip whitespace */
         if (!*s) {
-            printf("Bad file command (missing parameters)\n");
+            std::printf("Bad file command (missing parameters)\n");
             return false;
         }
         char ch = *s++;
         s = skip_hor_space(s); /* skip whitespace */
         if (!*s) {
-            printf("Bad file command (missing parameters)\n");
+            std::printf("Bad file command (missing parameters)\n");
             return false;
         }
         if (s_sf_abbr[(int)ch])
         {
-            free(s_sf_abbr[(int)ch]);
+            std::free(s_sf_abbr[(int)ch]);
         }
         s_sf_abbr[(int)ch] = savestr(sf_cmd_fname(s));
         return true;
     }
-    if (!strncmp(cmd,"end",3)) {
+    if (!std::strncmp(cmd,"end",3)) {
         s = skip_hor_space(cmd + 4); /* skip whitespace */
-        if (!strncmp(s,"score",5)) {
+        if (!std::strncmp(s,"score",5)) {
             /* do something useful later */
             return true;
         }
         return true;
     }
-    if (!strncmp(cmd,"newsclip",8)) {
-        printf("Newsclip is no longer supported.\n");
+    if (!std::strncmp(cmd,"newsclip",8)) {
+        std::printf("Newsclip is no longer supported.\n");
         return false;
     }
     /* no command matched */
-    printf("Unknown command: |%s|\n",cmd);
+    std::printf("Unknown command: |%s|\n",cmd);
     return false;
 }
 
@@ -573,7 +576,7 @@ char *sf_freeform(char *start1, char *end1)
     /* cases are # of letters in keyword */
     switch (end1-start1+1) {
       case 7:
-        if (!strncmp(start1,"pattern",7)) {
+        if (!std::strncmp(start1,"pattern",7)) {
             s_sf_pattern_status = true;
             break;
         }
@@ -582,17 +585,17 @@ char *sf_freeform(char *start1, char *end1)
       case 4:
 #ifdef UNDEF
 /* here is an example of a hypothetical freeform key with an argument */
-        if (!strncmp(start1,"date",4)) {
+        if (!std::strncmp(start1,"date",4)) {
             char* s1;
             int datenum;
             /* skip whitespace and = sign */
             s = skip_hor_space(end1 + 1);
             if (!*s) {  /* ran out of line */
-                printf("freeform: date keyword: ran out of input\n");
+                std::printf("freeform: date keyword: ran out of input\n");
                 return s;
             }
             datenum = atoi(s);
-            printf("Date: %d\n",datenum);
+            std::printf("Date: %d\n",datenum);
             s = skip_digits(s); /* skip datenum */
             end1 = s;           /* end of key data */
             break;
@@ -608,7 +611,7 @@ char *sf_freeform(char *start1, char *end1)
         s = end1+1;
         char ch = *s;
         *s = '\0';
-        printf("Scorefile freeform: unknown key: |%s|\n",start1);
+        std::printf("Scorefile freeform: unknown key: |%s|\n",start1);
         *s = ch;
         return nullptr; /* error indicated */
     }
@@ -638,7 +641,7 @@ bool sf_do_line(char *line, bool check)
     /* reset any per-line bitflags */
     s_sf_pattern_status = false;
 
-    if (isalpha(ch))            /* command line */
+    if (std::isalpha(ch))            /* command line */
     {
         return sf_do_command(line,check);
     }
@@ -651,20 +654,20 @@ bool sf_do_line(char *line, bool check)
     }
     /* convert line to lowercase (make optional later?) */
     for (char* s2 = s; *s2 != '\0'; s2++) {
-        if (isupper(*s2))
+        if (std::isupper(*s2))
         {
-            *s2 = tolower(*s2);         /* convert to lower case */
+            *s2 = std::tolower(*s2);         /* convert to lower case */
         }
     }
-    int i = atoi(s);
+    int i = std::atoi(s);
     if (i == 0) {       /* it might not be a number */
         if (!is_text_zero(s)) {
-            printf("\nBad scorefile line:\n|%s|\n",s);
+            std::printf("\nBad scorefile line:\n|%s|\n",s);
             return false;
         }
     }
     /* add the line as a scoring entry */
-    while (isdigit(*s) || *s == '+' || *s == '-' || is_hor_space(*s))
+    while (std::isdigit(*s) || *s == '+' || *s == '-' || is_hor_space(*s))
     {
         s++;    /* skip score */
     }
@@ -680,8 +683,8 @@ bool sf_do_line(char *line, bool check)
         }
         s = sf_freeform(s,s2);
         if (!s || !*s) {        /* used up all the line's text, or error */
-            printf("Scorefile entry error error (freeform parse).  ");
-            printf("Line was:\n|%s|\n",line);
+            std::printf("Scorefile entry error error (freeform parse).  ");
+            std::printf("Line was:\n|%s|\n",line);
             return false;       /* error */
         }
     } /* while */
@@ -696,14 +699,14 @@ bool sf_do_line(char *line, bool check)
             j += HEAD_LAST;
         }
         else {
-            printf("Unknown score header type.  Line follows:\n|%s|\n",line);
+            std::printf("Unknown score header type.  Line follows:\n|%s|\n",line);
             return false;
         }
     }
     /* skip whitespace */
     s = skip_hor_space(++s2);
     if (!*s) {  /* no pattern */
-        printf("Empty score pattern.  Line follows:\n|%s|\n",line);
+        std::printf("Empty score pattern.  Line follows:\n|%s|\n",line);
         return false;
     }
     if (check)
@@ -725,10 +728,10 @@ bool sf_do_line(char *line, bool check)
         /* 4th is true for case-insensitivity */
         s2 = compile(s_sf_compex,s,true,true);
         if (s2 != nullptr) {
-            printf("Bad pattern : |%s|\n",s);
-            printf("Compex returns: |%s|\n",s2);
+            std::printf("Bad pattern : |%s|\n",s);
+            std::printf("Compex returns: |%s|\n",s2);
             free_compex(s_sf_compex);
-            free(s_sf_compex);
+            std::free(s_sf_compex);
             s_sf_entries[g_sf_num_entries-1].compex = nullptr;
             return false;
         }
@@ -764,9 +767,9 @@ void sf_do_file(const char *fname)
     if (g_sf_verbose) {
         for (int i = 1; i < s_sf_file_level; i++)
         {
-            printf(".");                /* maybe later putchar... */
+            std::printf(".");                /* maybe later putchar... */
         }
-        printf("Score file: %s\n",fname);
+        std::printf("Score file: %s\n",fname);
     }
     char *safefilename = savestr(fname);
     /* add end marker to scoring array */
@@ -789,7 +792,7 @@ void sf_do_file(const char *fname)
     s_sf_entries[g_sf_num_entries-1].score = s_sf_file_level;
     s_sf_entries[g_sf_num_entries-1].str2 = nullptr;
     s_sf_entries[g_sf_num_entries-1].str1 = savestr(safefilename);
-    free(safefilename);
+    std::free(safefilename);
     s_sf_file_level--;
 }
 
@@ -886,7 +889,7 @@ int sf_score(ART_NUM a)
     if (s_newauthor_active && !(article_ptr(a)->scoreflags & SFLAG_AUTHOR)) {
         sum = sum+s_newauthor;  /* add new author bonus */
         if (g_sf_score_verbose) {
-            printf("New Author: %d\n",s_newauthor);
+            std::printf("New Author: %d\n",s_newauthor);
             /* consider: print which file the bonus came from */
         }
     }
@@ -897,7 +900,7 @@ int sf_score(ART_NUM a)
         if (s && subject_has_Re(s,nullptr)) {
             sum = sum+s_reply_score;
             if (g_sf_score_verbose) {
-                printf("Reply: %d\n",s_reply_score);
+                std::printf("Reply: %d\n",s_reply_score);
                 /* consider: print which file the bonus came from */
             }
         }
@@ -914,13 +917,13 @@ char *sf_missing_score(const char *line)
 
     /* save line since it is probably pointing at (the TRN-global) g_buf */
     char *s = savestr(line);
-    printf("Possibly missing score.\n"
+    std::printf("Possibly missing score.\n"
            "Type a score now or delete the colon to abort this entry:\n");
     g_buf[0] = ':';
     g_buf[1] = FINISHCMD;
     int i = finish_command(true); /* print the CR */
     if (!i) {                     /* there was no score */
-        free(s);
+        std::free(s);
         return nullptr;
     }
     std::strcpy(lbuf,g_buf+1);
@@ -928,7 +931,7 @@ char *sf_missing_score(const char *line)
     lbuf[i] = ' ';
     lbuf[i+1] = '\0';
     std::strcat(lbuf,s);
-    free(s);
+    std::free(s);
     return lbuf;
 }
 
@@ -949,17 +952,16 @@ void sf_append(char *line)
     char filechar = *line; /* ch is file abbreviation */
 
     if (filechar == '?') {      /* list known file abbreviations */
-
-        printf("List of abbreviation/file pairs\n") ;
+        std::printf("List of abbreviation/file pairs\n") ;
         for (int i = 0; i < 256; i++)
         {
             if (s_sf_abbr[i])
             {
-                printf("%c %s\n",(char)i,s_sf_abbr[i]);
+                std::printf("%c %s\n",(char)i,s_sf_abbr[i]);
             }
         }
-        printf("\" [The current newsgroup's score file]\n");
-        printf("* [The global score file]\n");
+        std::printf("\" [The current newsgroup's score file]\n");
+        std::printf("* [The global score file]\n");
         return;
     }
 
@@ -969,12 +971,12 @@ void sf_append(char *line)
     char ch = *scoreline; /* first non-whitespace after filechar */
     /* If the scorefile line does not begin with a number,
        and is not a valid command, request a score */
-    if (!isdigit(ch) && ch != '+' && ch != '-' && ch != ':' && ch != '!'
+    if (!std::isdigit(ch) && ch != '+' && ch != '-' && ch != ':' && ch != '!'
      && ch != '#') {
         if (!sf_do_line(scoreline,true)) {  /* just checking */
             scoreline = sf_missing_score(scoreline);
             if (!scoreline) {   /* no score typed */
-                printf("Score entry aborted.\n");
+                std::printf("Score entry aborted.\n");
                 return;
             }
         }
@@ -982,7 +984,7 @@ void sf_append(char *line)
 
     /* scoretext = first non-whitespace after score# */
     for (scoretext = scoreline;
-         isdigit(*scoretext) || *scoretext == '+' || *scoretext == '-' || is_hor_space(*scoretext);
+         std::isdigit(*scoretext) || *scoretext == '+' || *scoretext == '-' || is_hor_space(*scoretext);
          scoretext++)
     {
     }
@@ -1000,7 +1002,7 @@ void sf_append(char *line)
             std::strcpy(lbuf,scoreline);
             s = fetchcache(g_art, SUBJ_LINE,true);
             if (!s || !*s) {
-                printf("No subject: score entry aborted.\n");
+                std::printf("No subject: score entry aborted.\n");
                 return;
             }
             if (s[0] == 'R' && s[1] == 'e' && s[2] == ':' && s[3] == ' ')
@@ -1008,19 +1010,19 @@ void sf_append(char *line)
                 s += 4;
             }
             /* change this next line if LBUFLEN changes */
-            sprintf(lbuf+(std::strlen(lbuf)-1),"subject: %.900s",s);
+            std::sprintf(lbuf+(std::strlen(lbuf)-1),"subject: %.900s",s);
             scoreline = lbuf;
             break;
           default:
-            printf("\nBad scorefile line: |%s| (not added)\n", line);
+            std::printf("\nBad scorefile line: |%s| (not added)\n", line);
             return;
         }
-        printf("%s\n",scoreline);
+        std::printf("%s\n",scoreline);
     }
 
     /* test the scoring line unless filechar is '!' (meaning do it now) */
     if (!sf_do_line(scoreline,filechar!='!')) {
-        printf("Bad score line (ignored)\n");
+        std::printf("Bad score line (ignored)\n");
         return;
     }
     if (filechar == '!')
@@ -1040,22 +1042,22 @@ void sf_append(char *line)
         filename = filebuf;
     }
     else if (!(filename = s_sf_abbr[(int)filechar])) {
-        printf("\nBad file abbreviation: %c\n",filechar);
+        std::printf("\nBad file abbreviation: %c\n",filechar);
         return;
     }
     filename = filexp(sf_cmd_fname(filename));  /* allow shortcuts */
     /* make sure directory exists... */
     makedir(filename, MD_FILE);
     sf_file_clear();
-    FILE *fp = fopen(filename, "a");
+    std::FILE *fp = std::fopen(filename, "a");
     if (fp != nullptr)
     {
-        fprintf(fp, "%s\n", scoreline); /* open (or create) for append */
-        fclose(fp);
+        std::fprintf(fp, "%s\n", scoreline); /* open (or create) for append */
+        std::fclose(fp);
     }
     else /* unsuccessful in opening file */
     {
-        printf("\nCould not open (for append) file %s\n",filename);
+        std::printf("\nCould not open (for append) file %s\n",filename);
     }
 }
 
@@ -1066,8 +1068,8 @@ char *sf_get_line(ART_NUM a, header_line_type h)
     char* s;
 
     if (h <= SOME_LINE) {
-        printf("sf_get_line(%d,%d): bad header type\n",(int)a,h);
-        printf("(Internal error: header number too low)\n");
+        std::printf("sf_get_line(%d,%d): bad header type\n",(int)a,h);
+        std::printf("(Internal error: header number too low)\n");
         *sf_getline = '\0';
         return sf_getline;
     }
@@ -1077,8 +1079,8 @@ char *sf_get_line(ART_NUM a, header_line_type h)
             s = sf_get_extra_header(a,h-HEAD_LAST);
         }
         else {
-            printf("sf_get_line(%d,%d): bad header type\n",(int)a,h);
-            printf("(Internal error: header number too high)\n");
+            std::printf("sf_get_line(%d,%d): bad header type\n",(int)a,h);
+            std::printf("(Internal error: header number too high)\n");
             *sf_getline = '\0';
             return sf_getline;
         }
@@ -1101,9 +1103,9 @@ char *sf_get_line(ART_NUM a, header_line_type h)
 
     for (char *t = sf_getline; *t; t++)
     {
-        if (isupper(*t))
+        if (std::isupper(*t))
         {
-            *t = tolower(*t);
+            *t = std::tolower(*t);
         }
     }
     return sf_getline;
@@ -1147,9 +1149,9 @@ void sf_print_match(int indx)
             level--;    /* go out... */
             for (int k = 0; k < level; k++)
             {
-                printf(".");            /* make putchar later? */
+                std::printf(".");            /* make putchar later? */
             }
-            printf("From file: %s\n",s_sf_entries[i].str1);
+            std::printf("From file: %s\n",s_sf_entries[i].str1);
             if (level == 0)             /* top level */
             {
                 break;          /* out of the big for loop */
@@ -1173,13 +1175,13 @@ void sf_print_match(int indx)
     {
         head_name = g_htype[s_sf_entries[indx].head_type].name;
     }
-    printf("%d %s%s: %s", s_sf_entries[indx].score,pattern,head_name,
+    std::printf("%d %s%s: %s", s_sf_entries[indx].score,pattern,head_name,
            s_sf_entries[indx].str1);
     if (s_sf_entries[indx].str2)
     {
-        printf("*%s",s_sf_entries[indx].str2);
+        std::printf("*%s",s_sf_entries[indx].str2);
     }
-    printf("\n");
+    std::printf("\n");
 }
 
 void sf_exclude_file(const char *fname)
@@ -1191,25 +1193,25 @@ void sf_exclude_file(const char *fname)
     for (start = 0; start < g_sf_num_entries; start++)
     {
         if (s_sf_entries[start].head_type == static_cast<header_line_type>(SF_FILE_MARK_START)
-         && !strcmp(s_sf_entries[start].str1,fname))
+         && !std::strcmp(s_sf_entries[start].str1,fname))
         {
             break;
         }
     }
     if (start == g_sf_num_entries) {
-        printf("Exclude: file |%s| was not included\n",fname);
+        std::printf("Exclude: file |%s| was not included\n",fname);
         return;
     }
     for (end = start+1; end < g_sf_num_entries; end++)
     {
         if (s_sf_entries[end].head_type==SF_FILE_MARK_END
-         && !strcmp(s_sf_entries[end].str1,fname))
+         && !std::strcmp(s_sf_entries[end].str1,fname))
         {
             break;
         }
     }
     if (end == g_sf_num_entries) {
-        printf("Exclude: file |%s| is incomplete at exclusion command\n",
+        std::printf("Exclude: file |%s| is incomplete at exclusion command\n",
                 fname);
         /* insert more explanation later? */
         return;
@@ -1223,7 +1225,7 @@ void sf_exclude_file(const char *fname)
      */
     if (newnum==0) {
         g_sf_num_entries = 0;
-        free(s_sf_entries);
+        std::free(s_sf_entries);
         s_sf_entries = nullptr;
         return;
     }
@@ -1232,18 +1234,18 @@ void sf_exclude_file(const char *fname)
     /* copy the parts into tmp_entries */
     if (start > 0)
     {
-        memcpy((char*)tmp_entries,(char*)s_sf_entries,start * sizeof (SF_ENTRY));
+        std::memcpy((char*)tmp_entries,(char*)s_sf_entries,start * sizeof (SF_ENTRY));
     }
     if (end < g_sf_num_entries-1)
     {
-        memcpy((char*)(tmp_entries+start),(char*)(s_sf_entries+end+1),(g_sf_num_entries-end-1) * sizeof (SF_ENTRY));
+        std::memcpy((char*)(tmp_entries+start),(char*)(s_sf_entries+end+1),(g_sf_num_entries-end-1) * sizeof (SF_ENTRY));
     }
-    free(s_sf_entries);
+    std::free(s_sf_entries);
     s_sf_entries = tmp_entries;
     g_sf_num_entries = newnum;
     if (g_sf_verbose)
     {
-        printf("Excluded file: %s\n",fname);
+        std::printf("Excluded file: %s\n",fname);
     }
 }
 
@@ -1274,7 +1276,7 @@ void sf_edit_file(const char *filespec)
     }
     else {      /* abbreviation */
         if (!s_sf_abbr[(int)filechar]) {
-            printf("\nBad file abbreviation: %c\n",filechar);
+            std::printf("\nBad file abbreviation: %c\n",filechar);
             return;
         }
         std::strcpy(filebuf,s_sf_abbr[(int)filechar]);
@@ -1288,7 +1290,7 @@ void sf_edit_file(const char *filespec)
     }
     else
     {
-        printf("Can't make %s\n",filebuf);
+        std::printf("Can't make %s\n",filebuf);
     }
 }
 
@@ -1305,7 +1307,7 @@ static int sf_open_file(const char *name)
     }
     for (i = 0; i < s_sf_num_files; i++)
     {
-        if (!strcmp(s_sf_files[i].fname,name)) {
+        if (!std::strcmp(s_sf_files[i].fname,name)) {
             if (s_sf_files[i].num_lines < 0)    /* nonexistent */
             {
                 return -1;      /* no such file */
@@ -1342,12 +1344,12 @@ static int sf_open_file(const char *name)
         s_sf_files[i].num_lines = -1;
         return -1;
     }
-    FILE *fp = fopen(name, "r");
+    std::FILE *fp = std::fopen(name, "r");
     if (!fp) {
         s_sf_files[i].num_lines = -1;
         return -1;
     }
-    while ((s = fgets(s_sf_buf,LBUFLEN-4,fp)) != nullptr) {
+    while ((s = std::fgets(s_sf_buf,LBUFLEN-4,fp)) != nullptr) {
         if (s_sf_files[i].num_lines >= s_sf_files[i].num_alloc) {
             s_sf_files[i].num_alloc += 100;
             s_sf_files[i].lines = (char**)saferealloc((char*)s_sf_files[i].lines,
@@ -1356,7 +1358,7 @@ static int sf_open_file(const char *name)
         /* CAA: I kind of like the next line in a twisted sort of way. */
         s_sf_files[i].lines[s_sf_files[i].num_lines++] = mp_savestr(s,MP_SCORE2);
     }
-    fclose(fp);
+    std::fclose(fp);
     if (temp_name)
     {
         remove(temp_name);
@@ -1369,17 +1371,17 @@ static void sf_file_clear()
     for (int i = 0; i < s_sf_num_files; i++) {
         if (s_sf_files[i].fname)
         {
-            free(s_sf_files[i].fname);
+            std::free(s_sf_files[i].fname);
         }
         if (s_sf_files[i].num_lines > 0) {
             /* memory pool takes care of freeing line contents */
-            free(s_sf_files[i].lines);
+            std::free(s_sf_files[i].lines);
         }
     }
     mp_free(MP_SCORE2);
     if (s_sf_files)
     {
-        free(s_sf_files);
+        std::free(s_sf_files);
     }
     s_sf_files = (SF_FILE*)nullptr;
     s_sf_num_files = 0;
