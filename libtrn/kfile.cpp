@@ -29,7 +29,7 @@
 #include <algorithm>
 #include <cstring>
 #include <filesystem>
-#include <time.h>
+#include <ctime>
 
 FILE               *g_localkfp{};               /* local (for this newsgroup) file */
 killfilestate_flags g_kf_state{};               /* the state of our kill files */
@@ -60,7 +60,7 @@ static FILE *s_newkfp{};
 
 inline long killfile_daynum(long x)
 {
-    return (long) time(nullptr) / 86400 - 10490 - x;
+    return (long) std::time(nullptr) / 86400 - 10490 - x;
 }
 
 void kfile_init()

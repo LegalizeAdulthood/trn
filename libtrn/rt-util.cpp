@@ -20,7 +20,7 @@
 #include "util/util2.h"
 
 #include <cstring>
-#include <time.h>
+#include <ctime>
 
 char g_spin_char{' '};           /* char to put back when we're done spinning */
 long g_spin_estimate{};          /* best guess of how much work there is */
@@ -877,7 +877,7 @@ bool inbackground()
 }
 
 static int    s_prior_perform_cnt{};
-static time_t s_prior_now{};
+static std::time_t s_prior_now{};
 static long   s_ps_sel{};
 static long   s_ps_cnt{};
 static long   s_ps_missing{};
@@ -914,7 +914,7 @@ void perform_status(long cnt, int spin)
         return;
     }
 
-    time_t now = time((time_t*)nullptr);
+    std::time_t now = std::time((std::time_t*)nullptr);
     if (now - s_prior_now < 2)
     {
         return;

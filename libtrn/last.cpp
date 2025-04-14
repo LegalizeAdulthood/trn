@@ -12,7 +12,7 @@
 
 #include <algorithm>
 #include <cstring>
-#include <time.h>
+#include <ctime>
 
 std::string g_lastngname;    /* last newsgroup read */
 long        g_lasttime{};    /* time last we ran */
@@ -27,7 +27,7 @@ void last_init()
 {
     s_lastfile = savestr(filexp(LASTNAME));
 
-    s_starttime = (long)time((time_t*)nullptr);
+    s_starttime = (long)std::time((std::time_t*)nullptr);
     readlast();
 }
 

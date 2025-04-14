@@ -174,7 +174,7 @@ int nntp_command(const char *bp)
     {
         return nntp_handle_timeout();
     }
-    now = std::time((time_t*)nullptr);
+    now = std::time((std::time_t*)nullptr);
     s_last_command_diff = now - g_nntplink.last_command;
     g_nntplink.last_command = now;
     return 1;

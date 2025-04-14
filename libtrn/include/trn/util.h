@@ -11,6 +11,8 @@
 #include "config/typedef.h"
 #include "trn/utf.h"
 
+#include <ctime>
+
 extern bool g_waiting; /* waiting for subprocess (in doshell)? */
 extern bool g_nowait_fork;
 
@@ -63,8 +65,8 @@ void safelink(char *old_name, char *new_name);
 #endif
 void   verify_sig();
 double current_time();
-time_t text2secs(const char *s, time_t defSecs);
-char * secs2text(time_t secs);
+std::time_t text2secs(const char *s, std::time_t defSecs);
+char * secs2text(std::time_t secs);
 char * temp_filename();
 char * get_auth_user();
 char * get_auth_pass();

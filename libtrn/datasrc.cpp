@@ -34,8 +34,8 @@
 #if !defined(I_UTIME) && !defined(I_SYS_UTIME)
 struct utimbuf
 {
-    time_t actime;
-    time_t modtime;
+    std::time_t actime;
+    std::time_t modtime;
 };
 #endif
 

@@ -155,7 +155,7 @@ void thread_open()
         }
     }
 
-    time_t save_ov_opened = g_datasrc->ov_opened;
+    std::time_t save_ov_opened = g_datasrc->ov_opened;
     g_datasrc->ov_opened = 0; /* avoid trying to call ov_data twice for high arts */
     thread_grow();          /* thread any new articles not yet in the database */
     g_datasrc->ov_opened = save_ov_opened;
@@ -1524,7 +1524,7 @@ void count_subjects(cs_mode cmode)
     }
 
     for (sp = g_first_subject; sp; sp = sp->next) {
-        time_t subjdate = 0;
+        std::time_t subjdate = 0;
         int    count = 0;
         int    sel_count = 0;
         for (ARTICLE *ap = sp->articles; ap; ap = ap->subj_next) {
@@ -1595,7 +1595,7 @@ static int subjorder_subject(const SUBJECT **spp1, const SUBJECT**spp2)
 
 static int subjorder_date(const SUBJECT **spp1, const SUBJECT**spp2)
 {
-    time_t eq = (*spp1)->date - (*spp2)->date;
+    std::time_t eq = (*spp1)->date - (*spp2)->date;
     return eq? eq > 0? g_sel_direction : -g_sel_direction : 0;
 }
 

@@ -6,7 +6,7 @@
 
 #include <config/typedef.h>
 
-#include <time.h>
+#include <ctime>
 
 struct DATASRC;
 struct NGDATA;
@@ -36,9 +36,9 @@ long    nntp_artsize();
 int     nntp_finishbody(finishbody_mode bmode);
 int     nntp_seekart(ART_POS pos);
 ART_POS nntp_tellart();
-char *  nntp_readart(char *s, int limit);
-time_t  nntp_time();
-int     nntp_newgroups(time_t t);
+char       *nntp_readart(char *s, int limit);
+std::time_t nntp_time();
+int     nntp_newgroups(std::time_t t);
 int     nntp_artnums();
 #if 0
 int nntp_rover();

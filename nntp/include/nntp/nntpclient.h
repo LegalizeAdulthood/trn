@@ -46,7 +46,7 @@ using ConnectionFactory = std::function<ConnectionPtr(const char *machine, int p
 struct NNTPLINK
 {
     ConnectionPtr connection;
-    time_t        last_command;
+    std::time_t        last_command;
     int           port_number;
     nntp_flags    flags;
     bool          trailing_CR;

@@ -30,7 +30,7 @@
 
 #include <algorithm>
 #include <cstring>
-#include <time.h>
+#include <ctime>
 
 /* How many overview lines to read with one NNTP call */
 enum
@@ -190,7 +190,7 @@ bool ov_data(ART_NUM first, ART_NUM last, bool cheating)
     ART_NUM real_last = last;
     int line_cnt;
     int ov_chunk_size = cheating? OV_CHUNK_SIZE : OV_CHUNK_SIZE * 8;
-    time_t started_request;
+    std::time_t started_request;
     bool remote = !g_datasrc->over_dir;
 
 beginning:
@@ -213,7 +213,7 @@ beginning:
             line_cnt = 0;
         }
     }
-    started_request = time((time_t*)nullptr);
+    started_request = std::time((std::time_t*)nullptr);
     for (;;) {
         artnum = article_last(last);
         if (artnum < last || !(article_ptr(artnum)->flags & AF_CACHED))
@@ -350,7 +350,7 @@ beginning:
             success = false;
         } else if (last < real_last) {
             if (!cheating || !input_pending()) {
-                long elapsed_time = time((time_t*)nullptr) - started_request;
+                long elapsed_time = std::time((std::time_t*)nullptr) - started_request;
                 long expected_time = cheating? 2 : 10;
                 int max_chunk_size = cheating? 500 : 2000;
                 ov_chunk_size += (expected_time - elapsed_time) * OV_CHUNK_SIZE;

@@ -28,7 +28,7 @@
 #include <cstring>
 #include <filesystem>
 #include <string>
-#include <time.h>
+#include <ctime>
 
 ADDGROUP *g_first_addgroup{};
 ADDGROUP *g_last_addgroup{};
@@ -151,7 +151,7 @@ static void new_nntp_groups(DATASRC *dp)
 
     set_datasrc(dp);
 
-    time_t const server_time = nntp_time();
+    std::time_t const server_time = nntp_time();
     if (server_time == -2)
     {
         return; /*$$*/
@@ -253,7 +253,7 @@ static void new_local_groups(DATASRC *dp)
         termdown(1);
         return;
     }
-    time_t lastone = time(nullptr) - 24L * 60 * 60 - 1;
+    std::time_t lastone = std::time(nullptr) - 24L * 60 * 60 - 1;
     HASHTABLE *newngs = hashcreate(33, addng_cmp);
 
     while (std::fgets(g_buf, LBUFLEN, fp) != nullptr)

@@ -12,6 +12,7 @@
 #include "trn/ngdata.h"
 
 #include <cstdint>
+#include <ctime>
 
 struct ARTICLE;
 struct LIST;
@@ -41,7 +42,7 @@ struct SUBJECT
     ARTICLE      *thread;
     SUBJECT      *thread_link;
     char         *str;
-    time_t        date;
+    std::time_t   date;
     subject_flags flags;
     short         misc; /* used for temporary totals and subject numbers */
 };
@@ -91,7 +92,7 @@ DECLARE_FLAGS_ENUM(score_flags, std::uint16_t)
 struct ARTICLE
 {
     ART_NUM        num;
-    time_t         date;
+    std::time_t         date;
     SUBJECT       *subj;
     char          *from;
     char          *msgid;

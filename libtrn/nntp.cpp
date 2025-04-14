@@ -21,7 +21,7 @@
 #include "util/util2.h"
 
 #include <cstring>
-#include <time.h>
+#include <ctime>
 
 static int nntp_copybody(char *s, int limit, ART_POS pos);
 
@@ -420,9 +420,9 @@ char *nntp_readart(char *s, int limit)
 }
 
 /* This is a 1-relative list */
-static int s_maxdays[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+static int s_maxdays[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
-time_t nntp_time()
+std::time_t nntp_time()
 {
     if (nntp_command("DATE") <= 0)
     {
@@ -430,7 +430,7 @@ time_t nntp_time()
     }
     if (nntp_check() <= 0)
     {
-        return time((time_t *) nullptr);
+        return std::time((std::time_t *) nullptr);
     }
 
     char * s = std::strrchr(g_ser_line, ' ') + 1;
@@ -438,7 +438,7 @@ time_t nntp_time()
     int    day = (s[6] - '0') * 10 + (s[7] - '0');
     int    hh = (s[8] - '0') * 10 + (s[9] - '0');
     int    mm = (s[10] - '0') * 10 + (s[11] - '0');
-    time_t ss = (s[12] - '0') * 10 + (s[13] - '0');
+    std::time_t ss = (s[12] - '0') * 10 + (s[13] - '0');
     s[4] = '\0';
     int year = atoi(s);
 
@@ -455,7 +455,7 @@ time_t nntp_time()
      || hh < 0 || hh > 23 || mm < 0 || mm > 59
      || ss < 0 || ss > 59)
     {
-        return time((time_t *) nullptr);
+        return std::time((std::time_t *) nullptr);
     }
 
     for (month--; month; month--)
@@ -469,7 +469,7 @@ time_t nntp_time()
     return ss;
 }
 
-int nntp_newgroups(time_t t)
+int nntp_newgroups(std::time_t t)
 {
     struct tm *ts = gmtime(&t);
     sprintf(g_ser_line, "NEWGROUPS %02d%02d%02d %02d%02d%02d GMT",
@@ -547,8 +547,8 @@ ART_NUM nntp_find_real_art(ART_NUM after)
 char *nntp_artname(ART_NUM artnum, bool allocate)
 {
     static ART_NUM artnums[MAX_NNTP_ARTICLES];
-    static time_t  artages[MAX_NNTP_ARTICLES];
-    time_t         lowage;
+    static std::time_t  artages[MAX_NNTP_ARTICLES];
+    std::time_t         lowage;
 
     if (!artnum) {
         for (int i = 0; i < MAX_NNTP_ARTICLES; i++) {
@@ -558,7 +558,7 @@ char *nntp_artname(ART_NUM artnum, bool allocate)
         return nullptr;
     }
 
-    time_t now = time((time_t*)nullptr);
+    std::time_t now = std::time((std::time_t*)nullptr);
 
     int j = 0;
     lowage = now;

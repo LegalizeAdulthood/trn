@@ -72,7 +72,7 @@
 
 #include <cstring>
 #include <string>
-#include <time.h>
+#include <ctime>
 
 std::string g_ngname;                             /* name of current newsgroup */
 std::string g_ngdir;                              /* same thing in directory name form */
@@ -855,7 +855,7 @@ reask_abandon:
 
 void check_active_refetch(bool force)
 {
-    time_t now = time((time_t*)nullptr);
+    std::time_t now = std::time((std::time_t*)nullptr);
 
     for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp)) {
         if (!all_bits(dp->flags, DF_OPEN | DF_ACTIVE))

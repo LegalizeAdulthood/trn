@@ -3,8 +3,8 @@
 #ifndef PARSE_DATE_H
 #define PARSE_DATE_H
 
-#include <time.h>
+#include <ctime>
 
-extern "C" time_t parsedate(const char *text);
+extern "C" std::time_t parsedate(const char *text);
 
 #endif

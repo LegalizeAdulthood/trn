@@ -524,9 +524,9 @@ double current_time()
     return static_cast<double>(result) / 1000.0;
 }
 
-time_t text2secs(const char *s, time_t defSecs)
+time_t text2secs(const char *s, std::time_t defSecs)
 {
-    time_t secs = 0;
+    std::time_t secs = 0;
 
     if (!isdigit(*s)) {
         if (*s == 'm' || *s == 'M')     /* "missing" */
@@ -540,7 +540,7 @@ time_t text2secs(const char *s, time_t defSecs)
         return secs;                    /* "never" */
     }
     do {
-        time_t item = atol(s);
+        std::time_t item = atol(s);
         s = skip_digits(s);
         s = skip_space(s);
         if (isalpha(*s)) {
@@ -570,7 +570,7 @@ time_t text2secs(const char *s, time_t defSecs)
     return secs * 60;
 }
 
-char *secs2text(time_t secs)
+char *secs2text(std::time_t secs)
 {
     char* s = g_buf;
     int items;
