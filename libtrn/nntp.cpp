@@ -20,6 +20,7 @@
 #include "trn/trn.h"
 #include "util/util2.h"
 
+#include <cstdio>
 #include <cstring>
 #include <ctime>
 
@@ -42,7 +43,7 @@ int nntp_list(const char *type, const char *arg, int len)
 #endif
     if (len)
     {
-        sprintf(g_ser_line, "LIST %s %.*s", type, len, arg);
+        std::sprintf(g_ser_line, "LIST %s %.*s", type, len, arg);
     }
     else if (string_case_equal(type, "active"))
     {
@@ -50,7 +51,7 @@ int nntp_list(const char *type, const char *arg, int len)
     }
     else
     {
-        sprintf(g_ser_line, "LIST %s", type);
+        std::sprintf(g_ser_line, "LIST %s", type);
     }
     if (nntp_command(g_ser_line) <= 0)
     {
@@ -72,7 +73,7 @@ int nntp_list(const char *type, const char *arg, int len)
 #if defined(DEBUG) && defined(FLUSH)
     if (debug & DEB_NNTP)
     {
-        printf("<%s\n", g_ser_line);
+        std::printf("<%s\n", g_ser_line);
     }
 #endif
     if (nntp_at_list_end(g_ser_line))
@@ -114,12 +115,12 @@ int nntp_group(const char *group, NGDATA *gp)
         return -2;
       case -1:
       case 0: {
-        int ser_int = atoi(g_ser_line);
+        int ser_int = std::atoi(g_ser_line);
         if (ser_int != NNTP_NOSUCHGROUP_VAL
          && ser_int != NNTP_SYNTAX_VAL) {
             if (ser_int != NNTP_AUTH_NEEDED_VAL && ser_int != NNTP_ACCESS_VAL
              && ser_int != NNTP_AUTH_REJECT_VAL) {
-                fprintf(stderr, "\nServer's response to GROUP %s:\n%s\n",
+                std::fprintf(stderr, "\nServer's response to GROUP %s:\n%s\n",
                         group, g_ser_line);
                 return -1;
             }
@@ -132,7 +133,7 @@ int nntp_group(const char *group, NGDATA *gp)
         long first;
         long last;
 
-        (void) sscanf(g_ser_line,"%*d%ld%ld%ld",&count,&first,&last);
+        (void) std::sscanf(g_ser_line,"%*d%ld%ld%ld",&count,&first,&last);
         /* NNTP mangles the high/low values when no articles are present. */
         if (!count)
         {
@@ -150,7 +151,7 @@ int nntp_group(const char *group, NGDATA *gp)
 
 int nntp_stat(ART_NUM artnum)
 {
-    sprintf(g_ser_line, "STAT %ld", (long)artnum);
+    std::sprintf(g_ser_line, "STAT %ld", (long)artnum);
     if (nntp_command(g_ser_line) <= 0)
     {
         return -2;
@@ -164,13 +165,13 @@ ART_NUM nntp_stat_id(char *msgid)
 {
     long artnum;
 
-    sprintf(g_ser_line, "STAT %s", msgid);
+    std::sprintf(g_ser_line, "STAT %s", msgid);
     if (nntp_command(g_ser_line) <= 0)
     {
         return -2;
     }
     artnum = nntp_check();
-    if (artnum > 0 && sscanf(g_ser_line, "%*d%ld", &artnum) != 1)
+    if (artnum > 0 && std::sscanf(g_ser_line, "%*d%ld", &artnum) != 1)
     {
         artnum = 0;
     }
@@ -186,7 +187,7 @@ ART_NUM nntp_next_art()
         return -2;
     }
     artnum = nntp_check();
-    if (artnum > 0 && sscanf(g_ser_line, "%*d %ld", &artnum) != 1)
+    if (artnum > 0 && std::sscanf(g_ser_line, "%*d %ld", &artnum) != 1)
     {
         artnum = 0;
     }
@@ -197,7 +198,7 @@ ART_NUM nntp_next_art()
 
 int nntp_header(ART_NUM artnum)
 {
-    sprintf(g_ser_line, "HEAD %ld", (long)artnum);
+    std::sprintf(g_ser_line, "HEAD %ld", (long)artnum);
     if (nntp_command(g_ser_line) <= 0)
     {
         return -2;
@@ -215,7 +216,7 @@ void nntp_body(ART_NUM artnum)
         {
             nntp_finishbody(FB_DISCARD);
         }
-        g_artfp = fopen(artname,"r");
+        g_artfp = std::fopen(artname,"r");
         stat_t art_stat{};
         if (g_artfp && fstat(fileno(g_artfp),&art_stat) == 0)
         {
@@ -225,8 +226,8 @@ void nntp_body(ART_NUM artnum)
     }
 
     artname = nntp_artname(artnum, true);   /* Allocate a tmp file */
-    if (!(g_artfp = fopen(artname, "w+"))) {
-        fprintf(stderr, "\nUnable to write temporary file: '%s'.\n",
+    if (!(g_artfp = std::fopen(artname, "w+"))) {
+        std::fprintf(stderr, "\nUnable to write temporary file: '%s'.\n",
                 artname);
         finalize(1); /*$$*/
     }
@@ -236,11 +237,11 @@ void nntp_body(ART_NUM artnum)
     /*artio_setbuf(g_artfp);$$*/
     if (g_parsed_art == artnum)
     {
-        sprintf(g_ser_line, "BODY %ld", (long) artnum);
+        std::sprintf(g_ser_line, "BODY %ld", (long) artnum);
     }
     else
     {
-        sprintf(g_ser_line, "ARTICLE %ld", (long) artnum);
+        std::sprintf(g_ser_line, "ARTICLE %ld", (long) artnum);
     }
     if (nntp_command(g_ser_line) <= 0)
     {
@@ -251,15 +252,15 @@ void nntp_body(ART_NUM artnum)
       case -1:
         finalize(1); /*$$*/
       case 0:
-        fclose(g_artfp);
+        std::fclose(g_artfp);
         g_artfp = nullptr;
         errno = ENOENT;                 /* Simulate file-not-found */
         return;
     }
     s_body_pos = 0;
     if (g_parsed_art == artnum) {
-        fwrite(g_headbuf, 1, std::strlen(g_headbuf), g_artfp);
-        s_body_end = (ART_POS)ftell(g_artfp);
+        std::fwrite(g_headbuf, 1, std::strlen(g_headbuf), g_artfp);
+        s_body_end = (ART_POS)std::ftell(g_artfp);
         g_htype[PAST_HEADER].minpos = s_body_end;
     }
     else {
@@ -295,7 +296,7 @@ static int nntp_copybody(char *s, int limit, ART_POS pos)
         }
         if (had_nl) {
             if (nntp_at_list_end(s)) {
-                fseek(g_artfp, (long)s_body_pos, 0);
+                std::fseek(g_artfp, (long)s_body_pos, 0);
                 s_body_pos = -1;
                 return 0;
             }
@@ -309,8 +310,8 @@ static int nntp_copybody(char *s, int limit, ART_POS pos)
         {
             std::strcpy(s + len, "\n");
         }
-        fputs(s, g_artfp);
-        s_body_end = ftell(g_artfp);
+        std::fputs(s, g_artfp);
+        s_body_end = std::ftell(g_artfp);
         had_nl = result == NGSR_FULL_LINE;
     }
     return 1;
@@ -334,17 +335,17 @@ int nntp_finishbody(finishbody_mode bmode)
     else if (bmode == FB_OUTPUT) {
         if (g_verbose)
         {
-            printf("Receiving the rest of the article...");
+            std::printf("Receiving the rest of the article...");
         }
         else
         {
-            printf("Receiving...");
+            std::printf("Receiving...");
         }
-        fflush(stdout);
+        std::fflush(stdout);
     }
     if (s_body_end != s_body_pos)
     {
-        fseek(g_artfp, (long) s_body_end, 0);
+        std::fseek(g_artfp, (long) s_body_end, 0);
     }
     if (bmode != FB_BACKGROUND)
     {
@@ -359,7 +360,7 @@ int nntp_finishbody(finishbody_mode bmode)
         }
         if (s_body_pos >= 0)
         {
-            fseek(g_artfp, (long) s_body_pos, 0);
+            std::fseek(g_artfp, (long) s_body_pos, 0);
         }
     }
     if (bmode == FB_OUTPUT)
@@ -374,7 +375,7 @@ int nntp_seekart(ART_POS pos)
     if (s_body_pos >= 0) {
         if (s_body_end < pos) {
             char b[NNTP_STRLEN];
-            fseek(g_artfp, (long)s_body_end, 0);
+            std::fseek(g_artfp, (long)s_body_end, 0);
             nntp_copybody(b, sizeof b, pos);
             if (s_body_pos >= 0)
             {
@@ -386,12 +387,12 @@ int nntp_seekart(ART_POS pos)
             s_body_pos = pos;
         }
     }
-    return fseek(g_artfp, (long)pos, 0);
+    return std::fseek(g_artfp, (long)pos, 0);
 }
 
 ART_POS nntp_tellart()
 {
-    return s_body_pos < 0 ? (ART_POS)ftell(g_artfp) : s_body_pos;
+    return s_body_pos < 0 ? (ART_POS)std::ftell(g_artfp) : s_body_pos;
 }
 
 char *nntp_readart(char *s, int limit)
@@ -406,17 +407,17 @@ char *nntp_readart(char *s, int limit)
                 s_body_pos = s_body_end;
                 return s;
             }
-            fseek(g_artfp, (long)s_body_pos, 0);
+            std::fseek(g_artfp, (long)s_body_pos, 0);
         }
-        s = fgets(s, limit, g_artfp);
-        s_body_pos = ftell(g_artfp);
+        s = std::fgets(s, limit, g_artfp);
+        s_body_pos = std::ftell(g_artfp);
         if (s_body_pos == s_body_end)
         {
-            fseek(g_artfp, (long) s_body_pos, 0); /* Prepare for coming write */
+            std::fseek(g_artfp, (long) s_body_pos, 0); /* Prepare for coming write */
         }
         return s;
     }
-    return fgets(s, limit, g_artfp);
+    return std::fgets(s, limit, g_artfp);
 }
 
 /* This is a 1-relative list */
@@ -430,7 +431,7 @@ std::time_t nntp_time()
     }
     if (nntp_check() <= 0)
     {
-        return std::time((std::time_t *) nullptr);
+        return std::time(nullptr);
     }
 
     char * s = std::strrchr(g_ser_line, ' ') + 1;
@@ -440,7 +441,7 @@ std::time_t nntp_time()
     int    mm = (s[10] - '0') * 10 + (s[11] - '0');
     std::time_t ss = (s[12] - '0') * 10 + (s[13] - '0');
     s[4] = '\0';
-    int year = atoi(s);
+    int year = std::atoi(s);
 
     /* This simple algorithm will be valid until the year 2100 */
     if (year % 4)
@@ -455,7 +456,7 @@ std::time_t nntp_time()
      || hh < 0 || hh > 23 || mm < 0 || mm > 59
      || ss < 0 || ss > 59)
     {
-        return std::time((std::time_t *) nullptr);
+        return std::time(nullptr);
     }
 
     for (month--; month; month--)
@@ -471,8 +472,8 @@ std::time_t nntp_time()
 
 int nntp_newgroups(std::time_t t)
 {
-    struct tm *ts = gmtime(&t);
-    sprintf(g_ser_line, "NEWGROUPS %02d%02d%02d %02d%02d%02d GMT",
+    std::tm *ts = std::gmtime(&t);
+    std::sprintf(g_ser_line, "NEWGROUPS %02d%02d%02d %02d%02d%02d GMT",
         ts->tm_year % 100, ts->tm_mon+1, ts->tm_mday,
         ts->tm_hour, ts->tm_min, ts->tm_sec);
     if (nntp_command(g_ser_line) <= 0)
@@ -558,7 +559,7 @@ char *nntp_artname(ART_NUM artnum, bool allocate)
         return nullptr;
     }
 
-    std::time_t now = std::time((std::time_t*)nullptr);
+    std::time_t now = std::time(nullptr);
 
     int j = 0;
     lowage = now;
@@ -586,7 +587,7 @@ char *nntp_artname(ART_NUM artnum, bool allocate)
 char *nntp_tmpname(int ndx)
 {
     static char artname[20];
-    sprintf(artname,"rrn.%ld.%d",g_our_pid,ndx);
+    std::sprintf(artname,"rrn.%ld.%d",g_our_pid,ndx);
     return artname;
 }
 
@@ -600,7 +601,7 @@ int nntp_handle_nested_lists()
     {
         return 1;
     }
-    fprintf(stderr,"Programming error! Nested NNTP calls detected.\n");
+    std::fprintf(stderr,"Programming error! Nested NNTP calls detected.\n");
     return -1;
 }
 
@@ -649,7 +650,7 @@ void nntp_server_died(DATASRC *dp)
     {
         g_multirc = nullptr;
     }
-    fprintf(stderr,"\n%s\n", g_ser_line);
+    std::fprintf(stderr,"\n%s\n", g_ser_line);
     get_anything();
 }
 
@@ -670,7 +671,7 @@ long nntp_readcheck()
     }
 
     /* try to get the number of bytes being transfered */
-    if (sscanf(g_ser_line, "%*d%ld", &s_rawbytes) != 1)
+    if (std::sscanf(g_ser_line, "%*d%ld", &s_rawbytes) != 1)
     {
         return s_rawbytes = -1;
     }
