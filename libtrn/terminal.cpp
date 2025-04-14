@@ -31,6 +31,10 @@
 #endif
 
 #include <algorithm>
+#include <cctype>
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 #ifdef u3b2
@@ -267,7 +271,7 @@ void term_set(char *tcbuf)
     if (isatty(devtty)) {
         devtty = open("/dev/tty",0);
         if (devtty < 0) {
-            printf(cantopen,"/dev/tty");
+            std::printf(cantopen,"/dev/tty");
             finalize(1);
         }
         fcntl(devtty,F_SETFL,O_NDELAY);
@@ -303,7 +307,7 @@ void term_set(char *tcbuf)
     s = getenv("TERM");
     status = tgetent(tcbuf,s? s : "dumb");      /* get termcap entry */
     if (status < 1) {
-        printf("No termcap %s found.\n", status ? "file" : "entry");
+        std::printf("No termcap %s found.\n", status ? "file" : "entry");
         finalize(1);
     }
     tmpaddr = s_tcarea;                 /* set up strange tgetstr pointer */
@@ -379,7 +383,7 @@ void term_set(char *tcbuf)
     if (!*g_tc_CR) {
         if (tgetflag("nc") && *g_tc_UP) {
             g_tc_CR = safemalloc((MEM_SIZE)std::strlen(g_tc_UP)+2);
-            sprintf(g_tc_CR,"%s\r",g_tc_UP);
+            std::sprintf(g_tc_CR,"%s\r",g_tc_UP);
         }
         else
         {
@@ -424,9 +428,9 @@ void term_set(char *tcbuf)
     line_col_calcs();
     noecho();                           /* turn off echo */
     crmode();                           /* enter cbreak mode */
-    sprintf(g_buf, "%d", g_tc_LINES);
+    std::sprintf(g_buf, "%d", g_tc_LINES);
     s_lines_export = export_var("LINES",g_buf);
-    sprintf(g_buf, "%d", g_tc_COLS);
+    std::sprintf(g_buf, "%d", g_tc_COLS);
     s_cols_export = export_var("COLUMNS",g_buf);
 
     mac_init(tcbuf);
@@ -555,18 +559,18 @@ static void mac_init(char *tcbuf)
     {
         arrow_macros(tmpbuf);
     }
-    FILE *macros;
+    std::FILE *macros;
     if (!g_use_threads
-     || (macros = fopen(filexp(get_val_const("TRNMACRO",TRNMACRO)),"r")) == nullptr)
+     || (macros = std::fopen(filexp(get_val_const("TRNMACRO",TRNMACRO)),"r")) == nullptr)
     {
-        macros = fopen(filexp(get_val_const("RNMACRO",RNMACRO)),"r");
+        macros = std::fopen(filexp(get_val_const("RNMACRO",RNMACRO)),"r");
     }
     if (macros) {
-        while (fgets(tcbuf,TCBUF_SIZE,macros) != nullptr)
+        while (std::fgets(tcbuf,TCBUF_SIZE,macros) != nullptr)
         {
             mac_line(tcbuf,tmpbuf,sizeof tmpbuf);
         }
-        fclose(macros);
+        std::fclose(macros);
     }
 }
 
@@ -609,7 +613,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
     for (char *s = tmpbuf; *s; s++)
     {
         ch = *s & 0177;
-        if (s[1] == '+' && isdigit(s[2])) {
+        if (s[1] == '+' && std::isdigit(s[2])) {
             s += 2;
             garbage = (*s & KM_GMASK) << KM_GSHIFT;
         }
@@ -620,10 +624,10 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
         if (s[1]) {
             if ((curmap->km_type[ch] & KM_TMASK) == KM_STRING) {
                 if (tbsize) {
-                    fputs(override,stdout);
+                    std::fputs(override,stdout);
                     termdown(2);
                 }
-                free(curmap->km_ptr[ch].km_str);
+                std::free(curmap->km_ptr[ch].km_str);
                 curmap->km_ptr[ch].km_str = nullptr;
             }
             curmap->km_type[ch] = KM_KEYMAP + garbage;
@@ -635,7 +639,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
         }
         else {
             if (tbsize && (curmap->km_type[ch] & KM_TMASK) == KM_KEYMAP) {
-                fputs(override,stdout);
+                std::fputs(override,stdout);
                 termdown(2);
             }
             else {
@@ -685,7 +689,7 @@ static void show_keymap(KEYMAP *curmap, char *prefix)
         if (kt != 0) {
             if (i < ' ')
             {
-                sprintf(next,"^%c",i+64);
+                std::sprintf(next,"^%c",i+64);
             }
             else if (i == ' ')
             {
@@ -697,26 +701,26 @@ static void show_keymap(KEYMAP *curmap, char *prefix)
             }
             else
             {
-                sprintf(next,"%c",i);
+                std::sprintf(next,"%c",i);
             }
             if ((kt >> KM_GSHIFT) & KM_GMASK) {
-                sprintf(g_cmd_buf,"+%d", (kt >> KM_GSHIFT) & KM_GMASK);
+                std::sprintf(g_cmd_buf,"+%d", (kt >> KM_GSHIFT) & KM_GMASK);
                 std::strcat(next,g_cmd_buf);
             }
             switch (kt & KM_TMASK) {
               case KM_NOTHIN:
-                sprintf(g_cmd_buf,"%s   %c\n",prefix,i);
+                std::sprintf(g_cmd_buf,"%s   %c\n",prefix,i);
                 print_lines(g_cmd_buf, NOMARKING);
                 break;
               case KM_KEYMAP:
                 show_keymap(curmap->km_ptr[i].km_km, prefix);
                 break;
               case KM_STRING:
-                sprintf(g_cmd_buf,"%s   %s\n",prefix,curmap->km_ptr[i].km_str);
+                std::sprintf(g_cmd_buf,"%s   %s\n",prefix,curmap->km_ptr[i].km_str);
                 print_lines(g_cmd_buf, NOMARKING);
                 break;
               case KM_BOGUS:
-                sprintf(g_cmd_buf,"%s   BOGUS\n",prefix);
+                std::sprintf(g_cmd_buf,"%s   BOGUS\n",prefix);
                 print_lines(g_cmd_buf, STANDOUT);
                 break;
             }
@@ -737,7 +741,7 @@ void set_mode(general_mode new_gmode, minor_mode new_mode)
 
 int putchr(char_int ch)
 {
-    putchar(ch);
+    std::putchar(ch);
 #ifdef lint
     ch = '\0';
     ch = ch;
@@ -818,7 +822,7 @@ bool finish_command(int donewline)
     do {
         s = edit_buf(s, g_buf);
         if (s == g_buf) {                       /* entire string gone? */
-            fflush(stdout);             /* return to single char command mode */
+            std::fflush(stdout);             /* return to single char command mode */
             set_mode(gmode_save,g_mode);
             return false;
         }
@@ -826,7 +830,7 @@ bool finish_command(int donewline)
         {
             break;
         }
-        fflush(stdout);
+        std::fflush(stdout);
         getcmd(s);
         if (errno || *s == '\f') {
             *s = Ctl('r');              /* force rewrite on CONT */
@@ -852,16 +856,16 @@ bool finish_command(int donewline)
 static int echo_char(char_int ch)
 {
     if (((Uchar)ch & 0x7F) < ' ') {
-        putchar('^');
-        putchar((ch & 0x7F) | 64);
+        std::putchar('^');
+        std::putchar((ch & 0x7F) | 64);
         return 2;
     }
     if (ch == '\177') {
-        putchar('^');
-        putchar('?');
+        std::putchar('^');
+        std::putchar('?');
         return 2;
     }
-    putchar(ch);
+    std::putchar(ch);
     return 1;
 }
 
@@ -898,13 +902,13 @@ char *edit_buf(char *s, const char *cmd)
             *s = '\0';
             cpybuf = savestr(g_buf);
             interpsearch(g_buf, sizeof g_buf, cpybuf, cmd);
-            free(cpybuf);
+            std::free(cpybuf);
             s = g_buf + std::strlen(g_buf);
             reprint();
         }
         else {
             interpsearch(s, sizeof g_buf - (s-g_buf), tmpbuf, cmd);
-            fputs(s,stdout);
+            std::fputs(s,stdout);
             s += std::strlen(s);
         }
         return s;
@@ -937,7 +941,7 @@ char *edit_buf(char *s, const char *cmd)
             return s;
         }
         *s-- = ' ';
-        while (!isspace(*s) || isspace(s[1])) {
+        while (!std::isspace(*s) || std::isspace(s[1])) {
             rubout();
             if (!at_norm_char(s))
             {
@@ -957,9 +961,9 @@ char *edit_buf(char *s, const char *cmd)
         return s;
     }
     if (*s == Ctl('v')) {
-        putchar('^');
+        std::putchar('^');
         backspace();
-        fflush(stdout);
+        std::fflush(stdout);
         getcmd(s);
     }
     else if (*s == '\\')
@@ -1015,7 +1019,7 @@ void eat_typeahead()
             errno = 0;
             if (read_tty(&g_buf[j],1) < 0) {
                 if (errno && errno != EINTR) {
-                    perror(s_readerr);
+                    std::perror(s_readerr);
                     sig_catcher(0);
                 }
                 continue;
@@ -1076,7 +1080,7 @@ void save_typeahead(char *buf, int len)
 void settle_down()
 {
     dingaling();
-    fflush(stdout);
+    std::fflush(stdout);
     /*sleep(1);*/
     s_nextout = s_nextin;                       /* empty s_circlebuf */
     s_not_echoing = 0;
@@ -1088,7 +1092,7 @@ static bool s_ignore_EINTR = false;
 #ifdef SIGALRM
 Signal_t alarm_catcher(int signo)
 {
-    /*printf("\n*** In alarm catcher **\n"); $$*/
+    /*std::printf("\n*** In alarm catcher **\n"); $$*/
     s_ignore_EINTR = true;
     check_datasrcs();
     sigset(SIGALRM,alarm_catcher);
@@ -1152,7 +1156,7 @@ void pushchar(char_int c)
         s_nextout = PUSHSIZE - 1;
     }
     if (s_nextout == s_nextin) {
-        fputs("\npushback buffer overflow\n",stdout);
+        std::fputs("\npushback buffer overflow\n",stdout);
         sig_catcher(0);
     }
     s_circlebuf[s_nextout] = c;
@@ -1166,15 +1170,15 @@ void underprint(const char *s)
     if (*g_tc_UC) {     /* char by char underline? */
         while (*s) {
             if (!at_norm_char(s)) {
-                putchar('^');
+                std::putchar('^');
                 backspace();/* back up over it */
                 underchar();/* and do the underline */
-                putchar((*s & 0x7F) | 64);
+                std::putchar((*s & 0x7F) | 64);
                 backspace();/* back up over it */
                 underchar();/* and do the underline */
             }
             else {
-                putchar(*s);
+                std::putchar(*s);
                 backspace();/* back up over it */
                 underchar();/* and do the underline */
             }
@@ -1254,7 +1258,7 @@ tryagain:
 #endif
                 return;
             }
-            perror(s_readerr);
+            std::perror(s_readerr);
             sig_catcher(0);
         }
         g_lastchar = *(Uchar*)whatbuf;
@@ -1286,7 +1290,7 @@ tryagain:
           case KM_STRING:               /* a string? */
             pushstring(curmap->km_ptr[g_lastchar].km_str,0200);
             if (++times > 20) {         /* loop? */
-                fputs("\nmacro loop?\n",stdout);
+                std::fputs("\nmacro loop?\n",stdout);
                 termdown(2);
                 settle_down();
             }
@@ -1340,14 +1344,14 @@ reask_anything:
     color_object(COLOR_MORE, true);
     if (g_verbose)
     {
-        fputs("[Type space to continue] ",stdout);
+        std::fputs("[Type space to continue] ",stdout);
     }
     else
     {
-        fputs("[MORE] ",stdout);
+        std::fputs("[MORE] ",stdout);
     }
     color_pop();        /* of COLOR_MORE */
-    fflush(stdout);
+    std::fflush(stdout);
     eat_typeahead();
     if (g_int_count)
     {
@@ -1364,11 +1368,11 @@ reask_anything:
     if (*tmpbuf == 'h') {
         if (g_verbose)
         {
-            fputs("\nType q to quit or space to continue.\n",stdout);
+            std::fputs("\nType q to quit or space to continue.\n",stdout);
         }
         else
         {
-            fputs("\nq to quit, space to continue.\n",stdout);
+            std::fputs("\nq to quit, space to continue.\n",stdout);
         }
         termdown(2);
         goto reask_anything;
@@ -1403,14 +1407,14 @@ int pause_getcmd()
     color_object(COLOR_CMD, true);
     if (g_verbose)
     {
-        fputs("[Type space or a command] ",stdout);
+        std::fputs("[Type space or a command] ",stdout);
     }
     else
     {
-        fputs("[CMD] ",stdout);
+        std::fputs("[CMD] ",stdout);
     }
     color_pop();        /* of COLOR_CMD */
-    fflush(stdout);
+    std::fflush(stdout);
     eat_typeahead();
     if (g_int_count)
     {
@@ -1447,8 +1451,8 @@ void in_char(const char *prompt, minor_mode newmode, const char *dflt)
 
 reask_in_char:
     unflush_output();                   /* disable any ^O in effect */
-    printf("%s [%s] ", prompt, dflt);
-    fflush(stdout);
+    std::printf("%s [%s] ", prompt, dflt);
+    std::fflush(stdout);
     termdown(newlines);
     eat_typeahead();
     set_mode(GM_PROMPT,newmode);
@@ -1468,8 +1472,8 @@ void in_answer(const char *prompt, minor_mode newmode)
 
 reask_in_answer:
     unflush_output();                   /* disable any ^O in effect */
-    fputs(prompt,stdout);
-    fflush(stdout);
+    std::fputs(prompt,stdout);
+    std::fflush(stdout);
     eat_typeahead();
     set_mode(GM_INPUT,newmode);
 reinp_in_answer:
@@ -1596,7 +1600,7 @@ reask_in_choice:
         {
             cp = tmpbuf;
         }
-        if (*cp == '<' && (*g_buf == '<' || cp[1] != '#' || isdigit(*g_buf) || !*s))
+        if (*cp == '<' && (*g_buf == '<' || cp[1] != '#' || std::isdigit(*g_buf) || !*s))
         {
             prefix = nullptr;
             break;
@@ -1614,7 +1618,7 @@ reask_in_choice:
             }
             break;
         }
-        if (!*bp || !strncmp(cp,bp,any_val_OK ? len : 1))
+        if (!*bp || !std::strncmp(cp,bp,any_val_OK ? len : 1))
         {
             break;
         }
@@ -1624,7 +1628,7 @@ reask_in_choice:
         if (*g_buf == '<' || cp[1] == '#') {
             if (number_was >= 0)
             {
-                sprintf(g_buf, "%d", number_was);
+                std::sprintf(g_buf, "%d", number_was);
             }
             else {
                 s = skip_digits(g_buf);
@@ -1634,7 +1638,7 @@ reask_in_choice:
     }
     else {
         if (prefix) {
-            sprintf(g_buf, "%s ", prefix);
+            std::sprintf(g_buf, "%s ", prefix);
             std::strcat(g_buf,cp);
         }
         else
@@ -1645,8 +1649,8 @@ reask_in_choice:
     s = g_buf + std::strlen(g_buf);
     carriage_return();
     erase_line(false);
-    fputs(prompt,stdout);
-    fputs(g_buf,stdout);
+    std::fputs(prompt,stdout);
+    std::fputs(g_buf,stdout);
     len = std::strlen(prompt);
     number_was = -1;
 
@@ -1655,7 +1659,7 @@ reinp_in_choice:
     {
         s_screen_is_dirty = true;
     }
-    fflush(stdout);
+    std::fflush(stdout);
     getcmd(s);
     if (errno || *s == '\f')            /* if return from stop signal */
     {
@@ -1667,13 +1671,13 @@ reinp_in_choice:
             if (cp[1] == '#') {
                 s = edit_buf(s, nullptr);
                 if (s != g_buf) {
-                    if (isdigit(s[-1]))
+                    if (std::isdigit(s[-1]))
                     {
                         goto reinp_in_choice;
                     }
                     else
                     {
-                        number_was = atoi(g_buf);
+                        number_was = std::atoi(g_buf);
                     }
                 }
             }
@@ -1710,7 +1714,7 @@ reinp_in_choice:
                     ch = g_buf[0];
                 }
             }
-            sprintf(g_buf,"%c %c",ch == g_erase_char || ch == g_kill_char? '<' : ch, ch1);
+            std::sprintf(g_buf,"%c %c",ch == g_erase_char || ch == g_kill_char? '<' : ch, ch1);
         }
         goto reask_in_choice;
     }
@@ -1752,7 +1756,7 @@ int print_lines(const char *what_to_print, int hilite)
                 i += put_char_adv(const_cast<char**>(&s), true);
             }
             else if (*s == '\t') {
-                putchar(*s);
+                std::putchar(*s);
                 s++;
                 i = ((i+8) & ~7);
             }
@@ -1761,8 +1765,8 @@ int print_lines(const char *what_to_print, int hilite)
                 i = 32000;
             }
             else {
-                putchar('^');
-                putchar(*s + 64);
+                std::putchar('^');
+                std::putchar(*s + 64);
                 s++;
                 i += 2;
             }
@@ -1778,7 +1782,7 @@ int print_lines(const char *what_to_print, int hilite)
             }
             if (g_tc_AM && i == g_tc_COLS)
             {
-                fflush(stdout);
+                std::fflush(stdout);
             }
             else
             {
@@ -1833,7 +1837,7 @@ void errormsg(const char *str)
         g_error_occurred = true;
     }
     else if (*str) {
-        printf("\n%s\n", str);
+        std::printf("\n%s\n", str);
         termdown(2);
     }
 }
@@ -1841,7 +1845,7 @@ void errormsg(const char *str)
 void warnmsg(const char *str)
 {
     if (g_general_mode != GM_SELECTOR) {
-        printf("\n%s\n", str);
+        std::printf("\n%s\n", str);
         termdown(2);
         pad(g_just_a_sec/3);
     }
@@ -1851,9 +1855,9 @@ void pad(int num)
 {
     for (int i = num; i; i--)
     {
-        putchar(s_tc_PC);
+        std::putchar(s_tc_PC);
     }
-    fflush(stdout);
+    std::fflush(stdout);
 }
 
 /* echo the command just typed */
@@ -1862,29 +1866,29 @@ void printcmd()
 {
     if (g_verify && g_buf[1] == FINISHCMD) {
         if (!at_norm_char(g_buf)) {
-            putchar('^');
-            putchar((*g_buf & 0x7F) | 64);
+            std::putchar('^');
+            std::putchar((*g_buf & 0x7F) | 64);
             backspace();
             backspace();
         }
         else {
-            putchar(*g_buf);
+            std::putchar(*g_buf);
             backspace();
         }
-        fflush(stdout);
+        std::fflush(stdout);
     }
 }
 
 void rubout()
 {
     backspace();                        /* do the old backspace, */
-    putchar(' ');                       /*   space, */
+    std::putchar(' ');                  /*   space, */
     backspace();                        /*     backspace trick */
 }
 
 void reprint()
 {
-    fputs("^R\n",stdout);
+    std::fputs("^R\n",stdout);
     termdown(1);
     for (char *s = g_buf; *s; s++)
     {
@@ -1905,7 +1909,7 @@ void erase_line(bool to_eos)
         erase_eol();
     }
     carriage_return();          /* Resets kernel's tab column counter to 0 */
-    fflush(stdout);
+    std::fflush(stdout);
 }
 
 void clear()
@@ -1935,7 +1939,7 @@ void home_cursor()
 {
     if (!*g_tc_HO) {            /* no home sequence? */
         if (!*g_tc_CM) {                /* no cursor motion either? */
-            fputs("\n\n\n", stdout);
+            std::fputs("\n\n\n", stdout);
             termdown(3);
             return;             /* forget it. */
         }
@@ -2024,7 +2028,7 @@ void goto_xy(int to_col, int to_line)
         while (g_term_col < to_col)
         {
             g_term_col++;
-            putchar(' ');
+            std::putchar(' ');
         }
     }
     else
@@ -2087,8 +2091,8 @@ Signal_t winch_catcher(int dummy)
                 g_tc_LINES = ws.ws_row;
                 g_tc_COLS = ws.ws_col;
                 line_col_calcs();
-                sprintf(s_lines_export, "%d", g_tc_LINES);
-                sprintf(s_cols_export, "%d", g_tc_COLS);
+                std::sprintf(s_lines_export, "%d", g_tc_LINES);
+                std::sprintf(s_cols_export, "%d", g_tc_COLS);
                 if (g_general_mode == 's' || g_mode == 'a' || g_mode == 'p') {
                     forceme("\f");      /* cause a refresh */
                                         /* (defined only if TIOCSTI defined) */
@@ -2110,13 +2114,13 @@ void termlib_init()
 #ifdef USETITE
     if (s_tc_TI && *s_tc_TI) {
         tputs(s_tc_TI,1,putchr);
-        fflush(stdout);
+        std::fflush(stdout);
     }
 #endif
 #ifdef USEKSKE
     if (s_tc_KS && *s_tc_KS) {
         tputs(s_tc_KS,1,putchr);
-        fflush(stdout);
+        std::fflush(stdout);
     }
 #endif
     g_term_line = g_tc_LINES-1;
@@ -2129,13 +2133,13 @@ void termlib_reset()
 #ifdef USETITE
     if (s_tc_TE && *s_tc_TE) {
         tputs(s_tc_TE,1,putchr);
-        fflush(stdout);
+        std::fflush(stdout);
     }
 #endif
 #ifdef USEKSKE
     if (s_tc_KE && *s_tc_KE) {
         tputs(s_tc_KE,1,putchr);
-        fflush(stdout);
+        std::fflush(stdout);
     }
 #endif
 }
@@ -2241,8 +2245,8 @@ void xmouse_on()
 {
     if (!s_xmouse_is_on) {
         /* save old highlight mouse tracking and enable mouse tracking */
-        fputs("\033[?1001s\033[?1000h",stdout);
-        fflush(stdout);
+        std::fputs("\033[?1001s\033[?1000h",stdout);
+        std::fflush(stdout);
         s_xmouse_is_on = true;
     }
 }
@@ -2251,8 +2255,8 @@ void xmouse_off()
 {
     if (s_xmouse_is_on) {
         /* disable mouse tracking and restore old highlight mouse tracking */
-        fputs("\033[?1000l\033[?1001r",stdout);
-        fflush(stdout);
+        std::fputs("\033[?1000l\033[?1001r",stdout);
+        std::fflush(stdout);
         s_xmouse_is_on = false;
     }
 }
@@ -2319,7 +2323,7 @@ void draw_mousebar(int limit, bool restore_cursor)
 
     goto_xy(g_tc_COLS - g_mousebar_width - 1, g_tc_LINES-1);
     for (int i = s_mousebar_start; i < g_mousebar_cnt; i++) {
-        putchar(' ');
+        std::putchar(' ');
         color_string(COLOR_MOUSE,s);
         s += std::strlen(s) + 1;
     }
@@ -2427,14 +2431,14 @@ bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                     for (int k = 0; k < 5 && *t; k++, t++)
                     {
                         g_term_col++;
-                        putchar(*t);
+                        std::putchar(*t);
                     }
                 }
                 else {
                     for (; *t && *t != ' '; t++)
                     {
                         g_term_col++;
-                        putchar(*t);
+                        std::putchar(*t);
                     }
                 }
                 if (btn == 3)
@@ -2442,7 +2446,7 @@ bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                     color_pop();        /* of COLOR_MOUSE */
                 }
                 goto_xy(tcol,tline);
-                fflush(stdout);
+                std::fflush(stdout);
                 if (btn == 3 && x > 0 && x < i)
                 {
                     pushstring(s,0);
@@ -2477,14 +2481,14 @@ void add_tc_string(const char *capability, const char *string)
     int i;
 
     for (i = 0; i < s_tc_string_cnt; i++) {
-        if (!strcmp(capability,s_tc_strings[i].capability)) {
-            free(s_tc_strings[i].string);
+        if (!std::strcmp(capability,s_tc_strings[i].capability)) {
+            std::free(s_tc_strings[i].string);
             break;
         }
     }
     if (i == s_tc_string_cnt) {
         if (s_tc_string_cnt == TC_STRINGS) {
-            fprintf(stderr,"trn: too many colors in [termcap] section (max is %d).\n",
+            std::fprintf(stderr,"trn: too many colors in [termcap] section (max is %d).\n",
                     TC_STRINGS);
             finalize(1);
         }
@@ -2499,7 +2503,7 @@ void add_tc_string(const char *capability, const char *string)
 char *tc_color_capability(const char *capability)
 {
     for (int c = 0; c < s_tc_string_cnt; c++) {
-        if (!strcmp(s_tc_strings[c].capability,capability))
+        if (!std::strcmp(s_tc_strings[c].capability,capability))
         {
             return s_tc_strings[c].string;
         }
@@ -2510,7 +2514,7 @@ char *tc_color_capability(const char *capability)
 #ifdef MSDOS
 int tputs(char *str, int num, int (*func)(int))
 {
-    printf(str,num);
+    std::printf(str,num);
     return 0;
 }
 #endif
@@ -2519,7 +2523,7 @@ int tputs(char *str, int num, int (*func)(int))
 char *tgoto(char *str, int x, int y)
 {
     static char gbuf[32];
-    sprintf(gbuf,str,y+1,x+1);
+    std::sprintf(gbuf,str,y+1,x+1);
     return gbuf;
 }
 #endif
