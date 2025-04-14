@@ -24,7 +24,10 @@
 #include "trn/trn.h"
 #include "util/util2.h"
 
+#include <cctype>
+#include <cstdio>
 #include <cstring>
+#include <string>
 
 static COMPEX s_sub_compex{}; /* last compiled subject search */
 static COMPEX s_art_compex{}; /* last compiled normal search */
@@ -139,7 +142,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
             }
           loop_break:;
         }
-        while (isspace(*s) || *s == ':')
+        while (std::isspace(*s) || *s == ':')
         {
             s++;
         }
@@ -226,11 +229,11 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
             if (!*h) {
                 if (g_verbose)
                 {
-                    sprintf(g_msg, "Current article has no %s.", finding_str);
+                    std::sprintf(g_msg, "Current article has no %s.", finding_str);
                 }
                 else
                 {
-                    sprintf(g_msg, "Null %s.", finding_str);
+                    std::sprintf(g_msg, "Null %s.", finding_str);
                 }
                 errormsg(g_msg);
                 ret = SRCH_ABORT;
@@ -239,11 +242,11 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
             if (g_verbose) {
                 if (cmdchr != '+' && cmdchr != '.')
                 {
-                    printf("\nMarking %s \"%s\" as read.\n", finding_str, h);
+                    std::printf("\nMarking %s \"%s\" as read.\n", finding_str, h);
                 }
                 else
                 {
-                    printf("\nSelecting %s \"%s\".\n", finding_str, h);
+                    std::printf("\nSelecting %s \"%s\".\n", finding_str, h);
                 }
                 termdown(2);
             }
@@ -265,7 +268,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
         }
 #ifdef DEBUG
         if (debug) {
-            printf("\npattern = %s\n",pattern);
+            std::printf("\npattern = %s\n",pattern);
             termdown(2);
         }
 #endif
@@ -347,7 +350,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
             newline();
         }
         else {
-            fputs("\nSearching...\n",stdout);
+            std::fputs("\nSearching...\n",stdout);
             termdown(2);
         }
                                         /* give them something to read */
@@ -409,13 +412,13 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
                     return SRCH_FOUND;
                 }
                 if (perform(cmdlst,output_level && g_page_line == 1) < 0) {
-                    free(cmdlst);
+                    std::free(cmdlst);
                     return SRCH_INTR;
                 }
             }
             else if (output_level && !cmdlst && !(g_art%50)) {
-                printf("...%ld",(long)g_art);
-                fflush(stdout);
+                std::printf("...%ld",(long)g_art);
+                std::fflush(stdout);
             }
         }
         if (!output_level && g_page_line == 1)
@@ -426,7 +429,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
 exit:
     if (cmdlst)
     {
-        free(cmdlst);
+        std::free(cmdlst);
     }
     return ret;
 }
@@ -450,7 +453,7 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
 #ifdef DEBUG
         if (debug & DEB_SEARCH_AHEAD)
         {
-            printf("%s\n",g_buf);
+            std::printf("%s\n",g_buf);
         }
 #endif
         break;
@@ -460,7 +463,7 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
         break;
       case ARTSCOPE_ONEHDR:
         g_untrim_cache = true;
-        sprintf(g_buf, "%s: %s", g_htype[g_art_srchhdr].name,
+        std::sprintf(g_buf, "%s: %s", g_htype[g_art_srchhdr].name,
                 prefetchlines(artnum,g_art_srchhdr,false));
         g_untrim_cache = false;
         break;
