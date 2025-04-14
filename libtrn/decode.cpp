@@ -403,7 +403,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
 
     if (g_mime_section->type == MESSAGE_MIME) {
         mime_PushSection();
-        mime_ParseSubheader(fp,first_line);
+        mime_ParseSubheader(fp, first_line);
         first_line = nullptr;
     }
     g_mime_getc_line = first_line;

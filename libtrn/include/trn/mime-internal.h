@@ -2,6 +2,7 @@
 #define TRN_MIME_INTERNAL_H
 
 #include "trn/mime.h"
+
 #include <functional>
 
 // Internal entry points for testing purposes.
