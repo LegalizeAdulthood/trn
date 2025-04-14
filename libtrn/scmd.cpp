@@ -23,6 +23,8 @@
 #include "trn/terminal.h"
 #include "trn/univ.h"
 
+#include <cctype>
+#include <cstdio>
 #include <cstring>
 
 void s_go_bot()
@@ -39,8 +41,8 @@ int s_finish_cmd(const char *string)
 {
     s_go_bot();
     if (string && *string) {
-        printf("%s",string);
-        fflush(stdout);
+        std::printf("%s",string);
+        std::fflush(stdout);
     }
     g_buf[1] = FINISHCMD;
     return finish_command(false);       /* do not echo newline */
@@ -241,8 +243,8 @@ int s_docmd()
             (void)help_scanart();
             break;
           default:
-            printf("No help available for this mode (yet).\n");
-            printf("Press any key to continue.\n");
+            std::printf("No help available for this mode (yet).\n");
+            std::printf("Press any key to continue.\n");
             break;
         }
         (void)get_anything();
@@ -313,9 +315,9 @@ bool s_match_description(long ent)
         std::strncpy(lbuf,s_get_desc(ent,i,false),LBUFLEN);
         for (char *s = lbuf; *s; s++)
         {
-            if (isupper(*s))
+            if (std::isupper(*s))
             {
-                *s = tolower(*s);               /* convert to lower case */
+                *s = std::tolower(*s);               /* convert to lower case */
             }
         }
         if (std::strstr(lbuf,s_search_text))
@@ -389,22 +391,22 @@ void s_search()
         std::strncpy(s_search_text,s,LBUFLEN);
         for (char *t = s_search_text; *t != '\0'; t++)
         {
-            if (isupper(*t))
+            if (std::isupper(*t))
             {
-                *t = tolower(*t);               /* convert to lower case */
+                *t = std::tolower(*t);               /* convert to lower case */
             }
         }
     }
     if (!*s_search_text) {
         s_beep();
-        printf("\nNo previous search string.\n");
+        std::printf("\nNo previous search string.\n");
         (void)get_anything();
         g_s_ref_all = true;
         return;
     }
     s_go_bot();
-    printf("Searching for %s",s_search_text);
-    fflush(stdout);
+    std::printf("Searching for %s",s_search_text);
+    std::fflush(stdout);
     long ent = g_page_ents[g_s_ptr_page_line].entnum;
     switch (*g_buf) {
       case '/':
@@ -439,7 +441,7 @@ void s_search()
     }
     if (!ent) {
         s_beep();
-        printf("\n%s\n",error_msg);
+        std::printf("\n%s\n",error_msg);
         (void)get_anything();
         g_s_ref_all = true;
         return;
@@ -474,8 +476,8 @@ void s_jumpnum(char_int firstchar)
     if (jump_verbose) {
         s_go_bot();
         g_s_ref_bot = true;
-        printf("Jump to item: %c",firstchar);
-        fflush(stdout);
+        std::printf("Jump to item: %c",firstchar);
+        std::fflush(stdout);
     }
     getcmd(g_buf);
     if (*g_buf == g_erase_char)
@@ -486,8 +488,8 @@ void s_jumpnum(char_int firstchar)
       case '0': case '1': case '2': case '3': case '4':
       case '5': case '6': case '7': case '8': case '9':
         if (jump_verbose) {
-            printf("%c",*g_buf);
-            fflush(stdout);
+            std::printf("%c",*g_buf);
+            std::fflush(stdout);
         }
         value = value*10 + (*g_buf - '0');
         break;
