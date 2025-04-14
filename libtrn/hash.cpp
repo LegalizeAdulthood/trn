@@ -11,6 +11,9 @@
 #include "trn/util.h"
 
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #define BADTBL(tbl)     ((tbl) == nullptr || (tbl)->ht_magic != HASHMAG)
 
@@ -74,7 +77,7 @@ HASHTABLE *hashcreate(unsigned size, HASHCMPFUNC cmpfunc)
         HASHENT *hepa[1]; /* longer than it looks */
     };
     alignalloc *aap = (alignalloc *)safemalloc(sizeof *aap + (size - 1) * sizeof(HASHENT *));
-    memset((char*)aap,0,sizeof *aap + (size-1)*sizeof (HASHENT*));
+    std::memset((char*)aap,0,sizeof *aap + (size-1)*sizeof (HASHENT*));
     HASHTABLE *tbl = &aap->ht;
     tbl->ht_size = size;
     tbl->ht_magic = HASHMAG;
@@ -106,7 +109,7 @@ void hashdestroy(HASHTABLE *tbl)
     }
     tbl->ht_magic = 0;                  /* de-certify this table */
     tbl->ht_addr = nullptr;
-    free((char*)tbl);
+    std::free((char*)tbl);
 }
 
 void hashstore(HASHTABLE *tbl, const char *key, int keylen, HASHDATUM data)
@@ -208,7 +211,7 @@ static HASHENT **hashfind(HASHTABLE *tbl, const char *key, int keylen)
     HASHENT* prevhp = nullptr;
 
     if (BADTBL(tbl)) {
-        fputs("Hash table is invalid.",stderr);
+        std::fputs("Hash table is invalid.",stderr);
         finalize(1);
     }
     unsigned size = tbl->ht_size;
@@ -238,7 +241,7 @@ static unsigned hash(const char *key, int keylen)
 static int default_cmp(const char *key, int keylen, HASHDATUM data)
 {
     /* We already know that the lengths are equal, just compare the strings */
-    return memcmp(key, data.dat_ptr, keylen);
+    return std::memcmp(key, data.dat_ptr, keylen);
 }
 
 /* allocate a hash entry */
@@ -276,7 +279,7 @@ static void hefree(HASHENT *hp)
 #ifdef HASH_FREE_ENTRIES
     if (s_reusables >= RETAIN)          /* compost heap is full? */
     {
-        free((char*)hp);                /* yup, just pitch this one */
+        std::free((char*)hp);                /* yup, just pitch this one */
     }
     else {                              /* no, just stash for reuse */
         ++s_reusables;
