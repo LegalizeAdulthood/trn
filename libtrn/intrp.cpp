@@ -37,6 +37,8 @@ struct utsname utsn;
 #endif
 
 #include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <string>
@@ -139,7 +141,7 @@ static char *skipinterp(char *pattern, const char *stoppers)
 #ifdef DEBUG
     if (debug & DEB_INTRP)
     {
-        printf("skipinterp %s (till %s)\n",pattern,stoppers?stoppers:"");
+        std::printf("skipinterp %s (till %s)\n",pattern,stoppers?stoppers:"");
     }
 #endif
 
@@ -436,7 +438,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     s = compile(&s_cond_compex, scrbuf, true, true);
                     if (s != nullptr)
                     {
-                        printf("%s: %s\n",scrbuf,s);
+                        std::printf("%s: %s\n",scrbuf,s);
                         pattern += std::strlen(pattern);
                         free_compex(&s_cond_compex);
                         goto getout;
@@ -468,14 +470,14 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 }
                 case '`': {
                     pattern = dointerp(scrbuf,(sizeof scrbuf),pattern+1,"`",cmd);
-                    FILE* pipefp = popen(scrbuf,"r");
+                    std::FILE* pipefp = popen(scrbuf,"r");
                     if (pipefp != nullptr) {
-                        int len = fread(scrbuf, sizeof(char), (sizeof scrbuf) - 1, pipefp);
+                        int len = std::fread(scrbuf, sizeof(char), (sizeof scrbuf) - 1, pipefp);
                         scrbuf[len] = '\0';
                         pclose(pipefp);
                     }
                     else {
-                        printf("\nCan't run %s\n",scrbuf);
+                        std::printf("\nCan't run %s\n",scrbuf);
                         *scrbuf = '\0';
                     }
                     for (char *t=scrbuf; *t; t++) {
@@ -496,9 +498,9 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 case '"':
                 {
                     pattern = dointerp(scrbuf,(sizeof scrbuf),pattern+1,"\"",cmd);
-                    fputs(scrbuf,stdout);
+                    std::fputs(scrbuf,stdout);
                     resetty();
-                    fgets(scrbuf, sizeof scrbuf, stdin);
+                    std::fgets(scrbuf, sizeof scrbuf, stdin);
                     noecho();
                     crmode();
                     int i = std::strlen(scrbuf);
@@ -521,18 +523,18 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     s = scrbuf;
                     break;
                 case '$':
-                    sprintf(scrbuf, "%ld", g_our_pid);
+                    std::sprintf(scrbuf, "%ld", g_our_pid);
                     s = scrbuf;
                     break;
                 case '#':
                     if (upper)
                     {
                         static int counter = 0;
-                        sprintf(scrbuf, "%d", ++counter);
+                        std::sprintf(scrbuf, "%d", ++counter);
                     }
                     else
                     {
-                        sprintf(scrbuf, "%d", g_perform_cnt);
+                        std::sprintf(scrbuf, "%d", g_perform_cnt);
                     }
                     s = scrbuf;
                     break;
@@ -548,7 +550,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 case 'a':
                     if (g_in_ng) {
                         s = scrbuf;
-                        sprintf(s,"%ld",(long)g_art);
+                        std::sprintf(s,"%ld",(long)g_art);
                     }
                     else
                     {
@@ -560,7 +562,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         if (g_datasrc->flags & DF_REMOTE) {
                             if (artopen(g_art,(ART_POS)0)) {
                                 nntp_finishbody(FB_SILENT);
-                                sprintf(s = scrbuf,"%s/%s",g_datasrc->spool_dir,
+                                std::sprintf(s = scrbuf,"%s/%s",g_datasrc->spool_dir,
                                         nntp_artname(g_art, false));
                             }
                             else
@@ -570,7 +572,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         }
                         else
                         {
-                            sprintf(s = scrbuf, "%s/%s/%ld", g_datasrc->spool_dir, g_ngdir.c_str(), (long) g_art);
+                            std::sprintf(s = scrbuf, "%s/%s/%ld", g_datasrc->spool_dir, g_ngdir.c_str(), (long) g_art);
                         }
                     }
                     else
@@ -584,7 +586,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     break;
                 case 'B':
                     s = scrbuf;
-                    sprintf(s,"%ld",(long)g_savefrom);
+                    std::sprintf(s,"%ld",(long)g_savefrom);
                     break;
                 case 'c':
                     std::strcpy(scrbuf, g_ngdir.c_str());
@@ -597,7 +599,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 case 'd':
                     if (!g_ngdir.empty())
                     {
-                        sprintf(scrbuf, "%s/%s", g_datasrc->spool_dir, g_ngdir.c_str());
+                        std::sprintf(scrbuf, "%s/%s", g_datasrc->spool_dir, g_ngdir.c_str());
                         s = scrbuf;
                     }
                     else
@@ -704,7 +706,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                             s = artid_buf;
                         }
                         if (*s && *s != '<') {
-                            sprintf(scrbuf,"<%s>",artid_buf);
+                            std::sprintf(scrbuf,"<%s>",artid_buf);
                             s = scrbuf;
                         }
                     }
@@ -714,12 +716,12 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     break;
                 case 'I':                       /* indent string for quoting */
-                    sprintf(scrbuf,"'%s'",g_indstr.c_str());
+                    std::sprintf(scrbuf,"'%s'",g_indstr.c_str());
                     s = scrbuf;
                     break;
                 case 'j':
                     s = scrbuf;
-                    sprintf(scrbuf,"%d",g_just_a_sec*10);
+                    std::sprintf(scrbuf,"%d",g_just_a_sec*10);
                     break;
                 case 'l':                       /* news admin login */
 #ifdef HAS_NEWS_ADMIN
@@ -739,7 +741,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     s[1] = '\0';
                     break;
                 case 'M':
-                    sprintf(scrbuf,"%ld",(long)g_dmcount);
+                    std::sprintf(scrbuf,"%ld",(long)g_dmcount);
                     s = scrbuf;
                     break;
                 case 'n':                       /* newsgroups */
@@ -770,14 +772,14 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
 #endif
                     s = filexp(s);
                     if (FILE_REF(s)) {
-                        FILE* ofp = fopen(s,"r");
+                        std::FILE* ofp = std::fopen(s,"r");
 
                         if (ofp) {
-                            if (fgets(scrbuf,sizeof scrbuf,ofp) == nullptr)
+                            if (std::fgets(scrbuf,sizeof scrbuf,ofp) == nullptr)
                             {
                                 *scrbuf = '\0';
                             }
-                            fclose(ofp);
+                            std::fclose(ofp);
                             s = scrbuf+std::strlen(scrbuf)-1;
                             if (*scrbuf && *s == '\n')
                             {
@@ -877,7 +879,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     else if (artid_buf[0])
                     {
-                        sprintf(refs_buf + i, "<%s>", artid_buf);
+                        std::sprintf(refs_buf + i, "<%s>", artid_buf);
                     }
                     else
                     {
@@ -941,7 +943,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                             s = path_buf;
                         }
                         int i = std::strlen(g_p_host_name.c_str());
-                        if (!strncmp(g_p_host_name.c_str(),s,i) && s[i] == '!')
+                        if (!std::strncmp(g_p_host_name.c_str(),s,i) && s[i] == '!')
                         {
                             s += i + 1;
                         }
@@ -950,7 +952,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     break;
                 case 'u':
                     if (g_in_ng) {
-                        sprintf(scrbuf, "%ld", g_ngptr->toread);
+                        std::sprintf(scrbuf, "%ld", g_ngptr->toread);
                         s = scrbuf;
                     }
                     else
@@ -966,11 +968,11 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     const bool unseen = g_art <= g_lastart && !was_read(g_art);
                     if (g_selected_only) {
                         const bool selected = g_curr_artp != nullptr && (g_curr_artp->flags & AF_SEL) != AF_NONE;
-                        sprintf(scrbuf, "%ld", g_selected_count - (selected && unseen ? 1 : 0));
+                        std::sprintf(scrbuf, "%ld", g_selected_count - (selected && unseen ? 1 : 0));
                     }
                     else
                     {
-                        sprintf(scrbuf, "%ld", g_ngptr->toread - (unseen ? 1 : 0));
+                        std::sprintf(scrbuf, "%ld", g_ngptr->toread - (unseen ? 1 : 0));
                     }
                     s = scrbuf;
                     break;
@@ -979,7 +981,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     if (g_in_ng) {
                         const bool selected = g_curr_artp && g_curr_artp->flags & AF_SEL;
                         const bool unseen = g_art <= g_lastart && !was_read(g_art);
-                        sprintf(scrbuf, "%ld",
+                        std::sprintf(scrbuf, "%ld",
                                 g_ngptr->toread - g_selected_count - (!selected && unseen ? 1 : 0));
                         s = scrbuf;
                     }
@@ -1015,7 +1017,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
 
                         s2 = fetchlines(g_art,FROM_LINE);
                         std::strcpy(tmpbuf,s2);
-                        free(s2);
+                        std::free(s2);
                         for (s2 = tmpbuf; (*s2 && (*s2 != '@') && (*s2 != ' ')); s2++)
                         {
                         }
@@ -1060,7 +1062,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         s = s_empty;
                         break;
                     }
-                    sprintf(scrbuf, "%5s", std::to_string(std::filesystem::file_size(std::to_string(g_art))).c_str());
+                    std::sprintf(scrbuf, "%5s", std::to_string(std::filesystem::file_size(std::to_string(g_art))).c_str());
                     s = scrbuf;
                     break;
                 case 'Z':
@@ -1070,7 +1072,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     else
                     {
-                        sprintf(scrbuf,"%ld",(long)g_selected_count);
+                        std::sprintf(scrbuf,"%ld",(long)g_selected_count);
                         s = scrbuf;
                     }
                     break;
@@ -1094,7 +1096,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     std::strcpy(scratch, scrbuf);
                     s = scratch;
                 }
-                sprintf(scrbuf, spfbuf, s);
+                std::sprintf(scrbuf, spfbuf, s);
                 s = scrbuf;
             }
             if (*pattern)
@@ -1111,13 +1113,13 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 {
                     t = s;
                 }
-                while (*t && !isalpha(*t))
+                while (*t && !std::isalpha(*t))
                 {
                     t++;
                 }
-                if (islower(*t))
+                if (std::islower(*t))
                 {
-                    *t = toupper(*t);
+                    *t = std::toupper(*t);
                 }
             }
             /* Do we have room left? */
@@ -1388,6 +1390,6 @@ void normalize_refs(char *refs)
 
 static void abort_interp()
 {
-    fputs("\n% interp buffer overflow!\n",stdout);
+    std::fputs("\n% interp buffer overflow!\n",stdout);
     sig_catcher(0);
 }
