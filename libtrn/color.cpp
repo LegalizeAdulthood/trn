@@ -35,6 +35,7 @@
 #include "trn/terminal.h"
 #include "util/util2.h"
 
+#include <cstdio>
 #include <cstring>
 
 struct COLOR_OBJ
@@ -99,16 +100,16 @@ void color_init()
         char *fg = tc_color_capability("fg default");
         if (fg == nullptr)
         {
-            fprintf(stderr,"trn: you need a 'fg default' definition in the [termcap] section.\n");
+            std::fprintf(stderr,"trn: you need a 'fg default' definition in the [termcap] section.\n");
             finalize(1);
         }
         char *bg = tc_color_capability("bg default");
         if (bg == nullptr)
         {
-            fprintf(stderr,"trn: you need a 'bg default' definition in the [termcap] section.\n");
+            std::fprintf(stderr,"trn: you need a 'bg default' definition in the [termcap] section.\n");
             finalize(1);
         }
-        if (!strcmp(fg,bg))
+        if (!std::strcmp(fg,bg))
         {
             bg = "";
         }
@@ -146,7 +147,7 @@ void color_rc_attribute(const char *object, char *value)
         }
     }
     if (i >= MAX_COLORS) {
-        fprintf(stderr,"trn: unknown object '%s' in [attribute] section.\n",
+        std::fprintf(stderr,"trn: unknown object '%s' in [attribute] section.\n",
                 object);
         finalize(1);
     }
@@ -169,7 +170,7 @@ void color_rc_attribute(const char *object, char *value)
         s_objects[i].attr = LASTMARKING;
     }
     else {
-        fprintf(stderr,"trn: bad attribute '%s' for %s in [attribute] section.\n",
+        std::fprintf(stderr,"trn: bad attribute '%s' for %s in [attribute] section.\n",
                 value, object);
         finalize(1);
     }
@@ -199,10 +200,10 @@ void color_rc_attribute(const char *object, char *value)
         s_objects[i].fg = nullptr;
     }
     else {
-        sprintf(g_buf, "fg %s", s);
+        std::sprintf(g_buf, "fg %s", s);
         s_objects[i].fg = tc_color_capability(g_buf);
         if (s_objects[i].fg == nullptr) {
-            fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
+            std::fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
                     g_buf, object);
             finalize(1);
         }
@@ -221,7 +222,7 @@ void color_rc_attribute(const char *object, char *value)
         t = skip_space(t);
     }
     if (!*s || *t) {
-        fprintf(stderr,"trn: wrong number of parameters for %s in [attribute] section.\n",
+        std::fprintf(stderr,"trn: wrong number of parameters for %s in [attribute] section.\n",
                 object);
         finalize(1);
     }
@@ -232,10 +233,10 @@ void color_rc_attribute(const char *object, char *value)
         s_objects[i].bg = nullptr;
     }
     else {
-        sprintf(g_buf, "bg %s", s);
+        std::sprintf(g_buf, "bg %s", s);
         s_objects[i].bg = tc_color_capability(g_buf);
         if (s_objects[i].bg == nullptr) {
-            fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
+            std::fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
                     g_buf, object);
             finalize(1);
         }
@@ -310,12 +311,12 @@ void color_string(int object, const char *str)
     }
     else {
         color_object(object, true);
-        fputs(str, stdout);
+        std::fputs(str, stdout);
         color_pop();
     }
     if (!len)
     {
-        putchar('\n');
+        std::putchar('\n');
     }
 }
 
@@ -342,8 +343,8 @@ static void output_color()
     if (s_use_colors) {
         if (s_objects[COLOR_DEFAULT].fg != prior.fg
          || s_objects[COLOR_DEFAULT].bg != prior.bg) {
-            fputs(prior.fg = s_objects[COLOR_DEFAULT].fg, stdout);
-            fputs(prior.bg = s_objects[COLOR_DEFAULT].bg, stdout);
+            std::fputs(prior.fg = s_objects[COLOR_DEFAULT].fg, stdout);
+            std::fputs(prior.bg = s_objects[COLOR_DEFAULT].bg, stdout);
         }
     }
     switch (prior.attr) {
@@ -361,11 +362,11 @@ static void output_color()
     if (s_use_colors) {
         if (op->fg != prior.fg)
         {
-            fputs(prior.fg = op->fg, stdout);
+            std::fputs(prior.fg = op->fg, stdout);
         }
         if (op->bg != prior.bg)
         {
-            fputs(prior.bg = op->bg, stdout);
+            std::fputs(prior.bg = op->bg, stdout);
         }
     }
 
