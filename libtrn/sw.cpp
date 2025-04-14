@@ -21,6 +21,9 @@
 #include "trn/trn.h"
 #include "trn/util.h"
 
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 static char **s_init_environment_strings{};
@@ -61,7 +64,7 @@ void sw_list(char *swlist)
     char *s = swlist;
     p = swlist;
     while (*s) {                        /* "String, or nothing" */
-        if (!inquote && isspace(*s)) {  /* word delimiter? */
+        if (!inquote && std::isspace(*s)) {  /* word delimiter? */
             for (;;) {
                 s = skip_space(s);
                 if (*s != '#')
@@ -98,7 +101,7 @@ void sw_list(char *swlist)
     *p++ = '\0';
     *p = '\0';                          /* put an extra null on the end */
     if (inquote) {
-        printf("Unmatched %c in switch\n",inquote);
+        std::printf("Unmatched %c in switch\n",inquote);
         termdown(1);
     }
     for (char *c = swlist; *c; /* p += strlen(p)+1 */ ) {
@@ -117,7 +120,7 @@ void decode_switch(const char *s)
     s = skip_space(s);          /* ignore leading spaces */
 #ifdef DEBUG
     if (debug) {
-        printf("Switch: %s\n",s);
+        std::printf("Switch: %s\n",s);
         termdown(1);
     }
 #endif
@@ -184,11 +187,11 @@ void decode_switch(const char *s)
             if (*s) {
                 if (upordown)
                 {
-                    debug |= atoi(s);
+                    debug |= std::atoi(s);
                 }
                 else
                 {
-                    debug &= ~atoi(s);
+                    debug &= ~std::atoi(s);
                 }
             }
             else {
@@ -202,7 +205,7 @@ void decode_switch(const char *s)
                 }
             }
 #else
-            printf("Trn was not compiled with -DDEBUG.\n");
+            std::printf("Trn was not compiled with -DDEBUG.\n");
             termdown(1);
 #endif
             break;
@@ -251,9 +254,9 @@ void decode_switch(const char *s)
                 /* Free old g_user_htype list */
                 while (g_user_htype_cnt > 1)
                 {
-                    free(g_user_htype[--g_user_htype_cnt].name);
+                    std::free(g_user_htype[--g_user_htype_cnt].name);
                 }
-                memset((char*)g_user_htypeix,0,26);
+                std::memset(g_user_htypeix,0,26);
             }
             /* FALL THROUGH */
         case 'H':
@@ -326,7 +329,7 @@ void decode_switch(const char *s)
             set_option(OI_NEWS_SEL_MODE, s);
             if (*++s) {
                 char tmpbuf2[4];
-                sprintf(tmpbuf2, "%s%c", isupper(*s)? "r " : "", *s);
+                std::sprintf(tmpbuf2, "%s%c", std::isupper(*s)? "r " : "", *s);
                 set_option(OI_NEWS_SEL_ORDER, tmpbuf2);
             }
             break;
@@ -372,7 +375,7 @@ void decode_switch(const char *s)
             {
                 s++;
             }
-            set_option(OI_INITIAL_GROUP_LIST, isdigit(*s)? s : YESorNO(false));
+            set_option(OI_INITIAL_GROUP_LIST, std::isdigit(*s)? s : YESorNO(false));
             break;
         case 'S':
             if (*++s == '=')
@@ -406,7 +409,7 @@ void decode_switch(const char *s)
             newline();
             if (g_mode == MM_INITIALIZING)
             {
-                exit(0);
+                std::exit(0);
             }
             break;
         case 'x':
@@ -414,7 +417,7 @@ void decode_switch(const char *s)
             {
                 s++;
             }
-            if (isdigit(*s)) {
+            if (std::isdigit(*s)) {
                 set_option(OI_ARTICLE_TREE_LINES, s);
                 s = skip_digits(s);
             }
@@ -429,7 +432,7 @@ void decode_switch(const char *s)
             {
                 s++;
             }
-            if (isdigit(*s)) {
+            if (std::isdigit(*s)) {
                 set_option(OI_USE_NEWS_SEL, s);
                 s = skip_digits(s);
             }
@@ -453,11 +456,11 @@ void decode_switch(const char *s)
         default:
             if (g_verbose)
             {
-                printf("\nIgnoring unrecognized switch: -%c\n", *s);
+                std::printf("\nIgnoring unrecognized switch: -%c\n", *s);
             }
             else
             {
-                printf("\nIgnoring -%c\n", *s);
+                std::printf("\nIgnoring -%c\n", *s);
             }
             termdown(2);
             break;
@@ -476,7 +479,7 @@ void save_init_environment(char *str)
     s_init_environment_strings[s_init_environment_cnt++] = str;
 }
 
-void write_init_environment(FILE *fp)
+void write_init_environment(std::FILE *fp)
 {
     for (int i = 0; i < s_init_environment_cnt; i++) {
         char *s = std::strchr(s_init_environment_strings[i], '=');
@@ -485,11 +488,11 @@ void write_init_environment(FILE *fp)
             continue;
         }
         *s = '\0';
-        fprintf(fp, "%s=%s\n", s_init_environment_strings[i],quote_string(s+1));
+        std::fprintf(fp, "%s=%s\n", s_init_environment_strings[i],quote_string(s+1));
         *s = '=';
     }
     s_init_environment_cnt = 0;
     s_init_environment_max = 0;
-    free((char*)s_init_environment_strings);
+    std::free(s_init_environment_strings);
     s_init_environment_strings = nullptr;
 }
