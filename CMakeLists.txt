@@ -5,6 +5,7 @@ set(TRN_PROJECT_NAME "trn" CACHE STRING "Project name for IDEs")
 project("${TRN_PROJECT_NAME}" VERSION 5.0.0 LANGUAGES C CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+include(misc_target)
 include(set_cxx_standard)
 include(target_folder)
 include(vs_startup_project)
@@ -55,41 +56,29 @@ if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
 
-add_custom_target(Miscellaneous)
-target_sources(Miscellaneous PRIVATE
-    ".clang-format"
-    ".editorconfig"
-    ".github/workflows/cmake.yml"
-    ".gitignore"
-    ".gitmodules"
+misc_target(FILES
     "CMakePresets.json"
     "HACKERSGUIDE.txt"
     "INIT.txt"
     "INSTALL.txt"
-    "LICENSE.txt"
     "README.txt"
     "ReadMe.md"
-    "vcpkg.json"
-    "cmake/FindBoostAsio.cmake"
-    "cmake/Findpdcurses.cmake"
-    "cmake/set_cxx_standard.cmake"
-    "cmake/target_folder.cmake"
-    "cmake/vs_startup_project.cmake"
 )
-source_group("CMake Scripts" FILES
+misc_group_sources("CMake Scripts" FILES
     "cmake/FindBoostAsio.cmake"
     "cmake/Findpdcurses.cmake"
+    "cmake/misc_target.cmake"
     "cmake/set_cxx_standard.cmake"
     "cmake/target_folder.cmake"
     "cmake/vs_startup_project.cmake")
-source_group("Editing" FILES
+misc_group_sources("Editing" FILES
     ".clang-format"
     ".editorconfig")
-source_group("Git" FILES
+misc_group_sources("Git" FILES
     ".gitignore"
     ".gitmodules")
-source_group("GitHub" FILES
+misc_group_sources("GitHub" FILES
     ".github/workflows/cmake.yml"
     "LICENSE.txt")
-source_group("VcPkg" FILES
+misc_group_sources("VcPkg" FILES
     "vcpkg.json")
