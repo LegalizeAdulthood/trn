@@ -44,8 +44,10 @@ static bool matchlist(const char *patlist, const char *s)
 
     bool result = false;
     init_compex(&ilcompex);
-    while(patlist && *patlist) {
-        if (*patlist == '!') {
+    while (patlist && *patlist)
+    {
+        if (*patlist == '!')
+        {
             patlist++;
             tmpresult = false;
         } else
@@ -67,7 +69,8 @@ static bool matchlist(const char *patlist, const char *s)
         /* compile regular expression */
         const char *err = ng_comp(&ilcompex, pattern.c_str(), true, true);
 
-        if (err != nullptr) {
+        if (err != nullptr)
+        {
             std::printf("\n%s\n", err);
             finalize(1);
         }
