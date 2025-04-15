@@ -153,15 +153,18 @@ do_article_result do_article()
     }
     g_term_scrolled = 0;
 
-    for (;;) {                  /* for each page */
+    for (;;) /* for each page */
+    {
         if (g_threaded_group && g_max_tree_lines)
         {
             init_tree(); /* init tree display */
         }
         TRN_ASSERT(g_art == g_openart);
-        if (g_do_fseek) {
+        if (g_do_fseek)
+        {
             parseheader(g_art);         /* make sure header is ours */
-            if (!*g_artbuf) {
+            if (!*g_artbuf)
+            {
                 mime_SetArticle();
                 g_artbuf_seek = g_htype[PAST_HEADER].minpos;
             }
@@ -174,12 +177,14 @@ do_article_result do_article()
             {
                 g_artpos = (ART_POS) 0;
             }
-            if (g_artpos < g_htype[PAST_HEADER].minpos) {
+            if (g_artpos < g_htype[PAST_HEADER].minpos)
+            {
                 g_in_header = SOME_LINE;
                 seekart(g_htype[PAST_HEADER].minpos);
                 seekartbuf(g_htype[PAST_HEADER].minpos);
             }
-            else {
+            else
+            {
                 seekart(g_artbuf_seek);
                 seekartbuf(g_artpos);
             }
@@ -193,24 +198,30 @@ do_article_result do_article()
             g_is_mime = false;
         }
 #endif
-        if (s_firstpage) {
-            if (g_firstline) {
+        if (s_firstpage)
+        {
+            if (g_firstline)
+            {
                 interp(g_art_line,sizeof g_art_line,g_firstline);
                 linenum += tree_puts(g_art_line,linenum+g_topline,0);
-            } else {
+            }
+            else
+            {
                 ART_NUM i;
 
                 int selected = (g_curr_artp->flags & AF_SEL);
                 int unseen = article_unread(g_art) ? 1 : 0;
                 std::sprintf(g_art_line,"%s%s #%ld",g_ngname.c_str(),g_moderated.c_str(),(long)g_art);
-                if (g_selected_only) {
+                if (g_selected_only)
+                {
                     i = g_selected_count - (unseen && selected);
                     std::sprintf(g_art_line+std::strlen(g_art_line)," (%ld + %ld more)",
                             (long)i,(long)g_ngptr->toread - g_selected_count
                                         - (!selected && unseen));
                 }
-                else if ((i = (ART_NUM)(g_ngptr->toread - unseen)) != 0
-                       || (!g_threaded_group && g_dmcount)) {
+                else if ((i = (ART_NUM) (g_ngptr->toread - unseen)) != 0 //
+                         || (!g_threaded_group && g_dmcount))
+                {
                     std::sprintf(g_art_line+std::strlen(g_art_line),
                             " (%ld more)",(long)i);
                 }
@@ -232,15 +243,18 @@ do_article_result do_article()
            : s_special? (linenum < s_slines)
            : (s_firstpage && !g_in_header)? (linenum < g_initlines)
            : (linenum < g_tc_LINES);
-             linenum++) {               /* for each line on page */
-            if (g_int_count) {          /* exit via interrupt? */
+             linenum++)
+        {                               /* for each line on page */
+            if (g_int_count)            /* exit via interrupt? */
+            {
                 newline();              /* get to left margin */
                 g_int_count = 0;        /* reset interrupt count */
                 set_mode(g_general_mode,oldmode);
                 s_special = false;
                 return DA_NORM;         /* skip out of loops */
             }
-            if (s_restart) {            /* did not finish last line? */
+            if (s_restart)              /* did not finish last line? */
+            {
                 bufptr = line_ptr(s_restart);/* then start again here */
                 s_restart = 0;          /* and reset the flag */
                 s_continuation = true;
@@ -253,7 +267,8 @@ do_article_result do_article()
             {
                 s_continuation = is_hor_space(*bufptr);
             }
-            else {
+            else
+            {
                 bufptr = readartbuf(g_auto_view_inline);
                 if (bufptr == nullptr)
                 {
@@ -275,16 +290,20 @@ do_article_result do_article()
             }
             s_alinebeg = g_artpos;      /* remember where we began */
             restart_color = false;
-            if (g_in_header) {
+            if (g_in_header)
+            {
                 hide_this_line = parseline(bufptr,g_do_hiding,hide_this_line);
-                if (!g_in_header) {
+                if (!g_in_header)
+                {
                     linenum += finish_tree(linenum+g_topline);
                     end_header();
                     seekart(g_artbuf_seek);
                 }
-            } else if (notesfiles && g_do_hiding && !s_continuation
-                    && *bufptr == '#' && isupper(bufptr[1])
-                    && bufptr[2] == ':' ) {
+            }
+            else if (notesfiles && g_do_hiding && !s_continuation //
+                     && *bufptr == '#' && std::isupper(bufptr[1]) //
+                     && bufptr[2] == ':')
+            {
                 bufptr = readartbuf(g_auto_view_inline);
                 if (bufptr == nullptr)
                 {
@@ -308,8 +327,10 @@ do_article_result do_article()
             {
                 hide_this_line = true;
             }
-            if (g_in_header && g_do_hiding && (g_htype[g_in_header].flags & HT_MAGIC)) {
-                switch (g_in_header) {
+            if (g_in_header && g_do_hiding && (g_htype[g_in_header].flags & HT_MAGIC))
+            {
+                switch (g_in_header)
+                {
                   case NEWSGROUPS_LINE:
                     s = std::strchr(bufptr, '\n');
                     if (s != nullptr)
@@ -324,7 +345,8 @@ do_article_result do_article()
                     }
                     break;
                   case EXPIR_LINE:
-                    if (!(g_htype[EXPIR_LINE].flags & HT_HIDE)) {
+                    if (!(g_htype[EXPIR_LINE].flags & HT_HIDE))
+                    {
                         s = bufptr + g_htype[EXPIR_LINE].length + 1;
                         hide_this_line = *s != ' ' || s[1] == '\n';
                     }
@@ -347,7 +369,8 @@ do_article_result do_article()
                     }
                     break;
                   case DATE_LINE:
-                    if (g_curr_artp->date != -1) {
+                    if (g_curr_artp->date != -1)
+                    {
                         std::strncpy(g_art_line,bufptr,6);
                         std::strftime(g_art_line+6, (sizeof g_art_line)-6,
                                  get_val_const("LOCALTIMEFMT", LOCALTIMEFMT),
@@ -357,14 +380,17 @@ do_article_result do_article()
                     break;
                 }
             }
-            if (g_in_header == SUBJ_LINE && g_do_hiding
-             && (g_htype[SUBJ_LINE].flags & HT_MAGIC)) { /* handle the subject */
+            if (g_in_header == SUBJ_LINE && g_do_hiding   //
+                && (g_htype[SUBJ_LINE].flags & HT_MAGIC)) /* handle the subject */
+            {
                 s = get_cached_line(g_artp, SUBJ_LINE, false);
-                if (s && s_continuation) {
+                if (s && s_continuation)
+                {
                     /* continuation lines were already output */
                     linenum--;
                 }
-                else {
+                else
+                {
                     int length = std::strlen(bufptr+1);
                     notesfiles = in_string(&bufptr[length-10]," - (nf", true)!=nullptr;
                     g_artline++;
@@ -380,24 +406,29 @@ do_article_result do_article()
                     linenum += tree_puts(bufptr,linenum+g_topline,1)-1;
                 }
             }
-            else if (hide_this_line && g_do_hiding) {   /* do not print line? */
+            else if (hide_this_line && g_do_hiding)     /* do not print line? */
+            {
                 linenum--;                        /* compensate for linenum++ */
                 if (!g_in_header)
                 {
                     hide_this_line = false;
                 }
             }
-            else if (g_in_header) {
+            else if (g_in_header)
+            {
                 g_artline++;
                 linenum += tree_puts(bufptr,linenum+g_topline,0)-1;
             }
-            else {                        /* just a normal line */
+            else                          /* just a normal line */
+            {
                 if (outputok && g_erase_each_line)
                 {
                     erase_line(false);
                 }
-                if (g_highlight == g_artline) { /* this line to be highlit? */
-                    if (g_marking == STANDOUT) {
+                if (g_highlight == g_artline)   /* this line to be highlit? */
+                {
+                    if (g_marking == STANDOUT)
+                    {
 #ifdef NOFIREWORKS
                         if (g_erase_screen)
                         {
@@ -406,7 +437,8 @@ do_article_result do_article()
 #endif
                         standout();
                     }
-                    else {
+                    else
+                    {
 #ifdef NOFIREWORKS
                         if (g_erase_screen)
                         {
@@ -426,15 +458,21 @@ do_article_result do_article()
                 {
                     linenum = 32700;
                 }
-                for (outpos = 0; outpos < g_tc_COLS; ) { /* while line has room */
-                    if (at_norm_char(bufptr)) {     /* normal char? */
-                        if (*bufptr == '_') {
-                            if (bufptr[1] == '\b') {
-                                if (outputok && !under_lining
-                                 && g_highlight != g_artline) {
+                for (outpos = 0; outpos < g_tc_COLS; )   /* while line has room */
+                {
+                    if (at_norm_char(bufptr))       /* normal char? */
+                    {
+                        if (*bufptr == '_')
+                        {
+                            if (bufptr[1] == '\b')
+                            {
+                                if (outputok && !under_lining && g_highlight != g_artline)
+                                {
                                     under_lining = true;
-                                    if (g_tc_UG) {
-                                        if (bufptr != g_buf && bufptr[-1]==' ') {
+                                    if (g_tc_UG)
+                                    {
+                                        if (bufptr != g_buf && bufptr[-1] == ' ')
+                                        {
                                             outpos--;
                                             backspace();
                                         }
@@ -444,11 +482,14 @@ do_article_result do_article()
                                 bufptr += 2;
                             }
                         }
-                        else {
-                            if (under_lining) {
+                        else
+                        {
+                            if (under_lining)
+                            {
                                 under_lining = false;
                                 un_underline();
-                                if (g_tc_UG) {
+                                if (g_tc_UG)
+                                {
                                     outpos++;
                                     if (*bufptr == ' ')
                                     {
@@ -458,8 +499,10 @@ do_article_result do_article()
                             }
                         }
                         /* handle rot-13 if wanted */
-                        if (g_rotate && !g_in_header && std::isalpha(*bufptr)) {
-                            if (outputok) {
+                        if (g_rotate && !g_in_header && std::isalpha(*bufptr))
+                        {
+                            if (outputok)
+                            {
                                 if ((*bufptr & 31) <= 13)
                                 {
                                     std::putchar(*bufptr + 13);
@@ -471,10 +514,12 @@ do_article_result do_article()
                             }
                             outpos++;
                         }
-                        else {
+                        else
+                        {
                             int i;
 #ifdef USE_UTF_HACK
-                            if (outpos + visual_width_at(bufptr) > g_tc_COLS) { /* will line overflow? */
+                            if (outpos + visual_width_at(bufptr) > g_tc_COLS)   /* will line overflow? */
+                            {
                                 newline();
                                 outpos = 0;
                                 linenum++;
@@ -484,7 +529,8 @@ do_article_result do_article()
 #else /* !USE_UTF_HACK */
                             i = putsubstchar(*bufptr, g_tc_COLS - outpos, outputok);
 #endif /* USE_UTF_HACK */
-                            if (i < 0) {
+                            if (i < 0)
+                            {
                                 outpos += -i - 1;
                                 break;
                             }
@@ -498,13 +544,16 @@ do_article_result do_article()
                     skip_put:
                         bufptr++;
                     }
-                    else if (at_nl(*bufptr) || !*bufptr) {    /* newline? */
-                        if (under_lining) {
+                    else if (at_nl(*bufptr) || !*bufptr)      /* newline? */
+                    {
+                        if (under_lining)
+                        {
                             under_lining = false;
                             un_underline();
                         }
 #ifdef DEBUG
-                        if (debug & DEB_INNERSRCH && outpos < g_tc_COLS - 6) {
+                        if (debug & DEB_INNERSRCH && outpos < g_tc_COLS - 6)
+                        {
                             standout();
                             std::printf("%4d",g_artline);
                             un_standout();
@@ -517,9 +566,11 @@ do_article_result do_article()
                         s_restart = 0;
                         outpos = 1000;  /* signal normal \n */
                     }
-                    else if (*bufptr == '\t') { /* tab? */
+                    else if (*bufptr == '\t')   /* tab? */
+                    {
                         int incpos =  8 - outpos % 8;
-                        if (outputok) {
+                        if (outputok)
+                        {
                             if (g_tc_GT)
                             {
                                 std::putchar(*bufptr);
@@ -535,7 +586,8 @@ do_article_result do_article()
                         bufptr++;
                         outpos += 8 - outpos % 8;
                     }
-                    else if (*bufptr == '\f') { /* form feed? */
+                    else if (*bufptr == '\f')   /* form feed? */
+                    {
                         if (outpos+2 > g_tc_COLS)
                         {
                             break;
@@ -552,23 +604,27 @@ do_article_result do_article()
                         bufptr++;
                         outpos += 2;
                     }
-                    else {                /* other control char */
-                        if (g_dont_filter_control) {
+                    else                  /* other control char */
+                    {
+                        if (g_dont_filter_control)
+                        {
                             if (outputok)
                             {
                                 std::putchar(*bufptr);
                             }
                             outpos++;
                         }
-                        else if (*bufptr != '\r' || bufptr[1] != '\n') {
+                        else if (*bufptr != '\r' || bufptr[1] != '\n')
+                        {
                             if (outpos+2 > g_tc_COLS)
                             {
                                 break;
                             }
-                            if (outputok) {
+                            if (outputok)
+                            {
                                 std::putchar('^');
-                                if (g_highlight == g_artline && *g_tc_UC
-                                 && g_marking == STANDOUT) {
+                                if (g_highlight == g_artline && *g_tc_UC && g_marking == STANDOUT)
+                                {
                                     backspace();
                                     underchar();
                                     std::putchar((*bufptr & 0x7F) ^ 0x40);
@@ -584,12 +640,13 @@ do_article_result do_article()
                         }
                         bufptr++;
                     }
-
                 } /* end of column loop */
 
-                if (outpos < 1000) {    /* did line overflow? */
+                if (outpos < 1000)      /* did line overflow? */
+                {
                     s_restart = line_offset(bufptr);/* restart here next time */
-                    if (outputok) {
+                    if (outputok)
+                    {
                         if (!g_tc_AM || g_tc_XN || outpos < g_tc_COLS)
                         {
                             newline();
@@ -607,9 +664,9 @@ do_article_result do_article()
 
                 /* handle normal end of output line formalities */
 
-                if (g_highlight == g_artline) {
-                                        /* were we highlighting line? */
-                    if (g_marking == STANDOUT)
+                if (g_highlight == g_artline)
+                {
+                    if (g_marking == STANDOUT)  /* were we highlighting line? */
                     {
                         un_standout();
                     }
@@ -650,7 +707,8 @@ do_article_result do_article()
         } /* end of line loop */
 
         g_innersearch = 0;
-        if (g_hide_everything) {
+        if (g_hide_everything)
+        {
             *g_buf = g_hide_everything;
             g_hide_everything = 0;
             goto fake_command;
@@ -672,14 +730,16 @@ do_article_result do_article()
             g_artsize = g_raw_artsize-g_artbuf_seek+g_artbuf_len+g_htype[PAST_HEADER].minpos;
         }
 recheck_pager:
-        if (g_do_hiding && g_artbuf_pos == g_artbuf_len) {
+        if (g_do_hiding && g_artbuf_pos == g_artbuf_len)
+        {
             /* If we're filtering we need to figure out if any
              * remaining text is going to vanish or not. */
             long seekpos = g_artbuf_pos + g_htype[PAST_HEADER].minpos;
             readartbuf(false);
             seekartbuf(seekpos);
         }
-        if (g_artpos == g_artsize) {/* did we just now reach EOF? */
+        if (g_artpos == g_artsize)  /* did we just now reach EOF? */
+        {
             color_default();
             set_mode(g_general_mode,oldmode);
             return DA_NORM;     /* avoid --MORE--(100%) */
@@ -688,7 +748,8 @@ recheck_pager:
 /* not done with this article, so pretend we are a pager */
 
 reask_pager:
-        if (g_term_line >= g_tc_LINES) {
+        if (g_term_line >= g_tc_LINES)
+        {
             g_term_scrolled += g_term_line - g_tc_LINES + 1;
             g_term_line = g_tc_LINES-1;
         }
@@ -713,13 +774,15 @@ reask_pager:
         g_term_col = outpos;
         eat_typeahead();
 #ifdef DEBUG
-        if (debug & DEB_CHECKPOINTING) {
+        if (debug & DEB_CHECKPOINTING)
+        {
             std::printf("(%d %d %d)",g_checkcount,linenum,g_artline);
             std::fflush(stdout);
         }
 #endif
-        if (g_checkcount >= g_docheckwhen && linenum == g_tc_LINES
-         && (g_artline > 40 || g_checkcount >= g_docheckwhen+10)) {
+        if (g_checkcount >= g_docheckwhen && linenum == g_tc_LINES &&
+            (g_artline > 40 || g_checkcount >= g_docheckwhen + 10))
+        {
                             /* while he is reading a whole page */
                             /* in an article he is interested in */
             g_checkcount = 0;
@@ -727,14 +790,16 @@ reask_pager:
             update_thread_kfile();
         }
         cache_until_key();
-        if (g_artsize < 0 && (g_raw_artsize = nntp_artsize()) >= 0) {
+        if (g_artsize < 0 && (g_raw_artsize = nntp_artsize()) >= 0)
+        {
             g_artsize = g_raw_artsize-g_artbuf_seek+g_artbuf_len+g_htype[PAST_HEADER].minpos;
             goto_xy(s_more_prompt_col,g_term_line);
             goto recheck_pager;
         }
         set_mode(g_general_mode,MM_PAGER);
         getcmd(g_buf);
-        if (errno) {
+        if (errno)
+        {
             if (g_tc_LINES < 100 && !g_int_count)
             {
                 *g_buf = '\f'; /* on CONT fake up refresh */
@@ -755,7 +820,8 @@ reask_pager:
         {
             clear_rest();
         }
-        switch (page_switch()) {
+        switch (page_switch())
+        {
           case PS_ASK:  /* reprompt "--MORE--..." */
             goto reask_pager;
           case PS_RAISE:        /* reparse on article level */
@@ -781,8 +847,10 @@ bool maybe_set_color(const char *cp, bool backsearch)
     {
         color_object(COLOR_MIMESEP, false);
     }
-    else if (ch == WRAPPED_NL) {
-        if (backsearch) {
+    else if (ch == WRAPPED_NL)
+    {
+        if (backsearch)
+        {
             while (cp > g_artbuf && cp[-1] != '\n')
             {
                 cp--;
@@ -811,15 +879,18 @@ page_switch_result page_switch()
 {
     char* s;
 
-    switch (*g_buf) {
+    switch (*g_buf)
+    {
       case '!':                 /* shell escape */
         escapade();
         return PS_ASK;
-      case Ctl('i'): {
+      case Ctl('i'):
+      {
         ART_LINE i = g_artline;
         g_gline = 3;
         s = line_ptr(s_alinebeg);
-        while (at_nl(*s) && i >= g_topline) {
+        while (at_nl(*s) && i >= g_topline)
+        {
             ART_POS pos = vrdary(--i);
             if (pos < 0)
             {
@@ -877,7 +948,8 @@ page_switch_result page_switch()
             g_gline = g_tc_LINES - 2;
         }
 #ifdef DEBUG
-        if (debug & DEB_INNERSRCH) {
+        if (debug & DEB_INNERSRCH)
+        {
             std::printf("Start here? %d  >=? %d\n",g_topline + g_gline + 1,g_artline);
             termdown(1);
         }
@@ -887,7 +959,8 @@ page_switch_result page_switch()
             start_where = g_artpos;
                         /* in case we had a line wrap */
         }
-        else {
+        else
+        {
             start_where = vrdary(g_topline+g_gline+1);
             if (start_where < 0)
             {
@@ -898,7 +971,8 @@ page_switch_result page_switch()
         seekartbuf(start_where);
         g_innerlight = 0;
         g_innersearch = 0; /* assume not found */
-        while ((s = readartbuf(false)) != nullptr) {
+        while ((s = readartbuf(false)) != nullptr)
+        {
             nlptr = std::strchr(s, '\n');
             if (nlptr != nullptr)
             {
@@ -916,25 +990,30 @@ page_switch_result page_switch()
             {
                 *nlptr = ch;
             }
-            if (success) {
+            if (success)
+            {
                 g_innersearch = g_artbuf_pos + g_htype[PAST_HEADER].minpos;
                 break;
             }
         }
-        if (!g_innersearch) {
+        if (!g_innersearch)
+        {
             seekartbuf(g_artpos);
             std::fputs("(Not found)", stdout);
             g_term_col = 11;
             return PS_ASK;
         }
 #ifdef DEBUG
-        if (debug & DEB_INNERSRCH) {
+        if (debug & DEB_INNERSRCH)
+        {
             std::printf("On page? %ld <=? %ld\n",(long)g_innersearch,(long)g_artpos);
             termdown(1);
         }
 #endif
-        if (g_innersearch <= g_artpos) {        /* already on page? */
-            if (g_innersearch < g_artpos) {
+        if (g_innersearch <= g_artpos)          /* already on page? */
+        {
+            if (g_innersearch < g_artpos)
+            {
                 g_artline = g_topline+1;
                 while (vrdary(g_artline) < g_innersearch)
                 {
@@ -943,7 +1022,8 @@ page_switch_result page_switch()
             }
             g_highlight = g_artline - 1;
 #ifdef DEBUG
-            if (debug & DEB_INNERSRCH) {
+            if (debug & DEB_INNERSRCH)
+            {
                 std::printf("@ %d\n",g_highlight);
                 termdown(1);
             }
@@ -970,7 +1050,8 @@ page_switch_result page_switch()
       case '\f':                /* refresh screen */
       refresh_screen:
 #ifdef DEBUG
-        if (debug & DEB_INNERSRCH) {
+        if (debug & DEB_INNERSRCH)
+        {
             std::printf("Topline = %d",g_topline);
             std::fgets(g_buf, sizeof g_buf, stdin);
         }
@@ -982,12 +1063,14 @@ page_switch_result page_switch()
         s_firstpage = (g_topline < 0);
         return PS_NORM;
       case Ctl('e'):
-        if (g_artsize < 0) {
+        if (g_artsize < 0)
+        {
             nntp_finishbody(FB_OUTPUT);
             g_raw_artsize = nntp_artsize();
             g_artsize = g_raw_artsize-g_artbuf_seek+g_artbuf_len+g_htype[PAST_HEADER].minpos;
         }
-        if (g_do_hiding) {
+        if (g_do_hiding)
+        {
             seekartbuf(g_artsize);
             seekartbuf(g_artpos);
         }
@@ -1002,7 +1085,8 @@ page_switch_result page_switch()
         {
             break;
         }
-        if (*g_tc_IL && *g_tc_HO) {
+        if (*g_tc_IL && *g_tc_HO)
+        {
             home_cursor();
             insert_line();
             carriage_return();
@@ -1011,7 +1095,8 @@ page_switch_result page_switch()
             {
                 pos = -pos;
             }
-            if (pos >= g_htype[PAST_HEADER].minpos) {
+            if (pos >= g_htype[PAST_HEADER].minpos)
+            {
                 seekartbuf(pos);
                 s = readartbuf(false);
                 if (s != nullptr)
@@ -1048,7 +1133,8 @@ page_switch_result page_switch()
         }
         /* FALL THROUGH */
       case 'b':
-      case Ctl('b'): {  /* back up a page */
+      case Ctl('b'):    /* back up a page */
+      {
         ART_LINE target;
 
         if (g_erase_each_line)
@@ -1065,7 +1151,8 @@ page_switch_result page_switch()
         {
             target = g_topline - 1;
         }
-        else {
+        else
+        {
             target = g_topline - (g_tc_LINES - 2);
             if (g_marking && (g_marking_areas & BACKPAGE_MARKING))
             {
@@ -1085,7 +1172,7 @@ page_switch_result page_switch()
         g_artline = std::max(g_artline, 0);
         s_firstpage = (g_topline < 0);
         return PS_NORM;
-    }
+      }
       case 'H':         /* help */
         help_page();
         return PS_ASK;
@@ -1098,7 +1185,8 @@ page_switch_result page_switch()
         {
             return PS_ASK;
         }
-        switch (g_buf[1] & 0177) {
+        switch (g_buf[1] & 0177)
+        {
           case 'C':
             if (!*(++g_charsubst))
             {
@@ -1166,8 +1254,9 @@ page_switch_result page_switch()
                case '\b': case '\177':
 leave_pager:
         g_reread = false;
-        if (std::strchr("nNpP\016\020",*g_buf) == nullptr
-         && std::strchr("wWsSe:!&|/?123456789.",*g_buf) != nullptr) {
+        if (std::strchr("nNpP\016\020", *g_buf) == nullptr //
+            && std::strchr("wWsSe:!&|/?123456789.", *g_buf) != nullptr)
+        {
             setdfltcmd();
             color_object(COLOR_CMD, true);
             interpsearch(g_cmd_buf, sizeof g_cmd_buf, g_mailcall, g_buf);
@@ -1191,7 +1280,8 @@ leave_pager:
         goto go_forward;
       case 'y':
       case ' ': /* continue current article */
-        if (g_erase_screen) {   /* -e? */
+        if (g_erase_screen)     /* -e? */
+        {
             if (g_erase_each_line)
             {
                 home_cursor();
@@ -1202,15 +1292,17 @@ leave_pager:
             }
             std::fflush(stdout);
         }
-        else {
+        else
+        {
             s_special = true;
             s_slines = g_tc_LINES;
         }
       go_forward:
           if (*line_ptr(s_alinebeg) != '\f' && (!g_pagestop || s_continuation || !execute(&g_page_compex, line_ptr(s_alinebeg))))
           {
-            if (!s_special
-             || (g_marking && (*g_buf!='d' || (g_marking_areas&HALFPAGE_MARKING)))) {
+              if (!s_special //
+                  || (g_marking && (*g_buf != 'd' || (g_marking_areas & HALFPAGE_MARKING))))
+              {
                 s_restart = s_alinebeg;
                 g_artline--;     /* restart this line */
                 g_artpos = s_alinebeg;
@@ -1226,11 +1318,11 @@ leave_pager:
                 {
                     g_highlight = g_artline;
                 }
-            }
-            else
-            {
-                s_slines--;
-            }
+              }
+              else
+              {
+                  s_slines--;
+              }
         }
         return PS_NORM;
       case 'i':
@@ -1255,7 +1347,8 @@ leave_pager:
 
 bool innermore()
 {
-    if (g_artpos < g_innersearch) {             /* not even on page yet? */
+    if (g_artpos < g_innersearch)               /* not even on page yet? */
+    {
 #ifdef DEBUG
         if (debug & DEB_INNERSRCH)
         {
@@ -1264,7 +1357,8 @@ bool innermore()
 #endif
         return true;
     }
-    if (g_artpos == g_innersearch) {    /* just got onto page? */
+    if (g_artpos == g_innersearch)      /* just got onto page? */
+    {
         s_isrchline = g_artline;        /* remember first line after */
         if (g_innerlight)
         {
@@ -1275,19 +1369,22 @@ bool innermore()
             g_highlight = g_artline - 1;
         }
 #ifdef DEBUG
-        if (debug & DEB_INNERSRCH) {
+        if (debug & DEB_INNERSRCH)
+        {
             std::printf("There it is %ld = %ld, %d @ %d\n",(long)g_artpos,
                 (long)g_innersearch,g_hide_everything,g_highlight);
             termdown(1);
         }
 #endif
-        if (g_hide_everything) {        /* forced refresh? */
+        if (g_hide_everything)          /* forced refresh? */
+        {
             g_topline = std::max(g_artline - g_gline - 1, -1);
             return false;               /* let refresh do it all */
         }
     }
 #ifdef DEBUG
-    if (debug & DEB_INNERSRCH) {
+    if (debug & DEB_INNERSRCH)
+    {
         std::printf("Not far enough? %d <? %d + %d\n",g_artline,s_isrchline,g_gline);
         termdown(1);
     }
@@ -1325,9 +1422,11 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         return;
     }
 
-    switch (btn_clk) {
+    switch (btn_clk)
+    {
       case 0:
-        if (ap) {
+        if (ap)
+        {
             if (ap == g_artp)
             {
                 return;
@@ -1347,7 +1446,8 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         }
         break;
       case 1:
-        if (ap) {
+        if (ap)
+        {
             select_subthread(ap, AUTO_KILL_NONE);
             s_special = true;
             s_slines = 1;
@@ -1363,7 +1463,8 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         }
         break;
       case 2:
-        if (ap) {
+        if (ap)
+        {
             kill_subthread(ap, AUTO_KILL_NONE);
             s_special = true;
             s_slines = 1;
