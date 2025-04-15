@@ -59,7 +59,8 @@ int putsubstchar(int c, int limit, bool outputok)
         i = Latin1toASCII(nc, oc, sizeof nc, t);
         if (i <= limit)
         {
-            if (outputok) {
+            if (outputok)
+            {
                 for (int t2 = 0; t2 < i; t2++)
                 {
                     std::putchar((char) nc[t2]);
@@ -72,8 +73,10 @@ int putsubstchar(int c, int limit, bool outputok)
         }
         break;
     case 't':
-        if (c == '\\' || c == '"') {
-            if (s_texchar && (c == '\\' || s_texchar != '\\')) {
+        if (c == '\\' || c == '"')
+        {
+            if (s_texchar && (c == '\\' || s_texchar != '\\'))
+            {
                 if (outputok)
                 {
                     std::putchar(s_texchar);
@@ -83,18 +86,21 @@ int putsubstchar(int c, int limit, bool outputok)
             s_texchar = (char)c;
             break;
         }
-        else if (s_texchar == '\\') {
+        else if (s_texchar == '\\')
+        {
             if (outputok)
             {
                 std::putchar('\\');
             }
-            if (limit == 1) {
+            if (limit == 1)
+            {
                 i = -2;
                 break;
             }
             i++;
         }
-        else if (s_texchar == '"') {
+        else if (s_texchar == '"')
+        {
             Uchar d;
             if (c < 32 || c > 128)
             {
@@ -109,12 +115,14 @@ int putsubstchar(int c, int limit, bool outputok)
             {
                 c = d;
             }
-            else {
+            else
+            {
                 if (outputok)
                 {
                     std::putchar('"');
                 }
-                if (limit == 1) {
+                if (limit == 1)
+                {
                     i = -2;
                     break;
                 }
@@ -151,7 +159,8 @@ const char *current_charsubst()
 #else /*!USE_UTF_HACK */
     static const char* show;
 
-    switch (*g_charsubst) {
+    switch (*g_charsubst)
+    {
       case 'm':
         show = g_verbose ? "[ISO->USmono] " : "[M] ";
         break;
@@ -263,11 +272,15 @@ static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t)
     }
     t--;        /* offset correction -ot */
     const char **tab = s_iso2asc[t] - 0xa0;
-    while (*iso) {
-        if (*iso > 0x9f) {
+    while (*iso)
+    {
+        if (*iso > 0x9f)
+        {
             const char *p = tab[*iso++];
-            if (p) {
-                while (*p) {
+            if (p)
+            {
+                while (*p)
+                {
                     *s++ = *p++;
                     if (!--limit)
                     {
@@ -277,12 +290,14 @@ static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t)
                 }
             }
         }
-        else {
+        else
+        {
             if (*iso < 0x80)
             {
                 *s++ = *iso++;
             }
-            else {
+            else
+            {
                 *s++ = ' ';
                 iso++;
             }
