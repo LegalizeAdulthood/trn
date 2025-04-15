@@ -86,7 +86,8 @@ int main(int argc, char *argv[])
 #ifdef LAX_INEWS
     env_init(headbuf, true);
 #else
-    if (!env_init(headbuf, false)) {
+    if (!env_init(headbuf, false))
+    {
         fprintf(stderr,"Can't get %s information. Please contact your system adminstrator.\n",
                 (!g_login_name.empty() || g_real_name.empty())? "user" : "host");
         exit(1);
@@ -94,7 +95,8 @@ int main(int argc, char *argv[])
 #endif
 
     argv++;
-    while (argc > 1) {
+    while (argc > 1)
+    {
         if (*argv[0] != '-')
         {
             break;
@@ -102,15 +104,18 @@ int main(int argc, char *argv[])
         argv++;
         argc--;
     }
-    if (argc > 1) {
-        if (std::freopen(*argv, "r", stdin) == nullptr) {
+    if (argc > 1)
+    {
+        if (std::freopen(*argv, "r", stdin) == nullptr)
+        {
             std::perror(*argv);
             std::exit(1);
         }
     }
 
     cp = get_val("NNTPSERVER");
-    if (!cp) {
+    if (!cp)
+    {
         cp = filexp(SERVER_NAME);
         if (FILE_REF(cp))
         {
@@ -122,7 +127,8 @@ int main(int argc, char *argv[])
     {
         g_server_name = savestr(cp);
         cp = std::strchr(g_server_name, ';');
-        if (cp) {
+        if (cp)
+        {
             *cp = '\0';
             g_nntplink.port_number = std::atoi(cp+1);
         }
@@ -133,7 +139,9 @@ int main(int argc, char *argv[])
         {
             g_nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
         }
-    } else {
+    }
+    else
+    {
         g_server_name = nullptr;
         line_end = "\n";
     }
@@ -145,8 +153,10 @@ int main(int argc, char *argv[])
     cp = headbuf;
     had_nl = true;
 
-    for (;;) {
-        if (headbuf_size < artpos + LBUFLEN + 1) {
+    for (;;)
+    {
+        if (headbuf_size < artpos + LBUFLEN + 1)
+        {
             len = cp - headbuf;
             headbuf_size += LBUFLEN * 4;
             headbuf = saferealloc(headbuf,headbuf_size);
@@ -158,14 +168,16 @@ int main(int argc, char *argv[])
             *cp++ = '.';
         }
 
-        if (i == '\n') {
+        if (i == '\n')
+        {
             if (!in_header)
             {
                 continue;
             }
             break;
         }
-        if (i == EOF || !std::fgets(cp+1, LBUFLEN-1, stdin)) {
+        if (i == EOF || !std::fgets(cp + 1, LBUFLEN - 1, stdin))
+        {
             /* Still in header after EOF?  Hmm... */
             std::fprintf(stderr,"Article was all header -- no body.\n");
             std::exit(1);
@@ -173,14 +185,16 @@ int main(int argc, char *argv[])
         *cp = (char)i;
         len = std::strlen(cp);
         found_nl = (len && cp[len-1] == '\n');
-        if (had_nl) {
+        if (had_nl)
+        {
             i = valid_header(cp);
             if (i == 0)
             {
                 std::fprintf(stderr,"Invalid header:\n%s",cp);
                 std::exit(1);
             }
-            if (i == 2) {
+            if (i == 2)
+            {
                 if (!in_header)
                 {
                     continue;
@@ -210,15 +224,18 @@ int main(int argc, char *argv[])
 
     /* Well, the header looks ok, so let's get on with it. */
 
-    if (g_server_name) {
-        if (!g_nntplink.connection) {
+    if (g_server_name)
+    {
+        if (!g_nntplink.connection)
+        {
             if (init_nntp() < 0 || !nntp_connect(g_server_name,false))
             {
                 std::exit(1);
             }
             new_connection = true;
         }
-        if (nntp_command("POST") <= 0 || nntp_check() <= 0) {
+        if (nntp_command("POST") <= 0 || nntp_check() <= 0)
+        {
             if (new_connection)
             {
                 nntp_close(true);
@@ -227,10 +244,12 @@ int main(int argc, char *argv[])
             std::exit(1);
         }
     }
-    else {
+    else
+    {
         std::sprintf(g_buf, "%s -h", EXTRAINEWS);
         inews_wr_fp = popen(g_buf,"w");
-        if (!inews_wr_fp) {
+        if (!inews_wr_fp)
+        {
             std::fprintf(stderr,"Unable to execute inews for local posting.\n");
             std::exit(1);
         }
@@ -242,14 +261,16 @@ int main(int argc, char *argv[])
         std::sprintf(g_buf,"Path: not-for-mail%s",line_end);
         inews_fputs(g_buf);
     }
-    if (!has_fromline) {
+    if (!has_fromline)
+    {
         char buff[80];
         std::strcpy(buff, g_real_name.c_str());
         std::sprintf(g_buf, "From: %s@%s (%s)%s", g_login_name.c_str(), g_p_host_name.c_str(), get_val_const("NAME", buff),
                 line_end);
         inews_fputs(g_buf);
     }
-    if (!std::getenv("NO_ORIGINATOR")) {
+    if (!std::getenv("NO_ORIGINATOR"))
+    {
         char buff[80];
         std::strcpy(buff, g_real_name.c_str());
         std::sprintf(g_buf, "Originator: %s@%s (%s)%s", g_login_name.c_str(), g_p_host_name.c_str(), get_val_const("NAME", buff),
@@ -260,7 +281,8 @@ int main(int argc, char *argv[])
     inews_fputs(g_buf);
 
     had_nl = true;
-    while (std::fgets(headbuf, headbuf_size, stdin)) {
+    while (std::fgets(headbuf, headbuf_size, stdin))
+    {
         /* Single . is eof, so put in extra one */
         if (g_server_name && had_nl && *headbuf == '.')
         {
@@ -268,13 +290,15 @@ int main(int argc, char *argv[])
         }
         /* check on newline */
         cp = headbuf + std::strlen(headbuf);
-        if (cp > headbuf && *--cp == '\n') {
+        if (cp > headbuf && *--cp == '\n')
+        {
             *cp = '\0';
             std::sprintf(g_buf, "%s%s", headbuf, line_end);
             inews_fputs(g_buf);
             had_nl = true;
         }
-        else {
+        else
+        {
             inews_fputs(headbuf);
             had_nl = false;
         }
@@ -295,11 +319,14 @@ int main(int argc, char *argv[])
     inews_fputs(".\r\n");
     inews_fflush();
 
-    if (nntp_gets(g_ser_line, sizeof g_ser_line) < 0
-     || *g_ser_line != NNTP_CLASS_OK) {
-        if (std::atoi(g_ser_line) == NNTP_POSTFAIL_VAL) {
+    if (nntp_gets(g_ser_line, sizeof g_ser_line) < 0 //
+        || *g_ser_line != NNTP_CLASS_OK)
+    {
+        if (std::atoi(g_ser_line) == NNTP_POSTFAIL_VAL)
+        {
             std::fprintf(stderr,"Article not accepted by server; not posted:\n");
-            for (cp = g_ser_line + 4; *cp && *cp != '\r'; cp++) {
+            for (cp = g_ser_line + 4; *cp && *cp != '\r'; cp++)
+            {
                 if (*cp == '\\')
                 {
                     std::fputc('\n',stderr);
@@ -335,7 +362,8 @@ int main(int argc, char *argv[])
 int valid_header(char *h)
 {
     /* Blank or tab in first position implies this is a continuation header */
-    if (is_hor_space(h[0])) {
+    if (is_hor_space(h[0]))
+    {
         h = skip_hor_space(h);
         return *h && *h != '\n'? 1 : 2;
     }
@@ -379,9 +407,11 @@ void append_signature()
 
     std::sprintf(g_buf, "-- \r\n");
     inews_fputs(g_buf);
-    while (std::fgets(g_ser_line, sizeof g_ser_line, fp)) {
+    while (std::fgets(g_ser_line, sizeof g_ser_line, fp))
+    {
         count++;
-        if (count > MAX_SIGNATURE) {
+        if (count > MAX_SIGNATURE)
+        {
             std::fprintf(stderr,"Warning: .signature files should be no longer than %d lines.\n",
                     MAX_SIGNATURE);
             std::fprintf(stderr,"(Only %d lines of your .signature were posted.)\n",
@@ -402,7 +432,8 @@ void append_signature()
 
 int nntp_handle_timeout()
 {
-    if (!new_connection) {
+    if (!new_connection)
+    {
         static bool handling_timeout = false;
         char last_command_save[NNTP_STRLEN];
 
