@@ -71,7 +71,8 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
     ART_NUM srchfirst;
 
     g_int_count = 0;
-    if (cmdchr == '/' || cmdchr == '?') {       /* normal search? */
+    if (cmdchr == '/' || cmdchr == '?')         /* normal search? */
+    {
         if (get_cmd && g_buf == patbuf)
         {
             if (!finish_command(false)) /* get rest of command */
@@ -80,24 +81,30 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
             }
         }
         compex = &s_art_compex;
-        if (patbuf[1]) {
+        if (patbuf[1])
+        {
             howmuch = ARTSCOPE_SUBJECT;
             srchhdr = SOME_LINE;
             doread = false;
         }
-        else {
+        else
+        {
             howmuch = g_art_howmuch;
             srchhdr = g_art_srchhdr;
             doread = g_art_doread;
         }
         char *s = cpytill(g_buf,patbuf+1,cmdchr);/* ok to cpy g_buf+1 to g_buf */
         pattern = g_buf;
-        if (*pattern) {
+        if (*pattern)
+        {
             g_lastpat = pattern;
         }
-        if (*s) {                       /* modifiers or commands? */
-            while (*++s) {
-                switch (*s) {
+        if (*s)                         /* modifiers or commands? */
+        {
+            while (*++s)
+            {
+                switch (*s)
+                {
                 case 'f':               /* scan the From line */
                     howmuch = ARTSCOPE_FROM;
                     break;
@@ -146,7 +153,8 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
         {
             s++;
         }
-        if (*s) {
+        if (*s)
+        {
             if (*s == 'm')
             {
                 doread = true;
@@ -180,42 +188,48 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
         compex = &s_sub_compex;
         pattern = patbuf+1;
         char *h;
-        if (howmuch == ARTSCOPE_SUBJECT) {
+        if (howmuch == ARTSCOPE_SUBJECT)
+        {
             std::strcpy(pattern,": *");
             h = pattern + std::strlen(pattern);
             interp(h,patbufsiz - (h-patbuf),"%\\s");  /* fetch current subject */
         }
-        else {
+        else
+        {
             h = pattern;
             /*$$ if using thread files, make this "%\\)f" */
             interp(pattern, patbufsiz - 1, "%\\>f");
         }
-        if (cmdchr == 'k' || cmdchr == 'K' || cmdchr == ','
-         || cmdchr == '+' || cmdchr == '.' || cmdchr == 's') {
+        if (cmdchr == 'k' || cmdchr == 'K' || cmdchr == ',' //
+            || cmdchr == '+' || cmdchr == '.' || cmdchr == 's')
+        {
             if (cmdchr != 'k')
             {
                 saltaway = saltmode;
             }
             ret = SRCH_DONE;
-            if (cmdchr == '+') {
+            if (cmdchr == '+')
+            {
                 cmdlst = savestr("+");
                 if (!ignorethru && g_kill_thru_kludge)
                 {
                     ignorethru = 1;
                 }
             }
-            else if (cmdchr == '.') {
+            else if (cmdchr == '.')
+            {
                 cmdlst = savestr(".");
                 if (!ignorethru && g_kill_thru_kludge)
                 {
                     ignorethru = 1;
                 }
             }
-            else if (cmdchr == 's') {
+            else if (cmdchr == 's')
+            {
                 cmdlst = savestr(patbuf);
-                /*ignorethru = 1;*/
             }
-            else {
+            else
+            {
                 if (cmdchr == ',')
                 {
                     cmdlst = savestr(",");
@@ -226,7 +240,8 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
                 }
                 mark_as_read(article_ptr(g_art));       /* this article needs to die */
             }
-            if (!*h) {
+            if (!*h)
+            {
                 if (g_verbose)
                 {
                     std::sprintf(g_msg, "Current article has no %s.", finding_str);
@@ -239,7 +254,8 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
                 ret = SRCH_ABORT;
                 goto exit;
             }
-            if (g_verbose) {
+            if (g_verbose)
+            {
                 if (cmdchr != '+' && cmdchr != '.')
                 {
                     std::printf("\nMarking %s \"%s\" as read.\n", finding_str, h);
@@ -267,7 +283,8 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
             *h = '\0';
         }
 #ifdef DEBUG
-        if (debug) {
+        if (debug)
+        {
             std::printf("\npattern = %s\n",pattern);
             termdown(2);
         }
@@ -287,8 +304,10 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
     {
         ret = SRCH_ERROR;               /* listing subjects is an error? */
     }
-    if (g_general_mode == GM_SELECTOR) {
-        if (!cmdlst) {
+    if (g_general_mode == GM_SELECTOR)
+    {
+        if (!cmdlst)
+        {
             if (g_sel_mode == SM_ARTICLE)/* set the selector's default command */
             {
                 cmdlst = savestr("+");
@@ -300,12 +319,14 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
         }
         ret = SRCH_DONE;
     }
-    if (saltaway) {
+    if (saltaway)
+    {
         char  saltbuf[LBUFLEN];
         char *s = saltbuf;
         const char *f = pattern;
         *s++ = '/';
-        while (*f) {
+        while (*f)
+        {
             if (*f == '/')
             {
                 *s++ = '\\';
@@ -325,9 +346,11 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
         {
             *s++ = (ignorethru == 1 ? 'I' : 'N');
         }
-        if (howmuch != ARTSCOPE_SUBJECT) {
+        if (howmuch != ARTSCOPE_SUBJECT)
+        {
             *s++ = g_scopestr[howmuch];
-            if (howmuch == ARTSCOPE_ONEHDR) {
+            if (howmuch == ARTSCOPE_ONEHDR)
+            {
                 safecpy(s,g_htype[srchhdr].name,LBUFLEN-(s-saltbuf));
                 s += g_htype[srchhdr].length;
                 if (s - saltbuf > LBUFLEN-2)
@@ -344,35 +367,40 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
         safecpy(s,cmdlst,LBUFLEN-(s-saltbuf));
         kf_append(saltbuf, saltaway == 2? KF_GLOBAL : KF_LOCAL);
     }
-    if (get_cmd) {
+    if (get_cmd)
+    {
         if (g_use_threads)
         {
             newline();
         }
-        else {
+        else
+        {
             std::fputs("\nSearching...\n",stdout);
             termdown(2);
         }
                                         /* give them something to read */
     }
-    if (ignorethru == 0 && g_kill_thru_kludge && cmdlst
-     && (*cmdlst == '+' || *cmdlst == '.'))
+    if (ignorethru == 0 && g_kill_thru_kludge && cmdlst //
+        && (*cmdlst == '+' || *cmdlst == '.'))
     {
         ignorethru = 1;
     }
     srchfirst = doread || g_sel_rereading? g_absfirst
                       : (g_mode != MM_PROCESSING_KILL || ignorethru > 0)? g_firstart : g_killfirst;
-    if (topstart || g_art == 0) {
+    if (topstart || g_art == 0)
+    {
         g_art = g_lastart+1;
         topstart = false;
     }
-    if (backward) {
+    if (backward)
+    {
         if (cmdlst && g_art <= g_lastart)
         {
             g_art++;                    /* include current article */
         }
     }
-    else {
+    else
+    {
         if (g_art > g_lastart)
         {
             g_art = srchfirst - 1;
@@ -382,7 +410,8 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
             g_art--;                    /* include current article */
         }
     }
-    if (g_srchahead > 0) {
+    if (g_srchahead > 0)
+    {
         if (!backward)
         {
             g_art = g_srchahead - 1;
@@ -391,32 +420,38 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
     }
     TRN_ASSERT(!cmdlst || *cmdlst);
     perform_status_init(g_ngptr->toread);
-    for (;;) {
+    for (;;)
+    {
         /* check if we're out of articles */
         if (backward? ((g_art = article_prev(g_art)) < srchfirst)
                     : ((g_art = article_next(g_art)) > g_lastart))
         {
             break;
         }
-        if (g_int_count) {
+        if (g_int_count)
+        {
             g_int_count = 0;
             ret = SRCH_INTR;
             break;
         }
         g_artp = article_ptr(g_art);
-        if (doread || (!(g_artp->flags & AF_UNREAD) ^ (!g_sel_rereading ? AF_SEL : AF_NONE))) {
-            if (wanted(compex,g_art,howmuch)) {
+        if (doread || (!(g_artp->flags & AF_UNREAD) ^ (!g_sel_rereading ? AF_SEL : AF_NONE)))
+        {
+            if (wanted(compex, g_art, howmuch))
+            {
                                     /* does the shoe fit? */
                 if (!cmdlst)
                 {
                     return SRCH_FOUND;
                 }
-                if (perform(cmdlst,output_level && g_page_line == 1) < 0) {
+                if (perform(cmdlst, output_level && g_page_line == 1) < 0)
+                {
                     std::free(cmdlst);
                     return SRCH_INTR;
                 }
             }
-            else if (output_level && !cmdlst && !(g_art%50)) {
+            else if (output_level && !cmdlst && !(g_art % 50))
+            {
                 std::printf("...%ld",(long)g_art);
                 std::fflush(stdout);
             }
@@ -446,7 +481,8 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
         return false;
     }
 
-    switch (scope) {
+    switch (scope)
+    {
       case ARTSCOPE_SUBJECT:
         std::strcpy(g_buf,"Subject: ");
         std::strncpy(g_buf+9,fetchsubj(artnum,false),256);
@@ -467,12 +503,14 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
                 prefetchlines(artnum,g_art_srchhdr,false));
         g_untrim_cache = false;
         break;
-      default: {
+      default:
+      {
         char*s;
         char ch;
         bool success = false;
         bool in_sig = false;
-        if (scope != ARTSCOPE_BODY && scope != ARTSCOPE_BODY_NOSIG) {
+        if (scope != ARTSCOPE_BODY && scope != ARTSCOPE_BODY_NOSIG)
+        {
             if (!parseheader(artnum))
             {
                 return false;
@@ -487,13 +525,15 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
                 return false;
             }
         }
-        if (g_parsed_art == artnum) {
+        if (g_parsed_art == artnum)
+        {
             if (!artopen(artnum,g_htype[PAST_HEADER].minpos))
             {
                 return false;
             }
         }
-        else {
+        else
+        {
             if (!artopen(artnum,(ART_POS)0))
             {
                 return false;
@@ -505,9 +545,11 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
         }
         /* loop through each line of the article */
         seekartbuf(g_htype[PAST_HEADER].minpos);
-        while ((s = readartbuf(false)) != nullptr) {
-            if (scope == ARTSCOPE_BODY_NOSIG && *s == '-' && s[1] == '-'
-             && (s[2] == '\n' || (s[2] == ' ' && s[3] == '\n'))) {
+        while ((s = readartbuf(false)) != nullptr)
+        {
+            if (scope == ARTSCOPE_BODY_NOSIG && *s == '-' && s[1] == '-' //
+                && (s[2] == '\n' || (s[2] == ' ' && s[3] == '\n')))
+            {
                 if (in_sig && success)
                 {
                     return true;
