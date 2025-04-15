@@ -90,8 +90,10 @@ bool find_new_groups()
         return false;
     }
 
-    for (NEWSRC const *rp = g_multirc->first; rp; rp = rp->next) {
-        if (all_bits(rp->flags, RF_ADD_NEWGROUPS | RF_ACTIVE)) {
+    for (NEWSRC const *rp = g_multirc->first; rp; rp = rp->next)
+    {
+        if (all_bits(rp->flags, RF_ADD_NEWGROUPS | RF_ACTIVE))
+        {
             if (rp->datasrc->flags & DF_REMOTE)
             {
                 new_nntp_groups(rp->datasrc);
@@ -111,7 +113,8 @@ bool find_new_groups()
 
 static void process_list(getnewsgroup_flags flag)
 {
-    if (flag == GNG_NONE) {
+    if (flag == GNG_NONE)
+    {
         std::sprintf(g_cmd_buf,
                 "\n"
                 "Unsubscribed but mentioned in your current newsrc%s:\n",
@@ -123,8 +126,10 @@ static void process_list(getnewsgroup_flags flag)
     {
         addgroup_selector(flag);
     }
-    while (node) {
-        if (flag == GNG_NONE) {
+    while (node)
+    {
+        if (flag == GNG_NONE)
+        {
             std::sprintf(g_cmd_buf, "%s\n", node->name);
             print_lines(g_cmd_buf, NOMARKING);
         }
@@ -156,13 +161,15 @@ static void new_nntp_groups(DATASRC *dp)
     {
         return;
     }
-    if (nntp_newgroups(dp->lastnewgrp) < 1) {
+    if (nntp_newgroups(dp->lastnewgrp) < 1)
+    {
         std::printf("Can't get new groups from server:\n%s\n", g_ser_line);
         return;
     }
     HASHTABLE *newngs = hashcreate(33, addng_cmp);
 
-    while (true) {
+    while (true)
+    {
         high = 0;
         low = 1;
         if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
@@ -189,14 +196,17 @@ static void new_nntp_groups(DATASRC *dp)
         {
             len = std::strlen(g_ser_line);
         }
-        if (dp->act_sf.fp) {
-            if (find_actgrp(dp, g_buf, g_ser_line, len, (ART_NUM)0)) {
+        if (dp->act_sf.fp)
+        {
+            if (find_actgrp(dp, g_buf, g_ser_line, len, (ART_NUM) 0))
+            {
                 if (!s)
                 {
                     s = g_buf + len + 1;
                 }
             }
-            else {
+            else
+            {
                 char ch = 'y';
                 if (s)
                 {
@@ -210,7 +220,8 @@ static void new_nntp_groups(DATASRC *dp)
                 (void) srcfile_append(&dp->act_sf, g_ser_line, len);
             }
         }
-        if (s) {
+        if (s)
+        {
             *s++ = '\0';
             while (std::isdigit(*s) || std::isspace(*s))
             {
@@ -228,7 +239,8 @@ static void new_nntp_groups(DATASRC *dp)
         }
         add_to_hash(newngs, g_ser_line, high-low, auto_subscribe(g_ser_line));
     }
-    if (foundSomething) {
+    if (foundSomething)
+    {
         hashwalk(newngs, build_addgroup_list, 0);
         srcfile_end_append(&dp->act_sf, dp->extra_name);
         dp->lastnewgrp = server_time;
@@ -248,7 +260,8 @@ static void new_local_groups(DATASRC *dp)
     }
 
     std::FILE *fp = std::fopen(dp->extra_name, "r");
-    if (fp == nullptr) {
+    if (fp == nullptr)
+    {
         std::printf(g_cantopen, dp->extra_name);
         termdown(1);
         return;
@@ -299,7 +312,8 @@ static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch
     data.dat_len = namelen + sizeof (ADDGROUP);
     ADDGROUP *node = (ADDGROUP*)safemalloc(data.dat_len);
     data.dat_ptr = (char *)node;
-    switch (ch) {
+    switch (ch)
+    {
       case ':':
         node->flags = AGF_SEL;
         break;
@@ -322,7 +336,8 @@ static void add_to_list(const char *name, int toread, char_int ch)
 {
     ADDGROUP* node = g_first_addgroup;
 
-    while (node) {
+    while (node)
+    {
         if (!std::strcmp(node->name,name))
         {
             return;
@@ -331,7 +346,8 @@ static void add_to_list(const char *name, int toread, char_int ch)
     }
 
     node = (ADDGROUP*)safemalloc(std::strlen(name) + sizeof (ADDGROUP));
-    switch (ch) {
+    switch (ch)
+    {
       case ':':
         node->flags = AGF_SEL;
         break;
@@ -368,7 +384,8 @@ bool scanactive(bool add_matching)
         print_lines("Completely unsubscribed newsgroups:\n", STANDOUT);
     }
 
-    for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp)) {
+    for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
+    {
         if (!(dp->flags & DF_OPEN))
         {
             continue;
@@ -378,12 +395,14 @@ bool scanactive(bool add_matching)
         {
             hashwalk(dp->act_sf.hp, list_groups, add_matching);
         }
-        else {
+        else
+        {
             if (g_maxngtodo != 1)
             {
                 std::strcpy(g_buf, "*");
             }
-            else {
+            else
+            {
                 if (g_ngtodo[0][0] == '^')
                 {
                     std::sprintf(g_buf, "%s*", &g_ngtodo[0][1]);
@@ -397,8 +416,10 @@ bool scanactive(bool add_matching)
                     g_buf[std::strlen(g_buf) - 2] = '\0';
                 }
             }
-            if (nntp_list("active", g_buf, std::strlen(g_buf)) == 1) {
-                while (!nntp_at_list_end(g_ser_line)) {
+            if (nntp_list("active", g_buf, std::strlen(g_buf)) == 1)
+            {
+                while (!nntp_at_list_end(g_ser_line))
+                {
                     scanline(g_ser_line,add_matching);
                     if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
                     {
@@ -458,11 +479,13 @@ static void scanline(char *actline, bool add_matching)
     {
         return;
     }
-    if (add_matching || np) {
+    if (add_matching || np)
+    {
         /* it's not in a newsrc */
         add_to_list(actline, high-low, 0);
     }
-    else {
+    else
+    {
         std::strcat(actline,"\n");
         print_lines(actline, NOMARKING);
     }
@@ -497,7 +520,8 @@ void sort_addgroups()
     ADDGROUP** lp;
     int (*sort_procedure)(const ADDGROUP**, const ADDGROUP**);
 
-    switch (g_sel_sort) {
+    switch (g_sel_sort)
+    {
       case SS_NATURAL:
       default:
         sort_procedure = agorder_number;
@@ -523,7 +547,8 @@ void sort_addgroups()
     g_first_addgroup = ag_list[0];
     ap->prev = nullptr;
     lp = ag_list;
-    for (int i = s_addgroup_cnt; --i; ++lp) {
+    for (int i = s_addgroup_cnt; --i; ++lp)
+    {
         lp[0]->next = lp[1];
         lp[1]->prev = lp[0];
     }
