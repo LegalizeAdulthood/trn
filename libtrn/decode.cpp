@@ -339,7 +339,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
         std::sprintf(g_buf, "%s%d", dir, part);
         fp = std::fopen(g_buf, "w");
         if (!fp) {
-            std::strcpy(g_msg,"Failed."); /*$$*/
+            std::strcpy(g_msg,"Failed.");
             return false;
         }
         while (readart(g_art_line,sizeof g_art_line)) {
@@ -439,7 +439,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
             std::fclose(fp);
         }
         if (state == DECODE_ERROR) {
-            std::strcpy(g_msg,"Failed."); /*$$*/
+            std::strcpy(g_msg,"Failed.");
             return false;
         }
     }

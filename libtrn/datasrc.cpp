@@ -247,7 +247,7 @@ static DATASRC *new_datasrc(const char *name, char **vals)
     }
     else if (!vals[DI_ACTIVE_FILE])
     {
-        return nullptr; /*$$*/
+        return nullptr;
     }
 
     dp->name = savestr(name);
@@ -527,7 +527,6 @@ void check_datasrcs()
                 std::time_t limit = ((dp->flags & DF_ACTIVE) ? 30 * 60 : 10 * 60);
                 if (now - dp->nntplink.last_command > limit) {
                     DATASRC* save_datasrc = g_datasrc;
-                    /*printf("\n*** Closing %s ***\n", dp->name); $$*/
                     set_datasrc(dp);
                     nntp_close(true);
                     dp->nntplink = g_nntplink;
@@ -695,8 +694,8 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
         /* hopefully this forces a reread */
         std::fseek(fp,2000000000L,1);
 
-        /*$$ if line has changed length or is not there, we should
-         * discard/close the active file, and re-open it. $$*/
+        /* if line has changed length or is not there, we should
+         * discard/close the active file, and re-open it. */
         if (std::fseek(fp, act_pos, 0) >= 0
          && std::fgets(outbuf, LBUFLEN, fp) != nullptr
          && !std::strncmp(outbuf, nam, len) && outbuf[len] == ' ') {

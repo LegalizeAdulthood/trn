@@ -64,7 +64,7 @@ bool ov_init()
         }
         if (nntp_check() < 0)
         {
-            return false;/*$$*/
+            return false;
         }
         if (std::atoi(g_ser_line) == NNTP_BAD_COMMAND_VAL)
         {
@@ -96,7 +96,7 @@ bool ov_init()
             if (!g_datasrc->over_dir) {
                 if (nntp_gets(g_buf, sizeof g_buf) == NGSR_ERROR)
                 {
-                    break;/*$$*/
+                    break;
                 }
                 if (nntp_at_list_end(g_buf))
                 {

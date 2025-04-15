@@ -419,7 +419,7 @@ bool parseheader(ART_NUM artnum)
             found_nl = nntp_gets(bp,LBUFLEN) == NGSR_FULL_LINE;
             if (found_nl < 0)
             {
-                std::strcpy(bp, "."); /*$$*/
+                std::strcpy(bp, ".");
             }
             if (had_nl && *bp == '.') {
                 if (!bp[1]) {
@@ -607,7 +607,7 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
         }
         if (status <= 0)
         {
-            finalize(1); /*$$*/
+            finalize(1);
         }
         if (nntp_check() > 0) {
             char* last_buf = g_ser_line;

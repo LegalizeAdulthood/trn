@@ -295,8 +295,8 @@ void term_set(char *tcbuf)
     s_tc_KE = "";
     g_tc_CM = "\033[%d;%dH";
     g_tc_HO = "\033[H";
-    g_tc_IL = ""; /*$$*/
-    g_tc_CD = ""; /*$$*/
+    g_tc_IL = "";
+    g_tc_CD = "";
     g_tc_SO = "\033[7m";
     g_tc_SE = "\033[m";
     g_tc_US = "\033[7m";
@@ -1092,7 +1092,6 @@ static bool s_ignore_EINTR = false;
 #ifdef SIGALRM
 Signal_t alarm_catcher(int signo)
 {
-    /*std::printf("\n*** In alarm catcher **\n"); $$*/
     s_ignore_EINTR = true;
     check_datasrcs();
     sigset(SIGALRM,alarm_catcher);

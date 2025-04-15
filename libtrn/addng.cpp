@@ -154,9 +154,9 @@ static void new_nntp_groups(DATASRC *dp)
     std::time_t const server_time = nntp_time();
     if (server_time == -2)
     {
-        return; /*$$*/
+        return;
     }
-    if (nntp_newgroups(dp->lastnewgrp) < 1) { /*$$*/
+    if (nntp_newgroups(dp->lastnewgrp) < 1) {
         std::printf("Can't get new groups from server:\n%s\n", g_ser_line);
         return;
     }
@@ -402,7 +402,7 @@ bool scanactive(bool add_matching)
                     scanline(g_ser_line,add_matching);
                     if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
                     {
-                        break; /*$$*/
+                        break;
                     }
                 }
             }
@@ -411,7 +411,7 @@ bool scanactive(bool add_matching)
 
     process_list(add_matching ? GNG_RELOC : GNG_NONE);
 
-    if (g_in_ng) /*$$*/
+    if (g_in_ng)
     {
         set_datasrc(g_ngptr->rc->datasrc);
     }

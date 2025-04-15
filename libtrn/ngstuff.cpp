@@ -103,7 +103,7 @@ int switcheroo()
             return 0;
         }
         s_option_sel_ilock = true;
-        if (g_general_mode != GM_SELECTOR || g_sel_mode != SM_OPTIONS) /*$$*/
+        if (g_general_mode != GM_SELECTOR || g_sel_mode != SM_OPTIONS)
         {
             option_selector();
         }
@@ -379,7 +379,7 @@ int thread_perform()
         followup();
         g_forcegrow = true;
         g_art = oldart;
-        g_page_line++; /*$$*/
+        g_page_line++;
     } else {
         /* The rest loop through the articles. */
         /* Use the explicit article-order if it exists */
@@ -826,7 +826,7 @@ int addgrp_sel_perform()
         bits = g_sel_mask;
     }
     if (g_buf[len] == '.') {
-        if (g_first_addgroup) /*$$*/
+        if (g_first_addgroup)
         {
             return -1;
         }
@@ -839,7 +839,6 @@ int addgrp_sel_perform()
     len = std::strlen(cmdstr);
 
     if (one_group) {
-        /*addgrp_perform(gp, cmdstr, 0);$$*/
         goto break_out;
     }
 

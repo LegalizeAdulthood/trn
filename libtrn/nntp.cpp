@@ -35,7 +35,7 @@ static long s_rawbytes{-1}; /* bytes remaining to be transferred */
 int nntp_list(const char *type, const char *arg, int len)
 {
     int ret;
-#ifdef DEBUG /*$$*/
+#ifdef DEBUG
     if (len && (debug & 1) && string_case_equal(type, "active"))
     {
         return -1;
@@ -229,12 +229,11 @@ void nntp_body(ART_NUM artnum)
     if (!(g_artfp = std::fopen(artname, "w+"))) {
         std::fprintf(stderr, "\nUnable to write temporary file: '%s'.\n",
                 artname);
-        finalize(1); /*$$*/
+        finalize(1);
     }
 #ifndef MSDOS
     chmod(artname, 0600);
 #endif
-    /*artio_setbuf(g_artfp);$$*/
     if (g_parsed_art == artnum)
     {
         std::sprintf(g_ser_line, "BODY %ld", (long) artnum);
@@ -245,12 +244,12 @@ void nntp_body(ART_NUM artnum)
     }
     if (nntp_command(g_ser_line) <= 0)
     {
-        finalize(1); /*$$*/
+        finalize(1);
     }
     switch (nntp_check()) {
       case -2:
       case -1:
-        finalize(1); /*$$*/
+        finalize(1);
       case 0:
         std::fclose(g_artfp);
         g_artfp = nullptr;
@@ -292,7 +291,7 @@ static int nntp_copybody(char *s, int limit, ART_POS pos)
         const int result = nntp_gets(s, limit);
         if (result == NGSR_ERROR)
         {
-            std::strcpy(s, "."); /*$$*/
+            std::strcpy(s, ".");
         }
         if (had_nl) {
             if (nntp_at_list_end(s)) {
@@ -325,7 +324,6 @@ int nntp_finishbody(finishbody_mode bmode)
         return 0;
     }
     if (bmode == FB_DISCARD) {
-        /*printf("Discarding the rest of the article...\n"); $$*/
 #if 0
         /* Implement this if flushing the data becomes possible */
         nntp_artname(g_openart, -1); /* Or something... */
