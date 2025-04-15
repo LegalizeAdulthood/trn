@@ -77,7 +77,8 @@ static std::time_t s_cached_time{};
 
 void build_cache()
 {
-    if (s_cached_ng == g_ngptr && std::time(nullptr) < s_cached_time + 6*60*60L) {
+    if (s_cached_ng == g_ngptr && std::time(nullptr) < s_cached_time + 6 * 60 * 60L)
+    {
         s_cached_time = std::time(nullptr);
         if (g_sel_mode == SM_ARTICLE)
         {
@@ -125,16 +126,19 @@ void close_cache()
 
     nntp_artname(0, false);             /* clear the tmpfile cache */
 
-    if (s_subj_hash) {
+    if (s_subj_hash)
+    {
         hashdestroy(s_subj_hash);
         s_subj_hash = nullptr;
     }
-    if (s_shortsubj_hash) {
+    if (s_shortsubj_hash)
+    {
         hashdestroy(s_shortsubj_hash);
         s_shortsubj_hash = nullptr;
     }
     /* Free all the subjects. */
-    for (SUBJECT *sp = g_first_subject; sp; sp = next) {
+    for (SUBJECT *sp = g_first_subject; sp; sp = next)
+    {
         next = sp->next;
         std::free(sp->str);
         std::free(sp);
@@ -144,14 +148,16 @@ void close_cache()
     g_subject_count = 0;                /* just to be sure */
     g_parsed_art = 0;
 
-    if (g_artptr_list) {
+    if (g_artptr_list)
+    {
         std::free(g_artptr_list);
         g_artptr_list = nullptr;
     }
     g_artptr = nullptr;
     thread_close();
 
-    if (g_article_list) {
+    if (g_article_list)
+    {
         walk_list(g_article_list, clear_artitem, 0);
         delete_list(g_article_list);
         g_article_list = nullptr;
@@ -188,7 +194,8 @@ void cache_article(ARTICLE *ap)
     {
         ap->subj->articles = ap;
     }
-    else {
+    else
+    {
         while ((next = (ap2 = next)->subj_next) && next->date <= ap->date)
         {
         }
@@ -197,13 +204,16 @@ void cache_article(ARTICLE *ap)
     ap->subj_next = next;
     ap->flags |= AF_CACHED;
 
-    if (!!(ap->flags & AF_UNREAD) ^ g_sel_rereading) {
+    if (!!(ap->flags & AF_UNREAD) ^ g_sel_rereading)
+    {
         if (ap->subj->flags & g_sel_mask)
         {
             select_article(ap, AUTO_KILL_NONE);
         }
-        else {
-            if (ap->subj->flags & SF_WASSELECTED) {
+        else
+        {
+            if (ap->subj->flags & SF_WASSELECTED)
+            {
 #if 0
                 if (g_selected_only)
                 {
@@ -228,26 +238,32 @@ void cache_article(ARTICLE *ap)
 void check_for_near_subj(ARTICLE *ap)
 {
     SUBJECT* sp;
-    if (!s_shortsubj_hash) {
+    if (!s_shortsubj_hash)
+    {
         s_shortsubj_hash = hashcreate(401, subject_cmp);    /*TODO: pick a better size */
         sp = g_first_subject;
     }
-    else {
+    else
+    {
         sp = ap->subj;
         if (sp->next)
         {
             sp = nullptr;
         }
     }
-    while (sp) {
-        if ((int)std::strlen(sp->str+4) >= g_join_subject_len && sp->thread) {
+    while (sp)
+    {
+        if ((int) std::strlen(sp->str + 4) >= g_join_subject_len && sp->thread)
+        {
             SUBJECT* sp2;
             HASHDATUM data = hashfetch(s_shortsubj_hash, sp->str + 4, g_join_subject_len);
-            if (!(sp2 = (SUBJECT*)data.dat_ptr)) {
+            if (!(sp2 = (SUBJECT *) data.dat_ptr))
+            {
                 data.dat_ptr = (char*)sp;
                 hashstorelast(data);
             }
-            else if (sp->thread != sp2->thread) {
+            else if (sp->thread != sp2->thread)
+            {
                 merge_threads(sp2, sp);
             }
         }
@@ -257,8 +273,10 @@ void check_for_near_subj(ARTICLE *ap)
 
 void change_join_subject_len(int len)
 {
-    if (g_join_subject_len != len) {
-        if (s_shortsubj_hash) {
+    if (g_join_subject_len != len)
+    {
+        if (s_shortsubj_hash)
+        {
             hashdestroy(s_shortsubj_hash);
             s_shortsubj_hash = nullptr;
         }
@@ -272,19 +290,23 @@ void change_join_subject_len(int len)
 
 void check_poster(ARTICLE *ap)
 {
-    if (g_auto_select_postings && (ap->flags & AF_EXISTS) && ap->from) {
+    if (g_auto_select_postings && (ap->flags & AF_EXISTS) && ap->from)
+    {
         {
             char* s = g_cmd_buf;
             char* u;
             char* h;
             std::strcpy(s,ap->from);
-            if ((h=std::strchr(s,'<')) != nullptr) { /* grab the good part */
+            if ((h=std::strchr(s,'<')) != nullptr)   /* grab the good part */
+            {
                 s = h+1;
                 if ((h=std::strchr(s,'>')) != nullptr)
                 {
                     *h = '\0';
                 }
-            } else if ((h=std::strchr(s,'(')) != nullptr) {
+            }
+            else if ((h = std::strchr(s, '(')) != nullptr)
+            {
                 while (h-- != s && *h == ' ')
                 {
                 }
@@ -294,17 +316,23 @@ void check_poster(ARTICLE *ap)
             {
                 *h++ = '\0';
                 u = s;
-            } else if ((u = std::strrchr(s,'!')) != nullptr) {
+            }
+            else if ((u = std::strrchr(s, '!')) != nullptr)
+            {
                 *u++ = '\0';
                 h = s;
-            } else
+            }
+            else
             {
                 h = s;
                 u = s;
             }
-            if (!std::strcmp(u,g_login_name.c_str())) {
-                if (in_string(h,g_hostname, false)) {
-                    switch (g_auto_select_postings) {
+            if (!std::strcmp(u, g_login_name.c_str()))
+            {
+                if (in_string(h, g_hostname, false))
+                {
+                    switch (g_auto_select_postings)
+                    {
                       case '.':
                         select_subthread(ap,AUTO_SEL_FOL);
                         break;
@@ -322,7 +350,9 @@ void check_poster(ARTICLE *ap)
                         }
                         break;
                     }
-                } else {
+                }
+                else
+                {
 #ifdef REPLYTO_POSTER_CHECKING
                     char* reply_buf = fetchlines(article_num(ap),REPLY_LINE);
                     if (in_string(reply_buf, g_login_name.c_str(), true))
@@ -343,15 +373,19 @@ void check_poster(ARTICLE *ap)
 */
 void uncache_article(ARTICLE *ap, bool remove_empties)
 {
-    if (ap->subj) {
-        if (all_bits(ap->flags, AF_CACHED | AF_EXISTS)) {
+    if (ap->subj)
+    {
+        if (all_bits(ap->flags, AF_CACHED | AF_EXISTS))
+        {
             ARTICLE *next = ap->subj->articles;
             if (next == ap)
             {
                 ap->subj->articles = ap->subj_next;
             }
-            else {
-                while (next) {
+            else
+            {
+                while (next)
+                {
                     ARTICLE *ap2 = next->subj_next;
                     if (ap2 == ap)
                     {
@@ -362,7 +396,8 @@ void uncache_article(ARTICLE *ap, bool remove_empties)
                 }
             }
         }
-        if (remove_empties && !ap->subj->articles) {
+        if (remove_empties && !ap->subj->articles)
+        {
             SUBJECT* sp = ap->subj;
             if (sp == g_first_subject)
             {
@@ -429,7 +464,8 @@ char *get_cached_line(ARTICLE *ap, header_line_type which_line, bool no_truncs)
 {
     char* s;
 
-    switch (which_line) {
+    switch (which_line)
+    {
       case SUBJ_LINE:
         if (!ap->subj || (no_truncs && (ap->subj->flags & SF_SUBJTRUNCED)))
         {
@@ -449,13 +485,15 @@ char *get_cached_line(ARTICLE *ap, header_line_type which_line, bool no_truncs)
       case MSGID_LINE:
         s = ap->msgid;
         break;
-      case LINES_LINE: {
+      case LINES_LINE:
+      {
         static char linesbuf[32];
         std::sprintf(linesbuf, "%ld", ap->lines);
         s = linesbuf;
         break;
       }
-      case BYTES_LINE: {
+      case BYTES_LINE:
+      {
         static char bytesbuf[32];
         std::sprintf(bytesbuf, "%ld", ap->bytes);
         s = bytesbuf;
@@ -493,28 +531,34 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
     {
         ap->flags |= AF_HAS_RE;
     }
-    if (subj_start != newsubj + 4) {
+    if (subj_start != newsubj + 4)
+    {
         safecpy(newsubj + 4, subj_start, size);
         if ((size -= subj_start - newsubj - 4) < 0)
         {
             size = 0;
         }
     }
-    if (ap->subj && !std::strncmp(ap->subj->str+4, newsubj+4, size)) {
+    if (ap->subj && !std::strncmp(ap->subj->str + 4, newsubj + 4, size))
+    {
         std::free(newsubj);
         return;
     }
 
-    if (ap->subj) {
+    if (ap->subj)
+    {
         /* This only happens when we freshen truncated subjects */
         hashdelete(s_subj_hash, ap->subj->str+4, std::strlen(ap->subj->str+4));
         std::free(ap->subj->str);
         ap->subj->str = newsubj;
         data.dat_ptr = (char*)ap->subj;
         hashstore(s_subj_hash, newsubj + 4, size, data);
-    } else {
+    }
+    else
+    {
         data = hashfetch(s_subj_hash, newsubj + 4, size);
-        if (!(sp = (SUBJECT*)data.dat_ptr)) {
+        if (!(sp = (SUBJECT *) data.dat_ptr))
+        {
             sp = (SUBJECT*)safemalloc(sizeof (SUBJECT));
             std::memset((char*)sp,0,sizeof (SUBJECT));
             g_subject_count++;
@@ -534,7 +578,8 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
 
             data.dat_ptr = (char*)sp;
             hashstorelast(data);
-        } else
+        }
+        else
         {
             std::free(newsubj);
         }
@@ -548,13 +593,16 @@ int decode_header(char *to, char *from, int size)
     bool pass2needed = false;
 
     /* Pass 1 to decode coded bytes (which might be character fragments - so 1 pass is wrong) */
-    for (int i = size; *from && i--; ) {
-        if (*from == '=' && from[1] == '?') {
+    for (int i = size; *from && i--;)
+    {
+        if (*from == '=' && from[1] == '?')
+        {
             char* q = std::strchr(from+2,'?');
             char ch = (q && q[2] == '?')? q[1] : 0;
             char* e;
 
-            if (ch == 'q' || ch == 'Q' || ch == 'b' || ch == 'B') {
+            if (ch == 'q' || ch == 'Q' || ch == 'b' || ch == 'B')
+            {
                 const char* old_ics = input_charset_name();
                 const char* old_ocs = output_charset_name();
 #ifdef USE_UTF_HACK
@@ -563,10 +611,12 @@ int decode_header(char *to, char *from, int size)
                 *q = '?';
 #endif
                 e = q+2;
-                do {
-                    e = std::strchr(e+1, '?');
+                do
+                {
+                    e = std::strchr(e + 1, '?');
                 } while (e && e[1] != '=');
-                if (e) {
+                if (e)
+                {
                     int len = e - from + 2;
 #ifdef USE_UTF_HACK
                     char *d;
@@ -586,8 +636,10 @@ int decode_header(char *to, char *from, int size)
                     }
 #ifdef USE_UTF_HACK
                     d = create_utf8_copy(to);
-                    if (d) {
-                        for (len = 0; d[len]; ) {
+                    if (d)
+                    {
+                        for (len = 0; d[len];)
+                        {
                             to[len] = d[len];
                             len++;
                         }
@@ -645,10 +697,13 @@ void dectrl(char *str)
         return;
     }
 
-    for ( ; *str;) {
+    for (; *str;)
+    {
         int w = byte_length_at(str);
-        if (at_grey_space(str)) {
-            for (int i = 0; i < w; i += 1) {
+        if (at_grey_space(str))
+        {
+            for (int i = 0; i < w; i += 1)
+            {
                 str[i] = ' ';
             }
         }
@@ -661,7 +716,8 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
 {
     char* cp;
     /* SUBJ_LINE is handled specially above */
-    switch (which_line) {
+    switch (which_line)
+    {
       case FROM_LINE:
         if (ap->from)
         {
@@ -677,7 +733,8 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
         }
         /* Exclude an xref for just this group or "(none)". */
         cp = std::strchr(s, ':');
-        if (!cp || !std::strchr(cp+1, ':')) {
+        if (!cp || !std::strchr(cp + 1, ':'))
+        {
             std::free(s);
             s = "";
         }
@@ -715,14 +772,16 @@ void look_ahead()
     char* s;
 
 #ifdef DEBUG
-    if (debug && g_srchahead) {
+    if (debug && g_srchahead)
+    {
         std::printf("(%ld)",(long)g_srchahead);
         std::fflush(stdout);
     }
 #endif
 #endif
 
-    if (g_threaded_group) {
+    if (g_threaded_group)
+    {
         g_artp = g_curr_artp;
         inc_art(g_selected_only,false);
         if (g_artp)
@@ -732,7 +791,8 @@ void look_ahead()
     }
     else
 #ifdef ARTSEARCH
-    if (g_srchahead && g_srchahead < g_art) {   /* in ^N mode? */
+    if (g_srchahead && g_srchahead < g_art)     /* in ^N mode? */
+    {
         char* pattern;
 
         pattern = g_buf+1;
@@ -750,7 +810,8 @@ void look_ahead()
             *h = '\0';
         }
 #ifdef DEBUG
-        if (debug & DEB_SEARCH_AHEAD) {
+        if (debug & DEB_SEARCH_AHEAD)
+        {
             std::fputs("(hit CR)",stdout);
             std::fflush(stdout);
             std::fgets(g_buf+128, sizeof g_buf-128, stdin);
@@ -766,11 +827,14 @@ void look_ahead()
             termdown(2);
             g_srchahead = 0;
         }
-        if (g_srchahead) {
+        if (g_srchahead)
+        {
             g_srchahead = g_art;
-            for (;;) {
+            for (;;)
+            {
                 g_srchahead++;  /* go forward one article */
-                if (g_srchahead > g_lastart) { /* out of articles? */
+                if (g_srchahead > g_lastart)   /* out of articles? */
+                {
 #ifdef DEBUG
                     if (debug)
                     {
@@ -779,8 +843,9 @@ void look_ahead()
 #endif
                     break;
                 }
-                if (!was_read(g_srchahead) &&
-                    wanted(&s_srchcompex,g_srchahead,0)) {
+                if (!was_read(g_srchahead) && //
+                    wanted(&s_srchcompex, g_srchahead, 0))
+                {
                                     /* does the shoe fit? */
 #ifdef DEBUG
                     if (debug)
@@ -833,10 +898,14 @@ void cache_until_key()
     g_sentinel_artp = g_curr_artp;
 
     /* Prioritize our caching based on what mode we're in */
-    if (g_general_mode == GM_SELECTOR) {
-        if (cache_subjects()) {
-            if (cache_xrefs()) {
-                if (chase_xrefs(true)) {
+    if (g_general_mode == GM_SELECTOR)
+    {
+        if (cache_subjects())
+        {
+            if (cache_xrefs())
+            {
+                if (chase_xrefs(true))
+                {
                     if (g_threaded_group)
                     {
                         cache_all_arts();
@@ -848,10 +917,15 @@ void cache_until_key()
                 }
             }
         }
-    } else {
-        if (!g_threaded_group || cache_all_arts()) {
-            if (cache_subjects()) {
-                if (cache_unread_arts()) {
+    }
+    else
+    {
+        if (!g_threaded_group || cache_all_arts())
+        {
+            if (cache_subjects())
+            {
+                if (cache_unread_arts())
+                {
                     if (cache_xrefs())
                     {
                         chase_xrefs(true);
@@ -882,7 +956,8 @@ bool cache_subjects()
         return true;
     }
     setspin(SPIN_BACKGROUND);
-    for (an=article_first(s_subj_to_get); an <= g_lastart; an=article_next(an)) {
+    for (an = article_first(s_subj_to_get); an <= g_lastart; an = article_next(an))
+    {
         if (input_pending())
         {
             break;
@@ -906,7 +981,8 @@ bool cache_xrefs()
         return true;
     }
     setspin(SPIN_BACKGROUND);
-    for (an=article_first(s_xref_to_get); an <= g_lastart; an=article_next(an)) {
+    for (an = article_first(s_xref_to_get); an <= g_lastart; an = article_next(an))
+    {
         if (input_pending())
         {
             break;
@@ -934,18 +1010,21 @@ bool cache_all_arts()
 
     /* turn it on as late as possible to avoid fseek()ing openart */
     setspin(SPIN_BACKGROUND);
-    if (g_last_cached < g_lastart) {
+    if (g_last_cached < g_lastart)
+    {
         if (g_datasrc->ov_opened)
         {
             ov_data(g_last_cached + 1, g_lastart, true);
         }
-        if (!art_data(g_last_cached+1, g_lastart, true, true)) {
+        if (!art_data(g_last_cached + 1, g_lastart, true, true))
+        {
             g_last_cached = old_last_cached;
             return false;
         }
         g_cached_all_in_range = true;
     }
-    if (g_first_cached > g_absfirst) {
+    if (g_first_cached > g_absfirst)
+    {
         if (g_datasrc->ov_opened)
         {
             ov_data(g_absfirst, g_first_cached - 1, true);
@@ -955,7 +1034,8 @@ bool cache_all_arts()
             art_data(g_absfirst, g_first_cached - 1, true, true);
         }
         /* If we got interrupted, make a quick exit */
-        if (g_first_cached > g_absfirst) {
+        if (g_first_cached > g_absfirst)
+        {
             g_last_cached = old_last_cached;
             return false;
         }
@@ -998,12 +1078,14 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
     {
         setspin(SPIN_BACKGROUND);
     }
-    else {
+    else
+    {
         int lots2do = ((g_datasrc->flags & DF_REMOTE)? g_net_speed : 20) * 25;
         setspin(g_spin_estimate > lots2do? SPIN_BARGRAPH : SPIN_FOREGROUND);
     }
     /*TRN_ASSERT(first >= g_absfirst && last <= g_lastart);*/
-    for (i = article_first(first); i <= last; i = article_next(i)) {
+    for (i = article_first(first); i <= last; i = article_next(i))
+    {
         if ((article_ptr(i)->flags & cachemask) ^ cachemask2)
         {
             continue;
@@ -1015,17 +1097,20 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
         /* This parses the header which will cache/thread the article */
         (void) parseheader(i);
 
-        if (g_int_count) {
+        if (g_int_count)
+        {
             g_int_count = 0;
             break;
         }
-        if (cheating) {
+        if (cheating)
+        {
             if (input_pending())
             {
                 break;
             }
             /* If the current article is no longer a '?', let them know. */
-            if (g_curr_artp != g_sentinel_artp) {
+            if (g_curr_artp != g_sentinel_artp)
+            {
                 pushchar('\f' | 0200);
                 break;
             }
@@ -1034,7 +1119,8 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
     setspin(SPIN_POP);
     i = std::min(i, last);
     g_last_cached = std::max(i, g_last_cached);
-    if (i == last) {
+    if (i == last)
+    {
         g_first_cached = std::min(first, g_first_cached);
         return true;
     }
@@ -1047,7 +1133,8 @@ bool cache_range(ART_NUM first, ART_NUM last)
     bool all_arts = (g_sel_rereading || g_thread_always);
     ART_NUM count = 0;
 
-    if (g_sel_rereading && !g_cached_all_in_range) {
+    if (g_sel_rereading && !g_cached_all_in_range)
+    {
         g_first_cached = first;
         g_last_cached = first-1;
     }
@@ -1065,13 +1152,16 @@ bool cache_range(ART_NUM first, ART_NUM last)
     }
     g_spin_todo = count;
 
-    if (g_first_cached > g_last_cached) {
-        if (g_sel_rereading) {
+    if (g_first_cached > g_last_cached)
+    {
+        if (g_sel_rereading)
+        {
             if (g_first_subject)
             {
                 count -= g_ngptr->toread;
             }
-        } else if (first == g_firstart && last == g_lastart && !all_arts)
+        }
+        else if (first == g_firstart && last == g_lastart && !all_arts)
         {
             count = g_ngptr->toread;
         }
@@ -1084,16 +1174,21 @@ bool cache_range(ART_NUM first, ART_NUM last)
 
     setspin(SPIN_FOREGROUND);
 
-    if (first < g_first_cached) {
-        if (g_datasrc->ov_opened) {
+    if (first < g_first_cached)
+    {
+        if (g_datasrc->ov_opened)
+        {
             ov_data(g_absfirst,g_first_cached-1,false);
             success = (g_first_cached == g_absfirst);
-        } else {
+        }
+        else
+        {
             success = art_data(first, g_first_cached-1, false, all_arts);
             g_cached_all_in_range = (all_arts && success);
         }
     }
-    if (success && g_last_cached < last) {
+    if (success && g_last_cached < last)
+    {
         if (g_datasrc->ov_opened)
         {
             ov_data(g_last_cached + 1, last, false);
