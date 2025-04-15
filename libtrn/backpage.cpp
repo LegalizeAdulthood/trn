@@ -22,7 +22,8 @@ void backpage_init()
     close(creat(varyname,0600));
     s_varyfd = open(varyname,2);
     remove(varyname);
-    if (s_varyfd < 0) {
+    if (s_varyfd < 0)
+    {
         std::printf(g_cantopen,varyname);
         sig_catcher(0);
     }
@@ -37,7 +38,8 @@ ART_POS vrdary(ART_LINE indx)
     long offset;
 
 #ifdef DEBUG
-    if (indx > maxindx) {
+    if (indx > maxindx)
+    {
         std::printf("vrdary(%ld) > %ld\n",(long)indx, (long)maxindx);
         return 0;
     }
@@ -48,8 +50,10 @@ ART_POS vrdary(ART_LINE indx)
     }
     subindx = indx % VARYSIZE;
     offset = (indx - subindx) * sizeof(s_varybuf[0]);
-    if (offset != s_oldoffset) {
-        if (s_oldoffset >= 0) {
+    if (offset != s_oldoffset)
+    {
+        if (s_oldoffset >= 0)
+        {
 #ifndef lint
             (void)lseek(s_varyfd,s_oldoffset,0);
             write(s_varyfd, (char*)s_varybuf,sizeof(s_varybuf));
@@ -79,7 +83,8 @@ void vwtary(ART_LINE indx, ART_POS newvalue)
     {
         maxindx = 0;
     }
-    if (indx > maxindx) {
+    if (indx > maxindx)
+    {
         if (indx != maxindx + 1)
         {
             std::printf("indx skipped %d-%d\n",maxindx+1,indx-1);
@@ -89,8 +94,10 @@ void vwtary(ART_LINE indx, ART_POS newvalue)
 #endif
     subindx = indx % VARYSIZE;
     offset = (indx - subindx) * sizeof(s_varybuf[0]);
-    if (offset != s_oldoffset) {
-        if (s_oldoffset >= 0) {
+    if (offset != s_oldoffset)
+    {
+        if (s_oldoffset >= 0)
+        {
 #ifndef lint
             (void)lseek(s_varyfd,s_oldoffset,0);
             write(s_varyfd,(char*)s_varybuf,sizeof(s_varybuf));
