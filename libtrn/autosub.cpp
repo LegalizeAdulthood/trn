@@ -50,7 +50,8 @@ static bool matchlist(const char *patlist, const char *s)
         {
             patlist++;
             tmpresult = false;
-        } else
+        }
+        else
         {
             tmpresult = true;
         }
