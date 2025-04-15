@@ -74,7 +74,8 @@ void rc_to_bits()
     }
     mybuf[i] = '\0';
     s = mybuf;                          /* initialize the for loop below */
-    if (set_firstart(s)) {
+    if (set_firstart(s))
+    {
         s = std::strchr(s,',') + 1;
         for (i = article_first(g_absfirst); i < g_firstart; i = article_next(i))
         {
@@ -88,10 +89,12 @@ void rc_to_bits()
     }
     unread = 0;
 #ifdef DEBUG
-    if (debug & DEB_CTLAREA_BITMAP) {
+    if (debug & DEB_CTLAREA_BITMAP)
+    {
         std::printf("\n%s\n",mybuf);
         termdown(2);
-        for (i = article_first(g_absfirst); i < g_firstart; i = article_next(i)) {
+        for (i = article_first(g_absfirst); i < g_firstart; i = article_next(i))
+        {
             if (article_unread(i))
             {
                 std::printf("%ld ",(long)i);
@@ -100,7 +103,8 @@ void rc_to_bits()
     }
 #endif
     i = g_firstart;
-    for ( ; (c = std::strchr(s,',')) != nullptr; s = ++c) {  /* for each range */
+    for ( ; (c = std::strchr(s,',')) != nullptr; s = ++c)    /* for each range */
+    {
         ART_NUM max;
         *c = '\0';                      /* do not let index see past comma */
         h = std::strchr(s,'-');
@@ -110,14 +114,17 @@ void rc_to_bits()
         {
             min = g_lastart + 1;
         }
-        for (; i < min; i = article_next(i)) {
+        for (; i < min; i = article_next(i))
+        {
             ap = article_ptr(i);
-            if (ap->flags & AF_EXISTS) {
+            if (ap->flags & AF_EXISTS)
+            {
                 if (ap->autofl & AUTO_KILL_MASK)
                 {
                     ap->flags &= ~AF_UNREAD;
                 }
-                else {
+                else
+                {
                     ap->flags |= AF_UNREAD;
                     unread++;
                     if (ap->autofl & AUTO_SEL_MASK)
@@ -142,10 +149,12 @@ void rc_to_bits()
             article_ptr(i)->flags &= ~AF_UNREAD;
         }
 #ifdef DEBUG
-        if (debug & DEB_CTLAREA_BITMAP) {
+        if (debug & DEB_CTLAREA_BITMAP)
+        {
             std::printf("\n%s\n",s);
             termdown(2);
-            for (i = g_absfirst; i <= g_lastart; i++) {
+            for (i = g_absfirst; i <= g_lastart; i++)
+            {
                 if (!was_read(i))
                 {
                     std::printf("%ld ",(long)i);
@@ -155,14 +164,17 @@ void rc_to_bits()
 #endif
         i = article_next(max);
     }
-    for (; i <= g_lastart; i = article_next(i)) {
+    for (; i <= g_lastart; i = article_next(i))
+    {
         ap = article_ptr(i);
-        if (ap->flags & AF_EXISTS) {
+        if (ap->flags & AF_EXISTS)
+        {
             if (ap->autofl & AUTO_KILL_MASK)
             {
                 ap->flags &= ~AF_UNREAD;
             }
-            else {
+            else
+            {
                 ap->flags |= AF_UNREAD;
                 unread++;
                 if (ap->autofl & AUTO_SEL_MASK)
@@ -173,7 +185,8 @@ void rc_to_bits()
         }
     }
 #ifdef DEBUG
-    if (debug & DEB_CTLAREA_BITMAP) {
+    if (debug & DEB_CTLAREA_BITMAP)
+    {
         std::fputs("\n(hit CR)",stdout);
         termdown(1);
         std::fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
@@ -189,7 +202,8 @@ void rc_to_bits()
 bool set_firstart(const char *s)
 {
     s = skip_eq(s, ' ');
-    if (!std::strncmp(s,"1-",2)) {                   /* can we save some time here? */
+    if (!std::strncmp(s,"1-",2))                     /* can we save some time here? */
+    {
         g_firstart = std::atol(s+2)+1;               /* process first range thusly */
         g_firstart = std::max(g_firstart, g_absfirst);
         return true;
@@ -211,7 +225,8 @@ void bits_to_rc()
     std::strcpy(g_buf,g_ngptr->rcline);            /* start with the newsgroup name */
     char *s = g_buf + g_ngptr->numoffset - 1; /* use s for buffer pointer */
     *s++ = g_ngptr->subscribechar;            /* put the requisite : or !*/
-    for (i = article_first(g_absfirst); i <= g_lastart; i = article_next(i)) {
+    for (i = article_first(g_absfirst); i <= g_lastart; i = article_next(i))
+    {
         if (article_unread(i))
         {
             break;
@@ -219,17 +234,21 @@ void bits_to_rc()
     }
     std::sprintf(s," 1-%ld,",(long)i-1);
     s += std::strlen(s);
-    for (; i<=g_lastart; i++) { /* for each article in newsgroup */
-        if (s-mybuf > safelen) {        /* running out of room? */
+    for (; i<=g_lastart; i++)   /* for each article in newsgroup */
+    {
+        if (s-mybuf > safelen)          /* running out of room? */
+        {
             safelen *= 2;
-            if (mybuf == g_buf) {       /* currently static? */
+            if (mybuf == g_buf)         /* currently static? */
+            {
                 *s = '\0';
                 mybuf = safemalloc((MEM_SIZE)safelen + 32);
                 std::strcpy(mybuf,g_buf);    /* so we must copy it */
                 s = mybuf + (s-g_buf);
                                         /* fix the pointer, too */
             }
-            else {                      /* just grow in place, if possible */
+            else                        /* just grow in place, if possible */
+            {
                 int oldlen = s - mybuf;
                 mybuf = saferealloc(mybuf,(MEM_SIZE)safelen + 32);
                 s = mybuf + oldlen;
@@ -239,8 +258,8 @@ void bits_to_rc()
         {
             count++;                    /* then count it */
         }
-        else {                          /* article was read */
-
+        else                            /* article was read */
+        {
             std::sprintf(s,"%ld",(long)i); /* put out the min of the range */
             s += std::strlen(s);           /* keeping house */
             ART_NUM oldi = i;         /* remember this spot */
@@ -250,7 +269,8 @@ void bits_to_rc()
             } while (i <= g_lastart && was_read(i));
                                         /* find 1st unread article or end */
             i--;                        /* backup to last read article */
-            if (i > oldi) {             /* range of more than 1? */
+            if (i > oldi)               /* range of more than 1? */
+            {
                 std::sprintf(s,"-%ld,",(long)i);
                                         /* then it out as a range */
                 s += std::strlen(s);         /* and housekeep */
@@ -267,19 +287,22 @@ void bits_to_rc()
     }
     *s++ = '\0';                        /* and terminate string */
 #ifdef DEBUG
-    if ((debug & DEB_NEWSRC_LINE) && !g_panic) {
+    if ((debug & DEB_NEWSRC_LINE) && !g_panic)
+    {
         std::printf("%s: %s\n",g_ngptr->rcline,g_ngptr->rcline+g_ngptr->numoffset);
         std::printf("%s\n",mybuf);
         termdown(2);
     }
 #endif
     std::free(g_ngptr->rcline);              /* return old rc line */
-    if (mybuf == g_buf) {
+    if (mybuf == g_buf)
+    {
         g_ngptr->rcline = safemalloc((MEM_SIZE)(s-g_buf)+1);
                                         /* grab a new rc line */
         std::strcpy(g_ngptr->rcline, g_buf); /* and load it */
     }
-    else {
+    else
+    {
         mybuf = saferealloc(mybuf,(MEM_SIZE)(s-mybuf)+1);
                                         /* be nice to the heap */
         g_ngptr->rcline = mybuf;
@@ -301,18 +324,19 @@ void find_existing_articles()
     ART_NUM an;
     ARTICLE* ap;
 
-    if (g_datasrc->flags & DF_REMOTE) {
+    if (g_datasrc->flags & DF_REMOTE)
+    {
         /* Parse the LISTGROUP output and remember everything we find */
-        if (/*nntp_rover() ||*/ nntp_artnums()) {
-            /*char* s;*/
-
+        if (nntp_artnums())
+        {
             for (ap = article_ptr(article_first(g_absfirst));
                  ap && article_num(ap) <= g_lastart;
                  ap = article_nextp(ap))
             {
                 ap->flags &= ~AF_EXISTS;
             }
-            for (;;) {
+            for (;;)
+            {
                 if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
                 {
                     break;
@@ -340,8 +364,10 @@ void find_existing_articles()
 #endif
             }
         }
-        else if (g_first_subject && g_cached_all_in_range) {
-            if (!g_datasrc->ov_opened || g_datasrc->over_dir != nullptr) {
+        else if (g_first_subject && g_cached_all_in_range)
+        {
+            if (!g_datasrc->ov_opened || g_datasrc->over_dir != nullptr)
+            {
                 for (ap = article_ptr(article_first(g_first_cached));
                      ap && article_num(ap) <= g_last_cached;
                      ap = article_nextp(ap))
@@ -352,14 +378,16 @@ void find_existing_articles()
                     }
                 }
             }
-            for (an = g_absfirst; an < g_first_cached; an++) {
+            for (an = g_absfirst; an < g_first_cached; an++)
+            {
                 ap = article_ptr(an);
                 if (!(ap->flags2 & AF2_BOGUS))
                 {
                     ap->flags |= AF_EXISTS;
                 }
             }
-            for (an = g_last_cached+1; an <= g_lastart; an++) {
+            for (an = g_last_cached + 1; an <= g_lastart; an++)
+            {
                 ap = article_ptr(an);
                 if (!(ap->flags2 & AF2_BOGUS))
                 {
@@ -367,8 +395,10 @@ void find_existing_articles()
                 }
             }
         }
-        else {
-            for (an = g_absfirst; an <= g_lastart; an++) {
+        else
+        {
+            for (an = g_absfirst; an <= g_lastart; an++)
+            {
                 ap = article_ptr(an);
                 if (!(ap->flags2 & AF2_BOGUS))
                 {
@@ -403,9 +433,11 @@ void find_existing_articles()
         for (const fs::directory_entry &entry : entries)
         {
             std::string filename{entry.path().filename().string()};
-            if (std::sscanf(filename.c_str(), "%ld%c", &lnum, &ch) == 1) {
+            if (std::sscanf(filename.c_str(), "%ld%c", &lnum, &ch) == 1)
+            {
                 an = (ART_NUM)lnum;
-                if (an <= g_lastart && an >= g_absfirst) {
+                if (an <= g_lastart && an >= g_absfirst)
+                {
                     first = std::min(an, first);
                     last = std::max(an, last);
                     ap = article_ptr(an);
@@ -420,7 +452,8 @@ void find_existing_articles()
         g_ngptr->abs1st = first;
         g_ngptr->ngmax = last;
 
-        if (first > g_absfirst) {
+        if (first > g_absfirst)
+        {
             checkexpired(g_ngptr,first);
             for (g_absfirst = article_first(g_absfirst);
                  g_absfirst < first;
@@ -449,19 +482,24 @@ void find_existing_articles()
 
 void onemore(ARTICLE *ap)
 {
-    if (!(ap->flags & AF_UNREAD)) {
+    if (!(ap->flags & AF_UNREAD))
+    {
         ART_NUM artnum = article_num(ap);
         check_first(artnum);
         ap->flags |= AF_UNREAD;
         ap->flags &= ~AF_DEL;
         g_ngptr->toread++;
-        if (ap->subj) {
-            if (g_selected_only) {
-                if (ap->subj->flags & static_cast<subject_flags>(g_sel_mask)) {
+        if (ap->subj)
+        {
+            if (g_selected_only)
+            {
+                if (ap->subj->flags & static_cast<subject_flags>(g_sel_mask))
+                {
                     ap->flags |= static_cast<article_flags>(g_sel_mask);
                     g_selected_count++;
                 }
-            } else
+            }
+            else
             {
                 ap->subj->flags |= SF_VISIT;
             }
@@ -473,10 +511,12 @@ void onemore(ARTICLE *ap)
 
 void oneless(ARTICLE *ap)
 {
-    if (ap->flags & AF_UNREAD) {
+    if (ap->flags & AF_UNREAD)
+    {
         ap->flags &= ~AF_UNREAD;
         /* Keep g_selected_count accurate */
-        if (ap->flags & static_cast<article_flags>(g_sel_mask)) {
+        if (ap->flags & static_cast<article_flags>(g_sel_mask))
+        {
             g_selected_count--;
             ap->flags &= ~static_cast<article_flags>(g_sel_mask);
         }
@@ -510,7 +550,8 @@ void unmark_as_read(ARTICLE *ap)
 {
     onemore(ap);
 #ifdef MCHASE
-    if (!empty(ap->xrefs) && !(ap->flags & AF_MCHASE)) {
+    if (!empty(ap->xrefs) && !(ap->flags & AF_MCHASE))
+    {
         ap->flags |= AF_MCHASE;
         s_chase_count++;
     }
@@ -523,7 +564,8 @@ void unmark_as_read(ARTICLE *ap)
 void set_read(ARTICLE *ap)
 {
     oneless(ap);
-    if (!g_olden_days && !empty(ap->xrefs) && !(ap->flags & AF_KCHASE)) {
+    if (!g_olden_days && !empty(ap->xrefs) && !(ap->flags & AF_KCHASE))
+    {
         ap->flags |= AF_KCHASE;
         s_chase_count++;
     }
@@ -534,7 +576,8 @@ void set_read(ARTICLE *ap)
 
 void delay_unmark(ARTICLE *ap)
 {
-    if (!(ap->flags & AF_YANKBACK)) {
+    if (!(ap->flags & AF_YANKBACK))
+    {
         ap->flags |= AF_YANKBACK;
         g_dmcount++;
     }
@@ -546,7 +589,8 @@ void delay_unmark(ARTICLE *ap)
 void mark_as_read(ARTICLE *ap)
 {
     oneless(ap);
-    if (!empty(ap->xrefs) && !(ap->flags & AF_KCHASE)) {
+    if (!empty(ap->xrefs) && !(ap->flags & AF_KCHASE))
+    {
         ap->flags |= AF_KCHASE;
         s_chase_count++;
     }
@@ -577,7 +621,8 @@ void check_first(ART_NUM min)
 /* bring back articles marked with M */
 void yankback()
 {
-    if (g_dmcount) {                    /* delayed unmarks pending? */
+    if (g_dmcount)                      /* delayed unmarks pending? */
+    {
         if (g_panic)
         {
         }
@@ -585,7 +630,8 @@ void yankback()
         {
             std::sprintf(g_msg, "Returned %ld Marked article%s.", (long) g_dmcount, plural(g_dmcount));
         }
-        else {
+        else
+        {
             std::printf("\nReturning %ld Marked article%s...\n",(long)g_dmcount,
                 plural(g_dmcount));
             termdown(2);
@@ -598,7 +644,8 @@ void yankback()
 static bool yank_article(char *ptr, int arg)
 {
     ARTICLE* ap = (ARTICLE*)ptr;
-    if (ap->flags & AF_YANKBACK) {
+    if (ap->flags & AF_YANKBACK)
+    {
         unmark_as_read(ap);
         if (g_selected_only)
         {
@@ -629,7 +676,8 @@ static bool check_chase(char *ptr, int until_key)
 {
     ARTICLE* ap = (ARTICLE*)ptr;
 
-    if (ap->flags & AF_KCHASE) {
+    if (ap->flags & AF_KCHASE)
+    {
         chase_xref(article_num(ap),true);
         ap->flags &= ~AF_KCHASE;
         if (!--s_chase_count)
@@ -638,7 +686,8 @@ static bool check_chase(char *ptr, int until_key)
         }
     }
 #ifdef MCHASE
-    if (ap->flags & AF_MCHASE) {
+    if (ap->flags & AF_MCHASE)
+    {
         chase_xref(article_num(ap),true);
         ap->flags &= ~AF_MCHASE;
         if (!--s_chase_count)
@@ -673,8 +722,10 @@ static int chase_xref(ART_NUM artnum, int markread)
     {
         spin(10);
     }
-    else {
-        if (g_output_chase_phrase) {
+    else
+    {
+        if (g_output_chase_phrase)
+        {
             if (g_verbose)
             {
                 std::fputs("\nChasing xrefs", stdout);
@@ -698,7 +749,8 @@ static int chase_xref(ART_NUM artnum, int markread)
 
     xref_buf = savestr(xref_buf);
 # ifdef DEBUG
-    if (debug & DEB_XREF_MARKER) {
+    if (debug & DEB_XREF_MARKER)
+    {
         std::printf("Xref: %s\n",xref_buf);
         termdown(1);
     }
@@ -708,7 +760,8 @@ static int chase_xref(ART_NUM artnum, int markread)
     if (valid_xref_site(artnum,tmpbuf))
 # endif
     {
-        while (*curxref) {          /* for each newsgroup */
+        while (*curxref)            /* for each newsgroup */
+        {
             curxref = cpytill(tmpbuf,curxref,' ');
             xartnum = std::strchr(tmpbuf,':');
             if (!xartnum)
@@ -720,7 +773,8 @@ static int chase_xref(ART_NUM artnum, int markread)
             {
                 continue;
             }
-            if (!std::strcmp(tmpbuf,g_ngname.c_str())) {/* is this the current newsgroup? */
+            if (!std::strcmp(tmpbuf,g_ngname.c_str()))  /* is this the current newsgroup? */
+            {
                 if (x < g_absfirst || x > g_lastart)
                 {
                     continue;
@@ -735,8 +789,11 @@ static int chase_xref(ART_NUM artnum, int markread)
                     onemore(article_ptr(x));
                 }
 # endif
-            } else {
-                if (markread) {
+            }
+            else
+            {
+                if (markread)
+                {
                     if (addartnum(g_datasrc,x,tmpbuf))
                     {
                         break;
@@ -810,7 +867,8 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
     }
 
 #ifdef DEBUG
-    if (debug) {
+    if (debug)
+    {
         std::printf("Xref not from %s -- ignoring\n",inews_site);
         termdown(1);
     }
