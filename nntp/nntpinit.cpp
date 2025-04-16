@@ -135,7 +135,8 @@ int server_init(const char *machine)
     /* Now get the server's signon message */
     nntp_check();
 
-    if (*g_ser_line == NNTP_CLASS_OK) {
+    if (*g_ser_line == NNTP_CLASS_OK)
+    {
         char save_line[NNTP_STRLEN];
         std::strcpy(save_line, g_ser_line);
         /* Try MODE READER just in case we're talking to innd.
@@ -176,14 +177,17 @@ int get_tcp_socket(const char *machine, int port, const char *service)
         sprintf(service = portstr, "%d", port);
     }
     error = getaddrinfo(machine, service, &hints, &res0);
-    if (error) {
+    if (error)
+    {
         fprintf(stderr, "%s", gai_strerror(error));
         return -1;
     }
-    for (res = res0; res; res = res->ai_next) {
+    for (res = res0; res; res = res->ai_next)
+    {
         char buf[64] = "";
         s = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-        if (s < 0) {
+        if (s < 0)
+        {
             cause = "socket";
             continue;
         }
@@ -205,7 +209,8 @@ int get_tcp_socket(const char *machine, int port, const char *service)
         close(s);
         s = -1;
     }
-    if (s < 0) {
+    if (s < 0)
+    {
         fprintf(stderr, "giving up... ");
         perror(cause);
     }
@@ -231,7 +236,8 @@ int get_tcp_socket(const char *machine, int port, const char *service)
     {
         sin.sin_port = htons(port);
     }
-    else {
+    else
+    {
         struct servent *sp = getservbyname(service, "tcp");
         if (sp == nullptr)
         {
@@ -250,7 +256,8 @@ int get_tcp_socket(const char *machine, int port, const char *service)
     {
         hp = gethostbyname(machine);
     }
-    else {
+    else
+    {
         /* Raw ip address, fake  */
         (void) std::strcpy(namebuf, machine);
         def.h_name = namebuf;
@@ -263,7 +270,8 @@ int get_tcp_socket(const char *machine, int port, const char *service)
         def.h_aliases = nullptr;
         hp = &def;
     }
-    if (hp == nullptr) {
+    if (hp == nullptr)
+    {
         std::fprintf(stderr, "%s: Unknown host.\n", machine);
         return -1;
     }
@@ -271,9 +279,11 @@ int get_tcp_socket(const char *machine, int port, const char *service)
     sin.sin_family = hp->h_addrtype;
 
     /* get a socket and initiate connection -- use multiple addresses */
-    for (char **cp = hp->h_addr_list; cp && *cp; cp++) {
+    for (char **cp = hp->h_addr_list; cp && *cp; cp++)
+    {
         s = socket(hp->h_addrtype, SOCK_STREAM, 0);
-        if (s < 0) {
+        if (s < 0)
+        {
             std::perror("socket");
             return -1;
         }
@@ -292,7 +302,8 @@ int get_tcp_socket(const char *machine, int port, const char *service)
         std::perror("");
         (void) close(s);
     }
-    if (x < 0) {
+    if (x < 0)
+    {
         std::fprintf(stderr, "giving up...\n");
         return -1;
     }
@@ -300,14 +311,16 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 #ifdef __hpux   /* recommended by raj@cup.hp.com */
 #define HPSOCKSIZE 0x8000
     getsockopt(s, SOL_SOCKET, SO_SNDBUF, (caddr_t)&socksize, (caddr_t)&socksizelen);
-    if (socksize < HPSOCKSIZE) {
+    if (socksize < HPSOCKSIZE)
+    {
         socksize = HPSOCKSIZE;
         setsockopt(s, SOL_SOCKET, SO_SNDBUF, (caddr_t)&socksize, sizeof (socksize));
     }
     socksize = 0;
     socksizelen = sizeof (socksize);
     getsockopt(s, SOL_SOCKET, SO_RCVBUF, (caddr_t)&socksize, (caddr_t)&socksizelen);
-    if (socksize < HPSOCKSIZE) {
+    if (socksize < HPSOCKSIZE)
+    {
         socksize = HPSOCKSIZE;
         setsockopt(s, SOL_SOCKET, SO_RCVBUF, (caddr_t)&socksize, sizeof (socksize));
     }
