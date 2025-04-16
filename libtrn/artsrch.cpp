@@ -32,7 +32,7 @@
 static CompiledRegex s_sub_compex{}; /* last compiled subject search */
 static CompiledRegex s_art_compex{}; /* last compiled normal search */
 
-static bool wanted(CompiledRegex *compex, ART_NUM artnum, ArtScope scope);
+static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope);
 
 std::string      g_lastpat;                   /* last search pattern */
 CompiledRegex          *g_bra_compex{&s_art_compex}; /* current compex with brackets */
@@ -68,7 +68,7 @@ ArtSearchResult art_search(char *patbuf, int patbufsiz, bool get_cmd)
     bool foldcase = true;               /* fold upper and lower case? */
     int ignorethru = 0;                 /* should we ignore the thru line? */
     bool output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
-    ART_NUM srchfirst;
+    ArticleNum srchfirst;
 
     g_int_count = 0;
     if (cmdchr == '/' || cmdchr == '?')         /* normal search? */
@@ -485,7 +485,7 @@ exit:
 /* determine if article fits pattern */
 /* returns true if it exists and fits pattern, false otherwise */
 
-static bool wanted(CompiledRegex *compex, ART_NUM artnum, ArtScope scope)
+static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
 {
     Article* ap = article_find(artnum);
 

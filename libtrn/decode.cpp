@@ -126,7 +126,7 @@ static bool bad_filename(const char *filename)
 }
 
 /* Parse the subject looking for filename and part number information. */
-char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
+char *decode_subject(ArticleNum artnum, int *partp, int *totalp)
 {
     static char* subject = nullptr;
     char* filename;

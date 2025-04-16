@@ -134,7 +134,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
     static char desc_buf[1024];
     char*       s;
 
-    ART_NUM artnum = g_sa_ents[e].artnum;
+    ArticleNum artnum = g_sa_ents[e].artnum;
     bool    use_standout = false;
     switch (line)
     {
@@ -311,7 +311,7 @@ int sa_ent_lines(long e)
     char*s;
     int  num = 1;
 
-    ART_NUM artnum = g_sa_ents[e].artnum;
+    ArticleNum artnum = g_sa_ents[e].artnum;
     if (g_sa_mode_desc_summary)
     {
         s = fetchlines(artnum,SUMRY_LINE);

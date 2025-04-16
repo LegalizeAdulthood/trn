@@ -634,7 +634,7 @@ bool actfile_hash(DataSource *dp)
     return ret != 0;
 }
 
-bool find_actgrp(DataSource *dp, char *outbuf, const char *nam, int len, ART_NUM high)
+bool find_actgrp(DataSource *dp, char *outbuf, const char *nam, int len, ArticleNum high)
 {
     ACT_POS act_pos;
     FILE* fp = dp->act_sf.fp;
@@ -712,7 +712,7 @@ bool find_actgrp(DataSource *dp, char *outbuf, const char *nam, int len, ART_NUM
             }
         }
 # endif
-        high = (ART_NUM)std::atol(outbuf+len+1);
+        high = (ArticleNum)std::atol(outbuf+len+1);
     }
 
     if (lbp_len)
@@ -720,7 +720,7 @@ bool find_actgrp(DataSource *dp, char *outbuf, const char *nam, int len, ART_NUM
         if ((dp->flags & DF_REMOTE) && dp->act_sf.refetch_secs)
         {
             char* cp;
-            if (high && high != (ART_NUM) std::atol(cp = lbp + len + 1))
+            if (high && high != (ArticleNum) std::atol(cp = lbp + len + 1))
             {
                 cp = skip_digits(cp);
                 while (*--cp != ' ')

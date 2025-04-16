@@ -41,10 +41,10 @@
 List     *g_article_list{};         /* a list of ARTICLEs */
 Article **g_artptr_list{};          /* the article-selector creates this */
 Article **g_artptr{};               /* ditto -- used for article order */
-ART_NUM   g_artptr_list_size{};     //
-ART_NUM   g_srchahead{};            /* are we in subject scan mode? (if so, contains art # found or -1) */
-ART_NUM   g_first_cached{};         //
-ART_NUM   g_last_cached{};          //
+ArticleNum   g_artptr_list_size{};     //
+ArticleNum   g_srchahead{};            /* are we in subject scan mode? (if so, contains art # found or -1) */
+ArticleNum   g_first_cached{};         //
+ArticleNum   g_last_cached{};          //
 bool      g_cached_all_in_range{};  //
 Article  *g_sentinel_artp{};        //
 Subject  *g_first_subject{};        //
@@ -55,8 +55,8 @@ int       g_olden_days{};           /* -o */
 char      g_auto_select_postings{}; /* -p */
 
 #ifdef PENDING
-static ART_NUM s_subj_to_get{};
-static ART_NUM s_xref_to_get{};
+static ArticleNum s_subj_to_get{};
+static ArticleNum s_xref_to_get{};
 static CompiledRegex  s_srchcompex; /* compiled regex for searchahead */
 #endif
 static HASHTABLE *s_subj_hash{};
@@ -88,7 +88,7 @@ void build_cache()
         {
             set_selector(g_sel_threadmode, g_sel_threadsort);
         }
-        for (ART_NUM an = g_last_cached + 1; an <= g_lastart; an++)
+        for (ArticleNum an = g_last_cached + 1; an <= g_lastart; an++)
         {
             article_ptr(an)->flags |= AF_EXISTS;
         }
@@ -170,7 +170,7 @@ static void init_artnode(List *list, ListNode *node)
 {
     std::memset(node->data, 0, list->items_per_node * list->item_size);
     Article *ap = (Article *) node->data;
-    for (ART_NUM i = node->low; i <= node->high; i++, ap++)
+    for (ArticleNum i = node->low; i <= node->high; i++, ap++)
     {
         ap->num = i;
     }
@@ -429,7 +429,7 @@ void uncache_article(Article *ap, bool remove_empties)
 
 /* get the header line from an article's cache or parse the article trying */
 
-char *fetchcache(ART_NUM artnum, HeaderLineType which_line, bool fill_cache)
+char *fetchcache(ArticleNum artnum, HeaderLineType which_line, bool fill_cache)
 {
     char* s;
     Article* ap;
@@ -962,7 +962,7 @@ void cache_until_key()
 #ifdef PENDING
 bool cache_subjects()
 {
-    ART_NUM an;
+    ArticleNum an;
 
     if (s_subj_to_get > g_lastart)
     {
@@ -987,7 +987,7 @@ bool cache_subjects()
 
 bool cache_xrefs()
 {
-    ART_NUM an;
+    ArticleNum an;
 
     if (g_olden_days || (g_datasrc->flags & DF_NOXREFS) || s_xref_to_get > g_lastart)
     {
@@ -1078,10 +1078,10 @@ bool cache_unread_arts()
 }
 #endif
 
-bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
+bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_articles)
 {
-    ART_NUM i;
-    ART_NUM expected_i = first;
+    ArticleNum i;
+    ArticleNum expected_i = first;
 
     int cachemask = (g_threaded_group ? AF_THREADED : AF_CACHED)
                   + (all_articles? 0 : AF_UNREAD);
@@ -1140,11 +1140,11 @@ bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles)
     return false;
 }
 
-bool cache_range(ART_NUM first, ART_NUM last)
+bool cache_range(ArticleNum first, ArticleNum last)
 {
     bool success = true;
     bool all_arts = (g_sel_rereading || g_thread_always);
-    ART_NUM count = 0;
+    ArticleNum count = 0;
 
     if (g_sel_rereading && !g_cached_all_in_range)
     {

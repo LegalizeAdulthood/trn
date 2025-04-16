@@ -34,7 +34,7 @@ static char    s_lbuf2[LBUFLEN]{}; /* what's another buffer between... */
 static int     s_loaded{};
 static int     s_used{};
 static int     s_saved{};
-static ART_NUM s_last{};
+static ArticleNum s_last{};
 
 void sc_sv_add(const char *str)
 {
@@ -160,7 +160,7 @@ void sc_sv_savefile()
 
 /* returns the next article number (after the last one used) */
 //ART_NUM a;    /* art number to start with */
-ART_NUM sc_sv_use_line(char *line, ART_NUM a)
+ArticleNum sc_sv_use_line(char *line, ArticleNum a)
 {
     char *p;
     char  c1;
@@ -274,7 +274,7 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
     return a;
 }
 
-ART_NUM sc_sv_make_line(ART_NUM a)
+ArticleNum sc_sv_make_line(ArticleNum a)
 {
     bool lastscore_valid = false;
     int  num_output = 0;
@@ -285,7 +285,7 @@ ART_NUM sc_sv_make_line(ART_NUM a)
     *s++ = '.';
     int lastscore = 0;
 
-    for (ART_NUM art = article_first(a); art <= g_lastart && num_output < 50; art = article_next(art))
+    for (ArticleNum art = article_first(a); art <= g_lastart && num_output < 50; art = article_next(art))
     {
         if (article_unread(art) && article_scored(art))
         {
@@ -367,7 +367,7 @@ ART_NUM sc_sv_make_line(ART_NUM a)
 void sc_load_scores()
 {
     /* lots of cleanup needed here */
-    ART_NUM a = 0;
+    ArticleNum a = 0;
     char*   s;
 
     s_sc_save_new = -1;         /* just in case we exit early */
@@ -447,7 +447,7 @@ void sc_load_scores()
     }
     int total = 0;
     int scored = 0;
-    for (ART_NUM art = article_first(a); art <= g_lastart; art = article_next(art))
+    for (ArticleNum art = article_first(a); art <= g_lastart; art = article_next(art))
     {
         if (!article_exists(art))
         {
@@ -498,7 +498,7 @@ void sc_save_scores()
     std::sprintf(s_lbuf2,"!%s",gname);       /* add the header */
     sc_sv_add(s_lbuf2);
 
-    ART_NUM a = g_firstart;
+    ArticleNum a = g_firstart;
     std::sprintf(s_lbuf2,":%ld",a);
     sc_sv_add(s_lbuf2);
     s_last = a-1;

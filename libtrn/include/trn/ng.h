@@ -11,9 +11,9 @@
 
 struct Article;
 
-extern ART_NUM  g_art;         /* current or prospective article # */
-extern ART_NUM  g_recent_art;  /* previous article # for '-' command */
-extern ART_NUM  g_curr_art;    /* current article # */
+extern ArticleNum  g_art;         /* current or prospective article # */
+extern ArticleNum  g_recent_art;  /* previous article # for '-' command */
+extern ArticleNum  g_curr_art;    /* current article # */
 extern Article *g_recent_artp; /* article_ptr equivalents */
 extern Article *g_curr_artp;
 extern Article *g_artp;        /* the article ptr we use when g_art is 0 */

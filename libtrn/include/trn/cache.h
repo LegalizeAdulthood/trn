@@ -89,7 +89,7 @@ DECLARE_FLAGS_ENUM(ScoreFlags, std::uint16_t)
 /* This is our article-caching structure */
 struct Article
 {
-    ART_NUM        num;
+    ArticleNum        num;
     std::time_t         date;
     Subject       *subj;
     char          *from;
@@ -118,10 +118,10 @@ enum : bool
 extern List     *g_article_list; /* a list of ARTICLEs */
 extern Article **g_artptr_list;  /* the article-selector creates this */
 extern Article **g_artptr;       /* ditto -- used for article order */
-extern ART_NUM   g_artptr_list_size;
-extern ART_NUM   g_srchahead; /* are we in subject scan mode? (if so, contains art # found or -1) */
-extern ART_NUM   g_first_cached;
-extern ART_NUM   g_last_cached;
+extern ArticleNum   g_artptr_list_size;
+extern ArticleNum   g_srchahead; /* are we in subject scan mode? (if so, contains art # found or -1) */
+extern ArticleNum   g_first_cached;
+extern ArticleNum   g_last_cached;
 extern bool      g_cached_all_in_range;
 extern Article  *g_sentinel_artp;
 extern Subject  *g_first_subject;
@@ -139,7 +139,7 @@ void check_for_near_subj(Article *ap);
 void change_join_subject_len(int len);
 void check_poster(Article *ap);
 void uncache_article(Article *ap, bool remove_empties);
-char *fetchcache(ART_NUM artnum, HeaderLineType which_line, bool fill_cache);
+char *fetchcache(ArticleNum artnum, HeaderLineType which_line, bool fill_cache);
 char *get_cached_line(Article *ap, HeaderLineType which_line, bool no_truncs);
 void set_subj_line(Article *ap, char *subj, int size);
 int decode_header(char *to, char *from, int size);
@@ -156,23 +156,23 @@ bool cache_subjects();
 bool cache_xrefs();
 bool cache_all_arts();
 bool cache_unread_arts();
-bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles);
-bool cache_range(ART_NUM first, ART_NUM last);
+bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_articles);
+bool cache_range(ArticleNum first, ArticleNum last);
 void clear_article(Article *ap);
 
-inline Article *article_ptr(ART_NUM an)
+inline Article *article_ptr(ArticleNum an)
 {
     return (Article *) listnum2listitem(g_article_list, an);
 }
-inline ART_NUM article_num(const Article *ap)
+inline ArticleNum article_num(const Article *ap)
 {
     return ap->num;
 }
-inline bool article_hasdata(ART_NUM an)
+inline bool article_hasdata(ArticleNum an)
 {
     return existing_listnum(g_article_list, an, 0) != 0;
 }
-inline Article *article_find(ART_NUM an)
+inline Article *article_find(ArticleNum an)
 {
     return an <= g_lastart && article_hasdata(an) ? article_ptr(an) : nullptr;
 }
@@ -180,19 +180,19 @@ inline bool article_walk(bool (*callback)(char *, int), int arg)
 {
     return walk_list(g_article_list, callback, arg);
 }
-inline ART_NUM article_first(ART_NUM an)
+inline ArticleNum article_first(ArticleNum an)
 {
     return existing_listnum(g_article_list, an, 1);
 }
-inline ART_NUM article_next(ART_NUM an)
+inline ArticleNum article_next(ArticleNum an)
 {
     return existing_listnum(g_article_list, an + 1, 1);
 }
-inline ART_NUM article_last(ART_NUM an)
+inline ArticleNum article_last(ArticleNum an)
 {
     return existing_listnum(g_article_list, an, -1);
 }
-inline ART_NUM article_prev(ART_NUM an)
+inline ArticleNum article_prev(ArticleNum an)
 {
     return existing_listnum(g_article_list, an - 1, -1);
 }
@@ -200,27 +200,27 @@ inline Article *article_nextp(Article *ap)
 {
     return (Article *) next_listitem(g_article_list, (char *) ap);
 }
-inline bool article_exists(ART_NUM an)
+inline bool article_exists(ArticleNum an)
 {
     return article_ptr(an)->flags & AF_EXISTS;
 }
-inline bool article_unread(ART_NUM an)
+inline bool article_unread(ArticleNum an)
 {
     return article_ptr(an)->flags & AF_UNREAD;
 }
-inline bool was_read(ART_NUM an)
+inline bool was_read(ArticleNum an)
 {
     return !article_hasdata(an) || !article_unread(an);
 }
-inline bool is_available(ART_NUM an)
+inline bool is_available(ArticleNum an)
 {
     return an <= g_lastart && article_hasdata(an) && article_exists(an);
 }
-inline bool is_unavailable(ART_NUM an)
+inline bool is_unavailable(ArticleNum an)
 {
     return !is_available(an);
 }
-inline bool article_scored(ART_NUM an)
+inline bool article_scored(ArticleNum an)
 {
     return article_ptr(an)->scoreflags & SFLAG_SCORED;
 }

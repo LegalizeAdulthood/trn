@@ -29,7 +29,7 @@ struct AddGroup
     AddGroup      *next;
     AddGroup      *prev;
     DataSource       *datasrc;
-    ART_NUM        toread; /* number of articles to be read (for sorting) */
+    ArticleNum        toread; /* number of articles to be read (for sorting) */
     NewsgroupNum         num;    /* a possible sort order for this group */
     AddGroupFlags flags;
     char           name[1];

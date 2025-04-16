@@ -110,7 +110,7 @@ void        set_datasrc(DataSource *dp);
 void        check_datasrcs();
 void        close_datasrc(DataSource *dp);
 bool        actfile_hash(DataSource *dp);
-bool        find_actgrp(DataSource *dp, char *outbuf, const char *nam, int len, ART_NUM high);
+bool        find_actgrp(DataSource *dp, char *outbuf, const char *nam, int len, ArticleNum high);
 const char *find_grpdesc(DataSource *dp, const char *groupname);
 int         srcfile_open(SourceFile *sfp, const char *filename, const char *fetchcmd, const char *server);
 char       *srcfile_append(SourceFile *sfp, char *bp, int keylen);

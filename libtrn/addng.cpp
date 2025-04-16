@@ -198,7 +198,7 @@ static void new_nntp_groups(DataSource *dp)
         }
         if (dp->act_sf.fp)
         {
-            if (find_actgrp(dp, g_buf, g_ser_line, len, (ART_NUM) 0))
+            if (find_actgrp(dp, g_buf, g_ser_line, len, (ArticleNum) 0))
             {
                 if (!s)
                 {
@@ -278,7 +278,7 @@ static void new_local_groups(DataSource *dp)
         }
         *s = '\0';
         char tmpbuf[LBUFLEN];
-        if (!find_actgrp(g_datasrc, tmpbuf, g_buf, s - g_buf, (ART_NUM)0))
+        if (!find_actgrp(g_datasrc, tmpbuf, g_buf, s - g_buf, (ArticleNum)0))
         {
             continue;
         }
@@ -493,7 +493,7 @@ static void scanline(char *actline, bool add_matching)
 
 static int agorder_number(const AddGroup **app1, const AddGroup **app2)
 {
-    ART_NUM const eq = (*app1)->num - (*app2)->num;
+    ArticleNum const eq = (*app1)->num - (*app2)->num;
     return eq > 0? g_sel_direction : -g_sel_direction;
 }
 

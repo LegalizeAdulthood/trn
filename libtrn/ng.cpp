@@ -51,9 +51,9 @@
 #include <cstring>
 #include <string>
 
-ART_NUM  g_art{};           /* current or prospective article # */
-ART_NUM  g_recent_art{};    /* previous article # for '-' command */
-ART_NUM  g_curr_art{};      /* current article # */
+ArticleNum  g_art{};           /* current or prospective article # */
+ArticleNum  g_recent_art{};    /* previous article # for '-' command */
+ArticleNum  g_curr_art{};      /* current article # */
 Article *g_recent_artp{};   /* article_ptr equivilents */
 Article *g_curr_artp{};     //
 Article *g_artp{};          /* the article ptr we use when art is 0 */
@@ -168,7 +168,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
     }
 
     g_srchahead = (g_scanon && !g_threaded_group        /* did they say -S? */
-              && ((ART_NUM)g_ngptr->toread) >= g_scanon ? -1 : 0);
+              && ((ArticleNum)g_ngptr->toread) >= g_scanon ? -1 : 0);
 
     /* FROM HERE ON, RETURN THRU CLEANUP OR WE ARE SCREWED */
 
@@ -252,7 +252,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
 
         if ((g_art > g_lastart || g_forcegrow) && !g_keep_the_group_static)
         {
-            ART_NUM oldlast = g_lastart;
+            ArticleNum oldlast = g_lastart;
             if (g_artsize < 0)
             {
                 nntp_finishbody(FB_SILENT);
@@ -1515,7 +1515,7 @@ run_the_selector:
 
     case '=':                 /* list subjects */
     {
-        ART_NUM oldart = g_art;
+        ArticleNum oldart = g_art;
         page_start();
         article_walk(output_subject, AF_UNREAD);
         g_int_count = 0;
@@ -2088,7 +2088,7 @@ bool output_subject(char *ptr, int flag)
     {
         return false;
     }
-    ART_NUM i = article_num(ap);
+    ArticleNum i = article_num(ap);
     char *  s = fetchsubj(i, false);
     if (s != nullptr)
     {
@@ -2141,7 +2141,7 @@ char ask_memorize(char_int ch)
     const char* mode_string = (thread_cmd? "thread" : "subject");
     const char* mode_phrase = (thread_cmd? "replies to this article" :
                                      "this subject and all replies");
-    ART_NUM art_hold = g_art;
+    ArticleNum art_hold = g_art;
     Article* artp_hold = g_artp;
 
     if (!use_one_line)

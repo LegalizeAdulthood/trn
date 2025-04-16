@@ -207,7 +207,7 @@ DoArticlResult do_article()
             }
             else
             {
-                ART_NUM i;
+                ArticleNum i;
 
                 int selected = (g_curr_artp->flags & AF_SEL);
                 int unseen = article_unread(g_art) ? 1 : 0;
@@ -219,7 +219,7 @@ DoArticlResult do_article()
                             (long)i,(long)g_ngptr->toread - g_selected_count
                                         - (!selected && unseen));
                 }
-                else if ((i = (ART_NUM) (g_ngptr->toread - unseen)) != 0 //
+                else if ((i = (ArticleNum) (g_ngptr->toread - unseen)) != 0 //
                          || (!g_threaded_group && g_dmcount))
                 {
                     std::sprintf(g_art_line+std::strlen(g_art_line),

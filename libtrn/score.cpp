@@ -27,7 +27,7 @@
 
 bool    g_kill_thresh_active{};  //
 int     g_kill_thresh{LOWSCORE}; /* KILL articles at or below this score */
-ART_NUM g_sc_fill_max;           /* maximum art# scored by fill-routine */
+ArticleNum g_sc_fill_max;           /* maximum art# scored by fill-routine */
 bool    g_sc_fill_read{};        /* true if also scoring read arts... */
 bool    g_sc_initialized{};      /* has score been initialized (are we "in" scoring?) */
 bool    g_sc_scoring{};          /* are we currently scoring an article (prevents loops) */
@@ -126,7 +126,7 @@ void sc_init(bool pend_wait)
     if (i < g_absfirst)                         /* none scored yet */
     {
         /* score one article, or give up */
-        ART_NUM a;
+        ArticleNum a;
         for (a = article_last(g_lastart); a >= g_absfirst; a = article_prev(a))
         {
             sc_score_art(a,true);       /* I want it *now* */
@@ -151,7 +151,7 @@ void sc_init(bool pend_wait)
     if (!g_sf_num_entries)
     {
         /* score everything really fast */
-        for (ART_NUM art = article_last(g_lastart); art >= g_absfirst; art = article_prev(art))
+        for (ArticleNum art = article_last(g_lastart); art >= g_absfirst; art = article_prev(art))
         {
             sc_score_art(art,true);
         }
@@ -219,7 +219,7 @@ void sc_cleanup()
     }
 }
 
-void sc_set_score(ART_NUM a, int score)
+void sc_set_score(ArticleNum a, int score)
 {
     if (is_unavailable(a))      /* newly unavailable */
     {
@@ -238,7 +238,7 @@ void sc_set_score(ART_NUM a, int score)
 
 /* Hopefully people will write more scoring routines later */
 /* This is where you should add hooks for new scoring methods. */
-void sc_score_art_basic(ART_NUM a)
+void sc_score_art_basic(ArticleNum a)
 {
     int score = 0;
     score += sf_score(a);       /* get a score */
@@ -252,7 +252,7 @@ void sc_score_art_basic(ART_NUM a)
 
 /* Returns an article's score, scoring it if necessary */
 //bool now;     /* if true, sort the scores if necessary... */
-int sc_score_art(ART_NUM a, bool now)
+int sc_score_art(ArticleNum a, bool now)
 {
     if (a < g_absfirst || a > g_lastart)
     {
@@ -292,7 +292,7 @@ int sc_score_art(ART_NUM a, bool now)
 
 /* scores articles in a range */
 /* CONSIDER: option for scoring only unread articles (obey sc_fill_unread?) */
-void sc_fill_scorelist(ART_NUM first, ART_NUM last)
+void sc_fill_scorelist(ArticleNum first, ArticleNum last)
 {
     for (int i = article_first(first); i <= last; i = article_next(i))
     {
@@ -307,7 +307,7 @@ void sc_fill_scorelist(ART_NUM first, ART_NUM last)
  */
 void sc_lookahead(bool flag, bool nowait)
 {
-    ART_NUM oldart = g_openart;
+    ArticleNum oldart = g_openart;
     ART_POS oldartpos;
 
     if (!g_sc_initialized)
@@ -395,14 +395,14 @@ int sc_percent_scored()
     {
         return 100;
     }
-    ART_NUM i = g_firstart;
+    ArticleNum i = g_firstart;
     if (g_sa_mode_read_elig)
     {
         i = g_absfirst;
     }
     int total = 0;
     int scored = 0;
-    for (ART_NUM art = article_first(i); art <= g_lastart; art = article_next(art))
+    for (ArticleNum art = article_first(i); art <= g_lastart; art = article_next(art))
     {
         if (!article_exists(art))
         {
@@ -451,7 +451,7 @@ void sc_rescore_arts()
     bool old_spin = s_sc_do_spin;
     setspin(SPIN_FOREGROUND);
     s_sc_do_spin = true;                                /* amuse the user */
-    for (ART_NUM a = article_first(g_absfirst); a <= g_lastart; a = article_next(a))
+    for (ArticleNum a = article_first(g_absfirst); a <= g_lastart; a = article_next(a))
     {
         if (article_exists(a))
         {
@@ -631,7 +631,7 @@ void sc_score_cmd(const char *line)
 //int thresh;           /* kill all articles with this score or lower */
 void sc_kill_threshold(int thresh)
 {
-    for (ART_NUM a = article_first(g_firstart); a <= g_lastart; a = article_next(a))
+    for (ArticleNum a = article_first(g_firstart); a <= g_lastart; a = article_next(a))
     {
         if (article_ptr(a)->score <= thresh &&
             article_unread(a)

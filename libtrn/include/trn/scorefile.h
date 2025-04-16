@@ -44,7 +44,7 @@ void sf_clean();
 void sf_grow();
 int sf_check_extra_headers(const char *head);
 void sf_add_extra_header(const char *head);
-char *sf_get_extra_header(ART_NUM art, int hnum);
+char *sf_get_extra_header(ArticleNum art, int hnum);
 
 /* Returns true if text pointed to by s is a text representation of
  * the number 0.  Used for error checking.
@@ -62,10 +62,10 @@ char *sf_freeform(char *start1, char *end1);
 bool sf_do_line(char *line, bool check);
 void sf_do_file(const char *fname);
 int score_match(char *str, int ind);
-int sf_score(ART_NUM a);
+int sf_score(ArticleNum a);
 char *sf_missing_score(const char *line);
 void sf_append(char *line);
-char *sf_get_line(ART_NUM a, HeaderLineType h);
+char *sf_get_line(ArticleNum a, HeaderLineType h);
 void sf_print_match(int indx);
 void sf_exclude_file(const char *fname);
 void sf_edit_file(const char *filespec);

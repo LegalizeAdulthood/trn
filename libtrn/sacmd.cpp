@@ -45,7 +45,7 @@ int sa_docmd()
     int     i; /* for misc. purposes */
 
     long    a = (long)g_page_ents[g_s_ptr_page_line].entnum;
-    ART_NUM artnum = g_sa_ents[a].artnum;
+    ArticleNum artnum = g_sa_ents[a].artnum;
 
     switch (*g_buf)
     {
@@ -488,7 +488,7 @@ int sa_docmd()
                 return 0;                       /* beep but do nothing */
             }
         }
-        g_sa_art = (ART_NUM)i;
+        g_sa_art = (ArticleNum)i;
         return SA_READ;                 /* special code to really return */
 
     case 'N': /* next newsgroup */
@@ -762,7 +762,7 @@ bool sa_extract_start()
 /* sa_art_cmd primitive: actually does work on an article */
 void sa_art_cmd_prim(SaCommand cmd, long a)
 {
-    ART_NUM artnum = g_sa_ents[a].artnum;
+    ArticleNum artnum = g_sa_ents[a].artnum;
 /* do more onpage status refreshes when in unread+read mode? */
     switch (cmd)
     {

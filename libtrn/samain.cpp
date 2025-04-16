@@ -77,7 +77,7 @@ void sa_clean_ents()
 
 /* returns entry number that was added */
 //ART_NUM artnum;               /* article number to be added */
-long sa_add_ent(ART_NUM artnum)
+long sa_add_ent(ArticleNum artnum)
 {
     g_sa_num_ents++;
     if (g_sa_num_ents > s_sa_ents_alloc)

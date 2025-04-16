@@ -827,7 +827,7 @@ static void init_ngnode(List *list, ListNode *node)
 {
     std::memset(node->data,0,list->items_per_node * list->item_size);
     NewsgroupData *np = (NewsgroupData*)node->data;
-    for (ART_NUM i = node->low; i <= node->high; i++, np++)
+    for (ArticleNum i = node->low; i <= node->high; i++, np++)
     {
         np->num = i;
     }
@@ -981,7 +981,7 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
                 continue;
             }
             /* TODO: this may scan a datasrc multiple times... */
-            if (find_actgrp(rp->datasrc,g_buf,g_ngname.c_str(),g_ngname.length(),(ART_NUM)0))
+            if (find_actgrp(rp->datasrc,g_buf,g_ngname.c_str(),g_ngname.length(),(ArticleNum)0))
             {
                 break; /* TODO: let them choose which server */
             }

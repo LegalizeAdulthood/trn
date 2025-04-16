@@ -86,7 +86,7 @@ UserHeaderType   *g_user_htype{};
 short            g_user_htypeix[26];
 int              g_user_htype_cnt{};
 int              g_user_htype_max{};
-ART_NUM          g_parsed_art{}; /* the article number we've parsed */
+ArticleNum          g_parsed_art{}; /* the article number we've parsed */
 HeaderLineType g_in_header{};  /* are we decoding the header? */
 char            *g_headbuf;
 
@@ -239,7 +239,7 @@ HeaderLineType get_header_num(char *s)
     return i;
 }
 
-void start_header(ART_NUM artnum)
+void start_header(ArticleNum artnum)
 {
 #ifdef DEBUG
     if (debug & DEB_HEADER)
@@ -391,7 +391,7 @@ void end_header()
 
 /* read the header into memory and parse it if we haven't already */
 
-bool parseheader(ART_NUM artnum)
+bool parseheader(ArticleNum artnum)
 {
     int len;
     bool had_nl = true;
@@ -492,7 +492,7 @@ bool parseheader(ART_NUM artnum)
 
 /* article to get line from */
 /* type of line desired */
-char *fetchlines(ART_NUM artnum, HeaderLineType which_line)
+char *fetchlines(ArticleNum artnum, HeaderLineType which_line)
 {
     char* s;
 
@@ -537,7 +537,7 @@ char *fetchlines(ART_NUM artnum, HeaderLineType which_line)
 /* ART_NUM artnum   article to get line from */
 /* int which_line   type of line desired */
 /* int pool         which memory pool to use */
-char *mp_fetchlines(ART_NUM artnum, HeaderLineType which_line, MemoryPool pool)
+char *mp_fetchlines(ArticleNum artnum, HeaderLineType which_line, MemoryPool pool)
 {
     char* s;
 
@@ -578,13 +578,13 @@ char *mp_fetchlines(ART_NUM artnum, HeaderLineType which_line, MemoryPool pool)
     return s;
 }
 
-static int nntp_xhdr(HeaderLineType which_line, ART_NUM artnum)
+static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum)
 {
     std::sprintf(g_ser_line,"XHDR %s %ld",g_htype[which_line].name,artnum);
     return nntp_command(g_ser_line);
 }
 
-static int nntp_xhdr(HeaderLineType which_line, ART_NUM artnum, ART_NUM lastnum)
+static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum, ArticleNum lastnum)
 {
     std::sprintf(g_ser_line, "XHDR %s %ld-%ld", g_htype[which_line].name, artnum, lastnum);
     return nntp_command(g_ser_line);
@@ -595,7 +595,7 @@ static int nntp_xhdr(HeaderLineType which_line, ART_NUM artnum, ART_NUM lastnum)
 // ART_NUM artnum   article to get line from */
 // int which_line   type of line desired */
 // bool copy    do you want it savestr()ed? */
-char *prefetchlines(ART_NUM artnum, HeaderLineType which_line, bool copy)
+char *prefetchlines(ArticleNum artnum, HeaderLineType which_line, bool copy)
 {
     char* s;
     char* t;
@@ -605,8 +605,8 @@ char *prefetchlines(ART_NUM artnum, HeaderLineType which_line, bool copy)
     {
         Article*ap;
         int     size;
-        ART_NUM num;
-        ART_NUM lastnum;
+        ArticleNum num;
+        ArticleNum lastnum;
         bool    hasxhdr = true;
 
         s = fetchcache(artnum,which_line, DONT_FILL_CACHE);
@@ -631,7 +631,7 @@ char *prefetchlines(ART_NUM artnum, HeaderLineType which_line, bool copy)
             size = sizeof g_cmd_buf;
         }
         *s = '\0';
-        ART_NUM priornum = artnum - 1;
+        ArticleNum priornum = artnum - 1;
         bool    cached = (g_htype[which_line].flags & HT_CACHED);
         int     status;
         if (cached != 0)

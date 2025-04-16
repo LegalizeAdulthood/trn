@@ -34,7 +34,7 @@
 #include <cstdlib>
 #include <ctime>
 
-ART_NUM    g_obj_count{};
+ArticleNum    g_obj_count{};
 int        g_subject_count{};
 bool       g_output_chase_phrase{};
 HASHTABLE *g_msgid_hash{};
@@ -2044,7 +2044,7 @@ static int artorder_author(const Article **art1, const Article **art2)
 
 static int artorder_number(const Article **art1, const Article **art2)
 {
-    ART_NUM eq = article_num(*art1) - article_num(*art2);
+    ArticleNum eq = article_num(*art1) - article_num(*art2);
     return eq > 0? g_sel_direction : -g_sel_direction;
 }
 
@@ -2127,7 +2127,7 @@ void sort_articles()
 
 static void build_artptrs()
 {
-    ART_NUM count = g_obj_count;
+    ArticleNum count = g_obj_count;
     int desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
 
     if (!g_artptr_list || g_artptr_list_size != count)
@@ -2137,7 +2137,7 @@ static void build_artptrs()
         g_artptr_list_size = count;
     }
     Article **app = g_artptr_list;
-    for (ART_NUM an = article_first(g_absfirst); count; an = article_next(an))
+    for (ArticleNum an = article_first(g_absfirst); count; an = article_next(an))
     {
         Article *ap = article_ptr(an);
         if ((ap->flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)

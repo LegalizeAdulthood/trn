@@ -45,7 +45,7 @@ static HeaderLineType s_hdrnum[] = {
     REFS_LINE, BYTES_LINE, LINES_LINE, XREF_LINE
 };
 
-static void ov_parse(char *line, ART_NUM artnum, bool remote);
+static void ov_parse(char *line, ArticleNum artnum, bool remote);
 static const char *ov_name(const char *group);
 static OverviewFieldNum ov_num(char *hdr, char *end);
 
@@ -198,16 +198,16 @@ OverviewFieldNum ov_num(char *hdr, char *end)
 
 /* Process the data in the group's news-overview file.
 */
-bool ov_data(ART_NUM first, ART_NUM last, bool cheating)
+bool ov_data(ArticleNum first, ArticleNum last, bool cheating)
 {
-    ART_NUM  artnum;
-    ART_NUM  an;
+    ArticleNum  artnum;
+    ArticleNum  an;
     char    * line;
     char* last_buf = g_buf;
     MEM_SIZE last_buflen = LBUFLEN;
     bool success = true;
-    ART_NUM real_first = first;
-    ART_NUM real_last = last;
+    ArticleNum real_first = first;
+    ArticleNum real_last = last;
     int line_cnt;
     int ov_chunk_size = cheating? OV_CHUNK_SIZE : OV_CHUNK_SIZE * 8;
     std::time_t started_request;
@@ -431,7 +431,7 @@ beginning:
     return success;
 }
 
-static void ov_parse(char *line, ART_NUM artnum, bool remote)
+static void ov_parse(char *line, ArticleNum artnum, bool remote)
 {
     OverviewFieldNum *fieldnum = g_datasrc->fieldnum;
     FieldFlags  *fieldflags = g_datasrc->fieldflags;
@@ -552,7 +552,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
         }
         else if (fields[OV_XREF])
         {
-            for (ART_NUM an = article_first(g_absfirst); an < artnum; an = article_next(an))
+            for (ArticleNum an = article_first(g_absfirst); an < artnum; an = article_next(an))
             {
                 Article *ap = article_ptr(an);
                 if (!ap->xrefs)

@@ -1068,7 +1068,7 @@ void followup()
 {
     char hbuf[5*LBUFLEN];
     bool incl_body = (*g_buf == 'F' && g_art);
-    ART_NUM oldart = g_art;
+    ArticleNum oldart = g_art;
 
     if (!incl_body && g_art <= g_lastart)
     {

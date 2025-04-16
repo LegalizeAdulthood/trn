@@ -16,7 +16,7 @@ enum
 
 extern bool g_kill_thresh_active;
 extern int g_kill_thresh;       /* KILL articles at or below this score */
-extern ART_NUM g_sc_fill_max;   /* maximum art# scored by fill-routine */
+extern ArticleNum g_sc_fill_max;   /* maximum art# scored by fill-routine */
 extern bool g_sc_fill_read;     /* true if also scoring read arts... */
 extern bool g_sc_initialized;   /* has score been initialized (are we "in" scoring?) */
 extern bool g_sc_scoring;       /* are we currently scoring an article (prevents loops) */
@@ -26,10 +26,10 @@ extern bool g_sc_delay;         /* If true, delay initialization of scoring unti
 
 void sc_init(bool pend_wait);
 void sc_cleanup();
-void sc_set_score(ART_NUM a, int score);
-void sc_score_art_basic(ART_NUM a);
-int sc_score_art(ART_NUM a, bool now);
-void sc_fill_scorelist(ART_NUM first, ART_NUM last);
+void sc_set_score(ArticleNum a, int score);
+void sc_score_art_basic(ArticleNum a);
+int sc_score_art(ArticleNum a, bool now);
+void sc_fill_scorelist(ArticleNum first, ArticleNum last);
 void sc_lookahead(bool flag, bool nowait);
 int sc_percent_scored();
 void sc_rescore_arts();

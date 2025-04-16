@@ -32,8 +32,8 @@ struct NewsgroupData
     NewsgroupData    *next;
     Newsrc    *rc;                 /* which rc is this line from? */
     char      *rcline;             /* pointer to group's .newsrc line */
-    ART_NUM    abs1st;             /* 1st real article in newsgroup */
-    ART_NUM    ngmax;              /* high message num for the group */
+    ArticleNum    abs1st;             /* 1st real article in newsgroup */
+    ArticleNum    ngmax;              /* high message num for the group */
     ART_UNREAD toread;             /* number of articles to be read in newsgroup */
                                    /* < 0 is invalid or unsubscribed newsgroup */
     NewsgroupNum          num;           /* a possible sort order for this group */
@@ -55,16 +55,16 @@ extern NewsgroupData     *g_recent_ng;        /* the prior newsgroup we visited 
 extern NewsgroupData     *g_starthere;        /* set to the first newsgroup with unread news on startup */
 extern NewsgroupData     *g_sel_page_np;      //
 extern NewsgroupData     *g_sel_next_np;      //
-extern ART_NUM     g_absfirst;         /* 1st real article in current newsgroup */
-extern ART_NUM     g_firstart;         /* minimum unread article number in newsgroup */
-extern ART_NUM     g_lastart;          /* maximum article number in newsgroup */
+extern ArticleNum     g_absfirst;         /* 1st real article in current newsgroup */
+extern ArticleNum     g_firstart;         /* minimum unread article number in newsgroup */
+extern ArticleNum     g_lastart;          /* maximum article number in newsgroup */
 extern ART_UNREAD  g_missing_count;    /* for reports on missing articles */
 extern std::string g_moderated;        //
 extern bool        g_redirected;       //
 extern std::string g_redirected_to;    //
 extern bool        g_threaded_group;   //
 extern NewsgroupData     *g_ng_go_ngptr;      //
-extern ART_NUM     g_ng_go_artnum;     //
+extern ArticleNum     g_ng_go_artnum;     //
 extern bool        g_novice_delays;    /* +f */
 extern bool        g_in_ng;            /* true if in a newsgroup */
 
@@ -72,9 +72,9 @@ void ngdata_init();
 void set_ng(NewsgroupData *np);
 int access_ng();
 void chdir_newsdir();
-void grow_ng(ART_NUM newlast);
+void grow_ng(ArticleNum newlast);
 void sort_newsgroups();
 void ng_skip();
-ART_NUM getngsize(NewsgroupData *gp);
+ArticleNum getngsize(NewsgroupData *gp);
 
 #endif

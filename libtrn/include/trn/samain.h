@@ -14,7 +14,7 @@ extern int g_sa_scan_context;  /* contains the scan-context number for the curre
 void sa_init();
 void sa_init_ents();
 void sa_clean_ents();
-long sa_add_ent(ART_NUM artnum);
+long sa_add_ent(ArticleNum artnum);
 void sa_cleanmain();
 void sa_growarts(long oldlast, long last);
 void sa_init_context();

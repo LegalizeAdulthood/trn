@@ -10,7 +10,7 @@ struct Article;
 struct HASHTABLE;
 struct Subject;
 
-extern ART_NUM    g_obj_count;
+extern ArticleNum    g_obj_count;
 extern int        g_subject_count;
 extern bool       g_output_chase_phrase;
 extern HASHTABLE *g_msgid_hash;

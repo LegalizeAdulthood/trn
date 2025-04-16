@@ -42,7 +42,7 @@ DECLARE_FLAGS_ENUM(ScanArticleFlags, unsigned char);
 /* per-entry data */
 struct ScanArticleEntryData
 {
-    ART_NUM       artnum;
+    ArticleNum       artnum;
     long          subj_thread_num;
     ScanArticleFlags sa_flags; /* status bitmap (marked, select, etc...) */
 };
@@ -60,7 +60,7 @@ extern bool g_sa_go;          /* go to sa.  Do not pass GO (:-) */
 extern bool g_sa_go_explicit; /* want to bypass read-next-marked */
 
 /* used to pass an article number to read soon */
-extern ART_NUM g_sa_art;
+extern ArticleNum g_sa_art;
 
 /* reimplement later */
 /* select threads from TRN thread selector */
@@ -109,7 +109,7 @@ extern bool g_sa_mode_desc_keyw;
 
 SaMainResult sa_main();
 SaMainResult sa_mainloop();
-void sa_grow(ART_NUM oldlast, ART_NUM last);
+void sa_grow(ArticleNum oldlast, ArticleNum last);
 void sa_cleanup();
 
 inline void sa_mark(int a)

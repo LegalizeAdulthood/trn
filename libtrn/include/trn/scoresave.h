@@ -13,8 +13,8 @@ void sc_sv_add(const char *str);
 void sc_sv_delgroup(const char *gname);
 void sc_sv_getfile();
 void sc_sv_savefile();
-ART_NUM sc_sv_use_line(char *line, ART_NUM a);
-ART_NUM sc_sv_make_line(ART_NUM a);
+ArticleNum sc_sv_use_line(char *line, ArticleNum a);
+ArticleNum sc_sv_make_line(ArticleNum a);
 void sc_load_scores();
 void sc_save_scores();
 

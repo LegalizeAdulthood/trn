@@ -81,7 +81,7 @@ static bool univ_include_file(const char *fname);
 static void univ_do_line_ext1(const char *desc, char *line);
 static bool univ_do_line(char *line);
 static char*univ_edit_new_userfile();
-static void univ_vg_addart(ART_NUM a);
+static void univ_vg_addart(ArticleNum a);
 static void univ_vg_addgroup();
 static int  univ_order_number(const UniversalItem**ui1, const UniversalItem**ui2);
 static int  univ_order_score(const UniversalItem**ui1, const UniversalItem**ui2);
@@ -346,7 +346,7 @@ void univ_add_file(const char *desc, const char *fname, const char *label)
     }
 }
 
-UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ART_NUM art)
+UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum art)
 {
     UniversalItem *ui = univ_add(UN_ARTICLE, desc);
     ui->data.virt.ng = savestr(grp);
@@ -666,7 +666,7 @@ static void univ_do_line_ext1(const char *desc, char *line)
 {
     char* p;
     char* q;
-    ART_NUM a;
+    ArticleNum a;
     char ch;
 
     char *s = line;
@@ -681,7 +681,7 @@ static void univ_do_line_ext1(const char *desc, char *line)
         case '0':             /* test vector: "desc" $v0 */
             s++;
             (void)univ_add_virt_num(desc? desc : s,
-                                    "news.software.readers",(ART_NUM)15000);
+                                    "news.software.readers",(ArticleNum)15000);
             break;
 
         case '1':             /* "desc" $v1 1500 news.admin */
@@ -691,7 +691,7 @@ static void univ_do_line_ext1(const char *desc, char *line)
             p = skip_digits(s);
             ch = *p;
             *p = '\0';
-            a = (ART_NUM)atoi(s);
+            a = (ArticleNum)atoi(s);
             *p = ch;
             if (*p)
             {
@@ -1103,7 +1103,7 @@ void univ_ng_virtual()
     /* also do things like check scores, add newsgroups, etc. */
 }
 
-static void univ_vg_addart(ART_NUM a)
+static void univ_vg_addart(ArticleNum a)
 {
     char lbuf[70];
 
@@ -1137,7 +1137,7 @@ static void univ_vg_addart(ART_NUM a)
 static void univ_vg_addgroup()
 {
     /* later: allow was-read articles, etc... */
-    for (ART_NUM a = article_first(g_firstart); a <= g_lastart; a = article_next(a))
+    for (ArticleNum a = article_first(g_firstart); a <= g_lastart; a = article_next(a))
     {
         if (!article_unread(a))
         {

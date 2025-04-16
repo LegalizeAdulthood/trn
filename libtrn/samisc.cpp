@@ -28,7 +28,7 @@ inline int check_article(long a)
 /* ignoring "Fold" (or later recursive) mode(s), is this article eligible? */
 bool sa_basic_elig(long a)
 {
-    ART_NUM artnum = g_sa_ents[a].artnum;
+    ArticleNum artnum = g_sa_ents[a].artnum;
     TRN_ASSERT(check_article(artnum));
 
     /* "run the gauntlet" style (:-) */
@@ -80,7 +80,7 @@ bool sa_eligible(long a)
 
 /* given an article number, return the entry number for that article */
 /* (There is no easy mapping between entry numbers and article numbers.) */
-long sa_artnum_to_ent(ART_NUM artnum)
+long sa_artnum_to_ent(ArticleNum artnum)
 {
     for (long i = 1; i < g_sa_num_ents; i++)
     {
@@ -141,7 +141,7 @@ int sa_number_arts()
     int total = 0;
     for (int i = 1; i < g_sa_num_ents; i++)
     {
-        ART_NUM a = g_sa_ents[i].artnum;
+        ArticleNum a = g_sa_ents[i].artnum;
         if (is_unavailable(a))
         {
             continue;

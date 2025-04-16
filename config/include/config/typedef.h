@@ -6,7 +6,7 @@
 /* some important types */
 
 using NewsgroupNum = int;      /* newsgroup number */
-using ART_NUM = long;          /* article number */
+using ArticleNum = long;       /* article number */
 using ART_UNREAD = long;       /* could be short to save space */
 using ART_POS = long;          /* char position in article file */
 using ART_LINE = int;          /* line position in article file */

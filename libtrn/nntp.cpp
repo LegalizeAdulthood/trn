@@ -149,8 +149,8 @@ int nntp_group(const char *group, NewsgroupData *gp)
         }
         else
         {
-            gp->abs1st = (ART_NUM)first;
-            gp->ngmax = (ART_NUM)last;
+            gp->abs1st = (ArticleNum)first;
+            gp->ngmax = (ArticleNum)last;
         }
     }
     return 1;
@@ -158,7 +158,7 @@ int nntp_group(const char *group, NewsgroupData *gp)
 
 /* check on an article's existence */
 
-int nntp_stat(ART_NUM artnum)
+int nntp_stat(ArticleNum artnum)
 {
     std::sprintf(g_ser_line, "STAT %ld", (long)artnum);
     if (nntp_command(g_ser_line) <= 0)
@@ -170,7 +170,7 @@ int nntp_stat(ART_NUM artnum)
 
 /* check on an article's existence by its message id */
 
-ART_NUM nntp_stat_id(char *msgid)
+ArticleNum nntp_stat_id(char *msgid)
 {
     long artnum;
 
@@ -184,10 +184,10 @@ ART_NUM nntp_stat_id(char *msgid)
     {
         artnum = 0;
     }
-    return (ART_NUM)artnum;
+    return (ArticleNum)artnum;
 }
 
-ART_NUM nntp_next_art()
+ArticleNum nntp_next_art()
 {
     long artnum;
 
@@ -200,12 +200,12 @@ ART_NUM nntp_next_art()
     {
         artnum = 0;
     }
-    return (ART_NUM)artnum;
+    return (ArticleNum)artnum;
 }
 
 /* prepare to get the header */
 
-int nntp_header(ART_NUM artnum)
+int nntp_header(ArticleNum artnum)
 {
     std::sprintf(g_ser_line, "HEAD %ld", (long)artnum);
     if (nntp_command(g_ser_line) <= 0)
@@ -217,7 +217,7 @@ int nntp_header(ART_NUM artnum)
 
 /* copy the body of an article to a temporary file */
 
-void nntp_body(ART_NUM artnum)
+void nntp_body(ArticleNum artnum)
 {
     char *artname = nntp_artname(artnum, false); /* Is it already in a tmp file? */
     if (artname)
@@ -547,9 +547,9 @@ int nntp_rover()
 }
 #endif
 
-ART_NUM nntp_find_real_art(ART_NUM after)
+ArticleNum nntp_find_real_art(ArticleNum after)
 {
-    ART_NUM an;
+    ArticleNum an;
 
     if (g_last_cached > after || g_last_cached < g_absfirst //
         || nntp_stat(g_last_cached) <= 0)
@@ -575,9 +575,9 @@ ART_NUM nntp_find_real_art(ART_NUM after)
     return 0;
 }
 
-char *nntp_artname(ART_NUM artnum, bool allocate)
+char *nntp_artname(ArticleNum artnum, bool allocate)
 {
-    static ART_NUM artnums[MAX_NNTP_ARTICLES];
+    static ArticleNum artnums[MAX_NNTP_ARTICLES];
     static std::time_t  artages[MAX_NNTP_ARTICLES];
     std::time_t         lowage;
 

@@ -83,14 +83,14 @@ void catch_up(NewsgroupData *np, int leave_count, int output_level)
 
 /* add an article number to a newsgroup, if it isn't already read */
 
-int addartnum(DataSource *dp, ART_NUM artnum, const char *ngnam)
+int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
 {
     char*   s;
     char*   t;
     char*   maxt = nullptr;
-    ART_NUM min = 0;
-    ART_NUM max = -1;
-    ART_NUM lastnum = 0;
+    ArticleNum min = 0;
+    ArticleNum max = -1;
+    ArticleNum lastnum = 0;
     char*   mbuf;
     bool    morenum;
 
@@ -447,9 +447,9 @@ void set_toread(NewsgroupData *np, bool lax_high_check)
     char    tmpbuf[64];
     char*   mybuf = tmpbuf;
     bool    virgin_ng = (!np->abs1st);
-    ART_NUM ngsize = getngsize(np);
-    ART_NUM unread = ngsize;
-    ART_NUM newmax;
+    ArticleNum ngsize = getngsize(np);
+    ArticleNum unread = ngsize;
+    ArticleNum newmax;
 
     if (ngsize == TR_BOGUS)
     {
@@ -557,11 +557,11 @@ void set_toread(NewsgroupData *np, bool lax_high_check)
 
 /* make sure expired articles are marked as read */
 
-void checkexpired(NewsgroupData *np, ART_NUM a1st)
+void checkexpired(NewsgroupData *np, ArticleNum a1st)
 {
     char   *s;
-    ART_NUM num;
-    ART_NUM lastnum = 0;
+    ArticleNum num;
+    ArticleNum lastnum = 0;
     char   * mbuf;
     char* cp;
     int len;
@@ -671,12 +671,12 @@ void checkexpired(NewsgroupData *np, ART_NUM a1st)
 
 /* Returns true if article is marked as read or does not exist */
 /* could use a better name */
-bool was_read_group(DataSource *dp, ART_NUM artnum, char *ngnam)
+bool was_read_group(DataSource *dp, ArticleNum artnum, char *ngnam)
 {
     char*   s;
     char*   t;
-    ART_NUM min = 0;
-    ART_NUM max = -1;
+    ArticleNum min = 0;
+    ArticleNum max = -1;
 
     if (!artnum)
     {
@@ -713,7 +713,7 @@ bool was_read_group(DataSource *dp, ART_NUM artnum, char *ngnam)
     while (std::isdigit(*s) && artnum >= (min = std::atol(s)))
     {
         char*   maxt = nullptr;
-        ART_NUM lastnum = 0;
+        ArticleNum lastnum = 0;
         /* while it might have been read */
         t = skip_digits(s);             /* skip number */
         if (*t == '-')                  /* is it a range? */

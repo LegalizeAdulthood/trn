@@ -38,7 +38,7 @@ using DecodeFunc = DecodeState (*)(std::FILE *ifp, DecodeState state);
 
 void decode_init();
 char *decode_fix_fname(const char *s);
-char *decode_subject(ART_NUM artnum, int *partp, int *totalp);
+char *decode_subject(ArticleNum artnum, int *partp, int *totalp);
 bool decode_piece(MimeCapEntry *mcp, char *first_line);
 DecodeFunc decode_function(MimeEncoding encoding);
 char *decode_mkdir(const char *filename);

@@ -174,12 +174,12 @@ int switcheroo()
 
 NumNumResult numnum()
 {
-    ART_NUM min;
-    ART_NUM max;
+    ArticleNum min;
+    ArticleNum max;
     char   * cmdlst = nullptr;
     char* s;
     char* c;
-    ART_NUM oldart = g_art;
+    ArticleNum oldart = g_art;
     char tmpbuf[LBUFLEN];
     bool output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
     bool justone = true;                /* assume only one article */
@@ -411,7 +411,7 @@ int thread_perform()
     }
     else if (*cmdstr == 'p')
     {
-        ART_NUM oldart = g_art;
+        ArticleNum oldart = g_art;
         g_art = g_lastart+1;
         followup();
         g_forcegrow = true;

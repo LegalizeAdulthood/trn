@@ -27,11 +27,11 @@ enum
 int     nntp_list(const char *type, const char *arg, int len);
 void    nntp_finish_list();
 int     nntp_group(const char *group, NewsgroupData *gp);
-int     nntp_stat(ART_NUM artnum);
-ART_NUM nntp_stat_id(char *msgid);
-ART_NUM nntp_next_art();
-int     nntp_header(ART_NUM artnum);
-void    nntp_body(ART_NUM artnum);
+int     nntp_stat(ArticleNum artnum);
+ArticleNum nntp_stat_id(char *msgid);
+ArticleNum nntp_next_art();
+int     nntp_header(ArticleNum artnum);
+void    nntp_body(ArticleNum artnum);
 long    nntp_artsize();
 int     nntp_finishbody(FinishBodyMode bmode);
 int     nntp_seekart(ART_POS pos);
@@ -43,8 +43,8 @@ int     nntp_artnums();
 #if 0
 int nntp_rover();
 #endif
-ART_NUM nntp_find_real_art(ART_NUM after);
-char *nntp_artname(ART_NUM artnum, bool allocate);
+ArticleNum nntp_find_real_art(ArticleNum after);
+char *nntp_artname(ArticleNum artnum, bool allocate);
 char *nntp_tmpname(int ndx);
 int nntp_handle_nested_lists();
 int nntp_handle_timeout();

@@ -27,7 +27,7 @@ bool          g_sa_never_initialized{true}; /* Have we ever initialized? */
 bool    g_sa_in{};             /* Are we "in" SA? */
 bool    g_sa_go{};             /* go to sa.  Do not pass GO (:-) */
 bool    g_sa_go_explicit{};    /* want to bypass read-next-marked */
-ART_NUM g_sa_art{};            /* used to pass an article number to read soon */
+ArticleNum g_sa_art{};            /* used to pass an article number to read soon */
 bool    g_sa_do_selthreads{};  /* select threads from TRN thread selector; re-implement later */
 bool    g_sa_mode_read_elig{}; /* true if read articles are eligible in trn/scanart.h for world-visibilty */
 
@@ -138,7 +138,7 @@ SaMainResult sa_main()
 }
 
 /* called when more articles arrive */
-void sa_grow(ART_NUM oldlast, ART_NUM last)
+void sa_grow(ArticleNum oldlast, ArticleNum last)
 {
     if (!g_sa_initialized)
     {

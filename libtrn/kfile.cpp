@@ -37,7 +37,7 @@ std::FILE          *g_localkfp{};               /* local (for this newsgroup) fi
 KillFileStateFlags g_kf_state{};               /* the state of our kill files */
 KillFileStateFlags g_kfs_thread_change_set{};  /* bits to set for thread changes */
 int                 g_kf_changethd_cnt{};       /* # entries changed from old to new */
-ART_NUM             g_killfirst{};              /* used as g_firstart when killing */
+ArticleNum             g_killfirst{};              /* used as g_firstart when killing */
 
 static void mention(const char *str);
 static bool kfile_junk(char *ptr, int killmask);
@@ -420,7 +420,7 @@ static bool kfile_junk(char *ptr, int killmask)
     return false;
 }
 
-void kill_unwanted(ART_NUM starting, const char *message, int entering)
+void kill_unwanted(ArticleNum starting, const char *message, int entering)
 {
     bool intr = false;                  /* did we get an interrupt? */
     MinorMode oldmode = g_mode;
@@ -430,7 +430,7 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
     if ((entering || s_exitcmds) && (g_localkfp || s_globkfp))
     {
         s_exitcmds = false;
-        ART_NUM oldfirst = g_firstart;
+        ArticleNum oldfirst = g_firstart;
         g_firstart = starting;
         clear();
         if (message && (g_verbose || entering))
@@ -499,7 +499,7 @@ static int write_local_thread_commands(int keylen, HashDatum *data, int extra)
     return 0;
 }
 
-void rewrite_kfile(ART_NUM thru)
+void rewrite_kfile(ArticleNum thru)
 {
     bool has_content = (g_kf_state & (KFS_THREAD_LINES|KFS_GLOBAL_THREADFILE))
                                  == KFS_THREAD_LINES;

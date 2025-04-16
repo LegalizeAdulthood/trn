@@ -28,7 +28,7 @@ static void unlink_child(Article *child);
 
 /* This depends on art being set to the current article number.
 */
-Article *allocate_article(ART_NUM artnum)
+Article *allocate_article(ArticleNum artnum)
 {
     Article* article;
 

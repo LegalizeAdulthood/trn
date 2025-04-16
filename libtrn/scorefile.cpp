@@ -304,7 +304,7 @@ void sf_add_extra_header(const char *head)
 
 //ART_NUM art;          /* article number to check */
 //int hnum;             /* header number: offset into s_sf_extra_headers */
-char *sf_get_extra_header(ART_NUM art, int hnum)
+char *sf_get_extra_header(ArticleNum art, int hnum)
 {
     static char lbuf[LBUFLEN];
 
@@ -888,7 +888,7 @@ int score_match(char *str, int ind)
     return s3 != nullptr && (!s2 || std::strstr(s3 + std::strlen(s1), s2));
 }
 
-int sf_score(ART_NUM a)
+int sf_score(ArticleNum a)
 {
     if (is_unavailable(a))
     {
@@ -1155,7 +1155,7 @@ void sf_append(char *line)
 }
 
 /* returns a lowercased copy of the header line type h in private buffer */
-char *sf_get_line(ART_NUM a, HeaderLineType h)
+char *sf_get_line(ArticleNum a, HeaderLineType h)
 {
     static char sf_getline[LBUFLEN];
     char* s;

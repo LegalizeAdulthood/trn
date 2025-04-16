@@ -86,7 +86,7 @@ extern UserHeaderType *g_user_htype;
 extern short g_user_htypeix[26];
 extern int g_user_htype_cnt;
 extern int g_user_htype_max;
-extern ART_NUM g_parsed_art;         /* the article number we've parsed */
+extern ArticleNum g_parsed_art;         /* the article number we've parsed */
 extern HeaderLineType g_in_header; /* are we decoding the header? */
 extern char *g_headbuf;
 
@@ -103,23 +103,23 @@ void dumpheader(char *where);
 #endif
 HeaderLineType set_line_type(char *bufptr, const char *colon);
 HeaderLineType get_header_num(char *s);
-void start_header(ART_NUM artnum);
+void start_header(ArticleNum artnum);
 void end_header_line();
 bool parseline(char *art_buf, int newhide, int oldhide);
 void end_header();
-bool parseheader(ART_NUM artnum);
-char *fetchlines(ART_NUM artnum, HeaderLineType which_line);
-char *mp_fetchlines(ART_NUM artnum, HeaderLineType which_line, MemoryPool pool);
-char *prefetchlines(ART_NUM artnum, HeaderLineType which_line, bool copy);
-inline char *fetchsubj(ART_NUM artnum, bool copy)
+bool parseheader(ArticleNum artnum);
+char *fetchlines(ArticleNum artnum, HeaderLineType which_line);
+char *mp_fetchlines(ArticleNum artnum, HeaderLineType which_line, MemoryPool pool);
+char *prefetchlines(ArticleNum artnum, HeaderLineType which_line, bool copy);
+inline char *fetchsubj(ArticleNum artnum, bool copy)
 {
     return prefetchlines(artnum, SUBJ_LINE, copy);
 }
-inline char *fetchfrom(ART_NUM artnum, bool copy)
+inline char *fetchfrom(ArticleNum artnum, bool copy)
 {
     return prefetchlines(artnum, FROM_LINE, copy);
 }
-inline char *fetchxref(ART_NUM artnum, bool copy)
+inline char *fetchxref(ArticleNum artnum, bool copy)
 {
     return prefetchlines(artnum, XREF_LINE, copy);
 }

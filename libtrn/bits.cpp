@@ -39,7 +39,7 @@ static long s_chase_count{};
 
 static bool yank_article(char *ptr, int arg);
 static bool check_chase(char *ptr, int until_key);
-static int chase_xref(ART_NUM artnum, int markread);
+static int chase_xref(ArticleNum artnum, int markread);
 #ifdef VALIDATE_XREF_SITE
 static bool valid_xref_site(ART_NUM artnum, char *site);
 #endif
@@ -53,7 +53,7 @@ void rc_to_bits()
     char*   mybuf = g_buf; /* place to decode rc line */
     char*   c;
     char*   h;
-    ART_NUM unread;
+    ArticleNum unread;
     Article*ap;
 
     /* modify the article flags to reflect what has already been read */
@@ -105,10 +105,10 @@ void rc_to_bits()
     i = g_firstart;
     for ( ; (c = std::strchr(s,',')) != nullptr; s = ++c)    /* for each range */
     {
-        ART_NUM max;
+        ArticleNum max;
         *c = '\0';                      /* do not let index see past comma */
         h = std::strchr(s,'-');
-        ART_NUM min = std::atol(s);
+        ArticleNum min = std::atol(s);
         min = std::max(min, g_firstart);    /* make sure range is in range */
         if (min > g_lastart)
         {
@@ -218,8 +218,8 @@ bool set_firstart(const char *s)
 void bits_to_rc()
 {
     char* mybuf = g_buf;
-    ART_NUM i;
-    ART_NUM count=0;
+    ArticleNum i;
+    ArticleNum count=0;
     int safelen = LBUFLEN - 32;
 
     std::strcpy(g_buf,g_ngptr->rcline);            /* start with the newsgroup name */
@@ -262,7 +262,7 @@ void bits_to_rc()
         {
             std::sprintf(s,"%ld",(long)i); /* put out the min of the range */
             s += std::strlen(s);           /* keeping house */
-            ART_NUM oldi = i;         /* remember this spot */
+            ArticleNum oldi = i;         /* remember this spot */
             do
             {
                 i++;
@@ -321,7 +321,7 @@ void bits_to_rc()
 
 void find_existing_articles()
 {
-    ART_NUM an;
+    ArticleNum an;
     Article* ap;
 
     if (g_datasrc->flags & DF_REMOTE)
@@ -345,7 +345,7 @@ void find_existing_articles()
                 {
                     break;
                 }
-                an = (ART_NUM)std::atol(g_ser_line);
+                an = (ArticleNum)std::atol(g_ser_line);
                 if (an < g_absfirst)
                 {
                     continue;   /* Ignore some wacked-out NNTP servers */
@@ -410,8 +410,8 @@ void find_existing_articles()
     else
     {
         namespace fs = std::filesystem;
-        ART_NUM first = g_lastart+1;
-        ART_NUM last = 0;
+        ArticleNum first = g_lastart+1;
+        ArticleNum last = 0;
         fs::path cwd(".");
         char ch;
         long lnum;
@@ -435,7 +435,7 @@ void find_existing_articles()
             std::string filename{entry.path().filename().string()};
             if (std::sscanf(filename.c_str(), "%ld%c", &lnum, &ch) == 1)
             {
-                an = (ART_NUM)lnum;
+                an = (ArticleNum)lnum;
                 if (an <= g_lastart && an >= g_absfirst)
                 {
                     first = std::min(an, first);
@@ -484,7 +484,7 @@ void onemore(Article *ap)
 {
     if (!(ap->flags & AF_UNREAD))
     {
-        ART_NUM artnum = article_num(ap);
+        ArticleNum artnum = article_num(ap);
         check_first(artnum);
         ap->flags |= AF_UNREAD;
         ap->flags &= ~AF_DEL;
@@ -527,7 +527,7 @@ void oneless(Article *ap)
     }
 }
 
-void oneless_artnum(ART_NUM artnum)
+void oneless_artnum(ArticleNum artnum)
 {
     Article* ap = article_find(artnum);
     if (ap)
@@ -612,7 +612,7 @@ void mark_missing_articles()
 
 /* keep g_firstart pointing at the first unread article */
 
-void check_first(ART_NUM min)
+void check_first(ArticleNum min)
 {
     min = std::max(min, g_absfirst);
     g_firstart = std::min(min, g_firstart);
@@ -706,10 +706,10 @@ static bool check_chase(char *ptr, int until_key)
 /* run down xref list and mark as read or unread */
 
 /* The Xref-line-using version */
-static int chase_xref(ART_NUM artnum, int markread)
+static int chase_xref(ArticleNum artnum, int markread)
 {
     char* xartnum;
-    ART_NUM x;
+    ArticleNum x;
     char *curxref;
     char tmpbuf[128];
 

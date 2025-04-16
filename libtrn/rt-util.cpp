@@ -777,7 +777,7 @@ static int       s_spin_level{}; /* used to allow non-interfering nested spins *
 static SpinMode s_spin_mode{};
 static int       s_spin_place{}; /* represents place in s_spinchars array */
 static int       s_spin_pos{};   /* the last spinbar position we drew */
-static ART_NUM   s_spin_art{};
+static ArticleNum   s_spin_art{};
 static ART_POS   s_spin_tell{};
 
 void setspin(SpinMode mode)

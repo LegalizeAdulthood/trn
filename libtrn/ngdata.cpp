@@ -49,16 +49,16 @@ NewsgroupData     *g_recent_ng{};         /* the prior newsgroup we visited */
 NewsgroupData     *g_starthere{};         /* set to the first newsgroup with unread news on startup */
 NewsgroupData     *g_sel_page_np{};       //
 NewsgroupData     *g_sel_next_np{};       //
-ART_NUM     g_absfirst{};          /* 1st real article in current newsgroup */
-ART_NUM     g_firstart{};          /* minimum unread article number in newsgroup */
-ART_NUM     g_lastart{};           /* maximum article number in newsgroup */
+ArticleNum     g_absfirst{};          /* 1st real article in current newsgroup */
+ArticleNum     g_firstart{};          /* minimum unread article number in newsgroup */
+ArticleNum     g_lastart{};           /* maximum article number in newsgroup */
 ART_UNREAD  g_missing_count{};     /* for reports on missing articles */
 std::string g_moderated;           //
 bool        g_redirected{};        //
 std::string g_redirected_to;       //
 bool        g_threaded_group{};    //
 NewsgroupData     *g_ng_go_ngptr{};       //
-ART_NUM     g_ng_go_artnum{};      //
+ArticleNum     g_ng_go_artnum{};      //
 bool        g_novice_delays{true}; /* +f */
 bool        g_in_ng{};             /* true if in a newsgroup */
 
@@ -83,7 +83,7 @@ void set_ng(NewsgroupData *np)
 
 int access_ng()
 {
-    ART_NUM old_first = g_ngptr->abs1st;
+    ArticleNum old_first = g_ngptr->abs1st;
 
     if (g_datasrc->flags & DF_REMOTE)
     {
@@ -172,14 +172,14 @@ void chdir_newsdir()
     }
 }
 
-void grow_ng(ART_NUM newlast)
+void grow_ng(ArticleNum newlast)
 {
     g_forcegrow = false;
     if (newlast > g_lastart)
     {
-        ART_NUM tmpart = g_art;
+        ArticleNum tmpart = g_art;
         g_ngptr->toread += (ART_UNREAD)(newlast-g_lastart);
-        ART_NUM tmpfirst = g_lastart + 1;
+        ArticleNum tmpfirst = g_lastart + 1;
         /* Increase the size of article scan arrays. */
         sa_grow(g_lastart,newlast);
         do
@@ -310,7 +310,7 @@ void ng_skip()
         {
             /* tries to grab PREFETCH_SIZE XHDRS, flagging missing articles */
             (void) fetchsubj(g_art, false);
-            ART_NUM artnum = g_art + PREFETCH_SIZE - 1;
+            ArticleNum artnum = g_art + PREFETCH_SIZE - 1;
             artnum = std::min(artnum, g_lastart);
             while (g_art <= artnum)
             {
@@ -349,7 +349,7 @@ void ng_skip()
 
 /* find the maximum article number of a newsgroup */
 
-ART_NUM getngsize(NewsgroupData *gp)
+ArticleNum getngsize(NewsgroupData *gp)
 {
     char tmpbuf[LBUFLEN];
     long last;
@@ -378,7 +378,7 @@ ART_NUM getngsize(NewsgroupData *gp)
 #endif
     if (!gp->abs1st)
     {
-        gp->abs1st = (ART_NUM) first;
+        gp->abs1st = (ArticleNum) first;
     }
     if (!g_in_ng)
     {
@@ -423,5 +423,5 @@ ART_NUM getngsize(NewsgroupData *gp)
     {
         return gp->ngmax;
     }
-    return gp->ngmax = (ART_NUM)last;
+    return gp->ngmax = (ArticleNum)last;
 }
