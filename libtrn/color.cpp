@@ -38,7 +38,7 @@
 #include <cstdio>
 #include <cstring>
 
-struct COLOR_OBJ
+struct ColorObj
 {
     const char* name;
     char* fg;
@@ -62,7 +62,7 @@ static void output_color();
 ** or just a few, lines in the [attribute] section.
 */
 
-static COLOR_OBJ s_objects[MAX_COLORS] =
+static ColorObj s_objects[MAX_COLORS] =
 // clang-format off
 {
     { "default",        "", "", NOMARKING       },
@@ -89,7 +89,7 @@ static COLOR_OBJ s_objects[MAX_COLORS] =
 // clang-format on
 
 /* The attribute stack.  The 0th element is always the "normal" object. */
-static COLOR_OBJ s_color_stack[STACK_SIZE];
+static ColorObj s_color_stack[STACK_SIZE];
 static int       s_stack_pointer{};
 
 /* Initialize color support after trnrc is read. */
@@ -114,7 +114,7 @@ void color_init()
         {
             bg = "";
         }
-        for (COLOR_OBJ &obj : s_objects)
+        for (ColorObj &obj : s_objects)
         {
             if (empty(obj.fg))
             {
@@ -265,7 +265,7 @@ void color_object(int object, bool push)
 {
     /* Merge in the colors/attributes that we are not setting
      * from the current object. */
-    COLOR_OBJ merged = s_color_stack[s_stack_pointer];
+    ColorObj merged = s_color_stack[s_stack_pointer];
 
     /* Merge in the new colors/attributes. */
     if (s_objects[object].fg)
@@ -346,8 +346,8 @@ void color_default()
 /* Set colors/attribute for an object. */
 static void output_color()
 {
-    static COLOR_OBJ prior{"", nullptr, nullptr, NOMARKING};
-    COLOR_OBJ* op = &s_color_stack[s_stack_pointer];
+    static ColorObj prior{"", nullptr, nullptr, NOMARKING};
+    ColorObj* op = &s_color_stack[s_stack_pointer];
 
     /* If no change, just return. */
     if (op->attr == prior.attr && op->fg == prior.fg && op->bg == prior.bg)
