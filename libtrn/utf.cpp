@@ -213,24 +213,44 @@ const char *output_charset_name()
 int byte_length_at(const char *s)
 {
     int it = s != nullptr; /* correct for ASCII */
-    if (!it) {
-    } else if (IS_UTF8(s_gs.in)) {
-        if ((*s & 0x80) == 0) {
-        } else if ((*s & 0xE0) == 0xC0 && OK(s + 1)) {
+    if (!it)
+    {
+    }
+    else if (IS_UTF8(s_gs.in))
+    {
+        if ((*s & 0x80) == 0)
+        {
+        }
+        else if ((*s & 0xE0) == 0xC0 && OK(s + 1))
+        {
             it = 2;
-        } else if ((*s & 0xF0) == 0xE0 && OK(s + 1) && OK(s + 2)) {
+        }
+        else if ((*s & 0xF0) == 0xE0 && OK(s + 1) && OK(s + 2))
+        {
             it = 3;
-        } else if ((*s & 0xF8) == 0xF0 && OK(s + 1) && OK(s + 2) && OK(s + 3)) {
+        }
+        else if ((*s & 0xF8) == 0xF0 && OK(s + 1) && OK(s + 2) && OK(s + 3))
+        {
             it = 4;
-        } else if ((*s & 0xFC) == 0xF8 && OK(s + 1) && OK(s + 2) && OK(s + 3) && OK(s + 4)) {
+        }
+        else if ((*s & 0xFC) == 0xF8 && OK(s + 1) && OK(s + 2) && OK(s + 3) && OK(s + 4))
+        {
             it = 5;
-        } else if ((*s & 0xFE) == 0xFC && OK(s + 1) && OK(s + 2) && OK(s + 3) && OK(s + 4) && OK(s + 5)) {
+        }
+        else if ((*s & 0xFE) == 0xFC && OK(s + 1) && OK(s + 2) && OK(s + 3) && OK(s + 4) && OK(s + 5))
+        {
             it = 6;
-        } else {
+        }
+        else
+        {
             /* FIXME - invalid UTF-8 */
         }
-    } else if (IS_SINGLE_BYTE(s_gs.in)) {
-    } else if (IS_DOUBLE_BYTE(s_gs.in)) {
+    }
+    else if (IS_SINGLE_BYTE(s_gs.in))
+    {
+    }
+    else if (IS_DOUBLE_BYTE(s_gs.in))
+    {
         if (*s & 0x80)
         {
             it = 2;
@@ -244,25 +264,34 @@ int visual_width_at(const char *s)
 {
     CODE_POINT c = code_point_at(s);
     int it = 1;
-    if (c == INVALID_CODE_POINT) {
+    if (c == INVALID_CODE_POINT)
+    {
         it = 0;
-    } else if (IS_SINGLE_BYTE(s_gs.in)) {
+    }
+    else if (IS_SINGLE_BYTE(s_gs.in))
+    {
         it = 1;
-    } else if (IS_DOUBLE_BYTE(s_gs.in)) {
+    }
+    else if (IS_DOUBLE_BYTE(s_gs.in))
+    {
         it = (c & 0x80)? 2: 1;
-    } else if ((c >= 0x00300 && c <= 0x0036F)   /* combining diacritics */
-            || (c >= 0x01AB0 && c <= 0x01AFF)
-            || (c >= 0x01DC0 && c <= 0x01DFF)
-            || (c >= 0x0200B && c <= 0x0200F)   /* zwsp, zwnj, zwj, lrm, rlm */
-            || (c >= 0x0202A && c <= 0x0202E)   /* lre, rle, pdf, lro, rlo */
-            || (c >= 0x02060 && c <= 0x02064)) { /* wj,..., invisible plus */
+    }
+    else if ((c >= 0x00300 && c <= 0x0036F)     /* combining diacritics */
+             || (c >= 0x01AB0 && c <= 0x01AFF)  //
+             || (c >= 0x01DC0 && c <= 0x01DFF)  //
+             || (c >= 0x0200B && c <= 0x0200F)  /* zwsp, zwnj, zwj, lrm, rlm */
+             || (c >= 0x0202A && c <= 0x0202E)  /* lre, rle, pdf, lro, rlo */
+             || (c >= 0x02060 && c <= 0x02064)) /* wj,..., invisible plus */
+    {
         it = 0;
-    } else if ((c >= 0x02E80 && c <= 0x04DBF)   /* CJK misc, kana, hangul */
-            || (c >= 0x04E00 && c <= 0x09FFF)   /* CJK ideographs */
-            || (c >= 0x0FE30 && c <= 0x0FE4F)   /* CJK compatibility forms */
-            || (c >= 0x0FF00 && c <= 0x0FF60)   /* CJK fullwidth forms */
-            || (c >= 0x0FFE0 && c <= 0x0FFE6)
-            || (c >= 0x20000 && c <= 0x2FA1F)) { /* more CJK ideographs */
+    }
+    else if ((c >= 0x02E80 && c <= 0x04DBF)     /* CJK misc, kana, hangul */
+             || (c >= 0x04E00 && c <= 0x09FFF)  /* CJK ideographs */
+             || (c >= 0x0FE30 && c <= 0x0FE4F)  /* CJK compatibility forms */
+             || (c >= 0x0FF00 && c <= 0x0FF60)  /* CJK fullwidth forms */
+             || (c >= 0x0FFE0 && c <= 0x0FFE6)  //
+             || (c >= 0x20000 && c <= 0x2FA1F)) /* more CJK ideographs */
+    {
         it = 2;
     }
     return it;
@@ -271,8 +300,10 @@ int visual_width_at(const char *s)
 int visual_length_of(const char *s)
 {
     int it = 0;
-    if (s) {
-        for (; *s; ) {
+    if (s)
+    {
+        for (; *s;)
+        {
             int w = byte_length_at(s);
             int v = visual_width_at(s);
             it += v;
@@ -285,13 +316,16 @@ int visual_length_of(const char *s)
 int visual_length_between(const char *s1, const char *s2)
 {
     int it = 0;
-    if (s1 && s2) {
-        if (s1 > s2) {
+    if (s1 && s2)
+    {
+        if (s1 > s2)
+        {
             const char *t = s1;
             s1 = s2;
             s2 = t;
         }
-        for (; *s1 && s1 < s2; ) {
+        for (; *s1 && s1 < s2;)
+        {
             int w = byte_length_at(s1);
             int v = visual_width_at(s1);
             it += v;
@@ -304,34 +338,55 @@ int visual_length_between(const char *s1, const char *s2)
 CODE_POINT code_point_at(const char *s)
 {
     CODE_POINT it;
-    if (s != nullptr) {
-        if (IS_UTF8(s_gs.in)) {
+    if (s != nullptr)
+    {
+        if (IS_UTF8(s_gs.in))
+        {
             size_t n = std::strlen(s);
-            if (n > 0 && (*s & 0x80) == 0) {
+            if (n > 0 && (*s & 0x80) == 0)
+            {
                 it = *s;
-            } else if (n > 1 && (*s & 0xE0) == 0xC0 && OK(s + 1)) {
+            }
+            else if (n > 1 && (*s & 0xE0) == 0xC0 && OK(s + 1))
+            {
                 it = LEAD(s, 0x1F, 6) | NEXT(s[1], 0);
-            } else if (n > 2 && (*s & 0xF0) == 0xE0 && OK(s + 1) && OK(s + 2)) {
+            }
+            else if (n > 2 && (*s & 0xF0) == 0xE0 && OK(s + 1) && OK(s + 2))
+            {
                 it = LEAD(s, 0x0F, 12) | NEXT(s[1], 6) | NEXT(s[2], 0);
-            } else if (n > 3 && (*s & 0xF8) == 0xF0 && OK(s + 1) && OK(s + 2) && OK(s + 3)) {
+            }
+            else if (n > 3 && (*s & 0xF8) == 0xF0 && OK(s + 1) && OK(s + 2) && OK(s + 3))
+            {
                 it = LEAD(s, 0x07, 18) | NEXT(s[1], 12) | NEXT(s[2], 6) | NEXT(s[3], 0);
-            } else if (n > 4 && (*s & 0xFC) == 0xF8 && OK(s + 1) && OK(s + 2) && OK(s + 3) && OK(s + 4)) {
+            }
+            else if (n > 4 && (*s & 0xFC) == 0xF8 && OK(s + 1) && OK(s + 2) && OK(s + 3) && OK(s + 4))
+            {
                 it = LEAD(s, 0x03, 24) | NEXT(s[1], 18) | NEXT(s[2], 12) | NEXT(s[3], 6) | NEXT(s[4], 0);
-            } else if (n > 5 && (*s & 0xFE) == 0xFC && OK(s + 1) && OK(s + 2) && OK(s + 3) && OK(s + 4) && OK(s + 5)) {
+            }
+            else if (n > 5 && (*s & 0xFE) == 0xFC && OK(s + 1) && OK(s + 2) && OK(s + 3) && OK(s + 4) && OK(s + 5))
+            {
                 it = LEAD(s, 0x01, 30) | NEXT(s[1], 24) | NEXT(s[2], 18) | NEXT(s[3], 12) | NEXT(s[4], 6) | NEXT(s[5], 0);
-            } else {
+            }
+            else
+            {
                 it = INVALID_CODE_POINT;
             }
-        } else if (s_gs.in == CHARSET_ASCII) {
+        }
+        else if (s_gs.in == CHARSET_ASCII)
+        {
             it = *s & 0x7F;
-        } else if (s_gs.himap_in != nullptr) {
+        }
+        else if (s_gs.himap_in != nullptr)
+        {
             it = *s & 0xFF; /* I hate signed/unsigned conversions */
             if (it & 0x80)
             {
                 it = s_gs.himap_in[it & 0x7F];
             }
         }
-    } else {
+    }
+    else
+    {
         it = INVALID_CODE_POINT;
     }
     return it;
@@ -345,29 +400,34 @@ static int insert_utf8_at(char *s, CODE_POINT c)
     {
         it = 0;
     }
-    else if (c <= 0x0000007F) {
+    else if (c <= 0x0000007F)
+    {
         s[0] = (char)c;
         it = 1;
     }
-    else if (c <= 0x000007FF) {
+    else if (c <= 0x000007FF)
+    {
         s[0] = ((char)(c >>  6) & 0x1F) | 0xC0;
         s[1] = ((char) c        & 0x3F) | 0x80;
         it = 2;
     }
-    else if (c <= 0x0000FFFF) {
+    else if (c <= 0x0000FFFF)
+    {
         s[0] = ((char)(c >> 12) & 0x1F) | 0xE0;
         s[1] = ((char)(c >>  6) & 0x3F) | 0x80;
         s[2] = ((char) c        & 0x3F) | 0x80;
         it = 3;
     }
-    else if (c <= 0x001FFFFF) {
+    else if (c <= 0x001FFFFF)
+    {
         s[0] = ((char)(c >> 18) & 0x1F) | 0xF0;
         s[1] = ((char)(c >> 12) & 0x3F) | 0x80;
         s[2] = ((char)(c >>  6) & 0x3F) | 0x80;
         s[3] = ((char) c        & 0x3F) | 0x80;
         it = 4;
     }
-    else if (c <= 0x03FFFFFF) {
+    else if (c <= 0x03FFFFFF)
+    {
         s[0] = ((char)(c >> 24) & 0x1F) | 0xF8;
         s[1] = ((char)(c >> 18) & 0x3F) | 0x80;
         s[2] = ((char)(c >> 12) & 0x3F) | 0x80;
@@ -375,7 +435,8 @@ static int insert_utf8_at(char *s, CODE_POINT c)
         s[4] = ((char) c        & 0x3F) | 0x80;
         it = 5;
     }
-    else if (c <= 0x7FFFFFFF) {
+    else if (c <= 0x7FFFFFFF)
+    {
         s[0] = ((char)(c >> 30) & 0x1F) | 0xFC;
         s[1] = ((char)(c >> 24) & 0x3F) | 0x80;
         s[2] = ((char)(c >> 18) & 0x3F) | 0x80;
@@ -395,12 +456,17 @@ int insert_unicode_at(char *s, CODE_POINT c)
     {
         it = 0;
     }
-    else if (IS_UTF8(s_gs.in)) {
+    else if (IS_UTF8(s_gs.in))
+    {
         it = insert_utf8_at(s, c);
-    } else if (c <= 0x7F) {
+    }
+    else if (c <= 0x7F)
+    {
         s[0] = (char)c;
         it = 1;
-    } else if (s_gs.himap_in != nullptr) {
+    }
+    else if (s_gs.himap_in != nullptr)
+    {
         it = insert_utf8_at(s, s_gs.himap_in[c & 0x7F]);
     }
     return it;
@@ -409,9 +475,14 @@ int insert_unicode_at(char *s, CODE_POINT c)
 bool at_norm_char(const char *s)
 {
     int it = s != nullptr;
-    if (it) { it = *s != 0; }
-    if (it) {
-        if (s_gs.in == CHARSET_UTF8) {
+    if (it)
+    {
+        it = *s != 0;
+    }
+    if (it)
+    {
+        if (s_gs.in == CHARSET_UTF8)
+        {
             CODE_POINT c = code_point_at(s);
             it = c >= 0x20 && !(c >= 0x7F && c < 0xA0) && c != 0x2028 && c != 0x2029;
         }
@@ -430,22 +501,29 @@ bool at_norm_char(const char *s)
 int put_char_adv(char **strptr, bool outputok)
 {
     int it;
-    if (strptr == nullptr) {
+    if (strptr == nullptr)
+    {
         it = 0;
-    } else {
+    }
+    else
+    {
         char *s = *strptr;
-        if (s_gs.in == CHARSET_UTF8 || (*s >= ' ' && *s < 0x7F)) {
+        if (s_gs.in == CHARSET_UTF8 || (*s >= ' ' && *s < 0x7F))
+        {
             int w = byte_length_at(s);
             it = visual_width_at(s);
             if (outputok)
             {
-                for (int i = 0; i < w; i += 1) {
+                for (int i = 0; i < w; i += 1)
+                {
                     std::putchar(*s);
                     s++;
                 }
             }
             *strptr = s;
-        } else if (s_gs.himap_in) {
+        }
+        else if (s_gs.himap_in)
+        {
             char buf[7];
             int w = insert_utf8_at(buf, s_gs.himap_in[U(*s) & 0x7F]);
             for (int i = 0; i < w; i += 1)
@@ -463,13 +541,15 @@ int put_char_adv(char **strptr, bool outputok)
 char *create_utf8_copy(char *s)
 {
     char *it = s;
-    if (s != nullptr) {
+    if (s != nullptr)
+    {
         int  slen;
         int  tlen;
         char buf[7];
 
         /* Precalculate size of required space */
-        for (slen = tlen = 0; s[slen]; ) {
+        for (slen = tlen = 0; s[slen];)
+        {
             int sw = byte_length_at(s+slen);
             int tw = insert_utf8_at(buf, code_point_at(s+slen));
             slen += sw;
@@ -478,9 +558,11 @@ char *create_utf8_copy(char *s)
 
         /* Create the actual copy */
         it = (char*) std::malloc(tlen + 1);
-        if (it) {
+        if (it)
+        {
             char *bufptr = it;
-            for (int i = 0; s[i]; ) {
+            for (int i = 0; s[i];)
+            {
                 int sw = byte_length_at(s+i);
                 bufptr += insert_utf8_at(bufptr, code_point_at(s+i));
                 i += sw;
@@ -493,9 +575,11 @@ char *create_utf8_copy(char *s)
 
 void terminate_string_at_visual_index(char *s, int i)
 {
-    if (s) {
+    if (s)
+    {
         int j;
-        for (j = 0; *s; ) {
+        for (j = 0; *s;)
+        {
             int w = byte_length_at(s);
             int v = visual_width_at(s);
             if (w == 0 || j + v > i)
