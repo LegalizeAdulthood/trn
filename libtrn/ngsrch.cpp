@@ -33,7 +33,7 @@ void ngsrch_init()
 
 // patbuf   if patbuf != g_buf, get_cmd must */
 // get_cmd  be set to false!!! */
-ng_search_result ng_search(char *patbuf, bool get_cmd)
+NewsgroupSearchResult ng_search(char *patbuf, bool get_cmd)
 {
     g_int_count = 0;
     if (get_cmd && g_buf == patbuf)
@@ -85,7 +85,7 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
     {
         cmdlst = savestr("+");
     }
-    ng_search_result ret = NGS_NOTFOUND; /* assume no commands */
+    NewsgroupSearchResult ret = NGS_NOTFOUND; /* assume no commands */
     if (cmdlst)
     {
         ret = NGS_DONE;

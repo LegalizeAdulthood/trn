@@ -7,7 +7,7 @@
 struct COMPEX;
 struct NewsgroupData;
 
-enum ng_search_result
+enum NewsgroupSearchResult
 {
     NGS_ABORT = 0,
     NGS_FOUND = 1,
@@ -18,7 +18,7 @@ enum ng_search_result
 };
 
 void ngsrch_init();
-ng_search_result ng_search(char *patbuf, bool get_cmd);
+NewsgroupSearchResult ng_search(char *patbuf, bool get_cmd);
 bool ng_wanted(NewsgroupData *np);
 const char *ng_comp(COMPEX *compex, const char *pattern, bool RE, bool fold);
 
