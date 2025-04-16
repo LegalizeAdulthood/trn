@@ -177,7 +177,7 @@ void hashstorelast(HashDatum data)
 /* Visit each entry by calling nodefunc at each, with keylen, data,
 ** and extra as arguments.
 */
-void hashwalk(HASHTABLE *tbl, HASHWALKFUNC nodefunc, int extra)
+void hashwalk(HASHTABLE *tbl, HashWalkFunc nodefunc, int extra)
 {
     HASHENT* next;
     HASHENT** hepp;

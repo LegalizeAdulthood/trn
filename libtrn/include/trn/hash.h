@@ -16,7 +16,7 @@ struct HashDatum
 struct HASHTABLE;
 
 using HashCompareFunc = int (*)(const char *key, int keylen, HashDatum data);
-using HASHWALKFUNC = int (*)(int keylen, HashDatum *data, int extra);
+using HashWalkFunc = int (*)(int keylen, HashDatum *data, int extra);
 
 #define HASH_DEFCMPFUNC ((HashCompareFunc) nullptr)
 
@@ -26,6 +26,6 @@ void hashstore(HASHTABLE *tbl, const char *key, int keylen, HashDatum data);
 void hashdelete(HASHTABLE *tbl, const char *key, int keylen);
 HashDatum hashfetch(HASHTABLE *tbl, const char *key, int keylen);
 void hashstorelast(HashDatum data);
-void hashwalk(HASHTABLE *tbl, HASHWALKFUNC nodefunc, int extra);
+void hashwalk(HASHTABLE *tbl, HashWalkFunc nodefunc, int extra);
 
 #endif
