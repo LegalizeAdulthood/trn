@@ -473,7 +473,7 @@ char multirc_selector()
     if (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == 'Z' || s_sel_ret == '\t')
     {
         PUSH_SELECTOR();
-        for (MULTIRC *mp = multirc_low(); mp; mp = multirc_next(mp))
+        for (Multirc *mp = multirc_low(); mp; mp = multirc_next(mp))
         {
             if (mp->flags & MF_SEL)
             {

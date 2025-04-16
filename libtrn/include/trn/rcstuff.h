@@ -69,7 +69,7 @@ enum MultircFlags : int
 };
 DECLARE_FLAGS_ENUM(MultircFlags, int);
 
-struct MULTIRC
+struct Multirc
 {
     Newsrc       *first;
     int           num;
@@ -77,10 +77,10 @@ struct MULTIRC
 };
 
 extern HASHTABLE  *g_newsrc_hash;
-extern MULTIRC    *g_sel_page_mp;
-extern MULTIRC    *g_sel_next_mp;
+extern Multirc    *g_sel_page_mp;
+extern Multirc    *g_sel_next_mp;
 extern List       *g_multirc_list;    /* a list of all MULTIRCs */
-extern MULTIRC    *g_multirc;         /* the current MULTIRC */
+extern Multirc    *g_multirc;         /* the current MULTIRC */
 extern bool        g_paranoid;        /* did we detect some inconsistency in .newsrc? */
 extern AddNewType g_addnewbydefault; //
 extern bool        g_checkflag;       /* -c */
@@ -92,11 +92,11 @@ extern bool        g_append_unsub;    /* -I */
 bool     rcstuff_init();
 void     rcstuff_final();
 Newsrc  *new_newsrc(const char *name, const char *newsrc, const char *add_ok);
-bool     use_multirc(MULTIRC *mp);
-void     unuse_multirc(MULTIRC *mptr);
-bool     use_next_multirc(MULTIRC *mptr);
-bool     use_prev_multirc(MULTIRC *mptr);
-char    *multirc_name(MULTIRC *mp);
+bool     use_multirc(Multirc *mp);
+void     unuse_multirc(Multirc *mptr);
+bool     use_next_multirc(Multirc *mptr);
+bool     use_prev_multirc(Multirc *mptr);
+char    *multirc_name(Multirc *mp);
 void     abandon_ng(NewsgroupData *np);
 bool     get_ng(const char *what, GetNewsgroupFlags flags);
 bool     relocate_newsgroup(NewsgroupData *move_np, NG_NUM newnum);
@@ -105,28 +105,28 @@ NewsgroupData  *find_ng(const char *ngnam);
 void     cleanup_newsrc(Newsrc *rp);
 void     sethash(NewsgroupData *np);
 void     checkpoint_newsrcs();
-bool     write_newsrcs(MULTIRC *mptr);
-void     get_old_newsrcs(MULTIRC *mptr);
+bool     write_newsrcs(Multirc *mptr);
+void     get_old_newsrcs(Multirc *mptr);
 
-inline MULTIRC *multirc_ptr(long n)
+inline Multirc *multirc_ptr(long n)
 {
-    return (MULTIRC *) listnum2listitem(g_multirc_list, n);
+    return (Multirc *) listnum2listitem(g_multirc_list, n);
 }
-inline MULTIRC *multirc_low()
+inline Multirc *multirc_low()
 {
-    return (MULTIRC *) listnum2listitem(g_multirc_list, existing_listnum(g_multirc_list, 0L, 1));
+    return (Multirc *) listnum2listitem(g_multirc_list, existing_listnum(g_multirc_list, 0L, 1));
 }
-inline MULTIRC *multirc_high()
+inline Multirc *multirc_high()
 {
-    return (MULTIRC *) listnum2listitem(g_multirc_list, existing_listnum(g_multirc_list, g_multirc_list->high, -1));
+    return (Multirc *) listnum2listitem(g_multirc_list, existing_listnum(g_multirc_list, g_multirc_list->high, -1));
 }
-inline MULTIRC *multirc_next(MULTIRC *p)
+inline Multirc *multirc_next(Multirc *p)
 {
-    return (MULTIRC *) next_listitem(g_multirc_list, (char *) p);
+    return (Multirc *) next_listitem(g_multirc_list, (char *) p);
 }
-inline MULTIRC *multirc_prev(MULTIRC *p)
+inline Multirc *multirc_prev(Multirc *p)
 {
-    return (MULTIRC *) prev_listitem(g_multirc_list, (char *) p);
+    return (Multirc *) prev_listitem(g_multirc_list, (char *) p);
 }
 
 #endif

@@ -677,7 +677,7 @@ int nntp_handle_timeout()
 
 void nntp_server_died(DataSource *dp)
 {
-    MULTIRC* mp = g_multirc;
+    Multirc* mp = g_multirc;
     close_datasrc(dp);
     dp->flags |= DF_UNAVAILABLE;
     unuse_multirc(mp);

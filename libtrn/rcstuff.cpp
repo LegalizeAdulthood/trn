@@ -37,10 +37,10 @@
 #include <cstring>
 
 HASHTABLE  *g_newsrc_hash{};
-MULTIRC    *g_sel_page_mp{};
-MULTIRC    *g_sel_next_mp{};
+Multirc    *g_sel_page_mp{};
+Multirc    *g_sel_next_mp{};
 List       *g_multirc_list{};    /* a list of all MULTIRCs */
-MULTIRC    *g_multirc{};         /* the current MULTIRC */
+Multirc    *g_multirc{};         /* the current MULTIRC */
 bool        g_paranoid{};        /* did we detect some inconsistency in .newsrc? */
 AddNewType g_addnewbydefault{ADDNEW_ASK}; //
 bool        g_checkflag{};       /* -c */
@@ -81,11 +81,11 @@ inline NewsgroupData *ngdata_ptr(int ngnum)
     return (NewsgroupData *) listnum2listitem(g_ngdata_list, ngnum);
 }
 
-static MULTIRC *rcstuff_init_data()
+static Multirc *rcstuff_init_data()
 {
-    MULTIRC* mptr = nullptr;
+    Multirc* mptr = nullptr;
 
-    g_multirc_list = new_list(0,0,sizeof(MULTIRC),20,LF_ZERO_MEM|LF_SPARSE,nullptr);
+    g_multirc_list = new_list(0,0,sizeof(Multirc),20,LF_ZERO_MEM|LF_SPARSE,nullptr);
 
     if (g_trnaccess_mem)
     {
@@ -113,7 +113,7 @@ static MULTIRC *rcstuff_init_data()
             Newsrc *rp = new_newsrc(vals[RI_ID], vals[RI_NEWSRC], vals[RI_ADDGROUPS]);
             if (rp)
             {
-                MULTIRC *mp = multirc_ptr(i);
+                Multirc *mp = multirc_ptr(i);
                 Newsrc * prev_rp = mp->first;
                 if (!prev_rp)
                 {
@@ -142,7 +142,7 @@ static MULTIRC *rcstuff_init_data()
 
 bool rcstuff_init()
 {
-    MULTIRC *mptr = rcstuff_init_data();
+    Multirc *mptr = rcstuff_init_data();
 
     if (g_use_newsrc_selector && !g_checkflag)
     {
@@ -240,7 +240,7 @@ Newsrc *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
     return rp;
 }
 
-bool use_multirc(MULTIRC *mp)
+bool use_multirc(Multirc *mp)
 {
     bool had_trouble = false;
     bool had_success = false;
@@ -278,7 +278,7 @@ bool use_multirc(MULTIRC *mp)
     return true;
 }
 
-void unuse_multirc(MULTIRC *mptr)
+void unuse_multirc(Multirc *mptr)
 {
     if (!mptr)
     {
@@ -314,9 +314,9 @@ void unuse_multirc(MULTIRC *mptr)
     g_multirc = nullptr;
 }
 
-bool use_next_multirc(MULTIRC *mptr)
+bool use_next_multirc(Multirc *mptr)
 {
-    MULTIRC* mp = multirc_ptr(mptr->num);
+    Multirc* mp = multirc_ptr(mptr->num);
 
     unuse_multirc(mptr);
 
@@ -340,9 +340,9 @@ bool use_next_multirc(MULTIRC *mptr)
     return true;
 }
 
-bool use_prev_multirc(MULTIRC *mptr)
+bool use_prev_multirc(Multirc *mptr)
 {
-    MULTIRC* mp = multirc_ptr(mptr->num);
+    Multirc* mp = multirc_ptr(mptr->num);
 
     unuse_multirc(mptr);
 
@@ -366,7 +366,7 @@ bool use_prev_multirc(MULTIRC *mptr)
     return true;
 }
 
-char *multirc_name(MULTIRC *mp)
+char *multirc_name(Multirc *mp)
 {
     if (mp->first->next)
     {
@@ -1670,7 +1670,7 @@ void checkpoint_newsrcs()
 
 /* write out the (presumably) revised newsrc(s) */
 
-bool write_newsrcs(MULTIRC *mptr)
+bool write_newsrcs(Multirc *mptr)
 {
     sel_sort_mode save_sort = g_sel_sort;
     bool          total_success = true;
@@ -1815,7 +1815,7 @@ bool write_newsrcs(MULTIRC *mptr)
     return total_success;
 }
 
-void get_old_newsrcs(MULTIRC *mptr)
+void get_old_newsrcs(Multirc *mptr)
 {
     if (mptr)
     {
