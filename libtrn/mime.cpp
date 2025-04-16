@@ -275,7 +275,7 @@ static char *mime_ParseEntryArg(char **cpp)
     return s;
 }
 
-MIMECAP_ENTRY *mime_FindMimecapEntry(const char *contenttype, mimecap_flags skip_flags)
+MIMECAP_ENTRY *mime_FindMimecapEntry(const char *contenttype, MimeCapFlags skip_flags)
 {
     for (int i = 0; i <= s_mimecap_list->high; i++)
     {

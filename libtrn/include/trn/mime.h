@@ -141,13 +141,13 @@ extern std::string g_multipart_separator;
 extern bool g_auto_view_inline;
 extern char *g_mime_getc_line;
 
-enum mimecap_flags : std::uint8_t
+enum MimeCapFlags : std::uint8_t
 {
     MCF_NONE = 0x00,
     MCF_NEEDSTERMINAL = 0x01,
     MCF_COPIOUSOUTPUT = 0x02
 };
-DECLARE_FLAGS_ENUM(mimecap_flags, std::uint8_t);
+DECLARE_FLAGS_ENUM(MimeCapFlags, std::uint8_t);
 
 struct MIMECAP_ENTRY
 {
@@ -155,13 +155,13 @@ struct MIMECAP_ENTRY
     char         *command;
     char         *testcommand;
     char         *description;
-    mimecap_flags flags;
+    MimeCapFlags flags;
 };
 
 void           mime_init();
 void           mime_final();
 void           mime_ReadMimecap(const char *mcname);
-MIMECAP_ENTRY *mime_FindMimecapEntry(const char *contenttype, mimecap_flags skip_flags);
+MIMECAP_ENTRY *mime_FindMimecapEntry(const char *contenttype, MimeCapFlags skip_flags);
 bool           mime_TypesMatch(const char *ct, const char *pat);
 int            mime_Exec(char *cmd);
 void           mime_InitSections();
