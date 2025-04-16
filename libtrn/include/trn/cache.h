@@ -46,8 +46,7 @@ struct Subject
     short         misc; /* used for temporary totals and subject numbers */
 };
 
-/* article flags */
-enum article_flags : std::uint16_t
+enum ArticleFlags : std::uint16_t
 {
     AF_NONE = 0,
     AF_SEL = 0x0001,
@@ -66,7 +65,7 @@ enum article_flags : std::uint16_t
     AF_TMPMEM = 0x4000,
     AF_FAKE = 0x8000,
 };
-DECLARE_FLAGS_ENUM(article_flags, std::uint16_t);
+DECLARE_FLAGS_ENUM(ArticleFlags, std::uint16_t);
 
 enum article_flags2 : std::uint16_t
 {
@@ -104,7 +103,7 @@ struct ARTICLE
     long           lines;
     int            score;
     score_flags    scoreflags;
-    article_flags  flags;  /* article state flags */
+    ArticleFlags  flags;  /* article state flags */
     article_flags2 flags2; /* more state flags */
     autokill_flags autofl; /* auto-processing flags */
 };

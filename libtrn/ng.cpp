@@ -2050,7 +2050,7 @@ static bool mark_all_READ(char *ptr, int leave_unread)
     {
         return true;
     }
-    ap->flags &= ~(static_cast<article_flags>(g_sel_mask) |AF_UNREAD);
+    ap->flags &= ~(static_cast<ArticleFlags>(g_sel_mask) |AF_UNREAD);
     return false;
 }
 

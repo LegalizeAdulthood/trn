@@ -411,7 +411,7 @@ static bool kfile_junk(char *ptr, int killmask)
     }
     else if (ap->flags & g_sel_mask)
     {
-        ap->flags &= ~static_cast<article_flags>(g_sel_mask);
+        ap->flags &= ~static_cast<ArticleFlags>(g_sel_mask);
         if (!g_selected_count--)
         {
             g_selected_count = 0;

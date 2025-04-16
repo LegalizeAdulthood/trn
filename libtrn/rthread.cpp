@@ -814,12 +814,12 @@ Subject *prev_subj(Subject *sp, int subj_mask)
 */
 void select_article(ARTICLE *ap, autokill_flags auto_flags)
 {
-    const article_flags desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
+    const ArticleFlags desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
     bool echo = (auto_flags & ALSO_ECHO) != 0;
     auto_flags &= AUTO_SEL_MASK;
     if ((ap->flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)
     {
-        if (!(ap->flags & static_cast<article_flags>(g_sel_mask)))
+        if (!(ap->flags & static_cast<ArticleFlags>(g_sel_mask)))
         {
             g_selected_count++;
             if (g_verbose && echo && g_general_mode != GM_SELECTOR)
@@ -827,7 +827,7 @@ void select_article(ARTICLE *ap, autokill_flags auto_flags)
                 std::fputs("\tSelected", stdout);
             }
         }
-        ap->flags = (ap->flags & ~AF_DEL) | static_cast<article_flags>(g_sel_mask);
+        ap->flags = (ap->flags & ~AF_DEL) | static_cast<ArticleFlags>(g_sel_mask);
     }
     if (auto_flags)
     {
@@ -870,7 +870,7 @@ void select_subject(Subject *subj, autokill_flags auto_flags)
     {
         if ((ap->flags & (AF_EXISTS | AF_UNREAD | g_sel_mask)) == desired_flags)
         {
-            ap->flags |= static_cast<article_flags>(g_sel_mask);
+            ap->flags |= static_cast<ArticleFlags>(g_sel_mask);
             g_selected_count++;
         }
         if (auto_flags)
@@ -947,7 +947,7 @@ void select_subthread(ARTICLE *ap, autokill_flags auto_flags)
     {
         if ((ap->flags & (AF_EXISTS | AF_UNREAD | g_sel_mask)) == desired_flags)
         {
-            ap->flags |= static_cast<article_flags>(g_sel_mask);
+            ap->flags |= static_cast<ArticleFlags>(g_sel_mask);
             g_selected_count++;
         }
         if (auto_flags)
@@ -972,9 +972,9 @@ void deselect_article(ARTICLE *ap, autokill_flags auto_flags)
 {
     const bool echo = (auto_flags & ALSO_ECHO) != 0;
     auto_flags &= AUTO_SEL_MASK;
-    if (ap->flags & static_cast<article_flags>(g_sel_mask))
+    if (ap->flags & static_cast<ArticleFlags>(g_sel_mask))
     {
-        ap->flags &= ~static_cast<article_flags>(g_sel_mask);
+        ap->flags &= ~static_cast<ArticleFlags>(g_sel_mask);
         if (!g_selected_count--)
         {
             g_selected_count = 0;
@@ -1012,7 +1012,7 @@ void deselect_subject(Subject *subj)
     {
         if (ap->flags & g_sel_mask)
         {
-            ap->flags &= ~static_cast<article_flags>(g_sel_mask);
+            ap->flags &= ~static_cast<ArticleFlags>(g_sel_mask);
             if (!g_selected_count--)
             {
                 g_selected_count = 0;
