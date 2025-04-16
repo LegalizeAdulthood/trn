@@ -52,7 +52,8 @@ int g_s_mode_vi{};
 void s_init_context(int cnum, scontext_type type)
 {
     /* g_s_num_contexts not incremented until last moment */
-    if (cnum < 0 || cnum > g_s_num_contexts) {
+    if (cnum < 0 || cnum > g_s_num_contexts)
+    {
         std::printf("s_init_context: illegal context number %d!\n",cnum);
         TRN_ASSERT(false);
     }
@@ -82,7 +83,8 @@ void s_init_context(int cnum, scontext_type type)
     p->ptr_page_line = 0;
     p->flags = 0;
     /* clear the page entries */
-    for (int i = 0; i < MAX_PAGE_SIZE; i++) {
+    for (int i = 0; i < MAX_PAGE_SIZE; i++)
+    {
         p->page_ents[i].entnum = 0;
         p->page_ents[i].lines = 0;
         p->page_ents[i].start_line = 0;
@@ -105,16 +107,20 @@ int s_new_context(scontext_type type)
             break;
         }
     }
-    if (i < g_s_num_contexts) { /* a deleted one was found */
+    if (i < g_s_num_contexts)   /* a deleted one was found */
+    {
         s_init_context(i,type);
         return i;
     }
     /* none deleted, so allocate a new one */
     i = g_s_num_contexts;
     i++;
-    if (i == 1) {       /* none allocated before */
+    if (i == 1)         /* none allocated before */
+    {
         g_s_contexts = (SCONTEXT*)safemalloc(sizeof (SCONTEXT));
-    } else {
+    }
+    else
+    {
         g_s_contexts = (SCONTEXT*)saferealloc((char*)g_s_contexts,
                                         i * sizeof (SCONTEXT));
     }
@@ -163,7 +169,8 @@ void s_save_context()
 // int newcontext;                      /* context number to activate */
 void s_change_context(int newcontext)
 {
-    if (newcontext < 0 || newcontext >= g_s_num_contexts) {
+    if (newcontext < 0 || newcontext >= g_s_num_contexts)
+    {
         std::printf("s_change_context: bad context number %d!\n",newcontext);
         TRN_ASSERT(false);
     }
@@ -206,7 +213,8 @@ void s_clean_contexts()
 //int cnum;             /* context number to delete */
 void s_delete_context(int cnum)
 {
-    if (cnum < 0 || cnum >= g_s_num_contexts) {
+    if (cnum < 0 || cnum >= g_s_num_contexts)
+    {
         std::printf("s_delete_context: illegal context number %d!\n",cnum);
         TRN_ASSERT(false);
     }
