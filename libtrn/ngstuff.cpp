@@ -60,12 +60,15 @@ int escapade()
     }
     char *s = g_buf + 1;
     bool  docd = *s != '!';
-    if (!docd) {
+    if (!docd)
+    {
         s++;
     }
-    else {
+    else
+    {
         trn_getwd(whereiam, sizeof(whereiam));
-        if (change_dir(g_privdir)) {
+        if (change_dir(g_privdir))
+        {
             std::printf(g_nocd,g_privdir.c_str());
             sig_catcher(0);
         }
@@ -76,8 +79,10 @@ int escapade()
     doshell(nullptr,g_cmd_buf); /* invoke the shell */
     noecho();                           /* and make terminal */
     crmode();                           /*   unfriendly again */
-    if (docd) {
-        if (change_dir(whereiam)) {
+    if (docd)
+    {
+        if (change_dir(whereiam))
+        {
             std::printf(g_nocd,whereiam);
             sig_catcher(0);
         }
@@ -96,9 +101,11 @@ int switcheroo()
     {
         return -1;      /* if rubbed out, try something else */
     }
-    if (!g_buf[1]) {
+    if (!g_buf[1])
+    {
         const std::string prior_savedir = g_savedir;
-        if (s_option_sel_ilock) {
+        if (s_option_sel_ilock)
+        {
             g_buf[1] = '\0';
             return 0;
         }
@@ -114,18 +121,22 @@ int switcheroo()
         }
         g_buf[1] = '\0';
     }
-    else if (g_buf[1] == '&') {
-        if (!g_buf[2]) {
+    else if (g_buf[1] == '&')
+    {
+        if (!g_buf[2])
+        {
             page_start();
             show_macros();
         }
-        else {
+        else
+        {
             char tmpbuf[LBUFLEN];
             char *s = skip_space(g_buf + 2);
             mac_line(s,tmpbuf,(sizeof tmpbuf));
         }
     }
-    else {
+    else
+    {
         bool docd = (in_string(g_buf,"-d", true) != nullptr);
          char whereami[1024];
         char tmpbuf[LBUFLEN+16];
@@ -134,19 +145,23 @@ int switcheroo()
         {
             trn_getwd(whereami, sizeof(whereami));
         }
-        if (g_buf[1] == '-' || g_buf[1] == '+') {
+        if (g_buf[1] == '-' || g_buf[1] == '+')
+        {
             std::strcpy(tmpbuf,g_buf+1);
             sw_list(tmpbuf);
         }
-        else {
+        else
+        {
             std::sprintf(tmpbuf,"[options]\n%s\n",g_buf+1);
             prep_ini_data(tmpbuf,"'&' input");
             parse_ini_section(tmpbuf+10,g_options_ini);
             set_options(ini_values(g_options_ini));
         }
-        if (docd) {
+        if (docd)
+        {
             cwd_check();
-            if (change_dir(whereami)) {              /* -d does chdirs */
+            if (change_dir(whereami))                /* -d does chdirs */
+            {
                 std::printf(g_nocd,whereami);
                 sig_catcher(0);
             }
@@ -173,7 +188,8 @@ numnum_result numnum()
     {
         return NN_INP;
     }
-    if (g_lastart < 1) {
+    if (g_lastart < 1)
+    {
         errormsg("No articles");
         return NN_ASK;
     }
@@ -191,7 +207,8 @@ numnum_result numnum()
             justone = false;
         }
     }
-    if (*s) {
+    if (*s)
+    {
         cmdlst = savestr(s);
         justone = false;
     }
@@ -202,11 +219,13 @@ numnum_result numnum()
     *s++ = ',';
     *s = '\0';
     safecpy(tmpbuf,g_buf,LBUFLEN);
-    if (!output_level && !justone) {
+    if (!output_level && !justone)
+    {
         std::printf("Processing...");
         std::fflush(stdout);
     }
-    for (char *t = tmpbuf; (c = std::strchr(t,',')) != nullptr; t = ++c) {
+    for (char *t = tmpbuf; (c = std::strchr(t, ',')) != nullptr; t = ++c)
+    {
         *c = '\0';
         if (*t == '.')
         {
@@ -216,12 +235,14 @@ numnum_result numnum()
         {
             min = std::atol(t);
         }
-        if (min < g_absfirst) {
+        if (min < g_absfirst)
+        {
             min = g_absfirst;
             std::sprintf(g_msg,"(First article is %ld)",(long)g_absfirst);
             warnmsg(g_msg);
         }
-        if ((t=std::strchr(t,'-')) != nullptr) {
+        if ((t = std::strchr(t, '-')) != nullptr)
+        {
             t++;
             if (*t == '$')
             {
@@ -240,13 +261,15 @@ numnum_result numnum()
         {
             max = min;
         }
-        if (max>g_lastart) {
+        if (max > g_lastart)
+        {
             max = g_lastart;
             min = std::min(min, max);
             std::sprintf(g_msg,"(Last article is %ld)",(long)g_lastart);
             warnmsg(g_msg);
         }
-        if (max < min) {
+        if (max < min)
+        {
             errormsg("Bad range");
             if (cmdlst)
             {
@@ -254,13 +277,16 @@ numnum_result numnum()
             }
             return NN_ASK;
         }
-        if (justone) {
+        if (justone)
+        {
             g_art = min;
             return NN_REREAD;
         }
-        for (g_art = article_first(min); g_art <= max; g_art = article_next(g_art)) {
+        for (g_art = article_first(min); g_art <= max; g_art = article_next(g_art))
+        {
             g_artp = article_ptr(g_art);
-            if (perform(cmdlst,output_level && g_page_line == 1) < 0) {
+            if (perform(cmdlst, output_level && g_page_line == 1) < 0)
+            {
                 if (g_verbose)
                 {
                     std::sprintf(g_msg, "(Interrupted at article %ld)", (long) g_art);
@@ -307,7 +333,8 @@ int thread_perform()
         return -1;
     }
     int len = 1;
-    if (g_buf[1] == ':') {
+    if (g_buf[1] == ':')
+    {
         bits = 0;
         len++;
     }
@@ -315,7 +342,8 @@ int thread_perform()
     {
         bits = SF_VISIT;
     }
-    if (g_buf[len] == '.') {
+    if (g_buf[len] == '.')
+    {
         if (!g_artp)
         {
             return -1;
@@ -329,15 +357,17 @@ int thread_perform()
     perform_status_init(g_ngptr->toread);
     len = std::strlen(cmdstr);
 
-    if (!output_level && !one_thread) {
+    if (!output_level && !one_thread)
+    {
         std::printf("Processing...");
         std::fflush(stdout);
     }
     /* A few commands can just loop through the subjects. */
-    if ((len == 1 && (*cmdstr == 't' || *cmdstr == 'J'))
-     || (len == 2
-      && (((*cmdstr == '+' || *cmdstr == '-') && cmdstr[0] == cmdstr[1])
-       || *cmdstr == 'T' || *cmdstr == 'A'))) {
+    if ((len == 1 && (*cmdstr == 't' || *cmdstr == 'J'))                       //
+        || (len == 2                                                           //
+            && (((*cmdstr == '+' || *cmdstr == '-') && cmdstr[0] == cmdstr[1]) //
+                || *cmdstr == 'T' || *cmdstr == 'A')))
+    {
         g_performed_article_loop = false;
         if (one_thread)
         {
@@ -347,15 +377,18 @@ int thread_perform()
         {
             sp = next_subj((SUBJECT *) nullptr, bits);
         }
-        for ( ; sp; sp = next_subj(sp,bits)) {
+        for (; sp; sp = next_subj(sp, bits))
+        {
             if ((!(sp->flags & g_sel_mask) ^ !bits) || !sp->misc)
             {
                 continue;
             }
             g_artp = first_art(sp);
-            if (g_artp) {
+            if (g_artp)
+            {
                 g_art = article_num(g_artp);
-                if (perform(cmdstr, 0) < 0) {
+                if (perform(cmdstr, 0) < 0)
+                {
                     errormsg("Interrupted");
                     goto break_out;
                 }
@@ -366,37 +399,46 @@ int thread_perform()
             }
         }
 #if 0
-    } else if (!std::strcmp(cmdstr, "E")) {
+    } else if (!std::strcmp(cmdstr, "E"))
+    {
         /* The 'E'nd-decode command doesn't do any looping at all. */
         if (decode_fp)
         {
             decode_end();
         }
 #endif
-    } else if (*cmdstr == 'p') {
+    }
+    else if (*cmdstr == 'p')
+    {
         ART_NUM oldart = g_art;
         g_art = g_lastart+1;
         followup();
         g_forcegrow = true;
         g_art = oldart;
         g_page_line++;
-    } else {
+    }
+    else
+    {
         /* The rest loop through the articles. */
         /* Use the explicit article-order if it exists */
-        if (g_artptr_list) {
+        if (g_artptr_list)
+        {
             ARTICLE** limit = g_artptr_list + g_artptr_list_size;
             sp = (g_sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
-            for (ARTICLE **app = g_artptr_list; app < limit; app++) {
+            for (ARTICLE **app = g_artptr_list; app < limit; app++)
+            {
                 ap = *app;
                 if (one_thread && ap->subj->thread != sp->thread)
                 {
                     continue;
                 }
-                if ((!(ap->flags & AF_UNREAD) ^ want_unread)
-                 && !(ap->flags & g_sel_mask) ^ !!bits) {
+                if ((!(ap->flags & AF_UNREAD) ^ want_unread) //
+                    && !(ap->flags & g_sel_mask) ^ !!bits)
+                {
                     g_art = article_num(ap);
                     g_artp = ap;
-                    if (perform(cmdstr, output_level && g_page_line == 1) < 0) {
+                    if (perform(cmdstr, output_level && g_page_line == 1) < 0)
+                    {
                         errormsg("Interrupted");
                         goto break_out;
                     }
@@ -406,7 +448,9 @@ int thread_perform()
                     perform_status(g_ngptr->toread, 50);
                 }
             }
-        } else {
+        }
+        else
+        {
             if (one_thread)
             {
                 sp = (g_sel_mode == SM_THREAD ? g_artp->subj->thread->subj : g_artp->subj);
@@ -415,7 +459,8 @@ int thread_perform()
             {
                 sp = next_subj((SUBJECT *) nullptr, bits);
             }
-            for ( ; sp; sp = next_subj(sp,bits)) {
+            for (; sp; sp = next_subj(sp, bits))
+            {
                 for (ap = first_art(sp); ap; ap = next_art(ap))
                 {
                     if ((!(ap->flags & AF_UNREAD) ^ want_unread)
@@ -423,7 +468,8 @@ int thread_perform()
                     {
                         g_art = article_num(ap);
                         g_artp = ap;
-                        if (perform(cmdstr,output_level && g_page_line==1) < 0) {
+                        if (perform(cmdstr, output_level && g_page_line == 1) < 0)
+                        {
                             errormsg("Interrupted");
                             goto break_out;
                         }
@@ -455,23 +501,28 @@ int perform(char *cmdlst, int output_level)
     safecpy(tbuf, cmdlst, sizeof tbuf);
     cmdlst = tbuf;
 
-    if (output_level == 1) {
+    if (output_level == 1)
+    {
         std::printf("%-6ld ",g_art);
         std::fflush(stdout);
     }
 
     g_perform_cnt++;
-    for (; (ch = *cmdlst) != 0; cmdlst++) {
+    for (; (ch = *cmdlst) != 0; cmdlst++)
+    {
         if (std::isspace(ch) || ch == ':')
         {
             continue;
         }
-        if (ch == 'j') {
-            if (savemode) {
+        if (ch == 'j')
+        {
+            if (savemode)
+            {
                 mark_as_read(g_artp);
                 change_auto_flags(g_artp, AUTO_KILL_1);
             }
-            else if (!was_read(g_art)) {
+            else if (!was_read(g_art))
+            {
                 mark_as_read(g_artp);
                 if (output_level && g_verbose)
                 {
@@ -482,8 +533,11 @@ int perform(char *cmdlst, int output_level)
             {
                 deselect_article(g_artp, output_level ? ALSO_ECHO : AUTO_KILL_NONE);
             }
-        } else if (ch == '+') {
-            if (savemode || cmdlst[1] == '+') {
+        }
+        else if (ch == '+')
+        {
+            if (savemode || cmdlst[1] == '+')
+            {
                 if (g_sel_mode == SM_THREAD)
                 {
                     select_arts_thread(g_artp, savemode ? AUTO_SEL_THD : AUTO_KILL_NONE);
@@ -500,12 +554,19 @@ int perform(char *cmdlst, int output_level)
             {
                 select_article(g_artp, output_level ? ALSO_ECHO : AUTO_KILL_NONE);
             }
-        } else if (ch == 'S') {
+        }
+        else if (ch == 'S')
+        {
             select_arts_subject(g_artp, AUTO_SEL_SBJ);
-        } else if (ch == '.') {
+        }
+        else if (ch == '.')
+        {
             select_subthread(g_artp, savemode? AUTO_SEL_FOL : AUTO_KILL_NONE);
-        } else if (ch == '-') {
-            if (cmdlst[1] == '-') {
+        }
+        else if (ch == '-')
+        {
+            if (cmdlst[1] == '-')
+            {
                 if (g_sel_mode == SM_THREAD)
                 {
                     deselect_arts_thread(g_artp);
@@ -519,9 +580,13 @@ int perform(char *cmdlst, int output_level)
             {
                 deselect_article(g_artp, output_level ? ALSO_ECHO : AUTO_KILL_NONE);
             }
-        } else if (ch == ',') {
+        }
+        else if (ch == ',')
+        {
             kill_subthread(g_artp, AFFECT_ALL | (savemode? AUTO_KILL_FOL : AUTO_KILL_NONE));
-        } else if (ch == 'J') {
+        }
+        else if (ch == 'J')
+        {
             if (g_sel_mode == SM_THREAD)
             {
                 kill_arts_thread(g_artp, AFFECT_ALL | (savemode ? AUTO_KILL_THD : AUTO_KILL_NONE));
@@ -530,10 +595,15 @@ int perform(char *cmdlst, int output_level)
             {
                 kill_arts_subject(g_artp, AFFECT_ALL | (savemode ? AUTO_KILL_SBJ : AUTO_KILL_NONE));
             }
-        } else if (ch == 'K' || ch == 'k') {
+        }
+        else if (ch == 'K' || ch == 'k')
+        {
             kill_arts_subject(g_artp, AFFECT_ALL|(savemode? AUTO_KILL_SBJ : AUTO_KILL_NONE));
-        } else if (ch == 'x') {
-            if (!was_read(g_art)) {
+        }
+        else if (ch == 'x')
+        {
+            if (!was_read(g_art))
+            {
                 oneless(g_artp);
                 if (output_level && g_verbose)
                 {
@@ -544,18 +614,27 @@ int perform(char *cmdlst, int output_level)
             {
                 deselect_article(g_artp, AUTO_KILL_NONE);
             }
-        } else if (ch == 't') {
+        }
+        else if (ch == 't')
+        {
             entire_tree(g_artp);
-        } else if (ch == 'T') {
+        }
+        else if (ch == 'T')
+        {
             savemode = 1;
-        } else if (ch == 'A') {
+        }
+        else if (ch == 'A')
+        {
             savemode = 2;
-        } else if (ch == 'm') {
+        }
+        else if (ch == 'm')
+        {
             if (savemode)
             {
                 change_auto_flags(g_artp, AUTO_SEL_1);
             }
-            else if ((g_artp->flags & (AF_UNREAD|AF_EXISTS)) == AF_EXISTS) {
+            else if ((g_artp->flags & (AF_UNREAD | AF_EXISTS)) == AF_EXISTS)
+            {
                 unmark_as_read(g_artp);
                 if (output_level && g_verbose)
                 {
@@ -563,7 +642,8 @@ int perform(char *cmdlst, int output_level)
                 }
             }
         }
-        else if (ch == 'M') {
+        else if (ch == 'M')
+        {
             delay_unmark(g_artp);
             oneless(g_artp);
             if (output_level && g_verbose)
@@ -571,19 +651,22 @@ int perform(char *cmdlst, int output_level)
                 std::fputs("\tWill return", stdout);
             }
         }
-        else if (ch == '=') {
+        else if (ch == '=')
+        {
             carriage_return();
             output_subject((char*)g_artp,0);
             output_level = 0;
         }
-        else if (ch == 'C') {
+        else if (ch == 'C')
+        {
             int ret = cancel_article();
             if (output_level && g_verbose)
             {
                 std::printf("\t%sanceled", ret ? "Not c" : "C");
             }
         }
-        else if (ch == '%') {
+        else if (ch == '%')
+        {
             char tmpbuf[512];
 
             if (g_one_command)
@@ -600,7 +683,8 @@ int perform(char *cmdlst, int output_level)
                 return -1;
             }
         }
-        else if (std::strchr("!&sSwWae|",ch)) {
+        else if (std::strchr("!&sSwWae|", ch))
+        {
             if (g_one_command)
             {
                 std::strcpy(g_buf, cmdlst);
@@ -610,14 +694,16 @@ int perform(char *cmdlst, int output_level)
                 cmdlst = cpytill(g_buf, cmdlst, ':') - 1;
             }
             /* we now have the command in g_buf */
-            if (ch == '!') {
+            if (ch == '!')
+            {
                 escapade();
                 if (output_level && g_verbose)
                 {
                     std::fputs("\tShell escaped", stdout);
                 }
             }
-            else if (ch == '&') {
+            else if (ch == '&')
+            {
                 switcheroo();
                 if (output_level && g_verbose)
                 {
@@ -627,8 +713,10 @@ int perform(char *cmdlst, int output_level)
                     }
                 }
             }
-            else {
-                if (output_level != 1) {
+            else
+            {
+                if (output_level != 1)
+                {
                     erase_line(false);
                     std::printf("%-6ld ",g_art);
                 }
@@ -644,7 +732,8 @@ int perform(char *cmdlst, int output_level)
                 output_level = 0;
             }
         }
-        else {
+        else
+        {
             std::sprintf(g_msg,"Unknown command: %s",cmdlst);
             errormsg(g_msg);
             return -1;
@@ -662,7 +751,8 @@ int perform(char *cmdlst, int output_level)
     {
         newline();
     }
-    if (g_int_count) {
+    if (g_int_count)
+    {
         g_int_count = 0;
         return -1;
     }
@@ -683,7 +773,8 @@ int ngsel_perform()
         return -1;
     }
     int len = 1;
-    if (g_buf[1] == ':') {
+    if (g_buf[1] == ':')
+    {
         bits = NF_NONE;
         len++;
     }
@@ -691,7 +782,8 @@ int ngsel_perform()
     {
         bits = NF_INCLUDED;
     }
-    if (g_buf[len] == '.') {
+    if (g_buf[len] == '.')
+    {
         if (!g_ngptr)
         {
             return -1;
@@ -704,20 +796,23 @@ int ngsel_perform()
     perform_status_init(g_newsgroup_toread);
     len = std::strlen(cmdstr);
 
-    if (one_group) {
+    if (one_group)
+    {
         ng_perform(cmdstr, 0);
         goto break_out;
     }
 
-    for (g_ngptr = g_first_ng; g_ngptr; g_ngptr = g_ngptr->next) {
+    for (g_ngptr = g_first_ng; g_ngptr; g_ngptr = g_ngptr->next)
+    {
         if (g_sel_rereading? g_ngptr->toread != TR_NONE
                          : g_ngptr->toread < g_ng_min_toread)
         {
             continue;
         }
         set_ng(g_ngptr);
-        if ((g_ngptr->flags & bits) == bits
-         && (!(g_ngptr->flags & static_cast<newsgroup_flags>(g_sel_mask)) ^ !!bits)) {
+        if ((g_ngptr->flags & bits) == bits //
+            && (!(g_ngptr->flags & static_cast<newsgroup_flags>(g_sel_mask)) ^ !!bits))
+        {
             if (ng_perform(cmdstr, 0) < 0)
             {
                 break;
@@ -735,20 +830,24 @@ int ng_perform(char *cmdlst, int output_level)
 {
     int ch;
 
-    if (output_level == 1) {
+    if (output_level == 1)
+    {
         std::printf("%s ",g_ngname.c_str());
         std::fflush(stdout);
     }
 
     g_perform_cnt++;
-    for (; (ch = *cmdlst) != 0; cmdlst++) {
+    for (; (ch = *cmdlst) != 0; cmdlst++)
+    {
         if (std::isspace(ch) || ch == ':')
         {
             continue;
         }
-        switch (ch) {
+        switch (ch)
+        {
           case '+':
-            if (!(g_ngptr->flags & static_cast<newsgroup_flags>(g_sel_mask))) {
+            if (!(g_ngptr->flags & static_cast<newsgroup_flags>(g_sel_mask)))
+            {
                 g_ngptr->flags = ((g_ngptr->flags | static_cast<newsgroup_flags>(g_sel_mask)) & ~NF_DEL);
                 g_selected_count++;
             }
@@ -758,7 +857,8 @@ int ng_perform(char *cmdlst, int output_level)
             /* FALL THROUGH */
           case '-':
           deselect:
-            if (g_ngptr->flags & static_cast<newsgroup_flags>(g_sel_mask)) {
+            if (g_ngptr->flags & static_cast<newsgroup_flags>(g_sel_mask))
+            {
                 g_ngptr->flags &= ~static_cast<newsgroup_flags>(g_sel_mask);
                 if (g_sel_rereading)
                 {
@@ -768,7 +868,8 @@ int ng_perform(char *cmdlst, int output_level)
             }
             break;
           case 'u':
-            if (output_level && g_verbose) {
+            if (output_level && g_verbose)
+            {
                 std::printf(g_unsubto,g_ngptr->rcline);
                 termdown(1);
             }
@@ -796,7 +897,8 @@ int ng_perform(char *cmdlst, int output_level)
     {
         newline();
     }
-    if (g_int_count) {
+    if (g_int_count)
+    {
         g_int_count = 0;
         return -1;
     }
@@ -817,7 +919,8 @@ int addgrp_sel_perform()
         return -1;
     }
     int len = 1;
-    if (g_buf[1] == ':') {
+    if (g_buf[1] == ':')
+    {
         bits = 0;
         len++;
     }
@@ -825,7 +928,8 @@ int addgrp_sel_perform()
     {
         bits = g_sel_mask;
     }
-    if (g_buf[len] == '.') {
+    if (g_buf[len] == '.')
+    {
         if (g_first_addgroup)
         {
             return -1;
@@ -838,12 +942,15 @@ int addgrp_sel_perform()
     perform_status_init(g_newsgroup_toread);
     len = std::strlen(cmdstr);
 
-    if (one_group) {
+    if (one_group)
+    {
         goto break_out;
     }
 
-    for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next) {
-        if (!(gp->flags & g_sel_mask) ^ !!bits) {
+    for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next)
+    {
+        if (!(gp->flags & g_sel_mask) ^ !!bits)
+        {
             if (addgrp_perform(gp, cmdstr, 0) < 0)
             {
                 break;
@@ -861,25 +968,31 @@ int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level)
 {
     int ch;
 
-    if (output_level == 1) {
+    if (output_level == 1)
+    {
         std::printf("%s ",gp->name);
         std::fflush(stdout);
     }
 
     g_perform_cnt++;
-    for (; (ch = *cmdlst) != 0; cmdlst++) {
+    for (; (ch = *cmdlst) != 0; cmdlst++)
+    {
         if (std::isspace(ch) || ch == ':')
         {
             continue;
         }
-        if (ch == '+') {
+        if (ch == '+')
+        {
             gp->flags |= AGF_SEL;
             g_selected_count++;
-        } else if (ch == '-') {
+        }
+        else if (ch == '-')
+        {
             gp->flags &= ~AGF_SEL;
             g_selected_count--;
         }
-        else {
+        else
+        {
             std::sprintf(g_msg,"Unknown command: %s",cmdlst);
             errormsg(g_msg);
             return -1;
@@ -897,7 +1010,8 @@ int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level)
     {
         newline();
     }
-    if (g_int_count) {
+    if (g_int_count)
+    {
         g_int_count = 0;
         return -1;
     }
