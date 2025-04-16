@@ -139,13 +139,15 @@ void datasrc_init()
         std::free(s);
     }
 
-    if (!machine) {
+    if (!machine)
+    {
         machine = filexp(SERVER_NAME);
         if (FILE_REF(machine))
         {
             machine = nntp_servername(machine);
         }
-        if (!std::strcmp(machine,"local")) {
+        if (!std::strcmp(machine, "local"))
+        {
             machine = nullptr;
             actname = ACTIVE;
         }
@@ -158,7 +160,8 @@ void datasrc_init()
         vals[DI_OVERVIEW_FMT] = OVERVIEW_FMT;
         vals[DI_ACTIVE_TIMES] = ACTIVE_TIMES;
         vals[DI_GROUP_DESC] = GROUPDESC;
-        if (machine) {
+        if (machine)
+        {
             vals[DI_AUTH_USER] = read_auth_file(g_nntp_auth_file.c_str(),
                                                 &vals[DI_AUTH_PASS]);
             vals[DI_FORCE_AUTH] = get_val("NNTP_FORCE_AUTH");
@@ -197,13 +200,15 @@ char *read_datasrcs(const char *filename)
     {
         stat_t datasrc_stat{};
         fstat(fd,&datasrc_stat);
-        if (datasrc_stat.st_size) {
+        if (datasrc_stat.st_size)
+        {
             filebuf = safemalloc((MEM_SIZE)datasrc_stat.st_size+2);
             int len = read(fd, filebuf, (int)datasrc_stat.st_size);
             (filebuf)[len] = '\0';
             prep_ini_data(filebuf,filename);
             char *s = filebuf;
-            while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
+            while ((s = next_ini_section(s, &section, &cond)) != nullptr)
+            {
                 if (*cond && !check_ini_cond(cond))
                 {
                     continue;
@@ -292,9 +297,11 @@ static DATASRC *new_datasrc(const char *name, char **vals)
     dp->over_fmt = file_or_none(vals[DI_OVERVIEW_FMT]);
     dp->grpdesc = dir_or_none(dp,vals[DI_GROUP_DESC],DF_NONE);
     dp->extra_name = dir_or_none(dp,vals[DI_ACTIVE_TIMES],DF_ADD_OK);
-    if (dp->flags & DF_REMOTE) {
+    if (dp->flags & DF_REMOTE)
+    {
         /* FYI, we know extra_name to be nullptr in this case. */
-        if (vals[DI_ACTIVE_FILE]) {
+        if (vals[DI_ACTIVE_FILE])
+        {
             dp->extra_name = savestr(filexp(vals[DI_ACTIVE_FILE]));
             stat_t extra_stat{};
             if (stat(dp->extra_name,&extra_stat) >= 0)
@@ -302,7 +309,8 @@ static DATASRC *new_datasrc(const char *name, char **vals)
                 dp->act_sf.lastfetch = extra_stat.st_mtime;
             }
         }
-        else {
+        else
+        {
             dp->extra_name = temp_filename();
             dp->flags |= DF_TMPACTFILE;
             if (!dp->act_sf.refetch_secs)
@@ -320,14 +328,16 @@ static DATASRC *new_datasrc(const char *name, char **vals)
         {
             dp->desc_sf.refetch_secs = g_def_refetch_secs;
         }
-        if (dp->grpdesc) {
+        if (dp->grpdesc)
+        {
             stat_t desc_stat{};
             if (stat(dp->grpdesc,&desc_stat) >= 0)
             {
                 dp->desc_sf.lastfetch = desc_stat.st_mtime;
             }
         }
-        else {
+        else
+        {
             dp->grpdesc = temp_filename();
             dp->flags |= DF_TMPGRPDESC;
             if (!dp->desc_sf.refetch_secs)
@@ -367,18 +377,21 @@ static DATASRC *new_datasrc(const char *name, char **vals)
 
 static char *dir_or_none(DATASRC *dp, const char *dir, datasrc_flags flag)
 {
-    if (!dir || !*dir || !std::strcmp(dir,"remote")) {
+    if (!dir || !*dir || !std::strcmp(dir, "remote"))
+    {
         dp->flags |= flag;
         if (dp->flags & DF_REMOTE)
         {
             return nullptr;
         }
-        if (flag == DF_ADD_OK) {
+        if (flag == DF_ADD_OK)
+        {
             char* cp = safemalloc(std::strlen(dp->newsid)+6+1);
             std::sprintf(cp,"%s.times",dp->newsid);
             return cp;
         }
-        if (flag == DF_NONE) {
+        if (flag == DF_NONE)
+        {
             char* cp = std::strrchr(dp->newsid,'/');
             if (!cp)
             {
@@ -429,15 +442,19 @@ bool open_datasrc(DATASRC *dp)
     {
         return true;
     }
-    if (dp->flags & DF_REMOTE) {
-        if (nntp_connect(dp->newsid,true) <= 0) {
+    if (dp->flags & DF_REMOTE)
+    {
+        if (nntp_connect(dp->newsid, true) <= 0)
+        {
             dp->flags |= DF_UNAVAILABLE;
             return false;
         }
         g_nntp_allow_timeout = false;
         dp->nntplink = g_nntplink;
-        if (dp->act_sf.refetch_secs) {
-            switch (nntp_list("active", "control", 7)) {
+        if (dp->act_sf.refetch_secs)
+        {
+            switch (nntp_list("active", "control", 7))
+            {
             case 1:
                 if (std::strncmp(g_ser_line, "control ", 8) != 0)
                 {
@@ -446,8 +463,9 @@ bool open_datasrc(DATASRC *dp)
                     success = actfile_hash(dp);
                     break;
                 }
-                if (nntp_gets(g_buf, sizeof g_buf - 1) == NGSR_FULL_LINE
-                 && !nntp_at_list_end(g_buf)) {
+                if (nntp_gets(g_buf, sizeof g_buf - 1) == NGSR_FULL_LINE //
+                    && !nntp_at_list_end(g_buf))
+                {
                     nntp_finish_list();
                     success = actfile_hash(dp);
                     break;
@@ -455,7 +473,8 @@ bool open_datasrc(DATASRC *dp)
                 /* FALL THROUGH */
             case 0:
                 dp->flags |= DF_USELISTACT;
-                if (dp->flags & DF_TMPACTFILE) {
+                if (dp->flags & DF_TMPACTFILE)
+                {
                     dp->flags &= ~DF_TMPACTFILE;
                     std::free(dp->extra_name);
                     dp->extra_name = nullptr;
@@ -486,7 +505,8 @@ bool open_datasrc(DATASRC *dp)
     {
         success = actfile_hash(dp);
     }
-    if (success) {
+    if (success)
+    {
         dp->flags |= DF_OPEN;
         if (dp->flags & DF_TRY_OVERVIEW)
         {
@@ -521,11 +541,15 @@ void check_datasrcs()
 {
     std::time_t now = std::time(nullptr);
 
-    if (g_datasrc_list) {
-        for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp)) {
-            if ((dp->flags & DF_OPEN) && dp->nntplink.connection) {
+    if (g_datasrc_list)
+    {
+        for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
+        {
+            if ((dp->flags & DF_OPEN) && dp->nntplink.connection)
+            {
                 std::time_t limit = ((dp->flags & DF_ACTIVE) ? 30 * 60 : 10 * 60);
-                if (now - dp->nntplink.last_command > limit) {
+                if (now - dp->nntplink.last_command > limit)
+                {
                     DATASRC* save_datasrc = g_datasrc;
                     set_datasrc(dp);
                     nntp_close(true);
@@ -539,7 +563,8 @@ void check_datasrcs()
 
 void close_datasrc(DATASRC *dp)
 {
-    if (dp->flags & DF_REMOTE) {
+    if (dp->flags & DF_REMOTE)
+    {
         if (dp->flags & DF_TMPACTFILE)
         {
             remove(dp->extra_name);
@@ -548,7 +573,8 @@ void close_datasrc(DATASRC *dp)
         {
             srcfile_end_append(&dp->act_sf, dp->extra_name);
         }
-        if (dp->grpdesc) {
+        if (dp->grpdesc)
+        {
             if (dp->flags & DF_TMPGRPDESC)
             {
                 remove(dp->grpdesc);
@@ -565,7 +591,8 @@ void close_datasrc(DATASRC *dp)
         return;
     }
 
-    if (dp->flags & DF_REMOTE) {
+    if (dp->flags & DF_REMOTE)
+    {
         DATASRC* save_datasrc = g_datasrc;
         set_datasrc(dp);
         nntp_close(true);
@@ -584,7 +611,8 @@ void close_datasrc(DATASRC *dp)
 bool actfile_hash(DATASRC *dp)
 {
     int ret;
-    if (dp->flags & DF_REMOTE) {
+    if (dp->flags & DF_REMOTE)
+    {
         DATASRC* save_datasrc = g_datasrc;
         set_datasrc(dp);
         g_spin_todo = dp->act_sf.recent_cnt;
@@ -613,22 +641,26 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
 
     outbuf[0] = '\0';
     HASHDATUM data = hashfetch(dp->act_sf.hp, nam, len);
-    if (data.dat_ptr) {
+    if (data.dat_ptr)
+    {
         LISTNODE* node = (LISTNODE*)data.dat_ptr;
         /*dp->act_sf.lp->recent = node;*/
         act_pos = node->low + data.dat_len;
         lbp = node->data + data.dat_len;
         lbp_len = std::strchr(lbp, '\n') - lbp + 1;
     }
-    else {
+    else
+    {
         lbp = nullptr;
         lbp_len = 0;
     }
-    if ((dp->flags & DF_USELISTACT)
-     && (datasrc_nntp_flags(dp) & NNTP_NEW_CMD_OK)) {
+    if ((dp->flags & DF_USELISTACT) //
+        && (datasrc_nntp_flags(dp) & NNTP_NEW_CMD_OK))
+    {
         DATASRC* save_datasrc = g_datasrc;
         set_datasrc(dp);
-        switch (nntp_list("active", nam, len)) {
+        switch (nntp_list("active", nam, len))
+        {
         case 0:
             set_datasrc(save_datasrc);
             return false;
@@ -641,7 +673,8 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
             break;
         }
         set_datasrc(save_datasrc);
-        if (!lbp_len) {
+        if (!lbp_len)
+        {
             if (fp)
             {
                 (void) srcfile_append(&dp->act_sf, outbuf, len);
@@ -656,7 +689,8 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
             while (*--t != ' ')
             {
             }
-            while (t > lbp) {
+            while (t > lbp)
+            {
                 if (*--t == ' ')
                 {
                     break;
@@ -675,12 +709,16 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
         high = (ART_NUM)std::atol(outbuf+len+1);
     }
 
-    if (lbp_len) {
-        if ((dp->flags & DF_REMOTE) && dp->act_sf.refetch_secs) {
+    if (lbp_len)
+    {
+        if ((dp->flags & DF_REMOTE) && dp->act_sf.refetch_secs)
+        {
             char* cp;
-            if (high && high != (ART_NUM)std::atol(cp = lbp+len+1)) {
+            if (high && high != (ART_NUM) std::atol(cp = lbp + len + 1))
+            {
                 cp = skip_digits(cp);
-                while (*--cp != ' ') {
+                while (*--cp != ' ')
+                {
                     int num = high % 10;
                     high = high / 10;
                     *cp = '0' + (char)num;
@@ -696,9 +734,10 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
 
         /* if line has changed length or is not there, we should
          * discard/close the active file, and re-open it. */
-        if (std::fseek(fp, act_pos, 0) >= 0
-         && std::fgets(outbuf, LBUFLEN, fp) != nullptr
-         && !std::strncmp(outbuf, nam, len) && outbuf[len] == ' ') {
+        if (std::fseek(fp, act_pos, 0) >= 0               //
+            && std::fgets(outbuf, LBUFLEN, fp) != nullptr //
+            && !std::strncmp(outbuf, nam, len) && outbuf[len] == ' ')
+        {
             /* Remember the latest info in our cache. */
             (void) std::memcpy(lbp,outbuf,lbp_len);
             return true;
@@ -721,13 +760,15 @@ const char *find_grpdesc(DATASRC *dp, const char *groupname)
         return "";
     }
 
-    if (!dp->desc_sf.hp) {
+    if (!dp->desc_sf.hp)
+    {
         int ret;
-        if ((dp->flags & DF_REMOTE) && dp->desc_sf.refetch_secs) {
-            /*DATASRC* save_datasrc = g_datasrc;*/
+        if ((dp->flags & DF_REMOTE) && dp->desc_sf.refetch_secs)
+        {
             set_datasrc(dp);
-            if ((dp->flags & (DF_TMPGRPDESC|DF_NOXGTITLE)) == DF_TMPGRPDESC
-             && g_net_speed < 5) {
+            if ((dp->flags & (DF_TMPGRPDESC | DF_NOXGTITLE)) == DF_TMPGRPDESC //
+                && g_net_speed < 5)
+            {
                 (void)srcfile_open(&dp->desc_sf,nullptr, /*$$check return?*/
                                    nullptr,nullptr);
                 grouplen = std::strlen(groupname);
@@ -745,8 +786,10 @@ const char *find_grpdesc(DATASRC *dp, const char *groupname)
         {
             ret = srcfile_open(&dp->desc_sf, dp->grpdesc, nullptr, nullptr);
         }
-        if (!ret) {
-            if (dp->flags & DF_TMPGRPDESC) {
+        if (!ret)
+        {
+            if (dp->flags & DF_TMPGRPDESC)
+            {
                 dp->flags &= ~DF_TMPGRPDESC;
                 remove(dp->grpdesc);
             }
@@ -770,15 +813,18 @@ const char *find_grpdesc(DATASRC *dp, const char *groupname)
 
 try_xgtitle:
 
-    if ((dp->flags & (DF_REMOTE|DF_NOXGTITLE)) == DF_REMOTE) {
+    if ((dp->flags & (DF_REMOTE | DF_NOXGTITLE)) == DF_REMOTE)
+    {
         set_datasrc(dp);
-        if (nntp_xgtitle(groupname) > 0) {
+        if (nntp_xgtitle(groupname) > 0)
+        {
             nntp_gets(g_buf, sizeof g_buf - 1); // TODO: check return value?
             if (nntp_at_list_end(g_buf))
             {
                 std::sprintf(g_buf, "%s \n", groupname);
             }
-            else {
+            else
+            {
                 nntp_finish_list();
                 std::strcat(g_buf, "\n");
             }
@@ -786,7 +832,8 @@ try_xgtitle:
             return groupname+grouplen+1;
         }
         dp->flags |= DF_NOXGTITLE;
-        if (dp->desc_sf.lp->high == -1) {
+        if (dp->desc_sf.lp->high == -1)
+        {
             srcfile_close(&dp->desc_sf);
             if (dp->flags & DF_TMPGRPDESC)
             {
@@ -811,10 +858,13 @@ static char *adv_then_find_next_nl_and_dectrl(char *s)
         return s;
     }
 
-    for (s++; *s && *s != '\n';) {
+    for (s++; *s && *s != '\n';)
+    {
         int w = byte_length_at(s);
-        if (at_grey_space(s)) {
-            for (int i = 0; i < w; i += 1) {
+        if (at_grey_space(s))
+        {
+            for (int i = 0; i < w; i += 1)
+            {
                 s[i] = ' ';
             }
         }
@@ -838,8 +888,10 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
     {
         fp = nullptr;
     }
-    else if (server) {
-        if (!sfp->refetch_secs) {
+    else if (server)
+    {
+        if (!sfp->refetch_secs)
+        {
             server = nullptr;
             fp = std::fopen(filename, "r");
             g_spin_todo = 0;
@@ -847,7 +899,8 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
         else if (now - sfp->lastfetch > sfp->refetch_secs && (sfp->refetch_secs != 2 || !sfp->lastfetch))
         {
             fp = std::fopen(filename, "w+");
-            if (fp) {
+            if (fp)
+            {
                 std::printf("Getting %s file from %s.", fetchcmd, server);
                 std::fflush(stdout);
                 /* tell server we want the file */
@@ -855,7 +908,8 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
                 {
                     use_buffered_nntp_gets = true;
                 }
-                else if (nntp_list(fetchcmd, "", 0) < 0) {
+                else if (nntp_list(fetchcmd, "", 0) < 0)
+                {
                     std::printf("\nCan't get %s file from server: \n%s\n",
                            fetchcmd, g_ser_line);
                     termdown(2);
@@ -869,10 +923,12 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
                 }
             }
         }
-        else {
+        else
+        {
             server = nullptr;
             fp = std::fopen(filename, "r+");
-            if (!fp) {
+            if (!fp)
+            {
                 sfp->refetch_secs = 0;
                 fp = std::fopen(filename, "r");
             }
@@ -889,7 +945,8 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
         g_spin_todo = 0;
     }
 
-    if (filename && fp == nullptr) {
+    if (filename && fp == nullptr)
+    {
         std::printf(g_cantopen, filename);
         termdown(1);
         return 0;
@@ -903,7 +960,8 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
     sfp->hp = hashcreate(3001, srcfile_cmp);
     sfp->fp = fp;
 
-    if (!filename) {
+    if (!filename)
+    {
         (void) listnum2listitem(sfp->lp, 0);
         sfp->lp->high = -1;
         setspin(SPIN_OFF);
@@ -913,13 +971,16 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
     char *lbp = listnum2listitem(sfp->lp, 0);
     data.dat_ptr = (char*)sfp->lp->first;
 
-    for (offset = 0, node_low = 0; ; offset += linelen, lbp += linelen) {
-        if (server) {
+    for (offset = 0, node_low = 0;; offset += linelen, lbp += linelen)
+    {
+        if (server)
+        {
             if (use_buffered_nntp_gets)
             {
                 use_buffered_nntp_gets = false;
             }
-            else if (nntp_gets(g_buf, sizeof g_buf - 1) == NGSR_ERROR) {
+            else if (nntp_gets(g_buf, sizeof g_buf - 1) == NGSR_ERROR)
+            {
                 std::printf("\nError getting %s file.\n", fetchcmd);
                 termdown(2);
                 srcfile_close(sfp);
@@ -940,12 +1001,14 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
         }
 
         s = skip_non_space(g_buf);
-        if (!*s) {
+        if (!*s)
+        {
             linelen = 0;
             continue;
         }
         int keylen = s - g_buf;
-        if (*++s != '\n' && std::isspace(*s)) {
+        if (*++s != '\n' && std::isspace(*s))
+        {
             while (*++s != '\n' && std::isspace(*s))
             {
             }
@@ -954,15 +1017,18 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
         }
         s = adv_then_find_next_nl_and_dectrl(s);
         linelen = s - g_buf + 1;
-        if (*s != '\n') {
-            if (linelen == sizeof g_buf) {
+        if (*s != '\n')
+        {
+            if (linelen == sizeof g_buf)
+            {
                 linelen = 0;
                 continue;
             }
             *s++ = '\n';
             *s = '\0';
         }
-        if (offset + linelen > SRCFILE_CHUNK_SIZE) {
+        if (offset + linelen > SRCFILE_CHUNK_SIZE)
+        {
             LISTNODE* node = sfp->lp->recent;
             node_low += offset;
             node->high = node_low - 1;
@@ -978,9 +1044,11 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
     sfp->lp->high = node_low + offset - 1;
     setspin(SPIN_OFF);
 
-    if (server) {
+    if (server)
+    {
         std::fflush(fp);
-        if (std::ferror(fp)) {
+        if (std::ferror(fp))
+        {
             std::printf("\nError writing the %s file %s.\n",fetchcmd,filename);
             termdown(2);
             srcfile_close(sfp);
@@ -1003,12 +1071,14 @@ char *srcfile_append(SRCFILE *sfp, char *bp, int keylen)
     data.dat_len = pos - node->low;
 
     char *s = bp + keylen + 1;
-    if (sfp->fp && sfp->refetch_secs && *s != '\n') {
+    if (sfp->fp && sfp->refetch_secs && *s != '\n')
+    {
         std::fseek(sfp->fp, 0, 2);
         std::fputs(bp, sfp->fp);
     }
 
-    if (*s != '\n' && std::isspace(*s)) {
+    if (*s != '\n' && std::isspace(*s))
+    {
         while (*++s != '\n' && std::isspace(*s))
         {
         }
@@ -1017,11 +1087,13 @@ char *srcfile_append(SRCFILE *sfp, char *bp, int keylen)
     }
     s = adv_then_find_next_nl_and_dectrl(s);
     const int linelen = s - bp + 1;
-    if (*s != '\n') {
+    if (*s != '\n')
+    {
         *s++ = '\n';
         *s = '\0';
     }
-    if (data.dat_len + linelen > SRCFILE_CHUNK_SIZE) {
+    if (data.dat_len + linelen > SRCFILE_CHUNK_SIZE)
+    {
         node->high = pos - 1;
         node->data_high = node->data + data.dat_len - 1;
         lbp = listnum2listitem(sfp->lp, pos);
@@ -1038,10 +1110,12 @@ char *srcfile_append(SRCFILE *sfp, char *bp, int keylen)
 
 void srcfile_end_append(SRCFILE *sfp, const char *filename)
 {
-    if (sfp->fp && sfp->refetch_secs) {
+    if (sfp->fp && sfp->refetch_secs)
+    {
         std::fflush(sfp->fp);
 
-        if (sfp->lastfetch) {
+        if (sfp->lastfetch)
+        {
             struct utimbuf ut;
             std::time(&ut.actime);
             ut.modtime = sfp->lastfetch;
@@ -1052,15 +1126,18 @@ void srcfile_end_append(SRCFILE *sfp, const char *filename)
 
 void srcfile_close(SRCFILE *sfp)
 {
-    if (sfp->fp) {
+    if (sfp->fp)
+    {
         std::fclose(sfp->fp);
         sfp->fp = nullptr;
     }
-    if (sfp->lp) {
+    if (sfp->lp)
+    {
         delete_list(sfp->lp);
         sfp->lp = nullptr;
     }
-    if (sfp->hp) {
+    if (sfp->hp)
+    {
         hashdestroy(sfp->hp);
         sfp->hp = nullptr;
     }
@@ -1114,8 +1191,10 @@ int find_close_match()
     s_ngn = 0;
 
     /* Iterate over all legal newsgroups */
-    for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp)) {
-        if (dp->flags & DF_OPEN) {
+    for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
+    {
+        if (dp->flags & DF_OPEN)
+        {
             if (dp->act_sf.hp)
             {
                 hashwalk(dp->act_sf.hp, check_distance, 0);
@@ -1127,17 +1206,20 @@ int find_close_match()
         }
     }
 
-    if (ret < 0) {
+    if (ret < 0)
+    {
         hashwalk(g_newsrc_hash, check_distance, 1);
         ret = 0;
     }
 
     /* s_ngn is the number of possibilities.  If there's just one, go with it. */
 
-    switch (s_ngn) {
+    switch (s_ngn)
+    {
         case 0:
             break;
-        case 1: {
+        case 1:
+        {
             char* cp = std::strchr(s_ngptrs[0], ' ');
             if (cp)
             {
@@ -1182,13 +1264,15 @@ static int check_distance(int len, HASHDATUM *data, int newsrc_ptr)
 
     /* Efficiency: don't call edit_dist when the lengths are too different. */
     const int ngname_len = static_cast<int>(g_ngname.length());
-    if (len < ngname_len) {
+    if (len < ngname_len)
+    {
         if (ngname_len - len > LENGTH_HACK)
         {
             return 0;
         }
     }
-    else {
+    else
+    {
         if (len - ngname_len > LENGTH_HACK)
         {
             return 0;
@@ -1205,8 +1289,10 @@ static int check_distance(int len, HASHDATUM *data, int newsrc_ptr)
     {
         s_ngn = 0;
     }
-    if (s_best_match < 0 || value <= s_best_match) {
-        for (int i = 0; i < s_ngn; i++) {
+    if (s_best_match < 0 || value <= s_best_match)
+    {
+        for (int i = 0; i < s_ngn; i++)
+        {
             if (!std::strcmp(name,s_ngptrs[i]))
             {
                 return 0;
@@ -1235,7 +1321,8 @@ static int get_near_miss()
         std::printf("However, here are some close matches:\n");
     }
     s_ngn = std::min(s_ngn, 9);         /* Since we're using single digits.... */
-    for (int i = 0; i < s_ngn; i++) {
+    for (int i = 0; i < s_ngn; i++)
+    {
         char* cp = std::strchr(s_ngptrs[i], ' ');
         if (cp)
         {
@@ -1263,7 +1350,8 @@ reask:
     in_char(promptbuf, MM_ADD_NEWSGROUP_PROMPT, options);
     printcmd();
     std::putchar('\n');
-    switch (*g_buf) {
+    switch (*g_buf)
+    {
         case 'n':
         case 'N':
         case 'q':
@@ -1286,11 +1374,13 @@ reask:
             }
             goto reask;
         default:
-            if (std::isdigit(*g_buf)) {
+            if (std::isdigit(*g_buf))
+            {
                 char* s = std::strchr(options, *g_buf);
 
                 int i = s ? (s - options) : s_ngn;
-                if (i >= 0 && i < s_ngn) {
+                if (i >= 0 && i < s_ngn)
+                {
                     char* cp = std::strchr(s_ngptrs[i], ' ');
                     if (cp)
                     {
