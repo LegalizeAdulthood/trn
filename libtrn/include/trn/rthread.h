@@ -18,7 +18,7 @@ extern bool       g_thread_always; /* -a */
 extern bool       g_breadth_first; /* -b */
 
 /* Values to pass to count_subjects() */
-enum cs_mode
+enum CountSubjectMode
 {
     CS_RETAIN = 0,
     CS_NORM,
@@ -73,7 +73,7 @@ bool     find_parent(bool keep_going);
 bool     find_leaf(bool keep_going);
 bool     find_next_sib();
 bool     find_prev_sib();
-void     count_subjects(cs_mode cmode);
+void     count_subjects(CountSubjectMode cmode);
 void     sort_subjects();
 void     sort_articles();
 

@@ -1593,7 +1593,7 @@ static Article *last_sib(Article *ta, int depth, Article *limit)
 ** is specified, the selections from the last CS_UNSEL_STORE are
 ** reselected.
 */
-void count_subjects(cs_mode cmode)
+void count_subjects(CountSubjectMode cmode)
 {
     Subject*sp;
     int     desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
