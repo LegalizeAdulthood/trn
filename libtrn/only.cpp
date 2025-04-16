@@ -5,8 +5,8 @@
 #include "config/common.h"
 #include "trn/only.h"
 
-#include "trn/final.h"
 #include "trn/ngdata.h"
+#include "trn/final.h"
 #include "trn/ngsrch.h"
 #include "trn/search.h"
 #include "trn/trn.h"

@@ -41,14 +41,14 @@ int         g_ngdata_cnt{};        //
 NG_NUM      g_newsgroup_cnt{};     /* all newsgroups in our current newsrc(s) */
 NG_NUM      g_newsgroup_toread{};  //
 ART_UNREAD  g_ng_min_toread{1};    /* == TR_ONE or TR_NONE */
-NGDATA     *g_first_ng{};          //
-NGDATA     *g_last_ng{};           //
-NGDATA     *g_ngptr{};             /* current newsgroup data ptr */
-NGDATA     *g_current_ng{};        /* stable current newsgroup so we can ditz with g_ngptr */
-NGDATA     *g_recent_ng{};         /* the prior newsgroup we visited */
-NGDATA     *g_starthere{};         /* set to the first newsgroup with unread news on startup */
-NGDATA     *g_sel_page_np{};       //
-NGDATA     *g_sel_next_np{};       //
+NewsgroupData     *g_first_ng{};          //
+NewsgroupData     *g_last_ng{};           //
+NewsgroupData     *g_ngptr{};             /* current newsgroup data ptr */
+NewsgroupData     *g_current_ng{};        /* stable current newsgroup so we can ditz with g_ngptr */
+NewsgroupData     *g_recent_ng{};         /* the prior newsgroup we visited */
+NewsgroupData     *g_starthere{};         /* set to the first newsgroup with unread news on startup */
+NewsgroupData     *g_sel_page_np{};       //
+NewsgroupData     *g_sel_next_np{};       //
 ART_NUM     g_absfirst{};          /* 1st real article in current newsgroup */
 ART_NUM     g_firstart{};          /* minimum unread article number in newsgroup */
 ART_NUM     g_lastart{};           /* maximum article number in newsgroup */
@@ -57,14 +57,14 @@ std::string g_moderated;           //
 bool        g_redirected{};        //
 std::string g_redirected_to;       //
 bool        g_threaded_group{};    //
-NGDATA     *g_ng_go_ngptr{};       //
+NewsgroupData     *g_ng_go_ngptr{};       //
 ART_NUM     g_ng_go_artnum{};      //
 bool        g_novice_delays{true}; /* +f */
 bool        g_in_ng{};             /* true if in a newsgroup */
 
-static int ngorder_number(const NGDATA **npp1, const NGDATA **npp2);
-static int ngorder_groupname(const NGDATA **npp1, const NGDATA **npp2);
-static int ngorder_count(const NGDATA **npp1, const NGDATA **npp2);
+static int ngorder_number(const NewsgroupData **npp1, const NewsgroupData **npp2);
+static int ngorder_groupname(const NewsgroupData **npp1, const NewsgroupData **npp2);
+static int ngorder_count(const NewsgroupData **npp1, const NewsgroupData **npp2);
 
 void ngdata_init()
 {
@@ -72,7 +72,7 @@ void ngdata_init()
 
 /* set current newsgroup */
 
-void set_ng(NGDATA *np)
+void set_ng(NewsgroupData *np)
 {
     g_ngptr = np;
     if (g_ngptr)
@@ -213,17 +213,17 @@ void grow_ng(ART_NUM newlast)
     }
 }
 
-static int ngorder_number(const NGDATA **npp1, const NGDATA **npp2)
+static int ngorder_number(const NewsgroupData **npp1, const NewsgroupData **npp2)
 {
     return (int)((*npp1)->num - (*npp2)->num) * g_sel_direction;
 }
 
-static int ngorder_groupname(const NGDATA **npp1, const NGDATA **npp2)
+static int ngorder_groupname(const NewsgroupData **npp1, const NewsgroupData **npp2)
 {
     return string_case_compare((*npp1)->rcline, (*npp2)->rcline) * g_sel_direction;
 }
 
-static int ngorder_count(const NGDATA **npp1, const NGDATA **npp2)
+static int ngorder_count(const NewsgroupData **npp1, const NewsgroupData **npp2)
 {
     int eq = (int)((*npp1)->toread - (*npp2)->toread);
     if (eq != 0)
@@ -237,8 +237,8 @@ static int ngorder_count(const NGDATA **npp1, const NGDATA **npp2)
 */
 void sort_newsgroups()
 {
-    NGDATA**lp;
-    int (*  sort_procedure)(const NGDATA **npp1,const NGDATA **npp2);
+    NewsgroupData**lp;
+    int (*  sort_procedure)(const NewsgroupData **npp1,const NewsgroupData **npp2);
 
     /* If we don't have at least two newsgroups, we're done! */
     if (!g_first_ng || !g_first_ng->next)
@@ -262,15 +262,15 @@ void sort_newsgroups()
         break;
     }
 
-    NGDATA **ng_list = (NGDATA**)safemalloc(g_newsgroup_cnt * sizeof(NGDATA*));
+    NewsgroupData **ng_list = (NewsgroupData**)safemalloc(g_newsgroup_cnt * sizeof(NewsgroupData*));
     lp = ng_list;
-    for (NGDATA* np = g_first_ng; np; np = np->next)
+    for (NewsgroupData* np = g_first_ng; np; np = np->next)
     {
         *lp++ = np;
     }
     TRN_ASSERT(lp - ng_list == g_newsgroup_cnt);
 
-    std::qsort(ng_list, g_newsgroup_cnt, sizeof (NGDATA*), (int(*)(void const *, void const *))sort_procedure);
+    std::qsort(ng_list, g_newsgroup_cnt, sizeof (NewsgroupData*), (int(*)(void const *, void const *))sort_procedure);
 
     g_first_ng = ng_list[0];
     g_first_ng->prev = nullptr;
@@ -349,7 +349,7 @@ void ng_skip()
 
 /* find the maximum article number of a newsgroup */
 
-ART_NUM getngsize(NGDATA *gp)
+ART_NUM getngsize(NewsgroupData *gp)
 {
     char tmpbuf[LBUFLEN];
     long last;

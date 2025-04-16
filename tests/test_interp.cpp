@@ -11,7 +11,7 @@
 
 #include <config/common.h>
 
-#include <trn/datasrc.h>
+#include <trn/ngdata.h>
 #include <trn/addng.h>
 #include <trn/art.h>
 #include <trn/artio.h>
@@ -20,13 +20,13 @@
 #include <trn/bits.h>
 #include <trn/cache.h>
 #include <trn/color.h>
+#include <trn/datasrc.h>
 #include <trn/init.h>
 #include <trn/intrp.h>
 #include <trn/kfile.h>
 #include <trn/last.h>
 #include <trn/mime.h>
 #include <trn/ng.h>
-#include <trn/ngdata.h>
 #include <trn/ngsrch.h>
 #include <trn/ngstuff.h>
 #include <trn/only.h>

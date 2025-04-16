@@ -8,13 +8,13 @@
 #include "trn/nntp.h"
 
 #include "nntp/nntpclient.h"
-#include "trn/datasrc.h"
+#include "trn/ngdata.h"
 #include "trn/artio.h"
 #include "trn/cache.h"
+#include "trn/datasrc.h"
 #include "trn/final.h"
 #include "trn/head.h"
 #include "trn/init.h"
-#include "trn/ngdata.h"
 #include "trn/rcstuff.h"
 #include "trn/terminal.h"
 #include "trn/trn.h"
@@ -105,7 +105,7 @@ void nntp_finish_list()
 
 /* try to access the specified group */
 
-int nntp_group(const char *group, NGDATA *gp)
+int nntp_group(const char *group, NewsgroupData *gp)
 {
     sprintf(g_ser_line, "GROUP %s", group);
     if (nntp_command(g_ser_line) <= 0)
@@ -662,7 +662,7 @@ int nntp_handle_timeout()
         return -2;
     }
     g_datasrc->nntplink = g_nntplink;
-    if (g_in_ng && nntp_group(g_ngname.c_str(), (NGDATA*)nullptr) <= 0)
+    if (g_in_ng && nntp_group(g_ngname.c_str(), (NewsgroupData*)nullptr) <= 0)
     {
         return -2;
     }

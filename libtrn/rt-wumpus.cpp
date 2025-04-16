@@ -5,6 +5,7 @@
 #include "config/common.h"
 #include "trn/rt-wumpus.h"
 
+#include "trn/ngdata.h"
 #include "trn/artio.h"
 #include "trn/artstate.h"
 #include "trn/backpage.h"
@@ -13,7 +14,6 @@
 #include "trn/color.h"
 #include "trn/head.h"
 #include "trn/ng.h"
-#include "trn/ngdata.h"
 #include "trn/rt-select.h"
 #include "trn/rthread.h"
 #include "trn/string-algos.h"

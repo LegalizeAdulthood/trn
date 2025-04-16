@@ -7,6 +7,7 @@
 #include "trn/cache.h"
 
 #include "trn/List.h"
+#include "trn/ngdata.h"
 #include "trn/bits.h"
 #include "trn/datasrc.h"
 #include "trn/final.h"
@@ -16,7 +17,6 @@
 #include "trn/kfile.h"
 #include "trn/mime.h"
 #include "trn/ng.h"
-#include "trn/ngdata.h"
 #include "trn/nntp.h"
 #include "trn/rt-ov.h"
 #include "trn/rt-page.h"
@@ -72,7 +72,7 @@ void cache_init()
 #endif
 }
 
-static NGDATA* s_cached_ng{};
+static NewsgroupData* s_cached_ng{};
 static std::time_t s_cached_time{};
 
 void build_cache()

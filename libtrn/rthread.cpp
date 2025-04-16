@@ -8,6 +8,7 @@
 #include "trn/rthread.h"
 
 #include "trn/List.h"
+#include "trn/ngdata.h"
 #include "trn/artstate.h"
 #include "trn/bits.h"
 #include "trn/cache.h"
@@ -16,7 +17,6 @@
 #include "trn/head.h"
 #include "trn/kfile.h"
 #include "trn/ng.h"
-#include "trn/ngdata.h"
 #include "trn/rt-ov.h"
 #include "trn/rt-page.h"
 #include "trn/rt-process.h"

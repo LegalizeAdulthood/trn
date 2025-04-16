@@ -7,6 +7,7 @@
 
 #include "nntp/nntpclient.h"
 #include "trn/List.h"
+#include "trn/ngdata.h"
 #include "trn/art.h"
 #include "trn/artio.h"
 #include "trn/artsrch.h"
@@ -24,7 +25,6 @@
 #include "trn/intrp.h"
 #include "trn/kfile.h"
 #include "trn/mime.h"
-#include "trn/ngdata.h"
 #include "trn/ngstuff.h"
 #include "trn/nntp.h"
 #include "trn/rcln.h"

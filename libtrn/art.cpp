@@ -8,6 +8,7 @@
 #include "trn/art.h"
 
 #include "trn/List.h"
+#include "trn/ngdata.h"
 #include "trn/artio.h"
 #include "trn/artstate.h"
 #include "trn/backpage.h"
@@ -23,7 +24,6 @@
 #include "trn/kfile.h"
 #include "trn/mime.h"
 #include "trn/ng.h"
-#include "trn/ngdata.h"
 #include "trn/ngstuff.h"
 #include "trn/nntp.h"
 #include "trn/rcstuff.h"

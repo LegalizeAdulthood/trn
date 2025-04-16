@@ -11,13 +11,13 @@
 #include "trn/univ.h"
 
 #include "trn/List.h"
+#include "trn/ngdata.h"
 #include "trn/cache.h"
 #include "trn/final.h"
 #include "trn/hash.h"
 #include "trn/head.h"
 #include "trn/help.h"
 #include "trn/ng.h"
-#include "trn/ngdata.h"
 #include "trn/rcstuff.h"
 #include "trn/rt-select.h"
 #include "trn/rt-util.h"
@@ -482,7 +482,7 @@ static bool univ_DoMatch(const char *text, const char *p)
 void univ_use_pattern(const char *pattern, int type)
 {
     const char* s = pattern;
-    NGDATA* np;
+    NewsgroupData* np;
     UNIV_ITEM* ui;
 
     if (!s || !*s)
@@ -1156,7 +1156,7 @@ int univ_visit_group_main(const char *gname)
         return NG_ERROR;
     }
 
-    NGDATA *np = find_ng(gname);
+    NewsgroupData *np = find_ng(gname);
     if (!np)
     {
         std::printf("Univ/Virt: newsgroup %s not found!", gname);

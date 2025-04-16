@@ -11,9 +11,9 @@
 
 #include "nntp/nntpclient.h"
 #include "trn/List.h"
+#include "trn/ngdata.h"
 #include "trn/edit_dist.h"
 #include "trn/hash.h"
-#include "trn/ngdata.h"
 #include "trn/nntp.h"
 #include "trn/rcstuff.h"
 #include "trn/rt-ov.h"
@@ -1262,7 +1262,7 @@ static int check_distance(int len, HashDatum *data, int newsrc_ptr)
 
     if (newsrc_ptr)
     {
-        name = ((NGDATA *) data->dat_ptr)->rcline;
+        name = ((NewsgroupData *) data->dat_ptr)->rcline;
     }
     else
     {

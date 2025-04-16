@@ -7,7 +7,7 @@
 #include <config/typedef.h>
 
 struct DataSource;
-struct NGDATA;
+struct NewsgroupData;
 
 /* if true, silence is golden (universal scan mode) */
 extern bool g_toread_quiet;
@@ -19,14 +19,14 @@ enum : bool
 };
 
 void rcln_init();
-void catch_up(NGDATA *np, int leave_count, int output_level);
+void catch_up(NewsgroupData *np, int leave_count, int output_level);
 int addartnum(DataSource *dp, ART_NUM artnum, const char *ngnam);
 #ifdef MCHASE
 void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam);
 void prange(char *where, ART_NUM min, ART_NUM max);
 #endif
-void set_toread(NGDATA *np, bool lax_high_check);
-void checkexpired(NGDATA *np, ART_NUM a1st);
+void set_toread(NewsgroupData *np, bool lax_high_check);
+void checkexpired(NewsgroupData *np, ART_NUM a1st);
 bool was_read_group(DataSource *dp, ART_NUM artnum, char *ngnam);
 
 #endif

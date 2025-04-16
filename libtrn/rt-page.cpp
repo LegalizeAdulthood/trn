@@ -7,11 +7,11 @@
 #include "trn/rt-page.h"
 
 #include "trn/List.h"
+#include "trn/ngdata.h"
 #include "trn/addng.h"
 #include "trn/cache.h"
 #include "trn/color.h"
 #include "trn/datasrc.h"
-#include "trn/ngdata.h"
 #include "trn/only.h"
 #include "trn/opt.h"
 #include "trn/rcln.h"
@@ -422,7 +422,7 @@ try_again:
         sort_newsgroups();
         g_selected_count = 0;
         g_obj_count = 0;
-        for (NGDATA *np = g_first_ng; np; np = np->next)
+        for (NewsgroupData *np = g_first_ng; np; np = np->next)
         {
             if (g_sel_page_np == np)
             {
@@ -606,7 +606,7 @@ try_again:
                     ui_elig = false;
                     break;
                 }
-                NGDATA *np = find_ng(ui->data.group.ng);
+                NewsgroupData *np = find_ng(ui->data.group.ng);
                 if (!np)
                 {
                     ui_elig = false;
@@ -947,7 +947,7 @@ bool first_page()
 
     case SM_NEWSGROUP:
     {
-        for (NGDATA *np = g_first_ng; np; np = np->next)
+        for (NewsgroupData *np = g_first_ng; np; np = np->next)
         {
             if (np->flags & NF_INCLUDED)
             {
@@ -1067,7 +1067,7 @@ bool last_page()
 
     case SM_NEWSGROUP:
     {
-        NGDATA* np = g_sel_page_np;
+        NewsgroupData* np = g_sel_page_np;
         g_sel_page_np = nullptr;
         if (!prev_page())
         {
@@ -1285,8 +1285,8 @@ bool prev_page()
 
     case SM_NEWSGROUP:
     {
-        NGDATA* np = g_sel_page_np;
-        NGDATA* page_np = g_sel_page_np;
+        NewsgroupData* np = g_sel_page_np;
+        NewsgroupData* page_np = g_sel_page_np;
 
         if (!np)
         {
@@ -1524,7 +1524,7 @@ try_again:
 
     case SM_NEWSGROUP:
     {
-        NGDATA* np = g_sel_page_np;
+        NewsgroupData* np = g_sel_page_np;
         for (; np && g_sel_page_item_cnt < s_sel_max_per_page; np = np->next)
         {
             if (np == u.np)
@@ -1866,7 +1866,7 @@ try_again:
     }
     else if (g_sel_mode == SM_NEWSGROUP)
     {
-        NGDATA* np;
+        NewsgroupData* np;
         int max_len = 0;
         int outputting = (*g_sel_grp_dmode != 'l');
       start_of_loop:
@@ -2623,7 +2623,7 @@ static void display_univ(const UNIV_ITEM *ui)
         case UN_NEWSGROUP:
         {
               /* later error check the UI? */
-            NGDATA *np = find_ng(ui->data.group.ng);
+            NewsgroupData *np = find_ng(ui->data.group.ng);
             if (!np)
             {
                 std::printf("!!!!! could not find %s", ui->data.group.ng);

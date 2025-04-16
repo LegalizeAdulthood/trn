@@ -5,18 +5,18 @@
 #include "config/common.h"
 #include "trn/rt-select.h"
 
-#include "trn/datasrc.h"
+#include "trn/ngdata.h"
 #include "trn/addng.h"
 #include "trn/artsrch.h"
 #include "trn/bits.h"
 #include "trn/cache.h"
 #include "trn/color.h"
+#include "trn/datasrc.h"
 #include "trn/enum-flags.h"
 #include "trn/final.h"
 #include "trn/intrp.h"
 #include "trn/kfile.h"
 #include "trn/ng.h"
-#include "trn/ngdata.h"
 #include "trn/ngsrch.h"
 #include "trn/ngstuff.h"
 #include "trn/nntp.h"
@@ -365,7 +365,7 @@ static void sel_dogroups()
     int ret;
     int save_selected_count = g_selected_count;
 
-    for (NGDATA *np = g_first_ng; np; np = np->next)
+    for (NewsgroupData *np = g_first_ng; np; np = np->next)
     {
         if (!(np->flags & NF_VISIT))
         {
@@ -562,7 +562,7 @@ char newsgroup_selector()
     if (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == 'Z' || s_sel_ret == '\t' || s_sel_ret == ';')
     {
         PUSH_SELECTOR();
-        for (NGDATA *np = g_first_ng; np; np = np->next)
+        for (NewsgroupData *np = g_first_ng; np; np = np->next)
         {
             if ((np->flags & NF_INCLUDED)
              && (!g_selected_count || (np->flags & g_sel_mask)))
@@ -782,7 +782,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
         {
             break;                      /* XXX whine */
         }
-        NGDATA *np = find_ng(ui->data.virt.ng);
+        NewsgroupData *np = find_ng(ui->data.virt.ng);
 
         if (!np)
         {
@@ -878,7 +878,7 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
         {
             break;                      /* XXX whine */
         }
-        NGDATA *np = find_ng(ui->data.group.ng);
+        NewsgroupData *np = find_ng(ui->data.group.ng);
 
         if (!np)
         {
@@ -1924,7 +1924,7 @@ static void sel_cleanup()
     case SM_NEWSGROUP:
         if (g_sel_rereading)
         {
-            for (NGDATA *np = g_first_ng; np; np = np->next)
+            for (NewsgroupData *np = g_first_ng; np; np = np->next)
             {
                 if (np->flags & NF_DELSEL)
                 {
@@ -1939,7 +1939,7 @@ static void sel_cleanup()
         }
         else
         {
-            for (NGDATA *np = g_first_ng; np; np = np->next)
+            for (NewsgroupData *np = g_first_ng; np; np = np->next)
             {
                 if (np->flags & NF_DEL)
                 {
@@ -2868,7 +2868,7 @@ static display_state newsgroup_commands(char_int ch)
     case 'X':  case 'D':  case 'J':
         if (!g_sel_rereading)
         {
-            NGDATA* np;
+            NewsgroupData* np;
             if (ch == 'D')
             {
                 np = g_sel_page_np;
@@ -2906,7 +2906,7 @@ static display_state newsgroup_commands(char_int ch)
         }
         else if (ch == 'J')
         {
-            for (NGDATA *np = g_first_ng; np; np = np->next)
+            for (NewsgroupData *np = g_first_ng; np; np = np->next)
             {
                 np->flags &= ~NF_DELSEL;
             }
@@ -2919,7 +2919,7 @@ static display_state newsgroup_commands(char_int ch)
     {
         sel_cleanup();
         g_missing_count = 0;
-        for (NGDATA *np = g_first_ng; np; np = np->next)
+        for (NewsgroupData *np = g_first_ng; np; np = np->next)
         {
             if (np->toread > TR_UNSUB && np->toread < g_ng_min_toread)
             {

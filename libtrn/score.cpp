@@ -7,11 +7,11 @@
 #include "trn/score.h"
 
 #include "trn/List.h"
+#include "trn/ngdata.h"
 #include "trn/artio.h" /* for g_openart var.*/
 #include "trn/bits.h"
 #include "trn/cache.h"
-#include "trn/ng.h" /* g_art */
-#include "trn/ngdata.h"
+#include "trn/ng.h"      /* g_art */
 #include "trn/rt-util.h" /* spinner */
 #include "trn/samisc.h"
 #include "trn/scan.h"

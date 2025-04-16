@@ -8,10 +8,10 @@
 #include "trn/sacmd.h"
 
 #include "trn/List.h"
+#include "trn/ngdata.h" /* for g_threaded_group */
 #include "trn/bits.h"
 #include "trn/cache.h"
 #include "trn/ng.h"
-#include "trn/ngdata.h" /* for g_threaded_group */
 #include "trn/respond.h"
 #include "trn/samain.h"
 #include "trn/samisc.h"

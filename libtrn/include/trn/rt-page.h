@@ -16,7 +16,7 @@ enum : bool
 struct AddGroup;
 struct Article;
 struct MULTIRC;
-struct NGDATA;
+struct NewsgroupData;
 struct Subject;
 struct UNIV_ITEM;
 
@@ -31,7 +31,7 @@ union SEL_UNION
     Subject     *sp;
     AddGroup    *gp;
     MULTIRC     *mp;
-    NGDATA      *np;
+    NewsgroupData      *np;
     UNIV_ITEM   *un;
     option_index op;
 };

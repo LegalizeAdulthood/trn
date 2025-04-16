@@ -5,11 +5,11 @@
 #define TRN_CACHE_H
 
 #include "trn/List.h"
+#include "trn/ngdata.h"
 #include "trn/enum-flags.h"
 #include "trn/hash.h"
 #include "trn/head.h"
 #include "trn/kfile.h"
-#include "trn/ngdata.h"
 
 #include <cstdint>
 #include <ctime>

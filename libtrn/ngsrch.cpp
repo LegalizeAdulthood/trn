@@ -5,10 +5,10 @@
 #include "config/common.h"
 #include "trn/ngsrch.h"
 
+#include "trn/ngdata.h"
 #include "trn/addng.h"
 #include "trn/final.h"
 #include "trn/ng.h"
-#include "trn/ngdata.h"
 #include "trn/ngstuff.h"
 #include "trn/rcln.h"
 #include "trn/rcstuff.h"
@@ -138,7 +138,7 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
     }
 
     bool const backward = cmdchr == '?'; /* direction of search */
-    NGDATA const *ng_start = g_ngptr;
+    NewsgroupData const *ng_start = g_ngptr;
     if (backward)
     {
         if (!g_ngptr)
@@ -232,7 +232,7 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
     return ret;
 }
 
-bool ng_wanted(NGDATA *np)
+bool ng_wanted(NewsgroupData *np)
 {
     return execute(&s_ngcompex,np->rcline) != nullptr;
 }

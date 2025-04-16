@@ -6,11 +6,11 @@
 #include "trn/rt-process.h"
 
 #include "trn/List.h"
+#include "trn/ngdata.h"
 #include "trn/cache.h"
 #include "trn/hash.h"
 #include "trn/kfile.h"
 #include "trn/ng.h"
-#include "trn/ngdata.h"
 #include "trn/rt-select.h"
 #include "trn/rthread.h"
 #include "trn/string-algos.h"

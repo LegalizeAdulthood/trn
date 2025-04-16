@@ -7,12 +7,11 @@
 #include "config/common.h"
 #include "trn/sw.h"
 
-#include "util/env.h"
+#include "trn/ngdata.h"
 #include "trn/head.h"
 #include "trn/init.h"
 #include "trn/intrp.h"
 #include "trn/ng.h"
-#include "trn/ngdata.h"
 #include "trn/only.h"
 #include "trn/opt.h"
 #include "trn/rcstuff.h"
@@ -20,6 +19,7 @@
 #include "trn/terminal.h"
 #include "trn/trn.h"
 #include "trn/util.h"
+#include "util/env.h"
 
 #include <cctype>
 #include <cstdio>

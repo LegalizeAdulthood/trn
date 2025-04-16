@@ -9,9 +9,9 @@
 #include "config/common.h"
 #include "trn/scanart.h"
 
-#include "trn/artstate.h" /* for g_reread */
-#include "trn/ng.h"       /* variable g_art, the next article to read. */
 #include "trn/ngdata.h"
+#include "trn/artstate.h"  /* for g_reread */
+#include "trn/ng.h"        /* variable g_art, the next article to read. */
 #include "trn/rt-select.h" /* g_selected_only */
 #include "trn/samain.h"
 #include "trn/samisc.h"

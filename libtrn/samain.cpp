@@ -8,8 +8,8 @@
 #include "trn/samain.h"
 
 #include "trn/List.h"
-#include "trn/cache.h"
 #include "trn/ngdata.h"
+#include "trn/cache.h"
 #include "trn/sadisp.h"
 #include "trn/samisc.h"
 #include "trn/sathread.h"

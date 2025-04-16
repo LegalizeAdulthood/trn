@@ -5,8 +5,8 @@
 #include "config/common.h"
 #include "trn/rcln.h"
 
-#include "trn/datasrc.h"
 #include "trn/ngdata.h"
+#include "trn/datasrc.h"
 #include "trn/rcstuff.h"
 #include "trn/string-algos.h"
 #include "trn/terminal.h"
@@ -30,7 +30,7 @@ void rcln_init()
 {
 }
 
-void catch_up(NGDATA *np, int leave_count, int output_level)
+void catch_up(NewsgroupData *np, int leave_count, int output_level)
 {
     char tmpbuf[128];
 
@@ -98,7 +98,7 @@ int addartnum(DataSource *dp, ART_NUM artnum, const char *ngnam)
     {
         return 0;
     }
-    NGDATA *np = find_ng(ngnam);
+    NewsgroupData *np = find_ng(ngnam);
     if (np == nullptr)                  /* not found in newsrc? */
     {
         return 0;
@@ -441,7 +441,7 @@ void prange(char *where, ART_NUM min, ART_NUM max)
 
 /* calculate the number of unread articles for a newsgroup */
 
-void set_toread(NGDATA *np, bool lax_high_check)
+void set_toread(NewsgroupData *np, bool lax_high_check)
 {
     char*   c;
     char    tmpbuf[64];
@@ -557,7 +557,7 @@ void set_toread(NGDATA *np, bool lax_high_check)
 
 /* make sure expired articles are marked as read */
 
-void checkexpired(NGDATA *np, ART_NUM a1st)
+void checkexpired(NewsgroupData *np, ART_NUM a1st)
 {
     char   *s;
     ART_NUM num;
@@ -682,7 +682,7 @@ bool was_read_group(DataSource *dp, ART_NUM artnum, char *ngnam)
     {
         return true;
     }
-    NGDATA *np = find_ng(ngnam);
+    NewsgroupData *np = find_ng(ngnam);
     if (np == nullptr)          /* not found in newsrc? */
     {
         return true;

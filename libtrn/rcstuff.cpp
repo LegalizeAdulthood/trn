@@ -9,6 +9,7 @@
 
 #include "nntp/nntpclient.h"
 #include "trn/List.h"
+#include "trn/ngdata.h"
 #include "trn/autosub.h"
 #include "trn/bits.h"
 #include "trn/cache.h"
@@ -17,7 +18,6 @@
 #include "trn/hash.h"
 #include "trn/init.h"
 #include "trn/last.h"
-#include "trn/ngdata.h"
 #include "trn/nntp.h"
 #include "trn/only.h"
 #include "trn/rcln.h"
@@ -72,13 +72,13 @@ static bool    lock_newsrc(NEWSRC *rp);
 static void    unlock_newsrc(NEWSRC *rp);
 static bool    open_newsrc(NEWSRC *rp);
 static void    init_ngnode(List *list, ListNode *node);
-static void    parse_rcline(NGDATA *np);
-static NGDATA *add_newsgroup(NEWSRC *rp, const char *ngn, char_int c);
+static void    parse_rcline(NewsgroupData *np);
+static NewsgroupData *add_newsgroup(NEWSRC *rp, const char *ngn, char_int c);
 static int     rcline_cmp(const char *key, int keylen, HashDatum data);
 
-inline NGDATA *ngdata_ptr(int ngnum)
+inline NewsgroupData *ngdata_ptr(int ngnum)
 {
-    return (NGDATA *) listnum2listitem(g_ngdata_list, ngnum);
+    return (NewsgroupData *) listnum2listitem(g_ngdata_list, ngnum);
 }
 
 static MULTIRC *rcstuff_init_data()
@@ -382,7 +382,7 @@ char *multirc_name(MULTIRC *mp)
 
 static bool clear_ngitem(char *cp, int arg)
 {
-    NGDATA* ncp = (NGDATA*)cp;
+    NewsgroupData* ncp = (NewsgroupData*)cp;
 
     if (ncp->rcline != nullptr)
     {
@@ -629,11 +629,11 @@ static bool open_newsrc(NEWSRC *rp)
     if (!g_ngdata_list)
     {
         /* allocate memory for rc file globals */
-        g_ngdata_list = new_list(0, 0, sizeof (NGDATA), 200, LF_NONE, init_ngnode);
+        g_ngdata_list = new_list(0, 0, sizeof (NewsgroupData), 200, LF_NONE, init_ngnode);
         g_newsrc_hash = hashcreate(3001, rcline_cmp);
     }
 
-    NGDATA*   prev_np;
+    NewsgroupData*   prev_np;
     if (g_ngdata_cnt)
     {
         prev_np = ngdata_ptr(g_ngdata_cnt - 1);
@@ -653,7 +653,7 @@ static bool open_newsrc(NEWSRC *rp)
         {
             continue;
         }
-        NGDATA *np = ngdata_ptr(g_ngdata_cnt++);
+        NewsgroupData *np = ngdata_ptr(g_ngdata_cnt++);
         if (prev_np)
         {
             prev_np->next = np;
@@ -826,14 +826,14 @@ static bool open_newsrc(NEWSRC *rp)
 static void init_ngnode(List *list, ListNode *node)
 {
     std::memset(node->data,0,list->items_per_node * list->item_size);
-    NGDATA *np = (NGDATA*)node->data;
+    NewsgroupData *np = (NewsgroupData*)node->data;
     for (ART_NUM i = node->low; i <= node->high; i++, np++)
     {
         np->num = i;
     }
 }
 
-static void parse_rcline(NGDATA *np)
+static void parse_rcline(NewsgroupData *np)
 {
     char* s;
 
@@ -859,7 +859,7 @@ static void parse_rcline(NGDATA *np)
     *s = '\0';                      /* null terminate newsgroup name */
 }
 
-void abandon_ng(NGDATA *np)
+void abandon_ng(NewsgroupData *np)
 {
     char* some_buf = nullptr;
 
@@ -1193,9 +1193,9 @@ reask_unsub:
 
 /* add a newsgroup to the newsrc file (eventually) */
 
-static NGDATA *add_newsgroup(NEWSRC *rp, const char *ngn, char_int c)
+static NewsgroupData *add_newsgroup(NEWSRC *rp, const char *ngn, char_int c)
 {
-    NGDATA *np = ngdata_ptr(g_ngdata_cnt++);
+    NewsgroupData *np = ngdata_ptr(g_ngdata_cnt++);
     np->prev = g_last_ng;
     if (g_last_ng)
     {
@@ -1225,9 +1225,9 @@ static NGDATA *add_newsgroup(NEWSRC *rp, const char *ngn, char_int c)
     return np;
 }
 
-bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
+bool relocate_newsgroup(NewsgroupData *move_np, NG_NUM newnum)
 {
-    NGDATA* np;
+    NewsgroupData* np;
     int i;
     const char* dflt = (move_np!=g_current_ng ? "$^.Lq" : "$^Lq");
     sel_sort_mode save_sort = g_sel_sort;
@@ -1455,7 +1455,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
 
 void list_newsgroups()
 {
-    NGDATA* np;
+    NewsgroupData* np;
     NG_NUM i;
     char tmpbuf[2048];
     static const char* status[] = {"(READ)","(UNSUB)","(DUP)","(BOGUS)","(JUNK)"};
@@ -1489,10 +1489,10 @@ void list_newsgroups()
 
 /* find a newsgroup in any newsrc */
 
-NGDATA *find_ng(const char *ngnam)
+NewsgroupData *find_ng(const char *ngnam)
 {
     HashDatum data = hashfetch(g_newsrc_hash, ngnam, std::strlen(ngnam));
-    return (NGDATA*)data.dat_ptr;
+    return (NewsgroupData*)data.dat_ptr;
 }
 
 void cleanup_newsrc(NEWSRC *rp)
@@ -1508,7 +1508,7 @@ void cleanup_newsrc(NEWSRC *rp)
         std::printf("Checking '%s' -- hang on...\n", rp->name);
     }
     termdown(1);
-    NGDATA* np;
+    NewsgroupData* np;
     for (np = g_first_ng; np; np = np->next)
     {
 /*#ifdef CHECK_ALL_BOGUS TODO: what is this? */
@@ -1547,7 +1547,7 @@ void cleanup_newsrc(NEWSRC *rp)
         termdown(1);
         while (np)
         {
-            NGDATA *prev_np = np->prev;
+            NewsgroupData *prev_np = np->prev;
             if (np->toread == TR_BOGUS)
             {
                 relocate_newsgroup(np, g_newsgroup_cnt - 1);
@@ -1626,7 +1626,7 @@ reask_bogus:
 
 /* make an entry in the hash table for the current newsgroup */
 
-void sethash(NGDATA *np)
+void sethash(NewsgroupData *np)
 {
     HashDatum data;
     data.dat_ptr = (char*)np;
@@ -1637,7 +1637,7 @@ void sethash(NGDATA *np)
 static int rcline_cmp(const char *key, int keylen, HashDatum data)
 {
     /* We already know that the lengths are equal, just compare the strings */
-    return std::memcmp(key, ((NGDATA*)data.dat_ptr)->rcline, keylen);
+    return std::memcmp(key, ((NewsgroupData*)data.dat_ptr)->rcline, keylen);
 }
 
 /* checkpoint the newsrc(s) */
@@ -1744,7 +1744,7 @@ bool write_newsrcs(MULTIRC *mptr)
 #endif
         /* write out each line*/
 
-        for (NGDATA *np = g_first_ng; np; np = np->next)
+        for (NewsgroupData *np = g_first_ng; np; np = np->next)
         {
             char* delim;
             if (np->rc != rp)

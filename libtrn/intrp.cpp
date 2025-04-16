@@ -9,6 +9,7 @@
 
 #include "config/user_id.h"
 #include "trn/List.h"
+#include "trn/ngdata.h"
 #include "trn/artio.h"
 #include "trn/artsrch.h"
 #include "trn/bits.h"
@@ -18,7 +19,6 @@
 #include "trn/head.h"
 #include "trn/init.h"
 #include "trn/ng.h"
-#include "trn/ngdata.h"
 #include "trn/nntp.h"
 #include "trn/respond.h"
 #include "trn/rt-select.h"

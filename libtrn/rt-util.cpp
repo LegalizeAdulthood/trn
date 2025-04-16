@@ -5,12 +5,12 @@
 #include "config/common.h"
 #include "trn/rt-util.h"
 
+#include "trn/ngdata.h"
 #include "trn/artio.h"
 #include "trn/cache.h"
 #include "trn/charsubst.h"
 #include "trn/intrp.h"
 #include "trn/ng.h"
-#include "trn/ngdata.h"
 #include "trn/rt-select.h"
 #include "trn/string-algos.h"
 #include "trn/terminal.h"

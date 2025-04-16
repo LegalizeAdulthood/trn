@@ -11,7 +11,7 @@
 
 struct DataSource;
 struct HASHTABLE;
-struct NGDATA;
+struct NewsgroupData;
 
 enum : ART_UNREAD
 {
@@ -97,13 +97,13 @@ void     unuse_multirc(MULTIRC *mptr);
 bool     use_next_multirc(MULTIRC *mptr);
 bool     use_prev_multirc(MULTIRC *mptr);
 char    *multirc_name(MULTIRC *mp);
-void     abandon_ng(NGDATA *np);
+void     abandon_ng(NewsgroupData *np);
 bool     get_ng(const char *what, getnewsgroup_flags flags);
-bool     relocate_newsgroup(NGDATA *move_np, NG_NUM newnum);
+bool     relocate_newsgroup(NewsgroupData *move_np, NG_NUM newnum);
 void     list_newsgroups();
-NGDATA  *find_ng(const char *ngnam);
+NewsgroupData  *find_ng(const char *ngnam);
 void     cleanup_newsrc(NEWSRC *rp);
-void     sethash(NGDATA *np);
+void     sethash(NewsgroupData *np);
 void     checkpoint_newsrcs();
 bool     write_newsrcs(MULTIRC *mptr);
 void     get_old_newsrcs(MULTIRC *mptr);

@@ -9,7 +9,7 @@
 #include <ctime>
 
 struct DataSource;
-struct NGDATA;
+struct NewsgroupData;
 
 enum finishbody_mode
 {
@@ -26,7 +26,7 @@ enum
 
 int     nntp_list(const char *type, const char *arg, int len);
 void    nntp_finish_list();
-int     nntp_group(const char *group, NGDATA *gp);
+int     nntp_group(const char *group, NewsgroupData *gp);
 int     nntp_stat(ART_NUM artnum);
 ART_NUM nntp_stat_id(char *msgid);
 ART_NUM nntp_next_art();

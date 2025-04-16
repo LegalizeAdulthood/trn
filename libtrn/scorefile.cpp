@@ -11,11 +11,11 @@
 #include "trn/scorefile.h"
 
 #include "trn/List.h"
+#include "trn/ngdata.h"
 #include "trn/cache.h"
 #include "trn/head.h"
 #include "trn/mempool.h"
 #include "trn/ng.h"
-#include "trn/ngdata.h"
 #include "trn/rt-util.h"
 #include "trn/score.h"  /* shared stuff... */
 #include "trn/search.h" /* regex matches */

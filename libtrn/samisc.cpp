@@ -8,11 +8,11 @@
 #include "trn/samisc.h"
 
 #include "trn/List.h"
-#include "trn/artio.h" /* g_openart */
+#include "trn/ngdata.h" /* several */
+#include "trn/artio.h"         /* g_openart */
 #include "trn/bits.h"
 #include "trn/cache.h"
-#include "trn/ng.h"     /* for "g_art" */
-#include "trn/ngdata.h" /* several */
+#include "trn/ng.h" /* for "g_art" */
 #include "trn/rthread.h"
 #include "trn/samain.h"
 #include "trn/sathread.h"

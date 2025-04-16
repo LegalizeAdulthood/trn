@@ -6,6 +6,7 @@
 #include "trn/artio.h"
 
 #include "trn/List.h"
+#include "trn/ngdata.h"
 #include "trn/art.h"
 #include "trn/artstate.h"
 #include "trn/cache.h"
@@ -14,7 +15,6 @@
 #include "trn/decode.h"
 #include "trn/head.h"
 #include "trn/mime.h"
-#include "trn/ngdata.h"
 #include "trn/nntp.h"
 #include "trn/string-algos.h"
 #include "trn/terminal.h"

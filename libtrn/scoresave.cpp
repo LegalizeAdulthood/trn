@@ -8,8 +8,8 @@
 #include "trn/scoresave.h"
 
 #include "trn/List.h"
-#include "trn/cache.h"
 #include "trn/ngdata.h"
+#include "trn/cache.h"
 #include "trn/scan.h"
 #include "trn/scanart.h"
 #include "trn/score.h"

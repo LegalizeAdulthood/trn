@@ -9,10 +9,10 @@
 
 #include "nntp/nntpclient.h"
 #include "trn/List.h"
+#include "trn/ngdata.h"
 #include "trn/autosub.h"
 #include "trn/datasrc.h"
 #include "trn/hash.h"
-#include "trn/ngdata.h"
 #include "trn/nntp.h"
 #include "trn/only.h"
 #include "trn/rcstuff.h"
@@ -232,7 +232,7 @@ static void new_nntp_groups(DataSource *dp)
                 continue;
             }
         }
-        NGDATA *np = find_ng(g_ser_line);
+        NewsgroupData *np = find_ng(g_ser_line);
         if (np != nullptr && np->toread > TR_UNSUB)
         {
             continue;
@@ -290,7 +290,7 @@ static void new_local_groups(DataSource *dp)
         {
             continue;
         }
-        NGDATA *np = find_ng(g_buf);
+        NewsgroupData *np = find_ng(g_buf);
         if (np != nullptr)
         {
             continue;
@@ -474,7 +474,7 @@ static void scanline(char *actline, bool add_matching)
     {
         return;
     }
-    NGDATA *np = find_ng(actline);
+    NewsgroupData *np = find_ng(actline);
     if (np != nullptr && np->toread > TR_UNSUB)
     {
         return;

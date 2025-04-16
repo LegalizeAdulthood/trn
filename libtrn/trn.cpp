@@ -44,6 +44,7 @@
 
 #include "nntp/nntpclient.h"
 #include "trn/List.h"
+#include "trn/ngdata.h"
 #include "trn/addng.h"
 #include "trn/datasrc.h"
 #include "trn/final.h"
@@ -52,7 +53,6 @@
 #include "trn/kfile.h"
 #include "trn/last.h"
 #include "trn/ng.h"
-#include "trn/ngdata.h"
 #include "trn/ngsrch.h"
 #include "trn/ngstuff.h"
 #include "trn/nntp.h"
