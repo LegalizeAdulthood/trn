@@ -64,7 +64,7 @@ void s_refresh_top()
     home_cursor();
     switch (g_s_cur_type)
     {
-      case S_ART:
+    case S_ART:
         sa_refresh_top();
         break;
     }
@@ -77,7 +77,7 @@ void s_refresh_bot()
     s_goxy(0,g_tc_LINES-g_s_bot_lines);
     switch (g_s_cur_type)
     {
-      case S_ART:
+    case S_ART:
         sa_refresh_bot();
         break;
     }
