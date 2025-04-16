@@ -107,7 +107,7 @@ void art_init()
     init_compex(&s_gcompex);
 }
 
-do_article_result do_article()
+DoArticlResult do_article()
 {
     char* s;
     bool hide_this_line = false; /* hidden header line? */

@@ -8,7 +8,7 @@
 #include <config/typedef.h>
 
 /* do_article() return values */
-enum do_article_result
+enum DoArticlResult
 {
     DA_NORM = 0,
     DA_RAISE = 1,
@@ -31,7 +31,7 @@ extern char g_hide_everything; /* if set, do not write page now, */
 extern bool g_dont_filter_control; /* -j */
 
 void art_init();
-do_article_result do_article();
+DoArticlResult do_article();
 bool maybe_set_color(const char *cp, bool backsearch);
 bool innermore();
 void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
