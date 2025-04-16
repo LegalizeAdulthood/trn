@@ -23,7 +23,7 @@ enum SelectionMode
     SM_UNIVERSAL
 };
 
-enum sel_sort_mode
+enum SelectionSortMode
 {
     SS_MAGIC_NUMBER = 0, // Not sure what this mode value means?
     SS_DATE,
@@ -43,10 +43,10 @@ extern SelectionMode       g_sel_mode;
 extern SelectionMode       g_sel_defaultmode;
 extern SelectionMode       g_sel_threadmode;
 extern const char    *g_sel_mode_string;
-extern sel_sort_mode  g_sel_sort;
-extern sel_sort_mode  g_sel_artsort;
-extern sel_sort_mode  g_sel_threadsort;
-extern sel_sort_mode  g_sel_newsgroupsort;
+extern SelectionSortMode  g_sel_sort;
+extern SelectionSortMode  g_sel_artsort;
+extern SelectionSortMode  g_sel_threadsort;
+extern SelectionSortMode  g_sel_newsgroupsort;
 extern const char    *g_sel_sort_string;
 extern int            g_sel_direction;
 extern bool           g_sel_exclusive;

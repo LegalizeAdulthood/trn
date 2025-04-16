@@ -49,8 +49,8 @@ char     *g_sel_art_dmode{};
 static bool          s_group_init_done{true};
 static int           s_sel_max_line_cnt{};
 static int           s_sel_max_per_page{};
-static sel_sort_mode s_sel_addgroupsort{SS_NATURAL};
-static sel_sort_mode s_sel_univsort{SS_NATURAL};
+static SelectionSortMode s_sel_addgroupsort{SS_NATURAL};
+static SelectionSortMode s_sel_univsort{SS_NATURAL};
 static int           s_sel_next_op{};
 
 static void sel_page_init();
@@ -144,7 +144,7 @@ bool set_sel_order(SelectionMode smode, const char *str)
 bool set_sel_sort(SelectionMode smode, char_int ch)
 {
     SelectionMode save_sel_mode = g_sel_mode;
-    sel_sort_mode ssort;
+    SelectionSortMode ssort;
 
     switch (ch)
     {
@@ -187,7 +187,7 @@ bool set_sel_sort(SelectionMode smode, char_int ch)
     g_sel_mode = smode;
     if (std::isupper(ch))
     {
-        set_selector(SM_MAGIC_NUMBER, static_cast<sel_sort_mode>(-ssort));
+        set_selector(SM_MAGIC_NUMBER, static_cast<SelectionSortMode>(-ssort));
     }
     else
     {
@@ -202,7 +202,7 @@ bool set_sel_sort(SelectionMode smode, char_int ch)
     return true;
 }
 
-void set_selector(SelectionMode smode, sel_sort_mode ssort)
+void set_selector(SelectionMode smode, SelectionSortMode ssort)
 {
     if (smode == SM_MAGIC_NUMBER)
     {
@@ -258,7 +258,7 @@ void set_selector(SelectionMode smode, sel_sort_mode ssort)
     else
     {
         g_sel_direction = -1;
-        g_sel_sort = static_cast<sel_sort_mode>(-ssort);
+        g_sel_sort = static_cast<SelectionSortMode>(-ssort);
     }
 
     if (g_sel_mode == SM_THREAD && !g_threaded_group)

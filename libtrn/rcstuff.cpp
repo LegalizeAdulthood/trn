@@ -1230,7 +1230,7 @@ bool relocate_newsgroup(NewsgroupData *move_np, NG_NUM newnum)
     NewsgroupData* np;
     int i;
     const char* dflt = (move_np!=g_current_ng ? "$^.Lq" : "$^Lq");
-    sel_sort_mode save_sort = g_sel_sort;
+    SelectionSortMode save_sort = g_sel_sort;
 
     if (g_sel_newsgroupsort != SS_NATURAL)
     {
@@ -1672,7 +1672,7 @@ void checkpoint_newsrcs()
 
 bool write_newsrcs(Multirc *mptr)
 {
-    sel_sort_mode save_sort = g_sel_sort;
+    SelectionSortMode save_sort = g_sel_sort;
     bool          total_success = true;
 
     if (!mptr)

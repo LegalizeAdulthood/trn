@@ -61,7 +61,7 @@ bool set_sel_mode(char_int ch);
 char *get_sel_order(SelectionMode smode);
 bool set_sel_order(SelectionMode smode, const char *str);
 bool set_sel_sort(SelectionMode smode, char_int ch);
-void set_selector(SelectionMode smode, sel_sort_mode ssort);
+void set_selector(SelectionMode smode, SelectionSortMode ssort);
 void init_pages(bool fill_last_page);
 bool first_page();
 bool last_page();

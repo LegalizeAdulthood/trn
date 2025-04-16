@@ -63,10 +63,10 @@ SelectionMode       g_sel_mode{};
 SelectionMode       g_sel_defaultmode{SM_THREAD};
 SelectionMode       g_sel_threadmode{SM_THREAD};
 const char    *g_sel_mode_string{};
-sel_sort_mode  g_sel_sort{};
-sel_sort_mode  g_sel_artsort{SS_GROUPS};
-sel_sort_mode  g_sel_threadsort{SS_DATE};
-sel_sort_mode  g_sel_newsgroupsort{SS_NATURAL};
+SelectionSortMode  g_sel_sort{};
+SelectionSortMode  g_sel_artsort{SS_GROUPS};
+SelectionSortMode  g_sel_threadsort{SS_DATE};
+SelectionSortMode  g_sel_newsgroupsort{SS_NATURAL};
 const char    *g_sel_sort_string{};
 int            g_sel_direction{1};
 bool           g_sel_exclusive{};
@@ -2516,7 +2516,7 @@ static display_state article_commands(char_int ch)
         {
             sel_cleanup();
         }
-        set_selector(g_sel_mode, static_cast<sel_sort_mode>(g_sel_sort * -g_sel_direction));
+        set_selector(g_sel_mode, static_cast<SelectionSortMode>(g_sel_sort * -g_sel_direction));
         count_subjects(CS_NORM);
         g_sel_page_sp = nullptr;
         g_sel_page_app = nullptr;
@@ -2995,7 +2995,7 @@ static display_state newsgroup_commands(char_int ch)
         {
             sel_cleanup();
         }
-        set_selector(g_sel_mode, static_cast<sel_sort_mode>(g_sel_sort * -g_sel_direction));
+        set_selector(g_sel_mode, static_cast<SelectionSortMode>(g_sel_sort * -g_sel_direction));
         g_sel_page_np = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
@@ -3307,7 +3307,7 @@ static display_state addgroup_commands(char_int ch)
         {
             sel_cleanup();
         }
-        set_selector(g_sel_mode, static_cast<sel_sort_mode>(g_sel_sort * -g_sel_direction));
+        set_selector(g_sel_mode, static_cast<SelectionSortMode>(g_sel_sort * -g_sel_direction));
         g_sel_page_gp = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
@@ -3457,7 +3457,7 @@ static display_state multirc_commands(char_int ch)
     switch (ch)
     {
     case 'R':
-        set_selector(g_sel_mode, static_cast<sel_sort_mode>(g_sel_sort * -g_sel_direction));
+        set_selector(g_sel_mode, static_cast<SelectionSortMode>(g_sel_sort * -g_sel_direction));
         g_sel_page_mp = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
@@ -3499,7 +3499,7 @@ static display_state option_commands(char_int ch)
     switch (ch)
     {
     case 'R':
-        set_selector(g_sel_mode, static_cast<sel_sort_mode>(g_sel_sort * -g_sel_direction));
+        set_selector(g_sel_mode, static_cast<SelectionSortMode>(g_sel_sort * -g_sel_direction));
         g_sel_page_op = 1;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
@@ -3595,7 +3595,7 @@ static display_state universal_commands(char_int ch)
     switch (ch)
     {
     case 'R':
-        set_selector(g_sel_mode, static_cast<sel_sort_mode>(g_sel_sort * -g_sel_direction));
+        set_selector(g_sel_mode, static_cast<SelectionSortMode>(g_sel_sort * -g_sel_direction));
         sel_page_univ = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
