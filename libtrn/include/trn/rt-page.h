@@ -25,7 +25,7 @@ enum
     MAX_SEL = 99
 };
 
-union SEL_UNION
+union Selection
 {
     Article     *ap;
     Subject     *sp;
@@ -38,7 +38,7 @@ union SEL_UNION
 
 struct SEL_ITEM
 {
-    SEL_UNION u;
+    Selection u;
     int line;
     int sel;
 };
@@ -67,7 +67,7 @@ bool first_page();
 bool last_page();
 bool next_page();
 bool prev_page();
-bool calc_page(SEL_UNION u);
+bool calc_page(Selection u);
 void display_page_title(bool home_only);
 void display_page();
 void update_page();

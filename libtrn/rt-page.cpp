@@ -385,7 +385,7 @@ static void sel_page_init()
 
 void init_pages(bool fill_last_page)
 {
-    SEL_UNION no_search;
+    Selection no_search;
     no_search.op = OI_NONE;
     sel_page_init();
 try_again:
@@ -1485,7 +1485,7 @@ bool prev_page()
 }
 
 /* Return true if we had to change pages to find the object */
-bool calc_page(SEL_UNION u)
+bool calc_page(Selection u)
 {
     int ret = false;
     if (u.op != -1)
@@ -2236,7 +2236,7 @@ void update_page()
     int sel;
     for (int j = 0; j < g_sel_page_item_cnt; j++)
     {
-        SEL_UNION u = g_sel_items[j].u;
+        Selection u = g_sel_items[j].u;
         switch (g_sel_mode)
         {
         case SM_MULTIRC:

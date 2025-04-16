@@ -190,9 +190,9 @@ static void             sel_display();
 static void             sel_status_msg(const char *cp);
 static char             sel_input();
 static void             sel_prompt();
-static bool             select_item(SEL_UNION u);
-static bool             delay_return_item(SEL_UNION u);
-static bool             deselect_item(SEL_UNION u);
+static bool             select_item(Selection u);
+static bool             delay_return_item(Selection u);
+static bool             deselect_item(Selection u);
 static bool             select_option(OptionIndex i);
 static void             sel_cleanup();
 static bool             mark_DEL_as_READ(char *ptr, int arg);
@@ -1639,7 +1639,7 @@ static void sel_prompt()
     s_removed_prompt = RP_NONE;
 }
 
-static bool select_item(SEL_UNION u)
+static bool select_item(Selection u)
 {
     switch (g_sel_mode)
     {
@@ -1699,7 +1699,7 @@ static bool select_item(SEL_UNION u)
     return true;
 }
 
-static bool delay_return_item(SEL_UNION u)
+static bool delay_return_item(Selection u)
 {
     switch (g_sel_mode)
     {
@@ -1743,7 +1743,7 @@ static bool delay_return_item(SEL_UNION u)
     return true;
 }
 
-static bool deselect_item(SEL_UNION u)
+static bool deselect_item(Selection u)
 {
     switch (g_sel_mode)
     {
@@ -3126,7 +3126,7 @@ static display_state newsgroup_commands(char_int ch)
 
     default:
     {
-        SEL_UNION u;
+        Selection u;
         input_newsgroup_result ret;
         bool was_at_top = !g_sel_prior_obj_cnt;
         PUSH_SELECTOR();
@@ -3519,7 +3519,7 @@ static display_state option_commands(char_int ch)
 
     case '/':
     {
-        SEL_UNION u;
+        Selection u;
         char*     pattern;
         erase_line(g_mousebar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
