@@ -53,7 +53,7 @@ enum HeaderLineType
     HEAD_LAST,              /* total # of headers */
 };
 
-enum headtype_flags : std::uint8_t
+enum HeaderTypeFlags : std::uint8_t
 {
     HT_NONE = 0x0,
     HT_HIDE = 0x01,     /* hide this line */
@@ -63,7 +63,7 @@ enum headtype_flags : std::uint8_t
     HT_DEFMAGIC = 0x10, /* magic by default */
     HT_MAGICOK = 0x20,  /* magic even possible for line */
 };
-DECLARE_FLAGS_ENUM(headtype_flags, std::uint8_t);
+DECLARE_FLAGS_ENUM(HeaderTypeFlags, std::uint8_t);
 
 struct HEADTYPE
 {
@@ -71,7 +71,7 @@ struct HEADTYPE
     ART_POS        minpos; /* pointer to beginning of line in article */
     ART_POS        maxpos; /* pointer to end of line in article */
     char           length; /* the header's string length */
-    headtype_flags flags;  /* the header's flags */
+    HeaderTypeFlags flags;  /* the header's flags */
 };
 
 struct USER_HEADTYPE

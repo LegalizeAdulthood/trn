@@ -178,7 +178,7 @@ static char s_univ_sel_cmds[3]{"Z>"};
 
 static char* hidden_list();
 static char* magic_list();
-static void  set_header_list(headtype_flags flag, headtype_flags defflag, const char *str);
+static void  set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, const char *str);
 static int   parse_mouse_buttons(char **cpp, const char *btns);
 static char *expand_mouse_buttons(char *cp, int cnt);
 
@@ -1490,7 +1490,7 @@ static char *magic_list()
     return g_buf+1;
 }
 
-static void set_header_list(headtype_flags flag, headtype_flags defflag, const char *str)
+static void set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, const char *str)
 {
     bool setit;
 
@@ -1543,7 +1543,7 @@ static void set_header_list(headtype_flags flag, headtype_flags defflag, const c
     }
 }
 
-void set_header(const char *s, headtype_flags flag, bool setit)
+void set_header(const char *s, HeaderTypeFlags flag, bool setit)
 {
     int len = std::strlen(s);
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)

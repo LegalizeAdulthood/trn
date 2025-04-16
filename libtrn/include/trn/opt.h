@@ -150,7 +150,7 @@ void        set_options(char **vals);
 void        set_option(option_index num, const char *s);
 void        save_options(const char *filename);
 const char *option_value(option_index num);
-void        set_header(const char *s, headtype_flags flag, bool setit);
+void        set_header(const char *s, HeaderTypeFlags flag, bool setit);
 const char *quote_string(const char *val);
 void        cwd_check();
 
