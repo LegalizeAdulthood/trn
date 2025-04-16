@@ -60,10 +60,11 @@ void sa_refresh_bot()
     std::printf("(");
     switch (g_sa_mode_order)
     {
-      case SA_ORDER_ARRIVAL:
+    case SA_ORDER_ARRIVAL:
         s = "arrival";
         break;
-      case SA_ORDER_DESCENDING:
+
+    case SA_ORDER_DESCENDING:
         if (g_score_newfirst)
         {
             s = "score (new>old)";
@@ -73,7 +74,8 @@ void sa_refresh_bot()
             s = "score (old>new)";
         }
         break;
-      default:
+
+    default:
         s = "unknown";
         break;
     }
