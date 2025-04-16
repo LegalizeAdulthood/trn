@@ -62,7 +62,8 @@ void s_mail_and_place()
 void s_refresh_top()
 {
     home_cursor();
-    switch (g_s_cur_type) {
+    switch (g_s_cur_type)
+    {
       case S_ART:
         sa_refresh_top();
         break;
@@ -74,7 +75,8 @@ void s_refresh_bot()
 {
     /* if bottom bar exists, then it is at least one character high... */
     s_goxy(0,g_tc_LINES-g_s_bot_lines);
-    switch (g_s_cur_type) {
+    switch (g_s_cur_type)
+    {
       case S_ART:
         sa_refresh_bot();
         break;
@@ -87,14 +89,17 @@ void s_refresh_entzone()
 {
     int start;          /* starting page_arts index to refresh... */
 
-    if (g_s_ref_status < g_s_ref_desc) {
+    if (g_s_ref_status < g_s_ref_desc)
+    {
         /* refresh status characters up to (not including) desc_line */
         for (int i = g_s_ref_status; i <= g_s_bot_ent && i < g_s_ref_desc; i++)
         {
             s_refresh_description(i);
         }
         start = g_s_ref_desc;
-    } else {
+    }
+    else
+    {
         for (int i = g_s_ref_desc; i <= g_s_bot_ent && i < g_s_ref_status; i++)
         {
             s_refresh_status(i);
@@ -142,11 +147,14 @@ void s_refresh_description(int line)
     TRN_ASSERT(line <= g_s_bot_ent);    /* better be refreshing on-page */
     int startline = g_s_top_lines + g_page_ents[line].start_line;
     int j = g_page_ents[line].lines;
-    for (int i = 1; i <= j; i++) {
+    for (int i = 1; i <= j; i++)
+    {
         s_goxy(g_s_status_cols+g_s_cursor_cols,(i-1)+startline);
         /* allow flexible format later? */
-        if (g_s_itemnum_cols) {
-            if (i == 1) {       /* first description line */
+        if (g_s_itemnum_cols)
+        {
+            if (i == 1)         /* first description line */
+            {
                 if (line < 99)
                 {
                     std::printf("%2d ",line+1);
@@ -177,11 +185,14 @@ void s_ref_entry(int line, int jump)
         s_goxy(0,g_s_top_lines+g_page_ents[line].start_line);
     }
     int j = g_page_ents[line].lines;
-    for (int i = 1; i <= j; i++) {
-/* later replace middle with variable #spaces routine */
+    for (int i = 1; i <= j; i++)
+    {
+        /* later replace middle with variable #spaces routine */
         std::printf("%s%s",s_get_statchars(ent,i),"  ");
-        if (g_s_itemnum_cols) {
-            if (i == 1) {       /* first description line */
+        if (g_s_itemnum_cols)
+        {
+            if (i == 1)         /* first description line */
+            {
                 if (line < 99)
                 {
                     std::printf("%2d ",line+1);
@@ -190,7 +201,8 @@ void s_ref_entry(int line, int jump)
                 {
                     std::printf("** ");      /* too big */
                 }
-            } else
+            }
+            else
             {
                 std::printf("   ");
             }
@@ -208,7 +220,8 @@ void s_rub_ptr()
 
 void s_refresh()
 {
-    if (g_s_ref_all) {
+    if (g_s_ref_all)
+    {
         clear();        /* make a clean slate */
         g_s_ref_desc = 0;
         g_s_ref_status = 0;
@@ -221,14 +234,17 @@ void s_refresh()
     {
         s_refresh_entzone();
     }
-    else {
-        if (g_s_ref_status>=0) {
+    else
+    {
+        if (g_s_ref_status >= 0)
+        {
             for (int i = g_s_ref_status; i <= g_s_bot_ent; i++)
             {
                 s_refresh_status(i);
             }
         }
-        if (g_s_ref_desc >= 0) {
+        if (g_s_ref_desc >= 0)
+        {
             for (int i = g_s_ref_desc; i <= g_s_bot_ent; i++)
             {
                 s_refresh_description(i);
