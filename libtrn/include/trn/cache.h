@@ -17,8 +17,7 @@
 struct ARTICLE;
 struct LIST;
 
-/* subject flags */
-enum subject_flags : std::uint16_t
+enum SubjectFlags : std::uint16_t
 {
     SF_NONE = 0x0000,
     SF_SEL = 0x0001,
@@ -31,7 +30,7 @@ enum subject_flags : std::uint16_t
     SF_SUBJTRUNCED = 0x1000,
     SF_ISOSUBJ = 0x2000
 };
-DECLARE_FLAGS_ENUM(subject_flags, std::uint16_t);
+DECLARE_FLAGS_ENUM(SubjectFlags, std::uint16_t);
 
 /* Subjects get their own structure */
 struct SUBJECT
@@ -43,7 +42,7 @@ struct SUBJECT
     SUBJECT      *thread_link;
     char         *str;
     std::time_t   date;
-    subject_flags flags;
+    SubjectFlags flags;
     short         misc; /* used for temporary totals and subject numbers */
 };
 

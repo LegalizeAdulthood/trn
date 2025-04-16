@@ -145,7 +145,7 @@ struct addgroup_flag_equivalence
     T              other;
 };
 
-using addgroup_subject_flag = addgroup_flag_equivalence<subject_flags>;
+using addgroup_subject_flag = addgroup_flag_equivalence<SubjectFlags>;
 using addgroup_article_flag = addgroup_flag_equivalence<article_flags>;
 using addgroup_newsgroup_flag = addgroup_flag_equivalence<newsgroup_flags>;
 using addgroup_multirc_flag = addgroup_flag_equivalence<multirc_flags>;

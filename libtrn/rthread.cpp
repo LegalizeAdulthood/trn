@@ -839,7 +839,7 @@ void select_article(ARTICLE *ap, autokill_flags auto_flags)
         {
             g_selected_subj_cnt++;
         }
-        ap->subj->flags = (ap->subj->flags&~SF_DEL) | static_cast<subject_flags>(g_sel_mask) | SF_VISIT;
+        ap->subj->flags = (ap->subj->flags&~SF_DEL) | static_cast<SubjectFlags>(g_sel_mask) | SF_VISIT;
     }
     g_selected_only = (g_selected_only || g_selected_count != 0);
 }
@@ -885,7 +885,7 @@ void select_subject(SUBJECT *subj, autokill_flags auto_flags)
             g_selected_subj_cnt++;
         }
         subj->flags = (subj->flags & ~SF_DEL)
-                    | static_cast<subject_flags>(g_sel_mask) | SF_VISIT | SF_WASSELECTED;
+                    | static_cast<SubjectFlags>(g_sel_mask) | SF_VISIT | SF_WASSELECTED;
         g_selected_only = true;
     }
     else
@@ -961,7 +961,7 @@ void select_subthread(ARTICLE *ap, autokill_flags auto_flags)
         {
             g_selected_subj_cnt++;
         }
-        subj->flags = (subj->flags & ~SF_DEL) | static_cast<subject_flags>(g_sel_mask) | SF_VISIT;
+        subj->flags = (subj->flags & ~SF_DEL) | static_cast<SubjectFlags>(g_sel_mask) | SF_VISIT;
         g_selected_only = true;
     }
 }
@@ -1021,7 +1021,7 @@ void deselect_subject(SUBJECT *subj)
     }
     if (subj->flags & g_sel_mask)
     {
-        subj->flags &= ~static_cast<subject_flags>(g_sel_mask);
+        subj->flags &= ~static_cast<SubjectFlags>(g_sel_mask);
         g_selected_subj_cnt--;
     }
     subj->flags &= ~(SF_VISIT | SF_WASSELECTED);
@@ -1681,13 +1681,13 @@ void count_subjects(cs_mode cmode)
         {
             if (sp->flags & SF_VISIT)
             {
-                sp->flags = (sp->flags & ~(SF_SEL|SF_DEL)) | static_cast<subject_flags>(g_sel_mask);
+                sp->flags = (sp->flags & ~(SF_SEL|SF_DEL)) | static_cast<SubjectFlags>(g_sel_mask);
                 g_selected_count += sel_count;
                 g_selected_subj_cnt++;
             }
             else
             {
-                sp->flags &= ~static_cast<subject_flags>(g_sel_mask);
+                sp->flags &= ~static_cast<SubjectFlags>(g_sel_mask);
             }
         }
         else
@@ -1695,13 +1695,13 @@ void count_subjects(cs_mode cmode)
             if (sel_count //
                 && (cmode >= CS_UNSEL_STORE || (sp->flags & g_sel_mask)))
             {
-                sp->flags = (sp->flags & ~(SF_SEL|SF_DEL)) | static_cast<subject_flags>(g_sel_mask);
+                sp->flags = (sp->flags & ~(SF_SEL|SF_DEL)) | static_cast<SubjectFlags>(g_sel_mask);
                 g_selected_count += sel_count;
                 g_selected_subj_cnt++;
             }
             else if (cmode >= CS_UNSELECT)
             {
-                sp->flags &= ~static_cast<subject_flags>(g_sel_mask);
+                sp->flags &= ~static_cast<SubjectFlags>(g_sel_mask);
             }
             else if (sp->flags & g_sel_mask)
             {

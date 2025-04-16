@@ -493,7 +493,7 @@ void onemore(ARTICLE *ap)
         {
             if (g_selected_only)
             {
-                if (ap->subj->flags & static_cast<subject_flags>(g_sel_mask))
+                if (ap->subj->flags & static_cast<SubjectFlags>(g_sel_mask))
                 {
                     ap->flags |= static_cast<article_flags>(g_sel_mask);
                     g_selected_count++;
