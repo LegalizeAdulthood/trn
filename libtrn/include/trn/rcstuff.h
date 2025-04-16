@@ -10,7 +10,7 @@
 #include "trn/enum-flags.h"
 
 struct DataSource;
-struct HASHTABLE;
+struct HashTable;
 struct NewsgroupData;
 
 enum : ArticleUnread
@@ -76,7 +76,7 @@ struct Multirc
     MultircFlags flags;
 };
 
-extern HASHTABLE  *g_newsrc_hash;
+extern HashTable  *g_newsrc_hash;
 extern Multirc    *g_sel_page_mp;
 extern Multirc    *g_sel_next_mp;
 extern List       *g_multirc_list;    /* a list of all MULTIRCs */

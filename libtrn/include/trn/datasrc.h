@@ -19,13 +19,13 @@ enum
     DEFAULT_REFETCH_SECS = 4L * 60 * 60 /* 4 hours */
 };
 
-struct HASHTABLE;
+struct HashTable;
 struct List;
 
 struct SourceFile
 {
     std::FILE  *fp;           /* the file pointer to read the data */
-    HASHTABLE  *hp;           /* the hash table for the data */
+    HashTable  *hp;           /* the hash table for the data */
     List       *lp;           /* the list used to store the data */
     long        recent_cnt;   /* # lines/bytes this file might be */
     std::time_t lastfetch;    /* when the data was last fetched */

@@ -7,13 +7,13 @@
 #include "trn/kfile.h"
 
 struct Article;
-struct HASHTABLE;
+struct HashTable;
 struct Subject;
 
 extern ArticleNum    g_obj_count;
 extern int        g_subject_count;
 extern bool       g_output_chase_phrase;
-extern HASHTABLE *g_msgid_hash;
+extern HashTable *g_msgid_hash;
 extern bool       g_thread_always; /* -a */
 extern bool       g_breadth_first; /* -b */
 

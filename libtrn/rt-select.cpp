@@ -165,8 +165,8 @@ private:
     std::string const    save_univ_title = g_univ_title;       \
     std::string const    save_univ_tmp_file = g_univ_tmp_file; \
     const char           save_sel_ret = s_sel_ret;             \
-    HASHTABLE *const     save_univ_ng_hash = g_univ_ng_hash;   \
-    HASHTABLE *const     save_univ_vg_hash = g_univ_vg_hash
+    HashTable *const     save_univ_ng_hash = g_univ_ng_hash;   \
+    HashTable *const     save_univ_vg_hash = g_univ_vg_hash
 
 #define POP_UNIV_SELECTOR()                   \
     do                                        \

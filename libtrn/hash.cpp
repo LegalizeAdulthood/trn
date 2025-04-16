@@ -26,7 +26,7 @@ struct HashEntry
     int he_keylen;              /* to help verify a match */
 };
 
-struct HASHTABLE
+struct HashTable
 {
     HashEntry** ht_addr;          /* array of HASHENT pointers */
     unsigned ht_size;
@@ -34,7 +34,7 @@ struct HASHTABLE
     HashCompareFunc ht_cmp;
 };
 
-static HashEntry **hashfind(HASHTABLE *tbl, const char *key, int keylen);
+static HashEntry **hashfind(HashTable *tbl, const char *key, int keylen);
 static unsigned hash(const char *key, int keylen);
 static int default_cmp(const char *key, int keylen, HashDatum data);
 static HashEntry *healloc();
@@ -68,17 +68,17 @@ static HashEntry *s_hereuse{};
 static int      s_reusables{};
 
 /* size - a crude guide to size */
-HASHTABLE *hashcreate(unsigned size, HashCompareFunc cmpfunc)
+HashTable *hashcreate(unsigned size, HashCompareFunc cmpfunc)
 {
     size = std::max(size, 1U);  /* size < 1 is nonsense */
     struct alignalloc
     {
-        HASHTABLE ht;
+        HashTable ht;
         HashEntry *hepa[1]; /* longer than it looks */
     };
     alignalloc *aap = (alignalloc *)safemalloc(sizeof *aap + (size - 1) * sizeof(HashEntry *));
     std::memset((char*)aap,0,sizeof *aap + (size-1)*sizeof (HashEntry*));
-    HASHTABLE *tbl = &aap->ht;
+    HashTable *tbl = &aap->ht;
     tbl->ht_size = size;
     tbl->ht_magic = HASHMAG;
     tbl->ht_cmp = cmpfunc == nullptr ? default_cmp : cmpfunc;
@@ -89,7 +89,7 @@ HASHTABLE *hashcreate(unsigned size, HashCompareFunc cmpfunc)
 /* Free all the memory associated with tbl, erase the pointers to it, and
 ** invalidate tbl to prevent further use via other pointers to it.
 */
-void hashdestroy(HASHTABLE *tbl)
+void hashdestroy(HashTable *tbl)
 {
     HashEntry* next;
 
@@ -114,7 +114,7 @@ void hashdestroy(HASHTABLE *tbl)
     std::free((char*)tbl);
 }
 
-void hashstore(HASHTABLE *tbl, const char *key, int keylen, HashDatum data)
+void hashstore(HashTable *tbl, const char *key, int keylen, HashDatum data)
 {
     HashEntry **nextp = hashfind(tbl, key, keylen);
     HashEntry *hp = *nextp;
@@ -128,7 +128,7 @@ void hashstore(HASHTABLE *tbl, const char *key, int keylen, HashDatum data)
     hp->he_data = data;             /* supersede any old data for this key */
 }
 
-void hashdelete(HASHTABLE *tbl, const char *key, int keylen)
+void hashdelete(HashTable *tbl, const char *key, int keylen)
 {
     HashEntry **nextp = hashfind(tbl, key, keylen);
     HashEntry *hp = *nextp;
@@ -146,7 +146,7 @@ static HashEntry **s_slast_nextp{};
 static int       s_slast_keylen{};
 
 /* data corresponding to key */
-HashDatum hashfetch(HASHTABLE *tbl, const char *key, int keylen)
+HashDatum hashfetch(HashTable *tbl, const char *key, int keylen)
 {
     static HashDatum errdatum{nullptr, 0};
 
@@ -177,7 +177,7 @@ void hashstorelast(HashDatum data)
 /* Visit each entry by calling nodefunc at each, with keylen, data,
 ** and extra as arguments.
 */
-void hashwalk(HASHTABLE *tbl, HashWalkFunc nodefunc, int extra)
+void hashwalk(HashTable *tbl, HashWalkFunc nodefunc, int extra)
 {
     HashEntry* next;
     HashEntry** hepp;
@@ -213,7 +213,7 @@ void hashwalk(HASHTABLE *tbl, HashWalkFunc nodefunc, int extra)
 ** if so, this pointer should be updated with the address of the object
 ** to be inserted, if insertion is desired.
 */
-static HashEntry **hashfind(HASHTABLE *tbl, const char *key, int keylen)
+static HashEntry **hashfind(HashTable *tbl, const char *key, int keylen)
 {
     HashEntry* prevhp = nullptr;
 

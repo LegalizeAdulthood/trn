@@ -14,7 +14,7 @@
 #include <cstdint>
 #include <string>
 
-struct HASHTABLE;
+struct HashTable;
 
 enum UniversalItemType
 {
@@ -136,8 +136,8 @@ extern char *g_univ_fname;    /* current filename (may be null) */
 extern std::string g_univ_label;    /* current label (may be empty) */
 extern std::string g_univ_title;    /* title of current level */
 extern std::string g_univ_tmp_file; /* temp. file (may be empty) */
-extern HASHTABLE *g_univ_ng_hash;
-extern HASHTABLE *g_univ_vg_hash;
+extern HashTable *g_univ_ng_hash;
+extern HashTable *g_univ_vg_hash;
 /* end of items that must be saved */
 
 void        univ_init();

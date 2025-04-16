@@ -37,7 +37,7 @@
 ArticleNum    g_obj_count{};
 int        g_subject_count{};
 bool       g_output_chase_phrase{};
-HASHTABLE *g_msgid_hash{};
+HashTable *g_msgid_hash{};
 bool       g_thread_always{}; /* -a */
 bool       g_breadth_first{}; /* -b */
 

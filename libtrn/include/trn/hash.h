@@ -13,19 +13,19 @@ struct HashDatum
     unsigned dat_len;
 };
 
-struct HASHTABLE;
+struct HashTable;
 
 using HashCompareFunc = int (*)(const char *key, int keylen, HashDatum data);
 using HashWalkFunc = int (*)(int keylen, HashDatum *data, int extra);
 
 #define HASH_DEFCMPFUNC ((HashCompareFunc) nullptr)
 
-HASHTABLE *hashcreate(unsigned size, HashCompareFunc cmpfunc);
-void hashdestroy(HASHTABLE *tbl);
-void hashstore(HASHTABLE *tbl, const char *key, int keylen, HashDatum data);
-void hashdelete(HASHTABLE *tbl, const char *key, int keylen);
-HashDatum hashfetch(HASHTABLE *tbl, const char *key, int keylen);
+HashTable *hashcreate(unsigned size, HashCompareFunc cmpfunc);
+void hashdestroy(HashTable *tbl);
+void hashstore(HashTable *tbl, const char *key, int keylen, HashDatum data);
+void hashdelete(HashTable *tbl, const char *key, int keylen);
+HashDatum hashfetch(HashTable *tbl, const char *key, int keylen);
 void hashstorelast(HashDatum data);
-void hashwalk(HASHTABLE *tbl, HashWalkFunc nodefunc, int extra);
+void hashwalk(HashTable *tbl, HashWalkFunc nodefunc, int extra);
 
 #endif

@@ -44,7 +44,7 @@ static int  build_addgroup_list(int keylen, HashDatum *data, int extra);
 static void process_list(GetNewsgroupFlags flag);
 static void new_nntp_groups(DataSource *dp);
 static void new_local_groups(DataSource *dp);
-static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch);
+static void add_to_hash(HashTable *ng, const char *name, int toread, char_int ch);
 static void add_to_list(const char *name, int toread, char_int ch);
 static int  list_groups(int keylen, HashDatum *data, int add_matching);
 static void scanline(char *actline, bool add_matching);
@@ -166,7 +166,7 @@ static void new_nntp_groups(DataSource *dp)
         std::printf("Can't get new groups from server:\n%s\n", g_ser_line);
         return;
     }
-    HASHTABLE *newngs = hashcreate(33, addng_cmp);
+    HashTable *newngs = hashcreate(33, addng_cmp);
 
     while (true)
     {
@@ -267,7 +267,7 @@ static void new_local_groups(DataSource *dp)
         return;
     }
     std::time_t lastone = std::time(nullptr) - 24L * 60 * 60 - 1;
-    HASHTABLE *newngs = hashcreate(33, addng_cmp);
+    HashTable *newngs = hashcreate(33, addng_cmp);
 
     while (std::fgets(g_buf, LBUFLEN, fp) != nullptr)
     {
@@ -305,7 +305,7 @@ static void new_local_groups(DataSource *dp)
     dp->act_sf.recent_cnt = file_size;
 }
 
-static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch)
+static void add_to_hash(HashTable *ng, const char *name, int toread, char_int ch)
 {
     HashDatum data;
     unsigned const namelen = std::strlen(name);

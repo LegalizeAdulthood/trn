@@ -36,7 +36,7 @@
 #include <cstdlib>
 #include <cstring>
 
-HASHTABLE  *g_newsrc_hash{};
+HashTable  *g_newsrc_hash{};
 Multirc    *g_sel_page_mp{};
 Multirc    *g_sel_next_mp{};
 List       *g_multirc_list{};    /* a list of all MULTIRCs */

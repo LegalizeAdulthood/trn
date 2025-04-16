@@ -59,8 +59,8 @@ static ArticleNum s_subj_to_get{};
 static ArticleNum s_xref_to_get{};
 static CompiledRegex  s_srchcompex; /* compiled regex for searchahead */
 #endif
-static HASHTABLE *s_subj_hash{};
-static HASHTABLE *s_shortsubj_hash{};
+static HashTable *s_subj_hash{};
+static HashTable *s_shortsubj_hash{};
 
 static void init_artnode(List *list, ListNode *node);
 static bool clear_artitem(char *cp, int arg);
