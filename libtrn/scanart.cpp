@@ -68,11 +68,13 @@ sa_main_result sa_main()
     g_sa_go = false;    /* ...do not collect $200... */
     g_s_follow_temp = false;
 
-    if (g_lastart < g_absfirst) {
+    if (g_lastart < g_absfirst)
+    {
         s_beep();
         return SA_QUIT;
     }
-    if (!g_sa_initialized) {
+    if (!g_sa_initialized)
+    {
         sa_init();
         if (!g_sa_initialized)          /* still not working... */
         {
@@ -85,9 +87,11 @@ sa_main_result sa_main()
     }
 
     /* unless "explicit" entry, read any marked articles */
-    if (!g_sa_go_explicit) {
+    if (!g_sa_go_explicit)
+    {
         long a = sa_readmarked_elig();
-        if (a) {        /* there was an article */
+        if (a)          /* there was an article */
+        {
             g_art = g_sa_ents[a].artnum;
             g_reread = true;
             sa_clear_mark(a);
@@ -102,7 +106,8 @@ sa_main_result sa_main()
     /* If called from the trn thread-selector and articles/threads were
      * selected there, "select" the articles and enter the zoom mode.
      */
-    if (g_sa_do_selthreads) {
+    if (g_sa_do_selthreads)
+    {
         sa_selthreads();
         g_sa_do_selthreads = false;
         g_sa_mode_zoom = true;          /* zoom in by default */
@@ -114,7 +119,8 @@ sa_main_result sa_main()
     sa_main_result i = sa_mainloop();
     g_mode = sa_oldmode;                        /* restore mode */
 
-    if (i == SA_NORM || i == SA_FAKE) {
+    if (i == SA_NORM || i == SA_FAKE)
+    {
         g_art = g_sa_art;
         /* trn 3.x won't read an unselected article if g_selected_only */
         g_selected_only = false;
