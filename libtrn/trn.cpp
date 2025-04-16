@@ -168,7 +168,7 @@ int trn_main(int argc, char *argv[])
 void do_multirc()
 {
     bool special = false;       /* allow newsgroup with no unread news? */
-    minor_mode mode_save = g_mode;
+    MinorMode mode_save = g_mode;
     GeneralMode gmode_save = g_general_mode;
 
     if (g_use_univ_selector)

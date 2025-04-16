@@ -67,7 +67,7 @@ enum GeneralMode : char
 };
 
 // These identifiers are a best guess based on usage in the code.
-enum minor_mode : char
+enum MinorMode : char
 {
     MM_NONE = '\0',
     MM_ARTICLE = 'a',
@@ -103,7 +103,7 @@ enum minor_mode : char
 };
 
 extern GeneralMode g_general_mode; /* general mode of trn */
-extern minor_mode   g_mode;         /* current state of trn */
+extern MinorMode   g_mode;         /* current state of trn */
 
 enum marking_mode
 {
@@ -168,7 +168,7 @@ void  set_macro(char *seq, char *def);
 void  arrow_macros(char *tmpbuf);
 void  mac_line(char *line, char *tmpbuf, int tbsize);
 void  show_macros();
-void  set_mode(GeneralMode new_gmode, minor_mode new_mode);
+void  set_mode(GeneralMode new_gmode, MinorMode new_mode);
 int   putchr(char_int ch);
 void  hide_pending();
 bool  finput_pending(bool check_term);
@@ -195,9 +195,9 @@ void getcmd(char *whatbuf);
 void pushstring(char *str, char_int bits);
 int  get_anything();
 int  pause_getcmd();
-void in_char(const char *prompt, minor_mode newmode, const char *dflt);
-void in_answer(const char *prompt, minor_mode newmode);
-bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmode);
+void in_char(const char *prompt, MinorMode newmode, const char *dflt);
+void in_answer(const char *prompt, MinorMode newmode);
+bool in_choice(const char *prompt, char *value, char *choices, MinorMode newmode);
 int  print_lines(const char *what_to_print, int hilite);
 int  check_page_line();
 void page_start();

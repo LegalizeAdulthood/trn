@@ -112,7 +112,7 @@ namespace
 class push_selector_modes
 {
 public:
-    push_selector_modes(minor_mode new_mode) :
+    push_selector_modes(MinorMode new_mode) :
         m_save_mode(g_mode),
         m_save_gmode(g_general_mode)
     {
@@ -126,7 +126,7 @@ public:
     }
 
 private:
-    minor_mode m_save_mode;
+    MinorMode m_save_mode;
     GeneralMode m_save_gmode;
 };
 

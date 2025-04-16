@@ -79,7 +79,7 @@ marking_areas g_marking_areas{HALFPAGE_MARKING}; //
 ART_LINE      g_initlines{};                     /* -i */
 bool          g_use_mouse{};                     //
 char          g_mouse_modes[32]{"acjlptwvK"};    //
-minor_mode    g_mode{MM_INITIALIZING};           /* current state of trn */
+MinorMode    g_mode{MM_INITIALIZING};           /* current state of trn */
 GeneralMode  g_general_mode{GM_INIT};           /* general mode of trn */
 
 #ifdef HAS_TERMLIB
@@ -761,7 +761,7 @@ static void show_keymap(KEYMAP *curmap, char *prefix)
     }
 }
 
-void set_mode(GeneralMode new_gmode, minor_mode new_mode)
+void set_mode(GeneralMode new_gmode, MinorMode new_mode)
 {
     if (g_general_mode != new_gmode || g_mode != new_mode)
     {
@@ -1423,7 +1423,7 @@ void pushstring(char *str, char_int bits)
 int get_anything()
 {
     char tmpbuf[64];
-    minor_mode mode_save = g_mode;
+    MinorMode mode_save = g_mode;
 
 reask_anything:
     unflush_output();                   /* disable any ^O in effect */
@@ -1492,7 +1492,7 @@ reask_anything:
 
 int pause_getcmd()
 {
-    minor_mode mode_save = g_mode;
+    MinorMode mode_save = g_mode;
 
     unflush_output();                   /* disable any ^O in effect */
     color_object(COLOR_CMD, true);
@@ -1527,9 +1527,9 @@ int pause_getcmd()
     return 0;
 }
 
-void in_char(const char *prompt, minor_mode newmode, const char *dflt)
+void in_char(const char *prompt, MinorMode newmode, const char *dflt)
 {
-    minor_mode   mode_save = g_mode;
+    MinorMode   mode_save = g_mode;
     GeneralMode gmode_save = g_general_mode;
     const char  *s;
     int          newlines;
@@ -1559,9 +1559,9 @@ reask_in_char:
     set_mode(gmode_save,mode_save);
 }
 
-void in_answer(const char *prompt, minor_mode newmode)
+void in_answer(const char *prompt, MinorMode newmode)
 {
-    minor_mode   mode_save = g_mode;
+    MinorMode   mode_save = g_mode;
     GeneralMode gmode_save = g_general_mode;
 
 reask_in_answer:
@@ -1598,9 +1598,9 @@ reinp_in_answer:
 
 /* If this takes more than one line, return false */
 
-bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmode)
+bool in_choice(const char *prompt, char *value, char *choices, MinorMode newmode)
 {
-    minor_mode mode_save = g_mode;
+    MinorMode mode_save = g_mode;
     GeneralMode gmode_save = g_general_mode;
 
     unflush_output();                   /* disable any ^O in effect */
@@ -2332,7 +2332,7 @@ void xmouse_check()
     if (g_use_mouse)
     {
         bool turn_it_on;
-        minor_mode mmode = g_mode;
+        MinorMode mmode = g_mode;
         if (g_general_mode == GM_PROMPT)
         {
             turn_it_on = true;

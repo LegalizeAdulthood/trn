@@ -423,7 +423,7 @@ static bool kfile_junk(char *ptr, int killmask)
 void kill_unwanted(ART_NUM starting, const char *message, int entering)
 {
     bool intr = false;                  /* did we get an interrupt? */
-    minor_mode oldmode = g_mode;
+    MinorMode oldmode = g_mode;
     bool anytokill = (g_ngptr->toread > 0);
 
     set_mode(GM_READ,MM_PROCESSING_KILL);

@@ -1136,7 +1136,7 @@ void followup()
 
 int invoke(const char *cmd, const char *dir)
 {
-    minor_mode oldmode = g_mode;
+    MinorMode oldmode = g_mode;
     int ret = -1;
 
     if (g_datasrc->flags & DF_REMOTE)

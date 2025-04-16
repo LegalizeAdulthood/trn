@@ -132,7 +132,7 @@ void ng_init()
 // start_command command to fake up first
 DoNewsgroupResult do_newsgroup(char *start_command)
 {
-    minor_mode mode_save = g_mode;
+    MinorMode mode_save = g_mode;
     GeneralMode gmode_save = g_general_mode;
     const char*whatnext = "%s%sWhat next? [%s]";
     bool ng_virtual = false;

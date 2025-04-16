@@ -115,7 +115,7 @@ SaMainResult sa_main()
         g_s_top_ent = -1;               /* go to top of arts... */
     }
 
-    minor_mode sa_oldmode = g_mode; /* save mode */
+    MinorMode sa_oldmode = g_mode; /* save mode */
     g_mode = MM_S;             /* for RN macros */
     SaMainResult i = sa_mainloop();
     g_mode = sa_oldmode;                        /* restore mode */

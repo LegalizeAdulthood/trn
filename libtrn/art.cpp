@@ -116,7 +116,7 @@ DoArticlResult do_article()
     int outpos;                  /* column position of output */
     static char prompt_buf[64];  /* place to hold prompt */
     bool notesfiles = false;     /* might there be notesfiles junk? */
-    minor_mode oldmode = g_mode;
+    MinorMode oldmode = g_mode;
     bool outputok = true;
 
     if (g_datasrc->flags & DF_REMOTE)
