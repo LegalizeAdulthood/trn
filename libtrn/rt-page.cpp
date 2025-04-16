@@ -106,9 +106,9 @@ bool set_sel_mode(char_int ch)
     return true;
 }
 
-char *get_sel_order(sel_mode smode)
+char *get_sel_order(SelectionMode smode)
 {
-    sel_mode save_sel_mode = g_sel_mode;
+    SelectionMode save_sel_mode = g_sel_mode;
     set_selector(smode, SS_MAGIC_NUMBER);
     std::sprintf(g_buf,"%s%s", g_sel_direction < 0? "reverse " : "",
             g_sel_sort_string);
@@ -117,7 +117,7 @@ char *get_sel_order(sel_mode smode)
     return g_buf;
 }
 
-bool set_sel_order(sel_mode smode, const char *str)
+bool set_sel_order(SelectionMode smode, const char *str)
 {
     bool reverse = false;
 
@@ -141,9 +141,9 @@ bool set_sel_order(sel_mode smode, const char *str)
     return set_sel_sort(smode,ch);
 }
 
-bool set_sel_sort(sel_mode smode, char_int ch)
+bool set_sel_sort(SelectionMode smode, char_int ch)
 {
-    sel_mode save_sel_mode = g_sel_mode;
+    SelectionMode save_sel_mode = g_sel_mode;
     sel_sort_mode ssort;
 
     switch (ch)
@@ -202,7 +202,7 @@ bool set_sel_sort(sel_mode smode, char_int ch)
     return true;
 }
 
-void set_selector(sel_mode smode, sel_sort_mode ssort)
+void set_selector(SelectionMode smode, sel_sort_mode ssort)
 {
     if (smode == SM_MAGIC_NUMBER)
     {

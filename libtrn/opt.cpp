@@ -523,7 +523,7 @@ void set_option(OptionIndex num, const char *s)
 
     case OI_NEWS_SEL_MODE:
     {
-        const sel_mode save_sel_mode = g_sel_mode;
+        const SelectionMode save_sel_mode = g_sel_mode;
         set_sel_mode(*s);
         if (save_sel_mode != SM_ARTICLE && save_sel_mode != SM_SUBJECT //
             && save_sel_mode != SM_THREAD)
@@ -1172,7 +1172,7 @@ const char *option_value(OptionIndex num)
 
     case OI_NEWS_SEL_MODE:
     {
-        const sel_mode save_sel_mode = g_sel_mode;
+        const SelectionMode save_sel_mode = g_sel_mode;
         const int save_Threaded = g_threaded_group;
         g_threaded_group = true;
         set_selector(g_sel_defaultmode, SS_MAGIC_NUMBER);

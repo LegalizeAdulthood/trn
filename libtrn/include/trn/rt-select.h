@@ -10,7 +10,7 @@
 #include "trn/help.h"
 #include "trn/rcstuff.h"
 
-enum sel_mode
+enum SelectionMode
 {
     SM_MAGIC_NUMBER = 0, // Not sure what this mode value means?
     SM_THREAD,
@@ -39,9 +39,9 @@ enum sel_sort_mode
 };
 
 extern bool           g_sel_rereading;
-extern sel_mode       g_sel_mode;
-extern sel_mode       g_sel_defaultmode;
-extern sel_mode       g_sel_threadmode;
+extern SelectionMode       g_sel_mode;
+extern SelectionMode       g_sel_defaultmode;
+extern SelectionMode       g_sel_threadmode;
 extern const char    *g_sel_mode_string;
 extern sel_sort_mode  g_sel_sort;
 extern sel_sort_mode  g_sel_artsort;

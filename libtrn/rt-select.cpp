@@ -59,9 +59,9 @@ enum univ_read_result
 };
 
 bool           g_sel_rereading{};
-sel_mode       g_sel_mode{};
-sel_mode       g_sel_defaultmode{SM_THREAD};
-sel_mode       g_sel_threadmode{SM_THREAD};
+SelectionMode       g_sel_mode{};
+SelectionMode       g_sel_defaultmode{SM_THREAD};
+SelectionMode       g_sel_threadmode{SM_THREAD};
 const char    *g_sel_mode_string{};
 sel_sort_mode  g_sel_sort{};
 sel_sort_mode  g_sel_artsort{SS_GROUPS};
@@ -133,7 +133,7 @@ private:
 }
 
 #define PUSH_SELECTOR()                                \
-    sel_mode save_sel_mode = g_sel_mode;               \
+    SelectionMode save_sel_mode = g_sel_mode;          \
     const bool save_sel_rereading = g_sel_rereading;   \
     const bool save_sel_exclusive = g_sel_exclusive;   \
     ART_UNREAD save_selected_count = g_selected_count; \

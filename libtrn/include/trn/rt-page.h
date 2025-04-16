@@ -58,10 +58,10 @@ extern char *g_sel_grp_dmode;
 extern char *g_sel_art_dmode;
 
 bool set_sel_mode(char_int ch);
-char *get_sel_order(sel_mode smode);
-bool set_sel_order(sel_mode smode, const char *str);
-bool set_sel_sort(sel_mode smode, char_int ch);
-void set_selector(sel_mode smode, sel_sort_mode ssort);
+char *get_sel_order(SelectionMode smode);
+bool set_sel_order(SelectionMode smode, const char *str);
+bool set_sel_sort(SelectionMode smode, char_int ch);
+void set_selector(SelectionMode smode, sel_sort_mode ssort);
 void init_pages(bool fill_last_page);
 bool first_page();
 bool last_page();
