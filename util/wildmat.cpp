@@ -63,15 +63,18 @@ static bool DoMatch(const char *text, const char *p)
             /* Literal match with following character. */
             p++;
             /* FALLTHROUGH */
+
         default:
             if (*text != *p)
             {
                 return false;
             }
             continue;
+
         case '?':
             /* Match anything. */
             continue;
+
         case '*':
             while (*++p == '*')
             {
@@ -90,6 +93,7 @@ static bool DoMatch(const char *text, const char *p)
                 }
             }
             return false;
+
         case '[':
         {
             const bool reverse = p[1] == NEGATE_CLASS;
