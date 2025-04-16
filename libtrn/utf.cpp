@@ -71,14 +71,14 @@ static const CodePoint s_iso8859_15_himap[128] = {
     // clang-format on
 };
 
-struct CHARSET_DESC
+struct CharsetDesc
 {
     const char       *name;
     CharsetType      id;
     const CodePoint *himap;
 };
 
-static const CHARSET_DESC s_charset_descs[] = {
+static const CharsetDesc s_charset_descs[] = {
     /* Tags defined in trn/utf.h go first; these are short labels for charsubst.c */
     // clang-format off
     { CHARSET_NAME_ASCII, CHARSET_ASCII, nullptr },
@@ -153,12 +153,12 @@ static CharsetType find_charset(const char *s)
     return it;
 }
 
-static const CHARSET_DESC *find_charset_desc(int id)
+static const CharsetDesc *find_charset_desc(int id)
 {
-    const CHARSET_DESC *it = nullptr;
+    const CharsetDesc *it = nullptr;
     for (int i = 0;; i += 1)
     {
-        const CHARSET_DESC *node = &s_charset_descs[i];
+        const CharsetDesc *node = &s_charset_descs[i];
         if (node->name == nullptr)
         {
             break;
@@ -182,7 +182,7 @@ CharsetType utf_init(const char *from, const char *to)
     if (in != CHARSET_UNKNOWN)
     {
         s_gs.in = in;
-        const CHARSET_DESC *node = find_charset_desc(in);
+        const CharsetDesc *node = find_charset_desc(in);
         if (node)
         {
             s_gs.himap_in = node->himap;
@@ -191,7 +191,7 @@ CharsetType utf_init(const char *from, const char *to)
     if (out != CHARSET_UNKNOWN)
     {
         s_gs.out = out;
-        const CHARSET_DESC *node = find_charset_desc(out);
+        const CharsetDesc *node = find_charset_desc(out);
         if (node)
         {
             s_gs.himap_out = node->himap;
