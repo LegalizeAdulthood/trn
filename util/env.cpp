@@ -91,7 +91,8 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     }
 
     /* try to set g_login_name */
-    if (lax) {
+    if (lax)
+    {
         const char *login_name = s_getenv_fn("USER");
         if (!login_name)
         {
@@ -133,7 +134,8 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
 #endif
 
     /* Set g_real_name, and maybe set g_login_name and g_home_dir (if nullptr). */
-    if (!set_user_name_fn(tcbuf)) {
+    if (!set_user_name_fn(tcbuf))
+    {
         g_login_name.clear();
         g_real_name.clear();
         fully_successful = false;
@@ -160,7 +162,8 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
         {
             g_net_speed = 1;
         }
-        else {
+        else
+        {
             g_net_speed = std::atoi(cp);
             g_net_speed = std::max(g_net_speed, 1);
         }
@@ -257,7 +260,8 @@ static bool set_user_name(char *tmpbuf)
         *c = '\0';
     }
     s = cpytill(g_buf,s,'&');
-    if (*s == '&') {                    /* whoever thought this one up was */
+    if (*s == '&')                      /* whoever thought this one up was */
+    {
         c = g_buf + std::strlen(g_buf);      /* in the middle of the night */
         std::strcat(c, g_login_name.c_str()); /* before the morning after */
         std::strcat(c,s+1);
@@ -362,7 +366,8 @@ static bool set_p_host_name(char *tmpbuf)
     {
         std::FILE* pipefp = popen(PHOSTCMD,"r");
 
-        if (pipefp == nullptr) {
+        if (pipefp == nullptr)
+        {
             std::printf("Can't find hostname\n");
             finalize(1);
         }
@@ -403,7 +408,8 @@ static bool set_p_host_name(char *tmpbuf)
         std::strcpy(tmpbuf, PHOSTNAME);
     }
 
-    if (tmpbuf[0] == '.') {
+    if (tmpbuf[0] == '.')
+    {
         if (tmpbuf[1] != '\0')
         {
             std::strcpy(g_buf,tmpbuf);
@@ -416,7 +422,8 @@ static bool set_p_host_name(char *tmpbuf)
         std::strcat(tmpbuf,g_buf);
     }
 
-    if (!std::strchr(tmpbuf,'.')) {
+    if (!std::strchr(tmpbuf, '.'))
+    {
         if (tmpbuf[0])
         {
             std::strcat(tmpbuf, ".");
@@ -483,8 +490,10 @@ char *export_var(const char *nam, const char *val)
     int namlen = std::strlen(nam);
     int i=envix(nam,namlen);    /* where does it go? */
 
-    if (!environ[i]) {                  /* does not exist yet */
-        if (s_firstexport) {            /* need we copy environment? */
+    if (!environ[i])                    /* does not exist yet */
+    {
+        if (s_firstexport)              /* need we copy environment? */
+        {
 #ifndef lint
             char** tmpenv = (char**)    /* point our wand at memory */
                 safemalloc((MEM_SIZE) (i+2) * sizeof(char*));
@@ -519,7 +528,8 @@ char *export_var(const char *nam, const char *val)
 
 void un_export(char *export_val)
 {
-    if (export_val[-1] == '=' && export_val[-2] != '_') {
+    if (export_val[-1] == '=' && export_val[-2] != '_')
+    {
         export_val[0] = export_val[-2];
         export_val[1] = '\0';
         export_val[-2] = '_';
@@ -539,8 +549,9 @@ static int envix(const char *nam, int len)
 {
     int i;
 
-    for (i = 0; environ[i]; i++) {
-        if (!std::strncmp(environ[i],nam,len) && environ[i][len] == '=')
+    for (i = 0; environ[i]; i++)
+    {
+        if (!std::strncmp(environ[i], nam, len) && environ[i][len] == '=')
         {
             break;                      /* strncmp must come first to avoid */
         }
