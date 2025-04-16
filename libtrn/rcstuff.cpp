@@ -87,12 +87,14 @@ static MULTIRC *rcstuff_init_data()
 
     g_multirc_list = new_list(0,0,sizeof(MULTIRC),20,LF_ZERO_MEM|LF_SPARSE,nullptr);
 
-    if (g_trnaccess_mem) {
+    if (g_trnaccess_mem)
+    {
         char* section;
         char* cond;
         char**vals = prep_ini_words(s_rcgroups_ini);
         char *s = g_trnaccess_mem;
-        while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
+        while ((s = next_ini_section(s, &section, &cond)) != nullptr)
+        {
             if (*cond && !check_ini_cond(cond))
             {
                 continue;
@@ -109,14 +111,16 @@ static MULTIRC *rcstuff_init_data()
                 break;
             }
             NEWSRC *rp = new_newsrc(vals[RI_ID], vals[RI_NEWSRC], vals[RI_ADDGROUPS]);
-            if (rp) {
+            if (rp)
+            {
                 MULTIRC *mp = multirc_ptr(i);
                 NEWSRC * prev_rp = mp->first;
                 if (!prev_rp)
                 {
                     mp->first = rp;
                 }
-                else {
+                else
+                {
                     while (prev_rp->next)
                     {
                         prev_rp = prev_rp->next;
@@ -152,10 +156,12 @@ bool rcstuff_init()
     {
         use_next_multirc(mptr);
     }
-    if (!g_multirc) {
+    if (!g_multirc)
+    {
         mptr = multirc_ptr(0);
         mptr->first = new_newsrc("default",nullptr,nullptr);
-        if (!use_multirc(mptr)) {
+        if (!use_multirc(mptr))
+        {
             std::printf("Couldn't open any newsrc groups.  Is your access file ok?\n");
             finalize(1);
         }
@@ -190,7 +196,8 @@ NEWSRC *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
         return nullptr;
     }
 
-    if (!newsrc || !*newsrc) {
+    if (!newsrc || !*newsrc)
+    {
         newsrc = get_val_const("NEWSRC");
         if (!newsrc)
         {
@@ -214,7 +221,8 @@ NEWSRC *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
     std::sprintf(tmpbuf, RCNAME_NEW, rp->name);
     rp->newname = savestr(tmpbuf);
 
-    switch (add_ok? *add_ok : 'y') {
+    switch (add_ok ? *add_ok : 'y')
+    {
     case 'n':
     case 'N':
         break;
@@ -237,13 +245,16 @@ bool use_multirc(MULTIRC *mp)
     bool had_trouble = false;
     bool had_success = false;
 
-    for (NEWSRC *rp = mp->first; rp; rp = rp->next) {
-        if ((rp->datasrc->flags & DF_UNAVAILABLE) || !lock_newsrc(rp)
-         || !open_datasrc(rp->datasrc) || !open_newsrc(rp)) {
+    for (NEWSRC *rp = mp->first; rp; rp = rp->next)
+    {
+        if ((rp->datasrc->flags & DF_UNAVAILABLE) || !lock_newsrc(rp) //
+            || !open_datasrc(rp->datasrc) || !open_newsrc(rp))
+        {
             unlock_newsrc(rp);
             had_trouble = true;
         }
-        else {
+        else
+        {
             rp->datasrc->flags |= DF_ACTIVE;
             rp->flags |= RF_ACTIVE;
             had_success = true;
@@ -276,12 +287,14 @@ void unuse_multirc(MULTIRC *mptr)
 
     write_newsrcs(mptr);
 
-    for (NEWSRC *rp = mptr->first; rp; rp = rp->next) {
+    for (NEWSRC *rp = mptr->first; rp; rp = rp->next)
+    {
         unlock_newsrc(rp);
         rp->flags &= ~RF_ACTIVE;
         rp->datasrc->flags &= ~DF_ACTIVE;
     }
-    if (g_ngdata_list) {
+    if (g_ngdata_list)
+    {
         close_cache();
         hashdestroy(g_newsrc_hash);
         walk_list(g_ngdata_list, clear_ngitem, 0);
@@ -307,13 +320,15 @@ bool use_next_multirc(MULTIRC *mptr)
 
     unuse_multirc(mptr);
 
-    for (;;) {
+    for (;;)
+    {
         mp = multirc_next(mp);
         if (!mp)
         {
             mp = multirc_low();
         }
-        if (mp == mptr) {
+        if (mp == mptr)
+        {
             use_multirc(mptr);
             return false;
         }
@@ -331,13 +346,15 @@ bool use_prev_multirc(MULTIRC *mptr)
 
     unuse_multirc(mptr);
 
-    for (;;) {
+    for (;;)
+    {
         mp = multirc_prev(mp);
         if (!mp)
         {
             mp = multirc_high();
         }
-        if (mp == mptr) {
+        if (mp == mptr)
+        {
             use_multirc(mptr);
             return false;
         }
@@ -367,7 +384,8 @@ static bool clear_ngitem(char *cp, int arg)
 {
     NGDATA* ncp = (NGDATA*)cp;
 
-    if (ncp->rcline != nullptr) {
+    if (ncp->rcline != nullptr)
+    {
         if (!g_checkflag)
         {
             std::free(ncp->rcline);
@@ -393,7 +411,8 @@ static bool lock_newsrc(NEWSRC *rp)
     {
         rp->lockname = savestr(filexp(LOCKNAME));
     }
-    else {
+    else
+    {
         std::sprintf(g_buf, RCNAME_INFO, rp->name);
         rp->infoname = savestr(g_buf);
         std::sprintf(g_buf, RCNAME_LOCK, rp->name);
@@ -403,17 +422,20 @@ static bool lock_newsrc(NEWSRC *rp)
     char *runninghost;
     if (std::FILE *fp = std::fopen(rp->lockname, "r"))
     {
-        if (std::fgets(g_buf,LBUFLEN,fp)) {
+        if (std::fgets(g_buf, LBUFLEN, fp))
+        {
             processnum = std::atol(g_buf);
-            if (std::fgets(g_buf,LBUFLEN,fp) && *g_buf
-             && *(s = g_buf + std::strlen(g_buf) - 1) == '\n') {
+            if (std::fgets(g_buf, LBUFLEN, fp) && *g_buf //
+                && *(s = g_buf + std::strlen(g_buf) - 1) == '\n')
+            {
                 *s = '\0';
                 runninghost = g_buf;
             }
         }
         std::fclose(fp);
     }
-    if (processnum) {
+    if (processnum)
+    {
 #ifndef MSDOS
         if (g_verbose)
         {
@@ -425,7 +447,8 @@ static bool lock_newsrc(NEWSRC *rp)
             std::printf("\nNewsrc locked by %ld on host %s.\n",processnum,runninghost);
         }
         termdown(2);
-        if (std::strcmp(runninghost,g_local_host)) {
+        if (std::strcmp(runninghost, g_local_host))
+        {
             if (g_verbose)
             {
                 std::printf("\n"
@@ -446,7 +469,8 @@ static bool lock_newsrc(NEWSRC *rp)
             }
             finalize(0);
         }
-        if (processnum == g_our_pid) {
+        if (processnum == g_our_pid)
+        {
             if (g_verbose)
             {
                 std::printf("\n"
@@ -460,7 +484,8 @@ static bool lock_newsrc(NEWSRC *rp)
             termdown(2);
             return false;
         }
-        if (kill(processnum, 0) != 0) {
+        if (kill(processnum, 0) != 0)
+        {
             /* Process is apparently gone */
             sleep(2);
             if (g_verbose)
@@ -475,7 +500,8 @@ static bool lock_newsrc(NEWSRC *rp)
             {
                 std::fputs("\nProcess crashed.\n",stdout);
             }
-            if (!g_lastngname.empty()) {
+            if (!g_lastngname.empty())
+            {
                 if (g_verbose)
                 {
                     std::printf("(The last newsgroup accessed was %s.)\n\n",
@@ -490,7 +516,8 @@ static bool lock_newsrc(NEWSRC *rp)
             get_anything();
             newline();
         }
-        else {
+        else
+        {
             if (g_verbose)
             {
                 std::printf("\n"
@@ -512,7 +539,8 @@ static bool lock_newsrc(NEWSRC *rp)
 #endif
     }
     std::FILE *fp = std::fopen(rp->lockname, "w");
-    if (fp == nullptr) {
+    if (fp == nullptr)
+    {
         std::printf(g_cantcreate,rp->lockname);
         sig_catcher(0);
     }
@@ -524,8 +552,9 @@ static bool lock_newsrc(NEWSRC *rp)
 static void unlock_newsrc(NEWSRC *rp)
 {
     safefree0(rp->infoname);
-    if (rp->lockname) {
-         remove(rp->lockname);
+    if (rp->lockname)
+    {
+        remove(rp->lockname);
         std::free(rp->lockname);
         rp->lockname = nullptr;
     }
@@ -539,15 +568,18 @@ static bool open_newsrc(NEWSRC *rp)
     if (rcfp == nullptr)
     {
         rcfp = std::fopen(rp->name,"w+");
-        if (rcfp == nullptr) {
+        if (rcfp == nullptr)
+        {
             std::printf("\nCan't create %s.\n", rp->name);
             termdown(2);
             return false;
         }
         const char *some_buf = SUBSCRIPTIONS;
-        if ((rp->datasrc->flags & DF_REMOTE)
-         && nntp_list("SUBSCRIPTIONS","",0) == 1) {
-            do {
+        if ((rp->datasrc->flags & DF_REMOTE) //
+            && nntp_list("SUBSCRIPTIONS", "", 0) == 1)
+        {
+            do
+            {
                 std::fputs(g_ser_line,rcfp);
                 std::fputc('\n',rcfp);
                 if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
@@ -569,15 +601,18 @@ static bool open_newsrc(NEWSRC *rp)
         }
         std::fseek(rcfp, 0L, 0);
     }
-    else {
+    else
+    {
         /* File exists; if zero length and backup isn't, complain */
         stat_t newsrc_stat{};
-        if (fstat(fileno(rcfp),&newsrc_stat) < 0) {
+        if (fstat(fileno(rcfp), &newsrc_stat) < 0)
+        {
             std::perror(rp->name);
             return false;
         }
-        if (newsrc_stat.st_size == 0
-         && stat(rp->oldname,&newsrc_stat) >= 0 && newsrc_stat.st_size > 0) {
+        if (newsrc_stat.st_size == 0 //
+            && stat(rp->oldname, &newsrc_stat) >= 0 && newsrc_stat.st_size > 0)
+        {
             std::printf("Warning: %s is zero length but %s is not.\n",
                    rp->name,rp->oldname);
             std::printf("Either recover your newsrc or else remove the backup copy.\n");
@@ -591,7 +626,8 @@ static bool open_newsrc(NEWSRC *rp)
 #endif
     }
 
-    if (!g_ngdata_list) {
+    if (!g_ngdata_list)
+    {
         /* allocate memory for rc file globals */
         g_ngdata_list = new_list(0, 0, sizeof (NGDATA), 200, LF_NONE, init_ngnode);
         g_newsrc_hash = hashcreate(3001, rcline_cmp);
@@ -610,7 +646,8 @@ static bool open_newsrc(NEWSRC *rp)
     /* read in the .newsrc file */
 
     char* some_buf;
-    while ((some_buf = get_a_line(g_buf, LBUFLEN, false, rcfp)) != nullptr) {
+    while ((some_buf = get_a_line(g_buf, LBUFLEN, false, rcfp)) != nullptr)
+    {
         long length = g_len_last_line_got; /* side effect of get_a_line */
         if (length <= 1)                   /* only a newline??? */
         {
@@ -637,15 +674,17 @@ static bool open_newsrc(NEWSRC *rp)
         {
             np->rcline = savestr(some_buf);  /* make semipermanent copy */
         }
-        else {
+        else
+        {
             /*NOSTRICT*/
 #ifndef lint
             some_buf = saferealloc(some_buf,(MEM_SIZE)(length+1));
 #endif
             np->rcline = some_buf;
         }
-        if (is_hor_space(*some_buf)
-         || !std::strncmp(some_buf,"options",7)) {   /* non-useful line? */
+        if (is_hor_space(*some_buf)                   //
+            || !std::strncmp(some_buf, "options", 7)) /* non-useful line? */
+        {
             np->toread = TR_JUNK;
             np->subscribechar = ' ';
             np->numoffset = 0;
@@ -653,11 +692,13 @@ static bool open_newsrc(NEWSRC *rp)
         }
         parse_rcline(np);
         HASHDATUM data = hashfetch(g_newsrc_hash, np->rcline, np->numoffset - 1);
-        if (data.dat_ptr) {
+        if (data.dat_ptr)
+        {
             np->toread = TR_IGNORE;
             continue;
         }
-        if (np->subscribechar == NEGCHAR) {
+        if (np->subscribechar == NEGCHAR)
+        {
             np->toread = TR_UNSUB;
             sethash(np);
             continue;
@@ -674,18 +715,22 @@ static bool open_newsrc(NEWSRC *rp)
         {
             set_toread(np, ST_LAX);
         }
-        if (np->toread > TR_NONE) {     /* anything unread? */
-            if (!s_foundany) {
+        if (np->toread > TR_NONE)       /* anything unread? */
+        {
+            if (!s_foundany)
+            {
                 g_starthere = np;
                 s_foundany = true;      /* remember that fact*/
             }
-            if (g_suppress_cn) {        /* if no listing desired */
+            if (g_suppress_cn)          /* if no listing desired */
+            {
                 if (g_checkflag)        /* if that is all they wanted */
                 {
                     finalize(1);        /* then bomb out */
                 }
             }
-            else {
+            else
+            {
                 if (g_verbose)
                 {
                     std::printf("Unread news in %-40s %5ld article%s\n",
@@ -697,12 +742,15 @@ static bool open_newsrc(NEWSRC *rp)
                         np->rcline,(long)np->toread,plural(np->toread));
                 }
                 termdown(1);
-                if (g_int_count) {
+                if (g_int_count)
+                {
                     g_countdown = 1;
                     g_int_count = 0;
                 }
-                if (g_countdown) {
-                    if (!--g_countdown) {
+                if (g_countdown)
+                {
+                    if (!--g_countdown)
+                    {
                         std::fputs("etc.\n",stdout);
                         if (g_checkflag)
                         {
@@ -715,7 +763,8 @@ static bool open_newsrc(NEWSRC *rp)
         }
         sethash(np);
     }
-    if (prev_np) {
+    if (prev_np)
+    {
         prev_np->next = nullptr;
         g_last_ng = prev_np;
     }
@@ -725,11 +774,13 @@ static bool open_newsrc(NEWSRC *rp)
     rename(rp->name,rp->oldname);
     rp->flags |= RF_RCCHANGED;
 #endif
-    if (rp->infoname) {
+    if (rp->infoname)
+    {
         std::FILE *info = std::fopen(rp->infoname, "r");
         if (info != nullptr)
         {
-            if (std::fgets(g_buf,sizeof g_buf,info) != nullptr) {
+            if (std::fgets(g_buf, sizeof g_buf, info) != nullptr)
+            {
                 long actnum;
                 long descnum;
                 g_buf[std::strlen(g_buf)-1] = '\0';
@@ -738,8 +789,9 @@ static bool open_newsrc(NEWSRC *rp)
                 {
                     g_lastngname = s+2;
                 }
-                if (std::fscanf(info,"New-Group-State: %ld,%ld,%ld",
-                           &g_lastnewtime,&actnum,&descnum) == 3) {
+                if (std::fscanf(info, "New-Group-State: %ld,%ld,%ld", //
+                                &g_lastnewtime, &actnum, &descnum) == 3)
+                {
                     rp->datasrc->act_sf.recent_cnt = actnum;
                     rp->datasrc->desc_sf.recent_cnt = descnum;
                 }
@@ -747,9 +799,11 @@ static bool open_newsrc(NEWSRC *rp)
             std::fclose(info);
         }
     }
-    else {
+    else
+    {
         readlast();
-        if (rp->datasrc->flags & DF_REMOTE) {
+        if (rp->datasrc->flags & DF_REMOTE)
+        {
             rp->datasrc->act_sf.recent_cnt = g_lastactsiz;
             rp->datasrc->desc_sf.recent_cnt = g_lastextranum;
         }
@@ -787,14 +841,16 @@ static void parse_rcline(NGDATA *np)
     {
     }
     int len = s - np->rcline;
-    if ((!*s || std::isspace(*s)) && !g_checkflag) {
+    if ((!*s || std::isspace(*s)) && !g_checkflag)
+    {
 #ifndef lint
         np->rcline = saferealloc(np->rcline,(MEM_SIZE)len + 3);
 #endif
         s = np->rcline + len;
         std::strcpy(s, ": ");
     }
-    if (*s == ':' && s[1] && s[2] == '0') {
+    if (*s == ':' && s[1] && s[2] == '0')
+    {
         np->flags |= NF_UNTHREADED;
         s[2] = '1';
     }
@@ -813,14 +869,16 @@ void abandon_ng(NGDATA *np)
     {
         int length = np->numoffset - 1;
 
-        while ((some_buf = get_a_line(g_buf, LBUFLEN, false, rcfp)) != nullptr) {
+        while ((some_buf = get_a_line(g_buf, LBUFLEN, false, rcfp)) != nullptr)
+        {
             if (g_len_last_line_got <= 0)
             {
                 continue;
             }
             some_buf[g_len_last_line_got-1] = '\0'; /* wipe out newline */
-            if ((some_buf[length] == ':' || some_buf[length] == NEGCHAR)
-             && !std::strncmp(np->rcline, some_buf, length)) {
+            if ((some_buf[length] == ':' || some_buf[length] == NEGCHAR) //
+                && !std::strncmp(np->rcline, some_buf, length))
+            {
                 break;
             }
             if (some_buf != g_buf)
@@ -829,12 +887,15 @@ void abandon_ng(NGDATA *np)
             }
         }
         std::fclose(rcfp);
-    } else if (errno != ENOENT) {
+    }
+    else if (errno != ENOENT)
+    {
         std::printf("Unable to open %s.\n", np->rc->oldname);
         termdown(1);
         return;
     }
-    if (some_buf == nullptr) {
+    if (some_buf == nullptr)
+    {
         some_buf = np->rcline + np->numoffset;
         if (*some_buf == ' ')
         {
@@ -843,13 +904,15 @@ void abandon_ng(NGDATA *np)
         *some_buf = '\0';
         np->abs1st = 0;         /* force group to be re-calculated */
     }
-    else {
+    else
+    {
         std::free(np->rcline);
         if (some_buf == g_buf)
         {
             np->rcline = savestr(some_buf);
         }
-        else {
+        else
+        {
             /*NOSTRICT*/
 #ifndef lint
             some_buf = saferealloc(some_buf, (MEM_SIZE)(g_len_last_line_got));
@@ -883,12 +946,14 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
     {
         ntoforget = "n to forget it.\n";
     }
-    if (std::strchr(what,'/')) {
+    if (std::strchr(what, '/'))
+    {
         dingaling();
         std::printf("\nBad newsgroup name.\n");
         termdown(2);
       check_fuzzy_match:
-        if (g_fuzzy_get && (flags & GNG_FUZZY)) {
+        if (g_fuzzy_get && (flags & GNG_FUZZY))
+        {
             flags &= ~GNG_FUZZY;
             if (find_close_match())
             {
@@ -905,9 +970,11 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
     }
     set_ngname(what);
     g_ngptr = find_ng(g_ngname.c_str());
-    if (g_ngptr == nullptr) {           /* not in .newsrc? */
+    if (g_ngptr == nullptr)             /* not in .newsrc? */
+    {
         NEWSRC* rp;
-        for (rp = g_multirc->first; rp; rp = rp->next) {
+        for (rp = g_multirc->first; rp; rp = rp->next)
+        {
             if (!all_bits(rp->flags, RF_ADD_GROUPS | RF_ACTIVE))
             {
                 continue;
@@ -918,7 +985,8 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
                 break; /*$$ let them choose which server */
             }
         }
-        if (!rp) {
+        if (!rp)
+        {
             dingaling();
             if (g_verbose)
             {
@@ -940,25 +1008,34 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
         {
             autosub = g_addnewbydefault;
         }
-        if (autosub) {
-            if (g_append_unsub) {
+        if (autosub)
+        {
+            if (g_append_unsub)
+            {
                 std::printf("(Adding %s to end of your .newsrc %ssubscribed)\n",
                        g_ngname.c_str(), (autosub == ADDNEW_SUB)? "" : "un");
                 termdown(1);
                 g_ngptr = add_newsgroup(rp, g_ngname.c_str(), autosub);
-            } else {
-                if (autosub == ADDNEW_SUB) {
+            }
+            else
+            {
+                if (autosub == ADDNEW_SUB)
+                {
                     std::printf("(Subscribing to %s)\n", g_ngname.c_str());
                     termdown(1);
                     g_ngptr = add_newsgroup(rp, g_ngname.c_str(), autosub);
-                } else {
+                }
+                else
+                {
                     std::printf("(Ignoring %s)\n", g_ngname.c_str());
                     termdown(1);
                     return false;
                 }
             }
             flags &= ~GNG_RELOC;
-        } else {
+        }
+        else
+        {
             if (g_verbose)
             {
                 std::sprintf(promptbuf, "\nNewsgroup %s not in .newsrc -- subscribe?", g_ngname.c_str());
@@ -971,8 +1048,10 @@ reask_add:
             in_char(promptbuf,MM_ADD_NEWSGROUP_PROMPT,"ynYN");
             printcmd();
             newline();
-            if (*g_buf == 'h') {
-                if (g_verbose) {
+            if (*g_buf == 'h')
+            {
+                if (g_verbose)
+                {
                     std::printf("Type y or SP to subscribe to %s.\n"
                            "Type Y to subscribe to this and all remaining new groups.\n"
                            "Type N to leave all remaining new groups unsubscribed.\n",
@@ -989,18 +1068,21 @@ reask_add:
                 termdown(1);
                 goto reask_add;
             }
-            else if (*g_buf == 'n' || *g_buf == 'q') {
+            else if (*g_buf == 'n' || *g_buf == 'q')
+            {
                 if (g_append_unsub)
                 {
                     g_ngptr = add_newsgroup(rp, g_ngname.c_str(), NEGCHAR);
                 }
                 return false;
             }
-            else if (*g_buf == 'y') {
+            else if (*g_buf == 'y')
+            {
                 g_ngptr = add_newsgroup(rp, g_ngname.c_str(), ':');
                 flags |= GNG_RELOC;
             }
-            else if (*g_buf == 'Y') {
+            else if (*g_buf == 'Y')
+            {
                 g_addnewbydefault = ADDNEW_SUB;
                 if (g_append_unsub)
                 {
@@ -1015,21 +1097,26 @@ reask_add:
                 g_ngptr = add_newsgroup(rp, g_ngname.c_str(), ':');
                 flags &= ~GNG_RELOC;
             }
-            else if (*g_buf == 'N') {
+            else if (*g_buf == 'N')
+            {
                 g_addnewbydefault = ADDNEW_UNSUB;
-                if (g_append_unsub) {
+                if (g_append_unsub)
+                {
                     std::printf("(Adding %s to end of your .newsrc unsubscribed)\n",
                            g_ngname.c_str());
                     termdown(1);
                     g_ngptr = add_newsgroup(rp, g_ngname.c_str(), NEGCHAR);
                     flags &= ~GNG_RELOC;
-                } else {
+                }
+                else
+                {
                     std::printf("(Ignoring %s)\n", g_ngname.c_str());
                     termdown(1);
                     return false;
                 }
             }
-            else {
+            else
+            {
                 std::fputs(g_hforhelp,stdout);
                 termdown(1);
                 settle_down();
@@ -1041,7 +1128,8 @@ reask_add:
     {
         return false;
     }
-    else if (g_ngptr->subscribechar == NEGCHAR) {/* unsubscribed? */
+    else if (g_ngptr->subscribechar == NEGCHAR)  /* unsubscribed? */
+    {
         if (g_verbose)
         {
             std::sprintf(promptbuf, "\nNewsgroup %s is unsubscribed -- resubscribe?", g_ngname.c_str());
@@ -1054,7 +1142,8 @@ reask_unsub:
         in_char(promptbuf,MM_RESUBSCRIBE_PROMPT,"yn");
         printcmd();
         newline();
-        if (*g_buf == 'h') {
+        if (*g_buf == 'h')
+        {
             if (g_verbose)
             {
                 std::printf("Type y or SP to resubscribe to %s.\n", g_ngname.c_str());
@@ -1067,17 +1156,20 @@ reask_unsub:
             termdown(2);
             goto reask_unsub;
         }
-        else if (*g_buf == 'n' || *g_buf == 'q') {
+        else if (*g_buf == 'n' || *g_buf == 'q')
+        {
             return false;
         }
-        else if (*g_buf == 'y') {
+        else if (*g_buf == 'y')
+        {
             char *cp = g_ngptr->rcline + g_ngptr->numoffset;
             g_ngptr->flags = (*cp && cp[1] == '0' ? NF_UNTHREADED : NF_NONE);
             g_ngptr->subscribechar = ':';
             g_ngptr->rc->flags |= RF_RCCHANGED;
             flags &= ~GNG_RELOC;
         }
-        else {
+        else
+        {
             std::fputs(g_hforhelp,stdout);
             termdown(1);
             settle_down();
@@ -1088,7 +1180,8 @@ reask_unsub:
     /* now calculate how many unread articles in newsgroup */
 
     set_toread(g_ngptr, ST_STRICT);
-    if (flags & GNG_RELOC) {
+    if (flags & GNG_RELOC)
+    {
         if (!relocate_newsgroup(g_ngptr,-1))
         {
             return false;
@@ -1138,8 +1231,10 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
     const char* dflt = (move_np!=g_current_ng ? "$^.Lq" : "$^Lq");
     sel_sort_mode save_sort = g_sel_sort;
 
-    if (g_sel_newsgroupsort != SS_NATURAL) {
-        if (newnum < 0) {
+    if (g_sel_newsgroupsort != SS_NATURAL)
+    {
+        if (newnum < 0)
+        {
             /* ask if they want to keep the current order */
             in_char("Sort newsrc(s) using current sort order?",MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "yn"); /*$$ !'D' */
             printcmd();
@@ -1148,13 +1243,15 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
             {
                 set_selector(SM_NEWSGROUP, SS_NATURAL);
             }
-            else {
+            else
+            {
                 g_sel_sort = SS_NATURAL;
                 g_sel_direction = 1;
                 sort_newsgroups();
             }
         }
-        else {
+        else
+        {
             g_sel_sort = SS_NATURAL;
             g_sel_direction = 1;
             sort_newsgroups();
@@ -1162,7 +1259,8 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
     }
 
     g_starthere = nullptr;                      /* Disable this optimization */
-    if (move_np != g_last_ng) {
+    if (move_np != g_last_ng)
+    {
         if (move_np->prev)
         {
             move_np->prev->next = move_np->next;
@@ -1186,7 +1284,8 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
     }
     move_np->rc->flags |= RF_RCCHANGED;
 
-    if (newnum < 0) {
+    if (newnum < 0)
+    {
       reask_reloc:
         unflush_output();               /* disable any ^O in effect */
         if (g_verbose)
@@ -1208,8 +1307,10 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
         }
         setdef(g_buf,dflt);
         printcmd();
-        if (*g_buf == 'h') {
-            if (g_verbose) {
+        if (*g_buf == 'h')
+        {
+            if (g_verbose)
+            {
                 std::printf("\n"
                        "\n"
                        "Type ^ to put the newsgroup first (position 0).\n"
@@ -1245,12 +1346,14 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
         {
             return false;
         }
-        else if (*g_buf == 'L') {
+        else if (*g_buf == 'L')
+        {
             newline();
             list_newsgroups();
             goto reask_reloc;
         }
-        else if (std::isdigit(*g_buf)) {
+        else if (std::isdigit(*g_buf))
+        {
             if (!finish_command(true))  /* get rest of command */
             {
                 goto reinp_reloc;
@@ -1262,24 +1365,29 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
                 newnum = g_newsgroup_cnt - 1;
             }
         }
-        else if (*g_buf == '^') {
+        else if (*g_buf == '^')
+        {
             newline();
             newnum = 0;
         }
-        else if (*g_buf == '$') {
+        else if (*g_buf == '$')
+        {
             newnum = g_newsgroup_cnt-1;
         }
-        else if (*g_buf == '.') {
+        else if (*g_buf == '.')
+        {
             newline();
             newnum = g_current_ng->num;
         }
-        else if (*g_buf == '-' || *g_buf == '+') {
+        else if (*g_buf == '-' || *g_buf == '+')
+        {
             if (!finish_command(true))  /* get rest of command */
             {
                 goto reinp_reloc;
             }
             np = find_ng(g_buf+1);
-            if (np == nullptr) {
+            if (np == nullptr)
+            {
                 std::fputs("Not found.",stdout);
                 goto reask_reloc;
             }
@@ -1289,14 +1397,16 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
                 newnum++;
             }
         }
-        else {
+        else
+        {
             std::printf("\n%s",g_hforhelp);
             termdown(2);
             settle_down();
             goto reask_reloc;
         }
     }
-    if (newnum < g_newsgroup_cnt-1) {
+    if (newnum < g_newsgroup_cnt - 1)
+    {
         for (np = g_first_ng; np; np = np->next)
         {
             if (np->num >= newnum)
@@ -1331,7 +1441,8 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
             np->num = newnum;
         }
     }
-    if (g_sel_newsgroupsort != SS_NATURAL) {
+    if (g_sel_newsgroupsort != SS_NATURAL)
+    {
         g_sel_sort = g_sel_newsgroupsort;
         sort_newsgroups();
         g_sel_sort = save_sort;
@@ -1350,7 +1461,8 @@ void list_newsgroups()
 
     page_start();
     print_lines("  #  Status  Newsgroup\n", STANDOUT);
-    for (np = g_first_ng, i = 0; np && !g_int_count; np = np->next, i++) {
+    for (np = g_first_ng, i = 0; np && !g_int_count; np = np->next, i++)
+    {
         if (np->toread >= 0)
         {
             set_toread(np, ST_LAX);
@@ -1396,7 +1508,8 @@ void cleanup_newsrc(NEWSRC *rp)
     }
     termdown(1);
     NGDATA* np;
-    for (np = g_first_ng; np; np = np->next) {
+    for (np = g_first_ng; np; np = np->next)
+    {
 /*#ifdef CHECK_ALL_BOGUS $$ what is this? */
         if (np->toread >= TR_UNSUB)
         {
@@ -1431,7 +1544,8 @@ void cleanup_newsrc(NEWSRC *rp)
             std::fputs("Moving boguses to the end.\n", stdout);
         }
         termdown(1);
-        while (np) {
+        while (np)
+        {
             NGDATA *prev_np = np->prev;
             if (np->toread == TR_BOGUS)
             {
@@ -1444,8 +1558,10 @@ reask_bogus:
         in_char("Delete bogus newsgroups?", MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "ny");
         printcmd();
         newline();
-        if (*g_buf == 'h') {
-            if (g_verbose) {
+        if (*g_buf == 'h')
+        {
+            if (g_verbose)
+            {
                 std::fputs("Type y to delete bogus newsgroups.\n"
                       "Type n or SP to leave them at the end in case they return.\n",
                       stdout);
@@ -1461,8 +1577,10 @@ reask_bogus:
         else if (*g_buf == 'n' || *g_buf == 'q')
         {
         }
-        else if (*g_buf == 'y') {
-            for (np = g_last_ng; np && np->toread == TR_BOGUS; np = np->prev) {
+        else if (*g_buf == 'y')
+        {
+            for (np = g_last_ng; np && np->toread == TR_BOGUS; np = np->prev)
+            {
                 hashdelete(g_newsrc_hash, np->rcline, np->numoffset - 1);
                 clear_ngitem((char*)np,0);
                 g_newsgroup_cnt--;
@@ -1494,7 +1612,8 @@ reask_bogus:
                 g_sel_page_np = nullptr;
             }
         }
-        else {
+        else
+        {
             std::fputs(g_hforhelp,stdout);
             termdown(1);
             settle_down();
@@ -1525,7 +1644,8 @@ static int rcline_cmp(const char *key, int keylen, HASHDATUM data)
 void checkpoint_newsrcs()
 {
 #ifdef DEBUG
-    if (debug & DEB_CHECKPOINTING) {
+    if (debug & DEB_CHECKPOINTING)
+    {
         std::fputs("(ckpt)",stdout);
         std::fflush(stdout);
     }
@@ -1539,7 +1659,8 @@ void checkpoint_newsrcs()
         get_anything();
     }
 #ifdef DEBUG
-    if (debug & DEB_CHECKPOINTING) {
+    if (debug & DEB_CHECKPOINTING)
+    {
         std::fputs("(done)",stdout);
         std::fflush(stdout);
     }
@@ -1558,19 +1679,22 @@ bool write_newsrcs(MULTIRC *mptr)
         return true;
     }
 
-    if (g_sel_newsgroupsort != SS_NATURAL) {
+    if (g_sel_newsgroupsort != SS_NATURAL)
+    {
         g_sel_sort = SS_NATURAL;
         g_sel_direction = 1;
         sort_newsgroups();
     }
 
-    for (NEWSRC *rp = mptr->first; rp; rp = rp->next) {
+    for (NEWSRC *rp = mptr->first; rp; rp = rp->next)
+    {
         if (!(rp->flags & RF_ACTIVE))
         {
             continue;
         }
 
-        if (rp->infoname) {
+        if (rp->infoname)
+        {
             std::FILE *info = std::fopen(rp->infoname, "w");
             if (info != nullptr)
             {
@@ -1581,9 +1705,11 @@ bool write_newsrcs(MULTIRC *mptr)
                 std::fclose(info);
             }
         }
-        else {
+        else
+        {
             readlast();
-            if (rp->datasrc->flags & DF_REMOTE) {
+            if (rp->datasrc->flags & DF_REMOTE)
+            {
                 g_lastactsiz = rp->datasrc->act_sf.recent_cnt;
                 g_lastextranum = rp->datasrc->desc_sf.recent_cnt;
             }
@@ -1601,27 +1727,31 @@ bool write_newsrcs(MULTIRC *mptr)
         }
 
         FILE *rcfp = fopen(rp->newname, "w");
-        if (rcfp == nullptr) {
+        if (rcfp == nullptr)
+        {
             std::printf(s_cantrecreate,rp->name);
             total_success = false;
             continue;
         }
 #ifndef MSDOS
         stat_t perms;
-        if (stat(rp->name,&perms)>=0) { /* preserve permissions */
+        if (stat(rp->name,&perms)>=0)   /* preserve permissions */
+        {
             chmod(rp->newname,perms.st_mode&0666);
             chown(rp->newname,perms.st_uid,perms.st_gid);
         }
 #endif
         /* write out each line*/
 
-        for (NGDATA *np = g_first_ng; np; np = np->next) {
+        for (NGDATA *np = g_first_ng; np; np = np->next)
+        {
             char* delim;
             if (np->rc != rp)
             {
                 continue;
             }
-            if (np->numoffset) {
+            if (np->numoffset)
+            {
                 delim = np->rcline + np->numoffset - 1;
                 *delim = np->subscribechar;
                 if ((np->flags & NF_UNTHREADED) && delim[2] == '1')
@@ -1634,16 +1764,19 @@ bool write_newsrcs(MULTIRC *mptr)
                 delim = nullptr;
             }
 #ifdef DEBUG
-            if (debug & DEB_NEWSRC_LINE) {
+            if (debug & DEB_NEWSRC_LINE)
+            {
                 std::printf("%s\n",np->rcline);
                 termdown(1);
             }
 #endif
-            if (std::fprintf(rcfp,"%s\n",np->rcline) < 0) {
+            if (std::fprintf(rcfp, "%s\n", np->rcline) < 0)
+            {
                 std::fclose(rcfp);           /* close new newsrc */
                 goto write_error;
             }
-            if (delim) {
+            if (delim)
+            {
                 *delim = '\0';          /* might still need this line */
                 if ((np->flags & NF_UNTHREADED) && delim[2] == '0')
                 {
@@ -1653,11 +1786,13 @@ bool write_newsrcs(MULTIRC *mptr)
         }
         std::fflush(rcfp);
         /* fclose is the only sure test for full disks via NFS */
-        if (std::ferror(rcfp)) {
+        if (std::ferror(rcfp))
+        {
             std::fclose(rcfp);
             goto write_error;
         }
-        if (std::fclose(rcfp) == EOF) {
+        if (std::fclose(rcfp) == EOF)
+        {
           write_error:
             std::printf(s_cantrecreate,rp->name);
             remove(rp->newname);
@@ -1670,7 +1805,8 @@ bool write_newsrcs(MULTIRC *mptr)
         rename(rp->newname,rp->name);
     }
 
-    if (g_sel_newsgroupsort != SS_NATURAL) {
+    if (g_sel_newsgroupsort != SS_NATURAL)
+    {
         g_sel_sort = g_sel_newsgroupsort;
         sort_newsgroups();
         g_sel_sort = save_sort;
@@ -1680,9 +1816,12 @@ bool write_newsrcs(MULTIRC *mptr)
 
 void get_old_newsrcs(MULTIRC *mptr)
 {
-    if (mptr) {
-        for (NEWSRC *rp = mptr->first; rp; rp = rp->next) {
-            if (rp->flags & RF_ACTIVE) {
+    if (mptr)
+    {
+        for (NEWSRC *rp = mptr->first; rp; rp = rp->next)
+        {
+            if (rp->flags & RF_ACTIVE)
+            {
                 remove(rp->newname);
                 rename(rp->name,rp->newname);
                 rename(rp->oldname,rp->name);
