@@ -102,7 +102,7 @@ static INI_WORDS s_datasrc_ini[] =
     // clang-format on
 };
 
-static char *dir_or_none(DATASRC *dp, const char *dir, datasrc_flags flag);
+static char *dir_or_none(DATASRC *dp, const char *dir, DataSourceFlags flag);
 static char *file_or_none(char *fn);
 static int srcfile_cmp(const char *key, int keylen, HASHDATUM data);
 static int check_distance(int len, HASHDATUM *data, int newsrc_ptr);
@@ -375,7 +375,7 @@ static DATASRC *new_datasrc(const char *name, char **vals)
     return dp;
 }
 
-static char *dir_or_none(DATASRC *dp, const char *dir, datasrc_flags flag)
+static char *dir_or_none(DATASRC *dp, const char *dir, DataSourceFlags flag)
 {
     if (!dir || !*dir || !std::strcmp(dir, "remote"))
     {

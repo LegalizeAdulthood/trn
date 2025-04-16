@@ -32,7 +32,7 @@ struct SourceFile
     std::time_t refetch_secs; /* how long before we refetch this file */
 };
 
-enum datasrc_flags : std::uint16_t
+enum DataSourceFlags : std::uint16_t
 {
     DF_NONE = 0,
     DF_TRY_OVERVIEW = 0x0001,
@@ -50,7 +50,7 @@ enum datasrc_flags : std::uint16_t
     DF_NOLISTGROUP = 0x2000,
     DF_NOXREFS = 0x4000
 };
-DECLARE_FLAGS_ENUM(datasrc_flags, std::uint16_t)
+DECLARE_FLAGS_ENUM(DataSourceFlags, std::uint16_t)
 
 enum field_flags : std::uint8_t
 {
@@ -82,7 +82,7 @@ struct DATASRC
     std::time_t   ov_opened;  /* time overview file was opened */
     ov_field_num  fieldnum[OV_MAX_FIELDS];
     field_flags   fieldflags[OV_MAX_FIELDS];
-    datasrc_flags flags;
+    DataSourceFlags flags;
 };
 
 enum
