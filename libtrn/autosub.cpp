@@ -20,7 +20,7 @@ static bool matchlist(const char *patlist, const char *s);
 /* : if we should autosubscribe to it                   */
 /* ! if we should autounsubscribe to it                 */
 /* \0 if we should ask the user.                        */
-addnew_type auto_subscribe(const char *name)
+AddNewType auto_subscribe(const char *name)
 {
     const char *s = get_val_const("AUTOSUBSCRIBE", nullptr);
     if (s && matchlist(s, name))

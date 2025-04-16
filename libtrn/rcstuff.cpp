@@ -42,7 +42,7 @@ MULTIRC    *g_sel_next_mp{};
 List       *g_multirc_list{};    /* a list of all MULTIRCs */
 MULTIRC    *g_multirc{};         /* the current MULTIRC */
 bool        g_paranoid{};        /* did we detect some inconsistency in .newsrc? */
-addnew_type g_addnewbydefault{ADDNEW_ASK}; //
+AddNewType g_addnewbydefault{ADDNEW_ASK}; //
 bool        g_checkflag{};       /* -c */
 bool        g_suppress_cn{};     /* -s */
 int         g_countdown{5};      /* how many lines to list before invoking -s */
@@ -1004,7 +1004,7 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
             }
             goto check_fuzzy_match;
         }
-        addnew_type autosub;
+        AddNewType autosub;
         if (g_mode != MM_INITIALIZING || !(autosub = auto_subscribe(g_ngname.c_str())))
         {
             autosub = g_addnewbydefault;

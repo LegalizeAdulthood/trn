@@ -23,7 +23,7 @@ enum : ART_UNREAD
     TR_JUNK = (ART_UNREAD) -4,
 };
 
-enum addnew_type : char
+enum AddNewType : char
 {
     ADDNEW_ASK = '\0',
     ADDNEW_SUB = ':',
@@ -82,7 +82,7 @@ extern MULTIRC    *g_sel_next_mp;
 extern List       *g_multirc_list;    /* a list of all MULTIRCs */
 extern MULTIRC    *g_multirc;         /* the current MULTIRC */
 extern bool        g_paranoid;        /* did we detect some inconsistency in .newsrc? */
-extern addnew_type g_addnewbydefault; //
+extern AddNewType g_addnewbydefault; //
 extern bool        g_checkflag;       /* -c */
 extern bool        g_suppress_cn;     /* -s */
 extern int         g_countdown;       /* how many lines to list before invoking -s */

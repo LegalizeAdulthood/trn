@@ -6,6 +6,6 @@
 
 #include "trn/rcstuff.h"
 
-addnew_type auto_subscribe(const char *name);
+AddNewType auto_subscribe(const char *name);
 
 #endif
