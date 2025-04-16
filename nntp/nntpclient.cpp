@@ -326,7 +326,7 @@ static std::string s_nntp_gets_line;
  * the null-terminator, and we need room for our "\r\n"-stripping code
  * to work right, so "len" MUST be at least 3.
  */
-nntp_gets_result nntp_gets(char *bp, int len)
+NNTPGetsResult nntp_gets(char *bp, int len)
 {
     int_sig_holder holder;
 

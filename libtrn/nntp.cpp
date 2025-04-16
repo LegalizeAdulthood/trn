@@ -85,7 +85,7 @@ int nntp_list(const char *type, const char *arg, int len)
 
 void nntp_finish_list()
 {
-    nntp_gets_result ret;
+    NNTPGetsResult ret;
     do
     {
         while ((ret = nntp_gets(g_ser_line, sizeof g_ser_line)) == NGSR_PARTIAL_LINE)

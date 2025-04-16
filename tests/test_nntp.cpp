@@ -142,7 +142,7 @@ TEST_F(NNTPGetStringTest, line_fits)
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this fits")));
     char buffer[1024];
 
-    const nntp_gets_result result = nntp_gets(buffer, sizeof(buffer));
+    const NNTPGetsResult result = nntp_gets(buffer, sizeof(buffer));
 
     EXPECT_EQ(NGSR_FULL_LINE, result);
     EXPECT_EQ("this fits", std::string(buffer));
@@ -153,7 +153,7 @@ TEST_F(NNTPGetStringTest, partial_line)
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this does not fit")));
     char buffer[5];
 
-    const nntp_gets_result result = nntp_gets(buffer, sizeof(buffer));
+    const NNTPGetsResult result = nntp_gets(buffer, sizeof(buffer));
 
     EXPECT_EQ(NGSR_PARTIAL_LINE, result);
     EXPECT_EQ("this", std::string(buffer));
@@ -165,7 +165,7 @@ TEST_F(NNTPGetStringTest, error)
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this does not fit")));
     char buffer[1024]{"junk"};
 
-    const nntp_gets_result result = nntp_gets(buffer, sizeof(buffer));
+    const NNTPGetsResult result = nntp_gets(buffer, sizeof(buffer));
 
     EXPECT_EQ(NGSR_ERROR, result);
     EXPECT_EQ("junk", std::string(buffer));
