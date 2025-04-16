@@ -95,11 +95,13 @@ void init_compex(COMPEX *compex)
 
 void free_compex(COMPEX *compex)
 {
-    if (compex->eblen) {
+    if (compex->eblen)
+    {
         std::free(compex->expbuf);
         compex->eblen = 0;
     }
-    if (compex->brastr) {
+    if (compex->brastr)
+    {
         std::free(compex->brastr);
         compex->brastr = nullptr;
     }
@@ -127,14 +129,17 @@ const char *getbracket(COMPEX *compex, int n)
 
 void case_fold(bool which)
 {
-    if (which != s_folding) {
-        if (which) {
+    if (which != s_folding)
+    {
+        if (which)
+        {
             for (int i = 'A'; i <= 'Z'; i++)
             {
                 s_trans[i] = std::tolower(i);
             }
         }
-        else {
+        else
+        {
             for (int i = 'A'; i <= 'Z'; i++)
             {
                 s_trans[i] = i;
@@ -153,14 +158,16 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
     char* retmes = "Badly formed search string";
 
     case_fold(compex->do_folding = fold);
-    if (!compex->eblen) {
+    if (!compex->eblen)
+    {
         compex->expbuf = safemalloc(84);
         compex->eblen = 80;
     }
     char *ep = compex->expbuf; /* point at expression buffer */
     *alt++ = ep;               /* first alternative starts here */
     char *bracketp = bracket;  /* first bracket goes here */
-    if (*strp == 0) {          /* nothing to compile? */
+    if (*strp == 0)            /* nothing to compile? */
+    {
         if (*ep == 0)          /* nothing there yet? */
         {
             return "Null search string";
@@ -169,14 +176,17 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
     }
     compex->nbra = 0;                   /* no brackets yet */
     char *lastep = nullptr;
-    for (;;) {
+    for (;;)
+    {
         if (ep + 4 - compex->expbuf >= compex->eblen)
         {
             ep = grow_eb(compex, ep, alt);
         }
         int c = *strp++;               /* fetch next char of pattern */
-        if (c == 0) {                  /* end of pattern? */
-            if (bracketp != bracket) { /* balanced brackets? */
+        if (c == 0)                    /* end of pattern? */
+        {
+            if (bracketp != bracket)   /* balanced brackets? */
+            {
                 retmes = "Unbalanced parens";
                 goto cerror;
             }
@@ -188,17 +198,21 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
         {
             lastep = ep;
         }
-        if (!RE) {                      /* just a normal search string? */
+        if (!RE)                        /* just a normal search string? */
+        {
             *ep++ = CCHR;               /* everything is a normal char */
             *ep++ = c;
         }
         else                            /* it is a regular expression */
         {
-            switch (c) {
+            switch (c)
+            {
                 case '\\':              /* meta something */
-                    switch (c = *strp++) {
+                    switch (c = *strp++)
+                    {
                     case '(':
-                        if (compex->nbra >= NBRA) {
+                        if (compex->nbra >= NBRA)
+                        {
                             retmes = "Too many parens";
                             goto cerror;
                         }
@@ -207,19 +221,22 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
                         *ep++ = compex->nbra;
                         break;
                     case '|':
-                        if (bracketp>bracket) {
+                        if (bracketp > bracket)
+                        {
                             retmes = "No \\| in parens";        /* Alas! */
                             goto cerror;
                         }
                         *ep++ = CEND;
                         *alt++ = ep;
-                        if (alt > compex->alternatives + NALTS) {
+                        if (alt > compex->alternatives + NALTS)
+                        {
                                 retmes = "Too many alternatives in reg ex";
                                 goto cerror;
                         }
                         break;
                     case ')':
-                        if (bracketp <= bracket) {
+                        if (bracketp <= bracket)
+                        {
                             retmes = "Unmatched right paren";
                             goto cerror;
                         }
@@ -283,7 +300,8 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
                     *ep++ = CDOL;
                     continue;
 
-                case '[': {             /* character class */
+                case '[':               /* character class */
+                {
                     if (ep - compex->expbuf >= compex->eblen - BMAPSIZ)
                     {
                         ep = grow_eb(compex, ep, alt); /* reserve bitmap */
@@ -295,7 +313,8 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
                     }
 
                     c = *strp++;
-                    if (c == '^') {
+                    if (c == '^')
+                    {
                         c = *strp++;
                         *ep++ = NCCL;   /* negated */
                     }
@@ -305,8 +324,10 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
                     }
 
                     int i = 0;          /* remember oldchar */
-                    do {
-                        if (c == '\0') {
+                    do
+                    {
+                        if (c == '\0')
+                        {
                             retmes = "Missing ]";
                             goto cerror;
                         }
@@ -318,7 +339,8 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
                         {
                             i = c;
                         }
-                        while (c <= i) {
+                        while (c <= i)
+                        {
                             ep[c / BITSPERBYTE] |= 1 << (c % BITSPERBYTE);
                             if (fold && std::isalpha(c))
                             {
@@ -353,7 +375,8 @@ char *grow_eb(COMPEX *compex, char *epp, char **alt)
 
     compex->eblen += 80;
     compex->expbuf = saferealloc(compex->expbuf, (MEM_SIZE)compex->eblen + 4);
-    if (compex->expbuf != oldbuf) {     /* realloc can change expbuf! */
+    if (compex->expbuf != oldbuf)       /* realloc can change expbuf! */
+    {
         epp += compex->expbuf - oldbuf;
         while (altlist != alt)
         {
@@ -372,7 +395,8 @@ const char *execute(COMPEX *compex, const char *addr)
     {
         return nullptr;
     }
-    if (compex->nbra) {                 /* any brackets? */
+    if (compex->nbra)                   /* any brackets? */
+    {
         for (int i = 0; i <= compex->nbra; i++)
         {
             compex->braslist[i] = nullptr;
@@ -387,9 +411,11 @@ const char *execute(COMPEX *compex, const char *addr)
     }
     case_fold(compex->do_folding);      /* make sure table is correct */
     s_first_character = p1;             /* for ^ tests */
-    if (compex->expbuf[0] == CCHR && !compex->alternatives[1]) {
+    if (compex->expbuf[0] == CCHR && !compex->alternatives[1])
+    {
         int c = trt[*(Uchar*)(compex->expbuf + 1)]; /* fast check for first char */
-        do {
+        do
+        {
             if (trt[*(Uchar*)p1] == c && advance(compex, p1, compex->expbuf))
             {
                 return p1;
@@ -402,9 +428,11 @@ const char *execute(COMPEX *compex, const char *addr)
         }
         return nullptr;
     }
-    do {                                /* regular algorithm */
+    do                                  /* regular algorithm */
+    {
         char** alt = compex->alternatives;
-        while (*alt) {
+        while (*alt)
+        {
             if (advance(compex, p1, *alt++))
             {
                 return p1;
@@ -427,9 +455,10 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
     Uchar* trt = s_trans;
     int i;
 
-    while (*lp || (*ep & (STAR|MNULL))) {
-        switch (*ep++) {
-
+    while (*lp || (*ep & (STAR | MNULL)))
+    {
+        switch (*ep++)
+        {
             case CCHR:
                 if (trt[*(Uchar*)ep++] != trt[*(Uchar*)lp])
                 {
@@ -461,14 +490,16 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                 return false;
 
             case WORD:
-                if (std::isalnum(*lp)) {
+                if (std::isalnum(*lp))
+                {
                     lp++;
                     continue;
                 }
                 return false;
 
             case NWORD:
-                if (!std::isalnum(*lp)) {
+                if (!std::isalnum(*lp))
+                {
                     lp++;
                     continue;
                 }
@@ -494,7 +525,8 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                 return true;
 
             case CCL:
-                if (cclass(ep, *lp, 1)) {
+                if (cclass(ep, *lp, 1))
+                {
                     ep += BMAPSIZ;
                     lp++;
                     continue;
@@ -502,7 +534,8 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                 return false;
 
             case NCCL:
-                if (cclass(ep, *lp, 0)) {
+                if (cclass(ep, *lp, 0))
+                {
                     ep += BMAPSIZ;
                     lp++;
                     continue;
@@ -522,12 +555,14 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
 
             case CBACK:
                 i = *ep++;
-                if (compex->braelist[i] == nullptr) {
+                if (compex->braelist[i] == nullptr)
+                {
                     std::fputs("bad braces\n",stdout);
                     s_err = true;
                     return false;
                 }
-                if (backref(compex, i, lp)) {
+                if (backref(compex, i, lp))
+                {
                     lp += compex->braelist[i] - compex->braslist[i];
                     continue;
                 }
@@ -535,16 +570,19 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
 
             case CBACK | STAR:
                 i = *ep++;
-                if (compex->braelist[i] == nullptr) {
+                if (compex->braelist[i] == nullptr)
+                {
                     std::fputs("bad braces\n",stdout);
                     s_err = true;
                     return false;
                 }
                 curlp = lp;
-                while (backref(compex, i, lp)) {
+                while (backref(compex, i, lp))
+                {
                     lp += compex->braelist[i] - compex->braslist[i];
                 }
-                while (lp >= curlp) {
+                while (lp >= curlp)
+                {
                     if (advance(compex, lp, ep))
                     {
                         return true;
@@ -592,7 +630,8 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
                 goto star;
 
         star:
-                do {
+                do
+                {
                     lp--;
                     if (advance(compex, lp, ep))
                     {
@@ -613,7 +652,8 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
 bool backref(COMPEX *compex, int i, const char *lp)
 {
     const char *bp = compex->braslist[i];
-    while (*lp && *bp == *lp) {
+    while (*lp && *bp == *lp)
+    {
         bp++;
         lp++;
         if (bp >= compex->braelist[i])
