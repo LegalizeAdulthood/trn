@@ -65,13 +65,15 @@ bool set_sel_mode(char_int ch)
 {
     switch (ch)
     {
-      case 'a':
+    case 'a':
         set_selector(g_sel_defaultmode = SM_ARTICLE, SS_MAGIC_NUMBER);
         break;
-      case 's':
+
+    case 's':
         set_selector(g_sel_defaultmode = SM_SUBJECT, SS_MAGIC_NUMBER);
         break;
-      case 't':
+
+    case 't':
         if (g_in_ng && !g_threaded_group)
         {
             bool always_save = g_thread_always;
@@ -92,10 +94,12 @@ bool set_sel_mode(char_int ch)
             }
         }
         /* FALL THROUGH */
-      case 'T':
+
+    case 'T':
         set_selector(g_sel_defaultmode = SM_THREAD, SS_MAGIC_NUMBER);
         break;
-      default:
+
+    default:
         set_selector(g_sel_defaultmode, SS_MAGIC_NUMBER);
         return false;
     }
@@ -144,31 +148,39 @@ bool set_sel_sort(sel_mode smode, char_int ch)
 
     switch (ch)
     {
-      case 'd':  case 'D':
+    case 'd':  case 'D':
         ssort = SS_DATE;
         break;
-      case 's':  case 'S':
+
+    case 's':  case 'S':
         ssort = SS_STRING;
         break;
-      case 'a':  case 'A':
+
+    case 'a':  case 'A':
         ssort = SS_AUTHOR;
         break;
-      case 'c':  case 'C':
+
+    case 'c':  case 'C':
         ssort = SS_COUNT;
         break;
-      case 'n':  case 'N':
+
+    case 'n':  case 'N':
         ssort = SS_NATURAL;
         break;
-      case 'g':  case 'G':
+
+    case 'g':  case 'G':
         ssort = SS_GROUPS;
         break;
-      case 'l':  case 'L':
+
+    case 'l':  case 'L':
         ssort = SS_LINES;
         break;
-      case 'p':  case 'P':
+
+    case 'p':  case 'P':
         ssort = SS_SCORE;
         break;
-      default:
+
+    default:
         return false;
     }
 
@@ -208,26 +220,32 @@ void set_selector(sel_mode smode, sel_sort_mode ssort)
     {
         switch (g_sel_mode)
         {
-          case SM_MULTIRC:
+        case SM_MULTIRC:
             ssort = SS_NATURAL;
             break;
-          case SM_ADDGROUP:
+
+        case SM_ADDGROUP:
             ssort = s_sel_addgroupsort;
             break;
-          case SM_NEWSGROUP:
+
+        case SM_NEWSGROUP:
             ssort = g_sel_newsgroupsort;
             break;
-          case SM_OPTIONS:
+
+        case SM_OPTIONS:
             ssort = SS_NATURAL;
             break;
-          case SM_THREAD:
-          case SM_SUBJECT:
+
+        case SM_THREAD:
+        case SM_SUBJECT:
             ssort = g_sel_threadsort;
             break;
-          case SM_ARTICLE:
+
+        case SM_ARTICLE:
             ssort = g_sel_artsort;
             break;
-          case SM_UNIVERSAL:
+
+        case SM_UNIVERSAL:
             ssort = s_sel_univsort;
             break;
         }
@@ -250,30 +268,36 @@ void set_selector(sel_mode smode, sel_sort_mode ssort)
 
     switch (g_sel_mode)
     {
-      case SM_MULTIRC:
+    case SM_MULTIRC:
         g_sel_mode_string = "a newsrc group";
         break;
-      case SM_ADDGROUP:
+
+    case SM_ADDGROUP:
         g_sel_mode_string = "a newsgroup to add";
         s_sel_addgroupsort = ssort;
         break;
-      case SM_NEWSGROUP:
+
+    case SM_NEWSGROUP:
         g_sel_mode_string = "a newsgroup";
         g_sel_newsgroupsort = ssort;
         break;
-      case SM_OPTIONS:
+
+    case SM_OPTIONS:
         g_sel_mode_string = "an option to change";
         break;
-      case SM_UNIVERSAL:
+
+    case SM_UNIVERSAL:
         g_sel_mode_string = "an item";
         s_sel_univsort = ssort;
         break;
-      case SM_THREAD:
+
+    case SM_THREAD:
         g_sel_mode_string = "threads";
         g_sel_threadmode = smode;
         g_sel_threadsort = ssort;
         goto thread_subj_sort;
-      case SM_SUBJECT:
+
+    case SM_SUBJECT:
         g_sel_mode_string = "subjects";
         g_sel_threadmode = smode;
         g_sel_threadsort = ssort;
@@ -283,7 +307,8 @@ void set_selector(sel_mode smode, sel_sort_mode ssort)
               g_sel_sort = SS_DATE;
           }
         break;
-      case SM_ARTICLE:
+
+    case SM_ARTICLE:
         g_sel_mode_string = "articles";
         g_sel_artsort = ssort;
         if (g_sel_sort == SS_COUNT)
@@ -295,25 +320,31 @@ void set_selector(sel_mode smode, sel_sort_mode ssort)
 
     switch (g_sel_sort)
     {
-      case SS_DATE:
+    case SS_DATE:
         g_sel_sort_string = "date";
         break;
-      case SS_STRING:
+
+    case SS_STRING:
         g_sel_sort_string = "subject";
         break;
-      case SS_AUTHOR:
+
+    case SS_AUTHOR:
         g_sel_sort_string = "author";
         break;
-      case SS_COUNT:
+
+    case SS_COUNT:
         g_sel_sort_string = "count";
         break;
-      case SS_LINES:
+
+    case SS_LINES:
         g_sel_sort_string = "lines";
         break;
-      case SS_NATURAL:
+
+    case SS_NATURAL:
         g_sel_sort_string = "natural";
         break;
-      case SS_GROUPS:
+
+    case SS_GROUPS:
         if (g_sel_mode == SM_NEWSGROUP)
         {
             g_sel_sort_string = "group name";
@@ -323,7 +354,8 @@ void set_selector(sel_mode smode, sel_sort_mode ssort)
             g_sel_sort_string = "SubjDate";
         }
         break;
-      case SS_SCORE:
+
+    case SS_SCORE:
         g_sel_sort_string = "points";
         break;
     }
@@ -362,10 +394,10 @@ try_again:
 
     switch (g_sel_mode)
     {
-      case SM_MULTIRC:
-      {
-          for (MULTIRC *mp = multirc_low(); mp; mp = multirc_next(mp))
-          {
+    case SM_MULTIRC:
+    {
+        for (MULTIRC *mp = multirc_low(); mp; mp = multirc_next(mp))
+        {
             if (mp->first)
             {
                 mp->flags |= MF_INCLUDED;
@@ -381,9 +413,10 @@ try_again:
             (void) first_page();
         }
         break;
-      }
-      case SM_NEWSGROUP:
-      {
+    }
+
+    case SM_NEWSGROUP:
+    {
         bool save_the_rest = false;
         s_group_init_done = true;
         sort_newsgroups();
@@ -490,9 +523,10 @@ try_again:
             }
         }
         break;
-      }
-      case SM_ADDGROUP:
-      {
+    }
+
+    case SM_ADDGROUP:
+    {
         sort_addgroups();
         g_obj_count = 0;
         for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next)
@@ -540,9 +574,10 @@ try_again:
             }
         }
         break;
-      }
-      case SM_UNIVERSAL:
-      {
+    }
+
+    case SM_UNIVERSAL:
+    {
         g_obj_count = 0;
 
         sort_univ();
@@ -556,15 +591,16 @@ try_again:
             bool ui_elig = true;
             switch (ui->type)
             {
-              case UN_GROUP_DESEL:
-              case UN_VGROUP_DESEL:
-              case UN_DELETED:
-              case UN_VGROUP:               /* first-pass item */
+            case UN_GROUP_DESEL:
+            case UN_VGROUP_DESEL:
+            case UN_DELETED:
+            case UN_VGROUP:               /* first-pass item */
                 /* always ineligible items */
                 ui_elig = false;
                 break;
-              case UN_NEWSGROUP:
-              {
+
+            case UN_NEWSGROUP:
+            {
                 if (!ui->data.group.ng)
                 {
                     ui_elig = false;
@@ -587,8 +623,9 @@ try_again:
                     ui_elig = false;
                 }
                 break;
-              }
-              case UN_ARTICLE:
+            }
+
+            case UN_ARTICLE:
                 /* later: use the datasrc of the newsgroup */
                 ui_elig = !was_read_group(g_datasrc, ui->data.virt.num,
                                           ui->data.virt.ng);
@@ -597,7 +634,8 @@ try_again:
                     ui_elig = !ui_elig;
                 }
                 break;
-              default:
+
+            default:
                 ui_elig = !g_sel_rereading;
                 break;
             }
@@ -639,9 +677,10 @@ try_again:
             }
         }
         break;
-      }
-      case SM_OPTIONS:
-      {
+    }
+
+    case SM_OPTIONS:
+    {
         int included = 0;
         g_obj_count = 0;
         for (int op = 1; g_options_ini[op].checksum; op++)
@@ -692,9 +731,10 @@ try_again:
             }
         }
         break;
-      }
-      case SM_ARTICLE:
-      {
+    }
+
+    case SM_ARTICLE:
+    {
         ARTICLE* ap;
         ARTICLE** app;
         ARTICLE** limit;
@@ -786,9 +826,10 @@ try_again:
             }
         }
         break;
-      }
-      default:
-      {
+    }
+
+    default:
+    {
         if (g_sel_page_sp)
         {
             while (g_sel_page_sp && g_sel_page_sp->misc == 0)
@@ -877,7 +918,7 @@ try_again:
                 (void) last_page();
             }
         }
-      }
+    }
     }
 }
 
@@ -887,10 +928,10 @@ bool first_page()
 
     switch (g_sel_mode)
     {
-      case SM_MULTIRC:
-      {
-          for (MULTIRC *mp = multirc_low(); mp; mp = multirc_next(mp))
-          {
+    case SM_MULTIRC:
+    {
+        for (MULTIRC *mp = multirc_low(); mp; mp = multirc_next(mp))
+        {
             if (mp->flags & MF_INCLUDED)
             {
                 if (g_sel_page_mp != mp)
@@ -902,11 +943,12 @@ bool first_page()
             }
         }
         break;
-      }
-      case SM_NEWSGROUP:
-      {
-          for (NGDATA *np = g_first_ng; np; np = np->next)
-          {
+    }
+
+    case SM_NEWSGROUP:
+    {
+        for (NGDATA *np = g_first_ng; np; np = np->next)
+        {
             if (np->flags & NF_INCLUDED)
             {
                 if (g_sel_page_np != np)
@@ -918,11 +960,12 @@ bool first_page()
             }
         }
         break;
-      }
-      case SM_ADDGROUP:
-      {
-          for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next)
-          {
+    }
+
+    case SM_ADDGROUP:
+    {
+        for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next)
+        {
             if (gp->flags & AGF_INCLUDED)
             {
                 if (g_sel_page_gp != gp)
@@ -934,11 +977,12 @@ bool first_page()
             }
         }
         break;
-      }
-      case SM_UNIVERSAL:
-      {
-          for (UNIV_ITEM *ui = g_first_univ; ui; ui = ui->next)
-          {
+    }
+
+    case SM_UNIVERSAL:
+    {
+        for (UNIV_ITEM *ui = g_first_univ; ui; ui = ui->next)
+        {
             if (ui->flags & UF_INCLUDED)
             {
                 if (sel_page_univ != ui)
@@ -950,18 +994,20 @@ bool first_page()
             }
         }
         break;
-      }
-      case SM_OPTIONS:
-      {
+    }
+
+    case SM_OPTIONS:
+    {
         if (g_sel_page_op != 1)
         {
             g_sel_page_op = 1;
             return true;
         }
         break;
-      }
-      case SM_ARTICLE:
-      {
+    }
+
+    case SM_ARTICLE:
+    {
         ARTICLE **limit = g_artptr_list + g_artptr_list_size;
         for (ARTICLE **app = g_artptr_list; app < limit; app++)
         {
@@ -976,11 +1022,12 @@ bool first_page()
             }
         }
         break;
-      }
-      default:
-      {
-          for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
-          {
+    }
+
+    default:
+    {
+        for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
+        {
             if (sp->flags & SF_INCLUDED)
             {
                 if (g_sel_page_sp != sp)
@@ -992,7 +1039,7 @@ bool first_page()
             }
         }
         break;
-      }
+    }
     }
     return false;
 }
@@ -1003,8 +1050,8 @@ bool last_page()
 
     switch (g_sel_mode)
     {
-      case SM_MULTIRC:
-      {
+    case SM_MULTIRC:
+    {
         MULTIRC* mp = g_sel_page_mp;
         g_sel_page_mp = nullptr;
         if (!prev_page())
@@ -1016,9 +1063,10 @@ bool last_page()
             return true;
         }
         break;
-      }
-      case SM_NEWSGROUP:
-      {
+    }
+
+    case SM_NEWSGROUP:
+    {
         NGDATA* np = g_sel_page_np;
         g_sel_page_np = nullptr;
         if (!prev_page())
@@ -1030,9 +1078,10 @@ bool last_page()
             return true;
         }
         break;
-      }
-      case SM_ADDGROUP:
-      {
+    }
+
+    case SM_ADDGROUP:
+    {
         ADDGROUP* gp = g_sel_page_gp;
         g_sel_page_gp = nullptr;
         if (!prev_page())
@@ -1044,9 +1093,10 @@ bool last_page()
             return true;
         }
         break;
-      }
-      case SM_UNIVERSAL:
-      {
+    }
+
+    case SM_UNIVERSAL:
+    {
         UNIV_ITEM* ui = sel_page_univ;
         sel_page_univ = nullptr;
         if (!prev_page())
@@ -1058,9 +1108,10 @@ bool last_page()
             return true;
         }
         break;
-      }
-      case SM_OPTIONS:
-      {
+    }
+
+    case SM_OPTIONS:
+    {
         int op = g_sel_page_op;
         g_sel_page_op = g_obj_count+1;
         if (!prev_page())
@@ -1072,9 +1123,10 @@ bool last_page()
             return true;
         }
         break;
-      }
-      case SM_ARTICLE:
-      {
+    }
+
+    case SM_ARTICLE:
+    {
         ARTICLE** app = g_sel_page_app;
         g_sel_page_app = g_artptr_list + g_artptr_list_size;
         if (!prev_page())
@@ -1086,9 +1138,10 @@ bool last_page()
             return true;
         }
         break;
-      }
-      default:
-      {
+    }
+
+    default:
+    {
         SUBJECT* sp = g_sel_page_sp;
         g_sel_page_sp = nullptr;
         if (!prev_page())
@@ -1100,7 +1153,7 @@ bool last_page()
             return true;
         }
         break;
-      }
+    }
     }
     return false;
 }
@@ -1109,8 +1162,8 @@ bool next_page()
 {
     switch (g_sel_mode)
     {
-      case SM_MULTIRC:
-      {
+    case SM_MULTIRC:
+    {
         if (g_sel_next_mp)
         {
             g_sel_page_mp = g_sel_next_mp;
@@ -1118,9 +1171,10 @@ bool next_page()
             return true;
         }
         break;
-      }
-      case SM_NEWSGROUP:
-      {
+    }
+
+    case SM_NEWSGROUP:
+    {
         if (g_sel_next_np)
         {
             g_sel_page_np = g_sel_next_np;
@@ -1128,9 +1182,10 @@ bool next_page()
             return true;
         }
         break;
-      }
-      case SM_ADDGROUP:
-      {
+    }
+
+    case SM_ADDGROUP:
+    {
         if (g_sel_next_gp)
         {
             g_sel_page_gp = g_sel_next_gp;
@@ -1138,9 +1193,10 @@ bool next_page()
             return true;
         }
         break;
-      }
-      case SM_UNIVERSAL:
-      {
+    }
+
+    case SM_UNIVERSAL:
+    {
         if (g_sel_next_univ)
         {
             sel_page_univ = g_sel_next_univ;
@@ -1148,9 +1204,10 @@ bool next_page()
             return true;
         }
         break;
-      }
-      case SM_OPTIONS:
-      {
+    }
+
+    case SM_OPTIONS:
+    {
         if (s_sel_next_op <= g_obj_count)
         {
             g_sel_page_op = s_sel_next_op;
@@ -1158,9 +1215,10 @@ bool next_page()
             return true;
         }
         break;
-      }
-      case SM_ARTICLE:
-      {
+    }
+
+    case SM_ARTICLE:
+    {
         if (g_sel_next_app < g_artptr_list + g_artptr_list_size)
         {
             g_sel_page_app = g_sel_next_app;
@@ -1168,9 +1226,10 @@ bool next_page()
             return true;
         }
         break;
-      }
-      default:
-      {
+    }
+
+    default:
+    {
         if (g_sel_next_sp)
         {
             g_sel_page_sp = g_sel_next_sp;
@@ -1178,7 +1237,7 @@ bool next_page()
             return true;
         }
         break;
-      }
+    }
     }
     return false;
 }
@@ -1190,8 +1249,8 @@ bool prev_page()
     /* Scan the items in reverse to go back a page */
     switch (g_sel_mode)
     {
-      case SM_MULTIRC:
-      {
+    case SM_MULTIRC:
+    {
         MULTIRC* mp = g_sel_page_mp;
         MULTIRC* page_mp = g_sel_page_mp;
 
@@ -1222,9 +1281,10 @@ bool prev_page()
             return true;
         }
         break;
-      }
-      case SM_NEWSGROUP:
-      {
+    }
+
+    case SM_NEWSGROUP:
+    {
         NGDATA* np = g_sel_page_np;
         NGDATA* page_np = g_sel_page_np;
 
@@ -1255,9 +1315,10 @@ bool prev_page()
             return true;
         }
         break;
-      }
-      case SM_ADDGROUP:
-      {
+    }
+
+    case SM_ADDGROUP:
+    {
         ADDGROUP* gp = g_sel_page_gp;
         ADDGROUP* page_gp = g_sel_page_gp;
 
@@ -1288,9 +1349,10 @@ bool prev_page()
             return true;
         }
         break;
-      }
-      case SM_UNIVERSAL:
-      {
+    }
+
+    case SM_UNIVERSAL:
+    {
         UNIV_ITEM* ui = sel_page_univ;
         UNIV_ITEM* page_ui = sel_page_univ;
 
@@ -1321,9 +1383,10 @@ bool prev_page()
             return true;
         }
         break;
-      }
-      case SM_OPTIONS:
-      {
+    }
+
+    case SM_OPTIONS:
+    {
         int op = g_sel_page_op;
         int page_op = g_sel_page_op;
 
@@ -1345,9 +1408,10 @@ bool prev_page()
             return true;
         }
         break;
-      }
-      case SM_ARTICLE:
-      {
+    }
+
+    case SM_ARTICLE:
+    {
         ARTICLE** page_app = g_sel_page_app;
 
         for (ARTICLE **app = g_sel_page_app; --app >= g_artptr_list;)
@@ -1367,9 +1431,10 @@ bool prev_page()
             g_sel_page_app = page_app;
             return true;
         }
-      }
-      default:
-      {
+    }
+
+    default:
+    {
         SUBJECT*page_sp = g_sel_page_sp;
         int       line_cnt;
 
@@ -1414,7 +1479,7 @@ bool prev_page()
             return true;
         }
         break;
-      }
+    }
     }
     return false;
 }
@@ -1434,8 +1499,8 @@ try_again:
 
     switch (g_sel_mode)
     {
-      case SM_MULTIRC:
-      {
+    case SM_MULTIRC:
+    {
         MULTIRC* mp = g_sel_page_mp;
         if (mp)
         {
@@ -1455,9 +1520,10 @@ try_again:
         g_sel_page_obj_cnt = g_sel_page_item_cnt;
         g_sel_next_mp = mp;
         break;
-      }
-      case SM_NEWSGROUP:
-      {
+    }
+
+    case SM_NEWSGROUP:
+    {
         NGDATA* np = g_sel_page_np;
         for (; np && g_sel_page_item_cnt < s_sel_max_per_page; np = np->next)
         {
@@ -1473,9 +1539,10 @@ try_again:
         g_sel_page_obj_cnt = g_sel_page_item_cnt;
         g_sel_next_np = np;
         break;
-      }
-      case SM_ADDGROUP:
-      {
+    }
+
+    case SM_ADDGROUP:
+    {
         ADDGROUP* gp = g_sel_page_gp;
         for (; gp && g_sel_page_item_cnt < s_sel_max_per_page; gp = gp->next)
         {
@@ -1491,9 +1558,10 @@ try_again:
         g_sel_page_obj_cnt = g_sel_page_item_cnt;
         g_sel_next_gp = gp;
         break;
-      }
-      case SM_UNIVERSAL:
-      {
+    }
+
+    case SM_UNIVERSAL:
+    {
         UNIV_ITEM* ui = sel_page_univ;
         for (; ui && g_sel_page_item_cnt < s_sel_max_per_page; ui = ui->next)
         {
@@ -1509,9 +1577,10 @@ try_again:
         g_sel_page_obj_cnt = g_sel_page_item_cnt;
         g_sel_next_univ = ui;
         break;
-      }
-      case SM_OPTIONS:
-      {
+    }
+
+    case SM_OPTIONS:
+    {
         int op = g_sel_page_op;
         for (; op <= g_obj_count && g_sel_page_item_cnt < s_sel_max_per_page; op++)
         {
@@ -1527,9 +1596,10 @@ try_again:
         g_sel_page_obj_cnt = g_sel_page_item_cnt;
         s_sel_next_op = op;
         break;
-      }
-      case SM_ARTICLE:
-      {
+    }
+
+    case SM_ARTICLE:
+    {
         ARTICLE** app = g_sel_page_app;
         ARTICLE** limit = g_artptr_list + g_artptr_list_size;
         for (; app < limit && g_sel_page_item_cnt < s_sel_max_per_page; app++)
@@ -1546,9 +1616,10 @@ try_again:
         g_sel_page_obj_cnt = g_sel_page_item_cnt;
         g_sel_next_app = app;
         break;
-      }
-      default:
-      {
+    }
+
+    default:
+    {
           SUBJECT *sp = g_sel_page_sp;
           int      line_cnt;
           int      sel;
@@ -1598,7 +1669,7 @@ try_again:
         }
         g_sel_next_sp = sp;
         break;
-      }
+    }
     }
     if (u.op != -1 && g_sel_item_index < 0)
     {
@@ -2168,21 +2239,25 @@ void update_page()
         SEL_UNION u = g_sel_items[j].u;
         switch (g_sel_mode)
         {
-          case SM_MULTIRC:
+        case SM_MULTIRC:
             // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
             TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DELSEL)) == 0);
             sel = !!(u.mp->flags & static_cast<multirc_flags>(g_sel_mask));
             break;
-          case SM_NEWSGROUP:
+
+        case SM_NEWSGROUP:
             sel = !!(u.np->flags & g_sel_mask) + (u.np->flags & NF_DEL);
             break;
-          case SM_ADDGROUP:
+
+        case SM_ADDGROUP:
             sel = !!(u.gp->flags & g_sel_mask) + (u.gp->flags & AGF_DEL);
             break;
-          case SM_UNIVERSAL:
+
+        case SM_UNIVERSAL:
             sel = !!(u.un->flags & g_sel_mask) + (u.un->flags & UF_DEL);
             break;
-          case SM_OPTIONS:
+
+        case SM_OPTIONS:
             if (*g_options_ini[u.op].item == '*')
             {
                 sel = !!(g_option_flags[u.op] & OF_SEL);
@@ -2194,13 +2269,16 @@ void update_page()
                                (g_option_def_vals[u.op]? 0 : 2));
             }
             break;
-          case SM_ARTICLE:
+
+        case SM_ARTICLE:
             sel = !!(u.ap->flags & g_sel_mask) + (u.ap->flags & AF_DEL);
             break;
-          case SM_THREAD:
+
+        case SM_THREAD:
             (void) count_thread_lines(u.sp, &sel);
             break;
-          default:
+
+        default:
             (void) count_subject_lines(u.sp, &sel);
             break;
         }
@@ -2243,16 +2321,19 @@ void output_sel(int ix, int sel, bool update)
 
     switch (sel)
     {
-      case 1:                   /* '+' */
+    case 1:                   /* '+' */
         color_object(COLOR_PLUS, true);
         break;
-      case 2:                   /* '-' */
+
+    case 2:                   /* '-' */
         color_object(COLOR_MINUS, true);
         break;
-      case 3:                   /* '*' */
+
+    case 3:                   /* '*' */
         color_object(COLOR_STAR, true);
         break;
-      default:
+
+    default:
         color_object(COLOR_DEFAULT, true);
         sel = 0;
         break;
@@ -2539,8 +2620,8 @@ static void display_univ(const UNIV_ITEM *ui)
     {
         switch (ui->type)
         {
-          case UN_NEWSGROUP:
-          {
+        case UN_NEWSGROUP:
+        {
               /* later error check the UI? */
             NGDATA *np = find_ng(ui->data.group.ng);
             if (!np)
@@ -2571,16 +2652,19 @@ static void display_univ(const UNIV_ITEM *ui)
             }
             newline();
             break;
-          }
-          case UN_ARTICLE:
+        }
+
+        case UN_ARTICLE:
             std::printf("      %s",ui->desc? ui->desc : univ_article_desc(ui));
             newline();
             break;
-          case UN_HELPKEY:
+
+        case UN_HELPKEY:
             std::printf("      Help on the %s",univ_keyhelp_modestr(ui));
             newline();
             break;
-          default:
+
+        default:
             std::printf("      %s",ui->desc? ui->desc : "[No Description]");
             newline();
             break;
