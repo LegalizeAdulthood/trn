@@ -80,7 +80,8 @@ save_result save_article()
     mime_SetArticle();
     clear_artbuf();
     g_savefrom = (cmd == 'w' || cmd == 'e')? g_htype[PAST_HEADER].minpos : 0;
-    if (artopen(g_art,g_savefrom) == nullptr) {
+    if (artopen(g_art, g_savefrom) == nullptr)
+    {
         if (g_verbose)
         {
             std::fputs("\nCan't save an empty article.\n", stdout);
@@ -92,11 +93,13 @@ save_result save_article()
         termdown(2);
         return SAVE_DONE;
     }
-    if (change_dir(g_privdir)) {
+    if (change_dir(g_privdir))
+    {
         std::printf(g_nocd,g_privdir.c_str());
         sig_catcher(0);
     }
-    if (cmd == 'e') {           /* is this an extract command? */
+    if (cmd == 'e')             /* is this an extract command? */
+    {
         static bool custom_extract = false;
         char*       cmdstr;
         int         partOpt = 0;
@@ -104,13 +107,15 @@ save_result save_article()
 
         s = g_buf+1;            /* skip e */
         s = skip_eq(s, ' ');    /* skip leading spaces */
-        if (*s == '-' && std::isdigit(s[1])) {
+        if (*s == '-' && std::isdigit(s[1]))
+        {
             partOpt = std::atoi(s+1);
             do
             {
                 s++;
             } while (std::isdigit(*s));
-            if (*s == '/') {
+            if (*s == '/')
+            {
                 ++s;
                 totalOpt = std::atoi(s);
                 s = skip_digits(s);
@@ -123,7 +128,8 @@ save_result save_article()
         }
         safecpy(altbuf,filexp(s),sizeof altbuf);
         s = altbuf;
-        if (*s) {
+        if (*s)
+        {
             cmdstr = cpytill(g_buf,s,'|');      /* check for | */
             s = g_buf + std::strlen(g_buf)-1;
             while (*s == ' ')
@@ -131,10 +137,12 @@ save_result save_article()
                 s--;                            /* trim trailing spaces */
             }
             *++s = '\0';
-            if (*cmdstr) {
+            if (*cmdstr)
+            {
                 s = cmdstr+1;                   /* skip | */
                 s = skip_eq(s, ' ');
-                if (*s) {                       /* if new command, use it */
+                if (*s)                         /* if new command, use it */
+                {
                     g_extractprog = s;          /* put extracter in %e */
                 }
                 else
@@ -150,7 +158,8 @@ save_result save_article()
             }
             s = g_buf;
         }
-        else {
+        else
+        {
             if (!g_extractdest.empty())
             {
                 std::strcpy(s, g_extractdest.c_str());
@@ -168,14 +177,16 @@ save_result save_article()
         }
         custom_extract = (cmdstr != nullptr);
 
-        if (!FILE_REF(s)) {     /* relative path? */
+        if (!FILE_REF(s))       /* relative path? */
+        {
             c = (s==g_buf ? altbuf : g_buf);
             interp(c, (sizeof g_buf), get_val("SAVEDIR",SAVEDIR));
             if (makedir(c, MD_DIR))      /* ensure directory exists */
             {
                 std::strcpy(c,g_privdir.c_str());
             }
-            if (*s) {
+            if (*s)
+            {
                 while (*c)
                 {
                     c++;
@@ -185,7 +196,8 @@ save_result save_article()
             }
             s = (s==g_buf ? altbuf : g_buf);
         }
-        if (!FILE_REF(s)) {     /* path still relative? */
+        if (!FILE_REF(s))       /* path still relative? */
+        {
             c = (s==g_buf ? altbuf : g_buf);
             std::sprintf(c, "%s/%s", g_privdir.c_str(), s);
             s = c;                      /* absolutize it */
@@ -196,27 +208,32 @@ save_result save_article()
             std::strcpy(buff, g_extractdest.c_str());
             s = buff;
         }
-        if (makedir(s, MD_DIR)) {       /* ensure directory exists */
+        if (makedir(s, MD_DIR))         /* ensure directory exists */
+        {
             g_int_count++;
             return SAVE_DONE;
         }
-        if (change_dir(s)) {
+        if (change_dir(s))
+        {
             std::printf(g_nocd,s);
             sig_catcher(0);
         }
         c = trn_getwd(g_buf, sizeof(g_buf));    /* simplify path for output */
-        if (custom_extract) {
+        if (custom_extract)
+        {
             std::printf("Extracting article into %s using %s\n",c,g_extractprog.c_str());
             termdown(1);
             interp(g_cmd_buf, sizeof g_cmd_buf, get_val("CUSTOMSAVER",CUSTOMSAVER));
             invoke(g_cmd_buf, nullptr);
         }
-        else if (g_is_mime) {
+        else if (g_is_mime)
+        {
             std::printf("Extracting MIME article into %s:\n", c);
             termdown(1);
             mime_DecodeArticle(false);
         }
-        else {
+        else
+        {
             char *filename;
             int   part;
             int   total;
@@ -241,21 +258,23 @@ save_result save_article()
                 {
                     continue;   /* Ignore empty or initially-whitespace lines */
                 }
-                if (((*g_art_line == '#' || *g_art_line == ':')
-                  && (!std::strncmp(g_art_line+1, "! /bin/sh", 9)
-                   || !std::strncmp(g_art_line+1, "!/bin/sh", 8)
-                   || !std::strncmp(g_art_line+2, "This is ", 8)))
+                if (((*g_art_line == '#' || *g_art_line == ':')            //
+                     && (!std::strncmp(g_art_line + 1, "! /bin/sh", 9)     //
+                         || !std::strncmp(g_art_line + 1, "!/bin/sh", 8)   //
+                         || !std::strncmp(g_art_line + 2, "This is ", 8))) //
 #if 0
-                 || !std::strncmp(g_art_line, "sed ", 4)
-                 || !std::strncmp(g_art_line, "cat ", 4)
-                 || !std::strncmp(g_art_line, "echo ", 5)
+                    || !std::strncmp(g_art_line, "sed ", 4)                //
+                    || !std::strncmp(g_art_line, "cat ", 4)                //
+                    || !std::strncmp(g_art_line, "echo ", 5)               //
 #endif
-                ) {
+                )
+                {
                     g_savefrom = g_artpos;
                     decode_type = 1;
                     break;
                 }
-                if (uue_prescan(g_art_line,&filename,&part,&total)) {
+                if (uue_prescan(g_art_line, &filename, &part, &total))
+                {
                     g_savefrom = g_artpos;
                     seekart(g_savefrom);
                     decode_type = 2;
@@ -266,7 +285,8 @@ save_result save_article()
                     break;
                 }
             }/* for */
-            switch (decode_type) {
+            switch (decode_type)
+            {
               case 1:
                 std::printf("Extracting shar into %s:\n", c);
                 termdown(1);
@@ -282,7 +302,8 @@ save_result save_article()
                 g_mime_section->encoding = MENCODE_UUE;
                 g_mime_section->part = part;
                 g_mime_section->total = total;
-                if (!decode_piece(nullptr,nullptr) && *g_msg) {
+                if (!decode_piece(nullptr,nullptr) && *g_msg)
+                {
                     newline();
                     std::fputs(g_msg,stdout);
                 }
@@ -295,7 +316,8 @@ save_result save_article()
             }
         }/* if */
     }
-    else if ((s = std::strchr(g_buf,'|')) != nullptr) { /* is it a pipe command? */
+    else if ((s = std::strchr(g_buf,'|')) != nullptr)   /* is it a pipe command? */
+    {
         s++;                    /* skip the | */
         s = skip_eq(s, ' ');
         safecpy(altbuf,filexp(s),sizeof altbuf);
@@ -321,13 +343,15 @@ save_result save_article()
         crmode();               /* and start cbreaking */
         termlib_init();
     }
-    else {                      /* normal save */
+    else                        /* normal save */
+    {
         bool  there;
         bool  mailbox;
         char * savename = get_val("SAVENAME",SAVENAME);
 
         s = g_buf+1;            /* skip s or S */
-        if (*s == '-') {        /* if they are confused, skip - also */
+        if (*s == '-')          /* if they are confused, skip - also */
+        {
             if (g_verbose)
             {
                 std::fputs("Warning: '-' ignored.  This isn't readnews.\n", stdout);
@@ -345,13 +369,15 @@ save_result save_article()
         }
         safecpy(altbuf,filexp(s),sizeof altbuf);
         s = altbuf;
-        if (!FILE_REF(s)) {
+        if (!FILE_REF(s))
+        {
             interp(g_buf, (sizeof g_buf), get_val("SAVEDIR",SAVEDIR));
             if (makedir(g_buf, MD_DIR))  /* ensure directory exists */
             {
                 std::strcpy(g_buf, g_privdir.c_str());
             }
-            if (*s) {
+            if (*s)
+            {
                 for (c = g_buf; *c; c++)
                 {
                 }
@@ -363,8 +389,8 @@ save_result save_article()
         stat_t save_dir_stat{};
         for (int i = 0;
             (there = stat(s,&save_dir_stat) >= 0) && S_ISDIR(save_dir_stat.st_mode);
-            i++) {                      /* is it a directory? */
-
+            i++)                        /* is it a directory? */
+        {
             c = (s+std::strlen(s));
             *c++ = '/';                 /* put a slash before filename */
             static char s_news[] = "News";
@@ -372,14 +398,16 @@ save_result save_article()
                                 /* generate a default name somehow or other */
         }
         makedir(s, MD_FILE);
-        if (!FILE_REF(s)) {     /* relative path? */
+        if (!FILE_REF(s))       /* relative path? */
+        {
             c = (s==g_buf ? altbuf : g_buf);
             std::sprintf(c, "%s/%s", g_privdir.c_str(), s);
             s = c;                      /* absolutize it */
         }
         g_savedest = s; /* make it handy for %b */
         s_tmpfp = nullptr;
-        if (!there) {
+        if (!there)
+        {
             if (g_mbox_always)
             {
                 mailbox = true;
@@ -388,7 +416,8 @@ save_result save_article()
             {
                 mailbox = false;
             }
-            else {
+            else
+            {
                 const char* dflt = (in_string(savename,"%a", true) ? "nyq" : "ynq");
 
                 std::sprintf(g_cmd_buf,
@@ -397,7 +426,8 @@ save_result save_article()
                 in_char(g_cmd_buf, MM_USE_MAILBOX_FORMAT_PROMPT, dflt);
                 newline();
                 printcmd();
-                if (*g_buf == 'h') {
+                if (*g_buf == 'h')
+                {
                     if (g_verbose)
                     {
                         std::printf("\n"
@@ -417,16 +447,20 @@ save_result save_article()
                     termdown(4);
                     goto reask_save;
                 }
-                else if (*g_buf == 'n') {
+                else if (*g_buf == 'n')
+                {
                     mailbox = false;
                 }
-                else if (*g_buf == 'y') {
+                else if (*g_buf == 'y')
+                {
                     mailbox = true;
                 }
-                else if (*g_buf == 'q') {
+                else if (*g_buf == 'q')
+                {
                     goto s_bomb;
                 }
-                else {
+                else
+                {
                     std::fputs(g_hforhelp,stdout);
                     termdown(1);
                     settle_down();
@@ -438,21 +472,25 @@ save_result save_article()
         {
             mailbox = false;
         }
-        else {
+        else
+        {
             s_tmpfp = std::fopen(s,"r+");
             if (!s_tmpfp)
             {
                 mailbox = false;
             }
-            else {
-                if (std::fread(g_buf,1,LBUFLEN,s_tmpfp)) {
+            else
+            {
+                if (std::fread(g_buf, 1, LBUFLEN, s_tmpfp))
+                {
                     c = g_buf;
                     if (!std::isspace(MBOXCHAR))   /* if non-zero, */
                     {
                         c = skip_space(c);   /* check the first character */
                     }
                     mailbox = (*c == MBOXCHAR);
-                } else
+                }
+                else
                 {
                     mailbox = g_mbox_always;    /* if zero length, recheck -M */
                 }
@@ -461,7 +499,8 @@ save_result save_article()
 
         s = get_val(mailbox ? "MBOXSAVER" : "NORMSAVER");
         int i;
-        if (s) {
+        if (s)
+        {
             if (s_tmpfp)
             {
                 std::fclose(s_tmpfp);
@@ -478,10 +517,12 @@ save_result save_article()
             noecho();           /* make terminal do what we want */
             crmode();
         }
-        else if (s_tmpfp != nullptr || (s_tmpfp = std::fopen(g_savedest.c_str(), "a")) != nullptr) {
+        else if (s_tmpfp != nullptr || (s_tmpfp = std::fopen(g_savedest.c_str(), "a")) != nullptr)
+        {
             bool quote_From = false;
             std::fseek(s_tmpfp,0,2);
-            if (mailbox) {
+            if (mailbox)
+            {
 #if MBOXCHAR == '\001'
                 std::fprintf(s_tmpfp,"\001\001\001\001\n");
 #else
@@ -495,7 +536,8 @@ save_result save_article()
                 std::fprintf(s_tmpfp, "Article: %ld of %s\n", g_art, g_ngname.c_str());
             }
             seekart(g_savefrom);
-            while (readart(g_buf,LBUFLEN) != nullptr) {
+            while (readart(g_buf, LBUFLEN) != nullptr)
+            {
                 if (quote_From && string_case_equal(g_buf, "from ",5))
                 {
                     std::putc('>', s_tmpfp);
@@ -520,7 +562,8 @@ save_result save_article()
         {
             std::fputs("Not saved", stdout);
         }
-        else {
+        else
+        {
             std::printf("%s to %s %s", there? "Appended" : "Saved",
                    mailbox? "mailbox" : "file", g_savedest.c_str());
         }
@@ -540,7 +583,8 @@ save_result view_article()
     mime_SetArticle();
     clear_artbuf();
     g_savefrom = g_htype[PAST_HEADER].minpos;
-    if (artopen(g_art,g_savefrom) == nullptr) {
+    if (artopen(g_art, g_savefrom) == nullptr)
+    {
         if (g_verbose)
         {
             std::fputs("\nNo attatchments on an empty article.\n", stdout);
@@ -558,7 +602,8 @@ save_result view_article()
     {
         mime_DecodeArticle(true);
     }
-    else {
+    else
+    {
         char *filename;
         int   part;
         int   total;
@@ -574,7 +619,8 @@ save_result view_article()
             {
                 continue;       /* Ignore empty or initially-whitespace lines */
             }
-            if (uue_prescan(g_art_line, &filename, &part, &total)) {
+            if (uue_prescan(g_art_line, &filename, &part, &total))
+            {
                 MIMECAP_ENTRY*mc = mime_FindMimecapEntry("image/jpeg", MCF_NONE); /*$$ refine this */
                 g_savefrom = g_artpos;
                 seekart(g_savefrom);
@@ -584,7 +630,8 @@ save_result view_article()
                 g_mime_section->encoding = MENCODE_UUE;
                 g_mime_section->part = part;
                 g_mime_section->total = total;
-                if (mc && !decode_piece(mc,nullptr) && *g_msg) {
+                if (mc && !decode_piece(mc, nullptr) && *g_msg)
+                {
                     newline();
                     std::fputs(g_msg,stdout);
                 }
@@ -596,7 +643,8 @@ save_result view_article()
                 break;
             }
         }/* for */
-        if (cnt) {
+        if (cnt)
+        {
             std::printf("Unable to determine type of file.\n");
             termdown(1);
         }
@@ -611,7 +659,8 @@ int cancel_article()
     int  myuid = current_user_id();
     int  r = -1;
 
-    if (artopen(g_art,(ART_POS)0) == nullptr) {
+    if (artopen(g_art, (ART_POS) 0) == nullptr)
+    {
         if (g_verbose)
         {
             std::fputs("\nCan't cancel an empty article.\n", stdout);
@@ -626,16 +675,18 @@ int cancel_article()
     char *reply_buf = fetchlines(g_art, REPLY_LINE);
     char *from_buf = fetchlines(g_art, FROM_LINE);
     char *ngs_buf = fetchlines(g_art, NEWSGROUPS_LINE);
-    if (!string_case_equal(get_val_const("FROM",""),from_buf)
-     && (!in_string(from_buf,g_hostname, false)
-      || (!in_string(from_buf,g_login_name.c_str(), true)
-       && !in_string(reply_buf,g_login_name.c_str(), true)
+    if (!string_case_equal(get_val_const("FROM", ""), from_buf)      //
+        && (!in_string(from_buf, g_hostname, false)                  //
+            || (!in_string(from_buf, g_login_name.c_str(), true)     //
+                && !in_string(reply_buf, g_login_name.c_str(), true) //
 #ifdef HAS_NEWS_ADMIN
-       && myuid != g_newsuid
+                && myuid != g_newsuid //
 #endif
-       && myuid != ROOTID))) {
+                && myuid != ROOTID)))
+    {
 #ifdef DEBUG
-        if (debug) {
+        if (debug)
+        {
             std::printf("\n%s@%s != %s\n",g_login_name.c_str(),g_hostname,from_buf);
             std::printf("%s != %s\n",get_val("FROM",""),from_buf);
             termdown(3);
@@ -651,9 +702,11 @@ int cancel_article()
         }
         termdown(2);
     }
-    else {
+    else
+    {
         std::FILE *header = std::fopen(g_headname.c_str(),"w");   /* open header file */
-        if (header == nullptr) {
+        if (header == nullptr)
+        {
             std::printf(g_cantcreate,g_headname.c_str());
             termdown(1);
             goto done;
@@ -679,7 +732,8 @@ int supersede_article()         /* Supersedes: */
     int  r = -1;
     bool incl_body = (*g_buf == 'Z');
 
-    if (artopen(g_art,(ART_POS)0) == nullptr) {
+    if (artopen(g_art, (ART_POS) 0) == nullptr)
+    {
         if (g_verbose)
         {
             std::fputs("\nCan't supersede an empty article.\n", stdout);
@@ -694,16 +748,18 @@ int supersede_article()         /* Supersedes: */
     char *reply_buf = fetchlines(g_art, REPLY_LINE);
     char *from_buf = fetchlines(g_art, FROM_LINE);
     char *ngs_buf = fetchlines(g_art, NEWSGROUPS_LINE);
-    if (!string_case_equal(get_val_const("FROM",""),from_buf)
-     && (!in_string(from_buf,g_hostname, false)
-      || (!in_string(from_buf,g_login_name.c_str(), true)
-       && !in_string(reply_buf,g_login_name.c_str(), true)
-#ifdef HAS_NEWS_ADMIN
-       && myuid != g_newsuid
+    if (!string_case_equal(get_val_const("FROM", ""), from_buf)      //
+        && (!in_string(from_buf, g_hostname, false)                  //
+            || (!in_string(from_buf, g_login_name.c_str(), true)     //
+                && !in_string(reply_buf, g_login_name.c_str(), true) //
+#ifdef HAS_NEWS_ADMIN                                                //
+                && myuid != g_newsuid                                //
 #endif
-       && myuid != ROOTID))) {
+                && myuid != ROOTID)))
+    {
 #ifdef DEBUG
-        if (debug) {
+        if (debug)
+        {
             std::printf("\n%s@%s != %s\n",g_login_name.c_str(),g_hostname,from_buf);
             std::printf("%s != %s\n",get_val("FROM",""),from_buf);
             termdown(3);
@@ -719,16 +775,19 @@ int supersede_article()         /* Supersedes: */
         }
         termdown(2);
     }
-    else {
+    else
+    {
         std::FILE *header = std::fopen(g_headname.c_str(),"w");   /* open header file */
-        if (header == nullptr) {
+        if (header == nullptr)
+        {
             std::printf(g_cantcreate,g_headname.c_str());
             termdown(1);
             goto done;
         }
         interp(hbuf, sizeof hbuf, get_val("SUPERSEDEHEADER",SUPERSEDEHEADER));
         std::fputs(hbuf,header);
-        if (incl_body && g_artfp != nullptr) {
+        if (incl_body && g_artfp != nullptr)
+        {
             parseheader(g_art);
             seekart(g_htype[PAST_HEADER].minpos);
             while (readart(g_buf,LBUFLEN) != nullptr)
@@ -755,7 +814,8 @@ static int nntp_date()
 static void follow_it_up()
 {
     safecpy(g_cmd_buf,filexp(get_val_const("NEWSPOSTER",NEWSPOSTER)), sizeof g_cmd_buf);
-    if (invoke(g_cmd_buf,g_origdir.c_str()) == 42) {
+    if (invoke(g_cmd_buf, g_origdir.c_str()) == 42)
+    {
         int ret;
         if ((g_datasrc->flags & DF_REMOTE) &&
             (nntp_date() <= 0 || (nntp_check() < 0 && std::atoi(g_ser_line) != NNTP_BAD_COMMAND_VAL)))
@@ -766,7 +826,8 @@ static void follow_it_up()
         {
             ret = invoke(filexp(CALL_INEWS),g_origdir.c_str());
         }
-        if (ret) {
+        if (ret)
+        {
             int   appended = 0;
             char* deadart = filexp("%./dead.article");
             std::FILE *fp_out = std::fopen(deadart, "a");
@@ -804,14 +865,16 @@ void reply()
 
     artopen(g_art,(ART_POS)0);
     std::FILE *header = std::fopen(g_headname.c_str(),"w");       /* open header file */
-    if (header == nullptr) {
+    if (header == nullptr)
+    {
         std::printf(g_cantcreate,g_headname.c_str());
         termdown(1);
         goto done;
     }
     interp(hbuf, sizeof hbuf, get_val("MAILHEADER",MAILHEADER));
     std::fputs(hbuf,header);
-    if (!in_string(maildoer,"%h", true)) {
+    if (!in_string(maildoer, "%h", true))
+    {
         if (g_verbose)
         {
             std::printf("\n%s\n(Above lines saved in file %s)\n", g_buf, g_headname.c_str());
@@ -822,7 +885,8 @@ void reply()
         }
         termdown(3);
     }
-    if (incl_body && g_artfp != nullptr) {
+    if (incl_body && g_artfp != nullptr)
+    {
         char* s;
         interp(g_buf, (sizeof g_buf), get_val("YOUSAID",YOUSAID));
         std::fprintf(header,"%s\n",g_buf);
@@ -831,7 +895,8 @@ void reply()
         clear_artbuf();
         seekart(g_htype[PAST_HEADER].minpos);
         g_wrapped_nl = '\n';
-        while ((s = readartbuf(false)) != nullptr) {
+        while ((s = readartbuf(false)) != nullptr)
+        {
             char *t = std::strchr(s, '\n');
             if (t != nullptr)
             {
@@ -870,7 +935,8 @@ void forward()
 #endif
     artopen(g_art,(ART_POS)0);
     std::FILE *header = std::fopen(g_headname.c_str(),"w");       /* open header file */
-    if (header == nullptr) {
+    if (header == nullptr)
+    {
         std::printf(g_cantcreate,g_headname.c_str());
         termdown(1);
         goto done;
@@ -889,16 +955,20 @@ void forward()
     }
 #else
     mime_boundary = nullptr;
-    for (char *s = hbuf; s; s = eol) {
+    for (char *s = hbuf; s; s = eol)
+    {
         eol = std::strchr(s, '\n');
         if (eol)
         {
             eol++;
         }
-        if (*s == 'C' && string_case_equal(s, "Content-Type: multipart/", 24)) {
+        if (*s == 'C' && string_case_equal(s, "Content-Type: multipart/", 24))
+        {
             s += 24;
-            for (;;) {
-                for ( ; *s && *s != ';'; s++) {
+            for (;;)
+            {
+                for (; *s && *s != ';'; s++)
+                {
                     if (*s == '\n' && !std::isspace(s[1]))
                     {
                         break;
@@ -909,7 +979,8 @@ void forward()
                     break;
                 }
                 s = skip_eq(++s, ' ');
-                if (*s == 'b' && string_case_equal(s, "boundary=\"", 10)) {
+                if (*s == 'b' && string_case_equal(s, "boundary=\"", 10))
+                {
                     mime_boundary = s+10;
                     s = std::strchr(mime_boundary, '"');
                     if (s != nullptr)
@@ -927,7 +998,8 @@ void forward()
         }
     }
 #endif
-    if (!in_string(maildoer,"%h", true)) {
+    if (!in_string(maildoer, "%h", true))
+    {
         if (g_verbose)
         {
             std::printf("\n%s\n(Above lines saved in file %s)\n", hbuf, g_headname.c_str());
@@ -938,9 +1010,11 @@ void forward()
         }
         termdown(3);
     }
-    if (g_artfp != nullptr) {
+    if (g_artfp != nullptr)
+    {
         interp(g_buf, sizeof g_buf, get_val("FORWARDMSG",FORWARDMSG));
-        if (mime_boundary) {
+        if (mime_boundary)
+        {
             if (*g_buf && string_case_compare(g_buf, "Content-", 8))
             {
                 std::strcpy(g_buf, "Content-Type: text/plain\n");
@@ -954,8 +1028,10 @@ void forward()
         }
         parseheader(g_art);
         seekart((ART_POS)0);
-        while (readart(g_buf,sizeof g_buf) != nullptr) {
-            if (!mime_boundary && *g_buf == '-') {
+        while (readart(g_buf, sizeof g_buf) != nullptr)
+        {
+            if (!mime_boundary && *g_buf == '-')
+            {
                 std::putchar('-');
                 std::putchar(' ');
             }
@@ -965,7 +1041,8 @@ void forward()
         {
             std::fprintf(header, "\n--%s--\n", mime_boundary);
         }
-        else {
+        else
+        {
             interp(g_buf, (sizeof g_buf), get_val("FORWARDMSGEND",FORWARDMSGEND));
             if (*g_buf)
             {
@@ -991,7 +1068,8 @@ void followup()
     bool incl_body = (*g_buf == 'F' && g_art);
     ART_NUM oldart = g_art;
 
-    if (!incl_body && g_art <= g_lastart) {
+    if (!incl_body && g_art <= g_lastart)
+    {
         termdown(2);
         in_answer("\n\nAre you starting an unrelated topic? [ynq] ", MM_FOLLOWUP_NEW_TOPIC_PROMPT);
         setdef(g_buf,"y");
@@ -1006,7 +1084,8 @@ void followup()
     }
     artopen(g_art,(ART_POS)0);
     std::FILE *header = std::fopen(g_headname.c_str(),"w");
-    if (header == nullptr) {
+    if (header == nullptr)
+    {
         std::printf(g_cantcreate,g_headname.c_str());
         termdown(1);
         g_art = oldart;
@@ -1014,7 +1093,8 @@ void followup()
     }
     interp(hbuf, sizeof hbuf, get_val("NEWSHEADER",NEWSHEADER));
     std::fputs(hbuf,header);
-    if (incl_body && g_artfp != nullptr) {
+    if (incl_body && g_artfp != nullptr)
+    {
         char* s;
         if (g_verbose)
         {
@@ -1030,7 +1110,8 @@ void followup()
         clear_artbuf();
         seekart(g_htype[PAST_HEADER].minpos);
         g_wrapped_nl = '\n';
-        while ((s = readartbuf(false)) != nullptr) {
+        while ((s = readartbuf(false)) != nullptr)
+        {
             char *t = std::strchr(s, '\n');
             if (t != nullptr)
             {
@@ -1066,8 +1147,10 @@ int invoke(const char *cmd, const char *dir)
         std::printf("\nInvoking command: %s\n",cmd);
     }
 #endif
-    if (dir) {
-        if (change_dir(dir)) {
+    if (dir)
+    {
+        if (change_dir(dir))
+        {
             std::printf(g_nocd,dir);
             return ret;
         }
@@ -1111,8 +1194,10 @@ static bool cut_line(char *str)
     ** of the cut phrase.  If over 20 unknown characters are encountered,
     ** assume it isn't a cut line.  If we succeed, return true.
     */
-    for (cp = str, dash_cnt = equal_cnt = other_cnt = 0; *cp; cp++) {
-        switch (*cp) {
+    for (cp = str, dash_cnt = equal_cnt = other_cnt = 0; *cp; cp++)
+    {
+        switch (*cp)
+        {
         case '-':
             dash_cnt++;
             break;
@@ -1145,7 +1230,8 @@ static bool cut_line(char *str)
 
     got_flag = 0;
 
-    for (*(cp = word) = '\0'; *str; str++) {
+    for (*(cp = word) = '\0'; *str; str++)
+    {
         if (std::islower(*str))
         {
             *cp++ = *str;
@@ -1154,24 +1240,31 @@ static bool cut_line(char *str)
         {
             *cp++ = std::tolower(*str);
         }
-        else {
-            if (*word) {
+        else
+        {
+            if (*word)
+            {
                 *cp = '\0';
-                switch (got_flag) {
+                switch (got_flag)
+                {
                 case 2:
-                    if (!std::strcmp(word, "line")
-                     || !std::strcmp(word, "here"))
+                    if (!std::strcmp(word, "line")     //
+                        || !std::strcmp(word, "here")) //
+                    {
                         if ((other_cnt -= 4) <= 20)
                         {
                             return true;
                         }
+                    }
                     break;
                 case 1:
-                    if (!std::strcmp(word, "this")) {
+                    if (!std::strcmp(word, "this"))
+                    {
                         got_flag = 2;
                         other_cnt -= 4;
                     }
-                    else if (!std::strcmp(word, "here")) {
+                    else if (!std::strcmp(word, "here"))
+                    {
                         other_cnt -= 4;
                         if ((dash_cnt >= 6 || equal_cnt >= 6)
                          && other_cnt <= 20)
@@ -1183,9 +1276,10 @@ static bool cut_line(char *str)
                     }
                     break;
                 case 0:
-                    if (!std::strcmp(word, "cut")
-                     || !std::strcmp(word, "snip")
-                     || !std::strcmp(word, "tear")) {
+                    if (!std::strcmp(word, "cut")     //
+                        || !std::strcmp(word, "snip") //
+                        || !std::strcmp(word, "tear"))
+                    {
                         got_flag = 1;
                         other_cnt -= std::strlen(word);
                     }
