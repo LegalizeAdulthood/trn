@@ -82,7 +82,7 @@ inline ArticlePosition line_offset(char *ptr)
 }
 
 /* page_switch() return values */
-enum page_switch_result
+enum PageSwitchResult
 {
     PS_NORM = 0,
     PS_ASK = 1,
@@ -100,7 +100,7 @@ static CompiledRegex   s_gcompex{};         /* in article search pattern */
 static bool     s_firstpage{};       /* is this the 1st page of article? */
 static bool     s_continuation{};    /* this line/header is being continued */
 
-static page_switch_result page_switch();
+static PageSwitchResult page_switch();
 
 void art_init()
 {
@@ -883,7 +883,7 @@ bool maybe_set_color(const char *cp, bool backsearch)
 
 /* process pager commands */
 
-page_switch_result page_switch()
+PageSwitchResult page_switch()
 {
     char* s;
 
