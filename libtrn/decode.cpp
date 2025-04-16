@@ -56,7 +56,7 @@ char *decode_fix_fname(const char *s)
     safefree(g_decode_filename);
     g_decode_filename = safemalloc(std::strlen(s) + 2);
 
-/*$$ we need to eliminate any "../"s from the string */
+    /*TODO: we need to eliminate any "../"s from the string */
     while (*s == '/' || *s == '~')
     {
         s++;
@@ -64,7 +64,7 @@ char *decode_fix_fname(const char *s)
     for (t = g_decode_filename; *s; s++)
     {
 #ifdef MSDOS
-/*$$ we should also handle backslashes here */
+        /* TODO: we should also handle backslashes here */
         if (*s == '.' && (t == g_decode_filename || dotcount++))
         {
             continue;
@@ -569,6 +569,6 @@ void decode_rmdir(char *dir)
     char *s = dir + std::strlen(dir) - 1;
     *s = '\0';
 
-    /*$$ conditionalize this */
+    /* TODO: conditionalize this */
     std::filesystem::remove(dir);
 }

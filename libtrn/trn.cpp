@@ -181,7 +181,7 @@ void do_multirc()
             /* now write the newsrc(s) back out */
             if (!write_newsrcs(g_multirc))
             {
-                s_restore_old_newsrc = true; /*$$ ask to retry! */
+                s_restore_old_newsrc = true; /* TODO: ask to retry! */
             }
             if (s_restore_old_newsrc)
             {
@@ -436,7 +436,7 @@ bug_out:
     /* now write the newsrc(s) back out */
     if (!write_newsrcs(g_multirc))
     {
-        s_restore_old_newsrc = true; /*$$ ask to retry! */
+        s_restore_old_newsrc = true; /* TODO: ask to retry! */
     }
     if (s_restore_old_newsrc)
     {

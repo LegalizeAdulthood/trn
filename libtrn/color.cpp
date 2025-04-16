@@ -284,7 +284,7 @@ void color_object(int object, bool push)
     /* Push onto stack. */
     if (push && ++s_stack_pointer >= STACK_SIZE)
     {
-        /* error reporting? $$ */
+        /* TODO: error reporting? */
         s_stack_pointer = 0;            /* empty stack */
         color_default();                /* and set normal colors */
         return;

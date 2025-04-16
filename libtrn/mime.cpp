@@ -421,7 +421,7 @@ void mime_ClearStruct(MIME_SECT *mp)
 void mime_SetArticle()
 {
     mime_InitSections();
-    /*$$ Check mime version #? */
+    /* TODO: Check mime version #? */
     g_multimedia_mime = false;
     g_is_mime = g_htype[MIMEVER_LINE].flags & HT_MAGIC
             && g_htype[MIMEVER_LINE].minpos >= 0;
@@ -942,7 +942,7 @@ void mime_DecodeArticle(bool view)
         case HTMLTEXT_MIME:
         case ISOTEXT_MIME:
         case MESSAGE_MIME:
-            /* $$ Check for uuencoded file here? */
+            /* TODO: Check for uuencoded file here? */
             g_mime_state = SKIP_MIME;
             /* FALL THROUGH */
 

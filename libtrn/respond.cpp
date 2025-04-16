@@ -554,7 +554,7 @@ save_result save_article()
             }
 #endif
             std::fclose(s_tmpfp);
-            i = 0; /*$$ set non-zero on write error */
+            i = 0; /* TODO: set non-zero on write error */
         }
         else
         {
@@ -623,7 +623,7 @@ save_result view_article()
             }
             if (uue_prescan(g_art_line, &filename, &part, &total))
             {
-                MIMECAP_ENTRY*mc = mime_FindMimecapEntry("image/jpeg", MCF_NONE); /*$$ refine this */
+                MIMECAP_ENTRY*mc = mime_FindMimecapEntry("image/jpeg", MCF_NONE); /* TODO: refine this */
                 g_savefrom = g_artpos;
                 seekart(g_savefrom);
                 g_mime_section->type = UNHANDLED_MIME;

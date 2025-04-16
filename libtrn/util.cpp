@@ -1025,7 +1025,7 @@ bool check_ini_cond(char *cond)
     return true;
 }
 
-/* $$ might get replaced soonish... */
+/* TODO: might get replaced soonish... */
 /* Ask for a single character (improve the prompt?) */
 char menu_get_char()
 {

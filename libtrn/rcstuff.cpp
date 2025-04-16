@@ -133,8 +133,6 @@ static MULTIRC *rcstuff_init_data()
                     mptr = mp;
                 }
             }
-            /*else
-                ;$$complain?*/
         }
         std::free(vals);
         safefree0(g_trnaccess_mem);
@@ -982,10 +980,10 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
             {
                 continue;
             }
-            /*$$ this may scan a datasrc multiple times... */
+            /* TODO: this may scan a datasrc multiple times... */
             if (find_actgrp(rp->datasrc,g_buf,g_ngname.c_str(),g_ngname.length(),(ART_NUM)0))
             {
-                break; /*$$ let them choose which server */
+                break; /* TODO: let them choose which server */
             }
         }
         if (!rp)
@@ -1239,7 +1237,7 @@ bool relocate_newsgroup(NGDATA *move_np, NG_NUM newnum)
         if (newnum < 0)
         {
             /* ask if they want to keep the current order */
-            in_char("Sort newsrc(s) using current sort order?",MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "yn"); /*$$ !'D' */
+            in_char("Sort newsrc(s) using current sort order?",MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "yn"); /* TODO: !'D' */
             printcmd();
             newline();
             if (*g_buf == 'y')
@@ -1513,7 +1511,7 @@ void cleanup_newsrc(NEWSRC *rp)
     NGDATA* np;
     for (np = g_first_ng; np; np = np->next)
     {
-/*#ifdef CHECK_ALL_BOGUS $$ what is this? */
+/*#ifdef CHECK_ALL_BOGUS TODO: what is this? */
         if (np->toread >= TR_UNSUB)
         {
             set_toread(np, ST_LAX); /* this may reset the group or declare it bogus */
@@ -1588,7 +1586,7 @@ reask_bogus:
                 clear_ngitem((char*)np,0);
                 g_newsgroup_cnt--;
             }
-            rp->flags |= RF_RCCHANGED; /*$$ needed? */
+            rp->flags |= RF_RCCHANGED; /* TODO: needed? */
             g_last_ng = np;
             if (np)
             {

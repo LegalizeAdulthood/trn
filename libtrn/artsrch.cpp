@@ -210,7 +210,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
         else
         {
             h = pattern;
-            /*$$ if using thread files, make this "%\\)f" */
+            /* TODO: if using thread files, make this "%\\)f" */
             interp(pattern, patbufsiz - 1, "%\\>f");
         }
         if (cmdchr == 'k' || cmdchr == 'K' || cmdchr == ',' //

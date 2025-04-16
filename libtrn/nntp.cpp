@@ -630,7 +630,7 @@ int nntp_handle_nested_lists()
 {
     if (string_case_equal(g_last_command, "quit"))
     {
-        return 0; /*$$ flush data needed? */
+        return 0; /* TODO: flush data needed? */
     }
     if (nntp_finishbody(FB_DISCARD))
     {
@@ -670,7 +670,7 @@ int nntp_handle_timeout()
     {
         return -1;
     }
-    std::strcpy(g_last_command, last_command_save); /*$$ Is this really needed? */
+    std::strcpy(g_last_command, last_command_save); /* TODO: Is this really needed? */
     handling_timeout = false;
     return 1;
 }

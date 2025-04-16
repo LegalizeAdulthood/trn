@@ -695,7 +695,7 @@ void update_thread_kfile()
         s_newkfp = std::fopen(cp, "w");
         if (s_newkfp == nullptr)
         {
-            return; /*$$ Yikes! */
+            return; /* Yikes! */
         }
         s_kf_thread_cnt = 0;
         g_kf_changethd_cnt = 0;
@@ -706,7 +706,7 @@ void update_thread_kfile()
         s_newkfp = std::fopen(cp, "a");
         if (s_newkfp == nullptr)
         {
-            return; /*$$ Yikes! */
+            return; /* Yikes! */
         }
         hashwalk(g_msgid_hash, write_global_thread_commands, 1); /* Append */
     }

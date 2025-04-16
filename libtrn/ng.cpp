@@ -1110,7 +1110,7 @@ not_threaded:
         }
         else
         {
-            /* $$ will this work with 4.0? CAA */
+            /* TODO: will this work with 4.0? CAA */
             if (g_sa_in && g_threaded_group)
             {
                 ARTICLE* old_artp = g_artp;

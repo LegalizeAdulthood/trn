@@ -226,7 +226,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
         if (makedir(s, MD_DIR))
         {
             std::printf("Unable to create `%s'.\n",s);
-            finalize(1); /*$$??*/
+            finalize(1);
         }
     }
     if (stat(g_ini_file.c_str(),&ini_stat) == 0)

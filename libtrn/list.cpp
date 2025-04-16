@@ -84,7 +84,6 @@ char *listnum2listitem(LIST *list, long num)
                 node->next = list->first;
                 list->first = node;
             }
-            /*node->mid = $$;*/
             list->init_node(list, node);
             break;
         }

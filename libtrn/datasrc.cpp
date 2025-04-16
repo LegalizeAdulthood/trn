@@ -675,7 +675,7 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
             break;
 
         case -2:
-            /*$$$$*/
+            /* TODO */
             break;
         }
         set_datasrc(save_datasrc);
@@ -775,7 +775,7 @@ const char *find_grpdesc(DATASRC *dp, const char *groupname)
             if ((dp->flags & (DF_TMPGRPDESC | DF_NOXGTITLE)) == DF_TMPGRPDESC //
                 && g_net_speed < 5)
             {
-                (void)srcfile_open(&dp->desc_sf,nullptr, /*$$check return?*/
+                (void)srcfile_open(&dp->desc_sf,nullptr, /* TODO: check return? */
                                    nullptr,nullptr);
                 grouplen = std::strlen(groupname);
                 goto try_xgtitle;

@@ -330,7 +330,7 @@ int main(int argc, char *argv[])
                     {
                         break;
                     }
-                    /*$$ use list newsgroups if this fails...? */
+                    /* TODO: use list newsgroups if this fails...? */
                     if (nntp_check() > 0)
                     {
                         /* write results to fp_ng */

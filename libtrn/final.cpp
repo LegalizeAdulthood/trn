@@ -226,7 +226,7 @@ Signal_t sig_catcher(int signo)
     g_doing_ng = false;
     if (!write_newsrcs(g_multirc))      /* write anything that's changed */
     {
-        /*$$ get_old_newsrcs(g_multirc);  ?? */
+        /* TODO: get_old_newsrcs(g_multirc);  ?? */
     }
     update_thread_kfile();
 
@@ -258,7 +258,7 @@ Signal_t sig_catcher(int signo)
 Signal_t pipe_catcher(int signo)
 {
 #ifdef SIGPIPE
-    ;/*$$ we lost the current nntp connection */
+    ;/* TODO: we lost the current nntp connection */
     sigset(SIGPIPE,pipe_catcher);
 #endif
 }

@@ -913,7 +913,7 @@ static int echo_char(char_int ch)
     return 1;
 }
 
-static bool s_screen_is_dirty{}; /*$$ remove this? */
+static bool s_screen_is_dirty{}; /* TODO: remove this? */
 
 /* Process the character *s in the buffer g_buf returning the new 's' */
 

@@ -525,7 +525,7 @@ char newsgroup_selector()
                 find_grpdesc(rp->datasrc, "control");
                 if (rp->datasrc->desc_sf.fp)
                 {
-                    rp->datasrc->flags |= DF_NOXGTITLE; /*$$ ok?*/
+                    rp->datasrc->flags |= DF_NOXGTITLE; /* TODO: ok?*/
                 }
                 else
                 {
@@ -3477,7 +3477,6 @@ static display_state multirc_commands(char_int ch)
         return DS_DISPLAY;
 
     case '/':
-        /*$$$$*/
         break;
 
     case 'h':
