@@ -56,7 +56,8 @@ bool ov_init()
     field_flags  *fieldflags = g_datasrc->fieldflags;
     g_datasrc->flags &= ~DF_TRY_OVERVIEW;
     std::FILE *overview;
-    if (!g_datasrc->over_dir) {
+    if (!g_datasrc->over_dir)
+    {
         /* Check if the server is XOVER compliant */
         if (nntp_command("XOVER") <= 0)
         {
@@ -88,12 +89,15 @@ bool ov_init()
                         && (overview = std::fopen(g_datasrc->over_fmt, "r")) != nullptr;
     }
 
-    if (has_overview_fmt) {
+    if (has_overview_fmt)
+    {
         int i;
         fieldnum[0] = OV_NUM;
         fieldflags[OV_NUM] = FF_HAS_FIELD;
-        for (i = 1;;) {
-            if (!g_datasrc->over_dir) {
+        for (i = 1;;)
+        {
+            if (!g_datasrc->over_dir)
+            {
                 if (nntp_gets(g_buf, sizeof g_buf) == NGSR_ERROR)
                 {
                     break;
@@ -103,7 +107,8 @@ bool ov_init()
                     break;
                 }
             }
-            else if (!std::fgets(g_buf, sizeof g_buf, overview)) {
+            else if (!std::fgets(g_buf, sizeof g_buf, overview))
+            {
                 std::fclose(overview);
                 break;
             }
@@ -111,7 +116,8 @@ bool ov_init()
             {
                 continue;
             }
-            if (i < OV_MAX_FIELDS) {
+            if (i < OV_MAX_FIELDS)
+            {
                 char *s = std::strchr(g_buf,':');
                 fieldnum[i] = ov_num(g_buf,s);
                 fieldflags[fieldnum[i]] = FF_HAS_FIELD |
@@ -124,9 +130,11 @@ bool ov_init()
         {
             return false;
         }
-        if (i < OV_MAX_FIELDS) {
+        if (i < OV_MAX_FIELDS)
+        {
             int j;
-            for (j = OV_MAX_FIELDS; j--; ) {
+            for (j = OV_MAX_FIELDS; j--;)
+            {
                 if (!fieldflags[j])
                 {
                     break;
@@ -138,8 +146,10 @@ bool ov_init()
             }
         }
     }
-    else {
-        for (int i = 0; i < OV_MAX_FIELDS; i++) {
+    else
+    {
+        for (int i = 0; i < OV_MAX_FIELDS; i++)
+        {
             fieldnum[i] = static_cast<ov_field_num>(i);
             fieldflags[i] = FF_HAS_FIELD;
         }
@@ -156,7 +166,8 @@ ov_field_num ov_num(char *hdr, char *end)
         end = hdr + std::strlen(hdr);
     }
 
-    switch (set_line_type(hdr,end)) {
+    switch (set_line_type(hdr, end))
+    {
       case SUBJ_LINE:
         return OV_SUBJ;
       case AUTHOR_LINE:         /* This hack is for the Baen NNTP server */
@@ -196,7 +207,8 @@ bool ov_data(ART_NUM first, ART_NUM last, bool cheating)
     bool remote = !g_datasrc->over_dir;
 
 beginning:
-    for (;;) {
+    for (;;)
+    {
         artnum = article_first(first);
         if (artnum > first || !(article_ptr(artnum)->flags & AF_CACHED))
         {
@@ -209,14 +221,17 @@ beginning:
     {
         goto exit;
     }
-    if (remote) {
-        if (last - first > ov_chunk_size + ov_chunk_size/2 - 1) {
+    if (remote)
+    {
+        if (last - first > ov_chunk_size + ov_chunk_size / 2 - 1)
+        {
             last = first + ov_chunk_size - 1;
             line_cnt = 0;
         }
     }
     started_request = std::time(nullptr);
-    for (;;) {
+    for (;;)
+    {
         artnum = article_last(last);
         if (artnum < last || !(article_ptr(artnum)->flags & AF_CACHED))
         {
@@ -226,9 +241,11 @@ beginning:
         last--;
     }
 
-    if (remote) {
+    if (remote)
+    {
         std::sprintf(g_ser_line, "XOVER %ld-%ld", (long)first, (long)last);
-        if (nntp_command(g_ser_line) <= 0 || nntp_check() <= 0) {
+        if (nntp_command(g_ser_line) <= 0 || nntp_check() <= 0)
+        {
             success = false;
             goto exit;
         }
@@ -238,7 +255,8 @@ beginning:
             std::fflush(stdout);
         }
     }
-    else if (g_datasrc->ov_opened < started_request - 60*60) {
+    else if (g_datasrc->ov_opened < started_request - 60 * 60)
+    {
         ov_close();
         g_datasrc->ov_in = std::fopen(ov_name(g_ngname.c_str()), "r");
         if (g_datasrc->ov_in == nullptr)
@@ -251,12 +269,14 @@ beginning:
             std::fflush(stdout);
         }
     }
-    if (!g_datasrc->ov_opened) {
+    if (!g_datasrc->ov_opened)
+    {
         if (cheating)
         {
             setspin(SPIN_BACKGROUND);
         }
-        else {
+        else
+        {
             int lots2do = ((g_datasrc->flags & DF_REMOTE)? g_net_speed : 20) * 100;
             g_spin_estimate = std::min(g_spin_estimate, g_spin_todo);
             setspin(g_spin_estimate > lots2do? SPIN_BARGRAPH : SPIN_FOREGROUND);
@@ -265,8 +285,10 @@ beginning:
     }
 
     artnum = first-1;
-    for (;;) {
-        if (remote) {
+    for (;;)
+    {
+        if (remote)
+        {
             line = nntp_get_a_line(last_buf,last_buflen,last_buf!=g_buf);
             if (nntp_at_list_end(line))
             {
@@ -286,7 +308,8 @@ beginning:
         {
             continue;
         }
-        if (an > last) {
+        if (an > last)
+        {
             artnum = last;
             if (remote)
             {
@@ -296,7 +319,8 @@ beginning:
         }
         g_spin_todo -= an - artnum - 1;
         ov_parse(line, artnum = an, remote);
-        if (g_int_count) {
+        if (g_int_count)
+        {
             g_int_count = 0;
             success = false;
             if (!remote)
@@ -304,27 +328,33 @@ beginning:
                 break;
             }
         }
-        if (!remote && cheating) {
-            if (input_pending()) {
+        if (!remote && cheating)
+        {
+            if (input_pending())
+            {
                 success = false;
                 break;
             }
-            if (g_curr_artp != g_sentinel_artp) {
+            if (g_curr_artp != g_sentinel_artp)
+            {
                 pushchar('\f' | 0200);
                 success = false;
                 break;
             }
         }
     }
-    if (remote && line_cnt == 0 && last < real_last) {
+    if (remote && line_cnt == 0 && last < real_last)
+    {
         an = nntp_find_real_art(last);
-        if (an > 0) {
+        if (an > 0)
+        {
             last = an - 1;
             g_spin_todo -= last - artnum;
             artnum = last;
         }
     }
-    if (remote) {
+    if (remote)
+    {
         int cachemask = (g_threaded_group? AF_THREADED : AF_CACHED);
         for (ARTICLE *ap = article_ptr(article_first(real_first));
              ap && article_num(ap) <= artnum;
@@ -342,16 +372,22 @@ beginning:
         g_last_cached = artnum;
     }
   exit:
-    if (g_int_count || !success) {
+    if (g_int_count || !success)
+    {
         g_int_count = 0;
         success = false;
     }
-    else if (remote) {
-        if (cheating && g_curr_artp != g_sentinel_artp) {
+    else if (remote)
+    {
+        if (cheating && g_curr_artp != g_sentinel_artp)
+        {
             pushchar('\f' | 0200);
             success = false;
-        } else if (last < real_last) {
-            if (!cheating || !input_pending()) {
+        }
+        else if (last < real_last)
+        {
+            if (!cheating || !input_pending())
+            {
                 long elapsed_time = std::time(nullptr) - started_request;
                 long expected_time = cheating? 2 : 10;
                 int max_chunk_size = cheating? 500 : 2000;
@@ -375,7 +411,8 @@ beginning:
     {
         std::fseek(g_datasrc->ov_in, 0L, 0); /* rewind it for the cheating phase */
     }
-    if (success && real_first <= g_first_cached) {
+    if (success && real_first <= g_first_cached)
+    {
         g_first_cached = real_first;
         g_cached_all_in_range = true;
     }
@@ -395,12 +432,14 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
     char         *tab;
 
     ARTICLE *article = article_ptr(artnum);
-    if (article->flags & AF_THREADED) {
+    if (article->flags & AF_THREADED)
+    {
         g_spin_todo--;
         return;
     }
 
-    if (g_len_last_line_got > 0 && line[g_len_last_line_got-1] == '\n') {
+    if (g_len_last_line_got > 0 && line[g_len_last_line_got - 1] == '\n')
+    {
         if (g_len_last_line_got > 1 && line[g_len_last_line_got-2] == '\r')
         {
             line[g_len_last_line_got - 2] = '\0';
@@ -413,7 +452,8 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
     char *cp = line;
 
     std::memset(fields,0,sizeof fields);
-    for (int i = 0; cp && i < OV_MAX_FIELDS; cp = tab) {
+    for (int i = 0; cp && i < OV_MAX_FIELDS; cp = tab)
+    {
         tab = std::strchr(cp, '\t');
         if (tab != nullptr)
         {
@@ -424,16 +464,19 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
         {
             break;
         }
-        if (fieldflags[fn] & (FF_HAS_HDR | FF_CHECK4HDR)) {
+        if (fieldflags[fn] & (FF_HAS_HDR | FF_CHECK4HDR))
+        {
             char* s = std::strchr(cp, ':');
-            if (fieldflags[fn] & FF_CHECK4HDR) {
+            if (fieldflags[fn] & FF_CHECK4HDR)
+            {
                 if (s)
                 {
                     fieldflags[fn] |= FF_HAS_HDR;
                 }
                 fieldflags[fn] &= ~FF_CHECK4HDR;
             }
-            if (fieldflags[fn] & FF_HAS_HDR) {
+            if (fieldflags[fn] & FF_HAS_HDR)
+            {
                 if (!s)
                 {
                     break;
@@ -481,8 +524,10 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
         set_cached_line(article, LINES_LINE, fields[OV_LINES]);
     }
 
-    if (fieldflags[OV_XREF] & (FF_HAS_FIELD | FF_CHECK4FIELD)) {
-        if (!article->xrefs && fields[OV_XREF]) {
+    if (fieldflags[OV_XREF] & (FF_HAS_FIELD | FF_CHECK4FIELD))
+    {
+        if (!article->xrefs && fields[OV_XREF])
+        {
             /* Exclude an xref for just this group */
             cp = std::strchr(fields[OV_XREF], ':');
             if (cp && std::strchr(cp+1, ':'))
@@ -491,14 +536,17 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
             }
         }
 
-        if (fieldflags[OV_XREF] & FF_HAS_FIELD) {
+        if (fieldflags[OV_XREF] & FF_HAS_FIELD)
+        {
             if (!article->xrefs)
             {
                 article->xrefs = "";
             }
         }
-        else if (fields[OV_XREF]) {
-            for (ART_NUM an = article_first(g_absfirst); an<artnum; an=article_next(an)) {
+        else if (fields[OV_XREF])
+        {
+            for (ART_NUM an = article_first(g_absfirst); an < artnum; an = article_next(an))
+            {
                 ARTICLE *ap = article_ptr(an);
                 if (!ap->xrefs)
                 {
@@ -514,7 +562,8 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
         article->flags |= AF_EXISTS;
     }
 
-    if (g_threaded_group) {
+    if (g_threaded_group)
+    {
         if (valid_article(article))
         {
             thread_article(article, fields[OV_REFS]);
@@ -551,8 +600,10 @@ static const char *ov_name(const char *group)
 
 void ov_close()
 {
-    if (g_datasrc && g_datasrc->ov_opened) {
-        if (g_datasrc->ov_in) {
+    if (g_datasrc && g_datasrc->ov_opened)
+    {
+        if (g_datasrc->ov_in)
+        {
             (void) std::fclose(g_datasrc->ov_in);
             g_datasrc->ov_in = nullptr;
         }
@@ -573,12 +624,14 @@ const char *ov_field(ARTICLE *ap, int num)
         return nullptr;
     }
 
-    if (fn == OV_NUM) {
+    if (fn == OV_NUM)
+    {
         std::sprintf(g_cmd_buf, "%ld", (long)ap->num);
         return g_cmd_buf;
     }
 
-    if (fn == OV_DATE) {
+    if (fn == OV_DATE)
+    {
         std::sprintf(g_cmd_buf, "%ld", (long)ap->date);
         return g_cmd_buf;
     }
