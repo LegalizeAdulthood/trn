@@ -61,7 +61,7 @@ static void fix_msgid(char *msgid)
     }
 }
 
-int msgid_cmp(const char *key, int keylen, HASHDATUM data)
+int msgid_cmp(const char *key, int keylen, HashDatum data)
 {
     /* We already know that the lengths are equal, just compare the strings */
     if (data.dat_len)
@@ -80,7 +80,7 @@ bool valid_article(Article *article)
     if (msgid)
     {
         fix_msgid(msgid);
-        HASHDATUM data = hashfetch(g_msgid_hash, msgid, std::strlen(msgid));
+        HashDatum data = hashfetch(g_msgid_hash, msgid, std::strlen(msgid));
         if (data.dat_len)
         {
             safefree0(data.dat_ptr);
@@ -207,7 +207,7 @@ Article *get_article(char *msgid)
 
     fix_msgid(msgid);
 
-    HASHDATUM data = hashfetch(g_msgid_hash, msgid, std::strlen(msgid));
+    HashDatum data = hashfetch(g_msgid_hash, msgid, std::strlen(msgid));
     if (data.dat_len)
     {
         article = allocate_article(0);

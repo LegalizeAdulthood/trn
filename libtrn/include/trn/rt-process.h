@@ -12,7 +12,7 @@ struct Article;
 struct Subject;
 
 Article *allocate_article(ART_NUM artnum);
-int msgid_cmp(const char *key, int keylen, HASHDATUM data);
+int msgid_cmp(const char *key, int keylen, HashDatum data);
 bool valid_article(Article *article);
 Article *get_article(char *msgid);
 void thread_article(Article *article, char *references);

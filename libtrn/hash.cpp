@@ -22,7 +22,7 @@
 struct HASHENT
 {
     HASHENT* he_next;           /* in hash chain */
-    HASHDATUM he_data;
+    HashDatum he_data;
     int he_keylen;              /* to help verify a match */
 };
 
@@ -36,7 +36,7 @@ struct HASHTABLE
 
 static HASHENT **hashfind(HASHTABLE *tbl, const char *key, int keylen);
 static unsigned hash(const char *key, int keylen);
-static int default_cmp(const char *key, int keylen, HASHDATUM data);
+static int default_cmp(const char *key, int keylen, HashDatum data);
 static HASHENT *healloc();
 static void hefree(HASHENT *hp);
 
@@ -114,7 +114,7 @@ void hashdestroy(HASHTABLE *tbl)
     std::free((char*)tbl);
 }
 
-void hashstore(HASHTABLE *tbl, const char *key, int keylen, HASHDATUM data)
+void hashstore(HASHTABLE *tbl, const char *key, int keylen, HashDatum data)
 {
     HASHENT **nextp = hashfind(tbl, key, keylen);
     HASHENT *hp = *nextp;
@@ -146,9 +146,9 @@ static HASHENT **s_slast_nextp{};
 static int       s_slast_keylen{};
 
 /* data corresponding to key */
-HASHDATUM hashfetch(HASHTABLE *tbl, const char *key, int keylen)
+HashDatum hashfetch(HASHTABLE *tbl, const char *key, int keylen)
 {
-    static HASHDATUM errdatum{nullptr, 0};
+    static HashDatum errdatum{nullptr, 0};
 
     HASHENT **nextp = hashfind(tbl, key, keylen);
     s_slast_nextp = nextp;
@@ -161,7 +161,7 @@ HASHDATUM hashfetch(HASHTABLE *tbl, const char *key, int keylen)
     return hp->he_data;
 }
 
-void hashstorelast(HASHDATUM data)
+void hashstorelast(HashDatum data)
 {
     HASHENT *hp = *s_slast_nextp;
     if (hp == nullptr)                          /* absent; allocate an entry */
@@ -247,7 +247,7 @@ static unsigned hash(const char *key, int keylen)
     return hash;
 }
 
-static int default_cmp(const char *key, int keylen, HASHDATUM data)
+static int default_cmp(const char *key, int keylen, HashDatum data)
 {
     /* We already know that the lengths are equal, just compare the strings */
     return std::memcmp(key, data.dat_ptr, keylen);

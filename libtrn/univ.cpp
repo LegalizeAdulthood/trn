@@ -300,7 +300,7 @@ void univ_add_group(const char *desc, const char *grpname)
         g_univ_ng_hash = hashcreate(701, HASH_DEFCMPFUNC);
     }
 
-    HASHDATUM data = hashfetch(g_univ_ng_hash, grpname, std::strlen(grpname));
+    HashDatum data = hashfetch(g_univ_ng_hash, grpname, std::strlen(grpname));
 
     if (data.dat_ptr)
     {
@@ -413,7 +413,7 @@ void univ_add_virtgroup(const char *grpname)
     }
 
     s_univ_virt_pass_needed = true;
-    HASHDATUM data = hashfetch(g_univ_vg_hash, grpname, std::strlen(grpname));
+    HashDatum data = hashfetch(g_univ_vg_hash, grpname, std::strlen(grpname));
     if (data.dat_ptr)
     {
         /* group was already added */

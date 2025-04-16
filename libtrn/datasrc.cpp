@@ -104,8 +104,8 @@ static INI_WORDS s_datasrc_ini[] =
 
 static char *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag);
 static char *file_or_none(char *fn);
-static int srcfile_cmp(const char *key, int keylen, HASHDATUM data);
-static int check_distance(int len, HASHDATUM *data, int newsrc_ptr);
+static int srcfile_cmp(const char *key, int keylen, HashDatum data);
+static int check_distance(int len, HashDatum *data, int newsrc_ptr);
 static int get_near_miss();
 static DataSource *new_datasrc(const char *name, char **vals);
 
@@ -644,7 +644,7 @@ bool find_actgrp(DataSource *dp, char *outbuf, const char *nam, int len, ART_NUM
     /* Do a quick, hashed lookup */
 
     outbuf[0] = '\0';
-    HASHDATUM data = hashfetch(dp->act_sf.hp, nam, len);
+    HashDatum data = hashfetch(dp->act_sf.hp, nam, len);
     if (data.dat_ptr)
     {
         LISTNODE* node = (LISTNODE*)data.dat_ptr;
@@ -810,7 +810,7 @@ const char *find_grpdesc(DataSource *dp, const char *groupname)
     }
 
     grouplen = std::strlen(groupname);
-    if (HASHDATUM data = hashfetch(dp->desc_sf.hp, groupname, grouplen); data.dat_ptr)
+    if (HashDatum data = hashfetch(dp->desc_sf.hp, groupname, grouplen); data.dat_ptr)
     {
         LISTNODE*node = (LISTNODE*)data.dat_ptr;
         /*dp->act_sf.lp->recent = node;*/
@@ -883,7 +883,7 @@ int srcfile_open(SourceFile *sfp, const char *filename, const char *fetchcmd, co
 {
     unsigned offset;
     char* s;
-    HASHDATUM data;
+    HashDatum data;
     long node_low;
     int linelen;
     std::FILE* fp;
@@ -1069,7 +1069,7 @@ int srcfile_open(SourceFile *sfp, const char *filename, const char *fetchcmd, co
 
 char *srcfile_append(SourceFile *sfp, char *bp, int keylen)
 {
-    HASHDATUM data;
+    HashDatum data;
 
     long pos = sfp->lp->high + 1;
     char *lbp = listnum2listitem(sfp->lp, pos);
@@ -1149,7 +1149,7 @@ void srcfile_close(SourceFile *sfp)
     }
 }
 
-static int srcfile_cmp(const char *key, int keylen, HASHDATUM data)
+static int srcfile_cmp(const char *key, int keylen, HashDatum data)
 {
     /* We already know that the lengths are equal, just compare the strings */
     return std::memcmp(key, ((LISTNODE*)data.dat_ptr)->data + data.dat_len, keylen);
@@ -1256,7 +1256,7 @@ int find_close_match()
     return ret;
 }
 
-static int check_distance(int len, HASHDATUM *data, int newsrc_ptr)
+static int check_distance(int len, HashDatum *data, int newsrc_ptr)
 {
     char* name;
 

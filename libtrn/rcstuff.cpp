@@ -74,7 +74,7 @@ static bool    open_newsrc(NEWSRC *rp);
 static void    init_ngnode(LIST *list, LISTNODE *node);
 static void    parse_rcline(NGDATA *np);
 static NGDATA *add_newsgroup(NEWSRC *rp, const char *ngn, char_int c);
-static int     rcline_cmp(const char *key, int keylen, HASHDATUM data);
+static int     rcline_cmp(const char *key, int keylen, HashDatum data);
 
 inline NGDATA *ngdata_ptr(int ngnum)
 {
@@ -691,7 +691,7 @@ static bool open_newsrc(NEWSRC *rp)
             continue;
         }
         parse_rcline(np);
-        HASHDATUM data = hashfetch(g_newsrc_hash, np->rcline, np->numoffset - 1);
+        HashDatum data = hashfetch(g_newsrc_hash, np->rcline, np->numoffset - 1);
         if (data.dat_ptr)
         {
             np->toread = TR_IGNORE;
@@ -1491,7 +1491,7 @@ void list_newsgroups()
 
 NGDATA *find_ng(const char *ngnam)
 {
-    HASHDATUM data = hashfetch(g_newsrc_hash, ngnam, std::strlen(ngnam));
+    HashDatum data = hashfetch(g_newsrc_hash, ngnam, std::strlen(ngnam));
     return (NGDATA*)data.dat_ptr;
 }
 
@@ -1628,13 +1628,13 @@ reask_bogus:
 
 void sethash(NGDATA *np)
 {
-    HASHDATUM data;
+    HashDatum data;
     data.dat_ptr = (char*)np;
     data.dat_len = np->numoffset - 1;
     hashstore(g_newsrc_hash, np->rcline, data.dat_len, data);
 }
 
-static int rcline_cmp(const char *key, int keylen, HASHDATUM data)
+static int rcline_cmp(const char *key, int keylen, HashDatum data)
 {
     /* We already know that the lengths are equal, just compare the strings */
     return std::memcmp(key, ((NGDATA*)data.dat_ptr)->rcline, keylen);

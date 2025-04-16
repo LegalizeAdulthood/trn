@@ -256,7 +256,7 @@ void check_for_near_subj(Article *ap)
         if ((int) std::strlen(sp->str + 4) >= g_join_subject_len && sp->thread)
         {
             Subject* sp2;
-            HASHDATUM data = hashfetch(s_shortsubj_hash, sp->str + 4, g_join_subject_len);
+            HashDatum data = hashfetch(s_shortsubj_hash, sp->str + 4, g_join_subject_len);
             if (!(sp2 = (Subject *) data.dat_ptr))
             {
                 data.dat_ptr = (char*)sp;
@@ -517,7 +517,7 @@ char *get_cached_line(Article *ap, header_line_type which_line, bool no_truncs)
 /* subj not yet allocated, so we can tweak it first */
 void set_subj_line(Article *ap, char *subj, int size)
 {
-    HASHDATUM data;
+    HashDatum data;
     Subject* sp;
     char* subj_start;
 
@@ -769,7 +769,7 @@ void set_cached_line(Article *ap, int which_line, char *s)
     }
 }
 
-int subject_cmp(const char *key, int keylen, HASHDATUM data)
+int subject_cmp(const char *key, int keylen, HashDatum data)
 {
     /* We already know that the lengths are equal, just compare the strings */
     return std::memcmp(key, ((Subject*)data.dat_ptr)->str+4, keylen);

@@ -41,7 +41,7 @@ HASHTABLE *g_msgid_hash{};
 bool       g_thread_always{}; /* -a */
 bool       g_breadth_first{}; /* -b */
 
-static int cleanup_msgid_hash(int keylen, HASHDATUM *data, int extra);
+static int cleanup_msgid_hash(int keylen, HashDatum *data, int extra);
 static Article *first_sib(Article *ta, int depth);
 static Article *last_sib(Article *ta, int depth, Article *limit);
 static int subjorder_subject(const Subject **spp1, const Subject **spp2);
@@ -217,7 +217,7 @@ void thread_close()
     ov_close();
 }
 
-static int cleanup_msgid_hash(int keylen, HASHDATUM *data, int extra)
+static int cleanup_msgid_hash(int keylen, HashDatum *data, int extra)
 {
     Article* ap = (Article*)data->dat_ptr;
     int ret = -1;

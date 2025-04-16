@@ -41,9 +41,9 @@ ART_NUM             g_killfirst{};              /* used as g_firstart when killi
 
 static void mention(const char *str);
 static bool kfile_junk(char *ptr, int killmask);
-static int write_local_thread_commands(int keylen, HASHDATUM *data, int extra);
-static int write_global_thread_commands(int keylen, HASHDATUM *data, int appending);
-static int age_thread_commands(int keylen, HASHDATUM *data, int elapsed_days);
+static int write_local_thread_commands(int keylen, HashDatum *data, int extra);
+static int write_global_thread_commands(int keylen, HashDatum *data, int appending);
+static int age_thread_commands(int keylen, HashDatum *data, int elapsed_days);
 
 static std::FILE          *s_globkfp{};                /* global article killer file */
 static killfilestate_flags s_kfs_local_change_clear{}; /* bits to clear local changes */
@@ -104,7 +104,7 @@ void kfile_init()
                     if (cp != nullptr)
                     {
                         int auto_flag = s_thread_cmd_flag[cp - s_thread_cmd_ltr];
-                        HASHDATUM data = hashfetch(g_msgid_hash, g_buf, std::strlen(g_buf));
+                        HashDatum data = hashfetch(g_msgid_hash, g_buf, std::strlen(g_buf));
                         if (!data.dat_ptr)
                         {
                             data.dat_ptr = savestr(g_buf);
@@ -477,7 +477,7 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
     set_mode(g_general_mode,oldmode);
 }
 
-static int write_local_thread_commands(int keylen, HASHDATUM *data, int extra)
+static int write_local_thread_commands(int keylen, HashDatum *data, int extra)
 {
     Article* ap = (Article*)data->dat_ptr;
     int autofl = ap->autofl;
@@ -597,7 +597,7 @@ void rewrite_kfile(ART_NUM thru)
     }
 }
 
-static int write_global_thread_commands(int keylen, HASHDATUM *data, int appending)
+static int write_global_thread_commands(int keylen, HashDatum *data, int appending)
 {
     int autofl;
     int age;
@@ -642,7 +642,7 @@ static int write_global_thread_commands(int keylen, HASHDATUM *data, int appendi
     return 0;
 }
 
-static int age_thread_commands(int keylen, HASHDATUM *data, int elapsed_days)
+static int age_thread_commands(int keylen, HashDatum *data, int elapsed_days)
 {
     if (data->dat_len)
     {

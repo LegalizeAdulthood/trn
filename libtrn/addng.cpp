@@ -39,25 +39,25 @@ bool      g_use_add_selector{true}; //
 
 static int s_addgroup_cnt{};
 
-static int  addng_cmp(const char *key, int keylen, HASHDATUM data);
-static int  build_addgroup_list(int keylen, HASHDATUM *data, int extra);
+static int  addng_cmp(const char *key, int keylen, HashDatum data);
+static int  build_addgroup_list(int keylen, HashDatum *data, int extra);
 static void process_list(getnewsgroup_flags flag);
 static void new_nntp_groups(DataSource *dp);
 static void new_local_groups(DataSource *dp);
 static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch);
 static void add_to_list(const char *name, int toread, char_int ch);
-static int  list_groups(int keylen, HASHDATUM *data, int add_matching);
+static int  list_groups(int keylen, HashDatum *data, int add_matching);
 static void scanline(char *actline, bool add_matching);
 static int  agorder_number(const AddGroup **app1, const AddGroup **app2);
 static int  agorder_groupname(const AddGroup **app1, const AddGroup **app2);
 static int  agorder_count(const AddGroup **app1, const AddGroup **app2);
 
-static int addng_cmp(const char *key, int keylen, HASHDATUM data)
+static int addng_cmp(const char *key, int keylen, HashDatum data)
 {
     return memcmp(key, ((AddGroup *)data.dat_ptr)->name, keylen);
 }
 
-static int build_addgroup_list(int keylen, HASHDATUM *data, int extra)
+static int build_addgroup_list(int keylen, HashDatum *data, int extra)
 {
     AddGroup* node = (AddGroup*)data->dat_ptr;
 
@@ -307,7 +307,7 @@ static void new_local_groups(DataSource *dp)
 
 static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch)
 {
-    HASHDATUM data;
+    HashDatum data;
     unsigned const namelen = std::strlen(name);
     data.dat_len = namelen + sizeof (AddGroup);
     AddGroup *node = (AddGroup*)safemalloc(data.dat_len);
@@ -440,7 +440,7 @@ bool scanactive(bool add_matching)
     return oldcnt != g_newsgroup_cnt;
 }
 
-static int list_groups(int keylen, HASHDATUM *data, int add_matching)
+static int list_groups(int keylen, HashDatum *data, int add_matching)
 {
     char* bp = ((LISTNODE*)data->dat_ptr)->data + data->dat_len;
     int const linelen = std::strchr(bp, '\n') - bp + 1;

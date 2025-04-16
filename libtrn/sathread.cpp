@@ -55,7 +55,7 @@ long sa_get_subj_thread(long e)
     {
         s_sa_thread_hash = hashcreate(401, HASH_DEFCMPFUNC);
     }
-    HASHDATUM data = hashfetch(s_sa_thread_hash, s, std::strlen(s));
+    HashDatum data = hashfetch(s_sa_thread_hash, s, std::strlen(s));
     if (data.dat_ptr)
     {
         return (long)(data.dat_len);
