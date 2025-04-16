@@ -879,7 +879,7 @@ static char *adv_then_find_next_nl_and_dectrl(char *s)
     return s;
 }
 
-int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const char *server)
+int srcfile_open(SourceFile *sfp, const char *filename, const char *fetchcmd, const char *server)
 {
     unsigned offset;
     char* s;
@@ -1067,7 +1067,7 @@ int srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const
     return server? 2 : 1;
 }
 
-char *srcfile_append(SRCFILE *sfp, char *bp, int keylen)
+char *srcfile_append(SourceFile *sfp, char *bp, int keylen)
 {
     HASHDATUM data;
 
@@ -1114,7 +1114,7 @@ char *srcfile_append(SRCFILE *sfp, char *bp, int keylen)
     return lbp;
 }
 
-void srcfile_end_append(SRCFILE *sfp, const char *filename)
+void srcfile_end_append(SourceFile *sfp, const char *filename)
 {
     if (sfp->fp && sfp->refetch_secs)
     {
@@ -1130,7 +1130,7 @@ void srcfile_end_append(SRCFILE *sfp, const char *filename)
     }
 }
 
-void srcfile_close(SRCFILE *sfp)
+void srcfile_close(SourceFile *sfp)
 {
     if (sfp->fp)
     {

@@ -22,7 +22,7 @@ enum
 struct HASHTABLE;
 struct LIST;
 
-struct SRCFILE
+struct SourceFile
 {
     std::FILE  *fp;           /* the file pointer to read the data */
     HASHTABLE  *hp;           /* the hash table for the data */
@@ -67,9 +67,9 @@ struct DATASRC
 {
     char         *name;       /* our user-friendly name */
     char         *newsid;     /* the active file name or host name */
-    SRCFILE       act_sf;     /* the active file's hashed contents */
+    SourceFile       act_sf;     /* the active file's hashed contents */
     char         *grpdesc;    /* the newsgroup description file or tmp */
-    SRCFILE       desc_sf;    /* the group description's hashed contents */
+    SourceFile       desc_sf;    /* the group description's hashed contents */
     char         *extra_name; /* local active.times or server's actfile */
     NNTPLINK      nntplink;
     char         *spool_dir;
@@ -112,10 +112,10 @@ void        close_datasrc(DATASRC *dp);
 bool        actfile_hash(DATASRC *dp);
 bool        find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM high);
 const char *find_grpdesc(DATASRC *dp, const char *groupname);
-int         srcfile_open(SRCFILE *sfp, const char *filename, const char *fetchcmd, const char *server);
-char       *srcfile_append(SRCFILE *sfp, char *bp, int keylen);
-void        srcfile_end_append(SRCFILE *sfp, const char *filename);
-void        srcfile_close(SRCFILE *sfp);
+int         srcfile_open(SourceFile *sfp, const char *filename, const char *fetchcmd, const char *server);
+char       *srcfile_append(SourceFile *sfp, char *bp, int keylen);
+void        srcfile_end_append(SourceFile *sfp, const char *filename);
+void        srcfile_close(SourceFile *sfp);
 int         find_close_match();
 
 inline nntp_flags datasrc_nntp_flags(const DATASRC *dp)
