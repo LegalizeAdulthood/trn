@@ -81,8 +81,10 @@ void kfile_init()
         if (fp != nullptr)
         {
             g_msgid_hash = hashcreate(1999, msgid_cmp);
-            while (std::fgets(g_buf, sizeof g_buf, fp) != nullptr) {
-                if (*g_buf == '<') {
+            while (std::fgets(g_buf, sizeof g_buf, fp) != nullptr)
+            {
+                if (*g_buf == '<')
+                {
                     cp = std::strchr(g_buf,' ');
                     if (!cp)
                     {
@@ -93,7 +95,8 @@ void kfile_init()
                         *cp++ = '\0';
                     }
                     int age = s_kf_daynum - std::atol(cp + 1);
-                    if (age > KF_MAXDAYS) {
+                    if (age > KF_MAXDAYS)
+                    {
                         g_kf_changethd_cnt++;
                         continue;
                     }
@@ -122,7 +125,8 @@ void kfile_init()
         s_kfs_local_change_clear = KFS_LOCAL_CHANGES;
         g_kfs_thread_change_set = KFS_THREAD_CHANGES;
     }
-    else {
+    else
+    {
         s_kfs_local_change_clear = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
         g_kfs_thread_change_set = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
     }
@@ -130,7 +134,8 @@ void kfile_init()
 
 static void mention(const char *str)
 {
-    if (g_verbose) {
+    if (g_verbose)
+    {
         color_string(COLOR_NOTICE,str);
         newline();
     }
@@ -153,13 +158,15 @@ int do_kfile(std::FILE *kfp, int entering)
     g_art = g_lastart+1;
     g_killfirst = g_firstart;
     std::fseek(kfp,0L,0);                    /* rewind file */
-    while (std::fgets(g_buf,LBUFLEN,kfp) != nullptr) {
+    while (std::fgets(g_buf, LBUFLEN, kfp) != nullptr)
+    {
         if (*(cp = g_buf + std::strlen(g_buf) - 1) == '\n')
         {
             *cp = '\0';
         }
         bp = skip_space(g_buf);
-        if (!std::strncmp(bp,"THRU",4)) {
+        if (!std::strncmp(bp, "THRU", 4))
+        {
             int len = std::strlen(g_ngptr->rc->name);
             cp = skip_space(bp + 4);
             if (std::strncmp(cp, g_ngptr->rc->name, len) != 0 || !std::isspace(cp[len]))
@@ -174,7 +181,8 @@ int do_kfile(std::FILE *kfp, int entering)
             }
             continue;
         }
-        if (*bp == 'I') {
+        if (*bp == 'I')
+        {
             cp = skip_non_space(bp + 1);
             cp = skip_space(cp);
             if (!*cp)
@@ -182,7 +190,8 @@ int do_kfile(std::FILE *kfp, int entering)
                 continue;
             }
             cp = filexp(cp);
-            if (!std::strchr(cp,'/')) {
+            if (!std::strchr(cp, '/'))
+            {
                 set_ngname(cp);
                 cp = filexp(get_val_const("KILLLOCAL",s_killlocal));
                 set_ngname(g_ngptr->rcline);
@@ -199,8 +208,10 @@ int do_kfile(std::FILE *kfp, int entering)
             }
             continue;
         }
-        if (*bp == 'X') {               /* exit command? */
-            if (entering) {
+        if (*bp == 'X')                 /* exit command? */
+        {
+            if (entering)
+            {
                 s_exitcmds = true;
                 continue;
             }
@@ -211,7 +222,8 @@ int do_kfile(std::FILE *kfp, int entering)
             continue;
         }
 
-        if (*bp == '&') {
+        if (*bp == '&')
+        {
             mention(bp);
             if (bp > g_buf)
             {
@@ -219,14 +231,17 @@ int do_kfile(std::FILE *kfp, int entering)
             }
             switcheroo();
         }
-        else if (*bp == '/') {
+        else if (*bp == '/')
+        {
             g_kf_state |= KFS_NORMAL_LINES;
             if (g_firstart > g_lastart)
             {
                 continue;
             }
-            if (last_kill_type) {
-                if (perform_status_end(g_ngptr->toread,"article")) {
+            if (last_kill_type)
+            {
+                if (perform_status_end(g_ngptr->toread, "article"))
+                {
                     s_kill_mentioned = true;
                     carriage_return();
                     std::fputs(g_msg, stdout);
@@ -237,7 +252,8 @@ int do_kfile(std::FILE *kfp, int entering)
             last_kill_type = '/';
             mention(bp);
             s_kill_mentioned = true;
-            switch (art_search(bp, (sizeof g_buf) - (bp - g_buf), false)) {
+            switch (art_search(bp, (sizeof g_buf) - (bp - g_buf), false))
+            {
             case SRCH_ABORT:
                 continue;
             case SRCH_INTR:
@@ -266,10 +282,14 @@ int do_kfile(std::FILE *kfp, int entering)
                 break;
             }
         }
-        else if (first_time && *bp == '<') {
-            if (last_kill_type != '<') {
-                if (last_kill_type) {
-                    if (perform_status_end(g_ngptr->toread,"article")) {
+        else if (first_time && *bp == '<')
+        {
+            if (last_kill_type != '<')
+            {
+                if (last_kill_type)
+                {
+                    if (perform_status_end(g_ngptr->toread, "article"))
+                    {
                         s_kill_mentioned = true;
                         carriage_return();
                         std::fputs(g_msg, stdout);
@@ -291,7 +311,8 @@ int do_kfile(std::FILE *kfp, int entering)
             ARTICLE *ap = get_article(bp);
             if (ap != nullptr)
             {
-                if ((ap->flags & AF_FAKE) && !ap->child1) {
+                if ((ap->flags & AF_FAKE) && !ap->child1)
+                {
                     if (*cp == 'T')
                     {
                         cp++;
@@ -309,7 +330,9 @@ int do_kfile(std::FILE *kfp, int entering)
                             thread_select_cnt++;
                         }
                     }
-                } else {
+                }
+                else
+                {
                     g_art = article_num(ap);
                     g_artp = ap;
                     perform(cp,false);
@@ -326,12 +349,15 @@ int do_kfile(std::FILE *kfp, int entering)
             g_art = g_lastart+1;
             g_kf_state |= KFS_THREAD_LINES;
         }
-        else if (*bp == '<') {
+        else if (*bp == '<')
+        {
             g_kf_state |= KFS_THREAD_LINES;
         }
-        else if (*bp == '*') {
+        else if (*bp == '*')
+        {
             int killmask = AF_UNREAD;
-            switch (bp[1]) {
+            switch (bp[1])
+            {
             case 'X':
                 killmask |= g_sel_mask; /* don't kill selected articles */
                 /* FALL THROUGH */
@@ -342,20 +368,24 @@ int do_kfile(std::FILE *kfp, int entering)
             g_kf_state |= KFS_NORMAL_LINES;
         }
     }
-    if (thread_kill_cnt) {
+    if (thread_kill_cnt)
+    {
         std::sprintf(g_buf,"%ld auto-kill command%s.", (long)thread_kill_cnt,
                 plural(thread_kill_cnt));
         mention(g_buf);
         s_kill_mentioned = true;
     }
-    if (thread_select_cnt) {
+    if (thread_select_cnt)
+    {
         std::sprintf(g_buf,"%ld auto-select command%s.", (long)thread_select_cnt,
                 plural(thread_select_cnt));
         mention(g_buf);
         s_kill_mentioned = true;
     }
-    if (last_kill_type) {
-        if (perform_status_end(g_ngptr->toread,"article")) {
+    if (last_kill_type)
+    {
+        if (perform_status_end(g_ngptr->toread, "article"))
+        {
             s_kill_mentioned = true;
             carriage_return();
             std::fputs(g_msg, stdout);
@@ -372,7 +402,8 @@ static bool kfile_junk(char *ptr, int killmask)
     {
         set_read(ap);
     }
-    else if (ap->flags & g_sel_mask) {
+    else if (ap->flags & g_sel_mask)
+    {
         ap->flags &= ~static_cast<article_flags>(g_sel_mask);
         if (!g_selected_count--)
         {
@@ -389,7 +420,8 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
     bool anytokill = (g_ngptr->toread > 0);
 
     set_mode(GM_READ,MM_PROCESSING_KILL);
-    if ((entering || s_exitcmds) && (g_localkfp || s_globkfp)) {
+    if ((entering || s_exitcmds) && (g_localkfp || s_globkfp))
+    {
         s_exitcmds = false;
         ART_NUM oldfirst = g_firstart;
         g_firstart = starting;
@@ -400,7 +432,8 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
         }
 
         s_kill_mentioned = false;
-        if (g_localkfp) {
+        if (g_localkfp)
+        {
             if (entering)
             {
                 g_kf_state |= KFS_LOCAL_CHANGES;
@@ -413,7 +446,8 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
             intr = do_kfile(s_globkfp, entering);
         }
         newline();
-        if (entering && s_kill_mentioned && g_novice_delays) {
+        if (entering && s_kill_mentioned && g_novice_delays)
+        {
             if (g_verbose)
             {
                 get_anything();
@@ -442,10 +476,13 @@ static int write_local_thread_commands(int keylen, HASHDATUM *data, int extra)
     int autofl = ap->autofl;
     char ch;
 
-    if (autofl && ((ap->flags & AF_EXISTS) || ap->child1)) {
+    if (autofl && ((ap->flags & AF_EXISTS) || ap->child1))
+    {
         /* The arrays are in priority order, so find highest priority bit. */
-        for (int i = 0; s_thread_cmd_ltr[i]; i++) {
-            if (autofl & s_thread_cmd_flag[i]) {
+        for (int i = 0; s_thread_cmd_ltr[i]; i++)
+        {
+            if (autofl & s_thread_cmd_flag[i])
+            {
                 ch = s_thread_cmd_ltr[i];
                 break;
             }
@@ -478,8 +515,10 @@ void rewrite_kfile(ART_NUM thru)
     if (s_newkfp != nullptr)
     {
         std::fprintf(s_newkfp,"THRU %s %ld\n",g_ngptr->rc->name,(long)thru);
-        while (g_localkfp && std::fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
-            if (!std::strncmp(g_buf,"THRU",4)) {
+        while (g_localkfp && std::fgets(g_buf, LBUFLEN, g_localkfp) != nullptr)
+        {
+            if (!std::strncmp(g_buf, "THRU", 4))
+            {
                 char* cp = g_buf+4;
                 int len = std::strlen(g_ngptr->rc->name);
                 cp = skip_space(cp);
@@ -505,7 +544,8 @@ void rewrite_kfile(ART_NUM thru)
             {
                 has_star_commands = true;
             }
-            else {
+            else
+            {
                 std::fputs(g_buf,s_newkfp);
                 needs_newline = !std::strchr(bp,'\n');
             }
@@ -515,11 +555,14 @@ void rewrite_kfile(ART_NUM thru)
         {
             std::putc('\n', s_newkfp);
         }
-        if (has_star_commands) {
+        if (has_star_commands)
+        {
             std::fseek(g_localkfp,0L,0);                     /* rewind file */
-            while (std::fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
+            while (std::fgets(g_buf, LBUFLEN, g_localkfp) != nullptr)
+            {
                 bp = skip_space(g_buf);
-                if (*bp == '*') {
+                if (*bp == '*')
+                {
                     std::fputs(g_buf,s_newkfp);
                     needs_newline = !std::strchr(bp,'\n');
                 }
@@ -529,7 +572,8 @@ void rewrite_kfile(ART_NUM thru)
                 std::putc('\n', s_newkfp);
             }
         }
-        if (!(g_kf_state & KFS_GLOBAL_THREADFILE)) {
+        if (!(g_kf_state & KFS_GLOBAL_THREADFILE))
+        {
             /* Append all the still-valid thread commands */
             hashwalk(g_msgid_hash, write_local_thread_commands, 0);
         }
@@ -553,7 +597,8 @@ static int write_global_thread_commands(int keylen, HASHDATUM *data, int appendi
     char* msgid;
     char ch;
 
-    if (data->dat_len) {
+    if (data->dat_len)
+    {
         if (appending)
         {
             return 0;
@@ -562,7 +607,8 @@ static int write_global_thread_commands(int keylen, HASHDATUM *data, int appendi
         age = autofl & KF_AGE_MASK;
         msgid = data->dat_ptr;
     }
-    else {
+    else
+    {
         ARTICLE* ap = (ARTICLE*)data->dat_ptr;
         autofl = ap->autofl;
         if (!autofl || (appending && (autofl & AUTO_OLD)))
@@ -575,8 +621,10 @@ static int write_global_thread_commands(int keylen, HASHDATUM *data, int appendi
     }
 
     /* The arrays are in priority order, so find highest priority bit. */
-    for (int i = 0; s_thread_cmd_ltr[i]; i++) {
-        if (autofl & s_thread_cmd_flag[i]) {
+    for (int i = 0; s_thread_cmd_ltr[i]; i++)
+    {
+        if (autofl & s_thread_cmd_flag[i])
+        {
             ch = s_thread_cmd_ltr[i];
             break;
         }
@@ -589,18 +637,22 @@ static int write_global_thread_commands(int keylen, HASHDATUM *data, int appendi
 
 static int age_thread_commands(int keylen, HASHDATUM *data, int elapsed_days)
 {
-    if (data->dat_len) {
+    if (data->dat_len)
+    {
         int age = (data->dat_len & KF_AGE_MASK) + elapsed_days;
-        if (age > KF_MAXDAYS) {
+        if (age > KF_MAXDAYS)
+        {
             std::free(data->dat_ptr);
             g_kf_changethd_cnt++;
             return -1;
         }
         data->dat_len += elapsed_days;
     }
-    else {
+    else
+    {
         ARTICLE* ap = (ARTICLE*)data->dat_ptr;
-        if (ap->autofl & AUTO_OLD) {
+        if (ap->autofl & AUTO_OLD)
+        {
             ap->autofl &= ~AUTO_OLD;
             g_kf_changethd_cnt++;
             g_kf_state |= KFS_THREAD_CHANGES;
@@ -617,7 +669,8 @@ void update_thread_kfile()
     }
 
     int elapsed_days = killfile_daynum(s_kf_daynum);
-    if (elapsed_days) {
+    if (elapsed_days)
+    {
         hashwalk(g_msgid_hash, age_thread_commands, elapsed_days);
         s_kf_daynum += elapsed_days;
     }
@@ -629,7 +682,8 @@ void update_thread_kfile()
 
     char *cp = filexp(get_val_const("KILLTHREADS", s_killthreads));
     makedir(cp, MD_FILE);
-    if (g_kf_changethd_cnt*5 > s_kf_thread_cnt) {
+    if (g_kf_changethd_cnt * 5 > s_kf_thread_cnt)
+    {
         remove(cp);                     /* to prevent file reuse */
         s_newkfp = std::fopen(cp, "w");
         if (s_newkfp == nullptr)
@@ -640,7 +694,8 @@ void update_thread_kfile()
         g_kf_changethd_cnt = 0;
         hashwalk(g_msgid_hash, write_global_thread_commands, 0); /* Rewrite */
     }
-    else {
+    else
+    {
         s_newkfp = std::fopen(cp, "a");
         if (s_newkfp == nullptr)
         {
@@ -655,7 +710,8 @@ void update_thread_kfile()
 
 void change_auto_flags(ARTICLE *ap, autokill_flags auto_flag)
 {
-    if (auto_flag > (ap->autofl & (AUTO_KILL_MASK|AUTO_SEL_MASK))) {
+    if (auto_flag > (ap->autofl & (AUTO_KILL_MASK | AUTO_SEL_MASK)))
+    {
         if (ap->autofl & AUTO_OLD)
         {
             g_kf_changethd_cnt++;
@@ -667,7 +723,8 @@ void change_auto_flags(ARTICLE *ap, autokill_flags auto_flag)
 
 void clear_auto_flags(ARTICLE *ap)
 {
-    if (ap->autofl) {
+    if (ap->autofl)
+    {
         if (ap->autofl & AUTO_OLD)
         {
             g_kf_changethd_cnt++;
@@ -679,7 +736,8 @@ void clear_auto_flags(ARTICLE *ap)
 
 void perform_auto_flags(ARTICLE *ap, autokill_flags thread_autofl, autokill_flags subj_autofl, autokill_flags chain_autofl)
 {
-    if (thread_autofl & AUTO_SEL_THD) {
+    if (thread_autofl & AUTO_SEL_THD)
+    {
         if (g_sel_mode == SM_THREAD)
         {
             select_arts_thread(ap, AUTO_SEL_THD);
@@ -702,7 +760,8 @@ void perform_auto_flags(ARTICLE *ap, autokill_flags thread_autofl, autokill_flag
         select_article(ap, AUTO_SEL_1);
     }
 
-    if (thread_autofl & AUTO_KILL_THD) {
+    if (thread_autofl & AUTO_KILL_THD)
+    {
         if (g_sel_mode == SM_THREAD)
         {
             kill_arts_thread(ap, AFFECT_ALL | AUTO_KILL_THD);
@@ -732,12 +791,14 @@ void edit_kfile()
 {
     char* bp;
 
-    if (g_in_ng) {
+    if (g_in_ng)
+    {
         if (g_kf_state & KFS_LOCAL_CHANGES)
         {
             rewrite_kfile(g_lastart);
         }
-        if (!(g_kf_state & KFS_GLOBAL_THREADFILE)) {
+        if (!(g_kf_state & KFS_GLOBAL_THREADFILE))
+        {
             for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
             {
                 clear_subject(sp);
@@ -748,7 +809,8 @@ void edit_kfile()
     {
         std::strcpy(g_buf, filexp(get_val_const("KILLGLOBAL", s_killglobal)));
     }
-    if (!makedir(g_buf, MD_FILE)) {
+    if (!makedir(g_buf, MD_FILE))
+    {
         std::sprintf(g_cmd_buf,"%s %s",
             filexp(get_val_const("VISUAL",get_val_const("EDITOR",DEFEDITOR))),g_buf);
         std::printf("\nEditing %s KILL file:\n%s\n",
@@ -759,16 +821,19 @@ void edit_kfile()
         noecho();                       /* and make terminal */
         crmode();                       /*   unfriendly again */
         open_kfile(g_in_ng);
-        if (g_localkfp) {
+        if (g_localkfp)
+        {
             std::fseek(g_localkfp,0L,0);     /* rewind file */
             g_kf_state &= ~KFS_NORMAL_LINES;
-            while (std::fgets(g_buf,LBUFLEN,g_localkfp) != nullptr) {
+            while (std::fgets(g_buf, LBUFLEN, g_localkfp) != nullptr)
+            {
                 bp = skip_space(g_buf);
                 if (*bp == '/' || *bp == '*')
                 {
                     g_kf_state |= KFS_NORMAL_LINES;
                 }
-                else if (*bp == '<') {
+                else if (*bp == '<')
+                {
                     char* cp = std::strchr(bp,' ');
                     if (!cp)
                     {
@@ -795,7 +860,8 @@ void edit_kfile()
             }
         }
     }
-    else {
+    else
+    {
         std::printf("Can't make %s\n",g_buf);
         termdown(1);
     }
@@ -810,14 +876,16 @@ void open_kfile(int local)
     {
         std::filesystem::remove(kname);
     }
-    if (local) {
+    if (local)
+    {
         if (g_localkfp)
         {
             std::fclose(g_localkfp);
         }
         g_localkfp = std::fopen(kname,"r");
     }
-    else {
+    else
+    {
         if (s_globkfp)
         {
             std::fclose(s_globkfp);
@@ -829,7 +897,8 @@ void open_kfile(int local)
 void kf_append(const char *cmd, bool local)
 {
     std::strcpy(g_cmd_buf, filexp(local ? get_val_const("KILLLOCAL", s_killlocal) : get_val_const("KILLGLOBAL", s_killglobal)));
-    if (!makedir(g_cmd_buf, MD_FILE)) {
+    if (!makedir(g_cmd_buf, MD_FILE))
+    {
         if (g_verbose)
         {
             std::printf("\nDepositing command in %s...", g_cmd_buf);
