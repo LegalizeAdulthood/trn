@@ -24,7 +24,7 @@ enum CharsetType
 #define CHARSET_NAME_ISO8859_15     "Latin9"
 #define CHARSET_NAME_WINDOWS_1252   "CP1252"
 
-using CODE_POINT = unsigned long;
+using CodePoint = unsigned long;
 
 CharsetType utf_init(const char *from, const char *to);
 const char *input_charset_name();
@@ -36,13 +36,13 @@ int byte_length_at(const char *s);
 int visual_width_at(const char *s);
 int visual_length_of(const char *s);
 int visual_length_between(const char *s1, const char *s2);
-int insert_unicode_at(char *s, CODE_POINT c);
+int insert_unicode_at(char *s, CodePoint c);
 
-enum : CODE_POINT
+enum : CodePoint
 {
-    INVALID_CODE_POINT = static_cast<CODE_POINT>(~0L)
+    INVALID_CODE_POINT = static_cast<CodePoint>(~0L)
 };
-CODE_POINT code_point_at(const char *s);
+CodePoint code_point_at(const char *s);
 
 int put_char_adv(char **strptr, bool outputok);
 

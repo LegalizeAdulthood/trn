@@ -212,12 +212,12 @@ TEST(UTFCodePointDecodingTest, nullptr)
     ASSERT_EQ(INVALID_CODE_POINT, code_point_at(nullptr));
 }
 
-constexpr CODE_POINT ASCII_SPACE_CODE_POINT = 0x20;
-constexpr CODE_POINT ASCII_5_CODE_POINT = 0x35;
-constexpr CODE_POINT ISO8859D1_ETH_CODE_POINT = 0xF0;
-constexpr CODE_POINT CJK_SHIN_CODE_POINT = 0x05E9;
-constexpr CODE_POINT OY_CODE_POINT = 0x18B0;
-constexpr CODE_POINT KISSING_FACE_WITH_CLOSED_EYES_CODE_POINT = 0x1F61A;
+constexpr CodePoint ASCII_SPACE_CODE_POINT = 0x20;
+constexpr CodePoint ASCII_5_CODE_POINT = 0x35;
+constexpr CodePoint ISO8859D1_ETH_CODE_POINT = 0xF0;
+constexpr CodePoint CJK_SHIN_CODE_POINT = 0x05E9;
+constexpr CodePoint OY_CODE_POINT = 0x18B0;
+constexpr CodePoint KISSING_FACE_WITH_CLOSED_EYES_CODE_POINT = 0x1F61A;
 
 TEST(UTFCodePointDecodingTest, ascii_space)
 {

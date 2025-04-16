@@ -32,7 +32,7 @@
 
 #define XXXXXX INVALID_CODE_POINT
 
-static const CODE_POINT s_cp1252_himap[128] = {
+static const CodePoint s_cp1252_himap[128] = {
     // clang-format off
     0x20ac, XXXXXX, 0x201a, 0x0192, 0x201e, 0x2026, 0x2020, 0x2021,     0x02c6, 0x2030, 0x0160, 0x2039, 0x0152, XXXXXX, 0x017d, XXXXXX,
     XXXXXX, 0x2018, 0x2019, 0x201c, 0x201d, 0x00b7, 0x2013, 0x2014,     0x02dc, 0x2122, 0x0161, 0x203a, 0x0153, XXXXXX, 0x017e, 0x0178,
@@ -45,7 +45,7 @@ static const CODE_POINT s_cp1252_himap[128] = {
     // clang-format on
 };
 
-static const CODE_POINT s_iso8859_1_himap[128] = {
+static const CodePoint s_iso8859_1_himap[128] = {
     // clang-format off
     XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX,     XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX,
     XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX,     XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX,
@@ -58,7 +58,7 @@ static const CODE_POINT s_iso8859_1_himap[128] = {
     // clang-format on
 };
 
-static const CODE_POINT s_iso8859_15_himap[128] = {
+static const CodePoint s_iso8859_15_himap[128] = {
     // clang-format off
     XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX,     XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX,
     XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX,     XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX, XXXXXX,
@@ -75,7 +75,7 @@ struct CHARSET_DESC
 {
     const char       *name;
     CharsetType      id;
-    const CODE_POINT *himap;
+    const CodePoint *himap;
 };
 
 static const CHARSET_DESC s_charset_descs[] = {
@@ -109,8 +109,8 @@ struct gstate
 {
     CharsetType      in;
     CharsetType      out;
-    const CODE_POINT *himap_in;
-    const CODE_POINT *himap_out;
+    const CodePoint *himap_in;
+    const CodePoint *himap_out;
 };
 
 static gstate s_gs = { CHARSET_UTF8, CHARSET_UTF8, nullptr, nullptr };
@@ -262,7 +262,7 @@ int byte_length_at(const char *s)
 /* NOTE: correctness is not guaranteed; this is only a rough generalization */
 int visual_width_at(const char *s)
 {
-    CODE_POINT c = code_point_at(s);
+    CodePoint c = code_point_at(s);
     int it = 1;
     if (c == INVALID_CODE_POINT)
     {
@@ -335,9 +335,9 @@ int visual_length_between(const char *s1, const char *s2)
     return it;
 }
 
-CODE_POINT code_point_at(const char *s)
+CodePoint code_point_at(const char *s)
 {
-    CODE_POINT it;
+    CodePoint it;
     if (s != nullptr)
     {
         if (IS_UTF8(s_gs.in))
@@ -392,7 +392,7 @@ CODE_POINT code_point_at(const char *s)
     return it;
 }
 
-static int insert_utf8_at(char *s, CODE_POINT c)
+static int insert_utf8_at(char *s, CodePoint c)
 {
     int it;
     /* FIXME - should we check if s has enough space? */
@@ -448,7 +448,7 @@ static int insert_utf8_at(char *s, CODE_POINT c)
     return it;
 }
 
-int insert_unicode_at(char *s, CODE_POINT c)
+int insert_unicode_at(char *s, CodePoint c)
 {
     int it;
     /* FIXME - should we check if s has enough space? */
@@ -483,7 +483,7 @@ bool at_norm_char(const char *s)
     {
         if (s_gs.in == CHARSET_UTF8)
         {
-            CODE_POINT c = code_point_at(s);
+            CodePoint c = code_point_at(s);
             it = c >= 0x20 && !(c >= 0x7F && c < 0xA0) && c != 0x2028 && c != 0x2029;
         }
         else if (U(*s) < 0x80)
