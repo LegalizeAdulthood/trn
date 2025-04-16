@@ -22,9 +22,10 @@ int s_compare(long *a, long *b)
 {
     switch (g_s_cur_type)
     {
-      case S_ART:
+    case S_ART:
         return sa_compare(*a,*b);
-      default:
+
+    default:
         return *a - *b;
     }
 }
@@ -35,9 +36,10 @@ int s_compare(long a, long b)
 {
     switch (g_s_cur_type)
     {
-      case S_ART:
+    case S_ART:
         return sa_compare(a,b);
-      default:
+
+    default:
         return a - b;
     }
 }
