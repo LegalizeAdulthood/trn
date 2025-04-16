@@ -643,9 +643,9 @@ try_again:
             {
                 continue;
             }
-            if (!g_sel_exclusive || (ui->flags & static_cast<univitem_flags>(g_sel_mask)))
+            if (!g_sel_exclusive || (ui->flags & static_cast<UniversalItemFlags>(g_sel_mask)))
             {
-                if (g_sel_rereading && !(ui->flags & static_cast<univitem_flags>(g_sel_mask)))
+                if (g_sel_rereading && !(ui->flags & static_cast<UniversalItemFlags>(g_sel_mask)))
                 {
                     ui->flags |= UF_DEL;
                 }
@@ -2034,7 +2034,7 @@ try_again:
                 continue;
             }
 
-            sel = !!(ui->flags & static_cast<univitem_flags>(g_sel_mask)) + (ui->flags & UF_DEL);
+            sel = !!(ui->flags & static_cast<UniversalItemFlags>(g_sel_mask)) + (ui->flags & UF_DEL);
             g_sel_items[g_sel_page_item_cnt].u.un = ui;
             g_sel_items[g_sel_page_item_cnt].line = g_term_line;
             g_sel_items[g_sel_page_item_cnt].sel = sel;

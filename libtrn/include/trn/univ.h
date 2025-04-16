@@ -97,7 +97,7 @@ union UniversalData
 };
 
 /* selector flags */
-enum univitem_flags
+enum UniversalItemFlags
 {
     UF_NONE = 0x00,
     UF_SEL = 0x01,
@@ -106,14 +106,14 @@ enum univitem_flags
     UF_INCLUDED = 0x10,
     UF_EXCLUDED = 0x20
 };
-DECLARE_FLAGS_ENUM(univitem_flags, int);
+DECLARE_FLAGS_ENUM(UniversalItemFlags, int);
 
 struct UNIV_ITEM
 {
     UNIV_ITEM     *next;
     UNIV_ITEM     *prev;
     int            num;   /* natural order (for sort) */
-    univitem_flags flags; /* for selector */
+    UniversalItemFlags flags; /* for selector */
     UniversalItemType type;  /* what kind of object is it? */
     char          *desc;  /* default description */
     int            score;

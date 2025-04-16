@@ -149,7 +149,7 @@ using addgroup_subject_flag = addgroup_flag_equivalence<SubjectFlags>;
 using addgroup_article_flag = addgroup_flag_equivalence<ArticleFlags>;
 using addgroup_newsgroup_flag = addgroup_flag_equivalence<NewsgroupFlags>;
 using addgroup_multirc_flag = addgroup_flag_equivalence<MultircFlags>;
-using addgroup_univitem_flag = addgroup_flag_equivalence<univitem_flags>;
+using addgroup_univitem_flag = addgroup_flag_equivalence<UniversalItemFlags>;
 
 struct SubjectAddGroupFlagEquivalences : testing::TestWithParam<addgroup_subject_flag>
 {
