@@ -65,7 +65,8 @@ void mp_init()
 static int mp_alloc_frag()
 {
     int f = s_mp_first_free_frag;
-    if (f == 0) {
+    if (f == 0)
+    {
         std::printf("trn: out of memory pool fragments!\n");
         sig_catcher(0);         /* die. */
     }
@@ -103,7 +104,8 @@ static void mp_free_frag(int f)
 
 char *mp_savestr(const char *str, memory_pool pool)
 {
-    if (!str) {
+    if (!str)
+    {
 #if 1
         std::printf("\ntrn: mp_savestr(nullptr,%d) error.\n",pool);
         TRN_ASSERT(false);
@@ -112,14 +114,16 @@ char *mp_savestr(const char *str, memory_pool pool)
 #endif
     }
     int len = std::strlen(str);
-    if (len >= FRAG_SIZE) {
+    if (len >= FRAG_SIZE)
+    {
         std::printf("trn: string too big (len = %d) for memory pool!\n",len);
         std::printf("trn: (maximum length allowed is %d)\n",FRAG_SIZE);
         sig_catcher(0);         /* die. */
     }
     int f = s_mpheads[pool].current;
     /* just to be extra safe, keep 2 bytes unused at end of block */
-    if (f == 0 || len >= s_mpfrags[f].bytesfree-2) {
+    if (f == 0 || len >= s_mpfrags[f].bytesfree - 2)
+    {
         int oldf = f;
         f = mp_alloc_frag();
         s_mpfrags[f].next = oldf;
@@ -139,13 +143,15 @@ char *mp_malloc(int len, memory_pool pool)
     {
         len = 1;
     }
-    if (len >= FRAG_SIZE) {
+    if (len >= FRAG_SIZE)
+    {
         std::printf("trn: malloc size too big (len = %d) for memory pool!\n",len);
         std::printf("trn: (maximum length allowed is %d)\n",FRAG_SIZE);
         sig_catcher(0);         /* die. */
     }
     int f = s_mpheads[pool].current;
-    if (f == 0 || len >= s_mpfrags[f].bytesfree) {
+    if (f == 0 || len >= s_mpfrags[f].bytesfree)
+    {
         int oldf = f;
         f = mp_alloc_frag();
         s_mpfrags[f].next = oldf;
@@ -161,7 +167,8 @@ char *mp_malloc(int len, memory_pool pool)
 void mp_free(memory_pool pool)
 {
     int f = s_mpheads[pool].current;
-    while (f) {
+    while (f)
+    {
         int oldnext = s_mpfrags[f].next;
         mp_free_frag(f);
         f = oldnext;
