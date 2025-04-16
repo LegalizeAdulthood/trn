@@ -102,7 +102,7 @@ static void mp_free_frag(int f)
     s_mp_first_free_frag = f;
 }
 
-char *mp_savestr(const char *str, memory_pool pool)
+char *mp_savestr(const char *str, MemoryPool pool)
 {
     if (!str)
     {
@@ -137,7 +137,7 @@ char *mp_savestr(const char *str, memory_pool pool)
 }
 
 /* returns a pool-allocated string */
-char *mp_malloc(int len, memory_pool pool)
+char *mp_malloc(int len, MemoryPool pool)
 {
     if (len == 0)
     {
@@ -164,7 +164,7 @@ char *mp_malloc(int len, memory_pool pool)
 }
 
 /* free a whole memory pool */
-void mp_free(memory_pool pool)
+void mp_free(MemoryPool pool)
 {
     int f = s_mpheads[pool].current;
     while (f)

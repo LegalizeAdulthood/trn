@@ -109,7 +109,7 @@ bool parseline(char *art_buf, int newhide, int oldhide);
 void end_header();
 bool parseheader(ART_NUM artnum);
 char *fetchlines(ART_NUM artnum, HeaderLineType which_line);
-char *mp_fetchlines(ART_NUM artnum, HeaderLineType which_line, memory_pool pool);
+char *mp_fetchlines(ART_NUM artnum, HeaderLineType which_line, MemoryPool pool);
 char *prefetchlines(ART_NUM artnum, HeaderLineType which_line, bool copy);
 inline char *fetchsubj(ART_NUM artnum, bool copy)
 {
