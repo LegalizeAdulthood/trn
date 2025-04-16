@@ -360,7 +360,7 @@ int s_fillpage()
             /* downgrade eligibility standards */
             switch (g_s_cur_type)
             {
-              case S_ART:               /* article context */
+            case S_ART:               /* article context */
                 if (g_sa_mode_zoom)             /* we were zoomed in */
                 {
                     g_s_ref_top = true; /* for "FOLD" display */
@@ -373,7 +373,8 @@ int s_fillpage()
                     return s_fillpage();
                 }
                 return -1;              /* there just aren't entries! */
-              default:
+
+            default:
                 return -1;              /* there just aren't entries! */
             } /* switch */
         } /* if */
