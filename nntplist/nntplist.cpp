@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
                     std::exit(1);
                 }
                 break;
+
             case 'x':
                 if (wildarg || !--argc)
                 {
@@ -55,6 +56,7 @@ int main(int argc, char *argv[])
                 }
                 wildarg = *++argv;
                 break;
+
             default:
                 usage();
                 /* NO RETURN */
