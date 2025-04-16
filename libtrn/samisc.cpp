@@ -48,7 +48,8 @@ bool sa_basic_elig(long a)
         }
     }
     /* now just check availability */
-    if (is_unavailable(artnum)) {
+    if (is_unavailable(artnum))
+    {
         if (!was_read(artnum))
         {
             oneless_artnum(artnum);
@@ -111,12 +112,16 @@ void sa_selthreads()
     }
 
     /* Loop through all (selected) articles. */
-    for (SUBJECT *sp = g_first_subject; sp; sp = sp->next) {
-        if ((sp->flags & subj_mask) == subj_mask) {
-            for (ARTICLE *ap = first_art(sp); ap; ap = next_art(ap)) {
+    for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
+    {
+        if ((sp->flags & subj_mask) == subj_mask)
+        {
+            for (ARTICLE *ap = first_art(sp); ap; ap = next_art(ap))
+            {
                 long art = article_num(ap);
-                if ((ap->flags & AF_SEL)
-                 && (!(ap->flags & AF_UNREAD) ^ want_unread)) {
+                if ((ap->flags & AF_SEL) //
+                    && (!(ap->flags & AF_UNREAD) ^ want_unread))
+                {
                     /* this was a trn-thread selected article */
                     sa_select1(sa_artnum_to_ent(art));
     /* if scoring, make sure that this article is scored... */
@@ -134,7 +139,8 @@ void sa_selthreads()
 int sa_number_arts()
 {
     int total = 0;
-    for (int i = 1; i < g_sa_num_ents; i++) {
+    for (int i = 1; i < g_sa_num_ents; i++)
+    {
         ART_NUM a = g_sa_ents[i].artnum;
         if (is_unavailable(a))
         {
@@ -170,8 +176,10 @@ int sa_compare(long a, long b)
         /* do not score the articles here--move the articles to
          * the end of the list if unscored.
          */
-        if (!article_scored(g_sa_ents[a].artnum)) {                       /* a unscored */
-            if (!article_scored(g_sa_ents[b].artnum)) { /* a+b unscored */
+        if (!article_scored(g_sa_ents[a].artnum))                         /* a unscored */
+        {
+            if (!article_scored(g_sa_ents[b].artnum))   /* a+b unscored */
+            {
                 if (a < b)                                        /* keep ordering consistent */
                 {
                     return -1;
@@ -196,7 +204,8 @@ int sa_compare(long a, long b)
             return -1;
         }
         /* i == j */
-        if (g_score_newfirst) {
+        if (g_score_newfirst)
+        {
             if (a < b)
             {
                 return 1;
