@@ -87,7 +87,7 @@ struct UNIV_TEXTFILE
 union UNIV_DATA
 {
     char* str;
-    help_location i;
+    HelpLocation i;
     UNIV_GROUPMASK_DATA gmask;
     UNIV_CONFIGFILE_DATA cfile;
     UNIV_NEWSGROUP group;
@@ -166,8 +166,8 @@ int         univ_visit_group_main(const char *gname);
 void        univ_virt_pass();
 void        sort_univ();
 const char *univ_article_desc(const UNIV_ITEM *ui);
-void        univ_help_main(help_location where);
-void        univ_help(help_location where);
+void        univ_help_main(HelpLocation where);
+void        univ_help(HelpLocation where);
 const char *univ_keyhelp_modestr(const UNIV_ITEM *ui);
 
 #endif

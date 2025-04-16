@@ -3876,7 +3876,7 @@ int univ_visit_group(const char *gname)
 }
 
 /* later consider returning universal_selector() value */
-void univ_visit_help(help_location where)
+void univ_visit_help(HelpLocation where)
 {
     PUSH_SELECTOR();
     PUSH_UNIV_SELECTOR();

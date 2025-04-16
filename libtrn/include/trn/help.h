@@ -5,7 +5,7 @@
 #define TRN_HELP_H
 
 /* help locations */
-enum help_location
+enum HelpLocation
 {
     UHELP_PAGE = 1,
     UHELP_ART = 2,
@@ -32,6 +32,6 @@ int help_multirc();
 int help_options();
 int help_scanart();
 int help_univ();
-int univ_key_help(help_location where);
+int univ_key_help(HelpLocation where);
 
 #endif

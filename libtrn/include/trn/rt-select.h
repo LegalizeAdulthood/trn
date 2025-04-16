@@ -76,6 +76,6 @@ char option_selector();
 char universal_selector();
 void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
 int  univ_visit_group(const char *gname);
-void univ_visit_help(help_location where);
+void univ_visit_help(HelpLocation where);
 
 #endif

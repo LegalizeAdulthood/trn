@@ -865,7 +865,7 @@ int help_univ()
     return 0;
 }
 
-int univ_key_help(help_location where)
+int univ_key_help(HelpLocation where)
 {
     switch (where)
     {

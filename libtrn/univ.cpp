@@ -1360,7 +1360,7 @@ const char *univ_article_desc(const UNIV_ITEM *ui)
  *        to the new level
  */
 //int where;    /* what context were we in--use later for key help? */
-void univ_help_main(help_location where)
+void univ_help_main(HelpLocation where)
 {
     univ_open();
     g_univ_title = "Extended Help";
@@ -1381,7 +1381,7 @@ void univ_help_main(help_location where)
     /* later: if flag is not true, then add message? */
 }
 
-void univ_help(help_location where)
+void univ_help(HelpLocation where)
 {
     univ_visit_help(where);     /* push old selector info to stack */
 }
