@@ -139,41 +139,41 @@ namespace
 {
 
 template <typename T>
-struct addgroup_flag_equivalence
+struct AddGroupFlagEquivalence
 {
     AddGroupFlags agf;
     T              other;
 };
 
-using addgroup_subject_flag = addgroup_flag_equivalence<SubjectFlags>;
-using addgroup_article_flag = addgroup_flag_equivalence<ArticleFlags>;
-using addgroup_newsgroup_flag = addgroup_flag_equivalence<NewsgroupFlags>;
-using addgroup_multirc_flag = addgroup_flag_equivalence<MultircFlags>;
-using addgroup_univitem_flag = addgroup_flag_equivalence<UniversalItemFlags>;
+using AddGroupSubjectFlag = AddGroupFlagEquivalence<SubjectFlags>;
+using AddGroupArticleFlag = AddGroupFlagEquivalence<ArticleFlags>;
+using AddGroupNewsgroupFlag = AddGroupFlagEquivalence<NewsgroupFlags>;
+using AddGroupMultircFlag = AddGroupFlagEquivalence<MultircFlags>;
+using AddGroupUniversalItemFlag = AddGroupFlagEquivalence<UniversalItemFlags>;
 
-struct SubjectAddGroupFlagEquivalences : testing::TestWithParam<addgroup_subject_flag>
+struct SubjectAddGroupFlagEquivalences : testing::TestWithParam<AddGroupSubjectFlag>
 {
 };
 
-struct ArticleAddGroupFlagEquivalences : testing::TestWithParam<addgroup_article_flag>
+struct ArticleAddGroupFlagEquivalences : testing::TestWithParam<AddGroupArticleFlag>
 {
 };
 
-struct NewsgroupAddGroupFlagEquivalence : testing::TestWithParam<addgroup_newsgroup_flag>
+struct NewsgroupAddGroupFlagEquivalence : testing::TestWithParam<AddGroupNewsgroupFlag>
 {
 };
 
-struct MultiRCAddGroupFlagEquivalence : testing::TestWithParam<addgroup_multirc_flag>
+struct MultiRCAddGroupFlagEquivalence : testing::TestWithParam<AddGroupMultircFlag>
 {
 };
 
-struct UnivItemAddGroupFlagEquivalence : testing::TestWithParam<addgroup_univitem_flag>
+struct UnivItemAddGroupFlagEquivalence : testing::TestWithParam<AddGroupUniversalItemFlag>
 {
 };
 
 } // namespace
 
-static addgroup_subject_flag subject_equivs[] =
+static AddGroupSubjectFlag subject_equivs[] =
 {
     // clang-format off
     { AGF_NONE, SF_NONE },
@@ -185,14 +185,14 @@ static addgroup_subject_flag subject_equivs[] =
 
 TEST_P(SubjectAddGroupFlagEquivalences, sameValue)
 {
-    addgroup_subject_flag param = GetParam();
+    AddGroupSubjectFlag param = GetParam();
 
     ASSERT_EQ(static_cast<int>(param.agf), static_cast<int>(param.other));
 }
 
 INSTANTIATE_TEST_SUITE_P(TestSubjectAddGroupFlags, SubjectAddGroupFlagEquivalences, testing::ValuesIn(subject_equivs));
 
-static addgroup_article_flag article_equivs[] =
+static AddGroupArticleFlag article_equivs[] =
 {
     // clang-format off
     { AGF_NONE, AF_NONE },
@@ -204,14 +204,14 @@ static addgroup_article_flag article_equivs[] =
 
 TEST_P(ArticleAddGroupFlagEquivalences, sameValue)
 {
-    addgroup_article_flag param = GetParam();
+    AddGroupArticleFlag param = GetParam();
 
     ASSERT_EQ(static_cast<int>(param.agf), static_cast<int>(param.other));
 }
 
 INSTANTIATE_TEST_SUITE_P(TestArticleAddGroupFlags, ArticleAddGroupFlagEquivalences, testing::ValuesIn(article_equivs));
 
-static addgroup_newsgroup_flag newsgroup_equivs[] =
+static AddGroupNewsgroupFlag newsgroup_equivs[] =
 {
     // clang-format off
     { AGF_NONE, NF_NONE },
@@ -223,14 +223,14 @@ static addgroup_newsgroup_flag newsgroup_equivs[] =
 
 TEST_P(NewsgroupAddGroupFlagEquivalence, sameValue)
 {
-    addgroup_newsgroup_flag param = GetParam();
+    AddGroupNewsgroupFlag param = GetParam();
 
     ASSERT_EQ(static_cast<int>(param.agf), static_cast<int>(param.other));
 }
 
 INSTANTIATE_TEST_SUITE_P(TestNewsgroupAddGroupFlags, NewsgroupAddGroupFlagEquivalence, testing::ValuesIn(newsgroup_equivs));
 
-static addgroup_multirc_flag multirc_equivs[] =
+static AddGroupMultircFlag multirc_equivs[] =
 {
     // clang-format off
     { AGF_NONE, MF_NONE },
@@ -242,14 +242,14 @@ static addgroup_multirc_flag multirc_equivs[] =
 
 TEST_P(MultiRCAddGroupFlagEquivalence, sameValue)
 {
-    addgroup_multirc_flag param = GetParam();
+    AddGroupMultircFlag param = GetParam();
 
     ASSERT_EQ(static_cast<int>(param.agf), static_cast<int>(param.other));
 }
 
 INSTANTIATE_TEST_SUITE_P(TestMultiRCAddGroupFlags, MultiRCAddGroupFlagEquivalence, testing::ValuesIn(multirc_equivs));
 
-static addgroup_univitem_flag univitem_equivs[] =
+static AddGroupUniversalItemFlag univitem_equivs[] =
 {
     // clang-format off
     { AGF_NONE, UF_NONE },
@@ -261,7 +261,7 @@ static addgroup_univitem_flag univitem_equivs[] =
 
 TEST_P(UnivItemAddGroupFlagEquivalence, sameValue)
 {
-    addgroup_univitem_flag param = GetParam();
+    AddGroupUniversalItemFlag param = GetParam();
 
     ASSERT_EQ(static_cast<int>(param.agf), static_cast<int>(param.other));
 }
