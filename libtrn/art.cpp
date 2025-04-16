@@ -331,7 +331,7 @@ do_article_result do_article()
             {
                 switch (g_in_header)
                 {
-                  case NEWSGROUPS_LINE:
+                case NEWSGROUPS_LINE:
                     s = std::strchr(bufptr, '\n');
                     if (s != nullptr)
                     {
@@ -344,14 +344,16 @@ do_article_result do_article()
                         *s = '\n';
                     }
                     break;
-                  case EXPIR_LINE:
+
+                case EXPIR_LINE:
                     if (!(g_htype[EXPIR_LINE].flags & HT_HIDE))
                     {
                         s = bufptr + g_htype[EXPIR_LINE].length + 1;
                         hide_this_line = *s != ' ' || s[1] == '\n';
                     }
                     break;
-                 case FROM_LINE:
+
+                case FROM_LINE:
                     if ((s = std::strchr(bufptr,'\n')) != nullptr
                      && s-bufptr < sizeof g_art_line)
                     {
@@ -368,7 +370,8 @@ do_article_result do_article()
                         bufptr = g_art_line;
                     }
                     break;
-                  case DATE_LINE:
+
+                case DATE_LINE:
                     if (g_curr_artp->date != -1)
                     {
                         std::strncpy(g_art_line,bufptr,6);
@@ -823,15 +826,18 @@ reask_pager:
         }
         switch (page_switch())
         {
-          case PS_ASK:  /* reprompt "--MORE--..." */
+        case PS_ASK:  /* reprompt "--MORE--..." */
             goto reask_pager;
-          case PS_RAISE:        /* reparse on article level */
+
+        case PS_RAISE:        /* reparse on article level */
             set_mode(g_general_mode,oldmode);
             return DA_RAISE;
-          case PS_TOEND:        /* fast pager loop exit */
+
+        case PS_TOEND:        /* fast pager loop exit */
             set_mode(g_general_mode,oldmode);
             return DA_TOEND;
-          case PS_NORM:         /* display more article */
+
+        case PS_NORM:         /* display more article */
             break;
         }
     } /* end of page loop */
@@ -883,11 +889,12 @@ page_switch_result page_switch()
 
     switch (*g_buf)
     {
-      case '!':                 /* shell escape */
+    case '!':                 /* shell escape */
         escapade();
         return PS_ASK;
-      case Ctl('i'):
-      {
+
+    case Ctl('i'):
+    {
         ART_LINE i = g_artline;
         g_gline = 3;
         s = line_ptr(s_alinebeg);
@@ -913,12 +920,14 @@ page_switch_result page_switch()
         std::sprintf(g_cmd_buf,"^[^%c\n]",*s);
         compile(&s_gcompex,g_cmd_buf,true,true);
         goto caseG;
-      }
-      case Ctl('g'):
+    }
+
+    case Ctl('g'):
         g_gline = 3;
         compile(&s_gcompex,"^Subject:",true,true);
         goto caseG;
-      case 'g':         /* in-article search */
+
+    case 'g':         /* in-article search */
         if (!finish_command(false))/* get rest of command */
         {
             return PS_ASK;
@@ -939,8 +948,9 @@ page_switch_result page_switch()
         erase_line(false);      /* erase the prompt */
         /* FALL THROUGH */
       caseG:
-      case 'G':
-      {
+
+    case 'G':
+    {
         ART_POS start_where;
         bool success;
         char* nlptr;
@@ -1040,17 +1050,20 @@ page_switch_result page_switch()
         g_do_fseek = true;              /* who knows how many lines it is? */
         g_hide_everything = '\f';
         return PS_NORM;
-      }
-      case '\n':                        /* one line down */
-      case '\r':
+    }
+
+    case '\n':                        /* one line down */
+    case '\r':
         s_special = true;
         s_slines = 2;
         return PS_NORM;
-      case 'X':
+
+    case 'X':
         g_rotate = !g_rotate;
         /* FALL THROUGH */
-      case 'l':
-      case '\f':                /* refresh screen */
+
+    case 'l':
+    case '\f':                /* refresh screen */
       refresh_screen:
 #ifdef DEBUG
         if (debug & DEB_INNERSRCH)
@@ -1065,7 +1078,8 @@ page_switch_result page_switch()
         g_artline = std::max(g_artline, 0);
         s_firstpage = (g_topline < 0);
         return PS_NORM;
-      case Ctl('e'):
+
+    case Ctl('e'):
         if (g_artsize < 0)
         {
             nntp_finishbody(FB_OUTPUT);
@@ -1083,7 +1097,8 @@ page_switch_result page_switch()
         g_gline = 0;
         g_hide_everything = 'b';
         return PS_NORM;
-      case 'B':         /* one line up */
+
+    case 'B':         /* one line up */
         if (g_topline < 0)
         {
             break;
@@ -1135,9 +1150,10 @@ page_switch_result page_switch()
             }
         }
         /* FALL THROUGH */
-      case 'b':
-      case Ctl('b'):    /* back up a page */
-      {
+
+    case 'b':
+    case Ctl('b'):    /* back up a page */
+    {
         ART_LINE target;
 
         if (g_erase_each_line)
@@ -1176,85 +1192,92 @@ page_switch_result page_switch()
         s_firstpage = (g_topline < 0);
         return PS_NORM;
       }
-      case 'H':         /* help */
+
+    case 'H':         /* help */
         help_page();
         return PS_ASK;
-      case 't':         /* output thread data */
+
+    case 't':         /* output thread data */
         g_page_line = 1;
         entire_tree(g_curr_artp);
         return PS_ASK;
-      case '_':
+
+    case '_':
         if (!finish_dblchar())
         {
             return PS_ASK;
         }
         switch (g_buf[1] & 0177)
         {
-          case 'C':
+        case 'C':
             if (!*(++g_charsubst))
             {
                 g_charsubst = g_charsets.c_str();
             }
             goto refresh_screen;
-          default:
+
+        default:
             break;
         }
         goto leave_pager;
-      case '\0':                /* treat break as 'n' */
+
+    case '\0':                /* treat break as 'n' */
         *g_buf = 'n';
         /* FALL THROUGH */
-      case 'a': case 'A':
-      case 'e':
-      case 'k': case 'K': case 'J':
-      case 'n': case 'N': case Ctl('n'):
-                case 'F':
-                case 'R':
-      case 's': case 'S':
-                case 'T':
-      case 'u':
-      case 'w': case 'W':
-      case '|':
+
+    case 'a': case 'A':
+    case 'e':
+    case 'k': case 'K': case 'J':
+    case 'n': case 'N': case Ctl('n'):
+              case 'F':
+              case 'R':
+    case 's': case 'S':
+              case 'T':
+    case 'u':
+    case 'w': case 'W':
+    case '|':
         mark_as_read(g_artp);   /* mark article as read */
         /* FALL THROUGH */
-      case 'U': case ',':
-      case '<': case '>':
-      case '[': case ']':
-      case '{': case '}':
-      case '(': case ')':
-      case ':':
-      case '+':
-      case Ctl('v'):            /* verify crypto signature */
-      case ';':                 /* enter article scan mode */
-      case '"':                 /* append to local scorefile */
-      case '\'':                /* score command */
-      case '#':
-      case '$':
-      case '&':
-      case '-':
-      case '.':
-      case '/':
-      case '1': case '2': case '3': case '4': case '5':
-      case '6': case '7': case '8': case '9':
-      case '=':
-      case '?':
-      case 'c': case 'C':
+
+    case 'U': case ',':
+    case '<': case '>':
+    case '[': case ']':
+    case '{': case '}':
+    case '(': case ')':
+    case ':':
+    case '+':
+    case Ctl('v'):            /* verify crypto signature */
+    case ';':                 /* enter article scan mode */
+    case '"':                 /* append to local scorefile */
+    case '\'':                /* score command */
+    case '#':
+    case '$':
+    case '&':
+    case '-':
+    case '.':
+    case '/':
+    case '1': case '2': case '3': case '4': case '5':
+    case '6': case '7': case '8': case '9':
+    case '=':
+    case '?':
+    case 'c': case 'C':
 #ifdef DEBUG
-                case 'D':
+              case 'D':
 #endif
-      case 'f':           case Ctl('f'):
-      case 'h':
-      case 'j':
-                          case Ctl('k'):
-      case 'm': case 'M':
-      case 'p': case 'P': case Ctl('p'):
-      case '`': case 'Q':
-      case 'r':           case Ctl('r'):
-      case 'v':
-      case 'x':           case Ctl('x'):
-                case 'Y':
-      case 'z': case 'Z':
-      case '^':           case Ctl('^'):
-               case '\b': case '\177':
+    case 'f':           case Ctl('f'):
+    case 'h':
+    case 'j':
+                        case Ctl('k'):
+    case 'm': case 'M':
+    case 'p': case 'P': case Ctl('p'):
+    case '`': case 'Q':
+    case 'r':           case Ctl('r'):
+    case 'v':
+    case 'x':           case Ctl('x'):
+              case 'Y':
+    case 'z': case 'Z':
+    case '^':           case Ctl('^'):
+    case '\b': case '\177':
 leave_pager:
         g_reread = false;
         if (std::strchr("nNpP\016\020", *g_buf) == nullptr //
@@ -1271,8 +1294,9 @@ leave_pager:
             std::fflush(stdout);
         }
         return PS_RAISE;        /* and pretend we were at end */
-      case 'd':         /* half page */
-      case Ctl('d'):
+
+    case 'd':         /* half page */
+    case Ctl('d'):
         s_special = true;
         s_slines = g_tc_LINES / 2 + 1;
         /* no divide-by-zero, thank you */
@@ -1281,8 +1305,9 @@ leave_pager:
             s_slines++;
         }
         goto go_forward;
-      case 'y':
-      case ' ': /* continue current article */
+
+    case 'y':
+    case ' ': /* continue current article */
         if (g_erase_screen)     /* -e? */
         {
             if (g_erase_each_line)
@@ -1328,7 +1353,8 @@ leave_pager:
               }
         }
         return PS_NORM;
-      case 'i':
+
+    case 'i':
         g_auto_view_inline = !g_auto_view_inline;
         if (g_auto_view_inline != 0)
         {
@@ -1337,9 +1363,11 @@ leave_pager:
         std::printf("\nAuto-View inlined mime is %s\n", g_auto_view_inline? "on" : "off");
         termdown(2);
         break;
-      case 'q': /* quit this article? */
+
+    case 'q': /* quit this article? */
         return PS_TOEND;
-      default:
+
+    default:
         std::fputs(g_hforhelp,stdout);
         termdown(1);
         settle_down();
@@ -1427,7 +1455,7 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 
     switch (btn_clk)
     {
-      case 0:
+    case 0:
         if (ap)
         {
             if (ap == g_artp)
@@ -1448,7 +1476,8 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             pushchar('b');
         }
         break;
-      case 1:
+
+    case 1:
         if (ap)
         {
             select_subthread(ap, AUTO_KILL_NONE);
@@ -1465,7 +1494,8 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             pushchar('B');
         }
         break;
-      case 2:
+
+    case 2:
         if (ap)
         {
             kill_subthread(ap, AUTO_KILL_NONE);
