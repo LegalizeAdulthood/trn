@@ -68,12 +68,12 @@ static const char *s_cantrecreate{"Can't recreate %s -- restoring older version.
                                   "Perhaps you are near or over quota?\n"};
 
 static bool    clear_ngitem(char *cp, int arg);
-static bool    lock_newsrc(NEWSRC *rp);
-static void    unlock_newsrc(NEWSRC *rp);
-static bool    open_newsrc(NEWSRC *rp);
+static bool    lock_newsrc(Newsrc *rp);
+static void    unlock_newsrc(Newsrc *rp);
+static bool    open_newsrc(Newsrc *rp);
 static void    init_ngnode(List *list, ListNode *node);
 static void    parse_rcline(NewsgroupData *np);
-static NewsgroupData *add_newsgroup(NEWSRC *rp, const char *ngn, char_int c);
+static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c);
 static int     rcline_cmp(const char *key, int keylen, HashDatum data);
 
 inline NewsgroupData *ngdata_ptr(int ngnum)
@@ -110,11 +110,11 @@ static MULTIRC *rcstuff_init_data()
             {
                 break;
             }
-            NEWSRC *rp = new_newsrc(vals[RI_ID], vals[RI_NEWSRC], vals[RI_ADDGROUPS]);
+            Newsrc *rp = new_newsrc(vals[RI_ID], vals[RI_NEWSRC], vals[RI_ADDGROUPS]);
             if (rp)
             {
                 MULTIRC *mp = multirc_ptr(i);
-                NEWSRC * prev_rp = mp->first;
+                Newsrc * prev_rp = mp->first;
                 if (!prev_rp)
                 {
                     mp->first = rp;
@@ -187,7 +187,7 @@ void rcstuff_final()
     s_rcgroups_ini[0].help_str = nullptr;
 }
 
-NEWSRC *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
+Newsrc *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
 {
     if (!name || !*name)
     {
@@ -209,8 +209,8 @@ NEWSRC *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
         return nullptr;
     }
 
-    NEWSRC *rp = (NEWSRC*)safemalloc(sizeof(NEWSRC));
-    std::memset((char*)rp,0,sizeof (NEWSRC));
+    Newsrc *rp = (Newsrc*)safemalloc(sizeof(Newsrc));
+    std::memset((char*)rp,0,sizeof (Newsrc));
     rp->datasrc = dp;
     rp->name = savestr(filexp(newsrc));
     char tmpbuf[CBUFLEN];
@@ -245,7 +245,7 @@ bool use_multirc(MULTIRC *mp)
     bool had_trouble = false;
     bool had_success = false;
 
-    for (NEWSRC *rp = mp->first; rp; rp = rp->next)
+    for (Newsrc *rp = mp->first; rp; rp = rp->next)
     {
         if ((rp->datasrc->flags & DF_UNAVAILABLE) || !lock_newsrc(rp) //
             || !open_datasrc(rp->datasrc) || !open_newsrc(rp))
@@ -287,7 +287,7 @@ void unuse_multirc(MULTIRC *mptr)
 
     write_newsrcs(mptr);
 
-    for (NEWSRC *rp = mptr->first; rp; rp = rp->next)
+    for (Newsrc *rp = mptr->first; rp; rp = rp->next)
     {
         unlock_newsrc(rp);
         rp->flags &= ~RF_ACTIVE;
@@ -397,7 +397,7 @@ static bool clear_ngitem(char *cp, int arg)
 
 /* make sure there is no trn out there reading this newsrc */
 
-static bool lock_newsrc(NEWSRC *rp)
+static bool lock_newsrc(Newsrc *rp)
 {
     long processnum = 0;
 
@@ -549,7 +549,7 @@ static bool lock_newsrc(NEWSRC *rp)
     return true;
 }
 
-static void unlock_newsrc(NEWSRC *rp)
+static void unlock_newsrc(Newsrc *rp)
 {
     safefree0(rp->infoname);
     if (rp->lockname)
@@ -560,7 +560,7 @@ static void unlock_newsrc(NEWSRC *rp)
     }
 }
 
-static bool open_newsrc(NEWSRC *rp)
+static bool open_newsrc(Newsrc *rp)
 {
     /* make sure the .newsrc file exists */
 
@@ -973,7 +973,7 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
     g_ngptr = find_ng(g_ngname.c_str());
     if (g_ngptr == nullptr)             /* not in .newsrc? */
     {
-        NEWSRC* rp;
+        Newsrc* rp;
         for (rp = g_multirc->first; rp; rp = rp->next)
         {
             if (!all_bits(rp->flags, RF_ADD_GROUPS | RF_ACTIVE))
@@ -1193,7 +1193,7 @@ reask_unsub:
 
 /* add a newsgroup to the newsrc file (eventually) */
 
-static NewsgroupData *add_newsgroup(NEWSRC *rp, const char *ngn, char_int c)
+static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c)
 {
     NewsgroupData *np = ngdata_ptr(g_ngdata_cnt++);
     np->prev = g_last_ng;
@@ -1495,7 +1495,7 @@ NewsgroupData *find_ng(const char *ngnam)
     return (NewsgroupData*)data.dat_ptr;
 }
 
-void cleanup_newsrc(NEWSRC *rp)
+void cleanup_newsrc(Newsrc *rp)
 {
     NG_NUM bogosity = 0;
 
@@ -1687,7 +1687,7 @@ bool write_newsrcs(MULTIRC *mptr)
         sort_newsgroups();
     }
 
-    for (NEWSRC *rp = mptr->first; rp; rp = rp->next)
+    for (Newsrc *rp = mptr->first; rp; rp = rp->next)
     {
         if (!(rp->flags & RF_ACTIVE))
         {
@@ -1819,7 +1819,7 @@ void get_old_newsrcs(MULTIRC *mptr)
 {
     if (mptr)
     {
-        for (NEWSRC *rp = mptr->first; rp; rp = rp->next)
+        for (Newsrc *rp = mptr->first; rp; rp = rp->next)
         {
             if (rp->flags & RF_ACTIVE)
             {

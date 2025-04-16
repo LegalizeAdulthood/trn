@@ -49,10 +49,10 @@ enum NewsrcFlags : int
 };
 DECLARE_FLAGS_ENUM(NewsrcFlags, int);
 
-struct NEWSRC
+struct Newsrc
 {
-    NEWSRC      *next;
-    DataSource     *datasrc;
+    Newsrc      *next;
+    DataSource  *datasrc;
     char        *name;     /* the name of the associated newsrc */
     char        *oldname;  /* the backup of the newsrc */
     char        *newname;  /* our working newsrc file */
@@ -71,7 +71,7 @@ DECLARE_FLAGS_ENUM(multirc_flags, int);
 
 struct MULTIRC
 {
-    NEWSRC       *first;
+    Newsrc       *first;
     int           num;
     multirc_flags flags;
 };
@@ -91,7 +91,7 @@ extern bool        g_append_unsub;    /* -I */
 
 bool     rcstuff_init();
 void     rcstuff_final();
-NEWSRC  *new_newsrc(const char *name, const char *newsrc, const char *add_ok);
+Newsrc  *new_newsrc(const char *name, const char *newsrc, const char *add_ok);
 bool     use_multirc(MULTIRC *mp);
 void     unuse_multirc(MULTIRC *mptr);
 bool     use_next_multirc(MULTIRC *mptr);
@@ -102,7 +102,7 @@ bool     get_ng(const char *what, GetNewsgroupFlags flags);
 bool     relocate_newsgroup(NewsgroupData *move_np, NG_NUM newnum);
 void     list_newsgroups();
 NewsgroupData  *find_ng(const char *ngnam);
-void     cleanup_newsrc(NEWSRC *rp);
+void     cleanup_newsrc(Newsrc *rp);
 void     sethash(NewsgroupData *np);
 void     checkpoint_newsrcs();
 bool     write_newsrcs(MULTIRC *mptr);

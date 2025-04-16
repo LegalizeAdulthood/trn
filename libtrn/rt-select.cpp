@@ -479,7 +479,7 @@ char multirc_selector()
             {
                 mp->flags &= ~MF_SEL;
                 save_selected_count--;
-                for (NEWSRC *rp = mp->first; rp; rp = rp->next)
+                for (Newsrc *rp = mp->first; rp; rp = rp->next)
                 {
                     rp->datasrc->flags &= ~DF_UNAVAILABLE;
                 }
@@ -514,7 +514,7 @@ char newsgroup_selector()
   sel_restart:
     if (*g_sel_grp_dmode != 's')
     {
-        for (NEWSRC *rp = g_multirc->first; rp; rp = rp->next)
+        for (Newsrc *rp = g_multirc->first; rp; rp = rp->next)
         {
             if ((rp->flags & RF_ACTIVE) && !rp->datasrc->desc_sf.hp)
             {
@@ -601,7 +601,7 @@ char addgroup_selector(GetNewsgroupFlags flags)
   sel_restart:
     if (*g_sel_grp_dmode != 's')
     {
-        for (NEWSRC *rp = g_multirc->first; rp; rp = rp->next)
+        for (Newsrc *rp = g_multirc->first; rp; rp = rp->next)
         {
             if ((rp->flags & RF_ACTIVE) && !rp->datasrc->desc_sf.hp)
             {

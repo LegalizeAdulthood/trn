@@ -1728,7 +1728,7 @@ void display_page_title(bool home_only)
     else
     {
         int len;
-        NEWSRC* rp;
+        Newsrc* rp;
         color_object(COLOR_HEADING, true);
         std::printf("Newsgroups");
         for (rp = g_multirc->first, len = 0; rp && len < 34; rp = rp->next)
@@ -1812,7 +1812,7 @@ try_again:
     else if (g_sel_mode == SM_MULTIRC)
     {
         MULTIRC* mp = g_sel_page_mp;
-        NEWSRC* rp;
+        Newsrc* rp;
         int len;
         if (mp)
         {

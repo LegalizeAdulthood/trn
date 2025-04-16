@@ -12,7 +12,7 @@
 #include <string>
 
 struct List;
-struct NEWSRC;
+struct Newsrc;
 
 enum NewsgroupFlags : std::uint8_t
 {
@@ -30,7 +30,7 @@ struct NewsgroupData
 {
     NewsgroupData    *prev;
     NewsgroupData    *next;
-    NEWSRC    *rc;                 /* which rc is this line from? */
+    Newsrc    *rc;                 /* which rc is this line from? */
     char      *rcline;             /* pointer to group's .newsrc line */
     ART_NUM    abs1st;             /* 1st real article in newsgroup */
     ART_NUM    ngmax;              /* high message num for the group */

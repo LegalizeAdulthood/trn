@@ -672,7 +672,7 @@ input_newsgroup_result input_newsgroup()
         use_next_multirc(g_multirc);
       display_multirc:
         {
-            NEWSRC* rp;
+            Newsrc* rp;
             int len;
             for (rp = g_multirc->first, len = 0; rp && len < 66; rp = rp->next)
             {
@@ -1000,7 +1000,7 @@ void trn_version()
         newline();
         std::sprintf(g_msg,"News source group #%d:\n\n", g_multirc->num);
         print_lines(g_msg, NOMARKING);
-        for (NEWSRC *rp = g_multirc->first; rp; rp = rp->next)
+        for (Newsrc *rp = g_multirc->first; rp; rp = rp->next)
         {
             if (!(rp->flags & RF_ACTIVE))
             {

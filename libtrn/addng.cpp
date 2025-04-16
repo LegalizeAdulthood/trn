@@ -90,7 +90,7 @@ bool find_new_groups()
         return false;
     }
 
-    for (NEWSRC const *rp = g_multirc->first; rp; rp = rp->next)
+    for (Newsrc const *rp = g_multirc->first; rp; rp = rp->next)
     {
         if (all_bits(rp->flags, RF_ADD_NEWGROUPS | RF_ACTIVE))
         {
