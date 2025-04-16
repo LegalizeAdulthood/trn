@@ -59,7 +59,7 @@ enum
     SRCFILE_CHUNK_SIZE = (32 * 1024),
 };
 
-enum datasrc_ini_index
+enum DataSourceIniIndex
 {
     DI_NNTP_SERVER = 1,
     DI_ACTIVE_FILE,
