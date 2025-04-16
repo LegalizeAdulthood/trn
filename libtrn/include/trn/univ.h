@@ -58,20 +58,20 @@ struct UniversalVirtualData
 };
 
 /* virtual/merged group flags (UNIV_VIRT_GROUP.flags) */
-enum virtgroup_flags : std::uint8_t
+enum VirtualGroupFlags : std::uint8_t
 {
     UF_VG_NONE = 0x00,
     UF_VG_MINSCORE = 0x01, /* articles use minimum score */
     UF_VG_MAXSCORE = 0x02  /* articles use maximum score */
 };
-DECLARE_FLAGS_ENUM(virtgroup_flags, std::uint8_t);
+DECLARE_FLAGS_ENUM(VirtualGroupFlags, std::uint8_t);
 
 struct UNIV_VIRT_GROUP
 {
     char           *ng;
     int             minscore;
     int             maxscore;
-    virtgroup_flags flags;
+    VirtualGroupFlags flags;
 };
 
 struct UNIV_NEWSGROUP
