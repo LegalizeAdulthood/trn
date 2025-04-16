@@ -394,7 +394,7 @@ void term_set(char *tcbuf)
     {
         if (tgetflag("nc") && *g_tc_UP)
         {
-            g_tc_CR = safemalloc((MEM_SIZE)std::strlen(g_tc_UP)+2);
+            g_tc_CR = safemalloc((MemorySize)std::strlen(g_tc_UP)+2);
             std::sprintf(g_tc_CR,"%s\r",g_tc_UP);
         }
         else

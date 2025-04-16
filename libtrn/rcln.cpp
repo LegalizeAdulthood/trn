@@ -353,7 +353,7 @@ void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
                     artnum = 0;
                 }
                 *(np->rcline + np->numoffset - 1) = np->subscribechar;
-                mbuf = safemalloc((MEM_SIZE)(curlen+(artnum?(MAX_DIGITS+1)*2+1:1+1)));
+                mbuf = safemalloc((MemorySize)(curlen+(artnum?(MAX_DIGITS+1)*2+1:1+1)));
                 *s = '\0';
                 std::strcpy(mbuf,np->rcline);        /* make new rc line */
                 s = mbuf + (s - np->rcline);
