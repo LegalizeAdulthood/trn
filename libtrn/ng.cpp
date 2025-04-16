@@ -2214,7 +2214,8 @@ reask_memorize:
         {
             mark_as_read(g_artp);
             change_auto_flags(g_artp, AUTO_KILL_1);
-            if (g_general_mode != GM_SELECTOR) {
+            if (g_general_mode != GM_SELECTOR)
+            {
                 std::printf("\nKill memorized.\n");
                 termdown(2);
             }
