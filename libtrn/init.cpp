@@ -172,7 +172,8 @@ void newsnews_check()
     {
         stat_t news_news_stat{};
         fstat(fileno(fp),&news_news_stat);
-        if (news_news_stat.st_mtime > (std::time_t)g_lasttime) {
+        if (news_news_stat.st_mtime > (std::time_t) g_lasttime)
+        {
             while (std::fgets(g_buf,sizeof(g_buf),fp) != nullptr)
             {
                 std::fputs(g_buf, stdout);
