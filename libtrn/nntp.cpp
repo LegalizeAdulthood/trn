@@ -86,8 +86,10 @@ int nntp_list(const char *type, const char *arg, int len)
 void nntp_finish_list()
 {
     nntp_gets_result ret;
-    do {
-        while ((ret = nntp_gets(g_ser_line, sizeof g_ser_line)) == NGSR_PARTIAL_LINE) {
+    do
+    {
+        while ((ret = nntp_gets(g_ser_line, sizeof g_ser_line)) == NGSR_PARTIAL_LINE)
+        {
             /* A line w/o a newline is too long to be the end of the
             ** list, so grab the rest of this line and try again. */
             while ((ret = nntp_gets(g_ser_line, sizeof g_ser_line)) == NGSR_PARTIAL_LINE)
@@ -110,16 +112,20 @@ int nntp_group(const char *group, NGDATA *gp)
     {
         return -2;
     }
-    switch (nntp_check()) {
+    switch (nntp_check())
+    {
       case -2:
         return -2;
       case -1:
-      case 0: {
+      case 0:
+      {
         int ser_int = std::atoi(g_ser_line);
-        if (ser_int != NNTP_NOSUCHGROUP_VAL
-         && ser_int != NNTP_SYNTAX_VAL) {
-            if (ser_int != NNTP_AUTH_NEEDED_VAL && ser_int != NNTP_ACCESS_VAL
-             && ser_int != NNTP_AUTH_REJECT_VAL) {
+          if (ser_int != NNTP_NOSUCHGROUP_VAL //
+              && ser_int != NNTP_SYNTAX_VAL)
+          {
+              if (ser_int != NNTP_AUTH_NEEDED_VAL && ser_int != NNTP_ACCESS_VAL //
+                  && ser_int != NNTP_AUTH_REJECT_VAL)
+              {
                 std::fprintf(stderr, "\nServer's response to GROUP %s:\n%s\n",
                         group, g_ser_line);
                 return -1;
@@ -128,7 +134,8 @@ int nntp_group(const char *group, NGDATA *gp)
         return 0;
       }
     }
-    if (gp) {
+    if (gp)
+    {
         long count;
         long first;
         long last;
@@ -139,7 +146,8 @@ int nntp_group(const char *group, NGDATA *gp)
         {
             gp->abs1st = gp->ngmax + 1;
         }
-        else {
+        else
+        {
             gp->abs1st = (ART_NUM)first;
             gp->ngmax = (ART_NUM)last;
         }
@@ -211,7 +219,8 @@ int nntp_header(ART_NUM artnum)
 void nntp_body(ART_NUM artnum)
 {
     char *artname = nntp_artname(artnum, false); /* Is it already in a tmp file? */
-    if (artname) {
+    if (artname)
+    {
         if (s_body_pos >= 0)
         {
             nntp_finishbody(FB_DISCARD);
@@ -226,7 +235,8 @@ void nntp_body(ART_NUM artnum)
     }
 
     artname = nntp_artname(artnum, true);   /* Allocate a tmp file */
-    if (!(g_artfp = std::fopen(artname, "w+"))) {
+    if (!(g_artfp = std::fopen(artname, "w+")))
+    {
         std::fprintf(stderr, "\nUnable to write temporary file: '%s'.\n",
                 artname);
         finalize(1);
@@ -246,7 +256,8 @@ void nntp_body(ART_NUM artnum)
     {
         finalize(1);
     }
-    switch (nntp_check()) {
+    switch (nntp_check())
+    {
       case -2:
       case -1:
         finalize(1);
@@ -257,16 +268,19 @@ void nntp_body(ART_NUM artnum)
         return;
     }
     s_body_pos = 0;
-    if (g_parsed_art == artnum) {
+    if (g_parsed_art == artnum)
+    {
         std::fwrite(g_headbuf, 1, std::strlen(g_headbuf), g_artfp);
         s_body_end = (ART_POS)std::ftell(g_artfp);
         g_htype[PAST_HEADER].minpos = s_body_end;
     }
-    else {
+    else
+    {
         char b[NNTP_STRLEN];
         s_body_end = 0;
         ART_POS prev_pos = 0;
-        while (nntp_copybody(b, sizeof b, s_body_end+1) > 0) {
+        while (nntp_copybody(b, sizeof b, s_body_end + 1) > 0)
+        {
             if (*b == '\n' && s_body_end - prev_pos < sizeof b)
             {
                 break;
@@ -287,14 +301,17 @@ static int nntp_copybody(char *s, int limit, ART_POS pos)
 {
     bool had_nl = true;
 
-    while (pos > s_body_end || !had_nl) {
+    while (pos > s_body_end || !had_nl)
+    {
         const int result = nntp_gets(s, limit);
         if (result == NGSR_ERROR)
         {
             std::strcpy(s, ".");
         }
-        if (had_nl) {
-            if (nntp_at_list_end(s)) {
+        if (had_nl)
+        {
+            if (nntp_at_list_end(s))
+            {
                 std::fseek(g_artfp, (long)s_body_pos, 0);
                 s_body_pos = -1;
                 return 0;
@@ -323,14 +340,16 @@ int nntp_finishbody(finishbody_mode bmode)
     {
         return 0;
     }
-    if (bmode == FB_DISCARD) {
+    if (bmode == FB_DISCARD)
+    {
 #if 0
         /* Implement this if flushing the data becomes possible */
         nntp_artname(g_openart, -1); /* Or something... */
         g_openart = 0;  /* Since we didn't finish the art, forget its number */
 #endif
     }
-    else if (bmode == FB_OUTPUT) {
+    else if (bmode == FB_OUTPUT)
+    {
         if (g_verbose)
         {
             std::printf("Receiving the rest of the article...");
@@ -349,8 +368,10 @@ int nntp_finishbody(finishbody_mode bmode)
     {
         nntp_copybody(b, sizeof b, (ART_POS) 0x7fffffffL);
     }
-    else {
-        while (nntp_copybody(b, sizeof b, s_body_end+1)) {
+    else
+    {
+        while (nntp_copybody(b, sizeof b, s_body_end + 1))
+        {
             if (input_pending())
             {
                 break;
@@ -370,8 +391,10 @@ int nntp_finishbody(finishbody_mode bmode)
 
 int nntp_seekart(ART_POS pos)
 {
-    if (s_body_pos >= 0) {
-        if (s_body_end < pos) {
+    if (s_body_pos >= 0)
+    {
+        if (s_body_end < pos)
+        {
             char b[NNTP_STRLEN];
             std::fseek(g_artfp, (long)s_body_end, 0);
             nntp_copybody(b, sizeof b, pos);
@@ -395,13 +418,16 @@ ART_POS nntp_tellart()
 
 char *nntp_readart(char *s, int limit)
 {
-    if (s_body_pos >= 0) {
-        if (s_body_pos == s_body_end) {
+    if (s_body_pos >= 0)
+    {
+        if (s_body_pos == s_body_end)
+        {
             if (nntp_copybody(s, limit, s_body_pos+1) <= 0)
             {
                 return nullptr;
             }
-            if (s_body_end - s_body_pos < limit) {
+            if (s_body_end - s_body_pos < limit)
+            {
                 s_body_pos = s_body_end;
                 return s;
             }
@@ -491,7 +517,8 @@ int nntp_artnums()
     {
         return -2;
     }
-    if (nntp_check() <= 0) {
+    if (nntp_check() <= 0)
+    {
         g_datasrc->flags |= DF_NOLISTGROUP;
         return 0;
     }
@@ -509,7 +536,8 @@ int nntp_rover()
     {
         return -2;
     }
-    if (nntp_check() <= 0) {
+    if (nntp_check() <= 0)
+    {
         g_datasrc->flags |= DF_NOXROVER;
         return 0;
     }
@@ -521,15 +549,17 @@ ART_NUM nntp_find_real_art(ART_NUM after)
 {
     ART_NUM an;
 
-    if (g_last_cached > after || g_last_cached < g_absfirst
-     || nntp_stat(g_last_cached) <= 0) {
+    if (g_last_cached > after || g_last_cached < g_absfirst //
+        || nntp_stat(g_last_cached) <= 0)
+    {
         if (nntp_stat_id("") > after)
         {
             return 0;
         }
     }
 
-    while ((an = nntp_next_art()) > 0) {
+    while ((an = nntp_next_art()) > 0)
+    {
         if (an > after)
         {
             return an;
@@ -549,8 +579,10 @@ char *nntp_artname(ART_NUM artnum, bool allocate)
     static std::time_t  artages[MAX_NNTP_ARTICLES];
     std::time_t         lowage;
 
-    if (!artnum) {
-        for (int i = 0; i < MAX_NNTP_ARTICLES; i++) {
+    if (!artnum)
+    {
+        for (int i = 0; i < MAX_NNTP_ARTICLES; i++)
+        {
             artnums[i] = 0;
             artages[i] = 0;
         }
@@ -561,8 +593,10 @@ char *nntp_artname(ART_NUM artnum, bool allocate)
 
     int j = 0;
     lowage = now;
-    for (int i = 0; i < MAX_NNTP_ARTICLES; i++) {
-        if (artnums[i] == artnum) {
+    for (int i = 0; i < MAX_NNTP_ARTICLES; i++)
+    {
+        if (artnums[i] == artnum)
+        {
             artages[i] = now;
             return nntp_tmpname(i);
         }
@@ -573,7 +607,8 @@ char *nntp_artname(ART_NUM artnum, bool allocate)
         }
     }
 
-    if (allocate) {
+    if (allocate)
+    {
         artnums[j] = artnum;
         artages[j] = now;
         return nntp_tmpname(j);
@@ -660,7 +695,8 @@ void nntp_server_died(DATASRC *dp)
 long nntp_readcheck()
 {
     /* try to get the status line and the status code */
-    switch (nntp_check()) {
+    switch (nntp_check())
+    {
       case -2:
         return -2;
       case -1:
@@ -694,7 +730,8 @@ long nntp_read(char *buf, long n)
 #endif
 
     /* try to read some data from the server */
-    if (s_rawbytes) {
+    if (s_rawbytes)
+    {
         boost::system::error_code ec;
         n = g_nntplink.connection->read(buf, n > s_rawbytes ? s_rawbytes : n, ec);
         s_rawbytes -= n;
@@ -704,7 +741,8 @@ long nntp_read(char *buf, long n)
     }
 
     /* if no more left, then fetch the end-of-command signature */
-    if (s_rawbytes == 0) {
+    if (s_rawbytes == 0)
+    {
         char buf[5];    1/* "\r\n.\r\n" */
 
         boost::system::error_code ec;
