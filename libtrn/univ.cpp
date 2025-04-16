@@ -51,10 +51,10 @@ bool g_univ_follow{true};
 bool g_univ_follow_temp{};
 
 /* items which must be saved in context */
-UNIV_ITEM  *g_first_univ{};
-UNIV_ITEM  *g_last_univ{};
-UNIV_ITEM  *sel_page_univ{};
-UNIV_ITEM  *g_sel_next_univ{};
+UniversalItem  *g_first_univ{};
+UniversalItem  *g_last_univ{};
+UniversalItem  *sel_page_univ{};
+UniversalItem  *g_sel_next_univ{};
 char       *g_univ_fname{};  /* current filename (may be null) */
 std::string g_univ_label;    /* current label (may be null) */
 std::string g_univ_title;    /* title of current level */
@@ -71,10 +71,10 @@ static bool       s_univ_use_min_score{};    //
 static bool       s_univ_begin_found{};      //
 static char      *s_univ_begin_label{};      /* label to start working with */
 static char      *s_univ_line_desc{};        /* if non-nullptr, the description (printing name) of the entry */
-static UNIV_ITEM *s_current_vg_ui{};         //
+static UniversalItem *s_current_vg_ui{};         //
 static bool       s_univ_usrtop{};           /* if true, the user has loaded their own top univ. config file */
 
-static void univ_free_data(UNIV_ITEM *ui);
+static void univ_free_data(UniversalItem *ui);
 static bool univ_DoMatch(const char *text, const char *p);
 static bool univ_use_file(const char *fname, const char *label);
 static bool univ_include_file(const char *fname);
@@ -83,8 +83,8 @@ static bool univ_do_line(char *line);
 static char*univ_edit_new_userfile();
 static void univ_vg_addart(ART_NUM a);
 static void univ_vg_addgroup();
-static int  univ_order_number(const UNIV_ITEM**ui1, const UNIV_ITEM**ui2);
-static int  univ_order_score(const UNIV_ITEM**ui1, const UNIV_ITEM**ui2);
+static int  univ_order_number(const UniversalItem**ui1, const UniversalItem**ui2);
+static int  univ_order_score(const UniversalItem**ui1, const UniversalItem**ui2);
 
 void univ_init()
 {
@@ -141,9 +141,9 @@ void univ_open()
 
 void univ_close()
 {
-    UNIV_ITEM* nextnode;
+    UniversalItem* nextnode;
 
-    for (UNIV_ITEM *node = g_first_univ; node; node = nextnode)
+    for (UniversalItem *node = g_first_univ; node; node = nextnode)
     {
         univ_free_data(node);
         safefree(node->desc);
@@ -175,9 +175,9 @@ void univ_close()
     g_univ_level--;
 }
 
-UNIV_ITEM *univ_add(UniversalItemType type, const char *desc)
+UniversalItem *univ_add(UniversalItemType type, const char *desc)
 {
-    UNIV_ITEM *node = (UNIV_ITEM*)safemalloc(sizeof(UNIV_ITEM));
+    UniversalItem *node = (UniversalItem*)safemalloc(sizeof(UniversalItem));
 
     node->flags = UF_NONE;
     if (desc)
@@ -206,7 +206,7 @@ UNIV_ITEM *univ_add(UniversalItemType type, const char *desc)
     return node;
 }
 
-static void univ_free_data(UNIV_ITEM *ui)
+static void univ_free_data(UniversalItem *ui)
 {
     if (!ui)
     {
@@ -265,7 +265,7 @@ static void univ_free_data(UNIV_ITEM *ui)
 /* not used now, but may be used later... */
 //UNIV_ITEM* ui;                                /* universal item */
 //int linenum;                          /* which line to describe (0 base) */
-char *univ_desc_line(UNIV_ITEM *ui, int linenum)
+char *univ_desc_line(UniversalItem *ui, int linenum)
 {
     return ui->desc;
 }
@@ -280,13 +280,13 @@ void univ_add_text(const char *txt)
 void univ_add_debug(const char *desc, const char *txt)
 {
     /* later check text for bad things */
-    UNIV_ITEM *ui = univ_add(UN_DEBUG1, desc);
+    UniversalItem *ui = univ_add(UN_DEBUG1, desc);
     ui->data.str = savestr(txt);
 }
 
 void univ_add_group(const char *desc, const char *grpname)
 {
-    UNIV_ITEM* ui;
+    UniversalItem* ui;
 
     const char *s = grpname;
     if (!s)
@@ -325,7 +325,7 @@ void univ_add_group(const char *desc, const char *grpname)
 
 void univ_add_mask(const char *desc, const char *mask)
 {
-    UNIV_ITEM *ui = univ_add(UN_GROUPMASK, desc);
+    UniversalItem *ui = univ_add(UN_GROUPMASK, desc);
     ui->data.gmask.masklist = savestr(mask);
     ui->data.gmask.title = savestr(desc);
 }
@@ -333,7 +333,7 @@ void univ_add_mask(const char *desc, const char *mask)
 //char* fname;                          /* May be URL */
 void univ_add_file(const char *desc, const char *fname, const char *label)
 {
-    UNIV_ITEM *ui = univ_add(UN_CONFIGFILE, desc);
+    UniversalItem *ui = univ_add(UN_CONFIGFILE, desc);
     ui->data.cfile.title = savestr(desc);
     ui->data.cfile.fname = savestr(fname);
     if (label && *label)
@@ -346,9 +346,9 @@ void univ_add_file(const char *desc, const char *fname, const char *label)
     }
 }
 
-UNIV_ITEM *univ_add_virt_num(const char *desc, const char *grp, ART_NUM art)
+UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ART_NUM art)
 {
-    UNIV_ITEM *ui = univ_add(UN_ARTICLE, desc);
+    UniversalItem *ui = univ_add(UN_ARTICLE, desc);
     ui->data.virt.ng = savestr(grp);
     ui->data.virt.num = art;
     ui->data.virt.subj = nullptr;
@@ -358,7 +358,7 @@ UNIV_ITEM *univ_add_virt_num(const char *desc, const char *grp, ART_NUM art)
 
 void univ_add_textfile(const char *desc, char *name)
 {
-    UNIV_ITEM* ui;
+    UniversalItem* ui;
     char* p;
     static char lbuf[1024];
 
@@ -397,7 +397,7 @@ void univ_add_textfile(const char *desc, char *name)
 /* mostly the same as the newsgroup stuff */
 void univ_add_virtgroup(const char *grpname)
 {
-    UNIV_ITEM* ui;
+    UniversalItem* ui;
 
     if (!grpname)
     {
@@ -483,7 +483,7 @@ void univ_use_pattern(const char *pattern, int type)
 {
     const char* s = pattern;
     NewsgroupData* np;
-    UNIV_ITEM* ui;
+    UniversalItem* ui;
 
     if (!s || !*s)
     {
@@ -1127,7 +1127,7 @@ static void univ_vg_addart(ART_NUM a)
     /* later scan/replace bad characters */
 
     /* later consider author in description, scoring, etc. */
-    UNIV_ITEM *ui = univ_add_virt_num(nullptr, g_ngname.c_str(), a);
+    UniversalItem *ui = univ_add_virt_num(nullptr, g_ngname.c_str(), a);
     ui->score = score;
     ui->data.virt.subj = savestr(subj);
     ui->data.virt.from = savestr(from);
@@ -1189,7 +1189,7 @@ void univ_virt_pass()
     g_univ_ng_virtflag = true;
     s_univ_virt_pass_needed = false;
 
-    for (UNIV_ITEM *ui = g_first_univ; ui; ui = ui->next)
+    for (UniversalItem *ui = g_first_univ; ui; ui = ui->next)
     {
         if (input_pending())
         {
@@ -1240,12 +1240,12 @@ void univ_virt_pass()
     g_univ_ng_virtflag = false;
 }
 
-static int univ_order_number(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2)
+static int univ_order_number(const UniversalItem** ui1, const UniversalItem** ui2)
 {
     return (int)((*ui1)->num - (*ui2)->num) * g_sel_direction;
 }
 
-static int univ_order_score(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2)
+static int univ_order_score(const UniversalItem** ui1, const UniversalItem** ui2)
 {
     if ((*ui1)->score != (*ui2)->score)
     {
@@ -1257,7 +1257,7 @@ static int univ_order_score(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2)
 void sort_univ()
 {
     int cnt = 0;
-    for (const UNIV_ITEM *i = g_first_univ; i; i = i->next)
+    for (const UniversalItem *i = g_first_univ; i; i = i->next)
     {
         cnt++;
     }
@@ -1267,7 +1267,7 @@ void sort_univ()
         return;
     }
 
-    int (*sort_procedure)(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2);
+    int (*sort_procedure)(const UniversalItem** ui1, const UniversalItem** ui2);
     switch (g_sel_sort)
     {
     case SS_SCORE:
@@ -1280,15 +1280,15 @@ void sort_univ()
         break;
     }
 
-    UNIV_ITEM **univ_sort_list = (UNIV_ITEM**)safemalloc(cnt * sizeof(UNIV_ITEM*));
-    UNIV_ITEM** lp = univ_sort_list;
-    for (UNIV_ITEM *ui = g_first_univ; ui; ui = ui->next)
+    UniversalItem **univ_sort_list = (UniversalItem**)safemalloc(cnt * sizeof(UniversalItem*));
+    UniversalItem** lp = univ_sort_list;
+    for (UniversalItem *ui = g_first_univ; ui; ui = ui->next)
     {
         *lp++ = ui;
     }
     TRN_ASSERT(lp - univ_sort_list == cnt);
 
-    std::qsort(univ_sort_list, cnt, sizeof(UNIV_ITEM *), (int(*)(void const *, void const *))sort_procedure);
+    std::qsort(univ_sort_list, cnt, sizeof(UniversalItem *), (int(*)(void const *, void const *))sort_procedure);
 
     g_first_univ = univ_sort_list[0];
     lp = univ_sort_list;
@@ -1305,7 +1305,7 @@ void sort_univ()
 
 /* return a description of the article */
 /* do this better later, like the code in sadesc.c */
-const char *univ_article_desc(const UNIV_ITEM *ui)
+const char *univ_article_desc(const UniversalItem *ui)
 {
     static char dbuf[200];
     static char sbuf[200];
@@ -1366,7 +1366,7 @@ void univ_help_main(HelpLocation where)
     g_univ_title = "Extended Help";
 
     /* first add help on current mode */
-    UNIV_ITEM *ui = univ_add(UN_HELPKEY, nullptr);
+    UniversalItem *ui = univ_add(UN_HELPKEY, nullptr);
     ui->data.i = where;
 
     /* later, do other mode sensitive stuff */
@@ -1386,7 +1386,7 @@ void univ_help(HelpLocation where)
     univ_visit_help(where);     /* push old selector info to stack */
 }
 
-const char *univ_keyhelp_modestr(const UNIV_ITEM *ui)
+const char *univ_keyhelp_modestr(const UniversalItem *ui)
 {
     switch (ui->data.i)
     {

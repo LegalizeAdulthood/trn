@@ -155,18 +155,18 @@ private:
         }                                                   \
     } while (false)
 
-#define PUSH_UNIV_SELECTOR()                             \
-    UNIV_ITEM *const save_first_univ = g_first_univ;     \
-    UNIV_ITEM *const save_last_univ = g_last_univ;       \
-    UNIV_ITEM *const save_page_univ = sel_page_univ;     \
-    UNIV_ITEM *const save_next_univ = g_sel_next_univ;   \
-    char *const save_univ_fname = g_univ_fname;          \
-    std::string const save_univ_label = g_univ_label;    \
-    std::string const save_univ_title = g_univ_title;    \
-    std::string const save_univ_tmp_file = g_univ_tmp_file; \
-    const char save_sel_ret = s_sel_ret;                 \
-    HASHTABLE *const save_univ_ng_hash = g_univ_ng_hash; \
-    HASHTABLE *const save_univ_vg_hash = g_univ_vg_hash
+#define PUSH_UNIV_SELECTOR()                                   \
+    UniversalItem *const save_first_univ = g_first_univ;       \
+    UniversalItem *const save_last_univ = g_last_univ;         \
+    UniversalItem *const save_page_univ = sel_page_univ;       \
+    UniversalItem *const save_next_univ = g_sel_next_univ;     \
+    char *const          save_univ_fname = g_univ_fname;       \
+    std::string const    save_univ_label = g_univ_label;       \
+    std::string const    save_univ_title = g_univ_title;       \
+    std::string const    save_univ_tmp_file = g_univ_tmp_file; \
+    const char           save_sel_ret = s_sel_ret;             \
+    HASHTABLE *const     save_univ_ng_hash = g_univ_ng_hash;   \
+    HASHTABLE *const     save_univ_vg_hash = g_univ_vg_hash
 
 #define POP_UNIV_SELECTOR()                   \
     do                                        \
@@ -185,7 +185,7 @@ private:
     } while (false)
 
 static void             sel_dogroups();
-static univ_read_result univ_read(UNIV_ITEM *ui);
+static univ_read_result univ_read(UniversalItem *ui);
 static void             sel_display();
 static void             sel_status_msg(const char *cp);
 static char             sel_input();
@@ -733,7 +733,7 @@ char option_selector()
 }
 
 /* returns a command to do */
-static univ_read_result univ_read(UNIV_ITEM *ui)
+static univ_read_result univ_read(UniversalItem *ui)
 {
     univ_read_result exit_code = UR_NORM;
     char ch;
@@ -991,7 +991,7 @@ sel_restart:
 
     if (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == '\t' || s_sel_ret == ';' || s_sel_ret == 'Z')
     {
-        UNIV_ITEM *ui;
+        UniversalItem *ui;
         int i;
         for (ui = g_first_univ, i = 0; ui; ui = ui->next, i++)
         {

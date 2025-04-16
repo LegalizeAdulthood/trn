@@ -108,15 +108,15 @@ enum UniversalItemFlags
 };
 DECLARE_FLAGS_ENUM(UniversalItemFlags, int);
 
-struct UNIV_ITEM
+struct UniversalItem
 {
-    UNIV_ITEM     *next;
-    UNIV_ITEM     *prev;
-    int            num;   /* natural order (for sort) */
+    UniversalItem     *next;
+    UniversalItem     *prev;
+    int                num;   /* natural order (for sort) */
     UniversalItemFlags flags; /* for selector */
-    UniversalItemType type;  /* what kind of object is it? */
-    char          *desc;  /* default description */
-    int            score;
+    UniversalItemType  type;  /* what kind of object is it? */
+    char              *desc;  /* default description */
+    int                score;
     UniversalData      data; /* describes the object */
 };
 
@@ -128,10 +128,10 @@ extern bool g_univ_follow;
 extern bool g_univ_follow_temp;
 
 /* items which must be saved in context */
-extern UNIV_ITEM *g_first_univ;
-extern UNIV_ITEM *g_last_univ;
-extern UNIV_ITEM *sel_page_univ;
-extern UNIV_ITEM *g_sel_next_univ;
+extern UniversalItem *g_first_univ;
+extern UniversalItem *g_last_univ;
+extern UniversalItem *sel_page_univ;
+extern UniversalItem *g_sel_next_univ;
 extern char *g_univ_fname;    /* current filename (may be null) */
 extern std::string g_univ_label;    /* current label (may be empty) */
 extern std::string g_univ_title;    /* title of current level */
@@ -144,14 +144,14 @@ void        univ_init();
 void        univ_startup();
 void        univ_open();
 void        univ_close();
-UNIV_ITEM * univ_add(UniversalItemType type, const char *desc);
-char *      univ_desc_line(UNIV_ITEM *ui, int linenum);
+UniversalItem * univ_add(UniversalItemType type, const char *desc);
+char *      univ_desc_line(UniversalItem *ui, int linenum);
 void        univ_add_text(const char *txt);
 void        univ_add_debug(const char *desc, const char *txt);
 void        univ_add_group(const char *desc, const char *grpname);
 void        univ_add_mask(const char *desc, const char *mask);
 void        univ_add_file(const char *desc, const char *fname, const char *label);
-UNIV_ITEM * univ_add_virt_num(const char *desc, const char *grp, ART_NUM art);
+UniversalItem * univ_add_virt_num(const char *desc, const char *grp, ART_NUM art);
 void        univ_add_textfile(const char *desc, char *name);
 void        univ_add_virtgroup(const char *grpname);
 void        univ_use_pattern(const char *pattern, int type);
@@ -165,9 +165,9 @@ void        univ_ng_virtual();
 int         univ_visit_group_main(const char *gname);
 void        univ_virt_pass();
 void        sort_univ();
-const char *univ_article_desc(const UNIV_ITEM *ui);
+const char *univ_article_desc(const UniversalItem *ui);
 void        univ_help_main(HelpLocation where);
 void        univ_help(HelpLocation where);
-const char *univ_keyhelp_modestr(const UNIV_ITEM *ui);
+const char *univ_keyhelp_modestr(const UniversalItem *ui);
 
 #endif

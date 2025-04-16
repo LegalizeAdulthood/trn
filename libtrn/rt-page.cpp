@@ -58,7 +58,7 @@ static int count_subject_lines(const Subject *subj, int *selptr);
 static int count_thread_lines(const Subject *subj, int *selptr);
 static void display_article(const Article *ap, int ix, int sel);
 static void display_subject(const Subject *subj, int ix, int sel);
-static void display_univ(const UNIV_ITEM *ui);
+static void display_univ(const UniversalItem *ui);
 static void display_group(DataSource *dp, char *group, int len, int max_len);
 
 bool set_sel_mode(char_int ch)
@@ -581,7 +581,7 @@ try_again:
         g_obj_count = 0;
 
         sort_univ();
-        for (UNIV_ITEM *ui = g_first_univ; ui; ui = ui->next)
+        for (UniversalItem *ui = g_first_univ; ui; ui = ui->next)
         {
             if (sel_page_univ == ui)
             {
@@ -981,7 +981,7 @@ bool first_page()
 
     case SM_UNIVERSAL:
     {
-        for (UNIV_ITEM *ui = g_first_univ; ui; ui = ui->next)
+        for (UniversalItem *ui = g_first_univ; ui; ui = ui->next)
         {
             if (ui->flags & UF_INCLUDED)
             {
@@ -1097,7 +1097,7 @@ bool last_page()
 
     case SM_UNIVERSAL:
     {
-        UNIV_ITEM* ui = sel_page_univ;
+        UniversalItem* ui = sel_page_univ;
         sel_page_univ = nullptr;
         if (!prev_page())
         {
@@ -1353,8 +1353,8 @@ bool prev_page()
 
     case SM_UNIVERSAL:
     {
-        UNIV_ITEM* ui = sel_page_univ;
-        UNIV_ITEM* page_ui = sel_page_univ;
+        UniversalItem* ui = sel_page_univ;
+        UniversalItem* page_ui = sel_page_univ;
 
         if (!ui)
         {
@@ -1562,7 +1562,7 @@ try_again:
 
     case SM_UNIVERSAL:
     {
-        UNIV_ITEM* ui = sel_page_univ;
+        UniversalItem* ui = sel_page_univ;
         for (; ui && g_sel_page_item_cnt < s_sel_max_per_page; ui = ui->next)
         {
             if (ui == u.un)
@@ -2019,7 +2019,7 @@ try_again:
     }
     else if (g_sel_mode == SM_UNIVERSAL)
     {
-        UNIV_ITEM* ui = sel_page_univ;
+        UniversalItem* ui = sel_page_univ;
         for (; ui && g_sel_page_item_cnt < s_sel_max_per_page; ui = ui->next)
         {
 #if 0
@@ -2610,7 +2610,7 @@ void display_option(int op, int item_index)
     termdown(1);
 }
 
-static void display_univ(const UNIV_ITEM *ui)
+static void display_univ(const UniversalItem *ui)
 {
     if (!ui)
     {

@@ -18,7 +18,7 @@ struct Article;
 struct Multirc;
 struct NewsgroupData;
 struct Subject;
-struct UNIV_ITEM;
+struct UniversalItem;
 
 enum
 {
@@ -32,7 +32,7 @@ union Selection
     AddGroup    *gp;
     Multirc     *mp;
     NewsgroupData      *np;
-    UNIV_ITEM   *un;
+    UniversalItem   *un;
     OptionIndex op;
 };
 
