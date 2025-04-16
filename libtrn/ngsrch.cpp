@@ -65,6 +65,7 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
             case 'r':
                 s_ng_doempty = true;
                 break;
+
             default:
                 goto loop_break;
             }
