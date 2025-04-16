@@ -114,7 +114,8 @@ int doshell(const char *shell, const char *cmd)
     sigset(SIGTTOU,SIG_DFL);
     sigset(SIGTTIN,SIG_DFL);
 #endif
-    if (g_datasrc && (g_datasrc->flags & DF_REMOTE)) {
+    if (g_datasrc && (g_datasrc->flags & DF_REMOTE))
+    {
         re_export(s_nntpserver_export,g_datasrc->newsid,512);
         if (g_datasrc->nntplink.flags & NNTP_FORCE_AUTH_NEEDED)
         {
@@ -124,19 +125,23 @@ int doshell(const char *shell, const char *cmd)
         {
             un_export(s_nntpforce_export);
         }
-        if (g_datasrc->auth_user) {
+        if (g_datasrc->auth_user)
+        {
             int fd = open(g_nntp_auth_file.c_str(), O_WRONLY|O_CREAT, 0600);
-            if (fd >= 0) {
+            if (fd >= 0)
+            {
                 write(fd, g_datasrc->auth_user, std::strlen(g_datasrc->auth_user));
                 write(fd, "\n", 1);
-                if (g_datasrc->auth_pass) {
+                if (g_datasrc->auth_pass)
+                {
                     write(fd, g_datasrc->auth_pass, std::strlen(g_datasrc->auth_pass));
                     write(fd, "\n", 1);
                 }
                 close(fd);
             }
         }
-        if (g_nntplink.port_number) {
+        if (g_nntplink.port_number)
+        {
             int len = std::strlen(s_nntpserver_export);
             std::sprintf(g_buf,";%d",g_nntplink.port_number);
             if (len + (int)std::strlen(g_buf) < 511)
@@ -152,7 +157,9 @@ int doshell(const char *shell, const char *cmd)
         {
             re_export(s_newsactive_export, "none", 512);
         }
-    } else {
+    }
+    else
+    {
         un_export(s_nntpserver_export);
         un_export(s_nntpforce_export);
         if (g_datasrc)
@@ -188,8 +195,10 @@ int doshell(const char *shell, const char *cmd)
     intptr_t status = spawnl(P_WAIT, shell, shell, "/c", cmd, nullptr);
 #else
     pid = vfork();
-    if (pid == 0) {
-        if (g_nowait_fork) {
+    if (pid == 0)
+    {
+        if (g_nowait_fork)
+        {
             close(1);
             close(2);
             dup(open("/dev/null",1));
@@ -259,7 +268,8 @@ int doshell(const char *shell, const char *cmd)
 char *safemalloc(MEM_SIZE size)
 {
     char *ptr = (char*)std::malloc(size ? size : (MEM_SIZE)1);
-    if (!ptr) {
+    if (!ptr)
+    {
         std::fputs(s_nomem,stdout);
         sig_catcher(0);
     }
@@ -282,7 +292,8 @@ char *saferealloc(char *where, MEM_SIZE size)
     {
         ptr = (char*) std::realloc(where, size ? size : (MEM_SIZE)1);
     }
-    if (!ptr) {
+    if (!ptr)
+    {
         std::fputs(s_nomem,stdout);
         sig_catcher(0);
     }
@@ -297,12 +308,14 @@ char *safecat(char *to, const char *from, int len)
     char* dest = to;
 
     len--;                              /* leave room for null */
-    if (*dest) {
+    if (*dest)
+    {
         while (len && *dest++)
         {
             len--;
         }
-        if (len) {
+        if (len)
+        {
             len--;
             *(dest-1) = ' ';
         }
@@ -393,13 +406,17 @@ char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, std::FILE *fp
     int bufix = 0;
     int nextch;
 
-    do {
-        if (bufix >= buffer_length) {
+    do
+    {
+        if (bufix >= buffer_length)
+        {
             buffer_length *= 2;
-            if (realloc_ok) {           /* just grow in place, if possible */
+            if (realloc_ok)             /* just grow in place, if possible */
+            {
                 buffer = saferealloc(buffer,(MEM_SIZE)buffer_length+1);
             }
-            else {
+            else
+            {
                 char* tmp = safemalloc((MEM_SIZE)buffer_length+1);
                 std::strncpy(tmp,buffer,buffer_length/2);
                 buffer = tmp;
@@ -407,7 +424,8 @@ char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, std::FILE *fp
             }
         }
         nextch = std::getc(fp);
-        if ((nextch) == EOF) {
+        if ((nextch) == EOF)
+        {
             if (!bufix)
             {
                 return nullptr;
@@ -443,7 +461,8 @@ void notincl(const char *feature)
 
 void growstr(char **strptr, int *curlen, int newlen)
 {
-    if (newlen > *curlen) {             /* need more room? */
+    if (newlen > *curlen)               /* need more room? */
+    {
         if (*curlen)
         {
             *strptr = saferealloc(*strptr,(MEM_SIZE)newlen);
@@ -460,11 +479,12 @@ void setdef(char *buffer, const char *dflt)
 {
     g_s_default_cmd = false;
     g_univ_default_cmd = false;
-    if (*buffer == ' '
-#ifndef STRICTCR
-     || *buffer == '\n' || *buffer == '\r'
-#endif
-    ) {
+    if (*buffer == ' '                        //
+#ifndef STRICTCR                              //
+        || *buffer == '\n' || *buffer == '\r' //
+#endif                                        //
+    )
+    {
         g_s_default_cmd = true;
         g_univ_default_cmd = true;
         if (*dflt == '^' && std::isupper(dflt[1]))
@@ -487,7 +507,8 @@ void safelink(char *old_name, char *new_name)
     extern char* sys_errlist[];
 #endif
 
-    if (link(old_name,new_name)) {
+    if (link(old_name, new_name))
+    {
         std::printf("Can't link backup (%s) to .newsrc (%s)\n", old_name, new_name);
 #if 0
         if (errno>0 && errno<sys_nerr)
@@ -506,14 +527,16 @@ void verify_sig()
     std::printf("\n");
     /* RIPEM */
     int i = doshell(SH, filexp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
-    if (!i) {   /* found RIPEM */
+    if (!i)     /* found RIPEM */
+    {
         i = doshell(SH,filexp(get_val_const("VERIFY_RIPEM",VERIFY_RIPEM)));
         std::printf("\nReturned value: %d\n",i);
         return;
     }
     /* PGP */
     i = doshell(SH,filexp("grep -s \"BEGIN PGP\" %A"));
-    if (!i) {   /* found PGP */
+    if (!i)     /* found PGP */
+    {
         i = doshell(SH,filexp(get_val_const("VERIFY_PGP",VERIFY_PGP)));
         std::printf("\nReturned value: %d\n",i);
         return;
@@ -532,7 +555,8 @@ std::time_t text2secs(const char *s, std::time_t defSecs)
 {
     std::time_t secs = 0;
 
-    if (!std::isdigit(*s)) {
+    if (!std::isdigit(*s))
+    {
         if (*s == 'm' || *s == 'M')     /* "missing" */
         {
             return 2;
@@ -543,12 +567,15 @@ std::time_t text2secs(const char *s, std::time_t defSecs)
         }
         return secs;                    /* "never" */
     }
-    do {
+    do
+    {
         std::time_t item = std::atol(s);
         s = skip_digits(s);
         s = skip_space(s);
-        if (std::isalpha(*s)) {
-            switch (*s) {
+        if (std::isalpha(*s))
+        {
+            switch (*s)
+            {
               case 'd': case 'D':
                 item *= 24 * 60L;
                 break;
@@ -589,19 +616,22 @@ char *secs2text(std::time_t secs)
     }
 
     secs /= 60;
-    if (secs >= 24L * 60) {
+    if (secs >= 24L * 60)
+    {
         items = (int)(secs / (24*60));
         secs = secs % (24*60);
         std::sprintf(s, "%d day%s, ", items, plural(items));
         s += std::strlen(s);
     }
-    if (secs >= 60L) {
+    if (secs >= 60L)
+    {
         items = (int)(secs / 60);
         secs = secs % 60;
         std::sprintf(s, "%d hour%s, ", items, plural(items));
         s += std::strlen(s);
     }
-    if (secs) {
+    if (secs)
+    {
         std::sprintf(s, "%d minute%s, ", (int)secs, plural(items));
         s += std::strlen(s);
     }
@@ -632,10 +662,13 @@ char *get_auth_pass()
 char **prep_ini_words(INI_WORDS words[])
 {
     char* cp = (char*)ini_values(words);
-    if (!cp) {
+    if (!cp)
+    {
         int i;
-        for (i = 1; words[i].item != nullptr; i++) {
-            if (*words[i].item == '*') {
+        for (i = 1; words[i].item != nullptr; i++)
+        {
+            if (*words[i].item == '*')
+            {
                 words[i].checksum = -1;
                 continue;
             }
@@ -673,15 +706,19 @@ void prep_ini_data(char *cp, const char *filename)
     }
 #endif
 
-    while (*cp) {
+    while (*cp)
+    {
         cp = skip_space(cp);
 
-        if (*cp == '[') {
+        if (*cp == '[')
+        {
             char* s = t;
-            do {
+            do
+            {
                 *t++ = *cp++;
             } while (*cp && *cp != ']' && *cp != '\n');
-            if (*cp == ']' && t != s) {
+            if (*cp == ']' && t != s)
+            {
                 *t++ = '\0';
                 cp++;
                 if (parse_string(&t, &cp))
@@ -689,7 +726,8 @@ void prep_ini_data(char *cp, const char *filename)
                     cp++;
                 }
 
-                while (*cp) {
+                while (*cp)
+                {
                     cp = skip_space(cp);
                     if (*cp == '[')
                     {
@@ -699,14 +737,17 @@ void prep_ini_data(char *cp, const char *filename)
                     {
                         s = cp;
                     }
-                    else {
+                    else
+                    {
                         s = t;
-                        while (*cp && *cp != '\n') {
+                        while (*cp && *cp != '\n')
+                        {
                             if (*cp == '=')
                             {
                                 break;
                             }
-                            if (std::isspace(*cp)) {
+                            if (std::isspace(*cp))
+                            {
                                 if (s == t || t[-1] != ' ')
                                 {
                                     *t++ = ' ';
@@ -718,7 +759,8 @@ void prep_ini_data(char *cp, const char *filename)
                                 *t++ = *cp++;
                             }
                         }
-                        if (*cp == '=' && t != s) {
+                        if (*cp == '=' && t != s)
+                        {
                             while (t != s && std::isspace(t[-1]))
                             {
                                 t--;
@@ -748,7 +790,8 @@ void prep_ini_data(char *cp, const char *filename)
                     }
                 }
             }
-            else {
+            else
+            {
                 *t = '\0';
                 std::printf("Invalid section in %s: %s\n", filename, s);
                 t = s;
@@ -775,9 +818,12 @@ bool parse_string(char **to, char **from)
     }
 
     char* s;
-    for (s = t; *f; f++) {
-        if (inquote) {
-            if (*f == inquote) {
+    for (s = t; *f; f++)
+    {
+        if (inquote)
+        {
+            if (*f == inquote)
+            {
                 inquote = 0;
                 s = t;
                 continue;
@@ -787,15 +833,18 @@ bool parse_string(char **to, char **from)
         {
             break;
         }
-        else if (*f == '\'' || *f == '"') {
+        else if (*f == '\'' || *f == '"')
+        {
             inquote = *f;
             continue;
         }
-        else if (*f == '#') {
+        else if (*f == '#')
+        {
             f = skip_ne(f, '\n');
             break;
         }
-        if (*f == '\\') {
+        if (*f == '\\')
+        {
             if (*++f == '\n')
             {
                 continue;
@@ -830,7 +879,8 @@ bool parse_string(char **to, char **from)
 
 char *next_ini_section(char *cp, char **section, char **cond)
 {
-    while (*cp != '[') {
+    while (*cp != '[')
+    {
         if (!*cp)
         {
             return nullptr;
@@ -862,9 +912,11 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
     char* s;
     char** values = prep_ini_words(words);
 
-    while (*cp && *cp != '[') {
+    while (*cp && *cp != '[')
+    {
         int checksum = 0;
-        for (s = cp; *s; s++) {
+        for (s = cp; *s; s++)
+        {
             if (std::isupper(*s))
             {
                 *s = std::tolower(*s);
@@ -872,11 +924,14 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
             checksum += *s;
         }
         checksum = (checksum << 8) + (s++ - cp);
-        if (*s) {
+        if (*s)
+        {
             int i;
-            for (i = 1; words[i].checksum; i++) {
-                if (words[i].checksum == checksum
-                 && string_case_equal(cp, words[i].item)) {
+            for (i = 1; words[i].checksum; i++)
+            {
+                if (words[i].checksum == checksum //
+                    && string_case_equal(cp, words[i].item))
+                {
                     values[i] = s;
                     break;
                 }
@@ -894,7 +949,8 @@ char *parse_ini_section(char *cp, INI_WORDS words[])
     }
 
 #ifdef DEBUG
-    if (debug & DEB_RCFILES) {
+    if (debug & DEB_RCFILES)
+    {
         std::printf("Ini_words: %s\n", words[0].item);
         for (int i = 1; words[i].checksum; i++)
         {
@@ -934,18 +990,21 @@ bool check_ini_cond(char *cond)
         cond++;
     }
     cond = skip_space(cond);
-    if (upordown) {
+    if (upordown)
+    {
         const int num = std::atoi(cond) - std::atoi(g_buf);
         if (!((equal && !num) || (upordown * num < 0)) ^ negate)
         {
             return false;
         }
     }
-    else if (equal) {
+    else if (equal)
+    {
         COMPEX condcompex;
         init_compex(&condcompex);
         s = compile(&condcompex,cond,true,true);
-        if (s != nullptr) {
+        if (s != nullptr)
+        {
             /*warning(s)*/
             equal = false;
         }
