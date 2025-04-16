@@ -40,7 +40,8 @@ void s_go_bot()
 int s_finish_cmd(const char *string)
 {
     s_go_bot();
-    if (string && *string) {
+    if (string && *string)
+    {
         std::printf("%s",string);
         std::fflush(stdout);
     }
@@ -56,7 +57,8 @@ int s_cmdloop()
     /* initialization stuff for entry into s_cmdloop */
     g_s_ref_all = true;
     eat_typeahead();    /* no typeahead before entry */
-    while(true) {
+    while (true)
+    {
         s_refresh();
         s_place_ptr();          /* place article pointer */
         g_bos_on_stop = true;
@@ -66,7 +68,8 @@ int s_cmdloop()
         eat_typeahead();        /* stay in control. */
         /* check for window resizing and refresh */
         /* if window is resized, refill and redraw */
-        if (g_s_resized) {
+        if (g_s_resized)
+        {
             char ch = *g_buf;
             i = s_fillpage();
             if (i == -1 || i == 0)      /* can't fillpage */
@@ -79,8 +82,10 @@ int s_cmdloop()
             g_s_resized = false;                /* dealt with */
         }
         i = s_docmd();
-        if (i == S_NOTFOUND) {  /* command not in common set */
-            switch (g_s_cur_type) {
+        if (i == S_NOTFOUND)    /* command not in common set */
+        {
+            switch (g_s_cur_type)
+            {
               case S_ART:
                 i = sa_docmd();
                 break;
@@ -93,7 +98,8 @@ int s_cmdloop()
         {
             return i;
         }
-        if (g_s_refill) {
+        if (g_s_refill)
+        {
             i = s_fillpage();
             if (i == -1 || i == 0)      /* can't fillpage */
             {
@@ -106,7 +112,8 @@ int s_cmdloop()
 
 void s_lookahead()
 {
-    switch (g_s_cur_type) {
+    switch (g_s_cur_type)
+    {
       case S_ART:
         sa_lookahead();
         break;
@@ -129,7 +136,8 @@ int s_docmd()
     {
         *g_buf = Ctl('l');
     }
-    switch(*g_buf) {
+    switch (*g_buf)
+    {
       case 'j':         /* vi mode */
         if (!g_s_mode_vi)
         {
@@ -143,8 +151,10 @@ int s_docmd()
         {
             g_s_ptr_page_line +=1;
         }
-        else {
-            if (!s_next_elig(g_page_ents[g_s_bot_ent].entnum)) {
+        else
+        {
+            if (!s_next_elig(g_page_ents[g_s_bot_ent].entnum))
+            {
                 s_beep();
                 g_s_refill = true;
                 break;
@@ -165,11 +175,15 @@ int s_docmd()
         {
             g_s_ptr_page_line = g_s_ptr_page_line - 1;
         }
-        else {
-            if (s_prev_elig(g_page_ents[0].entnum)) {
+        else
+        {
+            if (s_prev_elig(g_page_ents[0].entnum))
+            {
                 s_go_prev_page();
                 g_s_ptr_page_line = g_s_bot_ent; /* go to page bot. */
-            } else {
+            }
+            else
+            {
                 g_s_refill = true;
                 s_beep();
             }
@@ -186,7 +200,8 @@ int s_docmd()
       case '>': /* next page */
         s_rub_ptr();
         a = s_next_elig(g_page_ents[g_s_bot_ent].entnum);
-        if (!a) {               /* at end of articles */
+        if (!a)                 /* at end of articles */
+        {
             s_beep();
             break;
         }
@@ -194,7 +209,8 @@ int s_docmd()
         break;
       case '<': /* previous page */
         s_rub_ptr();
-        if (!s_prev_elig(g_page_ents[0].entnum)) {
+        if (!s_prev_elig(g_page_ents[0].entnum))
+        {
             s_beep();
             break;
         }
@@ -238,7 +254,8 @@ int s_docmd()
         s_go_bot();
         g_s_ref_all = true;
         /* any commands typed during help are unused. (might change) */
-        switch (g_s_cur_type) {
+        switch (g_s_cur_type)
+        {
           case S_ART:
             (void)help_scanart();
             break;
@@ -284,12 +301,15 @@ int s_docmd()
         s_jumpnum(*g_buf);
         break;
       case '#':         /* Toggle item numbers */
-        if (g_s_itemnum) {
+        if (g_s_itemnum)
+        {
             /* turn off item numbers */
             g_s_desc_cols += g_s_itemnum_cols;
             g_s_itemnum_cols = 0;
             g_s_itemnum = 0;
-        } else {
+        }
+        else
+        {
             /* turn on item numbers */
             g_s_itemnum_cols = 3;
             g_s_desc_cols -= g_s_itemnum_cols;
@@ -311,7 +331,8 @@ bool s_match_description(long ent)
     static char lbuf[LBUFLEN];
 
     int lines = s_ent_lines(ent);
-    for (int i = 1; i <= lines; i++) {
+    for (int i = 1; i <= lines; i++)
+    {
         std::strncpy(lbuf,s_get_desc(ent,i,false),LBUFLEN);
         for (char *s = lbuf; *s; s++)
         {
@@ -374,7 +395,8 @@ void s_search()
     int  fill_type; /* 0: forward, 1: backward */
     char*error_msg;
 
-    if (!s_search_init) {
+    if (!s_search_init)
+    {
         s_search_init = true;
         s_search_text[0] = '\0';
     }
@@ -384,7 +406,8 @@ void s_search()
     {
         return;
     }
-    if (g_buf[1]) {     /* new text */
+    if (g_buf[1])       /* new text */
+    {
         /* make leading space skip an option later? */
         /* (it isn't too important because substring matching is used) */
         char *s = skip_eq(g_buf + 1, ' '); /* skip leading spaces */
@@ -397,7 +420,8 @@ void s_search()
             }
         }
     }
-    if (!*s_search_text) {
+    if (!*s_search_text)
+    {
         s_beep();
         std::printf("\nNo previous search string.\n");
         (void)get_anything();
@@ -408,7 +432,8 @@ void s_search()
     std::printf("Searching for %s",s_search_text);
     std::fflush(stdout);
     long ent = g_page_ents[g_s_ptr_page_line].entnum;
-    switch (*g_buf) {
+    switch (*g_buf)
+    {
       case '/':
         error_msg = "No matches forward from current point.";
         ent = s_forward_search(ent);
@@ -421,13 +446,16 @@ void s_search()
         break;
       case 'g':
         ent = s_forward_search(ent);
-        if (!ent) {
+        if (!ent)
+        {
             ent = s_forward_search(0);  /* from top */
             /* did we just loop around? */
-            if (ent == g_page_ents[g_s_ptr_page_line].entnum) {
+            if (ent == g_page_ents[g_s_ptr_page_line].entnum)
+            {
                 ent = 0;
                 error_msg = "No other entry matches.";
-            } else
+            }
+            else
             {
                 error_msg = "No matches.";
             }
@@ -439,7 +467,8 @@ void s_search()
         error_msg = "Internal error in s_search()";
         break;
     }
-    if (!ent) {
+    if (!ent)
+    {
         s_beep();
         std::printf("\n%s\n",error_msg);
         (void)get_anything();
@@ -448,19 +477,22 @@ void s_search()
     }
     for (int i = 0; i <= g_s_bot_ent; i++)
     {
-        if (g_page_ents[i].entnum == ent) {             /* entry is on same page */
+        if (g_page_ents[i].entnum == ent)               /* entry is on same page */
+        {
             g_s_ptr_page_line = i;
             return;
         }
     }
     /* entry is not on page... */
-    if (fill_type == 1) {
+    if (fill_type == 1)
+    {
         (void)s_fillpage_backward(ent);
         s_go_bot_page();
         g_s_refill = true;
         g_s_ref_all = true;
     }
-    else {
+    else
+    {
         (void)s_fillpage_forward(ent);
         s_go_top_page();
         g_s_ref_all = true;
@@ -473,7 +505,8 @@ void s_jumpnum(char_int firstchar)
     int  value = firstchar - '0';
 
     s_rub_ptr();
-    if (jump_verbose) {
+    if (jump_verbose)
+    {
         s_go_bot();
         g_s_ref_bot = true;
         std::printf("Jump to item: %c",firstchar);
@@ -484,10 +517,12 @@ void s_jumpnum(char_int firstchar)
     {
         return;
     }
-    switch (*g_buf) {
+    switch (*g_buf)
+    {
       case '0': case '1': case '2': case '3': case '4':
       case '5': case '6': case '7': case '8': case '9':
-        if (jump_verbose) {
+        if (jump_verbose)
+        {
             std::printf("%c",*g_buf);
             std::fflush(stdout);
         }
@@ -497,7 +532,8 @@ void s_jumpnum(char_int firstchar)
         pushchar(*g_buf);
         break;
     }
-    if (value == 0 || value > g_s_bot_ent+1) {
+    if (value == 0 || value > g_s_bot_ent+1)
+    {
         s_beep();
         return;
     }
