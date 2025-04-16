@@ -56,7 +56,7 @@ extern bool     g_use_mouse;       //
 extern char     g_mouse_modes[32]; //
 
 // These identifiers are a best guess based on usage in the code.
-enum general_mode : char
+enum GeneralMode : char
 {
     GM_CHOICE = 'c',
     GM_INIT = 'I',
@@ -102,7 +102,7 @@ enum minor_mode : char
     MM_RESUBSCRIBE_PROMPT = 'R',
 };
 
-extern general_mode g_general_mode; /* general mode of trn */
+extern GeneralMode g_general_mode; /* general mode of trn */
 extern minor_mode   g_mode;         /* current state of trn */
 
 enum marking_mode
@@ -168,7 +168,7 @@ void  set_macro(char *seq, char *def);
 void  arrow_macros(char *tmpbuf);
 void  mac_line(char *line, char *tmpbuf, int tbsize);
 void  show_macros();
-void  set_mode(general_mode new_gmode, minor_mode new_mode);
+void  set_mode(GeneralMode new_gmode, minor_mode new_mode);
 int   putchr(char_int ch);
 void  hide_pending();
 bool  finput_pending(bool check_term);

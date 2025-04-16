@@ -80,7 +80,7 @@ ART_LINE      g_initlines{};                     /* -i */
 bool          g_use_mouse{};                     //
 char          g_mouse_modes[32]{"acjlptwvK"};    //
 minor_mode    g_mode{MM_INITIALIZING};           /* current state of trn */
-general_mode  g_general_mode{GM_INIT};           /* general mode of trn */
+GeneralMode  g_general_mode{GM_INIT};           /* general mode of trn */
 
 #ifdef HAS_TERMLIB
 bool  g_tc_GT{};              /* hardware tabs */
@@ -761,7 +761,7 @@ static void show_keymap(KEYMAP *curmap, char *prefix)
     }
 }
 
-void set_mode(general_mode new_gmode, minor_mode new_mode)
+void set_mode(GeneralMode new_gmode, minor_mode new_mode)
 {
     if (g_general_mode != new_gmode || g_mode != new_mode)
     {
@@ -852,7 +852,7 @@ bool finish_command(int donewline)
         return true;
     }
 
-    general_mode gmode_save = g_general_mode;
+    GeneralMode gmode_save = g_general_mode;
     set_mode(GM_INPUT,g_mode);
     if (s_not_echoing)
     {
@@ -1530,7 +1530,7 @@ int pause_getcmd()
 void in_char(const char *prompt, minor_mode newmode, const char *dflt)
 {
     minor_mode   mode_save = g_mode;
-    general_mode gmode_save = g_general_mode;
+    GeneralMode gmode_save = g_general_mode;
     const char  *s;
     int          newlines;
 
@@ -1562,7 +1562,7 @@ reask_in_char:
 void in_answer(const char *prompt, minor_mode newmode)
 {
     minor_mode   mode_save = g_mode;
-    general_mode gmode_save = g_general_mode;
+    GeneralMode gmode_save = g_general_mode;
 
 reask_in_answer:
     unflush_output();                   /* disable any ^O in effect */
@@ -1601,7 +1601,7 @@ reinp_in_answer:
 bool in_choice(const char *prompt, char *value, char *choices, minor_mode newmode)
 {
     minor_mode mode_save = g_mode;
-    general_mode gmode_save = g_general_mode;
+    GeneralMode gmode_save = g_general_mode;
 
     unflush_output();                   /* disable any ^O in effect */
     eat_typeahead();

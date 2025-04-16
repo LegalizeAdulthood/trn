@@ -127,7 +127,7 @@ public:
 
 private:
     minor_mode m_save_mode;
-    general_mode m_save_gmode;
+    GeneralMode m_save_gmode;
 };
 
 }
