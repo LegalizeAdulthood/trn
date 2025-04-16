@@ -14,7 +14,7 @@
 #include <cstring>
 #include <ctime>
 
-NNTPLINK g_nntplink{};          /* the current server's file handles */
+NNTPLink g_nntplink{};          /* the current server's file handles */
 bool g_nntp_allow_timeout{};
 char g_ser_line[NNTP_STRLEN]{};
 char g_last_command[NNTP_STRLEN]{};
@@ -185,7 +185,7 @@ int nntp_command(const char *bp)
             return ret;
         }
     }
-    error_code ec;
+    error_code_t ec;
     g_nntplink.connection->write_line(bp, ec);
     if (ec)
     {
@@ -218,7 +218,7 @@ int nntp_check()
     sighold(SIGINT);
 #endif
     errno = 0;
-    error_code ec;
+    error_code_t ec;
     std::string line = g_nntplink.connection->read_line(ec);
     std::strncpy(g_ser_line, line.c_str(), sizeof g_ser_line);
     int ret = ec ? -2 : 0;
@@ -330,7 +330,7 @@ nntp_gets_result nntp_gets(char *bp, int len)
 {
     int_sig_holder holder;
 
-    error_code ec;
+    error_code_t ec;
     if (s_nntp_gets_line.empty())
     {
         s_nntp_gets_line = g_nntplink.connection->read_line(ec);

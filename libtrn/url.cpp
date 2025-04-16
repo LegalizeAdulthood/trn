@@ -24,7 +24,7 @@
 
 namespace asio = boost::asio;
 using resolver_results = asio::ip::tcp::resolver::results_type;
-using error_code = boost::system::error_code;
+using error_code_t = boost::system::error_code;
 
 static char s_url_buf[1030];
 /* XXX just a little bit larger than necessary... */
@@ -38,7 +38,7 @@ bool fetch_http(const char *host, int port, const char *path, const char *outnam
 {
     asio::io_context context;
     asio::ip::tcp::resolver s_resolver(context);
-    error_code ec;
+    error_code_t ec;
     std::string service{"http"};
     if (port)
     {

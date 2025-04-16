@@ -71,7 +71,7 @@ struct DataSource
     char           *grpdesc;    /* the newsgroup description file or tmp */
     SourceFile      desc_sf;    /* the group description's hashed contents */
     char           *extra_name; /* local active.times or server's actfile */
-    NNTPLINK        nntplink;
+    NNTPLink        nntplink;
     char           *spool_dir;
     char           *over_dir;
     char           *over_fmt;

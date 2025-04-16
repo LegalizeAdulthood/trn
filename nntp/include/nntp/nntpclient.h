@@ -26,24 +26,24 @@ enum NNTPFlags
 };
 DECLARE_FLAGS_ENUM(NNTPFlags, int);
 
-using error_code = boost::system::error_code;
+using error_code_t = boost::system::error_code;
 
 struct INNTPConnection
 {
     virtual ~INNTPConnection() = default;
 
-    virtual std::string read_line(error_code &ec) = 0;
-    virtual void        write_line(const std::string &line, error_code &ec) = 0;
-    virtual void        write(const char *buffer, size_t len, error_code &ec) = 0;
-    virtual size_t      read(char *buf, size_t size, error_code &ec) = 0;
+    virtual std::string read_line(error_code_t &ec) = 0;
+    virtual void        write_line(const std::string &line, error_code_t &ec) = 0;
+    virtual void        write(const char *buffer, size_t len, error_code_t &ec) = 0;
+    virtual size_t      read(char *buf, size_t size, error_code_t &ec) = 0;
 };
 
-// use a shared_ptr to allow copying of NNTPLINK structure like a value.
+// use a shared_ptr to allow copying of NNTPLink structure like a value.
 using ConnectionPtr = std::shared_ptr<INNTPConnection>;
 
 using ConnectionFactory = std::function<ConnectionPtr(const char *machine, int pot, const char *service)>;
 
-struct NNTPLINK
+struct NNTPLink
 {
     ConnectionPtr connection;
     std::time_t        last_command;
@@ -86,7 +86,7 @@ enum
     NNTP_STRLEN = 512
 };
 
-extern NNTPLINK g_nntplink; /* the current server's file handles */
+extern NNTPLink g_nntplink; /* the current server's file handles */
 extern bool g_nntp_allow_timeout;
 extern char g_ser_line[NNTP_STRLEN];
 extern char g_last_command[NNTP_STRLEN];

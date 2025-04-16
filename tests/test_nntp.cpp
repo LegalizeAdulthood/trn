@@ -15,10 +15,10 @@ class MockNNTPConnection : public INNTPConnection
 public:
     ~MockNNTPConnection() override = default;
 
-    MOCK_METHOD(std::string, read_line, (error_code &), (override));
-    MOCK_METHOD(void, write_line, (const std::string &, error_code &), (override));
-    MOCK_METHOD(void, write, (const char *, size_t, error_code &), (override));
-    MOCK_METHOD(size_t, read, (char *, size_t, error_code &), (override));
+    MOCK_METHOD(std::string, read_line, (error_code_t &), (override));
+    MOCK_METHOD(void, write_line, (const std::string &, error_code_t &), (override));
+    MOCK_METHOD(void, write, (const char *, size_t, error_code_t &), (override));
+    MOCK_METHOD(size_t, read, (char *, size_t, error_code_t &), (override));
 };
 
 using MockNNTPConnectionFactory =

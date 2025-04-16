@@ -27,7 +27,7 @@ static asio::ip::tcp::resolver s_resolver(s_context);
 static ConnectionFactory       s_nntp_connection_factory;
 
 using resolver_results = asio::ip::tcp::resolver::results_type;
-using error_code = boost::system::error_code;
+using error_code_t = boost::system::error_code;
 
 class NNTPConnection : public INNTPConnection
 {
@@ -35,7 +35,7 @@ public:
     NNTPConnection(const char *server, const resolver_results &results)
         : m_server(server)
     {
-        error_code ec;
+        error_code_t ec;
         asio::connect(m_socket, results, ec);
         if (ec)
         {
@@ -44,10 +44,10 @@ public:
     }
     ~NNTPConnection() override = default;
 
-    std::string read_line(error_code &ec) override;
-    void        write_line(const std::string &line, error_code &ec) override;
-    void        write(const char *buffer, size_t len, error_code &ec) override;
-    size_t      read(char *buf, size_t size, error_code &ec) override;
+    std::string read_line(error_code_t &ec) override;
+    void        write_line(const std::string &line, error_code_t &ec) override;
+    void        write(const char *buffer, size_t len, error_code_t &ec) override;
+    size_t      read(char *buf, size_t size, error_code_t &ec) override;
 
 private:
     std::string           m_server;
@@ -55,7 +55,7 @@ private:
     asio::streambuf       m_buffer;
 };
 
-std::string NNTPConnection::read_line(error_code &ec)
+std::string NNTPConnection::read_line(error_code_t &ec)
 {
     read_until(m_socket, m_buffer, "\r\n", ec);
     if (ec)
@@ -70,18 +70,18 @@ std::string NNTPConnection::read_line(error_code &ec)
     return line;
 }
 
-void NNTPConnection::write_line(const std::string &line, error_code &ec)
+void NNTPConnection::write_line(const std::string &line, error_code_t &ec)
 {
     const std::string buffer{line + "\r\n"};
     write(buffer.c_str(), buffer.size(), ec);
 }
 
-void NNTPConnection::write(const char *buffer, size_t len, error_code &ec)
+void NNTPConnection::write(const char *buffer, size_t len, error_code_t &ec)
 {
     asio::write(m_socket, asio::buffer(buffer, len), ec);
 }
 
-size_t NNTPConnection::read(char *buf, size_t size, error_code &ec)
+size_t NNTPConnection::read(char *buf, size_t size, error_code_t &ec)
 {
     return asio::read(m_socket, asio::buffer(buf, size), ec);
 }
@@ -94,7 +94,7 @@ static ConnectionPtr create_nntp_connection(const char *machine, int port, const
         service_name = std::to_string(g_nntplink.port_number);
     }
 
-    error_code ec;
+    error_code_t ec;
     asio::ip::tcp::resolver::results_type results = s_resolver.resolve(machine, service_name, ec);
     if (ec)
     {
