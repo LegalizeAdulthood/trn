@@ -62,6 +62,7 @@ int nntp_connect(const char *machine, bool verbose)
             response = 0;
             break;
         }
+
     case -1:
         if (verbose)
         {
@@ -74,6 +75,7 @@ int nntp_connect(const char *machine, bool verbose)
         }
         response = 0;
         break;
+
     case NNTP_ACCESS_VAL:
         if (verbose)
         {
@@ -88,6 +90,7 @@ int nntp_connect(const char *machine, bool verbose)
         }
         response = -1;
         break;
+
     case NNTP_NOPOSTOK_VAL:
         if (verbose)
         {
@@ -95,6 +98,7 @@ int nntp_connect(const char *machine, bool verbose)
         }
         response = 1;
         break;
+
     case NNTP_POSTOK_VAL:
         if (verbose)
         {
@@ -102,6 +106,7 @@ int nntp_connect(const char *machine, bool verbose)
         }
         response = 1;
         break;
+
     default:
         if (verbose)
         {
@@ -237,9 +242,11 @@ int nntp_check()
         case 1:
             len = 1;
             goto read_it;
+
         case 0:         /* We're quitting, so pretend it's OK */
             std::strcpy(g_ser_line, "205 Ok");
             break;
+
         default:
             break;
         }
