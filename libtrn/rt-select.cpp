@@ -88,21 +88,21 @@ char           g_option_sel_cmds[3]{"Z>"};
 bool           g_use_sel_num{};
 bool           g_sel_num_goto{};
 
-enum removed_prompt
+enum RemovedPrompt
 {
     RP_NONE = 0,
     RP_MOUSEBAR = 1,
     RP_NEWLINE = 2,
     RP_ALL = 3,
 };
-DECLARE_FLAGS_ENUM(removed_prompt, int);
+DECLARE_FLAGS_ENUM(RemovedPrompt, int);
 
 static char           s_sel_ret{};
 static char           s_page_char{};
 static char           s_end_char{};
 static int            s_disp_status_line{};
 static bool           s_clean_screen{};
-static removed_prompt s_removed_prompt{};
+static RemovedPrompt s_removed_prompt{};
 static int            s_force_sel_pos{};
 static DisplayState (*s_extra_commands)(char_int){};
 
