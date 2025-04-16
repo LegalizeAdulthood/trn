@@ -1380,20 +1380,20 @@ TEST_F(InterpolatorTest, caretEscapeLowerCase)
 namespace
 {
 
-class pushd
+class PushDir
 {
 public:
-    pushd() :
+    PushDir() :
         m_old_dir{}
     {
         getcwd(m_old_dir, sizeof(m_old_dir));
     }
-    pushd(const char *new_dir) :
-        pushd()
+    PushDir(const char *new_dir) :
+        PushDir()
     {
         chdir(new_dir);
     }
-    ~pushd()
+    ~PushDir()
     {
         if (m_old_dir[0] != '\0')
         {
@@ -1416,7 +1416,7 @@ protected:
     void SetUp() override;
     void TearDown() override;
 
-    pushd m_curdir;
+    PushDir m_curdir;
 };
 
 void InterpolatorNewsgroupTest::SetUp()
