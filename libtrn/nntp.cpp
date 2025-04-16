@@ -114,11 +114,12 @@ int nntp_group(const char *group, NGDATA *gp)
     }
     switch (nntp_check())
     {
-      case -2:
+    case -2:
         return -2;
-      case -1:
-      case 0:
-      {
+
+    case -1:
+    case 0:
+    {
         int ser_int = std::atoi(g_ser_line);
           if (ser_int != NNTP_NOSUCHGROUP_VAL //
               && ser_int != NNTP_SYNTAX_VAL)
@@ -132,7 +133,7 @@ int nntp_group(const char *group, NGDATA *gp)
             }
         }
         return 0;
-      }
+    }
     }
     if (gp)
     {
@@ -258,10 +259,11 @@ void nntp_body(ART_NUM artnum)
     }
     switch (nntp_check())
     {
-      case -2:
-      case -1:
+    case -2:
+    case -1:
         finalize(1);
-      case 0:
+
+    case 0:
         std::fclose(g_artfp);
         g_artfp = nullptr;
         errno = ENOENT;                 /* Simulate file-not-found */
@@ -697,10 +699,11 @@ long nntp_readcheck()
     /* try to get the status line and the status code */
     switch (nntp_check())
     {
-      case -2:
+    case -2:
         return -2;
-      case -1:
-      case 0:
+
+    case -1:
+    case 0:
         return s_rawbytes = -1;
     }
 
