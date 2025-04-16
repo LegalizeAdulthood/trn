@@ -70,7 +70,7 @@ sel_sort_mode  g_sel_newsgroupsort{SS_NATURAL};
 const char    *g_sel_sort_string{};
 int            g_sel_direction{1};
 bool           g_sel_exclusive{};
-addgroup_flags g_sel_mask{AGF_SEL};
+AddGroupFlags g_sel_mask{AGF_SEL};
 bool           g_selected_only{};
 ART_UNREAD     g_selected_count{};
 int            g_selected_subj_cnt{};

@@ -13,7 +13,7 @@
 
 struct DATASRC;
 
-enum addgroup_flags : std::uint8_t
+enum AddGroupFlags : std::uint8_t
 {
     AGF_NONE = 0x00,
     AGF_SEL = 0x01,
@@ -22,7 +22,7 @@ enum addgroup_flags : std::uint8_t
     AGF_INCLUDED = 0x10,
     AGF_EXCLUDED = 0x20
 };
-DECLARE_FLAGS_ENUM(addgroup_flags, std::uint8_t);
+DECLARE_FLAGS_ENUM(AddGroupFlags, std::uint8_t);
 
 struct ADDGROUP
 {
@@ -31,7 +31,7 @@ struct ADDGROUP
     DATASRC       *datasrc;
     ART_NUM        toread; /* number of articles to be read (for sorting) */
     NG_NUM         num;    /* a possible sort order for this group */
-    addgroup_flags flags;
+    AddGroupFlags flags;
     char           name[1];
 };
 

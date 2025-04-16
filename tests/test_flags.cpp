@@ -141,7 +141,7 @@ namespace
 template <typename T>
 struct addgroup_flag_equivalence
 {
-    addgroup_flags agf;
+    AddGroupFlags agf;
     T              other;
 };
 
