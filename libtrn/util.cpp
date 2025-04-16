@@ -102,7 +102,7 @@ void util_final()
 int doshell(const char *shell, const char *cmd)
 {
 #ifndef MSDOS
-    WAIT_STATUS status;
+    WaitStatus status;
     pid_t pid, w;
 #endif
     int ret = 0;
