@@ -21,7 +21,7 @@ enum
 };
 
 /* different context types */
-enum scontext_type
+enum ScanContextType
 {
     S_NONE = 0,
     S_ART = 1,
@@ -40,7 +40,7 @@ struct PAGE_ENT
 
 struct SCONTEXT
 {
-    scontext_type type; /* context type */
+    ScanContextType type; /* context type */
 
     /* ordering information */
     long* ent_sort;             /* sorted list of entries in the context */
@@ -108,13 +108,13 @@ extern long g_s_flags;          /* misc. flags */
 extern int g_s_num_contexts;
 extern SCONTEXT *g_s_contexts; /* array of context structures */
 extern int g_s_cur_context;       /* current context number */
-extern scontext_type g_s_cur_type;          /* current context type (for fast switching) */
+extern ScanContextType g_s_cur_type;          /* current context type (for fast switching) */
 /* options */
 extern int g_s_itemnum; /* show item numbers by default */
 extern int g_s_mode_vi;
 
-void s_init_context(int cnum, scontext_type type);
-int s_new_context(scontext_type type);
+void s_init_context(int cnum, ScanContextType type);
+int s_new_context(ScanContextType type);
 void s_save_context();
 void s_change_context(int newcontext);
 void s_clean_contexts();

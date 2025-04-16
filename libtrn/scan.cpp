@@ -44,12 +44,12 @@ long          g_s_flags{};         /* misc. flags */
 int           g_s_num_contexts{};  //
 SCONTEXT     *g_s_contexts{};      /* array of context structures */
 int           g_s_cur_context{};   /* current context number */
-scontext_type g_s_cur_type{};      /* current context type (for fast switching) */
+ScanContextType g_s_cur_type{};      /* current context type (for fast switching) */
 /* options */
 int g_s_itemnum{true}; /* show item numbers by default */
 int g_s_mode_vi{};
 
-void s_init_context(int cnum, scontext_type type)
+void s_init_context(int cnum, ScanContextType type)
 {
     /* g_s_num_contexts not incremented until last moment */
     if (cnum < 0 || cnum > g_s_num_contexts)
@@ -95,7 +95,7 @@ void s_init_context(int cnum, scontext_type type)
 /* allocate a new context number and initialize it */
 /* returns context number */
 //int type;                     /* context type */
-int s_new_context(scontext_type type)
+int s_new_context(ScanContextType type)
 {
     int i;
 
