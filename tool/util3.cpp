@@ -32,7 +32,8 @@ int doshell(const char *shell, const char *cmd)
 char *safemalloc(MEM_SIZE size)
 {
     char *ptr = (char*)std::malloc(size ? size : (MEM_SIZE)1);
-    if (!ptr) {
+    if (!ptr)
+    {
         std::fputs(s_nomem,stdout);
         finalize(1);
     }
@@ -46,7 +47,8 @@ char *safemalloc(MEM_SIZE size)
 char *saferealloc(char *where, MEM_SIZE size)
 {
     char *ptr = (char*)std::realloc(where, size ? size : (MEM_SIZE)1);
-    if (!ptr) {
+    if (!ptr)
+    {
         std::fputs(s_nomem,stdout);
         finalize(1);
     }
@@ -57,7 +59,8 @@ char *saferealloc(char *where, MEM_SIZE size)
 char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, const char *cmd)
 {
     extern std::string g_dot_dir;
-    if (*pattern == '%' && pattern[1] == '.') {
+    if (*pattern == '%' && pattern[1] == '.')
+    {
         int len = std::strlen(g_dot_dir.c_str());
         safecpy(dest, g_dot_dir.c_str(), destsize);
         if (len < destsize)
