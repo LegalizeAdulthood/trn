@@ -395,17 +395,20 @@ static void sel_dogroups()
         }
         switch (ret)
         {
-          case NG_NORM:
-          case NG_SELNEXT:
+        case NG_NORM:
+        case NG_SELNEXT:
             set_ng(np->next);
             break;
-          case NG_NEXT:
+
+        case NG_NEXT:
             set_ng(np->next);
             goto loop_break;
-          case NG_ERROR:
-          case NG_ASK:
+
+        case NG_ERROR:
+        case NG_ASK:
             goto loop_break;
-          case NG_SELPRIOR:
+
+        case NG_SELPRIOR:
             while ((np = np->prev) != nullptr)
             {
                 if (np->flags & NF_VISIT)
@@ -415,19 +418,22 @@ static void sel_dogroups()
             }
             (void) first_page();
             goto loop_break;
-          case NG_MINUS:
+
+        case NG_MINUS:
             np = g_recent_ng;
 #if 0
 /* CAA: I'm not sure why I wrote this originally--it seems unnecessary */
             np->flags |= NF_VISIT;
 #endif
             goto do_group;
-          case NG_NOSERVER:
+
+        case NG_NOSERVER:
             nntp_server_died(np->rc->datasrc);
             (void) first_page();
             break;
-          /* CAA extensions */
-          case NG_GO_ARTICLE:
+
+        /* CAA extensions */
+        case NG_GO_ARTICLE:
             np = g_ng_go_ngptr;
             goto do_group;
           /* later: possible go-to-newsgroup (applicable?) */
@@ -746,8 +752,8 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
     std::printf("\n");                 /* prepare for output msgs... */
     switch (ui->type)
     {
-      case UN_DEBUG1:
-      {
+    case UN_DEBUG1:
+    {
         char *s = ui->data.str;
         if (s && *s)
         {
@@ -756,9 +762,10 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
             return exit_code;
         }
         break;
-      }
-      case UN_TEXTFILE:
-      {
+    }
+
+    case UN_TEXTFILE:
+    {
         char *s = ui->data.textfile.fname;
         if (s && *s)
         {
@@ -766,9 +773,10 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
             univ_page_file(s);
         }
         break;
-      }
-      case UN_ARTICLE:
-      {
+    }
+
+    case UN_ARTICLE:
+    {
         if (g_in_ng)
         {
             /* XXX whine: can't recurse at this time */
@@ -801,59 +809,68 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
         g_univ_read_virtflag = false;
         switch (ret)
         {
-          case NG_NORM:         /* handle more cases later */
-          case NG_SELNEXT:
-          case NG_NEXT:
+        case NG_NORM:         /* handle more cases later */
+        case NG_SELNEXT:
+        case NG_NEXT:
             /* just continue reading */
             break;
-          case NG_SELPRIOR:
+
+        case NG_SELPRIOR:
             /* not implemented yet */
             /* FALL THROUGH */
-          case NG_ERROR:
-          case NG_ASK:
+
+        case NG_ERROR:
+        case NG_ASK:
             exit_code = UR_BREAK;
             return exit_code;
-          case NG_MINUS:
+
+        case NG_MINUS:
             /* not implemented */
             break;
-          default:
+
+        default:
             break;
         }
         break;
-      }
-      case UN_GROUPMASK:
-      {
+    }
+
+    case UN_GROUPMASK:
+    {
         univ_mask_load(ui->data.gmask.masklist,ui->data.gmask.title);
         ch = universal_selector();
         switch (ch)
         {
-          case 'q':
+        case 'q':
             exit_code = UR_BREAK;
             break;
-          default:
+
+        default:
             exit_code = UR_NORM;
             break;
         }
         return exit_code;
-      }
-      case UN_CONFIGFILE:
-      {
+    }
+
+    case UN_CONFIGFILE:
+    {
         univ_file_load(ui->data.cfile.fname,ui->data.cfile.title,
                        ui->data.cfile.label);
         ch = universal_selector();
         switch (ch)
         {
-          case 'q':
+        case 'q':
             exit_code = UR_BREAK;
             break;
-          default:
+
+        default:
             exit_code = UR_NORM;
             break;
         }
         return exit_code;
-      }
-      case UN_NEWSGROUP:
-      {
+    }
+
+    case UN_NEWSGROUP:
+    {
         int ret;
 
         if (g_in_ng)
@@ -893,34 +910,40 @@ static univ_read_result univ_read(UNIV_ITEM *ui)
         }
         switch (ret)
         {
-          case NG_NORM:         /* handle more cases later */
-          case NG_SELNEXT:
-          case NG_NEXT:
+        case NG_NORM:         /* handle more cases later */
+        case NG_SELNEXT:
+        case NG_NEXT:
             /* just continue reading */
             break;
-          case NG_SELPRIOR:
+
+        case NG_SELPRIOR:
             /* not implemented yet */
             /* FALL THROUGH */
-          case NG_ERROR:
-          case NG_ASK:
+
+        case NG_ERROR:
+        case NG_ASK:
             exit_code = UR_BREAK;
             return exit_code;
-          case NG_MINUS:
+
+        case NG_MINUS:
             np = g_recent_ng;
             goto do_group;
-          case NG_NOSERVER:
+
+        case NG_NOSERVER:
             /* Eeep! */
             break;
         }
         break;
-      }
-      case UN_HELPKEY:
+    }
+
+    case UN_HELPKEY:
         if (another_command(univ_key_help(ui->data.i)))
         {
             pushchar(s_sel_ret | 0200);
         }
         break;
-      default:
+
+    default:
         break;
     }
     return exit_code;
@@ -1413,7 +1436,7 @@ reinp_selector:
         s_sel_ret = ch;
         switch (sel_command(ch))
         {
-          case DS_ASK:
+        case DS_ASK:
             if (!s_clean_screen)
             {
                 sel_display();
@@ -1425,10 +1448,12 @@ reinp_selector:
                 goto reask_selector;
             }
             goto position_selector;
-          case DS_DISPLAY:
+
+        case DS_DISPLAY:
             sel_display();
             goto reask_selector;
-          case DS_UPDATE:
+
+        case DS_UPDATE:
             if (!s_clean_screen)
             {
                 sel_display();
@@ -1452,11 +1477,14 @@ reinp_selector:
                 goto_xy(0, g_sel_last_line);
             }
             goto reask_selector;
-          case DS_RESTART:
+
+        case DS_RESTART:
             return 'R'; /*Restart*/
-          case DS_QUIT:
+
+        case DS_QUIT:
             return 'Q'; /*Quit*/
-          case DS_STATUS:
+
+        case DS_STATUS:
             s_disp_status_line = 1;
             if (!s_clean_screen)
             {
@@ -1534,7 +1562,7 @@ reinp_selector:
         }
         switch (ch)
         {
-          case '+':
+        case '+':
             if (select_item(g_sel_items[g_sel_item_index].u))
             {
                 output_sel(g_sel_item_index, 1, true);
@@ -1545,8 +1573,9 @@ reinp_selector:
                 goto reask_selector;
             }
             break;
-          case '-':  case 'k':  case 'M':
-          {
+
+        case '-':  case 'k':  case 'M':
+        {
             bool sel_reread_save = g_sel_rereading;
             if (ch == 'M')
             {
@@ -1564,7 +1593,7 @@ reinp_selector:
                 goto reask_selector;
             }
             break;
-          }
+        }
         }
         if (g_can_home)
         {
@@ -1618,7 +1647,7 @@ static bool select_item(SEL_UNION u)
 {
     switch (g_sel_mode)
     {
-      case SM_MULTIRC:
+    case SM_MULTIRC:
         // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
         TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DELSEL)) == 0);
         if (!(u.mp->flags & static_cast<multirc_flags>(g_sel_mask)))
@@ -1627,36 +1656,43 @@ static bool select_item(SEL_UNION u)
         }
         u.mp->flags |= static_cast<multirc_flags>(g_sel_mask);
         break;
-      case SM_ADDGROUP:
+
+    case SM_ADDGROUP:
         if (!(u.gp->flags & g_sel_mask))
         {
             g_selected_count++;
         }
         u.gp->flags = (u.gp->flags & ~AGF_DEL) | g_sel_mask;
         break;
-      case SM_NEWSGROUP:
+
+    case SM_NEWSGROUP:
         if (!(u.np->flags & g_sel_mask))
         {
             g_selected_count++;
         }
         u.np->flags = (u.np->flags & ~NF_DEL) | static_cast<newsgroup_flags>(g_sel_mask);
         break;
-      case SM_OPTIONS:
+
+    case SM_OPTIONS:
         if (!select_option(u.op) || !ini_value(g_options_ini, u.op))
         {
             return false;
         }
         break;
-      case SM_THREAD:
+
+    case SM_THREAD:
         select_thread(u.sp->thread, AUTO_KILL_NONE);
         break;
-      case SM_SUBJECT:
+
+    case SM_SUBJECT:
         select_subject(u.sp, AUTO_KILL_NONE);
         break;
-      case SM_ARTICLE:
+
+    case SM_ARTICLE:
         select_article(u.ap, AUTO_KILL_NONE);
         break;
-      case SM_UNIVERSAL:
+
+    case SM_UNIVERSAL:
         if (!(u.un->flags & g_sel_mask))
         {
             g_selected_count++;
@@ -1671,40 +1707,42 @@ static bool delay_return_item(SEL_UNION u)
 {
     switch (g_sel_mode)
     {
-      case SM_MULTIRC:
-      case SM_ADDGROUP:
-      case SM_NEWSGROUP:
-      case SM_OPTIONS:
-      case SM_UNIVERSAL:
+    case SM_MULTIRC:
+    case SM_ADDGROUP:
+    case SM_NEWSGROUP:
+    case SM_OPTIONS:
+    case SM_UNIVERSAL:
         return false;
-      case SM_ARTICLE:
+
+    case SM_ARTICLE:
         delay_unmark(u.ap);
         break;
-      default:
-      {
-          ARTICLE* ap;
-          if (g_sel_mode == SM_THREAD)
-          {
-              for (ap = first_art(u.sp); ap; ap = next_art(ap))
-              {
-                  if (!!(ap->flags & AF_UNREAD) ^ g_sel_rereading)
-                  {
-                      delay_unmark(ap);
-                  }
-              }
-          }
-          else
-          {
-              for (ap = u.sp->articles; ap; ap = ap->subj_next)
-              {
-                  if (!!(ap->flags & AF_UNREAD) ^ g_sel_rereading)
-                  {
-                      delay_unmark(ap);
-                  }
-              }
-          }
-          break;
-      }
+
+    default:
+    {
+        ARTICLE* ap;
+        if (g_sel_mode == SM_THREAD)
+        {
+            for (ap = first_art(u.sp); ap; ap = next_art(ap))
+            {
+                if (!!(ap->flags & AF_UNREAD) ^ g_sel_rereading)
+                {
+                    delay_unmark(ap);
+                }
+            }
+        }
+        else
+        {
+            for (ap = u.sp->articles; ap; ap = ap->subj_next)
+            {
+                if (!!(ap->flags & AF_UNREAD) ^ g_sel_rereading)
+                {
+                    delay_unmark(ap);
+                }
+            }
+        }
+        break;
+    }
     }
     return true;
 }
@@ -1713,7 +1751,7 @@ static bool deselect_item(SEL_UNION u)
 {
     switch (g_sel_mode)
     {
-      case SM_MULTIRC:
+    case SM_MULTIRC:
         // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
         TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DELSEL)) == 0);
         if (u.mp->flags & static_cast<multirc_flags>(g_sel_mask))
@@ -1728,7 +1766,8 @@ static bool deselect_item(SEL_UNION u)
         }
 #endif
         break;
-      case SM_ADDGROUP:
+
+    case SM_ADDGROUP:
         if (u.gp->flags & g_sel_mask)
         {
             u.gp->flags &= ~g_sel_mask;
@@ -1739,7 +1778,8 @@ static bool deselect_item(SEL_UNION u)
             u.gp->flags |= AGF_DEL;
         }
         break;
-      case SM_NEWSGROUP:
+
+    case SM_NEWSGROUP:
         if (u.np->flags & static_cast<newsgroup_flags>(g_sel_mask))
         {
             u.np->flags &= ~static_cast<newsgroup_flags>(g_sel_mask);
@@ -1750,19 +1790,23 @@ static bool deselect_item(SEL_UNION u)
             u.np->flags |= NF_DEL;
         }
         break;
-      case SM_OPTIONS:
+
+    case SM_OPTIONS:
         if (!select_option(u.op) || ini_value(g_options_ini, u.op))
         {
             return false;
         }
         break;
-      case SM_THREAD:
+
+    case SM_THREAD:
         deselect_thread(u.sp->thread);
         break;
-      case SM_SUBJECT:
+
+    case SM_SUBJECT:
         deselect_subject(u.sp);
         break;
-      case SM_UNIVERSAL:
+
+    case SM_UNIVERSAL:
         if (u.un->flags & static_cast<univitem_flags>(g_sel_mask))
         {
             u.un->flags &= ~static_cast<univitem_flags>(g_sel_mask);
@@ -1773,7 +1817,8 @@ static bool deselect_item(SEL_UNION u)
             u.un->flags |= UF_DEL;
         }
         break;
-      default:
+
+    default:
         deselect_article(u.ap, AUTO_KILL_NONE);
         break;
     }
@@ -1849,9 +1894,10 @@ static void sel_cleanup()
 {
     switch (g_sel_mode)
     {
-      case SM_MULTIRC:
+    case SM_MULTIRC:
         break;
-      case SM_ADDGROUP:
+
+    case SM_ADDGROUP:
         if (g_sel_rereading)
         {
             for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next)
@@ -1878,7 +1924,8 @@ static void sel_cleanup()
             }
         }
         break;
-      case SM_NEWSGROUP:
+
+    case SM_NEWSGROUP:
         if (g_sel_rereading)
         {
             for (NGDATA *np = g_first_ng; np; np = np->next)
@@ -1906,12 +1953,15 @@ static void sel_cleanup()
             }
         }
         break;
-      case SM_OPTIONS:
+
+    case SM_OPTIONS:
         break;
-      /* should probably be expanded... */
-      case SM_UNIVERSAL:
+
+    /* should probably be expanded... */
+    case SM_UNIVERSAL:
         break;
-      default:
+
+    default:
         if (g_sel_rereading)
         {
             g_sel_last_ap = nullptr;
@@ -1988,44 +2038,50 @@ static display_state sel_command(char_int ch)
     g_output_chase_phrase = true;
     switch (ch)
     {
-      case '>':
+    case '>':
         g_sel_item_index = 0;
         if (next_page())
         {
             return DS_DISPLAY;
         }
         break;
-      case '<':
+
+    case '<':
         g_sel_item_index = 0;
         if (prev_page())
         {
             return DS_DISPLAY;
         }
         break;
-      case '^':  case Ctl('r'):
+
+    case '^':  case Ctl('r'):
         g_sel_item_index = 0;
         if (first_page())
         {
             return DS_DISPLAY;
         }
         break;
-      case '$':
+
+    case '$':
         g_sel_item_index = 0;
         if (last_page())
         {
             return DS_DISPLAY;
         }
         break;
-      case Ctl('l'):
+
+    case Ctl('l'):
         return DS_DISPLAY;
-      case Ctl('^'):
+
+    case Ctl('^'):
         erase_line(false);              /* erase the prompt */
         s_removed_prompt |= RP_NEWLINE;
 #ifdef MAILCALL
         setmail(true);          /* force a mail check */
 #endif
         break;
-      case '\r':  case '\n':
+
+    case '\r':  case '\n':
         if (!g_selected_count && g_sel_page_item_cnt)
         {
             if (g_sel_rereading || g_sel_items[g_sel_item_index].sel != 2)
@@ -2034,19 +2090,25 @@ static display_state sel_command(char_int ch)
             }
         }
         return DS_QUIT;
-      case 'Z':  case '\t':
+
+    case 'Z':  case '\t':
         return DS_QUIT;
-      case 'q':  case 'Q':  case '+':  case '`':
+
+    case 'q':  case 'Q':  case '+':  case '`':
         return DS_QUIT;
-      case Ctl('Q'):  case '\033':
+
+    case Ctl('Q'):  case '\033':
         s_sel_ret = '\033';
         return DS_QUIT;
-      case '\b':  case '\177':
+
+    case '\b':  case '\177':
         return DS_QUIT;
-      case Ctl('k'):
+
+    case Ctl('k'):
         edit_kfile();
         return DS_DISPLAY;
-      case '&':  case '!':
+
+    case '&':  case '!':
         erase_line(g_mousebar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
         if (!finish_command(true))      /* get rest of command */
@@ -2083,7 +2145,8 @@ static display_state sel_command(char_int ch)
             goto do_command;
         }
         return DS_DISPLAY;
-      case 'v':
+
+    case 'v':
         newline();
         trn_version();
         ch = another_command(1);
@@ -2092,7 +2155,8 @@ static display_state sel_command(char_int ch)
             goto do_command;
         }
         return DS_DISPLAY;
-      case '\\':
+
+    case '\\':
         erase_line(g_mousebar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
         if (g_sel_mode == SM_NEWSGROUP)
@@ -2125,17 +2189,20 @@ static display_state sel_command(char_int ch)
             goto do_command;
         }
         return DS_DISPLAY;
-      default:
+
+    default:
       the_default:
         ret = s_extra_commands(ch);
         switch (ret)
         {
-          case DS_ERROR:
+        case DS_ERROR:
             break;
-          case DS_DOCOMMAND:
+
+        case DS_DOCOMMAND:
             ch = s_sel_ret;
             goto do_command;
-          default:
+
+        default:
             return ret;
         }
         std::strcpy(g_msg,"Type ? for help.");
@@ -2241,7 +2308,7 @@ static display_state article_commands(char_int ch)
 {
     switch (ch)
     {
-      case 'U':
+    case 'U':
         sel_cleanup();
         g_sel_rereading = !g_sel_rereading;
         g_sel_page_sp = nullptr;
@@ -2251,7 +2318,8 @@ static display_state article_commands(char_int ch)
             g_sel_rereading = !g_sel_rereading;
         }
         return DS_RESTART;
-      case '#':
+
+    case '#':
         if (g_sel_page_item_cnt)
         {
             for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
@@ -2267,12 +2335,15 @@ static display_state article_commands(char_int ch)
             }
         }
         return DS_QUIT;
-      case 'N':  case 'P':
+
+    case 'N':  case 'P':
         return DS_QUIT;
-      case 'L':
+
+    case 'L':
         switch_dmode(&g_sel_art_dmode);     /* sets g_msg */
         return DS_DISPLAY;
-      case 'Y':
+
+    case 'Y':
         if (!g_dmcount)
         {
             std::strcpy(g_msg,"No marked articles to yank back.");
@@ -2289,7 +2360,8 @@ static display_state article_commands(char_int ch)
         g_sel_page_app = nullptr;
         init_pages(PRESERVE_PAGE);
         return DS_DISPLAY;
-      case '=':
+
+    case '=':
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -2308,7 +2380,8 @@ static display_state article_commands(char_int ch)
         g_sel_item_index = 0;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
-      case 'S':
+
+    case 'S':
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -2357,7 +2430,8 @@ static display_state article_commands(char_int ch)
         count_subjects(CS_NORM);
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
-      case 'O':
+
+    case 'O':
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -2440,7 +2514,8 @@ static display_state article_commands(char_int ch)
         g_sel_page_app = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
-      case 'R':
+
+    case 'R':
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -2451,7 +2526,8 @@ static display_state article_commands(char_int ch)
         g_sel_page_app = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
-      case 'E':
+
+    case 'E':
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -2463,7 +2539,8 @@ static display_state article_commands(char_int ch)
         init_pages(FILL_LAST_PAGE);
         g_sel_item_index = 0;
         return DS_DISPLAY;
-      case 'X':  case 'D':  case 'J':
+
+    case 'X':  case 'D':  case 'J':
         if (!g_sel_rereading)
         {
             if (g_sel_mode == SM_ARTICLE)
@@ -2547,14 +2624,16 @@ static display_state article_commands(char_int ch)
             return DS_DISPLAY;
         }
         return DS_QUIT;
-      case 'T':
+
+    case 'T':
         if (!g_threaded_group)
         {
             std::strcpy(g_msg,"Group is not threaded.");
             return DS_STATUS;
         }
         /* FALL THROUGH */
-      case 'A':
+
+    case 'A':
         if (!g_sel_page_item_cnt)
         {
             dingaling();
@@ -2582,23 +2661,27 @@ static display_state article_commands(char_int ch)
         /* This call executes the action too */
         switch (ask_memorize(ch))
         {
-          case 'J': case 'j': case 'K':  case ',':
+        case 'J': case 'j': case 'K':  case ',':
             count_subjects(g_sel_rereading? CS_NORM : CS_UNSELECT);
             init_pages(PRESERVE_PAGE);
             std::strcpy(g_msg,"Kill memorized.");
             s_disp_status_line = 1;
             return DS_DISPLAY;
-          case '+': case '.': case 'S': case 'm':
+
+        case '+': case '.': case 'S': case 'm':
             std::strcpy(g_msg,"Selection memorized.");
             s_disp_status_line = 1;
             return DS_UPDATE;
-          case 'c':  case 'C':
+
+        case 'c':  case 'C':
             std::strcpy(g_msg,"Auto-commands cleared.");
             s_disp_status_line = 1;
             return DS_UPDATE;
-          case 'q':
+
+        case 'q':
             return DS_UPDATE;
-          case 'Q':
+
+        case 'Q':
             break;
         }
         if (g_can_home)
@@ -2606,10 +2689,12 @@ static display_state article_commands(char_int ch)
             erase_line(false);
         }
         break;
-      case ';':
+
+    case ';':
         s_sel_ret = ';';
         return DS_QUIT;
-      case ':':
+
+    case ':':
         if (g_sel_page_item_cnt)
         {
             if (g_sel_mode == SM_ARTICLE)
@@ -2635,7 +2720,8 @@ static display_state article_commands(char_int ch)
             g_art = 0;
         }
         /* FALL THROUGH */
-      case '/':
+
+    case '/':
         erase_line(g_mousebar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
         if (!finish_command(true))      /* get rest of command */
@@ -2677,17 +2763,20 @@ static display_state article_commands(char_int ch)
                 g_art = g_lastart+1;
                 switch (art_search(g_buf, sizeof g_buf, false))
                 {
-                  case SRCH_ERROR:
-                  case SRCH_ABORT:
+                case SRCH_ERROR:
+                case SRCH_ABORT:
                     break;
-                  case SRCH_INTR:
+
+                case SRCH_INTR:
                     errormsg("Interrupted");
                     break;
-                  case SRCH_DONE:
-                  case SRCH_SUBJDONE:
-                  case SRCH_FOUND:
+
+                case SRCH_DONE:
+                case SRCH_SUBJDONE:
+                case SRCH_FOUND:
                     break;
-                  case SRCH_NOTFOUND:
+
+                case SRCH_NOTFOUND:
                     errormsg("Not found.");
                     break;
                 }
@@ -2710,7 +2799,8 @@ static display_state article_commands(char_int ch)
             return DS_DOCOMMAND;
         }
         return DS_DISPLAY;
-      case 'c':
+
+    case 'c':
         erase_line(g_mousebar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
         ch = ask_catchup();
@@ -2736,18 +2826,21 @@ static display_state article_commands(char_int ch)
             erase_line(false);
         }
         break;
-      case 'h':
-      case '?':
+
+    case 'h':
+    case '?':
         univ_help(UHELP_ARTSEL);
         return DS_RESTART;
-      case 'H':
+
+    case 'H':
         newline();
         if (another_command(help_artsel()))
         {
             return DS_DOCOMMAND;
         }
         return DS_DISPLAY;
-      default:
+
+    default:
         return DS_ERROR;
     }
     return DS_ASK;
@@ -2757,15 +2850,17 @@ static display_state newsgroup_commands(char_int ch)
 {
     switch (ch)
     {
-      case Ctl('n'):
-      case Ctl('p'):
+    case Ctl('n'):
+    case Ctl('p'):
         return DS_QUIT;
-      case 'U':
+
+    case 'U':
         sel_cleanup();
         g_sel_rereading = !g_sel_rereading;
         g_sel_page_np = nullptr;
         return DS_RESTART;
-      case 'L':
+
+    case 'L':
         switch_dmode(&g_sel_grp_dmode);     /* sets g_msg */
         if (*g_sel_grp_dmode != 's' && !g_multirc->first->datasrc->desc_sf.hp)
         {
@@ -2773,7 +2868,8 @@ static display_state newsgroup_commands(char_int ch)
             return DS_RESTART;
         }
         return DS_DISPLAY;
-      case 'X':  case 'D':  case 'J':
+
+    case 'X':  case 'D':  case 'J':
         if (!g_sel_rereading)
         {
             NGDATA* np;
@@ -2822,8 +2918,9 @@ static display_state newsgroup_commands(char_int ch)
             return DS_DISPLAY;
         }
         return DS_QUIT;
-      case '=':
-      {
+
+    case '=':
+    {
         sel_cleanup();
         g_missing_count = 0;
         for (NGDATA *np = g_first_ng; np; np = np->next)
@@ -2837,8 +2934,9 @@ static display_state newsgroup_commands(char_int ch)
         erase_line(false);
         check_active_refetch(true);
         return DS_RESTART;
-      }
-      case 'O':
+    }
+
+    case 'O':
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -2850,14 +2948,17 @@ static display_state newsgroup_commands(char_int ch)
         printcmd();
         switch (*g_buf)
         {
-          case 'n': case 'N':
+        case 'n': case 'N':
             break;
-          case 'g': case 'G':
+
+        case 'g': case 'G':
             *g_buf += 's' - 'g';                /* Group name == SS_STRING */
             break;
-          case 'c': case 'C':
+
+        case 'c': case 'C':
             break;
-          case 'h': case 'H':
+
+        case 'h': case 'H':
             if (g_verbose)
             {
                 std::fputs("\n"
@@ -2880,7 +2981,8 @@ static display_state newsgroup_commands(char_int ch)
             }
             s_clean_screen = false;
             goto reask_sort;
-          default:
+
+        default:
             if (g_can_home)
             {
                 erase_line(false);
@@ -2891,7 +2993,8 @@ static display_state newsgroup_commands(char_int ch)
         g_sel_page_np = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
-      case 'R':
+
+    case 'R':
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -2900,7 +3003,8 @@ static display_state newsgroup_commands(char_int ch)
         g_sel_page_np = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
-      case 'E':
+
+    case 'E':
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -2910,7 +3014,8 @@ static display_state newsgroup_commands(char_int ch)
         init_pages(FILL_LAST_PAGE);
         g_sel_item_index = 0;
         return DS_DISPLAY;
-      case ':':
+
+    case ':':
 #if 0
         if (g_ngptr != g_current_ng)
         {
@@ -2919,7 +3024,8 @@ static display_state newsgroup_commands(char_int ch)
         }
         /* FALL THROUGH */
 #endif
-      case '/':
+
+    case '/':
         erase_line(g_mousebar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
         if (!finish_command(true))      /* get rest of command */
@@ -2940,15 +3046,17 @@ static display_state newsgroup_commands(char_int ch)
                 g_ngptr = nullptr;
                 switch (ng_search(g_buf, false))
                 {
-                  case NGS_ERROR:
-                  case NGS_ABORT:
+                case NGS_ERROR:
+                case NGS_ABORT:
                     break;
-                  case NGS_INTR:
+
+                case NGS_INTR:
                     errormsg("Interrupted");
                     break;
-                  case NGS_FOUND:
-                  case NGS_NOTFOUND:
-                  case NGS_DONE:
+
+                case NGS_FOUND:
+                case NGS_NOTFOUND:
+                case NGS_DONE:
                     break;
                 }
                 g_ngptr = g_current_ng;
@@ -2969,7 +3077,8 @@ static display_state newsgroup_commands(char_int ch)
             return DS_DOCOMMAND;
         }
         return DS_DISPLAY;
-      case 'c':
+
+    case 'c':
         if (g_sel_item_index < g_sel_page_item_cnt)
         {
             set_ng(g_sel_items[g_sel_item_index].u.np);
@@ -3001,22 +3110,26 @@ static display_state newsgroup_commands(char_int ch)
             erase_line(false);
         }
         break;
-      case 'h':
-      case '?':
+
+    case 'h':
+    case '?':
         univ_help(UHELP_NGSEL);
         return DS_RESTART;
-      case 'H':
+
+    case 'H':
         newline();
         if (another_command(help_ngsel()))
         {
             return DS_DOCOMMAND;
         }
         return DS_DISPLAY;
-      case ';':
+
+    case ';':
         s_sel_ret = ';';
         return DS_QUIT;
-      default:
-      {
+
+    default:
+    {
         SEL_UNION u;
         input_newsgroup_result ret;
         bool was_at_top = !g_sel_prior_obj_cnt;
@@ -3047,7 +3160,7 @@ static display_state newsgroup_commands(char_int ch)
         POP_SELECTOR();
         switch (ret)
         {
-          case ING_NOSERVER:
+        case ING_NOSERVER:
             if (g_multirc)
             {
                 if (!was_at_top)
@@ -3057,19 +3170,23 @@ static display_state newsgroup_commands(char_int ch)
                 return DS_RESTART;
             }
             /* FALL THROUGH */
-          case ING_QUIT:
+
+        case ING_QUIT:
             s_sel_ret = 'q';
             return DS_QUIT;
-          case ING_ERROR:
+
+        case ING_ERROR:
             return DS_ERROR;
-          case ING_ERASE:
+
+        case ING_ERASE:
             if (s_clean_screen)
             {
                 erase_line(false);
                 return DS_ASK;
             }
             break;
-          default:
+
+        default:
             if (!save_sel_mode)
             {
                 return DS_RESTART;
@@ -3116,7 +3233,7 @@ static display_state newsgroup_commands(char_int ch)
             return DS_DOCOMMAND;
         }
         return DS_DISPLAY;
-      }
+    }
     }
     return DS_ASK;
 }
@@ -3125,7 +3242,7 @@ static display_state addgroup_commands(char_int ch)
 {
     switch (ch)
     {
-      case 'O':
+    case 'O':
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -3137,14 +3254,17 @@ static display_state addgroup_commands(char_int ch)
         printcmd();
         switch (*g_buf)
         {
-          case 'n': case 'N':
+        case 'n': case 'N':
             break;
-          case 'g': case 'G':
+
+        case 'g': case 'G':
             *g_buf += 's' - 'g';                /* Group name == SS_STRING */
             break;
-          case 'c': case 'C':
+
+        case 'c': case 'C':
             break;
-          case 'h': case 'H':
+
+        case 'h': case 'H':
             if (g_verbose)
             {
                 std::fputs("\n"
@@ -3167,7 +3287,8 @@ static display_state addgroup_commands(char_int ch)
             }
             s_clean_screen = false;
             goto reask_sort;
-          default:
+
+        default:
             if (g_can_home)
             {
                 erase_line(false);
@@ -3178,12 +3299,14 @@ static display_state addgroup_commands(char_int ch)
         g_sel_page_np = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
-      case 'U':
+
+    case 'U':
         sel_cleanup();
         g_sel_rereading = !g_sel_rereading;
         g_sel_page_gp = nullptr;
         return DS_RESTART;
-      case 'R':
+
+    case 'R':
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -3192,7 +3315,8 @@ static display_state addgroup_commands(char_int ch)
         g_sel_page_gp = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
-      case 'E':
+
+    case 'E':
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -3201,7 +3325,8 @@ static display_state addgroup_commands(char_int ch)
         g_sel_page_gp = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
-      case 'L':
+
+    case 'L':
         switch_dmode(&g_sel_grp_dmode);     /* sets g_msg */
         if (*g_sel_grp_dmode != 's' && !g_datasrc->desc_sf.hp)
         {
@@ -3209,7 +3334,8 @@ static display_state addgroup_commands(char_int ch)
             return DS_RESTART;
         }
         return DS_DISPLAY;
-      case 'X':  case 'D':  case 'J':
+
+    case 'X':  case 'D':  case 'J':
         if (!g_sel_rereading)
         {
             ADDGROUP* gp;
@@ -3258,8 +3384,9 @@ static display_state addgroup_commands(char_int ch)
             return DS_DISPLAY;
         }
         return DS_QUIT;
-      case ':':
-      case '/':
+
+    case ':':
+    case '/':
         erase_line(g_mousebar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
         if (!finish_command(true))      /* get rest of command */
@@ -3279,15 +3406,17 @@ static display_state addgroup_commands(char_int ch)
             {
                 switch (ng_search(g_buf,false))
                 {
-                  case NGS_ERROR:
-                  case NGS_ABORT:
+                case NGS_ERROR:
+                case NGS_ABORT:
                     break;
-                  case NGS_INTR:
+
+                case NGS_INTR:
                     errormsg("Interrupted");
                     break;
-                  case NGS_FOUND:
-                  case NGS_NOTFOUND:
-                  case NGS_DONE:
+
+                case NGS_FOUND:
+                case NGS_NOTFOUND:
+                case NGS_DONE:
                     break;
                 }
             }
@@ -3307,18 +3436,21 @@ static display_state addgroup_commands(char_int ch)
             return DS_DOCOMMAND;
         }
         return DS_DISPLAY;
-      case 'h':
-      case '?':
+
+    case 'h':
+    case '?':
         univ_help(UHELP_ADDSEL);
         return DS_RESTART;
-      case 'H':
+
+    case 'H':
         newline();
         if (another_command(help_addsel()))
         {
             return DS_DOCOMMAND;
         }
         return DS_DISPLAY;
-      default:
+
+    default:
         return DS_ERROR;
     }
     return DS_ASK;
@@ -3328,12 +3460,13 @@ static display_state multirc_commands(char_int ch)
 {
     switch (ch)
     {
-      case 'R':
+    case 'R':
         set_selector(g_sel_mode, static_cast<sel_sort_mode>(g_sel_sort * -g_sel_direction));
         g_sel_page_mp = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
-      case 'E':
+
+    case 'E':
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -3342,21 +3475,25 @@ static display_state multirc_commands(char_int ch)
         g_sel_page_mp = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
-      case '/':
+
+    case '/':
         /*$$$$*/
         break;
-      case 'h':
-      case '?':
+
+    case 'h':
+    case '?':
         univ_help(UHELP_MULTIRC);
         return DS_RESTART;
-      case 'H':
+
+    case 'H':
         newline();
         if (another_command(help_multirc()))
         {
             return DS_DOCOMMAND;
         }
         return DS_DISPLAY;
-      default:
+
+    default:
         return DS_ERROR;
     }
     return DS_ASK;
@@ -3366,12 +3503,13 @@ static display_state option_commands(char_int ch)
 {
     switch (ch)
     {
-      case 'R':
+    case 'R':
         set_selector(g_sel_mode, static_cast<sel_sort_mode>(g_sel_sort * -g_sel_direction));
         g_sel_page_op = 1;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
-      case 'E':
+
+    case 'E':
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -3380,10 +3518,12 @@ static display_state option_commands(char_int ch)
         g_sel_page_op = 1;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
-      case 'S':
+
+    case 'S':
         return DS_QUIT;
-      case '/':
-      {
+
+    case '/':
+    {
         SEL_UNION u;
         char*     pattern;
         erase_line(g_mousebar_cnt > 0); /* erase the prompt */
@@ -3434,19 +3574,22 @@ static display_state option_commands(char_int ch)
             return DS_DISPLAY;
         }
         return DS_ASK;
-      }
-      case 'h':
-      case '?':
+    }
+
+    case 'h':
+    case '?':
         univ_help(UHELP_OPTIONS);
         return DS_RESTART;
-      case 'H':
+
+    case 'H':
         newline();
         if (another_command(help_options()))
         {
             return DS_DOCOMMAND;
         }
         return DS_DISPLAY;
-      default:
+
+    default:
         return DS_ERROR;
     }
     return DS_ASK;
@@ -3456,12 +3599,13 @@ static display_state universal_commands(char_int ch)
 {
     switch (ch)
     {
-      case 'R':
+    case 'R':
         set_selector(g_sel_mode, static_cast<sel_sort_mode>(g_sel_sort * -g_sel_direction));
         sel_page_univ = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
-      case 'E':
+
+    case 'E':
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -3470,32 +3614,38 @@ static display_state universal_commands(char_int ch)
         sel_page_univ = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
-      case ';':
+
+    case ';':
         s_sel_ret = ';';
         return DS_QUIT;
-      case 'U':
+
+    case 'U':
         sel_cleanup();
         g_sel_rereading = !g_sel_rereading;
         sel_page_univ = nullptr;
         return DS_RESTART;
-      case Ctl('e'):
+
+    case Ctl('e'):
         univ_edit();
         univ_redofile();
         sel_cleanup();
         sel_page_univ = nullptr;
         return DS_RESTART;
-      case 'h':
-      case '?':
+
+    case 'h':
+    case '?':
         univ_help(UHELP_UNIV);
         return DS_RESTART;
-      case 'H':
+
+    case 'H':
         newline();
         if (another_command(help_univ()))
         {
             return DS_DOCOMMAND;
         }
         return DS_DISPLAY;
-      case 'O':
+
+    case 'O':
         if (!g_sel_rereading)
         {
             sel_cleanup();
@@ -3540,12 +3690,14 @@ static display_state universal_commands(char_int ch)
         sel_page_univ = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
-      case '~':
+
+    case '~':
         univ_virt_pass();
         sel_cleanup();
         sel_page_univ = nullptr;
         return DS_RESTART;
-      default:
+
+    default:
         break;
     }
     return DS_ERROR;
@@ -3564,16 +3716,19 @@ static void switch_dmode(char **dmode_cpp)
     }
     switch (**dmode_cpp)
     {
-      case 's':
+    case 's':
         s = "short";
         break;
-      case 'm':
+
+    case 'm':
         s = "medium";
         break;
-      case 'd':
+
+    case 'd':
         s = "date";
         break;
-      case 'l':
+
+    case 'l':
         s = "long";
         break;
     }
@@ -3618,8 +3773,8 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         /* Handle button-down event */
         switch (btn_clk)
         {
-          case 0:
-          case 1:
+        case 0:
+        case 1:
             if (y > 0 && y < g_sel_last_line)
             {
                 if (btn & 4)
@@ -3646,7 +3801,8 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                 }
             }
             break;
-          case 2:
+
+        case 2:
             break;
         }
     }
@@ -3655,7 +3811,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         /* Handle the button-up event */
         switch (btn_clk)
         {
-          case 0:
+        case 0:
             if (!y)
             {
                 pushchar('<' | 0200);
@@ -3683,7 +3839,8 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                 }
             }
             break;
-          case 1:
+
+        case 1:
             if (!y)
             {
                 pushchar('<' | 0200);
@@ -3693,7 +3850,8 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                 pushchar('>' | 0200);
             }
             break;
-          case 2:
+
+        case 2:
             /* move forward or backwards a page:
              *   if cursor in top half: backwards
              *   if cursor in bottom half: forwards
