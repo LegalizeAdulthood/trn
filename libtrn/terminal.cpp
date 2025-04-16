@@ -2162,14 +2162,14 @@ void goto_xy(int to_col, int to_line)
 
     if (to_line >= g_term_line)
     {
-        while(g_term_line < to_line)
+        while (g_term_line < to_line)
         {
             newline();
         }
     }
     else
     {
-        while(g_term_line > to_line)
+        while (g_term_line > to_line)
         {
             up_line();
         }

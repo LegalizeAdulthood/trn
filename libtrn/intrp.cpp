@@ -690,7 +690,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 case 'e':
                 {
                     static char dash[]{"-"};
-                    if(g_extractprog.empty())
+                    if (g_extractprog.empty())
                     {
                         s = dash;
                     }
