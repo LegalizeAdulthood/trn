@@ -78,13 +78,13 @@ enum ArticleFlags2 : std::uint16_t
 DECLARE_FLAGS_ENUM(ArticleFlags2, std::uint16_t);
 
 /* specific scoreflag meanings:  (note: bad placement, but where else?) */
-enum score_flags
+enum ScoreFlags
 {
     SFLAG_NONE = 0x00,
     SFLAG_AUTHOR = 0x01, /* author has a score (match on FROM: line) */
     SFLAG_SCORED = 0x10 /* if true, the article has been scored */
 };
-DECLARE_FLAGS_ENUM(score_flags, std::uint16_t)
+DECLARE_FLAGS_ENUM(ScoreFlags, std::uint16_t)
 
 /* This is our article-caching structure */
 struct ARTICLE
@@ -102,7 +102,7 @@ struct ARTICLE
     long           bytes;
     long           lines;
     int            score;
-    score_flags    scoreflags;
+    ScoreFlags    scoreflags;
     ArticleFlags  flags;  /* article state flags */
     ArticleFlags2 flags2; /* more state flags */
     autokill_flags autofl; /* auto-processing flags */
