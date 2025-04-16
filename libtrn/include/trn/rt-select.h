@@ -52,7 +52,7 @@ extern int            g_sel_direction;
 extern bool           g_sel_exclusive;
 extern AddGroupFlags g_sel_mask;
 extern bool           g_selected_only;
-extern ART_UNREAD     g_selected_count;
+extern ArticleUnread     g_selected_count;
 extern int            g_selected_subj_cnt;
 extern int            g_added_articles;
 extern char          *g_sel_chars;

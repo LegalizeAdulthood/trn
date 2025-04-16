@@ -40,7 +40,7 @@ List       *g_ngdata_list{};       /* a list of NGDATA */
 int         g_ngdata_cnt{};        //
 NewsgroupNum      g_newsgroup_cnt{};     /* all newsgroups in our current newsrc(s) */
 NewsgroupNum      g_newsgroup_toread{};  //
-ART_UNREAD  g_ng_min_toread{1};    /* == TR_ONE or TR_NONE */
+ArticleUnread  g_ng_min_toread{1};    /* == TR_ONE or TR_NONE */
 NewsgroupData     *g_first_ng{};          //
 NewsgroupData     *g_last_ng{};           //
 NewsgroupData     *g_ngptr{};             /* current newsgroup data ptr */
@@ -52,7 +52,7 @@ NewsgroupData     *g_sel_next_np{};       //
 ArticleNum     g_absfirst{};          /* 1st real article in current newsgroup */
 ArticleNum     g_firstart{};          /* minimum unread article number in newsgroup */
 ArticleNum     g_lastart{};           /* maximum article number in newsgroup */
-ART_UNREAD  g_missing_count{};     /* for reports on missing articles */
+ArticleUnread  g_missing_count{};     /* for reports on missing articles */
 std::string g_moderated;           //
 bool        g_redirected{};        //
 std::string g_redirected_to;       //
@@ -178,7 +178,7 @@ void grow_ng(ArticleNum newlast)
     if (newlast > g_lastart)
     {
         ArticleNum tmpart = g_art;
-        g_ngptr->toread += (ART_UNREAD)(newlast-g_lastart);
+        g_ngptr->toread += (ArticleUnread)(newlast-g_lastart);
         ArticleNum tmpfirst = g_lastart + 1;
         /* Increase the size of article scan arrays. */
         sa_grow(g_lastart,newlast);

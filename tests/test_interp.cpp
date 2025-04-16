@@ -1673,7 +1673,7 @@ TEST_F(InterpolatorNewsgroupTest, articleSizeInNewsgroup)
 
 TEST_F(InterpolatorNewsgroupTest, numSelectedThreadsInNewsgroupEmpty)
 {
-    value_saver<ART_UNREAD> saver(g_selected_count, 66);
+    value_saver<ArticleUnread> saver(g_selected_count, 66);
     char pattern[]{"%Z"};
 
     const char *new_pattern = interpolate(pattern);

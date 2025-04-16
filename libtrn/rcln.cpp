@@ -514,7 +514,7 @@ void set_toread(NewsgroupData *np, bool lax_high_check)
     }
     if (unread < 0)                     /* SOMEONE RESET THE NEWSGROUP!!! */
     {
-        unread = (ART_UNREAD)ngsize;    /* assume nothing carried over */
+        unread = (ArticleUnread)ngsize;    /* assume nothing carried over */
         if (!g_toread_quiet)
         {
             std::printf("\nSomebody reset %s -- assuming nothing read.\n",
@@ -547,7 +547,7 @@ void set_toread(NewsgroupData *np, bool lax_high_check)
             }
         }
     }
-    np->toread = (ART_UNREAD)unread;    /* remember how many are left */
+    np->toread = (ArticleUnread)unread;    /* remember how many are left */
 
     if (mybuf != tmpbuf)
     {

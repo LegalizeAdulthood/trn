@@ -72,7 +72,7 @@ int            g_sel_direction{1};
 bool           g_sel_exclusive{};
 AddGroupFlags g_sel_mask{AGF_SEL};
 bool           g_selected_only{};
-ART_UNREAD     g_selected_count{};
+ArticleUnread     g_selected_count{};
 int            g_selected_subj_cnt{};
 int            g_added_articles{};
 char          *g_sel_chars{};
@@ -132,11 +132,11 @@ private:
 
 }
 
-#define PUSH_SELECTOR()                                \
-    SelectionMode save_sel_mode = g_sel_mode;          \
-    const bool save_sel_rereading = g_sel_rereading;   \
-    const bool save_sel_exclusive = g_sel_exclusive;   \
-    ART_UNREAD save_selected_count = g_selected_count; \
+#define PUSH_SELECTOR()                                   \
+    SelectionMode save_sel_mode = g_sel_mode;             \
+    const bool    save_sel_rereading = g_sel_rereading;   \
+    const bool    save_sel_exclusive = g_sel_exclusive;   \
+    ArticleUnread save_selected_count = g_selected_count; \
     display_state (*const save_extra_commands)(char_int) = s_extra_commands
 
 #define POP_SELECTOR()                                      \

@@ -151,7 +151,7 @@ void thread_open()
 
     if (g_last_cached > g_lastart)
     {
-        g_ngptr->toread += (ART_UNREAD)(g_last_cached-g_lastart);
+        g_ngptr->toread += (ArticleUnread)(g_last_cached-g_lastart);
         /* ensure getngsize() knows the new maximum */
         g_ngptr->ngmax = g_last_cached;
         g_lastart = g_last_cached;

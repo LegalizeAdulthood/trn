@@ -288,7 +288,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             {
                 if (g_use_news_selector >= 0
                  && !ng_virtual
-                 && g_ngptr->toread >= (ART_UNREAD)g_use_news_selector)
+                 && g_ngptr->toread >= (ArticleUnread)g_use_news_selector)
                 {
                     pushchar('+');
                 }
@@ -321,7 +321,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             }
             count_subjects(CS_RETAIN);
             article_walk(count_unCACHED_article, 0);
-            g_ngptr->toread = (ART_UNREAD)g_obj_count;
+            g_ngptr->toread = (ArticleUnread)g_obj_count;
             if (g_artp != g_curr_artp)
             {
                 g_recent_art = g_curr_art;      /* remember last article # (for '-') */
@@ -786,7 +786,7 @@ static art_switch_result art_switch()
             check_first(g_absfirst);
             article_walk(mark_all_unREAD, 0);
             count_subjects(CS_NORM);
-            g_ngptr->toread = (ART_UNREAD)g_obj_count;
+            g_ngptr->toread = (ArticleUnread)g_obj_count;
         }
         else if (*g_buf == '+')
         {
@@ -2000,7 +2000,7 @@ reask_catchup:
         if (leave_unread)
         {
             count_subjects(CS_NORM);
-            g_ngptr->toread = (ART_UNREAD)g_obj_count;
+            g_ngptr->toread = (ArticleUnread)g_obj_count;
         }
         else
         {

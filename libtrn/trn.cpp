@@ -358,7 +358,7 @@ void do_multirc()
             {
                 g_threaded_group = (g_use_threads && !(g_ngptr->flags&NF_UNTHREADED));
                 g_dfltcmd =
-                    (g_use_news_selector >= 0 && g_ngptr->toread >= (ART_UNREAD) g_use_news_selector ? "+ynq" : "ynq");
+                    (g_use_news_selector >= 0 && g_ngptr->toread >= (ArticleUnread) g_use_news_selector ? "+ynq" : "ynq");
                 if (g_verbose)
                 {
                     std::printf("\n%s %3ld unread article%s in %s -- read now? [%s] ",

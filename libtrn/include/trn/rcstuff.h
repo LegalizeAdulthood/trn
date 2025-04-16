@@ -13,14 +13,14 @@ struct DataSource;
 struct HASHTABLE;
 struct NewsgroupData;
 
-enum : ART_UNREAD
+enum : ArticleUnread
 {
-    TR_ONE = (ART_UNREAD) 1,
-    TR_NONE = (ART_UNREAD) 0,
-    TR_UNSUB = (ART_UNREAD) -1, /* keep this one as -1, some tests use >= TR_UNSUB */
-    TR_IGNORE = (ART_UNREAD) -2,
-    TR_BOGUS = (ART_UNREAD) -3,
-    TR_JUNK = (ART_UNREAD) -4,
+    TR_ONE = (ArticleUnread) 1,
+    TR_NONE = (ArticleUnread) 0,
+    TR_UNSUB = (ArticleUnread) -1, /* keep this one as -1, some tests use >= TR_UNSUB */
+    TR_IGNORE = (ArticleUnread) -2,
+    TR_BOGUS = (ArticleUnread) -3,
+    TR_JUNK = (ArticleUnread) -4,
 };
 
 enum AddNewType : char

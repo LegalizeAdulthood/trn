@@ -34,7 +34,7 @@ struct NewsgroupData
     char      *rcline;             /* pointer to group's .newsrc line */
     ArticleNum    abs1st;             /* 1st real article in newsgroup */
     ArticleNum    ngmax;              /* high message num for the group */
-    ART_UNREAD toread;             /* number of articles to be read in newsgroup */
+    ArticleUnread toread;             /* number of articles to be read in newsgroup */
                                    /* < 0 is invalid or unsubscribed newsgroup */
     NewsgroupNum          num;           /* a possible sort order for this group */
     int             numoffset;     /* offset from rcline to numbers on line */
@@ -46,7 +46,7 @@ extern List       *g_ngdata_list;      /* a list of NGDATA */
 extern int         g_ngdata_cnt;       //
 extern NewsgroupNum      g_newsgroup_cnt;    /* all newsgroups in our current newsrc(s) */
 extern NewsgroupNum      g_newsgroup_toread; //
-extern ART_UNREAD  g_ng_min_toread;    /* == TR_ONE or TR_NONE */
+extern ArticleUnread  g_ng_min_toread;    /* == TR_ONE or TR_NONE */
 extern NewsgroupData     *g_first_ng;         //
 extern NewsgroupData     *g_last_ng;          //
 extern NewsgroupData     *g_ngptr;            /* current newsgroup data ptr */
@@ -58,7 +58,7 @@ extern NewsgroupData     *g_sel_next_np;      //
 extern ArticleNum     g_absfirst;         /* 1st real article in current newsgroup */
 extern ArticleNum     g_firstart;         /* minimum unread article number in newsgroup */
 extern ArticleNum     g_lastart;          /* maximum article number in newsgroup */
-extern ART_UNREAD  g_missing_count;    /* for reports on missing articles */
+extern ArticleUnread  g_missing_count;    /* for reports on missing articles */
 extern std::string g_moderated;        //
 extern bool        g_redirected;       //
 extern std::string g_redirected_to;    //

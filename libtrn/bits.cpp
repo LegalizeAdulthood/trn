@@ -314,7 +314,7 @@ void bits_to_rc()
     }
     else
     {
-        g_ngptr->toread = (ART_UNREAD)count; /* otherwise, remember the count */
+        g_ngptr->toread = (ArticleUnread)count; /* otherwise, remember the count */
     }
     g_ngptr->rc->flags |= RF_RCCHANGED;
 }

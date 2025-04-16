@@ -106,7 +106,7 @@ void push_only()
 
 void pop_only()
 {
-    ART_UNREAD save_ng_min_toread = g_ng_min_toread;
+    ArticleUnread save_ng_min_toread = g_ng_min_toread;
 
     end_only();
 
