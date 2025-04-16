@@ -105,14 +105,14 @@ enum MinorMode : char
 extern GeneralMode g_general_mode; /* general mode of trn */
 extern MinorMode   g_mode;         /* current state of trn */
 
-enum marking_mode
+enum MarkingMode
 {
     NOMARKING = 0,
     STANDOUT = 1,
     UNDERLINE = 2,
     LASTMARKING = 3
 };
-extern marking_mode g_marking; /* -m */
+extern MarkingMode g_marking; /* -m */
 
 enum marking_areas
 {

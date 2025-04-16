@@ -74,7 +74,7 @@ bool          g_can_home{};                      //
 bool          g_erase_each_line{};               /* fancy -e */
 bool          g_allow_typeahead{};               /* -T */
 bool          g_verify{};                        /* -v */
-marking_mode  g_marking{NOMARKING};              /* -m */
+MarkingMode  g_marking{NOMARKING};              /* -m */
 marking_areas g_marking_areas{HALFPAGE_MARKING}; //
 ART_LINE      g_initlines{};                     /* -i */
 bool          g_use_mouse{};                     //
