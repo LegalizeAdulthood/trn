@@ -299,7 +299,7 @@ void opt_file(const char *filename, char **tcbufptr, bool bleat)
         fstat(fd,&opt_stat);
         if (opt_stat.st_size >= TCBUF_SIZE - 1)
         {
-            filebuf = saferealloc(filebuf,(MEM_SIZE)opt_stat.st_size+2);
+            filebuf = saferealloc(filebuf,(MemorySize)opt_stat.st_size+2);
             *tcbufptr = filebuf;
         }
         if (opt_stat.st_size)
@@ -969,7 +969,7 @@ void save_options(const char *filename)
         fstat(fd_in,&opt_stat);
         if (opt_stat.st_size)
         {
-            filebuf = safemalloc((MEM_SIZE)opt_stat.st_size+2);
+            filebuf = safemalloc((MemorySize)opt_stat.st_size+2);
             int len = read(fd_in, filebuf, (int)opt_stat.st_size);
             filebuf[len] = '\0';
         }

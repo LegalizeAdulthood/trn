@@ -23,7 +23,7 @@ static char *s_tildedir{};
 
 char *savestr(const char *str)
 {
-    char* newaddr = safemalloc((MEM_SIZE)(std::strlen(str)+1));
+    char* newaddr = safemalloc((MemorySize)(std::strlen(str)+1));
 
     std::strcpy(newaddr,str);
     return newaddr;

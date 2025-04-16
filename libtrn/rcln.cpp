@@ -192,7 +192,7 @@ int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
 
     morenum = std::isdigit(*s);              /* will it need a comma after? */
     *(np->rcline + np->numoffset - 1) = np->subscribechar;
-    mbuf = safemalloc((MEM_SIZE)(std::strlen(s)+(s - np->rcline)+MAX_DIGITS+2+1));
+    mbuf = safemalloc((MemorySize)(std::strlen(s)+(s - np->rcline)+MAX_DIGITS+2+1));
     std::strcpy(mbuf,np->rcline);            /* make new rc line */
     if (maxt && lastnum && artnum == lastnum+1)
                                         /* can we just extend last range? */
@@ -478,7 +478,7 @@ void set_toread(NewsgroupData *np, bool lax_high_check)
     int   length = std::strlen(nums);
     if (length+MAX_DIGITS+1 > sizeof tmpbuf)
     {
-        mybuf = safemalloc((MEM_SIZE) (length + MAX_DIGITS + 1));
+        mybuf = safemalloc((MemorySize) (length + MAX_DIGITS + 1));
     }
     std::strcpy(mybuf,nums);
     mybuf[length++] = ',';
@@ -598,7 +598,7 @@ void checkexpired(NewsgroupData *np, ArticleNum a1st)
             }
             else
             {
-                mbuf = safemalloc((MEM_SIZE)(np->numoffset+3+len+1));
+                mbuf = safemalloc((MemorySize)(np->numoffset+3+len+1));
                 std::strcpy(mbuf, np->rcline);
             }
             cp = mbuf + np->numoffset;
@@ -628,7 +628,7 @@ void checkexpired(NewsgroupData *np, ArticleNum a1st)
         }
         else
         {
-            mbuf = safemalloc((MEM_SIZE)(np->numoffset+nlen+len+1));
+            mbuf = safemalloc((MemorySize)(np->numoffset+nlen+len+1));
             std::strcpy(mbuf,np->rcline);
         }
 
@@ -647,7 +647,7 @@ void checkexpired(NewsgroupData *np, ArticleNum a1st)
 
         if (!g_checkflag && np->rcline == mbuf)
         {
-            np->rcline = saferealloc(np->rcline, (MEM_SIZE) (cp - mbuf + len + 1));
+            np->rcline = saferealloc(np->rcline, (MemorySize) (cp - mbuf + len + 1));
         }
         else
         {

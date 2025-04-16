@@ -275,7 +275,7 @@ void end_header_line()
                 {
                     start++;
                 }
-                MEM_SIZE size = g_artpos - start + 1 - 1;   /* pre-strip newline */
+                MemorySize size = g_artpos - start + 1 - 1;   /* pre-strip newline */
                 if (g_in_header == SUBJ_LINE)
                 {
                     set_subj_line(s_parsed_artp, g_headbuf + start, size - 1);
@@ -528,7 +528,7 @@ char *fetchlines(ArticleNum artnum, HeaderLineType which_line)
         std::fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
     }
 #endif
-    s = safemalloc((MEM_SIZE)size);
+    s = safemalloc((MemorySize)size);
     safecpy(s,t,size);
     return s;
 }
@@ -623,7 +623,7 @@ char *prefetchlines(ArticleNum artnum, HeaderLineType which_line, bool copy)
         if (copy)
         {
             size = LBUFLEN;
-            s = safemalloc((MEM_SIZE) size);
+            s = safemalloc((MemorySize) size);
         }
         else
         {
@@ -652,7 +652,7 @@ char *prefetchlines(ArticleNum artnum, HeaderLineType which_line, bool copy)
         if (nntp_check() > 0)
         {
             char* last_buf = g_ser_line;
-            MEM_SIZE last_buflen = sizeof g_ser_line;
+            MemorySize last_buflen = sizeof g_ser_line;
             while (true)
             {
                 char *line = nntp_get_a_line(last_buf, last_buflen, last_buf!=g_ser_line);
@@ -727,7 +727,7 @@ char *prefetchlines(ArticleNum artnum, HeaderLineType which_line, bool copy)
         }
         if (copy)
         {
-            s = saferealloc(s, (MEM_SIZE) std::strlen(s) + 1);
+            s = saferealloc(s, (MemorySize) std::strlen(s) + 1);
         }
         return s;
     }
@@ -762,7 +762,7 @@ char *prefetchlines(ArticleNum artnum, HeaderLineType which_line, bool copy)
     }
     if (copy)
     {
-        s = safemalloc((MEM_SIZE) size);
+        s = safemalloc((MemorySize) size);
     }
     else                                /* hope this is okay--we're */
     {

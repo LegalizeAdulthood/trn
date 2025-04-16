@@ -100,7 +100,7 @@ inline char *nntp_get_a_line(char *buffer, int buffer_length, bool realloc_ok)
     {
         if (realloc_ok)
         {
-            buffer = saferealloc(buffer, (MEM_SIZE) line.length() + 1);
+            buffer = saferealloc(buffer, (MemorySize) line.length() + 1);
         }
         else
         {

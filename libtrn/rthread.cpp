@@ -2133,7 +2133,7 @@ static void build_artptrs()
     if (!g_artptr_list || g_artptr_list_size != count)
     {
         g_artptr_list = (Article**)saferealloc((char*)g_artptr_list,
-                (MEM_SIZE)count * sizeof (Article*));
+                (MemorySize)count * sizeof (Article*));
         g_artptr_list_size = count;
     }
     Article **app = g_artptr_list;

@@ -383,7 +383,7 @@ char *grow_eb(CompiledRegex *compex, char *epp, char **alt)
     char** altlist = compex->alternatives;
 
     compex->eblen += 80;
-    compex->expbuf = saferealloc(compex->expbuf, (MEM_SIZE)compex->eblen + 4);
+    compex->expbuf = saferealloc(compex->expbuf, (MemorySize)compex->eblen + 4);
     if (compex->expbuf != oldbuf)       /* realloc can change expbuf! */
     {
         epp += compex->expbuf - oldbuf;

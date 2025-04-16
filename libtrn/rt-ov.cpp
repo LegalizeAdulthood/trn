@@ -204,7 +204,7 @@ bool ov_data(ArticleNum first, ArticleNum last, bool cheating)
     ArticleNum  an;
     char    * line;
     char* last_buf = g_buf;
-    MEM_SIZE last_buflen = LBUFLEN;
+    MemorySize last_buflen = LBUFLEN;
     bool success = true;
     ArticleNum real_first = first;
     ArticleNum real_last = last;

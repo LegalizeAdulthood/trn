@@ -29,9 +29,9 @@ int doshell(const char *shell, const char *cmd)
 /* paranoid version of malloc */
 
 #ifndef USE_DEBUGGING_MALLOC
-char *safemalloc(MEM_SIZE size)
+char *safemalloc(MemorySize size)
 {
-    char *ptr = (char*)std::malloc(size ? size : (MEM_SIZE)1);
+    char *ptr = (char*)std::malloc(size ? size : (MemorySize)1);
     if (!ptr)
     {
         std::fputs(s_nomem,stdout);
@@ -44,9 +44,9 @@ char *safemalloc(MEM_SIZE size)
 /* paranoid version of realloc.  If where is nullptr, call malloc */
 
 #ifndef USE_DEBUGGING_MALLOC
-char *saferealloc(char *where, MEM_SIZE size)
+char *saferealloc(char *where, MemorySize size)
 {
-    char *ptr = (char*)std::realloc(where, size ? size : (MEM_SIZE)1);
+    char *ptr = (char*)std::realloc(where, size ? size : (MemorySize)1);
     if (!ptr)
     {
         std::fputs(s_nomem,stdout);

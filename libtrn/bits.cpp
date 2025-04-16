@@ -64,7 +64,7 @@ void rc_to_bits()
 #ifndef lint
     if (i >= LBUFLEN-2)                 /* bigger than g_buf? */
     {
-        mybuf = safemalloc((MEM_SIZE) (i + 2));
+        mybuf = safemalloc((MemorySize) (i + 2));
     }
 #endif
     std::strcpy(mybuf,s);                    /* make scratch copy of line */
@@ -242,7 +242,7 @@ void bits_to_rc()
             if (mybuf == g_buf)         /* currently static? */
             {
                 *s = '\0';
-                mybuf = safemalloc((MEM_SIZE)safelen + 32);
+                mybuf = safemalloc((MemorySize)safelen + 32);
                 std::strcpy(mybuf,g_buf);    /* so we must copy it */
                 s = mybuf + (s-g_buf);
                                         /* fix the pointer, too */
@@ -250,7 +250,7 @@ void bits_to_rc()
             else                        /* just grow in place, if possible */
             {
                 int oldlen = s - mybuf;
-                mybuf = saferealloc(mybuf,(MEM_SIZE)safelen + 32);
+                mybuf = saferealloc(mybuf,(MemorySize)safelen + 32);
                 s = mybuf + oldlen;
             }
         }
@@ -297,13 +297,13 @@ void bits_to_rc()
     std::free(g_ngptr->rcline);              /* return old rc line */
     if (mybuf == g_buf)
     {
-        g_ngptr->rcline = safemalloc((MEM_SIZE)(s-g_buf)+1);
+        g_ngptr->rcline = safemalloc((MemorySize)(s-g_buf)+1);
                                         /* grab a new rc line */
         std::strcpy(g_ngptr->rcline, g_buf); /* and load it */
     }
     else
     {
-        mybuf = saferealloc(mybuf,(MEM_SIZE)(s-mybuf)+1);
+        mybuf = saferealloc(mybuf,(MemorySize)(s-mybuf)+1);
                                         /* be nice to the heap */
         g_ngptr->rcline = mybuf;
     }

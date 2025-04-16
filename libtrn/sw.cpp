@@ -40,7 +40,7 @@ void sw_file(char **tcbufptr)
         fstat(initfd,&switch_file_stat);
         if (switch_file_stat.st_size >= TCBUF_SIZE-1)
         {
-            *tcbufptr = saferealloc(*tcbufptr,(MEM_SIZE)switch_file_stat.st_size+1);
+            *tcbufptr = saferealloc(*tcbufptr,(MemorySize)switch_file_stat.st_size+1);
         }
         if (switch_file_stat.st_size)
         {

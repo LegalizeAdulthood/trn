@@ -11,8 +11,8 @@ extern char *g_home_dir;
 int doshell(const char *shell, const char *cmd);
 [[noreturn]] void finalize(int num);
 #ifndef USE_DEBUGGING_MALLOC
-char *safemalloc(MEM_SIZE size);
-char *saferealloc(char *where, MEM_SIZE size);
+char *safemalloc(MemorySize size);
+char *saferealloc(char *where, MemorySize size);
 #endif
 char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, const char *cmd);
 int   nntp_handle_nested_lists();

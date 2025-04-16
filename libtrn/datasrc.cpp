@@ -202,7 +202,7 @@ char *read_datasrcs(const char *filename)
         fstat(fd,&datasrc_stat);
         if (datasrc_stat.st_size)
         {
-            filebuf = safemalloc((MEM_SIZE)datasrc_stat.st_size+2);
+            filebuf = safemalloc((MemorySize)datasrc_stat.st_size+2);
             int len = read(fd, filebuf, (int)datasrc_stat.st_size);
             (filebuf)[len] = '\0';
             prep_ini_data(filebuf,filename);
