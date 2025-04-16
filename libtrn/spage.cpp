@@ -74,7 +74,8 @@ bool s_fillpage_backward(long end)
     setspin(SPIN_BACKGROUND);   /* turn on spin on cache misses */
     /* uncertain what next comment means now */
     /* later do sheer paranoia check for min_page_ents */
-    while ((line_on+s_ent_lines(a)) <= page_lines) {
+    while ((line_on + s_ent_lines(a)) <= page_lines)
+    {
         g_page_ents[min_page_ents].entnum = a;
         i = s_ent_lines(a);
         g_page_ents[min_page_ents].lines = i;
@@ -93,7 +94,8 @@ bool s_fillpage_backward(long end)
     /* also set start_line entries */
     j = 0;
     line_on = 0;
-    for (int k = min_page_ents+1; k < MAX_PAGE_SIZE; k++) {
+    for (int k = min_page_ents + 1; k < MAX_PAGE_SIZE; k++)
+    {
         g_page_ents[j].entnum = g_page_ents[k].entnum;
         g_page_ents[j].pageflags = (char)0;
         g_page_ents[j].lines = g_page_ents[k].lines;
@@ -181,7 +183,8 @@ bool s_fillpage_forward(long start)
 
     setspin(SPIN_BACKGROUND);   /* turn on spin on cache misses */
 /* ?  later do paranoia check for g_s_bot_ent */
-    while ((line_on+s_ent_lines(a)) <= page_lines) {
+    while ((line_on + s_ent_lines(a)) <= page_lines)
+    {
         g_s_bot_ent += 1;
         g_page_ents[g_s_bot_ent].entnum = a;
         g_page_ents[g_s_bot_ent].start_line = line_on;
@@ -271,9 +274,10 @@ bool s_refillpage()
     a = s_next_elig(g_page_ents[0].entnum);
 
     /* similar to the tests in the last loop... */
-    while (i <= g_s_bot_ent && s_eligible(g_page_ents[i].entnum)
-      && g_page_ents[i].entnum == a
-      && g_page_ents[i].lines == s_ent_lines(g_page_ents[i].entnum)) {
+    while (i <= g_s_bot_ent && s_eligible(g_page_ents[i].entnum) //
+           && g_page_ents[i].entnum == a                         //
+           && g_page_ents[i].lines == s_ent_lines(g_page_ents[i].entnum))
+    {
         i++;
         a = s_next_elig(a);
     }
@@ -284,7 +288,8 @@ bool s_refillpage()
     a = s_next_elig(g_page_ents[j].entnum);
 
     setspin(SPIN_BACKGROUND);
-    while (a && line_on+s_ent_lines(a) <= page_lines) {
+    while (a && line_on + s_ent_lines(a) <= page_lines)
+    {
         i = s_ent_lines(a);
         g_s_bot_ent += 1;
         g_page_ents[g_s_bot_ent].entnum = a;
@@ -350,11 +355,14 @@ int s_fillpage()
     }
     if (!s_refillpage())        /* try for efficient refill */
     {
-        if (!s_fillpage_backward(g_s_top_ent)) {
+        if (!s_fillpage_backward(g_s_top_ent))
+        {
             /* downgrade eligibility standards */
-            switch (g_s_cur_type) {
+            switch (g_s_cur_type)
+            {
               case S_ART:               /* article context */
-                if (g_sa_mode_zoom) {           /* we were zoomed in */
+                if (g_sa_mode_zoom)             /* we were zoomed in */
+                {
                     g_s_ref_top = true; /* for "FOLD" display */
                     g_sa_mode_zoom = false;     /* zoom out */
                     if (g_sa_unzoomrefold)
@@ -426,7 +434,8 @@ bool s_go_top_ents()
     {
         g_s_top_ent = s_next_elig(g_s_top_ent);
     }
-    if (!g_s_top_ent) { /* none eligible */
+    if (!g_s_top_ent)   /* none eligible */
+    {
         /* just go to the top of all the entries */
         if (g_s_cur_type == S_ART)
         {
