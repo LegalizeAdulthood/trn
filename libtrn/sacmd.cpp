@@ -760,7 +760,7 @@ bool sa_extract_start()
 
 
 /* sa_art_cmd primitive: actually does work on an article */
-void sa_art_cmd_prim(sa_cmd cmd, long a)
+void sa_art_cmd_prim(SaCommand cmd, long a)
 {
     ART_NUM artnum = g_sa_ents[a].artnum;
 /* do more onpage status refreshes when in unread+read mode? */
@@ -834,7 +834,7 @@ void sa_art_cmd_prim(sa_cmd cmd, long a)
 // int multiple;                /* follow the thread? */
 // int cmd;             /* what to do */
 // long a;              /* article # to affect or start with */
-int sa_art_cmd(int multiple, sa_cmd cmd, long a)
+int sa_art_cmd(int multiple, SaCommand cmd, long a)
 {
     sa_art_cmd_prim(cmd,a);     /* do the first article */
     if (!multiple)

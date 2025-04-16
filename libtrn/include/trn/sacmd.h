@@ -6,7 +6,7 @@
 #ifndef TRN_SACMD_H
 #define TRN_SACMD_H
 
-enum sa_cmd
+enum SaCommand
 {
     SA_KILL = 1,
     SA_MARK = 2,
@@ -18,8 +18,8 @@ enum sa_cmd
 
 int sa_docmd();
 bool sa_extract_start();
-void sa_art_cmd_prim(sa_cmd cmd, long a);
-int sa_art_cmd(int multiple, sa_cmd cmd, long a);
+void sa_art_cmd_prim(SaCommand cmd, long a);
+int sa_art_cmd(int multiple, SaCommand cmd, long a);
 long sa_wrap_next_author(long a);
 
 #endif
