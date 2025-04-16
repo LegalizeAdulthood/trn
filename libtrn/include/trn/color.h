@@ -9,7 +9,7 @@
 ** Object numbers.
 */
 
-enum object_number
+enum ObjectNumber
 {
     COLOR_DEFAULT = 0,
     COLOR_NGNAME,    /* NG name in thread selector      */

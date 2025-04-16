@@ -74,7 +74,7 @@ TEST_P(HeaderLineTypes, orderRelationships)
 
 INSTANTIATE_TEST_SUITE_P(TestHeaderLineTypes, HeaderLineTypes, testing::ValuesIn(header_line_types));
 
-using object_number_values = enum_values<object_number>;
+using object_number_values = enum_values<ObjectNumber>;
 
 object_number_values object_numbers[] =
 {
