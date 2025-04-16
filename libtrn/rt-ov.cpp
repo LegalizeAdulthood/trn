@@ -47,12 +47,12 @@ static HeaderLineType s_hdrnum[] = {
 
 static void ov_parse(char *line, ART_NUM artnum, bool remote);
 static const char *ov_name(const char *group);
-static ov_field_num ov_num(char *hdr, char *end);
+static OverviewFieldNum ov_num(char *hdr, char *end);
 
 bool ov_init()
 {
     bool has_overview_fmt;
-    ov_field_num *fieldnum = g_datasrc->fieldnum;
+    OverviewFieldNum *fieldnum = g_datasrc->fieldnum;
     FieldFlags  *fieldflags = g_datasrc->fieldflags;
     g_datasrc->flags &= ~DF_TRY_OVERVIEW;
     std::FILE *overview;
@@ -142,7 +142,7 @@ bool ov_init()
             }
             while (i < OV_MAX_FIELDS)
             {
-                fieldnum[i++] = static_cast<ov_field_num>(j);
+                fieldnum[i++] = static_cast<OverviewFieldNum>(j);
             }
         }
     }
@@ -150,7 +150,7 @@ bool ov_init()
     {
         for (int i = 0; i < OV_MAX_FIELDS; i++)
         {
-            fieldnum[i] = static_cast<ov_field_num>(i);
+            fieldnum[i] = static_cast<OverviewFieldNum>(i);
             fieldflags[i] = FF_HAS_FIELD;
         }
         fieldflags[OV_XREF] = FF_CHECK4FIELD | FF_CHECK4HDR;
@@ -159,7 +159,7 @@ bool ov_init()
     return true;
 }
 
-ov_field_num ov_num(char *hdr, char *end)
+OverviewFieldNum ov_num(char *hdr, char *end)
 {
     if (!end)
     {
@@ -433,7 +433,7 @@ beginning:
 
 static void ov_parse(char *line, ART_NUM artnum, bool remote)
 {
-    ov_field_num *fieldnum = g_datasrc->fieldnum;
+    OverviewFieldNum *fieldnum = g_datasrc->fieldnum;
     FieldFlags  *fieldflags = g_datasrc->fieldflags;
     char         *fields[OV_MAX_FIELDS];
     char         *tab;
@@ -626,7 +626,7 @@ const char *ov_fieldname(int num)
 
 const char *ov_field(Article *ap, int num)
 {
-    ov_field_num fn = g_datasrc->fieldnum[num];
+    OverviewFieldNum fn = g_datasrc->fieldnum[num];
     if (!(g_datasrc->fieldflags[fn] & (FF_HAS_FIELD | FF_CHECK4FIELD)))
     {
         return nullptr;

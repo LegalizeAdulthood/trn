@@ -9,7 +9,7 @@
 struct Article;
 
 /* The usual order for the overview data fields. */
-enum ov_field_num
+enum OverviewFieldNum
 {
     OV_NUM = 0,
     OV_SUBJ,

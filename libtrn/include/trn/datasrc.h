@@ -80,7 +80,7 @@ struct DataSource
     long            lastnewgrp; /* time of last newgroup check */
     std::FILE      *ov_in;      /* the overview's file handle */
     std::time_t     ov_opened;  /* time overview file was opened */
-    ov_field_num    fieldnum[OV_MAX_FIELDS];
+    OverviewFieldNum    fieldnum[OV_MAX_FIELDS];
     FieldFlags      fieldflags[OV_MAX_FIELDS];
     DataSourceFlags flags;
 };
