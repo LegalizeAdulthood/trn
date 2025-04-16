@@ -56,9 +56,12 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
         s_ng_doempty = false;
     }
 
-    if (*s) {                           /* modifiers or commands? */
-        while (*++s) {
-            switch (*s) {
+    if (*s)                             /* modifiers or commands? */
+    {
+        while (*++s)
+        {
+            switch (*s)
+            {
             case 'r':
                 s_ng_doempty = true;
                 break;
@@ -97,21 +100,26 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
         }
         return NGS_ERROR;
     }
-    if (!cmdlst) {
+    if (!cmdlst)
+    {
         std::fputs("\nSearching...",stdout); /* give them something to read */
         std::fflush(stdout);
     }
 
     bool const output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
-    if (g_first_addgroup) {
+    if (g_first_addgroup)
+    {
         ADDGROUP *gp = g_first_addgroup;
-        do {
-            if (execute(&s_ngcompex,gp->name) != nullptr) {
+        do
+        {
+            if (execute(&s_ngcompex, gp->name) != nullptr)
+            {
                 if (!cmdlst)
                 {
                     return NGS_FOUND;
                 }
-                if (addgrp_perform(gp,cmdlst,output_level && g_page_line==1)<0) {
+                if (addgrp_perform(gp, cmdlst, output_level && g_page_line == 1) < 0)
+                {
                     std::free(cmdlst);
                     return NGS_INTR;
                 }
@@ -130,13 +138,15 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
 
     bool const backward = cmdchr == '?'; /* direction of search */
     NGDATA const *ng_start = g_ngptr;
-    if (backward) {
+    if (backward)
+    {
         if (!g_ngptr)
         {
             g_ngptr = g_last_ng;
             ng_start = g_last_ng;
         }
-        else if (!cmdlst) {
+        else if (!cmdlst)
+        {
             if (g_ngptr == g_first_ng)  /* skip current newsgroup */
             {
                 g_ngptr = g_last_ng;
@@ -147,13 +157,15 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
             }
         }
     }
-    else {
+    else
+    {
         if (!g_ngptr)
         {
             g_ngptr = g_first_ng;
             ng_start = g_first_ng;
         }
-        else if (!cmdlst) {
+        else if (!cmdlst)
+        {
             if (g_ngptr == g_last_ng)   /* skip current newsgroup */
             {
                 g_ngptr = g_first_ng;
@@ -170,30 +182,36 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
         return NGS_NOTFOUND;
     }
 
-    do {
-        if (g_int_count) {
+    do
+    {
+        if (g_int_count)
+        {
             g_int_count = 0;
             ret = NGS_INTR;
             break;
         }
 
-        if (g_ngptr->toread >= TR_NONE && ng_wanted(g_ngptr)) {
+        if (g_ngptr->toread >= TR_NONE && ng_wanted(g_ngptr))
+        {
             if (g_ngptr->toread == TR_NONE)
             {
                 set_toread(g_ngptr, ST_LAX);
             }
-            if (s_ng_doempty || ((g_ngptr->toread > TR_NONE) ^ g_sel_rereading)) {
+            if (s_ng_doempty || ((g_ngptr->toread > TR_NONE) ^ g_sel_rereading))
+            {
                 if (!cmdlst)
                 {
                     return NGS_FOUND;
                 }
                 set_ng(g_ngptr);
-                if (ng_perform(cmdlst,output_level && g_page_line == 1) < 0) {
+                if (ng_perform(cmdlst, output_level && g_page_line == 1) < 0)
+                {
                     std::free(cmdlst);
                     return NGS_INTR;
                 }
             }
-            if (output_level && !cmdlst) {
+            if (output_level && !cmdlst)
+            {
                 std::printf("\n[0 unread in %s -- skipping]",g_ngptr->rcline);
                 std::fflush(stdout);
             }
@@ -224,22 +242,27 @@ const char *ng_comp(COMPEX *compex, const char *pattern, bool RE, bool fold)
     const char* s = pattern;
     char* d = ng_pattern;
 
-    if (!*s) {
+    if (!*s)
+    {
         if (compile(compex, "", RE, fold))
         {
             return "No previous search pattern";
         }
         return nullptr;                 /* reuse old pattern */
     }
-    for (; *s; s++) {
-        if (*s == '.') {
+    for (; *s; s++)
+    {
+        if (*s == '.')
+        {
             *d++ = '\\';
             *d++ = *s;
         }
-        else if (*s == '?') {
+        else if (*s == '?')
+        {
             *d++ = '.';
         }
-        else if (*s == '*') {
+        else if (*s == '*')
+        {
             *d++ = '.';
             *d++ = *s;
         }
