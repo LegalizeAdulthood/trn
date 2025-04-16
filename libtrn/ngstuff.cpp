@@ -848,17 +848,19 @@ int ng_perform(char *cmdlst, int output_level)
         }
         switch (ch)
         {
-          case '+':
+        case '+':
             if (!(g_ngptr->flags & static_cast<newsgroup_flags>(g_sel_mask)))
             {
                 g_ngptr->flags = ((g_ngptr->flags | static_cast<newsgroup_flags>(g_sel_mask)) & ~NF_DEL);
                 g_selected_count++;
             }
             break;
-          case 'c':
+
+        case 'c':
             catch_up(g_ngptr, 0, 0);
             /* FALL THROUGH */
-          case '-':
+
+        case '-':
           deselect:
             if (g_ngptr->flags & static_cast<newsgroup_flags>(g_sel_mask))
             {
@@ -870,7 +872,8 @@ int ng_perform(char *cmdlst, int output_level)
                 g_selected_count--;
             }
             break;
-          case 'u':
+
+        case 'u':
             if (output_level && g_verbose)
             {
                 std::printf(g_unsubto,g_ngptr->rcline);
@@ -882,7 +885,8 @@ int ng_perform(char *cmdlst, int output_level)
             g_ngptr->flags &= ~static_cast<newsgroup_flags>(g_sel_mask);
             g_newsgroup_toread--;
             goto deselect;
-          default:
+
+        default:
             std::sprintf(g_msg,"Unknown command: %s",cmdlst);
             errormsg(g_msg);
             return -1;
