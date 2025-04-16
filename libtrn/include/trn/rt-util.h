@@ -14,7 +14,7 @@ extern bool g_performed_article_loop; //
 extern bool g_bkgnd_spinner;          /* -B */
 extern bool g_unbroken_subjects;      /* -u */
 
-enum spin_mode
+enum SpinMode
 {
     SPIN_OFF = 0,
     SPIN_POP,
@@ -31,7 +31,7 @@ char *compress_date(const Article *ap, int size);
 bool strip_one_Re(char *str, char **strp);
 bool subject_has_Re(char *str, char **strp);
 const char *compress_subj(const Article *ap, int max);
-void setspin(spin_mode mode);
+void setspin(SpinMode mode);
 void spin(int count);
 bool inbackground();
 void perform_status_init(long cnt);
