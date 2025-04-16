@@ -79,7 +79,7 @@ struct UniversalNewsgroup
     char* ng;
 };
 
-struct UNIV_TEXTFILE
+struct UniversalTextFile
 {
     char* fname;
 };
@@ -93,7 +93,7 @@ union UNIV_DATA
     UniversalNewsgroup group;
     UniversalVirtualData virt;
     UniversalVirtualGroup vgroup;
-    UNIV_TEXTFILE textfile;
+    UniversalTextFile textfile;
 };
 
 /* selector flags */
