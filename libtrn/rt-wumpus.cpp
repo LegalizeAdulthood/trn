@@ -254,10 +254,12 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
             s_node_on_line = true;
             break;
         }
+
         case 2:
             *s_tree_buff = (!ap->child1)? ' ' :
                 (ap->child1->sibling)? '+' : '-';
             break;
+
         default:
             break;
         }
