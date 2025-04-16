@@ -20,7 +20,8 @@ bool g_s_order_changed{}; /* If true, resort next time order is considered */
 /* pointers to the two entries to be compared */
 int s_compare(long *a, long *b)
 {
-    switch(g_s_cur_type) {
+    switch (g_s_cur_type)
+    {
       case S_ART:
         return sa_compare(*a,*b);
       default:
@@ -32,7 +33,8 @@ int s_compare(long *a, long *b)
 /* the two entry numbers to be compared */
 int s_compare(long a, long b)
 {
-    switch(g_s_cur_type) {
+    switch (g_s_cur_type)
+    {
       case S_ART:
         return sa_compare(a,b);
       default:
@@ -57,13 +59,15 @@ void s_sort_basic()
         return;         /* nothing to sort */
     }
 
-    for (int i = n/2; i >= 1; i--) {
+    for (int i = n / 2; i >= 1; i--)
+    {
         /* begin heap readjust */
         t1 = g_s_ent_sort[SOFF(i)];
         j = 2*i;
-        while (j <= n) {
-            if (j < n
-             && s_compare(g_s_ent_sort[SOFF(j)],g_s_ent_sort[SOFF(j+1)]) < 0)
+        while (j <= n)
+        {
+            if (j < n //
+                && s_compare(g_s_ent_sort[SOFF(j)], g_s_ent_sort[SOFF(j + 1)]) < 0)
             {
                 j++;
             }
@@ -78,15 +82,17 @@ void s_sort_basic()
         /* end heap readjust */
     } /* for */
 
-    for (int i = n-1; i >= 1; i--) {
+    for (int i = n - 1; i >= 1; i--)
+    {
         t1 = g_s_ent_sort[SOFF(i+1)];
         g_s_ent_sort[SOFF(i+1)] = g_s_ent_sort[SOFF(1)];
         g_s_ent_sort[SOFF(1)] = t1;
         /* begin heap readjust */
         j = 2;
-        while (j <= i) {
-            if (j < i
-             && s_compare(g_s_ent_sort[SOFF(j)],g_s_ent_sort[SOFF(j+1)]) < 0)
+        while (j <= i)
+        {
+            if (j < i //
+                && s_compare(g_s_ent_sort[SOFF(j)], g_s_ent_sort[SOFF(j + 1)]) < 0)
             {
                 j++;
             }
@@ -152,7 +158,8 @@ void s_order_add(long ent)
 
     /* add entry to end of sorted list */
     g_s_ent_sort_max += 1;
-    if (g_s_ent_sort_max % 100 == 0) {  /* be nice to realloc */
+    if (g_s_ent_sort_max % 100 == 0)    /* be nice to realloc */
+    {
         size = (g_s_ent_sort_max+100) * sizeof (long);
         g_s_ent_sort = (long*)saferealloc((char*)g_s_ent_sort,size);
         /* change the context too */
@@ -161,7 +168,8 @@ void s_order_add(long ent)
     g_s_ent_sort[g_s_ent_sort_max] = ent;
 
     /* grow index list if needed */
-    if (ent > g_s_ent_index_max) {
+    if (ent > g_s_ent_index_max)
+    {
         long old = g_s_ent_index_max;
         if (g_s_ent_index_max == -1)
         {
