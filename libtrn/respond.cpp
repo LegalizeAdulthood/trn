@@ -287,13 +287,14 @@ save_result save_article()
             }/* for */
             switch (decode_type)
             {
-              case 1:
+            case 1:
                 std::printf("Extracting shar into %s:\n", c);
                 termdown(1);
                 interp(g_cmd_buf,(sizeof g_cmd_buf),get_val("SHARSAVER",SHARSAVER));
                 invoke(g_cmd_buf, nullptr);
                 break;
-              case 2:
+
+            case 2:
                 std::printf("Extracting uuencoded file into %s:\n", c);
                 termdown(1);
                 g_mime_section->type = IMAGE_MIME;
@@ -309,7 +310,8 @@ save_result save_article()
                 }
                 newline();
                 break;
-              default:
+
+            default:
                 std::printf("Unable to determine type of file.\n");
                 termdown(1);
                 break;
@@ -1201,14 +1203,17 @@ static bool cut_line(char *str)
         case '-':
             dash_cnt++;
             break;
+
         case '=':
             equal_cnt++;
             break;
+
         case '/':
             if (*(cp+1) != '*')
             {
                 break;
             }
+
         case '"':
         case '\'':
         case '(':
@@ -1218,6 +1223,7 @@ static bool cut_line(char *str)
         case '{':
         case '}':
             return false;
+
         default:
             other_cnt++;
             break;
@@ -1257,6 +1263,7 @@ static bool cut_line(char *str)
                         }
                     }
                     break;
+
                 case 1:
                     if (!std::strcmp(word, "this"))
                     {
@@ -1275,6 +1282,7 @@ static bool cut_line(char *str)
                         got_flag = 0;
                     }
                     break;
+
                 case 0:
                     if (!std::strcmp(word, "cut")     //
                         || !std::strcmp(word, "snip") //
