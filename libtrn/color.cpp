@@ -95,7 +95,8 @@ static int       s_stack_pointer{};
 /* Initialize color support after trnrc is read. */
 void color_init()
 {
-    if (s_use_colors) {
+    if (s_use_colors)
+    {
         /* Get default capabilities. */
         char *fg = tc_color_capability("fg default");
         if (fg == nullptr)
@@ -140,13 +141,15 @@ void color_rc_attribute(const char *object, char *value)
 {
     /* Find the specified object. */
     int i;
-    for (i = 0; i < MAX_COLORS; i++) {
+    for (i = 0; i < MAX_COLORS; i++)
+    {
         if (string_case_equal(object, s_objects[i].name))
         {
             break;
         }
     }
-    if (i >= MAX_COLORS) {
+    if (i >= MAX_COLORS)
+    {
         std::fprintf(stderr,"trn: unknown object '%s' in [attribute] section.\n",
                 object);
         finalize(1);
@@ -169,7 +172,8 @@ void color_rc_attribute(const char *object, char *value)
     {
         s_objects[i].attr = LASTMARKING;
     }
-    else {
+    else
+    {
         std::fprintf(stderr,"trn: bad attribute '%s' for %s in [attribute] section.\n",
                 value, object);
         finalize(1);
@@ -178,14 +182,16 @@ void color_rc_attribute(const char *object, char *value)
     /* See if they specified a color */
     char *s = skip_non_space(value);
     s = skip_space(s);
-    if (!*s) {
+    if (!*s)
+    {
         s_objects[i].fg = "";
         s_objects[i].bg = "";
         return;
     }
     char *t = skip_non_space(s);
     char* n = nullptr;
-    if (*t) {
+    if (*t)
+    {
         n = t++;
         *n = '\0';
         t = skip_space(t);
@@ -199,16 +205,19 @@ void color_rc_attribute(const char *object, char *value)
     {
         s_objects[i].fg = nullptr;
     }
-    else {
+    else
+    {
         std::sprintf(g_buf, "fg %s", s);
         s_objects[i].fg = tc_color_capability(g_buf);
-        if (s_objects[i].fg == nullptr) {
+        if (s_objects[i].fg == nullptr)
+        {
             std::fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
                     g_buf, object);
             finalize(1);
         }
     }
-    if (n) {
+    if (n)
+    {
         *n = ' ';
         n = nullptr;
     }
@@ -216,12 +225,14 @@ void color_rc_attribute(const char *object, char *value)
     /* Make sure we have one more parameter. */
     s = t;
     t = skip_non_space(t);
-    if (*t) {
+    if (*t)
+    {
         n = t++;
         *n = '\0';
         t = skip_space(t);
     }
-    if (!*s || *t) {
+    if (!*s || *t)
+    {
         std::fprintf(stderr,"trn: wrong number of parameters for %s in [attribute] section.\n",
                 object);
         finalize(1);
@@ -232,10 +243,12 @@ void color_rc_attribute(const char *object, char *value)
     {
         s_objects[i].bg = nullptr;
     }
-    else {
+    else
+    {
         std::sprintf(g_buf, "bg %s", s);
         s_objects[i].bg = tc_color_capability(g_buf);
-        if (s_objects[i].bg == nullptr) {
+        if (s_objects[i].bg == nullptr)
+        {
             std::fprintf(stderr,"trn: no color '%s' for %s in [attribute] section.\n",
                     g_buf, object);
             finalize(1);
@@ -269,7 +282,8 @@ void color_object(int object, bool push)
     }
 
     /* Push onto stack. */
-    if (push && ++s_stack_pointer >= STACK_SIZE) {
+    if (push && ++s_stack_pointer >= STACK_SIZE)
+    {
         /* error reporting? $$ */
         s_stack_pointer = 0;            /* empty stack */
         color_default();                /* and set normal colors */
@@ -299,7 +313,8 @@ void color_pop()
 void color_string(int object, const char *str)
 {
     int len = std::strlen(str);
-    if (str[len-1] == '\n') {
+    if (str[len - 1] == '\n')
+    {
         std::strcpy(g_msg, str);
         g_msg[len-1] = '\0';
         str = g_msg;
@@ -309,7 +324,8 @@ void color_string(int object, const char *str)
     {
         underprint(str);        /* hack for stupid terminals */
     }
-    else {
+    else
+    {
         color_object(object, true);
         std::fputs(str, stdout);
         color_pop();
@@ -330,7 +346,7 @@ void color_default()
 /* Set colors/attribute for an object. */
 static void output_color()
 {
-    static COLOR_OBJ prior = { "", nullptr, nullptr, NOMARKING };
+    static COLOR_OBJ prior{"", nullptr, nullptr, NOMARKING};
     COLOR_OBJ* op = &s_color_stack[s_stack_pointer];
 
     /* If no change, just return. */
@@ -340,14 +356,17 @@ static void output_color()
     }
 
     /* Start by turning off any existing colors and/or attributes. */
-    if (s_use_colors) {
-        if (s_objects[COLOR_DEFAULT].fg != prior.fg
-         || s_objects[COLOR_DEFAULT].bg != prior.bg) {
+    if (s_use_colors)
+    {
+        if (s_objects[COLOR_DEFAULT].fg != prior.fg //
+            || s_objects[COLOR_DEFAULT].bg != prior.bg)
+        {
             std::fputs(prior.fg = s_objects[COLOR_DEFAULT].fg, stdout);
             std::fputs(prior.bg = s_objects[COLOR_DEFAULT].bg, stdout);
         }
     }
-    switch (prior.attr) {
+    switch (prior.attr)
+    {
       case NOMARKING:
         break;
       case STANDOUT:
@@ -359,7 +378,8 @@ static void output_color()
     }
 
     /* For color terminals we set the foreground and background color. */
-    if (s_use_colors) {
+    if (s_use_colors)
+    {
         if (op->fg != prior.fg)
         {
             std::fputs(prior.fg = op->fg, stdout);
@@ -371,7 +391,8 @@ static void output_color()
     }
 
     /* For both monochrome and color terminals we set the video attribute. */
-    switch (prior.attr = op->attr) {
+    switch (prior.attr = op->attr)
+    {
       case NOMARKING:
         break;
       case STANDOUT:
