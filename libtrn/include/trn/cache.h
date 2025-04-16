@@ -67,7 +67,7 @@ enum ArticleFlags : std::uint16_t
 };
 DECLARE_FLAGS_ENUM(ArticleFlags, std::uint16_t);
 
-enum article_flags2 : std::uint16_t
+enum ArticleFlags2 : std::uint16_t
 {
     AF2_NONE = 0x0000,
     AF2_WASUNREAD = 0x0001,
@@ -75,7 +75,7 @@ enum article_flags2 : std::uint16_t
     AF2_CHANGED = 0x0004,
     AF2_BOGUS = 0x0008
 };
-DECLARE_FLAGS_ENUM(article_flags2, std::uint16_t);
+DECLARE_FLAGS_ENUM(ArticleFlags2, std::uint16_t);
 
 /* specific scoreflag meanings:  (note: bad placement, but where else?) */
 enum score_flags
@@ -104,7 +104,7 @@ struct ARTICLE
     int            score;
     score_flags    scoreflags;
     ArticleFlags  flags;  /* article state flags */
-    article_flags2 flags2; /* more state flags */
+    ArticleFlags2 flags2; /* more state flags */
     autokill_flags autofl; /* auto-processing flags */
 };
 
