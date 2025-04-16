@@ -517,7 +517,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     return true;
 }
 
-DECODE_FUNC decode_function(mime_encoding encoding)
+DECODE_FUNC decode_function(MimeEncoding encoding)
 {
     switch (encoding)
     {

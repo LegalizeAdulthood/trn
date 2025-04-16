@@ -75,7 +75,7 @@ struct MIME_SECT
     int html_line_start;
     HBLK *html_blks;
     mime_state type;
-    mime_encoding encoding;
+    MimeEncoding encoding;
     short part;
     short total;
     short boundary_len;

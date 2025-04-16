@@ -12,7 +12,7 @@ struct MIMECAP_ENTRY;
 
 extern char *g_decode_filename;
 
-enum mime_encoding
+enum MimeEncoding
 {
     MENCODE_NONE = 0,
     MENCODE_BASE64 = 1,
@@ -40,7 +40,7 @@ void decode_init();
 char *decode_fix_fname(const char *s);
 char *decode_subject(ART_NUM artnum, int *partp, int *totalp);
 bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line);
-DECODE_FUNC decode_function(mime_encoding encoding);
+DECODE_FUNC decode_function(MimeEncoding encoding);
 char *decode_mkdir(const char *filename);
 void decode_rmdir(char *dir);
 
