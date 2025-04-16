@@ -17,7 +17,7 @@ struct HBlock
     char    indent;
 };
 
-enum mime_state
+enum MimeState
 {
     NOT_MIME = 0,
     TEXT_MIME,
@@ -74,7 +74,7 @@ struct MIME_SECT
     char *boundary;
     int html_line_start;
     HBlock *html_blks;
-    mime_state type;
+    MimeState type;
     MimeEncoding encoding;
     short part;
     short total;
@@ -136,7 +136,7 @@ struct HTML_TAGS
 
 extern MIME_SECT g_mime_article;
 extern MIME_SECT *g_mime_section;
-extern mime_state g_mime_state;
+extern MimeState g_mime_state;
 extern std::string g_multipart_separator;
 extern bool g_auto_view_inline;
 extern char *g_mime_getc_line;

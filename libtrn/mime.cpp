@@ -30,7 +30,7 @@
 
 MIME_SECT   g_mime_article{};
 MIME_SECT  *g_mime_section{&g_mime_article};
-mime_state  g_mime_state{};
+MimeState  g_mime_state{};
 std::string g_multipart_separator{"-=-=-=-=-=-"};
 bool        g_auto_view_inline{};
 char       *g_mime_getc_line{};
