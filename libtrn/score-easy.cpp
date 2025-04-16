@@ -25,7 +25,8 @@ char *sc_easy_append()
     char *s = s_sc_e_newline;
     std::printf("\nScorefile easy append mode.\n");
     bool q_done = false;
-    while (!q_done) {
+    while (!q_done)
+    {
         std::printf("0) Exit.\n");
         std::printf("1) List the current scorefile abbreviations.\n");
         std::printf("2) Add an entry to the global scorefile.\n");
@@ -34,7 +35,8 @@ char *sc_easy_append()
         std::printf("5) Use a temporary scoring rule.\n");
         ch = menu_get_char();
         q_done = true;
-        switch (ch) {
+        switch (ch)
+        {
           case '0':
             return nullptr;
           case '1':
@@ -61,7 +63,8 @@ char *sc_easy_append()
             break;
         }
     }
-    while (filechar == '\0') {  /* choose one */
+    while (filechar == '\0')    /* choose one */
+    {
         std::printf("Type the (single character) abbreviation of the scorefile:");
         std::fflush(stdout);
         eat_typeahead();
@@ -75,7 +78,8 @@ char *sc_easy_append()
     *s++ = filechar;
     *s++ = ' ';
     q_done = false;
-    while (!q_done) {
+    while (!q_done)
+    {
         std::printf("What type of line do you want to add?\n");
         std::printf("0) Exit.\n");
         std::printf("1) A scoring rule line.\n");
@@ -85,7 +89,8 @@ char *sc_easy_append()
         std::printf("\n[Other line formats will be supported later.]\n");
         ch = menu_get_char();
         q_done = true;
-        switch (ch) {
+        switch (ch)
+        {
           case '0':
             return nullptr;
           case '1':
@@ -95,7 +100,8 @@ char *sc_easy_append()
             std::fflush(stdout);
             g_buf[0] = '>';
             g_buf[1] = FINISHCMD;
-            if (finish_command(true)) {
+            if (finish_command(true))
+            {
                 std::sprintf(s,"%s",g_buf+1);
                 return s_sc_e_newline;
             }
@@ -112,12 +118,14 @@ char *sc_easy_append()
         }
     }
     q_done = false;
-    while (!q_done) {
+    while (!q_done)
+    {
         std::printf("Enter a score amount (like 10 or -6):");
         std::fflush(stdout);
         g_buf[0] = ' ';
         g_buf[1] = FINISHCMD;
-        if (finish_command(true)) {
+        if (finish_command(true))
+        {
             long score = atoi(g_buf + 1);
             if (score == 0)
             {
@@ -136,7 +144,8 @@ char *sc_easy_append()
         }
     }
     q_done = false;
-    while (!q_done) {
+    while (!q_done)
+    {
         std::printf("Do you want to:\n");
         std::printf("0) Exit.\n");
         std::printf("1) Give the score to the current subject.\n");
@@ -145,7 +154,8 @@ char *sc_easy_append()
 /* perhaps fold regular-expression question here? */
         ch = menu_get_char();
         q_done = true;
-        switch (ch) {
+        switch (ch)
+        {
           case '0':
             return nullptr;
           case '1':
@@ -174,7 +184,8 @@ const char *sc_easy_command()
 {
     std::printf("\nScoring easy command mode.\n");
     bool q_done = false;
-    while (!q_done) {
+    while (!q_done)
+    {
         std::printf("0) Exit.\n");
         std::printf("1) Add something to a scorefile.\n");
         std::printf("2) Rescore the articles in the current newsgroup.\n");
@@ -185,7 +196,8 @@ const char *sc_easy_command()
         std::printf("5) Continue scoring unscored articles.\n");
         char ch = menu_get_char();
         q_done = true;
-        switch (ch) {
+        switch (ch)
+        {
           case '0':
             return nullptr;
           case '1':
