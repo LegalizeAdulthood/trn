@@ -39,7 +39,7 @@
 #include <cstring>
 #include <string>
 
-enum display_state
+enum DisplayState
 {
     DS_ASK = 1,
     DS_UPDATE,
@@ -104,7 +104,7 @@ static int            s_disp_status_line{};
 static bool           s_clean_screen{};
 static removed_prompt s_removed_prompt{};
 static int            s_force_sel_pos{};
-static display_state (*s_extra_commands)(char_int){};
+static DisplayState (*s_extra_commands)(char_int){};
 
 namespace
 {
@@ -137,7 +137,7 @@ private:
     const bool    save_sel_rereading = g_sel_rereading;   \
     const bool    save_sel_exclusive = g_sel_exclusive;   \
     ArticleUnread save_selected_count = g_selected_count; \
-    display_state (*const save_extra_commands)(char_int) = s_extra_commands
+    DisplayState (*const save_extra_commands)(char_int) = s_extra_commands
 
 #define POP_SELECTOR()                                      \
     do                                                      \
@@ -196,15 +196,15 @@ static bool             deselect_item(Selection u);
 static bool             select_option(OptionIndex i);
 static void             sel_cleanup();
 static bool             mark_DEL_as_READ(char *ptr, int arg);
-static display_state    sel_command(char_int ch);
+static DisplayState    sel_command(char_int ch);
 static bool             sel_perform_change(long cnt, const char *obj_type);
 static char             another_command(char_int ch);
-static display_state    article_commands(char_int ch);
-static display_state    newsgroup_commands(char_int ch);
-static display_state    addgroup_commands(char_int ch);
-static display_state    multirc_commands(char_int ch);
-static display_state    option_commands(char_int ch);
-static display_state    universal_commands(char_int ch);
+static DisplayState    article_commands(char_int ch);
+static DisplayState    newsgroup_commands(char_int ch);
+static DisplayState    addgroup_commands(char_int ch);
+static DisplayState    multirc_commands(char_int ch);
+static DisplayState    option_commands(char_int ch);
+static DisplayState    universal_commands(char_int ch);
 static void             switch_dmode(char **dmode_cpp);
 static int              find_line(int y);
 
@@ -2007,9 +2007,9 @@ static bool mark_DEL_as_READ(char *ptr, int arg)
     return false;
 }
 
-static display_state sel_command(char_int ch)
+static DisplayState sel_command(char_int ch)
 {
-    display_state ret;
+    DisplayState ret;
     if (g_can_home)
     {
         goto_xy(0, g_sel_last_line);
@@ -2300,7 +2300,7 @@ static char another_command(char_int ch)
     return '\0';
 }
 
-static display_state article_commands(char_int ch)
+static DisplayState article_commands(char_int ch)
 {
     switch (ch)
     {
@@ -2842,7 +2842,7 @@ static display_state article_commands(char_int ch)
     return DS_ASK;
 }
 
-static display_state newsgroup_commands(char_int ch)
+static DisplayState newsgroup_commands(char_int ch)
 {
     switch (ch)
     {
@@ -3234,7 +3234,7 @@ static display_state newsgroup_commands(char_int ch)
     return DS_ASK;
 }
 
-static display_state addgroup_commands(char_int ch)
+static DisplayState addgroup_commands(char_int ch)
 {
     switch (ch)
     {
@@ -3452,7 +3452,7 @@ static display_state addgroup_commands(char_int ch)
     return DS_ASK;
 }
 
-static display_state multirc_commands(char_int ch)
+static DisplayState multirc_commands(char_int ch)
 {
     switch (ch)
     {
@@ -3494,7 +3494,7 @@ static display_state multirc_commands(char_int ch)
     return DS_ASK;
 }
 
-static display_state option_commands(char_int ch)
+static DisplayState option_commands(char_int ch)
 {
     switch (ch)
     {
@@ -3590,7 +3590,7 @@ static display_state option_commands(char_int ch)
     return DS_ASK;
 }
 
-static display_state universal_commands(char_int ch)
+static DisplayState universal_commands(char_int ch)
 {
     switch (ch)
     {
