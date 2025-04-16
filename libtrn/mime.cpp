@@ -1088,7 +1088,7 @@ int qp_decodestring(char *t, const char *f, bool in_header)
     return t - save_t;
 }
 
-decode_state qp_decode(std::FILE *ifp, decode_state state)
+DecodeState qp_decode(std::FILE *ifp, DecodeState state)
 {
     static std::FILE* ofp = nullptr;
     int c1;
@@ -1225,7 +1225,7 @@ int b64_decodestring(char *t, const char *f)
     return t - save_t;
 }
 
-decode_state b64_decode(std::FILE *ifp, decode_state state)
+DecodeState b64_decode(std::FILE *ifp, DecodeState state)
 {
     static std::FILE *ofp = nullptr;
     int          c1;
@@ -1351,7 +1351,7 @@ static int mime_getc(std::FILE *fp)
     return *g_mime_getc_line++;
 }
 
-decode_state cat_decode(std::FILE *ifp, decode_state state)
+DecodeState cat_decode(std::FILE *ifp, DecodeState state)
 {
     static std::FILE* ofp = nullptr;
 

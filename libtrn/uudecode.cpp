@@ -217,7 +217,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
     return 0;
 }
 
-decode_state uudecode(std::FILE *ifp, decode_state state)
+DecodeState uudecode(std::FILE *ifp, DecodeState state)
 {
     static std::FILE *ofp = nullptr;
     static int   line_length;

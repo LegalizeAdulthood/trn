@@ -455,7 +455,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     }
 
     /* Handle each part in order */
-    decode_state state;
+    DecodeState state;
     for (state = DECODE_START, part = 1; part <= total; part++)
     {
         if (part != 1)

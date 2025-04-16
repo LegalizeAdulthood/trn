@@ -15,6 +15,6 @@ enum
 };
 
 int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp);
-decode_state uudecode(std::FILE *ifp, decode_state state);
+DecodeState uudecode(std::FILE *ifp, DecodeState state);
 
 #endif

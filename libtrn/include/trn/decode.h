@@ -21,7 +21,7 @@ enum MimeEncoding
     MENCODE_UNHANDLED = 4
 };
 
-enum decode_state
+enum DecodeState
 {
     DECODE_DONE = 0,
     DECODE_START = 1,
@@ -34,7 +34,7 @@ enum decode_state
     DECODE_ERROR = 8
 };
 
-using DECODE_FUNC = decode_state (*)(std::FILE *ifp, decode_state state);
+using DECODE_FUNC = DecodeState (*)(std::FILE *ifp, DecodeState state);
 
 void decode_init();
 char *decode_fix_fname(const char *s);
