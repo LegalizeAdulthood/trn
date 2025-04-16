@@ -26,7 +26,7 @@ struct ScoreFileEntry
 /* note that negative header #s are used to indicate special entries... */
 
 /* for cached score rules */
-struct SF_FILE
+struct ScoreFile
 {
     char* fname;
     int num_lines;

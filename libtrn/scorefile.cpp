@@ -48,7 +48,7 @@ enum
 };
 
 static ScoreFileEntry *s_sf_entries{};        /* array of entries */
-static SF_FILE  *s_sf_files{};          //
+static ScoreFile  *s_sf_files{};          //
 static int       s_sf_num_files{};      //
 static char    **s_sf_abbr{};           /* abbreviations */
 static bool      s_newauthor_active{};  /* if true, s_newauthor is active */
@@ -1428,8 +1428,8 @@ static int sf_open_file(const char *name)
         }
     }
     s_sf_num_files++;
-    s_sf_files = (SF_FILE*)saferealloc((char*)s_sf_files,
-        s_sf_num_files * sizeof (SF_FILE));
+    s_sf_files = (ScoreFile*)saferealloc((char*)s_sf_files,
+        s_sf_num_files * sizeof (ScoreFile));
     s_sf_files[i].fname = savestr(name);
     s_sf_files[i].num_lines = 0;
     s_sf_files[i].num_alloc = 0;
@@ -1501,7 +1501,7 @@ static void sf_file_clear()
     {
         std::free(s_sf_files);
     }
-    s_sf_files = (SF_FILE*)nullptr;
+    s_sf_files = (ScoreFile*)nullptr;
     s_sf_num_files = 0;
 }
 
