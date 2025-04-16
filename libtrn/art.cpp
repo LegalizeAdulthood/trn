@@ -47,19 +47,19 @@
 #include <ctime>
 #include <string>
 
-ART_LINE    g_highlight{-1};         /* next line to be highlighted */
-ART_LINE    g_first_view{};          //
+ArticleLine    g_highlight{-1};         /* next line to be highlighted */
+ArticleLine    g_first_view{};          //
 ArticlePosition     g_raw_artsize{};         /* size in bytes of raw article */
 ArticlePosition     g_artsize{};             /* size in bytes of article */
 char        g_art_line[LBUFLEN];     /* place for article lines */
 int         g_gline{};               //
 ArticlePosition     g_innersearch{};         /* g_artpos of end of line we want to visit */
-ART_LINE    g_innerlight{};          /* highlight position for g_innersearch or 0 */
+ArticleLine    g_innerlight{};          /* highlight position for g_innersearch or 0 */
 char        g_hide_everything{};     /* if set, do not write page now, ...but execute char when done with page */
 bool        g_reread{};              /* consider current art temporarily unread? */
 bool        g_do_fseek{};            /* should we back up in article file? */
 bool        g_oldsubject{};          /* not 1st art in subject thread */
-ART_LINE    g_topline{-1};           /* top line of current screen */
+ArticleLine    g_topline{-1};           /* top line of current screen */
 bool        g_do_hiding{true};       /* hide header lines with -h? */
 bool        g_is_mime{};             /* process mime in an article? */
 bool        g_multimedia_mime{};     /* images/audio to see/hear? */
@@ -95,7 +95,7 @@ static int      s_slines{};          /* how long to make page when special */
 static ArticlePosition  s_restart{};         /* if nonzero, the place where last line left off on line split */
 static ArticlePosition  s_alinebeg{};        /* where in file current line began */
 static int      s_more_prompt_col{}; /* non-zero when the more prompt is indented */
-static ART_LINE s_isrchline{};       /* last line to display */
+static ArticleLine s_isrchline{};       /* last line to display */
 static CompiledRegex   s_gcompex{};         /* in article search pattern */
 static bool     s_firstpage{};       /* is this the 1st page of article? */
 static bool     s_continuation{};    /* this line/header is being continued */
@@ -191,7 +191,7 @@ DoArticlResult do_article()
             g_do_fseek = false;
             s_restart = 0;
         }
-        ART_LINE linenum = 1;
+        ArticleLine linenum = 1;
 #if 0 /* This causes a bug (headers displayed twice sometimes when you press v then ^R) */
         if (!g_do_hiding)
         {
@@ -895,7 +895,7 @@ page_switch_result page_switch()
 
     case Ctl('i'):
     {
-        ART_LINE i = g_artline;
+        ArticleLine i = g_artline;
         g_gline = 3;
         s = line_ptr(s_alinebeg);
         while (at_nl(*s) && i >= g_topline)
@@ -1154,7 +1154,7 @@ page_switch_result page_switch()
     case 'b':
     case Ctl('b'):    /* back up a page */
     {
-        ART_LINE target;
+        ArticleLine target;
 
         if (g_erase_each_line)
         {

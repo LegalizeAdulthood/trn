@@ -51,7 +51,7 @@ extern bool     g_can_home;        //
 extern bool     g_erase_each_line; /* fancy -e */
 extern bool     g_allow_typeahead; /* -T */
 extern bool     g_verify;          /* -v */
-extern ART_LINE g_initlines;       /* -i */
+extern ArticleLine g_initlines;       /* -i */
 extern bool     g_use_mouse;       //
 extern char     g_mouse_modes[32]; //
 

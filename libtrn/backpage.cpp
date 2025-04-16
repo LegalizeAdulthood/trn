@@ -32,7 +32,7 @@ void backpage_init()
 
 /* virtual array read */
 
-ArticlePosition vrdary(ART_LINE indx)
+ArticlePosition vrdary(ArticleLine indx)
 {
     int subindx;
     long offset;
@@ -69,7 +69,7 @@ ArticlePosition vrdary(ART_LINE indx)
 }
 
 /* write to virtual array */
-void vwtary(ART_LINE indx, ArticlePosition newvalue)
+void vwtary(ArticleLine indx, ArticlePosition newvalue)
 {
     int subindx;
     long offset;

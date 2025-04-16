@@ -367,13 +367,13 @@ inline bool header_conv()
 /* Output a header line with possible tree display on the right hand side.
 ** Does automatic wrapping of lines that are too long.
 */
-int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
+int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
 {
     char*    tmpbuf;
     char*    line;
     char*    end;
     int      wrap_at;
-    ART_LINE start_line = header_line;
+    ArticleLine start_line = header_line;
     int      i;
     int      len;
     char     ch;
@@ -614,9 +614,9 @@ int tree_puts(char *orig_line, ART_LINE header_line, int is_subject)
 /* Output any parts of the tree that are left to display.  Called at the
 ** end of each header.
 */
-int  finish_tree(ART_LINE last_line)
+int  finish_tree(ArticleLine last_line)
 {
-    ART_LINE start_line = last_line;
+    ArticleLine start_line = last_line;
 
     while (last_line <= s_max_line)
     {

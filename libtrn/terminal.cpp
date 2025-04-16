@@ -76,7 +76,7 @@ bool          g_allow_typeahead{};               /* -T */
 bool          g_verify{};                        /* -v */
 MarkingMode  g_marking{NOMARKING};              /* -m */
 MarkingAreas g_marking_areas{HALFPAGE_MARKING}; //
-ART_LINE      g_initlines{};                     /* -i */
+ArticleLine      g_initlines{};                     /* -i */
 bool          g_use_mouse{};                     //
 char          g_mouse_modes[32]{"acjlptwvK"};    //
 MinorMode    g_mode{MM_INITIALIZING};           /* current state of trn */

@@ -19,7 +19,7 @@ inline bool at_nl(char c)
 }
 
 extern ArticlePosition    g_artpos;  /* byte position in article file */
-extern ART_LINE   g_artline; /* current line number in article file */
+extern ArticleLine   g_artline; /* current line number in article file */
 extern std::FILE *g_artfp;   /* current article file pointer */
 extern ArticleNum    g_openart; /* the article number we have open */
 extern char      *g_artbuf;

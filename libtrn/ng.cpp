@@ -450,7 +450,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                         std::sprintf(tmpbuf, "%s: article may show up in a moment.", g_ngname.c_str());
                     }
                 }
-                ART_LINE linenum = tree_puts(tmpbuf, 0, 0);
+                ArticleLine linenum = tree_puts(tmpbuf, 0, 0);
                 vwtary(g_artline,(ArticlePosition)0);
                 finish_tree(linenum);
                 g_prompt = whatnext;
@@ -1627,7 +1627,7 @@ run_the_selector:
     case 'b': case Ctl('b'):          /* back up a page */
         if (g_art <= g_lastart)
         {
-            ART_LINE target;
+            ArticleLine target;
 
             g_reread = true;
             clear();

@@ -26,7 +26,7 @@
 #include <cstring>
 
 ArticlePosition    g_artpos{};               /* byte position in article file */
-ART_LINE   g_artline{};              /* current line number in article file */
+ArticleLine   g_artline{};              /* current line number in article file */
 std::FILE *g_artfp{};                /* current article file pointer */
 ArticleNum    g_openart{};              /* the article number we have open */
 char      *g_artbuf{};               //

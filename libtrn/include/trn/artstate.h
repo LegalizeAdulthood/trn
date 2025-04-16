@@ -13,7 +13,7 @@
 extern bool        g_reread;          /* consider current art temporarily unread? */
 extern bool        g_do_fseek;        /* should we back up in article file? */
 extern bool        g_oldsubject;      /* not 1st art in subject thread */
-extern ART_LINE    g_topline;         /* top line of current screen */
+extern ArticleLine    g_topline;         /* top line of current screen */
 extern bool        g_do_hiding;       /* hide header lines with -h? */
 extern bool        g_is_mime;         /* process mime in an article? */
 extern bool        g_multimedia_mime; /* images/audio to see/hear? */
