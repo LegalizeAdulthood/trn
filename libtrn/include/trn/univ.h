@@ -35,7 +35,7 @@ enum UniversalItemType
     UN_DELETED = -4       /* generic deleted item -- no per-item memory */
 };
 
-struct UNIV_GROUPMASK_DATA
+struct UniversalGroupMaskData
 {
     char* title;
     char* masklist;
@@ -88,7 +88,7 @@ union UNIV_DATA
 {
     char* str;
     HelpLocation i;
-    UNIV_GROUPMASK_DATA gmask;
+    UniversalGroupMaskData gmask;
     UNIV_CONFIGFILE_DATA cfile;
     UNIV_NEWSGROUP group;
     UNIV_VIRT_DATA virt;
