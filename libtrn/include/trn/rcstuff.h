@@ -38,7 +38,7 @@ enum GetNewsgroupFlags : int
 };
 DECLARE_FLAGS_ENUM(GetNewsgroupFlags, int);
 
-enum newsrc_flags : int
+enum NewsrcFlags : int
 {
     RF_NONE = 0x0000,
     RF_ADD_NEWGROUPS = 0x0001,
@@ -47,7 +47,7 @@ enum newsrc_flags : int
     RF_ACTIVE = 0x0200,
     RF_RCCHANGED = 0x0400
 };
-DECLARE_FLAGS_ENUM(newsrc_flags, int);
+DECLARE_FLAGS_ENUM(NewsrcFlags, int);
 
 struct NEWSRC
 {
@@ -58,7 +58,7 @@ struct NEWSRC
     char        *newname;  /* our working newsrc file */
     char        *infoname; /* the time/size info file */
     char        *lockname; /* the lock file we created */
-    newsrc_flags flags;
+    NewsrcFlags flags;
 };
 
 enum multirc_flags : int
