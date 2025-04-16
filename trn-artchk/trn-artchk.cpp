@@ -62,19 +62,22 @@ int main(int argc, char *argv[])
         g_dot_dir = g_home_dir;
     }
 
-    if (argc != 5 || !(max_col_len = std::atoi(argv[2]))) {
+    if (argc != 5 || !(max_col_len = std::atoi(argv[2])))
+    {
         std::fprintf(stderr, "Usage: trn-artchk <article> <maxLineLen> <newsgroupsFile> <activeFile>\n");
         std::exit(1);
     }
 
     std::FILE *fp = std::fopen(argv[1], "r");
-    if (fp == nullptr) {
+    if (fp == nullptr)
+    {
         std::fprintf(stderr, "trn-artchk: unable to open article `%s'.\n", argv[1]);
         std::exit(1);
     }
 
     /* Check the header for proper format and report on the newsgroups */
-    while (std::fgets(buff, LBUFLEN, fp)) {
+    while (std::fgets(buff, LBUFLEN, fp))
+    {
         line_num++;
         buff[std::strlen(buff)-1] = '\0';
         if (!*buff)
@@ -86,29 +89,34 @@ int main(int argc, char *argv[])
             continue;
         }
         cp = std::strchr(buff, ':');
-        if (!cp) {
+        if (!cp)
+        {
             std::printf("\nERROR: line %d is an invalid header line:\n%s\n",
                    line_num, buff);
             break;
         }
-        if (cp[1] != ' ' && cp[1] != '\0') {
+        if (cp[1] != ' ' && cp[1] != '\0')
+        {
             std::printf("\n"
                    "ERROR: header on line %d does not have a space after the colon:\n%s\n",
                    line_num, buff);
         }
-        if (cp - buff == 10 && !std::strncmp(buff, "Newsgroups", 10)) {
+        if (cp - buff == 10 && !std::strncmp(buff, "Newsgroups", 10))
+        {
             found_newsgroups = 1;
             for (cp = buff + 11; *cp == ' '; cp++)
             {
             }
-            if (std::strchr(cp, ' ')) {
+            if (std::strchr(cp, ' '))
+            {
                 std::printf("\n"
                        "ERROR: the \"Newsgroups:\" line has spaces in it that MUST be removed. The\n"
                        "only allowable space is the one separating the colon (:) from the contents.\n"
                        "Use a comma (,) to separate multiple newsgroup names.\n");
                 continue;
             }
-            while (*cp) {
+            while (*cp)
+            {
                 char *cp2 = std::strchr(cp, ',');
                 if (!cp2)
                 {
@@ -118,7 +126,8 @@ int main(int argc, char *argv[])
                 {
                     *cp2++ = '\0';
                 }
-                if (ngcnt < MAX_NGS) {
+                if (ngcnt < MAX_NGS)
+                {
                     nglens[ngcnt] = std::strlen(cp);
                     foundactive[ngcnt] = 0;
                     ngptrs[ngcnt] = safemalloc(nglens[ngcnt]+1);
@@ -127,19 +136,22 @@ int main(int argc, char *argv[])
                 }
                 cp = cp2;
             }
-            if (!ngcnt) {
+            if (!ngcnt)
+            {
                 std::printf("\n"
                        "ERROR: the \"Newsgroups:\" line lists no newsgroups.\n");
                 continue;
             }
         }
     }
-    if (!found_newsgroups) {
+    if (!found_newsgroups)
+    {
         printf("\nERROR: the \"Newsgroups:\" line is missing from the header.\n");
     }
 
     /* Check the body of the article for long lines */
-    while (std::fgets(buff, LBUFLEN, fp)) {
+    while (std::fgets(buff, LBUFLEN, fp))
+    {
         line_num++;
         int col = std::strlen(buff) - 1;
         if (buff[col] != '\n')
@@ -153,7 +165,8 @@ int main(int argc, char *argv[])
             buff[col] = '\0';
         }
         col = 0;
-        for (cp = buff; *cp; cp++) {
+        for (cp = buff; *cp; cp++)
+        {
             if (*cp == '\t')
             {
                 col += 8 - (col%8);
@@ -163,7 +176,8 @@ int main(int argc, char *argv[])
                 col++;
             }
         }
-        if (col > max_col_len) {
+        if (col > max_col_len)
+        {
             std::printf("\n"
                    "Warning: posting exceeds %d columns.  Line %d is the first long one:\n%s\n",
                    max_col_len, line_num, buff);
@@ -171,7 +185,8 @@ int main(int argc, char *argv[])
         }
     }
     cp = std::getenv("NNTPSERVER");
-    if (!cp) {
+    if (!cp)
+    {
         cp = filexp(SERVER_NAME);
         if (FILE_REF(cp))
         {
@@ -186,7 +201,8 @@ int main(int argc, char *argv[])
         {
             cp = std::strchr(g_server_name, ':');
         }
-        if (cp) {
+        if (cp)
+        {
             *cp = '\0';
             g_nntplink.port_number = std::atoi(cp+1);
         }
@@ -201,7 +217,8 @@ int main(int argc, char *argv[])
             g_server_name = nullptr;
         }
     }
-    if (ngcnt) {
+    if (ngcnt)
+    {
         struct stat st;
         if (stat(argv[3], &st) != -1)
         {
@@ -220,26 +237,34 @@ int main(int argc, char *argv[])
             check_active = true;
         }
     }
-    if (ngcnt && (check_ng || check_active)) {
+    if (ngcnt && (check_ng || check_active))
+    {
         int ngleft;
         /* Print a note about each newsgroup */
         std::printf("\nYour article's newsgroup%s:\n", plural(ngcnt));
-        if (!check_active) {
-            for (int i = 0; i < ngcnt; i++) {
+        if (!check_active)
+        {
+            for (int i = 0; i < ngcnt; i++)
+            {
                 foundactive[i] = 1;
             }
         }
-        else if (fp_active != nullptr) {
+        else if (fp_active != nullptr)
+        {
             ngleft = ngcnt;
-            while (std::fgets(buff, LBUFLEN, fp_active)) {
+            while (std::fgets(buff, LBUFLEN, fp_active))
+            {
                 if (!ngleft)
                 {
                     break;
                 }
-                for (int i = 0; i < ngcnt; i++) {
-                    if (!foundactive[i]) {
-                        if (is_hor_space(buff[nglens[i]])
-                          && !std::strncmp(ngptrs[i], buff, nglens[i])) {
+                for (int i = 0; i < ngcnt; i++)
+                {
+                    if (!foundactive[i])
+                    {
+                        if (is_hor_space(buff[nglens[i]]) //
+                            && !std::strncmp(ngptrs[i], buff, nglens[i]))
+                        {
                             foundactive[i] = 1;
                             ngleft--;
                         }
@@ -248,17 +273,22 @@ int main(int argc, char *argv[])
             }
             std::fclose(fp_active);
         }
-        else if (g_server_name) {
+        else if (g_server_name)
+        {
             int listactive_works = 1;
-            for (int i = 0; i < ngcnt; i++) {
-                if (listactive_works) {
+            for (int i = 0; i < ngcnt; i++)
+            {
+                if (listactive_works)
+                {
                     std::sprintf(g_ser_line, "list active %s", ngptrs[i]);
                     if (nntp_command(g_ser_line) <= 0)
                     {
                         break;
                     }
-                    if (nntp_check() > 0) {
-                        while (nntp_gets(g_ser_line, sizeof g_ser_line) >= 0) {
+                    if (nntp_check() > 0)
+                    {
+                        while (nntp_gets(g_ser_line, sizeof g_ser_line) >= 0)
+                        {
                             if (nntp_at_list_end(g_ser_line))
                             {
                                 break;
@@ -266,12 +296,14 @@ int main(int argc, char *argv[])
                             foundactive[i] = 1;
                         }
                     }
-                    else if (*g_ser_line == NNTP_CLASS_FATAL) {
+                    else if (*g_ser_line == NNTP_CLASS_FATAL)
+                    {
                         listactive_works = false;
                         i--;
                     }
                 }
-                else {
+                else
+                {
                     std::sprintf(g_ser_line, "GROUP %s", ngptrs[i]);
                     if (nntp_command(g_ser_line) <= 0)
                     {
@@ -284,11 +316,14 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        if (check_ng && fp_ng == nullptr) {
+        if (check_ng && fp_ng == nullptr)
+        {
             fp_ng = fopen(argv[3], "w+");
             unlink(argv[3]);
-            if (fp_ng != nullptr) {
-                for (int i = 0; i < ngcnt; i++) {
+            if (fp_ng != nullptr)
+            {
+                for (int i = 0; i < ngcnt; i++)
+                {
                     /* issue a description list command */
                     std::sprintf(g_ser_line, "XGTITLE %s", ngptrs[i]);
                     if (nntp_command(g_ser_line) <= 0)
@@ -296,9 +331,11 @@ int main(int argc, char *argv[])
                         break;
                     }
                     /*$$ use list newsgroups if this fails...? */
-                    if (nntp_check() > 0) {
+                    if (nntp_check() > 0)
+                    {
                         /* write results to fp_ng */
-                        while (nntp_gets(g_ser_line, sizeof g_ser_line) >= 0) {
+                        while (nntp_gets(g_ser_line, sizeof g_ser_line) >= 0)
+                        {
                             if (nntp_at_list_end(g_ser_line))
                             {
                                 break;
@@ -310,17 +347,22 @@ int main(int argc, char *argv[])
                 std::fseek(fp_ng, 0L, 0);
             }
         }
-        if (fp_ng != nullptr) {
+        if (fp_ng != nullptr)
+        {
             ngleft = ngcnt;
-            while (std::fgets(buff, LBUFLEN, fp_ng)) {
+            while (std::fgets(buff, LBUFLEN, fp_ng))
+            {
                 if (!ngleft)
                 {
                     break;
                 }
-                for (int i = 0; i < ngcnt; i++) {
-                    if (foundactive[i] && ngptrs[i]) {
-                        if (is_hor_space(buff[nglens[i]])
-                          && !std::strncmp(ngptrs[i], buff, nglens[i])) {
+                for (int i = 0; i < ngcnt; i++)
+                {
+                    if (foundactive[i] && ngptrs[i])
+                    {
+                        if (is_hor_space(buff[nglens[i]]) //
+                            && !std::strncmp(ngptrs[i], buff, nglens[i]))
+                        {
                             cp = &buff[nglens[i]];
                             *cp++ = '\0';
                             cp = skip_hor_space(cp);
@@ -338,13 +380,16 @@ int main(int argc, char *argv[])
             }
             std::fclose(fp_ng);
         }
-        for (int i = 0; i < ngcnt; i++) {
-            if (!foundactive[i]) {
+        for (int i = 0; i < ngcnt; i++)
+        {
+            if (!foundactive[i])
+            {
                 std::printf("%-23s ** invalid news group -- check spelling **\n",
                    ngptrs[i]);
                 std::free(ngptrs[i]);
             }
-            else if (ngptrs[i]) {
+            else if (ngptrs[i])
+            {
                 std::printf("%-23s [no description available]\n", ngptrs[i]);
                 std::free(ngptrs[i]);
             }
@@ -363,7 +408,8 @@ int main(int argc, char *argv[])
 int server_connection()
 {
     static int server_stat = 0;
-    if (!server_stat) {
+    if (!server_stat)
+    {
         if (nntp_connect(g_server_name,false) > 0)
         {
             server_stat = 1;
