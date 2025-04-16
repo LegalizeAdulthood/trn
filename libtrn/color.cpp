@@ -367,12 +367,14 @@ static void output_color()
     }
     switch (prior.attr)
     {
-      case NOMARKING:
+    case NOMARKING:
         break;
-      case STANDOUT:
+
+    case STANDOUT:
         un_standout();
         break;
-      case UNDERLINE:
+
+    case UNDERLINE:
         un_underline();
         break;
     }
@@ -393,15 +395,17 @@ static void output_color()
     /* For both monochrome and color terminals we set the video attribute. */
     switch (prior.attr = op->attr)
     {
-      case NOMARKING:
+    case NOMARKING:
         break;
-      case STANDOUT:
+
+    case STANDOUT:
 #ifdef NOFIREWORKS
         no_sofire();
 #endif
         standout();
         break;
-      case UNDERLINE:
+
+    case UNDERLINE:
 #ifdef NOFIREWORKS
         no_ulfire();
 #endif
