@@ -1646,11 +1646,11 @@ static bool select_item(SEL_UNION u)
     case SM_MULTIRC:
         // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
         TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DELSEL)) == 0);
-        if (!(u.mp->flags & static_cast<multirc_flags>(g_sel_mask)))
+        if (!(u.mp->flags & static_cast<MultircFlags>(g_sel_mask)))
         {
             g_selected_count++;
         }
-        u.mp->flags |= static_cast<multirc_flags>(g_sel_mask);
+        u.mp->flags |= static_cast<MultircFlags>(g_sel_mask);
         break;
 
     case SM_ADDGROUP:
@@ -1750,9 +1750,9 @@ static bool deselect_item(SEL_UNION u)
     case SM_MULTIRC:
         // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
         TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DELSEL)) == 0);
-        if (u.mp->flags & static_cast<multirc_flags>(g_sel_mask))
+        if (u.mp->flags & static_cast<MultircFlags>(g_sel_mask))
         {
-            u.mp->flags &= ~static_cast<multirc_flags>(g_sel_mask);
+            u.mp->flags &= ~static_cast<MultircFlags>(g_sel_mask);
             g_selected_count--;
         }
 #if 0

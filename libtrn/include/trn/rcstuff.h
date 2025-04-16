@@ -61,19 +61,19 @@ struct Newsrc
     NewsrcFlags flags;
 };
 
-enum multirc_flags : int
+enum MultircFlags : int
 {
     MF_NONE = 0x0000,
     MF_SEL = 0x0001,
     MF_INCLUDED = 0x0010
 };
-DECLARE_FLAGS_ENUM(multirc_flags, int);
+DECLARE_FLAGS_ENUM(MultircFlags, int);
 
 struct MULTIRC
 {
     Newsrc       *first;
     int           num;
-    multirc_flags flags;
+    MultircFlags flags;
 };
 
 extern HASHTABLE  *g_newsrc_hash;

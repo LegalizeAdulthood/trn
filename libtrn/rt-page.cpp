@@ -1834,7 +1834,7 @@ try_again:
 
             // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
             TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DELSEL)) == 0);
-            sel = !!(mp->flags & static_cast<multirc_flags>(g_sel_mask));
+            sel = !!(mp->flags & static_cast<MultircFlags>(g_sel_mask));
             g_sel_items[g_sel_page_item_cnt].u.mp = mp;
             g_sel_items[g_sel_page_item_cnt].line = g_term_line;
             g_sel_items[g_sel_page_item_cnt].sel = sel;
@@ -2242,7 +2242,7 @@ void update_page()
         case SM_MULTIRC:
             // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
             TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DELSEL)) == 0);
-            sel = !!(u.mp->flags & static_cast<multirc_flags>(g_sel_mask));
+            sel = !!(u.mp->flags & static_cast<MultircFlags>(g_sel_mask));
             break;
 
         case SM_NEWSGROUP:
