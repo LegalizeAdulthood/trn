@@ -175,7 +175,7 @@ void univ_close()
     g_univ_level--;
 }
 
-UNIV_ITEM *univ_add(univ_item_type type, const char *desc)
+UNIV_ITEM *univ_add(UniversalItemType type, const char *desc)
 {
     UNIV_ITEM *node = (UNIV_ITEM*)safemalloc(sizeof(UNIV_ITEM));
 

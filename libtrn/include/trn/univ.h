@@ -16,7 +16,7 @@
 
 struct HASHTABLE;
 
-enum univ_item_type
+enum UniversalItemType
 {
     UN_NONE = 0,          //
     UN_TXT = 1,           /* textual placeholder */
@@ -114,7 +114,7 @@ struct UNIV_ITEM
     UNIV_ITEM     *prev;
     int            num;   /* natural order (for sort) */
     univitem_flags flags; /* for selector */
-    univ_item_type type;  /* what kind of object is it? */
+    UniversalItemType type;  /* what kind of object is it? */
     char          *desc;  /* default description */
     int            score;
     UNIV_DATA      data; /* describes the object */
@@ -144,7 +144,7 @@ void        univ_init();
 void        univ_startup();
 void        univ_open();
 void        univ_close();
-UNIV_ITEM * univ_add(univ_item_type type, const char *desc);
+UNIV_ITEM * univ_add(UniversalItemType type, const char *desc);
 char *      univ_desc_line(UNIV_ITEM *ui, int linenum);
 void        univ_add_text(const char *txt);
 void        univ_add_debug(const char *desc, const char *txt);
