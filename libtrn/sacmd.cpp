@@ -47,9 +47,11 @@ int sa_docmd()
     long    a = (long)g_page_ents[g_s_ptr_page_line].entnum;
     ART_NUM artnum = g_sa_ents[a].artnum;
 
-    switch(*g_buf) {
+    switch (*g_buf)
+    {
       case '+': /* enter thread selector */
-        if (!g_threaded_group) {
+        if (!g_threaded_group)
+        {
             s_beep();
             return 0;
         }
@@ -70,7 +72,8 @@ int sa_docmd()
         {
             /* it might not be a number */
             char *s = g_buf + 1;
-            if (*s != '0' && ((*s != '+' && *s != '-') || s[1] != '0')) {
+            if (*s != '0' && ((*s != '+' && *s != '-') || s[1] != '0'))
+            {
                 /* text was not a numeric 0 */
                 s_beep();
                 return 0;                       /* beep but do nothing */
@@ -95,7 +98,8 @@ int sa_docmd()
         }
         /* consider: should it start reading? */
         b = sa_readmarked_elig();
-        if (b) {
+        if (b)
+        {
             sa_clear_mark(b);
             return b;
         }
@@ -104,8 +108,10 @@ int sa_docmd()
         break;
       case 'J': /* kill marked "on" page */
         /* If in "fold" mode, kill threads with the first article marked */
-        if (g_sa_mode_fold) {
-            for (int j = 0; j <= g_s_bot_ent; j++) {
+        if (g_sa_mode_fold)
+        {
+            for (int j = 0; j <= g_s_bot_ent; j++)
+            {
                 if (sa_marked(g_page_ents[j].entnum))
                 {
                     (void) sa_art_cmd(true, SA_KILL, g_page_ents[j].entnum);
@@ -144,13 +150,16 @@ int sa_docmd()
         }
         /* New action: if in fold mode, will not delete an article which
            has a thread-prior marked article. */
-        for ( ; i; i = s_next(i)) {
+        for (; i; i = s_next(i))
+        {
             if (!sa_basic_elig(i))
             {
                 continue;
             }
-            if (!sa_marked(i) && !was_read(g_sa_ents[i].artnum)) {
-                if (g_sa_mode_fold) {           /* new semantics */
+            if (!sa_marked(i) && !was_read(g_sa_ents[i].artnum))
+            {
+                if (g_sa_mode_fold)             /* new semantics */
+                {
                     long j;
                     /* make j == 0 if no prior marked articles in the thread. */
                     for (j = i; j; j = sa_subj_thread_prev(j))
@@ -169,7 +178,8 @@ int sa_docmd()
             }
         }
         b = sa_readmarked_elig();
-        if (b) {
+        if (b)
+        {
             sa_clear_mark(b);
             return b;
         }
@@ -192,7 +202,8 @@ int sa_docmd()
         {
             g_sa_mode_order = SA_ORDER_ARRIVAL;
         }
-        if (g_sa_mode_order == SA_ORDER_DESCENDING && g_sc_delay) {
+        if (g_sa_mode_order == SA_ORDER_DESCENDING && g_sc_delay)
+        {
             g_sc_delay = false;
             sc_init(true);
         }
@@ -211,7 +222,8 @@ int sa_docmd()
         g_s_ref_bot = true;
         break;
       case 'O': /* change article sorting order */
-        if (g_sa_mode_order != SA_ORDER_DESCENDING) { /* not in score order */
+        if (g_sa_mode_order != SA_ORDER_DESCENDING)   /* not in score order */
+        {
             s_beep();
             break;
         }
@@ -261,9 +273,11 @@ int sa_docmd()
         {
             s_order_add(j);             /* duplicates ignored */
         }
-        if (sa_eligible(s_first()) || s_next_elig(s_first())) {
+        if (sa_eligible(s_first()) || s_next_elig(s_first()))
+        {
 #ifdef PENDING
-            if (g_sa_mode_read_elig) {
+            if (g_sa_mode_read_elig)
+            {
                 g_sc_fill_read = true;
                 g_sc_fill_max = g_absfirst - 1;
             }
@@ -310,11 +324,14 @@ int sa_docmd()
             g_sa_mode_fold = true;
         }
         /* toggle mode again if no elibible articles left */
-        if (sa_eligible(s_first()) || s_next_elig(s_first())) {
+        if (sa_eligible(s_first()) || s_next_elig(s_first()))
+        {
             g_s_ref_top = true;
             s_go_top_ents();
             g_s_refill = true;
-        } else {
+        }
+        else
+        {
             s_beep();
             g_sa_mode_zoom = !g_sa_mode_zoom;   /* toggle it right back */
         }
@@ -332,8 +349,10 @@ int sa_docmd()
         {
             g_s_ptr_page_line +=1;
         }
-        else {
-            if (!s_next_elig(g_page_ents[g_s_bot_ent].entnum)) {
+        else
+        {
+            if (!s_next_elig(g_page_ents[g_s_bot_ent].entnum))
+            {
                 s_beep();
                 return 0;
             }
@@ -355,13 +374,15 @@ int sa_docmd()
                 break;
             }
         }
-        if (!b) {       /* no next w/ same subject */
+        if (!b)         /* no next w/ same subject */
+        {
             s_beep();
             return 0;
         }
         for (int j = g_s_ptr_page_line+1; j <= g_s_bot_ent; j++)
         {
-            if (g_page_ents[j].entnum == b) {   /* art is on same page */
+            if (g_page_ents[j].entnum == b)     /* art is on same page */
+            {
                 s_rub_ptr();
                 g_s_ptr_page_line = j;
                 return 0;
@@ -375,13 +396,15 @@ int sa_docmd()
         /* good for scoring */
         b = sa_wrap_next_author(a);
         /* rest of code copied from next-subject case above */
-        if (!b || (a == b)) {   /* no next w/ same subject */
+        if (!b || (a == b))     /* no next w/ same subject */
+        {
             s_beep();
             return 0;
         }
         for (int j = 0; j <= g_s_bot_ent; j++)
         {
-            if (g_page_ents[j].entnum == b) {   /* art is on same page */
+            if (g_page_ents[j].entnum == b)     /* art is on same page */
+            {
                 s_rub_ptr();
                 g_s_ptr_page_line = j;
                 return 0;
@@ -400,13 +423,15 @@ int sa_docmd()
                 break;
             }
         }
-        if (!b) {       /* no next w/ same subject */
+        if (!b)         /* no next w/ same subject */
+        {
             s_beep();
             return 0;
         }
         for (int j = g_s_ptr_page_line-1; j >= 0; j--)
         {
-            if (g_page_ents[j].entnum == b) {   /* art is on same page */
+            if (g_page_ents[j].entnum == b)     /* art is on same page */
+            {
                 s_rub_ptr();
                 g_s_ptr_page_line = j;
                 return 0;
@@ -430,7 +455,8 @@ int sa_docmd()
         {
             /* it might not be a number */
             char *s = g_buf + 1;
-            if (*s != '0' && ((*s != '+' && *s != '-') || s[1] != '0')) {
+            if (*s != '0' && ((*s != '+' && *s != '-') || s[1] != '0'))
+            {
                 /* text was not a numeric 0 */
                 s_beep();
                 return 0;                       /* beep but do nothing */
@@ -452,7 +478,8 @@ int sa_docmd()
       case '\n':
       case ' ':
         b = sa_readmarked_elig();
-        if (b) {
+        if (b)
+        {
             sa_clear_mark(b);
             return b;
         }
@@ -465,7 +492,8 @@ int sa_docmd()
       case 'M': /* toggle mark on thread */
         s_rub_ptr();
         (void)sa_art_cmd((*g_buf == 'M'),SA_MARK,a);
-        if (!g_sa_mark_stay) {
+        if (!g_sa_mark_stay)
+        {
             /* go to next art on page or top of page if at bottom */
             if (g_s_ptr_page_line < g_s_bot_ent)        /* more on page */
             {
@@ -487,7 +515,8 @@ int sa_docmd()
         /* if in zoom mode, selection will remove article(s) from the
          * page, so that moving the cursor down is unnecessary
          */
-        if (!g_sa_mark_stay && !g_sa_mode_zoom) {
+        if (!g_sa_mark_stay && !g_sa_mode_zoom)
+        {
             /* go to next art on page or top of page if at bottom */
             if (g_s_ptr_page_line<(g_s_bot_ent))        /* more on page */
             {
@@ -517,12 +546,14 @@ int sa_docmd()
         flag = false;           /* have we found a marked one? */
         for ( ; a; a = s_next_elig(a))
         {
-            if (sa_marked(a)) {
+            if (sa_marked(a))
+            {
                 flag = true;
                 (void)sa_art_cmd(false,SA_EXTRACT,a);
             }
         }
-        if (!flag) {                    /* none were marked */
+        if (!flag)                      /* none were marked */
+        {
             a = g_page_ents[g_s_ptr_page_line].entnum;
             (void)sa_art_cmd(false,SA_EXTRACT,a);
         }
@@ -536,7 +567,8 @@ int sa_docmd()
       case 'E': /* end extraction, do command on image */
         g_s_ref_all = true;
         s_go_bot();
-        if (decode_fp) {
+        if (decode_fp)
+        {
             std::printf("\nIncomplete file: %s\n",decode_dest);
             std::printf("Continue with command? [ny]");
             std::fflush(stdout);
@@ -550,19 +582,22 @@ int sa_docmd()
             std::fflush(stdout);
             getcmd(g_buf);
             std::printf("\n");
-            if (*g_buf == 'y' || *g_buf == 'Y') {
+            if (*g_buf == 'y' || *g_buf == 'Y')
+            {
                 decode_end();   /* will remove file */
                 break;
             }
             std::fclose(decode_fp);
             decode_fp = 0;
         }
-        if (!sa_extracted_use) {
+        if (!sa_extracted_use)
+        {
             sa_extracted_use = safemalloc(LBUFLEN);
 /* later consider a variable for the default command */
             *sa_extracted_use = '\0';
         }
-        if (!*decode_dest) {
+        if (!*decode_dest)
+        {
             std::printf("\nTrn doesn't remember an extracted file name.\n");
             *g_buf = ' ';
             if (!s_finish_cmd("Please enter a file to use:"))
@@ -576,12 +611,13 @@ int sa_docmd()
             safecpy(decode_dest,g_buf+1,MAXFILENAME);
             std::printf("\n");
         }
-        if (s_sa_extract_dest == nullptr) {
+        if (s_sa_extract_dest == nullptr)
+        {
             s_sa_extract_dest = (char*)safemalloc(LBUFLEN);
             safecpy(s_sa_extract_dest,filexp("%p"),LBUFLEN);
         }
-        if (*decode_dest != '/' && *decode_dest != '~'
-         && *decode_dest != '%') {
+        if (*decode_dest != '/' && *decode_dest != '~' && *decode_dest != '%')
+        {
             std::sprintf(g_buf,"%s/%s",s_sa_extract_dest,decode_dest);
             safecpy(decode_dest,g_buf,MAXFILENAME);
         }
@@ -655,7 +691,8 @@ int sa_docmd()
 
 bool sa_extract_start()
 {
-    if (s_sa_extract_dest == nullptr) {
+    if (s_sa_extract_dest == nullptr)
+    {
         s_sa_extract_dest = (char*)safemalloc(LBUFLEN);
         safecpy(s_sa_extract_dest,filexp("%p"),LBUFLEN);
     }
@@ -687,9 +724,11 @@ void sa_art_cmd_prim(sa_cmd cmd, long a)
 {
     ART_NUM artnum = g_sa_ents[a].artnum;
 /* do more onpage status refreshes when in unread+read mode? */
-    switch (cmd) {
+    switch (cmd)
+    {
       case SA_KILL_MARKED:
-        if (sa_marked(a)) {
+        if (sa_marked(a))
+        {
             sa_clear_mark(a);
             oneless_artnum(artnum);
         }
@@ -717,7 +756,8 @@ void sa_art_cmd_prim(sa_cmd cmd, long a)
         s_ref_status_onpage(a);
         break;
       case SA_SELECT:           /* select this article */
-        if (sa_selected1(a)) {
+        if (sa_selected1(a))
+        {
             sa_clear_select1(a);
             if (g_sa_mode_zoom)
             {
