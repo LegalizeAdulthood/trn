@@ -7,7 +7,7 @@
 #include "config/common.h"
 #include "trn/mime-internal.h"
 
-#include "trn/List.h"
+#include "trn/list.h"
 #include "trn/art.h"
 #include "trn/artio.h"
 #include "trn/artstate.h"

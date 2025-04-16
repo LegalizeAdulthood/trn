@@ -7,7 +7,7 @@
 #include "config/common.h"
 #include "trn/sacmd.h"
 
-#include "trn/List.h"
+#include "trn/list.h"
 #include "trn/ngdata.h" /* for g_threaded_group */
 #include "trn/bits.h"
 #include "trn/cache.h"

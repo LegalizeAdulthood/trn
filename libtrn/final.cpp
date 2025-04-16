@@ -9,7 +9,7 @@
 
 #include "nntp/nntpclient.h"
 #include "nntp/nntpinit.h"
-#include "trn/List.h"
+#include "trn/list.h"
 #include "trn/bits.h"
 #include "trn/change_dir.h"
 #include "trn/color.h"

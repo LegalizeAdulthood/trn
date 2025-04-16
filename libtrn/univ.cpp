@@ -10,7 +10,7 @@
 #include "config/common.h"
 #include "trn/univ.h"
 
-#include "trn/List.h"
+#include "trn/list.h"
 #include "trn/ngdata.h"
 #include "trn/cache.h"
 #include "trn/final.h"

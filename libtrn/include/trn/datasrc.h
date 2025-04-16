@@ -5,7 +5,7 @@
 #define TRN_DATASRC_H
 
 #include "nntp/nntpclient.h"
-#include "trn/List.h"
+#include "trn/list.h"
 #include "trn/enum-flags.h"
 #include "trn/rt-ov.h"
 

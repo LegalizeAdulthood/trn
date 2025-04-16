@@ -8,7 +8,7 @@
 #include "trn/rt-ov.h"
 
 #include "nntp/nntpclient.h"
-#include "trn/List.h"
+#include "trn/list.h"
 #include "trn/ngdata.h"
 #include "trn/bits.h"
 #include "trn/cache.h"

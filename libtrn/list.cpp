@@ -2,7 +2,7 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
-#include "trn/List.h"
+#include "trn/list.h"
 #include "config/common.h"
 
 #include "trn/util.h"

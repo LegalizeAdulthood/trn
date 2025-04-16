@@ -8,7 +8,7 @@
 #include "trn/rcstuff.h"
 
 #include "nntp/nntpclient.h"
-#include "trn/List.h"
+#include "trn/list.h"
 #include "trn/ngdata.h"
 #include "trn/autosub.h"
 #include "trn/bits.h"

@@ -6,7 +6,7 @@
 
 #include <config/typedef.h>
 
-#include "trn/List.h"
+#include "trn/list.h"
 #include "trn/enum-flags.h"
 
 struct DataSource;

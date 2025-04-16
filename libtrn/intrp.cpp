@@ -8,7 +8,7 @@
 #include "trn/intrp.h"
 
 #include "config/user_id.h"
-#include "trn/List.h"
+#include "trn/list.h"
 #include "trn/ngdata.h"
 #include "trn/artio.h"
 #include "trn/artsrch.h"

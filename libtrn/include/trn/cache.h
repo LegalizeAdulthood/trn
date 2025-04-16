@@ -4,7 +4,7 @@
 #ifndef TRN_CACHE_H
 #define TRN_CACHE_H
 
-#include "trn/List.h"
+#include "trn/list.h"
 #include "trn/ngdata.h"
 #include "trn/enum-flags.h"
 #include "trn/hash.h"

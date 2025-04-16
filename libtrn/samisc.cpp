@@ -7,7 +7,7 @@
 #include "config/common.h"
 #include "trn/samisc.h"
 
-#include "trn/List.h"
+#include "trn/list.h"
 #include "trn/ngdata.h" /* several */
 #include "trn/artio.h"         /* g_openart */
 #include "trn/bits.h"
