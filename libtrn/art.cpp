@@ -804,7 +804,8 @@ reask_pager:
             {
                 *g_buf = '\f'; /* on CONT fake up refresh */
             }
-            else {
+            else
+            {
                 *g_buf = 'q';   /* on INTR or paper just quit */
             }
         }
@@ -859,7 +860,8 @@ bool maybe_set_color(const char *cp, bool backsearch)
         }
         return true;
     }
-    else {
+    else
+    {
         cp = skip_hor_space(cp);
         if (std::strchr(">}]#!:|", *cp))
         {
@@ -937,7 +939,8 @@ page_switch_result page_switch()
         erase_line(false);      /* erase the prompt */
         /* FALL THROUGH */
       caseG:
-      case 'G': {
+      case 'G':
+      {
         ART_POS start_where;
         bool success;
         char* nlptr;
