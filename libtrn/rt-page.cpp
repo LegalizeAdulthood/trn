@@ -529,7 +529,7 @@ try_again:
     {
         sort_addgroups();
         g_obj_count = 0;
-        for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next)
+        for (AddGroup *gp = g_first_addgroup; gp; gp = gp->next)
         {
             if (g_sel_page_gp == gp)
             {
@@ -964,7 +964,7 @@ bool first_page()
 
     case SM_ADDGROUP:
     {
-        for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next)
+        for (AddGroup *gp = g_first_addgroup; gp; gp = gp->next)
         {
             if (gp->flags & AGF_INCLUDED)
             {
@@ -1082,7 +1082,7 @@ bool last_page()
 
     case SM_ADDGROUP:
     {
-        ADDGROUP* gp = g_sel_page_gp;
+        AddGroup* gp = g_sel_page_gp;
         g_sel_page_gp = nullptr;
         if (!prev_page())
         {
@@ -1319,8 +1319,8 @@ bool prev_page()
 
     case SM_ADDGROUP:
     {
-        ADDGROUP* gp = g_sel_page_gp;
-        ADDGROUP* page_gp = g_sel_page_gp;
+        AddGroup* gp = g_sel_page_gp;
+        AddGroup* page_gp = g_sel_page_gp;
 
         if (!gp)
         {
@@ -1543,7 +1543,7 @@ try_again:
 
     case SM_ADDGROUP:
     {
-        ADDGROUP* gp = g_sel_page_gp;
+        AddGroup* gp = g_sel_page_gp;
         for (; gp && g_sel_page_item_cnt < s_sel_max_per_page; gp = gp->next)
         {
             if (gp == u.gp)
@@ -1965,7 +1965,7 @@ try_again:
     }
     else if (g_sel_mode == SM_ADDGROUP)
     {
-        ADDGROUP* gp = g_sel_page_gp;
+        AddGroup* gp = g_sel_page_gp;
         int max_len = 0;
         if (*g_sel_grp_dmode == 'l')
         {

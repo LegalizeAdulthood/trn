@@ -6,7 +6,7 @@
 
 #include <string>
 
-struct ADDGROUP;
+struct AddGroup;
 
 enum numnum_result
 {
@@ -28,6 +28,6 @@ int perform(char *cmdlst, int output_level);
 int ngsel_perform();
 int ng_perform(char *cmdlst, int output_level);
 int addgrp_sel_perform();
-int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level);
+int addgrp_perform(AddGroup *gp, char *cmdlst, int output_level);
 
 #endif

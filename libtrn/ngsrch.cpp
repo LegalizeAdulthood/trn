@@ -110,7 +110,7 @@ ng_search_result ng_search(char *patbuf, bool get_cmd)
     bool const output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
     if (g_first_addgroup)
     {
-        ADDGROUP *gp = g_first_addgroup;
+        AddGroup *gp = g_first_addgroup;
         do
         {
             if (execute(&s_ngcompex, gp->name) != nullptr)

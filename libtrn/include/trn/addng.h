@@ -24,10 +24,10 @@ enum AddGroupFlags : std::uint8_t
 };
 DECLARE_FLAGS_ENUM(AddGroupFlags, std::uint8_t);
 
-struct ADDGROUP
+struct AddGroup
 {
-    ADDGROUP      *next;
-    ADDGROUP      *prev;
+    AddGroup      *next;
+    AddGroup      *prev;
     DATASRC       *datasrc;
     ART_NUM        toread; /* number of articles to be read (for sorting) */
     NG_NUM         num;    /* a possible sort order for this group */
@@ -35,10 +35,10 @@ struct ADDGROUP
     char           name[1];
 };
 
-extern ADDGROUP *g_first_addgroup;
-extern ADDGROUP *g_last_addgroup;
-extern ADDGROUP *g_sel_page_gp;
-extern ADDGROUP *g_sel_next_gp;
+extern AddGroup *g_first_addgroup;
+extern AddGroup *g_last_addgroup;
+extern AddGroup *g_sel_page_gp;
+extern AddGroup *g_sel_next_gp;
 extern bool      g_quickstart;       /* -q */
 extern bool      g_use_add_selector; //
 

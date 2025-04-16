@@ -646,7 +646,7 @@ char addgroup_selector(getnewsgroup_flags flags)
 
     if (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == 'Z' || s_sel_ret == '\t')
     {
-        ADDGROUP *gp;
+        AddGroup *gp;
         int i;
         g_addnewbydefault = ADDNEW_SUB;
         for (gp = g_first_addgroup, i = 0; gp; gp = gp->next, i++)
@@ -1896,7 +1896,7 @@ static void sel_cleanup()
     case SM_ADDGROUP:
         if (g_sel_rereading)
         {
-            for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next)
+            for (AddGroup *gp = g_first_addgroup; gp; gp = gp->next)
             {
                 if (gp->flags & AGF_DELSEL)
                 {
@@ -1911,7 +1911,7 @@ static void sel_cleanup()
         }
         else
         {
-            for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next)
+            for (AddGroup *gp = g_first_addgroup; gp; gp = gp->next)
             {
                 if (gp->flags & AGF_DEL)
                 {
@@ -3334,7 +3334,7 @@ static display_state addgroup_commands(char_int ch)
     case 'X':  case 'D':  case 'J':
         if (!g_sel_rereading)
         {
-            ADDGROUP* gp;
+            AddGroup* gp;
             if (ch == 'D')
             {
                 gp = g_sel_page_gp;
@@ -3372,7 +3372,7 @@ static display_state addgroup_commands(char_int ch)
         }
         else if (ch == 'J')
         {
-            for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next)
+            for (AddGroup *gp = g_first_addgroup; gp; gp = gp->next)
             {
                 gp->flags &= ~AGF_DELSEL;
             }

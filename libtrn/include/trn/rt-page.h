@@ -13,7 +13,7 @@ enum : bool
     FILL_LAST_PAGE = true
 };
 
-struct ADDGROUP;
+struct AddGroup;
 struct ARTICLE;
 struct MULTIRC;
 struct NGDATA;
@@ -29,7 +29,7 @@ union SEL_UNION
 {
     ARTICLE     *ap;
     SUBJECT     *sp;
-    ADDGROUP    *gp;
+    AddGroup    *gp;
     MULTIRC     *mp;
     NGDATA      *np;
     UNIV_ITEM   *un;

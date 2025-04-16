@@ -30,10 +30,10 @@
 #include <string>
 #include <ctime>
 
-ADDGROUP *g_first_addgroup{};
-ADDGROUP *g_last_addgroup{};
-ADDGROUP *g_sel_page_gp{};
-ADDGROUP *g_sel_next_gp{};
+AddGroup *g_first_addgroup{};
+AddGroup *g_last_addgroup{};
+AddGroup *g_sel_page_gp{};
+AddGroup *g_sel_next_gp{};
 bool      g_quickstart{};           /* -q */
 bool      g_use_add_selector{true}; //
 
@@ -48,18 +48,18 @@ static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch
 static void add_to_list(const char *name, int toread, char_int ch);
 static int  list_groups(int keylen, HASHDATUM *data, int add_matching);
 static void scanline(char *actline, bool add_matching);
-static int  agorder_number(const ADDGROUP **app1, const ADDGROUP **app2);
-static int  agorder_groupname(const ADDGROUP **app1, const ADDGROUP **app2);
-static int  agorder_count(const ADDGROUP **app1, const ADDGROUP **app2);
+static int  agorder_number(const AddGroup **app1, const AddGroup **app2);
+static int  agorder_groupname(const AddGroup **app1, const AddGroup **app2);
+static int  agorder_count(const AddGroup **app1, const AddGroup **app2);
 
 static int addng_cmp(const char *key, int keylen, HASHDATUM data)
 {
-    return memcmp(key, ((ADDGROUP *)data.dat_ptr)->name, keylen);
+    return memcmp(key, ((AddGroup *)data.dat_ptr)->name, keylen);
 }
 
 static int build_addgroup_list(int keylen, HASHDATUM *data, int extra)
 {
-    ADDGROUP* node = (ADDGROUP*)data->dat_ptr;
+    AddGroup* node = (AddGroup*)data->dat_ptr;
 
     node->num = s_addgroup_cnt++;
     node->next = nullptr;
@@ -121,7 +121,7 @@ static void process_list(getnewsgroup_flags flag)
                 g_multirc->first->next ? "s" : "");
         print_lines(g_cmd_buf, STANDOUT);
     }
-    ADDGROUP *node = g_first_addgroup;
+    AddGroup *node = g_first_addgroup;
     if (node != nullptr && flag != GNG_NONE && g_use_add_selector)
     {
         addgroup_selector(flag);
@@ -137,7 +137,7 @@ static void process_list(getnewsgroup_flags flag)
         {
             get_ng(node->name, flag); /* add newsgroup -- maybe */
         }
-        ADDGROUP *prevnode = node;
+        AddGroup *prevnode = node;
         node = node->next;
         std::free((char*)prevnode);
     }
@@ -309,8 +309,8 @@ static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch
 {
     HASHDATUM data;
     unsigned const namelen = std::strlen(name);
-    data.dat_len = namelen + sizeof (ADDGROUP);
-    ADDGROUP *node = (ADDGROUP*)safemalloc(data.dat_len);
+    data.dat_len = namelen + sizeof (AddGroup);
+    AddGroup *node = (AddGroup*)safemalloc(data.dat_len);
     data.dat_ptr = (char *)node;
     switch (ch)
     {
@@ -334,7 +334,7 @@ static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch
 
 static void add_to_list(const char *name, int toread, char_int ch)
 {
-    ADDGROUP* node = g_first_addgroup;
+    AddGroup* node = g_first_addgroup;
 
     while (node)
     {
@@ -345,7 +345,7 @@ static void add_to_list(const char *name, int toread, char_int ch)
         node = node->next;
     }
 
-    node = (ADDGROUP*)safemalloc(std::strlen(name) + sizeof (ADDGROUP));
+    node = (AddGroup*)safemalloc(std::strlen(name) + sizeof (AddGroup));
     switch (ch)
     {
     case ':':
@@ -491,18 +491,18 @@ static void scanline(char *actline, bool add_matching)
     }
 }
 
-static int agorder_number(const ADDGROUP **app1, const ADDGROUP **app2)
+static int agorder_number(const AddGroup **app1, const AddGroup **app2)
 {
     ART_NUM const eq = (*app1)->num - (*app2)->num;
     return eq > 0? g_sel_direction : -g_sel_direction;
 }
 
-static int agorder_groupname(const ADDGROUP **app1, const ADDGROUP **app2)
+static int agorder_groupname(const AddGroup **app1, const AddGroup **app2)
 {
     return string_case_compare((*app1)->name, (*app2)->name) * g_sel_direction;
 }
 
-static int agorder_count(const ADDGROUP **app1, const ADDGROUP **app2)
+static int agorder_count(const AddGroup **app1, const AddGroup **app2)
 {
     long const eq = (*app1)->toread - (*app2)->toread;
     if (eq)
@@ -516,9 +516,9 @@ static int agorder_count(const ADDGROUP **app1, const ADDGROUP **app2)
 */
 void sort_addgroups()
 {
-    ADDGROUP* ap;
-    ADDGROUP** lp;
-    int (*sort_procedure)(const ADDGROUP**, const ADDGROUP**);
+    AddGroup* ap;
+    AddGroup** lp;
+    int (*sort_procedure)(const AddGroup**, const AddGroup**);
 
     switch (g_sel_sort)
     {
@@ -534,14 +534,14 @@ void sort_addgroups()
         break;
     }
 
-    ADDGROUP **ag_list = (ADDGROUP**)safemalloc(s_addgroup_cnt * sizeof(ADDGROUP*));
+    AddGroup **ag_list = (AddGroup**)safemalloc(s_addgroup_cnt * sizeof(AddGroup*));
     for (lp = ag_list, ap = g_first_addgroup; ap; ap = ap->next)
     {
         *lp++ = ap;
     }
     TRN_ASSERT(lp - ag_list == s_addgroup_cnt);
 
-    std::qsort(ag_list, s_addgroup_cnt, sizeof(ADDGROUP*), (int(*)(void const *, void const *)) sort_procedure);
+    std::qsort(ag_list, s_addgroup_cnt, sizeof(AddGroup*), (int(*)(void const *, void const *)) sort_procedure);
 
     ap = ag_list[0];
     g_first_addgroup = ag_list[0];

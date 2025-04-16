@@ -954,7 +954,7 @@ int addgrp_sel_perform()
         goto break_out;
     }
 
-    for (ADDGROUP *gp = g_first_addgroup; gp; gp = gp->next)
+    for (AddGroup *gp = g_first_addgroup; gp; gp = gp->next)
     {
         if (!(gp->flags & g_sel_mask) ^ !!bits)
         {
@@ -971,7 +971,7 @@ int addgrp_sel_perform()
     return 1;
 }
 
-int addgrp_perform(ADDGROUP *gp, char *cmdlst, int output_level)
+int addgrp_perform(AddGroup *gp, char *cmdlst, int output_level)
 {
     int ch;
 
