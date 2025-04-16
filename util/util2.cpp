@@ -34,7 +34,8 @@ char *safecpy(char *to, const char *from, int len)
 {
     char* dest = to;
 
-    if (from) {
+    if (from)
+    {
         while (--len && *from)
         {
             *dest++ = *from++;
@@ -48,7 +49,8 @@ char *safecpy(char *to, const char *from, int len)
 /* copy a string up to some (non-backslashed) delimiter, if any */
 char *cpytill(char *to, char *from, int delim)
 {
-    while (*from) {
+    while (*from)
+    {
         if (*from == '\\' && from[1] == delim)
         {
             from++;
@@ -79,7 +81,8 @@ char *filexp(const char *text)
     /* interpret any % escapes */
     dointerp(filename,sizeof filename,s,nullptr,nullptr);
     s = filename;
-    if (*s == '~') {    /* does destination start with ~? */
+    if (*s == '~')      /* does destination start with ~? */
+    {
         if (!*(++s) || *s == '/')
         {
             std::sprintf(scrbuf, "%s%s", g_home_dir, s);
@@ -269,9 +272,12 @@ char *read_auth_file(const char *file, char **pass_ptr)
     strptr[1] = nullptr;
     strptr[0] = nullptr;
     std::FILE *fp = std::fopen(file, "r");
-    if (fp != nullptr) {
-        for (int i = 0; i < 2; i++) {
-            if (std::fgets(buf, sizeof buf, fp) != nullptr) {
+    if (fp != nullptr)
+    {
+        for (int i = 0; i < 2; i++)
+        {
+            if (std::fgets(buf, sizeof buf, fp) != nullptr)
+            {
                 char* cp = buf + std::strlen(buf) - 1;
                 if (*cp == '\n')
                 {
