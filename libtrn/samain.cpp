@@ -67,7 +67,7 @@ void sa_init_ents()
 {
     g_sa_num_ents = 0;
     s_sa_ents_alloc = 0;
-    g_sa_ents = (SA_ENTRYDATA*)nullptr;
+    g_sa_ents = (ScanArticleEntryData*)nullptr;
 }
 
 void sa_clean_ents()
@@ -87,13 +87,13 @@ long sa_add_ent(ART_NUM artnum)
         {
             /* don't use number 0, just allocate it and skip it */
             g_sa_num_ents = 2;
-            g_sa_ents = (SA_ENTRYDATA*)safemalloc(s_sa_ents_alloc
-                                        * sizeof (SA_ENTRYDATA));
+            g_sa_ents = (ScanArticleEntryData*)safemalloc(s_sa_ents_alloc
+                                        * sizeof (ScanArticleEntryData));
         }
         else
         {
-            g_sa_ents = (SA_ENTRYDATA*)saferealloc((char*)g_sa_ents,
-                        s_sa_ents_alloc * sizeof (SA_ENTRYDATA));
+            g_sa_ents = (ScanArticleEntryData*)saferealloc((char*)g_sa_ents,
+                        s_sa_ents_alloc * sizeof (ScanArticleEntryData));
         }
     }
     long cur = g_sa_num_ents - 1;

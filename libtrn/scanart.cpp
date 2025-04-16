@@ -19,7 +19,7 @@
 #include "trn/smisc.h"
 #include "trn/terminal.h" /* macro to clear... */
 
-SA_ENTRYDATA *g_sa_ents{};
+ScanArticleEntryData *g_sa_ents{};
 int           g_sa_num_ents{};
 bool          g_sa_initialized{};           /* Have we initialized? */
 bool          g_sa_never_initialized{true}; /* Have we ever initialized? */

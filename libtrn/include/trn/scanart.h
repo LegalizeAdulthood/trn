@@ -40,14 +40,14 @@ enum ScanArticleFlags : unsigned char
 DECLARE_FLAGS_ENUM(ScanArticleFlags, unsigned char);
 
 /* per-entry data */
-struct SA_ENTRYDATA
+struct ScanArticleEntryData
 {
     ART_NUM       artnum;
     long          subj_thread_num;
     ScanArticleFlags sa_flags; /* status bitmap (marked, select, etc...) */
 };
 
-extern SA_ENTRYDATA *g_sa_ents;
+extern ScanArticleEntryData *g_sa_ents;
 extern int g_sa_num_ents;
 
 extern bool g_sa_initialized;       /* Have we initialized? */
