@@ -357,7 +357,7 @@ char *readartbuf(bool view_inline)
 
     case DECODE_MIME:
     {
-        MIMECAP_ENTRY* mcp;
+        MimeCapEntry* mcp;
         mcp = mime_FindMimecapEntry(g_mime_section->type_name,
                                     MCF_NEEDSTERMINAL |MCF_COPIOUSOUTPUT);
         if (mcp)

@@ -78,9 +78,9 @@ static char *do_newline(char *t, HtmlFlags flag);
 static int   do_indent(char *t);
 static char *find_attr(char *str, const char *attr);
 
-inline MIMECAP_ENTRY *mimecap_ptr(long n)
+inline MimeCapEntry *mimecap_ptr(long n)
 {
-    return (MIMECAP_ENTRY *)listnum2listitem(s_mimecap_list, n);
+    return (MimeCapEntry *)listnum2listitem(s_mimecap_list, n);
 }
 
 void mime_set_executor(MimeExecutor executor)
@@ -91,7 +91,7 @@ void mime_set_executor(MimeExecutor executor)
 void mime_init()
 {
     s_executor = doshell;
-    s_mimecap_list = new_list(0,-1,sizeof(MIMECAP_ENTRY),40,LF_ZERO_MEM,nullptr);
+    s_mimecap_list = new_list(0,-1,sizeof(MimeCapEntry),40,LF_ZERO_MEM,nullptr);
 
     char *mcname = get_val("MIMECAPS");
     if (mcname == nullptr)
@@ -185,7 +185,7 @@ void mime_ReadMimecap(const char *mcname)
             std::fprintf(stderr, "trn: Ignoring invalid mimecap entry: %s\n", bp);
             continue;
         }
-        MIMECAP_ENTRY *mcp = mimecap_ptr(++i);
+        MimeCapEntry *mcp = mimecap_ptr(++i);
         mcp->contenttype = savestr(t);
         mcp->command = savestr(mime_ParseEntryArg(&s));
         while (s)
@@ -275,11 +275,11 @@ static char *mime_ParseEntryArg(char **cpp)
     return s;
 }
 
-MIMECAP_ENTRY *mime_FindMimecapEntry(const char *contenttype, MimeCapFlags skip_flags)
+MimeCapEntry *mime_FindMimecapEntry(const char *contenttype, MimeCapFlags skip_flags)
 {
     for (int i = 0; i <= s_mimecap_list->high; i++)
     {
-        MIMECAP_ENTRY *mcp = mimecap_ptr(i);
+        MimeCapEntry *mcp = mimecap_ptr(i);
         if (!(mcp->flags & skip_flags) //
             && mime_TypesMatch(contenttype, mcp->contenttype))
         {
@@ -917,7 +917,7 @@ char *mime_SkipWhitespace(char *s)
 
 void mime_DecodeArticle(bool view)
 {
-    MIMECAP_ENTRY* mcp = nullptr;
+    MimeCapEntry* mcp = nullptr;
 
     seekart(g_savefrom);
     *g_art_line = '\0';

@@ -39,7 +39,7 @@ protected:
 
 TEST_F(MimeTest, imageGif)
 {
-    MIMECAP_ENTRY *cap = mime_FindMimecapEntry(TRN_TEST_MIME_IMAGE_GIF_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = mime_FindMimecapEntry(TRN_TEST_MIME_IMAGE_GIF_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
     ASSERT_STREQ(TRN_TEST_MIME_IMAGE_GIF_CONTENT_TYPE, cap->contenttype);
@@ -51,7 +51,7 @@ TEST_F(MimeTest, imageGif)
 
 TEST_F(MimeTest, imageWildcardWithLabel)
 {
-    MIMECAP_ENTRY *cap = mime_FindMimecapEntry(TRN_TEST_MIME_IMAGE_ANY_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = mime_FindMimecapEntry(TRN_TEST_MIME_IMAGE_ANY_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
     ASSERT_STREQ(TRN_TEST_MIME_IMAGE_ANY_CONTENT_TYPE, cap->contenttype);
@@ -63,7 +63,7 @@ TEST_F(MimeTest, imageWildcardWithLabel)
 
 TEST_F(MimeTest, appleFileIgnoredParams)
 {
-    MIMECAP_ENTRY *cap = mime_FindMimecapEntry(TRN_TEST_MIME_APPLEFILE_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = mime_FindMimecapEntry(TRN_TEST_MIME_APPLEFILE_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
     ASSERT_STREQ(TRN_TEST_MIME_APPLEFILE_CONTENT_TYPE, cap->contenttype);
@@ -75,7 +75,7 @@ TEST_F(MimeTest, appleFileIgnoredParams)
 
 TEST_F(MimeTest, textPlainHasFlags)
 {
-    MIMECAP_ENTRY *cap = mime_FindMimecapEntry(TRN_TEST_MIME_TEXT_PLAIN_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = mime_FindMimecapEntry(TRN_TEST_MIME_TEXT_PLAIN_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
     ASSERT_STREQ(TRN_TEST_MIME_TEXT_PLAIN_CONTENT_TYPE, cap->contenttype);
@@ -118,7 +118,7 @@ TEST_F(MimeExecTest, applicationPdfSuccessfulTestCommand)
 {
     EXPECT_CALL(m_exec, Call(_, StrEq(TRN_TEST_MIME_PDF_TEST_EXEC_COMMAND))).WillOnce(Return(0));
 
-    MIMECAP_ENTRY *cap = mime_FindMimecapEntry(TRN_TEST_MIME_PDF_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = mime_FindMimecapEntry(TRN_TEST_MIME_PDF_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
     ASSERT_STREQ(TRN_TEST_MIME_PDF_CONTENT_TYPE, cap->contenttype);
@@ -132,7 +132,7 @@ TEST_F(MimeExecTest, applicationPdfFailedTestCommand)
 {
     EXPECT_CALL(m_exec, Call(_, _)).WillOnce(Return(1));
 
-    MIMECAP_ENTRY *cap = mime_FindMimecapEntry(TRN_TEST_MIME_PDF_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = mime_FindMimecapEntry(TRN_TEST_MIME_PDF_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_EQ(nullptr, cap);
 }

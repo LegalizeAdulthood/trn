@@ -303,7 +303,7 @@ char *decode_subject(ART_NUM artnum, int *partp, int *totalp)
 /*
  * Handle a piece of a split file.
  */
-bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
+bool decode_piece(MimeCapEntry *mcp, char *first_line)
 {
     *g_msg = '\0';
 
