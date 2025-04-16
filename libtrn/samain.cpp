@@ -53,7 +53,8 @@ void sa_init()
         return;                         /* ... no articles */
     }
 #ifdef PENDING
-    if (g_sa_mode_read_elig) {
+    if (g_sa_mode_read_elig)
+    {
         g_sc_fill_read = true;
         g_sc_fill_max = g_absfirst - 1;
     }
@@ -79,14 +80,18 @@ void sa_clean_ents()
 long sa_add_ent(ART_NUM artnum)
 {
     g_sa_num_ents++;
-    if (g_sa_num_ents > s_sa_ents_alloc) {
+    if (g_sa_num_ents > s_sa_ents_alloc)
+    {
         s_sa_ents_alloc += 100;
-        if (s_sa_ents_alloc == 100) {   /* newly allocated */
+        if (s_sa_ents_alloc == 100)     /* newly allocated */
+        {
             /* don't use number 0, just allocate it and skip it */
             g_sa_num_ents = 2;
             g_sa_ents = (SA_ENTRYDATA*)safemalloc(s_sa_ents_alloc
                                         * sizeof (SA_ENTRYDATA));
-        } else {
+        }
+        else
+        {
             g_sa_ents = (SA_ENTRYDATA*)saferealloc((char*)g_sa_ents,
                         s_sa_ents_alloc * sizeof (SA_ENTRYDATA));
         }
@@ -141,7 +146,8 @@ bool sa_initarts()
 {
     sa_init_ents();
     /* add all available articles to entry list */
-    for (int a = article_first(g_absfirst); a <= g_lastart; a = article_next(a)) {
+    for (int a = article_first(g_absfirst); a <= g_lastart; a = article_next(a))
+    {
         if (article_exists(a))
         {
             (void)sa_add_ent(a);
@@ -169,7 +175,8 @@ sa_main_result sa_mainloop()
      * then try to initialize.
      * If that fails then strn will just use arrival ordering.
      */
-    if (!g_sc_initialized && g_sa_mode_order == SA_ORDER_DESCENDING) {
+    if (!g_sc_initialized && g_sa_mode_order == SA_ORDER_DESCENDING)
+    {
         g_sc_delay = false;     /* yes, actually score... */
         sc_init(true);          /* wait for articles to score */
         if (!g_sc_initialized)
@@ -184,15 +191,18 @@ sa_main_result sa_mainloop()
         g_s_top_ent = s_first();
     }
     int i = s_fillpage();
-    if (i == -1 || i == 0) {
+    if (i == -1 || i == 0)
+    {
         /* for now just quit if no page could be filled. */
         return SA_QUIT;
     }
     i = s_cmdloop();
-    if (i == SA_READ) {
+    if (i == SA_READ)
+    {
         i = SA_NORM;
     }
-    if (i > 0) {
+    if (i > 0)
+    {
         g_sa_art = g_sa_ents[i].artnum;
         return SA_NORM;
     }
@@ -218,7 +228,8 @@ long sa_readmarked_elig()
     {
         return 0L;
     }
-    for ( ; e; e = s_next(e)) {
+    for (; e; e = s_next(e))
+    {
         if (!sa_basic_elig(e))
         {
             continue;
