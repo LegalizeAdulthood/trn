@@ -475,7 +475,8 @@ char *compress_address(char *name, int max)
             s--;
         }
         s[1] = '\0';
-        if (*name == '<') {
+        if (*name == '<')
+        {
             name++;
             if (*s == '>')
             {
@@ -492,21 +493,26 @@ char *compress_address(char *name, int max)
     char *at = nullptr;
     char *bang = nullptr;
     char *hack = nullptr;
-    for (char *s = name + 1; *s; s++) {
+    for (char *s = name + 1; *s; s++)
+    {
         /* If there's whitespace in the middle then it's probably not
         ** really an email address. */
-        if (std::isspace(*s)) {
+        if (std::isspace(*s))
+        {
             name[max] = '\0';
             return name;
         }
-        switch (*s) {
+        switch (*s)
+        {
           case '@':
-            if (at == nullptr) {
+            if (at == nullptr)
+            {
                 at = s;
             }
             break;
           case '!':
-            if (at == nullptr) {
+            if (at == nullptr)
+            {
                 bang = s;
                 hack = nullptr;
             }
@@ -524,8 +530,10 @@ char *compress_address(char *name, int max)
         at = name + len;
     }
 
-    if (hack != nullptr) {
-        if (bang != nullptr) {
+    if (hack != nullptr)
+    {
+        if (bang != nullptr)
+        {
             if (at - bang - 1 >= max)
             {
                 start = bang + 1;
@@ -538,11 +546,14 @@ char *compress_address(char *name, int max)
             {
                 start = name;
             }
-        } else
+        }
+        else
         {
             start = name;
         }
-    } else if (bang != nullptr) {
+    }
+    else if (bang != nullptr)
+    {
         if (at - name >= max)
         {
             start = at - max;
@@ -551,7 +562,8 @@ char *compress_address(char *name, int max)
         {
             start = name;
         }
-    } else
+    }
+    else
     {
         start = name;
     }
@@ -587,11 +599,13 @@ char *compress_from(const char *from, int size)
 #else
     vis_len = len;
 #endif
-    if (!len) {
+    if (!len)
+    {
         std::strcpy(s,"NO NAME");
         len = 7;
     }
-    while (vis_len < size && len < sizeof lbuf - 1) {
+    while (vis_len < size && len < sizeof lbuf - 1)
+    {
         s[len++] = ' ';
         vis_len++;
     }
@@ -695,21 +709,25 @@ const char *compress_subj(const ARTICLE *ap, int max)
     /* Remove "(was: oldsubject)", because we already know the old subjects.
     ** Also match "(Re: oldsubject)".  Allow possible spaces after the ('s.
     */
-    for (cp = g_buf; (cp = std::strchr(cp+1, '(')) != nullptr;) {
+    for (cp = g_buf; (cp = std::strchr(cp + 1, '(')) != nullptr;)
+    {
         cp = skip_eq(++cp, ' ');
-        if (eq_ignore_case(cp[0], 'w') && eq_ignore_case(cp[1], 'a') && eq_ignore_case(cp[2], 's')
-         && (cp[3] == ':' || cp[3] == ' ')) {
+        if (eq_ignore_case(cp[0], 'w') && eq_ignore_case(cp[1], 'a') && eq_ignore_case(cp[2], 's') //
+            && (cp[3] == ':' || cp[3] == ' '))
+        {
             *--cp = '\0';
             break;
         }
-        if (eq_ignore_case(cp[0], 'r') && eq_ignore_case(cp[1], 'e')
-         && ((cp[2]==':' && cp[3]==' ') || (cp[2]=='^' && cp[4]==':'))) {
+        if (eq_ignore_case(cp[0], 'r') && eq_ignore_case(cp[1], 'e') //
+            && ((cp[2] == ':' && cp[3] == ' ') || (cp[2] == '^' && cp[4] == ':')))
+        {
             *--cp = '\0';
             break;
         }
     }
     int len = std::strlen(g_buf);
-    if (!g_unbroken_subjects && len > max) {
+    if (!g_unbroken_subjects && len > max)
+    {
         /* Try to include the last two words on the line while trimming */
         char *last_word = std::strrchr(g_buf, ' ');
         if (last_word != nullptr)
@@ -731,7 +749,8 @@ const char *compress_subj(const ARTICLE *ap, int max)
                 cp = last_word;
             }
             *last_word = ' ';
-            if (cp-g_buf >= len - max + 3 + 10-1) {
+            if (cp - g_buf >= len - max + 3 + 10 - 1)
+            {
                 char* s = g_buf + max - (len-(cp-g_buf)+3);
                 *s++ = '.';
                 *s++ = '.';
@@ -760,11 +779,13 @@ static ART_POS   s_spin_tell{};
 
 void setspin(spin_mode mode)
 {
-    switch (mode) {
+    switch (mode)
+    {
       case SPIN_FOREGROUND:
       case SPIN_BACKGROUND:
       case SPIN_BARGRAPH:
-        if (!s_spin_level++) {
+        if (!s_spin_level++)
+        {
             s_spin_art = g_openart;
             if (s_spin_art != 0 && g_artfp)
             {
@@ -777,8 +798,10 @@ void setspin(spin_mode mode)
         {
             mode = SPIN_BARGRAPH;
         }
-        if (mode == SPIN_BARGRAPH) {
-            if (s_spin_mode != SPIN_BARGRAPH) {
+        if (mode == SPIN_BARGRAPH)
+        {
+            if (s_spin_mode != SPIN_BARGRAPH)
+            {
                 s_spin_marks = (g_verbose? 25 : 10);
                 std::printf(" [%*s]", s_spin_marks, "");
                 for (int i = s_spin_marks + 1; i--; )
@@ -794,7 +817,8 @@ void setspin(spin_mode mode)
         break;
       case SPIN_POP:
       case SPIN_OFF:
-        if (s_spin_mode == SPIN_BARGRAPH) {
+        if (s_spin_mode == SPIN_BARGRAPH)
+        {
             s_spin_level = 1;
             spin(10000);
             if (g_spin_count >= g_spin_todo)
@@ -809,13 +833,15 @@ void setspin(spin_mode mode)
             break;
         }
         s_spin_level = 0;
-        if (s_spin_place) {     /* we have spun at least once */
+        if (s_spin_place)       /* we have spun at least once */
+        {
             std::putchar(g_spin_char); /* get rid of spin character */
             backspace();
             std::fflush(stdout);
             s_spin_place = 0;
         }
-        if (s_spin_art) {
+        if (s_spin_art)
+        {
             artopen(s_spin_art,s_spin_tell);   /* do not screw up the pager */
             s_spin_art = 0;
         }
@@ -832,38 +858,45 @@ void spin(int count)
     {
         return;
     }
-    switch (s_spin_mode) {
+    switch (s_spin_mode)
+    {
       case SPIN_BACKGROUND:
         if (!g_bkgnd_spinner)
         {
             return;
         }
-        if (!(++g_spin_count % count)) {
+        if (!(++g_spin_count % count))
+        {
             std::putchar(s_spinchars[++s_spin_place % 4]);
             backspace();
             std::fflush(stdout);
         }
         break;
       case SPIN_FOREGROUND:
-        if (!(++g_spin_count % count)) {
+        if (!(++g_spin_count % count))
+        {
             std::putchar('.');
             std::fflush(stdout);
         }
         break;
-      case SPIN_BARGRAPH: {
+      case SPIN_BARGRAPH:
+      {
           if (g_spin_todo == 0)
           {
             break;              /* bail out rather than crash */
           }
         int new_pos = (int)((long)s_spin_marks * ++g_spin_count / g_spin_todo);
-        if (s_spin_pos < new_pos && g_spin_count <= g_spin_todo+1) {
-            do {
+        if (s_spin_pos < new_pos && g_spin_count <= g_spin_todo+1)
+        {
+            do
+            {
                 std::putchar('*');
             } while (++s_spin_pos < new_pos);
             s_spin_place = 0;
             std::fflush(stdout);
         }
-        else if (!(g_spin_count % count)) {
+        else if (!(g_spin_count % count))
+        {
             std::putchar(s_spinchars[++s_spin_place % 4]);
             backspace();
             std::fflush(stdout);
@@ -905,7 +938,8 @@ void perform_status_init(long cnt)
 
 void perform_status(long cnt, int spin)
 {
-    if (!(++g_spin_count % spin)) {
+    if (!(++g_spin_count % spin))
+    {
         std::putchar(s_spinchars[++s_spin_place % 4]);
         backspace();
         std::fflush(stdout);
@@ -962,7 +996,8 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
 {
     bool neg;
 
-    if (num < 0) {
+    if (num < 0)
+    {
         num *= -1;
         neg = true;
     }
@@ -971,7 +1006,8 @@ static char *output_change(char *cp, long num, const char *obj_type, const char 
         neg = false;
     }
 
-    if (cp != g_msg) {
+    if (cp != g_msg)
+    {
         *cp++ = ',';
         *cp++ = ' ';
     }
@@ -1023,7 +1059,8 @@ int perform_status_end(long cnt, const char *obj_type)
     char*cp = g_msg;
     bool article_status = (*obj_type == 'a');
 
-    if (g_perform_cnt == 0) {
+    if (g_perform_cnt == 0)
+    {
         std::sprintf(g_msg, "No %ss affected.", obj_type);
         return 0;
     }
@@ -1038,22 +1075,26 @@ int perform_status_end(long cnt, const char *obj_type)
                            g_sel_mode == SM_THREAD? "thread" : "subject",
                            nullptr, "ERR|match|ed");
     }
-    else if (g_perform_cnt != sels  && g_perform_cnt != -sels
-          && g_perform_cnt != kills && g_perform_cnt != -kills) {
+    else if (g_perform_cnt != sels && g_perform_cnt != -sels //
+             && g_perform_cnt != kills && g_perform_cnt != -kills)
+    {
         cp = output_change(cp, (long)g_perform_cnt, obj_type, nullptr,
                            "ERR|match|ed");
         obj_type = nullptr;
     }
-    if (kills) {
+    if (kills)
+    {
         cp = output_change(cp, kills, obj_type, nullptr,
                            article_status? "un||killed" : "more|less|");
         obj_type = nullptr;
     }
-    if (sels) {
+    if (sels)
+    {
         cp = output_change(cp, sels, obj_type, nullptr, "de||selected");
         obj_type = nullptr;
     }
-    if (article_status && missing > 0) {
+    if (article_status && missing > 0)
+    {
         *cp++ = '(';
         cp = output_change(cp, missing, obj_type, "was|were", "ERR|missing|");
         *cp++ = ')';
