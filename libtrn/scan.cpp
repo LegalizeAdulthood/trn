@@ -42,7 +42,7 @@ short g_s_desc_cols{};    /* characters for description column */
 short         g_s_ptr_page_line{}; /* page_ent index */
 long          g_s_flags{};         /* misc. flags */
 int           g_s_num_contexts{};  //
-SCONTEXT     *g_s_contexts{};      /* array of context structures */
+ScanContext     *g_s_contexts{};      /* array of context structures */
 int           g_s_cur_context{};   /* current context number */
 ScanContextType g_s_cur_type{};      /* current context type (for fast switching) */
 /* options */
@@ -57,7 +57,7 @@ void s_init_context(int cnum, ScanContextType type)
         std::printf("s_init_context: illegal context number %d!\n",cnum);
         TRN_ASSERT(false);
     }
-    SCONTEXT *p = g_s_contexts + cnum;
+    ScanContext *p = g_s_contexts + cnum;
     p->type = type;
     p->ent_sort = (long*)nullptr;
     p->ent_sort_max = -1;
@@ -117,12 +117,12 @@ int s_new_context(ScanContextType type)
     i++;
     if (i == 1)         /* none allocated before */
     {
-        g_s_contexts = (SCONTEXT*)safemalloc(sizeof (SCONTEXT));
+        g_s_contexts = (ScanContext*)safemalloc(sizeof (ScanContext));
     }
     else
     {
-        g_s_contexts = (SCONTEXT*)saferealloc((char*)g_s_contexts,
-                                        i * sizeof (SCONTEXT));
+        g_s_contexts = (ScanContext*)saferealloc((char*)g_s_contexts,
+                                        i * sizeof (ScanContext));
     }
     g_s_contexts[i-1].page_ents =
                         (PageEntry*)safemalloc(MAX_PAGE_SIZE*sizeof(PageEntry));
@@ -134,7 +134,7 @@ int s_new_context(ScanContextType type)
 /* saves the current context */
 void s_save_context()
 {
-    SCONTEXT *p = g_s_contexts + g_s_cur_context;
+    ScanContext *p = g_s_contexts + g_s_cur_context;
 
     p->type = g_s_cur_type;
     p->page_ents = g_page_ents;
@@ -175,7 +175,7 @@ void s_change_context(int newcontext)
         TRN_ASSERT(false);
     }
     g_s_cur_context = newcontext;
-    SCONTEXT *p = g_s_contexts + newcontext;
+    ScanContext *p = g_s_contexts + newcontext;
     g_s_cur_type = p->type;
     g_page_ents = p->page_ents;
 

@@ -38,7 +38,7 @@ struct PageEntry
     char pageflags;     /* not currently used. */
 };
 
-struct SCONTEXT
+struct ScanContext
 {
     ScanContextType type; /* context type */
 
@@ -106,7 +106,7 @@ extern short g_s_desc_cols;    /* characters for description column */
 extern short g_s_ptr_page_line; /* page_ent index */
 extern long g_s_flags;          /* misc. flags */
 extern int g_s_num_contexts;
-extern SCONTEXT *g_s_contexts; /* array of context structures */
+extern ScanContext *g_s_contexts; /* array of context structures */
 extern int g_s_cur_context;       /* current context number */
 extern ScanContextType g_s_cur_type;          /* current context type (for fast switching) */
 /* options */
