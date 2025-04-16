@@ -112,7 +112,8 @@ void intrp_init(char *tcbuf, int tcbuf_len)
     static char buff[128];
     std::strcpy(buff, g_p_host_name.c_str());
     g_hostname = buff+std::strlen(buff)-1;
-    while (i && g_hostname != buff) {
+    while (i && g_hostname != buff)
+    {
         if (*--g_hostname == '.')
         {
             i--;
@@ -145,10 +146,13 @@ static char *skipinterp(char *pattern, const char *stoppers)
     }
 #endif
 
-    while (*pattern && (!stoppers || !std::strchr(stoppers,*pattern))) {
-        if (*pattern == '%' && pattern[1]) {
+    while (*pattern && (!stoppers || !std::strchr(stoppers, *pattern)))
+    {
+        if (*pattern == '%' && pattern[1])
+        {
         switch_again:
-            switch (*++pattern) {
+            switch (*++pattern)
+            {
             case '^':
             case '_':
             case '\\':
@@ -158,8 +162,9 @@ static char *skipinterp(char *pattern, const char *stoppers)
                 goto switch_again;
             case ':':
                 pattern++;
-                while (*pattern
-                 && (*pattern=='.' || *pattern=='-' || isdigit(*pattern))) {
+                while (*pattern //
+                       && (*pattern == '.' || *pattern == '-' || isdigit(*pattern)))
+                {
                     pattern++;
                 }
                 pattern--;
@@ -182,7 +187,8 @@ static char *skipinterp(char *pattern, const char *stoppers)
                     }
                 }
                 break;
-            case '(': {
+            case '(':
+            {
                 pattern = skipinterp(pattern+1,"!=");
                 if (!*pattern)
                 {
@@ -206,7 +212,8 @@ static char *skipinterp(char *pattern, const char *stoppers)
                 }
                 break;
             }
-            case '`': {
+            case '`':
+            {
                 pattern = skipinterp(pattern+1,"`");
                 break;
             }
@@ -218,7 +225,8 @@ static char *skipinterp(char *pattern, const char *stoppers)
             }
             pattern++;
         }
-        else {
+        else
+        {
             if (*pattern == '^'
              && ((Uchar)pattern[1]>='?' || pattern[1]=='(' || pattern[1]==')'))
             {
@@ -269,8 +277,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
             bool comment_parse = false;
             bool proc_sprintf = false;
             char *s = nullptr;
-            while (s == nullptr) {
-                switch (*++pattern) {
+            while (s == nullptr)
+            {
+                switch (*++pattern)
+                {
                 case '^':
                     upper = true;
                     break;
@@ -295,8 +305,9 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     char *h = spfbuf;
                     *h++ = '%';
                     pattern++;  /* Skip over ':' */
-                    while (*pattern
-                     && (*pattern=='.' || *pattern=='-' || isdigit(*pattern))) {
+                    while (*pattern //
+                           && (*pattern == '.' || *pattern == '-' || isdigit(*pattern)))
+                    {
                         *h++ = *pattern++;
                      }
                     *h++ = 's';
@@ -312,7 +323,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     std::strcpy(s,g_lastpat.c_str());
                     s += std::strlen(s);
-                    if (!cmd || *cmd != 'g') {
+                    if (!cmd || *cmd != 'g')
+                    {
                         if (cmd && std::strchr("/?",*cmd))
                         {
                             *s++ = *cmd;
@@ -325,9 +337,11 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         {
                             *s++ = 'r';
                         }
-                        if (g_art_howmuch != ARTSCOPE_SUBJECT) {
+                        if (g_art_howmuch != ARTSCOPE_SUBJECT)
+                        {
                             *s++ = g_scopestr[g_art_howmuch];
-                            if (g_art_howmuch == ARTSCOPE_ONEHDR) {
+                            if (g_art_howmuch == ARTSCOPE_ONEHDR)
+                            {
                                 safecpy(s,g_htype[g_art_srchhdr].name,
                                         (sizeof scrbuf) - (s-scrbuf));
                                 if (!(s = std::strchr(s,':')))
@@ -375,7 +389,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     break;
                 case '[':
                     pattern = cpytill(scrbuf, pattern+1, ']');
-                    if (g_in_ng) {
+                    if (g_in_ng)
+                    {
                         header_line_type which_line;
                         if (*scrbuf && (which_line = get_header_num(scrbuf)) != SOME_LINE)
                         {
@@ -393,7 +408,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         s = s_empty;
                     }
                     break;
-                case '(': {
+                case '(':
+                {
                     COMPEX *oldbra_compex = g_bra_compex;
                     char rch;
                     bool matched;
@@ -416,8 +432,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     s = scrbuf;
                     char *h = spfbuf;
                     proc_sprintf = false;
-                    do {
-                        switch (*s) {
+                    do
+                    {
+                        switch (*s)
+                        {
                         case '^':
                             *h++ = '\\';
                             break;
@@ -431,7 +449,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         }
                         *h++ = *s;
                     } while (*s++);
-                    if (proc_sprintf) {
+                    if (proc_sprintf)
+                    {
                         dointerp(scrbuf,sizeof scrbuf,spfbuf,nullptr,cmd);
                         proc_sprintf = false;
                     }
@@ -448,14 +467,16 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     {
                         g_bra_compex = &s_cond_compex;
                     }
-                    if (matched==(rch == '=')) {
+                    if (matched == (rch == '='))
+                    {
                         pattern = dointerp(dest,destsize,pattern+1,":)",cmd);
                         if (*pattern == ':')
                         {
                             pattern = skipinterp(pattern + 1, ")");
                         }
                     }
-                    else {
+                    else
+                    {
                         pattern = skipinterp(pattern+1,":)");
                         if (*pattern == ':')
                         {
@@ -468,20 +489,25 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     free_compex(&s_cond_compex);
                     break;
                 }
-                case '`': {
+                case '`':
+                {
                     pattern = dointerp(scrbuf,(sizeof scrbuf),pattern+1,"`",cmd);
                     std::FILE* pipefp = popen(scrbuf,"r");
-                    if (pipefp != nullptr) {
+                    if (pipefp != nullptr)
+                    {
                         int len = std::fread(scrbuf, sizeof(char), (sizeof scrbuf) - 1, pipefp);
                         scrbuf[len] = '\0';
                         pclose(pipefp);
                     }
-                    else {
+                    else
+                    {
                         std::printf("\nCan't run %s\n",scrbuf);
                         *scrbuf = '\0';
                     }
-                    for (char *t=scrbuf; *t; t++) {
-                        if (*t == '\n') {
+                    for (char *t = scrbuf; *t; t++)
+                    {
+                        if (*t == '\n')
+                        {
                             if (t[1])
                             {
                                 *t = ' ';
@@ -504,7 +530,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     noecho();
                     crmode();
                     int i = std::strlen(scrbuf);
-                    if (scrbuf[i-1] == '\n') {
+                    if (scrbuf[i - 1] == '\n')
+                    {
                         scrbuf[--i] = '\0';
                     }
                     s_last_input = scrbuf;
@@ -548,7 +575,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     s = scrbuf;
                     break;
                 case 'a':
-                    if (g_in_ng) {
+                    if (g_in_ng)
+                    {
                         s = scrbuf;
                         std::sprintf(s,"%ld",(long)g_art);
                     }
@@ -558,9 +586,12 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     break;
                 case 'A':
-                    if (g_in_ng) {
-                        if (g_datasrc->flags & DF_REMOTE) {
-                            if (artopen(g_art,(ART_POS)0)) {
+                    if (g_in_ng)
+                    {
+                        if (g_datasrc->flags & DF_REMOTE)
+                        {
+                            if (artopen(g_art, (ART_POS) 0))
+                            {
                                 nntp_finishbody(FB_SILENT);
                                 std::sprintf(s = scrbuf,"%s/%s",g_datasrc->spool_dir,
                                         nntp_artname(g_art, false));
@@ -644,9 +675,11 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     break;
                 case 'f':                       /* from line */
-                    if (g_in_ng) {
+                    if (g_in_ng)
+                    {
                         parseheader(g_art);
-                        if (g_htype[REPLY_LINE].minpos >= 0 && !comment_parse) {
+                        if (g_htype[REPLY_LINE].minpos >= 0 && !comment_parse)
+                        {
                                                 /* was there a reply line? */
                             if (!(s=reply_buf))
                             {
@@ -666,7 +699,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     break;
                 case 'F':
-                    if (g_in_ng) {
+                    if (g_in_ng)
+                    {
                         parseheader(g_art);
                         if (g_htype[FOLLOW_LINE].minpos >= 0)
                                         /* is there a Followup-To line? */
@@ -699,13 +733,15 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     s = scrbuf;
                     break;
                 case 'i':
-                    if (g_in_ng) {
+                    if (g_in_ng)
+                    {
                         if (!(s=artid_buf))
                         {
                             artid_buf = fetchlines(g_art, MSGID_LINE);
                             s = artid_buf;
                         }
-                        if (*s && *s != '<') {
+                        if (*s && *s != '<')
+                        {
                             std::sprintf(scrbuf,"<%s>",artid_buf);
                             s = scrbuf;
                         }
@@ -771,10 +807,12 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
 #endif
                     s = filexp(s);
-                    if (FILE_REF(s)) {
+                    if (FILE_REF(s))
+                    {
                         std::FILE* ofp = std::fopen(s,"r");
 
-                        if (ofp) {
+                        if (ofp)
+                        {
                             if (std::fgets(scrbuf,sizeof scrbuf,ofp) == nullptr)
                             {
                                 *scrbuf = '\0';
@@ -809,10 +847,12 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     s = scrbuf;
                     break;
                 case 'r':
-                    if (g_in_ng) {
+                    if (g_in_ng)
+                    {
                         parseheader(g_art);
                         safefree0(refs_buf);
-                        if (g_htype[REFS_LINE].minpos >= 0) {
+                        if (g_htype[REFS_LINE].minpos >= 0)
+                        {
                             refs_buf = fetchlines(g_art,REFS_LINE);
                             normalize_refs(refs_buf);
                             s = std::strrchr(refs_buf, '<');
@@ -824,15 +864,18 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     s = s_empty;
                     break;
-                case 'R': {
-                    if (!g_in_ng) {
+                case 'R':
+                {
+                    if (!g_in_ng)
+                    {
                         s = s_empty;
                         break;
                     }
                     parseheader(g_art);
                     safefree0(refs_buf);
                     int len;
-                    if (g_htype[REFS_LINE].minpos >= 0) {
+                    if (g_htype[REFS_LINE].minpos >= 0)
+                    {
                         refs_buf = fetchlines(g_art,REFS_LINE);
                         len = std::strlen(refs_buf)+1;
                         normalize_refs(refs_buf);
@@ -845,7 +888,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                             *s = '\0';
                             char *h = std::strrchr(refs_buf,'<');
                             *s = '<';
-                            if (h && h > refs_buf) {
+                            if (h && h > refs_buf)
+                            {
                                 s = std::strchr(refs_buf+1,'<');
                                 if (s < h)
                                 {
@@ -889,8 +933,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     break;
                 }
                 case 's':
-                case 'S': {
-                    if (!g_in_ng || !g_art || !g_artp) {
+                case 'S':
+                {
+                    if (!g_in_ng || !g_art || !g_artp)
+                    {
                         s = s_empty;
                         break;
                     }
@@ -914,12 +960,14 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 }
                 case 't':
                 case 'T':
-                    if (!g_in_ng) {
+                    if (!g_in_ng)
+                    {
                         s = s_empty;
                         break;
                     }
                     parseheader(g_art);
-                    if (g_htype[REPLY_LINE].minpos >= 0) {
+                    if (g_htype[REPLY_LINE].minpos >= 0)
+                    {
                                         /* was there a reply line? */
                         if (!(s=reply_buf))
                         {
@@ -936,8 +984,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     {
                         s = "noname";
                     }
-                    if (*pattern == 'T') {
-                        if (g_htype[PATH_LINE].minpos >= 0) {
+                    if (*pattern == 'T')
+                    {
+                        if (g_htype[PATH_LINE].minpos >= 0)
+                        {
                                         /* should we substitute path? */
                             path_buf = fetchlines(g_art, PATH_LINE);
                             s = path_buf;
@@ -951,7 +1001,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     address_parse = true;       /* just the good part */
                     break;
                 case 'u':
-                    if (g_in_ng) {
+                    if (g_in_ng)
+                    {
                         std::sprintf(scrbuf, "%ld", g_ngptr->toread);
                         s = scrbuf;
                     }
@@ -960,13 +1011,16 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         s = s_empty;
                     }
                     break;
-                case 'U': {
-                    if (!g_in_ng) {
+                case 'U':
+                {
+                    if (!g_in_ng)
+                    {
                         s = s_empty;
                         break;
                     }
                     const bool unseen = g_art <= g_lastart && !was_read(g_art);
-                    if (g_selected_only) {
+                    if (g_selected_only)
+                    {
                         const bool selected = g_curr_artp != nullptr && (g_curr_artp->flags & AF_SEL) != AF_NONE;
                         std::sprintf(scrbuf, "%ld", g_selected_count - (selected && unseen ? 1 : 0));
                     }
@@ -977,8 +1031,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     s = scrbuf;
                     break;
                 }
-                case 'v': {
-                    if (g_in_ng) {
+                case 'v':
+                {
+                    if (g_in_ng)
+                    {
                         const bool selected = g_curr_artp && g_curr_artp->flags & AF_SEL;
                         const bool unseen = g_art <= g_lastart && !was_read(g_art);
                         std::sprintf(scrbuf, "%ld",
@@ -1004,7 +1060,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     s = scrbuf;
                     break;
                 case 'y':       /* from line with *-shortening */
-                    if (!g_in_ng) {
+                    if (!g_in_ng)
+                    {
                         s = s_empty;
                         break;
                     }
@@ -1021,7 +1078,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         for (s2 = tmpbuf; (*s2 && (*s2 != '@') && (*s2 != ' ')); s2++)
                         {
                         }
-                        if (*s2 == '@') {       /* we have normal form... */
+                        if (*s2 == '@')         /* we have normal form... */
+                        {
                             for (s3 = s2 + 1; (*s3 && (*s3 != ' ')); s3++)
                             {
                                 if (*s3 == '.')
@@ -1030,9 +1088,11 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                                 }
                             }
                         }
-                        if (i>1) { /* more than one dot */
+                        if (i>1)   /* more than one dot */
+                        {
                             s3 = s2;    /* will be incremented before use */
-                            while (i>=2) {
+                            while (i >= 2)
+                            {
                                 s3++;
                                 if (*s3 == '.')
                                 {
@@ -1047,7 +1107,9 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                                 (std::strlen(tmpbuf)+std::strlen(s3)+1)*sizeof(char));
                             std::strcpy(from_buf,tmpbuf);
                             std::strcat(from_buf,s3);
-                        } else {
+                        }
+                        else
+                        {
                             from_buf = savestr(tmpbuf);
                         }
                         s = from_buf;
@@ -1058,7 +1120,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     s = scrbuf;
                     break;
                 case 'z':
-                    if (!g_in_ng) {
+                    if (!g_in_ng)
+                    {
                         s = s_empty;
                         break;
                     }
@@ -1089,7 +1152,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     break;
                 }
             }
-            if (proc_sprintf) {
+            if (proc_sprintf)
+            {
                 if (s == scrbuf)
                 {
                     static char scratch[sizeof(scrbuf)];
@@ -1103,8 +1167,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
             {
                 pattern++;
             }
-            if (upper || lastcomp) {
-                if (s != scrbuf) {
+            if (upper || lastcomp)
+            {
+                if (s != scrbuf)
+                {
                     safecpy(scrbuf,s,sizeof scrbuf);
                     s = scrbuf;
                 }
@@ -1131,50 +1197,65 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
             destsize -= i;      /* adjust the size now. */
 
             /* A maze of twisty little conditions, all alike... */
-            if (address_parse || comment_parse) {
-                if (s != scrbuf) {
+            if (address_parse || comment_parse)
+            {
+                if (s != scrbuf)
+                {
                     safecpy(scrbuf,s,sizeof scrbuf);
                     s = scrbuf;
                 }
                 decode_header(s, s, std::strlen(s));
-                if (address_parse) {
+                if (address_parse)
+                {
                     char *h = std::strchr(s, '<');
-                    if (h != nullptr) { /* grab the good part */
+                    if (h != nullptr)   /* grab the good part */
+                    {
                         s = h+1;
                         if ((h=std::strchr(s,'>')) != nullptr)
                         {
                             *h = '\0';
                         }
-                    } else if ((h=std::strchr(s,'(')) != nullptr) {
+                    }
+                    else if ((h = std::strchr(s, '(')) != nullptr)
+                    {
                         while (h-- != s && *h == ' ')
                         {
                         }
                         h[1] = '\0';            /* or strip the comment */
                     }
-                } else {
+                }
+                else
+                {
                     if (!(s = extract_name(s)))
                     {
                         s = s_empty;
                     }
                 }
             }
-            if (metabit) {
+            if (metabit)
+            {
                 /* set meta bit while copying. */
                 i = metabit;            /* maybe get into register */
-                if (s == dest) {
+                if (s == dest)
+                {
                     while (*dest)
                     {
                         *dest++ |= i;
                     }
-                } else {
+                }
+                else
+                {
                     while (*s)
                     {
                         *dest++ = *s++ | i;
                     }
                 }
-            } else if (re_quote || tick_quote) {
+            }
+            else if (re_quote || tick_quote)
+            {
                 /* put a backslash before regexp specials while copying. */
-                if (s == dest) {
+                if (s == dest)
+                {
                     /* copy out so we can copy in. */
                     safecpy(scrbuf, s, sizeof scrbuf);
                     s = scrbuf;
@@ -1183,22 +1264,26 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         abort_interp();
                     }
                 }
-                while (*s) {
-                    if ((re_quote && std::strchr(s_regexp_specials, *s))
-                     || (tick_quote == 2 && *s == '"')) {
+                while (*s)
+                {
+                    if ((re_quote && std::strchr(s_regexp_specials, *s)) //
+                        || (tick_quote == 2 && *s == '"'))
+                    {
                         if (--destsize <= 0)
                         {
                             abort_interp();
                         }
                         *dest++ = '\\';
                     }
-                    else if (re_quote && *s == ' ' && s[1] == ' ') {
+                    else if (re_quote && *s == ' ' && s[1] == ' ')
+                    {
                         *dest++ = ' ';
                         *dest++ = '*';
                         s = skip_eq(++s, ' ');
                         continue;
                     }
-                    else if (tick_quote && *s == '\'') {
+                    else if (tick_quote && *s == '\'')
+                    {
                         if ((destsize -= 3) <= 0)
                         {
                             abort_interp();
@@ -1209,11 +1294,16 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     *dest++ = *s++;
                 }
-            } else {
+            }
+            else
+            {
                 /* straight copy. */
-                if (s == dest) {
+                if (s == dest)
+                {
                     dest += i;
-                } else {
+                }
+                else
+                {
                     while (*s)
                     {
                         *dest++ = *s++;
@@ -1221,22 +1311,26 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 }
             }
         }
-        else {
+        else
+        {
             if (--destsize <= 0)
             {
                 abort_interp();
             }
-            if (*pattern == '^' && pattern[1]) {
+            if (*pattern == '^' && pattern[1])
+            {
                 pattern++;
                 if (*pattern == '?')
                 {
                     *dest++ = '\177' | metabit;
                 }
-                else if (*pattern == '(') {
+                else if (*pattern == '(')
+                {
                     metabit = 0200;
                     destsize++;
                 }
-                else if (*pattern == ')') {
+                else if (*pattern == ')')
+                {
                     metabit = 0;
                     destsize++;
                 }
@@ -1250,7 +1344,8 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 }
                 pattern++;
             }
-            else if (*pattern == '\\' && pattern[1]) {
+            else if (*pattern == '\\' && pattern[1])
+            {
                 ++pattern;              /* skip backslash */
                 pattern = interp_backslash(dest, pattern) + 1;
                 *dest++ |= metabit;
@@ -1288,16 +1383,19 @@ char *interp_backslash(char *dest, char *pattern)
 {
     int i = *pattern;
 
-    if (i >= '0' && i <= '7') {
+    if (i >= '0' && i <= '7')
+    {
         i = 0;
-        while (i < 01000 && *pattern >= '0' && *pattern <= '7') {
+        while (i < 01000 && *pattern >= '0' && *pattern <= '7')
+        {
             i <<= 3;
             i += *pattern++ - '0';
         }
         *dest = (char)(i & 0377);
         return pattern - 1;
     }
-    switch (i) {
+    switch (i)
+    {
     case 'a':
         *dest = '\a';
         break;
@@ -1363,7 +1461,8 @@ void normalize_refs(char *refs)
 
     for (char *f = refs; *f;)
     {
-        if (*f == '<') {
+        if (*f == '<')
+        {
             while (*f && (*t++ = *f++) != '>')
             {
             }
