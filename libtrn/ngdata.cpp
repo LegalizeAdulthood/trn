@@ -248,14 +248,16 @@ void sort_newsgroups()
 
     switch (g_sel_sort)
     {
-      case SS_NATURAL:
-      default:
+    case SS_NATURAL:
+    default:
         sort_procedure = ngorder_number;
         break;
-      case SS_STRING:
+
+    case SS_STRING:
         sort_procedure = ngorder_groupname;
         break;
-      case SS_COUNT:
+
+    case SS_COUNT:
         sort_procedure = ngorder_count;
         break;
     }
@@ -390,14 +392,17 @@ ART_NUM getngsize(NGDATA *gp)
         case 'n':
             g_moderated = get_val_const("NOPOSTRING"," (no posting)");
             break;
+
         case 'm':
             g_moderated = get_val_const("MODSTRING", " (moderated)");
             break;
+
         case 'x':
             g_redirected = true;
             g_redirected_to.clear();
             g_moderated = " (DISABLED)";
             break;
+
         case '=':
             len = std::strlen(tmpbuf);
             if (tmpbuf[len-1] == '\n')
@@ -408,6 +413,7 @@ ART_NUM getngsize(NGDATA *gp)
             g_redirected_to = std::strrchr(tmpbuf, '=') + 1;
             g_moderated = " (REDIRECTED)";
             break;
+
         default:
             g_moderated.clear();
             break;
