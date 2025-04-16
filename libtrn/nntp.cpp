@@ -335,7 +335,7 @@ static int nntp_copybody(char *s, int limit, ART_POS pos)
     return 1;
 }
 
-int nntp_finishbody(finishbody_mode bmode)
+int nntp_finishbody(FinishBodyMode bmode)
 {
     char b[NNTP_STRLEN];
     if (s_body_pos < 0)
