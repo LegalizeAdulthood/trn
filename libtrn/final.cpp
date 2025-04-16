@@ -111,7 +111,8 @@ void finalize(int status)
         unuse_multirc(g_multirc);
     }
     datasrc_finalize();
-    for (int i = 0; i < MAX_NNTP_ARTICLES; i++) {
+    for (int i = 0; i < MAX_NNTP_ARTICLES; i++)
+    {
         char *s = nntp_tmpname(i);
         remove(s);
     }
@@ -120,7 +121,8 @@ void finalize(int status)
     {
         remove(g_headname.c_str());
     }
-    if (status < 0) {
+    if (status < 0)
+    {
         sigset(SIGILL,SIG_DFL);
 #ifdef HAS_SIGBLOCK
         sigsetmask(sigblock(0) & ~(sigmask(SIGILL) | sigmask(SIGIOT)));
@@ -147,9 +149,12 @@ Signal_t int_catcher(int dummy)
         write(2,"int_catcher\n",12);
     }
 #endif
-    if (!g_waiting) {
-        if (g_int_count++) {            /* was there already an interrupt? */
-            if (g_int_count == 3 || g_int_count > 5) {
+    if (!g_waiting)
+    {
+        if (g_int_count++)              /* was there already an interrupt? */
+        {
+            if (g_int_count == 3 || g_int_count > 5)
+            {
                 write(2,"\nBye-bye.\n",10);
                 sig_catcher(0);         /* emulate the other signals */
             }
@@ -162,7 +167,7 @@ Signal_t int_catcher(int dummy)
 
 Signal_t sig_catcher(int signo)
 {
-    static char* signame[] = {
+    static char *signame[]{
         "",
         "HUP",
         "INT",
@@ -198,12 +203,14 @@ Signal_t sig_catcher(int signo)
         };
 
 #ifdef DEBUG
-    if (debug) {
+    if (debug)
+    {
         std::printf("\nSIG%s--.newsrc not restored in debug\n",signame[signo]);
         finalize(-1);
     }
 #endif
-    if (g_panic) {
+    if (g_panic)
+    {
 #ifdef HAS_SIGBLOCK
         sigsetmask(sigblock(0) & ~(sigmask(SIGILL) | sigmask(SIGIOT)));
 #endif
@@ -211,19 +218,22 @@ Signal_t sig_catcher(int signo)
     }
     (void) sigset(SIGILL,SIG_DFL);
     g_panic = true;                     /* disable terminal I/O */
-    if (g_doing_ng) {                   /* need we reconstitute rc line? */
+    if (g_doing_ng)                     /* need we reconstitute rc line? */
+    {
         yankback();
         bits_to_rc();                   /* then do so (hope this works) */
     }
     g_doing_ng = false;
-    if (!write_newsrcs(g_multirc)) {    /* write anything that's changed */
+    if (!write_newsrcs(g_multirc))      /* write anything that's changed */
+    {
         /*$$ get_old_newsrcs(g_multirc);  ?? */
     }
     update_thread_kfile();
 
 #ifdef SIGHUP
-    if (signo != SIGHUP) {
+    if (signo != SIGHUP)
 #endif
+    {
         if (g_verbose)
         {
             std::printf("\nCaught %s%s--.newsrc restored\n", signo ? "a SIG" : "an internal error", signame[signo]);
@@ -232,10 +242,9 @@ Signal_t sig_catcher(int signo)
         {
             std::printf("\nSignal %d--bye bye\n", signo);
         }
-#ifdef SIGHUP
     }
-#endif
-    switch (signo) {
+    switch (signo)
+    {
 #ifdef SIGBUS
     case SIGBUS:
 #endif
@@ -259,10 +268,12 @@ Signal_t pipe_catcher(int signo)
 #ifdef SIGTSTP
 Signal_t stop_catcher(int signo)
 {
-    if (!g_waiting) {
+    if (!g_waiting)
+    {
         xmouse_off();
         checkpoint_newsrcs();   /* good chance of crash while stopped */
-        if (g_bos_on_stop) {
+        if (g_bos_on_stop)
+        {
             goto_xy(0, g_tc_LINES-1);
             std::putchar('\n');
         }
@@ -284,8 +295,10 @@ Signal_t stop_catcher(int signo)
 #ifdef MAILCALL
         g_mailcount = 0;                    /* force recheck */
 #endif
-        if (!g_panic) {
-            if (!g_waiting) {
+        if (!g_panic)
+        {
+            if (!g_waiting)
+            {
                 termlib_init();
                 noecho();                       /* set no echo */
                 crmode();                       /* set cbreak mode */
