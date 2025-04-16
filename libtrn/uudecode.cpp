@@ -23,18 +23,22 @@ static void uudecodeline(char *line, FILE *ofp);
 
 int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
 {
-    if (!std::strncmp(bp, "begin ", 6)
-        && std::isdigit(bp[6]) && std::isdigit(bp[7])
-        && std::isdigit(bp[8]) && (bp[9] == ' ' ||
-                              (bp[6] == '0' && std::isdigit(bp[9]) && bp[10] == ' '))) {
-        if (*partp == -1) {
+    if (!std::strncmp(bp, "begin ", 6)                //
+        && std::isdigit(bp[6]) && std::isdigit(bp[7]) //
+        && std::isdigit(bp[8]) &&                     //
+        (bp[9] == ' ' ||                              //
+         (bp[6] == '0' && std::isdigit(bp[9]) && bp[10] == ' ')))
+    {
+        if (*partp == -1)
+        {
             *filenamep = nullptr;
             *partp = 1;
             *totalp = 0;
         }
         return 1;
     }
-    if (!std::strncmp(bp,"section ",8) && std::isdigit(bp[8])) {
+    if (!std::strncmp(bp, "section ", 8) && std::isdigit(bp[8]))
+    {
         char *s = bp + 8;
         int   tmppart = std::atoi(s);
         if (tmppart == 0)
@@ -42,7 +46,8 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
             return 0;
         }
         s = skip_digits(s);
-        if (!std::strncmp(s, " of ", 4)) {
+        if (!std::strncmp(s, " of ", 4))
+        {
             /* "section N of ... of file F ..." */
             for (s += 4; *s && std::strncmp(s," of file ",9) != 0; s++)
             {
@@ -64,7 +69,8 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
             *totalp = 0;
             return 1;
         }
-        if (*s == '/' && std::isdigit(s[1])) {
+        if (*s == '/' && std::isdigit(s[1]))
+        {
             int tmptotal = std::atoi(s);
             s = skip_digits(s);
             s = skip_space(s);
@@ -85,7 +91,8 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
             return 1;
         }
     }
-    if (!std::strncmp(bp, "POST V", 6)) {
+    if (!std::strncmp(bp, "POST V", 6))
+    {
         char *s = std::strchr(bp + 6, ' ');
         if (!s)
         {
@@ -116,7 +123,8 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
         *totalp = tmptotal;
         return 1;
     }
-    if (!std::strncmp(bp, "File: ", 6)) {
+    if (!std::strncmp(bp, "File: ", 6))
+    {
         char *tmpfilename = bp + 6;
         char *s = std::strchr(tmpfilename, ' ');
         if (!s || std::strncmp(s, " -- part ", 9) != 0)
@@ -143,7 +151,8 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
         *totalp = tmptotal;
         return 1;
     }
-    if (!std::strncmp(bp, "[Section: ", 10)) {
+    if (!std::strncmp(bp, "[Section: ", 10))
+    {
         char *s = bp + 10;
         int   tmppart = std::atoi(s);
         if (tmppart == 0)
@@ -170,22 +179,25 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
         *totalp = tmptotal;
         return 1;
     }
-    if (*filenamep && *partp > 0 && *totalp > 0 && *partp <= *totalp
-     && (!std::strncmp(bp,"BEGIN",5) || !std::strncmp(bp,"--- BEGIN ---",12)
-      || (bp[0] == 'M' && std::strlen(bp) == UULENGTH))) {
+    if (*filenamep && *partp > 0 && *totalp > 0 && *partp <= *totalp                //
+        && (!std::strncmp(bp, "BEGIN", 5) || !std::strncmp(bp, "--- BEGIN ---", 12) //
+            || (bp[0] == 'M' && std::strlen(bp) == UULENGTH)))
+    {
         /* Found the start of a section of uuencoded data
          * and have the part N of M information.
          */
         return 1;
     }
-    if (string_case_equal(bp, "x-file-name: ", 13)) {
+    if (string_case_equal(bp, "x-file-name: ", 13))
+    {
         char *s = skip_non_space(bp + 13);
         *s = '\0';
         safecpy(g_msg, bp+13, sizeof g_msg);
         *filenamep = g_msg;
         return 0;
     }
-    if (string_case_equal(bp, "x-part: ", 8)) {
+    if (string_case_equal(bp, "x-part: ", 8))
+    {
         int tmppart = std::atoi(bp + 8);
         if (tmppart > 0)
         {
@@ -193,7 +205,8 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
         }
         return 0;
     }
-    if (string_case_equal(bp, "x-part-total: ", 14)) {
+    if (string_case_equal(bp, "x-part-total: ", 14))
+    {
         int tmptotal = std::atoi(bp + 14);
         if (tmptotal > 0)
         {
@@ -209,27 +222,32 @@ decode_state uudecode(std::FILE *ifp, decode_state state)
     static std::FILE *ofp = nullptr;
     static int   line_length;
 
-    if (state == DECODE_DONE) {
+    if (state == DECODE_DONE)
+    {
       all_done:
-        if (ofp) {
+        if (ofp)
+        {
             std::fclose(ofp);
             ofp = nullptr;
         }
         return state;
     }
 
-    while (ifp? std::fgets(g_buf, sizeof g_buf, ifp) : readart(g_buf, sizeof g_buf)) {
+    while (ifp ? std::fgets(g_buf, sizeof g_buf, ifp) : readart(g_buf, sizeof g_buf))
+    {
         char lastline[UULENGTH+1];
         if (!ifp && mime_EndOfSection(g_buf))
         {
             break;
         }
         char *p = std::strchr(g_buf, '\r');
-        if (p) {
+        if (p)
+        {
             p[0] = '\n';
             p[1] = '\0';
         }
-        switch (state) {
+        switch (state)
+        {
           case DECODE_START:    /* Looking for start of uuencoded file */
           case DECODE_MAYBEDONE:
           {
@@ -264,7 +282,8 @@ decode_state uudecode(std::FILE *ifp, decode_state state)
               break;
           }
           case DECODE_INACTIVE: /* Looking for uuencoded data to resume */
-            if (*g_buf != 'M' || std::strlen(g_buf) != line_length) {
+            if (*g_buf != 'M' || std::strlen(g_buf) != line_length)
+            {
                 if (*g_buf == 'B' && !std::strncmp(g_buf, "BEGIN", 5))
                 {
                     state = DECODE_ACTIVE;
@@ -278,11 +297,13 @@ decode_state uudecode(std::FILE *ifp, decode_state state)
             state = DECODE_ACTIVE;
             /* FALL THROUGH */
           case DECODE_ACTIVE:   /* Decoding data */
-            if (*g_buf == 'M' && std::strlen(g_buf) == line_length) {
+            if (*g_buf == 'M' && std::strlen(g_buf) == line_length)
+            {
                 uudecodeline(g_buf, ofp);
                 break;
             }
-            if ((int)std::strlen(g_buf) > line_length) {
+            if ((int)std::strlen(g_buf) > line_length)
+            {
                 state = DECODE_INACTIVE;
                 break;
             }
@@ -317,10 +338,12 @@ decode_state uudecode(std::FILE *ifp, decode_state state)
             }
             break;
           case DECODE_LAST:     /* Should be at end of file */
-            if (!std::strncmp(g_buf, "end", 3) && std::isspace(g_buf[3])) {
+            if (!std::strncmp(g_buf, "end", 3) && std::isspace(g_buf[3]))
+            {
                 /* Handle that last line we saved */
                 uudecodeline(lastline, ofp);
-end:            if (ofp) {
+end:            if (ofp)
+                {
                     std::fclose(ofp);
                     ofp = nullptr;
                 }
@@ -358,13 +381,16 @@ static void uudecodeline(char *line, FILE *ofp)
     }
 
     len = DEC(*line++);
-    while (len) {
+    while (len)
+    {
         int c = DEC(*line) << 2 | DEC(line[1]) >> 4;
         std::putc(c, ofp);
-        if (--len) {
+        if (--len)
+        {
             c = DEC(line[1]) << 4 | DEC(line[2]) >> 2;
             std::putc(c, ofp);
-            if (--len) {
+            if (--len)
+            {
                 c = DEC(line[2]) << 6 | DEC(line[3]);
                 std::putc(c, ofp);
                 len--;
