@@ -6,14 +6,14 @@
 #include "trn/head.h"
 
 template <typename Enum>
-struct enum_values
+struct EnumValues
 {
     const char *name;
     Enum type;
     int value;
 };
 
-using header_line_type_values = enum_values<HeaderLineType>;
+using header_line_type_values = EnumValues<HeaderLineType>;
 
 #define ENUM_VALUE(enum_, value_) { #enum_, enum_, value_ }
 
@@ -56,7 +56,7 @@ header_line_type_values header_line_types[] =
 };
 
 template <typename T>
-void PrintTo(const enum_values<T> &param, std::ostream *str)
+void PrintTo(const EnumValues<T> &param, std::ostream *str)
 {
     *str << param.name << " <=> " << param.value;
 }
@@ -74,7 +74,7 @@ TEST_P(HeaderLineTypes, orderRelationships)
 
 INSTANTIATE_TEST_SUITE_P(TestHeaderLineTypes, HeaderLineTypes, testing::ValuesIn(header_line_types));
 
-using object_number_values = enum_values<ObjectNumber>;
+using object_number_values = EnumValues<ObjectNumber>;
 
 object_number_values object_numbers[] =
 {
@@ -116,7 +116,7 @@ TEST_P(ObjectNumbers, orderRelationships)
 
 INSTANTIATE_TEST_SUITE_P(TestObjectNumbers, ObjectNumbers, testing::ValuesIn(object_numbers));
 
-using display_option_values = enum_values<OptionIndex>;
+using display_option_values = EnumValues<OptionIndex>;
 
 display_option_values display_options[] =
 {
