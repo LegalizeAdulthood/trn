@@ -74,35 +74,35 @@ TEST(DataSrcFlags, bitwiseXorEqual)
 
 TEST(FieldFlags, bitwiseOr)
 {
-    const field_flags val = FF_NONE | FF_HAS_FIELD;
+    const FieldFlags val = FF_NONE | FF_HAS_FIELD;
 
     EXPECT_EQ(FF_HAS_FIELD, val);
 }
 
 TEST(FieldFlags, bitwiseAnd)
 {
-    const field_flags val = FF_NONE & FF_HAS_FIELD;
+    const FieldFlags val = FF_NONE & FF_HAS_FIELD;
 
     EXPECT_EQ(FF_NONE, val);
 }
 
 TEST(FieldFlags, bitwiseXorSet)
 {
-    const field_flags val = FF_NONE ^ FF_HAS_FIELD;
+    const FieldFlags val = FF_NONE ^ FF_HAS_FIELD;
 
     EXPECT_EQ(FF_HAS_FIELD, val);
 }
 
 TEST(FieldFlags, bitwiseXorClear)
 {
-    const field_flags val = FF_HAS_FIELD ^ FF_HAS_FIELD;
+    const FieldFlags val = FF_HAS_FIELD ^ FF_HAS_FIELD;
 
     EXPECT_EQ(FF_NONE, val);
 }
 
 TEST(FieldFlags, bitwiseNot)
 {
-    const field_flags val = ~FF_HAS_FIELD;
+    const FieldFlags val = ~FF_HAS_FIELD;
 
     EXPECT_NE(FF_NONE, val);
     EXPECT_EQ(FF_NONE, val & FF_HAS_FIELD);
@@ -110,7 +110,7 @@ TEST(FieldFlags, bitwiseNot)
 
 TEST(FieldFlags, bitwiseOrEqual)
 {
-    field_flags val = FF_NONE;
+    FieldFlags val = FF_NONE;
 
     val |= FF_HAS_FIELD;
 
@@ -119,7 +119,7 @@ TEST(FieldFlags, bitwiseOrEqual)
 
 TEST(FieldFlags, bitwiseAndEqual)
 {
-    field_flags val = FF_HAS_FIELD | FF_CHECK4FIELD;
+    FieldFlags val = FF_HAS_FIELD | FF_CHECK4FIELD;
 
     val &= FF_HAS_FIELD;
 
@@ -128,7 +128,7 @@ TEST(FieldFlags, bitwiseAndEqual)
 
 TEST(FieldFlags, bitwiseXorEqual)
 {
-    field_flags val = FF_HAS_FIELD | FF_CHECK4FIELD;
+    FieldFlags val = FF_HAS_FIELD | FF_CHECK4FIELD;
 
     val ^= FF_HAS_FIELD;
 

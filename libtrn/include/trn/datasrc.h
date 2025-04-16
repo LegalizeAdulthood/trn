@@ -52,7 +52,7 @@ enum DataSourceFlags : std::uint16_t
 };
 DECLARE_FLAGS_ENUM(DataSourceFlags, std::uint16_t)
 
-enum field_flags : std::uint8_t
+enum FieldFlags : std::uint8_t
 {
     FF_NONE = 0,
     FF_HAS_FIELD = 0x01,
@@ -61,7 +61,7 @@ enum field_flags : std::uint8_t
     FF_CHECK4HDR = 0x08,
     FF_FILTERSEND = 0x10
 };
-DECLARE_FLAGS_ENUM(field_flags, std::uint8_t)
+DECLARE_FLAGS_ENUM(FieldFlags, std::uint8_t)
 
 struct DATASRC
 {
@@ -81,7 +81,7 @@ struct DATASRC
     std::FILE    *ov_in;      /* the overview's file handle */
     std::time_t   ov_opened;  /* time overview file was opened */
     ov_field_num  fieldnum[OV_MAX_FIELDS];
-    field_flags   fieldflags[OV_MAX_FIELDS];
+    FieldFlags   fieldflags[OV_MAX_FIELDS];
     DataSourceFlags flags;
 };
 

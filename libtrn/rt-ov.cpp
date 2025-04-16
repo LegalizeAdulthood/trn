@@ -53,7 +53,7 @@ bool ov_init()
 {
     bool has_overview_fmt;
     ov_field_num *fieldnum = g_datasrc->fieldnum;
-    field_flags  *fieldflags = g_datasrc->fieldflags;
+    FieldFlags  *fieldflags = g_datasrc->fieldflags;
     g_datasrc->flags &= ~DF_TRY_OVERVIEW;
     std::FILE *overview;
     if (!g_datasrc->over_dir)
@@ -434,7 +434,7 @@ beginning:
 static void ov_parse(char *line, ART_NUM artnum, bool remote)
 {
     ov_field_num *fieldnum = g_datasrc->fieldnum;
-    field_flags  *fieldflags = g_datasrc->fieldflags;
+    FieldFlags  *fieldflags = g_datasrc->fieldflags;
     char         *fields[OV_MAX_FIELDS];
     char         *tab;
 
