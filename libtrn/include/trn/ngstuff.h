@@ -8,7 +8,7 @@
 
 struct AddGroup;
 
-enum numnum_result
+enum NumNumResult
 {
     NN_NORM = 0,
     NN_INP,
@@ -22,7 +22,7 @@ extern std::string g_savedir;     /* -d */
 void ngstuff_init();
 int escapade();
 int switcheroo();
-numnum_result numnum();
+NumNumResult numnum();
 int thread_perform();
 int perform(char *cmdlst, int output_level);
 int ngsel_perform();

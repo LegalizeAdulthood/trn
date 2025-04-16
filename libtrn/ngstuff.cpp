@@ -172,7 +172,7 @@ int switcheroo()
 
 /* process range commands */
 
-numnum_result numnum()
+NumNumResult numnum()
 {
     ART_NUM min;
     ART_NUM max;
