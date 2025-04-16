@@ -62,7 +62,7 @@ static COMPEX  s_srchcompex; /* compiled regex for searchahead */
 static HASHTABLE *s_subj_hash{};
 static HASHTABLE *s_shortsubj_hash{};
 
-static void init_artnode(LIST *list, LISTNODE *node);
+static void init_artnode(LIST *list, ListNode *node);
 static bool clear_artitem(char *cp, int arg);
 
 void cache_init()
@@ -166,7 +166,7 @@ void close_cache()
 }
 
 /* Initialize the memory for an entire node's worth of article's */
-static void init_artnode(LIST *list, LISTNODE *node)
+static void init_artnode(LIST *list, ListNode *node)
 {
     std::memset(node->data, 0, list->items_per_node * list->item_size);
     Article *ap = (Article *) node->data;

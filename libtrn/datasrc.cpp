@@ -647,7 +647,7 @@ bool find_actgrp(DataSource *dp, char *outbuf, const char *nam, int len, ART_NUM
     HashDatum data = hashfetch(dp->act_sf.hp, nam, len);
     if (data.dat_ptr)
     {
-        LISTNODE* node = (LISTNODE*)data.dat_ptr;
+        ListNode* node = (ListNode*)data.dat_ptr;
         /*dp->act_sf.lp->recent = node;*/
         act_pos = node->low + data.dat_len;
         lbp = node->data + data.dat_len;
@@ -812,7 +812,7 @@ const char *find_grpdesc(DataSource *dp, const char *groupname)
     grouplen = std::strlen(groupname);
     if (HashDatum data = hashfetch(dp->desc_sf.hp, groupname, grouplen); data.dat_ptr)
     {
-        LISTNODE*node = (LISTNODE*)data.dat_ptr;
+        ListNode*node = (ListNode*)data.dat_ptr;
         /*dp->act_sf.lp->recent = node;*/
         return node->data + data.dat_len + grouplen + 1;
     }
@@ -1035,7 +1035,7 @@ int srcfile_open(SourceFile *sfp, const char *filename, const char *fetchcmd, co
         }
         if (offset + linelen > SRCFILE_CHUNK_SIZE)
         {
-            LISTNODE* node = sfp->lp->recent;
+            ListNode* node = sfp->lp->recent;
             node_low += offset;
             node->high = node_low - 1;
             node->data_high = node->data + offset - 1;
@@ -1073,7 +1073,7 @@ char *srcfile_append(SourceFile *sfp, char *bp, int keylen)
 
     long pos = sfp->lp->high + 1;
     char *lbp = listnum2listitem(sfp->lp, pos);
-    LISTNODE *node = sfp->lp->recent;
+    ListNode *node = sfp->lp->recent;
     data.dat_len = pos - node->low;
 
     char *s = bp + keylen + 1;
@@ -1152,7 +1152,7 @@ void srcfile_close(SourceFile *sfp)
 static int srcfile_cmp(const char *key, int keylen, HashDatum data)
 {
     /* We already know that the lengths are equal, just compare the strings */
-    return std::memcmp(key, ((LISTNODE*)data.dat_ptr)->data + data.dat_len, keylen);
+    return std::memcmp(key, ((ListNode*)data.dat_ptr)->data + data.dat_len, keylen);
 }
 
 /* Edit Distance extension to trn
@@ -1266,7 +1266,7 @@ static int check_distance(int len, HashDatum *data, int newsrc_ptr)
     }
     else
     {
-        name = ((LISTNODE *) data->dat_ptr)->data + data->dat_len;
+        name = ((ListNode *) data->dat_ptr)->data + data->dat_len;
     }
 
     /* Efficiency: don't call edit_dist when the lengths are too different. */

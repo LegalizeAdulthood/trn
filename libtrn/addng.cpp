@@ -442,7 +442,7 @@ bool scanactive(bool add_matching)
 
 static int list_groups(int keylen, HashDatum *data, int add_matching)
 {
-    char* bp = ((LISTNODE*)data->dat_ptr)->data + data->dat_len;
+    char* bp = ((ListNode*)data->dat_ptr)->data + data->dat_len;
     int const linelen = std::strchr(bp, '\n') - bp + 1;
     (void) memcpy(g_buf,bp,linelen);
     g_buf[linelen] = '\0';

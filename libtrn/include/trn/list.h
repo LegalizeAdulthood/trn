@@ -16,9 +16,9 @@ enum ListFlags : std::uint8_t
 };
 DECLARE_FLAGS_ENUM(ListFlags, std::uint8_t);
 
-struct LISTNODE
+struct ListNode
 {
-    LISTNODE *next;
+    ListNode *next;
     long      low;
     long      high;
     char     *data_high;
@@ -27,9 +27,9 @@ struct LISTNODE
 
 struct LIST
 {
-    LISTNODE *first;
-    LISTNODE *recent;
-    void (*init_node)(LIST *, LISTNODE *);
+    ListNode *first;
+    ListNode *recent;
+    void (*init_node)(LIST *, ListNode *);
     long       low;
     long       high;
     int        item_size;
@@ -38,7 +38,7 @@ struct LIST
 };
 
 void list_init();
-LIST *new_list(long low, long high, int item_size, int items_per_node, ListFlags flags, void (*init_node)(LIST *, LISTNODE *));
+LIST *new_list(long low, long high, int item_size, int items_per_node, ListFlags flags, void (*init_node)(LIST *, ListNode *));
 char *listnum2listitem(LIST *list, long num);
 long listitem2listnum(LIST *list, char *ptr);
 bool walk_list(LIST *list, bool (*callback)(char *, int), int arg);

@@ -11,7 +11,7 @@
 #include <cstdlib>
 #include <cstring>
 
-static void def_init_node(LIST *list, LISTNODE *node);
+static void def_init_node(LIST *list, ListNode *node);
 
 void list_init()
 {
@@ -19,7 +19,7 @@ void list_init()
 
 /* Create the header for a dynamic list of items.
 */
-LIST *new_list(long low, long high, int item_size, int items_per_node, ListFlags flags, void (*init_node)(LIST *, LISTNODE *))
+LIST *new_list(long low, long high, int item_size, int items_per_node, ListFlags flags, void (*init_node)(LIST *, ListNode *))
 {
     LIST* list = (LIST*)safemalloc(sizeof (LIST));
     list->first = nullptr;
@@ -35,7 +35,7 @@ LIST *new_list(long low, long high, int item_size, int items_per_node, ListFlags
 }
 
 /* The default way to initialize a node */
-static void def_init_node(LIST *list, LISTNODE *node)
+static void def_init_node(LIST *list, ListNode *node)
 {
     if (list->flags & LF_ZERO_MEM)
     {
@@ -49,8 +49,8 @@ static void def_init_node(LIST *list, LISTNODE *node)
 */
 char *listnum2listitem(LIST *list, long num)
 {
-    LISTNODE* node = list->recent;
-    LISTNODE* prevnode = nullptr;
+    ListNode* node = list->recent;
+    ListNode* prevnode = nullptr;
 
     if (node && num < node->low)
     {
@@ -60,8 +60,8 @@ char *listnum2listitem(LIST *list, long num)
     {
         if (!node || num < node->low)
         {
-            node = (LISTNODE*)safemalloc(list->items_per_node*list->item_size
-                                        + sizeof (LISTNODE) - 1);
+            node = (ListNode*)safemalloc(list->items_per_node*list->item_size
+                                        + sizeof (ListNode) - 1);
             if (list->flags & LF_SPARSE)
             {
                 node->low = ((num - list->low) / list->items_per_node) * list->items_per_node + list->low;
@@ -105,7 +105,7 @@ long listitem2listnum(LIST *list, char *ptr)
 {
     int item_size = list->item_size;
 
-    for (LISTNODE *node = list->recent;; node = node->next)
+    for (ListNode *node = list->recent;; node = node->next)
     {
         if (!node)
         {
@@ -130,7 +130,7 @@ bool walk_list(LIST *list, bool (*callback)(char *, int), int arg)
 {
     int item_size = list->item_size;
 
-    for (LISTNODE *node = list->first; node; node = node->next)
+    for (ListNode *node = list->first; node; node = node->next)
     {
         int i = node->high - node->low + 1;
         for (char *cp = node->data; i--; cp += item_size)
@@ -150,8 +150,8 @@ bool walk_list(LIST *list, bool (*callback)(char *, int), int arg)
 */
 long existing_listnum(LIST *list, long num, int direction)
 {
-    LISTNODE* node = list->recent;
-    LISTNODE* prevnode = nullptr;
+    ListNode* node = list->recent;
+    ListNode* prevnode = nullptr;
 
     if (node && num < node->low)
     {
@@ -203,7 +203,7 @@ long existing_listnum(LIST *list, long num, int direction)
 */
 char *next_listitem(LIST *list, char *ptr)
 {
-    LISTNODE* node = list->recent;
+    ListNode* node = list->recent;
 
     if (ptr == node->data_high)
     {
@@ -232,11 +232,11 @@ char *next_listitem(LIST *list, char *ptr)
 */
 char *prev_listitem(LIST *list, char *ptr)
 {
-    LISTNODE* node = list->recent;
+    ListNode* node = list->recent;
 
     if (ptr == node->data)
     {
-        LISTNODE* prev = list->first;
+        ListNode* prev = list->first;
         if (prev == node)
         {
             return nullptr;
@@ -257,11 +257,11 @@ char *prev_listitem(LIST *list, char *ptr)
 */
 void delete_list(LIST *list)
 {
-    LISTNODE* node = list->first;
+    ListNode* node = list->first;
 
     while (node)
     {
-        LISTNODE *prevnode = node;
+        ListNode *prevnode = node;
         node = node->next;
         std::free((char*)prevnode);
     }

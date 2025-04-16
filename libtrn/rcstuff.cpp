@@ -71,7 +71,7 @@ static bool    clear_ngitem(char *cp, int arg);
 static bool    lock_newsrc(NEWSRC *rp);
 static void    unlock_newsrc(NEWSRC *rp);
 static bool    open_newsrc(NEWSRC *rp);
-static void    init_ngnode(LIST *list, LISTNODE *node);
+static void    init_ngnode(LIST *list, ListNode *node);
 static void    parse_rcline(NGDATA *np);
 static NGDATA *add_newsgroup(NEWSRC *rp, const char *ngn, char_int c);
 static int     rcline_cmp(const char *key, int keylen, HashDatum data);
@@ -823,7 +823,7 @@ static bool open_newsrc(NEWSRC *rp)
 }
 
 /* Initialize the memory for an entire node's worth of article's */
-static void init_ngnode(LIST *list, LISTNODE *node)
+static void init_ngnode(LIST *list, ListNode *node)
 {
     std::memset(node->data,0,list->items_per_node * list->item_size);
     NGDATA *np = (NGDATA*)node->data;
