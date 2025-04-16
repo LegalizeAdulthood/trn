@@ -314,13 +314,13 @@ static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch
     data.dat_ptr = (char *)node;
     switch (ch)
     {
-      case ':':
+    case ':':
         node->flags = AGF_SEL;
         break;
-      case '!':
+    case '!':
         node->flags = AGF_DEL;
         break;
-      default:
+    default:
         node->flags = AGF_NONE;
         break;
     }
@@ -348,13 +348,13 @@ static void add_to_list(const char *name, int toread, char_int ch)
     node = (ADDGROUP*)safemalloc(std::strlen(name) + sizeof (ADDGROUP));
     switch (ch)
     {
-      case ':':
+    case ':':
         node->flags = AGF_SEL;
         break;
-      case '!':
+    case '!':
         node->flags = AGF_DEL;
         break;
-      default:
+    default:
         node->flags = AGF_NONE;
         break;
     }
@@ -522,14 +522,14 @@ void sort_addgroups()
 
     switch (g_sel_sort)
     {
-      case SS_NATURAL:
-      default:
+    case SS_NATURAL:
+    default:
         sort_procedure = agorder_number;
         break;
-      case SS_STRING:
+    case SS_STRING:
         sort_procedure = agorder_groupname;
         break;
-      case SS_COUNT:
+    case SS_COUNT:
         sort_procedure = agorder_count;
         break;
     }
