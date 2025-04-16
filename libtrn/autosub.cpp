@@ -39,7 +39,7 @@ AddNewType auto_subscribe(const char *name)
 
 static bool matchlist(const char *patlist, const char *s)
 {
-    COMPEX ilcompex;
+    CompiledRegex ilcompex;
     bool   tmpresult;
 
     bool result = false;

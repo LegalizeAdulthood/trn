@@ -4,7 +4,7 @@
 #ifndef TRN_NGSRCH_H
 #define TRN_NGSRCH_H
 
-struct COMPEX;
+struct CompiledRegex;
 struct NewsgroupData;
 
 enum NewsgroupSearchResult
@@ -20,6 +20,6 @@ enum NewsgroupSearchResult
 void ngsrch_init();
 NewsgroupSearchResult ng_search(char *patbuf, bool get_cmd);
 bool ng_wanted(NewsgroupData *np);
-const char *ng_comp(COMPEX *compex, const char *pattern, bool RE, bool fold);
+const char *ng_comp(CompiledRegex *compex, const char *pattern, bool RE, bool fold);
 
 #endif

@@ -9,7 +9,7 @@
                                    RE -- \( \) */
 #define NALTS   10              /* the maximum number of \|'s */
 
-struct COMPEX
+struct CompiledRegex
 {
     char* expbuf;               /* The compiled search string */
     int eblen;                  /* Length of above buffer */
@@ -24,15 +24,15 @@ struct COMPEX
 #endif
 
 void        search_init();
-void        init_compex(COMPEX *compex);
-void        free_compex(COMPEX *compex);
-const char *getbracket(COMPEX *compex, int n);
+void        init_compex(CompiledRegex *compex);
+void        free_compex(CompiledRegex *compex);
+const char *getbracket(CompiledRegex *compex, int n);
 void        case_fold(bool which);
-char       *compile(COMPEX *compex, const char *strp, bool RE, bool fold);
-char       *grow_eb(COMPEX *compex, char *epp, char **alt);
-const char *execute(COMPEX *compex, const char *addr);
-bool        advance(COMPEX *compex, const char *lp, const char *ep);
-bool        backref(COMPEX *compex, int i, const char *lp);
+char       *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold);
+char       *grow_eb(CompiledRegex *compex, char *epp, char **alt);
+const char *execute(CompiledRegex *compex, const char *addr);
+bool        advance(CompiledRegex *compex, const char *lp, const char *ep);
+bool        backref(CompiledRegex *compex, int i, const char *lp);
 bool        cclass(const char *set, int c, int af);
 
 #endif

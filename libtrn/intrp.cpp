@@ -57,7 +57,7 @@ static char *skipinterp(char *pattern, const char *stoppers);
 static void abort_interp();
 
 static const char *s_regexp_specials = "^$.*[\\/?%";
-static COMPEX      s_cond_compex;
+static CompiledRegex      s_cond_compex;
 static char        s_empty[]{""};
 static std::string s_last_input;
 
@@ -428,7 +428,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
 
                 case '(':
                 {
-                    COMPEX *oldbra_compex = g_bra_compex;
+                    CompiledRegex *oldbra_compex = g_bra_compex;
                     char rch;
                     bool matched;
 

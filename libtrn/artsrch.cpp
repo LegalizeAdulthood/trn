@@ -29,13 +29,13 @@
 #include <cstring>
 #include <string>
 
-static COMPEX s_sub_compex{}; /* last compiled subject search */
-static COMPEX s_art_compex{}; /* last compiled normal search */
+static CompiledRegex s_sub_compex{}; /* last compiled subject search */
+static CompiledRegex s_art_compex{}; /* last compiled normal search */
 
-static bool wanted(COMPEX *compex, ART_NUM artnum, ArtScope scope);
+static bool wanted(CompiledRegex *compex, ART_NUM artnum, ArtScope scope);
 
 std::string      g_lastpat;                   /* last search pattern */
-COMPEX          *g_bra_compex{&s_art_compex}; /* current compex with brackets */
+CompiledRegex          *g_bra_compex{&s_art_compex}; /* current compex with brackets */
 const char      *g_scopestr{"sfHhbBa"};       //
 ArtScope        g_art_howmuch{};             /* search scope */
 HeaderLineType g_art_srchhdr{};             /* specific header number to search */
@@ -57,7 +57,7 @@ ArtSearchResult art_search(char *patbuf, int patbufsiz, bool get_cmd)
     char cmdchr = *patbuf;              /* what kind of search? */
     bool backward = cmdchr == '?' || cmdchr == Ctl('p');
                                         /* direction of search */
-    COMPEX* compex;                     /* which compiled expression */
+    CompiledRegex* compex;                     /* which compiled expression */
     char* cmdlst = nullptr;             /* list of commands to do */
     ArtSearchResult ret = SRCH_NOTFOUND; /* assume no commands */
     int saltaway = 0;                   /* store in KILL file? */
@@ -485,7 +485,7 @@ exit:
 /* determine if article fits pattern */
 /* returns true if it exists and fits pattern, false otherwise */
 
-static bool wanted(COMPEX *compex, ART_NUM artnum, ArtScope scope)
+static bool wanted(CompiledRegex *compex, ART_NUM artnum, ArtScope scope)
 {
     Article* ap = article_find(artnum);
 

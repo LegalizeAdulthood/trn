@@ -57,7 +57,7 @@ char      g_auto_select_postings{}; /* -p */
 #ifdef PENDING
 static ART_NUM s_subj_to_get{};
 static ART_NUM s_xref_to_get{};
-static COMPEX  s_srchcompex; /* compiled regex for searchahead */
+static CompiledRegex  s_srchcompex; /* compiled regex for searchahead */
 #endif
 static HASHTABLE *s_subj_hash{};
 static HASHTABLE *s_shortsubj_hash{};

@@ -23,7 +23,7 @@
 #include <cstdlib>
 
 static bool   s_ng_doempty{}; /* search empty newsgroups? */
-static COMPEX s_ngcompex;
+static CompiledRegex s_ngcompex;
 
 void ngsrch_init()
 {
@@ -237,7 +237,7 @@ bool ng_wanted(NewsgroupData *np)
     return execute(&s_ngcompex,np->rcline) != nullptr;
 }
 
-const char *ng_comp(COMPEX *compex, const char *pattern, bool RE, bool fold)
+const char *ng_comp(CompiledRegex *compex, const char *pattern, bool RE, bool fold)
 {
     char ng_pattern[128];
     const char* s = pattern;

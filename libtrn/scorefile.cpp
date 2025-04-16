@@ -61,7 +61,7 @@ static char      s_sf_buf[LBUFLEN]{};
 static char    **s_sf_extra_headers{};
 static int       s_sf_num_extra_headers{};
 static bool      s_sf_has_extra_headers{};
-static COMPEX   *s_sf_compex{};
+static CompiledRegex   *s_sf_compex{};
 
 static int sf_open_file(const char *name);
 static void sf_file_clear();
@@ -781,7 +781,7 @@ bool sf_do_line(char *line, bool check)
     {
         s_sf_entries[g_sf_num_entries-1].flags |= 1;
         s_sf_entries[g_sf_num_entries-1].str1 = mp_savestr(s,MP_SCORE1);
-        s_sf_compex = (COMPEX*)safemalloc(sizeof (COMPEX));
+        s_sf_compex = (CompiledRegex*)safemalloc(sizeof (CompiledRegex));
         init_compex(s_sf_compex);
         /* compile arguments: */
         /* 1st is COMPEX to store compiled regex in */

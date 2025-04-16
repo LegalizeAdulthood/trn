@@ -135,7 +135,7 @@ enum OptionFlags : char
 };
 DECLARE_FLAGS_ENUM(OptionFlags, char);
 
-extern COMPEX g_optcompex;
+extern CompiledRegex g_optcompex;
 extern std::string g_ini_file;
 extern INI_WORDS g_options_ini[];
 extern char **g_option_def_vals;

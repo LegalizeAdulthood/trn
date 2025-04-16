@@ -22,7 +22,7 @@ int   g_maxngtodo{};       /*  0 => no restrictions */
 char g_empty_only_char{'o'};
 
 static int     s_save_maxngtodo{};
-static COMPEX *s_compextodo[MAXNGTODO]; /* restrictions in compiled form */
+static CompiledRegex *s_compextodo[MAXNGTODO]; /* restrictions in compiled form */
 
 void only_init()
 {
@@ -40,7 +40,7 @@ void setngtodo(const char *pat)
     {
         g_ngtodo[i] = savestr(pat);
 #ifndef lint
-        s_compextodo[i] = (COMPEX*)safemalloc(sizeof(COMPEX));
+        s_compextodo[i] = (CompiledRegex*)safemalloc(sizeof(CompiledRegex));
 #endif
         init_compex(s_compextodo[i]);
         compile(s_compextodo[i],pat,true,true);

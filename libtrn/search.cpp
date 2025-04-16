@@ -85,7 +85,7 @@ void search_init()
     }
 }
 
-void init_compex(COMPEX *compex)
+void init_compex(CompiledRegex *compex)
 {
     /* the following must start off zeroed */
 
@@ -93,7 +93,7 @@ void init_compex(COMPEX *compex)
     compex->brastr = nullptr;
 }
 
-void free_compex(COMPEX *compex)
+void free_compex(CompiledRegex *compex)
 {
     if (compex->eblen)
     {
@@ -110,7 +110,7 @@ void free_compex(COMPEX *compex)
 static char *s_gbr_str{};
 static int   s_gbr_siz{};
 
-const char *getbracket(COMPEX *compex, int n)
+const char *getbracket(CompiledRegex *compex, int n)
 {
     int length = compex->braelist[n] - compex->braslist[n];
 
@@ -151,7 +151,7 @@ void case_fold(bool which)
 
 /* Compile the given regular expression into a [secret] internal format */
 
-char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
+char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
 {
     char  bracket[NBRA];
     char**alt = compex->alternatives;
@@ -377,7 +377,7 @@ cerror:
     return retmes;
 }
 
-char *grow_eb(COMPEX *compex, char *epp, char **alt)
+char *grow_eb(CompiledRegex *compex, char *epp, char **alt)
 {
     char* oldbuf = compex->expbuf;
     char** altlist = compex->alternatives;
@@ -395,7 +395,7 @@ char *grow_eb(COMPEX *compex, char *epp, char **alt)
     return epp;
 }
 
-const char *execute(COMPEX *compex, const char *addr)
+const char *execute(CompiledRegex *compex, const char *addr)
 {
     const char* p1 = addr;
     Uchar* trt = s_trans;
@@ -458,7 +458,7 @@ const char *execute(COMPEX *compex, const char *addr)
 
 /* advance the match of the regular expression starting at ep along the
    string lp, simulates an NDFSA */
-bool advance(COMPEX *compex, const char *lp, const char *ep)
+bool advance(CompiledRegex *compex, const char *lp, const char *ep)
 {
     const char* curlp;
     Uchar* trt = s_trans;
@@ -658,7 +658,7 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
     return false;
 }
 
-bool backref(COMPEX *compex, int i, const char *lp)
+bool backref(CompiledRegex *compex, int i, const char *lp)
 {
     const char *bp = compex->braslist[i];
     while (*lp && *bp == *lp)

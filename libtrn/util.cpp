@@ -1003,7 +1003,7 @@ bool check_ini_cond(char *cond)
     }
     else if (equal)
     {
-        COMPEX condcompex;
+        CompiledRegex condcompex;
         init_compex(&condcompex);
         s = compile(&condcompex,cond,true,true);
         if (s != nullptr)

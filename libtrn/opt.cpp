@@ -51,7 +51,7 @@
 #include <memory>
 #include <string>
 
-COMPEX      g_optcompex;
+CompiledRegex      g_optcompex;
 std::string g_ini_file;
 INI_WORDS   g_options_ini[] = {
     // clang-format off

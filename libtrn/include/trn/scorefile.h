@@ -7,7 +7,7 @@
 
 #include "trn/head.h"
 
-struct COMPEX;
+struct CompiledRegex;
 
 #define DEFAULT_SCOREDIR "%+/scores"
 
@@ -17,7 +17,7 @@ struct ScoreFileEntry
     int score;                  /* score change */
     char *str1;                 /* first string part */
     char *str2;                 /* second string part */
-    COMPEX *compex;             /* regular expression ptr */
+    CompiledRegex *compex;             /* regular expression ptr */
     char flags;                 /* 1: regex is valid
                                  * 2: rule has been applied to the current article.
                                  * 4: use faster rule checking  (later)
