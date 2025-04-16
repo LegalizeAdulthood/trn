@@ -28,8 +28,8 @@
 #include <cstring>
 #include <utility>
 
-MIME_SECT   g_mime_article{};
-MIME_SECT  *g_mime_section{&g_mime_article};
+MimeSection   g_mime_article{};
+MimeSection  *g_mime_section{&g_mime_article};
 MimeState  g_mime_state{};
 std::string g_multipart_separator{"-=-=-=-=-=-"};
 bool        g_auto_view_inline{};
@@ -377,15 +377,15 @@ void mime_InitSections()
 
 void mime_PushSection()
 {
-    MIME_SECT* mp = (MIME_SECT*)safemalloc(sizeof (MIME_SECT));
-    std::memset((char*)mp,0,sizeof (MIME_SECT));
+    MimeSection* mp = (MimeSection*)safemalloc(sizeof (MimeSection));
+    std::memset((char*)mp,0,sizeof (MimeSection));
     mp->prev = g_mime_section;
     g_mime_section = mp;
 }
 
 bool mime_PopSection()
 {
-    MIME_SECT* mp = g_mime_section->prev;
+    MimeSection* mp = g_mime_section->prev;
     if (mp)
     {
         mime_ClearStruct(g_mime_section);
@@ -399,7 +399,7 @@ bool mime_PopSection()
 }
 
 /* Free up this mime structure's resources */
-void mime_ClearStruct(MIME_SECT *mp)
+void mime_ClearStruct(MimeSection *mp)
 {
     safefree0(mp->filename);
     safefree0(mp->type_name);
@@ -456,7 +456,7 @@ void mime_SetArticle()
 }
 
 /* Use the Content-Type to set values in the mime structure */
-void mime_ParseType(MIME_SECT *mp, char *s)
+void mime_ParseType(MimeSection *mp, char *s)
 {
     safefree0(mp->type_name);
     safefree0(mp->type_params);
@@ -566,7 +566,7 @@ void mime_ParseType(MIME_SECT *mp, char *s)
 }
 
 /* Use the Content-Disposition to set values in the mime structure */
-void mime_ParseDisposition(MIME_SECT *mp, char *s)
+void mime_ParseDisposition(MimeSection *mp, char *s)
 {
     char *params = mime_ParseParams(s);
     if (string_case_equal(s, "inline"))
@@ -584,7 +584,7 @@ void mime_ParseDisposition(MIME_SECT *mp, char *s)
 }
 
 /* Use the Content-Transfer-Encoding to set values in the mime structure */
-void mime_ParseEncoding(MIME_SECT *mp, char *s)
+void mime_ParseEncoding(MimeSection *mp, char *s)
 {
     s = mime_SkipWhitespace(s);
     if (!*s)
@@ -777,7 +777,7 @@ void mime_SetState(char *bp)
 
 int mime_EndOfSection(char *bp)
 {
-    MIME_SECT* mp = g_mime_section->prev;
+    MimeSection* mp = g_mime_section->prev;
     while (mp && !mp->boundary_len)
     {
         mp = mp->prev;
@@ -948,7 +948,7 @@ void mime_DecodeArticle(bool view)
 
         case SKIP_MIME:
         {
-            MIME_SECT* mp = g_mime_section;
+            MimeSection* mp = g_mime_section;
             while ((mp = mp->prev) != nullptr && !mp->boundary_len)
             {
             }
@@ -995,7 +995,7 @@ void mime_DecodeArticle(bool view)
     }
 }
 
-void mime_Description(MIME_SECT *mp, char *s, int limit)
+void mime_Description(MimeSection *mp, char *s, int limit)
 {
     char* fn = decode_fix_fname(mp->filename);
     int flen = std::strlen(fn);

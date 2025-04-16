@@ -65,9 +65,9 @@ enum HtmlFlags : std::uint16_t
 };
 DECLARE_FLAGS_ENUM(HtmlFlags, std::uint16_t);
 
-struct MIME_SECT
+struct MimeSection
 {
-    MIME_SECT *prev;
+    MimeSection *prev;
     char *filename;
     char *type_name;
     char *type_params;
@@ -134,8 +134,8 @@ struct HTML_TAGS
     tag_flags flags;
 };
 
-extern MIME_SECT g_mime_article;
-extern MIME_SECT *g_mime_section;
+extern MimeSection g_mime_article;
+extern MimeSection *g_mime_section;
 extern MimeState g_mime_state;
 extern std::string g_multipart_separator;
 extern bool g_auto_view_inline;
@@ -167,11 +167,11 @@ int            mime_Exec(char *cmd);
 void           mime_InitSections();
 void           mime_PushSection();
 bool           mime_PopSection();
-void           mime_ClearStruct(MIME_SECT *mp);
+void           mime_ClearStruct(MimeSection *mp);
 void           mime_SetArticle();
-void           mime_ParseType(MIME_SECT *mp, char *s);
-void           mime_ParseDisposition(MIME_SECT *mp, char *s);
-void           mime_ParseEncoding(MIME_SECT *mp, char *s);
+void           mime_ParseType(MimeSection *mp, char *s);
+void           mime_ParseDisposition(MimeSection *mp, char *s);
+void           mime_ParseEncoding(MimeSection *mp, char *s);
 void           mime_ParseSubheader(std::FILE *ifp, char *next_line);
 void           mime_SetState(char *bp);
 int            mime_EndOfSection(char *bp);
@@ -179,7 +179,7 @@ char *         mime_ParseParams(char *str);
 char *         mime_FindParam(char *s, const char *param);
 char *         mime_SkipWhitespace(char *s);
 void           mime_DecodeArticle(bool view);
-void           mime_Description(MIME_SECT *mp, char *s, int limit);
+void           mime_Description(MimeSection *mp, char *s, int limit);
 int            qp_decodestring(char *t, const char *f, bool in_header);
 DecodeState   qp_decode(std::FILE *ifp, DecodeState state);
 int            b64_decodestring(char *t, const char *f);

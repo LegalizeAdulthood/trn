@@ -109,7 +109,7 @@ protected:
         MimeTest::TearDown();
     }
 
-    MIME_SECT m_mime_section{};
+    MimeSection m_mime_section{};
 };
 
 }

@@ -394,7 +394,7 @@ char *readartbuf(bool view_inline)
 
     case SKIP_MIME:
     {
-        MIME_SECT* mp = g_mime_section;
+        MimeSection* mp = g_mime_section;
         while ((mp = mp->prev) != nullptr && !mp->boundary_len)
         {
         }
