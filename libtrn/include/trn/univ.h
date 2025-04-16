@@ -48,7 +48,7 @@ struct UniversalConfigFileData
     char* label;
 };
 
-struct UNIV_VIRT_DATA
+struct UniversalVirtualData
 {
     char* ng;
     char* id;
@@ -91,7 +91,7 @@ union UNIV_DATA
     UniversalGroupMaskData gmask;
     UniversalConfigFileData cfile;
     UNIV_NEWSGROUP group;
-    UNIV_VIRT_DATA virt;
+    UniversalVirtualData virt;
     UNIV_VIRT_GROUP vgroup;
     UNIV_TEXTFILE textfile;
 };
