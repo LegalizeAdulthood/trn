@@ -8,13 +8,13 @@
 
 #include <cstdint>
 
-enum list_flags : std::uint8_t
+enum ListFlags : std::uint8_t
 {
     LF_NONE = 0x0,
     LF_ZERO_MEM = 0x1,
     LF_SPARSE = 0x2
 };
-DECLARE_FLAGS_ENUM(list_flags, std::uint8_t);
+DECLARE_FLAGS_ENUM(ListFlags, std::uint8_t);
 
 struct LISTNODE
 {
@@ -34,11 +34,11 @@ struct LIST
     long       high;
     int        item_size;
     int        items_per_node;
-    list_flags flags;
+    ListFlags flags;
 };
 
 void list_init();
-LIST *new_list(long low, long high, int item_size, int items_per_node, list_flags flags, void (*init_node)(LIST *, LISTNODE *));
+LIST *new_list(long low, long high, int item_size, int items_per_node, ListFlags flags, void (*init_node)(LIST *, LISTNODE *));
 char *listnum2listitem(LIST *list, long num);
 long listitem2listnum(LIST *list, char *ptr);
 bool walk_list(LIST *list, bool (*callback)(char *, int), int arg);
