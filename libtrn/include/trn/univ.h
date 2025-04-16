@@ -74,7 +74,7 @@ struct UniversalVirtualGroup
     VirtualGroupFlags flags;
 };
 
-struct UNIV_NEWSGROUP
+struct UniversalNewsgroup
 {
     char* ng;
 };
@@ -90,7 +90,7 @@ union UNIV_DATA
     HelpLocation i;
     UniversalGroupMaskData gmask;
     UniversalConfigFileData cfile;
-    UNIV_NEWSGROUP group;
+    UniversalNewsgroup group;
     UniversalVirtualData virt;
     UniversalVirtualGroup vgroup;
     UNIV_TEXTFILE textfile;
