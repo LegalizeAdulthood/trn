@@ -31,7 +31,7 @@ extern bool        g_use_threads;     /* -x */
 extern bool        g_unsafe_rc_saves; /* -U */
 extern std::string g_dfltcmd;         /* 1st char is default command */
 
-enum do_newsgroup_result
+enum DoNewsgroupResult
 {
     NG_ERROR = -1,
     NG_NORM = 0,
@@ -45,7 +45,7 @@ enum do_newsgroup_result
 };
 
 void ng_init();
-do_newsgroup_result do_newsgroup(char *start_command);
+DoNewsgroupResult do_newsgroup(char *start_command);
 #ifdef MAILCALL
 void setmail(bool force);
 #endif

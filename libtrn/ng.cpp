@@ -91,7 +91,7 @@ static bool debug_article_output(char *ptr, int arg);
 #endif
 static art_switch_result art_switch();
 
-static do_newsgroup_result s_exit_code{NG_NORM};
+static DoNewsgroupResult s_exit_code{NG_NORM};
 static bool                s_art_sel_ilock{};
 
 void ng_init()
@@ -130,7 +130,7 @@ void ng_init()
  */
 
 // start_command command to fake up first
-do_newsgroup_result do_newsgroup(char *start_command)
+DoNewsgroupResult do_newsgroup(char *start_command)
 {
     minor_mode mode_save = g_mode;
     general_mode gmode_save = g_general_mode;
