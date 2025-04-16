@@ -206,29 +206,29 @@ void term_init()
     switch (s_outspeed)                         /* 1 second of padding */
     {
 #ifdef BEXTA
-        case BEXTA:  g_just_a_sec = 1920; break;
+    case BEXTA:  g_just_a_sec = 1920; break;
 #else
 #ifdef B19200
-        case B19200: g_just_a_sec = 1920; break;
+    case B19200: g_just_a_sec = 1920; break;
 #endif
 #endif
-        case B9600:  g_just_a_sec =  960; break;
-        case B4800:  g_just_a_sec =  480; break;
-        case B2400:  g_just_a_sec =  240; break;
-        case B1800:  g_just_a_sec =  180; break;
-        case B1200:  g_just_a_sec =  120; break;
-        case B600:   g_just_a_sec =   60; break;
-        case B300:   g_just_a_sec =   30; break;
-        /* do I really have to type the rest of this??? */
-        case B200:   g_just_a_sec =   20; break;
-        case B150:   g_just_a_sec =   15; break;
-        case B134:   g_just_a_sec =   13; break;
-        case B110:   g_just_a_sec =   11; break;
-        case B75:    g_just_a_sec =    8; break;
-        case B50:    g_just_a_sec =    5; break;
-        default:     g_just_a_sec =  960; break;
-                                        /* if we are running detached I */
-    }                                   /*  don't want to know about it! */
+    case B9600:  g_just_a_sec =  960; break;
+    case B4800:  g_just_a_sec =  480; break;
+    case B2400:  g_just_a_sec =  240; break;
+    case B1800:  g_just_a_sec =  180; break;
+    case B1200:  g_just_a_sec =  120; break;
+    case B600:   g_just_a_sec =   60; break;
+    case B300:   g_just_a_sec =   30; break;
+    /* do I really have to type the rest of this??? */
+    case B200:   g_just_a_sec =   20; break;
+    case B150:   g_just_a_sec =   15; break;
+    case B134:   g_just_a_sec =   13; break;
+    case B110:   g_just_a_sec =   11; break;
+    case B75:    g_just_a_sec =    8; break;
+    case B50:    g_just_a_sec =    5; break;
+    default:     g_just_a_sec =  960; break;
+                                    /* if we are running detached I */
+    }                               /*  don't want to know about it! */
 }
 
 #ifdef PENDING
@@ -738,18 +738,21 @@ static void show_keymap(KEYMAP *curmap, char *prefix)
             }
             switch (kt & KM_TMASK)
             {
-              case KM_NOTHIN:
+            case KM_NOTHIN:
                 std::sprintf(g_cmd_buf,"%s   %c\n",prefix,i);
                 print_lines(g_cmd_buf, NOMARKING);
                 break;
-              case KM_KEYMAP:
+
+            case KM_KEYMAP:
                 show_keymap(curmap->km_ptr[i].km_km, prefix);
                 break;
-              case KM_STRING:
+
+            case KM_STRING:
                 std::sprintf(g_cmd_buf,"%s   %s\n",prefix,curmap->km_ptr[i].km_str);
                 print_lines(g_cmd_buf, NOMARKING);
                 break;
-              case KM_BOGUS:
+
+            case KM_BOGUS:
                 std::sprintf(g_cmd_buf,"%s   BOGUS\n",prefix);
                 print_lines(g_cmd_buf, STANDOUT);
                 break;
@@ -798,14 +801,16 @@ bool finput_pending(bool check_term)
         }
         switch (s_not_echoing)
         {
-          case 0:
+        case 0:
             return true;
-          case 1:
+
+        case 1:
             s_nextout++;
             s_nextout %= PUSHSIZE;
             s_not_echoing = 0;
             break;
-          default:
+
+        default:
             s_circlebuf[s_nextout] = '\n';
             s_not_echoing = 0;
             return true;
@@ -1099,12 +1104,13 @@ void eat_typeahead()
 
             switch (curmap->km_type[lc] & KM_TMASK)
             {
-              case KM_STRING:           /* a string? */
-              case KM_NOTHIN:           /* no entry? */
+            case KM_STRING:           /* a string? */
+            case KM_NOTHIN:           /* no entry? */
                 curmap = s_topmap;
                 j = 0;
                 continue;
-              case KM_KEYMAP:           /* another keymap? */
+
+            case KM_KEYMAP:           /* another keymap? */
                 curmap = curmap->km_ptr[lc].km_km;
                 break;
             }
@@ -1352,18 +1358,20 @@ tryagain:
 
         switch (curmap->km_type[g_lastchar] & KM_TMASK)
         {
-          case KM_NOTHIN:               /* no entry? */
+        case KM_NOTHIN:               /* no entry? */
             if (curmap == s_topmap)     /* unmapped canonical */
             {
                 goto got_canonical;
             }
             settle_down();
             goto tryagain;
-          case KM_KEYMAP:               /* another keymap? */
+
+        case KM_KEYMAP:               /* another keymap? */
             curmap = curmap->km_ptr[g_lastchar].km_km;
             TRN_ASSERT(curmap != nullptr);
             break;
-          case KM_STRING:               /* a string? */
+
+        case KM_STRING:               /* a string? */
             pushstring(curmap->km_ptr[g_lastchar].km_str,0200);
             if (++times > 20)           /* loop? */
             {
@@ -2344,35 +2352,42 @@ void xmouse_check()
         {
             switch (mmode)
             {
-              case MM_NEWSRC_SELECTOR:
+            case MM_NEWSRC_SELECTOR:
                 s_mousebar_btns = g_newsrc_sel_btns;
                 g_mousebar_cnt = g_newsrc_sel_btn_cnt;
                 break;
-              case MM_ADD_GROUP_SELECTOR:
+
+            case MM_ADD_GROUP_SELECTOR:
                 s_mousebar_btns = g_add_sel_btns;
                 g_mousebar_cnt = g_add_sel_btn_cnt;
                 break;
-              case MM_OPTION_SELECTOR:
+
+            case MM_OPTION_SELECTOR:
                 s_mousebar_btns = g_option_sel_btns;
                 g_mousebar_cnt = g_option_sel_btn_cnt;
                 break;
-              case MM_THREAD_SELECTOR:
+
+            case MM_THREAD_SELECTOR:
                 s_mousebar_btns = g_news_sel_btns;
                 g_mousebar_cnt = g_news_sel_btn_cnt;
                 break;
-              case MM_NEWSGROUP_SELECTOR:
+
+            case MM_NEWSGROUP_SELECTOR:
                 s_mousebar_btns = g_newsgroup_sel_btns;
                 g_mousebar_cnt = g_newsgroup_sel_btn_cnt;
                 break;
-              case MM_ARTICLE:  case MM_PAGER:
+
+            case MM_ARTICLE:  case MM_PAGER:
                 s_mousebar_btns = g_art_pager_btns;
                 g_mousebar_cnt = g_art_pager_btn_cnt;
                 break;
-              case MM_UNIVERSAL:
+
+            case MM_UNIVERSAL:
                 s_mousebar_btns = g_univ_sel_btns;
                 g_mousebar_cnt = g_univ_sel_btn_cnt;
                 break;
-              default:
+
+            default:
                 s_mousebar_btns = "";
                 /*g_mousebar_cnt = 0;*/
                 break;
@@ -2454,10 +2469,11 @@ void draw_mousebar(int limit, bool restore_cursor)
         {
             switch (std::strlen(s))
             {
-              case 0:
+            case 0:
                 *t++ = ' ';
                 /* FALL THROUGH */
-              case 1:  case 2:
+
+            case 1:  case 2:
                 *t++ = ' ';
                 while (*s)
                 {
@@ -2465,13 +2481,15 @@ void draw_mousebar(int limit, bool restore_cursor)
                 }
                 *t++ = ' ';
                 break;
-              case 3:  case 4:
+
+            case 3:  case 4:
                 while (*s)
                 {
                     *t++ = *s++;
                 }
                 break;
-              default:
+
+            default:
                 std::strncpy(t, s, 5);
                 t += 5;
                 break;
