@@ -220,9 +220,11 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
 
     char *s = filexp("%+");
     stat_t ini_stat{};
-    if (stat(s,&ini_stat) < 0 || !S_ISDIR(ini_stat.st_mode)) {
+    if (stat(s, &ini_stat) < 0 || !S_ISDIR(ini_stat.st_mode))
+    {
         std::printf("Creating the directory %s.\n",s);
-        if (makedir(s, MD_DIR)) {
+        if (makedir(s, MD_DIR))
+        {
             std::printf("Unable to create `%s'.\n",s);
             finalize(1); /*$$??*/
         }
@@ -235,7 +237,8 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     {
         s = get_val("RNINIT");
     }
-    if (*safecpy(*tcbufptr,s,TCBUF_SIZE)) {
+    if (*safecpy(*tcbufptr, s, TCBUF_SIZE))
+    {
         if (*s == '-' || *s == '+' || isspace(*s))
         {
             sw_list(*tcbufptr);
@@ -250,7 +253,8 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     g_option_flags = new option_flags[len];
     std::fill_n(g_option_flags, len, OF_NONE);
 
-    if (argc > 1) {
+    if (argc > 1)
+    {
         for (int i = 1; i < argc; i++)
         {
             decode_switch(argv[i]);
@@ -289,24 +293,29 @@ void opt_file(const char *filename, char **tcbufptr, bool bleat)
     char*cond;
     int  fd = open(filename,0);
 
-    if (fd >= 0) {
+    if (fd >= 0)
+    {
         stat_t opt_stat{};
         fstat(fd,&opt_stat);
-        if (opt_stat.st_size >= TCBUF_SIZE-1) {
+        if (opt_stat.st_size >= TCBUF_SIZE - 1)
+        {
             filebuf = saferealloc(filebuf,(MEM_SIZE)opt_stat.st_size+2);
             *tcbufptr = filebuf;
         }
-        if (opt_stat.st_size) {
+        if (opt_stat.st_size)
+        {
             int len = read(fd,filebuf,(int)opt_stat.st_size);
             filebuf[len] = '\0';
             prep_ini_data(filebuf,filename);
             char *s = filebuf;
-            while ((s = next_ini_section(s,&section,&cond)) != nullptr) {
+            while ((s = next_ini_section(s, &section, &cond)) != nullptr)
+            {
                 if (*cond && !check_ini_cond(cond))
                 {
                     continue;
                 }
-                if (!std::strcmp(section,"options")) {
+                if (!std::strcmp(section, "options"))
+                {
                     s = parse_ini_section(s, g_options_ini);
                     if (!s)
                     {
@@ -314,24 +323,30 @@ void opt_file(const char *filename, char **tcbufptr, bool bleat)
                     }
                     set_options(ini_values(g_options_ini));
                 }
-                else if (!std::strcmp(section,"environment")) {
-                    while (*s && *s != '[') {
+                else if (!std::strcmp(section, "environment"))
+                {
+                    while (*s && *s != '[')
+                    {
                         section = s;
                         s += std::strlen(s) + 1;
                         export_var(section,s);
                         s += std::strlen(s) + 1;
                     }
                 }
-                else if (!std::strcmp(section,"termcap")) {
-                    while (*s && *s != '[') {
+                else if (!std::strcmp(section, "termcap"))
+                {
+                    while (*s && *s != '[')
+                    {
                         section = s;
                         s += std::strlen(s) + 1;
                         add_tc_string(section, s);
                         s += std::strlen(s) + 1;
                     }
                 }
-                else if (!std::strcmp(section,"attribute")) {
-                    while (*s && *s != '[') {
+                else if (!std::strcmp(section, "attribute"))
+                {
+                    while (*s && *s != '[')
+                    {
                         section = s;
                         s += std::strlen(s) + 1;
                         color_rc_attribute(section, s);
@@ -342,7 +357,8 @@ void opt_file(const char *filename, char **tcbufptr, bool bleat)
         }
         close(fd);
     }
-    else if (bleat) {
+    else if (bleat)
+    {
         std::printf(g_cantopen,filename);
         /*termdown(1);*/
     }
@@ -362,7 +378,8 @@ inline bool NO(const char *s)
 void set_options(char **vals)
 {
     int limit = ini_len(g_options_ini);
-    for (int i = 1; i < limit; i++) {
+    for (int i = 1; i < limit; i++)
+    {
         if (*++vals)
         {
             set_option(static_cast<option_index>(i), *vals);
@@ -372,8 +389,10 @@ void set_options(char **vals)
 
 void set_option(option_index num, const char *s)
 {
-    if (g_option_saved_vals) {
-        if (!g_option_saved_vals[num]) {
+    if (g_option_saved_vals)
+    {
+        if (!g_option_saved_vals[num])
+        {
             g_option_saved_vals[num] = savestr(option_value(num));
             if (!g_option_def_vals[num])
             {
@@ -381,19 +400,22 @@ void set_option(option_index num, const char *s)
             }
         }
     }
-    else if (g_option_def_vals) {
+    else if (g_option_def_vals)
+    {
         if (!g_option_def_vals[num])
         {
             g_option_def_vals[num] = savestr(option_value(num));
         }
     }
-    switch (num) {
+    switch (num)
+    {
       case OI_USE_THREADS:
         g_use_threads = YES(s);
         break;
       case OI_USE_MOUSE:
         g_use_mouse = YES(s);
-        if (g_use_mouse) {
+        if (g_use_mouse)
+        {
             /* set up the Xterm mouse sequence */
             set_macro("\033[M+3","\003");
         }
@@ -479,11 +501,13 @@ void set_option(option_index num, const char *s)
             g_use_news_selector = static_cast<int>(YES(s)) - 1;
         }
         break;
-      case OI_NEWS_SEL_MODE: {
+      case OI_NEWS_SEL_MODE:
+      {
         const sel_mode save_sel_mode = g_sel_mode;
         set_sel_mode(*s);
-        if (save_sel_mode != SM_ARTICLE && save_sel_mode != SM_SUBJECT
-         && save_sel_mode != SM_THREAD) {
+        if (save_sel_mode != SM_ARTICLE && save_sel_mode != SM_SUBJECT //
+            && save_sel_mode != SM_THREAD)
+        {
             g_sel_mode = save_sel_mode;
             set_selector(SM_MAGIC_NUMBER,SS_MAGIC_NUMBER);
         }
@@ -520,13 +544,16 @@ void set_option(option_index num, const char *s)
         g_option_sel_btn_cnt = parse_mouse_buttons(&g_option_sel_btns,s);
         break;
       case OI_AUTO_SAVE_NAME:
-        if (!g_checkflag) {
-            if (YES(s)) {
+        if (!g_checkflag)
+        {
+            if (YES(s))
+            {
                 export_var("SAVEDIR",  "%p/%c");
                 export_var("SAVENAME", "%a");
             }
-            else if (!std::strcmp(get_val_const("SAVEDIR",""),"%p/%c")
-                  && !std::strcmp(get_val_const("SAVENAME",""),"%a")) {
+            else if (!std::strcmp(get_val_const("SAVEDIR", ""), "%p/%c") //
+                     && !std::strcmp(get_val_const("SAVENAME", ""), "%a"))
+            {
                 export_var("SAVEDIR", "%p");
                 export_var("SAVENAME", "%^C");
             }
@@ -535,7 +562,8 @@ void set_option(option_index num, const char *s)
       case OI_BKGND_THREADING:
         g_thread_always = !YES(s);
         break;
-      case OI_AUTO_ARROW_MACROS: {
+      case OI_AUTO_ARROW_MACROS:
+      {
         int prev = g_auto_arrow_macros;
         if (YES(s) || *s == 'r' || *s == 'R')
         {
@@ -545,7 +573,8 @@ void set_option(option_index num, const char *s)
         {
             g_auto_arrow_macros = !NO(s);
         }
-        if (g_mode != MM_INITIALIZING && g_auto_arrow_macros != prev) {
+        if (g_mode != MM_INITIALIZING && g_auto_arrow_macros != prev)
+        {
             char tmpbuf[1024];
             arrow_macros(tmpbuf);
         }
@@ -561,9 +590,11 @@ void set_option(option_index num, const char *s)
         g_docheckwhen = std::atoi(s);
         break;
       case OI_SAVE_DIR:
-        if (!g_checkflag) {
+        if (!g_checkflag)
+        {
             g_savedir = s;
-            if (!g_privdir.empty()) {
+            if (!g_privdir.empty())
+            {
                 change_dir(g_privdir);
             }
             g_privdir = filexp(s);
@@ -665,8 +696,10 @@ void set_option(option_index num, const char *s)
         {
             g_auto_select_postings = 0;
         }
-        else {
-            switch (*s) {
+        else
+        {
+            switch (*s)
+            {
               case 't':
                 g_auto_select_postings = '+';
                 break;
@@ -695,11 +728,13 @@ void set_option(option_index num, const char *s)
         g_charsets = s;
         break;
       case OI_INITIAL_GROUP_LIST:
-        if (std::isdigit(*s)) {
+        if (std::isdigit(*s))
+        {
             g_countdown = std::atoi(s);
             g_suppress_cn = (g_countdown == 0);
         }
-        else {
+        else
+        {
             g_suppress_cn = NO(s);
             if (!g_suppress_cn)
             {
@@ -737,10 +772,12 @@ void set_option(option_index num, const char *s)
         g_verify = YES(s);
         break;
       case OI_ARTICLE_TREE_LINES:
-        if (std::isdigit(*s)) {
+        if (std::isdigit(*s))
+        {
             g_max_tree_lines = std::atoi(s);
             g_max_tree_lines = std::min(g_max_tree_lines, 11);
-        } else
+        }
+        else
         {
             g_max_tree_lines = YES(s) * 6;
         }
@@ -830,7 +867,8 @@ void save_options(const char *filename)
 
     std::sprintf(g_buf,"%s.new",filename);
     std::FILE *fp_out = std::fopen(g_buf, "w");
-    if (!fp_out) {
+    if (!fp_out)
+    {
         std::printf(g_cantcreate,g_buf);
         return;
     }
@@ -842,14 +880,16 @@ void save_options(const char *filename)
         char* comments = nullptr;
         stat_t opt_stat{};
         fstat(fd_in,&opt_stat);
-        if (opt_stat.st_size) {
+        if (opt_stat.st_size)
+        {
             filebuf = safemalloc((MEM_SIZE)opt_stat.st_size+2);
             int len = read(fd_in, filebuf, (int)opt_stat.st_size);
             filebuf[len] = '\0';
         }
         close(fd_in);
 
-        for (line = filebuf; line && *line; line = nlp) {
+        for (line = filebuf; line && *line; line = nlp)
+        {
             cp = line;
             nlp = std::strchr(cp, '\n');
             if (nlp)
@@ -857,7 +897,8 @@ void save_options(const char *filename)
                 *nlp++ = '\0';
             }
             cp = skip_space(cp);
-            if (*cp == '[' && !std::strncmp(cp+1,"options]",8)) {
+            if (*cp == '[' && !std::strncmp(cp + 1, "options]", 8))
+            {
                 cp = skip_space(cp + 9);
                 if (!*cp)
                 {
@@ -867,7 +908,8 @@ void save_options(const char *filename)
             std::fputs(line, fp_out);
             std::fputc('\n', fp_out);
         }
-        for (line = nlp; line && *line; line = nlp) {
+        for (line = nlp; line && *line; line = nlp)
+        {
             cp = line;
             nlp = std::strchr(cp, '\n');
             if (nlp)
@@ -896,7 +938,8 @@ void save_options(const char *filename)
             line = comments;
         }
     }
-    else {
+    else
+    {
         const char *t = g_use_threads? "T" : "";
         std::printf("\n"
                "This is the first save of the option file, %s.\n"
@@ -911,19 +954,22 @@ void save_options(const char *filename)
         std::fprintf(fp_out, "%sRNINIT = ''\n\n", t);
     }
     std::fprintf(fp_out,"[options]\n");
-    for (int i = 1; g_options_ini[i].checksum; i++) {
+    for (int i = 1; g_options_ini[i].checksum; i++)
+    {
         if (*g_options_ini[i].item == '*')
         {
             std::fprintf(fp_out, "# ==%s========\n", g_options_ini[i].item + 1);
         }
-        else {
+        else
+        {
             std::fprintf(fp_out,"%s = ",g_options_ini[i].item);
             if (!g_option_def_vals[i])
             {
                 std::fputs("#default of ", fp_out);
             }
             std::fprintf(fp_out,"%s\n",quote_string(option_value(static_cast<option_index>(i))));
-            if (g_option_saved_vals[i]) {
+            if (g_option_saved_vals[i])
+            {
                 if (g_option_saved_vals[i] != g_option_def_vals[i])
                 {
                     std::free(g_option_saved_vals[i]);
@@ -932,7 +978,8 @@ void save_options(const char *filename)
             }
         }
     }
-    if (line) {
+    if (line)
+    {
         /*std::putc('\n',fp_out);*/
         std::fputs(line,fp_out);
     }
@@ -940,8 +987,10 @@ void save_options(const char *filename)
 
     safefree(filebuf);
 
-    if (first_time) {
-        if (fd_in >= 0) {
+    if (first_time)
+    {
+        if (fd_in >= 0)
+        {
             std::sprintf(g_buf,"%s.old",filename);
             remove(g_buf);
             rename(filename,g_buf);
@@ -959,7 +1008,8 @@ void save_options(const char *filename)
 
 const char *option_value(option_index num)
 {
-    switch (num) {
+    switch (num)
+    {
       case OI_USE_THREADS:
         return YESorNO(g_use_threads);
       case OI_USE_MOUSE:
@@ -997,7 +1047,8 @@ const char *option_value(option_index num)
         return g_newsgroup_sel_cmds;
       case OI_NEWSGROUP_SEL_BTNS:
         return expand_mouse_buttons(g_newsgroup_sel_btns,g_newsgroup_sel_btn_cnt);
-      case OI_NEWSGROUP_SEL_STYLES: {
+      case OI_NEWSGROUP_SEL_STYLES:
+      {
         char* s = g_sel_grp_dmode;
         while (s[-1] != '*')
         {
@@ -1012,7 +1063,8 @@ const char *option_value(option_index num)
         }
         std::sprintf(g_buf,"%d",g_use_news_selector);
         return g_buf;
-      case OI_NEWS_SEL_MODE: {
+      case OI_NEWS_SEL_MODE:
+      {
         const sel_mode save_sel_mode = g_sel_mode;
         const int save_Threaded = g_threaded_group;
         g_threaded_group = true;
@@ -1029,7 +1081,8 @@ const char *option_value(option_index num)
         return g_news_sel_cmds;
       case OI_NEWS_SEL_BTNS:
         return expand_mouse_buttons(g_news_sel_btns,g_news_sel_btn_cnt);
-      case OI_NEWS_SEL_STYLES: {
+      case OI_NEWS_SEL_STYLES:
+      {
         char* s = g_sel_art_dmode;
         while (s[-1] != '*')
         {
@@ -1046,7 +1099,8 @@ const char *option_value(option_index num)
       case OI_BKGND_THREADING:
         return YESorNO(!g_thread_always);
       case OI_AUTO_ARROW_MACROS:
-        switch (g_auto_arrow_macros) {
+        switch (g_auto_arrow_macros)
+        {
           case 2:
             return "regular";
           case 1:
@@ -1090,7 +1144,8 @@ const char *option_value(option_index num)
       case OI_FILTER_CONTROL_CHARACTERS:
         return YESorNO(!g_dont_filter_control);
       case OI_JOIN_SUBJECT_LINES:
-        if (g_join_subject_len) {
+        if (g_join_subject_len)
+        {
             std::sprintf(g_buf,"%d",g_join_subject_len);
             return g_buf;
         }
@@ -1135,7 +1190,8 @@ const char *option_value(option_index num)
         std::sprintf(g_buf,"%d",g_olden_days);
         return g_buf;
       case OI_SELECT_MY_POSTS:
-        switch (g_auto_select_postings) {
+        switch (g_auto_select_postings)
+        {
           case '+':
             return "thread";
           case 'p':
@@ -1180,7 +1236,8 @@ const char *option_value(option_index num)
         std::sprintf(g_buf,"%d",g_max_tree_lines);
         return g_buf;
       case OI_WORD_WRAP_MARGIN:
-        if (g_word_wrap_offset >= 0) {
+        if (g_word_wrap_offset >= 0)
+        {
             std::sprintf(g_buf,"%d",g_word_wrap_offset);
             return g_buf;
         }
@@ -1232,7 +1289,8 @@ static char *hidden_list()
 {
     g_buf[0] = '\0';
     g_buf[1] = '\0';
-    for (int i = 1; i < g_user_htype_cnt; i++) {
+    for (int i = 1; i < g_user_htype_cnt; i++)
+    {
         std::sprintf(g_buf+std::strlen(g_buf),",%s%s", g_user_htype[i].flags? "" : "!",
                 g_user_htype[i].name);
     }
@@ -1243,8 +1301,10 @@ static char *magic_list()
 {
     g_buf[0] = '\0';
     g_buf[1] = '\0';
-    for (int i = HEAD_FIRST; i < HEAD_LAST; i++) {
-        if (!(g_htype[i].flags & HT_MAGIC) != !(g_htype[i].flags & HT_DEFMAGIC)) {
+    for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
+    {
+        if (!(g_htype[i].flags & HT_MAGIC) != !(g_htype[i].flags & HT_DEFMAGIC))
+        {
             std::sprintf(g_buf+std::strlen(g_buf),",%s%s",
                     (g_htype[i].flags & HT_DEFMAGIC)? "!" : "",
                     g_htype[i].name);
@@ -1257,7 +1317,8 @@ static void set_header_list(headtype_flags flag, headtype_flags defflag, const c
 {
     bool setit;
 
-    if (flag == HT_HIDE || flag == HT_DEFHIDE) {
+    if (flag == HT_HIDE || flag == HT_DEFHIDE)
+    {
         /* Free old g_user_htype list */
         while (g_user_htype_cnt > 1)
         {
@@ -1279,13 +1340,15 @@ static void set_header_list(headtype_flags flag, headtype_flags defflag, const c
     std::unique_ptr<char[]> buffer(new char[std::strlen(str) + 1]);
     char *buff = buffer.get();
     std::strcpy(buff, str);
-    for (;;) {
+    for (;;)
+    {
         char *cp = std::strchr(buff, ',');
         if (cp != nullptr)
         {
             *cp = '\0';
         }
-        if (*buff == '!') {
+        if (*buff == '!')
+        {
             setit = false;
             buff++;
         }
@@ -1306,8 +1369,10 @@ static void set_header_list(headtype_flags flag, headtype_flags defflag, const c
 void set_header(const char *s, headtype_flags flag, bool setit)
 {
     int len = std::strlen(s);
-    for (int i = HEAD_FIRST; i < HEAD_LAST; i++) {
-        if (!len || string_case_equal(s, g_htype[i].name,len)) {
+    for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
+    {
+        if (!len || string_case_equal(s, g_htype[i].name, len))
+        {
             if (setit && (flag != HT_MAGIC || (g_htype[i].flags & HT_MAGICOK)))
             {
                 g_htype[i].flags |= flag;
@@ -1318,21 +1383,26 @@ void set_header(const char *s, headtype_flags flag, bool setit)
             }
         }
     }
-    if (flag == HT_HIDE && *s && isalpha(*s)) {
+    if (flag == HT_HIDE && *s && isalpha(*s))
+    {
         char ch = std::isupper(*s)? std::tolower(*s) : *s;
         int  add_at = 0;
         int  killed = 0;
         bool save_it = true;
-        for (int i = g_user_htypeix[ch - 'a']; *g_user_htype[i].name == ch; i--) {
-            if (len <= g_user_htype[i].length
-             && string_case_equal(s, g_user_htype[i].name,len)) {
+        for (int i = g_user_htypeix[ch - 'a']; *g_user_htype[i].name == ch; i--)
+        {
+            if (len <= g_user_htype[i].length //
+                && string_case_equal(s, g_user_htype[i].name, len))
+            {
                 std::free(g_user_htype[i].name);
                 g_user_htype[i].name = nullptr;
                 killed = i;
             }
-            else if (len > g_user_htype[i].length
-                  && string_case_equal(s, g_user_htype[i].name,g_user_htype[i].length)) {
-                if (!add_at) {
+            else if (len > g_user_htype[i].length //
+                     && string_case_equal(s, g_user_htype[i].name, g_user_htype[i].length))
+            {
+                if (!add_at)
+                {
                     if (g_user_htype[i].flags == (setit? flag : 0))
                     {
                         save_it = false;
@@ -1341,14 +1411,18 @@ void set_header(const char *s, headtype_flags flag, bool setit)
                 }
             }
         }
-        if (save_it) {
-            if (!killed || (add_at && g_user_htype[add_at].name)) {
-                if (g_user_htype_cnt >= g_user_htype_max) {
+        if (save_it)
+        {
+            if (!killed || (add_at && g_user_htype[add_at].name))
+            {
+                if (g_user_htype_cnt >= g_user_htype_max)
+                {
                     g_user_htype = (USER_HEADTYPE*)
                         std::realloc(g_user_htype, (g_user_htype_max += 10)
                                             * sizeof (USER_HEADTYPE));
                 }
-                if (!add_at) {
+                if (!add_at)
+                {
                     add_at = g_user_htypeix[ch - 'a']+1;
                     if (add_at == 1)
                     {
@@ -1368,19 +1442,22 @@ void set_header(const char *s, headtype_flags flag, bool setit)
             g_user_htype[add_at].length = len;
             g_user_htype[add_at].flags = setit? flag : 0;
             g_user_htype[add_at].name = savestr(s);
-            for (char *tmp = g_user_htype[add_at].name; *tmp; tmp++) {
+            for (char *tmp = g_user_htype[add_at].name; *tmp; tmp++)
+            {
                 if (std::isupper(*tmp))
                 {
                     *tmp = static_cast<char>(std::tolower(*tmp));
                 }
             }
         }
-        if (killed) {
+        if (killed)
+        {
             while (killed < g_user_htype_cnt && g_user_htype[killed].name != nullptr)
             {
                 killed++;
             }
-            for (int i = killed+1; i < g_user_htype_cnt; i++) {
+            for (int i = killed + 1; i < g_user_htype_cnt; i++)
+            {
                 if (g_user_htype[i].name != nullptr)
                 {
                     g_user_htype[killed++] = g_user_htype[i];
@@ -1406,13 +1483,16 @@ static int parse_mouse_buttons(char **cpp, const char *btns)
     *cpp = safemalloc(std::strlen(btns) + 1);
     t = *cpp;
 
-    while (*btns) {
-        if (*btns == '[') {
+    while (*btns)
+    {
+        if (*btns == '[')
+        {
             if (!btns[1])
             {
                 break;
             }
-            while (*btns) {
+            while (*btns)
+            {
                 if (*btns == '\\' && btns[1])
                 {
                     btns++;
@@ -1444,8 +1524,10 @@ static int parse_mouse_buttons(char **cpp, const char *btns)
 static char *expand_mouse_buttons(char *cp, int cnt)
 {
     *g_buf = '\0';
-    while (cnt--) {
-        if (*cp == '[') {
+    while (cnt--)
+    {
+        if (*cp == '[')
+        {
             int len = std::strlen(cp);
             cp[len] = ']';
             safecat(g_buf,cp,sizeof g_buf);
@@ -1475,8 +1557,10 @@ const char *quote_string(const char *val)
     {
         needs_quotes = true;
     }
-    for (const char *cp = val; *cp; cp++) {
-        switch (*cp) {
+    for (const char *cp = val; *cp; cp++)
+    {
+        switch (*cp)
+        {
           case ' ':
           case '\t':
             if (!cp[1] || isspace(cp[1]))
@@ -1500,10 +1584,12 @@ const char *quote_string(const char *val)
         }
     }
 
-    if (needs_quotes || ticks || quotes || backslashes) {
+    if (needs_quotes || ticks || quotes || backslashes)
+    {
         const char usequote = quotes > ticks? '\'' : '"';
         buff = usequote;
-        while (*val) {
+        while (*val)
+        {
             if (*val == usequote || *val == '\\')
             {
                 buff += '\\';
@@ -1525,9 +1611,11 @@ void cwd_check()
         g_privdir = filexp("~/News");
     }
     std::strcpy(tmpbuf,g_privdir.c_str());
-    if (change_dir(g_privdir)) {
+    if (change_dir(g_privdir))
+    {
         safecpy(tmpbuf,filexp(g_privdir.c_str()),sizeof tmpbuf);
-        if (makedir(tmpbuf, MD_DIR) || change_dir(tmpbuf)) {
+        if (makedir(tmpbuf, MD_DIR) || change_dir(tmpbuf))
+        {
             interp(g_cmd_buf, (sizeof g_cmd_buf), "%~/News");
             if (makedir(g_cmd_buf, MD_DIR))
             {
@@ -1555,7 +1643,8 @@ void cwd_check()
         }
     }
     trn_getwd(tmpbuf, sizeof(tmpbuf));
-    if (eaccess(tmpbuf,2)) {
+    if (eaccess(tmpbuf, 2))
+    {
         if (g_verbose)
         {
             std::printf("Current directory %s is not writeable--\n"
