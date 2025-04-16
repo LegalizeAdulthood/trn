@@ -7,7 +7,8 @@
 
 using namespace testing;
 
-namespace {
+namespace
+{
 
 struct StringAlgosTest : Test
 {
