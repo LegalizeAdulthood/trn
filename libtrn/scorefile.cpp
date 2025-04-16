@@ -119,7 +119,7 @@ void sf_init()
         }
         switch (s_sf_entries[i].head_type)
         {
-          case SF_KILLTHRESHOLD:
+        case SF_KILLTHRESHOLD:
             g_kill_thresh_active = true;
             g_kill_thresh = s_sf_entries[i].score;
             if (g_sf_verbose)
@@ -139,7 +139,8 @@ void sf_init()
                 }
             }
             break;
-          case SF_NEWAUTHOR:
+
+        case SF_NEWAUTHOR:
             s_newauthor_active = true;
             s_newauthor = s_sf_entries[i].score;
             if (g_sf_verbose)
@@ -159,7 +160,8 @@ void sf_init()
                 }
             }
             break;
-          case SF_REPLY:
+
+        case SF_REPLY:
             s_reply_active = true;
             s_reply_score = s_sf_entries[i].score;
             if (g_sf_verbose)
@@ -620,7 +622,7 @@ char *sf_freeform(char *start1, char *end1)
     /* cases are # of letters in keyword */
     switch (end1 - start1 + 1)
     {
-      case 7:
+    case 7:
         if (!std::strncmp(start1,"pattern",7))
         {
             s_sf_pattern_status = true;
@@ -628,9 +630,10 @@ char *sf_freeform(char *start1, char *end1)
         }
         error = true;
         break;
-      case 4:
+
+    case 4:
 #ifdef UNDEF
-/* here is an example of a hypothetical freeform key with an argument */
+        /* here is an example of a hypothetical freeform key with an argument */
         if (!std::strncmp(start1,"date",4))
         {
             char* s1;
@@ -651,7 +654,8 @@ char *sf_freeform(char *start1, char *end1)
 #endif
         error = true;
         break;
-      default:
+
+    default:
         error = true;
         break;
     }
@@ -1074,13 +1078,14 @@ void sf_append(char *line)
         static char lbuf[LBUFLEN];
         switch (*scoretext)
         {
-          case 'F':     /* domain-shortened FROM line */
+        case 'F':     /* domain-shortened FROM line */
             std::strcpy(lbuf,scoreline);
             lbuf[std::strlen(lbuf)-1] = '\0';
             std::strcat(lbuf,filexp("from: %y"));
             scoreline = lbuf;
             break;
-          case 'S':     /* current subject */
+
+        case 'S':     /* current subject */
             std::strcpy(lbuf,scoreline);
             s = fetchcache(g_art, SUBJ_LINE,true);
             if (!s || !*s)
@@ -1096,7 +1101,8 @@ void sf_append(char *line)
             std::sprintf(lbuf+(std::strlen(lbuf)-1),"subject: %.900s",s);
             scoreline = lbuf;
             break;
-          default:
+
+        default:
             std::printf("\nBad scorefile line: |%s| (not added)\n", line);
             return;
         }
