@@ -207,158 +207,167 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
         {
             switch (c)
             {
-                case '\\':              /* meta something */
-                    switch (c = *strp++)
+            case '\\':              /* meta something */
+                switch (c = *strp++)
+                {
+                case '(':
+                    if (compex->nbra >= NBRA)
                     {
-                    case '(':
-                        if (compex->nbra >= NBRA)
-                        {
-                            retmes = "Too many parens";
+                        retmes = "Too many parens";
+                        goto cerror;
+                    }
+                    *bracketp++ = ++compex->nbra;
+                    *ep++ = CBRA;
+                    *ep++ = compex->nbra;
+                    break;
+
+                case '|':
+                    if (bracketp > bracket)
+                    {
+                        retmes = "No \\| in parens";        /* Alas! */
+                        goto cerror;
+                    }
+                    *ep++ = CEND;
+                    *alt++ = ep;
+                    if (alt > compex->alternatives + NALTS)
+                    {
+                            retmes = "Too many alternatives in reg ex";
                             goto cerror;
-                        }
-                        *bracketp++ = ++compex->nbra;
-                        *ep++ = CBRA;
-                        *ep++ = compex->nbra;
-                        break;
-                    case '|':
-                        if (bracketp > bracket)
-                        {
-                            retmes = "No \\| in parens";        /* Alas! */
-                            goto cerror;
-                        }
-                        *ep++ = CEND;
-                        *alt++ = ep;
-                        if (alt > compex->alternatives + NALTS)
-                        {
-                                retmes = "Too many alternatives in reg ex";
-                                goto cerror;
-                        }
-                        break;
-                    case ')':
-                        if (bracketp <= bracket)
-                        {
-                            retmes = "Unmatched right paren";
-                            goto cerror;
-                        }
-                        *ep++ = CKET;
-                        *ep++ = *--bracketp;
-                        break;
-                    case 'w':
-                        *ep++ = WORD;
-                        break;
-                    case 'W':
-                        *ep++ = NWORD;
-                        break;
-                    case 'b':
-                        *ep++ = WBOUND;
-                        break;
-                    case 'B':
-                        *ep++ = NWBOUND;
-                        break;
-                    case '0': case '1': case '2': case '3': case '4':
-                    case '5': case '6': case '7': case '8': case '9':
-                        *ep++ = CBACK;
-                        *ep++ = c - '0';
-                        break;
-                    default:
-                        *ep++ = CCHR;
-                        if (c == '\0')
-                        {
-                            goto cerror;
-                        }
-                        *ep++ = c;
-                        break;
                     }
                     break;
-                case '.':
-                    *ep++ = CDOT;
-                    continue;
 
-                case '*':
-                    if (lastep == nullptr || *lastep == CBRA || *lastep == CKET //
-                        || *lastep == CIRC                                      //
-                        || (*lastep & STAR) || *lastep > NWORD)
+                case ')':
+                    if (bracketp <= bracket)
                     {
-                        goto defchar;
+                        retmes = "Unmatched right paren";
+                        goto cerror;
                     }
-                    *lastep |= STAR;
-                    continue;
+                    *ep++ = CKET;
+                    *ep++ = *--bracketp;
+                    break;
 
-                case '^':
-                    if (ep != compex->expbuf && ep[-1] != CEND)
+                case 'w':
+                    *ep++ = WORD;
+                    break;
+
+                case 'W':
+                    *ep++ = NWORD;
+                    break;
+
+                case 'b':
+                    *ep++ = WBOUND;
+                    break;
+
+                case 'B':
+                    *ep++ = NWBOUND;
+                    break;
+
+                case '0': case '1': case '2': case '3': case '4':
+                case '5': case '6': case '7': case '8': case '9':
+                    *ep++ = CBACK;
+                    *ep++ = c - '0';
+                    break;
+
+                default:
+                    *ep++ = CCHR;
+                    if (c == '\0')
                     {
-                        goto defchar;
+                        goto cerror;
                     }
-                    *ep++ = CIRC;
-                    continue;
+                    *ep++ = c;
+                    break;
+                }
+                break;
 
-                case '$':
-                    if (*strp != 0 && (*strp != '\\' || strp[1] != '|'))
-                    {
-                        goto defchar;
-                    }
-                    *ep++ = CDOL;
-                    continue;
+            case '.':
+                *ep++ = CDOT;
+                continue;
 
-                case '[':               /* character class */
+            case '*':
+                if (lastep == nullptr || *lastep == CBRA || *lastep == CKET //
+                    || *lastep == CIRC                                      //
+                    || (*lastep & STAR) || *lastep > NWORD)
                 {
-                    if (ep - compex->expbuf >= compex->eblen - BMAPSIZ)
-                    {
-                        ep = grow_eb(compex, ep, alt); /* reserve bitmap */
-                    }
+                    goto defchar;
+                }
+                *lastep |= STAR;
+                continue;
 
-                    for (int i = BMAPSIZ; i; --i)
-                    {
-                        ep[i] = 0;
-                    }
+            case '^':
+                if (ep != compex->expbuf && ep[-1] != CEND)
+                {
+                    goto defchar;
+                }
+                *ep++ = CIRC;
+                continue;
 
+            case '$':
+                if (*strp != 0 && (*strp != '\\' || strp[1] != '|'))
+                {
+                    goto defchar;
+                }
+                *ep++ = CDOL;
+                continue;
+
+            case '[':               /* character class */
+            {
+                if (ep - compex->expbuf >= compex->eblen - BMAPSIZ)
+                {
+                    ep = grow_eb(compex, ep, alt); /* reserve bitmap */
+                }
+
+                for (int i = BMAPSIZ; i; --i)
+                {
+                    ep[i] = 0;
+                }
+
+                c = *strp++;
+                if (c == '^')
+                {
                     c = *strp++;
-                    if (c == '^')
+                    *ep++ = NCCL;   /* negated */
+                }
+                else
+                {
+                    *ep++ = CCL;    /* normal */
+                }
+
+                int i = 0;          /* remember oldchar */
+                do
+                {
+                    if (c == '\0')
                     {
-                        c = *strp++;
-                        *ep++ = NCCL;   /* negated */
+                        retmes = "Missing ]";
+                        goto cerror;
+                    }
+                    if (*strp == '-' && *(++strp) != ']' && *strp)
+                    {
+                        i = *strp++;
                     }
                     else
                     {
-                        *ep++ = CCL;    /* normal */
+                        i = c;
                     }
-
-                    int i = 0;          /* remember oldchar */
-                    do
+                    while (c <= i)
                     {
-                        if (c == '\0')
+                        ep[c / BITSPERBYTE] |= 1 << (c % BITSPERBYTE);
+                        if (fold && std::isalpha(c))
                         {
-                            retmes = "Missing ]";
-                            goto cerror;
+                            ep[(c ^ 32) / BITSPERBYTE] |=
+                                1 << ((c ^ 32) % BITSPERBYTE);
+                                    /* set the other bit too */
                         }
-                        if (*strp == '-' && *(++strp) != ']' && *strp)
-                        {
-                            i = *strp++;
-                        }
-                        else
-                        {
-                            i = c;
-                        }
-                        while (c <= i)
-                        {
-                            ep[c / BITSPERBYTE] |= 1 << (c % BITSPERBYTE);
-                            if (fold && std::isalpha(c))
-                            {
-                                ep[(c ^ 32) / BITSPERBYTE] |=
-                                    1 << ((c ^ 32) % BITSPERBYTE);
-                                        /* set the other bit too */
-                            }
-                            c++;
-                        }
-                    } while ((c = *strp++) != ']');
-                    ep += BMAPSIZ;
-                    continue;
-                }
+                        c++;
+                    }
+                } while ((c = *strp++) != ']');
+                ep += BMAPSIZ;
+                continue;
+            }
 
             defchar:
-                default:
-                    *ep++ = CCHR;
-                    *ep++ = c;
+            default:
+                *ep++ = CCHR;
+                *ep++ = c;
             }
         }
     }
@@ -459,191 +468,191 @@ bool advance(COMPEX *compex, const char *lp, const char *ep)
     {
         switch (*ep++)
         {
-            case CCHR:
-                if (trt[*(Uchar*)ep++] != trt[*(Uchar*)lp])
-                {
-                    return false;
-                }
+        case CCHR:
+            if (trt[*(Uchar*)ep++] != trt[*(Uchar*)lp])
+            {
+                return false;
+            }
+            lp++;
+            continue;
+
+        case CDOT:
+            if (*lp == '\n')
+            {
+                return false;
+            }
+            lp++;
+            continue;
+
+        case CDOL:
+            if (!*lp || *lp == '\n')
+            {
+                continue;
+            }
+            return false;
+
+        case CIRC:
+            if (lp == s_first_character || lp[-1]=='\n')
+            {
+                continue;
+            }
+            return false;
+
+        case WORD:
+            if (std::isalnum(*lp))
+            {
                 lp++;
                 continue;
+            }
+            return false;
 
-            case CDOT:
-                if (*lp == '\n')
-                {
-                    return false;
-                }
+        case NWORD:
+            if (!std::isalnum(*lp))
+            {
                 lp++;
                 continue;
+            }
+            return false;
 
-            case CDOL:
-                if (!*lp || *lp == '\n')
-                {
-                    continue;
-                }
-                return false;
-
-            case CIRC:
-                if (lp == s_first_character || lp[-1]=='\n')
-                {
-                    continue;
-                }
-                return false;
-
-            case WORD:
-                if (std::isalnum(*lp))
-                {
-                    lp++;
-                    continue;
-                }
-                return false;
-
-            case NWORD:
-                if (!std::isalnum(*lp))
-                {
-                    lp++;
-                    continue;
-                }
-                return false;
-
-            case WBOUND:
-                if ((lp == s_first_character || !std::isalnum(lp[-1])) !=
-                        (!*lp || !std::isalnum(*lp)) )
-                {
-                    continue;
-                }
-                return false;
-
-            case NWBOUND:
-                if ((lp == s_first_character || !std::isalnum(lp[-1])) ==
-                        (!*lp || !std::isalnum(*lp)))
-                {
-                    continue;
-                }
-                return false;
-
-            case CEND:
-                return true;
-
-            case CCL:
-                if (cclass(ep, *lp, 1))
-                {
-                    ep += BMAPSIZ;
-                    lp++;
-                    continue;
-                }
-                return false;
-
-            case NCCL:
-                if (cclass(ep, *lp, 0))
-                {
-                    ep += BMAPSIZ;
-                    lp++;
-                    continue;
-                }
-                return false;
-
-            case CBRA:
-                compex->braslist[(unsigned char)*ep++] = lp;
+        case WBOUND:
+            if ((lp == s_first_character || !std::isalnum(lp[-1])) !=
+                    (!*lp || !std::isalnum(*lp)) )
+            {
                 continue;
+            }
+            return false;
 
-            case CKET:
-                i = *ep++;
-                compex->braelist[i] = lp;
-                compex->braelist[0] = lp;
-                compex->braslist[0] = compex->braslist[i];
+        case NWBOUND:
+            if ((lp == s_first_character || !std::isalnum(lp[-1])) ==
+                    (!*lp || !std::isalnum(*lp)))
+            {
                 continue;
+            }
+            return false;
 
-            case CBACK:
-                i = *ep++;
-                if (compex->braelist[i] == nullptr)
-                {
-                    std::fputs("bad braces\n",stdout);
-                    s_err = true;
-                    return false;
-                }
-                if (backref(compex, i, lp))
-                {
-                    lp += compex->braelist[i] - compex->braslist[i];
-                    continue;
-                }
-                return false;
+        case CEND:
+            return true;
 
-            case CBACK | STAR:
-                i = *ep++;
-                if (compex->braelist[i] == nullptr)
-                {
-                    std::fputs("bad braces\n",stdout);
-                    s_err = true;
-                    return false;
-                }
-                curlp = lp;
-                while (backref(compex, i, lp))
-                {
-                    lp += compex->braelist[i] - compex->braslist[i];
-                }
-                while (lp >= curlp)
-                {
-                    if (advance(compex, lp, ep))
-                    {
-                        return true;
-                    }
-                    lp -= compex->braelist[i] - compex->braslist[i];
-                }
-                continue;
-
-            case CDOT | STAR:
-                curlp = lp;
-                while (*lp++ && lp[-1] != '\n')
-                {
-                }
-                goto star;
-
-            case WORD | STAR:
-                curlp = lp;
-                while (*lp++ && std::isalnum(lp[-1]))
-                {
-                }
-                goto star;
-
-            case NWORD | STAR:
-                curlp = lp;
-                while (*lp++ && !std::isalnum(lp[-1]))
-                {
-                }
-                goto star;
-
-            case CCHR | STAR:
-                curlp = lp;
-                while (*lp++ && trt[*(Uchar*)(lp-1)] == trt[*(Uchar*)ep])
-                {
-                }
-                ep++;
-                goto star;
-
-            case CCL | STAR:
-            case NCCL | STAR:
-                curlp = lp;
-                while (*lp++ && cclass(ep, lp[-1], ep[-1] == (CCL | STAR)))
-                {
-                }
+        case CCL:
+            if (cclass(ep, *lp, 1))
+            {
                 ep += BMAPSIZ;
-                goto star;
+                lp++;
+                continue;
+            }
+            return false;
 
-        star:
-                do
-                {
-                    lp--;
-                    if (advance(compex, lp, ep))
-                    {
-                        return true;
-                    }
-                } while (lp > curlp);
-                return false;
+        case NCCL:
+            if (cclass(ep, *lp, 0))
+            {
+                ep += BMAPSIZ;
+                lp++;
+                continue;
+            }
+            return false;
 
-            default:
-                std::fputs("Badly compiled pattern\n",stdout);
+        case CBRA:
+            compex->braslist[(unsigned char)*ep++] = lp;
+            continue;
+
+        case CKET:
+            i = *ep++;
+            compex->braelist[i] = lp;
+            compex->braelist[0] = lp;
+            compex->braslist[0] = compex->braslist[i];
+            continue;
+
+        case CBACK:
+            i = *ep++;
+            if (compex->braelist[i] == nullptr)
+            {
+                std::fputs("bad braces\n",stdout);
                 s_err = true;
                 return false;
+            }
+            if (backref(compex, i, lp))
+            {
+                lp += compex->braelist[i] - compex->braslist[i];
+                continue;
+            }
+            return false;
+
+        case CBACK | STAR:
+            i = *ep++;
+            if (compex->braelist[i] == nullptr)
+            {
+                std::fputs("bad braces\n",stdout);
+                s_err = true;
+                return false;
+            }
+            curlp = lp;
+            while (backref(compex, i, lp))
+            {
+                lp += compex->braelist[i] - compex->braslist[i];
+            }
+            while (lp >= curlp)
+            {
+                if (advance(compex, lp, ep))
+                {
+                    return true;
+                }
+                lp -= compex->braelist[i] - compex->braslist[i];
+            }
+            continue;
+
+        case CDOT | STAR:
+            curlp = lp;
+            while (*lp++ && lp[-1] != '\n')
+            {
+            }
+            goto star;
+
+        case WORD | STAR:
+            curlp = lp;
+            while (*lp++ && std::isalnum(lp[-1]))
+            {
+            }
+            goto star;
+
+        case NWORD | STAR:
+            curlp = lp;
+            while (*lp++ && !std::isalnum(lp[-1]))
+            {
+            }
+            goto star;
+
+        case CCHR | STAR:
+            curlp = lp;
+            while (*lp++ && trt[*(Uchar*)(lp-1)] == trt[*(Uchar*)ep])
+            {
+            }
+            ep++;
+            goto star;
+
+        case CCL | STAR:
+        case NCCL | STAR:
+            curlp = lp;
+            while (*lp++ && cclass(ep, lp[-1], ep[-1] == (CCL | STAR)))
+            {
+            }
+            ep += BMAPSIZ;
+            goto star;
+
+        star:
+            do
+            {
+                lp--;
+                if (advance(compex, lp, ep))
+                {
+                    return true;
+                }
+            } while (lp > curlp);
+            return false;
+
+        default:
+            std::fputs("Badly compiled pattern\n",stdout);
+            s_err = true;
+            return false;
         }
     }
     return false;
