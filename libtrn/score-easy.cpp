@@ -37,28 +37,35 @@ char *sc_easy_append()
         q_done = true;
         switch (ch)
         {
-          case '0':
+        case '0':
             return nullptr;
-          case '1':
+
+        case '1':
             std::strcpy(s_sc_e_newline,"?");
             return s_sc_e_newline;
-          case '2':
+
+        case '2':
             filechar = '*';
             break;
-          case '3':
+
+        case '3':
             filechar = '"';
             break;
-          case '4':
+
+        case '4':
             filechar = '\0';
             break;
-          case '5':
+
+        case '5':
             filechar = '!';
             break;
-          case 'h':
+
+        case 'h':
             std::printf("No help available (yet).\n");
             q_done = false;
             break;
-          default:
+
+        default:
             q_done = false;
             break;
         }
@@ -91,11 +98,13 @@ char *sc_easy_append()
         q_done = true;
         switch (ch)
         {
-          case '0':
+        case '0':
             return nullptr;
-          case '1':
+
+        case '1':
             break;
-          case '2':
+
+        case '2':
             std::printf("Enter the line below:\n");
             std::fflush(stdout);
             g_buf[0] = '>';
@@ -108,11 +117,13 @@ char *sc_easy_append()
             std::printf("\n");
             q_done = false;
             break;
-          case 'h':
+
+        case 'h':
             std::printf("No help available (yet).\n");
             q_done = false;
             break;
-          default:
+
+        default:
             q_done = false;
             break;
         }
@@ -157,21 +168,25 @@ char *sc_easy_append()
         q_done = true;
         switch (ch)
         {
-          case '0':
+        case '0':
             return nullptr;
-          case '1':
+
+        case '1':
             *s++ = 'S';
             *s++ = '\0';
             return s_sc_e_newline;
-          case '2':
+
+        case '2':
             *s++ = 'F';
             *s++ = '\0';
             return s_sc_e_newline;
-          case 'h':
+
+        case 'h':
             std::printf("No help available (yet).\n");
             q_done = false;
             break;
-          default:
+
+        default:
             q_done = false;
             break;
         }
@@ -199,24 +214,31 @@ const char *sc_easy_command()
         q_done = true;
         switch (ch)
         {
-          case '0':
+        case '0':
             return nullptr;
-          case '1':
+
+        case '1':
             return "\"";        /* do an append command */
-          case '2':
+
+        case '2':
             return "r";
-          case '3':
+
+        case '3':
             return "s";
-          case '4':
+
+        case '4':
             /* add more later */
             return "e";
-          case '5':
+
+        case '5':
             return "f";
-          case 'h':
+
+        case 'h':
             std::printf("No help available (yet).\n");
             q_done = false;
             break;
-          default:
+
+        default:
             q_done = false;
             break;
         }
