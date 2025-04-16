@@ -6,7 +6,7 @@
 
 #include <string>
 
-enum input_newsgroup_result
+enum InputNewsgroupResult
 {
     ING_NORM = 0,
     ING_ASK,
@@ -34,7 +34,7 @@ extern int         g_use_news_selector;      //
 
 void trn_init();
 void do_multirc();
-input_newsgroup_result input_newsgroup();
+InputNewsgroupResult input_newsgroup();
 void check_active_refetch(bool force);
 void trn_version();
 void set_ngname(const char *what);

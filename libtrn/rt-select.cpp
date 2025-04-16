@@ -3127,7 +3127,7 @@ static display_state newsgroup_commands(char_int ch)
     default:
     {
         Selection u;
-        input_newsgroup_result ret;
+        InputNewsgroupResult ret;
         bool was_at_top = !g_sel_prior_obj_cnt;
         PUSH_SELECTOR();
         if (!(s_removed_prompt & RP_NEWLINE))

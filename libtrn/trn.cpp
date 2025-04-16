@@ -446,7 +446,7 @@ bug_out:
     set_mode(gmode_save,mode_save);
 }
 
-input_newsgroup_result input_newsgroup()
+InputNewsgroupResult input_newsgroup()
 {
     char* s;
 
