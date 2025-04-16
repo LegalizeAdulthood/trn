@@ -9,7 +9,7 @@
 
 #include <string>
 
-enum art_search_result
+enum ArtSearchResult
 {
     SRCH_ABORT = 0,
     SRCH_INTR = 1,
@@ -40,6 +40,6 @@ extern bool             g_art_doread;       /* search read articles? */
 extern bool             g_kill_thru_kludge; /* -k */
 
 void              artsrch_init();
-art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd);
+ArtSearchResult art_search(char *patbuf, int patbufsiz, bool get_cmd);
 
 #endif
