@@ -72,7 +72,7 @@ bool        g_unsafe_rc_saves{};        /* -U */
 std::string g_dfltcmd;                  /* 1st char is default command */
 
 /* art_switch() return values */
-enum art_switch_result
+enum ArticleSwitchResult
 {
     AS_NORM = 0,
     AS_INP = 1,
@@ -89,7 +89,7 @@ static bool mark_all_unREAD(char *ptr, int arg);
 #ifdef DEBUG
 static bool debug_article_output(char *ptr, int arg);
 #endif
-static art_switch_result art_switch();
+static ArticleSwitchResult art_switch();
 
 static DoNewsgroupResult s_exit_code{NG_NORM};
 static bool                s_art_sel_ilock{};
@@ -645,7 +645,7 @@ cleanup2:
 
 /* decide what to do at the end of an article */
 
-static art_switch_result art_switch()
+static ArticleSwitchResult art_switch()
 {
     setdef(g_buf,g_dfltcmd.c_str());
     printcmd();
