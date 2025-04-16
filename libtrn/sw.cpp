@@ -34,14 +34,16 @@ void sw_file(char **tcbufptr)
 {
     int initfd = open(*tcbufptr,0);
 
-    if (initfd >= 0) {
+    if (initfd >= 0)
+    {
         stat_t switch_file_stat{};
         fstat(initfd,&switch_file_stat);
         if (switch_file_stat.st_size >= TCBUF_SIZE-1)
         {
             *tcbufptr = saferealloc(*tcbufptr,(MEM_SIZE)switch_file_stat.st_size+1);
         }
-        if (switch_file_stat.st_size) {
+        if (switch_file_stat.st_size)
+        {
             int len = read(initfd,*tcbufptr,(int)switch_file_stat.st_size);
             (*tcbufptr)[len] = '\0';
             sw_list(*tcbufptr);
@@ -63,9 +65,12 @@ void sw_list(char *swlist)
 
     char *s = swlist;
     p = swlist;
-    while (*s) {                        /* "String, or nothing" */
-        if (!inquote && std::isspace(*s)) {  /* word delimiter? */
-            for (;;) {
+    while (*s)                          /* "String, or nothing" */
+    {
+        if (!inquote && std::isspace(*s))    /* word delimiter? */
+        {
+            for (;;)
+            {
                 s = skip_space(s);
                 if (*s != '#')
                 {
@@ -78,16 +83,20 @@ void sw_list(char *swlist)
                 *p++ = '\0';            /* chop here */
             }
         }
-        else if (inquote == *s) {
+        else if (inquote == *s)
+        {
             s++;                        /* delete trailing quote */
             inquote = 0;                /* no longer quoting */
         }
-        else if (!inquote && (*s == '"' || *s == '\'')) {
+        else if (!inquote && (*s == '"' || *s == '\''))
+        {
                                         /* OK, I know when I am not wanted */
             inquote = *s++;             /* remember & del single or double */
         }
-        else if (*s == '\\') {          /* quoted something? */
-            if (*++s != '\n') {         /* newline? */
+        else if (*s == '\\')            /* quoted something? */
+        {
+            if (*++s != '\n')           /* newline? */
+            {
                 s = interp_backslash(p, s);
                 p++;
             }
@@ -100,11 +109,13 @@ void sw_list(char *swlist)
     }
     *p++ = '\0';
     *p = '\0';                          /* put an extra null on the end */
-    if (inquote) {
+    if (inquote)
+    {
         std::printf("Unmatched %c in switch\n",inquote);
         termdown(1);
     }
-    for (char *c = swlist; *c; /* p += strlen(p)+1 */ ) {
+    for (char *c = swlist; *c; /* p += strlen(p)+1 */)
+    {
         decode_switch(c);
         while (*c++)
         {
@@ -119,23 +130,27 @@ void decode_switch(const char *s)
 {
     s = skip_space(s);          /* ignore leading spaces */
 #ifdef DEBUG
-    if (debug) {
+    if (debug)
+    {
         std::printf("Switch: %s\n",s);
         termdown(1);
     }
 #endif
-    if (*s != '-' && *s != '+') {       /* newsgroup pattern */
+    if (*s != '-' && *s != '+')         /* newsgroup pattern */
+    {
         setngtodo(s);
         if (g_mode == MM_INITIALIZING)
         {
             g_ng_min_toread = 0;
         }
     }
-    else {                              /* normal switch */
+    else                                /* normal switch */
+    {
         bool upordown = *s == '-';
         char tmpbuf[LBUFLEN];
 
-        switch (*++s) {
+        switch (*++s)
+        {
         case '/':
             set_option(OI_AUTO_SAVE_NAME, YESorNO(upordown));
             break;
@@ -173,7 +188,8 @@ void decode_switch(const char *s)
             }
             set_option(OI_CHECKPOINT_NEWSRC_FREQUENCY, s);
             break;
-        case 'd': {
+        case 'd':
+        {
             if (*++s == '=')
             {
                 s++;
@@ -184,7 +200,8 @@ void decode_switch(const char *s)
         case 'D':
 #ifdef DEBUG
             if (*++s == '=') s++;
-            if (*s) {
+            if (*s)
+            {
                 if (upordown)
                 {
                     debug |= std::atoi(s);
@@ -194,7 +211,8 @@ void decode_switch(const char *s)
                     debug &= ~std::atoi(s);
                 }
             }
-            else {
+            else
+            {
                 if (upordown)
                 {
                     debug |= 1;
@@ -220,7 +238,8 @@ void decode_switch(const char *s)
             }
             std::strcpy(tmpbuf,s);
             char *tmp = std::strchr(tmpbuf,'=');
-            if (tmp) {
+            if (tmp)
+            {
                 *tmp++ = '\0';
                 tmp = export_var(tmpbuf,tmp) - (tmp-tmpbuf);
                 if (g_mode == MM_INITIALIZING)
@@ -228,7 +247,8 @@ void decode_switch(const char *s)
                     save_init_environment(tmp);
                 }
             }
-            else {
+            else
+            {
                 tmp = export_var(tmpbuf,"") - std::strlen(tmpbuf) - 1;
                 if (g_mode == MM_INITIALIZING)
                 {
@@ -250,7 +270,8 @@ void decode_switch(const char *s)
             set_option(OI_FUZZY_NEWSGROUP_NAMES, YESorNO(upordown));
             break;
         case 'h':
-            if (!s[1]) {
+            if (!s[1])
+            {
                 /* Free old g_user_htype list */
                 while (g_user_htype_cnt > 1)
                 {
@@ -327,7 +348,8 @@ void decode_switch(const char *s)
                 s++;
             }
             set_option(OI_NEWS_SEL_MODE, s);
-            if (*++s) {
+            if (*++s)
+            {
                 char tmpbuf2[4];
                 std::sprintf(tmpbuf2, "%s%c", std::isupper(*s)? "r " : "", *s);
                 set_option(OI_NEWS_SEL_ORDER, tmpbuf2);
@@ -342,8 +364,10 @@ void decode_switch(const char *s)
             {
                 s = YESorNO(false);
             }
-            else {
-                switch (*s) {
+            else
+            {
+                switch (*s)
+                {
                 case '+':
                     s = "thread";
                     break;
@@ -400,7 +424,8 @@ void decode_switch(const char *s)
             set_option(OI_VERIFY_INPUT, YESorNO(upordown));
             break;
         case 'V':
-            if (g_mode == MM_INITIALIZING) {
+            if (g_mode == MM_INITIALIZING)
+            {
                 g_tc_LINES = 1000;
                 g_tc_COLS = 1000;
                 g_erase_screen = false;
@@ -417,7 +442,8 @@ void decode_switch(const char *s)
             {
                 s++;
             }
-            if (std::isdigit(*s)) {
+            if (std::isdigit(*s))
+            {
                 set_option(OI_ARTICLE_TREE_LINES, s);
                 s = skip_digits(s);
             }
@@ -432,7 +458,8 @@ void decode_switch(const char *s)
             {
                 s++;
             }
-            if (std::isdigit(*s)) {
+            if (std::isdigit(*s))
+            {
                 set_option(OI_USE_NEWS_SEL, s);
                 s = skip_digits(s);
             }
@@ -470,7 +497,8 @@ void decode_switch(const char *s)
 
 void save_init_environment(char *str)
 {
-    if (s_init_environment_cnt >= s_init_environment_max) {
+    if (s_init_environment_cnt >= s_init_environment_max)
+    {
         s_init_environment_max += 32;
         s_init_environment_strings = (char**)
           saferealloc((char*)s_init_environment_strings,
@@ -481,7 +509,8 @@ void save_init_environment(char *str)
 
 void write_init_environment(std::FILE *fp)
 {
-    for (int i = 0; i < s_init_environment_cnt; i++) {
+    for (int i = 0; i < s_init_environment_cnt; i++)
+    {
         char *s = std::strchr(s_init_environment_strings[i], '=');
         if (!s)
         {
