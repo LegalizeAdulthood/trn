@@ -154,6 +154,7 @@ void decode_switch(const char *s)
         case '/':
             set_option(OI_AUTO_SAVE_NAME, YESorNO(upordown));
             break;
+
         case '+':
             set_option(OI_USE_ADD_SEL, YESorNO(upordown));
             set_option(OI_USE_NEWSGROUP_SEL, YESorNO(upordown));
@@ -166,21 +167,27 @@ void decode_switch(const char *s)
                 set_option(OI_USE_NEWSRC_SEL, YESorNO(false));
             }
             break;
+
         case 'a':
             set_option(OI_BKGND_THREADING, YESorNO(!upordown));
             break;
+
         case 'A':
             set_option(OI_AUTO_ARROW_MACROS, YESorNO(upordown));
             break;
+
         case 'b':
             set_option(OI_READ_BREADTH_FIRST, YESorNO(upordown));
             break;
+
         case 'B':
             set_option(OI_BKGND_SPINNER, YESorNO(upordown));
             break;
+
         case 'c':
             g_checkflag = upordown;
             break;
+
         case 'C':
             if (*++s == '=')
             {
@@ -188,6 +195,7 @@ void decode_switch(const char *s)
             }
             set_option(OI_CHECKPOINT_NEWSRC_FREQUENCY, s);
             break;
+
         case 'd':
         {
             if (*++s == '=')
@@ -197,9 +205,13 @@ void decode_switch(const char *s)
             set_option(OI_SAVE_DIR, s);
             break;
         }
+
         case 'D':
 #ifdef DEBUG
-            if (*++s == '=') s++;
+            if (*++s == '=')
+            {
+                s++;
+            }
             if (*s)
             {
                 if (upordown)
@@ -227,9 +239,11 @@ void decode_switch(const char *s)
             termdown(1);
 #endif
             break;
+
         case 'e':
             set_option(OI_ERASE_SCREEN, YESorNO(upordown));
             break;
+
         case 'E':
         {
             if (*++s == '=')
@@ -257,18 +271,23 @@ void decode_switch(const char *s)
             }
             break;
         }
+
         case 'f':
             set_option(OI_NOVICE_DELAYS, YESorNO(!upordown));
             break;
+
         case 'F':
             set_option(OI_CITED_TEXT_STRING, s+1);
             break;
+
         case 'g':
             set_option(OI_GOTO_LINE_NUM, s+1);
             break;
+
         case 'G':
             set_option(OI_FUZZY_NEWSGROUP_NAMES, YESorNO(upordown));
             break;
+
         case 'h':
             if (!s[1])
             {
@@ -280,6 +299,7 @@ void decode_switch(const char *s)
                 std::memset(g_user_htypeix,0,26);
             }
             /* FALL THROUGH */
+
         case 'H':
             if (g_checkflag)
             {
@@ -287,6 +307,7 @@ void decode_switch(const char *s)
             }
             set_header(s+1,*s == 'h'? HT_HIDE : HT_MAGIC, upordown);
             break;
+
         case 'i':
             if (*++s == '=')
             {
@@ -294,12 +315,15 @@ void decode_switch(const char *s)
             }
             set_option(OI_INITIAL_ARTICLE_LINES, s);
             break;
+
         case 'I':
             set_option(OI_APPEND_UNSUBSCRIBED_GROUPS, YESorNO(upordown));
             break;
+
         case 'j':
             set_option(OI_FILTER_CONTROL_CHARACTERS, YESorNO(!upordown));
             break;
+
         case 'J':
             if (*++s == '=')
             {
@@ -308,33 +332,41 @@ void decode_switch(const char *s)
             set_option(OI_JOIN_SUBJECT_LINES,
                        upordown && *s? s : YESorNO(upordown));
             break;
+
         case 'k':
             set_option(OI_IGNORE_THRU_ON_SELECT, YESorNO(upordown));
             break;
+
         case 'K':
             set_option(OI_AUTO_GROW_GROUPS, YESorNO(!upordown));
             break;
+
         case 'l':
             set_option(OI_MUCK_UP_CLEAR, YESorNO(upordown));
             break;
+
         case 'L':
             set_option(OI_ERASE_EACH_LINE, YESorNO(upordown));
             break;
+
         case 'M':
             if (upordown)
             {
                 set_option(OI_SAVEFILE_TYPE, "mail");
             }
             break;
+
         case 'm':
             set_option(OI_PAGER_LINE_MARKING, s+1);
             break;
+
         case 'N':
             if (upordown)
             {
                 set_option(OI_SAVEFILE_TYPE, "norm");
             }
             break;
+
         case 'o':
             if (*++s == '=')
             {
@@ -342,6 +374,7 @@ void decode_switch(const char *s)
             }
             set_option(OI_OLD_MTHREADS_DATABASE, s);
             break;
+
         case 'O':
             if (*++s == '=')
             {
@@ -355,6 +388,7 @@ void decode_switch(const char *s)
                 set_option(OI_NEWS_SEL_ORDER, tmpbuf2);
             }
             break;
+
         case 'p':
             if (*++s == '=')
             {
@@ -371,9 +405,11 @@ void decode_switch(const char *s)
                 case '+':
                     s = "thread";
                     break;
+
                 case 'p':
                     s = "parent";
                     break;
+
                 default:
                     s = "subthread";
                     break;
@@ -381,9 +417,11 @@ void decode_switch(const char *s)
             }
             set_option(OI_SELECT_MY_POSTS, s);
             break;
+
         case 'q':
             set_option(OI_NEWGROUP_CHECK, YESorNO(!upordown));
             break;
+
         case 'Q':
             if (*++s == '=')
             {
@@ -391,9 +429,11 @@ void decode_switch(const char *s)
             }
             set_option(OI_CHARSET, s);
             break;
+
         case 'r':
             set_option(OI_RESTART_AT_LAST_GROUP, YESorNO(upordown));
             break;
+
         case 's':
             if (*++s == '=')
             {
@@ -401,6 +441,7 @@ void decode_switch(const char *s)
             }
             set_option(OI_INITIAL_GROUP_LIST, std::isdigit(*s)? s : YESorNO(false));
             break;
+
         case 'S':
             if (*++s == '=')
             {
@@ -408,21 +449,27 @@ void decode_switch(const char *s)
             }
             set_option(OI_SCANMODE_COUNT, s);
             break;
+
         case 't':
             set_option(OI_TERSE_OUTPUT, YESorNO(upordown));
             break;
+
         case 'T':
             set_option(OI_EAT_TYPEAHEAD, YESorNO(!upordown));
             break;
+
         case 'u':
             set_option(OI_COMPRESS_SUBJECTS, YESorNO(!upordown));
             break;
+
         case 'U':
             g_unsafe_rc_saves = upordown;
             break;
+
         case 'v':
             set_option(OI_VERIFY_INPUT, YESorNO(upordown));
             break;
+
         case 'V':
             if (g_mode == MM_INITIALIZING)
             {
@@ -437,6 +484,7 @@ void decode_switch(const char *s)
                 std::exit(0);
             }
             break;
+
         case 'x':
             if (*++s == '=')
             {
@@ -453,6 +501,7 @@ void decode_switch(const char *s)
             }
             set_option(OI_USE_THREADS, YESorNO(upordown));
             break;
+
         case 'X':
             if (*++s == '=')
             {
@@ -472,6 +521,7 @@ void decode_switch(const char *s)
                 set_option(OI_NEWS_SEL_CMDS, s);
             }
             break;
+
         case 'z':
             if (*++s == '=')
             {
@@ -480,6 +530,7 @@ void decode_switch(const char *s)
             set_option(OI_DEFAULT_REFETCH_TIME,
                        upordown && *s? s : YESorNO(upordown));
             break;
+
         default:
             if (g_verbose)
             {
