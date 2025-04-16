@@ -51,7 +51,7 @@ enum DisplayState
     DS_ERROR
 };
 
-enum univ_read_result
+enum UniversalReadResult
 {
     UR_NORM = 1,
     UR_BREAK = 2, /* request return to selector */
@@ -185,7 +185,7 @@ private:
     } while (false)
 
 static void             sel_dogroups();
-static univ_read_result univ_read(UniversalItem *ui);
+static UniversalReadResult univ_read(UniversalItem *ui);
 static void             sel_display();
 static void             sel_status_msg(const char *cp);
 static char             sel_input();
@@ -733,9 +733,9 @@ char option_selector()
 }
 
 /* returns a command to do */
-static univ_read_result univ_read(UniversalItem *ui)
+static UniversalReadResult univ_read(UniversalItem *ui)
 {
-    univ_read_result exit_code = UR_NORM;
+    UniversalReadResult exit_code = UR_NORM;
     char ch;
 
     g_univ_follow_temp = false;
@@ -1002,7 +1002,7 @@ sel_restart:
 
                 ui->flags &= ~UF_SEL;
                 save_selected_count--;
-                univ_read_result ret = univ_read(ui);
+                UniversalReadResult ret = univ_read(ui);
 
                 POP_UNIV_SELECTOR();
                 POP_SELECTOR();
