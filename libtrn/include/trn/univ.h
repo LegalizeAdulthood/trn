@@ -41,7 +41,7 @@ struct UniversalGroupMaskData
     char* masklist;
 };
 
-struct UNIV_CONFIGFILE_DATA
+struct UniversalConfigFileData
 {
     char* title;
     char* fname;
@@ -89,7 +89,7 @@ union UNIV_DATA
     char* str;
     HelpLocation i;
     UniversalGroupMaskData gmask;
-    UNIV_CONFIGFILE_DATA cfile;
+    UniversalConfigFileData cfile;
     UNIV_NEWSGROUP group;
     UNIV_VIRT_DATA virt;
     UNIV_VIRT_GROUP vgroup;
