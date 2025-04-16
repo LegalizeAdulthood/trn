@@ -17,14 +17,14 @@
 #include <stdlib.h> // size_t
 #include <string>
 
-enum nntp_flags
+enum NNTPFlags
 {
     NNTP_NONE = 0x0000,
     NNTP_NEW_CMD_OK = 0x0001,
     NNTP_FORCE_AUTH_NEEDED = 0x0002,
     NNTP_FORCE_AUTH_NOW = 0x0004
 };
-DECLARE_FLAGS_ENUM(nntp_flags, int);
+DECLARE_FLAGS_ENUM(NNTPFlags, int);
 
 using error_code = boost::system::error_code;
 
@@ -48,7 +48,7 @@ struct NNTPLINK
     ConnectionPtr connection;
     std::time_t        last_command;
     int           port_number;
-    nntp_flags    flags;
+    NNTPFlags    flags;
     bool          trailing_CR;
 };
 
