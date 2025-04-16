@@ -576,7 +576,7 @@ void sc_score_cmd(const char *line)
     }
     switch (*line)
     {
-      case 'f': /* fill (useful when PENDING is unavailable) */
+    case 'f': /* fill (useful when PENDING is unavailable) */
         std::printf("Scoring more articles...");
         std::fflush(stdout); /* print it now */
         setspin(SPIN_FOREGROUND);
@@ -588,11 +588,13 @@ void sc_score_cmd(const char *line)
          * *if* lookahead did all the arts */
         std::putchar('\n');
         break;
-      case 'r': /* rescore */
+
+    case 'r': /* rescore */
         std::printf("Rescoring articles...\n");
         sc_rescore();
         break;
-      case 's': /* verbose score for this article */
+
+    case 's': /* verbose score for this article */
         /* XXX CONSIDER: A VERBOSE-SCORE ROUTINE (instead of this hack) */
         i = 0;  /* total score */
         g_sf_score_verbose = true;
@@ -608,7 +610,8 @@ void sc_score_cmd(const char *line)
         }
         std::printf("Total score is %ld\n",i);
         break;
-      case 'e': /* edit scorefile or other file */
+
+    case 'e': /* edit scorefile or other file */
         s = skip_hor_space(line+1);
         if (!*s)                /* empty name for scorefile */
         {
@@ -619,7 +622,8 @@ void sc_score_cmd(const char *line)
             sf_edit_file(s);
         }
         break;
-      default:
+
+    default:
         std::printf("Unknown scoring command |%s|\n",line);
     } /* switch */
 }
