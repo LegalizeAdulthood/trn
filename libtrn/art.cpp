@@ -153,7 +153,7 @@ do_article_result do_article()
     }
     g_term_scrolled = 0;
 
-    for (;;) /* for each page */
+    while (true) /* for each page */
     {
         if (g_threaded_group && g_max_tree_lines)
         {

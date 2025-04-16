@@ -967,7 +967,7 @@ void forward()
         if (*s == 'C' && string_case_equal(s, "Content-Type: multipart/", 24))
         {
             s += 24;
-            for (;;)
+            while (true)
             {
                 for (; *s && *s != ';'; s++)
                 {

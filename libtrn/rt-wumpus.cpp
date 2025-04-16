@@ -162,7 +162,7 @@ void init_tree()
 static void find_depth(ARTICLE *article, int depth)
 {
     s_max_depth = std::max(depth, s_max_depth);
-    for (;;)
+    while (true)
     {
         if (article == s_tree_article)
         {
@@ -205,7 +205,7 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
         cp = s_tree_indent;
         depth_mode = 0;
     }
-    for (;;)
+    while (true)
     {
         switch (depth_mode)
         {
@@ -333,7 +333,7 @@ ARTICLE *get_tree_artp(int x, int y)
 */
 static ARTICLE *find_artp(ARTICLE *article, int x)
 {
-    for (;;)
+    while (true)
     {
         if (!x && !s_find_artp_y)
         {
@@ -715,7 +715,7 @@ static void display_tree(ARTICLE *article, char *cp)
     cp[1] = ' ';
     cp += 5;
     color_object(COLOR_TREE, true);
-    for (;;)
+    while (true)
     {
         std::putchar(((article->flags&AF_HAS_RE) || article->parent) ? '-' : ' ');
         if (!(article->flags & AF_UNREAD))

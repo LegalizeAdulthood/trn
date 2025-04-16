@@ -433,7 +433,7 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
     }
     TRN_ASSERT(!cmdlst || *cmdlst);
     perform_status_init(g_ngptr->toread);
-    for (;;)
+    while (true)
     {
         /* check if we're out of articles */
         if (backward? ((g_art = article_prev(g_art)) < srchfirst)

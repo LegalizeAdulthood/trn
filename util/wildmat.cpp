@@ -158,7 +158,7 @@ int main()
     printf("A blank line gets prompts for a new pattern; a blank pattern\n");
     printf("exits the program.\n");
 
-    for (;;)
+    while (true)
     {
         printf("\nEnter pattern:  ");
         (void)fflush(stdout);
@@ -166,7 +166,7 @@ int main()
         {
             break;
         }
-        for (;;)
+        while (true)
         {
             printf("Enter text:  ");
             (void)fflush(stdout);

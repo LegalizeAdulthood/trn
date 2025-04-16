@@ -56,7 +56,7 @@ char *listnum2listitem(LIST *list, long num)
     {
         node = list->first;
     }
-    for (;;)
+    while (true)
     {
         if (!node || num < node->low)
         {

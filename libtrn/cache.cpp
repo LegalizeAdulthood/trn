@@ -843,7 +843,7 @@ void look_ahead()
         if (g_srchahead)
         {
             g_srchahead = g_art;
-            for (;;)
+            while (true)
             {
                 g_srchahead++;  /* go forward one article */
                 if (g_srchahead > g_lastart)   /* out of articles? */

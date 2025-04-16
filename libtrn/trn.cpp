@@ -216,7 +216,7 @@ void do_multirc()
     /* loop through all unread news */
   restart:
     g_current_ng = g_first_ng;
-    for (;;)
+    while (true)
     {
         bool retry = false;
         if (g_findlast > 0)
@@ -250,7 +250,7 @@ void do_multirc()
         {
             g_ngptr = g_first_ng;
         }
-        for (;;)                        /* for each newsgroup */
+        while (true)                        /* for each newsgroup */
         {
             if (g_ngptr == nullptr)     /* after the last newsgroup? */
             {

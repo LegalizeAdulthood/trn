@@ -69,7 +69,7 @@ void sw_list(char *swlist)
     {
         if (!inquote && std::isspace(*s))    /* word delimiter? */
         {
-            for (;;)
+            while (true)
             {
                 s = skip_space(s);
                 if (*s != '#')

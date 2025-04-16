@@ -1517,7 +1517,7 @@ static void set_header_list(headtype_flags flag, headtype_flags defflag, const c
     std::unique_ptr<char[]> buffer(new char[std::strlen(str) + 1]);
     char *buff = buffer.get();
     std::strcpy(buff, str);
-    for (;;)
+    while (true)
     {
         char *cp = std::strchr(buff, ',');
         if (cp != nullptr)

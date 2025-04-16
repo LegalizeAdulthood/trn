@@ -1316,7 +1316,7 @@ void getcmd(char *whatbuf)
 tryagain:
     KEYMAP *curmap = s_topmap;
     bool no_macros = (whatbuf != g_buf && !s_xmouse_is_on);
-    for (;;)
+    while (true)
     {
         g_int_count = 0;
         errno = 0;

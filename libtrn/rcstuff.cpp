@@ -322,7 +322,7 @@ bool use_next_multirc(MULTIRC *mptr)
 
     unuse_multirc(mptr);
 
-    for (;;)
+    while (true)
     {
         mp = multirc_next(mp);
         if (!mp)
@@ -348,7 +348,7 @@ bool use_prev_multirc(MULTIRC *mptr)
 
     unuse_multirc(mptr);
 
-    for (;;)
+    while (true)
     {
         mp = multirc_prev(mp);
         if (!mp)

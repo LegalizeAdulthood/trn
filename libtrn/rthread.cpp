@@ -283,7 +283,7 @@ ARTICLE *last_art(SUBJECT *sp)
     ap = sp->thread;
     if (ap)
     {
-        for (;;)
+        while (true)
         {
             if (ap->sibling)
             {
@@ -427,7 +427,7 @@ void inc_art(bool sel_flag, bool rereading)
     {
         g_art = g_firstart-1;
     }
-    for (;;)
+    while (true)
     {
         g_art = article_next(g_art);
         if (g_art > g_lastart)
@@ -542,7 +542,7 @@ void dec_art(bool sel_flag, bool rereading)
 
     /* Otherwise, just decrement through the art numbers */
   num_dec:
-    for (;;)
+    while (true)
     {
         g_art = article_prev(g_art);
         if (g_art < g_absfirst)
@@ -1470,7 +1470,7 @@ bool find_next_sib()
 {
     int      ascent = 0;
     ARTICLE *ta = g_artp;
-    for (;;)
+    while (true)
     {
         while (ta->sibling)
         {
@@ -1504,7 +1504,7 @@ static ARTICLE *first_sib(ARTICLE *ta, int depth)
         return ta;
     }
 
-    for (;;)
+    while (true)
     {
         if (ta->child1 && (tb = first_sib(ta->child1, depth-1)))
         {
@@ -1528,7 +1528,7 @@ bool find_prev_sib()
 {
     int      ascent = 0;
     ARTICLE *ta = g_artp;
-    for (;;)
+    while (true)
     {
         ARTICLE *tb = ta;
         if (ta->parent)

@@ -460,7 +460,7 @@ void rover_thread(ARTICLE *article, char *s)
 {
     ARTICLE*prev = article;
 
-    for (;;)
+    while (true)
     {
         s = skip_eq(++s, ' ');
         if (std::isdigit(*s))

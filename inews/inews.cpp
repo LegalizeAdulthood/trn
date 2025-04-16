@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
     cp = headbuf;
     had_nl = true;
 
-    for (;;)
+    while (true)
     {
         if (headbuf_size < artpos + LBUFLEN + 1)
         {

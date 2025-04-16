@@ -653,7 +653,7 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
         {
             char* last_buf = g_ser_line;
             MEM_SIZE last_buflen = sizeof g_ser_line;
-            for (;;)
+            while (true)
             {
                 char *line = nntp_get_a_line(last_buf, last_buflen, last_buf!=g_ser_line);
 # ifdef DEBUG

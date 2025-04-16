@@ -176,7 +176,7 @@ char *compile(COMPEX *compex, const char *strp, bool RE, bool fold)
     }
     compex->nbra = 0;                   /* no brackets yet */
     char *lastep = nullptr;
-    for (;;)
+    while (true)
     {
         if (ep + 4 - compex->expbuf >= compex->eblen)
         {

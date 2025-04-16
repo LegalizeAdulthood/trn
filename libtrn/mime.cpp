@@ -643,7 +643,7 @@ void mime_ParseSubheader(std::FILE *ifp, char *next_line)
     static int line_size = 0;
     mime_ClearStruct(g_mime_section);
     g_mime_section->type = TEXT_MIME;
-    for (;;)
+    while (true)
     {
         for (int pos = 0;; pos += std::strlen(line + pos))
         {
@@ -1660,7 +1660,7 @@ int filter_html(char *t, const char *f)
                 *t++ = ' ';
             }
             /* In non-PRE mode spaces should be collapsed */
-            for (;;)
+            while (true)
             {
                 int w = byte_length_at(f);
                 if (w == 0 || f[w] == '\0' || !(f[w] == ' ' || at_grey_space(f+w)))

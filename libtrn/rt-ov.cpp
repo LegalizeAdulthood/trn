@@ -214,7 +214,7 @@ bool ov_data(ART_NUM first, ART_NUM last, bool cheating)
     bool remote = !g_datasrc->over_dir;
 
 beginning:
-    for (;;)
+    while (true)
     {
         artnum = article_first(first);
         if (artnum > first || !(article_ptr(artnum)->flags & AF_CACHED))
@@ -237,7 +237,7 @@ beginning:
         }
     }
     started_request = std::time(nullptr);
-    for (;;)
+    while (true)
     {
         artnum = article_last(last);
         if (artnum < last || !(article_ptr(artnum)->flags & AF_CACHED))
@@ -292,7 +292,7 @@ beginning:
     }
 
     artnum = first-1;
-    for (;;)
+    while (true)
     {
         if (remote)
         {

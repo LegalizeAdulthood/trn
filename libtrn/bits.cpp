@@ -335,7 +335,7 @@ void find_existing_articles()
             {
                 ap->flags &= ~AF_EXISTS;
             }
-            for (;;)
+            while (true)
             {
                 if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
                 {
