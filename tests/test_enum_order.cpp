@@ -13,7 +13,7 @@ struct enum_values
     int value;
 };
 
-using header_line_type_values = enum_values<header_line_type>;
+using header_line_type_values = enum_values<HeaderLineType>;
 
 #define ENUM_VALUE(enum_, value_) { #enum_, enum_, value_ }
 

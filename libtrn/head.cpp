@@ -87,20 +87,20 @@ short            g_user_htypeix[26];
 int              g_user_htype_cnt{};
 int              g_user_htype_max{};
 ART_NUM          g_parsed_art{}; /* the article number we've parsed */
-header_line_type g_in_header{};  /* are we decoding the header? */
+HeaderLineType g_in_header{};  /* are we decoding the header? */
 char            *g_headbuf;
 
 static Article         *s_parsed_artp{}; /* the article ptr we've parsed */
 static long             s_headbuf_size;
 static bool             s_first_one; /* is this the 1st occurrence of this header line? */
 static bool             s_reading_nntp_header;
-static header_line_type s_htypeix[26]{};
+static HeaderLineType s_htypeix[26]{};
 
 void head_init()
 {
     for (int i = HEAD_FIRST + 1; i < HEAD_LAST; i++)
     {
-        s_htypeix[*g_htype[i].name - 'a'] = static_cast<header_line_type>(i);
+        s_htypeix[*g_htype[i].name - 'a'] = static_cast<HeaderLineType>(i);
     }
 
     g_user_htype_max = 10;
@@ -133,7 +133,7 @@ void dumpheader(char *where)
 }
 #endif
 
-header_line_type set_line_type(char *bufptr, const char *colon)
+HeaderLineType set_line_type(char *bufptr, const char *colon)
 {
     char* t;
     char* f;
@@ -166,7 +166,7 @@ header_line_type set_line_type(char *bufptr, const char *colon)
         {
             if (len == g_htype[i].length && !std::strcmp(f, g_htype[i].name))
             {
-                return static_cast<header_line_type>(i);
+                return static_cast<HeaderLineType>(i);
             }
         }
         if (len == g_htype[CUSTOM_LINE].length
@@ -190,11 +190,11 @@ header_line_type set_line_type(char *bufptr, const char *colon)
     return SOME_LINE;
 }
 
-header_line_type get_header_num(char *s)
+HeaderLineType get_header_num(char *s)
 {
     char* end = s + std::strlen(s);
 
-    header_line_type i = set_line_type(s, end);     /* Sets g_msg to lower-cased header name */
+    HeaderLineType i = set_line_type(s, end);     /* Sets g_msg to lower-cased header name */
 
     if (i <= SOME_LINE && i != CUSTOM_LINE)
     {
@@ -492,7 +492,7 @@ bool parseheader(ART_NUM artnum)
 
 /* article to get line from */
 /* type of line desired */
-char *fetchlines(ART_NUM artnum, header_line_type which_line)
+char *fetchlines(ART_NUM artnum, HeaderLineType which_line)
 {
     char* s;
 
@@ -537,7 +537,7 @@ char *fetchlines(ART_NUM artnum, header_line_type which_line)
 /* ART_NUM artnum   article to get line from */
 /* int which_line   type of line desired */
 /* int pool         which memory pool to use */
-char *mp_fetchlines(ART_NUM artnum, header_line_type which_line, memory_pool pool)
+char *mp_fetchlines(ART_NUM artnum, HeaderLineType which_line, memory_pool pool)
 {
     char* s;
 
@@ -578,13 +578,13 @@ char *mp_fetchlines(ART_NUM artnum, header_line_type which_line, memory_pool poo
     return s;
 }
 
-static int nntp_xhdr(header_line_type which_line, ART_NUM artnum)
+static int nntp_xhdr(HeaderLineType which_line, ART_NUM artnum)
 {
     std::sprintf(g_ser_line,"XHDR %s %ld",g_htype[which_line].name,artnum);
     return nntp_command(g_ser_line);
 }
 
-static int nntp_xhdr(header_line_type which_line, ART_NUM artnum, ART_NUM lastnum)
+static int nntp_xhdr(HeaderLineType which_line, ART_NUM artnum, ART_NUM lastnum)
 {
     std::sprintf(g_ser_line, "XHDR %s %ld-%ld", g_htype[which_line].name, artnum, lastnum);
     return nntp_command(g_ser_line);
@@ -595,7 +595,7 @@ static int nntp_xhdr(header_line_type which_line, ART_NUM artnum, ART_NUM lastnu
 // ART_NUM artnum   article to get line from */
 // int which_line   type of line desired */
 // bool copy    do you want it savestr()ed? */
-char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
+char *prefetchlines(ART_NUM artnum, HeaderLineType which_line, bool copy)
 {
     char* s;
     char* t;

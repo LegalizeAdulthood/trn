@@ -426,7 +426,7 @@ bool sf_do_command(char *cmd, bool check)
             return true;
         }
         sf_grow();
-        s_sf_entries[g_sf_num_entries-1].head_type = static_cast<header_line_type>(SF_KILLTHRESHOLD);
+        s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_KILLTHRESHOLD);
         s_sf_entries[g_sf_num_entries-1].score = i;
         return true;
     }
@@ -478,7 +478,7 @@ bool sf_do_command(char *cmd, bool check)
             return true;
         }
         sf_grow();
-        s_sf_entries[g_sf_num_entries-1].head_type = static_cast<header_line_type>(SF_NEWAUTHOR);
+        s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_NEWAUTHOR);
         s_sf_entries[g_sf_num_entries-1].score = i;
         return true;
     }
@@ -562,7 +562,7 @@ bool sf_do_command(char *cmd, bool check)
             return true;
         }
         sf_grow();
-        s_sf_entries[g_sf_num_entries-1].head_type = static_cast<header_line_type>(SF_REPLY);
+        s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_REPLY);
         s_sf_entries[g_sf_num_entries-1].score = i;
         return true;
     }
@@ -775,7 +775,7 @@ bool sf_do_line(char *line, bool check)
         return true;            /* limits of check */
     }
     sf_grow();          /* acutally make an entry */
-    s_sf_entries[g_sf_num_entries-1].head_type = static_cast<header_line_type>(j);
+    s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(j);
     s_sf_entries[g_sf_num_entries-1].score = i;
     if (s_sf_pattern_status)    /* in pattern matching mode */
     {
@@ -840,7 +840,7 @@ void sf_do_file(const char *fname)
     char *safefilename = savestr(fname);
     /* add end marker to scoring array */
     sf_grow();
-    s_sf_entries[g_sf_num_entries-1].head_type = static_cast<header_line_type>(SF_FILE_MARK_START);
+    s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_FILE_MARK_START);
     /* file_level is 1 to n */
     s_sf_entries[g_sf_num_entries-1].score = s_sf_file_level;
     s_sf_entries[g_sf_num_entries-1].str2 = nullptr;
@@ -854,7 +854,7 @@ void sf_do_file(const char *fname)
     }
     /* add end marker to scoring array */
     sf_grow();
-    s_sf_entries[g_sf_num_entries-1].head_type = static_cast<header_line_type>(SF_FILE_MARK_END);
+    s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_FILE_MARK_END);
     /* file_level is 1 to n */
     s_sf_entries[g_sf_num_entries-1].score = s_sf_file_level;
     s_sf_entries[g_sf_num_entries-1].str2 = nullptr;
@@ -916,7 +916,7 @@ int sf_score(ART_NUM a)
 
     for (int i = 0; i < g_sf_num_entries; i++)
     {
-        header_line_type h = s_sf_entries[i].head_type;
+        HeaderLineType h = s_sf_entries[i].head_type;
         if (h <= 0)     /* don't use command headers for scoring */
         {
             continue;   /* the outer for loop */
@@ -1155,7 +1155,7 @@ void sf_append(char *line)
 }
 
 /* returns a lowercased copy of the header line type h in private buffer */
-char *sf_get_line(ART_NUM a, header_line_type h)
+char *sf_get_line(ART_NUM a, HeaderLineType h)
 {
     static char sf_getline[LBUFLEN];
     char* s;
@@ -1229,7 +1229,7 @@ void sf_print_match(int indx)
             int k;
             for (k = i; k >= 0; k--)
             {
-                if (s_sf_entries[k].head_type == static_cast<header_line_type>(SF_FILE_MARK_START) //
+                if (s_sf_entries[k].head_type == static_cast<HeaderLineType>(SF_FILE_MARK_START) //
                     && s_sf_entries[k].score == tmplevel)
                 {
                     break;      /* inner for loop */
@@ -1245,7 +1245,7 @@ void sf_print_match(int indx)
     /* print the file markers. */
     for (; i >= 0; i--)
     {
-        if (s_sf_entries[i].head_type == static_cast<header_line_type>(SF_FILE_MARK_START) //
+        if (s_sf_entries[i].head_type == static_cast<HeaderLineType>(SF_FILE_MARK_START) //
             && s_sf_entries[i].score <= level)
         {
             level--;    /* go out... */
@@ -1294,7 +1294,7 @@ void sf_exclude_file(const char *fname)
 
     for (start = 0; start < g_sf_num_entries; start++)
     {
-        if (s_sf_entries[start].head_type == static_cast<header_line_type>(SF_FILE_MARK_START)
+        if (s_sf_entries[start].head_type == static_cast<HeaderLineType>(SF_FILE_MARK_START)
          && !std::strcmp(s_sf_entries[start].str1,fname))
         {
             break;

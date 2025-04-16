@@ -35,7 +35,7 @@ extern std::string      g_lastpat;          /* last search pattern */
 extern COMPEX          *g_bra_compex;       /* current compex with brackets */
 extern const char      *g_scopestr;         //
 extern ArtScope        g_art_howmuch;      /* search scope */
-extern header_line_type g_art_srchhdr;      /* specific header number to search */
+extern HeaderLineType g_art_srchhdr;      /* specific header number to search */
 extern bool             g_art_doread;       /* search read articles? */
 extern bool             g_kill_thru_kludge; /* -k */
 

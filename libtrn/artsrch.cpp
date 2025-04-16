@@ -38,7 +38,7 @@ std::string      g_lastpat;                   /* last search pattern */
 COMPEX          *g_bra_compex{&s_art_compex}; /* current compex with brackets */
 const char      *g_scopestr{"sfHhbBa"};       //
 ArtScope        g_art_howmuch{};             /* search scope */
-header_line_type g_art_srchhdr{};             /* specific header number to search */
+HeaderLineType g_art_srchhdr{};             /* specific header number to search */
 bool             g_art_doread{};              /* search read articles? */
 bool             g_kill_thru_kludge{true};    /* -k */
 
@@ -62,7 +62,7 @@ ArtSearchResult art_search(char *patbuf, int patbufsiz, bool get_cmd)
     ArtSearchResult ret = SRCH_NOTFOUND; /* assume no commands */
     int saltaway = 0;                   /* store in KILL file? */
     ArtScope howmuch;                  /* search scope: subj/from/Hdr/head/art */
-    header_line_type srchhdr;           /* header to search if Hdr scope */
+    HeaderLineType srchhdr;           /* header to search if Hdr scope */
     bool topstart = false;
     bool doread;                        /* search read articles? */
     bool foldcase = true;               /* fold upper and lower case? */

@@ -17,7 +17,7 @@ struct Article;
  * (These must stay in alphabetic order at least in the first letter.
  * Within each letter it helps to arrange in increasing likelihood.)
  */
-enum header_line_type
+enum HeaderLineType
 {
     PAST_HEADER = 0,        /* body */
     SHOWN_LINE,             /* unrecognized but shown */
@@ -87,7 +87,7 @@ extern short g_user_htypeix[26];
 extern int g_user_htype_cnt;
 extern int g_user_htype_max;
 extern ART_NUM g_parsed_art;         /* the article number we've parsed */
-extern header_line_type g_in_header; /* are we decoding the header? */
+extern HeaderLineType g_in_header; /* are we decoding the header? */
 extern char *g_headbuf;
 
 enum
@@ -101,16 +101,16 @@ void head_final();
 #ifdef DEBUG
 void dumpheader(char *where);
 #endif
-header_line_type set_line_type(char *bufptr, const char *colon);
-header_line_type get_header_num(char *s);
+HeaderLineType set_line_type(char *bufptr, const char *colon);
+HeaderLineType get_header_num(char *s);
 void start_header(ART_NUM artnum);
 void end_header_line();
 bool parseline(char *art_buf, int newhide, int oldhide);
 void end_header();
 bool parseheader(ART_NUM artnum);
-char *fetchlines(ART_NUM artnum, header_line_type which_line);
-char *mp_fetchlines(ART_NUM artnum, header_line_type which_line, memory_pool pool);
-char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy);
+char *fetchlines(ART_NUM artnum, HeaderLineType which_line);
+char *mp_fetchlines(ART_NUM artnum, HeaderLineType which_line, memory_pool pool);
+char *prefetchlines(ART_NUM artnum, HeaderLineType which_line, bool copy);
 inline char *fetchsubj(ART_NUM artnum, bool copy)
 {
     return prefetchlines(artnum, SUBJ_LINE, copy);

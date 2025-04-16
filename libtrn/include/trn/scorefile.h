@@ -13,7 +13,7 @@ struct COMPEX;
 
 struct SF_ENTRY
 {
-    header_line_type head_type; /* header # (see trn/head.h) */
+    HeaderLineType head_type; /* header # (see trn/head.h) */
     int score;                  /* score change */
     char *str1;                 /* first string part */
     char *str2;                 /* second string part */
@@ -65,7 +65,7 @@ int score_match(char *str, int ind);
 int sf_score(ART_NUM a);
 char *sf_missing_score(const char *line);
 void sf_append(char *line);
-char *sf_get_line(ART_NUM a, header_line_type h);
+char *sf_get_line(ART_NUM a, HeaderLineType h);
 void sf_print_match(int indx);
 void sf_exclude_file(const char *fname);
 void sf_edit_file(const char *filespec);

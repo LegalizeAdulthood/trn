@@ -408,7 +408,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     pattern = cpytill(scrbuf, pattern+1, ']');
                     if (g_in_ng)
                     {
-                        header_line_type which_line;
+                        HeaderLineType which_line;
                         if (*scrbuf && (which_line = get_header_num(scrbuf)) != SOME_LINE)
                         {
                             safefree(line_buf);
