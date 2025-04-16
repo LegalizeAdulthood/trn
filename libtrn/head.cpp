@@ -411,7 +411,7 @@ bool parseheader(ArticleNum artnum)
         char *s = nntp_artname(artnum, false);
         if (s)
         {
-            if (!artopen(artnum,(ART_POS)0))
+            if (!artopen(artnum,(ArticlePosition)0))
             {
                 return false;
             }
@@ -426,7 +426,7 @@ bool parseheader(ArticleNum artnum)
             s_reading_nntp_header = true;
         }
     }
-    else if (!artopen(artnum,(ART_POS)0))
+    else if (!artopen(artnum,(ArticlePosition)0))
     {
         return false;
     }
@@ -506,14 +506,14 @@ char *fetchlines(ArticleNum artnum, HeaderLineType which_line)
             return savestr(s);
         }
     }
-    ART_POS firstpos = g_htype[which_line].minpos;
+    ArticlePosition firstpos = g_htype[which_line].minpos;
     if (firstpos < 0)
     {
         return savestr("");
     }
 
     firstpos += g_htype[which_line].length + 1;
-    ART_POS lastpos = g_htype[which_line].maxpos;
+    ArticlePosition lastpos = g_htype[which_line].maxpos;
     int size = lastpos - firstpos;
     char *t = g_headbuf + firstpos;
     while (is_hor_space(*t))
@@ -551,14 +551,14 @@ char *mp_fetchlines(ArticleNum artnum, HeaderLineType which_line, MemoryPool poo
             return mp_savestr(s, pool);
         }
     }
-    ART_POS firstpos = g_htype[which_line].minpos;
+    ArticlePosition firstpos = g_htype[which_line].minpos;
     if (firstpos < 0)
     {
         return mp_savestr("", pool);
     }
 
     firstpos += g_htype[which_line].length + 1;
-    ART_POS lastpos = g_htype[which_line].maxpos;
+    ArticlePosition lastpos = g_htype[which_line].maxpos;
     int size = lastpos - firstpos;
     char *t = g_headbuf + firstpos;
     while (is_hor_space(*t))
@@ -599,7 +599,7 @@ char *prefetchlines(ArticleNum artnum, HeaderLineType which_line, bool copy)
 {
     char* s;
     char* t;
-    ART_POS firstpos;
+    ArticlePosition firstpos;
 
     if ((g_datasrc->flags & DF_REMOTE) && g_parsed_art != artnum)
     {
@@ -752,7 +752,7 @@ char *prefetchlines(ArticleNum artnum, HeaderLineType which_line, bool copy)
     }
 
     firstpos += g_htype[which_line].length + 1;
-    ART_POS lastpos = g_htype[which_line].maxpos;
+    ArticlePosition lastpos = g_htype[which_line].maxpos;
     int size = lastpos - firstpos;
     t = g_headbuf + firstpos;
     while (is_hor_space(*t))

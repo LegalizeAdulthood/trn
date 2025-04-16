@@ -18,7 +18,7 @@ inline bool at_nl(char c)
     return c == '\n' || c == WRAPPED_NL;
 }
 
-extern ART_POS    g_artpos;  /* byte position in article file */
+extern ArticlePosition    g_artpos;  /* byte position in article file */
 extern ART_LINE   g_artline; /* current line number in article file */
 extern std::FILE *g_artfp;   /* current article file pointer */
 extern ArticleNum    g_openart; /* the article number we have open */
@@ -33,11 +33,11 @@ void artio_init();
 void artio_final();
 std::FILE *artopen(ArticleNum artnum, ArticleNum pos);
 void artclose();
-int seekart(ART_POS pos);
-ART_POS tellart();
+int seekart(ArticlePosition pos);
+ArticlePosition tellart();
 char *readart(char *s, int limit);
 void clear_artbuf();
-int seekartbuf(ART_POS pos);
+int seekartbuf(ArticlePosition pos);
 char *readartbuf(bool view_inline);
 
 #endif

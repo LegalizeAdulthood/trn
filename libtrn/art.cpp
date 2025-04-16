@@ -49,11 +49,11 @@
 
 ART_LINE    g_highlight{-1};         /* next line to be highlighted */
 ART_LINE    g_first_view{};          //
-ART_POS     g_raw_artsize{};         /* size in bytes of raw article */
-ART_POS     g_artsize{};             /* size in bytes of article */
+ArticlePosition     g_raw_artsize{};         /* size in bytes of raw article */
+ArticlePosition     g_artsize{};             /* size in bytes of article */
 char        g_art_line[LBUFLEN];     /* place for article lines */
 int         g_gline{};               //
-ART_POS     g_innersearch{};         /* g_artpos of end of line we want to visit */
+ArticlePosition     g_innersearch{};         /* g_artpos of end of line we want to visit */
 ART_LINE    g_innerlight{};          /* highlight position for g_innersearch or 0 */
 char        g_hide_everything{};     /* if set, do not write page now, ...but execute char when done with page */
 bool        g_reread{};              /* consider current art temporarily unread? */
@@ -72,11 +72,11 @@ CompiledRegex      g_hide_compex{};         //
 CompiledRegex      g_page_compex{};         //
 bool        g_dont_filter_control{}; /* -j */
 
-inline char *line_ptr(ART_POS pos)
+inline char *line_ptr(ArticlePosition pos)
 {
     return g_artbuf + pos - g_htype[PAST_HEADER].minpos;
 }
-inline ART_POS line_offset(char *ptr)
+inline ArticlePosition line_offset(char *ptr)
 {
     return ptr - g_artbuf + g_htype[PAST_HEADER].minpos;
 }
@@ -92,8 +92,8 @@ enum page_switch_result
 
 static bool     s_special{};         /* is next page special length? */
 static int      s_slines{};          /* how long to make page when special */
-static ART_POS  s_restart{};         /* if nonzero, the place where last line left off on line split */
-static ART_POS  s_alinebeg{};        /* where in file current line began */
+static ArticlePosition  s_restart{};         /* if nonzero, the place where last line left off on line split */
+static ArticlePosition  s_alinebeg{};        /* where in file current line began */
 static int      s_more_prompt_col{}; /* non-zero when the more prompt is indented */
 static ART_LINE s_isrchline{};       /* last line to display */
 static CompiledRegex   s_gcompex{};         /* in article search pattern */
@@ -175,7 +175,7 @@ DoArticlResult do_article()
             }
             if (s_firstpage)
             {
-                g_artpos = (ART_POS) 0;
+                g_artpos = (ArticlePosition) 0;
             }
             if (g_artpos < g_htype[PAST_HEADER].minpos)
             {
@@ -900,7 +900,7 @@ page_switch_result page_switch()
         s = line_ptr(s_alinebeg);
         while (at_nl(*s) && i >= g_topline)
         {
-            ART_POS pos = vrdary(--i);
+            ArticlePosition pos = vrdary(--i);
             if (pos < 0)
             {
                 pos = -pos;
@@ -951,7 +951,7 @@ page_switch_result page_switch()
 
     case 'G':
     {
-        ART_POS start_where;
+        ArticlePosition start_where;
         bool success;
         char* nlptr;
         char ch;
@@ -1108,7 +1108,7 @@ page_switch_result page_switch()
             home_cursor();
             insert_line();
             carriage_return();
-            ART_POS pos = vrdary(g_topline - 1);
+            ArticlePosition pos = vrdary(g_topline - 1);
             if (pos < 0)
             {
                 pos = -pos;

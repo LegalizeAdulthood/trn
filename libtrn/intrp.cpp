@@ -621,7 +621,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     {
                         if (g_datasrc->flags & DF_REMOTE)
                         {
-                            if (artopen(g_art, (ART_POS) 0))
+                            if (artopen(g_art, (ArticlePosition) 0))
                             {
                                 nntp_finishbody(FB_SILENT);
                                 std::sprintf(s = scrbuf,"%s/%s",g_datasrc->spool_dir,

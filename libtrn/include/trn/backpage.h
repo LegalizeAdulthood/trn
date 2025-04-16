@@ -9,7 +9,7 @@
 /* things for doing the 'back page' command */
 
 void backpage_init();
-ART_POS vrdary(ART_LINE indx);
-void vwtary(ART_LINE indx, ART_POS newvalue);
+ArticlePosition vrdary(ART_LINE indx);
+void vwtary(ART_LINE indx, ArticlePosition newvalue);
 
 #endif

@@ -436,7 +436,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 }
             }
             /* make sure article is found & open */
-            if (!artopen(g_art, (ART_POS) 0))
+            if (!artopen(g_art, (ArticlePosition) 0))
             {
                 char tmpbuf[256];
                 /* see if we have tree data for this article anyway */
@@ -451,7 +451,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                     }
                 }
                 ART_LINE linenum = tree_puts(tmpbuf, 0, 0);
-                vwtary(g_artline,(ART_POS)0);
+                vwtary(g_artline,(ArticlePosition)0);
                 finish_tree(linenum);
                 g_prompt = whatnext;
                 g_srchahead = 0;

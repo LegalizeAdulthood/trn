@@ -164,7 +164,7 @@ void sa_go_art(long a)
     (void)article_find(g_art);
     if (g_openart != g_art)
     {
-        artopen(g_art, (ART_POS) 0);
+        artopen(g_art, (ArticlePosition) 0);
     }
 }
 

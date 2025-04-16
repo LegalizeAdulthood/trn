@@ -308,7 +308,7 @@ void sc_fill_scorelist(ArticleNum first, ArticleNum last)
 void sc_lookahead(bool flag, bool nowait)
 {
     ArticleNum oldart = g_openart;
-    ART_POS oldartpos;
+    ArticlePosition oldartpos;
 
     if (!g_sc_initialized)
     {

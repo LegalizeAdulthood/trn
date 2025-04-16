@@ -25,7 +25,7 @@
 #include <cstdio>
 #include <cstring>
 
-ART_POS    g_artpos{};               /* byte position in article file */
+ArticlePosition    g_artpos{};               /* byte position in article file */
 ART_LINE   g_artline{};              /* current line number in article file */
 std::FILE *g_artfp{};                /* current article file pointer */
 ArticleNum    g_openart{};              /* the article number we have open */
@@ -119,7 +119,7 @@ void artclose()
     }
 }
 
-int seekart(ART_POS pos)
+int seekart(ArticlePosition pos)
 {
     if (g_datasrc->flags & DF_REMOTE)
     {
@@ -128,14 +128,14 @@ int seekart(ART_POS pos)
     return std::fseek(g_artfp,(long)pos,0);
 }
 
-ART_POS
+ArticlePosition
 tellart()
 {
     if (g_datasrc->flags & DF_REMOTE)
     {
         return nntp_tellart();
     }
-    return (ART_POS)std::ftell(g_artfp);
+    return (ArticlePosition)std::ftell(g_artfp);
 }
 
 char *readart(char *s, int limit)
@@ -155,7 +155,7 @@ void clear_artbuf()
     g_artbuf_pos = 0;
 }
 
-int seekartbuf(ART_POS pos)
+int seekartbuf(ArticlePosition pos)
 {
     if (!g_do_hiding)
     {

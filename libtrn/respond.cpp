@@ -39,7 +39,7 @@
 std::string g_savedest;      /* value of %b */
 std::string g_extractdest;   /* value of %E */
 std::string g_extractprog;   /* value of %e */
-ART_POS     g_savefrom{};    /* value of %B */
+ArticlePosition     g_savefrom{};    /* value of %B */
 bool        g_mbox_always{}; /* -M */
 bool        g_norm_always{}; /* -N */
 std::string g_privdir;       /* private news directory */
@@ -661,7 +661,7 @@ int cancel_article()
     int  myuid = current_user_id();
     int  r = -1;
 
-    if (artopen(g_art, (ART_POS) 0) == nullptr)
+    if (artopen(g_art, (ArticlePosition) 0) == nullptr)
     {
         if (g_verbose)
         {
@@ -734,7 +734,7 @@ int supersede_article()         /* Supersedes: */
     int  r = -1;
     bool incl_body = (*g_buf == 'Z');
 
-    if (artopen(g_art, (ART_POS) 0) == nullptr)
+    if (artopen(g_art, (ArticlePosition) 0) == nullptr)
     {
         if (g_verbose)
         {
@@ -865,7 +865,7 @@ void reply()
     bool incl_body = (*g_buf == 'R' && g_art);
     char* maildoer = savestr(get_val_const("MAILPOSTER",MAILPOSTER));
 
-    artopen(g_art,(ART_POS)0);
+    artopen(g_art,(ArticlePosition)0);
     std::FILE *header = std::fopen(g_headname.c_str(),"w");       /* open header file */
     if (header == nullptr)
     {
@@ -935,7 +935,7 @@ void forward()
 #ifdef REGEX_WORKS_RIGHT
     init_compex(&mime_compex);
 #endif
-    artopen(g_art,(ART_POS)0);
+    artopen(g_art,(ArticlePosition)0);
     std::FILE *header = std::fopen(g_headname.c_str(),"w");       /* open header file */
     if (header == nullptr)
     {
@@ -1029,7 +1029,7 @@ void forward()
             std::fprintf(header, "%s\n", g_buf);
         }
         parseheader(g_art);
-        seekart((ART_POS)0);
+        seekart((ArticlePosition)0);
         while (readart(g_buf, sizeof g_buf) != nullptr)
         {
             if (!mime_boundary && *g_buf == '-')
@@ -1084,7 +1084,7 @@ void followup()
             g_art = g_lastart + 1;
         }
     }
-    artopen(g_art,(ART_POS)0);
+    artopen(g_art,(ArticlePosition)0);
     std::FILE *header = std::fopen(g_headname.c_str(),"w");
     if (header == nullptr)
     {

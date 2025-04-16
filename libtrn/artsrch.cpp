@@ -550,7 +550,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
         }
         else
         {
-            if (!artopen(artnum,(ART_POS)0))
+            if (!artopen(artnum,(ArticlePosition)0))
             {
                 return false;
             }

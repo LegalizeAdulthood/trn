@@ -778,7 +778,7 @@ static SpinMode s_spin_mode{};
 static int       s_spin_place{}; /* represents place in s_spinchars array */
 static int       s_spin_pos{};   /* the last spinbar position we drew */
 static ArticleNum   s_spin_art{};
-static ART_POS   s_spin_tell{};
+static ArticlePosition   s_spin_tell{};
 
 void setspin(SpinMode mode)
 {

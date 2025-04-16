@@ -68,8 +68,8 @@ DECLARE_FLAGS_ENUM(HeaderTypeFlags, std::uint8_t);
 struct HeaderType
 {
     char          *name;   /* header line identifier */
-    ART_POS        minpos; /* pointer to beginning of line in article */
-    ART_POS        maxpos; /* pointer to end of line in article */
+    ArticlePosition        minpos; /* pointer to beginning of line in article */
+    ArticlePosition        maxpos; /* pointer to end of line in article */
     char           length; /* the header's string length */
     HeaderTypeFlags flags;  /* the header's flags */
 };

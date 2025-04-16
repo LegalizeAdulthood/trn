@@ -24,10 +24,10 @@
 #include <cstring>
 #include <ctime>
 
-static int nntp_copybody(char *s, int limit, ART_POS pos);
+static int nntp_copybody(char *s, int limit, ArticlePosition pos);
 
-static ART_POS s_body_pos{-1};
-static ART_POS s_body_end{};
+static ArticlePosition s_body_pos{-1};
+static ArticlePosition s_body_end{};
 #ifdef SUPPORT_XTHREAD
 static long s_rawbytes{-1}; /* bytes remaining to be transferred */
 #endif
@@ -273,14 +273,14 @@ void nntp_body(ArticleNum artnum)
     if (g_parsed_art == artnum)
     {
         std::fwrite(g_headbuf, 1, std::strlen(g_headbuf), g_artfp);
-        s_body_end = (ART_POS)std::ftell(g_artfp);
+        s_body_end = (ArticlePosition)std::ftell(g_artfp);
         g_htype[PAST_HEADER].minpos = s_body_end;
     }
     else
     {
         char b[NNTP_STRLEN];
         s_body_end = 0;
-        ART_POS prev_pos = 0;
+        ArticlePosition prev_pos = 0;
         while (nntp_copybody(b, sizeof b, s_body_end + 1) > 0)
         {
             if (*b == '\n' && s_body_end - prev_pos < sizeof b)
@@ -299,7 +299,7 @@ long nntp_artsize()
     return s_body_pos < 0 ? s_body_end : -1;
 }
 
-static int nntp_copybody(char *s, int limit, ART_POS pos)
+static int nntp_copybody(char *s, int limit, ArticlePosition pos)
 {
     bool had_nl = true;
 
@@ -368,7 +368,7 @@ int nntp_finishbody(FinishBodyMode bmode)
     }
     if (bmode != FB_BACKGROUND)
     {
-        nntp_copybody(b, sizeof b, (ART_POS) 0x7fffffffL);
+        nntp_copybody(b, sizeof b, (ArticlePosition) 0x7fffffffL);
     }
     else
     {
@@ -391,7 +391,7 @@ int nntp_finishbody(FinishBodyMode bmode)
     return 1;
 }
 
-int nntp_seekart(ART_POS pos)
+int nntp_seekart(ArticlePosition pos)
 {
     if (s_body_pos >= 0)
     {
@@ -413,9 +413,9 @@ int nntp_seekart(ART_POS pos)
     return std::fseek(g_artfp, (long)pos, 0);
 }
 
-ART_POS nntp_tellart()
+ArticlePosition nntp_tellart()
 {
-    return s_body_pos < 0 ? (ART_POS)std::ftell(g_artfp) : s_body_pos;
+    return s_body_pos < 0 ? (ArticlePosition)std::ftell(g_artfp) : s_body_pos;
 }
 
 char *nntp_readart(char *s, int limit)
