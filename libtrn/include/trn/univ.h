@@ -84,7 +84,7 @@ struct UniversalTextFile
     char* fname;
 };
 
-union UNIV_DATA
+union UniversalData
 {
     char* str;
     HelpLocation i;
@@ -117,7 +117,7 @@ struct UNIV_ITEM
     UniversalItemType type;  /* what kind of object is it? */
     char          *desc;  /* default description */
     int            score;
-    UNIV_DATA      data; /* describes the object */
+    UniversalData      data; /* describes the object */
 };
 
 extern int g_univ_level;          /* How deep are we in the tree? */
