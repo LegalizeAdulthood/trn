@@ -36,14 +36,14 @@ enum MimeState
     ALTERNATE_MIME
 };
 
-enum mimesection_flags : std::uint16_t
+enum MimeSectionFlags : std::uint16_t
 {
     MFS_NONE = 0x0000,
     MSF_INLINE = 0x0001,
     MSF_ALTERNATIVE = 0x0002,
     MSF_ALTERNADONE = 0x0004
 };
-DECLARE_FLAGS_ENUM(mimesection_flags, std::uint16_t);
+DECLARE_FLAGS_ENUM(MimeSectionFlags, std::uint16_t);
 
 /* Only used with HTMLTEXT_MIME */
 enum html_flags : std::uint16_t
@@ -79,7 +79,7 @@ struct MIME_SECT
     short part;
     short total;
     short boundary_len;
-    mimesection_flags flags;
+    MimeSectionFlags flags;
     html_flags html;
     short html_blkcnt;
 };
