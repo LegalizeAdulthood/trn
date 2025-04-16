@@ -409,10 +409,11 @@ void set_option(option_index num, const char *s)
     }
     switch (num)
     {
-      case OI_USE_THREADS:
+    case OI_USE_THREADS:
         g_use_threads = YES(s);
         break;
-      case OI_USE_MOUSE:
+
+    case OI_USE_MOUSE:
         g_use_mouse = YES(s);
         if (g_use_mouse)
         {
@@ -420,78 +421,96 @@ void set_option(option_index num, const char *s)
             set_macro("\033[M+3","\003");
         }
         break;
-      case OI_MOUSE_MODES:
+
+    case OI_MOUSE_MODES:
         safecpy(g_mouse_modes, s, sizeof g_mouse_modes);
         break;
-      case OI_USE_UNIV_SEL:
+
+    case OI_USE_UNIV_SEL:
         g_use_univ_selector = YES(s);
         break;
-      case OI_UNIV_SEL_CMDS:
+
+    case OI_UNIV_SEL_CMDS:
         *s_univ_sel_cmds = *s;
         if (s[1])
         {
             s_univ_sel_cmds[1] = s[1];
         }
         break;
-      case OI_UNIV_SEL_BTNS:
+
+    case OI_UNIV_SEL_BTNS:
         g_univ_sel_btn_cnt = parse_mouse_buttons(&g_univ_sel_btns,s);
         break;
-      case OI_UNIV_SEL_ORDER:
+
+    case OI_UNIV_SEL_ORDER:
         set_sel_order(SM_UNIVERSAL,s);
         break;
-      case OI_UNIV_FOLLOW:
+
+    case OI_UNIV_FOLLOW:
         g_univ_follow = YES(s);
         break;
-      case OI_USE_NEWSRC_SEL:
+
+    case OI_USE_NEWSRC_SEL:
         g_use_newsrc_selector = YES(s);
         break;
-      case OI_NEWSRC_SEL_CMDS:
+
+    case OI_NEWSRC_SEL_CMDS:
         *g_newsrc_sel_cmds = *s;
         if (s[1])
         {
             g_newsrc_sel_cmds[1] = s[1];
         }
         break;
-      case OI_NEWSRC_SEL_BTNS:
+
+    case OI_NEWSRC_SEL_BTNS:
         g_newsrc_sel_btn_cnt = parse_mouse_buttons(&g_newsrc_sel_btns,s);
         break;
-      case OI_USE_ADD_SEL:
+
+    case OI_USE_ADD_SEL:
         g_use_add_selector = YES(s);
         break;
-      case OI_ADD_SEL_CMDS:
+
+    case OI_ADD_SEL_CMDS:
         *g_add_sel_cmds = *s;
         if (s[1])
         {
             g_add_sel_cmds[1] = s[1];
         }
         break;
-      case OI_ADD_SEL_BTNS:
+
+    case OI_ADD_SEL_BTNS:
         g_add_sel_btn_cnt = parse_mouse_buttons(&g_add_sel_btns,s);
         break;
-      case OI_USE_NEWSGROUP_SEL:
+
+    case OI_USE_NEWSGROUP_SEL:
         g_use_newsgroup_selector = YES(s);
         break;
-      case OI_NEWSGROUP_SEL_ORDER:
+
+    case OI_NEWSGROUP_SEL_ORDER:
         set_sel_order(SM_NEWSGROUP,s);
         break;
-      case OI_NEWSGROUP_SEL_CMDS:
+
+    case OI_NEWSGROUP_SEL_CMDS:
         *g_newsgroup_sel_cmds = *s;
         if (s[1])
         {
             g_newsgroup_sel_cmds[1] = s[1];
         }
         break;
-      case OI_NEWSGROUP_SEL_BTNS:
+
+    case OI_NEWSGROUP_SEL_BTNS:
         g_newsgroup_sel_btn_cnt = parse_mouse_buttons(&g_newsgroup_sel_btns,s);
         break;
-      case OI_NEWSGROUP_SEL_STYLES:
+
+    case OI_NEWSGROUP_SEL_STYLES:
         g_sel_grp_dmode--;
         safefree0(g_sel_grp_dmode);
         g_sel_grp_dmode = safemalloc(std::strlen(s)+2);
         *g_sel_grp_dmode++ = '*';
         std::strcpy(g_sel_grp_dmode, s);
         break;
-      case OI_USE_NEWS_SEL:
+
+    case OI_USE_NEWS_SEL:
         if (std::isdigit(*s))
         {
             g_use_news_selector = std::atoi(s);
@@ -501,8 +520,9 @@ void set_option(option_index num, const char *s)
             g_use_news_selector = static_cast<int>(YES(s)) - 1;
         }
         break;
-      case OI_NEWS_SEL_MODE:
-      {
+
+    case OI_NEWS_SEL_MODE:
+    {
         const sel_mode save_sel_mode = g_sel_mode;
         set_sel_mode(*s);
         if (save_sel_mode != SM_ARTICLE && save_sel_mode != SM_SUBJECT //
@@ -512,38 +532,45 @@ void set_option(option_index num, const char *s)
             set_selector(SM_MAGIC_NUMBER,SS_MAGIC_NUMBER);
         }
         break;
-      }
-      case OI_NEWS_SEL_ORDER:
+    }
+
+    case OI_NEWS_SEL_ORDER:
         set_sel_order(g_sel_defaultmode,s);
         break;
-      case OI_NEWS_SEL_CMDS:
+
+    case OI_NEWS_SEL_CMDS:
         *g_news_sel_cmds = *s;
         if (s[1])
         {
             g_news_sel_cmds[1] = s[1];
         }
         break;
-      case OI_NEWS_SEL_BTNS:
+
+    case OI_NEWS_SEL_BTNS:
         g_news_sel_btn_cnt = parse_mouse_buttons(&g_news_sel_btns,s);
         break;
-      case OI_NEWS_SEL_STYLES:
+
+    case OI_NEWS_SEL_STYLES:
         g_sel_art_dmode--;
         safefree0(g_sel_art_dmode);
         g_sel_art_dmode = safemalloc(std::strlen(s)+2);
         *g_sel_art_dmode++ = '*';
         std::strcpy(g_sel_art_dmode, s);
         break;
-      case OI_OPTION_SEL_CMDS:
+
+    case OI_OPTION_SEL_CMDS:
         *g_option_sel_cmds = *s;
         if (s[1])
         {
             g_option_sel_cmds[1] = s[1];
         }
         break;
-      case OI_OPTION_SEL_BTNS:
+
+    case OI_OPTION_SEL_BTNS:
         g_option_sel_btn_cnt = parse_mouse_buttons(&g_option_sel_btns,s);
         break;
-      case OI_AUTO_SAVE_NAME:
+
+    case OI_AUTO_SAVE_NAME:
         if (!g_checkflag)
         {
             if (YES(s))
@@ -559,11 +586,13 @@ void set_option(option_index num, const char *s)
             }
         }
         break;
-      case OI_BKGND_THREADING:
+
+    case OI_BKGND_THREADING:
         g_thread_always = !YES(s);
         break;
-      case OI_AUTO_ARROW_MACROS:
-      {
+
+    case OI_AUTO_ARROW_MACROS:
+    {
         int prev = g_auto_arrow_macros;
         if (YES(s) || *s == 'r' || *s == 'R')
         {
@@ -579,17 +608,21 @@ void set_option(option_index num, const char *s)
             arrow_macros(tmpbuf);
         }
         break;
-      }
-      case OI_READ_BREADTH_FIRST:
+    }
+
+    case OI_READ_BREADTH_FIRST:
         g_breadth_first = YES(s);
         break;
-      case OI_BKGND_SPINNER:
+
+    case OI_BKGND_SPINNER:
         g_bkgnd_spinner = YES(s);
         break;
-      case OI_CHECKPOINT_NEWSRC_FREQUENCY:
+
+    case OI_CHECKPOINT_NEWSRC_FREQUENCY:
         g_docheckwhen = std::atoi(s);
         break;
-      case OI_SAVE_DIR:
+
+    case OI_SAVE_DIR:
         if (!g_checkflag)
         {
             g_savedir = s;
@@ -600,40 +633,51 @@ void set_option(option_index num, const char *s)
             g_privdir = filexp(s);
         }
         break;
-      case OI_ERASE_SCREEN:
+
+    case OI_ERASE_SCREEN:
         g_erase_screen = YES(s);
         break;
-      case OI_NOVICE_DELAYS:
+
+    case OI_NOVICE_DELAYS:
         g_novice_delays = YES(s);
         break;
-      case OI_CITED_TEXT_STRING:
+
+    case OI_CITED_TEXT_STRING:
         g_indstr = s;
         break;
-      case OI_GOTO_LINE_NUM:
+
+    case OI_GOTO_LINE_NUM:
         g_gline = std::atoi(s)-1;
         break;
-      case OI_FUZZY_NEWSGROUP_NAMES:
+
+    case OI_FUZZY_NEWSGROUP_NAMES:
         g_fuzzy_get = YES(s);
         break;
-      case OI_HEADER_MAGIC:
+
+    case OI_HEADER_MAGIC:
         if (!g_checkflag)
         {
             set_header_list(HT_MAGIC, HT_DEFMAGIC, s);
         }
         break;
-      case OI_HEADER_HIDING:
+
+    case OI_HEADER_HIDING:
         set_header_list(HT_HIDE, HT_DEFHIDE, s);
         break;
-      case OI_INITIAL_ARTICLE_LINES:
+
+    case OI_INITIAL_ARTICLE_LINES:
         g_initlines = std::atoi(s);
         break;
-      case OI_APPEND_UNSUBSCRIBED_GROUPS:
+
+    case OI_APPEND_UNSUBSCRIBED_GROUPS:
         g_append_unsub = YES(s);
         break;
-      case OI_FILTER_CONTROL_CHARACTERS:
+
+    case OI_FILTER_CONTROL_CHARACTERS:
         g_dont_filter_control = !YES(s);
         break;
-      case OI_JOIN_SUBJECT_LINES:
+
+    case OI_JOIN_SUBJECT_LINES:
         if (std::isdigit(*s))
         {
             change_join_subject_len(std::atoi(s));
@@ -643,23 +687,29 @@ void set_option(option_index num, const char *s)
             change_join_subject_len(YES(s)? 30 : 0);
         }
         break;
-      case OI_IGNORE_THRU_ON_SELECT:
+
+    case OI_IGNORE_THRU_ON_SELECT:
         g_kill_thru_kludge = YES(s);
         break;
-      case OI_AUTO_GROW_GROUPS:
+
+    case OI_AUTO_GROW_GROUPS:
         g_keep_the_group_static = !YES(s);
         break;
-      case OI_MUCK_UP_CLEAR:
+
+    case OI_MUCK_UP_CLEAR:
         g_muck_up_clear = YES(s);
         break;
-      case OI_ERASE_EACH_LINE:
+
+    case OI_ERASE_EACH_LINE:
         g_erase_each_line = YES(s);
         break;
-      case OI_SAVEFILE_TYPE:
+
+    case OI_SAVEFILE_TYPE:
         g_mbox_always = (*s == 'm' || *s == 'M');
         g_norm_always = (*s == 'n' || *s == 'N');
         break;
-      case OI_PAGER_LINE_MARKING:
+
+    case OI_PAGER_LINE_MARKING:
         if (std::isdigit(*s))
         {
             g_marking_areas = static_cast<marking_areas>(std::atoi(s));
@@ -681,7 +731,8 @@ void set_option(option_index num, const char *s)
             g_marking = STANDOUT;
         }
         break;
-      case OI_OLD_MTHREADS_DATABASE:
+
+    case OI_OLD_MTHREADS_DATABASE:
         if (std::isdigit(*s))
         {
             g_olden_days = std::atoi(s);
@@ -691,7 +742,8 @@ void set_option(option_index num, const char *s)
             g_olden_days = YES(s);
         }
         break;
-      case OI_SELECT_MY_POSTS:
+
+    case OI_SELECT_MY_POSTS:
         if (NO(s))
         {
             g_auto_select_postings = 0;
@@ -700,34 +752,42 @@ void set_option(option_index num, const char *s)
         {
             switch (*s)
             {
-              case 't':
+            case 't':
                 g_auto_select_postings = '+';
                 break;
-              case 'p':
+
+            case 'p':
                 g_auto_select_postings = 'p';
                 break;
-              default:
+
+            default:
                 g_auto_select_postings = '.';
                 break;
             }
         }
         break;
-      case OI_MULTIPART_SEPARATOR:
+
+    case OI_MULTIPART_SEPARATOR:
         g_multipart_separator = s;
         break;
-      case OI_AUTO_VIEW_INLINE:
+
+    case OI_AUTO_VIEW_INLINE:
         g_auto_view_inline = YES(s);
         break;
-      case OI_NEWGROUP_CHECK:
+
+    case OI_NEWGROUP_CHECK:
         g_quickstart = !YES(s);
         break;
-      case OI_RESTRICTION_INCLUDES_EMPTIES:
+
+    case OI_RESTRICTION_INCLUDES_EMPTIES:
         g_empty_only_char = YES(s)? 'o' : 'O';
         break;
-      case OI_CHARSET:
+
+    case OI_CHARSET:
         g_charsets = s;
         break;
-      case OI_INITIAL_GROUP_LIST:
+
+    case OI_INITIAL_GROUP_LIST:
         if (std::isdigit(*s))
         {
             g_countdown = std::atoi(s);
@@ -742,10 +802,12 @@ void set_option(option_index num, const char *s)
             }
         }
         break;
-      case OI_RESTART_AT_LAST_GROUP:
+
+    case OI_RESTART_AT_LAST_GROUP:
         g_findlast = YES(s) * (g_mode == MM_INITIALIZING? 1 : -1);
         break;
-      case OI_SCANMODE_COUNT:
+
+    case OI_SCANMODE_COUNT:
         if (std::isdigit(*s))
         {
             g_scanon = std::atoi(s);
@@ -755,23 +817,28 @@ void set_option(option_index num, const char *s)
             g_scanon = YES(s)*3;
         }
         break;
-      case OI_TERSE_OUTPUT:
+
+    case OI_TERSE_OUTPUT:
         g_verbose = !YES(s);
         if (!g_verbose)
         {
             g_novice_delays = false;
         }
         break;
-      case OI_EAT_TYPEAHEAD:
+
+    case OI_EAT_TYPEAHEAD:
         g_allow_typeahead = !YES(s);
         break;
-      case OI_COMPRESS_SUBJECTS:
+
+    case OI_COMPRESS_SUBJECTS:
         g_unbroken_subjects = !YES(s);
         break;
-      case OI_VERIFY_INPUT:
+
+    case OI_VERIFY_INPUT:
         g_verify = YES(s);
         break;
-      case OI_ARTICLE_TREE_LINES:
+
+    case OI_ARTICLE_TREE_LINES:
         if (std::isdigit(*s))
         {
             g_max_tree_lines = std::atoi(s);
@@ -782,7 +849,8 @@ void set_option(option_index num, const char *s)
             g_max_tree_lines = YES(s) * 6;
         }
         break;
-      case OI_WORD_WRAP_MARGIN:
+
+    case OI_WORD_WRAP_MARGIN:
         if (std::isdigit(*s))
         {
             g_word_wrap_offset = std::atoi(s);
@@ -796,64 +864,83 @@ void set_option(option_index num, const char *s)
             g_word_wrap_offset = -1;
         }
         break;
-      case OI_DEFAULT_REFETCH_TIME:
+
+    case OI_DEFAULT_REFETCH_TIME:
         g_def_refetch_secs = text2secs(s, DEFAULT_REFETCH_SECS);
         break;
-      case OI_ART_PAGER_BTNS:
+
+    case OI_ART_PAGER_BTNS:
         g_art_pager_btn_cnt = parse_mouse_buttons(&g_art_pager_btns,s);
         break;
-      case OI_SCAN_ITEMNUM:
+
+    case OI_SCAN_ITEMNUM:
         g_s_itemnum = YES(s);
         break;
-      case OI_SCAN_VI:
+
+    case OI_SCAN_VI:
         g_s_mode_vi = YES(s);
         break;
-      case OI_SCANA_FOLLOW:
+
+    case OI_SCANA_FOLLOW:
         g_sa_follow = YES(s);
         break;
-      case OI_SCANA_FOLD:
+
+    case OI_SCANA_FOLD:
         g_sa_mode_fold = YES(s);
         break;
-      case OI_SCANA_UNZOOMFOLD:
+
+    case OI_SCANA_UNZOOMFOLD:
         g_sa_unzoomrefold = YES(s);
         break;
-      case OI_SCANA_MARKSTAY:
+
+    case OI_SCANA_MARKSTAY:
         g_sa_mark_stay = YES(s);
         break;
-      case OI_SCANA_DISPANUM:
+
+    case OI_SCANA_DISPANUM:
         g_sa_mode_desc_artnum = YES(s);
         break;
-      case OI_SCANA_DISPAUTHOR:
+
+    case OI_SCANA_DISPAUTHOR:
         g_sa_mode_desc_author = YES(s);
         break;
-      case OI_SCANA_DISPSCORE:
+
+    case OI_SCANA_DISPSCORE:
         g_sa_mode_desc_score = YES(s);
         break;
-      case OI_SCANA_DISPSUBCNT:
+
+    case OI_SCANA_DISPSUBCNT:
         g_sa_mode_desc_threadcount = YES(s);
         break;
-      case OI_SCANA_DISPSUBJ:
+
+    case OI_SCANA_DISPSUBJ:
 #if 0
         /* CAA: for now, always on. */
         g_sa_mode_desc_subject = YES(s);
 #endif
         break;
-      case OI_SCANA_DISPSUMMARY:
+
+    case OI_SCANA_DISPSUMMARY:
         g_sa_mode_desc_summary = YES(s);
         break;
-      case OI_SCANA_DISPKEYW:
+
+    case OI_SCANA_DISPKEYW:
         g_sa_mode_desc_keyw = YES(s);
         break;
-      case OI_SC_VERBOSE:
+
+    case OI_SC_VERBOSE:
         g_sf_verbose = YES(s);
         break;
-      case OI_USE_SEL_NUM:
+
+    case OI_USE_SEL_NUM:
         g_use_sel_num = YES(s);
         break;
-      case OI_SEL_NUM_GOTO:
+
+    case OI_SEL_NUM_GOTO:
         g_sel_num_goto = YES(s);
         break;
-      default:
+
+    default:
         std::printf("*** Internal error: Unknown Option ***\n");
         break;
     }
@@ -1010,61 +1097,81 @@ const char *option_value(option_index num)
 {
     switch (num)
     {
-      case OI_USE_THREADS:
+    case OI_USE_THREADS:
         return YESorNO(g_use_threads);
-      case OI_USE_MOUSE:
+
+    case OI_USE_MOUSE:
         return YESorNO(g_use_mouse);
-      case OI_MOUSE_MODES:
+
+    case OI_MOUSE_MODES:
         return g_mouse_modes;
-      case OI_USE_UNIV_SEL:
+
+    case OI_USE_UNIV_SEL:
         return YESorNO(g_use_univ_selector);
-      case OI_UNIV_SEL_CMDS:
+
+    case OI_UNIV_SEL_CMDS:
         return s_univ_sel_cmds;
-      case OI_UNIV_SEL_BTNS:
+
+    case OI_UNIV_SEL_BTNS:
         return expand_mouse_buttons(g_univ_sel_btns,g_univ_sel_btn_cnt);
-      case OI_UNIV_SEL_ORDER:
+
+    case OI_UNIV_SEL_ORDER:
         return get_sel_order(SM_UNIVERSAL);
-      case OI_UNIV_FOLLOW:
+
+    case OI_UNIV_FOLLOW:
         return YESorNO(g_univ_follow);
         break;
-      case OI_USE_NEWSRC_SEL:
+
+    case OI_USE_NEWSRC_SEL:
         return YESorNO(g_use_newsrc_selector);
-      case OI_NEWSRC_SEL_CMDS:
+
+    case OI_NEWSRC_SEL_CMDS:
         return g_newsrc_sel_cmds;
-      case OI_NEWSRC_SEL_BTNS:
+
+    case OI_NEWSRC_SEL_BTNS:
         return expand_mouse_buttons(g_newsrc_sel_btns,g_newsrc_sel_btn_cnt);
-      case OI_USE_ADD_SEL:
+
+    case OI_USE_ADD_SEL:
         return YESorNO(g_use_add_selector);
-      case OI_ADD_SEL_CMDS:
+
+    case OI_ADD_SEL_CMDS:
         return g_add_sel_cmds;
-      case OI_ADD_SEL_BTNS:
+
+    case OI_ADD_SEL_BTNS:
         return expand_mouse_buttons(g_add_sel_btns,g_add_sel_btn_cnt);
-      case OI_USE_NEWSGROUP_SEL:
+
+    case OI_USE_NEWSGROUP_SEL:
         return YESorNO(g_use_newsgroup_selector);
-      case OI_NEWSGROUP_SEL_ORDER:
+
+    case OI_NEWSGROUP_SEL_ORDER:
         return get_sel_order(SM_NEWSGROUP);
-      case OI_NEWSGROUP_SEL_CMDS:
+
+    case OI_NEWSGROUP_SEL_CMDS:
         return g_newsgroup_sel_cmds;
-      case OI_NEWSGROUP_SEL_BTNS:
+
+    case OI_NEWSGROUP_SEL_BTNS:
         return expand_mouse_buttons(g_newsgroup_sel_btns,g_newsgroup_sel_btn_cnt);
-      case OI_NEWSGROUP_SEL_STYLES:
-      {
+
+    case OI_NEWSGROUP_SEL_STYLES:
+    {
         char* s = g_sel_grp_dmode;
         while (s[-1] != '*')
         {
             s--;
         }
         return s;
-      }
-      case OI_USE_NEWS_SEL:
+    }
+
+    case OI_USE_NEWS_SEL:
         if (g_use_news_selector < 1)
         {
             return YESorNO(g_use_news_selector+1);
         }
         std::sprintf(g_buf,"%d",g_use_news_selector);
         return g_buf;
-      case OI_NEWS_SEL_MODE:
-      {
+
+    case OI_NEWS_SEL_MODE:
+    {
         const sel_mode save_sel_mode = g_sel_mode;
         const int save_Threaded = g_threaded_group;
         g_threaded_group = true;
@@ -1074,93 +1181,125 @@ const char *option_value(option_index num)
         g_threaded_group = save_Threaded;
         set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
         return s;
-      }
-      case OI_NEWS_SEL_ORDER:
+    }
+
+    case OI_NEWS_SEL_ORDER:
         return get_sel_order(g_sel_defaultmode);
-      case OI_NEWS_SEL_CMDS:
+
+    case OI_NEWS_SEL_CMDS:
         return g_news_sel_cmds;
-      case OI_NEWS_SEL_BTNS:
+
+    case OI_NEWS_SEL_BTNS:
         return expand_mouse_buttons(g_news_sel_btns,g_news_sel_btn_cnt);
-      case OI_NEWS_SEL_STYLES:
-      {
+
+    case OI_NEWS_SEL_STYLES:
+    {
         char* s = g_sel_art_dmode;
         while (s[-1] != '*')
         {
             s--;
         }
         return s;
-      }
-      case OI_OPTION_SEL_CMDS:
+    }
+
+    case OI_OPTION_SEL_CMDS:
         return g_option_sel_cmds;
-      case OI_OPTION_SEL_BTNS:
+
+    case OI_OPTION_SEL_BTNS:
         return expand_mouse_buttons(g_option_sel_btns,g_option_sel_btn_cnt);
-      case OI_AUTO_SAVE_NAME:
+
+    case OI_AUTO_SAVE_NAME:
         return YESorNO(!std::strcmp(get_val_const("SAVEDIR",SAVEDIR),"%p/%c"));
-      case OI_BKGND_THREADING:
+
+    case OI_BKGND_THREADING:
         return YESorNO(!g_thread_always);
-      case OI_AUTO_ARROW_MACROS:
+
+    case OI_AUTO_ARROW_MACROS:
         switch (g_auto_arrow_macros)
         {
-          case 2:
+        case 2:
             return "regular";
-          case 1:
+
+        case 1:
             return "alternate";
-          default:
+
+        default:
             return YESorNO(false);
         }
-      case OI_READ_BREADTH_FIRST:
+
+    case OI_READ_BREADTH_FIRST:
         return YESorNO(g_breadth_first);
-      case OI_BKGND_SPINNER:
+
+    case OI_BKGND_SPINNER:
         return YESorNO(g_bkgnd_spinner);
-      case OI_CHECKPOINT_NEWSRC_FREQUENCY:
+
+    case OI_CHECKPOINT_NEWSRC_FREQUENCY:
         std::sprintf(g_buf,"%d",g_docheckwhen);
         return g_buf;
-      case OI_SAVE_DIR:
+
+    case OI_SAVE_DIR:
         return g_savedir.empty() ? "%./News" : g_savedir.c_str();
-      case OI_ERASE_SCREEN:
+
+    case OI_ERASE_SCREEN:
         return YESorNO(g_erase_screen);
-      case OI_NOVICE_DELAYS:
+
+    case OI_NOVICE_DELAYS:
         return YESorNO(g_novice_delays);
-      case OI_CITED_TEXT_STRING:
+
+    case OI_CITED_TEXT_STRING:
         return g_indstr.c_str();
-      case OI_GOTO_LINE_NUM:
+
+    case OI_GOTO_LINE_NUM:
         std::sprintf(g_buf,"%d",g_gline+1);
         return g_buf;
-      case OI_FUZZY_NEWSGROUP_NAMES:
+
+    case OI_FUZZY_NEWSGROUP_NAMES:
         return YESorNO(g_fuzzy_get);
-      case OI_HEADER_MAGIC:
+
+    case OI_HEADER_MAGIC:
         return magic_list();
-      case OI_HEADER_HIDING:
+
+    case OI_HEADER_HIDING:
         return hidden_list();
-      case OI_INITIAL_ARTICLE_LINES:
+
+    case OI_INITIAL_ARTICLE_LINES:
         if (!g_option_def_vals[OI_INITIAL_ARTICLE_LINES])
         {
             return "$LINES";
         }
         std::sprintf(g_buf,"%d",g_initlines);
         return g_buf;
-      case OI_APPEND_UNSUBSCRIBED_GROUPS:
+
+    case OI_APPEND_UNSUBSCRIBED_GROUPS:
         return YESorNO(g_append_unsub);
-      case OI_FILTER_CONTROL_CHARACTERS:
+
+    case OI_FILTER_CONTROL_CHARACTERS:
         return YESorNO(!g_dont_filter_control);
-      case OI_JOIN_SUBJECT_LINES:
+
+    case OI_JOIN_SUBJECT_LINES:
         if (g_join_subject_len)
         {
             std::sprintf(g_buf,"%d",g_join_subject_len);
             return g_buf;
         }
         return YESorNO(false);
-      case OI_IGNORE_THRU_ON_SELECT:
+
+    case OI_IGNORE_THRU_ON_SELECT:
         return YESorNO(g_kill_thru_kludge);
-      case OI_AUTO_GROW_GROUPS:
+
+    case OI_AUTO_GROW_GROUPS:
         return YESorNO(!g_keep_the_group_static);
-      case OI_MUCK_UP_CLEAR:
+
+    case OI_MUCK_UP_CLEAR:
         return YESorNO(g_muck_up_clear);
-      case OI_ERASE_EACH_LINE:
+
+    case OI_ERASE_EACH_LINE:
         return YESorNO(g_erase_each_line);
-      case OI_SAVEFILE_TYPE:
+
+    case OI_SAVEFILE_TYPE:
         return g_mbox_always? "mail" : (g_norm_always? "norm" : "ask");
-      case OI_PAGER_LINE_MARKING:
+
+    case OI_PAGER_LINE_MARKING:
         if (g_marking == NOMARKING)
         {
             return YESorNO(false);
@@ -1182,103 +1321,141 @@ const char *option_value(option_index num)
             std::strcat(g_buf,"standout");
         }
         return g_buf;
-      case OI_OLD_MTHREADS_DATABASE:
+
+    case OI_OLD_MTHREADS_DATABASE:
         if (g_olden_days <= 1)
         {
             return YESorNO(g_olden_days);
         }
         std::sprintf(g_buf,"%d",g_olden_days);
         return g_buf;
-      case OI_SELECT_MY_POSTS:
+
+    case OI_SELECT_MY_POSTS:
         switch (g_auto_select_postings)
         {
-          case '+':
+        case '+':
             return "thread";
-          case 'p':
+
+        case 'p':
             return "parent";
-          case '.':
+
+        case '.':
             return "subthread";
-          default:
+
+        default:
             break;
         }
         return YESorNO(false);
-      case OI_MULTIPART_SEPARATOR:
+
+    case OI_MULTIPART_SEPARATOR:
         return g_multipart_separator.c_str();
-      case OI_AUTO_VIEW_INLINE:
+
+    case OI_AUTO_VIEW_INLINE:
         return YESorNO(g_auto_view_inline);
-      case OI_NEWGROUP_CHECK:
+
+    case OI_NEWGROUP_CHECK:
         return YESorNO(!g_quickstart);
-      case OI_RESTRICTION_INCLUDES_EMPTIES:
+
+    case OI_RESTRICTION_INCLUDES_EMPTIES:
         return YESorNO(g_empty_only_char == 'o');
-      case OI_CHARSET:
+
+    case OI_CHARSET:
         return g_charsets.c_str();
-      case OI_INITIAL_GROUP_LIST:
+
+    case OI_INITIAL_GROUP_LIST:
         if (g_suppress_cn)
         {
             return YESorNO(false);
         }
         std::sprintf(g_buf,"%d",g_countdown);
         return g_buf;
-      case OI_RESTART_AT_LAST_GROUP:
+
+    case OI_RESTART_AT_LAST_GROUP:
         return YESorNO(g_findlast != 0);
-      case OI_SCANMODE_COUNT:
+
+    case OI_SCANMODE_COUNT:
         std::sprintf(g_buf,"%d",g_scanon);
         return g_buf;
-      case OI_TERSE_OUTPUT:
+
+    case OI_TERSE_OUTPUT:
         return YESorNO(!g_verbose);
-      case OI_EAT_TYPEAHEAD:
+
+    case OI_EAT_TYPEAHEAD:
         return YESorNO(!g_allow_typeahead);
-      case OI_COMPRESS_SUBJECTS:
+
+    case OI_COMPRESS_SUBJECTS:
         return YESorNO(!g_unbroken_subjects);
-      case OI_VERIFY_INPUT:
+
+    case OI_VERIFY_INPUT:
         return YESorNO(g_verify);
-      case OI_ARTICLE_TREE_LINES:
+
+    case OI_ARTICLE_TREE_LINES:
         std::sprintf(g_buf,"%d",g_max_tree_lines);
         return g_buf;
-      case OI_WORD_WRAP_MARGIN:
+
+    case OI_WORD_WRAP_MARGIN:
         if (g_word_wrap_offset >= 0)
         {
             std::sprintf(g_buf,"%d",g_word_wrap_offset);
             return g_buf;
         }
         return YESorNO(false);
-      case OI_DEFAULT_REFETCH_TIME:
+
+    case OI_DEFAULT_REFETCH_TIME:
         return secs2text(g_def_refetch_secs);
-      case OI_ART_PAGER_BTNS:
+
+    case OI_ART_PAGER_BTNS:
         return expand_mouse_buttons(g_art_pager_btns,g_art_pager_btn_cnt);
-      case OI_SCAN_ITEMNUM:
+
+    case OI_SCAN_ITEMNUM:
         return YESorNO(g_s_itemnum);
-      case OI_SCAN_VI:
+
+    case OI_SCAN_VI:
         return YESorNO(g_s_mode_vi);
-      case OI_SCANA_FOLLOW:
+
+    case OI_SCANA_FOLLOW:
         return YESorNO(g_sa_follow);
-      case OI_SCANA_FOLD:
+
+    case OI_SCANA_FOLD:
         return YESorNO(g_sa_mode_fold);
-      case OI_SCANA_UNZOOMFOLD:
+
+    case OI_SCANA_UNZOOMFOLD:
         return YESorNO(g_sa_unzoomrefold);
-      case OI_SCANA_MARKSTAY:
+
+    case OI_SCANA_MARKSTAY:
         return YESorNO(g_sa_mark_stay);
-      case OI_SCANA_DISPANUM:
+
+    case OI_SCANA_DISPANUM:
         return YESorNO(g_sa_mode_desc_artnum);
-      case OI_SCANA_DISPAUTHOR:
+
+    case OI_SCANA_DISPAUTHOR:
         return YESorNO(g_sa_mode_desc_author);
-      case OI_SCANA_DISPSCORE:
+
+    case OI_SCANA_DISPSCORE:
         return YESorNO(g_sa_mode_desc_score);
-      case OI_SCANA_DISPSUBCNT:
+
+    case OI_SCANA_DISPSUBCNT:
         return YESorNO(g_sa_mode_desc_threadcount);
-      case OI_SCANA_DISPSUBJ:
+
+    case OI_SCANA_DISPSUBJ:
         return YESorNO(g_sa_mode_desc_subject);
-      case OI_SCANA_DISPSUMMARY:
+
+    case OI_SCANA_DISPSUMMARY:
         return YESorNO(g_sa_mode_desc_summary);
-      case OI_SCANA_DISPKEYW:
+
+    case OI_SCANA_DISPKEYW:
         return YESorNO(g_sa_mode_desc_keyw);
-      case OI_SC_VERBOSE:
+
+    case OI_SC_VERBOSE:
         return YESorNO(g_sf_verbose);
-      case OI_USE_SEL_NUM:
+
+    case OI_USE_SEL_NUM:
         return YESorNO(g_use_sel_num);
-      case OI_SEL_NUM_GOTO:
+
+    case OI_SEL_NUM_GOTO:
         return YESorNO(g_sel_num_goto);
-      default:
+
+    default:
         std::printf("*** Internal error: Unknown Option ***\n");
         break;
     }
@@ -1561,24 +1738,28 @@ const char *quote_string(const char *val)
     {
         switch (*cp)
         {
-          case ' ':
-          case '\t':
+        case ' ':
+        case '\t':
             if (!cp[1] || isspace(cp[1]))
             {
                 needs_quotes = true;
             }
             break;
-          case '\n':
-          case '#':
+
+        case '\n':
+        case '#':
             needs_quotes = true;
             break;
-          case '\'':
+
+        case '\'':
             ticks++;
             break;
-          case '"':
+
+        case '"':
             quotes++;
             break;
-          case '\\':
+
+        case '\\':
             backslashes++;
             break;
         }
