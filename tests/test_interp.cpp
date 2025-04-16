@@ -666,16 +666,16 @@ namespace
 {
 
 template <typename T>
-class value_saver
+class ValueSaver
 {
 public:
-    value_saver(T &var, T new_value) :
+    ValueSaver(T &var, T new_value) :
         m_var(var),
         m_old_value(var)
     {
         m_var = new_value;
     }
-    ~value_saver()
+    ~ValueSaver()
     {
         m_var = m_old_value;
     }
@@ -689,7 +689,7 @@ private:
 
 TEST_F(InterpolatorTest, newsSpoolDirectoryNoDataSource)
 {
-    value_saver<DataSource *> datasrc(g_datasrc, nullptr);
+    ValueSaver<DataSource *> datasrc(g_datasrc, nullptr);
     char                   pattern[]{"%P"};
 
     const char *new_pattern = interpolate(pattern);
@@ -890,7 +890,7 @@ TEST_F(InterpolatorTest, trailingPercentRemains)
 
 TEST_F(InterpolatorTest, performCount)
 {
-    value_saver<int> saved(g_perform_cnt, 86);
+    ValueSaver<int> saved(g_perform_cnt, 86);
     char pattern[]{"%#"};
 
     const char *new_pattern = interpolate(pattern);
@@ -911,7 +911,7 @@ TEST_F(InterpolatorTest, modifiedPerformCountNotZero)
 
 TEST_F(InterpolatorTest, consecutiveModifiedPerformCountIncreases)
 {
-    value_saver<int> saved(g_perform_cnt, 86);
+    ValueSaver<int> saved(g_perform_cnt, 86);
     char pattern[]{"%^#,%^#"};
 
     const char *new_pattern = interpolate(pattern);
@@ -1673,7 +1673,7 @@ TEST_F(InterpolatorNewsgroupTest, articleSizeInNewsgroup)
 
 TEST_F(InterpolatorNewsgroupTest, numSelectedThreadsInNewsgroupEmpty)
 {
-    value_saver<ArticleUnread> saver(g_selected_count, 66);
+    ValueSaver<ArticleUnread> saver(g_selected_count, 66);
     char pattern[]{"%Z"};
 
     const char *new_pattern = interpolate(pattern);
