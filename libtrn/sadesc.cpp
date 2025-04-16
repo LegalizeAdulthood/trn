@@ -38,7 +38,7 @@ const char *sa_get_statchars(long a, int line)
     /* old 5-column status */
     switch (line)
     {
-      case 1:
+    case 1:
         std::strcpy(char_buf,".....");
         if (sa_marked(a))
         {
@@ -57,14 +57,15 @@ const char *sa_get_statchars(long a, int line)
             char_buf[0] = '+';
         }
         break;
-      default:
+
+    default:
         std::strcpy(char_buf,"     ");
         break;
     } /* switch */
 #else
     switch (line)
     {
-      case 1:
+    case 1:
         std::strcpy(char_buf,"...");
         if (sa_marked(a))
         {
@@ -83,7 +84,8 @@ const char *sa_get_statchars(long a, int line)
             char_buf[0] = '+';
         }
         break;
-      default:
+
+    default:
         std::strcpy(char_buf,"   ");
         break;
     } /* switch */
@@ -136,7 +138,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
     bool    use_standout = false;
     switch (line)
     {
-      case 1:
+    case 1:
         desc_buf[0] = '\0';     /* initialize the buffer */
         if (g_sa_mode_desc_artnum)
         {
@@ -183,7 +185,8 @@ const char *sa_get_desc(long e, int line, bool trunc)
             std::strcat(desc_buf,s_sa_buf);
         }
         break;
-      case 2:   /* summary line (test) */
+
+    case 2:   /* summary line (test) */
         s = fetchlines(artnum,SUMRY_LINE);
         if (s && *s)   /* we really have one */
         {
@@ -227,7 +230,8 @@ const char *sa_get_desc(long e, int line, bool trunc)
         }
         /* otherwise, we might have had a keyword */
         /* FALL THROUGH */
-      case 3:   /* Keywords (test) */
+
+    case 3:   /* Keywords (test) */
         s = fetchlines(artnum,KEYW_LINE);
         if (s && *s)   /* we really have one */
         {
@@ -269,7 +273,8 @@ const char *sa_get_desc(long e, int line, bool trunc)
             break;
         }
         /* FALL THROUGH */
-      default:  /* no line I know of */
+
+    default:  /* no line I know of */
         /* later return nullptr */
         std::sprintf(desc_buf,"Entry %ld: Nonimplemented Description LINE",e);
         break;
@@ -289,10 +294,10 @@ const char *sa_get_desc(long e, int line, bool trunc)
     {
         switch (*t)
         {
-          case Ctl('h'):
-          case '\t':
-          case '\n':
-          case '\r':
+        case Ctl('h'):
+        case '\t':
+        case '\n':
+        case '\r':
             *t = ' ';
         }
     }
