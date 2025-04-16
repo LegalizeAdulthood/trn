@@ -44,9 +44,9 @@
 #include <system_error>
 
 #ifdef UNION_WAIT
-using WAIT_STATUS = union wait;
+using WaitStatus = union wait;
 #else
-using WAIT_STATUS = int;
+using WaitStatus = int;
 #endif
 
 bool g_waiting{}; /* waiting for subprocess (in doshell)? */
