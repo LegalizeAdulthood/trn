@@ -46,7 +46,7 @@ enum MimeSectionFlags : std::uint16_t
 DECLARE_FLAGS_ENUM(MimeSectionFlags, std::uint16_t);
 
 /* Only used with HTMLTEXT_MIME */
-enum html_flags : std::uint16_t
+enum HtmlFlags : std::uint16_t
 {
     HF_NONE = 0x0000,
     HF_IN_TAG = 0x0001,
@@ -63,7 +63,7 @@ enum html_flags : std::uint16_t
     HF_SPACE_OK = 0x0800,
     HF_COMPACT = 0x1000
 };
-DECLARE_FLAGS_ENUM(html_flags, std::uint16_t);
+DECLARE_FLAGS_ENUM(HtmlFlags, std::uint16_t);
 
 struct MIME_SECT
 {
@@ -80,7 +80,7 @@ struct MIME_SECT
     short total;
     short boundary_len;
     MimeSectionFlags flags;
-    html_flags html;
+    HtmlFlags html;
     short html_blkcnt;
 };
 

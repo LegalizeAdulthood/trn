@@ -74,7 +74,7 @@ static char *mime_ParseEntryArg(char **cpp);
 static int   mime_getc(std::FILE *fp);
 static char *tag_action(char *t, char *word, bool opening_tag);
 static char *output_prep(char *t);
-static char *do_newline(char *t, html_flags flag);
+static char *do_newline(char *t, HtmlFlags flag);
 static int   do_indent(char *t);
 static char *find_attr(char *str, const char *attr);
 
@@ -1711,7 +1711,7 @@ int filter_html(char *t, const char *f)
             }
             if (cp)
             {
-                const html_flags flag_save = g_mime_section->html;
+                const HtmlFlags flag_save = g_mime_section->html;
                 g_mime_section->html |= HF_NL_OK;
                 line_start = do_newline(cp, HF_NL_OK);
                 int fudge = do_indent(nullptr);
@@ -2144,7 +2144,7 @@ static char *output_prep(char *t)
     return t + do_indent(t);
 }
 
-static char *do_newline(char *t, html_flags flag)
+static char *do_newline(char *t, HtmlFlags flag)
 {
     if (g_mime_section->html & flag)
     {
