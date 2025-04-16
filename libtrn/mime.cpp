@@ -42,7 +42,7 @@ char       *g_mime_getc_line{};
 #endif
 
 // clang-format off
-static HTML_TAGS s_tagattr[LAST_TAG] = {
+static HtmlTag s_tagattr[LAST_TAG] = {
  /* name               length   flags */
     {"blockquote",      10,     TF_BLOCK | TF_P | TF_NL                 },
     {"br",               2,     TF_NL | TF_BR                           },

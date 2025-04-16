@@ -127,7 +127,7 @@ enum
     LAST_TAG,
 };
 
-struct HTML_TAGS
+struct HtmlTag
 {
     char* name;
     char length;
