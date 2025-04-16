@@ -316,18 +316,20 @@ int mime_Exec(char *cmd)
         {
             switch (*++f)
             {
-              case 's':
+            case 's':
                 safecpy(t, g_decode_filename, CBUFLEN-(t-g_cmd_buf));
                 t += std::strlen(t);
                 break;
-              case 't':
+
+            case 't':
                 *t++ = '\'';
                 safecpy(t, g_mime_section->type_name, CBUFLEN-(t-g_cmd_buf)-1);
                 t += std::strlen(t);
                 *t++ = '\'';
                 break;
-              case '{':
-              {
+
+            case '{':
+            {
                 char* s = std::strchr(f, '}');
                 if (!s)
                 {
@@ -343,12 +345,14 @@ int mime_Exec(char *cmd)
                 t += std::strlen(t);
                 *t++ = '\'';
                 break;
-              }
-              case '%':
+            }
+
+            case '%':
                 *t++ = '%';
                 break;
-              case 'n':
-              case 'F':
+
+            case 'n':
+            case 'F':
                 return -1;
             }
         }
@@ -685,22 +689,26 @@ void mime_ParseSubheader(std::FILE *ifp, char *next_line)
         int linetype = set_line_type(line, s);
         switch (linetype)
         {
-          case CONTTYPE_LINE:
+        case CONTTYPE_LINE:
             mime_ParseType(g_mime_section,s+1);
             break;
-          case CONTXFER_LINE:
+
+        case CONTXFER_LINE:
             mime_ParseEncoding(g_mime_section,s+1);
             break;
-          case CONTDISP_LINE:
+
+        case CONTDISP_LINE:
             mime_ParseDisposition(g_mime_section,s+1);
             break;
-          case CONTNAME_LINE:
+
+        case CONTNAME_LINE:
             safefree(g_mime_section->filename);
             s = mime_SkipWhitespace(s+1);
             g_mime_section->filename = savestr(s);
             break;
+
 #if 0
-          case CONTLEN_LINE:
+        case CONTLEN_LINE:
             g_mime_section->content_len = atol(s+1);
             break;
 #endif
@@ -745,16 +753,18 @@ void mime_SetState(char *bp)
     int ret = mime_EndOfSection(bp);
     switch (ret)
     {
-      case 0:
+    case 0:
         break;
-      case 1:
+
+    case 1:
         while (!g_mime_section->prev->boundary_len)
         {
             mime_PopSection();
         }
         g_mime_state = BETWEEN_MIME;
         break;
-      case 2:
+
+    case 2:
         while (!g_mime_section->prev->boundary_len)
         {
             mime_PopSection();
@@ -876,15 +886,18 @@ char *mime_SkipWhitespace(char *s)
             {
                 switch (*s++)
                 {
-                  case '\0':
+                case '\0':
                     return s-1;
-                  case '\\':
+
+                case '\\':
                     s++;
                     break;
-                  case '(':
+
+                case '(':
                     comment_level++;
                     break;
-                  case ')':
+
+                case ')':
                     comment_level--;
                     break;
                 }
@@ -921,18 +934,20 @@ void mime_DecodeArticle(bool view)
         }
         switch (g_mime_state)
         {
-          case BETWEEN_MIME:
-          case END_OF_MIME:
+        case BETWEEN_MIME:
+        case END_OF_MIME:
             break;
-          case TEXT_MIME:
-          case HTMLTEXT_MIME:
-          case ISOTEXT_MIME:
-          case MESSAGE_MIME:
+
+        case TEXT_MIME:
+        case HTMLTEXT_MIME:
+        case ISOTEXT_MIME:
+        case MESSAGE_MIME:
             /* $$ Check for uuencoded file here? */
             g_mime_state = SKIP_MIME;
             /* FALL THROUGH */
-          case SKIP_MIME:
-          {
+
+        case SKIP_MIME:
+        {
             MIME_SECT* mp = g_mime_section;
             while ((mp = mp->prev) != nullptr && !mp->boundary_len)
             {
@@ -942,8 +957,9 @@ void mime_DecodeArticle(bool view)
                 return;
             }
             break;
-          }
-          default:
+        }
+
+        default:
             if (view)
             {
                 mcp = mime_FindMimecapEntry(g_mime_section->type_name, MCF_NONE);
@@ -1033,7 +1049,7 @@ int qp_decodestring(char *t, const char *f, bool in_header)
     {
         switch (*f)
         {
-          case '_':
+        case '_':
             if (in_header)
             {
                 *t++ = ' ';
@@ -1044,7 +1060,8 @@ int qp_decodestring(char *t, const char *f, bool in_header)
                 *t++ = *f++;
             }
             break;
-          case '=':     /* decode a hex-value */
+
+        case '=':     /* decode a hex-value */
             if (f[1] == '\n')
             {
                 f += 2;
@@ -1061,7 +1078,8 @@ int qp_decodestring(char *t, const char *f, bool in_header)
                 break;
             }
             /* FALL THROUGH */
-          default:
+
+        default:
             *t++ = *f++;
             break;
         }
@@ -1845,7 +1863,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 
         switch (tnum)
         {
-          case TAG_BLOCKQUOTE:
+        case TAG_BLOCKQUOTE:
             if (((cp = find_attr(word, "type")) != nullptr && string_case_equal(cp, "cite", 4)) ||
                 ((cp = find_attr(word, "style")) != nullptr && string_case_equal(cp, "border-left:", 12)))
             {
@@ -1856,14 +1874,16 @@ static char *tag_action(char *t, char *word, bool opening_tag)
                 blks[j].indent = ' ';
             }
             break;
-          case TAG_HR:
+
+        case TAG_HR:
             t = output_prep(t);
               *t++ = '-';
               *t++ = '-';
             g_mime_section->html |= HF_NL_OK;
             t = do_newline(t, HF_NL_OK);
             break;
-          case TAG_IMG:
+
+        case TAG_IMG:
             t = output_prep(t);
             if (g_mime_section->html & HF_SPACE_OK)
             {
@@ -1873,32 +1893,34 @@ static char *tag_action(char *t, char *word, bool opening_tag)
             t += 8;
             g_mime_section->html &= ~HF_SPACE_OK;
             break;
-          case TAG_OL:
+
+        case TAG_OL:
             itype = 4;
             cp = find_attr(word, "type");
             if (cp != nullptr)
             {
                 switch (*cp)
                 {
-                  case 'a':  itype = 5;  break;
-                  case 'A':  itype = 6;  break;
-                  case 'i':  itype = 7;  break;
-                  case 'I':  itype = 8;  break;
-                  default:   itype = 4;  break;
+                case 'a':  itype = 5;  break;
+                case 'A':  itype = 6;  break;
+                case 'i':  itype = 7;  break;
+                case 'I':  itype = 8;  break;
+                default:   itype = 4;  break;
                 }
             }
             blks[j].indent = itype;
             break;
-          case TAG_UL:
+
+        case TAG_UL:
             itype = 1;
             cp = find_attr(word, "type");
             if (cp != nullptr)
             {
                 switch (*cp)
                 {
-                  case 'd': case 'D':  itype = 1;  break;
-                  case 'c': case 'C':  itype = 2;  break;
-                  case 's': case 'S':  itype = 3;  break;
+                case 'd': case 'D':  itype = 1;  break;
+                case 'c': case 'C':  itype = 2;  break;
+                case 's': case 'S':  itype = 3;  break;
                 }
             }
             else
@@ -1916,22 +1938,25 @@ static char *tag_action(char *t, char *word, bool opening_tag)
             }
             blks[j].indent = itype;
             break;
-          case TAG_LI:
+
+        case TAG_LI:
             t = output_prep(t);
             ch = j < 0? ' ' : blks[j].indent;
             switch (ch)
             {
-              case 1: case 2: case 3:
+            case 1: case 2: case 3:
                 t[-2] = s_bullets[ch-1];
                 break;
-              case 4:
+
+            case 4:
                 std::sprintf(t-4, "%2d. ", ++blks[j].cnt);
                 if (*t)
                 {
                     t += std::strlen(t);
                 }
                 break;
-              case 5: case 6:
+
+            case 5: case 6:
                 cnt = blks[j].cnt++;
                 if (cnt >= 26*26)
                 {
@@ -1945,7 +1970,8 @@ static char *tag_action(char *t, char *word, bool opening_tag)
                 t[-3] = s_letters[ch-5] + cnt % 26;
                 t[-2] = '.';
                 break;
-              case 7:
+
+            case 7:
                 for (int i = 0; i < 7; i++)
                 {
                     if (std::isupper(s_roman_letters[i]))
@@ -1954,7 +1980,8 @@ static char *tag_action(char *t, char *word, bool opening_tag)
                     }
                 }
                 goto roman_numerals;
-              case 8:
+
+            case 8:
                 for (int i = 0; i < 7; i++)
                 {
                     if (std::islower(s_roman_letters[i]))
@@ -2004,14 +2031,16 @@ static char *tag_action(char *t, char *word, bool opening_tag)
                 *t++ = '.';
                 *t++ = ' ';
                 break;
-              default:
+
+            default:
                 *t++ = '*';
                 *t++ = ' ';
                 break;
             }
             g_mime_section->html |= HF_NL_OK|HF_P_OK;
             break;
-          case TAG_PRE:
+
+        case TAG_PRE:
             g_mime_section->html |= HF_IN_PRE;
             s_word_wrap = s_word_wrap_in_pre;
             break;
@@ -2072,7 +2101,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 
         switch (tnum)
         {
-          case TAG_PRE:
+        case TAG_PRE:
             g_mime_section->html &= ~HF_IN_PRE;
             s_word_wrap = s_normal_word_wrap;
             break;
@@ -2153,17 +2182,20 @@ static int do_indent(char *t)
             {
                 switch (ch)
                 {
-                  case '>':
+                case '>':
                     spaces = 1;
                     break;
-                  case ' ':
+
+                case ' ':
                     spaces = 3;
                     break;
-                  case 7:  case 8:
+
+                case 7:  case 8:
                     ch = ' ';
                     spaces = 5;
                     break;
-                  default:
+
+                default:
                     ch = ' ';
                     spaces = 3;
                     break;
