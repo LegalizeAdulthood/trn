@@ -10,7 +10,7 @@
 #include <cstdio>
 #include <string>
 
-struct HBLK
+struct HBlock
 {
     int     tnum;
     short   cnt;
@@ -73,7 +73,7 @@ struct MIME_SECT
     char *type_params;
     char *boundary;
     int html_line_start;
-    HBLK *html_blks;
+    HBlock *html_blks;
     mime_state type;
     MimeEncoding encoding;
     short part;

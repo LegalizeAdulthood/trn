@@ -1487,8 +1487,8 @@ int filter_html(char *t, const char *f)
 
     if (!g_mime_section->html_blks)
     {
-        g_mime_section->html_blks = (HBLK*)safemalloc(HTML_MAX_BLOCKS
-                                                  * sizeof (HBLK));
+        g_mime_section->html_blks = (HBlock*)safemalloc(HTML_MAX_BLOCKS
+                                                  * sizeof (HBlock));
     }
 
     for (bp = t; *f; f++)
@@ -1759,7 +1759,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
     int   cnt;
     int   num;
     bool match = false;
-    HBLK* blks = g_mime_section->html_blks;
+    HBlock* blks = g_mime_section->html_blks;
 
     for (cp = word; *cp && *cp != ' '; cp++)
     {
@@ -2172,7 +2172,7 @@ static int do_indent(char *t)
         g_mime_section->html &= ~HF_NEED_INDENT;
     }
 
-    HBLK *blks = g_mime_section->html_blks;
+    HBlock *blks = g_mime_section->html_blks;
     if (blks != nullptr)
     {
         for (int j = 0; j < g_mime_section->html_blkcnt; j++)
