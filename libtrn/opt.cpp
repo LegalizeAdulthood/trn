@@ -1594,9 +1594,9 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
             {
                 if (g_user_htype_cnt >= g_user_htype_max)
                 {
-                    g_user_htype = (USER_HEADTYPE*)
+                    g_user_htype = (UserHeaderType*)
                         std::realloc(g_user_htype, (g_user_htype_max += 10)
-                                            * sizeof (USER_HEADTYPE));
+                                            * sizeof (UserHeaderType));
                 }
                 if (!add_at)
                 {

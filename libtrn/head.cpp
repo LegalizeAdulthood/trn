@@ -82,7 +82,7 @@ HeaderType g_htype[HEAD_LAST] = {
 #undef NGS_CACHED
 #undef XREF_CACHED
 
-USER_HEADTYPE   *g_user_htype{};
+UserHeaderType   *g_user_htype{};
 short            g_user_htypeix[26];
 int              g_user_htype_cnt{};
 int              g_user_htype_max{};
@@ -104,8 +104,8 @@ void head_init()
     }
 
     g_user_htype_max = 10;
-    g_user_htype = (USER_HEADTYPE*)safemalloc(g_user_htype_max
-                                            * sizeof (USER_HEADTYPE));
+    g_user_htype = (UserHeaderType*)safemalloc(g_user_htype_max
+                                            * sizeof (UserHeaderType));
     g_user_htype[g_user_htype_cnt++].name = "*";
 
     s_headbuf_size = LBUFLEN * 8;

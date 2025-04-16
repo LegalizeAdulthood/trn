@@ -74,15 +74,15 @@ struct HeaderType
     HeaderTypeFlags flags;  /* the header's flags */
 };
 
-struct USER_HEADTYPE
+struct UserHeaderType
 {
-char* name;                 /* user-defined headers */
+    char* name;             /* user-defined headers */
     char length;            /* the header's string length */
     char flags;             /* the header's flags */
 };
 
 extern HeaderType g_htype[HEAD_LAST];
-extern USER_HEADTYPE *g_user_htype;
+extern UserHeaderType *g_user_htype;
 extern short g_user_htypeix[26];
 extern int g_user_htype_cnt;
 extern int g_user_htype_max;
@@ -123,7 +123,5 @@ inline char *fetchxref(ART_NUM artnum, bool copy)
 {
     return prefetchlines(artnum, XREF_LINE, copy);
 }
-
-
 
 #endif
