@@ -31,7 +31,7 @@ struct HASHTABLE
     HASHENT** ht_addr;          /* array of HASHENT pointers */
     unsigned ht_size;
     char ht_magic;
-    HASHCMPFUNC ht_cmp;
+    HashCompareFunc ht_cmp;
 };
 
 static HASHENT **hashfind(HASHTABLE *tbl, const char *key, int keylen);
@@ -68,7 +68,7 @@ static HASHENT *s_hereuse{};
 static int      s_reusables{};
 
 /* size - a crude guide to size */
-HASHTABLE *hashcreate(unsigned size, HASHCMPFUNC cmpfunc)
+HASHTABLE *hashcreate(unsigned size, HashCompareFunc cmpfunc)
 {
     size = std::max(size, 1U);  /* size < 1 is nonsense */
     struct alignalloc

@@ -15,12 +15,12 @@ struct HashDatum
 
 struct HASHTABLE;
 
-using HASHCMPFUNC = int (*)(const char *key, int keylen, HashDatum data);
+using HashCompareFunc = int (*)(const char *key, int keylen, HashDatum data);
 using HASHWALKFUNC = int (*)(int keylen, HashDatum *data, int extra);
 
-#define HASH_DEFCMPFUNC ((HASHCMPFUNC) nullptr)
+#define HASH_DEFCMPFUNC ((HashCompareFunc) nullptr)
 
-HASHTABLE *hashcreate(unsigned size, HASHCMPFUNC cmpfunc);
+HASHTABLE *hashcreate(unsigned size, HashCompareFunc cmpfunc);
 void hashdestroy(HASHTABLE *tbl);
 void hashstore(HASHTABLE *tbl, const char *key, int keylen, HashDatum data);
 void hashdelete(HASHTABLE *tbl, const char *key, int keylen);
