@@ -471,6 +471,7 @@ bool open_datasrc(DATASRC *dp)
                     break;
                 }
                 /* FALL THROUGH */
+
             case 0:
                 dp->flags |= DF_USELISTACT;
                 if (dp->flags & DF_TMPACTFILE)
@@ -487,11 +488,13 @@ bool open_datasrc(DATASRC *dp)
                     success = actfile_hash(dp);
                 }
                 break;
+
             case -2:
                 std::printf("Failed to open news server %s:\n%s\n", dp->newsid, g_ser_line);
                 termdown(2);
                 success = false;
                 break;
+
             default:
                 success = actfile_hash(dp);
                 break;
@@ -665,10 +668,12 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
         case 0:
             set_datasrc(save_datasrc);
             return false;
+
         case 1:
             std::sprintf(outbuf, "%s\n", g_ser_line);
             nntp_finish_list();
             break;
+
         case -2:
             /*$$$$*/
             break;
@@ -1217,34 +1222,35 @@ int find_close_match()
 
     switch (s_ngn)
     {
-        case 0:
-            break;
-        case 1:
+    case 0:
+        break;
+    case 1:
+    {
+        char* cp = std::strchr(s_ngptrs[0], ' ');
+        if (cp)
         {
-            char* cp = std::strchr(s_ngptrs[0], ' ');
-            if (cp)
-            {
-                *cp = '\0';
-            }
-            if (g_verbose)
-            {
-                std::printf("(I assume you meant %s)\n", s_ngptrs[0]);
-            }
-            else
-            {
-                std::printf("(Using %s)\n", s_ngptrs[0]);
-            }
-            set_ngname(s_ngptrs[0]);
-            if (cp)
-            {
-                *cp = ' ';
-            }
-            ret = 1;
-            break;
+            *cp = '\0';
         }
-        default:
-            ret = get_near_miss();
-            break;
+        if (g_verbose)
+        {
+            std::printf("(I assume you meant %s)\n", s_ngptrs[0]);
+        }
+        else
+        {
+            std::printf("(Using %s)\n", s_ngptrs[0]);
+        }
+        set_ngname(s_ngptrs[0]);
+        if (cp)
+        {
+            *cp = ' ';
+        }
+        ret = 1;
+        break;
+    }
+
+    default:
+        ret = get_near_miss();
+        break;
     }
     std::free((char*)s_ngptrs);
     return ret;
@@ -1353,50 +1359,52 @@ reask:
     std::putchar('\n');
     switch (*g_buf)
     {
-        case 'n':
-        case 'N':
-        case 'q':
-        case 'Q':
-        case 'x':
-        case 'X':
-            return 0;
-        case 'h':
-        case 'H':
-            if (g_verbose)
-            {
-                std::fputs("  You entered an illegal newsgroup name, and these are the nearest possible\n"
-                      "  matches.  If you want one of these, then enter its number.  Otherwise\n"
-                      "  just say 'n'.\n",
-                      stdout);
-            }
-            else
-            {
-                std::fputs("Illegal newsgroup, enter a number or 'n'.\n", stdout);
-            }
-            goto reask;
-        default:
-            if (std::isdigit(*g_buf))
-            {
-                char* s = std::strchr(options, *g_buf);
+    case 'n':
+    case 'N':
+    case 'q':
+    case 'Q':
+    case 'x':
+    case 'X':
+        return 0;
 
-                int i = s ? (s - options) : s_ngn;
-                if (i >= 0 && i < s_ngn)
+    case 'h':
+    case 'H':
+        if (g_verbose)
+        {
+            std::fputs("  You entered an illegal newsgroup name, and these are the nearest possible\n"
+                    "  matches.  If you want one of these, then enter its number.  Otherwise\n"
+                    "  just say 'n'.\n",
+                    stdout);
+        }
+        else
+        {
+            std::fputs("Illegal newsgroup, enter a number or 'n'.\n", stdout);
+        }
+        goto reask;
+
+    default:
+        if (std::isdigit(*g_buf))
+        {
+            char* s = std::strchr(options, *g_buf);
+
+            int i = s ? (s - options) : s_ngn;
+            if (i >= 0 && i < s_ngn)
+            {
+                char* cp = std::strchr(s_ngptrs[i], ' ');
+                if (cp)
                 {
-                    char* cp = std::strchr(s_ngptrs[i], ' ');
-                    if (cp)
-                    {
-                        *cp = '\0';
-                    }
-                    set_ngname(s_ngptrs[i]);
-                    if (cp)
-                    {
-                        *cp = ' ';
-                    }
-                    return 1;
+                    *cp = '\0';
                 }
+                set_ngname(s_ngptrs[i]);
+                if (cp)
+                {
+                    *cp = ' ';
+                }
+                return 1;
             }
-            std::fputs(g_hforhelp, stdout);
-            break;
+        }
+        std::fputs(g_hforhelp, stdout);
+        break;
     }
 
     settle_down();
