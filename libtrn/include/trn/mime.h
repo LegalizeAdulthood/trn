@@ -89,7 +89,7 @@ enum
     HTML_MAX_BLOCKS = 256
 };
 
-enum tag_flags : std::uint16_t
+enum TagFlags : std::uint16_t
 {
     TF_NONE = 0x0000,
     TF_BLOCK = 0x0001, /* This implies TF_HAS_CLOSE */
@@ -102,7 +102,7 @@ enum tag_flags : std::uint16_t
     TF_SPACE = 0x0080,
     TF_TAB = 0x0100
 };
-DECLARE_FLAGS_ENUM(tag_flags, std::uint16_t);
+DECLARE_FLAGS_ENUM(TagFlags, std::uint16_t);
 
 /* NOTE: This must match tagattr in mime.cpp */
 enum
@@ -131,7 +131,7 @@ struct HTML_TAGS
 {
     char* name;
     char length;
-    tag_flags flags;
+    TagFlags flags;
 };
 
 extern MimeSection g_mime_article;
