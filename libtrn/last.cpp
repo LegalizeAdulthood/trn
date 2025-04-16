@@ -43,10 +43,12 @@ void readlast()
 {
     if (std::FILE *fp = std::fopen(s_lastfile, "r"))
     {
-        if (std::fgets(g_buf,sizeof g_buf,fp) != nullptr) {
+        if (std::fgets(g_buf, sizeof g_buf, fp) != nullptr)
+        {
             long old_last = g_lasttime;
             g_buf[std::strlen(g_buf)-1] = '\0';
-            if (*g_buf) {
+            if (*g_buf)
+            {
                 g_lastngname = g_buf;
             }
             std::fscanf(fp,"%ld %ld %ld %ld",&g_lasttime,&g_lastactsiz,
@@ -76,7 +78,8 @@ void writelast()
         remove(s_lastfile);
         rename(g_buf,s_lastfile);
     }
-    else {
+    else
+    {
         std::printf(g_cantcreate,g_buf);
         /*termdown(1);*/
     }
