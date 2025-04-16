@@ -30,7 +30,7 @@ enum ScanContextType
     S_VIRT = 4
 };
 
-struct PAGE_ENT
+struct PageEntry
 {
     long entnum;        /* entry (article/message/newsgroup) number */
     short lines;        /* how many screen lines to describe? */
@@ -51,7 +51,7 @@ struct SCONTEXT
 
     int page_size;              /* number of entries allocated for page */
                                 /* (usually fixed, > max screen lines) */
-    PAGE_ENT* page_ents;        /* array of entries on page */
+    PageEntry* page_ents;        /* array of entries on page */
     /* -1 means not initialized for top and bottom entry */
     long top_ent;               /* top entry on page */
     long bot_ent;               /* bottom entry (note change) */
@@ -83,7 +83,7 @@ extern long *g_s_ent_index;     /* indexes into ent_sorted */
 extern long g_s_ent_index_max;  /* maximum entry number added */
 extern int g_s_page_size;       /* number of entries allocated for page */
 /* (usually fixed, > max screen lines) */
-extern PAGE_ENT *g_page_ents; /* array of entries on page */
+extern PageEntry *g_page_ents; /* array of entries on page */
 /* -1 means not initialized for top and bottom entry */
 extern long g_s_top_ent; /* top entry on page */
 extern long g_s_bot_ent; /* bottom entry (note change) */

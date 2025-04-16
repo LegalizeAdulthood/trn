@@ -21,7 +21,7 @@ long      g_s_ent_sorted_max{}; /* maximum index *that is sorted* */
 long     *g_s_ent_index{};      /* indexes into ent_sorted */
 long      g_s_ent_index_max{};  /* maximum entry number added */
 int       g_s_page_size{};      /* number of entries allocated for page (usually fixed, > max screen lines) */
-PAGE_ENT *g_page_ents{};        /* array of entries on page; -1 means not initialized for top and bottom entry */
+PageEntry *g_page_ents{};        /* array of entries on page; -1 means not initialized for top and bottom entry */
 long      g_s_top_ent{};        /* top entry on page */
 long      g_s_bot_ent{};        /* bottom entry (note change) */
 bool      g_s_refill{};         /* does the page need refilling? */
@@ -125,7 +125,7 @@ int s_new_context(ScanContextType type)
                                         i * sizeof (SCONTEXT));
     }
     g_s_contexts[i-1].page_ents =
-                        (PAGE_ENT*)safemalloc(MAX_PAGE_SIZE*sizeof(PAGE_ENT));
+                        (PageEntry*)safemalloc(MAX_PAGE_SIZE*sizeof(PageEntry));
     s_init_context(i-1,type);
     g_s_num_contexts++;                 /* now safe to increment */
     return g_s_num_contexts-1;
