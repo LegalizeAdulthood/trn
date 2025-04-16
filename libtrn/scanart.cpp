@@ -62,7 +62,7 @@ bool g_sa_mode_desc_subject{true};
 bool g_sa_mode_desc_summary{};
 bool g_sa_mode_desc_keyw{};
 
-sa_main_result sa_main()
+SaMainResult sa_main()
 {
     g_sa_in = true;
     g_sa_go = false;    /* ...do not collect $200... */
@@ -117,7 +117,7 @@ sa_main_result sa_main()
 
     minor_mode sa_oldmode = g_mode; /* save mode */
     g_mode = MM_S;             /* for RN macros */
-    sa_main_result i = sa_mainloop();
+    SaMainResult i = sa_mainloop();
     g_mode = sa_oldmode;                        /* restore mode */
 
     if (i == SA_NORM || i == SA_FAKE)

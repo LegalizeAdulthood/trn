@@ -11,7 +11,7 @@
 #include "trn/enum-flags.h"
 
 /* return codes for sa_main */
-enum sa_main_result
+enum SaMainResult
 {
     SA_READ = -7,     /* read article pointed to by g_art (always) */
     SA_QUIT_SEL = -6, /* quit, and return to previous selector (backtick) */
@@ -107,8 +107,8 @@ extern bool g_sa_mode_desc_subject;
 extern bool g_sa_mode_desc_summary;
 extern bool g_sa_mode_desc_keyw;
 
-sa_main_result sa_main();
-sa_main_result sa_mainloop();
+SaMainResult sa_main();
+SaMainResult sa_mainloop();
 void sa_grow(ART_NUM oldlast, ART_NUM last);
 void sa_cleanup();
 
