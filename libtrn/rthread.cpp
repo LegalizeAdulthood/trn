@@ -812,7 +812,7 @@ Subject *prev_subj(Subject *sp, int subj_mask)
 
 /* Select a single article.
 */
-void select_article(Article *ap, autokill_flags auto_flags)
+void select_article(Article *ap, AutoKillFlags auto_flags)
 {
     const ArticleFlags desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
     bool echo = (auto_flags & ALSO_ECHO) != 0;
@@ -846,7 +846,7 @@ void select_article(Article *ap, autokill_flags auto_flags)
 
 /* Select this article's subject.
 */
-void select_arts_subject(Article *ap, autokill_flags auto_flags)
+void select_arts_subject(Article *ap, AutoKillFlags auto_flags)
 {
     if (ap->subj && ap->subj->articles)
     {
@@ -860,7 +860,7 @@ void select_arts_subject(Article *ap, autokill_flags auto_flags)
 
 /* Select all the articles in a subject.
 */
-void select_subject(Subject *subj, autokill_flags auto_flags)
+void select_subject(Subject *subj, AutoKillFlags auto_flags)
 {
     int desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
     int old_count = g_selected_count;
@@ -896,7 +896,7 @@ void select_subject(Subject *subj, autokill_flags auto_flags)
 
 /* Select this article's thread.
 */
-void select_arts_thread(Article *ap, autokill_flags auto_flags)
+void select_arts_thread(Article *ap, AutoKillFlags auto_flags)
 {
     if (ap->subj && ap->subj->thread)
     {
@@ -910,7 +910,7 @@ void select_arts_thread(Article *ap, autokill_flags auto_flags)
 
 /* Select all the articles in a thread.
 */
-void select_thread(Article *thread, autokill_flags auto_flags)
+void select_thread(Article *thread, AutoKillFlags auto_flags)
 {
     Subject *sp = thread->subj;
     do
@@ -922,7 +922,7 @@ void select_thread(Article *thread, autokill_flags auto_flags)
 
 /* Select the subthread attached to this article.
 */
-void select_subthread(Article *ap, autokill_flags auto_flags)
+void select_subthread(Article *ap, AutoKillFlags auto_flags)
 {
     Article*limit;
     int     desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
@@ -968,7 +968,7 @@ void select_subthread(Article *ap, autokill_flags auto_flags)
 
 /* Deselect a single article.
 */
-void deselect_article(Article *ap, autokill_flags auto_flags)
+void deselect_article(Article *ap, AutoKillFlags auto_flags)
 {
     const bool echo = (auto_flags & ALSO_ECHO) != 0;
     auto_flags &= AUTO_SEL_MASK;
@@ -1080,7 +1080,7 @@ void deselect_all()
 
 /* Kill all unread articles attached to this article's subject.
 */
-void kill_arts_subject(Article *ap, autokill_flags auto_flags)
+void kill_arts_subject(Article *ap, AutoKillFlags auto_flags)
 {
     if (ap->subj && ap->subj->articles)
     {
@@ -1103,7 +1103,7 @@ void kill_arts_subject(Article *ap, autokill_flags auto_flags)
 
 /* Kill all unread articles attached to the given subject.
 */
-void kill_subject(Subject *subj, autokill_flags auto_flags)
+void kill_subject(Subject *subj, AutoKillFlags auto_flags)
 {
     int killmask = (auto_flags & AFFECT_ALL)? 0 : g_sel_mask;
     const bool toreturn = (auto_flags & SET_TORETURN) != 0;
@@ -1129,7 +1129,7 @@ void kill_subject(Subject *subj, autokill_flags auto_flags)
 
 /* Kill all unread articles attached to this article's thread.
 */
-void kill_arts_thread(Article *ap, autokill_flags auto_flags)
+void kill_arts_thread(Article *ap, AutoKillFlags auto_flags)
 {
     if (ap->subj && ap->subj->thread)
     {
@@ -1143,7 +1143,7 @@ void kill_arts_thread(Article *ap, autokill_flags auto_flags)
 
 /* Kill all unread articles attached to the given thread.
 */
-void kill_thread(Article *thread, autokill_flags auto_flags)
+void kill_thread(Article *thread, AutoKillFlags auto_flags)
 {
     Subject *sp = thread->subj;
     do
@@ -1155,7 +1155,7 @@ void kill_thread(Article *thread, autokill_flags auto_flags)
 
 /* Kill the subthread attached to this article.
 */
-void kill_subthread(Article *ap, autokill_flags auto_flags)
+void kill_subthread(Article *ap, AutoKillFlags auto_flags)
 {
     Article* limit;
     const bool toreturn = (auto_flags & SET_TORETURN) != 0;

@@ -105,7 +105,7 @@ struct Article
     ScoreFlags    scoreflags;
     ArticleFlags  flags;  /* article state flags */
     ArticleFlags2 flags2; /* more state flags */
-    autokill_flags autofl; /* auto-processing flags */
+    AutoKillFlags autofl; /* auto-processing flags */
 };
 
 /* See trn/kfile.h for the AUTO_* flags */

@@ -51,7 +51,7 @@ static int                 s_kf_thread_cnt{};          /* # entries in the threa
 static long                s_kf_daynum{};              /* day number for thread killfile */
 static bool                s_exitcmds{};
 static char                s_thread_cmd_ltr[] = "JK,j+S.m";
-static autokill_flags      s_thread_cmd_flag[] = {
+static AutoKillFlags      s_thread_cmd_flag[] = {
          AUTO_KILL_THD, AUTO_KILL_SBJ, AUTO_KILL_FOL, AUTO_KILL_1, AUTO_SEL_THD, AUTO_SEL_SBJ, AUTO_SEL_FOL, AUTO_SEL_1,
 };
 static char  s_killglobal[] = KILLGLOBAL;
@@ -715,7 +715,7 @@ void update_thread_kfile()
     g_kf_state &= ~KFS_THREAD_CHANGES;
 }
 
-void change_auto_flags(Article *ap, autokill_flags auto_flag)
+void change_auto_flags(Article *ap, AutoKillFlags auto_flag)
 {
     if (auto_flag > (ap->autofl & (AUTO_KILL_MASK | AUTO_SEL_MASK)))
     {
@@ -741,7 +741,7 @@ void clear_auto_flags(Article *ap)
     }
 }
 
-void perform_auto_flags(Article *ap, autokill_flags thread_autofl, autokill_flags subj_autofl, autokill_flags chain_autofl)
+void perform_auto_flags(Article *ap, AutoKillFlags thread_autofl, AutoKillFlags subj_autofl, AutoKillFlags chain_autofl)
 {
     if (thread_autofl & AUTO_SEL_THD)
     {

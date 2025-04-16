@@ -30,7 +30,7 @@ enum KillFileStateFlags : std::uint16_t
 };
 DECLARE_FLAGS_ENUM(KillFileStateFlags, std::uint16_t);
 
-enum autokill_flags : std::uint16_t
+enum AutoKillFlags : std::uint16_t
 {
     AUTO_KILL_NONE = 0x0,
     AUTO_KILL_THD = 0x8000,
@@ -51,7 +51,7 @@ enum autokill_flags : std::uint16_t
     ALSO_ECHO = 0x0002,   /* only works with [un]select_article() */
     SET_TORETURN = 0x0004 /* only works with kill_*() */
 };
-DECLARE_FLAGS_ENUM(autokill_flags, std::uint16_t);
+DECLARE_FLAGS_ENUM(AutoKillFlags, std::uint16_t);
 
 enum
 {
@@ -74,9 +74,9 @@ int do_kfile(std::FILE *kfp, int entering);
 void kill_unwanted(ART_NUM starting, const char *message, int entering);
 void rewrite_kfile(ART_NUM thru);
 void update_thread_kfile();
-void change_auto_flags(Article *ap, autokill_flags auto_flag);
+void change_auto_flags(Article *ap, AutoKillFlags auto_flag);
 void clear_auto_flags(Article *ap);
-void perform_auto_flags(Article *ap, autokill_flags thread_autofl, autokill_flags subj_autofl, autokill_flags chain_autofl);
+void perform_auto_flags(Article *ap, AutoKillFlags thread_autofl, AutoKillFlags subj_autofl, AutoKillFlags chain_autofl);
 void edit_kfile();
 void open_kfile(int local);
 void kf_append(const char *cmd, bool local);

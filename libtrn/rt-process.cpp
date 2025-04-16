@@ -84,7 +84,7 @@ bool valid_article(Article *article)
         if (data.dat_len)
         {
             safefree0(data.dat_ptr);
-            article->autofl = static_cast<autokill_flags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
+            article->autofl = static_cast<AutoKillFlags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
             if ((data.dat_len & KF_AGE_MASK) == 0)
             {
                 article->autofl |= AUTO_OLD;
@@ -211,7 +211,7 @@ Article *get_article(char *msgid)
     if (data.dat_len)
     {
         article = allocate_article(0);
-        article->autofl = static_cast<autokill_flags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
+        article->autofl = static_cast<AutoKillFlags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
         if ((data.dat_len & KF_AGE_MASK) == 0)
         {
             article->autofl |= AUTO_OLD;
@@ -244,9 +244,9 @@ void thread_article(Article *article, char *references)
     Article* prev;
     char* cp;
     char* end;
-    autokill_flags chain_autofl =
+    AutoKillFlags chain_autofl =
         article->autofl | (article->subj->articles ? article->subj->articles->autofl : AUTO_KILL_NONE);
-    autokill_flags subj_autofl = AUTO_KILL_NONE;
+    AutoKillFlags subj_autofl = AUTO_KILL_NONE;
     const bool rethreading = (article->flags & AF_THREADED) != 0;
 
     /* We're definitely not a fake anymore */
@@ -438,7 +438,7 @@ void thread_article(Article *article, char *references)
     {
         cache_article(article);
     }
-    autokill_flags thread_autofl = chain_autofl;
+    AutoKillFlags thread_autofl = chain_autofl;
     if (g_sel_mode == SM_THREAD)
     {
         Subject* sp = article->subj->thread_link;
