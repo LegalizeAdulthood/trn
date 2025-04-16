@@ -45,7 +45,8 @@ void sc_init(bool pend_wait)
 {
     int i;
 
-    if (g_lastart == 0 || g_lastart < g_absfirst) {
+    if (g_lastart == 0 || g_lastart < g_absfirst)
+    {
 #if 0
         std::printf("No articles exist to be scored.\n");
 #endif
@@ -72,14 +73,16 @@ void sc_init(bool pend_wait)
     g_sc_fill_max = g_absfirst - 1;
     g_sc_fill_read = g_sa_mode_read_elig || g_firstart > g_lastart;
 
-    if (g_sf_verbose) {
+    if (g_sf_verbose)
+    {
         std::printf("\nScoring articles...");
         std::fflush(stdout);         /* print it *now* */
     }
 
     g_sc_initialized = true;    /* little white lie for lookahead */
     /* now is a good time to load a saved score-list which may exist */
-    if (!s_sc_rescoring) {      /* don't load if rescoring */
+    if (!s_sc_rescoring)        /* don't load if rescoring */
+    {
         sc_load_scores();       /* will be quiet if non-existent */
         i = g_firstart;
         if (g_sc_fill_read)
@@ -90,7 +93,8 @@ void sc_init(bool pend_wait)
         {
             i = g_lastart+1;    /* skip loop */
         }
-        for (i = article_first(i); i <= g_lastart; i = article_next(i)) {
+        for (i = article_first(i); i <= g_lastart; i = article_next(i))
+        {
             if (!article_scored(i) && (g_sc_fill_read || article_unread(i)))
             {
                 break;
@@ -112,23 +116,27 @@ void sc_init(bool pend_wait)
     }
 
     s_sc_do_spin = false;
-    for (i = article_last(g_lastart); i >= g_absfirst; i = article_prev(i)) {
+    for (i = article_last(g_lastart); i >= g_absfirst; i = article_prev(i))
+    {
         if (article_scored(i))
         {
             break;
         }
     }
-    if (i < g_absfirst) {                       /* none scored yet */
+    if (i < g_absfirst)                         /* none scored yet */
+    {
         /* score one article, or give up */
         ART_NUM a;
-        for (a = article_last(g_lastart); a >= g_absfirst; a = article_prev(a)) {
+        for (a = article_last(g_lastart); a >= g_absfirst; a = article_prev(a))
+        {
             sc_score_art(a,true);       /* I want it *now* */
             if (article_scored(a))
             {
                 break;
             }
         }
-        if (a < g_absfirst) {           /* no articles scored */
+        if (a < g_absfirst)             /* no articles scored */
+        {
             if (g_sf_verbose)
             {
                 std::printf("\nNo articles available for scoring\n");
@@ -140,16 +148,19 @@ void sc_init(bool pend_wait)
 
     /* if no scoring rules/methods are present, score everything */
     /* XXX will be bad if later methods are added. */
-    if (!g_sf_num_entries) {
+    if (!g_sf_num_entries)
+    {
         /* score everything really fast */
         for (ART_NUM art = article_last(g_lastart); art >= g_absfirst; art = article_prev(art))
         {
             sc_score_art(art,true);
         }
     }
-    if (pend_wait) {
+    if (pend_wait)
+    {
         bool waitflag = true; /* normal mode: wait for key first */
-        if (g_sf_verbose && waitflag) {
+        if (g_sf_verbose && waitflag)
+        {
 #ifdef PENDING
             std::printf("(press key to start reading)");
 #else
@@ -157,12 +168,14 @@ void sc_init(bool pend_wait)
 #endif
             std::fflush(stdout);
         }
-        if (waitflag) {
+        if (waitflag)
+        {
             setspin(SPIN_FOREGROUND);
             s_sc_do_spin = true;                /* really do it */
         }
         sc_lookahead(true,waitflag);    /* jump in *now* */
-        if (waitflag) {
+        if (waitflag)
+        {
             s_sc_do_spin = false;
             setspin(SPIN_POP);
         }
@@ -188,7 +201,8 @@ void sc_cleanup()
     }
     g_sc_loaded_count = 0;
 
-    if (g_sf_verbose) {
+    if (g_sf_verbose)
+    {
         std::printf("\nCleaning up scoring...");
         std::fflush(stdout);
     }
@@ -240,7 +254,8 @@ void sc_score_art_basic(ART_NUM a)
 //bool now;     /* if true, sort the scores if necessary... */
 int sc_score_art(ART_NUM a, bool now)
 {
-    if (a < g_absfirst || a > g_lastart) {
+    if (a < g_absfirst || a > g_lastart)
+    {
 #if 0
          std::printf("\nsc_score_art: illegal article# %d\n",a);
 #endif
@@ -251,15 +266,18 @@ int sc_score_art(ART_NUM a, bool now)
         return LOWSCORE;
     }
 
-    if (!g_sc_initialized) {
+    if (!g_sc_initialized)
+    {
         g_sc_delay = false;
         s_sc_sf_force_init = true;
         sc_init(false);
         s_sc_sf_force_init = false;
     }
 
-    if (!article_scored(a)) {
-        if (s_sc_sf_delay) {
+    if (!article_scored(a))
+    {
+        if (s_sc_sf_delay)
+        {
             sf_init();
             s_sc_sf_delay = false;
         }
@@ -326,13 +344,15 @@ void sc_lookahead(bool flag, bool nowait)
     {
         g_sc_fill_max = article_first(g_sc_fill_max);
     }
-    while (g_sc_fill_max < g_lastart
+    while (g_sc_fill_max < g_lastart //
 #ifdef PENDING
-     && !input_pending()
+           && !input_pending()
 #endif
-    ) {
+    )
+    {
 #ifndef PENDING
-        if (g_int_count > 0) {
+        if (g_int_count > 0)
+        {
             g_int_count = 0;
             return;     /* user requested break */
         }
@@ -382,7 +402,8 @@ int sc_percent_scored()
     }
     int total = 0;
     int scored = 0;
-    for (ART_NUM art = article_first(i); art <= g_lastart; art = article_next(art)) {
+    for (ART_NUM art = article_first(i); art <= g_lastart; art = article_next(art))
+    {
         if (!article_exists(art))
         {
             continue;
@@ -406,18 +427,23 @@ int sc_percent_scored()
 
 void sc_rescore_arts()
 {
-    if (!g_sc_initialized) {
-        if (g_sc_delay) {
+    if (!g_sc_initialized)
+    {
+        if (g_sc_delay)
+        {
             g_sc_delay = false;
             s_sc_sf_force_init = true;
             sc_init(true);
             s_sc_sf_force_init = false;
         }
-    } else if (s_sc_sf_delay) {
+    }
+    else if (s_sc_sf_delay)
+    {
         sf_init();
         s_sc_sf_delay = false;
     }
-    if (!g_sc_initialized) {
+    if (!g_sc_initialized)
+    {
         std::printf("\nScoring is not initialized, aborting command.\n");
         return;
     }
@@ -425,7 +451,8 @@ void sc_rescore_arts()
     bool old_spin = s_sc_do_spin;
     setspin(SPIN_FOREGROUND);
     s_sc_do_spin = true;                                /* amuse the user */
-    for (ART_NUM a = article_first(g_absfirst); a <= g_lastart; a = article_next(a)) {
+    for (ART_NUM a = article_first(g_absfirst); a <= g_lastart; a = article_next(a))
+    {
         if (article_exists(a))
         {
             sc_score_art_basic(a);              /* rescore it then */
@@ -433,7 +460,8 @@ void sc_rescore_arts()
     }
     s_sc_do_spin = old_spin;
     setspin(SPIN_POP);
-    if (g_sa_in) {
+    if (g_sa_in)
+    {
         g_s_ref_all = true;
         g_s_refill = true;
         g_s_top_ent = 0;                /* make sure the refill starts from top */
@@ -449,22 +477,28 @@ void sc_append(char *line)
         return;
     }
 
-    if (!g_sc_initialized) {
-        if (g_sc_delay) {
+    if (!g_sc_initialized)
+    {
+        if (g_sc_delay)
+        {
             g_sc_delay = false;
             s_sc_sf_force_init = true;
             sc_init(true);
             s_sc_sf_force_init = false;
         }
-    } else if (s_sc_sf_delay) {
+    }
+    else if (s_sc_sf_delay)
+    {
         sf_init();
         s_sc_sf_delay = false;
     }
-    if (!g_sc_initialized) {
+    if (!g_sc_initialized)
+    {
         std::printf("\nScoring is not initialized, aborting command.\n");
         return;
     }
-    if (!*line) {
+    if (!*line)
+    {
         line = sc_easy_append();
         if (!line)
         {
@@ -473,7 +507,8 @@ void sc_append(char *line)
     }
     char filechar = *line; /* first char */
     sf_append(line);
-    if (filechar == '!') {
+    if (filechar == '!')
+    {
         std::printf("\nRescoring articles...");
         std::fflush(stdout);
         sc_rescore_arts();
@@ -490,7 +525,8 @@ void sc_rescore()
     s_sc_rescoring = true; /* in case routines need to know */
     sc_cleanup();        /* get rid of the old */
     sc_init(true);       /* enter the new... (wait for rescore) */
-    if (g_sa_initialized) {
+    if (g_sa_initialized)
+    {
         g_s_top_ent = -1;       /* reset top of page */
         g_s_refill = true;      /* make sure a refill is done */
     }
@@ -504,34 +540,42 @@ void sc_score_cmd(const char *line)
     long        j;
     const char* s;
 
-    if (!g_sc_initialized) {
-        if (g_sc_delay) {
+    if (!g_sc_initialized)
+    {
+        if (g_sc_delay)
+        {
             g_sc_delay = false;
             s_sc_sf_force_init = true;
             sc_init(true);
             s_sc_sf_force_init = false;
         }
-    } else if (s_sc_sf_delay) {
+    }
+    else if (s_sc_sf_delay)
+    {
         sf_init();
         s_sc_sf_delay = false;
     }
-    if (!g_sc_initialized) {
+    if (!g_sc_initialized)
+    {
         std::printf("\nScoring is not initialized, aborting command.\n");
         return;
     }
-    if (!*line) {
+    if (!*line)
+    {
         line = sc_easy_command();
         if (!line)
         {
             return;             /* do nothing with empty string */
         }
-        if (*line == '\"') {
+        if (*line == '\"')
+        {
             g_buf[0] = '\0';
             sc_append(g_buf);
             return;
         }
     }
-    switch (*line) {
+    switch (*line)
+    {
       case 'f': /* fill (useful when PENDING is unavailable) */
         std::printf("Scoring more articles...");
         std::fflush(stdout); /* print it now */
@@ -557,7 +601,8 @@ void sc_score_cmd(const char *line)
         std::printf("Scorefile total score: %ld\n",j);
         i += j;
         j = sc_score_art(g_art,true);
-        if (i != j) {
+        if (i != j)
+        {
             /* Consider resubmitting article to filter? */
             std::printf("Other scoring total: %ld\n", j - i);
         }
