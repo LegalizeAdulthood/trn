@@ -127,20 +127,20 @@ enum OptionIndex
     OI_SCORE_LAST = OI_SC_VERBOSE,
 };
 
-enum option_flags : char
+enum OptionFlags : char
 {
     OF_NONE = 0x00,
     OF_SEL = 0x01,
     OF_INCLUDED = 0x10
 };
-DECLARE_FLAGS_ENUM(option_flags, char);
+DECLARE_FLAGS_ENUM(OptionFlags, char);
 
 extern COMPEX g_optcompex;
 extern std::string g_ini_file;
 extern INI_WORDS g_options_ini[];
 extern char **g_option_def_vals;
 extern char **g_option_saved_vals;
-extern option_flags *g_option_flags;
+extern OptionFlags *g_option_flags;
 extern int g_sel_page_op;
 
 void        opt_init(int argc, char *argv[], char **tcbufptr);

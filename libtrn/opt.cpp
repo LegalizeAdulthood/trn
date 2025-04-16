@@ -171,7 +171,7 @@ INI_WORDS   g_options_ini[] = {
 // clang-format on
 char        **g_option_def_vals{};
 char        **g_option_saved_vals{};
-option_flags *g_option_flags{};
+OptionFlags *g_option_flags{};
 int           g_sel_page_op{};
 
 static char s_univ_sel_cmds[3]{"Z>"};
@@ -250,7 +250,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     }
     g_option_saved_vals = (char**)safemalloc(len*sizeof(char*));
     std::memset((char*)g_option_saved_vals,0,(g_options_ini)[0].checksum * sizeof (char*));
-    g_option_flags = new option_flags[len];
+    g_option_flags = new OptionFlags[len];
     std::fill_n(g_option_flags, len, OF_NONE);
 
     if (argc > 1)
