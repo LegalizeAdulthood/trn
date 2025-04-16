@@ -318,7 +318,7 @@ numnum_result numnum()
 
 int thread_perform()
 {
-    SUBJECT*sp;
+    Subject*sp;
     ARTICLE*ap;
     int     bits;
     bool    output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
@@ -375,7 +375,7 @@ int thread_perform()
         }
         else
         {
-            sp = next_subj((SUBJECT *) nullptr, bits);
+            sp = next_subj((Subject *) nullptr, bits);
         }
         for (; sp; sp = next_subj(sp, bits))
         {
@@ -458,7 +458,7 @@ int thread_perform()
             }
             else
             {
-                sp = next_subj((SUBJECT *) nullptr, bits);
+                sp = next_subj((Subject *) nullptr, bits);
             }
             for (; sp; sp = next_subj(sp, bits))
             {

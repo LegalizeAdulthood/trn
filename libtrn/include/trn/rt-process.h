@@ -9,7 +9,7 @@
 #include "trn/hash.h"
 
 struct ARTICLE;
-struct SUBJECT;
+struct Subject;
 
 ARTICLE *allocate_article(ART_NUM artnum);
 int msgid_cmp(const char *key, int keylen, HASHDATUM data);
@@ -18,6 +18,6 @@ ARTICLE *get_article(char *msgid);
 void thread_article(ARTICLE *article, char *references);
 void rover_thread(ARTICLE *article, char *s);
 void link_child(ARTICLE *child);
-void merge_threads(SUBJECT *s1, SUBJECT *s2);
+void merge_threads(Subject *s1, Subject *s2);
 
 #endif

@@ -47,8 +47,8 @@ ART_NUM   g_first_cached{};         //
 ART_NUM   g_last_cached{};          //
 bool      g_cached_all_in_range{};  //
 ARTICLE  *g_sentinel_artp{};        //
-SUBJECT  *g_first_subject{};        //
-SUBJECT  *g_last_subject{};         //
+Subject  *g_first_subject{};        //
+Subject  *g_last_subject{};         //
 bool      g_untrim_cache{};         //
 int       g_join_subject_len{};     /* -J */
 int       g_olden_days{};           /* -o */
@@ -122,7 +122,7 @@ void build_cache()
 
 void close_cache()
 {
-    SUBJECT* next;
+    Subject* next;
 
     nntp_artname(0, false);             /* clear the tmpfile cache */
 
@@ -137,7 +137,7 @@ void close_cache()
         s_shortsubj_hash = nullptr;
     }
     /* Free all the subjects. */
-    for (SUBJECT *sp = g_first_subject; sp; sp = next)
+    for (Subject *sp = g_first_subject; sp; sp = next)
     {
         next = sp->next;
         std::free(sp->str);
@@ -237,7 +237,7 @@ void cache_article(ARTICLE *ap)
 
 void check_for_near_subj(ARTICLE *ap)
 {
-    SUBJECT* sp;
+    Subject* sp;
     if (!s_shortsubj_hash)
     {
         s_shortsubj_hash = hashcreate(401, subject_cmp);    /*TODO: pick a better size */
@@ -255,9 +255,9 @@ void check_for_near_subj(ARTICLE *ap)
     {
         if ((int) std::strlen(sp->str + 4) >= g_join_subject_len && sp->thread)
         {
-            SUBJECT* sp2;
+            Subject* sp2;
             HASHDATUM data = hashfetch(s_shortsubj_hash, sp->str + 4, g_join_subject_len);
-            if (!(sp2 = (SUBJECT *) data.dat_ptr))
+            if (!(sp2 = (Subject *) data.dat_ptr))
             {
                 data.dat_ptr = (char*)sp;
                 hashstorelast(data);
@@ -400,7 +400,7 @@ void uncache_article(ARTICLE *ap, bool remove_empties)
         }
         if (remove_empties && !ap->subj->articles)
         {
-            SUBJECT* sp = ap->subj;
+            Subject* sp = ap->subj;
             if (sp == g_first_subject)
             {
                 g_first_subject = sp->next;
@@ -518,7 +518,7 @@ char *get_cached_line(ARTICLE *ap, header_line_type which_line, bool no_truncs)
 void set_subj_line(ARTICLE *ap, char *subj, int size)
 {
     HASHDATUM data;
-    SUBJECT* sp;
+    Subject* sp;
     char* subj_start;
 
     if (subject_has_Re(subj, &subj_start))
@@ -565,10 +565,10 @@ void set_subj_line(ARTICLE *ap, char *subj, int size)
     else
     {
         data = hashfetch(s_subj_hash, newsubj + 4, size);
-        if (!(sp = (SUBJECT *) data.dat_ptr))
+        if (!(sp = (Subject *) data.dat_ptr))
         {
-            sp = (SUBJECT*)safemalloc(sizeof (SUBJECT));
-            std::memset((char*)sp,0,sizeof (SUBJECT));
+            sp = (Subject*)safemalloc(sizeof (Subject));
+            std::memset((char*)sp,0,sizeof (Subject));
             g_subject_count++;
             sp->prev = g_last_subject;
             if (sp->prev != nullptr)
@@ -772,7 +772,7 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
 int subject_cmp(const char *key, int keylen, HASHDATUM data)
 {
     /* We already know that the lengths are equal, just compare the strings */
-    return std::memcmp(key, ((SUBJECT*)data.dat_ptr)->str+4, keylen);
+    return std::memcmp(key, ((Subject*)data.dat_ptr)->str+4, keylen);
 }
 
 /* see what we can do while they are reading */

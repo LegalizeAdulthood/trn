@@ -1962,7 +1962,7 @@ static void sel_cleanup()
         {
             g_sel_last_ap = nullptr;
             g_sel_last_sp = nullptr;
-            for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
+            for (Subject *sp = g_first_subject; sp; sp = sp->next)
             {
                 unkill_subject(sp);
             }
@@ -1975,7 +1975,7 @@ static void sel_cleanup()
             }
             else
             {
-                for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
+                for (Subject *sp = g_first_subject; sp; sp = sp->next)
                 {
                     if (sp->flags & SF_DEL)
                     {
@@ -2318,7 +2318,7 @@ static display_state article_commands(char_int ch)
     case '#':
         if (g_sel_page_item_cnt)
         {
-            for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
+            for (Subject *sp = g_first_subject; sp; sp = sp->next)
             {
                 sp->flags &= ~SF_SEL;
             }
@@ -2570,7 +2570,7 @@ static display_state article_commands(char_int ch)
             }
             else
             {
-                SUBJECT* sp;
+                Subject* sp;
                 if (ch == 'D')
                 {
                     sp = g_sel_page_sp;
@@ -2611,7 +2611,7 @@ static display_state article_commands(char_int ch)
         }
         else if (ch == 'J')
         {
-            for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
+            for (Subject *sp = g_first_subject; sp; sp = sp->next)
             {
                 deselect_subject(sp);
             }
@@ -2643,7 +2643,7 @@ static display_state article_commands(char_int ch)
         }
         else
         {
-            SUBJECT* sp = g_sel_items[g_sel_item_index].u.sp;
+            Subject* sp = g_sel_items[g_sel_item_index].u.sp;
             if (g_sel_mode == SM_THREAD)
             {
                 while (!sp->misc)
@@ -2699,7 +2699,7 @@ static display_state article_commands(char_int ch)
             }
             else
             {
-                SUBJECT* sp = g_sel_items[g_sel_item_index].u.sp;
+                Subject* sp = g_sel_items[g_sel_item_index].u.sp;
                 if (g_sel_mode == SM_THREAD)
                 {
                     while (!sp->misc)
@@ -2734,7 +2734,7 @@ static display_state article_commands(char_int ch)
                 thread_perform();
                 if (!g_sel_rereading)
                 {
-                    for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
+                    for (Subject *sp = g_first_subject; sp; sp = sp->next)
                     {
                         if (sp->flags & SF_DEL)
                         {

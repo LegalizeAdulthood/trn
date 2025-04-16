@@ -112,7 +112,7 @@ void sa_selthreads()
     }
 
     /* Loop through all (selected) articles. */
-    for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
+    for (Subject *sp = g_first_subject; sp; sp = sp->next)
     {
         if ((sp->flags & subj_mask) == subj_mask)
         {

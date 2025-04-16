@@ -40,9 +40,9 @@ int       g_sel_page_item_cnt{};
 ARTICLE **g_sel_page_app{};
 ARTICLE **g_sel_next_app{};
 ARTICLE  *g_sel_last_ap{};
-SUBJECT  *g_sel_page_sp{};
-SUBJECT  *g_sel_next_sp{};
-SUBJECT  *g_sel_last_sp{};
+Subject  *g_sel_page_sp{};
+Subject  *g_sel_next_sp{};
+Subject  *g_sel_last_sp{};
 char     *g_sel_grp_dmode{};
 char     *g_sel_art_dmode{};
 
@@ -54,10 +54,10 @@ static sel_sort_mode s_sel_univsort{SS_NATURAL};
 static int           s_sel_next_op{};
 
 static void sel_page_init();
-static int count_subject_lines(const SUBJECT *subj, int *selptr);
-static int count_thread_lines(const SUBJECT *subj, int *selptr);
+static int count_subject_lines(const Subject *subj, int *selptr);
+static int count_thread_lines(const Subject *subj, int *selptr);
 static void display_article(const ARTICLE *ap, int ix, int sel);
-static void display_subject(const SUBJECT *subj, int ix, int sel);
+static void display_subject(const Subject *subj, int ix, int sel);
 static void display_univ(const UNIV_ITEM *ui);
 static void display_group(DATASRC *dp, char *group, int len, int max_len);
 
@@ -846,14 +846,14 @@ try_again:
         {
             sort_subjects();
         }
-        for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
+        for (Subject *sp = g_first_subject; sp; sp = sp->next)
         {
             if (g_sel_rereading && !(sp->flags & g_sel_mask))
             {
                 sp->flags |= SF_DEL;
             }
 
-            SUBJECT *group_sp = sp;
+            Subject *group_sp = sp;
             int      group_arts = sp->misc;
 
             if (!g_sel_exclusive || (sp->flags & g_sel_mask))
@@ -1026,7 +1026,7 @@ bool first_page()
 
     default:
     {
-        for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
+        for (Subject *sp = g_first_subject; sp; sp = sp->next)
         {
             if (sp->flags & SF_INCLUDED)
             {
@@ -1142,7 +1142,7 @@ bool last_page()
 
     default:
     {
-        SUBJECT* sp = g_sel_page_sp;
+        Subject* sp = g_sel_page_sp;
         g_sel_page_sp = nullptr;
         if (!prev_page())
         {
@@ -1435,11 +1435,11 @@ bool prev_page()
 
     default:
     {
-        SUBJECT*page_sp = g_sel_page_sp;
+        Subject*page_sp = g_sel_page_sp;
         int       line_cnt;
 
         int line = 2;
-        for (SUBJECT *sp = (!page_sp ? g_last_subject : page_sp->prev); sp; sp = sp->prev)
+        for (Subject *sp = (!page_sp ? g_last_subject : page_sp->prev); sp; sp = sp->prev)
         {
             int item_arts = sp->misc;
             if (g_sel_mode == SM_THREAD)
@@ -1620,7 +1620,7 @@ try_again:
 
     default:
     {
-          SUBJECT *sp = g_sel_page_sp;
+          Subject *sp = g_sel_page_sp;
           int      line_cnt;
           int      sel;
           for (; sp && g_sel_page_item_cnt < s_sel_max_per_page; sp = sp->next)
@@ -2139,7 +2139,7 @@ try_again:
         int etc = 0;
         int ix = -1;    /* item # or -1 */
 
-        SUBJECT *sp = g_sel_page_sp;
+        Subject *sp = g_sel_page_sp;
         for (; sp && !etc && g_sel_page_item_cnt < s_sel_max_per_page; sp = sp->next)
         {
             if (sp == g_sel_last_sp)
@@ -2350,7 +2350,7 @@ void output_sel(int ix, int sel, bool update)
 /* Counts the number of lines needed to output a subject, including
 ** optional authors.
 */
-static int count_subject_lines(const SUBJECT *subj, int *selptr)
+static int count_subject_lines(const Subject *subj, int *selptr)
 {
     int sel;
 
@@ -2393,7 +2393,7 @@ static int count_subject_lines(const SUBJECT *subj, int *selptr)
 /* Counts the number of lines needed to output a thread, including
 ** optional authors.
 */
-static int count_thread_lines(const SUBJECT *subj, int *selptr)
+static int count_thread_lines(const Subject *subj, int *selptr)
 {
     int total = 0;
     const ARTICLE *thread = subj->thread;
@@ -2455,7 +2455,7 @@ static void display_article(const ARTICLE *ap, int ix, int sel)
 
 /* Display the given subject group, with optional authors.
 */
-static void display_subject(const SUBJECT *subj, int ix, int sel)
+static void display_subject(const Subject *subj, int ix, int sel)
 {
     ARTICLE*ap;
     int     subj_width = g_tc_COLS - 8 - g_use_sel_num;

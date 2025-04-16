@@ -91,7 +91,7 @@ void init_tree()
         return;
     }
     /* Enumerate our subjects for display */
-    SUBJECT *sp = thread->subj;
+    Subject *sp = thread->subj;
     int      num = 0;
     do
     {
@@ -671,7 +671,7 @@ void entire_tree(ARTICLE* ap)
     newline();
     ARTICLE *thread = ap->subj->thread;
     /* Enumerate our subjects for display */
-    SUBJECT *sp = thread->subj;
+    Subject *sp = thread->subj;
     int      num = 0;
     do
     {

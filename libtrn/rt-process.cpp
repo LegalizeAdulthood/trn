@@ -71,7 +71,7 @@ int msgid_cmp(const char *key, int keylen, HASHDATUM data)
     return std::memcmp(key, ((ARTICLE*)data.dat_ptr)->msgid, keylen);
 }
 
-static SUBJECT *s_fake_had_subj; /* the fake-turned-real article had this subject */
+static Subject *s_fake_had_subj; /* the fake-turned-real article had this subject */
 
 bool valid_article(ARTICLE *article)
 {
@@ -157,7 +157,7 @@ bool valid_article(ARTICLE *article)
             }
             else if (s_fake_had_subj)
             {
-                SUBJECT* sp = s_fake_had_subj;
+                Subject* sp = s_fake_had_subj;
                 ap = sp->thread;
                 if (ap == fake_ap)
                 {
@@ -441,7 +441,7 @@ void thread_article(ARTICLE *article, char *references)
     autokill_flags thread_autofl = chain_autofl;
     if (g_sel_mode == SM_THREAD)
     {
-        SUBJECT* sp = article->subj->thread_link;
+        Subject* sp = article->subj->thread_link;
         while (sp != article->subj)
         {
             if (sp->articles)
@@ -534,7 +534,7 @@ static void unlink_child(ARTICLE *child)
 
     if (!(last = child->parent))
     {
-        SUBJECT* sp = child->subj;
+        Subject* sp = child->subj;
         last = sp->thread;
         if (last == child)
         {
@@ -580,7 +580,7 @@ void link_child(ARTICLE *child)
 
     if (!(ap = child->parent))
     {
-        SUBJECT* sp = child->subj;
+        Subject* sp = child->subj;
         ap = sp->thread;
         if (!ap || child->date < ap->date)
         {
@@ -619,12 +619,12 @@ void link_child(ARTICLE *child)
 
 /* Merge all of s2's thread into s1's thread.
 */
-void merge_threads(SUBJECT *s1, SUBJECT *s2)
+void merge_threads(Subject *s1, Subject *s2)
 {
     ARTICLE *t1 = s1->thread;
     ARTICLE *t2 = s2->thread;
     /* Change all of t2's thread pointers to a common lead article */
-    SUBJECT *sp = s2;
+    Subject *sp = s2;
     do
     {
         sp->thread = t1;

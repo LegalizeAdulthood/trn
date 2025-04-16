@@ -33,13 +33,13 @@ enum SubjectFlags : std::uint16_t
 DECLARE_FLAGS_ENUM(SubjectFlags, std::uint16_t);
 
 /* Subjects get their own structure */
-struct SUBJECT
+struct Subject
 {
-    SUBJECT      *next;
-    SUBJECT      *prev;
+    Subject      *next;
+    Subject      *prev;
     ARTICLE      *articles;
     ARTICLE      *thread;
-    SUBJECT      *thread_link;
+    Subject      *thread_link;
     char         *str;
     std::time_t   date;
     SubjectFlags flags;
@@ -92,7 +92,7 @@ struct ARTICLE
 {
     ART_NUM        num;
     std::time_t         date;
-    SUBJECT       *subj;
+    Subject       *subj;
     char          *from;
     char          *msgid;
     char          *xrefs;
@@ -125,8 +125,8 @@ extern ART_NUM   g_first_cached;
 extern ART_NUM   g_last_cached;
 extern bool      g_cached_all_in_range;
 extern ARTICLE  *g_sentinel_artp;
-extern SUBJECT  *g_first_subject;
-extern SUBJECT  *g_last_subject;
+extern Subject  *g_first_subject;
+extern Subject  *g_last_subject;
 extern bool      g_untrim_cache;
 extern int       g_join_subject_len; /* -J */
 extern int       g_olden_days;       /* -o */

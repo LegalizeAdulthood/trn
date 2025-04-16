@@ -806,7 +806,7 @@ void edit_kfile()
         }
         if (!(g_kf_state & KFS_GLOBAL_THREADFILE))
         {
-            for (SUBJECT *sp = g_first_subject; sp; sp = sp->next)
+            for (Subject *sp = g_first_subject; sp; sp = sp->next)
             {
                 clear_subject(sp);
             }
