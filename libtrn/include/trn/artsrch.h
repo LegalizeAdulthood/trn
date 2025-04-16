@@ -20,7 +20,7 @@ enum ArtSearchResult
     SRCH_ERROR = 6
 };
 
-enum art_scope
+enum ArtScope
 {
     ARTSCOPE_SUBJECT = 0,
     ARTSCOPE_FROM = 1,
@@ -34,7 +34,7 @@ enum art_scope
 extern std::string      g_lastpat;          /* last search pattern */
 extern COMPEX          *g_bra_compex;       /* current compex with brackets */
 extern const char      *g_scopestr;         //
-extern art_scope        g_art_howmuch;      /* search scope */
+extern ArtScope        g_art_howmuch;      /* search scope */
 extern header_line_type g_art_srchhdr;      /* specific header number to search */
 extern bool             g_art_doread;       /* search read articles? */
 extern bool             g_kill_thru_kludge; /* -k */
