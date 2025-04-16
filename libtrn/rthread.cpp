@@ -1610,6 +1610,7 @@ void count_subjects(cs_mode cmode)
     {
     case CS_RETAIN:
         break;
+
     case CS_UNSEL_STORE:
         for (sp = g_first_subject; sp; sp = sp->next)
         {
@@ -1623,6 +1624,7 @@ void count_subjects(cs_mode cmode)
             }
         }
         break;
+
     case CS_RESELECT:
         for (sp = g_first_subject; sp; sp = sp->next)
         {
@@ -1636,6 +1638,7 @@ void count_subjects(cs_mode cmode)
             }
         }
         break;
+
     default:
         for (sp = g_first_subject; sp; sp = sp->next)
         {
@@ -1950,25 +1953,29 @@ void sort_subjects()
 
     switch (g_sel_sort)
     {
-      case SS_DATE:
-      default:
+    case SS_DATE:
+    default:
         sort_procedure = (g_sel_mode == SM_THREAD?
                           threadorder_date : subjorder_date);
         break;
-      case SS_STRING:
+
+    case SS_STRING:
         sort_procedure = (g_sel_mode == SM_THREAD?
                           threadorder_subject : subjorder_subject);
         break;
-      case SS_COUNT:
+
+    case SS_COUNT:
         sort_procedure = (g_sel_mode == SM_THREAD?
                           threadorder_count : subjorder_count);
         break;
-      case SS_LINES:
+
+    case SS_LINES:
         sort_procedure = (g_sel_mode == SM_THREAD?
                           threadorder_lines : subjorder_lines);
         break;
-      /* if SCORE is undefined, use the default above */
-      case SS_SCORE:
+
+    /* if SCORE is undefined, use the default above */
+    case SS_SCORE:
         sort_procedure = (g_sel_mode == SM_THREAD?
                           threadorder_score : subjorder_score);
         break;
@@ -2085,26 +2092,32 @@ void sort_articles()
 
     switch (g_sel_sort)
     {
-      case SS_DATE:
-      default:
+    case SS_DATE:
+    default:
         sort_procedure = artorder_date;
         break;
-      case SS_STRING:
+
+    case SS_STRING:
         sort_procedure = artorder_subject;
         break;
-      case SS_AUTHOR:
+
+    case SS_AUTHOR:
         sort_procedure = artorder_author;
         break;
-      case SS_NATURAL:
+
+    case SS_NATURAL:
         sort_procedure = artorder_number;
         break;
-      case SS_GROUPS:
+
+    case SS_GROUPS:
         sort_procedure = artorder_groups;
         break;
-      case SS_LINES:
+
+    case SS_LINES:
         sort_procedure = artorder_lines;
         break;
-      case SS_SCORE:
+
+    case SS_SCORE:
         sort_procedure = artorder_score;
         break;
     }
