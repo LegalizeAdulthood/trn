@@ -241,10 +241,11 @@ char *readartbuf(bool view_inline)
     }
     switch (g_mime_state)
     {
-      case IMAGE_MIME:
-      case AUDIO_MIME:
+    case IMAGE_MIME:
+    case AUDIO_MIME:
         break;
-      default:
+
+    default:
         read_something = 1;
         /* The -1 leaves room for appending a newline, if needed */
         if (!readart(bp + o, s_artbuf_size - g_artbuf_pos - o - 1))
@@ -285,13 +286,14 @@ char *readartbuf(bool view_inline)
   mime_switch:
     switch (g_mime_state)
     {
-      case ISOTEXT_MIME:
+    case ISOTEXT_MIME:
         g_mime_state = TEXT_MIME;
         /* FALL THROUGH */
-      case TEXT_MIME:
-      case HTMLTEXT_MIME:
-          if (g_mime_section->encoding == MENCODE_QPRINT)
-          {
+
+    case TEXT_MIME:
+    case HTMLTEXT_MIME:
+        if (g_mime_section->encoding == MENCODE_QPRINT)
+        {
             o = line_offset + extra_offset;
             len = qp_decodestring(bp+o, bp+o, false) + line_offset;
             if (len == line_offset || bp[len + extra_offset - 1] != '\n')
@@ -352,8 +354,9 @@ char *readartbuf(bool view_inline)
             extra_chars -= len;
         }
         break;
-      case DECODE_MIME:
-      {
+
+    case DECODE_MIME:
+    {
         MIMECAP_ENTRY* mcp;
         mcp = mime_FindMimecapEntry(g_mime_section->type_name,
                                     MCF_NEEDSTERMINAL |MCF_COPIOUSOUTPUT);
@@ -387,9 +390,10 @@ char *readartbuf(bool view_inline)
             }
         }
         /* FALL THROUGH */
-      }
-      case SKIP_MIME:
-      {
+    }
+
+    case SKIP_MIME:
+    {
         MIME_SECT* mp = g_mime_section;
         while ((mp = mp->prev) != nullptr && !mp->boundary_len)
         {
@@ -415,7 +419,8 @@ char *readartbuf(bool view_inline)
         }
         len = 0;
         break;
-      }
+    }
+
     case END_OF_MIME:
         if (g_mime_section->prev)
         {
@@ -431,7 +436,8 @@ char *readartbuf(bool view_inline)
             seekart(g_raw_artsize);
         }
         /* FALL THROUGH */
-      case BETWEEN_MIME:
+
+    case BETWEEN_MIME:
         len = std::strlen(g_multipart_separator.c_str()) + 1;
         if (extra_offset && filter_offset)
         {
@@ -448,28 +454,32 @@ char *readartbuf(bool view_inline)
         }
         std::sprintf(bp+o,"\002%s\n",g_multipart_separator.c_str());
         break;
-      case UNHANDLED_MIME:
+
+    case UNHANDLED_MIME:
         g_mime_state = SKIP_MIME;
         *bp++ = '\001';
         g_artbuf_pos++;
         mime_Description(g_mime_section,bp,g_tc_COLS);
         len = std::strlen(bp);
         break;
-      case ALTERNATE_MIME:
+
+    case ALTERNATE_MIME:
         g_mime_state = SKIP_MIME;
         *bp++ = '\001';
         g_artbuf_pos++;
         std::sprintf(bp,"[Alternative: %s]\n", g_mime_section->type_name);
         len = std::strlen(bp);
         break;
-      case IMAGE_MIME:
-      case AUDIO_MIME:
+
+    case IMAGE_MIME:
+    case AUDIO_MIME:
         if (!g_mime_article.total && !g_multimedia_mime)
         {
             g_multimedia_mime = true;
         }
         /* FALL THROUGH */
-      default:
+
+    default:
         if (view_inline && g_first_view < g_artline //
           && (g_mime_section->flags & MSF_INLINE))
         {
