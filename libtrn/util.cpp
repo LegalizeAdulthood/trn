@@ -440,7 +440,7 @@ char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, std::FILE *fp
     return buffer;
 }
 
-bool makedir(const char *dirname, makedir_name_type nametype)
+bool makedir(const char *dirname, MakeDirNameType nametype)
 {
     std::filesystem::path dir{dirname};
     if (nametype == MD_FILE)

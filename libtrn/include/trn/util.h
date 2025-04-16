@@ -27,7 +27,7 @@ inline bool at_grey_space(const char *s)
 
 /* is the string for makedir a directory name or a filename? */
 
-enum makedir_name_type
+enum MakeDirNameType
 {
     MD_DIR = 0,
     MD_FILE = 1
@@ -55,7 +55,7 @@ int eaccess(char *, int);
 #endif
 char *trn_getwd(char *buf, int buflen);
 char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, std::FILE *fp);
-bool makedir(const char *dirname, makedir_name_type nametype);
+bool makedir(const char *dirname, MakeDirNameType nametype);
 void notincl(const char *feature);
 void growstr(char **strptr, int *curlen, int newlen);
 void setdef(char *buffer, const char *dflt);
