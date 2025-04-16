@@ -105,7 +105,7 @@ static const CharsetDesc s_charset_descs[] = {
     // clang-format on
 };
 
-struct gstate
+struct GraphicState
 {
     CharsetType      in;
     CharsetType      out;
@@ -113,7 +113,7 @@ struct gstate
     const CodePoint *himap_out;
 };
 
-static gstate s_gs = { CHARSET_UTF8, CHARSET_UTF8, nullptr, nullptr };
+static GraphicState s_gs = { CHARSET_UTF8, CHARSET_UTF8, nullptr, nullptr };
 
 static CharsetType find_charset(const char *s)
 {
