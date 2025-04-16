@@ -248,40 +248,41 @@ decode_state uudecode(std::FILE *ifp, decode_state state)
         }
         switch (state)
         {
-          case DECODE_START:    /* Looking for start of uuencoded file */
-          case DECODE_MAYBEDONE:
-          {
-              if (std::strncmp(g_buf, "begin ", 6) != 0)
-              {
-                  break;
-              }
-              /* skip mode */
-              p = skip_non_space(g_buf + 6);
-              p = skip_space(p);
-              char *filename = p;
-              while (*p && (!std::isspace(*p) || *p == ' '))
-              {
-                  p++;
-              }
-              *p = '\0';
-              if (!*filename)
-              {
-                  return DECODE_ERROR;
-              }
-              filename = decode_fix_fname(filename);
+        case DECODE_START:    /* Looking for start of uuencoded file */
+        case DECODE_MAYBEDONE:
+        {
+            if (std::strncmp(g_buf, "begin ", 6) != 0)
+            {
+                break;
+            }
+            /* skip mode */
+            p = skip_non_space(g_buf + 6);
+            p = skip_space(p);
+            char *filename = p;
+            while (*p && (!std::isspace(*p) || *p == ' '))
+            {
+                p++;
+            }
+            *p = '\0';
+            if (!*filename)
+            {
+                return DECODE_ERROR;
+            }
+            filename = decode_fix_fname(filename);
 
-              /* Create output file and start decoding */
-              ofp = std::fopen(filename, "wb");
-              if (!ofp)
-              {
-                  return DECODE_ERROR;
-              }
-              std::printf("Decoding %s\n", filename);
-              termdown(1);
-              state = DECODE_SETLEN;
-              break;
-          }
-          case DECODE_INACTIVE: /* Looking for uuencoded data to resume */
+            /* Create output file and start decoding */
+            ofp = std::fopen(filename, "wb");
+            if (!ofp)
+            {
+                return DECODE_ERROR;
+            }
+            std::printf("Decoding %s\n", filename);
+            termdown(1);
+            state = DECODE_SETLEN;
+            break;
+        }
+
+        case DECODE_INACTIVE: /* Looking for uuencoded data to resume */
             if (*g_buf != 'M' || std::strlen(g_buf) != line_length)
             {
                 if (*g_buf == 'B' && !std::strncmp(g_buf, "BEGIN", 5))
@@ -292,11 +293,13 @@ decode_state uudecode(std::FILE *ifp, decode_state state)
             }
             state = DECODE_ACTIVE;
             /* FALL THROUGH */
-          case DECODE_SETLEN:
+
+        case DECODE_SETLEN:
             line_length = std::strlen(g_buf);
             state = DECODE_ACTIVE;
             /* FALL THROUGH */
-          case DECODE_ACTIVE:   /* Decoding data */
+
+        case DECODE_ACTIVE:   /* Decoding data */
             if (*g_buf == 'M' && std::strlen(g_buf) == line_length)
             {
                 uudecodeline(g_buf, ofp);
@@ -323,7 +326,8 @@ decode_state uudecode(std::FILE *ifp, decode_state state)
                 state = DECODE_NEXT2LAST;
             }
             break;
-          case DECODE_NEXT2LAST:/* May be nearing end of file */
+
+        case DECODE_NEXT2LAST:/* May be nearing end of file */
             if (!std::strncmp(g_buf, "end", 3))
             {
                 goto end;
@@ -337,7 +341,8 @@ decode_state uudecode(std::FILE *ifp, decode_state state)
                 state = DECODE_INACTIVE;
             }
             break;
-          case DECODE_LAST:     /* Should be at end of file */
+
+        case DECODE_LAST:     /* Should be at end of file */
             if (!std::strncmp(g_buf, "end", 3) && std::isspace(g_buf[3]))
             {
                 /* Handle that last line we saved */
@@ -354,7 +359,8 @@ end:            if (ofp)
                 state = DECODE_INACTIVE;
             }
             break;
-          case DECODE_DONE:
+
+        case DECODE_DONE:
             break;
         }
     }
