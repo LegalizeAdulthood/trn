@@ -21,7 +21,7 @@ enum
     FRAG_SIZE = ((1024 * 64) - 32) /* number of bytes in a fragment */
 };
 
-struct MP_FRAG
+struct MemoryPoolFragment
 {
     char *data;
     char *lastfree;
@@ -35,7 +35,7 @@ struct MP_HEAD
     int current; /* index into mp_frag of most recent alloc */
 };
 
-static MP_FRAG s_mpfrags[MAX_MEM_FRAGS]{}; /* zero is unused */
+static MemoryPoolFragment s_mpfrags[MAX_MEM_FRAGS]{}; /* zero is unused */
 static int     s_mp_first_free_frag{};
 static MP_HEAD s_mpheads[MAX_MEM_POOLS]{};
 
