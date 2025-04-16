@@ -109,17 +109,17 @@ static DisplayState (*s_extra_commands)(char_int){};
 namespace
 {
 
-class push_selector_modes
+class PushSelectorModes
 {
 public:
-    push_selector_modes(MinorMode new_mode) :
+    PushSelectorModes(MinorMode new_mode) :
         m_save_mode(g_mode),
         m_save_gmode(g_general_mode)
     {
         g_bos_on_stop = true;
         set_mode(GM_SELECTOR, new_mode);
     }
-    ~push_selector_modes()
+    ~PushSelectorModes()
     {
         g_bos_on_stop = false;
         set_mode(m_save_gmode, m_save_mode);
@@ -216,7 +216,7 @@ static int              find_line(int y);
 char article_selector(char_int cmd)
 {
     bool save_selected_only;
-    push_selector_modes saver(MM_THREAD_SELECTOR);
+    PushSelectorModes saver(MM_THREAD_SELECTOR);
 
     g_sel_rereading = (cmd == 'U');
 
@@ -441,7 +441,7 @@ static void sel_dogroups()
 
 char multirc_selector()
 {
-    push_selector_modes saver(MM_NEWSRC_SELECTOR);
+    PushSelectorModes saver(MM_NEWSRC_SELECTOR);
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -503,7 +503,7 @@ char multirc_selector()
 
 char newsgroup_selector()
 {
-    push_selector_modes saver(MM_NEWSGROUP_SELECTOR);
+    PushSelectorModes saver(MM_NEWSGROUP_SELECTOR);
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -590,7 +590,7 @@ char newsgroup_selector()
 
 char addgroup_selector(GetNewsgroupFlags flags)
 {
-    push_selector_modes saver(MM_ADD_GROUP_SELECTOR);
+    PushSelectorModes saver(MM_ADD_GROUP_SELECTOR);
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -666,7 +666,7 @@ char addgroup_selector(GetNewsgroupFlags flags)
 char option_selector()
 {
     char** vals = ini_values(g_options_ini);
-    push_selector_modes saver(MM_OPTION_SELECTOR);
+    PushSelectorModes saver(MM_OPTION_SELECTOR);
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
@@ -947,7 +947,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
 
 char universal_selector()
 {
-    push_selector_modes saver(MM_UNIVERSAL);            /* kind of like 'v'irtual... */
+    PushSelectorModes saver(MM_UNIVERSAL);            /* kind of like 'v'irtual... */
 
     g_sel_rereading = false;
     g_sel_exclusive = false;
