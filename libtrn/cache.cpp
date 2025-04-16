@@ -333,13 +333,15 @@ void check_poster(ARTICLE *ap)
                 {
                     switch (g_auto_select_postings)
                     {
-                      case '.':
+                    case '.':
                         select_subthread(ap,AUTO_SEL_FOL);
                         break;
-                      case '+':
+
+                    case '+':
                         select_arts_thread(ap,AUTO_SEL_THD);
                         break;
-                      case 'p':
+
+                    case 'p':
                         if (ap->parent)
                         {
                             select_subthread(ap->parent,AUTO_SEL_FOL);
@@ -466,7 +468,7 @@ char *get_cached_line(ARTICLE *ap, header_line_type which_line, bool no_truncs)
 
     switch (which_line)
     {
-      case SUBJ_LINE:
+    case SUBJ_LINE:
         if (!ap->subj || (no_truncs && (ap->subj->flags & SF_SUBJTRUNCED)))
         {
             s = nullptr;
@@ -476,30 +478,36 @@ char *get_cached_line(ARTICLE *ap, header_line_type which_line, bool no_truncs)
             s = ap->subj->str + ((ap->flags & AF_HAS_RE) ? 0 : 4);
         }
         break;
-      case FROM_LINE:
+
+    case FROM_LINE:
         s = ap->from;
         break;
-      case XREF_LINE:
+
+    case XREF_LINE:
         s = ap->xrefs;
         break;
-      case MSGID_LINE:
+
+    case MSGID_LINE:
         s = ap->msgid;
         break;
-      case LINES_LINE:
-      {
+
+    case LINES_LINE:
+    {
         static char linesbuf[32];
         std::sprintf(linesbuf, "%ld", ap->lines);
         s = linesbuf;
         break;
-      }
-      case BYTES_LINE:
-      {
+    }
+
+    case BYTES_LINE:
+    {
         static char bytesbuf[32];
         std::sprintf(bytesbuf, "%ld", ap->bytes);
         s = bytesbuf;
         break;
-      }
-      default:
+    }
+
+    default:
         s = nullptr;
         break;
     }
@@ -719,7 +727,7 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
     /* SUBJ_LINE is handled specially above */
     switch (which_line)
     {
-      case FROM_LINE:
+    case FROM_LINE:
         if (ap->from)
         {
             std::free(ap->from);
@@ -727,7 +735,8 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
         decode_header(s, s, std::strlen(s));
         ap->from = s;
         break;
-      case XREF_LINE:
+
+    case XREF_LINE:
         if (ap->xrefs && !empty(ap->xrefs))
         {
             std::free(ap->xrefs);
@@ -741,17 +750,20 @@ void set_cached_line(ARTICLE *ap, int which_line, char *s)
         }
         ap->xrefs = s;
         break;
-      case MSGID_LINE:
+
+    case MSGID_LINE:
         if (ap->msgid)
         {
             std::free(ap->msgid);
         }
         ap->msgid = s;
         break;
-      case LINES_LINE:
+
+    case LINES_LINE:
         ap->lines = std::atol(s);
         break;
-      case BYTES_LINE:
+
+    case BYTES_LINE:
         ap->bytes = std::atol(s);
         break;
     }
