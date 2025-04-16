@@ -56,8 +56,10 @@ char *listnum2listitem(LIST *list, long num)
     {
         node = list->first;
     }
-    for (;;) {
-        if (!node || num < node->low) {
+    for (;;)
+    {
+        if (!node || num < node->low)
+        {
             node = (LISTNODE*)safemalloc(list->items_per_node*list->item_size
                                         + sizeof (LISTNODE) - 1);
             if (list->flags & LF_SPARSE)
@@ -72,11 +74,13 @@ char *listnum2listitem(LIST *list, long num)
             node->data_high = node->data
                             + (list->items_per_node - 1) * list->item_size;
             list->high = std::max(node->high, list->high);
-            if (prevnode) {
+            if (prevnode)
+            {
                 node->next = prevnode->next;
                 prevnode->next = node;
             }
-            else {
+            else
+            {
                 node->next = list->first;
                 list->first = node;
             }
@@ -102,14 +106,17 @@ long listitem2listnum(LIST *list, char *ptr)
 {
     int item_size = list->item_size;
 
-    for (LISTNODE *node = list->recent; ; node = node->next) {
+    for (LISTNODE *node = list->recent;; node = node->next)
+    {
         if (!node)
         {
             node = list->first;
         }
         int i = node->high - node->low + 1;
-        for (char *cp = node->data; i--; cp += item_size) {
-            if (ptr == cp) {
+        for (char *cp = node->data; i--; cp += item_size)
+        {
+            if (ptr == cp)
+            {
                 list->recent = node;
                 return (ptr - node->data) / list->item_size + node->low;
             }
@@ -124,7 +131,8 @@ bool walk_list(LIST *list, bool (*callback)(char *, int), int arg)
 {
     int item_size = list->item_size;
 
-    for (LISTNODE *node = list->first; node; node = node->next) {
+    for (LISTNODE *node = list->first; node; node = node->next)
+    {
         int i = node->high - node->low + 1;
         for (char *cp = node->data; i--; cp += item_size)
         {
@@ -150,18 +158,23 @@ long existing_listnum(LIST *list, long num, int direction)
     {
         node = list->first;
     }
-    while (node) {
-        if (num <= node->high) {
-            if (direction > 0) {
+    while (node)
+    {
+        if (num <= node->high)
+        {
+            if (direction > 0)
+            {
                 num = std::max(num, node->low);
             }
-            else if (direction == 0) {
+            else if (direction == 0)
+            {
                 if (num < node->low)
                 {
                     num = 0;
                 }
             }
-            else if (num < node->low) {
+            else if (num < node->low)
+            {
                 if (!prevnode)
                 {
                     break;
@@ -193,7 +206,8 @@ char *next_listitem(LIST *list, char *ptr)
 {
     LISTNODE* node = list->recent;
 
-    if (ptr == node->data_high) {
+    if (ptr == node->data_high)
+    {
         node = node->next;
         if (!node)
         {
@@ -203,7 +217,8 @@ char *next_listitem(LIST *list, char *ptr)
         return node->data;
     }
 #if 0
-    if (node->high > list->high) {
+    if (node->high > list->high)
+    {
         if ((ptr - node->data) / list->item_size + node->low >= list->high)
         {
             return nullptr;
@@ -220,7 +235,8 @@ char *prev_listitem(LIST *list, char *ptr)
 {
     LISTNODE* node = list->recent;
 
-    if (ptr == node->data) {
+    if (ptr == node->data)
+    {
         LISTNODE* prev = list->first;
         if (prev == node)
         {
@@ -244,7 +260,8 @@ void delete_list(LIST *list)
 {
     LISTNODE* node = list->first;
 
-    while (node) {
+    while (node)
+    {
         LISTNODE *prevnode = node;
         node = node->next;
         std::free((char*)prevnode);
