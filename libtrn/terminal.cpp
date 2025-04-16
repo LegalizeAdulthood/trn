@@ -131,12 +131,12 @@ static long s_outspeed{}; /*    for use by tputs() */
 #endif
 #endif
 
-struct KEYMAP
+struct KeyMap
 {
     char km_type[128];
-    union km_union
+    union KeyMapUnion
     {
-        KEYMAP *km_km;
+        KeyMap *km_km;
         char *km_str;
     } km_ptr[128];
 };
@@ -165,7 +165,7 @@ static const char *s_readerr{"rn read error"};
 #ifndef MSDOS
 static char s_tcarea[TCSIZE]; /* area for "compiled" termcap strings */
 #endif
-static KEYMAP *s_topmap{};
+static KeyMap *s_topmap{};
 static char   *s_lines_export{};
 static char   *s_cols_export{};
 static int     s_leftcost{};
@@ -173,8 +173,8 @@ static int     s_upcost{};
 static bool    s_got_a_char{}; /* true if we got a char since eating */
 
 static void mac_init(char *tcbuf);
-static KEYMAP* newkeymap();
-static void show_keymap(KEYMAP *curmap, char *prefix);
+static KeyMap* newkeymap();
+static void show_keymap(KeyMap *curmap, char *prefix);
 static int echo_char(char_int ch);
 static void line_col_calcs();
 static void mouse_input(const char *cp);
@@ -593,7 +593,7 @@ static void mac_init(char *tcbuf)
 void mac_line(char *line, char *tmpbuf, int tbsize)
 {
     char*       m;
-    KEYMAP*     curmap;
+    KeyMap*     curmap;
     int         garbage = 0;
     static char override[] = "\nkeymap overrides string\n";
 
@@ -673,12 +673,12 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
     }
 }
 
-static KEYMAP *newkeymap()
+static KeyMap *newkeymap()
 {
-    KEYMAP* map;
+    KeyMap* map;
 
 #ifndef lint
-    map = (KEYMAP*)safemalloc(sizeof(KEYMAP));
+    map = (KeyMap*)safemalloc(sizeof(KeyMap));
 #else
     map = nullptr;
 #endif /* lint */
@@ -706,7 +706,7 @@ void show_macros()
     }
 }
 
-static void show_keymap(KEYMAP *curmap, char *prefix)
+static void show_keymap(KeyMap *curmap, char *prefix)
 {
     char* next = prefix + std::strlen(prefix);
 
@@ -1071,7 +1071,7 @@ void eat_typeahead()
         && this_time - last_time > 0.3)
     {
 #ifdef PENDING
-        KEYMAP*curmap = s_topmap;
+        KeyMap*curmap = s_topmap;
         int    j;
         for (j = 0; input_pending();)
         {
@@ -1314,7 +1314,7 @@ void getcmd(char *whatbuf)
     }
 
 tryagain:
-    KEYMAP *curmap = s_topmap;
+    KeyMap *curmap = s_topmap;
     bool no_macros = (whatbuf != g_buf && !s_xmouse_is_on);
     while (true)
     {
