@@ -17,15 +17,15 @@ extern bool        g_norm_always; /* -N */
 extern std::string g_privdir;     /* private news directory */
 extern std::string g_indstr;      /* indent for old article embedded in followup */
 
-enum save_result
+enum SaveResult
 {
     SAVE_ABORT = 0,
     SAVE_DONE = 1
 };
 
 void respond_init();
-save_result save_article();
-save_result view_article();
+SaveResult save_article();
+SaveResult view_article();
 int cancel_article();
 int supersede_article();
 void reply();

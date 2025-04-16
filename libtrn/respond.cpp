@@ -59,7 +59,7 @@ void respond_init()
     g_extractdest.clear();
 }
 
-save_result save_article()
+SaveResult save_article()
 {
     char* s;
     char* c;
@@ -579,7 +579,7 @@ s_bomb:
     return SAVE_DONE;
 }
 
-save_result view_article()
+SaveResult view_article()
 {
     parseheader(g_art);
     mime_SetArticle();
