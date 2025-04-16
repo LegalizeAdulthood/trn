@@ -74,9 +74,9 @@ TEST_P(HeaderLineTypes, orderRelationships)
 
 INSTANTIATE_TEST_SUITE_P(TestHeaderLineTypes, HeaderLineTypes, testing::ValuesIn(header_line_types));
 
-using object_number_values = EnumValues<ObjectNumber>;
+using ObjectNumberValues = EnumValues<ObjectNumber>;
 
-object_number_values object_numbers[] =
+ObjectNumberValues object_numbers[] =
 {
     // clang-format off
     ENUM_VALUE(COLOR_DEFAULT, 0),
@@ -103,22 +103,22 @@ object_number_values object_numbers[] =
     // clang-format on
 };
 
-class ObjectNumbers : public testing::TestWithParam<object_number_values>
+class ObjectNumbers : public testing::TestWithParam<ObjectNumberValues>
 {
 };
 
 TEST_P(ObjectNumbers, orderRelationships)
 {
-    const object_number_values param = GetParam();
+    const ObjectNumberValues param = GetParam();
 
     ASSERT_EQ(param.value, param.type);
 }
 
 INSTANTIATE_TEST_SUITE_P(TestObjectNumbers, ObjectNumbers, testing::ValuesIn(object_numbers));
 
-using display_option_values = EnumValues<OptionIndex>;
+using DisplayOptionValues = EnumValues<OptionIndex>;
 
-display_option_values display_options[] =
+DisplayOptionValues display_options[] =
 {
     // clang-format off
     ENUM_VALUE(OI_TERSE_OUTPUT,                 2),
@@ -224,13 +224,13 @@ display_option_values display_options[] =
     // clang-format on
 };
 
-class DisplayOptions : public testing::TestWithParam<display_option_values>
+class DisplayOptions : public testing::TestWithParam<DisplayOptionValues>
 {
 };
 
 TEST_P(DisplayOptions, orderRelationships)
 {
-    const display_option_values param = GetParam();
+    const DisplayOptionValues param = GetParam();
 
     ASSERT_EQ(param.value, param.type);
 }
