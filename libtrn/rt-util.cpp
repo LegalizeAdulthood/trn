@@ -504,20 +504,22 @@ char *compress_address(char *name, int max)
         }
         switch (*s)
         {
-          case '@':
+        case '@':
             if (at == nullptr)
             {
                 at = s;
             }
             break;
-          case '!':
+
+        case '!':
             if (at == nullptr)
             {
                 bang = s;
                 hack = nullptr;
             }
             break;
-          case '%':
+
+        case '%':
             if (at == nullptr && hack == nullptr)
             {
                 hack = s;
@@ -782,9 +784,9 @@ void setspin(spin_mode mode)
 {
     switch (mode)
     {
-      case SPIN_FOREGROUND:
-      case SPIN_BACKGROUND:
-      case SPIN_BARGRAPH:
+    case SPIN_FOREGROUND:
+    case SPIN_BACKGROUND:
+    case SPIN_BARGRAPH:
         if (!s_spin_level++)
         {
             s_spin_art = g_openart;
@@ -816,8 +818,9 @@ void setspin(spin_mode mode)
         s_spinchars = "|/-\\";
         s_spin_mode = mode;
         break;
-      case SPIN_POP:
-      case SPIN_OFF:
+
+    case SPIN_POP:
+    case SPIN_OFF:
         if (s_spin_mode == SPIN_BARGRAPH)
         {
             s_spin_level = 1;
@@ -861,7 +864,7 @@ void spin(int count)
     }
     switch (s_spin_mode)
     {
-      case SPIN_BACKGROUND:
+    case SPIN_BACKGROUND:
         if (!g_bkgnd_spinner)
         {
             return;
@@ -873,19 +876,21 @@ void spin(int count)
             std::fflush(stdout);
         }
         break;
-      case SPIN_FOREGROUND:
+
+    case SPIN_FOREGROUND:
         if (!(++g_spin_count % count))
         {
             std::putchar('.');
             std::fflush(stdout);
         }
         break;
-      case SPIN_BARGRAPH:
-      {
-          if (g_spin_todo == 0)
-          {
+
+    case SPIN_BARGRAPH:
+    {
+        if (g_spin_todo == 0)
+        {
             break;              /* bail out rather than crash */
-          }
+        }
         int new_pos = (int)((long)s_spin_marks * ++g_spin_count / g_spin_todo);
         if (s_spin_pos < new_pos && g_spin_count <= g_spin_todo+1)
         {
@@ -903,7 +908,7 @@ void spin(int count)
             std::fflush(stdout);
         }
         break;
-      }
+    }
     }
 }
 
