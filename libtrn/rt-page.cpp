@@ -32,7 +32,7 @@
 #include <cstdio>
 #include <cstring>
 
-SEL_ITEM  g_sel_items[MAX_SEL];
+SelectionItem  g_sel_items[MAX_SEL];
 int       g_sel_total_obj_cnt{};
 int       g_sel_prior_obj_cnt{};
 int       g_sel_page_obj_cnt{};

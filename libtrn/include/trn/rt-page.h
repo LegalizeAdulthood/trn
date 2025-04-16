@@ -36,14 +36,14 @@ union Selection
     OptionIndex op;
 };
 
-struct SEL_ITEM
+struct SelectionItem
 {
     Selection u;
     int line;
     int sel;
 };
 
-extern SEL_ITEM g_sel_items[MAX_SEL];
+extern SelectionItem g_sel_items[MAX_SEL];
 extern int g_sel_total_obj_cnt;
 extern int g_sel_prior_obj_cnt;
 extern int g_sel_page_obj_cnt;
