@@ -72,6 +72,7 @@ int putsubstchar(int c, int limit, bool outputok)
             i = -1;
         }
         break;
+
     case 't':
         if (c == '\\' || c == '"')
         {
@@ -130,6 +131,7 @@ int putsubstchar(int c, int limit, bool outputok)
             }
         }
         /* FALL THROUGH */
+
     default:
         if (outputok)
         {
@@ -161,16 +163,19 @@ const char *current_charsubst()
 
     switch (*g_charsubst)
     {
-      case 'm':
+    case 'm':
         show = g_verbose ? "[ISO->USmono] " : "[M] ";
         break;
-      case 'a':
+
+    case 'a':
         show = g_verbose ? "[ISO->US] " : "[U] ";
         break;
-      case 't':
+
+    case 't':
         show = g_verbose ? "[TeX->ISO] " : "[T] ";
         break;
-      default:
+
+    default:
         show = "";
         break;
     }
@@ -184,8 +189,10 @@ int strcharsubst(char *outb, const char *inb, int limit, char_int subst)
     {
     case 'm':
         return Latin1toASCII((Uchar *) outb, (const Uchar *) inb, limit, 1);
+
     case 'a':
         return Latin1toASCII((Uchar *) outb, (const Uchar *) inb, limit, 2);
+
     default:
         break;
     }
