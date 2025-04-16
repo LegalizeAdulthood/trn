@@ -38,19 +38,23 @@ int nntp_connect(const char *machine, bool verbose)
 #if 0
   try_to_connect:
 #endif
-    if (verbose) {
+    if (verbose)
+    {
         std::printf("Connecting to %s...",machine);
         std::fflush(stdout);
     }
-    switch (response = server_init(machine)) {
+    switch (response = server_init(machine))
+    {
     case NNTP_GOODBYE_VAL:
-        if (atoi(g_ser_line) == response) {
+        if (atoi(g_ser_line) == response)
+        {
             char tmpbuf[LBUFLEN];
             if (verbose)
             {
                 std::printf("failed: %s\n",&g_ser_line[4]);
             }
-            else {
+            else
+            {
                 std::sprintf(tmpbuf,"News server \"%s\" is unavailable: %s\n",
                         machine,&g_ser_line[4]);
                 nntp_init_error(tmpbuf);
@@ -63,7 +67,8 @@ int nntp_connect(const char *machine, bool verbose)
         {
             std::printf("failed.\n");
         }
-        else {
+        else
+        {
             std::sprintf(g_ser_line,"News server \"%s\" is unavailable.\n",machine);
             nntp_init_error(g_ser_line);
         }
@@ -74,7 +79,8 @@ int nntp_connect(const char *machine, bool verbose)
         {
             std::printf("access denied.\n");
         }
-        else {
+        else
+        {
             std::sprintf(g_ser_line,
                     "This machine does not have permission to use the %s news server.\n\n",
                     machine);
@@ -101,7 +107,8 @@ int nntp_connect(const char *machine, bool verbose)
         {
             std::printf("unknown response: %d.\n",response);
         }
-        else {
+        else
+        {
             std::sprintf(g_ser_line,"\nUnknown response code %d from %s.\n",
                     response,machine);
             nntp_init_error(g_ser_line);
@@ -110,7 +117,8 @@ int nntp_connect(const char *machine, bool verbose)
         break;
     }
 #if 0
-    if (!response) {
+    if (!response)
+    {
         if (handle_no_connect() > 0)
         {
             goto try_to_connect;
@@ -124,8 +132,10 @@ char *nntp_servername(char *name)
 {
     std::FILE* fp;
 
-    if (FILE_REF(name) && (fp = std::fopen(name, "r")) != nullptr) {
-        while (std::fgets(g_ser_line, sizeof g_ser_line, fp) != nullptr) {
+    if (FILE_REF(name) && (fp = std::fopen(name, "r")) != nullptr)
+    {
+        while (std::fgets(g_ser_line, sizeof g_ser_line, fp) != nullptr)
+        {
             if (*g_ser_line == '\n' || *g_ser_line == '#')
             {
                 continue;
@@ -157,11 +167,13 @@ int nntp_command(const char *bp)
     {
         return nntp_handle_timeout();
     }
-    if (g_nntplink.flags & NNTP_FORCE_AUTH_NOW) {
+    if (g_nntplink.flags & NNTP_FORCE_AUTH_NOW)
+    {
         g_nntplink.flags &= ~NNTP_FORCE_AUTH_NOW;
         return nntp_handle_auth_err();
     }
-    if (!(g_nntplink.flags & NNTP_NEW_CMD_OK)) {
+    if (!(g_nntplink.flags & NNTP_NEW_CMD_OK))
+    {
         int ret = nntp_handle_nested_lists();
         if (ret <= 0)
         {
@@ -208,17 +220,20 @@ int nntp_check()
 #ifdef HAS_SIGHOLD
     sigrelse(SIGINT);
 #endif
-    if (ret < 0) {
+    if (ret < 0)
+    {
         if (errno == EINTR)
         {
             goto read_it;
         }
         std::strcpy(g_ser_line, "503 Server closed connection.");
     }
-    if (len == 0 && std::atoi(g_ser_line) == NNTP_TMPERR_VAL
-     && g_nntp_allow_timeout && s_last_command_diff > 60) {
+    if (len == 0 && std::atoi(g_ser_line) == NNTP_TMPERR_VAL //
+        && g_nntp_allow_timeout && s_last_command_diff > 60)
+    {
         ret = nntp_handle_timeout();
-        switch (ret) {
+        switch (ret)
+        {
         case 1:
             len = 1;
             goto read_it;
@@ -258,7 +273,8 @@ int nntp_check()
         std::printf("<%s\n", g_ser_line);
     }
 #endif
-    if (std::atoi(g_ser_line) == NNTP_AUTH_NEEDED_VAL) {
+    if (std::atoi(g_ser_line) == NNTP_AUTH_NEEDED_VAL)
+    {
         ret = nntp_handle_auth_err();
         if (ret > 0)
         {
@@ -270,7 +286,8 @@ int nntp_check()
 
 bool nntp_at_list_end(const char *s)
 {
-    if (!s || (*s == '.' && (s[1] == '\0' || s[1] == '\r'))) {
+    if (!s || (*s == '.' && (s[1] == '\0' || s[1] == '\r')))
+    {
         g_nntplink.flags |= NNTP_NEW_CMD_OK;
         return true;
     }
@@ -336,7 +353,8 @@ void nntp_gets_clear_buffer()
 
 void nntp_close(bool send_quit)
 {
-    if (send_quit && g_nntplink.connection) {
+    if (send_quit && g_nntplink.connection)
+    {
         if (nntp_command("QUIT") > 0)
         {
             nntp_check();
