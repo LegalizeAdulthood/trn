@@ -30,14 +30,14 @@ struct MemoryPoolFragment
 };
 
 /* structure for extensibility */
-struct MP_HEAD
+struct MemoryPoolHead
 {
     int current; /* index into mp_frag of most recent alloc */
 };
 
 static MemoryPoolFragment s_mpfrags[MAX_MEM_FRAGS]{}; /* zero is unused */
 static int     s_mp_first_free_frag{};
-static MP_HEAD s_mpheads[MAX_MEM_POOLS]{};
+static MemoryPoolHead s_mpheads[MAX_MEM_POOLS]{};
 
 static int mp_alloc_frag();
 static void mp_free_frag(int f);
@@ -55,7 +55,7 @@ void mp_init()
     s_mpfrags[i-1].next = 0;
     s_mp_first_free_frag = 1;   /* first free fragment */
 
-    for (MP_HEAD &pool : s_mpheads)
+    for (MemoryPoolHead &pool : s_mpheads)
     {
         pool.current = 0;
     }
