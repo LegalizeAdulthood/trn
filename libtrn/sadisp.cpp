@@ -58,7 +58,8 @@ void sa_refresh_bot()
     color_object(COLOR_SCORE, true);
     s_mail_and_place();
     std::printf("(");
-    switch (g_sa_mode_order) {
+    switch (g_sa_mode_order)
+    {
       case SA_ORDER_ARRIVAL:
         s = "arrival";
         break;
