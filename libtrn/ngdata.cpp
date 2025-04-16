@@ -85,13 +85,15 @@ int access_ng()
 {
     ART_NUM old_first = g_ngptr->abs1st;
 
-    if (g_datasrc->flags & DF_REMOTE) {
+    if (g_datasrc->flags & DF_REMOTE)
+    {
         int ret = nntp_group(g_ngname.c_str(),g_ngptr);
         if (ret == -2)
         {
             return -2;
         }
-        if (ret <= 0) {
+        if (ret <= 0)
+        {
             g_ngptr->toread = TR_BOGUS;
             return 0;
         }
@@ -108,8 +110,10 @@ int access_ng()
     }
     else
     {
-        if (eaccess(g_ngdir.c_str(),5)) {               /* directory read protected? */
-            if (eaccess(g_ngdir.c_str(),0)) {
+        if (eaccess(g_ngdir.c_str(),5))                 /* directory read protected? */
+        {
+            if (eaccess(g_ngdir.c_str(), 0))
+            {
                 if (g_verbose)
                 {
                     std::printf("\nNewsgroup %s does not have a spool directory!\n", g_ngname.c_str());
@@ -119,7 +123,9 @@ int access_ng()
                     std::printf("\nNo spool for %s!\n", g_ngname.c_str());
                 }
                 termdown(2);
-            } else {
+            }
+            else
+            {
                 if (g_verbose)
                 {
                     std::printf("\nNewsgroup %s is not currently accessible.\n", g_ngname.c_str());
@@ -136,7 +142,8 @@ int access_ng()
         }
 
         /* chdir to newsgroup subdirectory */
-        if (change_dir(g_ngdir)) {
+        if (change_dir(g_ngdir))
+        {
             std::printf(g_nocd,g_ngdir.c_str());
             return 0;
         }
@@ -168,13 +175,15 @@ void chdir_newsdir()
 void grow_ng(ART_NUM newlast)
 {
     g_forcegrow = false;
-    if (newlast > g_lastart) {
+    if (newlast > g_lastart)
+    {
         ART_NUM tmpart = g_art;
         g_ngptr->toread += (ART_UNREAD)(newlast-g_lastart);
         ART_NUM tmpfirst = g_lastart + 1;
         /* Increase the size of article scan arrays. */
         sa_grow(g_lastart,newlast);
-        do {
+        do
+        {
             g_lastart++;
             article_ptr(g_lastart)->flags |= AF_EXISTS|AF_UNREAD;
         } while (g_lastart < newlast);
@@ -192,7 +201,8 @@ void grow_ng(ART_NUM newlast)
             std::strcpy(g_buf, "More news -- auto-processing...\n\n");
         }
         termdown(2);
-        if (g_kf_state & KFS_NORMAL_LINES) {
+        if (g_kf_state & KFS_NORMAL_LINES)
+        {
             bool forcelast_save = g_forcelast;
             ARTICLE* artp_save = g_artp;
             kill_unwanted(tmpfirst,g_buf,true);
@@ -236,7 +246,8 @@ void sort_newsgroups()
         return;
     }
 
-    switch (g_sel_sort) {
+    switch (g_sel_sort)
+    {
       case SS_NATURAL:
       default:
         sort_procedure = ngorder_number;
@@ -262,7 +273,8 @@ void sort_newsgroups()
     g_first_ng = ng_list[0];
     g_first_ng->prev = nullptr;
     lp = ng_list;
-    for (int i = g_newsgroup_cnt; --i; lp++) {
+    for (int i = g_newsgroup_cnt; --i; lp++)
+    {
         lp[0]->next = lp[1];
         lp[1]->prev = lp[0];
     }
@@ -273,7 +285,8 @@ void sort_newsgroups()
 
 void ng_skip()
 {
-    if (g_datasrc->flags & DF_REMOTE) {
+    if (g_datasrc->flags & DF_REMOTE)
+    {
         clear();
         if (g_verbose)
         {
@@ -284,18 +297,21 @@ void ng_skip()
             std::fputs("Skipping\n", stdout);
         }
         termdown(1);
-        if (g_novice_delays) {
+        if (g_novice_delays)
+        {
             pad(g_just_a_sec/3);
             sleep(1);
         }
         g_art = article_next(g_art);
         g_artp = article_ptr(g_art);
-        do {
+        do
+        {
             /* tries to grab PREFETCH_SIZE XHDRS, flagging missing articles */
             (void) fetchsubj(g_art, false);
             ART_NUM artnum = g_art + PREFETCH_SIZE - 1;
             artnum = std::min(artnum, g_lastart);
-            while (g_art <= artnum) {
+            while (g_art <= artnum)
+            {
                 if (g_artp->flags & AF_EXISTS)
                 {
                     return;
@@ -307,7 +323,8 @@ void ng_skip()
     }
     else
     {
-        if (errno != ENOENT) {  /* has it not been deleted? */
+        if (errno != ENOENT)    /* has it not been deleted? */
+        {
             clear();
             if (g_verbose)
             {
@@ -318,7 +335,8 @@ void ng_skip()
                 std::printf("\n(%ld unreadable.)\n", (long) g_art);
             }
             termdown(2);
-            if (g_novice_delays) {
+            if (g_novice_delays)
+            {
                 pad(g_just_a_sec);
                 sleep(2);
             }
@@ -339,8 +357,10 @@ ART_NUM getngsize(NGDATA *gp)
     char *nam = gp->rcline;
     int   len = gp->numoffset - 1;
 
-    if (!find_actgrp(gp->rc->datasrc,tmpbuf,nam,len,gp->ngmax)) {
-        if (gp->subscribechar == ':') {
+    if (!find_actgrp(gp->rc->datasrc, tmpbuf, nam, len, gp->ngmax))
+    {
+        if (gp->subscribechar == ':')
+        {
             gp->subscribechar = NEGCHAR;
             gp->rc->flags |= RF_RCCHANGED;
             g_newsgroup_toread--;
@@ -358,12 +378,15 @@ ART_NUM getngsize(NGDATA *gp)
     {
         gp->abs1st = (ART_NUM) first;
     }
-    if (!g_in_ng) {
-        if (g_redirected) {
+    if (!g_in_ng)
+    {
+        if (g_redirected)
+        {
             g_redirected = false;
             g_redirected_to.clear();
         }
-        switch (ch) {
+        switch (ch)
+        {
         case 'n':
             g_moderated = get_val_const("NOPOSTRING"," (no posting)");
             break;
