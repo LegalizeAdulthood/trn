@@ -2669,12 +2669,12 @@ bool check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 
 static int s_tc_string_cnt{};
 
-struct COLOR_CAPABILITY
+struct ColorCapability
 {
     char *capability; /* name of capability, e.g. "foreground red" */
     char *string;     /* escape sequence, e.g. "\033[31m" */
 };
-static COLOR_CAPABILITY s_tc_strings[TC_STRINGS];
+static ColorCapability s_tc_strings[TC_STRINGS];
 
 /* Parse a line from the [termcap] section of trnrc. */
 void add_tc_string(const char *capability, const char *string)
