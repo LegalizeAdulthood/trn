@@ -1666,7 +1666,7 @@ static bool select_item(SEL_UNION u)
         {
             g_selected_count++;
         }
-        u.np->flags = (u.np->flags & ~NF_DEL) | static_cast<newsgroup_flags>(g_sel_mask);
+        u.np->flags = (u.np->flags & ~NF_DEL) | static_cast<NewsgroupFlags>(g_sel_mask);
         break;
 
     case SM_OPTIONS:
@@ -1776,9 +1776,9 @@ static bool deselect_item(SEL_UNION u)
         break;
 
     case SM_NEWSGROUP:
-        if (u.np->flags & static_cast<newsgroup_flags>(g_sel_mask))
+        if (u.np->flags & static_cast<NewsgroupFlags>(g_sel_mask))
         {
-            u.np->flags &= ~static_cast<newsgroup_flags>(g_sel_mask);
+            u.np->flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
             g_selected_count--;
         }
         if (g_sel_rereading)

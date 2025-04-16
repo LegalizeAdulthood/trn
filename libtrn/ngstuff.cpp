@@ -764,7 +764,7 @@ int perform(char *cmdlst, int output_level)
 
 int ngsel_perform()
 {
-    newsgroup_flags bits;
+    NewsgroupFlags bits;
     bool one_group = false;
 
     if (!finish_command(true))  /* get rest of command */
@@ -814,7 +814,7 @@ int ngsel_perform()
         }
         set_ng(g_ngptr);
         if ((g_ngptr->flags & bits) == bits //
-            && (!(g_ngptr->flags & static_cast<newsgroup_flags>(g_sel_mask)) ^ !!bits))
+            && (!(g_ngptr->flags & static_cast<NewsgroupFlags>(g_sel_mask)) ^ !!bits))
         {
             if (ng_perform(cmdstr, 0) < 0)
             {
@@ -849,9 +849,9 @@ int ng_perform(char *cmdlst, int output_level)
         switch (ch)
         {
         case '+':
-            if (!(g_ngptr->flags & static_cast<newsgroup_flags>(g_sel_mask)))
+            if (!(g_ngptr->flags & static_cast<NewsgroupFlags>(g_sel_mask)))
             {
-                g_ngptr->flags = ((g_ngptr->flags | static_cast<newsgroup_flags>(g_sel_mask)) & ~NF_DEL);
+                g_ngptr->flags = ((g_ngptr->flags | static_cast<NewsgroupFlags>(g_sel_mask)) & ~NF_DEL);
                 g_selected_count++;
             }
             break;
@@ -862,9 +862,9 @@ int ng_perform(char *cmdlst, int output_level)
 
         case '-':
           deselect:
-            if (g_ngptr->flags & static_cast<newsgroup_flags>(g_sel_mask))
+            if (g_ngptr->flags & static_cast<NewsgroupFlags>(g_sel_mask))
             {
-                g_ngptr->flags &= ~static_cast<newsgroup_flags>(g_sel_mask);
+                g_ngptr->flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
                 if (g_sel_rereading)
                 {
                     g_ngptr->flags |= NF_DEL;
@@ -882,7 +882,7 @@ int ng_perform(char *cmdlst, int output_level)
             g_ngptr->subscribechar = NEGCHAR;
             g_ngptr->toread = TR_UNSUB;
             g_ngptr->rc->flags |= RF_RCCHANGED;
-            g_ngptr->flags &= ~static_cast<newsgroup_flags>(g_sel_mask);
+            g_ngptr->flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
             g_newsgroup_toread--;
             goto deselect;
 

@@ -14,7 +14,7 @@
 struct List;
 struct NEWSRC;
 
-enum newsgroup_flags : std::uint8_t
+enum NewsgroupFlags : std::uint8_t
 {
     NF_NONE = 0x00,
     NF_SEL = 0x01,
@@ -24,7 +24,7 @@ enum newsgroup_flags : std::uint8_t
     NF_UNTHREADED = 0x40,
     NF_VISIT = 0x80
 };
-DECLARE_FLAGS_ENUM(newsgroup_flags, std::uint8_t);
+DECLARE_FLAGS_ENUM(NewsgroupFlags, std::uint8_t);
 
 struct NGDATA
 {
@@ -39,7 +39,7 @@ struct NGDATA
     NG_NUM          num;           /* a possible sort order for this group */
     int             numoffset;     /* offset from rcline to numbers on line */
     char            subscribechar; /* holds the character : or ! while spot is \0 */
-    newsgroup_flags flags;         /* flags for each group */
+    NewsgroupFlags flags;         /* flags for each group */
 };
 
 extern List       *g_ngdata_list;      /* a list of NGDATA */
