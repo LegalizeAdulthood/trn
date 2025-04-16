@@ -13,7 +13,8 @@
 
 using namespace testing;
 
-namespace {
+namespace
+{
 
 struct MimeTest : Test
 {
@@ -84,7 +85,8 @@ TEST_F(MimeTest, textPlainHasFlags)
     ASSERT_EQ(MCF_NEEDSTERMINAL | MCF_COPIOUSOUTPUT, cap->flags);
 }
 
-namespace {
+namespace
+{
 
 struct MimeExecTest : MimeTest
 {
