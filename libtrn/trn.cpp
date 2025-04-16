@@ -874,9 +874,9 @@ reask_abandon:
             termdown(1);
             return ING_ASK;
         }
-        /* CAA: *once*, the char* s was set to an illegal value
-         *      (it seemed to miss all the if statements below)
-         *      Just to be safe, make sure it is legal.
+        /* *once*, the char* s was set to an illegal value
+         * (it seemed to miss all the if statements below)
+         * Just to be safe, make sure it is legal.
          */
         s = "";
         if (*g_buf == '.')              /* start command? */
@@ -930,7 +930,7 @@ reask_abandon:
             nntp_server_died(g_ngptr->rc->datasrc);
             return ING_NOSERVER;
 
-        /* CAA extensions */
+        /* extensions */
         case NG_GO_ARTICLE:
             g_ngptr = g_ng_go_ngptr;
             s = savestr("y");           /* enter with minimal fuss */

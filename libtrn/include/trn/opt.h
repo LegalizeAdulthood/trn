@@ -104,9 +104,9 @@ enum option_index
 
     OI_TRN_LAST = OI_OLD_MTHREADS_DATABASE,
 
-    /* CAA: There are no current plans for scan modes other than article.
-     *      The general-scan options might as well be displayed in the same
-     *      section as the article-scan options.
+    /* There are no current plans for scan modes other than article.
+     * The general-scan options might as well be displayed in the same
+     * section as the article-scan options.
      */
     OI_SCANA_FOLLOW = OI_TRN_LAST + 2,
     OI_SCANA_FOLD,

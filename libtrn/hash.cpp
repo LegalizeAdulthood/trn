@@ -40,9 +40,9 @@ static int default_cmp(const char *key, int keylen, HASHDATUM data);
 static HASHENT *healloc();
 static void hefree(HASHENT *hp);
 
-/* CAA: In the future it might be a good idea to preallocate a region
- *      of hashents, since allocation overhead on some systems will be as
- *      large as the structure itself.
+/* In the future it might be a good idea to preallocate a region
+ * of hashents, since allocation overhead on some systems will be as
+ * large as the structure itself.
  */
 /* grab this many hashents at a time (under 1024 for malloc overhead) */
 enum
@@ -55,8 +55,8 @@ enum
  */
 /* #define HASH_FREE_ENTRIES */
 
-/* CAA: increased from 600.  Each threaded article requires at least
- *      one hashent, and various newsgroup hashes can easily get large.
+/* increased from 600.  Each threaded article requires at least
+ * one hashent, and various newsgroup hashes can easily get large.
  */
 /* tunable parameters */
 enum

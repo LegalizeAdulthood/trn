@@ -1471,7 +1471,7 @@ static int sf_open_file(const char *name)
             s_sf_files[i].lines = (char**)saferealloc((char*)s_sf_files[i].lines,
                 s_sf_files[i].num_alloc*sizeof(char**));
         }
-        /* CAA: I kind of like the next line in a twisted sort of way. */
+        /* I kind of like the next line in a twisted sort of way. */
         s_sf_files[i].lines[s_sf_files[i].num_lines++] = mp_savestr(s,MP_SCORE2);
     }
     std::fclose(fp);

@@ -225,7 +225,7 @@ do_newsgroup_result do_newsgroup(char *start_command)
 
     /* now read each unread article */
 
-    /* CAA: if we are going directly to an article, set things up here */
+    /* if we are going directly to an article, set things up here */
     if (g_ng_go_artnum)
     {
         ng_virtual = true;
@@ -1110,7 +1110,7 @@ not_threaded:
         }
         else
         {
-            /* TODO: will this work with 4.0? CAA */
+            /* TODO: will this work with 4.0? */
             if (g_sa_in && g_threaded_group)
             {
                 ARTICLE* old_artp = g_artp;

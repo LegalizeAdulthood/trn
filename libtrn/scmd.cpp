@@ -296,7 +296,7 @@ int s_docmd()
 
 #if 0
     case '&':         /* see/set switches... */
-        /* CAA 05/29/95: The new option stuff makes this potentially recursive.
+        /* The new option stuff makes this potentially recursive.
          * Something similar to the 'H' (extended help) code needs to be done.
          * It may be necessary for this code to do the context saving.
          */

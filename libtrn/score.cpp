@@ -469,7 +469,7 @@ void sc_rescore_arts()
 }
 
 /* Wrapper to isolate scorefile functions from the rest of the world */
-/* corrupted (:-) 11/12/92 by CAA for online rescoring */
+/* corrupted (:-) for online rescoring */
 void sc_append(char *line)
 {
     if (!line)          /* empty line */
@@ -635,7 +635,7 @@ void sc_kill_threshold(int thresh)
     {
         if (article_ptr(a)->score <= thresh &&
             article_unread(a)
-            /* CAA 6/19/93: this is needed for zoom mode */
+            /* this is needed for zoom mode */
             && sa_basic_elig(sa_artnum_to_ent(a)))
         {
             oneless_artnum(a);

@@ -915,7 +915,7 @@ void set_option(option_index num, const char *s)
 
     case OI_SCANA_DISPSUBJ:
 #if 0
-        /* CAA: for now, always on. */
+        /* for now, always on. */
         g_sa_mode_desc_subject = YES(s);
 #endif
         break;

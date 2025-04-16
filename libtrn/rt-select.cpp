@@ -421,10 +421,6 @@ static void sel_dogroups()
 
         case NG_MINUS:
             np = g_recent_ng;
-#if 0
-/* CAA: I'm not sure why I wrote this originally--it seems unnecessary */
-            np->flags |= NF_VISIT;
-#endif
             goto do_group;
 
         case NG_NOSERVER:
@@ -432,11 +428,11 @@ static void sel_dogroups()
             (void) first_page();
             break;
 
-        /* CAA extensions */
+        /* extensions */
         case NG_GO_ARTICLE:
             np = g_ng_go_ngptr;
             goto do_group;
-          /* later: possible go-to-newsgroup (applicable?) */
+            /* later: possible go-to-newsgroup (applicable?) */
         }
     }
   loop_break:
@@ -1067,7 +1063,7 @@ static void sel_status_msg(const char *cp)
     std::fputs(cp, stdout);
     g_term_col = std::strlen(cp);
     goto_xy(0,g_sel_items[g_sel_item_index].line);
-    std::fflush(stdout);     /* CAA: otherwise may not be visible */
+    std::fflush(stdout);     /* otherwise may not be visible */
     s_disp_status_line = 2;
 }
 
@@ -1076,9 +1072,9 @@ static char sel_input()
     int j;
     int sel_number;
 
-    /* CAA: TRN proudly continues the state machine traditions of RN.
-     *      April 2, 1996: 28 gotos in this function.  Conversion to
-     *      structured programming is left as an exercise for the reader.
+    /* TRN proudly continues the state machine traditions of RN.
+     * April 2, 1996: 28 gotos in this function.  Conversion to
+     * structured programming is left as an exercise for the reader.
      */
     /* If one immediately types a goto command followed by a dash ('-'),
      * the following will be the default action.
@@ -1104,7 +1100,7 @@ static char sel_input()
 reinp_selector:
     if (s_removed_prompt & RP_MOUSEBAR)
     {
-        goto position_selector; /* (CAA: TRN considered harmful? :-) */
+        goto position_selector; /* (TRN considered harmful? :-) */
     }
     /* Grab some commands from the user */
     std::fflush(stdout);

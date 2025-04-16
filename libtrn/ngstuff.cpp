@@ -36,9 +36,9 @@
 bool        g_one_command{}; /* no ':' processing in perform() */
 std::string g_savedir;       /* -d */
 
-/* CAA: given the new and complex universal/help possibilities,
- *      the following interlock variable may save some trouble.
- *      (if true, we are currently processing options)
+/* given the new and complex universal/help possibilities,
+ * the following interlock variable may save some trouble.
+ * (if true, we are currently processing options)
  */
 static bool s_option_sel_ilock{};
 

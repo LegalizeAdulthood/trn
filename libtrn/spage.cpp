@@ -263,7 +263,7 @@ bool s_refillpage()
     }
 
     i = 1;
-    /* CAA misc note: I used to have
+    /* misc note: I used to have
      * a = g_page_ents[1];
      * ...at this point.  This caused a truly difficult to track bug...
      * (briefly, occasionally the entry in g_page_ents[1] would be
