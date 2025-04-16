@@ -39,7 +39,7 @@
 
 /* This array must stay in the same order as the enum values header_line_type */
 // clang-format off
-HEADTYPE g_htype[HEAD_LAST] = {
+HeaderType g_htype[HEAD_LAST] = {
     /* name             minpos  maxpos  length   flag */
     {"",/*BODY*/        0,      0,      0,      HT_NONE         },
     {"",/*SHOWN*/       0,      0,      0,      HT_NONE         },
@@ -247,7 +247,7 @@ void start_header(ART_NUM artnum)
         dumpheader("start_header\n");
     }
 #endif
-    for (HEADTYPE &i : g_htype)
+    for (HeaderType &i : g_htype)
     {
         i.minpos = -1;
         i.maxpos = 0;
