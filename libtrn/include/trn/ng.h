@@ -9,14 +9,14 @@
 
 #include <string>
 
-struct ARTICLE;
+struct Article;
 
 extern ART_NUM  g_art;         /* current or prospective article # */
 extern ART_NUM  g_recent_art;  /* previous article # for '-' command */
 extern ART_NUM  g_curr_art;    /* current article # */
-extern ARTICLE *g_recent_artp; /* article_ptr equivalents */
-extern ARTICLE *g_curr_artp;
-extern ARTICLE *g_artp;        /* the article ptr we use when g_art is 0 */
+extern Article *g_recent_artp; /* article_ptr equivalents */
+extern Article *g_curr_artp;
+extern Article *g_artp;        /* the article ptr we use when g_art is 0 */
 extern int      g_checkcount;  /* how many articles have we read in the current newsgroup since the last checkpoint? */
 extern int      g_docheckwhen; /* how often to do checkpoint */
 extern char    *g_subjline;    /* what format to use for '=' */

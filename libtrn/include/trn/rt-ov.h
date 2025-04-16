@@ -6,7 +6,7 @@
 
 #include <config/typedef.h>
 
-struct ARTICLE;
+struct Article;
 
 /* The usual order for the overview data fields. */
 enum ov_field_num
@@ -27,6 +27,6 @@ bool ov_init();
 bool ov_data(ART_NUM first, ART_NUM last, bool cheating);
 void ov_close();
 const char *ov_fieldname(int num);
-const char *ov_field(ARTICLE *ap, int num);
+const char *ov_field(Article *ap, int num);
 
 #endif

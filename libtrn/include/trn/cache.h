@@ -14,7 +14,7 @@
 #include <cstdint>
 #include <ctime>
 
-struct ARTICLE;
+struct Article;
 struct LIST;
 
 enum SubjectFlags : std::uint16_t
@@ -37,8 +37,8 @@ struct Subject
 {
     Subject      *next;
     Subject      *prev;
-    ARTICLE      *articles;
-    ARTICLE      *thread;
+    Article      *articles;
+    Article      *thread;
     Subject      *thread_link;
     char         *str;
     std::time_t   date;
@@ -87,7 +87,7 @@ enum ScoreFlags
 DECLARE_FLAGS_ENUM(ScoreFlags, std::uint16_t)
 
 /* This is our article-caching structure */
-struct ARTICLE
+struct Article
 {
     ART_NUM        num;
     std::time_t         date;
@@ -95,10 +95,10 @@ struct ARTICLE
     char          *from;
     char          *msgid;
     char          *xrefs;
-    ARTICLE       *parent;    /* parent article */
-    ARTICLE       *child1;    /* first child of a chain */
-    ARTICLE       *sibling;   /* our next sibling */
-    ARTICLE       *subj_next; /* next article in subject order */
+    Article       *parent;    /* parent article */
+    Article       *child1;    /* first child of a chain */
+    Article       *sibling;   /* our next sibling */
+    Article       *subj_next; /* next article in subject order */
     long           bytes;
     long           lines;
     int            score;
@@ -116,14 +116,14 @@ enum : bool
 };
 
 extern LIST     *g_article_list; /* a list of ARTICLEs */
-extern ARTICLE **g_artptr_list;  /* the article-selector creates this */
-extern ARTICLE **g_artptr;       /* ditto -- used for article order */
+extern Article **g_artptr_list;  /* the article-selector creates this */
+extern Article **g_artptr;       /* ditto -- used for article order */
 extern ART_NUM   g_artptr_list_size;
 extern ART_NUM   g_srchahead; /* are we in subject scan mode? (if so, contains art # found or -1) */
 extern ART_NUM   g_first_cached;
 extern ART_NUM   g_last_cached;
 extern bool      g_cached_all_in_range;
-extern ARTICLE  *g_sentinel_artp;
+extern Article  *g_sentinel_artp;
 extern Subject  *g_first_subject;
 extern Subject  *g_last_subject;
 extern bool      g_untrim_cache;
@@ -134,17 +134,17 @@ extern char      g_auto_select_postings; /* -p */
 void cache_init();
 void build_cache();
 void close_cache();
-void cache_article(ARTICLE *ap);
-void check_for_near_subj(ARTICLE *ap);
+void cache_article(Article *ap);
+void check_for_near_subj(Article *ap);
 void change_join_subject_len(int len);
-void check_poster(ARTICLE *ap);
-void uncache_article(ARTICLE *ap, bool remove_empties);
+void check_poster(Article *ap);
+void uncache_article(Article *ap, bool remove_empties);
 char *fetchcache(ART_NUM artnum, header_line_type which_line, bool fill_cache);
-char *get_cached_line(ARTICLE *ap, header_line_type which_line, bool no_truncs);
-void set_subj_line(ARTICLE *ap, char *subj, int size);
+char *get_cached_line(Article *ap, header_line_type which_line, bool no_truncs);
+void set_subj_line(Article *ap, char *subj, int size);
 int decode_header(char *to, char *from, int size);
 void dectrl(char *str);
-void set_cached_line(ARTICLE *ap, int which_line, char *s);
+void set_cached_line(Article *ap, int which_line, char *s);
 int subject_cmp(const char *key, int keylen, HASHDATUM data);
 #ifdef PENDING
 void look_ahead();
@@ -158,13 +158,13 @@ bool cache_all_arts();
 bool cache_unread_arts();
 bool art_data(ART_NUM first, ART_NUM last, bool cheating, bool all_articles);
 bool cache_range(ART_NUM first, ART_NUM last);
-void clear_article(ARTICLE *ap);
+void clear_article(Article *ap);
 
-inline ARTICLE *article_ptr(ART_NUM an)
+inline Article *article_ptr(ART_NUM an)
 {
-    return (ARTICLE *) listnum2listitem(g_article_list, an);
+    return (Article *) listnum2listitem(g_article_list, an);
 }
-inline ART_NUM article_num(const ARTICLE *ap)
+inline ART_NUM article_num(const Article *ap)
 {
     return ap->num;
 }
@@ -172,7 +172,7 @@ inline bool article_hasdata(ART_NUM an)
 {
     return existing_listnum(g_article_list, an, 0) != 0;
 }
-inline ARTICLE *article_find(ART_NUM an)
+inline Article *article_find(ART_NUM an)
 {
     return an <= g_lastart && article_hasdata(an) ? article_ptr(an) : nullptr;
 }
@@ -196,9 +196,9 @@ inline ART_NUM article_prev(ART_NUM an)
 {
     return existing_listnum(g_article_list, an - 1, -1);
 }
-inline ARTICLE *article_nextp(ARTICLE *ap)
+inline Article *article_nextp(Article *ap)
 {
-    return (ARTICLE *) next_listitem(g_article_list, (char *) ap);
+    return (Article *) next_listitem(g_article_list, (char *) ap);
 }
 inline bool article_exists(ART_NUM an)
 {

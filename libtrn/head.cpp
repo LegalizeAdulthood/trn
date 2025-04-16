@@ -90,7 +90,7 @@ ART_NUM          g_parsed_art{}; /* the article number we've parsed */
 header_line_type g_in_header{};  /* are we decoding the header? */
 char            *g_headbuf;
 
-static ARTICLE         *s_parsed_artp{}; /* the article ptr we've parsed */
+static Article         *s_parsed_artp{}; /* the article ptr we've parsed */
 static long             s_headbuf_size;
 static bool             s_first_one; /* is this the 1st occurrence of this header line? */
 static bool             s_reading_nntp_header;
@@ -341,7 +341,7 @@ bool parseline(char *art_buf, int newhide, int oldhide)
 
 void end_header()
 {
-    ARTICLE* ap = s_parsed_artp;
+    Article* ap = s_parsed_artp;
 
     end_header_line();
     g_in_header = PAST_HEADER;  /* just to be sure */
@@ -369,7 +369,7 @@ void end_header()
     {
         if (valid_article(ap))
         {
-            ARTICLE* artp_hold = g_artp;
+            Article* artp_hold = g_artp;
             char* references = fetchlines(g_parsed_art, REFS_LINE);
             char* inreply = fetchlines(g_parsed_art, INREPLY_LINE);
             int reflen = std::strlen(references) + 1;
@@ -603,7 +603,7 @@ char *prefetchlines(ART_NUM artnum, header_line_type which_line, bool copy)
 
     if ((g_datasrc->flags & DF_REMOTE) && g_parsed_art != artnum)
     {
-        ARTICLE*ap;
+        Article*ap;
         int     size;
         ART_NUM num;
         ART_NUM lastnum;

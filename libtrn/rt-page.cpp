@@ -37,9 +37,9 @@ int       g_sel_total_obj_cnt{};
 int       g_sel_prior_obj_cnt{};
 int       g_sel_page_obj_cnt{};
 int       g_sel_page_item_cnt{};
-ARTICLE **g_sel_page_app{};
-ARTICLE **g_sel_next_app{};
-ARTICLE  *g_sel_last_ap{};
+Article **g_sel_page_app{};
+Article **g_sel_next_app{};
+Article  *g_sel_last_ap{};
 Subject  *g_sel_page_sp{};
 Subject  *g_sel_next_sp{};
 Subject  *g_sel_last_sp{};
@@ -56,7 +56,7 @@ static int           s_sel_next_op{};
 static void sel_page_init();
 static int count_subject_lines(const Subject *subj, int *selptr);
 static int count_thread_lines(const Subject *subj, int *selptr);
-static void display_article(const ARTICLE *ap, int ix, int sel);
+static void display_article(const Article *ap, int ix, int sel);
 static void display_subject(const Subject *subj, int ix, int sel);
 static void display_univ(const UNIV_ITEM *ui);
 static void display_group(DATASRC *dp, char *group, int len, int max_len);
@@ -735,9 +735,9 @@ try_again:
 
     case SM_ARTICLE:
     {
-        ARTICLE* ap;
-        ARTICLE** app;
-        ARTICLE** limit;
+        Article* ap;
+        Article** app;
+        Article** limit;
 
         if (g_sel_page_app)
         {
@@ -1008,8 +1008,8 @@ bool first_page()
 
     case SM_ARTICLE:
     {
-        ARTICLE **limit = g_artptr_list + g_artptr_list_size;
-        for (ARTICLE **app = g_artptr_list; app < limit; app++)
+        Article **limit = g_artptr_list + g_artptr_list_size;
+        for (Article **app = g_artptr_list; app < limit; app++)
         {
             if ((*app)->flags & AF_INCLUDED)
             {
@@ -1127,7 +1127,7 @@ bool last_page()
 
     case SM_ARTICLE:
     {
-        ARTICLE** app = g_sel_page_app;
+        Article** app = g_sel_page_app;
         g_sel_page_app = g_artptr_list + g_artptr_list_size;
         if (!prev_page())
         {
@@ -1412,9 +1412,9 @@ bool prev_page()
 
     case SM_ARTICLE:
     {
-        ARTICLE** page_app = g_sel_page_app;
+        Article** page_app = g_sel_page_app;
 
-        for (ARTICLE **app = g_sel_page_app; --app >= g_artptr_list;)
+        for (Article **app = g_sel_page_app; --app >= g_artptr_list;)
         {
             if ((*app)->flags & AF_INCLUDED)
             {
@@ -1600,8 +1600,8 @@ try_again:
 
     case SM_ARTICLE:
     {
-        ARTICLE** app = g_sel_page_app;
-        ARTICLE** limit = g_artptr_list + g_artptr_list_size;
+        Article** app = g_sel_page_app;
+        Article** limit = g_artptr_list + g_artptr_list_size;
         for (; app < limit && g_sel_page_item_cnt < s_sel_max_per_page; app++)
         {
             if (*app == u.ap)
@@ -2102,11 +2102,11 @@ try_again:
     }
     else if (g_sel_mode == SM_ARTICLE)
     {
-        ARTICLE **limit = g_artptr_list + g_artptr_list_size;
-        ARTICLE **app = g_sel_page_app;
+        Article **limit = g_artptr_list + g_artptr_list_size;
+        Article **app = g_sel_page_app;
         for (; app < limit && g_sel_page_item_cnt < s_sel_max_per_page; app++)
         {
-            ARTICLE *ap = *app;
+            Article *ap = *app;
             if (ap == g_sel_last_ap)
             {
                 g_sel_item_index = g_sel_page_item_cnt;
@@ -2361,7 +2361,7 @@ static int count_subject_lines(const Subject *subj, int *selptr)
     else if (subj->flags & g_sel_mask)
     {
         sel = 1;
-        for (ARTICLE *ap = subj->articles; ap; ap = ap->subj_next)
+        for (Article *ap = subj->articles; ap; ap = ap->subj_next)
         {
             if ((!!(ap->flags & AF_UNREAD) ^ g_sel_rereading) //
                 && !(ap->flags & g_sel_mask))
@@ -2396,7 +2396,7 @@ static int count_subject_lines(const Subject *subj, int *selptr)
 static int count_thread_lines(const Subject *subj, int *selptr)
 {
     int total = 0;
-    const ARTICLE *thread = subj->thread;
+    const Article *thread = subj->thread;
     int            sel = -1;
     int            subj_sel;
 
@@ -2424,7 +2424,7 @@ static int count_thread_lines(const Subject *subj, int *selptr)
 
 /* Display an article, perhaps with its author.
 */
-static void display_article(const ARTICLE *ap, int ix, int sel)
+static void display_article(const Article *ap, int ix, int sel)
 {
     int subj_width = g_tc_COLS - 5 - g_use_sel_num;
     int from_width = g_tc_COLS / 5;
@@ -2457,7 +2457,7 @@ static void display_article(const ARTICLE *ap, int ix, int sel)
 */
 static void display_subject(const Subject *subj, int ix, int sel)
 {
-    ARTICLE*ap;
+    Article*ap;
     int     subj_width = g_tc_COLS - 8 - g_use_sel_num;
     int     from_width = g_tc_COLS / 5;
     int     date_width = g_tc_COLS / 5;
@@ -2478,7 +2478,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
     }
     else
     {
-        ARTICLE* first_ap;
+        Article* first_ap;
         /* Find the first unread article so we get the author right */
         if ((first_ap = subj->thread) != nullptr                    //
             && (first_ap->subj != subj || first_ap->from == nullptr //

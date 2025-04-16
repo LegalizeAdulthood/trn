@@ -51,7 +51,7 @@ static char s_tree_indent[] = {
     ' ', ' ', ' ', ' ', 0,   ' ', ' ', ' ', ' ', 0
 };
 // clang-format on
-static ARTICLE *s_tree_article{};
+static Article *s_tree_article{};
 static int      s_max_depth{};
 static int      s_max_line{-1};
 static int      s_first_depth{};
@@ -66,16 +66,16 @@ static char    *s_tree_lines[11]{};
 static char     s_tree_buff[128]{};
 static char    *s_str{};
 
-static void find_depth(ARTICLE *article, int depth);
-static void cache_tree(ARTICLE *ap, int depth, char *cp);
-static ARTICLE *find_artp(ARTICLE *article, int x);
-static void display_tree(ARTICLE *article, char *cp);
+static void find_depth(Article *article, int depth);
+static void cache_tree(Article *ap, int depth, char *cp);
+static Article *find_artp(Article *article, int x);
+static void display_tree(Article *article, char *cp);
 
 /* Prepare tree display for inclusion in the article header.
 */
 void init_tree()
 {
-    ARTICLE*thread;
+    Article*thread;
 
     while (s_max_line >= 0)             /* free any previous tree data */
     {
@@ -159,7 +159,7 @@ void init_tree()
 
 /* A recursive routine to find the maximum tree extents and where we are.
 */
-static void find_depth(ARTICLE *article, int depth)
+static void find_depth(Article *article, int depth)
 {
     s_max_depth = std::max(depth, s_max_depth);
     while (true)
@@ -186,7 +186,7 @@ static void find_depth(ARTICLE *article, int depth)
 
 /* Place the tree display in a maximum of 11 lines x 6 nodes.
 */
-static void cache_tree(ARTICLE *ap, int depth, char *cp)
+static void cache_tree(Article *ap, int depth, char *cp)
 {
     int depth_mode;
 
@@ -311,13 +311,13 @@ static void cache_tree(ARTICLE *ap, int depth, char *cp)
 
 static int s_find_artp_y{};
 
-ARTICLE *get_tree_artp(int x, int y)
+Article *get_tree_artp(int x, int y)
 {
     if (!s_tree_article || !s_tree_article->subj)
     {
         return nullptr;
     }
-    ARTICLE *ap = s_tree_article->subj->thread;
+    Article *ap = s_tree_article->subj->thread;
     x -= g_tc_COLS-1 - s_max_depth;
     if (x < 0 || y > s_max_line || !ap)
     {
@@ -331,7 +331,7 @@ ARTICLE *get_tree_artp(int x, int y)
 
 /* A recursive routine to find the maximum tree extents and where we are.
 */
-static ARTICLE *find_artp(ARTICLE *article, int x)
+static Article *find_artp(Article *article, int x)
 {
     while (true)
     {
@@ -341,7 +341,7 @@ static ARTICLE *find_artp(ARTICLE *article, int x)
         }
         if (article->child1)
         {
-            ARTICLE* ap = find_artp(article->child1, x-1);
+            Article* ap = find_artp(article->child1, x-1);
             if (ap)
             {
                 return ap;
@@ -629,7 +629,7 @@ int  finish_tree(ART_LINE last_line)
 
 /* Output the entire article tree for the user.
 */
-void entire_tree(ARTICLE* ap)
+void entire_tree(Article* ap)
 {
     if (!ap)
     {
@@ -669,7 +669,7 @@ void entire_tree(ARTICLE* ap)
         return;
     }
     newline();
-    ARTICLE *thread = ap->subj->thread;
+    Article *thread = ap->subj->thread;
     /* Enumerate our subjects for display */
     Subject *sp = thread->subj;
     int      num = 0;
@@ -706,7 +706,7 @@ void entire_tree(ARTICLE* ap)
 
 /* A recursive routine to output the entire article tree.
 */
-static void display_tree(ARTICLE *article, char *cp)
+static void display_tree(Article *article, char *cp)
 {
     if (cp - s_tree_indent > g_tc_COLS || g_page_line < 0)
     {
@@ -794,7 +794,7 @@ static void display_tree(ARTICLE *article, char *cp)
 ** are marked with a ' ', others get a letter in the sequence:
 **      ' ', '1'-'9', 'A'-'Z', 'a'-'z', '+'
 */
-char thread_letter(ARTICLE *ap)
+char thread_letter(Article *ap)
 {
     int subj = ap->subj->misc;
 

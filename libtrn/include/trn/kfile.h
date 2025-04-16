@@ -11,7 +11,7 @@
 #include <cstdint>
 #include <cstdio>
 
-struct ARTICLE;
+struct Article;
 
 enum : bool
 {
@@ -74,9 +74,9 @@ int do_kfile(std::FILE *kfp, int entering);
 void kill_unwanted(ART_NUM starting, const char *message, int entering);
 void rewrite_kfile(ART_NUM thru);
 void update_thread_kfile();
-void change_auto_flags(ARTICLE *ap, autokill_flags auto_flag);
-void clear_auto_flags(ARTICLE *ap);
-void perform_auto_flags(ARTICLE *ap, autokill_flags thread_autofl, autokill_flags subj_autofl, autokill_flags chain_autofl);
+void change_auto_flags(Article *ap, autokill_flags auto_flag);
+void clear_auto_flags(Article *ap);
+void perform_auto_flags(Article *ap, autokill_flags thread_autofl, autokill_flags subj_autofl, autokill_flags chain_autofl);
 void edit_kfile();
 void open_kfile(int local);
 void kf_append(const char *cmd, bool local);

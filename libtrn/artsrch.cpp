@@ -487,7 +487,7 @@ exit:
 
 static bool wanted(COMPEX *compex, ART_NUM artnum, ArtScope scope)
 {
-    ARTICLE* ap = article_find(artnum);
+    Article* ap = article_find(artnum);
 
     if (!ap || !(ap->flags & AF_EXISTS))
     {

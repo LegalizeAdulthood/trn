@@ -5,7 +5,7 @@
 
 #include "config/typedef.h"
 
-struct ARTICLE;
+struct Article;
 
 extern int g_dmcount;
 
@@ -14,14 +14,14 @@ void rc_to_bits();
 bool set_firstart(const char *s);
 void bits_to_rc();
 void find_existing_articles();
-void onemore(ARTICLE *ap);
-void oneless(ARTICLE *ap);
+void onemore(Article *ap);
+void oneless(Article *ap);
 void oneless_artnum(ART_NUM artnum);
-void onemissing(ARTICLE *ap);
-void unmark_as_read(ARTICLE *ap);
-void set_read(ARTICLE *ap);
-void delay_unmark(ARTICLE *ap);
-void mark_as_read(ARTICLE *ap);
+void onemissing(Article *ap);
+void unmark_as_read(Article *ap);
+void set_read(Article *ap);
+void delay_unmark(Article *ap);
+void mark_as_read(Article *ap);
 void mark_missing_articles();
 void check_first(ART_NUM min);
 void yankback();

@@ -11,7 +11,7 @@
 
 #include <cstdint>
 
-struct ARTICLE;
+struct Article;
 
 /* types of header lines
  * (These must stay in alphabetic order at least in the first letter.

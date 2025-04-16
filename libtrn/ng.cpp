@@ -54,9 +54,9 @@
 ART_NUM  g_art{};           /* current or prospective article # */
 ART_NUM  g_recent_art{};    /* previous article # for '-' command */
 ART_NUM  g_curr_art{};      /* current article # */
-ARTICLE *g_recent_artp{};   /* article_ptr equivilents */
-ARTICLE *g_curr_artp{};     //
-ARTICLE *g_artp{};          /* the article ptr we use when art is 0 */
+Article *g_recent_artp{};   /* article_ptr equivilents */
+Article *g_curr_artp{};     //
+Article *g_artp{};          /* the article ptr we use when art is 0 */
 int      g_checkcount{};    /* how many articles have we read in the current newsgroup since the last checkpoint? */
 int      g_docheckwhen{20}; /* how often to do checkpoint */
 char    *g_subjline{};      /* what format to use for '=' */
@@ -1113,7 +1113,7 @@ not_threaded:
             /* TODO: will this work with 4.0? */
             if (g_sa_in && g_threaded_group)
             {
-                ARTICLE* old_artp = g_artp;
+                Article* old_artp = g_artp;
                 inc_art(g_selected_only,false);
                 if (!g_artp || !old_artp)
                 {
@@ -2035,7 +2035,7 @@ reask_catchup:
 
 static bool count_unCACHED_article(char *ptr, int arg)
 {
-    ARTICLE* ap = (ARTICLE*)ptr;
+    Article* ap = (Article*)ptr;
     if ((ap->flags & (AF_UNREAD|AF_CACHED)) == AF_UNREAD)
     {
         g_obj_count++;
@@ -2045,7 +2045,7 @@ static bool count_unCACHED_article(char *ptr, int arg)
 
 static bool mark_all_READ(char *ptr, int leave_unread)
 {
-    ARTICLE* ap = (ARTICLE*)ptr;
+    Article* ap = (Article*)ptr;
     if (article_num(ap) > g_lastart - leave_unread)
     {
         return true;
@@ -2056,7 +2056,7 @@ static bool mark_all_READ(char *ptr, int leave_unread)
 
 static bool mark_all_unREAD(char *ptr, int arg)
 {
-    ARTICLE* ap = (ARTICLE*)ptr;
+    Article* ap = (Article*)ptr;
     if ((ap->flags & (AF_UNREAD | AF_EXISTS)) == AF_EXISTS)
     {
         ap->flags |= AF_UNREAD;         /* mark as unread */
@@ -2083,7 +2083,7 @@ bool output_subject(char *ptr, int flag)
         }
     }
 
-    ARTICLE *ap = (ARTICLE*)ptr;
+    Article *ap = (Article*)ptr;
     if (flag && !(ap->flags & flag))
     {
         return false;
@@ -2142,7 +2142,7 @@ char ask_memorize(char_int ch)
     const char* mode_phrase = (thread_cmd? "replies to this article" :
                                      "this subject and all replies");
     ART_NUM art_hold = g_art;
-    ARTICLE* artp_hold = g_artp;
+    Article* artp_hold = g_artp;
 
     if (!use_one_line)
     {

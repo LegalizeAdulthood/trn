@@ -314,7 +314,7 @@ int do_kfile(std::FILE *kfp, int entering)
             {
                 *cp++ = '\0';
             }
-            ARTICLE *ap = get_article(bp);
+            Article *ap = get_article(bp);
             if (ap != nullptr)
             {
                 if ((ap->flags & AF_FAKE) && !ap->child1)
@@ -404,7 +404,7 @@ int do_kfile(std::FILE *kfp, int entering)
 
 static bool kfile_junk(char *ptr, int killmask)
 {
-    ARTICLE* ap = (ARTICLE*)ptr;
+    Article* ap = (Article*)ptr;
     if ((ap->flags & killmask) == AF_UNREAD)
     {
         set_read(ap);
@@ -479,7 +479,7 @@ void kill_unwanted(ART_NUM starting, const char *message, int entering)
 
 static int write_local_thread_commands(int keylen, HASHDATUM *data, int extra)
 {
-    ARTICLE* ap = (ARTICLE*)data->dat_ptr;
+    Article* ap = (Article*)data->dat_ptr;
     int autofl = ap->autofl;
     char ch;
 
@@ -616,7 +616,7 @@ static int write_global_thread_commands(int keylen, HASHDATUM *data, int appendi
     }
     else
     {
-        ARTICLE* ap = (ARTICLE*)data->dat_ptr;
+        Article* ap = (Article*)data->dat_ptr;
         autofl = ap->autofl;
         if (!autofl || (appending && (autofl & AUTO_OLD)))
         {
@@ -657,7 +657,7 @@ static int age_thread_commands(int keylen, HASHDATUM *data, int elapsed_days)
     }
     else
     {
-        ARTICLE* ap = (ARTICLE*)data->dat_ptr;
+        Article* ap = (Article*)data->dat_ptr;
         if (ap->autofl & AUTO_OLD)
         {
             ap->autofl &= ~AUTO_OLD;
@@ -715,7 +715,7 @@ void update_thread_kfile()
     g_kf_state &= ~KFS_THREAD_CHANGES;
 }
 
-void change_auto_flags(ARTICLE *ap, autokill_flags auto_flag)
+void change_auto_flags(Article *ap, autokill_flags auto_flag)
 {
     if (auto_flag > (ap->autofl & (AUTO_KILL_MASK | AUTO_SEL_MASK)))
     {
@@ -728,7 +728,7 @@ void change_auto_flags(ARTICLE *ap, autokill_flags auto_flag)
     }
 }
 
-void clear_auto_flags(ARTICLE *ap)
+void clear_auto_flags(Article *ap)
 {
     if (ap->autofl)
     {
@@ -741,7 +741,7 @@ void clear_auto_flags(ARTICLE *ap)
     }
 }
 
-void perform_auto_flags(ARTICLE *ap, autokill_flags thread_autofl, autokill_flags subj_autofl, autokill_flags chain_autofl)
+void perform_auto_flags(Article *ap, autokill_flags thread_autofl, autokill_flags subj_autofl, autokill_flags chain_autofl)
 {
     if (thread_autofl & AUTO_SEL_THD)
     {
@@ -851,7 +851,7 @@ void edit_kfile()
                     {
                         *cp++ = '\0';
                     }
-                    ARTICLE *ap = get_article(bp);
+                    Article *ap = get_article(bp);
                     if (ap != nullptr)
                     {
                         if (*cp == 'T')

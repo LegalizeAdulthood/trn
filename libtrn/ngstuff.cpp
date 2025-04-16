@@ -319,7 +319,7 @@ numnum_result numnum()
 int thread_perform()
 {
     Subject*sp;
-    ARTICLE*ap;
+    Article*ap;
     int     bits;
     bool    output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
     bool    one_thread = false;
@@ -424,9 +424,9 @@ int thread_perform()
         /* Use the explicit article-order if it exists */
         if (g_artptr_list)
         {
-            ARTICLE** limit = g_artptr_list + g_artptr_list_size;
+            Article** limit = g_artptr_list + g_artptr_list_size;
             sp = (g_sel_mode==SM_THREAD? g_artp->subj->thread->subj : g_artp->subj);
-            for (ARTICLE **app = g_artptr_list; app < limit; app++)
+            for (Article **app = g_artptr_list; app < limit; app++)
             {
                 ap = *app;
                 if (one_thread && ap->subj->thread != sp->thread)

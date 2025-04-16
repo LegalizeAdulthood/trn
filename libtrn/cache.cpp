@@ -39,14 +39,14 @@
 #include <ctime>
 
 LIST     *g_article_list{};         /* a list of ARTICLEs */
-ARTICLE **g_artptr_list{};          /* the article-selector creates this */
-ARTICLE **g_artptr{};               /* ditto -- used for article order */
+Article **g_artptr_list{};          /* the article-selector creates this */
+Article **g_artptr{};               /* ditto -- used for article order */
 ART_NUM   g_artptr_list_size{};     //
 ART_NUM   g_srchahead{};            /* are we in subject scan mode? (if so, contains art # found or -1) */
 ART_NUM   g_first_cached{};         //
 ART_NUM   g_last_cached{};          //
 bool      g_cached_all_in_range{};  //
-ARTICLE  *g_sentinel_artp{};        //
+Article  *g_sentinel_artp{};        //
 Subject  *g_first_subject{};        //
 Subject  *g_last_subject{};         //
 bool      g_untrim_cache{};         //
@@ -102,7 +102,7 @@ void build_cache()
 
     s_cached_ng = g_ngptr;
     s_cached_time = std::time(nullptr);
-    g_article_list = new_list(g_absfirst, g_lastart, sizeof (ARTICLE), 371,
+    g_article_list = new_list(g_absfirst, g_lastart, sizeof (Article), 371,
                               LF_SPARSE, init_artnode);
     s_subj_hash = hashcreate(991, subject_cmp); /*TODO: pick a better size */
 
@@ -169,7 +169,7 @@ void close_cache()
 static void init_artnode(LIST *list, LISTNODE *node)
 {
     std::memset(node->data, 0, list->items_per_node * list->item_size);
-    ARTICLE *ap = (ARTICLE *) node->data;
+    Article *ap = (Article *) node->data;
     for (ART_NUM i = node->low; i <= node->high; i++, ap++)
     {
         ap->num = i;
@@ -178,17 +178,17 @@ static void init_artnode(LIST *list, LISTNODE *node)
 
 static bool clear_artitem(char *cp, int arg)
 {
-    clear_article((ARTICLE*)cp);
+    clear_article((Article*)cp);
     return false;
 }
 
 /* The article has all it's data in place, so add it to the list of articles
 ** with the same subject.
 */
-void cache_article(ARTICLE *ap)
+void cache_article(Article *ap)
 {
-    ARTICLE* next;
-    ARTICLE* ap2;
+    Article* next;
+    Article* ap2;
 
     if (!(next = ap->subj->articles) || ap->date < next->date)
     {
@@ -235,7 +235,7 @@ void cache_article(ARTICLE *ap)
     }
 }
 
-void check_for_near_subj(ARTICLE *ap)
+void check_for_near_subj(Article *ap)
 {
     Subject* sp;
     if (!s_shortsubj_hash)
@@ -288,7 +288,7 @@ void change_join_subject_len(int len)
     }
 }
 
-void check_poster(ARTICLE *ap)
+void check_poster(Article *ap)
 {
     if (g_auto_select_postings && (ap->flags & AF_EXISTS) && ap->from)
     {
@@ -373,13 +373,13 @@ void check_poster(ARTICLE *ap)
 ** list and possibly destroy the subject (should only happen if the data
 ** was corrupt and the duplicate id got a different subject).
 */
-void uncache_article(ARTICLE *ap, bool remove_empties)
+void uncache_article(Article *ap, bool remove_empties)
 {
     if (ap->subj)
     {
         if (all_bits(ap->flags, AF_CACHED | AF_EXISTS))
         {
-            ARTICLE *next = ap->subj->articles;
+            Article *next = ap->subj->articles;
             if (next == ap)
             {
                 ap->subj->articles = ap->subj_next;
@@ -388,7 +388,7 @@ void uncache_article(ARTICLE *ap, bool remove_empties)
             {
                 while (next)
                 {
-                    ARTICLE *ap2 = next->subj_next;
+                    Article *ap2 = next->subj_next;
                     if (ap2 == ap)
                     {
                         next->subj_next = ap->subj_next;
@@ -432,7 +432,7 @@ void uncache_article(ARTICLE *ap, bool remove_empties)
 char *fetchcache(ART_NUM artnum, header_line_type which_line, bool fill_cache)
 {
     char* s;
-    ARTICLE* ap;
+    Article* ap;
     bool cached = (g_htype[which_line].flags & HT_CACHED);
 
     /* article_find() returns a nullptr if the artnum value is invalid */
@@ -462,7 +462,7 @@ char *fetchcache(ART_NUM artnum, header_line_type which_line, bool fill_cache)
 /* Return a pointer to a cached header line for the indicated article.
 ** Truncated headers (e.g. from a .thread file) are optionally ignored.
 */
-char *get_cached_line(ARTICLE *ap, header_line_type which_line, bool no_truncs)
+char *get_cached_line(Article *ap, header_line_type which_line, bool no_truncs)
 {
     char* s;
 
@@ -515,7 +515,7 @@ char *get_cached_line(ARTICLE *ap, header_line_type which_line, bool no_truncs)
 }
 
 /* subj not yet allocated, so we can tweak it first */
-void set_subj_line(ARTICLE *ap, char *subj, int size)
+void set_subj_line(Article *ap, char *subj, int size)
 {
     HASHDATUM data;
     Subject* sp;
@@ -721,7 +721,7 @@ void dectrl(char *str)
 }
 
 /* s already allocated, ready to save */
-void set_cached_line(ARTICLE *ap, int which_line, char *s)
+void set_cached_line(Article *ap, int which_line, char *s)
 {
     char* cp;
     /* SUBJ_LINE is handled specially above */
@@ -1213,7 +1213,7 @@ bool cache_range(ART_NUM first, ART_NUM last)
     return success;
 }
 
-void clear_article(ARTICLE *ap)
+void clear_article(Article *ap)
 {
     if (ap->from)
     {

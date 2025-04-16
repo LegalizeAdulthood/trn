@@ -54,7 +54,7 @@ void artio_final()
 
 std::FILE *artopen(ART_NUM artnum, ART_NUM pos)
 {
-    ARTICLE* ap = article_find(artnum);
+    Article* ap = article_find(artnum);
 
     if (!ap || !artnum || (ap->flags & (AF_EXISTS | AF_FAKE)) != AF_EXISTS)
     {

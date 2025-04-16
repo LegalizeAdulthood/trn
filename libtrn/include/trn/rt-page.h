@@ -14,7 +14,7 @@ enum : bool
 };
 
 struct AddGroup;
-struct ARTICLE;
+struct Article;
 struct MULTIRC;
 struct NGDATA;
 struct Subject;
@@ -27,7 +27,7 @@ enum
 
 union SEL_UNION
 {
-    ARTICLE     *ap;
+    Article     *ap;
     Subject     *sp;
     AddGroup    *gp;
     MULTIRC     *mp;
@@ -48,9 +48,9 @@ extern int g_sel_total_obj_cnt;
 extern int g_sel_prior_obj_cnt;
 extern int g_sel_page_obj_cnt;
 extern int g_sel_page_item_cnt;
-extern ARTICLE **g_sel_page_app;
-extern ARTICLE **g_sel_next_app;
-extern ARTICLE *g_sel_last_ap;
+extern Article **g_sel_page_app;
+extern Article **g_sel_next_app;
+extern Article *g_sel_last_ap;
 extern Subject *g_sel_page_sp;
 extern Subject *g_sel_next_sp;
 extern Subject *g_sel_last_sp;

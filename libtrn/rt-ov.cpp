@@ -363,7 +363,7 @@ beginning:
     if (remote)
     {
         int cachemask = (g_threaded_group? AF_THREADED : AF_CACHED);
-        for (ARTICLE *ap = article_ptr(article_first(real_first));
+        for (Article *ap = article_ptr(article_first(real_first));
              ap && article_num(ap) <= artnum;
              ap = article_nextp(ap))
         {
@@ -438,7 +438,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
     char         *fields[OV_MAX_FIELDS];
     char         *tab;
 
-    ARTICLE *article = article_ptr(artnum);
+    Article *article = article_ptr(artnum);
     if (article->flags & AF_THREADED)
     {
         g_spin_todo--;
@@ -554,7 +554,7 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
         {
             for (ART_NUM an = article_first(g_absfirst); an < artnum; an = article_next(an))
             {
-                ARTICLE *ap = article_ptr(an);
+                Article *ap = article_ptr(an);
                 if (!ap->xrefs)
                 {
                     ap->xrefs = "";
@@ -624,7 +624,7 @@ const char *ov_fieldname(int num)
     return g_htype[s_hdrnum[num]].name;
 }
 
-const char *ov_field(ARTICLE *ap, int num)
+const char *ov_field(Article *ap, int num)
 {
     ov_field_num fn = g_datasrc->fieldnum[num];
     if (!(g_datasrc->fieldflags[fn] & (FF_HAS_FIELD | FF_CHECK4FIELD)))

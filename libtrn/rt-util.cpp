@@ -616,7 +616,7 @@ char *compress_from(const char *from, int size)
 }
 
 /* Fit the date in <max> chars. */
-char *compress_date(const ARTICLE *ap, int size)
+char *compress_date(const Article *ap, int size)
 {
     char* t;
 
@@ -691,7 +691,7 @@ bool subject_has_Re(char *str, char **strp)
 /* Output a subject in <max> chars.  Does intelligent trimming that tries to
 ** save the last two words on the line, excluding "(was: blah)" if needed.
 */
-const char *compress_subj(const ARTICLE *ap, int max)
+const char *compress_subj(const Article *ap, int max)
 {
     if (!ap)
     {
@@ -700,7 +700,7 @@ const char *compress_subj(const ARTICLE *ap, int max)
 
     /* Put a preceeding '>' on subjects that are replies to other articles */
     char *   cp = g_buf;
-    ARTICLE *first = (g_threaded_group ? ap->subj->thread : ap->subj->articles);
+    Article *first = (g_threaded_group ? ap->subj->thread : ap->subj->articles);
     if (ap != first || (ap->flags & AF_HAS_RE)
      || (!(ap->flags&AF_UNREAD) ^ g_sel_rereading))
     {

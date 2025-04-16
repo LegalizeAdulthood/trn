@@ -1360,7 +1360,7 @@ reinp_selector:
         }
         else
         {
-            ARTICLE *ap = g_sel_items[g_sel_item_index].u.ap;
+            Article *ap = g_sel_items[g_sel_item_index].u.ap;
             if (g_sel_items[g_sel_item_index].sel)
             {
                 deselect_subject(ap->subj);
@@ -1716,7 +1716,7 @@ static bool delay_return_item(SEL_UNION u)
 
     default:
     {
-        ARTICLE* ap;
+        Article* ap;
         if (g_sel_mode == SM_THREAD)
         {
             for (ap = first_art(u.sp); ap; ap = next_art(ap))
@@ -1998,7 +1998,7 @@ static void sel_cleanup()
 
 static bool mark_DEL_as_READ(char *ptr, int arg)
 {
-    ARTICLE* ap = (ARTICLE*)ptr;
+    Article* ap = (Article*)ptr;
     if (ap->flags & AF_DEL)
     {
         ap->flags &= ~AF_DEL;
@@ -2541,8 +2541,8 @@ static display_state article_commands(char_int ch)
         {
             if (g_sel_mode == SM_ARTICLE)
             {
-                ARTICLE** app;
-                ARTICLE **limit = g_artptr_list + g_artptr_list_size;
+                Article** app;
+                Article **limit = g_artptr_list + g_artptr_list_size;
                 if (ch == 'D')
                 {
                     app = g_sel_page_app;
@@ -2553,7 +2553,7 @@ static display_state article_commands(char_int ch)
                 }
                 while (app < limit)
                 {
-                    ARTICLE *ap = *app;
+                    Article *ap = *app;
                     if ((!(ap->flags & AF_SEL) ^ (ch == 'J')) || (ap->flags & AF_DEL))
                     {
                         if (ch == 'J' || !g_sel_exclusive || (ap->flags & AF_INCLUDED))

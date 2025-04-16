@@ -204,7 +204,7 @@ void grow_ng(ART_NUM newlast)
         if (g_kf_state & KFS_NORMAL_LINES)
         {
             bool forcelast_save = g_forcelast;
-            ARTICLE* artp_save = g_artp;
+            Article* artp_save = g_artp;
             kill_unwanted(tmpfirst,g_buf,true);
             g_artp = artp_save;
             g_forcelast = forcelast_save;

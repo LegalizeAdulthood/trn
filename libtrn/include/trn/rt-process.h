@@ -8,16 +8,16 @@
 
 #include "trn/hash.h"
 
-struct ARTICLE;
+struct Article;
 struct Subject;
 
-ARTICLE *allocate_article(ART_NUM artnum);
+Article *allocate_article(ART_NUM artnum);
 int msgid_cmp(const char *key, int keylen, HASHDATUM data);
-bool valid_article(ARTICLE *article);
-ARTICLE *get_article(char *msgid);
-void thread_article(ARTICLE *article, char *references);
-void rover_thread(ARTICLE *article, char *s);
-void link_child(ARTICLE *child);
+bool valid_article(Article *article);
+Article *get_article(char *msgid);
+void thread_article(Article *article, char *references);
+void rover_thread(Article *article, char *s);
+void link_child(Article *child);
 void merge_threads(Subject *s1, Subject *s2);
 
 #endif

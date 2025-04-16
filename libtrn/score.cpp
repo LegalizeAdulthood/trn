@@ -230,7 +230,7 @@ void sc_set_score(ART_NUM a, int score)
         oneless_artnum(a);
     }
 
-    ARTICLE *ap = article_ptr(a);
+    Article *ap = article_ptr(a);
     ap->score = score;  /* update the score */
     ap->scoreflags |= SFLAG_SCORED;
     g_s_order_changed = true;   /* resort */

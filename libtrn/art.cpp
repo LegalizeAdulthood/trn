@@ -1447,7 +1447,7 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         return;
     }
 
-    ARTICLE *ap = get_tree_artp(x_clk, y_clk + g_topline + 1 + g_term_scrolled);
+    Article *ap = get_tree_artp(x_clk, y_clk + g_topline + 1 + g_term_scrolled);
     if (ap && ap != get_tree_artp(x,y+g_topline+1+g_term_scrolled))
     {
         return;

@@ -4,7 +4,7 @@
 #ifndef TRN_RT_UTIL_H
 #define TRN_RT_UTIL_H
 
-struct ARTICLE;
+struct Article;
 
 extern char g_spin_char;              /* char to put back when we're done spinning */
 extern long g_spin_estimate;          /* best guess of how much work there is */
@@ -27,10 +27,10 @@ char *extract_name(char *name);
 char *compress_name(char *name, int max);
 char *compress_address(char *name, int max);
 char *compress_from(const char *from, int size);
-char *compress_date(const ARTICLE *ap, int size);
+char *compress_date(const Article *ap, int size);
 bool strip_one_Re(char *str, char **strp);
 bool subject_has_Re(char *str, char **strp);
-const char *compress_subj(const ARTICLE *ap, int max);
+const char *compress_subj(const Article *ap, int max);
 void setspin(spin_mode mode);
 void spin(int count);
 bool inbackground();

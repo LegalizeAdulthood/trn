@@ -54,7 +54,7 @@ void rc_to_bits()
     char*   c;
     char*   h;
     ART_NUM unread;
-    ARTICLE*ap;
+    Article*ap;
 
     /* modify the article flags to reflect what has already been read */
 
@@ -322,7 +322,7 @@ void bits_to_rc()
 void find_existing_articles()
 {
     ART_NUM an;
-    ARTICLE* ap;
+    Article* ap;
 
     if (g_datasrc->flags & DF_REMOTE)
     {
@@ -480,7 +480,7 @@ void find_existing_articles()
 
 /* mark an article unread, keeping track of toread[] */
 
-void onemore(ARTICLE *ap)
+void onemore(Article *ap)
 {
     if (!(ap->flags & AF_UNREAD))
     {
@@ -509,7 +509,7 @@ void onemore(ARTICLE *ap)
 
 /* mark an article read, keeping track of toread[] */
 
-void oneless(ARTICLE *ap)
+void oneless(Article *ap)
 {
     if (ap->flags & AF_UNREAD)
     {
@@ -529,14 +529,14 @@ void oneless(ARTICLE *ap)
 
 void oneless_artnum(ART_NUM artnum)
 {
-    ARTICLE* ap = article_find(artnum);
+    Article* ap = article_find(artnum);
     if (ap)
     {
         oneless(ap);
     }
 }
 
-void onemissing(ARTICLE *ap)
+void onemissing(Article *ap)
 {
     g_missing_count += (ap->flags & AF_UNREAD) != 0;
     oneless(ap);
@@ -546,7 +546,7 @@ void onemissing(ARTICLE *ap)
 
 /* mark an article as unread, with possible xref chasing */
 
-void unmark_as_read(ARTICLE *ap)
+void unmark_as_read(Article *ap)
 {
     onemore(ap);
 #ifdef MCHASE
@@ -561,7 +561,7 @@ void unmark_as_read(ARTICLE *ap)
 /* Mark an article as read in this newsgroup and possibly chase xrefs.
 ** Don't call this on missing articles.
 */
-void set_read(ARTICLE *ap)
+void set_read(Article *ap)
 {
     oneless(ap);
     if (!g_olden_days && !empty(ap->xrefs) && !(ap->flags & AF_KCHASE))
@@ -574,7 +574,7 @@ void set_read(ARTICLE *ap)
 /* temporarily mark article as read.  When newsgroup is exited, articles */
 /* will be marked as unread.  Called via M command */
 
-void delay_unmark(ARTICLE *ap)
+void delay_unmark(Article *ap)
 {
     if (!(ap->flags & AF_YANKBACK))
     {
@@ -586,7 +586,7 @@ void delay_unmark(ARTICLE *ap)
 /* mark article as read.  If article is cross referenced to other */
 /* newsgroups, mark them read there also. */
 
-void mark_as_read(ARTICLE *ap)
+void mark_as_read(Article *ap)
 {
     oneless(ap);
     if (!empty(ap->xrefs) && !(ap->flags & AF_KCHASE))
@@ -599,7 +599,7 @@ void mark_as_read(ARTICLE *ap)
 
 void mark_missing_articles()
 {
-    for (ARTICLE *ap = article_ptr(article_first(g_absfirst));
+    for (Article *ap = article_ptr(article_first(g_absfirst));
          ap && article_num(ap) <= g_lastart;
          ap = article_nextp(ap))
     {
@@ -643,7 +643,7 @@ void yankback()
 
 static bool yank_article(char *ptr, int arg)
 {
-    ARTICLE* ap = (ARTICLE*)ptr;
+    Article* ap = (Article*)ptr;
     if (ap->flags & AF_YANKBACK)
     {
         unmark_as_read(ap);
@@ -674,7 +674,7 @@ bool chase_xrefs(bool until_key)
 
 static bool check_chase(char *ptr, int until_key)
 {
-    ARTICLE* ap = (ARTICLE*)ptr;
+    Article* ap = (Article*)ptr;
 
     if (ap->flags & AF_KCHASE)
     {

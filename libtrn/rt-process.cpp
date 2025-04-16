@@ -24,13 +24,13 @@
 
 static void fix_msgid(char *msgid);
 static char *valid_message_id(char *start, char *end);
-static void unlink_child(ARTICLE *child);
+static void unlink_child(Article *child);
 
 /* This depends on art being set to the current article number.
 */
-ARTICLE *allocate_article(ART_NUM artnum)
+Article *allocate_article(ART_NUM artnum)
 {
-    ARTICLE* article;
+    Article* article;
 
     /* create an new article */
     if (artnum >= g_absfirst)
@@ -39,8 +39,8 @@ ARTICLE *allocate_article(ART_NUM artnum)
     }
     else
     {
-        article = (ARTICLE*)safemalloc(sizeof (ARTICLE));
-        std::memset((char*)article,0,sizeof (ARTICLE));
+        article = (Article*)safemalloc(sizeof (Article));
+        std::memset((char*)article,0,sizeof (Article));
         article->flags |= AF_FAKE|AF_TMPMEM;
     }
     return article;
@@ -68,12 +68,12 @@ int msgid_cmp(const char *key, int keylen, HASHDATUM data)
     {
         return std::memcmp(key, data.dat_ptr, keylen);
     }
-    return std::memcmp(key, ((ARTICLE*)data.dat_ptr)->msgid, keylen);
+    return std::memcmp(key, ((Article*)data.dat_ptr)->msgid, keylen);
 }
 
 static Subject *s_fake_had_subj; /* the fake-turned-real article had this subject */
 
-bool valid_article(ARTICLE *article)
+bool valid_article(Article *article)
 {
     char* msgid = article->msgid;
 
@@ -95,7 +95,7 @@ bool valid_article(ARTICLE *article)
             }
             data.dat_len = 0;
         }
-        ARTICLE *fake_ap = (ARTICLE*)data.dat_ptr;
+        Article *fake_ap = (Article*)data.dat_ptr;
         if (fake_ap == nullptr)
         {
             data.dat_ptr = (char*)article;
@@ -132,7 +132,7 @@ bool valid_article(ARTICLE *article)
                 g_recent_artp = article;
                 g_recent_art = article_num(article);
             }
-            ARTICLE *ap = article->parent;
+            Article *ap = article->parent;
             if (ap != nullptr)
             {
                 if (ap->child1 == fake_ap)
@@ -201,9 +201,9 @@ bool valid_article(ARTICLE *article)
 /* Take a message-id and see if we already know about it.  If so, return
 ** the article, otherwise create a fake one.
 */
-ARTICLE *get_article(char *msgid)
+Article *get_article(char *msgid)
 {
-    ARTICLE* article;
+    Article* article;
 
     fix_msgid(msgid);
 
@@ -225,7 +225,7 @@ ARTICLE *get_article(char *msgid)
         data.dat_len = 0;
         hashstorelast(data);
     }
-    else if (!(article = (ARTICLE *) data.dat_ptr))
+    else if (!(article = (Article *) data.dat_ptr))
     {
         article = allocate_article(0);
         data.dat_ptr = (char*)article;
@@ -238,10 +238,10 @@ ARTICLE *get_article(char *msgid)
 /* Take all the data we've accumulated about the article and shove it into
 ** the article tree at the best place we can deduce.
 */
-void thread_article(ARTICLE *article, char *references)
+void thread_article(Article *article, char *references)
 {
-    ARTICLE* ap;
-    ARTICLE* prev;
+    Article* ap;
+    Article* prev;
     char* cp;
     char* end;
     autokill_flags chain_autofl =
@@ -268,7 +268,7 @@ void thread_article(ARTICLE *article, char *references)
             prev = ap;
             ap = ap->parent;
         }
-        ARTICLE *stopper = ap;
+        Article *stopper = ap;
         unlink_child(article);
         /* We'll assume that this article has as good or better references
         ** than the child that faked us initially.  Free the fake reference-
@@ -456,9 +456,9 @@ void thread_article(ARTICLE *article, char *references)
     perform_auto_flags(article, thread_autofl, subj_autofl, chain_autofl);
 }
 
-void rover_thread(ARTICLE *article, char *s)
+void rover_thread(Article *article, char *s)
 {
-    ARTICLE*prev = article;
+    Article*prev = article;
 
     while (true)
     {
@@ -528,9 +528,9 @@ static char *valid_message_id(char *start, char *end)
 
 /* Remove an article from its parent/siblings.  Leave parent pointer intact.
 */
-static void unlink_child(ARTICLE *child)
+static void unlink_child(Article *child)
 {
-    ARTICLE* last;
+    Article* last;
 
     if (!(last = child->parent))
     {
@@ -574,9 +574,9 @@ static void unlink_child(ARTICLE *child)
 /* Link an article to its parent article.  If its parent pointer is zero,
 ** link it to its thread.  Sorts siblings by date.
 */
-void link_child(ARTICLE *child)
+void link_child(Article *child)
 {
-    ARTICLE* ap;
+    Article* ap;
 
     if (!(ap = child->parent))
     {
@@ -621,8 +621,8 @@ void link_child(ARTICLE *child)
 */
 void merge_threads(Subject *s1, Subject *s2)
 {
-    ARTICLE *t1 = s1->thread;
-    ARTICLE *t2 = s2->thread;
+    Article *t1 = s1->thread;
+    Article *t2 = s2->thread;
     /* Change all of t2's thread pointers to a common lead article */
     Subject *sp = s2;
     do
