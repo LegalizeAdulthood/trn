@@ -439,7 +439,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
         first_line = nullptr;
     }
     g_mime_getc_line = first_line;
-    DECODE_FUNC decoder = decode_function(g_mime_section->encoding);
+    DecodeFunc decoder = decode_function(g_mime_section->encoding);
     if (!decoder)
     {
         std::strcpy(g_msg,"Unhandled encoding type -- aborting.");
@@ -517,7 +517,7 @@ bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line)
     return true;
 }
 
-DECODE_FUNC decode_function(MimeEncoding encoding)
+DecodeFunc decode_function(MimeEncoding encoding)
 {
     switch (encoding)
     {

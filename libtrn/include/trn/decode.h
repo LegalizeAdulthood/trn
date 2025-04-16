@@ -34,13 +34,13 @@ enum DecodeState
     DECODE_ERROR = 8
 };
 
-using DECODE_FUNC = DecodeState (*)(std::FILE *ifp, DecodeState state);
+using DecodeFunc = DecodeState (*)(std::FILE *ifp, DecodeState state);
 
 void decode_init();
 char *decode_fix_fname(const char *s);
 char *decode_subject(ART_NUM artnum, int *partp, int *totalp);
 bool decode_piece(MIMECAP_ENTRY *mcp, char *first_line);
-DECODE_FUNC decode_function(MimeEncoding encoding);
+DecodeFunc decode_function(MimeEncoding encoding);
 char *decode_mkdir(const char *filename);
 void decode_rmdir(char *dir);
 
