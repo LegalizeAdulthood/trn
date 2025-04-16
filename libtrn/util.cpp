@@ -576,15 +576,18 @@ std::time_t text2secs(const char *s, std::time_t defSecs)
         {
             switch (*s)
             {
-              case 'd': case 'D':
+            case 'd': case 'D':
                 item *= 24 * 60L;
                 break;
-              case 'h': case 'H':
+
+            case 'h': case 'H':
                 item *= 60L;
                 break;
-              case 'm': case 'M':
+
+            case 'm': case 'M':
                 break;
-              default:
+
+            default:
                 item = 0;
                 break;
             }
