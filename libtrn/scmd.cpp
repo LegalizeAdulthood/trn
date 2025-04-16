@@ -86,10 +86,11 @@ int s_cmdloop()
         {
             switch (g_s_cur_type)
             {
-              case S_ART:
+            case S_ART:
                 i = sa_docmd();
                 break;
-              default:
+
+            default:
                 i = 0;  /* just keep looping */
                 break;
             }
@@ -114,10 +115,11 @@ void s_lookahead()
 {
     switch (g_s_cur_type)
     {
-      case S_ART:
+    case S_ART:
         sa_lookahead();
         break;
-      default:
+
+    default:
         break;
     }
 }
@@ -138,14 +140,15 @@ int s_docmd()
     }
     switch (*g_buf)
     {
-      case 'j':         /* vi mode */
+    case 'j':         /* vi mode */
         if (!g_s_mode_vi)
         {
             return S_NOTFOUND;
         }
         /* FALL THROUGH */
-      case 'n':         /* next art */
-      case ']':
+
+    case 'n':         /* next art */
+    case ']':
         s_rub_ptr();
         if (g_s_ptr_page_line < g_s_bot_ent)    /* more on page... */
         {
@@ -162,14 +165,16 @@ int s_docmd()
             s_go_next_page();   /* will jump to top too... */
         }
         break;
-      case 'k': /* vi mode */
+
+    case 'k': /* vi mode */
         if (!g_s_mode_vi)
         {
             return S_NOTFOUND;
         }
         /* FALL THROUGH */
-      case 'p': /* previous art */
-      case '[':
+
+    case 'p': /* previous art */
+    case '[':
         s_rub_ptr();
         if (g_s_ptr_page_line > 0)      /* more on page... */
         {
@@ -189,15 +194,18 @@ int s_docmd()
             }
         }
         break;
-      case 't': /* top of page */
+
+    case 't': /* top of page */
         s_rub_ptr();
         s_go_top_page();
         break;
-      case 'b': /* bottom of page */
+
+    case 'b': /* bottom of page */
         s_rub_ptr();
         s_go_bot_page();
         break;
-      case '>': /* next page */
+
+    case '>': /* next page */
         s_rub_ptr();
         a = s_next_elig(g_page_ents[g_s_bot_ent].entnum);
         if (!a)                 /* at end of articles */
@@ -207,7 +215,8 @@ int s_docmd()
         }
         s_go_next_page();               /* will beep if no next page */
         break;
-      case '<': /* previous page */
+
+    case '<': /* previous page */
         s_rub_ptr();
         if (!s_prev_elig(g_page_ents[0].entnum))
         {
@@ -216,8 +225,9 @@ int s_docmd()
         }
         s_go_prev_page();               /* will beep if no prior page */
         break;
-      case 'T':         /* top of ents */
-      case '^':
+
+    case 'T':         /* top of ents */
+    case '^':
         s_rub_ptr();
         flag = s_go_top_ents();
         if (!flag)              /* failure */
@@ -225,8 +235,9 @@ int s_docmd()
             return S_QUIT;
         }
         break;
-      case 'B': /* bottom of ents */
-      case '$':
+
+    case 'B': /* bottom of ents */
+    case '$':
         s_rub_ptr();
         flag = s_go_bot_ents();
         if (!flag)
@@ -234,32 +245,37 @@ int s_docmd()
             return S_QUIT;
         }
         break;
-      case Ctl('r'):    /* refresh screen */
-      case Ctl('l'):
+
+    case Ctl('r'):    /* refresh screen */
+    case Ctl('l'):
           g_s_ref_all = true;
         break;
-      case Ctl('f'):    /* refresh (mail) display */
+
+    case Ctl('f'):    /* refresh (mail) display */
 #ifdef MAILCALL
         setmail(true);
 #endif
         g_s_ref_bot = true;
         break;
-      case 'h': /* universal help */
+
+    case 'h': /* universal help */
         s_go_bot();
         g_s_ref_all = true;
         univ_help(UHELP_SCANART);
         eat_typeahead();
         break;
-      case 'H': /* help */
+
+    case 'H': /* help */
         s_go_bot();
         g_s_ref_all = true;
         /* any commands typed during help are unused. (might change) */
         switch (g_s_cur_type)
         {
-          case S_ART:
+        case S_ART:
             (void)help_scanart();
             break;
-          default:
+
+        default:
             std::printf("No help available for this mode (yet).\n");
             std::printf("Press any key to continue.\n");
             break;
@@ -267,7 +283,8 @@ int s_docmd()
         (void)get_anything();
         eat_typeahead();
         break;
-      case '!': /* shell command */
+
+    case '!': /* shell command */
         s_go_bot();
         g_s_ref_all = true;                     /* will need refresh */
         if (!escapade())
@@ -276,12 +293,13 @@ int s_docmd()
         }
         eat_typeahead();
         break;
+
 #if 0
-      case '&':         /* see/set switches... */
-/* CAA 05/29/95: The new option stuff makes this potentially recursive.
- * Something similar to the 'H' (extended help) code needs to be done.
- * It may be necessary for this code to do the context saving.
- */
+    case '&':         /* see/set switches... */
+        /* CAA 05/29/95: The new option stuff makes this potentially recursive.
+         * Something similar to the 'H' (extended help) code needs to be done.
+         * It may be necessary for this code to do the context saving.
+         */
         s_go_bot();
         g_s_ref_all = true;                     /* will need refresh */
         if (!switcheroo())              /* XXX same semantics in trn4? */
@@ -291,16 +309,19 @@ int s_docmd()
         eat_typeahead();
         break;
 #endif
-      case '/':
-      case '?':
-      case 'g':         /* goto (search for) group */
+
+    case '/':
+    case '?':
+    case 'g':         /* goto (search for) group */
         s_search();
         break;
-      case '0': case '1': case '2': case '3': case '4':
-      case '5': case '6': case '7': case '8': case '9':
+
+    case '0': case '1': case '2': case '3': case '4':
+    case '5': case '6': case '7': case '8': case '9':
         s_jumpnum(*g_buf);
         break;
-      case '#':         /* Toggle item numbers */
+
+    case '#':         /* Toggle item numbers */
         if (g_s_itemnum)
         {
             /* turn off item numbers */
@@ -317,7 +338,8 @@ int s_docmd()
         }
         g_s_ref_all = true;
         break;
-      default:
+
+    default:
         return S_NOTFOUND;              /* not one of the simple commands */
     } /* switch */
     return 0;           /* keep on looping! */
@@ -434,17 +456,19 @@ void s_search()
     long ent = g_page_ents[g_s_ptr_page_line].entnum;
     switch (*g_buf)
     {
-      case '/':
+    case '/':
         error_msg = "No matches forward from current point.";
         ent = s_forward_search(ent);
         fill_type = 0;          /* forwards fill */
         break;
-      case '?':
+
+    case '?':
         error_msg = "No matches backward from current point.";
         ent = s_backward_search(ent);
         fill_type = 1;          /* backwards fill */
         break;
-      case 'g':
+
+    case 'g':
         ent = s_forward_search(ent);
         if (!ent)
         {
@@ -462,7 +486,8 @@ void s_search()
         }
         fill_type = 0;          /* forwards fill */
         break;
-      default:
+
+    default:
         fill_type = 0;
         error_msg = "Internal error in s_search()";
         break;
@@ -519,8 +544,8 @@ void s_jumpnum(char_int firstchar)
     }
     switch (*g_buf)
     {
-      case '0': case '1': case '2': case '3': case '4':
-      case '5': case '6': case '7': case '8': case '9':
+    case '0': case '1': case '2': case '3': case '4':
+    case '5': case '6': case '7': case '8': case '9':
         if (jump_verbose)
         {
             std::printf("%c",*g_buf);
@@ -528,7 +553,8 @@ void s_jumpnum(char_int firstchar)
         }
         value = value*10 + (*g_buf - '0');
         break;
-      default:
+
+    default:
         pushchar(*g_buf);
         break;
     }
