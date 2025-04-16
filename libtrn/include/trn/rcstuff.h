@@ -9,7 +9,7 @@
 #include "trn/enum-flags.h"
 #include "trn/list.h"
 
-struct DATASRC;
+struct DataSource;
 struct HASHTABLE;
 struct NGDATA;
 
@@ -52,7 +52,7 @@ DECLARE_FLAGS_ENUM(newsrc_flags, int);
 struct NEWSRC
 {
     NEWSRC      *next;
-    DATASRC     *datasrc;
+    DataSource     *datasrc;
     char        *name;     /* the name of the associated newsrc */
     char        *oldname;  /* the backup of the newsrc */
     char        *newname;  /* our working newsrc file */

@@ -7,14 +7,14 @@
 #include "config/common.h"
 #include "trn/nntp.h"
 
+#include "nntp/nntpclient.h"
+#include "trn/datasrc.h"
 #include "trn/artio.h"
 #include "trn/cache.h"
-#include "trn/datasrc.h"
 #include "trn/final.h"
 #include "trn/head.h"
 #include "trn/init.h"
 #include "trn/ngdata.h"
-#include "nntp/nntpclient.h"
 #include "trn/rcstuff.h"
 #include "trn/terminal.h"
 #include "trn/trn.h"
@@ -675,7 +675,7 @@ int nntp_handle_timeout()
     return 1;
 }
 
-void nntp_server_died(DATASRC *dp)
+void nntp_server_died(DataSource *dp)
 {
     MULTIRC* mp = g_multirc;
     close_datasrc(dp);

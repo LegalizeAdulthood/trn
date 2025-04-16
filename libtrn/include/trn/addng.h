@@ -11,7 +11,7 @@
 
 #include <cstdint>
 
-struct DATASRC;
+struct DataSource;
 
 enum AddGroupFlags : std::uint8_t
 {
@@ -28,7 +28,7 @@ struct AddGroup
 {
     AddGroup      *next;
     AddGroup      *prev;
-    DATASRC       *datasrc;
+    DataSource       *datasrc;
     ART_NUM        toread; /* number of articles to be read (for sorting) */
     NG_NUM         num;    /* a possible sort order for this group */
     AddGroupFlags flags;

@@ -83,7 +83,7 @@ void catch_up(NGDATA *np, int leave_count, int output_level)
 
 /* add an article number to a newsgroup, if it isn't already read */
 
-int addartnum(DATASRC *dp, ART_NUM artnum, const char *ngnam)
+int addartnum(DataSource *dp, ART_NUM artnum, const char *ngnam)
 {
     char*   s;
     char*   t;
@@ -671,7 +671,7 @@ void checkexpired(NGDATA *np, ART_NUM a1st)
 
 /* Returns true if article is marked as read or does not exist */
 /* could use a better name */
-bool was_read_group(DATASRC *dp, ART_NUM artnum, char *ngnam)
+bool was_read_group(DataSource *dp, ART_NUM artnum, char *ngnam)
 {
     char*   s;
     char*   t;

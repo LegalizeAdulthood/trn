@@ -6,11 +6,10 @@
 #include "config/common.h"
 #include "trn/terminal.h"
 
+#include "trn/datasrc.h"
 #include "trn/art.h"
 #include "trn/cache.h"
 #include "trn/color.h"
-#include "trn/datasrc.h"
-#include "util/env.h"
 #include "trn/final.h"
 #include "trn/help.h"
 #include "trn/init.h"
@@ -24,6 +23,7 @@
 #include "trn/univ.h"
 #include "trn/utf.h"
 #include "trn/util.h"
+#include "util/env.h"
 #include "util/util2.h"
 
 #ifdef MSDOS

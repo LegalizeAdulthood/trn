@@ -7,11 +7,11 @@
 #include "config/common.h"
 #include "trn/rcstuff.h"
 
+#include "nntp/nntpclient.h"
+#include "trn/datasrc.h"
 #include "trn/autosub.h"
 #include "trn/bits.h"
 #include "trn/cache.h"
-#include "trn/datasrc.h"
-#include "util/env.h"
 #include "trn/final.h"
 #include "trn/hash.h"
 #include "trn/init.h"
@@ -19,7 +19,6 @@
 #include "trn/list.h"
 #include "trn/ngdata.h"
 #include "trn/nntp.h"
-#include "nntp/nntpclient.h"
 #include "trn/only.h"
 #include "trn/rcln.h"
 #include "trn/rt-page.h"
@@ -28,6 +27,7 @@
 #include "trn/terminal.h"
 #include "trn/trn.h"
 #include "trn/util.h"
+#include "util/env.h"
 #include "util/util2.h"
 
 #include <algorithm>
@@ -203,7 +203,7 @@ NEWSRC *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
         }
     }
 
-    DATASRC *dp = get_datasrc(name);
+    DataSource *dp = get_datasrc(name);
     if (!dp)
     {
         return nullptr;

@@ -8,11 +8,10 @@
 #include "config/common.h"
 #include "trn/ngdata.h"
 
+#include "trn/datasrc.h"
 #include "trn/bits.h"
 #include "trn/cache.h"
 #include "trn/change_dir.h"
-#include "trn/datasrc.h"
-#include "util/env.h"
 #include "trn/final.h"
 #include "trn/head.h"
 #include "trn/kfile.h"
@@ -28,6 +27,7 @@
 #include "trn/terminal.h"
 #include "trn/trn.h"
 #include "trn/util.h"
+#include "util/env.h"
 #include "util/util2.h"
 
 #include <algorithm>

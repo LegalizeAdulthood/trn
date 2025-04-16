@@ -7,13 +7,13 @@
 #include "config/common.h"
 #include "trn/addng.h"
 
-#include "trn/autosub.h"
+#include "nntp/nntpclient.h"
 #include "trn/datasrc.h"
+#include "trn/autosub.h"
 #include "trn/hash.h"
 #include "trn/list.h"
 #include "trn/ngdata.h"
 #include "trn/nntp.h"
-#include "nntp/nntpclient.h"
 #include "trn/only.h"
 #include "trn/rcstuff.h"
 #include "trn/rt-select.h"
@@ -42,8 +42,8 @@ static int s_addgroup_cnt{};
 static int  addng_cmp(const char *key, int keylen, HASHDATUM data);
 static int  build_addgroup_list(int keylen, HASHDATUM *data, int extra);
 static void process_list(getnewsgroup_flags flag);
-static void new_nntp_groups(DATASRC *dp);
-static void new_local_groups(DATASRC *dp);
+static void new_nntp_groups(DataSource *dp);
+static void new_local_groups(DataSource *dp);
 static void add_to_hash(HASHTABLE *ng, const char *name, int toread, char_int ch);
 static void add_to_list(const char *name, int toread, char_int ch);
 static int  list_groups(int keylen, HASHDATUM *data, int add_matching);
@@ -146,7 +146,7 @@ static void process_list(getnewsgroup_flags flag)
     s_addgroup_cnt = 0;
 }
 
-static void new_nntp_groups(DATASRC *dp)
+static void new_nntp_groups(DataSource *dp)
 {
     char* s;
     int len;
@@ -248,7 +248,7 @@ static void new_nntp_groups(DATASRC *dp)
     hashdestroy(newngs);
 }
 
-static void new_local_groups(DATASRC *dp)
+static void new_local_groups(DataSource *dp)
 {
     g_datasrc = dp;
 
@@ -384,7 +384,7 @@ bool scanactive(bool add_matching)
         print_lines("Completely unsubscribed newsgroups:\n", STANDOUT);
     }
 
-    for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
+    for (DataSource *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
     {
         if (!(dp->flags & DF_OPEN))
         {

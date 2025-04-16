@@ -63,25 +63,25 @@ enum FieldFlags : std::uint8_t
 };
 DECLARE_FLAGS_ENUM(FieldFlags, std::uint8_t)
 
-struct DATASRC
+struct DataSource
 {
-    char         *name;       /* our user-friendly name */
-    char         *newsid;     /* the active file name or host name */
-    SourceFile       act_sf;     /* the active file's hashed contents */
-    char         *grpdesc;    /* the newsgroup description file or tmp */
-    SourceFile       desc_sf;    /* the group description's hashed contents */
-    char         *extra_name; /* local active.times or server's actfile */
-    NNTPLINK      nntplink;
-    char         *spool_dir;
-    char         *over_dir;
-    char         *over_fmt;
-    char         *auth_user;
-    char         *auth_pass;
-    long          lastnewgrp; /* time of last newgroup check */
-    std::FILE    *ov_in;      /* the overview's file handle */
-    std::time_t   ov_opened;  /* time overview file was opened */
-    ov_field_num  fieldnum[OV_MAX_FIELDS];
-    FieldFlags   fieldflags[OV_MAX_FIELDS];
+    char           *name;       /* our user-friendly name */
+    char           *newsid;     /* the active file name or host name */
+    SourceFile      act_sf;     /* the active file's hashed contents */
+    char           *grpdesc;    /* the newsgroup description file or tmp */
+    SourceFile      desc_sf;    /* the group description's hashed contents */
+    char           *extra_name; /* local active.times or server's actfile */
+    NNTPLINK        nntplink;
+    char           *spool_dir;
+    char           *over_dir;
+    char           *over_fmt;
+    char           *auth_user;
+    char           *auth_pass;
+    long            lastnewgrp; /* time of last newgroup check */
+    std::FILE      *ov_in;      /* the overview's file handle */
+    std::time_t     ov_opened;  /* time overview file was opened */
+    ov_field_num    fieldnum[OV_MAX_FIELDS];
+    FieldFlags      fieldflags[OV_MAX_FIELDS];
     DataSourceFlags flags;
 };
 
@@ -95,7 +95,7 @@ enum
 };
 
 extern LIST       *g_datasrc_list;     /* a list of all DATASRCs */
-extern DATASRC    *g_datasrc;          /* the current datasrc */
+extern DataSource    *g_datasrc;          /* the current datasrc */
 extern int         g_datasrc_cnt;      //
 extern char       *g_trnaccess_mem;    //
 extern std::string g_nntp_auth_file;   //
@@ -104,38 +104,38 @@ extern std::time_t g_def_refetch_secs; /* -z */
 void        datasrc_init();
 void        datasrc_finalize();
 char       *read_datasrcs(const char *filename);
-DATASRC    *get_datasrc(const char *name);
-bool        open_datasrc(DATASRC *dp);
-void        set_datasrc(DATASRC *dp);
+DataSource    *get_datasrc(const char *name);
+bool        open_datasrc(DataSource *dp);
+void        set_datasrc(DataSource *dp);
 void        check_datasrcs();
-void        close_datasrc(DATASRC *dp);
-bool        actfile_hash(DATASRC *dp);
-bool        find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM high);
-const char *find_grpdesc(DATASRC *dp, const char *groupname);
+void        close_datasrc(DataSource *dp);
+bool        actfile_hash(DataSource *dp);
+bool        find_actgrp(DataSource *dp, char *outbuf, const char *nam, int len, ART_NUM high);
+const char *find_grpdesc(DataSource *dp, const char *groupname);
 int         srcfile_open(SourceFile *sfp, const char *filename, const char *fetchcmd, const char *server);
 char       *srcfile_append(SourceFile *sfp, char *bp, int keylen);
 void        srcfile_end_append(SourceFile *sfp, const char *filename);
 void        srcfile_close(SourceFile *sfp);
 int         find_close_match();
 
-inline nntp_flags datasrc_nntp_flags(const DATASRC *dp)
+inline nntp_flags datasrc_nntp_flags(const DataSource *dp)
 {
     return dp == g_datasrc ? g_nntplink.flags : dp->nntplink.flags;
 }
 
-inline DATASRC *datasrc_ptr(int n)
+inline DataSource *datasrc_ptr(int n)
 {
-    return (DATASRC *) listnum2listitem(g_datasrc_list, n);
+    return (DataSource *) listnum2listitem(g_datasrc_list, n);
 }
 
-inline DATASRC *datasrc_first()
+inline DataSource *datasrc_first()
 {
     return datasrc_ptr(0);
 }
 
-inline DATASRC *datasrc_next(DATASRC *p)
+inline DataSource *datasrc_next(DataSource *p)
 {
-    return (DATASRC *) next_listitem(g_datasrc_list, (char *) p);
+    return (DataSource *) next_listitem(g_datasrc_list, (char *) p);
 }
 
 #endif

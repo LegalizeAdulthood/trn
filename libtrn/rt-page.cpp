@@ -6,11 +6,10 @@
 #include "config/common.h"
 #include "trn/rt-page.h"
 
+#include "trn/datasrc.h"
 #include "trn/addng.h"
 #include "trn/cache.h"
 #include "trn/color.h"
-#include "trn/datasrc.h"
-#include "util/env.h"
 #include "trn/list.h"
 #include "trn/ngdata.h"
 #include "trn/only.h"
@@ -26,6 +25,7 @@
 #include "trn/univ.h"
 #include "trn/utf.h"
 #include "trn/util.h"
+#include "util/env.h"
 
 #include <algorithm>
 #include <cctype>
@@ -59,7 +59,7 @@ static int count_thread_lines(const Subject *subj, int *selptr);
 static void display_article(const Article *ap, int ix, int sel);
 static void display_subject(const Subject *subj, int ix, int sel);
 static void display_univ(const UNIV_ITEM *ui);
-static void display_group(DATASRC *dp, char *group, int len, int max_len);
+static void display_group(DataSource *dp, char *group, int len, int max_len);
 
 bool set_sel_mode(char_int ch)
 {
@@ -2672,7 +2672,7 @@ static void display_univ(const UNIV_ITEM *ui)
     }
 }
 
-static void display_group(DATASRC *dp, char *group, int len, int max_len)
+static void display_group(DataSource *dp, char *group, int len, int max_len)
 {
     if (*g_sel_grp_dmode == 's')
     {

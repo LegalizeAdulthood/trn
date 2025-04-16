@@ -5,11 +5,11 @@
 #include "config/common.h"
 #include "trn/artio.h"
 
+#include "trn/datasrc.h"
 #include "trn/art.h"
 #include "trn/artstate.h"
 #include "trn/cache.h"
 #include "trn/color.h"
-#include "trn/datasrc.h"
 #include "trn/decode.h"
 #include "trn/head.h"
 #include "trn/list.h"

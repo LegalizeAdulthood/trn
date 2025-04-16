@@ -8,7 +8,7 @@
 
 #include <ctime>
 
-struct DATASRC;
+struct DataSource;
 struct NGDATA;
 
 enum finishbody_mode
@@ -48,7 +48,7 @@ char *nntp_artname(ART_NUM artnum, bool allocate);
 char *nntp_tmpname(int ndx);
 int nntp_handle_nested_lists();
 int nntp_handle_timeout();
-void nntp_server_died(DATASRC *dp);
+void nntp_server_died(DataSource *dp);
 #ifdef SUPPORT_XTHREAD
 long nntp_readcheck();
 long nntp_read(char *buf, long n);

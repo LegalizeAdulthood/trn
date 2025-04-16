@@ -11,6 +11,7 @@
 
 #include <config/common.h>
 
+#include <trn/datasrc.h>
 #include <trn/addng.h>
 #include <trn/art.h>
 #include <trn/artio.h>
@@ -19,8 +20,6 @@
 #include <trn/bits.h>
 #include <trn/cache.h>
 #include <trn/color.h>
-#include <trn/datasrc.h>
-#include <util/env-internal.h>
 #include <trn/init.h>
 #include <trn/intrp.h>
 #include <trn/kfile.h>
@@ -44,6 +43,7 @@
 #include <trn/trn.h>
 #include <trn/univ.h>
 #include <trn/util.h>
+#include <util/env-internal.h>
 #include <util/util2.h>
 
 constexpr int BUFFER_SIZE{4096};
@@ -689,7 +689,7 @@ private:
 
 TEST_F(InterpolatorTest, newsSpoolDirectoryNoDataSource)
 {
-    value_saver<DATASRC *> datasrc(g_datasrc, nullptr);
+    value_saver<DataSource *> datasrc(g_datasrc, nullptr);
     char                   pattern[]{"%P"};
 
     const char *new_pattern = interpolate(pattern);

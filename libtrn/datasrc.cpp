@@ -9,13 +9,12 @@
 #include "config/common.h"
 #include "trn/datasrc.h"
 
+#include "nntp/nntpclient.h"
 #include "trn/edit_dist.h"
-#include "util/env.h"
 #include "trn/hash.h"
 #include "trn/list.h"
 #include "trn/ngdata.h"
 #include "trn/nntp.h"
-#include "nntp/nntpclient.h"
 #include "trn/rcstuff.h"
 #include "trn/rt-ov.h"
 #include "trn/rt-util.h"
@@ -23,6 +22,7 @@
 #include "trn/terminal.h"
 #include "trn/trn.h"
 #include "trn/util.h"
+#include "util/env.h"
 #include "util/util2.h"
 
 #ifdef I_UTIME
@@ -47,8 +47,8 @@ struct utimbuf
 #include <ctime>
 #include <string>
 
-LIST       *g_datasrc_list{};                         /* a list of all DATASRCs */
-DATASRC    *g_datasrc{};                              /* the current datasrc */
+LIST       *g_datasrc_list{};                         /* a list of all DataSources */
+DataSource    *g_datasrc{};                              /* the current datasrc */
 int         g_datasrc_cnt{};                          //
 char       *g_trnaccess_mem{};                        //
 std::string g_nntp_auth_file;                         //
@@ -102,19 +102,19 @@ static INI_WORDS s_datasrc_ini[] =
     // clang-format on
 };
 
-static char *dir_or_none(DATASRC *dp, const char *dir, DataSourceFlags flag);
+static char *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag);
 static char *file_or_none(char *fn);
 static int srcfile_cmp(const char *key, int keylen, HASHDATUM data);
 static int check_distance(int len, HASHDATUM *data, int newsrc_ptr);
 static int get_near_miss();
-static DATASRC *new_datasrc(const char *name, char **vals);
+static DataSource *new_datasrc(const char *name, char **vals);
 
 void datasrc_init()
 {
     char** vals = prep_ini_words(s_datasrc_ini);
     char* actname = nullptr;
 
-    g_datasrc_list = new_list(0,0,sizeof(DATASRC),20,LF_ZERO_MEM,nullptr);
+    g_datasrc_list = new_list(0,0,sizeof(DataSource),20,LF_ZERO_MEM,nullptr);
 
     g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
 
@@ -176,7 +176,7 @@ void datasrc_finalize()
 {
     if (g_datasrc_list)
     {
-        for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
+        for (DataSource *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
         {
             close_datasrc(dp);
         }
@@ -230,9 +230,9 @@ char *read_datasrcs(const char *filename)
     return filebuf;
 }
 
-DATASRC *get_datasrc(const char *name)
+DataSource *get_datasrc(const char *name)
 {
-    for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
+    for (DataSource *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
     {
         if (dp->name == std::string{name})
         {
@@ -242,9 +242,9 @@ DATASRC *get_datasrc(const char *name)
     return nullptr;
 }
 
-static DATASRC *new_datasrc(const char *name, char **vals)
+static DataSource *new_datasrc(const char *name, char **vals)
 {
-    DATASRC* dp = datasrc_ptr(g_datasrc_cnt++);
+    DataSource* dp = datasrc_ptr(g_datasrc_cnt++);
 
     if (vals[DI_NNTP_SERVER])
     {
@@ -375,7 +375,7 @@ static DATASRC *new_datasrc(const char *name, char **vals)
     return dp;
 }
 
-static char *dir_or_none(DATASRC *dp, const char *dir, DataSourceFlags flag)
+static char *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag)
 {
     if (!dir || !*dir || !std::strcmp(dir, "remote"))
     {
@@ -429,7 +429,7 @@ static char *file_or_none(char *fn)
     return savestr(filexp(fn));
 }
 
-bool open_datasrc(DATASRC *dp)
+bool open_datasrc(DataSource *dp)
 {
     bool success;
 
@@ -528,7 +528,7 @@ bool open_datasrc(DATASRC *dp)
     return success;
 }
 
-void set_datasrc(DATASRC *dp)
+void set_datasrc(DataSource *dp)
 {
     if (g_datasrc)
     {
@@ -547,14 +547,14 @@ void check_datasrcs()
 
     if (g_datasrc_list)
     {
-        for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
+        for (DataSource *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
         {
             if ((dp->flags & DF_OPEN) && dp->nntplink.connection)
             {
                 std::time_t limit = ((dp->flags & DF_ACTIVE) ? 30 * 60 : 10 * 60);
                 if (now - dp->nntplink.last_command > limit)
                 {
-                    DATASRC* save_datasrc = g_datasrc;
+                    DataSource* save_datasrc = g_datasrc;
                     set_datasrc(dp);
                     nntp_close(true);
                     dp->nntplink = g_nntplink;
@@ -565,7 +565,7 @@ void check_datasrcs()
     }
 }
 
-void close_datasrc(DATASRC *dp)
+void close_datasrc(DataSource *dp)
 {
     if (dp->flags & DF_REMOTE)
     {
@@ -597,7 +597,7 @@ void close_datasrc(DATASRC *dp)
 
     if (dp->flags & DF_REMOTE)
     {
-        DATASRC* save_datasrc = g_datasrc;
+        DataSource* save_datasrc = g_datasrc;
         set_datasrc(dp);
         nntp_close(true);
         dp->nntplink = g_nntplink;
@@ -612,12 +612,12 @@ void close_datasrc(DATASRC *dp)
     }
 }
 
-bool actfile_hash(DATASRC *dp)
+bool actfile_hash(DataSource *dp)
 {
     int ret;
     if (dp->flags & DF_REMOTE)
     {
-        DATASRC* save_datasrc = g_datasrc;
+        DataSource* save_datasrc = g_datasrc;
         set_datasrc(dp);
         g_spin_todo = dp->act_sf.recent_cnt;
         ret = srcfile_open(&dp->act_sf, dp->extra_name, "active", dp->newsid);
@@ -634,7 +634,7 @@ bool actfile_hash(DATASRC *dp)
     return ret != 0;
 }
 
-bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM high)
+bool find_actgrp(DataSource *dp, char *outbuf, const char *nam, int len, ART_NUM high)
 {
     ACT_POS act_pos;
     FILE* fp = dp->act_sf.fp;
@@ -661,7 +661,7 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
     if ((dp->flags & DF_USELISTACT) //
         && (datasrc_nntp_flags(dp) & NNTP_NEW_CMD_OK))
     {
-        DATASRC* save_datasrc = g_datasrc;
+        DataSource* save_datasrc = g_datasrc;
         set_datasrc(dp);
         switch (nntp_list("active", nam, len))
         {
@@ -757,7 +757,7 @@ bool find_actgrp(DATASRC *dp, char *outbuf, const char *nam, int len, ART_NUM hi
     return false;       /* no such group */
 }
 
-const char *find_grpdesc(DATASRC *dp, const char *groupname)
+const char *find_grpdesc(DataSource *dp, const char *groupname)
 {
     int grouplen;
 
@@ -1197,7 +1197,7 @@ int find_close_match()
     s_ngn = 0;
 
     /* Iterate over all legal newsgroups */
-    for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
+    for (DataSource *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
     {
         if (dp->flags & DF_OPEN)
         {

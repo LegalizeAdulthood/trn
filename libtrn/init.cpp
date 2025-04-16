@@ -5,6 +5,8 @@
 #include "config/common.h"
 #include "trn/init.h"
 
+#include "nntp/nntpinit.h"
+#include "trn/datasrc.h"
 #include "trn/addng.h"
 #include "trn/art.h"
 #include "trn/artio.h"
@@ -13,9 +15,7 @@
 #include "trn/bits.h"
 #include "trn/cache.h"
 #include "trn/color.h"
-#include "trn/datasrc.h"
 #include "trn/decode.h"
-#include "util/env.h"
 #include "trn/final.h"
 #include "trn/head.h"
 #include "trn/help.h"
@@ -28,7 +28,6 @@
 #include "trn/ngdata.h"
 #include "trn/ngsrch.h"
 #include "trn/ngstuff.h"
-#include "nntp/nntpinit.h"
 #include "trn/only.h"
 #include "trn/opt.h"
 #include "trn/rcln.h"
@@ -39,6 +38,7 @@
 #include "trn/trn.h"
 #include "trn/univ.h"
 #include "trn/util.h"
+#include "util/env.h"
 #include "util/util2.h"
 
 #ifdef _WIN32

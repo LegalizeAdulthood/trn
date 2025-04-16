@@ -6,9 +6,8 @@
 #include "config/common.h"
 #include "trn/cache.h"
 
-#include "trn/bits.h"
 #include "trn/datasrc.h"
-#include "util/env.h"
+#include "trn/bits.h"
 #include "trn/final.h"
 #include "trn/hash.h"
 #include "trn/head.h"
@@ -31,6 +30,7 @@
 #include "trn/terminal.h"
 #include "trn/utf.h"
 #include "trn/util.h"
+#include "util/env.h"
 #include "util/util2.h"
 
 #include <algorithm>

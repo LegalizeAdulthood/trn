@@ -8,16 +8,16 @@
 #include "config/common.h"
 #include "trn/util.h"
 
+#include "nntp/nntpclient.h"
 #include "trn/datasrc.h"
-#include "util/env.h"
 #include "trn/final.h"
 #include "trn/intrp.h"
-#include "nntp/nntpclient.h"
 #include "trn/search.h"
 #include "trn/smisc.h" /* g_s_default_cmd */
 #include "trn/string-algos.h"
 #include "trn/terminal.h"
 #include "trn/univ.h"
+#include "util/env.h"
 #include "util/util2.h"
 
 #ifdef I_SYS_TIMEB

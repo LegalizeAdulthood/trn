@@ -5,12 +5,12 @@
 #include "config/common.h"
 #include "trn/rt-select.h"
 
+#include "trn/datasrc.h"
 #include "trn/addng.h"
 #include "trn/artsrch.h"
 #include "trn/bits.h"
 #include "trn/cache.h"
 #include "trn/color.h"
-#include "trn/datasrc.h"
 #include "trn/enum-flags.h"
 #include "trn/final.h"
 #include "trn/intrp.h"

@@ -6,8 +6,9 @@
 
 #include "trn/bits.h"
 
-#include "trn/cache.h"
+#include "nntp/nntpclient.h"
 #include "trn/datasrc.h"
+#include "trn/cache.h"
 #include "trn/final.h"
 #include "trn/head.h"
 #include "trn/kfile.h"
@@ -15,7 +16,6 @@
 #include "trn/ng.h"
 #include "trn/ngdata.h"
 #include "trn/nntp.h"
-#include "nntp/nntpclient.h"
 #include "trn/rcln.h"
 #include "trn/rcstuff.h"
 #include "trn/rt-select.h"

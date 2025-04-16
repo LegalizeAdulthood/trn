@@ -7,23 +7,23 @@
 #include "config/common.h"
 #include "trn/final.h"
 
+#include "nntp/nntpclient.h"
+#include "nntp/nntpinit.h"
+#include "trn/datasrc.h"
 #include "trn/bits.h"
 #include "trn/change_dir.h"
 #include "trn/color.h"
-#include "trn/datasrc.h"
-#include "util/env.h"
 #include "trn/intrp.h"
 #include "trn/kfile.h"
 #include "trn/list.h"
 #include "trn/ng.h"
 #include "trn/nntp.h"
-#include "nntp/nntpclient.h"
-#include "nntp/nntpinit.h"
 #include "trn/rcstuff.h"
 #include "trn/scoresave.h"
 #include "trn/terminal.h"
 #include "trn/trn.h"
 #include "trn/util.h"
+#include "util/env.h"
 
 #include <cerrno>
 #include <cstdio>

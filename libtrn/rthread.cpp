@@ -7,10 +7,10 @@
 #include "config/common.h"
 #include "trn/rthread.h"
 
+#include "trn/datasrc.h"
 #include "trn/artstate.h"
 #include "trn/bits.h"
 #include "trn/cache.h"
-#include "trn/datasrc.h"
 #include "trn/hash.h"
 #include "trn/head.h"
 #include "trn/kfile.h"

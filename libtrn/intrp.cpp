@@ -7,12 +7,12 @@
 #include "config/common.h"
 #include "trn/intrp.h"
 
+#include "config/user_id.h"
+#include "trn/datasrc.h"
 #include "trn/artio.h"
 #include "trn/artsrch.h"
 #include "trn/bits.h"
 #include "trn/cache.h"
-#include "trn/datasrc.h"
-#include "util/env.h"
 #include "trn/final.h"
 #include "trn/head.h"
 #include "trn/init.h"
@@ -27,8 +27,8 @@
 #include "trn/string-algos.h"
 #include "trn/terminal.h"
 #include "trn/trn.h"
-#include "config/user_id.h"
 #include "trn/util.h"
+#include "util/env.h"
 #include "util/util2.h"
 
 #ifdef HAS_UNAME

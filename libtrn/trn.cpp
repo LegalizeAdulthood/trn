@@ -42,8 +42,9 @@
 #include "config/common.h"
 #include "trn/trn.h"
 
-#include "trn/addng.h"
+#include "nntp/nntpclient.h"
 #include "trn/datasrc.h"
+#include "trn/addng.h"
 #include "trn/final.h"
 #include "trn/help.h"
 #include "trn/init.h"
@@ -55,7 +56,6 @@
 #include "trn/ngsrch.h"
 #include "trn/ngstuff.h"
 #include "trn/nntp.h"
-#include "nntp/nntpclient.h"
 #include "trn/only.h"
 #include "trn/opt.h"
 #include "trn/patchlevel.h"
@@ -968,7 +968,7 @@ void check_active_refetch(bool force)
 {
     std::time_t now = std::time(nullptr);
 
-    for (DATASRC *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
+    for (DataSource *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
     {
         if (!all_bits(dp->flags, DF_OPEN | DF_ACTIVE))
         {

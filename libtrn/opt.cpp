@@ -8,6 +8,7 @@
 #include "config/common.h"
 #include "trn/opt.h"
 
+#include "trn/datasrc.h"
 #include "trn/art.h"
 #include "trn/artio.h"
 #include "trn/artsrch.h"
@@ -15,8 +16,6 @@
 #include "trn/change_dir.h"
 #include "trn/charsubst.h"
 #include "trn/color.h"
-#include "trn/datasrc.h"
-#include "util/env.h"
 #include "trn/final.h"
 #include "trn/head.h"
 #include "trn/init.h"
@@ -41,6 +40,7 @@
 #include "trn/trn.h"
 #include "trn/univ.h"
 #include "trn/util.h"
+#include "util/env.h"
 #include "util/util2.h"
 
 #include <algorithm>

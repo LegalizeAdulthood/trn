@@ -5,6 +5,8 @@
 #include "config/common.h"
 #include "trn/ng.h"
 
+#include "nntp/nntpclient.h"
+#include "trn/datasrc.h"
 #include "trn/art.h"
 #include "trn/artio.h"
 #include "trn/artsrch.h"
@@ -15,8 +17,6 @@
 #include "trn/change_dir.h"
 #include "trn/charsubst.h"
 #include "trn/color.h"
-#include "trn/datasrc.h"
-#include "util/env.h"
 #include "trn/final.h"
 #include "trn/head.h"
 #include "trn/help.h"
@@ -27,7 +27,6 @@
 #include "trn/ngdata.h"
 #include "trn/ngstuff.h"
 #include "trn/nntp.h"
-#include "nntp/nntpclient.h"
 #include "trn/rcln.h"
 #include "trn/rcstuff.h"
 #include "trn/respond.h"
@@ -43,6 +42,7 @@
 #include "trn/trn.h"
 #include "trn/univ.h"
 #include "trn/util.h"
+#include "util/env.h"
 #include "util/util2.h"
 
 #include <algorithm>
