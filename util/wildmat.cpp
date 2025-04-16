@@ -51,12 +51,14 @@ static bool DoMatch(const char *text, const char *p);
 */
 static bool DoMatch(const char *text, const char *p)
 {
-    for ( ; *p; text++, p++) {
+    for (; *p; text++, p++)
+    {
         if (*text == '\0' && *p != '*')
         {
             return false;
         }
-        switch (*p) {
+        switch (*p)
+        {
         case '\\':
             /* Literal match with following character. */
             p++;
@@ -152,14 +154,16 @@ int main()
     printf("A blank line gets prompts for a new pattern; a blank pattern\n");
     printf("exits the program.\n");
 
-    for ( ; ; ) {
+    for (;;)
+    {
         printf("\nEnter pattern:  ");
         (void)fflush(stdout);
         if (gets(p) == nullptr || p[0] == '\0')
         {
             break;
         }
-        for ( ; ; ) {
+        for (;;)
+        {
             printf("Enter text:  ");
             (void)fflush(stdout);
             if (gets(text) == nullptr)
