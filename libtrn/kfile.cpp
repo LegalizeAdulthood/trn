@@ -256,6 +256,7 @@ int do_kfile(std::FILE *kfp, int entering)
             {
             case SRCH_ABORT:
                 continue;
+
             case SRCH_INTR:
                 if (g_verbose)
                 {
@@ -267,17 +268,22 @@ int do_kfile(std::FILE *kfp, int entering)
                 }
                 termdown(2);
                 return -1;
+
             case SRCH_DONE:
                 break;
+
             case SRCH_SUBJDONE:
                 /*std::fputs("\tsubject not found (?)\n",stdout);*/
                 break;
+
             case SRCH_NOTFOUND:
                 /*std::fputs("\tnot found\n",stdout);*/
                 break;
+
             case SRCH_FOUND:
                 /*std::fputs("\tfound\n",stdout);*/
                 break;
+
             case SRCH_ERROR:
                 break;
             }
@@ -361,6 +367,7 @@ int do_kfile(std::FILE *kfp, int entering)
             case 'X':
                 killmask |= g_sel_mask; /* don't kill selected articles */
                 /* FALL THROUGH */
+
             case 'j':
                 article_walk(kfile_junk, killmask);
                 break;
