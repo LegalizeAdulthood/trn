@@ -108,41 +108,53 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
                 case 'f':               /* scan the From line */
                     howmuch = ARTSCOPE_FROM;
                     break;
+
                 case 'H':               /* scan a specific header */
                     howmuch = ARTSCOPE_ONEHDR;
                     s = cpytill(g_msg, s+1, ':');
                     srchhdr = get_header_num(g_msg);
                     goto loop_break;
+
                 case 'h':               /* scan header */
                     howmuch = ARTSCOPE_HEAD;
                     break;
+
                 case 'b':               /* scan body sans signature */
                     howmuch = ARTSCOPE_BODY_NOSIG;
                     break;
+
                 case 'B':               /* scan body */
                     howmuch = ARTSCOPE_BODY;
                     break;
+
                 case 'a':               /* scan article */
                     howmuch = ARTSCOPE_ARTICLE;
                     break;
+
                 case 't':               /* start from the top */
                     topstart = true;
                     break;
+
                 case 'r':               /* scan read articles */
                     doread = true;
                     break;
+
                 case 'K':               /* put into KILL file */
                     saltaway = 1;
                     break;
+
                 case 'c':               /* make search case sensitive */
                     foldcase = false;
                     break;
+
                 case 'I':               /* ignore the killfile thru line */
                     ignorethru = 1;
                     break;
+
                 case 'N':               /* override ignore if -k was used */
                     ignorethru = -1;
                     break;
+
                 default:
                     goto loop_break;
                 }
@@ -484,7 +496,7 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
 
     switch (scope)
     {
-      case ARTSCOPE_SUBJECT:
+    case ARTSCOPE_SUBJECT:
         std::strcpy(g_buf,"Subject: ");
         std::strncpy(g_buf+9,fetchsubj(artnum,false),256);
 #ifdef DEBUG
@@ -494,18 +506,21 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
         }
 #endif
         break;
-      case ARTSCOPE_FROM:
+
+    case ARTSCOPE_FROM:
         std::strcpy(g_buf, "From: ");
         std::strncpy(g_buf+6,fetchfrom(artnum,false),256);
         break;
-      case ARTSCOPE_ONEHDR:
+
+    case ARTSCOPE_ONEHDR:
         g_untrim_cache = true;
         std::sprintf(g_buf, "%s: %s", g_htype[g_art_srchhdr].name,
                 prefetchlines(artnum,g_art_srchhdr,false));
         g_untrim_cache = false;
         break;
-      default:
-      {
+
+    default:
+    {
         char*s;
         char ch;
         bool success = false;
@@ -574,7 +589,7 @@ static bool wanted(COMPEX *compex, ART_NUM artnum, art_scope scope)
             }
         }
         return false;                           /* out of article, so no match */
-      }
+    }
     }
     return execute(compex,g_buf) != nullptr;
 }
