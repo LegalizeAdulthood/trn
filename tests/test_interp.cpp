@@ -662,7 +662,8 @@ TEST_F(InterpolatorTest, privateNewsDirectory)
     ASSERT_EQ(g_privdir, buffer());
 }
 
-namespace {
+namespace
+{
 
 template <typename T>
 class value_saver
@@ -1376,7 +1377,8 @@ TEST_F(InterpolatorTest, caretEscapeLowerCase)
     ASSERT_EQ("\a", buffer());
 }
 
-namespace {
+namespace
+{
 
 class pushd
 {
