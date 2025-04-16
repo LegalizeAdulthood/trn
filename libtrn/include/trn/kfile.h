@@ -19,7 +19,7 @@ enum : bool
     KF_LOCAL = true
 };
 
-enum killfilestate_flags : std::uint16_t
+enum KillFileStateFlags : std::uint16_t
 {
     KFS_NONE = 0x0000,
     KFS_LOCAL_CHANGES = 0x0001,
@@ -28,7 +28,7 @@ enum killfilestate_flags : std::uint16_t
     KFS_THREAD_LINES = 0x0020,
     KFS_GLOBAL_THREADFILE = 0x1000
 };
-DECLARE_FLAGS_ENUM(killfilestate_flags, std::uint16_t);
+DECLARE_FLAGS_ENUM(KillFileStateFlags, std::uint16_t);
 
 enum autokill_flags : std::uint16_t
 {
@@ -64,8 +64,8 @@ enum
 };
 
 extern std::FILE          *g_localkfp;               /* local (for this newsgroup) file */
-extern killfilestate_flags g_kf_state;               /* the state of our kill files */
-extern killfilestate_flags g_kfs_thread_change_set;  /* bits to set for thread changes */
+extern KillFileStateFlags g_kf_state;               /* the state of our kill files */
+extern KillFileStateFlags g_kfs_thread_change_set;  /* bits to set for thread changes */
 extern int                 g_kf_changethd_cnt;       /* # entries changed from old to new */
 extern ART_NUM             g_killfirst;              /* used as g_firstart when killing */
 

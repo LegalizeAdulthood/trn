@@ -34,8 +34,8 @@
 #include <filesystem>
 
 std::FILE          *g_localkfp{};               /* local (for this newsgroup) file */
-killfilestate_flags g_kf_state{};               /* the state of our kill files */
-killfilestate_flags g_kfs_thread_change_set{};  /* bits to set for thread changes */
+KillFileStateFlags g_kf_state{};               /* the state of our kill files */
+KillFileStateFlags g_kfs_thread_change_set{};  /* bits to set for thread changes */
 int                 g_kf_changethd_cnt{};       /* # entries changed from old to new */
 ART_NUM             g_killfirst{};              /* used as g_firstart when killing */
 
@@ -46,7 +46,7 @@ static int write_global_thread_commands(int keylen, HashDatum *data, int appendi
 static int age_thread_commands(int keylen, HashDatum *data, int elapsed_days);
 
 static std::FILE          *s_globkfp{};                /* global article killer file */
-static killfilestate_flags s_kfs_local_change_clear{}; /* bits to clear local changes */
+static KillFileStateFlags s_kfs_local_change_clear{}; /* bits to clear local changes */
 static int                 s_kf_thread_cnt{};          /* # entries in the thread kfile */
 static long                s_kf_daynum{};              /* day number for thread killfile */
 static bool                s_exitcmds{};
