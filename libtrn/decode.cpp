@@ -521,15 +521,19 @@ DECODE_FUNC decode_function(mime_encoding encoding)
 {
     switch (encoding)
     {
-      case MENCODE_QPRINT:
+    case MENCODE_QPRINT:
         return qp_decode;
-      case MENCODE_BASE64:
+
+    case MENCODE_BASE64:
         return b64_decode;
-      case MENCODE_UUE:
+
+    case MENCODE_UUE:
         return uudecode;
-      case MENCODE_NONE:
+
+    case MENCODE_NONE:
         return cat_decode;
-      default:
+
+    default:
         return nullptr;
     }
 }
