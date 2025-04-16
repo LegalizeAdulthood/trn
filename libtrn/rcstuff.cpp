@@ -1225,7 +1225,7 @@ static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c)
     return np;
 }
 
-bool relocate_newsgroup(NewsgroupData *move_np, NG_NUM newnum)
+bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum)
 {
     NewsgroupData* np;
     int i;
@@ -1456,7 +1456,7 @@ bool relocate_newsgroup(NewsgroupData *move_np, NG_NUM newnum)
 void list_newsgroups()
 {
     NewsgroupData* np;
-    NG_NUM i;
+    NewsgroupNum i;
     char tmpbuf[2048];
     static const char* status[] = {"(READ)","(UNSUB)","(DUP)","(BOGUS)","(JUNK)"};
 
@@ -1497,7 +1497,7 @@ NewsgroupData *find_ng(const char *ngnam)
 
 void cleanup_newsrc(Newsrc *rp)
 {
-    NG_NUM bogosity = 0;
+    NewsgroupNum bogosity = 0;
 
     if (g_verbose)
     {

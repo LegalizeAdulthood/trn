@@ -36,7 +36,7 @@ struct NewsgroupData
     ART_NUM    ngmax;              /* high message num for the group */
     ART_UNREAD toread;             /* number of articles to be read in newsgroup */
                                    /* < 0 is invalid or unsubscribed newsgroup */
-    NG_NUM          num;           /* a possible sort order for this group */
+    NewsgroupNum          num;           /* a possible sort order for this group */
     int             numoffset;     /* offset from rcline to numbers on line */
     char            subscribechar; /* holds the character : or ! while spot is \0 */
     NewsgroupFlags flags;         /* flags for each group */
@@ -44,8 +44,8 @@ struct NewsgroupData
 
 extern List       *g_ngdata_list;      /* a list of NGDATA */
 extern int         g_ngdata_cnt;       //
-extern NG_NUM      g_newsgroup_cnt;    /* all newsgroups in our current newsrc(s) */
-extern NG_NUM      g_newsgroup_toread; //
+extern NewsgroupNum      g_newsgroup_cnt;    /* all newsgroups in our current newsrc(s) */
+extern NewsgroupNum      g_newsgroup_toread; //
 extern ART_UNREAD  g_ng_min_toread;    /* == TR_ONE or TR_NONE */
 extern NewsgroupData     *g_first_ng;         //
 extern NewsgroupData     *g_last_ng;          //

@@ -82,7 +82,7 @@ void addng_init()
 
 bool find_new_groups()
 {
-    NG_NUM const oldcnt = g_newsgroup_cnt;      /* remember # newsgroups */
+    NewsgroupNum const oldcnt = g_newsgroup_cnt;      /* remember # newsgroups */
 
     /* Skip this check if the -q flag was given. */
     if (g_quickstart)
@@ -377,7 +377,7 @@ static void add_to_list(const char *name, int toread, char_int ch)
 
 bool scanactive(bool add_matching)
 {
-    NG_NUM const oldcnt = g_newsgroup_cnt;      /* remember # of newsgroups */
+    NewsgroupNum const oldcnt = g_newsgroup_cnt;      /* remember # of newsgroups */
 
     if (!add_matching)
     {

@@ -38,8 +38,8 @@
 
 List       *g_ngdata_list{};       /* a list of NGDATA */
 int         g_ngdata_cnt{};        //
-NG_NUM      g_newsgroup_cnt{};     /* all newsgroups in our current newsrc(s) */
-NG_NUM      g_newsgroup_toread{};  //
+NewsgroupNum      g_newsgroup_cnt{};     /* all newsgroups in our current newsrc(s) */
+NewsgroupNum      g_newsgroup_toread{};  //
 ART_UNREAD  g_ng_min_toread{1};    /* == TR_ONE or TR_NONE */
 NewsgroupData     *g_first_ng{};          //
 NewsgroupData     *g_last_ng{};           //

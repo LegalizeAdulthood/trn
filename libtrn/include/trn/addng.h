@@ -30,7 +30,7 @@ struct AddGroup
     AddGroup      *prev;
     DataSource       *datasrc;
     ART_NUM        toread; /* number of articles to be read (for sorting) */
-    NG_NUM         num;    /* a possible sort order for this group */
+    NewsgroupNum         num;    /* a possible sort order for this group */
     AddGroupFlags flags;
     char           name[1];
 };
