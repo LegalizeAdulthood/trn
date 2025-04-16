@@ -81,7 +81,8 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
 
 /* Handle trivial cases when one string is empty */
 
-    if (from == nullptr || !from_len) {
+    if (from == nullptr || !from_len)
+    {
         if (to == nullptr || !to_len)
         {
             return 0;
@@ -110,7 +111,8 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
 /* Make   from   short enough to fit in the static storage, if it's at all
    possible */
 
-    if (from_len > to_len && from_len > STRLENTHRESHOLD) {
+    if (from_len > to_len && from_len > STRLENTHRESHOLD)
+    {
         swap_int(from_len, to_len);
         swap_char(from, to);
 #ifndef TRN_SPEEDUP
@@ -203,7 +205,8 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
     printf("\n %c %2d %2d ", to[0], ins, buffer[index - 1]);
 #endif
 
-    for (col = 1; col < from_len; col++) {
+    for (col = 1; col < from_len; col++)
+    {
         buffer[index] = min3(
                 col * del + ((from[col] == to[0]) ? 0 : ch),
                 (col + 1) * del + ins,
@@ -225,8 +228,10 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
 
 /* Now handle the rest of the matrix */
 
-    for (row = 1; row < to_len; row++) {
-        for (col = 0; col < from_len; col++) {
+    for (row = 1; row < to_len; row++)
+    {
+        for (col = 0; col < from_len; col++)
+        {
             buffer[index] = min3(
                     NW(row, col) + ((from[col] == to[row]) ? 0 : ch),
                     N(row, col + 1) + ins,
