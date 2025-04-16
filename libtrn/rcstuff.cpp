@@ -226,12 +226,14 @@ NEWSRC *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
     case 'n':
     case 'N':
         break;
+
     default:
         if (dp->flags & DF_ADD_OK)
         {
             rp->flags |= RF_ADD_NEWGROUPS;
         }
         /* FALL THROUGH */
+
     case 'm':
     case 'M':
         rp->flags |= RF_ADD_GROUPS;
