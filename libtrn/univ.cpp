@@ -215,41 +215,49 @@ static void univ_free_data(UNIV_ITEM *ui)
 
     switch (ui->type)
     {
-      case UN_NONE:     /* cases where nothing is needed. */
-      case UN_TXT:
-      case UN_HELPKEY:
+    case UN_NONE:     /* cases where nothing is needed. */
+    case UN_TXT:
+    case UN_HELPKEY:
         break;
-      case UN_DEBUG1:   /* methods that use the string */
+
+    case UN_DEBUG1:   /* methods that use the string */
         safefree(ui->data.str);
         break;
-      case UN_GROUPMASK:        /* methods that have custom data */
+
+    case UN_GROUPMASK:        /* methods that have custom data */
         safefree(ui->data.gmask.title);
         safefree(ui->data.gmask.masklist);
         break;
-      case UN_CONFIGFILE:
+
+    case UN_CONFIGFILE:
         safefree(ui->data.cfile.title);
         safefree(ui->data.cfile.fname);
         safefree(ui->data.cfile.label);
         break;
-      case UN_NEWSGROUP:
-      case UN_GROUP_DESEL:
+
+    case UN_NEWSGROUP:
+    case UN_GROUP_DESEL:
         safefree(ui->data.group.ng);
         break;
-      case UN_ARTICLE:
+
+    case UN_ARTICLE:
         safefree(ui->data.virt.ng);
         safefree(ui->data.virt.from);
         safefree(ui->data.virt.subj);
         break;
-      case UN_VGROUP:
-      case UN_VGROUP_DESEL:
+
+    case UN_VGROUP:
+    case UN_VGROUP_DESEL:
         safefree(ui->data.vgroup.ng);
         break;
-      case UN_TEXTFILE:
+
+    case UN_TEXTFILE:
         safefree(ui->data.textfile.fname);
         break;
-      case UN_DATASRC:  /* unimplemented methods */
-      case UN_VIRTUAL1:
-      default:
+
+    case UN_DATASRC:  /* unimplemented methods */
+    case UN_VIRTUAL1:
+    default:
         break;
     }
 }
@@ -357,10 +365,12 @@ void univ_add_textfile(const char *desc, char *name)
     char *s = name;
     switch (*s)
     {
-      /* later add URL handling */
-      case ':':
+    /* later add URL handling */
+    case ':':
         s++;
-      default:
+        /* FALL THROUGH */
+
+    default:
         /* XXX later have error checking on length */
         std::strcpy(lbuf,g_univ_fname);
         for (p = lbuf+std::strlen(lbuf); p > lbuf && *p != '/'; p--)
@@ -374,9 +384,10 @@ void univ_add_textfile(const char *desc, char *name)
             s = lbuf;
         }
         /* FALL THROUGH */
-      case '~': /* ...or full file names */
-      case '%':
-      case '/':
+
+    case '~': /* ...or full file names */
+    case '%':
+    case '/':
         ui = univ_add(UN_TEXTFILE,desc);
         ui->data.textfile.fname = savestr(filexp(s));
         break;
@@ -487,7 +498,7 @@ void univ_use_pattern(const char *pattern, int type)
         s++;
         switch (type)
         {
-          case 0:
+        case 0:
             for (ui = g_first_univ; ui; ui = ui->next)
             {
                 if (ui->type == UN_NEWSGROUP && ui->data.group.ng //
@@ -497,7 +508,8 @@ void univ_use_pattern(const char *pattern, int type)
                 }
             }
             break;
-          case 1:
+
+        case 1:
             for (ui = g_first_univ; ui; ui = ui->next)
             {
                 if (ui->type == UN_VGROUP && ui->data.vgroup.ng //
@@ -513,7 +525,7 @@ void univ_use_pattern(const char *pattern, int type)
     {
         switch (type)
         {
-          case 0:
+        case 0:
             for (np = g_first_ng; np; np = np->next)
             {
                 if (univ_DoMatch(np->rcline, s))
@@ -522,7 +534,8 @@ void univ_use_pattern(const char *pattern, int type)
                 }
             }
             break;
-          case 1:
+
+        case 1:
             for (np = g_first_ng; np; np = np->next)
             {
                 if (univ_DoMatch(np->rcline, s))
@@ -661,16 +674,17 @@ static void univ_do_line_ext1(const char *desc, char *line)
     s++;
     switch (*s)
     {
-      case 'v':
+    case 'v':
         s++;
         switch (*s)
         {
-          case '0':             /* test vector: "desc" $v0 */
+        case '0':             /* test vector: "desc" $v0 */
             s++;
             (void)univ_add_virt_num(desc? desc : s,
                                     "news.software.readers",(ART_NUM)15000);
             break;
-          case '1':             /* "desc" $v1 1500 news.admin */
+
+        case '1':             /* "desc" $v1 1500 news.admin */
             /* XXX error checking */
             s++;
             s = skip_space(s);
@@ -685,7 +699,8 @@ static void univ_do_line_ext1(const char *desc, char *line)
                 (void)univ_add_virt_num(desc ? desc : s, p, a);
             }
             break;
-          case 'g':             /* $vg [scorenum] news.* !news.foo.* */
+
+        case 'g':             /* $vg [scorenum] news.* !news.foo.* */
             p = s;
             p++;
             p = skip_space(p);
@@ -708,16 +723,18 @@ static void univ_do_line_ext1(const char *desc, char *line)
             break;
         }
         break;
-      case 't':         /* text file */
+
+    case 't':         /* text file */
         s++;
         switch (*s)
         {
-          case '0':             /* test vector: "desc" $t0 */
+        case '0':             /* test vector: "desc" $t0 */
             univ_add_textfile(desc? desc : s, "/home/c/caadams/ztext");
             break;
         }
         break;
-        default:
+
+    default:
           break;
     }
 }
@@ -796,9 +813,10 @@ static bool univ_do_line(char *line)
     {
         switch (*s)
         {
-          case '#':     /* comment */
+        case '#':     /* comment */
             break;
-          case ':':     /* relative to g_univ_fname */
+
+        case ':':     /* relative to g_univ_fname */
             /* XXX hack the variable and fall through */
             if (g_univ_fname && std::strlen(g_univ_fname)+std::strlen(s) < 1020)
             {
@@ -817,9 +835,10 @@ static bool univ_do_line(char *line)
                 }
             } /* XXX later have else which will complain */
             /* FALL THROUGH */
-          case '~':     /* ...or full file names */
-          case '%':
-          case '/':
+
+        case '~':     /* ...or full file names */
+        case '%':
+        case '/':
             p = skip_ne(s, '>');
             if (*p)
             {
@@ -846,7 +865,8 @@ static bool univ_do_line(char *line)
             /* description defaults to name */
             univ_add_file(s_univ_line_desc? s_univ_line_desc : s, filexp(s), p);
             break;
-          case '-':     /* label within same file */
+
+        case '-':     /* label within same file */
             s++;
             if (*s++ != '>')
             {
@@ -865,22 +885,27 @@ static bool univ_do_line(char *line)
             }
             univ_add_file(s_univ_line_desc? s_univ_line_desc : s, g_univ_fname, s);
             break;
-          case '>':
+
+        case '>':
             if (s[1] == ':')
             {
                 return false;   /* label found, end of previous block */
             }
             break;      /* just ignore the line (print warning later?) */
-          case '@':     /* virtual newsgroup file */
+
+        case '@':       /* virtual newsgroup file */
             break;      /* not used now */
-          case '&':     /* text file shortcut (for help files) */
+
+        case '&':       /* text file shortcut (for help files) */
             s++;
             univ_add_textfile(s_univ_line_desc? s_univ_line_desc : s, s);
             break;
-          case '$':     /* extension 1 */
+
+        case '$':       /* extension 1 */
             univ_do_line_ext1(s_univ_line_desc,s);
             break;
-          default:
+
+        default:
             /* if there is a description, this must be a restriction list */
             if (s_univ_line_desc)
             {
@@ -1062,13 +1087,15 @@ void univ_ng_virtual()
 {
     switch (s_current_vg_ui->type)
     {
-      case UN_VGROUP:
+    case UN_VGROUP:
         univ_vg_addgroup();
         break;
-      case UN_ARTICLE:
+
+    case UN_ARTICLE:
         /* get article number from message-id */
         break;
-      default:
+
+    default:
         break;
     }
 
@@ -1171,7 +1198,7 @@ void univ_virt_pass()
         }
         switch (ui->type)
         {
-          case UN_VGROUP:
+        case UN_VGROUP:
             if (!ui->data.vgroup.ng)
             {
                 break;                  /* XXX whine */
@@ -1189,7 +1216,8 @@ void univ_virt_pass()
             safefree(ui->desc);
             ui->type = UN_DELETED;
             break;
-          case UN_ARTICLE:
+
+        case UN_ARTICLE:
             /* if article number is not set, visit newsgroup with callback */
             /* later also check for descriptions */
             if ((ui->data.virt.num) && (ui->desc))
@@ -1204,7 +1232,8 @@ void univ_virt_pass()
             (void)univ_visit_group(ui->data.virt.ng);
             /* later do something with return value */
             break;
-          default:
+
+        default:
             break;
         }
     }
@@ -1241,11 +1270,12 @@ void sort_univ()
     int (*sort_procedure)(const UNIV_ITEM** ui1, const UNIV_ITEM** ui2);
     switch (g_sel_sort)
     {
-      case SS_SCORE:
+    case SS_SCORE:
         sort_procedure = univ_order_score;
         break;
-      case SS_NATURAL:
-      default:
+
+    case SS_NATURAL:
+    default:
         sort_procedure = univ_order_number;
         break;
     }
@@ -1360,29 +1390,40 @@ const char *univ_keyhelp_modestr(const UNIV_ITEM *ui)
 {
     switch (ui->data.i)
     {
-      case UHELP_PAGE:
+    case UHELP_PAGE:
         return "Article Pager Mode";
-      case UHELP_ART:
+
+    case UHELP_ART:
         return "Article Display/Selection Mode";
-      case UHELP_NG:
+
+    case UHELP_NG:
         return "Newsgroup Browse Mode";
-      case UHELP_NGSEL:
+
+    case UHELP_NGSEL:
         return "Newsgroup Selector";
-      case UHELP_ADDSEL:
+
+    case UHELP_ADDSEL:
         return "Add-Newsgroup Selector";
-      case UHELP_SUBS:
+
+    case UHELP_SUBS:
         return "Escape Substitutions";
-      case UHELP_ARTSEL:
+
+    case UHELP_ARTSEL:
         return "Thread/Subject/Article Selector";
-      case UHELP_MULTIRC:
+
+    case UHELP_MULTIRC:
         return "Newsrc Selector";
-      case UHELP_OPTIONS:
+
+    case UHELP_OPTIONS:
         return "Option Selector";
-      case UHELP_SCANART:
+
+    case UHELP_SCANART:
         return "Article Scan Mode";
-      case UHELP_UNIV:
+
+    case UHELP_UNIV:
         return "Universal Selector";
-      default:
+
+    default:
         return nullptr;
     }
 }
