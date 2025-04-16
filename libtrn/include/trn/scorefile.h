@@ -11,7 +11,7 @@ struct COMPEX;
 
 #define DEFAULT_SCOREDIR "%+/scores"
 
-struct SF_ENTRY
+struct ScoreFileEntry
 {
     HeaderLineType head_type; /* header # (see trn/head.h) */
     int score;                  /* score change */

@@ -47,7 +47,7 @@ enum
     SF_REPLY = -5
 };
 
-static SF_ENTRY *s_sf_entries{};        /* array of entries */
+static ScoreFileEntry *s_sf_entries{};        /* array of entries */
 static SF_FILE  *s_sf_files{};          //
 static int       s_sf_num_files{};      //
 static char    **s_sf_abbr{};           /* abbreviations */
@@ -226,14 +226,14 @@ void sf_grow()
     g_sf_num_entries++;
     if (g_sf_num_entries == 1)
     {
-        s_sf_entries = (SF_ENTRY*)safemalloc(sizeof (SF_ENTRY));
+        s_sf_entries = (ScoreFileEntry*)safemalloc(sizeof (ScoreFileEntry));
     }
     else
     {
-        s_sf_entries = (SF_ENTRY*)saferealloc((char*)s_sf_entries,
-                        g_sf_num_entries * sizeof (SF_ENTRY));
+        s_sf_entries = (ScoreFileEntry*)saferealloc((char*)s_sf_entries,
+                        g_sf_num_entries * sizeof (ScoreFileEntry));
     }
-    s_sf_entries[g_sf_num_entries - 1] = SF_ENTRY{}; /* init */
+    s_sf_entries[g_sf_num_entries - 1] = ScoreFileEntry{}; /* init */
 }
 
 /* Returns -1 if no matching extra header found, otherwise returns offset
@@ -1290,7 +1290,7 @@ void sf_exclude_file(const char *fname)
 {
     int       start;
     int       end;
-    SF_ENTRY *tmp_entries;
+    ScoreFileEntry *tmp_entries;
 
     for (start = 0; start < g_sf_num_entries; start++)
     {
@@ -1335,15 +1335,15 @@ void sf_exclude_file(const char *fname)
         return;
     }
 #endif
-    tmp_entries = (SF_ENTRY*)safemalloc(newnum*sizeof(SF_ENTRY));
+    tmp_entries = (ScoreFileEntry*)safemalloc(newnum*sizeof(ScoreFileEntry));
     /* copy the parts into tmp_entries */
     if (start > 0)
     {
-        std::memcpy((char*)tmp_entries,(char*)s_sf_entries,start * sizeof (SF_ENTRY));
+        std::memcpy((char*)tmp_entries,(char*)s_sf_entries,start * sizeof (ScoreFileEntry));
     }
     if (end < g_sf_num_entries-1)
     {
-        std::memcpy((char*)(tmp_entries+start),(char*)(s_sf_entries+end+1),(g_sf_num_entries-end-1) * sizeof (SF_ENTRY));
+        std::memcpy((char*)(tmp_entries+start),(char*)(s_sf_entries+end+1),(g_sf_num_entries-end-1) * sizeof (ScoreFileEntry));
     }
     std::free(s_sf_entries);
     s_sf_entries = tmp_entries;
