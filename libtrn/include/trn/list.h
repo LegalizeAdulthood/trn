@@ -25,11 +25,11 @@ struct ListNode
     char      data[1]; /* this is actually longer */
 };
 
-struct LIST
+struct List
 {
     ListNode *first;
     ListNode *recent;
-    void (*init_node)(LIST *, ListNode *);
+    void (*init_node)(List *, ListNode *);
     long       low;
     long       high;
     int        item_size;
@@ -38,13 +38,13 @@ struct LIST
 };
 
 void list_init();
-LIST *new_list(long low, long high, int item_size, int items_per_node, ListFlags flags, void (*init_node)(LIST *, ListNode *));
-char *listnum2listitem(LIST *list, long num);
-long listitem2listnum(LIST *list, char *ptr);
-bool walk_list(LIST *list, bool (*callback)(char *, int), int arg);
-long existing_listnum(LIST *list, long num, int direction);
-char *next_listitem(LIST *list, char *ptr);
-char *prev_listitem(LIST *list, char *ptr);
-void delete_list(LIST *list);
+List *new_list(long low, long high, int item_size, int items_per_node, ListFlags flags, void (*init_node)(List *, ListNode *));
+char *listnum2listitem(List *list, long num);
+long listitem2listnum(List *list, char *ptr);
+bool walk_list(List *list, bool (*callback)(char *, int), int arg);
+long existing_listnum(List *list, long num, int direction);
+char *next_listitem(List *list, char *ptr);
+char *prev_listitem(List *list, char *ptr);
+void delete_list(List *list);
 
 #endif

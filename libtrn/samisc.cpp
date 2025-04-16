@@ -7,10 +7,10 @@
 #include "config/common.h"
 #include "trn/samisc.h"
 
+#include "trn/List.h"
 #include "trn/artio.h" /* g_openart */
 #include "trn/bits.h"
 #include "trn/cache.h"
-#include "trn/list.h"
 #include "trn/ng.h"     /* for "g_art" */
 #include "trn/ngdata.h" /* several */
 #include "trn/rthread.h"

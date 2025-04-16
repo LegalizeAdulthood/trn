@@ -8,15 +8,15 @@
 #include "trn/rcstuff.h"
 
 #include "nntp/nntpclient.h"
-#include "trn/datasrc.h"
+#include "trn/List.h"
 #include "trn/autosub.h"
 #include "trn/bits.h"
 #include "trn/cache.h"
+#include "trn/datasrc.h"
 #include "trn/final.h"
 #include "trn/hash.h"
 #include "trn/init.h"
 #include "trn/last.h"
-#include "trn/list.h"
 #include "trn/ngdata.h"
 #include "trn/nntp.h"
 #include "trn/only.h"
@@ -39,7 +39,7 @@
 HASHTABLE  *g_newsrc_hash{};
 MULTIRC    *g_sel_page_mp{};
 MULTIRC    *g_sel_next_mp{};
-LIST       *g_multirc_list{};    /* a list of all MULTIRCs */
+List       *g_multirc_list{};    /* a list of all MULTIRCs */
 MULTIRC    *g_multirc{};         /* the current MULTIRC */
 bool        g_paranoid{};        /* did we detect some inconsistency in .newsrc? */
 addnew_type g_addnewbydefault{ADDNEW_ASK}; //
@@ -71,7 +71,7 @@ static bool    clear_ngitem(char *cp, int arg);
 static bool    lock_newsrc(NEWSRC *rp);
 static void    unlock_newsrc(NEWSRC *rp);
 static bool    open_newsrc(NEWSRC *rp);
-static void    init_ngnode(LIST *list, ListNode *node);
+static void    init_ngnode(List *list, ListNode *node);
 static void    parse_rcline(NGDATA *np);
 static NGDATA *add_newsgroup(NEWSRC *rp, const char *ngn, char_int c);
 static int     rcline_cmp(const char *key, int keylen, HashDatum data);
@@ -823,7 +823,7 @@ static bool open_newsrc(NEWSRC *rp)
 }
 
 /* Initialize the memory for an entire node's worth of article's */
-static void init_ngnode(LIST *list, ListNode *node)
+static void init_ngnode(List *list, ListNode *node)
 {
     std::memset(node->data,0,list->items_per_node * list->item_size);
     NGDATA *np = (NGDATA*)node->data;

@@ -7,19 +7,19 @@
 #include "config/common.h"
 #include "trn/mime-internal.h"
 
+#include "trn/List.h"
 #include "trn/art.h"
 #include "trn/artio.h"
 #include "trn/artstate.h"
 #include "trn/decode.h"
-#include "util/env.h"
 #include "trn/head.h"
-#include "trn/list.h"
 #include "trn/ng.h"
 #include "trn/respond.h"
 #include "trn/string-algos.h"
 #include "trn/terminal.h"
 #include "trn/utf.h"
 #include "trn/util.h"
+#include "util/env.h"
 #include "util/util2.h"
 
 #include <cctype>
@@ -63,7 +63,7 @@ static HTML_TAGS s_tagattr[LAST_TAG] = {
     {"xml",              3,     TF_BLOCK | TF_HIDE                      }, /* non-standard but seen in the wild */
 };
 // clang-format on
-static LIST        *s_mimecap_list{};
+static List        *s_mimecap_list{};
 static char         s_text_plain[] = "text/plain";
 static MimeExecutor s_executor;
 

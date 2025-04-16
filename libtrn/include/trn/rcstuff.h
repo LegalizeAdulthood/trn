@@ -6,8 +6,8 @@
 
 #include <config/typedef.h>
 
+#include "trn/List.h"
 #include "trn/enum-flags.h"
-#include "trn/list.h"
 
 struct DataSource;
 struct HASHTABLE;
@@ -79,7 +79,7 @@ struct MULTIRC
 extern HASHTABLE  *g_newsrc_hash;
 extern MULTIRC    *g_sel_page_mp;
 extern MULTIRC    *g_sel_next_mp;
-extern LIST       *g_multirc_list;    /* a list of all MULTIRCs */
+extern List       *g_multirc_list;    /* a list of all MULTIRCs */
 extern MULTIRC    *g_multirc;         /* the current MULTIRC */
 extern bool        g_paranoid;        /* did we detect some inconsistency in .newsrc? */
 extern addnew_type g_addnewbydefault; //

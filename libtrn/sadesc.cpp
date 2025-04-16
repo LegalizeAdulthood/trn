@@ -6,9 +6,9 @@
 #include "config/common.h"
 #include "trn/sadesc.h"
 
+#include "trn/List.h"
 #include "trn/cache.h"
-#include "trn/head.h" /* currently used for fast author fetch when group is threaded */
-#include "trn/list.h"
+#include "trn/head.h"    /* currently used for fast author fetch when group is threaded */
 #include "trn/rt-util.h" /* compress_from() */
 #include "trn/samain.h"
 #include "trn/sathread.h"

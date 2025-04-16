@@ -4,9 +4,9 @@
 #ifndef TRN_DATASRC_H
 #define TRN_DATASRC_H
 
-#include "trn/enum-flags.h"
-#include "trn/list.h"
 #include "nntp/nntpclient.h"
+#include "trn/List.h"
+#include "trn/enum-flags.h"
 #include "trn/rt-ov.h"
 
 #include <cstdint>
@@ -20,13 +20,13 @@ enum
 };
 
 struct HASHTABLE;
-struct LIST;
+struct List;
 
 struct SourceFile
 {
     std::FILE  *fp;           /* the file pointer to read the data */
     HASHTABLE  *hp;           /* the hash table for the data */
-    LIST       *lp;           /* the list used to store the data */
+    List       *lp;           /* the list used to store the data */
     long        recent_cnt;   /* # lines/bytes this file might be */
     std::time_t lastfetch;    /* when the data was last fetched */
     std::time_t refetch_secs; /* how long before we refetch this file */
@@ -94,7 +94,7 @@ enum
     DATASRC_ALARM_SECS = (5 * 60)
 };
 
-extern LIST       *g_datasrc_list;     /* a list of all DATASRCs */
+extern List       *g_datasrc_list;     /* a list of all DATASRCs */
 extern DataSource    *g_datasrc;          /* the current datasrc */
 extern int         g_datasrc_cnt;      //
 extern char       *g_trnaccess_mem;    //

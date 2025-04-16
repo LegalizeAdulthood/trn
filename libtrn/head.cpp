@@ -6,11 +6,11 @@
 #include "trn/head.h"
 
 #include "nntp/nntpclient.h"
-#include "trn/datasrc.h"
+#include "trn/List.h"
 #include "trn/artio.h"
 #include "trn/cache.h"
+#include "trn/datasrc.h"
 #include "trn/final.h"
-#include "trn/list.h"
 #include "trn/mempool.h"
 #include "trn/ng.h"
 #include "trn/ngdata.h"

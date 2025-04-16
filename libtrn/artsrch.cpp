@@ -6,6 +6,7 @@
 #include "config/common.h"
 #include "trn/artsrch.h"
 
+#include "trn/List.h"
 #include "trn/artio.h"
 #include "trn/bits.h"
 #include "trn/cache.h"
@@ -13,7 +14,6 @@
 #include "trn/head.h"
 #include "trn/intrp.h"
 #include "trn/kfile.h"
-#include "trn/list.h"
 #include "trn/ng.h"
 #include "trn/ngdata.h"
 #include "trn/ngstuff.h"

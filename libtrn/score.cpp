@@ -6,10 +6,10 @@
 #include "config/common.h"
 #include "trn/score.h"
 
+#include "trn/List.h"
 #include "trn/artio.h" /* for g_openart var.*/
 #include "trn/bits.h"
 #include "trn/cache.h"
-#include "trn/list.h"
 #include "trn/ng.h" /* g_art */
 #include "trn/ngdata.h"
 #include "trn/rt-util.h" /* spinner */
@@ -19,8 +19,8 @@
 #include "trn/score-easy.h" /* interactive menus and such */
 #include "trn/scorefile.h"
 #include "trn/scoresave.h"
-#include "trn/string-algos.h"
 #include "trn/sorder.h"
+#include "trn/string-algos.h"
 #include "trn/terminal.h" /* input_pending() */
 
 #include <cstdio>

@@ -11,7 +11,7 @@
 #include <cstdint>
 #include <string>
 
-struct LIST;
+struct List;
 struct NEWSRC;
 
 enum newsgroup_flags : std::uint8_t
@@ -42,7 +42,7 @@ struct NGDATA
     newsgroup_flags flags;         /* flags for each group */
 };
 
-extern LIST       *g_ngdata_list;      /* a list of NGDATA */
+extern List       *g_ngdata_list;      /* a list of NGDATA */
 extern int         g_ngdata_cnt;       //
 extern NG_NUM      g_newsgroup_cnt;    /* all newsgroups in our current newsrc(s) */
 extern NG_NUM      g_newsgroup_toread; //

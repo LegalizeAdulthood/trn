@@ -4,18 +4,18 @@
 #ifndef TRN_CACHE_H
 #define TRN_CACHE_H
 
+#include "trn/List.h"
 #include "trn/enum-flags.h"
 #include "trn/hash.h"
 #include "trn/head.h"
 #include "trn/kfile.h"
-#include "trn/list.h"
 #include "trn/ngdata.h"
 
 #include <cstdint>
 #include <ctime>
 
 struct Article;
-struct LIST;
+struct List;
 
 enum SubjectFlags : std::uint16_t
 {
@@ -115,7 +115,7 @@ enum : bool
     FILL_CACHE = true
 };
 
-extern LIST     *g_article_list; /* a list of ARTICLEs */
+extern List     *g_article_list; /* a list of ARTICLEs */
 extern Article **g_artptr_list;  /* the article-selector creates this */
 extern Article **g_artptr;       /* ditto -- used for article order */
 extern ART_NUM   g_artptr_list_size;

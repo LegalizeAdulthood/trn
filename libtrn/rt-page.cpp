@@ -6,11 +6,11 @@
 #include "config/common.h"
 #include "trn/rt-page.h"
 
-#include "trn/datasrc.h"
+#include "trn/List.h"
 #include "trn/addng.h"
 #include "trn/cache.h"
 #include "trn/color.h"
-#include "trn/list.h"
+#include "trn/datasrc.h"
 #include "trn/ngdata.h"
 #include "trn/only.h"
 #include "trn/opt.h"

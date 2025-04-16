@@ -6,14 +6,14 @@
 #include "config/common.h"
 #include "trn/cache.h"
 
-#include "trn/datasrc.h"
+#include "trn/List.h"
 #include "trn/bits.h"
+#include "trn/datasrc.h"
 #include "trn/final.h"
 #include "trn/hash.h"
 #include "trn/head.h"
 #include "trn/intrp.h"
 #include "trn/kfile.h"
-#include "trn/list.h"
 #include "trn/mime.h"
 #include "trn/ng.h"
 #include "trn/ngdata.h"
@@ -38,7 +38,7 @@
 #include <cstring>
 #include <ctime>
 
-LIST     *g_article_list{};         /* a list of ARTICLEs */
+List     *g_article_list{};         /* a list of ARTICLEs */
 Article **g_artptr_list{};          /* the article-selector creates this */
 Article **g_artptr{};               /* ditto -- used for article order */
 ART_NUM   g_artptr_list_size{};     //
@@ -62,7 +62,7 @@ static COMPEX  s_srchcompex; /* compiled regex for searchahead */
 static HASHTABLE *s_subj_hash{};
 static HASHTABLE *s_shortsubj_hash{};
 
-static void init_artnode(LIST *list, ListNode *node);
+static void init_artnode(List *list, ListNode *node);
 static bool clear_artitem(char *cp, int arg);
 
 void cache_init()
@@ -166,7 +166,7 @@ void close_cache()
 }
 
 /* Initialize the memory for an entire node's worth of article's */
-static void init_artnode(LIST *list, ListNode *node)
+static void init_artnode(List *list, ListNode *node)
 {
     std::memset(node->data, 0, list->items_per_node * list->item_size);
     Article *ap = (Article *) node->data;

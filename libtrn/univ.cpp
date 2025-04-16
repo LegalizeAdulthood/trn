@@ -10,13 +10,12 @@
 #include "config/common.h"
 #include "trn/univ.h"
 
+#include "trn/List.h"
 #include "trn/cache.h"
-#include "util/env.h"
 #include "trn/final.h"
 #include "trn/hash.h"
 #include "trn/head.h"
 #include "trn/help.h"
-#include "trn/list.h"
 #include "trn/ng.h"
 #include "trn/ngdata.h"
 #include "trn/rcstuff.h"
@@ -28,6 +27,7 @@
 #include "trn/trn.h"
 #include "trn/url.h"
 #include "trn/util.h"
+#include "util/env.h"
 #include "util/util2.h"
 
 #include <cstdio>

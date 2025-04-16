@@ -2,8 +2,8 @@
  */
 /* This software is copyrighted as detailed in the LICENSE file. */
 
+#include "trn/List.h"
 #include "config/common.h"
-#include "trn/list.h"
 
 #include "trn/util.h"
 
@@ -11,7 +11,7 @@
 #include <cstdlib>
 #include <cstring>
 
-static void def_init_node(LIST *list, ListNode *node);
+static void def_init_node(List *list, ListNode *node);
 
 void list_init()
 {
@@ -19,9 +19,9 @@ void list_init()
 
 /* Create the header for a dynamic list of items.
 */
-LIST *new_list(long low, long high, int item_size, int items_per_node, ListFlags flags, void (*init_node)(LIST *, ListNode *))
+List *new_list(long low, long high, int item_size, int items_per_node, ListFlags flags, void (*init_node)(List *, ListNode *))
 {
-    LIST* list = (LIST*)safemalloc(sizeof (LIST));
+    List* list = (List*)safemalloc(sizeof (List));
     list->first = nullptr;
     list->recent = nullptr;
     list->init_node = init_node? init_node : def_init_node;
@@ -35,7 +35,7 @@ LIST *new_list(long low, long high, int item_size, int items_per_node, ListFlags
 }
 
 /* The default way to initialize a node */
-static void def_init_node(LIST *list, ListNode *node)
+static void def_init_node(List *list, ListNode *node)
 {
     if (list->flags & LF_ZERO_MEM)
     {
@@ -47,7 +47,7 @@ static void def_init_node(LIST *list, ListNode *node)
 ** will allocate new list items as needed, keeping the list->high
 ** value up to date.
 */
-char *listnum2listitem(LIST *list, long num)
+char *listnum2listitem(List *list, long num)
 {
     ListNode* node = list->recent;
     ListNode* prevnode = nullptr;
@@ -101,7 +101,7 @@ char *listnum2listitem(LIST *list, long num)
 /* Take the pointer of a list element and return its number.  The item
 ** must already exist or this will infinite loop.
 */
-long listitem2listnum(LIST *list, char *ptr)
+long listitem2listnum(List *list, char *ptr)
 {
     int item_size = list->item_size;
 
@@ -126,7 +126,7 @@ long listitem2listnum(LIST *list, char *ptr)
 
 /* Execute the indicated callback function on every item in the list.
 */
-bool walk_list(LIST *list, bool (*callback)(char *, int), int arg)
+bool walk_list(List *list, bool (*callback)(char *, int), int arg)
 {
     int item_size = list->item_size;
 
@@ -148,7 +148,7 @@ bool walk_list(LIST *list, bool (*callback)(char *, int), int arg)
 ** that is already allocated, rounding in the indicated direction from
 ** the initial list number.
 */
-long existing_listnum(LIST *list, long num, int direction)
+long existing_listnum(List *list, long num, int direction)
 {
     ListNode* node = list->recent;
     ListNode* prevnode = nullptr;
@@ -201,7 +201,7 @@ long existing_listnum(LIST *list, long num, int direction)
 /* Increment the item pointer to the next allocated item.
 ** Returns nullptr if ptr is the last one.
 */
-char *next_listitem(LIST *list, char *ptr)
+char *next_listitem(List *list, char *ptr)
 {
     ListNode* node = list->recent;
 
@@ -230,7 +230,7 @@ char *next_listitem(LIST *list, char *ptr)
 /* Decrement the item pointer to the prev allocated item.
 ** Returns nullptr if ptr is the first one.
 */
-char *prev_listitem(LIST *list, char *ptr)
+char *prev_listitem(List *list, char *ptr)
 {
     ListNode* node = list->recent;
 
@@ -255,7 +255,7 @@ char *prev_listitem(LIST *list, char *ptr)
 ** the individual nodes, call walk_list() with a cleanup function before
 ** calling this.
 */
-void delete_list(LIST *list)
+void delete_list(List *list)
 {
     ListNode* node = list->first;
 

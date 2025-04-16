@@ -8,14 +8,14 @@
 #include "config/common.h"
 #include "trn/ngdata.h"
 
-#include "trn/datasrc.h"
+#include "trn/List.h"
 #include "trn/bits.h"
 #include "trn/cache.h"
 #include "trn/change_dir.h"
+#include "trn/datasrc.h"
 #include "trn/final.h"
 #include "trn/head.h"
 #include "trn/kfile.h"
-#include "trn/list.h"
 #include "trn/ng.h"
 #include "trn/nntp.h"
 #include "trn/rcln.h"
@@ -36,7 +36,7 @@
 #include <cstring>
 #include <string>
 
-LIST       *g_ngdata_list{};       /* a list of NGDATA */
+List       *g_ngdata_list{};       /* a list of NGDATA */
 int         g_ngdata_cnt{};        //
 NG_NUM      g_newsgroup_cnt{};     /* all newsgroups in our current newsrc(s) */
 NG_NUM      g_newsgroup_toread{};  //

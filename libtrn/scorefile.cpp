@@ -10,10 +10,9 @@
 #include "config/common.h"
 #include "trn/scorefile.h"
 
+#include "trn/List.h"
 #include "trn/cache.h"
-#include "util/env.h" /* get_val */
 #include "trn/head.h"
-#include "trn/list.h"
 #include "trn/mempool.h"
 #include "trn/ng.h"
 #include "trn/ngdata.h"
@@ -24,6 +23,7 @@
 #include "trn/terminal.h" /* finish_command() */
 #include "trn/url.h"
 #include "trn/util.h"
+#include "util/env.h" /* get_val */
 #include "util/util2.h"
 
 #include <cctype>
