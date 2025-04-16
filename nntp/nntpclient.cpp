@@ -302,16 +302,16 @@ bool nntp_at_list_end(const char *s)
     return false;
 }
 
-class int_sig_holder
+class SigIntHolder
 {
 public:
-    int_sig_holder()
+    SigIntHolder()
     {
 #ifdef HAS_SIGHOLD
         sighold(SIGINT);
 #endif
     }
-    ~int_sig_holder()
+    ~SigIntHolder()
     {
 #ifdef HAS_SIGHOLD
         sigrelse(SIGINT);
@@ -328,7 +328,7 @@ static std::string s_nntp_gets_line;
  */
 NNTPGetsResult nntp_gets(char *bp, int len)
 {
-    int_sig_holder holder;
+    SigIntHolder holder;
 
     error_code_t ec;
     if (s_nntp_gets_line.empty())
