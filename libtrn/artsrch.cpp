@@ -174,7 +174,8 @@ art_search_result art_search(char *patbuf, int patbufsiz, bool get_cmd)
             g_srchahead = -1;
         }
     }
-    else {
+    else
+    {
         int saltmode = patbuf[2] == 'g'? 2 : 1;
         const char *finding_str = patbuf[1] == 'f' ? "author" : "subject";
 
