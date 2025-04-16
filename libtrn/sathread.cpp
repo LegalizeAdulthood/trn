@@ -22,7 +22,8 @@ void sa_init_threads()
 {
     mp_free(MP_SATHREAD);
     s_sa_num_threads = 0;
-    if (s_sa_thread_hash) {
+    if (s_sa_thread_hash)
+    {
         hashdestroy(s_sa_thread_hash);
         s_sa_thread_hash = nullptr;
     }
@@ -50,11 +51,13 @@ long sa_get_subj_thread(long e)
         s += 2;
     }
 
-    if (!s_sa_thread_hash) {
+    if (!s_sa_thread_hash)
+    {
         s_sa_thread_hash = hashcreate(401, HASH_DEFCMPFUNC);
     }
     HASHDATUM data = hashfetch(s_sa_thread_hash, s, std::strlen(s));
-    if (data.dat_ptr) {
+    if (data.dat_ptr)
+    {
         return (long)(data.dat_len);
     }
     char *p = mp_savestr(s, MP_SATHREAD);
@@ -88,7 +91,8 @@ long sa_subj_thread_prev(long a)
     int j;
 
     int i = sa_subj_thread(a);
-    while ((a = s_prev(a)) != 0) {
+    while ((a = s_prev(a)) != 0)
+    {
         if (!sa_basic_elig(a))
         {
             continue;
@@ -110,7 +114,8 @@ long sa_subj_thread_next(long a)
     int j;
 
     int i = sa_subj_thread(a);
-    while ((a = s_next(a)) != 0) {
+    while ((a = s_next(a)) != 0)
+    {
         if (!sa_basic_elig(a))
         {
             continue;
