@@ -116,7 +116,7 @@ TEST_P(ObjectNumbers, orderRelationships)
 
 INSTANTIATE_TEST_SUITE_P(TestObjectNumbers, ObjectNumbers, testing::ValuesIn(object_numbers));
 
-using display_option_values = enum_values<option_index>;
+using display_option_values = enum_values<OptionIndex>;
 
 display_option_values display_options[] =
 {

@@ -193,7 +193,7 @@ static void             sel_prompt();
 static bool             select_item(SEL_UNION u);
 static bool             delay_return_item(SEL_UNION u);
 static bool             deselect_item(SEL_UNION u);
-static bool             select_option(option_index i);
+static bool             select_option(OptionIndex i);
 static void             sel_cleanup();
 static bool             mark_DEL_as_READ(char *ptr, int arg);
 static display_state    sel_command(char_int ch);
@@ -1821,7 +1821,7 @@ static bool deselect_item(SEL_UNION u)
     return true;
 }
 
-static bool select_option(option_index i)
+static bool select_option(OptionIndex i)
 {
     bool  changed = false;
     char**vals = ini_values(g_options_ini);
@@ -3553,7 +3553,7 @@ static display_state option_commands(char_int ch)
                 break;
             }
         } while (i != j);
-        u.op = static_cast<option_index>(i);
+        u.op = static_cast<OptionIndex>(i);
         if (!(g_option_flags[i] & OF_INCLUDED))
         {
             for (j = i-1; *g_options_ini[j].item != '*'; j--)

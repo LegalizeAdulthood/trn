@@ -33,7 +33,7 @@ union SEL_UNION
     MULTIRC     *mp;
     NewsgroupData      *np;
     UNIV_ITEM   *un;
-    option_index op;
+    OptionIndex op;
 };
 
 struct SEL_ITEM

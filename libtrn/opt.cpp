@@ -382,12 +382,12 @@ void set_options(char **vals)
     {
         if (*++vals)
         {
-            set_option(static_cast<option_index>(i), *vals);
+            set_option(static_cast<OptionIndex>(i), *vals);
         }
     }
 }
 
-void set_option(option_index num, const char *s)
+void set_option(OptionIndex num, const char *s)
 {
     if (g_option_saved_vals)
     {
@@ -1054,7 +1054,7 @@ void save_options(const char *filename)
             {
                 std::fputs("#default of ", fp_out);
             }
-            std::fprintf(fp_out,"%s\n",quote_string(option_value(static_cast<option_index>(i))));
+            std::fprintf(fp_out,"%s\n",quote_string(option_value(static_cast<OptionIndex>(i))));
             if (g_option_saved_vals[i])
             {
                 if (g_option_saved_vals[i] != g_option_def_vals[i])
@@ -1093,7 +1093,7 @@ void save_options(const char *filename)
     rename(g_buf,filename);
 }
 
-const char *option_value(option_index num)
+const char *option_value(OptionIndex num)
 {
     switch (num)
     {

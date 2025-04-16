@@ -12,7 +12,7 @@
 #include <string>
 
 /* Display Options */
-enum option_index
+enum OptionIndex
 {
     OI_NONE = -1,
 
@@ -147,9 +147,9 @@ void        opt_init(int argc, char *argv[], char **tcbufptr);
 void        opt_final();
 void        opt_file(const char *filename, char **tcbufptr, bool bleat);
 void        set_options(char **vals);
-void        set_option(option_index num, const char *s);
+void        set_option(OptionIndex num, const char *s);
 void        save_options(const char *filename);
-const char *option_value(option_index num);
+const char *option_value(OptionIndex num);
 void        set_header(const char *s, HeaderTypeFlags flag, bool setit);
 const char *quote_string(const char *val);
 void        cwd_check();

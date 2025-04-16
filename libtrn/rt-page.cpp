@@ -2082,7 +2082,7 @@ try_again:
                           (g_option_saved_vals[op]? 3 :
                                (g_option_def_vals[op]? 0 : 2));
             }
-            g_sel_items[g_sel_page_item_cnt].u.op = static_cast<option_index>(op);
+            g_sel_items[g_sel_page_item_cnt].u.op = static_cast<OptionIndex>(op);
             g_sel_items[g_sel_page_item_cnt].line = g_term_line;
             g_sel_items[g_sel_page_item_cnt].sel = sel;
             g_sel_page_obj_cnt++;
@@ -2602,7 +2602,7 @@ void display_option(int op, int item_index)
         val = ini_values(g_options_ini)[op];
         if (!val)
         {
-            val = quote_string(option_value(static_cast<option_index>(op)));
+            val = quote_string(option_value(static_cast<OptionIndex>(op)));
         }
     }
     output_sel(item_index, g_sel_items[item_index].sel, false);
