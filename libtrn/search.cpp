@@ -70,9 +70,9 @@ enum
 
     ASCSIZ = 256
 };
-using TRANSTABLE = Uchar[ASCSIZ];
+using TranslationTable = Uchar[ASCSIZ];
 
-static TRANSTABLE  s_trans{};
+static TranslationTable  s_trans{};
 static bool        s_folding{};
 static int         s_err{};
 static const char *s_first_character{};
