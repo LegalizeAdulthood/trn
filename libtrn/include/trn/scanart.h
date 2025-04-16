@@ -29,7 +29,7 @@ enum SaMainResult
  * 2: Secondary selection--not currently used.
  * 3: If set, the author of this article influenced its score.
  */
-enum scanart_flags : unsigned char
+enum ScanArticleFlags : unsigned char
 {
     SAF_NONE = 0,
     SAF_MARK = 0x01,
@@ -37,14 +37,14 @@ enum scanart_flags : unsigned char
     SAF_SELECT2 = 0x04,
     SAF_AUTH_SCORED = 0x08
 };
-DECLARE_FLAGS_ENUM(scanart_flags, unsigned char);
+DECLARE_FLAGS_ENUM(ScanArticleFlags, unsigned char);
 
 /* per-entry data */
 struct SA_ENTRYDATA
 {
     ART_NUM       artnum;
     long          subj_thread_num;
-    scanart_flags sa_flags; /* status bitmap (marked, select, etc...) */
+    ScanArticleFlags sa_flags; /* status bitmap (marked, select, etc...) */
 };
 
 extern SA_ENTRYDATA *g_sa_ents;
