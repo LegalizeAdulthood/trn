@@ -168,22 +168,29 @@ ov_field_num ov_num(char *hdr, char *end)
 
     switch (set_line_type(hdr, end))
     {
-      case SUBJ_LINE:
+    case SUBJ_LINE:
         return OV_SUBJ;
-      case AUTHOR_LINE:         /* This hack is for the Baen NNTP server */
-      case FROM_LINE:
+
+    case AUTHOR_LINE:         /* This hack is for the Baen NNTP server */
+    case FROM_LINE:
         return OV_FROM;
-      case DATE_LINE:
+
+    case DATE_LINE:
         return OV_DATE;
-      case MSGID_LINE:
+
+    case MSGID_LINE:
         return OV_MSGID;
-      case REFS_LINE:
+
+    case REFS_LINE:
         return OV_REFS;
-      case BYTES_LINE:
+
+    case BYTES_LINE:
         return OV_BYTES;
-      case LINES_LINE:
+
+    case LINES_LINE:
         return OV_LINES;
-      case XREF_LINE:
+
+    case XREF_LINE:
         return OV_XREF;
     }
     return OV_NUM;
