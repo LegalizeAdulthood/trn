@@ -30,16 +30,20 @@ int main(int argc, char *argv[])
     char*wildarg = nullptr;
     std::FILE *out_fp{};
 
-    while (--argc) {
-        if (**++argv == '-') {
-            switch (*++*argv) {
+    while (--argc)
+    {
+        if (**++argv == '-')
+        {
+            switch (*++*argv)
+            {
             case 'o':
                 if (out_fp || !--argc)
                 {
                     usage();
                 }
                 out_fp = std::fopen(*++argv, "w");
-                if (out_fp == nullptr) {
+                if (out_fp == nullptr)
+                {
                     std::perror(*argv);
                     std::exit(1);
                 }
@@ -79,7 +83,8 @@ int main(int argc, char *argv[])
     env_init(tcbuf, true);
 
     char *cp = std::getenv("NNTPSERVER");
-    if (!cp) {
+    if (!cp)
+    {
         cp = filexp(SERVER_NAME);
         if (*cp == '/')
         {
@@ -94,7 +99,8 @@ int main(int argc, char *argv[])
         {
             cp = std::strchr(s_server_name, ':');
         }
-        if (cp) {
+        if (cp)
+        {
             *cp = '\0';
             g_nntplink.port_number = std::atoi(cp+1);
         }
@@ -106,9 +112,10 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (s_server_name) {
-        if (init_nntp() < 0
-         || nntp_connect(s_server_name,false) <= 0)
+    if (s_server_name)
+    {
+        if (init_nntp() < 0 //
+            || nntp_connect(s_server_name, false) <= 0)
         {
             std::exit(1);
         }
@@ -131,12 +138,14 @@ int main(int argc, char *argv[])
 #ifdef HAS_SIGHOLD
         sighold(SIGINT);
 #endif
-        if (nntp_check() <= 0) {
+        if (nntp_check() <= 0)
+        {
             std::fprintf(stderr,"nntplist: Can't get %s file from server.\n",action? action : "active");
             std::fprintf(stderr, "Server said: %s\n", g_ser_line);
             finalize(1);
         }
-        while (nntp_gets(g_ser_line, sizeof g_ser_line) == 1) {
+        while (nntp_gets(g_ser_line, sizeof g_ser_line) == 1)
+        {
             if (nntp_at_list_end(g_ser_line))
             {
                 break;
@@ -151,7 +160,8 @@ int main(int argc, char *argv[])
         nntp_close(true);
         cleanup_nntp();
     }
-    else {
+    else
+    {
         cp = nullptr;
         if (!action)
         {
@@ -173,7 +183,8 @@ int main(int argc, char *argv[])
         {
             cp = OVERVIEW_FMT;
         }
-        if (!cp || !*cp) {
+        if (!cp || !*cp)
+        {
             std::fprintf(stderr, "Don't know how to list `%s' from your local system.\n",
                     action);
             exit(1);
@@ -184,8 +195,10 @@ int main(int argc, char *argv[])
             std::fprintf(stderr,"Unable to open `%s'.\n", cp);
             std::exit(1);
         }
-        while (std::fgets(g_ser_line, sizeof g_ser_line, in_fp)) {
-            if (wildarg) {
+        while (std::fgets(g_ser_line, sizeof g_ser_line, in_fp))
+        {
+            if (wildarg)
+            {
                 cp = skip_non_space(g_ser_line);
                 if (!cp)
                 {
