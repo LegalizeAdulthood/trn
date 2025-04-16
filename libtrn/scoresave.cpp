@@ -177,8 +177,8 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
     {
         switch (*s)
         {
-          case 'A': case 'B': case 'C': case 'D': case 'E':
-          case 'F': case 'G': case 'H': case 'I':
+        case 'A': case 'B': case 'C': case 'D': case 'E':
+        case 'F': case 'G': case 'H': case 'I':
             /* negative starting digit */
             p = s;
             c1 = *s;
@@ -198,8 +198,9 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
             }
             a++;
             break;
-          case 'J': case 'K': case 'L': case 'M': case 'N':
-          case 'O': case 'P': case 'Q': case 'R': case 'S':
+
+        case 'J': case 'K': case 'L': case 'M': case 'N':
+        case 'O': case 'P': case 'Q': case 'R': case 'S':
             /* positive starting digit */
             p = s;
             c1 = *s;
@@ -219,7 +220,8 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
             }
             a++;
             break;
-          case 'r':     /* repeat */
+
+        case 'r':     /* repeat */
             s++;
             p = s;
             if (!std::isdigit(*s))
@@ -247,7 +249,8 @@ ART_NUM sc_sv_use_line(char *line, ART_NUM a)
                 a++;
             }
             break;
-          case 's':     /* skip */
+
+        case 's':     /* skip */
             s++;
             p = s;
             if (!std::isdigit(*s))
@@ -411,21 +414,26 @@ void sc_load_scores()
         }
         switch (*s)
         {
-          case ':':
-            a = std::atoi(s+1);      /* set the article # */
+        case ':':
+            a = std::atoi(s+1);         /* set the article # */
             break;
-          case '.':                     /* longer score line */
+
+        case '.':                       /* longer score line */
             a = sc_sv_use_line(s+1,a);
             break;
-          case '!':                     /* group of shared file */
+
+        case '!':                       /* group of shared file */
             i = s_num_lines;
             break;
-          case 'v':                     /* version number */
+
+        case 'v':                       /* version number */
             break;                      /* not used now */
-          case '\0':                    /* empty string */
-          case '#':                     /* comment */
+
+        case '\0':                      /* empty string */
+        case '#':                       /* comment */
             break;
-          default:
+
+        default:
             /* don't even try to deal with it */
             return;
         } /* switch */
