@@ -712,7 +712,7 @@ void set_option(OptionIndex num, const char *s)
     case OI_PAGER_LINE_MARKING:
         if (std::isdigit(*s))
         {
-            g_marking_areas = static_cast<marking_areas>(std::atoi(s));
+            g_marking_areas = static_cast<MarkingAreas>(std::atoi(s));
         }
         else
         {

@@ -114,14 +114,14 @@ enum MarkingMode
 };
 extern MarkingMode g_marking; /* -m */
 
-enum marking_areas
+enum MarkingAreas
 {
     NONE = 0,
     HALFPAGE_MARKING = 1,
     BACKPAGE_MARKING = 2
 };
-DECLARE_FLAGS_ENUM(marking_areas, int);
-extern marking_areas g_marking_areas;
+DECLARE_FLAGS_ENUM(MarkingAreas, int);
+extern MarkingAreas g_marking_areas;
 
 /* termcap stuff */
 
