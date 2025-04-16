@@ -735,7 +735,8 @@ long nntp_read(char *buf, long n)
         boost::system::error_code ec;
         n = g_nntplink.connection->read(buf, n > s_rawbytes ? s_rawbytes : n, ec);
         s_rawbytes -= n;
-    } else
+    }
+    else
     {
         n = 0;
     }

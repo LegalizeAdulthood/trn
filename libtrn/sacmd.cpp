@@ -117,7 +117,8 @@ int sa_docmd()
                     (void) sa_art_cmd(true, SA_KILL, g_page_ents[j].entnum);
                 }
             }
-        } else
+        }
+        else
         {
             for (int j = 0; j <= g_s_bot_ent; j++)
             {
@@ -290,7 +291,8 @@ int sa_docmd()
             s_rub_ptr();
             s_go_top_ents();
             g_s_refill = true;
-        } else  /* quit out: no articles */
+        }
+        else /* quit out: no articles */
         {
             return SA_QUIT;
         }
@@ -763,7 +765,8 @@ void sa_art_cmd_prim(sa_cmd cmd, long a)
             {
                 g_s_refill = true;      /* article is now ineligible */
             }
-        } else
+        }
+        else
         {
             sa_select1(a);
         }

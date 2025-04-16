@@ -887,7 +887,8 @@ void select_subject(SUBJECT *subj, autokill_flags auto_flags)
         subj->flags = (subj->flags & ~SF_DEL)
                     | static_cast<subject_flags>(g_sel_mask) | SF_VISIT | SF_WASSELECTED;
         g_selected_only = true;
-    } else
+    }
+    else
     {
         subj->flags |= SF_WASSELECTED;
     }
@@ -1211,7 +1212,8 @@ void unkill_subject(SUBJECT *subj)
                     g_selected_count++;
                 }
                 ap->flags = (ap->flags & ~AF_DELSEL) | AF_SEL|AF_UNREAD;
-            } else
+            }
+            else
             {
                 ap->flags &= ~(AF_DEL | AF_DELSEL);
             }
@@ -1679,7 +1681,8 @@ void count_subjects(cs_mode cmode)
                 sp->flags = (sp->flags & ~(SF_SEL|SF_DEL)) | static_cast<subject_flags>(g_sel_mask);
                 g_selected_count += sel_count;
                 g_selected_subj_cnt++;
-            } else
+            }
+            else
             {
                 sp->flags &= ~static_cast<subject_flags>(g_sel_mask);
             }
@@ -1692,7 +1695,8 @@ void count_subjects(cs_mode cmode)
                 sp->flags = (sp->flags & ~(SF_SEL|SF_DEL)) | static_cast<subject_flags>(g_sel_mask);
                 g_selected_count += sel_count;
                 g_selected_subj_cnt++;
-            } else if (cmode >= CS_UNSELECT)
+            }
+            else if (cmode >= CS_UNSELECT)
             {
                 sp->flags &= ~static_cast<subject_flags>(g_sel_mask);
             }

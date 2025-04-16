@@ -728,7 +728,8 @@ try_again:
                     }
                 }
             }
-        } else
+        }
+        else
         {
             sort_articles();
         }
@@ -756,7 +757,8 @@ try_again:
             {
                 g_sel_total_obj_cnt++;
                 ap->flags |= AF_INCLUDED;
-            } else
+            }
+            else
             {
                 ap->flags &= ~AF_INCLUDED;
             }
@@ -1383,7 +1385,8 @@ bool prev_page()
                     item_arts += sp->misc;
                 }
                 line_cnt = count_thread_lines(sp, (int*)nullptr);
-            } else
+            }
+            else
             {
                 line_cnt = count_subject_lines(sp, (int *) nullptr);
             }
@@ -2113,7 +2116,8 @@ try_again:
                         ix = -1;
                     }
                 }
-            } else
+            }
+            else
             {
                 line_cnt = 0;
             }
@@ -2285,7 +2289,8 @@ static int count_subject_lines(const SUBJECT *subj, int *selptr)
                 break;
             }
         }
-    } else
+    }
+    else
     {
         sel = 0;
     }

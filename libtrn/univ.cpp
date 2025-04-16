@@ -784,7 +784,8 @@ static bool univ_do_line(char *line)
                 p = nullptr;
             }
             /* XXX later do more error checking */
-        } else
+        }
+        else
         {
             p = nullptr;
         }
@@ -837,7 +838,8 @@ static bool univ_do_line(char *line)
                     }
                     /* XXX later do more error checking */
                 }
-            } else
+            }
+            else
             {
                 p = nullptr;
             }

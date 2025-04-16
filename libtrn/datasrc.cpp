@@ -496,7 +496,8 @@ bool open_datasrc(DATASRC *dp)
                 success = actfile_hash(dp);
                 break;
             }
-        } else
+        }
+        else
         {
             success = actfile_hash(dp);
         }

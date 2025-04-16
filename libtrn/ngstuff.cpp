@@ -399,7 +399,8 @@ int thread_perform()
             }
         }
 #if 0
-    } else if (!std::strcmp(cmdstr, "E"))
+    }
+    else if (!std::strcmp(cmdstr, "E"))
     {
         /* The 'E'nd-decode command doesn't do any looping at all. */
         if (decode_fp)
@@ -550,7 +551,8 @@ int perform(char *cmdlst, int output_level)
                 {
                     cmdlst++;
                 }
-            } else
+            }
+            else
             {
                 select_article(g_artp, output_level ? ALSO_ECHO : AUTO_KILL_NONE);
             }
@@ -576,7 +578,8 @@ int perform(char *cmdlst, int output_level)
                     deselect_arts_subject(g_artp);
                 }
                 cmdlst++;
-            } else
+            }
+            else
             {
                 deselect_article(g_artp, output_level ? ALSO_ECHO : AUTO_KILL_NONE);
             }

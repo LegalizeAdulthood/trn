@@ -664,7 +664,8 @@ int decode_header(char *to, char *from, int size)
             {
                 *to++ = *from++;
             }
-        } else if (*from != '\n')
+        }
+        else if (*from != '\n')
         {
             *to++ = *from++;
         }

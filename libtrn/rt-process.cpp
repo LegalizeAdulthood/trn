@@ -543,7 +543,8 @@ static void unlink_child(ARTICLE *child)
                 sp->thread = child->sibling;
                 sp = sp->thread_link;
             } while (sp != child->subj);
-        } else
+        }
+        else
         {
             goto sibling_search;
         }
@@ -589,7 +590,8 @@ void link_child(ARTICLE *child)
                 sp = sp->thread_link;
             } while (sp != child->subj);
             child->sibling = ap;
-        } else
+        }
+        else
         {
             goto sibling_search;
         }

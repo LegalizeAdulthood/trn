@@ -163,7 +163,8 @@ void s_refresh_description(int line)
                 {
                     std::printf("** ");      /* too big */
                 }
-            } else
+            }
+            else
             {
                 std::printf("   ");
             }

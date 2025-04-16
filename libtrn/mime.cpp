@@ -1626,7 +1626,8 @@ int filter_html(char *t, const char *f)
                     *t++ = c;
                 }
                 f += entity_found;
-            } else
+            }
+            else
             {
                 *t++ = *f;
             }

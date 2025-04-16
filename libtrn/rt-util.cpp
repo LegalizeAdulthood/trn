@@ -744,7 +744,8 @@ const char *compress_subj(const ARTICLE *ap, int max)
                 {
                     cp = last_word;
                 }
-            } else
+            }
+            else
             {
                 cp = last_word;
             }

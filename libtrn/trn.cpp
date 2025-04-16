@@ -306,7 +306,8 @@ void do_multirc()
                         cleanup_newsrc(g_ngptr->rc); /* this may move newsgroups around */
                         set_ng(g_current_ng);
                     }
-                } else
+                }
+                else
                 {
                     shoe_fits = true;
                 }

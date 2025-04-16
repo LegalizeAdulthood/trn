@@ -963,7 +963,8 @@ bool get_ng(const char *what, getnewsgroup_flags flags)
             {
                 return false;
             }
-        } else
+        }
+        else
         {
             return false;
         }

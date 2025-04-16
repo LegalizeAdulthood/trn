@@ -328,7 +328,8 @@ void term_set(char *tcbuf)
                 g_tc_BC = "\b";         /* better than nothing... */
             }
         }
-    } else
+    }
+    else
     {
         g_tc_BC = "\b";                 /* make a backspace handy */
     }

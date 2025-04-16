@@ -1109,7 +1109,8 @@ not_threaded:
                     /* HUH?  Just hope for the best */
                     break;
                 }
-            } else
+            }
+            else
             {
                 inc_art(g_selected_only,false);
             }

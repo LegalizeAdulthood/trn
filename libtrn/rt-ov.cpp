@@ -568,7 +568,8 @@ static void ov_parse(char *line, ART_NUM artnum, bool remote)
         {
             thread_article(article, fields[OV_REFS]);
         }
-    } else if (!(article->flags & AF_CACHED))
+    }
+    else if (!(article->flags & AF_CACHED))
     {
         cache_article(article);
     }

@@ -805,7 +805,8 @@ void edit_kfile()
             }
         }
         std::strcpy(g_buf,filexp(get_val_const("KILLLOCAL",s_killlocal)));
-    } else
+    }
+    else
     {
         std::strcpy(g_buf, filexp(get_val_const("KILLGLOBAL", s_killglobal)));
     }

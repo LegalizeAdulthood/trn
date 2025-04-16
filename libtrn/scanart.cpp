@@ -81,7 +81,8 @@ sa_main_result sa_main()
             return SA_ERR;              /* we don't belong here */
         }
         g_sa_never_initialized = false; /* we have entered at least once */
-    } else
+    }
+    else
     {
         s_change_context(g_sa_scan_context);
     }

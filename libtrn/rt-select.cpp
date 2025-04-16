@@ -352,7 +352,8 @@ sel_exit:
     {
         g_art = g_curr_art;
         g_artp = g_curr_artp;
-    } else
+    }
+    else
     {
         top_article();
     }
@@ -534,7 +535,8 @@ char newsgroup_selector()
     {
         g_sel_mask = AGF_DELSEL;
         g_sel_page_np = nullptr;
-    } else
+    }
+    else
     {
         g_sel_mask = AGF_SEL;
     }
@@ -3084,7 +3086,8 @@ static display_state newsgroup_commands(char_int ch)
         }
         g_sel_item_index = 0;
         init_pages(PRESERVE_PAGE);
-        if (ret == ING_SPECIAL && g_ngptr && g_ngptr->toread < g_ng_min_toread){
+        if (ret == ING_SPECIAL && g_ngptr && g_ngptr->toread < g_ng_min_toread)
+        {
             g_ngptr->flags |= NF_INCLUDED;
             g_sel_total_obj_cnt++;
             ret = ING_DISPLAY;

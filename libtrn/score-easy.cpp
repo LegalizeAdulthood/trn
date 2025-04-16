@@ -138,7 +138,8 @@ char *sc_easy_append()
             s = s_sc_e_newline+std::strlen(s_sc_e_newline); /* point at terminator  */
             *s++ = ' ';
             q_done = true;
-        } else
+        }
+        else
         {
             std::printf("\n");
         }

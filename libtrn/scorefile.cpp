@@ -1174,7 +1174,8 @@ char *sf_get_line(ART_NUM a, header_line_type h)
             *sf_getline = '\0';
             return sf_getline;
         }
-    } else if (h == SUBJ_LINE)
+    }
+    else if (h == SUBJ_LINE)
     {
         s = fetchcache(a,h,true);       /* get compressed copy */
     }
