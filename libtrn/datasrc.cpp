@@ -636,7 +636,7 @@ bool actfile_hash(DataSource *dp)
 
 bool find_actgrp(DataSource *dp, char *outbuf, const char *nam, int len, ArticleNum high)
 {
-    ACT_POS act_pos;
+    ActivePosition act_pos;
     FILE* fp = dp->act_sf.fp;
     char* lbp;
     int lbp_len;
