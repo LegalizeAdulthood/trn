@@ -137,10 +137,12 @@ void mime_ReadMimecap(const char *mcname)
         return;
     }
     char *bp = safemalloc(buflen);
-    for (i = s_mimecap_list->high; !std::feof(fp); ) {
+    for (i = s_mimecap_list->high; !std::feof(fp);)
+    {
         *(s = bp) = '\0';
         int linelen = 0;
-        while (std::fgets(s, buflen - linelen, fp)) {
+        while (std::fgets(s, buflen - linelen, fp))
+        {
             if (*s == '#')
             {
                 continue;
@@ -150,19 +152,22 @@ void mime_ReadMimecap(const char *mcname)
             {
                 continue;
             }
-            if (bp[linelen-1] == '\n') {
+            if (bp[linelen - 1] == '\n')
+            {
                 if (--linelen == 0)
                 {
                     continue;
                 }
-                if (bp[linelen-1] != '\\') {
+                if (bp[linelen - 1] != '\\')
+                {
                     bp[linelen] = '\0';
                     break;
                 }
                 bp[--linelen] = '\0';
             }
 
-            if (linelen+1024 > buflen) {
+            if (linelen + 1024 > buflen)
+            {
                 buflen *= 2;
                 bp = saferealloc(bp, buflen);
             }
@@ -175,14 +180,16 @@ void mime_ReadMimecap(const char *mcname)
             continue;
         }
         char *t = mime_ParseEntryArg(&s);
-        if (!s) {
+        if (!s)
+        {
             std::fprintf(stderr, "trn: Ignoring invalid mimecap entry: %s\n", bp);
             continue;
         }
         MIMECAP_ENTRY *mcp = mimecap_ptr(++i);
         mcp->contenttype = savestr(t);
         mcp->command = savestr(mime_ParseEntryArg(&s));
-        while (s) {
+        while (s)
+        {
             t = mime_ParseEntryArg(&s);
             char *arg = std::strchr(t, '=');
             if (arg != nullptr)
@@ -203,7 +210,8 @@ void mime_ReadMimecap(const char *mcname)
                     arg = f;
                 }
             }
-            if (*t) {
+            if (*t)
+            {
                 if (string_case_equal(t, "needsterminal"))
                 {
                     mcp->flags |= MCF_NEEDSTERMINAL;
@@ -235,8 +243,10 @@ static char *mime_ParseEntryArg(char **cpp)
 
     char *s = skip_space(*cpp);
 
-    for (f = t = s; *f && *f != ';'; ) {
-        if (*f == '\\') {
+    for (f = t = s; *f && *f != ';';)
+    {
+        if (*f == '\\')
+        {
             if (*++f == '%')
             {
                 *t++ = '%';
@@ -267,10 +277,12 @@ static char *mime_ParseEntryArg(char **cpp)
 
 MIMECAP_ENTRY *mime_FindMimecapEntry(const char *contenttype, mimecap_flags skip_flags)
 {
-    for (int i = 0; i <= s_mimecap_list->high; i++) {
+    for (int i = 0; i <= s_mimecap_list->high; i++)
+    {
         MIMECAP_ENTRY *mcp = mimecap_ptr(i);
-        if (!(mcp->flags & skip_flags)
-         && mime_TypesMatch(contenttype, mcp->contenttype)) {
+        if (!(mcp->flags & skip_flags) //
+            && mime_TypesMatch(contenttype, mcp->contenttype))
+        {
             if (!mcp->testcommand)
             {
                 return mcp;
@@ -298,9 +310,12 @@ int mime_Exec(char *cmd)
 {
     char* t = g_cmd_buf;
 
-    for (char *f = cmd; *f && t-g_cmd_buf < CBUFLEN-2; f++) {
-        if (*f == '%') {
-            switch (*++f) {
+    for (char *f = cmd; *f && t - g_cmd_buf < CBUFLEN - 2; f++)
+    {
+        if (*f == '%')
+        {
+            switch (*++f)
+            {
               case 's':
                 safecpy(t, g_decode_filename, CBUFLEN-(t-g_cmd_buf));
                 t += std::strlen(t);
@@ -311,7 +326,8 @@ int mime_Exec(char *cmd)
                 t += std::strlen(t);
                 *t++ = '\'';
                 break;
-              case '{': {
+              case '{':
+              {
                 char* s = std::strchr(f, '}');
                 if (!s)
                 {
@@ -366,7 +382,8 @@ void mime_PushSection()
 bool mime_PopSection()
 {
     MIME_SECT* mp = g_mime_section->prev;
-    if (mp) {
+    if (mp)
+    {
         mime_ClearStruct(g_mime_section);
         std::free((char*)g_mime_section);
         g_mime_section = mp;
@@ -411,7 +428,8 @@ void mime_SetArticle()
         std::free(s);
     }
 
-    if (g_is_mime) {
+    if (g_is_mime)
+    {
         char *s = fetchlines(g_art, CONTXFER_LINE);
         mime_ParseEncoding(g_mime_section,s);
         std::free(s);
@@ -440,18 +458,21 @@ void mime_ParseType(MIME_SECT *mp, char *s)
     safefree0(mp->type_params);
 
     mp->type_params = mime_ParseParams(s);
-    if (!*s) {
+    if (!*s)
+    {
         mp->type = NOT_MIME;
         return;
     }
     mp->type_name = savestr(s);
     char *t = mime_FindParam(mp->type_params, "name");
-    if (t) {
+    if (t)
+    {
         safefree(mp->filename);
         mp->filename = savestr(t);
     }
 
-    if (string_case_equal(s, "text", 4)) {
+    if (string_case_equal(s, "text", 4))
+    {
         mp->type = TEXT_MIME;
         s += 4;
         if (*s++ != '/')
@@ -472,10 +493,12 @@ void mime_ParseType(MIME_SECT *mp, char *s)
         return;
     }
 
-    if (string_case_equal(s, "message/", 8)) {
+    if (string_case_equal(s, "message/", 8))
+    {
         s += 8;
         mp->type = MESSAGE_MIME;
-        if (string_case_equal(s, "partial")) {
+        if (string_case_equal(s, "partial"))
+        {
             t = mime_FindParam(mp->type_params,"id");
             if (!t)
             {
@@ -493,7 +516,8 @@ void mime_ParseType(MIME_SECT *mp, char *s)
             {
                 mp->total = (short) std::atoi(t);
             }
-            if (!mp->total) {
+            if (!mp->total)
+            {
                 mp->part = 0;
                 return;
             }
@@ -502,10 +526,12 @@ void mime_ParseType(MIME_SECT *mp, char *s)
         return;
     }
 
-    if (string_case_equal(s, "multipart/", 10)) {
+    if (string_case_equal(s, "multipart/", 10))
+    {
         s += 10;
         t = mime_FindParam(mp->type_params,"boundary");
-        if (!t) {
+        if (!t)
+        {
             mp->type = UNHANDLED_MIME;
             return;
         }
@@ -520,12 +546,14 @@ void mime_ParseType(MIME_SECT *mp, char *s)
         return;
     }
 
-    if (string_case_equal(s, "image/", 6)) {
+    if (string_case_equal(s, "image/", 6))
+    {
         mp->type = IMAGE_MIME;
         return;
     }
 
-    if (string_case_equal(s, "audio/", 6)) {
+    if (string_case_equal(s, "audio/", 6))
+    {
         mp->type = AUDIO_MIME;
         return;
     }
@@ -543,7 +571,8 @@ void mime_ParseDisposition(MIME_SECT *mp, char *s)
     }
 
     s = mime_FindParam(params,"filename");
-    if (s) {
+    if (s)
+    {
         safefree(mp->filename);
         mp->filename = savestr(s);
     }
@@ -554,29 +583,36 @@ void mime_ParseDisposition(MIME_SECT *mp, char *s)
 void mime_ParseEncoding(MIME_SECT *mp, char *s)
 {
     s = mime_SkipWhitespace(s);
-    if (!*s) {
+    if (!*s)
+    {
         mp->encoding = MENCODE_NONE;
         return;
     }
-    if (*s == '7' || *s == '8') {
-        if (string_case_equal(s+1, "bit", 3)) {
+    if (*s == '7' || *s == '8')
+    {
+        if (string_case_equal(s + 1, "bit", 3))
+        {
             s += 4;
             mp->encoding = MENCODE_NONE;
         }
     }
-    else if (string_case_equal(s, "quoted-printable", 16)) {
+    else if (string_case_equal(s, "quoted-printable", 16))
+    {
         s += 16;
         mp->encoding = MENCODE_QPRINT;
     }
-    else if (string_case_equal(s, "binary", 6)) {
+    else if (string_case_equal(s, "binary", 6))
+    {
         s += 6;
         mp->encoding = MENCODE_NONE;
     }
-    else if (string_case_equal(s, "base64", 6)) {
+    else if (string_case_equal(s, "base64", 6))
+    {
         s += 6;
         mp->encoding = MENCODE_BASE64;
     }
-    else if (string_case_equal(s, "x-uue", 5)) {
+    else if (string_case_equal(s, "x-uue", 5))
+    {
         s += 5;
         mp->encoding = MENCODE_UUE;
         if (string_case_equal(s, "ncode", 5))
@@ -584,7 +620,8 @@ void mime_ParseEncoding(MIME_SECT *mp, char *s)
             s += 5;
         }
     }
-    else {
+    else
+    {
         mp->encoding = MENCODE_UNHANDLED;
         return;
     }
@@ -602,18 +639,23 @@ void mime_ParseSubheader(std::FILE *ifp, char *next_line)
     static int line_size = 0;
     mime_ClearStruct(g_mime_section);
     g_mime_section->type = TEXT_MIME;
-    for (;;) {
-        for (int pos = 0; ; pos += std::strlen(line+pos)) {
+    for (;;)
+    {
+        for (int pos = 0;; pos += std::strlen(line + pos))
+        {
             int len = pos + (next_line ? std::strlen(next_line) : 0) + LBUFLEN;
-            if (line_size < len) {
+            if (line_size < len)
+            {
                 line_size = len + LBUFLEN;
                 line = saferealloc(line, line_size);
             }
-            if (next_line) {
+            if (next_line)
+            {
                 safecpy(line+pos, next_line, line_size - pos);
                 next_line = nullptr;
             }
-            else if (ifp) {
+            else if (ifp)
+            {
                 if (!std::fgets(line + pos, LBUFLEN, ifp))
                 {
                     break;
@@ -627,7 +669,8 @@ void mime_ParseSubheader(std::FILE *ifp, char *next_line)
             {
                 break;
             }
-            if (pos && !is_hor_space(line[pos])) {
+            if (pos && !is_hor_space(line[pos]))
+            {
                 next_line = line + pos;
                 line[pos-1] = '\0';
                 break;
@@ -640,7 +683,8 @@ void mime_ParseSubheader(std::FILE *ifp, char *next_line)
         }
 
         int linetype = set_line_type(line, s);
-        switch (linetype) {
+        switch (linetype)
+        {
           case CONTTYPE_LINE:
             mime_ParseType(g_mime_section,s+1);
             break;
@@ -671,7 +715,8 @@ void mime_ParseSubheader(std::FILE *ifp, char *next_line)
 
 void mime_SetState(char *bp)
 {
-    if (g_mime_state == BETWEEN_MIME) {
+    if (g_mime_state == BETWEEN_MIME)
+    {
         mime_ParseSubheader(nullptr, bp);
         *bp = '\0';
         if (g_mime_section->prev->flags & MSF_ALTERNADONE)
@@ -684,19 +729,22 @@ void mime_SetState(char *bp)
         }
     }
 
-    while (g_mime_state == MESSAGE_MIME) {
+    while (g_mime_state == MESSAGE_MIME)
+    {
         mime_PushSection();
         mime_ParseSubheader(nullptr, *bp ? bp : nullptr);
         *bp = '\0';
     }
 
-    if (g_mime_state == MULTIPART_MIME) {
+    if (g_mime_state == MULTIPART_MIME)
+    {
         mime_PushSection();
         g_mime_state = SKIP_MIME;               /* Skip anything before 1st part */
     }
 
     int ret = mime_EndOfSection(bp);
-    switch (ret) {
+    switch (ret)
+    {
       case 0:
         break;
       case 1:
@@ -724,10 +772,12 @@ int mime_EndOfSection(char *bp)
     {
         mp = mp->prev;
     }
-    if (mp) {
+    if (mp)
+    {
         /* have we read all the data in this part? */
-        if (bp[0] == '-' && bp[1] == '-'
-         && !std::strncmp(bp+2,mp->boundary,mp->boundary_len)) {
+        if (bp[0] == '-' && bp[1] == '-' //
+            && !std::strncmp(bp + 2, mp->boundary, mp->boundary_len))
+        {
             int len = 2 + mp->boundary_len;
             /* have we found the last boundary? */
             if (bp[len] == '-' && bp[len+1] == '-'
@@ -761,17 +811,20 @@ char *mime_ParseParams(char *str)
     }
     str = t;
     s = t;
-    while (*s == ';') {
+    while (*s == ';')
+    {
         s = mime_SkipWhitespace(s+1);
         while (*s && *s != ';' && *s != '(' && *s != '=' && !std::isspace(*s))
         {
             *t++ = *s++;
         }
         s = mime_SkipWhitespace(s);
-        if (*s == '=') {
+        if (*s == '=')
+        {
             *t++ = *s;
             s = mime_SkipWhitespace(s+1);
-            if (*s == '"') {
+            if (*s == '"')
+            {
                 s = cpytill(t,s+1,'"');
                 if (*s == '"')
                 {
@@ -796,7 +849,8 @@ char *mime_ParseParams(char *str)
 char *mime_FindParam(char *s, const char *param)
 {
     int param_len = std::strlen(param);
-    while (s && *s) {
+    while (s && *s)
+    {
         if (string_case_equal(s, param, param_len) && s[param_len] == '=')
         {
             return s + param_len + 1;
@@ -812,12 +866,16 @@ char *mime_SkipWhitespace(char *s)
 {
     int comment_level = 0;
 
-    while (*s) {
-        if (*s == '(') {
+    while (*s)
+    {
+        if (*s == '(')
+        {
             s++;
             comment_level++;
-            while (comment_level) {
-                switch (*s++) {
+            while (comment_level)
+            {
+                switch (*s++)
+                {
                   case '\0':
                     return s-1;
                   case '\\':
@@ -851,15 +909,18 @@ void mime_DecodeArticle(bool view)
     seekart(g_savefrom);
     *g_art_line = '\0';
 
-    while (true) {
-        if (g_mime_state != MESSAGE_MIME || !g_mime_section->total) {
+    while (true)
+    {
+        if (g_mime_state != MESSAGE_MIME || !g_mime_section->total)
+        {
             if (!readart(g_art_line,sizeof g_art_line))
             {
                 break;
             }
             mime_SetState(g_art_line);
         }
-        switch (g_mime_state) {
+        switch (g_mime_state)
+        {
           case BETWEEN_MIME:
           case END_OF_MIME:
             break;
@@ -870,7 +931,8 @@ void mime_DecodeArticle(bool view)
             /* $$ Check for uuencoded file here? */
             g_mime_state = SKIP_MIME;
             /* FALL THROUGH */
-          case SKIP_MIME: {
+          case SKIP_MIME:
+          {
             MIME_SECT* mp = g_mime_section;
             while ((mp = mp->prev) != nullptr && !mp->boundary_len)
             {
@@ -882,9 +944,11 @@ void mime_DecodeArticle(bool view)
             break;
           }
           default:
-            if (view) {
+            if (view)
+            {
                 mcp = mime_FindMimecapEntry(g_mime_section->type_name, MCF_NONE);
-                if (!mcp) {
+                if (!mcp)
+                {
                     std::printf("No view method for %s -- skipping.\n",
                            g_mime_section->type_name);
                     g_mime_state = SKIP_MIME;
@@ -892,15 +956,18 @@ void mime_DecodeArticle(bool view)
                 }
             }
             g_mime_state = DECODE_MIME;
-            if (decode_piece(mcp, *g_art_line == '\n'? nullptr : g_art_line)) {
+            if (decode_piece(mcp, *g_art_line == '\n' ? nullptr : g_art_line))
+            {
                 mime_SetState(g_art_line);
                 if (g_mime_state == DECODE_MIME)
                 {
                     g_mime_state = SKIP_MIME;
                 }
             }
-            else {
-                if (*g_msg) {
+            else
+            {
+                if (*g_msg)
+                {
                     newline();
                     std::fputs(g_msg,stdout);
                 }
@@ -928,7 +995,8 @@ void mime_Description(MIME_SECT *mp, char *s, int limit)
     {
         std::strcpy(s + limit - 3, "...]\n");
     }
-    else {
+    else
+    {
 #if 0
         std::sprintf(s+len, "...%s]\n", fn + flen - (limit-(len+3)));
 #else
@@ -961,10 +1029,13 @@ static Uchar s_index_hex[256] = {
 int qp_decodestring(char *t, const char *f, bool in_header)
 {
     char* save_t = t;
-    while (*f) {
-        switch (*f) {
+    while (*f)
+    {
+        switch (*f)
+        {
           case '_':
-            if (in_header) {
+            if (in_header)
+            {
                 *t++ = ' ';
                 f++;
             }
@@ -974,11 +1045,13 @@ int qp_decodestring(char *t, const char *f, bool in_header)
             }
             break;
           case '=':     /* decode a hex-value */
-            if (f[1] == '\n') {
+            if (f[1] == '\n')
+            {
                 f += 2;
                 break;
             }
-            if (s_index_hex[(Uchar)f[1]] != XX && s_index_hex[(Uchar)f[2]] != XX) {
+            if (s_index_hex[(Uchar) f[1]] != XX && s_index_hex[(Uchar) f[2]] != XX)
+            {
                 *t = (s_index_hex[(Uchar)f[1]] << 4) + s_index_hex[(Uchar)f[2]];
                 f += 3;
                 if (*t != '\r')
@@ -1002,7 +1075,8 @@ decode_state qp_decode(std::FILE *ifp, decode_state state)
     static std::FILE* ofp = nullptr;
     int c1;
 
-    if (state == DECODE_DONE) {
+    if (state == DECODE_DONE)
+    {
         if (ofp)
         {
             std::fclose(ofp);
@@ -1011,7 +1085,8 @@ decode_state qp_decode(std::FILE *ifp, decode_state state)
         return state;
     }
 
-    if (state == DECODE_START) {
+    if (state == DECODE_START)
+    {
         char* filename = decode_fix_fname(g_mime_section->filename);
         ofp = std::fopen(filename, "wb");
         if (!ofp)
@@ -1030,20 +1105,24 @@ decode_state qp_decode(std::FILE *ifp, decode_state state)
         }
     }
 
-    while ((c1 = mime_getc(ifp)) != EOF) {
+    while ((c1 = mime_getc(ifp)) != EOF)
+    {
       check_c1:
-        if (c1 == '=') {
+        if (c1 == '=')
+        {
             c1 = mime_getc(ifp);
             if (c1 == '\n')
             {
                 continue;
             }
-            if (s_index_hex[(Uchar)c1] == XX) {
+            if (s_index_hex[(Uchar) c1] == XX)
+            {
                 std::putc('=', ofp);
                 goto check_c1;
             }
             int c2 = mime_getc(ifp);
-            if (s_index_hex[(Uchar)c2] == XX) {
+            if (s_index_hex[(Uchar) c2] == XX)
+            {
                 std::putc('=', ofp);
                 std::putc(c1, ofp);
                 c1 = c2;
@@ -1088,13 +1167,15 @@ int b64_decodestring(char *t, const char *f)
     char* save_t = t;
     Uchar ch2;
 
-    while (*f && *f != '=') {
+    while (*f && *f != '=')
+    {
         Uchar ch1 = s_index_b64[(Uchar)*f++];
         if (ch1 == XX)
         {
             continue;
         }
-        do {
+        do
+        {
             if (!*f || *f == '=')
             {
                 goto dbl_break;
@@ -1102,7 +1183,8 @@ int b64_decodestring(char *t, const char *f)
             ch2 = s_index_b64[(Uchar)*f++];
         } while (ch2 == XX);
         *t++ = ch1 << 2 | ch2 >> 4;
-        do {
+        do
+        {
             if (!*f || *f == '=')
             {
                 goto dbl_break;
@@ -1110,7 +1192,8 @@ int b64_decodestring(char *t, const char *f)
             ch1 = s_index_b64[(Uchar)*f++];
         } while (ch1 == XX);
         *t++ = (ch2 & 0x0f) << 4 | ch1 >> 2;
-        do {
+        do
+        {
             if (!*f || *f == '=')
             {
                 goto dbl_break;
@@ -1132,7 +1215,8 @@ decode_state b64_decode(std::FILE *ifp, decode_state state)
     int          c3;
     int          c4;
 
-    if (state == DECODE_DONE) {
+    if (state == DECODE_DONE)
+    {
       all_done:
         if (ofp)
         {
@@ -1142,7 +1226,8 @@ decode_state b64_decode(std::FILE *ifp, decode_state state)
         return state;
     }
 
-    if (state == DECODE_START) {
+    if (state == DECODE_START)
+    {
         char* filename = decode_fix_fname(g_mime_section->filename);
         ofp = std::fopen(filename, "wb");
         if (!ofp)
@@ -1161,33 +1246,38 @@ decode_state b64_decode(std::FILE *ifp, decode_state state)
         state = DECODE_ACTIVE;
     }
 
-    while ((c1 = mime_getc(ifp)) != EOF) {
+    while ((c1 = mime_getc(ifp)) != EOF)
+    {
         if (c1 != '=' && s_index_b64[c1] == XX)
         {
             continue;
         }
-        do {
+        do
+        {
             c2 = mime_getc(ifp);
             if (c2 == EOF)
             {
                 return state;
             }
         } while (c2 != '=' && s_index_b64[c2] == XX);
-        do {
+        do
+        {
             c3 = mime_getc(ifp);
             if (c3 == EOF)
             {
                 return state;
             }
         } while (c3 != '=' && s_index_b64[c3] == XX);
-        do {
+        do
+        {
             c4 = mime_getc(ifp);
             if (c4 == EOF)
             {
                 return state;
             }
         } while (c4 != '=' && s_index_b64[c4] == XX);
-        if (c1 == '=' || c2 == '=') {
+        if (c1 == '=' || c2 == '=')
+        {
             state = DECODE_DONE;
             break;
         }
@@ -1195,14 +1285,16 @@ decode_state b64_decode(std::FILE *ifp, decode_state state)
         c2 = s_index_b64[c2];
         c1 = c1 << 2 | c2 >> 4;
         std::putc(c1, ofp);
-        if (c3 == '=') {
+        if (c3 == '=')
+        {
             state = DECODE_DONE;
             break;
         }
         c3 = s_index_b64[c3];
         c2 = (c2 & 0x0f) << 4 | c3 >> 2;
         std::putc(c2, ofp);
-        if (c4 == '=') {
+        if (c4 == '=')
+        {
             state = DECODE_DONE;
             break;
         }
@@ -1226,7 +1318,8 @@ static int mime_getc(std::FILE *fp)
         return std::fgetc(fp);
     }
 
-    if (!g_mime_getc_line || !*g_mime_getc_line) {
+    if (!g_mime_getc_line || !*g_mime_getc_line)
+    {
         g_mime_getc_line = readart(g_art_line,sizeof g_art_line);
         if (mime_EndOfSection(g_art_line))
         {
@@ -1244,7 +1337,8 @@ decode_state cat_decode(std::FILE *ifp, decode_state state)
 {
     static std::FILE* ofp = nullptr;
 
-    if (state == DECODE_DONE) {
+    if (state == DECODE_DONE)
+    {
         if (ofp)
         {
             std::fclose(ofp);
@@ -1253,7 +1347,8 @@ decode_state cat_decode(std::FILE *ifp, decode_state state)
         return state;
     }
 
-    if (state == DECODE_START) {
+    if (state == DECODE_START)
+    {
         char* filename = decode_fix_fname(g_mime_section->filename);
         ofp = std::fopen(filename, "wb");
         if (!ofp)
@@ -1271,14 +1366,17 @@ decode_state cat_decode(std::FILE *ifp, decode_state state)
         }
     }
 
-    if (ifp) {
+    if (ifp)
+    {
         while (std::fgets(g_buf, sizeof g_buf, ifp))
         {
             std::fputs(g_buf, ofp);
         }
     }
-    else {
-        while (readart(g_buf, sizeof g_buf)) {
+    else
+    {
+        while (readart(g_buf, sizeof g_buf))
+        {
             if (mime_EndOfSection(g_buf))
             {
                 break;
@@ -1343,7 +1441,8 @@ int filter_html(char *t, const char *f)
     char* bp;
     char* cp;
 
-    if (g_word_wrap_offset < 0) {
+    if (g_word_wrap_offset < 0)
+    {
         s_normal_word_wrap = g_tc_COLS - 8;
         s_word_wrap_in_pre = 0;
     }
@@ -1368,13 +1467,16 @@ int filter_html(char *t, const char *f)
         g_mime_section->html_line_start = t - g_artbuf;
     }
 
-    if (!g_mime_section->html_blks) {
+    if (!g_mime_section->html_blks)
+    {
         g_mime_section->html_blks = (HBLK*)safemalloc(HTML_MAX_BLOCKS
                                                   * sizeof (HBLK));
     }
 
-    for (bp = t; *f; f++) {
-        if (g_mime_section->html & HF_IN_DQUOTE) {
+    for (bp = t; *f; f++)
+    {
+        if (g_mime_section->html & HF_IN_DQUOTE)
+        {
             if (*f == '"')
             {
                 g_mime_section->html &= ~HF_IN_DQUOTE;
@@ -1384,7 +1486,8 @@ int filter_html(char *t, const char *f)
                 tagword[tagword_len++] = *f;
             }
         }
-        else if (g_mime_section->html & HF_IN_SQUOTE) {
+        else if (g_mime_section->html & HF_IN_SQUOTE)
+        {
             if (*f == '\'')
             {
                 g_mime_section->html &= ~HF_IN_SQUOTE;
@@ -1394,8 +1497,10 @@ int filter_html(char *t, const char *f)
                 tagword[tagword_len++] = *f;
             }
         }
-        else if (g_mime_section->html & HF_IN_TAG) {
-            if (*f == '>') {
+        else if (g_mime_section->html & HF_IN_TAG)
+        {
+            if (*f == '>')
+            {
                 g_mime_section->html &= ~(HF_IN_TAG | HF_IN_COMMENT);
                 tagword[tagword_len] = '\0';
                 if (*tagword == '/')
@@ -1407,7 +1512,8 @@ int filter_html(char *t, const char *f)
                     t = tag_action(t, tagword, OPENING_TAG);
                 }
             }
-            else if (*f == '-' && f[1] == '-') {
+            else if (*f == '-' && f[1] == '-')
+            {
                 f++;
                 g_mime_section->html |= HF_IN_COMMENT;
             }
@@ -1419,24 +1525,29 @@ int filter_html(char *t, const char *f)
             {
                 g_mime_section->html |= HF_IN_SQUOTE;
             }
-            else if (tagword_len < sizeof tagword - 1) {
+            else if (tagword_len < sizeof tagword - 1)
+            {
                 tagword[tagword_len++] = at_grey_space(f)? ' ' : *f;
             }
         }
-        else if (g_mime_section->html & HF_IN_COMMENT) {
-            if (*f == '-' && f[1] == '-') {
+        else if (g_mime_section->html & HF_IN_COMMENT)
+        {
+            if (*f == '-' && f[1] == '-')
+            {
                 f++;
                 g_mime_section->html &= ~HF_IN_COMMENT;
             }
         }
-        else if (*f == '<') {
+        else if (*f == '<')
+        {
             tagword_len = 0;
             g_mime_section->html |= HF_IN_TAG;
         }
         else if (g_mime_section->html & HF_IN_HIDING)
         {
         }
-        else if (*f == '&' && f[1] == '#') {
+        else if (*f == '&' && f[1] == '#')
+        {
             long int ncr = 0;
             int ncr_found = 0;
             int is_hex = f[2] == 'x';
@@ -1453,7 +1564,8 @@ int filter_html(char *t, const char *f)
                 ncr *= base;
                 ncr += v;
             }
-            if (i) {
+            if (i)
+            {
                 char det = f[2 + is_hex + i];
                 if (det == ';')
                 {
@@ -1464,18 +1576,21 @@ int filter_html(char *t, const char *f)
                     ncr_found = 1 + is_hex + i;
                 }
             }
-            if (ncr_found && ncr <= CODE_POINT_MAX) {
+            if (ncr_found && ncr <= CODE_POINT_MAX)
+            {
                 if (ncr)
                 {
                     t += insert_unicode_at(t, ncr);
                 }
                 f += ncr_found;
-            } else
+            }
+            else
             {
                 *t++ = *f;
             }
         }
-        else if (*f == '&' && std::isalpha(f[1])) { /* see html-spec.txt 3.2.1 */
+        else if (*f == '&' && std::isalpha(f[1]))   /* see html-spec.txt 3.2.1 */
+        {
             int i;
             int entity_found = 0;
             t = output_prep(t);
@@ -1499,7 +1614,8 @@ int filter_html(char *t, const char *f)
                     break;
                 }
             }
-            if (entity_found) {
+            if (entity_found)
+            {
                 for (int j = 0;; j++)
                 {
                     char c = s_named_entities[i + 1][j];
@@ -1516,14 +1632,17 @@ int filter_html(char *t, const char *f)
             }
             g_mime_section->html |= HF_NL_OK|HF_P_OK|HF_SPACE_OK;
         }
-        else if ((*f == ' ' || at_grey_space(f)) && !(g_mime_section->html & HF_IN_PRE)) {
+        else if ((*f == ' ' || at_grey_space(f)) && !(g_mime_section->html & HF_IN_PRE))
+        {
             /* We don't want to call output_prep() here. */
-            if (*f == ' ' || (g_mime_section->html & HF_SPACE_OK)) {
+            if (*f == ' ' || (g_mime_section->html & HF_SPACE_OK))
+            {
                 g_mime_section->html &= ~HF_SPACE_OK;
                 *t++ = ' ';
             }
             /* In non-PRE mode spaces should be collapsed */
-            for (;;) {
+            for (;;)
+            {
                 int w = byte_length_at(f);
                 if (w == 0 || f[w] == '\0' || !(f[w] == ' ' || at_grey_space(f+w)))
                 {
@@ -1532,12 +1651,14 @@ int filter_html(char *t, const char *f)
                 f += w;
             }
         }
-        else if (*f == '\n') { /* Handle the HF_IN_PRE case */
+        else if (*f == '\n')   /* Handle the HF_IN_PRE case */
+        {
             t = output_prep(t);
             g_mime_section->html |= HF_NL_OK;
             t = do_newline(t, HF_NL_OK);
         }
-        else {
+        else
+        {
             int w = byte_length_at(f);
             t = output_prep(t);
             for (int i = 0; i < w; i++)
@@ -1548,32 +1669,38 @@ int filter_html(char *t, const char *f)
             g_mime_section->html |= HF_NL_OK|HF_P_OK|HF_SPACE_OK;
         }
 
-        if (s_word_wrap && t - g_artbuf - g_mime_section->html_line_start > g_tc_COLS) {
+        if (s_word_wrap && t - g_artbuf - g_mime_section->html_line_start > g_tc_COLS)
+        {
             char* line_start = g_mime_section->html_line_start + g_artbuf;
             for (cp = line_start + s_word_wrap;
                  cp > line_start && !is_hor_space(*cp);
                  cp--)
             {
             }
-            if (cp == line_start) {
+            if (cp == line_start)
+            {
                 for (cp = line_start + s_word_wrap;
                      cp - line_start <= g_tc_COLS && !is_hor_space(*cp);
                      cp++)
                 {
                 }
-                if (cp - line_start > g_tc_COLS) {
+                if (cp - line_start > g_tc_COLS)
+                {
                     g_mime_section->html_line_start += g_tc_COLS;
                     cp = nullptr;
                 }
             }
-            if (cp) {
+            if (cp)
+            {
                 const html_flags flag_save = g_mime_section->html;
                 g_mime_section->html |= HF_NL_OK;
                 line_start = do_newline(cp, HF_NL_OK);
                 int fudge = do_indent(nullptr);
                 cp = skip_hor_space(line_start);
-                if ((fudge -= cp - line_start) != 0) {
-                    if (fudge < 0) {
+                if ((fudge -= cp - line_start) != 0)
+                {
+                    if (fudge < 0)
+                    {
                         if (t - cp > 0)
                         {
                             std::memcpy(cp + fudge, cp, t - cp);
@@ -1628,9 +1755,11 @@ static char *tag_action(char *t, char *word, bool opening_tag)
     for (tnum = 0; tnum < LAST_TAG && *s_tagattr[tnum].name != ch; tnum++)
     {
     }
-    for ( ; tnum < LAST_TAG && *s_tagattr[tnum].name == ch; tnum++) {
-        if (len == s_tagattr[tnum].length
-         && string_case_equal(word, s_tagattr[tnum].name, len)) {
+    for (; tnum < LAST_TAG && *s_tagattr[tnum].name == ch; tnum++)
+    {
+        if (len == s_tagattr[tnum].length //
+            && string_case_equal(word, s_tagattr[tnum].name, len))
+        {
             match = true;
             break;
         }
@@ -1656,31 +1785,39 @@ static char *tag_action(char *t, char *word, bool opening_tag)
         g_mime_section->html |= HF_NL_OK;
     }
 
-    if (opening_tag) {
-        if (s_tagattr[tnum].flags & TF_NL) {
+    if (opening_tag)
+    {
+        if (s_tagattr[tnum].flags & TF_NL)
+        {
             t = output_prep(t);
             t = do_newline(t, HF_NL_OK);
         }
-        if ((num = s_tagattr[tnum].flags & (TF_P|TF_LIST)) == TF_P
-         || (num == (TF_P|TF_LIST) && !(g_mime_section->html & HF_COMPACT))) {
+        if ((num = s_tagattr[tnum].flags & (TF_P | TF_LIST)) == TF_P //
+            || (num == (TF_P | TF_LIST) && !(g_mime_section->html & HF_COMPACT)))
+        {
             t = output_prep(t);
             t = do_newline(t, HF_P_OK);
         }
-        if (s_tagattr[tnum].flags & TF_SPACE) {
-            if (g_mime_section->html & HF_SPACE_OK) {
+        if (s_tagattr[tnum].flags & TF_SPACE)
+        {
+            if (g_mime_section->html & HF_SPACE_OK)
+            {
                 g_mime_section->html &= ~HF_SPACE_OK;
                 *t++ = ' ';
             }
         }
-        if (s_tagattr[tnum].flags & TF_TAB) {
-            if (g_mime_section->html & HF_NL_OK) {
+        if (s_tagattr[tnum].flags & TF_TAB)
+        {
+            if (g_mime_section->html & HF_NL_OK)
+            {
                 g_mime_section->html &= ~HF_SPACE_OK;
                 *t++ = '\t';
             }
         }
 
-        if (s_tagattr[tnum].flags & TF_BLOCK
-         && g_mime_section->html_blkcnt < HTML_MAX_BLOCKS) {
+        if (s_tagattr[tnum].flags & TF_BLOCK //
+            && g_mime_section->html_blkcnt < HTML_MAX_BLOCKS)
+        {
             j = g_mime_section->html_blkcnt++;
             blks[j].tnum = tnum;
             blks[j].indent = 0;
@@ -1705,7 +1842,8 @@ static char *tag_action(char *t, char *word, bool opening_tag)
             g_mime_section->html |= HF_IN_HIDING;
         }
 
-        switch (tnum) {
+        switch (tnum)
+        {
           case TAG_BLOCKQUOTE:
             if (((cp = find_attr(word, "type")) != nullptr && string_case_equal(cp, "cite", 4)) ||
                 ((cp = find_attr(word, "style")) != nullptr && string_case_equal(cp, "border-left:", 12)))
@@ -1739,7 +1877,8 @@ static char *tag_action(char *t, char *word, bool opening_tag)
             cp = find_attr(word, "type");
             if (cp != nullptr)
             {
-                switch (*cp) {
+                switch (*cp)
+                {
                   case 'a':  itype = 5;  break;
                   case 'A':  itype = 6;  break;
                   case 'i':  itype = 7;  break;
@@ -1754,15 +1893,19 @@ static char *tag_action(char *t, char *word, bool opening_tag)
             cp = find_attr(word, "type");
             if (cp != nullptr)
             {
-                switch (*cp) {
+                switch (*cp)
+                {
                   case 'd': case 'D':  itype = 1;  break;
                   case 'c': case 'C':  itype = 2;  break;
                   case 's': case 'S':  itype = 3;  break;
                 }
             }
-            else {
-                for (int i = 0; i < g_mime_section->html_blkcnt; i++) {
-                    if (blks[i].indent && blks[i].indent < ' ') {
+            else
+            {
+                for (int i = 0; i < g_mime_section->html_blkcnt; i++)
+                {
+                    if (blks[i].indent && blks[i].indent < ' ')
+                    {
                         if (++itype == 3)
                         {
                             break;
@@ -1775,7 +1918,8 @@ static char *tag_action(char *t, char *word, bool opening_tag)
           case TAG_LI:
             t = output_prep(t);
             ch = j < 0? ' ' : blks[j].indent;
-            switch (ch) {
+            switch (ch)
+            {
               case 1: case 2: case 3:
                 t[-2] = s_bullets[ch-1];
                 break;
@@ -1801,7 +1945,8 @@ static char *tag_action(char *t, char *word, bool opening_tag)
                 t[-2] = '.';
                 break;
               case 7:
-                for (int i = 0; i < 7; i++) {
+                for (int i = 0; i < 7; i++)
+                {
                     if (std::isupper(s_roman_letters[i]))
                     {
                         s_roman_letters[i] = std::tolower(s_roman_letters[i]);
@@ -1809,7 +1954,8 @@ static char *tag_action(char *t, char *word, bool opening_tag)
                 }
                 goto roman_numerals;
               case 8:
-                for (int i = 0; i < 7; i++) {
+                for (int i = 0; i < 7; i++)
+                {
                     if (std::islower(s_roman_letters[i]))
                     {
                         s_roman_letters[i] = std::toupper(s_roman_letters[i]);
@@ -1818,23 +1964,28 @@ static char *tag_action(char *t, char *word, bool opening_tag)
               roman_numerals:
                 cp = t - 6;
                 cnt = ++blks[j].cnt;
-                for (int i = 0; cnt && i < 7; i++) {
+                for (int i = 0; cnt && i < 7; i++)
+                {
                     num = s_roman_values[i];
-                    while (cnt >= num) {
+                    while (cnt >= num)
+                    {
                         *cp++ = s_roman_letters[i];
                         cnt -= num;
                     }
                     j = (i | 1) + 1;
-                    if (j < 7) {
+                    if (j < 7)
+                    {
                         num -= s_roman_values[j];
-                        if (cnt >= num) {
+                        if (cnt >= num)
+                        {
                             *cp++ = s_roman_letters[j];
                             *cp++ = s_roman_letters[i];
                             cnt -= num;
                         }
                     }
                 }
-                if (cp < t - 2) {
+                if (cp < t - 2)
+                {
                     t -= 2;
                     for (cnt = t - cp; cp-- != t - 4; )
                     {
@@ -1865,11 +2016,16 @@ static char *tag_action(char *t, char *word, bool opening_tag)
             break;
         }
     }
-    else {
-        if (s_tagattr[tnum].flags & TF_BLOCK) {
-            for (j = g_mime_section->html_blkcnt; j--; ) {
-                if (blks[j].tnum == tnum) {
-                    for (int i = g_mime_section->html_blkcnt; --i > j; ) {
+    else
+    {
+        if (s_tagattr[tnum].flags & TF_BLOCK)
+        {
+            for (j = g_mime_section->html_blkcnt; j--;)
+            {
+                if (blks[j].tnum == tnum)
+                {
+                    for (int i = g_mime_section->html_blkcnt; --i > j;)
+                    {
                         t = tag_action(t, s_tagattr[blks[i].tnum].name,
                                        CLOSING_TAG);
                     }
@@ -1878,8 +2034,10 @@ static char *tag_action(char *t, char *word, bool opening_tag)
                 }
             }
             g_mime_section->html &= ~HF_IN_HIDING;
-            while (j-- > 0) {
-                if (s_tagattr[blks[j].tnum].flags & TF_HIDE) {
+            while (j-- > 0)
+            {
+                if (s_tagattr[blks[j].tnum].flags & TF_HIDE)
+                {
                     g_mime_section->html |= HF_IN_HIDING;
                     break;
                 }
@@ -1896,19 +2054,23 @@ static char *tag_action(char *t, char *word, bool opening_tag)
             g_mime_section->html &= ~HF_COMPACT;
         }
 
-        if (s_tagattr[tnum].flags & TF_NL && g_mime_section->html & HF_NL_OK) {
+        if (s_tagattr[tnum].flags & TF_NL && g_mime_section->html & HF_NL_OK)
+        {
             g_mime_section->html |= HF_QUEUED_NL;
             g_mime_section->html &= ~HF_SPACE_OK;
         }
-        if ((num = s_tagattr[tnum].flags & (TF_P|TF_LIST)) == TF_P
-         || (num == (TF_P|TF_LIST) && !(g_mime_section->html & HF_COMPACT))) {
-            if (g_mime_section->html & HF_P_OK) {
+        if ((num = s_tagattr[tnum].flags & (TF_P | TF_LIST)) == TF_P //
+            || (num == (TF_P | TF_LIST) && !(g_mime_section->html & HF_COMPACT)))
+        {
+            if (g_mime_section->html & HF_P_OK)
+            {
                 g_mime_section->html |= HF_QUEUED_P;
                 g_mime_section->html &= ~HF_SPACE_OK;
             }
         }
 
-        switch (tnum) {
+        switch (tnum)
+        {
           case TAG_PRE:
             g_mime_section->html &= ~HF_IN_PRE;
             s_word_wrap = s_normal_word_wrap;
@@ -1939,11 +2101,13 @@ static char *tag_action(char *t, char *word, bool opening_tag)
 
 static char *output_prep(char *t)
 {
-    if (g_mime_section->html & HF_QUEUED_P) {
+    if (g_mime_section->html & HF_QUEUED_P)
+    {
         g_mime_section->html &= ~HF_QUEUED_P;
         t = do_newline(t, HF_P_OK);
     }
-    if (g_mime_section->html & HF_QUEUED_NL) {
+    if (g_mime_section->html & HF_QUEUED_NL)
+    {
         g_mime_section->html &= ~HF_QUEUED_NL;
         t = do_newline(t, HF_NL_OK);
     }
@@ -1952,7 +2116,8 @@ static char *output_prep(char *t)
 
 static char *do_newline(char *t, html_flags flag)
 {
-    if (g_mime_section->html & flag) {
+    if (g_mime_section->html & flag)
+    {
         g_mime_section->html &= ~(flag|HF_SPACE_OK);
         t += do_indent(t);
         *t++ = '\n';
@@ -1980,11 +2145,13 @@ static int do_indent(char *t)
     HBLK *blks = g_mime_section->html_blks;
     if (blks != nullptr)
     {
-        for (int j = 0; j < g_mime_section->html_blkcnt; j++) {
+        for (int j = 0; j < g_mime_section->html_blkcnt; j++)
+        {
             int ch = blks[j].indent;
             if (ch != 0)
             {
-                switch (ch) {
+                switch (ch)
+                {
                   case '>':
                     spaces = 1;
                     break;
@@ -2001,11 +2168,13 @@ static int do_indent(char *t)
                     break;
                 }
                 len += spaces + 1;
-                if (len > 64) {
+                if (len > 64)
+                {
                     len -= spaces + 1;
                     break;
                 }
-                if (t) {
+                if (t)
+                {
                     *t++ = ch;
                     while (spaces--)
                     {
@@ -2025,7 +2194,8 @@ static char *find_attr(char *str, const char *attr)
     char* cp = str;
     char* s;
 
-    while ((cp = std::strchr(cp+1, '=')) != nullptr) {
+    while ((cp = std::strchr(cp + 1, '=')) != nullptr)
+    {
         for (s = cp; s[-1] == ' '; s--)
         {
         }
