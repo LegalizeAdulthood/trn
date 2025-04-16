@@ -74,7 +74,7 @@ static const CODE_POINT s_iso8859_15_himap[128] = {
 struct CHARSET_DESC
 {
     const char       *name;
-    charset_type      id;
+    CharsetType      id;
     const CODE_POINT *himap;
 };
 
@@ -107,22 +107,22 @@ static const CHARSET_DESC s_charset_descs[] = {
 
 struct gstate
 {
-    charset_type      in;
-    charset_type      out;
+    CharsetType      in;
+    CharsetType      out;
     const CODE_POINT *himap_in;
     const CODE_POINT *himap_out;
 };
 
 static gstate s_gs = { CHARSET_UTF8, CHARSET_UTF8, nullptr, nullptr };
 
-static charset_type find_charset(const char *s)
+static CharsetType find_charset(const char *s)
 {
     if (!s)
     {
         return CHARSET_UNKNOWN;
     }
 
-    charset_type it = CHARSET_UNKNOWN;
+    CharsetType it = CHARSET_UNKNOWN;
     for (int i = 0;; ++i)
     {
         const char *name = s_charset_descs[i].name;
@@ -175,10 +175,10 @@ static const CHARSET_DESC *find_charset_desc(int id)
     return it;
 }
 
-charset_type utf_init(const char *from, const char *to)
+CharsetType utf_init(const char *from, const char *to)
 {
-    charset_type in = find_charset(from);
-    charset_type out = find_charset(to);
+    CharsetType in = find_charset(from);
+    CharsetType out = find_charset(to);
     if (in != CHARSET_UNKNOWN)
     {
         s_gs.in = in;

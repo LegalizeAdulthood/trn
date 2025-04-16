@@ -8,7 +8,7 @@
 
 #define USE_UTF_HACK
 
-enum charset_type
+enum CharsetType
 {
     CHARSET_ASCII = 0x0000,
     CHARSET_UTF8 = 0x8000,
@@ -26,7 +26,7 @@ enum charset_type
 
 using CODE_POINT = unsigned long;
 
-charset_type utf_init(const char *from, const char *to);
+CharsetType utf_init(const char *from, const char *to);
 const char *input_charset_name();
 const char *output_charset_name();
 
