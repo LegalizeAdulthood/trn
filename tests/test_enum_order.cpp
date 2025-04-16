@@ -13,11 +13,11 @@ struct EnumValues
     int value;
 };
 
-using header_line_type_values = EnumValues<HeaderLineType>;
+using HeaderLineTypeValues = EnumValues<HeaderLineType>;
 
 #define ENUM_VALUE(enum_, value_) { #enum_, enum_, value_ }
 
-header_line_type_values header_line_types[] =
+HeaderLineTypeValues header_line_types[] =
 {
     // clang-format off
     ENUM_VALUE(PAST_HEADER, 0),
@@ -61,13 +61,13 @@ void PrintTo(const EnumValues<T> &param, std::ostream *str)
     *str << param.name << " <=> " << param.value;
 }
 
-class HeaderLineTypes : public testing::TestWithParam<header_line_type_values>
+class HeaderLineTypes : public testing::TestWithParam<HeaderLineTypeValues>
 {
 };
 
 TEST_P(HeaderLineTypes, orderRelationships)
 {
-    const header_line_type_values param = GetParam();
+    const HeaderLineTypeValues param = GetParam();
 
     ASSERT_EQ(param.value, param.type);
 }
