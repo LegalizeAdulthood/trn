@@ -71,7 +71,7 @@ extern bool           g_sel_num_goto;
 char article_selector(char_int cmd);
 char multirc_selector();
 char newsgroup_selector();
-char addgroup_selector(getnewsgroup_flags flags);
+char addgroup_selector(GetNewsgroupFlags flags);
 char option_selector();
 char universal_selector();
 void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);

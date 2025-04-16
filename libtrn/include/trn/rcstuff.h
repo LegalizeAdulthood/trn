@@ -30,13 +30,13 @@ enum AddNewType : char
     ADDNEW_UNSUB = '!'
 };
 
-enum getnewsgroup_flags : int
+enum GetNewsgroupFlags : int
 {
     GNG_NONE = 0x00,
     GNG_RELOC = 0x01,
     GNG_FUZZY = 0x02
 };
-DECLARE_FLAGS_ENUM(getnewsgroup_flags, int);
+DECLARE_FLAGS_ENUM(GetNewsgroupFlags, int);
 
 enum newsrc_flags : int
 {
@@ -98,7 +98,7 @@ bool     use_next_multirc(MULTIRC *mptr);
 bool     use_prev_multirc(MULTIRC *mptr);
 char    *multirc_name(MULTIRC *mp);
 void     abandon_ng(NewsgroupData *np);
-bool     get_ng(const char *what, getnewsgroup_flags flags);
+bool     get_ng(const char *what, GetNewsgroupFlags flags);
 bool     relocate_newsgroup(NewsgroupData *move_np, NG_NUM newnum);
 void     list_newsgroups();
 NewsgroupData  *find_ng(const char *ngnam);

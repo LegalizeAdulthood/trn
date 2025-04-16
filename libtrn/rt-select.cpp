@@ -588,7 +588,7 @@ char newsgroup_selector()
     return s_sel_ret;
 }
 
-char addgroup_selector(getnewsgroup_flags flags)
+char addgroup_selector(GetNewsgroupFlags flags)
 {
     push_selector_modes saver(MM_ADD_GROUP_SELECTOR);
 
