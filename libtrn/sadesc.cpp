@@ -36,7 +36,8 @@ const char *sa_get_statchars(long a, int line)
 
 #if 0
     /* old 5-column status */
-    switch (line) {
+    switch (line)
+    {
       case 1:
         std::strcpy(char_buf,".....");
         if (sa_marked(a))
@@ -61,7 +62,8 @@ const char *sa_get_statchars(long a, int line)
         break;
     } /* switch */
 #else
-    switch (line) {
+    switch (line)
+    {
       case 1:
         std::strcpy(char_buf,"...");
         if (sa_marked(a))
@@ -96,7 +98,8 @@ const char *sa_desc_subject(long e)
     /* fetchlines saves its arguments */
     char *s = fetchlines(g_sa_ents[e].artnum, SUBJ_LINE);
 
-    if (!s || !*s) {
+    if (!s || !*s)
+    {
         if (s)
         {
             std::free(s);
@@ -107,9 +110,12 @@ const char *sa_desc_subject(long e)
     std::strncpy(sa_subj_buf,s,250);
     std::free(s);
     char *s1 = sa_subj_buf;
-    if (*s1 == 'r' || *s1 == 'R') {
-        if (*++s1 == 'e' || *s1 == 'E') {
-            if (*++s1 ==':') {
+    if (*s1 == 'r' || *s1 == 'R')
+    {
+        if (*++s1 == 'e' || *s1 == 'E')
+        {
+            if (*++s1 == ':')
+            {
                 *s1 = '>';              /* more cosmetic "Re:" */
                 return s1;
             }
@@ -128,23 +134,28 @@ const char *sa_get_desc(long e, int line, bool trunc)
 
     ART_NUM artnum = g_sa_ents[e].artnum;
     bool    use_standout = false;
-    switch (line) {
+    switch (line)
+    {
       case 1:
         desc_buf[0] = '\0';     /* initialize the buffer */
-        if (g_sa_mode_desc_artnum) {
+        if (g_sa_mode_desc_artnum)
+        {
             std::sprintf(s_sa_buf,"%6d ",(int)artnum);
             std::strcat(desc_buf,s_sa_buf);
         }
-        if (g_sc_initialized && g_sa_mode_desc_score) {
+        if (g_sc_initialized && g_sa_mode_desc_score)
+        {
             /* we'd like the score now */
             std::sprintf(s_sa_buf,"[%4d] ",sc_score_art(artnum,true));
             std::strcat(desc_buf,s_sa_buf);
         }
-        if (g_sa_mode_desc_threadcount) {
+        if (g_sa_mode_desc_threadcount)
+        {
             std::sprintf(s_sa_buf,"(%3d) ",sa_subj_thread_count(e));
             std::strcat(desc_buf,s_sa_buf);
         }
-        if (g_sa_mode_desc_author) {
+        if (g_sa_mode_desc_author)
+        {
 #if 0
             if (trunc)
             {
@@ -166,14 +177,16 @@ const char *sa_get_desc(long e, int line, bool trunc)
             }
             std::strcat(desc_buf," ");
         }
-        if (g_sa_mode_desc_subject) {
+        if (g_sa_mode_desc_subject)
+        {
             std::sprintf(s_sa_buf,"%s",sa_desc_subject(e));
             std::strcat(desc_buf,s_sa_buf);
         }
         break;
       case 2:   /* summary line (test) */
         s = fetchlines(artnum,SUMRY_LINE);
-        if (s && *s) { /* we really have one */
+        if (s && *s)   /* we really have one */
+        {
             int i;              /* number of spaces to indent */
             char* s2;   /* for indenting */
 
@@ -216,7 +229,8 @@ const char *sa_get_desc(long e, int line, bool trunc)
         /* FALL THROUGH */
       case 3:   /* Keywords (test) */
         s = fetchlines(artnum,KEYW_LINE);
-        if (s && *s) { /* we really have one */
+        if (s && *s)   /* we really have one */
+        {
             int i;              /* number of spaces to indent */
             char* s2;   /* for indenting */
 /* include the following line to use standout mode */
@@ -273,7 +287,8 @@ const char *sa_get_desc(long e, int line, bool trunc)
     /* take out bad characters (replace with one space) */
     for (char *t = desc_buf; *t; t++)
     {
-        switch (*t) {
+        switch (*t)
+        {
           case Ctl('h'):
           case '\t':
           case '\n':
@@ -292,7 +307,8 @@ int sa_ent_lines(long e)
     int  num = 1;
 
     ART_NUM artnum = g_sa_ents[e].artnum;
-    if (g_sa_mode_desc_summary) {
+    if (g_sa_mode_desc_summary)
+    {
         s = fetchlines(artnum,SUMRY_LINE);
         if (s && *s)
         {
@@ -303,7 +319,8 @@ int sa_ent_lines(long e)
             std::free(s);
         }
     }
-    if (g_sa_mode_desc_keyw) {
+    if (g_sa_mode_desc_keyw)
+    {
         s = fetchlines(artnum,KEYW_LINE);
         if (s && *s)
         {
