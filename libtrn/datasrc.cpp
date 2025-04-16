@@ -78,7 +78,7 @@ enum datasrc_ini_index
     DI_FORCE_AUTH
 };
 
-static INI_WORDS s_datasrc_ini[] =
+static IniWords s_datasrc_ini[] =
 {
     // clang-format off
     { 0, "DATASRC", nullptr },

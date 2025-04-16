@@ -35,7 +35,7 @@ enum MakeDirNameType
 
 /* a template for parsing an ini file */
 
-struct INI_WORDS
+struct IniWords
 {
     int         checksum;
     const char *item;
@@ -69,25 +69,25 @@ char * secs2text(std::time_t secs);
 char * temp_filename();
 char * get_auth_user();
 char * get_auth_pass();
-char **prep_ini_words(INI_WORDS words[]);
-void   unprep_ini_words(INI_WORDS words[]);
+char **prep_ini_words(IniWords words[]);
+void   unprep_ini_words(IniWords words[]);
 void   prep_ini_data(char *cp, const char *filename);
 bool   parse_string(char **to, char **from);
 char * next_ini_section(char *cp, char **section, char **cond);
-char * parse_ini_section(char *cp, INI_WORDS words[]);
+char * parse_ini_section(char *cp, IniWords words[]);
 bool   check_ini_cond(char *cond);
 char   menu_get_char();
 int    edit_file(const char *fname);
 
-inline int ini_len(const INI_WORDS *words)
+inline int ini_len(const IniWords *words)
 {
     return words[0].checksum;
 }
-inline char **ini_values(INI_WORDS *words)
+inline char **ini_values(IniWords *words)
 {
     return (char **) words[0].help_str;
 }
-inline char *ini_value(INI_WORDS *words, int num)
+inline char *ini_value(IniWords *words, int num)
 {
     return ini_values(words)[num];
 }

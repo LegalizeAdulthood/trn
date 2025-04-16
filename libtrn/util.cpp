@@ -662,7 +662,7 @@ char *get_auth_pass()
     return g_datasrc->auth_pass;
 }
 
-char **prep_ini_words(INI_WORDS words[])
+char **prep_ini_words(IniWords words[])
 {
     char* cp = (char*)ini_values(words);
     if (!cp)
@@ -691,7 +691,7 @@ char **prep_ini_words(INI_WORDS words[])
     return (char**)cp;
 }
 
-void unprep_ini_words(INI_WORDS words[])
+void unprep_ini_words(IniWords words[])
 {
     std::free(ini_values(words));
     words[0].checksum = 0;
@@ -905,7 +905,7 @@ char *next_ini_section(char *cp, char **section, char **cond)
     return cp;
 }
 
-char *parse_ini_section(char *cp, INI_WORDS words[])
+char *parse_ini_section(char *cp, IniWords words[])
 {
     if (!*cp)
     {

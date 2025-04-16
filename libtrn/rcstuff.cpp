@@ -56,7 +56,7 @@ enum
     RI_ADDGROUPS = 3
 };
 
-static INI_WORDS s_rcgroups_ini[] = {
+static IniWords s_rcgroups_ini[] = {
     { 0, "RCGROUPS", nullptr },
     { 0, "ID", nullptr },
     { 0, "Newsrc", nullptr },
