@@ -220,19 +220,24 @@ char *filexp(const char *text)
 
 char *in_string(char *big, const char *little, bool case_matters)
 {
-    for (char *t = big; *t; t++) {
+    for (char *t = big; *t; t++)
+    {
         const char *s = little;
-        for (const char *x=t; *s; x++,s++) {
+        for (const char *x = t; *s; x++, s++)
+        {
             if (!*x)
             {
                 return nullptr;
             }
-            if (case_matters) {
+            if (case_matters)
+            {
                 if (*s != *x)
                 {
                     break;
                 }
-            } else {
+            }
+            else
+            {
                 char c;
                 char d;
                 if (std::isupper(*s))
