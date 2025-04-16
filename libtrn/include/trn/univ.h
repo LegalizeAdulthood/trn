@@ -66,7 +66,7 @@ enum VirtualGroupFlags : std::uint8_t
 };
 DECLARE_FLAGS_ENUM(VirtualGroupFlags, std::uint8_t);
 
-struct UNIV_VIRT_GROUP
+struct UniversalVirtualGroup
 {
     char           *ng;
     int             minscore;
@@ -92,7 +92,7 @@ union UNIV_DATA
     UniversalConfigFileData cfile;
     UNIV_NEWSGROUP group;
     UniversalVirtualData virt;
-    UNIV_VIRT_GROUP vgroup;
+    UniversalVirtualGroup vgroup;
     UNIV_TEXTFILE textfile;
 };
 
