@@ -123,7 +123,7 @@ void InterpolatorTest::SetUp()
     bits_init();
     cache_init();
     help_init();
-    kfile_init();
+    kill_file_init();
     mime_init();
     ng_init();
     ngsrch_init();

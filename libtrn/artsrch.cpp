@@ -378,7 +378,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             cmdlst = savestr("j");
         }
         safecpy(s,cmdlst,LBUFLEN-(s-saltbuf));
-        kf_append(saltbuf, saltaway == 2? KF_GLOBAL : KF_LOCAL);
+        kill_file_append(saltbuf, saltaway == 2? KF_GLOBAL : KF_LOCAL);
     }
     if (get_cmd)
     {
@@ -399,7 +399,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         ignorethru = 1;
     }
     srchfirst = doread || g_sel_rereading? g_absfirst
-                      : (g_mode != MM_PROCESSING_KILL || ignorethru > 0)? g_firstart : g_killfirst;
+                      : (g_mode != MM_PROCESSING_KILL || ignorethru > 0)? g_firstart : g_kill_first;
     if (topstart || g_art == 0)
     {
         g_art = g_lastart+1;

@@ -95,7 +95,7 @@ void final_init()
 void finalize(int status)
 {
     sc_sv_savefile();   /* save any scores from memory to disk */
-    update_thread_kfile();
+    update_thread_kill_file();
     color_default();
     termlib_reset();
     if (g_bizarre)
@@ -228,7 +228,7 @@ Signal_t sig_catcher(int signo)
     {
         /* TODO: get_old_newsrcs(g_multirc);  ?? */
     }
-    update_thread_kfile();
+    update_thread_kill_file();
 
 #ifdef SIGHUP
     if (signo != SIGHUP)

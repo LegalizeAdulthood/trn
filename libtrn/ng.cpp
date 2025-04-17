@@ -98,7 +98,7 @@ void ng_init()
 {
     setdfltcmd();
 
-    open_kfile(KF_GLOBAL);
+    open_kill_file(KF_GLOBAL);
     init_compex(&g_hide_compex);
     init_compex(&g_page_compex);
 }
@@ -148,7 +148,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
     s_exit_code = NG_NORM;
     g_kf_state &= ~(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES
                  |KFS_NORMAL_LINES  | KFS_THREAD_LINES);
-    g_killfirst = 0;
+    g_kill_first = 0;
 
     g_extractdest.clear();
     g_extractprog.clear();
@@ -182,7 +182,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
 
     /* see if there are any special searches to do */
 
-    open_kfile(KF_LOCAL);
+    open_kill_file(KF_LOCAL);
     if (g_verbose)
     {
         kill_unwanted(g_firstart, "Processing memorized commands...\n\n", true);
@@ -630,14 +630,14 @@ cleanup2:
             {
                 get_anything();
             }
-            update_thread_kfile();
+            update_thread_kill_file();
         }
     }
 
-    if (g_localkfp)
+    if (g_local_kfp)
     {
-        std::fclose(g_localkfp);
-        g_localkfp = nullptr;
+        std::fclose(g_local_kfp);
+        g_local_kfp = nullptr;
     }
     set_mode(gmode_save,mode_save);
     return s_exit_code;
@@ -1254,7 +1254,7 @@ not_threaded:
         return AS_NORM;
 
     case Ctl('k'):
-        edit_kfile();
+        edit_kill_file();
         return AS_ASK;
 
     case Ctl('n'):    /* search for next article with same subject */
@@ -1826,7 +1826,7 @@ run_the_selector:
             {
                 goto not_threaded;
             }
-            kill_subthread(g_artp, SET_TORETURN | AFFECT_ALL);
+            kill_subthread(g_artp, SET_TO_RETURN | AFFECT_ALL);
             return AS_NORM;
 
         case 'M':
@@ -1834,7 +1834,7 @@ run_the_selector:
             {
                 goto not_threaded;
             }
-            kill_arts_thread(g_artp, SET_TORETURN | AFFECT_ALL);
+            kill_arts_thread(g_artp, SET_TO_RETURN | AFFECT_ALL);
             return AS_NORM;
         }
         /* FALL THROUGH */

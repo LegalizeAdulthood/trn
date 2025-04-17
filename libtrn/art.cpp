@@ -790,7 +790,7 @@ reask_pager:
                             /* in an article he is interested in */
             g_checkcount = 0;
             checkpoint_newsrcs();       /* update all newsrcs */
-            update_thread_kfile();
+            update_thread_kill_file();
         }
         cache_until_key();
         if (g_art_size < 0 && (g_raw_art_size = nntp_artsize()) >= 0)

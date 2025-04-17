@@ -2101,7 +2101,7 @@ static DisplayState sel_command(char_int ch)
         return DS_QUIT;
 
     case Ctl('k'):
-        edit_kfile();
+        edit_kill_file();
         return DS_DISPLAY;
 
     case '&':  case '!':

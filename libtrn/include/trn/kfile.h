@@ -26,7 +26,7 @@ enum KillFileStateFlags : std::uint16_t
     KFS_THREAD_CHANGES = 0x0002,
     KFS_NORMAL_LINES = 0x0010,
     KFS_THREAD_LINES = 0x0020,
-    KFS_GLOBAL_THREADFILE = 0x1000
+    KFS_GLOBAL_THREAD_FILE = 0x1000
 };
 DECLARE_FLAGS_ENUM(KillFileStateFlags, std::uint16_t);
 
@@ -48,8 +48,8 @@ enum AutoKillFlags : std::uint16_t
      * in combination with the AUTO_* flags above. */
     AFFECT_UNSEL = 0,
     AFFECT_ALL = 0x0001,
-    ALSO_ECHO = 0x0002,   /* only works with [un]select_article() */
-    SET_TORETURN = 0x0004 /* only works with kill_*() */
+    ALSO_ECHO = 0x0002,    /* only works with [un]select_article() */
+    SET_TO_RETURN = 0x0004 /* only works with kill_*() */
 };
 DECLARE_FLAGS_ENUM(AutoKillFlags, std::uint16_t);
 
@@ -60,25 +60,25 @@ enum
 
 enum
 {
-    KF_MAXDAYS = 30
+    KF_MAX_DAYS = 30
 };
 
-extern std::FILE          *g_localkfp;               /* local (for this newsgroup) file */
-extern KillFileStateFlags g_kf_state;               /* the state of our kill files */
-extern KillFileStateFlags g_kfs_thread_change_set;  /* bits to set for thread changes */
-extern int                 g_kf_changethd_cnt;       /* # entries changed from old to new */
-extern ArticleNum             g_killfirst;              /* used as g_firstart when killing */
+extern std::FILE         *g_local_kfp;             /* local (for this newsgroup) file */
+extern KillFileStateFlags g_kf_state;              /* the state of our kill files */
+extern KillFileStateFlags g_kfs_thread_change_set; /* bits to set for thread changes */
+extern int                g_kf_change_thread_cnt;  /* # entries changed from old to new */
+extern ArticleNum         g_kill_first;            /* used as g_firstart when killing */
 
-void kfile_init();
-int do_kfile(std::FILE *kfp, int entering);
+void kill_file_init();
+int  do_kill_file(std::FILE *kfp, int entering);
 void kill_unwanted(ArticleNum starting, const char *message, int entering);
-void rewrite_kfile(ArticleNum thru);
-void update_thread_kfile();
+void rewrite_kill_file(ArticleNum thru);
+void update_thread_kill_file();
 void change_auto_flags(Article *ap, AutoKillFlags auto_flag);
 void clear_auto_flags(Article *ap);
-void perform_auto_flags(Article *ap, AutoKillFlags thread_autofl, AutoKillFlags subj_autofl, AutoKillFlags chain_autofl);
-void edit_kfile();
-void open_kfile(int local);
-void kf_append(const char *cmd, bool local);
+void perform_auto_flags(Article *ap, AutoKillFlags thread_flags, AutoKillFlags subj_flags, AutoKillFlags chain_flags);
+void edit_kill_file();
+void open_kill_file(int local);
+void kill_file_append(const char *cmd, bool local);
 
 #endif

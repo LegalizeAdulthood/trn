@@ -203,7 +203,7 @@ void thread_close()
     g_artp = nullptr;
     init_tree();                        /* free any tree lines */
 
-    update_thread_kfile();
+    update_thread_kill_file();
     if (g_msgid_hash)
     {
         hash_walk(g_msgid_hash, cleanup_msgid_hash, 0);
@@ -228,7 +228,7 @@ static int cleanup_msgid_hash(int keylen, HashDatum *data, int extra)
         {
             return 0;
         }
-        if ((g_kf_state & KFS_GLOBAL_THREADFILE) && ap->auto_flags)
+        if ((g_kf_state & KFS_GLOBAL_THREAD_FILE) && ap->auto_flags)
         {
             data->dat_ptr = ap->msg_id;
             data->dat_len = ap->auto_flags;
@@ -1088,7 +1088,7 @@ void kill_arts_subject(Article *ap, AutoKillFlags auto_flags)
     }
     else
     {
-        if (auto_flags & SET_TORETURN)
+        if (auto_flags & SET_TO_RETURN)
         {
             delay_unmark(ap);
         }
@@ -1106,7 +1106,7 @@ void kill_arts_subject(Article *ap, AutoKillFlags auto_flags)
 void kill_subject(Subject *subj, AutoKillFlags auto_flags)
 {
     int killmask = (auto_flags & AFFECT_ALL)? 0 : g_sel_mask;
-    const bool toreturn = (auto_flags & SET_TORETURN) != 0;
+    const bool toreturn = (auto_flags & SET_TO_RETURN) != 0;
 
     auto_flags &= AUTO_KILL_MASK;
     for (Article *ap = subj->articles; ap; ap = ap->subj_next)
@@ -1158,7 +1158,7 @@ void kill_thread(Article *thread, AutoKillFlags auto_flags)
 void kill_subthread(Article *ap, AutoKillFlags auto_flags)
 {
     Article* limit;
-    const bool toreturn = (auto_flags & SET_TORETURN) != 0;
+    const bool toreturn = (auto_flags & SET_TO_RETURN) != 0;
 
     if (!ap)
     {

@@ -91,7 +91,7 @@ bool valid_article(Article *article)
             }
             else
             {
-                g_kf_changethd_cnt++;
+                g_kf_change_thread_cnt++;
             }
             data.dat_len = 0;
         }
@@ -218,7 +218,7 @@ Article *get_article(char *msgid)
         }
         else
         {
-            g_kf_changethd_cnt++;
+            g_kf_change_thread_cnt++;
         }
         article->msg_id = data.dat_ptr;
         data.dat_ptr = (char*)article;

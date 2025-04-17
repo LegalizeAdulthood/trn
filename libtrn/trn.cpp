@@ -657,7 +657,7 @@ InputNewsgroupResult input_newsgroup()
         return ING_ASK;
 
     case Ctl('k'):            /* edit global KILL file */
-        edit_kfile();
+        edit_kill_file();
         return ING_ASK;
 
     case Ctl('n'):            /* next newsrc list */
