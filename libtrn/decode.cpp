@@ -369,7 +369,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
         }
         while (read_art(g_art_line, sizeof g_art_line))
         {
-            if (mime_EndOfSection(g_art_line))
+            if (mime_end_of_section(g_art_line))
             {
                 break;
             }
@@ -434,8 +434,8 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
 
     if (g_mime_section->type == MESSAGE_MIME)
     {
-        mime_PushSection();
-        mime_ParseSubheader(fp, first_line);
+        mime_push_section();
+        mime_parse_subheader(fp, first_line);
         first_line = nullptr;
     }
     g_mime_getc_line = first_line;
@@ -504,7 +504,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
 
     if (mcp)
     {
-        mime_Exec(mcp->command);
+        mime_exec(mcp->command);
         remove(g_decode_filename);
         change_dir("..");
     }

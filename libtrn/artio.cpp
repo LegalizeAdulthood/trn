@@ -231,7 +231,7 @@ char *read_art_buf(bool view_inline)
     }
 
   read_more:
-    extra_offset = g_mime_state == HTMLTEXT_MIME? 1024 : 0;
+    extra_offset = g_mime_state == HTML_TEXT_MIME? 1024 : 0;
     o = read_offset + extra_offset;
     if (s_artbuf_size < g_art_buf_pos + o + LBUFLEN)
     {
@@ -275,7 +275,7 @@ char *read_art_buf(bool view_inline)
             goto done;
         }
         o = line_offset + extra_offset;
-        mime_SetState(bp+o);
+        mime_set_state(bp+o);
         if (bp[o] == '\0')
         {
             std::strcpy(bp+o, "\n");
@@ -286,16 +286,16 @@ char *read_art_buf(bool view_inline)
   mime_switch:
     switch (g_mime_state)
     {
-    case ISOTEXT_MIME:
+    case ISO_TEXT_MIME:
         g_mime_state = TEXT_MIME;
         /* FALL THROUGH */
 
     case TEXT_MIME:
-    case HTMLTEXT_MIME:
+    case HTML_TEXT_MIME:
         if (g_mime_section->encoding == MENCODE_QPRINT)
         {
             o = line_offset + extra_offset;
-            len = qp_decodestring(bp+o, bp+o, false) + line_offset;
+            len = qp_decode_string(bp+o, bp+o, false) + line_offset;
             if (len == line_offset || bp[len + extra_offset - 1] != '\n')
             {
                 if (read_something >= 0)
@@ -310,7 +310,7 @@ char *read_art_buf(bool view_inline)
         else if (g_mime_section->encoding == MENCODE_BASE64)
         {
             o = line_offset + extra_offset;
-            len = b64_decodestring(bp+o, bp+o) + line_offset;
+            len = b64_decode_string(bp+o, bp+o) + line_offset;
             s = std::strchr(bp + o, '\n');
             if (s == nullptr)
             {
@@ -329,7 +329,7 @@ char *read_art_buf(bool view_inline)
                 extra_chars -= len;
             }
         }
-        if (g_mime_state != HTMLTEXT_MIME)
+        if (g_mime_state != HTML_TEXT_MIME)
         {
             break;
         }
@@ -358,8 +358,8 @@ char *read_art_buf(bool view_inline)
     case DECODE_MIME:
     {
         MimeCapEntry* mcp;
-        mcp = mime_FindMimecapEntry(g_mime_section->type_name,
-                                    MCF_NEEDSTERMINAL |MCF_COPIOUSOUTPUT);
+        mcp = mime_find_mimecap_entry(g_mime_section->type_name,
+                                    MCF_NEEDS_TERMINAL |MCF_COPIOUS_OUTPUT);
         if (mcp)
         {
             int save_term_line = g_term_line;
@@ -368,7 +368,7 @@ char *read_art_buf(bool view_inline)
             if (decode_piece(mcp, bp))
             {
                 std::strcpy(bp = g_art_buf + g_art_buf_pos, g_art_line);
-                mime_SetState(bp);
+                mime_set_state(bp);
                 if (g_mime_state == DECODE_MIME)
                 {
                     g_mime_state = SKIP_MIME;
@@ -459,7 +459,7 @@ char *read_art_buf(bool view_inline)
         g_mime_state = SKIP_MIME;
         *bp++ = '\001';
         g_art_buf_pos++;
-        mime_Description(g_mime_section,bp,g_tc_COLS);
+        mime_description(g_mime_section,bp,g_tc_COLS);
         len = std::strlen(bp);
         break;
 
@@ -491,7 +491,7 @@ char *read_art_buf(bool view_inline)
         }
         *bp++ = '\001';
         g_art_buf_pos++;
-        mime_Description(g_mime_section,bp,g_tc_COLS);
+        mime_description(g_mime_section,bp,g_tc_COLS);
         len = std::strlen(bp);
         break;
     }

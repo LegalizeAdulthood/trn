@@ -25,7 +25,7 @@ protected:
     {
         mime_init();
         mime_set_executor(m_exec.AsStdFunction());
-        mime_ReadMimecap(TRN_TEST_MIMECAP_FILE);
+        mime_read_mimecap(TRN_TEST_MIMECAP_FILE);
     }
     void TearDown() override
     {
@@ -39,50 +39,50 @@ protected:
 
 TEST_F(MimeTest, imageGif)
 {
-    MimeCapEntry *cap = mime_FindMimecapEntry(TRN_TEST_MIME_IMAGE_GIF_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_IMAGE_GIF_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
-    ASSERT_STREQ(TRN_TEST_MIME_IMAGE_GIF_CONTENT_TYPE, cap->contenttype);
+    ASSERT_STREQ(TRN_TEST_MIME_IMAGE_GIF_CONTENT_TYPE, cap->content_type);
     ASSERT_STREQ(TRN_TEST_MIME_IMAGE_GIF_COMMAND, cap->command);
-    ASSERT_EQ(nullptr, cap->testcommand);
+    ASSERT_EQ(nullptr, cap->test_command);
     ASSERT_STREQ(TRN_TEST_MIME_IMAGE_GIF_DESCRIPTION, cap->description);
     ASSERT_EQ(MCF_NONE, cap->flags);
 }
 
 TEST_F(MimeTest, imageWildcardWithLabel)
 {
-    MimeCapEntry *cap = mime_FindMimecapEntry(TRN_TEST_MIME_IMAGE_ANY_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_IMAGE_ANY_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
-    ASSERT_STREQ(TRN_TEST_MIME_IMAGE_ANY_CONTENT_TYPE, cap->contenttype);
+    ASSERT_STREQ(TRN_TEST_MIME_IMAGE_ANY_CONTENT_TYPE, cap->content_type);
     ASSERT_STREQ(TRN_TEST_MIME_IMAGE_ANY_COMMAND, cap->command);
-    ASSERT_EQ(nullptr, cap->testcommand);
+    ASSERT_EQ(nullptr, cap->test_command);
     ASSERT_STREQ(TRN_TEST_MIME_IMAGE_ANY_DESCRIPTION, cap->description);
     ASSERT_EQ(MCF_NONE, cap->flags);
 }
 
 TEST_F(MimeTest, appleFileIgnoredParams)
 {
-    MimeCapEntry *cap = mime_FindMimecapEntry(TRN_TEST_MIME_APPLEFILE_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_APPLEFILE_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
-    ASSERT_STREQ(TRN_TEST_MIME_APPLEFILE_CONTENT_TYPE, cap->contenttype);
+    ASSERT_STREQ(TRN_TEST_MIME_APPLEFILE_CONTENT_TYPE, cap->content_type);
     ASSERT_STREQ(TRN_TEST_MIME_APPLEFILE_COMMAND, cap->command);
-    ASSERT_EQ(nullptr, cap->testcommand);
+    ASSERT_EQ(nullptr, cap->test_command);
     ASSERT_STREQ(TRN_TEST_MIME_APPLEFILE_DESCRIPTION, cap->description);
     ASSERT_EQ(MCF_NONE, cap->flags);
 }
 
 TEST_F(MimeTest, textPlainHasFlags)
 {
-    MimeCapEntry *cap = mime_FindMimecapEntry(TRN_TEST_MIME_TEXT_PLAIN_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_TEXT_PLAIN_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
-    ASSERT_STREQ(TRN_TEST_MIME_TEXT_PLAIN_CONTENT_TYPE, cap->contenttype);
+    ASSERT_STREQ(TRN_TEST_MIME_TEXT_PLAIN_CONTENT_TYPE, cap->content_type);
     ASSERT_STREQ(TRN_TEST_MIME_TEXT_PLAIN_COMMAND, cap->command);
-    ASSERT_EQ(nullptr, cap->testcommand);
+    ASSERT_EQ(nullptr, cap->test_command);
     ASSERT_STREQ(TRN_TEST_MIME_TEXT_PLAIN_DESCRIPTION, cap->description);
-    ASSERT_EQ(MCF_NEEDSTERMINAL | MCF_COPIOUSOUTPUT, cap->flags);
+    ASSERT_EQ(MCF_NEEDS_TERMINAL | MCF_COPIOUS_OUTPUT, cap->flags);
 }
 
 namespace
@@ -97,7 +97,7 @@ protected:
         g_decode_filename = safemalloc(1024);
         std::strcpy(g_decode_filename, TRN_TEST_MIME_PDF_DECODE_FILE);
         m_mime_section.type_name = savestr(TRN_TEST_MIME_PDF_CONTENT_TYPE);
-        m_mime_section.type_params = mime_ParseParams(savestr(TRN_TEST_MIME_PDF_SECTION_PARAMS));
+        m_mime_section.type_params = mime_parse_params(savestr(TRN_TEST_MIME_PDF_SECTION_PARAMS));
         g_mime_section = &m_mime_section;
     }
     void TearDown() override
@@ -118,12 +118,12 @@ TEST_F(MimeExecTest, applicationPdfSuccessfulTestCommand)
 {
     EXPECT_CALL(m_exec, Call(_, StrEq(TRN_TEST_MIME_PDF_TEST_EXEC_COMMAND))).WillOnce(Return(0));
 
-    MimeCapEntry *cap = mime_FindMimecapEntry(TRN_TEST_MIME_PDF_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_PDF_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
-    ASSERT_STREQ(TRN_TEST_MIME_PDF_CONTENT_TYPE, cap->contenttype);
+    ASSERT_STREQ(TRN_TEST_MIME_PDF_CONTENT_TYPE, cap->content_type);
     ASSERT_STREQ(TRN_TEST_MIME_PDF_COMMAND, cap->command);
-    ASSERT_STREQ(TRN_TEST_MIME_PDF_TEST_COMMAND, cap->testcommand);
+    ASSERT_STREQ(TRN_TEST_MIME_PDF_TEST_COMMAND, cap->test_command);
     ASSERT_STREQ(TRN_TEST_MIME_PDF_DESCRIPTION, cap->description);
     ASSERT_EQ(MCF_NONE, cap->flags);
 }
@@ -132,7 +132,7 @@ TEST_F(MimeExecTest, applicationPdfFailedTestCommand)
 {
     EXPECT_CALL(m_exec, Call(_, _)).WillOnce(Return(1));
 
-    MimeCapEntry *cap = mime_FindMimecapEntry(TRN_TEST_MIME_PDF_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_PDF_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_EQ(nullptr, cap);
 }

@@ -147,7 +147,7 @@ DoArticleResult do_article()
     if (s_firstpage != 0)
     {
         parse_header(g_art);
-        mime_SetArticle();
+        mime_set_article();
         clear_art_buf();
         seek_art(g_art_buf_seek = g_htype[PAST_HEADER].min_pos);
     }
@@ -165,7 +165,7 @@ DoArticleResult do_article()
             parse_header(g_art);         /* make sure header is ours */
             if (!*g_art_buf)
             {
-                mime_SetArticle();
+                mime_set_article();
                 g_art_buf_seek = g_htype[PAST_HEADER].min_pos;
             }
             g_art_pos = virtual_read(g_art_line_num);
@@ -316,7 +316,7 @@ DoArticleResult do_article()
                 {
                     read_art_buf(g_auto_view_inline);
                 }
-                mime_SetArticle();
+                mime_set_article();
                 clear_art_buf();         /* exclude notesfiles droppings */
                 g_htype[PAST_HEADER].min_pos = tell_art();
                 g_art_buf_seek = tell_art();

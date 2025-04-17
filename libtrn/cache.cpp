@@ -636,11 +636,11 @@ int decode_header(char *to, char *from, int size)
                     *e = '\0';
                     if (ch == 'q' || ch == 'Q')
                     {
-                        len = qp_decodestring(to, q, true);
+                        len = qp_decode_string(to, q, true);
                     }
                     else
                     {
-                        len = b64_decodestring(to, q);
+                        len = b64_decode_string(to, q);
                     }
 #ifdef USE_UTF_HACK
                     d = create_utf8_copy(to);

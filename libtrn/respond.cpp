@@ -77,7 +77,7 @@ SaveResult save_article()
         cmd = std::tolower(cmd);
     }
     parse_header(g_art);
-    mime_SetArticle();
+    mime_set_article();
     clear_art_buf();
     g_savefrom = (cmd == 'w' || cmd == 'e')? g_htype[PAST_HEADER].min_pos : 0;
     if (art_open(g_art, g_savefrom) == nullptr)
@@ -230,7 +230,7 @@ SaveResult save_article()
         {
             std::printf("Extracting MIME article into %s:\n", c);
             termdown(1);
-            mime_DecodeArticle(false);
+            mime_decode_article(false);
         }
         else
         {
@@ -582,7 +582,7 @@ s_bomb:
 SaveResult view_article()
 {
     parse_header(g_art);
-    mime_SetArticle();
+    mime_set_article();
     clear_art_buf();
     g_savefrom = g_htype[PAST_HEADER].min_pos;
     if (art_open(g_art, g_savefrom) == nullptr)
@@ -602,7 +602,7 @@ SaveResult view_article()
     termdown(1);
     if (g_is_mime)
     {
-        mime_DecodeArticle(true);
+        mime_decode_article(true);
     }
     else
     {
@@ -623,7 +623,7 @@ SaveResult view_article()
             }
             if (uue_prescan(g_art_line, &filename, &part, &total))
             {
-                MimeCapEntry*mc = mime_FindMimecapEntry("image/jpeg", MCF_NONE); /* TODO: refine this */
+                MimeCapEntry*mc = mime_find_mimecap_entry("image/jpeg", MCF_NONE); /* TODO: refine this */
                 g_savefrom = g_art_pos;
                 seek_art(g_savefrom);
                 g_mime_section->type = UNHANDLED_MIME;
@@ -893,7 +893,7 @@ void reply()
         interp(g_buf, (sizeof g_buf), get_val("YOUSAID",YOUSAID));
         std::fprintf(header,"%s\n",g_buf);
         parse_header(g_art);
-        mime_SetArticle();
+        mime_set_article();
         clear_art_buf();
         seek_art(g_htype[PAST_HEADER].min_pos);
         g_wrapped_nl = '\n';
@@ -1108,7 +1108,7 @@ void followup()
         interp(g_buf, (sizeof g_buf), get_val("ATTRIBUTION",ATTRIBUTION));
         std::fprintf(header,"%s\n",g_buf);
         parse_header(g_art);
-        mime_SetArticle();
+        mime_set_article();
         clear_art_buf();
         seek_art(g_htype[PAST_HEADER].min_pos);
         g_wrapped_nl = '\n';
