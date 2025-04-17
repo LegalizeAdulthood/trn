@@ -155,7 +155,7 @@ bool initialize(int argc, char *argv[])
     util_init();
     xmouse_init(argv[0]);
 
-    writelast();        /* remember last runtime in .rnlast */
+    write_last();        /* remember last runtime in .rnlast */
 
     if (g_maxngtodo)                    /* patterns on command line? */
     {
@@ -172,7 +172,7 @@ void news_news_check()
     {
         stat_t news_news_stat{};
         fstat(fileno(fp),&news_news_stat);
-        if (news_news_stat.st_mtime > (std::time_t) g_lasttime)
+        if (news_news_stat.st_mtime > (std::time_t) g_last_time)
         {
             while (std::fgets(g_buf,sizeof(g_buf),fp) != nullptr)
             {

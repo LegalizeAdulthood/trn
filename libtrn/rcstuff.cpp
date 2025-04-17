@@ -787,10 +787,10 @@ static bool open_newsrc(Newsrc *rp)
                 char *s = std::strchr(g_buf, ':');
                 if (s != nullptr && s[1] == ' ' && s[2])
                 {
-                    g_lastngname = s+2;
+                    g_last_newsgroup_name = s+2;
                 }
                 if (std::fscanf(info, "New-Group-State: %ld,%ld,%ld", //
-                                &g_lastnewtime, &actnum, &descnum) == 3)
+                                &g_last_new_time, &actnum, &descnum) == 3)
                 {
                     rp->datasrc->act_sf.recent_cnt = actnum;
                     rp->datasrc->desc_sf.recent_cnt = descnum;
@@ -801,19 +801,19 @@ static bool open_newsrc(Newsrc *rp)
     }
     else
     {
-        readlast();
+        read_last();
         if (rp->datasrc->flags & DF_REMOTE)
         {
-            rp->datasrc->act_sf.recent_cnt = g_lastactsiz;
-            rp->datasrc->desc_sf.recent_cnt = g_lastextranum;
+            rp->datasrc->act_sf.recent_cnt = g_last_active_size;
+            rp->datasrc->desc_sf.recent_cnt = g_last_extra_num;
         }
         else
         {
-            rp->datasrc->act_sf.recent_cnt = g_lastextranum;
+            rp->datasrc->act_sf.recent_cnt = g_last_extra_num;
             rp->datasrc->desc_sf.recent_cnt = 0;
         }
     }
-    rp->datasrc->last_new_group = g_lastnewtime;
+    rp->datasrc->last_new_group = g_last_new_time;
 
     if (g_paranoid && !g_checkflag)
     {
@@ -1708,18 +1708,18 @@ bool write_newsrcs(Multirc *mptr)
         }
         else
         {
-            readlast();
+            read_last();
             if (rp->datasrc->flags & DF_REMOTE)
             {
-                g_lastactsiz = rp->datasrc->act_sf.recent_cnt;
-                g_lastextranum = rp->datasrc->desc_sf.recent_cnt;
+                g_last_active_size = rp->datasrc->act_sf.recent_cnt;
+                g_last_extra_num = rp->datasrc->desc_sf.recent_cnt;
             }
             else
             {
-                g_lastextranum = rp->datasrc->act_sf.recent_cnt;
+                g_last_extra_num = rp->datasrc->act_sf.recent_cnt;
             }
-            g_lastnewtime = rp->datasrc->last_new_group;
-            writelast();
+            g_last_new_time = rp->datasrc->last_new_group;
+            write_last();
         }
 
         if (!(rp->flags & RF_RCCHANGED))

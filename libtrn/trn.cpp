@@ -223,16 +223,16 @@ void do_multirc()
         {
             g_findlast = -1;
             g_starthere = nullptr;
-            if (!g_lastngname.empty())
+            if (!g_last_newsgroup_name.empty())
             {
-                g_ngptr = find_ng(g_lastngname.c_str());
+                g_ngptr = find_ng(g_last_newsgroup_name.c_str());
                 if (g_ngptr == nullptr)
                 {
                     g_ngptr = g_first_ng;
                 }
                 else
                 {
-                    set_ngname(g_lastngname.c_str());
+                    set_ngname(g_last_newsgroup_name.c_str());
                     set_toread(g_ngptr, ST_LAX);
                     if (g_ngptr->toread <= TR_NONE)
                     {

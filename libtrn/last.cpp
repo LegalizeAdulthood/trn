@@ -16,11 +16,11 @@
 #include <ctime>
 #include <string>
 
-std::string g_lastngname;    /* last newsgroup read */
-long        g_lasttime{};    /* time last we ran */
-long        g_lastactsiz{};  /* last known size of active file */
-long        g_lastnewtime{}; /* time of last newgroup request */
-long        g_lastextranum{};
+std::string g_last_newsgroup_name;    /* last newsgroup read */
+long        g_last_time{};    /* time last we ran */
+long        g_last_active_size{};  /* last known size of active file */
+long        g_last_new_time{}; /* time of last newgroup request */
+long        g_last_extra_num{};
 
 static char *s_lastfile{}; /* path name of .rnlast file */
 static long  s_starttime{};
@@ -30,34 +30,34 @@ void last_init()
     s_lastfile = savestr(filexp(LASTNAME));
 
     s_starttime = (long)std::time(nullptr);
-    readlast();
+    read_last();
 }
 
 void last_final()
 {
     safefree0(s_lastfile);
-    g_lastngname.clear();
+    g_last_newsgroup_name.clear();
 }
 
-void readlast()
+void read_last()
 {
     if (std::FILE *fp = std::fopen(s_lastfile, "r"))
     {
         if (std::fgets(g_buf, sizeof g_buf, fp) != nullptr)
         {
-            long old_last = g_lasttime;
+            long old_last = g_last_time;
             g_buf[std::strlen(g_buf)-1] = '\0';
             if (*g_buf)
             {
-                g_lastngname = g_buf;
+                g_last_newsgroup_name = g_buf;
             }
-            std::fscanf(fp,"%ld %ld %ld %ld",&g_lasttime,&g_lastactsiz,
-                                           &g_lastnewtime,&g_lastextranum);
-            if (!g_lastnewtime)
+            std::fscanf(fp,"%ld %ld %ld %ld",&g_last_time,&g_last_active_size,
+                                           &g_last_new_time,&g_last_extra_num);
+            if (!g_last_new_time)
             {
-                g_lastnewtime = s_starttime;
+                g_last_new_time = s_starttime;
             }
-            g_lasttime = std::max(old_last, g_lasttime);
+            g_last_time = std::max(old_last, g_last_time);
         }
         std::fclose(fp);
     }
@@ -65,15 +65,15 @@ void readlast()
 
 /* Put out certain values for next run of trn */
 
-void writelast()
+void write_last()
 {
     std::sprintf(g_buf,"%s.%ld", s_lastfile, g_our_pid);
     if (std::FILE *fp = std::fopen(g_buf, "w"))
     {
-        g_lasttime = std::max(g_lasttime, s_starttime);
+        g_last_time = std::max(g_last_time, s_starttime);
         std::fprintf(fp,"%s\n%ld\n%ld\n%ld\n%ld\n",
-                g_ngname.c_str(),g_lasttime,
-                g_lastactsiz,g_lastnewtime,g_lastextranum);
+                g_ngname.c_str(),g_last_time,
+                g_last_active_size,g_last_new_time,g_last_extra_num);
         std::fclose(fp);
         remove(s_lastfile);
         rename(g_buf,s_lastfile);

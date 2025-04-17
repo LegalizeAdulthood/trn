@@ -6,15 +6,15 @@
 
 #include <string>
 
-extern std::string g_lastngname;  /* last newsgroup read */
-extern long        g_lasttime;    /* time last we ran */
-extern long        g_lastactsiz;  /* last known size of active file */
-extern long        g_lastnewtime; /* time of last newgroup request */
-extern long        g_lastextranum;
+extern std::string g_last_newsgroup_name; /* last newsgroup read */
+extern long        g_last_time;           /* time last we ran */
+extern long        g_last_active_size;    /* last known size of active file */
+extern long        g_last_new_time;       /* time of last newgroup request */
+extern long        g_last_extra_num;
 
 void last_init();
 void last_final();
-void readlast();
-void writelast();
+void read_last();
+void write_last();
 
 #endif
