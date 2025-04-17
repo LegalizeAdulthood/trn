@@ -104,7 +104,7 @@ void build_cache()
     s_cached_time = std::time(nullptr);
     g_article_list = new_list(g_absfirst, g_lastart, sizeof (Article), 371,
                               LF_SPARSE, init_artnode);
-    s_subj_hash = hashcreate(991, subject_cmp); /*TODO: pick a better size */
+    s_subj_hash = hash_create(991, subject_cmp); /*TODO: pick a better size */
 
     set_first_art(g_ngptr->rcline + g_ngptr->numoffset);
     g_first_cached = g_thread_always? g_absfirst : g_firstart;
@@ -128,12 +128,12 @@ void close_cache()
 
     if (s_subj_hash)
     {
-        hashdestroy(s_subj_hash);
+        hash_destroy(s_subj_hash);
         s_subj_hash = nullptr;
     }
     if (s_shortsubj_hash)
     {
-        hashdestroy(s_shortsubj_hash);
+        hash_destroy(s_shortsubj_hash);
         s_shortsubj_hash = nullptr;
     }
     /* Free all the subjects. */
@@ -240,7 +240,7 @@ void check_for_near_subj(Article *ap)
     Subject* sp;
     if (!s_shortsubj_hash)
     {
-        s_shortsubj_hash = hashcreate(401, subject_cmp);    /*TODO: pick a better size */
+        s_shortsubj_hash = hash_create(401, subject_cmp);    /*TODO: pick a better size */
         sp = g_first_subject;
     }
     else
@@ -256,11 +256,11 @@ void check_for_near_subj(Article *ap)
         if ((int) std::strlen(sp->str + 4) >= g_join_subject_len && sp->thread)
         {
             Subject* sp2;
-            HashDatum data = hashfetch(s_shortsubj_hash, sp->str + 4, g_join_subject_len);
+            HashDatum data = hash_fetch(s_shortsubj_hash, sp->str + 4, g_join_subject_len);
             if (!(sp2 = (Subject *) data.dat_ptr))
             {
                 data.dat_ptr = (char*)sp;
-                hashstorelast(data);
+                hash_store_last(data);
             }
             else if (sp->thread != sp2->thread)
             {
@@ -277,7 +277,7 @@ void change_join_subject_len(int len)
     {
         if (s_shortsubj_hash)
         {
-            hashdestroy(s_shortsubj_hash);
+            hash_destroy(s_shortsubj_hash);
             s_shortsubj_hash = nullptr;
         }
         g_join_subject_len = len;
@@ -417,7 +417,7 @@ void uncache_article(Article *ap, bool remove_empties)
             {
                 sp->next->prev = sp->prev;
             }
-            hashdelete(s_subj_hash, sp->str+4, std::strlen(sp->str+4));
+            hash_delete(s_subj_hash, sp->str+4, std::strlen(sp->str+4));
             std::free((char*)sp);
             ap->subj = nullptr;
             g_subject_count--;
@@ -556,15 +556,15 @@ void set_subj_line(Article *ap, char *subj, int size)
     if (ap->subj)
     {
         /* This only happens when we freshen truncated subjects */
-        hashdelete(s_subj_hash, ap->subj->str+4, std::strlen(ap->subj->str+4));
+        hash_delete(s_subj_hash, ap->subj->str+4, std::strlen(ap->subj->str+4));
         std::free(ap->subj->str);
         ap->subj->str = newsubj;
         data.dat_ptr = (char*)ap->subj;
-        hashstore(s_subj_hash, newsubj + 4, size, data);
+        hash_store(s_subj_hash, newsubj + 4, size, data);
     }
     else
     {
-        data = hashfetch(s_subj_hash, newsubj + 4, size);
+        data = hash_fetch(s_subj_hash, newsubj + 4, size);
         if (!(sp = (Subject *) data.dat_ptr))
         {
             sp = (Subject*)safemalloc(sizeof (Subject));
@@ -585,7 +585,7 @@ void set_subj_line(Article *ap, char *subj, int size)
             sp->flags = SF_NONE;
 
             data.dat_ptr = (char*)sp;
-            hashstorelast(data);
+            hash_store_last(data);
         }
         else
         {

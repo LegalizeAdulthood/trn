@@ -80,7 +80,7 @@ bool valid_article(Article *article)
     if (msgid)
     {
         fix_msgid(msgid);
-        HashDatum data = hashfetch(g_msgid_hash, msgid, std::strlen(msgid));
+        HashDatum data = hash_fetch(g_msgid_hash, msgid, std::strlen(msgid));
         if (data.dat_len)
         {
             safefree0(data.dat_ptr);
@@ -99,7 +99,7 @@ bool valid_article(Article *article)
         if (fake_ap == nullptr)
         {
             data.dat_ptr = (char*)article;
-            hashstorelast(data);
+            hash_store_last(data);
             s_fake_had_subj = nullptr;
             return true;
         }
@@ -189,7 +189,7 @@ bool valid_article(Article *article)
             clear_article(fake_ap);
             std::free(fake_ap);
             data.dat_ptr = (char*)article;
-            hashstorelast(data);
+            hash_store_last(data);
             return true;
         }
     }
@@ -207,7 +207,7 @@ Article *get_article(char *msgid)
 
     fix_msgid(msgid);
 
-    HashDatum data = hashfetch(g_msgid_hash, msgid, std::strlen(msgid));
+    HashDatum data = hash_fetch(g_msgid_hash, msgid, std::strlen(msgid));
     if (data.dat_len)
     {
         article = allocate_article(0);
@@ -223,14 +223,14 @@ Article *get_article(char *msgid)
         article->msg_id = data.dat_ptr;
         data.dat_ptr = (char*)article;
         data.dat_len = 0;
-        hashstorelast(data);
+        hash_store_last(data);
     }
     else if (!(article = (Article *) data.dat_ptr))
     {
         article = allocate_article(0);
         data.dat_ptr = (char*)article;
         article->msg_id = savestr(msgid);
-        hashstorelast(data);
+        hash_store_last(data);
     }
     return article;
 }

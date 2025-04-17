@@ -24,7 +24,7 @@ void sa_init_threads()
     s_sa_num_threads = 0;
     if (s_sa_thread_hash)
     {
-        hashdestroy(s_sa_thread_hash);
+        hash_destroy(s_sa_thread_hash);
         s_sa_thread_hash = nullptr;
     }
 }
@@ -53,18 +53,18 @@ long sa_get_subj_thread(long e)
 
     if (!s_sa_thread_hash)
     {
-        s_sa_thread_hash = hashcreate(401, HASH_DEFCMPFUNC);
+        s_sa_thread_hash = hash_create(401, nullptr);
     }
-    HashDatum data = hashfetch(s_sa_thread_hash, s, std::strlen(s));
+    HashDatum data = hash_fetch(s_sa_thread_hash, s, std::strlen(s));
     if (data.dat_ptr)
     {
         return (long)(data.dat_len);
     }
     char *p = mp_savestr(s, MP_SATHREAD);
-    data = hashfetch(s_sa_thread_hash,p,std::strlen(s));
+    data = hash_fetch(s_sa_thread_hash,p,std::strlen(s));
     data.dat_ptr = p;
     data.dat_len = (unsigned)(s_sa_num_threads+1);
-    hashstorelast(data);
+    hash_store_last(data);
     s_sa_num_threads++;
     g_sa_ents[e].subj_thread_num = s_sa_num_threads;
     return s_sa_num_threads;

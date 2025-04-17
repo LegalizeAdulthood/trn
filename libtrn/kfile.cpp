@@ -80,7 +80,7 @@ void kfile_init()
         std::FILE *fp = std::fopen(filexp(cp), "r");
         if (fp != nullptr)
         {
-            g_msgid_hash = hashcreate(1999, msgid_cmp);
+            g_msgid_hash = hash_create(1999, msgid_cmp);
             while (std::fgets(g_buf, sizeof g_buf, fp) != nullptr)
             {
                 if (*g_buf == '<')
@@ -104,7 +104,7 @@ void kfile_init()
                     if (cp != nullptr)
                     {
                         int auto_flag = s_thread_cmd_flag[cp - s_thread_cmd_ltr];
-                        HashDatum data = hashfetch(g_msgid_hash, g_buf, std::strlen(g_buf));
+                        HashDatum data = hash_fetch(g_msgid_hash, g_buf, std::strlen(g_buf));
                         if (!data.dat_ptr)
                         {
                             data.dat_ptr = savestr(g_buf);
@@ -114,7 +114,7 @@ void kfile_init()
                             g_kf_changethd_cnt++;
                         }
                         data.dat_len = auto_flag | age;
-                        hashstorelast(data);
+                        hash_store_last(data);
                     }
                     s_kf_thread_cnt++;
                 }
@@ -582,7 +582,7 @@ void rewrite_kfile(ArticleNum thru)
         if (!(g_kf_state & KFS_GLOBAL_THREADFILE))
         {
             /* Append all the still-valid thread commands */
-            hashwalk(g_msgid_hash, write_local_thread_commands, 0);
+            hash_walk(g_msgid_hash, write_local_thread_commands, 0);
         }
         std::fclose(s_newkfp);
         if (!has_content)
@@ -678,7 +678,7 @@ void update_thread_kfile()
     int elapsed_days = killfile_daynum(s_kf_daynum);
     if (elapsed_days)
     {
-        hashwalk(g_msgid_hash, age_thread_commands, elapsed_days);
+        hash_walk(g_msgid_hash, age_thread_commands, elapsed_days);
         s_kf_daynum += elapsed_days;
     }
 
@@ -699,7 +699,7 @@ void update_thread_kfile()
         }
         s_kf_thread_cnt = 0;
         g_kf_changethd_cnt = 0;
-        hashwalk(g_msgid_hash, write_global_thread_commands, 0); /* Rewrite */
+        hash_walk(g_msgid_hash, write_global_thread_commands, 0); /* Rewrite */
     }
     else
     {
@@ -708,7 +708,7 @@ void update_thread_kfile()
         {
             return; /* Yikes! */
         }
-        hashwalk(g_msgid_hash, write_global_thread_commands, 1); /* Append */
+        hash_walk(g_msgid_hash, write_global_thread_commands, 1); /* Append */
     }
     std::fclose(s_newkfp);
 

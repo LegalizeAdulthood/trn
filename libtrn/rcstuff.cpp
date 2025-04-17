@@ -296,7 +296,7 @@ void unuse_multirc(Multirc *mptr)
     if (g_ngdata_list)
     {
         close_cache();
-        hashdestroy(g_newsrc_hash);
+        hash_destroy(g_newsrc_hash);
         walk_list(g_ngdata_list, clear_ngitem, 0);
         delete_list(g_ngdata_list);
         g_ngdata_list = nullptr;
@@ -630,7 +630,7 @@ static bool open_newsrc(Newsrc *rp)
     {
         /* allocate memory for rc file globals */
         g_ngdata_list = new_list(0, 0, sizeof (NewsgroupData), 200, LF_NONE, init_ngnode);
-        g_newsrc_hash = hashcreate(3001, rcline_cmp);
+        g_newsrc_hash = hash_create(3001, rcline_cmp);
     }
 
     NewsgroupData*   prev_np;
@@ -691,7 +691,7 @@ static bool open_newsrc(Newsrc *rp)
             continue;
         }
         parse_rcline(np);
-        HashDatum data = hashfetch(g_newsrc_hash, np->rcline, np->numoffset - 1);
+        HashDatum data = hash_fetch(g_newsrc_hash, np->rcline, np->numoffset - 1);
         if (data.dat_ptr)
         {
             np->toread = TR_IGNORE;
@@ -1491,7 +1491,7 @@ void list_newsgroups()
 
 NewsgroupData *find_ng(const char *ngnam)
 {
-    HashDatum data = hashfetch(g_newsrc_hash, ngnam, std::strlen(ngnam));
+    HashDatum data = hash_fetch(g_newsrc_hash, ngnam, std::strlen(ngnam));
     return (NewsgroupData*)data.dat_ptr;
 }
 
@@ -1582,7 +1582,7 @@ reask_bogus:
         {
             for (np = g_last_ng; np && np->toread == TR_BOGUS; np = np->prev)
             {
-                hashdelete(g_newsrc_hash, np->rcline, np->numoffset - 1);
+                hash_delete(g_newsrc_hash, np->rcline, np->numoffset - 1);
                 clear_ngitem((char*)np,0);
                 g_newsgroup_cnt--;
             }
@@ -1631,7 +1631,7 @@ void sethash(NewsgroupData *np)
     HashDatum data;
     data.dat_ptr = (char*)np;
     data.dat_len = np->numoffset - 1;
-    hashstore(g_newsrc_hash, np->rcline, data.dat_len, data);
+    hash_store(g_newsrc_hash, np->rcline, data.dat_len, data);
 }
 
 static int rcline_cmp(const char *key, int keylen, HashDatum data)

@@ -166,7 +166,7 @@ static void new_nntp_groups(DataSource *dp)
         std::printf("Can't get new groups from server:\n%s\n", g_ser_line);
         return;
     }
-    HashTable *newngs = hashcreate(33, addng_cmp);
+    HashTable *newngs = hash_create(33, addng_cmp);
 
     while (true)
     {
@@ -241,11 +241,11 @@ static void new_nntp_groups(DataSource *dp)
     }
     if (foundSomething)
     {
-        hashwalk(newngs, build_addgroup_list, 0);
+        hash_walk(newngs, build_addgroup_list, 0);
         source_file_end_append(&dp->act_sf, dp->extra_name);
         dp->last_new_group = server_time;
     }
-    hashdestroy(newngs);
+    hash_destroy(newngs);
 }
 
 static void new_local_groups(DataSource *dp)
@@ -267,7 +267,7 @@ static void new_local_groups(DataSource *dp)
         return;
     }
     std::time_t lastone = std::time(nullptr) - 24L * 60 * 60 - 1;
-    HashTable *newngs = hashcreate(33, addng_cmp);
+    HashTable *newngs = hash_create(33, addng_cmp);
 
     while (std::fgets(g_buf, LBUFLEN, fp) != nullptr)
     {
@@ -299,8 +299,8 @@ static void new_local_groups(DataSource *dp)
     }
     std::fclose(fp);
 
-    hashwalk(newngs, build_addgroup_list, 0);
-    hashdestroy(newngs);
+    hash_walk(newngs, build_addgroup_list, 0);
+    hash_destroy(newngs);
     dp->last_new_group = lastone+1;
     dp->act_sf.recent_cnt = file_size;
 }
@@ -329,7 +329,7 @@ static void add_to_hash(HashTable *ng, const char *name, int toread, char_int ch
     node->data_src = g_data_source;
     node->next = nullptr;
     node->prev = nullptr;
-    hashstore(ng, name, namelen, data);
+    hash_store(ng, name, namelen, data);
 }
 
 static void add_to_list(const char *name, int toread, char_int ch)
@@ -393,7 +393,7 @@ bool scan_active(bool add_matching)
         set_data_source(dp);
         if (dp->act_sf.fp)
         {
-            hashwalk(dp->act_sf.hp, list_groups, add_matching);
+            hash_walk(dp->act_sf.hp, list_groups, add_matching);
         }
         else
         {

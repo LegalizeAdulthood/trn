@@ -644,7 +644,7 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
     /* Do a quick, hashed lookup */
 
     outbuf[0] = '\0';
-    HashDatum data = hashfetch(dp->act_sf.hp, nam, len);
+    HashDatum data = hash_fetch(dp->act_sf.hp, nam, len);
     if (data.dat_ptr)
     {
         ListNode* node = (ListNode*)data.dat_ptr;
@@ -810,7 +810,7 @@ const char *find_goup_desc(DataSource *dp, const char *group_name)
     }
 
     grouplen = std::strlen(group_name);
-    if (HashDatum data = hashfetch(dp->desc_sf.hp, group_name, grouplen); data.dat_ptr)
+    if (HashDatum data = hash_fetch(dp->desc_sf.hp, group_name, grouplen); data.dat_ptr)
     {
         ListNode*node = (ListNode*)data.dat_ptr;
         /*dp->act_sf.lp->recent = node;*/
@@ -963,7 +963,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
 
     /* Create a list with one character per item using a large chunk size. */
     sfp->lp = new_list(0, 0, 1, SRCFILE_CHUNK_SIZE, LF_NONE, nullptr);
-    sfp->hp = hashcreate(3001, srcfile_cmp);
+    sfp->hp = hash_create(3001, srcfile_cmp);
     sfp->fp = fp;
 
     if (!filename)
@@ -1045,7 +1045,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
         }
         data.dat_len = offset;
         (void) std::memcpy(lbp,g_buf,linelen);
-        hashstore(sfp->hp, g_buf, keylen, data);
+        hash_store(sfp->hp, g_buf, keylen, data);
     }
     sfp->lp->high = node_low + offset - 1;
     setspin(SPIN_OFF);
@@ -1108,7 +1108,7 @@ char *source_file_append(SourceFile *sfp, char *bp, int key_len)
     }
     data.dat_ptr = (char*)node;
     (void) std::memcpy(lbp,bp,linelen);
-    hashstore(sfp->hp, bp, key_len, data);
+    hash_store(sfp->hp, bp, key_len, data);
     sfp->lp->high = pos + linelen - 1;
 
     return lbp;
@@ -1144,7 +1144,7 @@ void source_file_close(SourceFile *sfp)
     }
     if (sfp->hp)
     {
-        hashdestroy(sfp->hp);
+        hash_destroy(sfp->hp);
         sfp->hp = nullptr;
     }
 }
@@ -1203,7 +1203,7 @@ int find_close_match()
         {
             if (dp->act_sf.hp)
             {
-                hashwalk(dp->act_sf.hp, check_distance, 0);
+                hash_walk(dp->act_sf.hp, check_distance, 0);
             }
             else
             {
@@ -1214,7 +1214,7 @@ int find_close_match()
 
     if (ret < 0)
     {
-        hashwalk(g_newsrc_hash, check_distance, 1);
+        hash_walk(g_newsrc_hash, check_distance, 1);
         ret = 0;
     }
 

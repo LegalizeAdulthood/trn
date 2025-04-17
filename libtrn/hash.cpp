@@ -68,7 +68,7 @@ static HashEntry *s_hereuse{};
 static int      s_reusables{};
 
 /* size - a crude guide to size */
-HashTable *hashcreate(unsigned size, HashCompareFunc cmpfunc)
+HashTable *hash_create(unsigned size, HashCompareFunc cmp_func)
 {
     size = std::max(size, 1U);  /* size < 1 is nonsense */
     struct alignalloc
@@ -81,7 +81,7 @@ HashTable *hashcreate(unsigned size, HashCompareFunc cmpfunc)
     HashTable *tbl = &aap->ht;
     tbl->ht_size = size;
     tbl->ht_magic = HASHMAG;
-    tbl->ht_cmp = cmpfunc == nullptr ? default_cmp : cmpfunc;
+    tbl->ht_cmp = cmp_func == nullptr ? default_cmp : cmp_func;
     tbl->ht_addr = aap->hepa;
     return tbl;
 }
@@ -89,7 +89,7 @@ HashTable *hashcreate(unsigned size, HashCompareFunc cmpfunc)
 /* Free all the memory associated with tbl, erase the pointers to it, and
 ** invalidate tbl to prevent further use via other pointers to it.
 */
-void hashdestroy(HashTable *tbl)
+void hash_destroy(HashTable *tbl)
 {
     HashEntry* next;
 
@@ -114,23 +114,23 @@ void hashdestroy(HashTable *tbl)
     std::free((char*)tbl);
 }
 
-void hashstore(HashTable *tbl, const char *key, int keylen, HashDatum data)
+void hash_store(HashTable *tbl, const char *key, int key_len, HashDatum data)
 {
-    HashEntry **nextp = hashfind(tbl, key, keylen);
+    HashEntry **nextp = hashfind(tbl, key, key_len);
     HashEntry *hp = *nextp;
     if (hp == nullptr)              /* absent; allocate an entry */
     {
         hp = healloc();
         hp->he_next = nullptr;
-        hp->he_keylen = keylen;
+        hp->he_keylen = key_len;
         *nextp = hp;                /* append to hash chain */
     }
     hp->he_data = data;             /* supersede any old data for this key */
 }
 
-void hashdelete(HashTable *tbl, const char *key, int keylen)
+void hash_delete(HashTable *tbl, const char *key, int key_len)
 {
-    HashEntry **nextp = hashfind(tbl, key, keylen);
+    HashEntry **nextp = hashfind(tbl, key, key_len);
     HashEntry *hp = *nextp;
     if (hp == nullptr)                  /* absent */
     {
@@ -146,13 +146,13 @@ static HashEntry **s_slast_nextp{};
 static int       s_slast_keylen{};
 
 /* data corresponding to key */
-HashDatum hashfetch(HashTable *tbl, const char *key, int keylen)
+HashDatum hash_fetch(HashTable *tbl, const char *key, int key_len)
 {
     static HashDatum errdatum{nullptr, 0};
 
-    HashEntry **nextp = hashfind(tbl, key, keylen);
+    HashEntry **nextp = hashfind(tbl, key, key_len);
     s_slast_nextp = nextp;
-    s_slast_keylen = keylen;
+    s_slast_keylen = key_len;
     HashEntry *hp = *nextp;
     if (hp == nullptr)                  /* absent */
     {
@@ -161,7 +161,7 @@ HashDatum hashfetch(HashTable *tbl, const char *key, int keylen)
     return hp->he_data;
 }
 
-void hashstorelast(HashDatum data)
+void hash_store_last(HashDatum data)
 {
     HashEntry *hp = *s_slast_nextp;
     if (hp == nullptr)                          /* absent; allocate an entry */
@@ -177,7 +177,7 @@ void hashstorelast(HashDatum data)
 /* Visit each entry by calling nodefunc at each, with keylen, data,
 ** and extra as arguments.
 */
-void hashwalk(HashTable *tbl, HashWalkFunc nodefunc, int extra)
+void hash_walk(HashTable *tbl, HashWalkFunc node_func, int extra)
 {
     HashEntry* next;
     HashEntry** hepp;
@@ -194,7 +194,7 @@ void hashwalk(HashTable *tbl, HashWalkFunc nodefunc, int extra)
         for (HashEntry *hp = *s_slast_nextp; hp != nullptr; hp = next)
         {
             next = hp->he_next;
-            if ((*nodefunc)(hp->he_keylen, &hp->he_data, extra) < 0)
+            if ((*node_func)(hp->he_keylen, &hp->he_data, extra) < 0)
             {
                 *s_slast_nextp = next;
                 hp->he_next = nullptr;

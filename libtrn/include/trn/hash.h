@@ -9,23 +9,21 @@
 
 struct HashDatum
 {
-    char *dat_ptr;
+    char    *dat_ptr;
     unsigned dat_len;
 };
 
 struct HashTable;
 
-using HashCompareFunc = int (*)(const char *key, int keylen, HashDatum data);
-using HashWalkFunc = int (*)(int keylen, HashDatum *data, int extra);
+using HashCompareFunc = int (*)(const char *key, int key_len, HashDatum data);
+using HashWalkFunc = int (*)(int key_len, HashDatum *data, int extra);
 
-#define HASH_DEFCMPFUNC ((HashCompareFunc) nullptr)
-
-HashTable *hashcreate(unsigned size, HashCompareFunc cmpfunc);
-void hashdestroy(HashTable *tbl);
-void hashstore(HashTable *tbl, const char *key, int keylen, HashDatum data);
-void hashdelete(HashTable *tbl, const char *key, int keylen);
-HashDatum hashfetch(HashTable *tbl, const char *key, int keylen);
-void hashstorelast(HashDatum data);
-void hashwalk(HashTable *tbl, HashWalkFunc nodefunc, int extra);
+HashTable *hash_create(unsigned size, HashCompareFunc cmp_func);
+void hash_destroy(HashTable *tbl);
+void hash_store(HashTable *tbl, const char *key, int key_len, HashDatum data);
+void hash_delete(HashTable *tbl, const char *key, int key_len);
+HashDatum hash_fetch(HashTable *tbl, const char *key, int key_len);
+void hash_store_last(HashDatum data);
+void hash_walk(HashTable *tbl, HashWalkFunc node_func, int extra);
 
 #endif

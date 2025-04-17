@@ -79,7 +79,7 @@ void thread_open()
 
     if (!g_msgid_hash)
     {
-        g_msgid_hash = hashcreate(1999, msgid_cmp); /*TODO: pick a better size */
+        g_msgid_hash = hash_create(1999, msgid_cmp); /*TODO: pick a better size */
     }
     if (g_threaded_group)
     {
@@ -206,7 +206,7 @@ void thread_close()
     update_thread_kfile();
     if (g_msgid_hash)
     {
-        hashwalk(g_msgid_hash, cleanup_msgid_hash, 0);
+        hash_walk(g_msgid_hash, cleanup_msgid_hash, 0);
     }
     g_sel_page_sp = nullptr;
     g_sel_page_app = nullptr;

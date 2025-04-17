@@ -160,12 +160,12 @@ void univ_close()
     g_univ_label.clear();
     if (g_univ_ng_hash)
     {
-        hashdestroy(g_univ_ng_hash);
+        hash_destroy(g_univ_ng_hash);
         g_univ_ng_hash = nullptr;
     }
     if (g_univ_vg_hash)
     {
-        hashdestroy(g_univ_vg_hash);
+        hash_destroy(g_univ_vg_hash);
         g_univ_vg_hash = nullptr;
     }
     g_first_univ = nullptr;
@@ -297,10 +297,10 @@ void univ_add_group(const char *desc, const char *grpname)
 
     if (!g_univ_ng_hash)
     {
-        g_univ_ng_hash = hashcreate(701, HASH_DEFCMPFUNC);
+        g_univ_ng_hash = hash_create(701, nullptr);
     }
 
-    HashDatum data = hashfetch(g_univ_ng_hash, grpname, std::strlen(grpname));
+    HashDatum data = hash_fetch(g_univ_ng_hash, grpname, std::strlen(grpname));
 
     if (data.dat_ptr)
     {
@@ -320,7 +320,7 @@ void univ_add_group(const char *desc, const char *grpname)
     ui = univ_add(UN_NEWSGROUP,desc);
     ui->data.group.ng = savestr(grpname);
     data.dat_ptr = ui->data.group.ng;
-    hashstorelast(data);
+    hash_store_last(data);
 }
 
 void univ_add_mask(const char *desc, const char *mask)
@@ -409,11 +409,11 @@ void univ_add_virtgroup(const char *grpname)
     /* perhaps leave if group has no unread, or other factor */
     if (!g_univ_vg_hash)
     {
-        g_univ_vg_hash = hashcreate(701, HASH_DEFCMPFUNC);
+        g_univ_vg_hash = hash_create(701, nullptr);
     }
 
     s_univ_virt_pass_needed = true;
-    HashDatum data = hashfetch(g_univ_vg_hash, grpname, std::strlen(grpname));
+    HashDatum data = hash_fetch(g_univ_vg_hash, grpname, std::strlen(grpname));
     if (data.dat_ptr)
     {
         /* group was already added */
@@ -438,7 +438,7 @@ void univ_add_virtgroup(const char *grpname)
     }
     ui->data.vgroup.ng = savestr(grpname);
     data.dat_ptr = ui->data.vgroup.ng;
-    hashstorelast(data);
+    hash_store_last(data);
 }
 
 /* univ_DoMatch uses a modified Wildmat function which is
