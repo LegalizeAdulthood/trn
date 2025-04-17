@@ -36,31 +36,31 @@
 #include <cstring>
 #include <string>
 
-List       *g_newsgroup_data_list{};       /* a list of NGDATA */
-int         g_newsgroup_data_count{};        //
-NewsgroupNum      g_newsgroup_count{};     /* all newsgroups in our current newsrc(s) */
-NewsgroupNum      g_newsgroup_to_read{};  //
-ArticleUnread  g_newsgroup_min_to_read{1};    /* == TR_ONE or TR_NONE */
-NewsgroupData     *g_first_newsgroup{};          //
-NewsgroupData     *g_last_newsgroup{};           //
-NewsgroupData     *g_newsgroup_ptr{};             /* current newsgroup data ptr */
-NewsgroupData     *g_current_newsgroup{};        /* stable current newsgroup so we can ditz with g_ngptr */
-NewsgroupData     *g_recent_newsgroup{};         /* the prior newsgroup we visited */
-NewsgroupData     *g_start_here{};         /* set to the first newsgroup with unread news on startup */
-NewsgroupData     *g_sel_page_np{};       //
-NewsgroupData     *g_sel_next_np{};       //
-ArticleNum     g_abs_first{};          /* 1st real article in current newsgroup */
-ArticleNum     g_first_art{};          /* minimum unread article number in newsgroup */
-ArticleNum     g_last_art{};           /* maximum article number in newsgroup */
-ArticleUnread  g_missing_count{};     /* for reports on missing articles */
-std::string g_moderated;           //
-bool        g_redirected{};        //
-std::string g_redirected_to;       //
-bool        g_threaded_group{};    //
-NewsgroupData     *g_ng_go_newsgroup_ptr{};       //
-ArticleNum     g_ng_go_art_num{};      //
-bool        g_novice_delays{true}; /* +f */
-bool        g_in_ng{};             /* true if in a newsgroup */
+List          *g_newsgroup_data_list{};    /* a list of NGDATA */
+int            g_newsgroup_data_count{};   //
+NewsgroupNum   g_newsgroup_count{};        /* all newsgroups in our current newsrc(s) */
+NewsgroupNum   g_newsgroup_to_read{};      //
+ArticleUnread  g_newsgroup_min_to_read{1}; /* == TR_ONE or TR_NONE */
+NewsgroupData *g_first_newsgroup{};        //
+NewsgroupData *g_last_newsgroup{};         //
+NewsgroupData *g_newsgroup_ptr{};          /* current newsgroup data ptr */
+NewsgroupData *g_current_newsgroup{};      /* stable current newsgroup so we can ditz with g_ngptr */
+NewsgroupData *g_recent_newsgroup{};       /* the prior newsgroup we visited */
+NewsgroupData *g_start_here{};             /* set to the first newsgroup with unread news on startup */
+NewsgroupData *g_sel_page_np{};            //
+NewsgroupData *g_sel_next_np{};            //
+ArticleNum     g_abs_first{};              /* 1st real article in current newsgroup */
+ArticleNum     g_first_art{};              /* minimum unread article number in newsgroup */
+ArticleNum     g_last_art{};               /* maximum article number in newsgroup */
+ArticleUnread  g_missing_count{};          /* for reports on missing articles */
+std::string    g_moderated;                //
+bool           g_redirected{};             //
+std::string    g_redirected_to;            //
+bool           g_threaded_group{};         //
+NewsgroupData *g_ng_go_newsgroup_ptr{};    //
+ArticleNum     g_ng_go_art_num{};          //
+bool           g_novice_delays{true};      /* +f */
+bool           g_in_ng{};                  /* true if in a newsgroup */
 
 static int ngorder_number(const NewsgroupData **npp1, const NewsgroupData **npp2);
 static int ngorder_groupname(const NewsgroupData **npp1, const NewsgroupData **npp2);

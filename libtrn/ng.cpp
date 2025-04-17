@@ -51,25 +51,25 @@
 #include <cstring>
 #include <string>
 
-ArticleNum  g_art{};           /* current or prospective article # */
-ArticleNum  g_recent_art{};    /* previous article # for '-' command */
-ArticleNum  g_curr_art{};      /* current article # */
-Article *g_recent_artp{};   /* article_ptr equivilents */
-Article *g_curr_artp{};     //
-Article *g_artp{};          /* the article ptr we use when art is 0 */
-int      g_check_count{};    /* how many articles have we read in the current newsgroup since the last checkpoint? */
-int      g_do_check_when{20}; /* how often to do checkpoint */
-char    *g_subj_line{};      /* what format to use for '=' */
+ArticleNum g_art{};             /* current or prospective article # */
+ArticleNum g_recent_art{};      /* previous article # for '-' command */
+ArticleNum g_curr_art{};        /* current article # */
+Article   *g_recent_artp{};     /* article_ptr equivilents */
+Article   *g_curr_artp{};       //
+Article   *g_artp{};            /* the article ptr we use when art is 0 */
+int        g_check_count{};     /* how many articles have we read in the current newsgroup since the last checkpoint? */
+int        g_do_check_when{20}; /* how often to do checkpoint */
+char      *g_subj_line{};       /* what format to use for '=' */
 #ifdef MAILCALL
-int g_mail_count{}; /* check for mail when 0 mod 10 */
+int        g_mail_count{};      /* check for mail when 0 mod 10 */
 #endif
 char       *g_mail_call{""};
-bool        g_force_last{};              /* ought we show "End of newsgroup"? */
-bool        g_force_grow{};              /* do we want to recalculate size of newsgroup, e.g. after posting? */
-int         g_scan_on{};                 /* -S */
+bool        g_force_last{};             /* ought we show "End of newsgroup"? */
+bool        g_force_grow{};             /* do we want to recalculate size of newsgroup, e.g. after posting? */
+int         g_scan_on{};                /* -S */
 bool        g_use_threads{THREAD_INIT}; /* -x */
 bool        g_unsafe_rc_saves{};        /* -U */
-std::string g_default_cmd;                  /* 1st char is default command */
+std::string g_default_cmd;              /* 1st char is default command */
 
 /* art_switch() return values */
 enum ArticleSwitchResult
@@ -83,16 +83,16 @@ enum ArticleSwitchResult
     AS_SV = 6
 };
 
-static bool count_unCACHED_article(char *ptr, int arg);
-static bool mark_all_READ(char *ptr, int leave_unread);
-static bool mark_all_unREAD(char *ptr, int arg);
+static bool count_uncached_article(char *ptr, int arg);
+static bool mark_all_read(char *ptr, int leave_unread);
+static bool mark_all_unread(char *ptr, int arg);
 #ifdef DEBUG
 static bool debug_article_output(char *ptr, int arg);
 #endif
 static ArticleSwitchResult art_switch();
 
 static DoNewsgroupResult s_exit_code{NG_NORM};
-static bool                s_art_sel_ilock{};
+static bool              s_art_sel_lock{};
 
 void ng_init()
 {
@@ -320,7 +320,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 goto article_level;
             }
             count_subjects(CS_RETAIN);
-            article_walk(count_unCACHED_article, 0);
+            article_walk(count_uncached_article, 0);
             g_newsgroup_ptr->to_read = (ArticleUnread)g_obj_count;
             if (g_artp != g_curr_artp)
             {
@@ -784,7 +784,7 @@ static ArticleSwitchResult art_switch()
         else if (*g_buf == 'a')
         {
             check_first(g_abs_first);
-            article_walk(mark_all_unREAD, 0);
+            article_walk(mark_all_unread, 0);
             count_subjects(CS_NORM);
             g_newsgroup_ptr->to_read = (ArticleUnread)g_obj_count;
         }
@@ -1461,7 +1461,7 @@ normal_search:
 
     case '+':                 /* enter selection mode */
 run_the_selector:
-        if (s_art_sel_ilock)
+        if (s_art_sel_lock)
         {
             std::printf("\nAlready inside article selector!\n");
             term_down(2);
@@ -1472,9 +1472,9 @@ run_the_selector:
         /* turn on temporary follow */
         g_s_follow_temp = true;
         g_univ_follow_temp = true;
-        s_art_sel_ilock = true;
+        s_art_sel_lock = true;
         *g_buf = article_selector(*g_buf);
-        s_art_sel_ilock = false;
+        s_art_sel_lock = false;
         switch (*g_buf)
         {
         case '+':
@@ -1996,7 +1996,7 @@ reask_catchup:
     }
     if (g_in_ng)
     {
-        article_walk(mark_all_READ, leave_unread);
+        article_walk(mark_all_read, leave_unread);
         if (leave_unread)
         {
             count_subjects(CS_NORM);
@@ -2033,7 +2033,7 @@ reask_catchup:
     return ch;
 }
 
-static bool count_unCACHED_article(char *ptr, int arg)
+static bool count_uncached_article(char *ptr, int arg)
 {
     Article* ap = (Article*)ptr;
     if ((ap->flags & (AF_UNREAD|AF_CACHED)) == AF_UNREAD)
@@ -2043,7 +2043,7 @@ static bool count_unCACHED_article(char *ptr, int arg)
     return false;
 }
 
-static bool mark_all_READ(char *ptr, int leave_unread)
+static bool mark_all_read(char *ptr, int leave_unread)
 {
     Article* ap = (Article*)ptr;
     if (article_num(ap) > g_last_art - leave_unread)
@@ -2054,7 +2054,7 @@ static bool mark_all_READ(char *ptr, int leave_unread)
     return false;
 }
 
-static bool mark_all_unREAD(char *ptr, int arg)
+static bool mark_all_unread(char *ptr, int arg)
 {
     Article* ap = (Article*)ptr;
     if ((ap->flags & (AF_UNREAD | AF_EXISTS)) == AF_EXISTS)
