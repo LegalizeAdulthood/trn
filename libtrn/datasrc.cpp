@@ -47,10 +47,10 @@ struct utimbuf
 #include <ctime>
 #include <string>
 
-List       *g_data_source_list{};                         /* a list of all DataSources */
-DataSource    *g_data_source{};                              /* the current datasrc */
-int         g_data_source_cnt{};                          //
-char       *g_trn_access_mem{};                        //
+List       *g_data_source_list{};                     /* a list of all DataSources */
+DataSource *g_data_source{};                          /* the current datasrc */
+int         g_data_source_cnt{};                      //
+char       *g_trn_access_mem{};                       //
 std::string g_nntp_auth_file;                         //
 time_t      g_def_refetch_secs{DEFAULT_REFETCH_SECS}; /* -z */
 
@@ -102,12 +102,12 @@ static IniWords s_datasrc_ini[] =
     // clang-format on
 };
 
-static char *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag);
-static char *file_or_none(char *fn);
-static int srcfile_cmp(const char *key, int keylen, HashDatum data);
-static int check_distance(int len, HashDatum *data, int newsrc_ptr);
-static int get_near_miss();
-static DataSource *new_datasrc(const char *name, char **vals);
+static char       *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag);
+static char       *file_or_none(char *fn);
+static int         source_file_cmp(const char *key, int keylen, HashDatum data);
+static int         check_distance(int len, HashDatum *data, int newsrc_ptr);
+static int         get_near_miss();
+static DataSource *new_data_source(const char *name, char **vals);
 
 void data_source_init()
 {
@@ -125,7 +125,7 @@ void data_source_init()
         vals[DI_AUTH_USER] = read_auth_file(g_nntp_auth_file.c_str(),
                                             &vals[DI_AUTH_PASS]);
         vals[DI_FORCE_AUTH] = get_val("NNTP_FORCE_AUTH");
-        new_datasrc("default",vals);
+        new_data_source("default",vals);
     }
 
     g_trn_access_mem = read_data_sources(TRNACCESS);
@@ -166,7 +166,7 @@ void data_source_init()
                                                 &vals[DI_AUTH_PASS]);
             vals[DI_FORCE_AUTH] = get_val("NNTP_FORCE_AUTH");
         }
-        new_datasrc("default",vals);
+        new_data_source("default",vals);
     }
     unprep_ini_words(s_datasrc_ini);
 }
@@ -222,7 +222,7 @@ char *read_data_sources(const char *filename)
                 {
                     break;
                 }
-                new_datasrc(section,vals);
+                new_data_source(section,vals);
             }
         }
         close(fd);
@@ -242,7 +242,7 @@ DataSource *get_data_source(const char *name)
     return nullptr;
 }
 
-static DataSource *new_datasrc(const char *name, char **vals)
+static DataSource *new_data_source(const char *name, char **vals)
 {
     DataSource* dp = data_source_ptr(g_data_source_cnt++);
 
@@ -757,7 +757,7 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
     return false;       /* no such group */
 }
 
-const char *find_goup_desc(DataSource *dp, const char *group_name)
+const char *find_group_desc(DataSource *dp, const char *group_name)
 {
     int grouplen;
 
@@ -843,7 +843,7 @@ try_xgtitle:
             source_file_close(&dp->desc_sf);
             if (dp->flags & DF_TMP_GROUP_DESC)
             {
-                return find_goup_desc(dp, group_name);
+                return find_group_desc(dp, group_name);
             }
             std::free(dp->group_desc);
             dp->group_desc = nullptr;
@@ -963,7 +963,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
 
     /* Create a list with one character per item using a large chunk size. */
     sfp->lp = new_list(0, 0, 1, SRCFILE_CHUNK_SIZE, LF_NONE, nullptr);
-    sfp->hp = hash_create(3001, srcfile_cmp);
+    sfp->hp = hash_create(3001, source_file_cmp);
     sfp->fp = fp;
 
     if (!filename)
@@ -1149,7 +1149,7 @@ void source_file_close(SourceFile *sfp)
     }
 }
 
-static int srcfile_cmp(const char *key, int keylen, HashDatum data)
+static int source_file_cmp(const char *key, int keylen, HashDatum data)
 {
     /* We already know that the lengths are equal, just compare the strings */
     return std::memcmp(key, ((ListNode*)data.dat_ptr)->data + data.dat_len, keylen);
@@ -1184,17 +1184,17 @@ static int srcfile_cmp(const char *key, int keylen, HashDatum data)
  * or not they had precisely the same edit distance, but oh well.
  */
 
-static char **s_ngptrs{};     /* List of potential matches */
-static int    s_ngn{};        /* Length of list in s_ngptrs[] */
-static int    s_best_match{}; /* Value of best match */
+static char **s_newsgroup_ptrs{}; /* List of potential matches */
+static int    s_newsgroup_num{};  /* Length of list in s_ngptrs[] */
+static int    s_best_match{};     /* Value of best match */
 
 int find_close_match()
 {
     int ret = 0;
 
     s_best_match = -1;
-    s_ngptrs = (char**)safe_malloc(MAX_NG * sizeof (char*));
-    s_ngn = 0;
+    s_newsgroup_ptrs = (char**)safe_malloc(MAX_NG * sizeof (char*));
+    s_newsgroup_num = 0;
 
     /* Iterate over all legal newsgroups */
     for (DataSource *dp = data_source_first(); dp && !empty(dp->name); dp = data_source_next(dp))
@@ -1220,26 +1220,26 @@ int find_close_match()
 
     /* s_ngn is the number of possibilities.  If there's just one, go with it. */
 
-    switch (s_ngn)
+    switch (s_newsgroup_num)
     {
     case 0:
         break;
     case 1:
     {
-        char* cp = std::strchr(s_ngptrs[0], ' ');
+        char* cp = std::strchr(s_newsgroup_ptrs[0], ' ');
         if (cp)
         {
             *cp = '\0';
         }
         if (g_verbose)
         {
-            std::printf("(I assume you meant %s)\n", s_ngptrs[0]);
+            std::printf("(I assume you meant %s)\n", s_newsgroup_ptrs[0]);
         }
         else
         {
-            std::printf("(Using %s)\n", s_ngptrs[0]);
+            std::printf("(Using %s)\n", s_newsgroup_ptrs[0]);
         }
-        set_newsgroup_name(s_ngptrs[0]);
+        set_newsgroup_name(s_newsgroup_ptrs[0]);
         if (cp)
         {
             *cp = ' ';
@@ -1252,7 +1252,7 @@ int find_close_match()
         ret = get_near_miss();
         break;
     }
-    std::free((char*)s_ngptrs);
+    std::free((char*)s_newsgroup_ptrs);
     return ret;
 }
 
@@ -1294,21 +1294,21 @@ static int check_distance(int len, HashDatum *data, int newsrc_ptr)
 
     if (value < s_best_match)
     {
-        s_ngn = 0;
+        s_newsgroup_num = 0;
     }
     if (s_best_match < 0 || value <= s_best_match)
     {
-        for (int i = 0; i < s_ngn; i++)
+        for (int i = 0; i < s_newsgroup_num; i++)
         {
-            if (!std::strcmp(name,s_ngptrs[i]))
+            if (!std::strcmp(name,s_newsgroup_ptrs[i]))
             {
                 return 0;
             }
         }
         s_best_match = value;
-        if (s_ngn < MAX_NG)
+        if (s_newsgroup_num < MAX_NG)
         {
-            s_ngptrs[s_ngn++] = name;
+            s_newsgroup_ptrs[s_newsgroup_num++] = name;
         }
     }
     return 0;
@@ -1327,15 +1327,15 @@ static int get_near_miss()
     {
         std::printf("However, here are some close matches:\n");
     }
-    s_ngn = std::min(s_ngn, 9);         /* Since we're using single digits.... */
-    for (int i = 0; i < s_ngn; i++)
+    s_newsgroup_num = std::min(s_newsgroup_num, 9);         /* Since we're using single digits.... */
+    for (int i = 0; i < s_newsgroup_num; i++)
     {
-        char* cp = std::strchr(s_ngptrs[i], ' ');
+        char* cp = std::strchr(s_newsgroup_ptrs[i], ' ');
         if (cp)
         {
             *cp = '\0';
         }
-        std::printf("  %d.  %s\n", i+1, s_ngptrs[i]);
+        std::printf("  %d.  %s\n", i+1, s_newsgroup_ptrs[i]);
         std::sprintf(op++, "%d", i+1);       /* Expensive, but avoids ASCII deps */
         if (cp)
         {
@@ -1387,15 +1387,15 @@ reask:
         {
             char* s = std::strchr(options, *g_buf);
 
-            int i = s ? (s - options) : s_ngn;
-            if (i >= 0 && i < s_ngn)
+            int i = s ? (s - options) : s_newsgroup_num;
+            if (i >= 0 && i < s_newsgroup_num)
             {
-                char* cp = std::strchr(s_ngptrs[i], ' ');
+                char* cp = std::strchr(s_newsgroup_ptrs[i], ' ');
                 if (cp)
                 {
                     *cp = '\0';
                 }
-                set_newsgroup_name(s_ngptrs[i]);
+                set_newsgroup_name(s_newsgroup_ptrs[i]);
                 if (cp)
                 {
                     *cp = ' ';

@@ -111,7 +111,7 @@ void        check_data_sources();
 void        close_data_source(DataSource *dp);
 bool        active_file_hash(DataSource *dp);
 bool        find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, ArticleNum high);
-const char *find_goup_desc(DataSource *dp, const char *group_name);
+const char *find_group_desc(DataSource *dp, const char *group_name);
 int         source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cmd, const char *server);
 char       *source_file_append(SourceFile *sfp, char *bp, int key_len);
 void        source_file_end_append(SourceFile *sfp, const char *filename);

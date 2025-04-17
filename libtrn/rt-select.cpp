@@ -518,7 +518,7 @@ char newsgroup_selector()
         {
             if ((rp->flags & RF_ACTIVE) && !rp->data_source->desc_sf.hp)
             {
-                find_goup_desc(rp->data_source, "control");
+                find_group_desc(rp->data_source, "control");
                 if (rp->data_source->desc_sf.fp)
                 {
                     rp->data_source->flags |= DF_NO_XGTITLE; /* TODO: ok?*/
@@ -605,7 +605,7 @@ char add_group_selector(GetNewsgroupFlags flags)
         {
             if ((rp->flags & RF_ACTIVE) && !rp->data_source->desc_sf.hp)
             {
-                find_goup_desc(rp->data_source, "control");
+                find_group_desc(rp->data_source, "control");
                 if (!rp->data_source->desc_sf.fp)
                 {
                     rp->data_source->desc_sf.refetch_secs = 0;

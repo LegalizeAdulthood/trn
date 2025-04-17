@@ -2682,7 +2682,7 @@ static void display_group(DataSource *dp, char *group, int len, int max_len)
     {
         char* end;
         char buff[256];
-        std::strcpy(buff, find_goup_desc(dp, group));
+        std::strcpy(buff, find_group_desc(dp, group));
         char* cp = buff;
         if (*cp != '?' && (end = std::strchr(cp, '\n')) != nullptr //
             && end != cp)
