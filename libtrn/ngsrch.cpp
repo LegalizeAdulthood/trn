@@ -22,13 +22,13 @@
 #include <cstdio>
 #include <cstdlib>
 
-static bool   s_ng_doempty{}; /* search empty newsgroups? */
-static CompiledRegex s_ngcompex;
+static bool          s_newsgroup_do_empty{}; /* search empty newsgroups? */
+static CompiledRegex s_newsgroup_compex;
 
 void newsgroup_search_init()
 {
-    s_ng_doempty = false;
-    init_compex(&s_ngcompex);
+    s_newsgroup_do_empty = false;
+    init_compex(&s_newsgroup_compex);
 }
 
 // patbuf   if patbuf != g_buf, get_cmd must */
@@ -53,7 +53,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
     }
     if (*pattern)
     {
-        s_ng_doempty = false;
+        s_newsgroup_do_empty = false;
     }
 
     if (*s)                             /* modifiers or commands? */
@@ -63,7 +63,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
             switch (*s)
             {
             case 'r':
-                s_ng_doempty = true;
+                s_newsgroup_do_empty = true;
                 break;
 
             default:
@@ -90,7 +90,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
     {
         ret = NGS_DONE;
     }
-    const char *err = newsgroup_comp(&s_ngcompex, pattern, true, true);
+    const char *err = newsgroup_comp(&s_newsgroup_compex, pattern, true, true);
     if (err != nullptr)
     {
                                         /* compile regular expression */
@@ -113,7 +113,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
         AddGroup *gp = g_first_add_group;
         do
         {
-            if (execute(&s_ngcompex, gp->name) != nullptr)
+            if (execute(&s_newsgroup_compex, gp->name) != nullptr)
             {
                 if (!cmdlst)
                 {
@@ -198,7 +198,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
             {
                 set_to_read(g_newsgroup_ptr, ST_LAX);
             }
-            if (s_ng_doempty || ((g_newsgroup_ptr->to_read > TR_NONE) ^ g_sel_rereading))
+            if (s_newsgroup_do_empty || ((g_newsgroup_ptr->to_read > TR_NONE) ^ g_sel_rereading))
             {
                 if (!cmdlst)
                 {
@@ -234,7 +234,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
 
 bool newsgroup_wanted(NewsgroupData *np)
 {
-    return execute(&s_ngcompex,np->rc_line) != nullptr;
+    return execute(&s_newsgroup_compex,np->rc_line) != nullptr;
 }
 
 const char *newsgroup_comp(CompiledRegex *compex, const char *pattern, bool RE, bool fold)
