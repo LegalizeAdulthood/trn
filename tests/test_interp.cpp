@@ -158,7 +158,7 @@ void InterpolatorTest::TearDown()
     opt_final();
     head_final();
     env_final();
-    resetty();
+    reset_tty();
 
     Test::TearDown();
 }

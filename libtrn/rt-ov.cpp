@@ -344,7 +344,7 @@ beginning:
             }
             if (g_curr_artp != g_sentinel_artp)
             {
-                pushchar('\f' | 0200);
+                push_char('\f' | 0200);
                 success = false;
                 break;
             }
@@ -388,7 +388,7 @@ beginning:
     {
         if (cheating && g_curr_artp != g_sentinel_artp)
         {
-            pushchar('\f' | 0200);
+            push_char('\f' | 0200);
             success = false;
         }
         else if (last < real_last)

@@ -94,7 +94,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
     if (err != nullptr)
     {
                                         /* compile regular expression */
-        errormsg(err);
+        error_msg(err);
         if (cmdlst)
         {
             std::free(cmdlst);

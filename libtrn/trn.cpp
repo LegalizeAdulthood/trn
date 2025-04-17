@@ -153,7 +153,7 @@ int trn_main(int argc, char *argv[])
             std::fputs("No unread news in subscribed-to newsgroups.  To subscribe to a new\n"
                   "newsgroup use the g<newsgroup> command.\n",
                   stdout);
-            termdown(2);
+            term_down(2);
         }
         g_start_here = g_last_newsgroup;
     }
@@ -268,7 +268,7 @@ void do_multirc()
                         {
                             std::fputs("\n(\"Only\" mode.)\n",stdout);
                         }
-                        termdown(2);
+                        term_down(2);
                     }
                     else
                     {
@@ -280,10 +280,10 @@ void do_multirc()
                         {
                             std::fputs("\nNo \"only\" articles.",stdout);
                         }
-                        termdown(2);
+                        term_down(2);
                         end_only();     /* release the restriction */
                         std::printf("\n%s\n", g_msg);
-                        termdown(2);
+                        term_down(2);
                         retry = true;
                     }
                 }
@@ -352,7 +352,7 @@ void do_multirc()
                 {
                     std::printf("\n**** End -- next? [%s] ", g_default_cmd.c_str());
                 }
-                termdown(1);
+                term_down(1);
             }
             else
             {
@@ -372,7 +372,7 @@ void do_multirc()
                            g_threaded_group? "====" : "****",
                            (long)g_newsgroup_ptr->to_read,g_ngname.c_str(),g_default_cmd.c_str());
                 }
-                termdown(1);
+                term_down(1);
             }
             std::fflush(stdout);
     reinp_newsgroup:
@@ -391,7 +391,7 @@ void do_multirc()
 
             case ING_ERROR:
                 std::printf("\n%s",g_hforhelp);
-                termdown(2);
+                term_down(2);
                 settle_down();
                 goto reask_newsgroup;
 
@@ -424,7 +424,7 @@ void do_multirc()
 
             case ING_MESSAGE:
                 std::printf("\n%s\n", g_msg);
-                termdown(2);
+                term_down(2);
                 break;
             }
         }
@@ -451,7 +451,7 @@ InputNewsgroupResult input_newsgroup()
     char* s;
 
     eat_typeahead();
-    getcmd(g_buf);
+    get_cmd(g_buf);
     if (errno || *g_buf == '\f')
     {
         newline();              /* if return from stop signal */
@@ -459,7 +459,7 @@ InputNewsgroupResult input_newsgroup()
     }
     g_buf[2] = *g_buf;
     setdef(g_buf,g_default_cmd.c_str());
-    printcmd();
+    print_cmd();
     if (g_newsgroup_ptr != nullptr)
     {
         *g_buf = g_buf[2];
@@ -508,7 +508,7 @@ InputNewsgroupResult input_newsgroup()
         }
         std::printf("\nThe abandoned changes are in %s.new.\n",
                multirc_name(g_multirc));
-        termdown(2);
+        term_down(2);
         s_restore_old_newsrc = true;
         return ING_QUIT;
 
@@ -570,7 +570,7 @@ InputNewsgroupResult input_newsgroup()
             {
                 std::fputs("\n(Intr)\n",stdout);
             }
-            termdown(2);
+            term_down(2);
             set_newsgroup(g_current_newsgroup);
             return ING_ASK;
 
@@ -587,7 +587,7 @@ InputNewsgroupResult input_newsgroup()
             {
                 std::fputs("\n\nNot found\n",stdout);
             }
-            termdown(3);
+            term_down(3);
             return ING_ASK;
 
         case NGS_DONE:
@@ -630,7 +630,7 @@ InputNewsgroupResult input_newsgroup()
                 {
                     g_newsgroup_ptr = g_current_newsgroup;
                     std::printf("\nOnly %d groups. Try again.\n", g_newsgroup_count);
-                    termdown(2);
+                    term_down(2);
                     return ING_ASK;
                 }
                 set_ngname(g_newsgroup_ptr->rc_line);
@@ -687,7 +687,7 @@ InputNewsgroupResult input_newsgroup()
                 std::strcpy(g_buf+len, ", ...");
             }
             std::printf("\nUsing newsrc group #%d: %s.\n",g_multirc->num,g_buf+2);
-            termdown(3);
+            term_down(3);
             return ING_RESTART;
         }
 
@@ -715,7 +715,7 @@ InputNewsgroupResult input_newsgroup()
                    g_newsgroup_ptr->rc_line, read_unthreaded? "un" : "");
             set_to_read(g_newsgroup_ptr, ST_LAX);
         }
-        termdown(3);
+        term_down(3);
         return ING_SPECIAL;
 
     case 'u':                 /* unsubscribe */
@@ -723,7 +723,7 @@ InputNewsgroupResult input_newsgroup()
         {
             newline();
             std::printf(g_unsubto,g_newsgroup_ptr->rc_line);
-            termdown(1);
+            term_down(1);
             g_newsgroup_ptr->subscribe_char = NEGCHAR;   /* unsubscribe it */
             g_newsgroup_ptr->to_read = TR_UNSUB;         /* and make line invisible */
             g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
@@ -754,19 +754,19 @@ reask_abandon:
         {
             in_char("\nAbandon?", MM_CONFIRM_ABANDON_PROMPT, "ynh");
         }
-        printcmd();
+        print_cmd();
         newline();
         if (*g_buf == 'h')
         {
             std::printf("Type y or SP to abandon the changes to this group since you started trn.\n");
             std::printf("Type n to leave the group as it is.\n");
-            termdown(2);
+            term_down(2);
             goto reask_abandon;
         }
         else if (*g_buf != 'y' && *g_buf != 'n' && *g_buf != 'q')
         {
             std::fputs(g_hforhelp,stdout);
-            termdown(1);
+            term_down(1);
             settle_down();
             goto reask_abandon;
         }
@@ -871,7 +871,7 @@ reask_abandon:
         if (!g_newsgroup_ptr)
         {
             std::fputs("\nNot on a newsgroup.",stdout);
-            termdown(1);
+            term_down(1);
             return ING_ASK;
         }
         /* *once*, the char* s was set to an illegal value
@@ -889,7 +889,7 @@ reask_abandon:
         }
         else if (*g_buf == '+' || *g_buf == 'U' || *g_buf == '=' || *g_buf == ';')
         {
-            *g_buf = g_lastchar; /* restore 0200 if from a macro */
+            *g_buf = g_last_char; /* restore 0200 if from a macro */
             save_typeahead(g_buf+1, sizeof g_buf - 1);
             s = savestr(g_buf);
         }
@@ -993,13 +993,13 @@ void trn_version()
             "NNTP (plus individual local access).\n",
 #endif
             g_patchlevel.c_str());
-    print_lines(g_msg, NOMARKING);
+    print_lines(g_msg, NO_MARKING);
 
     if (g_multirc)
     {
         newline();
         std::sprintf(g_msg,"News source group #%d:\n\n", g_multirc->num);
-        print_lines(g_msg, NOMARKING);
+        print_lines(g_msg, NO_MARKING);
         for (Newsrc *rp = g_multirc->first; rp; rp = rp->next)
         {
             if (!(rp->flags & RF_ACTIVE))
@@ -1007,11 +1007,11 @@ void trn_version()
                 continue;
             }
             std::sprintf(g_msg,"ID %s:\nNewsrc %s.\n",rp->data_source->name,rp->name);
-            print_lines(g_msg, NOMARKING);
+            print_lines(g_msg, NO_MARKING);
             if (rp->data_source->flags & DF_REMOTE)
             {
                 std::sprintf(g_msg,"News from server %s.\n",rp->data_source->news_id);
-                print_lines(g_msg, NOMARKING);
+                print_lines(g_msg, NO_MARKING);
                 if (rp->data_source->act_sf.fp)
                 {
                     if (rp->data_source->flags & DF_TMP_ACTIVE_FILE)
@@ -1044,7 +1044,7 @@ void trn_version()
                 std::sprintf(g_msg,"News from %s.\nLocal active file %s.\n",
                         rp->data_source->spool_dir, rp->data_source->news_id);
             }
-            print_lines(g_msg, NOMARKING);
+            print_lines(g_msg, NO_MARKING);
             if (rp->data_source->group_desc)
             {
                 if (!rp->data_source->desc_sf.fp && rp->data_source->desc_sf.hp)
@@ -1069,22 +1069,22 @@ void trn_version()
                     }
                 }
                 std::strcat(g_msg,".\n");
-                print_lines(g_msg, NOMARKING);
+                print_lines(g_msg, NO_MARKING);
             }
             if (rp->data_source->flags & DF_TRY_OVERVIEW)
             {
                 std::sprintf(g_msg,"Overview files from %s.\n",
                         rp->data_source->over_dir? rp->data_source->over_dir
                                              : "the server");
-                print_lines(g_msg, NOMARKING);
+                print_lines(g_msg, NO_MARKING);
             }
-            print_lines("\n", NOMARKING);
+            print_lines("\n", NO_MARKING);
         }
     }
 
     print_lines("You can request help from:  trn-users@lists.sourceforge.net\n"
                 "Send bug reports, suggestions, etc. to:  trn-workers@lists.sourceforge.net\n",
-                NOMARKING);
+                NO_MARKING);
 }
 
 void set_ngname(const char *what)

@@ -489,13 +489,13 @@ void setdef(char *buffer, const char *dflt)
         g_univ_default_cmd = true;
         if (*dflt == '^' && std::isupper(dflt[1]))
         {
-            pushchar(Ctl(dflt[1]));
+            push_char(Ctl(dflt[1]));
         }
         else
         {
-            pushchar(*dflt);
+            push_char(*dflt);
         }
-        getcmd(buffer);
+        get_cmd(buffer);
     }
 }
 
@@ -1032,7 +1032,7 @@ char menu_get_char()
     std::printf("Enter your choice: ");
     std::fflush(stdout);
     eat_typeahead();
-    getcmd(g_buf);
+    get_cmd(g_buf);
     std::printf("%c\n",*g_buf);
     return(*g_buf);
 }
@@ -1052,11 +1052,11 @@ int edit_file(const char *fname)
     std::sprintf(g_cmd_buf,"%s ",
             filexp(get_val_const("VISUAL",get_val_const("EDITOR",DEFEDITOR))));
     std::strcat(g_cmd_buf, filexp(fname));
-    termdown(3);
-    resetty();                  /* make sure tty is friendly */
+    term_down(3);
+    reset_tty();                  /* make sure tty is friendly */
     r = doshell(SH,g_cmd_buf);  /* invoke the shell */
-    noecho();                   /* and make terminal */
-    crmode();                   /*   unfriendly again */
+    no_echo();                   /* and make terminal */
+    cr_mode();                   /*   unfriendly again */
     return r;
 }
 

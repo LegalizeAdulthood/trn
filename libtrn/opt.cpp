@@ -666,7 +666,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_INITIAL_ARTICLE_LINES:
-        g_initlines = std::atoi(s);
+        g_init_lines = std::atoi(s);
         break;
 
     case OI_APPEND_UNSUBSCRIBED_GROUPS:
@@ -716,11 +716,11 @@ void set_option(OptionIndex num, const char *s)
         }
         else
         {
-            g_marking_areas = HALFPAGE_MARKING;
+            g_marking_areas = HALF_PAGE_MARKING;
         }
         if (NO(s))
         {
-            g_marking = NOMARKING;
+            g_marking = NO_MARKING;
         }
         else if (*s == 'u')
         {
@@ -1267,7 +1267,7 @@ const char *option_value(OptionIndex num)
         {
             return "$LINES";
         }
-        std::sprintf(g_buf,"%d",g_initlines);
+        std::sprintf(g_buf,"%d",g_init_lines);
         return g_buf;
 
     case OI_APPEND_UNSUBSCRIBED_GROUPS:
@@ -1300,11 +1300,11 @@ const char *option_value(OptionIndex num)
         return g_mbox_always? "mail" : (g_norm_always? "norm" : "ask");
 
     case OI_PAGER_LINE_MARKING:
-        if (g_marking == NOMARKING)
+        if (g_marking == NO_MARKING)
         {
             return yes_or_no(false);
         }
-        if (g_marking_areas != HALFPAGE_MARKING)
+        if (g_marking_areas != HALF_PAGE_MARKING)
         {
             std::sprintf(g_buf,"%d", static_cast<int>(g_marking_areas));
         }

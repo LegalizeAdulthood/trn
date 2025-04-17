@@ -85,7 +85,7 @@ bool set_sel_mode(char_int ch)
             }
             std::printf("\nThreading the group. ");
             std::fflush(stdout);
-            termdown(1);
+            term_down(1);
             thread_open();
             g_thread_always = always_save;
             if (g_last_cached < g_last_art)
@@ -1852,7 +1852,7 @@ try_again:
             }
             output_sel(g_sel_page_item_cnt, sel, false);
             std::printf("%5d %s\n", mp->num, g_buf+2);
-            termdown(1);
+            term_down(1);
             g_sel_page_item_cnt++;
         }
         if (!g_sel_page_obj_cnt)
@@ -2450,7 +2450,7 @@ static void display_article(const Article *ap, int ix, int sel)
                compress_from(ap->from, from_width),
                compress_subj(ap, subj_width - from_width));
     }
-    termdown(1);
+    term_down(1);
 }
 
 /* Display the given subject group, with optional authors.
@@ -2474,7 +2474,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
     if (*g_sel_art_display_mode == 's' || from_width < 8)
     {
         std::printf("%3d  %s\n",j,compress_subj(subj->articles,subj_width));
-        termdown(1);
+        term_down(1);
     }
     else
     {
@@ -2509,7 +2509,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
                    compress_from(first_ap? first_ap->from : nullptr, from_width), j,
                    compress_subj(first_ap, subj_width - from_width));
         }
-        termdown(1);
+        term_down(1);
         int i = -1;
         if (*g_sel_art_display_mode != 'd' && --j && ap)
         {
@@ -2572,7 +2572,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
                     std::putchar(' ');
                 }
                 std::printf("  %s\n", compress_from(ap? ap->from : nullptr, from_width));
-                termdown(1);
+                term_down(1);
             }
         }
     }
@@ -2607,7 +2607,7 @@ void display_option(int op, int item_index)
     }
     output_sel(item_index, g_sel_items[item_index].sel, false);
     std::printf(" %s%s%s %.39s\n", pre, item, post + len, val);
-    termdown(1);
+    term_down(1);
 }
 
 static void display_univ(const UniversalItem *ui)

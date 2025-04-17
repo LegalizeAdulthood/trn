@@ -491,7 +491,7 @@ bool open_data_source(DataSource *dp)
 
             case -2:
                 std::printf("Failed to open news server %s:\n%s\n", dp->news_id, g_ser_line);
-                termdown(2);
+                term_down(2);
                 success = false;
                 break;
 
@@ -918,7 +918,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
                 {
                     std::printf("\nCan't get %s file from server: \n%s\n",
                            fetch_cmd, g_ser_line);
-                    termdown(2);
+                    term_down(2);
                     std::fclose(fp);
                     return 0;
                 }
@@ -954,7 +954,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
     if (filename && fp == nullptr)
     {
         std::printf(g_cantopen, filename);
-        termdown(1);
+        term_down(1);
         return 0;
     }
     set_spin(g_spin_todo > 0? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
@@ -988,7 +988,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
             else if (nntp_gets(g_buf, sizeof g_buf - 1) == NGSR_ERROR)
             {
                 std::printf("\nError getting %s file.\n", fetch_cmd);
-                termdown(2);
+                term_down(2);
                 source_file_close(sfp);
                 set_spin(SPIN_OFF);
                 return 0;
@@ -1056,7 +1056,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
         if (std::ferror(fp))
         {
             std::printf("\nError writing the %s file %s.\n",fetch_cmd,filename);
-            termdown(2);
+            term_down(2);
             source_file_close(sfp);
             return 0;
         }
@@ -1355,7 +1355,7 @@ static int get_near_miss()
     }
 reask:
     in_char(promptbuf, MM_ADD_NEWSGROUP_PROMPT, options);
-    printcmd();
+    print_cmd();
     std::putchar('\n');
     switch (*g_buf)
     {

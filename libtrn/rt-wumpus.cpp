@@ -641,7 +641,7 @@ void entire_tree(Article* ap)
         {
             std::fputs("\nNo tree.\n", stdout);
         }
-        termdown(2);
+        term_down(2);
         return;
     }
 
@@ -654,7 +654,7 @@ void entire_tree(Article* ap)
         if (!g_threaded_group)
         {
             std::printf("*failed*\n");
-            termdown(1);
+            term_down(1);
             return;
         }
         count_subjects(CS_NORM);
@@ -680,7 +680,7 @@ void entire_tree(Article* ap)
             return;
         }
         std::printf("[%c] %s\n",s_letters[num>9+26+26? 9+26+26:num],sp->str+4);
-        termdown(1);
+        term_down(1);
         sp->misc = num++;
         sp = sp->thread_link;
     } while (sp != thread->subj);

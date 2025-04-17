@@ -547,10 +547,10 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                 {
                     pattern = do_interp(scrbuf,(sizeof scrbuf),pattern+1,"\"",cmd);
                     std::fputs(scrbuf,stdout);
-                    resetty();
+                    reset_tty();
                     std::fgets(scrbuf, sizeof scrbuf, stdin);
-                    noecho();
-                    crmode();
+                    no_echo();
+                    cr_mode();
                     int i = std::strlen(scrbuf);
                     if (scrbuf[i - 1] == '\n')
                     {

@@ -112,7 +112,7 @@ void sw_list(char *swlist)
     if (inquote)
     {
         std::printf("Unmatched %c in switch\n",inquote);
-        termdown(1);
+        term_down(1);
     }
     for (char *c = swlist; *c; /* p += strlen(p)+1 */)
     {
@@ -236,7 +236,7 @@ void decode_switch(const char *s)
             }
 #else
             std::printf("Trn was not compiled with -DDEBUG.\n");
-            termdown(1);
+            term_down(1);
 #endif
             break;
 
@@ -540,7 +540,7 @@ void decode_switch(const char *s)
             {
                 std::printf("\nIgnoring -%c\n", *s);
             }
-            termdown(2);
+            term_down(2);
             break;
         }
     }

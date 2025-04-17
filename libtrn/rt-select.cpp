@@ -935,7 +935,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
     case UN_HELPKEY:
         if (another_command(univ_key_help(ui->data.i)))
         {
-            pushchar(s_sel_ret | 0200);
+            push_char(s_sel_ret | 0200);
         }
         break;
 
@@ -1089,7 +1089,7 @@ static char sel_input()
     s_force_sel_pos = -1;
     if (s_removed_prompt & RP_MOUSEBAR)
     {
-        draw_mousebar(g_tc_COLS,false);
+        draw_mouse_bar(g_tc_COLS,false);
         s_removed_prompt &= ~RP_MOUSEBAR;
     }
     if (g_can_home)
@@ -1114,7 +1114,7 @@ reinp_selector:
         g_spin_char = g_sel_chars[g_sel_item_index];
     }
     cache_until_key();
-    getcmd(g_buf);
+    get_cmd(g_buf);
     if (*g_buf == ' ')
     {
         setdef(g_buf, g_sel_at_end ? &s_end_char : &s_page_char);
@@ -1242,7 +1242,7 @@ reinp_selector:
         /* Consider cache_until_key() here.  The middle of typing a
          * number is a lousy time to delay, however.
          */
-        getcmd(g_buf);
+        get_cmd(g_buf);
         ch = *g_buf;
         if (s_disp_status_line == 2)    /* status was printed */
         {
@@ -1296,7 +1296,7 @@ reinp_selector:
         }
         else
         {
-            pushchar(ch);       /* for later use */
+            push_char(ch);       /* for later use */
             sel_number = (ch_num1 - '0');
         }
         j = sel_number-1;
@@ -1462,7 +1462,7 @@ reinp_selector:
                 g_term_col = std::strlen(g_msg);
                 if (s_removed_prompt & RP_MOUSEBAR)
                 {
-                    draw_mousebar(g_tc_COLS,false);
+                    draw_mouse_bar(g_tc_COLS,false);
                     s_removed_prompt &= ~RP_MOUSEBAR;
                 }
                 s_disp_status_line = 2;
@@ -1610,7 +1610,7 @@ reinp_selector:
 
 static void sel_prompt()
 {
-    draw_mousebar(g_tc_COLS,false);
+    draw_mouse_bar(g_tc_COLS,false);
     if (g_can_home)
     {
         goto_xy(0, g_sel_last_line);
@@ -2164,7 +2164,7 @@ static DisplayState sel_command(char_int ch)
             std::fputs("Cmd: ", stdout);
         }
         std::fflush(stdout);
-        getcmd(g_buf);
+        get_cmd(g_buf);
         if (*g_buf == '\\')
         {
             goto the_default;
@@ -2236,7 +2236,7 @@ static bool sel_perform_change(long cnt, const char *obj_type)
 
     if (g_error_occurred)
     {
-        print_lines(g_msg, NOMARKING);
+        print_lines(g_msg, NO_MARKING);
         s_clean_screen = false;
         g_error_occurred = false;
     }
@@ -2256,7 +2256,7 @@ static bool sel_perform_change(long cnt, const char *obj_type)
     }
     else if (s_disp_status_line == 1)
     {
-        print_lines(g_msg, NOMARKING);
+        print_lines(g_msg, NO_MARKING);
         s_disp_status_line = 0;
     }
 
@@ -2281,7 +2281,7 @@ static char another_command(char_int ch)
     }
     else
     {
-        ch = pause_getcmd();
+        ch = pause_get_cmd();
     }
     if (ch != 0 && ch != '\n' && ch != '\r' && (!skip_q || ch != 'q'))
     {
@@ -2294,7 +2294,7 @@ static char another_command(char_int ch)
                 s_sel_ret = ch;
                 return ch;
             }
-            pushchar(ch | 0200);
+            push_char(ch | 0200);
         }
     }
     return '\0';
@@ -2386,7 +2386,7 @@ static DisplayState article_commands(char_int ch)
         s_removed_prompt = RP_ALL;
       reask_output:
         in_char("Selector mode:  Threads, Subjects, Articles?", MM_SELECTOR_ORDER_PROMPT, "tsa");
-        printcmd();
+        print_cmd();
         if (*g_buf == 'h' || *g_buf == 'H')
         {
             if (g_verbose)
@@ -2446,7 +2446,7 @@ static DisplayState article_commands(char_int ch)
             in_char("Order by Date, Subject, Count, Lines, or Points?",
                     MM_Q, "dsclpDSCLP");
         }
-        printcmd();
+        print_cmd();
         if (*g_buf == 'h' || *g_buf == 'H')
         {
             if (g_verbose)
@@ -2764,7 +2764,7 @@ static DisplayState article_commands(char_int ch)
                     break;
 
                 case SRCH_INTR:
-                    errormsg("Interrupted");
+                    error_msg("Interrupted");
                     break;
 
                 case SRCH_DONE:
@@ -2773,7 +2773,7 @@ static DisplayState article_commands(char_int ch)
                     break;
 
                 case SRCH_NOT_FOUND:
-                    errormsg("Not found.");
+                    error_msg("Not found.");
                     break;
                 }
             }
@@ -2941,7 +2941,7 @@ static DisplayState newsgroup_commands(char_int ch)
         s_removed_prompt = RP_ALL;
       reask_sort:
         in_char("Order by Newsrc, Group name, or Count?", MM_Q, "ngcNGC");
-        printcmd();
+        print_cmd();
         switch (*g_buf)
         {
         case 'n': case 'N':
@@ -3047,7 +3047,7 @@ static DisplayState newsgroup_commands(char_int ch)
                     break;
 
                 case NGS_INTR:
-                    errormsg("Interrupted");
+                    error_msg("Interrupted");
                     break;
 
                 case NGS_FOUND:
@@ -3146,7 +3146,7 @@ static DisplayState newsgroup_commands(char_int ch)
         }
         else
         {
-            pushchar(ch | 0200);
+            push_char(ch | 0200);
         }
         do
         {
@@ -3247,7 +3247,7 @@ static DisplayState addgroup_commands(char_int ch)
         s_removed_prompt = RP_ALL;
       reask_sort:
         in_char("Order by Natural-order, Group name, or Count?", MM_Q, "ngcNGC");
-        printcmd();
+        print_cmd();
         switch (*g_buf)
         {
         case 'n': case 'N':
@@ -3407,7 +3407,7 @@ static DisplayState addgroup_commands(char_int ch)
                     break;
 
                 case NGS_INTR:
-                    errormsg("Interrupted");
+                    error_msg("Interrupted");
                     break;
 
                 case NGS_FOUND:
@@ -3649,7 +3649,7 @@ static DisplayState universal_commands(char_int ch)
         s_removed_prompt = RP_ALL;
       reask_sort:
         in_char("Order by Natural, or score Points?", MM_Q, "npNP");
-        printcmd();
+        print_cmd();
         if (*g_buf == 'h' || *g_buf == 'H')
         {
             if (g_verbose)
@@ -3758,7 +3758,7 @@ static int find_line(int y)
  */
 void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 {
-    if (check_mousebar(btn, x,y, btn_clk, x_clk,y_clk))
+    if (check_mouse_bar(btn, x,y, btn_clk, x_clk,y_clk))
     {
         return;
     }
@@ -3774,7 +3774,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             {
                 if (btn & 4)
                 {
-                    pushchar(btn_clk == 0? '\n' : 'Z');
+                    push_char(btn_clk == 0? '\n' : 'Z');
                     g_mouse_is_down = false;
                 }
                 else
@@ -3782,16 +3782,16 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                     s_force_sel_pos = find_line(y);
                     if (g_use_sel_num)
                     {
-                        pushchar(('0' + (s_force_sel_pos+1) % 10) | 0200);
-                        pushchar(('0' + (s_force_sel_pos+1)/10) | 0200);
+                        push_char(('0' + (s_force_sel_pos+1) % 10) | 0200);
+                        push_char(('0' + (s_force_sel_pos+1)/10) | 0200);
                     }
                     else
                     {
-                        pushchar(g_sel_chars[s_force_sel_pos] | 0200);
+                        push_char(g_sel_chars[s_force_sel_pos] | 0200);
                     }
                     if (btn == 1)
                     {
-                        pushchar(Ctl('g') | 0200);
+                        push_char(Ctl('g') | 0200);
                     }
                 }
             }
@@ -3809,11 +3809,11 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         case 0:
             if (!y)
             {
-                pushchar('<' | 0200);
+                push_char('<' | 0200);
             }
             else if (y >= g_sel_last_line)
             {
-                pushchar(' ');
+                push_char(' ');
             }
             else
             {
@@ -3822,14 +3822,14 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                 {
                     if (g_use_sel_num)
                     {
-                        pushchar(('0' + (i+1) % 10) | 0200);
-                        pushchar(('0' + (i+1) / 10) | 0200);
+                        push_char(('0' + (i+1) % 10) | 0200);
+                        push_char(('0' + (i+1) / 10) | 0200);
                     }
                     else
                     {
-                        pushchar(g_sel_chars[i] | 0200);
+                        push_char(g_sel_chars[i] | 0200);
                     }
-                    pushchar('-' | 0200);
+                    push_char('-' | 0200);
                     s_force_sel_pos = i;
                 }
             }
@@ -3838,11 +3838,11 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         case 1:
             if (!y)
             {
-                pushchar('<' | 0200);
+                push_char('<' | 0200);
             }
             else if (y >= g_sel_last_line)
             {
-                pushchar('>' | 0200);
+                push_char('>' | 0200);
             }
             break;
 
@@ -3853,11 +3853,11 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
              */
             if (y < g_tc_LINES/2)
             {
-                pushchar('<' | 0200);
+                push_char('<' | 0200);
             }
             else
             {
-                pushchar('>' | 0200);
+                push_char('>' | 0200);
             }
             break;
         }

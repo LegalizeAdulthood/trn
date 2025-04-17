@@ -122,7 +122,7 @@ int access_newsgroup()
                 {
                     std::printf("\nNo spool for %s!\n", g_ngname.c_str());
                 }
-                termdown(2);
+                term_down(2);
             }
             else
             {
@@ -134,7 +134,7 @@ int access_newsgroup()
                 {
                     std::printf("\n%s not readable.\n", g_ngname.c_str());
                 }
-                termdown(2);
+                term_down(2);
             }
             /* make this newsgroup temporarily invisible */
             g_newsgroup_ptr->to_read = TR_NONE;
@@ -200,7 +200,7 @@ void grow_newsgroup(ArticleNum new_last)
         {
             std::strcpy(g_buf, "More news -- auto-processing...\n\n");
         }
-        termdown(2);
+        term_down(2);
         if (g_kf_state & KFS_NORMAL_LINES)
         {
             bool forcelast_save = g_force_last;
@@ -298,7 +298,7 @@ void newsgroup_skip()
         {
             std::fputs("Skipping\n", stdout);
         }
-        termdown(1);
+        term_down(1);
         if (g_novice_delays)
         {
             pad(g_just_a_sec/3);
@@ -336,7 +336,7 @@ void newsgroup_skip()
             {
                 std::printf("\n(%ld unreadable.)\n", (long) g_art);
             }
-            termdown(2);
+            term_down(2);
             if (g_novice_delays)
             {
                 pad(g_just_a_sec);

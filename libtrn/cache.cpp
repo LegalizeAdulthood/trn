@@ -1057,7 +1057,7 @@ bool cache_all_arts()
     ** still in doubt, tell them it's missing. */
     if (g_curr_artp && !(g_curr_artp->flags & AF_CACHED) && !input_pending())
     {
-        pushchar('\f' | 0200);
+        push_char('\f' | 0200);
     }
     /* A completely empty group needs a count & a sort */
     if (g_general_mode != GM_SELECTOR && !g_obj_count && !g_selected_only)
@@ -1124,7 +1124,7 @@ bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_article
             /* If the current article is no longer a '?', let them know. */
             if (g_curr_artp != g_sentinel_artp)
             {
-                pushchar('\f' | 0200);
+                push_char('\f' | 0200);
                 break;
             }
         }
@@ -1183,7 +1183,7 @@ bool cache_range(ArticleNum first, ArticleNum last)
 
     std::printf("\n%sing %ld article%s.", g_threaded_group? "Thread" : "Cach",
            (long)count, plural(count));
-    termdown(1);
+    term_down(1);
 
     set_spin(SPIN_FOREGROUND);
 

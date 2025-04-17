@@ -1067,11 +1067,11 @@ void univ_page_file(char *fname)
     std::sprintf(g_cmd_buf,"%s ",
             filexp(get_val_const("HELPPAGER",get_val_const("PAGER","more"))));
     std::strcat(g_cmd_buf, filexp(fname));
-    termdown(3);
-    resetty();                  /* make sure tty is friendly */
+    term_down(3);
+    reset_tty();                  /* make sure tty is friendly */
     doshell(SH,g_cmd_buf);      /* invoke the shell */
-    noecho();                   /* and make terminal */
-    crmode();                   /*   unfriendly again */
+    no_echo();                   /* and make terminal */
+    cr_mode();                   /*   unfriendly again */
     /* later: consider something else that will return the key, and
      *        returning different codes based on the key.
      */

@@ -75,7 +75,7 @@ char *sc_easy_append()
         std::printf("Type the (single character) abbreviation of the scorefile:");
         std::fflush(stdout);
         eat_typeahead();
-        getcmd(g_buf);
+        get_cmd(g_buf);
         std::printf("%c\n",*g_buf);
         filechar = *g_buf;
         /* If error checking is done later, then an error should set

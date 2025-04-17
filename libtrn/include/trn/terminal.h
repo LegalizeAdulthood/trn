@@ -26,7 +26,7 @@ extern termios g_oldtty;
 
 extern char          g_erase_char; /* rubout character */
 extern char          g_kill_char;  /* line delete character */
-extern unsigned char g_lastchar;
+extern unsigned char g_last_char;
 extern bool          g_bizarre; /* do we need to restore terminal? */
 
 extern int g_univ_sel_btn_cnt;
@@ -51,7 +51,7 @@ extern bool     g_can_home;        //
 extern bool     g_erase_each_line; /* fancy -e */
 extern bool     g_allow_typeahead; /* -T */
 extern bool     g_verify;          /* -v */
-extern ArticleLine g_initlines;       /* -i */
+extern ArticleLine g_init_lines;       /* -i */
 extern bool     g_use_mouse;       //
 extern char     g_mouse_modes[32]; //
 
@@ -107,18 +107,18 @@ extern MinorMode   g_mode;         /* current state of trn */
 
 enum MarkingMode
 {
-    NOMARKING = 0,
+    NO_MARKING = 0,
     STANDOUT = 1,
     UNDERLINE = 2,
-    LASTMARKING = 3
+    LAST_MARKING = 3
 };
 extern MarkingMode g_marking; /* -m */
 
 enum MarkingAreas
 {
     NONE = 0,
-    HALFPAGE_MARKING = 1,
-    BACKPAGE_MARKING = 2
+    HALF_PAGE_MARKING = 1,
+    BACK_PAGE_MARKING = 2
 };
 DECLARE_FLAGS_ENUM(MarkingAreas, int);
 extern MarkingAreas g_marking_areas;
@@ -174,7 +174,7 @@ void  hide_pending();
 bool  finput_pending(bool check_term);
 bool  finish_command(int donewline);
 char *edit_buf(char *s, const char *cmd);
-bool  finish_dblchar();
+bool  finish_dbl_char();
 void  eat_typeahead();
 void  save_typeahead(char *buf, int len);
 void  settle_down();
@@ -185,26 +185,26 @@ int read_tty(char *addr, int size);
 #if !defined(FIONREAD) && !defined(HAS_RDCHK) && !defined(MSDOS)
 int circfill();
 #endif
-void pushchar(char_int c);
+void push_char(char_int c);
 void underprint(const char *s);
 #ifdef NOFIREWORKS
-void no_sofire();
-void no_ulfire();
+void no_so_fire();
+void no_ul_fire();
 #endif
-void getcmd(char *whatbuf);
-void pushstring(char *str, char_int bits);
+void get_cmd(char *whatbuf);
+void push_string(char *str, char_int bits);
 int  get_anything();
-int  pause_getcmd();
+int  pause_get_cmd();
 void in_char(const char *prompt, MinorMode newmode, const char *dflt);
 void in_answer(const char *prompt, MinorMode newmode);
 bool in_choice(const char *prompt, char *value, char *choices, MinorMode newmode);
 int  print_lines(const char *what_to_print, int hilite);
 int  check_page_line();
 void page_start();
-void errormsg(const char *str);
-void warnmsg(const char *str);
+void error_msg(const char *str);
+void warn_msg(const char *str);
 void pad(int num);
-void printcmd();
+void print_cmd();
 void rubout();
 void reprint();
 void erase_line(bool to_eos);
@@ -220,8 +220,8 @@ void  xmouse_init(const char *progname);
 void  xmouse_check();
 void  xmouse_on();
 void  xmouse_off();
-void  draw_mousebar(int limit, bool restore_cursor);
-bool  check_mousebar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
+void  draw_mouse_bar(int limit, bool restore_cursor);
+bool  check_mouse_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
 void  add_tc_string(const char *capability, const char *string);
 char *tc_color_capability(const char *capability);
 #ifdef MSDOS
@@ -291,11 +291,11 @@ inline void unflush_output()
 #else /* !I_TERMIOS */
 #ifdef MSDOS
 
-inline void crmode()
+inline void cr_mode()
 {
     g_bizarre = true;
 }
-inline void nocrmode()
+inline void no_cr_mode()
 {
     g_bizarre = true;
 }
@@ -303,7 +303,7 @@ inline void echo()
 {
     g_bizarre = true;
 }
-inline void noecho()
+inline void no_echo()
 {
     g_bizarre = true;
 }
@@ -311,14 +311,14 @@ inline void nl()
 {
     g_bizarre = true;
 }
-inline void nonl()
+inline void no_nl()
 {
     g_bizarre = true;
 }
-inline void savetty()
+inline void save_tty()
 {
 }
-inline void resetty()
+inline void reset_tty()
 {
     g_bizarre = false;
 }
@@ -330,7 +330,7 @@ inline void unflush_output()
 #endif /* !MSDOS */
 #endif /* !I_TERMIOS */
 
-inline void forceme(const char *c)
+inline void force_me(const char *c)
 {
 #ifdef TIOCSTI
     ioctl(g_tty_ch, TIOCSTI, c); /* pass character in " " */
@@ -338,7 +338,7 @@ inline void forceme(const char *c)
 }
 
 /* define a few handy macros */
-inline void termdown(int x)
+inline void term_down(int x)
 {
     g_term_line += x;
     g_term_col = 0;

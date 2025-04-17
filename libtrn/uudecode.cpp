@@ -277,7 +277,7 @@ DecodeState uudecode(std::FILE *ifp, DecodeState state)
                 return DECODE_ERROR;
             }
             std::printf("Decoding %s\n", filename);
-            termdown(1);
+            term_down(1);
             state = DECODE_SET_LEN;
             break;
         }

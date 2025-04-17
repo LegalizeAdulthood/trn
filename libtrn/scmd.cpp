@@ -63,7 +63,7 @@ int s_cmd_loop()
         s_place_ptr();          /* place article pointer */
         g_bos_on_stop = true;
         s_look_ahead();          /* do something useful while waiting */
-        getcmd(g_buf);
+        get_cmd(g_buf);
         g_bos_on_stop = false;
         eat_typeahead();        /* stay in control. */
         /* check for window resizing and refresh */
@@ -537,7 +537,7 @@ void s_jump_num(char_int firstchar)
         std::printf("Jump to item: %c",firstchar);
         std::fflush(stdout);
     }
-    getcmd(g_buf);
+    get_cmd(g_buf);
     if (*g_buf == g_erase_char)
     {
         return;
@@ -555,7 +555,7 @@ void s_jump_num(char_int firstchar)
         break;
 
     default:
-        pushchar(*g_buf);
+        push_char(*g_buf);
         break;
     }
     if (value == 0 || value > g_s_bot_ent+1)

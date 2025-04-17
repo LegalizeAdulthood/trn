@@ -75,10 +75,10 @@ int escapade()
     }
     s = skip_eq(s, ' ');                /* skip leading spaces */
     interp(g_cmd_buf, (sizeof g_cmd_buf), s);/* interpret any % escapes */
-    resetty();                          /* make sure tty is friendly */
+    reset_tty();                          /* make sure tty is friendly */
     doshell(nullptr,g_cmd_buf); /* invoke the shell */
-    noecho();                           /* and make terminal */
-    crmode();                           /*   unfriendly again */
+    no_echo();                           /* and make terminal */
+    cr_mode();                           /*   unfriendly again */
     if (docd)
     {
         if (change_dir(whereiam))
@@ -190,7 +190,7 @@ NumNumResult num_num()
     }
     if (g_last_art < 1)
     {
-        errormsg("No articles");
+        error_msg("No articles");
         return NN_ASK;
     }
     if (g_search_ahead)
@@ -239,7 +239,7 @@ NumNumResult num_num()
         {
             min = g_abs_first;
             std::sprintf(g_msg,"(First article is %ld)",(long)g_abs_first);
-            warnmsg(g_msg);
+            warn_msg(g_msg);
         }
         if ((t = std::strchr(t, '-')) != nullptr)
         {
@@ -266,11 +266,11 @@ NumNumResult num_num()
             max = g_last_art;
             min = std::min(min, max);
             std::sprintf(g_msg,"(Last article is %ld)",(long)g_last_art);
-            warnmsg(g_msg);
+            warn_msg(g_msg);
         }
         if (max < min)
         {
-            errormsg("Bad range");
+            error_msg("Bad range");
             if (cmdlst)
             {
                 std::free(cmdlst);
@@ -295,7 +295,7 @@ NumNumResult num_num()
                 {
                     std::sprintf(g_msg, "(Intr at %ld)", (long) g_art);
                 }
-                errormsg(g_msg);
+                error_msg(g_msg);
                 if (cmdlst)
                 {
                     std::free(cmdlst);
@@ -389,7 +389,7 @@ int thread_perform()
                 g_art = article_num(g_artp);
                 if (perform(cmdstr, 0) < 0)
                 {
-                    errormsg("Interrupted");
+                    error_msg("Interrupted");
                     goto break_out;
                 }
             }
@@ -440,7 +440,7 @@ int thread_perform()
                     g_artp = ap;
                     if (perform(cmdstr, output_level && g_page_line == 1) < 0)
                     {
-                        errormsg("Interrupted");
+                        error_msg("Interrupted");
                         goto break_out;
                     }
                 }
@@ -471,7 +471,7 @@ int thread_perform()
                         g_artp = ap;
                         if (perform(cmdstr, output_level && g_page_line == 1) < 0)
                         {
-                            errormsg("Interrupted");
+                            error_msg("Interrupted");
                             goto break_out;
                         }
                     }
@@ -738,7 +738,7 @@ int perform(char *cmdlst, int output_level)
         else
         {
             std::sprintf(g_msg,"Unknown command: %s",cmdlst);
-            errormsg(g_msg);
+            error_msg(g_msg);
             return -1;
         }
         if (output_level && g_verbose)
@@ -877,7 +877,7 @@ int newsgroup_perform(char *cmdlst, int output_level)
             if (output_level && g_verbose)
             {
                 std::printf(g_unsubto,g_newsgroup_ptr->rc_line);
-                termdown(1);
+                term_down(1);
             }
             g_newsgroup_ptr->subscribe_char = NEGCHAR;
             g_newsgroup_ptr->to_read = TR_UNSUB;
@@ -888,7 +888,7 @@ int newsgroup_perform(char *cmdlst, int output_level)
 
         default:
             std::sprintf(g_msg,"Unknown command: %s",cmdlst);
-            errormsg(g_msg);
+            error_msg(g_msg);
             return -1;
         }
         if (output_level && g_verbose)
@@ -1001,7 +1001,7 @@ int add_group_perform(AddGroup *gp, char *cmdlst, int output_level)
         else
         {
             std::sprintf(g_msg,"Unknown command: %s",cmdlst);
-            errormsg(g_msg);
+            error_msg(g_msg);
             return -1;
         }
         if (output_level && g_verbose)

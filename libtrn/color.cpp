@@ -65,14 +65,14 @@ static void output_color();
 static ColorObj s_objects[MAX_COLORS] =
 // clang-format off
 {
-    { "default",        "", "", NOMARKING       },
+    { "default",        "", "", NO_MARKING       },
     { "ngname",         "", "", STANDOUT        },
-    { "plus",           "", "", LASTMARKING     },
-    { "minus",          "", "", LASTMARKING     },
-    { "star",           "", "", LASTMARKING     },
-    { "header",         "", "", LASTMARKING     },
+    { "plus",           "", "", LAST_MARKING     },
+    { "minus",          "", "", LAST_MARKING     },
+    { "star",           "", "", LAST_MARKING     },
+    { "header",         "", "", LAST_MARKING     },
     { "subject",        "", "", UNDERLINE       },
-    { "tree",           "", "", LASTMARKING     },
+    { "tree",           "", "", LAST_MARKING     },
     { "tree marker",    "", "", STANDOUT        },
     { "more",           "", "", STANDOUT        },
     { "heading",        "", "", STANDOUT        },
@@ -80,11 +80,11 @@ static ColorObj s_objects[MAX_COLORS] =
     { "mouse bar",      "", "", STANDOUT        },
     { "notice",         "", "", STANDOUT        },
     { "score",          "", "", STANDOUT        },
-    { "art heading",    "", "", LASTMARKING     },
+    { "art heading",    "", "", LAST_MARKING     },
     { "mime separator", "", "", STANDOUT        },
     { "mime description","","", UNDERLINE       },
-    { "cited text",     "", "", LASTMARKING     },
-    { "body text",      "", "", NOMARKING       },
+    { "cited text",     "", "", LAST_MARKING     },
+    { "body text",      "", "", NO_MARKING       },
 };
 // clang-format on
 
@@ -127,9 +127,9 @@ void color_init()
         }
     }
 
-    if (s_objects[COLOR_DEFAULT].attr == LASTMARKING)
+    if (s_objects[COLOR_DEFAULT].attr == LAST_MARKING)
     {
-        s_objects[COLOR_DEFAULT].attr = NOMARKING;
+        s_objects[COLOR_DEFAULT].attr = NO_MARKING;
     }
 
     /* Set color to default. */
@@ -166,11 +166,11 @@ void color_rc_attribute(const char *object, char *value)
     }
     else if (*value == 'n' || *value == 'N')
     {
-        s_objects[i].attr = NOMARKING;
+        s_objects[i].attr = NO_MARKING;
     }
     else if (*value == '-')
     {
-        s_objects[i].attr = LASTMARKING;
+        s_objects[i].attr = LAST_MARKING;
     }
     else
     {
@@ -276,7 +276,7 @@ void color_object(int object, bool push)
     {
         merged.bg = s_objects[object].bg;
     }
-    if (s_objects[object].attr != LASTMARKING)
+    if (s_objects[object].attr != LAST_MARKING)
     {
         merged.attr = s_objects[object].attr;
     }
@@ -346,7 +346,7 @@ void color_default()
 /* Set colors/attribute for an object. */
 static void output_color()
 {
-    static ColorObj prior{"", nullptr, nullptr, NOMARKING};
+    static ColorObj prior{"", nullptr, nullptr, NO_MARKING};
     ColorObj* op = &s_color_stack[s_stack_pointer];
 
     /* If no change, just return. */
@@ -367,7 +367,7 @@ static void output_color()
     }
     switch (prior.attr)
     {
-    case NOMARKING:
+    case NO_MARKING:
         break;
 
     case STANDOUT:
@@ -395,19 +395,19 @@ static void output_color()
     /* For both monochrome and color terminals we set the video attribute. */
     switch (prior.attr = op->attr)
     {
-    case NOMARKING:
+    case NO_MARKING:
         break;
 
     case STANDOUT:
 #ifdef NOFIREWORKS
-        no_sofire();
+        no_so_fire();
 #endif
         standout();
         break;
 
     case UNDERLINE:
 #ifdef NOFIREWORKS
-        no_ulfire();
+        no_ul_fire();
 #endif
         underline();
         break;

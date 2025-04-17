@@ -131,7 +131,7 @@ static void process_list(GetNewsgroupFlags flag)
         if (flag == GNG_NONE)
         {
             std::sprintf(g_cmd_buf, "%s\n", node->name);
-            print_lines(g_cmd_buf, NOMARKING);
+            print_lines(g_cmd_buf, NO_MARKING);
         }
         else if (!g_use_add_selector)
         {
@@ -263,7 +263,7 @@ static void new_local_groups(DataSource *dp)
     if (fp == nullptr)
     {
         std::printf(g_cantopen, dp->extra_name);
-        termdown(1);
+        term_down(1);
         return;
     }
     std::time_t lastone = std::time(nullptr) - 24L * 60 * 60 - 1;
@@ -487,7 +487,7 @@ static void scanline(char *actline, bool add_matching)
     else
     {
         std::strcat(actline,"\n");
-        print_lines(actline, NOMARKING);
+        print_lines(actline, NO_MARKING);
     }
 }
 

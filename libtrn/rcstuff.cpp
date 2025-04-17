@@ -571,7 +571,7 @@ static bool open_newsrc(Newsrc *rp)
         if (rcfp == nullptr)
         {
             std::printf("\nCan't create %s.\n", rp->name);
-            termdown(2);
+            term_down(2);
             return false;
         }
         const char *some_buf = SUBSCRIPTIONS;
@@ -616,7 +616,7 @@ static bool open_newsrc(Newsrc *rp)
             std::printf("Warning: %s is zero length but %s is not.\n",
                    rp->name,rp->old_name);
             std::printf("Either recover your newsrc or else remove the backup copy.\n");
-            termdown(2);
+            term_down(2);
             return false;
         }
         /* unlink backup file name and backup current name */
@@ -741,7 +741,7 @@ static bool open_newsrc(Newsrc *rp)
                     std::printf("%s: %ld article%s\n",
                         np->rc_line,(long)np->to_read,plural(np->to_read));
                 }
-                termdown(1);
+                term_down(1);
                 if (g_int_count)
                 {
                     g_countdown = 1;
@@ -891,7 +891,7 @@ void abandon_ng(NewsgroupData *np)
     else if (errno != ENOENT)
     {
         std::printf("Unable to open %s.\n", np->rc->old_name);
-        termdown(1);
+        term_down(1);
         return;
     }
     if (some_buf == nullptr)
@@ -950,7 +950,7 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
     {
         dingaling();
         std::printf("\nBad newsgroup name.\n");
-        termdown(2);
+        term_down(2);
       check_fuzzy_match:
         if (g_fuzzy_get && (flags & GNG_FUZZY))
         {
@@ -997,7 +997,7 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
             {
                 std::printf("\nNo %s!\n", g_ngname.c_str());
             }
-            termdown(2);
+            term_down(2);
             if (g_novice_delays)
             {
                 sleep(2);
@@ -1015,7 +1015,7 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
             {
                 std::printf("(Adding %s to end of your .newsrc %ssubscribed)\n",
                        g_ngname.c_str(), (autosub == ADDNEW_SUB)? "" : "un");
-                termdown(1);
+                term_down(1);
                 g_newsgroup_ptr = add_newsgroup(rp, g_ngname.c_str(), autosub);
             }
             else
@@ -1023,13 +1023,13 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
                 if (autosub == ADDNEW_SUB)
                 {
                     std::printf("(Subscribing to %s)\n", g_ngname.c_str());
-                    termdown(1);
+                    term_down(1);
                     g_newsgroup_ptr = add_newsgroup(rp, g_ngname.c_str(), autosub);
                 }
                 else
                 {
                     std::printf("(Ignoring %s)\n", g_ngname.c_str());
-                    termdown(1);
+                    term_down(1);
                     return false;
                 }
             }
@@ -1047,7 +1047,7 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
             }
 reask_add:
             in_char(promptbuf,MM_ADD_NEWSGROUP_PROMPT,"ynYN");
-            printcmd();
+            print_cmd();
             newline();
             if (*g_buf == 'h')
             {
@@ -1057,16 +1057,16 @@ reask_add:
                            "Type Y to subscribe to this and all remaining new groups.\n"
                            "Type N to leave all remaining new groups unsubscribed.\n",
                            g_ngname.c_str());
-                    termdown(3);
+                    term_down(3);
                 }
                 else
                 {
                     std::fputs("y or SP to subscribe, Y to subscribe all new groups, N to unsubscribe all\n",
                           stdout);
-                    termdown(1);
+                    term_down(1);
                 }
                 std::fputs(ntoforget,stdout);
-                termdown(1);
+                term_down(1);
                 goto reask_add;
             }
             else if (*g_buf == 'n' || *g_buf == 'q')
@@ -1094,7 +1094,7 @@ reask_add:
                 {
                     std::printf("(Subscribing to %s)\n", g_ngname.c_str());
                 }
-                termdown(1);
+                term_down(1);
                 g_newsgroup_ptr = add_newsgroup(rp, g_ngname.c_str(), ':');
                 flags &= ~GNG_RELOC;
             }
@@ -1105,21 +1105,21 @@ reask_add:
                 {
                     std::printf("(Adding %s to end of your .newsrc unsubscribed)\n",
                            g_ngname.c_str());
-                    termdown(1);
+                    term_down(1);
                     g_newsgroup_ptr = add_newsgroup(rp, g_ngname.c_str(), NEGCHAR);
                     flags &= ~GNG_RELOC;
                 }
                 else
                 {
                     std::printf("(Ignoring %s)\n", g_ngname.c_str());
-                    termdown(1);
+                    term_down(1);
                     return false;
                 }
             }
             else
             {
                 std::fputs(g_hforhelp,stdout);
-                termdown(1);
+                term_down(1);
                 settle_down();
                 goto reask_add;
             }
@@ -1141,7 +1141,7 @@ reask_add:
         }
 reask_unsub:
         in_char(promptbuf,MM_RESUBSCRIBE_PROMPT,"yn");
-        printcmd();
+        print_cmd();
         newline();
         if (*g_buf == 'h')
         {
@@ -1154,7 +1154,7 @@ reask_unsub:
                 std::fputs("y or SP to resubscribe.\n", stdout);
             }
             std::fputs(ntoforget,stdout);
-            termdown(2);
+            term_down(2);
             goto reask_unsub;
         }
         else if (*g_buf == 'n' || *g_buf == 'q')
@@ -1172,7 +1172,7 @@ reask_unsub:
         else
         {
             std::fputs(g_hforhelp,stdout);
-            termdown(1);
+            term_down(1);
             settle_down();
             goto reask_unsub;
         }
@@ -1238,7 +1238,7 @@ bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum)
         {
             /* ask if they want to keep the current order */
             in_char("Sort newsrc(s) using current sort order?",MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "yn"); /* TODO: !'D' */
-            printcmd();
+            print_cmd();
             newline();
             if (*g_buf == 'y')
             {
@@ -1298,16 +1298,16 @@ bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum)
             std::printf("\nPut where? [%s] ", dflt);
         }
         std::fflush(stdout);
-        termdown(1);
+        term_down(1);
       reinp_reloc:
         eat_typeahead();
-        getcmd(g_buf);
+        get_cmd(g_buf);
         if (errno || *g_buf == '\f')    /* if return from stop signal */
         {
             goto reask_reloc;           /* give them a prompt again */
         }
         setdef(g_buf,dflt);
-        printcmd();
+        print_cmd();
         if (*g_buf == 'h')
         {
             if (g_verbose)
@@ -1340,7 +1340,7 @@ bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum)
                        "q to abort\n",
                        g_newsgroup_count - 1);
             }
-            termdown(10);
+            term_down(10);
             goto reask_reloc;
         }
         else if (*g_buf == 'q')
@@ -1401,7 +1401,7 @@ bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum)
         else
         {
             std::printf("\n%s",g_hforhelp);
-            termdown(2);
+            term_down(2);
             settle_down();
             goto reask_reloc;
         }
@@ -1479,7 +1479,7 @@ void list_newsgroups()
         }
         safecpy(tmpbuf+13, np->rc_line, sizeof tmpbuf - 13);
         *(np->rc_line + np->num_offset - 1) = '\0';
-        if (print_lines(tmpbuf, NOMARKING) != 0)
+        if (print_lines(tmpbuf, NO_MARKING) != 0)
         {
             break;
         }
@@ -1507,7 +1507,7 @@ void cleanup_newsrc(Newsrc *rp)
     {
         std::printf("Checking '%s' -- hang on...\n", rp->name);
     }
-    termdown(1);
+    term_down(1);
     NewsgroupData* np;
     for (np = g_first_newsgroup; np; np = np->next)
     {
@@ -1532,7 +1532,7 @@ void cleanup_newsrc(Newsrc *rp)
               stdout);
         std::fputs("leave the \"bogus\" groups alone, and they may come back to normal.  Maybe.\n",
               stdout);
-        termdown(2);
+        term_down(2);
     }
     else if (bogosity)
     {
@@ -1544,7 +1544,7 @@ void cleanup_newsrc(Newsrc *rp)
         {
             std::fputs("Moving boguses to the end.\n", stdout);
         }
-        termdown(1);
+        term_down(1);
         while (np)
         {
             NewsgroupData *prev_np = np->prev;
@@ -1557,7 +1557,7 @@ void cleanup_newsrc(Newsrc *rp)
         rp->flags |= RF_RC_CHANGED;
 reask_bogus:
         in_char("Delete bogus newsgroups?", MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "ny");
-        printcmd();
+        print_cmd();
         newline();
         if (*g_buf == 'h')
         {
@@ -1566,12 +1566,12 @@ reask_bogus:
                 std::fputs("Type y to delete bogus newsgroups.\n"
                       "Type n or SP to leave them at the end in case they return.\n",
                       stdout);
-                termdown(2);
+                term_down(2);
             }
             else
             {
                 std::fputs("y to delete, n to keep\n",stdout);
-                termdown(1);
+                term_down(1);
             }
             goto reask_bogus;
         }
@@ -1616,7 +1616,7 @@ reask_bogus:
         else
         {
             std::fputs(g_hforhelp,stdout);
-            termdown(1);
+            term_down(1);
             settle_down();
             goto reask_bogus;
         }

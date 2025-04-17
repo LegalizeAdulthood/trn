@@ -100,7 +100,7 @@ void finalize(int status)
     termlib_reset();
     if (g_bizarre)
     {
-        resetty();
+        reset_tty();
     }
     xmouse_off();       /* turn off mouse tracking (if on) */
     std::fflush(stdout);

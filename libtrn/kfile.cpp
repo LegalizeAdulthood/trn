@@ -266,7 +266,7 @@ int do_kill_file(std::FILE *kfp, int entering)
                 {
                     std::printf("\n(Intr at %ld)\n", (long) g_art);
                 }
-                termdown(2);
+                term_down(2);
                 return -1;
 
             case SRCH_DONE:
@@ -823,11 +823,11 @@ void edit_kill_file()
             filexp(get_val_const("VISUAL",get_val_const("EDITOR",DEFEDITOR))),g_buf);
         std::printf("\nEditing %s KILL file:\n%s\n",
             (g_in_ng?"local":"global"),g_cmd_buf);
-        termdown(3);
-        resetty();                      /* make sure tty is friendly */
+        term_down(3);
+        reset_tty();                      /* make sure tty is friendly */
         doshell(SH, g_cmd_buf);         /* invoke the shell */
-        noecho();                       /* and make terminal */
-        crmode();                       /*   unfriendly again */
+        no_echo();                       /* and make terminal */
+        cr_mode();                       /*   unfriendly again */
         open_kill_file(g_in_ng);
         if (g_local_kfp)
         {
@@ -871,7 +871,7 @@ void edit_kill_file()
     else
     {
         std::printf("Can't make %s\n",g_buf);
-        termdown(1);
+        term_down(1);
     }
 }
 
@@ -948,7 +948,7 @@ void kill_file_append(const char *cmd, bool local)
         {
             std::printf(g_cantopen, g_cmd_buf);
         }
-        termdown(2);
+        term_down(2);
     }
     g_kf_state |= KFS_NORMAL_LINES;
 }

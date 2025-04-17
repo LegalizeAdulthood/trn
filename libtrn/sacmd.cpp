@@ -752,7 +752,7 @@ bool sa_extract_start()
     /* set a mode for this later? */
     std::printf("\nMark extracted articles as read? [yn]");
     std::fflush(stdout);
-    getcmd(g_buf);
+    get_cmd(g_buf);
     std::printf("\n");
     s_sa_extract_junk = *g_buf == 'y' || *g_buf == ' ' || *g_buf == '\n';
     return true;

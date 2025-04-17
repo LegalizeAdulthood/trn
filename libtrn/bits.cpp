@@ -634,7 +634,7 @@ void yank_back()
         {
             std::printf("\nReturning %ld Marked article%s...\n",(long)g_dm_count,
                 plural(g_dm_count));
-            termdown(2);
+            term_down(2);
         }
         article_walk(yank_article, 0);
         g_dm_count = 0;
@@ -734,7 +734,7 @@ static int chase_xref(ArticleNum artnum, int markread)
             {
                 std::fputs("\nXrefs", stdout);
             }
-            termdown(1);
+            term_down(1);
             g_output_chase_phrase = false;
         }
         std::putchar('.');

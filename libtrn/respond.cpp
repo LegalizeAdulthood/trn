@@ -90,7 +90,7 @@ SaveResult save_article()
         {
             std::fputs(s_nullart, stdout);
         }
-        termdown(2);
+        term_down(2);
         return SAVE_DONE;
     }
     if (change_dir(g_priv_dir))
@@ -222,14 +222,14 @@ SaveResult save_article()
         if (custom_extract)
         {
             std::printf("Extracting article into %s using %s\n",c,g_extract_prog.c_str());
-            termdown(1);
+            term_down(1);
             interp(g_cmd_buf, sizeof g_cmd_buf, get_val("CUSTOMSAVER",CUSTOMSAVER));
             invoke(g_cmd_buf, nullptr);
         }
         else if (g_is_mime)
         {
             std::printf("Extracting MIME article into %s:\n", c);
-            termdown(1);
+            term_down(1);
             mime_decode_article(false);
         }
         else
@@ -289,14 +289,14 @@ SaveResult save_article()
             {
             case 1:
                 std::printf("Extracting shar into %s:\n", c);
-                termdown(1);
+                term_down(1);
                 interp(g_cmd_buf,(sizeof g_cmd_buf),get_val("SHARSAVER",SHARSAVER));
                 invoke(g_cmd_buf, nullptr);
                 break;
 
             case 2:
                 std::printf("Extracting uuencoded file into %s:\n", c);
-                termdown(1);
+                term_down(1);
                 g_mime_section->type = IMAGE_MIME;
                 safefree(g_mime_section->filename);
                 g_mime_section->filename = filename? savestr(filename) : nullptr;
@@ -313,7 +313,7 @@ SaveResult save_article()
 
             default:
                 std::printf("Unable to determine type of file.\n");
-                termdown(1);
+                term_down(1);
                 break;
             }
         }/* if */
@@ -331,7 +331,7 @@ SaveResult save_article()
         interp(g_cmd_buf, (sizeof g_cmd_buf), get_val("PIPESAVER",PIPESAVER));
                                 /* then set up for command */
         termlib_reset();
-        resetty();              /* restore tty state */
+        reset_tty();              /* restore tty state */
         if (use_pref)           /* use preferred shell? */
         {
             doshell(nullptr,g_cmd_buf);
@@ -341,8 +341,8 @@ SaveResult save_article()
         {
             doshell(SH,g_cmd_buf);  /* do command with sh */
         }
-        noecho();               /* and stop echoing */
-        crmode();               /* and start cbreaking */
+        no_echo();               /* and stop echoing */
+        cr_mode();               /* and start cbreaking */
         termlib_init();
     }
     else                        /* normal save */
@@ -362,7 +362,7 @@ SaveResult save_article()
             {
                 std::fputs("'-' ignored.\n", stdout);
             }
-            termdown(1);
+            term_down(1);
             s++;
         }
         for (; *s == ' '; s++)
@@ -427,7 +427,7 @@ SaveResult save_article()
               reask_save:
                 in_char(g_cmd_buf, MM_USE_MAILBOX_FORMAT_PROMPT, dflt);
                 newline();
-                printcmd();
+                print_cmd();
                 if (*g_buf == 'h')
                 {
                     if (g_verbose)
@@ -446,7 +446,7 @@ SaveResult save_article()
                               "q to abort.\n",
                               stdout);
                     }
-                    termdown(4);
+                    term_down(4);
                     goto reask_save;
                 }
                 else if (*g_buf == 'n')
@@ -464,7 +464,7 @@ SaveResult save_article()
                 else
                 {
                     std::fputs(g_hforhelp,stdout);
-                    termdown(1);
+                    term_down(1);
                     settle_down();
                     goto reask_save;
                 }
@@ -513,11 +513,11 @@ SaveResult save_article()
                 nntp_finish_body(FB_SILENT);
             }
             termlib_reset();
-            resetty();          /* make terminal behave */
+            reset_tty();          /* make terminal behave */
             i = doshell(use_pref?nullptr:SH,g_cmd_buf);
             termlib_init();
-            noecho();           /* make terminal do what we want */
-            crmode();
+            no_echo();           /* make terminal do what we want */
+            cr_mode();
         }
         else if (s_tmpfp != nullptr || (s_tmpfp = std::fopen(g_save_dest.c_str(), "a")) != nullptr)
         {
@@ -595,11 +595,11 @@ SaveResult view_article()
         {
             std::fputs(s_nullart, stdout);
         }
-        termdown(2);
+        term_down(2);
         return SAVE_DONE;
     }
     std::printf("Processing attachments...\n");
-    termdown(1);
+    term_down(1);
     if (g_is_mime)
     {
         mime_decode_article(true);
@@ -648,7 +648,7 @@ SaveResult view_article()
         if (cnt)
         {
             std::printf("Unable to determine type of file.\n");
-            termdown(1);
+            term_down(1);
         }
     }
     chdir_news_dir();
@@ -671,7 +671,7 @@ int cancel_article()
         {
             std::fputs(s_nullart, stdout);
         }
-        termdown(2);
+        term_down(2);
         return r;
     }
     char *reply_buf = fetch_lines(g_art, REPLY_LINE);
@@ -702,7 +702,7 @@ int cancel_article()
         {
             std::fputs("\nNot your article\n", stdout);
         }
-        termdown(2);
+        term_down(2);
     }
     else
     {
@@ -710,14 +710,14 @@ int cancel_article()
         if (header == nullptr)
         {
             std::printf(g_cantcreate,g_head_name.c_str());
-            termdown(1);
+            term_down(1);
             goto done;
         }
         interp(hbuf, sizeof hbuf, get_val("CANCELHEADER",CANCELHEADER));
         std::fputs(hbuf,header);
         std::fclose(header);
         std::fputs("\nCanceling...\n",stdout);
-        termdown(2);
+        term_down(2);
         r = doshell(SH,filexp(get_val_const("CANCEL",CALL_INEWS)));
     }
 done:
@@ -744,7 +744,7 @@ int supersede_article()         /* Supersedes: */
         {
             std::fputs(s_nullart, stdout);
         }
-        termdown(2);
+        term_down(2);
         return r;
     }
     char *reply_buf = fetch_lines(g_art, REPLY_LINE);
@@ -775,7 +775,7 @@ int supersede_article()         /* Supersedes: */
         {
             std::fputs("\nNot your article\n", stdout);
         }
-        termdown(2);
+        term_down(2);
     }
     else
     {
@@ -783,7 +783,7 @@ int supersede_article()         /* Supersedes: */
         if (header == nullptr)
         {
             std::printf(g_cantcreate,g_head_name.c_str());
-            termdown(1);
+            term_down(1);
             goto done;
         }
         interp(hbuf, sizeof hbuf, get_val("SUPERSEDEHEADER",SUPERSEDEHEADER));
@@ -870,7 +870,7 @@ void reply()
     if (header == nullptr)
     {
         std::printf(g_cantcreate,g_head_name.c_str());
-        termdown(1);
+        term_down(1);
         goto done;
     }
     interp(hbuf, sizeof hbuf, get_val("MAILHEADER",MAILHEADER));
@@ -885,7 +885,7 @@ void reply()
         {
             std::printf("\n%s\n(Header in %s)\n", g_buf, g_head_name.c_str());
         }
-        termdown(3);
+        term_down(3);
     }
     if (incl_body && g_art_fp != nullptr)
     {
@@ -940,7 +940,7 @@ void forward()
     if (header == nullptr)
     {
         std::printf(g_cantcreate,g_head_name.c_str());
-        termdown(1);
+        term_down(1);
         goto done;
     }
     interp(hbuf, sizeof hbuf, get_val("FORWARDHEADER",FORWARDHEADER));
@@ -1010,7 +1010,7 @@ void forward()
         {
             std::printf("\n%s\n(Header in %s)\n", hbuf, g_head_name.c_str());
         }
-        termdown(3);
+        term_down(3);
     }
     if (g_art_fp != nullptr)
     {
@@ -1072,7 +1072,7 @@ void followup()
 
     if (!incl_body && g_art <= g_last_art)
     {
-        termdown(2);
+        term_down(2);
         in_answer("\n\nAre you starting an unrelated topic? [ynq] ", MM_FOLLOWUP_NEW_TOPIC_PROMPT);
         setdef(g_buf,"y");
         if (*g_buf == 'q')  /*TODO: need to add 'h' also */
@@ -1089,7 +1089,7 @@ void followup()
     if (header == nullptr)
     {
         std::printf(g_cantcreate,g_head_name.c_str());
-        termdown(1);
+        term_down(1);
         g_art = oldart;
         return;
     }
@@ -1159,10 +1159,10 @@ int invoke(const char *cmd, const char *dir)
     }
     set_mode(g_general_mode,MM_EXECUTE);
     termlib_reset();
-    resetty();                  /* make terminal well-behaved */
+    reset_tty();                  /* make terminal well-behaved */
     ret = doshell(SH,cmd);      /* do the command */
-    noecho();                   /* set no echo */
-    crmode();                   /* and cbreak mode */
+    no_echo();                   /* set no echo */
+    cr_mode();                   /* and cbreak mode */
     termlib_init();
     set_mode(g_general_mode,oldmode);
     if (dir)

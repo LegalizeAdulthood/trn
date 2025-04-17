@@ -241,7 +241,7 @@ DoArticleResult do_article()
         for (bool restart_color = true; /* linenum already set */
           g_inner_search? (g_in_header || inner_more())
            : s_special? (linenum < s_slines)
-           : (s_firstpage && !g_in_header)? (linenum < g_initlines)
+           : (s_firstpage && !g_in_header)? (linenum < g_init_lines)
            : (linenum < g_tc_LINES);
              linenum++)
         {                               /* for each line on page */
@@ -435,7 +435,7 @@ DoArticleResult do_article()
 #ifdef NOFIREWORKS
                         if (g_erase_screen)
                         {
-                            no_sofire();
+                            no_so_fire();
                         }
 #endif
                         standout();
@@ -445,7 +445,7 @@ DoArticleResult do_article()
 #ifdef NOFIREWORKS
                         if (g_erase_screen)
                         {
-                            no_ulfire();
+                            no_ul_fire();
                         }
 #endif
                         underline();
@@ -771,7 +771,7 @@ reask_pager:
         }
         std::sprintf(g_buf,"%s--MORE--(%s%%)",current_char_subst(),g_cmd_buf);
         outpos = g_term_col + std::strlen(g_buf);
-        draw_mousebar(g_tc_COLS - (g_term_line == g_tc_LINES-1? outpos+5 : 0), true);
+        draw_mouse_bar(g_tc_COLS - (g_term_line == g_tc_LINES-1? outpos+5 : 0), true);
         color_string(COLOR_MORE,g_buf);
         std::fflush(stdout);
         g_term_col = outpos;
@@ -800,7 +800,7 @@ reask_pager:
             goto recheck_pager;
         }
         set_mode(g_general_mode,MM_PAGER);
-        getcmd(g_buf);
+        get_cmd(g_buf);
         if (errno)
         {
             if (g_tc_LINES < 100 && !g_int_count)
@@ -942,7 +942,7 @@ PageSwitchResult page_switch()
         {
                             /* compile regular expression */
             std::printf("\n%s\n", s);
-            termdown(2);
+            term_down(2);
             return PS_ASK;
         }
         erase_line(false);      /* erase the prompt */
@@ -1173,7 +1173,7 @@ PageSwitchResult page_switch()
         else
         {
             target = g_top_line - (g_tc_LINES - 2);
-            if (g_marking && (g_marking_areas & BACKPAGE_MARKING))
+            if (g_marking && (g_marking_areas & BACK_PAGE_MARKING))
             {
                 g_highlight = g_top_line;
             }
@@ -1203,7 +1203,7 @@ PageSwitchResult page_switch()
         return PS_ASK;
 
     case '_':
-        if (!finish_dblchar())
+        if (!finish_dbl_char())
         {
             return PS_ASK;
         }
@@ -1329,7 +1329,7 @@ leave_pager:
           if (*line_ptr(s_alinebeg) != '\f' && (!g_page_stop || s_continuation || !execute(&g_page_compex, line_ptr(s_alinebeg))))
           {
               if (!s_special //
-                  || (g_marking && (*g_buf != 'd' || (g_marking_areas & HALFPAGE_MARKING))))
+                  || (g_marking && (*g_buf != 'd' || (g_marking_areas & HALF_PAGE_MARKING))))
               {
                 s_restart = s_alinebeg;
                 g_art_line_num--;     /* restart this line */
@@ -1361,7 +1361,7 @@ leave_pager:
             g_first_view = 0;
         }
         std::printf("\nAuto-View inlined mime is %s\n", g_auto_view_inline? "on" : "off");
-        termdown(2);
+        term_down(2);
         break;
 
     case 'q': /* quit this article? */
@@ -1369,7 +1369,7 @@ leave_pager:
 
     default:
         std::fputs(g_hforhelp,stdout);
-        termdown(1);
+        term_down(1);
         settle_down();
         return PS_ASK;
     }
@@ -1437,7 +1437,7 @@ bool inner_more()
  */
 void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 {
-    if (check_mousebar(btn, x,y, btn_clk, x_clk,y_clk))
+    if (check_mouse_bar(btn, x,y, btn_clk, x_clk,y_clk))
     {
         return;
     }
@@ -1465,15 +1465,15 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             g_artp = ap;
             g_art = article_num(ap);
             g_reread = true;
-            pushchar(Ctl('r'));
+            push_char(Ctl('r'));
         }
         else if (y > g_tc_LINES/2)
         {
-            pushchar(' ');
+            push_char(' ');
         }
         else if (g_top_line != -1)
         {
-            pushchar('b');
+            push_char('b');
         }
         break;
 
@@ -1483,15 +1483,15 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             select_sub_thread(ap, AUTO_KILL_NONE);
             s_special = true;
             s_slines = 1;
-            pushchar(Ctl('r'));
+            push_char(Ctl('r'));
         }
         else if (y > g_tc_LINES/2)
         {
-            pushchar('\n');
+            push_char('\n');
         }
         else if (g_top_line != -1)
         {
-            pushchar('B');
+            push_char('B');
         }
         break;
 
@@ -1501,15 +1501,15 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             kill_sub_thread(ap, AUTO_KILL_NONE);
             s_special = true;
             s_slines = 1;
-            pushchar(Ctl('r'));
+            push_char(Ctl('r'));
         }
         else if (y > g_tc_LINES/2)
         {
-            pushchar('n');
+            push_char('n');
         }
         else
         {
-            pushchar(Ctl('r'));
+            push_char(Ctl('r'));
         }
         break;
     }

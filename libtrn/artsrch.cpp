@@ -263,7 +263,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
                 {
                     std::sprintf(g_msg, "Null %s.", finding_str);
                 }
-                errormsg(g_msg);
+                error_msg(g_msg);
                 ret = SRCH_ABORT;
                 goto exit;
             }
@@ -277,7 +277,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
                 {
                     std::printf("\nSelecting %s \"%s\".\n", finding_str, h);
                 }
-                termdown(2);
+                term_down(2);
             }
         }
         else if (!g_search_ahead)
@@ -308,7 +308,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         if (s != nullptr)
         {
             /* compile regular expression */
-            errormsg(s);
+            error_msg(s);
             ret = SRCH_ABORT;
             goto exit;
         }
@@ -389,7 +389,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         else
         {
             std::fputs("\nSearching...\n",stdout);
-            termdown(2);
+            term_down(2);
         }
                                         /* give them something to read */
     }
