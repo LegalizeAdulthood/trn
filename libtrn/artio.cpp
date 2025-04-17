@@ -379,7 +379,7 @@ char *read_art_buf(bool view_inline)
                 g_mime_state = SKIP_MIME;
             }
             color_pop();
-            chdir_newsdir();
+            chdir_news_dir();
             erase_line(false);
             g_nowait_fork = false;
             g_first_view = g_art_line_num;

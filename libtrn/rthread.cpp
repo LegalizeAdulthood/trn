@@ -87,8 +87,8 @@ void thread_open()
         /* If cached but not threaded articles exist, set up to thread them. */
         if (g_first_subject)
         {
-            g_first_cached = g_firstart;
-            g_last_cached = g_firstart - 1;
+            g_first_cached = g_first_art;
+            g_last_cached = g_first_art - 1;
             g_parsed_art = 0;
         }
     }
@@ -106,9 +106,9 @@ void thread_open()
     {
         if (g_thread_always)
         {
-            g_spin_todo = g_lastart - g_absfirst + 1;
-            g_spin_estimate = g_lastart - g_absfirst + 1;
-            (void) ov_data(g_absfirst, g_lastart, false);
+            g_spin_todo = g_last_art - g_abs_first + 1;
+            g_spin_estimate = g_last_art - g_abs_first + 1;
+            (void) ov_data(g_abs_first, g_last_art, false);
             if (g_data_source->ov_opened && find_existing && g_data_source->over_dir == nullptr)
             {
                 mark_missing_articles();
@@ -118,17 +118,17 @@ void thread_open()
         }
         else
         {
-            g_spin_todo = g_lastart - g_firstart + 1;
-            g_spin_estimate = g_ngptr->toread;
-            if (g_firstart > g_lastart)
+            g_spin_todo = g_last_art - g_first_art + 1;
+            g_spin_estimate = g_newsgroup_ptr->to_read;
+            if (g_first_art > g_last_art)
             {
                 /* If no unread articles, see if ov. exists as fast as possible */
-                (void) ov_data(g_absfirst, g_absfirst, false);
+                (void) ov_data(g_abs_first, g_abs_first, false);
                 g_cached_all_in_range = false;
             }
             else
             {
-                (void) ov_data(g_firstart, g_lastart, false);
+                (void) ov_data(g_first_art, g_last_art, false);
             }
         }
     }
@@ -139,7 +139,7 @@ void thread_open()
         rc_to_bits();
     }
 
-    for (ap = article_ptr(article_first(g_firstart));
+    for (ap = article_ptr(article_first(g_first_art));
          ap && article_num(ap) <= g_last_cached;
          ap = article_nextp(ap))
     {
@@ -149,17 +149,17 @@ void thread_open()
         }
     }
 
-    if (g_last_cached > g_lastart)
+    if (g_last_cached > g_last_art)
     {
-        g_ngptr->toread += (ArticleUnread)(g_last_cached-g_lastart);
+        g_newsgroup_ptr->to_read += (ArticleUnread)(g_last_cached-g_last_art);
         /* ensure getngsize() knows the new maximum */
-        g_ngptr->ngmax = g_last_cached;
-        g_lastart = g_last_cached;
+        g_newsgroup_ptr->ng_max = g_last_cached;
+        g_last_art = g_last_cached;
     }
-    g_article_list->high = g_lastart;
+    g_article_list->high = g_last_art;
 
-    for (ap = article_ptr(article_first(g_absfirst));
-         ap && article_num(ap) <= g_lastart;
+    for (ap = article_ptr(article_first(g_abs_first));
+         ap && article_num(ap) <= g_last_art;
          ap = article_nextp(ap))
     {
         if (ap->flags & AF_CACHED)
@@ -181,10 +181,10 @@ void thread_open()
 */
 void thread_grow()
 {
-    g_added_articles += g_lastart - g_last_cached;
+    g_added_articles += g_last_art - g_last_cached;
     if (g_added_articles && g_thread_always)
     {
-        cache_range(g_last_cached + 1, g_lastart);
+        cache_range(g_last_cached + 1, g_last_art);
     }
     count_subjects(CS_NORM);
     if (g_art_ptr_list)
@@ -246,12 +246,12 @@ static int cleanup_msgid_hash(int keylen, HashDatum *data, int extra)
 
 void top_article()
 {
-    g_art = g_lastart+1;
+    g_art = g_last_art+1;
     g_artp = nullptr;
     inc_art(g_selected_only, false);
-    if (g_art > g_lastart && g_last_cached < g_lastart)
+    if (g_art > g_last_art && g_last_cached < g_last_art)
     {
-        g_art = g_firstart;
+        g_art = g_first_art;
     }
 }
 
@@ -351,7 +351,7 @@ void inc_art(bool sel_flag, bool rereading)
         else
         {
             g_artp = nullptr;
-            g_art = g_lastart+1;
+            g_art = g_last_art+1;
             g_art_ptr = g_art_ptr_list;
         }
         return;
@@ -409,13 +409,13 @@ void inc_art(bool sel_flag, bool rereading)
             {
                 g_art++;
             }
-            if (g_art <= g_lastart)
+            if (g_art <= g_last_art)
             {
                 g_artp = article_ptr(g_art);
             }
             else
             {
-                g_art = g_lastart + 1;
+                g_art = g_last_art + 1;
             }
         }
         return;
@@ -425,14 +425,14 @@ void inc_art(bool sel_flag, bool rereading)
   num_inc:
     if (!ap)
     {
-        g_art = g_firstart-1;
+        g_art = g_first_art-1;
     }
     while (true)
     {
         g_art = article_next(g_art);
-        if (g_art > g_lastart)
+        if (g_art > g_last_art)
         {
-            g_art = g_lastart+1;
+            g_art = g_last_art+1;
             ap = nullptr;
             break;
         }
@@ -535,7 +535,7 @@ void dec_art(bool sel_flag, bool rereading)
         }
         else
         {
-            g_art = g_absfirst - 1;
+            g_art = g_abs_first - 1;
         }
         return;
     }
@@ -545,9 +545,9 @@ void dec_art(bool sel_flag, bool rereading)
     while (true)
     {
         g_art = article_prev(g_art);
-        if (g_art < g_absfirst)
+        if (g_art < g_abs_first)
         {
-            g_art = g_absfirst-1;
+            g_art = g_abs_first-1;
             ap = nullptr;
             break;
         }
@@ -704,7 +704,7 @@ bool next_art_with_subj()
         {
             if (!g_art)
             {
-                g_art = g_firstart;
+                g_art = g_first_art;
             }
             return false;
         }
@@ -747,7 +747,7 @@ bool prev_art_with_subj()
         {
             if (!g_art)
             {
-                g_art = g_lastart;
+                g_art = g_last_art;
             }
             return false;
         }
@@ -1205,7 +1205,7 @@ void unkill_subject(Subject *subj)
             {
                 if (!(ap->flags & AF_UNREAD))
                 {
-                    g_ngptr->toread++;
+                    g_newsgroup_ptr->to_read++;
                 }
                 if (g_selected_only && !(ap->flags & AF_SEL))
                 {
@@ -1390,7 +1390,7 @@ void visit_next_thread()
         g_reread = false;
     }
     g_artp = nullptr;
-    g_art = g_lastart+1;
+    g_art = g_last_art+1;
     g_force_last = true;
 }
 
@@ -1414,7 +1414,7 @@ void visit_prev_thread()
         g_reread = false;
     }
     g_artp = nullptr;
-    g_art = g_lastart+1;
+    g_art = g_last_art+1;
     g_force_last = true;
 }
 
@@ -1601,9 +1601,9 @@ void count_subjects(CountSubjectMode cmode)
     g_obj_count = 0;
     g_selected_count = 0;
     g_selected_subj_cnt = 0;
-    if (g_last_cached >= g_lastart)
+    if (g_last_cached >= g_last_art)
     {
-        g_firstart = g_lastart + 1;
+        g_first_art = g_last_art + 1;
     }
 
     switch (cmode)
@@ -1664,7 +1664,7 @@ void count_subjects(CountSubjectMode cmode)
                 {
                     subjdate = ap->date;
                 }
-                g_firstart = std::min(article_num(ap), g_firstart);
+                g_first_art = std::min(article_num(ap), g_first_art);
             }
         }
         sp->misc = count;
@@ -2137,7 +2137,7 @@ static void build_artptrs()
         g_art_ptr_list_size = count;
     }
     Article **app = g_art_ptr_list;
-    for (ArticleNum an = article_first(g_absfirst); count; an = article_next(an))
+    for (ArticleNum an = article_first(g_abs_first); count; an = article_next(an))
     {
         Article *ap = article_ptr(an);
         if ((ap->flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)

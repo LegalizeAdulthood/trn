@@ -141,7 +141,7 @@ void decode_switch(const char *s)
         setngtodo(s);
         if (g_mode == MM_INITIALIZING)
         {
-            g_ng_min_toread = 0;
+            g_newsgroup_min_to_read = 0;
         }
     }
     else                                /* normal switch */

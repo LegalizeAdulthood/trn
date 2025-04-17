@@ -220,14 +220,14 @@ char article_selector(char_int cmd)
 
     g_sel_rereading = (cmd == 'U');
 
-    g_art = g_lastart+1;
+    g_art = g_last_art+1;
     s_extra_commands = article_commands;
     g_keep_the_group_static = (g_keep_the_group_static == 1);
 
     g_sel_mode = SM_ARTICLE;
     set_sel_mode(cmd);
 
-    if (!cache_range(g_sel_rereading ? g_absfirst : g_firstart, g_lastart))
+    if (!cache_range(g_sel_rereading ? g_abs_first : g_first_art, g_last_art))
     {
         s_sel_ret = '+';
         goto sel_exit;
@@ -264,7 +264,7 @@ char article_selector(char_int cmd)
     if (g_added_articles)
     {
         long i = g_added_articles;
-        for (long j = g_lastart - i + 1; j <= g_lastart; j++)
+        for (long j = g_last_art - i + 1; j <= g_last_art; j++)
         {
             if (!article_unread(j))
             {
@@ -365,7 +365,7 @@ static void sel_dogroups()
     int ret;
     int save_selected_count = g_selected_count;
 
-    for (NewsgroupData *np = g_first_ng; np; np = np->next)
+    for (NewsgroupData *np = g_first_newsgroup; np; np = np->next)
     {
         if (!(np->flags & NF_VISIT))
         {
@@ -377,11 +377,11 @@ static void sel_dogroups()
             np->flags &= ~NF_SEL;
             save_selected_count--;
         }
-        set_ng(np);
-        if (np != g_current_ng)
+        set_newsgroup(np);
+        if (np != g_current_newsgroup)
         {
-            g_recent_ng = g_current_ng;
-            g_current_ng = np;
+            g_recent_newsgroup = g_current_newsgroup;
+            g_current_newsgroup = np;
         }
         g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
         std::printf("Entering %s:", g_ngname.c_str());
@@ -397,11 +397,11 @@ static void sel_dogroups()
         {
         case NG_NORM:
         case NG_SEL_NEXT:
-            set_ng(np->next);
+            set_newsgroup(np->next);
             break;
 
         case NG_NEXT:
-            set_ng(np->next);
+            set_newsgroup(np->next);
             goto loop_break;
 
         case NG_ERROR:
@@ -420,7 +420,7 @@ static void sel_dogroups()
             goto loop_break;
 
         case NG_MINUS:
-            np = g_recent_ng;
+            np = g_recent_newsgroup;
             goto do_group;
 
         case NG_NO_SERVER:
@@ -430,7 +430,7 @@ static void sel_dogroups()
 
         /* extensions */
         case NG_GO_ARTICLE:
-            np = g_ng_go_ngptr;
+            np = g_ng_go_newsgroup_ptr;
             goto do_group;
             /* later: possible go-to-newsgroup (applicable?) */
         }
@@ -562,7 +562,7 @@ char newsgroup_selector()
     if (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == 'Z' || s_sel_ret == '\t' || s_sel_ret == ';')
     {
         PUSH_SELECTOR();
-        for (NewsgroupData *np = g_first_ng; np; np = np->next)
+        for (NewsgroupData *np = g_first_newsgroup; np; np = np->next)
         {
             if ((np->flags & NF_INCLUDED)
              && (!g_selected_count || (np->flags & g_sel_mask)))
@@ -791,15 +791,15 @@ static UniversalReadResult univ_read(UniversalItem *ui)
             sleep(5);
             return exit_code;
         }
-        set_ng(np);
-        if (np != g_current_ng)
+        set_newsgroup(np);
+        if (np != g_current_newsgroup)
         {
-            g_recent_ng = g_current_ng;
-            g_current_ng = np;
+            g_recent_newsgroup = g_current_newsgroup;
+            g_current_newsgroup = np;
         }
         g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
         std::printf("Virtual: Entering %s:\n", g_ngname.c_str());
-        g_ng_go_artnum = ui->data.virt.num;
+        g_ng_go_art_num = ui->data.virt.num;
         g_univ_read_virtflag = true;
         int ret = do_newsgroup("");
         g_univ_read_virtflag = false;
@@ -888,11 +888,11 @@ static UniversalReadResult univ_read(UniversalItem *ui)
             return exit_code;
         }
       do_group:
-        set_ng(np);
-        if (np != g_current_ng)
+        set_newsgroup(np);
+        if (np != g_current_newsgroup)
         {
-            g_recent_ng = g_current_ng;
-            g_current_ng = np;
+            g_recent_newsgroup = g_current_newsgroup;
+            g_current_newsgroup = np;
         }
         g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
         std::printf("Entering %s:", g_ngname.c_str());
@@ -922,7 +922,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
             return exit_code;
 
         case NG_MINUS:
-            np = g_recent_ng;
+            np = g_recent_newsgroup;
             goto do_group;
 
         case NG_NO_SERVER:
@@ -1924,22 +1924,22 @@ static void sel_cleanup()
     case SM_NEWSGROUP:
         if (g_sel_rereading)
         {
-            for (NewsgroupData *np = g_first_ng; np; np = np->next)
+            for (NewsgroupData *np = g_first_newsgroup; np; np = np->next)
             {
-                if (np->flags & NF_DELSEL)
+                if (np->flags & NF_DEL_SEL)
                 {
                     if (!(np->flags & NF_SEL))
                     {
                         g_selected_count++;
                     }
-                    np->flags = (np->flags & ~NF_DELSEL) | NF_SEL;
+                    np->flags = (np->flags & ~NF_DEL_SEL) | NF_SEL;
                 }
                 np->flags &= ~NF_DEL;
             }
         }
         else
         {
-            for (NewsgroupData *np = g_first_ng; np; np = np->next)
+            for (NewsgroupData *np = g_first_newsgroup; np; np = np->next)
             {
                 if (np->flags & NF_DEL)
                 {
@@ -2021,11 +2021,11 @@ static DisplayState sel_command(char_int ch)
     {
         if (g_sel_item_index < g_sel_page_item_cnt)
         {
-            set_ng(g_sel_items[g_sel_item_index].u.np);
+            set_newsgroup(g_sel_items[g_sel_item_index].u.np);
         }
         else
         {
-            g_ngptr = nullptr;
+            g_newsgroup_ptr = nullptr;
         }
     }
   do_command:
@@ -2157,7 +2157,7 @@ static DisplayState sel_command(char_int ch)
         s_removed_prompt = RP_ALL;
         if (g_sel_mode == SM_NEWSGROUP)
         {
-            std::printf("[%s] Cmd: ", g_ngptr ? g_ngptr->rcline : "*End*");
+            std::printf("[%s] Cmd: ", g_newsgroup_ptr ? g_newsgroup_ptr->rc_line : "*End*");
         }
         else
         {
@@ -2309,7 +2309,7 @@ static DisplayState article_commands(char_int ch)
         g_sel_rereading = !g_sel_rereading;
         g_sel_page_sp = nullptr;
         g_sel_page_app = nullptr;
-        if (!cache_range(g_sel_rereading? g_absfirst : g_firstart, g_lastart))
+        if (!cache_range(g_sel_rereading? g_abs_first : g_first_art, g_last_art))
         {
             g_sel_rereading = !g_sel_rereading;
         }
@@ -2756,7 +2756,7 @@ static DisplayState article_commands(char_int ch)
                 /* Force the search to begin at g_absfirst or g_firstart,
                 ** depending upon whether they specified the 'r' option.
                 */
-                g_art = g_lastart+1;
+                g_art = g_last_art+1;
                 switch (art_search(g_buf, sizeof g_buf, false))
                 {
                 case SRCH_ERROR:
@@ -2781,7 +2781,7 @@ static DisplayState article_commands(char_int ch)
             /* Recount, in case something has changed. */
             count_subjects(g_sel_rereading? CS_NORM : CS_UNSELECT);
 
-            if (sel_perform_change(g_ngptr->toread, "article"))
+            if (sel_perform_change(g_newsgroup_ptr->to_read, "article"))
             {
                 return DS_UPDATE;
             }
@@ -2875,11 +2875,11 @@ static DisplayState newsgroup_commands(char_int ch)
             }
             else
             {
-                np = g_first_ng;
+                np = g_first_newsgroup;
             }
             while (np)
             {
-                if (((!(np->flags & NF_SEL) ^ (ch == 'J')) && np->toread != TR_UNSUB) //
+                if (((!(np->flags & NF_SEL) ^ (ch == 'J')) && np->to_read != TR_UNSUB) //
                     || (np->flags & NF_DEL))
                 {
                     if (ch == 'J' || (np->flags & NF_INCLUDED))
@@ -2906,9 +2906,9 @@ static DisplayState newsgroup_commands(char_int ch)
         }
         else if (ch == 'J')
         {
-            for (NewsgroupData *np = g_first_ng; np; np = np->next)
+            for (NewsgroupData *np = g_first_newsgroup; np; np = np->next)
             {
-                np->flags &= ~NF_DELSEL;
+                np->flags &= ~NF_DEL_SEL;
             }
             g_selected_count = 0;
             return DS_DISPLAY;
@@ -2919,13 +2919,13 @@ static DisplayState newsgroup_commands(char_int ch)
     {
         sel_cleanup();
         g_missing_count = 0;
-        for (NewsgroupData *np = g_first_ng; np; np = np->next)
+        for (NewsgroupData *np = g_first_newsgroup; np; np = np->next)
         {
-            if (np->toread > TR_UNSUB && np->toread < g_ng_min_toread)
+            if (np->to_read > TR_UNSUB && np->to_read < g_newsgroup_min_to_read)
             {
-                g_newsgroup_toread++;
+                g_newsgroup_to_read++;
             }
-            np->abs1st = 0;
+            np->abs_first = 0;
         }
         erase_line(false);
         check_active_refetch(true);
@@ -3039,7 +3039,7 @@ static DisplayState newsgroup_commands(char_int ch)
             }
             else
             {
-                g_ngptr = nullptr;
+                g_newsgroup_ptr = nullptr;
                 switch (ng_search(g_buf, false))
                 {
                 case NGS_ERROR:
@@ -3055,11 +3055,11 @@ static DisplayState newsgroup_commands(char_int ch)
                 case NGS_DONE:
                     break;
                 }
-                g_ngptr = g_current_ng;
+                g_newsgroup_ptr = g_current_newsgroup;
             }
             g_sel_item_index = 0;
 
-            if (sel_perform_change(g_newsgroup_toread, "newsgroup"))
+            if (sel_perform_change(g_newsgroup_to_read, "newsgroup"))
             {
                 return DS_UPDATE;
             }
@@ -3077,7 +3077,7 @@ static DisplayState newsgroup_commands(char_int ch)
     case 'c':
         if (g_sel_item_index < g_sel_page_item_cnt)
         {
-            set_ng(g_sel_items[g_sel_item_index].u.np);
+            set_newsgroup(g_sel_items[g_sel_item_index].u.np);
         }
         else
         {
@@ -3085,10 +3085,10 @@ static DisplayState newsgroup_commands(char_int ch)
             s_disp_status_line = 1;
             return DS_UPDATE;
         }
-        if (g_ngptr != g_current_ng)
+        if (g_newsgroup_ptr != g_current_newsgroup)
         {
-            g_recent_ng = g_current_ng;
-            g_current_ng = g_ngptr;
+            g_recent_newsgroup = g_current_newsgroup;
+            g_current_newsgroup = g_newsgroup_ptr;
         }
         erase_line(g_mousebar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
@@ -3134,7 +3134,7 @@ static DisplayState newsgroup_commands(char_int ch)
         {
             erase_line(g_mousebar_cnt > 0);     /* erase the prompt */
             s_removed_prompt = RP_ALL;
-            std::printf("[%s] Cmd: ", g_ngptr? g_ngptr->rcline : "*End*");
+            std::printf("[%s] Cmd: ", g_newsgroup_ptr? g_newsgroup_ptr->rc_line : "*End*");
             std::fflush(stdout);
         }
         g_default_cmd = "\\";
@@ -3199,13 +3199,13 @@ static DisplayState newsgroup_commands(char_int ch)
         }
         g_sel_item_index = 0;
         init_pages(PRESERVE_PAGE);
-        if (ret == ING_SPECIAL && g_ngptr && g_ngptr->toread < g_ng_min_toread)
+        if (ret == ING_SPECIAL && g_newsgroup_ptr && g_newsgroup_ptr->to_read < g_newsgroup_min_to_read)
         {
-            g_ngptr->flags |= NF_INCLUDED;
+            g_newsgroup_ptr->flags |= NF_INCLUDED;
             g_sel_total_obj_cnt++;
             ret = ING_DISPLAY;
         }
-        u.np = g_ngptr;
+        u.np = g_newsgroup_ptr;
         if ((calc_page(u) || ret == ING_DISPLAY) && s_clean_screen)
         {
             return DS_DISPLAY;
@@ -3418,7 +3418,7 @@ static DisplayState addgroup_commands(char_int ch)
             }
             g_sel_item_index = 0;
 
-            if (sel_perform_change(g_newsgroup_toread, "newsgroup"))
+            if (sel_perform_change(g_newsgroup_to_read, "newsgroup"))
             {
                 return DS_UPDATE;
             }

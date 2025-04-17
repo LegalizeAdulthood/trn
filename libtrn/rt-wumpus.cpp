@@ -799,7 +799,7 @@ char thread_letter(Article *ap)
     int subj = ap->subj->misc;
 
     if (!(ap->flags & AF_CACHED)
-     && (g_absfirst < g_first_cached || g_last_cached < g_lastart
+     && (g_abs_first < g_first_cached || g_last_cached < g_last_art
       || !g_cached_all_in_range))
     {
         return '?';

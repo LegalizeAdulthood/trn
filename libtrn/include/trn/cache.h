@@ -174,7 +174,7 @@ inline bool article_hasdata(ArticleNum an)
 }
 inline Article *article_find(ArticleNum an)
 {
-    return an <= g_lastart && article_hasdata(an) ? article_ptr(an) : nullptr;
+    return an <= g_last_art && article_hasdata(an) ? article_ptr(an) : nullptr;
 }
 inline bool article_walk(bool (*callback)(char *, int), int arg)
 {
@@ -214,7 +214,7 @@ inline bool was_read(ArticleNum an)
 }
 inline bool is_available(ArticleNum an)
 {
-    return an <= g_lastart && article_hasdata(an) && article_exists(an);
+    return an <= g_last_art && article_hasdata(an) && article_exists(an);
 }
 inline bool is_unavailable(ArticleNum an)
 {

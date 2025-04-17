@@ -58,7 +58,7 @@ void rc_to_bits()
 
     /* modify the article flags to reflect what has already been read */
 
-    char *s = skip_eq(g_ngptr->rcline + g_ngptr->numoffset, ' ');
+    char *s = skip_eq(g_newsgroup_ptr->rc_line + g_newsgroup_ptr->num_offset, ' ');
                                         /* find numbers in rc line */
     long i = std::strlen(s);
 #ifndef lint
@@ -77,15 +77,15 @@ void rc_to_bits()
     if (set_first_art(s))
     {
         s = std::strchr(s,',') + 1;
-        for (i = article_first(g_absfirst); i < g_firstart; i = article_next(i))
+        for (i = article_first(g_abs_first); i < g_first_art; i = article_next(i))
         {
             article_ptr(i)->flags &= ~AF_UNREAD;
         }
-        g_firstart = i;
+        g_first_art = i;
     }
     else
     {
-        g_firstart = article_first(g_firstart);
+        g_first_art = article_first(g_first_art);
     }
     unread = 0;
 #ifdef DEBUG
@@ -102,17 +102,17 @@ void rc_to_bits()
         }
     }
 #endif
-    i = g_firstart;
+    i = g_first_art;
     for ( ; (c = std::strchr(s,',')) != nullptr; s = ++c)    /* for each range */
     {
         ArticleNum max;
         *c = '\0';                      /* do not let index see past comma */
         h = std::strchr(s,'-');
         ArticleNum min = std::atol(s);
-        min = std::max(min, g_firstart);    /* make sure range is in range */
-        if (min > g_lastart)
+        min = std::max(min, g_first_art);    /* make sure range is in range */
+        if (min > g_last_art)
         {
-            min = g_lastart + 1;
+            min = g_last_art + 1;
         }
         for (; i < min; i = article_next(i))
         {
@@ -142,7 +142,7 @@ void rc_to_bits()
         {
             max = min - 1;
         }
-        max = std::min(max, g_lastart);
+        max = std::min(max, g_last_art);
         /* mark all arts in range as read */
         for ( ; i <= max; i = article_next(i))
         {
@@ -164,7 +164,7 @@ void rc_to_bits()
 #endif
         i = article_next(max);
     }
-    for (; i <= g_lastart; i = article_next(i))
+    for (; i <= g_last_art; i = article_next(i))
     {
         ap = article_ptr(i);
         if (ap->flags & AF_EXISTS)
@@ -196,7 +196,7 @@ void rc_to_bits()
     {
         std::free(mybuf);
     }
-    g_ngptr->toread = unread;
+    g_newsgroup_ptr->to_read = unread;
 }
 
 bool set_first_art(const char *s)
@@ -204,12 +204,12 @@ bool set_first_art(const char *s)
     s = skip_eq(s, ' ');
     if (!std::strncmp(s,"1-",2))                     /* can we save some time here? */
     {
-        g_firstart = std::atol(s+2)+1;               /* process first range thusly */
-        g_firstart = std::max(g_firstart, g_absfirst);
+        g_first_art = std::atol(s+2)+1;               /* process first range thusly */
+        g_first_art = std::max(g_first_art, g_abs_first);
         return true;
     }
 
-    g_firstart = g_absfirst;
+    g_first_art = g_abs_first;
     return false;
 }
 
@@ -222,10 +222,10 @@ void bits_to_rc()
     ArticleNum count=0;
     int safelen = LBUFLEN - 32;
 
-    std::strcpy(g_buf,g_ngptr->rcline);            /* start with the newsgroup name */
-    char *s = g_buf + g_ngptr->numoffset - 1; /* use s for buffer pointer */
-    *s++ = g_ngptr->subscribechar;            /* put the requisite : or !*/
-    for (i = article_first(g_absfirst); i <= g_lastart; i = article_next(i))
+    std::strcpy(g_buf,g_newsgroup_ptr->rc_line);            /* start with the newsgroup name */
+    char *s = g_buf + g_newsgroup_ptr->num_offset - 1; /* use s for buffer pointer */
+    *s++ = g_newsgroup_ptr->subscribe_char;            /* put the requisite : or !*/
+    for (i = article_first(g_abs_first); i <= g_last_art; i = article_next(i))
     {
         if (article_unread(i))
         {
@@ -234,7 +234,7 @@ void bits_to_rc()
     }
     std::sprintf(s," 1-%ld,",(long)i-1);
     s += std::strlen(s);
-    for (; i<=g_lastart; i++)   /* for each article in newsgroup */
+    for (; i<=g_last_art; i++)   /* for each article in newsgroup */
     {
         if (s-mybuf > safelen)          /* running out of room? */
         {
@@ -266,7 +266,7 @@ void bits_to_rc()
             do
             {
                 i++;
-            } while (i <= g_lastart && was_read(i));
+            } while (i <= g_last_art && was_read(i));
                                         /* find 1st unread article or end */
             i--;                        /* backup to last read article */
             if (i > oldi)               /* range of more than 1? */
@@ -294,29 +294,29 @@ void bits_to_rc()
         termdown(2);
     }
 #endif
-    std::free(g_ngptr->rcline);              /* return old rc line */
+    std::free(g_newsgroup_ptr->rc_line);              /* return old rc line */
     if (mybuf == g_buf)
     {
-        g_ngptr->rcline = safemalloc((MemorySize)(s-g_buf)+1);
+        g_newsgroup_ptr->rc_line = safemalloc((MemorySize)(s-g_buf)+1);
                                         /* grab a new rc line */
-        std::strcpy(g_ngptr->rcline, g_buf); /* and load it */
+        std::strcpy(g_newsgroup_ptr->rc_line, g_buf); /* and load it */
     }
     else
     {
         mybuf = saferealloc(mybuf,(MemorySize)(s-mybuf)+1);
                                         /* be nice to the heap */
-        g_ngptr->rcline = mybuf;
+        g_newsgroup_ptr->rc_line = mybuf;
     }
-    *(g_ngptr->rcline + g_ngptr->numoffset - 1) = '\0';
-    if (g_ngptr->subscribechar == NEGCHAR)/* did they unsubscribe? */
+    *(g_newsgroup_ptr->rc_line + g_newsgroup_ptr->num_offset - 1) = '\0';
+    if (g_newsgroup_ptr->subscribe_char == NEGCHAR)/* did they unsubscribe? */
     {
-        g_ngptr->toread = TR_UNSUB;     /* make line invisible */
+        g_newsgroup_ptr->to_read = TR_UNSUB;     /* make line invisible */
     }
     else
     {
-        g_ngptr->toread = (ArticleUnread)count; /* otherwise, remember the count */
+        g_newsgroup_ptr->to_read = (ArticleUnread)count; /* otherwise, remember the count */
     }
-    g_ngptr->rc->flags |= RF_RCCHANGED;
+    g_newsgroup_ptr->rc->flags |= RF_RCCHANGED;
 }
 
 void find_existing_articles()
@@ -329,8 +329,8 @@ void find_existing_articles()
         /* Parse the LISTGROUP output and remember everything we find */
         if (nntp_artnums())
         {
-            for (ap = article_ptr(article_first(g_absfirst));
-                 ap && article_num(ap) <= g_lastart;
+            for (ap = article_ptr(article_first(g_abs_first));
+                 ap && article_num(ap) <= g_last_art;
                  ap = article_nextp(ap))
             {
                 ap->flags &= ~AF_EXISTS;
@@ -346,7 +346,7 @@ void find_existing_articles()
                     break;
                 }
                 an = (ArticleNum)std::atol(g_ser_line);
-                if (an < g_absfirst)
+                if (an < g_abs_first)
                 {
                     continue;   /* Ignore some wacked-out NNTP servers */
                 }
@@ -378,7 +378,7 @@ void find_existing_articles()
                     }
                 }
             }
-            for (an = g_absfirst; an < g_first_cached; an++)
+            for (an = g_abs_first; an < g_first_cached; an++)
             {
                 ap = article_ptr(an);
                 if (!(ap->flags2 & AF2_BOGUS))
@@ -386,7 +386,7 @@ void find_existing_articles()
                     ap->flags |= AF_EXISTS;
                 }
             }
-            for (an = g_last_cached + 1; an <= g_lastart; an++)
+            for (an = g_last_cached + 1; an <= g_last_art; an++)
             {
                 ap = article_ptr(an);
                 if (!(ap->flags2 & AF2_BOGUS))
@@ -397,7 +397,7 @@ void find_existing_articles()
         }
         else
         {
-            for (an = g_absfirst; an <= g_lastart; an++)
+            for (an = g_abs_first; an <= g_last_art; an++)
             {
                 ap = article_ptr(an);
                 if (!(ap->flags2 & AF2_BOGUS))
@@ -410,7 +410,7 @@ void find_existing_articles()
     else
     {
         namespace fs = std::filesystem;
-        ArticleNum first = g_lastart+1;
+        ArticleNum first = g_last_art+1;
         ArticleNum last = 0;
         fs::path cwd(".");
         char ch;
@@ -423,8 +423,8 @@ void find_existing_articles()
         }
 
         /* Scan the directory to find which articles are present. */
-        for (ap = article_ptr(article_first(g_absfirst));
-             ap && article_num(ap) <= g_lastart;
+        for (ap = article_ptr(article_first(g_abs_first));
+             ap && article_num(ap) <= g_last_art;
              ap = article_nextp(ap))
         {
             ap->flags &= ~AF_EXISTS;
@@ -436,7 +436,7 @@ void find_existing_articles()
             if (std::sscanf(filename.c_str(), "%ld%c", &lnum, &ch) == 1)
             {
                 an = (ArticleNum)lnum;
-                if (an <= g_lastart && an >= g_absfirst)
+                if (an <= g_last_art && an >= g_abs_first)
                 {
                     first = std::min(an, first);
                     last = std::max(an, last);
@@ -449,32 +449,32 @@ void find_existing_articles()
             }
         }
 
-        g_ngptr->abs1st = first;
-        g_ngptr->ngmax = last;
+        g_newsgroup_ptr->abs_first = first;
+        g_newsgroup_ptr->ng_max = last;
 
-        if (first > g_absfirst)
+        if (first > g_abs_first)
         {
-            checkexpired(g_ngptr,first);
-            for (g_absfirst = article_first(g_absfirst);
-                 g_absfirst < first;
-                 g_absfirst = article_next(g_absfirst))
+            checkexpired(g_newsgroup_ptr,first);
+            for (g_abs_first = article_first(g_abs_first);
+                 g_abs_first < first;
+                 g_abs_first = article_next(g_abs_first))
             {
-                one_missing(article_ptr(g_absfirst));
+                one_missing(article_ptr(g_abs_first));
             }
-            g_absfirst = first;
+            g_abs_first = first;
         }
-        g_lastart = last;
+        g_last_art = last;
     }
 
-    g_firstart = std::max(g_firstart, g_absfirst);
-    if (g_firstart > g_lastart)
+    g_first_art = std::max(g_first_art, g_abs_first);
+    if (g_first_art > g_last_art)
     {
-        g_firstart = g_lastart + 1;
+        g_first_art = g_last_art + 1;
     }
-    g_first_cached = std::max(g_first_cached, g_absfirst);
-    if (g_last_cached < g_absfirst)
+    g_first_cached = std::max(g_first_cached, g_abs_first);
+    if (g_last_cached < g_abs_first)
     {
-        g_last_cached = g_absfirst - 1;
+        g_last_cached = g_abs_first - 1;
     }
 }
 
@@ -488,7 +488,7 @@ void one_more(Article *ap)
         check_first(artnum);
         ap->flags |= AF_UNREAD;
         ap->flags &= ~AF_DEL;
-        g_ngptr->toread++;
+        g_newsgroup_ptr->to_read++;
         if (ap->subj)
         {
             if (g_selected_only)
@@ -520,9 +520,9 @@ void one_less(Article *ap)
             g_selected_count--;
             ap->flags &= ~static_cast<ArticleFlags>(g_sel_mask);
         }
-        if (g_ngptr->toread > TR_NONE)
+        if (g_newsgroup_ptr->to_read > TR_NONE)
         {
-            g_ngptr->toread--;
+            g_newsgroup_ptr->to_read--;
         }
     }
 }
@@ -599,8 +599,8 @@ void mark_as_read(Article *ap)
 
 void mark_missing_articles()
 {
-    for (Article *ap = article_ptr(article_first(g_absfirst));
-         ap && article_num(ap) <= g_lastart;
+    for (Article *ap = article_ptr(article_first(g_abs_first));
+         ap && article_num(ap) <= g_last_art;
          ap = article_nextp(ap))
     {
         if (!(ap->flags & AF_EXISTS))
@@ -614,8 +614,8 @@ void mark_missing_articles()
 
 void check_first(ArticleNum min)
 {
-    min = std::max(min, g_absfirst);
-    g_firstart = std::min(min, g_firstart);
+    min = std::max(min, g_abs_first);
+    g_first_art = std::min(min, g_first_art);
 }
 
 /* bring back articles marked with M */
@@ -775,7 +775,7 @@ static int chase_xref(ArticleNum artnum, int markread)
             }
             if (!std::strcmp(tmpbuf,g_ngname.c_str()))  /* is this the current newsgroup? */
             {
-                if (x < g_absfirst || x > g_lastart)
+                if (x < g_abs_first || x > g_last_art)
                 {
                     continue;
                 }

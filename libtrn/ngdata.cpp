@@ -36,29 +36,29 @@
 #include <cstring>
 #include <string>
 
-List       *g_ngdata_list{};       /* a list of NGDATA */
-int         g_ngdata_cnt{};        //
-NewsgroupNum      g_newsgroup_cnt{};     /* all newsgroups in our current newsrc(s) */
-NewsgroupNum      g_newsgroup_toread{};  //
-ArticleUnread  g_ng_min_toread{1};    /* == TR_ONE or TR_NONE */
-NewsgroupData     *g_first_ng{};          //
-NewsgroupData     *g_last_ng{};           //
-NewsgroupData     *g_ngptr{};             /* current newsgroup data ptr */
-NewsgroupData     *g_current_ng{};        /* stable current newsgroup so we can ditz with g_ngptr */
-NewsgroupData     *g_recent_ng{};         /* the prior newsgroup we visited */
-NewsgroupData     *g_starthere{};         /* set to the first newsgroup with unread news on startup */
+List       *g_newsgroup_data_list{};       /* a list of NGDATA */
+int         g_newsgroup_data_count{};        //
+NewsgroupNum      g_newsgroup_count{};     /* all newsgroups in our current newsrc(s) */
+NewsgroupNum      g_newsgroup_to_read{};  //
+ArticleUnread  g_newsgroup_min_to_read{1};    /* == TR_ONE or TR_NONE */
+NewsgroupData     *g_first_newsgroup{};          //
+NewsgroupData     *g_last_newsgroup{};           //
+NewsgroupData     *g_newsgroup_ptr{};             /* current newsgroup data ptr */
+NewsgroupData     *g_current_newsgroup{};        /* stable current newsgroup so we can ditz with g_ngptr */
+NewsgroupData     *g_recent_newsgroup{};         /* the prior newsgroup we visited */
+NewsgroupData     *g_start_here{};         /* set to the first newsgroup with unread news on startup */
 NewsgroupData     *g_sel_page_np{};       //
 NewsgroupData     *g_sel_next_np{};       //
-ArticleNum     g_absfirst{};          /* 1st real article in current newsgroup */
-ArticleNum     g_firstart{};          /* minimum unread article number in newsgroup */
-ArticleNum     g_lastart{};           /* maximum article number in newsgroup */
+ArticleNum     g_abs_first{};          /* 1st real article in current newsgroup */
+ArticleNum     g_first_art{};          /* minimum unread article number in newsgroup */
+ArticleNum     g_last_art{};           /* maximum article number in newsgroup */
 ArticleUnread  g_missing_count{};     /* for reports on missing articles */
 std::string g_moderated;           //
 bool        g_redirected{};        //
 std::string g_redirected_to;       //
 bool        g_threaded_group{};    //
-NewsgroupData     *g_ng_go_ngptr{};       //
-ArticleNum     g_ng_go_artnum{};      //
+NewsgroupData     *g_ng_go_newsgroup_ptr{};       //
+ArticleNum     g_ng_go_art_num{};      //
 bool        g_novice_delays{true}; /* +f */
 bool        g_in_ng{};             /* true if in a newsgroup */
 
@@ -66,46 +66,46 @@ static int ngorder_number(const NewsgroupData **npp1, const NewsgroupData **npp2
 static int ngorder_groupname(const NewsgroupData **npp1, const NewsgroupData **npp2);
 static int ngorder_count(const NewsgroupData **npp1, const NewsgroupData **npp2);
 
-void ngdata_init()
+void newsgroup_data_init()
 {
 }
 
 /* set current newsgroup */
 
-void set_ng(NewsgroupData *np)
+void set_newsgroup(NewsgroupData *np)
 {
-    g_ngptr = np;
-    if (g_ngptr)
+    g_newsgroup_ptr = np;
+    if (g_newsgroup_ptr)
     {
-        set_ngname(g_ngptr->rcline);
+        set_ngname(g_newsgroup_ptr->rc_line);
     }
 }
 
-int access_ng()
+int access_newsgroup()
 {
-    ArticleNum old_first = g_ngptr->abs1st;
+    ArticleNum old_first = g_newsgroup_ptr->abs_first;
 
     if (g_data_source->flags & DF_REMOTE)
     {
-        int ret = nntp_group(g_ngname.c_str(),g_ngptr);
+        int ret = nntp_group(g_ngname.c_str(),g_newsgroup_ptr);
         if (ret == -2)
         {
             return -2;
         }
         if (ret <= 0)
         {
-            g_ngptr->toread = TR_BOGUS;
+            g_newsgroup_ptr->to_read = TR_BOGUS;
             return 0;
         }
-        g_lastart = getngsize(g_ngptr);
-        if (g_lastart < 0) /* Impossible... */
+        g_last_art = get_newsgroup_size(g_newsgroup_ptr);
+        if (g_last_art < 0) /* Impossible... */
         {
             return 0;
         }
-        g_absfirst = g_ngptr->abs1st;
-        if (g_absfirst > old_first)
+        g_abs_first = g_newsgroup_ptr->abs_first;
+        if (g_abs_first > old_first)
         {
-            checkexpired(g_ngptr, g_absfirst);
+            checkexpired(g_newsgroup_ptr, g_abs_first);
         }
     }
     else
@@ -137,7 +137,7 @@ int access_ng()
                 termdown(2);
             }
             /* make this newsgroup temporarily invisible */
-            g_ngptr->toread = TR_NONE;
+            g_newsgroup_ptr->to_read = TR_NONE;
             return 0;
         }
 
@@ -147,12 +147,12 @@ int access_ng()
             std::printf(g_nocd,g_ngdir.c_str());
             return 0;
         }
-        g_lastart = getngsize(g_ngptr);
-        if (g_lastart < 0) /* Impossible... */
+        g_last_art = get_newsgroup_size(g_newsgroup_ptr);
+        if (g_last_art < 0) /* Impossible... */
         {
             return 0;
         }
-        g_absfirst = g_ngptr->abs1st;
+        g_abs_first = g_newsgroup_ptr->abs_first;
     }
 
     g_dm_count = 0;
@@ -163,7 +163,7 @@ int access_ng()
     return 1;
 }
 
-void chdir_newsdir()
+void chdir_news_dir()
 {
     if (change_dir(g_data_source->spool_dir) || (!(g_data_source->flags & DF_REMOTE) && change_dir(g_ngdir)))
     {
@@ -172,29 +172,29 @@ void chdir_newsdir()
     }
 }
 
-void grow_ng(ArticleNum newlast)
+void grow_newsgroup(ArticleNum new_last)
 {
     g_force_grow = false;
-    if (newlast > g_lastart)
+    if (new_last > g_last_art)
     {
         ArticleNum tmpart = g_art;
-        g_ngptr->toread += (ArticleUnread)(newlast-g_lastart);
-        ArticleNum tmpfirst = g_lastart + 1;
+        g_newsgroup_ptr->to_read += (ArticleUnread)(new_last-g_last_art);
+        ArticleNum tmpfirst = g_last_art + 1;
         /* Increase the size of article scan arrays. */
-        sa_grow(g_lastart,newlast);
+        sa_grow(g_last_art,new_last);
         do
         {
-            g_lastart++;
-            article_ptr(g_lastart)->flags |= AF_EXISTS|AF_UNREAD;
-        } while (g_lastart < newlast);
-        g_article_list->high = g_lastart;
+            g_last_art++;
+            article_ptr(g_last_art)->flags |= AF_EXISTS|AF_UNREAD;
+        } while (g_last_art < new_last);
+        g_article_list->high = g_last_art;
         thread_grow();
         /* Score all new articles now just in case they weren't done above. */
-        sc_fill_scorelist(tmpfirst,newlast);
+        sc_fill_scorelist(tmpfirst,new_last);
         if (g_verbose)
         {
             std::sprintf(g_buf, "%ld more article%s arrived -- processing memorized commands...\n\n",
-                    (long) (g_lastart - tmpfirst + 1), (g_lastart > tmpfirst ? "s have" : " has"));
+                    (long) (g_last_art - tmpfirst + 1), (g_last_art > tmpfirst ? "s have" : " has"));
         }
         else                    /* my, my, how clever we are */
         {
@@ -220,12 +220,12 @@ static int ngorder_number(const NewsgroupData **npp1, const NewsgroupData **npp2
 
 static int ngorder_groupname(const NewsgroupData **npp1, const NewsgroupData **npp2)
 {
-    return string_case_compare((*npp1)->rcline, (*npp2)->rcline) * g_sel_direction;
+    return string_case_compare((*npp1)->rc_line, (*npp2)->rc_line) * g_sel_direction;
 }
 
 static int ngorder_count(const NewsgroupData **npp1, const NewsgroupData **npp2)
 {
-    int eq = (int)((*npp1)->toread - (*npp2)->toread);
+    int eq = (int)((*npp1)->to_read - (*npp2)->to_read);
     if (eq != 0)
     {
         return eq * g_sel_direction;
@@ -241,7 +241,7 @@ void sort_newsgroups()
     int (*  sort_procedure)(const NewsgroupData **npp1,const NewsgroupData **npp2);
 
     /* If we don't have at least two newsgroups, we're done! */
-    if (!g_first_ng || !g_first_ng->next)
+    if (!g_first_newsgroup || !g_first_newsgroup->next)
     {
         return;
     }
@@ -262,30 +262,30 @@ void sort_newsgroups()
         break;
     }
 
-    NewsgroupData **ng_list = (NewsgroupData**)safemalloc(g_newsgroup_cnt * sizeof(NewsgroupData*));
+    NewsgroupData **ng_list = (NewsgroupData**)safemalloc(g_newsgroup_count * sizeof(NewsgroupData*));
     lp = ng_list;
-    for (NewsgroupData* np = g_first_ng; np; np = np->next)
+    for (NewsgroupData* np = g_first_newsgroup; np; np = np->next)
     {
         *lp++ = np;
     }
-    TRN_ASSERT(lp - ng_list == g_newsgroup_cnt);
+    TRN_ASSERT(lp - ng_list == g_newsgroup_count);
 
-    std::qsort(ng_list, g_newsgroup_cnt, sizeof (NewsgroupData*), (int(*)(void const *, void const *))sort_procedure);
+    std::qsort(ng_list, g_newsgroup_count, sizeof (NewsgroupData*), (int(*)(void const *, void const *))sort_procedure);
 
-    g_first_ng = ng_list[0];
-    g_first_ng->prev = nullptr;
+    g_first_newsgroup = ng_list[0];
+    g_first_newsgroup->prev = nullptr;
     lp = ng_list;
-    for (int i = g_newsgroup_cnt; --i; lp++)
+    for (int i = g_newsgroup_count; --i; lp++)
     {
         lp[0]->next = lp[1];
         lp[1]->prev = lp[0];
     }
-    g_last_ng = lp[0];
-    g_last_ng->next = nullptr;
+    g_last_newsgroup = lp[0];
+    g_last_newsgroup->next = nullptr;
     std::free((char*)ng_list);
 }
 
-void ng_skip()
+void newsgroup_skip()
 {
     if (g_data_source->flags & DF_REMOTE)
     {
@@ -311,7 +311,7 @@ void ng_skip()
             /* tries to grab PREFETCH_SIZE XHDRS, flagging missing articles */
             (void) fetch_subj(g_art, false);
             ArticleNum artnum = g_art + PREFETCH_SIZE - 1;
-            artnum = std::min(artnum, g_lastart);
+            artnum = std::min(artnum, g_last_art);
             while (g_art <= artnum)
             {
                 if (g_artp->flags & AF_EXISTS)
@@ -321,7 +321,7 @@ void ng_skip()
                 g_art = article_next(g_art);
                 g_artp = article_ptr(g_art);
             }
-        } while (g_art <= g_lastart);
+        } while (g_art <= g_last_art);
     }
     else
     {
@@ -349,23 +349,23 @@ void ng_skip()
 
 /* find the maximum article number of a newsgroup */
 
-ArticleNum getngsize(NewsgroupData *gp)
+ArticleNum get_newsgroup_size(NewsgroupData *gp)
 {
     char tmpbuf[LBUFLEN];
     long last;
     long first;
     char ch;
 
-    char *nam = gp->rcline;
-    int   len = gp->numoffset - 1;
+    char *nam = gp->rc_line;
+    int   len = gp->num_offset - 1;
 
-    if (!find_active_group(gp->rc->datasrc, tmpbuf, nam, len, gp->ngmax))
+    if (!find_active_group(gp->rc->datasrc, tmpbuf, nam, len, gp->ng_max))
     {
-        if (gp->subscribechar == ':')
+        if (gp->subscribe_char == ':')
         {
-            gp->subscribechar = NEGCHAR;
+            gp->subscribe_char = NEGCHAR;
             gp->rc->flags |= RF_RCCHANGED;
-            g_newsgroup_toread--;
+            g_newsgroup_to_read--;
         }
         return TR_BOGUS;
     }
@@ -376,9 +376,9 @@ ArticleNum getngsize(NewsgroupData *gp)
 #else
     std::sscanf(tmpbuf+len+1, "%ld %ld %c", &last, &first, &ch);
 #endif
-    if (!gp->abs1st)
+    if (!gp->abs_first)
     {
-        gp->abs1st = (ArticleNum) first;
+        gp->abs_first = (ArticleNum) first;
     }
     if (!g_in_ng)
     {
@@ -419,9 +419,9 @@ ArticleNum getngsize(NewsgroupData *gp)
             break;
         }
     }
-    if (last <= gp->ngmax)
+    if (last <= gp->ng_max)
     {
-        return gp->ngmax;
+        return gp->ng_max;
     }
-    return gp->ngmax = (ArticleNum)last;
+    return gp->ng_max = (ArticleNum)last;
 }

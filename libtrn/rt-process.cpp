@@ -33,7 +33,7 @@ Article *allocate_article(ArticleNum artnum)
     Article* article;
 
     /* create an new article */
-    if (artnum >= g_absfirst)
+    if (artnum >= g_abs_first)
     {
         article = article_ptr(artnum);
     }

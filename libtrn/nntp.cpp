@@ -145,12 +145,12 @@ int nntp_group(const char *group, NewsgroupData *gp)
         /* NNTP mangles the high/low values when no articles are present. */
         if (!count)
         {
-            gp->abs1st = gp->ngmax + 1;
+            gp->abs_first = gp->ng_max + 1;
         }
         else
         {
-            gp->abs1st = (ArticleNum)first;
-            gp->ngmax = (ArticleNum)last;
+            gp->abs_first = (ArticleNum)first;
+            gp->ng_max = (ArticleNum)last;
         }
     }
     return 1;
@@ -551,7 +551,7 @@ ArticleNum nntp_find_real_art(ArticleNum after)
 {
     ArticleNum an;
 
-    if (g_last_cached > after || g_last_cached < g_absfirst //
+    if (g_last_cached > after || g_last_cached < g_abs_first //
         || nntp_stat(g_last_cached) <= 0)
     {
         if (nntp_stat_id("") > after)

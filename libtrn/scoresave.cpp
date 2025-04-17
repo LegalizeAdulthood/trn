@@ -285,7 +285,7 @@ ArticleNum sc_sv_make_line(ArticleNum a)
     *s++ = '.';
     int lastscore = 0;
 
-    for (ArticleNum art = article_first(a); art <= g_lastart && num_output < 50; art = article_next(art))
+    for (ArticleNum art = article_first(a); art <= g_last_art && num_output < 50; art = article_next(art))
     {
         if (article_unread(art) && article_scored(art))
         {
@@ -309,7 +309,7 @@ ArticleNum sc_sv_make_line(ArticleNum a)
             if (score == lastscore && lastscore_valid)
             {
                 art = article_next(art);
-                for (i = 1; art <= g_lastart && article_unread(art) && article_scored(art)
+                for (i = 1; art <= g_last_art && article_unread(art) && article_scored(art)
                          && article_ptr(art)->score == score; i++)
                 {
                     art = article_next(art);
@@ -440,14 +440,14 @@ void sc_load_scores()
     } /* while */
 
     g_sc_loaded_count = s_loaded;
-    a = g_firstart;
+    a = g_first_art;
     if (g_sa_mode_read_elig)
     {
-        a = g_absfirst;
+        a = g_abs_first;
     }
     int total = 0;
     int scored = 0;
-    for (ArticleNum art = article_first(a); art <= g_lastart; art = article_next(art))
+    for (ArticleNum art = article_first(a); art <= g_last_art; art = article_next(art))
     {
         if (!article_exists(art))
         {
@@ -498,11 +498,11 @@ void sc_save_scores()
     std::sprintf(s_lbuf2,"!%s",gname);       /* add the header */
     sc_sv_add(s_lbuf2);
 
-    ArticleNum a = g_firstart;
+    ArticleNum a = g_first_art;
     std::sprintf(s_lbuf2,":%ld",a);
     sc_sv_add(s_lbuf2);
     s_last = a-1;
-    while (a <= g_lastart)
+    while (a <= g_last_art)
     {
         a = sc_sv_make_line(a);
     }

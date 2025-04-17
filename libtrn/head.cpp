@@ -401,7 +401,7 @@ bool parse_header(ArticleNum art_num)
     {
         return true;
     }
-    if (art_num > g_lastart)
+    if (art_num > g_last_art)
     {
         return false;
     }
@@ -637,7 +637,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
         if (cached != 0)
         {
             lastnum = art_num + PREFETCH_SIZE - 1;
-            lastnum = std::min(lastnum, g_lastart);
+            lastnum = std::min(lastnum, g_last_art);
             status = nntp_xhdr(which_line, art_num, lastnum);
         }
         else

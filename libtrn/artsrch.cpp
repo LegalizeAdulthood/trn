@@ -398,27 +398,27 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
     {
         ignorethru = 1;
     }
-    srchfirst = doread || g_sel_rereading? g_absfirst
-                      : (g_mode != MM_PROCESSING_KILL || ignorethru > 0)? g_firstart : g_kill_first;
+    srchfirst = doread || g_sel_rereading? g_abs_first
+                      : (g_mode != MM_PROCESSING_KILL || ignorethru > 0)? g_first_art : g_kill_first;
     if (topstart || g_art == 0)
     {
-        g_art = g_lastart+1;
+        g_art = g_last_art+1;
         topstart = false;
     }
     if (backward)
     {
-        if (cmdlst && g_art <= g_lastart)
+        if (cmdlst && g_art <= g_last_art)
         {
             g_art++;                    /* include current article */
         }
     }
     else
     {
-        if (g_art > g_lastart)
+        if (g_art > g_last_art)
         {
             g_art = srchfirst - 1;
         }
-        else if (cmdlst && g_art >= g_absfirst)
+        else if (cmdlst && g_art >= g_abs_first)
         {
             g_art--;                    /* include current article */
         }
@@ -432,12 +432,12 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         g_search_ahead = -1;
     }
     TRN_ASSERT(!cmdlst || *cmdlst);
-    perform_status_init(g_ngptr->toread);
+    perform_status_init(g_newsgroup_ptr->to_read);
     while (true)
     {
         /* check if we're out of articles */
         if (backward? ((g_art = article_prev(g_art)) < srchfirst)
-                    : ((g_art = article_next(g_art)) > g_lastart))
+                    : ((g_art = article_next(g_art)) > g_last_art))
         {
             break;
         }
@@ -471,7 +471,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         }
         if (!output_level && g_page_line == 1)
         {
-            perform_status(g_ngptr->toread, 60 / (howmuch + 1));
+            perform_status(g_newsgroup_ptr->to_read, 60 / (howmuch + 1));
         }
     }
 exit:

@@ -33,7 +33,7 @@ static bool s_sa_context_init{}; /* has context been initialized? */
 void sa_init()
 {
     sa_init_context();
-    if (g_lastart == 0 || g_absfirst > g_lastart)
+    if (g_last_art == 0 || g_abs_first > g_last_art)
     {
         return;         /* no articles */
     }
@@ -44,7 +44,7 @@ void sa_init()
     sa_initmode();                      /*      mode differences */
     sa_init_threads();
     g_sa_mode_read_elig = false;
-    if (g_firstart > g_lastart)         /* none unread */
+    if (g_first_art > g_last_art)         /* none unread */
     {
         g_sa_mode_read_elig = true;     /* unread+read in some situations */
     }
@@ -56,7 +56,7 @@ void sa_init()
     if (g_sa_mode_read_elig)
     {
         g_sc_fill_read = true;
-        g_sc_fill_max = g_absfirst - 1;
+        g_sc_fill_max = g_abs_first - 1;
     }
 #endif
     s_save_context();
@@ -146,7 +146,7 @@ bool sa_initarts()
 {
     sa_init_ents();
     /* add all available articles to entry list */
-    for (int a = article_first(g_absfirst); a <= g_lastart; a = article_next(a))
+    for (int a = article_first(g_abs_first); a <= g_last_art; a = article_next(a))
     {
         if (article_exists(a))
         {

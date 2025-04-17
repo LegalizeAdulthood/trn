@@ -22,7 +22,7 @@
 
 inline int check_article(long a)
 {
-    return a >= g_absfirst && a <= g_lastart;
+    return a >= g_abs_first && a <= g_last_art;
 }
 
 /* ignoring "Fold" (or later recursive) mode(s), is this article eligible? */

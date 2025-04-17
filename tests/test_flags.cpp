@@ -217,7 +217,7 @@ static AddGroupNewsgroupFlag newsgroup_equivs[] =
     { AGF_NONE, NF_NONE },
     { AGF_DEL, NF_DEL },
     { AGF_SEL, NF_SEL },
-    { AGF_DEL_SEL, NF_DELSEL }
+    { AGF_DEL_SEL, NF_DEL_SEL }
     // clang-format on
 };
 

@@ -552,7 +552,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
         }
         else if (fields[OV_XREF])
         {
-            for (ArticleNum an = article_first(g_absfirst); an < artnum; an = article_next(an))
+            for (ArticleNum an = article_first(g_abs_first); an < artnum; an = article_next(an))
             {
                 Article *ap = article_ptr(an);
                 if (!ap->xrefs)

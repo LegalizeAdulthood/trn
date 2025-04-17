@@ -188,7 +188,7 @@ NumNumResult numnum()
     {
         return NN_INP;
     }
-    if (g_lastart < 1)
+    if (g_last_art < 1)
     {
         errormsg("No articles");
         return NN_ASK;
@@ -198,7 +198,7 @@ NumNumResult numnum()
         g_search_ahead = -1;
     }
 
-    perform_status_init(g_ngptr->toread);
+    perform_status_init(g_newsgroup_ptr->to_read);
 
     for (s=g_buf; *s && (std::isdigit(*s) || std::strchr(" ,-.$",*s)); s++)
     {
@@ -235,10 +235,10 @@ NumNumResult numnum()
         {
             min = std::atol(t);
         }
-        if (min < g_absfirst)
+        if (min < g_abs_first)
         {
-            min = g_absfirst;
-            std::sprintf(g_msg,"(First article is %ld)",(long)g_absfirst);
+            min = g_abs_first;
+            std::sprintf(g_msg,"(First article is %ld)",(long)g_abs_first);
             warnmsg(g_msg);
         }
         if ((t = std::strchr(t, '-')) != nullptr)
@@ -246,7 +246,7 @@ NumNumResult numnum()
             t++;
             if (*t == '$')
             {
-                max = g_lastart;
+                max = g_last_art;
             }
             else if (*t == '.')
             {
@@ -261,11 +261,11 @@ NumNumResult numnum()
         {
             max = min;
         }
-        if (max > g_lastart)
+        if (max > g_last_art)
         {
-            max = g_lastart;
+            max = g_last_art;
             min = std::min(min, max);
-            std::sprintf(g_msg,"(Last article is %ld)",(long)g_lastart);
+            std::sprintf(g_msg,"(Last article is %ld)",(long)g_last_art);
             warnmsg(g_msg);
         }
         if (max < min)
@@ -304,7 +304,7 @@ NumNumResult numnum()
             }
             if (!output_level)
             {
-                perform_status(g_ngptr->toread, 50);
+                perform_status(g_newsgroup_ptr->to_read, 50);
             }
         }
     }
@@ -354,7 +354,7 @@ int thread_perform()
     char *cmdstr = savestr(g_buf + len);
     bool  want_unread = !g_sel_rereading && *cmdstr != 'm';
 
-    perform_status_init(g_ngptr->toread);
+    perform_status_init(g_newsgroup_ptr->to_read);
     len = std::strlen(cmdstr);
 
     if (!output_level && !one_thread)
@@ -412,7 +412,7 @@ int thread_perform()
     else if (*cmdstr == 'p')
     {
         ArticleNum oldart = g_art;
-        g_art = g_lastart+1;
+        g_art = g_last_art+1;
         followup();
         g_force_grow = true;
         g_art = oldart;
@@ -446,7 +446,7 @@ int thread_perform()
                 }
                 if (!output_level)
                 {
-                    perform_status(g_ngptr->toread, 50);
+                    perform_status(g_newsgroup_ptr->to_read, 50);
                 }
             }
         }
@@ -482,7 +482,7 @@ int thread_perform()
                 }
                 if (!output_level)
                 {
-                    perform_status(g_ngptr->toread, 50);
+                    perform_status(g_newsgroup_ptr->to_read, 50);
                 }
             }
         }
@@ -787,7 +787,7 @@ int ngsel_perform()
     }
     if (g_buf[len] == '.')
     {
-        if (!g_ngptr)
+        if (!g_newsgroup_ptr)
         {
             return -1;
         }
@@ -796,7 +796,7 @@ int ngsel_perform()
     }
     char *cmdstr = savestr(g_buf + len);
 
-    perform_status_init(g_newsgroup_toread);
+    perform_status_init(g_newsgroup_to_read);
     len = std::strlen(cmdstr);
 
     if (one_group)
@@ -805,23 +805,23 @@ int ngsel_perform()
         goto break_out;
     }
 
-    for (g_ngptr = g_first_ng; g_ngptr; g_ngptr = g_ngptr->next)
+    for (g_newsgroup_ptr = g_first_newsgroup; g_newsgroup_ptr; g_newsgroup_ptr = g_newsgroup_ptr->next)
     {
-        if (g_sel_rereading? g_ngptr->toread != TR_NONE
-                         : g_ngptr->toread < g_ng_min_toread)
+        if (g_sel_rereading? g_newsgroup_ptr->to_read != TR_NONE
+                         : g_newsgroup_ptr->to_read < g_newsgroup_min_to_read)
         {
             continue;
         }
-        set_ng(g_ngptr);
-        if ((g_ngptr->flags & bits) == bits //
-            && (!(g_ngptr->flags & static_cast<NewsgroupFlags>(g_sel_mask)) ^ !!bits))
+        set_newsgroup(g_newsgroup_ptr);
+        if ((g_newsgroup_ptr->flags & bits) == bits //
+            && (!(g_newsgroup_ptr->flags & static_cast<NewsgroupFlags>(g_sel_mask)) ^ !!bits))
         {
             if (ng_perform(cmdstr, 0) < 0)
             {
                 break;
             }
         }
-        perform_status(g_newsgroup_toread, 50);
+        perform_status(g_newsgroup_to_read, 50);
     }
 
   break_out:
@@ -849,25 +849,25 @@ int ng_perform(char *cmdlst, int output_level)
         switch (ch)
         {
         case '+':
-            if (!(g_ngptr->flags & static_cast<NewsgroupFlags>(g_sel_mask)))
+            if (!(g_newsgroup_ptr->flags & static_cast<NewsgroupFlags>(g_sel_mask)))
             {
-                g_ngptr->flags = ((g_ngptr->flags | static_cast<NewsgroupFlags>(g_sel_mask)) & ~NF_DEL);
+                g_newsgroup_ptr->flags = ((g_newsgroup_ptr->flags | static_cast<NewsgroupFlags>(g_sel_mask)) & ~NF_DEL);
                 g_selected_count++;
             }
             break;
 
         case 'c':
-            catch_up(g_ngptr, 0, 0);
+            catch_up(g_newsgroup_ptr, 0, 0);
             /* FALL THROUGH */
 
         case '-':
           deselect:
-            if (g_ngptr->flags & static_cast<NewsgroupFlags>(g_sel_mask))
+            if (g_newsgroup_ptr->flags & static_cast<NewsgroupFlags>(g_sel_mask))
             {
-                g_ngptr->flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
+                g_newsgroup_ptr->flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
                 if (g_sel_rereading)
                 {
-                    g_ngptr->flags |= NF_DEL;
+                    g_newsgroup_ptr->flags |= NF_DEL;
                 }
                 g_selected_count--;
             }
@@ -876,14 +876,14 @@ int ng_perform(char *cmdlst, int output_level)
         case 'u':
             if (output_level && g_verbose)
             {
-                std::printf(g_unsubto,g_ngptr->rcline);
+                std::printf(g_unsubto,g_newsgroup_ptr->rc_line);
                 termdown(1);
             }
-            g_ngptr->subscribechar = NEGCHAR;
-            g_ngptr->toread = TR_UNSUB;
-            g_ngptr->rc->flags |= RF_RCCHANGED;
-            g_ngptr->flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
-            g_newsgroup_toread--;
+            g_newsgroup_ptr->subscribe_char = NEGCHAR;
+            g_newsgroup_ptr->to_read = TR_UNSUB;
+            g_newsgroup_ptr->rc->flags |= RF_RCCHANGED;
+            g_newsgroup_ptr->flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
+            g_newsgroup_to_read--;
             goto deselect;
 
         default:
@@ -946,7 +946,7 @@ int addgrp_sel_perform()
     }
     char *cmdstr = savestr(g_buf + len);
 
-    perform_status_init(g_newsgroup_toread);
+    perform_status_init(g_newsgroup_to_read);
     len = std::strlen(cmdstr);
 
     if (one_group)
@@ -963,7 +963,7 @@ int addgrp_sel_perform()
                 break;
             }
         }
-        perform_status(g_newsgroup_toread, 50);
+        perform_status(g_newsgroup_to_read, 50);
     }
 
   break_out:

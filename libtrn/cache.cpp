@@ -77,7 +77,7 @@ static std::time_t s_cached_time{};
 
 void build_cache()
 {
-    if (s_cached_ng == g_ngptr && std::time(nullptr) < s_cached_time + 6 * 60 * 60L)
+    if (s_cached_ng == g_newsgroup_ptr && std::time(nullptr) < s_cached_time + 6 * 60 * 60L)
     {
         s_cached_time = std::time(nullptr);
         if (g_sel_mode == SM_ARTICLE)
@@ -88,31 +88,31 @@ void build_cache()
         {
             set_selector(g_sel_threadmode, g_sel_threadsort);
         }
-        for (ArticleNum an = g_last_cached + 1; an <= g_lastart; an++)
+        for (ArticleNum an = g_last_cached + 1; an <= g_last_art; an++)
         {
             article_ptr(an)->flags |= AF_EXISTS;
         }
         rc_to_bits();
-        g_article_list->high = g_lastart;
+        g_article_list->high = g_last_art;
         thread_grow();
         return;
     }
 
     close_cache();
 
-    s_cached_ng = g_ngptr;
+    s_cached_ng = g_newsgroup_ptr;
     s_cached_time = std::time(nullptr);
-    g_article_list = new_list(g_absfirst, g_lastart, sizeof (Article), 371,
+    g_article_list = new_list(g_abs_first, g_last_art, sizeof (Article), 371,
                               LF_SPARSE, init_artnode);
     s_subj_hash = hash_create(991, subject_cmp); /*TODO: pick a better size */
 
-    set_first_art(g_ngptr->rcline + g_ngptr->numoffset);
-    g_first_cached = g_thread_always? g_absfirst : g_firstart;
+    set_first_art(g_newsgroup_ptr->rc_line + g_newsgroup_ptr->num_offset);
+    g_first_cached = g_thread_always? g_abs_first : g_first_art;
     g_last_cached = g_first_cached-1;
     g_cached_all_in_range = false;
 #ifdef PENDING
-    s_subj_to_get = g_firstart;
-    s_xref_to_get = g_firstart;
+    s_subj_to_get = g_first_art;
+    s_xref_to_get = g_first_art;
 #endif
 
     /* Cache as much data in advance as possible, possibly threading
@@ -880,7 +880,7 @@ void look_ahead()
     else
 #endif /* ARTSEARCH */
     {
-        if (article_next(g_art) <= g_lastart)   /* how about a pre-fetch? */
+        if (article_next(g_art) <= g_last_art)   /* how about a pre-fetch? */
         {
             parse_header(article_next(g_art));   /* look for the next article */
         }
@@ -964,12 +964,12 @@ bool cache_subjects()
 {
     ArticleNum an;
 
-    if (s_subj_to_get > g_lastart)
+    if (s_subj_to_get > g_last_art)
     {
         return true;
     }
     setspin(SPIN_BACKGROUND);
-    for (an = article_first(s_subj_to_get); an <= g_lastart; an = article_next(an))
+    for (an = article_first(s_subj_to_get); an <= g_last_art; an = article_next(an))
     {
         if (input_pending())
         {
@@ -982,19 +982,19 @@ bool cache_subjects()
         }
     }
     s_subj_to_get = an;
-    return s_subj_to_get > g_lastart;
+    return s_subj_to_get > g_last_art;
 }
 
 bool cache_xrefs()
 {
     ArticleNum an;
 
-    if (g_olden_days || (g_data_source->flags & DF_NO_XREFS) || s_xref_to_get > g_lastart)
+    if (g_olden_days || (g_data_source->flags & DF_NO_XREFS) || s_xref_to_get > g_last_art)
     {
         return true;
     }
     setspin(SPIN_BACKGROUND);
-    for (an = article_first(s_xref_to_get); an <= g_lastart; an = article_next(an))
+    for (an = article_first(s_xref_to_get); an <= g_last_art; an = article_next(an))
     {
         if (input_pending())
         {
@@ -1006,7 +1006,7 @@ bool cache_xrefs()
         }
     }
     s_xref_to_get = an;
-    return s_xref_to_get > g_lastart;
+    return s_xref_to_get > g_last_art;
 }
 
 bool cache_all_arts()
@@ -1016,38 +1016,38 @@ bool cache_all_arts()
     {
         g_last_cached = g_first_cached - 1;
     }
-    if (g_last_cached >= g_lastart && g_first_cached <= g_absfirst)
+    if (g_last_cached >= g_last_art && g_first_cached <= g_abs_first)
     {
         return true;
     }
 
     /* turn it on as late as possible to avoid fseek()ing openart */
     setspin(SPIN_BACKGROUND);
-    if (g_last_cached < g_lastart)
+    if (g_last_cached < g_last_art)
     {
         if (g_data_source->ov_opened)
         {
-            ov_data(g_last_cached + 1, g_lastart, true);
+            ov_data(g_last_cached + 1, g_last_art, true);
         }
-        if (!art_data(g_last_cached + 1, g_lastart, true, true))
+        if (!art_data(g_last_cached + 1, g_last_art, true, true))
         {
             g_last_cached = old_last_cached;
             return false;
         }
         g_cached_all_in_range = true;
     }
-    if (g_first_cached > g_absfirst)
+    if (g_first_cached > g_abs_first)
     {
         if (g_data_source->ov_opened)
         {
-            ov_data(g_absfirst, g_first_cached - 1, true);
+            ov_data(g_abs_first, g_first_cached - 1, true);
         }
         else
         {
-            art_data(g_absfirst, g_first_cached - 1, true, true);
+            art_data(g_abs_first, g_first_cached - 1, true, true);
         }
         /* If we got interrupted, make a quick exit */
-        if (g_first_cached > g_absfirst)
+        if (g_first_cached > g_abs_first)
         {
             g_last_cached = old_last_cached;
             return false;
@@ -1069,12 +1069,12 @@ bool cache_all_arts()
 
 bool cache_unread_arts()
 {
-    if (g_last_cached >= g_lastart)
+    if (g_last_cached >= g_last_art)
     {
         return true;
     }
     setspin(SPIN_BACKGROUND);
-    return art_data(g_last_cached+1, g_lastart, true, false);
+    return art_data(g_last_cached+1, g_last_art, true, false);
 }
 #endif
 
@@ -1171,12 +1171,12 @@ bool cache_range(ArticleNum first, ArticleNum last)
         {
             if (g_first_subject)
             {
-                count -= g_ngptr->toread;
+                count -= g_newsgroup_ptr->to_read;
             }
         }
-        else if (first == g_firstart && last == g_lastart && !all_arts)
+        else if (first == g_first_art && last == g_last_art && !all_arts)
         {
-            count = g_ngptr->toread;
+            count = g_newsgroup_ptr->to_read;
         }
     }
     g_spin_estimate = count;
@@ -1191,8 +1191,8 @@ bool cache_range(ArticleNum first, ArticleNum last)
     {
         if (g_data_source->ov_opened)
         {
-            ov_data(g_absfirst,g_first_cached-1,false);
-            success = (g_first_cached == g_absfirst);
+            ov_data(g_abs_first,g_first_cached-1,false);
+            success = (g_first_cached == g_abs_first);
         }
         else
         {

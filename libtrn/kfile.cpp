@@ -155,8 +155,8 @@ int do_kill_file(std::FILE *kfp, int entering)
     char* cp;
     char* bp;
 
-    g_art = g_lastart+1;
-    g_kill_first = g_firstart;
+    g_art = g_last_art+1;
+    g_kill_first = g_first_art;
     std::fseek(kfp,0L,0);                    /* rewind file */
     while (std::fgets(g_buf, LBUFLEN, kfp) != nullptr)
     {
@@ -167,17 +167,17 @@ int do_kill_file(std::FILE *kfp, int entering)
         bp = skip_space(g_buf);
         if (!std::strncmp(bp, "THRU", 4))
         {
-            int len = std::strlen(g_ngptr->rc->name);
+            int len = std::strlen(g_newsgroup_ptr->rc->name);
             cp = skip_space(bp + 4);
-            if (std::strncmp(cp, g_ngptr->rc->name, len) != 0 || !std::isspace(cp[len]))
+            if (std::strncmp(cp, g_newsgroup_ptr->rc->name, len) != 0 || !std::isspace(cp[len]))
             {
                 continue;
             }
             g_kill_first = std::atol(cp+len+1)+1;
-            g_kill_first = std::max(g_kill_first, g_firstart);
-            if (g_kill_first > g_lastart)
+            g_kill_first = std::max(g_kill_first, g_first_art);
+            if (g_kill_first > g_last_art)
             {
-                g_kill_first = g_lastart + 1;
+                g_kill_first = g_last_art + 1;
             }
             continue;
         }
@@ -194,7 +194,7 @@ int do_kill_file(std::FILE *kfp, int entering)
             {
                 set_ngname(cp);
                 cp = filexp(get_val_const("KILLLOCAL",s_killlocal));
-                set_ngname(g_ngptr->rcline);
+                set_ngname(g_newsgroup_ptr->rc_line);
             }
             std::FILE *incfile = std::fopen(cp, "r");
             if (incfile != nullptr)
@@ -234,13 +234,13 @@ int do_kill_file(std::FILE *kfp, int entering)
         else if (*bp == '/')
         {
             g_kf_state |= KFS_NORMAL_LINES;
-            if (g_firstart > g_lastart)
+            if (g_first_art > g_last_art)
             {
                 continue;
             }
             if (last_kill_type)
             {
-                if (perform_status_end(g_ngptr->toread, "article"))
+                if (perform_status_end(g_newsgroup_ptr->to_read, "article"))
                 {
                     s_kill_mentioned = true;
                     carriage_return();
@@ -248,7 +248,7 @@ int do_kill_file(std::FILE *kfp, int entering)
                     newline();
                 }
             }
-            perform_status_init(g_ngptr->toread);
+            perform_status_init(g_newsgroup_ptr->to_read);
             last_kill_type = '/';
             mention(bp);
             s_kill_mentioned = true;
@@ -294,7 +294,7 @@ int do_kill_file(std::FILE *kfp, int entering)
             {
                 if (last_kill_type)
                 {
-                    if (perform_status_end(g_ngptr->toread, "article"))
+                    if (perform_status_end(g_newsgroup_ptr->to_read, "article"))
                     {
                         s_kill_mentioned = true;
                         carriage_return();
@@ -302,7 +302,7 @@ int do_kill_file(std::FILE *kfp, int entering)
                         newline();
                     }
                 }
-                perform_status_init(g_ngptr->toread);
+                perform_status_init(g_newsgroup_ptr->to_read);
                 last_kill_type = '<';
             }
             cp = std::strchr(bp,' ');
@@ -352,7 +352,7 @@ int do_kill_file(std::FILE *kfp, int entering)
                     }
                 }
             }
-            g_art = g_lastart+1;
+            g_art = g_last_art+1;
             g_kf_state |= KFS_THREAD_LINES;
         }
         else if (*bp == '<')
@@ -391,7 +391,7 @@ int do_kill_file(std::FILE *kfp, int entering)
     }
     if (last_kill_type)
     {
-        if (perform_status_end(g_ngptr->toread, "article"))
+        if (perform_status_end(g_newsgroup_ptr->to_read, "article"))
         {
             s_kill_mentioned = true;
             carriage_return();
@@ -424,14 +424,14 @@ void kill_unwanted(ArticleNum starting, const char *message, int entering)
 {
     bool intr = false;                  /* did we get an interrupt? */
     MinorMode oldmode = g_mode;
-    bool anytokill = (g_ngptr->toread > 0);
+    bool anytokill = (g_newsgroup_ptr->to_read > 0);
 
     set_mode(GM_READ,MM_PROCESSING_KILL);
     if ((entering || s_exitcmds) && (g_local_kfp || s_globkfp))
     {
         s_exitcmds = false;
-        ArticleNum oldfirst = g_firstart;
-        g_firstart = starting;
+        ArticleNum oldfirst = g_first_art;
+        g_first_art = starting;
         clear();
         if (message && (g_verbose || entering))
         {
@@ -468,11 +468,11 @@ void kill_unwanted(ArticleNum starting, const char *message, int entering)
         {
             g_force_last = false;        /* allow for having killed it all */
         }
-        g_firstart = oldfirst;
+        g_first_art = oldfirst;
     }
     if (!entering && (g_kf_state & KFS_LOCAL_CHANGES) && !intr)
     {
-        rewrite_kill_file(g_lastart);
+        rewrite_kill_file(g_last_art);
     }
     set_mode(g_general_mode,oldmode);
 }
@@ -521,19 +521,19 @@ void rewrite_kill_file(ArticleNum thru)
     s_newkfp = std::fopen(killname, "w");
     if (s_newkfp != nullptr)
     {
-        std::fprintf(s_newkfp,"THRU %s %ld\n",g_ngptr->rc->name,(long)thru);
+        std::fprintf(s_newkfp,"THRU %s %ld\n",g_newsgroup_ptr->rc->name,(long)thru);
         while (g_local_kfp && std::fgets(g_buf, LBUFLEN, g_local_kfp) != nullptr)
         {
             if (!std::strncmp(g_buf, "THRU", 4))
             {
                 char* cp = g_buf+4;
-                int len = std::strlen(g_ngptr->rc->name);
+                int len = std::strlen(g_newsgroup_ptr->rc->name);
                 cp = skip_space(cp);
                 if (std::isdigit(*cp))
                 {
                     continue;
                 }
-                if (std::strncmp(cp, g_ngptr->rc->name, len) != 0 || (cp[len] && !std::isspace(cp[len])))
+                if (std::strncmp(cp, g_newsgroup_ptr->rc->name, len) != 0 || (cp[len] && !std::isspace(cp[len])))
                 {
                     std::fputs(g_buf,s_newkfp);
                     needs_newline = !std::strchr(g_buf,'\n');
@@ -802,7 +802,7 @@ void edit_kill_file()
     {
         if (g_kf_state & KFS_LOCAL_CHANGES)
         {
-            rewrite_kill_file(g_lastart);
+            rewrite_kill_file(g_last_art);
         }
         if (!(g_kf_state & KFS_GLOBAL_THREAD_FILE))
         {

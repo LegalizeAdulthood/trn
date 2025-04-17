@@ -45,7 +45,7 @@ void sc_init(bool pend_wait)
 {
     int i;
 
-    if (g_lastart == 0 || g_lastart < g_absfirst)
+    if (g_last_art == 0 || g_last_art < g_abs_first)
     {
 #if 0
         std::printf("No articles exist to be scored.\n");
@@ -70,8 +70,8 @@ void sc_init(bool pend_wait)
     g_sc_savescores = true;
 
 /* CONSIDER: (for sc_init callers) is g_lastart properly set yet? */
-    g_sc_fill_max = g_absfirst - 1;
-    g_sc_fill_read = g_sa_mode_read_elig || g_firstart > g_lastart;
+    g_sc_fill_max = g_abs_first - 1;
+    g_sc_fill_read = g_sa_mode_read_elig || g_first_art > g_last_art;
 
     if (g_sf_verbose)
     {
@@ -84,23 +84,23 @@ void sc_init(bool pend_wait)
     if (!s_sc_rescoring)        /* don't load if rescoring */
     {
         sc_load_scores();       /* will be quiet if non-existent */
-        i = g_firstart;
+        i = g_first_art;
         if (g_sc_fill_read)
         {
-            i = g_absfirst;
+            i = g_abs_first;
         }
         if (s_sc_sf_force_init)
         {
-            i = g_lastart+1;    /* skip loop */
+            i = g_last_art+1;    /* skip loop */
         }
-        for (i = article_first(i); i <= g_lastart; i = article_next(i))
+        for (i = article_first(i); i <= g_last_art; i = article_next(i))
         {
             if (!article_scored(i) && (g_sc_fill_read || article_unread(i)))
             {
                 break;
             }
         }
-        if (i == g_lastart)     /* all scored */
+        if (i == g_last_art)     /* all scored */
         {
             s_sc_sf_delay = true;
         }
@@ -116,18 +116,18 @@ void sc_init(bool pend_wait)
     }
 
     s_sc_do_spin = false;
-    for (i = article_last(g_lastart); i >= g_absfirst; i = article_prev(i))
+    for (i = article_last(g_last_art); i >= g_abs_first; i = article_prev(i))
     {
         if (article_scored(i))
         {
             break;
         }
     }
-    if (i < g_absfirst)                         /* none scored yet */
+    if (i < g_abs_first)                         /* none scored yet */
     {
         /* score one article, or give up */
         ArticleNum a;
-        for (a = article_last(g_lastart); a >= g_absfirst; a = article_prev(a))
+        for (a = article_last(g_last_art); a >= g_abs_first; a = article_prev(a))
         {
             sc_score_art(a,true);       /* I want it *now* */
             if (article_scored(a))
@@ -135,7 +135,7 @@ void sc_init(bool pend_wait)
                 break;
             }
         }
-        if (a < g_absfirst)             /* no articles scored */
+        if (a < g_abs_first)             /* no articles scored */
         {
             if (g_sf_verbose)
             {
@@ -151,7 +151,7 @@ void sc_init(bool pend_wait)
     if (!g_sf_num_entries)
     {
         /* score everything really fast */
-        for (ArticleNum art = article_last(g_lastart); art >= g_absfirst; art = article_prev(art))
+        for (ArticleNum art = article_last(g_last_art); art >= g_abs_first; art = article_prev(art))
         {
             sc_score_art(art,true);
         }
@@ -254,7 +254,7 @@ void sc_score_art_basic(ArticleNum a)
 //bool now;     /* if true, sort the scores if necessary... */
 int sc_score_art(ArticleNum a, bool now)
 {
-    if (a < g_absfirst || a > g_lastart)
+    if (a < g_abs_first || a > g_last_art)
     {
 #if 0
          std::printf("\nsc_score_art: illegal article# %d\n",a);
@@ -336,15 +336,15 @@ void sc_lookahead(bool flag, bool nowait)
     }
 #endif
     /* prevent needless looping below */
-    if (g_sc_fill_max < g_firstart && !g_sc_fill_read)
+    if (g_sc_fill_max < g_first_art && !g_sc_fill_read)
     {
-        g_sc_fill_max = article_first(g_firstart)-1;
+        g_sc_fill_max = article_first(g_first_art)-1;
     }
     else
     {
         g_sc_fill_max = article_first(g_sc_fill_max);
     }
-    while (g_sc_fill_max < g_lastart //
+    while (g_sc_fill_max < g_last_art //
 #ifdef PENDING
            && !input_pending()
 #endif
@@ -359,7 +359,7 @@ void sc_lookahead(bool flag, bool nowait)
 #endif
         g_sc_fill_max = article_next(g_sc_fill_max);
         /* skip over some articles quickly */
-        while (g_sc_fill_max < g_lastart
+        while (g_sc_fill_max < g_last_art
          && (article_scored(g_sc_fill_max)
           || (!g_sc_fill_read && !article_unread(g_sc_fill_max))))
         {
@@ -391,18 +391,18 @@ int sc_percent_scored()
     {
         return 0;       /* none scored */
     }
-    if (g_sc_fill_max == g_lastart)
+    if (g_sc_fill_max == g_last_art)
     {
         return 100;
     }
-    ArticleNum i = g_firstart;
+    ArticleNum i = g_first_art;
     if (g_sa_mode_read_elig)
     {
-        i = g_absfirst;
+        i = g_abs_first;
     }
     int total = 0;
     int scored = 0;
-    for (ArticleNum art = article_first(i); art <= g_lastart; art = article_next(art))
+    for (ArticleNum art = article_first(i); art <= g_last_art; art = article_next(art))
     {
         if (!article_exists(art))
         {
@@ -451,7 +451,7 @@ void sc_rescore_arts()
     bool old_spin = s_sc_do_spin;
     setspin(SPIN_FOREGROUND);
     s_sc_do_spin = true;                                /* amuse the user */
-    for (ArticleNum a = article_first(g_absfirst); a <= g_lastart; a = article_next(a))
+    for (ArticleNum a = article_first(g_abs_first); a <= g_last_art; a = article_next(a))
     {
         if (article_exists(a))
         {
@@ -631,7 +631,7 @@ void sc_score_cmd(const char *line)
 //int thresh;           /* kill all articles with this score or lower */
 void sc_kill_threshold(int thresh)
 {
-    for (ArticleNum a = article_first(g_firstart); a <= g_lastart; a = article_next(a))
+    for (ArticleNum a = article_first(g_first_art); a <= g_last_art; a = article_next(a))
     {
         if (article_ptr(a)->score <= thresh &&
             article_unread(a)

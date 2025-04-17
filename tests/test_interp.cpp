@@ -143,7 +143,7 @@ void InterpolatorTest::TearDown()
     g_general_mode = GM_INIT;
     g_mode = MM_INITIALIZING;
     g_dm_count = 0;
-    g_lastart = 0;
+    g_last_art = 0;
     g_art = 0;
     g_in_ng = false;
     g_data_source = nullptr;
@@ -284,7 +284,7 @@ TEST_F(InterpolatorTest, articleNameInsideLocalNewsgroupArticleClosed)
     char pattern[]{"%A"};
     g_in_ng = true;
     g_ngdir = TRN_TEST_NEWSGROUP_SUBDIR;
-    g_lastart = TRN_TEST_ARTICLE_NUM;
+    g_last_art = TRN_TEST_ARTICLE_NUM;
     g_art = TRN_TEST_ARTICLE_NUM;
 
     const char *new_pattern = interpolate(pattern);
@@ -1424,8 +1424,8 @@ void InterpolatorNewsgroupTest::SetUp()
     InterpolatorTest::SetUp();
     g_in_ng = true;
     g_art = TRN_TEST_ARTICLE_NUM;
-    g_lastart = TRN_TEST_NEWSGROUP_HIGH;
-    g_ngptr = g_first_ng;
+    g_last_art = TRN_TEST_NEWSGROUP_HIGH;
+    g_newsgroup_ptr = g_first_newsgroup;
     m_curdir.push(TRN_TEST_NEWSGROUP_DIR);
     build_cache();
 }
@@ -1436,8 +1436,8 @@ void InterpolatorNewsgroupTest::TearDown()
     close_cache();
     g_in_ng = false;
     g_art = -1;
-    g_lastart = -1;
-    g_ngptr = nullptr;
+    g_last_art = -1;
+    g_newsgroup_ptr = nullptr;
     InterpolatorTest::TearDown();
 }
 

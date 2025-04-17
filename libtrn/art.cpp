@@ -140,7 +140,7 @@ DoArticleResult do_article()
     }
     std::sprintf(prompt_buf, g_mousebar_cnt>3? "%%sEnd of art %ld (of %ld) %%s[%%s]"
         : "%%sEnd of article %ld (of %ld) %%s-- what next? [%%s]",
-        (long)g_art,(long)g_lastart);   /* format prompt string */
+        (long)g_art,(long)g_last_art);   /* format prompt string */
     g_prompt = prompt_buf;
     g_int_count = 0;            /* interrupt count is 0 */
     s_firstpage = (g_top_line < 0);
@@ -216,10 +216,10 @@ DoArticleResult do_article()
                 {
                     i = g_selected_count - (unseen && selected);
                     std::sprintf(g_art_line+std::strlen(g_art_line)," (%ld + %ld more)",
-                            (long)i,(long)g_ngptr->toread - g_selected_count
+                            (long)i,(long)g_newsgroup_ptr->to_read - g_selected_count
                                         - (!selected && unseen));
                 }
-                else if ((i = (ArticleNum) (g_ngptr->toread - unseen)) != 0 //
+                else if ((i = (ArticleNum) (g_newsgroup_ptr->to_read - unseen)) != 0 //
                          || (!g_threaded_group && g_dm_count))
                 {
                     std::sprintf(g_art_line+std::strlen(g_art_line),

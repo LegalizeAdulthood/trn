@@ -44,7 +44,7 @@ NewsgroupSearchResult ng_search(char *patbuf, bool get_cmd)
         }
     }
 
-    perform_status_init(g_newsgroup_toread);
+    perform_status_init(g_newsgroup_to_read);
     char const cmdchr = *patbuf;         /* what kind of search? */
     char *s = cpytill(g_buf, patbuf + 1, cmdchr); /* ok to cpy g_buf+1 to g_buf */
     char *pattern;                                /* unparsed pattern */
@@ -127,7 +127,7 @@ NewsgroupSearchResult ng_search(char *patbuf, bool get_cmd)
             }
             if (!output_level && g_page_line == 1)
             {
-                perform_status(g_newsgroup_toread, 50);
+                perform_status(g_newsgroup_to_read, 50);
             }
         } while ((gp = gp->next) != nullptr);
         if (cmdlst)
@@ -138,47 +138,47 @@ NewsgroupSearchResult ng_search(char *patbuf, bool get_cmd)
     }
 
     bool const backward = cmdchr == '?'; /* direction of search */
-    NewsgroupData const *ng_start = g_ngptr;
+    NewsgroupData const *ng_start = g_newsgroup_ptr;
     if (backward)
     {
-        if (!g_ngptr)
+        if (!g_newsgroup_ptr)
         {
-            g_ngptr = g_last_ng;
-            ng_start = g_last_ng;
+            g_newsgroup_ptr = g_last_newsgroup;
+            ng_start = g_last_newsgroup;
         }
         else if (!cmdlst)
         {
-            if (g_ngptr == g_first_ng)  /* skip current newsgroup */
+            if (g_newsgroup_ptr == g_first_newsgroup)  /* skip current newsgroup */
             {
-                g_ngptr = g_last_ng;
+                g_newsgroup_ptr = g_last_newsgroup;
             }
             else
             {
-                g_ngptr = g_ngptr->prev;
+                g_newsgroup_ptr = g_newsgroup_ptr->prev;
             }
         }
     }
     else
     {
-        if (!g_ngptr)
+        if (!g_newsgroup_ptr)
         {
-            g_ngptr = g_first_ng;
-            ng_start = g_first_ng;
+            g_newsgroup_ptr = g_first_newsgroup;
+            ng_start = g_first_newsgroup;
         }
         else if (!cmdlst)
         {
-            if (g_ngptr == g_last_ng)   /* skip current newsgroup */
+            if (g_newsgroup_ptr == g_last_newsgroup)   /* skip current newsgroup */
             {
-                g_ngptr = g_first_ng;
+                g_newsgroup_ptr = g_first_newsgroup;
             }
             else
             {
-                g_ngptr = g_ngptr->next;
+                g_newsgroup_ptr = g_newsgroup_ptr->next;
             }
         }
     }
 
-    if (!g_ngptr)
+    if (!g_newsgroup_ptr)
     {
         return NGS_NOTFOUND;
     }
@@ -192,19 +192,19 @@ NewsgroupSearchResult ng_search(char *patbuf, bool get_cmd)
             break;
         }
 
-        if (g_ngptr->toread >= TR_NONE && ng_wanted(g_ngptr))
+        if (g_newsgroup_ptr->to_read >= TR_NONE && ng_wanted(g_newsgroup_ptr))
         {
-            if (g_ngptr->toread == TR_NONE)
+            if (g_newsgroup_ptr->to_read == TR_NONE)
             {
-                set_toread(g_ngptr, ST_LAX);
+                set_toread(g_newsgroup_ptr, ST_LAX);
             }
-            if (s_ng_doempty || ((g_ngptr->toread > TR_NONE) ^ g_sel_rereading))
+            if (s_ng_doempty || ((g_newsgroup_ptr->to_read > TR_NONE) ^ g_sel_rereading))
             {
                 if (!cmdlst)
                 {
                     return NGS_FOUND;
                 }
-                set_ng(g_ngptr);
+                set_newsgroup(g_newsgroup_ptr);
                 if (ng_perform(cmdlst, output_level && g_page_line == 1) < 0)
                 {
                     std::free(cmdlst);
@@ -213,16 +213,16 @@ NewsgroupSearchResult ng_search(char *patbuf, bool get_cmd)
             }
             if (output_level && !cmdlst)
             {
-                std::printf("\n[0 unread in %s -- skipping]",g_ngptr->rcline);
+                std::printf("\n[0 unread in %s -- skipping]",g_newsgroup_ptr->rc_line);
                 std::fflush(stdout);
             }
         }
         if (!output_level && g_page_line == 1)
         {
-            perform_status(g_newsgroup_toread, 50);
+            perform_status(g_newsgroup_to_read, 50);
         }
-    } while ((g_ngptr = (backward? (g_ngptr->prev? g_ngptr->prev : g_last_ng)
-                               : (g_ngptr->next? g_ngptr->next : g_first_ng)))
+    } while ((g_newsgroup_ptr = (backward? (g_newsgroup_ptr->prev? g_newsgroup_ptr->prev : g_last_newsgroup)
+                               : (g_newsgroup_ptr->next? g_newsgroup_ptr->next : g_first_newsgroup)))
                 != ng_start);
 
     if (cmdlst)
@@ -234,7 +234,7 @@ NewsgroupSearchResult ng_search(char *patbuf, bool get_cmd)
 
 bool ng_wanted(NewsgroupData *np)
 {
-    return execute(&s_ngcompex,np->rcline) != nullptr;
+    return execute(&s_ngcompex,np->rc_line) != nullptr;
 }
 
 const char *ng_comp(CompiledRegex *compex, const char *pattern, bool RE, bool fold)

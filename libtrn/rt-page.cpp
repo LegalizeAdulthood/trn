@@ -81,14 +81,14 @@ bool set_sel_mode(char_int ch)
             g_thread_always = true;
             if (g_sel_rereading)
             {
-                g_firstart = g_absfirst;
+                g_first_art = g_abs_first;
             }
             std::printf("\nThreading the group. ");
             std::fflush(stdout);
             termdown(1);
             thread_open();
             g_thread_always = always_save;
-            if (g_last_cached < g_lastart)
+            if (g_last_cached < g_last_art)
             {
                 g_threaded_group = false;
             }
@@ -422,28 +422,28 @@ try_again:
         sort_newsgroups();
         g_selected_count = 0;
         g_obj_count = 0;
-        for (NewsgroupData *np = g_first_ng; np; np = np->next)
+        for (NewsgroupData *np = g_first_newsgroup; np; np = np->next)
         {
             if (g_sel_page_np == np)
             {
                 g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
             }
             np->flags &= ~NF_INCLUDED;
-            if (np->toread < TR_NONE)
+            if (np->to_read < TR_NONE)
             {
                 continue;
             }
-            if (!inlist(np->rcline))
+            if (!inlist(np->rc_line))
             {
                 continue;
             }
-            if (np->abs1st)
+            if (np->abs_first)
             {
             }
             else if (save_the_rest)
             {
                 s_group_init_done = false;
-                np->toread = !g_sel_rereading;
+                np->to_read = !g_sel_rereading;
             }
             else
             {
@@ -452,20 +452,20 @@ try_again:
                 set_toread(np, ST_LAX);
                 if (!np->rc->datasrc->act_sf.fp)
                 {
-                    save_the_rest = (g_sel_rereading ^ (np->toread > TR_NONE));
+                    save_the_rest = (g_sel_rereading ^ (np->to_read > TR_NONE));
                 }
             }
             if (g_paranoid)
             {
-                g_current_ng = np;
-                g_ngptr = np;
+                g_current_newsgroup = np;
+                g_newsgroup_ptr = np;
                 /* this may move newsgroups around */
                 cleanup_newsrc(np->rc);
                 goto try_again;
             }
             if (!(np->flags & g_sel_mask)
-             && (g_sel_rereading? np->toread != TR_NONE
-                              : np->toread < g_ng_min_toread))
+             && (g_sel_rereading? np->to_read != TR_NONE
+                              : np->to_read < g_newsgroup_min_to_read))
             {
                 continue;
             }
@@ -510,7 +510,7 @@ try_again:
         {
             (void) first_page();
         }
-        else if (g_sel_page_np == g_last_ng)
+        else if (g_sel_page_np == g_last_newsgroup)
         {
             (void) last_page();
         }
@@ -612,13 +612,13 @@ try_again:
                     ui_elig = false;
                     break;
                 }
-                if (!np->abs1st)
+                if (!np->abs_first)
                 {
                     g_toread_quiet = true;
                     set_toread(np, ST_LAX);
                     g_toread_quiet = false;
                 }
-                if (!(g_sel_rereading ^ (np->toread>TR_NONE)))
+                if (!(g_sel_rereading ^ (np->to_read>TR_NONE)))
                 {
                     ui_elig = false;
                 }
@@ -947,7 +947,7 @@ bool first_page()
 
     case SM_NEWSGROUP:
     {
-        for (NewsgroupData *np = g_first_ng; np; np = np->next)
+        for (NewsgroupData *np = g_first_newsgroup; np; np = np->next)
         {
             if (np->flags & NF_INCLUDED)
             {
@@ -1290,7 +1290,7 @@ bool prev_page()
 
         if (!np)
         {
-            np = g_last_ng;
+            np = g_last_newsgroup;
         }
         else
         {
@@ -1872,7 +1872,7 @@ try_again:
       start_of_loop:
         for (np = g_sel_page_np; np; np = np->next)
         {
-            if (np == g_ngptr)
+            if (np == g_newsgroup_ptr)
             {
                 g_sel_item_index = g_sel_page_item_cnt;
             }
@@ -1882,26 +1882,26 @@ try_again:
                 continue;
             }
 
-            if (!np->abs1st)
+            if (!np->abs_first)
             {
                 set_toread(np, ST_LAX);
                 if (g_paranoid)
                 {
                     newline();
-                    g_current_ng = np;
-                    g_ngptr = np;
+                    g_current_newsgroup = np;
+                    g_newsgroup_ptr = np;
                     /* this may move newsgroups around */
                     cleanup_newsrc(np->rc);
                     init_pages(PRESERVE_PAGE);
                     display_page_title(false);
                     goto try_again;
                 }
-                if (g_sel_rereading ? (np->toread != TR_NONE) //
-                                    : (np->toread < g_ng_min_toread))
+                if (g_sel_rereading ? (np->to_read != TR_NONE) //
+                                    : (np->to_read < g_newsgroup_min_to_read))
                 {
                     np->flags &= ~NF_INCLUDED;
                     g_sel_total_obj_cnt--;
-                    g_newsgroup_toread--;
+                    g_newsgroup_to_read--;
                     g_missing_count++;
                     continue;
                 }
@@ -1922,12 +1922,12 @@ try_again:
 
                 maybe_eol();
                 output_sel(g_sel_page_item_cnt, sel, false);
-                std::printf("%5ld ", (long)np->toread);
-                display_group(np->rc->datasrc,np->rcline,np->numoffset-1,max_len);
+                std::printf("%5ld ", (long)np->to_read);
+                display_group(np->rc->datasrc,np->rc_line,np->num_offset-1,max_len);
             }
-            else if (np->numoffset >= max_len)
+            else if (np->num_offset >= max_len)
             {
-                max_len = np->numoffset + 1;
+                max_len = np->num_offset + 1;
             }
             g_sel_page_item_cnt++;
         }
@@ -1949,7 +1949,7 @@ try_again:
         {
             for (; np; np = np->next)
             {
-                if (!np->abs1st)
+                if (!np->abs_first)
                 {
                     break;
                 }
@@ -2631,11 +2631,11 @@ static void display_univ(const UniversalItem *ui)
             else
             {
                 /* XXX set_toread() can print sometimes... */
-                if (!np->abs1st)
+                if (!np->abs_first)
                 {
                     set_toread(np, ST_LAX);
                 }
-                int numarts = np->toread;
+                int numarts = np->to_read;
                 if (numarts >= 0)
                 {
                     std::printf("%5ld ", (long) numarts);

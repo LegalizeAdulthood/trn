@@ -575,7 +575,7 @@ SaveResult save_article()
         }
     }
 s_bomb:
-    chdir_newsdir();
+    chdir_news_dir();
     return SAVE_DONE;
 }
 
@@ -651,7 +651,7 @@ SaveResult view_article()
             termdown(1);
         }
     }
-    chdir_newsdir();
+    chdir_news_dir();
     return SAVE_DONE;
 }
 
@@ -1070,7 +1070,7 @@ void followup()
     bool incl_body = (*g_buf == 'F' && g_art);
     ArticleNum oldart = g_art;
 
-    if (!incl_body && g_art <= g_lastart)
+    if (!incl_body && g_art <= g_last_art)
     {
         termdown(2);
         in_answer("\n\nAre you starting an unrelated topic? [ynq] ", MM_FOLLOWUP_NEW_TOPIC_PROMPT);
@@ -1081,7 +1081,7 @@ void followup()
         }
         if (*g_buf != 'n')
         {
-            g_art = g_lastart + 1;
+            g_art = g_last_art + 1;
         }
     }
     art_open(g_art,(ArticlePosition)0);
@@ -1167,7 +1167,7 @@ int invoke(const char *cmd, const char *dir)
     set_mode(g_general_mode,oldmode);
     if (dir)
     {
-        chdir_newsdir();
+        chdir_news_dir();
     }
     return ret;
 }

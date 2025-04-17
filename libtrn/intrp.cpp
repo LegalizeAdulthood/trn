@@ -1066,7 +1066,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                 case 'u':
                     if (g_in_ng)
                     {
-                        std::sprintf(scrbuf, "%ld", g_ngptr->toread);
+                        std::sprintf(scrbuf, "%ld", g_newsgroup_ptr->to_read);
                         s = scrbuf;
                     }
                     else
@@ -1082,7 +1082,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         s = s_empty;
                         break;
                     }
-                    const bool unseen = g_art <= g_lastart && !was_read(g_art);
+                    const bool unseen = g_art <= g_last_art && !was_read(g_art);
                     if (g_selected_only)
                     {
                         const bool selected = g_curr_artp != nullptr && (g_curr_artp->flags & AF_SEL) != AF_NONE;
@@ -1090,7 +1090,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     }
                     else
                     {
-                        std::sprintf(scrbuf, "%ld", g_ngptr->toread - (unseen ? 1 : 0));
+                        std::sprintf(scrbuf, "%ld", g_newsgroup_ptr->to_read - (unseen ? 1 : 0));
                     }
                     s = scrbuf;
                     break;
@@ -1101,9 +1101,9 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     if (g_in_ng)
                     {
                         const bool selected = g_curr_artp && g_curr_artp->flags & AF_SEL;
-                        const bool unseen = g_art <= g_lastart && !was_read(g_art);
+                        const bool unseen = g_art <= g_last_art && !was_read(g_art);
                         std::sprintf(scrbuf, "%ld",
-                                g_ngptr->toread - g_selected_count - (!selected && unseen ? 1 : 0));
+                                g_newsgroup_ptr->to_read - g_selected_count - (!selected && unseen ? 1 : 0));
                         s = scrbuf;
                     }
                     else

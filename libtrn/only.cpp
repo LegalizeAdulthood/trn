@@ -94,7 +94,7 @@ void end_only()
 #endif
         }
         g_maxngtodo = 0;
-        g_ng_min_toread = 1;
+        g_newsgroup_min_to_read = 1;
     }
 }
 
@@ -106,12 +106,12 @@ void push_only()
 
 void pop_only()
 {
-    ArticleUnread save_ng_min_toread = g_ng_min_toread;
+    ArticleUnread save_ng_min_toread = g_newsgroup_min_to_read;
 
     end_only();
 
     g_maxngtodo = s_save_maxngtodo;
     s_save_maxngtodo = 0;
 
-    g_ng_min_toread = save_ng_min_toread;
+    g_newsgroup_min_to_read = save_ng_min_toread;
 }

@@ -526,21 +526,21 @@ void univ_use_pattern(const char *pattern, int type)
         switch (type)
         {
         case 0:
-            for (np = g_first_ng; np; np = np->next)
+            for (np = g_first_newsgroup; np; np = np->next)
             {
-                if (univ_DoMatch(np->rcline, s))
+                if (univ_DoMatch(np->rc_line, s))
                 {
-                    univ_add_group(np->rcline,np->rcline);
+                    univ_add_group(np->rc_line,np->rc_line);
                 }
             }
             break;
 
         case 1:
-            for (np = g_first_ng; np; np = np->next)
+            for (np = g_first_newsgroup; np; np = np->next)
             {
-                if (univ_DoMatch(np->rcline, s))
+                if (univ_DoMatch(np->rc_line, s))
                 {
-                    univ_add_virtgroup(np->rcline);
+                    univ_add_virtgroup(np->rc_line);
                 }
             }
             break;
@@ -1137,7 +1137,7 @@ static void univ_vg_addart(ArticleNum a)
 static void univ_vg_addgroup()
 {
     /* later: allow was-read articles, etc... */
-    for (ArticleNum a = article_first(g_firstart); a <= g_lastart; a = article_next(a))
+    for (ArticleNum a = article_first(g_first_art); a <= g_last_art; a = article_next(a))
     {
         if (!article_unread(a))
         {
@@ -1163,17 +1163,17 @@ int univ_visit_group_main(const char *gname)
         return NG_ERROR;
     }
     /* unsubscribed, bogus, etc. groups are not visited */
-    if (np->toread <= TR_UNSUB)
+    if (np->to_read <= TR_UNSUB)
     {
       return NG_ERROR;
     }
 
-    set_ng(np);
-    if (np != g_current_ng)
+    set_newsgroup(np);
+    if (np != g_current_newsgroup)
     {
         /* probably unnecessary... */
-        g_recent_ng = g_current_ng;
-        g_current_ng = np;
+        g_recent_newsgroup = g_current_newsgroup;
+        g_current_newsgroup = np;
     }
     bool old_threaded = g_threaded_group;
     g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));

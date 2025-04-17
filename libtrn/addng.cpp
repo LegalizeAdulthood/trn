@@ -82,7 +82,7 @@ void add_ng_init()
 
 bool find_new_groups()
 {
-    NewsgroupNum const oldcnt = g_newsgroup_cnt;      /* remember # newsgroups */
+    NewsgroupNum const oldcnt = g_newsgroup_count;      /* remember # newsgroups */
 
     /* Skip this check if the -q flag was given. */
     if (g_quick_start)
@@ -108,7 +108,7 @@ bool find_new_groups()
 
     process_list(GNG_RELOC);
 
-    return oldcnt != g_newsgroup_cnt;
+    return oldcnt != g_newsgroup_count;
 }
 
 static void process_list(GetNewsgroupFlags flag)
@@ -233,7 +233,7 @@ static void new_nntp_groups(DataSource *dp)
             }
         }
         NewsgroupData *np = find_ng(g_ser_line);
-        if (np != nullptr && np->toread > TR_UNSUB)
+        if (np != nullptr && np->to_read > TR_UNSUB)
         {
             continue;
         }
@@ -377,7 +377,7 @@ static void add_to_list(const char *name, int toread, char_int ch)
 
 bool scan_active(bool add_matching)
 {
-    NewsgroupNum const oldcnt = g_newsgroup_cnt;      /* remember # of newsgroups */
+    NewsgroupNum const oldcnt = g_newsgroup_count;      /* remember # of newsgroups */
 
     if (!add_matching)
     {
@@ -434,10 +434,10 @@ bool scan_active(bool add_matching)
 
     if (g_in_ng)
     {
-        set_data_source(g_ngptr->rc->datasrc);
+        set_data_source(g_newsgroup_ptr->rc->datasrc);
     }
 
-    return oldcnt != g_newsgroup_cnt;
+    return oldcnt != g_newsgroup_count;
 }
 
 static int list_groups(int keylen, HashDatum *data, int add_matching)
@@ -475,7 +475,7 @@ static void scanline(char *actline, bool add_matching)
         return;
     }
     NewsgroupData *np = find_ng(actline);
-    if (np != nullptr && np->toread > TR_UNSUB)
+    if (np != nullptr && np->to_read > TR_UNSUB)
     {
         return;
     }

@@ -68,7 +68,7 @@ SaMainResult sa_main()
     g_sa_go = false;    /* ...do not collect $200... */
     g_s_follow_temp = false;
 
-    if (g_lastart < g_absfirst)
+    if (g_last_art < g_abs_first)
     {
         s_beep();
         return SA_QUIT;

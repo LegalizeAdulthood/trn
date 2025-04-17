@@ -214,7 +214,7 @@ int help_ng()
     {
         return cmd;
     }
-    if (g_ngptr)
+    if (g_newsgroup_ptr)
     {
         if ((cmd = print_lines("\n"
                                "y       Do this newsgroup now.\n"

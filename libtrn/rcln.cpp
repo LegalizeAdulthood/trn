@@ -41,14 +41,14 @@ void catch_up(NewsgroupData *np, int leave_count, int output_level)
             if (g_verbose)
             {
                 std::printf("\nMarking all but %d articles in %s as read.\n",
-                      leave_count,np->rcline);
+                      leave_count,np->rc_line);
             }
             else
             {
                 std::printf("\nAll but %d marked as read.\n", leave_count);
             }
         }
-        checkexpired(np, getngsize(np) - leave_count + 1);
+        checkexpired(np, get_newsgroup_size(np) - leave_count + 1);
         set_toread(np, ST_STRICT);
     }
     else
@@ -57,22 +57,22 @@ void catch_up(NewsgroupData *np, int leave_count, int output_level)
         {
             if (g_verbose)
             {
-                std::printf("\nMarking %s as all read.\n", np->rcline);
+                std::printf("\nMarking %s as all read.\n", np->rc_line);
             }
             else
             {
                 std::fputs("\nMarked read\n", stdout);
             }
         }
-        std::sprintf(tmpbuf,"%s: 1-%ld", np->rcline,(long)getngsize(np));
-        std::free(np->rcline);
-        np->rcline = savestr(tmpbuf);
-        *(np->rcline + np->numoffset - 1) = '\0';
-        if (g_ng_min_toread > TR_NONE && np->toread > TR_NONE)
+        std::sprintf(tmpbuf,"%s: 1-%ld", np->rc_line,(long)get_newsgroup_size(np));
+        std::free(np->rc_line);
+        np->rc_line = savestr(tmpbuf);
+        *(np->rc_line + np->num_offset - 1) = '\0';
+        if (g_newsgroup_min_to_read > TR_NONE && np->to_read > TR_NONE)
         {
-            g_newsgroup_toread--;
+            g_newsgroup_to_read--;
         }
-        np->toread = TR_NONE;
+        np->to_read = TR_NONE;
     }
     np->rc->flags |= RF_RCCHANGED;
     if (!write_newsrcs(g_multirc))
@@ -113,12 +113,12 @@ int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
 #endif
         return 0;
     }
-    if (!np->numoffset)
+    if (!np->num_offset)
     {
         return 0;
     }
 #ifndef ANCIENT_NEWS
-    if (!np->abs1st)
+    if (!np->abs_first)
     {
         /* Trim down the list due to expires if we haven't done so yet. */
         set_toread(np, ST_LAX);
@@ -135,17 +135,17 @@ int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
     }
 #endif
 
-    if (np->toread == TR_BOGUS)
+    if (np->to_read == TR_BOGUS)
     {
         return 0;
     }
-    if (artnum > np->ngmax)
+    if (artnum > np->ng_max)
     {
-        if (np->toread > TR_NONE)
+        if (np->to_read > TR_NONE)
         {
-            np->toread += artnum - np->ngmax;
+            np->to_read += artnum - np->ng_max;
         }
-        np->ngmax = artnum;
+        np->ng_max = artnum;
     }
 #ifdef DEBUG
     if (debug & DEB_XREF_MARKER)
@@ -154,7 +154,7 @@ int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
           np->rcline + np->numoffset);
     }
 #endif
-    s = skip_eq(np->rcline + np->numoffset, ' '); /* skip spaces */
+    s = skip_eq(np->rc_line + np->num_offset, ' '); /* skip spaces */
     t = s;
     while (std::isdigit(*s) && artnum >= (min = std::atol(s)))
     {
@@ -191,17 +191,17 @@ int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
     /* we have not read it, so insert the article number before s */
 
     morenum = std::isdigit(*s);              /* will it need a comma after? */
-    *(np->rcline + np->numoffset - 1) = np->subscribechar;
-    mbuf = safemalloc((MemorySize)(std::strlen(s)+(s - np->rcline)+MAX_DIGITS+2+1));
-    std::strcpy(mbuf,np->rcline);            /* make new rc line */
+    *(np->rc_line + np->num_offset - 1) = np->subscribe_char;
+    mbuf = safemalloc((MemorySize)(std::strlen(s)+(s - np->rc_line)+MAX_DIGITS+2+1));
+    std::strcpy(mbuf,np->rc_line);            /* make new rc line */
     if (maxt && lastnum && artnum == lastnum+1)
                                         /* can we just extend last range? */
     {
-        t = mbuf + (maxt - np->rcline); /* then overwrite previous max */
+        t = mbuf + (maxt - np->rc_line); /* then overwrite previous max */
     }
     else
     {
-        t = mbuf + (t - np->rcline);    /* point t into new line instead */
+        t = mbuf + (t - np->rc_line);    /* point t into new line instead */
         if (lastnum)                    /* have we parsed any line? */
         {
             if (!morenum)               /* are we adding to the tail? */
@@ -253,13 +253,13 @@ int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
         std::printf("%s\n",mbuf);
     }
 #endif
-    std::free(np->rcline);
-    np->rcline = mbuf;          /* pull the switcheroo */
-    *(np->rcline + np->numoffset - 1) = '\0';
+    std::free(np->rc_line);
+    np->rc_line = mbuf;          /* pull the switcheroo */
+    *(np->rc_line + np->num_offset - 1) = '\0';
                                         /* wipe out : or ! */
-    if (np->toread > TR_NONE)   /* lest we turn unsub into bogus */
+    if (np->to_read > TR_NONE)   /* lest we turn unsub into bogus */
     {
-        np->toread--;
+        np->to_read--;
     }
     return 0;
 }
@@ -446,8 +446,8 @@ void set_toread(NewsgroupData *np, bool lax_high_check)
     char*   c;
     char    tmpbuf[64];
     char*   mybuf = tmpbuf;
-    bool    virgin_ng = (!np->abs1st);
-    ArticleNum ngsize = getngsize(np);
+    bool    virgin_ng = (!np->abs_first);
+    ArticleNum ngsize = get_newsgroup_size(np);
     ArticleNum unread = ngsize;
     ArticleNum newmax;
 
@@ -455,26 +455,26 @@ void set_toread(NewsgroupData *np, bool lax_high_check)
     {
         if (!g_toread_quiet)
         {
-            std::printf("\nInvalid (bogus) newsgroup found: %s\n",np->rcline);
+            std::printf("\nInvalid (bogus) newsgroup found: %s\n",np->rc_line);
         }
         g_paranoid = true;
-        if (virgin_ng || np->toread >= g_ng_min_toread)
+        if (virgin_ng || np->to_read >= g_newsgroup_min_to_read)
         {
-            g_newsgroup_toread--;
+            g_newsgroup_to_read--;
             g_missing_count++;
         }
-        np->toread = TR_BOGUS;
+        np->to_read = TR_BOGUS;
         return;
     }
     if (virgin_ng)
     {
         std::sprintf(tmpbuf," 1-%ld",(long)ngsize);
-        if (std::strcmp(tmpbuf,np->rcline+np->numoffset) != 0)
+        if (std::strcmp(tmpbuf,np->rc_line+np->num_offset) != 0)
         {
-            checkexpired(np,np->abs1st);        /* this might realloc rcline */
+            checkexpired(np,np->abs_first);        /* this might realloc rcline */
         }
     }
-    char *nums = np->rcline + np->numoffset;
+    char *nums = np->rc_line + np->num_offset;
     int   length = std::strlen(nums);
     if (length+MAX_DIGITS+1 > sizeof tmpbuf)
     {
@@ -508,7 +508,7 @@ void set_toread(NewsgroupData *np, bool lax_high_check)
                 break;
             }
             unread += newmax - ngsize;
-            np->ngmax = newmax;
+            np->ng_max = newmax;
             ngsize = newmax;
         }
     }
@@ -518,36 +518,36 @@ void set_toread(NewsgroupData *np, bool lax_high_check)
         if (!g_toread_quiet)
         {
             std::printf("\nSomebody reset %s -- assuming nothing read.\n",
-                   np->rcline);
+                   np->rc_line);
         }
-        *(np->rcline + np->numoffset) = '\0';
+        *(np->rc_line + np->num_offset) = '\0';
         g_paranoid = true;          /* enough to make a guy paranoid */
         np->rc->flags |= RF_RCCHANGED;
     }
-    if (np->subscribechar == NEGCHAR)
+    if (np->subscribe_char == NEGCHAR)
     {
         unread = TR_UNSUB;
     }
 
-    if (unread >= g_ng_min_toread)
+    if (unread >= g_newsgroup_min_to_read)
     {
-        if (!virgin_ng && np->toread < g_ng_min_toread)
+        if (!virgin_ng && np->to_read < g_newsgroup_min_to_read)
         {
-            g_newsgroup_toread++;
+            g_newsgroup_to_read++;
         }
     }
     else if (unread <= 0)
     {
-        if (np->toread > g_ng_min_toread)
+        if (np->to_read > g_newsgroup_min_to_read)
         {
-            g_newsgroup_toread--;
+            g_newsgroup_to_read--;
             if (virgin_ng)
             {
                 g_missing_count++;
             }
         }
     }
-    np->toread = (ArticleUnread)unread;    /* remember how many are left */
+    np->to_read = (ArticleUnread)unread;    /* remember how many are left */
 
     if (mybuf != tmpbuf)
     {
@@ -577,7 +577,7 @@ void checkexpired(NewsgroupData *np, ArticleNum a1st)
           np->rcline + np->numoffset);
     }
 #endif
-    s = skip_space(np->rcline + np->numoffset);
+    s = skip_space(np->rc_line + np->num_offset);
     while (*s && (num = std::atol(s)) <= a1st)
     {
         s = skip_digits(s);
@@ -592,24 +592,24 @@ void checkexpired(NewsgroupData *np, ArticleNum a1st)
     {
         if (lastnum != 1)
         {
-            if (3+len <= (int)std::strlen(np->rcline+np->numoffset))
+            if (3+len <= (int)std::strlen(np->rc_line+np->num_offset))
             {
-                mbuf = np->rcline;
+                mbuf = np->rc_line;
             }
             else
             {
-                mbuf = safemalloc((MemorySize)(np->numoffset+3+len+1));
-                std::strcpy(mbuf, np->rcline);
+                mbuf = safemalloc((MemorySize)(np->num_offset+3+len+1));
+                std::strcpy(mbuf, np->rc_line);
             }
-            cp = mbuf + np->numoffset;
+            cp = mbuf + np->num_offset;
             *cp++ = ' ';
             *cp++ = '1';
             *cp++ = '-';
             safecpy(cp, s, len+1);
-            if (np->rcline != mbuf)
+            if (np->rc_line != mbuf)
             {
-                std::free(np->rcline);
-                np->rcline = mbuf;
+                std::free(np->rc_line);
+                np->rc_line = mbuf;
             }
             np->rc->flags |= RF_RCCHANGED;
         }
@@ -622,17 +622,17 @@ void checkexpired(NewsgroupData *np, ArticleNum a1st)
         std::sprintf(numbuf," 1-%ld",(long)(a1st - (lastnum != a1st)));
         int nlen = std::strlen(numbuf) + (len != 0);
 
-        if (s - np->rcline >= np->numoffset + nlen)
+        if (s - np->rc_line >= np->num_offset + nlen)
         {
-            mbuf = np->rcline;
+            mbuf = np->rc_line;
         }
         else
         {
-            mbuf = safemalloc((MemorySize)(np->numoffset+nlen+len+1));
-            std::strcpy(mbuf,np->rcline);
+            mbuf = safemalloc((MemorySize)(np->num_offset+nlen+len+1));
+            std::strcpy(mbuf,np->rc_line);
         }
 
-        cp = mbuf + np->numoffset;
+        cp = mbuf + np->num_offset;
         std::strcpy(cp, numbuf);
         cp += nlen;
 
@@ -645,17 +645,17 @@ void checkexpired(NewsgroupData *np, ArticleNum a1st)
             }
         }
 
-        if (!g_checkflag && np->rcline == mbuf)
+        if (!g_checkflag && np->rc_line == mbuf)
         {
-            np->rcline = saferealloc(np->rcline, (MemorySize) (cp - mbuf + len + 1));
+            np->rc_line = saferealloc(np->rc_line, (MemorySize) (cp - mbuf + len + 1));
         }
         else
         {
             if (!g_checkflag)
             {
-                std::free(np->rcline);
+                std::free(np->rc_line);
             }
-            np->rcline = mbuf;
+            np->rc_line = mbuf;
         }
         np->rc->flags |= RF_RCCHANGED;
     }
@@ -687,7 +687,7 @@ bool was_read_group(DataSource *dp, ArticleNum artnum, char *ngnam)
     {
         return true;
     }
-    if (!np->numoffset)         /* no numbers on line */
+    if (!np->num_offset)         /* no numbers on line */
     {
         return false;
     }
@@ -700,15 +700,15 @@ bool was_read_group(DataSource *dp, ArticleNum artnum, char *ngnam)
     }
 #endif
 
-    if (np->toread == TR_BOGUS)
+    if (np->to_read == TR_BOGUS)
     {
         return true;
     }
-    if (artnum > np->ngmax)
+    if (artnum > np->ng_max)
     {
         return false;           /* probably doesn't exist, however */
     }
-    s = skip_eq(np->rcline + np->numoffset, ' '); /* skip spaces */
+    s = skip_eq(np->rc_line + np->num_offset, ' '); /* skip spaces */
     t = s;
     while (std::isdigit(*s) && artnum >= (min = std::atol(s)))
     {
