@@ -208,19 +208,19 @@ DoNewsgroupResult do_newsgroup(char *start_command)
 
     /* do they want a special top line? */
 
-    g_firstline = get_val("FIRSTLINE",nullptr);
+    g_first_line = get_val("FIRSTLINE",nullptr);
 
     /* custom line suppression, custom page ending */
 
-    g_hideline = get_val_const("HIDELINE", nullptr);
-    if (g_hideline != nullptr)
+    g_hide_line = get_val_const("HIDELINE", nullptr);
+    if (g_hide_line != nullptr)
     {
-        compile(&g_hide_compex, g_hideline, true, true);
+        compile(&g_hide_compex, g_hide_line, true, true);
     }
-    g_pagestop = get_val_const("PAGESTOP", nullptr);
-    if (g_pagestop != nullptr)
+    g_page_stop = get_val_const("PAGESTOP", nullptr);
+    if (g_page_stop != nullptr)
     {
-        compile(&g_page_compex, g_pagestop, true, true);
+        compile(&g_page_compex, g_page_stop, true, true);
     }
 
     /* now read each unread article */
@@ -417,7 +417,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             if (!g_do_fseek)            /* starting at top of article? */
             {
                 g_art_line_num = 0;          /* start at the beginning */
-                g_topline = -1;         /* and remember top line of screen */
+                g_top_line = -1;         /* and remember top line of screen */
                                         /*  (line # within article file) */
             }
             clear();                    /* clear screen */
@@ -1357,7 +1357,7 @@ normal_search:
         case SRCH_FOUND:
             if (cmd == Ctl('n') || cmd == Ctl('p'))
             {
-                g_oldsubject = true;
+                g_old_subject = true;
                 g_reread = false;
             }
             break;
@@ -1587,7 +1587,7 @@ run_the_selector:
             g_reread = true;
             clear();
             g_do_fseek = true;
-            g_art_line_num = g_topline;
+            g_art_line_num = g_top_line;
             g_art_line_num = std::max(g_art_line_num, 0);
         }
         return AS_NORM;
@@ -1615,7 +1615,7 @@ run_the_selector:
             }
             g_reread = true;
             g_do_fseek = true;
-            g_topline = g_art_line_num;
+            g_top_line = g_art_line_num;
             g_inner_light = g_art_line_num - 1;
             g_inner_search = g_art_size;
             g_g_line = 0;
@@ -1634,17 +1634,17 @@ run_the_selector:
             g_do_fseek = true;
             if (*g_buf == 'B')
             {
-                target = g_topline - 1;
+                target = g_top_line - 1;
             }
             else
             {
-                target = g_topline - (g_tc_LINES - 2);
+                target = g_top_line - (g_tc_LINES - 2);
                 if (g_marking && (g_marking_areas & BACKPAGE_MARKING))
                 {
-                    g_highlight = g_topline;
+                    g_highlight = g_top_line;
                 }
             }
-            g_art_line_num = g_topline;
+            g_art_line_num = g_top_line;
             if (g_art_line_num >= 0)
             {
                 do
@@ -1652,7 +1652,7 @@ run_the_selector:
                     g_art_line_num--;
                 } while (g_art_line_num >= 0 && g_art_line_num > target && vrdary(g_art_line_num - 1) >= 0);
             }
-            g_topline = g_art_line_num;
+            g_top_line = g_art_line_num;
             g_art_line_num = std::max(g_art_line_num, 0);
         }
         return AS_NORM;
