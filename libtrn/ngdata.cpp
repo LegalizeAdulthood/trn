@@ -105,7 +105,7 @@ int access_newsgroup()
         g_abs_first = g_newsgroup_ptr->abs_first;
         if (g_abs_first > old_first)
         {
-            checkexpired(g_newsgroup_ptr, g_abs_first);
+            check_expired(g_newsgroup_ptr, g_abs_first);
         }
     }
     else

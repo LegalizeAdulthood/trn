@@ -454,7 +454,7 @@ void find_existing_articles()
 
         if (first > g_abs_first)
         {
-            checkexpired(g_newsgroup_ptr,first);
+            check_expired(g_newsgroup_ptr,first);
             for (g_abs_first = article_first(g_abs_first);
                  g_abs_first < first;
                  g_abs_first = article_next(g_abs_first))
@@ -794,7 +794,7 @@ static int chase_xref(ArticleNum artnum, int markread)
             {
                 if (markread)
                 {
-                    if (addartnum(g_data_source,x,tmpbuf))
+                    if (add_art_num(g_data_source,x,tmpbuf))
                     {
                         break;
                     }
@@ -802,7 +802,7 @@ static int chase_xref(ArticleNum artnum, int markread)
 # ifdef MCHASE
                 else
                 {
-                    subartnum(g_datasrc,x,tmpbuf);
+                    sub_art_num(g_datasrc,x,tmpbuf);
                 }
 # endif
             }

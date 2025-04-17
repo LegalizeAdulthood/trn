@@ -233,7 +233,7 @@ void do_multirc()
                 else
                 {
                     set_ngname(g_last_newsgroup_name.c_str());
-                    set_toread(g_newsgroup_ptr, ST_LAX);
+                    set_to_read(g_newsgroup_ptr, ST_LAX);
                     if (g_newsgroup_ptr->to_read <= TR_NONE)
                     {
                         g_newsgroup_ptr = g_first_newsgroup;
@@ -299,7 +299,7 @@ void do_multirc()
                     shoe_fits = in_list(g_ngname.c_str());
                     if (shoe_fits)
                     {
-                        set_toread(g_newsgroup_ptr, ST_LAX);
+                        set_to_read(g_newsgroup_ptr, ST_LAX);
                     }
                     if (g_paranoid)
                     {
@@ -713,7 +713,7 @@ InputNewsgroupResult input_newsgroup()
             g_newsgroup_ptr->flags ^= NF_UNTHREADED;
             std::printf("\n\n%s will be read %sthreaded.\n",
                    g_newsgroup_ptr->rc_line, read_unthreaded? "un" : "");
-            set_toread(g_newsgroup_ptr, ST_LAX);
+            set_to_read(g_newsgroup_ptr, ST_LAX);
         }
         termdown(3);
         return ING_SPECIAL;

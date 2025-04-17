@@ -713,7 +713,7 @@ static bool open_newsrc(Newsrc *rp)
         }
         else
         {
-            set_toread(np, ST_LAX);
+            set_to_read(np, ST_LAX);
         }
         if (np->to_read > TR_NONE)       /* anything unread? */
         {
@@ -926,7 +926,7 @@ void abandon_ng(NewsgroupData *np)
         np->subscribe_char = ':';
     }
     np->rc->flags |= RF_RCCHANGED;
-    set_toread(np, ST_LAX);
+    set_to_read(np, ST_LAX);
 }
 
 /* try to find or add an explicitly specified newsgroup */
@@ -1180,7 +1180,7 @@ reask_unsub:
 
     /* now calculate how many unread articles in newsgroup */
 
-    set_toread(g_newsgroup_ptr, ST_STRICT);
+    set_to_read(g_newsgroup_ptr, ST_STRICT);
     if (flags & GNG_RELOC)
     {
         if (!relocate_newsgroup(g_newsgroup_ptr,-1))
@@ -1466,7 +1466,7 @@ void list_newsgroups()
     {
         if (np->to_read >= 0)
         {
-            set_toread(np, ST_LAX);
+            set_to_read(np, ST_LAX);
         }
         *(np->rc_line + np->num_offset - 1) = np->subscribe_char;
         if (np->to_read > 0)
@@ -1514,7 +1514,7 @@ void cleanup_newsrc(Newsrc *rp)
 /*#ifdef CHECK_ALL_BOGUS TODO: what is this? */
         if (np->to_read >= TR_UNSUB)
         {
-            set_toread(np, ST_LAX); /* this may reset the group or declare it bogus */
+            set_to_read(np, ST_LAX); /* this may reset the group or declare it bogus */
         }
 /*#endif*/
         if (np->to_read == TR_BOGUS)

@@ -449,7 +449,7 @@ try_again:
             {
                 /*g_ngptr = np; ??*/
                 /*set_ngname(np->rcline);*/
-                set_toread(np, ST_LAX);
+                set_to_read(np, ST_LAX);
                 if (!np->rc->datasrc->act_sf.fp)
                 {
                     save_the_rest = (g_sel_rereading ^ (np->to_read > TR_NONE));
@@ -614,9 +614,9 @@ try_again:
                 }
                 if (!np->abs_first)
                 {
-                    g_toread_quiet = true;
-                    set_toread(np, ST_LAX);
-                    g_toread_quiet = false;
+                    g_to_read_quiet = true;
+                    set_to_read(np, ST_LAX);
+                    g_to_read_quiet = false;
                 }
                 if (!(g_sel_rereading ^ (np->to_read>TR_NONE)))
                 {
@@ -1884,7 +1884,7 @@ try_again:
 
             if (!np->abs_first)
             {
-                set_toread(np, ST_LAX);
+                set_to_read(np, ST_LAX);
                 if (g_paranoid)
                 {
                     newline();
@@ -2633,7 +2633,7 @@ static void display_univ(const UniversalItem *ui)
                 /* XXX set_toread() can print sometimes... */
                 if (!np->abs_first)
                 {
-                    set_toread(np, ST_LAX);
+                    set_to_read(np, ST_LAX);
                 }
                 int numarts = np->to_read;
                 if (numarts >= 0)

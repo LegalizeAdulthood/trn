@@ -196,7 +196,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
         {
             if (g_newsgroup_ptr->to_read == TR_NONE)
             {
-                set_toread(g_newsgroup_ptr, ST_LAX);
+                set_to_read(g_newsgroup_ptr, ST_LAX);
             }
             if (s_ng_doempty || ((g_newsgroup_ptr->to_read > TR_NONE) ^ g_sel_rereading))
             {

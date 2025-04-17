@@ -24,7 +24,7 @@ enum
     MAX_DIGITS = 7
 };
 
-bool g_toread_quiet{};
+bool g_to_read_quiet{};
 
 void rcln_init()
 {
@@ -48,8 +48,8 @@ void catch_up(NewsgroupData *np, int leave_count, int output_level)
                 std::printf("\nAll but %d marked as read.\n", leave_count);
             }
         }
-        checkexpired(np, get_newsgroup_size(np) - leave_count + 1);
-        set_toread(np, ST_STRICT);
+        check_expired(np, get_newsgroup_size(np) - leave_count + 1);
+        set_to_read(np, ST_STRICT);
     }
     else
     {
@@ -83,7 +83,7 @@ void catch_up(NewsgroupData *np, int leave_count, int output_level)
 
 /* add an article number to a newsgroup, if it isn't already read */
 
-int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
+int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
 {
     char*   s;
     char*   t;
@@ -94,11 +94,11 @@ int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
     char*   mbuf;
     bool    morenum;
 
-    if (!artnum)
+    if (!art_num)
     {
         return 0;
     }
-    NewsgroupData *np = find_ng(ngnam);
+    NewsgroupData *np = find_ng(newsgroup_name);
     if (np == nullptr)                  /* not found in newsrc? */
     {
         return 0;
@@ -121,7 +121,7 @@ int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
     if (!np->abs_first)
     {
         /* Trim down the list due to expires if we haven't done so yet. */
-        set_toread(np, ST_LAX);
+        set_to_read(np, ST_LAX);
     }
 #endif
 #if 0
@@ -139,13 +139,13 @@ int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
     {
         return 0;
     }
-    if (artnum > np->ng_max)
+    if (art_num > np->ng_max)
     {
         if (np->to_read > TR_NONE)
         {
-            np->to_read += artnum - np->ng_max;
+            np->to_read += art_num - np->ng_max;
         }
-        np->ng_max = artnum;
+        np->ng_max = art_num;
     }
 #ifdef DEBUG
     if (debug & DEB_XREF_MARKER)
@@ -156,14 +156,14 @@ int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
 #endif
     s = skip_eq(np->rc_line + np->num_offset, ' '); /* skip spaces */
     t = s;
-    while (std::isdigit(*s) && artnum >= (min = std::atol(s)))
+    while (std::isdigit(*s) && art_num >= (min = std::atol(s)))
     {
                                         /* while it might have been read */
         t = skip_digits(s);             /* skip number */
         if (*t == '-')                  /* is it a range? */
         {
             t++;                        /* skip to next number */
-            if (artnum <= (max = std::atol(t)))
+            if (art_num <= (max = std::atol(t)))
             {
                 return 0;               /* it is in range => already read */
             }
@@ -174,7 +174,7 @@ int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
         }
         else
         {
-            if (artnum == min)          /* explicitly a read article? */
+            if (art_num == min)          /* explicitly a read article? */
             {
                 return 0;
             }
@@ -194,7 +194,7 @@ int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
     *(np->rc_line + np->num_offset - 1) = np->subscribe_char;
     mbuf = safemalloc((MemorySize)(std::strlen(s)+(s - np->rc_line)+MAX_DIGITS+2+1));
     std::strcpy(mbuf,np->rc_line);            /* make new rc line */
-    if (maxt && lastnum && artnum == lastnum+1)
+    if (maxt && lastnum && art_num == lastnum+1)
                                         /* can we just extend last range? */
     {
         t = mbuf + (maxt - np->rc_line); /* then overwrite previous max */
@@ -208,7 +208,7 @@ int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
             {
                 *t++ = ',';             /* supply comma before */
             }
-            if (!maxt && artnum == lastnum+1 && *(t-1) == ',')
+            if (!maxt && art_num == lastnum+1 && *(t-1) == ',')
                                         /* adjacent singletons? */
             {
                 *(t-1) = '-';           /* turn them into a range */
@@ -217,7 +217,7 @@ int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
     }
     if (morenum)                        /* is there more to life? */
     {
-        if (min == artnum+1)            /* can we consolidate further? */
+        if (min == art_num+1)            /* can we consolidate further? */
         {
             bool range_before = (*(t-1) == '-');
             char *nextmax = skip_digits(s);
@@ -229,7 +229,7 @@ int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
             }
             else
             {
-                std::sprintf(t,"%ld-",(long)artnum);/* artnum will be new min */
+                std::sprintf(t,"%ld-",(long)art_num);/* artnum will be new min */
             }
 
             if (range_after)
@@ -239,12 +239,12 @@ int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
         }
         else
         {
-            std::sprintf(t,"%ld,",(long)artnum);     /* put the number and comma */
+            std::sprintf(t,"%ld,",(long)art_num);     /* put the number and comma */
         }
     }
     else
     {
-        std::sprintf(t,"%ld",(long)artnum);  /* put the number there (wherever) */
+        std::sprintf(t,"%ld",(long)art_num);  /* put the number there (wherever) */
     }
     std::strcat(t,s);                        /* copy remainder of line */
 #ifdef DEBUG
@@ -267,7 +267,7 @@ int addartnum(DataSource *dp, ArticleNum artnum, const char *ngnam)
 /* delete an article number from a newsgroup, if it is there */
 
 #ifdef MCHASE
-void subartnum(DTASRC *dp, ART_NUM artnum, char *ngnam)
+void sub_art_num(DTASRC *dp, ART_NUM artnum, char *ngnam)
 {
     NGDATA* np;
     char* s;
@@ -441,7 +441,7 @@ void prange(char *where, ART_NUM min, ART_NUM max)
 
 /* calculate the number of unread articles for a newsgroup */
 
-void set_toread(NewsgroupData *np, bool lax_high_check)
+void set_to_read(NewsgroupData *np, bool lax_high_check)
 {
     char*   c;
     char    tmpbuf[64];
@@ -453,7 +453,7 @@ void set_toread(NewsgroupData *np, bool lax_high_check)
 
     if (ngsize == TR_BOGUS)
     {
-        if (!g_toread_quiet)
+        if (!g_to_read_quiet)
         {
             std::printf("\nInvalid (bogus) newsgroup found: %s\n",np->rc_line);
         }
@@ -471,7 +471,7 @@ void set_toread(NewsgroupData *np, bool lax_high_check)
         std::sprintf(tmpbuf," 1-%ld",(long)ngsize);
         if (std::strcmp(tmpbuf,np->rc_line+np->num_offset) != 0)
         {
-            checkexpired(np,np->abs_first);        /* this might realloc rcline */
+            check_expired(np,np->abs_first);        /* this might realloc rcline */
         }
     }
     char *nums = np->rc_line + np->num_offset;
@@ -515,7 +515,7 @@ void set_toread(NewsgroupData *np, bool lax_high_check)
     if (unread < 0)                     /* SOMEONE RESET THE NEWSGROUP!!! */
     {
         unread = (ArticleUnread)ngsize;    /* assume nothing carried over */
-        if (!g_toread_quiet)
+        if (!g_to_read_quiet)
         {
             std::printf("\nSomebody reset %s -- assuming nothing read.\n",
                    np->rc_line);
@@ -557,7 +557,7 @@ void set_toread(NewsgroupData *np, bool lax_high_check)
 
 /* make sure expired articles are marked as read */
 
-void checkexpired(NewsgroupData *np, ArticleNum a1st)
+void check_expired(NewsgroupData *np, ArticleNum a1st)
 {
     char   *s;
     ArticleNum num;
