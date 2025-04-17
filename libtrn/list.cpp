@@ -21,7 +21,7 @@ void list_init()
 */
 List *new_list(long low, long high, int item_size, int items_per_node, ListFlags flags, void (*init_node)(List *, ListNode *))
 {
-    List* list = (List*)safemalloc(sizeof (List));
+    List* list = (List*)safe_malloc(sizeof (List));
     list->first = nullptr;
     list->recent = nullptr;
     list->init_node = init_node? init_node : def_init_node;
@@ -60,7 +60,7 @@ char *list_get_item(List *list, long index)
     {
         if (!node || index < node->low)
         {
-            node = (ListNode*)safemalloc(list->items_per_node*list->item_size
+            node = (ListNode*)safe_malloc(list->items_per_node*list->item_size
                                         + sizeof (ListNode) - 1);
             if (list->flags & LF_SPARSE)
             {

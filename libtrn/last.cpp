@@ -35,7 +35,7 @@ void last_init()
 
 void last_final()
 {
-    safefree0(s_lastfile);
+    safe_free0(s_lastfile);
     g_last_newsgroup_name.clear();
 }
 

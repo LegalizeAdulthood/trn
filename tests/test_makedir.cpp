@@ -51,7 +51,7 @@ TEST_F(TestMakeDir, directoryExists)
 {
     setup_buffer(m_path);
 
-    bool result{makedir(m_buffer, MD_DIR)};
+    bool result{make_dir(m_buffer, MD_DIR)};
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(exists(std::filesystem::path{TEST_MAKEDIR_BASE}));
@@ -63,7 +63,7 @@ TEST_F(TestMakeDir, fileDirectoryExists)
     file /= "file.txt";
     setup_buffer(file);
 
-    bool result{makedir(m_buffer, MD_FILE)};
+    bool result{make_dir(m_buffer, MD_FILE)};
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(std::filesystem::exists(TEST_MAKEDIR_BASE));
@@ -78,7 +78,7 @@ TEST_F(TestMakeDir, createDirectory)
     ASSERT_FALSE(exists(dir));
     setup_buffer(dir);
 
-    bool result{makedir(m_buffer, MD_DIR)};
+    bool result{make_dir(m_buffer, MD_DIR)};
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(exists(dir));
@@ -94,7 +94,7 @@ TEST_F(TestMakeDir, fileCreateDirectory)
     ASSERT_FALSE(exists(file));
     setup_buffer(file);
 
-    bool result{makedir(m_buffer, MD_FILE)};
+    bool result{make_dir(m_buffer, MD_FILE)};
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(exists(dir));
@@ -111,7 +111,7 @@ TEST_F(TestMakeDir, createSubDirectory)
     ASSERT_FALSE(exists(dir));
     setup_buffer(dir);
 
-    bool result{makedir(m_buffer, MD_DIR)};
+    bool result{make_dir(m_buffer, MD_DIR)};
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(exists(dir));
@@ -127,7 +127,7 @@ TEST_F(TestMakeDir, fileCreateSubDirectory)
     ASSERT_FALSE(exists(file));
     setup_buffer(file);
 
-    bool result{makedir(m_buffer, MD_FILE)};
+    bool result{make_dir(m_buffer, MD_FILE)};
 
     EXPECT_FALSE(result);
     EXPECT_TRUE(exists(dir));

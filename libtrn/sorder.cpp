@@ -163,7 +163,7 @@ void s_order_add(long ent)
     if (g_s_ent_sort_max % 100 == 0)    /* be nice to realloc */
     {
         size = (g_s_ent_sort_max+100) * sizeof (long);
-        g_s_ent_sort = (long*)saferealloc((char*)g_s_ent_sort,size);
+        g_s_ent_sort = (long*)safe_realloc((char*)g_s_ent_sort,size);
         /* change the context too */
         g_s_contexts[g_s_cur_context].ent_sort = g_s_ent_sort;
     }
@@ -179,7 +179,7 @@ void s_order_add(long ent)
         }
         g_s_ent_index_max = (ent/100+1) * 100;  /* round up */
         size = (g_s_ent_index_max + 1) * sizeof (long);
-        g_s_ent_index = (long*)saferealloc((char*)g_s_ent_index,size);
+        g_s_ent_index = (long*)safe_realloc((char*)g_s_ent_index,size);
         /* change the context too */
         g_s_contexts[g_s_cur_context].ent_index = g_s_ent_index;
         /* initialize new indexes */

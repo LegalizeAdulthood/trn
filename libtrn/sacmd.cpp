@@ -733,7 +733,7 @@ bool sa_extract_start()
 {
     if (s_sa_extract_dest == nullptr)
     {
-        s_sa_extract_dest = (char*)safemalloc(LBUFLEN);
+        s_sa_extract_dest = (char*)safe_malloc(LBUFLEN);
         safecpy(s_sa_extract_dest,filexp("%p"),LBUFLEN);
     }
     s_go_bot();

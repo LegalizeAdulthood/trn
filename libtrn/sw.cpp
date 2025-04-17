@@ -40,7 +40,7 @@ void sw_file(char **tcbufptr)
         fstat(initfd,&switch_file_stat);
         if (switch_file_stat.st_size >= TCBUF_SIZE-1)
         {
-            *tcbufptr = saferealloc(*tcbufptr,(MemorySize)switch_file_stat.st_size+1);
+            *tcbufptr = safe_realloc(*tcbufptr,(MemorySize)switch_file_stat.st_size+1);
         }
         if (switch_file_stat.st_size)
         {
@@ -552,7 +552,7 @@ void save_init_environment(char *str)
     {
         s_init_environment_max += 32;
         s_init_environment_strings = (char**)
-          saferealloc((char*)s_init_environment_strings,
+          safe_realloc((char*)s_init_environment_strings,
                       s_init_environment_max * sizeof (char*));
     }
     s_init_environment_strings[s_init_environment_cnt++] = str;

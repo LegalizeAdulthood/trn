@@ -181,7 +181,7 @@ SaveResult save_article()
         {
             c = (s==g_buf ? altbuf : g_buf);
             interp(c, (sizeof g_buf), get_val("SAVEDIR",SAVEDIR));
-            if (makedir(c, MD_DIR))      /* ensure directory exists */
+            if (make_dir(c, MD_DIR))      /* ensure directory exists */
             {
                 std::strcpy(c,g_priv_dir.c_str());
             }
@@ -208,7 +208,7 @@ SaveResult save_article()
             std::strcpy(buff, g_extract_dest.c_str());
             s = buff;
         }
-        if (makedir(s, MD_DIR))         /* ensure directory exists */
+        if (make_dir(s, MD_DIR))         /* ensure directory exists */
         {
             g_int_count++;
             return SAVE_DONE;
@@ -298,7 +298,7 @@ SaveResult save_article()
                 std::printf("Extracting uuencoded file into %s:\n", c);
                 term_down(1);
                 g_mime_section->type = IMAGE_MIME;
-                safefree(g_mime_section->filename);
+                safe_free(g_mime_section->filename);
                 g_mime_section->filename = filename? savestr(filename) : nullptr;
                 g_mime_section->encoding = MENCODE_UUE;
                 g_mime_section->part = part;
@@ -334,12 +334,12 @@ SaveResult save_article()
         reset_tty();              /* restore tty state */
         if (use_pref)           /* use preferred shell? */
         {
-            doshell(nullptr,g_cmd_buf);
+            do_shell(nullptr,g_cmd_buf);
                                 /* do command with it */
         }
         else
         {
-            doshell(SH,g_cmd_buf);  /* do command with sh */
+            do_shell(SH,g_cmd_buf);  /* do command with sh */
         }
         no_echo();               /* and stop echoing */
         cr_mode();               /* and start cbreaking */
@@ -374,7 +374,7 @@ SaveResult save_article()
         if (!FILE_REF(s))
         {
             interp(g_buf, (sizeof g_buf), get_val("SAVEDIR",SAVEDIR));
-            if (makedir(g_buf, MD_DIR))  /* ensure directory exists */
+            if (make_dir(g_buf, MD_DIR))  /* ensure directory exists */
             {
                 std::strcpy(g_buf, g_priv_dir.c_str());
             }
@@ -399,7 +399,7 @@ SaveResult save_article()
             interp(c, s == g_buf ? (sizeof g_buf) : (sizeof altbuf), i ? s_news : savename);
                                 /* generate a default name somehow or other */
         }
-        makedir(s, MD_FILE);
+        make_dir(s, MD_FILE);
         if (!FILE_REF(s))       /* relative path? */
         {
             c = (s==g_buf ? altbuf : g_buf);
@@ -514,7 +514,7 @@ SaveResult save_article()
             }
             termlib_reset();
             reset_tty();          /* make terminal behave */
-            i = doshell(use_pref?nullptr:SH,g_cmd_buf);
+            i = do_shell(use_pref?nullptr:SH,g_cmd_buf);
             termlib_init();
             no_echo();           /* make terminal do what we want */
             cr_mode();
@@ -627,7 +627,7 @@ SaveResult view_article()
                 g_save_from = g_art_pos;
                 seek_art(g_save_from);
                 g_mime_section->type = UNHANDLED_MIME;
-                safefree(g_mime_section->filename);
+                safe_free(g_mime_section->filename);
                 g_mime_section->filename = filename? savestr(filename) : nullptr;
                 g_mime_section->encoding = MENCODE_UUE;
                 g_mime_section->part = part;
@@ -718,7 +718,7 @@ int cancel_article()
         std::fclose(header);
         std::fputs("\nCanceling...\n",stdout);
         term_down(2);
-        r = doshell(SH,filexp(get_val_const("CANCEL",CALL_INEWS)));
+        r = do_shell(SH,filexp(get_val_const("CANCEL",CALL_INEWS)));
     }
 done:
     std::free(ngs_buf);
@@ -1060,7 +1060,7 @@ void forward()
 #ifdef REGEX_WORKS_RIGHT
     free_compex(&mime_compex);
 #else
-    safefree(mime_boundary);
+    safe_free(mime_boundary);
 #endif
 }
 
@@ -1074,7 +1074,7 @@ void followup()
     {
         term_down(2);
         in_answer("\n\nAre you starting an unrelated topic? [ynq] ", MM_FOLLOWUP_NEW_TOPIC_PROMPT);
-        setdef(g_buf,"y");
+        set_def(g_buf,"y");
         if (*g_buf == 'q')  /*TODO: need to add 'h' also */
         {
             return;
@@ -1160,7 +1160,7 @@ int invoke(const char *cmd, const char *dir)
     set_mode(g_general_mode,MM_EXECUTE);
     termlib_reset();
     reset_tty();                  /* make terminal well-behaved */
-    ret = doshell(SH,cmd);      /* do the command */
+    ret = do_shell(SH,cmd);      /* do the command */
     no_echo();                   /* set no echo */
     cr_mode();                   /* and cbreak mode */
     termlib_init();

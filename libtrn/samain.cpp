@@ -87,12 +87,12 @@ long sa_add_ent(ArticleNum artnum)
         {
             /* don't use number 0, just allocate it and skip it */
             g_sa_num_ents = 2;
-            g_sa_ents = (ScanArticleEntryData*)safemalloc(s_sa_ents_alloc
+            g_sa_ents = (ScanArticleEntryData*)safe_malloc(s_sa_ents_alloc
                                         * sizeof (ScanArticleEntryData));
         }
         else
         {
-            g_sa_ents = (ScanArticleEntryData*)saferealloc((char*)g_sa_ents,
+            g_sa_ents = (ScanArticleEntryData*)safe_realloc((char*)g_sa_ents,
                         s_sa_ents_alloc * sizeof (ScanArticleEntryData));
         }
     }

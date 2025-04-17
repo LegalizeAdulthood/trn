@@ -75,7 +75,7 @@ void sf_init()
     s_sf_num_extra_headers = 0;
 
     /* initialize abbreviation list */
-    s_sf_abbr = (char**)safemalloc(256 * sizeof (char*));
+    s_sf_abbr = (char**)safe_malloc(256 * sizeof (char*));
     std::memset((char*)s_sf_abbr,0,256 * sizeof (char*));
 
     if (g_sf_verbose)
@@ -226,11 +226,11 @@ void sf_grow()
     g_sf_num_entries++;
     if (g_sf_num_entries == 1)
     {
-        s_sf_entries = (ScoreFileEntry*)safemalloc(sizeof (ScoreFileEntry));
+        s_sf_entries = (ScoreFileEntry*)safe_malloc(sizeof (ScoreFileEntry));
     }
     else
     {
-        s_sf_entries = (ScoreFileEntry*)saferealloc((char*)s_sf_entries,
+        s_sf_entries = (ScoreFileEntry*)safe_realloc((char*)s_sf_entries,
                         g_sf_num_entries * sizeof (ScoreFileEntry));
     }
     s_sf_entries[g_sf_num_entries - 1] = ScoreFileEntry{}; /* init */
@@ -289,7 +289,7 @@ void sf_add_extra_header(const char *head)
     }
 
     s_sf_num_extra_headers++;
-    s_sf_extra_headers = (char**)saferealloc((char*)s_sf_extra_headers,
+    s_sf_extra_headers = (char**)safe_realloc((char*)s_sf_extra_headers,
         s_sf_num_extra_headers * sizeof (char*));
     char *s = savestr(head);
     for (char *s2 = s; *s2; s2++)
@@ -781,7 +781,7 @@ bool sf_do_line(char *line, bool check)
     {
         s_sf_entries[g_sf_num_entries-1].flags |= 1;
         s_sf_entries[g_sf_num_entries-1].str1 = mp_save_str(s,MP_SCORE1);
-        s_sf_compex = (CompiledRegex*)safemalloc(sizeof (CompiledRegex));
+        s_sf_compex = (CompiledRegex*)safe_malloc(sizeof (CompiledRegex));
         init_compex(s_sf_compex);
         /* compile arguments: */
         /* 1st is COMPEX to store compiled regex in */
@@ -1140,7 +1140,7 @@ void sf_append(char *line)
     }
     filename = filexp(sf_cmd_fname(filename));  /* allow shortcuts */
     /* make sure directory exists... */
-    makedir(filename, MD_FILE);
+    make_dir(filename, MD_FILE);
     sf_file_clear();
     std::FILE *fp = std::fopen(filename, "a");
     if (fp != nullptr)
@@ -1335,7 +1335,7 @@ void sf_exclude_file(const char *fname)
         return;
     }
 #endif
-    tmp_entries = (ScoreFileEntry*)safemalloc(newnum*sizeof(ScoreFileEntry));
+    tmp_entries = (ScoreFileEntry*)safe_malloc(newnum*sizeof(ScoreFileEntry));
     /* copy the parts into tmp_entries */
     if (start > 0)
     {
@@ -1393,7 +1393,7 @@ void sf_edit_file(const char *filespec)
     char *fname_noexpand = sf_cmd_fname(filebuf);
     std::strcpy(filebuf,filexp(fname_noexpand));
     /* make sure directory exists... */
-    if (!makedir(filebuf, MD_FILE))
+    if (!make_dir(filebuf, MD_FILE))
     {
         (void)edit_file(fname_noexpand);
         sf_file_clear();
@@ -1428,7 +1428,7 @@ static int sf_open_file(const char *name)
         }
     }
     s_sf_num_files++;
-    s_sf_files = (ScoreFile*)saferealloc((char*)s_sf_files,
+    s_sf_files = (ScoreFile*)safe_realloc((char*)s_sf_files,
         s_sf_num_files * sizeof (ScoreFile));
     s_sf_files[i].fname = savestr(name);
     s_sf_files[i].num_lines = 0;
@@ -1468,7 +1468,7 @@ static int sf_open_file(const char *name)
         if (s_sf_files[i].num_lines >= s_sf_files[i].num_alloc)
         {
             s_sf_files[i].num_alloc += 100;
-            s_sf_files[i].lines = (char**)saferealloc((char*)s_sf_files[i].lines,
+            s_sf_files[i].lines = (char**)safe_realloc((char*)s_sf_files[i].lines,
                 s_sf_files[i].num_alloc*sizeof(char**));
         }
         /* I kind of like the next line in a twisted sort of way. */

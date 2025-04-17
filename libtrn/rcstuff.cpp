@@ -135,7 +135,7 @@ static Multirc *rcstuff_init_data()
             }
         }
         std::free(vals);
-        safefree0(g_trn_access_mem);
+        safe_free0(g_trn_access_mem);
     }
     return mptr;
 }
@@ -209,7 +209,7 @@ Newsrc *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
         return nullptr;
     }
 
-    Newsrc *rp = (Newsrc*)safemalloc(sizeof(Newsrc));
+    Newsrc *rp = (Newsrc*)safe_malloc(sizeof(Newsrc));
     std::memset((char*)rp,0,sizeof (Newsrc));
     rp->data_source = dp;
     rp->name = savestr(filexp(newsrc));
@@ -551,7 +551,7 @@ static bool lock_newsrc(Newsrc *rp)
 
 static void unlock_newsrc(Newsrc *rp)
 {
-    safefree0(rp->info_name);
+    safe_free0(rp->info_name);
     if (rp->lock_name)
     {
         remove(rp->lock_name);
@@ -622,7 +622,7 @@ static bool open_newsrc(Newsrc *rp)
         /* unlink backup file name and backup current name */
         remove(rp->old_name);
 #ifndef NO_FILELINKS
-        safelink(rp->name,rp->oldname);
+        safe_link(rp->name,rp->oldname);
 #endif
     }
 
@@ -678,7 +678,7 @@ static bool open_newsrc(Newsrc *rp)
         {
             /*NOSTRICT*/
 #ifndef lint
-            some_buf = saferealloc(some_buf,(MemorySize)(length+1));
+            some_buf = safe_realloc(some_buf,(MemorySize)(length+1));
 #endif
             np->rc_line = some_buf;
         }
@@ -844,7 +844,7 @@ static void parse_rcline(NewsgroupData *np)
     if ((!*s || std::isspace(*s)) && !g_check_flag)
     {
 #ifndef lint
-        np->rc_line = saferealloc(np->rc_line,(MemorySize)len + 3);
+        np->rc_line = safe_realloc(np->rc_line,(MemorySize)len + 3);
 #endif
         s = np->rc_line + len;
         std::strcpy(s, ": ");
@@ -915,7 +915,7 @@ void abandon_ng(NewsgroupData *np)
         {
             /*NOSTRICT*/
 #ifndef lint
-            some_buf = saferealloc(some_buf, (MemorySize)(g_len_last_line_got));
+            some_buf = safe_realloc(some_buf, (MemorySize)(g_len_last_line_got));
 #endif /* lint */
             np->rc_line = some_buf;
         }
@@ -1211,7 +1211,7 @@ static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c)
 
     np->rc = rp;
     np->num_offset = std::strlen(ngn) + 1;
-    np->rc_line = safemalloc((MemorySize)(np->num_offset + 2));
+    np->rc_line = safe_malloc((MemorySize)(np->num_offset + 2));
     std::strcpy(np->rc_line,ngn);             /* and copy over the name */
     std::strcpy(np->rc_line + np->num_offset, " ");
     np->subscribe_char = c;              /* subscribe or unsubscribe */
@@ -1306,7 +1306,7 @@ bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum)
         {
             goto reask_reloc;           /* give them a prompt again */
         }
-        setdef(g_buf,dflt);
+        set_def(g_buf,dflt);
         print_cmd();
         if (*g_buf == 'h')
         {

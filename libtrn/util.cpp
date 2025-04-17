@@ -50,11 +50,11 @@ using WaitStatus = int;
 #endif
 
 bool g_waiting{}; /* waiting for subprocess (in doshell)? */
-bool g_nowait_fork{};
+bool g_no_wait_fork{};
 /* the strlen and the buffer length of "some_buf" after a call to:
  *     some_buf = get_a_line(bufptr,bufsize,realloc,fp); */
 int      g_len_last_line_got{};
-MemorySize g_buflen_last_line_got{};
+MemorySize g_buf_len_last_line_got{};
 
 #ifndef USE_DEBUGGING_MALLOC
 static char s_nomem[] = "trn: out of memory!\n";
@@ -99,7 +99,7 @@ void util_final()
 
 /* fork and exec a shell command */
 
-int doshell(const char *shell, const char *cmd)
+int do_shell(const char *shell, const char *cmd)
 {
 #ifndef MSDOS
     WaitStatus status;
@@ -265,7 +265,7 @@ int doshell(const char *shell, const char *cmd)
 /* paranoid version of malloc */
 
 #ifndef USE_DEBUGGING_MALLOC
-char *safemalloc(MemorySize size)
+char *safe_malloc(MemorySize size)
 {
     char *ptr = (char*)std::malloc(size ? size : (MemorySize)1);
     if (!ptr)
@@ -280,7 +280,7 @@ char *safemalloc(MemorySize size)
 /* paranoid version of realloc.  If where is nullptr, call malloc */
 
 #ifndef USE_DEBUGGING_MALLOC
-char *saferealloc(char *where, MemorySize size)
+char *safe_realloc(char *where, MemorySize size)
 {
     char* ptr;
 
@@ -303,7 +303,7 @@ char *saferealloc(char *where, MemorySize size)
 
 /* safe version of string concatenate, with \n deletion and space padding */
 
-char *safecat(char *to, const char *from, int len)
+char *safe_cat(char *to, const char *from, int len)
 {
     char* dest = to;
 
@@ -413,11 +413,11 @@ char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, std::FILE *fp
             buffer_length *= 2;
             if (realloc_ok)             /* just grow in place, if possible */
             {
-                buffer = saferealloc(buffer,(MemorySize)buffer_length+1);
+                buffer = safe_realloc(buffer,(MemorySize)buffer_length+1);
             }
             else
             {
-                char* tmp = safemalloc((MemorySize)buffer_length+1);
+                char* tmp = safe_malloc((MemorySize)buffer_length+1);
                 std::strncpy(tmp,buffer,buffer_length/2);
                 buffer = tmp;
                 realloc_ok = true;
@@ -436,11 +436,11 @@ char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, std::FILE *fp
     } while (nextch && nextch != '\n');
     buffer[bufix] = '\0';
     g_len_last_line_got = bufix;
-    g_buflen_last_line_got = buffer_length;
+    g_buf_len_last_line_got = buffer_length;
     return buffer;
 }
 
-bool makedir(const char *dirname, MakeDirNameType nametype)
+bool make_dir(const char *dirname, MakeDirNameType nametype)
 {
     std::filesystem::path dir{dirname};
     if (nametype == MD_FILE)
@@ -452,30 +452,30 @@ bool makedir(const char *dirname, MakeDirNameType nametype)
     return static_cast<bool>(ec);
 }
 
-void notincl(const char *feature)
+void not_incl(const char *feature)
 {
     std::printf("\nNo room for feature \"%s\" on this machine.\n",feature);
 }
 
 /* grow a static string to at least a certain length */
 
-void growstr(char **strptr, int *curlen, int newlen)
+void grow_str(char **strptr, int *curlen, int newlen)
 {
     if (newlen > *curlen)               /* need more room? */
     {
         if (*curlen)
         {
-            *strptr = saferealloc(*strptr,(MemorySize)newlen);
+            *strptr = safe_realloc(*strptr,(MemorySize)newlen);
         }
         else
         {
-            *strptr = safemalloc((MemorySize)newlen);
+            *strptr = safe_malloc((MemorySize)newlen);
         }
         *curlen = newlen;
     }
 }
 
-void setdef(char *buffer, const char *dflt)
+void set_def(char *buffer, const char *dflt)
 {
     g_s_default_cmd = false;
     g_univ_default_cmd = false;
@@ -500,7 +500,7 @@ void setdef(char *buffer, const char *dflt)
 }
 
 #ifndef NO_FILELINKS
-void safelink(char *old_name, char *new_name)
+void safe_link(char *old_name, char *new_name)
 {
 #if 0
     extern int sys_nerr;
@@ -526,18 +526,18 @@ void verify_sig()
 {
     std::printf("\n");
     /* RIPEM */
-    int i = doshell(SH, filexp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
+    int i = do_shell(SH, filexp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
     if (!i)     /* found RIPEM */
     {
-        i = doshell(SH,filexp(get_val_const("VERIFY_RIPEM",VERIFY_RIPEM)));
+        i = do_shell(SH,filexp(get_val_const("VERIFY_RIPEM",VERIFY_RIPEM)));
         std::printf("\nReturned value: %d\n",i);
         return;
     }
     /* PGP */
-    i = doshell(SH,filexp("grep -s \"BEGIN PGP\" %A"));
+    i = do_shell(SH,filexp("grep -s \"BEGIN PGP\" %A"));
     if (!i)     /* found PGP */
     {
-        i = doshell(SH,filexp(get_val_const("VERIFY_PGP",VERIFY_PGP)));
+        i = do_shell(SH,filexp(get_val_const("VERIFY_PGP",VERIFY_PGP)));
         std::printf("\nReturned value: %d\n",i);
         return;
     }
@@ -551,7 +551,7 @@ double current_time()
     return static_cast<double>(result) / 1000.0;
 }
 
-std::time_t text2secs(const char *s, std::time_t defSecs)
+std::time_t text_to_secs(const char *s, std::time_t defSecs)
 {
     std::time_t secs = 0;
 
@@ -604,7 +604,7 @@ std::time_t text2secs(const char *s, std::time_t defSecs)
     return secs * 60;
 }
 
-char *secs2text(std::time_t secs)
+char *secs_to_text(std::time_t secs)
 {
     char* s = g_buf;
     int items;
@@ -684,7 +684,7 @@ char **prep_ini_words(IniWords words[])
             words[i].checksum = (checksum << 8) + (item - words[i].item);
         }
         words[0].checksum = i;
-        cp = safemalloc(i * sizeof(char *));
+        cp = safe_malloc(i * sizeof(char *));
         words[0].help_str = cp;
     }
     std::memset(cp,0,(words)[0].checksum * sizeof (char*));
@@ -1054,7 +1054,7 @@ int edit_file(const char *fname)
     std::strcat(g_cmd_buf, filexp(fname));
     term_down(3);
     reset_tty();                  /* make sure tty is friendly */
-    r = doshell(SH,g_cmd_buf);  /* invoke the shell */
+    r = do_shell(SH,g_cmd_buf);  /* invoke the shell */
     no_echo();                   /* and make terminal */
     cr_mode();                   /*   unfriendly again */
     return r;

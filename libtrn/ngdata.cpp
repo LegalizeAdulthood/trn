@@ -262,7 +262,7 @@ void sort_newsgroups()
         break;
     }
 
-    NewsgroupData **ng_list = (NewsgroupData**)safemalloc(g_newsgroup_count * sizeof(NewsgroupData*));
+    NewsgroupData **ng_list = (NewsgroupData**)safe_malloc(g_newsgroup_count * sizeof(NewsgroupData*));
     lp = ng_list;
     for (NewsgroupData* np = g_first_newsgroup; np; np = np->next)
     {

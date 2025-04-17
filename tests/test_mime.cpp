@@ -94,7 +94,7 @@ protected:
     void SetUp() override
     {
         MimeTest::SetUp();
-        g_decode_filename = safemalloc(1024);
+        g_decode_filename = safe_malloc(1024);
         std::strcpy(g_decode_filename, TRN_TEST_MIME_PDF_DECODE_FILE);
         m_mime_section.type_name = savestr(TRN_TEST_MIME_PDF_CONTENT_TYPE);
         m_mime_section.type_params = mime_parse_params(savestr(TRN_TEST_MIME_PDF_SECTION_PARAMS));
@@ -105,7 +105,7 @@ protected:
         free(m_mime_section.type_params);
         free(m_mime_section.type_name);
         g_mime_section = nullptr;
-        safefree0(g_decode_filename);
+        safe_free0(g_decode_filename);
         MimeTest::TearDown();
     }
 

@@ -678,7 +678,7 @@ static KeyMap *newkeymap()
     KeyMap* map;
 
 #ifndef lint
-    map = (KeyMap*)safemalloc(sizeof(KeyMap));
+    map = (KeyMap*)safe_malloc(sizeof(KeyMap));
 #else
     map = nullptr;
 #endif /* lint */
@@ -1555,7 +1555,7 @@ reask_in_char:
         newline();                      /* if return from stop signal */
         goto reask_in_char;             /* give them a prompt again */
     }
-    setdef(g_buf,dflt);
+    set_def(g_buf,dflt);
     set_mode(gmode_save,mode_save);
 }
 

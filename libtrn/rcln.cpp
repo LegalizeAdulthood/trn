@@ -192,7 +192,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
 
     morenum = std::isdigit(*s);              /* will it need a comma after? */
     *(np->rc_line + np->num_offset - 1) = np->subscribe_char;
-    mbuf = safemalloc((MemorySize)(std::strlen(s)+(s - np->rc_line)+MAX_DIGITS+2+1));
+    mbuf = safe_malloc((MemorySize)(std::strlen(s)+(s - np->rc_line)+MAX_DIGITS+2+1));
     std::strcpy(mbuf,np->rc_line);            /* make new rc line */
     if (maxt && lastnum && art_num == lastnum+1)
                                         /* can we just extend last range? */
@@ -478,7 +478,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
     int   length = std::strlen(nums);
     if (length+MAX_DIGITS+1 > sizeof tmpbuf)
     {
-        mybuf = safemalloc((MemorySize) (length + MAX_DIGITS + 1));
+        mybuf = safe_malloc((MemorySize) (length + MAX_DIGITS + 1));
     }
     std::strcpy(mybuf,nums);
     mybuf[length++] = ',';
@@ -598,7 +598,7 @@ void check_expired(NewsgroupData *np, ArticleNum a1st)
             }
             else
             {
-                mbuf = safemalloc((MemorySize)(np->num_offset+3+len+1));
+                mbuf = safe_malloc((MemorySize)(np->num_offset+3+len+1));
                 std::strcpy(mbuf, np->rc_line);
             }
             cp = mbuf + np->num_offset;
@@ -628,7 +628,7 @@ void check_expired(NewsgroupData *np, ArticleNum a1st)
         }
         else
         {
-            mbuf = safemalloc((MemorySize)(np->num_offset+nlen+len+1));
+            mbuf = safe_malloc((MemorySize)(np->num_offset+nlen+len+1));
             std::strcpy(mbuf,np->rc_line);
         }
 
@@ -647,7 +647,7 @@ void check_expired(NewsgroupData *np, ArticleNum a1st)
 
         if (!g_check_flag && np->rc_line == mbuf)
         {
-            np->rc_line = saferealloc(np->rc_line, (MemorySize) (cp - mbuf + len + 1));
+            np->rc_line = safe_realloc(np->rc_line, (MemorySize) (cp - mbuf + len + 1));
         }
         else
         {

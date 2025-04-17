@@ -282,7 +282,7 @@ static void cache_tree(Article *ap, int depth, char *cp)
                 }
                 *s_str = '\0';
                 s_tree_lines[s_line_num-s_first_line]
-                        = safemalloc(s_str-s_tree_buff + 1);
+                        = safe_malloc(s_str-s_tree_buff + 1);
                 std::strcpy(s_tree_lines[s_line_num - s_first_line], s_tree_buff);
                 if (s_node_on_line)
                 {
@@ -392,12 +392,12 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
     /* Copy line, filtering encoded and control characters. */
     if (header_conv())
     {
-        tmpbuf = safemalloc(len * 2 + 2);
+        tmpbuf = safe_malloc(len * 2 + 2);
         line = tmpbuf + len + 1;
     }
     else
     {
-        tmpbuf = safemalloc(len + 2); /* yes, I mean "2" */
+        tmpbuf = safe_malloc(len + 2); /* yes, I mean "2" */
         line = tmpbuf;
     }
     if (g_do_hiding)

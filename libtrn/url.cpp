@@ -151,7 +151,7 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
 #endif
 
     *p = '/';
-    status = doshell(nullptr,cmdline);
+    status = do_shell(nullptr,cmdline);
 #if 0
     std::printf("\nFTP command status is %d\n",status);
     while (!input_pending())

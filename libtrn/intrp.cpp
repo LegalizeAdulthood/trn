@@ -411,7 +411,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         HeaderLineType which_line;
                         if (*scrbuf && (which_line = get_header_num(scrbuf)) != SOME_LINE)
                         {
-                            safefree(line_buf);
+                            safe_free(line_buf);
                             line_buf = fetch_lines(g_art, which_line);
                             s = line_buf;
                         }
@@ -909,7 +909,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     if (g_in_ng)
                     {
                         parse_header(g_art);
-                        safefree0(refs_buf);
+                        safe_free0(refs_buf);
                         if (g_htype[REFS_LINE].min_pos >= 0)
                         {
                             refs_buf = fetch_lines(g_art,REFS_LINE);
@@ -932,7 +932,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         break;
                     }
                     parse_header(g_art);
-                    safefree0(refs_buf);
+                    safe_free0(refs_buf);
                     int len;
                     if (g_htype[REFS_LINE].min_pos >= 0)
                     {
@@ -971,7 +971,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                       + (artid_buf[0] == '<'? 0 : 2) + 1;
                     if (len < i + j)
                     {
-                        refs_buf = saferealloc(refs_buf, i + j);
+                        refs_buf = safe_realloc(refs_buf, i + j);
                     }
                     if (i)
                     {
@@ -1172,7 +1172,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                             *s2 = '*';
                             s2++;
                             *s2 = '\0';
-                            from_buf = (char*)safemalloc(
+                            from_buf = (char*)safe_malloc(
                                 (std::strlen(tmpbuf)+std::strlen(s3)+1)*sizeof(char));
                             std::strcpy(from_buf,tmpbuf);
                             std::strcat(from_buf,s3);
@@ -1439,16 +1439,16 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
         }
     }
 getout:
-    safefree(subj_buf);         /* return any checked out storage */
-    safefree(ngs_buf);
-    safefree(refs_buf);
-    safefree(artid_buf);
-    safefree(reply_buf);
-    safefree(from_buf);
-    safefree(path_buf);
-    safefree(follow_buf);
-    safefree(dist_buf);
-    safefree(line_buf);
+    safe_free(subj_buf);         /* return any checked out storage */
+    safe_free(ngs_buf);
+    safe_free(refs_buf);
+    safe_free(artid_buf);
+    safe_free(reply_buf);
+    safe_free(from_buf);
+    safe_free(path_buf);
+    safe_free(follow_buf);
+    safe_free(dist_buf);
+    safe_free(line_buf);
 
     return pattern; /* where we left off */
 }

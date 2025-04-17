@@ -90,7 +90,7 @@ void mime_set_executor(MimeExecutor executor)
 
 void mime_init()
 {
-    s_executor = doshell;
+    s_executor = do_shell;
     s_mimecap_list = new_list(0,-1,sizeof(MimeCapEntry),40,LF_ZERO_MEM,nullptr);
 
     char *mcname = get_val("MIMECAPS");
@@ -136,7 +136,7 @@ void mime_read_mimecap(const char *mcname)
     {
         return;
     }
-    char *bp = safemalloc(buflen);
+    char *bp = safe_malloc(buflen);
     for (i = s_mimecap_list->high; !std::feof(fp);)
     {
         *(s = bp) = '\0';
@@ -169,7 +169,7 @@ void mime_read_mimecap(const char *mcname)
             if (linelen + 1024 > buflen)
             {
                 buflen *= 2;
-                bp = saferealloc(bp, buflen);
+                bp = safe_realloc(bp, buflen);
             }
 
             s = bp + linelen;
@@ -377,7 +377,7 @@ void mime_init_sections()
 
 void mime_push_section()
 {
-    MimeSection* mp = (MimeSection*)safemalloc(sizeof (MimeSection));
+    MimeSection* mp = (MimeSection*)safe_malloc(sizeof (MimeSection));
     std::memset((char*)mp,0,sizeof (MimeSection));
     mp->prev = g_mime_section;
     g_mime_section = mp;
@@ -401,11 +401,11 @@ bool mime_pop_section()
 /* Free up this mime structure's resources */
 void mime_clear_struct(MimeSection *mp)
 {
-    safefree0(mp->filename);
-    safefree0(mp->type_name);
-    safefree0(mp->type_params);
-    safefree0(mp->boundary);
-    safefree0(mp->html_blocks);
+    safe_free0(mp->filename);
+    safe_free0(mp->type_name);
+    safe_free0(mp->type_params);
+    safe_free0(mp->boundary);
+    safe_free0(mp->html_blocks);
     mp->type = NOT_MIME;
     mp->encoding = MENCODE_NONE;
     mp->total = 0;
@@ -458,8 +458,8 @@ void mime_set_article()
 /* Use the Content-Type to set values in the mime structure */
 void mime_parse_type(MimeSection *mp, char *s)
 {
-    safefree0(mp->type_name);
-    safefree0(mp->type_params);
+    safe_free0(mp->type_name);
+    safe_free0(mp->type_params);
 
     mp->type_params = mime_parse_params(s);
     if (!*s)
@@ -471,7 +471,7 @@ void mime_parse_type(MimeSection *mp, char *s)
     char *t = mime_find_param(mp->type_params, "name");
     if (t)
     {
-        safefree(mp->filename);
+        safe_free(mp->filename);
         mp->filename = savestr(t);
     }
 
@@ -508,7 +508,7 @@ void mime_parse_type(MimeSection *mp, char *s)
             {
                 return;
             }
-            safefree(mp->filename);
+            safe_free(mp->filename);
             mp->filename = savestr(t);
             t = mime_find_param(mp->type_params,"number");
             if (t)
@@ -543,7 +543,7 @@ void mime_parse_type(MimeSection *mp, char *s)
         {
             mp->flags |= MSF_ALTERNATIVE;
         }
-        safefree(mp->boundary);
+        safe_free(mp->boundary);
         mp->boundary = savestr(t);
         mp->boundary_len = (short)std::strlen(t);
         mp->type = MULTIPART_MIME;
@@ -577,10 +577,10 @@ void mime_parse_disposition(MimeSection *mp, char *s)
     s = mime_find_param(params,"filename");
     if (s)
     {
-        safefree(mp->filename);
+        safe_free(mp->filename);
         mp->filename = savestr(s);
     }
-    safefree(params);
+    safe_free(params);
 }
 
 /* Use the Content-Transfer-Encoding to set values in the mime structure */
@@ -651,7 +651,7 @@ void mime_parse_subheader(std::FILE *ifp, char *next_line)
             if (line_size < len)
             {
                 line_size = len + LBUFLEN;
-                line = saferealloc(line, line_size);
+                line = safe_realloc(line, line_size);
             }
             if (next_line)
             {
@@ -702,7 +702,7 @@ void mime_parse_subheader(std::FILE *ifp, char *next_line)
             break;
 
         case CONT_NAME_LINE:
-            safefree(g_mime_section->filename);
+            safe_free(g_mime_section->filename);
             s = mime_skip_whitespace(s+1);
             g_mime_section->filename = savestr(s);
             break;
@@ -1113,7 +1113,7 @@ DecodeState qp_decode(std::FILE *ifp, DecodeState state)
         }
         erase_line(false);
         std::printf("Decoding %s", filename);
-        if (g_nowait_fork)
+        if (g_no_wait_fork)
         {
             std::fflush(stdout);
         }
@@ -1253,7 +1253,7 @@ DecodeState b64_decode(std::FILE *ifp, DecodeState state)
             return DECODE_ERROR;
         }
         std::printf("Decoding %s", filename);
-        if (g_nowait_fork)
+        if (g_no_wait_fork)
         {
             std::fflush(stdout);
         }
@@ -1374,7 +1374,7 @@ DecodeState cat_decode(std::FILE *ifp, DecodeState state)
             return DECODE_ERROR;
         }
         std::printf("Decoding %s", filename);
-        if (g_nowait_fork)
+        if (g_no_wait_fork)
         {
             std::fflush(stdout);
         }
@@ -1487,7 +1487,7 @@ int filter_html(char *t, const char *f)
 
     if (!g_mime_section->html_blocks)
     {
-        g_mime_section->html_blocks = (HtmlBlock*)safemalloc(HTML_MAX_BLOCKS
+        g_mime_section->html_blocks = (HtmlBlock*)safe_malloc(HTML_MAX_BLOCKS
                                                   * sizeof (HtmlBlock));
     }
 

@@ -39,7 +39,7 @@ Article *allocate_article(ArticleNum artnum)
     }
     else
     {
-        article = (Article*)safemalloc(sizeof (Article));
+        article = (Article*)safe_malloc(sizeof (Article));
         std::memset((char*)article,0,sizeof (Article));
         article->flags |= AF_FAKE|AF_TMP_MEM;
     }
@@ -83,7 +83,7 @@ bool valid_article(Article *article)
         HashDatum data = hash_fetch(g_msg_id_hash, msgid, std::strlen(msgid));
         if (data.dat_len)
         {
-            safefree0(data.dat_ptr);
+            safe_free0(data.dat_ptr);
             article->auto_flags = static_cast<AutoKillFlags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
             if ((data.dat_len & KF_AGE_MASK) == 0)
             {

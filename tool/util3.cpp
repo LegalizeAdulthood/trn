@@ -15,7 +15,7 @@
 static char *s_nntp_password{};
 static char s_nomem[] = "trn: out of memory!\n";
 
-int doshell(const char *shell, const char *cmd)
+int do_shell(const char *shell, const char *cmd)
 {
     return std::system(cmd);
 }
@@ -29,7 +29,7 @@ int doshell(const char *shell, const char *cmd)
 /* paranoid version of malloc */
 
 #ifndef USE_DEBUGGING_MALLOC
-char *safemalloc(MemorySize size)
+char *safe_malloc(MemorySize size)
 {
     char *ptr = (char*)std::malloc(size ? size : (MemorySize)1);
     if (!ptr)
@@ -44,7 +44,7 @@ char *safemalloc(MemorySize size)
 /* paranoid version of realloc.  If where is nullptr, call malloc */
 
 #ifndef USE_DEBUGGING_MALLOC
-char *saferealloc(char *where, MemorySize size)
+char *safe_realloc(char *where, MemorySize size)
 {
     char *ptr = (char*)std::realloc(where, size ? size : (MemorySize)1);
     if (!ptr)

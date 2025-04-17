@@ -13,12 +13,12 @@
 #include <ctime>
 
 extern bool g_waiting; /* waiting for subprocess (in doshell)? */
-extern bool g_nowait_fork;
+extern bool g_no_wait_fork;
 
 /* the strlen and the buffer length of "some_buf" after a call to:
  *     some_buf = get_a_line(bufptr,bufsize,realloc,fp); */
 extern int g_len_last_line_got;
-extern MemorySize g_buflen_last_line_got;
+extern MemorySize g_buf_len_last_line_got;
 
 inline bool at_grey_space(const char *s)
 {
@@ -44,28 +44,28 @@ struct IniWords
 
 void util_init();
 void util_final();
-int doshell(const char *shell, const char *cmd);
+int do_shell(const char *shell, const char *cmd);
 #ifndef USE_DEBUGGING_MALLOC
-char *safemalloc(MemorySize size);
-char *saferealloc(char *where, MemorySize size);
+char *safe_malloc(MemorySize size);
+char *safe_realloc(char *where, MemorySize size);
 #endif
-char *safecat(char *to, const char *from, int len);
+char *safe_cat(char *to, const char *from, int len);
 #ifdef SETUIDGID
 int eaccess(char *, int);
 #endif
 char *trn_getwd(char *buf, int buflen);
 char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, std::FILE *fp);
-bool makedir(const char *dirname, MakeDirNameType nametype);
-void notincl(const char *feature);
-void growstr(char **strptr, int *curlen, int newlen);
-void setdef(char *buffer, const char *dflt);
+bool make_dir(const char *dirname, MakeDirNameType nametype);
+void not_incl(const char *feature);
+void grow_str(char **strptr, int *curlen, int newlen);
+void set_def(char *buffer, const char *dflt);
 #ifndef NO_FILELINKS
-void safelink(char *old_name, char *new_name);
+void safe_link(char *old_name, char *new_name);
 #endif
 void   verify_sig();
 double current_time();
-std::time_t text2secs(const char *s, std::time_t defSecs);
-char * secs2text(std::time_t secs);
+std::time_t text_to_secs(const char *s, std::time_t defSecs);
+char * secs_to_text(std::time_t secs);
 char * temp_filename();
 char * get_auth_user();
 char * get_auth_pass();
@@ -92,7 +92,7 @@ inline char *ini_value(IniWords *words, int num)
     return ini_values(words)[num];
 }
 
-inline void safefree(void *ptr)
+inline void safe_free(void *ptr)
 {
     if (ptr)
     {
@@ -101,7 +101,7 @@ inline void safefree(void *ptr)
 }
 
 template <typename T>
-void safefree0(T *&ptr)
+void safe_free0(T *&ptr)
 {
     if (ptr)
     {

@@ -128,7 +128,7 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
     }
     else
     {
-        buffer = (int *) safemalloc((MemorySize) radix * sizeof(int));
+        buffer = (int *) safe_malloc((MemorySize) radix * sizeof(int));
     }
 
     /* Here's where the fun begins.  We will find the minimum edit distance

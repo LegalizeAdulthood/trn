@@ -104,18 +104,18 @@ void head_init()
     }
 
     g_user_htype_max = 10;
-    g_user_htype = (UserHeaderType*)safemalloc(g_user_htype_max
+    g_user_htype = (UserHeaderType*)safe_malloc(g_user_htype_max
                                             * sizeof (UserHeaderType));
     g_user_htype[g_user_htype_count++].name = "*";
 
     s_headbuf_size = LBUFLEN * 8;
-    g_head_buf = safemalloc(s_headbuf_size);
+    g_head_buf = safe_malloc(s_headbuf_size);
 }
 
 void head_final()
 {
-    safefree0(g_head_buf);
-    safefree0(g_user_htype);
+    safe_free0(g_head_buf);
+    safe_free0(g_user_htype);
     g_user_htype_count = 0;
 }
 
@@ -282,7 +282,7 @@ void end_header_line()
                 }
                 else
                 {
-                    char* s = safemalloc(size);
+                    char* s = safe_malloc(size);
                     safecpy(s,g_head_buf+start,size);
                     set_cached_line(s_parsed_artp,g_in_header,s);
                 }
@@ -373,8 +373,8 @@ void end_header()
             char* references = fetch_lines(g_parsed_art, REFS_LINE);
             char* inreply = fetch_lines(g_parsed_art, IN_REPLY_LINE);
             int reflen = std::strlen(references) + 1;
-            growstr(&references, &reflen, reflen + std::strlen(inreply) + 1);
-            safecat(references, inreply, reflen);
+            grow_str(&references, &reflen, reflen + std::strlen(inreply) + 1);
+            safe_cat(references, inreply, reflen);
             thread_article(ap, references);
             std::free(inreply);
             std::free(references);
@@ -440,7 +440,7 @@ bool parse_header(ArticleNum art_num)
         {
             len = bp - g_head_buf;
             s_headbuf_size += LBUFLEN * 4;
-            g_head_buf = saferealloc(g_head_buf,s_headbuf_size);
+            g_head_buf = safe_realloc(g_head_buf,s_headbuf_size);
             bp = g_head_buf + len;
         }
         if (s_reading_nntp_header)
@@ -528,7 +528,7 @@ char *fetch_lines(ArticleNum art_num, HeaderLineType which_line)
         std::fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
     }
 #endif
-    s = safemalloc((MemorySize)size);
+    s = safe_malloc((MemorySize)size);
     safecpy(s,t,size);
     return s;
 }
@@ -623,7 +623,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
         if (copy)
         {
             size = LBUFLEN;
-            s = safemalloc((MemorySize) size);
+            s = safe_malloc((MemorySize) size);
         }
         else
         {
@@ -665,7 +665,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
                     break;
                 }
                 last_buf = line;
-                last_buflen = g_buflen_last_line_got;
+                last_buflen = g_buf_len_last_line_got;
                 t = std::strchr(line, '\r');
                 if (t != nullptr)
                 {
@@ -699,7 +699,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
                 }
                 if (num == art_num)
                 {
-                    safecat(s, t, size);
+                    safe_cat(s, t, size);
                 }
             }
             if (last_buf != g_ser_line)
@@ -727,7 +727,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
         }
         if (copy)
         {
-            s = saferealloc(s, (MemorySize) std::strlen(s) + 1);
+            s = safe_realloc(s, (MemorySize) std::strlen(s) + 1);
         }
         return s;
     }
@@ -762,7 +762,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
     }
     if (copy)
     {
-        s = safemalloc((MemorySize) size);
+        s = safe_malloc((MemorySize) size);
     }
     else                                /* hope this is okay--we're */
     {

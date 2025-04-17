@@ -202,7 +202,7 @@ char *read_data_sources(const char *filename)
         fstat(fd,&datasrc_stat);
         if (datasrc_stat.st_size)
         {
-            filebuf = safemalloc((MemorySize)datasrc_stat.st_size+2);
+            filebuf = safe_malloc((MemorySize)datasrc_stat.st_size+2);
             int len = read(fd, filebuf, (int)datasrc_stat.st_size);
             (filebuf)[len] = '\0';
             prep_ini_data(filebuf,filename);
@@ -275,7 +275,7 @@ static DataSource *new_datasrc(const char *name, char **vals)
         v = vals[DI_ACT_REFETCH];
         if (v != nullptr && *v)
         {
-            dp->act_sf.refetch_secs = text2secs(v, g_def_refetch_secs);
+            dp->act_sf.refetch_secs = text_to_secs(v, g_def_refetch_secs);
         }
         else if (!vals[DI_ACTIVE_FILE])
         {
@@ -322,7 +322,7 @@ static DataSource *new_datasrc(const char *name, char **vals)
         v = vals[DI_DESC_REFETCH];
         if (v != nullptr && *v)
         {
-            dp->desc_sf.refetch_secs = text2secs(v, g_def_refetch_secs);
+            dp->desc_sf.refetch_secs = text_to_secs(v, g_def_refetch_secs);
         }
         else if (!dp->group_desc)
         {
@@ -386,7 +386,7 @@ static char *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag)
         }
         if (flag == DF_ADD_OK)
         {
-            char* cp = safemalloc(std::strlen(dp->news_id)+6+1);
+            char* cp = safe_malloc(std::strlen(dp->news_id)+6+1);
             std::sprintf(cp,"%s.times",dp->news_id);
             return cp;
         }
@@ -398,7 +398,7 @@ static char *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag)
                 return nullptr;
             }
             int len = cp - dp->news_id + 1;
-            cp = safemalloc(len+10+1);
+            cp = safe_malloc(len+10+1);
             std::strcpy(cp,dp->news_id);
             std::strcpy(cp+len,"newsgroups");
             return cp;
@@ -1193,7 +1193,7 @@ int find_close_match()
     int ret = 0;
 
     s_best_match = -1;
-    s_ngptrs = (char**)safemalloc(MAX_NG * sizeof (char*));
+    s_ngptrs = (char**)safe_malloc(MAX_NG * sizeof (char*));
     s_ngn = 0;
 
     /* Iterate over all legal newsgroups */

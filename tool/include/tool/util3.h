@@ -8,11 +8,11 @@
 
 extern char *g_home_dir;
 
-int doshell(const char *shell, const char *cmd);
+int do_shell(const char *shell, const char *cmd);
 [[noreturn]] void finalize(int num);
 #ifndef USE_DEBUGGING_MALLOC
-char *safemalloc(MemorySize size);
-char *saferealloc(char *where, MemorySize size);
+char *safe_malloc(MemorySize size);
+char *safe_realloc(char *where, MemorySize size);
 #endif
 char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, const char *cmd);
 int   nntp_handle_nested_lists();

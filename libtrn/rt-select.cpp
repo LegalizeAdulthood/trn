@@ -1117,7 +1117,7 @@ reinp_selector:
     get_cmd(g_buf);
     if (*g_buf == ' ')
     {
-        setdef(g_buf, g_sel_at_end ? &s_end_char : &s_page_char);
+        set_def(g_buf, g_sel_at_end ? &s_end_char : &s_page_char);
     }
     int ch = *g_buf;
     if (errno)

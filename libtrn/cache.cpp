@@ -530,7 +530,7 @@ void set_subj_line(Article *ap, char *subj, int size)
         size = 0;
     }
 
-    char *newsubj = safemalloc(size + 4 + 1);
+    char *newsubj = safe_malloc(size + 4 + 1);
     std::strcpy(newsubj, "Re: ");
     size = decode_header(newsubj + 4, subj_start, size);
 
@@ -567,7 +567,7 @@ void set_subj_line(Article *ap, char *subj, int size)
         data = hash_fetch(s_subj_hash, newsubj + 4, size);
         if (!(sp = (Subject *) data.dat_ptr))
         {
-            sp = (Subject*)safemalloc(sizeof (Subject));
+            sp = (Subject*)safe_malloc(sizeof (Subject));
             std::memset((char*)sp,0,sizeof (Subject));
             g_subject_count++;
             sp->prev = g_last_subject;

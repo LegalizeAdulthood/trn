@@ -24,11 +24,11 @@ struct InitTest : Test
 protected:
     void TearDown() override
     {
-        safefree0(g_home_dir);
+        safe_free0(g_home_dir);
         g_tmp_dir.clear();
         g_login_name.clear();
         g_real_name.clear();
-        safefree0(g_local_host);
+        safe_free0(g_local_host);
         g_p_host_name.clear();
         g_dot_dir.clear();
         g_trn_dir.clear();

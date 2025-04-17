@@ -458,7 +458,7 @@ InputNewsgroupResult input_newsgroup()
         return ING_ASK;
     }
     g_buf[2] = *g_buf;
-    setdef(g_buf,g_default_cmd.c_str());
+    set_def(g_buf,g_default_cmd.c_str());
     print_cmd();
     if (g_newsgroup_ptr != nullptr)
     {
@@ -596,7 +596,7 @@ InputNewsgroupResult input_newsgroup()
         break;
 
     case 'm':
-        notincl("m");
+        not_incl("m");
         break;
 
     case 'g': /* goto named newsgroup */
@@ -1030,7 +1030,7 @@ void trn_version()
                 }
                 if (rp->data_source->act_sf.refetch_secs)
                 {
-                    char* cp = secs2text(rp->data_source->act_sf.refetch_secs);
+                    char* cp = secs_to_text(rp->data_source->act_sf.refetch_secs);
                     if (*cp != 'n')
                     {
                         std::sprintf(g_msg+std::strlen(g_msg),
@@ -1061,7 +1061,7 @@ void trn_version()
                 }
                 if (rp->data_source->desc_sf.refetch_secs)
                 {
-                    char* cp = secs2text(rp->data_source->desc_sf.refetch_secs);
+                    char* cp = secs_to_text(rp->data_source->desc_sf.refetch_secs);
                     if (*cp != 'n')
                     {
                         std::sprintf(g_msg+std::strlen(g_msg),

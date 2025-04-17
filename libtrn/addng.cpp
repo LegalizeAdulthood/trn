@@ -310,7 +310,7 @@ static void add_to_hash(HashTable *ng, const char *name, int toread, char_int ch
     HashDatum data;
     unsigned const namelen = std::strlen(name);
     data.dat_len = namelen + sizeof (AddGroup);
-    AddGroup *node = (AddGroup*)safemalloc(data.dat_len);
+    AddGroup *node = (AddGroup*)safe_malloc(data.dat_len);
     data.dat_ptr = (char *)node;
     switch (ch)
     {
@@ -345,7 +345,7 @@ static void add_to_list(const char *name, int toread, char_int ch)
         node = node->next;
     }
 
-    node = (AddGroup*)safemalloc(std::strlen(name) + sizeof (AddGroup));
+    node = (AddGroup*)safe_malloc(std::strlen(name) + sizeof (AddGroup));
     switch (ch)
     {
     case ':':
@@ -534,7 +534,7 @@ void sort_add_groups()
         break;
     }
 
-    AddGroup **ag_list = (AddGroup**)safemalloc(s_addgroup_cnt * sizeof(AddGroup*));
+    AddGroup **ag_list = (AddGroup**)safe_malloc(s_addgroup_cnt * sizeof(AddGroup*));
     for (lp = ag_list, ap = g_first_add_group; ap; ap = ap->next)
     {
         *lp++ = ap;

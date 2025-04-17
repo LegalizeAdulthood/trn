@@ -514,7 +514,7 @@ void rewrite_kill_file(ArticleNum thru)
     }
     else
     {
-        makedir(killname, MD_FILE);
+        make_dir(killname, MD_FILE);
     }
     remove(killname);                   /* to prevent file reuse */
     g_kf_state &= ~(s_kfs_local_change_clear | KFS_NORMAL_LINES);
@@ -688,7 +688,7 @@ void update_thread_kill_file()
     }
 
     char *cp = filexp(get_val_const("KILLTHREADS", s_killthreads));
-    makedir(cp, MD_FILE);
+    make_dir(cp, MD_FILE);
     if (g_kf_change_thread_cnt * 5 > s_kf_thread_cnt)
     {
         remove(cp);                     /* to prevent file reuse */
@@ -817,7 +817,7 @@ void edit_kill_file()
     {
         std::strcpy(g_buf, filexp(get_val_const("KILLGLOBAL", s_killglobal)));
     }
-    if (!makedir(g_buf, MD_FILE))
+    if (!make_dir(g_buf, MD_FILE))
     {
         std::sprintf(g_cmd_buf,"%s %s",
             filexp(get_val_const("VISUAL",get_val_const("EDITOR",DEFEDITOR))),g_buf);
@@ -825,7 +825,7 @@ void edit_kill_file()
             (g_in_ng?"local":"global"),g_cmd_buf);
         term_down(3);
         reset_tty();                      /* make sure tty is friendly */
-        doshell(SH, g_cmd_buf);         /* invoke the shell */
+        do_shell(SH, g_cmd_buf);         /* invoke the shell */
         no_echo();                       /* and make terminal */
         cr_mode();                       /*   unfriendly again */
         open_kill_file(g_in_ng);
@@ -905,7 +905,7 @@ void open_kill_file(int local)
 void kill_file_append(const char *cmd, bool local)
 {
     std::strcpy(g_cmd_buf, filexp(local ? get_val_const("KILLLOCAL", s_killlocal) : get_val_const("KILLGLOBAL", s_killglobal)));
-    if (!makedir(g_cmd_buf, MD_FILE))
+    if (!make_dir(g_cmd_buf, MD_FILE))
     {
         if (g_verbose)
         {

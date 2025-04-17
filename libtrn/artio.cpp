@@ -41,13 +41,13 @@ static long s_artbuf_size{};
 void art_io_init()
 {
     s_artbuf_size = 8 * 1024;
-    g_art_buf = safemalloc(s_artbuf_size);
+    g_art_buf = safe_malloc(s_artbuf_size);
     clear_art_buf();
 }
 
 void art_io_final()
 {
-    safefree0(g_art_buf);
+    safe_free0(g_art_buf);
 }
 
 /* open an article, unless it's already open */
@@ -236,7 +236,7 @@ char *read_art_buf(bool view_inline)
     if (s_artbuf_size < g_art_buf_pos + o + LBUFLEN)
     {
         s_artbuf_size += LBUFLEN * 4;
-        g_art_buf = saferealloc(g_art_buf,s_artbuf_size);
+        g_art_buf = safe_realloc(g_art_buf,s_artbuf_size);
         bp = g_art_buf + g_art_buf_pos;
     }
     switch (g_mime_state)
@@ -363,7 +363,7 @@ char *read_art_buf(bool view_inline)
         if (mcp)
         {
             int save_term_line = g_term_line;
-            g_nowait_fork = true;
+            g_no_wait_fork = true;
             color_object(COLOR_MIME_DESC, true);
             if (decode_piece(mcp, bp))
             {
@@ -381,7 +381,7 @@ char *read_art_buf(bool view_inline)
             color_pop();
             chdir_news_dir();
             erase_line(false);
-            g_nowait_fork = false;
+            g_no_wait_fork = false;
             g_first_view = g_art_line_num;
             g_term_line = save_term_line;
             if (g_mime_state != SKIP_MIME)

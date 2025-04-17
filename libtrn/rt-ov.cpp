@@ -309,7 +309,7 @@ beginning:
         }
 
         last_buf = line;
-        last_buflen = g_buflen_last_line_got;
+        last_buflen = g_buf_len_last_line_got;
         an = std::atol(line);
         if (an < first)
         {

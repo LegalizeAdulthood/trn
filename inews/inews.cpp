@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
     int  i;
 
     int   headbuf_size = LBUFLEN * 8;
-    char *headbuf = safemalloc(headbuf_size);
+    char *headbuf = safe_malloc(headbuf_size);
 
 #ifdef LAX_INEWS
     env_init(headbuf, true);
@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
         {
             len = cp - headbuf;
             headbuf_size += LBUFLEN * 4;
-            headbuf = saferealloc(headbuf,headbuf_size);
+            headbuf = safe_realloc(headbuf,headbuf_size);
             cp = headbuf + len;
         }
         i = std::getc(stdin);

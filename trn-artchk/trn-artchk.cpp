@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
                 {
                     nglens[ngcnt] = std::strlen(cp);
                     foundactive[ngcnt] = 0;
-                    ngptrs[ngcnt] = safemalloc(nglens[ngcnt]+1);
+                    ngptrs[ngcnt] = safe_malloc(nglens[ngcnt]+1);
                     std::strcpy(ngptrs[ngcnt], cp);
                     ngcnt++;
                 }

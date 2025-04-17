@@ -41,7 +41,7 @@ void sc_sv_add(const char *str)
     if (s_num_lines == s_lines_alloc)
     {
         s_lines_alloc += 100;
-        s_lines = (char**)saferealloc((char*)s_lines,s_lines_alloc * sizeof (char*));
+        s_lines = (char**)safe_realloc((char*)s_lines,s_lines_alloc * sizeof (char*));
     }
     s_lines[s_num_lines] = savestr(str);
     s_num_lines++;

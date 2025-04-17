@@ -122,7 +122,7 @@ const char *getbracket(CompiledRegex *compex, int n)
     {
         return "";
     }
-    growstr(&s_gbr_str, &s_gbr_siz, length+1);
+    grow_str(&s_gbr_str, &s_gbr_siz, length+1);
     safecpy(s_gbr_str, compex->braslist[n], length+1);
     return s_gbr_str;
 }
@@ -160,7 +160,7 @@ char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
     case_fold(compex->do_folding = fold);
     if (!compex->eblen)
     {
-        compex->expbuf = safemalloc(84);
+        compex->expbuf = safe_malloc(84);
         compex->eblen = 80;
     }
     char *ep = compex->expbuf; /* point at expression buffer */
@@ -383,7 +383,7 @@ char *grow_eb(CompiledRegex *compex, char *epp, char **alt)
     char** altlist = compex->alternatives;
 
     compex->eblen += 80;
-    compex->expbuf = saferealloc(compex->expbuf, (MemorySize)compex->eblen + 4);
+    compex->expbuf = safe_realloc(compex->expbuf, (MemorySize)compex->eblen + 4);
     if (compex->expbuf != oldbuf)       /* realloc can change expbuf! */
     {
         epp += compex->expbuf - oldbuf;

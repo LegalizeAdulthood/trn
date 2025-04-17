@@ -146,7 +146,7 @@ void univ_close()
     for (UniversalItem *node = g_first_univ; node; node = nextnode)
     {
         univ_free_data(node);
-        safefree(node->desc);
+        safe_free(node->desc);
         nextnode = node->next;
         std::free((char*)node);
     }
@@ -155,7 +155,7 @@ void univ_close()
         remove(g_univ_tmp_file.c_str());
         g_univ_tmp_file.clear();
     }
-    safefree(g_univ_fname);
+    safe_free(g_univ_fname);
     g_univ_title.clear();
     g_univ_label.clear();
     if (g_univ_ng_hash)
@@ -177,7 +177,7 @@ void univ_close()
 
 UniversalItem *univ_add(UniversalItemType type, const char *desc)
 {
-    UniversalItem *node = (UniversalItem*)safemalloc(sizeof(UniversalItem));
+    UniversalItem *node = (UniversalItem*)safe_malloc(sizeof(UniversalItem));
 
     node->flags = UF_NONE;
     if (desc)
@@ -221,38 +221,38 @@ static void univ_free_data(UniversalItem *ui)
         break;
 
     case UN_DEBUG1:   /* methods that use the string */
-        safefree(ui->data.str);
+        safe_free(ui->data.str);
         break;
 
     case UN_GROUP_MASK:        /* methods that have custom data */
-        safefree(ui->data.gmask.title);
-        safefree(ui->data.gmask.mask_list);
+        safe_free(ui->data.gmask.title);
+        safe_free(ui->data.gmask.mask_list);
         break;
 
     case UN_CONFIG_FILE:
-        safefree(ui->data.cfile.title);
-        safefree(ui->data.cfile.fname);
-        safefree(ui->data.cfile.label);
+        safe_free(ui->data.cfile.title);
+        safe_free(ui->data.cfile.fname);
+        safe_free(ui->data.cfile.label);
         break;
 
     case UN_NEWSGROUP:
     case UN_GROUP_DESEL:
-        safefree(ui->data.group.ng);
+        safe_free(ui->data.group.ng);
         break;
 
     case UN_ARTICLE:
-        safefree(ui->data.virt.ng);
-        safefree(ui->data.virt.from);
-        safefree(ui->data.virt.subj);
+        safe_free(ui->data.virt.ng);
+        safe_free(ui->data.virt.from);
+        safe_free(ui->data.virt.subj);
         break;
 
     case UN_VGROUP:
     case UN_VGROUP_DESEL:
-        safefree(ui->data.vgroup.ng);
+        safe_free(ui->data.vgroup.ng);
         break;
 
     case UN_TEXT_FILE:
-        safefree(ui->data.text_file.fname);
+        safe_free(ui->data.text_file.fname);
         break;
 
     case UN_DATA_SOURCE:  /* unimplemented methods */
@@ -613,7 +613,7 @@ static bool univ_use_file(const char *fname, const char *label)
         return false;
     }
     s_univ_begin_found = begin_top;
-    safefree0(s_univ_begin_label);
+    safe_free0(s_univ_begin_label);
     if (label)
     {
         s_univ_begin_label = savestr(label);
@@ -768,11 +768,11 @@ static bool univ_do_line(char *line)
     {
         if (*s == '>' && s[1] == ':' && !std::strcmp(s + 2, s_univ_begin_label))
         {
-            safefree0(s_univ_begin_label); /* interpret starting at next line */
+            safe_free0(s_univ_begin_label); /* interpret starting at next line */
         }
         return true;
     }
-    safefree0(s_univ_line_desc);
+    safe_free0(s_univ_line_desc);
     if (*s == '"')      /* description name */
     {
         p = cpytill(s,s+1,'"');
@@ -989,7 +989,7 @@ void univ_redo_file()
         univ_startup();
     }
 
-    safefree(tmp_fname);
+    safe_free(tmp_fname);
 }
 
 
@@ -1011,7 +1011,7 @@ static char *univ_edit_new_userfile()
         return g_univ_fname;    /* as if this function was not called */
     }
 
-    makedir(s, MD_FILE);
+    make_dir(s, MD_FILE);
 
     fp = std::fopen(s,"w");
     if (!fp)
@@ -1069,7 +1069,7 @@ void univ_page_file(char *fname)
     std::strcat(g_cmd_buf, filexp(fname));
     term_down(3);
     reset_tty();                  /* make sure tty is friendly */
-    doshell(SH,g_cmd_buf);      /* invoke the shell */
+    do_shell(SH,g_cmd_buf);      /* invoke the shell */
     no_echo();                   /* and make terminal */
     cr_mode();                   /*   unfriendly again */
     /* later: consider something else that will return the key, and
@@ -1213,7 +1213,7 @@ void univ_virt_pass()
             s_univ_use_min_score = false;
             /* later do something with return value */
             univ_free_data(ui);
-            safefree(ui->desc);
+            safe_free(ui->desc);
             ui->type = UN_DELETED;
             break;
 
@@ -1280,7 +1280,7 @@ void sort_univ()
         break;
     }
 
-    UniversalItem **univ_sort_list = (UniversalItem**)safemalloc(cnt * sizeof(UniversalItem*));
+    UniversalItem **univ_sort_list = (UniversalItem**)safe_malloc(cnt * sizeof(UniversalItem*));
     UniversalItem** lp = univ_sort_list;
     for (UniversalItem *ui = g_first_univ; ui; ui = ui->next)
     {

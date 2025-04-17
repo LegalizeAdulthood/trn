@@ -40,7 +40,7 @@ void set_newsgroup_to_do(const char *pat)
     {
         g_newsgroup_to_do[i] = savestr(pat);
 #ifndef lint
-        s_compextodo[i] = (CompiledRegex*)safemalloc(sizeof(CompiledRegex));
+        s_compextodo[i] = (CompiledRegex*)safe_malloc(sizeof(CompiledRegex));
 #endif
         init_compex(s_compextodo[i]);
         compile(s_compextodo[i],pat,true,true);

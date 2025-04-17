@@ -75,7 +75,7 @@ static int mp_alloc_frag()
     {
         return f;       /* already allocated */
     }
-    s_mpfrags[f].data = (char*)safemalloc(FRAG_SIZE);
+    s_mpfrags[f].data = (char*)safe_malloc(FRAG_SIZE);
     s_mpfrags[f].lastfree = s_mpfrags[f].data;
     s_mpfrags[f].bytesfree = FRAG_SIZE;
 

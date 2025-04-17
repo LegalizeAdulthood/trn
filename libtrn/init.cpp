@@ -52,7 +52,7 @@ long g_our_pid{};
 
 bool initialize(int argc, char *argv[])
 {
-    char *tcbuf = safemalloc(TCBUF_SIZE); /* make temp buffer for termcap and */
+    char *tcbuf = safe_malloc(TCBUF_SIZE); /* make temp buffer for termcap and */
                                           /* other initialization stuff */
 
     g_our_pid = (long)getpid();

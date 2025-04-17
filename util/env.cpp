@@ -180,10 +180,10 @@ bool env_init(char *tcbuf, bool lax)
 void env_final()
 {
     g_p_host_name.clear();
-    safefree0(g_local_host);
+    safe_free0(g_local_host);
     g_real_name.clear();
     g_login_name.clear();
-    safefree0(g_home_dir);
+    safe_free0(g_home_dir);
     g_tmp_dir.clear();
     g_dot_dir.clear();
     g_trn_dir.clear();
@@ -319,10 +319,10 @@ static bool set_user_name(char *tmpbuf)
         {
             if (GetLastError() == ERROR_MORE_DATA)
             {
-                char *buffer = safemalloc(size);
+                char *buffer = safe_malloc(size);
                 GetUserNameExA(NameDisplay, buffer, &size);
                 g_real_name = buffer;
-                safefree(buffer);
+                safe_free(buffer);
             }
         }
     }

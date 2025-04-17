@@ -53,8 +53,8 @@ char *decode_fix_filename(const char *s)
         s = "unknown";
     }
 
-    safefree(g_decode_filename);
-    g_decode_filename = safemalloc(std::strlen(s) + 2);
+    safe_free(g_decode_filename);
+    g_decode_filename = safe_malloc(std::strlen(s) + 2);
 
     /*TODO: we need to eliminate any "../"s from the string */
     while (*s == '/' || *s == '~')
@@ -137,7 +137,7 @@ char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
 
     *partp = part;
     *totalp = total;
-    safefree(subject);
+    safe_free(subject);
     subject = fetch_subj(art_num,true);
     if (!*subject)
     {
@@ -351,7 +351,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
         }
         std::strcat(g_buf, filename);
         std::fputs(g_buf,stdout);
-        if (g_nowait_fork)
+        if (g_no_wait_fork)
         {
             std::fflush(stdout);
         }
@@ -556,7 +556,7 @@ char *decode_mkdir(const char *filename)
     }
     *s++ = '/';
     *s = '\0';
-    if (makedir(dir, MD_FILE))
+    if (make_dir(dir, MD_FILE))
     {
         return nullptr;
     }

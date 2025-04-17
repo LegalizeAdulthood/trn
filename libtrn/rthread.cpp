@@ -1981,7 +1981,7 @@ void sort_subjects()
         break;
     }
 
-    Subject **subj_list = (Subject**)safemalloc(g_subject_count * sizeof(Subject*));
+    Subject **subj_list = (Subject**)safe_malloc(g_subject_count * sizeof(Subject*));
     for (lp = subj_list, sp = g_first_subject; sp; sp = sp->next)
     {
         *lp++ = sp;
@@ -2132,7 +2132,7 @@ static void build_artptrs()
 
     if (!g_art_ptr_list || g_art_ptr_list_size != count)
     {
-        g_art_ptr_list = (Article**)saferealloc((char*)g_art_ptr_list,
+        g_art_ptr_list = (Article**)safe_realloc((char*)g_art_ptr_list,
                 (MemorySize)count * sizeof (Article*));
         g_art_ptr_list_size = count;
     }

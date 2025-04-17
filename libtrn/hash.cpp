@@ -76,7 +76,7 @@ HashTable *hash_create(unsigned size, HashCompareFunc cmp_func)
         HashTable ht;
         HashEntry *hepa[1]; /* longer than it looks */
     };
-    alignalloc *aap = (alignalloc *)safemalloc(sizeof *aap + (size - 1) * sizeof(HashEntry *));
+    alignalloc *aap = (alignalloc *)safe_malloc(sizeof *aap + (size - 1) * sizeof(HashEntry *));
     std::memset((char*)aap,0,sizeof *aap + (size-1)*sizeof (HashEntry*));
     HashTable *tbl = &aap->ht;
     tbl->ht_size = size;
@@ -263,7 +263,7 @@ static HashEntry *healloc()
         int i;
 
         /* make a nice big block of hashents to play with */
-        hp = (HashEntry*)safemalloc(HEBLOCKSIZE * sizeof (HashEntry));
+        hp = (HashEntry*)safe_malloc(HEBLOCKSIZE * sizeof (HashEntry));
         /* set up the pointers within the block */
         for (i = 0; i < HEBLOCKSIZE-1; i++)
         {

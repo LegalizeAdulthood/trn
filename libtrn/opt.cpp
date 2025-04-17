@@ -210,7 +210,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     opt_file(*tcbufptr,tcbufptr,false);
 
     const int len = ini_len(g_options_ini);
-    g_option_def_vals = (char**)safemalloc(len*sizeof(char*));
+    g_option_def_vals = (char**)safe_malloc(len*sizeof(char*));
     std::memset((char*)g_option_def_vals,0,(g_options_ini)[0].checksum * sizeof (char*));
     /* Set DEFHIDE and DEFMAGIC to current values and clear g_user_htype list */
     set_header_list(HT_DEF_HIDE,HT_HIDE,"");
@@ -223,7 +223,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     if (stat(s, &ini_stat) < 0 || !S_ISDIR(ini_stat.st_mode))
     {
         std::printf("Creating the directory %s.\n",s);
-        if (makedir(s, MD_DIR))
+        if (make_dir(s, MD_DIR))
         {
             std::printf("Unable to create `%s'.\n",s);
             finalize(1);
@@ -248,7 +248,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
             sw_file(tcbufptr);
         }
     }
-    g_option_saved_vals = (char**)safemalloc(len*sizeof(char*));
+    g_option_saved_vals = (char**)safe_malloc(len*sizeof(char*));
     std::memset((char*)g_option_saved_vals,0,(g_options_ini)[0].checksum * sizeof (char*));
     g_option_flags = new OptionFlags[len];
     std::fill_n(g_option_flags, len, OF_NONE);
@@ -270,20 +270,20 @@ void opt_final()
     g_priv_dir.clear();
     delete[] g_option_flags;
     g_option_flags = nullptr;
-    safefree0(g_option_saved_vals);
+    safe_free0(g_option_saved_vals);
     g_ini_file.clear();
-    safefree0(g_option_def_vals);
-    safefree0(g_art_pager_btns);
-    safefree0(g_news_sel_btns);
-    safefree0(g_newsgroup_sel_btns);
-    safefree0(g_option_sel_btns);
-    safefree0(g_add_sel_btns);
-    safefree0(g_newsrc_sel_btns);
-    safefree0(g_univ_sel_btns);
+    safe_free0(g_option_def_vals);
+    safe_free0(g_art_pager_btns);
+    safe_free0(g_news_sel_btns);
+    safe_free0(g_newsgroup_sel_btns);
+    safe_free0(g_option_sel_btns);
+    safe_free0(g_add_sel_btns);
+    safe_free0(g_newsrc_sel_btns);
+    safe_free0(g_univ_sel_btns);
     g_sel_art_display_mode--;
-    safefree0(g_sel_art_display_mode);
+    safe_free0(g_sel_art_display_mode);
     g_sel_grp_display_mode--;
-    safefree0(g_sel_grp_display_mode);
+    safe_free0(g_sel_grp_display_mode);
 }
 
 void opt_file(const char *filename, char **tcbufptr, bool bleat)
@@ -299,7 +299,7 @@ void opt_file(const char *filename, char **tcbufptr, bool bleat)
         fstat(fd,&opt_stat);
         if (opt_stat.st_size >= TCBUF_SIZE - 1)
         {
-            filebuf = saferealloc(filebuf,(MemorySize)opt_stat.st_size+2);
+            filebuf = safe_realloc(filebuf,(MemorySize)opt_stat.st_size+2);
             *tcbufptr = filebuf;
         }
         if (opt_stat.st_size)
@@ -504,8 +504,8 @@ void set_option(OptionIndex num, const char *s)
 
     case OI_NEWSGROUP_SEL_STYLES:
         g_sel_grp_display_mode--;
-        safefree0(g_sel_grp_display_mode);
-        g_sel_grp_display_mode = safemalloc(std::strlen(s)+2);
+        safe_free0(g_sel_grp_display_mode);
+        g_sel_grp_display_mode = safe_malloc(std::strlen(s)+2);
         *g_sel_grp_display_mode++ = '*';
         std::strcpy(g_sel_grp_display_mode, s);
         break;
@@ -552,8 +552,8 @@ void set_option(OptionIndex num, const char *s)
 
     case OI_NEWS_SEL_STYLES:
         g_sel_art_display_mode--;
-        safefree0(g_sel_art_display_mode);
-        g_sel_art_display_mode = safemalloc(std::strlen(s)+2);
+        safe_free0(g_sel_art_display_mode);
+        g_sel_art_display_mode = safe_malloc(std::strlen(s)+2);
         *g_sel_art_display_mode++ = '*';
         std::strcpy(g_sel_art_display_mode, s);
         break;
@@ -866,7 +866,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_DEFAULT_REFETCH_TIME:
-        g_def_refetch_secs = text2secs(s, DEFAULT_REFETCH_SECS);
+        g_def_refetch_secs = text_to_secs(s, DEFAULT_REFETCH_SECS);
         break;
 
     case OI_ART_PAGER_BTNS:
@@ -969,7 +969,7 @@ void save_options(const char *filename)
         fstat(fd_in,&opt_stat);
         if (opt_stat.st_size)
         {
-            filebuf = safemalloc((MemorySize)opt_stat.st_size+2);
+            filebuf = safe_malloc((MemorySize)opt_stat.st_size+2);
             int len = read(fd_in, filebuf, (int)opt_stat.st_size);
             filebuf[len] = '\0';
         }
@@ -1072,7 +1072,7 @@ void save_options(const char *filename)
     }
     std::fclose(fp_out);
 
-    safefree(filebuf);
+    safe_free(filebuf);
 
     if (first_time)
     {
@@ -1402,7 +1402,7 @@ const char *option_value(OptionIndex num)
         return yes_or_no(false);
 
     case OI_DEFAULT_REFETCH_TIME:
-        return secs2text(g_def_refetch_secs);
+        return secs_to_text(g_def_refetch_secs);
 
     case OI_ART_PAGER_BTNS:
         return expand_mouse_buttons(g_art_pager_btns,g_art_pager_btn_cnt);
@@ -1655,9 +1655,9 @@ static int parse_mouse_buttons(char **cpp, const char *btns)
     char* t = *cpp;
     int cnt = 0;
 
-    safefree(t);
+    safe_free(t);
     btns = skip_eq(btns, ' ');
-    *cpp = safemalloc(std::strlen(btns) + 1);
+    *cpp = safe_malloc(std::strlen(btns) + 1);
     t = *cpp;
 
     while (*btns)
@@ -1707,13 +1707,13 @@ static char *expand_mouse_buttons(char *cp, int cnt)
         {
             int len = std::strlen(cp);
             cp[len] = ']';
-            safecat(g_buf,cp,sizeof g_buf);
+            safe_cat(g_buf,cp,sizeof g_buf);
             cp += len;
             *cp++ = '\0';
         }
         else
         {
-            safecat(g_buf, cp, sizeof g_buf);
+            safe_cat(g_buf, cp, sizeof g_buf);
         }
         cp += std::strlen(cp)+1;
     }
@@ -1795,10 +1795,10 @@ void cwd_check()
     if (change_dir(g_priv_dir))
     {
         safecpy(tmpbuf,filexp(g_priv_dir.c_str()),sizeof tmpbuf);
-        if (makedir(tmpbuf, MD_DIR) || change_dir(tmpbuf))
+        if (make_dir(tmpbuf, MD_DIR) || change_dir(tmpbuf))
         {
             interp(g_cmd_buf, (sizeof g_cmd_buf), "%~/News");
-            if (makedir(g_cmd_buf, MD_DIR))
+            if (make_dir(g_cmd_buf, MD_DIR))
             {
                 std::strcpy(tmpbuf, g_home_dir);
             }

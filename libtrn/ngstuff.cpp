@@ -76,7 +76,7 @@ int escapade()
     s = skip_eq(s, ' ');                /* skip leading spaces */
     interp(g_cmd_buf, (sizeof g_cmd_buf), s);/* interpret any % escapes */
     reset_tty();                          /* make sure tty is friendly */
-    doshell(nullptr,g_cmd_buf); /* invoke the shell */
+    do_shell(nullptr,g_cmd_buf); /* invoke the shell */
     no_echo();                           /* and make terminal */
     cr_mode();                           /*   unfriendly again */
     if (docd)

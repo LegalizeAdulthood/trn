@@ -117,15 +117,15 @@ int s_new_context(ScanContextType type)
     i++;
     if (i == 1)         /* none allocated before */
     {
-        g_s_contexts = (ScanContext*)safemalloc(sizeof (ScanContext));
+        g_s_contexts = (ScanContext*)safe_malloc(sizeof (ScanContext));
     }
     else
     {
-        g_s_contexts = (ScanContext*)saferealloc((char*)g_s_contexts,
+        g_s_contexts = (ScanContext*)safe_realloc((char*)g_s_contexts,
                                         i * sizeof (ScanContext));
     }
     g_s_contexts[i-1].page_ents =
-                        (PageEntry*)safemalloc(MAX_PAGE_SIZE*sizeof(PageEntry));
+                        (PageEntry*)safe_malloc(MAX_PAGE_SIZE*sizeof(PageEntry));
     s_init_context(i-1,type);
     g_s_num_contexts++;                 /* now safe to increment */
     return g_s_num_contexts-1;
