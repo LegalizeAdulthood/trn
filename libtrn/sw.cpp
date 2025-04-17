@@ -133,7 +133,7 @@ void decode_switch(const char *s)
     if (debug)
     {
         std::printf("Switch: %s\n",s);
-        termdown(1);
+        term_down(1);
     }
 #endif
     if (*s != '-' && *s != '+')         /* newsgroup pattern */

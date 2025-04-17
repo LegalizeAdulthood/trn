@@ -1532,7 +1532,7 @@ run_the_selector:
 #ifdef DEBUG
     case 'D':
         std::printf("\nFirst article: %ld\n",(long)g_firstart);
-        termdown(2);
+        term_down(2);
         article_walk(debug_article_output, 0);
         g_int_count = 0;
         return AS_ASK;
@@ -2127,7 +2127,7 @@ static bool debug_article_output(char *ptr, int arg)
     {
         std::printf("%5ld %c %s\n", article_num(ap),
                (ap->flags & AF_UNREAD)? 'y' : 'n', ap->subj->str);
-        termdown(1);
+        term_down(1);
     }
     return 0;
 }

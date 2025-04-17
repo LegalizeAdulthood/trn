@@ -964,7 +964,7 @@ PageSwitchResult page_switch()
         if (debug & DEB_INNERSRCH)
         {
             std::printf("Start here? %d  >=? %d\n",g_topline + g_gline + 1,g_artline);
-            termdown(1);
+            term_down(1);
         }
 #endif
         if (*g_buf == Ctl('i') || g_top_line+g_g_line+1 >= g_art_line_num)
@@ -1020,7 +1020,7 @@ PageSwitchResult page_switch()
         if (debug & DEB_INNERSRCH)
         {
             std::printf("On page? %ld <=? %ld\n",(long)g_innersearch,(long)g_artpos);
-            termdown(1);
+            term_down(1);
         }
 #endif
         if (g_inner_search <= g_art_pos)          /* already on page? */
@@ -1038,7 +1038,7 @@ PageSwitchResult page_switch()
             if (debug & DEB_INNERSRCH)
             {
                 std::printf("@ %d\n",g_highlight);
-                termdown(1);
+                term_down(1);
             }
 #endif
             g_top_line = g_highlight - g_g_line;
@@ -1404,7 +1404,7 @@ bool inner_more()
         {
             std::printf("There it is %ld = %ld, %d @ %d\n",(long)g_artpos,
                 (long)g_innersearch,g_hide_everything,g_highlight);
-            termdown(1);
+            term_down(1);
         }
 #endif
         if (g_hide_everything)          /* forced refresh? */
@@ -1417,7 +1417,7 @@ bool inner_more()
     if (debug & DEB_INNERSRCH)
     {
         std::printf("Not far enough? %d <? %d + %d\n",g_artline,s_isrchline,g_gline);
-        termdown(1);
+        term_down(1);
     }
 #endif
     if (g_art_line_num < s_isrchline + g_g_line)

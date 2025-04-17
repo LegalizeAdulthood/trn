@@ -81,6 +81,6 @@ void write_last()
     else
     {
         std::printf(g_cantcreate,g_buf);
-        /*termdown(1);*/
+        /*term_down(1);*/
     }
 }

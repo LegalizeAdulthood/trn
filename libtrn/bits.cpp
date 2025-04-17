@@ -92,7 +92,7 @@ void rc_to_bits()
     if (debug & DEB_CTLAREA_BITMAP)
     {
         std::printf("\n%s\n",mybuf);
-        termdown(2);
+        term_down(2);
         for (i = article_first(g_absfirst); i < g_firstart; i = article_next(i))
         {
             if (article_unread(i))
@@ -152,7 +152,7 @@ void rc_to_bits()
         if (debug & DEB_CTLAREA_BITMAP)
         {
             std::printf("\n%s\n",s);
-            termdown(2);
+            term_down(2);
             for (i = g_absfirst; i <= g_lastart; i++)
             {
                 if (!was_read(i))
@@ -188,7 +188,7 @@ void rc_to_bits()
     if (debug & DEB_CTLAREA_BITMAP)
     {
         std::fputs("\n(hit CR)",stdout);
-        termdown(1);
+        term_down(1);
         std::fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
     }
 #endif
@@ -291,7 +291,7 @@ void bits_to_rc()
     {
         std::printf("%s: %s\n",g_ngptr->rcline,g_ngptr->rcline+g_ngptr->numoffset);
         std::printf("%s\n",mybuf);
-        termdown(2);
+        term_down(2);
     }
 #endif
     std::free(g_newsgroup_ptr->rc_line);              /* return old rc line */
@@ -752,7 +752,7 @@ static int chase_xref(ArticleNum artnum, int markread)
     if (debug & DEB_XREF_MARKER)
     {
         std::printf("Xref: %s\n",xref_buf);
-        termdown(1);
+        term_down(1);
     }
 # endif
     curxref = copy_till(tmpbuf,xref_buf,' ') + 1;
@@ -870,7 +870,7 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
     if (debug)
     {
         std::printf("Xref not from %s -- ignoring\n",inews_site);
-        termdown(1);
+        term_down(1);
     }
 #endif
     return false;

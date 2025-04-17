@@ -691,7 +691,7 @@ int cancel_article()
         {
             std::printf("\n%s@%s != %s\n",g_login_name.c_str(),g_hostname,from_buf);
             std::printf("%s != %s\n",get_val("FROM",""),from_buf);
-            termdown(3);
+            term_down(3);
         }
 #endif
         if (g_verbose)
@@ -764,7 +764,7 @@ int supersede_article()         /* Supersedes: */
         {
             std::printf("\n%s@%s != %s\n",g_login_name.c_str(),g_hostname,from_buf);
             std::printf("%s != %s\n",get_val("FROM",""),from_buf);
-            termdown(3);
+            term_down(3);
         }
 #endif
         if (g_verbose)

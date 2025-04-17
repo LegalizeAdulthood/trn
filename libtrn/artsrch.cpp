@@ -299,7 +299,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         if (debug)
         {
             std::printf("\npattern = %s\n",pattern);
-            termdown(2);
+            term_down(2);
         }
 #endif
     }

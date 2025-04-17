@@ -360,7 +360,7 @@ void opt_file(const char *filename, char **tcbufptr, bool bleat)
     else if (bleat)
     {
         std::printf(g_cantopen,filename);
-        /*termdown(1);*/
+        /*term_down(1);*/
     }
 
     *filebuf = '\0';

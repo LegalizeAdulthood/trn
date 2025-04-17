@@ -446,7 +446,7 @@ static bool lock_newsrc(Newsrc *rp)
         {
             std::printf("\nNewsrc locked by %ld on host %s.\n",processnum,runninghost);
         }
-        termdown(2);
+        term_down(2);
         if (std::strcmp(runninghost, g_local_host))
         {
             if (g_verbose)
@@ -455,14 +455,14 @@ static bool lock_newsrc(Newsrc *rp)
                        "Since that's not the same host as this one (%s), we must\n"
                        "assume that process still exists.  To override this check, remove\n"
                        "the lock file: %s\n",
-                       g_local_host, rp->lockname);
+                       g_local_host, rp->lock_name);
             }
             else
             {
                 std::printf("\nThis host (%s) doesn't match.\nCan't unlock %s.\n",
-                       g_local_host, rp->lockname);
+                       g_local_host, rp->lock_name);
             }
-            termdown(2);
+            term_down(2);
             if (g_bizarre)
             {
                 reset_tty();
@@ -481,7 +481,7 @@ static bool lock_newsrc(Newsrc *rp)
             {
                 std::printf("\nAccess file error (our pid detected).\n");
             }
-            termdown(2);
+            term_down(2);
             return false;
         }
         if (kill(processnum, 0) != 0)
@@ -500,19 +500,19 @@ static bool lock_newsrc(Newsrc *rp)
             {
                 std::fputs("\nProcess crashed.\n",stdout);
             }
-            if (!g_lastngname.empty())
+            if (!g_last_newsgroup_name.empty())
             {
                 if (g_verbose)
                 {
                     std::printf("(The last newsgroup accessed was %s.)\n\n",
-                           g_lastngname.c_str());
+                           g_last_newsgroup_name.c_str());
                 }
                 else
                 {
-                    std::printf("(In %s.)\n\n",g_lastngname.c_str());
+                    std::printf("(In %s.)\n\n",g_last_newsgroup_name.c_str());
                 }
             }
-            termdown(2);
+            term_down(2);
             get_anything();
             newline();
         }
@@ -523,13 +523,13 @@ static bool lock_newsrc(Newsrc *rp)
                 std::printf("\n"
                        "It looks like that process still exists.  To override this, remove\n"
                        "the lock file: %s\n",
-                       rp->lockname);
+                       rp->lock_name);
             }
             else
             {
-                std::printf("\nCan't unlock %s.\n", rp->lockname);
+                std::printf("\nCan't unlock %s.\n", rp->lock_name);
             }
-            termdown(2);
+            term_down(2);
             if (g_bizarre)
             {
                 reset_tty();
@@ -1768,7 +1768,7 @@ bool write_newsrcs(Multirc *mptr)
             if (debug & DEB_NEWSRC_LINE)
             {
                 std::printf("%s\n",np->rcline);
-                termdown(1);
+                term_down(1);
             }
 #endif
             if (std::fprintf(rcfp, "%s\n", np->rc_line) < 0)

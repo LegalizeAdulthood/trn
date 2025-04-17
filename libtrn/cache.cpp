@@ -829,7 +829,7 @@ void look_ahead()
             std::fflush(stdout);
             std::fgets(g_buf+128, sizeof g_buf-128, stdin);
             std::printf("\npattern = %s\n",pattern);
-            termdown(2);
+            term_down(2);
         }
 #endif
         s = compile(&s_srchcompex, pattern, true, true);
@@ -837,7 +837,7 @@ void look_ahead()
         {
                                     /* compile regular expression */
             std::printf("\n%s\n",s);
-            termdown(2);
+            term_down(2);
             g_srchahead = 0;
         }
         if (g_srchahead)
