@@ -336,7 +336,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
     {
         if (change_dir(dir))
         {
-            std::printf(g_nocd,dir);
+            std::printf(g_no_cd,dir);
             sig_catcher(0);
         }
     }

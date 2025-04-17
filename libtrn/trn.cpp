@@ -390,7 +390,7 @@ void do_multirc()
                 goto reinp_newsgroup;
 
             case ING_ERROR:
-                std::printf("\n%s",g_hforhelp);
+                std::printf("\n%s",g_h_for_help);
                 term_down(2);
                 settle_down();
                 goto reask_newsgroup;
@@ -722,7 +722,7 @@ InputNewsgroupResult input_newsgroup()
         if (g_newsgroup_ptr && g_newsgroup_ptr->to_read >= TR_NONE)  /* unsubscribable? */
         {
             newline();
-            std::printf(g_unsubto,g_newsgroup_ptr->rc_line);
+            std::printf(g_unsub_to,g_newsgroup_ptr->rc_line);
             term_down(1);
             g_newsgroup_ptr->subscribe_char = NEGCHAR;   /* unsubscribe it */
             g_newsgroup_ptr->to_read = TR_UNSUB;         /* and make line invisible */
@@ -765,7 +765,7 @@ reask_abandon:
         }
         else if (*g_buf != 'y' && *g_buf != 'n' && *g_buf != 'q')
         {
-            std::fputs(g_hforhelp,stdout);
+            std::fputs(g_h_for_help,stdout);
             term_down(1);
             settle_down();
             goto reask_abandon;

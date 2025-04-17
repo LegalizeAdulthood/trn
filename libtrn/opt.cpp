@@ -359,7 +359,7 @@ void opt_file(const char *filename, char **tcbufptr, bool bleat)
     }
     else if (bleat)
     {
-        std::printf(g_cantopen,filename);
+        std::printf(g_cant_open,filename);
         /*term_down(1);*/
     }
 
@@ -956,7 +956,7 @@ void save_options(const char *filename)
     std::FILE *fp_out = std::fopen(g_buf, "w");
     if (!fp_out)
     {
-        std::printf(g_cantcreate,g_buf);
+        std::printf(g_cant_create,g_buf);
         return;
     }
     int fd_in = open(filename, 0);

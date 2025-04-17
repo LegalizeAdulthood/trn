@@ -141,7 +141,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
 
     if (change_dir(g_data_source->spool_dir))
     {
-        std::printf(g_nocd,g_data_source->spool_dir);
+        std::printf(g_no_cd,g_data_source->spool_dir);
         return NG_ERROR;
     }
 
@@ -795,7 +795,7 @@ static ArticleSwitchResult art_switch()
         }
         else
         {
-            std::fputs(g_hforhelp,stdout);
+            std::fputs(g_h_for_help,stdout);
             term_down(1);
             settle_down();
             goto reask_unread;
@@ -1367,7 +1367,7 @@ normal_search:
 
     case 'u':                 /* unsubscribe from this newsgroup? */
         newline();
-        std::printf(g_unsubto,g_newsgroup_name.c_str());
+        std::printf(g_unsub_to,g_newsgroup_name.c_str());
         term_down(1);
         g_newsgroup_ptr->subscribe_char = NEGCHAR;
         g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
@@ -1734,7 +1734,7 @@ run_the_selector:
 
 #ifdef STRICTCR
     case '\n':   case '\r':
-        std::fputs(g_badcr,stdout);
+        std::fputs(g_bad_cr,stdout);
         return AS_ASK;
 #endif
 
@@ -1840,7 +1840,7 @@ run_the_selector:
         /* FALL THROUGH */
 
     default:
-        std::printf("\n%s",g_hforhelp);
+        std::printf("\n%s",g_h_for_help);
         term_down(2);
         settle_down();
         break;
@@ -1989,7 +1989,7 @@ reask_catchup:
     if (ch != 'y' && ch != 'u')
     {
         use_one_line = false;
-        std::printf("\n%s\n", g_hforhelp);
+        std::printf("\n%s\n", g_h_for_help);
         term_down(3);
         settle_down();
         goto reask_catchup;
@@ -2026,7 +2026,7 @@ reask_catchup:
         g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
         g_newsgroup_to_read--;
         newline();
-        std::printf(g_unsubto,g_newsgroup_name.c_str());
+        std::printf(g_unsub_to,g_newsgroup_name.c_str());
         std::printf("(If you meant to hit 'y' instead of 'u', press '-'.)\n");
         term_down(2);
     }
@@ -2380,7 +2380,7 @@ reask_memorize:
     else
     {
         use_one_line = false;
-        std::printf("\n%s\n", g_hforhelp);
+        std::printf("\n%s\n", g_h_for_help);
         term_down(3);
         settle_down();
         goto reask_memorize;

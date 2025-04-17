@@ -677,13 +677,13 @@ bool all_bits(T val, U bits)
 
 /* Factored strings */
 
-extern const char *g_hforhelp;
+extern const char *g_h_for_help;
 #ifdef STRICTCR
-extern char g_badcr[];
+extern char g_bad_cr[];
 #endif
-extern const char *g_unsubto;
-extern const char *g_cantopen;
-extern const char *g_cantcreate;
-extern const char *g_nocd;
+extern const char *g_unsub_to;
+extern const char *g_cant_open;
+extern const char *g_cant_create;
+extern const char *g_no_cd;
 
 #endif

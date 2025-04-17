@@ -262,7 +262,7 @@ static void new_local_groups(DataSource *dp)
     std::FILE *fp = std::fopen(dp->extra_name, "r");
     if (fp == nullptr)
     {
-        std::printf(g_cantopen, dp->extra_name);
+        std::printf(g_cant_open, dp->extra_name);
         term_down(1);
         return;
     }

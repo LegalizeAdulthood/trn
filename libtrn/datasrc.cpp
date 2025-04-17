@@ -953,7 +953,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
 
     if (filename && fp == nullptr)
     {
-        std::printf(g_cantopen, filename);
+        std::printf(g_cant_open, filename);
         term_down(1);
         return 0;
     }
@@ -1403,7 +1403,7 @@ reask:
                 return 1;
             }
         }
-        std::fputs(g_hforhelp, stdout);
+        std::fputs(g_h_for_help, stdout);
         break;
     }
 

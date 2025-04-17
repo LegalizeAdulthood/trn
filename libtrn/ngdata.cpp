@@ -144,7 +144,7 @@ int access_newsgroup()
         /* chdir to newsgroup subdirectory */
         if (change_dir(g_newsgroup_dir))
         {
-            std::printf(g_nocd,g_newsgroup_dir.c_str());
+            std::printf(g_no_cd,g_newsgroup_dir.c_str());
             return 0;
         }
         g_last_art = get_newsgroup_size(g_newsgroup_ptr);
@@ -167,7 +167,7 @@ void chdir_news_dir()
 {
     if (change_dir(g_data_source->spool_dir) || (!(g_data_source->flags & DF_REMOTE) && change_dir(g_newsgroup_dir)))
     {
-        std::printf(g_nocd,g_newsgroup_dir.c_str());
+        std::printf(g_no_cd,g_newsgroup_dir.c_str());
         sig_catcher(0);
     }
 }

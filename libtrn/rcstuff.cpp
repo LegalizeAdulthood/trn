@@ -541,7 +541,7 @@ static bool lock_newsrc(Newsrc *rp)
     std::FILE *fp = std::fopen(rp->lock_name, "w");
     if (fp == nullptr)
     {
-        std::printf(g_cantcreate,rp->lock_name);
+        std::printf(g_cant_create,rp->lock_name);
         sig_catcher(0);
     }
     std::fprintf(fp,"%ld\n%s\n",g_our_pid,g_local_host);
@@ -1118,7 +1118,7 @@ reask_add:
             }
             else
             {
-                std::fputs(g_hforhelp,stdout);
+                std::fputs(g_h_for_help,stdout);
                 term_down(1);
                 settle_down();
                 goto reask_add;
@@ -1171,7 +1171,7 @@ reask_unsub:
         }
         else
         {
-            std::fputs(g_hforhelp,stdout);
+            std::fputs(g_h_for_help,stdout);
             term_down(1);
             settle_down();
             goto reask_unsub;
@@ -1400,7 +1400,7 @@ bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum)
         }
         else
         {
-            std::printf("\n%s",g_hforhelp);
+            std::printf("\n%s",g_h_for_help);
             term_down(2);
             settle_down();
             goto reask_reloc;
@@ -1615,7 +1615,7 @@ reask_bogus:
         }
         else
         {
-            std::fputs(g_hforhelp,stdout);
+            std::fputs(g_h_for_help,stdout);
             term_down(1);
             settle_down();
             goto reask_bogus;

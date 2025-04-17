@@ -69,7 +69,7 @@ int escapade()
         trn_getwd(whereiam, sizeof(whereiam));
         if (change_dir(g_priv_dir))
         {
-            std::printf(g_nocd,g_priv_dir.c_str());
+            std::printf(g_no_cd,g_priv_dir.c_str());
             sig_catcher(0);
         }
     }
@@ -83,7 +83,7 @@ int escapade()
     {
         if (change_dir(whereiam))
         {
-            std::printf(g_nocd,whereiam);
+            std::printf(g_no_cd,whereiam);
             sig_catcher(0);
         }
     }
@@ -162,7 +162,7 @@ int switcheroo()
             cwd_check();
             if (change_dir(whereami))                /* -d does chdirs */
             {
-                std::printf(g_nocd,whereami);
+                std::printf(g_no_cd,whereami);
                 sig_catcher(0);
             }
         }
@@ -876,7 +876,7 @@ int newsgroup_perform(char *cmdlst, int output_level)
         case 'u':
             if (output_level && g_verbose)
             {
-                std::printf(g_unsubto,g_newsgroup_ptr->rc_line);
+                std::printf(g_unsub_to,g_newsgroup_ptr->rc_line);
                 term_down(1);
             }
             g_newsgroup_ptr->subscribe_char = NEGCHAR;

@@ -80,7 +80,7 @@ void write_last()
     }
     else
     {
-        std::printf(g_cantcreate,g_buf);
+        std::printf(g_cant_create,g_buf);
         /*term_down(1);*/
     }
 }

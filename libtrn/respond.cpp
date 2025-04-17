@@ -95,7 +95,7 @@ SaveResult save_article()
     }
     if (change_dir(g_priv_dir))
     {
-        std::printf(g_nocd,g_priv_dir.c_str());
+        std::printf(g_no_cd,g_priv_dir.c_str());
         sig_catcher(0);
     }
     if (cmd == 'e')             /* is this an extract command? */
@@ -215,7 +215,7 @@ SaveResult save_article()
         }
         if (change_dir(s))
         {
-            std::printf(g_nocd,s);
+            std::printf(g_no_cd,s);
             sig_catcher(0);
         }
         c = trn_getwd(g_buf, sizeof(g_buf));    /* simplify path for output */
@@ -463,7 +463,7 @@ SaveResult save_article()
                 }
                 else
                 {
-                    std::fputs(g_hforhelp,stdout);
+                    std::fputs(g_h_for_help,stdout);
                     term_down(1);
                     settle_down();
                     goto reask_save;
@@ -709,7 +709,7 @@ int cancel_article()
         std::FILE *header = std::fopen(g_head_name.c_str(),"w");   /* open header file */
         if (header == nullptr)
         {
-            std::printf(g_cantcreate,g_head_name.c_str());
+            std::printf(g_cant_create,g_head_name.c_str());
             term_down(1);
             goto done;
         }
@@ -782,7 +782,7 @@ int supersede_article()         /* Supersedes: */
         std::FILE *header = std::fopen(g_head_name.c_str(),"w");   /* open header file */
         if (header == nullptr)
         {
-            std::printf(g_cantcreate,g_head_name.c_str());
+            std::printf(g_cant_create,g_head_name.c_str());
             term_down(1);
             goto done;
         }
@@ -869,7 +869,7 @@ void reply()
     std::FILE *header = std::fopen(g_head_name.c_str(),"w");       /* open header file */
     if (header == nullptr)
     {
-        std::printf(g_cantcreate,g_head_name.c_str());
+        std::printf(g_cant_create,g_head_name.c_str());
         term_down(1);
         goto done;
     }
@@ -939,7 +939,7 @@ void forward()
     std::FILE *header = std::fopen(g_head_name.c_str(),"w");       /* open header file */
     if (header == nullptr)
     {
-        std::printf(g_cantcreate,g_head_name.c_str());
+        std::printf(g_cant_create,g_head_name.c_str());
         term_down(1);
         goto done;
     }
@@ -1088,7 +1088,7 @@ void followup()
     std::FILE *header = std::fopen(g_head_name.c_str(),"w");
     if (header == nullptr)
     {
-        std::printf(g_cantcreate,g_head_name.c_str());
+        std::printf(g_cant_create,g_head_name.c_str());
         term_down(1);
         g_art = oldart;
         return;
@@ -1153,7 +1153,7 @@ int invoke(const char *cmd, const char *dir)
     {
         if (change_dir(dir))
         {
-            std::printf(g_nocd,dir);
+            std::printf(g_no_cd,dir);
             return ret;
         }
     }

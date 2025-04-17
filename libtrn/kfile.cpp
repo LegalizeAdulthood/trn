@@ -593,7 +593,7 @@ void rewrite_kill_file(ArticleNum thru)
     }
     else
     {
-        std::printf(g_cantcreate, g_buf);
+        std::printf(g_cant_create, g_buf);
     }
 }
 
@@ -946,7 +946,7 @@ void kill_file_append(const char *cmd, bool local)
         }
         else
         {
-            std::printf(g_cantopen, g_cmd_buf);
+            std::printf(g_cant_open, g_cmd_buf);
         }
         term_down(2);
     }

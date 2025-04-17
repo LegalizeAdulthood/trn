@@ -24,7 +24,7 @@ void back_page_init()
     remove(varyname);
     if (s_varyfd < 0)
     {
-        std::printf(g_cantopen,varyname);
+        std::printf(g_cant_open,varyname);
         sig_catcher(0);
     }
 

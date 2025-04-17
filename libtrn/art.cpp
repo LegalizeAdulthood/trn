@@ -1368,7 +1368,7 @@ leave_pager:
         return PS_TOEND;
 
     default:
-        std::fputs(g_hforhelp,stdout);
+        std::fputs(g_h_for_help,stdout);
         term_down(1);
         settle_down();
         return PS_ASK;
