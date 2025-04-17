@@ -50,16 +50,16 @@ int         g_perform_count{};
 
 #ifdef HAS_NEWS_ADMIN
 const std::string g_news_admin{NEWS_ADMIN}; /* news administrator */
-int g_news_uid{};
+int               g_news_uid{};
 #endif
 
-static char *skipinterp(char *pattern, const char *stoppers);
+static char *skip_interp(char *pattern, const char *stoppers);
 static void abort_interp();
 
-static const char *s_regexp_specials = "^$.*[\\/?%";
-static CompiledRegex      s_cond_compex;
-static char        s_empty[]{""};
-static std::string s_last_input;
+static const char   *s_regexp_specials = "^$.*[\\/?%";
+static CompiledRegex s_cond_compex;
+static char          s_empty[]{""};
+static std::string   s_last_input;
 
 void interp_init(char *tcbuf, int tcbuf_len)
 {
@@ -137,7 +137,7 @@ void interp_final()
 
 /* skip interpolations */
 
-static char *skipinterp(char *pattern, const char *stoppers)
+static char *skip_interp(char *pattern, const char *stoppers)
 {
 #ifdef DEBUG
     if (debug & DEB_INTRP)
@@ -193,7 +193,7 @@ static char *skipinterp(char *pattern, const char *stoppers)
 
             case '(':
             {
-                pattern = skipinterp(pattern+1,"!=");
+                pattern = skip_interp(pattern+1,"!=");
                 if (!*pattern)
                 {
                     goto getout;
@@ -209,22 +209,22 @@ static char *skipinterp(char *pattern, const char *stoppers)
                 {
                     goto getout;
                 }
-                pattern = skipinterp(pattern+1,":)");
+                pattern = skip_interp(pattern+1,":)");
                 if (*pattern == ':')
                 {
-                    pattern = skipinterp(pattern + 1, ")");
+                    pattern = skip_interp(pattern + 1, ")");
                 }
                 break;
             }
 
             case '`':
             {
-                pattern = skipinterp(pattern+1,"`");
+                pattern = skip_interp(pattern+1,"`");
                 break;
             }
 
             case '"':
-                pattern = skipinterp(pattern+1,"\"");
+                pattern = skip_interp(pattern+1,"\"");
                 break;
 
             default:
@@ -492,12 +492,12 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         pattern = do_interp(dest,dest_size,pattern+1,":)",cmd);
                         if (*pattern == ':')
                         {
-                            pattern = skipinterp(pattern + 1, ")");
+                            pattern = skip_interp(pattern + 1, ")");
                         }
                     }
                     else
                     {
-                        pattern = skipinterp(pattern+1,":)");
+                        pattern = skip_interp(pattern+1,":)");
                         if (*pattern == ':')
                         {
                             pattern++;
