@@ -16,7 +16,7 @@ enum SaCommand
     SA_EXTRACT = 6
 };
 
-int sa_docmd();
+int sa_do_cmd();
 bool sa_extract_start();
 void sa_art_cmd_prim(SaCommand cmd, long a);
 int sa_art_cmd(int multiple, SaCommand cmd, long a);

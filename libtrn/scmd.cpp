@@ -87,7 +87,7 @@ int s_cmdloop()
             switch (g_s_cur_type)
             {
             case S_ART:
-                i = sa_docmd();
+                i = sa_do_cmd();
                 break;
 
             default:

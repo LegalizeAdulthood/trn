@@ -39,7 +39,7 @@ static bool  s_sa_extract_junk{}; /* junk articles after extracting them */
  * a condition code (negative #s) or an art# to read.  Also responsible
  * for setting refresh flags if necessary.
  */
-int sa_docmd()
+int sa_do_cmd()
 {
     long    b; /* misc. artnum */
     int     i; /* for misc. purposes */
