@@ -622,7 +622,7 @@ static bool open_newsrc(Newsrc *rp)
         /* unlink backup file name and backup current name */
         remove(rp->old_name);
 #ifndef NO_FILELINKS
-        safe_link(rp->name,rp->oldname);
+        safe_link(rp->name,rp->old_name);
 #endif
     }
 
@@ -1738,8 +1738,8 @@ bool write_newsrcs(Multirc *mptr)
         stat_t perms;
         if (stat(rp->name,&perms)>=0)   /* preserve permissions */
         {
-            chmod(rp->newname,perms.st_mode&0666);
-            chown(rp->newname,perms.st_uid,perms.st_gid);
+            chmod(rp->new_name,perms.st_mode&0666);
+            chown(rp->new_name,perms.st_uid,perms.st_gid);
         }
 #endif
         /* write out each line*/
