@@ -364,7 +364,7 @@ char *read_art_buf(bool view_inline)
         {
             int save_term_line = g_term_line;
             g_nowait_fork = true;
-            color_object(COLOR_MIMEDESC, true);
+            color_object(COLOR_MIME_DESC, true);
             if (decode_piece(mcp, bp))
             {
                 std::strcpy(bp = g_art_buf + g_art_buf_pos, g_art_line);

@@ -848,11 +848,11 @@ bool maybe_set_color(const char *cp, bool back_search)
     const char ch = (cp == g_art_buf || cp == g_art_line? 0 : cp[-1]);
     if (ch == '\001')
     {
-        color_object(COLOR_MIMEDESC, false);
+        color_object(COLOR_MIME_DESC, false);
     }
     else if (ch == '\002')
     {
-        color_object(COLOR_MIMESEP, false);
+        color_object(COLOR_MIME_SEP, false);
     }
     else if (ch == WRAPPED_NL)
     {
@@ -871,11 +871,11 @@ bool maybe_set_color(const char *cp, bool back_search)
         cp = skip_hor_space(cp);
         if (std::strchr(">}]#!:|", *cp))
         {
-            color_object(COLOR_CITEDTEXT, false);
+            color_object(COLOR_CITE_DTEXT, false);
         }
         else
         {
-            color_object(COLOR_BODYTEXT, false);
+            color_object(COLOR_BODY_TEXT, false);
         }
     }
     return false;

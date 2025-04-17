@@ -533,7 +533,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
         }
         else if (s_header_indent == 0 && *line != '+')
         {
-            color_string(COLOR_ARTLINE1, line);
+            color_string(COLOR_ART_LINE1, line);
         }
         else
         {
