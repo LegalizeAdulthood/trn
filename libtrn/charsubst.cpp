@@ -28,7 +28,7 @@ std::string g_charsets{"patm"};
 const char *g_char_subst{};
 
 /* TeX encoding table - gives ISO char for "x (x=32..127) */
-static Uchar s_textbl[96] =
+static Uchar s_tex_tbl[96] =
 // clang-format off
 {
     0,  0,'"',  0,  0,  0,  0,'"',  0,  0,  0,  0,  0,  0,  0,  0,
@@ -39,9 +39,9 @@ static Uchar s_textbl[96] =
     0,  0,  0,223,  0,252,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
 };
 // clang-format on
-static char s_texchar{};
+static char s_tex_char{};
 
-static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t);
+static int latin1_to_ascii(Uchar *asc, const Uchar *iso, int limit, int t);
 
 int put_subst_char(int c, int limit, bool output_ok)
 {
@@ -56,7 +56,7 @@ int put_subst_char(int c, int limit, bool output_ok)
         t = *g_char_subst == 'm' ? 1 : 2;
         oc[0] = (Uchar)c;
         oc[1] = '\0';
-        i = Latin1toASCII(nc, oc, sizeof nc, t);
+        i = latin1_to_ascii(nc, oc, sizeof nc, t);
         if (i <= limit)
         {
             if (output_ok)
@@ -76,18 +76,18 @@ int put_subst_char(int c, int limit, bool output_ok)
     case 't':
         if (c == '\\' || c == '"')
         {
-            if (s_texchar && (c == '\\' || s_texchar != '\\'))
+            if (s_tex_char && (c == '\\' || s_tex_char != '\\'))
             {
                 if (output_ok)
                 {
-                    std::putchar(s_texchar);
+                    std::putchar(s_tex_char);
                 }
                 i++;
             }
-            s_texchar = (char)c;
+            s_tex_char = (char)c;
             break;
         }
-        else if (s_texchar == '\\')
+        else if (s_tex_char == '\\')
         {
             if (output_ok)
             {
@@ -100,7 +100,7 @@ int put_subst_char(int c, int limit, bool output_ok)
             }
             i++;
         }
-        else if (s_texchar == '"')
+        else if (s_tex_char == '"')
         {
             Uchar d;
             if (c < 32 || c > 128)
@@ -109,9 +109,9 @@ int put_subst_char(int c, int limit, bool output_ok)
             }
             else
             {
-                d = s_textbl[c - 32];
+                d = s_tex_tbl[c - 32];
             }
-            s_texchar = '\0';
+            s_tex_char = '\0';
             if (d)
             {
                 c = d;
@@ -188,10 +188,10 @@ int str_char_subst(char *outb, const char *inb, int limit, char_int subst)
     switch (subst)
     {
     case 'm':
-        return Latin1toASCII((Uchar *) outb, (const Uchar *) inb, limit, 1);
+        return latin1_to_ascii((Uchar *) outb, (const Uchar *) inb, limit, 1);
 
     case 'a':
-        return Latin1toASCII((Uchar *) outb, (const Uchar *) inb, limit, 2);
+        return latin1_to_ascii((Uchar *) outb, (const Uchar *) inb, limit, 2);
 
     default:
         break;
@@ -236,7 +236,7 @@ int str_char_subst(char *outb, const char *inb, int limit, char_int subst)
 
 #define SUB nullptr       /* used if no reasonable ASCII string is possible */
 
-static const char* s_iso2asc[ISO_TABLES][96] =
+static const char* s_iso_to_ascii[ISO_TABLES][96] =
 // clang-format off
 {
     {
@@ -264,7 +264,7 @@ static const char* s_iso2asc[ISO_TABLES][96] =
  *
  *  worst case: strlen(iso) == 4*strlen(asc)
  */
-static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t)
+static int latin1_to_ascii(Uchar *asc, const Uchar *iso, int limit, int t)
 {
     Uchar *s = asc;
 
@@ -278,7 +278,7 @@ static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t)
         return s - asc;
     }
     t--;        /* offset correction -ot */
-    const char **tab = s_iso2asc[t] - 0xa0;
+    const char **tab = s_iso_to_ascii[t] - 0xa0;
     while (*iso)
     {
         if (*iso > 0x9f)

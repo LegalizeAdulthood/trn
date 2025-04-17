@@ -90,7 +90,7 @@ static ColorObj s_objects[MAX_COLORS] =
 
 /* The attribute stack.  The 0th element is always the "normal" object. */
 static ColorObj s_color_stack[STACK_SIZE];
-static int       s_stack_pointer{};
+static int      s_stack_pointer{};
 
 /* Initialize color support after trnrc is read. */
 void color_init()
