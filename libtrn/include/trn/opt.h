@@ -21,7 +21,7 @@ enum OptionIndex
     OI_ERASE_SCREEN,
     OI_ERASE_EACH_LINE,
     OI_MUCK_UP_CLEAR,
-    OI_BKGND_SPINNER,
+    OI_BACKGROUND_SPINNER,
     OI_CHARSET,
     OI_FILTER_CONTROL_CHARACTERS,
 
@@ -59,8 +59,8 @@ enum OptionIndex
     OI_GOTO_LINE_NUM,
     OI_IGNORE_THRU_ON_SELECT,
     OI_READ_BREADTH_FIRST,
-    OI_BKGND_THREADING,
-    OI_SCANMODE_COUNT,
+    OI_BACKGROUND_THREADING,
+    OI_SCAN_MODE_COUNT,
     OI_HEADER_MAGIC,
     OI_HEADER_HIDING,
 
@@ -70,10 +70,10 @@ enum OptionIndex
     /* Save Options */
     OI_SAVE_DIR = OI_CITED_TEXT_STRING + 2,
     OI_AUTO_SAVE_NAME,
-    OI_SAVEFILE_TYPE,
+    OI_SAVE_FILE_TYPE,
 
     /* Mouse Options */
-    OI_USE_MOUSE = OI_SAVEFILE_TYPE + 2,
+    OI_USE_MOUSE = OI_SAVE_FILE_TYPE + 2,
     OI_MOUSE_MODES,
     OI_UNIV_SEL_BTNS,
     OI_NEWSRC_SEL_BTNS,
@@ -88,7 +88,7 @@ enum OptionIndex
     OI_AUTO_VIEW_INLINE,
 
     /* Misc Options */
-    OI_NEWGROUP_CHECK = OI_AUTO_VIEW_INLINE + 2,
+    OI_NEW_GROUP_CHECK = OI_AUTO_VIEW_INLINE + 2,
     OI_RESTRICTION_INCLUDES_EMPTIES,
     OI_APPEND_UNSUBSCRIBED_GROUPS,
     OI_INITIAL_GROUP_LIST,
@@ -108,20 +108,20 @@ enum OptionIndex
      * The general-scan options might as well be displayed in the same
      * section as the article-scan options.
      */
-    OI_SCANA_FOLLOW = OI_TRN_LAST + 2,
-    OI_SCANA_FOLD,
-    OI_SCANA_UNZOOMFOLD,
-    OI_SCANA_MARKSTAY,
+    OI_SCAN_ART_FOLLOW = OI_TRN_LAST + 2,
+    OI_SCAN_ART_FOLD,
+    OI_SCAN_ART_UNZOOM_FOLD,
+    OI_SCAN_ART_MARK_STAY,
     OI_SCAN_VI,
-    OI_SCAN_ITEMNUM,
-    OI_SCANA_DISPANUM,
-    OI_SCANA_DISPAUTHOR,
-    OI_SCANA_DISPSCORE,
-    OI_SCANA_DISPSUBCNT,
-    OI_SCANA_DISPSUBJ,
-    OI_SCANA_DISPSUMMARY,
-    OI_SCANA_DISPKEYW,
-    OI_SCAN_LAST = OI_SCANA_DISPKEYW,
+    OI_SCAN_ITEM_NUM,
+    OI_SCAN_ART_DISP_ART_NUM,
+    OI_SCAN_ART_DISP_AUTHOR,
+    OI_SCAN_ART_DISP_SCORE,
+    OI_SCAN_ART_DISP_SUB_COUNT,
+    OI_SCAN_ART_DISP_SUBJ,
+    OI_SCAN_ART_DISP_SUMMARY,
+    OI_SCAN_ART_DISP_KEYW,
+    OI_SCAN_LAST = OI_SCAN_ART_DISP_KEYW,
 
     OI_SC_VERBOSE = OI_SCAN_LAST + 2,
     OI_SCORE_LAST = OI_SC_VERBOSE,
@@ -135,13 +135,13 @@ enum OptionFlags : char
 };
 DECLARE_FLAGS_ENUM(OptionFlags, char);
 
-extern CompiledRegex g_optcompex;
-extern std::string g_ini_file;
-extern IniWords g_options_ini[];
-extern char **g_option_def_vals;
-extern char **g_option_saved_vals;
-extern OptionFlags *g_option_flags;
-extern int g_sel_page_op;
+extern CompiledRegex g_opt_compex;
+extern std::string   g_ini_file;
+extern IniWords      g_options_ini[];
+extern char        **g_option_def_vals;
+extern char        **g_option_saved_vals;
+extern OptionFlags  *g_option_flags;
+extern int           g_sel_page_op;
 
 void        opt_init(int argc, char *argv[], char **tcbufptr);
 void        opt_final();
@@ -154,7 +154,7 @@ void        set_header(const char *s, HeaderTypeFlags flag, bool setit);
 const char *quote_string(const char *val);
 void        cwd_check();
 
-inline const char *YESorNO(bool v)
+inline const char *yes_or_no(bool v)
 {
     return v ? "yes" : "no";
 }

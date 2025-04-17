@@ -126,7 +126,7 @@ DisplayOptionValues display_options[] =
     ENUM_VALUE(OI_ERASE_SCREEN,                 4),
     ENUM_VALUE(OI_ERASE_EACH_LINE,              5),
     ENUM_VALUE(OI_MUCK_UP_CLEAR,                6),
-    ENUM_VALUE(OI_BKGND_SPINNER,                7),
+    ENUM_VALUE(OI_BACKGROUND_SPINNER,                7),
     ENUM_VALUE(OI_CHARSET,                      8),
     ENUM_VALUE(OI_FILTER_CONTROL_CHARACTERS,    9),
 
@@ -162,8 +162,8 @@ DisplayOptionValues display_options[] =
     ENUM_VALUE(OI_GOTO_LINE_NUM,                40),
     ENUM_VALUE(OI_IGNORE_THRU_ON_SELECT,        41),
     ENUM_VALUE(OI_READ_BREADTH_FIRST,           42),
-    ENUM_VALUE(OI_BKGND_THREADING,              43),
-    ENUM_VALUE(OI_SCANMODE_COUNT,               44),
+    ENUM_VALUE(OI_BACKGROUND_THREADING,              43),
+    ENUM_VALUE(OI_SCAN_MODE_COUNT,               44),
     ENUM_VALUE(OI_HEADER_MAGIC,                 45),
     ENUM_VALUE(OI_HEADER_HIDING,                46),
 
@@ -171,7 +171,7 @@ DisplayOptionValues display_options[] =
 
     ENUM_VALUE(OI_SAVE_DIR,                     50),
     ENUM_VALUE(OI_AUTO_SAVE_NAME,               51),
-    ENUM_VALUE(OI_SAVEFILE_TYPE,                52),
+    ENUM_VALUE(OI_SAVE_FILE_TYPE,                52),
 
     ENUM_VALUE(OI_USE_MOUSE,                    54),
     ENUM_VALUE(OI_MOUSE_MODES,                  55),
@@ -186,7 +186,7 @@ DisplayOptionValues display_options[] =
     ENUM_VALUE(OI_MULTIPART_SEPARATOR,          64),
     ENUM_VALUE(OI_AUTO_VIEW_INLINE,             65),
 
-    ENUM_VALUE(OI_NEWGROUP_CHECK,               67),
+    ENUM_VALUE(OI_NEW_GROUP_CHECK,               67),
     ENUM_VALUE(OI_RESTRICTION_INCLUDES_EMPTIES, 68),
     ENUM_VALUE(OI_APPEND_UNSUBSCRIBED_GROUPS,   69),
     ENUM_VALUE(OI_INITIAL_GROUP_LIST,           70),
@@ -202,19 +202,19 @@ DisplayOptionValues display_options[] =
 
     ENUM_VALUE(OI_TRN_LAST,                     79),
 
-    ENUM_VALUE(OI_SCANA_FOLLOW,                 81),
-    ENUM_VALUE(OI_SCANA_FOLD,                   82),
-    ENUM_VALUE(OI_SCANA_UNZOOMFOLD,             83),
-    ENUM_VALUE(OI_SCANA_MARKSTAY,               84),
+    ENUM_VALUE(OI_SCAN_ART_FOLLOW,                 81),
+    ENUM_VALUE(OI_SCAN_ART_FOLD,                   82),
+    ENUM_VALUE(OI_SCAN_ART_UNZOOM_FOLD,             83),
+    ENUM_VALUE(OI_SCAN_ART_MARK_STAY,               84),
     ENUM_VALUE(OI_SCAN_VI,                      85),
-    ENUM_VALUE(OI_SCAN_ITEMNUM,                 86),
-    ENUM_VALUE(OI_SCANA_DISPANUM,               87),
-    ENUM_VALUE(OI_SCANA_DISPAUTHOR,             88),
-    ENUM_VALUE(OI_SCANA_DISPSCORE,              89),
-    ENUM_VALUE(OI_SCANA_DISPSUBCNT,             90),
-    ENUM_VALUE(OI_SCANA_DISPSUBJ,               91),
-    ENUM_VALUE(OI_SCANA_DISPSUMMARY,            92),
-    ENUM_VALUE(OI_SCANA_DISPKEYW,               93),
+    ENUM_VALUE(OI_SCAN_ITEM_NUM,                 86),
+    ENUM_VALUE(OI_SCAN_ART_DISP_ART_NUM,               87),
+    ENUM_VALUE(OI_SCAN_ART_DISP_AUTHOR,             88),
+    ENUM_VALUE(OI_SCAN_ART_DISP_SCORE,              89),
+    ENUM_VALUE(OI_SCAN_ART_DISP_SUB_COUNT,             90),
+    ENUM_VALUE(OI_SCAN_ART_DISP_SUBJ,               91),
+    ENUM_VALUE(OI_SCAN_ART_DISP_SUMMARY,            92),
+    ENUM_VALUE(OI_SCAN_ART_DISP_KEYW,               93),
 
     ENUM_VALUE(OI_SCAN_LAST,                    93),
 

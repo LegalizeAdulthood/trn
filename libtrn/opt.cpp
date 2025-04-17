@@ -51,7 +51,7 @@
 #include <memory>
 #include <string>
 
-CompiledRegex      g_optcompex;
+CompiledRegex      g_opt_compex;
 std::string g_ini_file;
 IniWords   g_options_ini[] = {
     // clang-format off
@@ -260,7 +260,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
             decode_switch(argv[i]);
         }
     }
-    init_compex(&g_optcompex);
+    init_compex(&g_opt_compex);
 
     g_privdir = filexp("~/News");
 }
@@ -587,7 +587,7 @@ void set_option(OptionIndex num, const char *s)
         }
         break;
 
-    case OI_BKGND_THREADING:
+    case OI_BACKGROUND_THREADING:
         g_thread_always = !YES(s);
         break;
 
@@ -614,7 +614,7 @@ void set_option(OptionIndex num, const char *s)
         g_breadth_first = YES(s);
         break;
 
-    case OI_BKGND_SPINNER:
+    case OI_BACKGROUND_SPINNER:
         g_bkgnd_spinner = YES(s);
         break;
 
@@ -704,7 +704,7 @@ void set_option(OptionIndex num, const char *s)
         g_erase_each_line = YES(s);
         break;
 
-    case OI_SAVEFILE_TYPE:
+    case OI_SAVE_FILE_TYPE:
         g_mbox_always = (*s == 'm' || *s == 'M');
         g_norm_always = (*s == 'n' || *s == 'N');
         break;
@@ -775,7 +775,7 @@ void set_option(OptionIndex num, const char *s)
         g_auto_view_inline = YES(s);
         break;
 
-    case OI_NEWGROUP_CHECK:
+    case OI_NEW_GROUP_CHECK:
         g_quick_start = !YES(s);
         break;
 
@@ -807,7 +807,7 @@ void set_option(OptionIndex num, const char *s)
         g_findlast = YES(s) * (g_mode == MM_INITIALIZING? 1 : -1);
         break;
 
-    case OI_SCANMODE_COUNT:
+    case OI_SCAN_MODE_COUNT:
         if (std::isdigit(*s))
         {
             g_scan_on = std::atoi(s);
@@ -873,7 +873,7 @@ void set_option(OptionIndex num, const char *s)
         g_art_pager_btn_cnt = parse_mouse_buttons(&g_art_pager_btns,s);
         break;
 
-    case OI_SCAN_ITEMNUM:
+    case OI_SCAN_ITEM_NUM:
         g_s_itemnum = YES(s);
         break;
 
@@ -881,50 +881,50 @@ void set_option(OptionIndex num, const char *s)
         g_s_mode_vi = YES(s);
         break;
 
-    case OI_SCANA_FOLLOW:
+    case OI_SCAN_ART_FOLLOW:
         g_sa_follow = YES(s);
         break;
 
-    case OI_SCANA_FOLD:
+    case OI_SCAN_ART_FOLD:
         g_sa_mode_fold = YES(s);
         break;
 
-    case OI_SCANA_UNZOOMFOLD:
+    case OI_SCAN_ART_UNZOOM_FOLD:
         g_sa_unzoomrefold = YES(s);
         break;
 
-    case OI_SCANA_MARKSTAY:
+    case OI_SCAN_ART_MARK_STAY:
         g_sa_mark_stay = YES(s);
         break;
 
-    case OI_SCANA_DISPANUM:
+    case OI_SCAN_ART_DISP_ART_NUM:
         g_sa_mode_desc_artnum = YES(s);
         break;
 
-    case OI_SCANA_DISPAUTHOR:
+    case OI_SCAN_ART_DISP_AUTHOR:
         g_sa_mode_desc_author = YES(s);
         break;
 
-    case OI_SCANA_DISPSCORE:
+    case OI_SCAN_ART_DISP_SCORE:
         g_sa_mode_desc_score = YES(s);
         break;
 
-    case OI_SCANA_DISPSUBCNT:
+    case OI_SCAN_ART_DISP_SUB_COUNT:
         g_sa_mode_desc_threadcount = YES(s);
         break;
 
-    case OI_SCANA_DISPSUBJ:
+    case OI_SCAN_ART_DISP_SUBJ:
 #if 0
         /* for now, always on. */
         g_sa_mode_desc_subject = YES(s);
 #endif
         break;
 
-    case OI_SCANA_DISPSUMMARY:
+    case OI_SCAN_ART_DISP_SUMMARY:
         g_sa_mode_desc_summary = YES(s);
         break;
 
-    case OI_SCANA_DISPKEYW:
+    case OI_SCAN_ART_DISP_KEYW:
         g_sa_mode_desc_keyw = YES(s);
         break;
 
@@ -1098,16 +1098,16 @@ const char *option_value(OptionIndex num)
     switch (num)
     {
     case OI_USE_THREADS:
-        return YESorNO(g_use_threads);
+        return yes_or_no(g_use_threads);
 
     case OI_USE_MOUSE:
-        return YESorNO(g_use_mouse);
+        return yes_or_no(g_use_mouse);
 
     case OI_MOUSE_MODES:
         return g_mouse_modes;
 
     case OI_USE_UNIV_SEL:
-        return YESorNO(g_use_univ_selector);
+        return yes_or_no(g_use_univ_selector);
 
     case OI_UNIV_SEL_CMDS:
         return s_univ_sel_cmds;
@@ -1119,11 +1119,11 @@ const char *option_value(OptionIndex num)
         return get_sel_order(SM_UNIVERSAL);
 
     case OI_UNIV_FOLLOW:
-        return YESorNO(g_univ_follow);
+        return yes_or_no(g_univ_follow);
         break;
 
     case OI_USE_NEWSRC_SEL:
-        return YESorNO(g_use_newsrc_selector);
+        return yes_or_no(g_use_newsrc_selector);
 
     case OI_NEWSRC_SEL_CMDS:
         return g_newsrc_sel_cmds;
@@ -1132,7 +1132,7 @@ const char *option_value(OptionIndex num)
         return expand_mouse_buttons(g_newsrc_sel_btns,g_newsrc_sel_btn_cnt);
 
     case OI_USE_ADD_SEL:
-        return YESorNO(g_use_add_selector);
+        return yes_or_no(g_use_add_selector);
 
     case OI_ADD_SEL_CMDS:
         return g_add_sel_cmds;
@@ -1141,7 +1141,7 @@ const char *option_value(OptionIndex num)
         return expand_mouse_buttons(g_add_sel_btns,g_add_sel_btn_cnt);
 
     case OI_USE_NEWSGROUP_SEL:
-        return YESorNO(g_use_newsgroup_selector);
+        return yes_or_no(g_use_newsgroup_selector);
 
     case OI_NEWSGROUP_SEL_ORDER:
         return get_sel_order(SM_NEWSGROUP);
@@ -1165,7 +1165,7 @@ const char *option_value(OptionIndex num)
     case OI_USE_NEWS_SEL:
         if (g_use_news_selector < 1)
         {
-            return YESorNO(g_use_news_selector+1);
+            return yes_or_no(g_use_news_selector+1);
         }
         std::sprintf(g_buf,"%d",g_use_news_selector);
         return g_buf;
@@ -1209,10 +1209,10 @@ const char *option_value(OptionIndex num)
         return expand_mouse_buttons(g_option_sel_btns,g_option_sel_btn_cnt);
 
     case OI_AUTO_SAVE_NAME:
-        return YESorNO(!std::strcmp(get_val_const("SAVEDIR",SAVEDIR),"%p/%c"));
+        return yes_or_no(!std::strcmp(get_val_const("SAVEDIR",SAVEDIR),"%p/%c"));
 
-    case OI_BKGND_THREADING:
-        return YESorNO(!g_thread_always);
+    case OI_BACKGROUND_THREADING:
+        return yes_or_no(!g_thread_always);
 
     case OI_AUTO_ARROW_MACROS:
         switch (g_auto_arrow_macros)
@@ -1224,14 +1224,14 @@ const char *option_value(OptionIndex num)
             return "alternate";
 
         default:
-            return YESorNO(false);
+            return yes_or_no(false);
         }
 
     case OI_READ_BREADTH_FIRST:
-        return YESorNO(g_breadth_first);
+        return yes_or_no(g_breadth_first);
 
-    case OI_BKGND_SPINNER:
-        return YESorNO(g_bkgnd_spinner);
+    case OI_BACKGROUND_SPINNER:
+        return yes_or_no(g_bkgnd_spinner);
 
     case OI_CHECKPOINT_NEWSRC_FREQUENCY:
         std::sprintf(g_buf,"%d",g_do_check_when);
@@ -1241,10 +1241,10 @@ const char *option_value(OptionIndex num)
         return g_save_dir.empty() ? "%./News" : g_save_dir.c_str();
 
     case OI_ERASE_SCREEN:
-        return YESorNO(g_erase_screen);
+        return yes_or_no(g_erase_screen);
 
     case OI_NOVICE_DELAYS:
-        return YESorNO(g_novice_delays);
+        return yes_or_no(g_novice_delays);
 
     case OI_CITED_TEXT_STRING:
         return g_indstr.c_str();
@@ -1254,7 +1254,7 @@ const char *option_value(OptionIndex num)
         return g_buf;
 
     case OI_FUZZY_NEWSGROUP_NAMES:
-        return YESorNO(g_fuzzy_get);
+        return yes_or_no(g_fuzzy_get);
 
     case OI_HEADER_MAGIC:
         return magic_list();
@@ -1271,10 +1271,10 @@ const char *option_value(OptionIndex num)
         return g_buf;
 
     case OI_APPEND_UNSUBSCRIBED_GROUPS:
-        return YESorNO(g_append_unsub);
+        return yes_or_no(g_append_unsub);
 
     case OI_FILTER_CONTROL_CHARACTERS:
-        return YESorNO(!g_dont_filter_control);
+        return yes_or_no(!g_dont_filter_control);
 
     case OI_JOIN_SUBJECT_LINES:
         if (g_join_subject_len)
@@ -1282,27 +1282,27 @@ const char *option_value(OptionIndex num)
             std::sprintf(g_buf,"%d",g_join_subject_len);
             return g_buf;
         }
-        return YESorNO(false);
+        return yes_or_no(false);
 
     case OI_IGNORE_THRU_ON_SELECT:
-        return YESorNO(g_kill_thru_kludge);
+        return yes_or_no(g_kill_thru_kludge);
 
     case OI_AUTO_GROW_GROUPS:
-        return YESorNO(!g_keep_the_group_static);
+        return yes_or_no(!g_keep_the_group_static);
 
     case OI_MUCK_UP_CLEAR:
-        return YESorNO(g_muck_up_clear);
+        return yes_or_no(g_muck_up_clear);
 
     case OI_ERASE_EACH_LINE:
-        return YESorNO(g_erase_each_line);
+        return yes_or_no(g_erase_each_line);
 
-    case OI_SAVEFILE_TYPE:
+    case OI_SAVE_FILE_TYPE:
         return g_mbox_always? "mail" : (g_norm_always? "norm" : "ask");
 
     case OI_PAGER_LINE_MARKING:
         if (g_marking == NOMARKING)
         {
-            return YESorNO(false);
+            return yes_or_no(false);
         }
         if (g_marking_areas != HALFPAGE_MARKING)
         {
@@ -1325,7 +1325,7 @@ const char *option_value(OptionIndex num)
     case OI_OLD_MTHREADS_DATABASE:
         if (g_olden_days <= 1)
         {
-            return YESorNO(g_olden_days);
+            return yes_or_no(g_olden_days);
         }
         std::sprintf(g_buf,"%d",g_olden_days);
         return g_buf;
@@ -1345,19 +1345,19 @@ const char *option_value(OptionIndex num)
         default:
             break;
         }
-        return YESorNO(false);
+        return yes_or_no(false);
 
     case OI_MULTIPART_SEPARATOR:
         return g_multipart_separator.c_str();
 
     case OI_AUTO_VIEW_INLINE:
-        return YESorNO(g_auto_view_inline);
+        return yes_or_no(g_auto_view_inline);
 
-    case OI_NEWGROUP_CHECK:
-        return YESorNO(!g_quick_start);
+    case OI_NEW_GROUP_CHECK:
+        return yes_or_no(!g_quick_start);
 
     case OI_RESTRICTION_INCLUDES_EMPTIES:
-        return YESorNO(g_empty_only_char == 'o');
+        return yes_or_no(g_empty_only_char == 'o');
 
     case OI_CHARSET:
         return g_charsets.c_str();
@@ -1365,29 +1365,29 @@ const char *option_value(OptionIndex num)
     case OI_INITIAL_GROUP_LIST:
         if (g_suppress_cn)
         {
-            return YESorNO(false);
+            return yes_or_no(false);
         }
         std::sprintf(g_buf,"%d",g_countdown);
         return g_buf;
 
     case OI_RESTART_AT_LAST_GROUP:
-        return YESorNO(g_findlast != 0);
+        return yes_or_no(g_findlast != 0);
 
-    case OI_SCANMODE_COUNT:
+    case OI_SCAN_MODE_COUNT:
         std::sprintf(g_buf,"%d",g_scan_on);
         return g_buf;
 
     case OI_TERSE_OUTPUT:
-        return YESorNO(!g_verbose);
+        return yes_or_no(!g_verbose);
 
     case OI_EAT_TYPEAHEAD:
-        return YESorNO(!g_allow_typeahead);
+        return yes_or_no(!g_allow_typeahead);
 
     case OI_COMPRESS_SUBJECTS:
-        return YESorNO(!g_unbroken_subjects);
+        return yes_or_no(!g_unbroken_subjects);
 
     case OI_VERIFY_INPUT:
-        return YESorNO(g_verify);
+        return yes_or_no(g_verify);
 
     case OI_ARTICLE_TREE_LINES:
         std::sprintf(g_buf,"%d",g_max_tree_lines);
@@ -1399,7 +1399,7 @@ const char *option_value(OptionIndex num)
             std::sprintf(g_buf,"%d",g_word_wrap_offset);
             return g_buf;
         }
-        return YESorNO(false);
+        return yes_or_no(false);
 
     case OI_DEFAULT_REFETCH_TIME:
         return secs2text(g_def_refetch_secs);
@@ -1407,53 +1407,53 @@ const char *option_value(OptionIndex num)
     case OI_ART_PAGER_BTNS:
         return expand_mouse_buttons(g_art_pager_btns,g_art_pager_btn_cnt);
 
-    case OI_SCAN_ITEMNUM:
-        return YESorNO(g_s_itemnum);
+    case OI_SCAN_ITEM_NUM:
+        return yes_or_no(g_s_itemnum);
 
     case OI_SCAN_VI:
-        return YESorNO(g_s_mode_vi);
+        return yes_or_no(g_s_mode_vi);
 
-    case OI_SCANA_FOLLOW:
-        return YESorNO(g_sa_follow);
+    case OI_SCAN_ART_FOLLOW:
+        return yes_or_no(g_sa_follow);
 
-    case OI_SCANA_FOLD:
-        return YESorNO(g_sa_mode_fold);
+    case OI_SCAN_ART_FOLD:
+        return yes_or_no(g_sa_mode_fold);
 
-    case OI_SCANA_UNZOOMFOLD:
-        return YESorNO(g_sa_unzoomrefold);
+    case OI_SCAN_ART_UNZOOM_FOLD:
+        return yes_or_no(g_sa_unzoomrefold);
 
-    case OI_SCANA_MARKSTAY:
-        return YESorNO(g_sa_mark_stay);
+    case OI_SCAN_ART_MARK_STAY:
+        return yes_or_no(g_sa_mark_stay);
 
-    case OI_SCANA_DISPANUM:
-        return YESorNO(g_sa_mode_desc_artnum);
+    case OI_SCAN_ART_DISP_ART_NUM:
+        return yes_or_no(g_sa_mode_desc_artnum);
 
-    case OI_SCANA_DISPAUTHOR:
-        return YESorNO(g_sa_mode_desc_author);
+    case OI_SCAN_ART_DISP_AUTHOR:
+        return yes_or_no(g_sa_mode_desc_author);
 
-    case OI_SCANA_DISPSCORE:
-        return YESorNO(g_sa_mode_desc_score);
+    case OI_SCAN_ART_DISP_SCORE:
+        return yes_or_no(g_sa_mode_desc_score);
 
-    case OI_SCANA_DISPSUBCNT:
-        return YESorNO(g_sa_mode_desc_threadcount);
+    case OI_SCAN_ART_DISP_SUB_COUNT:
+        return yes_or_no(g_sa_mode_desc_threadcount);
 
-    case OI_SCANA_DISPSUBJ:
-        return YESorNO(g_sa_mode_desc_subject);
+    case OI_SCAN_ART_DISP_SUBJ:
+        return yes_or_no(g_sa_mode_desc_subject);
 
-    case OI_SCANA_DISPSUMMARY:
-        return YESorNO(g_sa_mode_desc_summary);
+    case OI_SCAN_ART_DISP_SUMMARY:
+        return yes_or_no(g_sa_mode_desc_summary);
 
-    case OI_SCANA_DISPKEYW:
-        return YESorNO(g_sa_mode_desc_keyw);
+    case OI_SCAN_ART_DISP_KEYW:
+        return yes_or_no(g_sa_mode_desc_keyw);
 
     case OI_SC_VERBOSE:
-        return YESorNO(g_sf_verbose);
+        return yes_or_no(g_sf_verbose);
 
     case OI_USE_SEL_NUM:
-        return YESorNO(g_use_sel_num);
+        return yes_or_no(g_use_sel_num);
 
     case OI_SEL_NUM_GOTO:
-        return YESorNO(g_sel_num_goto);
+        return yes_or_no(g_sel_num_goto);
 
     default:
         std::printf("*** Internal error: Unknown Option ***\n");

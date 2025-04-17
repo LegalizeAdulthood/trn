@@ -3530,7 +3530,7 @@ static DisplayState option_commands(char_int ch)
         for (pattern = g_buf; *pattern == ' '; pattern++)
         {
         }
-        char *s = compile(&g_optcompex, pattern, true, true);
+        char *s = compile(&g_opt_compex, pattern, true, true);
         if (s != nullptr)
         {
             std::strcpy(g_msg,s);
@@ -3548,7 +3548,7 @@ static DisplayState option_commands(char_int ch)
             {
                 continue;
             }
-            if (execute(&g_optcompex,g_options_ini[i].item))
+            if (execute(&g_opt_compex,g_options_ini[i].item))
             {
                 break;
             }

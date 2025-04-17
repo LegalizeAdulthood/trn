@@ -152,36 +152,36 @@ void decode_switch(const char *s)
         switch (*++s)
         {
         case '/':
-            set_option(OI_AUTO_SAVE_NAME, YESorNO(upordown));
+            set_option(OI_AUTO_SAVE_NAME, yes_or_no(upordown));
             break;
 
         case '+':
-            set_option(OI_USE_ADD_SEL, YESorNO(upordown));
-            set_option(OI_USE_NEWSGROUP_SEL, YESorNO(upordown));
+            set_option(OI_USE_ADD_SEL, yes_or_no(upordown));
+            set_option(OI_USE_NEWSGROUP_SEL, yes_or_no(upordown));
             if (upordown)
             {
-                set_option(OI_INITIAL_GROUP_LIST, YESorNO(false));
+                set_option(OI_INITIAL_GROUP_LIST, yes_or_no(false));
             }
             else
             {
-                set_option(OI_USE_NEWSRC_SEL, YESorNO(false));
+                set_option(OI_USE_NEWSRC_SEL, yes_or_no(false));
             }
             break;
 
         case 'a':
-            set_option(OI_BKGND_THREADING, YESorNO(!upordown));
+            set_option(OI_BACKGROUND_THREADING, yes_or_no(!upordown));
             break;
 
         case 'A':
-            set_option(OI_AUTO_ARROW_MACROS, YESorNO(upordown));
+            set_option(OI_AUTO_ARROW_MACROS, yes_or_no(upordown));
             break;
 
         case 'b':
-            set_option(OI_READ_BREADTH_FIRST, YESorNO(upordown));
+            set_option(OI_READ_BREADTH_FIRST, yes_or_no(upordown));
             break;
 
         case 'B':
-            set_option(OI_BKGND_SPINNER, YESorNO(upordown));
+            set_option(OI_BACKGROUND_SPINNER, yes_or_no(upordown));
             break;
 
         case 'c':
@@ -241,7 +241,7 @@ void decode_switch(const char *s)
             break;
 
         case 'e':
-            set_option(OI_ERASE_SCREEN, YESorNO(upordown));
+            set_option(OI_ERASE_SCREEN, yes_or_no(upordown));
             break;
 
         case 'E':
@@ -273,7 +273,7 @@ void decode_switch(const char *s)
         }
 
         case 'f':
-            set_option(OI_NOVICE_DELAYS, YESorNO(!upordown));
+            set_option(OI_NOVICE_DELAYS, yes_or_no(!upordown));
             break;
 
         case 'F':
@@ -285,7 +285,7 @@ void decode_switch(const char *s)
             break;
 
         case 'G':
-            set_option(OI_FUZZY_NEWSGROUP_NAMES, YESorNO(upordown));
+            set_option(OI_FUZZY_NEWSGROUP_NAMES, yes_or_no(upordown));
             break;
 
         case 'h':
@@ -317,11 +317,11 @@ void decode_switch(const char *s)
             break;
 
         case 'I':
-            set_option(OI_APPEND_UNSUBSCRIBED_GROUPS, YESorNO(upordown));
+            set_option(OI_APPEND_UNSUBSCRIBED_GROUPS, yes_or_no(upordown));
             break;
 
         case 'j':
-            set_option(OI_FILTER_CONTROL_CHARACTERS, YESorNO(!upordown));
+            set_option(OI_FILTER_CONTROL_CHARACTERS, yes_or_no(!upordown));
             break;
 
         case 'J':
@@ -330,29 +330,29 @@ void decode_switch(const char *s)
                 s++;
             }
             set_option(OI_JOIN_SUBJECT_LINES,
-                       upordown && *s? s : YESorNO(upordown));
+                       upordown && *s? s : yes_or_no(upordown));
             break;
 
         case 'k':
-            set_option(OI_IGNORE_THRU_ON_SELECT, YESorNO(upordown));
+            set_option(OI_IGNORE_THRU_ON_SELECT, yes_or_no(upordown));
             break;
 
         case 'K':
-            set_option(OI_AUTO_GROW_GROUPS, YESorNO(!upordown));
+            set_option(OI_AUTO_GROW_GROUPS, yes_or_no(!upordown));
             break;
 
         case 'l':
-            set_option(OI_MUCK_UP_CLEAR, YESorNO(upordown));
+            set_option(OI_MUCK_UP_CLEAR, yes_or_no(upordown));
             break;
 
         case 'L':
-            set_option(OI_ERASE_EACH_LINE, YESorNO(upordown));
+            set_option(OI_ERASE_EACH_LINE, yes_or_no(upordown));
             break;
 
         case 'M':
             if (upordown)
             {
-                set_option(OI_SAVEFILE_TYPE, "mail");
+                set_option(OI_SAVE_FILE_TYPE, "mail");
             }
             break;
 
@@ -363,7 +363,7 @@ void decode_switch(const char *s)
         case 'N':
             if (upordown)
             {
-                set_option(OI_SAVEFILE_TYPE, "norm");
+                set_option(OI_SAVE_FILE_TYPE, "norm");
             }
             break;
 
@@ -396,7 +396,7 @@ void decode_switch(const char *s)
             }
             if (!upordown)
             {
-                s = YESorNO(false);
+                s = yes_or_no(false);
             }
             else
             {
@@ -419,7 +419,7 @@ void decode_switch(const char *s)
             break;
 
         case 'q':
-            set_option(OI_NEWGROUP_CHECK, YESorNO(!upordown));
+            set_option(OI_NEW_GROUP_CHECK, yes_or_no(!upordown));
             break;
 
         case 'Q':
@@ -431,7 +431,7 @@ void decode_switch(const char *s)
             break;
 
         case 'r':
-            set_option(OI_RESTART_AT_LAST_GROUP, YESorNO(upordown));
+            set_option(OI_RESTART_AT_LAST_GROUP, yes_or_no(upordown));
             break;
 
         case 's':
@@ -439,7 +439,7 @@ void decode_switch(const char *s)
             {
                 s++;
             }
-            set_option(OI_INITIAL_GROUP_LIST, std::isdigit(*s)? s : YESorNO(false));
+            set_option(OI_INITIAL_GROUP_LIST, std::isdigit(*s)? s : yes_or_no(false));
             break;
 
         case 'S':
@@ -447,19 +447,19 @@ void decode_switch(const char *s)
             {
                 s++;
             }
-            set_option(OI_SCANMODE_COUNT, s);
+            set_option(OI_SCAN_MODE_COUNT, s);
             break;
 
         case 't':
-            set_option(OI_TERSE_OUTPUT, YESorNO(upordown));
+            set_option(OI_TERSE_OUTPUT, yes_or_no(upordown));
             break;
 
         case 'T':
-            set_option(OI_EAT_TYPEAHEAD, YESorNO(!upordown));
+            set_option(OI_EAT_TYPEAHEAD, yes_or_no(!upordown));
             break;
 
         case 'u':
-            set_option(OI_COMPRESS_SUBJECTS, YESorNO(!upordown));
+            set_option(OI_COMPRESS_SUBJECTS, yes_or_no(!upordown));
             break;
 
         case 'U':
@@ -467,7 +467,7 @@ void decode_switch(const char *s)
             break;
 
         case 'v':
-            set_option(OI_VERIFY_INPUT, YESorNO(upordown));
+            set_option(OI_VERIFY_INPUT, yes_or_no(upordown));
             break;
 
         case 'V':
@@ -499,7 +499,7 @@ void decode_switch(const char *s)
             {
                 set_option(OI_NEWS_SEL_STYLES, s);
             }
-            set_option(OI_USE_THREADS, YESorNO(upordown));
+            set_option(OI_USE_THREADS, yes_or_no(upordown));
             break;
 
         case 'X':
@@ -514,7 +514,7 @@ void decode_switch(const char *s)
             }
             else
             {
-                set_option(OI_USE_NEWS_SEL, YESorNO(upordown));
+                set_option(OI_USE_NEWS_SEL, yes_or_no(upordown));
             }
             if (*s)
             {
@@ -528,7 +528,7 @@ void decode_switch(const char *s)
                 s++;
             }
             set_option(OI_DEFAULT_REFETCH_TIME,
-                       upordown && *s? s : YESorNO(upordown));
+                       upordown && *s? s : yes_or_no(upordown));
             break;
 
         default:
