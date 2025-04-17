@@ -272,11 +272,11 @@ int do_kfile(std::FILE *kfp, int entering)
             case SRCH_DONE:
                 break;
 
-            case SRCH_SUBJDONE:
+            case SRCH_SUBJ_DONE:
                 /*std::fputs("\tsubject not found (?)\n",stdout);*/
                 break;
 
-            case SRCH_NOTFOUND:
+            case SRCH_NOT_FOUND:
                 /*std::fputs("\tnot found\n",stdout);*/
                 break;
 

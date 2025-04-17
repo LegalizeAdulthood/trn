@@ -2768,11 +2768,11 @@ static DisplayState article_commands(char_int ch)
                     break;
 
                 case SRCH_DONE:
-                case SRCH_SUBJDONE:
+                case SRCH_SUBJ_DONE:
                 case SRCH_FOUND:
                     break;
 
-                case SRCH_NOTFOUND:
+                case SRCH_NOT_FOUND:
                     errormsg("Not found.");
                     break;
                 }

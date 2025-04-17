@@ -136,7 +136,7 @@ bool initialize(int argc, char *argv[])
     add_ng_init();
     art_init();
     art_io_init();
-    artsrch_init();
+    art_search_init();
     backpage_init();
     bits_init();
     cache_init();

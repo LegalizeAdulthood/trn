@@ -14,9 +14,9 @@ enum ArtSearchResult
     SRCH_ABORT = 0,
     SRCH_INTR = 1,
     SRCH_FOUND = 2,
-    SRCH_NOTFOUND = 3,
+    SRCH_NOT_FOUND = 3,
     SRCH_DONE = 4,
-    SRCH_SUBJDONE = 5,
+    SRCH_SUBJ_DONE = 5,
     SRCH_ERROR = 6
 };
 
@@ -24,22 +24,22 @@ enum ArtScope
 {
     ARTSCOPE_SUBJECT = 0,
     ARTSCOPE_FROM = 1,
-    ARTSCOPE_ONEHDR = 2,
+    ARTSCOPE_ONE_HDR = 2,
     ARTSCOPE_HEAD = 3,
-    ARTSCOPE_BODY_NOSIG = 4,
+    ARTSCOPE_BODY_NO_SIG = 4,
     ARTSCOPE_BODY = 5,
     ARTSCOPE_ARTICLE = 6
 };
 
-extern std::string      g_lastpat;          /* last search pattern */
-extern CompiledRegex          *g_bra_compex;       /* current compex with brackets */
-extern const char      *g_scopestr;         //
-extern ArtScope        g_art_howmuch;      /* search scope */
-extern HeaderLineType g_art_srchhdr;      /* specific header number to search */
-extern bool             g_art_doread;       /* search read articles? */
-extern bool             g_kill_thru_kludge; /* -k */
+extern std::string    g_last_pat;         /* last search pattern */
+extern CompiledRegex *g_bra_compex;       /* current compex with brackets */
+extern const char    *g_scope_str;        //
+extern ArtScope       g_art_how_much;     /* search scope */
+extern HeaderLineType g_art_srch_hdr;     /* specific header number to search */
+extern bool           g_art_do_read;      /* search read articles? */
+extern bool           g_kill_thru_kludge; /* -k */
 
-void              artsrch_init();
-ArtSearchResult art_search(char *patbuf, int patbufsiz, bool get_cmd);
+void            art_search_init();
+ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd);
 
 #endif

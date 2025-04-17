@@ -1335,7 +1335,7 @@ normal_search:
             g_reread = false;
             return AS_NORM;
 
-        case SRCH_SUBJDONE:
+        case SRCH_SUBJ_DONE:
             if (g_sa_in)
             {
                 return AS_SA;
@@ -1344,7 +1344,7 @@ normal_search:
             g_reread = false;
             return AS_NORM;
 
-        case SRCH_NOTFOUND:
+        case SRCH_NOT_FOUND:
             std::fputs("\n\n\n\nNot found.\n",stdout);
             termdown(5);
             g_art = g_curr_art;  /* restore to current article */

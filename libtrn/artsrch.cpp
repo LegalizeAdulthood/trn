@@ -34,15 +34,15 @@ static CompiledRegex s_art_compex{}; /* last compiled normal search */
 
 static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope);
 
-std::string      g_lastpat;                   /* last search pattern */
+std::string      g_last_pat;                   /* last search pattern */
 CompiledRegex          *g_bra_compex{&s_art_compex}; /* current compex with brackets */
-const char      *g_scopestr{"sfHhbBa"};       //
-ArtScope        g_art_howmuch{};             /* search scope */
-HeaderLineType g_art_srchhdr{};             /* specific header number to search */
-bool             g_art_doread{};              /* search read articles? */
+const char      *g_scope_str{"sfHhbBa"};       //
+ArtScope        g_art_how_much{};             /* search scope */
+HeaderLineType g_art_srch_hdr{};             /* specific header number to search */
+bool             g_art_do_read{};              /* search read articles? */
 bool             g_kill_thru_kludge{true};    /* -k */
 
-void artsrch_init()
+void art_search_init()
 {
     init_compex(&s_sub_compex);
     init_compex(&s_art_compex);
@@ -51,15 +51,15 @@ void artsrch_init()
 /* search for an article containing some pattern */
 
 /* if patbuf != g_buf, get_cmd must be set to false!!! */
-ArtSearchResult art_search(char *patbuf, int patbufsiz, bool get_cmd)
+ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
 {
     char* pattern;                      /* unparsed pattern */
-    char cmdchr = *patbuf;              /* what kind of search? */
+    char cmdchr = *pat_buf;              /* what kind of search? */
     bool backward = cmdchr == '?' || cmdchr == Ctl('p');
                                         /* direction of search */
     CompiledRegex* compex;                     /* which compiled expression */
     char* cmdlst = nullptr;             /* list of commands to do */
-    ArtSearchResult ret = SRCH_NOTFOUND; /* assume no commands */
+    ArtSearchResult ret = SRCH_NOT_FOUND; /* assume no commands */
     int saltaway = 0;                   /* store in KILL file? */
     ArtScope howmuch;                  /* search scope: subj/from/Hdr/head/art */
     HeaderLineType srchhdr;           /* header to search if Hdr scope */
@@ -73,7 +73,7 @@ ArtSearchResult art_search(char *patbuf, int patbufsiz, bool get_cmd)
     g_int_count = 0;
     if (cmdchr == '/' || cmdchr == '?')         /* normal search? */
     {
-        if (get_cmd && g_buf == patbuf)
+        if (get_cmd && g_buf == pat_buf)
         {
             if (!finish_command(false)) /* get rest of command */
             {
@@ -81,7 +81,7 @@ ArtSearchResult art_search(char *patbuf, int patbufsiz, bool get_cmd)
             }
         }
         compex = &s_art_compex;
-        if (patbuf[1])
+        if (pat_buf[1])
         {
             howmuch = ARTSCOPE_SUBJECT;
             srchhdr = SOME_LINE;
@@ -89,15 +89,15 @@ ArtSearchResult art_search(char *patbuf, int patbufsiz, bool get_cmd)
         }
         else
         {
-            howmuch = g_art_howmuch;
-            srchhdr = g_art_srchhdr;
-            doread = g_art_doread;
+            howmuch = g_art_how_much;
+            srchhdr = g_art_srch_hdr;
+            doread = g_art_do_read;
         }
-        char *s = cpytill(g_buf,patbuf+1,cmdchr);/* ok to cpy g_buf+1 to g_buf */
+        char *s = cpytill(g_buf,pat_buf+1,cmdchr);/* ok to cpy g_buf+1 to g_buf */
         pattern = g_buf;
         if (*pattern)
         {
-            g_lastpat = pattern;
+            g_last_pat = pattern;
         }
         if (*s)                         /* modifiers or commands? */
         {
@@ -110,7 +110,7 @@ ArtSearchResult art_search(char *patbuf, int patbufsiz, bool get_cmd)
                     break;
 
                 case 'H':               /* scan a specific header */
-                    howmuch = ARTSCOPE_ONEHDR;
+                    howmuch = ARTSCOPE_ONE_HDR;
                     s = cpytill(g_msg, s+1, ':');
                     srchhdr = get_header_num(g_msg);
                     goto loop_break;
@@ -120,7 +120,7 @@ ArtSearchResult art_search(char *patbuf, int patbufsiz, bool get_cmd)
                     break;
 
                 case 'b':               /* scan body sans signature */
-                    howmuch = ARTSCOPE_BODY_NOSIG;
+                    howmuch = ARTSCOPE_BODY_NO_SIG;
                     break;
 
                 case 'B':               /* scan body */
@@ -178,9 +178,9 @@ ArtSearchResult art_search(char *patbuf, int patbufsiz, bool get_cmd)
             cmdlst = savestr(s);
             ret = SRCH_DONE;
         }
-        g_art_howmuch = howmuch;
-        g_art_srchhdr = srchhdr;
-        g_art_doread = doread;
+        g_art_how_much = howmuch;
+        g_art_srch_hdr = srchhdr;
+        g_art_do_read = doread;
         if (g_srchahead)
         {
             g_srchahead = -1;
@@ -188,30 +188,30 @@ ArtSearchResult art_search(char *patbuf, int patbufsiz, bool get_cmd)
     }
     else
     {
-        int saltmode = patbuf[2] == 'g'? 2 : 1;
-        const char *finding_str = patbuf[1] == 'f' ? "author" : "subject";
+        int saltmode = pat_buf[2] == 'g'? 2 : 1;
+        const char *finding_str = pat_buf[1] == 'f' ? "author" : "subject";
 
-        howmuch = patbuf[1] == 'f'? ARTSCOPE_FROM : ARTSCOPE_SUBJECT;
+        howmuch = pat_buf[1] == 'f'? ARTSCOPE_FROM : ARTSCOPE_SUBJECT;
         srchhdr = SOME_LINE;
         doread = (cmdchr == Ctl('p'));
         if (cmdchr == Ctl('n'))
         {
-            ret = SRCH_SUBJDONE;
+            ret = SRCH_SUBJ_DONE;
         }
         compex = &s_sub_compex;
-        pattern = patbuf+1;
+        pattern = pat_buf+1;
         char *h;
         if (howmuch == ARTSCOPE_SUBJECT)
         {
             std::strcpy(pattern,": *");
             h = pattern + std::strlen(pattern);
-            interp(h,patbufsiz - (h-patbuf),"%\\s");  /* fetch current subject */
+            interp(h,pat_buf_siz - (h-pat_buf),"%\\s");  /* fetch current subject */
         }
         else
         {
             h = pattern;
             /* TODO: if using thread files, make this "%\\)f" */
-            interp(pattern, patbufsiz - 1, "%\\>f");
+            interp(pattern, pat_buf_siz - 1, "%\\>f");
         }
         if (cmdchr == 'k' || cmdchr == 'K' || cmdchr == ',' //
             || cmdchr == '+' || cmdchr == '.' || cmdchr == 's')
@@ -239,7 +239,7 @@ ArtSearchResult art_search(char *patbuf, int patbufsiz, bool get_cmd)
             }
             else if (cmdchr == 's')
             {
-                cmdlst = savestr(patbuf);
+                cmdlst = savestr(pat_buf);
             }
             else
             {
@@ -361,8 +361,8 @@ ArtSearchResult art_search(char *patbuf, int patbufsiz, bool get_cmd)
         }
         if (howmuch != ARTSCOPE_SUBJECT)
         {
-            *s++ = g_scopestr[howmuch];
-            if (howmuch == ARTSCOPE_ONEHDR)
+            *s++ = g_scope_str[howmuch];
+            if (howmuch == ARTSCOPE_ONE_HDR)
             {
                 safecpy(s,g_htype[srchhdr].name,LBUFLEN-(s-saltbuf));
                 s += g_htype[srchhdr].length;
@@ -512,10 +512,10 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
         std::strncpy(g_buf+6,fetchfrom(artnum,false),256);
         break;
 
-    case ARTSCOPE_ONEHDR:
+    case ARTSCOPE_ONE_HDR:
         g_untrim_cache = true;
-        std::sprintf(g_buf, "%s: %s", g_htype[g_art_srchhdr].name,
-                prefetchlines(artnum,g_art_srchhdr,false));
+        std::sprintf(g_buf, "%s: %s", g_htype[g_art_srch_hdr].name,
+                prefetchlines(artnum,g_art_srch_hdr,false));
         g_untrim_cache = false;
         break;
 
@@ -525,7 +525,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
         char ch;
         bool success = false;
         bool in_sig = false;
-        if (scope != ARTSCOPE_BODY && scope != ARTSCOPE_BODY_NOSIG)
+        if (scope != ARTSCOPE_BODY && scope != ARTSCOPE_BODY_NO_SIG)
         {
             if (!parseheader(artnum))
             {
@@ -563,7 +563,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
         seek_art_buf(g_htype[PAST_HEADER].minpos);
         while ((s = read_art_buf(false)) != nullptr)
         {
-            if (scope == ARTSCOPE_BODY_NOSIG && *s == '-' && s[1] == '-' //
+            if (scope == ARTSCOPE_BODY_NO_SIG && *s == '-' && s[1] == '-' //
                 && (s[2] == '\n' || (s[2] == ' ' && s[3] == '\n')))
             {
                 if (in_sig && success)

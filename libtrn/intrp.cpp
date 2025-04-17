@@ -335,7 +335,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     {
                         *s++ = '/';
                     }
-                    std::strcpy(s,g_lastpat.c_str());
+                    std::strcpy(s,g_last_pat.c_str());
                     s += std::strlen(s);
                     if (!cmd || *cmd != 'g')
                     {
@@ -347,16 +347,16 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         {
                             *s++ = '/';
                         }
-                        if (g_art_doread)
+                        if (g_art_do_read)
                         {
                             *s++ = 'r';
                         }
-                        if (g_art_howmuch != ARTSCOPE_SUBJECT)
+                        if (g_art_how_much != ARTSCOPE_SUBJECT)
                         {
-                            *s++ = g_scopestr[g_art_howmuch];
-                            if (g_art_howmuch == ARTSCOPE_ONEHDR)
+                            *s++ = g_scope_str[g_art_how_much];
+                            if (g_art_how_much == ARTSCOPE_ONE_HDR)
                             {
-                                safecpy(s,g_htype[g_art_srchhdr].name,
+                                safecpy(s,g_htype[g_art_srch_hdr].name,
                                         (sizeof scrbuf) - (s-scrbuf));
                                 if (!(s = std::strchr(s,':')))
                                 {
