@@ -291,7 +291,7 @@ Signal_t stop_catcher(int signo)
         sigsetmask(sigblock(0) & ~(1 << (signo-1)));
 #endif
         kill(0,signo);          /* and do the stop */
-        savetty();
+        save_tty();
 #ifdef MAILCALL
         g_mail_count = 0;                    /* force recheck */
 #endif
@@ -300,8 +300,8 @@ Signal_t stop_catcher(int signo)
             if (!g_waiting)
             {
                 termlib_init();
-                noecho();                       /* set no echo */
-                crmode();                       /* set cbreak mode */
+                no_echo();                       /* set no echo */
+                cr_mode();                       /* set cbreak mode */
                 force_me("\f");                  /* cause a refresh */
                                                 /* (defined only if TIOCSTI defined) */
                 errno = 0;                      /* needed for getcmd */

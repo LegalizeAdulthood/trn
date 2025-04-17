@@ -234,14 +234,14 @@ char *tgoto(char *str, int x, int y);
 #ifdef I_TERMIOS
 extern int  g_tty_ch;
 
-inline void crmode()
+inline void cr_mode()
 {
     g_bizarre = true;
     g_tty.c_lflag &= ~ICANON;
     g_tty.c_cc[VMIN] = 1;
     tcsetattr(g_tty_ch, TCSAFLUSH, &g_tty);
 }
-inline void nocrmode()
+inline void no_cr_mode()
 {
     g_bizarre = true;
     g_tty.c_lflag |= ICANON;
@@ -254,7 +254,7 @@ inline void echo()
     g_tty.c_lflag |= ECHO;
     tcsetattr(g_tty_ch, TCSAFLUSH, &g_tty);
 }
-inline void noecho()
+inline void no_echo()
 {
     g_bizarre = true;
     g_tty.c_lflag &= ~ECHO;
@@ -267,14 +267,14 @@ inline void nl()
     g_tty.c_oflag |= ONLCR;
     tcsetattr(g_tty_ch, TCSAFLUSH, &g_tty);
 }
-inline void nonl()
+inline void no_nl()
 {
     g_bizarre = true;
     g_tty.c_iflag &= ~ICRNL;
     g_tty.c_oflag &= ~ONLCR;
     tcsetattr(g_tty_ch, TCSAFLUSH, &g_tty);
 }
-inline void savetty()
+inline void save_tty()
 {
     tcgetattr(g_tty_ch, &g_oldtty);
     tcgetattr(g_tty_ch, &g_tty);
