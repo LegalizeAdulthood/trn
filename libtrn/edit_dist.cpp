@@ -40,20 +40,33 @@ HISTORY
                                    when this # of bytes is exceeded */
 #define STRLENTHRESHOLD ((int) ((THRESHOLD / sizeof (int) - 3) / 2))
 
-#define swap_int(x,y)  (s_iswap = (x), (x) = (y), (y) = s_iswap)
-#define swap_char(x,y) (s_cswap = (x), (x) = (y), (y) = s_cswap)
-#define min3(x,y,z) (s_mx = (x), s_my = (y), s_mz = (z), (s_mx < s_my ? (s_mx < s_mz ? s_mx : s_mz) : (s_mz < s_my) ? s_mz : s_my))
-#define min2(x,y) (s_mx = (x), s_my = (y), (s_mx < s_my ? s_mx : s_my))
+namespace
+{
 
+void swap_int(int &x, int &y)
+{
+    int tmp = x;
+    x = y;
+    y = tmp;
+}
 
-static int         s_insert_cost = 1;
-static int         s_delete_cost = 1;
-static int         s_iswap{}; /* swap_int temp variable */
-static const char *s_cswap{}; /* swap_char temp variable */
-static int         s_mx{};    /* min2, min3 temp variables */
-static int         s_my{};
-static int         s_mz{};
+void swap_char(const char *&x, const char *&y)
+{
+    const char *tmp = x;
+    x = y;
+    y = tmp;
+}
 
+template <typename T>
+T min3(T x, T y, T z)
+{
+    return std::min(std::min(x, y), z);
+}
+
+} // namespace
+
+static int s_insert_cost = 1;
+static int s_delete_cost = 1;
 
 /* edit_distn -- returns the edit distance between two strings, or -1 on
    failure */
@@ -196,7 +209,7 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
    the corresponding MATRIX indicies are   row+1 and col+1.
 */
 
-    buffer[index++] = min2(ins + del, (from[0] == to[0] ? 0 : ch));
+    buffer[index++] = std::min(ins + del, (from[0] == to[0] ? 0 : ch));
 #ifdef TRN_SPEEDUP
     low = buffer[mod(index + radix - 1)];
 #endif
@@ -238,7 +251,7 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
                     W(row + 1, col) + del);
             if (from[col] == to[row - 1] && col > 0 && from[col - 1] == to[row])
             {
-                buffer[index] = min2(buffer[index], NNWW(row - 1, col - 1) + swap_cost);
+                buffer[index] = std::min(buffer[index], NNWW(row - 1, col - 1) + swap_cost);
             }
 
 #ifdef DEBUG_EDITDIST
