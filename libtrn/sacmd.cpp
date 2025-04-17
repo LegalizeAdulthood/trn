@@ -796,7 +796,7 @@ void sa_art_cmd_prim(SaCommand cmd, long a)
         {
             sa_mark(a);
         }
-        s_ref_status_onpage(a);
+        s_ref_status_on_page(a);
         break;
 
     case SA_SELECT:             /* select this article */
@@ -812,7 +812,7 @@ void sa_art_cmd_prim(SaCommand cmd, long a)
         {
             sa_select1(a);
         }
-        s_ref_status_onpage(a);
+        s_ref_status_on_page(a);
         break;
 
     case SA_EXTRACT:

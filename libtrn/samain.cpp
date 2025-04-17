@@ -37,7 +37,7 @@ void sa_init()
     {
         return;         /* no articles */
     }
-    if (s_initscreen())         /* If not able to init screen...*/
+    if (s_init_screen())         /* If not able to init screen...*/
     {
         return;                         /* ...most likely dumb terminal */
     }

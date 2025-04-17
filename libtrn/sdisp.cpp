@@ -85,7 +85,7 @@ void s_refresh_bot()
 }
 
 /* refresh both status and description */
-void s_refresh_entzone()
+void s_refresh_ent_zone()
 {
     int start;          /* starting page_arts index to refresh... */
 
@@ -233,7 +233,7 @@ void s_refresh()
     }
     if (g_s_ref_all || ((g_s_ref_status>=0) && (g_s_ref_desc>=0)))
     {
-        s_refresh_entzone();
+        s_refresh_ent_zone();
     }
     else
     {
@@ -261,7 +261,7 @@ void s_refresh()
     g_s_ref_all = false;
 }
 
-int s_initscreen()
+int s_init_screen()
 {
     /* check to see if term is too dumb: if so, return non-zero */
 
@@ -278,7 +278,7 @@ int s_initscreen()
 }
 
 /* screen-refresh the status if on-page */
-void s_ref_status_onpage(long ent)
+void s_ref_status_on_page(long ent)
 {
     for (int i = 0; i <= g_s_bot_ent; i++)
     {
