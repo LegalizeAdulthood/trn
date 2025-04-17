@@ -664,7 +664,7 @@ bool chase_xrefs(bool until_key)
     }
     if (until_key)
     {
-        setspin(SPIN_BACKGROUND);
+        set_spin(SPIN_BACKGROUND);
     }
 
     article_walk(check_chase, until_key);
@@ -718,7 +718,7 @@ static int chase_xref(ArticleNum artnum, int markread)
         return 0;
     }
 
-    if (inbackground())
+    if (in_background())
     {
         spin(10);
     }

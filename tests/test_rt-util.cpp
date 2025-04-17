@@ -220,7 +220,7 @@ TEST(SubjectHasReTest, one)
     char *after{};
     const char *expected = "followup";
 
-    const bool hasRe = subject_has_Re(before, &after);
+    const bool hasRe = subject_has_re(before, &after);
 
     EXPECT_TRUE(hasRe);
     EXPECT_STREQ(expected, after);
@@ -233,7 +233,7 @@ TEST(SubjectHasReTest, noRePresent)
     char buffer[]{TRN_TEST_HEADER_STRIPPED_SUBJECT};
     char *interesting{};
 
-    const bool hasRe = subject_has_Re(buffer, &interesting);
+    const bool hasRe = subject_has_re(buffer, &interesting);
 
     ASSERT_FALSE(hasRe);
     ASSERT_STREQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, interesting);
@@ -244,7 +244,7 @@ TEST(SubjectHasReTest, stripAllRe)
     char buffer[]{"Re: Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
     char *interesting{};
 
-    const bool hasRe = subject_has_Re(buffer, &interesting);
+    const bool hasRe = subject_has_re(buffer, &interesting);
 
     ASSERT_TRUE(hasRe);
     ASSERT_STREQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, interesting);
@@ -255,7 +255,7 @@ TEST(SubjectHasReTest, stripRe3)
     char buffer[]{"Re^3: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
     char *interesting{};
 
-    const bool hasRe = subject_has_Re(buffer, &interesting);
+    const bool hasRe = subject_has_re(buffer, &interesting);
 
     ASSERT_TRUE(hasRe);
     ASSERT_STREQ(TRN_TEST_HEADER_STRIPPED_SUBJECT, interesting);
@@ -266,7 +266,7 @@ TEST(SubjectHasReTest, stripOneRe)
     char buffer[]{"Re: Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT};
     char *interesting{};
 
-    const bool hasRe = strip_one_Re(buffer, &interesting);
+    const bool hasRe = strip_one_re(buffer, &interesting);
 
     ASSERT_TRUE(hasRe);
     ASSERT_STREQ("Re: Re: " TRN_TEST_HEADER_STRIPPED_SUBJECT, interesting);

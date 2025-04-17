@@ -635,7 +635,7 @@ inline bool eq_ignore_case(char unknown, char lower)
     return std::tolower(unknown) == lower;
 }
 
-bool strip_one_Re(char *str, char **strp)
+bool strip_one_re(char *str, char **strp)
 {
     bool has_Re = false;
     while (*str && at_grey_space(str))
@@ -674,10 +674,10 @@ bool strip_one_Re(char *str, char **strp)
 ** Returns true if a Re was found.  If strp is non-nullptr, it
 ** will be set to the start of the interesting characters.
 */
-bool subject_has_Re(char *str, char **strp)
+bool subject_has_re(char *str, char **strp)
 {
     bool has_Re = false;
-    while (strip_one_Re(str, &str))
+    while (strip_one_re(str, &str))
     {
         has_Re = true;
     }
@@ -780,7 +780,7 @@ static int       s_spin_pos{};   /* the last spinbar position we drew */
 static ArticleNum   s_spin_art{};
 static ArticlePosition   s_spin_tell{};
 
-void setspin(SpinMode mode)
+void set_spin(SpinMode mode)
 {
     switch (mode)
     {
@@ -912,7 +912,7 @@ void spin(int count)
     }
 }
 
-bool inbackground()
+bool in_background()
 {
     return s_spin_mode == SPIN_BACKGROUND;
 }

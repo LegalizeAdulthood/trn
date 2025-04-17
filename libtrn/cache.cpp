@@ -521,7 +521,7 @@ void set_subj_line(Article *ap, char *subj, int size)
     Subject* sp;
     char* subj_start;
 
-    if (subject_has_Re(subj, &subj_start))
+    if (subject_has_re(subj, &subj_start))
     {
         ap->flags |= AF_HAS_RE;
     }
@@ -535,7 +535,7 @@ void set_subj_line(Article *ap, char *subj, int size)
     size = decode_header(newsubj + 4, subj_start, size);
 
     /* Do the Re:-stripping over again, just in case it was encoded. */
-    if (subject_has_Re(newsubj + 4, &subj_start))
+    if (subject_has_re(newsubj + 4, &subj_start))
     {
         ap->flags |= AF_HAS_RE;
     }
@@ -953,7 +953,7 @@ void cache_until_key()
         sc_lookahead(true, true);
     }
 
-    setspin(SPIN_OFF);
+    set_spin(SPIN_OFF);
     g_untrim_cache = false;
 #endif
     check_data_sources();
@@ -968,7 +968,7 @@ bool cache_subjects()
     {
         return true;
     }
-    setspin(SPIN_BACKGROUND);
+    set_spin(SPIN_BACKGROUND);
     for (an = article_first(s_subj_to_get); an <= g_last_art; an = article_next(an))
     {
         if (input_pending())
@@ -993,7 +993,7 @@ bool cache_xrefs()
     {
         return true;
     }
-    setspin(SPIN_BACKGROUND);
+    set_spin(SPIN_BACKGROUND);
     for (an = article_first(s_xref_to_get); an <= g_last_art; an = article_next(an))
     {
         if (input_pending())
@@ -1022,7 +1022,7 @@ bool cache_all_arts()
     }
 
     /* turn it on as late as possible to avoid fseek()ing openart */
-    setspin(SPIN_BACKGROUND);
+    set_spin(SPIN_BACKGROUND);
     if (g_last_cached < g_last_art)
     {
         if (g_data_source->ov_opened)
@@ -1073,7 +1073,7 @@ bool cache_unread_arts()
     {
         return true;
     }
-    setspin(SPIN_BACKGROUND);
+    set_spin(SPIN_BACKGROUND);
     return art_data(g_last_cached+1, g_last_art, true, false);
 }
 #endif
@@ -1089,12 +1089,12 @@ bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_article
 
     if (cheating)
     {
-        setspin(SPIN_BACKGROUND);
+        set_spin(SPIN_BACKGROUND);
     }
     else
     {
         int lots2do = ((g_data_source->flags & DF_REMOTE)? g_net_speed : 20) * 25;
-        setspin(g_spin_estimate > lots2do? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
+        set_spin(g_spin_estimate > lots2do? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
     }
     /*TRN_ASSERT(first >= g_absfirst && last <= g_lastart);*/
     for (i = article_first(first); i <= last; i = article_next(i))
@@ -1129,7 +1129,7 @@ bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_article
             }
         }
     }
-    setspin(SPIN_POP);
+    set_spin(SPIN_POP);
     i = std::min(i, last);
     g_last_cached = std::max(i, g_last_cached);
     if (i == last)
@@ -1185,7 +1185,7 @@ bool cache_range(ArticleNum first, ArticleNum last)
            (long)count, plural(count));
     termdown(1);
 
-    setspin(SPIN_FOREGROUND);
+    set_spin(SPIN_FOREGROUND);
 
     if (first < g_first_cached)
     {
@@ -1209,7 +1209,7 @@ bool cache_range(ArticleNum first, ArticleNum last)
         success = art_data(g_last_cached+1, last, false, all_arts);
         g_cached_all_in_range = (all_arts && success);
     }
-    setspin(SPIN_POP);
+    set_spin(SPIN_POP);
     return success;
 }
 

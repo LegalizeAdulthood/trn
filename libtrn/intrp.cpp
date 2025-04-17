@@ -1009,7 +1009,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     }
                     if (*pattern == 's')
                     {
-                        subject_has_Re(str, &str);
+                        subject_has_re(str, &str);
                     }
                     char *h;
                     if (*pattern == 's' && (h = in_string(str, "- (nf", true)) != nullptr)

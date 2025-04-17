@@ -20,7 +20,7 @@ enum SpinMode
     SPIN_POP,
     SPIN_FOREGROUND,
     SPIN_BACKGROUND,
-    SPIN_BARGRAPH
+    SPIN_BAR_GRAPH
 };
 
 char *extract_name(char *name);
@@ -28,12 +28,12 @@ char *compress_name(char *name, int max);
 char *compress_address(char *name, int max);
 char *compress_from(const char *from, int size);
 char *compress_date(const Article *ap, int size);
-bool strip_one_Re(char *str, char **strp);
-bool subject_has_Re(char *str, char **strp);
+bool strip_one_re(char *str, char **strp);
+bool subject_has_re(char *str, char **strp);
 const char *compress_subj(const Article *ap, int max);
-void setspin(SpinMode mode);
+void set_spin(SpinMode mode);
 void spin(int count);
-bool inbackground();
+bool in_background();
 void perform_status_init(long cnt);
 void perform_status(long cnt, int spin);
 int perform_status_end(long cnt, const char *obj_type);

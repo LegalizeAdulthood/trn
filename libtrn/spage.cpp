@@ -71,7 +71,7 @@ bool s_fillpage_backward(long end)
 /* later make it shorten the descript. */
 
 /* CONSIDER: make setspin conditional on context? */
-    setspin(SPIN_BACKGROUND);   /* turn on spin on cache misses */
+    set_spin(SPIN_BACKGROUND);   /* turn on spin on cache misses */
     /* uncertain what next comment means now */
     /* later do sheer paranoia check for min_page_ents */
     while ((line_on + s_ent_lines(a)) <= page_lines)
@@ -89,7 +89,7 @@ bool s_fillpage_backward(long end)
         }
     }
 /* what if none on page? (desc. too long) Fix later */
-    setspin(SPIN_POP);  /* turn off spin on cache misses */
+    set_spin(SPIN_POP);  /* turn off spin on cache misses */
     /* replace the entries at the front of the g_page_ents array */
     /* also set start_line entries */
     j = 0;
@@ -181,7 +181,7 @@ bool s_fillpage_forward(long start)
 /* what if the first entry for the page has a description too long? */
 /* later make it shorten the descript. */
 
-    setspin(SPIN_BACKGROUND);   /* turn on spin on cache misses */
+    set_spin(SPIN_BACKGROUND);   /* turn on spin on cache misses */
 /* ?  later do paranoia check for g_s_bot_ent */
     while ((line_on + s_ent_lines(a)) <= page_lines)
     {
@@ -198,7 +198,7 @@ bool s_fillpage_forward(long start)
             break;      /* get out of loop and finish up... */
         }
     }
-    setspin(SPIN_POP);  /* turn off spin on cache misses */
+    set_spin(SPIN_POP);  /* turn off spin on cache misses */
     /* Now, suppose that the pointer position is off the page.  That would
      * be bad, so lets make sure it doesn't happen.
      */
@@ -287,7 +287,7 @@ bool s_refillpage()
     line_on = g_page_ents[j].start_line + s_ent_lines(g_page_ents[j].entnum);
     a = s_next_elig(g_page_ents[j].entnum);
 
-    setspin(SPIN_BACKGROUND);
+    set_spin(SPIN_BACKGROUND);
     while (a && line_on + s_ent_lines(a) <= page_lines)
     {
         i = s_ent_lines(a);
@@ -299,7 +299,7 @@ bool s_refillpage()
         line_on = line_on+i;
         a = s_next_elig(a);
     }
-    setspin(SPIN_POP);
+    set_spin(SPIN_POP);
 
     /* there are fairly good reasons to refresh the last good entry, such
      * as clearing the rest of the screen...

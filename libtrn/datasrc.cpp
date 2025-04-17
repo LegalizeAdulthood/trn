@@ -957,7 +957,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
         termdown(1);
         return 0;
     }
-    setspin(g_spin_todo > 0? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
+    set_spin(g_spin_todo > 0? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
 
     source_file_close(sfp);
 
@@ -970,7 +970,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
     {
         (void) list_get_item(sfp->lp, 0);
         sfp->lp->high = -1;
-        setspin(SPIN_OFF);
+        set_spin(SPIN_OFF);
         return 1;
     }
 
@@ -990,7 +990,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
                 std::printf("\nError getting %s file.\n", fetch_cmd);
                 termdown(2);
                 source_file_close(sfp);
-                setspin(SPIN_OFF);
+                set_spin(SPIN_OFF);
                 return 0;
             }
             if (nntp_at_list_end(g_buf))
@@ -1048,7 +1048,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
         hash_store(sfp->hp, g_buf, keylen, data);
     }
     sfp->lp->high = node_low + offset - 1;
-    setspin(SPIN_OFF);
+    set_spin(SPIN_OFF);
 
     if (server)
     {

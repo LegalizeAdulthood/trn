@@ -975,7 +975,7 @@ int sf_score(ArticleNum a)
         /* should be in cache if a rule above used the subject */
         s = fetch_cache(a, SUBJ_LINE, true);
         /* later: consider other possible reply forms (threading?) */
-        if (s && subject_has_Re(s, nullptr))
+        if (s && subject_has_re(s, nullptr))
         {
             sum = sum+s_reply_score;
             if (g_sf_score_verbose)
