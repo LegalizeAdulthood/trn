@@ -79,7 +79,7 @@ char *filexp(const char *text)
     char scrbuf[CBUFLEN];
 
     /* interpret any % escapes */
-    dointerp(filename,sizeof filename,s,nullptr,nullptr);
+    do_interp(filename,sizeof filename,s,nullptr,nullptr);
     s = filename;
     if (*s == '~')      /* does destination start with ~? */
     {
@@ -211,7 +211,7 @@ char *filexp(const char *text)
             std::strcpy(d, s);
         }
         /* this might do some extra '%'s, but that's how the Mercedes Benz */
-        dointerp(filename, sizeof filename, scrbuf, nullptr, nullptr);
+        do_interp(filename, sizeof filename, scrbuf, nullptr, nullptr);
     }
     return filename;
 }

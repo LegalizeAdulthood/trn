@@ -508,7 +508,7 @@ int perform(char *cmdlst, int output_level)
         std::fflush(stdout);
     }
 
-    g_perform_cnt++;
+    g_perform_count++;
     for (; (ch = *cmdlst) != 0; cmdlst++)
     {
         if (std::isspace(ch) || ch == ':')
@@ -678,9 +678,9 @@ int perform(char *cmdlst, int output_level)
             }
             else
             {
-                cmdlst = dointerp(tmpbuf, sizeof tmpbuf, cmdlst, ":", nullptr) - 1;
+                cmdlst = do_interp(tmpbuf, sizeof tmpbuf, cmdlst, ":", nullptr) - 1;
             }
-            g_perform_cnt--;
+            g_perform_count--;
             if (perform(tmpbuf,output_level?2:0) < 0)
             {
                 return -1;
@@ -839,7 +839,7 @@ int ng_perform(char *cmdlst, int output_level)
         std::fflush(stdout);
     }
 
-    g_perform_cnt++;
+    g_perform_count++;
     for (; (ch = *cmdlst) != 0; cmdlst++)
     {
         if (std::isspace(ch) || ch == ':')
@@ -981,7 +981,7 @@ int addgrp_perform(AddGroup *gp, char *cmdlst, int output_level)
         std::fflush(stdout);
     }
 
-    g_perform_cnt++;
+    g_perform_count++;
     for (; (ch = *cmdlst) != 0; cmdlst++)
     {
         if (std::isspace(ch) || ch == ':')

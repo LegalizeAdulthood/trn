@@ -117,9 +117,9 @@ void finalize(int status)
         remove(s);
     }
     cleanup_nntp();
-    if (!g_headname.empty())
+    if (!g_head_name.empty())
     {
-        remove(g_headname.c_str());
+        remove(g_head_name.c_str());
     }
     if (status < 0)
     {
@@ -130,9 +130,9 @@ void finalize(int status)
         std::abort();
     }
 #ifdef RESTORE_ORIGDIR
-    if (!g_origdir.empty())
+    if (!g_orig_dir.empty())
     {
-        change_dir(g_origdir);
+        change_dir(g_orig_dir);
     }
 #endif
     std::exit(status);

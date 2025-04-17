@@ -925,7 +925,7 @@ static long   s_ps_missing{};
 
 void perform_status_init(long cnt)
 {
-    g_perform_cnt = 0;
+    g_perform_count = 0;
     g_error_occurred = false;
     g_subjline = nullptr;
     g_page_line = 1;
@@ -951,7 +951,7 @@ void perform_status(long cnt, int spin)
         std::fflush(stdout);
     }
 
-    if (g_perform_cnt == s_prior_perform_cnt)
+    if (g_perform_count == s_prior_perform_cnt)
     {
         return;
     }
@@ -963,7 +963,7 @@ void perform_status(long cnt, int spin)
     }
 
     s_prior_now = now;
-    s_prior_perform_cnt = g_perform_cnt;
+    s_prior_perform_cnt = g_perform_count;
 
     long missing = g_missing_count - s_ps_missing;
     long kills = s_ps_cnt - cnt - missing;
@@ -975,10 +975,10 @@ void perform_status(long cnt, int spin)
     }
 
     carriage_return();
-    if (g_perform_cnt != sels  && g_perform_cnt != -sels
-     && g_perform_cnt != kills && g_perform_cnt != -kills)
+    if (g_perform_count != sels  && g_perform_count != -sels
+     && g_perform_count != kills && g_perform_count != -kills)
     {
-        std::printf("M:%d ", g_perform_cnt);
+        std::printf("M:%d ", g_perform_count);
     }
     if (kills)
     {
@@ -1065,7 +1065,7 @@ int perform_status_end(long cnt, const char *obj_type)
     char*cp = g_msg;
     bool article_status = (*obj_type == 'a');
 
-    if (g_perform_cnt == 0)
+    if (g_perform_count == 0)
     {
         std::sprintf(g_msg, "No %ss affected.", obj_type);
         return 0;
@@ -1077,14 +1077,14 @@ int perform_status_end(long cnt, const char *obj_type)
 
     if (!g_performed_article_loop)
     {
-        cp = output_change(cp, (long)g_perform_cnt,
+        cp = output_change(cp, (long)g_perform_count,
                            g_sel_mode == SM_THREAD? "thread" : "subject",
                            nullptr, "ERR|match|ed");
     }
-    else if (g_perform_cnt != sels && g_perform_cnt != -sels //
-             && g_perform_cnt != kills && g_perform_cnt != -kills)
+    else if (g_perform_count != sels && g_perform_count != -sels //
+             && g_perform_count != kills && g_perform_count != -kills)
     {
-        cp = output_change(cp, (long)g_perform_cnt, obj_type, nullptr,
+        cp = output_change(cp, (long)g_perform_count, obj_type, nullptr,
                            "ERR|match|ed");
         obj_type = nullptr;
     }

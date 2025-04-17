@@ -329,7 +329,7 @@ void check_poster(Article *ap)
             }
             if (!std::strcmp(u, g_login_name.c_str()))
             {
-                if (in_string(h, g_hostname, false))
+                if (in_string(h, g_host_name, false))
                 {
                     switch (g_auto_select_postings)
                     {

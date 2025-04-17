@@ -614,7 +614,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
     ** so line is just the definition. */
     if (tbsize)
     {
-        m = dointerp(tmpbuf,tbsize,line," \t",nullptr);
+        m = do_interp(tmpbuf,tbsize,line," \t",nullptr);
     }
     else
     {
@@ -949,14 +949,14 @@ char *edit_buf(char *s, const char *cmd)
         {
             *s = '\0';
             cpybuf = savestr(g_buf);
-            interpsearch(g_buf, sizeof g_buf, cpybuf, cmd);
+            interp_search(g_buf, sizeof g_buf, cpybuf, cmd);
             std::free(cpybuf);
             s = g_buf + std::strlen(g_buf);
             reprint();
         }
         else
         {
-            interpsearch(s, sizeof g_buf - (s-g_buf), tmpbuf, cmd);
+            interp_search(s, sizeof g_buf - (s-g_buf), tmpbuf, cmd);
             std::fputs(s,stdout);
             s += std::strlen(s);
         }

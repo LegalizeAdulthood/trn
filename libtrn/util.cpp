@@ -970,7 +970,7 @@ char *parse_ini_section(char *cp, IniWords words[])
 
 bool check_ini_cond(char *cond)
 {
-    cond = dointerp(g_buf,sizeof g_buf,cond,"!=<>",nullptr);
+    cond = do_interp(g_buf,sizeof g_buf,cond,"!=<>",nullptr);
     char *s = g_buf + std::strlen(g_buf);
     while (s != g_buf && std::isspace(s[-1]))
     {

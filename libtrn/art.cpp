@@ -1285,7 +1285,7 @@ leave_pager:
         {
             setdfltcmd();
             color_object(COLOR_CMD, true);
-            interpsearch(g_cmd_buf, sizeof g_cmd_buf, g_mailcall, g_buf);
+            interp_search(g_cmd_buf, sizeof g_cmd_buf, g_mailcall, g_buf);
             std::printf(g_prompt.c_str(),g_cmd_buf,
                    current_char_subst(),
                    g_dfltcmd.c_str());  /* print prompt, whatever it is */

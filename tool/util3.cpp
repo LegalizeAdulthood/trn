@@ -56,21 +56,21 @@ char *saferealloc(char *where, MemorySize size)
 }
 #endif
 
-char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, const char *cmd)
+char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, const char *cmd)
 {
     extern std::string g_dot_dir;
     if (*pattern == '%' && pattern[1] == '.')
     {
         int len = std::strlen(g_dot_dir.c_str());
-        safecpy(dest, g_dot_dir.c_str(), destsize);
-        if (len < destsize)
+        safecpy(dest, g_dot_dir.c_str(), dest_size);
+        if (len < dest_size)
         {
-            safecpy(dest+len, pattern+2, destsize - len);
+            safecpy(dest+len, pattern+2, dest_size - len);
         }
     }
     else
     {
-        safecpy(dest, pattern, destsize);
+        safecpy(dest, pattern, dest_size);
     }
     return nullptr; /* This is wrong on purpose */
 }

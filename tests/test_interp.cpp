@@ -65,7 +65,7 @@ protected:
 
     char *interpolate(char *pattern, const char *stoppers = "")
     {
-        return dointerp(m_buffer.data(), BUFFER_SIZE, pattern, stoppers, nullptr);
+        return do_interp(m_buffer.data(), BUFFER_SIZE, pattern, stoppers, nullptr);
     }
 
     std::string buffer() const
@@ -108,7 +108,7 @@ void InterpolatorTest::SetUp()
     char *tcbuf = m_tcbuf.data();
     opt_init(1,argv,&tcbuf);
     color_init();
-    intrp_init(tcbuf, TCBUF_SIZE);
+    interp_init(tcbuf, TCBUF_SIZE);
     cwd_check();
     term_set(tcbuf);
     last_init();
@@ -154,7 +154,7 @@ void InterpolatorTest::TearDown()
     rcstuff_final();
     data_source_finalize();
     last_final();
-    intrp_final();
+    interp_final();
     opt_final();
     head_final();
     env_final();
@@ -649,7 +649,7 @@ TEST_F(InterpolatorTest, originalDirectory)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(g_origdir, buffer());
+    ASSERT_EQ(g_orig_dir, buffer());
 }
 
 TEST_F(InterpolatorTest, privateNewsDirectory)
@@ -890,13 +890,13 @@ TEST_F(InterpolatorTest, trailingPercentRemains)
 
 TEST_F(InterpolatorTest, performCount)
 {
-    ValueSaver<int> saved(g_perform_cnt, 86);
+    ValueSaver<int> saved(g_perform_count, 86);
     char pattern[]{"%#"};
 
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(std::to_string(g_perform_cnt), buffer());
+    ASSERT_EQ(std::to_string(g_perform_count), buffer());
 }
 
 TEST_F(InterpolatorTest, modifiedPerformCountNotZero)
@@ -911,7 +911,7 @@ TEST_F(InterpolatorTest, modifiedPerformCountNotZero)
 
 TEST_F(InterpolatorTest, consecutiveModifiedPerformCountIncreases)
 {
-    ValueSaver<int> saved(g_perform_cnt, 86);
+    ValueSaver<int> saved(g_perform_count, 86);
     char pattern[]{"%^#,%^#"};
 
     const char *new_pattern = interpolate(pattern);

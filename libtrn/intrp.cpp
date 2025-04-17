@@ -43,14 +43,14 @@ struct utsname utsn;
 #include <filesystem>
 #include <string>
 
-std::string g_origdir;    /* cwd when rn invoked */
-char       *g_hostname{}; /* host name to match local postings */
-std::string g_headname;
-int         g_perform_cnt{};
+std::string g_orig_dir;    /* cwd when rn invoked */
+char       *g_host_name{}; /* host name to match local postings */
+std::string g_head_name;
+int         g_perform_count{};
 
 #ifdef HAS_NEWS_ADMIN
-const std::string g_newsadmin{NEWS_ADMIN}; /* news administrator */
-int g_newsuid{};
+const std::string g_news_admin{NEWS_ADMIN}; /* news administrator */
+int g_news_uid{};
 #endif
 
 static char *skipinterp(char *pattern, const char *stoppers);
@@ -61,7 +61,7 @@ static CompiledRegex      s_cond_compex;
 static char        s_empty[]{""};
 static std::string s_last_input;
 
-void intrp_init(char *tcbuf, int tcbuf_len)
+void interp_init(char *tcbuf, int tcbuf_len)
 {
     s_last_input.clear();
     init_compex(&s_cond_compex);
@@ -75,7 +75,7 @@ void intrp_init(char *tcbuf, int tcbuf_len)
 
         if (pwd != nullptr)
         {
-            g_newsuid = pwd->pw_uid;
+            g_news_uid = pwd->pw_uid;
         }
 #else
 #ifdef TILDENAME
@@ -89,10 +89,10 @@ void intrp_init(char *tcbuf, int tcbuf_len)
 #endif  /* HAS_GETPWENT */
     }
 
-    /* if this is the news admin then load his UID into g_newsuid */
+    /* if this is the news admin then load his UID into g_news_uid */
 
     if (!g_login_name.empty())
-        g_newsuid = getuid();
+        g_news_uid = getuid();
 #endif
 
     if (g_checkflag)             /* that getwd below takes ~1/3 sec. */
@@ -100,39 +100,39 @@ void intrp_init(char *tcbuf, int tcbuf_len)
         return;                  /* and we do not need it for -c */
     }
     trn_getwd(tcbuf, tcbuf_len); /* find working directory name */
-    g_origdir = tcbuf;           /* and remember it */
+    g_orig_dir = tcbuf;           /* and remember it */
 
     /* name of header file (%h) */
 
-    g_headname = filexp(HEADNAME);
+    g_head_name = filexp(HEADNAME);
 
     /* the hostname to use in local-article comparisons */
 #if HOSTBITS != 0
     int i = (HOSTBITS < 2? 2 : HOSTBITS);
     static char buff[128];
     std::strcpy(buff, g_p_host_name.c_str());
-    g_hostname = buff+std::strlen(buff)-1;
-    while (i && g_hostname != buff)
+    g_host_name = buff+std::strlen(buff)-1;
+    while (i && g_host_name != buff)
     {
-        if (*--g_hostname == '.')
+        if (*--g_host_name == '.')
         {
             i--;
         }
     }
-    if (*g_hostname == '.')
+    if (*g_host_name == '.')
     {
-        g_hostname++;
+        g_host_name++;
     }
 #else
     g_hostname = g_p_host_name.c_str();
 #endif
 }
 
-void intrp_final()
+void interp_final()
 {
-    g_headname.clear();
-    g_hostname = nullptr;
-    g_origdir.clear();
+    g_head_name.clear();
+    g_host_name = nullptr;
+    g_orig_dir.clear();
 }
 
 /* skip interpolations */
@@ -254,7 +254,7 @@ getout:
 }
 
 /* interpret interpolations */
-char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, const char *cmd)
+char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, const char *cmd)
 {
     char* subj_buf = nullptr;
     char* ngs_buf = nullptr;
@@ -432,7 +432,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     char rch;
                     bool matched;
 
-                    pattern = dointerp(dest,destsize,pattern+1,"!=",cmd);
+                    pattern = do_interp(dest,dest_size,pattern+1,"!=",cmd);
                     rch = *pattern;
                     if (rch == '!')
                     {
@@ -471,7 +471,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     } while (*s++);
                     if (proc_sprintf)
                     {
-                        dointerp(scrbuf,sizeof scrbuf,spfbuf,nullptr,cmd);
+                        do_interp(scrbuf,sizeof scrbuf,spfbuf,nullptr,cmd);
                         proc_sprintf = false;
                     }
                     s = compile(&s_cond_compex, scrbuf, true, true);
@@ -489,7 +489,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     if (matched == (rch == '='))
                     {
-                        pattern = dointerp(dest,destsize,pattern+1,":)",cmd);
+                        pattern = do_interp(dest,dest_size,pattern+1,":)",cmd);
                         if (*pattern == ':')
                         {
                             pattern = skipinterp(pattern + 1, ")");
@@ -502,7 +502,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         {
                             pattern++;
                         }
-                        pattern = dointerp(dest,destsize,pattern,")",cmd);
+                        pattern = do_interp(dest,dest_size,pattern,")",cmd);
                     }
                     s = dest;
                     g_bra_compex = oldbra_compex;
@@ -512,7 +512,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
 
                 case '`':
                 {
-                    pattern = dointerp(scrbuf,(sizeof scrbuf),pattern+1,"`",cmd);
+                    pattern = do_interp(scrbuf,(sizeof scrbuf),pattern+1,"`",cmd);
                     std::FILE* pipefp = popen(scrbuf,"r");
                     if (pipefp != nullptr)
                     {
@@ -545,7 +545,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
 
                 case '"':
                 {
-                    pattern = dointerp(scrbuf,(sizeof scrbuf),pattern+1,"\"",cmd);
+                    pattern = do_interp(scrbuf,(sizeof scrbuf),pattern+1,"\"",cmd);
                     std::fputs(scrbuf,stdout);
                     resetty();
                     std::fgets(scrbuf, sizeof scrbuf, stdin);
@@ -588,7 +588,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     else
                     {
-                        std::sprintf(scrbuf, "%d", g_perform_cnt);
+                        std::sprintf(scrbuf, "%d", g_perform_count);
                     }
                     s = scrbuf;
                     break;
@@ -768,7 +768,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     break;
 
                 case 'h':                       /* header file name */
-                    std::strcpy(scrbuf, g_headname.c_str());
+                    std::strcpy(scrbuf, g_head_name.c_str());
                     s = scrbuf;
                     break;
 
@@ -809,7 +809,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
 
                 case 'l':                       /* news admin login */
 #ifdef HAS_NEWS_ADMIN
-                    std::strcpy(scrbuf, g_newsadmin.c_str());
+                    std::strcpy(scrbuf, g_news_admin.c_str());
 #else
                     std::strcpy(scrbuf, "???");
 #endif
@@ -887,7 +887,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     break;
 
                 case 'O':
-                    std::strcpy(scrbuf, g_origdir.c_str());
+                    std::strcpy(scrbuf, g_orig_dir.c_str());
                     s = scrbuf;
                     break;
 
@@ -1217,7 +1217,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     break;
 
                 default:
-                    if (--destsize <= 0)
+                    if (--dest_size <= 0)
                     {
                         abort_interp();
                     }
@@ -1264,11 +1264,11 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
             }
             /* Do we have room left? */
             int i = std::strlen(s);
-            if (destsize <= i)
+            if (dest_size <= i)
             {
                 abort_interp();
             }
-            destsize -= i;      /* adjust the size now. */
+            dest_size -= i;      /* adjust the size now. */
 
             /* A maze of twisty little conditions, all alike... */
             if (address_parse || comment_parse)
@@ -1343,7 +1343,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     if ((re_quote && std::strchr(s_regexp_specials, *s)) //
                         || (tick_quote == 2 && *s == '"'))
                     {
-                        if (--destsize <= 0)
+                        if (--dest_size <= 0)
                         {
                             abort_interp();
                         }
@@ -1358,7 +1358,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     else if (tick_quote && *s == '\'')
                     {
-                        if ((destsize -= 3) <= 0)
+                        if ((dest_size -= 3) <= 0)
                         {
                             abort_interp();
                         }
@@ -1387,7 +1387,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
         }
         else
         {
-            if (--destsize <= 0)
+            if (--dest_size <= 0)
             {
                 abort_interp();
             }
@@ -1401,12 +1401,12 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 else if (*pattern == '(')
                 {
                     metabit = 0200;
-                    destsize++;
+                    dest_size++;
                 }
                 else if (*pattern == ')')
                 {
                     metabit = 0;
-                    destsize++;
+                    dest_size++;
                 }
                 else if (*pattern >= '@')
                 {
@@ -1526,14 +1526,14 @@ char *interp_backslash(char *dest, char *pattern)
 
 /* helper functions */
 
-char *interp(char *dest, int destsize, char *pattern)
+char *interp(char *dest, int dest_size, char *pattern)
 {
-    return dointerp(dest,destsize,pattern,nullptr,nullptr);
+    return do_interp(dest,dest_size,pattern,nullptr,nullptr);
 }
 
-char *interpsearch(char *dest, int destsize, char *pattern, const char *cmd)
+char *interp_search(char *dest, int dest_size, char *pattern, const char *cmd)
 {
-    return dointerp(dest,destsize,pattern,nullptr,cmd);
+    return do_interp(dest,dest_size,pattern,nullptr,cmd);
 }
 
 /* normalize a references line in place */

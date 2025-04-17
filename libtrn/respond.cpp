@@ -678,11 +678,11 @@ int cancel_article()
     char *from_buf = fetch_lines(g_art, FROM_LINE);
     char *ngs_buf = fetch_lines(g_art, NEWSGROUPS_LINE);
     if (!string_case_equal(get_val_const("FROM", ""), from_buf)      //
-        && (!in_string(from_buf, g_hostname, false)                  //
+        && (!in_string(from_buf, g_host_name, false)                  //
             || (!in_string(from_buf, g_login_name.c_str(), true)     //
                 && !in_string(reply_buf, g_login_name.c_str(), true) //
 #ifdef HAS_NEWS_ADMIN
-                && myuid != g_newsuid //
+                && myuid != g_news_uid //
 #endif
                 && myuid != ROOTID)))
     {
@@ -706,10 +706,10 @@ int cancel_article()
     }
     else
     {
-        std::FILE *header = std::fopen(g_headname.c_str(),"w");   /* open header file */
+        std::FILE *header = std::fopen(g_head_name.c_str(),"w");   /* open header file */
         if (header == nullptr)
         {
-            std::printf(g_cantcreate,g_headname.c_str());
+            std::printf(g_cantcreate,g_head_name.c_str());
             termdown(1);
             goto done;
         }
@@ -751,11 +751,11 @@ int supersede_article()         /* Supersedes: */
     char *from_buf = fetch_lines(g_art, FROM_LINE);
     char *ngs_buf = fetch_lines(g_art, NEWSGROUPS_LINE);
     if (!string_case_equal(get_val_const("FROM", ""), from_buf)      //
-        && (!in_string(from_buf, g_hostname, false)                  //
+        && (!in_string(from_buf, g_host_name, false)                  //
             || (!in_string(from_buf, g_login_name.c_str(), true)     //
                 && !in_string(reply_buf, g_login_name.c_str(), true) //
 #ifdef HAS_NEWS_ADMIN                                                //
-                && myuid != g_newsuid                                //
+                && myuid != g_news_uid                                //
 #endif
                 && myuid != ROOTID)))
     {
@@ -779,10 +779,10 @@ int supersede_article()         /* Supersedes: */
     }
     else
     {
-        std::FILE *header = std::fopen(g_headname.c_str(),"w");   /* open header file */
+        std::FILE *header = std::fopen(g_head_name.c_str(),"w");   /* open header file */
         if (header == nullptr)
         {
-            std::printf(g_cantcreate,g_headname.c_str());
+            std::printf(g_cantcreate,g_head_name.c_str());
             termdown(1);
             goto done;
         }
@@ -816,7 +816,7 @@ static int nntp_date()
 static void follow_it_up()
 {
     safecpy(g_cmd_buf,filexp(get_val_const("NEWSPOSTER",NEWSPOSTER)), sizeof g_cmd_buf);
-    if (invoke(g_cmd_buf, g_origdir.c_str()) == 42)
+    if (invoke(g_cmd_buf, g_orig_dir.c_str()) == 42)
     {
         int ret;
         if ((g_data_source->flags & DF_REMOTE) &&
@@ -826,7 +826,7 @@ static void follow_it_up()
         }
         else
         {
-            ret = invoke(filexp(CALL_INEWS),g_origdir.c_str());
+            ret = invoke(filexp(CALL_INEWS),g_orig_dir.c_str());
         }
         if (ret)
         {
@@ -835,7 +835,7 @@ static void follow_it_up()
             std::FILE *fp_out = std::fopen(deadart, "a");
             if (fp_out != nullptr)
             {
-                std::FILE *fp_in = std::fopen(g_headname.c_str(), "r");
+                std::FILE *fp_in = std::fopen(g_head_name.c_str(), "r");
                 if (fp_in != nullptr)
                 {
                     while (std::fgets(g_cmd_buf, sizeof g_cmd_buf, fp_in))
@@ -866,10 +866,10 @@ void reply()
     char* maildoer = savestr(get_val_const("MAILPOSTER",MAILPOSTER));
 
     art_open(g_art,(ArticlePosition)0);
-    std::FILE *header = std::fopen(g_headname.c_str(),"w");       /* open header file */
+    std::FILE *header = std::fopen(g_head_name.c_str(),"w");       /* open header file */
     if (header == nullptr)
     {
-        std::printf(g_cantcreate,g_headname.c_str());
+        std::printf(g_cantcreate,g_head_name.c_str());
         termdown(1);
         goto done;
     }
@@ -879,11 +879,11 @@ void reply()
     {
         if (g_verbose)
         {
-            std::printf("\n%s\n(Above lines saved in file %s)\n", g_buf, g_headname.c_str());
+            std::printf("\n%s\n(Above lines saved in file %s)\n", g_buf, g_head_name.c_str());
         }
         else
         {
-            std::printf("\n%s\n(Header in %s)\n", g_buf, g_headname.c_str());
+            std::printf("\n%s\n(Header in %s)\n", g_buf, g_head_name.c_str());
         }
         termdown(3);
     }
@@ -916,7 +916,7 @@ void reply()
     }
     std::fclose(header);
     safecpy(g_cmd_buf,filexp(maildoer),sizeof g_cmd_buf);
-    invoke(g_cmd_buf,g_origdir.c_str());
+    invoke(g_cmd_buf,g_orig_dir.c_str());
 done:
     std::free(maildoer);
 }
@@ -936,10 +936,10 @@ void forward()
     init_compex(&mime_compex);
 #endif
     art_open(g_art,(ArticlePosition)0);
-    std::FILE *header = std::fopen(g_headname.c_str(),"w");       /* open header file */
+    std::FILE *header = std::fopen(g_head_name.c_str(),"w");       /* open header file */
     if (header == nullptr)
     {
-        std::printf(g_cantcreate,g_headname.c_str());
+        std::printf(g_cantcreate,g_head_name.c_str());
         termdown(1);
         goto done;
     }
@@ -1004,11 +1004,11 @@ void forward()
     {
         if (g_verbose)
         {
-            std::printf("\n%s\n(Above lines saved in file %s)\n", hbuf, g_headname.c_str());
+            std::printf("\n%s\n(Above lines saved in file %s)\n", hbuf, g_head_name.c_str());
         }
         else
         {
-            std::printf("\n%s\n(Header in %s)\n", hbuf, g_headname.c_str());
+            std::printf("\n%s\n(Header in %s)\n", hbuf, g_head_name.c_str());
         }
         termdown(3);
     }
@@ -1054,7 +1054,7 @@ void forward()
     }
     std::fclose(header);
     safecpy(g_cmd_buf,filexp(maildoer),sizeof g_cmd_buf);
-    invoke(g_cmd_buf,g_origdir.c_str());
+    invoke(g_cmd_buf,g_orig_dir.c_str());
   done:
     std::free(maildoer);
 #ifdef REGEX_WORKS_RIGHT
@@ -1085,10 +1085,10 @@ void followup()
         }
     }
     art_open(g_art,(ArticlePosition)0);
-    std::FILE *header = std::fopen(g_headname.c_str(),"w");
+    std::FILE *header = std::fopen(g_head_name.c_str(),"w");
     if (header == nullptr)
     {
-        std::printf(g_cantcreate,g_headname.c_str());
+        std::printf(g_cantcreate,g_head_name.c_str());
         termdown(1);
         g_art = oldart;
         return;
