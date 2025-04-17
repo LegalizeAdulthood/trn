@@ -154,14 +154,14 @@ static void new_nntp_groups(DataSource *dp)
     long  high;
     long  low;
 
-    set_datasrc(dp);
+    set_data_source(dp);
 
     std::time_t const server_time = nntp_time();
     if (server_time == -2)
     {
         return;
     }
-    if (nntp_newgroups(dp->lastnewgrp) < 1)
+    if (nntp_newgroups(dp->last_new_group) < 1)
     {
         std::printf("Can't get new groups from server:\n%s\n", g_ser_line);
         return;
@@ -198,7 +198,7 @@ static void new_nntp_groups(DataSource *dp)
         }
         if (dp->act_sf.fp)
         {
-            if (find_actgrp(dp, g_buf, g_ser_line, len, (ArticleNum) 0))
+            if (find_active_group(dp, g_buf, g_ser_line, len, (ArticleNum) 0))
             {
                 if (!s)
                 {
@@ -217,7 +217,7 @@ static void new_nntp_groups(DataSource *dp)
                     s = g_ser_line + len;
                 }
                 std::sprintf(s, " %010ld %05ld %c\n", high, low, ch);
-                (void) srcfile_append(&dp->act_sf, g_ser_line, len);
+                (void) source_file_append(&dp->act_sf, g_ser_line, len);
             }
         }
         if (s)
@@ -242,15 +242,15 @@ static void new_nntp_groups(DataSource *dp)
     if (foundSomething)
     {
         hashwalk(newngs, build_addgroup_list, 0);
-        srcfile_end_append(&dp->act_sf, dp->extra_name);
-        dp->lastnewgrp = server_time;
+        source_file_end_append(&dp->act_sf, dp->extra_name);
+        dp->last_new_group = server_time;
     }
     hashdestroy(newngs);
 }
 
 static void new_local_groups(DataSource *dp)
 {
-    g_datasrc = dp;
+    g_data_source = dp;
 
     const long file_size{static_cast<long>(std::filesystem::file_size(dp->extra_name))};
     /* did active.times file grow? */
@@ -272,13 +272,13 @@ static void new_local_groups(DataSource *dp)
     while (std::fgets(g_buf, LBUFLEN, fp) != nullptr)
     {
         char *s;
-        if ((s = std::strchr(g_buf, ' ')) == nullptr || (lastone = std::atol(s + 1)) < dp->lastnewgrp)
+        if ((s = std::strchr(g_buf, ' ')) == nullptr || (lastone = std::atol(s + 1)) < dp->last_new_group)
         {
             continue;
         }
         *s = '\0';
         char tmpbuf[LBUFLEN];
-        if (!find_actgrp(g_datasrc, tmpbuf, g_buf, s - g_buf, (ArticleNum)0))
+        if (!find_active_group(g_data_source, tmpbuf, g_buf, s - g_buf, (ArticleNum)0))
         {
             continue;
         }
@@ -301,7 +301,7 @@ static void new_local_groups(DataSource *dp)
 
     hashwalk(newngs, build_addgroup_list, 0);
     hashdestroy(newngs);
-    dp->lastnewgrp = lastone+1;
+    dp->last_new_group = lastone+1;
     dp->act_sf.recent_cnt = file_size;
 }
 
@@ -326,7 +326,7 @@ static void add_to_hash(HashTable *ng, const char *name, int toread, char_int ch
     }
     node->to_read = (toread < 0)? 0 : toread;
     std::strcpy(node->name, name);
-    node->data_src = g_datasrc;
+    node->data_src = g_data_source;
     node->next = nullptr;
     node->prev = nullptr;
     hashstore(ng, name, namelen, data);
@@ -361,7 +361,7 @@ static void add_to_list(const char *name, int toread, char_int ch)
     node->to_read = (toread < 0)? 0 : toread;
     node->num = s_addgroup_cnt++;
     std::strcpy(node->name, name);
-    node->data_src = g_datasrc;
+    node->data_src = g_data_source;
     node->next = nullptr;
     node->prev = g_last_add_group;
     if (g_last_add_group)
@@ -384,13 +384,13 @@ bool scan_active(bool add_matching)
         print_lines("Completely unsubscribed newsgroups:\n", STANDOUT);
     }
 
-    for (DataSource *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
+    for (DataSource *dp = data_source_first(); dp && !empty(dp->name); dp = data_source_next(dp))
     {
         if (!(dp->flags & DF_OPEN))
         {
             continue;
         }
-        set_datasrc(dp);
+        set_data_source(dp);
         if (dp->act_sf.fp)
         {
             hashwalk(dp->act_sf.hp, list_groups, add_matching);
@@ -434,7 +434,7 @@ bool scan_active(bool add_matching)
 
     if (g_in_ng)
     {
-        set_datasrc(g_ngptr->rc->datasrc);
+        set_data_source(g_ngptr->rc->datasrc);
     }
 
     return oldcnt != g_newsgroup_cnt;

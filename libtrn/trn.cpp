@@ -968,16 +968,16 @@ void check_active_refetch(bool force)
 {
     std::time_t now = std::time(nullptr);
 
-    for (DataSource *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
+    for (DataSource *dp = data_source_first(); dp && !empty(dp->name); dp = data_source_next(dp))
     {
         if (!all_bits(dp->flags, DF_OPEN | DF_ACTIVE))
         {
             continue;
         }
         if (dp->act_sf.fp && dp->act_sf.refetch_secs
-         && (force || now - dp->act_sf.lastfetch > dp->act_sf.refetch_secs))
+         && (force || now - dp->act_sf.last_fetch > dp->act_sf.refetch_secs))
         {
-            actfile_hash(dp);
+            active_file_hash(dp);
         }
     }
 }
@@ -1010,11 +1010,11 @@ void trn_version()
             print_lines(g_msg, NOMARKING);
             if (rp->datasrc->flags & DF_REMOTE)
             {
-                std::sprintf(g_msg,"News from server %s.\n",rp->datasrc->newsid);
+                std::sprintf(g_msg,"News from server %s.\n",rp->datasrc->news_id);
                 print_lines(g_msg, NOMARKING);
                 if (rp->datasrc->act_sf.fp)
                 {
-                    if (rp->datasrc->flags & DF_TMPACTFILE)
+                    if (rp->datasrc->flags & DF_TMP_ACTIVE_FILE)
                     {
                         std::strcpy(g_msg,"Copy of remote active file");
                     }
@@ -1042,22 +1042,22 @@ void trn_version()
             else
             {
                 std::sprintf(g_msg,"News from %s.\nLocal active file %s.\n",
-                        rp->datasrc->spool_dir, rp->datasrc->newsid);
+                        rp->datasrc->spool_dir, rp->datasrc->news_id);
             }
             print_lines(g_msg, NOMARKING);
-            if (rp->datasrc->grpdesc)
+            if (rp->datasrc->group_desc)
             {
                 if (!rp->datasrc->desc_sf.fp && rp->datasrc->desc_sf.hp)
                 {
                     std::strcpy(g_msg,"Dynamic group desc. file");
                 }
-                else if (rp->datasrc->flags & DF_TMPGRPDESC)
+                else if (rp->datasrc->flags & DF_TMP_GROUP_DESC)
                 {
                     std::strcpy(g_msg,"Copy of remote group desc. file");
                 }
                 else
                 {
-                    std::sprintf(g_msg,"Group desc. file: %s",rp->datasrc->grpdesc);
+                    std::sprintf(g_msg,"Group desc. file: %s",rp->datasrc->group_desc);
                 }
                 if (rp->datasrc->desc_sf.refetch_secs)
                 {

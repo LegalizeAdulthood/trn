@@ -110,7 +110,7 @@ void finalize(int status)
     {
         unuse_multirc(g_multirc);
     }
-    datasrc_finalize();
+    data_source_finalize();
     for (int i = 0; i < MAX_NNTP_ARTICLES; i++)
     {
         char *s = nntp_tmpname(i);

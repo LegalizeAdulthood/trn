@@ -119,7 +119,7 @@ DoArticleResult do_article()
     MinorMode oldmode = g_mode;
     bool outputok = true;
 
-    if (g_datasrc->flags & DF_REMOTE)
+    if (g_data_source->flags & DF_REMOTE)
     {
         g_raw_art_size = nntp_artsize();
         g_art_size = nntp_artsize();

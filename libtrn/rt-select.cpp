@@ -518,10 +518,10 @@ char newsgroup_selector()
         {
             if ((rp->flags & RF_ACTIVE) && !rp->datasrc->desc_sf.hp)
             {
-                find_grpdesc(rp->datasrc, "control");
+                find_goup_desc(rp->datasrc, "control");
                 if (rp->datasrc->desc_sf.fp)
                 {
-                    rp->datasrc->flags |= DF_NOXGTITLE; /* TODO: ok?*/
+                    rp->datasrc->flags |= DF_NO_XGTITLE; /* TODO: ok?*/
                 }
                 else
                 {
@@ -605,7 +605,7 @@ char addgroup_selector(GetNewsgroupFlags flags)
         {
             if ((rp->flags & RF_ACTIVE) && !rp->datasrc->desc_sf.hp)
             {
-                find_grpdesc(rp->datasrc, "control");
+                find_goup_desc(rp->datasrc, "control");
                 if (!rp->datasrc->desc_sf.fp)
                 {
                     rp->datasrc->desc_sf.refetch_secs = 0;
@@ -3324,7 +3324,7 @@ static DisplayState addgroup_commands(char_int ch)
 
     case 'L':
         switch_dmode(&g_sel_grp_dmode);     /* sets g_msg */
-        if (*g_sel_grp_dmode != 's' && !g_datasrc->desc_sf.hp)
+        if (*g_sel_grp_dmode != 's' && !g_data_source->desc_sf.hp)
         {
             newline();
             return DS_RESTART;

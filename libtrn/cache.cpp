@@ -902,7 +902,7 @@ void cache_until_key()
         return;
     }
 
-    if ((g_datasrc->flags & DF_REMOTE) && nntp_finishbody(FB_BACKGROUND))
+    if ((g_data_source->flags & DF_REMOTE) && nntp_finishbody(FB_BACKGROUND))
     {
         return;
     }
@@ -956,7 +956,7 @@ void cache_until_key()
     setspin(SPIN_OFF);
     g_untrim_cache = false;
 #endif
-    check_datasrcs();
+    check_data_sources();
 }
 
 #ifdef PENDING
@@ -989,7 +989,7 @@ bool cache_xrefs()
 {
     ArticleNum an;
 
-    if (g_olden_days || (g_datasrc->flags & DF_NOXREFS) || s_xref_to_get > g_lastart)
+    if (g_olden_days || (g_data_source->flags & DF_NO_XREFS) || s_xref_to_get > g_lastart)
     {
         return true;
     }
@@ -1025,7 +1025,7 @@ bool cache_all_arts()
     setspin(SPIN_BACKGROUND);
     if (g_last_cached < g_lastart)
     {
-        if (g_datasrc->ov_opened)
+        if (g_data_source->ov_opened)
         {
             ov_data(g_last_cached + 1, g_lastart, true);
         }
@@ -1038,7 +1038,7 @@ bool cache_all_arts()
     }
     if (g_first_cached > g_absfirst)
     {
-        if (g_datasrc->ov_opened)
+        if (g_data_source->ov_opened)
         {
             ov_data(g_absfirst, g_first_cached - 1, true);
         }
@@ -1093,7 +1093,7 @@ bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_article
     }
     else
     {
-        int lots2do = ((g_datasrc->flags & DF_REMOTE)? g_net_speed : 20) * 25;
+        int lots2do = ((g_data_source->flags & DF_REMOTE)? g_net_speed : 20) * 25;
         setspin(g_spin_estimate > lots2do? SPIN_BARGRAPH : SPIN_FOREGROUND);
     }
     /*TRN_ASSERT(first >= g_absfirst && last <= g_lastart);*/
@@ -1189,7 +1189,7 @@ bool cache_range(ArticleNum first, ArticleNum last)
 
     if (first < g_first_cached)
     {
-        if (g_datasrc->ov_opened)
+        if (g_data_source->ov_opened)
         {
             ov_data(g_absfirst,g_first_cached-1,false);
             success = (g_first_cached == g_absfirst);
@@ -1202,7 +1202,7 @@ bool cache_range(ArticleNum first, ArticleNum last)
     }
     if (success && g_last_cached < last)
     {
-        if (g_datasrc->ov_opened)
+        if (g_data_source->ov_opened)
         {
             ov_data(g_last_cached + 1, last, false);
         }

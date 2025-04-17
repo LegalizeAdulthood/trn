@@ -124,7 +124,7 @@ bool initialize(int argc, char *argv[])
 
     /* process the newsid(s) and associate the newsrc(s) */
 
-    datasrc_init();
+    data_source_init();
     ngdata_init();
 
     /* now read in the .newsrc file(s) */

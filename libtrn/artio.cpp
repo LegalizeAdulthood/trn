@@ -70,7 +70,7 @@ std::FILE *art_open(ArticleNum art_num, ArticleNum pos)
 
     while (true)
     {
-        if (g_datasrc->flags & DF_REMOTE)
+        if (g_data_source->flags & DF_REMOTE)
         {
             nntp_body(art_num);
         }
@@ -108,7 +108,7 @@ void art_close()
 {
     if (g_art_fp != nullptr)             /* article still open? */
     {
-        if (g_datasrc->flags & DF_REMOTE)
+        if (g_data_source->flags & DF_REMOTE)
         {
             nntp_finishbody(FB_DISCARD);
         }
@@ -121,7 +121,7 @@ void art_close()
 
 int seek_art(ArticlePosition pos)
 {
-    if (g_datasrc->flags & DF_REMOTE)
+    if (g_data_source->flags & DF_REMOTE)
     {
         return nntp_seekart(pos);
     }
@@ -131,7 +131,7 @@ int seek_art(ArticlePosition pos)
 ArticlePosition
 tell_art()
 {
-    if (g_datasrc->flags & DF_REMOTE)
+    if (g_data_source->flags & DF_REMOTE)
     {
         return nntp_tellart();
     }
@@ -140,7 +140,7 @@ tell_art()
 
 char *read_art(char *s, int limit)
 {
-    if (g_datasrc->flags & DF_REMOTE)
+    if (g_data_source->flags & DF_REMOTE)
     {
         return nntp_readart(s, limit);
     }
@@ -428,7 +428,7 @@ char *read_art_buf(bool view_inline)
         }
         else
         {
-            if (g_datasrc->flags & DF_REMOTE)
+            if (g_data_source->flags & DF_REMOTE)
             {
                 nntp_finishbody(FB_SILENT);
                 g_raw_art_size = nntp_artsize();

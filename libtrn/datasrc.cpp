@@ -47,10 +47,10 @@ struct utimbuf
 #include <ctime>
 #include <string>
 
-List       *g_datasrc_list{};                         /* a list of all DataSources */
-DataSource    *g_datasrc{};                              /* the current datasrc */
-int         g_datasrc_cnt{};                          //
-char       *g_trnaccess_mem{};                        //
+List       *g_data_source_list{};                         /* a list of all DataSources */
+DataSource    *g_data_source{};                              /* the current datasrc */
+int         g_data_source_cnt{};                          //
+char       *g_trn_access_mem{};                        //
 std::string g_nntp_auth_file;                         //
 time_t      g_def_refetch_secs{DEFAULT_REFETCH_SECS}; /* -z */
 
@@ -109,12 +109,12 @@ static int check_distance(int len, HashDatum *data, int newsrc_ptr);
 static int get_near_miss();
 static DataSource *new_datasrc(const char *name, char **vals);
 
-void datasrc_init()
+void data_source_init()
 {
     char** vals = prep_ini_words(s_datasrc_ini);
     char* actname = nullptr;
 
-    g_datasrc_list = new_list(0,0,sizeof(DataSource),20,LF_ZERO_MEM,nullptr);
+    g_data_source_list = new_list(0,0,sizeof(DataSource),20,LF_ZERO_MEM,nullptr);
 
     g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
 
@@ -128,11 +128,11 @@ void datasrc_init()
         new_datasrc("default",vals);
     }
 
-    g_trnaccess_mem = read_datasrcs(TRNACCESS);
-    char *s = read_datasrcs(DEFACCESS);
-    if (!g_trnaccess_mem)
+    g_trn_access_mem = read_data_sources(TRNACCESS);
+    char *s = read_data_sources(DEFACCESS);
+    if (!g_trn_access_mem)
     {
-        g_trnaccess_mem = s;
+        g_trn_access_mem = s;
     }
     else if (s)
     {
@@ -172,23 +172,23 @@ void datasrc_init()
 }
 
 
-void datasrc_finalize()
+void data_source_finalize()
 {
-    if (g_datasrc_list)
+    if (g_data_source_list)
     {
-        for (DataSource *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
+        for (DataSource *dp = data_source_first(); dp && !empty(dp->name); dp = data_source_next(dp))
         {
-            close_datasrc(dp);
+            close_data_source(dp);
         }
 
-        delete_list(g_datasrc_list);
-        g_datasrc_list = nullptr;
+        delete_list(g_data_source_list);
+        g_data_source_list = nullptr;
     }
-    g_datasrc_cnt = 0;
+    g_data_source_cnt = 0;
     g_nntp_auth_file.clear();
 }
 
-char *read_datasrcs(const char *filename)
+char *read_data_sources(const char *filename)
 {
     char* section;
     char* cond;
@@ -230,9 +230,9 @@ char *read_datasrcs(const char *filename)
     return filebuf;
 }
 
-DataSource *get_datasrc(const char *name)
+DataSource *get_data_source(const char *name)
 {
-    for (DataSource *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
+    for (DataSource *dp = data_source_first(); dp && !empty(dp->name); dp = data_source_next(dp))
     {
         if (dp->name == std::string{name})
         {
@@ -244,7 +244,7 @@ DataSource *get_datasrc(const char *name)
 
 static DataSource *new_datasrc(const char *name, char **vals)
 {
-    DataSource* dp = datasrc_ptr(g_datasrc_cnt++);
+    DataSource* dp = data_source_ptr(g_data_source_cnt++);
 
     if (vals[DI_NNTP_SERVER])
     {
@@ -264,12 +264,12 @@ static DataSource *new_datasrc(const char *name, char **vals)
     const char *v = vals[DI_NNTP_SERVER];
     if (v != nullptr)
     {
-        dp->newsid = savestr(v);
-        char *cp = std::strchr(dp->newsid, ';');
+        dp->news_id = savestr(v);
+        char *cp = std::strchr(dp->news_id, ';');
         if (cp != nullptr)
         {
             *cp = '\0';
-            dp->nntplink.port_number = std::atoi(cp+1);
+            dp->nntp_link.port_number = std::atoi(cp+1);
         }
 
         v = vals[DI_ACT_REFETCH];
@@ -284,7 +284,7 @@ static DataSource *new_datasrc(const char *name, char **vals)
     }
     else
     {
-        dp->newsid = savestr(filexp(vals[DI_ACTIVE_FILE]));
+        dp->news_id = savestr(filexp(vals[DI_ACTIVE_FILE]));
     }
 
     dp->spool_dir = file_or_none(vals[DI_SPOOL_DIR]);
@@ -295,7 +295,7 @@ static DataSource *new_datasrc(const char *name, char **vals)
 
     dp->over_dir = dir_or_none(dp,vals[DI_OVERVIEW_DIR],DF_TRY_OVERVIEW);
     dp->over_fmt = file_or_none(vals[DI_OVERVIEW_FMT]);
-    dp->grpdesc = dir_or_none(dp,vals[DI_GROUP_DESC],DF_NONE);
+    dp->group_desc = dir_or_none(dp,vals[DI_GROUP_DESC],DF_NONE);
     dp->extra_name = dir_or_none(dp,vals[DI_ACTIVE_TIMES],DF_ADD_OK);
     if (dp->flags & DF_REMOTE)
     {
@@ -306,13 +306,13 @@ static DataSource *new_datasrc(const char *name, char **vals)
             stat_t extra_stat{};
             if (stat(dp->extra_name,&extra_stat) >= 0)
             {
-                dp->act_sf.lastfetch = extra_stat.st_mtime;
+                dp->act_sf.last_fetch = extra_stat.st_mtime;
             }
         }
         else
         {
             dp->extra_name = temp_filename();
-            dp->flags |= DF_TMPACTFILE;
+            dp->flags |= DF_TMP_ACTIVE_FILE;
             if (!dp->act_sf.refetch_secs)
             {
                 dp->act_sf.refetch_secs = 1;
@@ -324,22 +324,22 @@ static DataSource *new_datasrc(const char *name, char **vals)
         {
             dp->desc_sf.refetch_secs = text2secs(v, g_def_refetch_secs);
         }
-        else if (!dp->grpdesc)
+        else if (!dp->group_desc)
         {
             dp->desc_sf.refetch_secs = g_def_refetch_secs;
         }
-        if (dp->grpdesc)
+        if (dp->group_desc)
         {
             stat_t desc_stat{};
-            if (stat(dp->grpdesc,&desc_stat) >= 0)
+            if (stat(dp->group_desc,&desc_stat) >= 0)
             {
-                dp->desc_sf.lastfetch = desc_stat.st_mtime;
+                dp->desc_sf.last_fetch = desc_stat.st_mtime;
             }
         }
         else
         {
-            dp->grpdesc = temp_filename();
-            dp->flags |= DF_TMPGRPDESC;
+            dp->group_desc = temp_filename();
+            dp->flags |= DF_TMP_GROUP_DESC;
             if (!dp->desc_sf.refetch_secs)
             {
                 dp->desc_sf.refetch_secs = 1;
@@ -349,7 +349,7 @@ static DataSource *new_datasrc(const char *name, char **vals)
     v = vals[DI_FORCE_AUTH];
     if (v != nullptr && (*v == 'y' || *v == 'Y'))
     {
-        dp->nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
+        dp->nntp_link.flags |= NNTP_FORCE_AUTH_NEEDED;
     }
     v = vals[DI_AUTH_USER];
     if (v != nullptr)
@@ -369,7 +369,7 @@ static DataSource *new_datasrc(const char *name, char **vals)
     v = vals[DI_XREFS];
     if (v != nullptr && (*v == 'n' || *v == 'N'))
     {
-        dp->flags |= DF_NOXREFS;
+        dp->flags |= DF_NO_XREFS;
     }
 
     return dp;
@@ -386,20 +386,20 @@ static char *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag)
         }
         if (flag == DF_ADD_OK)
         {
-            char* cp = safemalloc(std::strlen(dp->newsid)+6+1);
-            std::sprintf(cp,"%s.times",dp->newsid);
+            char* cp = safemalloc(std::strlen(dp->news_id)+6+1);
+            std::sprintf(cp,"%s.times",dp->news_id);
             return cp;
         }
         if (flag == DF_NONE)
         {
-            char* cp = std::strrchr(dp->newsid,'/');
+            char* cp = std::strrchr(dp->news_id,'/');
             if (!cp)
             {
                 return nullptr;
             }
-            int len = cp - dp->newsid + 1;
+            int len = cp - dp->news_id + 1;
             cp = safemalloc(len+10+1);
-            std::strcpy(cp,dp->newsid);
+            std::strcpy(cp,dp->news_id);
             std::strcpy(cp+len,"newsgroups");
             return cp;
         }
@@ -429,7 +429,7 @@ static char *file_or_none(char *fn)
     return savestr(filexp(fn));
 }
 
-bool open_datasrc(DataSource *dp)
+bool open_data_source(DataSource *dp)
 {
     bool success;
 
@@ -437,20 +437,20 @@ bool open_datasrc(DataSource *dp)
     {
         return false;
     }
-    set_datasrc(dp);
+    set_data_source(dp);
     if (dp->flags & DF_OPEN)
     {
         return true;
     }
     if (dp->flags & DF_REMOTE)
     {
-        if (nntp_connect(dp->newsid, true) <= 0)
+        if (nntp_connect(dp->news_id, true) <= 0)
         {
             dp->flags |= DF_UNAVAILABLE;
             return false;
         }
         g_nntp_allow_timeout = false;
-        dp->nntplink = g_nntplink;
+        dp->nntp_link = g_nntplink;
         if (dp->act_sf.refetch_secs)
         {
             switch (nntp_list("active", "control", 7))
@@ -459,55 +459,55 @@ bool open_datasrc(DataSource *dp)
                 if (std::strncmp(g_ser_line, "control ", 8) != 0)
                 {
                     std::strcpy(g_buf, g_ser_line);
-                    dp->act_sf.lastfetch = 0;
-                    success = actfile_hash(dp);
+                    dp->act_sf.last_fetch = 0;
+                    success = active_file_hash(dp);
                     break;
                 }
                 if (nntp_gets(g_buf, sizeof g_buf - 1) == NGSR_FULL_LINE //
                     && !nntp_at_list_end(g_buf))
                 {
                     nntp_finish_list();
-                    success = actfile_hash(dp);
+                    success = active_file_hash(dp);
                     break;
                 }
                 /* FALL THROUGH */
 
             case 0:
-                dp->flags |= DF_USELISTACT;
-                if (dp->flags & DF_TMPACTFILE)
+                dp->flags |= DF_USE_LIST_ACTIVE;
+                if (dp->flags & DF_TMP_ACTIVE_FILE)
                 {
-                    dp->flags &= ~DF_TMPACTFILE;
+                    dp->flags &= ~DF_TMP_ACTIVE_FILE;
                     std::free(dp->extra_name);
                     dp->extra_name = nullptr;
                     dp->act_sf.refetch_secs = 0;
-                    success = srcfile_open(&dp->act_sf,nullptr,
+                    success = source_file_open(&dp->act_sf,nullptr,
                                            nullptr,nullptr);
                 }
                 else
                 {
-                    success = actfile_hash(dp);
+                    success = active_file_hash(dp);
                 }
                 break;
 
             case -2:
-                std::printf("Failed to open news server %s:\n%s\n", dp->newsid, g_ser_line);
+                std::printf("Failed to open news server %s:\n%s\n", dp->news_id, g_ser_line);
                 termdown(2);
                 success = false;
                 break;
 
             default:
-                success = actfile_hash(dp);
+                success = active_file_hash(dp);
                 break;
             }
         }
         else
         {
-            success = actfile_hash(dp);
+            success = active_file_hash(dp);
         }
     }
     else
     {
-        success = actfile_hash(dp);
+        success = active_file_hash(dp);
     }
     if (success)
     {
@@ -528,64 +528,64 @@ bool open_datasrc(DataSource *dp)
     return success;
 }
 
-void set_datasrc(DataSource *dp)
+void set_data_source(DataSource *dp)
 {
-    if (g_datasrc)
+    if (g_data_source)
     {
-        g_datasrc->nntplink = g_nntplink;
+        g_data_source->nntp_link = g_nntplink;
     }
     if (dp)
     {
-        g_nntplink = dp->nntplink;
+        g_nntplink = dp->nntp_link;
     }
-    g_datasrc = dp;
+    g_data_source = dp;
 }
 
-void check_datasrcs()
+void check_data_sources()
 {
     std::time_t now = std::time(nullptr);
 
-    if (g_datasrc_list)
+    if (g_data_source_list)
     {
-        for (DataSource *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
+        for (DataSource *dp = data_source_first(); dp && !empty(dp->name); dp = data_source_next(dp))
         {
-            if ((dp->flags & DF_OPEN) && dp->nntplink.connection)
+            if ((dp->flags & DF_OPEN) && dp->nntp_link.connection)
             {
                 std::time_t limit = ((dp->flags & DF_ACTIVE) ? 30 * 60 : 10 * 60);
-                if (now - dp->nntplink.last_command > limit)
+                if (now - dp->nntp_link.last_command > limit)
                 {
-                    DataSource* save_datasrc = g_datasrc;
-                    set_datasrc(dp);
+                    DataSource* save_datasrc = g_data_source;
+                    set_data_source(dp);
                     nntp_close(true);
-                    dp->nntplink = g_nntplink;
-                    set_datasrc(save_datasrc);
+                    dp->nntp_link = g_nntplink;
+                    set_data_source(save_datasrc);
                 }
             }
         }
     }
 }
 
-void close_datasrc(DataSource *dp)
+void close_data_source(DataSource *dp)
 {
     if (dp->flags & DF_REMOTE)
     {
-        if (dp->flags & DF_TMPACTFILE)
+        if (dp->flags & DF_TMP_ACTIVE_FILE)
         {
             remove(dp->extra_name);
         }
         else
         {
-            srcfile_end_append(&dp->act_sf, dp->extra_name);
+            source_file_end_append(&dp->act_sf, dp->extra_name);
         }
-        if (dp->grpdesc)
+        if (dp->group_desc)
         {
-            if (dp->flags & DF_TMPGRPDESC)
+            if (dp->flags & DF_TMP_GROUP_DESC)
             {
-                remove(dp->grpdesc);
+                remove(dp->group_desc);
             }
             else
             {
-                srcfile_end_append(&dp->desc_sf, dp->grpdesc);
+                source_file_end_append(&dp->desc_sf, dp->group_desc);
             }
         }
     }
@@ -597,44 +597,44 @@ void close_datasrc(DataSource *dp)
 
     if (dp->flags & DF_REMOTE)
     {
-        DataSource* save_datasrc = g_datasrc;
-        set_datasrc(dp);
+        DataSource* save_datasrc = g_data_source;
+        set_data_source(dp);
         nntp_close(true);
-        dp->nntplink = g_nntplink;
-        set_datasrc(save_datasrc);
+        dp->nntp_link = g_nntplink;
+        set_data_source(save_datasrc);
     }
-    srcfile_close(&dp->act_sf);
-    srcfile_close(&dp->desc_sf);
+    source_file_close(&dp->act_sf);
+    source_file_close(&dp->desc_sf);
     dp->flags &= ~DF_OPEN;
-    if (g_datasrc == dp)
+    if (g_data_source == dp)
     {
-        g_datasrc = nullptr;
+        g_data_source = nullptr;
     }
 }
 
-bool actfile_hash(DataSource *dp)
+bool active_file_hash(DataSource *dp)
 {
     int ret;
     if (dp->flags & DF_REMOTE)
     {
-        DataSource* save_datasrc = g_datasrc;
-        set_datasrc(dp);
+        DataSource* save_datasrc = g_data_source;
+        set_data_source(dp);
         g_spin_todo = dp->act_sf.recent_cnt;
-        ret = srcfile_open(&dp->act_sf, dp->extra_name, "active", dp->newsid);
+        ret = source_file_open(&dp->act_sf, dp->extra_name, "active", dp->news_id);
         if (g_spin_count > 0)
         {
             dp->act_sf.recent_cnt = g_spin_count;
         }
-        set_datasrc(save_datasrc);
+        set_data_source(save_datasrc);
     }
     else
     {
-        ret = srcfile_open(&dp->act_sf, dp->newsid, nullptr, nullptr);
+        ret = source_file_open(&dp->act_sf, dp->news_id, nullptr, nullptr);
     }
     return ret != 0;
 }
 
-bool find_actgrp(DataSource *dp, char *outbuf, const char *nam, int len, ArticleNum high)
+bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, ArticleNum high)
 {
     ActivePosition act_pos;
     FILE* fp = dp->act_sf.fp;
@@ -658,15 +658,15 @@ bool find_actgrp(DataSource *dp, char *outbuf, const char *nam, int len, Article
         lbp = nullptr;
         lbp_len = 0;
     }
-    if ((dp->flags & DF_USELISTACT) //
-        && (datasrc_nntp_flags(dp) & NNTP_NEW_CMD_OK))
+    if ((dp->flags & DF_USE_LIST_ACTIVE) //
+        && (data_source_nntp_flags(dp) & NNTP_NEW_CMD_OK))
     {
-        DataSource* save_datasrc = g_datasrc;
-        set_datasrc(dp);
+        DataSource* save_datasrc = g_data_source;
+        set_data_source(dp);
         switch (nntp_list("active", nam, len))
         {
         case 0:
-            set_datasrc(save_datasrc);
+            set_data_source(save_datasrc);
             return false;
 
         case 1:
@@ -678,12 +678,12 @@ bool find_actgrp(DataSource *dp, char *outbuf, const char *nam, int len, Article
             /* TODO */
             break;
         }
-        set_datasrc(save_datasrc);
+        set_data_source(save_datasrc);
         if (!lbp_len)
         {
             if (fp)
             {
-                (void) srcfile_append(&dp->act_sf, outbuf, len);
+                (void) source_file_append(&dp->act_sf, outbuf, len);
             }
             return true;
         }
@@ -757,11 +757,11 @@ bool find_actgrp(DataSource *dp, char *outbuf, const char *nam, int len, Article
     return false;       /* no such group */
 }
 
-const char *find_grpdesc(DataSource *dp, const char *groupname)
+const char *find_goup_desc(DataSource *dp, const char *group_name)
 {
     int grouplen;
 
-    if (!dp->grpdesc)
+    if (!dp->group_desc)
     {
         return "";
     }
@@ -771,18 +771,18 @@ const char *find_grpdesc(DataSource *dp, const char *groupname)
         int ret;
         if ((dp->flags & DF_REMOTE) && dp->desc_sf.refetch_secs)
         {
-            set_datasrc(dp);
-            if ((dp->flags & (DF_TMPGRPDESC | DF_NOXGTITLE)) == DF_TMPGRPDESC //
+            set_data_source(dp);
+            if ((dp->flags & (DF_TMP_GROUP_DESC | DF_NO_XGTITLE)) == DF_TMP_GROUP_DESC //
                 && g_net_speed < 5)
             {
-                (void)srcfile_open(&dp->desc_sf,nullptr, /* TODO: check return? */
+                (void)source_file_open(&dp->desc_sf,nullptr, /* TODO: check return? */
                                    nullptr,nullptr);
-                grouplen = std::strlen(groupname);
+                grouplen = std::strlen(group_name);
                 goto try_xgtitle;
             }
             g_spin_todo = dp->desc_sf.recent_cnt;
-            ret = srcfile_open(&dp->desc_sf, dp->grpdesc,
-                               "newsgroups", dp->newsid);
+            ret = source_file_open(&dp->desc_sf, dp->group_desc,
+                               "newsgroups", dp->news_id);
             if (g_spin_count > 0)
             {
                 dp->desc_sf.recent_cnt = g_spin_count;
@@ -790,27 +790,27 @@ const char *find_grpdesc(DataSource *dp, const char *groupname)
         }
         else
         {
-            ret = srcfile_open(&dp->desc_sf, dp->grpdesc, nullptr, nullptr);
+            ret = source_file_open(&dp->desc_sf, dp->group_desc, nullptr, nullptr);
         }
         if (!ret)
         {
-            if (dp->flags & DF_TMPGRPDESC)
+            if (dp->flags & DF_TMP_GROUP_DESC)
             {
-                dp->flags &= ~DF_TMPGRPDESC;
-                remove(dp->grpdesc);
+                dp->flags &= ~DF_TMP_GROUP_DESC;
+                remove(dp->group_desc);
             }
-            std::free(dp->grpdesc);
-            dp->grpdesc = nullptr;
+            std::free(dp->group_desc);
+            dp->group_desc = nullptr;
             return "";
         }
         if (ret == 2 || !dp->desc_sf.refetch_secs)
         {
-            dp->flags |= DF_NOXGTITLE;
+            dp->flags |= DF_NO_XGTITLE;
         }
     }
 
-    grouplen = std::strlen(groupname);
-    if (HashDatum data = hashfetch(dp->desc_sf.hp, groupname, grouplen); data.dat_ptr)
+    grouplen = std::strlen(group_name);
+    if (HashDatum data = hashfetch(dp->desc_sf.hp, group_name, grouplen); data.dat_ptr)
     {
         ListNode*node = (ListNode*)data.dat_ptr;
         /*dp->act_sf.lp->recent = node;*/
@@ -819,34 +819,34 @@ const char *find_grpdesc(DataSource *dp, const char *groupname)
 
 try_xgtitle:
 
-    if ((dp->flags & (DF_REMOTE | DF_NOXGTITLE)) == DF_REMOTE)
+    if ((dp->flags & (DF_REMOTE | DF_NO_XGTITLE)) == DF_REMOTE)
     {
-        set_datasrc(dp);
-        if (nntp_xgtitle(groupname) > 0)
+        set_data_source(dp);
+        if (nntp_xgtitle(group_name) > 0)
         {
             nntp_gets(g_buf, sizeof g_buf - 1); // TODO: check return value?
             if (nntp_at_list_end(g_buf))
             {
-                std::sprintf(g_buf, "%s \n", groupname);
+                std::sprintf(g_buf, "%s \n", group_name);
             }
             else
             {
                 nntp_finish_list();
                 std::strcat(g_buf, "\n");
             }
-            groupname = srcfile_append(&dp->desc_sf, g_buf, grouplen);
-            return groupname+grouplen+1;
+            group_name = source_file_append(&dp->desc_sf, g_buf, grouplen);
+            return group_name+grouplen+1;
         }
-        dp->flags |= DF_NOXGTITLE;
+        dp->flags |= DF_NO_XGTITLE;
         if (dp->desc_sf.lp->high == -1)
         {
-            srcfile_close(&dp->desc_sf);
-            if (dp->flags & DF_TMPGRPDESC)
+            source_file_close(&dp->desc_sf);
+            if (dp->flags & DF_TMP_GROUP_DESC)
             {
-                return find_grpdesc(dp, groupname);
+                return find_goup_desc(dp, group_name);
             }
-            std::free(dp->grpdesc);
-            dp->grpdesc = nullptr;
+            std::free(dp->group_desc);
+            dp->group_desc = nullptr;
         }
     }
     return "";
@@ -879,7 +879,7 @@ static char *adv_then_find_next_nl_and_dectrl(char *s)
     return s;
 }
 
-int srcfile_open(SourceFile *sfp, const char *filename, const char *fetchcmd, const char *server)
+int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cmd, const char *server)
 {
     unsigned offset;
     char* s;
@@ -902,27 +902,27 @@ int srcfile_open(SourceFile *sfp, const char *filename, const char *fetchcmd, co
             fp = std::fopen(filename, "r");
             g_spin_todo = 0;
         }
-        else if (now - sfp->lastfetch > sfp->refetch_secs && (sfp->refetch_secs != 2 || !sfp->lastfetch))
+        else if (now - sfp->last_fetch > sfp->refetch_secs && (sfp->refetch_secs != 2 || !sfp->last_fetch))
         {
             fp = std::fopen(filename, "w+");
             if (fp)
             {
-                std::printf("Getting %s file from %s.", fetchcmd, server);
+                std::printf("Getting %s file from %s.", fetch_cmd, server);
                 std::fflush(stdout);
                 /* tell server we want the file */
                 if (!(g_nntplink.flags & NNTP_NEW_CMD_OK))
                 {
                     use_buffered_nntp_gets = true;
                 }
-                else if (nntp_list(fetchcmd, "", 0) < 0)
+                else if (nntp_list(fetch_cmd, "", 0) < 0)
                 {
                     std::printf("\nCan't get %s file from server: \n%s\n",
-                           fetchcmd, g_ser_line);
+                           fetch_cmd, g_ser_line);
                     termdown(2);
                     std::fclose(fp);
                     return 0;
                 }
-                sfp->lastfetch = now;
+                sfp->last_fetch = now;
                 if (g_net_speed > 8)
                 {
                     g_spin_todo = 0;
@@ -959,7 +959,7 @@ int srcfile_open(SourceFile *sfp, const char *filename, const char *fetchcmd, co
     }
     setspin(g_spin_todo > 0? SPIN_BARGRAPH : SPIN_FOREGROUND);
 
-    srcfile_close(sfp);
+    source_file_close(sfp);
 
     /* Create a list with one character per item using a large chunk size. */
     sfp->lp = new_list(0, 0, 1, SRCFILE_CHUNK_SIZE, LF_NONE, nullptr);
@@ -987,9 +987,9 @@ int srcfile_open(SourceFile *sfp, const char *filename, const char *fetchcmd, co
             }
             else if (nntp_gets(g_buf, sizeof g_buf - 1) == NGSR_ERROR)
             {
-                std::printf("\nError getting %s file.\n", fetchcmd);
+                std::printf("\nError getting %s file.\n", fetch_cmd);
                 termdown(2);
-                srcfile_close(sfp);
+                source_file_close(sfp);
                 setspin(SPIN_OFF);
                 return 0;
             }
@@ -1055,9 +1055,9 @@ int srcfile_open(SourceFile *sfp, const char *filename, const char *fetchcmd, co
         std::fflush(fp);
         if (std::ferror(fp))
         {
-            std::printf("\nError writing the %s file %s.\n",fetchcmd,filename);
+            std::printf("\nError writing the %s file %s.\n",fetch_cmd,filename);
             termdown(2);
-            srcfile_close(sfp);
+            source_file_close(sfp);
             return 0;
         }
         newline();
@@ -1067,7 +1067,7 @@ int srcfile_open(SourceFile *sfp, const char *filename, const char *fetchcmd, co
     return server? 2 : 1;
 }
 
-char *srcfile_append(SourceFile *sfp, char *bp, int keylen)
+char *source_file_append(SourceFile *sfp, char *bp, int key_len)
 {
     HashDatum data;
 
@@ -1076,7 +1076,7 @@ char *srcfile_append(SourceFile *sfp, char *bp, int keylen)
     ListNode *node = sfp->lp->recent;
     data.dat_len = pos - node->low;
 
-    char *s = bp + keylen + 1;
+    char *s = bp + key_len + 1;
     if (sfp->fp && sfp->refetch_secs && *s != '\n')
     {
         std::fseek(sfp->fp, 0, 2);
@@ -1088,8 +1088,8 @@ char *srcfile_append(SourceFile *sfp, char *bp, int keylen)
         while (*++s != '\n' && std::isspace(*s))
         {
         }
-        std::strcpy(bp+keylen+1, s);
-        s = bp+keylen+1;
+        std::strcpy(bp+key_len+1, s);
+        s = bp+key_len+1;
     }
     s = adv_then_find_next_nl_and_dectrl(s);
     const int linelen = s - bp + 1;
@@ -1108,29 +1108,29 @@ char *srcfile_append(SourceFile *sfp, char *bp, int keylen)
     }
     data.dat_ptr = (char*)node;
     (void) std::memcpy(lbp,bp,linelen);
-    hashstore(sfp->hp, bp, keylen, data);
+    hashstore(sfp->hp, bp, key_len, data);
     sfp->lp->high = pos + linelen - 1;
 
     return lbp;
 }
 
-void srcfile_end_append(SourceFile *sfp, const char *filename)
+void source_file_end_append(SourceFile *sfp, const char *filename)
 {
     if (sfp->fp && sfp->refetch_secs)
     {
         std::fflush(sfp->fp);
 
-        if (sfp->lastfetch)
+        if (sfp->last_fetch)
         {
             struct utimbuf ut;
             std::time(&ut.actime);
-            ut.modtime = sfp->lastfetch;
+            ut.modtime = sfp->last_fetch;
             (void) utime(filename, &ut);
         }
     }
 }
 
-void srcfile_close(SourceFile *sfp)
+void source_file_close(SourceFile *sfp)
 {
     if (sfp->fp)
     {
@@ -1197,7 +1197,7 @@ int find_close_match()
     s_ngn = 0;
 
     /* Iterate over all legal newsgroups */
-    for (DataSource *dp = datasrc_first(); dp && !empty(dp->name); dp = datasrc_next(dp))
+    for (DataSource *dp = data_source_first(); dp && !empty(dp->name); dp = data_source_next(dp))
     {
         if (dp->flags & DF_OPEN)
         {

@@ -627,7 +627,7 @@ try_again:
 
             case UN_ARTICLE:
                 /* later: use the datasrc of the newsgroup */
-                ui_elig = !was_read_group(g_datasrc, ui->data.virt.num,
+                ui_elig = !was_read_group(g_data_source, ui->data.virt.num,
                                           ui->data.virt.ng);
                 if (g_sel_rereading)
                 {
@@ -2682,7 +2682,7 @@ static void display_group(DataSource *dp, char *group, int len, int max_len)
     {
         char* end;
         char buff[256];
-        std::strcpy(buff, find_grpdesc(dp, group));
+        std::strcpy(buff, find_goup_desc(dp, group));
         char* cp = buff;
         if (*cp != '?' && (end = std::strchr(cp, '\n')) != nullptr //
             && end != cp)

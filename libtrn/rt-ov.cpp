@@ -52,11 +52,11 @@ static OverviewFieldNum ov_num(char *hdr, char *end);
 bool ov_init()
 {
     bool has_overview_fmt;
-    OverviewFieldNum *fieldnum = g_datasrc->fieldnum;
-    FieldFlags  *fieldflags = g_datasrc->fieldflags;
-    g_datasrc->flags &= ~DF_TRY_OVERVIEW;
+    OverviewFieldNum *fieldnum = g_data_source->field_num;
+    FieldFlags  *fieldflags = g_data_source->field_flags;
+    g_data_source->flags &= ~DF_TRY_OVERVIEW;
     std::FILE *overview;
-    if (!g_datasrc->over_dir)
+    if (!g_data_source->over_dir)
     {
         /* Check if the server is XOVER compliant */
         if (nntp_command("XOVER") <= 0)
@@ -85,8 +85,8 @@ bool ov_init()
     }
     else
     {
-        has_overview_fmt = g_datasrc->over_fmt != nullptr
-                        && (overview = std::fopen(g_datasrc->over_fmt, "r")) != nullptr;
+        has_overview_fmt = g_data_source->over_fmt != nullptr
+                        && (overview = std::fopen(g_data_source->over_fmt, "r")) != nullptr;
     }
 
     if (has_overview_fmt)
@@ -96,7 +96,7 @@ bool ov_init()
         fieldflags[OV_NUM] = FF_HAS_FIELD;
         for (i = 1;;)
         {
-            if (!g_datasrc->over_dir)
+            if (!g_data_source->over_dir)
             {
                 if (nntp_gets(g_buf, sizeof g_buf) == NGSR_ERROR)
                 {
@@ -153,9 +153,9 @@ bool ov_init()
             fieldnum[i] = static_cast<OverviewFieldNum>(i);
             fieldflags[i] = FF_HAS_FIELD;
         }
-        fieldflags[OV_XREF] = FF_CHECK4FIELD | FF_CHECK4HDR;
+        fieldflags[OV_XREF] = FF_CHECK_FOR_FIELD | FF_CHECK_FOR_HEADER;
     }
-    g_datasrc->flags |= DF_TRY_OVERVIEW;
+    g_data_source->flags |= DF_TRY_OVERVIEW;
     return true;
 }
 
@@ -211,7 +211,7 @@ bool ov_data(ArticleNum first, ArticleNum last, bool cheating)
     int line_cnt;
     int ov_chunk_size = cheating? OV_CHUNK_SIZE : OV_CHUNK_SIZE * 8;
     std::time_t started_request;
-    bool remote = !g_datasrc->over_dir;
+    bool remote = !g_data_source->over_dir;
 
 beginning:
     while (true)
@@ -256,17 +256,17 @@ beginning:
             success = false;
             goto exit;
         }
-        if (g_verbose && !g_first_subject && !g_datasrc->ov_opened)
+        if (g_verbose && !g_first_subject && !g_data_source->ov_opened)
         {
             std::printf("\nGetting overview file.");
             std::fflush(stdout);
         }
     }
-    else if (g_datasrc->ov_opened < started_request - 60 * 60)
+    else if (g_data_source->ov_opened < started_request - 60 * 60)
     {
         ov_close();
-        g_datasrc->ov_in = std::fopen(ov_name(g_ngname.c_str()), "r");
-        if (g_datasrc->ov_in == nullptr)
+        g_data_source->ov_in = std::fopen(ov_name(g_ngname.c_str()), "r");
+        if (g_data_source->ov_in == nullptr)
         {
             return false;
         }
@@ -276,7 +276,7 @@ beginning:
             std::fflush(stdout);
         }
     }
-    if (!g_datasrc->ov_opened)
+    if (!g_data_source->ov_opened)
     {
         if (cheating)
         {
@@ -284,11 +284,11 @@ beginning:
         }
         else
         {
-            int lots2do = ((g_datasrc->flags & DF_REMOTE)? g_net_speed : 20) * 100;
+            int lots2do = ((g_data_source->flags & DF_REMOTE)? g_net_speed : 20) * 100;
             g_spin_estimate = std::min(g_spin_estimate, g_spin_todo);
             setspin(g_spin_estimate > lots2do? SPIN_BARGRAPH : SPIN_FOREGROUND);
         }
-        g_datasrc->ov_opened = started_request;
+        g_data_source->ov_opened = started_request;
     }
 
     artnum = first-1;
@@ -303,7 +303,7 @@ beginning:
             }
             line_cnt++;
         }
-        else if (!(line = get_a_line(last_buf, last_buflen, last_buf != g_buf, g_datasrc->ov_in)))
+        else if (!(line = get_a_line(last_buf, last_buflen, last_buf != g_buf, g_data_source->ov_in)))
         {
             break;
         }
@@ -414,9 +414,9 @@ beginning:
             success = false;
         }
     }
-    if (!cheating && g_datasrc->ov_in)
+    if (!cheating && g_data_source->ov_in)
     {
-        std::fseek(g_datasrc->ov_in, 0L, 0); /* rewind it for the cheating phase */
+        std::fseek(g_data_source->ov_in, 0L, 0); /* rewind it for the cheating phase */
     }
     if (success && real_first <= g_first_cached)
     {
@@ -433,8 +433,8 @@ beginning:
 
 static void ov_parse(char *line, ArticleNum artnum, bool remote)
 {
-    OverviewFieldNum *fieldnum = g_datasrc->fieldnum;
-    FieldFlags  *fieldflags = g_datasrc->fieldflags;
+    OverviewFieldNum *fieldnum = g_data_source->field_num;
+    FieldFlags  *fieldflags = g_data_source->field_flags;
     char         *fields[OV_MAX_FIELDS];
     char         *tab;
 
@@ -467,20 +467,20 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
             *tab++ = '\0';
         }
         int fn = fieldnum[i];
-        if (!(fieldflags[fn] & (FF_HAS_FIELD | FF_CHECK4FIELD)))
+        if (!(fieldflags[fn] & (FF_HAS_FIELD | FF_CHECK_FOR_FIELD)))
         {
             break;
         }
-        if (fieldflags[fn] & (FF_HAS_HDR | FF_CHECK4HDR))
+        if (fieldflags[fn] & (FF_HAS_HDR | FF_CHECK_FOR_HEADER))
         {
             char* s = std::strchr(cp, ':');
-            if (fieldflags[fn] & FF_CHECK4HDR)
+            if (fieldflags[fn] & FF_CHECK_FOR_HEADER)
             {
                 if (s)
                 {
                     fieldflags[fn] |= FF_HAS_HDR;
                 }
-                fieldflags[fn] &= ~FF_CHECK4HDR;
+                fieldflags[fn] &= ~FF_CHECK_FOR_HEADER;
             }
             if (fieldflags[fn] & FF_HAS_HDR)
             {
@@ -531,7 +531,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
         set_cached_line(article, LINES_LINE, fields[OV_LINES]);
     }
 
-    if (fieldflags[OV_XREF] & (FF_HAS_FIELD | FF_CHECK4FIELD))
+    if (fieldflags[OV_XREF] & (FF_HAS_FIELD | FF_CHECK_FOR_FIELD))
     {
         if (!article->xrefs && fields[OV_XREF])
         {
@@ -594,7 +594,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
 */
 static const char *ov_name(const char *group)
 {
-    std::strcpy(g_buf, g_datasrc->over_dir);
+    std::strcpy(g_buf, g_data_source->over_dir);
     char *cp = g_buf + std::strlen(g_buf);
     *cp++ = '/';
     std::strcpy(cp, group);
@@ -608,14 +608,14 @@ static const char *ov_name(const char *group)
 
 void ov_close()
 {
-    if (g_datasrc && g_datasrc->ov_opened)
+    if (g_data_source && g_data_source->ov_opened)
     {
-        if (g_datasrc->ov_in)
+        if (g_data_source->ov_in)
         {
-            (void) std::fclose(g_datasrc->ov_in);
-            g_datasrc->ov_in = nullptr;
+            (void) std::fclose(g_data_source->ov_in);
+            g_data_source->ov_in = nullptr;
         }
-        g_datasrc->ov_opened = 0;
+        g_data_source->ov_opened = 0;
     }
 }
 
@@ -626,8 +626,8 @@ const char *ov_fieldname(int num)
 
 const char *ov_field(Article *ap, int num)
 {
-    OverviewFieldNum fn = g_datasrc->fieldnum[num];
-    if (!(g_datasrc->fieldflags[fn] & (FF_HAS_FIELD | FF_CHECK4FIELD)))
+    OverviewFieldNum fn = g_data_source->field_num[num];
+    if (!(g_data_source->field_flags[fn] & (FF_HAS_FIELD | FF_CHECK_FOR_FIELD)))
     {
         return nullptr;
     }

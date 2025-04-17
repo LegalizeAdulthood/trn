@@ -137,11 +137,11 @@ DoNewsgroupResult do_newsgroup(char *start_command)
     const char*whatnext = "%s%sWhat next? [%s]";
     bool ng_virtual = false;
 
-    set_datasrc(g_ngptr->rc->datasrc);
+    set_data_source(g_ngptr->rc->datasrc);
 
-    if (change_dir(g_datasrc->spool_dir))
+    if (change_dir(g_data_source->spool_dir))
     {
-        std::printf(g_nocd,g_datasrc->spool_dir);
+        std::printf(g_nocd,g_data_source->spool_dir);
         return NG_ERROR;
     }
 
@@ -257,9 +257,9 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             {
                 nntp_finishbody(FB_SILENT);
             }
-            if (g_datasrc->flags & DF_REMOTE)
+            if (g_data_source->flags & DF_REMOTE)
             {
-                if (g_datasrc->act_sf.fp || getngsize(g_ngptr) > g_lastart)
+                if (g_data_source->act_sf.fp || getngsize(g_ngptr) > g_lastart)
                 {
                     if (nntp_group(g_ngname.c_str(), g_ngptr) <= 0)
                     {
@@ -421,7 +421,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                                         /*  (line # within article file) */
             }
             clear();                    /* clear screen */
-            if (g_art == 0 && g_artp && g_artp->msg_id && (g_datasrc->flags & DF_REMOTE) //
+            if (g_art == 0 && g_artp && g_artp->msg_id && (g_data_source->flags & DF_REMOTE) //
                 && !(g_artp->flags & AF_CACHED))
             {
                 g_art = nntp_stat_id(g_artp->msg_id);

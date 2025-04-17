@@ -87,12 +87,12 @@ static Multirc *rcstuff_init_data()
 
     g_multirc_list = new_list(0,0,sizeof(Multirc),20,LF_ZERO_MEM|LF_SPARSE,nullptr);
 
-    if (g_trnaccess_mem)
+    if (g_trn_access_mem)
     {
         char* section;
         char* cond;
         char**vals = prep_ini_words(s_rcgroups_ini);
-        char *s = g_trnaccess_mem;
+        char *s = g_trn_access_mem;
         while ((s = next_ini_section(s, &section, &cond)) != nullptr)
         {
             if (*cond && !check_ini_cond(cond))
@@ -135,7 +135,7 @@ static Multirc *rcstuff_init_data()
             }
         }
         std::free(vals);
-        safefree0(g_trnaccess_mem);
+        safefree0(g_trn_access_mem);
     }
     return mptr;
 }
@@ -203,7 +203,7 @@ Newsrc *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
         }
     }
 
-    DataSource *dp = get_datasrc(name);
+    DataSource *dp = get_data_source(name);
     if (!dp)
     {
         return nullptr;
@@ -248,7 +248,7 @@ bool use_multirc(Multirc *mp)
     for (Newsrc *rp = mp->first; rp; rp = rp->next)
     {
         if ((rp->datasrc->flags & DF_UNAVAILABLE) || !lock_newsrc(rp) //
-            || !open_datasrc(rp->datasrc) || !open_newsrc(rp))
+            || !open_data_source(rp->datasrc) || !open_newsrc(rp))
         {
             unlock_newsrc(rp);
             had_trouble = true;
@@ -813,7 +813,7 @@ static bool open_newsrc(Newsrc *rp)
             rp->datasrc->desc_sf.recent_cnt = 0;
         }
     }
-    rp->datasrc->lastnewgrp = g_lastnewtime;
+    rp->datasrc->last_new_group = g_lastnewtime;
 
     if (g_paranoid && !g_checkflag)
     {
@@ -981,7 +981,7 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
                 continue;
             }
             /* TODO: this may scan a datasrc multiple times... */
-            if (find_actgrp(rp->datasrc,g_buf,g_ngname.c_str(),g_ngname.length(),(ArticleNum)0))
+            if (find_active_group(rp->datasrc,g_buf,g_ngname.c_str(),g_ngname.length(),(ArticleNum)0))
             {
                 break; /* TODO: let them choose which server */
             }
@@ -1700,7 +1700,7 @@ bool write_newsrcs(Multirc *mptr)
             if (info != nullptr)
             {
                 std::fprintf(info,"Last-Group: %s\nNew-Group-State: %ld,%ld,%ld\n",
-                        g_ngname.c_str(),rp->datasrc->lastnewgrp,
+                        g_ngname.c_str(),rp->datasrc->last_new_group,
                         rp->datasrc->act_sf.recent_cnt,
                         rp->datasrc->desc_sf.recent_cnt);
                 std::fclose(info);
@@ -1718,7 +1718,7 @@ bool write_newsrcs(Multirc *mptr)
             {
                 g_lastextranum = rp->datasrc->act_sf.recent_cnt;
             }
-            g_lastnewtime = rp->datasrc->lastnewgrp;
+            g_lastnewtime = rp->datasrc->last_new_group;
             writelast();
         }
 

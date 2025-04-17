@@ -113,7 +113,7 @@ void InterpolatorTest::SetUp()
     term_set(tcbuf);
     last_init();
     univ_init();
-    datasrc_init();
+    data_source_init();
     rcstuff_init();
     add_ng_init();
     art_init();
@@ -146,13 +146,13 @@ void InterpolatorTest::TearDown()
     g_lastart = 0;
     g_art = 0;
     g_in_ng = false;
-    g_datasrc = nullptr;
+    g_data_source = nullptr;
 
     util_final();
     mime_final();
     art_io_final();
     rcstuff_final();
-    datasrc_finalize();
+    data_source_finalize();
     last_final();
     intrp_final();
     opt_final();
@@ -689,7 +689,7 @@ private:
 
 TEST_F(InterpolatorTest, newsSpoolDirectoryNoDataSource)
 {
-    ValueSaver<DataSource *> datasrc(g_datasrc, nullptr);
+    ValueSaver<DataSource *> datasrc(g_data_source, nullptr);
     char                   pattern[]{"%P"};
 
     const char *new_pattern = interpolate(pattern);
@@ -705,7 +705,7 @@ TEST_F(InterpolatorTest, newsSpoolDirectory)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(g_datasrc->spool_dir, buffer());
+    ASSERT_EQ(g_data_source->spool_dir, buffer());
 }
 
 TEST_F(InterpolatorTest, lastInputStringInitiallyEmpty)

@@ -114,10 +114,10 @@ int doshell(const char *shell, const char *cmd)
     sigset(SIGTTOU,SIG_DFL);
     sigset(SIGTTIN,SIG_DFL);
 #endif
-    if (g_datasrc && (g_datasrc->flags & DF_REMOTE))
+    if (g_data_source && (g_data_source->flags & DF_REMOTE))
     {
-        re_export(s_nntpserver_export,g_datasrc->newsid,512);
-        if (g_datasrc->nntplink.flags & NNTP_FORCE_AUTH_NEEDED)
+        re_export(s_nntpserver_export,g_data_source->news_id,512);
+        if (g_data_source->nntp_link.flags & NNTP_FORCE_AUTH_NEEDED)
         {
             re_export(s_nntpforce_export,"yes",3);
         }
@@ -125,16 +125,16 @@ int doshell(const char *shell, const char *cmd)
         {
             un_export(s_nntpforce_export);
         }
-        if (g_datasrc->auth_user)
+        if (g_data_source->auth_user)
         {
             int fd = open(g_nntp_auth_file.c_str(), O_WRONLY|O_CREAT, 0600);
             if (fd >= 0)
             {
-                write(fd, g_datasrc->auth_user, std::strlen(g_datasrc->auth_user));
+                write(fd, g_data_source->auth_user, std::strlen(g_data_source->auth_user));
                 write(fd, "\n", 1);
-                if (g_datasrc->auth_pass)
+                if (g_data_source->auth_pass)
                 {
-                    write(fd, g_datasrc->auth_pass, std::strlen(g_datasrc->auth_pass));
+                    write(fd, g_data_source->auth_pass, std::strlen(g_data_source->auth_pass));
                     write(fd, "\n", 1);
                 }
                 close(fd);
@@ -149,9 +149,9 @@ int doshell(const char *shell, const char *cmd)
                 std::strcpy(s_nntpserver_export+len, g_buf);
             }
         }
-        if (g_datasrc->act_sf.fp)
+        if (g_data_source->act_sf.fp)
         {
-            re_export(s_newsactive_export, g_datasrc->extra_name, 512);
+            re_export(s_newsactive_export, g_data_source->extra_name, 512);
         }
         else
         {
@@ -162,18 +162,18 @@ int doshell(const char *shell, const char *cmd)
     {
         un_export(s_nntpserver_export);
         un_export(s_nntpforce_export);
-        if (g_datasrc)
+        if (g_data_source)
         {
-            re_export(s_newsactive_export, g_datasrc->newsid, 512);
+            re_export(s_newsactive_export, g_data_source->news_id, 512);
         }
         else
         {
             un_export(s_newsactive_export);
         }
     }
-    if (g_datasrc)
+    if (g_data_source)
     {
-        re_export(s_grpdesc_export, g_datasrc->grpdesc, 512);
+        re_export(s_grpdesc_export, g_data_source->group_desc, 512);
     }
     else
     {
@@ -255,7 +255,7 @@ int doshell(const char *shell, const char *cmd)
     sigset(SIGTTOU,stop_catcher);
     sigset(SIGTTIN,stop_catcher);
 #endif
-    if (g_datasrc && g_datasrc->auth_user)
+    if (g_data_source && g_data_source->auth_user)
     {
         remove(g_nntp_auth_file.c_str());
     }
@@ -654,12 +654,12 @@ char *temp_filename()
 
 char *get_auth_user()
 {
-    return g_datasrc->auth_user;
+    return g_data_source->auth_user;
 }
 
 char *get_auth_pass()
 {
-    return g_datasrc->auth_pass;
+    return g_data_source->auth_pass;
 }
 
 char **prep_ini_words(IniWords words[])

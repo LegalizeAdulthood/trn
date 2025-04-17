@@ -119,7 +119,7 @@ TEST(FieldFlags, bitwiseOrEqual)
 
 TEST(FieldFlags, bitwiseAndEqual)
 {
-    FieldFlags val = FF_HAS_FIELD | FF_CHECK4FIELD;
+    FieldFlags val = FF_HAS_FIELD | FF_CHECK_FOR_FIELD;
 
     val &= FF_HAS_FIELD;
 
@@ -128,11 +128,11 @@ TEST(FieldFlags, bitwiseAndEqual)
 
 TEST(FieldFlags, bitwiseXorEqual)
 {
-    FieldFlags val = FF_HAS_FIELD | FF_CHECK4FIELD;
+    FieldFlags val = FF_HAS_FIELD | FF_CHECK_FOR_FIELD;
 
     val ^= FF_HAS_FIELD;
 
-    EXPECT_EQ(FF_CHECK4FIELD, val);
+    EXPECT_EQ(FF_CHECK_FOR_FIELD, val);
 }
 
 namespace

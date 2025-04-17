@@ -619,12 +619,12 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 case 'A':
                     if (g_in_ng)
                     {
-                        if (g_datasrc->flags & DF_REMOTE)
+                        if (g_data_source->flags & DF_REMOTE)
                         {
                             if (art_open(g_art, (ArticlePosition) 0))
                             {
                                 nntp_finishbody(FB_SILENT);
-                                std::sprintf(s = scrbuf,"%s/%s",g_datasrc->spool_dir,
+                                std::sprintf(s = scrbuf,"%s/%s",g_data_source->spool_dir,
                                         nntp_artname(g_art, false));
                             }
                             else
@@ -634,7 +634,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         }
                         else
                         {
-                            std::sprintf(s = scrbuf, "%s/%s/%ld", g_datasrc->spool_dir, g_ngdir.c_str(), (long) g_art);
+                            std::sprintf(s = scrbuf, "%s/%s/%ld", g_data_source->spool_dir, g_ngdir.c_str(), (long) g_art);
                         }
                     }
                     else
@@ -666,7 +666,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 case 'd':
                     if (!g_ngdir.empty())
                     {
-                        std::sprintf(scrbuf, "%s/%s", g_datasrc->spool_dir, g_ngdir.c_str());
+                        std::sprintf(scrbuf, "%s/%s", g_data_source->spool_dir, g_ngdir.c_str());
                         s = scrbuf;
                     }
                     else
@@ -897,7 +897,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     break;
 
                 case 'P':
-                    s = g_datasrc ? g_datasrc->spool_dir : s_empty;
+                    s = g_data_source ? g_data_source->spool_dir : s_empty;
                     break;
 
                 case 'q':

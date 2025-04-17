@@ -85,7 +85,7 @@ int access_ng()
 {
     ArticleNum old_first = g_ngptr->abs1st;
 
-    if (g_datasrc->flags & DF_REMOTE)
+    if (g_data_source->flags & DF_REMOTE)
     {
         int ret = nntp_group(g_ngname.c_str(),g_ngptr);
         if (ret == -2)
@@ -165,7 +165,7 @@ int access_ng()
 
 void chdir_newsdir()
 {
-    if (change_dir(g_datasrc->spool_dir) || (!(g_datasrc->flags & DF_REMOTE) && change_dir(g_ngdir)))
+    if (change_dir(g_data_source->spool_dir) || (!(g_data_source->flags & DF_REMOTE) && change_dir(g_ngdir)))
     {
         std::printf(g_nocd,g_ngdir.c_str());
         sig_catcher(0);
@@ -287,7 +287,7 @@ void sort_newsgroups()
 
 void ng_skip()
 {
-    if (g_datasrc->flags & DF_REMOTE)
+    if (g_data_source->flags & DF_REMOTE)
     {
         clear();
         if (g_verbose)
@@ -359,7 +359,7 @@ ArticleNum getngsize(NewsgroupData *gp)
     char *nam = gp->rcline;
     int   len = gp->numoffset - 1;
 
-    if (!find_actgrp(gp->rc->datasrc, tmpbuf, nam, len, gp->ngmax))
+    if (!find_active_group(gp->rc->datasrc, tmpbuf, nam, len, gp->ngmax))
     {
         if (gp->subscribechar == ':')
         {
