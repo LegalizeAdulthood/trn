@@ -760,9 +760,9 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         break;
     }
 
-    case UN_TEXTFILE:
+    case UN_TEXT_FILE:
     {
-        char *s = ui->data.textfile.fname;
+        char *s = ui->data.text_file.fname;
         if (s && *s)
         {
             /* later have some way of getting a return code back */
@@ -800,9 +800,9 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
         std::printf("Virtual: Entering %s:\n", g_newsgroup_name.c_str());
         g_ng_go_art_num = ui->data.virt.num;
-        g_univ_read_virtflag = true;
+        g_univ_read_virt_flag = true;
         int ret = do_newsgroup("");
-        g_univ_read_virtflag = false;
+        g_univ_read_virt_flag = false;
         switch (ret)
         {
         case NG_NORM:         /* handle more cases later */
@@ -830,9 +830,9 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         break;
     }
 
-    case UN_GROUPMASK:
+    case UN_GROUP_MASK:
     {
-        univ_mask_load(ui->data.gmask.masklist,ui->data.gmask.title);
+        univ_mask_load(ui->data.gmask.mask_list,ui->data.gmask.title);
         ch = universal_selector();
         switch (ch)
         {
@@ -847,7 +847,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         return exit_code;
     }
 
-    case UN_CONFIGFILE:
+    case UN_CONFIG_FILE:
     {
         univ_file_load(ui->data.cfile.fname,ui->data.cfile.title,
                        ui->data.cfile.label);
@@ -932,7 +932,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         break;
     }
 
-    case UN_HELPKEY:
+    case UN_HELP_KEY:
         if (another_command(univ_key_help(ui->data.i)))
         {
             push_char(s_sel_ret | 0200);
@@ -3622,7 +3622,7 @@ static DisplayState universal_commands(char_int ch)
 
     case Ctl('e'):
         univ_edit();
-        univ_redofile();
+        univ_redo_file();
         sel_cleanup();
         sel_page_univ = nullptr;
         return DS_RESTART;

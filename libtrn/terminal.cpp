@@ -1055,7 +1055,7 @@ void eat_typeahead()
     double this_time = current_time();
 
     /* do not eat typeahead while creating virtual group */
-    if (g_univ_ng_virtflag)
+    if (g_univ_ng_virt_flag)
     {
       return;
     }

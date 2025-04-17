@@ -195,7 +195,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
     sc_init((g_sa_never_initialized || g_sa_mode_order == SA_ORDER_DESCENDING)
             && start_command && *start_command == ';');
 
-    if (g_univ_ng_virtflag)
+    if (g_univ_ng_virt_flag)
     {
         univ_ng_virtual();
         goto cleanup;
@@ -604,13 +604,13 @@ cleanup:
         sc_cleanup();
     }
     chase_xrefs(false);
-    if (!g_univ_ng_virtflag)
+    if (!g_univ_ng_virt_flag)
     {
     }
 
     g_in_ng = false;                      /* leave newsgroup state */
     art_close();
-    if (!g_univ_ng_virtflag)
+    if (!g_univ_ng_virt_flag)
     {
         newline();
     }
@@ -621,8 +621,8 @@ cleanup2:
 /* go here if already cleaned up */
     g_doing_ng = false;                 /* tell sig_catcher to cool it */
     /* XXX later, make an option for faster/less-safe virtual groups */
-    if (!g_univ_ng_virtflag && //
-        !(g_univ_read_virtflag && !(g_univ_follow || g_univ_follow_temp)))
+    if (!g_univ_ng_virt_flag && //
+        !(g_univ_read_virt_flag && !(g_univ_follow || g_univ_follow_temp)))
     {
         if (!g_unsafe_rc_saves)
         {
@@ -1073,7 +1073,7 @@ not_threaded:
         {
             return AS_SA;
         }
-        if (g_univ_read_virtflag && g_univ_default_cmd && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
+        if (g_univ_read_virt_flag && g_univ_default_cmd && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
             !(g_univ_follow || g_univ_follow_temp))
         {
             s_exit_code = NG_NEXT;
@@ -1164,7 +1164,7 @@ not_threaded:
         {
             return AS_SA;
         }
-        if (g_univ_read_virtflag && g_univ_default_cmd && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
+        if (g_univ_read_virt_flag && g_univ_default_cmd && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
             !(g_univ_follow || g_univ_follow_temp))
         {
             s_exit_code = NG_NEXT;
@@ -1263,7 +1263,7 @@ not_threaded:
         {
             return AS_SA;
         }
-        if (g_univ_read_virtflag && g_univ_default_cmd && (*g_buf == Ctl('n')) && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
+        if (g_univ_read_virt_flag && g_univ_default_cmd && (*g_buf == Ctl('n')) && !(g_sa_in && (g_sa_follow || g_s_follow_temp)) &&
             !(g_univ_follow || g_univ_follow_temp))
         {
             s_exit_code = NG_NEXT;

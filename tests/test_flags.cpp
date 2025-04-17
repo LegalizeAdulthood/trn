@@ -255,7 +255,7 @@ static AddGroupUniversalItemFlag univitem_equivs[] =
     { AGF_NONE, UF_NONE },
     { AGF_DEL, UF_DEL },
     { AGF_SEL, UF_SEL },
-    { AGF_DEL_SEL, UF_DELSEL }
+    { AGF_DEL_SEL, UF_DEL_SEL }
     // clang-format on
 };
 

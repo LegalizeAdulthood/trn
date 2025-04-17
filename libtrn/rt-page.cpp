@@ -2659,8 +2659,8 @@ static void display_univ(const UniversalItem *ui)
             newline();
             break;
 
-        case UN_HELPKEY:
-            std::printf("      Help on the %s",univ_keyhelp_modestr(ui));
+        case UN_HELP_KEY:
+            std::printf("      Help on the %s",univ_key_help_mode_str(ui));
             newline();
             break;
 

@@ -44,8 +44,8 @@
  */
 
 int  g_univ_level{};         /* How deep are we in the tree? */
-bool g_univ_ng_virtflag{};   /* if true, we are in the "virtual group" second pass */
-bool g_univ_read_virtflag{}; /* if true, we are reading an article from a "virtual group" */
+bool g_univ_ng_virt_flag{};   /* if true, we are in the "virtual group" second pass */
+bool g_univ_read_virt_flag{}; /* if true, we are reading an article from a "virtual group" */
 bool g_univ_default_cmd{};   /* "follow"-related stuff (virtual groups) */
 bool g_univ_follow{true};
 bool g_univ_follow_temp{};
@@ -217,19 +217,19 @@ static void univ_free_data(UniversalItem *ui)
     {
     case UN_NONE:     /* cases where nothing is needed. */
     case UN_TXT:
-    case UN_HELPKEY:
+    case UN_HELP_KEY:
         break;
 
     case UN_DEBUG1:   /* methods that use the string */
         safefree(ui->data.str);
         break;
 
-    case UN_GROUPMASK:        /* methods that have custom data */
+    case UN_GROUP_MASK:        /* methods that have custom data */
         safefree(ui->data.gmask.title);
-        safefree(ui->data.gmask.masklist);
+        safefree(ui->data.gmask.mask_list);
         break;
 
-    case UN_CONFIGFILE:
+    case UN_CONFIG_FILE:
         safefree(ui->data.cfile.title);
         safefree(ui->data.cfile.fname);
         safefree(ui->data.cfile.label);
@@ -251,11 +251,11 @@ static void univ_free_data(UniversalItem *ui)
         safefree(ui->data.vgroup.ng);
         break;
 
-    case UN_TEXTFILE:
-        safefree(ui->data.textfile.fname);
+    case UN_TEXT_FILE:
+        safefree(ui->data.text_file.fname);
         break;
 
-    case UN_DATASRC:  /* unimplemented methods */
+    case UN_DATA_SOURCE:  /* unimplemented methods */
     case UN_VIRTUAL1:
     default:
         break;
@@ -325,15 +325,15 @@ void univ_add_group(const char *desc, const char *grpname)
 
 void univ_add_mask(const char *desc, const char *mask)
 {
-    UniversalItem *ui = univ_add(UN_GROUPMASK, desc);
-    ui->data.gmask.masklist = savestr(mask);
+    UniversalItem *ui = univ_add(UN_GROUP_MASK, desc);
+    ui->data.gmask.mask_list = savestr(mask);
     ui->data.gmask.title = savestr(desc);
 }
 
 //char* fname;                          /* May be URL */
 void univ_add_file(const char *desc, const char *fname, const char *label)
 {
-    UniversalItem *ui = univ_add(UN_CONFIGFILE, desc);
+    UniversalItem *ui = univ_add(UN_CONFIG_FILE, desc);
     ui->data.cfile.title = savestr(desc);
     ui->data.cfile.fname = savestr(fname);
     if (label && *label)
@@ -356,7 +356,7 @@ UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum a
     return ui;
 }
 
-void univ_add_textfile(const char *desc, char *name)
+void univ_add_text_file(const char *desc, char *name)
 {
     UniversalItem* ui;
     char* p;
@@ -388,14 +388,14 @@ void univ_add_textfile(const char *desc, char *name)
     case '~': /* ...or full file names */
     case '%':
     case '/':
-        ui = univ_add(UN_TEXTFILE,desc);
-        ui->data.textfile.fname = savestr(filexp(s));
+        ui = univ_add(UN_TEXT_FILE,desc);
+        ui->data.text_file.fname = savestr(filexp(s));
         break;
     }
 }
 
 /* mostly the same as the newsgroup stuff */
-void univ_add_virtgroup(const char *grpname)
+void univ_add_virt_group(const char *grpname)
 {
     UniversalItem* ui;
 
@@ -433,8 +433,8 @@ void univ_add_virtgroup(const char *grpname)
     ui->data.vgroup.flags = UF_VG_NONE;
     if (s_univ_use_min_score)
     {
-        ui->data.vgroup.flags |= UF_VG_MINSCORE;
-        ui->data.vgroup.minscore = s_univ_min_score;
+        ui->data.vgroup.flags |= UF_VG_MIN_SCORE;
+        ui->data.vgroup.min_score = s_univ_min_score;
     }
     ui->data.vgroup.ng = savestr(grpname);
     data.dat_ptr = ui->data.vgroup.ng;
@@ -540,7 +540,7 @@ void univ_use_pattern(const char *pattern, int type)
             {
                 if (univ_DoMatch(np->rc_line, s))
                 {
-                    univ_add_virtgroup(np->rc_line);
+                    univ_add_virt_group(np->rc_line);
                 }
             }
             break;
@@ -729,7 +729,7 @@ static void univ_do_line_ext1(const char *desc, char *line)
         switch (*s)
         {
         case '0':             /* test vector: "desc" $t0 */
-            univ_add_textfile(desc? desc : s, "/home/c/caadams/ztext");
+            univ_add_text_file(desc? desc : s, "/home/c/caadams/ztext");
             break;
         }
         break;
@@ -898,7 +898,7 @@ static bool univ_do_line(char *line)
 
         case '&':       /* text file shortcut (for help files) */
             s++;
-            univ_add_textfile(s_univ_line_desc? s_univ_line_desc : s, s);
+            univ_add_text_file(s_univ_line_desc? s_univ_line_desc : s, s);
             break;
 
         case '$':       /* extension 1 */
@@ -973,7 +973,7 @@ void univ_mask_load(char *mask, const char *title)
     }
 }
 
-void univ_redofile()
+void univ_redo_file()
 {
     char *tmp_fname = (g_univ_fname ? savestr(g_univ_fname) : nullptr);
     const std::string tmp_title = g_univ_title;
@@ -1186,7 +1186,7 @@ int univ_visit_group_main(const char *gname)
 /* LATER: allow the loop to be interrupted */
 void univ_virt_pass()
 {
-    g_univ_ng_virtflag = true;
+    g_univ_ng_virt_flag = true;
     s_univ_virt_pass_needed = false;
 
     for (UniversalItem *ui = g_first_univ; ui; ui = ui->next)
@@ -1204,10 +1204,10 @@ void univ_virt_pass()
                 break;                  /* XXX whine */
             }
             s_current_vg_ui = ui;
-            if (ui->data.vgroup.flags & UF_VG_MINSCORE)
+            if (ui->data.vgroup.flags & UF_VG_MIN_SCORE)
             {
                 s_univ_use_min_score = true;
-                s_univ_min_score = ui->data.vgroup.minscore;
+                s_univ_min_score = ui->data.vgroup.min_score;
             }
             (void)univ_visit_group(ui->data.vgroup.ng);
             s_univ_use_min_score = false;
@@ -1237,7 +1237,7 @@ void univ_virt_pass()
             break;
         }
     }
-    g_univ_ng_virtflag = false;
+    g_univ_ng_virt_flag = false;
 }
 
 static int univ_order_number(const UniversalItem** ui1, const UniversalItem** ui2)
@@ -1366,7 +1366,7 @@ void univ_help_main(HelpLocation where)
     g_univ_title = "Extended Help";
 
     /* first add help on current mode */
-    UniversalItem *ui = univ_add(UN_HELPKEY, nullptr);
+    UniversalItem *ui = univ_add(UN_HELP_KEY, nullptr);
     ui->data.i = where;
 
     /* later, do other mode sensitive stuff */
@@ -1386,7 +1386,7 @@ void univ_help(HelpLocation where)
     univ_visit_help(where);     /* push old selector info to stack */
 }
 
-const char *univ_keyhelp_modestr(const UniversalItem *ui)
+const char *univ_key_help_mode_str(const UniversalItem *ui)
 {
     switch (ui->data.i)
     {
