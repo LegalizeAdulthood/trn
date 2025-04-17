@@ -253,7 +253,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
         if ((g_art > g_lastart || g_forcegrow) && !g_keep_the_group_static)
         {
             ArticleNum oldlast = g_lastart;
-            if (g_artsize < 0)
+            if (g_art_size < 0)
             {
                 nntp_finishbody(FB_SILENT);
             }
@@ -463,7 +463,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 case DA_CLEAN:          /* quit newsgroup */
                     goto cleanup;
 
-                case DA_TOEND:          /* do not mark as read */
+                case DA_TO_END:          /* do not mark as read */
                     goto reask_article;
 
                 case DA_RAISE:          /* reparse command at end of art */
@@ -1602,23 +1602,23 @@ run_the_selector:
     case Ctl('e'):
         if (g_art <= g_lastart)
         {
-            if (g_artsize < 0)
+            if (g_art_size < 0)
             {
                 nntp_finishbody(FB_OUTPUT);
-                g_raw_artsize = nntp_artsize();
-                g_artsize = g_raw_artsize-g_artbuf_seek+g_artbuf_len+g_htype[PAST_HEADER].minpos;
+                g_raw_art_size = nntp_artsize();
+                g_art_size = g_raw_art_size-g_artbuf_seek+g_artbuf_len+g_htype[PAST_HEADER].minpos;
             }
             if (g_do_hiding)
             {
-                seekartbuf(g_artsize);
+                seekartbuf(g_art_size);
                 seekartbuf(g_artpos);
             }
             g_reread = true;
             g_do_fseek = true;
             g_topline = g_artline;
-            g_innerlight = g_artline - 1;
-            g_innersearch = g_artsize;
-            g_gline = 0;
+            g_inner_light = g_artline - 1;
+            g_inner_search = g_art_size;
+            g_g_line = 0;
             g_hide_everything = 'b';
         }
         return AS_NORM;

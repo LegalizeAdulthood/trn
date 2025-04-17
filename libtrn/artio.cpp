@@ -199,7 +199,7 @@ char *readartbuf(bool view_inline)
         g_artbuf_pos = g_artbuf_seek;
         return bp;
     }
-    if (g_artbuf_pos == g_artsize - g_htype[PAST_HEADER].minpos)
+    if (g_artbuf_pos == g_art_size - g_htype[PAST_HEADER].minpos)
     {
         return nullptr;
     }
@@ -401,7 +401,7 @@ char *readartbuf(bool view_inline)
         if (!mp)
         {
             g_artbuf_len = g_artbuf_pos;
-            g_artsize = g_artbuf_len + g_htype[PAST_HEADER].minpos;
+            g_art_size = g_artbuf_len + g_htype[PAST_HEADER].minpos;
             read_something = 0;
             bp = nullptr;
         }
@@ -431,9 +431,9 @@ char *readartbuf(bool view_inline)
             if (g_datasrc->flags & DF_REMOTE)
             {
                 nntp_finishbody(FB_SILENT);
-                g_raw_artsize = nntp_artsize();
+                g_raw_art_size = nntp_artsize();
             }
-            seekart(g_raw_artsize);
+            seekart(g_raw_art_size);
         }
         /* FALL THROUGH */
 
@@ -547,9 +547,9 @@ char *readartbuf(bool view_inline)
     {
         g_artbuf_seek = tellart();
         g_artbuf_len = g_artbuf_pos + extra_chars;
-        if (g_artsize >= 0)
+        if (g_art_size >= 0)
         {
-            g_artsize = g_raw_artsize - g_artbuf_seek + g_artbuf_len + g_htype[PAST_HEADER].minpos;
+            g_art_size = g_raw_art_size - g_artbuf_seek + g_artbuf_len + g_htype[PAST_HEADER].minpos;
         }
     }
 

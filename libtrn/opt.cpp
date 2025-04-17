@@ -647,7 +647,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_GOTO_LINE_NUM:
-        g_gline = std::atoi(s)-1;
+        g_g_line = std::atoi(s)-1;
         break;
 
     case OI_FUZZY_NEWSGROUP_NAMES:
@@ -1250,7 +1250,7 @@ const char *option_value(OptionIndex num)
         return g_indstr.c_str();
 
     case OI_GOTO_LINE_NUM:
-        std::sprintf(g_buf,"%d",g_gline+1);
+        std::sprintf(g_buf,"%d",g_g_line+1);
         return g_buf;
 
     case OI_FUZZY_NEWSGROUP_NAMES:
