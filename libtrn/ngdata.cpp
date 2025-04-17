@@ -359,12 +359,12 @@ ArticleNum get_newsgroup_size(NewsgroupData *gp)
     char *nam = gp->rc_line;
     int   len = gp->num_offset - 1;
 
-    if (!find_active_group(gp->rc->datasrc, tmpbuf, nam, len, gp->ng_max))
+    if (!find_active_group(gp->rc->data_source, tmpbuf, nam, len, gp->ng_max))
     {
         if (gp->subscribe_char == ':')
         {
             gp->subscribe_char = NEGCHAR;
-            gp->rc->flags |= RF_RCCHANGED;
+            gp->rc->flags |= RF_RC_CHANGED;
             g_newsgroup_to_read--;
         }
         return TR_BOGUS;

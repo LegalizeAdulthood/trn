@@ -424,7 +424,7 @@ static void sel_dogroups()
             goto do_group;
 
         case NG_NO_SERVER:
-            nntp_server_died(np->rc->datasrc);
+            nntp_server_died(np->rc->data_source);
             (void) first_page();
             break;
 
@@ -481,7 +481,7 @@ char multirc_selector()
                 save_selected_count--;
                 for (Newsrc *rp = mp->first; rp; rp = rp->next)
                 {
-                    rp->datasrc->flags &= ~DF_UNAVAILABLE;
+                    rp->data_source->flags &= ~DF_UNAVAILABLE;
                 }
                 if (use_multirc(mp))
                 {
@@ -516,16 +516,16 @@ char newsgroup_selector()
     {
         for (Newsrc *rp = g_multirc->first; rp; rp = rp->next)
         {
-            if ((rp->flags & RF_ACTIVE) && !rp->datasrc->desc_sf.hp)
+            if ((rp->flags & RF_ACTIVE) && !rp->data_source->desc_sf.hp)
             {
-                find_goup_desc(rp->datasrc, "control");
-                if (rp->datasrc->desc_sf.fp)
+                find_goup_desc(rp->data_source, "control");
+                if (rp->data_source->desc_sf.fp)
                 {
-                    rp->datasrc->flags |= DF_NO_XGTITLE; /* TODO: ok?*/
+                    rp->data_source->flags |= DF_NO_XGTITLE; /* TODO: ok?*/
                 }
                 else
                 {
-                    rp->datasrc->desc_sf.refetch_secs = 0;
+                    rp->data_source->desc_sf.refetch_secs = 0;
                 }
             }
         }
@@ -603,12 +603,12 @@ char addgroup_selector(GetNewsgroupFlags flags)
     {
         for (Newsrc *rp = g_multirc->first; rp; rp = rp->next)
         {
-            if ((rp->flags & RF_ACTIVE) && !rp->datasrc->desc_sf.hp)
+            if ((rp->flags & RF_ACTIVE) && !rp->data_source->desc_sf.hp)
             {
-                find_goup_desc(rp->datasrc, "control");
-                if (!rp->datasrc->desc_sf.fp)
+                find_goup_desc(rp->data_source, "control");
+                if (!rp->data_source->desc_sf.fp)
                 {
-                    rp->datasrc->desc_sf.refetch_secs = 0;
+                    rp->data_source->desc_sf.refetch_secs = 0;
                 }
             }
         }
@@ -648,7 +648,7 @@ char addgroup_selector(GetNewsgroupFlags flags)
     {
         AddGroup *gp;
         int i;
-        g_addnewbydefault = ADDNEW_SUB;
+        g_add_new_by_default = ADDNEW_SUB;
         for (gp = g_first_add_group, i = 0; gp; gp = gp->next, i++)
         {
             if (gp->flags & AGF_SEL)
@@ -657,7 +657,7 @@ char addgroup_selector(GetNewsgroupFlags flags)
                 get_ng(gp->name,flags);
             }
         }
-        g_addnewbydefault = ADDNEW_ASK;
+        g_add_new_by_default = ADDNEW_ASK;
     }
     sel_cleanup();
     return s_sel_ret;
@@ -2858,7 +2858,7 @@ static DisplayState newsgroup_commands(char_int ch)
 
     case 'L':
         switch_dmode(&g_sel_grp_dmode);     /* sets g_msg */
-        if (*g_sel_grp_dmode != 's' && !g_multirc->first->datasrc->desc_sf.hp)
+        if (*g_sel_grp_dmode != 's' && !g_multirc->first->data_source->desc_sf.hp)
         {
             newline();
             return DS_RESTART;

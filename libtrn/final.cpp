@@ -106,7 +106,7 @@ void finalize(int status)
     std::fflush(stdout);
 
     change_dir(g_tmp_dir);
-    if (!g_checkflag)
+    if (!g_check_flag)
     {
         unuse_multirc(g_multirc);
     }

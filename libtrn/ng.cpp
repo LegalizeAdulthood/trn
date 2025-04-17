@@ -137,7 +137,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
     const char*whatnext = "%s%sWhat next? [%s]";
     bool ng_virtual = false;
 
-    set_data_source(g_newsgroup_ptr->rc->datasrc);
+    set_data_source(g_newsgroup_ptr->rc->data_source);
 
     if (change_dir(g_data_source->spool_dir))
     {
@@ -238,7 +238,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
     }
 
     g_doing_ng = true;                  /* enter the twilight zone */
-    g_newsgroup_ptr->rc->flags |= RF_RCCHANGED;
+    g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
     if (!g_unsafe_rc_saves)
     {
         g_check_count = 0;               /* do not checkpoint for a while */
@@ -1370,7 +1370,7 @@ normal_search:
         std::printf(g_unsubto,g_ngname.c_str());
         termdown(1);
         g_newsgroup_ptr->subscribe_char = NEGCHAR;
-        g_newsgroup_ptr->rc->flags |= RF_RCCHANGED;
+        g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
         g_newsgroup_to_read--;
         return AS_CLEAN;
 
@@ -2023,7 +2023,7 @@ reask_catchup:
     if (ch == 'u')
     {
         g_newsgroup_ptr->subscribe_char = NEGCHAR;
-        g_newsgroup_ptr->rc->flags |= RF_RCCHANGED;
+        g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
         g_newsgroup_to_read--;
         newline();
         std::printf(g_unsubto,g_ngname.c_str());

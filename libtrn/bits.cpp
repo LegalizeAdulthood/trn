@@ -316,7 +316,7 @@ void bits_to_rc()
     {
         g_newsgroup_ptr->to_read = (ArticleUnread)count; /* otherwise, remember the count */
     }
-    g_newsgroup_ptr->rc->flags |= RF_RCCHANGED;
+    g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
 }
 
 void find_existing_articles()

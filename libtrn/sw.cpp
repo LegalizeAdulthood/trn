@@ -185,7 +185,7 @@ void decode_switch(const char *s)
             break;
 
         case 'c':
-            g_checkflag = upordown;
+            g_check_flag = upordown;
             break;
 
         case 'C':
@@ -301,7 +301,7 @@ void decode_switch(const char *s)
             /* FALL THROUGH */
 
         case 'H':
-            if (g_checkflag)
+            if (g_check_flag)
             {
                 break;
             }

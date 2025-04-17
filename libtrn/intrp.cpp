@@ -95,7 +95,7 @@ void interp_init(char *tcbuf, int tcbuf_len)
         g_news_uid = getuid();
 #endif
 
-    if (g_checkflag)             /* that getwd below takes ~1/3 sec. */
+    if (g_check_flag)             /* that getwd below takes ~1/3 sec. */
     {
         return;                  /* and we do not need it for -c */
     }

@@ -204,7 +204,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     prep_ini_words(g_options_ini);
     if (argc >= 2 && !strcmp(argv[1],"-c"))
     {
-        g_checkflag=true;                       /* so we can optimize for -c */
+        g_check_flag=true;                       /* so we can optimize for -c */
     }
     interp(*tcbufptr,TCBUF_SIZE,GLOBINIT);
     opt_file(*tcbufptr,tcbufptr,false);
@@ -571,7 +571,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_AUTO_SAVE_NAME:
-        if (!g_checkflag)
+        if (!g_check_flag)
         {
             if (YES(s))
             {
@@ -623,7 +623,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_SAVE_DIR:
-        if (!g_checkflag)
+        if (!g_check_flag)
         {
             g_save_dir = s;
             if (!g_privdir.empty())
@@ -655,7 +655,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_HEADER_MAGIC:
-        if (!g_checkflag)
+        if (!g_check_flag)
         {
             set_header_list(HT_MAGIC, HT_DEF_MAGIC, s);
         }

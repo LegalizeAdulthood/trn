@@ -90,7 +90,7 @@ bool initialize(int argc, char *argv[])
 
     /* now make sure we have a current working directory */
 
-    if (!g_checkflag)
+    if (!g_check_flag)
     {
         cwd_check();
     }
@@ -102,7 +102,7 @@ bool initialize(int argc, char *argv[])
 
     /* if we aren't just checking, turn off echo */
 
-    if (!g_checkflag)
+    if (!g_check_flag)
     {
         term_set(tcbuf);
     }
@@ -117,7 +117,7 @@ bool initialize(int argc, char *argv[])
 
     /* check for news news */
 
-    if (!g_checkflag)
+    if (!g_check_flag)
     {
         news_news_check();
     }

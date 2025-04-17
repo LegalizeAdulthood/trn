@@ -450,7 +450,7 @@ try_again:
                 /*g_ngptr = np; ??*/
                 /*set_ngname(np->rcline);*/
                 set_to_read(np, ST_LAX);
-                if (!np->rc->datasrc->act_sf.fp)
+                if (!np->rc->data_source->act_sf.fp)
                 {
                     save_the_rest = (g_sel_rereading ^ (np->to_read > TR_NONE));
                 }
@@ -1735,7 +1735,7 @@ void display_page_title(bool home_only)
         {
             if (rp->flags & RF_ACTIVE)
             {
-                std::sprintf(g_buf+len, ", %s", rp->datasrc->name);
+                std::sprintf(g_buf+len, ", %s", rp->data_source->name);
                 len += std::strlen(g_buf+len);
             }
         }
@@ -1843,7 +1843,7 @@ try_again:
             maybe_eol();
             for (rp = mp->first, len = 0; rp && len < 34; rp = rp->next)
             {
-                std::sprintf(g_buf+len, ", %s", rp->datasrc->name);
+                std::sprintf(g_buf+len, ", %s", rp->data_source->name);
                 len += std::strlen(g_buf+len);
             }
             if (rp)
@@ -1923,7 +1923,7 @@ try_again:
                 maybe_eol();
                 output_sel(g_sel_page_item_cnt, sel, false);
                 std::printf("%5ld ", (long)np->to_read);
-                display_group(np->rc->datasrc,np->rc_line,np->num_offset-1,max_len);
+                display_group(np->rc->data_source,np->rc_line,np->num_offset-1,max_len);
             }
             else if (np->num_offset >= max_len)
             {

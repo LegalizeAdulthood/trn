@@ -42,8 +42,8 @@ Multirc    *g_sel_next_mp{};
 List       *g_multirc_list{};    /* a list of all MULTIRCs */
 Multirc    *g_multirc{};         /* the current MULTIRC */
 bool        g_paranoid{};        /* did we detect some inconsistency in .newsrc? */
-AddNewType g_addnewbydefault{ADDNEW_ASK}; //
-bool        g_checkflag{};       /* -c */
+AddNewType g_add_new_by_default{ADDNEW_ASK}; //
+bool        g_check_flag{};       /* -c */
 bool        g_suppress_cn{};     /* -s */
 int         g_countdown{5};      /* how many lines to list before invoking -s */
 bool        g_fuzzy_get{};       /* -G */
@@ -144,7 +144,7 @@ bool rcstuff_init()
 {
     Multirc *mptr = rcstuff_init_data();
 
-    if (g_use_newsrc_selector && !g_checkflag)
+    if (g_use_newsrc_selector && !g_check_flag)
     {
         return true;
     }
@@ -164,7 +164,7 @@ bool rcstuff_init()
             finalize(1);
         }
     }
-    if (g_checkflag)                    /* were we just checking? */
+    if (g_check_flag)                    /* were we just checking? */
     {
         finalize(s_foundany);           /* tell them what we found */
     }
@@ -211,13 +211,13 @@ Newsrc *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
 
     Newsrc *rp = (Newsrc*)safemalloc(sizeof(Newsrc));
     std::memset((char*)rp,0,sizeof (Newsrc));
-    rp->datasrc = dp;
+    rp->data_source = dp;
     rp->name = savestr(filexp(newsrc));
     char tmpbuf[CBUFLEN];
     std::sprintf(tmpbuf, RCNAME_OLD, rp->name);
-    rp->oldname = savestr(tmpbuf);
+    rp->old_name = savestr(tmpbuf);
     std::sprintf(tmpbuf, RCNAME_NEW, rp->name);
-    rp->newname = savestr(tmpbuf);
+    rp->new_name = savestr(tmpbuf);
 
     switch (add_ok ? *add_ok : 'y')
     {
@@ -228,7 +228,7 @@ Newsrc *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
     default:
         if (dp->flags & DF_ADD_OK)
         {
-            rp->flags |= RF_ADD_NEWGROUPS;
+            rp->flags |= RF_ADD_NEW_GROUPS;
         }
         /* FALL THROUGH */
 
@@ -247,15 +247,15 @@ bool use_multirc(Multirc *mp)
 
     for (Newsrc *rp = mp->first; rp; rp = rp->next)
     {
-        if ((rp->datasrc->flags & DF_UNAVAILABLE) || !lock_newsrc(rp) //
-            || !open_data_source(rp->datasrc) || !open_newsrc(rp))
+        if ((rp->data_source->flags & DF_UNAVAILABLE) || !lock_newsrc(rp) //
+            || !open_data_source(rp->data_source) || !open_newsrc(rp))
         {
             unlock_newsrc(rp);
             had_trouble = true;
         }
         else
         {
-            rp->datasrc->flags |= DF_ACTIVE;
+            rp->data_source->flags |= DF_ACTIVE;
             rp->flags |= RF_ACTIVE;
             had_success = true;
         }
@@ -291,7 +291,7 @@ void unuse_multirc(Multirc *mptr)
     {
         unlock_newsrc(rp);
         rp->flags &= ~RF_ACTIVE;
-        rp->datasrc->flags &= ~DF_ACTIVE;
+        rp->data_source->flags &= ~DF_ACTIVE;
     }
     if (g_newsgroup_data_list)
     {
@@ -386,7 +386,7 @@ static bool clear_ngitem(char *cp, int arg)
 
     if (ncp->rc_line != nullptr)
     {
-        if (!g_checkflag)
+        if (!g_check_flag)
         {
             std::free(ncp->rc_line);
         }
@@ -401,7 +401,7 @@ static bool lock_newsrc(Newsrc *rp)
 {
     long processnum = 0;
 
-    if (g_checkflag)
+    if (g_check_flag)
     {
         return true;
     }
@@ -409,18 +409,18 @@ static bool lock_newsrc(Newsrc *rp)
     char *s = filexp(RCNAME);
     if (!std::strcmp(rp->name,s))
     {
-        rp->lockname = savestr(filexp(LOCKNAME));
+        rp->lock_name = savestr(filexp(LOCKNAME));
     }
     else
     {
         std::sprintf(g_buf, RCNAME_INFO, rp->name);
-        rp->infoname = savestr(g_buf);
+        rp->info_name = savestr(g_buf);
         std::sprintf(g_buf, RCNAME_LOCK, rp->name);
-        rp->lockname = savestr(g_buf);
+        rp->lock_name = savestr(g_buf);
     }
 
     char *runninghost;
-    if (std::FILE *fp = std::fopen(rp->lockname, "r"))
+    if (std::FILE *fp = std::fopen(rp->lock_name, "r"))
     {
         if (std::fgets(g_buf, LBUFLEN, fp))
         {
@@ -538,10 +538,10 @@ static bool lock_newsrc(Newsrc *rp)
         }
 #endif
     }
-    std::FILE *fp = std::fopen(rp->lockname, "w");
+    std::FILE *fp = std::fopen(rp->lock_name, "w");
     if (fp == nullptr)
     {
-        std::printf(g_cantcreate,rp->lockname);
+        std::printf(g_cantcreate,rp->lock_name);
         sig_catcher(0);
     }
     std::fprintf(fp,"%ld\n%s\n",g_our_pid,g_local_host);
@@ -551,12 +551,12 @@ static bool lock_newsrc(Newsrc *rp)
 
 static void unlock_newsrc(Newsrc *rp)
 {
-    safefree0(rp->infoname);
-    if (rp->lockname)
+    safefree0(rp->info_name);
+    if (rp->lock_name)
     {
-        remove(rp->lockname);
-        std::free(rp->lockname);
-        rp->lockname = nullptr;
+        remove(rp->lock_name);
+        std::free(rp->lock_name);
+        rp->lock_name = nullptr;
     }
 }
 
@@ -575,7 +575,7 @@ static bool open_newsrc(Newsrc *rp)
             return false;
         }
         const char *some_buf = SUBSCRIPTIONS;
-        if ((rp->datasrc->flags & DF_REMOTE) //
+        if ((rp->data_source->flags & DF_REMOTE) //
             && nntp_list("SUBSCRIPTIONS", "", 0) == 1)
         {
             do
@@ -611,16 +611,16 @@ static bool open_newsrc(Newsrc *rp)
             return false;
         }
         if (newsrc_stat.st_size == 0 //
-            && stat(rp->oldname, &newsrc_stat) >= 0 && newsrc_stat.st_size > 0)
+            && stat(rp->old_name, &newsrc_stat) >= 0 && newsrc_stat.st_size > 0)
         {
             std::printf("Warning: %s is zero length but %s is not.\n",
-                   rp->name,rp->oldname);
+                   rp->name,rp->old_name);
             std::printf("Either recover your newsrc or else remove the backup copy.\n");
             termdown(2);
             return false;
         }
         /* unlink backup file name and backup current name */
-        remove(rp->oldname);
+        remove(rp->old_name);
 #ifndef NO_FILELINKS
         safelink(rp->name,rp->oldname);
 #endif
@@ -700,7 +700,7 @@ static bool open_newsrc(Newsrc *rp)
         if (np->subscribe_char == NEGCHAR)
         {
             np->to_read = TR_UNSUB;
-            sethash(np);
+            set_hash(np);
             continue;
         }
         g_newsgroup_to_read++;
@@ -724,7 +724,7 @@ static bool open_newsrc(Newsrc *rp)
             }
             if (g_suppress_cn)          /* if no listing desired */
             {
-                if (g_checkflag)        /* if that is all they wanted */
+                if (g_check_flag)        /* if that is all they wanted */
                 {
                     finalize(1);        /* then bomb out */
                 }
@@ -752,7 +752,7 @@ static bool open_newsrc(Newsrc *rp)
                     if (!--g_countdown)
                     {
                         std::fputs("etc.\n",stdout);
-                        if (g_checkflag)
+                        if (g_check_flag)
                         {
                             finalize(1);
                         }
@@ -761,7 +761,7 @@ static bool open_newsrc(Newsrc *rp)
                 }
             }
         }
-        sethash(np);
+        set_hash(np);
     }
     if (prev_np)
     {
@@ -770,13 +770,13 @@ static bool open_newsrc(Newsrc *rp)
     }
     std::fclose(rcfp);                       /* close .newsrc */
 #ifdef NO_FILELINKS
-    remove(rp->oldname);
-    rename(rp->name,rp->oldname);
-    rp->flags |= RF_RCCHANGED;
+    remove(rp->old_name);
+    rename(rp->name,rp->old_name);
+    rp->flags |= RF_RC_CHANGED;
 #endif
-    if (rp->infoname)
+    if (rp->info_name)
     {
-        std::FILE *info = std::fopen(rp->infoname, "r");
+        std::FILE *info = std::fopen(rp->info_name, "r");
         if (info != nullptr)
         {
             if (std::fgets(g_buf, sizeof g_buf, info) != nullptr)
@@ -792,8 +792,8 @@ static bool open_newsrc(Newsrc *rp)
                 if (std::fscanf(info, "New-Group-State: %ld,%ld,%ld", //
                                 &g_last_new_time, &actnum, &descnum) == 3)
                 {
-                    rp->datasrc->act_sf.recent_cnt = actnum;
-                    rp->datasrc->desc_sf.recent_cnt = descnum;
+                    rp->data_source->act_sf.recent_cnt = actnum;
+                    rp->data_source->desc_sf.recent_cnt = descnum;
                 }
             }
             std::fclose(info);
@@ -802,20 +802,20 @@ static bool open_newsrc(Newsrc *rp)
     else
     {
         read_last();
-        if (rp->datasrc->flags & DF_REMOTE)
+        if (rp->data_source->flags & DF_REMOTE)
         {
-            rp->datasrc->act_sf.recent_cnt = g_last_active_size;
-            rp->datasrc->desc_sf.recent_cnt = g_last_extra_num;
+            rp->data_source->act_sf.recent_cnt = g_last_active_size;
+            rp->data_source->desc_sf.recent_cnt = g_last_extra_num;
         }
         else
         {
-            rp->datasrc->act_sf.recent_cnt = g_last_extra_num;
-            rp->datasrc->desc_sf.recent_cnt = 0;
+            rp->data_source->act_sf.recent_cnt = g_last_extra_num;
+            rp->data_source->desc_sf.recent_cnt = 0;
         }
     }
-    rp->datasrc->last_new_group = g_last_new_time;
+    rp->data_source->last_new_group = g_last_new_time;
 
-    if (g_paranoid && !g_checkflag)
+    if (g_paranoid && !g_check_flag)
     {
         cleanup_newsrc(rp);
     }
@@ -841,7 +841,7 @@ static void parse_rcline(NewsgroupData *np)
     {
     }
     int len = s - np->rc_line;
-    if ((!*s || std::isspace(*s)) && !g_checkflag)
+    if ((!*s || std::isspace(*s)) && !g_check_flag)
     {
 #ifndef lint
         np->rc_line = saferealloc(np->rc_line,(MemorySize)len + 3);
@@ -864,7 +864,7 @@ void abandon_ng(NewsgroupData *np)
     char* some_buf = nullptr;
 
     /* open newsrc backup copy and try to find the prior value for the group. */
-    std::FILE *rcfp = std::fopen(np->rc->oldname, "r");
+    std::FILE *rcfp = std::fopen(np->rc->old_name, "r");
     if (rcfp != nullptr)
     {
         int length = np->num_offset - 1;
@@ -890,7 +890,7 @@ void abandon_ng(NewsgroupData *np)
     }
     else if (errno != ENOENT)
     {
-        std::printf("Unable to open %s.\n", np->rc->oldname);
+        std::printf("Unable to open %s.\n", np->rc->old_name);
         termdown(1);
         return;
     }
@@ -925,7 +925,7 @@ void abandon_ng(NewsgroupData *np)
     {
         np->subscribe_char = ':';
     }
-    np->rc->flags |= RF_RCCHANGED;
+    np->rc->flags |= RF_RC_CHANGED;
     set_to_read(np, ST_LAX);
 }
 
@@ -981,7 +981,7 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
                 continue;
             }
             /* TODO: this may scan a datasrc multiple times... */
-            if (find_active_group(rp->datasrc,g_buf,g_ngname.c_str(),g_ngname.length(),(ArticleNum)0))
+            if (find_active_group(rp->data_source,g_buf,g_ngname.c_str(),g_ngname.length(),(ArticleNum)0))
             {
                 break; /* TODO: let them choose which server */
             }
@@ -1007,7 +1007,7 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
         AddNewType autosub;
         if (g_mode != MM_INITIALIZING || !(autosub = auto_subscribe(g_ngname.c_str())))
         {
-            autosub = g_addnewbydefault;
+            autosub = g_add_new_by_default;
         }
         if (autosub)
         {
@@ -1084,7 +1084,7 @@ reask_add:
             }
             else if (*g_buf == 'Y')
             {
-                g_addnewbydefault = ADDNEW_SUB;
+                g_add_new_by_default = ADDNEW_SUB;
                 if (g_append_unsub)
                 {
                     std::printf("(Adding %s to end of your .newsrc subscribed)\n",
@@ -1100,7 +1100,7 @@ reask_add:
             }
             else if (*g_buf == 'N')
             {
-                g_addnewbydefault = ADDNEW_UNSUB;
+                g_add_new_by_default = ADDNEW_UNSUB;
                 if (g_append_unsub)
                 {
                     std::printf("(Adding %s to end of your .newsrc unsubscribed)\n",
@@ -1166,7 +1166,7 @@ reask_unsub:
             char *cp = g_newsgroup_ptr->rc_line + g_newsgroup_ptr->num_offset;
             g_newsgroup_ptr->flags = (*cp && cp[1] == '0' ? NF_UNTHREADED : NF_NONE);
             g_newsgroup_ptr->subscribe_char = ':';
-            g_newsgroup_ptr->rc->flags |= RF_RCCHANGED;
+            g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
             flags &= ~GNG_RELOC;
         }
         else
@@ -1220,8 +1220,8 @@ static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c)
         g_newsgroup_to_read++;
     }
     np->to_read = TR_NONE;               /* just for prettiness */
-    sethash(np);                        /* so we can find it again */
-    rp->flags |= RF_RCCHANGED;
+    set_hash(np);                        /* so we can find it again */
+    rp->flags |= RF_RC_CHANGED;
     return np;
 }
 
@@ -1283,7 +1283,7 @@ bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum)
     {
         np->num = i;
     }
-    move_np->rc->flags |= RF_RCCHANGED;
+    move_np->rc->flags |= RF_RC_CHANGED;
 
     if (newnum < 0)
     {
@@ -1554,7 +1554,7 @@ void cleanup_newsrc(Newsrc *rp)
             }
             np = prev_np;
         }
-        rp->flags |= RF_RCCHANGED;
+        rp->flags |= RF_RC_CHANGED;
 reask_bogus:
         in_char("Delete bogus newsgroups?", MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "ny");
         printcmd();
@@ -1586,7 +1586,7 @@ reask_bogus:
                 clear_ngitem((char*)np,0);
                 g_newsgroup_count--;
             }
-            rp->flags |= RF_RCCHANGED; /* TODO: needed? */
+            rp->flags |= RF_RC_CHANGED; /* TODO: needed? */
             g_last_newsgroup = np;
             if (np)
             {
@@ -1626,7 +1626,7 @@ reask_bogus:
 
 /* make an entry in the hash table for the current newsgroup */
 
-void sethash(NewsgroupData *np)
+void set_hash(NewsgroupData *np)
 {
     HashDatum data;
     data.dat_ptr = (char*)np;
@@ -1694,40 +1694,40 @@ bool write_newsrcs(Multirc *mptr)
             continue;
         }
 
-        if (rp->infoname)
+        if (rp->info_name)
         {
-            std::FILE *info = std::fopen(rp->infoname, "w");
+            std::FILE *info = std::fopen(rp->info_name, "w");
             if (info != nullptr)
             {
                 std::fprintf(info,"Last-Group: %s\nNew-Group-State: %ld,%ld,%ld\n",
-                        g_ngname.c_str(),rp->datasrc->last_new_group,
-                        rp->datasrc->act_sf.recent_cnt,
-                        rp->datasrc->desc_sf.recent_cnt);
+                        g_ngname.c_str(),rp->data_source->last_new_group,
+                        rp->data_source->act_sf.recent_cnt,
+                        rp->data_source->desc_sf.recent_cnt);
                 std::fclose(info);
             }
         }
         else
         {
             read_last();
-            if (rp->datasrc->flags & DF_REMOTE)
+            if (rp->data_source->flags & DF_REMOTE)
             {
-                g_last_active_size = rp->datasrc->act_sf.recent_cnt;
-                g_last_extra_num = rp->datasrc->desc_sf.recent_cnt;
+                g_last_active_size = rp->data_source->act_sf.recent_cnt;
+                g_last_extra_num = rp->data_source->desc_sf.recent_cnt;
             }
             else
             {
-                g_last_extra_num = rp->datasrc->act_sf.recent_cnt;
+                g_last_extra_num = rp->data_source->act_sf.recent_cnt;
             }
-            g_last_new_time = rp->datasrc->last_new_group;
+            g_last_new_time = rp->data_source->last_new_group;
             write_last();
         }
 
-        if (!(rp->flags & RF_RCCHANGED))
+        if (!(rp->flags & RF_RC_CHANGED))
         {
             continue;
         }
 
-        FILE *rcfp = fopen(rp->newname, "w");
+        FILE *rcfp = fopen(rp->new_name, "w");
         if (rcfp == nullptr)
         {
             std::printf(s_cantrecreate,rp->name);
@@ -1796,14 +1796,14 @@ bool write_newsrcs(Multirc *mptr)
         {
           write_error:
             std::printf(s_cantrecreate,rp->name);
-            remove(rp->newname);
+            remove(rp->new_name);
             total_success = false;
             continue;
         }
-        rp->flags &= ~RF_RCCHANGED;
+        rp->flags &= ~RF_RC_CHANGED;
 
         remove(rp->name);
-        rename(rp->newname,rp->name);
+        rename(rp->new_name,rp->name);
     }
 
     if (g_sel_newsgroupsort != SS_NATURAL)
@@ -1823,9 +1823,9 @@ void get_old_newsrcs(Multirc *mptr)
         {
             if (rp->flags & RF_ACTIVE)
             {
-                remove(rp->newname);
-                rename(rp->name,rp->newname);
-                rename(rp->oldname,rp->name);
+                remove(rp->new_name);
+                rename(rp->name,rp->new_name);
+                rename(rp->old_name,rp->name);
             }
         }
     }

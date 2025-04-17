@@ -92,19 +92,19 @@ bool find_new_groups()
 
     for (Newsrc const *rp = g_multirc->first; rp; rp = rp->next)
     {
-        if (all_bits(rp->flags, RF_ADD_NEWGROUPS | RF_ACTIVE))
+        if (all_bits(rp->flags, RF_ADD_NEW_GROUPS | RF_ACTIVE))
         {
-            if (rp->datasrc->flags & DF_REMOTE)
+            if (rp->data_source->flags & DF_REMOTE)
             {
-                new_nntp_groups(rp->datasrc);
+                new_nntp_groups(rp->data_source);
             }
             else
             {
-                new_local_groups(rp->datasrc);
+                new_local_groups(rp->data_source);
             }
         }
     }
-    g_addnewbydefault = ADDNEW_ASK;
+    g_add_new_by_default = ADDNEW_ASK;
 
     process_list(GNG_RELOC);
 
@@ -434,7 +434,7 @@ bool scan_active(bool add_matching)
 
     if (g_in_ng)
     {
-        set_data_source(g_newsgroup_ptr->rc->datasrc);
+        set_data_source(g_newsgroup_ptr->rc->data_source);
     }
 
     return oldcnt != g_newsgroup_count;

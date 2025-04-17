@@ -41,23 +41,23 @@ DECLARE_FLAGS_ENUM(GetNewsgroupFlags, int);
 enum NewsrcFlags : int
 {
     RF_NONE = 0x0000,
-    RF_ADD_NEWGROUPS = 0x0001,
+    RF_ADD_NEW_GROUPS = 0x0001,
     RF_ADD_GROUPS = 0x0002,
     RF_OPEN = 0x0100,
     RF_ACTIVE = 0x0200,
-    RF_RCCHANGED = 0x0400
+    RF_RC_CHANGED = 0x0400
 };
 DECLARE_FLAGS_ENUM(NewsrcFlags, int);
 
 struct Newsrc
 {
-    Newsrc      *next;
-    DataSource  *datasrc;
-    char        *name;     /* the name of the associated newsrc */
-    char        *oldname;  /* the backup of the newsrc */
-    char        *newname;  /* our working newsrc file */
-    char        *infoname; /* the time/size info file */
-    char        *lockname; /* the lock file we created */
+    Newsrc     *next;
+    DataSource *data_source;
+    char       *name;      /* the name of the associated newsrc */
+    char       *old_name;  /* the backup of the newsrc */
+    char       *new_name;  /* our working newsrc file */
+    char       *info_name; /* the time/size info file */
+    char       *lock_name; /* the lock file we created */
     NewsrcFlags flags;
 };
 
@@ -71,23 +71,23 @@ DECLARE_FLAGS_ENUM(MultircFlags, int);
 
 struct Multirc
 {
-    Newsrc       *first;
-    int           num;
+    Newsrc      *first;
+    int          num;
     MultircFlags flags;
 };
 
-extern HashTable  *g_newsrc_hash;
-extern Multirc    *g_sel_page_mp;
-extern Multirc    *g_sel_next_mp;
-extern List       *g_multirc_list;    /* a list of all MULTIRCs */
-extern Multirc    *g_multirc;         /* the current MULTIRC */
-extern bool        g_paranoid;        /* did we detect some inconsistency in .newsrc? */
-extern AddNewType g_addnewbydefault; //
-extern bool        g_checkflag;       /* -c */
-extern bool        g_suppress_cn;     /* -s */
-extern int         g_countdown;       /* how many lines to list before invoking -s */
-extern bool        g_fuzzy_get;       /* -G */
-extern bool        g_append_unsub;    /* -I */
+extern HashTable *g_newsrc_hash;
+extern Multirc   *g_sel_page_mp;
+extern Multirc   *g_sel_next_mp;
+extern List      *g_multirc_list;       /* a list of all MULTIRCs */
+extern Multirc   *g_multirc;            /* the current MULTIRC */
+extern bool       g_paranoid;           /* did we detect some inconsistency in .newsrc? */
+extern AddNewType g_add_new_by_default; //
+extern bool       g_check_flag;         /* -c */
+extern bool       g_suppress_cn;        /* -s */
+extern int        g_countdown;          /* how many lines to list before invoking -s */
+extern bool       g_fuzzy_get;          /* -G */
+extern bool       g_append_unsub;       /* -I */
 
 bool     rcstuff_init();
 void     rcstuff_final();
@@ -103,7 +103,7 @@ bool     relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum);
 void     list_newsgroups();
 NewsgroupData  *find_ng(const char *ngnam);
 void     cleanup_newsrc(Newsrc *rp);
-void     sethash(NewsgroupData *np);
+void     set_hash(NewsgroupData *np);
 void     checkpoint_newsrcs();
 bool     write_newsrcs(Multirc *mptr);
 void     get_old_newsrcs(Multirc *mptr);

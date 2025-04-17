@@ -74,7 +74,7 @@ void catch_up(NewsgroupData *np, int leave_count, int output_level)
         }
         np->to_read = TR_NONE;
     }
-    np->rc->flags |= RF_RCCHANGED;
+    np->rc->flags |= RF_RC_CHANGED;
     if (!write_newsrcs(g_multirc))
     {
         get_anything();
@@ -103,7 +103,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
     {
         return 0;
     }
-    if (dp != np->rc->datasrc)          /* punt on cross-host xrefs */
+    if (dp != np->rc->data_source)          /* punt on cross-host xrefs */
     {
 #ifdef DEBUG
         if (debug & DEB_XREF_MARKER)
@@ -522,7 +522,7 @@ void set_to_read(NewsgroupData *np, bool lax_high_check)
         }
         *(np->rc_line + np->num_offset) = '\0';
         g_paranoid = true;          /* enough to make a guy paranoid */
-        np->rc->flags |= RF_RCCHANGED;
+        np->rc->flags |= RF_RC_CHANGED;
     }
     if (np->subscribe_char == NEGCHAR)
     {
@@ -611,7 +611,7 @@ void check_expired(NewsgroupData *np, ArticleNum a1st)
                 std::free(np->rc_line);
                 np->rc_line = mbuf;
             }
-            np->rc->flags |= RF_RCCHANGED;
+            np->rc->flags |= RF_RC_CHANGED;
         }
     }
     else
@@ -645,19 +645,19 @@ void check_expired(NewsgroupData *np, ArticleNum a1st)
             }
         }
 
-        if (!g_checkflag && np->rc_line == mbuf)
+        if (!g_check_flag && np->rc_line == mbuf)
         {
             np->rc_line = saferealloc(np->rc_line, (MemorySize) (cp - mbuf + len + 1));
         }
         else
         {
-            if (!g_checkflag)
+            if (!g_check_flag)
             {
                 std::free(np->rc_line);
             }
             np->rc_line = mbuf;
         }
-        np->rc->flags |= RF_RCCHANGED;
+        np->rc->flags |= RF_RC_CHANGED;
     }
 
 #ifdef DEBUG

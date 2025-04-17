@@ -494,7 +494,7 @@ InputNewsgroupResult input_newsgroup()
             {
                 set_newsgroup(g_current_newsgroup);
             }
-            g_addnewbydefault = ADDNEW_ASK;
+            g_add_new_by_default = ADDNEW_ASK;
         }
         return ING_SPECIAL;
 
@@ -641,7 +641,7 @@ InputNewsgroupResult input_newsgroup()
         {
             g_newsgroup_ptr = g_current_newsgroup;     /* if not found, go nowhere */
         }
-        g_addnewbydefault = ADDNEW_ASK;
+        g_add_new_by_default = ADDNEW_ASK;
         return ING_SPECIAL;
 
 #ifdef DEBUG
@@ -678,7 +678,7 @@ InputNewsgroupResult input_newsgroup()
             {
                 if (rp->flags & RF_ACTIVE)
                 {
-                    std::sprintf(g_buf+len, ", %s", rp->datasrc->name);
+                    std::sprintf(g_buf+len, ", %s", rp->data_source->name);
                     len += std::strlen(g_buf+len);
                 }
             }
@@ -726,7 +726,7 @@ InputNewsgroupResult input_newsgroup()
             termdown(1);
             g_newsgroup_ptr->subscribe_char = NEGCHAR;   /* unsubscribe it */
             g_newsgroup_ptr->to_read = TR_UNSUB;         /* and make line invisible */
-            g_newsgroup_ptr->rc->flags |= RF_RCCHANGED;
+            g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
             g_newsgroup_ptr = g_newsgroup_ptr->next;            /* do an automatic 'n' */
             g_newsgroup_to_read--;
         }
@@ -927,7 +927,7 @@ reask_abandon:
             return ING_SPECIAL;
 
         case NG_NO_SERVER:
-            nntp_server_died(g_newsgroup_ptr->rc->datasrc);
+            nntp_server_died(g_newsgroup_ptr->rc->data_source);
             return ING_NOSERVER;
 
         /* extensions */
@@ -1006,31 +1006,31 @@ void trn_version()
             {
                 continue;
             }
-            std::sprintf(g_msg,"ID %s:\nNewsrc %s.\n",rp->datasrc->name,rp->name);
+            std::sprintf(g_msg,"ID %s:\nNewsrc %s.\n",rp->data_source->name,rp->name);
             print_lines(g_msg, NOMARKING);
-            if (rp->datasrc->flags & DF_REMOTE)
+            if (rp->data_source->flags & DF_REMOTE)
             {
-                std::sprintf(g_msg,"News from server %s.\n",rp->datasrc->news_id);
+                std::sprintf(g_msg,"News from server %s.\n",rp->data_source->news_id);
                 print_lines(g_msg, NOMARKING);
-                if (rp->datasrc->act_sf.fp)
+                if (rp->data_source->act_sf.fp)
                 {
-                    if (rp->datasrc->flags & DF_TMP_ACTIVE_FILE)
+                    if (rp->data_source->flags & DF_TMP_ACTIVE_FILE)
                     {
                         std::strcpy(g_msg,"Copy of remote active file");
                     }
                     else
                     {
                         std::sprintf(g_msg,"Local active file: %s",
-                                rp->datasrc->extra_name);
+                                rp->data_source->extra_name);
                     }
                 }
                 else
                 {
                     std::strcpy(g_msg,"Dynamic active file");
                 }
-                if (rp->datasrc->act_sf.refetch_secs)
+                if (rp->data_source->act_sf.refetch_secs)
                 {
-                    char* cp = secs2text(rp->datasrc->act_sf.refetch_secs);
+                    char* cp = secs2text(rp->data_source->act_sf.refetch_secs);
                     if (*cp != 'n')
                     {
                         std::sprintf(g_msg+std::strlen(g_msg),
@@ -1042,26 +1042,26 @@ void trn_version()
             else
             {
                 std::sprintf(g_msg,"News from %s.\nLocal active file %s.\n",
-                        rp->datasrc->spool_dir, rp->datasrc->news_id);
+                        rp->data_source->spool_dir, rp->data_source->news_id);
             }
             print_lines(g_msg, NOMARKING);
-            if (rp->datasrc->group_desc)
+            if (rp->data_source->group_desc)
             {
-                if (!rp->datasrc->desc_sf.fp && rp->datasrc->desc_sf.hp)
+                if (!rp->data_source->desc_sf.fp && rp->data_source->desc_sf.hp)
                 {
                     std::strcpy(g_msg,"Dynamic group desc. file");
                 }
-                else if (rp->datasrc->flags & DF_TMP_GROUP_DESC)
+                else if (rp->data_source->flags & DF_TMP_GROUP_DESC)
                 {
                     std::strcpy(g_msg,"Copy of remote group desc. file");
                 }
                 else
                 {
-                    std::sprintf(g_msg,"Group desc. file: %s",rp->datasrc->group_desc);
+                    std::sprintf(g_msg,"Group desc. file: %s",rp->data_source->group_desc);
                 }
-                if (rp->datasrc->desc_sf.refetch_secs)
+                if (rp->data_source->desc_sf.refetch_secs)
                 {
-                    char* cp = secs2text(rp->datasrc->desc_sf.refetch_secs);
+                    char* cp = secs2text(rp->data_source->desc_sf.refetch_secs);
                     if (*cp != 'n')
                     {
                         std::sprintf(g_msg+std::strlen(g_msg),
@@ -1071,10 +1071,10 @@ void trn_version()
                 std::strcat(g_msg,".\n");
                 print_lines(g_msg, NOMARKING);
             }
-            if (rp->datasrc->flags & DF_TRY_OVERVIEW)
+            if (rp->data_source->flags & DF_TRY_OVERVIEW)
             {
                 std::sprintf(g_msg,"Overview files from %s.\n",
-                        rp->datasrc->over_dir? rp->datasrc->over_dir
+                        rp->data_source->over_dir? rp->data_source->over_dir
                                              : "the server");
                 print_lines(g_msg, NOMARKING);
             }
