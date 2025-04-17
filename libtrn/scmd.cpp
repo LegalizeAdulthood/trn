@@ -272,7 +272,7 @@ int s_do_cmd()
         switch (g_s_cur_type)
         {
         case S_ART:
-            (void)help_scanart();
+            (void)help_scan_article();
             break;
 
         default:

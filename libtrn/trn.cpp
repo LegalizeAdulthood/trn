@@ -737,7 +737,7 @@ InputNewsgroupResult input_newsgroup()
         return ING_ASK;
 
     case 'H':                 /* help */
-        help_ng();
+        help_newsgroup();
         return ING_ASK;
 
     case 'A':

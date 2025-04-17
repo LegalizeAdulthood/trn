@@ -206,7 +206,7 @@ int help_art()
     return 0;
 }
 
-int help_ng()
+int help_newsgroup()
 {
     page_start();
     int cmd = print_lines("Newsgroup Selection commands:\n", STANDOUT);
@@ -284,7 +284,7 @@ int help_ng()
     return 0;
 }
 
-int help_ngsel()
+int help_newsgroup_selector()
 {
     int cmd;
     page_start();
@@ -342,7 +342,7 @@ int help_ngsel()
     return 0;
 }
 
-int help_addsel()
+int help_add_group_selector()
 {
     int cmd;
     page_start();
@@ -465,7 +465,7 @@ int help_subs()
     return 0;
 }
 
-int help_artsel()
+int help_article_selector()
 {
     int cmd;
     page_start();
@@ -686,7 +686,7 @@ int help_options()
     return 0;
 }
 
-int help_scanart()
+int help_scan_article()
 {
     int cmd;
 #ifdef UNDEF
@@ -874,21 +874,21 @@ int univ_key_help(HelpLocation where)
     case UHELP_ART:
         return help_art();
     case UHELP_NG:
-        return help_ng();
+        return help_newsgroup();
     case UHELP_NGSEL:
-        return help_ngsel();
+        return help_newsgroup_selector();
     case UHELP_ADDSEL:
-        return help_addsel();
+        return help_add_group_selector();
     case UHELP_SUBS:
         return help_subs();
     case UHELP_ARTSEL:
-        return help_artsel();
+        return help_article_selector();
     case UHELP_MULTIRC:
         return help_multirc();
     case UHELP_OPTIONS:
         return help_options();
     case UHELP_SCANART:
-        return help_scanart();
+        return help_scan_article();
     case UHELP_UNIV:
         return help_univ();
     default:

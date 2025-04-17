@@ -2830,7 +2830,7 @@ static DisplayState article_commands(char_int ch)
 
     case 'H':
         newline();
-        if (another_command(help_artsel()))
+        if (another_command(help_article_selector()))
         {
             return DS_DOCOMMAND;
         }
@@ -3114,7 +3114,7 @@ static DisplayState newsgroup_commands(char_int ch)
 
     case 'H':
         newline();
-        if (another_command(help_ngsel()))
+        if (another_command(help_newsgroup_selector()))
         {
             return DS_DOCOMMAND;
         }
@@ -3440,7 +3440,7 @@ static DisplayState addgroup_commands(char_int ch)
 
     case 'H':
         newline();
-        if (another_command(help_addsel()))
+        if (another_command(help_add_group_selector()))
         {
             return DS_DOCOMMAND;
         }

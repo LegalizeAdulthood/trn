@@ -23,14 +23,14 @@ enum HelpLocation
 void help_init();
 int help_page();
 int help_art();
-int help_ng();
-int help_ngsel();
-int help_addsel();
+int help_newsgroup();
+int help_newsgroup_selector();
+int help_add_group_selector();
 int help_subs();
-int help_artsel();
+int help_article_selector();
 int help_multirc();
 int help_options();
-int help_scanart();
+int help_scan_article();
 int help_univ();
 int univ_key_help(HelpLocation where);
 
