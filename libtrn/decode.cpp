@@ -435,7 +435,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
     if (g_mime_section->type == MESSAGE_MIME)
     {
         mime_push_section();
-        mime_parse_subheader(fp, first_line);
+        mime_parse_sub_header(fp, first_line);
         first_line = nullptr;
     }
     g_mime_getc_line = first_line;

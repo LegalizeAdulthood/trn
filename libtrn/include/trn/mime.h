@@ -172,7 +172,7 @@ void          mime_set_article();
 void          mime_parse_type(MimeSection *mp, char *s);
 void          mime_parse_disposition(MimeSection *mp, char *s);
 void          mime_parse_encoding(MimeSection *mp, char *s);
-void          mime_parse_subheader(std::FILE *ifp, char *next_line);
+void          mime_parse_sub_header(std::FILE *ifp, char *next_line);
 void          mime_set_state(char *bp);
 int           mime_end_of_section(char *bp);
 char         *mime_parse_params(char *str);

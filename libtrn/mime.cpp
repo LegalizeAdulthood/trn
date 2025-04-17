@@ -28,12 +28,12 @@
 #include <cstring>
 #include <utility>
 
-MimeSection   g_mime_article{};
-MimeSection  *g_mime_section{&g_mime_article};
-MimeState  g_mime_state{};
-std::string g_multipart_separator{"-=-=-=-=-=-"};
-bool        g_auto_view_inline{};
-char       *g_mime_getc_line{};
+MimeSection  g_mime_article{};
+MimeSection *g_mime_section{&g_mime_article};
+MimeState    g_mime_state{};
+std::string  g_multipart_separator{"-=-=-=-=-=-"};
+bool         g_auto_view_inline{};
+char        *g_mime_getc_line{};
 
 #ifdef USE_UTF_HACK
 #define CODE_POINT_MAX  0x7FFFFFFFL
@@ -42,7 +42,7 @@ char       *g_mime_getc_line{};
 #endif
 
 // clang-format off
-static HtmlTag s_tagattr[LAST_TAG] = {
+static HtmlTag s_tag_attr[LAST_TAG] = {
  /* name               length   flags */
     {"blockquote",      10,     TF_BLOCK | TF_P | TF_NL                 },
     {"br",               2,     TF_NL | TF_BR                           },
@@ -70,7 +70,7 @@ static MimeExecutor s_executor;
 constexpr bool CLOSING_TAG = false;
 constexpr bool OPENING_TAG = true;
 
-static char *mime_ParseEntryArg(char **cpp);
+static char *mime_parse_entry_arg(char **cpp);
 static int   mime_getc(std::FILE *fp);
 static char *tag_action(char *t, char *word, bool opening_tag);
 static char *output_prep(char *t);
@@ -179,7 +179,7 @@ void mime_read_mimecap(const char *mcname)
         {
             continue;
         }
-        char *t = mime_ParseEntryArg(&s);
+        char *t = mime_parse_entry_arg(&s);
         if (!s)
         {
             std::fprintf(stderr, "trn: Ignoring invalid mimecap entry: %s\n", bp);
@@ -187,10 +187,10 @@ void mime_read_mimecap(const char *mcname)
         }
         MimeCapEntry *mcp = mimecap_ptr(++i);
         mcp->content_type = save_str(t);
-        mcp->command = save_str(mime_ParseEntryArg(&s));
+        mcp->command = save_str(mime_parse_entry_arg(&s));
         while (s)
         {
-            t = mime_ParseEntryArg(&s);
+            t = mime_parse_entry_arg(&s);
             char *arg = std::strchr(t, '=');
             if (arg != nullptr)
             {
@@ -236,7 +236,7 @@ void mime_read_mimecap(const char *mcname)
     std::fclose(fp);
 }
 
-static char *mime_ParseEntryArg(char **cpp)
+static char *mime_parse_entry_arg(char **cpp)
 {
     char*f;
     char*t;
@@ -637,7 +637,7 @@ void mime_parse_encoding(MimeSection *mp, char *s)
 
 /* Parse a multipart mime header and affect the *g_mime_section structure */
 
-void mime_parse_subheader(std::FILE *ifp, char *next_line)
+void mime_parse_sub_header(std::FILE *ifp, char *next_line)
 {
     static char* line = nullptr;
     static int line_size = 0;
@@ -725,7 +725,7 @@ void mime_set_state(char *bp)
 {
     if (g_mime_state == BETWEEN_MIME)
     {
-        mime_parse_subheader(nullptr, bp);
+        mime_parse_sub_header(nullptr, bp);
         *bp = '\0';
         if (g_mime_section->prev->flags & MSF_ALTERNADONE)
         {
@@ -740,7 +740,7 @@ void mime_set_state(char *bp)
     while (g_mime_state == MESSAGE_MIME)
     {
         mime_push_section();
-        mime_parse_subheader(nullptr, *bp ? bp : nullptr);
+        mime_parse_sub_header(nullptr, *bp ? bp : nullptr);
         *bp = '\0';
     }
 
@@ -1771,13 +1771,13 @@ static char *tag_action(char *t, char *word, bool opening_tag)
         return t;
     }
     int ch = std::isupper(*word) ? std::tolower(*word) : *word;
-    for (tnum = 0; tnum < LAST_TAG && *s_tagattr[tnum].name != ch; tnum++)
+    for (tnum = 0; tnum < LAST_TAG && *s_tag_attr[tnum].name != ch; tnum++)
     {
     }
-    for (; tnum < LAST_TAG && *s_tagattr[tnum].name == ch; tnum++)
+    for (; tnum < LAST_TAG && *s_tag_attr[tnum].name == ch; tnum++)
     {
-        if (len == s_tagattr[tnum].length //
-            && string_case_equal(word, s_tagattr[tnum].name, len))
+        if (len == s_tag_attr[tnum].length //
+            && string_case_equal(word, s_tag_attr[tnum].name, len))
         {
             match = true;
             break;
@@ -1788,7 +1788,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
         return t;
     }
 
-    if (!opening_tag && !(s_tagattr[tnum].flags & (TF_BLOCK|TF_HAS_CLOSE)))
+    if (!opening_tag && !(s_tag_attr[tnum].flags & (TF_BLOCK|TF_HAS_CLOSE)))
     {
         return t;
     }
@@ -1799,25 +1799,25 @@ static char *tag_action(char *t, char *word, bool opening_tag)
         return t;
     }
 
-    if (s_tagattr[tnum].flags & TF_BR)
+    if (s_tag_attr[tnum].flags & TF_BR)
     {
         g_mime_section->html |= HF_NL_OK;
     }
 
     if (opening_tag)
     {
-        if (s_tagattr[tnum].flags & TF_NL)
+        if (s_tag_attr[tnum].flags & TF_NL)
         {
             t = output_prep(t);
             t = do_newline(t, HF_NL_OK);
         }
-        if ((num = s_tagattr[tnum].flags & (TF_P | TF_LIST)) == TF_P //
+        if ((num = s_tag_attr[tnum].flags & (TF_P | TF_LIST)) == TF_P //
             || (num == (TF_P | TF_LIST) && !(g_mime_section->html & HF_COMPACT)))
         {
             t = output_prep(t);
             t = do_newline(t, HF_P_OK);
         }
-        if (s_tagattr[tnum].flags & TF_SPACE)
+        if (s_tag_attr[tnum].flags & TF_SPACE)
         {
             if (g_mime_section->html & HF_SPACE_OK)
             {
@@ -1825,7 +1825,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
                 *t++ = ' ';
             }
         }
-        if (s_tagattr[tnum].flags & TF_TAB)
+        if (s_tag_attr[tnum].flags & TF_TAB)
         {
             if (g_mime_section->html & HF_NL_OK)
             {
@@ -1834,7 +1834,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
             }
         }
 
-        if (s_tagattr[tnum].flags & TF_BLOCK //
+        if (s_tag_attr[tnum].flags & TF_BLOCK //
             && g_mime_section->html_block_count < HTML_MAX_BLOCKS)
         {
             j = g_mime_section->html_block_count++;
@@ -1842,7 +1842,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
             blks[j].indent = 0;
             blks[j].count = 0;
 
-            if (s_tagattr[tnum].flags & TF_LIST)
+            if (s_tag_attr[tnum].flags & TF_LIST)
             {
                 g_mime_section->html |= HF_COMPACT;
             }
@@ -1856,7 +1856,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
             j = g_mime_section->html_block_count - 1;
         }
 
-        if ((s_tagattr[tnum].flags & (TF_BLOCK|TF_HIDE)) == (TF_BLOCK|TF_HIDE))
+        if ((s_tag_attr[tnum].flags & (TF_BLOCK|TF_HIDE)) == (TF_BLOCK|TF_HIDE))
         {
             g_mime_section->html |= HF_IN_HIDING;
         }
@@ -2048,7 +2048,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
     }
     else
     {
-        if (s_tagattr[tnum].flags & TF_BLOCK)
+        if (s_tag_attr[tnum].flags & TF_BLOCK)
         {
             for (j = g_mime_section->html_block_count; j--;)
             {
@@ -2056,7 +2056,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
                 {
                     for (int i = g_mime_section->html_block_count; --i > j;)
                     {
-                        t = tag_action(t, s_tagattr[blks[i].tag_num].name,
+                        t = tag_action(t, s_tag_attr[blks[i].tag_num].name,
                                        CLOSING_TAG);
                     }
                     g_mime_section->html_block_count = j;
@@ -2066,7 +2066,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
             g_mime_section->html &= ~HF_IN_HIDING;
             while (j-- > 0)
             {
-                if (s_tagattr[blks[j].tag_num].flags & TF_HIDE)
+                if (s_tag_attr[blks[j].tag_num].flags & TF_HIDE)
                 {
                     g_mime_section->html |= HF_IN_HIDING;
                     break;
@@ -2075,7 +2075,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
         }
 
         j = g_mime_section->html_block_count - 1;
-        if (j >= 0 && s_tagattr[blks[j].tag_num].flags & TF_LIST)
+        if (j >= 0 && s_tag_attr[blks[j].tag_num].flags & TF_LIST)
         {
             g_mime_section->html |= HF_COMPACT;
         }
@@ -2084,12 +2084,12 @@ static char *tag_action(char *t, char *word, bool opening_tag)
             g_mime_section->html &= ~HF_COMPACT;
         }
 
-        if (s_tagattr[tnum].flags & TF_NL && g_mime_section->html & HF_NL_OK)
+        if (s_tag_attr[tnum].flags & TF_NL && g_mime_section->html & HF_NL_OK)
         {
             g_mime_section->html |= HF_QUEUED_NL;
             g_mime_section->html &= ~HF_SPACE_OK;
         }
-        if ((num = s_tagattr[tnum].flags & (TF_P | TF_LIST)) == TF_P //
+        if ((num = s_tag_attr[tnum].flags & (TF_P | TF_LIST)) == TF_P //
             || (num == (TF_P | TF_LIST) && !(g_mime_section->html & HF_COMPACT)))
         {
             if (g_mime_section->html & HF_P_OK)
