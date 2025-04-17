@@ -168,7 +168,7 @@ DoArticleResult do_article()
                 mime_SetArticle();
                 g_art_buf_seek = g_htype[PAST_HEADER].minpos;
             }
-            g_art_pos = vrdary(g_art_line_num);
+            g_art_pos = virtual_read(g_art_line_num);
             if (g_art_pos < 0)
             {
                 g_art_pos = -g_art_pos; /* labs(), anyone? */
@@ -236,7 +236,7 @@ DoArticleResult do_article()
             s_restart = 0;
             g_art_line_num = 0;              /* start counting lines */
             g_art_pos = 0;
-            vwtary(g_art_line_num,g_art_pos); /* remember pos in file */
+            virtual_write(g_art_line_num,g_art_pos); /* remember pos in file */
         }
         for (bool restart_color = true; /* linenum already set */
           g_inner_search? (g_in_header || inner_more())
@@ -706,7 +706,7 @@ DoArticleResult do_article()
             {
                 g_art_pos = g_art_buf_pos + g_htype[PAST_HEADER].minpos;
             }
-            vwtary(g_art_line_num,g_art_pos); /* remember pos in file */
+            virtual_write(g_art_line_num,g_art_pos); /* remember pos in file */
         } /* end of line loop */
 
         g_inner_search = 0;
@@ -718,7 +718,7 @@ DoArticleResult do_article()
         }
         if (linenum >= 32700)   /* did last line have formfeed? */
         {
-            vwtary(g_art_line_num - 1, -vrdary(g_art_line_num - 1));
+            virtual_write(g_art_line_num - 1, -virtual_read(g_art_line_num - 1));
                                 /* remember by negating pos in file */
         }
 
@@ -900,7 +900,7 @@ PageSwitchResult page_switch()
         s = line_ptr(s_alinebeg);
         while (at_nl(*s) && i >= g_top_line)
         {
-            ArticlePosition pos = vrdary(--i);
+            ArticlePosition pos = virtual_read(--i);
             if (pos < 0)
             {
                 pos = -pos;
@@ -974,7 +974,7 @@ PageSwitchResult page_switch()
         }
         else
         {
-            start_where = vrdary(g_top_line+g_g_line+1);
+            start_where = virtual_read(g_top_line+g_g_line+1);
             if (start_where < 0)
             {
                 start_where = -start_where;
@@ -1028,7 +1028,7 @@ PageSwitchResult page_switch()
             if (g_inner_search < g_art_pos)
             {
                 g_art_line_num = g_top_line+1;
-                while (vrdary(g_art_line_num) < g_inner_search)
+                while (virtual_read(g_art_line_num) < g_inner_search)
                 {
                     g_art_line_num++;
                 }
@@ -1108,7 +1108,7 @@ PageSwitchResult page_switch()
             home_cursor();
             insert_line();
             carriage_return();
-            ArticlePosition pos = vrdary(g_top_line - 1);
+            ArticlePosition pos = virtual_read(g_top_line - 1);
             if (pos < 0)
             {
                 pos = -pos;
@@ -1119,7 +1119,7 @@ PageSwitchResult page_switch()
                 s = read_art_buf(false);
                 if (s != nullptr)
                 {
-                    g_art_pos = vrdary(g_top_line);
+                    g_art_pos = virtual_read(g_top_line);
                     if (g_art_pos < 0)
                     {
                         g_art_pos = -g_art_pos;
@@ -1132,13 +1132,13 @@ PageSwitchResult page_switch()
                     color_default();
                     std::putchar('\n');
                     g_top_line--;
-                    g_art_pos = vrdary(--g_art_line_num);
+                    g_art_pos = virtual_read(--g_art_line_num);
                     if (g_art_pos < 0)
                     {
                         g_art_pos = -g_art_pos;
                     }
                     seek_art_buf(g_art_pos);
-                    s_alinebeg = vrdary(g_art_line_num-1);
+                    s_alinebeg = virtual_read(g_art_line_num-1);
                     if (s_alinebeg < 0)
                     {
                         s_alinebeg = -s_alinebeg;
@@ -1184,7 +1184,7 @@ PageSwitchResult page_switch()
             do
             {
                 g_art_line_num--;
-            } while (g_art_line_num >= 0 && g_art_line_num > target && vrdary(g_art_line_num - 1) >= 0);
+            } while (g_art_line_num >= 0 && g_art_line_num > target && virtual_read(g_art_line_num - 1) >= 0);
         }
         g_top_line = g_art_line_num;  /* remember top line of screen */
                                 /*  (line # within article file) */

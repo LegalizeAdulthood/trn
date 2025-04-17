@@ -451,7 +451,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                     }
                 }
                 ArticleLine linenum = tree_puts(tmpbuf, 0, 0);
-                vwtary(g_art_line_num,(ArticlePosition)0);
+                virtual_write(g_art_line_num,(ArticlePosition)0);
                 finish_tree(linenum);
                 g_prompt = whatnext;
                 g_srchahead = 0;
@@ -1650,7 +1650,7 @@ run_the_selector:
                 do
                 {
                     g_art_line_num--;
-                } while (g_art_line_num >= 0 && g_art_line_num > target && vrdary(g_art_line_num - 1) >= 0);
+                } while (g_art_line_num >= 0 && g_art_line_num > target && virtual_read(g_art_line_num - 1) >= 0);
             }
             g_top_line = g_art_line_num;
             g_art_line_num = std::max(g_art_line_num, 0);

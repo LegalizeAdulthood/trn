@@ -8,8 +8,8 @@
 
 /* things for doing the 'back page' command */
 
-void backpage_init();
-ArticlePosition vrdary(ArticleLine indx);
-void vwtary(ArticleLine indx, ArticlePosition newvalue);
+void back_page_init();
+ArticlePosition virtual_read(ArticleLine index);
+void virtual_write(ArticleLine index, ArticlePosition value);
 
 #endif

@@ -16,7 +16,7 @@ static int     s_varyfd{0};         /* virtual array file for storing  file offs
 static ArticlePosition s_varybuf[VARYSIZE]; /* current window onto virtual array */
 static long    s_oldoffset{-1};     /* offset to block currently in window */
 
-void backpage_init()
+void back_page_init()
 {
     const char *varyname = filexp(VARYNAME);
     close(creat(varyname,0600));
@@ -32,7 +32,7 @@ void backpage_init()
 
 /* virtual array read */
 
-ArticlePosition vrdary(ArticleLine indx)
+ArticlePosition virtual_read(ArticleLine index)
 {
     int subindx;
     long offset;
@@ -44,12 +44,12 @@ ArticlePosition vrdary(ArticleLine indx)
         return 0;
     }
 #endif
-    if (indx < 0)
+    if (index < 0)
     {
         return 0;
     }
-    subindx = indx % VARYSIZE;
-    offset = (indx - subindx) * sizeof(s_varybuf[0]);
+    subindx = index % VARYSIZE;
+    offset = (index - subindx) * sizeof(s_varybuf[0]);
     if (offset != s_oldoffset)
     {
         if (s_oldoffset >= 0)
@@ -69,7 +69,7 @@ ArticlePosition vrdary(ArticleLine indx)
 }
 
 /* write to virtual array */
-void vwtary(ArticleLine indx, ArticlePosition newvalue)
+void virtual_write(ArticleLine index, ArticlePosition value)
 {
     int subindx;
     long offset;
@@ -92,8 +92,8 @@ void vwtary(ArticleLine indx, ArticlePosition newvalue)
         maxindx = indx;
     }
 #endif
-    subindx = indx % VARYSIZE;
-    offset = (indx - subindx) * sizeof(s_varybuf[0]);
+    subindx = index % VARYSIZE;
+    offset = (index - subindx) * sizeof(s_varybuf[0]);
     if (offset != s_oldoffset)
     {
         if (s_oldoffset >= 0)
@@ -109,5 +109,5 @@ void vwtary(ArticleLine indx, ArticlePosition newvalue)
 #endif /* lint */
         s_oldoffset = offset;
     }
-    s_varybuf[subindx] = newvalue;
+    s_varybuf[subindx] = value;
 }
