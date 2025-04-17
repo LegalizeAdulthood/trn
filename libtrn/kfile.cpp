@@ -80,7 +80,7 @@ void kill_file_init()
         std::FILE *fp = std::fopen(filexp(cp), "r");
         if (fp != nullptr)
         {
-            g_msg_id_hash = hash_create(1999, msgid_cmp);
+            g_msg_id_hash = hash_create(1999, msg_id_cmp);
             while (std::fgets(g_buf, sizeof g_buf, fp) != nullptr)
             {
                 if (*g_buf == '<')

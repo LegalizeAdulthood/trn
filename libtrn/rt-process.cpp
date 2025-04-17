@@ -61,14 +61,14 @@ static void fix_msgid(char *msgid)
     }
 }
 
-int msgid_cmp(const char *key, int keylen, HashDatum data)
+int msg_id_cmp(const char *key, int key_len, HashDatum data)
 {
     /* We already know that the lengths are equal, just compare the strings */
     if (data.dat_len)
     {
-        return std::memcmp(key, data.dat_ptr, keylen);
+        return std::memcmp(key, data.dat_ptr, key_len);
     }
-    return std::memcmp(key, ((Article*)data.dat_ptr)->msg_id, keylen);
+    return std::memcmp(key, ((Article*)data.dat_ptr)->msg_id, key_len);
 }
 
 static Subject *s_fake_had_subj; /* the fake-turned-real article had this subject */
