@@ -68,7 +68,7 @@ static bool matchlist(const char *patlist, const char *s)
         }
 
         /* compile regular expression */
-        const char *err = ng_comp(&ilcompex, pattern.c_str(), true, true);
+        const char *err = newsgroup_comp(&ilcompex, pattern.c_str(), true, true);
 
         if (err != nullptr)
         {

@@ -551,7 +551,7 @@ InputNewsgroupResult input_newsgroup()
         return ING_ASK;
 
     case '/': case '?':       /* scan for newsgroup pattern */
-        switch (ng_search(g_buf,true))
+        switch (newsgroup_search(g_buf,true))
         {
         case NGS_ERROR:
             set_newsgroup(g_current_newsgroup);
@@ -577,7 +577,7 @@ InputNewsgroupResult input_newsgroup()
         case NGS_FOUND:
             return ING_SPECIAL;
 
-        case NGS_NOTFOUND:
+        case NGS_NOT_FOUND:
             if (g_verbose)
             {
                 std::fputs("\n\nNot found -- use a or g to add newsgroups\n",

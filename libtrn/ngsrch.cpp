@@ -25,7 +25,7 @@
 static bool   s_ng_doempty{}; /* search empty newsgroups? */
 static CompiledRegex s_ngcompex;
 
-void ngsrch_init()
+void newsgroup_search_init()
 {
     s_ng_doempty = false;
     init_compex(&s_ngcompex);
@@ -33,7 +33,7 @@ void ngsrch_init()
 
 // patbuf   if patbuf != g_buf, get_cmd must */
 // get_cmd  be set to false!!! */
-NewsgroupSearchResult ng_search(char *patbuf, bool get_cmd)
+NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
 {
     g_int_count = 0;
     if (get_cmd && g_buf == patbuf)
@@ -85,12 +85,12 @@ NewsgroupSearchResult ng_search(char *patbuf, bool get_cmd)
     {
         cmdlst = savestr("+");
     }
-    NewsgroupSearchResult ret = NGS_NOTFOUND; /* assume no commands */
+    NewsgroupSearchResult ret = NGS_NOT_FOUND; /* assume no commands */
     if (cmdlst)
     {
         ret = NGS_DONE;
     }
-    const char *err = ng_comp(&s_ngcompex, pattern, true, true);
+    const char *err = newsgroup_comp(&s_ngcompex, pattern, true, true);
     if (err != nullptr)
     {
                                         /* compile regular expression */
@@ -180,7 +180,7 @@ NewsgroupSearchResult ng_search(char *patbuf, bool get_cmd)
 
     if (!g_newsgroup_ptr)
     {
-        return NGS_NOTFOUND;
+        return NGS_NOT_FOUND;
     }
 
     do
@@ -192,7 +192,7 @@ NewsgroupSearchResult ng_search(char *patbuf, bool get_cmd)
             break;
         }
 
-        if (g_newsgroup_ptr->to_read >= TR_NONE && ng_wanted(g_newsgroup_ptr))
+        if (g_newsgroup_ptr->to_read >= TR_NONE && newsgroup_wanted(g_newsgroup_ptr))
         {
             if (g_newsgroup_ptr->to_read == TR_NONE)
             {
@@ -232,12 +232,12 @@ NewsgroupSearchResult ng_search(char *patbuf, bool get_cmd)
     return ret;
 }
 
-bool ng_wanted(NewsgroupData *np)
+bool newsgroup_wanted(NewsgroupData *np)
 {
     return execute(&s_ngcompex,np->rc_line) != nullptr;
 }
 
-const char *ng_comp(CompiledRegex *compex, const char *pattern, bool RE, bool fold)
+const char *newsgroup_comp(CompiledRegex *compex, const char *pattern, bool RE, bool fold)
 {
     char ng_pattern[128];
     const char* s = pattern;

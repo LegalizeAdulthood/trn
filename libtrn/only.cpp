@@ -44,7 +44,7 @@ void setngtodo(const char *pat)
 #endif
         init_compex(s_compextodo[i]);
         compile(s_compextodo[i],pat,true,true);
-        const char *err = ng_comp(s_compextodo[i], pat, true, true);
+        const char *err = newsgroup_comp(s_compextodo[i], pat, true, true);
         if (err != nullptr)
         {
             std::printf("\n%s\n",err);

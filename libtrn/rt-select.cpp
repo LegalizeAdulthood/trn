@@ -3040,7 +3040,7 @@ static DisplayState newsgroup_commands(char_int ch)
             else
             {
                 g_newsgroup_ptr = nullptr;
-                switch (ng_search(g_buf, false))
+                switch (newsgroup_search(g_buf, false))
                 {
                 case NGS_ERROR:
                 case NGS_ABORT:
@@ -3051,7 +3051,7 @@ static DisplayState newsgroup_commands(char_int ch)
                     break;
 
                 case NGS_FOUND:
-                case NGS_NOTFOUND:
+                case NGS_NOT_FOUND:
                 case NGS_DONE:
                     break;
                 }
@@ -3400,7 +3400,7 @@ static DisplayState addgroup_commands(char_int ch)
             }
             else
             {
-                switch (ng_search(g_buf,false))
+                switch (newsgroup_search(g_buf,false))
                 {
                 case NGS_ERROR:
                 case NGS_ABORT:
@@ -3411,7 +3411,7 @@ static DisplayState addgroup_commands(char_int ch)
                     break;
 
                 case NGS_FOUND:
-                case NGS_NOTFOUND:
+                case NGS_NOT_FOUND:
                 case NGS_DONE:
                     break;
                 }
