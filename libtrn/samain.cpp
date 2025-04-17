@@ -41,14 +41,14 @@ void sa_init()
     {
         return;                         /* ...most likely dumb terminal */
     }
-    sa_initmode();                      /*      mode differences */
+    sa_init_mode();                      /*      mode differences */
     sa_init_threads();
     g_sa_mode_read_elig = false;
     if (g_first_art > g_last_art)         /* none unread */
     {
         g_sa_mode_read_elig = true;     /* unread+read in some situations */
     }
-    if (!sa_initarts())                 /* init article array(s) */
+    if (!sa_init_arts())                 /* init article array(s) */
     {
         return;                         /* ... no articles */
     }
@@ -104,7 +104,7 @@ long sa_add_ent(ArticleNum artnum)
     return cur;
 }
 
-void sa_cleanmain()
+void sa_clean_main()
 {
     sa_clean_ents();
 
@@ -118,7 +118,7 @@ void sa_cleanmain()
     g_sa_in = false;
 }
 
-void sa_growarts(long oldlast, long last)
+void sa_grow_arts(long oldlast, long last)
 {
     for (int i = oldlast + 1; i <= last; i++)
     {
@@ -142,7 +142,7 @@ void sa_init_context()
     s_sa_context_init = true;
 }
 
-bool sa_initarts()
+bool sa_init_arts()
 {
     sa_init_ents();
     /* add all available articles to entry list */
@@ -157,7 +157,7 @@ bool sa_initarts()
 }
 
 /* note: initscreen must be called before (for g_scr_width) */
-void sa_initmode()
+void sa_init_mode()
 {
     /* set up screen sizes */
     sa_set_screen();
@@ -221,7 +221,7 @@ void sa_lookahead()
 }
 
 /* Returns first marked entry number, or 0 if no articles are marked. */
-long sa_readmarked_elig()
+long sa_read_marked_elig()
 {
     long e = s_first();
     if (!e)

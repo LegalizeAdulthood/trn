@@ -99,7 +99,7 @@ int sa_do_cmd()
             }
         }
         /* consider: should it start reading? */
-        b = sa_readmarked_elig();
+        b = sa_read_marked_elig();
         if (b)
         {
             sa_clear_mark(b);
@@ -182,7 +182,7 @@ int sa_do_cmd()
                 one_less_art_num(g_sa_ents[i].artnum);
             }
         }
-        b = sa_readmarked_elig();
+        b = sa_read_marked_elig();
         if (b)
         {
             sa_clear_mark(b);
@@ -509,7 +509,7 @@ int sa_do_cmd()
 
     case '\n':
     case ' ':
-        b = sa_readmarked_elig();
+        b = sa_read_marked_elig();
         if (b)
         {
             sa_clear_mark(b);

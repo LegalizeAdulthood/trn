@@ -90,7 +90,7 @@ SaMainResult sa_main()
     /* unless "explicit" entry, read any marked articles */
     if (!g_sa_go_explicit)
     {
-        long a = sa_readmarked_elig();
+        long a = sa_read_marked_elig();
         if (a)          /* there was an article */
         {
             g_art = g_sa_ents[a].artnum;
@@ -144,7 +144,7 @@ void sa_grow(ArticleNum oldlast, ArticleNum last)
     {
         return;
     }
-    sa_growarts(oldlast,last);
+    sa_grow_arts(oldlast,last);
 }
 
 void sa_cleanup()
@@ -157,7 +157,7 @@ void sa_cleanup()
         return;
     }
 
-    sa_cleanmain();
+    sa_clean_main();
     clear();            /* should something else clear the screen? */
     g_sa_initialized = false;           /* goodbye... */
 }
