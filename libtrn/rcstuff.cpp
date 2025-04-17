@@ -465,7 +465,7 @@ static bool lock_newsrc(Newsrc *rp)
             termdown(2);
             if (g_bizarre)
             {
-                resetty();
+                reset_tty();
             }
             finalize(0);
         }
@@ -532,7 +532,7 @@ static bool lock_newsrc(Newsrc *rp)
             termdown(2);
             if (g_bizarre)
             {
-                resetty();
+                reset_tty();
             }
             finalize(0);
         }

@@ -278,7 +278,7 @@ Signal_t stop_catcher(int signo)
             std::putchar('\n');
         }
         termlib_reset();
-        resetty();              /* this is the point of all this */
+        reset_tty();              /* this is the point of all this */
 #ifdef DEBUG
         if (debug)
         {

@@ -279,7 +279,7 @@ inline void savetty()
     tcgetattr(g_tty_ch, &g_oldtty);
     tcgetattr(g_tty_ch, &g_tty);
 }
-inline void resetty()
+inline void reset_tty()
 {
     g_bizarre = false;
     tcsetattr(g_tty_ch, TCSAFLUSH, &g_oldtty);
