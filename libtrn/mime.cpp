@@ -919,7 +919,7 @@ void mime_decode_article(bool view)
 {
     MimeCapEntry* mcp = nullptr;
 
-    seek_art(g_savefrom);
+    seek_art(g_save_from);
     *g_art_line = '\0';
 
     while (true)

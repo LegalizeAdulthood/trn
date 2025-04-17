@@ -262,12 +262,12 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     }
     init_compex(&g_opt_compex);
 
-    g_privdir = filexp("~/News");
+    g_priv_dir = filexp("~/News");
 }
 
 void opt_final()
 {
-    g_privdir.clear();
+    g_priv_dir.clear();
     delete[] g_option_flags;
     g_option_flags = nullptr;
     safefree0(g_option_saved_vals);
@@ -626,11 +626,11 @@ void set_option(OptionIndex num, const char *s)
         if (!g_check_flag)
         {
             g_save_dir = s;
-            if (!g_privdir.empty())
+            if (!g_priv_dir.empty())
             {
-                change_dir(g_privdir);
+                change_dir(g_priv_dir);
             }
-            g_privdir = filexp(s);
+            g_priv_dir = filexp(s);
         }
         break;
 
@@ -643,7 +643,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_CITED_TEXT_STRING:
-        g_indstr = s;
+        g_indent_string = s;
         break;
 
     case OI_GOTO_LINE_NUM:
@@ -1247,7 +1247,7 @@ const char *option_value(OptionIndex num)
         return yes_or_no(g_novice_delays);
 
     case OI_CITED_TEXT_STRING:
-        return g_indstr.c_str();
+        return g_indent_string.c_str();
 
     case OI_GOTO_LINE_NUM:
         std::sprintf(g_buf,"%d",g_g_line+1);
@@ -1787,14 +1787,14 @@ void cwd_check()
 {
     char tmpbuf[LBUFLEN];
 
-    if (g_privdir.empty())
+    if (g_priv_dir.empty())
     {
-        g_privdir = filexp("~/News");
+        g_priv_dir = filexp("~/News");
     }
-    std::strcpy(tmpbuf,g_privdir.c_str());
-    if (change_dir(g_privdir))
+    std::strcpy(tmpbuf,g_priv_dir.c_str());
+    if (change_dir(g_priv_dir))
     {
-        safecpy(tmpbuf,filexp(g_privdir.c_str()),sizeof tmpbuf);
+        safecpy(tmpbuf,filexp(g_priv_dir.c_str()),sizeof tmpbuf);
         if (makedir(tmpbuf, MD_DIR) || change_dir(tmpbuf))
         {
             interp(g_cmd_buf, (sizeof g_cmd_buf), "%~/News");
@@ -1812,14 +1812,14 @@ void cwd_check()
                 std::printf("Cannot make directory %s--\n"
                       "        articles will be saved to %s\n"
                       "\n",
-                      g_privdir.c_str(), tmpbuf);
+                      g_priv_dir.c_str(), tmpbuf);
             }
             else
             {
                 std::printf("Can't make %s--\n"
                       "        using %s\n"
                       "\n",
-                      g_privdir.c_str(), tmpbuf);
+                      g_priv_dir.c_str(), tmpbuf);
             }
         }
     }
@@ -1839,5 +1839,5 @@ void cwd_check()
         }
         std::strcpy(tmpbuf,g_home_dir);
     }
-    g_privdir = tmpbuf;
+    g_priv_dir = tmpbuf;
 }

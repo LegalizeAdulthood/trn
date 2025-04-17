@@ -644,13 +644,13 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     break;
 
                 case 'b':
-                    std::strcpy(scrbuf, g_savedest.c_str());
+                    std::strcpy(scrbuf, g_save_dest.c_str());
                     s = scrbuf;
                     break;
 
                 case 'B':
                     s = scrbuf;
-                    std::sprintf(s,"%ld",(long)g_savefrom);
+                    std::sprintf(s,"%ld",(long)g_save_from);
                     break;
 
                 case 'c':
@@ -690,26 +690,26 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                 case 'e':
                 {
                     static char dash[]{"-"};
-                    if (g_extractprog.empty())
+                    if (g_extract_prog.empty())
                     {
                         s = dash;
                     }
                     else
                     {
-                        std::strcpy(scrbuf, g_extractprog.c_str());
+                        std::strcpy(scrbuf, g_extract_prog.c_str());
                         s = scrbuf;
                     }
                     break;
                 }
 
                 case 'E':
-                    if (g_extractdest.empty())
+                    if (g_extract_dest.empty())
                     {
                         s = s_empty;
                     }
                     else
                     {
-                        std::strcpy(scrbuf, g_extractdest.c_str());
+                        std::strcpy(scrbuf, g_extract_dest.c_str());
                         s = scrbuf;
                     }
                     break;
@@ -798,7 +798,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     break;
 
                 case 'I':                       /* indent string for quoting */
-                    std::sprintf(scrbuf,"'%s'",g_indstr.c_str());
+                    std::sprintf(scrbuf,"'%s'",g_indent_string.c_str());
                     s = scrbuf;
                     break;
 
@@ -892,7 +892,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     break;
 
                 case 'p':
-                    std::strcpy(scrbuf, g_privdir.c_str());
+                    std::strcpy(scrbuf, g_priv_dir.c_str());
                     s = scrbuf;
                     break;
 

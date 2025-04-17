@@ -305,7 +305,7 @@ TEST_F(InterpolatorTest, saveDestinationNotSet)
 
 TEST_F(InterpolatorTest, saveDestinationSet)
 {
-    g_savedest = "/tmp/frob";
+    g_save_dest = "/tmp/frob";
     char pattern[]{"%b"};
 
     const char *new_pattern = interpolate(pattern);
@@ -382,7 +382,7 @@ TEST_F(InterpolatorTest, oldDistributionLineNotInNewsgroup)
 
 TEST_F(InterpolatorTest, extractProgramNotSet)
 {
-    g_extractprog.clear();
+    g_extract_prog.clear();
     char pattern[]{"%e"};
 
     const char *new_pattern = interpolate(pattern);
@@ -393,7 +393,7 @@ TEST_F(InterpolatorTest, extractProgramNotSet)
 
 TEST_F(InterpolatorTest, extractProgramSet)
 {
-    g_extractprog = "uudecode";
+    g_extract_prog = "uudecode";
     char pattern[]{"%e"};
 
     const char *new_pattern = interpolate(pattern);
@@ -404,7 +404,7 @@ TEST_F(InterpolatorTest, extractProgramSet)
 
 TEST_F(InterpolatorTest, extractDestinationNotSet)
 {
-    g_extractdest.clear();
+    g_extract_dest.clear();
     char pattern[]{"%E"};
 
     const char *new_pattern = interpolate(pattern);
@@ -415,7 +415,7 @@ TEST_F(InterpolatorTest, extractDestinationNotSet)
 
 TEST_F(InterpolatorTest, extractDestinationSet)
 {
-    g_extractdest = "/home/users/foo";
+    g_extract_dest = "/home/users/foo";
     char pattern[]{"%E"};
 
     const char *new_pattern = interpolate(pattern);
@@ -659,7 +659,7 @@ TEST_F(InterpolatorTest, privateNewsDirectory)
     const char *new_pattern = interpolate(pattern);
 
     ASSERT_EQ('\0', *new_pattern);
-    ASSERT_EQ(g_privdir, buffer());
+    ASSERT_EQ(g_priv_dir, buffer());
 }
 
 namespace

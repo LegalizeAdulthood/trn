@@ -150,8 +150,8 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                  |KFS_NORMAL_LINES  | KFS_THREAD_LINES);
     g_kill_first = 0;
 
-    g_extractdest.clear();
-    g_extractprog.clear();
+    g_extract_dest.clear();
+    g_extract_prog.clear();
 
     /* initialize the newsgroup data structures */
 

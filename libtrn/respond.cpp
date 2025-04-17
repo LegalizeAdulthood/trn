@@ -36,14 +36,14 @@
 #include <cstdlib>
 #include <cstring>
 
-std::string g_savedest;      /* value of %b */
-std::string g_extractdest;   /* value of %E */
-std::string g_extractprog;   /* value of %e */
-ArticlePosition     g_savefrom{};    /* value of %B */
+std::string g_save_dest;      /* value of %b */
+std::string g_extract_dest;   /* value of %E */
+std::string g_extract_prog;   /* value of %e */
+ArticlePosition     g_save_from{};    /* value of %B */
 bool        g_mbox_always{}; /* -M */
 bool        g_norm_always{}; /* -N */
-std::string g_privdir;       /* private news directory */
-std::string g_indstr{">"};   /* indent for old article embedded in followup */
+std::string g_priv_dir;       /* private news directory */
+std::string g_indent_string{">"};   /* indent for old article embedded in followup */
 
 static char  s_nullart[] = "\nEmpty article.\n";
 static std::FILE *s_tmpfp{};
@@ -55,8 +55,8 @@ static bool cut_line(char *str);
 
 void respond_init()
 {
-    g_savedest.clear();
-    g_extractdest.clear();
+    g_save_dest.clear();
+    g_extract_dest.clear();
 }
 
 SaveResult save_article()
@@ -79,8 +79,8 @@ SaveResult save_article()
     parse_header(g_art);
     mime_set_article();
     clear_art_buf();
-    g_savefrom = (cmd == 'w' || cmd == 'e')? g_htype[PAST_HEADER].min_pos : 0;
-    if (art_open(g_art, g_savefrom) == nullptr)
+    g_save_from = (cmd == 'w' || cmd == 'e')? g_htype[PAST_HEADER].min_pos : 0;
+    if (art_open(g_art, g_save_from) == nullptr)
     {
         if (g_verbose)
         {
@@ -93,9 +93,9 @@ SaveResult save_article()
         termdown(2);
         return SAVE_DONE;
     }
-    if (change_dir(g_privdir))
+    if (change_dir(g_priv_dir))
     {
-        std::printf(g_nocd,g_privdir.c_str());
+        std::printf(g_nocd,g_priv_dir.c_str());
         sig_catcher(0);
     }
     if (cmd == 'e')             /* is this an extract command? */
@@ -143,12 +143,12 @@ SaveResult save_article()
                 s = skip_eq(s, ' ');
                 if (*s)                         /* if new command, use it */
                 {
-                    g_extractprog = s;          /* put extracter in %e */
+                    g_extract_prog = s;          /* put extracter in %e */
                 }
                 else
                 {
                     static char cmdbuff[1024];
-                    std::strcpy(cmdbuff, g_extractprog.c_str());
+                    std::strcpy(cmdbuff, g_extract_prog.c_str());
                     cmdstr = cmdbuff;
                 }
             }
@@ -160,14 +160,14 @@ SaveResult save_article()
         }
         else
         {
-            if (!g_extractdest.empty())
+            if (!g_extract_dest.empty())
             {
-                std::strcpy(s, g_extractdest.c_str());
+                std::strcpy(s, g_extract_dest.c_str());
             }
             if (custom_extract)
             {
                 static char cmdbuff[1024];
-                std::strcpy(cmdbuff, g_extractprog.c_str());
+                std::strcpy(cmdbuff, g_extract_prog.c_str());
                 cmdstr = cmdbuff;
             }
             else
@@ -183,7 +183,7 @@ SaveResult save_article()
             interp(c, (sizeof g_buf), get_val("SAVEDIR",SAVEDIR));
             if (makedir(c, MD_DIR))      /* ensure directory exists */
             {
-                std::strcpy(c,g_privdir.c_str());
+                std::strcpy(c,g_priv_dir.c_str());
             }
             if (*s)
             {
@@ -199,13 +199,13 @@ SaveResult save_article()
         if (!FILE_REF(s))       /* path still relative? */
         {
             c = (s==g_buf ? altbuf : g_buf);
-            std::sprintf(c, "%s/%s", g_privdir.c_str(), s);
+            std::sprintf(c, "%s/%s", g_priv_dir.c_str(), s);
             s = c;                      /* absolutize it */
         }
-        g_extractdest = s; /* make it handy for %E */
+        g_extract_dest = s; /* make it handy for %E */
         {
             static char buff[512];
-            std::strcpy(buff, g_extractdest.c_str());
+            std::strcpy(buff, g_extract_dest.c_str());
             s = buff;
         }
         if (makedir(s, MD_DIR))         /* ensure directory exists */
@@ -221,7 +221,7 @@ SaveResult save_article()
         c = trn_getwd(g_buf, sizeof(g_buf));    /* simplify path for output */
         if (custom_extract)
         {
-            std::printf("Extracting article into %s using %s\n",c,g_extractprog.c_str());
+            std::printf("Extracting article into %s using %s\n",c,g_extract_prog.c_str());
             termdown(1);
             interp(g_cmd_buf, sizeof g_cmd_buf, get_val("CUSTOMSAVER",CUSTOMSAVER));
             invoke(g_cmd_buf, nullptr);
@@ -250,7 +250,7 @@ SaveResult save_article()
             {
                 total = totalOpt;
             }
-            for (g_art_pos = g_savefrom;
+            for (g_art_pos = g_save_from;
                  read_art(g_art_line,sizeof g_art_line) != nullptr;
                  g_art_pos = tell_art())
             {
@@ -269,14 +269,14 @@ SaveResult save_article()
 #endif
                 )
                 {
-                    g_savefrom = g_art_pos;
+                    g_save_from = g_art_pos;
                     decode_type = 1;
                     break;
                 }
                 if (uue_prescan(g_art_line, &filename, &part, &total))
                 {
-                    g_savefrom = g_art_pos;
-                    seek_art(g_savefrom);
+                    g_save_from = g_art_pos;
+                    seek_art(g_save_from);
                     decode_type = 2;
                     break;
                 }
@@ -323,7 +323,7 @@ SaveResult save_article()
         s++;                    /* skip the | */
         s = skip_eq(s, ' ');
         safecpy(altbuf,filexp(s),sizeof altbuf);
-        g_savedest = altbuf;
+        g_save_dest = altbuf;
         if (g_data_source->flags & DF_REMOTE)
         {
             nntp_finish_body(FB_SILENT);
@@ -376,7 +376,7 @@ SaveResult save_article()
             interp(g_buf, (sizeof g_buf), get_val("SAVEDIR",SAVEDIR));
             if (makedir(g_buf, MD_DIR))  /* ensure directory exists */
             {
-                std::strcpy(g_buf, g_privdir.c_str());
+                std::strcpy(g_buf, g_priv_dir.c_str());
             }
             if (*s)
             {
@@ -403,10 +403,10 @@ SaveResult save_article()
         if (!FILE_REF(s))       /* relative path? */
         {
             c = (s==g_buf ? altbuf : g_buf);
-            std::sprintf(c, "%s/%s", g_privdir.c_str(), s);
+            std::sprintf(c, "%s/%s", g_priv_dir.c_str(), s);
             s = c;                      /* absolutize it */
         }
-        g_savedest = s; /* make it handy for %b */
+        g_save_dest = s; /* make it handy for %b */
         s_tmpfp = nullptr;
         if (!there)
         {
@@ -519,7 +519,7 @@ SaveResult save_article()
             noecho();           /* make terminal do what we want */
             crmode();
         }
-        else if (s_tmpfp != nullptr || (s_tmpfp = std::fopen(g_savedest.c_str(), "a")) != nullptr)
+        else if (s_tmpfp != nullptr || (s_tmpfp = std::fopen(g_save_dest.c_str(), "a")) != nullptr)
         {
             bool quote_From = false;
             std::fseek(s_tmpfp,0,2);
@@ -533,11 +533,11 @@ SaveResult save_article()
                 quote_From = true;
 #endif
             }
-            if (g_savefrom == 0 && g_art != 0)
+            if (g_save_from == 0 && g_art != 0)
             {
                 std::fprintf(s_tmpfp, "Article: %ld of %s\n", g_art, g_ngname.c_str());
             }
-            seek_art(g_savefrom);
+            seek_art(g_save_from);
             while (read_art(g_buf, LBUFLEN) != nullptr)
             {
                 if (quote_From && string_case_equal(g_buf, "from ",5))
@@ -567,7 +567,7 @@ SaveResult save_article()
         else
         {
             std::printf("%s to %s %s", there? "Appended" : "Saved",
-                   mailbox? "mailbox" : "file", g_savedest.c_str());
+                   mailbox? "mailbox" : "file", g_save_dest.c_str());
         }
         if (interactive)
         {
@@ -584,8 +584,8 @@ SaveResult view_article()
     parse_header(g_art);
     mime_set_article();
     clear_art_buf();
-    g_savefrom = g_htype[PAST_HEADER].min_pos;
-    if (art_open(g_art, g_savefrom) == nullptr)
+    g_save_from = g_htype[PAST_HEADER].min_pos;
+    if (art_open(g_art, g_save_from) == nullptr)
     {
         if (g_verbose)
         {
@@ -613,7 +613,7 @@ SaveResult view_article()
 
         /* Scan subject for filename and part number information */
         filename = decode_subject(g_art, &part, &total);
-        for (g_art_pos = g_savefrom;
+        for (g_art_pos = g_save_from;
              read_art(g_art_line,sizeof g_art_line) != nullptr;
              g_art_pos = tell_art())
         {
@@ -624,8 +624,8 @@ SaveResult view_article()
             if (uue_prescan(g_art_line, &filename, &part, &total))
             {
                 MimeCapEntry*mc = mime_find_mimecap_entry("image/jpeg", MCF_NONE); /* TODO: refine this */
-                g_savefrom = g_art_pos;
-                seek_art(g_savefrom);
+                g_save_from = g_art_pos;
+                seek_art(g_save_from);
                 g_mime_section->type = UNHANDLED_MIME;
                 safefree(g_mime_section->filename);
                 g_mime_section->filename = filename? savestr(filename) : nullptr;
@@ -905,7 +905,7 @@ void reply()
                 *t = '\0';
             }
             str_char_subst(hbuf,s,sizeof hbuf,*g_char_subst);
-            std::fprintf(header,"%s%s\n",g_indstr.c_str(),hbuf);
+            std::fprintf(header,"%s%s\n",g_indent_string.c_str(),hbuf);
             if (t)
             {
                 *t = '\0';
@@ -1120,7 +1120,7 @@ void followup()
                 *t = '\0';
             }
             str_char_subst(hbuf,s,sizeof hbuf,*g_char_subst);
-            std::fprintf(header,"%s%s\n",g_indstr.c_str(),hbuf);
+            std::fprintf(header,"%s%s\n",g_indent_string.c_str(),hbuf);
             if (t)
             {
                 *t = '\0';

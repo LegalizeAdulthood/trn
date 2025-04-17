@@ -67,9 +67,9 @@ int escapade()
     else
     {
         trn_getwd(whereiam, sizeof(whereiam));
-        if (change_dir(g_privdir))
+        if (change_dir(g_priv_dir))
         {
-            std::printf(g_nocd,g_privdir.c_str());
+            std::printf(g_nocd,g_priv_dir.c_str());
             sig_catcher(0);
         }
     }
