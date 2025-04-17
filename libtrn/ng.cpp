@@ -261,7 +261,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             {
                 if (g_data_source->act_sf.fp || get_newsgroup_size(g_newsgroup_ptr) > g_last_art)
                 {
-                    if (nntp_group(g_ngname.c_str(), g_newsgroup_ptr) <= 0)
+                    if (nntp_group(g_newsgroup_name.c_str(), g_newsgroup_ptr) <= 0)
                     {
                         s_exit_code = NG_NO_SERVER;
                         goto cleanup;
@@ -347,12 +347,12 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             }
             if (g_verbose)
             {
-                std::printf("End of newsgroup %s.",g_ngname.c_str());
+                std::printf("End of newsgroup %s.",g_newsgroup_name.c_str());
                                         /* print pseudo-article */
             }
             else
             {
-                std::printf("End of %s", g_ngname.c_str());
+                std::printf("End of %s", g_newsgroup_name.c_str());
             }
             if (g_obj_count)
             {
@@ -441,13 +441,13 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 char tmpbuf[256];
                 /* see if we have tree data for this article anyway */
                 init_tree();
-                std::sprintf(tmpbuf,"%s: article is not available.",g_ngname.c_str());
+                std::sprintf(tmpbuf,"%s: article is not available.",g_newsgroup_name.c_str());
                 if (g_artp && !(g_artp->flags & AF_CACHED))
                 {
                     if (g_abs_first < g_first_cached || g_last_cached < g_last_art
                      || !g_cached_all_in_range)
                     {
-                        std::sprintf(tmpbuf, "%s: article may show up in a moment.", g_ngname.c_str());
+                        std::sprintf(tmpbuf, "%s: article may show up in a moment.", g_newsgroup_name.c_str());
                     }
                 }
                 ArticleLine linenum = tree_puts(tmpbuf, 0, 0);
@@ -1367,7 +1367,7 @@ normal_search:
 
     case 'u':                 /* unsubscribe from this newsgroup? */
         newline();
-        std::printf(g_unsubto,g_ngname.c_str());
+        std::printf(g_unsubto,g_newsgroup_name.c_str());
         term_down(1);
         g_newsgroup_ptr->subscribe_char = NEGCHAR;
         g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
@@ -1919,11 +1919,11 @@ char ask_catchup()
 reask_catchup:
     if (g_verbose)
     {
-        std::sprintf(g_buf, "Mark everything in %s as read?", g_ngname.c_str());
+        std::sprintf(g_buf, "Mark everything in %s as read?", g_newsgroup_name.c_str());
     }
     else
     {
-        std::sprintf(g_buf, "Catchup %s?", g_ngname.c_str());
+        std::sprintf(g_buf, "Catchup %s?", g_newsgroup_name.c_str());
     }
     in_char(g_buf,MM_CONFIRM_CATCH_UP_PROMPT,"yn#h");
     print_cmd();
@@ -2026,7 +2026,7 @@ reask_catchup:
         g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
         g_newsgroup_to_read--;
         newline();
-        std::printf(g_unsubto,g_ngname.c_str());
+        std::printf(g_unsubto,g_newsgroup_name.c_str());
         std::printf("(If you meant to hit 'y' instead of 'u', press '-'.)\n");
         term_down(2);
     }

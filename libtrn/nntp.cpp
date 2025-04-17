@@ -662,7 +662,7 @@ int nntp_handle_timeout()
         return -2;
     }
     g_data_source->nntp_link = g_nntplink;
-    if (g_in_ng && nntp_group(g_ngname.c_str(), (NewsgroupData*)nullptr) <= 0)
+    if (g_in_ng && nntp_group(g_newsgroup_name.c_str(), (NewsgroupData*)nullptr) <= 0)
     {
         return -2;
     }

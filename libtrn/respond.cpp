@@ -535,7 +535,7 @@ SaveResult save_article()
             }
             if (g_save_from == 0 && g_art != 0)
             {
-                std::fprintf(s_tmpfp, "Article: %ld of %s\n", g_art, g_ngname.c_str());
+                std::fprintf(s_tmpfp, "Article: %ld of %s\n", g_art, g_newsgroup_name.c_str());
             }
             seek_art(g_save_from);
             while (read_art(g_buf, LBUFLEN) != nullptr)

@@ -69,7 +69,7 @@ static char *s_nntpforce_export = s_null_export + 2;
 
 void util_init()
 {
-    extern std::string g_patchlevel;
+    extern std::string g_patch_level;
 
     char *cp = g_buf;
     for (int i = 0; i < 512; i++)
@@ -84,7 +84,7 @@ void util_init()
     s_quotechars_export = export_var("QUOTECHARS",g_buf);
     g_buf[3] = '\0';
     s_nntpforce_export = export_var("NNTP_FORCE_AUTH", g_buf);
-    export_var("TRN_VERSION", g_patchlevel.c_str());
+    export_var("TRN_VERSION", g_patch_level.c_str());
 }
 
 void util_final()

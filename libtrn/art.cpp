@@ -211,7 +211,7 @@ DoArticleResult do_article()
 
                 int selected = (g_curr_artp->flags & AF_SEL);
                 int unseen = article_unread(g_art) ? 1 : 0;
-                std::sprintf(g_art_line,"%s%s #%ld",g_ngname.c_str(),g_moderated.c_str(),(long)g_art);
+                std::sprintf(g_art_line,"%s%s #%ld",g_newsgroup_name.c_str(),g_moderated.c_str(),(long)g_art);
                 if (g_selected_only)
                 {
                     i = g_selected_count - (unseen && selected);
@@ -338,7 +338,7 @@ DoArticleResult do_article()
                         *s = '\0';
                     }
                     hide_this_line = (std::strchr(bufptr,',') == nullptr)
-                        && !strcmp(bufptr+12,g_ngname.c_str());
+                        && !strcmp(bufptr+12,g_newsgroup_name.c_str());
                     if (s != nullptr)
                     {
                         *s = '\n';

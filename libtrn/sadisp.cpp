@@ -22,7 +22,7 @@
 void sa_refresh_top()
 {
     color_object(COLOR_SCORE, true);
-    std::printf("%s |",g_ngname.c_str());
+    std::printf("%s |",g_newsgroup_name.c_str());
 /* # of articles might be optional later */
     std::printf(" %d",sa_number_arts());
 

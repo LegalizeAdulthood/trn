@@ -74,10 +74,10 @@
 #include <string>
 #include <ctime>
 
-std::string g_ngname;                             /* name of current newsgroup */
-std::string g_ngdir;                              /* same thing in directory name form */
-std::string g_patchlevel{PATCHLEVEL};             //
-int         g_findlast{};                         /* -r */
+std::string g_newsgroup_name;                             /* name of current newsgroup */
+std::string g_newsgroup_dir;                              /* same thing in directory name form */
+std::string g_patch_level{PATCHLEVEL};             //
+int         g_find_last{};                         /* -r */
 bool        g_verbose{true};                      /* +t */
 bool        g_use_univ_selector{};                //
 bool        g_use_newsrc_selector{};              //
@@ -91,7 +91,7 @@ static std::string getngdir(const char *ngnam);
 
 void trn_init()
 {
-    g_ngdir.clear();
+    g_newsgroup_dir.clear();
 }
 
 int trn_main(int argc, char *argv[])
@@ -219,9 +219,9 @@ void do_multirc()
     while (true)
     {
         bool retry = false;
-        if (g_findlast > 0)
+        if (g_find_last > 0)
         {
-            g_findlast = -1;
+            g_find_last = -1;
             g_start_here = nullptr;
             if (!g_last_newsgroup_name.empty())
             {
@@ -232,7 +232,7 @@ void do_multirc()
                 }
                 else
                 {
-                    set_ngname(g_last_newsgroup_name.c_str());
+                    set_newsgroup_name(g_last_newsgroup_name.c_str());
                     set_to_read(g_newsgroup_ptr, ST_LAX);
                     if (g_newsgroup_ptr->to_read <= TR_NONE)
                     {
@@ -295,8 +295,8 @@ void do_multirc()
                 set_mode(GM_READ,MM_NEWSGROUP_LIST);
                 if (g_newsgroup_ptr->to_read >= TR_NONE)         /* recalc toread? */
                 {
-                    set_ngname(g_newsgroup_ptr->rc_line);
-                    shoe_fits = in_list(g_ngname.c_str());
+                    set_newsgroup_name(g_newsgroup_ptr->rc_line);
+                    shoe_fits = in_list(g_newsgroup_name.c_str());
                     if (shoe_fits)
                     {
                         set_to_read(g_newsgroup_ptr, ST_LAX);
@@ -364,13 +364,13 @@ void do_multirc()
                     std::printf("\n%s %3ld unread article%s in %s -- read now? [%s] ",
                            g_threaded_group? "======" : "******",
                            (long)g_newsgroup_ptr->to_read, plural(g_newsgroup_ptr->to_read),
-                           g_ngname.c_str(), g_default_cmd.c_str());
+                           g_newsgroup_name.c_str(), g_default_cmd.c_str());
                 }
                 else
                 {
                     std::printf("\n%s %3ld in %s -- read? [%s] ",
                            g_threaded_group? "====" : "****",
-                           (long)g_newsgroup_ptr->to_read,g_ngname.c_str(),g_default_cmd.c_str());
+                           (long)g_newsgroup_ptr->to_read,g_newsgroup_name.c_str(),g_default_cmd.c_str());
                 }
                 term_down(1);
             }
@@ -404,7 +404,7 @@ void do_multirc()
             case ING_RESTART:
                 goto restart;
 
-            case ING_NOSERVER:
+            case ING_NO_SERVER:
                 if (g_multirc)
                 {
                     goto restart;
@@ -605,16 +605,16 @@ InputNewsgroupResult input_newsgroup()
             return ING_INPUT;
         }
         s = skip_eq(g_buf+1, ' '); /* skip leading spaces */
-        if (!*s && *g_buf == 'm' && !g_ngname.empty() && g_newsgroup_ptr)
+        if (!*s && *g_buf == 'm' && !g_newsgroup_name.empty() && g_newsgroup_ptr)
         {
-            std::strcpy(s,g_ngname.c_str());
+            std::strcpy(s,g_newsgroup_name.c_str());
         }
         {
             char* _s = skip_digits(s);
             if (*_s)
             {
                 /* found non-digit before hitting end */
-                set_ngname(s);
+                set_newsgroup_name(s);
             }
             else
             {
@@ -633,11 +633,11 @@ InputNewsgroupResult input_newsgroup()
                     term_down(2);
                     return ING_ASK;
                 }
-                set_ngname(g_newsgroup_ptr->rc_line);
+                set_newsgroup_name(g_newsgroup_ptr->rc_line);
             }
         }
         /* try to find newsgroup */
-        if (!get_ng(g_ngname.c_str(), (*g_buf == 'm' ? GNG_RELOC : GNG_NONE) | GNG_FUZZY))
+        if (!get_ng(g_newsgroup_name.c_str(), (*g_buf == 'm' ? GNG_RELOC : GNG_NONE) | GNG_FUZZY))
         {
             g_newsgroup_ptr = g_current_newsgroup;     /* if not found, go nowhere */
         }
@@ -928,7 +928,7 @@ reask_abandon:
 
         case NG_NO_SERVER:
             nntp_server_died(g_newsgroup_ptr->rc->data_source);
-            return ING_NOSERVER;
+            return ING_NO_SERVER;
 
         /* extensions */
         case NG_GO_ARTICLE:
@@ -992,7 +992,7 @@ void trn_version()
 #else
             "NNTP (plus individual local access).\n",
 #endif
-            g_patchlevel.c_str());
+            g_patch_level.c_str());
     print_lines(g_msg, NO_MARKING);
 
     if (g_multirc)
@@ -1087,21 +1087,21 @@ void trn_version()
                 NO_MARKING);
 }
 
-void set_ngname(const char *what)
+void set_newsgroup_name(const char *what)
 {
     if (what != nullptr)
     {
-        if (g_ngname != what)
+        if (g_newsgroup_name != what)
         {
-            g_ngname = what;
+            g_newsgroup_name = what;
         }
     }
     else
     {
-        g_ngname.clear();
+        g_newsgroup_name.clear();
     }
 
-    g_ngdir = getngdir(g_ngname.c_str());
+    g_newsgroup_dir = getngdir(g_newsgroup_name.c_str());
 }
 
 static std::string getngdir(const char *ngnam)

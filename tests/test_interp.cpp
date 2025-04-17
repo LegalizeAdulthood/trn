@@ -283,7 +283,7 @@ TEST_F(InterpolatorTest, articleNameInsideLocalNewsgroupArticleClosed)
 {
     char pattern[]{"%A"};
     g_in_ng = true;
-    g_ngdir = TRN_TEST_NEWSGROUP_SUBDIR;
+    g_newsgroup_dir = TRN_TEST_NEWSGROUP_SUBDIR;
     g_last_art = TRN_TEST_ARTICLE_NUM;
     g_art = TRN_TEST_ARTICLE_NUM;
 
@@ -316,7 +316,7 @@ TEST_F(InterpolatorTest, saveDestinationSet)
 
 TEST_F(InterpolatorTest, relativeNewsgroupDir)
 {
-    g_ngdir = "comp/arch";
+    g_newsgroup_dir = "comp/arch";
     char pattern[]{"%c"};
 
     const char *new_pattern = interpolate(pattern);
@@ -327,7 +327,7 @@ TEST_F(InterpolatorTest, relativeNewsgroupDir)
 
 TEST_F(InterpolatorTest, relativeNewsgroupDirNotSet)
 {
-    g_ngdir.clear();
+    g_newsgroup_dir.clear();
     char pattern[]{"%c"};
 
     const char *new_pattern = interpolate(pattern);
@@ -338,7 +338,7 @@ TEST_F(InterpolatorTest, relativeNewsgroupDirNotSet)
 
 TEST_F(InterpolatorTest, newsgroupNameNotSet)
 {
-    g_ngname.clear();
+    g_newsgroup_name.clear();
     char pattern[]{"%C"};
 
     const char *new_pattern = interpolate(pattern);
@@ -349,7 +349,7 @@ TEST_F(InterpolatorTest, newsgroupNameNotSet)
 
 TEST_F(InterpolatorTest, newsgroupNameSet)
 {
-    g_ngname = "comp.arch";
+    g_newsgroup_name = "comp.arch";
     char pattern[]{"%C"};
 
     const char *new_pattern = interpolate(pattern);
@@ -360,7 +360,7 @@ TEST_F(InterpolatorTest, newsgroupNameSet)
 
 TEST_F(InterpolatorTest, absoluteNewsgroupDirNotSet)
 {
-    g_ngdir.clear();
+    g_newsgroup_dir.clear();
     char pattern[]{"%d"};
 
     const char *new_pattern = interpolate(pattern);
@@ -1445,7 +1445,7 @@ void InterpolatorNewsgroupTest::TearDown()
 
 TEST_F(InterpolatorNewsgroupTest, absoluteNewsgroupDirSet)
 {
-    g_ngdir = TRN_TEST_NEWSGROUP_SUBDIR;
+    g_newsgroup_dir = TRN_TEST_NEWSGROUP_SUBDIR;
     char pattern[]{"%d"};
 
     const char *new_pattern = interpolate(pattern);

@@ -1127,7 +1127,7 @@ static void univ_vg_addart(ArticleNum a)
     /* later scan/replace bad characters */
 
     /* later consider author in description, scoring, etc. */
-    UniversalItem *ui = univ_add_virt_num(nullptr, g_ngname.c_str(), a);
+    UniversalItem *ui = univ_add_virt_num(nullptr, g_newsgroup_name.c_str(), a);
     ui->score = score;
     ui->data.virt.subj = savestr(subj);
     ui->data.virt.from = savestr(from);

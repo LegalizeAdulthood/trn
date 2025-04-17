@@ -957,7 +957,7 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
             flags &= ~GNG_FUZZY;
             if (find_close_match())
             {
-                what = g_ngname.c_str();
+                what = g_newsgroup_name.c_str();
             }
             else
             {
@@ -969,8 +969,8 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
             return false;
         }
     }
-    set_ngname(what);
-    g_newsgroup_ptr = find_ng(g_ngname.c_str());
+    set_newsgroup_name(what);
+    g_newsgroup_ptr = find_ng(g_newsgroup_name.c_str());
     if (g_newsgroup_ptr == nullptr)             /* not in .newsrc? */
     {
         Newsrc* rp;
@@ -981,7 +981,7 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
                 continue;
             }
             /* TODO: this may scan a datasrc multiple times... */
-            if (find_active_group(rp->data_source,g_buf,g_ngname.c_str(),g_ngname.length(),(ArticleNum)0))
+            if (find_active_group(rp->data_source,g_buf,g_newsgroup_name.c_str(),g_newsgroup_name.length(),(ArticleNum)0))
             {
                 break; /* TODO: let them choose which server */
             }
@@ -991,11 +991,11 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
             dingaling();
             if (g_verbose)
             {
-                std::printf("\nNewsgroup %s does not exist!\n", g_ngname.c_str());
+                std::printf("\nNewsgroup %s does not exist!\n", g_newsgroup_name.c_str());
             }
             else
             {
-                std::printf("\nNo %s!\n", g_ngname.c_str());
+                std::printf("\nNo %s!\n", g_newsgroup_name.c_str());
             }
             term_down(2);
             if (g_novice_delays)
@@ -1005,7 +1005,7 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
             goto check_fuzzy_match;
         }
         AddNewType autosub;
-        if (g_mode != MM_INITIALIZING || !(autosub = auto_subscribe(g_ngname.c_str())))
+        if (g_mode != MM_INITIALIZING || !(autosub = auto_subscribe(g_newsgroup_name.c_str())))
         {
             autosub = g_add_new_by_default;
         }
@@ -1014,21 +1014,21 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
             if (g_append_unsub)
             {
                 std::printf("(Adding %s to end of your .newsrc %ssubscribed)\n",
-                       g_ngname.c_str(), (autosub == ADDNEW_SUB)? "" : "un");
+                       g_newsgroup_name.c_str(), (autosub == ADDNEW_SUB)? "" : "un");
                 term_down(1);
-                g_newsgroup_ptr = add_newsgroup(rp, g_ngname.c_str(), autosub);
+                g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), autosub);
             }
             else
             {
                 if (autosub == ADDNEW_SUB)
                 {
-                    std::printf("(Subscribing to %s)\n", g_ngname.c_str());
+                    std::printf("(Subscribing to %s)\n", g_newsgroup_name.c_str());
                     term_down(1);
-                    g_newsgroup_ptr = add_newsgroup(rp, g_ngname.c_str(), autosub);
+                    g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), autosub);
                 }
                 else
                 {
-                    std::printf("(Ignoring %s)\n", g_ngname.c_str());
+                    std::printf("(Ignoring %s)\n", g_newsgroup_name.c_str());
                     term_down(1);
                     return false;
                 }
@@ -1039,11 +1039,11 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
         {
             if (g_verbose)
             {
-                std::sprintf(promptbuf, "\nNewsgroup %s not in .newsrc -- subscribe?", g_ngname.c_str());
+                std::sprintf(promptbuf, "\nNewsgroup %s not in .newsrc -- subscribe?", g_newsgroup_name.c_str());
             }
             else
             {
-                std::sprintf(promptbuf,"\nSubscribe %s?",g_ngname.c_str());
+                std::sprintf(promptbuf,"\nSubscribe %s?",g_newsgroup_name.c_str());
             }
 reask_add:
             in_char(promptbuf,MM_ADD_NEWSGROUP_PROMPT,"ynYN");
@@ -1056,7 +1056,7 @@ reask_add:
                     std::printf("Type y or SP to subscribe to %s.\n"
                            "Type Y to subscribe to this and all remaining new groups.\n"
                            "Type N to leave all remaining new groups unsubscribed.\n",
-                           g_ngname.c_str());
+                           g_newsgroup_name.c_str());
                     term_down(3);
                 }
                 else
@@ -1073,13 +1073,13 @@ reask_add:
             {
                 if (g_append_unsub)
                 {
-                    g_newsgroup_ptr = add_newsgroup(rp, g_ngname.c_str(), NEGCHAR);
+                    g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), NEGCHAR);
                 }
                 return false;
             }
             else if (*g_buf == 'y')
             {
-                g_newsgroup_ptr = add_newsgroup(rp, g_ngname.c_str(), ':');
+                g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), ':');
                 flags |= GNG_RELOC;
             }
             else if (*g_buf == 'Y')
@@ -1088,14 +1088,14 @@ reask_add:
                 if (g_append_unsub)
                 {
                     std::printf("(Adding %s to end of your .newsrc subscribed)\n",
-                           g_ngname.c_str());
+                           g_newsgroup_name.c_str());
                 }
                 else
                 {
-                    std::printf("(Subscribing to %s)\n", g_ngname.c_str());
+                    std::printf("(Subscribing to %s)\n", g_newsgroup_name.c_str());
                 }
                 term_down(1);
-                g_newsgroup_ptr = add_newsgroup(rp, g_ngname.c_str(), ':');
+                g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), ':');
                 flags &= ~GNG_RELOC;
             }
             else if (*g_buf == 'N')
@@ -1104,14 +1104,14 @@ reask_add:
                 if (g_append_unsub)
                 {
                     std::printf("(Adding %s to end of your .newsrc unsubscribed)\n",
-                           g_ngname.c_str());
+                           g_newsgroup_name.c_str());
                     term_down(1);
-                    g_newsgroup_ptr = add_newsgroup(rp, g_ngname.c_str(), NEGCHAR);
+                    g_newsgroup_ptr = add_newsgroup(rp, g_newsgroup_name.c_str(), NEGCHAR);
                     flags &= ~GNG_RELOC;
                 }
                 else
                 {
-                    std::printf("(Ignoring %s)\n", g_ngname.c_str());
+                    std::printf("(Ignoring %s)\n", g_newsgroup_name.c_str());
                     term_down(1);
                     return false;
                 }
@@ -1133,11 +1133,11 @@ reask_add:
     {
         if (g_verbose)
         {
-            std::sprintf(promptbuf, "\nNewsgroup %s is unsubscribed -- resubscribe?", g_ngname.c_str());
+            std::sprintf(promptbuf, "\nNewsgroup %s is unsubscribed -- resubscribe?", g_newsgroup_name.c_str());
         }
         else
         {
-            std::sprintf(promptbuf, "\nResubscribe %s?", g_ngname.c_str());
+            std::sprintf(promptbuf, "\nResubscribe %s?", g_newsgroup_name.c_str());
         }
 reask_unsub:
         in_char(promptbuf,MM_RESUBSCRIBE_PROMPT,"yn");
@@ -1147,7 +1147,7 @@ reask_unsub:
         {
             if (g_verbose)
             {
-                std::printf("Type y or SP to resubscribe to %s.\n", g_ngname.c_str());
+                std::printf("Type y or SP to resubscribe to %s.\n", g_newsgroup_name.c_str());
             }
             else
             {
@@ -1700,7 +1700,7 @@ bool write_newsrcs(Multirc *mptr)
             if (info != nullptr)
             {
                 std::fprintf(info,"Last-Group: %s\nNew-Group-State: %ld,%ld,%ld\n",
-                        g_ngname.c_str(),rp->data_source->last_new_group,
+                        g_newsgroup_name.c_str(),rp->data_source->last_new_group,
                         rp->data_source->act_sf.recent_cnt,
                         rp->data_source->desc_sf.recent_cnt);
                 std::fclose(info);

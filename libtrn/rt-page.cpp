@@ -1719,7 +1719,7 @@ void display_page_title(bool home_only)
     }
     else if (g_in_ng)
     {
-        color_string(COLOR_NG_NAME, g_ngname.c_str());
+        color_string(COLOR_NG_NAME, g_newsgroup_name.c_str());
     }
     else if (g_sel_mode == SM_ADD_GROUP)
     {

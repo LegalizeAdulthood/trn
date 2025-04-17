@@ -265,7 +265,7 @@ beginning:
     else if (g_data_source->ov_opened < started_request - 60 * 60)
     {
         ov_close();
-        g_data_source->ov_in = std::fopen(ov_name(g_ngname.c_str()), "r");
+        g_data_source->ov_in = std::fopen(ov_name(g_newsgroup_name.c_str()), "r");
         if (g_data_source->ov_in == nullptr)
         {
             return false;

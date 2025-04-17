@@ -77,7 +77,7 @@ void set_newsgroup(NewsgroupData *np)
     g_newsgroup_ptr = np;
     if (g_newsgroup_ptr)
     {
-        set_ngname(g_newsgroup_ptr->rc_line);
+        set_newsgroup_name(g_newsgroup_ptr->rc_line);
     }
 }
 
@@ -87,7 +87,7 @@ int access_newsgroup()
 
     if (g_data_source->flags & DF_REMOTE)
     {
-        int ret = nntp_group(g_ngname.c_str(),g_newsgroup_ptr);
+        int ret = nntp_group(g_newsgroup_name.c_str(),g_newsgroup_ptr);
         if (ret == -2)
         {
             return -2;
@@ -110,17 +110,17 @@ int access_newsgroup()
     }
     else
     {
-        if (eaccess(g_ngdir.c_str(),5))                 /* directory read protected? */
+        if (eaccess(g_newsgroup_dir.c_str(),5))                 /* directory read protected? */
         {
-            if (eaccess(g_ngdir.c_str(), 0))
+            if (eaccess(g_newsgroup_dir.c_str(), 0))
             {
                 if (g_verbose)
                 {
-                    std::printf("\nNewsgroup %s does not have a spool directory!\n", g_ngname.c_str());
+                    std::printf("\nNewsgroup %s does not have a spool directory!\n", g_newsgroup_name.c_str());
                 }
                 else
                 {
-                    std::printf("\nNo spool for %s!\n", g_ngname.c_str());
+                    std::printf("\nNo spool for %s!\n", g_newsgroup_name.c_str());
                 }
                 term_down(2);
             }
@@ -128,11 +128,11 @@ int access_newsgroup()
             {
                 if (g_verbose)
                 {
-                    std::printf("\nNewsgroup %s is not currently accessible.\n", g_ngname.c_str());
+                    std::printf("\nNewsgroup %s is not currently accessible.\n", g_newsgroup_name.c_str());
                 }
                 else
                 {
-                    std::printf("\n%s not readable.\n", g_ngname.c_str());
+                    std::printf("\n%s not readable.\n", g_newsgroup_name.c_str());
                 }
                 term_down(2);
             }
@@ -142,9 +142,9 @@ int access_newsgroup()
         }
 
         /* chdir to newsgroup subdirectory */
-        if (change_dir(g_ngdir))
+        if (change_dir(g_newsgroup_dir))
         {
-            std::printf(g_nocd,g_ngdir.c_str());
+            std::printf(g_nocd,g_newsgroup_dir.c_str());
             return 0;
         }
         g_last_art = get_newsgroup_size(g_newsgroup_ptr);
@@ -165,9 +165,9 @@ int access_newsgroup()
 
 void chdir_news_dir()
 {
-    if (change_dir(g_data_source->spool_dir) || (!(g_data_source->flags & DF_REMOTE) && change_dir(g_ngdir)))
+    if (change_dir(g_data_source->spool_dir) || (!(g_data_source->flags & DF_REMOTE) && change_dir(g_newsgroup_dir)))
     {
-        std::printf(g_nocd,g_ngdir.c_str());
+        std::printf(g_nocd,g_newsgroup_dir.c_str());
         sig_catcher(0);
     }
 }

@@ -1239,7 +1239,7 @@ int find_close_match()
         {
             std::printf("(Using %s)\n", s_ngptrs[0]);
         }
-        set_ngname(s_ngptrs[0]);
+        set_newsgroup_name(s_ngptrs[0]);
         if (cp)
         {
             *cp = ' ';
@@ -1270,7 +1270,7 @@ static int check_distance(int len, HashDatum *data, int newsrc_ptr)
     }
 
     /* Efficiency: don't call edit_dist when the lengths are too different. */
-    const int ngname_len = static_cast<int>(g_ngname.length());
+    const int ngname_len = static_cast<int>(g_newsgroup_name.length());
     if (len < ngname_len)
     {
         if (ngname_len - len > LENGTH_HACK)
@@ -1286,7 +1286,7 @@ static int check_distance(int len, HashDatum *data, int newsrc_ptr)
         }
     }
 
-    int value = edit_distn(g_ngname.c_str(), ngname_len, name, len);
+    int value = edit_distn(g_newsgroup_name.c_str(), ngname_len, name, len);
     if (value > MIN_DIST)
     {
         return 0;
@@ -1395,7 +1395,7 @@ reask:
                 {
                     *cp = '\0';
                 }
-                set_ngname(s_ngptrs[i]);
+                set_newsgroup_name(s_ngptrs[i]);
                 if (cp)
                 {
                     *cp = ' ';

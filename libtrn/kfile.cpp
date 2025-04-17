@@ -192,9 +192,9 @@ int do_kill_file(std::FILE *kfp, int entering)
             cp = filexp(cp);
             if (!std::strchr(cp, '/'))
             {
-                set_ngname(cp);
+                set_newsgroup_name(cp);
                 cp = filexp(get_val_const("KILLLOCAL",s_killlocal));
-                set_ngname(g_newsgroup_ptr->rc_line);
+                set_newsgroup_name(g_newsgroup_ptr->rc_line);
             }
             std::FILE *incfile = std::fopen(cp, "r");
             if (incfile != nullptr)

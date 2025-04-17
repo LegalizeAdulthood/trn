@@ -72,7 +72,7 @@ void write_last()
     {
         g_last_time = std::max(g_last_time, s_starttime);
         std::fprintf(fp,"%s\n%ld\n%ld\n%ld\n%ld\n",
-                g_ngname.c_str(),g_last_time,
+                g_newsgroup_name.c_str(),g_last_time,
                 g_last_active_size,g_last_new_time,g_last_extra_num);
         std::fclose(fp);
         remove(s_lastfile);

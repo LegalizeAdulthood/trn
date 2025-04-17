@@ -835,7 +835,7 @@ int newsgroup_perform(char *cmdlst, int output_level)
 
     if (output_level == 1)
     {
-        std::printf("%s ",g_ngname.c_str());
+        std::printf("%s ",g_newsgroup_name.c_str());
         std::fflush(stdout);
     }
 

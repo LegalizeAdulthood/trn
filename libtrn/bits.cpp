@@ -773,7 +773,7 @@ static int chase_xref(ArticleNum artnum, int markread)
             {
                 continue;
             }
-            if (!std::strcmp(tmpbuf,g_ngname.c_str()))  /* is this the current newsgroup? */
+            if (!std::strcmp(tmpbuf,g_newsgroup_name.c_str()))  /* is this the current newsgroup? */
             {
                 if (x < g_abs_first || x > g_last_art)
                 {

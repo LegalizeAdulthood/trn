@@ -804,7 +804,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_RESTART_AT_LAST_GROUP:
-        g_findlast = YES(s) * (g_mode == MM_INITIALIZING? 1 : -1);
+        g_find_last = YES(s) * (g_mode == MM_INITIALIZING? 1 : -1);
         break;
 
     case OI_SCAN_MODE_COUNT:
@@ -1371,7 +1371,7 @@ const char *option_value(OptionIndex num)
         return g_buf;
 
     case OI_RESTART_AT_LAST_GROUP:
-        return yes_or_no(g_findlast != 0);
+        return yes_or_no(g_find_last != 0);
 
     case OI_SCAN_MODE_COUNT:
         std::sprintf(g_buf,"%d",g_scan_on);

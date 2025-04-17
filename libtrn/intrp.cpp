@@ -634,7 +634,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         }
                         else
                         {
-                            std::sprintf(s = scrbuf, "%s/%s/%ld", g_data_source->spool_dir, g_ngdir.c_str(), (long) g_art);
+                            std::sprintf(s = scrbuf, "%s/%s/%ld", g_data_source->spool_dir, g_newsgroup_dir.c_str(), (long) g_art);
                         }
                     }
                     else
@@ -654,19 +654,19 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     break;
 
                 case 'c':
-                    std::strcpy(scrbuf, g_ngdir.c_str());
+                    std::strcpy(scrbuf, g_newsgroup_dir.c_str());
                     s = scrbuf;
                     break;
 
                 case 'C':
-                    std::strcpy(scrbuf, g_ngname.c_str());
+                    std::strcpy(scrbuf, g_newsgroup_name.c_str());
                     s = scrbuf;
                     break;
 
                 case 'd':
-                    if (!g_ngdir.empty())
+                    if (!g_newsgroup_dir.empty())
                     {
-                        std::sprintf(scrbuf, "%s/%s", g_data_source->spool_dir, g_ngdir.c_str());
+                        std::sprintf(scrbuf, "%s/%s", g_data_source->spool_dir, g_newsgroup_dir.c_str());
                         s = scrbuf;
                     }
                     else
@@ -1114,7 +1114,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                 }
 
                 case 'V':
-                    std::strcpy(scrbuf, g_patchlevel.c_str());
+                    std::strcpy(scrbuf, g_patch_level.c_str());
                     s = scrbuf;
                     break;
 

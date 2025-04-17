@@ -384,7 +384,7 @@ static void sel_dogroups()
             g_current_newsgroup = np;
         }
         g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
-        std::printf("Entering %s:", g_ngname.c_str());
+        std::printf("Entering %s:", g_newsgroup_name.c_str());
         if (s_sel_ret == ';')
         {
             ret = do_newsgroup(savestr(";"));
@@ -798,7 +798,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
             g_current_newsgroup = np;
         }
         g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
-        std::printf("Virtual: Entering %s:\n", g_ngname.c_str());
+        std::printf("Virtual: Entering %s:\n", g_newsgroup_name.c_str());
         g_ng_go_art_num = ui->data.virt.num;
         g_univ_read_virtflag = true;
         int ret = do_newsgroup("");
@@ -895,7 +895,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
             g_current_newsgroup = np;
         }
         g_threaded_group = (g_use_threads && !(np->flags & NF_UNTHREADED));
-        std::printf("Entering %s:", g_ngname.c_str());
+        std::printf("Entering %s:", g_newsgroup_name.c_str());
         if (s_sel_ret == ';')
         {
             ret = do_newsgroup(savestr(";"));
@@ -3156,7 +3156,7 @@ static DisplayState newsgroup_commands(char_int ch)
         POP_SELECTOR();
         switch (ret)
         {
-        case ING_NOSERVER:
+        case ING_NO_SERVER:
             if (g_multirc)
             {
                 if (!was_at_top)
