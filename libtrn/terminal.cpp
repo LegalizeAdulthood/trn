@@ -1160,7 +1160,7 @@ static bool s_ignore_EINTR = false;
 Signal_t alarm_catcher(int signo)
 {
     s_ignore_EINTR = true;
-    check_datasrcs();
+    check_data_sources();
     sigset(SIGALRM,alarm_catcher);
     (void) alarm(DATASRC_ALARM_SECS);
 }
