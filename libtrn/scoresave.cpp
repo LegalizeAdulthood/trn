@@ -47,7 +47,7 @@ void sc_sv_add(const char *str)
     s_num_lines++;
 }
 
-void sc_sv_delgroup(const char *gname)
+void sc_sv_del_group(const char *gname)
 {
     char* s;
     int i;
@@ -89,7 +89,7 @@ void sc_sv_delgroup(const char *gname)
 }
 
 /* get the file containing scores into memory */
-void sc_sv_getfile()
+void sc_sv_get_file()
 {
     s_num_lines = 0;
     s_lines_alloc = 0;
@@ -113,7 +113,7 @@ void sc_sv_getfile()
 }
 
 /* save the memory into the score file */
-void sc_sv_savefile()
+void sc_sv_save_file()
 {
     if (s_num_lines == 0)
     {
@@ -380,7 +380,7 @@ void sc_load_scores()
 
     if (s_num_lines == 0)
     {
-        sc_sv_getfile();
+        sc_sv_get_file();
     }
 
     char *gname = savestr(filexp("%C"));
@@ -488,7 +488,7 @@ void sc_save_scores()
     /* not being able to open is OK */
     if (s_num_lines > 0)
     {
-        sc_sv_delgroup(gname);  /* delete old group */
+        sc_sv_del_group(gname);  /* delete old group */
     }
     else                /* there was no old file */
     {

@@ -94,7 +94,7 @@ void final_init()
 [[noreturn]] //
 void finalize(int status)
 {
-    sc_sv_savefile();   /* save any scores from memory to disk */
+    sc_sv_save_file();   /* save any scores from memory to disk */
     update_thread_kill_file();
     color_default();
     termlib_reset();
