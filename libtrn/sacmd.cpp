@@ -44,7 +44,7 @@ int sa_do_cmd()
     long    b; /* misc. artnum */
     int     i; /* for misc. purposes */
 
-    long    a = (long)g_page_ents[g_s_ptr_page_line].entnum;
+    long    a = (long)g_page_ents[g_s_ptr_page_line].ent_num;
     ArticleNum artnum = g_sa_ents[a].artnum;
 
     switch (*g_buf)
@@ -92,10 +92,10 @@ int sa_do_cmd()
             /* Do not kill threads with the first article marked, as it is probably
              * not what the user wanted.
              */
-            if (!sa_marked(g_page_ents[j].entnum) || !g_sa_mode_fold)
+            if (!sa_marked(g_page_ents[j].ent_num) || !g_sa_mode_fold)
             {
                 (void)sa_art_cmd(g_sa_mode_fold,SA_KILL_UNMARKED,
-                                 g_page_ents[j].entnum);
+                                 g_page_ents[j].ent_num);
             }
         }
         /* consider: should it start reading? */
@@ -115,9 +115,9 @@ int sa_do_cmd()
         {
             for (int j = 0; j <= g_s_bot_ent; j++)
             {
-                if (sa_marked(g_page_ents[j].entnum))
+                if (sa_marked(g_page_ents[j].ent_num))
                 {
-                    (void) sa_art_cmd(true, SA_KILL, g_page_ents[j].entnum);
+                    (void) sa_art_cmd(true, SA_KILL, g_page_ents[j].ent_num);
                 }
             }
         }
@@ -125,7 +125,7 @@ int sa_do_cmd()
         {
             for (int j = 0; j <= g_s_bot_ent; j++)
             {
-                (void) sa_art_cmd(false, SA_KILL_MARKED, g_page_ents[j].entnum);
+                (void) sa_art_cmd(false, SA_KILL_MARKED, g_page_ents[j].ent_num);
             }
         }
         g_s_refill = true;
@@ -372,7 +372,7 @@ int sa_do_cmd()
         }
         else
         {
-            if (!s_next_elig(g_page_ents[g_s_bot_ent].entnum))
+            if (!s_next_elig(g_page_ents[g_s_bot_ent].ent_num))
             {
                 s_beep();
                 return 0;
@@ -404,7 +404,7 @@ int sa_do_cmd()
         }
         for (int j = g_s_ptr_page_line+1; j <= g_s_bot_ent; j++)
         {
-            if (g_page_ents[j].entnum == b)     /* art is on same page */
+            if (g_page_ents[j].ent_num == b)     /* art is on same page */
             {
                 s_rub_ptr();
                 g_s_ptr_page_line = j;
@@ -427,7 +427,7 @@ int sa_do_cmd()
         }
         for (int j = 0; j <= g_s_bot_ent; j++)
         {
-            if (g_page_ents[j].entnum == b)     /* art is on same page */
+            if (g_page_ents[j].ent_num == b)     /* art is on same page */
             {
                 s_rub_ptr();
                 g_s_ptr_page_line = j;
@@ -455,7 +455,7 @@ int sa_do_cmd()
         }
         for (int j = g_s_ptr_page_line-1; j >= 0; j--)
         {
-            if (g_page_ents[j].entnum == b)     /* art is on same page */
+            if (g_page_ents[j].ent_num == b)     /* art is on same page */
             {
                 s_rub_ptr();
                 g_s_ptr_page_line = j;

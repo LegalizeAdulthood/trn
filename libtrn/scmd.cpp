@@ -82,7 +82,7 @@ int s_cmdloop()
             g_s_resized = false;                /* dealt with */
         }
         i = s_docmd();
-        if (i == S_NOTFOUND)    /* command not in common set */
+        if (i == S_NOT_FOUND)    /* command not in common set */
         {
             switch (g_s_cur_type)
             {
@@ -133,7 +133,7 @@ int s_docmd()
 {
     bool flag; /* misc */
 
-    long a = g_page_ents[g_s_ptr_page_line].entnum;
+    long a = g_page_ents[g_s_ptr_page_line].ent_num;
     if (*g_buf == '\f') /* map form feed to ^l */
     {
         *g_buf = Ctl('l');
@@ -143,7 +143,7 @@ int s_docmd()
     case 'j':         /* vi mode */
         if (!g_s_mode_vi)
         {
-            return S_NOTFOUND;
+            return S_NOT_FOUND;
         }
         /* FALL THROUGH */
 
@@ -156,7 +156,7 @@ int s_docmd()
         }
         else
         {
-            if (!s_next_elig(g_page_ents[g_s_bot_ent].entnum))
+            if (!s_next_elig(g_page_ents[g_s_bot_ent].ent_num))
             {
                 s_beep();
                 g_s_refill = true;
@@ -169,7 +169,7 @@ int s_docmd()
     case 'k': /* vi mode */
         if (!g_s_mode_vi)
         {
-            return S_NOTFOUND;
+            return S_NOT_FOUND;
         }
         /* FALL THROUGH */
 
@@ -182,7 +182,7 @@ int s_docmd()
         }
         else
         {
-            if (s_prev_elig(g_page_ents[0].entnum))
+            if (s_prev_elig(g_page_ents[0].ent_num))
             {
                 s_go_prev_page();
                 g_s_ptr_page_line = g_s_bot_ent; /* go to page bot. */
@@ -207,7 +207,7 @@ int s_docmd()
 
     case '>': /* next page */
         s_rub_ptr();
-        a = s_next_elig(g_page_ents[g_s_bot_ent].entnum);
+        a = s_next_elig(g_page_ents[g_s_bot_ent].ent_num);
         if (!a)                 /* at end of articles */
         {
             s_beep();
@@ -218,7 +218,7 @@ int s_docmd()
 
     case '<': /* previous page */
         s_rub_ptr();
-        if (!s_prev_elig(g_page_ents[0].entnum))
+        if (!s_prev_elig(g_page_ents[0].ent_num))
         {
             s_beep();
             break;
@@ -322,25 +322,25 @@ int s_docmd()
         break;
 
     case '#':         /* Toggle item numbers */
-        if (g_s_itemnum)
+        if (g_s_item_num)
         {
             /* turn off item numbers */
-            g_s_desc_cols += g_s_itemnum_cols;
-            g_s_itemnum_cols = 0;
-            g_s_itemnum = 0;
+            g_s_desc_cols += g_s_item_num_cols;
+            g_s_item_num_cols = 0;
+            g_s_item_num = 0;
         }
         else
         {
             /* turn on item numbers */
-            g_s_itemnum_cols = 3;
-            g_s_desc_cols -= g_s_itemnum_cols;
-            g_s_itemnum = 1;
+            g_s_item_num_cols = 3;
+            g_s_desc_cols -= g_s_item_num_cols;
+            g_s_item_num = 1;
         }
         g_s_ref_all = true;
         break;
 
     default:
-        return S_NOTFOUND;              /* not one of the simple commands */
+        return S_NOT_FOUND;              /* not one of the simple commands */
     } /* switch */
     return 0;           /* keep on looping! */
 }
@@ -453,7 +453,7 @@ void s_search()
     s_go_bot();
     std::printf("Searching for %s",s_search_text);
     std::fflush(stdout);
-    long ent = g_page_ents[g_s_ptr_page_line].entnum;
+    long ent = g_page_ents[g_s_ptr_page_line].ent_num;
     switch (*g_buf)
     {
     case '/':
@@ -474,7 +474,7 @@ void s_search()
         {
             ent = s_forward_search(0);  /* from top */
             /* did we just loop around? */
-            if (ent == g_page_ents[g_s_ptr_page_line].entnum)
+            if (ent == g_page_ents[g_s_ptr_page_line].ent_num)
             {
                 ent = 0;
                 error_msg = "No other entry matches.";
@@ -502,7 +502,7 @@ void s_search()
     }
     for (int i = 0; i <= g_s_bot_ent; i++)
     {
-        if (g_page_ents[i].entnum == ent)               /* entry is on same page */
+        if (g_page_ents[i].ent_num == ent)               /* entry is on same page */
         {
             g_s_ptr_page_line = i;
             return;

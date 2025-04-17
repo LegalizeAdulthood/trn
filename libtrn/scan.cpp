@@ -36,7 +36,7 @@ short g_s_top_lines{};    /* lines for top status bar */
 short g_s_bot_lines{};    /* lines for bottom status bar */
 short g_s_status_cols{};  /* characters for status column */
 short g_s_cursor_cols{};  /* characters for cursor column */
-short g_s_itemnum_cols{}; /* characters for item number column */
+short g_s_item_num_cols{}; /* characters for item number column */
 short g_s_desc_cols{};    /* characters for description column */
 /* pointer info */
 short         g_s_ptr_page_line{}; /* page_ent index */
@@ -46,7 +46,7 @@ ScanContext     *g_s_contexts{};      /* array of context structures */
 int           g_s_cur_context{};   /* current context number */
 ScanContextType g_s_cur_type{};      /* current context type (for fast switching) */
 /* options */
-int g_s_itemnum{true}; /* show item numbers by default */
+int g_s_item_num{true}; /* show item numbers by default */
 int g_s_mode_vi{};
 
 void s_init_context(int cnum, ScanContextType type)
@@ -79,16 +79,16 @@ void s_init_context(int cnum, ScanContextType type)
     p->status_cols = 0;
     p->cursor_cols = 0;
     p->desc_cols = 0;
-    p->itemnum_cols = 0;
+    p->item_num_cols = 0;
     p->ptr_page_line = 0;
     p->flags = 0;
     /* clear the page entries */
     for (int i = 0; i < MAX_PAGE_SIZE; i++)
     {
-        p->page_ents[i].entnum = 0;
+        p->page_ents[i].ent_num = 0;
         p->page_ents[i].lines = 0;
         p->page_ents[i].start_line = 0;
-        p->page_ents[i].pageflags = (char)0;
+        p->page_ents[i].page_flags = (char)0;
     }
 }
 
@@ -160,7 +160,7 @@ void s_save_context()
     p->status_cols = g_s_status_cols;
     p->cursor_cols = g_s_cursor_cols;
     p->desc_cols = g_s_desc_cols;
-    p->itemnum_cols = g_s_itemnum_cols;
+    p->item_num_cols = g_s_item_num_cols;
     p->ptr_page_line = g_s_ptr_page_line;
     p->flags = g_s_flags;
 }
@@ -200,7 +200,7 @@ void s_change_context(int newcontext)
     g_s_status_cols = p->status_cols;
     g_s_cursor_cols = p->cursor_cols;
     g_s_desc_cols = p->desc_cols;
-    g_s_itemnum_cols = p->itemnum_cols;
+    g_s_item_num_cols = p->item_num_cols;
     g_s_ptr_page_line = p->ptr_page_line;
     g_s_flags = p->flags;
 }

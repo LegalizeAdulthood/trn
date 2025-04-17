@@ -874,7 +874,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_SCAN_ITEM_NUM:
-        g_s_itemnum = YES(s);
+        g_s_item_num = YES(s);
         break;
 
     case OI_SCAN_VI:
@@ -1408,7 +1408,7 @@ const char *option_value(OptionIndex num)
         return expand_mouse_buttons(g_art_pager_btns,g_art_pager_btn_cnt);
 
     case OI_SCAN_ITEM_NUM:
-        return yes_or_no(g_s_itemnum);
+        return yes_or_no(g_s_item_num);
 
     case OI_SCAN_VI:
         return yes_or_no(g_s_mode_vi);

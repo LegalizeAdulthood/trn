@@ -39,8 +39,8 @@ void s_mail_and_place()
     std::printf("%s",g_mail_call);
 #endif /* MAILCALL */
     /* print page status wrt all entries */
-    previous = (0 != s_prev_elig(g_page_ents[0].entnum));
-    next = (0 != s_next_elig(g_page_ents[g_s_bot_ent].entnum));
+    previous = (0 != s_prev_elig(g_page_ents[0].ent_num));
+    next = (0 != s_next_elig(g_page_ents[g_s_bot_ent].ent_num));
     if (previous && next)
     {
         std::printf("-MIDDLE-");             /* middle of entries */
@@ -130,7 +130,7 @@ void s_place_ptr()
 /* note: descriptions will not (for now) be individually refreshable */
 void s_refresh_status(int line)
 {
-    long ent = g_page_ents[line].entnum;
+    long ent = g_page_ents[line].ent_num;
     TRN_ASSERT(line <= g_s_bot_ent);    /* better be refreshing on-page */
     s_goxy(0,g_s_top_lines+g_page_ents[line].start_line);
     int j = g_page_ents[line].lines;
@@ -143,7 +143,7 @@ void s_refresh_status(int line)
 
 void s_refresh_description(int line)
 {
-    long ent = g_page_ents[line].entnum;
+    long ent = g_page_ents[line].ent_num;
     TRN_ASSERT(line <= g_s_bot_ent);    /* better be refreshing on-page */
     int startline = g_s_top_lines + g_page_ents[line].start_line;
     int j = g_page_ents[line].lines;
@@ -151,7 +151,7 @@ void s_refresh_description(int line)
     {
         s_goxy(g_s_status_cols+g_s_cursor_cols,(i-1)+startline);
         /* allow flexible format later? */
-        if (g_s_itemnum_cols)
+        if (g_s_item_num_cols)
         {
             if (i == 1)         /* first description line */
             {
@@ -179,7 +179,7 @@ void s_refresh_description(int line)
 //int jump;     /* true means that the cursor should be positioned */
 void s_ref_entry(int line, int jump)
 {
-    long ent = g_page_ents[line].entnum;
+    long ent = g_page_ents[line].ent_num;
     TRN_ASSERT(line <= g_s_bot_ent);    /* better be refreshing on-page */
     if (jump)
     {
@@ -190,7 +190,7 @@ void s_ref_entry(int line, int jump)
     {
         /* later replace middle with variable #spaces routine */
         std::printf("%s%s",s_get_statchars(ent,i),"  ");
-        if (g_s_itemnum_cols)
+        if (g_s_item_num_cols)
         {
             if (i == 1)         /* first description line */
             {
@@ -282,7 +282,7 @@ void s_ref_status_onpage(long ent)
 {
     for (int i = 0; i <= g_s_bot_ent; i++)
     {
-        if (g_page_ents[i].entnum == ent)
+        if (g_page_ents[i].ent_num == ent)
         {
             s_refresh_status(i);
         }

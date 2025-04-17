@@ -76,7 +76,7 @@ bool s_fillpage_backward(long end)
     /* later do sheer paranoia check for min_page_ents */
     while ((line_on + s_ent_lines(a)) <= page_lines)
     {
-        g_page_ents[min_page_ents].entnum = a;
+        g_page_ents[min_page_ents].ent_num = a;
         i = s_ent_lines(a);
         g_page_ents[min_page_ents].lines = i;
         min_page_ents--;
@@ -96,15 +96,15 @@ bool s_fillpage_backward(long end)
     line_on = 0;
     for (int k = min_page_ents + 1; k < MAX_PAGE_SIZE; k++)
     {
-        g_page_ents[j].entnum = g_page_ents[k].entnum;
-        g_page_ents[j].pageflags = (char)0;
+        g_page_ents[j].ent_num = g_page_ents[k].ent_num;
+        g_page_ents[j].page_flags = (char)0;
         g_page_ents[j].lines = g_page_ents[k].lines;
         g_page_ents[j].start_line = line_on;
         line_on = line_on + g_page_ents[j].lines;
         j++;
     }
     /* set new g_s_top_ent */
-    g_s_top_ent = g_page_ents[0].entnum;
+    g_s_top_ent = g_page_ents[0].ent_num;
     /* Now, suppose that the pointer position is off the page.  That would
      * be bad, so lets make sure it doesn't happen.
      */
@@ -119,7 +119,7 @@ bool s_fillpage_backward(long end)
      */
     for (i = 0; i <= g_s_bot_ent; i++)
     {
-        if (is_unavailable(g_sa_ents[g_page_ents[i].entnum].artnum))
+        if (is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
         {
             break;
         }
@@ -186,11 +186,11 @@ bool s_fillpage_forward(long start)
     while ((line_on + s_ent_lines(a)) <= page_lines)
     {
         g_s_bot_ent += 1;
-        g_page_ents[g_s_bot_ent].entnum = a;
+        g_page_ents[g_s_bot_ent].ent_num = a;
         g_page_ents[g_s_bot_ent].start_line = line_on;
         i = s_ent_lines(a);
         g_page_ents[g_s_bot_ent].lines = i;
-        g_page_ents[g_s_bot_ent].pageflags = (char)0;
+        g_page_ents[g_s_bot_ent].page_flags = (char)0;
         line_on = line_on+i;
         a = s_next_elig(a);
         if (!a)         /* no more eligible */
@@ -203,7 +203,7 @@ bool s_fillpage_forward(long start)
      * be bad, so lets make sure it doesn't happen.
      */
     /* set new g_s_top_ent */
-    g_s_top_ent = g_page_ents[0].entnum;
+    g_s_top_ent = g_page_ents[0].ent_num;
     g_s_ptr_page_line = std::min<long>(g_s_ptr_page_line, g_s_bot_ent);
     if (g_s_cur_type != S_ART)
     {
@@ -215,7 +215,7 @@ bool s_fillpage_forward(long start)
      */
     for (i = 0; i <= g_s_bot_ent; i++)
     {
-        if (is_unavailable(g_sa_ents[g_page_ents[i].entnum].artnum))
+        if (is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
         {
             break;
         }
@@ -255,9 +255,9 @@ bool s_refillpage()
      * just refill the whole page.
      */
     if (g_s_bot_ent < 1 || g_s_top_ent < 1
-     || g_s_top_ent != g_page_ents[0].entnum || !s_eligible(g_page_ents[0].entnum)
+     || g_s_top_ent != g_page_ents[0].ent_num || !s_eligible(g_page_ents[0].ent_num)
      || g_page_ents[0].start_line != 0
-     || g_page_ents[0].lines != s_ent_lines(g_page_ents[0].entnum))
+     || g_page_ents[0].lines != s_ent_lines(g_page_ents[0].ent_num))
     {
         return s_fillpage_forward(g_s_top_ent);
     }
@@ -271,12 +271,12 @@ bool s_refillpage()
      *  this case the start_line entry of g_page_ents[0] could be overwritten
      *  causing big problems...)
      */
-    a = s_next_elig(g_page_ents[0].entnum);
+    a = s_next_elig(g_page_ents[0].ent_num);
 
     /* similar to the tests in the last loop... */
-    while (i <= g_s_bot_ent && s_eligible(g_page_ents[i].entnum) //
-           && g_page_ents[i].entnum == a                         //
-           && g_page_ents[i].lines == s_ent_lines(g_page_ents[i].entnum))
+    while (i <= g_s_bot_ent && s_eligible(g_page_ents[i].ent_num) //
+           && g_page_ents[i].ent_num == a                         //
+           && g_page_ents[i].lines == s_ent_lines(g_page_ents[i].ent_num))
     {
         i++;
         a = s_next_elig(a);
@@ -284,18 +284,18 @@ bool s_refillpage()
     j = i-1;    /* j is the last "good" entry */
 
     g_s_bot_ent = j;
-    line_on = g_page_ents[j].start_line + s_ent_lines(g_page_ents[j].entnum);
-    a = s_next_elig(g_page_ents[j].entnum);
+    line_on = g_page_ents[j].start_line + s_ent_lines(g_page_ents[j].ent_num);
+    a = s_next_elig(g_page_ents[j].ent_num);
 
     set_spin(SPIN_BACKGROUND);
     while (a && line_on + s_ent_lines(a) <= page_lines)
     {
         i = s_ent_lines(a);
         g_s_bot_ent += 1;
-        g_page_ents[g_s_bot_ent].entnum = a;
+        g_page_ents[g_s_bot_ent].ent_num = a;
         g_page_ents[g_s_bot_ent].lines = i;
         g_page_ents[g_s_bot_ent].start_line = line_on;
-        g_page_ents[g_s_bot_ent].pageflags = (char)0;
+        g_page_ents[g_s_bot_ent].page_flags = (char)0;
         line_on = line_on+i;
         a = s_next_elig(a);
     }
@@ -321,7 +321,7 @@ bool s_refillpage()
      */
     for (i = 0; i <= g_s_bot_ent; i++)
     {
-        if (is_unavailable(g_sa_ents[g_page_ents[i].entnum].artnum))
+        if (is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
         {
             break;
         }
@@ -385,7 +385,7 @@ int s_fillpage()
      */
     for (int j = 0; j <= g_s_bot_ent; j++)
     {
-        if (!s_eligible(g_page_ents[j].entnum))
+        if (!s_eligible(g_page_ents[j].ent_num))
         {
             return s_fillpage();  /* ineligible won't be chosen again */
         }
@@ -397,7 +397,7 @@ int s_fillpage()
     /* be extra cautious about the article scan pages */
     for (i = 0; i <= g_s_bot_ent; i++)
     {
-        if (is_unavailable(g_sa_ents[g_page_ents[i].entnum].artnum))
+        if (is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
         {
             break;
         }
@@ -465,7 +465,7 @@ bool s_go_bot_ents()
 
 void s_go_next_page()
 {
-    long a = s_next_elig(g_page_ents[g_s_bot_ent].entnum);
+    long a = s_next_elig(g_page_ents[g_s_bot_ent].ent_num);
     if (!a)
     {
         return;         /* no next page (we shouldn't have been called) */
@@ -478,7 +478,7 @@ void s_go_next_page()
 
 void s_go_prev_page()
 {
-    long a = s_prev_elig(g_page_ents[0].entnum);
+    long a = s_prev_elig(g_page_ents[0].ent_num);
     if (!a)
     {
         return;         /* no prev. page (we shouldn't have been called) */
