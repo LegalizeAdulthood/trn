@@ -81,7 +81,7 @@ struct UserHeaderType
     char  flags;  /* the header's flags */
 };
 
-extern HeaderType      g_htype[HEAD_LAST];
+extern HeaderType      g_header_type[HEAD_LAST];
 extern UserHeaderType *g_user_htype;
 extern short           g_user_htype_index[26];
 extern int             g_user_htype_count;

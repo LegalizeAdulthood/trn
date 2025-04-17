@@ -1275,7 +1275,7 @@ void sf_print_match(int indx)
     }
     else
     {
-        head_name = g_htype[s_sf_entries[indx].head_type].name;
+        head_name = g_header_type[s_sf_entries[indx].head_type].name;
     }
     std::printf("%d %s%s: %s", s_sf_entries[indx].score,pattern,head_name,
            s_sf_entries[indx].str1);

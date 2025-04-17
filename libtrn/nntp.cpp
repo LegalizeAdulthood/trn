@@ -274,7 +274,7 @@ void nntp_body(ArticleNum art_num)
     {
         std::fwrite(g_head_buf, 1, std::strlen(g_head_buf), g_art_fp);
         s_body_end = (ArticlePosition)std::ftell(g_art_fp);
-        g_htype[PAST_HEADER].min_pos = s_body_end;
+        g_header_type[PAST_HEADER].min_pos = s_body_end;
     }
     else
     {

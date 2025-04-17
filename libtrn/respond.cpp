@@ -79,7 +79,7 @@ SaveResult save_article()
     parse_header(g_art);
     mime_set_article();
     clear_art_buf();
-    g_save_from = (cmd == 'w' || cmd == 'e')? g_htype[PAST_HEADER].min_pos : 0;
+    g_save_from = (cmd == 'w' || cmd == 'e')? g_header_type[PAST_HEADER].min_pos : 0;
     if (art_open(g_art, g_save_from) == nullptr)
     {
         if (g_verbose)
@@ -584,7 +584,7 @@ SaveResult view_article()
     parse_header(g_art);
     mime_set_article();
     clear_art_buf();
-    g_save_from = g_htype[PAST_HEADER].min_pos;
+    g_save_from = g_header_type[PAST_HEADER].min_pos;
     if (art_open(g_art, g_save_from) == nullptr)
     {
         if (g_verbose)
@@ -791,7 +791,7 @@ int supersede_article()         /* Supersedes: */
         if (incl_body && g_art_fp != nullptr)
         {
             parse_header(g_art);
-            seek_art(g_htype[PAST_HEADER].min_pos);
+            seek_art(g_header_type[PAST_HEADER].min_pos);
             while (read_art(g_buf,LBUFLEN) != nullptr)
             {
                 std::fputs(g_buf, header);
@@ -895,7 +895,7 @@ void reply()
         parse_header(g_art);
         mime_set_article();
         clear_art_buf();
-        seek_art(g_htype[PAST_HEADER].min_pos);
+        seek_art(g_header_type[PAST_HEADER].min_pos);
         g_wrapped_nl = '\n';
         while ((s = read_art_buf(false)) != nullptr)
         {
@@ -1110,7 +1110,7 @@ void followup()
         parse_header(g_art);
         mime_set_article();
         clear_art_buf();
-        seek_art(g_htype[PAST_HEADER].min_pos);
+        seek_art(g_header_type[PAST_HEADER].min_pos);
         g_wrapped_nl = '\n';
         while ((s = read_art_buf(false)) != nullptr)
         {

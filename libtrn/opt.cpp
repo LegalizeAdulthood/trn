@@ -1480,11 +1480,11 @@ static char *magic_list()
     g_buf[1] = '\0';
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
     {
-        if (!(g_htype[i].flags & HT_MAGIC) != !(g_htype[i].flags & HT_DEF_MAGIC))
+        if (!(g_header_type[i].flags & HT_MAGIC) != !(g_header_type[i].flags & HT_DEF_MAGIC))
         {
             std::sprintf(g_buf+std::strlen(g_buf),",%s%s",
-                    (g_htype[i].flags & HT_DEF_MAGIC)? "!" : "",
-                    g_htype[i].name);
+                    (g_header_type[i].flags & HT_DEF_MAGIC)? "!" : "",
+                    g_header_type[i].name);
         }
     }
     return g_buf+1;
@@ -1510,9 +1510,9 @@ static void set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, const
     }
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
     {
-        g_htype[i].flags = ((g_htype[i].flags & defflag)
-                       ? (g_htype[i].flags | flag)
-                       : (g_htype[i].flags & ~flag));
+        g_header_type[i].flags = ((g_header_type[i].flags & defflag)
+                       ? (g_header_type[i].flags | flag)
+                       : (g_header_type[i].flags & ~flag));
     }
     std::unique_ptr<char[]> buffer(new char[std::strlen(str) + 1]);
     char *buff = buffer.get();
@@ -1548,15 +1548,15 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
     int len = std::strlen(s);
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
     {
-        if (!len || string_case_equal(s, g_htype[i].name, len))
+        if (!len || string_case_equal(s, g_header_type[i].name, len))
         {
-            if (setit && (flag != HT_MAGIC || (g_htype[i].flags & HT_MAGIC_OK)))
+            if (setit && (flag != HT_MAGIC || (g_header_type[i].flags & HT_MAGIC_OK)))
             {
-                g_htype[i].flags |= flag;
+                g_header_type[i].flags |= flag;
             }
             else
             {
-                g_htype[i].flags &= ~flag;
+                g_header_type[i].flags &= ~flag;
             }
         }
     }

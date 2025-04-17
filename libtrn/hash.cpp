@@ -21,24 +21,24 @@
 
 struct HashEntry
 {
-    HashEntry* he_next;           /* in hash chain */
-    HashDatum he_data;
-    int he_keylen;              /* to help verify a match */
+    HashEntry *he_next; /* in hash chain */
+    HashDatum  he_data;
+    int        he_key_len; /* to help verify a match */
 };
 
 struct HashTable
 {
-    HashEntry** ht_addr;          /* array of HASHENT pointers */
-    unsigned ht_size;
-    char ht_magic;
+    HashEntry     **ht_addr; /* array of HASHENT pointers */
+    unsigned        ht_size;
+    char            ht_magic;
     HashCompareFunc ht_cmp;
 };
 
-static HashEntry **hashfind(HashTable *tbl, const char *key, int keylen);
-static unsigned hash(const char *key, int keylen);
-static int default_cmp(const char *key, int keylen, HashDatum data);
-static HashEntry *healloc();
-static void hefree(HashEntry *hp);
+static HashEntry **hash_find(HashTable *tbl, const char *key, int keylen);
+static unsigned    hash(const char *key, int keylen);
+static int         default_cmp(const char *key, int keylen, HashDatum data);
+static HashEntry  *hash_entry_alloc();
+static void        hash_entry_free(HashEntry *hp);
 
 /* In the future it might be a good idea to preallocate a region
  * of hashents, since allocation overhead on some systems will be as
@@ -47,7 +47,7 @@ static void hefree(HashEntry *hp);
 /* grab this many hashents at a time (under 1024 for malloc overhead) */
 enum
 {
-    HEBLOCKSIZE = 1000
+    HASH_ENTRY_BLOCK_SIZE = 1000
 };
 
 /* define the following if you actually want to free the hashents
@@ -64,8 +64,8 @@ enum
     RETAIN = 1000 /* retain & recycle this many HASHENTs */
 };
 
-static HashEntry *s_hereuse{};
-static int      s_reusables{};
+static HashEntry *s_hash_entry_reuse{};
+static int        s_reusables{};
 
 /* size - a crude guide to size */
 HashTable *hash_create(unsigned size, HashCompareFunc cmp_func)
@@ -105,7 +105,7 @@ void hash_destroy(HashTable *tbl)
         {
             next = hp->he_next;
             hp->he_next = nullptr;
-            hefree(hp);
+            hash_entry_free(hp);
         }
         hepp[idx] = nullptr;
     }
@@ -116,13 +116,13 @@ void hash_destroy(HashTable *tbl)
 
 void hash_store(HashTable *tbl, const char *key, int key_len, HashDatum data)
 {
-    HashEntry **nextp = hashfind(tbl, key, key_len);
+    HashEntry **nextp = hash_find(tbl, key, key_len);
     HashEntry *hp = *nextp;
     if (hp == nullptr)              /* absent; allocate an entry */
     {
-        hp = healloc();
+        hp = hash_entry_alloc();
         hp->he_next = nullptr;
-        hp->he_keylen = key_len;
+        hp->he_key_len = key_len;
         *nextp = hp;                /* append to hash chain */
     }
     hp->he_data = data;             /* supersede any old data for this key */
@@ -130,7 +130,7 @@ void hash_store(HashTable *tbl, const char *key, int key_len, HashDatum data)
 
 void hash_delete(HashTable *tbl, const char *key, int key_len)
 {
-    HashEntry **nextp = hashfind(tbl, key, key_len);
+    HashEntry **nextp = hash_find(tbl, key, key_len);
     HashEntry *hp = *nextp;
     if (hp == nullptr)                  /* absent */
     {
@@ -139,7 +139,7 @@ void hash_delete(HashTable *tbl, const char *key, int key_len)
     *nextp = hp->he_next;               /* skip this entry */
     hp->he_next = nullptr;
     hp->he_data.dat_ptr = nullptr;
-    hefree(hp);
+    hash_entry_free(hp);
 }
 
 static HashEntry **s_slast_nextp{};
@@ -150,7 +150,7 @@ HashDatum hash_fetch(HashTable *tbl, const char *key, int key_len)
 {
     static HashDatum errdatum{nullptr, 0};
 
-    HashEntry **nextp = hashfind(tbl, key, key_len);
+    HashEntry **nextp = hash_find(tbl, key, key_len);
     s_slast_nextp = nextp;
     s_slast_keylen = key_len;
     HashEntry *hp = *nextp;
@@ -166,9 +166,9 @@ void hash_store_last(HashDatum data)
     HashEntry *hp = *s_slast_nextp;
     if (hp == nullptr)                          /* absent; allocate an entry */
     {
-        hp = healloc();
+        hp = hash_entry_alloc();
         hp->he_next = nullptr;
-        hp->he_keylen = s_slast_keylen;
+        hp->he_key_len = s_slast_keylen;
         *s_slast_nextp = hp;              /* append to hash chain */
     }
     hp->he_data = data;         /* supersede any old data for this key */
@@ -194,11 +194,11 @@ void hash_walk(HashTable *tbl, HashWalkFunc node_func, int extra)
         for (HashEntry *hp = *s_slast_nextp; hp != nullptr; hp = next)
         {
             next = hp->he_next;
-            if ((*node_func)(hp->he_keylen, &hp->he_data, extra) < 0)
+            if ((*node_func)(hp->he_key_len, &hp->he_data, extra) < 0)
             {
                 *s_slast_nextp = next;
                 hp->he_next = nullptr;
-                hefree(hp);
+                hash_entry_free(hp);
             }
             else
             {
@@ -213,7 +213,7 @@ void hash_walk(HashTable *tbl, HashWalkFunc node_func, int extra)
 ** if so, this pointer should be updated with the address of the object
 ** to be inserted, if insertion is desired.
 */
-static HashEntry **hashfind(HashTable *tbl, const char *key, int keylen)
+static HashEntry **hash_find(HashTable *tbl, const char *key, int keylen)
 {
     HashEntry* prevhp = nullptr;
 
@@ -226,7 +226,7 @@ static HashEntry **hashfind(HashTable *tbl, const char *key, int keylen)
     HashEntry **hepp = &tbl->ht_addr[hash(key, keylen) % size];
     for (HashEntry *hp = *hepp; hp != nullptr; prevhp = hp, hp = hp->he_next)
     {
-        if (hp->he_keylen == keylen && !(*tbl->ht_cmp)(key, keylen, hp->he_data))
+        if (hp->he_key_len == keylen && !(*tbl->ht_cmp)(key, keylen, hp->he_data))
         {
             break;
         }
@@ -254,37 +254,37 @@ static int default_cmp(const char *key, int keylen, HashDatum data)
 }
 
 /* allocate a hash entry */
-static HashEntry *healloc()
+static HashEntry *hash_entry_alloc()
 {
     HashEntry* hp;
 
-    if (s_hereuse == nullptr)
+    if (s_hash_entry_reuse == nullptr)
     {
         int i;
 
         /* make a nice big block of hashents to play with */
-        hp = (HashEntry*)safe_malloc(HEBLOCKSIZE * sizeof (HashEntry));
+        hp = (HashEntry*)safe_malloc(HASH_ENTRY_BLOCK_SIZE * sizeof (HashEntry));
         /* set up the pointers within the block */
-        for (i = 0; i < HEBLOCKSIZE-1; i++)
+        for (i = 0; i < HASH_ENTRY_BLOCK_SIZE-1; i++)
         {
             (hp + i)->he_next = hp + i + 1;
         }
         /* The last block is the end of the list */
         (hp+i)->he_next = nullptr;
-        s_hereuse = hp;         /* start of list is the first item */
-        s_reusables += HEBLOCKSIZE;
+        s_hash_entry_reuse = hp;         /* start of list is the first item */
+        s_reusables += HASH_ENTRY_BLOCK_SIZE;
     }
 
     /* pull the first reusable one off the pile */
-    hp = s_hereuse;
-    s_hereuse = s_hereuse->he_next;
+    hp = s_hash_entry_reuse;
+    s_hash_entry_reuse = s_hash_entry_reuse->he_next;
     hp->he_next = nullptr;                      /* prevent accidents */
     s_reusables--;
     return hp;
 }
 
 /* free a hash entry */
-static void hefree(HashEntry *hp)
+static void hash_entry_free(HashEntry *hp)
 {
 #ifdef HASH_FREE_ENTRIES
     if (s_reusables >= RETAIN)          /* compost heap is full? */
@@ -300,8 +300,8 @@ static void hefree(HashEntry *hp)
 #else
     /* always add to list */
     ++s_reusables;
-    hp->he_next = s_hereuse;
-    s_hereuse = hp;
+    hp->he_next = s_hash_entry_reuse;
+    s_hash_entry_reuse = hp;
 #endif
 }
 
