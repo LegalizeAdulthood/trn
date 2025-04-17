@@ -14,7 +14,7 @@
 #include <cstring>
 #include <string>
 
-static bool matchlist(const char *patlist, const char *s);
+static bool match_list(const char *patlist, const char *s);
 
 /* Consider the newsgroup specified, and return:        */
 /* : if we should autosubscribe to it                   */
@@ -23,13 +23,13 @@ static bool matchlist(const char *patlist, const char *s);
 AddNewType auto_subscribe(const char *name)
 {
     const char *s = get_val_const("AUTOSUBSCRIBE", nullptr);
-    if (s && matchlist(s, name))
+    if (s && match_list(s, name))
     {
         return ADDNEW_SUB;
     }
 
     s = get_val_const("AUTOUNSUBSCRIBE", nullptr);
-    if (s && matchlist(s, name))
+    if (s && match_list(s, name))
     {
         return ADDNEW_UNSUB;
     }
@@ -37,7 +37,7 @@ AddNewType auto_subscribe(const char *name)
     return ADDNEW_ASK;
 }
 
-static bool matchlist(const char *patlist, const char *s)
+static bool match_list(const char *patlist, const char *s)
 {
     CompiledRegex ilcompex;
     bool   tmpresult;
