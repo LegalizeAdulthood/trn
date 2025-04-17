@@ -776,7 +776,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_NEWGROUP_CHECK:
-        g_quickstart = !YES(s);
+        g_quick_start = !YES(s);
         break;
 
     case OI_RESTRICTION_INCLUDES_EMPTIES:
@@ -1354,7 +1354,7 @@ const char *option_value(OptionIndex num)
         return YESorNO(g_auto_view_inline);
 
     case OI_NEWGROUP_CHECK:
-        return YESorNO(!g_quickstart);
+        return YESorNO(!g_quick_start);
 
     case OI_RESTRICTION_INCLUDES_EMPTIES:
         return YESorNO(g_empty_only_char == 'o');

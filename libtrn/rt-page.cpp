@@ -527,9 +527,9 @@ try_again:
 
     case SM_ADDGROUP:
     {
-        sort_addgroups();
+        sort_add_groups();
         g_obj_count = 0;
-        for (AddGroup *gp = g_first_addgroup; gp; gp = gp->next)
+        for (AddGroup *gp = g_first_add_group; gp; gp = gp->next)
         {
             if (g_sel_page_gp == gp)
             {
@@ -561,7 +561,7 @@ try_again:
         {
             (void) first_page();
         }
-        else if (g_sel_page_gp == g_last_addgroup)
+        else if (g_sel_page_gp == g_last_add_group)
         {
             (void) last_page();
         }
@@ -964,7 +964,7 @@ bool first_page()
 
     case SM_ADDGROUP:
     {
-        for (AddGroup *gp = g_first_addgroup; gp; gp = gp->next)
+        for (AddGroup *gp = g_first_add_group; gp; gp = gp->next)
         {
             if (gp->flags & AGF_INCLUDED)
             {
@@ -1324,7 +1324,7 @@ bool prev_page()
 
         if (!gp)
         {
-            gp = g_last_addgroup;
+            gp = g_last_add_group;
         }
         else
         {
@@ -1833,7 +1833,7 @@ try_again:
             }
 
             // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
-            TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DELSEL)) == 0);
+            TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DEL_SEL)) == 0);
             sel = !!(mp->flags & static_cast<MultircFlags>(g_sel_mask));
             g_sel_items[g_sel_page_item_cnt].u.mp = mp;
             g_sel_items[g_sel_page_item_cnt].line = g_term_line;
@@ -2004,8 +2004,8 @@ try_again:
 
             maybe_eol();
             output_sel(g_sel_page_item_cnt, sel, false);
-            std::printf("%5ld ", (long)gp->toread);
-            display_group(gp->datasrc, gp->name, std::strlen(gp->name), max_len);
+            std::printf("%5ld ", (long)gp->to_read);
+            display_group(gp->data_src, gp->name, std::strlen(gp->name), max_len);
             g_sel_page_item_cnt++;
         }
         if (!g_sel_page_obj_cnt)
@@ -2241,7 +2241,7 @@ void update_page()
         {
         case SM_MULTIRC:
             // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
-            TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DELSEL)) == 0);
+            TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DEL_SEL)) == 0);
             sel = !!(u.mp->flags & static_cast<MultircFlags>(g_sel_mask));
             break;
 

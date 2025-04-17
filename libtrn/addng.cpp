@@ -30,11 +30,11 @@
 #include <string>
 #include <ctime>
 
-AddGroup *g_first_addgroup{};
-AddGroup *g_last_addgroup{};
+AddGroup *g_first_add_group{};
+AddGroup *g_last_add_group{};
 AddGroup *g_sel_page_gp{};
 AddGroup *g_sel_next_gp{};
-bool      g_quickstart{};           /* -q */
+bool      g_quick_start{};           /* -q */
 bool      g_use_add_selector{true}; //
 
 static int s_addgroup_cnt{};
@@ -63,20 +63,20 @@ static int build_addgroup_list(int keylen, HashDatum *data, int extra)
 
     node->num = s_addgroup_cnt++;
     node->next = nullptr;
-    node->prev = g_last_addgroup;
-    if (g_last_addgroup)
+    node->prev = g_last_add_group;
+    if (g_last_add_group)
     {
-        g_last_addgroup->next = node;
+        g_last_add_group->next = node;
     }
     else
     {
-        g_first_addgroup = node;
+        g_first_add_group = node;
     }
-    g_last_addgroup = node;
+    g_last_add_group = node;
     return 0;
 }
 
-void addng_init()
+void add_ng_init()
 {
 }
 
@@ -85,7 +85,7 @@ bool find_new_groups()
     NewsgroupNum const oldcnt = g_newsgroup_cnt;      /* remember # newsgroups */
 
     /* Skip this check if the -q flag was given. */
-    if (g_quickstart)
+    if (g_quick_start)
     {
         return false;
     }
@@ -121,7 +121,7 @@ static void process_list(GetNewsgroupFlags flag)
                 g_multirc->first->next ? "s" : "");
         print_lines(g_cmd_buf, STANDOUT);
     }
-    AddGroup *node = g_first_addgroup;
+    AddGroup *node = g_first_add_group;
     if (node != nullptr && flag != GNG_NONE && g_use_add_selector)
     {
         addgroup_selector(flag);
@@ -141,8 +141,8 @@ static void process_list(GetNewsgroupFlags flag)
         node = node->next;
         std::free((char*)prevnode);
     }
-    g_first_addgroup = nullptr;
-    g_last_addgroup = nullptr;
+    g_first_add_group = nullptr;
+    g_last_add_group = nullptr;
     s_addgroup_cnt = 0;
 }
 
@@ -324,9 +324,9 @@ static void add_to_hash(HashTable *ng, const char *name, int toread, char_int ch
         node->flags = AGF_NONE;
         break;
     }
-    node->toread = (toread < 0)? 0 : toread;
+    node->to_read = (toread < 0)? 0 : toread;
     std::strcpy(node->name, name);
-    node->datasrc = g_datasrc;
+    node->data_src = g_datasrc;
     node->next = nullptr;
     node->prev = nullptr;
     hashstore(ng, name, namelen, data);
@@ -334,7 +334,7 @@ static void add_to_hash(HashTable *ng, const char *name, int toread, char_int ch
 
 static void add_to_list(const char *name, int toread, char_int ch)
 {
-    AddGroup* node = g_first_addgroup;
+    AddGroup* node = g_first_add_group;
 
     while (node)
     {
@@ -358,24 +358,24 @@ static void add_to_list(const char *name, int toread, char_int ch)
         node->flags = AGF_NONE;
         break;
     }
-    node->toread = (toread < 0)? 0 : toread;
+    node->to_read = (toread < 0)? 0 : toread;
     node->num = s_addgroup_cnt++;
     std::strcpy(node->name, name);
-    node->datasrc = g_datasrc;
+    node->data_src = g_datasrc;
     node->next = nullptr;
-    node->prev = g_last_addgroup;
-    if (g_last_addgroup)
+    node->prev = g_last_add_group;
+    if (g_last_add_group)
     {
-        g_last_addgroup->next = node;
+        g_last_add_group->next = node;
     }
     else
     {
-        g_first_addgroup = node;
+        g_first_add_group = node;
     }
-    g_last_addgroup = node;
+    g_last_add_group = node;
 }
 
-bool scanactive(bool add_matching)
+bool scan_active(bool add_matching)
 {
     NewsgroupNum const oldcnt = g_newsgroup_cnt;      /* remember # of newsgroups */
 
@@ -504,7 +504,7 @@ static int agorder_groupname(const AddGroup **app1, const AddGroup **app2)
 
 static int agorder_count(const AddGroup **app1, const AddGroup **app2)
 {
-    long const eq = (*app1)->toread - (*app2)->toread;
+    long const eq = (*app1)->to_read - (*app2)->to_read;
     if (eq)
     {
         return eq > 0 ? g_sel_direction : -g_sel_direction;
@@ -514,7 +514,7 @@ static int agorder_count(const AddGroup **app1, const AddGroup **app2)
 
 /* Sort the newsgroups into the chosen order.
 */
-void sort_addgroups()
+void sort_add_groups()
 {
     AddGroup* ap;
     AddGroup** lp;
@@ -535,7 +535,7 @@ void sort_addgroups()
     }
 
     AddGroup **ag_list = (AddGroup**)safemalloc(s_addgroup_cnt * sizeof(AddGroup*));
-    for (lp = ag_list, ap = g_first_addgroup; ap; ap = ap->next)
+    for (lp = ag_list, ap = g_first_add_group; ap; ap = ap->next)
     {
         *lp++ = ap;
     }
@@ -544,7 +544,7 @@ void sort_addgroups()
     std::qsort(ag_list, s_addgroup_cnt, sizeof(AddGroup*), (int(*)(void const *, void const *)) sort_procedure);
 
     ap = ag_list[0];
-    g_first_addgroup = ag_list[0];
+    g_first_add_group = ag_list[0];
     ap->prev = nullptr;
     lp = ag_list;
     for (int i = s_addgroup_cnt; --i; ++lp)
@@ -552,7 +552,7 @@ void sort_addgroups()
         lp[0]->next = lp[1];
         lp[1]->prev = lp[0];
     }
-    g_last_addgroup = lp[0];
-    g_last_addgroup->next = nullptr;
+    g_last_add_group = lp[0];
+    g_last_add_group->next = nullptr;
     std::free((char*)ag_list);
 }

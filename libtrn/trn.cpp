@@ -799,7 +799,7 @@ reask_abandon:
             }
             if (doscan && g_maxngtodo)
             {
-                scanactive(true);
+                scan_active(true);
             }
             g_ng_min_toread = *g_buf == g_empty_only_char && g_maxngtodo
                           ? TR_NONE : TR_ONE;
@@ -832,7 +832,7 @@ reask_abandon:
             sw_list(s);
         }
         page_start();
-        scanactive(false);
+        scan_active(false);
         pop_only();
         return ING_ASK;
     }

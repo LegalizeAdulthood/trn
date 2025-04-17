@@ -179,7 +179,7 @@ static AddGroupSubjectFlag subject_equivs[] =
     { AGF_NONE, SF_NONE },
     { AGF_DEL, SF_DEL },
     { AGF_SEL, SF_SEL },
-    { AGF_DELSEL, SF_DELSEL }
+    { AGF_DEL_SEL, SF_DELSEL }
     // clang-format on
 };
 
@@ -198,7 +198,7 @@ static AddGroupArticleFlag article_equivs[] =
     { AGF_NONE, AF_NONE },
     { AGF_DEL, AF_DEL },
     { AGF_SEL, AF_SEL },
-    { AGF_DELSEL, AF_DELSEL }
+    { AGF_DEL_SEL, AF_DELSEL }
     // clang-format on
 };
 
@@ -217,7 +217,7 @@ static AddGroupNewsgroupFlag newsgroup_equivs[] =
     { AGF_NONE, NF_NONE },
     { AGF_DEL, NF_DEL },
     { AGF_SEL, NF_SEL },
-    { AGF_DELSEL, NF_DELSEL }
+    { AGF_DEL_SEL, NF_DELSEL }
     // clang-format on
 };
 
@@ -255,7 +255,7 @@ static AddGroupUniversalItemFlag univitem_equivs[] =
     { AGF_NONE, UF_NONE },
     { AGF_DEL, UF_DEL },
     { AGF_SEL, UF_SEL },
-    { AGF_DELSEL, UF_DELSEL }
+    { AGF_DEL_SEL, UF_DELSEL }
     // clang-format on
 };
 

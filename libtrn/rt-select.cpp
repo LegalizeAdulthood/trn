@@ -241,7 +241,7 @@ char article_selector(char_int cmd)
         s_page_char = '>';
         g_sel_page_app = nullptr;
         g_sel_page_sp = nullptr;
-        g_sel_mask = AGF_DELSEL;
+        g_sel_mask = AGF_DEL_SEL;
     }
     else
     {
@@ -535,7 +535,7 @@ char newsgroup_selector()
     s_page_char = g_newsgroup_sel_cmds[1];
     if (g_sel_rereading)
     {
-        g_sel_mask = AGF_DELSEL;
+        g_sel_mask = AGF_DEL_SEL;
         g_sel_page_np = nullptr;
     }
     else
@@ -619,7 +619,7 @@ char addgroup_selector(GetNewsgroupFlags flags)
     /* Setup for selecting articles to read or set unread */
     if (g_sel_rereading)
     {
-        g_sel_mask = AGF_DELSEL;
+        g_sel_mask = AGF_DEL_SEL;
     }
     else
     {
@@ -649,7 +649,7 @@ char addgroup_selector(GetNewsgroupFlags flags)
         AddGroup *gp;
         int i;
         g_addnewbydefault = ADDNEW_SUB;
-        for (gp = g_first_addgroup, i = 0; gp; gp = gp->next, i++)
+        for (gp = g_first_add_group, i = 0; gp; gp = gp->next, i++)
         {
             if (gp->flags & AGF_SEL)
             {
@@ -680,7 +680,7 @@ char option_selector()
     s_page_char = g_option_sel_cmds[1];
     if (g_sel_rereading)
     {
-        g_sel_mask = AGF_DELSEL;
+        g_sel_mask = AGF_DEL_SEL;
     }
     else
     {
@@ -965,7 +965,7 @@ sel_restart:
     /* Setup for selecting articles to read or set unread */
     if (g_sel_rereading)
     {
-        g_sel_mask = AGF_DELSEL;
+        g_sel_mask = AGF_DEL_SEL;
     }
     else
     {
@@ -1645,7 +1645,7 @@ static bool select_item(Selection u)
     {
     case SM_MULTIRC:
         // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
-        TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DELSEL)) == 0);
+        TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DEL_SEL)) == 0);
         if (!(u.mp->flags & static_cast<MultircFlags>(g_sel_mask)))
         {
             g_selected_count++;
@@ -1749,7 +1749,7 @@ static bool deselect_item(Selection u)
     {
     case SM_MULTIRC:
         // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
-        TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DELSEL)) == 0);
+        TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DEL_SEL)) == 0);
         if (u.mp->flags & static_cast<MultircFlags>(g_sel_mask))
         {
             u.mp->flags &= ~static_cast<MultircFlags>(g_sel_mask);
@@ -1896,22 +1896,22 @@ static void sel_cleanup()
     case SM_ADDGROUP:
         if (g_sel_rereading)
         {
-            for (AddGroup *gp = g_first_addgroup; gp; gp = gp->next)
+            for (AddGroup *gp = g_first_add_group; gp; gp = gp->next)
             {
-                if (gp->flags & AGF_DELSEL)
+                if (gp->flags & AGF_DEL_SEL)
                 {
                     if (!(gp->flags & AGF_SEL))
                     {
                         g_selected_count++;
                     }
-                    gp->flags = (gp->flags&~(AGF_DELSEL|AGF_EXCLUDED))|AGF_SEL;
+                    gp->flags = (gp->flags&~(AGF_DEL_SEL|AGF_EXCLUDED))|AGF_SEL;
                 }
                 gp->flags &= ~AGF_DEL;
             }
         }
         else
         {
-            for (AddGroup *gp = g_first_addgroup; gp; gp = gp->next)
+            for (AddGroup *gp = g_first_add_group; gp; gp = gp->next)
             {
                 if (gp->flags & AGF_DEL)
                 {
@@ -3341,7 +3341,7 @@ static DisplayState addgroup_commands(char_int ch)
             }
             else
             {
-                gp = g_first_addgroup;
+                gp = g_first_add_group;
             }
             while (gp)
             {
@@ -3372,9 +3372,9 @@ static DisplayState addgroup_commands(char_int ch)
         }
         else if (ch == 'J')
         {
-            for (AddGroup *gp = g_first_addgroup; gp; gp = gp->next)
+            for (AddGroup *gp = g_first_add_group; gp; gp = gp->next)
             {
-                gp->flags &= ~AGF_DELSEL;
+                gp->flags &= ~AGF_DEL_SEL;
             }
             g_selected_count = 0;
             return DS_DISPLAY;

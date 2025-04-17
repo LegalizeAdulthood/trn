@@ -115,7 +115,7 @@ void InterpolatorTest::SetUp()
     univ_init();
     datasrc_init();
     rcstuff_init();
-    addng_init();
+    add_ng_init();
     art_init();
     artio_init();
     artsrch_init();

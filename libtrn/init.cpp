@@ -133,7 +133,7 @@ bool initialize(int argc, char *argv[])
 
     /* it looks like we will actually read something, so init everything */
 
-    addng_init();
+    add_ng_init();
     art_init();
     artio_init();
     artsrch_init();
@@ -159,7 +159,7 @@ bool initialize(int argc, char *argv[])
 
     if (g_maxngtodo)                    /* patterns on command line? */
     {
-        foundany |= scanactive(true);
+        foundany |= scan_active(true);
     }
 
     return foundany;

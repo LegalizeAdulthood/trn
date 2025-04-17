@@ -937,7 +937,7 @@ int addgrp_sel_perform()
     }
     if (g_buf[len] == '.')
     {
-        if (g_first_addgroup)
+        if (g_first_add_group)
         {
             return -1;
         }
@@ -954,7 +954,7 @@ int addgrp_sel_perform()
         goto break_out;
     }
 
-    for (AddGroup *gp = g_first_addgroup; gp; gp = gp->next)
+    for (AddGroup *gp = g_first_add_group; gp; gp = gp->next)
     {
         if (!(gp->flags & g_sel_mask) ^ !!bits)
         {

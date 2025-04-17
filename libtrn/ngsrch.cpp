@@ -108,9 +108,9 @@ NewsgroupSearchResult ng_search(char *patbuf, bool get_cmd)
     }
 
     bool const output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
-    if (g_first_addgroup)
+    if (g_first_add_group)
     {
-        AddGroup *gp = g_first_addgroup;
+        AddGroup *gp = g_first_add_group;
         do
         {
             if (execute(&s_ngcompex, gp->name) != nullptr)
