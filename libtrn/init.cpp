@@ -119,7 +119,7 @@ bool initialize(int argc, char *argv[])
 
     if (!g_checkflag)
     {
-        newsnews_check();
+        news_news_check();
     }
 
     /* process the newsid(s) and associate the newsrc(s) */
@@ -165,7 +165,7 @@ bool initialize(int argc, char *argv[])
     return foundany;
 }
 
-void newsnews_check()
+void news_news_check()
 {
     const char *newsnewsname = filexp(NEWSNEWSNAME);
     if (std::FILE *fp = std::fopen(newsnewsname, "r"))

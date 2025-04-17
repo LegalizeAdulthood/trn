@@ -12,6 +12,6 @@ enum
 extern long g_our_pid;
 
 bool initialize(int argc, char *argv[]);
-void newsnews_check();
+void news_news_check();
 
 #endif
