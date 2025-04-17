@@ -125,7 +125,7 @@ bool ov_init()
                 i++;
             }
         }
-        if (!fieldflags[OV_SUBJ] || !fieldflags[OV_MSGID]
+        if (!fieldflags[OV_SUBJ] || !fieldflags[OV_MSG_ID]
          || !fieldflags[OV_FROM] || !fieldflags[OV_DATE])
         {
             return false;
@@ -179,7 +179,7 @@ OverviewFieldNum ov_num(char *hdr, char *end)
         return OV_DATE;
 
     case MSG_ID_LINE:
-        return OV_MSGID;
+        return OV_MSG_ID;
 
     case REFS_LINE:
         return OV_REFS;
@@ -500,7 +500,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
         fields[fn] = cp;
         i++;
     }
-    if (!fields[OV_SUBJ] || !fields[OV_MSGID]
+    if (!fields[OV_SUBJ] || !fields[OV_MSG_ID]
      || !fields[OV_FROM] || !fields[OV_DATE])
     {
         return;         /* skip this line if it's too short */
@@ -512,7 +512,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
     }
     if (!article->msg_id)
     {
-        set_cached_line(article, MSG_ID_LINE, savestr(fields[OV_MSGID]));
+        set_cached_line(article, MSG_ID_LINE, savestr(fields[OV_MSG_ID]));
     }
     if (!article->from)
     {
@@ -619,7 +619,7 @@ void ov_close()
     }
 }
 
-const char *ov_fieldname(int num)
+const char *ov_field_name(int num)
 {
     return g_htype[s_hdrnum[num]].name;
 }

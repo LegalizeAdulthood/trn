@@ -1,5 +1,5 @@
 /* trn/rt-ov.h
-*/
+ */
 /* This software is copyrighted as detailed in the LICENSE file. */
 #ifndef TRN_RT_OV_H
 #define TRN_RT_OV_H
@@ -15,7 +15,7 @@ enum OverviewFieldNum
     OV_SUBJ,
     OV_FROM,
     OV_DATE,
-    OV_MSGID,
+    OV_MSG_ID,
     OV_REFS,
     OV_BYTES,
     OV_LINES,
@@ -23,10 +23,10 @@ enum OverviewFieldNum
     OV_MAX_FIELDS
 };
 
-bool ov_init();
-bool ov_data(ArticleNum first, ArticleNum last, bool cheating);
-void ov_close();
-const char *ov_fieldname(int num);
+bool        ov_init();
+bool        ov_data(ArticleNum first, ArticleNum last, bool cheating);
+void        ov_close();
+const char *ov_field_name(int num);
 const char *ov_field(Article *ap, int num);
 
 #endif
