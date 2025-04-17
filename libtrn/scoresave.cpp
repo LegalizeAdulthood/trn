@@ -43,7 +43,7 @@ void sc_sv_add(const char *str)
         s_lines_alloc += 100;
         s_lines = (char**)safe_realloc((char*)s_lines,s_lines_alloc * sizeof (char*));
     }
-    s_lines[s_num_lines] = savestr(str);
+    s_lines[s_num_lines] = save_str(str);
     s_num_lines++;
 }
 
@@ -121,7 +121,7 @@ void sc_sv_save_file()
     }
 
     g_waiting = true;   /* don't interrupt */
-    char *savename = savestr(filexp(get_val_const("SAVESCOREFILE", "%+/savedscores")));
+    char *savename = save_str(filexp(get_val_const("SAVESCOREFILE", "%+/savedscores")));
     std::strcpy(s_lbuf,savename);
     std::strcat(s_lbuf,".tmp");
     std::FILE *tmpfp = std::fopen(s_lbuf, "w");
@@ -383,7 +383,7 @@ void sc_load_scores()
         sc_sv_get_file();
     }
 
-    char *gname = savestr(filexp("%C"));
+    char *gname = save_str(filexp("%C"));
 
     int i;
     for (i = 0; i < s_num_lines; i++)
@@ -484,7 +484,7 @@ void sc_save_scores()
     s_last = 0;
 
     g_waiting = true;   /* DON'T interrupt */
-    char *gname = savestr(filexp("%C"));
+    char *gname = save_str(filexp("%C"));
     /* not being able to open is OK */
     if (s_num_lines > 0)
     {

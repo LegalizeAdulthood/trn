@@ -79,11 +79,11 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
     char *cmdlst = nullptr; /* list of commands to do */
     if (*s)
     {
-        cmdlst = savestr(s);
+        cmdlst = save_str(s);
     }
     else if (g_general_mode == GM_SELECTOR)
     {
-        cmdlst = savestr("+");
+        cmdlst = save_str("+");
     }
     NewsgroupSearchResult ret = NGS_NOT_FOUND; /* assume no commands */
     if (cmdlst)

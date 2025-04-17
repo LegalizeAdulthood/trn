@@ -190,12 +190,12 @@ int main(int argc, char *argv[])
         cp = filexp(SERVER_NAME);
         if (FILE_REF(cp))
         {
-            cp = nntp_servername(cp);
+            cp = nntp_server_name(cp);
         }
     }
     if (std::strcmp(cp,"local") != 0)
     {
-        g_server_name = savestr(cp);
+        g_server_name = save_str(cp);
         cp = std::strchr(g_server_name, ';');
         if (!cp)
         {

@@ -98,7 +98,7 @@ void univ_startup()
     {
         univ_open();
         g_univ_title = "Top Level";
-        g_univ_fname = savestr("%+/univ/usertop");
+        g_univ_fname = save_str("%+/univ/usertop");
 
         /* read in trn default top file */
         (void)univ_include_file("%X/sitetop");          /* pure local */
@@ -109,7 +109,7 @@ void univ_startup()
         {
             /* last resort--all newsgroups */
             univ_close();
-            univ_mask_load(savestr("*"),"All Newsgroups");
+            univ_mask_load(save_str("*"),"All Newsgroups");
         }
         if (user_top_load)
         {
@@ -182,7 +182,7 @@ UniversalItem *univ_add(UniversalItemType type, const char *desc)
     node->flags = UF_NONE;
     if (desc)
     {
-        node->desc = savestr(desc);
+        node->desc = save_str(desc);
     }
     else
     {
@@ -281,7 +281,7 @@ void univ_add_debug(const char *desc, const char *txt)
 {
     /* later check text for bad things */
     UniversalItem *ui = univ_add(UN_DEBUG1, desc);
-    ui->data.str = savestr(txt);
+    ui->data.str = save_str(txt);
 }
 
 void univ_add_group(const char *desc, const char *grpname)
@@ -318,7 +318,7 @@ void univ_add_group(const char *desc, const char *grpname)
         return;
     }
     ui = univ_add(UN_NEWSGROUP,desc);
-    ui->data.group.ng = savestr(grpname);
+    ui->data.group.ng = save_str(grpname);
     data.dat_ptr = ui->data.group.ng;
     hash_store_last(data);
 }
@@ -326,19 +326,19 @@ void univ_add_group(const char *desc, const char *grpname)
 void univ_add_mask(const char *desc, const char *mask)
 {
     UniversalItem *ui = univ_add(UN_GROUP_MASK, desc);
-    ui->data.gmask.mask_list = savestr(mask);
-    ui->data.gmask.title = savestr(desc);
+    ui->data.gmask.mask_list = save_str(mask);
+    ui->data.gmask.title = save_str(desc);
 }
 
 //char* fname;                          /* May be URL */
 void univ_add_file(const char *desc, const char *fname, const char *label)
 {
     UniversalItem *ui = univ_add(UN_CONFIG_FILE, desc);
-    ui->data.cfile.title = savestr(desc);
-    ui->data.cfile.fname = savestr(fname);
+    ui->data.cfile.title = save_str(desc);
+    ui->data.cfile.fname = save_str(fname);
     if (label && *label)
     {
-        ui->data.cfile.label = savestr(label);
+        ui->data.cfile.label = save_str(label);
     }
     else
     {
@@ -349,7 +349,7 @@ void univ_add_file(const char *desc, const char *fname, const char *label)
 UniversalItem *univ_add_virt_num(const char *desc, const char *grp, ArticleNum art)
 {
     UniversalItem *ui = univ_add(UN_ARTICLE, desc);
-    ui->data.virt.ng = savestr(grp);
+    ui->data.virt.ng = save_str(grp);
     ui->data.virt.num = art;
     ui->data.virt.subj = nullptr;
     ui->data.virt.from = nullptr;
@@ -389,7 +389,7 @@ void univ_add_text_file(const char *desc, char *name)
     case '%':
     case '/':
         ui = univ_add(UN_TEXT_FILE,desc);
-        ui->data.text_file.fname = savestr(filexp(s));
+        ui->data.text_file.fname = save_str(filexp(s));
         break;
     }
 }
@@ -436,7 +436,7 @@ void univ_add_virt_group(const char *grpname)
         ui->data.vgroup.flags |= UF_VG_MIN_SCORE;
         ui->data.vgroup.min_score = s_univ_min_score;
     }
-    ui->data.vgroup.ng = savestr(grpname);
+    ui->data.vgroup.ng = save_str(grpname);
     data.dat_ptr = ui->data.vgroup.ng;
     hash_store_last(data);
 }
@@ -616,7 +616,7 @@ static bool univ_use_file(const char *fname, const char *label)
     safe_free0(s_univ_begin_label);
     if (label)
     {
-        s_univ_begin_label = savestr(label);
+        s_univ_begin_label = save_str(label);
     }
     std::FILE *fp = std::fopen(filexp(open_name), "r");
     if (!fp)
@@ -654,7 +654,7 @@ static bool univ_use_file(const char *fname, const char *label)
 static bool univ_include_file(const char *fname)
 {
     char *old_univ_fname = g_univ_fname;
-    g_univ_fname = savestr(fname);      /* LEAK */
+    g_univ_fname = save_str(fname);      /* LEAK */
     bool retval = univ_use_file(g_univ_fname, nullptr);
     g_univ_fname = old_univ_fname;
     return retval;
@@ -782,7 +782,7 @@ static bool univ_do_line(char *line)
             return true;
         }
         *p = '\0';
-        s_univ_line_desc = savestr(s);
+        s_univ_line_desc = save_str(s);
         s = p+1;
     }
     s = skip_space(s);
@@ -931,7 +931,7 @@ bool univ_file_load(const char *fname, const char *title, const char *label)
 
     if (fname)
     {
-        g_univ_fname = savestr(fname);
+        g_univ_fname = save_str(fname);
     }
     if (title)
     {
@@ -975,7 +975,7 @@ void univ_mask_load(char *mask, const char *title)
 
 void univ_redo_file()
 {
-    char *tmp_fname = (g_univ_fname ? savestr(g_univ_fname) : nullptr);
+    char *tmp_fname = (g_univ_fname ? save_str(g_univ_fname) : nullptr);
     const std::string tmp_title = g_univ_title;
     const std::string tmp_label = g_univ_label;
 
@@ -995,7 +995,7 @@ void univ_redo_file()
 
 static char *univ_edit_new_userfile()
 {
-    char *s = savestr(filexp("%+/univ/usertop"));       /* LEAK */
+    char *s = save_str(filexp("%+/univ/usertop"));       /* LEAK */
 
     /* later, create a new user top file, and return its filename.
      * later perhaps ask whether to create or edit current file.
@@ -1129,8 +1129,8 @@ static void univ_vg_addart(ArticleNum a)
     /* later consider author in description, scoring, etc. */
     UniversalItem *ui = univ_add_virt_num(nullptr, g_newsgroup_name.c_str(), a);
     ui->score = score;
-    ui->data.virt.subj = savestr(subj);
-    ui->data.virt.from = savestr(from);
+    ui->data.virt.subj = save_str(subj);
+    ui->data.virt.from = save_str(from);
 }
 
 
@@ -1375,7 +1375,7 @@ void univ_help_main(HelpLocation where)
     univ_include_file("%X/sitehelp/top");
 
     /* read in main help file */
-    g_univ_fname = savestr("%X/HelpFiles/top");
+    g_univ_fname = save_str("%X/HelpFiles/top");
     bool flag = univ_use_file(g_univ_fname, g_univ_label.c_str());
 
     /* later: if flag is not true, then add message? */

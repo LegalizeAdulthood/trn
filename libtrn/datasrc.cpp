@@ -144,7 +144,7 @@ void data_source_init()
         machine = filexp(SERVER_NAME);
         if (FILE_REF(machine))
         {
-            machine = nntp_servername(machine);
+            machine = nntp_server_name(machine);
         }
         if (!std::strcmp(machine, "local"))
         {
@@ -255,7 +255,7 @@ static DataSource *new_datasrc(const char *name, char **vals)
         return nullptr;
     }
 
-    dp->name = savestr(name);
+    dp->name = save_str(name);
     if (!std::strcmp(name,"default"))
     {
         dp->flags |= DF_DEFAULT;
@@ -264,7 +264,7 @@ static DataSource *new_datasrc(const char *name, char **vals)
     const char *v = vals[DI_NNTP_SERVER];
     if (v != nullptr)
     {
-        dp->news_id = savestr(v);
+        dp->news_id = save_str(v);
         char *cp = std::strchr(dp->news_id, ';');
         if (cp != nullptr)
         {
@@ -284,13 +284,13 @@ static DataSource *new_datasrc(const char *name, char **vals)
     }
     else
     {
-        dp->news_id = savestr(filexp(vals[DI_ACTIVE_FILE]));
+        dp->news_id = save_str(filexp(vals[DI_ACTIVE_FILE]));
     }
 
     dp->spool_dir = file_or_none(vals[DI_SPOOL_DIR]);
     if (!dp->spool_dir)
     {
-        dp->spool_dir = savestr(g_tmp_dir.c_str());
+        dp->spool_dir = save_str(g_tmp_dir.c_str());
     }
 
     dp->over_dir = dir_or_none(dp,vals[DI_OVERVIEW_DIR],DF_TRY_OVERVIEW);
@@ -302,7 +302,7 @@ static DataSource *new_datasrc(const char *name, char **vals)
         /* FYI, we know extra_name to be nullptr in this case. */
         if (vals[DI_ACTIVE_FILE])
         {
-            dp->extra_name = savestr(filexp(vals[DI_ACTIVE_FILE]));
+            dp->extra_name = save_str(filexp(vals[DI_ACTIVE_FILE]));
             stat_t extra_stat{};
             if (stat(dp->extra_name,&extra_stat) >= 0)
             {
@@ -354,12 +354,12 @@ static DataSource *new_datasrc(const char *name, char **vals)
     v = vals[DI_AUTH_USER];
     if (v != nullptr)
     {
-        dp->auth_user = savestr(v);
+        dp->auth_user = save_str(v);
     }
     v = vals[DI_AUTH_PASS];
     if (v != nullptr)
     {
-        dp->auth_pass = savestr(v);
+        dp->auth_pass = save_str(v);
     }
     v = vals[DI_XHDR_BROKEN];
     if (v != nullptr && (*v == 'y' || *v == 'Y'))
@@ -417,7 +417,7 @@ static char *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag)
     {
         return dp->spool_dir;
     }
-    return savestr(dir);
+    return save_str(dir);
 }
 
 static char *file_or_none(char *fn)
@@ -426,7 +426,7 @@ static char *file_or_none(char *fn)
     {
         return nullptr;
     }
-    return savestr(filexp(fn));
+    return save_str(filexp(fn));
 }
 
 bool open_data_source(DataSource *dp)

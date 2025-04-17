@@ -133,7 +133,7 @@ int nntp_connect(const char *machine, bool verbose)
     return response;
 }
 
-char *nntp_servername(char *name)
+char *nntp_server_name(char *name)
 {
     std::FILE* fp;
 

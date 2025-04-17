@@ -214,7 +214,7 @@ TEST_F(InitTest, hostNamesFromSuccessfulHostFn)
     const char *p_host_name{"news.gmane.io"};
     auto        host_name_fn = [&](char *)
     {
-        g_local_host = savestr(local_host);
+        g_local_host = save_str(local_host);
         g_p_host_name = p_host_name;
         return true;
     };

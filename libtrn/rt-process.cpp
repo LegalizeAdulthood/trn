@@ -229,7 +229,7 @@ Article *get_article(char *msgid)
     {
         article = allocate_article(0);
         data.dat_ptr = (char*)article;
-        article->msg_id = savestr(msgid);
+        article->msg_id = save_str(msgid);
         hash_store_last(data);
     }
     return article;

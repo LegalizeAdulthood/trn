@@ -66,7 +66,7 @@ void catch_up(NewsgroupData *np, int leave_count, int output_level)
         }
         std::sprintf(tmpbuf,"%s: 1-%ld", np->rc_line,(long)get_newsgroup_size(np));
         std::free(np->rc_line);
-        np->rc_line = savestr(tmpbuf);
+        np->rc_line = save_str(tmpbuf);
         *(np->rc_line + np->num_offset - 1) = '\0';
         if (g_newsgroup_min_to_read > TR_NONE && np->to_read > TR_NONE)
         {

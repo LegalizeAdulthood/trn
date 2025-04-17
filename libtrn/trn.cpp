@@ -885,13 +885,13 @@ reask_abandon:
             {
                 return ING_INPUT;
             }
-            s = savestr(g_buf+1);               /* do_newsgroup will free it */
+            s = save_str(g_buf+1);               /* do_newsgroup will free it */
         }
         else if (*g_buf == '+' || *g_buf == 'U' || *g_buf == '=' || *g_buf == ';')
         {
             *g_buf = g_last_char; /* restore 0200 if from a macro */
             save_typeahead(g_buf+1, sizeof g_buf - 1);
-            s = savestr(g_buf);
+            s = save_str(g_buf);
         }
         else if (*g_buf == ' ' || *g_buf == '\r' || *g_buf == '\n')
         {
@@ -933,7 +933,7 @@ reask_abandon:
         /* extensions */
         case NG_GO_ARTICLE:
             g_newsgroup_ptr = g_ng_go_newsgroup_ptr;
-            s = savestr("y");           /* enter with minimal fuss */
+            s = save_str("y");           /* enter with minimal fuss */
             goto redo_newsgroup;
           /* later: possible go-to-newsgroup */
         }

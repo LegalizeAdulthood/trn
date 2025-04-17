@@ -415,7 +415,7 @@ const char *execute(CompiledRegex *compex, const char *addr)
         {
             std::free(compex->brastr);
         }
-        compex->brastr = savestr(p1);   /* in case p1 is not static */
+        compex->brastr = save_str(p1);   /* in case p1 is not static */
         p1 = compex->brastr;            /* ! */
     }
     case_fold(compex->do_folding);      /* make sure table is correct */

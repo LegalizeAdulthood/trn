@@ -107,7 +107,7 @@ void kill_file_init()
                         HashDatum data = hash_fetch(g_msg_id_hash, g_buf, std::strlen(g_buf));
                         if (!data.dat_ptr)
                         {
-                            data.dat_ptr = savestr(g_buf);
+                            data.dat_ptr = save_str(g_buf);
                         }
                         else
                         {

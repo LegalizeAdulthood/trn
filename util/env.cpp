@@ -77,7 +77,7 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     }
     if (home_dir)
     {
-        g_home_dir = savestr(home_dir);
+        g_home_dir = save_str(home_dir);
     }
 
     const char *val = s_getenv_fn("TMPDIR");
@@ -128,7 +128,7 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
         {
             std::strcpy(tcbuf, home_drive);
             std::strcat(tcbuf, home_path);
-            g_home_dir = savestr(tcbuf);
+            g_home_dir = save_str(tcbuf);
         }
     }
 #endif
@@ -147,7 +147,7 @@ bool env_init(char *tcbuf, bool lax, const std::function<bool(char *tmpbuf)> &se
     {
         if (!g_local_host)
         {
-            g_local_host = savestr("");
+            g_local_host = save_str("");
         }
         fully_successful = false;
     }
@@ -200,7 +200,7 @@ static void env_init2()
 
     if (!g_home_dir)
     {
-        g_home_dir = savestr("/");
+        g_home_dir = save_str("/");
     }
     g_dot_dir = get_val_const("DOTDIR",g_home_dir);
     g_trn_dir = filexp(get_val_const("TRNDIR",TRNDIR));
@@ -380,7 +380,7 @@ static bool set_p_host_name(char *tmpbuf)
 #  endif /* PHOSTCMD */
 # endif /* HAS_UNAME */
 #endif /* HAS_GETHOSTNAME */
-    g_local_host = savestr(tmpbuf);
+    g_local_host = save_str(tmpbuf);
 
     /* Build the host name that goes in postings */
 
@@ -483,7 +483,7 @@ char *export_var(const char *nam, const char *val)
     std::string envar{nam};
     envar += '=';
     envar += val;
-    char *buff = savestr(envar.c_str());
+    char *buff = save_str(envar.c_str());
     putenv(buff);
     return buff;
 #else

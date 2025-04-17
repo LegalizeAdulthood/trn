@@ -291,7 +291,7 @@ void sf_add_extra_header(const char *head)
     s_sf_num_extra_headers++;
     s_sf_extra_headers = (char**)safe_realloc((char*)s_sf_extra_headers,
         s_sf_num_extra_headers * sizeof (char*));
-    char *s = savestr(head);
+    char *s = save_str(head);
     for (char *s2 = s; *s2; s2++)
     {
         if (std::isalpha(*s2) && std::isupper(*s2))
@@ -589,7 +589,7 @@ bool sf_do_command(char *cmd, bool check)
         {
             std::free(s_sf_abbr[(int)ch]);
         }
-        s_sf_abbr[(int)ch] = savestr(sf_cmd_fname(s));
+        s_sf_abbr[(int)ch] = save_str(sf_cmd_fname(s));
         return true;
     }
     if (!std::strncmp(cmd, "end", 3))
@@ -837,14 +837,14 @@ void sf_do_file(const char *fname)
         }
         std::printf("Score file: %s\n",fname);
     }
-    char *safefilename = savestr(fname);
+    char *safefilename = save_str(fname);
     /* add end marker to scoring array */
     sf_grow();
     s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_FILE_MARK_START);
     /* file_level is 1 to n */
     s_sf_entries[g_sf_num_entries-1].score = s_sf_file_level;
     s_sf_entries[g_sf_num_entries-1].str2 = nullptr;
-    s_sf_entries[g_sf_num_entries-1].str1 = savestr(safefilename);
+    s_sf_entries[g_sf_num_entries-1].str1 = save_str(safefilename);
 
     while ((s = sf_file_getline(sf_fp)) != nullptr)
     {
@@ -858,7 +858,7 @@ void sf_do_file(const char *fname)
     /* file_level is 1 to n */
     s_sf_entries[g_sf_num_entries-1].score = s_sf_file_level;
     s_sf_entries[g_sf_num_entries-1].str2 = nullptr;
-    s_sf_entries[g_sf_num_entries-1].str1 = savestr(safefilename);
+    s_sf_entries[g_sf_num_entries-1].str1 = save_str(safefilename);
     std::free(safefilename);
     s_sf_file_level--;
 }
@@ -996,7 +996,7 @@ char *sf_missing_score(const char *line)
     static char lbuf[LBUFLEN];
 
     /* save line since it is probably pointing at (the TRN-global) g_buf */
-    char *s = savestr(line);
+    char *s = save_str(line);
     std::printf("Possibly missing score.\n"
            "Type a score now or delete the colon to abort this entry:\n");
     g_buf[0] = ':';
@@ -1430,7 +1430,7 @@ static int sf_open_file(const char *name)
     s_sf_num_files++;
     s_sf_files = (ScoreFile*)safe_realloc((char*)s_sf_files,
         s_sf_num_files * sizeof (ScoreFile));
-    s_sf_files[i].fname = savestr(name);
+    s_sf_files[i].fname = save_str(name);
     s_sf_files[i].num_lines = 0;
     s_sf_files[i].num_alloc = 0;
     s_sf_files[i].line_on = 0;

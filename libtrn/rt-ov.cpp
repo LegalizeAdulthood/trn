@@ -512,11 +512,11 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
     }
     if (!article->msg_id)
     {
-        set_cached_line(article, MSG_ID_LINE, savestr(fields[OV_MSG_ID]));
+        set_cached_line(article, MSG_ID_LINE, save_str(fields[OV_MSG_ID]));
     }
     if (!article->from)
     {
-        set_cached_line(article, FROM_LINE, savestr(fields[OV_FROM]));
+        set_cached_line(article, FROM_LINE, save_str(fields[OV_FROM]));
     }
     if (!article->date)
     {
@@ -539,7 +539,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
             cp = std::strchr(fields[OV_XREF], ':');
             if (cp && std::strchr(cp+1, ':'))
             {
-                article->xrefs = savestr(fields[OV_XREF]);
+                article->xrefs = save_str(fields[OV_XREF]);
             }
         }
 

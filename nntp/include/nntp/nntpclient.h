@@ -1,5 +1,5 @@
 /* nntpclient.h
-*/
+ */
 /* This software is copyrighted as detailed in the LICENSE file. */
 #ifndef TRN_NNTPCLIENT_H
 #define TRN_NNTPCLIENT_H
@@ -46,10 +46,10 @@ using ConnectionFactory = std::function<ConnectionPtr(const char *machine, int p
 struct NNTPLink
 {
     ConnectionPtr connection;
-    std::time_t        last_command;
+    std::time_t   last_command;
     int           port_number;
-    NNTPFlags    flags;
-    bool          trailing_CR;
+    NNTPFlags     flags;
+    bool          trailing_cr;
 };
 
 /* RFC 977 defines these, so don't change them */
@@ -87,9 +87,9 @@ enum
 };
 
 extern NNTPLink g_nntplink; /* the current server's file handles */
-extern bool g_nntp_allow_timeout;
-extern char g_ser_line[NNTP_STRLEN];
-extern char g_last_command[NNTP_STRLEN];
+extern bool     g_nntp_allow_timeout;
+extern char     g_ser_line[NNTP_STRLEN];
+extern char     g_last_command[NNTP_STRLEN];
 
 inline char *nntp_get_a_line(char *buffer, int buffer_length, bool realloc_ok)
 {
@@ -111,13 +111,13 @@ inline char *nntp_get_a_line(char *buffer, int buffer_length, bool realloc_ok)
     return buffer;
 }
 
-void set_nntp_connection_factory(ConnectionFactory factory);
-int nntp_connect(const char *machine, bool verbose);
-char *nntp_servername(char *name);
-int nntp_command(const char *bp);
-int nntp_xgtitle(const char *groupname);
-int nntp_check();
-bool nntp_at_list_end(const char *s);
+void  set_nntp_connection_factory(ConnectionFactory factory);
+int   nntp_connect(const char *machine, bool verbose);
+char *nntp_server_name(char *name);
+int   nntp_command(const char *bp);
+int   nntp_xgtitle(const char *groupname);
+int   nntp_check();
+bool  nntp_at_list_end(const char *s);
 enum NNTPGetsResult
 {
     // NGSR: nntp get string result
@@ -126,8 +126,8 @@ enum NNTPGetsResult
     NGSR_FULL_LINE = 1,
 };
 NNTPGetsResult nntp_gets(char *bp, int len);
-void             nntp_gets_clear_buffer();
-void             nntp_close(bool send_quit);
+void           nntp_gets_clear_buffer();
+void           nntp_close(bool send_quit);
 
 inline void nntp_advise(const char *str)
 {

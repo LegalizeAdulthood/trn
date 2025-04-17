@@ -209,12 +209,12 @@ NumNumResult num_num()
     }
     if (*s)
     {
-        cmdlst = savestr(s);
+        cmdlst = save_str(s);
         justone = false;
     }
     else if (!justone)
     {
-        cmdlst = savestr("m");
+        cmdlst = save_str("m");
     }
     *s++ = ',';
     *s = '\0';
@@ -351,7 +351,7 @@ int thread_perform()
         one_thread = true;
         len++;
     }
-    char *cmdstr = savestr(g_buf + len);
+    char *cmdstr = save_str(g_buf + len);
     bool  want_unread = !g_sel_rereading && *cmdstr != 'm';
 
     perform_status_init(g_newsgroup_ptr->to_read);
@@ -794,7 +794,7 @@ int newsgroup_sel_perform()
         one_group = true;
         len++;
     }
-    char *cmdstr = savestr(g_buf + len);
+    char *cmdstr = save_str(g_buf + len);
 
     perform_status_init(g_newsgroup_to_read);
     len = std::strlen(cmdstr);
@@ -944,7 +944,7 @@ int add_group_sel_perform()
         one_group = true;
         len++;
     }
-    char *cmdstr = savestr(g_buf + len);
+    char *cmdstr = save_str(g_buf + len);
 
     perform_status_init(g_newsgroup_to_read);
     len = std::strlen(cmdstr);

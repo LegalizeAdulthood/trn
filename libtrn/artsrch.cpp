@@ -175,7 +175,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             {
                 *s = 'j';
             }
-            cmdlst = savestr(s);
+            cmdlst = save_str(s);
             ret = SRCH_DONE;
         }
         g_art_how_much = howmuch;
@@ -223,7 +223,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             ret = SRCH_DONE;
             if (cmdchr == '+')
             {
-                cmdlst = savestr("+");
+                cmdlst = save_str("+");
                 if (!ignorethru && g_kill_thru_kludge)
                 {
                     ignorethru = 1;
@@ -231,7 +231,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             }
             else if (cmdchr == '.')
             {
-                cmdlst = savestr(".");
+                cmdlst = save_str(".");
                 if (!ignorethru && g_kill_thru_kludge)
                 {
                     ignorethru = 1;
@@ -239,17 +239,17 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             }
             else if (cmdchr == 's')
             {
-                cmdlst = savestr(pat_buf);
+                cmdlst = save_str(pat_buf);
             }
             else
             {
                 if (cmdchr == ',')
                 {
-                    cmdlst = savestr(",");
+                    cmdlst = save_str(",");
                 }
                 else
                 {
-                    cmdlst = savestr("j");
+                    cmdlst = save_str("j");
                 }
                 mark_as_read(article_ptr(g_art));       /* this article needs to die */
             }
@@ -323,11 +323,11 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         {
             if (g_sel_mode == SM_ARTICLE)/* set the selector's default command */
             {
-                cmdlst = savestr("+");
+                cmdlst = save_str("+");
             }
             else
             {
-                cmdlst = savestr("++");
+                cmdlst = save_str("++");
             }
         }
         ret = SRCH_DONE;
@@ -375,7 +375,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         *s++ = ':';
         if (!cmdlst)
         {
-            cmdlst = savestr("j");
+            cmdlst = save_str("j");
         }
         safecpy(s,cmdlst,LBUFLEN-(s-saltbuf));
         kill_file_append(saltbuf, saltaway == 2? KF_GLOBAL : KF_LOCAL);

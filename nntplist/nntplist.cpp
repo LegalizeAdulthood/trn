@@ -90,12 +90,12 @@ int main(int argc, char *argv[])
         cp = filexp(SERVER_NAME);
         if (*cp == '/')
         {
-            cp = nntp_servername(cp);
+            cp = nntp_server_name(cp);
         }
     }
     if (std::strcmp(cp,"local") != 0)
     {
-        s_server_name = savestr(cp);
+        s_server_name = save_str(cp);
         cp = std::strchr(s_server_name, ';');
         if (!cp)
         {

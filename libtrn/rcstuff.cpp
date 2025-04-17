@@ -212,12 +212,12 @@ Newsrc *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
     Newsrc *rp = (Newsrc*)safe_malloc(sizeof(Newsrc));
     std::memset((char*)rp,0,sizeof (Newsrc));
     rp->data_source = dp;
-    rp->name = savestr(filexp(newsrc));
+    rp->name = save_str(filexp(newsrc));
     char tmpbuf[CBUFLEN];
     std::sprintf(tmpbuf, RCNAME_OLD, rp->name);
-    rp->old_name = savestr(tmpbuf);
+    rp->old_name = save_str(tmpbuf);
     std::sprintf(tmpbuf, RCNAME_NEW, rp->name);
-    rp->new_name = savestr(tmpbuf);
+    rp->new_name = save_str(tmpbuf);
 
     switch (add_ok ? *add_ok : 'y')
     {
@@ -409,14 +409,14 @@ static bool lock_newsrc(Newsrc *rp)
     char *s = filexp(RCNAME);
     if (!std::strcmp(rp->name,s))
     {
-        rp->lock_name = savestr(filexp(LOCKNAME));
+        rp->lock_name = save_str(filexp(LOCKNAME));
     }
     else
     {
         std::sprintf(g_buf, RCNAME_INFO, rp->name);
-        rp->info_name = savestr(g_buf);
+        rp->info_name = save_str(g_buf);
         std::sprintf(g_buf, RCNAME_LOCK, rp->name);
-        rp->lock_name = savestr(g_buf);
+        rp->lock_name = save_str(g_buf);
     }
 
     char *runninghost;
@@ -672,7 +672,7 @@ static bool open_newsrc(Newsrc *rp)
         }
         if (some_buf == g_buf)
         {
-            np->rc_line = savestr(some_buf);  /* make semipermanent copy */
+            np->rc_line = save_str(some_buf);  /* make semipermanent copy */
         }
         else
         {
@@ -909,7 +909,7 @@ void abandon_ng(NewsgroupData *np)
         std::free(np->rc_line);
         if (some_buf == g_buf)
         {
-            np->rc_line = savestr(some_buf);
+            np->rc_line = save_str(some_buf);
         }
         else
         {

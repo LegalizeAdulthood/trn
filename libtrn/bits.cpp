@@ -747,7 +747,7 @@ static int chase_xref(ArticleNum artnum, int markread)
         return 0;
     }
 
-    xref_buf = savestr(xref_buf);
+    xref_buf = save_str(xref_buf);
 # ifdef DEBUG
     if (debug & DEB_XREF_MARKER)
     {

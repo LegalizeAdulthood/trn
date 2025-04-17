@@ -98,7 +98,7 @@ void mime_init()
     {
         mcname = get_val("MAILCAPS", MIMECAP);
     }
-    mcname = savestr(mcname);
+    mcname = save_str(mcname);
     char *s = mcname;
     do
     {
@@ -186,8 +186,8 @@ void mime_read_mimecap(const char *mcname)
             continue;
         }
         MimeCapEntry *mcp = mimecap_ptr(++i);
-        mcp->content_type = savestr(t);
-        mcp->command = savestr(mime_ParseEntryArg(&s));
+        mcp->content_type = save_str(t);
+        mcp->command = save_str(mime_ParseEntryArg(&s));
         while (s)
         {
             t = mime_ParseEntryArg(&s);
@@ -222,11 +222,11 @@ void mime_read_mimecap(const char *mcname)
                 }
                 else if (arg && string_case_equal(t, "test"))
                 {
-                    mcp->test_command = savestr(arg);
+                    mcp->test_command = save_str(arg);
                 }
                 else if (arg && (string_case_equal(t, "description") || string_case_equal(t, "label")))
                 {
-                    mcp->description = savestr(arg); /* 'label' is the legacy name for description */
+                    mcp->description = save_str(arg); /* 'label' is the legacy name for description */
                 }
             }
         }
@@ -450,7 +450,7 @@ void mime_set_article()
         }
         else if (!g_mime_section->type_name)
         {
-            g_mime_section->type_name = savestr(s_text_plain);
+            g_mime_section->type_name = save_str(s_text_plain);
         }
     }
 }
@@ -467,12 +467,12 @@ void mime_parse_type(MimeSection *mp, char *s)
         mp->type = NOT_MIME;
         return;
     }
-    mp->type_name = savestr(s);
+    mp->type_name = save_str(s);
     char *t = mime_find_param(mp->type_params, "name");
     if (t)
     {
         safe_free(mp->filename);
-        mp->filename = savestr(t);
+        mp->filename = save_str(t);
     }
 
     if (string_case_equal(s, "text", 4))
@@ -509,7 +509,7 @@ void mime_parse_type(MimeSection *mp, char *s)
                 return;
             }
             safe_free(mp->filename);
-            mp->filename = savestr(t);
+            mp->filename = save_str(t);
             t = mime_find_param(mp->type_params,"number");
             if (t)
             {
@@ -544,7 +544,7 @@ void mime_parse_type(MimeSection *mp, char *s)
             mp->flags |= MSF_ALTERNATIVE;
         }
         safe_free(mp->boundary);
-        mp->boundary = savestr(t);
+        mp->boundary = save_str(t);
         mp->boundary_len = (short)std::strlen(t);
         mp->type = MULTIPART_MIME;
         return;
@@ -578,7 +578,7 @@ void mime_parse_disposition(MimeSection *mp, char *s)
     if (s)
     {
         safe_free(mp->filename);
-        mp->filename = savestr(s);
+        mp->filename = save_str(s);
     }
     safe_free(params);
 }
@@ -704,7 +704,7 @@ void mime_parse_subheader(std::FILE *ifp, char *next_line)
         case CONT_NAME_LINE:
             safe_free(g_mime_section->filename);
             s = mime_skip_whitespace(s+1);
-            g_mime_section->filename = savestr(s);
+            g_mime_section->filename = save_str(s);
             break;
 
 #if 0
@@ -717,7 +717,7 @@ void mime_parse_subheader(std::FILE *ifp, char *next_line)
     g_mime_state = g_mime_section->type;
     if (!g_mime_section->type_name)
     {
-        g_mime_section->type_name = savestr(s_text_plain);
+        g_mime_section->type_name = save_str(s_text_plain);
     }
 }
 
@@ -813,7 +813,7 @@ char *mime_parse_params(char *str)
     {
         e++;
     }
-    char *t = savestr(mime_skip_whitespace(e));
+    char *t = save_str(mime_skip_whitespace(e));
     *e = '\0';
     if (s != str)
     {

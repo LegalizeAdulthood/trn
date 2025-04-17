@@ -21,7 +21,7 @@ static char *s_tildedir{};
 
 /* copy a string to a safe spot */
 
-char *savestr(const char *str)
+char *save_str(const char *str)
 {
     char* newaddr = safe_malloc((MemorySize)(std::strlen(str)+1));
 
@@ -126,7 +126,7 @@ char *filexp(const char *text)
                     std::free(s_tildedir);
                 }
                 s_tildedir = nullptr;
-                s_tildename = savestr(scrbuf);
+                s_tildename = save_str(scrbuf);
 #ifdef HAS_GETPWENT     /* getpwnam() is not the paragon of efficiency */
                 {
                     struct passwd *pwd = getpwnam(s_tildename);
@@ -162,7 +162,7 @@ char *filexp(const char *text)
                                 if (d)
                                 {
                                     cpytill(scrbuf, d + 1, ':');
-                                    s_tildedir = savestr(scrbuf);
+                                    s_tildedir = save_str(scrbuf);
                                     std::strcat(scrbuf, s);
                                     std::strcpy(filename, scrbuf);
                                 }
@@ -288,7 +288,7 @@ char *read_auth_file(const char *file, char **pass_ptr)
                 {
                     *cp = '\0';
                 }
-                strptr[i] = savestr(buf);
+                strptr[i] = save_str(buf);
             }
         }
         std::fclose(fp);

@@ -667,7 +667,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
             else
             {
                 curmap->km_type[ch] = KM_STRING + garbage;
-                curmap->km_ptr[ch].km_str = savestr(m);
+                curmap->km_ptr[ch].km_str = save_str(m);
             }
         }
     }
@@ -948,7 +948,7 @@ char *edit_buf(char *s, const char *cmd)
         else if (tmpbuf[1] == '\033')
         {
             *s = '\0';
-            cpybuf = savestr(g_buf);
+            cpybuf = save_str(g_buf);
             interp_search(g_buf, sizeof g_buf, cpybuf, cmd);
             std::free(cpybuf);
             s = g_buf + std::strlen(g_buf);
@@ -2698,10 +2698,10 @@ void add_tc_string(const char *capability, const char *string)
             finalize(1);
         }
         s_tc_string_cnt++;
-        s_tc_strings[i].capability = savestr(capability);
+        s_tc_strings[i].capability = save_str(capability);
     }
 
-    s_tc_strings[i].string = savestr(string);
+    s_tc_strings[i].string = save_str(string);
 }
 
 /* Return the named termcap color capability's string. */

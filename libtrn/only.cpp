@@ -38,7 +38,7 @@ void set_newsgroup_to_do(const char *pat)
     }
     if (i < MAX_NG_TO_DO)
     {
-        g_newsgroup_to_do[i] = savestr(pat);
+        g_newsgroup_to_do[i] = save_str(pat);
 #ifndef lint
         s_compextodo[i] = (CompiledRegex*)safe_malloc(sizeof(CompiledRegex));
 #endif
