@@ -543,14 +543,14 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
         }
         if (g_parsed_art == artnum)
         {
-            if (!artopen(artnum,g_htype[PAST_HEADER].minpos))
+            if (!art_open(artnum,g_htype[PAST_HEADER].minpos))
             {
                 return false;
             }
         }
         else
         {
-            if (!artopen(artnum,(ArticlePosition)0))
+            if (!art_open(artnum,(ArticlePosition)0))
             {
                 return false;
             }
@@ -560,8 +560,8 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
             }
         }
         /* loop through each line of the article */
-        seekartbuf(g_htype[PAST_HEADER].minpos);
-        while ((s = readartbuf(false)) != nullptr)
+        seek_art_buf(g_htype[PAST_HEADER].minpos);
+        while ((s = read_art_buf(false)) != nullptr)
         {
             if (scope == ARTSCOPE_BODY_NOSIG && *s == '-' && s[1] == '-' //
                 && (s[2] == '\n' || (s[2] == ' ' && s[3] == '\n')))

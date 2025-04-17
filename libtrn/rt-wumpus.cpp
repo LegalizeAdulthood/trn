@@ -519,8 +519,8 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
             ch = *cp;
             *cp = '\0';
             /* keep rn's backpager happy */
-            vwtary(g_artline, vrdary(g_artline - 1));
-            g_artline++;
+            vwtary(g_art_line_num, vrdary(g_art_line_num - 1));
+            g_art_line_num++;
         }
         else
         {
@@ -620,9 +620,9 @@ int  finish_tree(ArticleLine last_line)
 
     while (last_line <= s_max_line)
     {
-        g_artline++;
+        g_art_line_num++;
         last_line += tree_puts("+", last_line, 0);
-        vwtary(g_artline, g_artpos);    /* keep rn's backpager happy */
+        vwtary(g_art_line_num, g_art_pos);    /* keep rn's backpager happy */
     }
     return last_line - start_line;
 }

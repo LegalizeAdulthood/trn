@@ -264,7 +264,7 @@ void end_header_line()
     {
         s_first_one = false;
         /* remember where line left off */
-        g_htype[g_in_header].maxpos = g_artpos;
+        g_htype[g_in_header].maxpos = g_art_pos;
         if (g_htype[g_in_header].flags & HT_CACHED)
         {
             if (!get_cached_line(s_parsed_artp, g_in_header, true))
@@ -275,7 +275,7 @@ void end_header_line()
                 {
                     start++;
                 }
-                MemorySize size = g_artpos - start + 1 - 1;   /* pre-strip newline */
+                MemorySize size = g_art_pos - start + 1 - 1;   /* pre-strip newline */
                 if (g_in_header == SUBJ_LINE)
                 {
                     set_subj_line(s_parsed_artp, g_headbuf + start, size - 1);
@@ -316,7 +316,7 @@ bool parseline(char *art_buf, int newhide, int oldhide)
             s_first_one = (g_htype[g_in_header].minpos < 0);
             if (s_first_one)
             {
-                g_htype[g_in_header].minpos = g_artpos;
+                g_htype[g_in_header].minpos = g_art_pos;
                 if (g_in_header == DATE_LINE)
                 {
                     if (!s_parsed_artp->date)
@@ -354,11 +354,11 @@ void end_header()
     if (s_reading_nntp_header)
     {
         s_reading_nntp_header = false;
-        g_htype[PAST_HEADER].minpos = g_artpos + 1;     /* nntp_body will fix this */
+        g_htype[PAST_HEADER].minpos = g_art_pos + 1;     /* nntp_body will fix this */
     }
     else
     {
-        g_htype[PAST_HEADER].minpos = tellart();
+        g_htype[PAST_HEADER].minpos = tell_art();
     }
 
     /* If there's no References: line, then the In-Reply-To: line may give us
@@ -411,7 +411,7 @@ bool parseheader(ArticleNum artnum)
         char *s = nntp_artname(artnum, false);
         if (s)
         {
-            if (!artopen(artnum,(ArticlePosition)0))
+            if (!art_open(artnum,(ArticlePosition)0))
             {
                 return false;
             }
@@ -426,17 +426,17 @@ bool parseheader(ArticleNum artnum)
             s_reading_nntp_header = true;
         }
     }
-    else if (!artopen(artnum,(ArticlePosition)0))
+    else if (!art_open(artnum,(ArticlePosition)0))
     {
         return false;
     }
 
     start_header(artnum);
-    g_artpos = 0;
+    g_art_pos = 0;
     char *bp = g_headbuf;
     while (g_in_header)
     {
-        if (s_headbuf_size < g_artpos + LBUFLEN)
+        if (s_headbuf_size < g_art_pos + LBUFLEN)
         {
             len = bp - g_headbuf;
             s_headbuf_size += LBUFLEN * 4;
@@ -468,7 +468,7 @@ bool parseheader(ArticleNum artnum)
         }
         else
         {
-            if (readart(bp,LBUFLEN) == nullptr)
+            if (read_art(bp,LBUFLEN) == nullptr)
             {
                 break;
             }
@@ -480,7 +480,7 @@ bool parseheader(ArticleNum artnum)
             parseline(bp, false, false);
         }
         had_nl = found_nl;
-        g_artpos += len;
+        g_art_pos += len;
         bp += len;
     }
     *bp = '\0';

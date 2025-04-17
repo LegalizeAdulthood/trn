@@ -789,10 +789,10 @@ void setspin(SpinMode mode)
     case SPIN_BARGRAPH:
         if (!s_spin_level++)
         {
-            s_spin_art = g_openart;
-            if (s_spin_art != 0 && g_artfp)
+            s_spin_art = g_open_art;
+            if (s_spin_art != 0 && g_art_fp)
             {
-                s_spin_tell = tellart();
+                s_spin_tell = tell_art();
             }
             g_spin_count = 0;
             s_spin_place = 0;
@@ -846,7 +846,7 @@ void setspin(SpinMode mode)
         }
         if (s_spin_art)
         {
-            artopen(s_spin_art,s_spin_tell);   /* do not screw up the pager */
+            art_open(s_spin_art,s_spin_tell);   /* do not screw up the pager */
             s_spin_art = 0;
         }
         s_spin_mode = SPIN_OFF;

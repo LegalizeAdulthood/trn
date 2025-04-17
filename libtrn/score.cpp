@@ -307,7 +307,7 @@ void sc_fill_scorelist(ArticleNum first, ArticleNum last)
  */
 void sc_lookahead(bool flag, bool nowait)
 {
-    ArticleNum oldart = g_openart;
+    ArticleNum oldart = g_open_art;
     ArticlePosition oldartpos;
 
     if (!g_sc_initialized)
@@ -327,7 +327,7 @@ void sc_lookahead(bool flag, bool nowait)
     }
     if (oldart)                 /* Was there an article open? */
     {
-        oldartpos = tellart();  /* where were we in it? */
+        oldartpos = tell_art();  /* where were we in it? */
     }
 #ifndef PENDING
     if (g_int_count)
@@ -381,7 +381,7 @@ void sc_lookahead(bool flag, bool nowait)
     }
     if (oldart)                 /* copied from cheat.c */
     {
-        artopen(oldart,oldartpos);      /* do not screw the pager */
+        art_open(oldart,oldartpos);      /* do not screw the pager */
     }
 }
 

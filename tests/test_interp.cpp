@@ -117,7 +117,7 @@ void InterpolatorTest::SetUp()
     rcstuff_init();
     add_ng_init();
     art_init();
-    artio_init();
+    art_io_init();
     artsrch_init();
     backpage_init();
     bits_init();
@@ -150,7 +150,7 @@ void InterpolatorTest::TearDown()
 
     util_final();
     mime_final();
-    artio_final();
+    art_io_final();
     rcstuff_final();
     datasrc_finalize();
     last_final();
@@ -1432,7 +1432,7 @@ void InterpolatorNewsgroupTest::SetUp()
 
 void InterpolatorNewsgroupTest::TearDown()
 {
-    artclose();
+    art_close();
     close_cache();
     g_in_ng = false;
     g_art = -1;

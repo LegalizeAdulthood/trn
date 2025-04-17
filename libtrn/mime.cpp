@@ -665,7 +665,7 @@ void mime_ParseSubheader(std::FILE *ifp, char *next_line)
                     break;
                 }
             }
-            else if (!readart(line + pos, LBUFLEN))
+            else if (!read_art(line + pos, LBUFLEN))
             {
                 break;
             }
@@ -919,14 +919,14 @@ void mime_DecodeArticle(bool view)
 {
     MimeCapEntry* mcp = nullptr;
 
-    seekart(g_savefrom);
+    seek_art(g_savefrom);
     *g_art_line = '\0';
 
     while (true)
     {
         if (g_mime_state != MESSAGE_MIME || !g_mime_section->total)
         {
-            if (!readart(g_art_line,sizeof g_art_line))
+            if (!read_art(g_art_line,sizeof g_art_line))
             {
                 break;
             }
@@ -1338,7 +1338,7 @@ static int mime_getc(std::FILE *fp)
 
     if (!g_mime_getc_line || !*g_mime_getc_line)
     {
-        g_mime_getc_line = readart(g_art_line,sizeof g_art_line);
+        g_mime_getc_line = read_art(g_art_line,sizeof g_art_line);
         if (mime_EndOfSection(g_art_line))
         {
             return EOF;
@@ -1393,7 +1393,7 @@ DecodeState cat_decode(std::FILE *ifp, DecodeState state)
     }
     else
     {
-        while (readart(g_buf, sizeof g_buf))
+        while (read_art(g_buf, sizeof g_buf))
         {
             if (mime_EndOfSection(g_buf))
             {
@@ -1482,7 +1482,7 @@ int filter_html(char *t, const char *f)
                                                 : s_normal_word_wrap;
     if (!g_mime_section->html_line_start)
     {
-        g_mime_section->html_line_start = t - g_artbuf;
+        g_mime_section->html_line_start = t - g_art_buf;
     }
 
     if (!g_mime_section->html_blks)
@@ -1688,9 +1688,9 @@ int filter_html(char *t, const char *f)
             g_mime_section->html |= HF_NL_OK|HF_P_OK|HF_SPACE_OK;
         }
 
-        if (s_word_wrap && t - g_artbuf - g_mime_section->html_line_start > g_tc_COLS)
+        if (s_word_wrap && t - g_art_buf - g_mime_section->html_line_start > g_tc_COLS)
         {
-            char* line_start = g_mime_section->html_line_start + g_artbuf;
+            char* line_start = g_mime_section->html_line_start + g_art_buf;
             for (cp = line_start + s_word_wrap;
                  cp > line_start && !is_hor_space(*cp);
                  cp--)
@@ -2151,7 +2151,7 @@ static char *do_newline(char *t, HtmlFlags flag)
         g_mime_section->html &= ~(flag|HF_SPACE_OK);
         t += do_indent(t);
         *t++ = '\n';
-        g_mime_section->html_line_start = t - g_artbuf;
+        g_mime_section->html_line_start = t - g_art_buf;
         g_mime_section->html |= HF_NEED_INDENT;
     }
     return t;

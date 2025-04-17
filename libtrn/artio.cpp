@@ -25,62 +25,62 @@
 #include <cstdio>
 #include <cstring>
 
-ArticlePosition    g_artpos{};               /* byte position in article file */
-ArticleLine   g_artline{};              /* current line number in article file */
-std::FILE *g_artfp{};                /* current article file pointer */
-ArticleNum    g_openart{};              /* the article number we have open */
-char      *g_artbuf{};               //
-long       g_artbuf_pos{};           //
-long       g_artbuf_seek{};          //
-long       g_artbuf_len{};           //
+ArticlePosition    g_art_pos{};               /* byte position in article file */
+ArticleLine   g_art_line_num{};              /* current line number in article file */
+std::FILE *g_art_fp{};                /* current article file pointer */
+ArticleNum    g_open_art{};              /* the article number we have open */
+char      *g_art_buf{};               //
+long       g_art_buf_pos{};           //
+long       g_art_buf_seek{};          //
+long       g_art_buf_len{};           //
 char       g_wrapped_nl{WRAPPED_NL}; //
 int        g_word_wrap_offset{8};    /* right-hand column size (0 is off) */
 
 static long s_artbuf_size{};
 
-void artio_init()
+void art_io_init()
 {
     s_artbuf_size = 8 * 1024;
-    g_artbuf = safemalloc(s_artbuf_size);
-    clear_artbuf();
+    g_art_buf = safemalloc(s_artbuf_size);
+    clear_art_buf();
 }
 
-void artio_final()
+void art_io_final()
 {
-    safefree0(g_artbuf);
+    safefree0(g_art_buf);
 }
 
 /* open an article, unless it's already open */
 
-std::FILE *artopen(ArticleNum artnum, ArticleNum pos)
+std::FILE *art_open(ArticleNum art_num, ArticleNum pos)
 {
-    Article* ap = article_find(artnum);
+    Article* ap = article_find(art_num);
 
-    if (!ap || !artnum || (ap->flags & (AF_EXISTS | AF_FAKE)) != AF_EXISTS)
+    if (!ap || !art_num || (ap->flags & (AF_EXISTS | AF_FAKE)) != AF_EXISTS)
     {
         errno = ENOENT;
         return nullptr;
     }
-    if (g_openart == artnum)            /* this article is already open? */
+    if (g_open_art == art_num)            /* this article is already open? */
     {
-        seekart(pos);                   /* yes: just seek the file */
-        return g_artfp;                 /* and say we succeeded */
+        seek_art(pos);                   /* yes: just seek the file */
+        return g_art_fp;                 /* and say we succeeded */
     }
-    artclose();
+    art_close();
 
     while (true)
     {
         if (g_datasrc->flags & DF_REMOTE)
         {
-            nntp_body(artnum);
+            nntp_body(art_num);
         }
         else
         {
             char artname[MAXFILENAME]; /* filename of current article */
-            std::sprintf(artname, "%ld", (long) artnum);
-            g_artfp = std::fopen(artname, "r");
+            std::sprintf(artname, "%ld", (long) art_num);
+            g_art_fp = std::fopen(artname, "r");
         }
-        if (!g_artfp)
+        if (!g_art_fp)
         {
 #ifdef ETIMEDOUT
             if (errno == ETIMEDOUT)
@@ -96,89 +96,89 @@ std::FILE *artopen(ArticleNum artnum, ArticleNum pos)
         }
         else
         {
-            g_openart = artnum; /* remember what we did here */
-            seekart(pos);
+            g_open_art = art_num; /* remember what we did here */
+            seek_art(pos);
         }
         break;
     }
-    return g_artfp;                     /* and return either fp or nullptr */
+    return g_art_fp;                     /* and return either fp or nullptr */
 }
 
-void artclose()
+void art_close()
 {
-    if (g_artfp != nullptr)             /* article still open? */
+    if (g_art_fp != nullptr)             /* article still open? */
     {
         if (g_datasrc->flags & DF_REMOTE)
         {
             nntp_finishbody(FB_DISCARD);
         }
-        std::fclose(g_artfp);                        /* close it */
-        g_artfp = nullptr;                      /* and tell the world */
-        g_openart = 0;
-        clear_artbuf();
+        std::fclose(g_art_fp);                        /* close it */
+        g_art_fp = nullptr;                      /* and tell the world */
+        g_open_art = 0;
+        clear_art_buf();
     }
 }
 
-int seekart(ArticlePosition pos)
+int seek_art(ArticlePosition pos)
 {
     if (g_datasrc->flags & DF_REMOTE)
     {
         return nntp_seekart(pos);
     }
-    return std::fseek(g_artfp,(long)pos,0);
+    return std::fseek(g_art_fp,(long)pos,0);
 }
 
 ArticlePosition
-tellart()
+tell_art()
 {
     if (g_datasrc->flags & DF_REMOTE)
     {
         return nntp_tellart();
     }
-    return (ArticlePosition)std::ftell(g_artfp);
+    return (ArticlePosition)std::ftell(g_art_fp);
 }
 
-char *readart(char *s, int limit)
+char *read_art(char *s, int limit)
 {
     if (g_datasrc->flags & DF_REMOTE)
     {
         return nntp_readart(s, limit);
     }
-    return std::fgets(s,limit,g_artfp);
+    return std::fgets(s,limit,g_art_fp);
 }
 
-void clear_artbuf()
+void clear_art_buf()
 {
-    *g_artbuf = '\0';
-    g_artbuf_len = 0;
-    g_artbuf_seek = 0;
-    g_artbuf_pos = 0;
+    *g_art_buf = '\0';
+    g_art_buf_len = 0;
+    g_art_buf_seek = 0;
+    g_art_buf_pos = 0;
 }
 
-int seekartbuf(ArticlePosition pos)
+int seek_art_buf(ArticlePosition pos)
 {
     if (!g_do_hiding)
     {
-        return seekart(pos);
+        return seek_art(pos);
     }
 
     pos -= g_htype[PAST_HEADER].minpos;
-    g_artbuf_pos = g_artbuf_len;
+    g_art_buf_pos = g_art_buf_len;
 
-    while (g_artbuf_pos < pos)
+    while (g_art_buf_pos < pos)
     {
-        if (!readartbuf(false))
+        if (!read_art_buf(false))
         {
             return -1;
         }
     }
 
-    g_artbuf_pos = pos;
+    g_art_buf_pos = pos;
 
     return 0;
 }
 
-char *readartbuf(bool view_inline)
+char *read_art_buf(bool view_inline)
 {
     char* bp;
     char *s;
@@ -194,20 +194,20 @@ char *readartbuf(bool view_inline)
 
     if (!g_do_hiding)
     {
-        bp = readart(g_art_line,(sizeof g_art_line)-1);
-        g_artbuf_seek = tellart() - g_htype[PAST_HEADER].minpos;
-        g_artbuf_pos = g_artbuf_seek;
+        bp = read_art(g_art_line,(sizeof g_art_line)-1);
+        g_art_buf_seek = tell_art() - g_htype[PAST_HEADER].minpos;
+        g_art_buf_pos = g_art_buf_seek;
         return bp;
     }
-    if (g_artbuf_pos == g_art_size - g_htype[PAST_HEADER].minpos)
+    if (g_art_buf_pos == g_art_size - g_htype[PAST_HEADER].minpos)
     {
         return nullptr;
     }
-    bp = g_artbuf + g_artbuf_pos;
+    bp = g_art_buf + g_art_buf_pos;
     if (*bp == '\001' || *bp == '\002')
     {
         bp++;
-        g_artbuf_pos++;
+        g_art_buf_pos++;
     }
     if (*bp)
     {
@@ -233,11 +233,11 @@ char *readartbuf(bool view_inline)
   read_more:
     extra_offset = g_mime_state == HTMLTEXT_MIME? 1024 : 0;
     o = read_offset + extra_offset;
-    if (s_artbuf_size < g_artbuf_pos + o + LBUFLEN)
+    if (s_artbuf_size < g_art_buf_pos + o + LBUFLEN)
     {
         s_artbuf_size += LBUFLEN * 4;
-        g_artbuf = saferealloc(g_artbuf,s_artbuf_size);
-        bp = g_artbuf + g_artbuf_pos;
+        g_art_buf = saferealloc(g_art_buf,s_artbuf_size);
+        bp = g_art_buf + g_art_buf_pos;
     }
     switch (g_mime_state)
     {
@@ -248,7 +248,7 @@ char *readartbuf(bool view_inline)
     default:
         read_something = 1;
         /* The -1 leaves room for appending a newline, if needed */
-        if (!readart(bp + o, s_artbuf_size - g_artbuf_pos - o - 1))
+        if (!read_art(bp + o, s_artbuf_size - g_art_buf_pos - o - 1))
         {
             if (!read_offset)
             {
@@ -367,7 +367,7 @@ char *readartbuf(bool view_inline)
             color_object(COLOR_MIMEDESC, true);
             if (decode_piece(mcp, bp))
             {
-                std::strcpy(bp = g_artbuf + g_artbuf_pos, g_art_line);
+                std::strcpy(bp = g_art_buf + g_art_buf_pos, g_art_line);
                 mime_SetState(bp);
                 if (g_mime_state == DECODE_MIME)
                 {
@@ -382,7 +382,7 @@ char *readartbuf(bool view_inline)
             chdir_newsdir();
             erase_line(false);
             g_nowait_fork = false;
-            g_first_view = g_artline;
+            g_first_view = g_art_line_num;
             g_term_line = save_term_line;
             if (g_mime_state != SKIP_MIME)
             {
@@ -400,8 +400,8 @@ char *readartbuf(bool view_inline)
         }
         if (!mp)
         {
-            g_artbuf_len = g_artbuf_pos;
-            g_art_size = g_artbuf_len + g_htype[PAST_HEADER].minpos;
+            g_art_buf_len = g_art_buf_pos;
+            g_art_size = g_art_buf_len + g_htype[PAST_HEADER].minpos;
             read_something = 0;
             bp = nullptr;
         }
@@ -433,7 +433,7 @@ char *readartbuf(bool view_inline)
                 nntp_finishbody(FB_SILENT);
                 g_raw_art_size = nntp_artsize();
             }
-            seekart(g_raw_art_size);
+            seek_art(g_raw_art_size);
         }
         /* FALL THROUGH */
 
@@ -449,7 +449,7 @@ char *readartbuf(bool view_inline)
         else
         {
             o = -1;
-            g_artbuf_pos++;
+            g_art_buf_pos++;
             bp++;
         }
         std::sprintf(bp+o,"\002%s\n",g_multipart_separator.c_str());
@@ -458,7 +458,7 @@ char *readartbuf(bool view_inline)
     case UNHANDLED_MIME:
         g_mime_state = SKIP_MIME;
         *bp++ = '\001';
-        g_artbuf_pos++;
+        g_art_buf_pos++;
         mime_Description(g_mime_section,bp,g_tc_COLS);
         len = std::strlen(bp);
         break;
@@ -466,7 +466,7 @@ char *readartbuf(bool view_inline)
     case ALTERNATE_MIME:
         g_mime_state = SKIP_MIME;
         *bp++ = '\001';
-        g_artbuf_pos++;
+        g_art_buf_pos++;
         std::sprintf(bp,"[Alternative: %s]\n", g_mime_section->type_name);
         len = std::strlen(bp);
         break;
@@ -480,7 +480,7 @@ char *readartbuf(bool view_inline)
         /* FALL THROUGH */
 
     default:
-        if (view_inline && g_first_view < g_artline //
+        if (view_inline && g_first_view < g_art_line_num //
           && (g_mime_section->flags & MSF_INLINE))
         {
             g_mime_state = DECODE_MIME;
@@ -490,7 +490,7 @@ char *readartbuf(bool view_inline)
             g_mime_state = SKIP_MIME;
         }
         *bp++ = '\001';
-        g_artbuf_pos++;
+        g_art_buf_pos++;
         mime_Description(g_mime_section,bp,g_tc_COLS);
         len = std::strlen(bp);
         break;
@@ -542,14 +542,14 @@ char *readartbuf(bool view_inline)
             }
         }
     }
-    g_artbuf_pos += len;
+    g_art_buf_pos += len;
     if (read_something)
     {
-        g_artbuf_seek = tellart();
-        g_artbuf_len = g_artbuf_pos + extra_chars;
+        g_art_buf_seek = tell_art();
+        g_art_buf_len = g_art_buf_pos + extra_chars;
         if (g_art_size >= 0)
         {
-            g_art_size = g_raw_art_size - g_artbuf_seek + g_artbuf_len + g_htype[PAST_HEADER].minpos;
+            g_art_size = g_raw_art_size - g_art_buf_seek + g_art_buf_len + g_htype[PAST_HEADER].minpos;
         }
     }
 

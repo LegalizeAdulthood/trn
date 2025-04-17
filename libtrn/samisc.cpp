@@ -162,9 +162,9 @@ void sa_go_art(long a)
 {
     g_art = a;
     (void)article_find(g_art);
-    if (g_openart != g_art)
+    if (g_open_art != g_art)
     {
-        artopen(g_art, (ArticlePosition) 0);
+        art_open(g_art, (ArticlePosition) 0);
     }
 }
 

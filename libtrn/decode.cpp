@@ -367,7 +367,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
             std::strcpy(g_msg,"Failed.");
             return false;
         }
-        while (readart(g_art_line, sizeof g_art_line))
+        while (read_art(g_art_line, sizeof g_art_line))
         {
             if (mime_EndOfSection(g_art_line))
             {

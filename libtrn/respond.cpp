@@ -78,9 +78,9 @@ SaveResult save_article()
     }
     parseheader(g_art);
     mime_SetArticle();
-    clear_artbuf();
+    clear_art_buf();
     g_savefrom = (cmd == 'w' || cmd == 'e')? g_htype[PAST_HEADER].minpos : 0;
-    if (artopen(g_art, g_savefrom) == nullptr)
+    if (art_open(g_art, g_savefrom) == nullptr)
     {
         if (g_verbose)
         {
@@ -250,9 +250,9 @@ SaveResult save_article()
             {
                 total = totalOpt;
             }
-            for (g_artpos = g_savefrom;
-                 readart(g_art_line,sizeof g_art_line) != nullptr;
-                 g_artpos = tellart())
+            for (g_art_pos = g_savefrom;
+                 read_art(g_art_line,sizeof g_art_line) != nullptr;
+                 g_art_pos = tell_art())
             {
                 if (*g_art_line <= ' ')
                 {
@@ -269,14 +269,14 @@ SaveResult save_article()
 #endif
                 )
                 {
-                    g_savefrom = g_artpos;
+                    g_savefrom = g_art_pos;
                     decode_type = 1;
                     break;
                 }
                 if (uue_prescan(g_art_line, &filename, &part, &total))
                 {
-                    g_savefrom = g_artpos;
-                    seekart(g_savefrom);
+                    g_savefrom = g_art_pos;
+                    seek_art(g_savefrom);
                     decode_type = 2;
                     break;
                 }
@@ -537,8 +537,8 @@ SaveResult save_article()
             {
                 std::fprintf(s_tmpfp, "Article: %ld of %s\n", g_art, g_ngname.c_str());
             }
-            seekart(g_savefrom);
-            while (readart(g_buf, LBUFLEN) != nullptr)
+            seek_art(g_savefrom);
+            while (read_art(g_buf, LBUFLEN) != nullptr)
             {
                 if (quote_From && string_case_equal(g_buf, "from ",5))
                 {
@@ -583,9 +583,9 @@ SaveResult view_article()
 {
     parseheader(g_art);
     mime_SetArticle();
-    clear_artbuf();
+    clear_art_buf();
     g_savefrom = g_htype[PAST_HEADER].minpos;
-    if (artopen(g_art, g_savefrom) == nullptr)
+    if (art_open(g_art, g_savefrom) == nullptr)
     {
         if (g_verbose)
         {
@@ -613,9 +613,9 @@ SaveResult view_article()
 
         /* Scan subject for filename and part number information */
         filename = decode_subject(g_art, &part, &total);
-        for (g_artpos = g_savefrom;
-             readart(g_art_line,sizeof g_art_line) != nullptr;
-             g_artpos = tellart())
+        for (g_art_pos = g_savefrom;
+             read_art(g_art_line,sizeof g_art_line) != nullptr;
+             g_art_pos = tell_art())
         {
             if (*g_art_line <= ' ')
             {
@@ -624,8 +624,8 @@ SaveResult view_article()
             if (uue_prescan(g_art_line, &filename, &part, &total))
             {
                 MimeCapEntry*mc = mime_FindMimecapEntry("image/jpeg", MCF_NONE); /* TODO: refine this */
-                g_savefrom = g_artpos;
-                seekart(g_savefrom);
+                g_savefrom = g_art_pos;
+                seek_art(g_savefrom);
                 g_mime_section->type = UNHANDLED_MIME;
                 safefree(g_mime_section->filename);
                 g_mime_section->filename = filename? savestr(filename) : nullptr;
@@ -661,7 +661,7 @@ int cancel_article()
     int  myuid = current_user_id();
     int  r = -1;
 
-    if (artopen(g_art, (ArticlePosition) 0) == nullptr)
+    if (art_open(g_art, (ArticlePosition) 0) == nullptr)
     {
         if (g_verbose)
         {
@@ -734,7 +734,7 @@ int supersede_article()         /* Supersedes: */
     int  r = -1;
     bool incl_body = (*g_buf == 'Z');
 
-    if (artopen(g_art, (ArticlePosition) 0) == nullptr)
+    if (art_open(g_art, (ArticlePosition) 0) == nullptr)
     {
         if (g_verbose)
         {
@@ -788,11 +788,11 @@ int supersede_article()         /* Supersedes: */
         }
         interp(hbuf, sizeof hbuf, get_val("SUPERSEDEHEADER",SUPERSEDEHEADER));
         std::fputs(hbuf,header);
-        if (incl_body && g_artfp != nullptr)
+        if (incl_body && g_art_fp != nullptr)
         {
             parseheader(g_art);
-            seekart(g_htype[PAST_HEADER].minpos);
-            while (readart(g_buf,LBUFLEN) != nullptr)
+            seek_art(g_htype[PAST_HEADER].minpos);
+            while (read_art(g_buf,LBUFLEN) != nullptr)
             {
                 std::fputs(g_buf, header);
             }
@@ -865,7 +865,7 @@ void reply()
     bool incl_body = (*g_buf == 'R' && g_art);
     char* maildoer = savestr(get_val_const("MAILPOSTER",MAILPOSTER));
 
-    artopen(g_art,(ArticlePosition)0);
+    art_open(g_art,(ArticlePosition)0);
     std::FILE *header = std::fopen(g_headname.c_str(),"w");       /* open header file */
     if (header == nullptr)
     {
@@ -887,17 +887,17 @@ void reply()
         }
         termdown(3);
     }
-    if (incl_body && g_artfp != nullptr)
+    if (incl_body && g_art_fp != nullptr)
     {
         char* s;
         interp(g_buf, (sizeof g_buf), get_val("YOUSAID",YOUSAID));
         std::fprintf(header,"%s\n",g_buf);
         parseheader(g_art);
         mime_SetArticle();
-        clear_artbuf();
-        seekart(g_htype[PAST_HEADER].minpos);
+        clear_art_buf();
+        seek_art(g_htype[PAST_HEADER].minpos);
         g_wrapped_nl = '\n';
-        while ((s = readartbuf(false)) != nullptr)
+        while ((s = read_art_buf(false)) != nullptr)
         {
             char *t = std::strchr(s, '\n');
             if (t != nullptr)
@@ -935,7 +935,7 @@ void forward()
 #ifdef REGEX_WORKS_RIGHT
     init_compex(&mime_compex);
 #endif
-    artopen(g_art,(ArticlePosition)0);
+    art_open(g_art,(ArticlePosition)0);
     std::FILE *header = std::fopen(g_headname.c_str(),"w");       /* open header file */
     if (header == nullptr)
     {
@@ -1012,7 +1012,7 @@ void forward()
         }
         termdown(3);
     }
-    if (g_artfp != nullptr)
+    if (g_art_fp != nullptr)
     {
         interp(g_buf, sizeof g_buf, get_val("FORWARDMSG",FORWARDMSG));
         if (mime_boundary)
@@ -1029,8 +1029,8 @@ void forward()
             std::fprintf(header, "%s\n", g_buf);
         }
         parseheader(g_art);
-        seekart((ArticlePosition)0);
-        while (readart(g_buf, sizeof g_buf) != nullptr)
+        seek_art((ArticlePosition)0);
+        while (read_art(g_buf, sizeof g_buf) != nullptr)
         {
             if (!mime_boundary && *g_buf == '-')
             {
@@ -1084,7 +1084,7 @@ void followup()
             g_art = g_lastart + 1;
         }
     }
-    artopen(g_art,(ArticlePosition)0);
+    art_open(g_art,(ArticlePosition)0);
     std::FILE *header = std::fopen(g_headname.c_str(),"w");
     if (header == nullptr)
     {
@@ -1095,7 +1095,7 @@ void followup()
     }
     interp(hbuf, sizeof hbuf, get_val("NEWSHEADER",NEWSHEADER));
     std::fputs(hbuf,header);
-    if (incl_body && g_artfp != nullptr)
+    if (incl_body && g_art_fp != nullptr)
     {
         char* s;
         if (g_verbose)
@@ -1109,10 +1109,10 @@ void followup()
         std::fprintf(header,"%s\n",g_buf);
         parseheader(g_art);
         mime_SetArticle();
-        clear_artbuf();
-        seekart(g_htype[PAST_HEADER].minpos);
+        clear_art_buf();
+        seek_art(g_htype[PAST_HEADER].minpos);
         g_wrapped_nl = '\n';
-        while ((s = readartbuf(false)) != nullptr)
+        while ((s = read_art_buf(false)) != nullptr)
         {
             char *t = std::strchr(s, '\n');
             if (t != nullptr)

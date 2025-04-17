@@ -416,7 +416,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             }
             if (!g_do_fseek)            /* starting at top of article? */
             {
-                g_artline = 0;          /* start at the beginning */
+                g_art_line_num = 0;          /* start at the beginning */
                 g_topline = -1;         /* and remember top line of screen */
                                         /*  (line # within article file) */
             }
@@ -436,7 +436,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 }
             }
             /* make sure article is found & open */
-            if (!artopen(g_art, (ArticlePosition) 0))
+            if (!art_open(g_art, (ArticlePosition) 0))
             {
                 char tmpbuf[256];
                 /* see if we have tree data for this article anyway */
@@ -451,7 +451,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                     }
                 }
                 ArticleLine linenum = tree_puts(tmpbuf, 0, 0);
-                vwtary(g_artline,(ArticlePosition)0);
+                vwtary(g_art_line_num,(ArticlePosition)0);
                 finish_tree(linenum);
                 g_prompt = whatnext;
                 g_srchahead = 0;
@@ -609,7 +609,7 @@ cleanup:
     }
 
     g_in_ng = false;                      /* leave newsgroup state */
-    artclose();
+    art_close();
     if (!g_univ_ng_virtflag)
     {
         newline();
@@ -1587,8 +1587,8 @@ run_the_selector:
             g_reread = true;
             clear();
             g_do_fseek = true;
-            g_artline = g_topline;
-            g_artline = std::max(g_artline, 0);
+            g_art_line_num = g_topline;
+            g_art_line_num = std::max(g_art_line_num, 0);
         }
         return AS_NORM;
 
@@ -1606,17 +1606,17 @@ run_the_selector:
             {
                 nntp_finishbody(FB_OUTPUT);
                 g_raw_art_size = nntp_artsize();
-                g_art_size = g_raw_art_size-g_artbuf_seek+g_artbuf_len+g_htype[PAST_HEADER].minpos;
+                g_art_size = g_raw_art_size-g_art_buf_seek+g_art_buf_len+g_htype[PAST_HEADER].minpos;
             }
             if (g_do_hiding)
             {
-                seekartbuf(g_art_size);
-                seekartbuf(g_artpos);
+                seek_art_buf(g_art_size);
+                seek_art_buf(g_art_pos);
             }
             g_reread = true;
             g_do_fseek = true;
-            g_topline = g_artline;
-            g_inner_light = g_artline - 1;
+            g_topline = g_art_line_num;
+            g_inner_light = g_art_line_num - 1;
             g_inner_search = g_art_size;
             g_g_line = 0;
             g_hide_everything = 'b';
@@ -1644,16 +1644,16 @@ run_the_selector:
                     g_highlight = g_topline;
                 }
             }
-            g_artline = g_topline;
-            if (g_artline >= 0)
+            g_art_line_num = g_topline;
+            if (g_art_line_num >= 0)
             {
                 do
                 {
-                    g_artline--;
-                } while (g_artline >= 0 && g_artline > target && vrdary(g_artline - 1) >= 0);
+                    g_art_line_num--;
+                } while (g_art_line_num >= 0 && g_art_line_num > target && vrdary(g_art_line_num - 1) >= 0);
             }
-            g_topline = g_artline;
-            g_artline = std::max(g_artline, 0);
+            g_topline = g_art_line_num;
+            g_art_line_num = std::max(g_art_line_num, 0);
         }
         return AS_NORM;
 

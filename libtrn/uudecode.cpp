@@ -233,7 +233,7 @@ DecodeState uudecode(std::FILE *ifp, DecodeState state)
         return state;
     }
 
-    while (ifp ? std::fgets(g_buf, sizeof g_buf, ifp) : readart(g_buf, sizeof g_buf))
+    while (ifp ? std::fgets(g_buf, sizeof g_buf, ifp) : read_art(g_buf, sizeof g_buf))
     {
         char lastline[UULENGTH+1];
         if (!ifp && mime_EndOfSection(g_buf))
