@@ -1112,12 +1112,12 @@ static void univ_vg_addart(ArticleNum a)
     {
         return;
     }
-    char *subj = fetchsubj(a, false);
+    char *subj = fetch_subj(a, false);
     if (!subj || !*subj)
     {
         return;
     }
-    char *from = fetchfrom(a, false);
+    char *from = fetch_from(a, false);
     if (!from || !*from)
     {
         from = "<No Author>";

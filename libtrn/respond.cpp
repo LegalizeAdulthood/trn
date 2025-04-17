@@ -76,10 +76,10 @@ SaveResult save_article()
     {
         cmd = std::tolower(cmd);
     }
-    parseheader(g_art);
+    parse_header(g_art);
     mime_SetArticle();
     clear_art_buf();
-    g_savefrom = (cmd == 'w' || cmd == 'e')? g_htype[PAST_HEADER].minpos : 0;
+    g_savefrom = (cmd == 'w' || cmd == 'e')? g_htype[PAST_HEADER].min_pos : 0;
     if (art_open(g_art, g_savefrom) == nullptr)
     {
         if (g_verbose)
@@ -581,10 +581,10 @@ s_bomb:
 
 SaveResult view_article()
 {
-    parseheader(g_art);
+    parse_header(g_art);
     mime_SetArticle();
     clear_art_buf();
-    g_savefrom = g_htype[PAST_HEADER].minpos;
+    g_savefrom = g_htype[PAST_HEADER].min_pos;
     if (art_open(g_art, g_savefrom) == nullptr)
     {
         if (g_verbose)
@@ -674,9 +674,9 @@ int cancel_article()
         termdown(2);
         return r;
     }
-    char *reply_buf = fetchlines(g_art, REPLY_LINE);
-    char *from_buf = fetchlines(g_art, FROM_LINE);
-    char *ngs_buf = fetchlines(g_art, NEWSGROUPS_LINE);
+    char *reply_buf = fetch_lines(g_art, REPLY_LINE);
+    char *from_buf = fetch_lines(g_art, FROM_LINE);
+    char *ngs_buf = fetch_lines(g_art, NEWSGROUPS_LINE);
     if (!string_case_equal(get_val_const("FROM", ""), from_buf)      //
         && (!in_string(from_buf, g_hostname, false)                  //
             || (!in_string(from_buf, g_login_name.c_str(), true)     //
@@ -747,9 +747,9 @@ int supersede_article()         /* Supersedes: */
         termdown(2);
         return r;
     }
-    char *reply_buf = fetchlines(g_art, REPLY_LINE);
-    char *from_buf = fetchlines(g_art, FROM_LINE);
-    char *ngs_buf = fetchlines(g_art, NEWSGROUPS_LINE);
+    char *reply_buf = fetch_lines(g_art, REPLY_LINE);
+    char *from_buf = fetch_lines(g_art, FROM_LINE);
+    char *ngs_buf = fetch_lines(g_art, NEWSGROUPS_LINE);
     if (!string_case_equal(get_val_const("FROM", ""), from_buf)      //
         && (!in_string(from_buf, g_hostname, false)                  //
             || (!in_string(from_buf, g_login_name.c_str(), true)     //
@@ -790,8 +790,8 @@ int supersede_article()         /* Supersedes: */
         std::fputs(hbuf,header);
         if (incl_body && g_art_fp != nullptr)
         {
-            parseheader(g_art);
-            seek_art(g_htype[PAST_HEADER].minpos);
+            parse_header(g_art);
+            seek_art(g_htype[PAST_HEADER].min_pos);
             while (read_art(g_buf,LBUFLEN) != nullptr)
             {
                 std::fputs(g_buf, header);
@@ -892,10 +892,10 @@ void reply()
         char* s;
         interp(g_buf, (sizeof g_buf), get_val("YOUSAID",YOUSAID));
         std::fprintf(header,"%s\n",g_buf);
-        parseheader(g_art);
+        parse_header(g_art);
         mime_SetArticle();
         clear_art_buf();
-        seek_art(g_htype[PAST_HEADER].minpos);
+        seek_art(g_htype[PAST_HEADER].min_pos);
         g_wrapped_nl = '\n';
         while ((s = read_art_buf(false)) != nullptr)
         {
@@ -1028,7 +1028,7 @@ void forward()
         {
             std::fprintf(header, "%s\n", g_buf);
         }
-        parseheader(g_art);
+        parse_header(g_art);
         seek_art((ArticlePosition)0);
         while (read_art(g_buf, sizeof g_buf) != nullptr)
         {
@@ -1107,10 +1107,10 @@ void followup()
         }
         interp(g_buf, (sizeof g_buf), get_val("ATTRIBUTION",ATTRIBUTION));
         std::fprintf(header,"%s\n",g_buf);
-        parseheader(g_art);
+        parse_header(g_art);
         mime_SetArticle();
         clear_art_buf();
-        seek_art(g_htype[PAST_HEADER].minpos);
+        seek_art(g_htype[PAST_HEADER].min_pos);
         g_wrapped_nl = '\n';
         while ((s = read_art_buf(false)) != nullptr)
         {

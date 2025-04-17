@@ -145,7 +145,7 @@ void thread_open()
     {
         if ((ap->flags & (AF_EXISTS|AF_CACHED)) == AF_EXISTS)
         {
-            (void) parseheader(article_num(ap));
+            (void) parse_header(article_num(ap));
         }
     }
 

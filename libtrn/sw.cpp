@@ -292,11 +292,11 @@ void decode_switch(const char *s)
             if (!s[1])
             {
                 /* Free old g_user_htype list */
-                while (g_user_htype_cnt > 1)
+                while (g_user_htype_count > 1)
                 {
-                    std::free(g_user_htype[--g_user_htype_cnt].name);
+                    std::free(g_user_htype[--g_user_htype_count].name);
                 }
-                std::memset(g_user_htypeix,0,26);
+                std::memset(g_user_htype_index,0,26);
             }
             /* FALL THROUGH */
 

@@ -138,7 +138,7 @@ char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
     *partp = part;
     *totalp = total;
     safefree(subject);
-    subject = fetchsubj(art_num,true);
+    subject = fetch_subj(art_num,true);
     if (!*subject)
     {
         return nullptr;

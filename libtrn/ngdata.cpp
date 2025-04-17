@@ -309,7 +309,7 @@ void ng_skip()
         do
         {
             /* tries to grab PREFETCH_SIZE XHDRS, flagging missing articles */
-            (void) fetchsubj(g_art, false);
+            (void) fetch_subj(g_art, false);
             ArticleNum artnum = g_art + PREFETCH_SIZE - 1;
             artnum = std::min(artnum, g_lastart);
             while (g_art <= artnum)

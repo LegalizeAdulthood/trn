@@ -213,8 +213,8 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     g_option_def_vals = (char**)safemalloc(len*sizeof(char*));
     std::memset((char*)g_option_def_vals,0,(g_options_ini)[0].checksum * sizeof (char*));
     /* Set DEFHIDE and DEFMAGIC to current values and clear g_user_htype list */
-    set_header_list(HT_DEFHIDE,HT_HIDE,"");
-    set_header_list(HT_DEFMAGIC,HT_MAGIC,"");
+    set_header_list(HT_DEF_HIDE,HT_HIDE,"");
+    set_header_list(HT_DEF_MAGIC,HT_MAGIC,"");
 
     g_ini_file = filexp(g_use_threads ? get_val_const("TRNRC", "%+/trnrc") : get_val_const("RNRC", "%+/rnrc"));
 
@@ -657,12 +657,12 @@ void set_option(OptionIndex num, const char *s)
     case OI_HEADER_MAGIC:
         if (!g_checkflag)
         {
-            set_header_list(HT_MAGIC, HT_DEFMAGIC, s);
+            set_header_list(HT_MAGIC, HT_DEF_MAGIC, s);
         }
         break;
 
     case OI_HEADER_HIDING:
-        set_header_list(HT_HIDE, HT_DEFHIDE, s);
+        set_header_list(HT_HIDE, HT_DEF_HIDE, s);
         break;
 
     case OI_INITIAL_ARTICLE_LINES:
@@ -1466,7 +1466,7 @@ static char *hidden_list()
 {
     g_buf[0] = '\0';
     g_buf[1] = '\0';
-    for (int i = 1; i < g_user_htype_cnt; i++)
+    for (int i = 1; i < g_user_htype_count; i++)
     {
         std::sprintf(g_buf+std::strlen(g_buf),",%s%s", g_user_htype[i].flags? "" : "!",
                 g_user_htype[i].name);
@@ -1480,10 +1480,10 @@ static char *magic_list()
     g_buf[1] = '\0';
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
     {
-        if (!(g_htype[i].flags & HT_MAGIC) != !(g_htype[i].flags & HT_DEFMAGIC))
+        if (!(g_htype[i].flags & HT_MAGIC) != !(g_htype[i].flags & HT_DEF_MAGIC))
         {
             std::sprintf(g_buf+std::strlen(g_buf),",%s%s",
-                    (g_htype[i].flags & HT_DEFMAGIC)? "!" : "",
+                    (g_htype[i].flags & HT_DEF_MAGIC)? "!" : "",
                     g_htype[i].name);
         }
     }
@@ -1494,14 +1494,14 @@ static void set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, const
 {
     bool setit;
 
-    if (flag == HT_HIDE || flag == HT_DEFHIDE)
+    if (flag == HT_HIDE || flag == HT_DEF_HIDE)
     {
         /* Free old g_user_htype list */
-        while (g_user_htype_cnt > 1)
+        while (g_user_htype_count > 1)
         {
-            std::free(g_user_htype[--g_user_htype_cnt].name);
+            std::free(g_user_htype[--g_user_htype_count].name);
         }
-        std::memset((char*)g_user_htypeix,0,sizeof g_user_htypeix);
+        std::memset((char*)g_user_htype_index,0,sizeof g_user_htype_index);
     }
 
     if (!*str)
@@ -1550,7 +1550,7 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
     {
         if (!len || string_case_equal(s, g_htype[i].name, len))
         {
-            if (setit && (flag != HT_MAGIC || (g_htype[i].flags & HT_MAGICOK)))
+            if (setit && (flag != HT_MAGIC || (g_htype[i].flags & HT_MAGIC_OK)))
             {
                 g_htype[i].flags |= flag;
             }
@@ -1566,7 +1566,7 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
         int  add_at = 0;
         int  killed = 0;
         bool save_it = true;
-        for (int i = g_user_htypeix[ch - 'a']; *g_user_htype[i].name == ch; i--)
+        for (int i = g_user_htype_index[ch - 'a']; *g_user_htype[i].name == ch; i--)
         {
             if (len <= g_user_htype[i].length //
                 && string_case_equal(s, g_user_htype[i].name, len))
@@ -1592,7 +1592,7 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
         {
             if (!killed || (add_at && g_user_htype[add_at].name))
             {
-                if (g_user_htype_cnt >= g_user_htype_max)
+                if (g_user_htype_count >= g_user_htype_max)
                 {
                     g_user_htype = (UserHeaderType*)
                         std::realloc(g_user_htype, (g_user_htype_max += 10)
@@ -1600,17 +1600,17 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
                 }
                 if (!add_at)
                 {
-                    add_at = g_user_htypeix[ch - 'a']+1;
+                    add_at = g_user_htype_index[ch - 'a']+1;
                     if (add_at == 1)
                     {
-                        add_at = g_user_htype_cnt;
+                        add_at = g_user_htype_count;
                     }
                 }
-                for (int i = g_user_htype_cnt; i > add_at; i--)
+                for (int i = g_user_htype_count; i > add_at; i--)
                 {
                     g_user_htype[i] = g_user_htype[i - 1];
                 }
-                g_user_htype_cnt++;
+                g_user_htype_count++;
             }
             else if (!add_at)
             {
@@ -1629,23 +1629,23 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
         }
         if (killed)
         {
-            while (killed < g_user_htype_cnt && g_user_htype[killed].name != nullptr)
+            while (killed < g_user_htype_count && g_user_htype[killed].name != nullptr)
             {
                 killed++;
             }
-            for (int i = killed + 1; i < g_user_htype_cnt; i++)
+            for (int i = killed + 1; i < g_user_htype_count; i++)
             {
                 if (g_user_htype[i].name != nullptr)
                 {
                     g_user_htype[killed++] = g_user_htype[i];
                 }
             }
-            g_user_htype_cnt = killed;
+            g_user_htype_count = killed;
         }
-        std::memset((char*)g_user_htypeix,0,sizeof g_user_htypeix);
-        for (int i = 1; i < g_user_htype_cnt; i++)
+        std::memset((char*)g_user_htype_index,0,sizeof g_user_htype_index);
+        for (int i = 1; i < g_user_htype_count; i++)
         {
-            g_user_htypeix[*g_user_htype[i].name - 'a'] = i;
+            g_user_htype_index[*g_user_htype[i].name - 'a'] = i;
         }
     }
 }

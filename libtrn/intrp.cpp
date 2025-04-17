@@ -412,7 +412,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         if (*scrbuf && (which_line = get_header_num(scrbuf)) != SOME_LINE)
                         {
                             safefree(line_buf);
-                            line_buf = fetchlines(g_art, which_line);
+                            line_buf = fetch_lines(g_art, which_line);
                             s = line_buf;
                         }
                         else
@@ -678,7 +678,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 case 'D':
                     if (g_in_ng)
                     {
-                        dist_buf = fetchlines(g_art, DIST_LINE);
+                        dist_buf = fetch_lines(g_art, DIST_LINE);
                         s = dist_buf;
                     }
                     else
@@ -717,19 +717,19 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 case 'f':                       /* from line */
                     if (g_in_ng)
                     {
-                        parseheader(g_art);
-                        if (g_htype[REPLY_LINE].minpos >= 0 && !comment_parse)
+                        parse_header(g_art);
+                        if (g_htype[REPLY_LINE].min_pos >= 0 && !comment_parse)
                         {
                                                 /* was there a reply line? */
                             if (!(s=reply_buf))
                             {
-                                reply_buf = fetchlines(g_art, REPLY_LINE);
+                                reply_buf = fetch_lines(g_art, REPLY_LINE);
                                 s = reply_buf;
                             }
                         }
                         else if (!(s = from_buf))
                         {
-                            from_buf = fetchlines(g_art, FROM_LINE);
+                            from_buf = fetch_lines(g_art, FROM_LINE);
                             s = from_buf;
                         }
                     }
@@ -742,16 +742,16 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 case 'F':
                     if (g_in_ng)
                     {
-                        parseheader(g_art);
-                        if (g_htype[FOLLOW_LINE].minpos >= 0)
+                        parse_header(g_art);
+                        if (g_htype[FOLLOW_LINE].min_pos >= 0)
                                         /* is there a Followup-To line? */
                         {
-                            follow_buf = fetchlines(g_art, FOLLOW_LINE);
+                            follow_buf = fetch_lines(g_art, FOLLOW_LINE);
                             s = follow_buf;
                         }
                         else
                         {
-                            ngs_buf = fetchlines(g_art, NEWSGROUPS_LINE);
+                            ngs_buf = fetch_lines(g_art, NEWSGROUPS_LINE);
                             s = ngs_buf;
                         }
                     }
@@ -782,7 +782,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     {
                         if (!(s=artid_buf))
                         {
-                            artid_buf = fetchlines(g_art, MSGID_LINE);
+                            artid_buf = fetch_lines(g_art, MSG_ID_LINE);
                             s = artid_buf;
                         }
                         if (*s && *s != '<')
@@ -835,7 +835,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 case 'n':                       /* newsgroups */
                     if (g_in_ng)
                     {
-                        ngs_buf = fetchlines(g_art, NEWSGROUPS_LINE);
+                        ngs_buf = fetch_lines(g_art, NEWSGROUPS_LINE);
                         s = ngs_buf;
                     }
                     else
@@ -908,11 +908,11 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                 case 'r':
                     if (g_in_ng)
                     {
-                        parseheader(g_art);
+                        parse_header(g_art);
                         safefree0(refs_buf);
-                        if (g_htype[REFS_LINE].minpos >= 0)
+                        if (g_htype[REFS_LINE].min_pos >= 0)
                         {
-                            refs_buf = fetchlines(g_art,REFS_LINE);
+                            refs_buf = fetch_lines(g_art,REFS_LINE);
                             normalize_refs(refs_buf);
                             s = std::strrchr(refs_buf, '<');
                             if (s != nullptr)
@@ -931,12 +931,12 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         s = s_empty;
                         break;
                     }
-                    parseheader(g_art);
+                    parse_header(g_art);
                     safefree0(refs_buf);
                     int len;
-                    if (g_htype[REFS_LINE].minpos >= 0)
+                    if (g_htype[REFS_LINE].min_pos >= 0)
                     {
-                        refs_buf = fetchlines(g_art,REFS_LINE);
+                        refs_buf = fetch_lines(g_art,REFS_LINE);
                         len = std::strlen(refs_buf)+1;
                         normalize_refs(refs_buf);
                         /* no more than 3 prior references PLUS the
@@ -964,7 +964,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     if (!artid_buf)
                     {
-                        artid_buf = fetchlines(g_art, MSGID_LINE);
+                        artid_buf = fetch_lines(g_art, MSG_ID_LINE);
                     }
                     int i = refs_buf? std::strlen(refs_buf) : 0;
                     int j = std::strlen(artid_buf) + (i? 1 : 0)
@@ -1004,7 +1004,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     char *str = subj_buf;
                     if (str == nullptr)
                     {
-                        subj_buf = fetchsubj(g_art, true);
+                        subj_buf = fetch_subj(g_art, true);
                         str = subj_buf;
                     }
                     if (*pattern == 's')
@@ -1027,19 +1027,19 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         s = s_empty;
                         break;
                     }
-                    parseheader(g_art);
-                    if (g_htype[REPLY_LINE].minpos >= 0)
+                    parse_header(g_art);
+                    if (g_htype[REPLY_LINE].min_pos >= 0)
                     {
                                         /* was there a reply line? */
                         if (!(s=reply_buf))
                         {
-                            reply_buf = fetchlines(g_art, REPLY_LINE);
+                            reply_buf = fetch_lines(g_art, REPLY_LINE);
                             s = reply_buf;
                         }
                     }
                     else if (!(s = from_buf))
                     {
-                        from_buf = fetchlines(g_art, FROM_LINE);
+                        from_buf = fetch_lines(g_art, FROM_LINE);
                         s = from_buf;
                     }
                     else
@@ -1048,10 +1048,10 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     }
                     if (*pattern == 'T')
                     {
-                        if (g_htype[PATH_LINE].minpos >= 0)
+                        if (g_htype[PATH_LINE].min_pos >= 0)
                         {
                                         /* should we substitute path? */
-                            path_buf = fetchlines(g_art, PATH_LINE);
+                            path_buf = fetch_lines(g_art, PATH_LINE);
                             s = path_buf;
                         }
                         int i = std::strlen(g_p_host_name.c_str());
@@ -1141,7 +1141,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                         char* s3;
                         int i = 0;
 
-                        s2 = fetchlines(g_art,FROM_LINE);
+                        s2 = fetch_lines(g_art,FROM_LINE);
                         std::strcpy(tmpbuf,s2);
                         std::free(s2);
                         for (s2 = tmpbuf; (*s2 && (*s2 != '@') && (*s2 != ' ')); s2++)

@@ -498,7 +498,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
     {
     case ARTSCOPE_SUBJECT:
         std::strcpy(g_buf,"Subject: ");
-        std::strncpy(g_buf+9,fetchsubj(artnum,false),256);
+        std::strncpy(g_buf+9,fetch_subj(artnum,false),256);
 #ifdef DEBUG
         if (debug & DEB_SEARCH_AHEAD)
         {
@@ -509,13 +509,13 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
 
     case ARTSCOPE_FROM:
         std::strcpy(g_buf, "From: ");
-        std::strncpy(g_buf+6,fetchfrom(artnum,false),256);
+        std::strncpy(g_buf+6,fetch_from(artnum,false),256);
         break;
 
     case ARTSCOPE_ONE_HDR:
         g_untrim_cache = true;
         std::sprintf(g_buf, "%s: %s", g_htype[g_art_srch_hdr].name,
-                prefetchlines(artnum,g_art_srch_hdr,false));
+                prefetch_lines(artnum,g_art_srch_hdr,false));
         g_untrim_cache = false;
         break;
 
@@ -527,12 +527,12 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
         bool in_sig = false;
         if (scope != ARTSCOPE_BODY && scope != ARTSCOPE_BODY_NO_SIG)
         {
-            if (!parseheader(artnum))
+            if (!parse_header(artnum))
             {
                 return false;
             }
             /* see if it's in the header */
-            if (execute(compex,g_headbuf))      /* does it match? */
+            if (execute(compex,g_head_buf))      /* does it match? */
             {
                 return true;                    /* say, "Eureka!" */
             }
@@ -543,7 +543,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
         }
         if (g_parsed_art == artnum)
         {
-            if (!art_open(artnum,g_htype[PAST_HEADER].minpos))
+            if (!art_open(artnum,g_htype[PAST_HEADER].min_pos))
             {
                 return false;
             }
@@ -554,13 +554,13 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
             {
                 return false;
             }
-            if (!parseheader(artnum))
+            if (!parse_header(artnum))
             {
                 return false;
             }
         }
         /* loop through each line of the article */
-        seek_art_buf(g_htype[PAST_HEADER].minpos);
+        seek_art_buf(g_htype[PAST_HEADER].min_pos);
         while ((s = read_art_buf(false)) != nullptr)
         {
             if (scope == ARTSCOPE_BODY_NO_SIG && *s == '-' && s[1] == '-' //

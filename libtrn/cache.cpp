@@ -448,7 +448,7 @@ char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache
     {
         return nullptr;
     }
-    if (!parseheader(art_num))
+    if (!parse_header(art_num))
     {
         return "";
     }
@@ -487,7 +487,7 @@ char *get_cached_line(Article *ap, HeaderLineType which_line, bool no_truncs)
         s = ap->xrefs;
         break;
 
-    case MSGID_LINE:
+    case MSG_ID_LINE:
         s = ap->msg_id;
         break;
 
@@ -751,7 +751,7 @@ void set_cached_line(Article *ap, int which_line, char *s)
         ap->xrefs = s;
         break;
 
-    case MSGID_LINE:
+    case MSG_ID_LINE:
         if (ap->msg_id)
         {
             std::free(ap->msg_id);
@@ -799,7 +799,7 @@ void look_ahead()
         inc_art(g_selected_only,false);
         if (g_artp)
         {
-            parseheader(g_art);
+            parse_header(g_art);
         }
     }
     else
@@ -882,7 +882,7 @@ void look_ahead()
     {
         if (article_next(g_art) <= g_lastart)   /* how about a pre-fetch? */
         {
-            parseheader(article_next(g_art));   /* look for the next article */
+            parse_header(article_next(g_art));   /* look for the next article */
         }
     }
 }
@@ -978,7 +978,7 @@ bool cache_subjects()
 
         if (article_unread(an))
         {
-            fetchsubj(an, false);
+            fetch_subj(an, false);
         }
     }
     s_subj_to_get = an;
@@ -1002,7 +1002,7 @@ bool cache_xrefs()
         }
         if (article_unread(an))
         {
-            fetchxref(an, false);
+            fetch_xref(an, false);
         }
     }
     s_xref_to_get = an;
@@ -1108,7 +1108,7 @@ bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_article
         expected_i = i + 1;
 
         /* This parses the header which will cache/thread the article */
-        (void) parseheader(i);
+        (void) parse_header(i);
 
         if (g_int_count)
         {

@@ -41,7 +41,7 @@ enum
 };
 
 static HeaderLineType s_hdrnum[] = {
-    PAST_HEADER, SUBJ_LINE, FROM_LINE, DATE_LINE, MSGID_LINE,
+    PAST_HEADER, SUBJ_LINE, FROM_LINE, DATE_LINE, MSG_ID_LINE,
     REFS_LINE, BYTES_LINE, LINES_LINE, XREF_LINE
 };
 
@@ -178,7 +178,7 @@ OverviewFieldNum ov_num(char *hdr, char *end)
     case DATE_LINE:
         return OV_DATE;
 
-    case MSGID_LINE:
+    case MSG_ID_LINE:
         return OV_MSGID;
 
     case REFS_LINE:
@@ -512,7 +512,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
     }
     if (!article->msg_id)
     {
-        set_cached_line(article, MSGID_LINE, savestr(fields[OV_MSGID]));
+        set_cached_line(article, MSG_ID_LINE, savestr(fields[OV_MSGID]));
     }
     if (!article->from)
     {

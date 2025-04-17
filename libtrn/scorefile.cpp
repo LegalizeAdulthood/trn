@@ -308,12 +308,12 @@ char *sf_get_extra_header(ArticleNum art, int hnum)
 {
     static char lbuf[LBUFLEN];
 
-    parseheader(art);   /* fast if already parsed */
+    parse_header(art);   /* fast if already parsed */
 
     char *head = s_sf_extra_headers[hnum];
     int   len = std::strlen(head);
 
-    for (char *s = g_headbuf; s && *s && *s != '\n'; s++)
+    for (char *s = g_head_buf; s && *s && *s != '\n'; s++)
     {
         if (string_case_equal(head, s, len))
         {
@@ -909,7 +909,7 @@ int sf_score(ArticleNum a)
     /* (This could save disk accesses.) */
     if (s_sf_has_extra_headers)
     {
-        parseheader(a);
+        parse_header(a);
     }
 
     char *s;            /* misc */
@@ -1187,7 +1187,7 @@ char *sf_get_line(ArticleNum a, HeaderLineType h)
     }
     else
     {
-        s = prefetchlines(a,h,false);   /* don't make a copy */
+        s = prefetch_lines(a,h,false);   /* don't make a copy */
     }
     if (!s)
     {

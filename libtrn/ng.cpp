@@ -395,7 +395,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             inc_art(g_selected_only,false);/* then skip it */
             continue;
         }
-        else if (!g_reread && (!(g_artp->flags & AF_EXISTS) || !parseheader(g_art)))
+        else if (!g_reread && (!(g_artp->flags & AF_EXISTS) || !parse_header(g_art)))
         {
             one_less(g_artp);            /* mark deleted as read */
             ng_skip();
@@ -1017,7 +1017,7 @@ not_threaded:
         do
         {
             dec_art(g_selected_only,false);
-        } while (g_art >= g_firstart && (was_read(g_art) || !parseheader(g_art)));
+        } while (g_art >= g_firstart && (was_read(g_art) || !parse_header(g_art)));
         g_search_ahead = 0;
         if (g_art >= g_firstart)
         {
@@ -1606,7 +1606,7 @@ run_the_selector:
             {
                 nntp_finishbody(FB_OUTPUT);
                 g_raw_art_size = nntp_artsize();
-                g_art_size = g_raw_art_size-g_art_buf_seek+g_art_buf_len+g_htype[PAST_HEADER].minpos;
+                g_art_size = g_raw_art_size-g_art_buf_seek+g_art_buf_len+g_htype[PAST_HEADER].min_pos;
             }
             if (g_do_hiding)
             {
@@ -2089,7 +2089,7 @@ bool output_subject(char *ptr, int flag)
         return false;
     }
     ArticleNum i = article_num(ap);
-    char *  s = fetchsubj(i, false);
+    char *  s = fetch_subj(i, false);
     if (s != nullptr)
     {
         std::sprintf(tmpbuf,"%-5ld ", i);

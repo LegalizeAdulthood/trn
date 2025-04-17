@@ -162,7 +162,7 @@ int seek_art_buf(ArticlePosition pos)
         return seek_art(pos);
     }
 
-    pos -= g_htype[PAST_HEADER].minpos;
+    pos -= g_htype[PAST_HEADER].min_pos;
     g_art_buf_pos = g_art_buf_len;
 
     while (g_art_buf_pos < pos)
@@ -195,11 +195,11 @@ char *read_art_buf(bool view_inline)
     if (!g_do_hiding)
     {
         bp = read_art(g_art_line,(sizeof g_art_line)-1);
-        g_art_buf_seek = tell_art() - g_htype[PAST_HEADER].minpos;
+        g_art_buf_seek = tell_art() - g_htype[PAST_HEADER].min_pos;
         g_art_buf_pos = g_art_buf_seek;
         return bp;
     }
-    if (g_art_buf_pos == g_art_size - g_htype[PAST_HEADER].minpos)
+    if (g_art_buf_pos == g_art_size - g_htype[PAST_HEADER].min_pos)
     {
         return nullptr;
     }
@@ -401,7 +401,7 @@ char *read_art_buf(bool view_inline)
         if (!mp)
         {
             g_art_buf_len = g_art_buf_pos;
-            g_art_size = g_art_buf_len + g_htype[PAST_HEADER].minpos;
+            g_art_size = g_art_buf_len + g_htype[PAST_HEADER].min_pos;
             read_something = 0;
             bp = nullptr;
         }
@@ -549,7 +549,7 @@ char *read_art_buf(bool view_inline)
         g_art_buf_len = g_art_buf_pos + extra_chars;
         if (g_art_size >= 0)
         {
-            g_art_size = g_raw_art_size - g_art_buf_seek + g_art_buf_len + g_htype[PAST_HEADER].minpos;
+            g_art_size = g_raw_art_size - g_art_buf_seek + g_art_buf_len + g_htype[PAST_HEADER].min_pos;
         }
     }
 

@@ -98,7 +98,7 @@ const char *sa_desc_subject(long e)
     static char sa_subj_buf[256];
 
     /* fetchlines saves its arguments */
-    char *s = fetchlines(g_sa_ents[e].artnum, SUBJ_LINE);
+    char *s = fetch_lines(g_sa_ents[e].artnum, SUBJ_LINE);
 
     if (!s || !*s)
     {
@@ -187,7 +187,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
         break;
 
     case 2:   /* summary line (test) */
-        s = fetchlines(artnum,SUMRY_LINE);
+        s = fetch_lines(artnum,SUMMARY_LINE);
         if (s && *s)   /* we really have one */
         {
             int i;              /* number of spaces to indent */
@@ -232,7 +232,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
         /* FALL THROUGH */
 
     case 3:   /* Keywords (test) */
-        s = fetchlines(artnum,KEYW_LINE);
+        s = fetch_lines(artnum,KEYW_LINE);
         if (s && *s)   /* we really have one */
         {
             int i;              /* number of spaces to indent */
@@ -314,7 +314,7 @@ int sa_ent_lines(long e)
     ArticleNum artnum = g_sa_ents[e].artnum;
     if (g_sa_mode_desc_summary)
     {
-        s = fetchlines(artnum,SUMRY_LINE);
+        s = fetch_lines(artnum,SUMMARY_LINE);
         if (s && *s)
         {
             num++;      /* just a test */
@@ -326,7 +326,7 @@ int sa_ent_lines(long e)
     }
     if (g_sa_mode_desc_keyw)
     {
-        s = fetchlines(artnum,KEYW_LINE);
+        s = fetch_lines(artnum,KEYW_LINE);
         if (s && *s)
         {
             num++;      /* just a test */

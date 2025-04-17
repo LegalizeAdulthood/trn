@@ -423,22 +423,22 @@ void mime_SetArticle()
     mime_InitSections();
     /* TODO: Check mime version #? */
     g_multimedia_mime = false;
-    g_is_mime = g_htype[MIMEVER_LINE].flags & HT_MAGIC
-            && g_htype[MIMEVER_LINE].minpos >= 0;
+    g_is_mime = g_htype[MIME_VER_LINE].flags & HT_MAGIC
+            && g_htype[MIME_VER_LINE].min_pos >= 0;
 
     {
-        char *s = fetchlines(g_art, CONTTYPE_LINE);
+        char *s = fetch_lines(g_art, CONT_TYPE_LINE);
         mime_ParseType(g_mime_section,s);
         std::free(s);
     }
 
     if (g_is_mime)
     {
-        char *s = fetchlines(g_art, CONTXFER_LINE);
+        char *s = fetch_lines(g_art, CONT_XFER_LINE);
         mime_ParseEncoding(g_mime_section,s);
         std::free(s);
 
-        s = fetchlines(g_art,CONTDISP_LINE);
+        s = fetch_lines(g_art,CONT_DISP_LINE);
         mime_ParseDisposition(g_mime_section,s);
         std::free(s);
 
@@ -689,19 +689,19 @@ void mime_ParseSubheader(std::FILE *ifp, char *next_line)
         int linetype = set_line_type(line, s);
         switch (linetype)
         {
-        case CONTTYPE_LINE:
+        case CONT_TYPE_LINE:
             mime_ParseType(g_mime_section,s+1);
             break;
 
-        case CONTXFER_LINE:
+        case CONT_XFER_LINE:
             mime_ParseEncoding(g_mime_section,s+1);
             break;
 
-        case CONTDISP_LINE:
+        case CONT_DISP_LINE:
             mime_ParseDisposition(g_mime_section,s+1);
             break;
 
-        case CONTNAME_LINE:
+        case CONT_NAME_LINE:
             safefree(g_mime_section->filename);
             s = mime_SkipWhitespace(s+1);
             g_mime_section->filename = savestr(s);
