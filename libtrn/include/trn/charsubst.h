@@ -20,10 +20,10 @@
 
 /* Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced */
 extern std::string g_charsets;
-extern const char* g_charsubst;
+extern const char* g_char_subst;
 
-int putsubstchar(int c, int limit, bool outputok);
-const char *current_charsubst();
-int strcharsubst(char *outb, const char *inb, int limit, char_int subst);
+int put_subst_char(int c, int limit, bool output_ok);
+const char *current_char_subst();
+int str_char_subst(char *outb, const char *inb, int limit, char_int subst);
 
 #endif

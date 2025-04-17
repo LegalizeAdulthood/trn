@@ -25,7 +25,7 @@
 
 /* Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced */
 std::string g_charsets{"patm"};
-const char *g_charsubst{};
+const char *g_char_subst{};
 
 /* TeX encoding table - gives ISO char for "x (x=32..127) */
 static Uchar s_textbl[96] =
@@ -43,23 +43,23 @@ static char s_texchar{};
 
 static int Latin1toASCII(Uchar *asc, const Uchar *iso, int limit, int t);
 
-int putsubstchar(int c, int limit, bool outputok)
+int put_subst_char(int c, int limit, bool output_ok)
 {
     Uchar oc[2];
     Uchar nc[5];
     int   t;
     int   i = 0;
-    switch (*g_charsubst)
+    switch (*g_char_subst)
     {
     case 'm':
     case 'a':
-        t = *g_charsubst == 'm' ? 1 : 2;
+        t = *g_char_subst == 'm' ? 1 : 2;
         oc[0] = (Uchar)c;
         oc[1] = '\0';
         i = Latin1toASCII(nc, oc, sizeof nc, t);
         if (i <= limit)
         {
-            if (outputok)
+            if (output_ok)
             {
                 for (int t2 = 0; t2 < i; t2++)
                 {
@@ -78,7 +78,7 @@ int putsubstchar(int c, int limit, bool outputok)
         {
             if (s_texchar && (c == '\\' || s_texchar != '\\'))
             {
-                if (outputok)
+                if (output_ok)
                 {
                     std::putchar(s_texchar);
                 }
@@ -89,7 +89,7 @@ int putsubstchar(int c, int limit, bool outputok)
         }
         else if (s_texchar == '\\')
         {
-            if (outputok)
+            if (output_ok)
             {
                 std::putchar('\\');
             }
@@ -118,7 +118,7 @@ int putsubstchar(int c, int limit, bool outputok)
             }
             else
             {
-                if (outputok)
+                if (output_ok)
                 {
                     std::putchar('"');
                 }
@@ -133,7 +133,7 @@ int putsubstchar(int c, int limit, bool outputok)
         /* FALL THROUGH */
 
     default:
-        if (outputok)
+        if (output_ok)
         {
             std::putchar(c);
         }
@@ -143,7 +143,7 @@ int putsubstchar(int c, int limit, bool outputok)
     return i;
 }
 
-const char *current_charsubst()
+const char *current_char_subst()
 {
 #ifdef USE_UTF_HACK
     static char show[50];
@@ -161,7 +161,7 @@ const char *current_charsubst()
 #else /*!USE_UTF_HACK */
     static const char* show;
 
-    switch (*g_charsubst)
+    switch (*g_char_subst)
     {
     case 'm':
         show = g_verbose ? "[ISO->USmono] " : "[M] ";
@@ -183,7 +183,7 @@ const char *current_charsubst()
     return show;
 }
 
-int strcharsubst(char *outb, const char *inb, int limit, char_int subst)
+int str_char_subst(char *outb, const char *inb, int limit, char_int subst)
 {
     switch (subst)
     {

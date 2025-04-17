@@ -904,7 +904,7 @@ void reply()
             {
                 *t = '\0';
             }
-            strcharsubst(hbuf,s,sizeof hbuf,*g_charsubst);
+            str_char_subst(hbuf,s,sizeof hbuf,*g_char_subst);
             std::fprintf(header,"%s%s\n",g_indstr.c_str(),hbuf);
             if (t)
             {
@@ -1119,7 +1119,7 @@ void followup()
             {
                 *t = '\0';
             }
-            strcharsubst(hbuf,s,sizeof hbuf,*g_charsubst);
+            str_char_subst(hbuf,s,sizeof hbuf,*g_char_subst);
             std::fprintf(header,"%s%s\n",g_indstr.c_str(),hbuf);
             if (t)
             {

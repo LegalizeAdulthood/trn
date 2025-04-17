@@ -178,7 +178,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
     g_recent_art = g_lastart + 1;
     g_curr_art = g_lastart + 1;
     g_prompt = whatnext;
-    g_charsubst = g_charsets.c_str();
+    g_char_subst = g_charsets.c_str();
 
     /* see if there are any special searches to do */
 
@@ -328,7 +328,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 g_curr_art = g_art;             /* set current article # */
                 g_recent_artp = g_curr_artp;
                 g_curr_artp = g_artp;
-                g_charsubst = g_charsets.c_str();
+                g_char_subst = g_charsets.c_str();
                 g_first_view = 0;
             }
             if (g_sa_in)
@@ -409,7 +409,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 g_curr_art = g_art;             /* set current article # */
                 g_recent_artp = g_curr_artp;
                 g_curr_artp = g_artp;
-                g_charsubst = g_charsets.c_str();
+                g_char_subst = g_charsets.c_str();
                 g_first_view = 0;
                 g_do_hiding = true;
                 g_rotate = false;
@@ -499,7 +499,7 @@ reask_article:
         /* print prompt, whatever it is */
         interp(g_cmd_buf, sizeof g_cmd_buf, g_mailcall);
         std::sprintf(g_buf,g_prompt.c_str(),g_cmd_buf,
-                current_charsubst(),
+                current_char_subst(),
                 g_dfltcmd.c_str());
         draw_mousebar(g_tc_COLS - (g_term_line == g_tc_LINES-1? std::strlen(g_buf)+5 : 0), true);
         color_string(COLOR_CMD,g_buf);
@@ -1811,9 +1811,9 @@ run_the_selector:
             return AS_ASK;
 
         case 'C':
-            if (!*(++g_charsubst))
+            if (!*(++g_char_subst))
             {
-                g_charsubst = g_charsets.c_str();
+                g_char_subst = g_charsets.c_str();
             }
             goto refresh_screen;
 

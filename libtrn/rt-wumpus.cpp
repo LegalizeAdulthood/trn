@@ -361,7 +361,7 @@ static Article *find_artp(Article *article, int x)
 
 inline bool header_conv()
 {
-    return g_charsubst[0] == 'a' || g_charsubst[0] == 'm';
+    return g_char_subst[0] == 'a' || g_char_subst[0] == 'm';
 }
 
 /* Output a header line with possible tree display on the right hand side.
@@ -412,7 +412,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
     }
     if (header_conv())
     {
-        end = tmpbuf + strcharsubst(tmpbuf, line, len*2+2, *g_charsubst);
+        end = tmpbuf + str_char_subst(tmpbuf, line, len*2+2, *g_char_subst);
         line = tmpbuf;
     }
 
