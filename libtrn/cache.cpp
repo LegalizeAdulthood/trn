@@ -38,37 +38,37 @@
 #include <cstring>
 #include <ctime>
 
-List     *g_article_list{};         /* a list of ARTICLEs */
-Article **g_art_ptr_list{};          /* the article-selector creates this */
-Article **g_art_ptr{};               /* ditto -- used for article order */
-ArticleNum   g_art_ptr_list_size{};     //
-ArticleNum   g_search_ahead{};            /* are we in subject scan mode? (if so, contains art # found or -1) */
-ArticleNum   g_first_cached{};         //
-ArticleNum   g_last_cached{};          //
-bool      g_cached_all_in_range{};  //
-Article  *g_sentinel_artp{};        //
-Subject  *g_first_subject{};        //
-Subject  *g_last_subject{};         //
-bool      g_untrim_cache{};         //
-int       g_join_subject_len{};     /* -J */
-int       g_olden_days{};           /* -o */
-char      g_auto_select_postings{}; /* -p */
+List      *g_article_list{};         /* a list of ARTICLEs */
+Article  **g_art_ptr_list{};         /* the article-selector creates this */
+Article  **g_art_ptr{};              /* ditto -- used for article order */
+ArticleNum g_art_ptr_list_size{};    //
+ArticleNum g_search_ahead{};         /* are we in subject scan mode? (if so, contains art # found or -1) */
+ArticleNum g_first_cached{};         //
+ArticleNum g_last_cached{};          //
+bool       g_cached_all_in_range{};  //
+Article   *g_sentinel_artp{};        //
+Subject   *g_first_subject{};        //
+Subject   *g_last_subject{};         //
+bool       g_untrim_cache{};         //
+int        g_join_subject_len{};     /* -J */
+int        g_olden_days{};           /* -o */
+char       g_auto_select_postings{}; /* -p */
 
 #ifdef PENDING
-static ArticleNum s_subj_to_get{};
-static ArticleNum s_xref_to_get{};
-static CompiledRegex  s_srchcompex; /* compiled regex for searchahead */
+static ArticleNum    s_subj_to_get{};
+static ArticleNum    s_xref_to_get{};
+static CompiledRegex s_search_compex; /* compiled regex for searchahead */
 #endif
 static HashTable *s_subj_hash{};
-static HashTable *s_shortsubj_hash{};
+static HashTable *s_short_subj_hash{};
 
-static void init_artnode(List *list, ListNode *node);
-static bool clear_artitem(char *cp, int arg);
+static void init_article_node(List *list, ListNode *node);
+static bool clear_article_item(char *cp, int arg);
 
 void cache_init()
 {
 #ifdef PENDING
-    init_compex(&s_srchcompex);
+    init_compex(&s_search_compex);
 #endif
 }
 
@@ -103,7 +103,7 @@ void build_cache()
     s_cached_ng = g_newsgroup_ptr;
     s_cached_time = std::time(nullptr);
     g_article_list = new_list(g_abs_first, g_last_art, sizeof (Article), 371,
-                              LF_SPARSE, init_artnode);
+                              LF_SPARSE, init_article_node);
     s_subj_hash = hash_create(991, subject_cmp); /*TODO: pick a better size */
 
     set_first_art(g_newsgroup_ptr->rc_line + g_newsgroup_ptr->num_offset);
@@ -131,10 +131,10 @@ void close_cache()
         hash_destroy(s_subj_hash);
         s_subj_hash = nullptr;
     }
-    if (s_shortsubj_hash)
+    if (s_short_subj_hash)
     {
-        hash_destroy(s_shortsubj_hash);
-        s_shortsubj_hash = nullptr;
+        hash_destroy(s_short_subj_hash);
+        s_short_subj_hash = nullptr;
     }
     /* Free all the subjects. */
     for (Subject *sp = g_first_subject; sp; sp = next)
@@ -158,7 +158,7 @@ void close_cache()
 
     if (g_article_list)
     {
-        walk_list(g_article_list, clear_artitem, 0);
+        walk_list(g_article_list, clear_article_item, 0);
         delete_list(g_article_list);
         g_article_list = nullptr;
     }
@@ -166,7 +166,7 @@ void close_cache()
 }
 
 /* Initialize the memory for an entire node's worth of article's */
-static void init_artnode(List *list, ListNode *node)
+static void init_article_node(List *list, ListNode *node)
 {
     std::memset(node->data, 0, list->items_per_node * list->item_size);
     Article *ap = (Article *) node->data;
@@ -176,7 +176,7 @@ static void init_artnode(List *list, ListNode *node)
     }
 }
 
-static bool clear_artitem(char *cp, int arg)
+static bool clear_article_item(char *cp, int arg)
 {
     clear_article((Article*)cp);
     return false;
@@ -238,9 +238,9 @@ void cache_article(Article *ap)
 void check_for_near_subj(Article *ap)
 {
     Subject* sp;
-    if (!s_shortsubj_hash)
+    if (!s_short_subj_hash)
     {
-        s_shortsubj_hash = hash_create(401, subject_cmp);    /*TODO: pick a better size */
+        s_short_subj_hash = hash_create(401, subject_cmp);    /*TODO: pick a better size */
         sp = g_first_subject;
     }
     else
@@ -256,7 +256,7 @@ void check_for_near_subj(Article *ap)
         if ((int) std::strlen(sp->str + 4) >= g_join_subject_len && sp->thread)
         {
             Subject* sp2;
-            HashDatum data = hash_fetch(s_shortsubj_hash, sp->str + 4, g_join_subject_len);
+            HashDatum data = hash_fetch(s_short_subj_hash, sp->str + 4, g_join_subject_len);
             if (!(sp2 = (Subject *) data.dat_ptr))
             {
                 data.dat_ptr = (char*)sp;
@@ -275,10 +275,10 @@ void change_join_subject_len(int len)
 {
     if (g_join_subject_len != len)
     {
-        if (s_shortsubj_hash)
+        if (s_short_subj_hash)
         {
-            hash_destroy(s_shortsubj_hash);
-            s_shortsubj_hash = nullptr;
+            hash_destroy(s_short_subj_hash);
+            s_short_subj_hash = nullptr;
         }
         g_join_subject_len = len;
         if (len && g_first_subject && g_first_subject->articles)
