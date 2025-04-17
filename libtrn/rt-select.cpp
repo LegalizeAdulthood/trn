@@ -512,7 +512,7 @@ char newsgroup_selector()
     set_selector(SM_NEWSGROUP, SS_MAGIC_NUMBER);
 
   sel_restart:
-    if (*g_sel_grp_dmode != 's')
+    if (*g_sel_grp_display_mode != 's')
     {
         for (Newsrc *rp = g_multirc->first; rp; rp = rp->next)
         {
@@ -599,7 +599,7 @@ char addgroup_selector(GetNewsgroupFlags flags)
     set_selector(SM_ADDGROUP, SS_MAGIC_NUMBER);
 
   sel_restart:
-    if (*g_sel_grp_dmode != 's')
+    if (*g_sel_grp_display_mode != 's')
     {
         for (Newsrc *rp = g_multirc->first; rp; rp = rp->next)
         {
@@ -2336,7 +2336,7 @@ static DisplayState article_commands(char_int ch)
         return DS_QUIT;
 
     case 'L':
-        switch_dmode(&g_sel_art_dmode);     /* sets g_msg */
+        switch_dmode(&g_sel_art_display_mode);     /* sets g_msg */
         return DS_DISPLAY;
 
     case 'Y':
@@ -2857,8 +2857,8 @@ static DisplayState newsgroup_commands(char_int ch)
         return DS_RESTART;
 
     case 'L':
-        switch_dmode(&g_sel_grp_dmode);     /* sets g_msg */
-        if (*g_sel_grp_dmode != 's' && !g_multirc->first->data_source->desc_sf.hp)
+        switch_dmode(&g_sel_grp_display_mode);     /* sets g_msg */
+        if (*g_sel_grp_display_mode != 's' && !g_multirc->first->data_source->desc_sf.hp)
         {
             newline();
             return DS_RESTART;
@@ -3323,8 +3323,8 @@ static DisplayState addgroup_commands(char_int ch)
         return DS_DISPLAY;
 
     case 'L':
-        switch_dmode(&g_sel_grp_dmode);     /* sets g_msg */
-        if (*g_sel_grp_dmode != 's' && !g_data_source->desc_sf.hp)
+        switch_dmode(&g_sel_grp_display_mode);     /* sets g_msg */
+        if (*g_sel_grp_display_mode != 's' && !g_data_source->desc_sf.hp)
         {
             newline();
             return DS_RESTART;

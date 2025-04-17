@@ -184,8 +184,8 @@ static char *expand_mouse_buttons(char *cp, int cnt);
 
 void opt_init(int argc, char *argv[], char **tcbufptr)
 {
-    g_sel_grp_dmode = savestr("*slm") + 1;
-    g_sel_art_dmode = savestr("*lmds") + 1;
+    g_sel_grp_display_mode = savestr("*slm") + 1;
+    g_sel_art_display_mode = savestr("*lmds") + 1;
     g_univ_sel_btn_cnt = parse_mouse_buttons(&g_univ_sel_btns,
                                         "[Top]^ [PgUp]< [PgDn]> [ OK ]^j [Quit]q [Help]?");
     g_newsrc_sel_btn_cnt = parse_mouse_buttons(&g_newsrc_sel_btns,
@@ -280,10 +280,10 @@ void opt_final()
     safefree0(g_add_sel_btns);
     safefree0(g_newsrc_sel_btns);
     safefree0(g_univ_sel_btns);
-    g_sel_art_dmode--;
-    safefree0(g_sel_art_dmode);
-    g_sel_grp_dmode--;
-    safefree0(g_sel_grp_dmode);
+    g_sel_art_display_mode--;
+    safefree0(g_sel_art_display_mode);
+    g_sel_grp_display_mode--;
+    safefree0(g_sel_grp_display_mode);
 }
 
 void opt_file(const char *filename, char **tcbufptr, bool bleat)
@@ -503,11 +503,11 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_NEWSGROUP_SEL_STYLES:
-        g_sel_grp_dmode--;
-        safefree0(g_sel_grp_dmode);
-        g_sel_grp_dmode = safemalloc(std::strlen(s)+2);
-        *g_sel_grp_dmode++ = '*';
-        std::strcpy(g_sel_grp_dmode, s);
+        g_sel_grp_display_mode--;
+        safefree0(g_sel_grp_display_mode);
+        g_sel_grp_display_mode = safemalloc(std::strlen(s)+2);
+        *g_sel_grp_display_mode++ = '*';
+        std::strcpy(g_sel_grp_display_mode, s);
         break;
 
     case OI_USE_NEWS_SEL:
@@ -551,11 +551,11 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_NEWS_SEL_STYLES:
-        g_sel_art_dmode--;
-        safefree0(g_sel_art_dmode);
-        g_sel_art_dmode = safemalloc(std::strlen(s)+2);
-        *g_sel_art_dmode++ = '*';
-        std::strcpy(g_sel_art_dmode, s);
+        g_sel_art_display_mode--;
+        safefree0(g_sel_art_display_mode);
+        g_sel_art_display_mode = safemalloc(std::strlen(s)+2);
+        *g_sel_art_display_mode++ = '*';
+        std::strcpy(g_sel_art_display_mode, s);
         break;
 
     case OI_OPTION_SEL_CMDS:
@@ -1154,7 +1154,7 @@ const char *option_value(OptionIndex num)
 
     case OI_NEWSGROUP_SEL_STYLES:
     {
-        char* s = g_sel_grp_dmode;
+        char* s = g_sel_grp_display_mode;
         while (s[-1] != '*')
         {
             s--;
@@ -1194,7 +1194,7 @@ const char *option_value(OptionIndex num)
 
     case OI_NEWS_SEL_STYLES:
     {
-        char* s = g_sel_art_dmode;
+        char* s = g_sel_art_display_mode;
         while (s[-1] != '*')
         {
             s--;

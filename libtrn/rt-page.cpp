@@ -43,8 +43,8 @@ Article  *g_sel_last_ap{};
 Subject  *g_sel_page_sp{};
 Subject  *g_sel_next_sp{};
 Subject  *g_sel_last_sp{};
-char     *g_sel_grp_dmode{};
-char     *g_sel_art_dmode{};
+char     *g_sel_grp_display_mode{};
+char     *g_sel_art_display_mode{};
 
 static bool          s_group_init_done{true};
 static int           s_sel_max_line_cnt{};
@@ -1868,7 +1868,7 @@ try_again:
     {
         NewsgroupData* np;
         int max_len = 0;
-        int outputting = (*g_sel_grp_dmode != 'l');
+        int outputting = (*g_sel_grp_display_mode != 'l');
       start_of_loop:
         for (np = g_sel_page_np; np; np = np->next)
         {
@@ -1967,7 +1967,7 @@ try_again:
     {
         AddGroup* gp = g_sel_page_gp;
         int max_len = 0;
-        if (*g_sel_grp_dmode == 'l')
+        if (*g_sel_grp_display_mode == 'l')
         {
             int i = 0;
             for (; gp && i < s_sel_max_per_page; gp = gp->next)
@@ -2379,11 +2379,11 @@ static int count_subject_lines(const Subject *subj, int *selptr)
     {
         *selptr = sel;
     }
-    if (*g_sel_art_dmode == 'l')
+    if (*g_sel_art_display_mode == 'l')
     {
         return subj->misc;
     }
-    if (*g_sel_art_dmode == 'm')
+    if (*g_sel_art_display_mode == 'm')
     {
         return (subj->misc <= 4 ? subj->misc : (subj->misc - 4) / 3 + 4);
     }
@@ -2434,11 +2434,11 @@ static void display_article(const Article *ap, int ix, int sel)
     subj_width = std::max(subj_width, 32);
 
     output_sel(ix, sel, false);
-    if (*g_sel_art_dmode == 's' || from_width < 8)
+    if (*g_sel_art_display_mode == 's' || from_width < 8)
     {
         std::printf("  %s\n", compress_subj(ap->subj->articles, subj_width));
     }
-    else if (*g_sel_art_dmode == 'd')
+    else if (*g_sel_art_display_mode == 'd')
     {
           std::printf("%s  %s\n",
                compress_date(ap, date_width),
@@ -2471,7 +2471,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
     int j = subj->misc;
 
     output_sel(ix, sel, false);
-    if (*g_sel_art_dmode == 's' || from_width < 8)
+    if (*g_sel_art_display_mode == 's' || from_width < 8)
     {
         std::printf("%3d  %s\n",j,compress_subj(subj->articles,subj_width));
         termdown(1);
@@ -2497,7 +2497,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
         {
             first_ap = ap;
         }
-        if (*g_sel_art_dmode == 'd')
+        if (*g_sel_art_display_mode == 'd')
         {
             std::printf("%s%3d  %s\n",
                    compress_date(first_ap, date_width), j,
@@ -2511,7 +2511,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
         }
         termdown(1);
         int i = -1;
-        if (*g_sel_art_dmode != 'd' && --j && ap)
+        if (*g_sel_art_display_mode != 'd' && --j && ap)
         {
             for (; ap && j; ap = ap->subj_next)
             {
@@ -2525,7 +2525,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
                 {
                     i = 0;
                 }
-                else if (*g_sel_art_dmode == 'm')
+                else if (*g_sel_art_display_mode == 'm')
                 {
                     if (!j)
                     {
@@ -2674,7 +2674,7 @@ static void display_univ(const UniversalItem *ui)
 
 static void display_group(DataSource *dp, char *group, int len, int max_len)
 {
-    if (*g_sel_grp_dmode == 's')
+    if (*g_sel_grp_display_mode == 's')
     {
         std::fputs(group, stdout);
     }
@@ -2693,7 +2693,7 @@ static void display_group(DataSource *dp, char *group, int len, int max_len)
             }
             char ch = *end;
             *end = '\0';
-            if (*g_sel_grp_dmode == 'm')
+            if (*g_sel_grp_display_mode == 'm')
             {
                 std::fputs(cp, stdout);
             }
