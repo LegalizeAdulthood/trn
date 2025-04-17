@@ -1225,7 +1225,7 @@ not_threaded:
     case '4': case '5': case '6':     /* or do something with a range */
     case '7': case '8': case '9': case '.':
         g_force_last = true;
-        switch (numnum())
+        switch (num_num())
         {
         case NN_INP:
             return AS_INP;

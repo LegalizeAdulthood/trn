@@ -3035,7 +3035,7 @@ static DisplayState newsgroup_commands(char_int ch)
         {
             if (ch == ':')
             {
-                ngsel_perform();
+                newsgroup_sel_perform();
             }
             else
             {
@@ -3396,7 +3396,7 @@ static DisplayState addgroup_commands(char_int ch)
         {
             if (ch == ':')
             {
-                addgrp_sel_perform();
+                add_group_sel_perform();
             }
             else
             {

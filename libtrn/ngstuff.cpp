@@ -34,7 +34,7 @@
 #include <cstring>
 
 bool        g_one_command{}; /* no ':' processing in perform() */
-std::string g_savedir;       /* -d */
+std::string g_save_dir;       /* -d */
 
 /* given the new and complex universal/help possibilities,
  * the following interlock variable may save some trouble.
@@ -42,7 +42,7 @@ std::string g_savedir;       /* -d */
  */
 static bool s_option_sel_ilock{};
 
-void ngstuff_init()
+void newsgroup_stuff_init()
 {
     s_option_sel_ilock = false;
 }
@@ -103,7 +103,7 @@ int switcheroo()
     }
     if (!g_buf[1])
     {
-        const std::string prior_savedir = g_savedir;
+        const std::string prior_savedir = g_save_dir;
         if (s_option_sel_ilock)
         {
             g_buf[1] = '\0';
@@ -115,7 +115,7 @@ int switcheroo()
             option_selector();
         }
         s_option_sel_ilock = false;
-        if (g_savedir != prior_savedir)
+        if (g_save_dir != prior_savedir)
         {
             cwd_check();
         }
@@ -172,7 +172,7 @@ int switcheroo()
 
 /* process range commands */
 
-NumNumResult numnum()
+NumNumResult num_num()
 {
     ArticleNum min;
     ArticleNum max;
@@ -762,7 +762,7 @@ int perform(char *cmdlst, int output_level)
     return 1;
 }
 
-int ngsel_perform()
+int newsgroup_sel_perform()
 {
     NewsgroupFlags bits;
     bool one_group = false;
@@ -801,7 +801,7 @@ int ngsel_perform()
 
     if (one_group)
     {
-        ng_perform(cmdstr, 0);
+        newsgroup_perform(cmdstr, 0);
         goto break_out;
     }
 
@@ -816,7 +816,7 @@ int ngsel_perform()
         if ((g_newsgroup_ptr->flags & bits) == bits //
             && (!(g_newsgroup_ptr->flags & static_cast<NewsgroupFlags>(g_sel_mask)) ^ !!bits))
         {
-            if (ng_perform(cmdstr, 0) < 0)
+            if (newsgroup_perform(cmdstr, 0) < 0)
             {
                 break;
             }
@@ -829,7 +829,7 @@ int ngsel_perform()
     return 1;
 }
 
-int ng_perform(char *cmdlst, int output_level)
+int newsgroup_perform(char *cmdlst, int output_level)
 {
     int ch;
 
@@ -912,7 +912,7 @@ int ng_perform(char *cmdlst, int output_level)
     return 1;
 }
 
-int addgrp_sel_perform()
+int add_group_sel_perform()
 {
     int bits;
     bool one_group = false;
@@ -958,7 +958,7 @@ int addgrp_sel_perform()
     {
         if (!(gp->flags & g_sel_mask) ^ !!bits)
         {
-            if (addgrp_perform(gp, cmdstr, 0) < 0)
+            if (add_group_perform(gp, cmdstr, 0) < 0)
             {
                 break;
             }
@@ -971,7 +971,7 @@ int addgrp_sel_perform()
     return 1;
 }
 
-int addgrp_perform(AddGroup *gp, char *cmdlst, int output_level)
+int add_group_perform(AddGroup *gp, char *cmdlst, int output_level)
 {
     int ch;
 

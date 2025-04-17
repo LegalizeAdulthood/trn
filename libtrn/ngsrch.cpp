@@ -119,7 +119,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
                 {
                     return NGS_FOUND;
                 }
-                if (addgrp_perform(gp, cmdlst, output_level && g_page_line == 1) < 0)
+                if (add_group_perform(gp, cmdlst, output_level && g_page_line == 1) < 0)
                 {
                     std::free(cmdlst);
                     return NGS_INTR;
@@ -205,7 +205,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
                     return NGS_FOUND;
                 }
                 set_newsgroup(g_newsgroup_ptr);
-                if (ng_perform(cmdlst, output_level && g_page_line == 1) < 0)
+                if (newsgroup_perform(cmdlst, output_level && g_page_line == 1) < 0)
                 {
                     std::free(cmdlst);
                     return NGS_INTR;

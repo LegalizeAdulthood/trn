@@ -17,17 +17,17 @@ enum NumNumResult
 };
 
 extern bool        g_one_command; /* no ':' processing in perform() */
-extern std::string g_savedir;     /* -d */
+extern std::string g_save_dir;     /* -d */
 
-void ngstuff_init();
+void newsgroup_stuff_init();
 int escapade();
 int switcheroo();
-NumNumResult numnum();
+NumNumResult num_num();
 int thread_perform();
 int perform(char *cmdlst, int output_level);
-int ngsel_perform();
-int ng_perform(char *cmdlst, int output_level);
-int addgrp_sel_perform();
-int addgrp_perform(AddGroup *gp, char *cmdlst, int output_level);
+int newsgroup_sel_perform();
+int newsgroup_perform(char *cmdlst, int output_level);
+int add_group_sel_perform();
+int add_group_perform(AddGroup *gp, char *cmdlst, int output_level);
 
 #endif

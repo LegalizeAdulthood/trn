@@ -940,7 +940,7 @@ reask_abandon:
         break;
 
     case ':':         /* execute command on selected groups */
-        if (!ngsel_perform())
+        if (!newsgroup_sel_perform())
         {
             return ING_INPUT;
         }

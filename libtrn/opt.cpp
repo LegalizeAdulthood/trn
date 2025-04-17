@@ -625,7 +625,7 @@ void set_option(OptionIndex num, const char *s)
     case OI_SAVE_DIR:
         if (!g_checkflag)
         {
-            g_savedir = s;
+            g_save_dir = s;
             if (!g_privdir.empty())
             {
                 change_dir(g_privdir);
@@ -1238,7 +1238,7 @@ const char *option_value(OptionIndex num)
         return g_buf;
 
     case OI_SAVE_DIR:
-        return g_savedir.empty() ? "%./News" : g_savedir.c_str();
+        return g_save_dir.empty() ? "%./News" : g_save_dir.c_str();
 
     case OI_ERASE_SCREEN:
         return YESorNO(g_erase_screen);

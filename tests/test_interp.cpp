@@ -127,7 +127,7 @@ void InterpolatorTest::SetUp()
     mime_init();
     ng_init();
     newsgroup_search_init();
-    ngstuff_init();
+    newsgroup_stuff_init();
     only_init();
     rcln_init();
     respond_init();
