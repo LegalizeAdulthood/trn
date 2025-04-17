@@ -302,7 +302,7 @@ Signal_t stop_catcher(int signo)
                 termlib_init();
                 noecho();                       /* set no echo */
                 crmode();                       /* set cbreak mode */
-                forceme("\f");                  /* cause a refresh */
+                force_me("\f");                  /* cause a refresh */
                                                 /* (defined only if TIOCSTI defined) */
                 errno = 0;                      /* needed for getcmd */
             }

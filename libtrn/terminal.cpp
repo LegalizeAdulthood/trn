@@ -2253,7 +2253,7 @@ Signal_t winch_catcher(int dummy)
                 std::sprintf(s_cols_export, "%d", g_tc_COLS);
                 if (g_general_mode == 's' || g_mode == 'a' || g_mode == 'p')
                 {
-                    forceme("\f");      /* cause a refresh */
+                    force_me("\f");      /* cause a refresh */
                                         /* (defined only if TIOCSTI defined) */
                 }
             }
