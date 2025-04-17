@@ -1391,7 +1391,7 @@ void visit_next_thread()
     }
     g_artp = nullptr;
     g_art = g_lastart+1;
-    g_forcelast = true;
+    g_force_last = true;
 }
 
 /* Find previous thread (or last if g_artp == nullptr).  If articles are selected,
@@ -1415,7 +1415,7 @@ void visit_prev_thread()
     }
     g_artp = nullptr;
     g_art = g_lastart+1;
-    g_forcelast = true;
+    g_force_last = true;
 }
 
 /* Find g_artp's parent or oldest ancestor.  Returns false if no such

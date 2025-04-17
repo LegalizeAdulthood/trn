@@ -88,7 +88,7 @@ int escapade()
         }
     }
 #ifdef MAILCALL
-    g_mailcount = 0;                    /* force recheck */
+    g_mail_count = 0;                    /* force recheck */
 #endif
     return 0;
 }
@@ -414,7 +414,7 @@ int thread_perform()
         ArticleNum oldart = g_art;
         g_art = g_lastart+1;
         followup();
-        g_forcegrow = true;
+        g_force_grow = true;
         g_art = oldart;
         g_page_line++;
     }

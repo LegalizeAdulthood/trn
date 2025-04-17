@@ -174,7 +174,7 @@ void chdir_newsdir()
 
 void grow_ng(ArticleNum newlast)
 {
-    g_forcegrow = false;
+    g_force_grow = false;
     if (newlast > g_lastart)
     {
         ArticleNum tmpart = g_art;
@@ -203,11 +203,11 @@ void grow_ng(ArticleNum newlast)
         termdown(2);
         if (g_kf_state & KFS_NORMAL_LINES)
         {
-            bool forcelast_save = g_forcelast;
+            bool forcelast_save = g_force_last;
             Article* artp_save = g_artp;
             kill_unwanted(tmpfirst,g_buf,true);
             g_artp = artp_save;
-            g_forcelast = forcelast_save;
+            g_force_last = forcelast_save;
         }
         g_art = tmpart;
     }

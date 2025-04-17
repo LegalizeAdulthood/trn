@@ -466,7 +466,7 @@ void kill_unwanted(ArticleNum starting, const char *message, int entering)
         }
         if (anytokill)                  /* if there was anything to kill */
         {
-            g_forcelast = false;        /* allow for having killed it all */
+            g_force_last = false;        /* allow for having killed it all */
         }
         g_firstart = oldfirst;
     }

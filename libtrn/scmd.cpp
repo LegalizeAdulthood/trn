@@ -253,7 +253,7 @@ int s_docmd()
 
     case Ctl('f'):    /* refresh (mail) display */
 #ifdef MAILCALL
-        setmail(true);
+        set_mail(true);
 #endif
         g_s_ref_bot = true;
         break;

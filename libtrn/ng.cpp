@@ -57,19 +57,19 @@ ArticleNum  g_curr_art{};      /* current article # */
 Article *g_recent_artp{};   /* article_ptr equivilents */
 Article *g_curr_artp{};     //
 Article *g_artp{};          /* the article ptr we use when art is 0 */
-int      g_checkcount{};    /* how many articles have we read in the current newsgroup since the last checkpoint? */
-int      g_docheckwhen{20}; /* how often to do checkpoint */
-char    *g_subjline{};      /* what format to use for '=' */
+int      g_check_count{};    /* how many articles have we read in the current newsgroup since the last checkpoint? */
+int      g_do_check_when{20}; /* how often to do checkpoint */
+char    *g_subj_line{};      /* what format to use for '=' */
 #ifdef MAILCALL
-int g_mailcount{}; /* check for mail when 0 mod 10 */
+int g_mail_count{}; /* check for mail when 0 mod 10 */
 #endif
-char       *g_mailcall{""};
-bool        g_forcelast{};              /* ought we show "End of newsgroup"? */
-bool        g_forcegrow{};              /* do we want to recalculate size of newsgroup, e.g. after posting? */
-int         g_scanon{};                 /* -S */
+char       *g_mail_call{""};
+bool        g_force_last{};              /* ought we show "End of newsgroup"? */
+bool        g_force_grow{};              /* do we want to recalculate size of newsgroup, e.g. after posting? */
+int         g_scan_on{};                 /* -S */
 bool        g_use_threads{THREAD_INIT}; /* -x */
 bool        g_unsafe_rc_saves{};        /* -U */
-std::string g_dfltcmd;                  /* 1st char is default command */
+std::string g_default_cmd;                  /* 1st char is default command */
 
 /* art_switch() return values */
 enum ArticleSwitchResult
@@ -96,7 +96,7 @@ static bool                s_art_sel_ilock{};
 
 void ng_init()
 {
-    setdfltcmd();
+    set_default_cmd();
 
     open_kill_file(KF_GLOBAL);
     init_compex(&g_hide_compex);
@@ -160,19 +160,19 @@ DoNewsgroupResult do_newsgroup(char *start_command)
     int ret = access_ng();
     if (ret == -2)
     {
-        return NG_NOSERVER;
+        return NG_NO_SERVER;
     }
     if (ret <= 0)
     {
         return NG_ERROR;
     }
 
-    g_search_ahead = (g_scanon && !g_threaded_group        /* did they say -S? */
-              && ((ArticleNum)g_ngptr->toread) >= g_scanon ? -1 : 0);
+    g_search_ahead = (g_scan_on && !g_threaded_group        /* did they say -S? */
+              && ((ArticleNum)g_ngptr->toread) >= g_scan_on ? -1 : 0);
 
     /* FROM HERE ON, RETURN THRU CLEANUP OR WE ARE SCREWED */
 
-    g_forcelast = true;                 /* if 0 unread, do not bomb out */
+    g_force_last = true;                 /* if 0 unread, do not bomb out */
     g_recent_artp = nullptr;
     g_curr_artp = nullptr;
     g_recent_art = g_lastart + 1;
@@ -241,7 +241,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
     g_ngptr->rc->flags |= RF_RCCHANGED;
     if (!g_unsafe_rc_saves)
     {
-        g_checkcount = 0;               /* do not checkpoint for a while */
+        g_check_count = 0;               /* do not checkpoint for a while */
     }
     g_do_fseek = false;                 /* start 1st article at top */
     for (; g_art <= g_lastart+1; )      /* for each article */
@@ -250,7 +250,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
 
         /* do we need to "grow" the newsgroup? */
 
-        if ((g_art > g_lastart || g_forcegrow) && !g_keep_the_group_static)
+        if ((g_art > g_lastart || g_force_grow) && !g_keep_the_group_static)
         {
             ArticleNum oldlast = g_lastart;
             if (g_art_size < 0)
@@ -263,7 +263,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 {
                     if (nntp_group(g_ngname.c_str(), g_ngptr) <= 0)
                     {
-                        s_exit_code = NG_NOSERVER;
+                        s_exit_code = NG_NO_SERVER;
                         goto cleanup;
                     }
                     grow_ng(g_ngptr->ngmax);
@@ -273,7 +273,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             {
                 grow_ng(getngsize(g_ngptr));
             }
-            if (g_forcelast && g_art > oldlast)
+            if (g_force_last && g_art > oldlast)
             {
                 g_art = g_lastart + 1;
             }
@@ -312,7 +312,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
         if (g_art > g_lastart)                  /* are we off the end still? */
         {
             g_art = g_lastart + 1;              /* keep pointer references sane */
-            if (!g_forcelast && g_ngptr->toread && g_selected_only && !g_selected_count)
+            if (!g_force_last && g_ngptr->toread && g_selected_only && !g_selected_count)
             {
                 g_art = g_curr_art;
                 g_artp = g_curr_artp;
@@ -378,7 +378,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 }
                 termdown(2);
             }
-            else if (!g_obj_count && !g_forcelast)
+            else if (!g_obj_count && !g_force_last)
             {
                 goto cleanup;               /* actually exit newsgroup */
             }
@@ -427,7 +427,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 g_art = nntp_stat_id(g_artp->msg_id);
                 if (g_art < 0)
                 {
-                    s_exit_code = NG_NOSERVER;
+                    s_exit_code = NG_NO_SERVER;
                     goto cleanup;
                 }
                 if (g_art)
@@ -483,9 +483,9 @@ DoNewsgroupResult do_newsgroup(char *start_command)
 
 reask_article:
 #ifdef MAILCALL
-        setmail(false);
+        set_mail(false);
 #endif
-        setdfltcmd();
+        set_default_cmd();
         if (g_erase_screen && g_erase_each_line)
         {
             erase_line(true);
@@ -497,10 +497,10 @@ reask_article:
         }
         unflush_output();               /* disable any ^O in effect */
         /* print prompt, whatever it is */
-        interp(g_cmd_buf, sizeof g_cmd_buf, g_mailcall);
+        interp(g_cmd_buf, sizeof g_cmd_buf, g_mail_call);
         std::sprintf(g_buf,g_prompt.c_str(),g_cmd_buf,
                 current_char_subst(),
-                g_dfltcmd.c_str());
+                g_default_cmd.c_str());
         draw_mousebar(g_tc_COLS - (g_term_line == g_tc_LINES-1? std::strlen(g_buf)+5 : 0), true);
         color_string(COLOR_CMD,g_buf);
         std::putchar(' ');
@@ -508,7 +508,7 @@ reask_article:
         g_term_col = std::strlen(g_buf) + 1;
 reinp_article:
         g_reread = false;
-        g_forcelast = false;
+        g_force_last = false;
         eat_typeahead();
 #ifdef PENDING
         look_ahead();                   /* see what we can do in advance */
@@ -544,11 +544,11 @@ article_level:
                 continue;               /* ...the article (for) loop */
 
             case SA_NEXT:             /* goto next newsgroup */
-                s_exit_code = NG_SELNEXT;
+                s_exit_code = NG_SEL_NEXT;
                 goto cleanup;
 
             case SA_PRIOR:            /* goto prior newsgroup */
-                s_exit_code = NG_SELPRIOR;
+                s_exit_code = NG_SEL_PRIOR;
                 goto cleanup;
 
             case SA_QUIT:
@@ -647,7 +647,7 @@ cleanup2:
 
 static ArticleSwitchResult art_switch()
 {
-    setdef(g_buf,g_dfltcmd.c_str());
+    setdef(g_buf,g_default_cmd.c_str());
     printcmd();
 
     g_buf[2] = '\0';
@@ -709,7 +709,7 @@ static ArticleSwitchResult art_switch()
             {
                 u_prompt = "\nUnkill?";
             }
-            g_dfltcmd = "+anq";
+            g_default_cmd = "+anq";
         }
         else
         {
@@ -727,10 +727,10 @@ static ArticleSwitchResult art_switch()
                 u_help_thread = "t or SP to mark thread unread.\n"
                                 "s to mark subthread unread.\n";
             }
-            g_dfltcmd = "+tsanq";
+            g_default_cmd = "+tsanq";
         }
       reask_unread:
-        in_char(u_prompt,MM_UNKILL_PROMPT,g_dfltcmd.c_str());
+        in_char(u_prompt,MM_UNKILL_PROMPT,g_default_cmd.c_str());
         printcmd();
         newline();
         if (*g_buf == 'h')
@@ -1061,7 +1061,7 @@ not_threaded:
             g_art = g_recent_art;
             g_artp = g_recent_artp;
             g_reread = true;
-            g_forcelast = true;
+            g_force_last = true;
             g_search_ahead = -(g_search_ahead != 0);
             return AS_NORM;
         }
@@ -1099,7 +1099,7 @@ not_threaded:
                 return AS_SA;
             }
         }
-        else if (g_scanon && !g_threaded_group && g_search_ahead)
+        else if (g_scan_on && !g_threaded_group && g_search_ahead)
         {
             *g_buf = Ctl('n');
             if (!next_art_with_subj())
@@ -1208,7 +1208,7 @@ not_threaded:
         }
         else
         {
-            g_forcelast = true;
+            g_force_last = true;
         }
         g_search_ahead = 0;
         return AS_NORM;
@@ -1216,7 +1216,7 @@ not_threaded:
     case '$':
         g_art = g_lastart+1;
         g_artp = nullptr;
-        g_forcelast = true;
+        g_force_last = true;
         g_search_ahead = 0;
         return AS_NORM;
 
@@ -1224,7 +1224,7 @@ not_threaded:
     case '1': case '2': case '3':     /* goto specified article */
     case '4': case '5': case '6':     /* or do something with a range */
     case '7': case '8': case '9': case '.':
-        g_forcelast = true;
+        g_force_last = true;
         switch (numnum())
         {
         case NN_INP:
@@ -1403,7 +1403,7 @@ normal_search:
         }
         g_art = g_lastart+1;
         g_artp = nullptr;
-        g_forcelast = false;
+        g_force_last = false;
         return AS_NORM;
 
     case 'Q':  case '`':
@@ -1492,11 +1492,11 @@ run_the_selector:
             break;
 
         case 'N':
-            s_exit_code = NG_SELNEXT;
+            s_exit_code = NG_SEL_NEXT;
             break;
 
         case 'P':
-            s_exit_code = NG_SELPRIOR;
+            s_exit_code = NG_SEL_PRIOR;
             break;
 
         case ';':
@@ -1519,7 +1519,7 @@ run_the_selector:
         page_start();
         article_walk(output_subject, AF_UNREAD);
         g_int_count = 0;
-        g_subjline = nullptr;
+        g_subj_line = nullptr;
         g_art = oldart;
         return AS_ASK;
     }
@@ -1555,7 +1555,7 @@ run_the_selector:
         }
         else
         {
-            g_forcelast = true;
+            g_force_last = true;
         }
         return AS_NORM;
 
@@ -1572,7 +1572,7 @@ run_the_selector:
         }
         else
         {
-            g_forcelast = true;
+            g_force_last = true;
         }
         return AS_NORM;
 
@@ -1595,7 +1595,7 @@ run_the_selector:
     case Ctl('^'):
         erase_line(false);              /* erase the prompt */
 #ifdef MAILCALL
-        setmail(true);          /* force a mail check */
+        set_mail(true);          /* force a mail check */
 #endif
         return AS_ASK;
 
@@ -1684,7 +1684,7 @@ run_the_selector:
     case 'f':                 /* followup command */
     {
         followup();
-        g_forcegrow = true;             /* recalculate g_lastart */
+        g_force_grow = true;             /* recalculate g_lastart */
         return AS_ASK;
     }
 
@@ -1851,35 +1851,35 @@ run_the_selector:
 /* see if there is any mail */
 
 #ifdef MAILCALL
-void setmail(bool force)
+void set_mail(bool force)
 {
     if (force)
     {
-        g_mailcount = 0;
+        g_mail_count = 0;
     }
-    if (!(g_mailcount++))
+    if (!(g_mail_count++))
     {
         const char* mailfile = filexp(get_val_const("MAILFILE",MAILFILE));
         stat_t mail_file_stat{};
         if (stat(mailfile,&mail_file_stat) < 0 || !mail_file_stat.st_size
             || mail_file_stat.st_atime > mail_file_stat.st_mtime)
         {
-            g_mailcall = "";
+            g_mail_call = "";
         }
         else
         {
-            g_mailcall = get_val("MAILCALL", "(Mail) ");
+            g_mail_call = get_val("MAILCALL", "(Mail) ");
         }
     }
-    g_mailcount %= 5;                   /* check every 5 articles */
+    g_mail_count %= 5;                   /* check every 5 articles */
 }
 #endif
 
-void setdfltcmd()
+void set_default_cmd()
 {
     if (!g_ngptr || !g_ngptr->toread)
     {
-        g_dfltcmd = "npq";
+        g_default_cmd = "npq";
     }
     else
     {
@@ -1893,11 +1893,11 @@ void setdfltcmd()
 #endif
         if (g_search_ahead)
         {
-            g_dfltcmd = "^Nnpq";
+            g_default_cmd = "^Nnpq";
         }
         else
         {
-            g_dfltcmd = "npq";
+            g_default_cmd = "npq";
         }
     }
 }
@@ -2074,12 +2074,12 @@ bool output_subject(char *ptr, int flag)
         return true;
     }
 
-    if (!g_subjline)
+    if (!g_subj_line)
     {
-        g_subjline = get_val("SUBJLINE",nullptr);
-        if (!g_subjline)
+        g_subj_line = get_val("SUBJLINE",nullptr);
+        if (!g_subj_line)
         {
-            g_subjline = "";
+            g_subj_line = "";
         }
     }
 
@@ -2094,10 +2094,10 @@ bool output_subject(char *ptr, int flag)
     {
         std::sprintf(tmpbuf,"%-5ld ", i);
         int len = std::strlen(tmpbuf);
-        if (!empty(g_subjline))
+        if (!empty(g_subj_line))
         {
             g_art = i;
-            interp(tmpbuf + len, sizeof tmpbuf - len, g_subjline);
+            interp(tmpbuf + len, sizeof tmpbuf - len, g_subj_line);
         }
         else
         {

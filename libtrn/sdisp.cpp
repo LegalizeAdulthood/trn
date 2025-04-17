@@ -35,8 +35,8 @@ void s_mail_and_place()
     bool next;
 
 #ifdef MAILCALL
-    setmail(false);             /* another chance to check mail */
-    std::printf("%s",g_mailcall);
+    set_mail(false);             /* another chance to check mail */
+    std::printf("%s",g_mail_call);
 #endif /* MAILCALL */
     /* print page status wrt all entries */
     previous = (0 != s_prev_elig(g_page_ents[0].entnum));

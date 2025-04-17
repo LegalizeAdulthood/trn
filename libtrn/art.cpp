@@ -232,7 +232,7 @@ DoArticleResult do_article()
                 linenum += tree_puts(g_art_line,linenum+g_top_line,0);
             }
             start_header(g_art);
-            g_forcelast = false;        /* we will have our day in court */
+            g_force_last = false;        /* we will have our day in court */
             s_restart = 0;
             g_art_line_num = 0;              /* start counting lines */
             g_art_pos = 0;
@@ -783,12 +783,12 @@ reask_pager:
             std::fflush(stdout);
         }
 #endif
-        if (g_checkcount >= g_docheckwhen && linenum == g_tc_LINES &&
-            (g_art_line_num > 40 || g_checkcount >= g_docheckwhen + 10))
+        if (g_check_count >= g_do_check_when && linenum == g_tc_LINES &&
+            (g_art_line_num > 40 || g_check_count >= g_do_check_when + 10))
         {
                             /* while he is reading a whole page */
                             /* in an article he is interested in */
-            g_checkcount = 0;
+            g_check_count = 0;
             checkpoint_newsrcs();       /* update all newsrcs */
             update_thread_kill_file();
         }
@@ -1283,12 +1283,12 @@ leave_pager:
         if (std::strchr("nNpP\016\020", *g_buf) == nullptr //
             && std::strchr("wWsSe:!&|/?123456789.", *g_buf) != nullptr)
         {
-            setdfltcmd();
+            set_default_cmd();
             color_object(COLOR_CMD, true);
-            interp_search(g_cmd_buf, sizeof g_cmd_buf, g_mailcall, g_buf);
+            interp_search(g_cmd_buf, sizeof g_cmd_buf, g_mail_call, g_buf);
             std::printf(g_prompt.c_str(),g_cmd_buf,
                    current_char_subst(),
-                   g_dfltcmd.c_str());  /* print prompt, whatever it is */
+                   g_default_cmd.c_str());  /* print prompt, whatever it is */
             color_pop();        /* of COLOR_CMD */
             std::putchar(' ');
             std::fflush(stdout);

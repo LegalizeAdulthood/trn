@@ -594,7 +594,7 @@ void mark_as_read(Article *ap)
         ap->flags |= AF_K_CHASE;
         s_chase_count++;
     }
-    g_checkcount++;             /* get more worried about crashes */
+    g_check_count++;             /* get more worried about crashes */
 }
 
 void mark_missing_articles()

@@ -619,7 +619,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_CHECKPOINT_NEWSRC_FREQUENCY:
-        g_docheckwhen = std::atoi(s);
+        g_do_check_when = std::atoi(s);
         break;
 
     case OI_SAVE_DIR:
@@ -810,11 +810,11 @@ void set_option(OptionIndex num, const char *s)
     case OI_SCANMODE_COUNT:
         if (std::isdigit(*s))
         {
-            g_scanon = std::atoi(s);
+            g_scan_on = std::atoi(s);
         }
         else
         {
-            g_scanon = YES(s)*3;
+            g_scan_on = YES(s)*3;
         }
         break;
 
@@ -1234,7 +1234,7 @@ const char *option_value(OptionIndex num)
         return YESorNO(g_bkgnd_spinner);
 
     case OI_CHECKPOINT_NEWSRC_FREQUENCY:
-        std::sprintf(g_buf,"%d",g_docheckwhen);
+        std::sprintf(g_buf,"%d",g_do_check_when);
         return g_buf;
 
     case OI_SAVE_DIR:
@@ -1374,7 +1374,7 @@ const char *option_value(OptionIndex num)
         return YESorNO(g_findlast != 0);
 
     case OI_SCANMODE_COUNT:
-        std::sprintf(g_buf,"%d",g_scanon);
+        std::sprintf(g_buf,"%d",g_scan_on);
         return g_buf;
 
     case OI_TERSE_OUTPUT:

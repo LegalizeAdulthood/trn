@@ -342,35 +342,35 @@ void do_multirc()
             unflush_output();   /* disable any ^O in effect */
                 if (g_ngptr == nullptr)
                 {
-                g_dfltcmd = retry ? "npq" : "qnp";
+                g_default_cmd = retry ? "npq" : "qnp";
                 if (g_verbose)
                 {
                     std::printf("\n****** End of newsgroups -- what next? [%s] ",
-                           g_dfltcmd.c_str());
+                           g_default_cmd.c_str());
                 }
                 else
                 {
-                    std::printf("\n**** End -- next? [%s] ", g_dfltcmd.c_str());
+                    std::printf("\n**** End -- next? [%s] ", g_default_cmd.c_str());
                 }
                 termdown(1);
             }
             else
             {
                 g_threaded_group = (g_use_threads && !(g_ngptr->flags&NF_UNTHREADED));
-                g_dfltcmd =
+                g_default_cmd =
                     (g_use_news_selector >= 0 && g_ngptr->toread >= (ArticleUnread) g_use_news_selector ? "+ynq" : "ynq");
                 if (g_verbose)
                 {
                     std::printf("\n%s %3ld unread article%s in %s -- read now? [%s] ",
                            g_threaded_group? "======" : "******",
                            (long)g_ngptr->toread, plural(g_ngptr->toread),
-                           g_ngname.c_str(), g_dfltcmd.c_str());
+                           g_ngname.c_str(), g_default_cmd.c_str());
                 }
                 else
                 {
                     std::printf("\n%s %3ld in %s -- read? [%s] ",
                            g_threaded_group? "====" : "****",
-                           (long)g_ngptr->toread,g_ngname.c_str(),g_dfltcmd.c_str());
+                           (long)g_ngptr->toread,g_ngname.c_str(),g_default_cmd.c_str());
                 }
                 termdown(1);
             }
@@ -458,7 +458,7 @@ InputNewsgroupResult input_newsgroup()
         return ING_ASK;
     }
     g_buf[2] = *g_buf;
-    setdef(g_buf,g_dfltcmd.c_str());
+    setdef(g_buf,g_default_cmd.c_str());
     printcmd();
     if (g_ngptr != nullptr)
     {
@@ -914,11 +914,11 @@ reask_abandon:
         case NG_ASK:
             return ING_ASK;
 
-        case NG_SELPRIOR:
+        case NG_SEL_PRIOR:
             *g_buf = 'p';
             goto do_command;
 
-        case NG_SELNEXT:
+        case NG_SEL_NEXT:
             *g_buf = 'n';
             goto do_command;
 
@@ -926,7 +926,7 @@ reask_abandon:
             g_ngptr = g_recent_ng;      /* recall previous newsgroup */
             return ING_SPECIAL;
 
-        case NG_NOSERVER:
+        case NG_NO_SERVER:
             nntp_server_died(g_ngptr->rc->datasrc);
             return ING_NOSERVER;
 

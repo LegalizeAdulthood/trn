@@ -396,7 +396,7 @@ static void sel_dogroups()
         switch (ret)
         {
         case NG_NORM:
-        case NG_SELNEXT:
+        case NG_SEL_NEXT:
             set_ng(np->next);
             break;
 
@@ -408,7 +408,7 @@ static void sel_dogroups()
         case NG_ASK:
             goto loop_break;
 
-        case NG_SELPRIOR:
+        case NG_SEL_PRIOR:
             while ((np = np->prev) != nullptr)
             {
                 if (np->flags & NF_VISIT)
@@ -423,7 +423,7 @@ static void sel_dogroups()
             np = g_recent_ng;
             goto do_group;
 
-        case NG_NOSERVER:
+        case NG_NO_SERVER:
             nntp_server_died(np->rc->datasrc);
             (void) first_page();
             break;
@@ -806,12 +806,12 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         switch (ret)
         {
         case NG_NORM:         /* handle more cases later */
-        case NG_SELNEXT:
+        case NG_SEL_NEXT:
         case NG_NEXT:
             /* just continue reading */
             break;
 
-        case NG_SELPRIOR:
+        case NG_SEL_PRIOR:
             /* not implemented yet */
             /* FALL THROUGH */
 
@@ -907,12 +907,12 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         switch (ret)
         {
         case NG_NORM:         /* handle more cases later */
-        case NG_SELNEXT:
+        case NG_SEL_NEXT:
         case NG_NEXT:
             /* just continue reading */
             break;
 
-        case NG_SELPRIOR:
+        case NG_SEL_PRIOR:
             /* not implemented yet */
             /* FALL THROUGH */
 
@@ -925,7 +925,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
             np = g_recent_ng;
             goto do_group;
 
-        case NG_NOSERVER:
+        case NG_NO_SERVER:
             /* Eeep! */
             break;
         }
@@ -1616,7 +1616,7 @@ static void sel_prompt()
         goto_xy(0, g_sel_last_line);
     }
 #ifdef MAILCALL
-    setmail(false);
+    set_mail(false);
 #endif
     if (g_sel_at_end)
     {
@@ -1630,7 +1630,7 @@ static void sel_prompt()
                 (long)((g_sel_prior_obj_cnt+g_sel_page_obj_cnt)*100 / g_sel_total_obj_cnt),
                 s_page_char, s_end_char);
     }
-    interp(g_buf, sizeof g_buf, g_mailcall);
+    interp(g_buf, sizeof g_buf, g_mail_call);
     std::sprintf(g_msg, "%s-- %s %s (%s%s order) -- %s", g_buf,
             g_sel_exclusive && g_in_ng? "SELECTED" : "Select", g_sel_mode_string,
             g_sel_direction<0? "reverse " : "", g_sel_sort_string, g_cmd_buf);
@@ -2073,7 +2073,7 @@ static DisplayState sel_command(char_int ch)
         erase_line(false);              /* erase the prompt */
         s_removed_prompt |= RP_NEWLINE;
 #ifdef MAILCALL
-        setmail(true);          /* force a mail check */
+        set_mail(true);          /* force a mail check */
 #endif
         break;
 
@@ -3137,7 +3137,7 @@ static DisplayState newsgroup_commands(char_int ch)
             std::printf("[%s] Cmd: ", g_ngptr? g_ngptr->rcline : "*End*");
             std::fflush(stdout);
         }
-        g_dfltcmd = "\\";
+        g_default_cmd = "\\";
         set_mode(GM_READ,MM_NEWSGROUP_LIST);
         if (ch == '\\')
         {
