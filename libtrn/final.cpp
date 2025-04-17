@@ -293,7 +293,7 @@ Signal_t stop_catcher(int signo)
         kill(0,signo);          /* and do the stop */
         savetty();
 #ifdef MAILCALL
-        g_mailcount = 0;                    /* force recheck */
+        g_mail_count = 0;                    /* force recheck */
 #endif
         if (!g_panic)
         {
