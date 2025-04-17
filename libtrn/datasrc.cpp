@@ -968,13 +968,13 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
 
     if (!filename)
     {
-        (void) listnum2listitem(sfp->lp, 0);
+        (void) list_get_item(sfp->lp, 0);
         sfp->lp->high = -1;
         setspin(SPIN_OFF);
         return 1;
     }
 
-    char *lbp = listnum2listitem(sfp->lp, 0);
+    char *lbp = list_get_item(sfp->lp, 0);
     data.dat_ptr = (char*)sfp->lp->first;
 
     for (offset = 0, node_low = 0;; offset += linelen, lbp += linelen)
@@ -1040,7 +1040,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
             node->high = node_low - 1;
             node->data_high = node->data + offset - 1;
             offset = 0;
-            lbp = listnum2listitem(sfp->lp, node_low);
+            lbp = list_get_item(sfp->lp, node_low);
             data.dat_ptr = (char*)sfp->lp->recent;
         }
         data.dat_len = offset;
@@ -1072,7 +1072,7 @@ char *source_file_append(SourceFile *sfp, char *bp, int key_len)
     HashDatum data;
 
     long pos = sfp->lp->high + 1;
-    char *lbp = listnum2listitem(sfp->lp, pos);
+    char *lbp = list_get_item(sfp->lp, pos);
     ListNode *node = sfp->lp->recent;
     data.dat_len = pos - node->low;
 
@@ -1102,7 +1102,7 @@ char *source_file_append(SourceFile *sfp, char *bp, int key_len)
     {
         node->high = pos - 1;
         node->data_high = node->data + data.dat_len - 1;
-        lbp = listnum2listitem(sfp->lp, pos);
+        lbp = list_get_item(sfp->lp, pos);
         node = sfp->lp->recent;
         data.dat_len = 0;
     }

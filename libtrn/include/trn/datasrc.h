@@ -125,7 +125,7 @@ inline NNTPFlags data_source_nntp_flags(const DataSource *dp)
 
 inline DataSource *data_source_ptr(int n)
 {
-    return (DataSource *) listnum2listitem(g_data_source_list, n);
+    return (DataSource *) list_get_item(g_data_source_list, n);
 }
 
 inline DataSource *data_source_first()
@@ -135,7 +135,7 @@ inline DataSource *data_source_first()
 
 inline DataSource *data_source_next(DataSource *p)
 {
-    return (DataSource *) next_listitem(g_data_source_list, (char *) p);
+    return (DataSource *) next_list_item(g_data_source_list, (char *) p);
 }
 
 #endif

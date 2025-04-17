@@ -78,7 +78,7 @@ static int     rcline_cmp(const char *key, int keylen, HashDatum data);
 
 inline NewsgroupData *ngdata_ptr(int ngnum)
 {
-    return (NewsgroupData *) listnum2listitem(g_ngdata_list, ngnum);
+    return (NewsgroupData *) list_get_item(g_ngdata_list, ngnum);
 }
 
 static Multirc *rcstuff_init_data()

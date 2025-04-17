@@ -162,7 +162,7 @@ void clear_article(Article *ap);
 
 inline Article *article_ptr(ArticleNum an)
 {
-    return (Article *) listnum2listitem(g_article_list, an);
+    return (Article *) list_get_item(g_article_list, an);
 }
 inline ArticleNum article_num(const Article *ap)
 {
@@ -170,7 +170,7 @@ inline ArticleNum article_num(const Article *ap)
 }
 inline bool article_hasdata(ArticleNum an)
 {
-    return existing_listnum(g_article_list, an, 0) != 0;
+    return existing_list_index(g_article_list, an, 0) != 0;
 }
 inline Article *article_find(ArticleNum an)
 {
@@ -182,23 +182,23 @@ inline bool article_walk(bool (*callback)(char *, int), int arg)
 }
 inline ArticleNum article_first(ArticleNum an)
 {
-    return existing_listnum(g_article_list, an, 1);
+    return existing_list_index(g_article_list, an, 1);
 }
 inline ArticleNum article_next(ArticleNum an)
 {
-    return existing_listnum(g_article_list, an + 1, 1);
+    return existing_list_index(g_article_list, an + 1, 1);
 }
 inline ArticleNum article_last(ArticleNum an)
 {
-    return existing_listnum(g_article_list, an, -1);
+    return existing_list_index(g_article_list, an, -1);
 }
 inline ArticleNum article_prev(ArticleNum an)
 {
-    return existing_listnum(g_article_list, an - 1, -1);
+    return existing_list_index(g_article_list, an - 1, -1);
 }
 inline Article *article_nextp(Article *ap)
 {
-    return (Article *) next_listitem(g_article_list, (char *) ap);
+    return (Article *) next_list_item(g_article_list, (char *) ap);
 }
 inline bool article_exists(ArticleNum an)
 {

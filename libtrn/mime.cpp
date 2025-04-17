@@ -80,7 +80,7 @@ static char *find_attr(char *str, const char *attr);
 
 inline MimeCapEntry *mimecap_ptr(long n)
 {
-    return (MimeCapEntry *)listnum2listitem(s_mimecap_list, n);
+    return (MimeCapEntry *)list_get_item(s_mimecap_list, n);
 }
 
 void mime_set_executor(MimeExecutor executor)

@@ -47,28 +47,28 @@ static void def_init_node(List *list, ListNode *node)
 ** will allocate new list items as needed, keeping the list->high
 ** value up to date.
 */
-char *listnum2listitem(List *list, long num)
+char *list_get_item(List *list, long index)
 {
     ListNode* node = list->recent;
     ListNode* prevnode = nullptr;
 
-    if (node && num < node->low)
+    if (node && index < node->low)
     {
         node = list->first;
     }
     while (true)
     {
-        if (!node || num < node->low)
+        if (!node || index < node->low)
         {
             node = (ListNode*)safemalloc(list->items_per_node*list->item_size
                                         + sizeof (ListNode) - 1);
             if (list->flags & LF_SPARSE)
             {
-                node->low = ((num - list->low) / list->items_per_node) * list->items_per_node + list->low;
+                node->low = ((index - list->low) / list->items_per_node) * list->items_per_node + list->low;
             }
             else
             {
-                node->low = num;
+                node->low = index;
             }
             node->high = node->low + list->items_per_node - 1;
             node->data_high = node->data
@@ -87,7 +87,7 @@ char *listnum2listitem(List *list, long num)
             list->init_node(list, node);
             break;
         }
-        if (num <= node->high)
+        if (index <= node->high)
         {
             break;
         }
@@ -95,13 +95,13 @@ char *listnum2listitem(List *list, long num)
         node = node->next;
     }
     list->recent = node;
-    return node->data + (num - node->low) * list->item_size;
+    return node->data + (index - node->low) * list->item_size;
 }
 
 /* Take the pointer of a list element and return its number.  The item
 ** must already exist or this will infinite loop.
 */
-long listitem2listnum(List *list, char *ptr)
+long list_get_index(List *list, char *item)
 {
     int item_size = list->item_size;
 
@@ -114,10 +114,10 @@ long listitem2listnum(List *list, char *ptr)
         int i = node->high - node->low + 1;
         for (char *cp = node->data; i--; cp += item_size)
         {
-            if (ptr == cp)
+            if (item == cp)
             {
                 list->recent = node;
-                return (ptr - node->data) / list->item_size + node->low;
+                return (item - node->data) / list->item_size + node->low;
             }
         }
     }
@@ -148,31 +148,31 @@ bool walk_list(List *list, bool (*callback)(char *, int), int arg)
 ** that is already allocated, rounding in the indicated direction from
 ** the initial list number.
 */
-long existing_listnum(List *list, long num, int direction)
+long existing_list_index(List *list, long index, int direction)
 {
     ListNode* node = list->recent;
     ListNode* prevnode = nullptr;
 
-    if (node && num < node->low)
+    if (node && index < node->low)
     {
         node = list->first;
     }
     while (node)
     {
-        if (num <= node->high)
+        if (index <= node->high)
         {
             if (direction > 0)
             {
-                num = std::max(num, node->low);
+                index = std::max(index, node->low);
             }
             else if (direction == 0)
             {
-                if (num < node->low)
+                if (index < node->low)
                 {
-                    num = 0;
+                    index = 0;
                 }
             }
-            else if (num < node->low)
+            else if (index < node->low)
             {
                 if (!prevnode)
                 {
@@ -182,7 +182,7 @@ long existing_listnum(List *list, long num, int direction)
                 return prevnode->high;
             }
             list->recent = node;
-            return num;
+            return index;
         }
         prevnode = node;
         node = node->next;
@@ -201,7 +201,7 @@ long existing_listnum(List *list, long num, int direction)
 /* Increment the item pointer to the next allocated item.
 ** Returns nullptr if ptr is the last one.
 */
-char *next_listitem(List *list, char *ptr)
+char *next_list_item(List *list, char *ptr)
 {
     ListNode* node = list->recent;
 
@@ -230,7 +230,7 @@ char *next_listitem(List *list, char *ptr)
 /* Decrement the item pointer to the prev allocated item.
 ** Returns nullptr if ptr is the first one.
 */
-char *prev_listitem(List *list, char *ptr)
+char *prev_list_item(List *list, char *ptr)
 {
     ListNode* node = list->recent;
 

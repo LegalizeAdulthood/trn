@@ -30,21 +30,21 @@ struct List
     ListNode *first;
     ListNode *recent;
     void (*init_node)(List *, ListNode *);
-    long       low;
-    long       high;
-    int        item_size;
-    int        items_per_node;
+    long      low;
+    long      high;
+    int       item_size;
+    int       items_per_node;
     ListFlags flags;
 };
 
 void list_init();
 List *new_list(long low, long high, int item_size, int items_per_node, ListFlags flags, void (*init_node)(List *, ListNode *));
-char *listnum2listitem(List *list, long num);
-long listitem2listnum(List *list, char *ptr);
+char *list_get_item(List *list, long index);
+long list_get_index(List *list, char *item);
 bool walk_list(List *list, bool (*callback)(char *, int), int arg);
-long existing_listnum(List *list, long num, int direction);
-char *next_listitem(List *list, char *ptr);
-char *prev_listitem(List *list, char *ptr);
+long existing_list_index(List *list, long index, int direction);
+char *next_list_item(List *list, char *ptr);
+char *prev_list_item(List *list, char *ptr);
 void delete_list(List *list);
 
 #endif
