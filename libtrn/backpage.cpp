@@ -12,17 +12,17 @@
 
 #include <cstdio>
 
-static int     s_varyfd{0};         /* virtual array file for storing  file offsets */
-static ArticlePosition s_varybuf[VARYSIZE]; /* current window onto virtual array */
-static long    s_oldoffset{-1};     /* offset to block currently in window */
+static int             s_vary_fd{0};         /* virtual array file for storing  file offsets */
+static ArticlePosition s_vary_buf[VARYSIZE]; /* current window onto virtual array */
+static long            s_old_offset{-1};     /* offset to block currently in window */
 
 void back_page_init()
 {
     const char *varyname = file_exp(VARYNAME);
     close(creat(varyname,0600));
-    s_varyfd = open(varyname,2);
+    s_vary_fd = open(varyname,2);
     remove(varyname);
-    if (s_varyfd < 0)
+    if (s_vary_fd < 0)
     {
         std::printf(g_cant_open,varyname);
         sig_catcher(0);
@@ -49,23 +49,23 @@ ArticlePosition virtual_read(ArticleLine index)
         return 0;
     }
     subindx = index % VARYSIZE;
-    offset = (index - subindx) * sizeof(s_varybuf[0]);
-    if (offset != s_oldoffset)
+    offset = (index - subindx) * sizeof(s_vary_buf[0]);
+    if (offset != s_old_offset)
     {
-        if (s_oldoffset >= 0)
+        if (s_old_offset >= 0)
         {
 #ifndef lint
-            (void)lseek(s_varyfd,s_oldoffset,0);
-            write(s_varyfd, (char*)s_varybuf,sizeof(s_varybuf));
+            (void)lseek(s_vary_fd,s_old_offset,0);
+            write(s_vary_fd, (char*)s_vary_buf,sizeof(s_vary_buf));
 #endif /* lint */
         }
 #ifndef lint
-        (void)lseek(s_varyfd,offset,0);
-        read(s_varyfd,(char*)s_varybuf,sizeof(s_varybuf));
+        (void)lseek(s_vary_fd,offset,0);
+        read(s_vary_fd,(char*)s_vary_buf,sizeof(s_vary_buf));
 #endif /* lint */
-        s_oldoffset = offset;
+        s_old_offset = offset;
     }
-    return s_varybuf[subindx];
+    return s_vary_buf[subindx];
 }
 
 /* write to virtual array */
@@ -93,21 +93,21 @@ void virtual_write(ArticleLine index, ArticlePosition value)
     }
 #endif
     subindx = index % VARYSIZE;
-    offset = (index - subindx) * sizeof(s_varybuf[0]);
-    if (offset != s_oldoffset)
+    offset = (index - subindx) * sizeof(s_vary_buf[0]);
+    if (offset != s_old_offset)
     {
-        if (s_oldoffset >= 0)
+        if (s_old_offset >= 0)
         {
 #ifndef lint
-            (void)lseek(s_varyfd,s_oldoffset,0);
-            write(s_varyfd,(char*)s_varybuf,sizeof(s_varybuf));
+            (void)lseek(s_vary_fd,s_old_offset,0);
+            write(s_vary_fd,(char*)s_vary_buf,sizeof(s_vary_buf));
 #endif /* lint */
         }
 #ifndef lint
-        (void)lseek(s_varyfd,offset,0);
-        read(s_varyfd,(char*)s_varybuf,sizeof(s_varybuf));
+        (void)lseek(s_vary_fd,offset,0);
+        read(s_vary_fd,(char*)s_vary_buf,sizeof(s_vary_buf));
 #endif /* lint */
-        s_oldoffset = offset;
+        s_old_offset = offset;
     }
-    s_varybuf[subindx] = value;
+    s_vary_buf[subindx] = value;
 }
