@@ -249,7 +249,7 @@ DecodeState uudecode(std::FILE *ifp, DecodeState state)
         switch (state)
         {
         case DECODE_START:    /* Looking for start of uuencoded file */
-        case DECODE_MAYBEDONE:
+        case DECODE_MAYBE_DONE:
         {
             if (std::strncmp(g_buf, "begin ", 6) != 0)
             {
@@ -268,7 +268,7 @@ DecodeState uudecode(std::FILE *ifp, DecodeState state)
             {
                 return DECODE_ERROR;
             }
-            filename = decode_fix_fname(filename);
+            filename = decode_fix_filename(filename);
 
             /* Create output file and start decoding */
             ofp = std::fopen(filename, "wb");
@@ -278,7 +278,7 @@ DecodeState uudecode(std::FILE *ifp, DecodeState state)
             }
             std::printf("Decoding %s\n", filename);
             termdown(1);
-            state = DECODE_SETLEN;
+            state = DECODE_SET_LEN;
             break;
         }
 
@@ -294,7 +294,7 @@ DecodeState uudecode(std::FILE *ifp, DecodeState state)
             state = DECODE_ACTIVE;
             /* FALL THROUGH */
 
-        case DECODE_SETLEN:
+        case DECODE_SET_LEN:
             line_length = std::strlen(g_buf);
             state = DECODE_ACTIVE;
             /* FALL THROUGH */
@@ -323,11 +323,11 @@ DecodeState uudecode(std::FILE *ifp, DecodeState state)
             }
             else
             {
-                state = DECODE_NEXT2LAST;
+                state = DECODE_NEXT_TO_LAST;
             }
             break;
 
-        case DECODE_NEXT2LAST:/* May be nearing end of file */
+        case DECODE_NEXT_TO_LAST:/* May be nearing end of file */
             if (!std::strncmp(g_buf, "end", 3))
             {
                 goto end;
@@ -352,7 +352,7 @@ end:            if (ofp)
                     std::fclose(ofp);
                     ofp = nullptr;
                 }
-                state = DECODE_MAYBEDONE;
+                state = DECODE_MAYBE_DONE;
             }
             else
             {
@@ -365,7 +365,7 @@ end:            if (ofp)
         }
     }
 
-    if (state == DECODE_DONE || state == DECODE_MAYBEDONE)
+    if (state == DECODE_DONE || state == DECODE_MAYBE_DONE)
     {
         goto all_done;
     }

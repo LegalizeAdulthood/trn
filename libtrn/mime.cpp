@@ -997,7 +997,7 @@ void mime_DecodeArticle(bool view)
 
 void mime_Description(MimeSection *mp, char *s, int limit)
 {
-    char* fn = decode_fix_fname(mp->filename);
+    char* fn = decode_fix_filename(mp->filename);
     int flen = std::strlen(fn);
 
     limit -= 2;  /* leave room for the trailing ']' and '\n' */
@@ -1105,7 +1105,7 @@ DecodeState qp_decode(std::FILE *ifp, DecodeState state)
 
     if (state == DECODE_START)
     {
-        char* filename = decode_fix_fname(g_mime_section->filename);
+        char* filename = decode_fix_filename(g_mime_section->filename);
         ofp = std::fopen(filename, "wb");
         if (!ofp)
         {
@@ -1158,7 +1158,7 @@ DecodeState qp_decode(std::FILE *ifp, DecodeState state)
         }
     }
 
-    return DECODE_MAYBEDONE;
+    return DECODE_MAYBE_DONE;
 }
 
 static Uchar s_index_b64[256] = {
@@ -1246,7 +1246,7 @@ DecodeState b64_decode(std::FILE *ifp, DecodeState state)
 
     if (state == DECODE_START)
     {
-        char* filename = decode_fix_fname(g_mime_section->filename);
+        char* filename = decode_fix_filename(g_mime_section->filename);
         ofp = std::fopen(filename, "wb");
         if (!ofp)
         {
@@ -1326,7 +1326,7 @@ DecodeState b64_decode(std::FILE *ifp, DecodeState state)
         goto all_done;
     }
 
-    return DECODE_MAYBEDONE;
+    return DECODE_MAYBE_DONE;
 }
 
 static int mime_getc(std::FILE *fp)
@@ -1367,7 +1367,7 @@ DecodeState cat_decode(std::FILE *ifp, DecodeState state)
 
     if (state == DECODE_START)
     {
-        char* filename = decode_fix_fname(g_mime_section->filename);
+        char* filename = decode_fix_filename(g_mime_section->filename);
         ofp = std::fopen(filename, "wb");
         if (!ofp)
         {
@@ -1403,7 +1403,7 @@ DecodeState cat_decode(std::FILE *ifp, DecodeState state)
         }
     }
 
-    return DECODE_MAYBEDONE;
+    return DECODE_MAYBE_DONE;
 }
 
 static int s_word_wrap_in_pre{};

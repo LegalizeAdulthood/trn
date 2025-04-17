@@ -41,7 +41,7 @@ void decode_init()
 {
 }
 
-char *decode_fix_fname(const char *s)
+char *decode_fix_filename(const char *s)
 {
     char* t;
 #ifdef MSDOS
@@ -126,7 +126,7 @@ static bool bad_filename(const char *filename)
 }
 
 /* Parse the subject looking for filename and part number information. */
-char *decode_subject(ArticleNum artnum, int *partp, int *totalp)
+char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
 {
     static char* subject = nullptr;
     char* filename;
@@ -138,7 +138,7 @@ char *decode_subject(ArticleNum artnum, int *partp, int *totalp)
     *partp = part;
     *totalp = total;
     safefree(subject);
-    subject = fetchsubj(artnum,true);
+    subject = fetchsubj(art_num,true);
     if (!*subject)
     {
         return nullptr;
@@ -316,7 +316,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
     }
 
     char* dir;
-    char *filename = decode_fix_fname(g_mime_section->filename);
+    char *filename = decode_fix_filename(g_mime_section->filename);
     if (mcp || total != 1 || part != 1)
     {
         /* Create directory to store parts and copy this part there. */
@@ -483,7 +483,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
     if (state != DECODE_DONE)
     {
         (void) decoder((FILE*)nullptr, DECODE_DONE);
-        if (state != DECODE_MAYBEDONE)
+        if (state != DECODE_MAYBE_DONE)
         {
             std::strcpy(g_msg,"Premature EOF.");
             return false;
