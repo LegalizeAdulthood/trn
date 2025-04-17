@@ -158,9 +158,9 @@ int nntp_group(const char *group, NewsgroupData *gp)
 
 /* check on an article's existence */
 
-int nntp_stat(ArticleNum artnum)
+int nntp_stat(ArticleNum art_num)
 {
-    std::sprintf(g_ser_line, "STAT %ld", (long)artnum);
+    std::sprintf(g_ser_line, "STAT %ld", (long)art_num);
     if (nntp_command(g_ser_line) <= 0)
     {
         return -2;
@@ -170,11 +170,11 @@ int nntp_stat(ArticleNum artnum)
 
 /* check on an article's existence by its message id */
 
-ArticleNum nntp_stat_id(char *msgid)
+ArticleNum nntp_stat_id(char *msg_id)
 {
     long artnum;
 
-    std::sprintf(g_ser_line, "STAT %s", msgid);
+    std::sprintf(g_ser_line, "STAT %s", msg_id);
     if (nntp_command(g_ser_line) <= 0)
     {
         return -2;
@@ -205,9 +205,9 @@ ArticleNum nntp_next_art()
 
 /* prepare to get the header */
 
-int nntp_header(ArticleNum artnum)
+int nntp_header(ArticleNum art_num)
 {
-    std::sprintf(g_ser_line, "HEAD %ld", (long)artnum);
+    std::sprintf(g_ser_line, "HEAD %ld", (long)art_num);
     if (nntp_command(g_ser_line) <= 0)
     {
         return -2;
@@ -217,14 +217,14 @@ int nntp_header(ArticleNum artnum)
 
 /* copy the body of an article to a temporary file */
 
-void nntp_body(ArticleNum artnum)
+void nntp_body(ArticleNum art_num)
 {
-    char *artname = nntp_artname(artnum, false); /* Is it already in a tmp file? */
+    char *artname = nntp_art_name(art_num, false); /* Is it already in a tmp file? */
     if (artname)
     {
         if (s_body_pos >= 0)
         {
-            nntp_finishbody(FB_DISCARD);
+            nntp_finish_body(FB_DISCARD);
         }
         g_art_fp = std::fopen(artname,"r");
         stat_t art_stat{};
@@ -235,7 +235,7 @@ void nntp_body(ArticleNum artnum)
         return;
     }
 
-    artname = nntp_artname(artnum, true);   /* Allocate a tmp file */
+    artname = nntp_art_name(art_num, true);   /* Allocate a tmp file */
     if (!(g_art_fp = std::fopen(artname, "w+")))
     {
         std::fprintf(stderr, "\nUnable to write temporary file: '%s'.\n",
@@ -245,13 +245,13 @@ void nntp_body(ArticleNum artnum)
 #ifndef MSDOS
     chmod(artname, 0600);
 #endif
-    if (g_parsed_art == artnum)
+    if (g_parsed_art == art_num)
     {
-        std::sprintf(g_ser_line, "BODY %ld", (long) artnum);
+        std::sprintf(g_ser_line, "BODY %ld", (long) art_num);
     }
     else
     {
-        std::sprintf(g_ser_line, "ARTICLE %ld", (long) artnum);
+        std::sprintf(g_ser_line, "ARTICLE %ld", (long) art_num);
     }
     if (nntp_command(g_ser_line) <= 0)
     {
@@ -270,7 +270,7 @@ void nntp_body(ArticleNum artnum)
         return;
     }
     s_body_pos = 0;
-    if (g_parsed_art == artnum)
+    if (g_parsed_art == art_num)
     {
         std::fwrite(g_head_buf, 1, std::strlen(g_head_buf), g_art_fp);
         s_body_end = (ArticlePosition)std::ftell(g_art_fp);
@@ -294,7 +294,7 @@ void nntp_body(ArticleNum artnum)
     g_nntplink.flags &= ~NNTP_NEW_CMD_OK;
 }
 
-long nntp_artsize()
+long nntp_art_size()
 {
     return s_body_pos < 0 ? s_body_end : -1;
 }
@@ -335,7 +335,7 @@ static int nntp_copybody(char *s, int limit, ArticlePosition pos)
     return 1;
 }
 
-int nntp_finishbody(FinishBodyMode bmode)
+int nntp_finish_body(FinishBodyMode bmode)
 {
     char b[NNTP_STRLEN];
     if (s_body_pos < 0)
@@ -391,7 +391,7 @@ int nntp_finishbody(FinishBodyMode bmode)
     return 1;
 }
 
-int nntp_seekart(ArticlePosition pos)
+int nntp_seek_art(ArticlePosition pos)
 {
     if (s_body_pos >= 0)
     {
@@ -413,12 +413,12 @@ int nntp_seekart(ArticlePosition pos)
     return std::fseek(g_art_fp, (long)pos, 0);
 }
 
-ArticlePosition nntp_tellart()
+ArticlePosition nntp_tell_art()
 {
     return s_body_pos < 0 ? (ArticlePosition)std::ftell(g_art_fp) : s_body_pos;
 }
 
-char *nntp_readart(char *s, int limit)
+char *nntp_read_art(char *s, int limit)
 {
     if (s_body_pos >= 0)
     {
@@ -496,7 +496,7 @@ std::time_t nntp_time()
     return ss;
 }
 
-int nntp_newgroups(std::time_t t)
+int nntp_new_groups(std::time_t t)
 {
     std::tm *ts = std::gmtime(&t);
     std::sprintf(g_ser_line, "NEWGROUPS %02d%02d%02d %02d%02d%02d GMT",
@@ -509,7 +509,7 @@ int nntp_newgroups(std::time_t t)
     return nntp_check();
 }
 
-int nntp_artnums()
+int nntp_art_nums()
 {
     if (g_data_source->flags & DF_NO_LIST_GROUP)
     {
@@ -575,13 +575,13 @@ ArticleNum nntp_find_real_art(ArticleNum after)
     return 0;
 }
 
-char *nntp_artname(ArticleNum artnum, bool allocate)
+char *nntp_art_name(ArticleNum art_num, bool allocate)
 {
     static ArticleNum artnums[MAX_NNTP_ARTICLES];
     static std::time_t  artages[MAX_NNTP_ARTICLES];
     std::time_t         lowage;
 
-    if (!artnum)
+    if (!art_num)
     {
         for (int i = 0; i < MAX_NNTP_ARTICLES; i++)
         {
@@ -597,10 +597,10 @@ char *nntp_artname(ArticleNum artnum, bool allocate)
     lowage = now;
     for (int i = 0; i < MAX_NNTP_ARTICLES; i++)
     {
-        if (artnums[i] == artnum)
+        if (artnums[i] == art_num)
         {
             artages[i] = now;
-            return nntp_tmpname(i);
+            return nntp_tmp_name(i);
         }
         if (artages[i] <= lowage)
         {
@@ -611,15 +611,15 @@ char *nntp_artname(ArticleNum artnum, bool allocate)
 
     if (allocate)
     {
-        artnums[j] = artnum;
+        artnums[j] = art_num;
         artages[j] = now;
-        return nntp_tmpname(j);
+        return nntp_tmp_name(j);
     }
 
     return nullptr;
 }
 
-char *nntp_tmpname(int ndx)
+char *nntp_tmp_name(int ndx)
 {
     static char artname[20];
     std::sprintf(artname,"rrn.%ld.%d",g_our_pid,ndx);
@@ -632,7 +632,7 @@ int nntp_handle_nested_lists()
     {
         return 0; /* TODO: flush data needed? */
     }
-    if (nntp_finishbody(FB_DISCARD))
+    if (nntp_finish_body(FB_DISCARD))
     {
         return 1;
     }
@@ -689,12 +689,12 @@ void nntp_server_died(DataSource *dp)
     get_anything();
 }
 
-/* nntp_readcheck -- get a line of text from the server, interpreting
+/* nntp_read_check -- get a line of text from the server, interpreting
 ** it as a status message for a binary command.  Call this once
 ** before calling nntp_read() for the actual data transfer.
 */
 #ifdef SUPPORT_XTHREAD
-long nntp_readcheck()
+long nntp_read_check()
 {
     /* try to get the status line and the status code */
     switch (nntp_check())
@@ -717,7 +717,7 @@ long nntp_readcheck()
 #endif
 
 /* nntp_read -- read data from the server in binary format.  This call must
-** be preceded by an appropriate binary command and an nntp_readcheck call.
+** be preceded by an appropriate binary command and an nntp_read_check call.
 */
 #ifdef SUPPORT_XTHREAD
 long nntp_read(char *buf, long n)

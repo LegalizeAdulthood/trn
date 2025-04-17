@@ -326,7 +326,7 @@ SaveResult save_article()
         g_savedest = altbuf;
         if (g_data_source->flags & DF_REMOTE)
         {
-            nntp_finishbody(FB_SILENT);
+            nntp_finish_body(FB_SILENT);
         }
         interp(g_cmd_buf, (sizeof g_cmd_buf), get_val("PIPESAVER",PIPESAVER));
                                 /* then set up for command */
@@ -510,7 +510,7 @@ SaveResult save_article()
             safecpy(g_cmd_buf, filexp(s), sizeof g_cmd_buf);
             if (g_data_source->flags & DF_REMOTE)
             {
-                nntp_finishbody(FB_SILENT);
+                nntp_finish_body(FB_SILENT);
             }
             termlib_reset();
             resetty();          /* make terminal behave */
@@ -1141,7 +1141,7 @@ int invoke(const char *cmd, const char *dir)
 
     if (g_data_source->flags & DF_REMOTE)
     {
-        nntp_finishbody(FB_SILENT);
+        nntp_finish_body(FB_SILENT);
     }
 #ifdef DEBUG
     if (debug)

@@ -327,7 +327,7 @@ void find_existing_articles()
     if (g_data_source->flags & DF_REMOTE)
     {
         /* Parse the LISTGROUP output and remember everything we find */
-        if (nntp_artnums())
+        if (nntp_art_nums())
         {
             for (ap = article_ptr(article_first(g_abs_first));
                  ap && article_num(ap) <= g_last_art;

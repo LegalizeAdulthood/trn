@@ -623,9 +623,9 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         {
                             if (art_open(g_art, (ArticlePosition) 0))
                             {
-                                nntp_finishbody(FB_SILENT);
+                                nntp_finish_body(FB_SILENT);
                                 std::sprintf(s = scrbuf,"%s/%s",g_data_source->spool_dir,
-                                        nntp_artname(g_art, false));
+                                        nntp_art_name(g_art, false));
                             }
                             else
                             {

@@ -121,8 +121,8 @@ DoArticleResult do_article()
 
     if (g_data_source->flags & DF_REMOTE)
     {
-        g_raw_art_size = nntp_artsize();
-        g_art_size = nntp_artsize();
+        g_raw_art_size = nntp_art_size();
+        g_art_size = nntp_art_size();
     }
     else
     {
@@ -728,7 +728,7 @@ DoArticleResult do_article()
 
         /* extra loop bombout */
 
-        if (g_art_size < 0 && (g_raw_art_size = nntp_artsize()) >= 0)
+        if (g_art_size < 0 && (g_raw_art_size = nntp_art_size()) >= 0)
         {
             g_art_size = g_raw_art_size-g_art_buf_seek+g_art_buf_len+g_htype[PAST_HEADER].min_pos;
         }
@@ -793,7 +793,7 @@ reask_pager:
             update_thread_kill_file();
         }
         cache_until_key();
-        if (g_art_size < 0 && (g_raw_art_size = nntp_artsize()) >= 0)
+        if (g_art_size < 0 && (g_raw_art_size = nntp_art_size()) >= 0)
         {
             g_art_size = g_raw_art_size-g_art_buf_seek+g_art_buf_len+g_htype[PAST_HEADER].min_pos;
             goto_xy(s_more_prompt_col,g_term_line);
@@ -1082,8 +1082,8 @@ PageSwitchResult page_switch()
     case Ctl('e'):
         if (g_art_size < 0)
         {
-            nntp_finishbody(FB_OUTPUT);
-            g_raw_art_size = nntp_artsize();
+            nntp_finish_body(FB_OUTPUT);
+            g_raw_art_size = nntp_art_size();
             g_art_size = g_raw_art_size-g_art_buf_seek+g_art_buf_len+g_htype[PAST_HEADER].min_pos;
         }
         if (g_do_hiding)

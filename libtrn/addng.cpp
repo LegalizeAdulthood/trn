@@ -161,7 +161,7 @@ static void new_nntp_groups(DataSource *dp)
     {
         return;
     }
-    if (nntp_newgroups(dp->last_new_group) < 1)
+    if (nntp_new_groups(dp->last_new_group) < 1)
     {
         std::printf("Can't get new groups from server:\n%s\n", g_ser_line);
         return;

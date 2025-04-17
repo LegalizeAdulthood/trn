@@ -255,7 +255,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             ArticleNum oldlast = g_last_art;
             if (g_art_size < 0)
             {
-                nntp_finishbody(FB_SILENT);
+                nntp_finish_body(FB_SILENT);
             }
             if (g_data_source->flags & DF_REMOTE)
             {
@@ -1604,8 +1604,8 @@ run_the_selector:
         {
             if (g_art_size < 0)
             {
-                nntp_finishbody(FB_OUTPUT);
-                g_raw_art_size = nntp_artsize();
+                nntp_finish_body(FB_OUTPUT);
+                g_raw_art_size = nntp_art_size();
                 g_art_size = g_raw_art_size-g_art_buf_seek+g_art_buf_len+g_htype[PAST_HEADER].min_pos;
             }
             if (g_do_hiding)

@@ -110,7 +110,7 @@ void art_close()
     {
         if (g_data_source->flags & DF_REMOTE)
         {
-            nntp_finishbody(FB_DISCARD);
+            nntp_finish_body(FB_DISCARD);
         }
         std::fclose(g_art_fp);                        /* close it */
         g_art_fp = nullptr;                      /* and tell the world */
@@ -123,7 +123,7 @@ int seek_art(ArticlePosition pos)
 {
     if (g_data_source->flags & DF_REMOTE)
     {
-        return nntp_seekart(pos);
+        return nntp_seek_art(pos);
     }
     return std::fseek(g_art_fp,(long)pos,0);
 }
@@ -133,7 +133,7 @@ tell_art()
 {
     if (g_data_source->flags & DF_REMOTE)
     {
-        return nntp_tellart();
+        return nntp_tell_art();
     }
     return (ArticlePosition)std::ftell(g_art_fp);
 }
@@ -142,7 +142,7 @@ char *read_art(char *s, int limit)
 {
     if (g_data_source->flags & DF_REMOTE)
     {
-        return nntp_readart(s, limit);
+        return nntp_read_art(s, limit);
     }
     return std::fgets(s,limit,g_art_fp);
 }
@@ -430,8 +430,8 @@ char *read_art_buf(bool view_inline)
         {
             if (g_data_source->flags & DF_REMOTE)
             {
-                nntp_finishbody(FB_SILENT);
-                g_raw_art_size = nntp_artsize();
+                nntp_finish_body(FB_SILENT);
+                g_raw_art_size = nntp_art_size();
             }
             seek_art(g_raw_art_size);
         }

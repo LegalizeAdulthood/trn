@@ -124,7 +124,7 @@ void close_cache()
 {
     Subject* next;
 
-    nntp_artname(0, false);             /* clear the tmpfile cache */
+    nntp_art_name(0, false);             /* clear the tmpfile cache */
 
     if (s_subj_hash)
     {
@@ -902,7 +902,7 @@ void cache_until_key()
         return;
     }
 
-    if ((g_data_source->flags & DF_REMOTE) && nntp_finishbody(FB_BACKGROUND))
+    if ((g_data_source->flags & DF_REMOTE) && nntp_finish_body(FB_BACKGROUND))
     {
         return;
     }

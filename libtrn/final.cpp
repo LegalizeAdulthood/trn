@@ -113,7 +113,7 @@ void finalize(int status)
     data_source_finalize();
     for (int i = 0; i < MAX_NNTP_ARTICLES; i++)
     {
-        char *s = nntp_tmpname(i);
+        char *s = nntp_tmp_name(i);
         remove(s);
     }
     cleanup_nntp();
