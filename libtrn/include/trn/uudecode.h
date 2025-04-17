@@ -11,7 +11,7 @@
 /* Length of a normal uuencoded line, including newline */
 enum
 {
-    UULENGTH = 62
+    UU_LENGTH = 62
 };
 
 int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp);

@@ -181,7 +181,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
     }
     if (*filenamep && *partp > 0 && *totalp > 0 && *partp <= *totalp                //
         && (!std::strncmp(bp, "BEGIN", 5) || !std::strncmp(bp, "--- BEGIN ---", 12) //
-            || (bp[0] == 'M' && std::strlen(bp) == UULENGTH)))
+            || (bp[0] == 'M' && std::strlen(bp) == UU_LENGTH)))
     {
         /* Found the start of a section of uuencoded data
          * and have the part N of M information.
@@ -235,7 +235,7 @@ DecodeState uudecode(std::FILE *ifp, DecodeState state)
 
     while (ifp ? std::fgets(g_buf, sizeof g_buf, ifp) : read_art(g_buf, sizeof g_buf))
     {
-        char lastline[UULENGTH+1];
+        char lastline[UU_LENGTH+1];
         if (!ifp && mime_end_of_section(g_buf))
         {
             break;
@@ -380,7 +380,7 @@ static void uudecodeline(char *line, FILE *ofp)
 {
     /* Calculate expected length and pad if necessary */
     int len = ((DEC(line[0]) + 2) / 3) * 4;
-    len = std::min(len, static_cast<int>(UULENGTH));
+    len = std::min(len, static_cast<int>(UU_LENGTH));
     for (int c = std::strlen(line) - 1; c <= len; c++)
     {
         line[c] = ' ';
