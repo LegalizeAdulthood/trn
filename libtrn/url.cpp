@@ -102,7 +102,7 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
     int         status;
     char*       cdpath;
 
-    safecpy(path,origpath,510);
+    safe_copy(path,origpath,510);
     char *p = std::strrchr(path, '/'); /* p points to last slash or nullptr*/
     if (p == nullptr)
     {
@@ -114,8 +114,8 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
         std::printf("Error: URL:ftp path has no final filename.\n");
         return false;
     }
-    safecpy(username,filexp("%L"),120);
-    safecpy(userhost,filexp("%H"),120);
+    safe_copy(username,file_exp("%L"),120);
+    safe_copy(userhost,file_exp("%H"),120);
     if (p != path)      /* not of form /foo */
     {
         *p = '\0';
@@ -127,7 +127,7 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
     }
 
     std::sprintf(cmdline,"%s/ftpgrab %s ftp %s@%s %s %s %s",
-            filexp("%X"),host,username,userhost,cdpath,p+1,outname);
+            file_exp("%X"),host,username,userhost,cdpath,p+1,outname);
 
     /* modified escape_shell_cmd code from NCSA HTTPD util.c */
     /* serious security holes could result without this code */

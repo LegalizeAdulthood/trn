@@ -46,7 +46,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
 
     perform_status_init(g_newsgroup_to_read);
     char const cmdchr = *patbuf;         /* what kind of search? */
-    char *s = cpytill(g_buf, patbuf + 1, cmdchr); /* ok to cpy g_buf+1 to g_buf */
+    char *s = copy_till(g_buf, patbuf + 1, cmdchr); /* ok to cpy g_buf+1 to g_buf */
     char *pattern;                                /* unparsed pattern */
     for (pattern = g_buf; *pattern == ' '; pattern++)
     {

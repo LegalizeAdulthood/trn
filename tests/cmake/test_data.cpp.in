@@ -29,7 +29,7 @@ bool set_name(char *)
 
 bool set_host_name(char *)
 {
-    g_local_host = savestr("@TRN_TEST_LOCAL_HOST@");
+    g_local_host = save_str("@TRN_TEST_LOCAL_HOST@");
     g_p_host_name = "@TRN_TEST_P_HOST_NAME@";
     return true;
 };

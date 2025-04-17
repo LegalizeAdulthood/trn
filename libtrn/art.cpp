@@ -357,11 +357,11 @@ DoArticleResult do_article()
                     if ((s = std::strchr(bufptr,'\n')) != nullptr
                      && s-bufptr < sizeof g_art_line)
                     {
-                        safecpy(g_art_line,bufptr,s-bufptr+1);
+                        safe_copy(g_art_line,bufptr,s-bufptr+1);
                     }
                     else
                     {
-                        safecpy(g_art_line,bufptr,sizeof g_art_line);
+                        safe_copy(g_art_line,bufptr,sizeof g_art_line);
                     }
                     s = extract_name(g_art_line + 6);
                     if (s != nullptr)

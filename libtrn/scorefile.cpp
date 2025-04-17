@@ -84,7 +84,7 @@ void sf_init()
     }
     s_sf_file_level = 0;
     /* find # of levels */
-    std::strcpy(s_sf_buf,filexp("%C"));
+    std::strcpy(s_sf_buf,file_exp("%C"));
     int level = 0;
     for (char *s = s_sf_buf; *s; s++)
     {
@@ -245,7 +245,7 @@ int sf_check_extra_headers(const char *head)
     static char lbuf[LBUFLEN];
 
     /* convert to lower case */
-    safecpy(lbuf,head,sizeof lbuf - 1);
+    safe_copy(lbuf,head,sizeof lbuf - 1);
     for (char *s = lbuf; *s; s++)
     {
         if (std::isalpha(*s) && std::isupper(*s))
@@ -273,7 +273,7 @@ void sf_add_extra_header(const char *head)
 
     /* check to see if it's already known */
     /* first see if it is a known system header */
-    safecpy(lbuf,head,sizeof lbuf - 2);
+    safe_copy(lbuf,head,sizeof lbuf - 2);
     int len = std::strlen(lbuf);
     lbuf[len] = ':';
     lbuf[len+1] = '\0';
@@ -335,7 +335,7 @@ char *sf_get_extra_header(ArticleNum art, int hnum)
                 return "";
             }
             *s = '\0';
-            safecpy(lbuf,head,sizeof lbuf - 1);
+            safe_copy(lbuf,head,sizeof lbuf - 1);
             *s = '\n';
             return lbuf;
         }
@@ -350,7 +350,7 @@ static char s_sf_file[LBUFLEN];
 /* filenames of type a/b/c/foo.bar.misc for group foo.bar.misc */
 char *sf_get_filename(int level)
 {
-    std::strcpy(s_sf_file,filexp(get_val_const("SCOREDIR",DEFAULT_SCOREDIR)));
+    std::strcpy(s_sf_file,file_exp(get_val_const("SCOREDIR",DEFAULT_SCOREDIR)));
     std::strcat(s_sf_file,"/");
     if (!level)
     {
@@ -359,7 +359,7 @@ char *sf_get_filename(int level)
     }
     else
     {
-        std::strcat(s_sf_file,filexp("%C"));
+        std::strcat(s_sf_file,file_exp("%C"));
         char *s = std::strrchr(s_sf_file, '/');
         /* maybe redo this logic later... */
         while (level--)
@@ -494,7 +494,7 @@ bool sf_do_command(char *cmd, bool check)
             std::printf("Bad include command (missing filename)\n");
             return false;
         }
-        sf_do_file(filexp(sf_cmd_fname(s)));
+        sf_do_file(file_exp(sf_cmd_fname(s)));
         return true;
     }
     if (!std::strncmp(cmd, "exclude", 7))
@@ -509,7 +509,7 @@ bool sf_do_command(char *cmd, bool check)
             std::printf("Bad exclude command (missing filename)\n");
             return false;
         }
-        sf_exclude_file(filexp(sf_cmd_fname(s)));
+        sf_exclude_file(file_exp(sf_cmd_fname(s)));
         return true;
     }
     if (!std::strncmp(cmd, "header", 6))
@@ -1081,7 +1081,7 @@ void sf_append(char *line)
         case 'F':     /* domain-shortened FROM line */
             std::strcpy(lbuf,scoreline);
             lbuf[std::strlen(lbuf)-1] = '\0';
-            std::strcat(lbuf,filexp("from: %y"));
+            std::strcat(lbuf,file_exp("from: %y"));
             scoreline = lbuf;
             break;
 
@@ -1138,7 +1138,7 @@ void sf_append(char *line)
         std::printf("\nBad file abbreviation: %c\n",filechar);
         return;
     }
-    filename = filexp(sf_cmd_fname(filename));  /* allow shortcuts */
+    filename = file_exp(sf_cmd_fname(filename));  /* allow shortcuts */
     /* make sure directory exists... */
     make_dir(filename, MD_FILE);
     sf_file_clear();
@@ -1195,7 +1195,7 @@ char *sf_get_line(ArticleNum a, HeaderLineType h)
     }
     else
     {
-        safecpy(sf_getline,s,sizeof sf_getline - 1);
+        safe_copy(sf_getline,s,sizeof sf_getline - 1);
     }
 
     for (char *t = sf_getline; *t; t++)
@@ -1391,7 +1391,7 @@ void sf_edit_file(const char *filespec)
         std::strcpy(filebuf,s_sf_abbr[(int)filechar]);
     }
     char *fname_noexpand = sf_cmd_fname(filebuf);
-    std::strcpy(filebuf,filexp(fname_noexpand));
+    std::strcpy(filebuf,file_exp(fname_noexpand));
     /* make sure directory exists... */
     if (!make_dir(filebuf, MD_FILE))
     {
@@ -1440,7 +1440,7 @@ static int sf_open_file(const char *name)
     if (string_case_equal(name, "URL:", 4))
     {
         char lbuf[1024];
-        safecpy(lbuf,name,sizeof lbuf - 4);
+        safe_copy(lbuf,name,sizeof lbuf - 4);
         name = lbuf;
         temp_name = temp_filename();
         if (!url_get(name+4,temp_name))

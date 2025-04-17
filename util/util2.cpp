@@ -30,7 +30,7 @@ char *save_str(const char *str)
 }
 
 /* safe version of string copy */
-char *safecpy(char *to, const char *from, int len)
+char *safe_copy(char *to, const char *from, int len)
 {
     char* dest = to;
 
@@ -47,7 +47,7 @@ char *safecpy(char *to, const char *from, int len)
 }
 
 /* copy a string up to some (non-backslashed) delimiter, if any */
-char *cpytill(char *to, char *from, int delim)
+char *copy_till(char *to, char *from, int delim)
 {
     while (*from)
     {
@@ -69,7 +69,7 @@ char *cpytill(char *to, char *from, int delim)
 /* returns pointer to static area */
 /* Note that there is a 1-deep cache of ~name interpretation */
 
-char *filexp(const char *text)
+char *file_exp(const char *text)
 {
     // sbuf exists so that we can have a const input
     static char sbuf[CBUFLEN];
@@ -136,20 +136,20 @@ char *filexp(const char *text)
                         return nullptr;
                     }
                     std::sprintf(scrbuf, "%s%s", pwd->pw_dir, s);
-                    s_tildedir = savestr(pwd->pw_dir);
+                    s_tildedir = save_str(pwd->pw_dir);
                     std::strcpy(filename, scrbuf);
                     endpwent();
                 }
 #else                   /* this will run faster, and is less D space */
                 { /* just be sure LOGDIRFIELD is correct */
-                    std::FILE *pfp = std::fopen(filexp(PASSFILE), "r");
+                    std::FILE *pfp = std::fopen(file_exp(PASSFILE), "r");
                     char tmpbuf[512];
 
                     if (pfp)
                     {
                         while (std::fgets(tmpbuf, 512, pfp) != nullptr)
                         {
-                            char *d = cpytill(scrbuf, tmpbuf, ':');
+                            char *d = copy_till(scrbuf, tmpbuf, ':');
                             if (!std::strcmp(scrbuf, s_tildename))
                             {
                                 for (int i = LOGDIRFIELD - 2; i; i--)
@@ -161,7 +161,7 @@ char *filexp(const char *text)
                                 }
                                 if (d)
                                 {
-                                    cpytill(scrbuf, d + 1, ':');
+                                    copy_till(scrbuf, d + 1, ':');
                                     s_tildedir = save_str(scrbuf);
                                     std::strcat(scrbuf, s);
                                     std::strcpy(filename, scrbuf);

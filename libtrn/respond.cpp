@@ -126,11 +126,11 @@ SaveResult save_article()
                 totalOpt = partOpt;
             }
         }
-        safecpy(altbuf,filexp(s),sizeof altbuf);
+        safe_copy(altbuf,file_exp(s),sizeof altbuf);
         s = altbuf;
         if (*s)
         {
-            cmdstr = cpytill(g_buf,s,'|');      /* check for | */
+            cmdstr = copy_till(g_buf,s,'|');      /* check for | */
             s = g_buf + std::strlen(g_buf)-1;
             while (*s == ' ')
             {
@@ -299,7 +299,7 @@ SaveResult save_article()
                 term_down(1);
                 g_mime_section->type = IMAGE_MIME;
                 safe_free(g_mime_section->filename);
-                g_mime_section->filename = filename? savestr(filename) : nullptr;
+                g_mime_section->filename = filename? save_str(filename) : nullptr;
                 g_mime_section->encoding = MENCODE_UUE;
                 g_mime_section->part = part;
                 g_mime_section->total = total;
@@ -322,7 +322,7 @@ SaveResult save_article()
     {
         s++;                    /* skip the | */
         s = skip_eq(s, ' ');
-        safecpy(altbuf,filexp(s),sizeof altbuf);
+        safe_copy(altbuf,file_exp(s),sizeof altbuf);
         g_save_dest = altbuf;
         if (g_data_source->flags & DF_REMOTE)
         {
@@ -369,7 +369,7 @@ SaveResult save_article()
         {
             /* skip spaces */
         }
-        safecpy(altbuf,filexp(s),sizeof altbuf);
+        safe_copy(altbuf,file_exp(s),sizeof altbuf);
         s = altbuf;
         if (!FILE_REF(s))
         {
@@ -507,7 +507,7 @@ SaveResult save_article()
             {
                 std::fclose(s_tmpfp);
             }
-            safecpy(g_cmd_buf, filexp(s), sizeof g_cmd_buf);
+            safe_copy(g_cmd_buf, file_exp(s), sizeof g_cmd_buf);
             if (g_data_source->flags & DF_REMOTE)
             {
                 nntp_finish_body(FB_SILENT);
@@ -628,7 +628,7 @@ SaveResult view_article()
                 seek_art(g_save_from);
                 g_mime_section->type = UNHANDLED_MIME;
                 safe_free(g_mime_section->filename);
-                g_mime_section->filename = filename? savestr(filename) : nullptr;
+                g_mime_section->filename = filename? save_str(filename) : nullptr;
                 g_mime_section->encoding = MENCODE_UUE;
                 g_mime_section->part = part;
                 g_mime_section->total = total;
@@ -718,7 +718,7 @@ int cancel_article()
         std::fclose(header);
         std::fputs("\nCanceling...\n",stdout);
         term_down(2);
-        r = do_shell(SH,filexp(get_val_const("CANCEL",CALL_INEWS)));
+        r = do_shell(SH,file_exp(get_val_const("CANCEL",CALL_INEWS)));
     }
 done:
     std::free(ngs_buf);
@@ -815,7 +815,7 @@ static int nntp_date()
 
 static void follow_it_up()
 {
-    safecpy(g_cmd_buf,filexp(get_val_const("NEWSPOSTER",NEWSPOSTER)), sizeof g_cmd_buf);
+    safe_copy(g_cmd_buf,file_exp(get_val_const("NEWSPOSTER",NEWSPOSTER)), sizeof g_cmd_buf);
     if (invoke(g_cmd_buf, g_orig_dir.c_str()) == 42)
     {
         int ret;
@@ -826,12 +826,12 @@ static void follow_it_up()
         }
         else
         {
-            ret = invoke(filexp(CALL_INEWS),g_orig_dir.c_str());
+            ret = invoke(file_exp(CALL_INEWS),g_orig_dir.c_str());
         }
         if (ret)
         {
             int   appended = 0;
-            char* deadart = filexp("%./dead.article");
+            char* deadart = file_exp("%./dead.article");
             std::FILE *fp_out = std::fopen(deadart, "a");
             if (fp_out != nullptr)
             {
@@ -863,7 +863,7 @@ void reply()
 {
     char hbuf[5*LBUFLEN];
     bool incl_body = (*g_buf == 'R' && g_art);
-    char* maildoer = savestr(get_val_const("MAILPOSTER",MAILPOSTER));
+    char* maildoer = save_str(get_val_const("MAILPOSTER",MAILPOSTER));
 
     art_open(g_art,(ArticlePosition)0);
     std::FILE *header = std::fopen(g_head_name.c_str(),"w");       /* open header file */
@@ -915,7 +915,7 @@ void reply()
         g_wrapped_nl = WRAPPED_NL;
     }
     std::fclose(header);
-    safecpy(g_cmd_buf,filexp(maildoer),sizeof g_cmd_buf);
+    safe_copy(g_cmd_buf,file_exp(maildoer),sizeof g_cmd_buf);
     invoke(g_cmd_buf,g_orig_dir.c_str());
 done:
     std::free(maildoer);
@@ -924,7 +924,7 @@ done:
 void forward()
 {
     char hbuf[5*LBUFLEN];
-    char* maildoer = savestr(get_val_const("FORWARDPOSTER",FORWARDPOSTER));
+    char* maildoer = save_str(get_val_const("FORWARDPOSTER",FORWARDPOSTER));
 #ifdef REGEX_WORKS_RIGHT
     COMPEX mime_compex;
 #else
@@ -989,7 +989,7 @@ void forward()
                     {
                         *s = '\0';
                     }
-                    mime_boundary = savestr(mime_boundary);
+                    mime_boundary = save_str(mime_boundary);
                     if (s)
                     {
                         *s = '"';
@@ -1053,7 +1053,7 @@ void forward()
         }
     }
     std::fclose(header);
-    safecpy(g_cmd_buf,filexp(maildoer),sizeof g_cmd_buf);
+    safe_copy(g_cmd_buf,file_exp(maildoer),sizeof g_cmd_buf);
     invoke(g_cmd_buf,g_orig_dir.c_str());
   done:
     std::free(maildoer);

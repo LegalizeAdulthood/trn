@@ -389,7 +389,7 @@ void univ_add_text_file(const char *desc, char *name)
     case '%':
     case '/':
         ui = univ_add(UN_TEXT_FILE,desc);
-        ui->data.text_file.fname = save_str(filexp(s));
+        ui->data.text_file.fname = save_str(file_exp(s));
         break;
     }
 }
@@ -618,7 +618,7 @@ static bool univ_use_file(const char *fname, const char *label)
     {
         s_univ_begin_label = save_str(label);
     }
-    std::FILE *fp = std::fopen(filexp(open_name), "r");
+    std::FILE *fp = std::fopen(file_exp(open_name), "r");
     if (!fp)
     {
         return false;           /* unsuccessful (XXX: complain) */
@@ -775,7 +775,7 @@ static bool univ_do_line(char *line)
     safe_free0(s_univ_line_desc);
     if (*s == '"')      /* description name */
     {
-        p = cpytill(s,s+1,'"');
+        p = copy_till(s,s+1,'"');
         if (!*p)
         {
             std::printf("univ: unmatched quote in string:\n\"%s\"\n", s);
@@ -863,7 +863,7 @@ static bool univ_do_line(char *line)
                 p = nullptr;
             }
             /* description defaults to name */
-            univ_add_file(s_univ_line_desc? s_univ_line_desc : s, filexp(s), p);
+            univ_add_file(s_univ_line_desc? s_univ_line_desc : s, file_exp(s), p);
             break;
 
         case '-':     /* label within same file */
@@ -995,7 +995,7 @@ void univ_redo_file()
 
 static char *univ_edit_new_userfile()
 {
-    char *s = save_str(filexp("%+/univ/usertop"));       /* LEAK */
+    char *s = save_str(file_exp("%+/univ/usertop"));       /* LEAK */
 
     /* later, create a new user top file, and return its filename.
      * later perhaps ask whether to create or edit current file.
@@ -1065,8 +1065,8 @@ void univ_page_file(char *fname)
     }
 
     std::sprintf(g_cmd_buf,"%s ",
-            filexp(get_val_const("HELPPAGER",get_val_const("PAGER","more"))));
-    std::strcat(g_cmd_buf, filexp(fname));
+            file_exp(get_val_const("HELPPAGER",get_val_const("PAGER","more"))));
+    std::strcat(g_cmd_buf, file_exp(fname));
     term_down(3);
     reset_tty();                  /* make sure tty is friendly */
     do_shell(SH,g_cmd_buf);      /* invoke the shell */
@@ -1123,7 +1123,7 @@ static void univ_vg_addart(ArticleNum a)
         from = "<No Author>";
     }
 
-    safecpy(lbuf,subj,sizeof lbuf - 4);
+    safe_copy(lbuf,subj,sizeof lbuf - 4);
     /* later scan/replace bad characters */
 
     /* later consider author in description, scoring, etc. */
@@ -1319,7 +1319,7 @@ const char *univ_article_desc(const UniversalItem *ui)
     }
     else
     {
-        safecpy(fbuf,compress_from(f,16),17);
+        safe_copy(fbuf,compress_from(f,16),17);
     }
     if (!s)
     {
@@ -1333,11 +1333,11 @@ const char *univ_article_desc(const UniversalItem *ui)
             (s[3] == ' '))
         {
             sbuf[0] = '>';
-            safecpy(sbuf+1,s+4,79);
+            safe_copy(sbuf+1,s+4,79);
         }
         else
         {
-            safecpy(sbuf,s,80);
+            safe_copy(sbuf,s,80);
         }
     }
     fbuf[16] = '\0';

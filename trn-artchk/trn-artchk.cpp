@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
     cp = std::getenv("NNTPSERVER");
     if (!cp)
     {
-        cp = filexp(SERVER_NAME);
+        cp = file_exp(SERVER_NAME);
         if (FILE_REF(cp))
         {
             cp = nntp_server_name(cp);
@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
             *cp = '\0';
             g_nntplink.port_number = std::atoi(cp+1);
         }
-        g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
+        g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
         cp = std::getenv("NNTP_FORCE_AUTH");
         if (cp != nullptr && (*cp == 'y' || *cp == 'Y'))
         {

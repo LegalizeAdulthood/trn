@@ -541,7 +541,7 @@ void set_subj_line(Article *ap, char *subj, int size)
     }
     if (subj_start != newsubj + 4)
     {
-        safecpy(newsubj + 4, subj_start, size);
+        safe_copy(newsubj + 4, subj_start, size);
         if ((size -= subj_start - newsubj - 4) < 0)
         {
             size = 0;

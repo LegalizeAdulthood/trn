@@ -734,7 +734,7 @@ bool sa_extract_start()
     if (s_sa_extract_dest == nullptr)
     {
         s_sa_extract_dest = (char*)safe_malloc(LBUFLEN);
-        safecpy(s_sa_extract_dest,filexp("%p"),LBUFLEN);
+        safe_copy(s_sa_extract_dest,file_exp("%p"),LBUFLEN);
     }
     s_go_bot();
     std::printf("To directory (default %s)\n",s_sa_extract_dest);
@@ -747,7 +747,7 @@ bool sa_extract_start()
     /* if the user typed something, copy it to the destination */
     if (g_buf[1] != '\0')
     {
-        safecpy(s_sa_extract_dest,filexp(g_buf+1),LBUFLEN);
+        safe_copy(s_sa_extract_dest,file_exp(g_buf+1),LBUFLEN);
     }
     /* set a mode for this later? */
     std::printf("\nMark extracted articles as read? [yn]");
@@ -819,7 +819,7 @@ void sa_art_cmd_prim(SaCommand cmd, long a)
         sa_clear_mark(a);
         g_art = artnum;
         *g_buf = 'e';           /* fake up the extract command */
-        safecpy(g_buf+1,s_sa_extract_dest,LBUFLEN);
+        safe_copy(g_buf+1,s_sa_extract_dest,LBUFLEN);
         (void)save_article();
         if (s_sa_extract_junk)
         {

@@ -131,7 +131,7 @@ void mime_read_mimecap(const char *mcname)
     int  buflen = 2048;
     int  i;
 
-    std::FILE *fp = std::fopen(filexp(mcname), "r");
+    std::FILE *fp = std::fopen(file_exp(mcname), "r");
     if (fp == nullptr)
     {
         return;
@@ -203,7 +203,7 @@ void mime_read_mimecap(const char *mcname)
                 f = skip_space(f);
                 if (*f == '"')
                 {
-                    f = cpytill(arg, f + 1, '"');
+                    f = copy_till(arg, f + 1, '"');
                 }
                 else
                 {
@@ -317,13 +317,13 @@ int mime_exec(char *cmd)
             switch (*++f)
             {
             case 's':
-                safecpy(t, g_decode_filename, CBUFLEN-(t-g_cmd_buf));
+                safe_copy(t, g_decode_filename, CBUFLEN-(t-g_cmd_buf));
                 t += std::strlen(t);
                 break;
 
             case 't':
                 *t++ = '\'';
-                safecpy(t, g_mime_section->type_name, CBUFLEN-(t-g_cmd_buf)-1);
+                safe_copy(t, g_mime_section->type_name, CBUFLEN-(t-g_cmd_buf)-1);
                 t += std::strlen(t);
                 *t++ = '\'';
                 break;
@@ -341,7 +341,7 @@ int mime_exec(char *cmd)
                 *s = '}'; /* restore */
                 f = s;
                 *t++ = '\'';
-                safecpy(t, p, CBUFLEN-(t-g_cmd_buf)-1);
+                safe_copy(t, p, CBUFLEN-(t-g_cmd_buf)-1);
                 t += std::strlen(t);
                 *t++ = '\'';
                 break;
@@ -655,7 +655,7 @@ void mime_parse_subheader(std::FILE *ifp, char *next_line)
             }
             if (next_line)
             {
-                safecpy(line+pos, next_line, line_size - pos);
+                safe_copy(line+pos, next_line, line_size - pos);
                 next_line = nullptr;
             }
             else if (ifp)
@@ -817,7 +817,7 @@ char *mime_parse_params(char *str)
     *e = '\0';
     if (s != str)
     {
-        safecpy(str, s, e - s + 1);
+        safe_copy(str, s, e - s + 1);
     }
     str = t;
     s = t;
@@ -835,7 +835,7 @@ char *mime_parse_params(char *str)
             s = mime_skip_whitespace(s+1);
             if (*s == '"')
             {
-                s = cpytill(t,s+1,'"');
+                s = copy_till(t,s+1,'"');
                 if (*s == '"')
                 {
                     s++;
@@ -1016,7 +1016,7 @@ void mime_description(MimeSection *mp, char *s, int limit)
 #if 0
         std::sprintf(s+len, "...%s]\n", fn + flen - (limit-(len+3)));
 #else
-        safecpy(s+len, fn, limit - (len+3));
+        safe_copy(s+len, fn, limit - (len+3));
         std::strcat(s, "...]\n");
 #endif
     }

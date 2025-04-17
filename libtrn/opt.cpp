@@ -184,8 +184,8 @@ static char *expand_mouse_buttons(char *cp, int cnt);
 
 void opt_init(int argc, char *argv[], char **tcbufptr)
 {
-    g_sel_grp_display_mode = savestr("*slm") + 1;
-    g_sel_art_display_mode = savestr("*lmds") + 1;
+    g_sel_grp_display_mode = save_str("*slm") + 1;
+    g_sel_art_display_mode = save_str("*lmds") + 1;
     g_univ_sel_btn_cnt = parse_mouse_buttons(&g_univ_sel_btns,
                                         "[Top]^ [PgUp]< [PgDn]> [ OK ]^j [Quit]q [Help]?");
     g_newsrc_sel_btn_cnt = parse_mouse_buttons(&g_newsrc_sel_btns,
@@ -216,9 +216,9 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     set_header_list(HT_DEF_HIDE,HT_HIDE,"");
     set_header_list(HT_DEF_MAGIC,HT_MAGIC,"");
 
-    g_ini_file = filexp(g_use_threads ? get_val_const("TRNRC", "%+/trnrc") : get_val_const("RNRC", "%+/rnrc"));
+    g_ini_file = file_exp(g_use_threads ? get_val_const("TRNRC", "%+/trnrc") : get_val_const("RNRC", "%+/rnrc"));
 
-    char *s = filexp("%+");
+    char *s = file_exp("%+");
     stat_t ini_stat{};
     if (stat(s, &ini_stat) < 0 || !S_ISDIR(ini_stat.st_mode))
     {
@@ -237,7 +237,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     {
         s = get_val("RNINIT");
     }
-    if (*safecpy(*tcbufptr, s, TCBUF_SIZE))
+    if (*safe_copy(*tcbufptr, s, TCBUF_SIZE))
     {
         if (*s == '-' || *s == '+' || isspace(*s))
         {
@@ -262,7 +262,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     }
     init_compex(&g_opt_compex);
 
-    g_priv_dir = filexp("~/News");
+    g_priv_dir = file_exp("~/News");
 }
 
 void opt_final()
@@ -393,7 +393,7 @@ void set_option(OptionIndex num, const char *s)
     {
         if (!g_option_saved_vals[num])
         {
-            g_option_saved_vals[num] = savestr(option_value(num));
+            g_option_saved_vals[num] = save_str(option_value(num));
             if (!g_option_def_vals[num])
             {
                 g_option_def_vals[num] = g_option_saved_vals[num];
@@ -404,7 +404,7 @@ void set_option(OptionIndex num, const char *s)
     {
         if (!g_option_def_vals[num])
         {
-            g_option_def_vals[num] = savestr(option_value(num));
+            g_option_def_vals[num] = save_str(option_value(num));
         }
     }
     switch (num)
@@ -423,7 +423,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_MOUSE_MODES:
-        safecpy(g_mouse_modes, s, sizeof g_mouse_modes);
+        safe_copy(g_mouse_modes, s, sizeof g_mouse_modes);
         break;
 
     case OI_USE_UNIV_SEL:
@@ -630,7 +630,7 @@ void set_option(OptionIndex num, const char *s)
             {
                 change_dir(g_priv_dir);
             }
-            g_priv_dir = filexp(s);
+            g_priv_dir = file_exp(s);
         }
         break;
 
@@ -1618,7 +1618,7 @@ void set_header(const char *s, HeaderTypeFlags flag, bool setit)
             }
             g_user_htype[add_at].length = len;
             g_user_htype[add_at].flags = setit? flag : 0;
-            g_user_htype[add_at].name = savestr(s);
+            g_user_htype[add_at].name = save_str(s);
             for (char *tmp = g_user_htype[add_at].name; *tmp; tmp++)
             {
                 if (std::isupper(*tmp))
@@ -1789,12 +1789,12 @@ void cwd_check()
 
     if (g_priv_dir.empty())
     {
-        g_priv_dir = filexp("~/News");
+        g_priv_dir = file_exp("~/News");
     }
     std::strcpy(tmpbuf,g_priv_dir.c_str());
     if (change_dir(g_priv_dir))
     {
-        safecpy(tmpbuf,filexp(g_priv_dir.c_str()),sizeof tmpbuf);
+        safe_copy(tmpbuf,file_exp(g_priv_dir.c_str()),sizeof tmpbuf);
         if (make_dir(tmpbuf, MD_DIR) || change_dir(tmpbuf))
         {
             interp(g_cmd_buf, (sizeof g_cmd_buf), "%~/News");

@@ -320,7 +320,7 @@ static int nntp_copybody(char *s, int limit, ArticlePosition pos)
             }
             if (s[0] == '.')
             {
-                safecpy(s, s + 1, limit);
+                safe_copy(s, s + 1, limit);
             }
         }
         int len = std::strlen(s);

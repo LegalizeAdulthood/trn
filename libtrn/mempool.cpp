@@ -130,7 +130,7 @@ char *mp_save_str(const char *str, MemoryPool pool)
         s_mpheads[pool].current = f;
     }
     char *s = s_mpfrags[f].lastfree;
-    safecpy(s,str,len+1);
+    safe_copy(s,str,len+1);
     s_mpfrags[f].lastfree += len+1;
     s_mpfrags[f].bytesfree -= len+1;
     return s;

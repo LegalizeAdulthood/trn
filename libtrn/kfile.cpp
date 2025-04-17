@@ -77,7 +77,7 @@ void kill_file_init()
         s_kf_daynum = killfile_daynum(0);
         s_kf_thread_cnt = 0;
         g_kf_change_thread_cnt = 0;
-        std::FILE *fp = std::fopen(filexp(cp), "r");
+        std::FILE *fp = std::fopen(file_exp(cp), "r");
         if (fp != nullptr)
         {
             g_msg_id_hash = hash_create(1999, msg_id_cmp);
@@ -189,11 +189,11 @@ int do_kill_file(std::FILE *kfp, int entering)
             {
                 continue;
             }
-            cp = filexp(cp);
+            cp = file_exp(cp);
             if (!std::strchr(cp, '/'))
             {
                 set_newsgroup_name(cp);
-                cp = filexp(get_val_const("KILLLOCAL",s_killlocal));
+                cp = file_exp(get_val_const("KILLLOCAL",s_killlocal));
                 set_newsgroup_name(g_newsgroup_ptr->rc_line);
             }
             std::FILE *incfile = std::fopen(cp, "r");
@@ -505,7 +505,7 @@ void rewrite_kill_file(ArticleNum thru)
                                  == KFS_THREAD_LINES;
     bool has_star_commands = false;
     bool needs_newline = false;
-    char* killname = filexp(get_val_const("KILLLOCAL",s_killlocal));
+    char* killname = file_exp(get_val_const("KILLLOCAL",s_killlocal));
     char* bp;
 
     if (g_local_kfp)
@@ -687,7 +687,7 @@ void update_thread_kill_file()
         return;
     }
 
-    char *cp = filexp(get_val_const("KILLTHREADS", s_killthreads));
+    char *cp = file_exp(get_val_const("KILLTHREADS", s_killthreads));
     make_dir(cp, MD_FILE);
     if (g_kf_change_thread_cnt * 5 > s_kf_thread_cnt)
     {
@@ -811,16 +811,16 @@ void edit_kill_file()
                 clear_subject(sp);
             }
         }
-        std::strcpy(g_buf,filexp(get_val_const("KILLLOCAL",s_killlocal)));
+        std::strcpy(g_buf,file_exp(get_val_const("KILLLOCAL",s_killlocal)));
     }
     else
     {
-        std::strcpy(g_buf, filexp(get_val_const("KILLGLOBAL", s_killglobal)));
+        std::strcpy(g_buf, file_exp(get_val_const("KILLGLOBAL", s_killglobal)));
     }
     if (!make_dir(g_buf, MD_FILE))
     {
         std::sprintf(g_cmd_buf,"%s %s",
-            filexp(get_val_const("VISUAL",get_val_const("EDITOR",DEFEDITOR))),g_buf);
+            file_exp(get_val_const("VISUAL",get_val_const("EDITOR",DEFEDITOR))),g_buf);
         std::printf("\nEditing %s KILL file:\n%s\n",
             (g_in_ng?"local":"global"),g_cmd_buf);
         term_down(3);
@@ -877,7 +877,7 @@ void edit_kill_file()
 
 void open_kill_file(int local)
 {
-    const char *kname = filexp(local ? get_val_const("KILLLOCAL", s_killlocal) : get_val_const("KILLGLOBAL", s_killglobal));
+    const char *kname = file_exp(local ? get_val_const("KILLLOCAL", s_killlocal) : get_val_const("KILLGLOBAL", s_killglobal));
 
     /* delete the file if it is empty */
     if (std::filesystem::exists(kname) && std::filesystem::file_size(kname) == 0)
@@ -904,7 +904,7 @@ void open_kill_file(int local)
 
 void kill_file_append(const char *cmd, bool local)
 {
-    std::strcpy(g_cmd_buf, filexp(local ? get_val_const("KILLLOCAL", s_killlocal) : get_val_const("KILLGLOBAL", s_killglobal)));
+    std::strcpy(g_cmd_buf, file_exp(local ? get_val_const("KILLLOCAL", s_killlocal) : get_val_const("KILLGLOBAL", s_killglobal)));
     if (!make_dir(g_cmd_buf, MD_FILE))
     {
         if (g_verbose)

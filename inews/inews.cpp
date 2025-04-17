@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
     cp = get_val("NNTPSERVER");
     if (!cp)
     {
-        cp = filexp(SERVER_NAME);
+        cp = file_exp(SERVER_NAME);
         if (FILE_REF(cp))
         {
             cp = nntp_server_name(cp);
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
             g_nntplink.port_number = std::atoi(cp+1);
         }
         line_end = "\r\n";
-        g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
+        g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
         if ((cp = std::getenv("NNTP_FORCE_AUTH")) != nullptr
          && (*cp == 'y' || *cp == 'Y'))
         {
@@ -399,7 +399,7 @@ void append_signature()
         return;
     }
 
-    fp = std::fopen(filexp(SIGNATURE_FILE), "r");
+    fp = std::fopen(file_exp(SIGNATURE_FILE), "r");
     if (fp == nullptr)
     {
         return;

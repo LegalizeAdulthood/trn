@@ -192,7 +192,7 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
     {
         char *s = skip_non_space(bp + 13);
         *s = '\0';
-        safecpy(g_msg, bp+13, sizeof g_msg);
+        safe_copy(g_msg, bp+13, sizeof g_msg);
         *filenamep = g_msg;
         return 0;
     }

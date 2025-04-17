@@ -27,7 +27,7 @@ static long  s_starttime{};
 
 void last_init()
 {
-    s_lastfile = save_str(filexp(LASTNAME));
+    s_lastfile = save_str(file_exp(LASTNAME));
 
     s_starttime = (long)std::time(nullptr);
     read_last();

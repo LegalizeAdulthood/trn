@@ -605,7 +605,7 @@ void check_expired(NewsgroupData *np, ArticleNum a1st)
             *cp++ = ' ';
             *cp++ = '1';
             *cp++ = '-';
-            safecpy(cp, s, len+1);
+            safe_copy(cp, s, len+1);
             if (np->rc_line != mbuf)
             {
                 std::free(np->rc_line);
@@ -641,7 +641,7 @@ void check_expired(NewsgroupData *np, ArticleNum a1st)
             cp[-1] = ',';
             if (cp != s)
             {
-                safecpy(cp, s, len + 1);
+                safe_copy(cp, s, len + 1);
             }
         }
 

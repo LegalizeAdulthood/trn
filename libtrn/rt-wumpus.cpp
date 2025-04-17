@@ -406,7 +406,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
     }
     else
     {
-        safecpy(line, orig_line, len+1);
+        safe_copy(line, orig_line, len+1);
         dectrl(line);
         end = line + len;
     }

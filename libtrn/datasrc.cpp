@@ -116,7 +116,7 @@ void data_source_init()
 
     g_data_source_list = new_list(0,0,sizeof(DataSource),20,LF_ZERO_MEM,nullptr);
 
-    g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
+    g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
 
     char *machine = get_val("NNTPSERVER");
     if (machine && std::strcmp(machine,"local") != 0)
@@ -141,7 +141,7 @@ void data_source_init()
 
     if (!machine)
     {
-        machine = filexp(SERVER_NAME);
+        machine = file_exp(SERVER_NAME);
         if (FILE_REF(machine))
         {
             machine = nntp_server_name(machine);
@@ -195,7 +195,7 @@ char *read_data_sources(const char *filename)
     char* filebuf = nullptr;
     char** vals = ini_values(s_datasrc_ini);
 
-    int fd = open(filexp(filename), 0);
+    int fd = open(file_exp(filename), 0);
     if (fd >= 0)
     {
         stat_t datasrc_stat{};
@@ -284,7 +284,7 @@ static DataSource *new_datasrc(const char *name, char **vals)
     }
     else
     {
-        dp->news_id = save_str(filexp(vals[DI_ACTIVE_FILE]));
+        dp->news_id = save_str(file_exp(vals[DI_ACTIVE_FILE]));
     }
 
     dp->spool_dir = file_or_none(vals[DI_SPOOL_DIR]);
@@ -302,7 +302,7 @@ static DataSource *new_datasrc(const char *name, char **vals)
         /* FYI, we know extra_name to be nullptr in this case. */
         if (vals[DI_ACTIVE_FILE])
         {
-            dp->extra_name = save_str(filexp(vals[DI_ACTIVE_FILE]));
+            dp->extra_name = save_str(file_exp(vals[DI_ACTIVE_FILE]));
             stat_t extra_stat{};
             if (stat(dp->extra_name,&extra_stat) >= 0)
             {
@@ -412,7 +412,7 @@ static char *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag)
     }
 
     dp->flags |= flag;
-    dir = filexp(dir);
+    dir = file_exp(dir);
     if (!std::strcmp(dir,dp->spool_dir))
     {
         return dp->spool_dir;
@@ -426,7 +426,7 @@ static char *file_or_none(char *fn)
     {
         return nullptr;
     }
-    return save_str(filexp(fn));
+    return save_str(file_exp(fn));
 }
 
 bool open_data_source(DataSource *dp)

@@ -62,15 +62,15 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
     if (*pattern == '%' && pattern[1] == '.')
     {
         int len = std::strlen(g_dot_dir.c_str());
-        safecpy(dest, g_dot_dir.c_str(), dest_size);
+        safe_copy(dest, g_dot_dir.c_str(), dest_size);
         if (len < dest_size)
         {
-            safecpy(dest+len, pattern+2, dest_size - len);
+            safe_copy(dest+len, pattern+2, dest_size - len);
         }
     }
     else
     {
-        safecpy(dest, pattern, dest_size);
+        safe_copy(dest, pattern, dest_size);
     }
     return nullptr; /* This is wrong on purpose */
 }

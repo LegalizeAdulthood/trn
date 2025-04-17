@@ -207,7 +207,7 @@ int str_char_subst(char *outb, const char *inb, int limit, char_int subst)
     {
         len = std::strlen(inb);
     }
-    safecpy(outb, inb, limit);
+    safe_copy(outb, inb, limit);
     return len;
 }
 

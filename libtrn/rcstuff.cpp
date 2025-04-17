@@ -212,7 +212,7 @@ Newsrc *new_newsrc(const char *name, const char *newsrc, const char *add_ok)
     Newsrc *rp = (Newsrc*)safe_malloc(sizeof(Newsrc));
     std::memset((char*)rp,0,sizeof (Newsrc));
     rp->data_source = dp;
-    rp->name = save_str(filexp(newsrc));
+    rp->name = save_str(file_exp(newsrc));
     char tmpbuf[CBUFLEN];
     std::sprintf(tmpbuf, RCNAME_OLD, rp->name);
     rp->old_name = save_str(tmpbuf);
@@ -406,10 +406,10 @@ static bool lock_newsrc(Newsrc *rp)
         return true;
     }
 
-    char *s = filexp(RCNAME);
+    char *s = file_exp(RCNAME);
     if (!std::strcmp(rp->name,s))
     {
-        rp->lock_name = save_str(filexp(LOCKNAME));
+        rp->lock_name = save_str(file_exp(LOCKNAME));
     }
     else
     {
@@ -590,7 +590,7 @@ static bool open_newsrc(Newsrc *rp)
         }
         else if (*some_buf)
         {
-            if (std::FILE *fp = std::fopen(filexp(some_buf), "r"))
+            if (std::FILE *fp = std::fopen(file_exp(some_buf), "r"))
             {
                 while (std::fgets(g_buf, sizeof g_buf, fp))
                 {
@@ -1477,7 +1477,7 @@ void list_newsgroups()
         {
             std::sprintf(tmpbuf, "%3d %7s  ", i, status[-np->to_read]);
         }
-        safecpy(tmpbuf+13, np->rc_line, sizeof tmpbuf - 13);
+        safe_copy(tmpbuf+13, np->rc_line, sizeof tmpbuf - 13);
         *(np->rc_line + np->num_offset - 1) = '\0';
         if (print_lines(tmpbuf, NO_MARKING) != 0)
         {

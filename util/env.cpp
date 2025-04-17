@@ -203,9 +203,9 @@ static void env_init2()
         g_home_dir = save_str("/");
     }
     g_dot_dir = get_val_const("DOTDIR",g_home_dir);
-    g_trn_dir = filexp(get_val_const("TRNDIR",TRNDIR));
-    g_lib = filexp(NEWSLIB);
-    g_rn_lib = filexp(PRIVLIB);
+    g_trn_dir = file_exp(get_val_const("TRNDIR",TRNDIR));
+    g_lib = file_exp(NEWSLIB);
+    g_rn_lib = file_exp(PRIVLIB);
 }
 
 /* Set g_login_name to the user's login name and g_real_name to the user's
@@ -237,7 +237,7 @@ static bool set_user_name(char *tmpbuf)
     }
     if (!g_home_dir)
     {
-        g_home_dir = savestr(pwd->pw_dir);
+        g_home_dir = save_str(pwd->pw_dir);
     }
     s = pwd->pw_gecos;
 #endif
@@ -288,7 +288,7 @@ static bool set_user_name(char *tmpbuf)
 #ifndef PASSNAMES
     {
         env_init2(); /* Make sure g_home_dir/g_dot_dir/etc. are set. */
-        std::FILE *fp = std::fopen(filexp(FULLNAMEFILE), "r");
+        std::FILE *fp = std::fopen(file_exp(FULLNAMEFILE), "r");
         if (fp != nullptr)
         {
             std::fgets(g_buf,sizeof g_buf,fp);
@@ -387,7 +387,7 @@ static bool set_p_host_name(char *tmpbuf)
     const char *filename{PHOSTNAME};
     if (FILE_REF(filename) || filename[0] == '~')
     {
-        fp = std::fopen(filexp(filename), "r");
+        fp = std::fopen(file_exp(filename), "r");
         if (fp == nullptr)
         {
             std::strcpy(tmpbuf, ".");
@@ -542,7 +542,7 @@ void re_export(char *export_val, const char *new_val, int limit)
     {
         export_val[-2] = export_val[0];
     }
-    safecpy(export_val, new_val, limit+1);
+    safe_copy(export_val, new_val, limit+1);
 }
 
 static int envix(const char *nam, int len)

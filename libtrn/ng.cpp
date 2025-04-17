@@ -1859,7 +1859,7 @@ void set_mail(bool force)
     }
     if (!(g_mail_count++))
     {
-        const char* mailfile = filexp(get_val_const("MAILFILE",MAILFILE));
+        const char* mailfile = file_exp(get_val_const("MAILFILE",MAILFILE));
         stat_t mail_file_stat{};
         if (stat(mailfile,&mail_file_stat) < 0 || !mail_file_stat.st_size
             || mail_file_stat.st_atime > mail_file_stat.st_mtime)
@@ -2101,7 +2101,7 @@ bool output_subject(char *ptr, int flag)
         }
         else
         {
-            safecpy(tmpbuf + len, s, sizeof tmpbuf - len);
+            safe_copy(tmpbuf + len, s, sizeof tmpbuf - len);
         }
         if (g_mode == MM_PROCESSING_KILL)
         {

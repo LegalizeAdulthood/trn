@@ -758,7 +758,7 @@ const char *compress_subj(const Article *ap, int max)
                 *s++ = '.';
                 *s++ = '.';
                 *s++ = '.';
-                safecpy(s, cp + 1, max);
+                safe_copy(s, cp + 1, max);
                 len = max;
             }
         }

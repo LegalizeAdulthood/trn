@@ -104,7 +104,7 @@ void interp_init(char *tcbuf, int tcbuf_len)
 
     /* name of header file (%h) */
 
-    g_head_name = filexp(HEADNAME);
+    g_head_name = file_exp(HEADNAME);
 
     /* the hostname to use in local-article comparisons */
 #if HOSTBITS != 0
@@ -356,7 +356,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                             *s++ = g_scope_str[g_art_how_much];
                             if (g_art_how_much == ARTSCOPE_ONE_HDR)
                             {
-                                safecpy(s,g_htype[g_art_srch_hdr].name,
+                                safe_copy(s,g_htype[g_art_srch_hdr].name,
                                         (sizeof scrbuf) - (s-scrbuf));
                                 if (!(s = std::strchr(s,':')))
                                 {
@@ -375,7 +375,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
 
                 case '{':
                 {
-                    pattern = cpytill(scrbuf,pattern+1,'}');
+                    pattern = copy_till(scrbuf,pattern+1,'}');
                     char *m = std::strchr(scrbuf, '-');
                     if (m != nullptr)
                     {
@@ -390,7 +390,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                 }
 
                 case '<':
-                    pattern = cpytill(scrbuf,pattern+1,'>');
+                    pattern = copy_till(scrbuf,pattern+1,'>');
                     s = std::strchr(scrbuf, '-');
                     if (s != nullptr)
                     {
@@ -405,7 +405,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     break;
 
                 case '[':
-                    pattern = cpytill(scrbuf, pattern+1, ']');
+                    pattern = copy_till(scrbuf, pattern+1, ']');
                     if (g_in_ng)
                     {
                         HeaderLineType which_line;
@@ -442,7 +442,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     {
                         goto getout;
                     }
-                    pattern = cpytill(scrbuf,pattern+1,'?');
+                    pattern = copy_till(scrbuf,pattern+1,'?');
                     if (!*pattern)
                     {
                         goto getout;
@@ -860,7 +860,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         s = get_val("ORGANIZATION", scrbuf);
                     }
 #endif
-                    s = filexp(s);
+                    s = file_exp(s);
                     if (FILE_REF(s))
                     {
                         std::FILE* ofp = std::fopen(s,"r");
@@ -953,7 +953,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                                 s = std::strchr(refs_buf+1,'<');
                                 if (s < h)
                                 {
-                                    safecpy(s, h, len);
+                                    safe_copy(s, h, len);
                                 }
                             }
                         }
@@ -1179,7 +1179,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         }
                         else
                         {
-                            from_buf = savestr(tmpbuf);
+                            from_buf = save_str(tmpbuf);
                         }
                         s = from_buf;
                     }
@@ -1245,7 +1245,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
             {
                 if (s != scrbuf)
                 {
-                    safecpy(scrbuf,s,sizeof scrbuf);
+                    safe_copy(scrbuf,s,sizeof scrbuf);
                     s = scrbuf;
                 }
                 char* t;
@@ -1275,7 +1275,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
             {
                 if (s != scrbuf)
                 {
-                    safecpy(scrbuf,s,sizeof scrbuf);
+                    safe_copy(scrbuf,s,sizeof scrbuf);
                     s = scrbuf;
                 }
                 decode_header(s, s, std::strlen(s));
@@ -1331,7 +1331,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                 if (s == dest)
                 {
                     /* copy out so we can copy in. */
-                    safecpy(scrbuf, s, sizeof scrbuf);
+                    safe_copy(scrbuf, s, sizeof scrbuf);
                     s = scrbuf;
                     if (i > sizeof scrbuf)      /* we truncated, ack! */
                     {

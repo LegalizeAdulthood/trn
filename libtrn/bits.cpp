@@ -755,14 +755,14 @@ static int chase_xref(ArticleNum artnum, int markread)
         termdown(1);
     }
 # endif
-    curxref = cpytill(tmpbuf,xref_buf,' ') + 1;
+    curxref = copy_till(tmpbuf,xref_buf,' ') + 1;
 # ifdef VALIDATE_XREF_SITE
     if (valid_xref_site(artnum,tmpbuf))
 # endif
     {
         while (*curxref)            /* for each newsgroup */
         {
-            curxref = cpytill(tmpbuf,curxref,' ');
+            curxref = copy_till(tmpbuf,curxref,' ');
             xartnum = std::strchr(tmpbuf,':');
             if (!xartnum)
             {
@@ -839,7 +839,7 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
     if (s != nullptr)
     {
         *s = '\0';
-        inews_site = savestr(sitebuf);
+        inews_site = save_str(sitebuf);
     }
 #else /* ANCIENT_NEWS */
     /* Grab the site from the Posting-Version line */
@@ -852,12 +852,12 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
         {
             *t = '\0';
         }
-        inews_site = savestr(s+7);
+        inews_site = save_str(s+7);
     }
 #endif /* ANCIENT_NEWS */
     else
     {
-        inews_site = savestr("");
+        inews_site = save_str("");
     }
     std::free(sitebuf);
 

@@ -93,7 +93,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             srchhdr = g_art_srch_hdr;
             doread = g_art_do_read;
         }
-        char *s = cpytill(g_buf,pat_buf+1,cmdchr);/* ok to cpy g_buf+1 to g_buf */
+        char *s = copy_till(g_buf,pat_buf+1,cmdchr);/* ok to cpy g_buf+1 to g_buf */
         pattern = g_buf;
         if (*pattern)
         {
@@ -111,7 +111,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
 
                 case 'H':               /* scan a specific header */
                     howmuch = ARTSCOPE_ONE_HDR;
-                    s = cpytill(g_msg, s+1, ':');
+                    s = copy_till(g_msg, s+1, ':');
                     srchhdr = get_header_num(g_msg);
                     goto loop_break;
 
@@ -364,7 +364,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             *s++ = g_scope_str[howmuch];
             if (howmuch == ARTSCOPE_ONE_HDR)
             {
-                safecpy(s,g_htype[srchhdr].name,LBUFLEN-(s-saltbuf));
+                safe_copy(s,g_htype[srchhdr].name,LBUFLEN-(s-saltbuf));
                 s += g_htype[srchhdr].length;
                 if (s - saltbuf > LBUFLEN-2)
                 {
@@ -377,7 +377,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         {
             cmdlst = save_str("j");
         }
-        safecpy(s,cmdlst,LBUFLEN-(s-saltbuf));
+        safe_copy(s,cmdlst,LBUFLEN-(s-saltbuf));
         kill_file_append(saltbuf, saltaway == 2? KF_GLOBAL : KF_LOCAL);
     }
     if (get_cmd)

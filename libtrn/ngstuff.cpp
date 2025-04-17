@@ -218,7 +218,7 @@ NumNumResult num_num()
     }
     *s++ = ',';
     *s = '\0';
-    safecpy(tmpbuf,g_buf,LBUFLEN);
+    safe_copy(tmpbuf,g_buf,LBUFLEN);
     if (!output_level && !justone)
     {
         std::printf("Processing...");
@@ -499,7 +499,7 @@ int perform(char *cmdlst, int output_level)
     char tbuf[LBUFLEN+1];
 
     /* A quick fix to avoid reuse of g_buf and cmdlst by shell commands. */
-    safecpy(tbuf, cmdlst, sizeof tbuf);
+    safe_copy(tbuf, cmdlst, sizeof tbuf);
     cmdlst = tbuf;
 
     if (output_level == 1)
@@ -694,7 +694,7 @@ int perform(char *cmdlst, int output_level)
             }
             else
             {
-                cmdlst = cpytill(g_buf, cmdlst, ':') - 1;
+                cmdlst = copy_till(g_buf, cmdlst, ':') - 1;
             }
             /* we now have the command in g_buf */
             if (ch == '!')

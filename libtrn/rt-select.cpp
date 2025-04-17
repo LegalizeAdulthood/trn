@@ -387,7 +387,7 @@ static void sel_dogroups()
         std::printf("Entering %s:", g_newsgroup_name.c_str());
         if (s_sel_ret == ';')
         {
-            ret = do_newsgroup(savestr(";"));
+            ret = do_newsgroup(save_str(";"));
         }
         else
         {
@@ -898,7 +898,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         std::printf("Entering %s:", g_newsgroup_name.c_str());
         if (s_sel_ret == ';')
         {
-            ret = do_newsgroup(savestr(";"));
+            ret = do_newsgroup(save_str(";"));
         }
         else
         {
@@ -1841,7 +1841,7 @@ static bool select_option(OptionIndex i)
     color_pop();        /* of COLOR_CMD */
     newline();
     *g_buf = '\0';
-    char *oldval = savestr(quote_string(option_value(i)));
+    char *oldval = save_str(quote_string(option_value(i)));
     char *val = vals[i] ? vals[i] : oldval;
     s_clean_screen = in_choice("> ", val, g_options_ini[i].help_str, MM_OPTION_EDIT_PROMPT);
     if (std::strcmp(g_buf,val) != 0)
@@ -1861,7 +1861,7 @@ static bool select_option(OptionIndex i)
         }
         else
         {
-            vals[i] = savestr(g_buf);
+            vals[i] = save_str(g_buf);
             g_selected_count++;
         }
     }

@@ -123,7 +123,7 @@ const char *getbracket(CompiledRegex *compex, int n)
         return "";
     }
     grow_str(&s_gbr_str, &s_gbr_siz, length+1);
-    safecpy(s_gbr_str, compex->braslist[n], length+1);
+    safe_copy(s_gbr_str, compex->braslist[n], length+1);
     return s_gbr_str;
 }
 

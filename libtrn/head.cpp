@@ -202,7 +202,7 @@ HeaderLineType get_header_num(char *s)
         {
             std::free(g_htype[CUSTOM_LINE].name);
         }
-        g_htype[CUSTOM_LINE].name = savestr(g_msg);
+        g_htype[CUSTOM_LINE].name = save_str(g_msg);
         g_htype[CUSTOM_LINE].length = end - s;
         g_htype[CUSTOM_LINE].flags = g_htype[i].flags;
         g_htype[CUSTOM_LINE].min_pos = -1;
@@ -283,7 +283,7 @@ void end_header_line()
                 else
                 {
                     char* s = safe_malloc(size);
-                    safecpy(s,g_head_buf+start,size);
+                    safe_copy(s,g_head_buf+start,size);
                     set_cached_line(s_parsed_artp,g_in_header,s);
                 }
             }
@@ -503,13 +503,13 @@ char *fetch_lines(ArticleNum art_num, HeaderLineType which_line)
         s = fetch_cache(art_num,which_line, FILL_CACHE);
         if (s)
         {
-            return savestr(s);
+            return save_str(s);
         }
     }
     ArticlePosition firstpos = g_htype[which_line].min_pos;
     if (firstpos < 0)
     {
-        return savestr("");
+        return save_str("");
     }
 
     firstpos += g_htype[which_line].length + 1;
@@ -529,7 +529,7 @@ char *fetch_lines(ArticleNum art_num, HeaderLineType which_line)
     }
 #endif
     s = safe_malloc((MemorySize)size);
-    safecpy(s,t,size);
+    safe_copy(s,t,size);
     return s;
 }
 
@@ -574,7 +574,7 @@ char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool p
     }
 #endif
     s = mp_malloc(size,pool);
-    safecpy(s,t,size);
+    safe_copy(s,t,size);
     return s;
 }
 
@@ -594,7 +594,7 @@ static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum, ArticleNum la
 
 // ART_NUM artnum   article to get line from */
 // int which_line   type of line desired */
-// bool copy    do you want it savestr()ed? */
+// bool copy    do you want it save_str()ed? */
 char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
 {
     char* s;
@@ -614,7 +614,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
         {
             if (copy)
             {
-                s = savestr(s);
+                s = save_str(s);
             }
             return s;
         }
@@ -695,7 +695,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
                 }
                 else if (cached)
                 {
-                    set_cached_line(ap, which_line, savestr(t));
+                    set_cached_line(ap, which_line, save_str(t));
                 }
                 if (num == art_num)
                 {
@@ -746,7 +746,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
     {
         if (copy)
         {
-            s = savestr(s);
+            s = save_str(s);
         }
         return s;
     }
@@ -769,6 +769,6 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
         s = g_cmd_buf;                  /* really scraping for space here */
         size = std::min(size, static_cast<int>(sizeof g_cmd_buf));
     }
-    safecpy(s,t,size);
+    safe_copy(s,t,size);
     return s;
 }

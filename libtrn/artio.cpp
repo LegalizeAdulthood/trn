@@ -534,7 +534,7 @@ char *read_art_buf(bool view_inline)
                         for (t++; *++t == ' ' || *t == '\t'; spaces++)
                         {
                         }
-                        safecpy(t-spaces,t,extra_chars);
+                        safe_copy(t-spaces,t,extra_chars);
                         extra_chars -= spaces;
                         t -= spaces + 1;
                     }

@@ -18,7 +18,7 @@ static long    s_oldoffset{-1};     /* offset to block currently in window */
 
 void back_page_init()
 {
-    const char *varyname = filexp(VARYNAME);
+    const char *varyname = file_exp(VARYNAME);
     close(creat(varyname,0600));
     s_varyfd = open(varyname,2);
     remove(varyname);

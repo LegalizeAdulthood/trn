@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
     char *cp = std::getenv("NNTPSERVER");
     if (!cp)
     {
-        cp = filexp(SERVER_NAME);
+        cp = file_exp(SERVER_NAME);
         if (*cp == '/')
         {
             cp = nntp_server_name(cp);
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
             *cp = '\0';
             g_nntplink.port_number = std::atoi(cp+1);
         }
-        g_nntp_auth_file = filexp(NNTP_AUTH_FILE);
+        g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
         if ((cp = getenv("NNTP_FORCE_AUTH")) != nullptr
          && (*cp == 'y' || *cp == 'Y'))
         {
@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
                     action);
             exit(1);
         }
-        std::FILE *in_fp{std::fopen(filexp(cp), "r")};
+        std::FILE *in_fp{std::fopen(file_exp(cp), "r")};
         if (in_fp == nullptr)
         {
             std::fprintf(stderr,"Unable to open `%s'.\n", cp);
