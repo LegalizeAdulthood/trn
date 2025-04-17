@@ -364,8 +364,8 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             *s++ = g_scope_str[howmuch];
             if (howmuch == ARTSCOPE_ONE_HDR)
             {
-                safe_copy(s,g_htype[srchhdr].name,LBUFLEN-(s-saltbuf));
-                s += g_htype[srchhdr].length;
+                safe_copy(s,g_header_type[srchhdr].name,LBUFLEN-(s-saltbuf));
+                s += g_header_type[srchhdr].length;
                 if (s - saltbuf > LBUFLEN-2)
                 {
                     s = saltbuf + LBUFLEN - 2;
@@ -514,7 +514,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
 
     case ARTSCOPE_ONE_HDR:
         g_untrim_cache = true;
-        std::sprintf(g_buf, "%s: %s", g_htype[g_art_srch_hdr].name,
+        std::sprintf(g_buf, "%s: %s", g_header_type[g_art_srch_hdr].name,
                 prefetch_lines(artnum,g_art_srch_hdr,false));
         g_untrim_cache = false;
         break;
@@ -543,7 +543,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
         }
         if (g_parsed_art == artnum)
         {
-            if (!art_open(artnum,g_htype[PAST_HEADER].min_pos))
+            if (!art_open(artnum,g_header_type[PAST_HEADER].min_pos))
             {
                 return false;
             }
@@ -560,7 +560,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
             }
         }
         /* loop through each line of the article */
-        seek_art_buf(g_htype[PAST_HEADER].min_pos);
+        seek_art_buf(g_header_type[PAST_HEADER].min_pos);
         while ((s = read_art_buf(false)) != nullptr)
         {
             if (scope == ARTSCOPE_BODY_NO_SIG && *s == '-' && s[1] == '-' //

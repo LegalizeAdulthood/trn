@@ -39,7 +39,7 @@
 
 /* This array must stay in the same order as the enum values header_line_type */
 // clang-format off
-HeaderType g_htype[HEAD_LAST] = {
+HeaderType g_header_type[HEAD_LAST] = {
     /* name             minpos  maxpos  length   flag */
     {"",/*BODY*/        0,      0,      0,      HT_NONE         },
     {"",/*SHOWN*/       0,      0,      0,      HT_NONE         },
@@ -82,25 +82,25 @@ HeaderType g_htype[HEAD_LAST] = {
 #undef NGS_CACHED
 #undef XREF_CACHED
 
-UserHeaderType   *g_user_htype{};
-short            g_user_htype_index[26];
-int              g_user_htype_count{};
-int              g_user_htype_max{};
-ArticleNum          g_parsed_art{}; /* the article number we've parsed */
-HeaderLineType g_in_header{};  /* are we decoding the header? */
-char            *g_head_buf;
+UserHeaderType *g_user_htype{};
+short           g_user_htype_index[26];
+int             g_user_htype_count{};
+int             g_user_htype_max{};
+ArticleNum      g_parsed_art{}; /* the article number we've parsed */
+HeaderLineType  g_in_header{};  /* are we decoding the header? */
+char           *g_head_buf;
 
-static Article         *s_parsed_artp{}; /* the article ptr we've parsed */
-static long             s_headbuf_size;
-static bool             s_first_one; /* is this the 1st occurrence of this header line? */
-static bool             s_reading_nntp_header;
+static Article       *s_parsed_artp{}; /* the article ptr we've parsed */
+static long           s_head_buf_size;
+static bool           s_first_one; /* is this the 1st occurrence of this header line? */
+static bool           s_reading_nntp_header;
 static HeaderLineType s_htypeix[26]{};
 
 void head_init()
 {
     for (int i = HEAD_FIRST + 1; i < HEAD_LAST; i++)
     {
-        s_htypeix[*g_htype[i].name - 'a'] = static_cast<HeaderLineType>(i);
+        s_htypeix[*g_header_type[i].name - 'a'] = static_cast<HeaderLineType>(i);
     }
 
     g_user_htype_max = 10;
@@ -108,8 +108,8 @@ void head_init()
                                             * sizeof (UserHeaderType));
     g_user_htype[g_user_htype_count++].name = "*";
 
-    s_headbuf_size = LBUFLEN * 8;
-    g_head_buf = safe_malloc(s_headbuf_size);
+    s_head_buf_size = LBUFLEN * 8;
+    g_head_buf = safe_malloc(s_head_buf_size);
 }
 
 void head_final()
@@ -120,15 +120,15 @@ void head_final()
 }
 
 #ifdef DEBUG
-void dumpheader(char *where)
+static void dump_header(char *where)
 {
     std::printf("header: %ld %s", (long)g_parsed_art, where);
 
     for (int i = HEAD_FIRST - 1; i < HEAD_LAST; i++)
     {
-        std::printf("%15s %4ld %4ld %03o\n",g_htype[i].name,
-               (long)g_htype[i].minpos, (long)g_htype[i].maxpos,
-               g_htype[i].flags);
+        std::printf("%15s %4ld %4ld %03o\n",g_header_type[i].name,
+               (long)g_htype[i].minpos, (long)g_header_type[i].maxpos,
+               g_header_type[i].flags);
     }
 }
 #endif
@@ -162,15 +162,15 @@ HeaderLineType set_line_type(char *bufptr, const char *colon)
      */
     if (*f >= 'a' && *f <= 'z')
     {
-        for (int i = s_htypeix[*f - 'a']; *g_htype[i].name == *f; i--)
+        for (int i = s_htypeix[*f - 'a']; *g_header_type[i].name == *f; i--)
         {
-            if (len == g_htype[i].length && !std::strcmp(f, g_htype[i].name))
+            if (len == g_header_type[i].length && !std::strcmp(f, g_header_type[i].name))
             {
                 return static_cast<HeaderLineType>(i);
             }
         }
-        if (len == g_htype[CUSTOM_LINE].length
-         && !std::strcmp(f,g_htype[(((0+1)+1)+1)].name))
+        if (len == g_header_type[CUSTOM_LINE].length
+         && !std::strcmp(f,g_header_type[(((0+1)+1)+1)].name))
         {
             return CUSTOM_LINE;
         }
@@ -198,15 +198,15 @@ HeaderLineType get_header_num(char *s)
 
     if (i <= SOME_LINE && i != CUSTOM_LINE)
     {
-        if (!empty(g_htype[CUSTOM_LINE].name))
+        if (!empty(g_header_type[CUSTOM_LINE].name))
         {
-            std::free(g_htype[CUSTOM_LINE].name);
+            std::free(g_header_type[CUSTOM_LINE].name);
         }
-        g_htype[CUSTOM_LINE].name = save_str(g_msg);
-        g_htype[CUSTOM_LINE].length = end - s;
-        g_htype[CUSTOM_LINE].flags = g_htype[i].flags;
-        g_htype[CUSTOM_LINE].min_pos = -1;
-        g_htype[CUSTOM_LINE].max_pos = 0;
+        g_header_type[CUSTOM_LINE].name = save_str(g_msg);
+        g_header_type[CUSTOM_LINE].length = end - s;
+        g_header_type[CUSTOM_LINE].flags = g_header_type[i].flags;
+        g_header_type[CUSTOM_LINE].min_pos = -1;
+        g_header_type[CUSTOM_LINE].max_pos = 0;
         for (char *bp = g_head_buf; *bp; bp = end)
         {
             if (!(end = std::strchr(bp,'\n')) || end == bp)
@@ -221,7 +221,7 @@ HeaderLineType get_header_num(char *s)
             {
                 continue;
             }
-            g_htype[CUSTOM_LINE].min_pos = bp - g_head_buf;
+            g_header_type[CUSTOM_LINE].min_pos = bp - g_head_buf;
             while (is_hor_space(*end))
             {
                 if (!(end = std::strchr(end, '\n')))
@@ -231,7 +231,7 @@ HeaderLineType get_header_num(char *s)
                 }
                 end++;
             }
-            g_htype[CUSTOM_LINE].max_pos = end - g_head_buf;
+            g_header_type[CUSTOM_LINE].max_pos = end - g_head_buf;
             break;
         }
         i = CUSTOM_LINE;
@@ -244,10 +244,10 @@ void start_header(ArticleNum artnum)
 #ifdef DEBUG
     if (debug & DEB_HEADER)
     {
-        dumpheader("start_header\n");
+        dump_header("start_header\n");
     }
 #endif
-    for (HeaderType &i : g_htype)
+    for (HeaderType &i : g_header_type)
     {
         i.min_pos = -1;
         i.max_pos = 0;
@@ -264,13 +264,13 @@ void end_header_line()
     {
         s_first_one = false;
         /* remember where line left off */
-        g_htype[g_in_header].max_pos = g_art_pos;
-        if (g_htype[g_in_header].flags & HT_CACHED)
+        g_header_type[g_in_header].max_pos = g_art_pos;
+        if (g_header_type[g_in_header].flags & HT_CACHED)
         {
             if (!get_cached_line(s_parsed_artp, g_in_header, true))
             {
-                int start = g_htype[g_in_header].min_pos
-                          + g_htype[g_in_header].length + 1;
+                int start = g_header_type[g_in_header].min_pos
+                          + g_header_type[g_in_header].length + 1;
                 while (is_hor_space(g_head_buf[start]))
                 {
                     start++;
@@ -313,10 +313,10 @@ bool parse_line(char *art_buf, int new_hide, int old_hide)
     else                /* it is a new header line */
     {
             g_in_header = set_line_type(art_buf,s);
-            s_first_one = (g_htype[g_in_header].min_pos < 0);
+            s_first_one = (g_header_type[g_in_header].min_pos < 0);
             if (s_first_one)
             {
-                g_htype[g_in_header].min_pos = g_art_pos;
+                g_header_type[g_in_header].min_pos = g_art_pos;
                 if (g_in_header == DATE_LINE)
                 {
                     if (!s_parsed_artp->date)
@@ -328,10 +328,10 @@ bool parse_line(char *art_buf, int new_hide, int old_hide)
 #ifdef DEBUG
             if (debug & DEB_HEADER)
             {
-                dumpheader(art_buf);
+                dump_header(art_buf);
             }
 #endif
-            if (g_htype[g_in_header].flags & HT_HIDE)
+            if (g_header_type[g_in_header].flags & HT_HIDE)
             {
                 return new_hide;
             }
@@ -354,18 +354,18 @@ void end_header()
     if (s_reading_nntp_header)
     {
         s_reading_nntp_header = false;
-        g_htype[PAST_HEADER].min_pos = g_art_pos + 1;     /* nntp_body will fix this */
+        g_header_type[PAST_HEADER].min_pos = g_art_pos + 1;     /* nntp_body will fix this */
     }
     else
     {
-        g_htype[PAST_HEADER].min_pos = tell_art();
+        g_header_type[PAST_HEADER].min_pos = tell_art();
     }
 
     /* If there's no References: line, then the In-Reply-To: line may give us
     ** more information.
     */
     if (g_threaded_group //
-        && (!(ap->flags & AF_THREADED) || g_htype[IN_REPLY_LINE].min_pos >= 0))
+        && (!(ap->flags & AF_THREADED) || g_header_type[IN_REPLY_LINE].min_pos >= 0))
     {
         if (valid_article(ap))
         {
@@ -436,11 +436,11 @@ bool parse_header(ArticleNum art_num)
     char *bp = g_head_buf;
     while (g_in_header)
     {
-        if (s_headbuf_size < g_art_pos + LBUFLEN)
+        if (s_head_buf_size < g_art_pos + LBUFLEN)
         {
             len = bp - g_head_buf;
-            s_headbuf_size += LBUFLEN * 4;
-            g_head_buf = safe_realloc(g_head_buf,s_headbuf_size);
+            s_head_buf_size += LBUFLEN * 4;
+            g_head_buf = safe_realloc(g_head_buf,s_head_buf_size);
             bp = g_head_buf + len;
         }
         if (s_reading_nntp_header)
@@ -506,14 +506,14 @@ char *fetch_lines(ArticleNum art_num, HeaderLineType which_line)
             return save_str(s);
         }
     }
-    ArticlePosition firstpos = g_htype[which_line].min_pos;
+    ArticlePosition firstpos = g_header_type[which_line].min_pos;
     if (firstpos < 0)
     {
         return save_str("");
     }
 
-    firstpos += g_htype[which_line].length + 1;
-    ArticlePosition lastpos = g_htype[which_line].max_pos;
+    firstpos += g_header_type[which_line].length + 1;
+    ArticlePosition lastpos = g_header_type[which_line].max_pos;
     int size = lastpos - firstpos;
     char *t = g_head_buf + firstpos;
     while (is_hor_space(*t))
@@ -551,14 +551,14 @@ char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool p
             return mp_save_str(s, pool);
         }
     }
-    ArticlePosition firstpos = g_htype[which_line].min_pos;
+    ArticlePosition firstpos = g_header_type[which_line].min_pos;
     if (firstpos < 0)
     {
         return mp_save_str("", pool);
     }
 
-    firstpos += g_htype[which_line].length + 1;
-    ArticlePosition lastpos = g_htype[which_line].max_pos;
+    firstpos += g_header_type[which_line].length + 1;
+    ArticlePosition lastpos = g_header_type[which_line].max_pos;
     int size = lastpos - firstpos;
     char *t = g_head_buf + firstpos;
     while (is_hor_space(*t))
@@ -580,13 +580,13 @@ char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool p
 
 static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum)
 {
-    std::sprintf(g_ser_line,"XHDR %s %ld",g_htype[which_line].name,artnum);
+    std::sprintf(g_ser_line,"XHDR %s %ld",g_header_type[which_line].name,artnum);
     return nntp_command(g_ser_line);
 }
 
 static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum, ArticleNum lastnum)
 {
-    std::sprintf(g_ser_line, "XHDR %s %ld-%ld", g_htype[which_line].name, artnum, lastnum);
+    std::sprintf(g_ser_line, "XHDR %s %ld-%ld", g_header_type[which_line].name, artnum, lastnum);
     return nntp_command(g_ser_line);
 }
 
@@ -632,7 +632,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
         }
         *s = '\0';
         ArticleNum priornum = art_num - 1;
-        bool    cached = (g_htype[which_line].flags & HT_CACHED);
+        bool    cached = (g_header_type[which_line].flags & HT_CACHED);
         int     status;
         if (cached != 0)
         {
@@ -738,7 +738,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
     {
         s = fetch_cache(art_num, which_line, FILL_CACHE);
     }
-    if (g_parsed_art == art_num && (firstpos = g_htype[which_line].min_pos) < 0)
+    if (g_parsed_art == art_num && (firstpos = g_header_type[which_line].min_pos) < 0)
     {
         s = "";
     }
@@ -751,8 +751,8 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
         return s;
     }
 
-    firstpos += g_htype[which_line].length + 1;
-    ArticlePosition lastpos = g_htype[which_line].max_pos;
+    firstpos += g_header_type[which_line].length + 1;
+    ArticlePosition lastpos = g_header_type[which_line].max_pos;
     int size = lastpos - firstpos;
     t = g_head_buf + firstpos;
     while (is_hor_space(*t))

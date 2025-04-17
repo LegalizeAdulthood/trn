@@ -74,11 +74,11 @@ bool            g_dont_filter_control{}; /* -j */
 
 inline char *line_ptr(ArticlePosition pos)
 {
-    return g_art_buf + pos - g_htype[PAST_HEADER].min_pos;
+    return g_art_buf + pos - g_header_type[PAST_HEADER].min_pos;
 }
 inline ArticlePosition line_offset(char *ptr)
 {
-    return ptr - g_art_buf + g_htype[PAST_HEADER].min_pos;
+    return ptr - g_art_buf + g_header_type[PAST_HEADER].min_pos;
 }
 
 /* page_switch() return values */
@@ -149,7 +149,7 @@ DoArticleResult do_article()
         parse_header(g_art);
         mime_set_article();
         clear_art_buf();
-        seek_art(g_art_buf_seek = g_htype[PAST_HEADER].min_pos);
+        seek_art(g_art_buf_seek = g_header_type[PAST_HEADER].min_pos);
     }
     g_term_scrolled = 0;
 
@@ -166,7 +166,7 @@ DoArticleResult do_article()
             if (!*g_art_buf)
             {
                 mime_set_article();
-                g_art_buf_seek = g_htype[PAST_HEADER].min_pos;
+                g_art_buf_seek = g_header_type[PAST_HEADER].min_pos;
             }
             g_art_pos = virtual_read(g_art_line_num);
             if (g_art_pos < 0)
@@ -177,11 +177,11 @@ DoArticleResult do_article()
             {
                 g_art_pos = (ArticlePosition) 0;
             }
-            if (g_art_pos < g_htype[PAST_HEADER].min_pos)
+            if (g_art_pos < g_header_type[PAST_HEADER].min_pos)
             {
                 g_in_header = SOME_LINE;
-                seek_art(g_htype[PAST_HEADER].min_pos);
-                seek_art_buf(g_htype[PAST_HEADER].min_pos);
+                seek_art(g_header_type[PAST_HEADER].min_pos);
+                seek_art_buf(g_header_type[PAST_HEADER].min_pos);
             }
             else
             {
@@ -318,7 +318,7 @@ DoArticleResult do_article()
                 }
                 mime_set_article();
                 clear_art_buf();         /* exclude notesfiles droppings */
-                g_htype[PAST_HEADER].min_pos = tell_art();
+                g_header_type[PAST_HEADER].min_pos = tell_art();
                 g_art_buf_seek = tell_art();
                 hide_this_line = true;  /* and do not print either */
                 notesfiles = false;
@@ -327,7 +327,7 @@ DoArticleResult do_article()
             {
                 hide_this_line = true;
             }
-            if (g_in_header && g_do_hiding && (g_htype[g_in_header].flags & HT_MAGIC))
+            if (g_in_header && g_do_hiding && (g_header_type[g_in_header].flags & HT_MAGIC))
             {
                 switch (g_in_header)
                 {
@@ -346,9 +346,9 @@ DoArticleResult do_article()
                     break;
 
                 case EXPIR_LINE:
-                    if (!(g_htype[EXPIR_LINE].flags & HT_HIDE))
+                    if (!(g_header_type[EXPIR_LINE].flags & HT_HIDE))
                     {
-                        s = bufptr + g_htype[EXPIR_LINE].length + 1;
+                        s = bufptr + g_header_type[EXPIR_LINE].length + 1;
                         hide_this_line = *s != ' ' || s[1] == '\n';
                     }
                     break;
@@ -384,7 +384,7 @@ DoArticleResult do_article()
                 }
             }
             if (g_in_header == SUBJ_LINE && g_do_hiding   //
-                && (g_htype[SUBJ_LINE].flags & HT_MAGIC)) /* handle the subject */
+                && (g_header_type[SUBJ_LINE].flags & HT_MAGIC)) /* handle the subject */
             {
                 s = get_cached_line(g_artp, SUBJ_LINE, false);
                 if (s && s_continuation)
@@ -704,7 +704,7 @@ DoArticleResult do_article()
             }
             else
             {
-                g_art_pos = g_art_buf_pos + g_htype[PAST_HEADER].min_pos;
+                g_art_pos = g_art_buf_pos + g_header_type[PAST_HEADER].min_pos;
             }
             virtual_write(g_art_line_num,g_art_pos); /* remember pos in file */
         } /* end of line loop */
@@ -730,14 +730,14 @@ DoArticleResult do_article()
 
         if (g_art_size < 0 && (g_raw_art_size = nntp_art_size()) >= 0)
         {
-            g_art_size = g_raw_art_size-g_art_buf_seek+g_art_buf_len+g_htype[PAST_HEADER].min_pos;
+            g_art_size = g_raw_art_size-g_art_buf_seek+g_art_buf_len+g_header_type[PAST_HEADER].min_pos;
         }
 recheck_pager:
         if (g_do_hiding && g_art_buf_pos == g_art_buf_len)
         {
             /* If we're filtering we need to figure out if any
              * remaining text is going to vanish or not. */
-            long seekpos = g_art_buf_pos + g_htype[PAST_HEADER].min_pos;
+            long seekpos = g_art_buf_pos + g_header_type[PAST_HEADER].min_pos;
             read_art_buf(false);
             seek_art_buf(seekpos);
         }
@@ -795,7 +795,7 @@ reask_pager:
         cache_until_key();
         if (g_art_size < 0 && (g_raw_art_size = nntp_art_size()) >= 0)
         {
-            g_art_size = g_raw_art_size-g_art_buf_seek+g_art_buf_len+g_htype[PAST_HEADER].min_pos;
+            g_art_size = g_raw_art_size-g_art_buf_seek+g_art_buf_len+g_header_type[PAST_HEADER].min_pos;
             goto_xy(s_more_prompt_col,g_term_line);
             goto recheck_pager;
         }
@@ -905,7 +905,7 @@ static PageSwitchResult page_switch()
             {
                 pos = -pos;
             }
-            if (pos < g_htype[PAST_HEADER].min_pos)
+            if (pos < g_header_type[PAST_HEADER].min_pos)
             {
                 break;
             }
@@ -980,7 +980,7 @@ static PageSwitchResult page_switch()
                 start_where = -start_where;
             }
         }
-        start_where = std::max(start_where, g_htype[PAST_HEADER].min_pos);
+        start_where = std::max(start_where, g_header_type[PAST_HEADER].min_pos);
         seek_art_buf(start_where);
         g_inner_light = 0;
         g_inner_search = 0; /* assume not found */
@@ -1005,7 +1005,7 @@ static PageSwitchResult page_switch()
             }
             if (success)
             {
-                g_inner_search = g_art_buf_pos + g_htype[PAST_HEADER].min_pos;
+                g_inner_search = g_art_buf_pos + g_header_type[PAST_HEADER].min_pos;
                 break;
             }
         }
@@ -1084,7 +1084,7 @@ static PageSwitchResult page_switch()
         {
             nntp_finish_body(FB_OUTPUT);
             g_raw_art_size = nntp_art_size();
-            g_art_size = g_raw_art_size-g_art_buf_seek+g_art_buf_len+g_htype[PAST_HEADER].min_pos;
+            g_art_size = g_raw_art_size-g_art_buf_seek+g_art_buf_len+g_header_type[PAST_HEADER].min_pos;
         }
         if (g_do_hiding)
         {
@@ -1113,7 +1113,7 @@ static PageSwitchResult page_switch()
             {
                 pos = -pos;
             }
-            if (pos >= g_htype[PAST_HEADER].min_pos)
+            if (pos >= g_header_type[PAST_HEADER].min_pos)
             {
                 seek_art_buf(pos);
                 s = read_art_buf(false);
