@@ -828,7 +828,7 @@ char *dointerp(char *dest, int destsize, char *pattern, const char *stoppers, co
                     break;
 
                 case 'M':
-                    std::sprintf(scrbuf,"%ld",(long)g_dmcount);
+                    std::sprintf(scrbuf,"%ld",(long)g_dm_count);
                     s = scrbuf;
                     break;
 

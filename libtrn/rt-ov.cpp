@@ -369,7 +369,7 @@ beginning:
         {
             if (!(ap->flags & cachemask))
             {
-                onemissing(ap);
+                one_missing(ap);
             }
         }
         g_spin_todo -= last - artnum;

@@ -2340,12 +2340,12 @@ static DisplayState article_commands(char_int ch)
         return DS_DISPLAY;
 
     case 'Y':
-        if (!g_dmcount)
+        if (!g_dm_count)
         {
             std::strcpy(g_msg,"No marked articles to yank back.");
             return DS_STATUS;
         }
-        yankback();
+        yank_back();
         if (!g_sel_rereading)
         {
             sel_cleanup();

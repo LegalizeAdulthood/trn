@@ -260,7 +260,7 @@ Article *first_art(Subject *sp)
     Article* ap = (g_threaded_group? sp->thread : sp->articles);
     if (ap && !(ap->flags & AF_EXISTS))
     {
-        oneless(ap);
+        one_less(ap);
         ap = next_art(ap);
     }
     return ap;
@@ -300,7 +300,7 @@ Article *last_art(Subject *sp)
         }
         if (!(ap->flags & AF_EXISTS))
         {
-            oneless(ap);
+            one_less(ap);
             ap = prev_art(ap);
         }
     }
@@ -439,7 +439,7 @@ void inc_art(bool sel_flag, bool rereading)
         ap = article_ptr(g_art);
         if (!(ap->flags & AF_EXISTS))
         {
-            oneless(ap);
+            one_less(ap);
         }
         else if ((rereading || (ap->flags & AF_UNREAD))
               && (!sel_flag || (ap->flags & AF_SEL)))
@@ -554,7 +554,7 @@ void dec_art(bool sel_flag, bool rereading)
         ap = article_ptr(g_art);
         if (!(ap->flags & AF_EXISTS))
         {
-            oneless(ap);
+            one_less(ap);
         }
         else if ((rereading || (ap->flags & AF_UNREAD))
               && (!sel_flag || (ap->flags & AF_SEL)))
@@ -629,7 +629,7 @@ try_again:
 done:
     if (ap && !(ap->flags & AF_EXISTS))
     {
-        oneless(ap);
+        one_less(ap);
         goto try_again;
     }
     return ap;
@@ -679,7 +679,7 @@ try_again:
 done:
     if (ap && !(ap->flags & AF_EXISTS))
     {
-        oneless(ap);
+        one_less(ap);
         goto try_again;
     }
     return ap;
@@ -1222,7 +1222,7 @@ void unkill_subject(Subject *subj)
         {
             if ((ap->flags & (AF_EXISTS|AF_UNREAD)) == AF_EXISTS)
             {
-                onemore(ap);
+                one_more(ap);
             }
             if (g_selected_only && (ap->flags & (AF_SEL | AF_UNREAD)) == AF_UNREAD)
             {
@@ -1276,7 +1276,7 @@ void unkill_subthread(Article *ap)
     {
         if ((ap->flags & (AF_EXISTS|AF_UNREAD)) == AF_EXISTS)
         {
-            onemore(ap);
+            one_more(ap);
         }
         if (g_selected_only && !(ap->flags & AF_SEL))
         {

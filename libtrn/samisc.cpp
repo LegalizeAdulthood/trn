@@ -52,7 +52,7 @@ bool sa_basic_elig(long a)
     {
         if (!was_read(artnum))
         {
-            oneless_artnum(artnum);
+            one_less_art_num(artnum);
         }
         return false;           /* don't try positively unavailable */
     }

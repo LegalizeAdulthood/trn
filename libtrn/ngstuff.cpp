@@ -607,7 +607,7 @@ int perform(char *cmdlst, int output_level)
         {
             if (!was_read(g_art))
             {
-                oneless(g_artp);
+                one_less(g_artp);
                 if (output_level && g_verbose)
                 {
                     std::fputs("\tKilled", stdout);
@@ -648,7 +648,7 @@ int perform(char *cmdlst, int output_level)
         else if (ch == 'M')
         {
             delay_unmark(g_artp);
-            oneless(g_artp);
+            one_less(g_artp);
             if (output_level && g_verbose)
             {
                 std::fputs("\tWill return", stdout);

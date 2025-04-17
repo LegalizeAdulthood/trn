@@ -179,7 +179,7 @@ int sa_docmd()
                         continue;       /* article selection loop */
                     }
                 }
-                oneless_artnum(g_sa_ents[i].artnum);
+                one_less_art_num(g_sa_ents[i].artnum);
             }
         }
         b = sa_readmarked_elig();
@@ -770,7 +770,7 @@ void sa_art_cmd_prim(SaCommand cmd, long a)
         if (sa_marked(a))
         {
             sa_clear_mark(a);
-            oneless_artnum(artnum);
+            one_less_art_num(artnum);
         }
         break;
 
@@ -779,12 +779,12 @@ void sa_art_cmd_prim(SaCommand cmd, long a)
         {
             break;              /* end case early */
         }
-        oneless_artnum(artnum);
+        one_less_art_num(artnum);
         break;
 
     case SA_KILL:               /* junk this article */
         sa_clear_mark(a);       /* clearing should be fast */
-        oneless_artnum(artnum);
+        one_less_art_num(artnum);
         break;
 
     case SA_MARK:               /* mark this article */
@@ -823,7 +823,7 @@ void sa_art_cmd_prim(SaCommand cmd, long a)
         (void)save_article();
         if (s_sa_extract_junk)
         {
-            oneless_artnum(artnum);
+            one_less_art_num(artnum);
         }
         break;
     } /* switch */

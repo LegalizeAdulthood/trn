@@ -397,7 +397,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
         }
         else if (!g_reread && (!(g_artp->flags & AF_EXISTS) || !parseheader(g_art)))
         {
-            oneless(g_artp);            /* mark deleted as read */
+            one_less(g_artp);            /* mark deleted as read */
             ng_skip();
             continue;
         }
@@ -615,7 +615,7 @@ cleanup:
         newline();
     }
     deselect_all();
-    yankback();                         /* do a Y command */
+    yank_back();                         /* do a Y command */
     bits_to_rc();                       /* reconstitute .newsrc line */
 cleanup2:
 /* go here if already cleaned up */
@@ -1378,7 +1378,7 @@ normal_search:
         if (g_art <= g_lastart)
         {
             delay_unmark(g_artp);
-            oneless(g_artp);
+            one_less(g_artp);
             std::printf("\nArticle %ld will return.\n",(long)g_art);
             termdown(2);
         }
@@ -1728,7 +1728,7 @@ run_the_selector:
         return AS_ASK;
 
     case 'Y':                         /* yank back M articles */
-        yankback();
+        yank_back();
         top_article();                  /* from the beginning */
         return AS_NORM;                 /* pretend nothing happened */
 
@@ -2008,9 +2008,9 @@ reask_catchup:
             g_selected_subj_cnt = false;
             g_selected_only = false;
             g_ngptr->toread = 0;
-            if (g_dmcount)
+            if (g_dm_count)
             {
-                yankback();
+                yank_back();
             }
         }
         newline();

@@ -220,14 +220,14 @@ DoArticleResult do_article()
                                         - (!selected && unseen));
                 }
                 else if ((i = (ArticleNum) (g_ngptr->toread - unseen)) != 0 //
-                         || (!g_threaded_group && g_dmcount))
+                         || (!g_threaded_group && g_dm_count))
                 {
                     std::sprintf(g_art_line+std::strlen(g_art_line),
                             " (%ld more)",(long)i);
                 }
-                if (!g_threaded_group && g_dmcount)
+                if (!g_threaded_group && g_dm_count)
                 {
-                    std::sprintf(g_art_line + std::strlen(g_art_line) - 1, " + %ld Marked to return)", (long) g_dmcount);
+                    std::sprintf(g_art_line + std::strlen(g_art_line) - 1, " + %ld Marked to return)", (long) g_dm_count);
                 }
                 linenum += tree_puts(g_art_line,linenum+g_top_line,0);
             }

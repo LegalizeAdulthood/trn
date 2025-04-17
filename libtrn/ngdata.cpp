@@ -155,7 +155,7 @@ int access_ng()
         g_absfirst = g_ngptr->abs1st;
     }
 
-    g_dmcount = 0;
+    g_dm_count = 0;
     g_missing_count = 0;
     g_in_ng = true;                     /* tell the world we are here */
 

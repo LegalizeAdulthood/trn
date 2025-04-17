@@ -33,7 +33,7 @@
 #include <cstring>
 #include <filesystem>
 
-int g_dmcount{};
+int g_dm_count{};
 
 static long s_chase_count{};
 
@@ -74,7 +74,7 @@ void rc_to_bits()
     }
     mybuf[i] = '\0';
     s = mybuf;                          /* initialize the for loop below */
-    if (set_firstart(s))
+    if (set_first_art(s))
     {
         s = std::strchr(s,',') + 1;
         for (i = article_first(g_absfirst); i < g_firstart; i = article_next(i))
@@ -199,7 +199,7 @@ void rc_to_bits()
     g_ngptr->toread = unread;
 }
 
-bool set_firstart(const char *s)
+bool set_first_art(const char *s)
 {
     s = skip_eq(s, ' ');
     if (!std::strncmp(s,"1-",2))                     /* can we save some time here? */
@@ -459,7 +459,7 @@ void find_existing_articles()
                  g_absfirst < first;
                  g_absfirst = article_next(g_absfirst))
             {
-                onemissing(article_ptr(g_absfirst));
+                one_missing(article_ptr(g_absfirst));
             }
             g_absfirst = first;
         }
@@ -480,7 +480,7 @@ void find_existing_articles()
 
 /* mark an article unread, keeping track of toread[] */
 
-void onemore(Article *ap)
+void one_more(Article *ap)
 {
     if (!(ap->flags & AF_UNREAD))
     {
@@ -509,7 +509,7 @@ void onemore(Article *ap)
 
 /* mark an article read, keeping track of toread[] */
 
-void oneless(Article *ap)
+void one_less(Article *ap)
 {
     if (ap->flags & AF_UNREAD)
     {
@@ -527,19 +527,19 @@ void oneless(Article *ap)
     }
 }
 
-void oneless_artnum(ArticleNum artnum)
+void one_less_art_num(ArticleNum art_num)
 {
-    Article* ap = article_find(artnum);
+    Article* ap = article_find(art_num);
     if (ap)
     {
-        oneless(ap);
+        one_less(ap);
     }
 }
 
-void onemissing(Article *ap)
+void one_missing(Article *ap)
 {
     g_missing_count += (ap->flags & AF_UNREAD) != 0;
-    oneless(ap);
+    one_less(ap);
     ap->flags = (ap->flags & ~(AF_HAS_RE|AF_YANKBACK|AF_EXISTS))
               | AF_CACHED|AF_THREADED;
 }
@@ -548,7 +548,7 @@ void onemissing(Article *ap)
 
 void unmark_as_read(Article *ap)
 {
-    onemore(ap);
+    one_more(ap);
 #ifdef MCHASE
     if (!empty(ap->xrefs) && !(ap->flags & AF_MCHASE))
     {
@@ -563,7 +563,7 @@ void unmark_as_read(Article *ap)
 */
 void set_read(Article *ap)
 {
-    oneless(ap);
+    one_less(ap);
     if (!g_olden_days && !empty(ap->xrefs) && !(ap->flags & AF_KCHASE))
     {
         ap->flags |= AF_KCHASE;
@@ -579,7 +579,7 @@ void delay_unmark(Article *ap)
     if (!(ap->flags & AF_YANKBACK))
     {
         ap->flags |= AF_YANKBACK;
-        g_dmcount++;
+        g_dm_count++;
     }
 }
 
@@ -588,7 +588,7 @@ void delay_unmark(Article *ap)
 
 void mark_as_read(Article *ap)
 {
-    oneless(ap);
+    one_less(ap);
     if (!empty(ap->xrefs) && !(ap->flags & AF_KCHASE))
     {
         ap->flags |= AF_KCHASE;
@@ -605,7 +605,7 @@ void mark_missing_articles()
     {
         if (!(ap->flags & AF_EXISTS))
         {
-            onemissing(ap);
+            one_missing(ap);
         }
     }
 }
@@ -619,25 +619,25 @@ void check_first(ArticleNum min)
 }
 
 /* bring back articles marked with M */
-void yankback()
+void yank_back()
 {
-    if (g_dmcount)                      /* delayed unmarks pending? */
+    if (g_dm_count)                      /* delayed unmarks pending? */
     {
         if (g_panic)
         {
         }
         else if (g_general_mode == GM_SELECTOR)
         {
-            std::sprintf(g_msg, "Returned %ld Marked article%s.", (long) g_dmcount, plural(g_dmcount));
+            std::sprintf(g_msg, "Returned %ld Marked article%s.", (long) g_dm_count, plural(g_dm_count));
         }
         else
         {
-            std::printf("\nReturning %ld Marked article%s...\n",(long)g_dmcount,
-                plural(g_dmcount));
+            std::printf("\nReturning %ld Marked article%s...\n",(long)g_dm_count,
+                plural(g_dm_count));
             termdown(2);
         }
         article_walk(yank_article, 0);
-        g_dmcount = 0;
+        g_dm_count = 0;
     }
 }
 
@@ -781,7 +781,7 @@ static int chase_xref(ArticleNum artnum, int markread)
                 }
                 if (markread)
                 {
-                    oneless(article_ptr(x)); /* take care of old C newses */
+                    one_less(article_ptr(x)); /* take care of old C newses */
                 }
 # ifdef MCHASE
                 else

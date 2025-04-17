@@ -227,7 +227,7 @@ void sc_set_score(ArticleNum a, int score)
     }
     if (g_kill_thresh_active && score <= g_kill_thresh && article_unread(a))
     {
-        oneless_artnum(a);
+        one_less_art_num(a);
     }
 
     Article *ap = article_ptr(a);
@@ -638,7 +638,7 @@ void sc_kill_threshold(int thresh)
             /* this is needed for zoom mode */
             && sa_basic_elig(sa_artnum_to_ent(a)))
         {
-            oneless_artnum(a);
+            one_less_art_num(a);
         }
     }
 }

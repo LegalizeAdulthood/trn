@@ -106,7 +106,7 @@ void build_cache()
                               LF_SPARSE, init_artnode);
     s_subj_hash = hashcreate(991, subject_cmp); /*TODO: pick a better size */
 
-    set_firstart(g_ngptr->rcline + g_ngptr->numoffset);
+    set_first_art(g_ngptr->rcline + g_ngptr->numoffset);
     g_first_cached = g_thread_always? g_absfirst : g_firstart;
     g_last_cached = g_first_cached-1;
     g_cached_all_in_range = false;
@@ -424,7 +424,7 @@ void uncache_article(Article *ap, bool remove_empties)
         }
     }
     ap->flags2 |= AF2_BOGUS;
-    onemissing(ap);
+    one_missing(ap);
 }
 
 /* get the header line from an article's cache or parse the article trying */

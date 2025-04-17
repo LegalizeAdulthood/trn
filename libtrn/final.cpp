@@ -220,7 +220,7 @@ Signal_t sig_catcher(int signo)
     g_panic = true;                     /* disable terminal I/O */
     if (g_doing_ng)                     /* need we reconstitute rc line? */
     {
-        yankback();
+        yank_back();
         bits_to_rc();                   /* then do so (hope this works) */
     }
     g_doing_ng = false;

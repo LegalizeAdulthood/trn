@@ -142,7 +142,7 @@ void InterpolatorTest::TearDown()
 {
     g_general_mode = GM_INIT;
     g_mode = MM_INITIALIZING;
-    g_dmcount = 0;
+    g_dm_count = 0;
     g_lastart = 0;
     g_art = 0;
     g_in_ng = false;
@@ -543,7 +543,7 @@ TEST_F(InterpolatorTest, minorMode)
 TEST_F(InterpolatorTest, markCount)
 {
     char pattern[]{"%M"};
-    g_dmcount = 96;
+    g_dm_count = 96;
 
     const char *new_pattern = interpolate(pattern);
 
