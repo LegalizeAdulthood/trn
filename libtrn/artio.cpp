@@ -25,23 +25,23 @@
 #include <cstdio>
 #include <cstring>
 
-ArticlePosition    g_art_pos{};               /* byte position in article file */
-ArticleLine   g_art_line_num{};              /* current line number in article file */
-std::FILE *g_art_fp{};                /* current article file pointer */
-ArticleNum    g_open_art{};              /* the article number we have open */
-char      *g_art_buf{};               //
-long       g_art_buf_pos{};           //
-long       g_art_buf_seek{};          //
-long       g_art_buf_len{};           //
-char       g_wrapped_nl{WRAPPED_NL}; //
-int        g_word_wrap_offset{8};    /* right-hand column size (0 is off) */
+ArticlePosition g_art_pos{};              /* byte position in article file */
+ArticleLine     g_art_line_num{};         /* current line number in article file */
+std::FILE      *g_art_fp{};               /* current article file pointer */
+ArticleNum      g_open_art{};             /* the article number we have open */
+char           *g_art_buf{};              //
+long            g_art_buf_pos{};          //
+long            g_art_buf_seek{};         //
+long            g_art_buf_len{};          //
+char            g_wrapped_nl{WRAPPED_NL}; //
+int             g_word_wrap_offset{8};    /* right-hand column size (0 is off) */
 
-static long s_artbuf_size{};
+static long s_art_buf_size{};
 
 void art_io_init()
 {
-    s_artbuf_size = 8 * 1024;
-    g_art_buf = safe_malloc(s_artbuf_size);
+    s_art_buf_size = 8 * 1024;
+    g_art_buf = safe_malloc(s_art_buf_size);
     clear_art_buf();
 }
 
@@ -128,8 +128,7 @@ int seek_art(ArticlePosition pos)
     return std::fseek(g_art_fp,(long)pos,0);
 }
 
-ArticlePosition
-tell_art()
+ArticlePosition tell_art()
 {
     if (g_data_source->flags & DF_REMOTE)
     {
@@ -233,10 +232,10 @@ char *read_art_buf(bool view_inline)
   read_more:
     extra_offset = g_mime_state == HTML_TEXT_MIME? 1024 : 0;
     o = read_offset + extra_offset;
-    if (s_artbuf_size < g_art_buf_pos + o + LBUFLEN)
+    if (s_art_buf_size < g_art_buf_pos + o + LBUFLEN)
     {
-        s_artbuf_size += LBUFLEN * 4;
-        g_art_buf = safe_realloc(g_art_buf,s_artbuf_size);
+        s_art_buf_size += LBUFLEN * 4;
+        g_art_buf = safe_realloc(g_art_buf,s_art_buf_size);
         bp = g_art_buf + g_art_buf_pos;
     }
     switch (g_mime_state)
@@ -248,7 +247,7 @@ char *read_art_buf(bool view_inline)
     default:
         read_something = 1;
         /* The -1 leaves room for appending a newline, if needed */
-        if (!read_art(bp + o, s_artbuf_size - g_art_buf_pos - o - 1))
+        if (!read_art(bp + o, s_art_buf_size - g_art_buf_pos - o - 1))
         {
             if (!read_offset)
             {
