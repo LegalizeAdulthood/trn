@@ -14,7 +14,7 @@ enum MemoryPool
 };
 
 void mp_init();
-char *mp_savestr(const char *str, MemoryPool pool);
+char *mp_save_str(const char *str, MemoryPool pool);
 char *mp_malloc(int len, MemoryPool pool);
 void mp_free(MemoryPool pool);
 

@@ -548,13 +548,13 @@ char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool p
         s = fetch_cache(art_num,which_line, FILL_CACHE);
         if (s)
         {
-            return mp_savestr(s, pool);
+            return mp_save_str(s, pool);
         }
     }
     ArticlePosition firstpos = g_htype[which_line].min_pos;
     if (firstpos < 0)
     {
-        return mp_savestr("", pool);
+        return mp_save_str("", pool);
     }
 
     firstpos += g_htype[which_line].length + 1;

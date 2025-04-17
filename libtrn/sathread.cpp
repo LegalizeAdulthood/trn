@@ -60,7 +60,7 @@ long sa_get_subj_thread(long e)
     {
         return (long)(data.dat_len);
     }
-    char *p = mp_savestr(s, MP_SATHREAD);
+    char *p = mp_save_str(s, MP_SATHREAD);
     data = hash_fetch(s_sa_thread_hash,p,std::strlen(s));
     data.dat_ptr = p;
     data.dat_len = (unsigned)(s_sa_num_threads+1);

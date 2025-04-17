@@ -780,7 +780,7 @@ bool sf_do_line(char *line, bool check)
     if (s_sf_pattern_status)    /* in pattern matching mode */
     {
         s_sf_entries[g_sf_num_entries-1].flags |= 1;
-        s_sf_entries[g_sf_num_entries-1].str1 = mp_savestr(s,MP_SCORE1);
+        s_sf_entries[g_sf_num_entries-1].str1 = mp_save_str(s,MP_SCORE1);
         s_sf_compex = (CompiledRegex*)safemalloc(sizeof (CompiledRegex));
         init_compex(s_sf_compex);
         /* compile arguments: */
@@ -810,11 +810,11 @@ bool sf_do_line(char *line, bool check)
             s2 = std::strchr(s, '*');
             if (s2 != nullptr)
             {
-                s_sf_entries[g_sf_num_entries - 1].str2 = mp_savestr(s2 + 1, MP_SCORE1);
+                s_sf_entries[g_sf_num_entries - 1].str2 = mp_save_str(s2 + 1, MP_SCORE1);
                 *s2 = '\0';
             }
         }
-        s_sf_entries[g_sf_num_entries-1].str1 = mp_savestr(s,MP_SCORE1);
+        s_sf_entries[g_sf_num_entries-1].str1 = mp_save_str(s,MP_SCORE1);
     }
     return true;
 }
@@ -1472,7 +1472,7 @@ static int sf_open_file(const char *name)
                 s_sf_files[i].num_alloc*sizeof(char**));
         }
         /* I kind of like the next line in a twisted sort of way. */
-        s_sf_files[i].lines[s_sf_files[i].num_lines++] = mp_savestr(s,MP_SCORE2);
+        s_sf_files[i].lines[s_sf_files[i].num_lines++] = mp_save_str(s,MP_SCORE2);
     }
     std::fclose(fp);
     if (temp_name)

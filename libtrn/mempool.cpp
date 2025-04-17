@@ -102,7 +102,7 @@ static void mp_free_frag(int f)
     s_mp_first_free_frag = f;
 }
 
-char *mp_savestr(const char *str, MemoryPool pool)
+char *mp_save_str(const char *str, MemoryPool pool)
 {
     if (!str)
     {
