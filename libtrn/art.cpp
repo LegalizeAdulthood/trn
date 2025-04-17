@@ -47,30 +47,30 @@
 #include <ctime>
 #include <string>
 
-ArticleLine    g_highlight{-1};         /* next line to be highlighted */
-ArticleLine    g_first_view{};          //
-ArticlePosition     g_raw_art_size{};         /* size in bytes of raw article */
-ArticlePosition     g_art_size{};             /* size in bytes of article */
-char        g_art_line[LBUFLEN];     /* place for article lines */
-int         g_g_line{};               //
-ArticlePosition     g_inner_search{};         /* g_artpos of end of line we want to visit */
-ArticleLine    g_inner_light{};          /* highlight position for g_innersearch or 0 */
-char        g_hide_everything{};     /* if set, do not write page now, ...but execute char when done with page */
-bool        g_reread{};              /* consider current art temporarily unread? */
-bool        g_do_fseek{};            /* should we back up in article file? */
-bool        g_old_subject{};          /* not 1st art in subject thread */
-ArticleLine    g_top_line{-1};           /* top line of current screen */
-bool        g_do_hiding{true};       /* hide header lines with -h? */
-bool        g_is_mime{};             /* process mime in an article? */
-bool        g_multimedia_mime{};     /* images/audio to see/hear? */
-bool        g_rotate{};              /* has rotation been requested? */
-std::string g_prompt;                /* current prompt */
-char       *g_first_line{};           /* s_special first line? */
-const char *g_hide_line{};            /* custom line hiding? */
-const char *g_page_stop{};            /* custom page terminator? */
-CompiledRegex      g_hide_compex{};         //
-CompiledRegex      g_page_compex{};         //
-bool        g_dont_filter_control{}; /* -j */
+ArticleLine     g_highlight{-1};         /* next line to be highlighted */
+ArticleLine     g_first_view{};          //
+ArticlePosition g_raw_art_size{};        /* size in bytes of raw article */
+ArticlePosition g_art_size{};            /* size in bytes of article */
+char            g_art_line[LBUFLEN];     /* place for article lines */
+int             g_g_line{};              //
+ArticlePosition g_inner_search{};        /* g_artpos of end of line we want to visit */
+ArticleLine     g_inner_light{};         /* highlight position for g_innersearch or 0 */
+char            g_hide_everything{};     /* if set, do not write page now, ...but execute char when done with page */
+bool            g_reread{};              /* consider current art temporarily unread? */
+bool            g_do_fseek{};            /* should we back up in article file? */
+bool            g_old_subject{};         /* not 1st art in subject thread */
+ArticleLine     g_top_line{-1};          /* top line of current screen */
+bool            g_do_hiding{true};       /* hide header lines with -h? */
+bool            g_is_mime{};             /* process mime in an article? */
+bool            g_multimedia_mime{};     /* images/audio to see/hear? */
+bool            g_rotate{};              /* has rotation been requested? */
+std::string     g_prompt;                /* current prompt */
+char           *g_first_line{};          /* s_special first line? */
+const char     *g_hide_line{};           /* custom line hiding? */
+const char     *g_page_stop{};           /* custom page terminator? */
+CompiledRegex   g_hide_compex{};         //
+CompiledRegex   g_page_compex{};         //
+bool            g_dont_filter_control{}; /* -j */
 
 inline char *line_ptr(ArticlePosition pos)
 {
@@ -90,15 +90,15 @@ enum PageSwitchResult
     PS_TOEND = 3
 };
 
-static bool     s_special{};         /* is next page special length? */
-static int      s_slines{};          /* how long to make page when special */
-static ArticlePosition  s_restart{};         /* if nonzero, the place where last line left off on line split */
-static ArticlePosition  s_alinebeg{};        /* where in file current line began */
-static int      s_more_prompt_col{}; /* non-zero when the more prompt is indented */
-static ArticleLine s_isrchline{};       /* last line to display */
+static bool            s_special{};         /* is next page special length? */
+static int             s_special_lines{};   /* how long to make page when special */
+static ArticlePosition s_restart{};         /* if nonzero, the place where last line left off on line split */
+static ArticlePosition s_a_line_begin{};    /* where in file current line began */
+static int             s_more_prompt_col{}; /* non-zero when the more prompt is indented */
+static ArticleLine     s_i_search_line{};   /* last line to display */
 static CompiledRegex   s_gcompex{};         /* in article search pattern */
-static bool     s_firstpage{};       /* is this the 1st page of article? */
-static bool     s_continuation{};    /* this line/header is being continued */
+static bool            s_first_page{};      /* is this the 1st page of article? */
+static bool            s_continuation{};    /* this line/header is being continued */
 
 static PageSwitchResult page_switch();
 
@@ -143,8 +143,8 @@ DoArticleResult do_article()
         (long)g_art,(long)g_last_art);   /* format prompt string */
     g_prompt = prompt_buf;
     g_int_count = 0;            /* interrupt count is 0 */
-    s_firstpage = (g_top_line < 0);
-    if (s_firstpage != 0)
+    s_first_page = (g_top_line < 0);
+    if (s_first_page != 0)
     {
         parse_header(g_art);
         mime_set_article();
@@ -173,7 +173,7 @@ DoArticleResult do_article()
             {
                 g_art_pos = -g_art_pos; /* labs(), anyone? */
             }
-            if (s_firstpage)
+            if (s_first_page)
             {
                 g_art_pos = (ArticlePosition) 0;
             }
@@ -198,7 +198,7 @@ DoArticleResult do_article()
             g_is_mime = false;
         }
 #endif
-        if (s_firstpage)
+        if (s_first_page)
         {
             if (g_first_line)
             {
@@ -240,8 +240,8 @@ DoArticleResult do_article()
         }
         for (bool restart_color = true; /* linenum already set */
           g_inner_search? (g_in_header || inner_more())
-           : s_special? (linenum < s_slines)
-           : (s_firstpage && !g_in_header)? (linenum < g_init_lines)
+           : s_special? (linenum < s_special_lines)
+           : (s_first_page && !g_in_header)? (linenum < g_init_lines)
            : (linenum < g_tc_LINES);
              linenum++)
         {                               /* for each line on page */
@@ -288,7 +288,7 @@ DoArticleResult do_article()
                     s_continuation = false;
                 }
             }
-            s_alinebeg = g_art_pos;      /* remember where we began */
+            s_a_line_begin = g_art_pos;      /* remember where we began */
             restart_color = false;
             if (g_in_header)
             {
@@ -599,7 +599,7 @@ DoArticleResult do_article()
                         {
                             std::fputs("^L", stdout);
                         }
-                        if (bufptr == line_ptr(s_alinebeg) && g_highlight != g_art_line_num)
+                        if (bufptr == line_ptr(s_a_line_begin) && g_highlight != g_art_line_num)
                         {
                             linenum = 32700;
                             /* how is that for a magic number? */
@@ -696,7 +696,7 @@ DoArticleResult do_article()
 
             if (s_restart)      /* stranded somewhere in the buffer? */
             {
-                g_art_pos += s_restart - s_alinebeg;
+                g_art_pos += s_restart - s_a_line_begin;
             }
             else if (g_in_header)
             {
@@ -723,7 +723,7 @@ DoArticleResult do_article()
         }
 
         s_special = false;      /* end of page, so reset page length */
-        s_firstpage = false;    /* and say it is not 1st time thru */
+        s_first_page = false;    /* and say it is not 1st time thru */
         g_highlight = -1;
 
         /* extra loop bombout */
@@ -883,7 +883,7 @@ bool maybe_set_color(const char *cp, bool back_search)
 
 /* process pager commands */
 
-PageSwitchResult page_switch()
+static PageSwitchResult page_switch()
 {
     char* s;
 
@@ -897,7 +897,7 @@ PageSwitchResult page_switch()
     {
         ArticleLine i = g_art_line_num;
         g_g_line = 3;
-        s = line_ptr(s_alinebeg);
+        s = line_ptr(s_a_line_begin);
         while (at_nl(*s) && i >= g_top_line)
         {
             ArticlePosition pos = virtual_read(--i);
@@ -913,7 +913,7 @@ PageSwitchResult page_switch()
             s = read_art_buf(false);
             if (s == nullptr)
             {
-                s = line_ptr(s_alinebeg);
+                s = line_ptr(s_a_line_begin);
                 break;
             }
         }
@@ -1055,7 +1055,7 @@ PageSwitchResult page_switch()
     case '\n':                        /* one line down */
     case '\r':
         s_special = true;
-        s_slines = 2;
+        s_special_lines = 2;
         return PS_NORM;
 
     case 'X':
@@ -1076,7 +1076,7 @@ PageSwitchResult page_switch()
         g_do_fseek = true;
         g_art_line_num = g_top_line;
         g_art_line_num = std::max(g_art_line_num, 0);
-        s_firstpage = (g_top_line < 0);
+        s_first_page = (g_top_line < 0);
         return PS_NORM;
 
     case Ctl('e'):
@@ -1138,10 +1138,10 @@ PageSwitchResult page_switch()
                         g_art_pos = -g_art_pos;
                     }
                     seek_art_buf(g_art_pos);
-                    s_alinebeg = virtual_read(g_art_line_num-1);
-                    if (s_alinebeg < 0)
+                    s_a_line_begin = virtual_read(g_art_line_num-1);
+                    if (s_a_line_begin < 0)
                     {
-                        s_alinebeg = -s_alinebeg;
+                        s_a_line_begin = -s_a_line_begin;
                     }
                     goto_xy(0,g_art_line_num-g_top_line);
                     erase_line(false);
@@ -1189,7 +1189,7 @@ PageSwitchResult page_switch()
         g_top_line = g_art_line_num;  /* remember top line of screen */
                                 /*  (line # within article file) */
         g_art_line_num = std::max(g_art_line_num, 0);
-        s_firstpage = (g_top_line < 0);
+        s_first_page = (g_top_line < 0);
         return PS_NORM;
       }
 
@@ -1298,11 +1298,11 @@ leave_pager:
     case 'd':         /* half page */
     case Ctl('d'):
         s_special = true;
-        s_slines = g_tc_LINES / 2 + 1;
+        s_special_lines = g_tc_LINES / 2 + 1;
         /* no divide-by-zero, thank you */
         if (g_tc_LINES > 2 && (g_tc_LINES & 1) && g_art_line_num % (g_tc_LINES-2) >= g_tc_LINES/2 - 1)
         {
-            s_slines++;
+            s_special_lines++;
         }
         goto go_forward;
 
@@ -1323,17 +1323,17 @@ leave_pager:
         else
         {
             s_special = true;
-            s_slines = g_tc_LINES;
+            s_special_lines = g_tc_LINES;
         }
       go_forward:
-          if (*line_ptr(s_alinebeg) != '\f' && (!g_page_stop || s_continuation || !execute(&g_page_compex, line_ptr(s_alinebeg))))
+          if (*line_ptr(s_a_line_begin) != '\f' && (!g_page_stop || s_continuation || !execute(&g_page_compex, line_ptr(s_a_line_begin))))
           {
               if (!s_special //
                   || (g_marking && (*g_buf != 'd' || (g_marking_areas & HALF_PAGE_MARKING))))
               {
-                s_restart = s_alinebeg;
+                s_restart = s_a_line_begin;
                 g_art_line_num--;     /* restart this line */
-                g_art_pos = s_alinebeg;
+                g_art_pos = s_a_line_begin;
                 if (s_special)
                 {
                     up_line();
@@ -1349,7 +1349,7 @@ leave_pager:
               }
               else
               {
-                  s_slines--;
+                  s_special_lines--;
               }
         }
         return PS_NORM;
@@ -1390,7 +1390,7 @@ bool inner_more()
     }
     if (g_art_pos == g_inner_search)      /* just got onto page? */
     {
-        s_isrchline = g_art_line_num;        /* remember first line after */
+        s_i_search_line = g_art_line_num;        /* remember first line after */
         if (g_inner_light)
         {
             g_highlight = g_inner_light;
@@ -1420,7 +1420,7 @@ bool inner_more()
         term_down(1);
     }
 #endif
-    if (g_art_line_num < s_isrchline + g_g_line)
+    if (g_art_line_num < s_i_search_line + g_g_line)
     {
         return true;
     }
@@ -1482,7 +1482,7 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         {
             select_sub_thread(ap, AUTO_KILL_NONE);
             s_special = true;
-            s_slines = 1;
+            s_special_lines = 1;
             push_char(Ctl('r'));
         }
         else if (y > g_tc_LINES/2)
@@ -1500,7 +1500,7 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         {
             kill_sub_thread(ap, AUTO_KILL_NONE);
             s_special = true;
-            s_slines = 1;
+            s_special_lines = 1;
             push_char(Ctl('r'));
         }
         else if (y > g_tc_LINES/2)
