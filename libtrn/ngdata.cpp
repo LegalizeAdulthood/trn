@@ -62,9 +62,9 @@ ArticleNum     g_ng_go_art_num{};          //
 bool           g_novice_delays{true};      /* +f */
 bool           g_in_ng{};                  /* true if in a newsgroup */
 
-static int ngorder_number(const NewsgroupData **npp1, const NewsgroupData **npp2);
-static int ngorder_groupname(const NewsgroupData **npp1, const NewsgroupData **npp2);
-static int ngorder_count(const NewsgroupData **npp1, const NewsgroupData **npp2);
+static int newsgroup_order_number(const NewsgroupData **npp1, const NewsgroupData **npp2);
+static int newsgroup_order_group_name(const NewsgroupData **npp1, const NewsgroupData **npp2);
+static int newsgroup_order_count(const NewsgroupData **npp1, const NewsgroupData **npp2);
 
 void newsgroup_data_init()
 {
@@ -213,17 +213,17 @@ void grow_newsgroup(ArticleNum new_last)
     }
 }
 
-static int ngorder_number(const NewsgroupData **npp1, const NewsgroupData **npp2)
+static int newsgroup_order_number(const NewsgroupData **npp1, const NewsgroupData **npp2)
 {
     return (int)((*npp1)->num - (*npp2)->num) * g_sel_direction;
 }
 
-static int ngorder_groupname(const NewsgroupData **npp1, const NewsgroupData **npp2)
+static int newsgroup_order_group_name(const NewsgroupData **npp1, const NewsgroupData **npp2)
 {
     return string_case_compare((*npp1)->rc_line, (*npp2)->rc_line) * g_sel_direction;
 }
 
-static int ngorder_count(const NewsgroupData **npp1, const NewsgroupData **npp2)
+static int newsgroup_order_count(const NewsgroupData **npp1, const NewsgroupData **npp2)
 {
     int eq = (int)((*npp1)->to_read - (*npp2)->to_read);
     if (eq != 0)
@@ -250,15 +250,15 @@ void sort_newsgroups()
     {
     case SS_NATURAL:
     default:
-        sort_procedure = ngorder_number;
+        sort_procedure = newsgroup_order_number;
         break;
 
     case SS_STRING:
-        sort_procedure = ngorder_groupname;
+        sort_procedure = newsgroup_order_group_name;
         break;
 
     case SS_COUNT:
-        sort_procedure = ngorder_count;
+        sort_procedure = newsgroup_order_count;
         break;
     }
 
