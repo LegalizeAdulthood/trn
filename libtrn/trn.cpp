@@ -142,7 +142,7 @@ int trn_main(int argc, char *argv[])
         g_start_here = nullptr;          /* start ng scan from the top */
     }
 
-    if (g_maxngtodo)
+    if (g_max_newsgroup_to_do)
     {
         g_start_here = nullptr;
     }
@@ -255,14 +255,14 @@ void do_multirc()
             if (g_newsgroup_ptr == nullptr)     /* after the last newsgroup? */
             {
                 set_mode(GM_READ,MM_FINISH_NEWSGROUP_LIST);
-                if (g_maxngtodo)
+                if (g_max_newsgroup_to_do)
                 {
                     if (retry)
                     {
                         if (g_verbose)
                         {
                             std::printf("\nRestriction %s%s still in effect.\n",
-                                   g_ngtodo[0], g_maxngtodo > 1 ? ", etc." : "");
+                                   g_newsgroup_to_do[0], g_max_newsgroup_to_do > 1 ? ", etc." : "");
                         }
                         else
                         {
@@ -296,7 +296,7 @@ void do_multirc()
                 if (g_newsgroup_ptr->to_read >= TR_NONE)         /* recalc toread? */
                 {
                     set_ngname(g_newsgroup_ptr->rc_line);
-                    shoe_fits = inlist(g_ngname.c_str());
+                    shoe_fits = in_list(g_ngname.c_str());
                     if (shoe_fits)
                     {
                         set_toread(g_newsgroup_ptr, ST_LAX);
@@ -797,15 +797,15 @@ reask_abandon:
             {
                 cwd_check();
             }
-            if (doscan && g_maxngtodo)
+            if (doscan && g_max_newsgroup_to_do)
             {
                 scan_active(true);
             }
-            g_newsgroup_min_to_read = *g_buf == g_empty_only_char && g_maxngtodo
+            g_newsgroup_min_to_read = *g_buf == g_empty_only_char && g_max_newsgroup_to_do
                           ? TR_NONE : TR_ONE;
         }
         g_newsgroup_ptr = g_first_newsgroup;   /* simulate ^ */
-        if (*g_msg && !g_maxngtodo)
+        if (*g_msg && !g_max_newsgroup_to_do)
         {
             return ING_MESSAGE;
         }

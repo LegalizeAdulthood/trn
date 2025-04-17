@@ -157,7 +157,7 @@ bool initialize(int argc, char *argv[])
 
     write_last();        /* remember last runtime in .rnlast */
 
-    if (g_maxngtodo)                    /* patterns on command line? */
+    if (g_max_newsgroup_to_do)                    /* patterns on command line? */
     {
         foundany |= scan_active(true);
     }

@@ -707,7 +707,7 @@ static bool open_newsrc(Newsrc *rp)
 
         /* now find out how much there is to read */
 
-        if (!inlist(g_buf) || (g_suppress_cn && s_foundany && !g_paranoid))
+        if (!in_list(g_buf) || (g_suppress_cn && s_foundany && !g_paranoid))
         {
             np->to_read = TR_NONE;       /* no need to calculate now */
         }

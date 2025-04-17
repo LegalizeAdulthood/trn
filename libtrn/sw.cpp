@@ -138,7 +138,7 @@ void decode_switch(const char *s)
 #endif
     if (*s != '-' && *s != '+')         /* newsgroup pattern */
     {
-        setngtodo(s);
+        set_newsgroup_to_do(s);
         if (g_mode == MM_INITIALIZING)
         {
             g_newsgroup_min_to_read = 0;

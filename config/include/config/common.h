@@ -225,7 +225,6 @@ enum
 /* To save D space, cut down size of MAXNGTODO and VARYSIZE. */
 enum
 {
-    MAXNGTODO = 512, /* number of newsgroups allowed on command line */
     VARYSIZE = 256   /* this makes a block 1024 bytes long in DECville */
                      /* (used by virtual array routines) */
 };

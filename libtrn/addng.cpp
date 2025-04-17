@@ -397,19 +397,19 @@ bool scan_active(bool add_matching)
         }
         else
         {
-            if (g_maxngtodo != 1)
+            if (g_max_newsgroup_to_do != 1)
             {
                 std::strcpy(g_buf, "*");
             }
             else
             {
-                if (g_ngtodo[0][0] == '^')
+                if (g_newsgroup_to_do[0][0] == '^')
                 {
-                    std::sprintf(g_buf, "%s*", &g_ngtodo[0][1]);
+                    std::sprintf(g_buf, "%s*", &g_newsgroup_to_do[0][1]);
                 }
                 else
                 {
-                    std::sprintf(g_buf, "*%s*", g_ngtodo[0]);
+                    std::sprintf(g_buf, "*%s*", g_newsgroup_to_do[0]);
                 }
                 if (g_buf[std::strlen(g_buf)-2] == '$')
                 {
@@ -470,7 +470,7 @@ static void scanline(char *actline, bool add_matching)
     {
         return;
     }
-    if (!inlist(actline))
+    if (!in_list(actline))
     {
         return;
     }

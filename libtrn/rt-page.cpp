@@ -433,7 +433,7 @@ try_again:
             {
                 continue;
             }
-            if (!inlist(np->rc_line))
+            if (!in_list(np->rc_line))
             {
                 continue;
             }
@@ -493,7 +493,7 @@ try_again:
                 g_sel_page_np = nullptr;
                 goto try_again;
             }
-            if (g_maxngtodo)
+            if (g_max_newsgroup_to_do)
             {
                 end_only();
                 std::fputs(g_msg, stdout);
@@ -1782,7 +1782,7 @@ void display_page_title(bool home_only)
         {
             std::printf(" out of %ld", (long) g_obj_count);
         }
-        if (g_maxngtodo)
+        if (g_max_newsgroup_to_do)
         {
             std::printf(" (Restriction)");
         }

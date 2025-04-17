@@ -16,29 +16,29 @@
 #include <cstdio>
 #include <cstdlib>
 
-char *g_ngtodo[MAXNGTODO]; /* restrictions in effect */
-int   g_maxngtodo{};       /*  0 => no restrictions */
+char *g_newsgroup_to_do[MAX_NG_TO_DO]; /* restrictions in effect */
+int   g_max_newsgroup_to_do{};       /*  0 => no restrictions */
                            /* >0 => # of entries in g_ngtodo */
 char g_empty_only_char{'o'};
 
 static int     s_save_maxngtodo{};
-static CompiledRegex *s_compextodo[MAXNGTODO]; /* restrictions in compiled form */
+static CompiledRegex *s_compextodo[MAX_NG_TO_DO]; /* restrictions in compiled form */
 
 void only_init()
 {
 }
 
-void setngtodo(const char *pat)
+void set_newsgroup_to_do(const char *pat)
 {
-    int i = g_maxngtodo + s_save_maxngtodo;
+    int i = g_max_newsgroup_to_do + s_save_maxngtodo;
 
     if (!*pat)
     {
         return;
     }
-    if (i < MAXNGTODO)
+    if (i < MAX_NG_TO_DO)
     {
-        g_ngtodo[i] = savestr(pat);
+        g_newsgroup_to_do[i] = savestr(pat);
 #ifndef lint
         s_compextodo[i] = (CompiledRegex*)safemalloc(sizeof(CompiledRegex));
 #endif
@@ -50,21 +50,21 @@ void setngtodo(const char *pat)
             std::printf("\n%s\n",err);
             finalize(1);
         }
-        g_maxngtodo++;
+        g_max_newsgroup_to_do++;
     }
 }
 
 /* if command line list is non-null, is this newsgroup wanted? */
 
-bool inlist(const char *ngnam)
+bool in_list(const char *newsgroup_name)
 {
-    if (g_maxngtodo == 0)
+    if (g_max_newsgroup_to_do == 0)
     {
         return true;
     }
-    for (int i = s_save_maxngtodo; i < g_maxngtodo + s_save_maxngtodo; i++)
+    for (int i = s_save_maxngtodo; i < g_max_newsgroup_to_do + s_save_maxngtodo; i++)
     {
-        if (execute(s_compextodo[i],ngnam))
+        if (execute(s_compextodo[i],newsgroup_name))
         {
             return true;
         }
@@ -74,34 +74,34 @@ bool inlist(const char *ngnam)
 
 void end_only()
 {
-    if (g_maxngtodo)                    /* did they specify newsgroup(s) */
+    if (g_max_newsgroup_to_do)                    /* did they specify newsgroup(s) */
     {
         if (g_verbose)
         {
-            std::sprintf(g_msg, "Restriction %s%s removed.",g_ngtodo[0],
-                   g_maxngtodo > 1 ? ", etc." : "");
+            std::sprintf(g_msg, "Restriction %s%s removed.",g_newsgroup_to_do[0],
+                   g_max_newsgroup_to_do > 1 ? ", etc." : "");
         }
         else
         {
             std::sprintf(g_msg, "Exiting \"only\".");
         }
-        for (int i = s_save_maxngtodo; i < g_maxngtodo + s_save_maxngtodo; i++)
+        for (int i = s_save_maxngtodo; i < g_max_newsgroup_to_do + s_save_maxngtodo; i++)
         {
-            std::free(g_ngtodo[i]);
+            std::free(g_newsgroup_to_do[i]);
             free_compex(s_compextodo[i]);
 #ifndef lint
             std::free((char*)s_compextodo[i]);
 #endif
         }
-        g_maxngtodo = 0;
+        g_max_newsgroup_to_do = 0;
         g_newsgroup_min_to_read = 1;
     }
 }
 
 void push_only()
 {
-    s_save_maxngtodo = g_maxngtodo;
-    g_maxngtodo = 0;
+    s_save_maxngtodo = g_max_newsgroup_to_do;
+    g_max_newsgroup_to_do = 0;
 }
 
 void pop_only()
@@ -110,7 +110,7 @@ void pop_only()
 
     end_only();
 
-    g_maxngtodo = s_save_maxngtodo;
+    g_max_newsgroup_to_do = s_save_maxngtodo;
     s_save_maxngtodo = 0;
 
     g_newsgroup_min_to_read = save_ng_min_toread;
