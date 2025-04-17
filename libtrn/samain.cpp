@@ -165,7 +165,7 @@ void sa_init_mode()
     g_sa_mode_zoom = false;                     /* reset zoom */
 }
 
-SaMainResult sa_mainloop()
+SaMainResult sa_main_loop()
 {
     /* Eventually, strn will need a variable in score.[ch] set when the
      * scoring initialization *failed*, so that strn could try to

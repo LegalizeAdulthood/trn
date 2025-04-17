@@ -266,7 +266,7 @@ int sa_do_cmd()
         break;
 
     case '\t':        /* TAB: toggle threadcount display */
-        g_sa_mode_desc_threadcount = !g_sa_mode_desc_threadcount;
+        g_sa_mode_desc_thread_count = !g_sa_mode_desc_thread_count;
         g_s_ref_desc = 0;
         break;
 
@@ -276,7 +276,7 @@ int sa_do_cmd()
         break;
 
     case '%': /* toggle article # display */
-        g_sa_mode_desc_artnum = !g_sa_mode_desc_artnum;
+        g_sa_mode_desc_art_num = !g_sa_mode_desc_art_num;
         g_s_ref_desc = 0;
         break;
 
@@ -338,7 +338,7 @@ int sa_do_cmd()
 
     case 'z': /* zoom mode toggle */
         g_sa_mode_zoom = !g_sa_mode_zoom;
-        if (g_sa_unzoomrefold && !g_sa_mode_zoom)
+        if (g_sa_unzoom_refold && !g_sa_mode_zoom)
         {
             g_sa_mode_fold = true;
         }

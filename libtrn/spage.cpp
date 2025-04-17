@@ -365,7 +365,7 @@ int s_fillpage()
                 {
                     g_s_ref_top = true; /* for "FOLD" display */
                     g_sa_mode_zoom = false;     /* zoom out */
-                    if (g_sa_unzoomrefold)
+                    if (g_sa_unzoom_refold)
                     {
                         g_sa_mode_fold = true;
                     }

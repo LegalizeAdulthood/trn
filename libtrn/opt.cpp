@@ -890,7 +890,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_SCAN_ART_UNZOOM_FOLD:
-        g_sa_unzoomrefold = YES(s);
+        g_sa_unzoom_refold = YES(s);
         break;
 
     case OI_SCAN_ART_MARK_STAY:
@@ -898,7 +898,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_SCAN_ART_DISP_ART_NUM:
-        g_sa_mode_desc_artnum = YES(s);
+        g_sa_mode_desc_art_num = YES(s);
         break;
 
     case OI_SCAN_ART_DISP_AUTHOR:
@@ -910,7 +910,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_SCAN_ART_DISP_SUB_COUNT:
-        g_sa_mode_desc_threadcount = YES(s);
+        g_sa_mode_desc_thread_count = YES(s);
         break;
 
     case OI_SCAN_ART_DISP_SUBJ:
@@ -1420,13 +1420,13 @@ const char *option_value(OptionIndex num)
         return yes_or_no(g_sa_mode_fold);
 
     case OI_SCAN_ART_UNZOOM_FOLD:
-        return yes_or_no(g_sa_unzoomrefold);
+        return yes_or_no(g_sa_unzoom_refold);
 
     case OI_SCAN_ART_MARK_STAY:
         return yes_or_no(g_sa_mark_stay);
 
     case OI_SCAN_ART_DISP_ART_NUM:
-        return yes_or_no(g_sa_mode_desc_artnum);
+        return yes_or_no(g_sa_mode_desc_art_num);
 
     case OI_SCAN_ART_DISP_AUTHOR:
         return yes_or_no(g_sa_mode_desc_author);
@@ -1435,7 +1435,7 @@ const char *option_value(OptionIndex num)
         return yes_or_no(g_sa_mode_desc_score);
 
     case OI_SCAN_ART_DISP_SUB_COUNT:
-        return yes_or_no(g_sa_mode_desc_threadcount);
+        return yes_or_no(g_sa_mode_desc_thread_count);
 
     case OI_SCAN_ART_DISP_SUBJ:
         return yes_or_no(g_sa_mode_desc_subject);

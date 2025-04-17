@@ -1500,7 +1500,7 @@ run_the_selector:
             break;
 
         case ';':
-            g_sa_do_selthreads = true;
+            g_sa_do_sel_threads = true;
             g_sa_go_explicit = true;
             return AS_SA;
 

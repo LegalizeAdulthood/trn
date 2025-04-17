@@ -140,7 +140,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
     {
     case 1:
         desc_buf[0] = '\0';     /* initialize the buffer */
-        if (g_sa_mode_desc_artnum)
+        if (g_sa_mode_desc_art_num)
         {
             std::sprintf(s_sa_buf,"%6d ",(int)artnum);
             std::strcat(desc_buf,s_sa_buf);
@@ -151,7 +151,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
             std::sprintf(s_sa_buf,"[%4d] ",sc_score_art(artnum,true));
             std::strcat(desc_buf,s_sa_buf);
         }
-        if (g_sa_mode_desc_threadcount)
+        if (g_sa_mode_desc_thread_count)
         {
             std::sprintf(s_sa_buf,"(%3d) ",sa_subj_thread_count(e));
             std::strcat(desc_buf,s_sa_buf);
@@ -199,7 +199,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
 #endif
             i = 0;
             /* if variable widths used later, use them */
-            if (g_sa_mode_desc_artnum)
+            if (g_sa_mode_desc_art_num)
             {
                 i += 7;
             }
@@ -207,7 +207,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
             {
                 i += 7;
             }
-            if (g_sa_mode_desc_threadcount)
+            if (g_sa_mode_desc_thread_count)
             {
                 i += 6;
             }
@@ -243,7 +243,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
 #endif
             i = 0;
             /* if variable widths used later, use them */
-            if (g_sa_mode_desc_artnum)
+            if (g_sa_mode_desc_art_num)
             {
                 i += 7;
             }
@@ -251,7 +251,7 @@ const char *sa_get_desc(long e, int line, bool trunc)
             {
                 i += 7;
             }
-            if (g_sa_mode_desc_threadcount)
+            if (g_sa_mode_desc_thread_count)
             {
                 i += 6;
             }

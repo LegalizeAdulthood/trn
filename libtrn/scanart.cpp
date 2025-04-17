@@ -28,7 +28,7 @@ bool    g_sa_in{};             /* Are we "in" SA? */
 bool    g_sa_go{};             /* go to sa.  Do not pass GO (:-) */
 bool    g_sa_go_explicit{};    /* want to bypass read-next-marked */
 ArticleNum g_sa_art{};            /* used to pass an article number to read soon */
-bool    g_sa_do_selthreads{};  /* select threads from TRN thread selector; re-implement later */
+bool    g_sa_do_sel_threads{};  /* select threads from TRN thread selector; re-implement later */
 bool    g_sa_mode_read_elig{}; /* true if read articles are eligible in trn/scanart.h for world-visibilty */
 
 /* Options */
@@ -37,14 +37,14 @@ bool    g_sa_mode_read_elig{}; /* true if read articles are eligible in trn/scan
  * 1: Arrival order
  * 2: Descending score
  */
-sa_display_order g_sa_mode_order{SA_ORDER_DESCENDING};
+SaDisplayOrder g_sa_mode_order{SA_ORDER_DESCENDING};
 
 /* if true, don't move the cursor after marking or selecting articles */
 bool g_sa_mark_stay{};
 
 /* if true, re-"fold" after an un-zoom operation. */
 /* This flag is useful for very slow terminals */
-bool g_sa_unzoomrefold{};
+bool g_sa_unzoom_refold{};
 
 /* true if in "fold" mode */
 bool g_sa_mode_fold{};
@@ -53,11 +53,11 @@ bool g_sa_mode_fold{};
 bool g_sa_follow{true};
 
 /* Options: what to display */
-bool g_sa_mode_desc_artnum{};     /* show art#s */
+bool g_sa_mode_desc_art_num{};     /* show art#s */
 bool g_sa_mode_desc_author{true}; /* show author */
 bool g_sa_mode_desc_score{true};  /* show score */
 /* flags to determine whether to display various things */
-bool g_sa_mode_desc_threadcount{};
+bool g_sa_mode_desc_thread_count{};
 bool g_sa_mode_desc_subject{true};
 bool g_sa_mode_desc_summary{};
 bool g_sa_mode_desc_keyw{};
@@ -107,17 +107,17 @@ SaMainResult sa_main()
     /* If called from the trn thread-selector and articles/threads were
      * selected there, "select" the articles and enter the zoom mode.
      */
-    if (g_sa_do_selthreads)
+    if (g_sa_do_sel_threads)
     {
         sa_sel_threads();
-        g_sa_do_selthreads = false;
+        g_sa_do_sel_threads = false;
         g_sa_mode_zoom = true;          /* zoom in by default */
         g_s_top_ent = -1;               /* go to top of arts... */
     }
 
     MinorMode sa_oldmode = g_mode; /* save mode */
     g_mode = MM_S;             /* for RN macros */
-    SaMainResult i = sa_mainloop();
+    SaMainResult i = sa_main_loop();
     g_mode = sa_oldmode;                        /* restore mode */
 
     if (i == SA_NORM || i == SA_FAKE)

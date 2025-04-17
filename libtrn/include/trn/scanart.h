@@ -43,7 +43,7 @@ DECLARE_FLAGS_ENUM(ScanArticleFlags, unsigned char);
 struct ScanArticleEntryData
 {
     ArticleNum       artnum;
-    long          subj_thread_num;
+    long             subj_thread_num;
     ScanArticleFlags sa_flags; /* status bitmap (marked, select, etc...) */
 };
 
@@ -64,7 +64,7 @@ extern ArticleNum g_sa_art;
 
 /* reimplement later */
 /* select threads from TRN thread selector */
-extern bool g_sa_do_selthreads;
+extern bool g_sa_do_sel_threads;
 
 /* true if read articles are eligible */
 /* in trn/scanart.h for world-visibilty */
@@ -76,20 +76,20 @@ extern bool g_sa_mode_read_elig;
  * 1: Arrival order
  * 2: Descending score
  */
-enum sa_display_order
+enum SaDisplayOrder
 {
     SA_ORDER_NONE = 0,
     SA_ORDER_ARRIVAL = 1,
     SA_ORDER_DESCENDING = 2,
 };
-extern sa_display_order g_sa_mode_order;
+extern SaDisplayOrder g_sa_mode_order;
 
 /* if true, don't move the cursor after marking or selecting articles */
 extern bool g_sa_mark_stay;
 
 /* if true, re-"fold" after an un-zoom operation. */
 /* This flag is useful for very slow terminals */
-extern bool g_sa_unzoomrefold;
+extern bool g_sa_unzoom_refold;
 
 /* true if in "fold" mode */
 extern bool g_sa_mode_fold;
@@ -98,17 +98,17 @@ extern bool g_sa_mode_fold;
 extern bool g_sa_follow;
 
 /* Options: what to display */
-extern bool g_sa_mode_desc_artnum; /* show art#s */
+extern bool g_sa_mode_desc_art_num; /* show art#s */
 extern bool g_sa_mode_desc_author; /* show author */
 extern bool g_sa_mode_desc_score;  /* show score */
 /* flags to determine whether to display various things */
-extern bool g_sa_mode_desc_threadcount;
+extern bool g_sa_mode_desc_thread_count;
 extern bool g_sa_mode_desc_subject;
 extern bool g_sa_mode_desc_summary;
 extern bool g_sa_mode_desc_keyw;
 
 SaMainResult sa_main();
-SaMainResult sa_mainloop();
+SaMainResult sa_main_loop();
 void sa_grow(ArticleNum oldlast, ArticleNum last);
 void sa_cleanup();
 
