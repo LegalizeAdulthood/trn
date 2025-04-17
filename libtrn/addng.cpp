@@ -37,31 +37,31 @@ AddGroup *g_sel_next_gp{};
 bool      g_quick_start{};           /* -q */
 bool      g_use_add_selector{true}; //
 
-static int s_addgroup_cnt{};
+static int s_add_group_count{};
 
-static int  addng_cmp(const char *key, int keylen, HashDatum data);
-static int  build_addgroup_list(int keylen, HashDatum *data, int extra);
+static int  add_newsgroup_cmp(const char *key, int keylen, HashDatum data);
+static int  build_add_group_list(int keylen, HashDatum *data, int extra);
 static void process_list(GetNewsgroupFlags flag);
 static void new_nntp_groups(DataSource *dp);
 static void new_local_groups(DataSource *dp);
 static void add_to_hash(HashTable *ng, const char *name, int toread, char_int ch);
 static void add_to_list(const char *name, int toread, char_int ch);
 static int  list_groups(int keylen, HashDatum *data, int add_matching);
-static void scanline(char *actline, bool add_matching);
-static int  agorder_number(const AddGroup **app1, const AddGroup **app2);
-static int  agorder_groupname(const AddGroup **app1, const AddGroup **app2);
-static int  agorder_count(const AddGroup **app1, const AddGroup **app2);
+static void scan_line(char *actline, bool add_matching);
+static int  add_group_order_number(const AddGroup **app1, const AddGroup **app2);
+static int  add_group_order_group_name(const AddGroup **app1, const AddGroup **app2);
+static int  add_group_order_count(const AddGroup **app1, const AddGroup **app2);
 
-static int addng_cmp(const char *key, int keylen, HashDatum data)
+static int add_newsgroup_cmp(const char *key, int keylen, HashDatum data)
 {
     return memcmp(key, ((AddGroup *)data.dat_ptr)->name, keylen);
 }
 
-static int build_addgroup_list(int keylen, HashDatum *data, int extra)
+static int build_add_group_list(int keylen, HashDatum *data, int extra)
 {
     AddGroup* node = (AddGroup*)data->dat_ptr;
 
-    node->num = s_addgroup_cnt++;
+    node->num = s_add_group_count++;
     node->next = nullptr;
     node->prev = g_last_add_group;
     if (g_last_add_group)
@@ -143,7 +143,7 @@ static void process_list(GetNewsgroupFlags flag)
     }
     g_first_add_group = nullptr;
     g_last_add_group = nullptr;
-    s_addgroup_cnt = 0;
+    s_add_group_count = 0;
 }
 
 static void new_nntp_groups(DataSource *dp)
@@ -166,7 +166,7 @@ static void new_nntp_groups(DataSource *dp)
         std::printf("Can't get new groups from server:\n%s\n", g_ser_line);
         return;
     }
-    HashTable *newngs = hash_create(33, addng_cmp);
+    HashTable *newngs = hash_create(33, add_newsgroup_cmp);
 
     while (true)
     {
@@ -241,7 +241,7 @@ static void new_nntp_groups(DataSource *dp)
     }
     if (foundSomething)
     {
-        hash_walk(newngs, build_addgroup_list, 0);
+        hash_walk(newngs, build_add_group_list, 0);
         source_file_end_append(&dp->act_sf, dp->extra_name);
         dp->last_new_group = server_time;
     }
@@ -267,7 +267,7 @@ static void new_local_groups(DataSource *dp)
         return;
     }
     std::time_t lastone = std::time(nullptr) - 24L * 60 * 60 - 1;
-    HashTable *newngs = hash_create(33, addng_cmp);
+    HashTable *newngs = hash_create(33, add_newsgroup_cmp);
 
     while (std::fgets(g_buf, LBUFLEN, fp) != nullptr)
     {
@@ -299,7 +299,7 @@ static void new_local_groups(DataSource *dp)
     }
     std::fclose(fp);
 
-    hash_walk(newngs, build_addgroup_list, 0);
+    hash_walk(newngs, build_add_group_list, 0);
     hash_destroy(newngs);
     dp->last_new_group = lastone+1;
     dp->act_sf.recent_cnt = file_size;
@@ -359,7 +359,7 @@ static void add_to_list(const char *name, int toread, char_int ch)
         break;
     }
     node->to_read = (toread < 0)? 0 : toread;
-    node->num = s_addgroup_cnt++;
+    node->num = s_add_group_count++;
     std::strcpy(node->name, name);
     node->data_src = g_data_source;
     node->next = nullptr;
@@ -420,7 +420,7 @@ bool scan_active(bool add_matching)
             {
                 while (!nntp_at_list_end(g_ser_line))
                 {
-                    scanline(g_ser_line,add_matching);
+                    scan_line(g_ser_line,add_matching);
                     if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
                     {
                         break;
@@ -446,11 +446,11 @@ static int list_groups(int keylen, HashDatum *data, int add_matching)
     int const linelen = std::strchr(bp, '\n') - bp + 1;
     (void) memcpy(g_buf,bp,linelen);
     g_buf[linelen] = '\0';
-    scanline(g_buf,add_matching);
+    scan_line(g_buf,add_matching);
     return 0;
 }
 
-static void scanline(char *actline, bool add_matching)
+static void scan_line(char *actline, bool add_matching)
 {
     char *s = std::strchr(actline, ' ');
     if (s == nullptr)
@@ -491,25 +491,25 @@ static void scanline(char *actline, bool add_matching)
     }
 }
 
-static int agorder_number(const AddGroup **app1, const AddGroup **app2)
+static int add_group_order_number(const AddGroup **app1, const AddGroup **app2)
 {
     ArticleNum const eq = (*app1)->num - (*app2)->num;
     return eq > 0? g_sel_direction : -g_sel_direction;
 }
 
-static int agorder_groupname(const AddGroup **app1, const AddGroup **app2)
+static int add_group_order_group_name(const AddGroup **app1, const AddGroup **app2)
 {
     return string_case_compare((*app1)->name, (*app2)->name) * g_sel_direction;
 }
 
-static int agorder_count(const AddGroup **app1, const AddGroup **app2)
+static int add_group_order_count(const AddGroup **app1, const AddGroup **app2)
 {
     long const eq = (*app1)->to_read - (*app2)->to_read;
     if (eq)
     {
         return eq > 0 ? g_sel_direction : -g_sel_direction;
     }
-    return agorder_groupname(app1, app2);
+    return add_group_order_group_name(app1, app2);
 }
 
 /* Sort the newsgroups into the chosen order.
@@ -524,30 +524,30 @@ void sort_add_groups()
     {
     case SS_NATURAL:
     default:
-        sort_procedure = agorder_number;
+        sort_procedure = add_group_order_number;
         break;
     case SS_STRING:
-        sort_procedure = agorder_groupname;
+        sort_procedure = add_group_order_group_name;
         break;
     case SS_COUNT:
-        sort_procedure = agorder_count;
+        sort_procedure = add_group_order_count;
         break;
     }
 
-    AddGroup **ag_list = (AddGroup**)safe_malloc(s_addgroup_cnt * sizeof(AddGroup*));
+    AddGroup **ag_list = (AddGroup**)safe_malloc(s_add_group_count * sizeof(AddGroup*));
     for (lp = ag_list, ap = g_first_add_group; ap; ap = ap->next)
     {
         *lp++ = ap;
     }
-    TRN_ASSERT(lp - ag_list == s_addgroup_cnt);
+    TRN_ASSERT(lp - ag_list == s_add_group_count);
 
-    std::qsort(ag_list, s_addgroup_cnt, sizeof(AddGroup*), (int(*)(void const *, void const *)) sort_procedure);
+    std::qsort(ag_list, s_add_group_count, sizeof(AddGroup*), (int(*)(void const *, void const *)) sort_procedure);
 
     ap = ag_list[0];
     g_first_add_group = ag_list[0];
     ap->prev = nullptr;
     lp = ag_list;
-    for (int i = s_addgroup_cnt; --i; ++lp)
+    for (int i = s_add_group_count; --i; ++lp)
     {
         lp[0]->next = lp[1];
         lp[1]->prev = lp[0];
