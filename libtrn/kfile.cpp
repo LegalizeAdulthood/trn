@@ -33,34 +33,34 @@
 #include <ctime>
 #include <filesystem>
 
-std::FILE          *g_local_kfp{};               /* local (for this newsgroup) file */
-KillFileStateFlags g_kf_state{};               /* the state of our kill files */
-KillFileStateFlags g_kfs_thread_change_set{};  /* bits to set for thread changes */
-int                 g_kf_change_thread_cnt{};       /* # entries changed from old to new */
-ArticleNum             g_kill_first{};              /* used as g_firstart when killing */
+std::FILE         *g_local_kfp{};             /* local (for this newsgroup) file */
+KillFileStateFlags g_kf_state{};              /* the state of our kill files */
+KillFileStateFlags g_kfs_thread_change_set{}; /* bits to set for thread changes */
+int                g_kf_change_thread_cnt{};  /* # entries changed from old to new */
+ArticleNum         g_kill_first{};            /* used as g_firstart when killing */
 
 static void mention(const char *str);
-static bool kfile_junk(char *ptr, int killmask);
-static int write_local_thread_commands(int keylen, HashDatum *data, int extra);
-static int write_global_thread_commands(int keylen, HashDatum *data, int appending);
-static int age_thread_commands(int keylen, HashDatum *data, int elapsed_days);
+static bool kill_file_junk(char *ptr, int killmask);
+static int  write_local_thread_commands(int keylen, HashDatum *data, int extra);
+static int  write_global_thread_commands(int keylen, HashDatum *data, int appending);
+static int  age_thread_commands(int keylen, HashDatum *data, int elapsed_days);
 
-static std::FILE          *s_globkfp{};                /* global article killer file */
-static KillFileStateFlags s_kfs_local_change_clear{}; /* bits to clear local changes */
-static int                 s_kf_thread_cnt{};          /* # entries in the thread kfile */
-static long                s_kf_daynum{};              /* day number for thread killfile */
-static bool                s_exitcmds{};
-static char                s_thread_cmd_ltr[] = "JK,j+S.m";
-static AutoKillFlags      s_thread_cmd_flag[] = {
-         AUTO_KILL_THD, AUTO_KILL_SBJ, AUTO_KILL_FOL, AUTO_KILL_1, AUTO_SEL_THD, AUTO_SEL_SBJ, AUTO_SEL_FOL, AUTO_SEL_1,
+static std::FILE         *s_global_kill_file_fp{};                /* global article killer file */
+static KillFileStateFlags s_kill_file_state_local_change_clear{}; /* bits to clear local changes */
+static int                s_kill_file_thread_cnt{};               /* # entries in the thread kfile */
+static long               s_kill_file_day_num{};                  /* day number for thread killfile */
+static bool               s_exit_cmds{};
+static char               s_thread_cmd_ltr[] = "JK,j+S.m";
+static AutoKillFlags      s_thread_cmd_flag[]{
+    AUTO_KILL_THD, AUTO_KILL_SBJ, AUTO_KILL_FOL, AUTO_KILL_1, AUTO_SEL_THD, AUTO_SEL_SBJ, AUTO_SEL_FOL, AUTO_SEL_1,
 };
-static char  s_killglobal[] = KILLGLOBAL;
-static char  s_killlocal[] = KILLLOCAL;
-static char  s_killthreads[] = KILLTHREADS;
-static bool  s_kill_mentioned;
-static std::FILE *s_newkfp{};
+static char       s_kill_global[] = KILLGLOBAL;
+static char       s_kill_local[] = KILLLOCAL;
+static char       s_kill_threads[] = KILLTHREADS;
+static bool       s_kill_mentioned;
+static std::FILE *s_new_kill_file_fp{};
 
-inline long killfile_daynum(long x)
+inline long kill_file_day_num(long x)
 {
     return (long) std::time(nullptr) / 86400 - 10490 - x;
 }
@@ -70,12 +70,12 @@ void kill_file_init()
     char* cp = get_val("KILLTHREADS");
     if (!cp)
     {
-        cp = s_killthreads;
+        cp = s_kill_threads;
     }
     if (*cp && std::strcmp(cp,"none") != 0)
     {
-        s_kf_daynum = killfile_daynum(0);
-        s_kf_thread_cnt = 0;
+        s_kill_file_day_num = kill_file_day_num(0);
+        s_kill_file_thread_cnt = 0;
         g_kf_change_thread_cnt = 0;
         std::FILE *fp = std::fopen(file_exp(cp), "r");
         if (fp != nullptr)
@@ -94,7 +94,7 @@ void kill_file_init()
                     {
                         *cp++ = '\0';
                     }
-                    int age = s_kf_daynum - std::atol(cp + 1);
+                    int age = s_kill_file_day_num - std::atol(cp + 1);
                     if (age > KF_MAX_DAYS)
                     {
                         g_kf_change_thread_cnt++;
@@ -116,18 +116,18 @@ void kill_file_init()
                         data.dat_len = auto_flag | age;
                         hash_store_last(data);
                     }
-                    s_kf_thread_cnt++;
+                    s_kill_file_thread_cnt++;
                 }
             }
             std::fclose(fp);
         }
         g_kf_state |= KFS_GLOBAL_THREAD_FILE;
-        s_kfs_local_change_clear = KFS_LOCAL_CHANGES;
+        s_kill_file_state_local_change_clear = KFS_LOCAL_CHANGES;
         g_kfs_thread_change_set = KFS_THREAD_CHANGES;
     }
     else
     {
-        s_kfs_local_change_clear = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
+        s_kill_file_state_local_change_clear = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
         g_kfs_thread_change_set = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
     }
 }
@@ -193,7 +193,7 @@ int do_kill_file(std::FILE *kfp, int entering)
             if (!std::strchr(cp, '/'))
             {
                 set_newsgroup_name(cp);
-                cp = file_exp(get_val_const("KILLLOCAL",s_killlocal));
+                cp = file_exp(get_val_const("KILLLOCAL",s_kill_local));
                 set_newsgroup_name(g_newsgroup_ptr->rc_line);
             }
             std::FILE *incfile = std::fopen(cp, "r");
@@ -212,7 +212,7 @@ int do_kill_file(std::FILE *kfp, int entering)
         {
             if (entering)
             {
-                s_exitcmds = true;
+                s_exit_cmds = true;
                 continue;
             }
             bp++;
@@ -369,7 +369,7 @@ int do_kill_file(std::FILE *kfp, int entering)
                 /* FALL THROUGH */
 
             case 'j':
-                article_walk(kfile_junk, killmask);
+                article_walk(kill_file_junk, killmask);
                 break;
             }
             g_kf_state |= KFS_NORMAL_LINES;
@@ -402,7 +402,7 @@ int do_kill_file(std::FILE *kfp, int entering)
     return 0;
 }
 
-static bool kfile_junk(char *ptr, int killmask)
+static bool kill_file_junk(char *ptr, int killmask)
 {
     Article* ap = (Article*)ptr;
     if ((ap->flags & killmask) == AF_UNREAD)
@@ -427,9 +427,9 @@ void kill_unwanted(ArticleNum starting, const char *message, int entering)
     bool anytokill = (g_newsgroup_ptr->to_read > 0);
 
     set_mode(GM_READ,MM_PROCESSING_KILL);
-    if ((entering || s_exitcmds) && (g_local_kfp || s_globkfp))
+    if ((entering || s_exit_cmds) && (g_local_kfp || s_global_kill_file_fp))
     {
-        s_exitcmds = false;
+        s_exit_cmds = false;
         ArticleNum oldfirst = g_first_art;
         g_first_art = starting;
         clear();
@@ -448,9 +448,9 @@ void kill_unwanted(ArticleNum starting, const char *message, int entering)
             intr = do_kill_file(g_local_kfp, entering);
         }
         open_kill_file(KF_GLOBAL);          /* Just in case the name changed */
-        if (s_globkfp && !intr)
+        if (s_global_kill_file_fp && !intr)
         {
-            intr = do_kill_file(s_globkfp, entering);
+            intr = do_kill_file(s_global_kill_file_fp, entering);
         }
         newline();
         if (entering && s_kill_mentioned && g_novice_delays)
@@ -494,7 +494,7 @@ static int write_local_thread_commands(int keylen, HashDatum *data, int extra)
                 break;
             }
         }
-        std::fprintf(s_newkfp,"%s T%c\n", ap->msg_id, ch);
+        std::fprintf(s_new_kill_file_fp,"%s T%c\n", ap->msg_id, ch);
     }
     return 0;
 }
@@ -505,7 +505,7 @@ void rewrite_kill_file(ArticleNum thru)
                                  == KFS_THREAD_LINES;
     bool has_star_commands = false;
     bool needs_newline = false;
-    char* killname = file_exp(get_val_const("KILLLOCAL",s_killlocal));
+    char* killname = file_exp(get_val_const("KILLLOCAL",s_kill_local));
     char* bp;
 
     if (g_local_kfp)
@@ -517,11 +517,11 @@ void rewrite_kill_file(ArticleNum thru)
         make_dir(killname, MD_FILE);
     }
     remove(killname);                   /* to prevent file reuse */
-    g_kf_state &= ~(s_kfs_local_change_clear | KFS_NORMAL_LINES);
-    s_newkfp = std::fopen(killname, "w");
-    if (s_newkfp != nullptr)
+    g_kf_state &= ~(s_kill_file_state_local_change_clear | KFS_NORMAL_LINES);
+    s_new_kill_file_fp = std::fopen(killname, "w");
+    if (s_new_kill_file_fp != nullptr)
     {
-        std::fprintf(s_newkfp,"THRU %s %ld\n",g_newsgroup_ptr->rc->name,(long)thru);
+        std::fprintf(s_new_kill_file_fp,"THRU %s %ld\n",g_newsgroup_ptr->rc->name,(long)thru);
         while (g_local_kfp && std::fgets(g_buf, LBUFLEN, g_local_kfp) != nullptr)
         {
             if (!std::strncmp(g_buf, "THRU", 4))
@@ -535,7 +535,7 @@ void rewrite_kill_file(ArticleNum thru)
                 }
                 if (std::strncmp(cp, g_newsgroup_ptr->rc->name, len) != 0 || (cp[len] && !std::isspace(cp[len])))
                 {
-                    std::fputs(g_buf,s_newkfp);
+                    std::fputs(g_buf,s_new_kill_file_fp);
                     needs_newline = !std::strchr(g_buf,'\n');
                 }
                 continue;
@@ -553,14 +553,14 @@ void rewrite_kill_file(ArticleNum thru)
             }
             else
             {
-                std::fputs(g_buf,s_newkfp);
+                std::fputs(g_buf,s_new_kill_file_fp);
                 needs_newline = !std::strchr(bp,'\n');
             }
             has_content = true;
         }
         if (needs_newline)
         {
-            std::putc('\n', s_newkfp);
+            std::putc('\n', s_new_kill_file_fp);
         }
         if (has_star_commands)
         {
@@ -570,13 +570,13 @@ void rewrite_kill_file(ArticleNum thru)
                 bp = skip_space(g_buf);
                 if (*bp == '*')
                 {
-                    std::fputs(g_buf,s_newkfp);
+                    std::fputs(g_buf,s_new_kill_file_fp);
                     needs_newline = !std::strchr(bp,'\n');
                 }
             }
             if (needs_newline)
             {
-                std::putc('\n', s_newkfp);
+                std::putc('\n', s_new_kill_file_fp);
             }
         }
         if (!(g_kf_state & KFS_GLOBAL_THREAD_FILE))
@@ -584,7 +584,7 @@ void rewrite_kill_file(ArticleNum thru)
             /* Append all the still-valid thread commands */
             hash_walk(g_msg_id_hash, write_local_thread_commands, 0);
         }
-        std::fclose(s_newkfp);
+        std::fclose(s_new_kill_file_fp);
         if (!has_content)
         {
             remove(killname);
@@ -636,8 +636,8 @@ static int write_global_thread_commands(int keylen, HashDatum *data, int appendi
             break;
         }
     }
-    std::fprintf(s_newkfp,"%s %c %ld\n", msgid, ch, s_kf_daynum - age);
-    s_kf_thread_cnt++;
+    std::fprintf(s_new_kill_file_fp,"%s %c %ld\n", msgid, ch, s_kill_file_day_num - age);
+    s_kill_file_thread_cnt++;
 
     return 0;
 }
@@ -675,11 +675,11 @@ void update_thread_kill_file()
         return;
     }
 
-    int elapsed_days = killfile_daynum(s_kf_daynum);
+    int elapsed_days = kill_file_day_num(s_kill_file_day_num);
     if (elapsed_days)
     {
         hash_walk(g_msg_id_hash, age_thread_commands, elapsed_days);
-        s_kf_daynum += elapsed_days;
+        s_kill_file_day_num += elapsed_days;
     }
 
     if (!(g_kf_state & KFS_THREAD_CHANGES))
@@ -687,30 +687,30 @@ void update_thread_kill_file()
         return;
     }
 
-    char *cp = file_exp(get_val_const("KILLTHREADS", s_killthreads));
+    char *cp = file_exp(get_val_const("KILLTHREADS", s_kill_threads));
     make_dir(cp, MD_FILE);
-    if (g_kf_change_thread_cnt * 5 > s_kf_thread_cnt)
+    if (g_kf_change_thread_cnt * 5 > s_kill_file_thread_cnt)
     {
         remove(cp);                     /* to prevent file reuse */
-        s_newkfp = std::fopen(cp, "w");
-        if (s_newkfp == nullptr)
+        s_new_kill_file_fp = std::fopen(cp, "w");
+        if (s_new_kill_file_fp == nullptr)
         {
             return; /* Yikes! */
         }
-        s_kf_thread_cnt = 0;
+        s_kill_file_thread_cnt = 0;
         g_kf_change_thread_cnt = 0;
         hash_walk(g_msg_id_hash, write_global_thread_commands, 0); /* Rewrite */
     }
     else
     {
-        s_newkfp = std::fopen(cp, "a");
-        if (s_newkfp == nullptr)
+        s_new_kill_file_fp = std::fopen(cp, "a");
+        if (s_new_kill_file_fp == nullptr)
         {
             return; /* Yikes! */
         }
         hash_walk(g_msg_id_hash, write_global_thread_commands, 1); /* Append */
     }
-    std::fclose(s_newkfp);
+    std::fclose(s_new_kill_file_fp);
 
     g_kf_state &= ~KFS_THREAD_CHANGES;
 }
@@ -811,11 +811,11 @@ void edit_kill_file()
                 clear_subject(sp);
             }
         }
-        std::strcpy(g_buf,file_exp(get_val_const("KILLLOCAL",s_killlocal)));
+        std::strcpy(g_buf,file_exp(get_val_const("KILLLOCAL",s_kill_local)));
     }
     else
     {
-        std::strcpy(g_buf, file_exp(get_val_const("KILLGLOBAL", s_killglobal)));
+        std::strcpy(g_buf, file_exp(get_val_const("KILLGLOBAL", s_kill_global)));
     }
     if (!make_dir(g_buf, MD_FILE))
     {
@@ -877,7 +877,7 @@ void edit_kill_file()
 
 void open_kill_file(int local)
 {
-    const char *kname = file_exp(local ? get_val_const("KILLLOCAL", s_killlocal) : get_val_const("KILLGLOBAL", s_killglobal));
+    const char *kname = file_exp(local ? get_val_const("KILLLOCAL", s_kill_local) : get_val_const("KILLGLOBAL", s_kill_global));
 
     /* delete the file if it is empty */
     if (std::filesystem::exists(kname) && std::filesystem::file_size(kname) == 0)
@@ -894,17 +894,17 @@ void open_kill_file(int local)
     }
     else
     {
-        if (s_globkfp)
+        if (s_global_kill_file_fp)
         {
-            std::fclose(s_globkfp);
+            std::fclose(s_global_kill_file_fp);
         }
-        s_globkfp = std::fopen(kname,"r");
+        s_global_kill_file_fp = std::fopen(kname,"r");
     }
 }
 
 void kill_file_append(const char *cmd, bool local)
 {
-    std::strcpy(g_cmd_buf, file_exp(local ? get_val_const("KILLLOCAL", s_killlocal) : get_val_const("KILLGLOBAL", s_killglobal)));
+    std::strcpy(g_cmd_buf, file_exp(local ? get_val_const("KILLLOCAL", s_kill_local) : get_val_const("KILLGLOBAL", s_kill_global)));
     if (!make_dir(g_cmd_buf, MD_FILE))
     {
         if (g_verbose)
