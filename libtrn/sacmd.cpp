@@ -629,7 +629,7 @@ int sa_do_cmd()
         }
         if (!sa_extracted_use)
         {
-            sa_extracted_use = safemalloc(LBUFLEN);
+            sa_extracted_use = safe_malloc(LBUFLEN);
 /* later consider a variable for the default command */
             *sa_extracted_use = '\0';
         }
@@ -650,7 +650,7 @@ int sa_do_cmd()
         }
         if (s_sa_extract_dest == nullptr)
         {
-            s_sa_extract_dest = (char*)safemalloc(LBUFLEN);
+            s_sa_extract_dest = (char*)safe_malloc(LBUFLEN);
             safecpy(s_sa_extract_dest,filexp("%p"),LBUFLEN);
         }
         if (*decode_dest != '/' && *decode_dest != '~' && *decode_dest != '%')

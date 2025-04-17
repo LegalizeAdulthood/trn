@@ -8,7 +8,7 @@
 #include "config/common.h"             /* Declare MemorySize */
 #include "trn/edit_dist.h"
 
-#include "trn/util.h"               /* Declare safemalloc() */
+#include "trn/util.h"               /* Declare safe_malloc() */
 
 #include <algorithm>
 #include <cstdlib>

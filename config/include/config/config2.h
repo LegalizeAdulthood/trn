@@ -16,8 +16,8 @@
 
 #ifdef USE_DEBUGGING_MALLOC
 #   include "malloc.h"
-#   define safemalloc malloc
-#   define saferealloc realloc
+#   define safe_malloc malloc
+#   define safe_realloc realloc
 #endif
 
 #include <string.h>

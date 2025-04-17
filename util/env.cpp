@@ -496,7 +496,7 @@ char *export_var(const char *nam, const char *val)
         {
 #ifndef lint
             char** tmpenv = (char**)    /* point our wand at memory */
-                safemalloc((MemorySize) (i+2) * sizeof(char*));
+                safe_malloc((MemorySize) (i+2) * sizeof(char*));
 #else
             char** tmpenv = nullptr;
 #endif /* lint */
@@ -511,14 +511,14 @@ char *export_var(const char *nam, const char *val)
 #ifndef lint
         else
         {
-            environ = (char**) saferealloc((char*) environ,
+            environ = (char**) safe_realloc((char*) environ,
                 (MemorySize) (i+2) * sizeof(char*));
                                         /* just expand it a bit */
         }
 #endif /* lint */
         environ[i+1] = nullptr; /* make sure it's null terminated */
     }
-    environ[i] = safemalloc((MemorySize)(namlen + std::strlen(val) + 2));
+    environ[i] = safe_malloc((MemorySize)(namlen + std::strlen(val) + 2));
                                         /* this may or may not be in */
                                         /* the old environ structure */
     std::sprintf(environ[i],"%s=%s",nam,val);/* all that work just for this */
