@@ -197,7 +197,7 @@ int do_shell(const char *shell, const char *cmd)
     pid = vfork();
     if (pid == 0)
     {
-        if (g_nowait_fork)
+        if (g_no_wait_fork)
         {
             close(1);
             close(2);
