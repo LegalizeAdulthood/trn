@@ -187,7 +187,7 @@ void thread_grow()
         cache_range(g_last_cached + 1, g_lastart);
     }
     count_subjects(CS_NORM);
-    if (g_artptr_list)
+    if (g_art_ptr_list)
     {
         sort_articles();
     }
@@ -228,14 +228,14 @@ static int cleanup_msgid_hash(int keylen, HashDatum *data, int extra)
         {
             return 0;
         }
-        if ((g_kf_state & KFS_GLOBAL_THREADFILE) && ap->autofl)
+        if ((g_kf_state & KFS_GLOBAL_THREADFILE) && ap->auto_flags)
         {
-            data->dat_ptr = ap->msgid;
-            data->dat_len = ap->autofl;
+            data->dat_ptr = ap->msg_id;
+            data->dat_len = ap->auto_flags;
             ret = 0;
-            ap->msgid = nullptr;
+            ap->msg_id = nullptr;
         }
-        if (ap->flags & AF_TMPMEM)
+        if (ap->flags & AF_TMP_MEM)
         {
             clear_article(ap);
             std::free(ap);
@@ -317,18 +317,18 @@ void inc_art(bool sel_flag, bool rereading)
     int subj_mask = (rereading? 0 : SF_VISIT);
 
     /* Use the explicit article-order if it exists */
-    if (g_artptr_list)
+    if (g_art_ptr_list)
     {
-        Article** limit = g_artptr_list + g_artptr_list_size;
+        Article** limit = g_art_ptr_list + g_art_ptr_list_size;
         if (!ap)
         {
-            g_artptr = g_artptr_list - 1;
+            g_art_ptr = g_art_ptr_list - 1;
         }
-        else if (!g_artptr || *g_artptr != ap)
+        else if (!g_art_ptr || *g_art_ptr != ap)
         {
-            for (g_artptr = g_artptr_list; g_artptr < limit; g_artptr++)
+            for (g_art_ptr = g_art_ptr_list; g_art_ptr < limit; g_art_ptr++)
             {
-                if (*g_artptr == ap)
+                if (*g_art_ptr == ap)
                 {
                     break;
                 }
@@ -336,29 +336,29 @@ void inc_art(bool sel_flag, bool rereading)
         }
         do
         {
-            if (++g_artptr >= limit)
+            if (++g_art_ptr >= limit)
             {
                 break;
             }
-            ap = *g_artptr;
+            ap = *g_art_ptr;
         } while ((!rereading && !(ap->flags & AF_UNREAD))
               || (sel_flag && !(ap->flags & AF_SEL)));
-        if (g_artptr < limit)
+        if (g_art_ptr < limit)
         {
-            g_artp = *g_artptr;
+            g_artp = *g_art_ptr;
             g_art = article_num(g_artp);
         }
         else
         {
             g_artp = nullptr;
             g_art = g_lastart+1;
-            g_artptr = g_artptr_list;
+            g_art_ptr = g_art_ptr_list;
         }
         return;
     }
 
     /* Use subject- or thread-order when possible */
-    if (g_threaded_group || g_srchahead)
+    if (g_threaded_group || g_search_ahead)
     {
         Subject* sp;
         if (ap)
@@ -460,18 +460,18 @@ void dec_art(bool sel_flag, bool rereading)
     int subj_mask = (rereading? 0 : SF_VISIT);
 
     /* Use the explicit article-order if it exists */
-    if (g_artptr_list)
+    if (g_art_ptr_list)
     {
-        Article** limit = g_artptr_list + g_artptr_list_size;
+        Article** limit = g_art_ptr_list + g_art_ptr_list_size;
         if (!ap)
         {
-            g_artptr = limit;
+            g_art_ptr = limit;
         }
-        else if (!g_artptr || *g_artptr != ap)
+        else if (!g_art_ptr || *g_art_ptr != ap)
         {
-            for (g_artptr = g_artptr_list; g_artptr < limit; g_artptr++)
+            for (g_art_ptr = g_art_ptr_list; g_art_ptr < limit; g_art_ptr++)
             {
-                if (*g_artptr == ap)
+                if (*g_art_ptr == ap)
                 {
                     break;
                 }
@@ -479,20 +479,20 @@ void dec_art(bool sel_flag, bool rereading)
         }
         do
         {
-            if (g_artptr == g_artptr_list)
+            if (g_art_ptr == g_art_ptr_list)
             {
                 break;
             }
-            ap = *--g_artptr;
+            ap = *--g_art_ptr;
         } while ((!rereading && !(ap->flags & AF_UNREAD))
               || (sel_flag && !(ap->flags & AF_SEL)));
-        g_artp = *g_artptr;
+        g_artp = *g_art_ptr;
         g_art = article_num(g_artp);
         return;
     }
 
     /* Use subject- or thread-order when possible */
-    if (g_threaded_group || g_srchahead)
+    if (g_threaded_group || g_search_ahead)
     {
         Subject* sp;
         if (ap)
@@ -712,7 +712,7 @@ bool next_art_with_subj()
           || (g_selected_only && !(ap->flags & AF_SEL)));
     g_artp = ap;
     g_art = article_num(ap);
-    g_srchahead = -1;
+    g_search_ahead = -1;
     return true;
 }
 
@@ -885,12 +885,12 @@ void select_subject(Subject *subj, AutoKillFlags auto_flags)
             g_selected_subj_cnt++;
         }
         subj->flags = (subj->flags & ~SF_DEL)
-                    | static_cast<SubjectFlags>(g_sel_mask) | SF_VISIT | SF_WASSELECTED;
+                    | static_cast<SubjectFlags>(g_sel_mask) | SF_VISIT | SF_WAS_SELECTED;
         g_selected_only = true;
     }
     else
     {
-        subj->flags |= SF_WASSELECTED;
+        subj->flags |= SF_WAS_SELECTED;
     }
 }
 
@@ -1024,7 +1024,7 @@ void deselect_subject(Subject *subj)
         subj->flags &= ~static_cast<SubjectFlags>(g_sel_mask);
         g_selected_subj_cnt--;
     }
-    subj->flags &= ~(SF_VISIT | SF_WASSELECTED);
+    subj->flags &= ~(SF_VISIT | SF_WAS_SELECTED);
     if (g_sel_rereading)
     {
         subj->flags |= SF_DEL;
@@ -1124,7 +1124,7 @@ void kill_subject(Subject *subj, AutoKillFlags auto_flags)
             change_auto_flags(ap, auto_flags);
         }
     }
-    subj->flags &= ~(SF_VISIT | SF_WASSELECTED);
+    subj->flags &= ~(SF_VISIT | SF_WAS_SELECTED);
 }
 
 /* Kill all unread articles attached to this article's thread.
@@ -1201,7 +1201,7 @@ void unkill_subject(Subject *subj)
     {
         if (g_sel_rereading)
         {
-            if (all_bits(ap->flags, AF_DELSEL | AF_EXISTS))
+            if (all_bits(ap->flags, AF_DEL_SEL | AF_EXISTS))
             {
                 if (!(ap->flags & AF_UNREAD))
                 {
@@ -1211,11 +1211,11 @@ void unkill_subject(Subject *subj)
                 {
                     g_selected_count++;
                 }
-                ap->flags = (ap->flags & ~AF_DELSEL) | AF_SEL|AF_UNREAD;
+                ap->flags = (ap->flags & ~AF_DEL_SEL) | AF_SEL|AF_UNREAD;
             }
             else
             {
-                ap->flags &= ~(AF_DEL | AF_DELSEL);
+                ap->flags &= ~(AF_DEL | AF_DEL_SEL);
             }
         }
         else
@@ -1234,10 +1234,10 @@ void unkill_subject(Subject *subj)
     if (g_selected_count != save_sel_count //
         && g_selected_only && !(subj->flags & SF_SEL))
     {
-        subj->flags |= SF_SEL | SF_VISIT | SF_WASSELECTED;
+        subj->flags |= SF_SEL | SF_VISIT | SF_WAS_SELECTED;
         g_selected_subj_cnt++;
     }
-    subj->flags &= ~(SF_DEL|SF_DELSEL);
+    subj->flags &= ~(SF_DEL|SF_DEL_SEL);
 }
 
 /* Unkill all the articles attached to the given thread.
@@ -1616,11 +1616,11 @@ void count_subjects(CountSubjectMode cmode)
         {
             if (sp->flags & SF_VISIT)
             {
-                sp->flags = (sp->flags & ~SF_VISIT) | SF_OLDVISIT;
+                sp->flags = (sp->flags & ~SF_VISIT) | SF_OLD_VISIT;
             }
             else
             {
-                sp->flags &= ~SF_OLDVISIT;
+                sp->flags &= ~SF_OLD_VISIT;
             }
         }
         break;
@@ -1628,7 +1628,7 @@ void count_subjects(CountSubjectMode cmode)
     case CS_RESELECT:
         for (sp = g_first_subject; sp; sp = sp->next)
         {
-            if (sp->flags & SF_OLDVISIT)
+            if (sp->flags & SF_OLD_VISIT)
             {
                 sp->flags |= SF_VISIT;
             }
@@ -2085,7 +2085,7 @@ void sort_articles()
     build_artptrs();
 
     /* If we don't have at least two articles, we're done! */
-    if (g_artptr_list_size < 2)
+    if (g_art_ptr_list_size < 2)
     {
         return;
     }
@@ -2122,7 +2122,7 @@ void sort_articles()
         break;
     }
     g_sel_page_app = nullptr;
-    std::qsort(g_artptr_list, g_artptr_list_size, sizeof (Article*), ((int(*)(void const *, void const *))sort_procedure));
+    std::qsort(g_art_ptr_list, g_art_ptr_list_size, sizeof (Article*), ((int(*)(void const *, void const *))sort_procedure));
 }
 
 static void build_artptrs()
@@ -2130,13 +2130,13 @@ static void build_artptrs()
     ArticleNum count = g_obj_count;
     int desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
 
-    if (!g_artptr_list || g_artptr_list_size != count)
+    if (!g_art_ptr_list || g_art_ptr_list_size != count)
     {
-        g_artptr_list = (Article**)saferealloc((char*)g_artptr_list,
+        g_art_ptr_list = (Article**)saferealloc((char*)g_art_ptr_list,
                 (MemorySize)count * sizeof (Article*));
-        g_artptr_list_size = count;
+        g_art_ptr_list_size = count;
     }
-    Article **app = g_artptr_list;
+    Article **app = g_art_ptr_list;
     for (ArticleNum an = article_first(g_absfirst); count; an = article_next(an))
     {
         Article *ap = article_ptr(an);

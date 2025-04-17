@@ -500,7 +500,7 @@ char *fetchlines(ArticleNum artnum, HeaderLineType which_line)
     if (g_parsed_art != artnum)
     {
         /* If the line is not in the cache, this will parse the header */
-        s = fetchcache(artnum,which_line, FILL_CACHE);
+        s = fetch_cache(artnum,which_line, FILL_CACHE);
         if (s)
         {
             return savestr(s);
@@ -545,7 +545,7 @@ char *mp_fetchlines(ArticleNum artnum, HeaderLineType which_line, MemoryPool poo
     if (g_parsed_art != artnum)
     {
         /* If the line is not in the cache, this will parse the header */
-        s = fetchcache(artnum,which_line, FILL_CACHE);
+        s = fetch_cache(artnum,which_line, FILL_CACHE);
         if (s)
         {
             return mp_savestr(s, pool);
@@ -609,7 +609,7 @@ char *prefetchlines(ArticleNum artnum, HeaderLineType which_line, bool copy)
         ArticleNum lastnum;
         bool    hasxhdr = true;
 
-        s = fetchcache(artnum,which_line, DONT_FILL_CACHE);
+        s = fetch_cache(artnum,which_line, DONT_FILL_CACHE);
         if (s)
         {
             if (copy)
@@ -736,7 +736,7 @@ char *prefetchlines(ArticleNum artnum, HeaderLineType which_line, bool copy)
     s = nullptr;
     if (g_parsed_art != artnum)
     {
-        s = fetchcache(artnum, which_line, FILL_CACHE);
+        s = fetch_cache(artnum, which_line, FILL_CACHE);
     }
     if (g_parsed_art == artnum && (firstpos = g_htype[which_line].minpos) < 0)
     {

@@ -232,7 +232,7 @@ void sc_set_score(ArticleNum a, int score)
 
     Article *ap = article_ptr(a);
     ap->score = score;  /* update the score */
-    ap->scoreflags |= SFLAG_SCORED;
+    ap->score_flags |= SFLAG_SCORED;
     g_s_order_changed = true;   /* resort */
 }
 

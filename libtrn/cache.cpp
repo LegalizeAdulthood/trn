@@ -39,10 +39,10 @@
 #include <ctime>
 
 List     *g_article_list{};         /* a list of ARTICLEs */
-Article **g_artptr_list{};          /* the article-selector creates this */
-Article **g_artptr{};               /* ditto -- used for article order */
-ArticleNum   g_artptr_list_size{};     //
-ArticleNum   g_srchahead{};            /* are we in subject scan mode? (if so, contains art # found or -1) */
+Article **g_art_ptr_list{};          /* the article-selector creates this */
+Article **g_art_ptr{};               /* ditto -- used for article order */
+ArticleNum   g_art_ptr_list_size{};     //
+ArticleNum   g_search_ahead{};            /* are we in subject scan mode? (if so, contains art # found or -1) */
 ArticleNum   g_first_cached{};         //
 ArticleNum   g_last_cached{};          //
 bool      g_cached_all_in_range{};  //
@@ -148,12 +148,12 @@ void close_cache()
     g_subject_count = 0;                /* just to be sure */
     g_parsed_art = 0;
 
-    if (g_artptr_list)
+    if (g_art_ptr_list)
     {
-        std::free(g_artptr_list);
-        g_artptr_list = nullptr;
+        std::free(g_art_ptr_list);
+        g_art_ptr_list = nullptr;
     }
-    g_artptr = nullptr;
+    g_art_ptr = nullptr;
     thread_close();
 
     if (g_article_list)
@@ -212,7 +212,7 @@ void cache_article(Article *ap)
         }
         else
         {
-            if (ap->subj->flags & SF_WASSELECTED)
+            if (ap->subj->flags & SF_WAS_SELECTED)
             {
 #if 0
                 if (g_selected_only)
@@ -429,14 +429,14 @@ void uncache_article(Article *ap, bool remove_empties)
 
 /* get the header line from an article's cache or parse the article trying */
 
-char *fetchcache(ArticleNum artnum, HeaderLineType which_line, bool fill_cache)
+char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache)
 {
     char* s;
     Article* ap;
     bool cached = (g_htype[which_line].flags & HT_CACHED);
 
     /* article_find() returns a nullptr if the artnum value is invalid */
-    if (!(ap = article_find(artnum)) || !(ap->flags & AF_EXISTS))
+    if (!(ap = article_find(art_num)) || !(ap->flags & AF_EXISTS))
     {
         return "";
     }
@@ -448,7 +448,7 @@ char *fetchcache(ArticleNum artnum, HeaderLineType which_line, bool fill_cache)
     {
         return nullptr;
     }
-    if (!parseheader(artnum))
+    if (!parseheader(art_num))
     {
         return "";
     }
@@ -469,7 +469,7 @@ char *get_cached_line(Article *ap, HeaderLineType which_line, bool no_truncs)
     switch (which_line)
     {
     case SUBJ_LINE:
-        if (!ap->subj || (no_truncs && (ap->subj->flags & SF_SUBJTRUNCED)))
+        if (!ap->subj || (no_truncs && (ap->subj->flags & SF_SUBJ_TRUNCATED)))
         {
             s = nullptr;
         }
@@ -488,7 +488,7 @@ char *get_cached_line(Article *ap, HeaderLineType which_line, bool no_truncs)
         break;
 
     case MSGID_LINE:
-        s = ap->msgid;
+        s = ap->msg_id;
         break;
 
     case LINES_LINE:
@@ -752,11 +752,11 @@ void set_cached_line(Article *ap, int which_line, char *s)
         break;
 
     case MSGID_LINE:
-        if (ap->msgid)
+        if (ap->msg_id)
         {
-            std::free(ap->msgid);
+            std::free(ap->msg_id);
         }
-        ap->msgid = s;
+        ap->msg_id = s;
         break;
 
     case LINES_LINE:
@@ -769,10 +769,10 @@ void set_cached_line(Article *ap, int which_line, char *s)
     }
 }
 
-int subject_cmp(const char *key, int keylen, HashDatum data)
+int subject_cmp(const char *key, int key_len, HashDatum data)
 {
     /* We already know that the lengths are equal, just compare the strings */
-    return std::memcmp(key, ((Subject*)data.dat_ptr)->str+4, keylen);
+    return std::memcmp(key, ((Subject*)data.dat_ptr)->str+4, key_len);
 }
 
 /* see what we can do while they are reading */
@@ -1219,9 +1219,9 @@ void clear_article(Article *ap)
     {
         std::free(ap->from);
     }
-    if (ap->msgid)
+    if (ap->msg_id)
     {
-        std::free(ap->msgid);
+        std::free(ap->msg_id);
     }
     if (ap->xrefs && !empty(ap->xrefs))
     {

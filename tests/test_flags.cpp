@@ -179,7 +179,7 @@ static AddGroupSubjectFlag subject_equivs[] =
     { AGF_NONE, SF_NONE },
     { AGF_DEL, SF_DEL },
     { AGF_SEL, SF_SEL },
-    { AGF_DEL_SEL, SF_DELSEL }
+    { AGF_DEL_SEL, SF_DEL_SEL }
     // clang-format on
 };
 
@@ -198,7 +198,7 @@ static AddGroupArticleFlag article_equivs[] =
     { AGF_NONE, AF_NONE },
     { AGF_DEL, AF_DEL },
     { AGF_SEL, AF_SEL },
-    { AGF_DEL_SEL, AF_DELSEL }
+    { AGF_DEL_SEL, AF_DEL_SEL }
     // clang-format on
 };
 

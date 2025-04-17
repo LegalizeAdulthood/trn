@@ -951,7 +951,7 @@ int sf_score(ArticleNum a)
                     sum = sum + s_sf_entries[j].score;
                     if (h == FROM_LINE)
                     {
-                        article_ptr(a)->scoreflags |= SFLAG_AUTHOR;
+                        article_ptr(a)->score_flags |= SFLAG_AUTHOR;
                     }
                     if (g_sf_score_verbose)
                     {
@@ -961,7 +961,7 @@ int sf_score(ArticleNum a)
             }
         }
     }
-    if (s_newauthor_active && !(article_ptr(a)->scoreflags & SFLAG_AUTHOR))
+    if (s_newauthor_active && !(article_ptr(a)->score_flags & SFLAG_AUTHOR))
     {
         sum = sum+s_newauthor;  /* add new author bonus */
         if (g_sf_score_verbose)
@@ -973,7 +973,7 @@ int sf_score(ArticleNum a)
     if (s_reply_active)
     {
         /* should be in cache if a rule above used the subject */
-        s = fetchcache(a, SUBJ_LINE, true);
+        s = fetch_cache(a, SUBJ_LINE, true);
         /* later: consider other possible reply forms (threading?) */
         if (s && subject_has_Re(s, nullptr))
         {
@@ -1087,7 +1087,7 @@ void sf_append(char *line)
 
         case 'S':     /* current subject */
             std::strcpy(lbuf,scoreline);
-            s = fetchcache(g_art, SUBJ_LINE,true);
+            s = fetch_cache(g_art, SUBJ_LINE,true);
             if (!s || !*s)
             {
                 std::printf("No subject: score entry aborted.\n");
@@ -1183,7 +1183,7 @@ char *sf_get_line(ArticleNum a, HeaderLineType h)
     }
     else if (h == SUBJ_LINE)
     {
-        s = fetchcache(a,h,true);       /* get compressed copy */
+        s = fetch_cache(a,h,true);       /* get compressed copy */
     }
     else
     {

@@ -321,22 +321,22 @@ sel_exit:
     }
     if (g_sel_mode != SM_ARTICLE || g_sel_sort == SS_GROUPS || g_sel_sort == SS_STRING)
     {
-        if (g_artptr_list)
+        if (g_art_ptr_list)
         {
-            std::free((char*)g_artptr_list);
-            g_artptr_list = nullptr;
+            std::free((char*)g_art_ptr_list);
+            g_art_ptr_list = nullptr;
             g_sel_page_app = nullptr;
             sort_subjects();
         }
-        g_artptr = nullptr;
+        g_art_ptr = nullptr;
         if (!g_threaded_group)
         {
-            g_srchahead = -1;
+            g_search_ahead = -1;
         }
     }
     else
     {
-        g_srchahead = 0;
+        g_search_ahead = 0;
     }
     g_selected_only = (g_selected_count != 0);
     if (s_sel_ret == '+')
@@ -2542,14 +2542,14 @@ static DisplayState article_commands(char_int ch)
             if (g_sel_mode == SM_ARTICLE)
             {
                 Article** app;
-                Article **limit = g_artptr_list + g_artptr_list_size;
+                Article **limit = g_art_ptr_list + g_art_ptr_list_size;
                 if (ch == 'D')
                 {
                     app = g_sel_page_app;
                 }
                 else
                 {
-                    app = g_artptr_list;
+                    app = g_art_ptr_list;
                 }
                 while (app < limit)
                 {
@@ -2604,7 +2604,7 @@ static DisplayState article_commands(char_int ch)
                 g_sel_item_index = 0;
                 return DS_DISPLAY;
             }
-            if (g_artptr_list && g_obj_count)
+            if (g_art_ptr_list && g_obj_count)
             {
                 sort_articles();
             }

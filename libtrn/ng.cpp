@@ -167,7 +167,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
         return NG_ERROR;
     }
 
-    g_srchahead = (g_scanon && !g_threaded_group        /* did they say -S? */
+    g_search_ahead = (g_scanon && !g_threaded_group        /* did they say -S? */
               && ((ArticleNum)g_ngptr->toread) >= g_scanon ? -1 : 0);
 
     /* FROM HERE ON, RETURN THRU CLEANUP OR WE ARE SCREWED */
@@ -278,7 +278,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 g_art = g_lastart + 1;
             }
         }
-        if (g_art != 0 || (g_artp && !(g_artp->flags & AF_TMPMEM)))
+        if (g_art != 0 || (g_artp && !(g_artp->flags & AF_TMP_MEM)))
         {
             g_artp = article_find(g_art);
         }
@@ -384,7 +384,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
             }
             set_mode(g_general_mode,MM_ARTICLE_END);
             g_prompt = whatnext;
-            g_srchahead = 0;                /* no more subject search mode */
+            g_search_ahead = 0;                /* no more subject search mode */
             std::fputs("\n\n",stdout);
             termdown(2);
         }
@@ -421,10 +421,10 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                                         /*  (line # within article file) */
             }
             clear();                    /* clear screen */
-            if (g_art == 0 && g_artp && g_artp->msgid && (g_datasrc->flags & DF_REMOTE) //
+            if (g_art == 0 && g_artp && g_artp->msg_id && (g_datasrc->flags & DF_REMOTE) //
                 && !(g_artp->flags & AF_CACHED))
             {
-                g_art = nntp_stat_id(g_artp->msgid);
+                g_art = nntp_stat_id(g_artp->msg_id);
                 if (g_art < 0)
                 {
                     s_exit_code = NG_NOSERVER;
@@ -454,7 +454,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                 virtual_write(g_art_line_num,(ArticlePosition)0);
                 finish_tree(linenum);
                 g_prompt = whatnext;
-                g_srchahead = 0;
+                g_search_ahead = 0;
             }
             else                        /* found it, so print it */
             {
@@ -1018,7 +1018,7 @@ not_threaded:
         {
             dec_art(g_selected_only,false);
         } while (g_art >= g_firstart && (was_read(g_art) || !parseheader(g_art)));
-        g_srchahead = 0;
+        g_search_ahead = 0;
         if (g_art >= g_firstart)
         {
             return AS_NORM;
@@ -1051,7 +1051,7 @@ not_threaded:
             return AS_ASK;
         }
         g_reread = true;
-        g_srchahead = 0;
+        g_search_ahead = 0;
         return AS_NORM;
 
     case '-':
@@ -1062,7 +1062,7 @@ not_threaded:
             g_artp = g_recent_artp;
             g_reread = true;
             g_forcelast = true;
-            g_srchahead = -(g_srchahead != 0);
+            g_search_ahead = -(g_search_ahead != 0);
             return AS_NORM;
         }
         s_exit_code = NG_MINUS;
@@ -1099,7 +1099,7 @@ not_threaded:
                 return AS_SA;
             }
         }
-        else if (g_scanon && !g_threaded_group && g_srchahead)
+        else if (g_scanon && !g_threaded_group && g_search_ahead)
         {
             *g_buf = Ctl('n');
             if (!next_art_with_subj())
@@ -1156,7 +1156,7 @@ not_threaded:
                 top_article();
             }
         }
-        g_srchahead = 0;
+        g_search_ahead = 0;
         return AS_NORM;
 
     case 'N':                 /* goto next article */
@@ -1210,14 +1210,14 @@ not_threaded:
         {
             g_forcelast = true;
         }
-        g_srchahead = 0;
+        g_search_ahead = 0;
         return AS_NORM;
 
     case '$':
         g_art = g_lastart+1;
         g_artp = nullptr;
         g_forcelast = true;
-        g_srchahead = 0;
+        g_search_ahead = 0;
         return AS_NORM;
 
     case '0':
@@ -1235,9 +1235,9 @@ not_threaded:
 
         case NN_REREAD:
             g_reread = true;
-            if (g_srchahead)
+            if (g_search_ahead)
             {
-                g_srchahead = -1;
+                g_search_ahead = -1;
             }
             break;
 
@@ -1326,7 +1326,7 @@ normal_search:
             }
             termdown(1);
             pad(g_just_a_sec/3);        /* 1/3 second */
-            if (!g_srchahead)
+            if (!g_search_ahead)
             {
                 g_art = g_curr_art;
                 return AS_ASK;
@@ -1526,7 +1526,7 @@ run_the_selector:
 
     case '^':
         top_article();
-        g_srchahead = 0;
+        g_search_ahead = 0;
         return AS_NORM;
 
 #ifdef DEBUG
@@ -1762,7 +1762,7 @@ run_the_selector:
             {
                 g_reread = true;
             }
-            g_srchahead = 0;
+            g_search_ahead = 0;
             return AS_NORM;
 
         case '+':
@@ -1891,7 +1891,7 @@ void setdfltcmd()
         }
         else
 #endif
-        if (g_srchahead)
+        if (g_search_ahead)
         {
             g_dfltcmd = "^Nnpq";
         }

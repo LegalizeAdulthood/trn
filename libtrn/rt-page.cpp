@@ -742,7 +742,7 @@ try_again:
         if (g_sel_page_app)
         {
             int desired_flags = (g_sel_rereading? AF_EXISTS:(AF_EXISTS|AF_UNREAD));
-            limit = g_artptr_list + g_artptr_list_size;
+            limit = g_art_ptr_list + g_art_ptr_list_size;
             ap = nullptr;
             for (app = g_sel_page_app; app < limit; app++)
             {
@@ -755,11 +755,11 @@ try_again:
             sort_articles();
             if (ap == nullptr)
             {
-                g_sel_page_app = g_artptr_list + g_artptr_list_size;
+                g_sel_page_app = g_art_ptr_list + g_art_ptr_list_size;
             }
             else
             {
-                for (app = g_artptr_list; app < limit; app++)
+                for (app = g_art_ptr_list; app < limit; app++)
                 {
                     if (*app == ap)
                     {
@@ -779,8 +779,8 @@ try_again:
             g_sel_page_sp = g_sel_page_sp->next;
         }
         /* The g_artptr_list contains only unread or read articles, never both */
-        limit = g_artptr_list + g_artptr_list_size;
-        for (app = g_artptr_list; app < limit; app++)
+        limit = g_art_ptr_list + g_art_ptr_list_size;
+        for (app = g_art_ptr_list; app < limit; app++)
         {
             ap = *app;
             if (g_sel_rereading && !(ap->flags & g_sel_mask))
@@ -1008,8 +1008,8 @@ bool first_page()
 
     case SM_ARTICLE:
     {
-        Article **limit = g_artptr_list + g_artptr_list_size;
-        for (Article **app = g_artptr_list; app < limit; app++)
+        Article **limit = g_art_ptr_list + g_art_ptr_list_size;
+        for (Article **app = g_art_ptr_list; app < limit; app++)
         {
             if ((*app)->flags & AF_INCLUDED)
             {
@@ -1128,7 +1128,7 @@ bool last_page()
     case SM_ARTICLE:
     {
         Article** app = g_sel_page_app;
-        g_sel_page_app = g_artptr_list + g_artptr_list_size;
+        g_sel_page_app = g_art_ptr_list + g_art_ptr_list_size;
         if (!prev_page())
         {
             g_sel_page_app = app;
@@ -1219,7 +1219,7 @@ bool next_page()
 
     case SM_ARTICLE:
     {
-        if (g_sel_next_app < g_artptr_list + g_artptr_list_size)
+        if (g_sel_next_app < g_art_ptr_list + g_art_ptr_list_size)
         {
             g_sel_page_app = g_sel_next_app;
             g_sel_prior_obj_cnt += g_sel_page_obj_cnt;
@@ -1414,7 +1414,7 @@ bool prev_page()
     {
         Article** page_app = g_sel_page_app;
 
-        for (Article **app = g_sel_page_app; --app >= g_artptr_list;)
+        for (Article **app = g_sel_page_app; --app >= g_art_ptr_list;)
         {
             if ((*app)->flags & AF_INCLUDED)
             {
@@ -1601,7 +1601,7 @@ try_again:
     case SM_ARTICLE:
     {
         Article** app = g_sel_page_app;
-        Article** limit = g_artptr_list + g_artptr_list_size;
+        Article** limit = g_art_ptr_list + g_art_ptr_list_size;
         for (; app < limit && g_sel_page_item_cnt < s_sel_max_per_page; app++)
         {
             if (*app == u.ap)
@@ -2102,7 +2102,7 @@ try_again:
     }
     else if (g_sel_mode == SM_ARTICLE)
     {
-        Article **limit = g_artptr_list + g_artptr_list_size;
+        Article **limit = g_art_ptr_list + g_art_ptr_list_size;
         Article **app = g_sel_page_app;
         for (; app < limit && g_sel_page_item_cnt < s_sel_max_per_page; app++)
         {

@@ -41,7 +41,7 @@ Article *allocate_article(ArticleNum artnum)
     {
         article = (Article*)safemalloc(sizeof (Article));
         std::memset((char*)article,0,sizeof (Article));
-        article->flags |= AF_FAKE|AF_TMPMEM;
+        article->flags |= AF_FAKE|AF_TMP_MEM;
     }
     return article;
 }
@@ -68,14 +68,14 @@ int msgid_cmp(const char *key, int keylen, HashDatum data)
     {
         return std::memcmp(key, data.dat_ptr, keylen);
     }
-    return std::memcmp(key, ((Article*)data.dat_ptr)->msgid, keylen);
+    return std::memcmp(key, ((Article*)data.dat_ptr)->msg_id, keylen);
 }
 
 static Subject *s_fake_had_subj; /* the fake-turned-real article had this subject */
 
 bool valid_article(Article *article)
 {
-    char* msgid = article->msgid;
+    char* msgid = article->msg_id;
 
     if (msgid)
     {
@@ -84,10 +84,10 @@ bool valid_article(Article *article)
         if (data.dat_len)
         {
             safefree0(data.dat_ptr);
-            article->autofl = static_cast<AutoKillFlags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
+            article->auto_flags = static_cast<AutoKillFlags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
             if ((data.dat_len & KF_AGE_MASK) == 0)
             {
-                article->autofl |= AUTO_OLD;
+                article->auto_flags |= AUTO_OLD;
             }
             else
             {
@@ -111,15 +111,15 @@ bool valid_article(Article *article)
 
         /* Whenever we replace a fake art with a real one, it's a lot of work
         ** cleaning up the references.  Fortunately, this is not often. */
-        if (fake_ap && (fake_ap->flags & AF_TMPMEM))
+        if (fake_ap && (fake_ap->flags & AF_TMP_MEM))
         {
             article->parent = fake_ap->parent;
             article->child1 = fake_ap->child1;
             article->sibling = fake_ap->sibling;
             s_fake_had_subj = fake_ap->subj;
-            if (fake_ap->autofl)
+            if (fake_ap->auto_flags)
             {
-                article->autofl |= fake_ap->autofl;
+                article->auto_flags |= fake_ap->auto_flags;
                 g_kf_state |= g_kfs_thread_change_set;
             }
             if (g_curr_artp == fake_ap)
@@ -211,16 +211,16 @@ Article *get_article(char *msgid)
     if (data.dat_len)
     {
         article = allocate_article(0);
-        article->autofl = static_cast<AutoKillFlags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
+        article->auto_flags = static_cast<AutoKillFlags>(data.dat_len) & (AUTO_SEL_MASK | AUTO_KILL_MASK);
         if ((data.dat_len & KF_AGE_MASK) == 0)
         {
-            article->autofl |= AUTO_OLD;
+            article->auto_flags |= AUTO_OLD;
         }
         else
         {
             g_kf_changethd_cnt++;
         }
-        article->msgid = data.dat_ptr;
+        article->msg_id = data.dat_ptr;
         data.dat_ptr = (char*)article;
         data.dat_len = 0;
         hashstorelast(data);
@@ -229,7 +229,7 @@ Article *get_article(char *msgid)
     {
         article = allocate_article(0);
         data.dat_ptr = (char*)article;
-        article->msgid = savestr(msgid);
+        article->msg_id = savestr(msgid);
         hashstorelast(data);
     }
     return article;
@@ -245,7 +245,7 @@ void thread_article(Article *article, char *references)
     char* cp;
     char* end;
     AutoKillFlags chain_autofl =
-        article->autofl | (article->subj->articles ? article->subj->articles->autofl : AUTO_KILL_NONE);
+        article->auto_flags | (article->subj->articles ? article->subj->articles->auto_flags : AUTO_KILL_NONE);
     AutoKillFlags subj_autofl = AUTO_KILL_NONE;
     const bool rethreading = (article->flags & AF_THREADED) != 0;
 
@@ -323,10 +323,10 @@ void thread_article(Article *article, char *references)
             }
             ap = get_article(cp);
             *cp = '\0';
-            chain_autofl |= ap->autofl;
+            chain_autofl |= ap->auto_flags;
             if (ap->subj == article->subj)
             {
-                subj_autofl |= ap->autofl;
+                subj_autofl |= ap->auto_flags;
             }
 
             /* Check for duplicates on the reference line.  Brand-new data has
@@ -446,12 +446,12 @@ void thread_article(Article *article, char *references)
         {
             if (sp->articles)
             {
-                thread_autofl |= sp->articles->autofl;
+                thread_autofl |= sp->articles->auto_flags;
             }
             sp = sp->thread_link;
         }
     }
-    subj_autofl |= article->subj->articles->autofl;
+    subj_autofl |= article->subj->articles->auto_flags;
 
     perform_auto_flags(article, thread_autofl, subj_autofl, chain_autofl);
 }

@@ -510,7 +510,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
     {
         set_subj_line(article, fields[OV_SUBJ], std::strlen(fields[OV_SUBJ]));
     }
-    if (!article->msgid)
+    if (!article->msg_id)
     {
         set_cached_line(article, MSGID_LINE, savestr(fields[OV_MSGID]));
     }

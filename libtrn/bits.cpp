@@ -119,7 +119,7 @@ void rc_to_bits()
             ap = article_ptr(i);
             if (ap->flags & AF_EXISTS)
             {
-                if (ap->autofl & AUTO_KILL_MASK)
+                if (ap->auto_flags & AUTO_KILL_MASK)
                 {
                     ap->flags &= ~AF_UNREAD;
                 }
@@ -127,9 +127,9 @@ void rc_to_bits()
                 {
                     ap->flags |= AF_UNREAD;
                     unread++;
-                    if (ap->autofl & AUTO_SEL_MASK)
+                    if (ap->auto_flags & AUTO_SEL_MASK)
                     {
-                        select_article(ap, ap->autofl);
+                        select_article(ap, ap->auto_flags);
                     }
                 }
             }
@@ -169,7 +169,7 @@ void rc_to_bits()
         ap = article_ptr(i);
         if (ap->flags & AF_EXISTS)
         {
-            if (ap->autofl & AUTO_KILL_MASK)
+            if (ap->auto_flags & AUTO_KILL_MASK)
             {
                 ap->flags &= ~AF_UNREAD;
             }
@@ -177,9 +177,9 @@ void rc_to_bits()
             {
                 ap->flags |= AF_UNREAD;
                 unread++;
-                if (ap->autofl & AUTO_SEL_MASK)
+                if (ap->auto_flags & AUTO_SEL_MASK)
                 {
-                    select_article(ap, ap->autofl);
+                    select_article(ap, ap->auto_flags);
                 }
             }
         }
@@ -540,7 +540,7 @@ void one_missing(Article *ap)
 {
     g_missing_count += (ap->flags & AF_UNREAD) != 0;
     one_less(ap);
-    ap->flags = (ap->flags & ~(AF_HAS_RE|AF_YANKBACK|AF_EXISTS))
+    ap->flags = (ap->flags & ~(AF_HAS_RE|AF_YANK_BACK|AF_EXISTS))
               | AF_CACHED|AF_THREADED;
 }
 
@@ -564,9 +564,9 @@ void unmark_as_read(Article *ap)
 void set_read(Article *ap)
 {
     one_less(ap);
-    if (!g_olden_days && !empty(ap->xrefs) && !(ap->flags & AF_KCHASE))
+    if (!g_olden_days && !empty(ap->xrefs) && !(ap->flags & AF_K_CHASE))
     {
-        ap->flags |= AF_KCHASE;
+        ap->flags |= AF_K_CHASE;
         s_chase_count++;
     }
 }
@@ -576,9 +576,9 @@ void set_read(Article *ap)
 
 void delay_unmark(Article *ap)
 {
-    if (!(ap->flags & AF_YANKBACK))
+    if (!(ap->flags & AF_YANK_BACK))
     {
-        ap->flags |= AF_YANKBACK;
+        ap->flags |= AF_YANK_BACK;
         g_dm_count++;
     }
 }
@@ -589,9 +589,9 @@ void delay_unmark(Article *ap)
 void mark_as_read(Article *ap)
 {
     one_less(ap);
-    if (!empty(ap->xrefs) && !(ap->flags & AF_KCHASE))
+    if (!empty(ap->xrefs) && !(ap->flags & AF_K_CHASE))
     {
-        ap->flags |= AF_KCHASE;
+        ap->flags |= AF_K_CHASE;
         s_chase_count++;
     }
     g_checkcount++;             /* get more worried about crashes */
@@ -644,14 +644,14 @@ void yank_back()
 static bool yank_article(char *ptr, int arg)
 {
     Article* ap = (Article*)ptr;
-    if (ap->flags & AF_YANKBACK)
+    if (ap->flags & AF_YANK_BACK)
     {
         unmark_as_read(ap);
         if (g_selected_only)
         {
             select_article(ap, AUTO_KILL_NONE);
         }
-        ap->flags &= ~AF_YANKBACK;
+        ap->flags &= ~AF_YANK_BACK;
     }
     return false;
 }
@@ -676,10 +676,10 @@ static bool check_chase(char *ptr, int until_key)
 {
     Article* ap = (Article*)ptr;
 
-    if (ap->flags & AF_KCHASE)
+    if (ap->flags & AF_K_CHASE)
     {
         chase_xref(article_num(ap),true);
-        ap->flags &= ~AF_KCHASE;
+        ap->flags &= ~AF_K_CHASE;
         if (!--s_chase_count)
         {
             return true;
@@ -741,7 +741,7 @@ static int chase_xref(ArticleNum artnum, int markread)
         std::fflush(stdout);
     }
 
-    char *xref_buf = fetchcache(artnum, XREF_LINE, FILL_CACHE);
+    char *xref_buf = fetch_cache(artnum, XREF_LINE, FILL_CACHE);
     if (!xref_buf || !*xref_buf)
     {
         return 0;

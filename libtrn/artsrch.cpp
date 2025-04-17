@@ -181,9 +181,9 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         g_art_how_much = howmuch;
         g_art_srch_hdr = srchhdr;
         g_art_do_read = doread;
-        if (g_srchahead)
+        if (g_search_ahead)
         {
-            g_srchahead = -1;
+            g_search_ahead = -1;
         }
     }
     else
@@ -280,9 +280,9 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
                 termdown(2);
             }
         }
-        else if (!g_srchahead)
+        else if (!g_search_ahead)
         {
-            g_srchahead = -1;
+            g_search_ahead = -1;
         }
 
         {                       /* compensate for notesfiles */
@@ -423,13 +423,13 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             g_art--;                    /* include current article */
         }
     }
-    if (g_srchahead > 0)
+    if (g_search_ahead > 0)
     {
         if (!backward)
         {
-            g_art = g_srchahead - 1;
+            g_art = g_search_ahead - 1;
         }
-        g_srchahead = -1;
+        g_search_ahead = -1;
     }
     TRN_ASSERT(!cmdlst || *cmdlst);
     perform_status_init(g_ngptr->toread);
