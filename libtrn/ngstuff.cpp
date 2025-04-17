@@ -34,17 +34,17 @@
 #include <cstring>
 
 bool        g_one_command{}; /* no ':' processing in perform() */
-std::string g_save_dir;       /* -d */
+std::string g_save_dir;      /* -d */
 
 /* given the new and complex universal/help possibilities,
  * the following interlock variable may save some trouble.
  * (if true, we are currently processing options)
  */
-static bool s_option_sel_ilock{};
+static bool s_option_sel_lock{};
 
 void newsgroup_stuff_init()
 {
-    s_option_sel_ilock = false;
+    s_option_sel_lock = false;
 }
 
 /* do a shell escape */
@@ -104,17 +104,17 @@ int switcheroo()
     if (!g_buf[1])
     {
         const std::string prior_savedir = g_save_dir;
-        if (s_option_sel_ilock)
+        if (s_option_sel_lock)
         {
             g_buf[1] = '\0';
             return 0;
         }
-        s_option_sel_ilock = true;
+        s_option_sel_lock = true;
         if (g_general_mode != GM_SELECTOR || g_sel_mode != SM_OPTIONS)
         {
             option_selector();
         }
-        s_option_sel_ilock = false;
+        s_option_sel_lock = false;
         if (g_save_dir != prior_savedir)
         {
             cwd_check();
