@@ -190,7 +190,7 @@ void grow_newsgroup(ArticleNum new_last)
         g_article_list->high = g_last_art;
         thread_grow();
         /* Score all new articles now just in case they weren't done above. */
-        sc_fill_scorelist(tmpfirst,new_last);
+        sc_fill_score_list(tmpfirst,new_last);
         if (g_verbose)
         {
             std::sprintf(g_buf, "%ld more article%s arrived -- processing memorized commands...\n\n",

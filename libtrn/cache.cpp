@@ -950,7 +950,7 @@ void cache_until_key()
 
     if (!input_pending() && g_sc_initialized)
     {
-        sc_lookahead(true, true);
+        sc_look_ahead(true, true);
     }
 
     set_spin(SPIN_OFF);

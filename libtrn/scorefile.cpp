@@ -440,7 +440,7 @@ bool sf_do_command(char *cmd, bool check)
         {
             if (!check)
             {
-                g_sc_savescores = false;
+                g_sc_saves_cores = false;
             }
             return true;
         }
@@ -450,7 +450,7 @@ bool sf_do_command(char *cmd, bool check)
             {
                 return true;
             }
-            g_sc_savescores = true;
+            g_sc_saves_cores = true;
             return true;
         }
         std::printf("Bad savescores command: |%s|\n",cmd);
@@ -892,7 +892,7 @@ int sf_score(ArticleNum a)
 {
     if (is_unavailable(a))
     {
-        return LOWSCORE;        /* unavailable arts get low negative score. */
+        return LOW_SCORE;        /* unavailable arts get low negative score. */
     }
 
     /* if there are no score entries, then the answer is real easy and quick */

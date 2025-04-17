@@ -235,7 +235,7 @@ int sa_do_cmd()
             s_beep();
             break;
         }
-        g_score_newfirst = !g_score_newfirst;
+        g_score_new_first = !g_score_new_first;
         s_sort();
         s_go_top_ents();
         g_s_refill = true;

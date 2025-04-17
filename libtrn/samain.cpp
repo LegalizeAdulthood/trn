@@ -214,7 +214,7 @@ SaMainResult sa_main_loop()
 void sa_lookahead()
 {
 #ifdef PENDING
-    sc_lookahead(true,false);           /* do resorting now... */
+    sc_look_ahead(true,false);           /* do resorting now... */
 #else /* !PENDING */
     ;                           /* so the function isn't empty */
 #endif

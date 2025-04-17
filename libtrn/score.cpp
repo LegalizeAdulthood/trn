@@ -26,13 +26,13 @@
 #include <cstdio>
 
 bool    g_kill_thresh_active{};  //
-int     g_kill_thresh{LOWSCORE}; /* KILL articles at or below this score */
+int     g_kill_thresh{LOW_SCORE}; /* KILL articles at or below this score */
 ArticleNum g_sc_fill_max;           /* maximum art# scored by fill-routine */
 bool    g_sc_fill_read{};        /* true if also scoring read arts... */
 bool    g_sc_initialized{};      /* has score been initialized (are we "in" scoring?) */
 bool    g_sc_scoring{};          /* are we currently scoring an article (prevents loops) */
-bool    g_score_newfirst{};      /* changes order of sorting (artnum comparison) when scores are equal */
-bool    g_sc_savescores{};       /* If true, save the scores for this group on exit. */
+bool    g_score_new_first{};      /* changes order of sorting (artnum comparison) when scores are equal */
+bool    g_sc_saves_cores{};       /* If true, save the scores for this group on exit. */
 bool    g_sc_delay{};            /* If true, delay initialization of scoring until explicitly required */
 
 static bool s_sc_sf_force_init{}; /* If true, always sf_init() */
@@ -67,7 +67,7 @@ void sc_init(bool pend_wait)
  */
     g_kill_thresh_active = false;  /* kill thresholds are generic */
     /* July 24, 1993: changed default of g_sc_savescores to true */
-    g_sc_savescores = true;
+    g_sc_saves_cores = true;
 
 /* CONSIDER: (for sc_init callers) is g_lastart properly set yet? */
     g_sc_fill_max = g_abs_first - 1;
@@ -173,7 +173,7 @@ void sc_init(bool pend_wait)
             set_spin(SPIN_FOREGROUND);
             s_sc_do_spin = true;                /* really do it */
         }
-        sc_lookahead(true,waitflag);    /* jump in *now* */
+        sc_look_ahead(true,waitflag);    /* jump in *now* */
         if (waitflag)
         {
             s_sc_do_spin = false;
@@ -195,7 +195,7 @@ void sc_cleanup()
         return;
     }
 
-    if (g_sc_savescores)
+    if (g_sc_saves_cores)
     {
         sc_save_scores();
     }
@@ -259,11 +259,11 @@ int sc_score_art(ArticleNum a, bool now)
 #if 0
          std::printf("\nsc_score_art: illegal article# %d\n",a);
 #endif
-        return LOWSCORE;                /* definitely unavailable */
+        return LOW_SCORE;                /* definitely unavailable */
     }
     if (is_unavailable(a))
     {
-        return LOWSCORE;
+        return LOW_SCORE;
     }
 
     if (!g_sc_initialized)
@@ -285,14 +285,14 @@ int sc_score_art(ArticleNum a, bool now)
     }
     if (is_unavailable(a))
     {
-        return LOWSCORE;
+        return LOW_SCORE;
     }
     return article_ptr(a)->score;
 }
 
 /* scores articles in a range */
 /* CONSIDER: option for scoring only unread articles (obey sc_fill_unread?) */
-void sc_fill_scorelist(ArticleNum first, ArticleNum last)
+void sc_fill_score_list(ArticleNum first, ArticleNum last)
 {
     for (int i = article_first(first); i <= last; i = article_next(i))
     {
@@ -305,7 +305,7 @@ void sc_fill_scorelist(ArticleNum first, ArticleNum last)
 /* flag == true means sort now, false means wait until later (not used)
  * nowait == true means start scoring immediately (group entry)
  */
-void sc_lookahead(bool flag, bool nowait)
+void sc_look_ahead(bool flag, bool nowait)
 {
     ArticleNum oldart = g_open_art;
     ArticlePosition oldartpos;
@@ -581,7 +581,7 @@ void sc_score_cmd(const char *line)
         std::fflush(stdout); /* print it now */
         set_spin(SPIN_FOREGROUND);
         s_sc_do_spin = true;
-        sc_lookahead(true,false);
+        sc_look_ahead(true,false);
         s_sc_do_spin = false;
         set_spin(SPIN_POP);
         /* consider a "done" message later,

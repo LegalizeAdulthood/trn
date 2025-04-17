@@ -204,7 +204,7 @@ int sa_compare(long a, long b)
             return -1;
         }
         /* i == j */
-        if (g_score_newfirst)
+        if (g_score_new_first)
         {
             if (a < b)
             {

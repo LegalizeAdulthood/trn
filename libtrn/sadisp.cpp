@@ -65,7 +65,7 @@ void sa_refresh_bot()
         break;
 
     case SA_ORDER_DESCENDING:
-        if (g_score_newfirst)
+        if (g_score_new_first)
         {
             s = "score (new>old)";
         }
