@@ -10,13 +10,13 @@
 
 void s_go_bot();
 int s_finish_cmd(const char *string);
-int s_cmdloop();
-void s_lookahead();
-int s_docmd();
+int s_cmd_loop();
+void s_look_ahead();
+int s_do_cmd();
 bool s_match_description(long ent);
 long s_forward_search(long ent);
 long s_backward_search(long ent);
 void s_search();
-void s_jumpnum(char_int firstchar);
+void s_jump_num(char_int firstchar);
 
 #endif

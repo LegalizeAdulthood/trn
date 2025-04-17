@@ -50,7 +50,7 @@ int s_finish_cmd(const char *string)
 }
 
 /* returns an entry # selected, S_QUIT, or S_ERR */
-int s_cmdloop()
+int s_cmd_loop()
 {
     int i;
 
@@ -62,7 +62,7 @@ int s_cmdloop()
         s_refresh();
         s_place_ptr();          /* place article pointer */
         g_bos_on_stop = true;
-        s_lookahead();          /* do something useful while waiting */
+        s_look_ahead();          /* do something useful while waiting */
         getcmd(g_buf);
         g_bos_on_stop = false;
         eat_typeahead();        /* stay in control. */
@@ -77,11 +77,11 @@ int s_cmdloop()
                 return S_QUIT;
             }
             *g_buf = Ctl('l');
-            (void)s_docmd();
+            (void)s_do_cmd();
             *g_buf = ch;
             g_s_resized = false;                /* dealt with */
         }
-        i = s_docmd();
+        i = s_do_cmd();
         if (i == S_NOT_FOUND)    /* command not in common set */
         {
             switch (g_s_cur_type)
@@ -111,7 +111,7 @@ int s_cmdloop()
     }
 }
 
-void s_lookahead()
+void s_look_ahead()
 {
     switch (g_s_cur_type)
     {
@@ -129,7 +129,7 @@ void s_lookahead()
  * a condition code (negative #s).  Responsible for setting refresh flags
  * if necessary.
  */
-int s_docmd()
+int s_do_cmd()
 {
     bool flag; /* misc */
 
@@ -318,7 +318,7 @@ int s_docmd()
 
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
-        s_jumpnum(*g_buf);
+        s_jump_num(*g_buf);
         break;
 
     case '#':         /* Toggle item numbers */
@@ -524,7 +524,7 @@ void s_search()
     }
 }
 
-void s_jumpnum(char_int firstchar)
+void s_jump_num(char_int firstchar)
 {
     bool jump_verbose = true;
     int  value = firstchar - '0';

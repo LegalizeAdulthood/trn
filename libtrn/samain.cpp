@@ -196,7 +196,7 @@ SaMainResult sa_main_loop()
         /* for now just quit if no page could be filled. */
         return SA_QUIT;
     }
-    i = s_cmdloop();
+    i = s_cmd_loop();
     if (i == SA_READ)
     {
         i = SA_NORM;
