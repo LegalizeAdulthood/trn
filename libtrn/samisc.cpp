@@ -94,7 +94,7 @@ long sa_artnum_to_ent(ArticleNum artnum)
 }
 
 /* select1 the articles picked in the TRN thread selector */
-void sa_selthreads()
+void sa_sel_threads()
 {
     bool want_unread;
 #if 0

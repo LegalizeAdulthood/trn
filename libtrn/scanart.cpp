@@ -109,7 +109,7 @@ SaMainResult sa_main()
      */
     if (g_sa_do_selthreads)
     {
-        sa_selthreads();
+        sa_sel_threads();
         g_sa_do_selthreads = false;
         g_sa_mode_zoom = true;          /* zoom in by default */
         g_s_top_ent = -1;               /* go to top of arts... */
