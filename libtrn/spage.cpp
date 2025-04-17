@@ -22,7 +22,7 @@
 
 /* returns true if successful */
 //long end;             /* entry number to be last on page */
-bool s_fillpage_backward(long end)
+bool s_fill_page_backward(long end)
 {
     int min_page_ents;  /* current minimum */
     int  i;
@@ -126,7 +126,7 @@ bool s_fillpage_backward(long end)
     }
     if (i <= g_s_bot_ent)
     {
-        return s_fillpage_backward(end);
+        return s_fill_page_backward(end);
     }
 /* next time the unavail won't be chosen */
     return true;        /* we have a page... */
@@ -135,7 +135,7 @@ bool s_fillpage_backward(long end)
 /* fills the page array */
 /* returns true on success */
 //long start;                   /* entry to start filling with */
-bool s_fillpage_forward(long start)
+bool s_fill_page_forward(long start)
 {
     int i;
     long a;
@@ -222,7 +222,7 @@ bool s_fillpage_forward(long start)
     }
     if (i <= g_s_bot_ent)
     {
-        return s_fillpage_forward(start);
+        return s_fill_page_forward(start);
     }
     /* next time the unavail won't be chosen */
     return true;        /* we have a page... */
@@ -234,7 +234,7 @@ bool s_fillpage_forward(long start)
  *  or not.)
  */
 /* returns true on success */
-bool s_refillpage()
+bool s_refill_page()
 {
     int  i;
     int  j;
@@ -259,7 +259,7 @@ bool s_refillpage()
      || g_page_ents[0].start_line != 0
      || g_page_ents[0].lines != s_ent_lines(g_page_ents[0].ent_num))
     {
-        return s_fillpage_forward(g_s_top_ent);
+        return s_fill_page_forward(g_s_top_ent);
     }
 
     i = 1;
@@ -328,7 +328,7 @@ bool s_refillpage()
     }
     if (i <= g_s_bot_ent)
     {
-        return s_refillpage();  /* next time the unavail won't be chosen */
+        return s_refill_page();  /* next time the unavail won't be chosen */
     }
     return true;        /* we have a page... */
 }
@@ -340,7 +340,7 @@ bool s_refillpage()
  *         negative # on special condition
  *         0 on failure
  */
-int s_fillpage()
+int s_fill_page()
 {
     int i;
 
@@ -353,9 +353,9 @@ int s_fillpage()
     {
         return 0;       /* failure */
     }
-    if (!s_refillpage())        /* try for efficient refill */
+    if (!s_refill_page())        /* try for efficient refill */
     {
-        if (!s_fillpage_backward(g_s_top_ent))
+        if (!s_fill_page_backward(g_s_top_ent))
         {
             /* downgrade eligibility standards */
             switch (g_s_cur_type)
@@ -370,7 +370,7 @@ int s_fillpage()
                         g_sa_mode_fold = true;
                     }
                     (void)s_go_top_ents();      /* go to top (ents and page) */
-                    return s_fillpage();
+                    return s_fill_page();
                 }
                 return -1;              /* there just aren't entries! */
 
@@ -387,7 +387,7 @@ int s_fillpage()
     {
         if (!s_eligible(g_page_ents[j].ent_num))
         {
-            return s_fillpage();  /* ineligible won't be chosen again */
+            return s_fill_page();  /* ineligible won't be chosen again */
         }
     }
     if (g_s_cur_type != S_ART)
@@ -404,12 +404,12 @@ int s_fillpage()
     }
     if (i <= g_s_bot_ent)
     {
-        return s_fillpage();    /* next time the unavail won't be chosen */
+        return s_fill_page();    /* next time the unavail won't be chosen */
     }
     return 1;   /* I guess everything worked :-) */
 }
 
-void s_cleanpage()
+void s_clean_page()
 {
 }
 
@@ -454,7 +454,7 @@ bool s_go_top_ents()
 
 bool s_go_bot_ents()
 {
-    bool flag = s_fillpage_backward(s_last()); /* fill backwards */
+    bool flag = s_fill_page_backward(s_last()); /* fill backwards */
     if (!flag)
     {
         return false;
@@ -471,7 +471,7 @@ void s_go_next_page()
         return;         /* no next page (we shouldn't have been called) */
     }
     /* the fill-page will set the refresh for the screen */
-    bool flag = s_fillpage_forward(a);
+    bool flag = s_fill_page_forward(a);
     TRN_ASSERT(flag);           /* I *must* be able to fill a page */
     g_s_ptr_page_line = 0;      /* top of page */
 }
@@ -484,10 +484,10 @@ void s_go_prev_page()
         return;         /* no prev. page (we shouldn't have been called) */
     }
     /* the fill-page will set the refresh for the screen */
-    bool flag = s_fillpage_backward(a); /* fill backward */
+    bool flag = s_fill_page_backward(a); /* fill backward */
     TRN_ASSERT(flag);                   /* be nicer later... */
     /* take care of partially filled previous pages */
-    flag = s_refillpage();
+    flag = s_refill_page();
     TRN_ASSERT(flag);           /* be nicer later... */
     g_s_ref_status = 0;
     g_s_ref_desc = 0;      /* refresh from top */

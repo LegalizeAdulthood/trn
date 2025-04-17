@@ -71,7 +71,7 @@ int s_cmd_loop()
         if (g_s_resized)
         {
             char ch = *g_buf;
-            i = s_fillpage();
+            i = s_fill_page();
             if (i == -1 || i == 0)      /* can't fillpage */
             {
                 return S_QUIT;
@@ -101,7 +101,7 @@ int s_cmd_loop()
         }
         if (g_s_refill)
         {
-            i = s_fillpage();
+            i = s_fill_page();
             if (i == -1 || i == 0)      /* can't fillpage */
             {
                 return S_QUIT;
@@ -511,14 +511,14 @@ void s_search()
     /* entry is not on page... */
     if (fill_type == 1)
     {
-        (void)s_fillpage_backward(ent);
+        (void)s_fill_page_backward(ent);
         s_go_bot_page();
         g_s_refill = true;
         g_s_ref_all = true;
     }
     else
     {
-        (void)s_fillpage_forward(ent);
+        (void)s_fill_page_forward(ent);
         s_go_top_page();
         g_s_ref_all = true;
     }

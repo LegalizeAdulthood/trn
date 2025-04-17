@@ -412,7 +412,7 @@ int sa_do_cmd()
             }
         }
         /* article is not on page... */
-        (void)s_fillpage_forward(b);  /* fill forward (*must* work) */
+        (void)s_fill_page_forward(b);  /* fill forward (*must* work) */
         g_s_ptr_page_line = 0;
         break;
 
@@ -435,7 +435,7 @@ int sa_do_cmd()
             }
         }
         /* article is not on page... */
-        (void)s_fillpage_forward(b);  /* fill forward (*must* work) */
+        (void)s_fill_page_forward(b);  /* fill forward (*must* work) */
         g_s_ptr_page_line = 0;
         break;
 
@@ -463,9 +463,9 @@ int sa_do_cmd()
             }
         }
         /* article is not on page... */
-        (void)s_fillpage_backward(b);  /* fill backward (*must* work) */
+        (void)s_fill_page_backward(b);  /* fill backward (*must* work) */
         g_s_ptr_page_line = g_s_bot_ent;  /* go to bottom of page */
-        (void)s_refillpage();   /* make sure page is full */
+        (void)s_refill_page();   /* make sure page is full */
         g_s_ref_all = true;             /* make everything redrawn... */
         break;
 

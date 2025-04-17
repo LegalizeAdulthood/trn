@@ -6,11 +6,11 @@
 #ifndef TRN_SPAGE_H
 #define TRN_SPAGE_H
 
-bool s_fillpage_backward(long end);
-bool s_fillpage_forward(long start);
-bool s_refillpage();
-int s_fillpage();
-void s_cleanpage();
+bool s_fill_page_backward(long end);
+bool s_fill_page_forward(long start);
+bool s_refill_page();
+int  s_fill_page();
+void s_clean_page();
 void s_go_top_page();
 void s_go_bot_page();
 bool s_go_top_ents();

@@ -190,7 +190,7 @@ SaMainResult sa_main_loop()
     {
         g_s_top_ent = s_first();
     }
-    int i = s_fillpage();
+    int i = s_fill_page();
     if (i == -1 || i == 0)
     {
         /* for now just quit if no page could be filled. */
