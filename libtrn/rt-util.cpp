@@ -786,7 +786,7 @@ void setspin(SpinMode mode)
     {
     case SPIN_FOREGROUND:
     case SPIN_BACKGROUND:
-    case SPIN_BARGRAPH:
+    case SPIN_BAR_GRAPH:
         if (!s_spin_level++)
         {
             s_spin_art = g_open_art;
@@ -797,13 +797,13 @@ void setspin(SpinMode mode)
             g_spin_count = 0;
             s_spin_place = 0;
         }
-        if (s_spin_mode == SPIN_BARGRAPH)
+        if (s_spin_mode == SPIN_BAR_GRAPH)
         {
-            mode = SPIN_BARGRAPH;
+            mode = SPIN_BAR_GRAPH;
         }
-        if (mode == SPIN_BARGRAPH)
+        if (mode == SPIN_BAR_GRAPH)
         {
-            if (s_spin_mode != SPIN_BARGRAPH)
+            if (s_spin_mode != SPIN_BAR_GRAPH)
             {
                 s_spin_marks = (g_verbose? 25 : 10);
                 std::printf(" [%*s]", s_spin_marks, "");
@@ -821,7 +821,7 @@ void setspin(SpinMode mode)
 
     case SPIN_POP:
     case SPIN_OFF:
-        if (s_spin_mode == SPIN_BARGRAPH)
+        if (s_spin_mode == SPIN_BAR_GRAPH)
         {
             s_spin_level = 1;
             spin(10000);
@@ -885,7 +885,7 @@ void spin(int count)
         }
         break;
 
-    case SPIN_BARGRAPH:
+    case SPIN_BAR_GRAPH:
     {
         if (g_spin_todo == 0)
         {

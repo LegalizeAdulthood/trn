@@ -124,7 +124,7 @@ static void process_list(GetNewsgroupFlags flag)
     AddGroup *node = g_first_add_group;
     if (node != nullptr && flag != GNG_NONE && g_use_add_selector)
     {
-        addgroup_selector(flag);
+        add_group_selector(flag);
     }
     while (node)
     {

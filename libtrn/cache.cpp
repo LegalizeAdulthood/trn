@@ -82,11 +82,11 @@ void build_cache()
         s_cached_time = std::time(nullptr);
         if (g_sel_mode == SM_ARTICLE)
         {
-            set_selector(g_sel_mode, g_sel_artsort);
+            set_selector(g_sel_mode, g_sel_art_sort);
         }
         else
         {
-            set_selector(g_sel_threadmode, g_sel_threadsort);
+            set_selector(g_sel_thread_mode, g_sel_thread_sort);
         }
         for (ArticleNum an = g_last_cached + 1; an <= g_last_art; an++)
         {
@@ -1094,7 +1094,7 @@ bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_article
     else
     {
         int lots2do = ((g_data_source->flags & DF_REMOTE)? g_net_speed : 20) * 25;
-        setspin(g_spin_estimate > lots2do? SPIN_BARGRAPH : SPIN_FOREGROUND);
+        setspin(g_spin_estimate > lots2do? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
     }
     /*TRN_ASSERT(first >= g_absfirst && last <= g_lastart);*/
     for (i = article_first(first); i <= last; i = article_next(i))

@@ -286,7 +286,7 @@ beginning:
         {
             int lots2do = ((g_data_source->flags & DF_REMOTE)? g_net_speed : 20) * 100;
             g_spin_estimate = std::min(g_spin_estimate, g_spin_todo);
-            setspin(g_spin_estimate > lots2do? SPIN_BARGRAPH : SPIN_FOREGROUND);
+            setspin(g_spin_estimate > lots2do? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
         }
         g_data_source->ov_opened = started_request;
     }

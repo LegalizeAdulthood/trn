@@ -66,11 +66,11 @@ bool set_sel_mode(char_int ch)
     switch (ch)
     {
     case 'a':
-        set_selector(g_sel_defaultmode = SM_ARTICLE, SS_MAGIC_NUMBER);
+        set_selector(g_sel_default_mode = SM_ARTICLE, SS_MAGIC_NUMBER);
         break;
 
     case 's':
-        set_selector(g_sel_defaultmode = SM_SUBJECT, SS_MAGIC_NUMBER);
+        set_selector(g_sel_default_mode = SM_SUBJECT, SS_MAGIC_NUMBER);
         break;
 
     case 't':
@@ -96,11 +96,11 @@ bool set_sel_mode(char_int ch)
         /* FALL THROUGH */
 
     case 'T':
-        set_selector(g_sel_defaultmode = SM_THREAD, SS_MAGIC_NUMBER);
+        set_selector(g_sel_default_mode = SM_THREAD, SS_MAGIC_NUMBER);
         break;
 
     default:
-        set_selector(g_sel_defaultmode, SS_MAGIC_NUMBER);
+        set_selector(g_sel_default_mode, SS_MAGIC_NUMBER);
         return false;
     }
     return true;
@@ -208,7 +208,7 @@ void set_selector(SelectionMode smode, SelectionSortMode ssort)
     {
         if (g_sel_mode == SM_SUBJECT)
         {
-            g_sel_mode = g_sel_threadmode;
+            g_sel_mode = g_sel_thread_mode;
         }
         smode = g_sel_mode;
     }
@@ -224,12 +224,12 @@ void set_selector(SelectionMode smode, SelectionSortMode ssort)
             ssort = SS_NATURAL;
             break;
 
-        case SM_ADDGROUP:
+        case SM_ADD_GROUP:
             ssort = s_sel_addgroupsort;
             break;
 
         case SM_NEWSGROUP:
-            ssort = g_sel_newsgroupsort;
+            ssort = g_sel_newsgroup_sort;
             break;
 
         case SM_OPTIONS:
@@ -238,11 +238,11 @@ void set_selector(SelectionMode smode, SelectionSortMode ssort)
 
         case SM_THREAD:
         case SM_SUBJECT:
-            ssort = g_sel_threadsort;
+            ssort = g_sel_thread_sort;
             break;
 
         case SM_ARTICLE:
-            ssort = g_sel_artsort;
+            ssort = g_sel_art_sort;
             break;
 
         case SM_UNIVERSAL:
@@ -272,14 +272,14 @@ void set_selector(SelectionMode smode, SelectionSortMode ssort)
         g_sel_mode_string = "a newsrc group";
         break;
 
-    case SM_ADDGROUP:
+    case SM_ADD_GROUP:
         g_sel_mode_string = "a newsgroup to add";
         s_sel_addgroupsort = ssort;
         break;
 
     case SM_NEWSGROUP:
         g_sel_mode_string = "a newsgroup";
-        g_sel_newsgroupsort = ssort;
+        g_sel_newsgroup_sort = ssort;
         break;
 
     case SM_OPTIONS:
@@ -293,14 +293,14 @@ void set_selector(SelectionMode smode, SelectionSortMode ssort)
 
     case SM_THREAD:
         g_sel_mode_string = "threads";
-        g_sel_threadmode = smode;
-        g_sel_threadsort = ssort;
+        g_sel_thread_mode = smode;
+        g_sel_thread_sort = ssort;
         goto thread_subj_sort;
 
     case SM_SUBJECT:
         g_sel_mode_string = "subjects";
-        g_sel_threadmode = smode;
-        g_sel_threadsort = ssort;
+        g_sel_thread_mode = smode;
+        g_sel_thread_sort = ssort;
      thread_subj_sort:
           if (g_sel_sort == SS_AUTHOR || g_sel_sort == SS_GROUPS || g_sel_sort == SS_NATURAL)
           {
@@ -310,7 +310,7 @@ void set_selector(SelectionMode smode, SelectionSortMode ssort)
 
     case SM_ARTICLE:
         g_sel_mode_string = "articles";
-        g_sel_artsort = ssort;
+        g_sel_art_sort = ssort;
         if (g_sel_sort == SS_COUNT)
         {
             g_sel_sort = SS_DATE;
@@ -525,7 +525,7 @@ try_again:
         break;
     }
 
-    case SM_ADDGROUP:
+    case SM_ADD_GROUP:
     {
         sort_add_groups();
         g_obj_count = 0;
@@ -962,7 +962,7 @@ bool first_page()
         break;
     }
 
-    case SM_ADDGROUP:
+    case SM_ADD_GROUP:
     {
         for (AddGroup *gp = g_first_add_group; gp; gp = gp->next)
         {
@@ -1080,7 +1080,7 @@ bool last_page()
         break;
     }
 
-    case SM_ADDGROUP:
+    case SM_ADD_GROUP:
     {
         AddGroup* gp = g_sel_page_gp;
         g_sel_page_gp = nullptr;
@@ -1184,7 +1184,7 @@ bool next_page()
         break;
     }
 
-    case SM_ADDGROUP:
+    case SM_ADD_GROUP:
     {
         if (g_sel_next_gp)
         {
@@ -1317,7 +1317,7 @@ bool prev_page()
         break;
     }
 
-    case SM_ADDGROUP:
+    case SM_ADD_GROUP:
     {
         AddGroup* gp = g_sel_page_gp;
         AddGroup* page_gp = g_sel_page_gp;
@@ -1541,7 +1541,7 @@ try_again:
         break;
     }
 
-    case SM_ADDGROUP:
+    case SM_ADD_GROUP:
     {
         AddGroup* gp = g_sel_page_gp;
         for (; gp && g_sel_page_item_cnt < s_sel_max_per_page; gp = gp->next)
@@ -1721,7 +1721,7 @@ void display_page_title(bool home_only)
     {
         color_string(COLOR_NG_NAME, g_ngname.c_str());
     }
-    else if (g_sel_mode == SM_ADDGROUP)
+    else if (g_sel_mode == SM_ADD_GROUP)
     {
         color_string(COLOR_HEADING, "ADD newsgroups");
     }
@@ -1963,7 +1963,7 @@ try_again:
             }
         }
     }
-    else if (g_sel_mode == SM_ADDGROUP)
+    else if (g_sel_mode == SM_ADD_GROUP)
     {
         AddGroup* gp = g_sel_page_gp;
         int max_len = 0;
@@ -2249,7 +2249,7 @@ void update_page()
             sel = !!(u.np->flags & g_sel_mask) + (u.np->flags & NF_DEL);
             break;
 
-        case SM_ADDGROUP:
+        case SM_ADD_GROUP:
             sel = !!(u.gp->flags & g_sel_mask) + (u.gp->flags & AGF_DEL);
             break;
 

@@ -957,7 +957,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
         termdown(1);
         return 0;
     }
-    setspin(g_spin_todo > 0? SPIN_BARGRAPH : SPIN_FOREGROUND);
+    setspin(g_spin_todo > 0? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
 
     source_file_close(sfp);
 

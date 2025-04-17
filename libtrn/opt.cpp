@@ -535,7 +535,7 @@ void set_option(OptionIndex num, const char *s)
     }
 
     case OI_NEWS_SEL_ORDER:
-        set_sel_order(g_sel_defaultmode,s);
+        set_sel_order(g_sel_default_mode,s);
         break;
 
     case OI_NEWS_SEL_CMDS:
@@ -1175,7 +1175,7 @@ const char *option_value(OptionIndex num)
         const SelectionMode save_sel_mode = g_sel_mode;
         const int save_Threaded = g_threaded_group;
         g_threaded_group = true;
-        set_selector(g_sel_defaultmode, SS_MAGIC_NUMBER);
+        set_selector(g_sel_default_mode, SS_MAGIC_NUMBER);
         const char *s = g_sel_mode_string;
         g_sel_mode = save_sel_mode;
         g_threaded_group = save_Threaded;
@@ -1184,7 +1184,7 @@ const char *option_value(OptionIndex num)
     }
 
     case OI_NEWS_SEL_ORDER:
-        return get_sel_order(g_sel_defaultmode);
+        return get_sel_order(g_sel_default_mode);
 
     case OI_NEWS_SEL_CMDS:
         return g_news_sel_cmds;

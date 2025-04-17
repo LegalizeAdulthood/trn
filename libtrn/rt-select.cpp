@@ -60,13 +60,13 @@ enum UniversalReadResult
 
 bool           g_sel_rereading{};
 SelectionMode       g_sel_mode{};
-SelectionMode       g_sel_defaultmode{SM_THREAD};
-SelectionMode       g_sel_threadmode{SM_THREAD};
+SelectionMode       g_sel_default_mode{SM_THREAD};
+SelectionMode       g_sel_thread_mode{SM_THREAD};
 const char    *g_sel_mode_string{};
 SelectionSortMode  g_sel_sort{};
-SelectionSortMode  g_sel_artsort{SS_GROUPS};
-SelectionSortMode  g_sel_threadsort{SS_DATE};
-SelectionSortMode  g_sel_newsgroupsort{SS_NATURAL};
+SelectionSortMode  g_sel_art_sort{SS_GROUPS};
+SelectionSortMode  g_sel_thread_sort{SS_DATE};
+SelectionSortMode  g_sel_newsgroup_sort{SS_NATURAL};
 const char    *g_sel_sort_string{};
 int            g_sel_direction{1};
 bool           g_sel_exclusive{};
@@ -588,7 +588,7 @@ char newsgroup_selector()
     return s_sel_ret;
 }
 
-char addgroup_selector(GetNewsgroupFlags flags)
+char add_group_selector(GetNewsgroupFlags flags)
 {
     PushSelectorModes saver(MM_ADD_GROUP_SELECTOR);
 
@@ -596,7 +596,7 @@ char addgroup_selector(GetNewsgroupFlags flags)
     g_sel_exclusive = false;
     g_selected_count = 0;
 
-    set_selector(SM_ADDGROUP, SS_MAGIC_NUMBER);
+    set_selector(SM_ADD_GROUP, SS_MAGIC_NUMBER);
 
   sel_restart:
     if (*g_sel_grp_display_mode != 's')
@@ -1653,7 +1653,7 @@ static bool select_item(Selection u)
         u.mp->flags |= static_cast<MultircFlags>(g_sel_mask);
         break;
 
-    case SM_ADDGROUP:
+    case SM_ADD_GROUP:
         if (!(u.gp->flags & g_sel_mask))
         {
             g_selected_count++;
@@ -1704,7 +1704,7 @@ static bool delay_return_item(Selection u)
     switch (g_sel_mode)
     {
     case SM_MULTIRC:
-    case SM_ADDGROUP:
+    case SM_ADD_GROUP:
     case SM_NEWSGROUP:
     case SM_OPTIONS:
     case SM_UNIVERSAL:
@@ -1763,7 +1763,7 @@ static bool deselect_item(Selection u)
 #endif
         break;
 
-    case SM_ADDGROUP:
+    case SM_ADD_GROUP:
         if (u.gp->flags & g_sel_mask)
         {
             u.gp->flags &= ~g_sel_mask;
@@ -1893,7 +1893,7 @@ static void sel_cleanup()
     case SM_MULTIRC:
         break;
 
-    case SM_ADDGROUP:
+    case SM_ADD_GROUP:
         if (g_sel_rereading)
         {
             for (AddGroup *gp = g_first_add_group; gp; gp = gp->next)
@@ -2364,7 +2364,7 @@ static DisplayState article_commands(char_int ch)
         }
         if (g_sel_mode == SM_ARTICLE)
         {
-            set_selector(g_sel_threadmode, SS_MAGIC_NUMBER);
+            set_selector(g_sel_thread_mode, SS_MAGIC_NUMBER);
             g_sel_page_sp = g_sel_page_app? g_sel_page_app[0]->subj : nullptr;
         }
         else
@@ -3865,11 +3865,11 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 }
 
 /* Icky placement, but the PUSH/POP stuff is local to this file */
-int univ_visit_group(const char *gname)
+int univ_visit_group(const char *group_name)
 {
     PUSH_SELECTOR();
 
-    univ_visit_group_main(gname);
+    univ_visit_group_main(group_name);
 
     POP_SELECTOR();
     return 0;           /* later may have some error return values */

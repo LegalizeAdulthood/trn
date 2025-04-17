@@ -1232,7 +1232,7 @@ bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum)
     const char* dflt = (move_np!=g_current_newsgroup ? "$^.Lq" : "$^Lq");
     SelectionSortMode save_sort = g_sel_sort;
 
-    if (g_sel_newsgroupsort != SS_NATURAL)
+    if (g_sel_newsgroup_sort != SS_NATURAL)
     {
         if (newnum < 0)
         {
@@ -1442,9 +1442,9 @@ bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum)
             np->num = newnum;
         }
     }
-    if (g_sel_newsgroupsort != SS_NATURAL)
+    if (g_sel_newsgroup_sort != SS_NATURAL)
     {
-        g_sel_sort = g_sel_newsgroupsort;
+        g_sel_sort = g_sel_newsgroup_sort;
         sort_newsgroups();
         g_sel_sort = save_sort;
     }
@@ -1680,7 +1680,7 @@ bool write_newsrcs(Multirc *mptr)
         return true;
     }
 
-    if (g_sel_newsgroupsort != SS_NATURAL)
+    if (g_sel_newsgroup_sort != SS_NATURAL)
     {
         g_sel_sort = SS_NATURAL;
         g_sel_direction = 1;
@@ -1806,9 +1806,9 @@ bool write_newsrcs(Multirc *mptr)
         rename(rp->new_name,rp->name);
     }
 
-    if (g_sel_newsgroupsort != SS_NATURAL)
+    if (g_sel_newsgroup_sort != SS_NATURAL)
     {
-        g_sel_sort = g_sel_newsgroupsort;
+        g_sel_sort = g_sel_newsgroup_sort;
         sort_newsgroups();
         g_sel_sort = save_sort;
     }
