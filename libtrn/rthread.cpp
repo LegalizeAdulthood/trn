@@ -37,7 +37,7 @@
 ArticleNum    g_obj_count{};
 int        g_subject_count{};
 bool       g_output_chase_phrase{};
-HashTable *g_msgid_hash{};
+HashTable *g_msg_id_hash{};
 bool       g_thread_always{}; /* -a */
 bool       g_breadth_first{}; /* -b */
 
@@ -77,9 +77,9 @@ void thread_open()
     bool    find_existing = !g_first_subject;
     Article*ap;
 
-    if (!g_msgid_hash)
+    if (!g_msg_id_hash)
     {
-        g_msgid_hash = hash_create(1999, msgid_cmp); /*TODO: pick a better size */
+        g_msg_id_hash = hash_create(1999, msgid_cmp); /*TODO: pick a better size */
     }
     if (g_threaded_group)
     {
@@ -204,9 +204,9 @@ void thread_close()
     init_tree();                        /* free any tree lines */
 
     update_thread_kill_file();
-    if (g_msgid_hash)
+    if (g_msg_id_hash)
     {
-        hash_walk(g_msgid_hash, cleanup_msgid_hash, 0);
+        hash_walk(g_msg_id_hash, cleanup_msgid_hash, 0);
     }
     g_sel_page_sp = nullptr;
     g_sel_page_app = nullptr;
@@ -922,7 +922,7 @@ void select_thread(Article *thread, AutoKillFlags auto_flags)
 
 /* Select the subthread attached to this article.
 */
-void select_subthread(Article *ap, AutoKillFlags auto_flags)
+void select_sub_thread(Article *ap, AutoKillFlags auto_flags)
 {
     Article*limit;
     int     desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
@@ -1155,7 +1155,7 @@ void kill_thread(Article *thread, AutoKillFlags auto_flags)
 
 /* Kill the subthread attached to this article.
 */
-void kill_subthread(Article *ap, AutoKillFlags auto_flags)
+void kill_sub_thread(Article *ap, AutoKillFlags auto_flags)
 {
     Article* limit;
     const bool toreturn = (auto_flags & SET_TO_RETURN) != 0;
@@ -1254,7 +1254,7 @@ void unkill_thread(Article *thread)
 
 /* Unkill the subthread attached to this article.
 */
-void unkill_subthread(Article *ap)
+void unkill_sub_thread(Article *ap)
 {
     Article* limit;
 
@@ -1316,7 +1316,7 @@ void clear_thread(Article *thread)
 
 /* Clear the auto flags in the subthread attached to this article.
 */
-void clear_subthread(Article *ap)
+void clear_sub_thread(Article *ap)
 {
     Article* limit;
 

@@ -779,7 +779,7 @@ static ArticleSwitchResult art_switch()
         }
         else if (*g_buf == 's' && *u_help_thread)
         {
-            unkill_subthread(g_artp);
+            unkill_sub_thread(g_artp);
         }
         else if (*g_buf == 'a')
         {
@@ -946,7 +946,7 @@ not_threaded:
         }
         if (g_threaded_group)
         {
-            kill_subthread(g_artp,AFFECT_ALL);
+            kill_sub_thread(g_artp,AFFECT_ALL);
         }
         else if (g_art >= g_abs_first && g_art <= g_last_art)
         {
@@ -1826,7 +1826,7 @@ run_the_selector:
             {
                 goto not_threaded;
             }
-            kill_subthread(g_artp, SET_TO_RETURN | AFFECT_ALL);
+            kill_sub_thread(g_artp, SET_TO_RETURN | AFFECT_ALL);
             return AS_NORM;
 
         case 'M':
@@ -2271,7 +2271,7 @@ reask_memorize:
         }
         else
         {
-            select_subthread(g_artp, AUTO_SEL_FOL);
+            select_sub_thread(g_artp, AUTO_SEL_FOL);
             ch = (use_one_line? '+' : '.');
         }
         if (g_general_mode != GM_SELECTOR)
@@ -2344,7 +2344,7 @@ reask_memorize:
         }
         else
         {
-            kill_subthread(g_artp, AFFECT_ALL | AUTO_KILL_FOL);
+            kill_sub_thread(g_artp, AFFECT_ALL | AUTO_KILL_FOL);
         }
         if (g_general_mode != GM_SELECTOR)
         {
@@ -2365,7 +2365,7 @@ reask_memorize:
     }
     else if (ch == 'c')
     {
-        clear_subthread(g_artp);
+        clear_sub_thread(g_artp);
     }
 #if 0
     else if (ch == 's')

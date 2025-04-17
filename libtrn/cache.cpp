@@ -334,7 +334,7 @@ void check_poster(Article *ap)
                     switch (g_auto_select_postings)
                     {
                     case '.':
-                        select_subthread(ap,AUTO_SEL_FOL);
+                        select_sub_thread(ap,AUTO_SEL_FOL);
                         break;
 
                     case '+':
@@ -344,11 +344,11 @@ void check_poster(Article *ap)
                     case 'p':
                         if (ap->parent)
                         {
-                            select_subthread(ap->parent,AUTO_SEL_FOL);
+                            select_sub_thread(ap->parent,AUTO_SEL_FOL);
                         }
                         else
                         {
-                            select_subthread(ap,AUTO_SEL_FOL);
+                            select_sub_thread(ap,AUTO_SEL_FOL);
                         }
                         break;
                     }

@@ -80,7 +80,7 @@ bool valid_article(Article *article)
     if (msgid)
     {
         fix_msgid(msgid);
-        HashDatum data = hash_fetch(g_msgid_hash, msgid, std::strlen(msgid));
+        HashDatum data = hash_fetch(g_msg_id_hash, msgid, std::strlen(msgid));
         if (data.dat_len)
         {
             safefree0(data.dat_ptr);
@@ -207,7 +207,7 @@ Article *get_article(char *msgid)
 
     fix_msgid(msgid);
 
-    HashDatum data = hash_fetch(g_msgid_hash, msgid, std::strlen(msgid));
+    HashDatum data = hash_fetch(g_msg_id_hash, msgid, std::strlen(msgid));
     if (data.dat_len)
     {
         article = allocate_article(0);

@@ -80,7 +80,7 @@ void kill_file_init()
         std::FILE *fp = std::fopen(filexp(cp), "r");
         if (fp != nullptr)
         {
-            g_msgid_hash = hash_create(1999, msgid_cmp);
+            g_msg_id_hash = hash_create(1999, msgid_cmp);
             while (std::fgets(g_buf, sizeof g_buf, fp) != nullptr)
             {
                 if (*g_buf == '<')
@@ -104,7 +104,7 @@ void kill_file_init()
                     if (cp != nullptr)
                     {
                         int auto_flag = s_thread_cmd_flag[cp - s_thread_cmd_ltr];
-                        HashDatum data = hash_fetch(g_msgid_hash, g_buf, std::strlen(g_buf));
+                        HashDatum data = hash_fetch(g_msg_id_hash, g_buf, std::strlen(g_buf));
                         if (!data.dat_ptr)
                         {
                             data.dat_ptr = savestr(g_buf);
@@ -582,7 +582,7 @@ void rewrite_kill_file(ArticleNum thru)
         if (!(g_kf_state & KFS_GLOBAL_THREAD_FILE))
         {
             /* Append all the still-valid thread commands */
-            hash_walk(g_msgid_hash, write_local_thread_commands, 0);
+            hash_walk(g_msg_id_hash, write_local_thread_commands, 0);
         }
         std::fclose(s_newkfp);
         if (!has_content)
@@ -678,7 +678,7 @@ void update_thread_kill_file()
     int elapsed_days = killfile_daynum(s_kf_daynum);
     if (elapsed_days)
     {
-        hash_walk(g_msgid_hash, age_thread_commands, elapsed_days);
+        hash_walk(g_msg_id_hash, age_thread_commands, elapsed_days);
         s_kf_daynum += elapsed_days;
     }
 
@@ -699,7 +699,7 @@ void update_thread_kill_file()
         }
         s_kf_thread_cnt = 0;
         g_kf_change_thread_cnt = 0;
-        hash_walk(g_msgid_hash, write_global_thread_commands, 0); /* Rewrite */
+        hash_walk(g_msg_id_hash, write_global_thread_commands, 0); /* Rewrite */
     }
     else
     {
@@ -708,7 +708,7 @@ void update_thread_kill_file()
         {
             return; /* Yikes! */
         }
-        hash_walk(g_msgid_hash, write_global_thread_commands, 1); /* Append */
+        hash_walk(g_msg_id_hash, write_global_thread_commands, 1); /* Append */
     }
     std::fclose(s_newkfp);
 
@@ -760,7 +760,7 @@ void perform_auto_flags(Article *ap, AutoKillFlags thread_flags, AutoKillFlags s
     }
     else if (chain_flags & AUTO_SEL_FOL)
     {
-        select_subthread(ap, AUTO_SEL_FOL);
+        select_sub_thread(ap, AUTO_SEL_FOL);
     }
     else if (ap->auto_flags & AUTO_SEL_1)
     {
@@ -784,7 +784,7 @@ void perform_auto_flags(Article *ap, AutoKillFlags thread_flags, AutoKillFlags s
     }
     else if (chain_flags & AUTO_KILL_FOL)
     {
-        kill_subthread(ap, AFFECT_ALL | AUTO_KILL_FOL);
+        kill_sub_thread(ap, AFFECT_ALL | AUTO_KILL_FOL);
     }
     else if (ap->auto_flags & AUTO_KILL_1)
     {

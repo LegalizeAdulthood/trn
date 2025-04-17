@@ -1480,7 +1480,7 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
     case 1:
         if (ap)
         {
-            select_subthread(ap, AUTO_KILL_NONE);
+            select_sub_thread(ap, AUTO_KILL_NONE);
             s_special = true;
             s_slines = 1;
             pushchar(Ctl('r'));
@@ -1498,7 +1498,7 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
     case 2:
         if (ap)
         {
-            kill_subthread(ap, AUTO_KILL_NONE);
+            kill_sub_thread(ap, AUTO_KILL_NONE);
             s_special = true;
             s_slines = 1;
             pushchar(Ctl('r'));

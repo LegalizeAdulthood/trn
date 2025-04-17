@@ -563,7 +563,7 @@ int perform(char *cmdlst, int output_level)
         }
         else if (ch == '.')
         {
-            select_subthread(g_artp, savemode? AUTO_SEL_FOL : AUTO_KILL_NONE);
+            select_sub_thread(g_artp, savemode? AUTO_SEL_FOL : AUTO_KILL_NONE);
         }
         else if (ch == '-')
         {
@@ -586,7 +586,7 @@ int perform(char *cmdlst, int output_level)
         }
         else if (ch == ',')
         {
-            kill_subthread(g_artp, AFFECT_ALL | (savemode? AUTO_KILL_FOL : AUTO_KILL_NONE));
+            kill_sub_thread(g_artp, AFFECT_ALL | (savemode? AUTO_KILL_FOL : AUTO_KILL_NONE));
         }
         else if (ch == 'J')
         {
