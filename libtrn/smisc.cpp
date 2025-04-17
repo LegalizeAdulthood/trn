@@ -44,7 +44,7 @@ const char *s_get_statchars(long ent, int line)
     switch (g_s_cur_type)
     {
     case S_ART:
-        return sa_get_statchars(ent,line);
+        return sa_get_stat_chars(ent,line);
 
     default:
         return nullptr;

@@ -25,7 +25,7 @@ static char s_sa_buf[LBUFLEN];    /* misc. buffer */
 
 /* returns statchars in temp space... */
 // int line;            /* which status line (1 = first) */
-const char *sa_get_statchars(long a, int line)
+const char *sa_get_stat_chars(long a, int line)
 {
     static char char_buf[16];
 
