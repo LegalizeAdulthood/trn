@@ -82,7 +82,7 @@ void add_ng_init()
 
 bool find_new_groups()
 {
-    const NewsgroupNum oldcnt = g_newsgroup_count;      /* remember # newsgroups */
+    const NewsgroupNum old_cnt = g_newsgroup_count;      /* remember # newsgroups */
 
     /* Skip this check if the -q flag was given. */
     if (g_quick_start)
@@ -108,7 +108,7 @@ bool find_new_groups()
 
     process_list(GNG_RELOC);
 
-    return oldcnt != g_newsgroup_count;
+    return old_cnt != g_newsgroup_count;
 }
 
 static void process_list(GetNewsgroupFlags flag)
@@ -308,8 +308,8 @@ static void new_local_groups(DataSource *dp)
 static void add_to_hash(HashTable *ng, const char *name, int to_read, char_int ch)
 {
     HashDatum      data;
-    const unsigned namelen = std::strlen(name);
-    data.dat_len = namelen + sizeof (AddGroup);
+    const unsigned name_len = std::strlen(name);
+    data.dat_len = name_len + sizeof (AddGroup);
     AddGroup *node = (AddGroup*)safe_malloc(data.dat_len);
     data.dat_ptr = (char *)node;
     switch (ch)
@@ -329,7 +329,7 @@ static void add_to_hash(HashTable *ng, const char *name, int to_read, char_int c
     node->data_src = g_data_source;
     node->next = nullptr;
     node->prev = nullptr;
-    hash_store(ng, name, namelen, data);
+    hash_store(ng, name, name_len, data);
 }
 
 static void add_to_list(const char *name, int to_read, char_int ch)
