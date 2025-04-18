@@ -1,4 +1,4 @@
-/* This file Copyright 1992,1993 by Clifford A. Adams */
+// This file Copyright 1992,1993 by Clifford A. Adams
 /* trn/samain.h
  *
  * Main routines for article-scan mode.
@@ -8,8 +8,8 @@
 
 #include <config/typedef.h>
 
-extern bool g_sa_mode_zoom;    /* true if in "zoom" (display only selected) mode */
-extern int g_sa_scan_context;  /* contains the scan-context number for the current article scan */
+extern bool g_sa_mode_zoom;    // true if in "zoom" (display only selected) mode
+extern int g_sa_scan_context;  // contains the scan-context number for the current article scan
 
 void sa_init();
 void sa_init_ents();
