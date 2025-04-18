@@ -5,10 +5,10 @@
  * is at the user's own risk.
  */
 
-#include "config/common.h"             /* Declare MemorySize */
+#include "config/common.h"             // Declare MemorySize
 #include "trn/edit_dist.h"
 
-#include "trn/util.h"               /* Declare safe_malloc() */
+#include "trn/util.h"               // Declare safe_malloc()
 
 #include <algorithm>
 #include <cstdlib>
@@ -81,7 +81,7 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
     int row;
     int col;
     int index;
-    int radix;                  /* radix for modular indexing */
+    int radix;                  // radix for modular indexing
 #ifdef TRN_SPEEDUP
     int low;
 #endif
@@ -92,7 +92,7 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
                                            storage, to be used when the
                                            input strings are small enough */
 
-/* Handle trivial cases when one string is empty */
+// Handle trivial cases when one string is empty
 
     if (from == nullptr || !from_len)
     {
@@ -107,7 +107,7 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
         return from_len * s_delete_cost;
     }
 
-    /* Initialize registers */
+    // Initialize registers
 
     radix = 2 * from_len + 3;
 #ifdef TRN_SPEEDUP
@@ -131,9 +131,9 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
 #ifndef TRN_SPEEDUP
         swap_int(ins, del);
 #endif
-    } /* if from_len > to_len */
+    } // if from_len > to_len
 
-/* Allocate the array storage (from the heap if necessary) */
+// Allocate the array storage (from the heap if necessary)
 
     if (from_len <= STRLENTHRESHOLD)
     {
@@ -233,13 +233,13 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
         printf("%2d ", buffer[index - 1]);
 #endif
 
-    } /* for col = 1 */
+    } // for col = 1
 
 #ifdef DEBUG_EDITDIST
     printf("\n %c %2d ", to[1], 2 * ins);
 #endif
 
-/* Now handle the rest of the matrix */
+// Now handle the rest of the matrix
 
     for (row = 1; row < to_len; row++)
     {
@@ -265,7 +265,7 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
 #endif
 
             index = mod(index + 1);
-        } /* for col = 1 */
+        } // for col = 1
 #ifdef DEBUG_EDITDIST
         if (row < to_len - 1)
         {
@@ -282,7 +282,7 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
             break;
         }
 #endif
-    } /* for row = 1 */
+    } // for row = 1
 
     row = buffer[mod(index + radix - 1)];
     if (buffer != store)
@@ -290,4 +290,4 @@ int edit_distn(const char *from, int from_len, const char *to, int to_len)
         std::free((char *) buffer);
     }
     return row;
-} /* edit_distn */
+} // edit_distn
