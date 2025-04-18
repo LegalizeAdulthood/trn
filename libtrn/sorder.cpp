@@ -1,4 +1,4 @@
-/* This file Copyright 1993 by Clifford A. Adams */
+// This file Copyright 1993 by Clifford A. Adams
 /* sorder.c
  *
  * scan ordering
@@ -14,10 +14,10 @@
 
 #include <cstdlib>
 
-bool g_s_order_changed{}; /* If true, resort next time order is considered */
+bool g_s_order_changed{}; // If true, resort next time order is considered
 
 #ifdef UNDEF
-/* pointers to the two entries to be compared */
+// pointers to the two entries to be compared
 int s_compare(long *a, long *b)
 {
     switch (g_s_cur_type)
@@ -31,7 +31,7 @@ int s_compare(long *a, long *b)
 }
 #endif
 
-/* the two entry numbers to be compared */
+// the two entry numbers to be compared
 int s_compare(long a, long b)
 {
     switch (g_s_cur_type)
@@ -49,7 +49,7 @@ int s_compare(long a, long b)
  */
 #define SOFF(a) ((a)-1)
 
-/* Uses a heapsort algorithm with the heap readjustment inlined. */
+// Uses a heapsort algorithm with the heap readjustment inlined.
 void s_sort_basic()
 {
     int t1;
@@ -58,12 +58,12 @@ void s_sort_basic()
     int n = g_s_ent_sort_max + 1;
     if (n < 1)
     {
-        return;         /* nothing to sort */
+        return;         // nothing to sort
     }
 
     for (int i = n / 2; i >= 1; i--)
     {
-        /* begin heap readjust */
+        // begin heap readjust
         t1 = g_s_ent_sort[SOFF(i)];
         j = 2*i;
         while (j <= n)
@@ -75,21 +75,21 @@ void s_sort_basic()
             }
             if (s_compare(t1,g_s_ent_sort[SOFF(j)]) > 0)
             {
-                break;          /* out of while loop */
+                break;          // out of while loop
             }
             g_s_ent_sort[SOFF(j/2)] = g_s_ent_sort[SOFF(j)];
             j = j*2;
-        } /* while */
+        } // while
         g_s_ent_sort[SOFF(j/2)] = t1;
-        /* end heap readjust */
-    } /* for */
+        // end heap readjust
+    } // for
 
     for (int i = n - 1; i >= 1; i--)
     {
         t1 = g_s_ent_sort[SOFF(i+1)];
         g_s_ent_sort[SOFF(i+1)] = g_s_ent_sort[SOFF(1)];
         g_s_ent_sort[SOFF(1)] = t1;
-        /* begin heap readjust */
+        // begin heap readjust
         j = 2;
         while (j <= i)
         {
@@ -100,15 +100,15 @@ void s_sort_basic()
             }
             if (s_compare(t1,g_s_ent_sort[SOFF(j)]) > 0)
             {
-                break;  /* out of while */
+                break;  // out of while
             }
             g_s_ent_sort[SOFF(j/2)] = g_s_ent_sort[SOFF(j)];
             j = j*2;
-        } /* while */
+        } // while
         g_s_ent_sort[SOFF(j/2)] = t1;
-        /* end heap readjust */
-    } /* for */
-    /* end of heapsort */
+        // end heap readjust
+    } // for
+    // end of heapsort
 }
 
 void s_sort()
@@ -117,9 +117,9 @@ void s_sort()
     std::qsort((void*)g_s_ent_sort,(g_s_ent_sort_max)+1,sizeof(long),s_compare);
 #endif
     s_sort_basic();
-    g_s_ent_sorted_max = g_s_ent_sort_max;  /* whole array is now sorted */
+    g_s_ent_sorted_max = g_s_ent_sort_max;  // whole array is now sorted
     g_s_order_changed = false;
-    /* rebuild the indexes */
+    // rebuild the indexes
     for (long i = 0; i <= g_s_ent_sort_max; i++)
     {
         g_s_ent_index[g_s_ent_sort[i]] = i;
@@ -148,28 +148,28 @@ void s_order_clean()
     g_s_ent_index_max = -1;
 }
 
-/* adds the entry number to the current context */
+// adds the entry number to the current context
 void s_order_add(long ent)
 {
     long size;
 
     if (ent < g_s_ent_index_max && g_s_ent_index[ent] >= 0)
     {
-        return;         /* entry is already in the list */
+        return;         // entry is already in the list
     }
 
-    /* add entry to end of sorted list */
+    // add entry to end of sorted list
     g_s_ent_sort_max += 1;
-    if (g_s_ent_sort_max % 100 == 0)    /* be nice to realloc */
+    if (g_s_ent_sort_max % 100 == 0)    // be nice to realloc
     {
         size = (g_s_ent_sort_max+100) * sizeof (long);
         g_s_ent_sort = (long*)safe_realloc((char*)g_s_ent_sort,size);
-        /* change the context too */
+        // change the context too
         g_s_contexts[g_s_cur_context].ent_sort = g_s_ent_sort;
     }
     g_s_ent_sort[g_s_ent_sort_max] = ent;
 
-    /* grow index list if needed */
+    // grow index list if needed
     if (ent > g_s_ent_index_max)
     {
         long old = g_s_ent_index_max;
@@ -177,15 +177,15 @@ void s_order_add(long ent)
         {
             g_s_ent_index_max += 1;
         }
-        g_s_ent_index_max = (ent/100+1) * 100;  /* round up */
+        g_s_ent_index_max = (ent/100+1) * 100;  // round up
         size = (g_s_ent_index_max + 1) * sizeof (long);
         g_s_ent_index = (long*)safe_realloc((char*)g_s_ent_index,size);
-        /* change the context too */
+        // change the context too
         g_s_contexts[g_s_cur_context].ent_index = g_s_ent_index;
-        /* initialize new indexes */
+        // initialize new indexes
         for (long i = old + 1; i < g_s_ent_index_max; i++)
         {
-            g_s_ent_index[i] = -1;      /* -1 == not a legal entry */
+            g_s_ent_index[i] = -1;      // -1 == not a legal entry
         }
     }
     g_s_ent_index[ent] = g_s_ent_sort_max;
@@ -228,8 +228,8 @@ long s_next(long ent)
     return g_s_ent_sort[tmp+1];
 }
 
-/* given an entry, returns previous eligible entry */
-/* returns 0 if no previous eligible entry */
+// given an entry, returns previous eligible entry
+// returns 0 if no previous eligible entry
 long s_prev_elig(long a)
 {
     while ((a = s_prev(a)) != 0)
@@ -242,8 +242,8 @@ long s_prev_elig(long a)
     return 0L;
 }
 
-/* given an entry, returns next eligible entry */
-/* returns 0 if no next eligible entry */
+// given an entry, returns next eligible entry
+// returns 0 if no next eligible entry
 long s_next_elig(long a)
 {
     while ((a = s_next(a)) != 0)
