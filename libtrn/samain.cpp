@@ -167,14 +167,14 @@ void sa_init_mode()
 
 SaMainResult sa_main_loop()
 {
-    /* Eventually, strn will need a variable in score.[ch] set when the
-     * scoring initialization *failed*, so that strn could try to
-     * initialize the scoring again or decide to disallow score operations.)
-     */
-    /* If strn is in score mode but scoring is not initialized,
-     * then try to initialize.
-     * If that fails then strn will just use arrival ordering.
-     */
+    // Eventually, strn will need a variable in score.[ch] set when the
+    // scoring initialization *failed*, so that strn could try to
+    // initialize the scoring again or decide to disallow score operations.)
+    //
+    // If strn is in score mode but scoring is not initialized,
+    // then try to initialize.
+    // If that fails then strn will just use arrival ordering.
+    //
     if (!g_sc_initialized && g_sa_mode_order == SA_ORDER_DESCENDING)
     {
         g_sc_delay = false;     // yes, actually score...
