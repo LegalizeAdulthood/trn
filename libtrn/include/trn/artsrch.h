@@ -1,6 +1,6 @@
 /* trn/artsrch.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_ARTSRCH_H
 #define TRN_ARTSRCH_H
 
@@ -31,13 +31,13 @@ enum ArtScope
     ARTSCOPE_ARTICLE = 6
 };
 
-extern std::string    g_last_pat;         /* last search pattern */
-extern CompiledRegex *g_bra_compex;       /* current compex with brackets */
+extern std::string    g_last_pat;         // last search pattern
+extern CompiledRegex *g_bra_compex;       // current compex with brackets
 extern const char    *g_scope_str;        //
-extern ArtScope       g_art_how_much;     /* search scope */
-extern HeaderLineType g_art_srch_hdr;     /* specific header number to search */
-extern bool           g_art_do_read;      /* search read articles? */
-extern bool           g_kill_thru_kludge; /* -k */
+extern ArtScope       g_art_how_much;     // search scope
+extern HeaderLineType g_art_srch_hdr;     // specific header number to search
+extern bool           g_art_do_read;      // search read articles?
+extern bool           g_kill_thru_kludge; // -k
 
 void            art_search_init();
 ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd);
