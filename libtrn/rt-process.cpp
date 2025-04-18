@@ -26,8 +26,7 @@ static void  fix_msg_id(char *msgid);
 static char *valid_message_id(char *start, char *end);
 static void  unlink_child(Article *child);
 
-/* This depends on art being set to the current article number.
-*/
+// This depends on art being set to the current article number.
 Article *allocate_article(ArticleNum artnum)
 {
     Article* article;
@@ -109,8 +108,8 @@ bool valid_article(Article *article)
             return true;
         }
 
-        /* Whenever we replace a fake art with a real one, it's a lot of work
-        ** cleaning up the references.  Fortunately, this is not often. */
+        // Whenever we replace a fake art with a real one, it's a lot of work
+        // cleaning up the references.  Fortunately, this is not often.
         if (fake_ap && (fake_ap->flags & AF_TMP_MEM))
         {
             article->parent = fake_ap->parent;
@@ -198,9 +197,9 @@ bool valid_article(Article *article)
     return false;
 }
 
-/* Take a message-id and see if we already know about it.  If so, return
-** the article, otherwise create a fake one.
-*/
+// Take a message-id and see if we already know about it.  If so, return
+// the article, otherwise create a fake one.
+//
 Article *get_article(char *msgid)
 {
     Article* article;
@@ -235,9 +234,9 @@ Article *get_article(char *msgid)
     return article;
 }
 
-/* Take all the data we've accumulated about the article and shove it into
-** the article tree at the best place we can deduce.
-*/
+// Take all the data we've accumulated about the article and shove it into
+// the article tree at the best place we can deduce.
+//
 void thread_article(Article *article, char *references)
 {
     Article* ap;
@@ -252,9 +251,8 @@ void thread_article(Article *article, char *references)
     // We're definitely not a fake anymore
     article->flags = (article->flags & ~AF_FAKE) | AF_THREADED;
 
-    /* If the article was already part of an existing thread, unlink it
-    ** to try to put it in the best possible spot.
-    */
+    // If the article was already part of an existing thread, unlink it
+    // to try to put it in the best possible spot.
     if (s_fake_had_subj)
     {
         if (s_fake_had_subj->thread != article->subj->thread)
@@ -270,10 +268,9 @@ void thread_article(Article *article, char *references)
         }
         Article *stopper = ap;
         unlink_child(article);
-        /* We'll assume that this article has as good or better references
-        ** than the child that faked us initially.  Free the fake reference-
-        ** chain and process our references as usual.
-        */
+        // We'll assume that this article has as good or better references
+        // than the child that faked us initially.  Free the fake reference-
+        // chain and process our references as usual.
         for (ap = article->parent; ap != stopper; ap = prev)
         {
             unlink_child(ap);
@@ -287,9 +284,8 @@ void thread_article(Article *article, char *references)
         article->sibling = nullptr;
     }
 
-    /* If we have references, process them from the right end one at a time
-    ** until we either run into somebody, or we run out of references.
-    */
+    // If we have references, process them from the right end one at a time
+    // until we either run into somebody, or we run out of references.
     if (references && *references)
     {
         prev = article;
@@ -329,11 +325,10 @@ void thread_article(Article *article, char *references)
                 subj_autofl |= ap->auto_flags;
             }
 
-            /* Check for duplicates on the reference line.  Brand-new data has
-            ** no date.  Data we just allocated earlier on this line has a
-            ** date but no subj.  Special-case the article itself, since it
-            ** does have a subj.
-            */
+            // Check for duplicates on the reference line.  Brand-new data has
+            // no date.  Data we just allocated earlier on this line has a
+            // date but no subj.  Special-case the article itself, since it
+            // does have a subj.
             if ((ap->date && !ap->subj) || ap == article)
             {
                 ap = prev;
@@ -344,9 +339,8 @@ void thread_article(Article *article, char *references)
                 goto next;
             }
 
-            /* When we're doing late processing of In-Reply-To: lines, we may
-            ** have to move an article from an old position.
-            */
+            // When we're doing late processing of In-Reply-To: lines, we may
+            // have to move an article from an old position.
             if (rethreading && prev->subj)
             {
                 unlink_child(prev);
@@ -376,14 +370,12 @@ next:
             goto no_references;
         }
 
-        /* Check if we ran into anybody that was already linked.  If so, we
-        ** just use their thread.
-        */
+        // Check if we ran into anybody that was already linked.  If so, we
+        // just use their thread.
         if (ap->subj)
         {
-            /* See if this article spans the gap between what we thought
-            ** were two different threads.
-            */
+            // See if this article spans the gap between what we thought
+            // were two different threads.
             if (article->subj->thread != ap->subj->thread)
             {
                 merge_threads(ap->subj, article->subj);
@@ -391,9 +383,8 @@ next:
         }
         else
         {
-            /* We didn't find anybody we knew, so either create a new thread
-            ** or use the article's thread if it was previously faked.
-            */
+            // We didn't find anybody we knew, so either create a new thread
+            // or use the article's thread if it was previously faked.
             ap->subj = article->subj;
             link_child(ap);
         }
@@ -403,20 +394,18 @@ next:
             ap->subj = article->subj;
         }
 
-        /* Make sure we didn't circularly link to a child article(!), by
-        ** ensuring that we run off the top before we run into ourself.
-        */
+        // Make sure we didn't circularly link to a child article(!), by
+        // ensuring that we run off the top before we run into ourself.
         while (ap && ap->parent != article)
         {
             ap = ap->parent;
         }
         if (ap)
         {
-            /* Ugh.  Someone's tweaked reference line with an incorrect
-            ** article-order arrived first, and one of our children is
-            ** really one of our ancestors. Cut off the bogus child branch
-            ** right where we are and link it to the thread.
-            */
+            // Ugh.  Someone's tweaked reference line with an incorrect
+            // article-order arrived first, and one of our children is
+            // really one of our ancestors. Cut off the bogus child branch
+            // right where we are and link it to the thread.
             unlink_child(ap);
             ap->parent = nullptr;
             link_child(ap);
@@ -425,10 +414,9 @@ next:
     else
     {
 no_references:
-        /* The article has no references.  Either turn it into a new thread
-        ** or re-attach the fleshed-out article to its old thread.  Don't
-        ** touch it at all unless this is the first attempt at threading it.
-        */
+        // The article has no references.  Either turn it into a new thread
+        // or re-attach the fleshed-out article to its old thread.  Don't
+        // touch it at all unless this is the first attempt at threading it.
         if (!rethreading)
         {
             link_child(article);
@@ -489,8 +477,7 @@ void rover_thread(Article *article, char *s)
     }
 }
 
-/* Check if the string we've found looks like a valid message-id reference.
-*/
+// Check if the string we've found looks like a valid message-id reference.
 static char *valid_message_id(char *start, char *end)
 {
     char* mid;
@@ -502,9 +489,8 @@ static char *valid_message_id(char *start, char *end)
 
     if (*end != '>')
     {
-        /* Compensate for space cadets who include the header in their
-        ** subsitution of all '>'s into another citation character.
-        */
+        // Compensate for space cadets who include the header in their
+        // subsitution of all '>'s into another citation character.
         if (*end == '<' || *end == '-' || *end == '!' || *end == '%'    //
             || *end == ')' || *end == '|' || *end == ':' || *end == '}' //
             || *end == '*' || *end == '+' || *end == '#' || *end == ']' //
@@ -526,8 +512,7 @@ static char *valid_message_id(char *start, char *end)
     return end;
 }
 
-/* Remove an article from its parent/siblings.  Leave parent pointer intact.
-*/
+// Remove an article from its parent/siblings.  Leave parent pointer intact.
 static void unlink_child(Article *child)
 {
     Article* last;
@@ -571,9 +556,8 @@ sibling_search:
     }
 }
 
-/* Link an article to its parent article.  If its parent pointer is zero,
-** link it to its thread.  Sorts siblings by date.
-*/
+// Link an article to its parent article.  If its parent pointer is zero,
+// link it to its thread.  Sorts siblings by date.
 void link_child(Article *child)
 {
     Article* ap;
@@ -617,8 +601,7 @@ sibling_search:
     }
 }
 
-/* Merge all of s2's thread into s1's thread.
-*/
+// Merge all of s2's thread into s1's thread.
 void merge_threads(Subject *s1, Subject *s2)
 {
     Article *t1 = s1->thread;
