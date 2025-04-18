@@ -87,8 +87,8 @@ struct DataSource
 
 enum
 {
-    LENGTH_HACK = 5, /* Don't bother comparing strings with lengths
-                      * that differ by more than this. */
+    LENGTH_HACK = 5, // Don't bother comparing strings with lengths
+                     // that differ by more than this.
     MAX_NG = 9,      // Maximum number of groups to offer.
 
     DATASRC_ALARM_SECS = (5 * 60)
