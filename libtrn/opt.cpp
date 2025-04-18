@@ -1,6 +1,6 @@
 /* opt.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <config/fdio.h>
 #include <config/string_case_compare.h>
@@ -204,7 +204,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     prep_ini_words(g_options_ini);
     if (argc >= 2 && !strcmp(argv[1],"-c"))
     {
-        g_check_flag=true;                       /* so we can optimize for -c */
+        g_check_flag=true;                       // so we can optimize for -c
     }
     interp(*tcbufptr,TCBUF_SIZE,GLOBINIT);
     opt_file(*tcbufptr,tcbufptr,false);
@@ -212,7 +212,7 @@ void opt_init(int argc, char *argv[], char **tcbufptr)
     const int len = ini_len(g_options_ini);
     g_option_def_vals = (char**)safe_malloc(len*sizeof(char*));
     std::memset((char*)g_option_def_vals,0,(g_options_ini)[0].checksum * sizeof (char*));
-    /* Set DEFHIDE and DEFMAGIC to current values and clear g_user_htype list */
+    // Set DEFHIDE and DEFMAGIC to current values and clear g_user_htype list
     set_header_list(HT_DEF_HIDE,HT_HIDE,"");
     set_header_list(HT_DEF_MAGIC,HT_MAGIC,"");
 
@@ -360,7 +360,7 @@ void opt_file(const char *filename, char **tcbufptr, bool bleat)
     else if (bleat)
     {
         std::printf(g_cant_open,filename);
-        /*term_down(1);*/
+        // term_down(1);
     }
 
     *filebuf = '\0';
@@ -417,7 +417,7 @@ void set_option(OptionIndex num, const char *s)
         g_use_mouse = is_yes(s);
         if (g_use_mouse)
         {
-            /* set up the Xterm mouse sequence */
+            // set up the Xterm mouse sequence
             set_macro("\033[M+3","\003");
         }
         break;
@@ -915,7 +915,7 @@ void set_option(OptionIndex num, const char *s)
 
     case OI_SCAN_ART_DISP_SUBJ:
 #if 0
-        /* for now, always on. */
+        // for now, always on.
         g_sa_mode_desc_subject = YES(s);
 #endif
         break;
@@ -1067,7 +1067,7 @@ void save_options(const char *filename)
     }
     if (line)
     {
-        /*std::putc('\n',fp_out);*/
+        // std::putc('\n',fp_out);
         std::fputs(line,fp_out);
     }
     std::fclose(fp_out);
@@ -1496,7 +1496,7 @@ static void set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, const
 
     if (flag == HT_HIDE || flag == HT_DEF_HIDE)
     {
-        /* Free old g_user_htype list */
+        // Free old g_user_htype list
         while (g_user_htype_count > 1)
         {
             std::free(g_user_htype[--g_user_htype_count].name);
