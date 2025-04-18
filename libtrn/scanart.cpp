@@ -104,9 +104,9 @@ SaMainResult sa_main()
     }
     g_sa_go_explicit = false;
 
-    /* If called from the trn thread-selector and articles/threads were
-     * selected there, "select" the articles and enter the zoom mode.
-     */
+    // If called from the trn thread-selector and articles/threads were
+    // selected there, "select" the articles and enter the zoom mode.
+    //
     if (g_sa_do_sel_threads)
     {
         sa_sel_threads();
@@ -149,9 +149,9 @@ void sa_grow(ArticleNum oldlast, ArticleNum last)
 
 void sa_cleanup()
 {
-    /* we might be called by other routines which aren't sure
-     * about the scan status
-     */
+    // we might be called by other routines which aren't sure
+    // about the scan status
+    //
     if (!g_sa_initialized)
     {
         return;
