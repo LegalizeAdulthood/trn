@@ -1,6 +1,6 @@
 /* kfile.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "config/common.h"
 #include "trn/kfile.h"
@@ -33,11 +33,11 @@
 #include <ctime>
 #include <filesystem>
 
-std::FILE         *g_local_kfp{};             /* local (for this newsgroup) file */
-KillFileStateFlags g_kf_state{};              /* the state of our kill files */
-KillFileStateFlags g_kfs_thread_change_set{}; /* bits to set for thread changes */
-int                g_kf_change_thread_cnt{};  /* # entries changed from old to new */
-ArticleNum         g_kill_first{};            /* used as g_firstart when killing */
+std::FILE         *g_local_kfp{};             // local (for this newsgroup) file
+KillFileStateFlags g_kf_state{};              // the state of our kill files
+KillFileStateFlags g_kfs_thread_change_set{}; // bits to set for thread changes
+int                g_kf_change_thread_cnt{};  // # entries changed from old to new
+ArticleNum         g_kill_first{};            // used as g_firstart when killing
 
 static void mention(const char *str);
 static bool kill_file_junk(char *ptr, int killmask);
@@ -45,10 +45,10 @@ static int  write_local_thread_commands(int keylen, HashDatum *data, int extra);
 static int  write_global_thread_commands(int keylen, HashDatum *data, int appending);
 static int  age_thread_commands(int keylen, HashDatum *data, int elapsed_days);
 
-static std::FILE         *s_global_kill_file_fp{};                /* global article killer file */
-static KillFileStateFlags s_kill_file_state_local_change_clear{}; /* bits to clear local changes */
-static int                s_kill_file_thread_cnt{};               /* # entries in the thread kfile */
-static long               s_kill_file_day_num{};                  /* day number for thread killfile */
+static std::FILE         *s_global_kill_file_fp{};                // global article killer file
+static KillFileStateFlags s_kill_file_state_local_change_clear{}; // bits to clear local changes
+static int                s_kill_file_thread_cnt{};               // # entries in the thread kfile
+static long               s_kill_file_day_num{};                  // day number for thread killfile
 static bool               s_exit_cmds{};
 static char               s_thread_cmd_ltr[] = "JK,j+S.m";
 static AutoKillFlags      s_thread_cmd_flag[]{
@@ -157,7 +157,7 @@ int do_kill_file(std::FILE *kfp, int entering)
 
     g_art = g_last_art+1;
     g_kill_first = g_first_art;
-    std::fseek(kfp,0L,0);                    /* rewind file */
+    std::fseek(kfp,0L,0);                    // rewind file
     while (std::fgets(g_buf, LINE_BUF_LEN, kfp) != nullptr)
     {
         if (*(cp = g_buf + std::strlen(g_buf) - 1) == '\n')
@@ -208,7 +208,7 @@ int do_kill_file(std::FILE *kfp, int entering)
             }
             continue;
         }
-        if (*bp == 'X')                 /* exit command? */
+        if (*bp == 'X')                 // exit command?
         {
             if (entering)
             {
@@ -273,15 +273,15 @@ int do_kill_file(std::FILE *kfp, int entering)
                 break;
 
             case SRCH_SUBJ_DONE:
-                /*std::fputs("\tsubject not found (?)\n",stdout);*/
+                // std::fputs("\tsubject not found (?)\n",stdout);
                 break;
 
             case SRCH_NOT_FOUND:
-                /*std::fputs("\tnot found\n",stdout);*/
+                // std::fputs("\tnot found\n",stdout);
                 break;
 
             case SRCH_FOUND:
-                /*std::fputs("\tfound\n",stdout);*/
+                // std::fputs("\tfound\n",stdout);
                 break;
 
             case SRCH_ERROR:
@@ -365,8 +365,8 @@ int do_kill_file(std::FILE *kfp, int entering)
             switch (bp[1])
             {
             case 'X':
-                killmask |= g_sel_mask; /* don't kill selected articles */
-                /* FALL THROUGH */
+                killmask |= g_sel_mask; // don't kill selected articles
+                // FALL THROUGH
 
             case 'j':
                 article_walk(kill_file_junk, killmask);
@@ -422,7 +422,7 @@ static bool kill_file_junk(char *ptr, int killmask)
 
 void kill_unwanted(ArticleNum starting, const char *message, int entering)
 {
-    bool intr = false;                  /* did we get an interrupt? */
+    bool intr = false;                  // did we get an interrupt?
     MinorMode oldmode = g_mode;
     bool anytokill = (g_newsgroup_ptr->to_read > 0);
 
@@ -447,7 +447,7 @@ void kill_unwanted(ArticleNum starting, const char *message, int entering)
             }
             intr = do_kill_file(g_local_kfp, entering);
         }
-        open_kill_file(KF_GLOBAL);          /* Just in case the name changed */
+        open_kill_file(KF_GLOBAL);          // Just in case the name changed
         if (s_global_kill_file_fp && !intr)
         {
             intr = do_kill_file(s_global_kill_file_fp, entering);
@@ -464,9 +464,9 @@ void kill_unwanted(ArticleNum starting, const char *message, int entering)
                 pad(g_just_a_sec);
             }
         }
-        if (anytokill)                  /* if there was anything to kill */
+        if (anytokill)                  // if there was anything to kill
         {
-            g_force_last = false;        /* allow for having killed it all */
+            g_force_last = false;        // allow for having killed it all
         }
         g_first_art = oldfirst;
     }
@@ -485,7 +485,7 @@ static int write_local_thread_commands(int keylen, HashDatum *data, int extra)
 
     if (autofl && ((ap->flags & AF_EXISTS) || ap->child1))
     {
-        /* The arrays are in priority order, so find highest priority bit. */
+        // The arrays are in priority order, so find highest priority bit.
         for (int i = 0; s_thread_cmd_ltr[i]; i++)
         {
             if (autofl & s_thread_cmd_flag[i])
@@ -510,13 +510,13 @@ void rewrite_kill_file(ArticleNum thru)
 
     if (g_local_kfp)
     {
-        std::fseek(g_local_kfp, 0L, 0);       /* rewind current file */
+        std::fseek(g_local_kfp, 0L, 0);       // rewind current file
     }
     else
     {
         make_dir(killname, MD_FILE);
     }
-    remove(killname);                   /* to prevent file reuse */
+    remove(killname);                   // to prevent file reuse
     g_kf_state &= ~(s_kill_file_state_local_change_clear | KFS_NORMAL_LINES);
     s_new_kill_file_fp = std::fopen(killname, "w");
     if (s_new_kill_file_fp != nullptr)
@@ -541,12 +541,12 @@ void rewrite_kill_file(ArticleNum thru)
                 continue;
             }
             bp = skip_space(g_buf);
-            /* Leave out any outdated thread commands */
+            // Leave out any outdated thread commands
             if (*bp == 'T' || *bp == '<')
             {
                 continue;
             }
-            /* Write star commands after other kill commands */
+            // Write star commands after other kill commands
             if (*bp == '*')
             {
                 has_star_commands = true;
@@ -564,7 +564,7 @@ void rewrite_kill_file(ArticleNum thru)
         }
         if (has_star_commands)
         {
-            std::fseek(g_local_kfp,0L,0);                     /* rewind file */
+            std::fseek(g_local_kfp,0L,0);                     // rewind file
             while (std::fgets(g_buf, LINE_BUF_LEN, g_local_kfp) != nullptr)
             {
                 bp = skip_space(g_buf);
@@ -581,7 +581,7 @@ void rewrite_kill_file(ArticleNum thru)
         }
         if (!(g_kf_state & KFS_GLOBAL_THREAD_FILE))
         {
-            /* Append all the still-valid thread commands */
+            // Append all the still-valid thread commands
             hash_walk(g_msg_id_hash, write_local_thread_commands, 0);
         }
         std::fclose(s_new_kill_file_fp);
@@ -589,7 +589,7 @@ void rewrite_kill_file(ArticleNum thru)
         {
             remove(killname);
         }
-        open_kill_file(KF_LOCAL);           /* and reopen local file */
+        open_kill_file(KF_LOCAL);           // and reopen local file
     }
     else
     {
@@ -627,7 +627,7 @@ static int write_global_thread_commands(int keylen, HashDatum *data, int appendi
         msgid = ap->msg_id;
     }
 
-    /* The arrays are in priority order, so find highest priority bit. */
+    // The arrays are in priority order, so find highest priority bit.
     for (int i = 0; s_thread_cmd_ltr[i]; i++)
     {
         if (autofl & s_thread_cmd_flag[i])
@@ -691,24 +691,24 @@ void update_thread_kill_file()
     make_dir(cp, MD_FILE);
     if (g_kf_change_thread_cnt * 5 > s_kill_file_thread_cnt)
     {
-        remove(cp);                     /* to prevent file reuse */
+        remove(cp);                     // to prevent file reuse
         s_new_kill_file_fp = std::fopen(cp, "w");
         if (s_new_kill_file_fp == nullptr)
         {
-            return; /* Yikes! */
+            return; // Yikes!
         }
         s_kill_file_thread_cnt = 0;
         g_kf_change_thread_cnt = 0;
-        hash_walk(g_msg_id_hash, write_global_thread_commands, 0); /* Rewrite */
+        hash_walk(g_msg_id_hash, write_global_thread_commands, 0); // Rewrite
     }
     else
     {
         s_new_kill_file_fp = std::fopen(cp, "a");
         if (s_new_kill_file_fp == nullptr)
         {
-            return; /* Yikes! */
+            return; // Yikes!
         }
-        hash_walk(g_msg_id_hash, write_global_thread_commands, 1); /* Append */
+        hash_walk(g_msg_id_hash, write_global_thread_commands, 1); // Append
     }
     std::fclose(s_new_kill_file_fp);
 
@@ -792,7 +792,7 @@ void perform_auto_flags(Article *ap, AutoKillFlags thread_flags, AutoKillFlags s
     }
 }
 
-/* edit KILL file for newsgroup */
+// edit KILL file for newsgroup
 
 void edit_kill_file()
 {
@@ -824,14 +824,14 @@ void edit_kill_file()
         std::printf("\nEditing %s KILL file:\n%s\n",
             (g_in_ng?"local":"global"),g_cmd_buf);
         term_down(3);
-        reset_tty();                      /* make sure tty is friendly */
-        do_shell(SH, g_cmd_buf);         /* invoke the shell */
-        no_echo();                       /* and make terminal */
-        cr_mode();                       /*   unfriendly again */
+        reset_tty();                      // make sure tty is friendly
+        do_shell(SH, g_cmd_buf);         // invoke the shell
+        no_echo();                       // and make terminal
+        cr_mode();                       // unfriendly again
         open_kill_file(g_in_ng);
         if (g_local_kfp)
         {
-            std::fseek(g_local_kfp,0L,0);     /* rewind file */
+            std::fseek(g_local_kfp,0L,0);     // rewind file
             g_kf_state &= ~KFS_NORMAL_LINES;
             while (std::fgets(g_buf, LINE_BUF_LEN, g_local_kfp) != nullptr)
             {
@@ -879,7 +879,7 @@ void open_kill_file(int local)
 {
     const char *kname = file_exp(local ? get_val_const("KILLLOCAL", s_kill_local) : get_val_const("KILLGLOBAL", s_kill_global));
 
-    /* delete the file if it is empty */
+    // delete the file if it is empty
     if (std::filesystem::exists(kname) && std::filesystem::file_size(kname) == 0)
     {
         std::filesystem::remove(kname);
