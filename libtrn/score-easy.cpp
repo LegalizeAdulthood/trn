@@ -1,4 +1,4 @@
-/* This file Copyright 1993 by Clifford A. Adams */
+// This file Copyright 1993 by Clifford A. Adams
 /* score-easy.c
  *
  * Simple interactive menus for scorefile tasks.
@@ -13,15 +13,15 @@
 #include <cstdio>
 #include <cstring>
 
-/* new line to return to the caller. */
+// new line to return to the caller.
 static char s_sc_e_newline[LINE_BUF_LEN];
 
-/* returns new string or nullptr to abort. */
+// returns new string or nullptr to abort.
 char *sc_easy_append()
 {
     char ch;
 
-    char  filechar = '\0'; /* GCC warning avoidance */
+    char  filechar = '\0'; // GCC warning avoidance
     char *s = s_sc_e_newline;
     std::printf("\nScorefile easy append mode.\n");
     bool q_done = false;
@@ -70,7 +70,7 @@ char *sc_easy_append()
             break;
         }
     }
-    while (filechar == '\0')    /* choose one */
+    while (filechar == '\0')    // choose one
     {
         std::printf("Type the (single character) abbreviation of the scorefile:");
         std::fflush(stdout);
@@ -142,11 +142,11 @@ char *sc_easy_append()
             {
                 if (g_buf[1] != '0')
                 {
-                    continue;   /* the while loop */
+                    continue;   // the while loop
                 }
             }
             std::sprintf(s,"%ld",score);
-            s = s_sc_e_newline+std::strlen(s_sc_e_newline); /* point at terminator  */
+            s = s_sc_e_newline+std::strlen(s_sc_e_newline); // point at terminator
             *s++ = ' ';
             q_done = true;
         }
@@ -162,8 +162,8 @@ char *sc_easy_append()
         std::printf("0) Exit.\n");
         std::printf("1) Give the score to the current subject.\n");
         std::printf("2) Give the score to the current author.\n");
-/* add some more options here later */
-/* perhaps fold regular-expression question here? */
+// add some more options here later
+// perhaps fold regular-expression question here?
         ch = menu_get_char();
         q_done = true;
         switch (ch)
@@ -191,11 +191,11 @@ char *sc_easy_append()
             break;
         }
     }
-    /* later ask for headers, pattern-matching, etc... */
+    // later ask for headers, pattern-matching, etc...
     return nullptr;
 }
 
-/* returns new string or nullptr to abort. */
+// returns new string or nullptr to abort.
 const char *sc_easy_command()
 {
     std::printf("\nScoring easy command mode.\n");
@@ -208,7 +208,7 @@ const char *sc_easy_command()
         std::printf("3) Explain the current article's score.\n");
         std::printf("   (show the rules that matched this article)\n");
         std::printf("4) Edit this newsgroup's scoring rule file.\n");
-        /* later add an option to edit an arbitrary file */
+        // later add an option to edit an arbitrary file
         std::printf("5) Continue scoring unscored articles.\n");
         char ch = menu_get_char();
         q_done = true;
@@ -218,7 +218,7 @@ const char *sc_easy_command()
             return nullptr;
 
         case '1':
-            return "\"";        /* do an append command */
+            return "\"";        // do an append command
 
         case '2':
             return "r";
@@ -227,7 +227,7 @@ const char *sc_easy_command()
             return "s";
 
         case '4':
-            /* add more later */
+            // add more later
             return "e";
 
         case '5':
