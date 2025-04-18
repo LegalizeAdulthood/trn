@@ -1,9 +1,9 @@
 /* search.c
  */
 
-/* string search routines */
+// string search routines
 
-/*              Copyright (c) 1981,1980 James Gosling           */
+// Copyright (c) 1981,1980 James Gosling
 
 /* Modified Aug. 12, 1981 by Tom London to include regular expressions
    as in ed.  RE stuff hacked over by jag to correct a few major problems,
@@ -44,21 +44,21 @@ enum
                           a null string.  advance() uses this. */
 };
 
-/* meta characters in the "compiled" form of a regular expression */
-#define CBRA (2 | META_NULL)     /* \( -- begin bracket */
-#define CCHR 4                   /* a vanilla character */
-#define CDOT 6                   /* . -- match anything except a newline */
-#define CCL 8                    /* [...] -- character class */
-#define NCCL 10                  /* [^...] -- negated character class */
-#define CDOL (12 | META_NULL)    /* $ -- matches the end of a line */
-#define CEND (14 | META_NULL)    /* The end of the pattern */
-#define CKET (16 | META_NULL)    /* \) -- close bracket */
-#define CBACK (18 | META_NULL)   /* \N -- backreference to the Nth bracketed string */
-#define CIRC (20 | META_NULL)    /* ^ matches the beginning of a line */
-#define WORD 32                  /* matches word character \w */
-#define NWORD 34                 /* matches non-word characer \W */
-#define WBOUND (36 | META_NULL)  /* matches word boundary \b */
-#define NWBOUND (38 | META_NULL) /* matches non-(word boundary) \B */
+// meta characters in the "compiled" form of a regular expression
+#define CBRA (2 | META_NULL)     // \( -- begin bracket
+#define CCHR 4                   // a vanilla character
+#define CDOT 6                   // . -- match anything except a newline
+#define CCL 8                    // [...] -- character class
+#define NCCL 10                  // [^...] -- negated character class
+#define CDOL (12 | META_NULL)    // $ -- matches the end of a line
+#define CEND (14 | META_NULL)    // The end of the pattern
+#define CKET (16 | META_NULL)    // \) -- close bracket
+#define CBACK (18 | META_NULL)   // \N -- backreference to the Nth bracketed string
+#define CIRC (20 | META_NULL)    // ^ matches the beginning of a line
+#define WORD 32                  // matches word character \w
+#define NWORD 34                 // matches non-word characer \W
+#define WBOUND (36 | META_NULL)  // matches word boundary \b
+#define NWBOUND (38 | META_NULL) // matches non-(word boundary) \B
 
 enum
 {
@@ -85,7 +85,7 @@ void search_init()
 
 void init_compex(CompiledRegex *compex)
 {
-    /* the following must start off zeroed */
+    // the following must start off zeroed
 
     compex->eblen = 0;
     compex->brastr = nullptr;
@@ -147,7 +147,7 @@ void case_fold(bool which)
     }
 }
 
-/* Compile the given regular expression into a [secret] internal format */
+// Compile the given regular expression into a [secret] internal format
 
 char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
 {
@@ -161,18 +161,18 @@ char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
         compex->expbuf = safe_malloc(84);
         compex->eblen = 80;
     }
-    char *ep = compex->expbuf; /* point at expression buffer */
-    *alt++ = ep;               /* first alternative starts here */
-    char *bracketp = bracket;  /* first bracket goes here */
-    if (*strp == 0)            /* nothing to compile? */
+    char *ep = compex->expbuf; // point at expression buffer
+    *alt++ = ep;               // first alternative starts here
+    char *bracketp = bracket;  // first bracket goes here
+    if (*strp == 0)            // nothing to compile?
     {
-        if (*ep == 0)          /* nothing there yet? */
+        if (*ep == 0)          // nothing there yet?
         {
             return "Null search string";
         }
-        return nullptr;                 /* just keep old expression */
+        return nullptr;                 // just keep old expression
     }
-    compex->nbra = 0;                   /* no brackets yet */
+    compex->nbra = 0;                   // no brackets yet
     char *lastep = nullptr;
     while (true)
     {
@@ -180,32 +180,32 @@ char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
         {
             ep = grow_eb(compex, ep, alt);
         }
-        int c = *strp++;               /* fetch next char of pattern */
-        if (c == 0)                    /* end of pattern? */
+        int c = *strp++;               // fetch next char of pattern
+        if (c == 0)                    // end of pattern?
         {
-            if (bracketp != bracket)   /* balanced brackets? */
+            if (bracketp != bracket)   // balanced brackets?
             {
                 retmes = "Unbalanced parens";
                 goto cerror;
             }
-            *ep++ = CEND;               /* terminate expression */
-            *alt++ = nullptr;           /* terminal alternative list */
-            return nullptr;             /* return success */
+            *ep++ = CEND;               // terminate expression
+            *alt++ = nullptr;           // terminal alternative list
+            return nullptr;             // return success
         }
         if (c != '*')
         {
             lastep = ep;
         }
-        if (!RE)                        /* just a normal search string? */
+        if (!RE)                        // just a normal search string?
         {
-            *ep++ = CCHR;               /* everything is a normal char */
+            *ep++ = CCHR;               // everything is a normal char
             *ep++ = c;
         }
-        else                            /* it is a regular expression */
+        else                            // it is a regular expression
         {
             switch (c)
             {
-            case '\\':              /* meta something */
+            case '\\':              // meta something
                 switch (c = *strp++)
                 {
                 case '(':
@@ -222,7 +222,7 @@ char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
                 case '|':
                     if (bracketp > bracket)
                     {
-                        retmes = "No \\| in parens";        /* Alas! */
+                        retmes = "No \\| in parens";        // Alas!
                         goto cerror;
                     }
                     *ep++ = CEND;
@@ -307,11 +307,11 @@ char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
                 *ep++ = CDOL;
                 continue;
 
-            case '[':               /* character class */
+            case '[':               // character class
             {
                 if (ep - compex->expbuf >= compex->eblen - BMAPSIZ)
                 {
-                    ep = grow_eb(compex, ep, alt); /* reserve bitmap */
+                    ep = grow_eb(compex, ep, alt); // reserve bitmap
                 }
 
                 for (int i = BMAPSIZ; i; --i)
@@ -323,14 +323,14 @@ char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
                 if (c == '^')
                 {
                     c = *strp++;
-                    *ep++ = NCCL;   /* negated */
+                    *ep++ = NCCL;   // negated
                 }
                 else
                 {
-                    *ep++ = CCL;    /* normal */
+                    *ep++ = CCL;    // normal
                 }
 
-                int i = 0;          /* remember oldchar */
+                int i = 0;          // remember oldchar
                 do
                 {
                     if (c == '\0')
@@ -353,7 +353,7 @@ char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
                         {
                             ep[(c ^ 32) / BITS_PER_BYTE] |=
                                 1 << ((c ^ 32) % BITS_PER_BYTE);
-                                    /* set the other bit too */
+                                    // set the other bit too
                         }
                         c++;
                     }
@@ -382,7 +382,7 @@ char *grow_eb(CompiledRegex *compex, char *epp, char **alt)
 
     compex->eblen += 80;
     compex->expbuf = safe_realloc(compex->expbuf, (MemorySize)compex->eblen + 4);
-    if (compex->expbuf != oldbuf)       /* realloc can change expbuf! */
+    if (compex->expbuf != oldbuf)       // realloc can change expbuf!
     {
         epp += compex->expbuf - oldbuf;
         while (altlist != alt)
@@ -402,7 +402,7 @@ const char *execute(CompiledRegex *compex, const char *addr)
     {
         return nullptr;
     }
-    if (compex->nbra)                   /* any brackets? */
+    if (compex->nbra)                   // any brackets?
     {
         for (int i = 0; i <= compex->nbra; i++)
         {
@@ -413,14 +413,14 @@ const char *execute(CompiledRegex *compex, const char *addr)
         {
             std::free(compex->brastr);
         }
-        compex->brastr = save_str(p1);   /* in case p1 is not static */
-        p1 = compex->brastr;            /* ! */
+        compex->brastr = save_str(p1);   // in case p1 is not static
+        p1 = compex->brastr;            // !
     }
-    case_fold(compex->do_folding);      /* make sure table is correct */
-    s_first_character = p1;             /* for ^ tests */
+    case_fold(compex->do_folding);      // make sure table is correct
+    s_first_character = p1;             // for ^ tests
     if (compex->expbuf[0] == CCHR && !compex->alternatives[1])
     {
-        int c = trt[*(Uchar*)(compex->expbuf + 1)]; /* fast check for first char */
+        int c = trt[*(Uchar*)(compex->expbuf + 1)]; // fast check for first char
         do
         {
             if (trt[*(Uchar*)p1] == c && advance(compex, p1, compex->expbuf))
@@ -435,7 +435,7 @@ const char *execute(CompiledRegex *compex, const char *addr)
         }
         return nullptr;
     }
-    do                                  /* regular algorithm */
+    do                                  // regular algorithm
     {
         char** alt = compex->alternatives;
         while (*alt)
