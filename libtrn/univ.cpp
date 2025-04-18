@@ -35,13 +35,13 @@
 #include <cstring>
 #include <cctype>
 
-/* TODO:
- *
- * Be friendlier when a file has no contents.
- * Implement virtual groups (largely done)
- * Help scan mode replacement
- * Lots more to do...
- */
+// TODO:
+//
+// Be friendlier when a file has no contents.
+// Implement virtual groups (largely done)
+// Help scan mode replacement
+// Lots more to do...
+//
 
 int  g_univ_level{};          // How deep are we in the tree?
 bool g_univ_ng_virt_flag{};   // if true, we are in the "virtual group" second pass
@@ -441,14 +441,14 @@ void univ_add_virtual_group(const char *grpname)
     hash_store_last(data);
 }
 
-/* univ_DoMatch uses a modified Wildmat function which is
- * based on Rich $alz's wildmat, reduced to the simple case of *
- * and text.  The complete version can be found in wildmat.c.
- */
+// univ_DoMatch uses a modified Wildmat function which is
+// based on Rich $alz's wildmat, reduced to the simple case of *
+// and text.  The complete version can be found in wildmat.c.
+//
 
-/*
-**  Match text and p, return true, false.
-*/
+//
+//  Match text and p, return true, false.
+//
 static bool univ_do_match(const char *text, const char *p)
 {
     for (; *p; text++, p++)
@@ -623,10 +623,10 @@ static bool univ_use_file(const char *fname, const char *label)
     {
         return false;           // unsuccessful (XXX: complain)
     }
-/* Later considerations:
- * 1. Long lines
- * 2. Backslash continuations
- */
+    // Later considerations:
+    // 1. Long lines
+    // 2. Backslash continuations
+    //
     while (std::fgets(lbuf, sizeof lbuf, fp) != nullptr)
     {
         if (!univ_do_line(lbuf))
@@ -920,9 +920,9 @@ static bool univ_do_line(char *line)
     return true;        // continue reading
 }
 
-/* features to return later (?):
- *   text files
- */
+// features to return later (?):
+//   text files
+//
 
 // level generator
 bool univ_file_load(const char *fname, const char *title, const char *label)
@@ -997,11 +997,11 @@ static char *univ_edit_new_user_file()
 {
     char *s = save_str(file_exp("%+/univ/usertop"));       // LEAK
 
-    /* later, create a new user top file, and return its filename.
-     * later perhaps ask whether to create or edit current file.
-     * note: the user may need to restart in order to use the new file.
-     *       (trn could do a univ_redofile, but it may be confusing.)
-     */
+    // later, create a new user top file, and return its filename.
+    // later perhaps ask whether to create or edit current file.
+    // note: the user may need to restart in order to use the new file.
+    //       (trn could do a univ_redofile, but it may be confusing.)
+    //
 
     // if the file exists, do not create a new one
     std::FILE *fp = std::fopen(s, "r");
@@ -1072,9 +1072,9 @@ void univ_page_file(char *fname)
     do_shell(SH,g_cmd_buf);      // invoke the shell
     no_echo();                   // and make terminal
     cr_mode();                   // unfriendly again
-    /* later: consider something else that will return the key, and
-     *        returning different codes based on the key.
-     */
+    // later: consider something else that will return the key, and
+    //        returning different codes based on the key.
+    //
     if (!std::strncmp(g_cmd_buf,"more ",5))
     {
         get_anything();
@@ -1356,9 +1356,9 @@ const char *univ_article_desc(const UniversalItem *ui)
 
 // Help start
 
-/* later: add online help as a new item type, add appropriate item
- *        to the new level
- */
+// later: add online help as a new item type, add appropriate item
+//        to the new level
+//
 //int where;    // what context were we in--use later for key help?
 void univ_help_main(HelpLocation where)
 {
