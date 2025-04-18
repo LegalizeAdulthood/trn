@@ -23,12 +23,12 @@ enum SaMainResult
     SA_NORM = 0       // do the normal thing (usually read article pointed to by g_art)
 };
 
-/* sa_flags character bitmap:
- * 0: If set, the article is "marked" (for reading).
- * 1: If set, the article is "selected" (for zoom mode display).
- * 2: Secondary selection--not currently used.
- * 3: If set, the author of this article influenced its score.
- */
+// sa_flags character bitmap:
+// 0: If set, the article is "marked" (for reading).
+// 1: If set, the article is "selected" (for zoom mode display).
+// 2: Secondary selection--not currently used.
+// 3: If set, the author of this article influenced its score.
+//
 enum ScanArticleFlags : unsigned char
 {
     SAF_NONE = 0,
@@ -71,11 +71,11 @@ extern bool g_sa_do_sel_threads;
 extern bool g_sa_mode_read_elig;
 
 // Options
-/* Display order variable:
- *
- * 1: Arrival order
- * 2: Descending score
- */
+// Display order variable:
+//
+// 1: Arrival order
+// 2: Descending score
+//
 enum SaDisplayOrder
 {
     SA_ORDER_NONE = 0,
