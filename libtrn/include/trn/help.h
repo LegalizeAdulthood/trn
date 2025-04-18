@@ -1,10 +1,10 @@
 /* trn/help.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_HELP_H
 #define TRN_HELP_H
 
-/* help locations */
+// help locations
 enum HelpLocation
 {
     UHELP_PAGE = 1,
