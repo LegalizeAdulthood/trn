@@ -779,7 +779,7 @@ reask_pager:
 #ifdef DEBUG
         if (debug & DEB_CHECKPOINTING)
         {
-            std::printf("(%d %d %d)",g_checkcount,linenum,g_artline);
+            std::printf("(%d %d %d)",g_check_count,line_num,g_art_line_num);
             std::fflush(stdout);
         }
 #endif
@@ -1019,7 +1019,7 @@ static PageSwitchResult page_switch()
 #ifdef DEBUG
         if (debug & DEB_INNERSRCH)
         {
-            std::printf("On page? %ld <=? %ld\n",(long)g_innersearch,(long)g_artpos);
+            std::printf("On page? %ld <=? %ld\n",(long)g_inner_search,(long)g_art_pos);
             term_down(1);
         }
 #endif
@@ -1068,7 +1068,7 @@ static PageSwitchResult page_switch()
 #ifdef DEBUG
         if (debug & DEB_INNERSRCH)
         {
-            std::printf("Topline = %d",g_topline);
+            std::printf("Topline = %d",g_top_line);
             std::fgets(g_buf, sizeof g_buf, stdin);
         }
 #endif
