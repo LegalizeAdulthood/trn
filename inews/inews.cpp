@@ -368,8 +368,8 @@ int valid_header(char *h)
         return *h && *h != '\n'? 1 : 2;
     }
 
-    /* Just check for initial letter, colon, and space to make
-     * sure we discard only invalid headers. */
+    // Just check for initial letter, colon, and space to make
+    // sure we discard only invalid headers.
     char *colon = std::strchr(h, ':');
     char *space = std::strchr(h, ' ');
     if (std::isalpha(h[0]) && colon && space == colon + 1)
@@ -381,10 +381,10 @@ int valid_header(char *h)
     return 0;
 }
 
-/* append_signature -- append the person's .signature file if
- * they have one.  Limit .signature to MAX_SIGNATURE lines.
- * The rn-style DOTDIR environmental variable is used if present.
- */
+// append_signature -- append the person's .signature file if
+// they have one.  Limit .signature to MAX_SIGNATURE lines.
+// The rn-style DOTDIR environmental variable is used if present.
+//
 void append_signature()
 {
     char* cp;
