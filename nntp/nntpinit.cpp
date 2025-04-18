@@ -168,18 +168,18 @@ int get_tcp_socket(const char *machine, int port, const char *service)
     char* cause = nullptr;
     int error;
 
-    memset(&hints, 0, sizeof hints);
+    std::memset(&hints, 0, sizeof hints);
     hints.ai_family = PF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = 0;
     if (port)
     {
-        sprintf(service = portstr, "%d", port);
+        std::sprintf(service = portstr, "%d", port);
     }
     error = getaddrinfo(machine, service, &hints, &res0);
     if (error)
     {
-        fprintf(stderr, "%s", gai_strerror(error));
+        std::fprintf(stderr, "%s", gai_strerror(error));
         return -1;
     }
     for (res = res0; res; res = res->ai_next)
@@ -195,7 +195,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
         inet_ntop(res->ai_family, res->ai_addr, buf, sizeof buf);
         if (res != res0)
         {
-            fprintf(stderr, "trying %s...", buf);
+            std::fprintf(stderr, "trying %s...", buf);
         }
 
         if (connect(s, res->ai_addr, res->ai_addrlen) >= 0)
@@ -203,16 +203,16 @@ int get_tcp_socket(const char *machine, int port, const char *service)
             break;  /* okay we got one */
         }
 
-        fprintf(stderr, "connection to %s: ", buf);
-        perror("");
+        std::fprintf(stderr, "connection to %s: ", buf);
+        std::perror("");
         cause = "connect";
         close(s);
         s = -1;
     }
     if (s < 0)
     {
-        fprintf(stderr, "giving up... ");
-        perror(cause);
+        std::fprintf(stderr, "giving up... ");
+        std::perror(cause);
     }
     freeaddrinfo(res0);
 #else   /* !INET6 */
