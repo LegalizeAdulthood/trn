@@ -39,7 +39,7 @@ static long s_chase_count{};
 
 static bool yank_article(char *ptr, int arg);
 static bool check_chase(char *ptr, int until_key);
-static int chase_xref(ArticleNum artnum, int markread);
+static int chase_xref(ArticleNum art_num, bool mark_read);
 #ifdef VALIDATE_XREF_SITE
 static bool valid_xref_site(ART_NUM artnum, char *site);
 #endif
@@ -678,7 +678,7 @@ static bool check_chase(char *ptr, int until_key)
 
     if (ap->flags & AF_K_CHASE)
     {
-        chase_xref(article_num(ap),true);
+        chase_xref(article_num(ap), true);
         ap->flags &= ~AF_K_CHASE;
         if (!--s_chase_count)
         {
@@ -688,7 +688,7 @@ static bool check_chase(char *ptr, int until_key)
 #ifdef MCHASE
     if (ap->flags & AF_MCHASE)
     {
-        chase_xref(article_num(ap),true);
+        chase_xref(article_num(ap), true);
         ap->flags &= ~AF_MCHASE;
         if (!--s_chase_count)
         {
@@ -706,7 +706,7 @@ static bool check_chase(char *ptr, int until_key)
 /* run down xref list and mark as read or unread */
 
 /* The Xref-line-using version */
-static int chase_xref(ArticleNum artnum, int markread)
+static int chase_xref(ArticleNum art_num, bool mark_read)
 {
     char* xartnum;
     ArticleNum x;
@@ -741,7 +741,7 @@ static int chase_xref(ArticleNum artnum, int markread)
         std::fflush(stdout);
     }
 
-    char *xref_buf = fetch_cache(artnum, XREF_LINE, FILL_CACHE);
+    char *xref_buf = fetch_cache(art_num, XREF_LINE, FILL_CACHE);
     if (!xref_buf || !*xref_buf)
     {
         return 0;
@@ -779,7 +779,7 @@ static int chase_xref(ArticleNum artnum, int markread)
                 {
                     continue;
                 }
-                if (markread)
+                if (mark_read)
                 {
                     one_less(article_ptr(x)); /* take care of old C newses */
                 }
@@ -792,7 +792,7 @@ static int chase_xref(ArticleNum artnum, int markread)
             }
             else
             {
-                if (markread)
+                if (mark_read)
                 {
                     if (add_art_num(g_data_source,x,tmpbuf))
                     {
