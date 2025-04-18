@@ -735,8 +735,8 @@ skip_put:
 recheck_pager:
         if (g_do_hiding && g_art_buf_pos == g_art_buf_len)
         {
-            /* If we're filtering we need to figure out if any
-             * remaining text is going to vanish or not. */
+            // If we're filtering we need to figure out if any
+            // remaining text is going to vanish or not.
             long seek_pos = g_art_buf_pos + g_header_type[PAST_HEADER].min_pos;
             read_art_buf(false);
             seek_art_buf(seek_pos);
@@ -1427,14 +1427,14 @@ bool inner_more()
     return false;
 }
 
-/* On click:
- *    btn = 0 (left), 1 (middle), or 2 (right) + 4 if double-clicked;
- *    x = 0 to g_tc_COLS-1; y = 0 to g_tc_LINES-1;
- *    btn_clk = 0, 1, or 2 (no 4); x_clk = x; y_clk = y.
- * On release:
- *    btn = 3; x = released x; y = released y;
- *    btn_clk = click's 0, 1, or 2; x_clk = clicked x; y_clk = clicked y.
- */
+// On click:
+//    btn = 0 (left), 1 (middle), or 2 (right) + 4 if double-clicked;
+//    x = 0 to g_tc_COLS-1; y = 0 to g_tc_LINES-1;
+//    btn_clk = 0, 1, or 2 (no 4); x_clk = x; y_clk = y.
+// On release:
+//    btn = 3; x = released x; y = released y;
+//    btn_clk = click's 0, 1, or 2; x_clk = clicked x; y_clk = clicked y.
+//
 void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 {
     if (check_mouse_bar(btn, x,y, btn_clk, x_clk,y_clk))
