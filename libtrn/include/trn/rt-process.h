@@ -1,6 +1,6 @@
 /* trn/rt-process.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_RT_PROCESS_H
 #define TRN_RT_PROCESS_H
 
