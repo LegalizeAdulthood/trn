@@ -1,6 +1,6 @@
 /* ngdata.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <config/fdio.h>
 #include <config/string_case_compare.h>
@@ -36,31 +36,31 @@
 #include <cstring>
 #include <string>
 
-List          *g_newsgroup_data_list{};    /* a list of NGDATA */
+List          *g_newsgroup_data_list{};    // a list of NGDATA
 int            g_newsgroup_data_count{};   //
-NewsgroupNum   g_newsgroup_count{};        /* all newsgroups in our current newsrc(s) */
+NewsgroupNum   g_newsgroup_count{};        // all newsgroups in our current newsrc(s)
 NewsgroupNum   g_newsgroup_to_read{};      //
-ArticleUnread  g_newsgroup_min_to_read{1}; /* == TR_ONE or TR_NONE */
+ArticleUnread  g_newsgroup_min_to_read{1}; // == TR_ONE or TR_NONE
 NewsgroupData *g_first_newsgroup{};        //
 NewsgroupData *g_last_newsgroup{};         //
-NewsgroupData *g_newsgroup_ptr{};          /* current newsgroup data ptr */
-NewsgroupData *g_current_newsgroup{};      /* stable current newsgroup so we can ditz with g_ngptr */
-NewsgroupData *g_recent_newsgroup{};       /* the prior newsgroup we visited */
-NewsgroupData *g_start_here{};             /* set to the first newsgroup with unread news on startup */
+NewsgroupData *g_newsgroup_ptr{};          // current newsgroup data ptr
+NewsgroupData *g_current_newsgroup{};      // stable current newsgroup so we can ditz with g_ngptr
+NewsgroupData *g_recent_newsgroup{};       // the prior newsgroup we visited
+NewsgroupData *g_start_here{};             // set to the first newsgroup with unread news on startup
 NewsgroupData *g_sel_page_np{};            //
 NewsgroupData *g_sel_next_np{};            //
-ArticleNum     g_abs_first{};              /* 1st real article in current newsgroup */
-ArticleNum     g_first_art{};              /* minimum unread article number in newsgroup */
-ArticleNum     g_last_art{};               /* maximum article number in newsgroup */
-ArticleUnread  g_missing_count{};          /* for reports on missing articles */
+ArticleNum     g_abs_first{};              // 1st real article in current newsgroup
+ArticleNum     g_first_art{};              // minimum unread article number in newsgroup
+ArticleNum     g_last_art{};               // maximum article number in newsgroup
+ArticleUnread  g_missing_count{};          // for reports on missing articles
 std::string    g_moderated;                //
 bool           g_redirected{};             //
 std::string    g_redirected_to;            //
 bool           g_threaded_group{};         //
 NewsgroupData *g_ng_go_newsgroup_ptr{};    //
 ArticleNum     g_ng_go_art_num{};          //
-bool           g_novice_delays{true};      /* +f */
-bool           g_in_ng{};                  /* true if in a newsgroup */
+bool           g_novice_delays{true};      // +f
+bool           g_in_ng{};                  // true if in a newsgroup
 
 static int newsgroup_order_number(const NewsgroupData **npp1, const NewsgroupData **npp2);
 static int newsgroup_order_group_name(const NewsgroupData **npp1, const NewsgroupData **npp2);
@@ -70,7 +70,7 @@ void newsgroup_data_init()
 {
 }
 
-/* set current newsgroup */
+// set current newsgroup
 
 void set_newsgroup(NewsgroupData *np)
 {
@@ -98,7 +98,7 @@ int access_newsgroup()
             return 0;
         }
         g_last_art = get_newsgroup_size(g_newsgroup_ptr);
-        if (g_last_art < 0) /* Impossible... */
+        if (g_last_art < 0) // Impossible...
         {
             return 0;
         }
@@ -110,7 +110,7 @@ int access_newsgroup()
     }
     else
     {
-        if (eaccess(g_newsgroup_dir.c_str(),5))                 /* directory read protected? */
+        if (eaccess(g_newsgroup_dir.c_str(),5))                 // directory read protected?
         {
             if (eaccess(g_newsgroup_dir.c_str(), 0))
             {
@@ -136,19 +136,19 @@ int access_newsgroup()
                 }
                 term_down(2);
             }
-            /* make this newsgroup temporarily invisible */
+            // make this newsgroup temporarily invisible
             g_newsgroup_ptr->to_read = TR_NONE;
             return 0;
         }
 
-        /* chdir to newsgroup subdirectory */
+        // chdir to newsgroup subdirectory
         if (change_dir(g_newsgroup_dir))
         {
             std::printf(g_no_cd,g_newsgroup_dir.c_str());
             return 0;
         }
         g_last_art = get_newsgroup_size(g_newsgroup_ptr);
-        if (g_last_art < 0) /* Impossible... */
+        if (g_last_art < 0) // Impossible...
         {
             return 0;
         }
@@ -157,7 +157,7 @@ int access_newsgroup()
 
     g_dm_count = 0;
     g_missing_count = 0;
-    g_in_ng = true;                     /* tell the world we are here */
+    g_in_ng = true;                     // tell the world we are here
 
     build_cache();
     return 1;
@@ -180,7 +180,7 @@ void grow_newsgroup(ArticleNum new_last)
         ArticleNum tmpart = g_art;
         g_newsgroup_ptr->to_read += (ArticleUnread)(new_last-g_last_art);
         ArticleNum tmpfirst = g_last_art + 1;
-        /* Increase the size of article scan arrays. */
+        // Increase the size of article scan arrays.
         sa_grow(g_last_art,new_last);
         do
         {
@@ -189,14 +189,14 @@ void grow_newsgroup(ArticleNum new_last)
         } while (g_last_art < new_last);
         g_article_list->high = g_last_art;
         thread_grow();
-        /* Score all new articles now just in case they weren't done above. */
+        // Score all new articles now just in case they weren't done above.
         sc_fill_score_list(tmpfirst,new_last);
         if (g_verbose)
         {
             std::sprintf(g_buf, "%ld more article%s arrived -- processing memorized commands...\n\n",
                     (long) (g_last_art - tmpfirst + 1), (g_last_art > tmpfirst ? "s have" : " has"));
         }
-        else                    /* my, my, how clever we are */
+        else                    // my, my, how clever we are
         {
             std::strcpy(g_buf, "More news -- auto-processing...\n\n");
         }
@@ -240,7 +240,7 @@ void sort_newsgroups()
     NewsgroupData**lp;
     int (*  sort_procedure)(const NewsgroupData **npp1,const NewsgroupData **npp2);
 
-    /* If we don't have at least two newsgroups, we're done! */
+    // If we don't have at least two newsgroups, we're done!
     if (!g_first_newsgroup || !g_first_newsgroup->next)
     {
         return;
@@ -308,7 +308,7 @@ void newsgroup_skip()
         g_artp = article_ptr(g_art);
         do
         {
-            /* tries to grab PREFETCH_SIZE XHDRS, flagging missing articles */
+            // tries to grab PREFETCH_SIZE XHDRS, flagging missing articles
             (void) fetch_subj(g_art, false);
             ArticleNum artnum = g_art + PREFETCH_SIZE - 1;
             artnum = std::min(artnum, g_last_art);
@@ -325,7 +325,7 @@ void newsgroup_skip()
     }
     else
     {
-        if (errno != ENOENT)    /* has it not been deleted? */
+        if (errno != ENOENT)    // has it not been deleted?
         {
             clear();
             if (g_verbose)
@@ -343,11 +343,11 @@ void newsgroup_skip()
                 sleep(2);
             }
         }
-        inc_article(g_selected_only,false); /* try next article */
+        inc_article(g_selected_only,false); // try next article
     }
 }
 
-/* find the maximum article number of a newsgroup */
+// find the maximum article number of a newsgroup
 
 ArticleNum get_newsgroup_size(NewsgroupData *gp)
 {
