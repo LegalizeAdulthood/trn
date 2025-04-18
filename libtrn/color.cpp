@@ -88,16 +88,16 @@ static ColorObj s_objects[MAX_COLORS] =
 };
 // clang-format on
 
-/* The attribute stack.  The 0th element is always the "normal" object. */
+// The attribute stack.  The 0th element is always the "normal" object.
 static ColorObj s_color_stack[STACK_SIZE];
 static int      s_stack_pointer{};
 
-/* Initialize color support after trnrc is read. */
+// Initialize color support after trnrc is read.
 void color_init()
 {
     if (s_use_colors)
     {
-        /* Get default capabilities. */
+        // Get default capabilities.
         char *fg = tc_color_capability("fg default");
         if (fg == nullptr)
         {
@@ -132,14 +132,14 @@ void color_init()
         s_objects[COLOR_DEFAULT].attr = NO_MARKING;
     }
 
-    /* Set color to default. */
+    // Set color to default.
     color_default();
 }
 
-/* Parse a line from the [attribute] section of trnrc. */
+// Parse a line from the [attribute] section of trnrc.
 void color_rc_attribute(const char *object, char *value)
 {
-    /* Find the specified object. */
+    // Find the specified object.
     int i;
     for (i = 0; i < MAX_COLORS; i++)
     {
@@ -155,7 +155,7 @@ void color_rc_attribute(const char *object, char *value)
         finalize(1);
     }
 
-    /* Parse the video attribute. */
+    // Parse the video attribute.
     if (*value == 's' || *value == 'S')
     {
         s_objects[i].attr = STANDOUT;
@@ -179,7 +179,7 @@ void color_rc_attribute(const char *object, char *value)
         finalize(1);
     }
 
-    /* See if they specified a color */
+    // See if they specified a color
     char *s = skip_non_space(value);
     s = skip_space(s);
     if (!*s)
@@ -197,10 +197,10 @@ void color_rc_attribute(const char *object, char *value)
         t = skip_space(t);
     }
 
-    /* We have both colors and attributes, so turn colors on. */
+    // We have both colors and attributes, so turn colors on.
     s_use_colors = true;
 
-    /* Parse the foreground color. */
+    // Parse the foreground color.
     if (*s == '-')
     {
         s_objects[i].fg = nullptr;
@@ -222,7 +222,7 @@ void color_rc_attribute(const char *object, char *value)
         n = nullptr;
     }
 
-    /* Make sure we have one more parameter. */
+    // Make sure we have one more parameter.
     s = t;
     t = skip_non_space(t);
     if (*t)
@@ -238,7 +238,7 @@ void color_rc_attribute(const char *object, char *value)
         finalize(1);
     }
 
-    /* Parse the background color. */
+    // Parse the background color.
     if (*s == '-')
     {
         s_objects[i].bg = nullptr;
@@ -260,14 +260,14 @@ void color_rc_attribute(const char *object, char *value)
     }
 }
 
-/* Turn on color attribute for an object. */
+// Turn on color attribute for an object.
 void color_object(int object, bool push)
 {
     /* Merge in the colors/attributes that we are not setting
      * from the current object. */
     ColorObj merged = s_color_stack[s_stack_pointer];
 
-    /* Merge in the new colors/attributes. */
+    // Merge in the new colors/attributes.
     if (s_objects[object].fg)
     {
         merged.fg = s_objects[object].fg;
@@ -281,24 +281,24 @@ void color_object(int object, bool push)
         merged.attr = s_objects[object].attr;
     }
 
-    /* Push onto stack. */
+    // Push onto stack.
     if (push && ++s_stack_pointer >= STACK_SIZE)
     {
-        /* TODO: error reporting? */
-        s_stack_pointer = 0;            /* empty stack */
-        color_default();                /* and set normal colors */
+        // TODO: error reporting?
+        s_stack_pointer = 0;            // empty stack
+        color_default();                // and set normal colors
         return;
     }
     s_color_stack[s_stack_pointer] = merged;
 
-    /* Set colors/attributes. */
+    // Set colors/attributes.
     output_color();
 }
 
-/* Pop the color/attribute stack. */
+// Pop the color/attribute stack.
 void color_pop()
 {
-    /* Trying to pop an empty stack? */
+    // Trying to pop an empty stack?
     if (--s_stack_pointer < 0)
     {
         s_stack_pointer = 0;
@@ -309,7 +309,7 @@ void color_pop()
     }
 }
 
-/* Color a string with the given object's color/attribute. */
+// Color a string with the given object's color/attribute.
 void color_string(int object, const char *str)
 {
     int len = std::strlen(str);
@@ -322,7 +322,7 @@ void color_string(int object, const char *str)
     }
     if (!s_use_colors && *g_tc_UC && s_objects[object].attr == UNDERLINE)
     {
-        under_print(str);        /* hack for stupid terminals */
+        under_print(str);        // hack for stupid terminals
     }
     else
     {
@@ -336,26 +336,26 @@ void color_string(int object, const char *str)
     }
 }
 
-/* Turn off color attribute. */
+// Turn off color attribute.
 void color_default()
 {
     s_color_stack[s_stack_pointer] = s_objects[COLOR_DEFAULT];
     output_color();
 }
 
-/* Set colors/attribute for an object. */
+// Set colors/attribute for an object.
 static void output_color()
 {
     static ColorObj prior{"", nullptr, nullptr, NO_MARKING};
     ColorObj* op = &s_color_stack[s_stack_pointer];
 
-    /* If no change, just return. */
+    // If no change, just return.
     if (op->attr == prior.attr && op->fg == prior.fg && op->bg == prior.bg)
     {
         return;
     }
 
-    /* Start by turning off any existing colors and/or attributes. */
+    // Start by turning off any existing colors and/or attributes.
     if (s_use_colors)
     {
         if (s_objects[COLOR_DEFAULT].fg != prior.fg //
@@ -379,7 +379,7 @@ static void output_color()
         break;
     }
 
-    /* For color terminals we set the foreground and background color. */
+    // For color terminals we set the foreground and background color.
     if (s_use_colors)
     {
         if (op->fg != prior.fg)
@@ -392,7 +392,7 @@ static void output_color()
         }
     }
 
-    /* For both monochrome and color terminals we set the video attribute. */
+    // For both monochrome and color terminals we set the video attribute.
     switch (prior.attr = op->attr)
     {
     case NO_MARKING:
