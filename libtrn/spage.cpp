@@ -105,18 +105,18 @@ bool s_fill_page_backward(long end)
     }
     // set new g_s_top_ent
     g_s_top_ent = g_page_ents[0].ent_num;
-    /* Now, suppose that the pointer position is off the page.  That would
-     * be bad, so lets make sure it doesn't happen.
-     */
+    // Now, suppose that the pointer position is off the page.  That would
+    // be bad, so lets make sure it doesn't happen.
+    //
     g_s_ptr_page_line = std::min<long>(g_s_ptr_page_line, g_s_bot_ent);
     if (g_s_cur_type != S_ART)
     {
         return true;
     }
-    /* temporary fix.  Under some conditions ineligible entries will
-     * not be found until they are in the page.  In this case just
-     * refill the page.
-     */
+    // temporary fix.  Under some conditions ineligible entries will
+    // not be found until they are in the page.  In this case just
+    // refill the page.
+    //
     for (i = 0; i <= g_s_bot_ent; i++)
     {
         if (is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
@@ -199,9 +199,9 @@ bool s_fill_page_forward(long start)
         }
     }
     set_spin(SPIN_POP);  // turn off spin on cache misses
-    /* Now, suppose that the pointer position is off the page.  That would
-     * be bad, so lets make sure it doesn't happen.
-     */
+    // Now, suppose that the pointer position is off the page.  That would
+    // be bad, so lets make sure it doesn't happen.
+    //
     // set new g_s_top_ent
     g_s_top_ent = g_page_ents[0].ent_num;
     g_s_ptr_page_line = std::min<long>(g_s_ptr_page_line, g_s_bot_ent);
@@ -209,10 +209,10 @@ bool s_fill_page_forward(long start)
     {
         return true;
     }
-    /* temporary fix.  Under some conditions ineligible entries will
-     * not be found until they are in the page.  In this case just
-     * refill the page.
-     */
+    // temporary fix.  Under some conditions ineligible entries will
+    // not be found until they are in the page.  In this case just
+    // refill the page.
+    //
     for (i = 0; i <= g_s_bot_ent; i++)
     {
         if (is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
@@ -228,11 +228,11 @@ bool s_fill_page_forward(long start)
     return true;        // we have a page...
 }
 
-/* Given possible changes to which entries should be on the page,
- * fills the page with more/less entries.  Tries to minimize refreshing
- * (the last entry on the page will be refreshed whether it needs it
- *  or not.)
- */
+// Given possible changes to which entries should be on the page,
+// fills the page with more/less entries.  Tries to minimize refreshing
+// (the last entry on the page will be refreshed whether it needs it
+//  or not.)
+//
 // returns true on success
 bool s_refill_page()
 {
@@ -248,12 +248,12 @@ bool s_refill_page()
 #endif
 
     page_lines = g_scr_height - g_s_top_lines - g_s_bot_lines;
-    /* if the top entry is not the g_s_top_ent,
-     *    or the top entry is not eligible,
-     *    or the top entry is not on the first line,
-     *    or the top entry has a different # of lines now,
-     * just refill the whole page.
-     */
+    // if the top entry is not the g_s_top_ent,
+    //    or the top entry is not eligible,
+    //    or the top entry is not on the first line,
+    //    or the top entry has a different # of lines now,
+    // just refill the whole page.
+    //
     if (g_s_bot_ent < 1 || g_s_top_ent < 1
      || g_s_top_ent != g_page_ents[0].ent_num || !s_eligible(g_page_ents[0].ent_num)
      || g_page_ents[0].start_line != 0
@@ -263,14 +263,14 @@ bool s_refill_page()
     }
 
     i = 1;
-    /* misc note: I used to have
-     * a = g_page_ents[1];
-     * ...at this point.  This caused a truly difficult to track bug...
-     * (briefly, occasionally the entry in g_page_ents[1] would be
-     *  *before* (by display order) the entry in g_page_ents[0].  In
-     *  this case the start_line entry of g_page_ents[0] could be overwritten
-     *  causing big problems...)
-     */
+    // misc note: I used to have
+    // a = g_page_ents[1];
+    // ...at this point.  This caused a truly difficult to track bug...
+    // (briefly, occasionally the entry in g_page_ents[1] would be
+    //  *before* (by display order) the entry in g_page_ents[0].  In
+    //  this case the start_line entry of g_page_ents[0] could be overwritten
+    //  causing big problems...)
+    //
     a = s_next_elig(g_page_ents[0].ent_num);
 
     // similar to the tests in the last loop...
@@ -301,24 +301,24 @@ bool s_refill_page()
     }
     set_spin(SPIN_POP);
 
-    /* there are fairly good reasons to refresh the last good entry, such
-     * as clearing the rest of the screen...
-     */
+    // there are fairly good reasons to refresh the last good entry, such
+    // as clearing the rest of the screen...
+    //
     g_s_ref_status = j;
     g_s_ref_desc = j;
 
-    /* Now, suppose that the pointer position is off the page.  That would
-     * be bad, so lets make sure it doesn't happen.
-     */
+    // Now, suppose that the pointer position is off the page.  That would
+    // be bad, so lets make sure it doesn't happen.
+    //
     g_s_ptr_page_line = std::min<long>(g_s_ptr_page_line, g_s_bot_ent);
     if (g_s_cur_type != S_ART)
     {
         return true;
     }
-    /* temporary fix.  Under some conditions ineligible entries will
-     * not be found until they are in the page.  In this case just
-     * refill the page.
-     */
+    // temporary fix.  Under some conditions ineligible entries will
+    // not be found until they are in the page.  In this case just
+    // refill the page.
+    //
     for (i = 0; i <= g_s_bot_ent; i++)
     {
         if (is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
@@ -379,10 +379,10 @@ int s_fill_page()
             } // switch
         } // if
     }
-    /* temporary fix.  Under some conditions ineligible entries will
-     * not be found until they are in the page.  In this case just
-     * refill the page.
-     */
+    // temporary fix.  Under some conditions ineligible entries will
+    // not be found until they are in the page.  In this case just
+    // refill the page.
+    //
     for (int j = 0; j <= g_s_bot_ent; j++)
     {
         if (!s_eligible(g_page_ents[j].ent_num))
