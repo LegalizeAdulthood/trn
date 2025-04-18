@@ -32,33 +32,33 @@
 #include <cstdio>
 #include <cstring>
 
-SelectionItem  g_sel_items[MAX_SEL];
-int       g_sel_total_obj_cnt{};
-int       g_sel_prior_obj_cnt{};
-int       g_sel_page_obj_cnt{};
-int       g_sel_page_item_cnt{};
-Article **g_sel_page_app{};
-Article **g_sel_next_app{};
-Article  *g_sel_last_ap{};
-Subject  *g_sel_page_sp{};
-Subject  *g_sel_next_sp{};
-Subject  *g_sel_last_sp{};
-char     *g_sel_grp_display_mode{};
-char     *g_sel_art_display_mode{};
+SelectionItem g_sel_items[MAX_SEL];
+int           g_sel_total_obj_cnt{};
+int           g_sel_prior_obj_cnt{};
+int           g_sel_page_obj_cnt{};
+int           g_sel_page_item_cnt{};
+Article     **g_sel_page_app{};
+Article     **g_sel_next_app{};
+Article      *g_sel_last_ap{};
+Subject      *g_sel_page_sp{};
+Subject      *g_sel_next_sp{};
+Subject      *g_sel_last_sp{};
+char         *g_sel_grp_display_mode{};
+char         *g_sel_art_display_mode{};
 
-static bool          s_group_init_done{true};
-static int           s_sel_max_line_cnt{};
-static int           s_sel_max_per_page{};
-static SelectionSortMode s_sel_addgroupsort{SS_NATURAL};
-static SelectionSortMode s_sel_univsort{SS_NATURAL};
-static int           s_sel_next_op{};
+static bool              s_group_init_done{true};
+static int               s_sel_max_line_cnt{};
+static int               s_sel_max_per_page{};
+static SelectionSortMode s_sel_add_group_sort{SS_NATURAL};
+static SelectionSortMode s_sel_universal_sort{SS_NATURAL};
+static int               s_sel_next_op{};
 
 static void sel_page_init();
-static int count_subject_lines(const Subject *subj, int *selptr);
-static int count_thread_lines(const Subject *subj, int *selptr);
+static int  count_subject_lines(const Subject *subj, int *selptr);
+static int  count_thread_lines(const Subject *subj, int *selptr);
 static void display_article(const Article *ap, int ix, int sel);
 static void display_subject(const Subject *subj, int ix, int sel);
-static void display_univ(const UniversalItem *ui);
+static void display_universal(const UniversalItem *ui);
 static void display_group(DataSource *dp, char *group, int len, int max_len);
 
 bool set_sel_mode(char_int ch)
@@ -225,7 +225,7 @@ void set_selector(SelectionMode smode, SelectionSortMode ssort)
             break;
 
         case SM_ADD_GROUP:
-            ssort = s_sel_addgroupsort;
+            ssort = s_sel_add_group_sort;
             break;
 
         case SM_NEWSGROUP:
@@ -246,7 +246,7 @@ void set_selector(SelectionMode smode, SelectionSortMode ssort)
             break;
 
         case SM_UNIVERSAL:
-            ssort = s_sel_univsort;
+            ssort = s_sel_universal_sort;
             break;
         }
     }
@@ -274,7 +274,7 @@ void set_selector(SelectionMode smode, SelectionSortMode ssort)
 
     case SM_ADD_GROUP:
         g_sel_mode_string = "a newsgroup to add";
-        s_sel_addgroupsort = ssort;
+        s_sel_add_group_sort = ssort;
         break;
 
     case SM_NEWSGROUP:
@@ -288,7 +288,7 @@ void set_selector(SelectionMode smode, SelectionSortMode ssort)
 
     case SM_UNIVERSAL:
         g_sel_mode_string = "an item";
-        s_sel_univsort = ssort;
+        s_sel_universal_sort = ssort;
         break;
 
     case SM_THREAD:
@@ -2043,7 +2043,7 @@ try_again:
             maybe_eol();
             output_sel(g_sel_page_item_cnt, sel, false);
             std::putchar(' ');
-            display_univ(ui);
+            display_universal(ui);
             g_sel_page_item_cnt++;
         }
         if (!g_sel_page_obj_cnt)
@@ -2610,7 +2610,7 @@ void display_option(int op, int item_index)
     term_down(1);
 }
 
-static void display_univ(const UniversalItem *ui)
+static void display_universal(const UniversalItem *ui)
 {
     if (!ui)
     {
