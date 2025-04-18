@@ -772,13 +772,13 @@ const char *compress_subj(const Article *ap, int max)
 
 /* Modified version of a spinner originally found in Clifford Adams' strn. */
 
-static char     *s_spinchars{};
-static int       s_spin_level{}; /* used to allow non-interfering nested spins */
-static SpinMode s_spin_mode{};
-static int       s_spin_place{}; /* represents place in s_spinchars array */
-static int       s_spin_pos{};   /* the last spinbar position we drew */
-static ArticleNum   s_spin_art{};
-static ArticlePosition   s_spin_tell{};
+static char           *s_spin_chars{};
+static int             s_spin_level{}; /* used to allow non-interfering nested spins */
+static SpinMode        s_spin_mode{};
+static int             s_spin_place{}; /* represents place in s_spinchars array */
+static int             s_spin_pos{};   /* the last spinbar position we drew */
+static ArticleNum      s_spin_art{};
+static ArticlePosition s_spin_tell{};
 
 void set_spin(SpinMode mode)
 {
@@ -815,7 +815,7 @@ void set_spin(SpinMode mode)
             }
             s_spin_pos = 0;
         }
-        s_spinchars = "|/-\\";
+        s_spin_chars = "|/-\\";
         s_spin_mode = mode;
         break;
 
@@ -871,7 +871,7 @@ void spin(int count)
         }
         if (!(++g_spin_count % count))
         {
-            std::putchar(s_spinchars[++s_spin_place % 4]);
+            std::putchar(s_spin_chars[++s_spin_place % 4]);
             backspace();
             std::fflush(stdout);
         }
@@ -903,7 +903,7 @@ void spin(int count)
         }
         else if (!(g_spin_count % count))
         {
-            std::putchar(s_spinchars[++s_spin_place % 4]);
+            std::putchar(s_spin_chars[++s_spin_place % 4]);
             backspace();
             std::fflush(stdout);
         }
@@ -917,11 +917,11 @@ bool in_background()
     return s_spin_mode == SPIN_BACKGROUND;
 }
 
-static int    s_prior_perform_cnt{};
+static int         s_prior_perform_cnt{};
 static std::time_t s_prior_now{};
-static long   s_ps_sel{};
-static long   s_ps_cnt{};
-static long   s_ps_missing{};
+static long        s_ps_sel{};
+static long        s_ps_cnt{};
+static long        s_ps_missing{};
 
 void perform_status_init(long cnt)
 {
@@ -939,14 +939,14 @@ void perform_status_init(long cnt)
 
     g_spin_count = 0;
     s_spin_place = 0;
-    s_spinchars = "v>^<";
+    s_spin_chars = "v>^<";
 }
 
 void perform_status(long cnt, int spin)
 {
     if (!(++g_spin_count % spin))
     {
-        std::putchar(s_spinchars[++s_spin_place % 4]);
+        std::putchar(s_spin_chars[++s_spin_place % 4]);
         backspace();
         std::fflush(stdout);
     }
