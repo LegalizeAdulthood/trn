@@ -17,12 +17,12 @@
 #include <cstdlib>
 
 char *g_newsgroup_to_do[MAX_NG_TO_DO]; /* restrictions in effect */
-int   g_max_newsgroup_to_do{};       /*  0 => no restrictions */
-                           /* >0 => # of entries in g_ngtodo */
+int   g_max_newsgroup_to_do{};         /*  0 => no restrictions */
+                                       /* >0 => # of entries in g_ngtodo */
 char g_empty_only_char{'o'};
 
-static int     s_save_maxngtodo{};
-static CompiledRegex *s_compextodo[MAX_NG_TO_DO]; /* restrictions in compiled form */
+static int            s_save_max_newsgroup_to_do{};
+static CompiledRegex *s_compex_to_do[MAX_NG_TO_DO]; /* restrictions in compiled form */
 
 void only_init()
 {
@@ -30,7 +30,7 @@ void only_init()
 
 void set_newsgroup_to_do(const char *pat)
 {
-    int i = g_max_newsgroup_to_do + s_save_maxngtodo;
+    int i = g_max_newsgroup_to_do + s_save_max_newsgroup_to_do;
 
     if (!*pat)
     {
@@ -40,11 +40,11 @@ void set_newsgroup_to_do(const char *pat)
     {
         g_newsgroup_to_do[i] = save_str(pat);
 #ifndef lint
-        s_compextodo[i] = (CompiledRegex*)safe_malloc(sizeof(CompiledRegex));
+        s_compex_to_do[i] = (CompiledRegex*)safe_malloc(sizeof(CompiledRegex));
 #endif
-        init_compex(s_compextodo[i]);
-        compile(s_compextodo[i],pat,true,true);
-        const char *err = newsgroup_comp(s_compextodo[i], pat, true, true);
+        init_compex(s_compex_to_do[i]);
+        compile(s_compex_to_do[i],pat,true,true);
+        const char *err = newsgroup_comp(s_compex_to_do[i], pat, true, true);
         if (err != nullptr)
         {
             std::printf("\n%s\n",err);
@@ -62,9 +62,9 @@ bool in_list(const char *newsgroup_name)
     {
         return true;
     }
-    for (int i = s_save_maxngtodo; i < g_max_newsgroup_to_do + s_save_maxngtodo; i++)
+    for (int i = s_save_max_newsgroup_to_do; i < g_max_newsgroup_to_do + s_save_max_newsgroup_to_do; i++)
     {
-        if (execute(s_compextodo[i],newsgroup_name))
+        if (execute(s_compex_to_do[i],newsgroup_name))
         {
             return true;
         }
@@ -85,12 +85,12 @@ void end_only()
         {
             std::sprintf(g_msg, "Exiting \"only\".");
         }
-        for (int i = s_save_maxngtodo; i < g_max_newsgroup_to_do + s_save_maxngtodo; i++)
+        for (int i = s_save_max_newsgroup_to_do; i < g_max_newsgroup_to_do + s_save_max_newsgroup_to_do; i++)
         {
             std::free(g_newsgroup_to_do[i]);
-            free_compex(s_compextodo[i]);
+            free_compex(s_compex_to_do[i]);
 #ifndef lint
-            std::free((char*)s_compextodo[i]);
+            std::free((char*)s_compex_to_do[i]);
 #endif
         }
         g_max_newsgroup_to_do = 0;
@@ -100,7 +100,7 @@ void end_only()
 
 void push_only()
 {
-    s_save_maxngtodo = g_max_newsgroup_to_do;
+    s_save_max_newsgroup_to_do = g_max_newsgroup_to_do;
     g_max_newsgroup_to_do = 0;
 }
 
@@ -110,8 +110,8 @@ void pop_only()
 
     end_only();
 
-    g_max_newsgroup_to_do = s_save_maxngtodo;
-    s_save_maxngtodo = 0;
+    g_max_newsgroup_to_do = s_save_max_newsgroup_to_do;
+    s_save_max_newsgroup_to_do = 0;
 
     g_newsgroup_min_to_read = save_ng_min_toread;
 }
