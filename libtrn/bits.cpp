@@ -1,6 +1,6 @@
 /* bits.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "config/common.h"
 
@@ -50,30 +50,30 @@ void bits_init()
 
 void rc_to_bits()
 {
-    char*   my_buf = g_buf; /* place to decode rc line */
+    char*   my_buf = g_buf; // place to decode rc line
     char*   c;
     char*   h;
     ArticleNum unread;
     Article*ap;
 
-    /* modify the article flags to reflect what has already been read */
+    // modify the article flags to reflect what has already been read
 
     char *s = skip_eq(g_newsgroup_ptr->rc_line + g_newsgroup_ptr->num_offset, ' ');
-                                        /* find numbers in rc line */
+                                        // find numbers in rc line
     long i = std::strlen(s);
 #ifndef lint
-    if (i >= LINE_BUF_LEN-2)                 /* bigger than g_buf? */
+    if (i >= LINE_BUF_LEN-2)                 // bigger than g_buf?
     {
         my_buf = safe_malloc((MemorySize) (i + 2));
     }
 #endif
-    std::strcpy(my_buf,s);                    /* make scratch copy of line */
+    std::strcpy(my_buf,s);                    // make scratch copy of line
     if (my_buf[0])
     {
-        my_buf[i++] = ',';               /* put extra comma on the end */
+        my_buf[i++] = ',';               // put extra comma on the end
     }
     my_buf[i] = '\0';
-    s = my_buf;                          /* initialize the for loop below */
+    s = my_buf;                          // initialize the for loop below
     if (set_first_art(s))
     {
         s = std::strchr(s,',') + 1;
@@ -103,13 +103,13 @@ void rc_to_bits()
     }
 #endif
     i = g_first_art;
-    for ( ; (c = std::strchr(s,',')) != nullptr; s = ++c)    /* for each range */
+    for ( ; (c = std::strchr(s,',')) != nullptr; s = ++c)    // for each range
     {
         ArticleNum max;
-        *c = '\0';                      /* do not let index see past comma */
+        *c = '\0';                      // do not let index see past comma
         h = std::strchr(s,'-');
         ArticleNum min = std::atol(s);
-        min = std::max(min, g_first_art);    /* make sure range is in range */
+        min = std::max(min, g_first_art);    // make sure range is in range
         if (min > g_last_art)
         {
             min = g_last_art + 1;
@@ -143,7 +143,7 @@ void rc_to_bits()
             max = min - 1;
         }
         max = std::min(max, g_last_art);
-        /* mark all arts in range as read */
+        // mark all arts in range as read
         for ( ; i <= max; i = article_next(i))
         {
             article_ptr(i)->flags &= ~AF_UNREAD;
@@ -202,9 +202,9 @@ void rc_to_bits()
 bool set_first_art(const char *s)
 {
     s = skip_eq(s, ' ');
-    if (!std::strncmp(s,"1-",2))                     /* can we save some time here? */
+    if (!std::strncmp(s,"1-",2))                     // can we save some time here?
     {
-        g_first_art = std::atol(s+2)+1;               /* process first range thusly */
+        g_first_art = std::atol(s+2)+1;               // process first range thusly
         g_first_art = std::max(g_first_art, g_abs_first);
         return true;
     }
@@ -213,7 +213,7 @@ bool set_first_art(const char *s)
     return false;
 }
 
-/* reconstruct the .newsrc line in a human readable form */
+// reconstruct the .newsrc line in a human readable form
 
 void bits_to_rc()
 {
@@ -222,9 +222,9 @@ void bits_to_rc()
     ArticleNum count=0;
     int safe_len = LINE_BUF_LEN - 32;
 
-    std::strcpy(g_buf,g_newsgroup_ptr->rc_line);            /* start with the newsgroup name */
-    char *s = g_buf + g_newsgroup_ptr->num_offset - 1; /* use s for buffer pointer */
-    *s++ = g_newsgroup_ptr->subscribe_char;            /* put the requisite : or !*/
+    std::strcpy(g_buf,g_newsgroup_ptr->rc_line);            // start with the newsgroup name
+    char *s = g_buf + g_newsgroup_ptr->num_offset - 1; // use s for buffer pointer
+    *s++ = g_newsgroup_ptr->subscribe_char;            // put the requisite : or !
     for (i = article_first(g_abs_first); i <= g_last_art; i = article_next(i))
     {
         if (article_unread(i))
@@ -234,58 +234,58 @@ void bits_to_rc()
     }
     std::sprintf(s," 1-%ld,",(long)i-1);
     s += std::strlen(s);
-    for (; i<=g_last_art; i++)   /* for each article in newsgroup */
+    for (; i<=g_last_art; i++)   // for each article in newsgroup
     {
-        if (s-mybuf > safe_len)          /* running out of room? */
+        if (s-mybuf > safe_len)          // running out of room?
         {
             safe_len *= 2;
-            if (mybuf == g_buf)         /* currently static? */
+            if (mybuf == g_buf)         // currently static?
             {
                 *s = '\0';
                 mybuf = safe_malloc((MemorySize)safe_len + 32);
-                std::strcpy(mybuf,g_buf);    /* so we must copy it */
+                std::strcpy(mybuf,g_buf);    // so we must copy it
                 s = mybuf + (s-g_buf);
-                                        /* fix the pointer, too */
+                                        // fix the pointer, too
             }
-            else                        /* just grow in place, if possible */
+            else                        // just grow in place, if possible
             {
                 int old_len = s - mybuf;
                 mybuf = safe_realloc(mybuf,(MemorySize)safe_len + 32);
                 s = mybuf + old_len;
             }
         }
-        if (!was_read(i))               /* still unread? */
+        if (!was_read(i))               // still unread?
         {
-            count++;                    /* then count it */
+            count++;                    // then count it
         }
-        else                            /* article was read */
+        else                            // article was read
         {
-            std::sprintf(s,"%ld",(long)i); /* put out the min of the range */
-            s += std::strlen(s);           /* keeping house */
-            ArticleNum old_i = i;         /* remember this spot */
+            std::sprintf(s,"%ld",(long)i); // put out the min of the range
+            s += std::strlen(s);           // keeping house
+            ArticleNum old_i = i;         // remember this spot
             do
             {
                 i++;
             } while (i <= g_last_art && was_read(i));
-                                        /* find 1st unread article or end */
-            i--;                        /* backup to last read article */
-            if (i > old_i)               /* range of more than 1? */
+                                        // find 1st unread article or end
+            i--;                        // backup to last read article
+            if (i > old_i)               // range of more than 1?
             {
                 std::sprintf(s,"-%ld,",(long)i);
-                                        /* then it out as a range */
-                s += std::strlen(s);         /* and housekeep */
+                                        // then it out as a range
+                s += std::strlen(s);         // and housekeep
             }
             else
             {
-                *s++ = ',';             /* otherwise, just a comma will do */
+                *s++ = ',';             // otherwise, just a comma will do
             }
         }
     }
-    if (*(s-1) == ',')                  /* is there a final ','? */
+    if (*(s-1) == ',')                  // is there a final ','?
     {
-        s--;                            /* take it back */
+        s--;                            // take it back
     }
-    *s++ = '\0';                        /* and terminate string */
+    *s++ = '\0';                        // and terminate string
 #ifdef DEBUG
     if ((debug & DEB_NEWSRC_LINE) && !g_panic)
     {
@@ -294,27 +294,27 @@ void bits_to_rc()
         term_down(2);
     }
 #endif
-    std::free(g_newsgroup_ptr->rc_line);              /* return old rc line */
+    std::free(g_newsgroup_ptr->rc_line);              // return old rc line
     if (mybuf == g_buf)
     {
         g_newsgroup_ptr->rc_line = safe_malloc((MemorySize)(s-g_buf)+1);
-                                        /* grab a new rc line */
-        std::strcpy(g_newsgroup_ptr->rc_line, g_buf); /* and load it */
+                                        // grab a new rc line
+        std::strcpy(g_newsgroup_ptr->rc_line, g_buf); // and load it
     }
     else
     {
         mybuf = safe_realloc(mybuf,(MemorySize)(s-mybuf)+1);
-                                        /* be nice to the heap */
+                                        // be nice to the heap
         g_newsgroup_ptr->rc_line = mybuf;
     }
     *(g_newsgroup_ptr->rc_line + g_newsgroup_ptr->num_offset - 1) = '\0';
-    if (g_newsgroup_ptr->subscribe_char == NEGCHAR)/* did they unsubscribe? */
+    if (g_newsgroup_ptr->subscribe_char == NEGCHAR)// did they unsubscribe?
     {
-        g_newsgroup_ptr->to_read = TR_UNSUB;     /* make line invisible */
+        g_newsgroup_ptr->to_read = TR_UNSUB;     // make line invisible
     }
     else
     {
-        g_newsgroup_ptr->to_read = (ArticleUnread)count; /* otherwise, remember the count */
+        g_newsgroup_ptr->to_read = (ArticleUnread)count; // otherwise, remember the count
     }
     g_newsgroup_ptr->rc->flags |= RF_RC_CHANGED;
 }
@@ -326,7 +326,7 @@ void find_existing_articles()
 
     if (g_data_source->flags & DF_REMOTE)
     {
-        /* Parse the LISTGROUP output and remember everything we find */
+        // Parse the LISTGROUP output and remember everything we find
         if (nntp_art_nums())
         {
             for (ap = article_ptr(article_first(g_abs_first));
@@ -348,7 +348,7 @@ void find_existing_articles()
                 an = (ArticleNum)std::atol(g_ser_line);
                 if (an < g_abs_first)
                 {
-                    continue;   /* Ignore some wacked-out NNTP servers */
+                    continue;   // Ignore some wacked-out NNTP servers
                 }
                 ap = article_ptr(an);
                 if (!(ap->flags2 & AF2_BOGUS))
@@ -422,7 +422,7 @@ void find_existing_articles()
             return;
         }
 
-        /* Scan the directory to find which articles are present. */
+        // Scan the directory to find which articles are present.
         for (ap = article_ptr(article_first(g_abs_first));
              ap && article_num(ap) <= g_last_art;
              ap = article_nextp(ap))
@@ -478,7 +478,7 @@ void find_existing_articles()
     }
 }
 
-/* mark an article unread, keeping track of toread[] */
+// mark an article unread, keeping track of toread[]
 
 void one_more(Article *ap)
 {
@@ -507,14 +507,14 @@ void one_more(Article *ap)
     }
 }
 
-/* mark an article read, keeping track of toread[] */
+// mark an article read, keeping track of toread[]
 
 void one_less(Article *ap)
 {
     if (ap->flags & AF_UNREAD)
     {
         ap->flags &= ~AF_UNREAD;
-        /* Keep g_selected_count accurate */
+        // Keep g_selected_count accurate
         if (ap->flags & static_cast<ArticleFlags>(g_sel_mask))
         {
             g_selected_count--;
@@ -544,7 +544,7 @@ void one_missing(Article *ap)
               | AF_CACHED|AF_THREADED;
 }
 
-/* mark an article as unread, with possible xref chasing */
+// mark an article as unread, with possible xref chasing
 
 void unmark_as_read(Article *ap)
 {
@@ -571,8 +571,8 @@ void set_read(Article *ap)
     }
 }
 
-/* temporarily mark article as read.  When newsgroup is exited, articles */
-/* will be marked as unread.  Called via M command */
+// temporarily mark article as read.  When newsgroup is exited, articles
+// will be marked as unread.  Called via M command
 
 void delay_unmark(Article *ap)
 {
@@ -583,8 +583,8 @@ void delay_unmark(Article *ap)
     }
 }
 
-/* mark article as read.  If article is cross referenced to other */
-/* newsgroups, mark them read there also. */
+// mark article as read.  If article is cross referenced to other
+// newsgroups, mark them read there also.
 
 void mark_as_read(Article *ap)
 {
@@ -594,7 +594,7 @@ void mark_as_read(Article *ap)
         ap->flags |= AF_K_CHASE;
         s_chase_count++;
     }
-    g_check_count++;             /* get more worried about crashes */
+    g_check_count++;             // get more worried about crashes
 }
 
 void mark_missing_articles()
@@ -610,7 +610,7 @@ void mark_missing_articles()
     }
 }
 
-/* keep g_firstart pointing at the first unread article */
+// keep g_firstart pointing at the first unread article
 
 void check_first(ArticleNum min)
 {
@@ -618,10 +618,10 @@ void check_first(ArticleNum min)
     g_first_art = std::min(min, g_first_art);
 }
 
-/* bring back articles marked with M */
+// bring back articles marked with M
 void yank_back()
 {
-    if (g_dm_count)                      /* delayed unmarks pending? */
+    if (g_dm_count)                      // delayed unmarks pending?
     {
         if (g_panic)
         {
@@ -703,9 +703,9 @@ static bool check_chase(char *ptr, int until_key)
     return false;
 }
 
-/* run down xref list and mark as read or unread */
+// run down xref list and mark as read or unread
 
-/* The Xref-line-using version */
+// The Xref-line-using version
 static int chase_xref(ArticleNum art_num, bool mark_read)
 {
     char* xartnum;
@@ -760,7 +760,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
     if (valid_xref_site(artnum,tmpbuf))
 # endif
     {
-        while (*cur_xref)            /* for each newsgroup */
+        while (*cur_xref)            // for each newsgroup
         {
             cur_xref = copy_till(tmp_buf,cur_xref,' ');
             xartnum = std::strchr(tmp_buf,':');
@@ -773,7 +773,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
             {
                 continue;
             }
-            if (!std::strcmp(tmp_buf,g_newsgroup_name.c_str()))  /* is this the current newsgroup? */
+            if (!std::strcmp(tmp_buf,g_newsgroup_name.c_str()))  // is this the current newsgroup?
             {
                 if (x < g_abs_first || x > g_last_art)
                 {
@@ -781,7 +781,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
                 }
                 if (mark_read)
                 {
-                    one_less(article_ptr(x)); /* take care of old C newses */
+                    one_less(article_ptr(x)); // take care of old C newses
                 }
 # ifdef MCHASE
                 else
@@ -833,7 +833,7 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
     if (inews_site)
         std::free(inews_site);
 #ifndef ANCIENT_NEWS
-    /* Grab the site from the first component of the Path line */
+    // Grab the site from the first component of the Path line
     sitebuf = fetchlines(artnum,PATH_LINE);
     s = std::strchr(sitebuf, '!');
     if (s != nullptr)
@@ -841,8 +841,8 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
         *s = '\0';
         inews_site = save_str(sitebuf);
     }
-#else /* ANCIENT_NEWS */
-    /* Grab the site from the Posting-Version line */
+#else // ANCIENT_NEWS
+    // Grab the site from the Posting-Version line
     sitebuf = fetchlines(artnum,RVER_LINE);
     s = instr(sitebuf, "; site ", true);
     if (s != nullptr)
@@ -854,7 +854,7 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
         }
         inews_site = save_str(s+7);
     }
-#endif /* ANCIENT_NEWS */
+#endif // ANCIENT_NEWS
     else
     {
         inews_site = save_str("");
@@ -875,4 +875,4 @@ static bool valid_xref_site(ART_NUM artnum, char *site)
 #endif
     return false;
 }
-# endif /* VALIDATE_XREF_SITE */
+# endif // VALIDATE_XREF_SITE
