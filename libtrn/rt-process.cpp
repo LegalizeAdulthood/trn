@@ -151,7 +151,7 @@ bool valid_article(Article *article)
                         }
                         ap = ap->sibling;
                     }
-                    // End of slibling-search code
+                    // End of sibling-search code
                 }
             }
             else if (s_fake_had_subj)
@@ -178,7 +178,7 @@ bool valid_article(Article *article)
                         }
                         ap = ap->sibling;
                     }
-                    // End of slibling-search code
+                    // End of sibling-search code
                 }
             }
             for (ap = article->child1; ap; ap = ap->sibling)
@@ -490,7 +490,7 @@ static char *valid_message_id(char *start, char *end)
     if (*end != '>')
     {
         // Compensate for space cadets who include the header in their
-        // subsitution of all '>'s into another citation character.
+        // substitution of all '>'s into another citation character.
         if (*end == '<' || *end == '-' || *end == '!' || *end == '%'    //
             || *end == ')' || *end == '|' || *end == ':' || *end == '}' //
             || *end == '*' || *end == '+' || *end == '#' || *end == ']' //

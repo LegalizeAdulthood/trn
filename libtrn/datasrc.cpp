@@ -47,8 +47,8 @@ struct utimbuf
 #include <ctime>
 #include <string>
 
-List       *g_data_source_list{};                     // a list of all DataSources
-DataSource *g_data_source{};                          // the current datasrc
+List       *g_data_source_list{};                     // a list of all data sources
+DataSource *g_data_source{};                          // the current data source
 int         g_data_source_cnt{};                      //
 char       *g_trn_access_mem{};                       //
 std::string g_nntp_auth_file;                         //
@@ -1166,7 +1166,7 @@ static int source_file_cmp(const char *key, int key_len, HashDatum data)
 //
 
 // find_close_match -- Finds the closest match for the string given in
-// global g_ngname.  If found, the result will be the corrected string
+// global g_newsgroup_name.  If found, the result will be the corrected string
 // returned in that global.
 //
 // We compare the (presumably misspelled) newsgroup name with all legal
@@ -1178,13 +1178,13 @@ static int source_file_cmp(const char *key, int key_len, HashDatum data)
 //
 // You might want to present all of the closest matches, and let the user
 // choose among them.  But because I'm lazy I chose to only keep track of
-// all with newsgroups with the//single* smallest error, in array s_ngptrs[].
+// all with newsgroups with the//single* smallest error, in array s_newsgroup_ptrs[].
 // A more flexible approach would keep around the 10 best matches, whether
 // or not they had precisely the same edit distance, but oh well.
 //
 
 static char **s_newsgroup_ptrs{}; // List of potential matches
-static int    s_newsgroup_num{};  // Length of list in s_ngptrs[]
+static int    s_newsgroup_num{};  // Length of list in s_newsgroup_ptrs[]
 static int    s_best_match{};     // Value of best match
 
 int find_close_match()
@@ -1314,7 +1314,7 @@ static int check_distance(int len, HashDatum *data, int newsrc_ptr)
 }
 
 // Now we've got several potential matches, and have to choose between them
-// somehow.  Again, results will be returned in global g_ngname.
+// somehow.  Again, results will be returned in global g_newsgroup_name.
 //
 static int get_near_miss()
 {

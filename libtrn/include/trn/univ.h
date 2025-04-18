@@ -25,7 +25,7 @@ enum UniversalItemType
     UN_GROUP_MASK = 4,    //
     UN_ARTICLE = 5,       // an individual article
     UN_CONFIG_FILE = 6,   // filename for a configuration file
-    UN_VIRTUAL1 = 7,      // Virtual newsgroup file (reserved for compatability with strn)
+    UN_VIRTUAL1 = 7,      // Virtual newsgroup file (reserved for compatibility with strn)
     UN_VGROUP = 8,        // virtual newsgroup marker (for pass 2)
     UN_TEXT_FILE = 9,     // text file
     UN_HELP_KEY = 10,     // keystroke help functions from help.c

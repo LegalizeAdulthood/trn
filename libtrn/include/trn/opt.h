@@ -47,7 +47,7 @@ enum OptionIndex
     OI_USE_SEL_NUM,
     OI_SEL_NUM_GOTO,
 
-    // Newsreading Options
+    // News reading Options
     OI_USE_THREADS = OI_SEL_NUM_GOTO + 2,
     OI_SELECT_MY_POSTS,
     OI_INITIAL_ARTICLE_LINES,

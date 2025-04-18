@@ -54,7 +54,7 @@
 ArticleNum g_art{};             // current or prospective article #
 ArticleNum g_recent_art{};      // previous article # for '-' command
 ArticleNum g_curr_art{};        // current article #
-Article   *g_recent_artp{};     // article_ptr equivilents
+Article   *g_recent_artp{};     // article_ptr equivalents
 Article   *g_curr_artp{};       //
 Article   *g_artp{};            // the article ptr we use when art is 0
 int        g_check_count{};     // how many articles have we read in the current newsgroup since the last checkpoint?
@@ -473,7 +473,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
                     break;
                 }
             }
-            if (g_art >= g_abs_first)    // don't mark non-existant articles
+            if (g_art >= g_abs_first)    // don't mark non-existent articles
             {
                 mark_as_read(g_artp);   // mark current article as read
             }
@@ -1905,7 +1905,7 @@ void set_default_cmd()
 // Ask the user about catching-up the current group.  Returns 'y' if yes,
 // 'n' or 'N' if no ('N' means we used one line when in the selector),
 // or 'u' for yes with unsubscribe.  Actually performs the catchup and
-// unsubscription as needed.
+// unsubscribe as needed.
 //
 char ask_catchup()
 {

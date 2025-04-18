@@ -70,7 +70,7 @@ struct DataSource
     SourceFile       act_sf;     // the active file's hashed contents
     char            *group_desc; // the newsgroup description file or tmp
     SourceFile       desc_sf;    // the group description's hashed contents
-    char            *extra_name; // local active.times or server's actfile
+    char            *extra_name; // local active.times or server's active file
     NNTPLink         nntp_link;
     char            *spool_dir;
     char            *over_dir;
@@ -94,8 +94,8 @@ enum
     DATASRC_ALARM_SECS = (5 * 60)
 };
 
-extern List       *g_data_source_list; // a list of all DATASRCs
-extern DataSource *g_data_source;      // the current datasrc
+extern List       *g_data_source_list; // a list of all data sources
+extern DataSource *g_data_source;      // the current data source
 extern int         g_data_source_cnt;  //
 extern char       *g_trn_access_mem;   //
 extern std::string g_nntp_auth_file;   //

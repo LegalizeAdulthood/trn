@@ -77,7 +77,7 @@ enum ArticleFlags2 : std::uint16_t
 };
 DECLARE_FLAGS_ENUM(ArticleFlags2, std::uint16_t);
 
-// specific scoreflag meanings:  (note: bad placement, but where else?)
+// specific score flag meanings:  (note: bad placement, but where else?)
 enum ScoreFlags
 {
     SFLAG_NONE = 0x00,
@@ -115,7 +115,7 @@ enum : bool
     FILL_CACHE = true
 };
 
-extern List      *g_article_list; // a list of ARTICLEs
+extern List      *g_article_list; // a list of Articles
 extern Article  **g_art_ptr_list; // the article-selector creates this
 extern Article  **g_art_ptr;      // ditto -- used for article order
 extern ArticleNum g_art_ptr_list_size;

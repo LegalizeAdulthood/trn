@@ -672,7 +672,7 @@ static bool open_newsrc(Newsrc *rp)
         }
         if (some_buf == g_buf)
         {
-            np->rc_line = save_str(some_buf);  // make semipermanent copy
+            np->rc_line = save_str(some_buf);  // make semi-permanent copy
         }
         else
         {

@@ -453,7 +453,7 @@ try_again:
 #undef vis_midlen
 
 // Compress an email address, trying to keep as much of the local part of
-// the addresses as possible.  The order of precence is @ ! %, but
+// the addresses as possible.  The order of precedence is @ ! %, but
 // @ % ! may be better...
 //
 char *compress_address(char *name, int max)
@@ -697,7 +697,7 @@ const char *compress_subj(const Article *ap, int max)
         return "<MISSING>";
     }
 
-    // Put a preceeding '>' on subjects that are replies to other articles
+    // Put a preceding '>' on subjects that are replies to other articles
     char *   cp = g_buf;
     Article *first = (g_threaded_group ? ap->subj->thread : ap->subj->articles);
     if (ap != first || (ap->flags & AF_HAS_RE)

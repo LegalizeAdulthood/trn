@@ -57,7 +57,7 @@ char       g_auto_select_postings{}; // -p
 #ifdef PENDING
 static ArticleNum    s_subj_to_get{};
 static ArticleNum    s_xref_to_get{};
-static CompiledRegex s_search_compex; // compiled regex for searchahead
+static CompiledRegex s_search_compex; // compiled regex for search ahead
 #endif
 static HashTable *s_subj_hash{};
 static HashTable *s_short_subj_hash{};
@@ -124,7 +124,7 @@ void close_cache()
 {
     Subject* next;
 
-    nntp_art_name(0, false);             // clear the tmpfile cache
+    nntp_art_name(0, false);             // clear the tmp file cache
 
     if (s_subj_hash)
     {
@@ -435,7 +435,7 @@ char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache
     Article* ap;
     bool cached = (g_header_type[which_line].flags & HT_CACHED);
 
-    // article_find() returns a nullptr if the artnum value is invalid
+    // article_find() returns a nullptr if the article number value is invalid
     if (!(ap = article_find(art_num)) || !(ap->flags & AF_EXISTS))
     {
         return "";
@@ -812,7 +812,7 @@ void look_ahead()
         std::strcpy(pattern,": *");
         h = pattern + std::strlen(pattern);
         interp(h,(sizeof g_buf) - (h-g_buf),"%\\s");
-        {                       // compensate for notesfiles
+        {                       // compensate for notes files
             for (int i = 24; *h && i--; h++)
             {
                 if (*h == '\\')
@@ -1021,7 +1021,7 @@ bool cache_all_arts()
         return true;
     }
 
-    // turn it on as late as possible to avoid fseek()ing openart
+    // turn it on as late as possible to avoid fseek()ing open art
     set_spin(SPIN_BACKGROUND);
     if (g_last_cached < g_last_art)
     {
@@ -1096,7 +1096,7 @@ bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_article
         int lots_to_do = ((g_data_source->flags & DF_REMOTE)? g_net_speed : 20) * 25;
         set_spin(g_spin_estimate > lots_to_do? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
     }
-    // TRN_ASSERT(first >= g_absfirst && last <= g_lastart);
+    // TRN_ASSERT(first >= g_abs_first && last <= g_last_art);
     for (i = article_first(first); i <= last; i = article_next(i))
     {
         if ((article_ptr(i)->flags & cache_mask) ^ cache_mask2)

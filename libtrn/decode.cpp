@@ -569,6 +569,6 @@ void decode_rmdir(char *dir)
     char *s = dir + std::strlen(dir) - 1;
     *s = '\0';
 
-    // TODO: conditionalize this
+    // TODO: conditional-ize this
     std::filesystem::remove(dir);
 }

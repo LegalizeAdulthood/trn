@@ -1440,7 +1440,7 @@ bool find_parent(bool keep_going)
     return true;
 }
 
-// Find g_artp's first child or youngest decendent.  Returns false if no
+// Find g_artp's first child or youngest descendant.  Returns false if no
 // such article.  Sets g_art and g_artp otherwise.
 //
 bool find_leaf(bool keep_going)

@@ -147,7 +147,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
                     fold_case = false;
                     break;
 
-                case 'I':               // ignore the killfile thru line
+                case 'I':               // ignore the kill file thru line
                     ignore_thru = 1;
                     break;
 
@@ -285,7 +285,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             g_search_ahead = -1;
         }
 
-        {                       // compensate for notesfiles
+        {                       // compensate for notes files
             for (int i = 24; *h && i--; h++)
             {
                 if (*h == '\\')

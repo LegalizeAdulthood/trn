@@ -418,7 +418,7 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
     }
 
     color_object(COLOR_HEADER, true);
-    // If this is the first subject line, output it with a preceeding [1]
+    // If this is the first subject line, output it with a preceding [1]
     if (is_subject && !std::isspace(*line))
     {
         if (g_threaded_group)

@@ -23,8 +23,8 @@ extern ArticlePosition g_art_size;          // size in bytes of article
 extern char            g_art_line[LINE_BUF_LEN]; // place for article lines
 
 extern int             g_g_line;
-extern ArticlePosition g_inner_search;    // g_artpos of end of line we want to visit
-extern ArticleLine     g_inner_light;     // highlight position for g_innersearch or 0
+extern ArticlePosition g_inner_search;    // g_art_pos of end of line we want to visit
+extern ArticleLine     g_inner_light;     // highlight position for g_inner_search or 0
 extern char            g_hide_everything; // if set, do not write page now,
                                           // ...but execute char when done with page
 

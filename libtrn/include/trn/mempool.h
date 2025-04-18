@@ -9,7 +9,7 @@
 enum MemoryPool
 {
     MP_SCORE1 = 0,  // scoring rule text
-    MP_SCORE2 = 1,  // scorefile cache
+    MP_SCORE2 = 1,  // score file cache
     MP_SATHREAD = 2 // sathread.c storage
 };
 

@@ -56,7 +56,7 @@ enum
 #define CBACK (18 | META_NULL)   // \N -- backreference to the Nth bracketed string
 #define CIRC (20 | META_NULL)    // ^ matches the beginning of a line
 #define WORD 32                  // matches word character \w
-#define NWORD 34                 // matches non-word characer \W
+#define NWORD 34                 // matches non-word character \W
 #define WBOUND (36 | META_NULL)  // matches word boundary \b
 #define NWBOUND (38 | META_NULL) // matches non-(word boundary) \B
 

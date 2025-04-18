@@ -47,30 +47,30 @@
 #include <ctime>
 #include <string>
 
-ArticleLine     g_highlight{-1};         // next line to be highlighted
-ArticleLine     g_first_view{};          //
-ArticlePosition g_raw_art_size{};        // size in bytes of raw article
-ArticlePosition g_art_size{};            // size in bytes of article
-char            g_art_line[LINE_BUF_LEN];     // place for article lines
-int             g_g_line{};              //
-ArticlePosition g_inner_search{};        // g_artpos of end of line we want to visit
-ArticleLine     g_inner_light{};         // highlight position for g_innersearch or 0
-char            g_hide_everything{};     // if set, do not write page now, ...but execute char when done with page
-bool            g_reread{};              // consider current art temporarily unread?
-bool            g_do_fseek{};            // should we back up in article file?
-bool            g_old_subject{};         // not 1st art in subject thread
-ArticleLine     g_top_line{-1};          // top line of current screen
-bool            g_do_hiding{true};       // hide header lines with -h?
-bool            g_is_mime{};             // process mime in an article?
-bool            g_multimedia_mime{};     // images/audio to see/hear?
-bool            g_rotate{};              // has rotation been requested?
-std::string     g_prompt;                // current prompt
-char           *g_first_line{};          // s_special first line?
-const char     *g_hide_line{};           // custom line hiding?
-const char     *g_page_stop{};           // custom page terminator?
-CompiledRegex   g_hide_compex{};         //
-CompiledRegex   g_page_compex{};         //
-bool            g_dont_filter_control{}; // -j
+ArticleLine     g_highlight{-1};          // next line to be highlighted
+ArticleLine     g_first_view{};           //
+ArticlePosition g_raw_art_size{};         // size in bytes of raw article
+ArticlePosition g_art_size{};             // size in bytes of article
+char            g_art_line[LINE_BUF_LEN]; // place for article lines
+int             g_g_line{};               //
+ArticlePosition g_inner_search{};         // g_art_pos of end of line we want to visit
+ArticleLine     g_inner_light{};          // highlight position for g_inner_search or 0
+char            g_hide_everything{};      // if set, do not write page now, ...but execute char when done with page
+bool            g_reread{};               // consider current art temporarily unread?
+bool            g_do_fseek{};             // should we back up in article file?
+bool            g_old_subject{};          // not 1st art in subject thread
+ArticleLine     g_top_line{-1};           // top line of current screen
+bool            g_do_hiding{true};        // hide header lines with -h?
+bool            g_is_mime{};              // process mime in an article?
+bool            g_multimedia_mime{};      // images/audio to see/hear?
+bool            g_rotate{};               // has rotation been requested?
+std::string     g_prompt;                 // current prompt
+char           *g_first_line{};           // s_special first line?
+const char     *g_hide_line{};            // custom line hiding?
+const char     *g_page_stop{};            // custom page terminator?
+CompiledRegex   g_hide_compex{};          //
+CompiledRegex   g_page_compex{};          //
+bool            g_dont_filter_control{};  // -j
 
 inline char *line_ptr(ArticlePosition pos)
 {
@@ -115,7 +115,7 @@ DoArticleResult do_article()
     char* buf_ptr = g_art_line;   // pointer to input buffer
     int out_pos;                  // column position of output
     static char prompt_buf[64];  // place to hold prompt
-    bool notes_files = false;     // might there be notesfiles junk?
+    bool notes_files = false;     // might there be notes files junk?
     MinorMode old_mode = g_mode;
     bool output_ok = true;
 
@@ -238,7 +238,7 @@ DoArticleResult do_article()
             g_art_pos = 0;
             virtual_write(g_art_line_num,g_art_pos); // remember pos in file
         }
-        for (bool restart_color = true; // linenum already set
+        for (bool restart_color = true; // line_num already set
           g_inner_search? (g_in_header || inner_more())
            : s_special? (line_num < s_special_lines)
            : (s_first_page && !g_in_header)? (line_num < g_init_lines)
@@ -317,7 +317,7 @@ DoArticleResult do_article()
                     read_art_buf(g_auto_view_inline);
                 }
                 mime_set_article();
-                clear_art_buf();         // exclude notesfiles droppings
+                clear_art_buf();         // exclude notes files droppings
                 g_header_type[PAST_HEADER].min_pos = tell_art();
                 g_art_buf_seek = tell_art();
                 hide_this_line = true;  // and do not print either
@@ -411,7 +411,7 @@ DoArticleResult do_article()
             }
             else if (hide_this_line && g_do_hiding)     // do not print line?
             {
-                line_num--;                        // compensate for linenum++
+                line_num--;                        // compensate for line_num++
                 if (!g_in_header)
                 {
                     hide_this_line = false;
@@ -428,7 +428,7 @@ DoArticleResult do_article()
                 {
                     erase_line(false);
                 }
-                if (g_highlight == g_art_line_num)   // this line to be highlit?
+                if (g_highlight == g_art_line_num)   // this line to be highlight?
                 {
                     if (g_marking == STANDOUT)
                     {
@@ -456,7 +456,7 @@ DoArticleResult do_article()
                         std::putchar(' ');
                     }
                 }
-                output_ok = !g_hide_everything; // registerize it, hopefully
+                output_ok = !g_hide_everything;
                 if (g_page_stop && !s_continuation && execute(&g_page_compex,buf_ptr))
                 {
                     line_num = 32700;
@@ -716,7 +716,7 @@ skip_put:
             g_hide_everything = 0;
             goto fake_command;
         }
-        if (line_num >= 32700)   // did last line have formfeed?
+        if (line_num >= 32700)   // did last line have form feed?
         {
             virtual_write(g_art_line_num - 1, -virtual_read(g_art_line_num - 1));
                                 // remember by negating pos in file
@@ -814,7 +814,7 @@ reask_pager:
         }
         erase_line(g_erase_screen && g_erase_each_line);
 
-    fake_command:               // used by g_innersearch
+    fake_command:               // used by g_inner_search
         color_default();
         g_output_chase_phrase = true;
 
@@ -1248,7 +1248,7 @@ refresh_screen:
     case '+':
     case Ctl('v'):            // verify crypto signature
     case ';':                 // enter article scan mode
-    case '"':                 // append to local scorefile
+    case '"':                 // append to local score file
     case '\'':                // score command
     case '#':
     case '$':

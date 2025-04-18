@@ -143,7 +143,7 @@ SaveResult save_article()
                 s = skip_eq(s, ' ');
                 if (*s)                         // if new command, use it
                 {
-                    g_extract_prog = s;          // put extracter in %e
+                    g_extract_prog = s;          // put extractor in %e
                 }
                 else
                 {

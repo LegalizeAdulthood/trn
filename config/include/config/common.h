@@ -285,7 +285,7 @@ inline void report_assertion(const char *expr, const char *file, unsigned int li
 // More System Dependencies
 
 // news library
-#ifndef NEWSLIB         // ~ and %l only ("~%l" is permissable)
+#ifndef NEWSLIB         // ~ and %l only ("~%l" is permissible)
 #   define NEWSLIB "/usr/lib/news"
 #endif
 
@@ -661,7 +661,7 @@ extern int debug; // -D
 #   define DEB_FEED_XREF 16384
 #endif
 
-// miscellania
+// miscellanea
 
 inline const char *plural(int num)
 {

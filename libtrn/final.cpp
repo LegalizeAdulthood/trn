@@ -309,6 +309,6 @@ Signal_t stop_catcher(int signo)
         }
         xmouse_check();
     }
-    sigset(signo,stop_catcher); // unenable the stop
+    sigset(signo,stop_catcher); // disable the stop
 }
 #endif

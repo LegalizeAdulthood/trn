@@ -707,7 +707,7 @@ long nntp_read_check()
         return s_raw_bytes = -1;
     }
 
-    // try to get the number of bytes being transfered
+    // try to get the number of bytes being transferred
     if (std::sscanf(g_ser_line, "%*d%ld", &s_raw_bytes) != 1)
     {
         return s_raw_bytes = -1;

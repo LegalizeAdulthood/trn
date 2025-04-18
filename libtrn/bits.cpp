@@ -273,7 +273,7 @@ void bits_to_rc()
             {
                 std::sprintf(s,"-%ld,",(long)i);
                                         // then it out as a range
-                s += std::strlen(s);         // and housekeep
+                s += std::strlen(s);         // and house keep
             }
             else
             {
@@ -348,7 +348,7 @@ void find_existing_articles()
                 an = (ArticleNum)std::atol(g_ser_line);
                 if (an < g_abs_first)
                 {
-                    continue;   // Ignore some wacked-out NNTP servers
+                    continue;   // Ignore some whacked-out NNTP servers
                 }
                 ap = article_ptr(an);
                 if (!(ap->flags2 & AF2_BOGUS))
@@ -478,7 +478,7 @@ void find_existing_articles()
     }
 }
 
-// mark an article unread, keeping track of toread[]
+// mark an article unread, keeping track of to_read[]
 
 void one_more(Article *ap)
 {
@@ -507,7 +507,7 @@ void one_more(Article *ap)
     }
 }
 
-// mark an article read, keeping track of toread[]
+// mark an article read, keeping track of to_read[]
 
 void one_less(Article *ap)
 {
@@ -610,7 +610,7 @@ void mark_missing_articles()
     }
 }
 
-// keep g_firstart pointing at the first unread article
+// keep g_first_art pointing at the first unread article
 
 void check_first(ArticleNum min)
 {

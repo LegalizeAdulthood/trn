@@ -67,7 +67,7 @@ extern std::FILE         *g_local_kfp;             // local (for this newsgroup)
 extern KillFileStateFlags g_kf_state;              // the state of our kill files
 extern KillFileStateFlags g_kfs_thread_change_set; // bits to set for thread changes
 extern int                g_kf_change_thread_cnt;  // # entries changed from old to new
-extern ArticleNum         g_kill_first;            // used as g_firstart when killing
+extern ArticleNum         g_kill_first;            // used as g_first_art when killing
 
 void kill_file_init();
 int  do_kill_file(std::FILE *kfp, int entering);

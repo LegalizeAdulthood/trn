@@ -156,7 +156,7 @@ HeaderLineType set_line_type(char *bufptr, const char *colon)
     f = g_msg;                          // get g_msg into a register
     int len = t - f;
 
-    // now scan the HEADTYPE table, backwards so we don't have to supply an
+    // now scan the HeaderType table, backwards so we don't have to supply an
     // extra terminating value, using first letter as index, and length as
     // optimization to avoid calling subroutine strEQ unnecessarily.  Hauls.
     //
@@ -260,7 +260,7 @@ void start_header(ArticleNum artnum)
 
 void end_header_line()
 {
-    if (s_first_one)            // did we just pass 1st occurance?
+    if (s_first_one)            // did we just pass 1st occurrence?
     {
         s_first_one = false;
         // remember where line left off
@@ -533,10 +533,10 @@ char *fetch_lines(ArticleNum art_num, HeaderLineType which_line)
     return s;
 }
 
-// (strn) like fetchlines, but for memory pools
-// ART_NUM artnum   article to get line from
-// int which_line   type of line desired
-// int pool         which memory pool to use
+// (strn) like fetch_lines, but for memory pools
+// ArticleNum art_num           article to get line from
+// HeaderLineType which_line    type of line desired
+// MemoryPool pool              which memory pool to use
 char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool pool)
 {
     char* s;
@@ -592,9 +592,9 @@ static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum, ArticleNum la
 
 // prefetch a header line from one or more articles
 
-// ART_NUM artnum   article to get line from */
-// int which_line   type of line desired */
-// bool copy    do you want it save_str()ed? */
+// ArticleNum art_num           article to get line from
+// HeaderLineType which_line    type of line desired
+// bool copy                    do you want it save_str()ed?
 char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
 {
     char* s;

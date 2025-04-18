@@ -41,7 +41,7 @@
 #undef TIOCGWINSZ
 #endif
 
-#undef  USETITE         // use terminal init/exit seqences (not recommended)
+#undef  USETITE         // use terminal init/exit sequences (not recommended)
 #undef  USEKSKE         // use keypad start/end sequences
 
 #ifdef I_TERMIOS

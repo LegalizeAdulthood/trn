@@ -588,7 +588,7 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
 }
 
 // Change a newsgroup name into the name of the overview data file.  We
-// subsitute any '.'s in the group name into '/'s, prepend the path, and
+// substitute any '.'s in the group name into '/'s, prepend the path, and
 // append the '/.overview' or '.ov') on to the end.
 //
 static const char *ov_name(const char *group)

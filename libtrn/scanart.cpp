@@ -29,7 +29,7 @@ bool       g_sa_go{};             // go to sa.  Do not pass GO (:-)
 bool       g_sa_go_explicit{};    // want to bypass read-next-marked
 ArticleNum g_sa_art{};            // used to pass an article number to read soon
 bool       g_sa_do_sel_threads{}; // select threads from TRN thread selector; re-implement later
-bool       g_sa_mode_read_elig{}; // true if read articles are eligible in trn/scanart.h for world-visibilty
+bool       g_sa_mode_read_elig{}; // true if read articles are eligible in trn/scanart.h for world-visibility
 
 // Options
 /* Display order variable:
