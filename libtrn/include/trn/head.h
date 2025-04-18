@@ -13,10 +13,10 @@
 
 struct Article;
 
-/* types of header lines
- * (These must stay in alphabetic order at least in the first letter.
- * Within each letter it helps to arrange in increasing likelihood.)
- */
+// types of header lines
+// (These must stay in alphabetic order at least in the first letter.
+// Within each letter it helps to arrange in increasing likelihood.)
+//
 enum HeaderLineType
 {
     PAST_HEADER = 0,        // body
