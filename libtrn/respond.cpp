@@ -1190,12 +1190,12 @@ static bool cut_line(char *str)
     char word[80];
     int  dash_cnt, equal_cnt, other_cnt;
 
-    /* Disallow any single-/double-quoted, parenthetical or c-commented
-    ** string lines.  Make sure it has the cut-phrase and at least six
-    ** '-'s or '='s.  If only four '-'s are present, check for a duplicate
-    ** of the cut phrase.  If over 20 unknown characters are encountered,
-    ** assume it isn't a cut line.  If we succeed, return true.
-    */
+    // Disallow any single-/double-quoted, parenthetical or c-commented
+    // string lines.  Make sure it has the cut-phrase and at least six
+    // '-'s or '='s.  If only four '-'s are present, check for a duplicate
+    // of the cut phrase.  If over 20 unknown characters are encountered,
+    // assume it isn't a cut line.  If we succeed, return true.
+    //
     for (cp = str, dash_cnt = equal_cnt = other_cnt = 0; *cp; cp++)
     {
         switch (*cp)
