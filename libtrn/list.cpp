@@ -1,6 +1,6 @@
 /* list.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "trn/list.h"
 #include "config/common.h"
@@ -34,7 +34,7 @@ List *new_list(long low, long high, int item_size, int items_per_node, ListFlags
     return list;
 }
 
-/* The default way to initialize a node */
+// The default way to initialize a node
 static void def_init_node(List *list, ListNode *node)
 {
     if (list->flags & LF_ZERO_MEM)
