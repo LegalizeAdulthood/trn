@@ -1,6 +1,6 @@
 /* only.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "config/common.h"
 #include "trn/only.h"
@@ -16,13 +16,13 @@
 #include <cstdio>
 #include <cstdlib>
 
-char *g_newsgroup_to_do[MAX_NG_TO_DO]; /* restrictions in effect */
-int   g_max_newsgroup_to_do{};         /*  0 => no restrictions */
-                                       /* >0 => # of entries in g_ngtodo */
+char *g_newsgroup_to_do[MAX_NG_TO_DO]; // restrictions in effect
+int   g_max_newsgroup_to_do{};         // 0 => no restrictions
+                                       // >0 => # of entries in g_ngtodo
 char g_empty_only_char{'o'};
 
 static int            s_save_max_newsgroup_to_do{};
-static CompiledRegex *s_compex_to_do[MAX_NG_TO_DO]; /* restrictions in compiled form */
+static CompiledRegex *s_compex_to_do[MAX_NG_TO_DO]; // restrictions in compiled form
 
 void only_init()
 {
@@ -54,7 +54,7 @@ void set_newsgroup_to_do(const char *pat)
     }
 }
 
-/* if command line list is non-null, is this newsgroup wanted? */
+// if command line list is non-null, is this newsgroup wanted?
 
 bool in_list(const char *newsgroup_name)
 {
@@ -74,7 +74,7 @@ bool in_list(const char *newsgroup_name)
 
 void end_only()
 {
-    if (g_max_newsgroup_to_do)                    /* did they specify newsgroup(s) */
+    if (g_max_newsgroup_to_do)                    // did they specify newsgroup(s)
     {
         if (g_verbose)
         {
