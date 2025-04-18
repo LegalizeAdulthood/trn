@@ -1,18 +1,18 @@
 /* trn/rt-util.h
 */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_RT_UTIL_H
 #define TRN_RT_UTIL_H
 
 struct Article;
 
-extern char g_spin_char;              /* char to put back when we're done spinning */
-extern long g_spin_estimate;          /* best guess of how much work there is */
-extern long g_spin_todo;              /* the max word to do (might decrease) */
-extern int  g_spin_count;             /* counter for when to spin */
+extern char g_spin_char;              // char to put back when we're done spinning
+extern long g_spin_estimate;          // best guess of how much work there is
+extern long g_spin_todo;              // the max word to do (might decrease)
+extern int  g_spin_count;             // counter for when to spin
 extern bool g_performed_article_loop; //
-extern bool g_bkgnd_spinner;          /* -B */
-extern bool g_unbroken_subjects;      /* -u */
+extern bool g_bkgnd_spinner;          // -B
+extern bool g_unbroken_subjects;      // -u
 
 enum SpinMode
 {
