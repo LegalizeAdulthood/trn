@@ -237,7 +237,7 @@ bool newsgroup_wanted(NewsgroupData *np)
     return execute(&s_newsgroup_compex,np->rc_line) != nullptr;
 }
 
-const char *newsgroup_comp(CompiledRegex *compex, const char *pattern, bool RE, bool fold)
+const char *newsgroup_comp(CompiledRegex *compex, const char *pattern, bool re, bool fold)
 {
     char ng_pattern[128];
     const char* s = pattern;
@@ -245,7 +245,7 @@ const char *newsgroup_comp(CompiledRegex *compex, const char *pattern, bool RE, 
 
     if (!*s)
     {
-        if (compile(compex, "", RE, fold))
+        if (compile(compex, "", re, fold))
         {
             return "No previous search pattern";
         }
@@ -273,5 +273,5 @@ const char *newsgroup_comp(CompiledRegex *compex, const char *pattern, bool RE, 
         }
     }
     *d = '\0';
-    return compile(compex,ng_pattern,RE,fold);
+    return compile(compex,ng_pattern,re,fold);
 }
