@@ -139,8 +139,8 @@ int server_init(const char *machine)
     {
         char save_line[NNTP_STRLEN];
         std::strcpy(save_line, g_ser_line);
-        /* Try MODE READER just in case we're talking to innd.
-        ** If it is not an invalid command, use the new reply. */
+        // Try MODE READER just in case we're talking to innd.
+        // If it is not an invalid command, use the new reply.
         if (nntp_command("MODE READER") <= 0)
         {
             std::sprintf(g_ser_line, "%d failed to send MODE READER\n", NNTP_ACCESS_VAL);
