@@ -1,6 +1,6 @@
 /* nntpclient.c
 */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "nntp/nntpclient.h"
 
@@ -14,7 +14,7 @@
 #include <cstring>
 #include <ctime>
 
-NNTPLink g_nntp_link{}; /* the current server's file handles */
+NNTPLink g_nntp_link{}; // the current server's file handles
 bool     g_nntp_allow_timeout{};
 char     g_ser_line[NNTP_STRLEN]{};
 char     g_last_command[NNTP_STRLEN]{};
@@ -243,7 +243,7 @@ read_it:
             len = 1;
             goto read_it;
 
-        case 0:         /* We're quitting, so pretend it's OK */
+        case 0:         // We're quitting, so pretend it's OK
             std::strcpy(g_ser_line, "205 Ok");
             break;
 
@@ -253,7 +253,7 @@ read_it:
     }
     else if (*g_ser_line <= NNTP_CLASS_CONT && *g_ser_line >= NNTP_CLASS_INF)
     {
-        ret = 1;                        /* (this includes NNTP_CLASS_OK) */
+        ret = 1;                        // (this includes NNTP_CLASS_OK)
     }
     else if (*g_ser_line == NNTP_CLASS_FATAL)
     {
