@@ -15,8 +15,8 @@
 extern bool g_waiting; // waiting for subprocess (in doshell)?
 extern bool g_no_wait_fork;
 
-/* the strlen and the buffer length of "some_buf" after a call to:
- *     some_buf = get_a_line(bufptr,bufsize,realloc,fp); */
+// the strlen and the buffer length of "some_buf" after a call to:
+//     some_buf = get_a_line(bufptr,bufsize,realloc,fp);
 extern int g_len_last_line_got;
 extern MemorySize g_buf_len_last_line_got;
 
