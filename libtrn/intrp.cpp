@@ -939,9 +939,9 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         refs_buf = fetch_lines(g_art,REFS_LINE);
                         len = std::strlen(refs_buf)+1;
                         normalize_refs(refs_buf);
-                        /* no more than 3 prior references PLUS the
-                        ** root article allowed, including the one
-                        ** concatenated below */
+                        // no more than 3 prior references PLUS the
+                        // root article allowed, including the one
+                        // concatenated below
                         s = std::strrchr(refs_buf, '<');
                         if (s != nullptr && s > refs_buf)
                         {
