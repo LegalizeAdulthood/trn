@@ -1,6 +1,6 @@
 /* trn/rt-select.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_RT_SELECT_H
 #define TRN_RT_SELECT_H
 
@@ -33,8 +33,8 @@ enum SelectionSortMode
     SS_NATURAL,
     SS_GROUPS,
     SS_LINES,
-    /* NOTE: The score order is still valid even without scoring enabled. */
-    /*       (The real order is then something like natural or date.) */
+    // NOTE: The score order is still valid even without scoring enabled.
+    // (The real order is then something like natural or date.)
     SS_SCORE
 };
 
@@ -59,7 +59,7 @@ extern char             *g_sel_chars;
 extern int               g_sel_item_index;
 extern int               g_sel_last_line;
 extern bool              g_sel_at_end;
-extern int               g_keep_the_group_static; /* -K */
+extern int               g_keep_the_group_static; // -K
 extern char              g_newsrc_sel_cmds[3];
 extern char              g_add_sel_cmds[3];
 extern char              g_newsgroup_sel_cmds[3];
