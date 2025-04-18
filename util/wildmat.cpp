@@ -46,9 +46,9 @@
 
 static bool do_match(const char *text, const char *p);
 
-/*
-**  Match text and p, return true, false.
-*/
+//
+//  Match text and p, return true, false.
+//
 static bool do_match(const char *text, const char *p)
 {
     for (; *p; text++, p++)
@@ -130,9 +130,9 @@ static bool do_match(const char *text, const char *p)
 }
 
 
-/*
-**  User-level routine.  Returns true or false.
-*/
+//
+//  User-level routine.  Returns true or false.
+//
 bool wildcard_match(const char *text, const char *p)
 {
 #ifdef  OPTIMIZE_JUST_STAR
