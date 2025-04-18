@@ -5,8 +5,8 @@
 #define TRN_SEARCH_H
 
 #ifndef NBRA
-#define NBRA    10              /* the maximum number of meta-brackets in an
-                                   RE -- \( \) */
+#define NBRA    10              // the maximum number of meta-brackets in an
+                                // RE -- \( \)
 #define NALTS   10              // the maximum number of \|'s
 
 struct CompiledRegex
@@ -17,8 +17,8 @@ struct CompiledRegex
     const char* braslist[NBRA]; // RE meta-bracket start list
     const char* braelist[NBRA]; // RE meta-bracket end list
     char* brastr;               // saved match string after execute()
-    char nbra;                  /* The number of meta-brackets int the most
-                                   recenlty compiled RE */
+    char nbra;                  // The number of meta-brackets int the most
+                                // recenlty compiled RE
     bool do_folding;            // fold upper and lower case?
 };
 #endif
