@@ -115,8 +115,8 @@ void build_cache()
     s_xref_to_get = g_first_art;
 #endif
 
-    /* Cache as much data in advance as possible, possibly threading
-    ** articles as we go. */
+    // Cache as much data in advance as possible, possibly threading
+    // articles as we go.
     thread_open();
 }
 
@@ -182,9 +182,9 @@ static bool clear_article_item(char *cp, int arg)
     return false;
 }
 
-/* The article has all it's data in place, so add it to the list of articles
-** with the same subject.
-*/
+// The article has all it's data in place, so add it to the list of articles
+// with the same subject.
+//
 void cache_article(Article *ap)
 {
     Article* next;
@@ -369,10 +369,10 @@ void check_poster(Article *ap)
     }
 }
 
-/* The article turned out to be a duplicate, so remove it from the cached
-** list and possibly destroy the subject (should only happen if the data
-** was corrupt and the duplicate id got a different subject).
-*/
+// The article turned out to be a duplicate, so remove it from the cached
+// list and possibly destroy the subject (should only happen if the data
+// was corrupt and the duplicate id got a different subject).
+//
 void uncache_article(Article *ap, bool remove_empties)
 {
     if (ap->subj)
@@ -459,9 +459,9 @@ char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache
     return nullptr;
 }
 
-/* Return a pointer to a cached header line for the indicated article.
-** Truncated headers (e.g. from a .thread file) are optionally ignored.
-*/
+// Return a pointer to a cached header line for the indicated article.
+// Truncated headers (e.g. from a .thread file) are optionally ignored.
+//
 char *get_cached_line(Article *ap, HeaderLineType which_line, bool no_truncs)
 {
     char* s;
@@ -1053,8 +1053,8 @@ bool cache_all_arts()
             return false;
         }
     }
-    /* We're all done threading the group, so if the current article is
-    ** still in doubt, tell them it's missing. */
+    // We're all done threading the group, so if the current article is
+    // still in doubt, tell them it's missing.
     if (g_curr_artp && !(g_curr_artp->flags & AF_CACHED) && !input_pending())
     {
         push_char('\f' | 0200);
