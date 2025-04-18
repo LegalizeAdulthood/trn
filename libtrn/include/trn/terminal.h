@@ -1,6 +1,6 @@
 /* trn/terminal.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_TERMINAL_H
 #define TRN_TERMINAL_H
 
@@ -9,7 +9,7 @@
 
 #include "trn/enum-flags.h"
 
-/* stuff wanted by terminal mode diddling routines */
+// stuff wanted by terminal mode diddling routines
 
 #ifdef I_SYS_IOCTL
 #include <sys/ioctl.h>
@@ -24,10 +24,10 @@ extern termios g_tty;
 extern termios g_oldtty;
 #endif
 
-extern char          g_erase_char; /* rubout character */
-extern char          g_kill_char;  /* line delete character */
+extern char          g_erase_char; // rubout character
+extern char          g_kill_char;  // line delete character
 extern unsigned char g_last_char;
-extern bool          g_bizarre; /* do we need to restore terminal? */
+extern bool          g_bizarre; // do we need to restore terminal?
 
 extern int g_univ_sel_btn_cnt;
 extern int g_newsrc_sel_btn_cnt;
@@ -45,13 +45,13 @@ extern char *g_news_sel_btns;
 extern char *g_option_sel_btns;
 extern char *g_art_pager_btns;
 
-extern bool     g_muck_up_clear;   /* -loco */
-extern bool     g_erase_screen;    /* -e */
+extern bool     g_muck_up_clear;   // -loco
+extern bool     g_erase_screen;    // -e
 extern bool     g_can_home;        //
-extern bool     g_erase_each_line; /* fancy -e */
-extern bool     g_allow_typeahead; /* -T */
-extern bool     g_verify;          /* -v */
-extern ArticleLine g_init_lines;       /* -i */
+extern bool     g_erase_each_line; // fancy -e
+extern bool     g_allow_typeahead; // -T
+extern bool     g_verify;          // -v
+extern ArticleLine g_init_lines;       // -i
 extern bool     g_use_mouse;       //
 extern char     g_mouse_modes[32]; //
 
@@ -102,8 +102,8 @@ enum MinorMode : char
     MM_RESUBSCRIBE_PROMPT = 'R',
 };
 
-extern GeneralMode g_general_mode; /* general mode of trn */
-extern MinorMode   g_mode;         /* current state of trn */
+extern GeneralMode g_general_mode; // general mode of trn
+extern MinorMode   g_mode;         // current state of trn
 
 enum MarkingMode
 {
@@ -112,7 +112,7 @@ enum MarkingMode
     UNDERLINE = 2,
     LAST_MARKING = 3
 };
-extern MarkingMode g_marking; /* -m */
+extern MarkingMode g_marking; // -m
 
 enum MarkingAreas
 {
@@ -123,44 +123,44 @@ enum MarkingAreas
 DECLARE_FLAGS_ENUM(MarkingAreas, int);
 extern MarkingAreas g_marking_areas;
 
-/* termcap stuff */
+// termcap stuff
 
 /*
  * NOTE: if you don't have termlib you'll either have to define these strings
  *    and the tputs routine, or you'll have to redefine the macros below
  */
 #ifdef HAS_TERMLIB
-extern bool  g_tc_GT; /* hardware tabs */
-extern char *g_tc_BC; /* backspace character */
-extern char *g_tc_UP; /* move cursor up one line */
-extern char *g_tc_CR; /* get to left margin, somehow */
-extern char *g_tc_VB; /* visible bell */
-extern char *g_tc_CE; /* clear to end of line */
-extern char *g_tc_CM; /* cursor motion */
-extern char *g_tc_HO; /* home cursor */
-extern char *g_tc_IL; /* insert line */
-extern char *g_tc_CD; /* clear to end of display */
-extern char *g_tc_SO; /* begin standout mode */
-extern char *g_tc_SE; /* end standout mode */
-extern char *g_tc_US; /* start underline mode */
-extern char *g_tc_UE; /* end underline mode */
-extern char *g_tc_UC; /* underline a character, if that's how it's done */
-extern bool  g_tc_UG; /* blanks left by US and UE */
-extern bool  g_tc_AM; /* does terminal have automatic margins? */
-extern bool  g_tc_XN; /* does it eat 1st newline after automatic wrap? */
+extern bool  g_tc_GT; // hardware tabs
+extern char *g_tc_BC; // backspace character
+extern char *g_tc_UP; // move cursor up one line
+extern char *g_tc_CR; // get to left margin, somehow
+extern char *g_tc_VB; // visible bell
+extern char *g_tc_CE; // clear to end of line
+extern char *g_tc_CM; // cursor motion
+extern char *g_tc_HO; // home cursor
+extern char *g_tc_IL; // insert line
+extern char *g_tc_CD; // clear to end of display
+extern char *g_tc_SO; // begin standout mode
+extern char *g_tc_SE; // end standout mode
+extern char *g_tc_US; // start underline mode
+extern char *g_tc_UE; // end underline mode
+extern char *g_tc_UC; // underline a character, if that's how it's done
+extern bool  g_tc_UG; // blanks left by US and UE
+extern bool  g_tc_AM; // does terminal have automatic margins?
+extern bool  g_tc_XN; // does it eat 1st newline after automatic wrap?
 extern int   g_fire_is_out;
 extern int   g_tc_LINES;
 extern int   g_tc_COLS;
 extern int   g_term_line;
 extern int   g_term_col;
-extern int   g_term_scrolled; /* how many lines scrolled away */
-extern int   g_just_a_sec;    /* 1 sec at current baud rate (number of nulls) */
-extern int   g_page_line;     /* line number for paging in print_line (origin 1) */
+extern int   g_term_scrolled; // how many lines scrolled away
+extern int   g_just_a_sec;    // 1 sec at current baud rate (number of nulls)
+extern int   g_page_line;     // line number for paging in print_line (origin 1)
 extern bool  g_error_occurred;
 extern int   g_mouse_bar_cnt;
 extern int   g_mouse_bar_width;
 extern bool  g_mouse_is_down;
-extern int   g_auto_arrow_macros; /* -A */
+extern int   g_auto_arrow_macros; // -A
 
 void  term_init();
 void  term_set(char *tcbuf);
@@ -229,7 +229,7 @@ int   tputs(char *str, int num, int (*func)(int));
 char *tgoto(char *str, int x, int y);
 #endif
 
-/* terminal mode diddling routines */
+// terminal mode diddling routines
 
 #ifdef I_TERMIOS
 extern int  g_tty_ch;
@@ -288,7 +288,7 @@ inline void unflush_output()
 {
 }
 
-#else /* !I_TERMIOS */
+#else // !I_TERMIOS
 #ifdef MSDOS
 
 inline void cr_mode()
@@ -325,19 +325,19 @@ inline void reset_tty()
 inline void unflush_output()
 {
 }
-#else  /* !MSDOS */
+#else  // !MSDOS
 // ..."Don't know how to define the term macros!"
-#endif /* !MSDOS */
-#endif /* !I_TERMIOS */
+#endif // !MSDOS
+#endif // !I_TERMIOS
 
 inline void force_me(const char *c)
 {
 #ifdef TIOCSTI
-    ioctl(g_tty_ch, TIOCSTI, c); /* pass character in " " */
+    ioctl(g_tty_ch, TIOCSTI, c); // pass character in " "
 #endif
 }
 
-/* define a few handy macros */
+// define a few handy macros
 inline void term_down(int x)
 {
     g_term_line += x;
@@ -408,9 +408,9 @@ inline void dingaling()
 {
     tputs(g_tc_VB, 1, put_char);
 }
-#else  /* !HAS_TERMLIB */
+#else  // !HAS_TERMLIB
 //..."Don't know how to define the term macros!"
-#endif /* !HAS_TERMLIB */
+#endif // !HAS_TERMLIB
 
 inline bool input_pending()
 {
