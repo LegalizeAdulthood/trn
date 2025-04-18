@@ -42,30 +42,30 @@ enum
     SF_FILE_MARK_START = -1,
     SF_FILE_MARK_END = -2,
     /* other misc. rules */
-    SF_KILLTHRESHOLD = -3,
-    SF_NEWAUTHOR = -4,
+    SF_KILL_THRESHOLD = -3,
+    SF_NEW_AUTHOR = -4,
     SF_REPLY = -5
 };
 
 static ScoreFileEntry *s_sf_entries{};        /* array of entries */
-static ScoreFile  *s_sf_files{};          //
-static int       s_sf_num_files{};      //
-static char    **s_sf_abbr{};           /* abbreviations */
-static bool      s_newauthor_active{};  /* if true, s_newauthor is active */
-static int       s_newauthor{};         /* bonus score given to a new (unscored) author */
-static bool      s_sf_pattern_status{}; /* should we match by pattern? */
-static bool      s_reply_active{};      /* if true, s_reply_score is active */
-static int       s_reply_score{};       /* score amount added to an article reply */
-static int       s_sf_file_level{};     /* how deep are we? */
-static char      s_sf_buf[LBUFLEN]{};
-static char    **s_sf_extra_headers{};
-static int       s_sf_num_extra_headers{};
-static bool      s_sf_has_extra_headers{};
-static CompiledRegex   *s_sf_compex{};
+static ScoreFile      *s_sf_files{};          //
+static int             s_sf_num_files{};      //
+static char          **s_sf_abbr{};           /* abbreviations */
+static bool            s_new_author_active{}; /* if true, s_newauthor is active */
+static int             s_new_author{};        /* bonus score given to a new (unscored) author */
+static bool            s_sf_pattern_status{}; /* should we match by pattern? */
+static bool            s_reply_active{};      /* if true, s_reply_score is active */
+static int             s_reply_score{};       /* score amount added to an article reply */
+static int             s_sf_file_level{};     /* how deep are we? */
+static char            s_sf_buf[LBUFLEN]{};
+static char          **s_sf_extra_headers{};
+static int             s_sf_num_extra_headers{};
+static bool            s_sf_has_extra_headers{};
+static CompiledRegex  *s_sf_compex{};
 
 static int sf_open_file(const char *name);
 static void sf_file_clear();
-static char *sf_file_getline(int fnum);
+static char *sf_file_get_line(int fnum);
 
 /* Must be called before any other sf_ routine (once for each group) */
 void sf_init()
@@ -109,7 +109,7 @@ void sf_init()
     s_sf_has_extra_headers = false;
     /* set thresholds from the s_sf_entries */
     s_reply_active = false;
-    s_newauthor_active = false;
+    s_new_author_active = false;
     g_kill_thresh_active = false;
     for (int i = 0; i < g_sf_num_entries; i++)
     {
@@ -119,7 +119,7 @@ void sf_init()
         }
         switch (s_sf_entries[i].head_type)
         {
-        case SF_KILLTHRESHOLD:
+        case SF_KILL_THRESHOLD:
             g_kill_thresh_active = true;
             g_kill_thresh = s_sf_entries[i].score;
             if (g_sf_verbose)
@@ -128,7 +128,7 @@ void sf_init()
                 /* rethink? */
                 for (j = i+1; j < g_sf_num_entries; j++)
                 {
-                    if (s_sf_entries[j].head_type == SF_KILLTHRESHOLD)
+                    if (s_sf_entries[j].head_type == SF_KILL_THRESHOLD)
                     {
                         break;
                     }
@@ -140,23 +140,23 @@ void sf_init()
             }
             break;
 
-        case SF_NEWAUTHOR:
-            s_newauthor_active = true;
-            s_newauthor = s_sf_entries[i].score;
+        case SF_NEW_AUTHOR:
+            s_new_author_active = true;
+            s_new_author = s_sf_entries[i].score;
             if (g_sf_verbose)
             {
                 int j;
                 /* rethink? */
                 for (j = i+1; j < g_sf_num_entries; j++)
                 {
-                    if (s_sf_entries[j].head_type == SF_NEWAUTHOR)
+                    if (s_sf_entries[j].head_type == SF_NEW_AUTHOR)
                     {
                         break;
                     }
                 }
                 if (j == g_sf_num_entries) /* no later newauthors */
                 {
-                    std::printf("New Author score: %d\n",s_newauthor);
+                    std::printf("New Author score: %d\n",s_new_author);
                 }
             }
             break;
@@ -426,7 +426,7 @@ bool sf_do_command(char *cmd, bool check)
             return true;
         }
         sf_grow();
-        s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_KILLTHRESHOLD);
+        s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_KILL_THRESHOLD);
         s_sf_entries[g_sf_num_entries-1].score = i;
         return true;
     }
@@ -478,7 +478,7 @@ bool sf_do_command(char *cmd, bool check)
             return true;
         }
         sf_grow();
-        s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_NEWAUTHOR);
+        s_sf_entries[g_sf_num_entries-1].head_type = static_cast<HeaderLineType>(SF_NEW_AUTHOR);
         s_sf_entries[g_sf_num_entries-1].score = i;
         return true;
     }
@@ -846,7 +846,7 @@ void sf_do_file(const char *fname)
     s_sf_entries[g_sf_num_entries-1].str2 = nullptr;
     s_sf_entries[g_sf_num_entries-1].str1 = save_str(safefilename);
 
-    while ((s = sf_file_getline(sf_fp)) != nullptr)
+    while ((s = sf_file_get_line(sf_fp)) != nullptr)
     {
         std::strcpy(s_sf_buf,s);
         s = s_sf_buf;
@@ -961,12 +961,12 @@ int sf_score(ArticleNum a)
             }
         }
     }
-    if (s_newauthor_active && !(article_ptr(a)->score_flags & SFLAG_AUTHOR))
+    if (s_new_author_active && !(article_ptr(a)->score_flags & SFLAG_AUTHOR))
     {
-        sum = sum+s_newauthor;  /* add new author bonus */
+        sum = sum+s_new_author;  /* add new author bonus */
         if (g_sf_score_verbose)
         {
-            std::printf("New Author: %d\n",s_newauthor);
+            std::printf("New Author: %d\n",s_new_author);
             /* consider: print which file the bonus came from */
         }
     }
@@ -1505,7 +1505,7 @@ static void sf_file_clear()
     s_sf_num_files = 0;
 }
 
-static char *sf_file_getline(int fnum)
+static char *sf_file_get_line(int fnum)
 {
     if (fnum < 0 || fnum >= s_sf_num_files)
     {
