@@ -1,4 +1,4 @@
-/* This file Copyright 1992 by Clifford A. Adams */
+// This file Copyright 1992 by Clifford A. Adams
 /* trn/scorefile.h
  *
  */
@@ -13,19 +13,19 @@ struct CompiledRegex;
 
 struct ScoreFileEntry
 {
-    HeaderLineType head_type; /* header # (see trn/head.h) */
-    int            score;     /* score change */
-    char          *str1;      /* first string part */
-    char          *str2;      /* second string part */
-    CompiledRegex *compex;    /* regular expression ptr */
+    HeaderLineType head_type; // header # (see trn/head.h)
+    int            score;     // score change
+    char          *str1;      // first string part
+    char          *str2;      // second string part
+    CompiledRegex *compex;    // regular expression ptr
     char           flags;     /* 1: regex is valid
                                * 2: rule has been applied to the current article.
                                * 4: use faster rule checking  (later)
                                */
 };
-/* note that negative header #s are used to indicate special entries... */
+// note that negative header #s are used to indicate special entries...
 
-/* for cached score rules */
+// for cached score rules
 struct ScoreFile
 {
     char  *fname;
@@ -35,9 +35,9 @@ struct ScoreFile
     char **lines;
 };
 
-extern int  g_sf_num_entries;   /* # of entries */
-extern int  g_sf_score_verbose; /* when true, the scoring routine prints lots of info... */
-extern bool g_sf_verbose;       /* if true print more stuff while loading */
+extern int  g_sf_num_entries;   // # of entries
+extern int  g_sf_score_verbose; // when true, the scoring routine prints lots of info...
+extern bool g_sf_verbose;       // if true print more stuff while loading
 
 void sf_init();
 void sf_clean();
