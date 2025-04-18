@@ -444,7 +444,7 @@ static int list_groups(int key_len, HashDatum *data, int add_matching)
 {
     char     *bp = ((ListNode *) data->dat_ptr)->data + data->dat_len;
     const int line_len = std::strchr(bp, '\n') - bp + 1;
-    (void) memcpy(g_buf,bp,line_len);
+    (void) std::memcpy(g_buf,bp,line_len);
     g_buf[line_len] = '\0';
     scan_active_line(g_buf,add_matching);
     return 0;
