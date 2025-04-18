@@ -1,6 +1,6 @@
 /* ngsrch.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "config/common.h"
 #include "trn/ngsrch.h"
@@ -22,7 +22,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-static bool          s_newsgroup_do_empty{}; /* search empty newsgroups? */
+static bool          s_newsgroup_do_empty{}; // search empty newsgroups?
 static CompiledRegex s_newsgroup_compex;
 
 void newsgroup_search_init()
@@ -38,16 +38,16 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
     g_int_count = 0;
     if (get_cmd && g_buf == patbuf)
     {
-        if (!finish_command(false))     /* get rest of command */
+        if (!finish_command(false))     // get rest of command
         {
             return NGS_ABORT;
         }
     }
 
     perform_status_init(g_newsgroup_to_read);
-    const char cmdchr = *patbuf;         /* what kind of search? */
-    char *s = copy_till(g_buf, patbuf + 1, cmdchr); /* ok to cpy g_buf+1 to g_buf */
-    char *pattern;                                /* unparsed pattern */
+    const char cmdchr = *patbuf;         // what kind of search?
+    char *s = copy_till(g_buf, patbuf + 1, cmdchr); // ok to cpy g_buf+1 to g_buf
+    char *pattern;                                // unparsed pattern
     for (pattern = g_buf; *pattern == ' '; pattern++)
     {
     }
@@ -56,7 +56,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
         s_newsgroup_do_empty = false;
     }
 
-    if (*s)                             /* modifiers or commands? */
+    if (*s)                             // modifiers or commands?
     {
         while (*++s)
         {
@@ -76,7 +76,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
     {
         s++;
     }
-    char *cmdlst = nullptr; /* list of commands to do */
+    char *cmdlst = nullptr; // list of commands to do
     if (*s)
     {
         cmdlst = save_str(s);
@@ -85,7 +85,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
     {
         cmdlst = save_str("+");
     }
-    NewsgroupSearchResult ret = NGS_NOT_FOUND; /* assume no commands */
+    NewsgroupSearchResult ret = NGS_NOT_FOUND; // assume no commands
     if (cmdlst)
     {
         ret = NGS_DONE;
@@ -93,7 +93,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
     const char *err = newsgroup_comp(&s_newsgroup_compex, pattern, true, true);
     if (err != nullptr)
     {
-                                        /* compile regular expression */
+                                        // compile regular expression
         error_msg(err);
         if (cmdlst)
         {
@@ -103,7 +103,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
     }
     if (!cmdlst)
     {
-        std::fputs("\nSearching...", stdout); /* give them something to read */
+        std::fputs("\nSearching...", stdout); // give them something to read
         std::fflush(stdout);
     }
 
@@ -137,7 +137,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
         return ret;
     }
 
-    const bool           backward = cmdchr == '?'; /* direction of search */
+    const bool           backward = cmdchr == '?'; // direction of search
     const NewsgroupData *ng_start = g_newsgroup_ptr;
     if (backward)
     {
@@ -148,7 +148,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
         }
         else if (!cmdlst)
         {
-            if (g_newsgroup_ptr == g_first_newsgroup)  /* skip current newsgroup */
+            if (g_newsgroup_ptr == g_first_newsgroup)  // skip current newsgroup
             {
                 g_newsgroup_ptr = g_last_newsgroup;
             }
@@ -167,7 +167,7 @@ NewsgroupSearchResult newsgroup_search(char *patbuf, bool get_cmd)
         }
         else if (!cmdlst)
         {
-            if (g_newsgroup_ptr == g_last_newsgroup)   /* skip current newsgroup */
+            if (g_newsgroup_ptr == g_last_newsgroup)   // skip current newsgroup
             {
                 g_newsgroup_ptr = g_first_newsgroup;
             }
@@ -249,7 +249,7 @@ const char *newsgroup_comp(CompiledRegex *compex, const char *pattern, bool re, 
         {
             return "No previous search pattern";
         }
-        return nullptr;                 /* reuse old pattern */
+        return nullptr;                 // reuse old pattern
     }
     for (; *s; s++)
     {
