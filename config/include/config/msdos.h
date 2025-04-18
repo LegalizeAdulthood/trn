@@ -1,6 +1,6 @@
 /* msdos.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_MSDOS_H
 #define TRN_MSDOS_H
 
