@@ -1,6 +1,6 @@
 /* nntpinit.c
 */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "nntp/nntpinit.h"
 
@@ -132,7 +132,7 @@ int server_init(const char *machine)
         return -1;
     }
 
-    /* Now get the server's signon message */
+    // Now get the server's signon message
     nntp_check();
 
     if (*g_ser_line == NNTP_CLASS_OK)
@@ -200,7 +200,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 
         if (connect(s, res->ai_addr, res->ai_addrlen) >= 0)
         {
-            break;  /* okay we got one */
+            break;  // okay we got one
         }
 
         std::fprintf(stderr, "connection to %s: ", buf);
@@ -215,7 +215,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
         std::perror(cause);
     }
     freeaddrinfo(res0);
-#else   /* !INET6 */
+#else   // !INET6
     struct sockaddr_in sin;
 #ifdef __hpux
     int socksize = 0;
@@ -225,7 +225,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 #ifdef h_addr
     int         x = 0;
     static char*alist[1];
-#endif /* h_addr */
+#endif // h_addr
     static struct hostent def;
     static struct in_addr defaddr;
     static char namebuf[256];
@@ -246,7 +246,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
         }
         sin.sin_port = sp->s_port;
     }
-    /* If not a raw ip address, try nameserver */
+    // If not a raw ip address, try nameserver
     if (!std::isdigit(*machine)
 #ifdef INADDR_NONE
      || (defaddr.s_addr = inet_addr(machine)) == INADDR_NONE)
@@ -258,7 +258,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
     }
     else
     {
-        /* Raw ip address, fake  */
+        // Raw ip address, fake
         (void) std::strcpy(namebuf, machine);
         def.h_name = namebuf;
 #ifdef h_addr
@@ -278,7 +278,7 @@ int get_tcp_socket(const char *machine, int port, const char *service)
 
     sin.sin_family = hp->h_addrtype;
 
-    /* get a socket and initiate connection -- use multiple addresses */
+    // get a socket and initiate connection -- use multiple addresses
     for (char **cp = hp->h_addr_list; cp && *cp; cp++)
     {
         s = socket(hp->h_addrtype, SOCK_STREAM, 0);
@@ -307,8 +307,8 @@ int get_tcp_socket(const char *machine, int port, const char *service)
         std::fprintf(stderr, "giving up...\n");
         return -1;
     }
-#endif /* !INET6 */
-#ifdef __hpux   /* recommended by raj@cup.hp.com */
+#endif // !INET6
+#ifdef __hpux   // recommended by raj@cup.hp.com
 #define HPSOCKSIZE 0x8000
     getsockopt(s, SOL_SOCKET, SO_SNDBUF, (caddr_t)&socksize, (caddr_t)&socksizelen);
     if (socksize < HPSOCKSIZE)
