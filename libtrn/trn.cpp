@@ -1,43 +1,43 @@
 // This software is copyrighted as detailed in the LICENSE file.
 // vi: set sw=4 ts=8 ai sm noet :
 
-/*  trn -- threaded readnews program based on rn 4.4
- *
- *  You can request help from:  trn-users@lists.sourceforge.net
- *  Send bugs, suggestions, etc. to:  trn-workers@lists.sourceforge.net
- *
- *  Author/Maintainer of trn: trn@blorf.net (Wayne Davison)
- *  Maintainer of rn: sob@bcm.tmc.edu (Stan Barber)
- *  Original Author: lwall@sdcrdcf.UUCP (Larry Wall)
- *
- *  History:
- *      01/14/83 - rn begun
- *      04/08/83 - rn 1.0
- *      09/01/83 - rn 2.0
- *      05/01/85 - rn 4.3
- *      11/01/89 - rn/rrn integration
- *      11/25/89 - trn begun
- *      07/21/90 - trn 1.0
- *      07/04/91 - rn 4.4
- *      11/25/91 - trn 2.0
- *      07/25/93 - trn 3.0
- *      ??/??/?? - trn 4.0
- *
- *  strn -- Scan(-mode)/Scoring TRN
- *
- *  Author/Maintainer of strn: caadams@zynet.com (Clifford A. Adams)
- *
- *  Strn history:
- *      Dec.  90  - "Keyword RN" initial ideas, keyword entry prototype
- *      01/16/91  - "Scoring RN" initial design notes
- *      Late  91  - cleaned up "Semicolon mode" RN patches from Todd Day
- *      Early 92  - major additions to "STRN"
- *      Mid   93  - first strn public release (version 0.8)
- *      Sep.  94  - last beta release (version 0.9.3).
- *      Late  95  - strn code ported to trn 4.0, universal selector started
- *      May   96  - strn 1.0 release
- *
- */
+//  trn -- threaded readnews program based on rn 4.4
+//
+//  You can request help from:  trn-users@lists.sourceforge.net
+//  Send bugs, suggestions, etc. to:  trn-workers@lists.sourceforge.net
+//
+//  Author/Maintainer of trn: trn@blorf.net (Wayne Davison)
+//  Maintainer of rn: sob@bcm.tmc.edu (Stan Barber)
+//  Original Author: lwall@sdcrdcf.UUCP (Larry Wall)
+//
+//  History:
+//      01/14/83 - rn begun
+//      04/08/83 - rn 1.0
+//      09/01/83 - rn 2.0
+//      05/01/85 - rn 4.3
+//      11/01/89 - rn/rrn integration
+//      11/25/89 - trn begun
+//      07/21/90 - trn 1.0
+//      07/04/91 - rn 4.4
+//      11/25/91 - trn 2.0
+//      07/25/93 - trn 3.0
+//      ??/??/?? - trn 4.0
+//
+//  strn -- Scan(-mode)/Scoring TRN
+//
+//  Author/Maintainer of strn: caadams@zynet.com (Clifford A. Adams)
+//
+//  Strn history:
+//      Dec.  90  - "Keyword RN" initial ideas, keyword entry prototype
+//      01/16/91  - "Scoring RN" initial design notes
+//      Late  91  - cleaned up "Semicolon mode" RN patches from Todd Day
+//      Early 92  - major additions to "STRN"
+//      Mid   93  - first strn public release (version 0.8)
+//      Sep.  94  - last beta release (version 0.9.3).
+//      Late  95  - strn code ported to trn 4.0, universal selector started
+//      May   96  - strn 1.0 release
+//
+//
 
 #include "config/common.h"
 #include "trn/trn.h"
@@ -874,10 +874,10 @@ ng_start_sel:
             term_down(1);
             return ING_ASK;
         }
-        /* *once*, the char* s was set to an illegal value
-         * (it seemed to miss all the if statements below)
-         * Just to be safe, make sure it is legal.
-         */
+        // *once*, the char* s was set to an illegal value
+        // (it seemed to miss all the if statements below)
+        // Just to be safe, make sure it is legal.
+        //
         s = "";
         if (*g_buf == '.')              // start command?
         {
