@@ -43,48 +43,48 @@
  * Lots more to do...
  */
 
-int  g_univ_level{};         /* How deep are we in the tree? */
+int  g_univ_level{};          /* How deep are we in the tree? */
 bool g_univ_ng_virt_flag{};   /* if true, we are in the "virtual group" second pass */
 bool g_univ_read_virt_flag{}; /* if true, we are reading an article from a "virtual group" */
-bool g_univ_default_cmd{};   /* "follow"-related stuff (virtual groups) */
+bool g_univ_default_cmd{};    /* "follow"-related stuff (virtual groups) */
 bool g_univ_follow{true};
 bool g_univ_follow_temp{};
 
 /* items which must be saved in context */
-UniversalItem  *g_first_univ{};
-UniversalItem  *g_last_univ{};
-UniversalItem  *sel_page_univ{};
-UniversalItem  *g_sel_next_univ{};
-char       *g_univ_fname{};  /* current filename (may be null) */
-std::string g_univ_label;    /* current label (may be null) */
-std::string g_univ_title;    /* title of current level */
-std::string g_univ_tmp_file; /* temp. file (may be null) */
-HashTable  *g_univ_ng_hash{};
-HashTable  *g_univ_vg_hash{};
+UniversalItem *g_first_univ{};
+UniversalItem *g_last_univ{};
+UniversalItem *sel_page_univ{};
+UniversalItem *g_sel_next_univ{};
+char          *g_univ_fname{};  /* current filename (may be null) */
+std::string    g_univ_label;    /* current label (may be null) */
+std::string    g_univ_title;    /* title of current level */
+std::string    g_univ_tmp_file; /* temp. file (may be null) */
+HashTable     *g_univ_ng_hash{};
+HashTable     *g_univ_vg_hash{};
 /* end of items that must be saved */
 
-static bool       s_univ_virt_pass_needed{}; //
-static int        s_univ_item_counter{1};    //
-static bool       s_univ_done_startup{};     //
-static int        s_univ_min_score{};        /* this score is part of the line format, so it is not ifdefed */
-static bool       s_univ_use_min_score{};    //
-static bool       s_univ_begin_found{};      //
-static char      *s_univ_begin_label{};      /* label to start working with */
-static char      *s_univ_line_desc{};        /* if non-nullptr, the description (printing name) of the entry */
+static bool           s_univ_virt_pass_needed{}; //
+static int            s_univ_item_counter{1};    //
+static bool           s_univ_done_startup{};     //
+static int            s_univ_min_score{};        /* this score is part of the line format, so it is not ifdefed */
+static bool           s_univ_use_min_score{};    //
+static bool           s_univ_begin_found{};      //
+static char          *s_univ_begin_label{};      /* label to start working with */
+static char          *s_univ_line_desc{};        /* if non-nullptr, the description (printing name) of the entry */
 static UniversalItem *s_current_vg_ui{};         //
-static bool       s_univ_usrtop{};           /* if true, the user has loaded their own top univ. config file */
+static bool           s_univ_user_top{};         /* if true, the user has loaded their own top univ. config file */
 
-static void univ_free_data(UniversalItem *ui);
-static bool univ_DoMatch(const char *text, const char *p);
-static bool univ_use_file(const char *fname, const char *label);
-static bool univ_include_file(const char *fname);
-static void univ_do_line_ext1(const char *desc, char *line);
-static bool univ_do_line(char *line);
-static char*univ_edit_new_userfile();
-static void univ_vg_addart(ArticleNum a);
-static void univ_vg_addgroup();
-static int  univ_order_number(const UniversalItem**ui1, const UniversalItem**ui2);
-static int  univ_order_score(const UniversalItem**ui1, const UniversalItem**ui2);
+static void  univ_free_data(UniversalItem *ui);
+static bool  univ_do_match(const char *text, const char *p);
+static bool  univ_use_file(const char *fname, const char *label);
+static bool  univ_include_file(const char *fname);
+static void  univ_do_line_ext1(const char *desc, char *line);
+static bool  univ_do_line(char *line);
+static char *univ_edit_new_user_file();
+static void  univ_vg_add_article(ArticleNum a);
+static void  univ_vg_add_group();
+static int   univ_order_number(const UniversalItem **ui1, const UniversalItem **ui2);
+static int   univ_order_score(const UniversalItem **ui1, const UniversalItem **ui2);
 
 void univ_init()
 {
@@ -113,12 +113,12 @@ void univ_startup()
         }
         if (user_top_load)
         {
-            s_univ_usrtop = true;
+            s_univ_user_top = true;
         }
     }
     else
     {
-        s_univ_usrtop = true;
+        s_univ_user_top = true;
     }
     s_univ_done_startup = true;
 }
@@ -395,7 +395,7 @@ void univ_add_text_file(const char *desc, char *name)
 }
 
 /* mostly the same as the newsgroup stuff */
-void univ_add_virt_group(const char *grpname)
+void univ_add_virtual_group(const char *grpname)
 {
     UniversalItem* ui;
 
@@ -449,7 +449,7 @@ void univ_add_virt_group(const char *grpname)
 /*
 **  Match text and p, return true, false.
 */
-static bool univ_DoMatch(const char *text, const char *p)
+static bool univ_do_match(const char *text, const char *p)
 {
     for (; *p; text++, p++)
     {
@@ -463,7 +463,7 @@ static bool univ_DoMatch(const char *text, const char *p)
             }
             while (*text)
             {
-                if (univ_DoMatch(text++, p))
+                if (univ_do_match(text++, p))
                 {
                     return true;
                 }
@@ -502,7 +502,7 @@ void univ_use_pattern(const char *pattern, int type)
             for (ui = g_first_univ; ui; ui = ui->next)
             {
                 if (ui->type == UN_NEWSGROUP && ui->data.group.ng //
-                    && univ_DoMatch(ui->data.group.ng, s))
+                    && univ_do_match(ui->data.group.ng, s))
                 {
                     ui->type = UN_GROUP_DESEL;
                 }
@@ -513,7 +513,7 @@ void univ_use_pattern(const char *pattern, int type)
             for (ui = g_first_univ; ui; ui = ui->next)
             {
                 if (ui->type == UN_VGROUP && ui->data.vgroup.ng //
-                    && univ_DoMatch(ui->data.vgroup.ng, s))
+                    && univ_do_match(ui->data.vgroup.ng, s))
                 {
                     ui->type = UN_VGROUP_DESEL;
                 }
@@ -528,7 +528,7 @@ void univ_use_pattern(const char *pattern, int type)
         case 0:
             for (np = g_first_newsgroup; np; np = np->next)
             {
-                if (univ_DoMatch(np->rc_line, s))
+                if (univ_do_match(np->rc_line, s))
                 {
                     univ_add_group(np->rc_line,np->rc_line);
                 }
@@ -538,9 +538,9 @@ void univ_use_pattern(const char *pattern, int type)
         case 1:
             for (np = g_first_newsgroup; np; np = np->next)
             {
-                if (univ_DoMatch(np->rc_line, s))
+                if (univ_do_match(np->rc_line, s))
                 {
-                    univ_add_virt_group(np->rc_line);
+                    univ_add_virtual_group(np->rc_line);
                 }
             }
             break;
@@ -993,7 +993,7 @@ void univ_redo_file()
 }
 
 
-static char *univ_edit_new_userfile()
+static char *univ_edit_new_user_file()
 {
     char *s = save_str(file_exp("%+/univ/usertop"));       /* LEAK */
 
@@ -1026,7 +1026,7 @@ static char *univ_edit_new_userfile()
     std::printf("New User Toplevel file created.\n");
     std::printf("After editing this file, exit and restart trn to use it.\n");
     (void)get_anything();
-    s_univ_usrtop = true;               /* do not overwrite this file */
+    s_univ_user_top = true;               /* do not overwrite this file */
     return s;
 }
 
@@ -1036,7 +1036,7 @@ void univ_edit()
 {
     const char* s;
 
-    if (s_univ_usrtop || !(s_univ_done_startup))
+    if (s_univ_user_top || !(s_univ_done_startup))
     {
         if (!g_univ_tmp_file.empty())
         {
@@ -1049,7 +1049,7 @@ void univ_edit()
     }
     else
     {
-        s = univ_edit_new_userfile();
+        s = univ_edit_new_user_file();
     }
 
     /* later consider directory push/pop pair around editing */
@@ -1083,12 +1083,12 @@ void univ_page_file(char *fname)
 
 /* virtual newsgroup second pass function */
 /* called from within newsgroup */
-void univ_ng_virtual()
+void univ_newsgroup_virtual()
 {
     switch (s_current_vg_ui->type)
     {
     case UN_VGROUP:
-        univ_vg_addgroup();
+        univ_vg_add_group();
         break;
 
     case UN_ARTICLE:
@@ -1103,7 +1103,7 @@ void univ_ng_virtual()
     /* also do things like check scores, add newsgroups, etc. */
 }
 
-static void univ_vg_addart(ArticleNum a)
+static void univ_vg_add_article(ArticleNum a)
 {
     char lbuf[70];
 
@@ -1134,7 +1134,7 @@ static void univ_vg_addart(ArticleNum a)
 }
 
 
-static void univ_vg_addgroup()
+static void univ_vg_add_group()
 {
     /* later: allow was-read articles, etc... */
     for (ArticleNum a = article_first(g_first_art); a <= g_last_art; a = article_next(a))
@@ -1144,7 +1144,7 @@ static void univ_vg_addgroup()
             continue;
         }
         /* minimum score check */
-        univ_vg_addart(a);
+        univ_vg_add_article(a);
     }
 }
 

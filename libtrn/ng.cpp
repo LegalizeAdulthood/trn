@@ -197,7 +197,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
 
     if (g_univ_ng_virt_flag)
     {
-        univ_ng_virtual();
+        univ_newsgroup_virtual();
         goto cleanup;
     }
     if (!g_selected_count)
