@@ -1,4 +1,4 @@
-/* This file Copyright 1992 by Clifford A. Adams */
+// This file Copyright 1992 by Clifford A. Adams
 /* sadisp.c
  *
  * display stuff
@@ -23,7 +23,7 @@ void sa_refresh_top()
 {
     color_object(COLOR_SCORE, true);
     std::printf("%s |",g_newsgroup_name.c_str());
-/* # of articles might be optional later */
+// # of articles might be optional later
     std::printf(" %d",sa_number_arts());
 
     if (g_sa_mode_read_elig)
@@ -46,7 +46,7 @@ void sa_refresh_top()
     {
         std::printf(" follow");
     }
-    color_pop();        /* of COLOR_SCORE */
+    color_pop();        // of COLOR_SCORE
     erase_eol();
     std::printf("\n");
 }
@@ -82,15 +82,15 @@ void sa_refresh_bot()
     std::printf("%s order",s);
     std::printf(", %d%% scored",sc_percent_scored());
     std::printf(")");
-    color_pop();        /* of COLOR_SCORE */
+    color_pop();        // of COLOR_SCORE
     std::fflush(stdout);
 }
 
-/* set up various screen dimensions */
+// set up various screen dimensions
 void sa_set_screen()
 {
-    /* One size fits all for now. */
-    /* these things here because they may vary by screen size later */
+    // One size fits all for now.
+    // these things here because they may vary by screen size later
     g_s_top_lines = 1;
     g_s_bot_lines = 1;
     g_s_status_cols = 3;
@@ -105,6 +105,6 @@ void sa_set_screen()
         g_s_item_num_cols = 0;
     }
 
-    /* (g_scr_width-1) keeps last character blank. */
+    // (g_scr_width-1) keeps last character blank.
     g_s_desc_cols = (g_scr_width-1) -g_s_status_cols -g_s_cursor_cols -g_s_item_num_cols;
 }
