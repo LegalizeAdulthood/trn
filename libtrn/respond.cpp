@@ -1,6 +1,6 @@
 /* respond.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <config/string_case_compare.h>
 
@@ -36,14 +36,14 @@
 #include <cstdlib>
 #include <cstring>
 
-std::string     g_save_dest;          /* value of %b */
-std::string     g_extract_dest;       /* value of %E */
-std::string     g_extract_prog;       /* value of %e */
-ArticlePosition g_save_from{};        /* value of %B */
-bool            g_mbox_always{};      /* -M */
-bool            g_norm_always{};      /* -N */
-std::string     g_priv_dir;           /* private news directory */
-std::string     g_indent_string{">"}; /* indent for old article embedded in followup */
+std::string     g_save_dest;          // value of %b
+std::string     g_extract_dest;       // value of %E
+std::string     g_extract_prog;       // value of %e
+ArticlePosition g_save_from{};        // value of %B
+bool            g_mbox_always{};      // -M
+bool            g_norm_always{};      // -N
+std::string     g_priv_dir;           // private news directory
+std::string     g_indent_string{">"}; // indent for old article embedded in followup
 
 static char       s_empty_article[] = "\nEmpty article.\n";
 static std::FILE *s_tmp_fp{};
@@ -67,7 +67,7 @@ SaveResult save_article()
     bool interactive = (g_buf[1] == FINISH_CMD);
     char cmd = *g_buf;
 
-    if (!finish_command(interactive))   /* get rest of command */
+    if (!finish_command(interactive))   // get rest of command
     {
         return SAVE_ABORT;
     }
@@ -98,15 +98,15 @@ SaveResult save_article()
         std::printf(g_no_cd,g_priv_dir.c_str());
         sig_catcher(0);
     }
-    if (cmd == 'e')             /* is this an extract command? */
+    if (cmd == 'e')             // is this an extract command?
     {
         static bool custom_extract = false;
         char*       cmdstr;
         int         partOpt = 0;
         int         totalOpt = 0;
 
-        s = g_buf+1;            /* skip e */
-        s = skip_eq(s, ' ');    /* skip leading spaces */
+        s = g_buf+1;            // skip e
+        s = skip_eq(s, ' ');    // skip leading spaces
         if (*s == '-' && std::isdigit(s[1]))
         {
             partOpt = std::atoi(s+1);
@@ -130,20 +130,20 @@ SaveResult save_article()
         s = altbuf;
         if (*s)
         {
-            cmdstr = copy_till(g_buf,s,'|');      /* check for | */
+            cmdstr = copy_till(g_buf,s,'|');      // check for |
             s = g_buf + std::strlen(g_buf)-1;
             while (*s == ' ')
             {
-                s--;                            /* trim trailing spaces */
+                s--;                            // trim trailing spaces
             }
             *++s = '\0';
             if (*cmdstr)
             {
-                s = cmdstr+1;                   /* skip | */
+                s = cmdstr+1;                   // skip |
                 s = skip_eq(s, ' ');
-                if (*s)                         /* if new command, use it */
+                if (*s)                         // if new command, use it
                 {
-                    g_extract_prog = s;          /* put extracter in %e */
+                    g_extract_prog = s;          // put extracter in %e
                 }
                 else
                 {
@@ -177,11 +177,11 @@ SaveResult save_article()
         }
         custom_extract = (cmdstr != nullptr);
 
-        if (!FILE_REF(s))       /* relative path? */
+        if (!FILE_REF(s))       // relative path?
         {
             c = (s==g_buf ? altbuf : g_buf);
             interp(c, (sizeof g_buf), get_val("SAVEDIR",SAVEDIR));
-            if (make_dir(c, MD_DIR))      /* ensure directory exists */
+            if (make_dir(c, MD_DIR))      // ensure directory exists
             {
                 std::strcpy(c,g_priv_dir.c_str());
             }
@@ -192,23 +192,23 @@ SaveResult save_article()
                     c++;
                 }
                 *c++ = '/';
-                std::strcpy(c,s);            /* add filename */
+                std::strcpy(c,s);            // add filename
             }
             s = (s==g_buf ? altbuf : g_buf);
         }
-        if (!FILE_REF(s))       /* path still relative? */
+        if (!FILE_REF(s))       // path still relative?
         {
             c = (s==g_buf ? altbuf : g_buf);
             std::sprintf(c, "%s/%s", g_priv_dir.c_str(), s);
-            s = c;                      /* absolutize it */
+            s = c;                      // absolutize it
         }
-        g_extract_dest = s; /* make it handy for %E */
+        g_extract_dest = s; // make it handy for %E
         {
             static char buff[512];
             std::strcpy(buff, g_extract_dest.c_str());
             s = buff;
         }
-        if (make_dir(s, MD_DIR))         /* ensure directory exists */
+        if (make_dir(s, MD_DIR))         // ensure directory exists
         {
             g_int_count++;
             return SAVE_DONE;
@@ -218,7 +218,7 @@ SaveResult save_article()
             std::printf(g_no_cd,s);
             sig_catcher(0);
         }
-        c = trn_getwd(g_buf, sizeof(g_buf));    /* simplify path for output */
+        c = trn_getwd(g_buf, sizeof(g_buf));    // simplify path for output
         if (custom_extract)
         {
             std::printf("Extracting article into %s using %s\n",c,g_extract_prog.c_str());
@@ -240,7 +240,7 @@ SaveResult save_article()
             int decode_type = 0;
             int cnt = 0;
 
-            /* Scan subject for filename and part number information */
+            // Scan subject for filename and part number information
             filename = decode_subject(g_art, &part, &total);
             if (partOpt)
             {
@@ -256,7 +256,7 @@ SaveResult save_article()
             {
                 if (*g_art_line <= ' ')
                 {
-                    continue;   /* Ignore empty or initially-whitespace lines */
+                    continue;   // Ignore empty or initially-whitespace lines
                 }
                 if (((*g_art_line == '#' || *g_art_line == ':')            //
                      && (!std::strncmp(g_art_line + 1, "! /bin/sh", 9)     //
@@ -284,7 +284,7 @@ SaveResult save_article()
                 {
                     break;
                 }
-            }/* for */
+            }// for
             switch (decode_type)
             {
             case 1:
@@ -316,11 +316,11 @@ SaveResult save_article()
                 term_down(1);
                 break;
             }
-        }/* if */
+        }// if
     }
-    else if ((s = std::strchr(g_buf,'|')) != nullptr)   /* is it a pipe command? */
+    else if ((s = std::strchr(g_buf,'|')) != nullptr)   // is it a pipe command?
     {
-        s++;                    /* skip the | */
+        s++;                    // skip the |
         s = skip_eq(s, ' ');
         safe_copy(altbuf,file_exp(s),sizeof altbuf);
         g_save_dest = altbuf;
@@ -329,30 +329,30 @@ SaveResult save_article()
             nntp_finish_body(FB_SILENT);
         }
         interp(g_cmd_buf, (sizeof g_cmd_buf), get_val("PIPESAVER",PIPESAVER));
-                                /* then set up for command */
+                                // then set up for command
         termlib_reset();
-        reset_tty();              /* restore tty state */
-        if (use_pref)           /* use preferred shell? */
+        reset_tty();              // restore tty state
+        if (use_pref)           // use preferred shell?
         {
             do_shell(nullptr,g_cmd_buf);
-                                /* do command with it */
+                                // do command with it
         }
         else
         {
-            do_shell(SH,g_cmd_buf);  /* do command with sh */
+            do_shell(SH,g_cmd_buf);  // do command with sh
         }
-        no_echo();               /* and stop echoing */
-        cr_mode();               /* and start cbreaking */
+        no_echo();               // and stop echoing
+        cr_mode();               // and start cbreaking
         termlib_init();
     }
-    else                        /* normal save */
+    else                        // normal save
     {
         bool  there;
         bool  mailbox;
         char * savename = get_val("SAVENAME",SAVENAME);
 
-        s = g_buf+1;            /* skip s or S */
-        if (*s == '-')          /* if they are confused, skip - also */
+        s = g_buf+1;            // skip s or S
+        if (*s == '-')          // if they are confused, skip - also
         {
             if (g_verbose)
             {
@@ -367,14 +367,14 @@ SaveResult save_article()
         }
         for (; *s == ' '; s++)
         {
-            /* skip spaces */
+            // skip spaces
         }
         safe_copy(altbuf,file_exp(s),sizeof altbuf);
         s = altbuf;
         if (!FILE_REF(s))
         {
             interp(g_buf, (sizeof g_buf), get_val("SAVEDIR",SAVEDIR));
-            if (make_dir(g_buf, MD_DIR))  /* ensure directory exists */
+            if (make_dir(g_buf, MD_DIR))  // ensure directory exists
             {
                 std::strcpy(g_buf, g_priv_dir.c_str());
             }
@@ -384,29 +384,29 @@ SaveResult save_article()
                 {
                 }
                 *c++ = '/';
-                std::strcpy(c,s);            /* add filename */
+                std::strcpy(c,s);            // add filename
             }
             s = g_buf;
         }
         stat_t save_dir_stat{};
         for (int i = 0;
             (there = stat(s,&save_dir_stat) >= 0) && S_ISDIR(save_dir_stat.st_mode);
-            i++)                        /* is it a directory? */
+            i++)                        // is it a directory?
         {
             c = (s+std::strlen(s));
-            *c++ = '/';                 /* put a slash before filename */
+            *c++ = '/';                 // put a slash before filename
             static char s_news[] = "News";
             interp(c, s == g_buf ? (sizeof g_buf) : (sizeof altbuf), i ? s_news : savename);
-                                /* generate a default name somehow or other */
+                                // generate a default name somehow or other
         }
         make_dir(s, MD_FILE);
-        if (!FILE_REF(s))       /* relative path? */
+        if (!FILE_REF(s))       // relative path?
         {
             c = (s==g_buf ? altbuf : g_buf);
             std::sprintf(c, "%s/%s", g_priv_dir.c_str(), s);
-            s = c;                      /* absolutize it */
+            s = c;                      // absolutize it
         }
-        g_save_dest = s; /* make it handy for %b */
+        g_save_dest = s; // make it handy for %b
         s_tmp_fp = nullptr;
         if (!there)
         {
@@ -486,15 +486,15 @@ reask_save:
                 if (std::fread(g_buf, 1, LINE_BUF_LEN, s_tmp_fp))
                 {
                     c = g_buf;
-                    if (!std::isspace(MBOXCHAR))   /* if non-zero, */
+                    if (!std::isspace(MBOXCHAR))   // if non-zero,
                     {
-                        c = skip_space(c);   /* check the first character */
+                        c = skip_space(c);   // check the first character
                     }
                     mailbox = (*c == MBOXCHAR);
                 }
                 else
                 {
-                    mailbox = g_mbox_always;    /* if zero length, recheck -M */
+                    mailbox = g_mbox_always;    // if zero length, recheck -M
                 }
             }
         }
@@ -513,10 +513,10 @@ reask_save:
                 nntp_finish_body(FB_SILENT);
             }
             termlib_reset();
-            reset_tty();          /* make terminal behave */
+            reset_tty();          // make terminal behave
             i = do_shell(use_pref?nullptr:SH,g_cmd_buf);
             termlib_init();
-            no_echo();           /* make terminal do what we want */
+            no_echo();           // make terminal do what we want
             cr_mode();
         }
         else if (s_tmp_fp != nullptr || (s_tmp_fp = std::fopen(g_save_dest.c_str(), "a")) != nullptr)
@@ -554,7 +554,7 @@ reask_save:
             }
 #endif
             std::fclose(s_tmp_fp);
-            i = 0; /* TODO: set non-zero on write error */
+            i = 0; // TODO: set non-zero on write error
         }
         else
         {
@@ -611,7 +611,7 @@ SaveResult view_article()
         int   total;
         int cnt = 0;
 
-        /* Scan subject for filename and part number information */
+        // Scan subject for filename and part number information
         filename = decode_subject(g_art, &part, &total);
         for (g_art_pos = g_save_from;
              read_art(g_art_line,sizeof g_art_line) != nullptr;
@@ -619,11 +619,11 @@ SaveResult view_article()
         {
             if (*g_art_line <= ' ')
             {
-                continue;       /* Ignore empty or initially-whitespace lines */
+                continue;       // Ignore empty or initially-whitespace lines
             }
             if (uue_prescan(g_art_line, &filename, &part, &total))
             {
-                MimeCapEntry*mc = mime_find_mimecap_entry("image/jpeg", MCF_NONE); /* TODO: refine this */
+                MimeCapEntry*mc = mime_find_mimecap_entry("image/jpeg", MCF_NONE); // TODO: refine this
                 g_save_from = g_art_pos;
                 seek_art(g_save_from);
                 g_mime_section->type = UNHANDLED_MIME;
@@ -644,7 +644,7 @@ SaveResult view_article()
             {
                 break;
             }
-        }/* for */
+        }// for
         if (cnt)
         {
             std::printf("Unable to determine type of file.\n");
@@ -706,7 +706,7 @@ int cancel_article()
     }
     else
     {
-        std::FILE *header = std::fopen(g_head_name.c_str(),"w");   /* open header file */
+        std::FILE *header = std::fopen(g_head_name.c_str(),"w");   // open header file
         if (header == nullptr)
         {
             std::printf(g_cant_create,g_head_name.c_str());
@@ -727,7 +727,7 @@ done:
     return r;
 }
 
-int supersede_article()         /* Supersedes: */
+int supersede_article()         // Supersedes:
 {
     char hbuf[5*LINE_BUF_LEN];
     int  myuid = current_user_id();
@@ -779,7 +779,7 @@ int supersede_article()         /* Supersedes: */
     }
     else
     {
-        std::FILE *header = std::fopen(g_head_name.c_str(),"w");   /* open header file */
+        std::FILE *header = std::fopen(g_head_name.c_str(),"w");   // open header file
         if (header == nullptr)
         {
             std::printf(g_cant_create,g_head_name.c_str());
@@ -866,7 +866,7 @@ void reply()
     char* maildoer = save_str(get_val_const("MAILPOSTER",MAILPOSTER));
 
     art_open(g_art,(ArticlePosition)0);
-    std::FILE *header = std::fopen(g_head_name.c_str(),"w");       /* open header file */
+    std::FILE *header = std::fopen(g_head_name.c_str(),"w");       // open header file
     if (header == nullptr)
     {
         std::printf(g_cant_create,g_head_name.c_str());
@@ -936,7 +936,7 @@ void forward()
     init_compex(&mime_compex);
 #endif
     art_open(g_art,(ArticlePosition)0);
-    std::FILE *header = std::fopen(g_head_name.c_str(),"w");       /* open header file */
+    std::FILE *header = std::fopen(g_head_name.c_str(),"w");       // open header file
     if (header == nullptr)
     {
         std::printf(g_cant_create,g_head_name.c_str());
@@ -1075,7 +1075,7 @@ void followup()
         term_down(2);
         in_answer("\n\nAre you starting an unrelated topic? [ynq] ", MM_FOLLOWUP_NEW_TOPIC_PROMPT);
         set_def(g_buf,"y");
-        if (*g_buf == 'q')  /*TODO: need to add 'h' also */
+        if (*g_buf == 'q')  // TODO: need to add 'h' also
         {
             return;
         }
@@ -1159,10 +1159,10 @@ int invoke(const char *cmd, const char *dir)
     }
     set_mode(g_general_mode,MM_EXECUTE);
     termlib_reset();
-    reset_tty();                  /* make terminal well-behaved */
-    ret = do_shell(SH,cmd);      /* do the command */
-    no_echo();                   /* set no echo */
-    cr_mode();                   /* and cbreak mode */
+    reset_tty();                  // make terminal well-behaved
+    ret = do_shell(SH,cmd);      // do the command
+    no_echo();                   // set no echo
+    cr_mode();                   // and cbreak mode
     termlib_init();
     set_mode(g_general_mode,oldmode);
     if (dir)
@@ -1296,7 +1296,7 @@ static bool cut_line(char *str)
                 *(cp = word) = '\0';
             }
         }
-    } /* for *str */
+    } // for *str
 
     return false;
 }
