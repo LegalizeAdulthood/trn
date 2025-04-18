@@ -1,6 +1,6 @@
 /* trn/datasrc.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_DATASRC_H
 #define TRN_DATASRC_H
 
@@ -16,7 +16,7 @@
 
 enum
 {
-    DEFAULT_REFETCH_SECS = 4L * 60 * 60 /* 4 hours */
+    DEFAULT_REFETCH_SECS = 4L * 60 * 60 // 4 hours
 };
 
 struct HashTable;
@@ -24,12 +24,12 @@ struct List;
 
 struct SourceFile
 {
-    std::FILE  *fp;           /* the file pointer to read the data */
-    HashTable  *hp;           /* the hash table for the data */
-    List       *lp;           /* the list used to store the data */
-    long        recent_cnt;   /* # lines/bytes this file might be */
-    std::time_t last_fetch;    /* when the data was last fetched */
-    std::time_t refetch_secs; /* how long before we refetch this file */
+    std::FILE  *fp;           // the file pointer to read the data
+    HashTable  *hp;           // the hash table for the data
+    List       *lp;           // the list used to store the data
+    long        recent_cnt;   // # lines/bytes this file might be
+    std::time_t last_fetch;    // when the data was last fetched
+    std::time_t refetch_secs; // how long before we refetch this file
 };
 
 enum DataSourceFlags : std::uint16_t
@@ -65,21 +65,21 @@ DECLARE_FLAGS_ENUM(FieldFlags, std::uint8_t)
 
 struct DataSource
 {
-    char            *name;       /* our user-friendly name */
-    char            *news_id;    /* the active file name or host name */
-    SourceFile       act_sf;     /* the active file's hashed contents */
-    char            *group_desc; /* the newsgroup description file or tmp */
-    SourceFile       desc_sf;    /* the group description's hashed contents */
-    char            *extra_name; /* local active.times or server's actfile */
+    char            *name;       // our user-friendly name
+    char            *news_id;    // the active file name or host name
+    SourceFile       act_sf;     // the active file's hashed contents
+    char            *group_desc; // the newsgroup description file or tmp
+    SourceFile       desc_sf;    // the group description's hashed contents
+    char            *extra_name; // local active.times or server's actfile
     NNTPLink         nntp_link;
     char            *spool_dir;
     char            *over_dir;
     char            *over_fmt;
     char            *auth_user;
     char            *auth_pass;
-    long             last_new_group; /* time of last newgroup check */
-    std::FILE       *ov_in;          /* the overview's file handle */
-    std::time_t      ov_opened;      /* time overview file was opened */
+    long             last_new_group; // time of last newgroup check
+    std::FILE       *ov_in;          // the overview's file handle
+    std::time_t      ov_opened;      // time overview file was opened
     OverviewFieldNum field_num[OV_MAX_FIELDS];
     FieldFlags       field_flags[OV_MAX_FIELDS];
     DataSourceFlags  flags;
@@ -89,17 +89,17 @@ enum
 {
     LENGTH_HACK = 5, /* Don't bother comparing strings with lengths
                       * that differ by more than this. */
-    MAX_NG = 9,      /* Maximum number of groups to offer. */
+    MAX_NG = 9,      // Maximum number of groups to offer.
 
     DATASRC_ALARM_SECS = (5 * 60)
 };
 
-extern List       *g_data_source_list; /* a list of all DATASRCs */
-extern DataSource *g_data_source;      /* the current datasrc */
+extern List       *g_data_source_list; // a list of all DATASRCs
+extern DataSource *g_data_source;      // the current datasrc
 extern int         g_data_source_cnt;  //
 extern char       *g_trn_access_mem;   //
 extern std::string g_nntp_auth_file;   //
-extern std::time_t g_def_refetch_secs; /* -z */
+extern std::time_t g_def_refetch_secs; // -z
 
 void        data_source_init();
 void        data_source_finalize();
