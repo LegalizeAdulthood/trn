@@ -32,7 +32,7 @@
 static CompiledRegex s_sub_compex{}; /* last compiled subject search */
 static CompiledRegex s_art_compex{}; /* last compiled normal search */
 
-static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope);
+static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope);
 
 std::string    g_last_pat;                  /* last search pattern */
 CompiledRegex *g_bra_compex{&s_art_compex}; /* current compex with brackets */
@@ -54,24 +54,24 @@ void art_search_init()
 ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
 {
     char* pattern;                      /* unparsed pattern */
-    char cmdchr = *pat_buf;              /* what kind of search? */
-    bool backward = cmdchr == '?' || cmdchr == Ctl('p');
+    char cmd_chr = *pat_buf;              /* what kind of search? */
+    bool backward = cmd_chr == '?' || cmd_chr == Ctl('p');
                                         /* direction of search */
     CompiledRegex* compex;                     /* which compiled expression */
-    char* cmdlst = nullptr;             /* list of commands to do */
+    char* cmd_lst = nullptr;             /* list of commands to do */
     ArtSearchResult ret = SRCH_NOT_FOUND; /* assume no commands */
-    int saltaway = 0;                   /* store in KILL file? */
-    ArtScope howmuch;                  /* search scope: subj/from/Hdr/head/art */
-    HeaderLineType srchhdr;           /* header to search if Hdr scope */
-    bool topstart = false;
-    bool doread;                        /* search read articles? */
-    bool foldcase = true;               /* fold upper and lower case? */
-    int ignorethru = 0;                 /* should we ignore the thru line? */
+    int salt_away = 0;                   /* store in KILL file? */
+    ArtScope how_much;                  /* search scope: subj/from/Hdr/head/art */
+    HeaderLineType search_header;           /* header to search if Hdr scope */
+    bool top_start = false;
+    bool do_read;                        /* search read articles? */
+    bool fold_case = true;               /* fold upper and lower case? */
+    int ignore_thru = 0;                 /* should we ignore the thru line? */
     bool output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
-    ArticleNum srchfirst;
+    ArticleNum search_first;
 
     g_int_count = 0;
-    if (cmdchr == '/' || cmdchr == '?')         /* normal search? */
+    if (cmd_chr == '/' || cmd_chr == '?')         /* normal search? */
     {
         if (get_cmd && g_buf == pat_buf)
         {
@@ -83,17 +83,17 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         compex = &s_art_compex;
         if (pat_buf[1])
         {
-            howmuch = ARTSCOPE_SUBJECT;
-            srchhdr = SOME_LINE;
-            doread = false;
+            how_much = ARTSCOPE_SUBJECT;
+            search_header = SOME_LINE;
+            do_read = false;
         }
         else
         {
-            howmuch = g_art_how_much;
-            srchhdr = g_art_srch_hdr;
-            doread = g_art_do_read;
+            how_much = g_art_how_much;
+            search_header = g_art_srch_hdr;
+            do_read = g_art_do_read;
         }
-        char *s = copy_till(g_buf,pat_buf+1,cmdchr);/* ok to cpy g_buf+1 to g_buf */
+        char *s = copy_till(g_buf,pat_buf+1,cmd_chr);/* ok to cpy g_buf+1 to g_buf */
         pattern = g_buf;
         if (*pattern)
         {
@@ -106,53 +106,53 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
                 switch (*s)
                 {
                 case 'f':               /* scan the From line */
-                    howmuch = ARTSCOPE_FROM;
+                    how_much = ARTSCOPE_FROM;
                     break;
 
                 case 'H':               /* scan a specific header */
-                    howmuch = ARTSCOPE_ONE_HDR;
+                    how_much = ARTSCOPE_ONE_HDR;
                     s = copy_till(g_msg, s+1, ':');
-                    srchhdr = get_header_num(g_msg);
+                    search_header = get_header_num(g_msg);
                     goto loop_break;
 
                 case 'h':               /* scan header */
-                    howmuch = ARTSCOPE_HEAD;
+                    how_much = ARTSCOPE_HEAD;
                     break;
 
                 case 'b':               /* scan body sans signature */
-                    howmuch = ARTSCOPE_BODY_NO_SIG;
+                    how_much = ARTSCOPE_BODY_NO_SIG;
                     break;
 
                 case 'B':               /* scan body */
-                    howmuch = ARTSCOPE_BODY;
+                    how_much = ARTSCOPE_BODY;
                     break;
 
                 case 'a':               /* scan article */
-                    howmuch = ARTSCOPE_ARTICLE;
+                    how_much = ARTSCOPE_ARTICLE;
                     break;
 
                 case 't':               /* start from the top */
-                    topstart = true;
+                    top_start = true;
                     break;
 
                 case 'r':               /* scan read articles */
-                    doread = true;
+                    do_read = true;
                     break;
 
                 case 'K':               /* put into KILL file */
-                    saltaway = 1;
+                    salt_away = 1;
                     break;
 
                 case 'c':               /* make search case sensitive */
-                    foldcase = false;
+                    fold_case = false;
                     break;
 
                 case 'I':               /* ignore the killfile thru line */
-                    ignorethru = 1;
+                    ignore_thru = 1;
                     break;
 
                 case 'N':               /* override ignore if -k was used */
-                    ignorethru = -1;
+                    ignore_thru = -1;
                     break;
 
                 default:
@@ -169,18 +169,18 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         {
             if (*s == 'm')
             {
-                doread = true;
+                do_read = true;
             }
             if (*s == 'k')              /* grandfather clause */
             {
                 *s = 'j';
             }
-            cmdlst = save_str(s);
+            cmd_lst = save_str(s);
             ret = SRCH_DONE;
         }
-        g_art_how_much = howmuch;
-        g_art_srch_hdr = srchhdr;
-        g_art_do_read = doread;
+        g_art_how_much = how_much;
+        g_art_srch_hdr = search_header;
+        g_art_do_read = do_read;
         if (g_search_ahead)
         {
             g_search_ahead = -1;
@@ -188,20 +188,20 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
     }
     else
     {
-        int saltmode = pat_buf[2] == 'g'? 2 : 1;
+        int salt_mode = pat_buf[2] == 'g'? 2 : 1;
         const char *finding_str = pat_buf[1] == 'f' ? "author" : "subject";
 
-        howmuch = pat_buf[1] == 'f'? ARTSCOPE_FROM : ARTSCOPE_SUBJECT;
-        srchhdr = SOME_LINE;
-        doread = (cmdchr == Ctl('p'));
-        if (cmdchr == Ctl('n'))
+        how_much = pat_buf[1] == 'f'? ARTSCOPE_FROM : ARTSCOPE_SUBJECT;
+        search_header = SOME_LINE;
+        do_read = (cmd_chr == Ctl('p'));
+        if (cmd_chr == Ctl('n'))
         {
             ret = SRCH_SUBJ_DONE;
         }
         compex = &s_sub_compex;
         pattern = pat_buf+1;
         char *h;
-        if (howmuch == ARTSCOPE_SUBJECT)
+        if (how_much == ARTSCOPE_SUBJECT)
         {
             std::strcpy(pattern,": *");
             h = pattern + std::strlen(pattern);
@@ -213,43 +213,43 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             /* TODO: if using thread files, make this "%\\)f" */
             interp(pattern, pat_buf_siz - 1, "%\\>f");
         }
-        if (cmdchr == 'k' || cmdchr == 'K' || cmdchr == ',' //
-            || cmdchr == '+' || cmdchr == '.' || cmdchr == 's')
+        if (cmd_chr == 'k' || cmd_chr == 'K' || cmd_chr == ',' //
+            || cmd_chr == '+' || cmd_chr == '.' || cmd_chr == 's')
         {
-            if (cmdchr != 'k')
+            if (cmd_chr != 'k')
             {
-                saltaway = saltmode;
+                salt_away = salt_mode;
             }
             ret = SRCH_DONE;
-            if (cmdchr == '+')
+            if (cmd_chr == '+')
             {
-                cmdlst = save_str("+");
-                if (!ignorethru && g_kill_thru_kludge)
+                cmd_lst = save_str("+");
+                if (!ignore_thru && g_kill_thru_kludge)
                 {
-                    ignorethru = 1;
+                    ignore_thru = 1;
                 }
             }
-            else if (cmdchr == '.')
+            else if (cmd_chr == '.')
             {
-                cmdlst = save_str(".");
-                if (!ignorethru && g_kill_thru_kludge)
+                cmd_lst = save_str(".");
+                if (!ignore_thru && g_kill_thru_kludge)
                 {
-                    ignorethru = 1;
+                    ignore_thru = 1;
                 }
             }
-            else if (cmdchr == 's')
+            else if (cmd_chr == 's')
             {
-                cmdlst = save_str(pat_buf);
+                cmd_lst = save_str(pat_buf);
             }
             else
             {
-                if (cmdchr == ',')
+                if (cmd_chr == ',')
                 {
-                    cmdlst = save_str(",");
+                    cmd_lst = save_str(",");
                 }
                 else
                 {
-                    cmdlst = save_str("j");
+                    cmd_lst = save_str("j");
                 }
                 mark_as_read(article_ptr(g_art));       /* this article needs to die */
             }
@@ -269,7 +269,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             }
             if (g_verbose)
             {
-                if (cmdchr != '+' && cmdchr != '.')
+                if (cmd_chr != '+' && cmd_chr != '.')
                 {
                     std::printf("\nMarking %s \"%s\" as read.\n", finding_str, h);
                 }
@@ -304,7 +304,7 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
 #endif
     }
     {
-        const char *s = compile(compex, pattern, true, foldcase);
+        const char *s = compile(compex, pattern, true, fold_case);
         if (s != nullptr)
         {
             /* compile regular expression */
@@ -313,29 +313,29 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             goto exit;
         }
     }
-    if (cmdlst && std::strchr(cmdlst,'='))
+    if (cmd_lst && std::strchr(cmd_lst,'='))
     {
         ret = SRCH_ERROR;               /* listing subjects is an error? */
     }
     if (g_general_mode == GM_SELECTOR)
     {
-        if (!cmdlst)
+        if (!cmd_lst)
         {
             if (g_sel_mode == SM_ARTICLE)/* set the selector's default command */
             {
-                cmdlst = save_str("+");
+                cmd_lst = save_str("+");
             }
             else
             {
-                cmdlst = save_str("++");
+                cmd_lst = save_str("++");
             }
         }
         ret = SRCH_DONE;
     }
-    if (saltaway)
+    if (salt_away)
     {
-        char  saltbuf[LINE_BUF_LEN];
-        char *s = saltbuf;
+        char  salt_buf[LINE_BUF_LEN];
+        char *s = salt_buf;
         const char *f = pattern;
         *s++ = '/';
         while (*f)
@@ -347,38 +347,38 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             *s++ = *f++;
         }
         *s++ = '/';
-        if (doread)
+        if (do_read)
         {
             *s++ = 'r';
         }
-        if (!foldcase)
+        if (!fold_case)
         {
             *s++ = 'c';
         }
-        if (ignorethru)
+        if (ignore_thru)
         {
-            *s++ = (ignorethru == 1 ? 'I' : 'N');
+            *s++ = (ignore_thru == 1 ? 'I' : 'N');
         }
-        if (howmuch != ARTSCOPE_SUBJECT)
+        if (how_much != ARTSCOPE_SUBJECT)
         {
-            *s++ = g_scope_str[howmuch];
-            if (howmuch == ARTSCOPE_ONE_HDR)
+            *s++ = g_scope_str[how_much];
+            if (how_much == ARTSCOPE_ONE_HDR)
             {
-                safe_copy(s,g_header_type[srchhdr].name,LINE_BUF_LEN-(s-saltbuf));
-                s += g_header_type[srchhdr].length;
-                if (s - saltbuf > LINE_BUF_LEN-2)
+                safe_copy(s,g_header_type[search_header].name,LINE_BUF_LEN-(s-salt_buf));
+                s += g_header_type[search_header].length;
+                if (s - salt_buf > LINE_BUF_LEN-2)
                 {
-                    s = saltbuf + LINE_BUF_LEN - 2;
+                    s = salt_buf + LINE_BUF_LEN - 2;
                 }
             }
         }
         *s++ = ':';
-        if (!cmdlst)
+        if (!cmd_lst)
         {
-            cmdlst = save_str("j");
+            cmd_lst = save_str("j");
         }
-        safe_copy(s,cmdlst,LINE_BUF_LEN-(s-saltbuf));
-        kill_file_append(saltbuf, saltaway == 2? KF_GLOBAL : KF_LOCAL);
+        safe_copy(s,cmd_lst,LINE_BUF_LEN-(s-salt_buf));
+        kill_file_append(salt_buf, salt_away == 2? KF_GLOBAL : KF_LOCAL);
     }
     if (get_cmd)
     {
@@ -393,21 +393,21 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         }
                                         /* give them something to read */
     }
-    if (ignorethru == 0 && g_kill_thru_kludge && cmdlst //
-        && (*cmdlst == '+' || *cmdlst == '.'))
+    if (ignore_thru == 0 && g_kill_thru_kludge && cmd_lst //
+        && (*cmd_lst == '+' || *cmd_lst == '.'))
     {
-        ignorethru = 1;
+        ignore_thru = 1;
     }
-    srchfirst = doread || g_sel_rereading? g_abs_first
-                      : (g_mode != MM_PROCESSING_KILL || ignorethru > 0)? g_first_art : g_kill_first;
-    if (topstart || g_art == 0)
+    search_first = do_read || g_sel_rereading? g_abs_first
+                      : (g_mode != MM_PROCESSING_KILL || ignore_thru > 0)? g_first_art : g_kill_first;
+    if (top_start || g_art == 0)
     {
         g_art = g_last_art+1;
-        topstart = false;
+        top_start = false;
     }
     if (backward)
     {
-        if (cmdlst && g_art <= g_last_art)
+        if (cmd_lst && g_art <= g_last_art)
         {
             g_art++;                    /* include current article */
         }
@@ -416,9 +416,9 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
     {
         if (g_art > g_last_art)
         {
-            g_art = srchfirst - 1;
+            g_art = search_first - 1;
         }
-        else if (cmdlst && g_art >= g_abs_first)
+        else if (cmd_lst && g_art >= g_abs_first)
         {
             g_art--;                    /* include current article */
         }
@@ -431,12 +431,12 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         }
         g_search_ahead = -1;
     }
-    TRN_ASSERT(!cmdlst || *cmdlst);
+    TRN_ASSERT(!cmd_lst || *cmd_lst);
     perform_status_init(g_newsgroup_ptr->to_read);
     while (true)
     {
         /* check if we're out of articles */
-        if (backward? ((g_art = article_prev(g_art)) < srchfirst)
+        if (backward? ((g_art = article_prev(g_art)) < search_first)
                     : ((g_art = article_next(g_art)) > g_last_art))
         {
             break;
@@ -448,22 +448,22 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
             break;
         }
         g_artp = article_ptr(g_art);
-        if (doread || (!(g_artp->flags & AF_UNREAD) ^ (!g_sel_rereading ? AF_SEL : AF_NONE)))
+        if (do_read || (!(g_artp->flags & AF_UNREAD) ^ (!g_sel_rereading ? AF_SEL : AF_NONE)))
         {
-            if (wanted(compex, g_art, howmuch))
+            if (wanted(compex, g_art, how_much))
             {
                                     /* does the shoe fit? */
-                if (!cmdlst)
+                if (!cmd_lst)
                 {
                     return SRCH_FOUND;
                 }
-                if (perform(cmdlst, output_level && g_page_line == 1) < 0)
+                if (perform(cmd_lst, output_level && g_page_line == 1) < 0)
                 {
-                    std::free(cmdlst);
+                    std::free(cmd_lst);
                     return SRCH_INTR;
                 }
             }
-            else if (output_level && !cmdlst && !(g_art % 50))
+            else if (output_level && !cmd_lst && !(g_art % 50))
             {
                 std::printf("...%ld",(long)g_art);
                 std::fflush(stdout);
@@ -471,13 +471,13 @@ ArtSearchResult art_search(char *pat_buf, int pat_buf_siz, bool get_cmd)
         }
         if (!output_level && g_page_line == 1)
         {
-            perform_status(g_newsgroup_ptr->to_read, 60 / (howmuch + 1));
+            perform_status(g_newsgroup_ptr->to_read, 60 / (how_much + 1));
         }
     }
 exit:
-    if (cmdlst)
+    if (cmd_lst)
     {
-        std::free(cmdlst);
+        std::free(cmd_lst);
     }
     return ret;
 }
@@ -485,9 +485,9 @@ exit:
 /* determine if article fits pattern */
 /* returns true if it exists and fits pattern, false otherwise */
 
-static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
+static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
 {
-    Article* ap = article_find(artnum);
+    Article* ap = article_find(art_num);
 
     if (!ap || !(ap->flags & AF_EXISTS))
     {
@@ -498,7 +498,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
     {
     case ARTSCOPE_SUBJECT:
         std::strcpy(g_buf,"Subject: ");
-        std::strncpy(g_buf+9,fetch_subj(artnum,false),256);
+        std::strncpy(g_buf+9,fetch_subj(art_num,false),256);
 #ifdef DEBUG
         if (debug & DEB_SEARCH_AHEAD)
         {
@@ -509,13 +509,13 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
 
     case ARTSCOPE_FROM:
         std::strcpy(g_buf, "From: ");
-        std::strncpy(g_buf+6,fetch_from(artnum,false),256);
+        std::strncpy(g_buf+6,fetch_from(art_num,false),256);
         break;
 
     case ARTSCOPE_ONE_HDR:
         g_untrim_cache = true;
         std::sprintf(g_buf, "%s: %s", g_header_type[g_art_srch_hdr].name,
-                prefetch_lines(artnum,g_art_srch_hdr,false));
+                prefetch_lines(art_num,g_art_srch_hdr,false));
         g_untrim_cache = false;
         break;
 
@@ -527,7 +527,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
         bool in_sig = false;
         if (scope != ARTSCOPE_BODY && scope != ARTSCOPE_BODY_NO_SIG)
         {
-            if (!parse_header(artnum))
+            if (!parse_header(art_num))
             {
                 return false;
             }
@@ -541,20 +541,20 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
                 return false;
             }
         }
-        if (g_parsed_art == artnum)
+        if (g_parsed_art == art_num)
         {
-            if (!art_open(artnum,g_header_type[PAST_HEADER].min_pos))
+            if (!art_open(art_num,g_header_type[PAST_HEADER].min_pos))
             {
                 return false;
             }
         }
         else
         {
-            if (!art_open(artnum,(ArticlePosition)0))
+            if (!art_open(art_num,(ArticlePosition)0))
             {
                 return false;
             }
-            if (!parse_header(artnum))
+            if (!parse_header(art_num))
             {
                 return false;
             }
@@ -572,16 +572,16 @@ static bool wanted(CompiledRegex *compex, ArticleNum artnum, ArtScope scope)
                 }
                 in_sig = true;
             }
-            char *nlptr = std::strchr(s, '\n');
-            if (nlptr != nullptr)
+            char *nl_ptr = std::strchr(s, '\n');
+            if (nl_ptr != nullptr)
             {
-                ch = *++nlptr;
-                *nlptr = '\0';
+                ch = *++nl_ptr;
+                *nl_ptr = '\0';
             }
             success = success || execute(compex,s) != nullptr;
-            if (nlptr)
+            if (nl_ptr)
             {
-                *nlptr = ch;
+                *nl_ptr = ch;
             }
             if (success && !in_sig)             /* does it match? */
             {
