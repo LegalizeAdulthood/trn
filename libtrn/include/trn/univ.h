@@ -19,20 +19,20 @@ struct HashTable;
 enum UniversalItemType
 {
     UN_NONE = 0,          //
-    UN_TXT = 1,           /* textual placeholder */
+    UN_TXT = 1,           // textual placeholder
     UN_DATA_SOURCE = 2,   //
     UN_NEWSGROUP = 3,     //
     UN_GROUP_MASK = 4,    //
-    UN_ARTICLE = 5,       /* an individual article */
-    UN_CONFIG_FILE = 6,   /* filename for a configuration file */
-    UN_VIRTUAL1 = 7,      /* Virtual newsgroup file (reserved for compatability with strn) */
-    UN_VGROUP = 8,        /* virtual newsgroup marker (for pass 2) */
-    UN_TEXT_FILE = 9,     /* text file */
-    UN_HELP_KEY = 10,     /* keystroke help functions from help.c */
-    UN_DEBUG1 = -1,       /* quick debugging: just has data */
-    UN_GROUP_DESEL = -2,  /* group that is deselected (with !group) */
-    UN_VGROUP_DESEL = -3, /* virtual newsgroup deselected (with !group) */
-    UN_DELETED = -4       /* generic deleted item -- no per-item memory */
+    UN_ARTICLE = 5,       // an individual article
+    UN_CONFIG_FILE = 6,   // filename for a configuration file
+    UN_VIRTUAL1 = 7,      // Virtual newsgroup file (reserved for compatability with strn)
+    UN_VGROUP = 8,        // virtual newsgroup marker (for pass 2)
+    UN_TEXT_FILE = 9,     // text file
+    UN_HELP_KEY = 10,     // keystroke help functions from help.c
+    UN_DEBUG1 = -1,       // quick debugging: just has data
+    UN_GROUP_DESEL = -2,  // group that is deselected (with !group)
+    UN_VGROUP_DESEL = -3, // virtual newsgroup deselected (with !group)
+    UN_DELETED = -4       // generic deleted item -- no per-item memory
 };
 
 struct UniversalGroupMaskData
@@ -57,12 +57,12 @@ struct UniversalVirtualData
     ArticleNum num;
 };
 
-/* virtual/merged group flags (UNIV_VIRT_GROUP.flags) */
+// virtual/merged group flags (UNIV_VIRT_GROUP.flags)
 enum VirtualGroupFlags : std::uint8_t
 {
     UF_VG_NONE = 0x00,
-    UF_VG_MIN_SCORE = 0x01, /* articles use minimum score */
-    UF_VG_MAX_SCORE = 0x02  /* articles use maximum score */
+    UF_VG_MIN_SCORE = 0x01, // articles use minimum score
+    UF_VG_MAX_SCORE = 0x02  // articles use maximum score
 };
 DECLARE_FLAGS_ENUM(VirtualGroupFlags, std::uint8_t);
 
@@ -96,7 +96,7 @@ union UniversalData
     UniversalTextFile       text_file;
 };
 
-/* selector flags */
+// selector flags
 enum UniversalItemFlags
 {
     UF_NONE = 0x00,
@@ -112,33 +112,33 @@ struct UniversalItem
 {
     UniversalItem     *next;
     UniversalItem     *prev;
-    int                num;   /* natural order (for sort) */
-    UniversalItemFlags flags; /* for selector */
-    UniversalItemType  type;  /* what kind of object is it? */
-    char              *desc;  /* default description */
+    int                num;   // natural order (for sort)
+    UniversalItemFlags flags; // for selector
+    UniversalItemType  type;  // what kind of object is it?
+    char              *desc;  // default description
     int                score;
-    UniversalData      data; /* describes the object */
+    UniversalData      data; // describes the object
 };
 
-extern int  g_univ_level;          /* How deep are we in the tree? */
-extern bool g_univ_ng_virt_flag;   /* if true, we are in the "virtual group" second pass */
-extern bool g_univ_read_virt_flag; /* if true, we are reading an article from a "virtual group" */
-extern bool g_univ_default_cmd;    /* "follow"-related stuff (virtual groups) */
+extern int  g_univ_level;          // How deep are we in the tree?
+extern bool g_univ_ng_virt_flag;   // if true, we are in the "virtual group" second pass
+extern bool g_univ_read_virt_flag; // if true, we are reading an article from a "virtual group"
+extern bool g_univ_default_cmd;    // "follow"-related stuff (virtual groups)
 extern bool g_univ_follow;
 extern bool g_univ_follow_temp;
 
-/* items which must be saved in context */
+// items which must be saved in context
 extern UniversalItem *g_first_univ;
 extern UniversalItem *g_last_univ;
 extern UniversalItem *sel_page_univ;
 extern UniversalItem *g_sel_next_univ;
-extern char          *g_univ_fname;    /* current filename (may be null) */
-extern std::string    g_univ_label;    /* current label (may be empty) */
-extern std::string    g_univ_title;    /* title of current level */
-extern std::string    g_univ_tmp_file; /* temp. file (may be empty) */
+extern char          *g_univ_fname;    // current filename (may be null)
+extern std::string    g_univ_label;    // current label (may be empty)
+extern std::string    g_univ_title;    // title of current level
+extern std::string    g_univ_tmp_file; // temp. file (may be empty)
 extern HashTable     *g_univ_ng_hash;
 extern HashTable     *g_univ_vg_hash;
-/* end of items that must be saved */
+// end of items that must be saved
 
 void           univ_init();
 void           univ_startup();
