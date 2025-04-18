@@ -39,25 +39,25 @@ bool      g_use_add_selector{true}; //
 
 static int s_add_group_count{};
 
-static int  add_newsgroup_cmp(const char *key, int keylen, HashDatum data);
-static int  build_add_group_list(int keylen, HashDatum *data, int extra);
+static int  add_newsgroup_cmp(const char *key, int key_len, HashDatum data);
+static int  build_add_group_list(int key_len, HashDatum *data, int extra);
 static void process_list(GetNewsgroupFlags flag);
 static void new_nntp_groups(DataSource *dp);
 static void new_local_groups(DataSource *dp);
-static void add_to_hash(HashTable *ng, const char *name, int toread, char_int ch);
-static void add_to_list(const char *name, int toread, char_int ch);
-static int  list_groups(int keylen, HashDatum *data, int add_matching);
-static void scan_line(char *actline, bool add_matching);
+static void add_to_hash(HashTable *ng, const char *name, int to_read, char_int ch);
+static void add_to_list(const char *name, int to_read, char_int ch);
+static int  list_groups(int key_len, HashDatum *data, int add_matching);
+static void scan_active_line(char *active_line, bool add_matching);
 static int  add_group_order_number(const AddGroup **app1, const AddGroup **app2);
 static int  add_group_order_group_name(const AddGroup **app1, const AddGroup **app2);
 static int  add_group_order_count(const AddGroup **app1, const AddGroup **app2);
 
-static int add_newsgroup_cmp(const char *key, int keylen, HashDatum data)
+static int add_newsgroup_cmp(const char *key, int key_len, HashDatum data)
 {
-    return memcmp(key, ((AddGroup *)data.dat_ptr)->name, keylen);
+    return memcmp(key, ((AddGroup *)data.dat_ptr)->name, key_len);
 }
 
-static int build_add_group_list(int keylen, HashDatum *data, int extra)
+static int build_add_group_list(int key_len, HashDatum *data, int extra)
 {
     AddGroup* node = (AddGroup*)data->dat_ptr;
 
@@ -137,9 +137,9 @@ static void process_list(GetNewsgroupFlags flag)
         {
             get_newsgroup(node->name, flag); /* add newsgroup -- maybe */
         }
-        AddGroup *prevnode = node;
+        AddGroup *prev_node = node;
         node = node->next;
-        std::free((char*)prevnode);
+        std::free((char*)prev_node);
     }
     g_first_add_group = nullptr;
     g_last_add_group = nullptr;
@@ -166,7 +166,7 @@ static void new_nntp_groups(DataSource *dp)
         std::printf("Can't get new groups from server:\n%s\n", g_ser_line);
         return;
     }
-    HashTable *newngs = hash_create(33, add_newsgroup_cmp);
+    HashTable *new_newsgroups = hash_create(33, add_newsgroup_cmp);
 
     while (true)
     {
@@ -237,15 +237,15 @@ static void new_nntp_groups(DataSource *dp)
         {
             continue;
         }
-        add_to_hash(newngs, g_ser_line, high-low, auto_subscribe(g_ser_line));
+        add_to_hash(new_newsgroups, g_ser_line, high-low, auto_subscribe(g_ser_line));
     }
     if (foundSomething)
     {
-        hash_walk(newngs, build_add_group_list, 0);
+        hash_walk(new_newsgroups, build_add_group_list, 0);
         source_file_end_append(&dp->act_sf, dp->extra_name);
         dp->last_new_group = server_time;
     }
-    hash_destroy(newngs);
+    hash_destroy(new_newsgroups);
 }
 
 static void new_local_groups(DataSource *dp)
@@ -266,26 +266,26 @@ static void new_local_groups(DataSource *dp)
         term_down(1);
         return;
     }
-    std::time_t lastone = std::time(nullptr) - 24L * 60 * 60 - 1;
-    HashTable *newngs = hash_create(33, add_newsgroup_cmp);
+    std::time_t last_one = std::time(nullptr) - 24L * 60 * 60 - 1;
+    HashTable *new_newsgroups = hash_create(33, add_newsgroup_cmp);
 
     while (std::fgets(g_buf, LBUFLEN, fp) != nullptr)
     {
         char *s;
-        if ((s = std::strchr(g_buf, ' ')) == nullptr || (lastone = std::atol(s + 1)) < dp->last_new_group)
+        if ((s = std::strchr(g_buf, ' ')) == nullptr || (last_one = std::atol(s + 1)) < dp->last_new_group)
         {
             continue;
         }
         *s = '\0';
-        char tmpbuf[LBUFLEN];
-        if (!find_active_group(g_data_source, tmpbuf, g_buf, s - g_buf, (ArticleNum)0))
+        char tmp_buf[LBUFLEN];
+        if (!find_active_group(g_data_source, tmp_buf, g_buf, s - g_buf, (ArticleNum)0))
         {
             continue;
         }
         long high;
         long low;
         char ch;
-        std::sscanf(tmpbuf + (s-g_buf) + 1, "%ld %ld %c", &high, &low, &ch);
+        std::sscanf(tmp_buf + (s-g_buf) + 1, "%ld %ld %c", &high, &low, &ch);
         if (ch == 'x' || ch == '=')
         {
             continue;
@@ -295,17 +295,17 @@ static void new_local_groups(DataSource *dp)
         {
             continue;
         }
-        add_to_hash(newngs, g_buf, high-low, auto_subscribe(g_buf));
+        add_to_hash(new_newsgroups, g_buf, high-low, auto_subscribe(g_buf));
     }
     std::fclose(fp);
 
-    hash_walk(newngs, build_add_group_list, 0);
-    hash_destroy(newngs);
-    dp->last_new_group = lastone+1;
+    hash_walk(new_newsgroups, build_add_group_list, 0);
+    hash_destroy(new_newsgroups);
+    dp->last_new_group = last_one+1;
     dp->act_sf.recent_cnt = file_size;
 }
 
-static void add_to_hash(HashTable *ng, const char *name, int toread, char_int ch)
+static void add_to_hash(HashTable *ng, const char *name, int to_read, char_int ch)
 {
     HashDatum      data;
     const unsigned namelen = std::strlen(name);
@@ -324,7 +324,7 @@ static void add_to_hash(HashTable *ng, const char *name, int toread, char_int ch
         node->flags = AGF_NONE;
         break;
     }
-    node->to_read = (toread < 0)? 0 : toread;
+    node->to_read = (to_read < 0)? 0 : to_read;
     std::strcpy(node->name, name);
     node->data_src = g_data_source;
     node->next = nullptr;
@@ -332,7 +332,7 @@ static void add_to_hash(HashTable *ng, const char *name, int toread, char_int ch
     hash_store(ng, name, namelen, data);
 }
 
-static void add_to_list(const char *name, int toread, char_int ch)
+static void add_to_list(const char *name, int to_read, char_int ch)
 {
     AddGroup* node = g_first_add_group;
 
@@ -358,7 +358,7 @@ static void add_to_list(const char *name, int toread, char_int ch)
         node->flags = AGF_NONE;
         break;
     }
-    node->to_read = (toread < 0)? 0 : toread;
+    node->to_read = (to_read < 0)? 0 : to_read;
     node->num = s_add_group_count++;
     std::strcpy(node->name, name);
     node->data_src = g_data_source;
@@ -377,7 +377,7 @@ static void add_to_list(const char *name, int toread, char_int ch)
 
 bool scan_active(bool add_matching)
 {
-    const NewsgroupNum oldcnt = g_newsgroup_count;      /* remember # of newsgroups */
+    const NewsgroupNum old_count = g_newsgroup_count;      /* remember # of newsgroups */
 
     if (!add_matching)
     {
@@ -420,7 +420,7 @@ bool scan_active(bool add_matching)
             {
                 while (!nntp_at_list_end(g_ser_line))
                 {
-                    scan_line(g_ser_line,add_matching);
+                    scan_active_line(g_ser_line,add_matching);
                     if (nntp_gets(g_ser_line, sizeof g_ser_line) == NGSR_ERROR)
                     {
                         break;
@@ -437,22 +437,22 @@ bool scan_active(bool add_matching)
         set_data_source(g_newsgroup_ptr->rc->data_source);
     }
 
-    return oldcnt != g_newsgroup_count;
+    return old_count != g_newsgroup_count;
 }
 
-static int list_groups(int keylen, HashDatum *data, int add_matching)
+static int list_groups(int key_len, HashDatum *data, int add_matching)
 {
     char     *bp = ((ListNode *) data->dat_ptr)->data + data->dat_len;
-    const int linelen = std::strchr(bp, '\n') - bp + 1;
-    (void) memcpy(g_buf,bp,linelen);
-    g_buf[linelen] = '\0';
-    scan_line(g_buf,add_matching);
+    const int line_len = std::strchr(bp, '\n') - bp + 1;
+    (void) memcpy(g_buf,bp,line_len);
+    g_buf[line_len] = '\0';
+    scan_active_line(g_buf,add_matching);
     return 0;
 }
 
-static void scan_line(char *actline, bool add_matching)
+static void scan_active_line(char *active_line, bool add_matching)
 {
-    char *s = std::strchr(actline, ' ');
+    char *s = std::strchr(active_line, ' ');
     if (s == nullptr)
     {
         return;
@@ -466,15 +466,15 @@ static void scan_line(char *actline, bool add_matching)
     low = 1;
     ch = 'y';
     std::sscanf(s, "%ld %ld %c", &high, &low, &ch);
-    if (ch == 'x' || !std::strncmp(actline,"to.",3))
+    if (ch == 'x' || !std::strncmp(active_line,"to.",3))
     {
         return;
     }
-    if (!in_list(actline))
+    if (!in_list(active_line))
     {
         return;
     }
-    NewsgroupData *np = find_newsgroup(actline);
+    NewsgroupData *np = find_newsgroup(active_line);
     if (np != nullptr && np->to_read > TR_UNSUB)
     {
         return;
@@ -482,12 +482,12 @@ static void scan_line(char *actline, bool add_matching)
     if (add_matching || np)
     {
         /* it's not in a newsrc */
-        add_to_list(actline, high-low, 0);
+        add_to_list(active_line, high-low, 0);
     }
     else
     {
-        std::strcat(actline,"\n");
-        print_lines(actline, NO_MARKING);
+        std::strcat(active_line,"\n");
+        print_lines(active_line, NO_MARKING);
     }
 }
 
