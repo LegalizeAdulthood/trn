@@ -20,16 +20,16 @@
 #include "trn/terminal.h" /* macro to clear... */
 
 ScanArticleEntryData *g_sa_ents{};
-int           g_sa_num_ents{};
-bool          g_sa_initialized{};           /* Have we initialized? */
-bool          g_sa_never_initialized{true}; /* Have we ever initialized? */
+int                   g_sa_num_ents{};
+bool                  g_sa_initialized{};           /* Have we initialized? */
+bool                  g_sa_never_initialized{true}; /* Have we ever initialized? */
 /* note: g_sa_in should be checked for returning to SA */
-bool    g_sa_in{};             /* Are we "in" SA? */
-bool    g_sa_go{};             /* go to sa.  Do not pass GO (:-) */
-bool    g_sa_go_explicit{};    /* want to bypass read-next-marked */
+bool       g_sa_in{};             /* Are we "in" SA? */
+bool       g_sa_go{};             /* go to sa.  Do not pass GO (:-) */
+bool       g_sa_go_explicit{};    /* want to bypass read-next-marked */
 ArticleNum g_sa_art{};            /* used to pass an article number to read soon */
-bool    g_sa_do_sel_threads{};  /* select threads from TRN thread selector; re-implement later */
-bool    g_sa_mode_read_elig{}; /* true if read articles are eligible in trn/scanart.h for world-visibilty */
+bool       g_sa_do_sel_threads{}; /* select threads from TRN thread selector; re-implement later */
+bool       g_sa_mode_read_elig{}; /* true if read articles are eligible in trn/scanart.h for world-visibilty */
 
 /* Options */
 /* Display order variable:
@@ -53,7 +53,7 @@ bool g_sa_mode_fold{};
 bool g_sa_follow{true};
 
 /* Options: what to display */
-bool g_sa_mode_desc_art_num{};     /* show art#s */
+bool g_sa_mode_desc_art_num{};    /* show art#s */
 bool g_sa_mode_desc_author{true}; /* show author */
 bool g_sa_mode_desc_score{true};  /* show score */
 /* flags to determine whether to display various things */
