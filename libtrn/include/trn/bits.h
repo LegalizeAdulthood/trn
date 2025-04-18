@@ -1,6 +1,6 @@
 /* trn/bits.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #pragma once
 
 #include "config/typedef.h"
