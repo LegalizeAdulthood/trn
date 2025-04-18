@@ -11,8 +11,7 @@
 #include "trn/util.h"
 #include "util/util2.h"
 
-/* Lower-level net routines grabbed from nntpinit.c.
- */
+// Lower-level net routines grabbed from nntpinit.c.
 
 #include <boost/asio.hpp>
 
