@@ -365,10 +365,10 @@ static void sel_page_init()
 {
     s_sel_max_line_cnt = g_tc_LINES - (g_tc_COLS - g_mouse_bar_width < 50? 6 : 5);
     g_sel_chars = get_val("SELECTCHARS", SELECTCHARS);
-    /* The numeric option of up to 99 lines will require many adaptations
-     * to be able to switch from a large numeric page (more than
-     * strlen(g_sel_chars) lines) to an alphanumeric page. XXX
-     */
+    // The numeric option of up to 99 lines will require many adaptations
+    // to be able to switch from a large numeric page (more than
+    // strlen(g_sel_chars) lines) to an alphanumeric page. XXX
+    //
     if (g_use_sel_num)
     {
         s_sel_max_per_page = 99;
@@ -2160,9 +2160,8 @@ start_of_loop:
                 }
                 if (line_cnt)
                 {
-                    /* If this item is too long to fit on the screen all by
-                    ** itself, trim it to fit and set the "etc" flag.
-                    */
+                    // If this item is too long to fit on the screen all by
+                    // itself, trim it to fit and set the "etc" flag.
                     if (line_cnt > s_sel_max_line_cnt)
                     {
                         etc = line_cnt;
@@ -2347,9 +2346,9 @@ void output_sel(int ix, int sel, bool update)
     }
 }
 
-/* Counts the number of lines needed to output a subject, including
-** optional authors.
-*/
+// Counts the number of lines needed to output a subject, including
+// optional authors.
+//
 static int count_subject_lines(const Subject *subj, int *selptr)
 {
     int sel;
@@ -2390,9 +2389,9 @@ static int count_subject_lines(const Subject *subj, int *selptr)
     return (subj->misc != 0);
 }
 
-/* Counts the number of lines needed to output a thread, including
-** optional authors.
-*/
+// Counts the number of lines needed to output a thread, including
+// optional authors.
+//
 static int count_thread_lines(const Subject *subj, int *selptr)
 {
     int total = 0;
@@ -2422,8 +2421,7 @@ static int count_thread_lines(const Subject *subj, int *selptr)
     return total;
 }
 
-/* Display an article, perhaps with its author.
-*/
+// Display an article, perhaps with its author.
 static void display_article(const Article *ap, int ix, int sel)
 {
     int subj_width = g_tc_COLS - 5 - g_use_sel_num;
@@ -2453,8 +2451,7 @@ static void display_article(const Article *ap, int ix, int sel)
     term_down(1);
 }
 
-/* Display the given subject group, with optional authors.
-*/
+// Display the given subject group, with optional authors.
 static void display_subject(const Subject *subj, int ix, int sel)
 {
     Article*ap;
