@@ -1,6 +1,6 @@
 /* inews.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <config/common.h>
 #include <config/pipe_io.h>
@@ -27,7 +27,7 @@ int debug{};
 int new_connection{};
 char *g_server_name{};
 std::string g_nntp_auth_file;
-char g_buf[LINE_BUF_LEN + 1]{}; /* general purpose line buffer */
+char g_buf[LINE_BUF_LEN + 1]{}; // general purpose line buffer
 
 int valid_header(char *h);
 void append_signature();
@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
         }
         if (i == EOF || !std::fgets(cp + 1, LINE_BUF_LEN - 1, stdin))
         {
-            /* Still in header after EOF?  Hmm... */
+            // Still in header after EOF?  Hmm...
             std::fprintf(stderr,"Article was all header -- no body.\n");
             std::exit(1);
         }
@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
     }
     *cp = '\0';
 
-    /* Well, the header looks ok, so let's get on with it. */
+    // Well, the header looks ok, so let's get on with it.
 
     if (g_server_name)
     {
@@ -283,12 +283,12 @@ int main(int argc, char *argv[])
     had_nl = true;
     while (std::fgets(headbuf, headbuf_size, stdin))
     {
-        /* Single . is eof, so put in extra one */
+        // Single . is eof, so put in extra one
         if (g_server_name && had_nl && *headbuf == '.')
         {
             inews_fputc('.');
         }
-        /* check on newline */
+        // check on newline
         cp = headbuf + std::strlen(headbuf);
         if (cp > headbuf && *--cp == '\n')
         {
@@ -358,10 +358,10 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-/* valid_header -- determine if a line is a valid header line */
+// valid_header -- determine if a line is a valid header line
 int valid_header(char *h)
 {
-    /* Blank or tab in first position implies this is a continuation header */
+    // Blank or tab in first position implies this is a continuation header
     if (is_hor_space(h[0]))
     {
         h = skip_hor_space(h);
@@ -377,7 +377,7 @@ int valid_header(char *h)
         return 1;
     }
 
-    /* Anything else is a bad header */
+    // Anything else is a bad header
     return 0;
 }
 
@@ -418,7 +418,7 @@ void append_signature()
                     MAX_SIGNATURE);
             break;
         }
-        /* Strip trailing newline */
+        // Strip trailing newline
         cp = g_ser_line + std::strlen(g_ser_line) - 1;
         if (cp >= g_ser_line && *cp == '\n')
         {
