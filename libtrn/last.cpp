@@ -1,6 +1,6 @@
 /* last.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "config/common.h"
 #include "trn/last.h"
@@ -16,13 +16,13 @@
 #include <ctime>
 #include <string>
 
-std::string g_last_newsgroup_name; /* last newsgroup read */
-long        g_last_time{};         /* time last we ran */
-long        g_last_active_size{};  /* last known size of active file */
-long        g_last_new_time{};     /* time of last newgroup request */
+std::string g_last_newsgroup_name; // last newsgroup read
+long        g_last_time{};         // time last we ran
+long        g_last_active_size{};  // last known size of active file
+long        g_last_new_time{};     // time of last newgroup request
 long        g_last_extra_num{};
 
-static char *s_last_file{}; /* path name of .rnlast file */
+static char *s_last_file{}; // path name of .rnlast file
 static long  s_start_time{};
 
 void last_init()
@@ -63,7 +63,7 @@ void read_last()
     }
 }
 
-/* Put out certain values for next run of trn */
+// Put out certain values for next run of trn
 
 void write_last()
 {
@@ -81,6 +81,6 @@ void write_last()
     else
     {
         std::printf(g_cant_create,g_buf);
-        /*term_down(1);*/
+        // term_down(1);
     }
 }
