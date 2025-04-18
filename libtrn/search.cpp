@@ -5,22 +5,22 @@
 
 // Copyright (c) 1981,1980 James Gosling
 
-/* Modified Aug. 12, 1981 by Tom London to include regular expressions
-   as in ed.  RE stuff hacked over by jag to correct a few major problems,
-   mainly dealing with searching within the buffer rather than copying
-   each line to a separate array.  Newlines can now appear in RE's */
-
-/* Ripped to shreds and glued back together to make a search package,
- * July 6, 1984, by Larry Wall. (If it doesn't work, it's probably my fault.)
- * Changes include:
- *      Buffer, window, and mlisp stuff gone.
- *      Translation tables reduced to 1 table.
- *      Expression buffer is now dynamically allocated.
- *      Character classes now implemented with a bitmap.
- * Modified by David Canzi, Apr 1997:
- *      Check bounds on alternatives array.
- *      Correct spurious matching, eg. /: re: .*\bfoo/ matched ": re: bar".
- */
+// Modified Aug. 12, 1981 by Tom London to include regular expressions
+// as in ed.  RE stuff hacked over by jag to correct a few major problems,
+// mainly dealing with searching within the buffer rather than copying
+// each line to a separate array.  Newlines can now appear in RE's
+//
+// Ripped to shreds and glued back together to make a search package,
+// July 6, 1984, by Larry Wall. (If it doesn't work, it's probably my fault.)
+// Changes include:
+//      Buffer, window, and mlisp stuff gone.
+//      Translation tables reduced to 1 table.
+//      Expression buffer is now dynamically allocated.
+//      Character classes now implemented with a bitmap.
+// Modified by David Canzi, Apr 1997:
+//      Check bounds on alternatives array.
+//      Correct spurious matching, eg. /: re: .*\bfoo/ matched ": re: bar".
+//
 
 #include "config/common.h"
 #include "trn/search.h"
@@ -39,9 +39,9 @@ enum
 
 enum
 {
-    META_NULL = 64 /* Bit is set in a meta-character defn to
-                          indicate that the metacharacter can match
-                          a null string.  advance() uses this. */
+    META_NULL = 64 // Bit is set in a meta-character defn to
+                   //     indicate that the metacharacter can match
+                   //     a null string.  advance() uses this.
 };
 
 // meta characters in the "compiled" form of a regular expression
@@ -62,9 +62,9 @@ enum
 
 enum
 {
-    STAR = 01, /* * -- Kleene star, repeats the previous
-                          REas many times as possible; the value
-                          ORs with the other operator types */
+    STAR = 01, // * -- Kleene star, repeats the previous
+               //         REas many times as possible; the value
+               //         ORs with the other operator types
 
     ASCSIZ = 256
 };
@@ -454,8 +454,8 @@ const char *execute(CompiledRegex *compex, const char *addr)
     return nullptr;
 }
 
-/* advance the match of the regular expression starting at ep along the
-   string lp, simulates an NDFSA */
+// advance the match of the regular expression starting at ep along the
+// string lp, simulates an NDFSA
 bool advance(CompiledRegex *compex, const char *lp, const char *ep)
 {
     const char* curlp;
