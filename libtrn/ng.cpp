@@ -103,31 +103,31 @@ void ng_init()
     init_compex(&g_page_compex);
 }
 
-/* do newsgroup pointed to by g_ngptr with name g_ngname
- *
- * The basic structure is:
- *  for each desired article
- *      for each desired page
- *          for each line on page
- *              if we need another line from file
- *                  get it
- *                  if it's a header line
- *                      do special things
- *              for each column on page
- *                  put out a character
- *              end loop
- *          end loop
- *      end loop
- *  end loop
- *
- *  (Actually, the pager is in another routine.)
- *
- * The chief problem is deciding what is meant by "desired".  Most of
- * the messiness of this routine is due to the fact that people want
- * to do unstructured things all the time.  I have used a few judicious
- * goto's where I thought it improved readability.  The rest of the messiness
- * arises from trying to be both space and time efficient.  Have fun.
- */
+// do newsgroup pointed to by g_ngptr with name g_ngname
+//
+// The basic structure is:
+//  for each desired article
+//      for each desired page
+//          for each line on page
+//              if we need another line from file
+//                  get it
+//                  if it's a header line
+//                      do special things
+//              for each column on page
+//                  put out a character
+//              end loop
+//          end loop
+//      end loop
+//  end loop
+//
+//  (Actually, the pager is in another routine.)
+//
+// The chief problem is deciding what is meant by "desired".  Most of
+// the messiness of this routine is due to the fact that people want
+// to do unstructured things all the time.  I have used a few judicious
+// goto's where I thought it improved readability.  The rest of the messiness
+// arises from trying to be both space and time efficient.  Have fun.
+//
 
 // start_command command to fake up first
 DoNewsgroupResult do_newsgroup(char *start_command)
@@ -1561,10 +1561,10 @@ run_the_selector:
 
     case 'x':
     case Ctl('x'):
-        /* In the future the behavior of 'x' may change back to a
-         * filter-select mechanism.
-         * Currently, both keys do ROT-13 translation.
-         */
+        // In the future the behavior of 'x' may change back to a
+        // filter-select mechanism.
+        // Currently, both keys do ROT-13 translation.
+        //
         g_rotate = true;
         if (g_art <= g_last_art)
         {
@@ -1902,11 +1902,11 @@ void set_default_cmd()
     }
 }
 
-/* Ask the user about catching-up the current group.  Returns 'y' if yes,
-** 'n' or 'N' if no ('N' means we used one line when in the selector),
-** or 'u' for yes with unsubscribe.  Actually performs the catchup and
-** unsubscription as needed.
-*/
+// Ask the user about catching-up the current group.  Returns 'y' if yes,
+// 'n' or 'N' if no ('N' means we used one line when in the selector),
+// or 'u' for yes with unsubscribe.  Actually performs the catchup and
+// unsubscription as needed.
+//
 char ask_catchup()
 {
     bool use_one_line = (g_general_mode == GM_SELECTOR);
