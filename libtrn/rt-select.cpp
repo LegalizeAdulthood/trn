@@ -208,11 +208,11 @@ static DisplayState        universal_commands(char_int ch);
 static void                switch_dmode(char **dmode_cpp);
 static int                 find_line(int y);
 
-/* Display a menu of threads/subjects/articles for the user to choose from.
-** If "cmd" is '+' we display all the unread items and allow the user to mark
-** them as selected and perform various commands upon them.  If "cmd" is 'U'
-** the list consists of previously-read items for the user to mark as unread.
-*/
+// Display a menu of threads/subjects/articles for the user to choose from.
+// If "cmd" is '+' we display all the unread items and allow the user to mark
+// them as selected and perform various commands upon them.  If "cmd" is 'U'
+// the list consists of previously-read items for the user to mark as unread.
+//
 char article_selector(char_int cmd)
 {
     bool save_selected_only;
@@ -1015,9 +1015,8 @@ sel_restart:
         }
     }
 // univ_loop_break:
-    /* restart the selector unless the user explicitly quits.
-     * possibly later have an option for 'Z' to quit levels>1.
-     */
+    // restart the selector unless the user explicitly quits.
+    // possibly later have an option for 'Z' to quit levels>1.
     if (s_sel_ret != 'q' && (s_sel_ret != 'Q'))
     {
         goto sel_restart;
@@ -1072,13 +1071,13 @@ static char sel_input()
     int j;
     int sel_number;
 
-    /* TRN proudly continues the state machine traditions of RN.
-     * April 2, 1996: 28 gotos in this function.  Conversion to
-     * structured programming is left as an exercise for the reader.
-     */
-    /* If one immediately types a goto command followed by a dash ('-'),
-     * the following will be the default action.
-     */
+    // TRN proudly continues the state machine traditions of RN.
+    // April 2, 1996: 28 gotos in this function.  Conversion to
+    // structured programming is left as an exercise for the reader.
+    //
+    // If one immediately types a goto command followed by a dash ('-'),
+    // the following will be the default action.
+    //
     int action = '+';
 reask_selector:
     // Prompt the user
@@ -1239,9 +1238,9 @@ reinp_selector:
             }
             sel_status_msg(g_msg);
         }
-        /* Consider cache_until_key() here.  The middle of typing a
-         * number is a lousy time to delay, however.
-         */
+        // Consider cache_until_key() here.  The middle of typing a
+        // number is a lousy time to delay, however.
+        //
         get_cmd(g_buf);
         ch = *g_buf;
         if (s_disp_status_line == 2)    // status was printed
@@ -1265,10 +1264,10 @@ reinp_selector:
         }
         if (ch == g_erase_char)
         {
-            /* Erase any first digit printed, but allow complex
-             * commands to continue.  Spaces at end of message are
-             * there to wipe out old first digit.
-             */
+            // Erase any first digit printed, but allow complex
+            // commands to continue.  Spaces at end of message are
+            // there to wipe out old first digit.
+            //
             if (got_dash)
             {
                 if (g_sel_item_index > 0)
@@ -2753,9 +2752,9 @@ reask_sort:
             }
             else
             {
-                /* Force the search to begin at g_absfirst or g_firstart,
-                ** depending upon whether they specified the 'r' option.
-                */
+                // Force the search to begin at g_absfirst or g_firstart,
+                // depending upon whether they specified the 'r' option.
+               //
                 g_art = g_last_art+1;
                 switch (art_search(g_buf, sizeof g_buf, false))
                 {
@@ -3748,14 +3747,14 @@ static int find_line(int y)
     return i;
 }
 
-/* On click:
- *    btn = 0 (left), 1 (middle), or 2 (right) + 4 if double-clicked;
- *    x = 0 to g_tc_COLS-1; y = 0 to g_tc_LINES-1;
- *    btn_clk = 0, 1, or 2 (no 4); x_clk = x; y_clk = y.
- * On release:
- *    btn = 3; x = release's x; y = release's y;
- *    btn_clk = click's 0, 1, or 2; x_clk = click's x; y_clk = click's y.
- */
+// On click:
+//    btn = 0 (left), 1 (middle), or 2 (right) + 4 if double-clicked;
+//    x = 0 to g_tc_COLS-1; y = 0 to g_tc_LINES-1;
+//    btn_clk = 0, 1, or 2 (no 4); x_clk = x; y_clk = y.
+// On release:
+//    btn = 3; x = release's x; y = release's y;
+//    btn_clk = click's 0, 1, or 2; x_clk = click's x; y_clk = click's y.
+//
 void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 {
     if (check_mouse_bar(btn, x,y, btn_clk, x_clk,y_clk))
@@ -3847,10 +3846,9 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             break;
 
         case 2:
-            /* move forward or backwards a page:
-             *   if cursor in top half: backwards
-             *   if cursor in bottom half: forwards
-             */
+            // move forward or backwards a page:
+            //   if cursor in top half: backwards
+            //   if cursor in bottom half: forwards
             if (y < g_tc_LINES/2)
             {
                 push_char('<' | 0200);
