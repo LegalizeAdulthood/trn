@@ -183,9 +183,9 @@ int uue_prescan(char *bp, char **filenamep, int *partp, int *totalp)
         && (!std::strncmp(bp, "BEGIN", 5) || !std::strncmp(bp, "--- BEGIN ---", 12) //
             || (bp[0] == 'M' && std::strlen(bp) == UU_LENGTH)))
     {
-        /* Found the start of a section of uuencoded data
-         * and have the part N of M information.
-         */
+        // Found the start of a section of uuencoded data
+        // and have the part N of M information.
+        //
         return 1;
     }
     if (string_case_equal(bp, "x-file-name: ", 13))
