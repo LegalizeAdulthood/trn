@@ -78,9 +78,8 @@ char *sc_easy_append()
         get_cmd(g_buf);
         std::printf("%c\n",*g_buf);
         filechar = *g_buf;
-        /* If error checking is done later, then an error should set
-         * filechar to '\0' and continue the while loop.
-         */
+        // If error checking is done later, then an error should set
+        // filechar to '\0' and continue the while loop.
     }
     *s++ = filechar;
     *s++ = ' ';
