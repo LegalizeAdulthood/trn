@@ -1,6 +1,6 @@
 /* artio.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "config/common.h"
 #include "trn/artio.h"
@@ -25,16 +25,16 @@
 #include <cstdio>
 #include <cstring>
 
-ArticlePosition g_art_pos{};              /* byte position in article file */
-ArticleLine     g_art_line_num{};         /* current line number in article file */
-std::FILE      *g_art_fp{};               /* current article file pointer */
-ArticleNum      g_open_art{};             /* the article number we have open */
+ArticlePosition g_art_pos{};              // byte position in article file
+ArticleLine     g_art_line_num{};         // current line number in article file
+std::FILE      *g_art_fp{};               // current article file pointer
+ArticleNum      g_open_art{};             // the article number we have open
 char           *g_art_buf{};              //
 long            g_art_buf_pos{};          //
 long            g_art_buf_seek{};         //
 long            g_art_buf_len{};          //
 char            g_wrapped_nl{WRAPPED_NL}; //
-int             g_word_wrap_offset{8};    /* right-hand column size (0 is off) */
+int             g_word_wrap_offset{8};    // right-hand column size (0 is off)
 
 static long s_art_buf_size{};
 
@@ -50,7 +50,7 @@ void art_io_final()
     safe_free0(g_art_buf);
 }
 
-/* open an article, unless it's already open */
+// open an article, unless it's already open
 
 std::FILE *art_open(ArticleNum art_num, ArticleNum pos)
 {
@@ -61,10 +61,10 @@ std::FILE *art_open(ArticleNum art_num, ArticleNum pos)
         errno = ENOENT;
         return nullptr;
     }
-    if (g_open_art == art_num)            /* this article is already open? */
+    if (g_open_art == art_num)            // this article is already open?
     {
-        seek_art(pos);                   /* yes: just seek the file */
-        return g_art_fp;                 /* and say we succeeded */
+        seek_art(pos);                   // yes: just seek the file
+        return g_art_fp;                 // and say we succeeded
     }
     art_close();
 
@@ -76,7 +76,7 @@ std::FILE *art_open(ArticleNum art_num, ArticleNum pos)
         }
         else
         {
-            char art_name[MAX_FILENAME]; /* filename of current article */
+            char art_name[MAX_FILENAME]; // filename of current article
             std::sprintf(art_name, "%ld", (long) art_num);
             g_art_fp = std::fopen(art_name, "r");
         }
@@ -96,24 +96,24 @@ std::FILE *art_open(ArticleNum art_num, ArticleNum pos)
         }
         else
         {
-            g_open_art = art_num; /* remember what we did here */
+            g_open_art = art_num; // remember what we did here
             seek_art(pos);
         }
         break;
     }
-    return g_art_fp;                     /* and return either fp or nullptr */
+    return g_art_fp;                     // and return either fp or nullptr
 }
 
 void art_close()
 {
-    if (g_art_fp != nullptr)             /* article still open? */
+    if (g_art_fp != nullptr)             // article still open?
     {
         if (g_data_source->flags & DF_REMOTE)
         {
             nntp_finish_body(FB_DISCARD);
         }
-        std::fclose(g_art_fp);                        /* close it */
-        g_art_fp = nullptr;                      /* and tell the world */
+        std::fclose(g_art_fp);                        // close it
+        g_art_fp = nullptr;                      // and tell the world
         g_open_art = 0;
         clear_art_buf();
     }
@@ -246,7 +246,7 @@ read_more:
 
     default:
         read_something = 1;
-        /* The -1 leaves room for appending a newline, if needed */
+        // The -1 leaves room for appending a newline, if needed
         if (!read_art(bp + o, s_art_buf_size - g_art_buf_pos - o - 1))
         {
             if (!read_offset)
@@ -287,7 +287,7 @@ mime_switch:
     {
     case ISO_TEXT_MIME:
         g_mime_state = TEXT_MIME;
-        /* FALL THROUGH */
+        // FALL THROUGH
 
     case TEXT_MIME:
     case HTML_TEXT_MIME:
@@ -388,7 +388,7 @@ mime_switch:
                 goto mime_switch;
             }
         }
-        /* FALL THROUGH */
+        // FALL THROUGH
     }
 
     case SKIP_MIME:
@@ -434,7 +434,7 @@ mime_switch:
             }
             seek_art(g_raw_art_size);
         }
-        /* FALL THROUGH */
+        // FALL THROUGH
 
     case BETWEEN_MIME:
         len = std::strlen(g_multipart_separator.c_str()) + 1;
@@ -476,7 +476,7 @@ mime_switch:
         {
             g_multimedia_mime = true;
         }
-        /* FALL THROUGH */
+        // FALL THROUGH
 
     default:
         if (view_inline && g_first_view < g_art_line_num //
