@@ -1,6 +1,6 @@
 /* trn/opt.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_OPT_H
 #define TRN_OPT_H
 
@@ -11,7 +11,7 @@
 
 #include <string>
 
-/* Display Options */
+// Display Options
 enum OptionIndex
 {
     OI_NONE = -1,
@@ -25,7 +25,7 @@ enum OptionIndex
     OI_CHARSET,
     OI_FILTER_CONTROL_CHARACTERS,
 
-    /* Selector Options */
+    // Selector Options
     OI_USE_UNIV_SEL = OI_FILTER_CONTROL_CHARACTERS + 2,
     OI_UNIV_SEL_ORDER,
     OI_UNIV_FOLLOW,
@@ -47,7 +47,7 @@ enum OptionIndex
     OI_USE_SEL_NUM,
     OI_SEL_NUM_GOTO,
 
-    /* Newsreading Options */
+    // Newsreading Options
     OI_USE_THREADS = OI_SEL_NUM_GOTO + 2,
     OI_SELECT_MY_POSTS,
     OI_INITIAL_ARTICLE_LINES,
@@ -64,15 +64,15 @@ enum OptionIndex
     OI_HEADER_MAGIC,
     OI_HEADER_HIDING,
 
-    /* Posting Options */
+    // Posting Options
     OI_CITED_TEXT_STRING = OI_HEADER_HIDING + 2,
 
-    /* Save Options */
+    // Save Options
     OI_SAVE_DIR = OI_CITED_TEXT_STRING + 2,
     OI_AUTO_SAVE_NAME,
     OI_SAVE_FILE_TYPE,
 
-    /* Mouse Options */
+    // Mouse Options
     OI_USE_MOUSE = OI_SAVE_FILE_TYPE + 2,
     OI_MOUSE_MODES,
     OI_UNIV_SEL_BTNS,
@@ -83,11 +83,11 @@ enum OptionIndex
     OI_OPTION_SEL_BTNS,
     OI_ART_PAGER_BTNS,
 
-    /* MIME Options */
+    // MIME Options
     OI_MULTIPART_SEPARATOR = OI_ART_PAGER_BTNS + 2,
     OI_AUTO_VIEW_INLINE,
 
-    /* Misc Options */
+    // Misc Options
     OI_NEW_GROUP_CHECK = OI_AUTO_VIEW_INLINE + 2,
     OI_RESTRICTION_INCLUDES_EMPTIES,
     OI_APPEND_UNSUBSCRIBED_GROUPS,
