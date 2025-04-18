@@ -51,8 +51,8 @@ using WaitStatus = int;
 
 bool g_waiting{}; // waiting for subprocess (in doshell)?
 bool g_no_wait_fork{};
-/* the strlen and the buffer length of "some_buf" after a call to:
- *     some_buf = get_a_line(bufptr,bufsize,realloc,fp); */
+// the strlen and the buffer length of "some_buf" after a call to:
+//     some_buf = get_a_line(bufptr,bufsize,realloc,fp);
 int        g_len_last_line_got{};
 MemorySize g_buf_len_last_line_got{};
 
@@ -370,9 +370,9 @@ int mod;
 }
 #endif
 
-/*
- * Get working directory
- */
+//
+// Get working directory
+//
 char *trn_getwd(char *buf, int buflen)
 {
     std::error_code       ec;
