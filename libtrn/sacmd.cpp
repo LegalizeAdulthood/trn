@@ -1,4 +1,4 @@
-/* This file Copyright 1992 by Clifford A. Adams */
+// This file Copyright 1992 by Clifford A. Adams
 /* sacmd.c
  *
  * main command loop
@@ -8,7 +8,7 @@
 #include "trn/sacmd.h"
 
 #include "trn/list.h"
-#include "trn/ngdata.h" /* for g_threaded_group */
+#include "trn/ngdata.h" // for g_threaded_group
 #include "trn/bits.h"
 #include "trn/cache.h"
 #include "trn/ng.h"
@@ -21,74 +21,74 @@
 #include "trn/scmd.h"
 #include "trn/score.h"
 #include "trn/sdisp.h"
-#include "trn/smisc.h" /* needed? */
+#include "trn/smisc.h" // needed?
 #include "trn/sorder.h"
 #include "trn/spage.h"
-#include "trn/terminal.h" /* for LINES */
+#include "trn/terminal.h" // for LINES
 #include "trn/util.h"
 #include "util/util2.h"
 
 #include <cstdio>
 #include <cstring>
 
-static char *s_sa_extract_dest{}; /* use this command on an extracted file */
-static bool  s_sa_extract_junk{}; /* junk articles after extracting them */
+static char *s_sa_extract_dest{}; // use this command on an extracted file
+static bool  s_sa_extract_junk{}; // junk articles after extracting them
 
-/* several basic commands are already done by s_docmd (Scan level) */
+// several basic commands are already done by s_docmd (Scan level)
 /* interprets command in g_buf, returning 0 to continue looping,
  * a condition code (negative #s) or an art# to read.  Also responsible
  * for setting refresh flags if necessary.
  */
 int sa_do_cmd()
 {
-    long    b; /* misc. artnum */
-    int     i; /* for misc. purposes */
+    long    b; // misc. artnum
+    int     i; // for misc. purposes
 
     long    a = (long)g_page_ents[g_s_ptr_page_line].ent_num;
     ArticleNum artnum = g_sa_ents[a].artnum;
 
     switch (*g_buf)
     {
-    case '+': /* enter thread selector */
+    case '+': // enter thread selector
         if (!g_threaded_group)
         {
             s_beep();
             return 0;
         }
-        g_buf[0] = '+'; /* fake up command for return */
+        g_buf[0] = '+'; // fake up command for return
         g_buf[1] = '\0';
-        g_sa_art = artnum; /* give it somewhere to point */
-        s_save_context();       /* for possible later changes */
-        return SA_FAKE; /* fake up the command. */
+        g_sa_art = artnum; // give it somewhere to point
+        s_save_context();       // for possible later changes
+        return SA_FAKE; // fake up the command.
 
-    case 'K': /* kill below a threshold */
-        *g_buf = ' ';                           /* for finish_cmd() */
+    case 'K': // kill below a threshold
+        *g_buf = ' ';                           // for finish_cmd()
         if (!s_finish_cmd("Kill below or equal score:"))
         {
             break;
         }
-        /* make **sure** that there is a number here */
+        // make **sure** that there is a number here
         i = std::atoi(g_buf+1);
         if (i == 0)
         {
-            /* it might not be a number */
+            // it might not be a number
             char *s = g_buf + 1;
             if (*s != '0' && ((*s != '+' && *s != '-') || s[1] != '0'))
             {
-                /* text was not a numeric 0 */
+                // text was not a numeric 0
                 s_beep();
-                return 0;                       /* beep but do nothing */
+                return 0;                       // beep but do nothing
             }
         }
         sc_kill_threshold(i);
         g_s_refill = true;
-        g_s_ref_top = true;     /* refresh # of articles */
+        g_s_ref_top = true;     // refresh # of articles
         break;
 
-    case 'D': /* kill unmarked "on" page */
+    case 'D': // kill unmarked "on" page
         for (int j = 0; j <= g_s_bot_ent; j++)
         {
-            /* This is a difficult decision, with no obviously good behavior. */
+            // This is a difficult decision, with no obviously good behavior.
             /* Do not kill threads with the first article marked, as it is probably
              * not what the user wanted.
              */
@@ -98,19 +98,19 @@ int sa_do_cmd()
                                  g_page_ents[j].ent_num);
             }
         }
-        /* consider: should it start reading? */
+        // consider: should it start reading?
         b = sa_read_marked_elig();
         if (b)
         {
             sa_clear_mark(b);
             return b;
         }
-        g_s_ref_top = true;     /* refresh # of articles */
+        g_s_ref_top = true;     // refresh # of articles
         g_s_refill = true;
         break;
 
-    case 'J': /* kill marked "on" page */
-        /* If in "fold" mode, kill threads with the first article marked */
+    case 'J': // kill marked "on" page
+        // If in "fold" mode, kill threads with the first article marked
         if (g_sa_mode_fold)
         {
             for (int j = 0; j <= g_s_bot_ent; j++)
@@ -129,11 +129,11 @@ int sa_do_cmd()
             }
         }
         g_s_refill = true;
-        g_s_ref_top = true;     /* refresh # of articles */
+        g_s_ref_top = true;     // refresh # of articles
         break;
 
-    case 'X': /* kill unmarked (basic-eligible) in group */
-        *g_buf = '?';                           /* for finish_cmd() */
+    case 'X': // kill unmarked (basic-eligible) in group
+        *g_buf = '?';                           // for finish_cmd()
         if (!s_finish_cmd("Junk all unmarked articles"))
         {
             break;
@@ -163,10 +163,10 @@ int sa_do_cmd()
             }
             if (!sa_marked(i) && !was_read(g_sa_ents[i].artnum))
             {
-                if (g_sa_mode_fold)             /* new semantics */
+                if (g_sa_mode_fold)             // new semantics
                 {
                     long j;
-                    /* make j == 0 if no prior marked articles in the thread. */
+                    // make j == 0 if no prior marked articles in the thread.
                     for (j = i; j; j = sa_subj_thread_prev(j))
                     {
                         if (sa_marked(j))
@@ -174,9 +174,9 @@ int sa_do_cmd()
                             break;
                         }
                     }
-                    if (j)      /* there was a marked article */
+                    if (j)      // there was a marked article
                     {
-                        continue;       /* article selection loop */
+                        continue;       // article selection loop
                     }
                 }
                 one_less_art_num(g_sa_ents[i].artnum);
@@ -189,17 +189,17 @@ int sa_do_cmd()
             return b;
         }
         g_s_refill = true;
-        g_s_ref_top = true;     /* refresh # of articles */
+        g_s_ref_top = true;     // refresh # of articles
         break;
 
-    case 'c': /* catchup */
+    case 'c': // catchup
         s_go_bot();
         ask_catchup();
         g_s_refill = true;
         g_s_ref_all = true;
         break;
 
-    case 'o': /* toggle between score and arrival orders */
+    case 'o': // toggle between score and arrival orders
         s_rub_ptr();
         if (g_sa_mode_order==SA_ORDER_ARRIVAL)
         {
@@ -214,11 +214,11 @@ int sa_do_cmd()
             g_sc_delay = false;
             sc_init(true);
         }
-        if (g_sa_mode_order == SA_ORDER_DESCENDING && !g_sc_initialized) /* score order */
+        if (g_sa_mode_order == SA_ORDER_DESCENDING && !g_sc_initialized) // score order
         {
-            g_sa_mode_order = SA_ORDER_ARRIVAL; /* nope... (maybe allow later) */
+            g_sa_mode_order = SA_ORDER_ARRIVAL; // nope... (maybe allow later)
         }
-        /* if we go into score mode, make sure score is displayed */
+        // if we go into score mode, make sure score is displayed
         if (g_sa_mode_order == SA_ORDER_DESCENDING && !g_sa_mode_desc_score)
         {
             g_sa_mode_desc_score = true;
@@ -229,8 +229,8 @@ int sa_do_cmd()
         g_s_ref_bot = true;
         break;
 
-    case 'O': /* change article sorting order */
-        if (g_sa_mode_order != SA_ORDER_DESCENDING)   /* not in score order */
+    case 'O': // change article sorting order
+        if (g_sa_mode_order != SA_ORDER_DESCENDING)   // not in score order
         {
             s_beep();
             break;
@@ -241,51 +241,51 @@ int sa_do_cmd()
         g_s_refill = true;
         break;
 
-    case 'R': /* rescore articles */
+    case 'R': // rescore articles
         if (!g_sc_initialized)
         {
             break;
         }
-        /* clear to end of screen */
+        // clear to end of screen
         clear_rest();
-        g_s_ref_all = true;     /* refresh everything */
+        g_s_ref_all = true;     // refresh everything
         std::printf("\nRescoring articles...\n");
         sc_rescore();
         s_sort();
         s_go_top_ents();
         g_s_refill = true;
-        eat_typeahead();        /* stay in control. */
+        eat_typeahead();        // stay in control.
         break;
 
-    case Ctl('e'):            /* edit scorefile for group */
-          /* clear to end of screen */
+    case Ctl('e'):            // edit scorefile for group
+          // clear to end of screen
           clear_rest();
-        g_s_ref_all = true;  /* refresh everything */
-        sc_score_cmd("e"); /* edit scorefile */
-        eat_typeahead();   /* stay in control. */
+        g_s_ref_all = true;  // refresh everything
+        sc_score_cmd("e"); // edit scorefile
+        eat_typeahead();   // stay in control.
         break;
 
-    case '\t':        /* TAB: toggle threadcount display */
+    case '\t':        // TAB: toggle threadcount display
         g_sa_mode_desc_thread_count = !g_sa_mode_desc_thread_count;
         g_s_ref_desc = 0;
         break;
 
-    case 'a': /* toggle author display */
+    case 'a': // toggle author display
         g_sa_mode_desc_author = !g_sa_mode_desc_author;
         g_s_ref_desc = 0;
         break;
 
-    case '%': /* toggle article # display */
+    case '%': // toggle article # display
         g_sa_mode_desc_art_num = !g_sa_mode_desc_art_num;
         g_s_ref_desc = 0;
         break;
 
-    case 'U': /* toggle unread/unread+read mode */
+    case 'U': // toggle unread/unread+read mode
         g_sa_mode_read_elig = !g_sa_mode_read_elig;
-/* maybe later use the flag to not do this more than once per newsgroup */
+// maybe later use the flag to not do this more than once per newsgroup
         for (int j = 1; j < g_sa_num_ents; j++)
         {
-            s_order_add(j);             /* duplicates ignored */
+            s_order_add(j);             // duplicates ignored
         }
         if (sa_eligible(s_first()) || s_next_elig(s_first()))
         {
@@ -305,24 +305,24 @@ int sa_do_cmd()
             s_go_top_ents();
             g_s_refill = true;
         }
-        else /* quit out: no articles */
+        else // quit out: no articles
         {
             return SA_QUIT;
         }
         break;
 
-    case 'F': /* Fold */
+    case 'F': // Fold
         g_sa_mode_fold = !g_sa_mode_fold;
         g_s_refill = true;
         g_s_ref_top = true;
         break;
 
-    case 'f': /* follow */
+    case 'f': // follow
         g_sa_follow = !g_sa_follow;
         g_s_ref_top = true;
         break;
 
-    case 'Z': /* Zero (wipe) selections... */
+    case 'Z': // Zero (wipe) selections...
         for (int j = 1; j < g_sa_num_ents; j++)
         {
             sa_clear_select1(j);
@@ -332,17 +332,17 @@ int sa_do_cmd()
         {
             break;
         }
-        g_s_ref_all = true;     /* otherwise won't be refreshed */
-        /* if in zoom mode, turn it off... */
-        /* FALL THROUGH */
+        g_s_ref_all = true;     // otherwise won't be refreshed
+        // if in zoom mode, turn it off...
+        // FALL THROUGH
 
-    case 'z': /* zoom mode toggle */
+    case 'z': // zoom mode toggle
         g_sa_mode_zoom = !g_sa_mode_zoom;
         if (g_sa_unzoom_refold && !g_sa_mode_zoom)
         {
             g_sa_mode_fold = true;
         }
-        /* toggle mode again if no elibible articles left */
+        // toggle mode again if no elibible articles left
         if (sa_eligible(s_first()) || s_next_elig(s_first()))
         {
             g_s_ref_top = true;
@@ -352,21 +352,21 @@ int sa_do_cmd()
         else
         {
             s_beep();
-            g_sa_mode_zoom = !g_sa_mode_zoom;   /* toggle it right back */
+            g_sa_mode_zoom = !g_sa_mode_zoom;   // toggle it right back
         }
         break;
 
-    case 'j': /* junk just this article */
+    case 'j': // junk just this article
         (void)sa_art_cmd(false,SA_KILL,a);
-        /* later refill the page */
+        // later refill the page
         g_s_refill = true;
-        g_s_ref_top = true;     /* refresh # of articles */
+        g_s_ref_top = true;     // refresh # of articles
         break;
 
-    case 'n': /* next art */
+    case 'n': // next art
     case ']':
         s_rub_ptr();
-        if (g_s_ptr_page_line<(g_s_bot_ent)) /* more on page... */
+        if (g_s_ptr_page_line<(g_s_bot_ent)) // more on page...
         {
             g_s_ptr_page_line +=1;
         }
@@ -377,18 +377,18 @@ int sa_do_cmd()
                 s_beep();
                 return 0;
             }
-            s_go_next_page();   /* will jump to top too... */
+            s_go_next_page();   // will jump to top too...
         }
         break;
 
-    case 'k': /* kill subject thread */
-    case ',': /* might later clone TRN ',' */
+    case 'k': // kill subject thread
+    case ',': // might later clone TRN ','
         (void)sa_art_cmd(true,SA_KILL,a);
         g_s_refill = true;
-        g_s_ref_top = true;     /* refresh # of articles */
+        g_s_ref_top = true;     // refresh # of articles
         break;
 
-    case Ctl('n'):    /* follow subject forward */
+    case Ctl('n'):    // follow subject forward
           i = sa_subj_thread(a);
         for (b = s_next_elig(a); b; b = s_next_elig(b))
         {
@@ -397,49 +397,49 @@ int sa_do_cmd()
                 break;
             }
         }
-        if (!b)         /* no next w/ same subject */
+        if (!b)         // no next w/ same subject
         {
             s_beep();
             return 0;
         }
         for (int j = g_s_ptr_page_line+1; j <= g_s_bot_ent; j++)
         {
-            if (g_page_ents[j].ent_num == b)     /* art is on same page */
+            if (g_page_ents[j].ent_num == b)     // art is on same page
             {
                 s_rub_ptr();
                 g_s_ptr_page_line = j;
                 return 0;
             }
         }
-        /* article is not on page... */
-        (void)s_fill_page_forward(b);  /* fill forward (*must* work) */
+        // article is not on page...
+        (void)s_fill_page_forward(b);  // fill forward (*must* work)
         g_s_ptr_page_line = 0;
         break;
 
-    case Ctl('a'):    /* next article with same author... */
-        /* good for scoring */
+    case Ctl('a'):    // next article with same author...
+        // good for scoring
         b = sa_wrap_next_author(a);
-        /* rest of code copied from next-subject case above */
-        if (!b || (a == b))     /* no next w/ same subject */
+        // rest of code copied from next-subject case above
+        if (!b || (a == b))     // no next w/ same subject
         {
             s_beep();
             return 0;
         }
         for (int j = 0; j <= g_s_bot_ent; j++)
         {
-            if (g_page_ents[j].ent_num == b)     /* art is on same page */
+            if (g_page_ents[j].ent_num == b)     // art is on same page
             {
                 s_rub_ptr();
                 g_s_ptr_page_line = j;
                 return 0;
             }
         }
-        /* article is not on page... */
-        (void)s_fill_page_forward(b);  /* fill forward (*must* work) */
+        // article is not on page...
+        (void)s_fill_page_forward(b);  // fill forward (*must* work)
         g_s_ptr_page_line = 0;
         break;
 
-    case Ctl('p'):    /* follow subject backwards */
+    case Ctl('p'):    // follow subject backwards
           i = sa_subj_thread(a);
         for (b = s_prev_elig(a); b; b = s_prev_elig(b))
         {
@@ -448,64 +448,64 @@ int sa_do_cmd()
                 break;
             }
         }
-        if (!b)         /* no next w/ same subject */
+        if (!b)         // no next w/ same subject
         {
             s_beep();
             return 0;
         }
         for (int j = g_s_ptr_page_line-1; j >= 0; j--)
         {
-            if (g_page_ents[j].ent_num == b)     /* art is on same page */
+            if (g_page_ents[j].ent_num == b)     // art is on same page
             {
                 s_rub_ptr();
                 g_s_ptr_page_line = j;
                 return 0;
             }
         }
-        /* article is not on page... */
-        (void)s_fill_page_backward(b);  /* fill backward (*must* work) */
-        g_s_ptr_page_line = g_s_bot_ent;  /* go to bottom of page */
-        (void)s_refill_page();   /* make sure page is full */
-        g_s_ref_all = true;             /* make everything redrawn... */
+        // article is not on page...
+        (void)s_fill_page_backward(b);  // fill backward (*must* work)
+        g_s_ptr_page_line = g_s_bot_ent;  // go to bottom of page
+        (void)s_refill_page();   // make sure page is full
+        g_s_ref_all = true;             // make everything redrawn...
         break;
 
-    case 'G': /* go to article number */
-        *g_buf = ' ';                           /* for finish_cmd() */
+    case 'G': // go to article number
+        *g_buf = ' ';                           // for finish_cmd()
         if (!s_finish_cmd("Goto article:"))
         {
             break;
         }
-        /* make **sure** that there is a number here */
+        // make **sure** that there is a number here
         i = std::atoi(g_buf+1);
         if (i == 0)
         {
-            /* it might not be a number */
+            // it might not be a number
             char *s = g_buf + 1;
             if (*s != '0' && ((*s != '+' && *s != '-') || s[1] != '0'))
             {
-                /* text was not a numeric 0 */
+                // text was not a numeric 0
                 s_beep();
-                return 0;                       /* beep but do nothing */
+                return 0;                       // beep but do nothing
             }
         }
         g_sa_art = (ArticleNum)i;
-        return SA_READ;                 /* special code to really return */
+        return SA_READ;                 // special code to really return
 
-    case 'N': /* next newsgroup */
+    case 'N': // next newsgroup
         return SA_NEXT;
 
-    case 'P': /* previous newsgroup */
+    case 'P': // previous newsgroup
         return SA_PRIOR;
 
     case '`':
         return SA_QUIT_SEL;
 
-    case 'q': /* quit newsgroup */
+    case 'q': // quit newsgroup
         return SA_QUIT;
 
-    case 'Q': /* start reading and quit SA mode */
+    case 'Q': // start reading and quit SA mode
         g_sa_in = false;
-        /* FALL THROUGH */
+        // FALL THROUGH
 
     case '\n':
     case ' ':
@@ -515,33 +515,33 @@ int sa_do_cmd()
             sa_clear_mark(b);
             return b;
         }
-        /* FALL THROUGH */
+        // FALL THROUGH
 
-    case 'r': /* read article... */
-        /* everything needs to be refreshed... */
+    case 'r': // read article...
+        // everything needs to be refreshed...
         g_s_ref_all = true;
         return a;
 
-    case 'm': /* toggle mark on one article */
-    case 'M': /* toggle mark on thread */
+    case 'm': // toggle mark on one article
+    case 'M': // toggle mark on thread
         s_rub_ptr();
         (void)sa_art_cmd((*g_buf == 'M'),SA_MARK,a);
         if (!g_sa_mark_stay)
         {
-            /* go to next art on page or top of page if at bottom */
-            if (g_s_ptr_page_line < g_s_bot_ent)        /* more on page */
+            // go to next art on page or top of page if at bottom
+            if (g_s_ptr_page_line < g_s_bot_ent)        // more on page
             {
                 g_s_ptr_page_line +=1;
             }
             else
             {
-                s_go_top_page();        /* wrap around to top */
+                s_go_top_page();        // wrap around to top
             }
         }
         break;
 
-    case 's': /* toggle select1 on one article */
-    case 'S': /* toggle select1 on a thread */
+    case 's': // toggle select1 on one article
+    case 'S': // toggle select1 on a thread
         if (!g_sa_mode_zoom)
         {
             s_rub_ptr();
@@ -552,34 +552,34 @@ int sa_do_cmd()
          */
         if (!g_sa_mark_stay && !g_sa_mode_zoom)
         {
-            /* go to next art on page or top of page if at bottom */
-            if (g_s_ptr_page_line<(g_s_bot_ent))        /* more on page */
+            // go to next art on page or top of page if at bottom
+            if (g_s_ptr_page_line<(g_s_bot_ent))        // more on page
             {
                 g_s_ptr_page_line +=1;
             }
             else
             {
-                s_go_top_page();        /* wrap around to top */
+                s_go_top_page();        // wrap around to top
             }
         }
         break;
 
-    case 'e': /* extract marked articles */
+    case 'e': // extract marked articles
 #if 0
         if (!sa_extract_start())
         {
-            break;              /* aborted */
+            break;              // aborted
         }
         if (!decode_fp)
         {
-            *decode_dest = '\0';        /* wipe old name */
+            *decode_dest = '\0';        // wipe old name
         }
         a = s_first();
         if (!s_eligible(a))
         {
             a = s_next_elig(a);
         }
-        flag = false;           /* have we found a marked one? */
+        flag = false;           // have we found a marked one?
         for ( ; a; a = s_next_elig(a))
         {
             if (sa_marked(a))
@@ -588,20 +588,20 @@ int sa_do_cmd()
                 (void)sa_art_cmd(false,SA_EXTRACT,a);
             }
         }
-        if (!flag)                      /* none were marked */
+        if (!flag)                      // none were marked
         {
             a = g_page_ents[g_s_ptr_page_line].entnum;
             (void)sa_art_cmd(false,SA_EXTRACT,a);
         }
         g_s_refill = true;
-        g_s_ref_top = true;     /* refresh # of articles */
+        g_s_ref_top = true;     // refresh # of articles
         (void)get_anything();
         eat_typeahead();
 #endif
         break;
 
 #if 0
-    case 'E': /* end extraction, do command on image */
+    case 'E': // end extraction, do command on image
         g_s_ref_all = true;
         s_go_bot();
         if (decode_fp)
@@ -621,7 +621,7 @@ int sa_do_cmd()
             std::printf("\n");
             if (*g_buf == 'y' || *g_buf == 'Y')
             {
-                decode_end();   /* will remove file */
+                decode_end();   // will remove file
                 break;
             }
             std::fclose(decode_fp);
@@ -630,7 +630,7 @@ int sa_do_cmd()
         if (!sa_extracted_use)
         {
             sa_extracted_use = safe_malloc(LBUFLEN);
-/* later consider a variable for the default command */
+// later consider a variable for the default command
             *sa_extracted_use = '\0';
         }
         if (!*decode_dest)
@@ -641,7 +641,7 @@ int sa_do_cmd()
             {
                 break;
             }
-            if (!g_buf[1])      /* user just typed return */
+            if (!g_buf[1])      // user just typed return
             {
                 break;
             }
@@ -666,16 +666,16 @@ int sa_do_cmd()
         {
             std::printf("Use command (no default):\n");
         }
-        *g_buf = ':';                   /* cosmetic */
+        *g_buf = ':';                   // cosmetic
         if (!s_finish_cmd(nullptr))
         {
-            break;      /* command rubbed out */
+            break;      // command rubbed out
         }
-        if (g_buf[1] != '\0')           /* typed in a command */
+        if (g_buf[1] != '\0')           // typed in a command
         {
             safecpy(sa_extracted_use,g_buf+1,LBUFLEN);
         }
-        if (*sa_extracted_use == '\0')  /* no command */
+        if (*sa_extracted_use == '\0')  // no command
         {
             break;
         }
@@ -687,7 +687,7 @@ int sa_do_cmd()
         break;
 #endif
 
-    case '"':                 /* append to local SCORE file */
+    case '"':                 // append to local SCORE file
         s_go_bot();
         g_s_ref_all = true;
         std::printf("Enter score append command or type RETURN for a menu\n");
@@ -704,7 +704,7 @@ int sa_do_cmd()
         eat_typeahead();
         break;
 
-    case '\'':                        /* execute scoring command */
+    case '\'':                        // execute scoring command
         s_go_bot();
         g_s_ref_all = true;
         std::printf("\nEnter scoring command or type RETURN for a menu\n");
@@ -725,7 +725,7 @@ int sa_do_cmd()
     default:
         s_beep();
         return 0;
-    } /* switch */
+    } // switch
     return 0;
 }
 
@@ -738,18 +738,18 @@ bool sa_extract_start()
     }
     s_go_bot();
     std::printf("To directory (default %s)\n",s_sa_extract_dest);
-    *g_buf = ':';                       /* cosmetic */
+    *g_buf = ':';                       // cosmetic
     if (!s_finish_cmd(nullptr))
     {
-        return false;           /* command rubbed out */
+        return false;           // command rubbed out
     }
     g_s_ref_all = true;
-    /* if the user typed something, copy it to the destination */
+    // if the user typed something, copy it to the destination
     if (g_buf[1] != '\0')
     {
         safe_copy(s_sa_extract_dest,file_exp(g_buf+1),LINE_BUF_LEN);
     }
-    /* set a mode for this later? */
+    // set a mode for this later?
     std::printf("\nMark extracted articles as read? [yn]");
     std::fflush(stdout);
     get_cmd(g_buf);
@@ -759,11 +759,11 @@ bool sa_extract_start()
 }
 
 
-/* sa_art_cmd primitive: actually does work on an article */
+// sa_art_cmd primitive: actually does work on an article
 void sa_art_cmd_prim(SaCommand cmd, long a)
 {
     ArticleNum artnum = g_sa_ents[a].artnum;
-/* do more onpage status refreshes when in unread+read mode? */
+// do more onpage status refreshes when in unread+read mode?
     switch (cmd)
     {
     case SA_KILL_MARKED:
@@ -777,17 +777,17 @@ void sa_art_cmd_prim(SaCommand cmd, long a)
     case SA_KILL_UNMARKED:
         if (sa_marked(a))
         {
-            break;              /* end case early */
+            break;              // end case early
         }
         one_less_art_num(artnum);
         break;
 
-    case SA_KILL:               /* junk this article */
-        sa_clear_mark(a);       /* clearing should be fast */
+    case SA_KILL:               // junk this article
+        sa_clear_mark(a);       // clearing should be fast
         one_less_art_num(artnum);
         break;
 
-    case SA_MARK:               /* mark this article */
+    case SA_MARK:               // mark this article
         if (sa_marked(a))
         {
             sa_clear_mark(a);
@@ -799,13 +799,13 @@ void sa_art_cmd_prim(SaCommand cmd, long a)
         s_ref_status_on_page(a);
         break;
 
-    case SA_SELECT:             /* select this article */
+    case SA_SELECT:             // select this article
         if (sa_selected1(a))
         {
             sa_clear_select1(a);
             if (g_sa_mode_zoom)
             {
-                g_s_refill = true;      /* article is now ineligible */
+                g_s_refill = true;      // article is now ineligible
             }
         }
         else
@@ -818,7 +818,7 @@ void sa_art_cmd_prim(SaCommand cmd, long a)
     case SA_EXTRACT:
         sa_clear_mark(a);
         g_art = artnum;
-        *g_buf = 'e';           /* fake up the extract command */
+        *g_buf = 'e';           // fake up the extract command
         safe_copy(g_buf+1,s_sa_extract_dest,LINE_BUF_LEN);
         (void)save_article();
         if (s_sa_extract_junk)
@@ -826,31 +826,31 @@ void sa_art_cmd_prim(SaCommand cmd, long a)
             one_less_art_num(artnum);
         }
         break;
-    } /* switch */
+    } // switch
 }
 
-/* return value is unused for now, but may be later... */
-/* note: refilling after a kill is the caller's responsibility */
-// int multiple;                /* follow the thread? */
-// int cmd;             /* what to do */
-// long a;              /* article # to affect or start with */
+// return value is unused for now, but may be later...
+// note: refilling after a kill is the caller's responsibility
+// int multiple;                // follow the thread?
+// int cmd;             // what to do
+// long a;              // article # to affect or start with
 int sa_art_cmd(int multiple, SaCommand cmd, long a)
 {
-    sa_art_cmd_prim(cmd,a);     /* do the first article */
+    sa_art_cmd_prim(cmd,a);     // do the first article
     if (!multiple)
     {
-        return 0;               /* no problem... */
+        return 0;               // no problem...
     }
     long b = a;
     while ((b = sa_subj_thread_next(b)) != 0)
     {
-        /* if this is basically eligible and the same subject thread# */
+        // if this is basically eligible and the same subject thread#
         sa_art_cmd_prim(cmd,b);
     }
     return 0;
 }
 
-/* XXX this needs a good long thinking session before re-activating */
+// XXX this needs a good long thinking session before re-activating
 long sa_wrap_next_author(long a)
 {
 #ifdef UNDEF
@@ -858,19 +858,19 @@ long sa_wrap_next_author(long a)
     char* s;
     char* s2;
 
-    s = (char*)sa_desc_author(a,20);    /* 20 characters should be enough */
+    s = (char*)sa_desc_author(a,20);    // 20 characters should be enough
     for (b = s_next_elig(a); b; b = s_next_elig(b))
     {
         if (std::strstr(get_from_line(b),s))
         {
-            break;      /* out of the for loop */
+            break;      // out of the for loop
         }
     }
-    if (b)      /* found it */
+    if (b)      // found it
     {
         return b;
     }
-    /* search from first article (maybe return original art) */
+    // search from first article (maybe return original art)
     b = s_first();
     if (!sa_eligible(b))
     {
@@ -880,11 +880,11 @@ long sa_wrap_next_author(long a)
     {
         if (std::strstr(get_from_line(b),s))
         {
-            break;      /* out of the for loop */
+            break;      // out of the for loop
         }
     }
     return b;
 #else
-    return a;           /* feature is disabled */
+    return a;           // feature is disabled
 #endif
 }
