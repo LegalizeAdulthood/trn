@@ -23,11 +23,11 @@
 #include <cstring>
 #include <string>
 
-/* Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced */
+// Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced
 std::string g_charsets{"patm"};
 const char *g_char_subst{};
 
-/* TeX encoding table - gives ISO char for "x (x=32..127) */
+// TeX encoding table - gives ISO char for "x (x=32..127)
 static Uchar s_tex_tbl[96] =
 // clang-format off
 {
@@ -130,7 +130,7 @@ int put_subst_char(int c, int limit, bool output_ok)
                 i++;
             }
         }
-        /* FALL THROUGH */
+        // FALL THROUGH
 
     default:
         if (output_ok)
@@ -158,7 +158,7 @@ const char *current_char_subst()
     {
         std::sprintf(show, "[%.*s->%.*s]", maxlen, ics, maxlen, ocs);
     }
-#else /*!USE_UTF_HACK */
+#else // !USE_UTF_HACK
     static const char* show;
 
     switch (*g_char_subst)
@@ -215,7 +215,7 @@ int str_char_subst(char *outb, const char *inb, int limit, char_int subst)
    University of Erlangen, Germany <mskuhn@immd4.uni-erlangen.de>
 */
 
-#define ISO_TABLES 2 /* originally: 7 */
+#define ISO_TABLES 2 // originally: 7
 
 /* Conversion tables for displaying the G1 set (0xa0-0xff) of
    ISO Latin 1 (ISO 8859-1) with 7-bit ASCII characters.
@@ -232,9 +232,9 @@ int str_char_subst(char *outb, const char *inb, int limit, char_int subst)
      5     table for printers that allow overstriking with backspace
 
    Markus Kuhn <mskuhn@immd4.informatik.uni-erlangen.de>                 */
-/* In this version, I have taken out all tables except 1 and 2 -ot */
+// In this version, I have taken out all tables except 1 and 2 -ot
 
-#define SUB nullptr       /* used if no reasonable ASCII string is possible */
+#define SUB nullptr       // used if no reasonable ASCII string is possible
 
 static const char* s_iso_to_ascii[ISO_TABLES][96] =
 // clang-format off
@@ -277,7 +277,7 @@ static int latin1_to_ascii(Uchar *asc, const Uchar *iso, int limit, int t)
         *s = '\0';
         return s - asc;
     }
-    t--;        /* offset correction -ot */
+    t--;        // offset correction -ot
     const char **tab = s_iso_to_ascii[t] - 0xa0;
     while (*iso)
     {
