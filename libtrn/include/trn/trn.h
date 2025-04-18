@@ -1,6 +1,6 @@
 /* trn/trn.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_TRN_H
 #define TRN_TRN_H
 
@@ -22,11 +22,11 @@ enum InputNewsgroupResult
     ING_MESSAGE
 };
 
-extern std::string g_newsgroup_name;         /* name of current newsgroup */
-extern std::string g_newsgroup_dir;          /* same thing in directory name form */
+extern std::string g_newsgroup_name;         // name of current newsgroup
+extern std::string g_newsgroup_dir;          // same thing in directory name form
 extern std::string g_patch_level;            //
-extern int         g_find_last;              /* -r */
-extern bool        g_verbose;                /* +t */
+extern int         g_find_last;              // -r
+extern bool        g_verbose;                // +t
 extern bool        g_use_univ_selector;      //
 extern bool        g_use_newsrc_selector;    //
 extern bool        g_use_newsgroup_selector; //
