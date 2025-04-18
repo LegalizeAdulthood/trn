@@ -129,14 +129,14 @@ char *file_exp(const char *text)
                 s_tilde_name = save_str(scrbuf);
 #ifdef HAS_GETPWENT     /* getpwnam() is not the paragon of efficiency */
                 {
-                    struct passwd *pwd = getpwnam(s_tildename);
+                    struct passwd *pwd = getpwnam(s_tilde_name);
                     if (pwd == nullptr)
                     {
-                        std::printf("%s is an unknown user. Using default.\n", s_tildename);
+                        std::printf("%s is an unknown user. Using default.\n", s_tilde_name);
                         return nullptr;
                     }
                     std::sprintf(scrbuf, "%s%s", pwd->pw_dir, s);
-                    s_tildedir = save_str(pwd->pw_dir);
+                    s_tilde_dir = save_str(pwd->pw_dir);
                     std::strcpy(filename, scrbuf);
                     endpwent();
                 }
