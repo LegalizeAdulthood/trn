@@ -233,8 +233,7 @@ static int newsgroup_order_count(const NewsgroupData **npp1, const NewsgroupData
     return (int)((*npp1)->num - (*npp2)->num);
 }
 
-/* Sort the newsgroups into the chosen order.
-*/
+// Sort the newsgroups into the chosen order.
 void sort_newsgroups()
 {
     NewsgroupData**lp;
