@@ -1,7 +1,7 @@
 /* art.c
  * vi: set sw=4 ts=8 ai sm noet :
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 
 #include "config/common.h"
@@ -47,30 +47,30 @@
 #include <ctime>
 #include <string>
 
-ArticleLine     g_highlight{-1};         /* next line to be highlighted */
+ArticleLine     g_highlight{-1};         // next line to be highlighted
 ArticleLine     g_first_view{};          //
-ArticlePosition g_raw_art_size{};        /* size in bytes of raw article */
-ArticlePosition g_art_size{};            /* size in bytes of article */
-char            g_art_line[LINE_BUF_LEN];     /* place for article lines */
+ArticlePosition g_raw_art_size{};        // size in bytes of raw article
+ArticlePosition g_art_size{};            // size in bytes of article
+char            g_art_line[LINE_BUF_LEN];     // place for article lines
 int             g_g_line{};              //
-ArticlePosition g_inner_search{};        /* g_artpos of end of line we want to visit */
-ArticleLine     g_inner_light{};         /* highlight position for g_innersearch or 0 */
-char            g_hide_everything{};     /* if set, do not write page now, ...but execute char when done with page */
-bool            g_reread{};              /* consider current art temporarily unread? */
-bool            g_do_fseek{};            /* should we back up in article file? */
-bool            g_old_subject{};         /* not 1st art in subject thread */
-ArticleLine     g_top_line{-1};          /* top line of current screen */
-bool            g_do_hiding{true};       /* hide header lines with -h? */
-bool            g_is_mime{};             /* process mime in an article? */
-bool            g_multimedia_mime{};     /* images/audio to see/hear? */
-bool            g_rotate{};              /* has rotation been requested? */
-std::string     g_prompt;                /* current prompt */
-char           *g_first_line{};          /* s_special first line? */
-const char     *g_hide_line{};           /* custom line hiding? */
-const char     *g_page_stop{};           /* custom page terminator? */
+ArticlePosition g_inner_search{};        // g_artpos of end of line we want to visit
+ArticleLine     g_inner_light{};         // highlight position for g_innersearch or 0
+char            g_hide_everything{};     // if set, do not write page now, ...but execute char when done with page
+bool            g_reread{};              // consider current art temporarily unread?
+bool            g_do_fseek{};            // should we back up in article file?
+bool            g_old_subject{};         // not 1st art in subject thread
+ArticleLine     g_top_line{-1};          // top line of current screen
+bool            g_do_hiding{true};       // hide header lines with -h?
+bool            g_is_mime{};             // process mime in an article?
+bool            g_multimedia_mime{};     // images/audio to see/hear?
+bool            g_rotate{};              // has rotation been requested?
+std::string     g_prompt;                // current prompt
+char           *g_first_line{};          // s_special first line?
+const char     *g_hide_line{};           // custom line hiding?
+const char     *g_page_stop{};           // custom page terminator?
 CompiledRegex   g_hide_compex{};         //
 CompiledRegex   g_page_compex{};         //
-bool            g_dont_filter_control{}; /* -j */
+bool            g_dont_filter_control{}; // -j
 
 inline char *line_ptr(ArticlePosition pos)
 {
@@ -81,7 +81,7 @@ inline ArticlePosition line_offset(char *ptr)
     return ptr - g_art_buf + g_header_type[PAST_HEADER].min_pos;
 }
 
-/* page_switch() return values */
+// page_switch() return values
 enum PageSwitchResult
 {
     PS_NORM = 0,
@@ -90,15 +90,15 @@ enum PageSwitchResult
     PS_TO_END = 3
 };
 
-static bool            s_special{};         /* is next page special length? */
-static int             s_special_lines{};   /* how long to make page when special */
-static ArticlePosition s_restart{};         /* if nonzero, the place where last line left off on line split */
-static ArticlePosition s_a_line_begin{};    /* where in file current line began */
-static int             s_more_prompt_col{}; /* non-zero when the more prompt is indented */
-static ArticleLine     s_i_search_line{};   /* last line to display */
-static CompiledRegex   s_gcompex{};         /* in article search pattern */
-static bool            s_first_page{};      /* is this the 1st page of article? */
-static bool            s_continuation{};    /* this line/header is being continued */
+static bool            s_special{};         // is next page special length?
+static int             s_special_lines{};   // how long to make page when special
+static ArticlePosition s_restart{};         // if nonzero, the place where last line left off on line split
+static ArticlePosition s_a_line_begin{};    // where in file current line began
+static int             s_more_prompt_col{}; // non-zero when the more prompt is indented
+static ArticleLine     s_i_search_line{};   // last line to display
+static CompiledRegex   s_gcompex{};         // in article search pattern
+static bool            s_first_page{};      // is this the 1st page of article?
+static bool            s_continuation{};    // this line/header is being continued
 
 static PageSwitchResult page_switch();
 
@@ -110,12 +110,12 @@ void art_init()
 DoArticleResult do_article()
 {
     char* s;
-    bool hide_this_line = false; /* hidden header line? */
-    bool under_lining = false;   /* are we underlining a word? */
-    char* buf_ptr = g_art_line;   /* pointer to input buffer */
-    int out_pos;                  /* column position of output */
-    static char prompt_buf[64];  /* place to hold prompt */
-    bool notes_files = false;     /* might there be notesfiles junk? */
+    bool hide_this_line = false; // hidden header line?
+    bool under_lining = false;   // are we underlining a word?
+    char* buf_ptr = g_art_line;   // pointer to input buffer
+    int out_pos;                  // column position of output
+    static char prompt_buf[64];  // place to hold prompt
+    bool notes_files = false;     // might there be notesfiles junk?
     MinorMode old_mode = g_mode;
     bool output_ok = true;
 
@@ -127,7 +127,7 @@ DoArticleResult do_article()
     else
     {
         stat_t art_stat{};
-        if (fstat(fileno(g_art_fp),&art_stat))   /* get article file stats */
+        if (fstat(fileno(g_art_fp),&art_stat))   // get article file stats
         {
             return DA_CLEAN;
         }
@@ -140,9 +140,9 @@ DoArticleResult do_article()
     }
     std::sprintf(prompt_buf, g_mouse_bar_cnt>3? "%%sEnd of art %ld (of %ld) %%s[%%s]"
         : "%%sEnd of article %ld (of %ld) %%s-- what next? [%%s]",
-        (long)g_art,(long)g_last_art);   /* format prompt string */
+        (long)g_art,(long)g_last_art);   // format prompt string
     g_prompt = prompt_buf;
-    g_int_count = 0;            /* interrupt count is 0 */
+    g_int_count = 0;            // interrupt count is 0
     s_first_page = (g_top_line < 0);
     if (s_first_page != 0)
     {
@@ -153,16 +153,16 @@ DoArticleResult do_article()
     }
     g_term_scrolled = 0;
 
-    while (true) /* for each page */
+    while (true) // for each page
     {
         if (g_threaded_group && g_max_tree_lines)
         {
-            init_tree(); /* init tree display */
+            init_tree(); // init tree display
         }
         TRN_ASSERT(g_art == g_open_art);
         if (g_do_fseek)
         {
-            parse_header(g_art);         /* make sure header is ours */
+            parse_header(g_art);         // make sure header is ours
             if (!*g_art_buf)
             {
                 mime_set_article();
@@ -171,7 +171,7 @@ DoArticleResult do_article()
             g_art_pos = virtual_read(g_art_line_num);
             if (g_art_pos < 0)
             {
-                g_art_pos = -g_art_pos; /* labs(), anyone? */
+                g_art_pos = -g_art_pos; // labs(), anyone?
             }
             if (s_first_page)
             {
@@ -192,7 +192,7 @@ DoArticleResult do_article()
             s_restart = 0;
         }
         ArticleLine line_num = 1;
-#if 0 /* This causes a bug (headers displayed twice sometimes when you press v then ^R) */
+#if 0 // This causes a bug (headers displayed twice sometimes when you press v then ^R)
         if (!g_do_hiding)
         {
             g_is_mime = false;
@@ -232,31 +232,31 @@ DoArticleResult do_article()
                 line_num += tree_puts(g_art_line,line_num+g_top_line,0);
             }
             start_header(g_art);
-            g_force_last = false;        /* we will have our day in court */
+            g_force_last = false;        // we will have our day in court
             s_restart = 0;
-            g_art_line_num = 0;              /* start counting lines */
+            g_art_line_num = 0;              // start counting lines
             g_art_pos = 0;
-            virtual_write(g_art_line_num,g_art_pos); /* remember pos in file */
+            virtual_write(g_art_line_num,g_art_pos); // remember pos in file
         }
-        for (bool restart_color = true; /* linenum already set */
+        for (bool restart_color = true; // linenum already set
           g_inner_search? (g_in_header || inner_more())
            : s_special? (line_num < s_special_lines)
            : (s_first_page && !g_in_header)? (line_num < g_init_lines)
            : (line_num < g_tc_LINES);
              line_num++)
-        {                               /* for each line on page */
-            if (g_int_count)            /* exit via interrupt? */
+        {                               // for each line on page
+            if (g_int_count)            // exit via interrupt?
             {
-                newline();              /* get to left margin */
-                g_int_count = 0;        /* reset interrupt count */
+                newline();              // get to left margin
+                g_int_count = 0;        // reset interrupt count
                 set_mode(g_general_mode,old_mode);
                 s_special = false;
-                return DA_NORM;         /* skip out of loops */
+                return DA_NORM;         // skip out of loops
             }
-            if (s_restart)              /* did not finish last line? */
+            if (s_restart)              // did not finish last line?
             {
-                buf_ptr = line_ptr(s_restart);/* then start again here */
-                s_restart = 0;          /* and reset the flag */
+                buf_ptr = line_ptr(s_restart);// then start again here
+                s_restart = 0;          // and reset the flag
                 s_continuation = true;
                 if (restart_color && g_do_hiding && !g_in_header)
                 {
@@ -288,7 +288,7 @@ DoArticleResult do_article()
                     s_continuation = false;
                 }
             }
-            s_a_line_begin = g_art_pos;      /* remember where we began */
+            s_a_line_begin = g_art_pos;      // remember where we began
             restart_color = false;
             if (g_in_header)
             {
@@ -317,10 +317,10 @@ DoArticleResult do_article()
                     read_art_buf(g_auto_view_inline);
                 }
                 mime_set_article();
-                clear_art_buf();         /* exclude notesfiles droppings */
+                clear_art_buf();         // exclude notesfiles droppings
                 g_header_type[PAST_HEADER].min_pos = tell_art();
                 g_art_buf_seek = tell_art();
-                hide_this_line = true;  /* and do not print either */
+                hide_this_line = true;  // and do not print either
                 notes_files = false;
             }
             if (g_hide_line && !s_continuation && execute(&g_hide_compex,buf_ptr))
@@ -384,12 +384,12 @@ DoArticleResult do_article()
                 }
             }
             if (g_in_header == SUBJ_LINE && g_do_hiding   //
-                && (g_header_type[SUBJ_LINE].flags & HT_MAGIC)) /* handle the subject */
+                && (g_header_type[SUBJ_LINE].flags & HT_MAGIC)) // handle the subject
             {
                 s = get_cached_line(g_artp, SUBJ_LINE, false);
                 if (s && s_continuation)
                 {
-                    /* continuation lines were already output */
+                    // continuation lines were already output
                     line_num--;
                 }
                 else
@@ -405,13 +405,13 @@ DoArticleResult do_article()
                     {
                         buf_ptr = s;
                     }
-                    /* tree_puts(, ,1) underlines subject */
+                    // tree_puts(, ,1) underlines subject
                     line_num += tree_puts(buf_ptr,line_num+g_top_line,1)-1;
                 }
             }
-            else if (hide_this_line && g_do_hiding)     /* do not print line? */
+            else if (hide_this_line && g_do_hiding)     // do not print line?
             {
-                line_num--;                        /* compensate for linenum++ */
+                line_num--;                        // compensate for linenum++
                 if (!g_in_header)
                 {
                     hide_this_line = false;
@@ -422,13 +422,13 @@ DoArticleResult do_article()
                 g_art_line_num++;
                 line_num += tree_puts(buf_ptr,line_num+g_top_line,0)-1;
             }
-            else                          /* just a normal line */
+            else                          // just a normal line
             {
                 if (output_ok && g_erase_each_line)
                 {
                     erase_line(false);
                 }
-                if (g_highlight == g_art_line_num)   /* this line to be highlit? */
+                if (g_highlight == g_art_line_num)   // this line to be highlit?
                 {
                     if (g_marking == STANDOUT)
                     {
@@ -456,14 +456,14 @@ DoArticleResult do_article()
                         std::putchar(' ');
                     }
                 }
-                output_ok = !g_hide_everything; /* registerize it, hopefully */
+                output_ok = !g_hide_everything; // registerize it, hopefully
                 if (g_page_stop && !s_continuation && execute(&g_page_compex,buf_ptr))
                 {
                     line_num = 32700;
                 }
-                for (out_pos = 0; out_pos < g_tc_COLS; )   /* while line has room */
+                for (out_pos = 0; out_pos < g_tc_COLS; )   // while line has room
                 {
-                    if (at_norm_char(buf_ptr))       /* normal char? */
+                    if (at_norm_char(buf_ptr))       // normal char?
                     {
                         if (*buf_ptr == '_')
                         {
@@ -501,7 +501,7 @@ DoArticleResult do_article()
                                 }
                             }
                         }
-                        /* handle rot-13 if wanted */
+                        // handle rot-13 if wanted
                         if (g_rotate && !g_in_header && std::isalpha(*buf_ptr))
                         {
                             if (output_ok)
@@ -521,7 +521,7 @@ DoArticleResult do_article()
                         {
                             int i;
 #ifdef USE_UTF_HACK
-                            if (out_pos + visual_width_at(buf_ptr) > g_tc_COLS)   /* will line overflow? */
+                            if (out_pos + visual_width_at(buf_ptr) > g_tc_COLS)   // will line overflow?
                             {
                                 newline();
                                 out_pos = 0;
@@ -529,9 +529,9 @@ DoArticleResult do_article()
                             }
                             i = put_char_adv(&buf_ptr, output_ok);
                             buf_ptr--;
-#else /* !USE_UTF_HACK */
+#else // !USE_UTF_HACK
                             i = putsubstchar(*bufptr, g_tc_COLS - outpos, outputok);
-#endif /* USE_UTF_HACK */
+#endif // USE_UTF_HACK
                             if (i < 0)
                             {
                                 out_pos += -i - 1;
@@ -547,7 +547,7 @@ DoArticleResult do_article()
 skip_put:
                         buf_ptr++;
                     }
-                    else if (at_nl(*buf_ptr) || !*buf_ptr)      /* newline? */
+                    else if (at_nl(*buf_ptr) || !*buf_ptr)      // newline?
                     {
                         if (under_lining)
                         {
@@ -567,9 +567,9 @@ skip_put:
                             newline();
                         }
                         s_restart = 0;
-                        out_pos = 1000;  /* signal normal \n */
+                        out_pos = 1000;  // signal normal \n
                     }
-                    else if (*buf_ptr == '\t')   /* tab? */
+                    else if (*buf_ptr == '\t')   // tab?
                     {
                         int inc_pos =  8 - out_pos % 8;
                         if (output_ok)
@@ -589,7 +589,7 @@ skip_put:
                         buf_ptr++;
                         out_pos += 8 - out_pos % 8;
                     }
-                    else if (*buf_ptr == '\f')   /* form feed? */
+                    else if (*buf_ptr == '\f')   // form feed?
                     {
                         if (out_pos+2 > g_tc_COLS)
                         {
@@ -602,12 +602,12 @@ skip_put:
                         if (buf_ptr == line_ptr(s_a_line_begin) && g_highlight != g_art_line_num)
                         {
                             line_num = 32700;
-                            /* how is that for a magic number? */
+                            // how is that for a magic number?
                         }
                         buf_ptr++;
                         out_pos += 2;
                     }
-                    else                  /* other control char */
+                    else                  // other control char
                     {
                         if (g_dont_filter_control)
                         {
@@ -643,11 +643,11 @@ skip_put:
                         }
                         buf_ptr++;
                     }
-                } /* end of column loop */
+                } // end of column loop
 
-                if (out_pos < 1000)      /* did line overflow? */
+                if (out_pos < 1000)      // did line overflow?
                 {
-                    s_restart = line_offset(buf_ptr);/* restart here next time */
+                    s_restart = line_offset(buf_ptr);// restart here next time
                     if (output_ok)
                     {
                         if (!g_tc_AM || g_tc_XN || out_pos < g_tc_COLS)
@@ -659,17 +659,17 @@ skip_put:
                             g_term_line++;
                         }
                     }
-                    if (at_nl(*buf_ptr))         /* skip the newline */
+                    if (at_nl(*buf_ptr))         // skip the newline
                     {
                         s_restart = 0;
                     }
                 }
 
-                /* handle normal end of output line formalities */
+                // handle normal end of output line formalities
 
                 if (g_highlight == g_art_line_num)
                 {
-                    if (g_marking == STANDOUT)  /* were we highlighting line? */
+                    if (g_marking == STANDOUT)  // were we highlighting line?
                     {
                         un_standout();
                     }
@@ -678,23 +678,23 @@ skip_put:
                         un_underline();
                     }
                     carriage_return();
-                    g_highlight = -1;   /* no more we are */
-                    /* in case terminal highlighted rest of line earlier */
-                    /* when we did an eol with highlight turned on: */
+                    g_highlight = -1;   // no more we are
+                    // in case terminal highlighted rest of line earlier
+                    // when we did an eol with highlight turned on:
                     if (g_erase_each_line)
                     {
                         erase_eol();
                     }
                 }
-                g_art_line_num++;    /* count the line just printed */
-                            /* did we just scroll top line off? */
-                            /* then recompute top line # */
+                g_art_line_num++;    // count the line just printed
+                            // did we just scroll top line off?
+                            // then recompute top line #
                 g_top_line = std::max(g_art_line_num - g_tc_LINES + 1, g_top_line);
             }
 
-            /* determine actual position in file */
+            // determine actual position in file
 
-            if (s_restart)      /* stranded somewhere in the buffer? */
+            if (s_restart)      // stranded somewhere in the buffer?
             {
                 g_art_pos += s_restart - s_a_line_begin;
             }
@@ -706,8 +706,8 @@ skip_put:
             {
                 g_art_pos = g_art_buf_pos + g_header_type[PAST_HEADER].min_pos;
             }
-            virtual_write(g_art_line_num,g_art_pos); /* remember pos in file */
-        } /* end of line loop */
+            virtual_write(g_art_line_num,g_art_pos); // remember pos in file
+        } // end of line loop
 
         g_inner_search = 0;
         if (g_hide_everything)
@@ -716,17 +716,17 @@ skip_put:
             g_hide_everything = 0;
             goto fake_command;
         }
-        if (line_num >= 32700)   /* did last line have formfeed? */
+        if (line_num >= 32700)   // did last line have formfeed?
         {
             virtual_write(g_art_line_num - 1, -virtual_read(g_art_line_num - 1));
-                                /* remember by negating pos in file */
+                                // remember by negating pos in file
         }
 
-        s_special = false;      /* end of page, so reset page length */
-        s_first_page = false;    /* and say it is not 1st time thru */
+        s_special = false;      // end of page, so reset page length
+        s_first_page = false;    // and say it is not 1st time thru
         g_highlight = -1;
 
-        /* extra loop bombout */
+        // extra loop bombout
 
         if (g_art_size < 0 && (g_raw_art_size = nntp_art_size()) >= 0)
         {
@@ -741,14 +741,14 @@ recheck_pager:
             read_art_buf(false);
             seek_art_buf(seek_pos);
         }
-        if (g_art_pos == g_art_size)  /* did we just now reach EOF? */
+        if (g_art_pos == g_art_size)  // did we just now reach EOF?
         {
             color_default();
             set_mode(g_general_mode,old_mode);
-            return DA_NORM;     /* avoid --MORE--(100%) */
+            return DA_NORM;     // avoid --MORE--(100%)
         }
 
-/* not done with this article, so pretend we are a pager */
+// not done with this article, so pretend we are a pager
 
 reask_pager:
         if (g_term_line >= g_tc_LINES)
@@ -758,7 +758,7 @@ reask_pager:
         }
         s_more_prompt_col = g_term_col;
 
-        unflush_output();       /* disable any ^O in effect */
+        unflush_output();       // disable any ^O in effect
          maybe_eol();
         color_default();
         if (g_art_size < 0)
@@ -786,10 +786,10 @@ reask_pager:
         if (g_check_count >= g_do_check_when && line_num == g_tc_LINES &&
             (g_art_line_num > 40 || g_check_count >= g_do_check_when + 10))
         {
-                            /* while he is reading a whole page */
-                            /* in an article he is interested in */
+                            // while he is reading a whole page
+                            // in an article he is interested in
             g_check_count = 0;
-            checkpoint_newsrcs();       /* update all newsrcs */
+            checkpoint_newsrcs();       // update all newsrcs
             update_thread_kill_file();
         }
         cache_until_key();
@@ -805,20 +805,20 @@ reask_pager:
         {
             if (g_tc_LINES < 100 && !g_int_count)
             {
-                *g_buf = '\f'; /* on CONT fake up refresh */
+                *g_buf = '\f'; // on CONT fake up refresh
             }
             else
             {
-                *g_buf = 'q';   /* on INTR or paper just quit */
+                *g_buf = 'q';   // on INTR or paper just quit
             }
         }
         erase_line(g_erase_screen && g_erase_each_line);
 
-    fake_command:               /* used by g_innersearch */
+    fake_command:               // used by g_innersearch
         color_default();
         g_output_chase_phrase = true;
 
-        /* parse and process pager command */
+        // parse and process pager command
 
         if (g_mouse_bar_cnt)
         {
@@ -826,21 +826,21 @@ reask_pager:
         }
         switch (page_switch())
         {
-        case PS_ASK:  /* reprompt "--MORE--..." */
+        case PS_ASK:  // reprompt "--MORE--..."
             goto reask_pager;
 
-        case PS_RAISE:        /* reparse on article level */
+        case PS_RAISE:        // reparse on article level
             set_mode(g_general_mode,old_mode);
             return DA_RAISE;
 
-        case PS_TO_END:        /* fast pager loop exit */
+        case PS_TO_END:        // fast pager loop exit
             set_mode(g_general_mode,old_mode);
             return DA_TO_END;
 
-        case PS_NORM:         /* display more article */
+        case PS_NORM:         // display more article
             break;
         }
-    } /* end of page loop */
+    } // end of page loop
 }
 
 bool maybe_set_color(const char *cp, bool back_search)
@@ -881,7 +881,7 @@ bool maybe_set_color(const char *cp, bool back_search)
     return false;
 }
 
-/* process pager commands */
+// process pager commands
 
 static PageSwitchResult page_switch()
 {
@@ -889,7 +889,7 @@ static PageSwitchResult page_switch()
 
     switch (*g_buf)
     {
-    case '!':                 /* shell escape */
+    case '!':                 // shell escape
         escapade();
         return PS_ASK;
 
@@ -927,8 +927,8 @@ static PageSwitchResult page_switch()
         compile(&s_gcompex,"^Subject:",true,true);
         goto caseG;
 
-    case 'g':         /* in-article search */
-        if (!finish_command(false))/* get rest of command */
+    case 'g':         // in-article search
+        if (!finish_command(false))// get rest of command
         {
             return PS_ASK;
         }
@@ -940,13 +940,13 @@ static PageSwitchResult page_switch()
         s = compile(&s_gcompex, s, true, true);
         if (s != nullptr)
         {
-                            /* compile regular expression */
+                            // compile regular expression
             std::printf("\n%s\n", s);
             term_down(2);
             return PS_ASK;
         }
-        erase_line(false);      /* erase the prompt */
-        /* FALL THROUGH */
+        erase_line(false);      // erase the prompt
+        // FALL THROUGH
 
 caseG:
     case 'G':
@@ -970,7 +970,7 @@ caseG:
         if (*g_buf == Ctl('i') || g_top_line+g_g_line+1 >= g_art_line_num)
         {
             start_where = g_art_pos;
-                        /* in case we had a line wrap */
+                        // in case we had a line wrap
         }
         else
         {
@@ -983,7 +983,7 @@ caseG:
         start_where = std::max(start_where, g_header_type[PAST_HEADER].min_pos);
         seek_art_buf(start_where);
         g_inner_light = 0;
-        g_inner_search = 0; /* assume not found */
+        g_inner_search = 0; // assume not found
         while ((s = read_art_buf(false)) != nullptr)
         {
             nl_ptr = std::strchr(s, '\n');
@@ -1023,7 +1023,7 @@ caseG:
             term_down(1);
         }
 #endif
-        if (g_inner_search <= g_art_pos)          /* already on page? */
+        if (g_inner_search <= g_art_pos)          // already on page?
         {
             if (g_inner_search < g_art_pos)
             {
@@ -1043,16 +1043,16 @@ caseG:
 #endif
             g_top_line = g_highlight - g_g_line;
             g_top_line = std::max(g_top_line, -1);
-            *g_buf = '\f';              /* fake up a refresh */
+            *g_buf = '\f';              // fake up a refresh
             g_inner_search = 0;
             return page_switch();
         }
-        g_do_fseek = true;              /* who knows how many lines it is? */
+        g_do_fseek = true;              // who knows how many lines it is?
         g_hide_everything = '\f';
         return PS_NORM;
     }
 
-    case '\n':                        /* one line down */
+    case '\n':                        // one line down
     case '\r':
         s_special = true;
         s_special_lines = 2;
@@ -1060,10 +1060,10 @@ caseG:
 
     case 'X':
         g_rotate = !g_rotate;
-        /* FALL THROUGH */
+        // FALL THROUGH
 
     case 'l':
-    case '\f':                /* refresh screen */
+    case '\f':                // refresh screen
 refresh_screen:
 #ifdef DEBUG
         if (debug & DEB_INNERSRCH)
@@ -1098,7 +1098,7 @@ refresh_screen:
         g_hide_everything = 'b';
         return PS_NORM;
 
-    case 'B':         /* one line up */
+    case 'B':         // one line up
         if (g_top_line < 0)
         {
             break;
@@ -1149,10 +1149,10 @@ refresh_screen:
                 }
             }
         }
-        /* FALL THROUGH */
+        // FALL THROUGH
 
     case 'b':
-    case Ctl('b'):    /* back up a page */
+    case Ctl('b'):    // back up a page
     {
         ArticleLine target;
 
@@ -1165,7 +1165,7 @@ refresh_screen:
             clear();
         }
 
-        g_do_fseek = true;      /* reposition article file */
+        g_do_fseek = true;      // reposition article file
         if (*g_buf == 'B')
         {
             target = g_top_line - 1;
@@ -1186,18 +1186,18 @@ refresh_screen:
                 g_art_line_num--;
             } while (g_art_line_num >= 0 && g_art_line_num > target && virtual_read(g_art_line_num - 1) >= 0);
         }
-        g_top_line = g_art_line_num;  /* remember top line of screen */
-                                /*  (line # within article file) */
+        g_top_line = g_art_line_num;  // remember top line of screen
+                                // (line # within article file)
         g_art_line_num = std::max(g_art_line_num, 0);
         s_first_page = (g_top_line < 0);
         return PS_NORM;
       }
 
-    case 'H':         /* help */
+    case 'H':         // help
         help_page();
         return PS_ASK;
 
-    case 't':         /* output thread data */
+    case 't':         // output thread data
         g_page_line = 1;
         entire_tree(g_curr_artp);
         return PS_ASK;
@@ -1221,9 +1221,9 @@ refresh_screen:
         }
         goto leave_pager;
 
-    case '\0':                /* treat break as 'n' */
+    case '\0':                // treat break as 'n'
         *g_buf = 'n';
-        /* FALL THROUGH */
+        // FALL THROUGH
 
     case 'a': case 'A':
     case 'e':
@@ -1236,8 +1236,8 @@ refresh_screen:
     case 'u':
     case 'w': case 'W':
     case '|':
-        mark_as_read(g_artp);   /* mark article as read */
-        /* FALL THROUGH */
+        mark_as_read(g_artp);   // mark article as read
+        // FALL THROUGH
 
     case 'U': case ',':
     case '<': case '>':
@@ -1246,10 +1246,10 @@ refresh_screen:
     case '(': case ')':
     case ':':
     case '+':
-    case Ctl('v'):            /* verify crypto signature */
-    case ';':                 /* enter article scan mode */
-    case '"':                 /* append to local scorefile */
-    case '\'':                /* score command */
+    case Ctl('v'):            // verify crypto signature
+    case ';':                 // enter article scan mode
+    case '"':                 // append to local scorefile
+    case '\'':                // score command
     case '#':
     case '$':
     case '&':
@@ -1288,18 +1288,18 @@ leave_pager:
             interp_search(g_cmd_buf, sizeof g_cmd_buf, g_mail_call, g_buf);
             std::printf(g_prompt.c_str(),g_cmd_buf,
                    current_char_subst(),
-                   g_default_cmd.c_str());  /* print prompt, whatever it is */
-            color_pop();        /* of COLOR_CMD */
+                   g_default_cmd.c_str());  // print prompt, whatever it is
+            color_pop();        // of COLOR_CMD
             std::putchar(' ');
             std::fflush(stdout);
         }
-        return PS_RAISE;        /* and pretend we were at end */
+        return PS_RAISE;        // and pretend we were at end
 
-    case 'd':         /* half page */
+    case 'd':         // half page
     case Ctl('d'):
         s_special = true;
         s_special_lines = g_tc_LINES / 2 + 1;
-        /* no divide-by-zero, thank you */
+        // no divide-by-zero, thank you
         if (g_tc_LINES > 2 && (g_tc_LINES & 1) && g_art_line_num % (g_tc_LINES-2) >= g_tc_LINES/2 - 1)
         {
             s_special_lines++;
@@ -1307,8 +1307,8 @@ leave_pager:
         goto go_forward;
 
     case 'y':
-    case ' ': /* continue current article */
-        if (g_erase_screen)     /* -e? */
+    case ' ': // continue current article
+        if (g_erase_screen)     // -e?
         {
             if (g_erase_each_line)
             {
@@ -1316,7 +1316,7 @@ leave_pager:
             }
             else
             {
-                clear();        /* clear screen */
+                clear();        // clear screen
             }
             std::fflush(stdout);
         }
@@ -1332,7 +1332,7 @@ go_forward:
                   || (g_marking && (*g_buf != 'd' || (g_marking_areas & HALF_PAGE_MARKING))))
               {
                 s_restart = s_a_line_begin;
-                g_art_line_num--;     /* restart this line */
+                g_art_line_num--;     // restart this line
                 g_art_pos = s_a_line_begin;
                 if (s_special)
                 {
@@ -1364,7 +1364,7 @@ go_forward:
         term_down(2);
         break;
 
-    case 'q': /* quit this article? */
+    case 'q': // quit this article?
         return PS_TO_END;
 
     default:
@@ -1378,7 +1378,7 @@ go_forward:
 
 bool inner_more()
 {
-    if (g_art_pos < g_inner_search)               /* not even on page yet? */
+    if (g_art_pos < g_inner_search)               // not even on page yet?
     {
 #ifdef DEBUG
         if (debug & DEB_INNERSRCH)
@@ -1388,9 +1388,9 @@ bool inner_more()
 #endif
         return true;
     }
-    if (g_art_pos == g_inner_search)      /* just got onto page? */
+    if (g_art_pos == g_inner_search)      // just got onto page?
     {
-        s_i_search_line = g_art_line_num;        /* remember first line after */
+        s_i_search_line = g_art_line_num;        // remember first line after
         if (g_inner_light)
         {
             g_highlight = g_inner_light;
@@ -1407,10 +1407,10 @@ bool inner_more()
             term_down(1);
         }
 #endif
-        if (g_hide_everything)          /* forced refresh? */
+        if (g_hide_everything)          // forced refresh?
         {
             g_top_line = std::max(g_art_line_num - g_g_line - 1, -1);
-            return false;               /* let refresh do it all */
+            return false;               // let refresh do it all
         }
     }
 #ifdef DEBUG
