@@ -36,13 +36,13 @@ static int s_spin_marks{25}; // how many bargraph marks we want
 
 static char *output_change(char *cp, long num, const char *obj_type, const char *modifier, const char *action);
 
-/* Name-munging routines written by Ross Ridge.
-** Enhanced by Wayne Davison.
-*/
+// Name-munging routines written by Ross Ridge.
+// Enhanced by Wayne Davison.
+//
 
-/* Extract the full-name part of an email address, returning nullptr if not
-** found.
-*/
+// Extract the full-name part of an email address, returning nullptr if not
+// found.
+//
 char *extract_name(char *name)
 {
     name = skip_space(name);
@@ -99,13 +99,13 @@ char *extract_name(char *name)
     return name;
 }
 
-/* If necessary, compress a net user's full name by playing games with
-** initials and the middle name(s).  If we start with "Ross Douglas Ridge"
-** we try "Ross D Ridge", "Ross Ridge", "R D Ridge" and finally "R Ridge"
-** before simply truncating the thing.  We also turn "R. Douglas Ridge"
-** into "Douglas Ridge" and "Ross Ridge D.D.S." into "Ross Ridge" as a
-** first step of the compaction, if needed.
-*/
+// If necessary, compress a net user's full name by playing games with
+// initials and the middle name(s).  If we start with "Ross Douglas Ridge"
+// we try "Ross D Ridge", "Ross Ridge", "R D Ridge" and finally "R Ridge"
+// before simply truncating the thing.  We also turn "R. Douglas Ridge"
+// into "Douglas Ridge" and "Ross Ridge D.D.S." into "Ross Ridge" as a
+// first step of the compaction, if needed.
+//
 char *compress_name(char *name, int max)
 {
     char *d;
@@ -146,13 +146,12 @@ try_again:
         return name;
     }
 
-    /* Look for characters that likely mean the end of the name
-    ** and the start of some hopefully uninteresting additional info.
-    ** Splitting at a comma is somewhat questionable, but since
-    ** "Ross Ridge, The Great HTMU" comes up much more often than
-    ** "Ridge, Ross" and since "R HTMU" is worse than "Ridge" we do
-    ** it anyways.
-    */
+    // Look for characters that likely mean the end of the name
+    // and the start of some hopefully uninteresting additional info.
+    // Splitting at a comma is somewhat questionable, but since
+    // "Ross Ridge, The Great HTMU" comes up much more often than
+    // "Ridge, Ross" and since "R HTMU" is worse than "Ridge" we do
+    // it anyways.
     for (d = name;;)
     {
 #ifdef USE_UTF_HACK
@@ -260,8 +259,8 @@ try_again:
 #ifdef USE_UTF_HACK
         vis_midlen = visual_length_between(s, mid) + 2;
 #endif
-        /* If first name is an initial and middle isn't and it all fits
-        ** without the first initial, drop it. */
+        // If first name is an initial and middle isn't and it all fits
+        // without the first initial, drop it.
         if (vis_len > max && mid != s)
         {
             if (vis_len - vis_namelen <= max &&
@@ -453,10 +452,10 @@ try_again:
 #undef vis_namelen
 #undef vis_midlen
 
-/* Compress an email address, trying to keep as much of the local part of
-** the addresses as possible.  The order of precence is @ ! %, but
-** @ % ! may be better...
-*/
+// Compress an email address, trying to keep as much of the local part of
+// the addresses as possible.  The order of precence is @ ! %, but
+// @ % ! may be better...
+//
 char *compress_address(char *name, int max)
 {
     char*start;
@@ -495,8 +494,8 @@ char *compress_address(char *name, int max)
     char *hack = nullptr;
     for (char *s = name + 1; *s; s++)
     {
-        /* If there's whitespace in the middle then it's probably not
-        ** really an email address. */
+        // If there's whitespace in the middle then it's probably not
+        // really an email address.
         if (std::isspace(*s))
         {
             name[max] = '\0';
@@ -576,9 +575,9 @@ char *compress_address(char *name, int max)
     return start;
 }
 
-/* Fit the author name in <max> chars.  Uses the comment portion if present
-** and pads with spaces.
-*/
+// Fit the author name in <max> chars.  Uses the comment portion if present
+// and pads with spaces.
+//
 char *compress_from(const char *from, int size)
 {
     static char lbuf[LINE_BUF_LEN];
@@ -670,10 +669,10 @@ bool strip_one_re(char *str, char **strp)
     return has_Re;
 }
 
-/* Parse the subject to look for any "Re[:^]"s at the start.
-** Returns true if a Re was found.  If strp is non-nullptr, it
-** will be set to the start of the interesting characters.
-*/
+// Parse the subject to look for any "Re[:^]"s at the start.
+// Returns true if a Re was found.  If strp is non-nullptr, it
+// will be set to the start of the interesting characters.
+//
 bool subject_has_re(char *str, char **strp)
 {
     bool has_Re = false;
@@ -688,9 +687,9 @@ bool subject_has_re(char *str, char **strp)
     return has_Re;
 }
 
-/* Output a subject in <max> chars.  Does intelligent trimming that tries to
-** save the last two words on the line, excluding "(was: blah)" if needed.
-*/
+// Output a subject in <max> chars.  Does intelligent trimming that tries to
+// save the last two words on the line, excluding "(was: blah)" if needed.
+//
 const char *compress_subj(const Article *ap, int max)
 {
     if (!ap)
@@ -708,9 +707,8 @@ const char *compress_subj(const Article *ap, int max)
     }
     str_char_subst(cp, ap->subj->str + 4, (sizeof g_buf) - (cp-g_buf), *g_char_subst);
 
-    /* Remove "(was: oldsubject)", because we already know the old subjects.
-    ** Also match "(Re: oldsubject)".  Allow possible spaces after the ('s.
-    */
+    // Remove "(was: oldsubject)", because we already know the old subjects.
+    // Also match "(Re: oldsubject)".  Allow possible spaces after the ('s.
     for (cp = g_buf; (cp = std::strchr(cp + 1, '(')) != nullptr;)
     {
         cp = skip_eq(++cp, ' ');
