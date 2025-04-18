@@ -17,8 +17,7 @@ void list_init()
 {
 }
 
-/* Create the header for a dynamic list of items.
-*/
+// Create the header for a dynamic list of items.
 List *new_list(long low, long high, int item_size, int items_per_node, ListFlags flags, void (*init_node)(List *, ListNode *))
 {
     List* list = (List*)safe_malloc(sizeof (List));
@@ -43,10 +42,10 @@ static void def_init_node(List *list, ListNode *node)
     }
 }
 
-/* Take the number of a list element and return its pointer.  This
-** will allocate new list items as needed, keeping the list->high
-** value up to date.
-*/
+// Take the number of a list element and return its pointer.  This
+// will allocate new list items as needed, keeping the list->high
+// value up to date.
+//
 char *list_get_item(List *list, long index)
 {
     ListNode* node = list->recent;
@@ -98,9 +97,9 @@ char *list_get_item(List *list, long index)
     return node->data + (index - node->low) * list->item_size;
 }
 
-/* Take the pointer of a list element and return its number.  The item
-** must already exist or this will infinite loop.
-*/
+// Take the pointer of a list element and return its number.  The item
+// must already exist or this will infinite loop.
+//
 long list_get_index(List *list, char *item)
 {
     int item_size = list->item_size;
@@ -124,8 +123,8 @@ long list_get_index(List *list, char *item)
     return -1;
 }
 
-/* Execute the indicated callback function on every item in the list.
-*/
+// Execute the indicated callback function on every item in the list.
+//
 bool walk_list(List *list, bool (*callback)(char *, int), int arg)
 {
     int item_size = list->item_size;
@@ -144,10 +143,10 @@ bool walk_list(List *list, bool (*callback)(char *, int), int arg)
     return false;
 }
 
-/* Since the list can be sparsely allocated, find the nearest number
-** that is already allocated, rounding in the indicated direction from
-** the initial list number.
-*/
+// Since the list can be sparsely allocated, find the nearest number
+// that is already allocated, rounding in the indicated direction from
+// the initial list number.
+//
 long existing_list_index(List *list, long index, int direction)
 {
     ListNode* node = list->recent;
@@ -198,9 +197,9 @@ long existing_list_index(List *list, long index, int direction)
     return list->low - 1;
 }
 
-/* Increment the item pointer to the next allocated item.
-** Returns nullptr if ptr is the last one.
-*/
+// Increment the item pointer to the next allocated item.
+// Returns nullptr if ptr is the last one.
+//
 char *next_list_item(List *list, char *ptr)
 {
     ListNode* node = list->recent;
@@ -227,9 +226,9 @@ char *next_list_item(List *list, char *ptr)
     return ptr += list->item_size;
 }
 
-/* Decrement the item pointer to the prev allocated item.
-** Returns nullptr if ptr is the first one.
-*/
+// Decrement the item pointer to the prev allocated item.
+// Returns nullptr if ptr is the first one.
+//
 char *prev_list_item(List *list, char *ptr)
 {
     ListNode* node = list->recent;
@@ -251,10 +250,10 @@ char *prev_list_item(List *list, char *ptr)
     return ptr -= list->item_size;
 }
 
-/* Delete the list and all its allocated nodes.  If you need to cleanup
-** the individual nodes, call walk_list() with a cleanup function before
-** calling this.
-*/
+// Delete the list and all its allocated nodes.  If you need to cleanup
+// the individual nodes, call walk_list() with a cleanup function before
+// calling this.
+//
 void delete_list(List *list)
 {
     ListNode* node = list->first;
