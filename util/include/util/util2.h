@@ -1,6 +1,6 @@
 /* util2.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_UTIL2_H
 #define TRN_UTIL2_H
 
