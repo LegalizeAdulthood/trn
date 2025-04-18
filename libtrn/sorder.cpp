@@ -44,9 +44,9 @@ int s_compare(long a, long b)
     }
 }
 
-/* sort offset--used so that the 1-offset algorithm is clear even
- * though the array is 0-offset.
- */
+// sort offset--used so that the 1-offset algorithm is clear even
+// though the array is 0-offset.
+//
 #define SOFF(a) ((a)-1)
 
 // Uses a heapsort algorithm with the heap readjustment inlined.
