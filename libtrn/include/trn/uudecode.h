@@ -1,6 +1,6 @@
 /* trn/uudecode.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_UUDECODE_H
 #define TRN_UUDECODE_H
 
@@ -8,7 +8,7 @@
 
 #include <cstdio>
 
-/* Length of a normal uuencoded line, including newline */
+// Length of a normal uuencoded line, including newline
 enum
 {
     UU_LENGTH = 62
