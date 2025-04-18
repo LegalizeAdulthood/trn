@@ -51,9 +51,9 @@
 #include <memory>
 #include <string>
 
-CompiledRegex      g_opt_compex;
-std::string g_ini_file;
-IniWords   g_options_ini[] = {
+CompiledRegex g_opt_compex;
+std::string   g_ini_file;
+IniWords      g_options_ini[] = {
     // clang-format off
     { 0, "OPTIONS", nullptr },
 
@@ -169,10 +169,10 @@ IniWords   g_options_ini[] = {
     { 0, nullptr, nullptr }
 };
 // clang-format on
-char        **g_option_def_vals{};
-char        **g_option_saved_vals{};
+char       **g_option_def_vals{};
+char       **g_option_saved_vals{};
 OptionFlags *g_option_flags{};
-int           g_sel_page_op{};
+int          g_sel_page_op{};
 
 static char s_univ_sel_cmds[3]{"Z>"};
 
@@ -366,11 +366,11 @@ void opt_file(const char *filename, char **tcbufptr, bool bleat)
     *filebuf = '\0';
 }
 
-inline bool YES(const char *s)
+inline bool is_yes(const char *s)
 {
     return *s == 'y' || *s == 'Y';
 }
-inline bool NO(const char *s)
+inline bool is_no(const char *s)
 {
     return *s == 'n' || *s == 'N';
 }
@@ -410,11 +410,11 @@ void set_option(OptionIndex num, const char *s)
     switch (num)
     {
     case OI_USE_THREADS:
-        g_use_threads = YES(s);
+        g_use_threads = is_yes(s);
         break;
 
     case OI_USE_MOUSE:
-        g_use_mouse = YES(s);
+        g_use_mouse = is_yes(s);
         if (g_use_mouse)
         {
             /* set up the Xterm mouse sequence */
@@ -427,7 +427,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_USE_UNIV_SEL:
-        g_use_univ_selector = YES(s);
+        g_use_univ_selector = is_yes(s);
         break;
 
     case OI_UNIV_SEL_CMDS:
@@ -447,11 +447,11 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_UNIV_FOLLOW:
-        g_univ_follow = YES(s);
+        g_univ_follow = is_yes(s);
         break;
 
     case OI_USE_NEWSRC_SEL:
-        g_use_newsrc_selector = YES(s);
+        g_use_newsrc_selector = is_yes(s);
         break;
 
     case OI_NEWSRC_SEL_CMDS:
@@ -467,7 +467,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_USE_ADD_SEL:
-        g_use_add_selector = YES(s);
+        g_use_add_selector = is_yes(s);
         break;
 
     case OI_ADD_SEL_CMDS:
@@ -483,7 +483,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_USE_NEWSGROUP_SEL:
-        g_use_newsgroup_selector = YES(s);
+        g_use_newsgroup_selector = is_yes(s);
         break;
 
     case OI_NEWSGROUP_SEL_ORDER:
@@ -517,7 +517,7 @@ void set_option(OptionIndex num, const char *s)
         }
         else
         {
-            g_use_news_selector = static_cast<int>(YES(s)) - 1;
+            g_use_news_selector = static_cast<int>(is_yes(s)) - 1;
         }
         break;
 
@@ -573,7 +573,7 @@ void set_option(OptionIndex num, const char *s)
     case OI_AUTO_SAVE_NAME:
         if (!g_check_flag)
         {
-            if (YES(s))
+            if (is_yes(s))
             {
                 export_var("SAVEDIR",  "%p/%c");
                 export_var("SAVENAME", "%a");
@@ -588,19 +588,19 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_BACKGROUND_THREADING:
-        g_thread_always = !YES(s);
+        g_thread_always = !is_yes(s);
         break;
 
     case OI_AUTO_ARROW_MACROS:
     {
         int prev = g_auto_arrow_macros;
-        if (YES(s) || *s == 'r' || *s == 'R')
+        if (is_yes(s) || *s == 'r' || *s == 'R')
         {
             g_auto_arrow_macros = 2;
         }
         else
         {
-            g_auto_arrow_macros = !NO(s);
+            g_auto_arrow_macros = !is_no(s);
         }
         if (g_mode != MM_INITIALIZING && g_auto_arrow_macros != prev)
         {
@@ -611,11 +611,11 @@ void set_option(OptionIndex num, const char *s)
     }
 
     case OI_READ_BREADTH_FIRST:
-        g_breadth_first = YES(s);
+        g_breadth_first = is_yes(s);
         break;
 
     case OI_BACKGROUND_SPINNER:
-        g_bkgnd_spinner = YES(s);
+        g_bkgnd_spinner = is_yes(s);
         break;
 
     case OI_CHECKPOINT_NEWSRC_FREQUENCY:
@@ -635,11 +635,11 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_ERASE_SCREEN:
-        g_erase_screen = YES(s);
+        g_erase_screen = is_yes(s);
         break;
 
     case OI_NOVICE_DELAYS:
-        g_novice_delays = YES(s);
+        g_novice_delays = is_yes(s);
         break;
 
     case OI_CITED_TEXT_STRING:
@@ -651,7 +651,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_FUZZY_NEWSGROUP_NAMES:
-        g_fuzzy_get = YES(s);
+        g_fuzzy_get = is_yes(s);
         break;
 
     case OI_HEADER_MAGIC:
@@ -670,11 +670,11 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_APPEND_UNSUBSCRIBED_GROUPS:
-        g_append_unsub = YES(s);
+        g_append_unsub = is_yes(s);
         break;
 
     case OI_FILTER_CONTROL_CHARACTERS:
-        g_dont_filter_control = !YES(s);
+        g_dont_filter_control = !is_yes(s);
         break;
 
     case OI_JOIN_SUBJECT_LINES:
@@ -684,24 +684,24 @@ void set_option(OptionIndex num, const char *s)
         }
         else
         {
-            change_join_subject_len(YES(s)? 30 : 0);
+            change_join_subject_len(is_yes(s)? 30 : 0);
         }
         break;
 
     case OI_IGNORE_THRU_ON_SELECT:
-        g_kill_thru_kludge = YES(s);
+        g_kill_thru_kludge = is_yes(s);
         break;
 
     case OI_AUTO_GROW_GROUPS:
-        g_keep_the_group_static = !YES(s);
+        g_keep_the_group_static = !is_yes(s);
         break;
 
     case OI_MUCK_UP_CLEAR:
-        g_muck_up_clear = YES(s);
+        g_muck_up_clear = is_yes(s);
         break;
 
     case OI_ERASE_EACH_LINE:
-        g_erase_each_line = YES(s);
+        g_erase_each_line = is_yes(s);
         break;
 
     case OI_SAVE_FILE_TYPE:
@@ -718,7 +718,7 @@ void set_option(OptionIndex num, const char *s)
         {
             g_marking_areas = HALF_PAGE_MARKING;
         }
-        if (NO(s))
+        if (is_no(s))
         {
             g_marking = NO_MARKING;
         }
@@ -739,12 +739,12 @@ void set_option(OptionIndex num, const char *s)
         }
         else
         {
-            g_olden_days = YES(s);
+            g_olden_days = is_yes(s);
         }
         break;
 
     case OI_SELECT_MY_POSTS:
-        if (NO(s))
+        if (is_no(s))
         {
             g_auto_select_postings = 0;
         }
@@ -772,15 +772,15 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_AUTO_VIEW_INLINE:
-        g_auto_view_inline = YES(s);
+        g_auto_view_inline = is_yes(s);
         break;
 
     case OI_NEW_GROUP_CHECK:
-        g_quick_start = !YES(s);
+        g_quick_start = !is_yes(s);
         break;
 
     case OI_RESTRICTION_INCLUDES_EMPTIES:
-        g_empty_only_char = YES(s)? 'o' : 'O';
+        g_empty_only_char = is_yes(s)? 'o' : 'O';
         break;
 
     case OI_CHARSET:
@@ -795,7 +795,7 @@ void set_option(OptionIndex num, const char *s)
         }
         else
         {
-            g_suppress_cn = NO(s);
+            g_suppress_cn = is_no(s);
             if (!g_suppress_cn)
             {
                 g_countdown = 5;
@@ -804,7 +804,7 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_RESTART_AT_LAST_GROUP:
-        g_find_last = YES(s) * (g_mode == MM_INITIALIZING? 1 : -1);
+        g_find_last = is_yes(s) * (g_mode == MM_INITIALIZING? 1 : -1);
         break;
 
     case OI_SCAN_MODE_COUNT:
@@ -814,12 +814,12 @@ void set_option(OptionIndex num, const char *s)
         }
         else
         {
-            g_scan_on = YES(s)*3;
+            g_scan_on = is_yes(s)*3;
         }
         break;
 
     case OI_TERSE_OUTPUT:
-        g_verbose = !YES(s);
+        g_verbose = !is_yes(s);
         if (!g_verbose)
         {
             g_novice_delays = false;
@@ -827,15 +827,15 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_EAT_TYPEAHEAD:
-        g_allow_typeahead = !YES(s);
+        g_allow_typeahead = !is_yes(s);
         break;
 
     case OI_COMPRESS_SUBJECTS:
-        g_unbroken_subjects = !YES(s);
+        g_unbroken_subjects = !is_yes(s);
         break;
 
     case OI_VERIFY_INPUT:
-        g_verify = YES(s);
+        g_verify = is_yes(s);
         break;
 
     case OI_ARTICLE_TREE_LINES:
@@ -846,7 +846,7 @@ void set_option(OptionIndex num, const char *s)
         }
         else
         {
-            g_max_tree_lines = YES(s) * 6;
+            g_max_tree_lines = is_yes(s) * 6;
         }
         break;
 
@@ -855,7 +855,7 @@ void set_option(OptionIndex num, const char *s)
         {
             g_word_wrap_offset = std::atoi(s);
         }
-        else if (YES(s))
+        else if (is_yes(s))
         {
             g_word_wrap_offset = 8;
         }
@@ -874,43 +874,43 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_SCAN_ITEM_NUM:
-        g_s_item_num = YES(s);
+        g_s_item_num = is_yes(s);
         break;
 
     case OI_SCAN_VI:
-        g_s_mode_vi = YES(s);
+        g_s_mode_vi = is_yes(s);
         break;
 
     case OI_SCAN_ART_FOLLOW:
-        g_sa_follow = YES(s);
+        g_sa_follow = is_yes(s);
         break;
 
     case OI_SCAN_ART_FOLD:
-        g_sa_mode_fold = YES(s);
+        g_sa_mode_fold = is_yes(s);
         break;
 
     case OI_SCAN_ART_UNZOOM_FOLD:
-        g_sa_unzoom_refold = YES(s);
+        g_sa_unzoom_refold = is_yes(s);
         break;
 
     case OI_SCAN_ART_MARK_STAY:
-        g_sa_mark_stay = YES(s);
+        g_sa_mark_stay = is_yes(s);
         break;
 
     case OI_SCAN_ART_DISP_ART_NUM:
-        g_sa_mode_desc_art_num = YES(s);
+        g_sa_mode_desc_art_num = is_yes(s);
         break;
 
     case OI_SCAN_ART_DISP_AUTHOR:
-        g_sa_mode_desc_author = YES(s);
+        g_sa_mode_desc_author = is_yes(s);
         break;
 
     case OI_SCAN_ART_DISP_SCORE:
-        g_sa_mode_desc_score = YES(s);
+        g_sa_mode_desc_score = is_yes(s);
         break;
 
     case OI_SCAN_ART_DISP_SUB_COUNT:
-        g_sa_mode_desc_thread_count = YES(s);
+        g_sa_mode_desc_thread_count = is_yes(s);
         break;
 
     case OI_SCAN_ART_DISP_SUBJ:
@@ -921,23 +921,23 @@ void set_option(OptionIndex num, const char *s)
         break;
 
     case OI_SCAN_ART_DISP_SUMMARY:
-        g_sa_mode_desc_summary = YES(s);
+        g_sa_mode_desc_summary = is_yes(s);
         break;
 
     case OI_SCAN_ART_DISP_KEYW:
-        g_sa_mode_desc_keyw = YES(s);
+        g_sa_mode_desc_keyw = is_yes(s);
         break;
 
     case OI_SC_VERBOSE:
-        g_sf_verbose = YES(s);
+        g_sf_verbose = is_yes(s);
         break;
 
     case OI_USE_SEL_NUM:
-        g_use_sel_num = YES(s);
+        g_use_sel_num = is_yes(s);
         break;
 
     case OI_SEL_NUM_GOTO:
-        g_sel_num_goto = YES(s);
+        g_sel_num_goto = is_yes(s);
         break;
 
     default:
