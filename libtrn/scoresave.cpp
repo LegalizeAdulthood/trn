@@ -25,15 +25,15 @@
 
 int g_sc_loaded_count{}; /* how many articles were loaded? */
 
-static long    s_sc_save_new{}; /* new articles (unloaded) */
-static int     s_num_lines{};
-static int     s_lines_alloc{};
-static char  **s_lines{};
-static char    s_lbuf[LBUFLEN]{};
-static char    s_lbuf2[LBUFLEN]{}; /* what's another buffer between... */
-static int     s_loaded{};
-static int     s_used{};
-static int     s_saved{};
+static long       s_sc_save_new{}; /* new articles (unloaded) */
+static int        s_num_lines{};
+static int        s_lines_alloc{};
+static char     **s_lines{};
+static char       s_line_buf[LBUFLEN]{};
+static char       s_line_buf2[LBUFLEN]{}; /* what's another buffer between... */
+static int        s_loaded{};
+static int        s_used{};
+static int        s_saved{};
 static ArticleNum s_last{};
 
 void sc_sv_add(const char *str)
@@ -104,10 +104,10 @@ void sc_sv_get_file()
 #endif
         return;
     }
-    while (std::fgets(s_lbuf, LBUFLEN - 2, fp))
+    while (std::fgets(s_line_buf, LBUFLEN - 2, fp))
     {
-        s_lbuf[std::strlen(s_lbuf)-1] = '\0';        /* strip \n */
-        sc_sv_add(s_lbuf);
+        s_line_buf[std::strlen(s_line_buf)-1] = '\0';        /* strip \n */
+        sc_sv_add(s_line_buf);
     }
     std::fclose(fp);
 }
@@ -122,9 +122,9 @@ void sc_sv_save_file()
 
     g_waiting = true;   /* don't interrupt */
     char *savename = save_str(file_exp(get_val_const("SAVESCOREFILE", "%+/savedscores")));
-    std::strcpy(s_lbuf,savename);
-    std::strcat(s_lbuf,".tmp");
-    std::FILE *tmpfp = std::fopen(s_lbuf, "w");
+    std::strcpy(s_line_buf,savename);
+    std::strcat(s_line_buf,".tmp");
+    std::FILE *tmpfp = std::fopen(s_line_buf, "w");
     if (!tmpfp)
     {
 #if 0
@@ -145,16 +145,16 @@ void sc_sv_save_file()
         {
             std::fclose(tmpfp);
             std::free(savename);
-            std::printf("\nWrite error in temporary save file %s\n",s_lbuf);
+            std::printf("\nWrite error in temporary save file %s\n",s_line_buf);
             std::printf("(keeping old saved scores)\n");
-            remove(s_lbuf);
+            remove(s_line_buf);
             g_waiting = false;
             return;
         }
     }
     std::fclose(tmpfp);
     remove(savename);
-    rename(s_lbuf,savename);
+    rename(s_line_buf,savename);
     g_waiting = false;
 }
 
@@ -281,7 +281,7 @@ ArticleNum sc_sv_make_line(ArticleNum a)
     int  i;
     bool neg_flag;
 
-    char *s = s_lbuf;
+    char *s = s_line_buf;
     *s++ = '.';
     int lastscore = 0;
 
@@ -299,7 +299,7 @@ ArticleNum sc_sv_make_line(ArticleNum a)
                 else
                 {
                     std::sprintf(s,"s%ld",(art-s_last)-1);
-                    s = s_lbuf + std::strlen(s_lbuf);
+                    s = s_line_buf + std::strlen(s_line_buf);
                     num_output++;
                 }
             }
@@ -323,7 +323,7 @@ ArticleNum sc_sv_make_line(ArticleNum a)
                 else
                 {
                     std::sprintf(s,"r%d",i); /* repeat >one */
-                    s = s_lbuf + std::strlen(s_lbuf);
+                    s = s_line_buf + std::strlen(s_line_buf);
                     num_output++;
                 }
                 s_saved += i-1;
@@ -350,7 +350,7 @@ ArticleNum sc_sv_make_line(ArticleNum a)
                 {
                     *s++ = 'J' + i;
                 }
-                s = s_lbuf + std::strlen(s_lbuf);
+                s = s_line_buf + std::strlen(s_line_buf);
                 num_output++;
                 lastscore_valid = true;
             }
@@ -360,7 +360,7 @@ ArticleNum sc_sv_make_line(ArticleNum a)
         } /* if */
     } /* for */
     *s = '\0';
-    sc_sv_add(s_lbuf);
+    sc_sv_add(s_line_buf);
     return a;
 }
 
@@ -495,12 +495,12 @@ void sc_save_scores()
         sc_sv_add("#STRN saved score file.");
         sc_sv_add("v1.0");
     }
-    std::sprintf(s_lbuf2,"!%s",gname);       /* add the header */
-    sc_sv_add(s_lbuf2);
+    std::sprintf(s_line_buf2,"!%s",gname);       /* add the header */
+    sc_sv_add(s_line_buf2);
 
     ArticleNum a = g_first_art;
-    std::sprintf(s_lbuf2,":%ld",a);
-    sc_sv_add(s_lbuf2);
+    std::sprintf(s_line_buf2,":%ld",a);
+    sc_sv_add(s_line_buf2);
     s_last = a-1;
     while (a <= g_last_art)
     {
