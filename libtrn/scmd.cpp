@@ -125,10 +125,10 @@ void s_look_ahead()
 }
 
 // Do some simple, common Scan commands for any mode
-/* Interprets command in g_buf, returning 0 to continue looping or
- * a condition code (negative #s).  Responsible for setting refresh flags
- * if necessary.
- */
+// Interprets command in g_buf, returning 0 to continue looping or
+// a condition code (negative #s).  Responsible for setting refresh flags
+// if necessary.
+//
 int s_do_cmd()
 {
     bool flag; // misc
@@ -296,10 +296,10 @@ int s_do_cmd()
 
 #if 0
     case '&':         // see/set switches...
-        /* The new option stuff makes this potentially recursive.
-         * Something similar to the 'H' (extended help) code needs to be done.
-         * It may be necessary for this code to do the context saving.
-         */
+        // The new option stuff makes this potentially recursive.
+        // Something similar to the 'H' (extended help) code needs to be done.
+        // It may be necessary for this code to do the context saving.
+        //
         s_go_bot();
         g_s_ref_all = true;                     // will need refresh
         if (!switcheroo())              // XXX same semantics in trn4?
