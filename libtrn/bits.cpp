@@ -558,9 +558,9 @@ void unmark_as_read(Article *ap)
 #endif
 }
 
-/* Mark an article as read in this newsgroup and possibly chase xrefs.
-** Don't call this on missing articles.
-*/
+// Mark an article as read in this newsgroup and possibly chase xrefs.
+// Don't call this on missing articles.
+//
 void set_read(Article *ap)
 {
     one_less(ap);
@@ -813,13 +813,13 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
     return 0;
 }
 
-/* Make sure the site name on Xref matches what inews thinks the site
- * is.  Check first against last inews_site.  If it matches, fine.
- * If not, fetch inews_site from current Path or Relay-Version line and
- * check again.  This is so that if the new administrator decides
- * to change the system name as known to inews, rn will still do
- * Xrefs correctly--each article need only match itself to be valid.
- */
+// Make sure the site name on Xref matches what inews thinks the site
+// is.  Check first against last inews_site.  If it matches, fine.
+// If not, fetch inews_site from current Path or Relay-Version line and
+// check again.  This is so that if the new administrator decides
+// to change the system name as known to inews, rn will still do
+// Xrefs correctly--each article need only match itself to be valid.
+//
 # ifdef VALIDATE_XREF_SITE
 static bool valid_xref_site(ART_NUM artnum, char *site)
 {
