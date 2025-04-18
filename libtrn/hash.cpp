@@ -21,14 +21,14 @@
 
 struct HashEntry
 {
-    HashEntry *he_next; /* in hash chain */
+    HashEntry *he_next; // in hash chain
     HashDatum  he_data;
-    int        he_key_len; /* to help verify a match */
+    int        he_key_len; // to help verify a match
 };
 
 struct HashTable
 {
-    HashEntry     **ht_addr; /* array of HASHENT pointers */
+    HashEntry     **ht_addr; // array of HASHENT pointers
     unsigned        ht_size;
     char            ht_magic;
     HashCompareFunc ht_cmp;
@@ -44,7 +44,7 @@ static void        hash_entry_free(HashEntry *hp);
  * of hashents, since allocation overhead on some systems will be as
  * large as the structure itself.
  */
-/* grab this many hashents at a time (under 1024 for malloc overhead) */
+// grab this many hashents at a time (under 1024 for malloc overhead)
 enum
 {
     HASH_ENTRY_BLOCK_SIZE = 1000
@@ -53,28 +53,28 @@ enum
 /* define the following if you actually want to free the hashents
  * You probably don't want to do this with the usual malloc...
  */
-/* #define HASH_FREE_ENTRIES */
+// #define HASH_FREE_ENTRIES
 
 /* increased from 600.  Each threaded article requires at least
  * one hashent, and various newsgroup hashes can easily get large.
  */
-/* tunable parameters */
+// tunable parameters
 enum
 {
-    RETAIN = 1000 /* retain & recycle this many HASHENTs */
+    RETAIN = 1000 // retain & recycle this many HASHENTs
 };
 
 static HashEntry *s_hash_entry_reuse{};
 static int        s_reusables{};
 
-/* size - a crude guide to size */
+// size - a crude guide to size
 HashTable *hash_create(unsigned size, HashCompareFunc cmp_func)
 {
-    size = std::max(size, 1U);  /* size < 1 is nonsense */
+    size = std::max(size, 1U);  // size < 1 is nonsense
     struct alignalloc
     {
         HashTable ht;
-        HashEntry *hepa[1]; /* longer than it looks */
+        HashEntry *hepa[1]; // longer than it looks
     };
     alignalloc *aap = (alignalloc *)safe_malloc(sizeof *aap + (size - 1) * sizeof(HashEntry *));
     std::memset((char*)aap,0,sizeof *aap + (size-1)*sizeof (HashEntry*));
@@ -109,7 +109,7 @@ void hash_destroy(HashTable *tbl)
         }
         hepp[idx] = nullptr;
     }
-    tbl->ht_magic = 0;                  /* de-certify this table */
+    tbl->ht_magic = 0;                  // de-certify this table
     tbl->ht_addr = nullptr;
     std::free((char*)tbl);
 }
@@ -118,25 +118,25 @@ void hash_store(HashTable *tbl, const char *key, int key_len, HashDatum data)
 {
     HashEntry **nextp = hash_find(tbl, key, key_len);
     HashEntry *hp = *nextp;
-    if (hp == nullptr)              /* absent; allocate an entry */
+    if (hp == nullptr)              // absent; allocate an entry
     {
         hp = hash_entry_alloc();
         hp->he_next = nullptr;
         hp->he_key_len = key_len;
-        *nextp = hp;                /* append to hash chain */
+        *nextp = hp;                // append to hash chain
     }
-    hp->he_data = data;             /* supersede any old data for this key */
+    hp->he_data = data;             // supersede any old data for this key
 }
 
 void hash_delete(HashTable *tbl, const char *key, int key_len)
 {
     HashEntry **nextp = hash_find(tbl, key, key_len);
     HashEntry *hp = *nextp;
-    if (hp == nullptr)                  /* absent */
+    if (hp == nullptr)                  // absent
     {
         return;
     }
-    *nextp = hp->he_next;               /* skip this entry */
+    *nextp = hp->he_next;               // skip this entry
     hp->he_next = nullptr;
     hp->he_data.dat_ptr = nullptr;
     hash_entry_free(hp);
@@ -145,7 +145,7 @@ void hash_delete(HashTable *tbl, const char *key, int key_len)
 static HashEntry **s_slast_nextp{};
 static int       s_slast_keylen{};
 
-/* data corresponding to key */
+// data corresponding to key
 HashDatum hash_fetch(HashTable *tbl, const char *key, int key_len)
 {
     static HashDatum errdatum{nullptr, 0};
@@ -154,7 +154,7 @@ HashDatum hash_fetch(HashTable *tbl, const char *key, int key_len)
     s_slast_nextp = nextp;
     s_slast_keylen = key_len;
     HashEntry *hp = *nextp;
-    if (hp == nullptr)                  /* absent */
+    if (hp == nullptr)                  // absent
     {
         return errdatum;
     }
@@ -164,14 +164,14 @@ HashDatum hash_fetch(HashTable *tbl, const char *key, int key_len)
 void hash_store_last(HashDatum data)
 {
     HashEntry *hp = *s_slast_nextp;
-    if (hp == nullptr)                          /* absent; allocate an entry */
+    if (hp == nullptr)                          // absent; allocate an entry
     {
         hp = hash_entry_alloc();
         hp->he_next = nullptr;
         hp->he_key_len = s_slast_keylen;
-        *s_slast_nextp = hp;              /* append to hash chain */
+        *s_slast_nextp = hp;              // append to hash chain
     }
-    hp->he_data = data;         /* supersede any old data for this key */
+    hp->he_data = data;         // supersede any old data for this key
 }
 
 /* Visit each entry by calling nodefunc at each, with keylen, data,
@@ -231,11 +231,11 @@ static HashEntry **hash_find(HashTable *tbl, const char *key, int keylen)
             break;
         }
     }
-    /* TRN_ASSERT: *(returned value) == hp */
+    // TRN_ASSERT: *(returned value) == hp
     return (prevhp == nullptr? hepp: &prevhp->he_next);
 }
 
-/* not yet taken modulus table size */
+// not yet taken modulus table size
 static unsigned hash(const char *key, int keylen)
 {
     unsigned hash = 0;
@@ -249,11 +249,11 @@ static unsigned hash(const char *key, int keylen)
 
 static int default_cmp(const char *key, int keylen, HashDatum data)
 {
-    /* We already know that the lengths are equal, just compare the strings */
+    // We already know that the lengths are equal, just compare the strings
     return std::memcmp(key, data.dat_ptr, keylen);
 }
 
-/* allocate a hash entry */
+// allocate a hash entry
 static HashEntry *hash_entry_alloc()
 {
     HashEntry* hp;
@@ -262,43 +262,43 @@ static HashEntry *hash_entry_alloc()
     {
         int i;
 
-        /* make a nice big block of hashents to play with */
+        // make a nice big block of hashents to play with
         hp = (HashEntry*)safe_malloc(HASH_ENTRY_BLOCK_SIZE * sizeof (HashEntry));
-        /* set up the pointers within the block */
+        // set up the pointers within the block
         for (i = 0; i < HASH_ENTRY_BLOCK_SIZE-1; i++)
         {
             (hp + i)->he_next = hp + i + 1;
         }
-        /* The last block is the end of the list */
+        // The last block is the end of the list
         (hp+i)->he_next = nullptr;
-        s_hash_entry_reuse = hp;         /* start of list is the first item */
+        s_hash_entry_reuse = hp;         // start of list is the first item
         s_reusables += HASH_ENTRY_BLOCK_SIZE;
     }
 
-    /* pull the first reusable one off the pile */
+    // pull the first reusable one off the pile
     hp = s_hash_entry_reuse;
     s_hash_entry_reuse = s_hash_entry_reuse->he_next;
-    hp->he_next = nullptr;                      /* prevent accidents */
+    hp->he_next = nullptr;                      // prevent accidents
     s_reusables--;
     return hp;
 }
 
-/* free a hash entry */
+// free a hash entry
 static void hash_entry_free(HashEntry *hp)
 {
 #ifdef HASH_FREE_ENTRIES
-    if (s_reusables >= RETAIN)          /* compost heap is full? */
+    if (s_reusables >= RETAIN)          // compost heap is full?
     {
-        std::free((char*)hp);                /* yup, just pitch this one */
+        std::free((char*)hp);                // yup, just pitch this one
     }
-    else                                /* no, just stash for reuse */
+    else                                // no, just stash for reuse
     {
         ++s_reusables;
         hp->he_next = s_hereuse;
         s_hereuse = hp;
     }
 #else
-    /* always add to list */
+    // always add to list
     ++s_reusables;
     hp->he_next = s_hash_entry_reuse;
     s_hash_entry_reuse = hp;
