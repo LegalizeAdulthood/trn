@@ -1,17 +1,17 @@
 /* common.cpp
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #include "config/common.h"
 
-/* GLOBAL THINGS */
+// GLOBAL THINGS
 
-/* various things of type char */
+// various things of type char
 
-char g_msg[CMD_BUF_LEN];     /* general purpose message buffer */
-char g_buf[LINE_BUF_LEN + 1]; /* general purpose line buffer */
-char g_cmd_buf[CMD_BUF_LEN]; /* buffer for formatting system commands */
+char g_msg[CMD_BUF_LEN];     // general purpose message buffer
+char g_buf[LINE_BUF_LEN + 1]; // general purpose line buffer
+char g_cmd_buf[CMD_BUF_LEN]; // buffer for formatting system commands
 
-/* Factored strings */
+// Factored strings
 const char *g_h_for_help{"Type h for help.\n"};
 #ifdef STRICTCR
 char g_bad_cr[]{"\nUnnecessary CR ignored.\n"};
