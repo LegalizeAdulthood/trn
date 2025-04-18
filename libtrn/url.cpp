@@ -1,4 +1,4 @@
-/* This file Copyright 1993 by Clifford A. Adams */
+// This file Copyright 1993 by Clifford A. Adams
 /* url.c
  *
  * Routines for handling WWW URL references.
@@ -27,13 +27,13 @@ using resolver_results = asio::ip::tcp::resolver::results_type;
 using error_code_t = boost::system::error_code;
 
 static char s_url_buf[1030];
-/* XXX just a little bit larger than necessary... */
+// XXX just a little bit larger than necessary...
 static char s_url_type[256];
 static char s_url_host[256];
 static int  s_url_port;
 static char s_url_path[1024];
 
-/* returns true if successful */
+// returns true if successful
 bool fetch_http(const char *host, int port, const char *path, const char *outname)
 {
     asio::io_context context;
@@ -57,8 +57,8 @@ bool fetch_http(const char *host, int port, const char *path, const char *outnam
         return false;
     }
 
-    /* XXX length check */
-    /* XXX later consider using HTTP/1.0 format (and user-agent) */
+    // XXX length check
+    // XXX later consider using HTTP/1.0 format (and user-agent)
     std::sprintf(s_url_buf, "GET %s\r\n", path);
     asio::write(socket, asio::buffer(s_url_buf, std::strlen(s_url_buf)), ec);
     if (ec)
@@ -82,7 +82,7 @@ bool fetch_http(const char *host, int port, const char *path, const char *outnam
         }
         if (len == 0)
         {
-            break;      /* no data, end connection */
+            break;      // no data, end connection
         }
         std::fwrite(s_url_buf,1,len,fp_out);
     }
@@ -90,20 +90,20 @@ bool fetch_http(const char *host, int port, const char *path, const char *outnam
     return true;
 }
 
-/* add port support later? */
+// add port support later?
 bool fetch_ftp(const char *host, const char *origpath, const char *outname)
 {
 #ifdef USE_FTP
     static char cmdline[1024];
-    static char path[512];      /* use to make writable copy */
-    /* buffers used because because filexp overwrites previous call results */
+    static char path[512];      // use to make writable copy
+    // buffers used because because filexp overwrites previous call results
     static char username[128];
     static char userhost[128];
     int         status;
     char*       cdpath;
 
     safe_copy(path,origpath,510);
-    char *p = std::strrchr(path, '/'); /* p points to last slash or nullptr*/
+    char *p = std::strrchr(path, '/'); // p points to last slash or nullptr
     if (p == nullptr)
     {
         std::printf("Error: URL:ftp path has no '/' character.\n");
@@ -116,7 +116,7 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
     }
     safe_copy(username,file_exp("%L"),120);
     safe_copy(userhost,file_exp("%H"),120);
-    if (p != path)      /* not of form /foo */
+    if (p != path)      // not of form /foo
     {
         *p = '\0';
         cdpath = path;
@@ -129,8 +129,8 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
     std::sprintf(cmdline,"%s/ftpgrab %s ftp %s@%s %s %s %s",
             file_exp("%X"),host,username,userhost,cdpath,p+1,outname);
 
-    /* modified escape_shell_cmd code from NCSA HTTPD util.c */
-    /* serious security holes could result without this code */
+    // modified escape_shell_cmd code from NCSA HTTPD util.c
+    // serious security holes could result without this code
     int l = std::strlen(cmdline);
     for (int x = 0; cmdline[x]; x++)
     {
@@ -140,9 +140,9 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
             {
                 cmdline[y] = cmdline[y-1];
             }
-            l++; /* length has been increased */
+            l++; // length has been increased
             cmdline[x] = '\\';
-            x++; /* skip the character */
+            x++; // skip the character
         }
     }
 
@@ -166,15 +166,15 @@ bool fetch_ftp(const char *host, const char *origpath, const char *outname)
 #endif
 }
 
-/* right now only full, absolute URLs are allowed. */
-/* use relative URLs later? */
-/* later: pay more attention to long URLs */
+// right now only full, absolute URLs are allowed.
+// use relative URLs later?
+// later: pay more attention to long URLs
 bool parse_url(const char *url)
 {
     const char* s;
 
-    /* consider using 0 as default to look up the service? */
-    s_url_port = 80;    /* the default */
+    // consider using 0 as default to look up the service?
+    s_url_port = 80;    // the default
     if (!url || !*url)
     {
         std::printf("Empty URL -- ignoring.\n");
@@ -193,10 +193,10 @@ bool parse_url(const char *url)
     s++;
     if (!std::strncmp(s, "//", 2))
     {
-        /* normal URL type, will have host (optional portnum) */
+        // normal URL type, will have host (optional portnum)
         s += 2;
         p = s_url_host;
-        /* check for address literal: news://[ip:v6:address]:port/ */
+        // check for address literal: news://[ip:v6:address]:port/
         if (*s == '[')
         {
             while (*s && *s != ']')
@@ -208,7 +208,7 @@ bool parse_url(const char *url)
                 std::printf("Bad address literal: %s\n",url);
                 return false;
             }
-            s++;        /* skip ] */
+            s++;        // skip ]
         }
         else
         {
@@ -226,7 +226,7 @@ bool parse_url(const char *url)
         if (*s == ':')
         {
             s++;
-            p = s_url_buf;      /* temp space */
+            p = s_url_buf;      // temp space
             if (!std::isdigit(*s))
             {
                 std::printf("Bad URL (non-numeric portnum): %s\n",url);
@@ -248,7 +248,7 @@ bool parse_url(const char *url)
             return false;
         }
     }
-    /* finally, just do the path */
+    // finally, just do the path
     if (*s != '/')
     {
         std::printf("Bad URL (path does not start with /): %s\n",url);
