@@ -125,10 +125,10 @@ extern MarkingAreas g_marking_areas;
 
 // termcap stuff
 
-/*
- * NOTE: if you don't have termlib you'll either have to define these strings
- *    and the tputs routine, or you'll have to redefine the macros below
- */
+//
+// NOTE: if you don't have termlib you'll either have to define these strings
+//    and the tputs routine, or you'll have to redefine the macros below
+//
 #ifdef HAS_TERMLIB
 extern bool  g_tc_GT; // hardware tabs
 extern char *g_tc_BC; // backspace character
