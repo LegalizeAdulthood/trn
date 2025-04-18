@@ -471,7 +471,7 @@ const char *get_val_const(const char *nam, const char *def)
     return val == nullptr || !*val ? def : val;
 }
 
-static bool s_firstexport = true;
+static bool s_first_export = true;
 
 #ifndef WIN32
 extern char **environ;
@@ -492,7 +492,7 @@ char *export_var(const char *nam, const char *val)
 
     if (!environ[i])                    /* does not exist yet */
     {
-        if (s_firstexport)              /* need we copy environment? */
+        if (s_first_export)              /* need we copy environment? */
         {
 #ifndef lint
             char** tmpenv = (char**)    /* point our wand at memory */
@@ -501,7 +501,7 @@ char *export_var(const char *nam, const char *val)
             char** tmpenv = nullptr;
 #endif /* lint */
 
-            s_firstexport = false;
+            s_first_export = false;
             for (int j = 0; j < i; j++) /* copy environment */
             {
                 tmpenv[j] = environ[j];

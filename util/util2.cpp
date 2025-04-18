@@ -15,8 +15,8 @@
 #include <cstring>
 
 #ifdef TILDENAME
-static char *s_tildename{};
-static char *s_tildedir{};
+static char *s_tilde_name{};
+static char *s_tilde_dir{};
 #endif
 
 /* copy a string to a safe spot */
@@ -109,24 +109,24 @@ char *file_exp(const char *text)
                 }
                 *d = '\0';
             }
-            if (s_tildedir && !strcmp(s_tildename, scrbuf))
+            if (s_tilde_dir && !strcmp(s_tilde_name, scrbuf))
             {
-                std::strcpy(scrbuf, s_tildedir);
+                std::strcpy(scrbuf, s_tilde_dir);
                 std::strcat(scrbuf, s);
                 std::strcpy(filename, scrbuf);
             }
             else
             {
-                if (s_tildename)
+                if (s_tilde_name)
                 {
-                    std::free(s_tildename);
+                    std::free(s_tilde_name);
                 }
-                if (s_tildedir)
+                if (s_tilde_dir)
                 {
-                    std::free(s_tildedir);
+                    std::free(s_tilde_dir);
                 }
-                s_tildedir = nullptr;
-                s_tildename = save_str(scrbuf);
+                s_tilde_dir = nullptr;
+                s_tilde_name = save_str(scrbuf);
 #ifdef HAS_GETPWENT     /* getpwnam() is not the paragon of efficiency */
                 {
                     struct passwd *pwd = getpwnam(s_tildename);
@@ -150,7 +150,7 @@ char *file_exp(const char *text)
                         while (std::fgets(tmpbuf, 512, pfp) != nullptr)
                         {
                             char *d = copy_till(scrbuf, tmpbuf, ':');
-                            if (!std::strcmp(scrbuf, s_tildename))
+                            if (!std::strcmp(scrbuf, s_tilde_name))
                             {
                                 for (int i = LOGDIRFIELD - 2; i; i--)
                                 {
@@ -162,7 +162,7 @@ char *file_exp(const char *text)
                                 if (d)
                                 {
                                     copy_till(scrbuf, d + 1, ':');
-                                    s_tildedir = save_str(scrbuf);
+                                    s_tilde_dir = save_str(scrbuf);
                                     std::strcat(scrbuf, s);
                                     std::strcpy(filename, scrbuf);
                                 }
@@ -171,9 +171,9 @@ char *file_exp(const char *text)
                         }
                         std::fclose(pfp);
                     }
-                    if (!s_tildedir)
+                    if (!s_tilde_dir)
                     {
-                        std::printf("%s is an unknown user. Using default.\n", s_tildename);
+                        std::printf("%s is an unknown user. Using default.\n", s_tilde_name);
                         return nullptr;
                     }
                 }
