@@ -1,6 +1,6 @@
 /* init.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "config/common.h"
 #include "trn/init.h"
@@ -52,43 +52,43 @@ long g_our_pid{};
 
 bool initialize(int argc, char *argv[])
 {
-    char *tcbuf = safe_malloc(TCBUF_SIZE); /* make temp buffer for termcap and */
-                                          /* other initialization stuff */
+    char *tcbuf = safe_malloc(TCBUF_SIZE); // make temp buffer for termcap and
+                                          // other initialization stuff
 
     g_our_pid = (long)getpid();
 
-    /* init terminal */
+    // init terminal
 
-    term_init();                        /* must precede opt_init() so that */
-                                        /* ospeed is set for baud-rate */
-                                        /* switches.  Actually terminal */
-                                        /* mode setting is in term_set() */
+    term_init();                        // must precede opt_init() so that
+                                        // ospeed is set for baud-rate
+                                        // switches.  Actually terminal
+                                        // mode setting is in term_set()
     mp_init();
 
-    /* init syntax etc. for searching (must also precede opt_init()) */
+    // init syntax etc. for searching (must also precede opt_init())
 
     search_init();
 
-    /* we have to know g_rn_lib to look up global switches in %X/INIT */
+    // we have to know g_rn_lib to look up global switches in %X/INIT
 
     env_init(tcbuf, true);
     head_init();
 
-    /* decode switches */
+    // decode switches
 
-    opt_init(argc,argv,&tcbuf);         /* must not do % interps! */
-                                        /* (but may mung environment) */
+    opt_init(argc,argv,&tcbuf);         // must not do % interps!
+                                        // (but may mung environment)
     color_init();
 
-    /* init signals, status flags */
+    // init signals, status flags
 
     final_init();
 
-    /* start up file expansion and the % interpreter */
+    // start up file expansion and the % interpreter
 
     interp_init(tcbuf, TCBUF_SIZE);
 
-    /* now make sure we have a current working directory */
+    // now make sure we have a current working directory
 
     if (!g_check_flag)
     {
@@ -100,38 +100,38 @@ bool initialize(int argc, char *argv[])
         finalize(1);
     }
 
-    /* if we aren't just checking, turn off echo */
+    // if we aren't just checking, turn off echo
 
     if (!g_check_flag)
     {
         term_set(tcbuf);
     }
 
-    /* get info on last trn run, if any */
+    // get info on last trn run, if any
 
     last_init();
 
-    std::free(tcbuf);                        /* recover 1024 bytes */
+    std::free(tcbuf);                        // recover 1024 bytes
 
     univ_init();
 
-    /* check for news news */
+    // check for news news
 
     if (!g_check_flag)
     {
         news_news_check();
     }
 
-    /* process the newsid(s) and associate the newsrc(s) */
+    // process the newsid(s) and associate the newsrc(s)
 
     data_source_init();
     newsgroup_data_init();
 
-    /* now read in the .newsrc file(s) */
+    // now read in the .newsrc file(s)
 
     bool foundany = rcstuff_init();
 
-    /* it looks like we will actually read something, so init everything */
+    // it looks like we will actually read something, so init everything
 
     add_ng_init();
     art_init();
@@ -155,9 +155,9 @@ bool initialize(int argc, char *argv[])
     util_init();
     xmouse_init(argv[0]);
 
-    write_last();        /* remember last runtime in .rnlast */
+    write_last();        // remember last runtime in .rnlast
 
-    if (g_max_newsgroup_to_do)                    /* patterns on command line? */
+    if (g_max_newsgroup_to_do)                    // patterns on command line?
     {
         foundany |= scan_active(true);
     }
