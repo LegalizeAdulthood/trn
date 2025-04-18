@@ -1,6 +1,6 @@
 /* backpage.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <config/fdio.h>
 
@@ -12,9 +12,9 @@
 
 #include <cstdio>
 
-static int             s_vary_fd{0};         /* virtual array file for storing  file offsets */
-static ArticlePosition s_vary_buf[VARY_SIZE]; /* current window onto virtual array */
-static long            s_old_offset{-1};     /* offset to block currently in window */
+static int             s_vary_fd{0};         // virtual array file for storing  file offsets
+static ArticlePosition s_vary_buf[VARY_SIZE]; // current window onto virtual array
+static long            s_old_offset{-1};     // offset to block currently in window
 #ifdef DEBUG
 static int             s_max_index{-1};
 #endif
@@ -33,7 +33,7 @@ void back_page_init()
 
 }
 
-/* virtual array read */
+// virtual array read
 
 ArticlePosition virtual_read(ArticleLine index)
 {
@@ -60,18 +60,18 @@ ArticlePosition virtual_read(ArticleLine index)
 #ifndef lint
             (void)lseek(s_vary_fd,s_old_offset,0);
             write(s_vary_fd, (char*)s_vary_buf,sizeof(s_vary_buf));
-#endif /* lint */
+#endif // lint
         }
 #ifndef lint
         (void)lseek(s_vary_fd,offset,0);
         read(s_vary_fd,(char*)s_vary_buf,sizeof(s_vary_buf));
-#endif /* lint */
+#endif // lint
         s_old_offset = offset;
     }
     return s_vary_buf[sub_index];
 }
 
-/* write to virtual array */
+// write to virtual array
 void virtual_write(ArticleLine index, ArticlePosition value)
 {
     int sub_index;
@@ -104,12 +104,12 @@ void virtual_write(ArticleLine index, ArticlePosition value)
 #ifndef lint
             (void)lseek(s_vary_fd,s_old_offset,0);
             write(s_vary_fd,(char*)s_vary_buf,sizeof(s_vary_buf));
-#endif /* lint */
+#endif // lint
         }
 #ifndef lint
         (void)lseek(s_vary_fd,offset,0);
         read(s_vary_fd,(char*)s_vary_buf,sizeof(s_vary_buf));
-#endif /* lint */
+#endif // lint
         s_old_offset = offset;
     }
     s_vary_buf[sub_index] = value;
