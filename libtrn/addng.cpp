@@ -54,7 +54,7 @@ static int  add_group_order_count(const AddGroup **app1, const AddGroup **app2);
 
 static int add_newsgroup_cmp(const char *key, int key_len, HashDatum data)
 {
-    return memcmp(key, ((AddGroup *)data.dat_ptr)->name, key_len);
+    return std::memcmp(key, ((AddGroup *)data.dat_ptr)->name, key_len);
 }
 
 static int build_add_group_list(int key_len, HashDatum *data, int extra)
