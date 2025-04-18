@@ -50,7 +50,7 @@ void bits_init()
 
 void rc_to_bits()
 {
-    char*   mybuf = g_buf; /* place to decode rc line */
+    char*   my_buf = g_buf; /* place to decode rc line */
     char*   c;
     char*   h;
     ArticleNum unread;
@@ -64,16 +64,16 @@ void rc_to_bits()
 #ifndef lint
     if (i >= LINE_BUF_LEN-2)                 /* bigger than g_buf? */
     {
-        mybuf = safe_malloc((MemorySize) (i + 2));
+        my_buf = safe_malloc((MemorySize) (i + 2));
     }
 #endif
-    std::strcpy(mybuf,s);                    /* make scratch copy of line */
-    if (mybuf[0])
+    std::strcpy(my_buf,s);                    /* make scratch copy of line */
+    if (my_buf[0])
     {
-        mybuf[i++] = ',';               /* put extra comma on the end */
+        my_buf[i++] = ',';               /* put extra comma on the end */
     }
-    mybuf[i] = '\0';
-    s = mybuf;                          /* initialize the for loop below */
+    my_buf[i] = '\0';
+    s = my_buf;                          /* initialize the for loop below */
     if (set_first_art(s))
     {
         s = std::strchr(s,',') + 1;
@@ -192,9 +192,9 @@ void rc_to_bits()
         std::fgets(g_cmd_buf, sizeof g_cmd_buf, stdin);
     }
 #endif
-    if (mybuf != g_buf)
+    if (my_buf != g_buf)
     {
-        std::free(mybuf);
+        std::free(my_buf);
     }
     g_newsgroup_ptr->to_read = unread;
 }
@@ -220,7 +220,7 @@ void bits_to_rc()
     char* mybuf = g_buf;
     ArticleNum i;
     ArticleNum count=0;
-    int safelen = LINE_BUF_LEN - 32;
+    int safe_len = LINE_BUF_LEN - 32;
 
     std::strcpy(g_buf,g_newsgroup_ptr->rc_line);            /* start with the newsgroup name */
     char *s = g_buf + g_newsgroup_ptr->num_offset - 1; /* use s for buffer pointer */
@@ -236,22 +236,22 @@ void bits_to_rc()
     s += std::strlen(s);
     for (; i<=g_last_art; i++)   /* for each article in newsgroup */
     {
-        if (s-mybuf > safelen)          /* running out of room? */
+        if (s-mybuf > safe_len)          /* running out of room? */
         {
-            safelen *= 2;
+            safe_len *= 2;
             if (mybuf == g_buf)         /* currently static? */
             {
                 *s = '\0';
-                mybuf = safe_malloc((MemorySize)safelen + 32);
+                mybuf = safe_malloc((MemorySize)safe_len + 32);
                 std::strcpy(mybuf,g_buf);    /* so we must copy it */
                 s = mybuf + (s-g_buf);
                                         /* fix the pointer, too */
             }
             else                        /* just grow in place, if possible */
             {
-                int oldlen = s - mybuf;
-                mybuf = safe_realloc(mybuf,(MemorySize)safelen + 32);
-                s = mybuf + oldlen;
+                int old_len = s - mybuf;
+                mybuf = safe_realloc(mybuf,(MemorySize)safe_len + 32);
+                s = mybuf + old_len;
             }
         }
         if (!was_read(i))               /* still unread? */
@@ -262,14 +262,14 @@ void bits_to_rc()
         {
             std::sprintf(s,"%ld",(long)i); /* put out the min of the range */
             s += std::strlen(s);           /* keeping house */
-            ArticleNum oldi = i;         /* remember this spot */
+            ArticleNum old_i = i;         /* remember this spot */
             do
             {
                 i++;
             } while (i <= g_last_art && was_read(i));
                                         /* find 1st unread article or end */
             i--;                        /* backup to last read article */
-            if (i > oldi)               /* range of more than 1? */
+            if (i > old_i)               /* range of more than 1? */
             {
                 std::sprintf(s,"-%ld,",(long)i);
                                         /* then it out as a range */
@@ -414,7 +414,7 @@ void find_existing_articles()
         ArticleNum last = 0;
         fs::path cwd(".");
         char ch;
-        long lnum;
+        long l_num;
 
         fs::directory_iterator entries(cwd);
         if (fs::directory_iterator() == entries)
@@ -433,9 +433,9 @@ void find_existing_articles()
         for (const fs::directory_entry &entry : entries)
         {
             std::string filename{entry.path().filename().string()};
-            if (std::sscanf(filename.c_str(), "%ld%c", &lnum, &ch) == 1)
+            if (std::sscanf(filename.c_str(), "%ld%c", &l_num, &ch) == 1)
             {
-                an = (ArticleNum)lnum;
+                an = (ArticleNum)l_num;
                 if (an <= g_last_art && an >= g_abs_first)
                 {
                     first = std::min(an, first);
@@ -484,8 +484,8 @@ void one_more(Article *ap)
 {
     if (!(ap->flags & AF_UNREAD))
     {
-        ArticleNum artnum = article_num(ap);
-        check_first(artnum);
+        ArticleNum art_num = article_num(ap);
+        check_first(art_num);
         ap->flags |= AF_UNREAD;
         ap->flags &= ~AF_DEL;
         g_newsgroup_ptr->to_read++;
@@ -710,8 +710,8 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
 {
     char* xartnum;
     ArticleNum x;
-    char *curxref;
-    char tmpbuf[128];
+    char *cur_xref;
+    char tmp_buf[128];
 
     if (g_data_source->flags & DF_NO_XREFS)
     {
@@ -755,15 +755,15 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
         term_down(1);
     }
 # endif
-    curxref = copy_till(tmpbuf,xref_buf,' ') + 1;
+    cur_xref = copy_till(tmp_buf,xref_buf,' ') + 1;
 # ifdef VALIDATE_XREF_SITE
     if (valid_xref_site(artnum,tmpbuf))
 # endif
     {
-        while (*curxref)            /* for each newsgroup */
+        while (*cur_xref)            /* for each newsgroup */
         {
-            curxref = copy_till(tmpbuf,curxref,' ');
-            xartnum = std::strchr(tmpbuf,':');
+            cur_xref = copy_till(tmp_buf,cur_xref,' ');
+            xartnum = std::strchr(tmp_buf,':');
             if (!xartnum)
             {
                 break;
@@ -773,7 +773,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
             {
                 continue;
             }
-            if (!std::strcmp(tmpbuf,g_newsgroup_name.c_str()))  /* is this the current newsgroup? */
+            if (!std::strcmp(tmp_buf,g_newsgroup_name.c_str()))  /* is this the current newsgroup? */
             {
                 if (x < g_abs_first || x > g_last_art)
                 {
@@ -794,7 +794,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
             {
                 if (mark_read)
                 {
-                    if (add_art_num(g_data_source,x,tmpbuf))
+                    if (add_art_num(g_data_source,x,tmp_buf))
                     {
                         break;
                     }
@@ -806,7 +806,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
                 }
 # endif
             }
-            curxref = skip_space(curxref);
+            cur_xref = skip_space(cur_xref);
         }
     }
     std::free(xref_buf);
