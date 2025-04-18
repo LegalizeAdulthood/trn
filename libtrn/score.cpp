@@ -25,15 +25,15 @@
 
 #include <cstdio>
 
-bool    g_kill_thresh_active{};  //
-int     g_kill_thresh{LOW_SCORE}; /* KILL articles at or below this score */
-ArticleNum g_sc_fill_max;           /* maximum art# scored by fill-routine */
-bool    g_sc_fill_read{};        /* true if also scoring read arts... */
-bool    g_sc_initialized{};      /* has score been initialized (are we "in" scoring?) */
-bool    g_sc_scoring{};          /* are we currently scoring an article (prevents loops) */
-bool    g_score_new_first{};      /* changes order of sorting (artnum comparison) when scores are equal */
-bool    g_sc_saves_cores{};       /* If true, save the scores for this group on exit. */
-bool    g_sc_delay{};            /* If true, delay initialization of scoring until explicitly required */
+bool       g_kill_thresh_active{};   //
+int        g_kill_thresh{LOW_SCORE}; /* KILL articles at or below this score */
+ArticleNum g_sc_fill_max;            /* maximum art# scored by fill-routine */
+bool       g_sc_fill_read{};         /* true if also scoring read arts... */
+bool       g_sc_initialized{};       /* has score been initialized (are we "in" scoring?) */
+bool       g_sc_scoring{};           /* are we currently scoring an article (prevents loops) */
+bool       g_score_new_first{};      /* changes order of sorting (artnum comparison) when scores are equal */
+bool       g_sc_saves_cores{};       /* If true, save the scores for this group on exit. */
+bool       g_sc_delay{};             /* If true, delay initialization of scoring until explicitly required */
 
 static bool s_sc_sf_force_init{}; /* If true, always sf_init() */
 static bool s_sc_sf_delay{};      /* if true, delay loading rule files */
