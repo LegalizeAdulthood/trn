@@ -1,6 +1,6 @@
 /* trn/ngstuff.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_NGSTUFF_H
 #define TRN_NGSTUFF_H
 
@@ -16,8 +16,8 @@ enum NumNumResult
     NN_ASK
 };
 
-extern bool        g_one_command; /* no ':' processing in perform() */
-extern std::string g_save_dir;     /* -d */
+extern bool        g_one_command; // no ':' processing in perform()
+extern std::string g_save_dir;     // -d
 
 void newsgroup_stuff_init();
 int escapade();
