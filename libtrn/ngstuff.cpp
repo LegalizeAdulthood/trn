@@ -487,7 +487,7 @@ int thread_perform()
             }
         }
     }
-  break_out:
+break_out:
     std::free(cmdstr);
     return 1;
 }
@@ -824,7 +824,7 @@ int newsgroup_sel_perform()
         perform_status(g_newsgroup_to_read, 50);
     }
 
-  break_out:
+break_out:
     std::free(cmdstr);
     return 1;
 }
@@ -861,7 +861,7 @@ int newsgroup_perform(char *cmdlst, int output_level)
             /* FALL THROUGH */
 
         case '-':
-          deselect:
+deselect:
             if (g_newsgroup_ptr->flags & static_cast<NewsgroupFlags>(g_sel_mask))
             {
                 g_newsgroup_ptr->flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
@@ -966,7 +966,7 @@ int add_group_sel_perform()
         perform_status(g_newsgroup_to_read, 50);
     }
 
-  break_out:
+break_out:
     free(cmdstr);
     return 1;
 }

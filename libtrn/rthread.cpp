@@ -422,7 +422,7 @@ void inc_article(bool sel_flag, bool rereading)
     }
 
     /* Otherwise, just increment through the art numbers */
-  num_inc:
+num_inc:
     if (!ap)
     {
         g_art = g_first_art-1;
@@ -541,7 +541,7 @@ void dec_article(bool sel_flag, bool rereading)
     }
 
     /* Otherwise, just decrement through the art numbers */
-  num_dec:
+num_dec:
     while (true)
     {
         g_art = article_prev(g_art);

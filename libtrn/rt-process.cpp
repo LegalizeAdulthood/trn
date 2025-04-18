@@ -360,7 +360,7 @@ void thread_article(Article *article, char *references)
 
             ap->date = article->date;
             prev = ap;
-          next:
+next:
             if (cp > references)
             {
                 end = cp-1;
@@ -424,7 +424,7 @@ void thread_article(Article *article, char *references)
     }
     else
     {
-      no_references:
+no_references:
         /* The article has no references.  Either turn it into a new thread
         ** or re-attach the fleshed-out article to its old thread.  Don't
         ** touch it at all unless this is the first attempt at threading it.
@@ -558,7 +558,7 @@ static void unlink_child(Article *child)
         else
         {
             last = last->child1;
-          sibling_search:
+sibling_search:
             while (last && last->sibling != child)
             {
                 last = last->sibling;
@@ -606,7 +606,7 @@ void link_child(Article *child)
         }
         else
         {
-          sibling_search:
+sibling_search:
             while (ap->sibling && ap->sibling->date <= child->date)
             {
                 ap = ap->sibling;
@@ -687,7 +687,7 @@ void merge_threads(Subject *s1, Subject *s2)
         s1->next = sp;
     }
 
-  artlink:
+artlink:
     /* Link each article that was attached to t2 to t1. */
       for (t1 = t2; t1; t1 = t2)
       {

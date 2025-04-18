@@ -1115,7 +1115,7 @@ void eat_typeahead()
                 break;
             }
         }
-      dbl_break:
+dbl_break:
         if (j)
         {
             /* Don't delete a partial macro sequence */

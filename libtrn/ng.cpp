@@ -729,7 +729,7 @@ static ArticleSwitchResult art_switch()
             }
             g_default_cmd = "+tsanq";
         }
-      reask_unread:
+reask_unread:
         in_char(u_prompt,MM_UNKILL_PROMPT,g_default_cmd.c_str());
         print_cmd();
         newline();
@@ -1030,7 +1030,7 @@ not_threaded:
         g_s_follow_temp = true; /* keep going until change req. */
         g_univ_follow_temp = true;
         dec_article(false,true);
-      check_dec_art:
+check_dec_art:
         if (g_art < g_abs_first)
         {
             if (g_verbose)
@@ -1581,7 +1581,7 @@ run_the_selector:
         /* FALL THROUGH */
 
     case 'l': case Ctl('l'):          /* refresh screen */
-      refresh_screen:
+refresh_screen:
         if (g_art <= g_last_art)
         {
             g_reread = true;

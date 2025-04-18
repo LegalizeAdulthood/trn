@@ -544,7 +544,7 @@ DoArticleResult do_article()
                             backspace();
                             underchar();
                         }
-                    skip_put:
+skip_put:
                         buf_ptr++;
                     }
                     else if (at_nl(*buf_ptr) || !*buf_ptr)      /* newline? */
@@ -947,8 +947,8 @@ static PageSwitchResult page_switch()
         }
         erase_line(false);      /* erase the prompt */
         /* FALL THROUGH */
-      caseG:
 
+caseG:
     case 'G':
     {
         ArticlePosition start_where;
@@ -1064,7 +1064,7 @@ static PageSwitchResult page_switch()
 
     case 'l':
     case '\f':                /* refresh screen */
-      refresh_screen:
+refresh_screen:
 #ifdef DEBUG
         if (debug & DEB_INNERSRCH)
         {
@@ -1325,7 +1325,7 @@ leave_pager:
             s_special = true;
             s_special_lines = g_tc_LINES;
         }
-      go_forward:
+go_forward:
           if (*line_ptr(s_a_line_begin) != '\f' && (!g_page_stop || s_continuation || !execute(&g_page_compex, line_ptr(s_a_line_begin))))
           {
               if (!s_special //

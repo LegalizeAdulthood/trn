@@ -150,7 +150,7 @@ static char *skip_interp(char *pattern, const char *stoppers)
     {
         if (*pattern == '%' && pattern[1])
         {
-        switch_again:
+switch_again:
             switch (*++pattern)
             {
             case '^':

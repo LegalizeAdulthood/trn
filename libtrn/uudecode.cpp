@@ -224,7 +224,7 @@ DecodeState uudecode(std::FILE *ifp, DecodeState state)
 
     if (state == DECODE_DONE)
     {
-      all_done:
+all_done:
         if (ofp)
         {
             std::fclose(ofp);

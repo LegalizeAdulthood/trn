@@ -229,7 +229,7 @@ char *read_art_buf(bool view_inline)
         filter_offset = 0;
     }
 
-  read_more:
+read_more:
     extra_offset = g_mime_state == HTML_TEXT_MIME? 1024 : 0;
     o = read_offset + extra_offset;
     if (s_art_buf_size < g_art_buf_pos + o + LINE_BUF_LEN)
@@ -282,7 +282,7 @@ char *read_art_buf(bool view_inline)
         }
         break;
     }
-  mime_switch:
+mime_switch:
     switch (g_mime_state)
     {
     case ISO_TEXT_MIME:
@@ -495,7 +495,7 @@ char *read_art_buf(bool view_inline)
         break;
     }
 
-  done:
+done:
     word_wrap = g_tc_COLS - g_word_wrap_offset;
     if (read_something && g_word_wrap_offset >= 0 && word_wrap > 20 && bp)
     {

@@ -301,7 +301,7 @@ void set_selector(SelectionMode smode, SelectionSortMode ssort)
         g_sel_mode_string = "subjects";
         g_sel_thread_mode = smode;
         g_sel_thread_sort = ssort;
-     thread_subj_sort:
+thread_subj_sort:
           if (g_sel_sort == SS_AUTHOR || g_sel_sort == SS_GROUPS || g_sel_sort == SS_NATURAL)
           {
               g_sel_sort = SS_DATE;
@@ -1869,7 +1869,7 @@ try_again:
         NewsgroupData* np;
         int max_len = 0;
         int outputting = (*g_sel_grp_display_mode != 'l');
-      start_of_loop:
+start_of_loop:
         for (np = g_sel_page_np; np; np = np->next)
         {
             if (np == g_newsgroup_ptr)

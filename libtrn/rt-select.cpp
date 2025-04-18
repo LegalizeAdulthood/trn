@@ -233,7 +233,7 @@ char article_selector(char_int cmd)
         goto sel_exit;
     }
 
-  sel_restart:
+sel_restart:
     /* Setup for selecting articles to read or set unread */
     if (g_sel_rereading)
     {
@@ -371,7 +371,7 @@ static void sel_do_groups()
         {
             continue;
         }
-      do_group:
+do_group:
         if (np->flags & NF_SEL)
         {
             np->flags &= ~NF_SEL;
@@ -435,7 +435,7 @@ static void sel_do_groups()
             /* later: possible go-to-newsgroup (applicable?) */
         }
     }
-  loop_break:
+loop_break:
     g_selected_count = save_selected_count;
 }
 
@@ -449,7 +449,7 @@ char multirc_selector()
 
     set_selector(SM_MULTIRC, SS_MAGIC_NUMBER);
 
-  sel_restart:
+sel_restart:
     s_end_char = g_newsrc_sel_cmds[0];
     s_page_char = g_newsrc_sel_cmds[1];
     g_sel_mask = AGF_SEL;
@@ -511,7 +511,7 @@ char newsgroup_selector()
 
     set_selector(SM_NEWSGROUP, SS_MAGIC_NUMBER);
 
-  sel_restart:
+sel_restart:
     if (*g_sel_grp_display_mode != 's')
     {
         for (Newsrc *rp = g_multirc->first; rp; rp = rp->next)
@@ -598,7 +598,7 @@ char add_group_selector(GetNewsgroupFlags flags)
 
     set_selector(SM_ADD_GROUP, SS_MAGIC_NUMBER);
 
-  sel_restart:
+sel_restart:
     if (*g_sel_grp_display_mode != 's')
     {
         for (Newsrc *rp = g_multirc->first; rp; rp = rp->next)
@@ -675,7 +675,7 @@ char option_selector()
 
     set_selector(SM_OPTIONS, SS_MAGIC_NUMBER);
 
-  sel_restart:
+sel_restart:
     s_end_char = g_option_sel_cmds[0];
     s_page_char = g_option_sel_cmds[1];
     if (g_sel_rereading)
@@ -887,7 +887,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
             sleep(5);
             return exit_code;
         }
-      do_group:
+do_group:
         set_newsgroup(np);
         if (np != g_current_newsgroup)
         {
@@ -1080,10 +1080,10 @@ static char sel_input()
      * the following will be the default action.
      */
     int action = '+';
-  reask_selector:
+reask_selector:
     /* Prompt the user */
     sel_prompt();
-  position_selector:
+position_selector:
       int got_dash = 0;
       int got_goto = 0;
     s_force_sel_pos = -1;
@@ -2028,7 +2028,7 @@ static DisplayState sel_command(char_int ch)
             g_newsgroup_ptr = nullptr;
         }
     }
-  do_command:
+do_command:
     *g_buf = ch;
     g_buf[1] = FINISH_CMD;
     g_output_chase_phrase = true;
@@ -2186,8 +2186,8 @@ static DisplayState sel_command(char_int ch)
         }
         return DS_DISPLAY;
 
+the_default:
     default:
-      the_default:
         ret = s_extra_commands(ch);
         switch (ret)
         {
@@ -2384,7 +2384,7 @@ static DisplayState article_commands(char_int ch)
         }
         erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
-      reask_output:
+reask_output:
         in_char("Selector mode:  Threads, Subjects, Articles?", MM_SELECTOR_ORDER_PROMPT, "tsa");
         print_cmd();
         if (*g_buf == 'h' || *g_buf == 'H')
@@ -2434,7 +2434,7 @@ static DisplayState article_commands(char_int ch)
         }
         erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
-      reask_sort:
+reask_sort:
         if (g_sel_mode == SM_ARTICLE)
         {
             in_char(
@@ -2939,7 +2939,7 @@ static DisplayState newsgroup_commands(char_int ch)
         }
         erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
-      reask_sort:
+reask_sort:
         in_char("Order by Newsrc, Group name, or Count?", MM_Q, "ngcNGC");
         print_cmd();
         switch (*g_buf)
@@ -3245,7 +3245,7 @@ static DisplayState add_group_commands(char_int ch)
         }
         erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
-      reask_sort:
+reask_sort:
         in_char("Order by Natural-order, Group name, or Count?", MM_Q, "ngcNGC");
         print_cmd();
         switch (*g_buf)
@@ -3647,7 +3647,7 @@ static DisplayState universal_commands(char_int ch)
         }
         erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
-      reask_sort:
+reask_sort:
         in_char("Order by Natural, or score Points?", MM_Q, "npNP");
         print_cmd();
         if (*g_buf == 'h' || *g_buf == 'H')

@@ -424,7 +424,7 @@ SaveResult save_article()
 
                 std::sprintf(g_cmd_buf,
                 "\nFile %s doesn't exist--\n        use mailbox format?",s);
-              reask_save:
+reask_save:
                 in_char(g_cmd_buf, MM_USE_MAILBOX_FORMAT_PROMPT, dflt);
                 newline();
                 print_cmd();
@@ -1055,7 +1055,7 @@ void forward()
     std::fclose(header);
     safe_copy(g_cmd_buf,file_exp(maildoer),sizeof g_cmd_buf);
     invoke(g_cmd_buf,g_orig_dir.c_str());
-  done:
+done:
     std::free(maildoer);
 #ifdef REGEX_WORKS_RIGHT
     free_compex(&mime_compex);

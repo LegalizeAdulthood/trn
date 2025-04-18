@@ -36,7 +36,7 @@ int nntp_connect(const char *machine, bool verbose)
     }
     g_nntp_link.flags |= NNTP_NEW_CMD_OK;
 #if 0
-  try_to_connect:
+try_to_connect:
 #endif
     if (verbose)
     {
@@ -213,7 +213,7 @@ int nntp_check()
 {
     int len = 0;
 
- read_it:
+read_it:
 #ifdef HAS_SIGHOLD
     sighold(SIGINT);
 #endif

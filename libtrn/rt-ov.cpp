@@ -378,7 +378,7 @@ beginning:
     {
         g_last_cached = artnum;
     }
-  exit:
+exit:
     if (g_int_count || !success)
     {
         g_int_count = 0;

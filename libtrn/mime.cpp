@@ -1125,7 +1125,7 @@ DecodeState qp_decode(std::FILE *ifp, DecodeState state)
 
     while ((c1 = mime_getc(ifp)) != EOF)
     {
-      check_c1:
+check_c1:
         if (c1 == '=')
         {
             c1 = mime_getc(ifp);
@@ -1220,7 +1220,7 @@ int b64_decode_string(char *t, const char *f)
         } while (ch2 == XX);
         *t++ = (ch1 & 0x03) << 6 | ch2;
     }
-  dbl_break:
+dbl_break:
     *t = '\0';
     return t - save_t;
 }
@@ -1235,7 +1235,7 @@ DecodeState b64_decode(std::FILE *ifp, DecodeState state)
 
     if (state == DECODE_DONE)
     {
-      all_done:
+all_done:
         if (ofp)
         {
             std::fclose(ofp);
@@ -1989,7 +1989,7 @@ static char *tag_action(char *t, char *word, bool opening_tag)
                         s_roman_letters[i] = std::toupper(s_roman_letters[i]);
                     }
                 }
-              roman_numerals:
+roman_numerals:
                 cp = t - 6;
                 cnt = ++blks[j].count;
                 for (int i = 0; cnt && i < 7; i++)

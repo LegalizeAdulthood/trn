@@ -951,7 +951,7 @@ bool get_newsgroup(const char *what, GetNewsgroupFlags flags)
         dingaling();
         std::printf("\nBad newsgroup name.\n");
         term_down(2);
-      check_fuzzy_match:
+check_fuzzy_match:
         if (g_fuzzy_get && (flags & GNG_FUZZY))
         {
             flags &= ~GNG_FUZZY;
@@ -1287,7 +1287,7 @@ bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum)
 
     if (newnum < 0)
     {
-      reask_reloc:
+reask_reloc:
         unflush_output();               /* disable any ^O in effect */
         if (g_verbose)
         {
@@ -1299,7 +1299,7 @@ bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum)
         }
         std::fflush(stdout);
         term_down(1);
-      reinp_reloc:
+reinp_reloc:
         eat_typeahead();
         get_cmd(g_buf);
         if (errno || *g_buf == '\f')    /* if return from stop signal */
@@ -1794,7 +1794,7 @@ bool write_newsrcs(Multirc *mptr)
         }
         if (std::fclose(rcfp) == EOF)
         {
-          write_error:
+write_error:
             std::printf(s_cant_recreate,rp->name);
             remove(rp->new_name);
             total_success = false;

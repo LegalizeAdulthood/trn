@@ -362,7 +362,7 @@ char *compile(CompiledRegex *compex, const char *strp, bool RE, bool fold)
                 continue;
             }
 
-            defchar:
+defchar:
             default:
                 *ep++ = CCHR;
                 *ep++ = c;
@@ -636,7 +636,7 @@ bool advance(CompiledRegex *compex, const char *lp, const char *ep)
             ep += BMAPSIZ;
             goto star;
 
-        star:
+star:
             do
             {
                 lp--;

@@ -748,7 +748,7 @@ bool find_active_group(DataSource *dp, char *outbuf, const char *nam, int len, A
             (void) std::memcpy(lbp,outbuf,lbp_len);
             return true;
         }
-      use_cache:
+use_cache:
         /* Return our cached version */
         (void) std::memcpy(outbuf,lbp,lbp_len);
         outbuf[lbp_len] = '\0';
@@ -818,7 +818,6 @@ const char *find_group_desc(DataSource *dp, const char *group_name)
     }
 
 try_xgtitle:
-
     if ((dp->flags & (DF_REMOTE | DF_NO_XGTITLE)) == DF_REMOTE)
     {
         set_data_source(dp);

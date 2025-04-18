@@ -193,7 +193,7 @@ void do_multirc()
 
     if (g_use_newsgroup_selector)
     {
-      ng_start_sel:
+ng_start_sel:
         switch (newsgroup_selector())
         {
         case Ctl('n'):
@@ -338,7 +338,7 @@ void do_multirc()
                 g_recent_newsgroup = g_current_newsgroup;     /* remember previous newsgroup */
                 g_current_newsgroup = g_newsgroup_ptr; /* remember current newsgroup */
             }
-    reask_newsgroup:
+reask_newsgroup:
             unflush_output();   /* disable any ^O in effect */
                 if (g_newsgroup_ptr == nullptr)
                 {
@@ -375,7 +375,7 @@ void do_multirc()
                 term_down(1);
             }
             std::fflush(stdout);
-    reinp_newsgroup:
+reinp_newsgroup:
             if (special || (g_newsgroup_ptr && g_newsgroup_ptr->to_read > 0))
             {
                 retry = true;
@@ -465,7 +465,7 @@ InputNewsgroupResult input_newsgroup()
         *g_buf = g_buf[2];
     }
 
-  do_command:
+do_command:
     s_go_forward = true;                /* default to forward motion */
     switch (*g_buf)
     {
@@ -670,7 +670,7 @@ InputNewsgroupResult input_newsgroup()
         end_only();
         newline();
         use_next_multirc(g_multirc);
-      display_multirc:
+display_multirc:
         {
             Newsrc* rp;
             int len;
@@ -843,7 +843,7 @@ reask_abandon:
         {
             return ING_ERASE;
         }
-      ng_start_sel:
+ng_start_sel:
         g_use_newsgroup_selector = true;
         switch (newsgroup_selector())
         {
@@ -902,7 +902,7 @@ reask_abandon:
             s = nullptr;
         }
 
-      redo_newsgroup:
+redo_newsgroup:
         switch (do_newsgroup(s))
         {
         case NG_NORM:
