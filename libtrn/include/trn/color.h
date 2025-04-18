@@ -5,9 +5,9 @@
 #ifndef TRN_COLOR_H
 #define TRN_COLOR_H
 
-/*
-** Object numbers.
-*/
+//
+// Object numbers.
+//
 
 enum ObjectNumber
 {
