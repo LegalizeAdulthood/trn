@@ -1,4 +1,4 @@
-/* This file is Copyright 1993 by Clifford A. Adams */
+// This file is Copyright 1993 by Clifford A. Adams
 /* trn/scmd.h
  *
  * Scan command interpreter/router
