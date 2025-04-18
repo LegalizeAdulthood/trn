@@ -1,6 +1,6 @@
 /* intrp.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <config/pipe_io.h>
 
@@ -43,13 +43,13 @@ struct utsname utsn;
 #include <filesystem>
 #include <string>
 
-std::string g_orig_dir;    /* cwd when rn invoked */
-char       *g_host_name{}; /* host name to match local postings */
+std::string g_orig_dir;    // cwd when rn invoked
+char       *g_host_name{}; // host name to match local postings
 std::string g_head_name;
 int         g_perform_count{};
 
 #ifdef HAS_NEWS_ADMIN
-const std::string g_news_admin{NEWS_ADMIN}; /* news administrator */
+const std::string g_news_admin{NEWS_ADMIN}; // news administrator
 int               g_news_uid{};
 #endif
 
@@ -66,7 +66,7 @@ void interp_init(char *tcbuf, int tcbuf_len)
     s_last_input.clear();
     init_compex(&s_cond_compex);
 
-    /* get environmental stuff */
+    // get environmental stuff
 
 #ifdef HAS_NEWS_ADMIN
     {
@@ -85,28 +85,28 @@ void interp_init(char *tcbuf, int tcbuf_len)
         (void) filexp(tildenews);
 #else
         ... "Define either HAS_GETPWENT or TILDENAME to get NEWS_ADMIN"
-#endif  /* TILDENAME */
-#endif  /* HAS_GETPWENT */
+#endif  // TILDENAME
+#endif  // HAS_GETPWENT
     }
 
-    /* if this is the news admin then load his UID into g_news_uid */
+    // if this is the news admin then load his UID into g_news_uid
 
     if (!g_login_name.empty())
         g_news_uid = getuid();
 #endif
 
-    if (g_check_flag)             /* that getwd below takes ~1/3 sec. */
+    if (g_check_flag)             // that getwd below takes ~1/3 sec.
     {
-        return;                  /* and we do not need it for -c */
+        return;                  // and we do not need it for -c
     }
-    trn_getwd(tcbuf, tcbuf_len); /* find working directory name */
-    g_orig_dir = tcbuf;           /* and remember it */
+    trn_getwd(tcbuf, tcbuf_len); // find working directory name
+    g_orig_dir = tcbuf;           // and remember it
 
-    /* name of header file (%h) */
+    // name of header file (%h)
 
     g_head_name = file_exp(HEADNAME);
 
-    /* the hostname to use in local-article comparisons */
+    // the hostname to use in local-article comparisons
 #if HOSTBITS != 0
     int i = (HOSTBITS < 2? 2 : HOSTBITS);
     static char buff[128];
@@ -135,7 +135,7 @@ void interp_final()
     g_orig_dir.clear();
 }
 
-/* skip interpolations */
+// skip interpolations
 
 static char *skip_interp(char *pattern, const char *stoppers)
 {
@@ -250,10 +250,10 @@ switch_again:
         }
     }
 getout:
-    return pattern;                     /* where we left off */
+    return pattern;                     // where we left off
 }
 
-/* interpret interpolations */
+// interpret interpolations
 char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, const char *cmd)
 {
     char* subj_buf = nullptr;
@@ -317,7 +317,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     proc_sprintf = true;
                     char *h = spfbuf;
                     *h++ = '%';
-                    pattern++;  /* Skip over ':' */
+                    pattern++;  // Skip over ':'
                     while (*pattern //
                            && (*pattern == '.' || *pattern == '-' || isdigit(*pattern)))
                     {
@@ -483,7 +483,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         goto getout;
                     }
                     matched = (execute(&s_cond_compex,dest) != nullptr);
-                    if (getbracket(&s_cond_compex, 0)) /* were there brackets? */
+                    if (getbracket(&s_cond_compex, 0)) // were there brackets?
                     {
                         g_bra_compex = &s_cond_compex;
                     }
@@ -714,13 +714,13 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     }
                     break;
 
-                case 'f':                       /* from line */
+                case 'f':                       // from line
                     if (g_in_ng)
                     {
                         parse_header(g_art);
                         if (g_header_type[REPLY_LINE].min_pos >= 0 && !comment_parse)
                         {
-                                                /* was there a reply line? */
+                                                // was there a reply line?
                             if (!(s=reply_buf))
                             {
                                 reply_buf = fetch_lines(g_art, REPLY_LINE);
@@ -744,7 +744,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     {
                         parse_header(g_art);
                         if (g_header_type[FOLLOW_LINE].min_pos >= 0)
-                                        /* is there a Followup-To line? */
+                                        // is there a Followup-To line?
                         {
                             follow_buf = fetch_lines(g_art, FOLLOW_LINE);
                             s = follow_buf;
@@ -761,18 +761,18 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     }
                     break;
 
-                case 'g':                       /* general mode */
+                case 'g':                       // general mode
                     scrbuf[0] = static_cast<char>(g_general_mode);
                     scrbuf[1] = '\0';
                     s = scrbuf;
                     break;
 
-                case 'h':                       /* header file name */
+                case 'h':                       // header file name
                     std::strcpy(scrbuf, g_head_name.c_str());
                     s = scrbuf;
                     break;
 
-                case 'H':                       /* host name in postings */
+                case 'H':                       // host name in postings
                     std::strcpy(scrbuf, g_p_host_name.c_str());
                     s = scrbuf;
                     break;
@@ -797,7 +797,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     }
                     break;
 
-                case 'I':                       /* indent string for quoting */
+                case 'I':                       // indent string for quoting
                     std::sprintf(scrbuf,"'%s'",g_indent_string.c_str());
                     s = scrbuf;
                     break;
@@ -807,7 +807,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     std::sprintf(scrbuf,"%d",g_just_a_sec*10);
                     break;
 
-                case 'l':                       /* news admin login */
+                case 'l':                       // news admin login
 #ifdef HAS_NEWS_ADMIN
                     std::strcpy(scrbuf, g_news_admin.c_str());
 #else
@@ -816,12 +816,12 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     s = scrbuf;
                     break;
 
-                case 'L':                       /* login id */
+                case 'L':                       // login id
                     std::strcpy(scrbuf, g_login_name.c_str());
                     s = scrbuf;
                     break;
 
-                case 'm':               /* current mode */
+                case 'm':               // current mode
                     s = scrbuf;
                     *s = static_cast<char>(g_mode);
                     s[1] = '\0';
@@ -832,7 +832,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     s = scrbuf;
                     break;
 
-                case 'n':                       /* newsgroups */
+                case 'n':                       // newsgroups
                     if (g_in_ng)
                     {
                         ngs_buf = fetch_lines(g_art, NEWSGROUPS_LINE);
@@ -844,12 +844,12 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     }
                     break;
 
-                case 'N':                       /* full name */
+                case 'N':                       // full name
                     std::strcpy(scrbuf, g_real_name.c_str());
                     s = get_val("NAME", scrbuf);
                     break;
 
-                case 'o':                       /* organization */
+                case 'o':                       // organization
 #ifdef IGNOREORG
                     s = get_val("NEWSORG",s_orgname);
 #else
@@ -1030,7 +1030,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     parse_header(g_art);
                     if (g_header_type[REPLY_LINE].min_pos >= 0)
                     {
-                                        /* was there a reply line? */
+                                        // was there a reply line?
                         if (!(s=reply_buf))
                         {
                             reply_buf = fetch_lines(g_art, REPLY_LINE);
@@ -1050,7 +1050,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     {
                         if (g_header_type[PATH_LINE].min_pos >= 0)
                         {
-                                        /* should we substitute path? */
+                                        // should we substitute path?
                             path_buf = fetch_lines(g_art, PATH_LINE);
                             s = path_buf;
                         }
@@ -1060,7 +1060,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                             s += i + 1;
                         }
                     }
-                    address_parse = true;       /* just the good part */
+                    address_parse = true;       // just the good part
                     break;
 
                 case 'u':
@@ -1118,24 +1118,24 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     s = scrbuf;
                     break;
 
-                case 'x':                           /* news library */
+                case 'x':                           // news library
                     std::strcpy(scrbuf, g_lib.c_str());
                     s = scrbuf;
                     break;
 
-                case 'X':                           /* rn library */
+                case 'X':                           // rn library
                     std::strcpy(scrbuf, g_rn_lib.c_str());
                     s = scrbuf;
                     break;
 
-                case 'y':       /* from line with *-shortening */
+                case 'y':       // from line with *-shortening
                     if (!g_in_ng)
                     {
                         s = s_empty;
                         break;
                     }
-                    /* XXX Rewrite this! */
-                    {   /* sick, but I don't want to hunt down a buf... */
+                    // XXX Rewrite this!
+                    {   // sick, but I don't want to hunt down a buf...
                         static char tmpbuf[1024];
                         char* s2;
                         char* s3;
@@ -1147,7 +1147,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         for (s2 = tmpbuf; (*s2 && (*s2 != '@') && (*s2 != ' ')); s2++)
                         {
                         }
-                        if (*s2 == '@')         /* we have normal form... */
+                        if (*s2 == '@')         // we have normal form...
                         {
                             for (s3 = s2 + 1; (*s3 && (*s3 != ' ')); s3++)
                             {
@@ -1157,9 +1157,9 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                                 }
                             }
                         }
-                        if (i>1)   /* more than one dot */
+                        if (i>1)   // more than one dot
                         {
-                            s3 = s2;    /* will be incremented before use */
+                            s3 = s2;    // will be incremented before use
                             while (i >= 2)
                             {
                                 s3++;
@@ -1262,15 +1262,15 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                     *t = std::toupper(*t);
                 }
             }
-            /* Do we have room left? */
+            // Do we have room left?
             int i = std::strlen(s);
             if (dest_size <= i)
             {
                 abort_interp();
             }
-            dest_size -= i;      /* adjust the size now. */
+            dest_size -= i;      // adjust the size now.
 
-            /* A maze of twisty little conditions, all alike... */
+            // A maze of twisty little conditions, all alike...
             if (address_parse || comment_parse)
             {
                 if (s != scrbuf)
@@ -1282,7 +1282,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                 if (address_parse)
                 {
                     char *h = std::strchr(s, '<');
-                    if (h != nullptr)   /* grab the good part */
+                    if (h != nullptr)   // grab the good part
                     {
                         s = h+1;
                         if ((h=std::strchr(s,'>')) != nullptr)
@@ -1295,7 +1295,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
                         while (h-- != s && *h == ' ')
                         {
                         }
-                        h[1] = '\0';            /* or strip the comment */
+                        h[1] = '\0';            // or strip the comment
                     }
                 }
                 else
@@ -1308,8 +1308,8 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
             }
             if (metabit)
             {
-                /* set meta bit while copying. */
-                i = metabit;            /* maybe get into register */
+                // set meta bit while copying.
+                i = metabit;            // maybe get into register
                 if (s == dest)
                 {
                     while (*dest)
@@ -1327,13 +1327,13 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
             }
             else if (re_quote || tick_quote)
             {
-                /* put a backslash before regexp specials while copying. */
+                // put a backslash before regexp specials while copying.
                 if (s == dest)
                 {
-                    /* copy out so we can copy in. */
+                    // copy out so we can copy in.
                     safe_copy(scrbuf, s, sizeof scrbuf);
                     s = scrbuf;
-                    if (i > sizeof scrbuf)      /* we truncated, ack! */
+                    if (i > sizeof scrbuf)      // we truncated, ack!
                     {
                         abort_interp();
                     }
@@ -1371,7 +1371,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
             }
             else
             {
-                /* straight copy. */
+                // straight copy.
                 if (s == dest)
                 {
                     dest += i;
@@ -1420,7 +1420,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
             }
             else if (*pattern == '\\' && pattern[1])
             {
-                ++pattern;              /* skip backslash */
+                ++pattern;              // skip backslash
                 pattern = interp_backslash(dest, pattern) + 1;
                 *dest++ |= metabit;
             }
@@ -1439,7 +1439,7 @@ char *do_interp(char *dest, int dest_size, char *pattern, const char *stoppers, 
         }
     }
 getout:
-    safe_free(subj_buf);         /* return any checked out storage */
+    safe_free(subj_buf);         // return any checked out storage
     safe_free(ngs_buf);
     safe_free(refs_buf);
     safe_free(artid_buf);
@@ -1450,7 +1450,7 @@ getout:
     safe_free(dist_buf);
     safe_free(line_buf);
 
-    return pattern; /* where we left off */
+    return pattern; // where we left off
 }
 
 char *interp_backslash(char *dest, char *pattern)
@@ -1524,7 +1524,7 @@ char *interp_backslash(char *dest, char *pattern)
     return pattern;
 }
 
-/* helper functions */
+// helper functions
 
 char *interp(char *dest, int dest_size, char *pattern)
 {
@@ -1536,7 +1536,7 @@ char *interp_search(char *dest, int dest_size, char *pattern, const char *cmd)
     return do_interp(dest,dest_size,pattern,nullptr,cmd);
 }
 
-/* normalize a references line in place */
+// normalize a references line in place
 
 void normalize_refs(char *refs)
 {
