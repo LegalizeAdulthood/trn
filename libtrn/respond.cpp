@@ -36,17 +36,17 @@
 #include <cstdlib>
 #include <cstring>
 
-std::string g_save_dest;      /* value of %b */
-std::string g_extract_dest;   /* value of %E */
-std::string g_extract_prog;   /* value of %e */
-ArticlePosition     g_save_from{};    /* value of %B */
-bool        g_mbox_always{}; /* -M */
-bool        g_norm_always{}; /* -N */
-std::string g_priv_dir;       /* private news directory */
-std::string g_indent_string{">"};   /* indent for old article embedded in followup */
+std::string     g_save_dest;          /* value of %b */
+std::string     g_extract_dest;       /* value of %E */
+std::string     g_extract_prog;       /* value of %e */
+ArticlePosition g_save_from{};        /* value of %B */
+bool            g_mbox_always{};      /* -M */
+bool            g_norm_always{};      /* -N */
+std::string     g_priv_dir;           /* private news directory */
+std::string     g_indent_string{">"}; /* indent for old article embedded in followup */
 
-static char  s_nullart[] = "\nEmpty article.\n";
-static std::FILE *s_tmpfp{};
+static char       s_empty_article[] = "\nEmpty article.\n";
+static std::FILE *s_tmp_fp{};
 
 static void follow_it_up();
 #if 0
@@ -88,7 +88,7 @@ SaveResult save_article()
         }
         else
         {
-            std::fputs(s_nullart, stdout);
+            std::fputs(s_empty_article, stdout);
         }
         term_down(2);
         return SAVE_DONE;
@@ -407,7 +407,7 @@ SaveResult save_article()
             s = c;                      /* absolutize it */
         }
         g_save_dest = s; /* make it handy for %b */
-        s_tmpfp = nullptr;
+        s_tmp_fp = nullptr;
         if (!there)
         {
             if (g_mbox_always)
@@ -476,14 +476,14 @@ SaveResult save_article()
         }
         else
         {
-            s_tmpfp = std::fopen(s,"r+");
-            if (!s_tmpfp)
+            s_tmp_fp = std::fopen(s,"r+");
+            if (!s_tmp_fp)
             {
                 mailbox = false;
             }
             else
             {
-                if (std::fread(g_buf, 1, LBUFLEN, s_tmpfp))
+                if (std::fread(g_buf, 1, LBUFLEN, s_tmp_fp))
                 {
                     c = g_buf;
                     if (!std::isspace(MBOXCHAR))   /* if non-zero, */
@@ -503,9 +503,9 @@ SaveResult save_article()
         int i;
         if (s)
         {
-            if (s_tmpfp)
+            if (s_tmp_fp)
             {
-                std::fclose(s_tmpfp);
+                std::fclose(s_tmp_fp);
             }
             safe_copy(g_cmd_buf, file_exp(s), sizeof g_cmd_buf);
             if (g_data_source->flags & DF_REMOTE)
@@ -519,41 +519,41 @@ SaveResult save_article()
             no_echo();           /* make terminal do what we want */
             cr_mode();
         }
-        else if (s_tmpfp != nullptr || (s_tmpfp = std::fopen(g_save_dest.c_str(), "a")) != nullptr)
+        else if (s_tmp_fp != nullptr || (s_tmp_fp = std::fopen(g_save_dest.c_str(), "a")) != nullptr)
         {
             bool quote_From = false;
-            std::fseek(s_tmpfp,0,2);
+            std::fseek(s_tmp_fp,0,2);
             if (mailbox)
             {
 #if MBOXCHAR == '\001'
                 std::fprintf(s_tmpfp,"\001\001\001\001\n");
 #else
                 interp(g_cmd_buf, sizeof g_cmd_buf, "From %t %`LANG= date`\n");
-                std::fputs(g_cmd_buf, s_tmpfp);
+                std::fputs(g_cmd_buf, s_tmp_fp);
                 quote_From = true;
 #endif
             }
             if (g_save_from == 0 && g_art != 0)
             {
-                std::fprintf(s_tmpfp, "Article: %ld of %s\n", g_art, g_newsgroup_name.c_str());
+                std::fprintf(s_tmp_fp, "Article: %ld of %s\n", g_art, g_newsgroup_name.c_str());
             }
             seek_art(g_save_from);
             while (read_art(g_buf, LBUFLEN) != nullptr)
             {
                 if (quote_From && string_case_equal(g_buf, "from ",5))
                 {
-                    std::putc('>', s_tmpfp);
+                    std::putc('>', s_tmp_fp);
                 }
-                std::fputs(g_buf, s_tmpfp);
+                std::fputs(g_buf, s_tmp_fp);
             }
-            std::fputs("\n\n", s_tmpfp);
+            std::fputs("\n\n", s_tmp_fp);
 #if MBOXCHAR == '\001'
             if (mailbox)
             {
                 std::fprintf(s_tmpfp,"\001\001\001\001\n");
             }
 #endif
-            std::fclose(s_tmpfp);
+            std::fclose(s_tmp_fp);
             i = 0; /* TODO: set non-zero on write error */
         }
         else
@@ -593,7 +593,7 @@ SaveResult view_article()
         }
         else
         {
-            std::fputs(s_nullart, stdout);
+            std::fputs(s_empty_article, stdout);
         }
         term_down(2);
         return SAVE_DONE;
@@ -669,7 +669,7 @@ int cancel_article()
         }
         else
         {
-            std::fputs(s_nullart, stdout);
+            std::fputs(s_empty_article, stdout);
         }
         term_down(2);
         return r;
@@ -742,7 +742,7 @@ int supersede_article()         /* Supersedes: */
         }
         else
         {
-            std::fputs(s_nullart, stdout);
+            std::fputs(s_empty_article, stdout);
         }
         term_down(2);
         return r;
