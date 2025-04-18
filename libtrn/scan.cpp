@@ -1,57 +1,57 @@
-/* This file Copyright 1992 by Clifford A. Adams */
+// This file Copyright 1992 by Clifford A. Adams
 /* scan.c
  *
  * Scan initialization/cleanup and context control.
  */
 
-/* CLEANUP: make a scontext file for the scan context stuff. */
+// CLEANUP: make a scontext file for the scan context stuff.
 
 #include "config/common.h"
 #include "trn/scan.h"
 
 #include "trn/sorder.h"
-#include "trn/util.h" /* allocation */
+#include "trn/util.h" // allocation
 
 #include <cstdio>
 
-/* the current values */
-long      *g_s_ent_sort{};       /* sorted list of entries in the context */
-long       g_s_ent_sort_max{};   /* maximum index of sorted array */
-long       g_s_ent_sorted_max{}; /* maximum index *that is sorted* */
-long      *g_s_ent_index{};      /* indexes into ent_sorted */
-long       g_s_ent_index_max{};  /* maximum entry number added */
-int        g_s_page_size{};      /* number of entries allocated for page (usually fixed, > max screen lines) */
-PageEntry *g_page_ents{};        /* array of entries on page; -1 means not initialized for top and bottom entry */
-long       g_s_top_ent{};        /* top entry on page */
-long       g_s_bot_ent{};        /* bottom entry (note change) */
-bool       g_s_refill{};         /* does the page need refilling? */
-/* refresh entries */
-bool  g_s_ref_all{};    /* refresh all on page */
-bool  g_s_ref_top{};    /* top status bar */
-bool  g_s_ref_bot{};    /* bottom status bar */
-short g_s_ref_status{}; /* line to start refreshing status from; -1 means don't refresh */
-short g_s_ref_desc{};   /* line to start refreshing descript. from; -1 means don't refresh */
-/* screen sizes */
-short g_s_top_lines{};     /* lines for top status bar */
-short g_s_bot_lines{};     /* lines for bottom status bar */
-short g_s_status_cols{};   /* characters for status column */
-short g_s_cursor_cols{};   /* characters for cursor column */
-short g_s_item_num_cols{}; /* characters for item number column */
-short g_s_desc_cols{};     /* characters for description column */
-/* pointer info */
-short           g_s_ptr_page_line{}; /* page_ent index */
-long            g_s_flags{};         /* misc. flags */
+// the current values
+long      *g_s_ent_sort{};       // sorted list of entries in the context
+long       g_s_ent_sort_max{};   // maximum index of sorted array
+long       g_s_ent_sorted_max{}; // maximum index *that is sorted*
+long      *g_s_ent_index{};      // indexes into ent_sorted
+long       g_s_ent_index_max{};  // maximum entry number added
+int        g_s_page_size{};      // number of entries allocated for page (usually fixed, > max screen lines)
+PageEntry *g_page_ents{};        // array of entries on page; -1 means not initialized for top and bottom entry
+long       g_s_top_ent{};        // top entry on page
+long       g_s_bot_ent{};        // bottom entry (note change)
+bool       g_s_refill{};         // does the page need refilling?
+// refresh entries
+bool  g_s_ref_all{};    // refresh all on page
+bool  g_s_ref_top{};    // top status bar
+bool  g_s_ref_bot{};    // bottom status bar
+short g_s_ref_status{}; // line to start refreshing status from; -1 means don't refresh
+short g_s_ref_desc{};   // line to start refreshing descript. from; -1 means don't refresh
+// screen sizes
+short g_s_top_lines{};     // lines for top status bar
+short g_s_bot_lines{};     // lines for bottom status bar
+short g_s_status_cols{};   // characters for status column
+short g_s_cursor_cols{};   // characters for cursor column
+short g_s_item_num_cols{}; // characters for item number column
+short g_s_desc_cols{};     // characters for description column
+// pointer info
+short           g_s_ptr_page_line{}; // page_ent index
+long            g_s_flags{};         // misc. flags
 int             g_s_num_contexts{};  //
-ScanContext    *g_s_contexts{};      /* array of context structures */
-int             g_s_cur_context{};   /* current context number */
-ScanContextType g_s_cur_type{};      /* current context type (for fast switching) */
-/* options */
-int g_s_item_num{true}; /* show item numbers by default */
+ScanContext    *g_s_contexts{};      // array of context structures
+int             g_s_cur_context{};   // current context number
+ScanContextType g_s_cur_type{};      // current context type (for fast switching)
+// options
+int g_s_item_num{true}; // show item numbers by default
 int g_s_mode_vi{};
 
 void s_init_context(int cnum, ScanContextType type)
 {
-    /* g_s_num_contexts not incremented until last moment */
+    // g_s_num_contexts not incremented until last moment
     if (cnum < 0 || cnum > g_s_num_contexts)
     {
         std::printf("s_init_context: illegal context number %d!\n",cnum);
@@ -73,7 +73,7 @@ void s_init_context(int cnum, ScanContextType type)
     p->ref_bot = true;
     p->ref_status = -1;
     p->ref_desc = -1;
-    /* next ones should be reset later */
+    // next ones should be reset later
     p->top_lines = 0;
     p->bot_lines = 0;
     p->status_cols = 0;
@@ -82,7 +82,7 @@ void s_init_context(int cnum, ScanContextType type)
     p->item_num_cols = 0;
     p->ptr_page_line = 0;
     p->flags = 0;
-    /* clear the page entries */
+    // clear the page entries
     for (int i = 0; i < MAX_PAGE_SIZE; i++)
     {
         p->page_ents[i].ent_num = 0;
@@ -92,30 +92,30 @@ void s_init_context(int cnum, ScanContextType type)
     }
 }
 
-/* allocate a new context number and initialize it */
-/* returns context number */
-//int type;                     /* context type */
+// allocate a new context number and initialize it
+// returns context number
+//int type;                     // context type
 int s_new_context(ScanContextType type)
 {
     int i;
 
-    /* check for deleted contexts */
+    // check for deleted contexts
     for (i = 0; i < g_s_num_contexts; i++)
     {
-        if (g_s_contexts[i].type == S_NONE)     /* deleted context */
+        if (g_s_contexts[i].type == S_NONE)     // deleted context
         {
             break;
         }
     }
-    if (i < g_s_num_contexts)   /* a deleted one was found */
+    if (i < g_s_num_contexts)   // a deleted one was found
     {
         s_init_context(i,type);
         return i;
     }
-    /* none deleted, so allocate a new one */
+    // none deleted, so allocate a new one
     i = g_s_num_contexts;
     i++;
-    if (i == 1)         /* none allocated before */
+    if (i == 1)         // none allocated before
     {
         g_s_contexts = (ScanContext*)safe_malloc(sizeof (ScanContext));
     }
@@ -127,11 +127,11 @@ int s_new_context(ScanContextType type)
     g_s_contexts[i-1].page_ents =
                         (PageEntry*)safe_malloc(MAX_PAGE_SIZE*sizeof(PageEntry));
     s_init_context(i-1,type);
-    g_s_num_contexts++;                 /* now safe to increment */
+    g_s_num_contexts++;                 // now safe to increment
     return g_s_num_contexts-1;
 }
 
-/* saves the current context */
+// saves the current context
 void s_save_context()
 {
     ScanContext *p = g_s_contexts + g_s_cur_context;
@@ -166,7 +166,7 @@ void s_save_context()
 }
 
 
-// int newcontext;                      /* context number to activate */
+// int newcontext;                      // context number to activate
 void s_change_context(int newcontext)
 {
     if (newcontext < 0 || newcontext >= g_s_num_contexts)
@@ -194,7 +194,7 @@ void s_change_context(int newcontext)
     g_s_ref_bot = p->ref_bot;
     g_s_ref_status = p->ref_status;
     g_s_ref_desc = p->ref_desc;
-    /* next ones should be reset later */
+    // next ones should be reset later
     g_s_top_lines = p->top_lines;
     g_s_bot_lines = p->bot_lines;
     g_s_status_cols = p->status_cols;
@@ -205,12 +205,12 @@ void s_change_context(int newcontext)
     g_s_flags = p->flags;
 }
 
-/* implement later? */
+// implement later?
 void s_clean_contexts()
 {
 }
 
-//int cnum;             /* context number to delete */
+//int cnum;             // context number to delete
 void s_delete_context(int cnum)
 {
     if (cnum < 0 || cnum >= g_s_num_contexts)
@@ -219,6 +219,6 @@ void s_delete_context(int cnum)
         TRN_ASSERT(false);
     }
     s_order_clean();
-    /* mark the context as empty */
+    // mark the context as empty
     g_s_contexts[cnum].type = S_NONE;
 }
