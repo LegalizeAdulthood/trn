@@ -1,6 +1,6 @@
 /* autosub.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "config/common.h"
 #include "trn/autosub.h"
@@ -16,10 +16,10 @@
 
 static bool match_list(const char *pat_list, const char *s);
 
-/* Consider the newsgroup specified, and return:        */
-/* : if we should autosubscribe to it                   */
-/* ! if we should autounsubscribe to it                 */
-/* \0 if we should ask the user.                        */
+// Consider the newsgroup specified, and return:
+// : if we should autosubscribe to it
+// ! if we should autounsubscribe to it
+// \0 if we should ask the user.
 AddNewType auto_subscribe(const char *name)
 {
     const char *s = get_val_const("AUTOSUBSCRIBE", nullptr);
@@ -67,7 +67,7 @@ static bool match_list(const char *pat_list, const char *s)
             pattern.assign(pat_list);
         }
 
-        /* compile regular expression */
+        // compile regular expression
         const char *err = newsgroup_comp(&il_compex, pattern.c_str(), true, true);
 
         if (err != nullptr)
