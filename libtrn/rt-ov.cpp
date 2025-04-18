@@ -40,13 +40,13 @@ enum
     OV_CHUNK_SIZE = 40
 };
 
-static HeaderLineType s_hdrnum[] = {
+static HeaderLineType s_header_num[] = {
     PAST_HEADER, SUBJ_LINE, FROM_LINE, DATE_LINE, MSG_ID_LINE,
     REFS_LINE, BYTES_LINE, LINES_LINE, XREF_LINE
 };
 
-static void ov_parse(char *line, ArticleNum artnum, bool remote);
-static const char *ov_name(const char *group);
+static void             ov_parse(char *line, ArticleNum artnum, bool remote);
+static const char      *ov_name(const char *group);
 static OverviewFieldNum ov_num(char *hdr, char *end);
 
 bool ov_init()
@@ -488,8 +488,8 @@ static void ov_parse(char *line, ArticleNum artnum, bool remote)
                 {
                     break;
                 }
-                if (s - cp != g_header_type[s_hdrnum[fn]].length
-                 || string_case_compare(cp,g_header_type[s_hdrnum[fn]].name,g_header_type[s_hdrnum[fn]].length))
+                if (s - cp != g_header_type[s_header_num[fn]].length
+                 || string_case_compare(cp,g_header_type[s_header_num[fn]].name,g_header_type[s_header_num[fn]].length))
                 {
                     continue;
                 }
@@ -621,7 +621,7 @@ void ov_close()
 
 const char *ov_field_name(int num)
 {
-    return g_header_type[s_hdrnum[num]].name;
+    return g_header_type[s_header_num[num]].name;
 }
 
 const char *ov_field(Article *ap, int num)
@@ -644,6 +644,6 @@ const char *ov_field(Article *ap, int num)
         return g_cmd_buf;
     }
 
-    const char *s = get_cached_line(ap, s_hdrnum[fn], true);
+    const char *s = get_cached_line(ap, s_header_num[fn], true);
     return s ? s : "";
 }
