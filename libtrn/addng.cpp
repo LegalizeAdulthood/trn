@@ -135,7 +135,7 @@ static void process_list(GetNewsgroupFlags flag)
         }
         else if (!g_use_add_selector)
         {
-            get_ng(node->name, flag); /* add newsgroup -- maybe */
+            get_newsgroup(node->name, flag); /* add newsgroup -- maybe */
         }
         AddGroup *prevnode = node;
         node = node->next;
@@ -232,7 +232,7 @@ static void new_nntp_groups(DataSource *dp)
                 continue;
             }
         }
-        NewsgroupData *np = find_ng(g_ser_line);
+        NewsgroupData *np = find_newsgroup(g_ser_line);
         if (np != nullptr && np->to_read > TR_UNSUB)
         {
             continue;
@@ -290,7 +290,7 @@ static void new_local_groups(DataSource *dp)
         {
             continue;
         }
-        NewsgroupData *np = find_ng(g_buf);
+        NewsgroupData *np = find_newsgroup(g_buf);
         if (np != nullptr)
         {
             continue;
@@ -474,7 +474,7 @@ static void scan_line(char *actline, bool add_matching)
     {
         return;
     }
-    NewsgroupData *np = find_ng(actline);
+    NewsgroupData *np = find_newsgroup(actline);
     if (np != nullptr && np->to_read > TR_UNSUB)
     {
         return;

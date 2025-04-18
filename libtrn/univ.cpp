@@ -1156,7 +1156,7 @@ int univ_visit_group_main(const char *gname)
         return NG_ERROR;
     }
 
-    NewsgroupData *np = find_ng(gname);
+    NewsgroupData *np = find_newsgroup(gname);
     if (!np)
     {
         std::printf("Univ/Virt: newsgroup %s not found!", gname);

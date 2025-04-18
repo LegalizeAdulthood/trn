@@ -36,24 +36,24 @@
 #include <cstdlib>
 #include <cstring>
 
-HashTable  *g_newsrc_hash{};
-Multirc    *g_sel_page_mp{};
-Multirc    *g_sel_next_mp{};
-List       *g_multirc_list{};    /* a list of all MULTIRCs */
-Multirc    *g_multirc{};         /* the current MULTIRC */
-bool        g_paranoid{};        /* did we detect some inconsistency in .newsrc? */
+HashTable *g_newsrc_hash{};
+Multirc   *g_sel_page_mp{};
+Multirc   *g_sel_next_mp{};
+List      *g_multirc_list{};                 /* a list of all MULTIRCs */
+Multirc   *g_multirc{};                      /* the current MULTIRC */
+bool       g_paranoid{};                     /* did we detect some inconsistency in .newsrc? */
 AddNewType g_add_new_by_default{ADDNEW_ASK}; //
-bool        g_check_flag{};       /* -c */
-bool        g_suppress_cn{};     /* -s */
-int         g_countdown{5};      /* how many lines to list before invoking -s */
-bool        g_fuzzy_get{};       /* -G */
-bool        g_append_unsub{};    /* -I */
+bool       g_check_flag{};                   /* -c */
+bool       g_suppress_cn{};                  /* -s */
+int        g_countdown{5};                   /* how many lines to list before invoking -s */
+bool       g_fuzzy_get{};                    /* -G */
+bool       g_append_unsub{};                 /* -I */
 
 enum
 {
     RI_ID = 1,
     RI_NEWSRC = 2,
-    RI_ADDGROUPS = 3
+    RI_ADD_GROUPS = 3
 };
 
 static IniWords s_rcgroups_ini[] = {
@@ -63,20 +63,20 @@ static IniWords s_rcgroups_ini[] = {
     { 0, "Add Groups", nullptr },
     { 0, nullptr, nullptr }
 };
-static bool        s_foundany{};
-static const char *s_cantrecreate{"Can't recreate %s -- restoring older version.\n"
-                                  "Perhaps you are near or over quota?\n"};
+static bool        s_found_any{};
+static const char *s_cant_recreate{"Can't recreate %s -- restoring older version.\n"
+                                   "Perhaps you are near or over quota?\n"};
 
-static bool    clear_ngitem(char *cp, int arg);
+static bool    clear_newsgroup_item(char *cp, int arg);
 static bool    lock_newsrc(Newsrc *rp);
 static void    unlock_newsrc(Newsrc *rp);
 static bool    open_newsrc(Newsrc *rp);
-static void    init_ngnode(List *list, ListNode *node);
+static void    init_newsgroup_node(List *list, ListNode *node);
 static void    parse_rcline(NewsgroupData *np);
 static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c);
 static int     rcline_cmp(const char *key, int keylen, HashDatum data);
 
-inline NewsgroupData *ngdata_ptr(int ngnum)
+inline NewsgroupData *newsgroup_data_ptr(int ngnum)
 {
     return (NewsgroupData *) list_get_item(g_newsgroup_data_list, ngnum);
 }
@@ -110,7 +110,7 @@ static Multirc *rcstuff_init_data()
             {
                 break;
             }
-            Newsrc *rp = new_newsrc(vals[RI_ID], vals[RI_NEWSRC], vals[RI_ADDGROUPS]);
+            Newsrc *rp = new_newsrc(vals[RI_ID], vals[RI_NEWSRC], vals[RI_ADD_GROUPS]);
             if (rp)
             {
                 Multirc *mp = multirc_ptr(i);
@@ -149,7 +149,7 @@ bool rcstuff_init()
         return true;
     }
 
-    s_foundany = false;
+    s_found_any = false;
     if (mptr && !use_multirc(mptr))
     {
         use_next_multirc(mptr);
@@ -166,9 +166,9 @@ bool rcstuff_init()
     }
     if (g_check_flag)                    /* were we just checking? */
     {
-        finalize(s_foundany);           /* tell them what we found */
+        finalize(s_found_any);           /* tell them what we found */
     }
-    return s_foundany;
+    return s_found_any;
 }
 
 void rcstuff_final()
@@ -297,7 +297,7 @@ void unuse_multirc(Multirc *mptr)
     {
         close_cache();
         hash_destroy(g_newsrc_hash);
-        walk_list(g_newsgroup_data_list, clear_ngitem, 0);
+        walk_list(g_newsgroup_data_list, clear_newsgroup_item, 0);
         delete_list(g_newsgroup_data_list);
         g_newsgroup_data_list = nullptr;
         g_first_newsgroup = nullptr;
@@ -380,7 +380,7 @@ char *multirc_name(Multirc *mp)
     return mp->first->name;
 }
 
-static bool clear_ngitem(char *cp, int arg)
+static bool clear_newsgroup_item(char *cp, int arg)
 {
     NewsgroupData* ncp = (NewsgroupData*)cp;
 
@@ -629,14 +629,14 @@ static bool open_newsrc(Newsrc *rp)
     if (!g_newsgroup_data_list)
     {
         /* allocate memory for rc file globals */
-        g_newsgroup_data_list = new_list(0, 0, sizeof (NewsgroupData), 200, LF_NONE, init_ngnode);
+        g_newsgroup_data_list = new_list(0, 0, sizeof (NewsgroupData), 200, LF_NONE, init_newsgroup_node);
         g_newsrc_hash = hash_create(3001, rcline_cmp);
     }
 
     NewsgroupData*   prev_np;
     if (g_newsgroup_data_count)
     {
-        prev_np = ngdata_ptr(g_newsgroup_data_count - 1);
+        prev_np = newsgroup_data_ptr(g_newsgroup_data_count - 1);
     }
     else
     {
@@ -653,7 +653,7 @@ static bool open_newsrc(Newsrc *rp)
         {
             continue;
         }
-        NewsgroupData *np = ngdata_ptr(g_newsgroup_data_count++);
+        NewsgroupData *np = newsgroup_data_ptr(g_newsgroup_data_count++);
         if (prev_np)
         {
             prev_np->next = np;
@@ -707,7 +707,7 @@ static bool open_newsrc(Newsrc *rp)
 
         /* now find out how much there is to read */
 
-        if (!in_list(g_buf) || (g_suppress_cn && s_foundany && !g_paranoid))
+        if (!in_list(g_buf) || (g_suppress_cn && s_found_any && !g_paranoid))
         {
             np->to_read = TR_NONE;       /* no need to calculate now */
         }
@@ -717,10 +717,10 @@ static bool open_newsrc(Newsrc *rp)
         }
         if (np->to_read > TR_NONE)       /* anything unread? */
         {
-            if (!s_foundany)
+            if (!s_found_any)
             {
                 g_start_here = np;
-                s_foundany = true;      /* remember that fact*/
+                s_found_any = true;      /* remember that fact*/
             }
             if (g_suppress_cn)          /* if no listing desired */
             {
@@ -823,7 +823,7 @@ static bool open_newsrc(Newsrc *rp)
 }
 
 /* Initialize the memory for an entire node's worth of article's */
-static void init_ngnode(List *list, ListNode *node)
+static void init_newsgroup_node(List *list, ListNode *node)
 {
     std::memset(node->data,0,list->items_per_node * list->item_size);
     NewsgroupData *np = (NewsgroupData*)node->data;
@@ -859,7 +859,7 @@ static void parse_rcline(NewsgroupData *np)
     *s = '\0';                      /* null terminate newsgroup name */
 }
 
-void abandon_ng(NewsgroupData *np)
+void abandon_newsgroup(NewsgroupData *np)
 {
     char* some_buf = nullptr;
 
@@ -933,7 +933,7 @@ void abandon_ng(NewsgroupData *np)
 /* returns true if found or added, false if not. */
 /* assumes that we are chdir'ed to NEWSSPOOL */
 
-bool get_ng(const char *what, GetNewsgroupFlags flags)
+bool get_newsgroup(const char *what, GetNewsgroupFlags flags)
 {
     char* ntoforget;
     char promptbuf[128];
@@ -970,7 +970,7 @@ bool get_ng(const char *what, GetNewsgroupFlags flags)
         }
     }
     set_newsgroup_name(what);
-    g_newsgroup_ptr = find_ng(g_newsgroup_name.c_str());
+    g_newsgroup_ptr = find_newsgroup(g_newsgroup_name.c_str());
     if (g_newsgroup_ptr == nullptr)             /* not in .newsrc? */
     {
         Newsrc* rp;
@@ -1195,7 +1195,7 @@ reask_unsub:
 
 static NewsgroupData *add_newsgroup(Newsrc *rp, const char *ngn, char_int c)
 {
-    NewsgroupData *np = ngdata_ptr(g_newsgroup_data_count++);
+    NewsgroupData *np = newsgroup_data_ptr(g_newsgroup_data_count++);
     np->prev = g_last_newsgroup;
     if (g_last_newsgroup)
     {
@@ -1386,7 +1386,7 @@ bool relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum)
             {
                 goto reinp_reloc;
             }
-            np = find_ng(g_buf+1);
+            np = find_newsgroup(g_buf+1);
             if (np == nullptr)
             {
                 std::fputs("Not found.",stdout);
@@ -1489,7 +1489,7 @@ void list_newsgroups()
 
 /* find a newsgroup in any newsrc */
 
-NewsgroupData *find_ng(const char *ngnam)
+NewsgroupData *find_newsgroup(const char *ngnam)
 {
     HashDatum data = hash_fetch(g_newsrc_hash, ngnam, std::strlen(ngnam));
     return (NewsgroupData*)data.dat_ptr;
@@ -1583,7 +1583,7 @@ reask_bogus:
             for (np = g_last_newsgroup; np && np->to_read == TR_BOGUS; np = np->prev)
             {
                 hash_delete(g_newsrc_hash, np->rc_line, np->num_offset - 1);
-                clear_ngitem((char*)np,0);
+                clear_newsgroup_item((char*)np,0);
                 g_newsgroup_count--;
             }
             rp->flags |= RF_RC_CHANGED; /* TODO: needed? */
@@ -1730,7 +1730,7 @@ bool write_newsrcs(Multirc *mptr)
         FILE *rcfp = fopen(rp->new_name, "w");
         if (rcfp == nullptr)
         {
-            std::printf(s_cantrecreate,rp->name);
+            std::printf(s_cant_recreate,rp->name);
             total_success = false;
             continue;
         }
@@ -1795,7 +1795,7 @@ bool write_newsrcs(Multirc *mptr)
         if (std::fclose(rcfp) == EOF)
         {
           write_error:
-            std::printf(s_cantrecreate,rp->name);
+            std::printf(s_cant_recreate,rp->name);
             remove(rp->new_name);
             total_success = false;
             continue;

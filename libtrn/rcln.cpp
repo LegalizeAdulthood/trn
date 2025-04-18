@@ -98,7 +98,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, const char *newsgroup_name)
     {
         return 0;
     }
-    NewsgroupData *np = find_ng(newsgroup_name);
+    NewsgroupData *np = find_newsgroup(newsgroup_name);
     if (np == nullptr)                  /* not found in newsrc? */
     {
         return 0;
@@ -682,7 +682,7 @@ bool was_read_group(DataSource *dp, ArticleNum artnum, char *ngnam)
     {
         return true;
     }
-    NewsgroupData *np = find_ng(ngnam);
+    NewsgroupData *np = find_newsgroup(ngnam);
     if (np == nullptr)          /* not found in newsrc? */
     {
         return true;

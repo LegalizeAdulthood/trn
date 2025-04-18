@@ -654,7 +654,7 @@ char add_group_selector(GetNewsgroupFlags flags)
             if (gp->flags & AGF_SEL)
             {
                 gp->flags &= ~AGF_SEL;
-                get_ng(gp->name,flags);
+                get_newsgroup(gp->name,flags);
             }
         }
         g_add_new_by_default = ADDNEW_ASK;
@@ -782,7 +782,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         {
             break;                      /* XXX whine */
         }
-        NewsgroupData *np = find_ng(ui->data.virt.ng);
+        NewsgroupData *np = find_newsgroup(ui->data.virt.ng);
 
         if (!np)
         {
@@ -878,7 +878,7 @@ static UniversalReadResult univ_read(UniversalItem *ui)
         {
             break;                      /* XXX whine */
         }
-        NewsgroupData *np = find_ng(ui->data.group.ng);
+        NewsgroupData *np = find_newsgroup(ui->data.group.ng);
 
         if (!np)
         {

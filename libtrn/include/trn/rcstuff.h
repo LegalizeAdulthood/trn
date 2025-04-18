@@ -89,24 +89,24 @@ extern int        g_countdown;          /* how many lines to list before invokin
 extern bool       g_fuzzy_get;          /* -G */
 extern bool       g_append_unsub;       /* -I */
 
-bool     rcstuff_init();
-void     rcstuff_final();
-Newsrc  *new_newsrc(const char *name, const char *newsrc, const char *add_ok);
-bool     use_multirc(Multirc *mp);
-void     unuse_multirc(Multirc *mptr);
-bool     use_next_multirc(Multirc *mptr);
-bool     use_prev_multirc(Multirc *mptr);
-char    *multirc_name(Multirc *mp);
-void     abandon_ng(NewsgroupData *np);
-bool     get_ng(const char *what, GetNewsgroupFlags flags);
-bool     relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum);
-void     list_newsgroups();
-NewsgroupData  *find_ng(const char *ngnam);
-void     cleanup_newsrc(Newsrc *rp);
-void     set_hash(NewsgroupData *np);
-void     checkpoint_newsrcs();
-bool     write_newsrcs(Multirc *mptr);
-void     get_old_newsrcs(Multirc *mptr);
+bool           rcstuff_init();
+void           rcstuff_final();
+Newsrc        *new_newsrc(const char *name, const char *newsrc, const char *add_ok);
+bool           use_multirc(Multirc *mp);
+void           unuse_multirc(Multirc *mptr);
+bool           use_next_multirc(Multirc *mptr);
+bool           use_prev_multirc(Multirc *mptr);
+char          *multirc_name(Multirc *mp);
+void           abandon_newsgroup(NewsgroupData *np);
+bool           get_newsgroup(const char *what, GetNewsgroupFlags flags);
+bool           relocate_newsgroup(NewsgroupData *move_np, NewsgroupNum newnum);
+void           list_newsgroups();
+NewsgroupData *find_newsgroup(const char *ngnam);
+void           cleanup_newsrc(Newsrc *rp);
+void           set_hash(NewsgroupData *np);
+void           checkpoint_newsrcs();
+bool           write_newsrcs(Multirc *mptr);
+void           get_old_newsrcs(Multirc *mptr);
 
 inline Multirc *multirc_ptr(long n)
 {

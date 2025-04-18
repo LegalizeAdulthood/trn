@@ -606,7 +606,7 @@ try_again:
                     ui_elig = false;
                     break;
                 }
-                NewsgroupData *np = find_ng(ui->data.group.ng);
+                NewsgroupData *np = find_newsgroup(ui->data.group.ng);
                 if (!np)
                 {
                     ui_elig = false;
@@ -2623,7 +2623,7 @@ static void display_univ(const UniversalItem *ui)
         case UN_NEWSGROUP:
         {
               /* later error check the UI? */
-            NewsgroupData *np = find_ng(ui->data.group.ng);
+            NewsgroupData *np = find_newsgroup(ui->data.group.ng);
             if (!np)
             {
                 std::printf("!!!!! could not find %s", ui->data.group.ng);

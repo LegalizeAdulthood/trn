@@ -225,7 +225,7 @@ void do_multirc()
             g_start_here = nullptr;
             if (!g_last_newsgroup_name.empty())
             {
-                g_newsgroup_ptr = find_ng(g_last_newsgroup_name.c_str());
+                g_newsgroup_ptr = find_newsgroup(g_last_newsgroup_name.c_str());
                 if (g_newsgroup_ptr == nullptr)
                 {
                     g_newsgroup_ptr = g_first_newsgroup;
@@ -490,7 +490,7 @@ InputNewsgroupResult input_newsgroup()
         g_newsgroup_ptr = g_recent_newsgroup;          /* recall previous newsgroup */
         if (g_newsgroup_ptr)
         {
-            if (!get_ng(g_newsgroup_ptr->rc_line,GNG_NONE))
+            if (!get_newsgroup(g_newsgroup_ptr->rc_line,GNG_NONE))
             {
                 set_newsgroup(g_current_newsgroup);
             }
@@ -637,7 +637,7 @@ InputNewsgroupResult input_newsgroup()
             }
         }
         /* try to find newsgroup */
-        if (!get_ng(g_newsgroup_name.c_str(), (*g_buf == 'm' ? GNG_RELOC : GNG_NONE) | GNG_FUZZY))
+        if (!get_newsgroup(g_newsgroup_name.c_str(), (*g_buf == 'm' ? GNG_RELOC : GNG_NONE) | GNG_FUZZY))
         {
             g_newsgroup_ptr = g_current_newsgroup;     /* if not found, go nowhere */
         }
@@ -772,7 +772,7 @@ reask_abandon:
         }
         else if (*g_buf == 'y')
         {
-            abandon_ng(g_newsgroup_ptr);
+            abandon_newsgroup(g_newsgroup_ptr);
         }
         return ING_SPECIAL;
 
