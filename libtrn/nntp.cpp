@@ -24,12 +24,12 @@
 #include <cstring>
 #include <ctime>
 
-static int nntp_copybody(char *s, int limit, ArticlePosition pos);
+static int nntp_copy_body(char *s, int limit, ArticlePosition pos);
 
 static ArticlePosition s_body_pos{-1};
 static ArticlePosition s_body_end{};
 #ifdef SUPPORT_XTHREAD
-static long s_rawbytes{-1}; /* bytes remaining to be transferred */
+static long s_raw_bytes{-1}; /* bytes remaining to be transferred */
 #endif
 
 int nntp_list(const char *type, const char *arg, int len)
@@ -281,7 +281,7 @@ void nntp_body(ArticleNum art_num)
         char b[NNTP_STRLEN];
         s_body_end = 0;
         ArticlePosition prev_pos = 0;
-        while (nntp_copybody(b, sizeof b, s_body_end + 1) > 0)
+        while (nntp_copy_body(b, sizeof b, s_body_end + 1) > 0)
         {
             if (*b == '\n' && s_body_end - prev_pos < sizeof b)
             {
@@ -299,7 +299,7 @@ long nntp_art_size()
     return s_body_pos < 0 ? s_body_end : -1;
 }
 
-static int nntp_copybody(char *s, int limit, ArticlePosition pos)
+static int nntp_copy_body(char *s, int limit, ArticlePosition pos)
 {
     bool had_nl = true;
 
@@ -368,11 +368,11 @@ int nntp_finish_body(FinishBodyMode bmode)
     }
     if (bmode != FB_BACKGROUND)
     {
-        nntp_copybody(b, sizeof b, (ArticlePosition) 0x7fffffffL);
+        nntp_copy_body(b, sizeof b, (ArticlePosition) 0x7fffffffL);
     }
     else
     {
-        while (nntp_copybody(b, sizeof b, s_body_end + 1))
+        while (nntp_copy_body(b, sizeof b, s_body_end + 1))
         {
             if (input_pending())
             {
@@ -399,7 +399,7 @@ int nntp_seek_art(ArticlePosition pos)
         {
             char b[NNTP_STRLEN];
             std::fseek(g_art_fp, (long)s_body_end, 0);
-            nntp_copybody(b, sizeof b, pos);
+            nntp_copy_body(b, sizeof b, pos);
             if (s_body_pos >= 0)
             {
                 s_body_pos = pos;
@@ -424,7 +424,7 @@ char *nntp_read_art(char *s, int limit)
     {
         if (s_body_pos == s_body_end)
         {
-            if (nntp_copybody(s, limit, s_body_pos+1) <= 0)
+            if (nntp_copy_body(s, limit, s_body_pos+1) <= 0)
             {
                 return nullptr;
             }
@@ -704,15 +704,15 @@ long nntp_read_check()
 
     case -1:
     case 0:
-        return s_rawbytes = -1;
+        return s_raw_bytes = -1;
     }
 
     /* try to get the number of bytes being transfered */
-    if (std::sscanf(g_ser_line, "%*d%ld", &s_rawbytes) != 1)
+    if (std::sscanf(g_ser_line, "%*d%ld", &s_raw_bytes) != 1)
     {
-        return s_rawbytes = -1;
+        return s_raw_bytes = -1;
     }
-    return s_rawbytes;
+    return s_raw_bytes;
 }
 #endif
 
@@ -723,7 +723,7 @@ long nntp_read_check()
 long nntp_read(char *buf, long n)
 {
     /* if no bytes to read, then just return EOF */
-    if (s_rawbytes < 0)
+    if (s_raw_bytes < 0)
     {
         return 0;
     }
@@ -733,11 +733,11 @@ long nntp_read(char *buf, long n)
 #endif
 
     /* try to read some data from the server */
-    if (s_rawbytes)
+    if (s_raw_bytes)
     {
         boost::system::error_code ec;
-        n = g_nntplink.connection->read(buf, n > s_rawbytes ? s_rawbytes : n, ec);
-        s_rawbytes -= n;
+        n = g_nntplink.connection->read(buf, n > s_raw_bytes ? s_raw_bytes : n, ec);
+        s_raw_bytes -= n;
     }
     else
     {
@@ -745,9 +745,9 @@ long nntp_read(char *buf, long n)
     }
 
     /* if no more left, then fetch the end-of-command signature */
-    if (s_rawbytes == 0)
+    if (s_raw_bytes == 0)
     {
-        char buf[5];    1/* "\r\n.\r\n" */
+        char buf[5];    /* "\r\n.\r\n" */
 
         boost::system::error_code ec;
         int num_remaining = 5;
@@ -755,7 +755,7 @@ long nntp_read(char *buf, long n)
         {
             num_remaining -= g_nntplink.connection->read(buf, num_remaining, ec);
         }
-        s_rawbytes = -1;
+        s_raw_bytes = -1;
     }
 #ifdef HAS_SIGHOLD
     sigrelse(SIGINT);
