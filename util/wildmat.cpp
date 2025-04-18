@@ -44,12 +44,12 @@
 #define OPTIMIZE_JUST_STAR /* Is "*" a common pattern? */
 #undef MATCH_TAR_PATTERN   /* Do tar(1) matching rules, which ignore a trailing slash? */
 
-static bool DoMatch(const char *text, const char *p);
+static bool do_match(const char *text, const char *p);
 
 /*
 **  Match text and p, return true, false.
 */
-static bool DoMatch(const char *text, const char *p)
+static bool do_match(const char *text, const char *p)
 {
     for (; *p; text++, p++)
     {
@@ -87,7 +87,7 @@ static bool DoMatch(const char *text, const char *p)
             }
             while (*text)
             {
-                if (DoMatch(text++, p))
+                if (do_match(text++, p))
                 {
                     return true;
                 }
@@ -133,7 +133,7 @@ static bool DoMatch(const char *text, const char *p)
 /*
 **  User-level routine.  Returns true or false.
 */
-bool wildmat(const char *text, const char *p)
+bool wildcard_match(const char *text, const char *p)
 {
 #ifdef  OPTIMIZE_JUST_STAR
     if (p[0] == '*' && p[1] == '\0')
@@ -141,7 +141,7 @@ bool wildmat(const char *text, const char *p)
         return true;
     }
 #endif  /* OPTIMIZE_JUST_STAR */
-    return DoMatch(text, p);
+    return do_match(text, p);
 }
 
 #ifdef  TEST

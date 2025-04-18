@@ -207,7 +207,7 @@ int main(int argc, char *argv[])
                     continue;
                 }
                 *cp = '\0';
-                if (!wildmat(g_ser_line, wildarg))
+                if (!wildcard_match(g_ser_line, wildarg))
                 {
                     continue;
                 }
