@@ -69,9 +69,9 @@ void thread_init()
 {
 }
 
-/* Generate the thread data we need for this group.  We must call
-** thread_close() before calling this again.
-*/
+// Generate the thread data we need for this group.  We must call
+// thread_close() before calling this again.
+//
 void thread_open()
 {
     bool    find_existing = !g_first_subject;
@@ -177,8 +177,8 @@ void thread_open()
     g_sel_page_app = nullptr;
 }
 
-/* Update the group's thread info.
-*/
+// Update the group's thread info.
+//
 void thread_grow()
 {
     g_added_articles += g_last_art - g_last_cached;
@@ -307,10 +307,10 @@ Article *last_art(Subject *sp)
     return ap;
 }
 
-/* Bump g_art/g_artp to the next article, wrapping from thread to thread.
-** If sel_flag is true, only stops at selected articles.
-** If rereading is false, only stops at unread articles.
-*/
+// Bump g_art/g_artp to the next article, wrapping from thread to thread.
+// If sel_flag is true, only stops at selected articles.
+// If rereading is false, only stops at unread articles.
+//
 void inc_article(bool sel_flag, bool rereading)
 {
     Article* ap = g_artp;
@@ -450,10 +450,10 @@ num_inc:
     g_artp = ap;
 }
 
-/* Bump g_art/g_artp to the previous article, wrapping from thread to thread.
-** If sel_flag is true, only stops at selected articles.
-** If rereading is false, only stops at unread articles.
-*/
+// Bump g_art/g_artp to the previous article, wrapping from thread to thread.
+// If sel_flag is true, only stops at selected articles.
+// If rereading is false, only stops at unread articles.
+//
 void dec_article(bool sel_flag, bool rereading)
 {
     Article* ap = g_artp;
@@ -565,8 +565,8 @@ num_dec:
     g_artp = ap;
 }
 
-/* Bump the param to the next article in depth-first order.
-*/
+// Bump the param to the next article in depth-first order.
+//
 Article *bump_article(Article *ap)
 {
     if (ap->child1)
@@ -583,9 +583,9 @@ Article *bump_article(Article *ap)
     return ap->sibling;
 }
 
-/* Bump the param to the next REAL article.  Uses subject order in a
-** non-threaded group; honors the g_breadth_first flag in a threaded one.
-*/
+// Bump the param to the next REAL article.  Uses subject order in a
+// non-threaded group; honors the g_breadth_first flag in a threaded one.
+//
 Article *next_article(Article *ap)
 {
 try_again:
@@ -635,9 +635,9 @@ done:
     return ap;
 }
 
-/* Bump the param to the previous REAL article.  Uses subject order in a
-** non-threaded group.
-*/
+// Bump the param to the previous REAL article.  Uses subject order in a
+// non-threaded group.
+//
 Article *prev_article(Article *ap)
 {
 try_again:
@@ -685,9 +685,9 @@ done:
     return ap;
 }
 
-/* Find the next g_art/g_artp with the same subject as this one.  Returns
-** false if no such article exists.
-*/
+// Find the next g_art/g_artp with the same subject as this one.  Returns
+// false if no such article exists.
+//
 bool next_article_with_subj()
 {
     Article* ap = g_artp;
@@ -716,9 +716,9 @@ bool next_article_with_subj()
     return true;
 }
 
-/* Find the previous g_art/g_artp with the same subject as this one.  Returns
-** false if no such article exists.
-*/
+// Find the previous g_art/g_artp with the same subject as this one.  Returns
+// false if no such article exists.
+//
 bool prev_article_with_subj()
 {
     Article* ap = g_artp;
@@ -810,8 +810,8 @@ Subject *prev_subject(Subject *sp, int subj_mask)
     return sp;
 }
 
-/* Select a single article.
-*/
+// Select a single article.
+//
 void select_article(Article *ap, AutoKillFlags auto_flags)
 {
     const ArticleFlags desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
@@ -844,8 +844,8 @@ void select_article(Article *ap, AutoKillFlags auto_flags)
     g_selected_only = (g_selected_only || g_selected_count != 0);
 }
 
-/* Select this article's subject.
-*/
+// Select this article's subject.
+//
 void select_articles_subject(Article *ap, AutoKillFlags auto_flags)
 {
     if (ap->subj && ap->subj->articles)
@@ -858,8 +858,8 @@ void select_articles_subject(Article *ap, AutoKillFlags auto_flags)
     }
 }
 
-/* Select all the articles in a subject.
-*/
+// Select all the articles in a subject.
+//
 void select_subject(Subject *subj, AutoKillFlags auto_flags)
 {
     int desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
@@ -894,8 +894,8 @@ void select_subject(Subject *subj, AutoKillFlags auto_flags)
     }
 }
 
-/* Select this article's thread.
-*/
+// Select this article's thread.
+//
 void select_articles_thread(Article *ap, AutoKillFlags auto_flags)
 {
     if (ap->subj && ap->subj->thread)
@@ -908,8 +908,8 @@ void select_articles_thread(Article *ap, AutoKillFlags auto_flags)
     }
 }
 
-/* Select all the articles in a thread.
-*/
+// Select all the articles in a thread.
+//
 void select_thread(Article *thread, AutoKillFlags auto_flags)
 {
     Subject *sp = thread->subj;
@@ -920,8 +920,8 @@ void select_thread(Article *thread, AutoKillFlags auto_flags)
     } while (sp != thread->subj);
 }
 
-/* Select the subthread attached to this article.
-*/
+// Select the subthread attached to this article.
+//
 void select_sub_thread(Article *ap, AutoKillFlags auto_flags)
 {
     Article*limit;
@@ -966,8 +966,8 @@ void select_sub_thread(Article *ap, AutoKillFlags auto_flags)
     }
 }
 
-/* Deselect a single article.
-*/
+// Deselect a single article.
+//
 void deselect_article(Article *ap, AutoKillFlags auto_flags)
 {
     const bool echo = (auto_flags & ALSO_ECHO) != 0;
@@ -990,8 +990,8 @@ void deselect_article(Article *ap, AutoKillFlags auto_flags)
     }
 }
 
-/* Deselect this article's subject.
-*/
+// Deselect this article's subject.
+//
 void deselect_articles_subject(Article *ap)
 {
     if (ap->subj && ap->subj->articles)
@@ -1004,8 +1004,8 @@ void deselect_articles_subject(Article *ap)
     }
 }
 
-/* Deselect all the articles in a subject.
-*/
+// Deselect all the articles in a subject.
+//
 void deselect_subject(Subject *subj)
 {
     for (Article *ap = subj->articles; ap; ap = ap->subj_next)
@@ -1035,8 +1035,8 @@ void deselect_subject(Subject *subj)
     }
 }
 
-/* Deselect this article's thread.
-*/
+// Deselect this article's thread.
+//
 void deselect_articles_thread(Article *ap)
 {
     if (ap->subj && ap->subj->thread)
@@ -1049,8 +1049,8 @@ void deselect_articles_thread(Article *ap)
     }
 }
 
-/* Deselect all the articles in a thread.
-*/
+// Deselect all the articles in a thread.
+//
 void deselect_thread(Article *thread)
 {
     Subject *sp = thread->subj;
@@ -1061,8 +1061,8 @@ void deselect_thread(Article *thread)
     } while (sp != thread->subj);
 }
 
-/* Deselect everything.
-*/
+// Deselect everything.
+//
 void deselect_all()
 {
     for (Subject *sp = g_first_subject; sp; sp = sp->next)
@@ -1078,8 +1078,8 @@ void deselect_all()
     g_selected_only = false;
 }
 
-/* Kill all unread articles attached to this article's subject.
-*/
+// Kill all unread articles attached to this article's subject.
+//
 void kill_articles_subject(Article *ap, AutoKillFlags auto_flags)
 {
     if (ap->subj && ap->subj->articles)
@@ -1101,8 +1101,8 @@ void kill_articles_subject(Article *ap, AutoKillFlags auto_flags)
     }
 }
 
-/* Kill all unread articles attached to the given subject.
-*/
+// Kill all unread articles attached to the given subject.
+//
 void kill_subject(Subject *subj, AutoKillFlags auto_flags)
 {
     int killmask = (auto_flags & AFFECT_ALL)? 0 : g_sel_mask;
@@ -1127,8 +1127,8 @@ void kill_subject(Subject *subj, AutoKillFlags auto_flags)
     subj->flags &= ~(SF_VISIT | SF_WAS_SELECTED);
 }
 
-/* Kill all unread articles attached to this article's thread.
-*/
+// Kill all unread articles attached to this article's thread.
+//
 void kill_articles_thread(Article *ap, AutoKillFlags auto_flags)
 {
     if (ap->subj && ap->subj->thread)
@@ -1141,8 +1141,8 @@ void kill_articles_thread(Article *ap, AutoKillFlags auto_flags)
     }
 }
 
-/* Kill all unread articles attached to the given thread.
-*/
+// Kill all unread articles attached to the given thread.
+//
 void kill_thread(Article *thread, AutoKillFlags auto_flags)
 {
     Subject *sp = thread->subj;
@@ -1153,8 +1153,8 @@ void kill_thread(Article *thread, AutoKillFlags auto_flags)
     } while (sp != thread->subj);
 }
 
-/* Kill the subthread attached to this article.
-*/
+// Kill the subthread attached to this article.
+//
 void kill_sub_thread(Article *ap, AutoKillFlags auto_flags)
 {
     Article* limit;
@@ -1191,8 +1191,8 @@ void kill_sub_thread(Article *ap, AutoKillFlags auto_flags)
     }
 }
 
-/* Unkill all the articles attached to the given subject.
-*/
+// Unkill all the articles attached to the given subject.
+//
 void unkill_subject(Subject *subj)
 {
     int save_sel_count = g_selected_count;
@@ -1240,8 +1240,8 @@ void unkill_subject(Subject *subj)
     subj->flags &= ~(SF_DEL|SF_DEL_SEL);
 }
 
-/* Unkill all the articles attached to the given thread.
-*/
+// Unkill all the articles attached to the given thread.
+//
 void unkill_thread(Article *thread)
 {
     Subject *sp = thread->subj;
@@ -1252,8 +1252,8 @@ void unkill_thread(Article *thread)
     } while (sp != thread->subj);
 }
 
-/* Unkill the subthread attached to this article.
-*/
+// Unkill the subthread attached to this article.
+//
 void unkill_sub_thread(Article *ap)
 {
     Article* limit;
@@ -1292,8 +1292,8 @@ void unkill_sub_thread(Article *ap)
     g_selected_only = (g_selected_only || g_selected_count != 0);
 }
 
-/* Clear the auto flags in all unread articles attached to the given subject.
-*/
+// Clear the auto flags in all unread articles attached to the given subject.
+//
 void clear_subject(Subject *subj)
 {
     for (Article *ap = subj->articles; ap; ap = ap->subj_next)
@@ -1302,8 +1302,8 @@ void clear_subject(Subject *subj)
     }
 }
 
-/* Clear the auto flags in all unread articles attached to the given thread.
-*/
+// Clear the auto flags in all unread articles attached to the given thread.
+//
 void clear_thread(Article *thread)
 {
     Subject *sp = thread->subj;
@@ -1314,8 +1314,8 @@ void clear_thread(Article *thread)
     } while (sp != thread->subj);
 }
 
-/* Clear the auto flags in the subthread attached to this article.
-*/
+// Clear the auto flags in the subthread attached to this article.
+//
 void clear_sub_thread(Article *ap)
 {
     Article* limit;
@@ -1370,9 +1370,9 @@ Article *subj_article(Subject *sp)
     return ap;
 }
 
-/* Find the next thread (first if g_art > g_lastart).  If articles are selected,
-** only choose from threads with selected articles.
-*/
+// Find the next thread (first if g_art > g_lastart).  If articles are selected,
+// only choose from threads with selected articles.
+//
 void visit_next_thread()
 {
     Article* ap = g_artp;
@@ -1394,9 +1394,9 @@ void visit_next_thread()
     g_force_last = true;
 }
 
-/* Find previous thread (or last if g_artp == nullptr).  If articles are selected,
-** only choose from threads with selected articles.
-*/
+// Find previous thread (or last if g_artp == nullptr).  If articles are selected,
+// only choose from threads with selected articles.
+//
 void visit_prev_thread()
 {
     Article* ap = g_artp;
@@ -1418,9 +1418,9 @@ void visit_prev_thread()
     g_force_last = true;
 }
 
-/* Find g_artp's parent or oldest ancestor.  Returns false if no such
-** article.  Sets g_art and g_artp otherwise.
-*/
+// Find g_artp's parent or oldest ancestor.  Returns false if no such
+// article.  Sets g_art and g_artp otherwise.
+//
 bool find_parent(bool keep_going)
 {
     Article* ap = g_artp;
@@ -1440,9 +1440,9 @@ bool find_parent(bool keep_going)
     return true;
 }
 
-/* Find g_artp's first child or youngest decendent.  Returns false if no
-** such article.  Sets g_art and g_artp otherwise.
-*/
+// Find g_artp's first child or youngest decendent.  Returns false if no
+// such article.  Sets g_art and g_artp otherwise.
+//
 bool find_leaf(bool keep_going)
 {
     Article* ap = g_artp;
@@ -1462,10 +1462,10 @@ bool find_leaf(bool keep_going)
     return true;
 }
 
-/* Find the next "sibling" of g_artp, including cousins that are the
-** same distance down the thread as we are.  Returns false if no such
-** article.  Sets g_art and g_artp otherwise.
-*/
+// Find the next "sibling" of g_artp, including cousins that are the
+// same distance down the thread as we are.  Returns false if no such
+// article.  Sets g_art and g_artp otherwise.
+//
 bool find_next_sib()
 {
     int      ascent = 0;
@@ -1492,9 +1492,9 @@ bool find_next_sib()
     return false;
 }
 
-/* A recursive routine to find the first node at the proper depth.  This
-** article is at depth 0.
-*/
+// A recursive routine to find the first node at the proper depth.  This
+// article is at depth 0.
+//
 static Article *first_sib(Article *ta, int depth)
 {
     Article* tb;
@@ -1520,10 +1520,10 @@ static Article *first_sib(Article *ta, int depth)
     }
 }
 
-/* Find the previous "sibling" of g_artp, including cousins that are
-** the same distance down the thread as we are.  Returns false if no
-** such article.  Sets g_art and g_artp otherwise.
-*/
+// Find the previous "sibling" of g_artp, including cousins that are
+// the same distance down the thread as we are.  Returns false if no
+// such article.  Sets g_art and g_artp otherwise.
+//
 bool find_prev_sib()
 {
     int      ascent = 0;
@@ -1555,9 +1555,9 @@ bool find_prev_sib()
     return false;
 }
 
-/* A recursive routine to find the last node at the proper depth.  This
-** article is at depth 0.
-*/
+// A recursive routine to find the last node at the proper depth.  This
+// article is at depth 0.
+//
 static Article *last_sib(Article *ta, int depth, Article *limit)
 {
     Article* tb;
@@ -1586,13 +1586,13 @@ static Article *last_sib(Article *ta, int depth, Article *limit)
     return nullptr;
 }
 
-/* Get each subject's article count; count total articles and selected
-** articles (use g_sel_rereading to determine whether to count read or
-** unread articles); deselect any subjects we find that are empty if
-** CS_UNSELECT or CS_UNSEL_STORE is specified.  If g_mode is CS_RESELECT
-** is specified, the selections from the last CS_UNSEL_STORE are
-** reselected.
-*/
+// Get each subject's article count; count total articles and selected
+// articles (use g_sel_rereading to determine whether to count read or
+// unread articles); deselect any subjects we find that are empty if
+// CS_UNSELECT or CS_UNSEL_STORE is specified.  If g_mode is CS_RESELECT
+// is specified, the selections from the last CS_UNSEL_STORE are
+// reselected.
+//
 void count_subjects(CountSubjectMode cmode)
 {
     Subject*sp;
@@ -1937,8 +1937,8 @@ static int thread_order_score(const Subject** spp1, const Subject** spp2)
     return thread_order_date(spp1, spp2);
 }
 
-/* Sort the subjects according to the chosen order.
-*/
+// Sort the subjects according to the chosen order.
+//
 void sort_subjects()
 {
     Subject* sp;
@@ -2076,8 +2076,8 @@ static int article_order_score(const Article **art1, const Article **art2)
     return eq? eq > 0? g_sel_direction : -g_sel_direction : 0;
 }
 
-/* Sort the articles according to the chosen order.
-*/
+// Sort the articles according to the chosen order.
+//
 void sort_articles()
 {
     int (*sort_procedure)(const Article **art1, const Article **art2);
