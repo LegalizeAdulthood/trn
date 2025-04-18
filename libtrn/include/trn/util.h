@@ -1,7 +1,7 @@
 /* trn/util.h
  * vi: set sw=4 ts=8 ai sm noet :
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_UTIL_H
 #define TRN_UTIL_H
 
@@ -12,7 +12,7 @@
 #include <cstdlib>
 #include <ctime>
 
-extern bool g_waiting; /* waiting for subprocess (in doshell)? */
+extern bool g_waiting; // waiting for subprocess (in doshell)?
 extern bool g_no_wait_fork;
 
 /* the strlen and the buffer length of "some_buf" after a call to:
@@ -25,7 +25,7 @@ inline bool at_grey_space(const char *s)
     return ((s) && ((!at_norm_char(s)) || ((*s) && (*s) == ' ')));
 }
 
-/* is the string for makedir a directory name or a filename? */
+// is the string for makedir a directory name or a filename?
 
 enum MakeDirNameType
 {
@@ -33,7 +33,7 @@ enum MakeDirNameType
     MD_FILE = 1
 };
 
-/* a template for parsing an ini file */
+// a template for parsing an ini file
 
 struct IniWords
 {
