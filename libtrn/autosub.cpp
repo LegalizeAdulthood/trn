@@ -14,7 +14,7 @@
 #include <cstring>
 #include <string>
 
-static bool match_list(const char *patlist, const char *s);
+static bool match_list(const char *pat_list, const char *s);
 
 /* Consider the newsgroup specified, and return:        */
 /* : if we should autosubscribe to it                   */
@@ -37,38 +37,38 @@ AddNewType auto_subscribe(const char *name)
     return ADDNEW_ASK;
 }
 
-static bool match_list(const char *patlist, const char *s)
+static bool match_list(const char *pat_list, const char *s)
 {
-    CompiledRegex ilcompex;
-    bool   tmpresult;
+    CompiledRegex il_compex;
+    bool   tmp_result;
 
     bool result = false;
-    init_compex(&ilcompex);
-    while (patlist && *patlist)
+    init_compex(&il_compex);
+    while (pat_list && *pat_list)
     {
-        if (*patlist == '!')
+        if (*pat_list == '!')
         {
-            patlist++;
-            tmpresult = false;
+            pat_list++;
+            tmp_result = false;
         }
         else
         {
-            tmpresult = true;
+            tmp_result = true;
         }
 
-        const char *p = std::strchr(patlist, ',');
+        const char *p = std::strchr(pat_list, ',');
         std::string pattern;
         if (p != nullptr)
         {
-            pattern.assign(patlist, p);
+            pattern.assign(pat_list, p);
         }
         else
         {
-            pattern.assign(patlist);
+            pattern.assign(pat_list);
         }
 
         /* compile regular expression */
-        const char *err = newsgroup_comp(&ilcompex, pattern.c_str(), true, true);
+        const char *err = newsgroup_comp(&il_compex, pattern.c_str(), true, true);
 
         if (err != nullptr)
         {
@@ -76,12 +76,12 @@ static bool match_list(const char *patlist, const char *s)
             finalize(1);
         }
 
-        if (execute(&ilcompex,s) != nullptr)
+        if (execute(&il_compex,s) != nullptr)
         {
-            result = tmpresult;
+            result = tmp_result;
         }
-        patlist = p;
+        pat_list = p;
     }
-    free_compex(&ilcompex);
+    free_compex(&il_compex);
     return result;
 }
