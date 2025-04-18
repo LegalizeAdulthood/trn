@@ -52,7 +52,7 @@ int     g_tty_ch{2};
 
 char          g_erase_char{}; /* rubout character */
 char          g_kill_char{};  /* line delete character */
-unsigned char g_last_char{};   //
+unsigned char g_last_char{};  //
 bool          g_bizarre{};    /* do we need to restore terminal? */
 int           g_univ_sel_btn_cnt{};
 int           g_newsrc_sel_btn_cnt{};
@@ -68,19 +68,19 @@ char         *g_newsgroup_sel_btns{};
 char         *g_news_sel_btns{};
 char         *g_option_sel_btns{};
 char         *g_art_pager_btns{};
-bool          g_muck_up_clear{};                 /* -loco */
-bool          g_erase_screen{};                  /* -e */
-bool          g_can_home{};                      //
-bool          g_erase_each_line{};               /* fancy -e */
-bool          g_allow_typeahead{};               /* -T */
-bool          g_verify{};                        /* -v */
-MarkingMode  g_marking{NO_MARKING};              /* -m */
-MarkingAreas g_marking_areas{HALF_PAGE_MARKING}; //
-ArticleLine      g_init_lines{};                     /* -i */
-bool          g_use_mouse{};                     //
-char          g_mouse_modes[32]{"acjlptwvK"};    //
-MinorMode    g_mode{MM_INITIALIZING};           /* current state of trn */
-GeneralMode  g_general_mode{GM_INIT};           /* general mode of trn */
+bool          g_muck_up_clear{};                  /* -loco */
+bool          g_erase_screen{};                   /* -e */
+bool          g_can_home{};                       //
+bool          g_erase_each_line{};                /* fancy -e */
+bool          g_allow_typeahead{};                /* -T */
+bool          g_verify{};                         /* -v */
+MarkingMode   g_marking{NO_MARKING};              /* -m */
+MarkingAreas  g_marking_areas{HALF_PAGE_MARKING}; //
+ArticleLine   g_init_lines{};                     /* -i */
+bool          g_use_mouse{};                      //
+char          g_mouse_modes[32]{"acjlptwvK"};     //
+MinorMode     g_mode{MM_INITIALIZING};            /* current state of trn */
+GeneralMode   g_general_mode{GM_INIT};            /* general mode of trn */
 
 #ifdef HAS_TERMLIB
 bool  g_tc_GT{};              /* hardware tabs */
@@ -110,13 +110,13 @@ int   g_term_scrolled;        /* how many lines scrolled away */
 int   g_just_a_sec{960};      /* 1 sec at current baud rate (number of nulls) */
 int   g_page_line{1};         /* line number for paging in print_line (origin 1) */
 bool  g_error_occurred{};     //
-int   g_mousebar_cnt{};       //
-int   g_mousebar_width{};     //
+int   g_mouse_bar_cnt{};      //
+int   g_mouse_bar_width{};    //
 bool  g_mouse_is_down{};      //
 int   g_auto_arrow_macros{2}; /* -A */
 
-static char *s_mousebar_btns{};
-static int   s_mousebar_start{};
+static char *s_mouse_bar_btns{};
+static int   s_mouse_bar_start{};
 static bool  s_xmouse_is_on{};
 static char *s_tc_CL{}; /* home and clear screen */
 static char *s_tc_TI{}; /* initialize terminal */
@@ -125,9 +125,9 @@ static char *s_tc_KS{}; /* enter `keypad transmit' mode */
 static char *s_tc_KE{}; /* exit `keypad transmit' mode */
 static char  s_tc_PC{}; /* pad character for use by tputs() */
 #ifdef _POSIX_SOURCE
-static speed_t s_outspeed{}; /* terminal output speed, */
+static speed_t s_out_speed{}; /* terminal output speed, */
 #else
-static long s_outspeed{}; /*    for use by tputs() */
+static long s_out_speed{}; /*    for use by tputs() */
 #endif
 #endif
 
@@ -143,7 +143,7 @@ struct KeyMap
 
 enum
 {
-    KM_NOTHIN = 0,
+    KM_NOTHING = 0,
     KM_STRING = 1,
     KM_KEYMAP = 2,
     KM_BOGUS = 3,
@@ -157,27 +157,27 @@ enum
     TC_STRINGS = 48 /* number of colors we can keep track of */
 };
 
-static char        s_circlebuf[PUSHSIZE]{};
-static int         s_nextin{};
-static int         s_nextout{};
-static const char *s_readerr{"rn read error"};
+static char        s_circle_buf[PUSHSIZE]{};
+static int         s_next_in{};
+static int         s_next_out{};
+static const char *s_read_err{"rn read error"};
 
 #ifndef MSDOS
-static char s_tcarea[TCSIZE]; /* area for "compiled" termcap strings */
+static char s_termcap_area[TCSIZE]; /* area for "compiled" termcap strings */
 #endif
-static KeyMap *s_topmap{};
+static KeyMap *s_top_map{};
 static char   *s_lines_export{};
 static char   *s_cols_export{};
-static int     s_leftcost{};
-static int     s_upcost{};
+static int     s_left_cost{};
+static int     s_up_cost{};
 static bool    s_got_a_char{}; /* true if we got a char since eating */
 
-static void mac_init(char *tcbuf);
-static KeyMap* newkeymap();
-static void show_keymap(KeyMap *curmap, char *prefix);
-static int echo_char(char_int ch);
-static void line_col_calcs();
-static void mouse_input(const char *cp);
+static void    mac_init(char *tcbuf);
+static KeyMap *new_key_map();
+static void    show_key_map(KeyMap *curmap, char *prefix);
+static int     echo_char(char_int ch);
+static void    line_col_calcs();
+static void    mouse_input(const char *cp);
 
 /* terminal initialization */
 
@@ -186,12 +186,12 @@ void term_init()
     save_tty();                          /* remember current tty state */
 
 #ifdef I_TERMIOS
-    s_outspeed = cfgetospeed(&g_tty);  /* for tputs() (output) */
+    s_out_speed = cfgetospeed(&g_tty);  /* for tputs() (output) */
     g_erase_char = g_tty.c_cc[VERASE]; /* for finish_command() */
     g_kill_char = g_tty.c_cc[VKILL];   /* for finish_command() */
 #else /* !I_TERMIOS */
 #ifdef MSDOS
-    s_outspeed = B19200;
+    s_out_speed = B19200;
     g_erase_char = '\b';
     g_kill_char = Ctl('u');
     g_tc_GT = true;
@@ -203,7 +203,7 @@ void term_init()
     /* The following could be a table but I can't be sure that there isn't */
     /* some degree of sparsity out there in the world. */
 
-    switch (s_outspeed)                         /* 1 second of padding */
+    switch (s_out_speed)                         /* 1 second of padding */
     {
 #ifdef BEXTA
     case BEXTA:  g_just_a_sec = 1920; break;
@@ -314,7 +314,7 @@ void term_set(char *tcbuf)
         std::printf("No termcap %s found.\n", status ? "file" : "entry");
         finalize(1);
     }
-    tmpaddr = s_tcarea;                 /* set up strange tgetstr pointer */
+    tmpaddr = s_termcap_area;                 /* set up strange tgetstr pointer */
     s = Tgetstr("pc");                  /* get pad character */
     s_tc_PC = *s;                               /* get it where tputs wants it */
     if (!tgetflag("bs"))                /* is backspace not used? */
@@ -432,8 +432,8 @@ void term_set(char *tcbuf)
     {
         s_tc_CL = nullptr;
     }
-    s_leftcost = std::strlen(g_tc_BC);
-    s_upcost = std::strlen(g_tc_UP);
+    s_left_cost = std::strlen(g_tc_BC);
+    s_up_cost = std::strlen(g_tc_UP);
 #else /* !HAS_TERMLIB */
     ..."Don't know how to set the terminal!"
 #endif /* !HAS_TERMLIB */
@@ -597,9 +597,9 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
     int         garbage = 0;
     static char override[] = "\nkeymap overrides string\n";
 
-    if (s_topmap == nullptr)
+    if (s_top_map == nullptr)
     {
-        s_topmap = newkeymap();
+        s_top_map = new_key_map();
     }
     if (*line == '#' || *line == '\n')
     {
@@ -625,7 +625,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
         return;
     }
     m = skip_hor_space(m);
-    curmap=s_topmap;
+    curmap=s_top_map;
     for (char *s = tmpbuf; *s; s++)
     {
         ch = *s & 0177;
@@ -653,7 +653,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
             curmap->km_type[ch] = KM_KEYMAP + garbage;
             if (curmap->km_ptr[ch].km_km == nullptr)
             {
-                curmap->km_ptr[ch].km_km = newkeymap();
+                curmap->km_ptr[ch].km_km = new_key_map();
             }
             curmap = curmap->km_ptr[ch].km_km;
         }
@@ -673,7 +673,7 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
     }
 }
 
-static KeyMap *newkeymap()
+static KeyMap *new_key_map()
 {
     KeyMap* map;
 
@@ -685,7 +685,7 @@ static KeyMap *newkeymap()
     for (int i = 127; i >= 0; i--)
     {
         map->km_ptr[i].km_km = nullptr;
-        map->km_type[i] = KM_NOTHIN;
+        map->km_type[i] = KM_NOTHING;
     }
     return map;
 }
@@ -694,11 +694,11 @@ void show_macros()
 {
     char prebuf[64];
 
-    if (s_topmap != nullptr)
+    if (s_top_map != nullptr)
     {
         print_lines("Macros:\n", STANDOUT);
         *prebuf = '\0';
-        show_keymap(s_topmap,prebuf);
+        show_key_map(s_top_map,prebuf);
     }
     else
     {
@@ -706,7 +706,7 @@ void show_macros()
     }
 }
 
-static void show_keymap(KeyMap *curmap, char *prefix)
+static void show_key_map(KeyMap *curmap, char *prefix)
 {
     char* next = prefix + std::strlen(prefix);
 
@@ -738,13 +738,13 @@ static void show_keymap(KeyMap *curmap, char *prefix)
             }
             switch (kt & KM_TMASK)
             {
-            case KM_NOTHIN:
+            case KM_NOTHING:
                 std::sprintf(g_cmd_buf,"%s   %c\n",prefix,i);
                 print_lines(g_cmd_buf, NO_MARKING);
                 break;
 
             case KM_KEYMAP:
-                show_keymap(curmap->km_ptr[i].km_km, prefix);
+                show_key_map(curmap->km_ptr[i].km_km, prefix);
                 break;
 
             case KM_STRING:
@@ -773,7 +773,7 @@ void set_mode(GeneralMode new_gmode, MinorMode new_mode)
 
 /* routine to pass to tputs */
 
-int putchr(char_int ch)
+int put_char(char_int ch)
 {
     std::putchar(ch);
 #ifdef lint
@@ -793,9 +793,9 @@ void hide_pending()
 
 bool finput_pending(bool check_term)
 {
-    while (s_nextout != s_nextin)
+    while (s_next_out != s_next_in)
     {
-        if (s_circlebuf[s_nextout] != '\200')
+        if (s_circle_buf[s_next_out] != '\200')
         {
             return true;
         }
@@ -805,13 +805,13 @@ bool finput_pending(bool check_term)
             return true;
 
         case 1:
-            s_nextout++;
-            s_nextout %= PUSHSIZE;
+            s_next_out++;
+            s_next_out %= PUSHSIZE;
             s_not_echoing = 0;
             break;
 
         default:
-            s_circlebuf[s_nextout] = '\n';
+            s_circle_buf[s_next_out] = '\n';
             s_not_echoing = 0;
             return true;
         }
@@ -1071,7 +1071,7 @@ void eat_typeahead()
         && this_time - last_time > 0.3)
     {
 #ifdef PENDING
-        KeyMap*curmap = s_topmap;
+        KeyMap*curmap = s_top_map;
         int    j;
         for (j = 0; input_pending();)
         {
@@ -1080,7 +1080,7 @@ void eat_typeahead()
             {
                 if (errno && errno != EINTR)
                 {
-                    std::perror(s_readerr);
+                    std::perror(s_read_err);
                     sig_catcher(0);
                 }
                 continue;
@@ -1088,7 +1088,7 @@ void eat_typeahead()
             Uchar lc = *(Uchar*)g_buf;
             if ((lc & 0200) || curmap == nullptr)
             {
-                curmap = s_topmap;
+                curmap = s_top_map;
                 j = 0;
                 continue;
             }
@@ -1105,8 +1105,8 @@ void eat_typeahead()
             switch (curmap->km_type[lc] & KM_TMASK)
             {
             case KM_STRING:           /* a string? */
-            case KM_NOTHIN:           /* no entry? */
-                curmap = s_topmap;
+            case KM_NOTHING:           /* no entry? */
+                curmap = s_top_map;
                 j = 0;
                 continue;
 
@@ -1149,17 +1149,17 @@ void settle_down()
     dingaling();
     std::fflush(stdout);
     /*sleep(1);*/
-    s_nextout = s_nextin;                       /* empty s_circlebuf */
+    s_next_out = s_next_in;                       /* empty s_circlebuf */
     s_not_echoing = 0;
     eat_typeahead();
 }
 
-static bool s_ignore_EINTR = false;
+static bool s_ignore_eintr = false;
 
 #ifdef SIGALRM
 Signal_t alarm_catcher(int signo)
 {
-    s_ignore_EINTR = true;
+    s_ignore_eintr = true;
     check_data_sources();
     sigset(SIGALRM,alarm_catcher);
     (void) alarm(DATASRC_ALARM_SECS);
@@ -1172,8 +1172,8 @@ int read_tty(char *addr, int size)
 {
     if (macro_pending())
     {
-        *addr = s_circlebuf[s_nextout++];
-        s_nextout %= PUSHSIZE;
+        *addr = s_circle_buf[s_next_out++];
+        s_next_out %= PUSHSIZE;
         return 1;
     }
 #ifdef MSDOS
@@ -1218,22 +1218,22 @@ int circfill()
 
 void push_char(char_int c)
 {
-    s_nextout--;
-    if (s_nextout < 0)
+    s_next_out--;
+    if (s_next_out < 0)
     {
-        s_nextout = PUSHSIZE - 1;
+        s_next_out = PUSHSIZE - 1;
     }
-    if (s_nextout == s_nextin)
+    if (s_next_out == s_next_in)
     {
         std::fputs("\npushback buffer overflow\n",stdout);
         sig_catcher(0);
     }
-    s_circlebuf[s_nextout] = c;
+    s_circle_buf[s_next_out] = c;
 }
 
 /* print an underlined string, one way or another */
 
-void underprint(const char *s)
+void under_print(const char *s)
 {
     TRN_ASSERT(g_tc_UC);
     if (*g_tc_UC)       /* char by char underline? */
@@ -1314,13 +1314,13 @@ void get_cmd(char *whatbuf)
     }
 
 tryagain:
-    KeyMap *curmap = s_topmap;
+    KeyMap *curmap = s_top_map;
     bool no_macros = (whatbuf != g_buf && !s_xmouse_is_on);
     while (true)
     {
         g_int_count = 0;
         errno = 0;
-        s_ignore_EINTR = false;
+        s_ignore_eintr = false;
         if (read_tty(whatbuf, 1) < 0)
         {
             if (!errno)
@@ -1329,7 +1329,7 @@ tryagain:
             }
             if (errno == EINTR)
             {
-                if (s_ignore_EINTR)
+                if (s_ignore_eintr)
                 {
                     continue;
                 }
@@ -1338,7 +1338,7 @@ tryagain:
 #endif
                 return;
             }
-            std::perror(s_readerr);
+            std::perror(s_read_err);
             sig_catcher(0);
         }
         g_last_char = *(Uchar*)whatbuf;
@@ -1358,8 +1358,8 @@ tryagain:
 
         switch (curmap->km_type[g_last_char] & KM_TMASK)
         {
-        case KM_NOTHIN:               /* no entry? */
-            if (curmap == s_topmap)     /* unmapped canonical */
+        case KM_NOTHING:               /* no entry? */
+            if (curmap == s_top_map)     /* unmapped canonical */
             {
                 goto got_canonical;
             }
@@ -2060,22 +2060,22 @@ void clear()
     g_fire_is_out = 0;
     if (s_tc_CL)
     {
-        tputs(s_tc_CL,g_tc_LINES,putchr);
+        tputs(s_tc_CL,g_tc_LINES,put_char);
     }
     else if (g_tc_CD)
     {
         home_cursor();
-        tputs(g_tc_CD,g_tc_LINES,putchr);
+        tputs(g_tc_CD,g_tc_LINES,put_char);
     }
     else
     {
         for (int i = 0; i < g_tc_LINES; i++)
         {
-            putchr('\n');
+            put_char('\n');
         }
         home_cursor();
     }
-    tputs(g_tc_CR,1,putchr);
+    tputs(g_tc_CR,1,put_char);
 }
 
 void home_cursor()
@@ -2088,11 +2088,11 @@ void home_cursor()
             term_down(3);
             return;             /* forget it. */
         }
-        tputs(tgoto(g_tc_CM, 0, 0), 1, putchr); /* go to home via CM */
+        tputs(tgoto(g_tc_CM, 0, 0), 1, put_char); /* go to home via CM */
     }
     else                        /* we have home sequence */
     {
-        tputs(g_tc_HO, 1, putchr);/* home via HO */
+        tputs(g_tc_HO, 1, put_char);/* home via HO */
     }
     carriage_return();  /* Resets kernel's tab column counter to 0 */
     g_term_line = 0;
@@ -2122,7 +2122,7 @@ void goto_xy(int to_col, int to_line)
     int ycost = (to_line - g_term_line);
     if (ycost < 0)
     {
-        ycost = (s_upcost? -ycost * s_upcost : 7777);
+        ycost = (s_up_cost? -ycost * s_up_cost : 7777);
     }
     else if (ycost > 0)
     {
@@ -2139,7 +2139,7 @@ void goto_xy(int to_col, int to_line)
         }
         else
         {
-            xcost = -xcost * s_leftcost;
+            xcost = -xcost * s_left_cost;
         }
     }
     else if (xcost > 0 && cmcost < 9999)
@@ -2149,7 +2149,7 @@ void goto_xy(int to_col, int to_line)
 
     if (cmcost <= xcost + ycost)
     {
-        tputs(str,1,putchr);
+        tputs(str,1,put_char);
         g_term_line = to_line;
         g_term_col = to_col;
         return;
@@ -2200,11 +2200,11 @@ static void line_col_calcs()
         if (!g_init_lines || !g_option_def_vals[OI_INITIAL_ARTICLE_LINES])
         {
             /* no -i or unreasonable value for g_initlines */
-            if (s_outspeed >= B9600)    /* whole page at >= 9600 baud */
+            if (s_out_speed >= B9600)    /* whole page at >= 9600 baud */
             {
                 g_init_lines = g_tc_LINES;
             }
-            else if (s_outspeed >= B4800)       /* 16 lines at 4800 */
+            else if (s_out_speed >= B4800)       /* 16 lines at 4800 */
             {
                 g_init_lines = 16;
             }
@@ -2328,7 +2328,7 @@ void xmouse_init(const char *progname)
 
 void xmouse_check()
 {
-    g_mousebar_cnt = 0;
+    g_mouse_bar_cnt = 0;
     if (g_use_mouse)
     {
         bool turn_it_on;
@@ -2353,59 +2353,59 @@ void xmouse_check()
             switch (mmode)
             {
             case MM_NEWSRC_SELECTOR:
-                s_mousebar_btns = g_newsrc_sel_btns;
-                g_mousebar_cnt = g_newsrc_sel_btn_cnt;
+                s_mouse_bar_btns = g_newsrc_sel_btns;
+                g_mouse_bar_cnt = g_newsrc_sel_btn_cnt;
                 break;
 
             case MM_ADD_GROUP_SELECTOR:
-                s_mousebar_btns = g_add_sel_btns;
-                g_mousebar_cnt = g_add_sel_btn_cnt;
+                s_mouse_bar_btns = g_add_sel_btns;
+                g_mouse_bar_cnt = g_add_sel_btn_cnt;
                 break;
 
             case MM_OPTION_SELECTOR:
-                s_mousebar_btns = g_option_sel_btns;
-                g_mousebar_cnt = g_option_sel_btn_cnt;
+                s_mouse_bar_btns = g_option_sel_btns;
+                g_mouse_bar_cnt = g_option_sel_btn_cnt;
                 break;
 
             case MM_THREAD_SELECTOR:
-                s_mousebar_btns = g_news_sel_btns;
-                g_mousebar_cnt = g_news_sel_btn_cnt;
+                s_mouse_bar_btns = g_news_sel_btns;
+                g_mouse_bar_cnt = g_news_sel_btn_cnt;
                 break;
 
             case MM_NEWSGROUP_SELECTOR:
-                s_mousebar_btns = g_newsgroup_sel_btns;
-                g_mousebar_cnt = g_newsgroup_sel_btn_cnt;
+                s_mouse_bar_btns = g_newsgroup_sel_btns;
+                g_mouse_bar_cnt = g_newsgroup_sel_btn_cnt;
                 break;
 
             case MM_ARTICLE:  case MM_PAGER:
-                s_mousebar_btns = g_art_pager_btns;
-                g_mousebar_cnt = g_art_pager_btn_cnt;
+                s_mouse_bar_btns = g_art_pager_btns;
+                g_mouse_bar_cnt = g_art_pager_btn_cnt;
                 break;
 
             case MM_UNIVERSAL:
-                s_mousebar_btns = g_univ_sel_btns;
-                g_mousebar_cnt = g_univ_sel_btn_cnt;
+                s_mouse_bar_btns = g_univ_sel_btns;
+                g_mouse_bar_cnt = g_univ_sel_btn_cnt;
                 break;
 
             default:
-                s_mousebar_btns = "";
+                s_mouse_bar_btns = "";
                 /*g_mousebar_cnt = 0;*/
                 break;
             }
-            char *s = s_mousebar_btns;
-            g_mousebar_width = 0;
-            for (int i = 0; i < g_mousebar_cnt; i++)
+            char *s = s_mouse_bar_btns;
+            g_mouse_bar_width = 0;
+            for (int i = 0; i < g_mouse_bar_cnt; i++)
             {
                 int j = std::strlen(s);
                 if (*s == '[')
                 {
-                    g_mousebar_width += j;
+                    g_mouse_bar_width += j;
                     s += j + 1;
                     j = std::strlen(s);
                 }
                 else
                 {
-                    g_mousebar_width += (j < 2? 3+1 : (j == 2? 4+1
+                    g_mouse_bar_width += (j < 2? 3+1 : (j == 2? 4+1
                                                      : (j < 5? j: 5+1)));
                 }
                 s += j + 1;
@@ -2447,15 +2447,15 @@ void draw_mouse_bar(int limit, bool restore_cursor)
     int save_col = g_term_col;
     int save_line = g_term_line;
 
-    g_mousebar_width = 0;
-    if (g_mousebar_cnt == 0)
+    g_mouse_bar_width = 0;
+    if (g_mouse_bar_cnt == 0)
     {
         return;
     }
 
-    char *s = s_mousebar_btns;
+    char *s = s_mouse_bar_btns;
     char *t = g_msg;
-    for (int i = 0; i < g_mousebar_cnt; i++)
+    for (int i = 0; i < g_mouse_bar_cnt; i++)
     {
         if (*s == '[')
         {
@@ -2498,20 +2498,20 @@ void draw_mouse_bar(int limit, bool restore_cursor)
         s += std::strlen(s) + 1;
         *t++ = '\0';
     }
-    g_mousebar_width = t - g_msg;
-    s_mousebar_start = 0;
+    g_mouse_bar_width = t - g_msg;
+    s_mouse_bar_start = 0;
 
     s = g_msg;
-    while (g_mousebar_width > limit)
+    while (g_mouse_bar_width > limit)
     {
         int len = std::strlen(s) + 1;
         s += len;
-        g_mousebar_width -= len;
-        s_mousebar_start++;
+        g_mouse_bar_width -= len;
+        s_mouse_bar_start++;
     }
 
-    goto_xy(g_tc_COLS - g_mousebar_width - 1, g_tc_LINES-1);
-    for (int i = s_mousebar_start; i < g_mousebar_cnt; i++)
+    goto_xy(g_tc_COLS - g_mouse_bar_width - 1, g_tc_LINES-1);
+    for (int i = s_mouse_bar_start; i < g_mouse_bar_cnt; i++)
     {
         std::putchar(' ');
         color_string(COLOR_MOUSE,s);
@@ -2578,14 +2578,14 @@ static void mouse_input(const char *cp)
 
 bool check_mouse_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 {
-    char*s = s_mousebar_btns;
-    int  col = g_tc_COLS - g_mousebar_width;
+    char*s = s_mouse_bar_btns;
+    int  col = g_tc_COLS - g_mouse_bar_width;
 
-    if (g_mousebar_width != 0 && btn_clk == 0 && y_clk == g_tc_LINES - 1 //
+    if (g_mouse_bar_width != 0 && btn_clk == 0 && y_clk == g_tc_LINES - 1 //
         && (x_clk -= col - 1) > 0)
     {
         x -= col-1;
-        for (int i = 0; i < s_mousebar_start; i++)
+        for (int i = 0; i < s_mouse_bar_start; i++)
         {
             if (*s == '[')
             {

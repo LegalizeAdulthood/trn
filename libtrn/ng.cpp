@@ -531,7 +531,7 @@ reinp_article:
         }
 article_level:
         g_output_chase_phrase = true;  /* Allow "Chasing Xrefs..." output */
-        if (g_mousebar_cnt)
+        if (g_mouse_bar_cnt)
         {
             clear_rest();
         }

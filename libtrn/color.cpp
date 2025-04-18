@@ -322,7 +322,7 @@ void color_string(int object, const char *str)
     }
     if (!s_use_colors && *g_tc_UC && s_objects[object].attr == UNDERLINE)
     {
-        underprint(str);        /* hack for stupid terminals */
+        under_print(str);        /* hack for stupid terminals */
     }
     else
     {

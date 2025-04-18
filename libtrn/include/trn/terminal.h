@@ -157,8 +157,8 @@ extern int   g_term_scrolled; /* how many lines scrolled away */
 extern int   g_just_a_sec;    /* 1 sec at current baud rate (number of nulls) */
 extern int   g_page_line;     /* line number for paging in print_line (origin 1) */
 extern bool  g_error_occurred;
-extern int   g_mousebar_cnt;
-extern int   g_mousebar_width;
+extern int   g_mouse_bar_cnt;
+extern int   g_mouse_bar_width;
 extern bool  g_mouse_is_down;
 extern int   g_auto_arrow_macros; /* -A */
 
@@ -169,7 +169,7 @@ void  arrow_macros(char *tmpbuf);
 void  mac_line(char *line, char *tmpbuf, int tbsize);
 void  show_macros();
 void  set_mode(GeneralMode new_gmode, MinorMode new_mode);
-int   putchr(char_int ch);
+int   put_char(char_int ch);
 void  hide_pending();
 bool  finput_pending(bool check_term);
 bool  finish_command(int donewline);
@@ -186,7 +186,7 @@ int read_tty(char *addr, int size);
 int circfill();
 #endif
 void push_char(char_int c);
-void underprint(const char *s);
+void under_print(const char *s);
 #ifdef NOFIREWORKS
 void no_so_fire();
 void no_ul_fire();
@@ -351,62 +351,62 @@ inline void newline()
 }
 inline void backspace()
 {
-    tputs(g_tc_BC, 0, putchr);
+    tputs(g_tc_BC, 0, put_char);
 }
 inline void erase_eol()
 {
-    tputs(g_tc_CE, 1, putchr);
+    tputs(g_tc_CE, 1, put_char);
 }
 inline void clear_rest()
 {
-    tputs(g_tc_CD, g_tc_LINES, putchr);
+    tputs(g_tc_CD, g_tc_LINES, put_char);
 }
 inline void maybe_eol()
 {
     if (g_erase_screen && g_erase_each_line)
     {
-        tputs(g_tc_CE, 1, putchr);
+        tputs(g_tc_CE, 1, put_char);
     }
 }
 inline void underline()
 {
-    tputs(g_tc_US, 1, putchr);
+    tputs(g_tc_US, 1, put_char);
 }
 inline void un_underline()
 {
     g_fire_is_out |= UNDERLINE;
-    tputs(g_tc_UE, 1, putchr);
+    tputs(g_tc_UE, 1, put_char);
 }
 inline void underchar()
 {
-    tputs(g_tc_UC, 0, putchr);
+    tputs(g_tc_UC, 0, put_char);
 }
 inline void standout()
 {
-    tputs(g_tc_SO, 1, putchr);
+    tputs(g_tc_SO, 1, put_char);
 }
 inline void un_standout()
 {
     g_fire_is_out |= STANDOUT;
-    tputs(g_tc_SE, 1, putchr);
+    tputs(g_tc_SE, 1, put_char);
 }
 inline void up_line()
 {
     g_term_line--;
-    tputs(g_tc_UP, 1, putchr);
+    tputs(g_tc_UP, 1, put_char);
 }
 inline void insert_line()
 {
-    tputs(g_tc_IL, 1, putchr);
+    tputs(g_tc_IL, 1, put_char);
 }
 inline void carriage_return()
 {
     g_term_col = 0;
-    tputs(g_tc_CR, 1, putchr);
+    tputs(g_tc_CR, 1, put_char);
 }
 inline void dingaling()
 {
-    tputs(g_tc_VB, 1, putchr);
+    tputs(g_tc_VB, 1, put_char);
 }
 #else  /* !HAS_TERMLIB */
 //..."Don't know how to define the term macros!"

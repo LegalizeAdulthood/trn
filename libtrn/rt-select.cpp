@@ -300,7 +300,7 @@ char article_selector(char_int cmd)
 
     sel_cleanup();
     newline();
-    if (g_mousebar_cnt)
+    if (g_mouse_bar_cnt)
     {
         clear_rest();
     }
@@ -465,7 +465,7 @@ char multirc_selector()
     }
 
     newline();
-    if (g_mousebar_cnt)
+    if (g_mouse_bar_cnt)
     {
         clear_rest();
     }
@@ -554,7 +554,7 @@ char newsgroup_selector()
     }
 
     newline();
-    if (g_mousebar_cnt)
+    if (g_mouse_bar_cnt)
     {
         clear_rest();
     }
@@ -639,7 +639,7 @@ char add_group_selector(GetNewsgroupFlags flags)
 
     g_selected_count = 0;
     newline();
-    if (g_mousebar_cnt)
+    if (g_mouse_bar_cnt)
     {
         clear_rest();
     }
@@ -700,7 +700,7 @@ char option_selector()
 
     g_selected_count = 0;
     newline();
-    if (g_mousebar_cnt)
+    if (g_mouse_bar_cnt)
     {
         clear_rest();
     }
@@ -984,7 +984,7 @@ sel_restart:
     }
 
     newline();
-    if (g_mousebar_cnt)
+    if (g_mouse_bar_cnt)
     {
         clear_rest();
     }
@@ -1835,7 +1835,7 @@ static bool select_option(OptionIndex i)
     }
 
     goto_xy(0,g_sel_last_line);
-    erase_line(g_mousebar_cnt > 0);     /* erase the prompt */
+    erase_line(g_mouse_bar_cnt > 0);     /* erase the prompt */
     color_object(COLOR_CMD, true);
     std::printf("Change `%s' (%s)",g_options_ini[i].item, g_options_ini[i].help_str);
     color_pop();        /* of COLOR_CMD */
@@ -2105,7 +2105,7 @@ static DisplayState sel_command(char_int ch)
         return DS_DISPLAY;
 
     case '&':  case '!':
-        erase_line(g_mousebar_cnt > 0); /* erase the prompt */
+        erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
         if (!finish_command(true))      /* get rest of command */
         {
@@ -2153,7 +2153,7 @@ static DisplayState sel_command(char_int ch)
         return DS_DISPLAY;
 
     case '\\':
-        erase_line(g_mousebar_cnt > 0); /* erase the prompt */
+        erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
         if (g_sel_mode == SM_NEWSGROUP)
         {
@@ -2382,7 +2382,7 @@ static DisplayState article_commands(char_int ch)
         {
             sel_cleanup();
         }
-        erase_line(g_mousebar_cnt > 0); /* erase the prompt */
+        erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
       reask_output:
         in_char("Selector mode:  Threads, Subjects, Articles?", MM_SELECTOR_ORDER_PROMPT, "tsa");
@@ -2432,7 +2432,7 @@ static DisplayState article_commands(char_int ch)
         {
             sel_cleanup();
         }
-        erase_line(g_mousebar_cnt > 0); /* erase the prompt */
+        erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
       reask_sort:
         if (g_sel_mode == SM_ARTICLE)
@@ -2635,7 +2635,7 @@ static DisplayState article_commands(char_int ch)
             dingaling();
             break;
         }
-        erase_line(g_mousebar_cnt > 0); /* erase the prompt */
+        erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
         if (g_sel_mode == SM_ARTICLE)
         {
@@ -2718,7 +2718,7 @@ static DisplayState article_commands(char_int ch)
         /* FALL THROUGH */
 
     case '/':
-        erase_line(g_mousebar_cnt > 0); /* erase the prompt */
+        erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
         if (!finish_command(true))      /* get rest of command */
         {
@@ -2797,7 +2797,7 @@ static DisplayState article_commands(char_int ch)
         return DS_DISPLAY;
 
     case 'c':
-        erase_line(g_mousebar_cnt > 0); /* erase the prompt */
+        erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
         ch = ask_catchup();
         if (ch == 'y' || ch == 'u')
@@ -2937,7 +2937,7 @@ static DisplayState newsgroup_commands(char_int ch)
         {
             sel_cleanup();
         }
-        erase_line(g_mousebar_cnt > 0); /* erase the prompt */
+        erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
       reask_sort:
         in_char("Order by Newsrc, Group name, or Count?", MM_Q, "ngcNGC");
@@ -3022,7 +3022,7 @@ static DisplayState newsgroup_commands(char_int ch)
 #endif
 
     case '/':
-        erase_line(g_mousebar_cnt > 0); /* erase the prompt */
+        erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
         if (!finish_command(true))      /* get rest of command */
         {
@@ -3090,7 +3090,7 @@ static DisplayState newsgroup_commands(char_int ch)
             g_recent_newsgroup = g_current_newsgroup;
             g_current_newsgroup = g_newsgroup_ptr;
         }
-        erase_line(g_mousebar_cnt > 0); /* erase the prompt */
+        erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
         ch = ask_catchup();
         if (ch == 'y' || ch == 'u')
@@ -3132,7 +3132,7 @@ static DisplayState newsgroup_commands(char_int ch)
         PUSH_SELECTOR();
         if (!(s_removed_prompt & RP_NEWLINE))
         {
-            erase_line(g_mousebar_cnt > 0);     /* erase the prompt */
+            erase_line(g_mouse_bar_cnt > 0);     /* erase the prompt */
             s_removed_prompt = RP_ALL;
             std::printf("[%s] Cmd: ", g_newsgroup_ptr? g_newsgroup_ptr->rc_line : "*End*");
             std::fflush(stdout);
@@ -3243,7 +3243,7 @@ static DisplayState add_group_commands(char_int ch)
         {
             sel_cleanup();
         }
-        erase_line(g_mousebar_cnt > 0); /* erase the prompt */
+        erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
       reask_sort:
         in_char("Order by Natural-order, Group name, or Count?", MM_Q, "ngcNGC");
@@ -3383,7 +3383,7 @@ static DisplayState add_group_commands(char_int ch)
 
     case ':':
     case '/':
-        erase_line(g_mousebar_cnt > 0); /* erase the prompt */
+        erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
         if (!finish_command(true))      /* get rest of command */
         {
@@ -3521,7 +3521,7 @@ static DisplayState option_commands(char_int ch)
     {
         Selection u;
         char*     pattern;
-        erase_line(g_mousebar_cnt > 0); /* erase the prompt */
+        erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
         if (!finish_command(true))      /* get rest of command */
         {
@@ -3645,7 +3645,7 @@ static DisplayState universal_commands(char_int ch)
         {
             sel_cleanup();
         }
-        erase_line(g_mousebar_cnt > 0); /* erase the prompt */
+        erase_line(g_mouse_bar_cnt > 0); /* erase the prompt */
         s_removed_prompt = RP_ALL;
       reask_sort:
         in_char("Order by Natural, or score Points?", MM_Q, "npNP");

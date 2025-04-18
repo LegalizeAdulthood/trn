@@ -22,7 +22,7 @@ bool g_s_resized{};  /* has the window been resized? */
 
 void s_goxy(int x, int y)
 {
-    tputs(tgoto(g_tc_CM, x, y), 1, putchr);
+    tputs(tgoto(g_tc_CM, x, y), 1, put_char);
 }
 
 /* Print a string with the placing of the page and mail status.

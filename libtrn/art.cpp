@@ -138,7 +138,7 @@ DoArticleResult do_article()
         g_raw_art_size = art_stat.st_size;
         g_art_size = art_stat.st_size;
     }
-    std::sprintf(prompt_buf, g_mousebar_cnt>3? "%%sEnd of art %ld (of %ld) %%s[%%s]"
+    std::sprintf(prompt_buf, g_mouse_bar_cnt>3? "%%sEnd of art %ld (of %ld) %%s[%%s]"
         : "%%sEnd of article %ld (of %ld) %%s-- what next? [%%s]",
         (long)g_art,(long)g_last_art);   /* format prompt string */
     g_prompt = prompt_buf;
@@ -820,7 +820,7 @@ reask_pager:
 
         /* parse and process pager command */
 
-        if (g_mousebar_cnt)
+        if (g_mouse_bar_cnt)
         {
             clear_rest();
         }
