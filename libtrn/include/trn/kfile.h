@@ -44,8 +44,8 @@ enum AutoKillFlags : std::uint16_t
     AUTO_SEL_1 = 0x0100,
     AUTO_SEL_MASK = 0x0F00,
     AUTO_OLD = 0x0080,
-    /* The following defines are only valid as flags to function calls, used
-     * in combination with the AUTO_* flags above. */
+    // The following defines are only valid as flags to function calls, used
+    // in combination with the AUTO_* flags above.
     AFFECT_UNSEL = 0,
     AFFECT_ALL = 0x0001,
     ALSO_ECHO = 0x0002,    // only works with [un]select_article()
