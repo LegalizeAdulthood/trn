@@ -1,6 +1,6 @@
 /* config2.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_CONFIG2_H
 #define TRN_CONFIG2_H
 
@@ -36,7 +36,7 @@
 #include "msdos.h"
 #endif
 
-/* some handy defs */
+// some handy defs
 
 using char_int = int;
 
