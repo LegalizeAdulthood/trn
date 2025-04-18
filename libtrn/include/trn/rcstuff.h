@@ -1,6 +1,6 @@
 /* trn/rcstuff.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_RCSTUFF_H
 #define TRN_RCSTUFF_H
 
@@ -17,7 +17,7 @@ enum : ArticleUnread
 {
     TR_ONE = (ArticleUnread) 1,
     TR_NONE = (ArticleUnread) 0,
-    TR_UNSUB = (ArticleUnread) -1, /* keep this one as -1, some tests use >= TR_UNSUB */
+    TR_UNSUB = (ArticleUnread) -1, // keep this one as -1, some tests use >= TR_UNSUB
     TR_IGNORE = (ArticleUnread) -2,
     TR_BOGUS = (ArticleUnread) -3,
     TR_JUNK = (ArticleUnread) -4,
@@ -53,11 +53,11 @@ struct Newsrc
 {
     Newsrc     *next;
     DataSource *data_source;
-    char       *name;      /* the name of the associated newsrc */
-    char       *old_name;  /* the backup of the newsrc */
-    char       *new_name;  /* our working newsrc file */
-    char       *info_name; /* the time/size info file */
-    char       *lock_name; /* the lock file we created */
+    char       *name;      // the name of the associated newsrc
+    char       *old_name;  // the backup of the newsrc
+    char       *new_name;  // our working newsrc file
+    char       *info_name; // the time/size info file
+    char       *lock_name; // the lock file we created
     NewsrcFlags flags;
 };
 
@@ -79,15 +79,15 @@ struct Multirc
 extern HashTable *g_newsrc_hash;
 extern Multirc   *g_sel_page_mp;
 extern Multirc   *g_sel_next_mp;
-extern List      *g_multirc_list;       /* a list of all MULTIRCs */
-extern Multirc   *g_multirc;            /* the current MULTIRC */
-extern bool       g_paranoid;           /* did we detect some inconsistency in .newsrc? */
+extern List      *g_multirc_list;       // a list of all MULTIRCs
+extern Multirc   *g_multirc;            // the current MULTIRC
+extern bool       g_paranoid;           // did we detect some inconsistency in .newsrc?
 extern AddNewType g_add_new_by_default; //
-extern bool       g_check_flag;         /* -c */
-extern bool       g_suppress_cn;        /* -s */
-extern int        g_countdown;          /* how many lines to list before invoking -s */
-extern bool       g_fuzzy_get;          /* -G */
-extern bool       g_append_unsub;       /* -I */
+extern bool       g_check_flag;         // -c
+extern bool       g_suppress_cn;        // -s
+extern int        g_countdown;          // how many lines to list before invoking -s
+extern bool       g_fuzzy_get;          // -G
+extern bool       g_append_unsub;       // -I
 
 bool           rcstuff_init();
 void           rcstuff_final();
