@@ -90,8 +90,8 @@ void nntp_finish_list()
     {
         while ((ret = nntp_gets(g_ser_line, sizeof g_ser_line)) == NGSR_PARTIAL_LINE)
         {
-            /* A line w/o a newline is too long to be the end of the
-            ** list, so grab the rest of this line and try again. */
+            // A line w/o a newline is too long to be the end of the
+            // list, so grab the rest of this line and try again.
             while ((ret = nntp_gets(g_ser_line, sizeof g_ser_line)) == NGSR_PARTIAL_LINE)
             {
             }
@@ -689,10 +689,10 @@ void nntp_server_died(DataSource *dp)
     get_anything();
 }
 
-/* nntp_read_check -- get a line of text from the server, interpreting
-** it as a status message for a binary command.  Call this once
-** before calling nntp_read() for the actual data transfer.
-*/
+// nntp_read_check -- get a line of text from the server, interpreting
+// it as a status message for a binary command.  Call this once
+// before calling nntp_read() for the actual data transfer.
+//
 #ifdef SUPPORT_XTHREAD
 long nntp_read_check()
 {
@@ -716,9 +716,9 @@ long nntp_read_check()
 }
 #endif
 
-/* nntp_read -- read data from the server in binary format.  This call must
-** be preceded by an appropriate binary command and an nntp_read_check call.
-*/
+// nntp_read -- read data from the server in binary format.  This call must
+// be preceded by an appropriate binary command and an nntp_read_check call.
+//
 #ifdef SUPPORT_XTHREAD
 long nntp_read(char *buf, long n)
 {
