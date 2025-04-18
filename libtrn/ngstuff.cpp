@@ -1,6 +1,6 @@
 /* ngstuff.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "config/common.h"
 #include "trn/ngstuff.h"
@@ -33,8 +33,8 @@
 #include <algorithm>
 #include <cstring>
 
-bool        g_one_command{}; /* no ':' processing in perform() */
-std::string g_save_dir;      /* -d */
+bool        g_one_command{}; // no ':' processing in perform()
+std::string g_save_dir;      // -d
 
 /* given the new and complex universal/help possibilities,
  * the following interlock variable may save some trouble.
@@ -47,14 +47,14 @@ void newsgroup_stuff_init()
     s_option_sel_lock = false;
 }
 
-/* do a shell escape */
+// do a shell escape
 
 int escapade()
 {
     bool interactive = (g_buf[1] == FINISH_CMD);
     char whereiam[1024];
 
-    if (!finish_command(interactive))   /* get remainder of command */
+    if (!finish_command(interactive))   // get remainder of command
     {
         return -1;
     }
@@ -73,12 +73,12 @@ int escapade()
             sig_catcher(0);
         }
     }
-    s = skip_eq(s, ' ');                /* skip leading spaces */
-    interp(g_cmd_buf, (sizeof g_cmd_buf), s);/* interpret any % escapes */
-    reset_tty();                          /* make sure tty is friendly */
-    do_shell(nullptr,g_cmd_buf); /* invoke the shell */
-    no_echo();                           /* and make terminal */
-    cr_mode();                           /*   unfriendly again */
+    s = skip_eq(s, ' ');                // skip leading spaces
+    interp(g_cmd_buf, (sizeof g_cmd_buf), s);// interpret any % escapes
+    reset_tty();                          // make sure tty is friendly
+    do_shell(nullptr,g_cmd_buf); // invoke the shell
+    no_echo();                           // and make terminal
+    cr_mode();                           // unfriendly again
     if (docd)
     {
         if (change_dir(whereiam))
@@ -88,18 +88,18 @@ int escapade()
         }
     }
 #ifdef MAIL_CALL
-    g_mail_count = 0;                    /* force recheck */
+    g_mail_count = 0;                    // force recheck
 #endif
     return 0;
 }
 
-/* process & command */
+// process & command
 
 int switcheroo()
 {
-    if (!finish_command(true)) /* get rest of command */
+    if (!finish_command(true)) // get rest of command
     {
-        return -1;      /* if rubbed out, try something else */
+        return -1;      // if rubbed out, try something else
     }
     if (!g_buf[1])
     {
@@ -160,7 +160,7 @@ int switcheroo()
         if (docd)
         {
             cwd_check();
-            if (change_dir(whereami))                /* -d does chdirs */
+            if (change_dir(whereami))                // -d does chdirs
             {
                 std::printf(g_no_cd,whereami);
                 sig_catcher(0);
@@ -170,7 +170,7 @@ int switcheroo()
     return 0;
 }
 
-/* process range commands */
+// process range commands
 
 NumNumResult num_num()
 {
@@ -182,9 +182,9 @@ NumNumResult num_num()
     ArticleNum oldart = g_art;
     char tmpbuf[LINE_BUF_LEN];
     bool output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
-    bool justone = true;                /* assume only one article */
+    bool justone = true;                // assume only one article
 
-    if (!finish_command(true))  /* get rest of command */
+    if (!finish_command(true))  // get rest of command
     {
         return NN_INP;
     }
@@ -324,7 +324,7 @@ int thread_perform()
     bool    output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
     bool    one_thread = false;
 
-    if (!finish_command(true))  /* get rest of command */
+    if (!finish_command(true))  // get rest of command
     {
         return 0;
     }
@@ -362,7 +362,7 @@ int thread_perform()
         std::printf("Processing...");
         std::fflush(stdout);
     }
-    /* A few commands can just loop through the subjects. */
+    // A few commands can just loop through the subjects.
     if ((len == 1 && (*cmdstr == 't' || *cmdstr == 'J'))                       //
         || (len == 2                                                           //
             && (((*cmdstr == '+' || *cmdstr == '-') && cmdstr[0] == cmdstr[1]) //
@@ -402,7 +402,7 @@ int thread_perform()
     }
     else if (!std::strcmp(cmdstr, "E"))
     {
-        /* The 'E'nd-decode command doesn't do any looping at all. */
+        // The 'E'nd-decode command doesn't do any looping at all.
         if (decode_fp)
         {
             decode_end();
@@ -420,8 +420,8 @@ int thread_perform()
     }
     else
     {
-        /* The rest loop through the articles. */
-        /* Use the explicit article-order if it exists */
+        // The rest loop through the articles.
+        // Use the explicit article-order if it exists
         if (g_art_ptr_list)
         {
             Article** limit = g_art_ptr_list + g_art_ptr_list_size;
@@ -498,7 +498,7 @@ int perform(char *cmdlst, int output_level)
     int savemode = 0;
     char tbuf[LINE_BUF_LEN+1];
 
-    /* A quick fix to avoid reuse of g_buf and cmdlst by shell commands. */
+    // A quick fix to avoid reuse of g_buf and cmdlst by shell commands.
     safe_copy(tbuf, cmdlst, sizeof tbuf);
     cmdlst = tbuf;
 
@@ -696,7 +696,7 @@ int perform(char *cmdlst, int output_level)
             {
                 cmdlst = copy_till(g_buf, cmdlst, ':') - 1;
             }
-            /* we now have the command in g_buf */
+            // we now have the command in g_buf
             if (ch == '!')
             {
                 escapade();
@@ -767,7 +767,7 @@ int newsgroup_sel_perform()
     NewsgroupFlags bits;
     bool one_group = false;
 
-    if (!finish_command(true))  /* get rest of command */
+    if (!finish_command(true))  // get rest of command
     {
         return 0;
     }
@@ -858,7 +858,7 @@ int newsgroup_perform(char *cmdlst, int output_level)
 
         case 'c':
             catch_up(g_newsgroup_ptr, 0, 0);
-            /* FALL THROUGH */
+            // FALL THROUGH
 
         case '-':
 deselect:
@@ -917,7 +917,7 @@ int add_group_sel_perform()
     int bits;
     bool one_group = false;
 
-    if (!finish_command(true))  /* get rest of command */
+    if (!finish_command(true))  // get rest of command
     {
         return 0;
     }
