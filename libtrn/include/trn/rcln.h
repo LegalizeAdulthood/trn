@@ -1,6 +1,6 @@
 /* trn/rcln.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #ifndef TRN_RCLN_H
 #define TRN_RCLN_H
 
@@ -9,7 +9,7 @@
 struct DataSource;
 struct NewsgroupData;
 
-/* if true, silence is golden (universal scan mode) */
+// if true, silence is golden (universal scan mode)
 extern bool g_to_read_quiet;
 
 enum : bool
