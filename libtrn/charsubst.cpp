@@ -211,27 +211,27 @@ int str_char_subst(char *outb, const char *inb, int limit, char_int subst)
     return len;
 }
 
-/* The following is an adapted version of iso2asc by Markus Kuhn,
-   University of Erlangen, Germany <mskuhn@immd4.uni-erlangen.de>
-*/
+// The following is an adapted version of iso2asc by Markus Kuhn,
+//   University of Erlangen, Germany <mskuhn@immd4.uni-erlangen.de>
 
 #define ISO_TABLES 2 // originally: 7
 
-/* Conversion tables for displaying the G1 set (0xa0-0xff) of
-   ISO Latin 1 (ISO 8859-1) with 7-bit ASCII characters.
-
-   Version 1.2 -- error corrections are welcome
-
-   Table   Purpose
-     0     universal table for many languages
-     1     single-spacing universal table
-     2     table for Danish, Dutch, German, Norwegian and Swedish
-     3     table for Danish, Finnish, Norwegian and Swedish using
-           the appropriate ISO 646 variant.
-     4     table with RFC 1345 codes in brackets
-     5     table for printers that allow overstriking with backspace
-
-   Markus Kuhn <mskuhn@immd4.informatik.uni-erlangen.de>                 */
+// Conversion tables for displaying the G1 set (0xa0-0xff) of
+//   ISO Latin 1 (ISO 8859-1) with 7-bit ASCII characters.
+//
+//   Version 1.2 -- error corrections are welcome
+//
+//   Table   Purpose
+//     0     universal table for many languages
+//     1     single-spacing universal table
+//     2     table for Danish, Dutch, German, Norwegian and Swedish
+//     3     table for Danish, Finnish, Norwegian and Swedish using
+//           the appropriate ISO 646 variant.
+//     4     table with RFC 1345 codes in brackets
+//     5     table for printers that allow overstriking with backspace
+//
+//   Markus Kuhn <mskuhn@immd4.informatik.uni-erlangen.de>
+//
 // In this version, I have taken out all tables except 1 and 2 -ot
 
 #define SUB nullptr       // used if no reasonable ASCII string is possible
@@ -258,12 +258,12 @@ static const char* s_iso_to_ascii[ISO_TABLES][96] =
 };
 // clang-format on
 
-/*
- *  Transform an 8-bit ISO Latin 1 string iso into a 7-bit ASCII string asc
- *  readable on old terminals using conversion table t.
- *
- *  worst case: strlen(iso) == 4*strlen(asc)
- */
+//
+//  Transform an 8-bit ISO Latin 1 string iso into a 7-bit ASCII string asc
+//  readable on old terminals using conversion table t.
+//
+//  worst case: strlen(iso) == 4*strlen(asc)
+//
 static int latin1_to_ascii(Uchar *asc, const Uchar *iso, int limit, int t)
 {
     Uchar *s = asc;
