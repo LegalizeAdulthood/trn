@@ -801,10 +801,10 @@ int mime_end_of_section(char *bp)
     return 0;
 }
 
-/* Return a saved string of all the extra parameters on this mime
- * header line.  The passed-in string is transformed into just the
- * first word on the line.
- */
+// Return a saved string of all the extra parameters on this mime
+// header line.  The passed-in string is transformed into just the
+// first word on the line.
+//
 char *mime_parse_params(char *str)
 {
     char *e = mime_skip_whitespace(str);
