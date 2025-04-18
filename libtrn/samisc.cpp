@@ -155,9 +155,9 @@ int sa_number_arts()
     return total;
 }
 
-/* needed for a couple functions which act within the
- * scope of an article.
- */
+// needed for a couple functions which act within the
+// scope of an article.
+//
 void sa_go_art(long a)
 {
     g_art = a;
@@ -173,9 +173,9 @@ int sa_compare(long a, long b)
 {
     if (g_sa_mode_order == SA_ORDER_DESCENDING) // score order
     {
-        /* do not score the articles here--move the articles to
-         * the end of the list if unscored.
-         */
+        // do not score the articles here--move the articles to
+        // the end of the list if unscored.
+        //
         if (!article_scored(g_sa_ents[a].artnum))                         // a unscored
         {
             if (!article_scored(g_sa_ents[b].artnum))   // a+b unscored
