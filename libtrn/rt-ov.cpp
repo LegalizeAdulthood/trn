@@ -342,7 +342,7 @@ beginning:
                 success = false;
                 break;
             }
-            if (g_curr_artp != g_sentinel_artp)
+            if (g_curr_artp != g_sentinel_art_ptr)
             {
                 push_char('\f' | 0200);
                 success = false;
@@ -386,7 +386,7 @@ beginning:
     }
     else if (remote)
     {
-        if (cheating && g_curr_artp != g_sentinel_artp)
+        if (cheating && g_curr_artp != g_sentinel_art_ptr)
         {
             push_char('\f' | 0200);
             success = false;

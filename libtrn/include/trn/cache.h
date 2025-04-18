@@ -123,7 +123,7 @@ extern ArticleNum g_search_ahead; /* are we in subject scan mode? (if so, contai
 extern ArticleNum g_first_cached;
 extern ArticleNum g_last_cached;
 extern bool       g_cached_all_in_range;
-extern Article   *g_sentinel_artp;
+extern Article   *g_sentinel_art_ptr;
 extern Subject   *g_first_subject;
 extern Subject   *g_last_subject;
 extern bool       g_untrim_cache;

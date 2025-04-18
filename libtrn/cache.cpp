@@ -46,7 +46,7 @@ ArticleNum g_search_ahead{};         /* are we in subject scan mode? (if so, con
 ArticleNum g_first_cached{};         //
 ArticleNum g_last_cached{};          //
 bool       g_cached_all_in_range{};  //
-Article   *g_sentinel_artp{};        //
+Article   *g_sentinel_art_ptr{};     //
 Subject   *g_first_subject{};        //
 Subject   *g_last_subject{};         //
 bool       g_untrim_cache{};         //
@@ -493,17 +493,17 @@ char *get_cached_line(Article *ap, HeaderLineType which_line, bool no_truncs)
 
     case LINES_LINE:
     {
-        static char linesbuf[32];
-        std::sprintf(linesbuf, "%ld", ap->lines);
-        s = linesbuf;
+        static char lines_buf[32];
+        std::sprintf(lines_buf, "%ld", ap->lines);
+        s = lines_buf;
         break;
     }
 
     case BYTES_LINE:
     {
-        static char bytesbuf[32];
-        std::sprintf(bytesbuf, "%ld", ap->bytes);
-        s = bytesbuf;
+        static char bytes_buf[32];
+        std::sprintf(bytes_buf, "%ld", ap->bytes);
+        s = bytes_buf;
         break;
     }
 
@@ -530,26 +530,26 @@ void set_subj_line(Article *ap, char *subj, int size)
         size = 0;
     }
 
-    char *newsubj = safe_malloc(size + 4 + 1);
-    std::strcpy(newsubj, "Re: ");
-    size = decode_header(newsubj + 4, subj_start, size);
+    char *new_subj = safe_malloc(size + 4 + 1);
+    std::strcpy(new_subj, "Re: ");
+    size = decode_header(new_subj + 4, subj_start, size);
 
     /* Do the Re:-stripping over again, just in case it was encoded. */
-    if (subject_has_re(newsubj + 4, &subj_start))
+    if (subject_has_re(new_subj + 4, &subj_start))
     {
         ap->flags |= AF_HAS_RE;
     }
-    if (subj_start != newsubj + 4)
+    if (subj_start != new_subj + 4)
     {
-        safe_copy(newsubj + 4, subj_start, size);
-        if ((size -= subj_start - newsubj - 4) < 0)
+        safe_copy(new_subj + 4, subj_start, size);
+        if ((size -= subj_start - new_subj - 4) < 0)
         {
             size = 0;
         }
     }
-    if (ap->subj && !std::strncmp(ap->subj->str + 4, newsubj + 4, size))
+    if (ap->subj && !std::strncmp(ap->subj->str + 4, new_subj + 4, size))
     {
-        std::free(newsubj);
+        std::free(new_subj);
         return;
     }
 
@@ -558,13 +558,13 @@ void set_subj_line(Article *ap, char *subj, int size)
         /* This only happens when we freshen truncated subjects */
         hash_delete(s_subj_hash, ap->subj->str+4, std::strlen(ap->subj->str+4));
         std::free(ap->subj->str);
-        ap->subj->str = newsubj;
+        ap->subj->str = new_subj;
         data.dat_ptr = (char*)ap->subj;
-        hash_store(s_subj_hash, newsubj + 4, size, data);
+        hash_store(s_subj_hash, new_subj + 4, size, data);
     }
     else
     {
-        data = hash_fetch(s_subj_hash, newsubj + 4, size);
+        data = hash_fetch(s_subj_hash, new_subj + 4, size);
         if (!(sp = (Subject *) data.dat_ptr))
         {
             sp = (Subject*)safe_malloc(sizeof (Subject));
@@ -580,7 +580,7 @@ void set_subj_line(Article *ap, char *subj, int size)
                 g_first_subject = sp;
             }
             g_last_subject = sp;
-            sp->str = newsubj;
+            sp->str = new_subj;
             sp->thread_link = sp;
             sp->flags = SF_NONE;
 
@@ -589,7 +589,7 @@ void set_subj_line(Article *ap, char *subj, int size)
         }
         else
         {
-            std::free(newsubj);
+            std::free(new_subj);
         }
         ap->subj = sp;
     }
@@ -598,7 +598,7 @@ void set_subj_line(Article *ap, char *subj, int size)
 int decode_header(char *to, char *from, int size)
 {
     char *s = to; /* save for pass 2 */
-    bool pass2needed = false;
+    bool pass2_needed = false;
 
     /* Pass 1 to decode coded bytes (which might be character fragments - so 1 pass is wrong) */
     for (int i = size; *from && i--;)
@@ -682,7 +682,7 @@ int decode_header(char *to, char *from, int size)
             from++;
             size--;
         }
-        pass2needed = true;
+        pass2_needed = true;
     }
     while (size > 1 && to[-1] == ' ')
     {
@@ -692,7 +692,7 @@ int decode_header(char *to, char *from, int size)
     *to = '\0';
 
     /* Pass 2 to clear out "control" characters */
-    if (pass2needed)
+    if (pass2_needed)
     {
         dectrl(s);
     }
@@ -908,7 +908,7 @@ void cache_until_key()
     }
 
     g_untrim_cache = true;
-    g_sentinel_artp = g_curr_artp;
+    g_sentinel_art_ptr = g_curr_artp;
 
     /* Prioritize our caching based on what mode we're in */
     if (g_general_mode == GM_SELECTOR)
@@ -1083,9 +1083,9 @@ bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_article
     ArticleNum i;
     ArticleNum expected_i = first;
 
-    int cachemask = (g_threaded_group ? AF_THREADED : AF_CACHED)
+    int cache_mask = (g_threaded_group ? AF_THREADED : AF_CACHED)
                   + (all_articles? 0 : AF_UNREAD);
-    int cachemask2 = (all_articles? 0 : AF_UNREAD);
+    int cache_mask2 = (all_articles? 0 : AF_UNREAD);
 
     if (cheating)
     {
@@ -1093,13 +1093,13 @@ bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_article
     }
     else
     {
-        int lots2do = ((g_data_source->flags & DF_REMOTE)? g_net_speed : 20) * 25;
-        set_spin(g_spin_estimate > lots2do? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
+        int lots_to_do = ((g_data_source->flags & DF_REMOTE)? g_net_speed : 20) * 25;
+        set_spin(g_spin_estimate > lots_to_do? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
     }
     /*TRN_ASSERT(first >= g_absfirst && last <= g_lastart);*/
     for (i = article_first(first); i <= last; i = article_next(i))
     {
-        if ((article_ptr(i)->flags & cachemask) ^ cachemask2)
+        if ((article_ptr(i)->flags & cache_mask) ^ cache_mask2)
         {
             continue;
         }
@@ -1122,7 +1122,7 @@ bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_article
                 break;
             }
             /* If the current article is no longer a '?', let them know. */
-            if (g_curr_artp != g_sentinel_artp)
+            if (g_curr_artp != g_sentinel_art_ptr)
             {
                 push_char('\f' | 0200);
                 break;
