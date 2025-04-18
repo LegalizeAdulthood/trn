@@ -1,4 +1,4 @@
-/* This file Copyright 1992 by Clifford A. Adams */
+// This file Copyright 1992 by Clifford A. Adams
 /* samisc.c
  *
  * lower-level routines
@@ -8,11 +8,11 @@
 #include "trn/samisc.h"
 
 #include "trn/list.h"
-#include "trn/ngdata.h" /* several */
-#include "trn/artio.h"         /* g_openart */
+#include "trn/ngdata.h" // several
+#include "trn/artio.h"         // g_openart
 #include "trn/bits.h"
 #include "trn/cache.h"
-#include "trn/ng.h" /* for "g_art" */
+#include "trn/ng.h" // for "g_art"
 #include "trn/rthread.h"
 #include "trn/samain.h"
 #include "trn/sathread.h"
@@ -25,13 +25,13 @@ inline int check_article(long a)
     return a >= g_abs_first && a <= g_last_art;
 }
 
-/* ignoring "Fold" (or later recursive) mode(s), is this article eligible? */
+// ignoring "Fold" (or later recursive) mode(s), is this article eligible?
 bool sa_basic_elig(long a)
 {
     ArticleNum artnum = g_sa_ents[a].artnum;
     TRN_ASSERT(check_article(artnum));
 
-    /* "run the gauntlet" style (:-) */
+    // "run the gauntlet" style (:-)
     if (!g_sa_mode_read_elig && was_read(artnum))
     {
         return false;
@@ -40,24 +40,24 @@ bool sa_basic_elig(long a)
     {
         return false;
     }
-    if (g_sa_mode_order == SA_ORDER_DESCENDING) /* score order */
+    if (g_sa_mode_order == SA_ORDER_DESCENDING) // score order
     {
         if (!article_scored(artnum))
         {
             return false;
         }
     }
-    /* now just check availability */
+    // now just check availability
     if (is_unavailable(artnum))
     {
         if (!was_read(artnum))
         {
             one_less_art_num(artnum);
         }
-        return false;           /* don't try positively unavailable */
+        return false;           // don't try positively unavailable
     }
-    /* consider later positively checking availability */
-    return true;        /* passed all tests */
+    // consider later positively checking availability
+    return true;        // passed all tests
 }
 
 bool sa_eligible(long a)
@@ -65,21 +65,21 @@ bool sa_eligible(long a)
     TRN_ASSERT(check_article(g_sa_ents[a].artnum));
     if (!sa_basic_elig(a))
     {
-        return false;           /* must always be basic-eligible */
+        return false;           // must always be basic-eligible
     }
     if (!g_sa_mode_fold)
     {
-        return true;            /* just use basic-eligible */
+        return true;            // just use basic-eligible
     }
     if (sa_subj_thread_prev(a))
     {
-        return false;           /* there was an earlier match */
+        return false;           // there was an earlier match
     }
-    return true;                /* no prior matches */
+    return true;                // no prior matches
 }
 
-/* given an article number, return the entry number for that article */
-/* (There is no easy mapping between entry numbers and article numbers.) */
+// given an article number, return the entry number for that article
+// (There is no easy mapping between entry numbers and article numbers.)
 long sa_artnum_to_ent(ArticleNum artnum)
 {
     for (long i = 1; i < g_sa_num_ents; i++)
@@ -89,29 +89,29 @@ long sa_artnum_to_ent(ArticleNum artnum)
             return i;
         }
     }
-    /* this had better not happen (complain?) */
+    // this had better not happen (complain?)
     return -1;
 }
 
-/* select1 the articles picked in the TRN thread selector */
+// select1 the articles picked in the TRN thread selector
 void sa_sel_threads()
 {
     bool want_unread;
 #if 0
-    /* this does not work now, but maybe it will help debugging? */
+    // this does not work now, but maybe it will help debugging?
     int subj_mask = (g_sel_mode == SM_THREAD? (SF_THREAD|SF_VISIT) : SF_VISIT);
 #endif
     int subj_mask = SF_VISIT;
 
     want_unread = !g_sa_mode_read_elig;
 
-    /* clear any old selections */
+    // clear any old selections
     for (long i = 1; i < g_sa_num_ents; i++)
     {
         sa_clear_select1(i);
     }
 
-    /* Loop through all (selected) articles. */
+    // Loop through all (selected) articles.
     for (Subject *sp = g_first_subject; sp; sp = sp->next)
     {
         if ((sp->flags & subj_mask) == subj_mask)
@@ -122,17 +122,17 @@ void sa_sel_threads()
                 if ((ap->flags & AF_SEL) //
                     && (!(ap->flags & AF_UNREAD) ^ want_unread))
                 {
-                    /* this was a trn-thread selected article */
+                    // this was a trn-thread selected article
                     sa_select1(sa_artnum_to_ent(art));
-    /* if scoring, make sure that this article is scored... */
-                    if (g_sa_mode_order == SA_ORDER_DESCENDING) /* score order */
+    // if scoring, make sure that this article is scored...
+                    if (g_sa_mode_order == SA_ORDER_DESCENDING) // score order
                     {
                         sc_score_art(art,false);
                     }
                 }
-                }/* for all articles */
-            }/* if selected */
-        }/* for all threads */
+                }// for all articles
+            }// if selected
+        }// for all threads
     s_sort();
 }
 
@@ -168,29 +168,29 @@ void sa_go_art(long a)
     }
 }
 
-// long a,b;            /* the entry numbers to compare */
+// long a,b;            // the entry numbers to compare
 int sa_compare(long a, long b)
 {
-    if (g_sa_mode_order == SA_ORDER_DESCENDING) /* score order */
+    if (g_sa_mode_order == SA_ORDER_DESCENDING) // score order
     {
         /* do not score the articles here--move the articles to
          * the end of the list if unscored.
          */
-        if (!article_scored(g_sa_ents[a].artnum))                         /* a unscored */
+        if (!article_scored(g_sa_ents[a].artnum))                         // a unscored
         {
-            if (!article_scored(g_sa_ents[b].artnum))   /* a+b unscored */
+            if (!article_scored(g_sa_ents[b].artnum))   // a+b unscored
             {
-                if (a < b)                                        /* keep ordering consistent */
+                if (a < b)                                        // keep ordering consistent
                 {
                     return -1;
                 }
                 return 1;
             }
-            return 1;           /* move unscored (a) to end */
+            return 1;           // move unscored (a) to end
         }
-        if (!article_scored(g_sa_ents[b].artnum))       /* only b unscored */
+        if (!article_scored(g_sa_ents[b].artnum))       // only b unscored
         {
-            return -1;          /* move unscored (b) to end */
+            return -1;          // move unscored (b) to end
         }
 
         long i = sc_score_art(g_sa_ents[a].artnum, true);
@@ -203,7 +203,7 @@ int sa_compare(long a, long b)
         {
             return -1;
         }
-        /* i == j */
+        // i == j
         if (g_score_new_first)
         {
             if (a < b)
