@@ -1,6 +1,6 @@
 /* help.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "config/common.h"
 #include "trn/help.h"
@@ -690,7 +690,7 @@ int help_scan_article()
 {
     int cmd;
 #ifdef UNDEF
-    /* implement this later? */
+    // implement this later?
     doshell(SH, filexp(SAHELP));
 #else
     page_start();
@@ -820,7 +820,7 @@ int help_scan_article()
     {
         return cmd;
     }
-#endif /* !UNDEF (later the !doshell part) */
+#endif // !UNDEF (later the !doshell part)
     return 0;
 }
 
