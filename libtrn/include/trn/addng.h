@@ -1,6 +1,6 @@
 /* trn/addng.h
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #ifndef TRN_ADDNG_H
 #define TRN_ADDNG_H
@@ -29,8 +29,8 @@ struct AddGroup
     AddGroup     *next;
     AddGroup     *prev;
     DataSource   *data_src;
-    ArticleNum    to_read; /* number of articles to be read (for sorting) */
-    NewsgroupNum  num;     /* a possible sort order for this group */
+    ArticleNum    to_read; // number of articles to be read (for sorting)
+    NewsgroupNum  num;     // a possible sort order for this group
     AddGroupFlags flags;
     char          name[1];
 };
@@ -39,7 +39,7 @@ extern AddGroup *g_first_add_group;
 extern AddGroup *g_last_add_group;
 extern AddGroup *g_sel_page_gp;
 extern AddGroup *g_sel_next_gp;
-extern bool      g_quick_start;      /* -q */
+extern bool      g_quick_start;      // -q
 extern bool      g_use_add_selector; //
 
 void add_ng_init();
