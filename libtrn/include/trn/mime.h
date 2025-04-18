@@ -45,7 +45,7 @@ enum MimeSectionFlags : std::uint16_t
 };
 DECLARE_FLAGS_ENUM(MimeSectionFlags, std::uint16_t);
 
-/* Only used with HTMLTEXT_MIME */
+// Only used with HTMLTEXT_MIME
 enum HtmlFlags : std::uint16_t
 {
     HF_NONE = 0x0000,
@@ -92,7 +92,7 @@ enum
 enum TagFlags : std::uint16_t
 {
     TF_NONE = 0x0000,
-    TF_BLOCK = 0x0001, /* This implies TF_HAS_CLOSE */
+    TF_BLOCK = 0x0001, // This implies TF_HAS_CLOSE
     TF_HAS_CLOSE = 0x0002,
     TF_NL = 0x0004,
     TF_P = 0x0008,
@@ -104,7 +104,7 @@ enum TagFlags : std::uint16_t
 };
 DECLARE_FLAGS_ENUM(TagFlags, std::uint16_t);
 
-/* NOTE: This must match tagattr in mime.cpp */
+// NOTE: This must match tagattr in mime.cpp
 enum
 {
     TAG_BLOCKQUOTE = 0,
