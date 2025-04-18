@@ -454,11 +454,11 @@ void term_set(char *tcbuf)
 void set_macro(char *seq, char *def)
 {
     mac_line(def,seq,0);
-    /* check for common (?) brain damage: ku/kd/etc sequence may be the
-     * cursor move sequence instead of the input sequence.
-     * (This happens on the local xterm definitions.)
-     * Try to recognize and adjust for this case.
-     */
+    // check for common (?) brain damage: ku/kd/etc sequence may be the
+    // cursor move sequence instead of the input sequence.
+    // (This happens on the local xterm definitions.)
+    // Try to recognize and adjust for this case.
+    //
     if (seq[0] == '\033' && seq[1] == '[' && seq[2])
     {
         char lbuf[LINE_BUF_LEN];     // copy of possibly non-writable string
@@ -504,9 +504,9 @@ static char *s_right[] = {
     "%(%m=n?^j:%(%m=[ap]?\\]:>))"
 };
 
-/* Turn the arrow keys into macros that do some basic trn functions.
-** Code provided by Clifford Adams.
-*/
+// Turn the arrow keys into macros that do some basic trn functions.
+// Code provided by Clifford Adams.
+//
 void arrow_macros(char *tmpbuf)
 {
 #ifdef HAS_TERMLIB
@@ -516,9 +516,9 @@ void arrow_macros(char *tmpbuf)
 #endif
     char* tmpstr;
 
-    /* If arrows are defined as single keys, we probably don't
-     * want to redefine them.  (The tvi912c defines kl as ^H)
-     */
+    // If arrows are defined as single keys, we probably don't
+    // want to redefine them.  (The tvi912c defines kl as ^H)
+    //
 #ifdef MSDOS
     std::strcpy(lbuf,"\035\110");
 #else
@@ -610,8 +610,8 @@ void mac_line(char *line, char *tmpbuf, int tbsize)
     {
         line[ch] = '\0';
     }
-    /* A 0 length signifies we already parsed the macro into tmpbuf,
-    ** so line is just the definition. */
+    // A 0 length signifies we already parsed the macro into tmpbuf,
+    // so line is just the definition.
     if (tbsize)
     {
         m = do_interp(tmpbuf,tbsize,line," \t",nullptr);
