@@ -1,7 +1,7 @@
 /* rt-util.c
 *  vi: set sw=4 ts=8 ai sm noet :
 */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 #include "config/common.h"
 #include "trn/rt-util.h"
 
@@ -24,15 +24,15 @@
 #include <cstring>
 #include <ctime>
 
-char g_spin_char{' '};           /* char to put back when we're done spinning */
-long g_spin_estimate{};          /* best guess of how much work there is */
-long g_spin_todo{};              /* the max word to do (might decrease) */
-int  g_spin_count{};             /* counter for when to spin */
+char g_spin_char{' '};           // char to put back when we're done spinning
+long g_spin_estimate{};          // best guess of how much work there is
+long g_spin_todo{};              // the max word to do (might decrease)
+int  g_spin_count{};             // counter for when to spin
 bool g_performed_article_loop{}; //
-bool g_bkgnd_spinner{};          /* -B */
-bool g_unbroken_subjects{};      /* -u */
+bool g_bkgnd_spinner{};          // -B
+bool g_unbroken_subjects{};      // -u
 
-static int s_spin_marks{25}; /* how many bargraph marks we want */
+static int s_spin_marks{25}; // how many bargraph marks we want
 
 static char *output_change(char *cp, long num, const char *obj_type, const char *modifier, const char *action);
 
@@ -113,7 +113,7 @@ char *compress_name(char *name, int max)
     bool  notlast;
 
 try_again:
-    /* First remove white space from both ends. */
+    // First remove white space from both ends.
     name = skip_space(name);
     int len = std::strlen(name);
     if (len == 0)
@@ -177,7 +177,7 @@ try_again:
         d += w;
     }
 
-    /* Find the last name */
+    // Find the last name
     do
     {
         notlast = false;
@@ -194,14 +194,14 @@ try_again:
         {
             return name;
         }
-        /* If the last name is an abbreviation it's not the one we want. */
+        // If the last name is an abbreviation it's not the one we want.
         if (*s == '.')
         {
             notlast = true;
         }
         while (!std::isspace(*s))
         {
-            if (s == name) /* only one name */
+            if (s == name) // only one name
             {
 #ifdef USE_UTF_HACK
                 terminate_string_at_visual_index(name, max);
@@ -210,9 +210,9 @@ try_again:
 #endif
                 return name;
             }
-            if (std::isdigit(*s))    /* probably a phone number */
+            if (std::isdigit(*s))    // probably a phone number
             {
-                notlast = true; /* so chuck it */
+                notlast = true; // so chuck it
             }
             s--;
         }
@@ -220,8 +220,8 @@ try_again:
 
     char *last = s-- + 1;
 
-    /* Look for a middle name */
-    while (std::isspace(*s)) /* get rid of any extra space */
+    // Look for a middle name
+    while (std::isspace(*s)) // get rid of any extra space
     {
         len--;
         s--;
@@ -239,7 +239,7 @@ try_again:
 #ifdef USE_UTF_HACK
     vis_namelen = visual_length_between(mid, name) + 1;
 #endif
-    if (mid == s + 1) /* no middle name */
+    if (mid == s + 1) // no middle name
     {
         mid = nullptr;
         midlen = 0;
@@ -298,7 +298,7 @@ try_again:
     s[1] = '\0';
     if (mid && vis_len > max)
     {
-        /* Turn middle names into initials */
+        // Turn middle names into initials
         len -= s - mid + 2;
 #ifdef USE_UTF_HACK
         vis_len -= visual_length_between(s, mid) + 2;
@@ -355,7 +355,7 @@ try_again:
     }
     if (vis_len > max)
     {
-        /* If the first name fits without the middle initials, drop them */
+        // If the first name fits without the middle initials, drop them
         if (mid && vis_len - vis_midlen <= max)
         {
             len -= midlen;
@@ -366,7 +366,7 @@ try_again:
         }
         else if (namelen > 0)
         {
-            /* Turn the first name into an initial */
+            // Turn the first name into an initial
 #ifdef USE_UTF_HACK
             int w = byte_length_at(name);
             len -= namelen - (w + 1);
@@ -380,7 +380,7 @@ try_again:
 #endif
             if (vis_len > max)
             {
-                /* Dump the middle initials (if present) */
+                // Dump the middle initials (if present)
                 if (mid)
                 {
                     len -= midlen;
@@ -391,7 +391,7 @@ try_again:
                 }
                 if (vis_len > max)
                 {
-                    /* Finally just truncate the last name */
+                    // Finally just truncate the last name
 #ifdef USE_UTF_HACK
                     terminate_string_at_visual_index(last, max - 2);
 #else
@@ -409,7 +409,7 @@ try_again:
         }
     }
 
-    /* Paste the names back together */
+    // Paste the names back together
     d = name + namelen;
     if (namelen)
     {
@@ -425,7 +425,7 @@ try_again:
         d[-1] = ' ';
     }
 #ifdef USE_UTF_HACK
-    /* FIXME - need to move into some function */
+    // FIXME - need to move into some function
     do
     {
         int i;
@@ -445,7 +445,7 @@ try_again:
         d[i] = '\0';
     } while (false);
 #else
-    safecpy(d, last, max); /* "max - (d-name)" would be overkill */
+    safecpy(d, last, max); // "max - (d-name)" would be overkill
 #endif
     return name;
 }
@@ -461,7 +461,7 @@ char *compress_address(char *name, int max)
 {
     char*start;
 
-    /* Remove white space from both ends. */
+    // Remove white space from both ends.
     name = skip_space(name);
     int len = std::strlen(name);
     if (len == 0)
@@ -615,7 +615,7 @@ char *compress_from(const char *from, int size)
     return s;
 }
 
-/* Fit the date in <max> chars. */
+// Fit the date in <max> chars.
 char *compress_date(const Article *ap, int size)
 {
     char* t;
@@ -642,10 +642,10 @@ bool strip_one_re(char *str, char **strp)
     {
         str++;
     }
-    if (eq_ignore_case(str[0], 'r') && eq_ignore_case(str[1], 'e')) /* check for Re: */
+    if (eq_ignore_case(str[0], 'r') && eq_ignore_case(str[1], 'e')) // check for Re:
     {
         char *cp = str + 2;
-        if (*cp == '^') /* allow Re^2: */
+        if (*cp == '^') // allow Re^2:
         {
             do
             {
@@ -698,7 +698,7 @@ const char *compress_subj(const Article *ap, int max)
         return "<MISSING>";
     }
 
-    /* Put a preceeding '>' on subjects that are replies to other articles */
+    // Put a preceeding '>' on subjects that are replies to other articles
     char *   cp = g_buf;
     Article *first = (g_threaded_group ? ap->subj->thread : ap->subj->articles);
     if (ap != first || (ap->flags & AF_HAS_RE)
@@ -730,7 +730,7 @@ const char *compress_subj(const Article *ap, int max)
     int len = std::strlen(g_buf);
     if (!g_unbroken_subjects && len > max)
     {
-        /* Try to include the last two words on the line while trimming */
+        // Try to include the last two words on the line while trimming
         char *last_word = std::strrchr(g_buf, ' ');
         if (last_word != nullptr)
         {
@@ -770,13 +770,13 @@ const char *compress_subj(const Article *ap, int max)
     return g_buf;
 }
 
-/* Modified version of a spinner originally found in Clifford Adams' strn. */
+// Modified version of a spinner originally found in Clifford Adams' strn.
 
 static char           *s_spin_chars{};
-static int             s_spin_level{}; /* used to allow non-interfering nested spins */
+static int             s_spin_level{}; // used to allow non-interfering nested spins
 static SpinMode        s_spin_mode{};
-static int             s_spin_place{}; /* represents place in s_spinchars array */
-static int             s_spin_pos{};   /* the last spinbar position we drew */
+static int             s_spin_place{}; // represents place in s_spinchars array
+static int             s_spin_pos{};   // the last spinbar position we drew
 static ArticleNum      s_spin_art{};
 static ArticlePosition s_spin_tell{};
 
@@ -837,16 +837,16 @@ void set_spin(SpinMode mode)
             break;
         }
         s_spin_level = 0;
-        if (s_spin_place)       /* we have spun at least once */
+        if (s_spin_place)       // we have spun at least once
         {
-            std::putchar(g_spin_char); /* get rid of spin character */
+            std::putchar(g_spin_char); // get rid of spin character
             backspace();
             std::fflush(stdout);
             s_spin_place = 0;
         }
         if (s_spin_art)
         {
-            art_open(s_spin_art,s_spin_tell);   /* do not screw up the pager */
+            art_open(s_spin_art,s_spin_tell);   // do not screw up the pager
             s_spin_art = 0;
         }
         s_spin_mode = SPIN_OFF;
@@ -855,7 +855,7 @@ void set_spin(SpinMode mode)
     }
 }
 
-/* modulus for the spin... */
+// modulus for the spin...
 void spin(int count)
 {
     if (!s_spin_level)
@@ -889,7 +889,7 @@ void spin(int count)
     {
         if (g_spin_todo == 0)
         {
-            break;              /* bail out rather than crash */
+            break;              // bail out rather than crash
         }
         int new_pos = (int)((long)s_spin_marks * ++g_spin_count / g_spin_todo);
         if (s_spin_pos < new_pos && g_spin_count <= g_spin_todo+1)
@@ -1108,6 +1108,6 @@ int perform_status_end(long cnt, const char *obj_type)
 
     std::strcpy(cp, ".");
 
-    /* If we only selected/deselected things, return 1, else 2 */
+    // If we only selected/deselected things, return 1, else 2
     return (kills | missing) == 0? 1 : 2;
 }
