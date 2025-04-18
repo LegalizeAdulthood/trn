@@ -1,6 +1,6 @@
 /* final.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <config/fdio.h>
 
@@ -35,22 +35,22 @@
 #endif
 #endif
 
-bool g_panic{};       /* we got hung up or something-- so leave tty alone */
-bool g_doing_ng{};    /* do we need to reconstitute current rc line? */
-char g_int_count{};   /* how many interrupts we've had */
-bool g_bos_on_stop{}; /* set when handling the stop signal would leave the screen a mess */
+bool g_panic{};       // we got hung up or something-- so leave tty alone
+bool g_doing_ng{};    // do we need to reconstitute current rc line?
+char g_int_count{};   // how many interrupts we've had
+bool g_bos_on_stop{}; // set when handling the stop signal would leave the screen a mess
 
 void final_init()
 {
 #ifdef SIGTSTP
-    sigset(SIGTSTP, stop_catcher);      /* job control signals */
-    sigset(SIGTTOU, stop_catcher);      /* job control signals */
-    sigset(SIGTTIN, stop_catcher);      /* job control signals */
+    sigset(SIGTSTP, stop_catcher);      // job control signals
+    sigset(SIGTTOU, stop_catcher);      // job control signals
+    sigset(SIGTTIN, stop_catcher);      // job control signals
 #endif
 
-    sigset(SIGINT, int_catcher);        /* always catch interrupts */
+    sigset(SIGINT, int_catcher);        // always catch interrupts
 #ifdef SIGHUP
-    sigset(SIGHUP, sig_catcher);        /* and hangups */
+    sigset(SIGHUP, sig_catcher);        // and hangups
 #endif
 #ifdef SIGWINCH
     sigset(SIGWINCH, winch_catcher);
@@ -61,12 +61,12 @@ void final_init()
 
 #ifndef lint
 #ifdef SIGEMT
-    sigignore(SIGEMT);          /* Ignore EMT signals from old [t]rn's */
+    sigignore(SIGEMT);          // Ignore EMT signals from old [t]rn's
 #endif
 #endif
 
 #ifdef DEBUG
-    /* sometimes we WANT a core dump */
+    // sometimes we WANT a core dump
     if (debug & DEB_COREDUMPSOK)
         return;
 #endif
@@ -94,7 +94,7 @@ void final_init()
 [[noreturn]] //
 void finalize(int status)
 {
-    sc_sv_save_file();   /* save any scores from memory to disk */
+    sc_sv_save_file();   // save any scores from memory to disk
     update_thread_kill_file();
     color_default();
     termlib_reset();
@@ -102,7 +102,7 @@ void finalize(int status)
     {
         reset_tty();
     }
-    xmouse_off();       /* turn off mouse tracking (if on) */
+    xmouse_off();       // turn off mouse tracking (if on)
     std::fflush(stdout);
 
     change_dir(g_tmp_dir);
@@ -138,7 +138,7 @@ void finalize(int status)
     std::exit(status);
 }
 
-/* come here on interrupt */
+// come here on interrupt
 
 Signal_t int_catcher(int dummy)
 {
@@ -151,19 +151,19 @@ Signal_t int_catcher(int dummy)
 #endif
     if (!g_waiting)
     {
-        if (g_int_count++)              /* was there already an interrupt? */
+        if (g_int_count++)              // was there already an interrupt?
         {
             if (g_int_count == 3 || g_int_count > 5)
             {
                 write(2,"\nBye-bye.\n",10);
-                sig_catcher(0);         /* emulate the other signals */
+                sig_catcher(0);         // emulate the other signals
             }
             write(2,"\n(Interrupt -- one more to kill trn)\n",37);
         }
     }
 }
 
-/* come here on signal other than interrupt, stop, or cont */
+// come here on signal other than interrupt, stop, or cont
 
 Signal_t sig_catcher(int signo)
 {
@@ -217,16 +217,16 @@ Signal_t sig_catcher(int signo)
         std::abort();
     }
     (void) sigset(SIGILL,SIG_DFL);
-    g_panic = true;                     /* disable terminal I/O */
-    if (g_doing_ng)                     /* need we reconstitute rc line? */
+    g_panic = true;                     // disable terminal I/O
+    if (g_doing_ng)                     // need we reconstitute rc line?
     {
         yank_back();
-        bits_to_rc();                   /* then do so (hope this works) */
+        bits_to_rc();                   // then do so (hope this works)
     }
     g_doing_ng = false;
-    if (!write_newsrcs(g_multirc))      /* write anything that's changed */
+    if (!write_newsrcs(g_multirc))      // write anything that's changed
     {
-        /* TODO: get_old_newsrcs(g_multirc);  ?? */
+        // TODO: get_old_newsrcs(g_multirc);  ??
     }
     update_thread_kill_file();
 
@@ -252,18 +252,18 @@ Signal_t sig_catcher(int signo)
     case SIGSEGV:
         finalize(-signo);
     }
-    finalize(1);                                /* and blow up */
+    finalize(1);                                // and blow up
 }
 
 Signal_t pipe_catcher(int signo)
 {
 #ifdef SIGPIPE
-    ;/* TODO: we lost the current nntp connection */
+    ;// TODO: we lost the current nntp connection
     sigset(SIGPIPE,pipe_catcher);
 #endif
 }
 
-/* come here on stop signal */
+// come here on stop signal
 
 #ifdef SIGTSTP
 Signal_t stop_catcher(int signo)
@@ -271,14 +271,14 @@ Signal_t stop_catcher(int signo)
     if (!g_waiting)
     {
         xmouse_off();
-        checkpoint_newsrcs();   /* good chance of crash while stopped */
+        checkpoint_newsrcs();   // good chance of crash while stopped
         if (g_bos_on_stop)
         {
             goto_xy(0, g_tc_LINES-1);
             std::putchar('\n');
         }
         termlib_reset();
-        reset_tty();              /* this is the point of all this */
+        reset_tty();              // this is the point of all this
 #ifdef DEBUG
         if (debug)
         {
@@ -286,29 +286,29 @@ Signal_t stop_catcher(int signo)
         }
 #endif
         std::fflush(stdout);
-        sigset(signo,SIG_DFL);  /* enable stop */
+        sigset(signo,SIG_DFL);  // enable stop
 #ifdef HAS_SIGBLOCK
         sigsetmask(sigblock(0) & ~(1 << (signo-1)));
 #endif
-        kill(0,signo);          /* and do the stop */
+        kill(0,signo);          // and do the stop
         save_tty();
 #ifdef MAILCALL
-        g_mail_count = 0;                    /* force recheck */
+        g_mail_count = 0;                    // force recheck
 #endif
         if (!g_panic)
         {
             if (!g_waiting)
             {
                 termlib_init();
-                no_echo();                       /* set no echo */
-                cr_mode();                       /* set cbreak mode */
-                force_me("\f");                  /* cause a refresh */
-                                                /* (defined only if TIOCSTI defined) */
-                errno = 0;                      /* needed for getcmd */
+                no_echo();                       // set no echo
+                cr_mode();                       // set cbreak mode
+                force_me("\f");                  // cause a refresh
+                                                // (defined only if TIOCSTI defined)
+                errno = 0;                      // needed for getcmd
             }
         }
         xmouse_check();
     }
-    sigset(signo,stop_catcher); /* unenable the stop */
+    sigset(signo,stop_catcher); // unenable the stop
 }
 #endif
