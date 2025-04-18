@@ -13,12 +13,12 @@
 #include <cstdlib>
 #include <cstring>
 
-/* any of these defines can be increased arbitrarily */
+// any of these defines can be increased arbitrarily
 enum
 {
     MAX_MEM_POOLS = 16,
     MAX_MEM_FRAGS = 4000,
-    FRAG_SIZE = ((1024 * 64) - 32) /* number of bytes in a fragment */
+    FRAG_SIZE = ((1024 * 64) - 32) // number of bytes in a fragment
 };
 
 struct MemoryPoolFragment
@@ -29,13 +29,13 @@ struct MemoryPoolFragment
     int   next;
 };
 
-/* structure for extensibility */
+// structure for extensibility
 struct MemoryPoolHead
 {
-    int current; /* index into mp_frag of most recent alloc */
+    int current; // index into mp_frag of most recent alloc
 };
 
-static MemoryPoolFragment s_mp_frags[MAX_MEM_FRAGS]{}; /* zero is unused */
+static MemoryPoolFragment s_mp_frags[MAX_MEM_FRAGS]{}; // zero is unused
 static int                s_mp_first_free_frag{};
 static MemoryPoolHead     s_mp_heads[MAX_MEM_POOLS]{};
 
@@ -53,7 +53,7 @@ void mp_init()
         s_mp_frags[i].next = i+1;
     }
     s_mp_frags[i-1].next = 0;
-    s_mp_first_free_frag = 1;   /* first free fragment */
+    s_mp_first_free_frag = 1;   // first free fragment
 
     for (MemoryPoolHead &pool : s_mp_heads)
     {
@@ -61,19 +61,19 @@ void mp_init()
     }
 }
 
-/* returns the fragment number */
+// returns the fragment number
 static int mp_alloc_frag()
 {
     int f = s_mp_first_free_frag;
     if (f == 0)
     {
         std::printf("trn: out of memory pool fragments!\n");
-        sig_catcher(0);         /* die. */
+        sig_catcher(0);         // die.
     }
     s_mp_first_free_frag = s_mp_frags[f].next;
     if (s_mp_frags[f].bytes_free)
     {
-        return f;       /* already allocated */
+        return f;       // already allocated
     }
     s_mp_frags[f].data = (char*)safe_malloc(FRAG_SIZE);
     s_mp_frags[f].last_free = s_mp_frags[f].data;
@@ -82,11 +82,11 @@ static int mp_alloc_frag()
     return f;
 }
 
-/* frees a fragment number */
+// frees a fragment number
 static void mp_free_frag(int f)
 {
 #if 0
-    /* old code to actually free the blocks */
+    // old code to actually free the blocks
     if (s_mpfrags[f].data)
     {
         std::free(s_mpfrags[f].data);
@@ -94,7 +94,7 @@ static void mp_free_frag(int f)
     s_mpfrags[f].lastfree = nullptr;
     s_mpfrags[f].bytesfree = 0;
 #else
-    /* instead of freeing it, reset it for later use */
+    // instead of freeing it, reset it for later use
     s_mp_frags[f].last_free = s_mp_frags[f].data;
     s_mp_frags[f].bytes_free = FRAG_SIZE;
 #endif
@@ -110,7 +110,7 @@ char *mp_save_str(const char *str, MemoryPool pool)
         std::printf("\ntrn: mp_savestr(nullptr,%d) error.\n",pool);
         TRN_ASSERT(false);
 #else
-        return nullptr;         /* only a flesh wound... (;-) */
+        return nullptr;         // only a flesh wound... (;-)
 #endif
     }
     int len = std::strlen(str);
@@ -118,10 +118,10 @@ char *mp_save_str(const char *str, MemoryPool pool)
     {
         std::printf("trn: string too big (len = %d) for memory pool!\n",len);
         std::printf("trn: (maximum length allowed is %d)\n",FRAG_SIZE);
-        sig_catcher(0);         /* die. */
+        sig_catcher(0);         // die.
     }
     int f = s_mp_heads[pool].current;
-    /* just to be extra safe, keep 2 bytes unused at end of block */
+    // just to be extra safe, keep 2 bytes unused at end of block
     if (f == 0 || len >= s_mp_frags[f].bytes_free - 2)
     {
         int oldf = f;
@@ -136,7 +136,7 @@ char *mp_save_str(const char *str, MemoryPool pool)
     return s;
 }
 
-/* returns a pool-allocated string */
+// returns a pool-allocated string
 char *mp_malloc(int len, MemoryPool pool)
 {
     if (len == 0)
@@ -147,7 +147,7 @@ char *mp_malloc(int len, MemoryPool pool)
     {
         std::printf("trn: malloc size too big (len = %d) for memory pool!\n",len);
         std::printf("trn: (maximum length allowed is %d)\n",FRAG_SIZE);
-        sig_catcher(0);         /* die. */
+        sig_catcher(0);         // die.
     }
     int f = s_mp_heads[pool].current;
     if (f == 0 || len >= s_mp_frags[f].bytes_free)
@@ -163,7 +163,7 @@ char *mp_malloc(int len, MemoryPool pool)
     return s;
 }
 
-/* free a whole memory pool */
+// free a whole memory pool
 void mp_free(MemoryPool pool)
 {
     int f = s_mp_heads[pool].current;
