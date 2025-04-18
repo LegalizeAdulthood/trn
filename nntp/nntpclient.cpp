@@ -14,10 +14,10 @@
 #include <cstring>
 #include <ctime>
 
-NNTPLink g_nntplink{};          /* the current server's file handles */
-bool g_nntp_allow_timeout{};
-char g_ser_line[NNTP_STRLEN]{};
-char g_last_command[NNTP_STRLEN]{};
+NNTPLink g_nntp_link{}; /* the current server's file handles */
+bool     g_nntp_allow_timeout{};
+char     g_ser_line[NNTP_STRLEN]{};
+char     g_last_command[NNTP_STRLEN]{};
 
 static std::time_t s_last_command_diff{};
 
@@ -25,16 +25,16 @@ int nntp_connect(const char *machine, bool verbose)
 {
     int response;
 
-    if (g_nntplink.connection)
+    if (g_nntp_link.connection)
     {
         return 1;
     }
 
-    if (g_nntplink.flags & NNTP_FORCE_AUTH_NEEDED)
+    if (g_nntp_link.flags & NNTP_FORCE_AUTH_NEEDED)
     {
-        g_nntplink.flags |= NNTP_FORCE_AUTH_NOW;
+        g_nntp_link.flags |= NNTP_FORCE_AUTH_NOW;
     }
-    g_nntplink.flags |= NNTP_NEW_CMD_OK;
+    g_nntp_link.flags |= NNTP_NEW_CMD_OK;
 #if 0
   try_to_connect:
 #endif
@@ -168,16 +168,16 @@ int nntp_command(const char *bp)
     }
 #endif
     std::strcpy(g_last_command, bp);
-    if (!g_nntplink.connection)
+    if (!g_nntp_link.connection)
     {
         return nntp_handle_timeout();
     }
-    if (g_nntplink.flags & NNTP_FORCE_AUTH_NOW)
+    if (g_nntp_link.flags & NNTP_FORCE_AUTH_NOW)
     {
-        g_nntplink.flags &= ~NNTP_FORCE_AUTH_NOW;
+        g_nntp_link.flags &= ~NNTP_FORCE_AUTH_NOW;
         return nntp_handle_auth_err();
     }
-    if (!(g_nntplink.flags & NNTP_NEW_CMD_OK))
+    if (!(g_nntp_link.flags & NNTP_NEW_CMD_OK))
     {
         int ret = nntp_handle_nested_lists();
         if (ret <= 0)
@@ -186,14 +186,14 @@ int nntp_command(const char *bp)
         }
     }
     error_code_t ec;
-    g_nntplink.connection->write_line(bp, ec);
+    g_nntp_link.connection->write_line(bp, ec);
     if (ec)
     {
         return nntp_handle_timeout();
     }
     now = std::time((std::time_t*)nullptr);
-    s_last_command_diff = now - g_nntplink.last_command;
-    g_nntplink.last_command = now;
+    s_last_command_diff = now - g_nntp_link.last_command;
+    g_nntp_link.last_command = now;
     return 1;
 }
 
@@ -219,7 +219,7 @@ int nntp_check()
 #endif
     errno = 0;
     error_code_t ec;
-    std::string line = g_nntplink.connection->read_line(ec);
+    std::string line = g_nntp_link.connection->read_line(ec);
     std::strncpy(g_ser_line, line.c_str(), sizeof g_ser_line);
     int ret = ec ? -2 : 0;
 #ifdef HAS_SIGHOLD
@@ -263,11 +263,11 @@ int nntp_check()
      * bit will get set right when the caller checks nntp_at_list_end(). */
     if (std::atoi(g_ser_line) == NNTP_LIST_FOLLOWS_VAL)
     {
-        g_nntplink.flags &= ~NNTP_NEW_CMD_OK;
+        g_nntp_link.flags &= ~NNTP_NEW_CMD_OK;
     }
     else
     {
-        g_nntplink.flags |= NNTP_NEW_CMD_OK;
+        g_nntp_link.flags |= NNTP_NEW_CMD_OK;
     }
     len = std::strlen(g_ser_line);
     if (len >= 2 && g_ser_line[len-1] == '\n' && g_ser_line[len-2] == '\r')
@@ -295,10 +295,10 @@ bool nntp_at_list_end(const char *s)
 {
     if (!s || (*s == '.' && (s[1] == '\0' || s[1] == '\r')))
     {
-        g_nntplink.flags |= NNTP_NEW_CMD_OK;
+        g_nntp_link.flags |= NNTP_NEW_CMD_OK;
         return true;
     }
-    g_nntplink.flags &= ~NNTP_NEW_CMD_OK;
+    g_nntp_link.flags &= ~NNTP_NEW_CMD_OK;
     return false;
 }
 
@@ -333,7 +333,7 @@ NNTPGetsResult nntp_gets(char *bp, int len)
     error_code_t ec;
     if (s_nntp_gets_line.empty())
     {
-        s_nntp_gets_line = g_nntplink.connection->read_line(ec);
+        s_nntp_gets_line = g_nntp_link.connection->read_line(ec);
         if (ec)
         {
             return NGSR_ERROR;
@@ -360,13 +360,13 @@ void nntp_gets_clear_buffer()
 
 void nntp_close(bool send_quit)
 {
-    if (send_quit && g_nntplink.connection)
+    if (send_quit && g_nntp_link.connection)
     {
         if (nntp_command("QUIT") > 0)
         {
             nntp_check();
         }
     }
-    g_nntplink.connection.reset();
-    g_nntplink.flags |= NNTP_NEW_CMD_OK;
+    g_nntp_link.connection.reset();
+    g_nntp_link.flags |= NNTP_NEW_CMD_OK;
 }

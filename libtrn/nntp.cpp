@@ -291,7 +291,7 @@ void nntp_body(ArticleNum art_num)
         }
     }
     fseek(g_art_fp, 0L, 0);
-    g_nntplink.flags &= ~NNTP_NEW_CMD_OK;
+    g_nntp_link.flags &= ~NNTP_NEW_CMD_OK;
 }
 
 long nntp_art_size()
@@ -656,12 +656,12 @@ int nntp_handle_timeout()
     handling_timeout = true;
     std::strcpy(last_command_save, g_last_command);
     nntp_close(false);
-    g_data_source->nntp_link = g_nntplink;
+    g_data_source->nntp_link = g_nntp_link;
     if (nntp_connect(g_data_source->news_id, false) <= 0)
     {
         return -2;
     }
-    g_data_source->nntp_link = g_nntplink;
+    g_data_source->nntp_link = g_nntp_link;
     if (g_in_ng && nntp_group(g_newsgroup_name.c_str(), (NewsgroupData*)nullptr) <= 0)
     {
         return -2;

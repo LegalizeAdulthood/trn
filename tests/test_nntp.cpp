@@ -124,13 +124,13 @@ protected:
         Test::SetUp();
         nntp_gets_clear_buffer();
         m_connection = std::make_shared<StrictMock<MockNNTPConnection>>();
-        g_nntplink.connection = m_connection;
+        g_nntp_link.connection = m_connection;
     }
 
     void TearDown() override
     {
         Test::TearDown();
-        g_nntplink.connection.reset();
+        g_nntp_link.connection.reset();
     }
 
     std::shared_ptr<StrictMock<MockNNTPConnection>> m_connection;

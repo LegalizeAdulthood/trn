@@ -43,7 +43,7 @@ static void inews_fputs(const char *buff)
     else
     {
         boost::system::error_code ec;
-        g_nntplink.connection->write(buff, 0, ec);
+        g_nntp_link.connection->write(buff, 0, ec);
     }
 }
 
@@ -56,7 +56,7 @@ static void inews_fputc(char c)
     else
     {
         boost::system::error_code ec;
-        g_nntplink.connection->write(&c, 1, ec);
+        g_nntp_link.connection->write(&c, 1, ec);
     }
 }
 
@@ -130,14 +130,14 @@ int main(int argc, char *argv[])
         if (cp)
         {
             *cp = '\0';
-            g_nntplink.port_number = std::atoi(cp+1);
+            g_nntp_link.port_number = std::atoi(cp+1);
         }
         line_end = "\r\n";
         g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
         if ((cp = std::getenv("NNTP_FORCE_AUTH")) != nullptr
          && (*cp == 'y' || *cp == 'Y'))
         {
-            g_nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
+            g_nntp_link.flags |= NNTP_FORCE_AUTH_NEEDED;
         }
     }
     else
@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
 
     if (g_server_name)
     {
-        if (!g_nntplink.connection)
+        if (!g_nntp_link.connection)
         {
             if (init_nntp() < 0 || !nntp_connect(g_server_name,false))
             {

@@ -204,13 +204,13 @@ int main(int argc, char *argv[])
         if (cp)
         {
             *cp = '\0';
-            g_nntplink.port_number = std::atoi(cp+1);
+            g_nntp_link.port_number = std::atoi(cp+1);
         }
         g_nntp_auth_file = file_exp(NNTP_AUTH_FILE);
         cp = std::getenv("NNTP_FORCE_AUTH");
         if (cp != nullptr && (*cp == 'y' || *cp == 'Y'))
         {
-            g_nntplink.flags |= NNTP_FORCE_AUTH_NEEDED;
+            g_nntp_link.flags |= NNTP_FORCE_AUTH_NEEDED;
         }
         if (init_nntp() < 0)
         {

@@ -450,7 +450,7 @@ bool open_data_source(DataSource *dp)
             return false;
         }
         g_nntp_allow_timeout = false;
-        dp->nntp_link = g_nntplink;
+        dp->nntp_link = g_nntp_link;
         if (dp->act_sf.refetch_secs)
         {
             switch (nntp_list("active", "control", 7))
@@ -532,11 +532,11 @@ void set_data_source(DataSource *dp)
 {
     if (g_data_source)
     {
-        g_data_source->nntp_link = g_nntplink;
+        g_data_source->nntp_link = g_nntp_link;
     }
     if (dp)
     {
-        g_nntplink = dp->nntp_link;
+        g_nntp_link = dp->nntp_link;
     }
     g_data_source = dp;
 }
@@ -557,7 +557,7 @@ void check_data_sources()
                     DataSource* save_datasrc = g_data_source;
                     set_data_source(dp);
                     nntp_close(true);
-                    dp->nntp_link = g_nntplink;
+                    dp->nntp_link = g_nntp_link;
                     set_data_source(save_datasrc);
                 }
             }
@@ -600,7 +600,7 @@ void close_data_source(DataSource *dp)
         DataSource* save_datasrc = g_data_source;
         set_data_source(dp);
         nntp_close(true);
-        dp->nntp_link = g_nntplink;
+        dp->nntp_link = g_nntp_link;
         set_data_source(save_datasrc);
     }
     source_file_close(&dp->act_sf);
@@ -910,7 +910,7 @@ int source_file_open(SourceFile *sfp, const char *filename, const char *fetch_cm
                 std::printf("Getting %s file from %s.", fetch_cmd, server);
                 std::fflush(stdout);
                 /* tell server we want the file */
-                if (!(g_nntplink.flags & NNTP_NEW_CMD_OK))
+                if (!(g_nntp_link.flags & NNTP_NEW_CMD_OK))
                 {
                     use_buffered_nntp_gets = true;
                 }

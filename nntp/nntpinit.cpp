@@ -89,9 +89,9 @@ size_t NNTPConnection::read(char *buf, size_t size, error_code_t &ec)
 static ConnectionPtr create_nntp_connection(const char *machine, int port, const char *service)
 {
     std::string service_name{service};
-    if (g_nntplink.port_number)
+    if (g_nntp_link.port_number)
     {
-        service_name = std::to_string(g_nntplink.port_number);
+        service_name = std::to_string(g_nntp_link.port_number);
     }
 
     error_code_t ec;
@@ -126,8 +126,8 @@ int init_nntp()
 
 int server_init(const char *machine)
 {
-    g_nntplink.connection = s_nntp_connection_factory(machine, g_nntplink.port_number, "nntp");
-    if (g_nntplink.connection == nullptr)
+    g_nntp_link.connection = s_nntp_connection_factory(machine, g_nntp_link.port_number, "nntp");
+    if (g_nntp_link.connection == nullptr)
     {
         return -1;
     }

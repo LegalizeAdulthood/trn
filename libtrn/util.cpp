@@ -140,10 +140,10 @@ int do_shell(const char *shell, const char *cmd)
                 close(fd);
             }
         }
-        if (g_nntplink.port_number)
+        if (g_nntp_link.port_number)
         {
             int len = std::strlen(s_nntp_server_export);
-            std::sprintf(g_buf,";%d",g_nntplink.port_number);
+            std::sprintf(g_buf,";%d",g_nntp_link.port_number);
             if (len + (int)std::strlen(g_buf) < 511)
             {
                 std::strcpy(s_nntp_server_export+len, g_buf);

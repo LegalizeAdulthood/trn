@@ -86,7 +86,7 @@ enum
     NNTP_STRLEN = 512
 };
 
-extern NNTPLink g_nntplink; /* the current server's file handles */
+extern NNTPLink g_nntp_link; /* the current server's file handles */
 extern bool     g_nntp_allow_timeout;
 extern char     g_ser_line[NNTP_STRLEN];
 extern char     g_last_command[NNTP_STRLEN];
@@ -95,7 +95,7 @@ inline char *nntp_get_a_line(char *buffer, int buffer_length, bool realloc_ok)
 {
     boost::system::error_code ec;
 
-    std::string line = g_nntplink.connection->read_line(ec);
+    std::string line = g_nntp_link.connection->read_line(ec);
     if (buffer_length < line.length())
     {
         if (realloc_ok)
