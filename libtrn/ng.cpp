@@ -244,7 +244,7 @@ DoNewsgroupResult do_newsgroup(char *start_command)
         g_check_count = 0;               /* do not checkpoint for a while */
     }
     g_do_fseek = false;                 /* start 1st article at top */
-    for (; g_art <= g_last_art+1; )      /* for each article */
+    while (g_art <= g_last_art + 1)     /* for each article */
     {
         set_mode(GM_READ,MM_ARTICLE);
 

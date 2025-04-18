@@ -706,7 +706,7 @@ void dectrl(char *str)
         return;
     }
 
-    for (; *str;)
+    while (*str)
     {
         int w = byte_length_at(str);
         if (at_grey_space(str))

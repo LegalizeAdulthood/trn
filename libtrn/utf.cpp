@@ -302,7 +302,7 @@ int visual_length_of(const char *s)
     int it = 0;
     if (s)
     {
-        for (; *s;)
+        while (*s)
         {
             int w = byte_length_at(s);
             int v = visual_width_at(s);
@@ -324,7 +324,7 @@ int visual_length_between(const char *s1, const char *s2)
             s1 = s2;
             s2 = t;
         }
-        for (; *s1 && s1 < s2;)
+        while (*s1 && s1 < s2)
         {
             int w = byte_length_at(s1);
             int v = visual_width_at(s1);
