@@ -3,27 +3,27 @@
 /* This software is copyrighted as detailed in the LICENSE file, and
  * this file is also Copyright 1995 by Gran Larsson <hoh@approve.se>. */
 
-/*
-** The color handling is implemented as an attribute stack containing
-** foreground color, background color, and video attribute for an object.
-** Objects are screen features like "thread tree", "header lines",
-** "subject line", and "command prompt". The intended use is something
-** like this:
-**
-**      color_object(COLOR_HEADER, 1);
-**      fputs(header_string, stdout);
-**      color_pop();
-**
-** The color_pop function will take care of restoring all colors and
-** attribute to the state before the color_object function was called.
-**
-** Colors and attributes are parsed from the [attribute] section
-** in the trnrc file. Escape sequences for the colors are picked up
-** from term.c by calling the function tc_color_capability.
-**
-** If colors were specified in the [attribute] section, then colors
-** are used, otherwise only normal monochrome video attributes.
-*/
+//
+// The color handling is implemented as an attribute stack containing
+// foreground color, background color, and video attribute for an object.
+// Objects are screen features like "thread tree", "header lines",
+// "subject line", and "command prompt". The intended use is something
+// like this:
+//
+//      color_object(COLOR_HEADER, 1);
+//      fputs(header_string, stdout);
+//      color_pop();
+//
+// The color_pop function will take care of restoring all colors and
+// attribute to the state before the color_object function was called.
+//
+// Colors and attributes are parsed from the [attribute] section
+// in the trnrc file. Escape sequences for the colors are picked up
+// from term.c by calling the function tc_color_capability.
+//
+// If colors were specified in the [attribute] section, then colors
+// are used, otherwise only normal monochrome video attributes.
+//
 
 #include <config/string_case_compare.h>
 
@@ -55,12 +55,12 @@ static bool s_use_colors{};
 
 static void output_color();
 
-/*
-** Object properties.
-**
-** Give default attributes that are used if the trnrc file has no,
-** or just a few, lines in the [attribute] section.
-*/
+//
+// Object properties.
+//
+// Give default attributes that are used if the trnrc file has no,
+// or just a few, lines in the [attribute] section.
+//
 
 static ColorObj s_objects[MAX_COLORS] =
 // clang-format off
@@ -263,8 +263,8 @@ void color_rc_attribute(const char *object, char *value)
 // Turn on color attribute for an object.
 void color_object(int object, bool push)
 {
-    /* Merge in the colors/attributes that we are not setting
-     * from the current object. */
+    // Merge in the colors/attributes that we are not setting
+    // from the current object.
     ColorObj merged = s_color_stack[s_stack_pointer];
 
     // Merge in the new colors/attributes.
