@@ -259,8 +259,8 @@ read_it:
     {
         ret = -1;
     }
-    /* Even though the following check doesn't catch all possible lists, the
-     * bit will get set right when the caller checks nntp_at_list_end(). */
+    // Even though the following check doesn't catch all possible lists, the
+    // bit will get set right when the caller checks nntp_at_list_end().
     if (std::atoi(g_ser_line) == NNTP_LIST_FOLLOWS_VAL)
     {
         g_nntp_link.flags &= ~NNTP_NEW_CMD_OK;
@@ -321,11 +321,11 @@ public:
 
 static std::string s_nntp_gets_line;
 
-/* This returns 1 when it reads a full line, 0 if it reads a partial
- * line, and -2 on EOF/error.  The maximum length includes a spot for
- * the null-terminator, and we need room for our "\r\n"-stripping code
- * to work right, so "len" MUST be at least 3.
- */
+// This returns 1 when it reads a full line, 0 if it reads a partial
+// line, and -2 on EOF/error.  The maximum length includes a spot for
+// the null-terminator, and we need room for our "\r\n"-stripping code
+// to work right, so "len" MUST be at least 3.
+//
 NNTPGetsResult nntp_gets(char *bp, int len)
 {
     SigIntHolder holder;
