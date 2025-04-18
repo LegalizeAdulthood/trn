@@ -65,7 +65,7 @@
  *      a signal handler using "Signal_t (*handler)()", and define the
  *      handler using "Signal_t handler(sig)".
  */
-#define Signal_t @SIGNAL_T@     /* Signal handler's return type */
+#define Signal_t @SIGNAL_T@     // Signal handler's return type
 
 /* USE_WIFSTAT:
  *      This symbol, if defined, indicates to the C program that the argument
@@ -164,8 +164,8 @@
  *      the /etc/passwd file in Berkeley format (name first thing, everything
  *      up to first comma, with & replaced by capitalized login id, yuck).
  */
-#cmakedefine PASSNAMES /*  (undef to take name from ~/.fullname) */
-#cmakedefine BERKNAMES /* (that is, ":name,stuff:") */
+#cmakedefine PASSNAMES // (undef to take name from ~/.fullname)
+#cmakedefine BERKNAMES // (that is, ":name,stuff:")
 
 /* INSTALLPREFIX:
  *      This symbol contains the name of the install prefix for this package.
@@ -218,7 +218,7 @@
  */
 #cmakedefine HAS_GETHOSTNAME
 #cmakedefine HAS_UNAME
-#cmakedefine PHOSTCMD "@APHOSTCMD@"     /* How to get the host name */
+#cmakedefine PHOSTCMD "@APHOSTCMD@"     // How to get the host name
 #cmakedefine HAS_RES_INIT
 #cmakedefine HAS_GETDOMAINNAME
 
