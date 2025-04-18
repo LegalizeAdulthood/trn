@@ -1,6 +1,6 @@
 /* util.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <config/fdio.h>
 #include <config/string_case_compare.h>
@@ -13,7 +13,7 @@
 #include "trn/final.h"
 #include "trn/intrp.h"
 #include "trn/search.h"
-#include "trn/smisc.h" /* g_s_default_cmd */
+#include "trn/smisc.h" // g_s_default_cmd
 #include "trn/string-algos.h"
 #include "trn/terminal.h"
 #include "trn/univ.h"
@@ -49,7 +49,7 @@ using WaitStatus = union wait;
 using WaitStatus = int;
 #endif
 
-bool g_waiting{}; /* waiting for subprocess (in doshell)? */
+bool g_waiting{}; // waiting for subprocess (in doshell)?
 bool g_no_wait_fork{};
 /* the strlen and the buffer length of "some_buf" after a call to:
  *     some_buf = get_a_line(bufptr,bufsize,realloc,fp); */
@@ -60,7 +60,7 @@ MemorySize g_buf_len_last_line_got{};
 static char s_no_memory[] = "trn: out of memory!\n";
 #endif
 
-static char  s_null_export[] = "_=X"; /* Just in case doshell precedes util_init */
+static char  s_null_export[] = "_=X"; // Just in case doshell precedes util_init
 static char *s_newsa_ctive_export = s_null_export + 2;
 static char *s_group_desc_export = s_null_export + 2;
 static char *s_quote_chars_export = s_null_export + 2;
@@ -97,7 +97,7 @@ void util_final()
     putenv("TRN_VERSION=");
 }
 
-/* fork and exec a shell command */
+// fork and exec a shell command
 
 int do_shell(const char *shell, const char *cmd)
 {
@@ -239,10 +239,10 @@ int do_shell(const char *shell, const char *cmd)
         ret = status.w_status >> 8;
 #else
         ret = status;
-#endif /* UNION_WAIT */
-#endif /* USE_WIFSTAT */
+#endif // UNION_WAIT
+#endif // USE_WIFSTAT
     }
-#endif /* !MSDOS */
+#endif // !MSDOS
     termlib_init();
     xmouse_check();
     g_waiting = false;
@@ -262,7 +262,7 @@ int do_shell(const char *shell, const char *cmd)
     return ret;
 }
 
-/* paranoid version of malloc */
+// paranoid version of malloc
 
 #ifndef USE_DEBUGGING_MALLOC
 char *safe_malloc(MemorySize size)
@@ -277,7 +277,7 @@ char *safe_malloc(MemorySize size)
 }
 #endif
 
-/* paranoid version of realloc.  If where is nullptr, call malloc */
+// paranoid version of realloc.  If where is nullptr, call malloc
 
 #ifndef USE_DEBUGGING_MALLOC
 char *safe_realloc(char *where, MemorySize size)
@@ -299,15 +299,15 @@ char *safe_realloc(char *where, MemorySize size)
     }
     return ptr;
 }
-#endif /* !USE_DEBUGGING_MALLOC */
+#endif // !USE_DEBUGGING_MALLOC
 
-/* safe version of string concatenate, with \n deletion and space padding */
+// safe version of string concatenate, with \n deletion and space padding
 
 char *safe_cat(char *to, const char *from, int len)
 {
     char* dest = to;
 
-    len--;                              /* leave room for null */
+    len--;                              // leave room for null
     if (*dest)
     {
         while (len && *dest++)
@@ -339,7 +339,7 @@ char *safe_cat(char *to, const char *from, int len)
     return to;
 }
 
-/* effective access */
+// effective access
 
 #ifdef SETUIDGID
 int
@@ -349,7 +349,7 @@ int mod;
 {
     int protection, euid;
 
-    mod &= 7;                           /* remove extraneous garbage */
+    mod &= 7;                           // remove extraneous garbage
     if (stat(filename, &g_filestat) < 0)
     {
         return -1;
@@ -399,7 +399,7 @@ char *trn_getwd(char *buf, int buflen)
     return buf;
 }
 
-/* just like fgets but will make bigger buffer as necessary */
+// just like fgets but will make bigger buffer as necessary
 
 char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, std::FILE *fp)
 {
@@ -411,7 +411,7 @@ char *get_a_line(char *buffer, int buffer_length, bool realloc_ok, std::FILE *fp
         if (bufix >= buffer_length)
         {
             buffer_length *= 2;
-            if (realloc_ok)             /* just grow in place, if possible */
+            if (realloc_ok)             // just grow in place, if possible
             {
                 buffer = safe_realloc(buffer,(MemorySize)buffer_length+1);
             }
@@ -457,11 +457,11 @@ void not_incl(const char *feature)
     std::printf("\nNo room for feature \"%s\" on this machine.\n",feature);
 }
 
-/* grow a static string to at least a certain length */
+// grow a static string to at least a certain length
 
 void grow_str(char **strptr, int *curlen, int newlen)
 {
-    if (newlen > *curlen)               /* need more room? */
+    if (newlen > *curlen)               // need more room?
     {
         if (*curlen)
         {
@@ -521,21 +521,21 @@ void safe_link(char *old_name, char *new_name)
 }
 #endif
 
-/* attempts to verify a cryptographic signature. */
+// attempts to verify a cryptographic signature.
 void verify_sig()
 {
     std::printf("\n");
-    /* RIPEM */
+    // RIPEM
     int i = do_shell(SH, file_exp("grep -s \"BEGIN PRIVACY-ENHANCED MESSAGE\" %A"));
-    if (!i)     /* found RIPEM */
+    if (!i)     // found RIPEM
     {
         i = do_shell(SH,file_exp(get_val_const("VERIFY_RIPEM",VERIFY_RIPEM)));
         std::printf("\nReturned value: %d\n",i);
         return;
     }
-    /* PGP */
+    // PGP
     i = do_shell(SH,file_exp("grep -s \"BEGIN PGP\" %A"));
-    if (!i)     /* found PGP */
+    if (!i)     // found PGP
     {
         i = do_shell(SH,file_exp(get_val_const("VERIFY_PGP",VERIFY_PGP)));
         std::printf("\nReturned value: %d\n",i);
@@ -557,15 +557,15 @@ std::time_t text_to_secs(const char *s, std::time_t defSecs)
 
     if (!std::isdigit(*s))
     {
-        if (*s == 'm' || *s == 'M')     /* "missing" */
+        if (*s == 'm' || *s == 'M')     // "missing"
         {
             return 2;
         }
-        if (*s == 'y' || *s == 'Y')     /* "yes" */
+        if (*s == 'y' || *s == 'Y')     // "yes"
         {
             return defSecs;
         }
-        return secs;                    /* "never" */
+        return secs;                    // "never"
     }
     do
     {
@@ -642,7 +642,7 @@ char *secs_to_text(std::time_t secs)
     return g_buf;
 }
 
-/* returns a saved string representing a unique temporary filename */
+// returns a saved string representing a unique temporary filename
 char *temp_filename()
 {
     static int tmpfile_num = 0;
@@ -877,7 +877,7 @@ bool parse_string(char **to, char **from)
     *to = t;
     *from = f;
 
-    return inquote;     /* return true if the string ended with a newline */
+    return inquote;     // return true if the string ended with a newline
 }
 
 char *next_ini_section(char *cp, char **section, char **cond)
@@ -1008,7 +1008,7 @@ bool check_ini_cond(char *cond)
         s = compile(&condcompex,cond,true,true);
         if (s != nullptr)
         {
-            /*warning(s)*/
+            // warning(s)
             equal = false;
         }
         else
@@ -1025,8 +1025,8 @@ bool check_ini_cond(char *cond)
     return true;
 }
 
-/* TODO: might get replaced soonish... */
-/* Ask for a single character (improve the prompt?) */
+// TODO: might get replaced soonish...
+// Ask for a single character (improve the prompt?)
 char menu_get_char()
 {
     std::printf("Enter your choice: ");
@@ -1037,8 +1037,8 @@ char menu_get_char()
     return(*g_buf);
 }
 
-/* NOTE: kfile.c uses its own editor function */
-/* used in a few places, now centralized */
+// NOTE: kfile.c uses its own editor function
+// used in a few places, now centralized
 int edit_file(const char *fname)
 {
     int r = -1;
@@ -1048,16 +1048,16 @@ int edit_file(const char *fname)
         return r;
     }
 
-    /* XXX paranoia check on length */
+    // XXX paranoia check on length
     std::sprintf(g_cmd_buf,"%s ",
             file_exp(get_val_const("VISUAL",get_val_const("EDITOR",DEFEDITOR))));
     std::strcat(g_cmd_buf, file_exp(fname));
     term_down(3);
-    reset_tty();                  /* make sure tty is friendly */
-    r = do_shell(SH,g_cmd_buf);  /* invoke the shell */
-    no_echo();                   /* and make terminal */
-    cr_mode();                   /*   unfriendly again */
+    reset_tty();                  // make sure tty is friendly
+    r = do_shell(SH,g_cmd_buf);  // invoke the shell
+    no_echo();                   // and make terminal
+    cr_mode();                   // unfriendly again
     return r;
 }
 
-/* Consider a trn_pushdir, trn_popdir pair of functions */
+// Consider a trn_pushdir, trn_popdir pair of functions
