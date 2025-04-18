@@ -71,8 +71,7 @@ static void     cache_tree(Article *ap, int depth, char *cp);
 static Article *find_artp(Article *article, int x);
 static void     display_tree(Article *article, char *cp);
 
-/* Prepare tree display for inclusion in the article header.
-*/
+// Prepare tree display for inclusion in the article header.
 void init_tree()
 {
     Article*thread;
@@ -157,8 +156,7 @@ void init_tree()
     }
 }
 
-/* A recursive routine to find the maximum tree extents and where we are.
-*/
+// A recursive routine to find the maximum tree extents and where we are.
 static void find_depth(Article *article, int depth)
 {
     s_max_depth = std::max(depth, s_max_depth);
@@ -184,8 +182,7 @@ static void find_depth(Article *article, int depth)
     }
 }
 
-/* Place the tree display in a maximum of 11 lines x 6 nodes.
-*/
+// Place the tree display in a maximum of 11 lines x 6 nodes.
 static void cache_tree(Article *ap, int depth, char *cp)
 {
     int depth_mode;
@@ -329,8 +326,7 @@ Article *get_tree_artp(int x, int y)
     return ap;
 }
 
-/* A recursive routine to find the maximum tree extents and where we are.
-*/
+// A recursive routine to find the maximum tree extents and where we are.
 static Article *find_artp(Article *article, int x)
 {
     while (true)
@@ -364,9 +360,8 @@ inline bool header_conv()
     return g_char_subst[0] == 'a' || g_char_subst[0] == 'm';
 }
 
-/* Output a header line with possible tree display on the right hand side.
-** Does automatic wrapping of lines that are too long.
-*/
+// Output a header line with possible tree display on the right hand side.
+// Does automatic wrapping of lines that are too long.
 int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
 {
     char*    tmpbuf;
@@ -447,9 +442,8 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
     {
         if (*line != ' ')
         {
-            /* A "normal" header line -- output keyword and set s_header_indent
-            ** _except_ for the first line, which is a non-standard header.
-            */
+            // A "normal" header line -- output keyword and set s_header_indent
+            // _except_ for the first line, which is a non-standard header.
             if (!header_line || !(cp = std::strchr(line, ':')) || *++cp != ' ')
             {
                 s_header_indent = 0;
@@ -554,9 +548,8 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
                 std::putchar(' ');
             } while (pad_cnt--);
             g_term_col = wrap_at;
-            /* Check string for the '*' flagging our current node
-            ** and the '@' flagging our prior node.
-            */
+            // Check string for the '*' flagging our current node
+            // and the '@' flagging our prior node.
             cp = s_tree_lines[header_line];
             char *cp1 = std::strchr(cp, '*');
             char *cp2 = std::strchr(cp, '@');
@@ -570,9 +563,8 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
             }
             color_object(COLOR_TREE, true);
             std::fputs(cp, stdout);
-            /* Handle standout output for '*' and '@' marked nodes, then
-            ** continue with the rest of the line.
-            */
+            // Handle standout output for '*' and '@' marked nodes, then
+            // continue with the rest of the line.
             while (cp1 || cp2)
             {
                 color_object(COLOR_TREE_MARK, true);
@@ -611,9 +603,9 @@ int tree_puts(char *orig_line, ArticleLine header_line, int is_subject)
     return header_line - start_line;
 }
 
-/* Output any parts of the tree that are left to display.  Called at the
-** end of each header.
-*/
+// Output any parts of the tree that are left to display.  Called at the
+// end of each header.
+//
 int  finish_tree(ArticleLine last_line)
 {
     ArticleLine start_line = last_line;
@@ -627,8 +619,8 @@ int  finish_tree(ArticleLine last_line)
     return last_line - start_line;
 }
 
-/* Output the entire article tree for the user.
-*/
+// Output the entire article tree for the user.
+//
 void entire_tree(Article* ap)
 {
     if (!ap)
@@ -704,8 +696,8 @@ void entire_tree(Article* ap)
     newline();
 }
 
-/* A recursive routine to output the entire article tree.
-*/
+// A recursive routine to output the entire article tree.
+//
 static void display_tree(Article *article, char *cp)
 {
     if (cp - s_tree_indent > g_tc_COLS || g_page_line < 0)
@@ -790,10 +782,10 @@ static void display_tree(Article *article, char *cp)
     color_pop();        // of COLOR_TREE
 }
 
-/* Calculate the subject letter representation.  "Place-holder" nodes
-** are marked with a ' ', others get a letter in the sequence:
-**      ' ', '1'-'9', 'A'-'Z', 'a'-'z', '+'
-*/
+// Calculate the subject letter representation.  "Place-holder" nodes
+// are marked with a ' ', others get a letter in the sequence:
+//      ' ', '1'-'9', 'A'-'Z', 'a'-'z', '+'
+//
 char thread_letter(Article *ap)
 {
     int subj = ap->subj->misc;
