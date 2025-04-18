@@ -1,6 +1,6 @@
 /* head.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "config/common.h"
 #include "trn/head.h"
@@ -37,10 +37,10 @@
 #define NGS_CACHED  HT_NONE
 #define FILT_CACHED HT_NONE
 
-/* This array must stay in the same order as the enum values header_line_type */
+// This array must stay in the same order as the enum values header_line_type
 // clang-format off
 HeaderType g_header_type[HEAD_LAST] = {
-    /* name             minpos  maxpos  length   flag */
+    // name             minpos  maxpos  length   flag
     {"",/*BODY*/        0,      0,      0,      HT_NONE         },
     {"",/*SHOWN*/       0,      0,      0,      HT_NONE         },
     {"",/*HIDDEN*/      0,      0,      0,      HIDDEN          },
@@ -86,13 +86,13 @@ UserHeaderType *g_user_htype{};
 short           g_user_htype_index[26];
 int             g_user_htype_count{};
 int             g_user_htype_max{};
-ArticleNum      g_parsed_art{}; /* the article number we've parsed */
-HeaderLineType  g_in_header{};  /* are we decoding the header? */
+ArticleNum      g_parsed_art{}; // the article number we've parsed
+HeaderLineType  g_in_header{};  // are we decoding the header?
 char           *g_head_buf;
 
-static Article       *s_parsed_artp{}; /* the article ptr we've parsed */
+static Article       *s_parsed_artp{}; // the article ptr we've parsed
 static long           s_head_buf_size;
-static bool           s_first_one; /* is this the 1st occurrence of this header line? */
+static bool           s_first_one; // is this the 1st occurrence of this header line?
 static bool           s_reading_nntp_header;
 static HeaderLineType s_htypeix[26]{};
 
@@ -145,7 +145,7 @@ HeaderLineType set_line_type(char *bufptr, const char *colon)
 
     for (t = g_msg, f = bufptr; f < colon; f++, t++)
     {
-        /* guard against space before : */
+        // guard against space before :
         if (std::isspace(*f))
         {
             return SOME_LINE;
@@ -153,7 +153,7 @@ HeaderLineType set_line_type(char *bufptr, const char *colon)
         *t = std::isupper(*f) ? static_cast<char>(std::tolower(*f)) : *f;
     }
     *t = '\0';
-    f = g_msg;                          /* get g_msg into a register */
+    f = g_msg;                          // get g_msg into a register
     int len = t - f;
 
     /* now scan the HEADTYPE table, backwards so we don't have to supply an
@@ -194,7 +194,7 @@ HeaderLineType get_header_num(char *s)
 {
     char* end = s + std::strlen(s);
 
-    HeaderLineType i = set_line_type(s, end);     /* Sets g_msg to lower-cased header name */
+    HeaderLineType i = set_line_type(s, end);     // Sets g_msg to lower-cased header name
 
     if (i <= SOME_LINE && i != CUSTOM_LINE)
     {
@@ -260,10 +260,10 @@ void start_header(ArticleNum artnum)
 
 void end_header_line()
 {
-    if (s_first_one)            /* did we just pass 1st occurance? */
+    if (s_first_one)            // did we just pass 1st occurance?
     {
         s_first_one = false;
-        /* remember where line left off */
+        // remember where line left off
         g_header_type[g_in_header].max_pos = g_art_pos;
         if (g_header_type[g_in_header].flags & HT_CACHED)
         {
@@ -275,7 +275,7 @@ void end_header_line()
                 {
                     start++;
                 }
-                MemorySize size = g_art_pos - start + 1 - 1;   /* pre-strip newline */
+                MemorySize size = g_art_pos - start + 1 - 1;   // pre-strip newline
                 if (g_in_header == SUBJ_LINE)
                 {
                     set_subj_line(s_parsed_artp, g_head_buf + start, size - 1);
@@ -293,16 +293,16 @@ void end_header_line()
 
 bool parse_line(char *art_buf, int new_hide, int old_hide)
 {
-    if (is_hor_space(*art_buf)) /* continuation line? */
+    if (is_hor_space(*art_buf)) // continuation line?
     {
         return old_hide;
     }
 
     end_header_line();
     char *s = std::strchr(art_buf, ':');
-    if (s == nullptr)   /* is it the end of the header? */
+    if (s == nullptr)   // is it the end of the header?
     {
-            /* Did NNTP ship us a mal-formed header line? */
+            // Did NNTP ship us a mal-formed header line?
             if (s_reading_nntp_header && *art_buf && *art_buf != '\n')
             {
                 g_in_header = SOME_LINE;
@@ -310,7 +310,7 @@ bool parse_line(char *art_buf, int new_hide, int old_hide)
             }
             g_in_header = PAST_HEADER;
     }
-    else                /* it is a new header line */
+    else                // it is a new header line
     {
             g_in_header = set_line_type(art_buf,s);
             s_first_one = (g_header_type[g_in_header].min_pos < 0);
@@ -336,7 +336,7 @@ bool parse_line(char *art_buf, int new_hide, int old_hide)
                 return new_hide;
             }
     }
-    return false;                       /* don't hide this line */
+    return false;                       // don't hide this line
 }
 
 void end_header()
@@ -344,7 +344,7 @@ void end_header()
     Article* ap = s_parsed_artp;
 
     end_header_line();
-    g_in_header = PAST_HEADER;  /* just to be sure */
+    g_in_header = PAST_HEADER;  // just to be sure
 
     if (!ap->subj)
     {
@@ -354,7 +354,7 @@ void end_header()
     if (s_reading_nntp_header)
     {
         s_reading_nntp_header = false;
-        g_header_type[PAST_HEADER].min_pos = g_art_pos + 1;     /* nntp_body will fix this */
+        g_header_type[PAST_HEADER].min_pos = g_art_pos + 1;     // nntp_body will fix this
     }
     else
     {
@@ -389,7 +389,7 @@ void end_header()
     }
 }
 
-/* read the header into memory and parse it if we haven't already */
+// read the header into memory and parse it if we haven't already
 
 bool parse_header(ArticleNum art_num)
 {
@@ -454,7 +454,7 @@ bool parse_header(ArticleNum art_num)
             {
                 if (!bp[1])
                 {
-                    *bp++ = '\n';       /* tag the end with an empty line */
+                    *bp++ = '\n';       // tag the end with an empty line
                     break;
                 }
                 std::strcpy(bp,bp+1);
@@ -488,18 +488,18 @@ bool parse_header(ArticleNum art_num)
     return true;
 }
 
-/* get a header line from an article */
+// get a header line from an article
 
-/* article to get line from */
-/* type of line desired */
+// article to get line from
+// type of line desired
 char *fetch_lines(ArticleNum art_num, HeaderLineType which_line)
 {
     char* s;
 
-    /* Only return a cached line if it isn't the current article */
+    // Only return a cached line if it isn't the current article
     if (g_parsed_art != art_num)
     {
-        /* If the line is not in the cache, this will parse the header */
+        // If the line is not in the cache, this will parse the header
         s = fetch_cache(art_num,which_line, FILL_CACHE);
         if (s)
         {
@@ -533,18 +533,18 @@ char *fetch_lines(ArticleNum art_num, HeaderLineType which_line)
     return s;
 }
 
-/* (strn) like fetchlines, but for memory pools */
-/* ART_NUM artnum   article to get line from */
-/* int which_line   type of line desired */
-/* int pool         which memory pool to use */
+// (strn) like fetchlines, but for memory pools
+// ART_NUM artnum   article to get line from
+// int which_line   type of line desired
+// int pool         which memory pool to use
 char *mp_fetch_lines(ArticleNum art_num, HeaderLineType which_line, MemoryPool pool)
 {
     char* s;
 
-    /* Only return a cached line if it isn't the current article */
+    // Only return a cached line if it isn't the current article
     if (g_parsed_art != art_num)
     {
-        /* If the line is not in the cache, this will parse the header */
+        // If the line is not in the cache, this will parse the header
         s = fetch_cache(art_num,which_line, FILL_CACHE);
         if (s)
         {
@@ -590,7 +590,7 @@ static int nntp_xhdr(HeaderLineType which_line, ArticleNum artnum, ArticleNum la
     return nntp_command(g_ser_line);
 }
 
-/* prefetch a header line from one or more articles */
+// prefetch a header line from one or more articles
 
 // ART_NUM artnum   article to get line from */
 // int which_line   type of line desired */
@@ -732,7 +732,7 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
         return s;
     }
 
-    /* Only return a cached line if it isn't the current article */
+    // Only return a cached line if it isn't the current article
     s = nullptr;
     if (g_parsed_art != art_num)
     {
@@ -764,9 +764,9 @@ char *prefetch_lines(ArticleNum art_num, HeaderLineType which_line, bool copy)
     {
         s = safe_malloc((MemorySize) size);
     }
-    else                                /* hope this is okay--we're */
+    else                                // hope this is okay--we're
     {
-        s = g_cmd_buf;                  /* really scraping for space here */
+        s = g_cmd_buf;                  // really scraping for space here
         size = std::min(size, static_cast<int>(sizeof g_cmd_buf));
     }
     safe_copy(s,t,size);
