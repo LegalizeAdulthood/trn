@@ -43,36 +43,36 @@
  * Lots more to do...
  */
 
-int  g_univ_level{};          /* How deep are we in the tree? */
-bool g_univ_ng_virt_flag{};   /* if true, we are in the "virtual group" second pass */
-bool g_univ_read_virt_flag{}; /* if true, we are reading an article from a "virtual group" */
-bool g_univ_default_cmd{};    /* "follow"-related stuff (virtual groups) */
+int  g_univ_level{};          // How deep are we in the tree?
+bool g_univ_ng_virt_flag{};   // if true, we are in the "virtual group" second pass
+bool g_univ_read_virt_flag{}; // if true, we are reading an article from a "virtual group"
+bool g_univ_default_cmd{};    // "follow"-related stuff (virtual groups)
 bool g_univ_follow{true};
 bool g_univ_follow_temp{};
 
-/* items which must be saved in context */
+// items which must be saved in context
 UniversalItem *g_first_univ{};
 UniversalItem *g_last_univ{};
 UniversalItem *sel_page_univ{};
 UniversalItem *g_sel_next_univ{};
-char          *g_univ_fname{};  /* current filename (may be null) */
-std::string    g_univ_label;    /* current label (may be null) */
-std::string    g_univ_title;    /* title of current level */
-std::string    g_univ_tmp_file; /* temp. file (may be null) */
+char          *g_univ_fname{};  // current filename (may be null)
+std::string    g_univ_label;    // current label (may be null)
+std::string    g_univ_title;    // title of current level
+std::string    g_univ_tmp_file; // temp. file (may be null)
 HashTable     *g_univ_ng_hash{};
 HashTable     *g_univ_vg_hash{};
-/* end of items that must be saved */
+// end of items that must be saved
 
 static bool           s_univ_virt_pass_needed{}; //
 static int            s_univ_item_counter{1};    //
 static bool           s_univ_done_startup{};     //
-static int            s_univ_min_score{};        /* this score is part of the line format, so it is not ifdefed */
+static int            s_univ_min_score{};        // this score is part of the line format, so it is not ifdefed
 static bool           s_univ_use_min_score{};    //
 static bool           s_univ_begin_found{};      //
-static char          *s_univ_begin_label{};      /* label to start working with */
-static char          *s_univ_line_desc{};        /* if non-nullptr, the description (printing name) of the entry */
+static char          *s_univ_begin_label{};      // label to start working with
+static char          *s_univ_line_desc{};        // if non-nullptr, the description (printing name) of the entry
 static UniversalItem *s_current_vg_ui{};         //
-static bool           s_univ_user_top{};         /* if true, the user has loaded their own top univ. config file */
+static bool           s_univ_user_top{};         // if true, the user has loaded their own top univ. config file
 
 static void  univ_free_data(UniversalItem *ui);
 static bool  univ_do_match(const char *text, const char *p);
@@ -93,21 +93,21 @@ void univ_init()
 
 void univ_startup()
 {
-    /* later: make user top file an option or environment variable? */
+    // later: make user top file an option or environment variable?
     if (!univ_file_load("%+/univ/top", "Top Level", nullptr))
     {
         univ_open();
         g_univ_title = "Top Level";
         g_univ_fname = save_str("%+/univ/usertop");
 
-        /* read in trn default top file */
-        (void)univ_include_file("%X/sitetop");          /* pure local */
+        // read in trn default top file
+        (void)univ_include_file("%X/sitetop");          // pure local
         bool sys_top_load = univ_include_file("%X/trn4top");
         bool user_top_load = univ_use_file("%+/univ/usertop", nullptr);
 
         if (!(sys_top_load || user_top_load))
         {
-            /* last resort--all newsgroups */
+            // last resort--all newsgroups
             univ_close();
             univ_mask_load(save_str("*"),"All Newsgroups");
         }
@@ -190,7 +190,7 @@ UniversalItem *univ_add(UniversalItemType type, const char *desc)
     }
     node->type = type;
     node->num = s_univ_item_counter++;
-    node->score = 0;            /* consider other default scores? */
+    node->score = 0;            // consider other default scores?
     node->next = nullptr;
     node->prev = g_last_univ;
     if (g_last_univ)
@@ -215,16 +215,16 @@ static void univ_free_data(UniversalItem *ui)
 
     switch (ui->type)
     {
-    case UN_NONE:     /* cases where nothing is needed. */
+    case UN_NONE:     // cases where nothing is needed.
     case UN_TXT:
     case UN_HELP_KEY:
         break;
 
-    case UN_DEBUG1:   /* methods that use the string */
+    case UN_DEBUG1:   // methods that use the string
         safe_free(ui->data.str);
         break;
 
-    case UN_GROUP_MASK:        /* methods that have custom data */
+    case UN_GROUP_MASK:        // methods that have custom data
         safe_free(ui->data.gmask.title);
         safe_free(ui->data.gmask.mask_list);
         break;
@@ -255,16 +255,16 @@ static void univ_free_data(UniversalItem *ui)
         safe_free(ui->data.text_file.fname);
         break;
 
-    case UN_DATA_SOURCE:  /* unimplemented methods */
+    case UN_DATA_SOURCE:  // unimplemented methods
     case UN_VIRTUAL1:
     default:
         break;
     }
 }
 
-/* not used now, but may be used later... */
-//UNIV_ITEM* ui;                                /* universal item */
-//int linenum;                          /* which line to describe (0 base) */
+// not used now, but may be used later...
+//UNIV_ITEM* ui;                                // universal item
+//int linenum;                          // which line to describe (0 base)
 char *univ_desc_line(UniversalItem *ui, int linenum)
 {
     return ui->desc;
@@ -272,14 +272,14 @@ char *univ_desc_line(UniversalItem *ui, int linenum)
 
 void univ_add_text(const char *txt)
 {
-    /* later check text for bad things */
+    // later check text for bad things
     (void)univ_add(UN_TXT,txt);
 }
 
-/* temp for testing */
+// temp for testing
 void univ_add_debug(const char *desc, const char *txt)
 {
-    /* later check text for bad things */
+    // later check text for bad things
     UniversalItem *ui = univ_add(UN_DEBUG1, desc);
     ui->data.str = save_str(txt);
 }
@@ -293,7 +293,7 @@ void univ_add_group(const char *desc, const char *grpname)
     {
         return;
     }
-    /* later check grpname for bad things? */
+    // later check grpname for bad things?
 
     if (!g_univ_ng_hash)
     {
@@ -304,14 +304,14 @@ void univ_add_group(const char *desc, const char *grpname)
 
     if (data.dat_ptr)
     {
-        /* group was already added */
-        /* perhaps it is marked as deleted? */
+        // group was already added
+        // perhaps it is marked as deleted?
         for (ui = g_first_univ; ui; ui = ui->next)
         {
             if ((ui->type == UN_GROUP_DESEL) && ui->data.group.ng //
                 && !strcmp(ui->data.group.ng, grpname))
             {
-                /* undelete the newsgroup */
+                // undelete the newsgroup
                 ui->type = UN_NEWSGROUP;
             }
         }
@@ -330,7 +330,7 @@ void univ_add_mask(const char *desc, const char *mask)
     ui->data.gmask.title = save_str(desc);
 }
 
-//char* fname;                          /* May be URL */
+//char* fname;                          // May be URL
 void univ_add_file(const char *desc, const char *fname, const char *label)
 {
     UniversalItem *ui = univ_add(UN_CONFIG_FILE, desc);
@@ -365,13 +365,13 @@ void univ_add_text_file(const char *desc, char *name)
     char *s = name;
     switch (*s)
     {
-    /* later add URL handling */
+    // later add URL handling
     case ':':
         s++;
-        /* FALL THROUGH */
+        // FALL THROUGH
 
     default:
-        /* XXX later have error checking on length */
+        // XXX later have error checking on length
         std::strcpy(lbuf,g_univ_fname);
         for (p = lbuf+std::strlen(lbuf); p > lbuf && *p != '/'; p--)
         {
@@ -383,9 +383,9 @@ void univ_add_text_file(const char *desc, char *name)
             std::strcat(lbuf,s);
             s = lbuf;
         }
-        /* FALL THROUGH */
+        // FALL THROUGH
 
-    case '~': /* ...or full file names */
+    case '~': // ...or full file names
     case '%':
     case '/':
         ui = univ_add(UN_TEXT_FILE,desc);
@@ -394,7 +394,7 @@ void univ_add_text_file(const char *desc, char *name)
     }
 }
 
-/* mostly the same as the newsgroup stuff */
+// mostly the same as the newsgroup stuff
 void univ_add_virtual_group(const char *grpname)
 {
     UniversalItem* ui;
@@ -404,9 +404,9 @@ void univ_add_virtual_group(const char *grpname)
         return;
     }
 
-    /* later check grpname for bad things? */
+    // later check grpname for bad things?
 
-    /* perhaps leave if group has no unread, or other factor */
+    // perhaps leave if group has no unread, or other factor
     if (!g_univ_vg_hash)
     {
         g_univ_vg_hash = hash_create(701, nullptr);
@@ -416,14 +416,14 @@ void univ_add_virtual_group(const char *grpname)
     HashDatum data = hash_fetch(g_univ_vg_hash, grpname, std::strlen(grpname));
     if (data.dat_ptr)
     {
-        /* group was already added */
-        /* perhaps it is marked as deleted? */
+        // group was already added
+        // perhaps it is marked as deleted?
         for (ui = g_first_univ; ui; ui = ui->next)
         {
             if ((ui->type == UN_VGROUP_DESEL) && ui->data.vgroup.ng //
                 && !std::strcmp(ui->data.vgroup.ng, grpname))
             {
-                /* undelete the newsgroup */
+                // undelete the newsgroup
                 ui->type = UN_VGROUP;
             }
         }
@@ -455,10 +455,10 @@ static bool univ_do_match(const char *text, const char *p)
     {
         if (*p == '*')
         {
-            p = skip_eq(p, '*'); /* Consecutive stars act just like one. */
+            p = skip_eq(p, '*'); // Consecutive stars act just like one.
             if (*p == '\0')
             {
-                /* Trailing star matches everything. */
+                // Trailing star matches everything.
                 return true;
             }
             while (*text)
@@ -478,7 +478,7 @@ static bool univ_do_match(const char *text, const char *p)
     return *text == '\0';
 }
 
-/* type: 0=newsgroup, 1=virtual (more in future?) */
+// type: 0=newsgroup, 1=virtual (more in future?)
 void univ_use_pattern(const char *pattern, int type)
 {
     const char* s = pattern;
@@ -490,8 +490,8 @@ void univ_use_pattern(const char *pattern, int type)
         std::printf("\ngroup pattern: empty regular expression\n");
         return;
     }
-    /* XXX later: match all newsgroups in current datasrc to the pattern. */
-    /* XXX later do a quick check to see if the group is a simple one. */
+    // XXX later: match all newsgroups in current datasrc to the pattern.
+    // XXX later do a quick check to see if the group is a simple one.
 
     if (*s == '!')
     {
@@ -548,8 +548,8 @@ void univ_use_pattern(const char *pattern, int type)
     }
 }
 
-/* interprets a line of newsgroups, adding or subtracting each pattern */
-/* Newsgroup patterns are separated by spaces and/or commas */
+// interprets a line of newsgroups, adding or subtracting each pattern
+// Newsgroup patterns are separated by spaces and/or commas
 void univ_use_group_line(char *line, int type)
 {
     char* p;
@@ -560,7 +560,7 @@ void univ_use_group_line(char *line, int type)
         return;
     }
 
-    /* newsgroup patterns will be separated by space(s) and/or comma(s) */
+    // newsgroup patterns will be separated by space(s) and/or comma(s)
     while (*s)
     {
         while (*s == ' ' || *s == ',')
@@ -578,21 +578,21 @@ void univ_use_group_line(char *line, int type)
     }
 }
 
-/* returns true on success, false otherwise */
+// returns true on success, false otherwise
 static bool univ_use_file(const char *fname, const char *label)
 {
     static char lbuf[LINE_BUF_LEN];
 
-    bool begin_top = true;      /* default assumption (might be changed later) */
+    bool begin_top = true;      // default assumption (might be changed later)
 
     if (!fname)
     {
-        return false;   /* bad argument */
+        return false;   // bad argument
     }
 
     const char *s = fname;
     const char *open_name = fname;
-    /* open URLs and translate them into local temporary filenames */
+    // open URLs and translate them into local temporary filenames
     if (string_case_equal(fname, "URL:", 4))
     {
         open_name = temp_filename();
@@ -601,9 +601,9 @@ static bool univ_use_file(const char *fname, const char *label)
         {
             open_name = nullptr;
         }
-        begin_top = false;      /* we will need a "begin group" */
+        begin_top = false;      // we will need a "begin group"
     }
-    else if (*s == ':')         /* relative to last file's directory */
+    else if (*s == ':')         // relative to last file's directory
     {
         std::printf("Colon filespec not supported for |%s|\n",s);
         open_name = nullptr;
@@ -621,7 +621,7 @@ static bool univ_use_file(const char *fname, const char *label)
     std::FILE *fp = std::fopen(file_exp(open_name), "r");
     if (!fp)
     {
-        return false;           /* unsuccessful (XXX: complain) */
+        return false;           // unsuccessful (XXX: complain)
     }
 /* Later considerations:
  * 1. Long lines
@@ -631,7 +631,7 @@ static bool univ_use_file(const char *fname, const char *label)
     {
         if (!univ_do_line(lbuf))
         {
-            break;      /* end of useful file */
+            break;      // end of useful file
         }
     }
     std::fclose(fp);
@@ -654,14 +654,14 @@ static bool univ_use_file(const char *fname, const char *label)
 static bool univ_include_file(const char *fname)
 {
     char *old_univ_fname = g_univ_fname;
-    g_univ_fname = save_str(fname);      /* LEAK */
+    g_univ_fname = save_str(fname);      // LEAK
     bool retval = univ_use_file(g_univ_fname, nullptr);
     g_univ_fname = old_univ_fname;
     return retval;
 }
 
-/* do the '$' extensions of the line. */
-//char* line;                   /* may be temporarily edited */
+// do the '$' extensions of the line.
+//char* line;                   // may be temporarily edited
 static void univ_do_line_ext1(const char *desc, char *line)
 {
     char* p;
@@ -678,14 +678,14 @@ static void univ_do_line_ext1(const char *desc, char *line)
         s++;
         switch (*s)
         {
-        case '0':             /* test vector: "desc" $v0 */
+        case '0':             // test vector: "desc" $v0
             s++;
             (void)univ_add_virt_num(desc? desc : s,
                                     "news.software.readers",(ArticleNum)15000);
             break;
 
-        case '1':             /* "desc" $v1 1500 news.admin */
-            /* XXX error checking */
+        case '1':             // "desc" $v1 1500 news.admin
+            // XXX error checking
             s++;
             s = skip_space(s);
             p = skip_digits(s);
@@ -700,7 +700,7 @@ static void univ_do_line_ext1(const char *desc, char *line)
             }
             break;
 
-        case 'g':             /* $vg [scorenum] news.* !news.foo.* */
+        case 'g':             // $vg [scorenum] news.* !news.foo.*
             p = s;
             p++;
             p = skip_space(p);
@@ -724,11 +724,11 @@ static void univ_do_line_ext1(const char *desc, char *line)
         }
         break;
 
-    case 't':         /* text file */
+    case 't':         // text file
         s++;
         switch (*s)
         {
-        case '0':             /* test vector: "desc" $t0 */
+        case '0':             // test vector: "desc" $t0
             univ_add_text_file(desc? desc : s, "/home/c/caadams/ztext");
             break;
         }
@@ -739,7 +739,7 @@ static void univ_do_line_ext1(const char *desc, char *line)
     }
 }
 
-/* returns false when no more lines should be interpreted */
+// returns false when no more lines should be interpreted
 static bool univ_do_line(char *line)
 {
     char* p;
@@ -747,20 +747,20 @@ static bool univ_do_line(char *line)
     char *s = line + std::strlen(line) - 1;
     if (*s == '\n')
     {
-        *s = '\0';                              /* delete newline */
+        *s = '\0';                              // delete newline
     }
 
     s = skip_space(line);
     if (*s == '\0')
     {
-        return true;    /* empty line */
+        return true;    // empty line
     }
 
     if (!s_univ_begin_found)
     {
         if (string_case_compare(s,"begin group",11))
         {
-            return true;        /* wait until "begin group" is found */
+            return true;        // wait until "begin group" is found
         }
         s_univ_begin_found = true;
     }
@@ -768,12 +768,12 @@ static bool univ_do_line(char *line)
     {
         if (*s == '>' && s[1] == ':' && !std::strcmp(s + 2, s_univ_begin_label))
         {
-            safe_free0(s_univ_begin_label); /* interpret starting at next line */
+            safe_free0(s_univ_begin_label); // interpret starting at next line
         }
         return true;
     }
     safe_free0(s_univ_line_desc);
-    if (*s == '"')      /* description name */
+    if (*s == '"')      // description name
     {
         p = copy_till(s,s+1,'"');
         if (!*p)
@@ -796,28 +796,28 @@ static bool univ_do_line(char *line)
         if (*p)
         {
             p++;
-            if (!*p)            /* empty label */
+            if (!*p)            // empty label
             {
                 p = nullptr;
             }
-            /* XXX later do more error checking */
+            // XXX later do more error checking
         }
         else
         {
             p = nullptr;
         }
-        /* description defaults to name */
+        // description defaults to name
         univ_add_file(s_univ_line_desc? s_univ_line_desc : s, s, p);
     }
     else
     {
         switch (*s)
         {
-        case '#':     /* comment */
+        case '#':     // comment
             break;
 
-        case ':':     /* relative to g_univ_fname */
-            /* XXX hack the variable and fall through */
+        case ':':     // relative to g_univ_fname
+            // XXX hack the variable and fall through
             if (g_univ_fname && std::strlen(g_univ_fname)+std::strlen(s) < 1020)
             {
                 static char lbuf[1024];
@@ -833,10 +833,10 @@ static bool univ_do_line(char *line)
                     std::strcat(lbuf,s);
                     s = lbuf;
                 }
-            } /* XXX later have else which will complain */
-            /* FALL THROUGH */
+            } // XXX later have else which will complain
+            // FALL THROUGH
 
-        case '~':     /* ...or full file names */
+        case '~':     // ...or full file names
         case '%':
         case '/':
             p = skip_ne(s, '>');
@@ -848,29 +848,29 @@ static bool univ_do_line(char *line)
                     std::strcpy(lbuf,s);
                     s = lbuf;
 
-                    p = skip_ne(s, '>'); /* XXX Ick! */
-                    *p++ = '\0';        /* separate label */
+                    p = skip_ne(s, '>'); // XXX Ick!
+                    *p++ = '\0';        // separate label
 
-                    if (!*p)            /* empty label */
+                    if (!*p)            // empty label
                     {
                         p = nullptr;
                     }
-                    /* XXX later do more error checking */
+                    // XXX later do more error checking
                 }
             }
             else
             {
                 p = nullptr;
             }
-            /* description defaults to name */
+            // description defaults to name
             univ_add_file(s_univ_line_desc? s_univ_line_desc : s, file_exp(s), p);
             break;
 
-        case '-':     /* label within same file */
+        case '-':     // label within same file
             s++;
             if (*s++ != '>')
             {
-                /* XXX give an error message later */
+                // XXX give an error message later
                 break;
             }
             if (!g_univ_tmp_file.empty())
@@ -889,42 +889,42 @@ static bool univ_do_line(char *line)
         case '>':
             if (s[1] == ':')
             {
-                return false;   /* label found, end of previous block */
+                return false;   // label found, end of previous block
             }
-            break;      /* just ignore the line (print warning later?) */
+            break;      // just ignore the line (print warning later?)
 
-        case '@':       /* virtual newsgroup file */
-            break;      /* not used now */
+        case '@':       // virtual newsgroup file
+            break;      // not used now
 
-        case '&':       /* text file shortcut (for help files) */
+        case '&':       // text file shortcut (for help files)
             s++;
             univ_add_text_file(s_univ_line_desc? s_univ_line_desc : s, s);
             break;
 
-        case '$':       /* extension 1 */
+        case '$':       // extension 1
             univ_do_line_ext1(s_univ_line_desc,s);
             break;
 
         default:
-            /* if there is a description, this must be a restriction list */
+            // if there is a description, this must be a restriction list
             if (s_univ_line_desc)
             {
                 univ_add_mask(s_univ_line_desc,s);
                 break;
             }
-            /* one or more newsgroups instead */
+            // one or more newsgroups instead
             univ_use_group_line(s,0);
             break;
         }
     }
-    return true;        /* continue reading */
+    return true;        // continue reading
 }
 
 /* features to return later (?):
  *   text files
  */
 
-/* level generator */
+// level generator
 bool univ_file_load(const char *fname, const char *title, const char *label)
 {
     univ_open();
@@ -952,12 +952,12 @@ bool univ_file_load(const char *fname, const char *title, const char *label)
     }
     if (finput_pending(true))
     {
-        /* later, *maybe* eat input */
+        // later, *maybe* eat input
     }
     return flag;
 }
 
-/* level generator */
+// level generator
 void univ_mask_load(char *mask, const char *title)
 {
     univ_open();
@@ -995,7 +995,7 @@ void univ_redo_file()
 
 static char *univ_edit_new_user_file()
 {
-    char *s = save_str(file_exp("%+/univ/usertop"));       /* LEAK */
+    char *s = save_str(file_exp("%+/univ/usertop"));       // LEAK
 
     /* later, create a new user top file, and return its filename.
      * later perhaps ask whether to create or edit current file.
@@ -1003,12 +1003,12 @@ static char *univ_edit_new_user_file()
      *       (trn could do a univ_redofile, but it may be confusing.)
      */
 
-    /* if the file exists, do not create a new one */
+    // if the file exists, do not create a new one
     std::FILE *fp = std::fopen(s, "r");
     if (fp)
     {
         std::fclose(fp);
-        return g_univ_fname;    /* as if this function was not called */
+        return g_univ_fname;    // as if this function was not called
     }
 
     make_dir(s, MD_FILE);
@@ -1026,12 +1026,12 @@ static char *univ_edit_new_user_file()
     std::printf("New User Toplevel file created.\n");
     std::printf("After editing this file, exit and restart trn to use it.\n");
     (void)get_anything();
-    s_univ_user_top = true;               /* do not overwrite this file */
+    s_univ_user_top = true;               // do not overwrite this file
     return s;
 }
 
-/* code adapted from edit_kfile in kfile.c */
-/* XXX problem if elements expand to larger than g_cmd_buf */
+// code adapted from edit_kfile in kfile.c
+// XXX problem if elements expand to larger than g_cmd_buf
 void univ_edit()
 {
     const char* s;
@@ -1052,11 +1052,11 @@ void univ_edit()
         s = univ_edit_new_user_file();
     }
 
-    /* later consider directory push/pop pair around editing */
+    // later consider directory push/pop pair around editing
     (void)edit_file(s);
 }
 
-/* later use some internal pager */
+// later use some internal pager
 void univ_page_file(char *fname)
 {
     if (!fname || !*fname)
@@ -1068,10 +1068,10 @@ void univ_page_file(char *fname)
             file_exp(get_val_const("HELPPAGER",get_val_const("PAGER","more"))));
     std::strcat(g_cmd_buf, file_exp(fname));
     term_down(3);
-    reset_tty();                  /* make sure tty is friendly */
-    do_shell(SH,g_cmd_buf);      /* invoke the shell */
-    no_echo();                   /* and make terminal */
-    cr_mode();                   /*   unfriendly again */
+    reset_tty();                  // make sure tty is friendly
+    do_shell(SH,g_cmd_buf);      // invoke the shell
+    no_echo();                   // and make terminal
+    cr_mode();                   // unfriendly again
     /* later: consider something else that will return the key, and
      *        returning different codes based on the key.
      */
@@ -1081,8 +1081,8 @@ void univ_page_file(char *fname)
     }
 }
 
-/* virtual newsgroup second pass function */
-/* called from within newsgroup */
+// virtual newsgroup second pass function
+// called from within newsgroup
 void univ_newsgroup_virtual()
 {
     switch (s_current_vg_ui->type)
@@ -1092,15 +1092,15 @@ void univ_newsgroup_virtual()
         break;
 
     case UN_ARTICLE:
-        /* get article number from message-id */
+        // get article number from message-id
         break;
 
     default:
         break;
     }
 
-    /* later, get subjects and article numbers when needed */
-    /* also do things like check scores, add newsgroups, etc. */
+    // later, get subjects and article numbers when needed
+    // also do things like check scores, add newsgroups, etc.
 }
 
 static void univ_vg_add_article(ArticleNum a)
@@ -1124,9 +1124,9 @@ static void univ_vg_add_article(ArticleNum a)
     }
 
     safe_copy(lbuf,subj,sizeof lbuf - 4);
-    /* later scan/replace bad characters */
+    // later scan/replace bad characters
 
-    /* later consider author in description, scoring, etc. */
+    // later consider author in description, scoring, etc.
     UniversalItem *ui = univ_add_virt_num(nullptr, g_newsgroup_name.c_str(), a);
     ui->score = score;
     ui->data.virt.subj = save_str(subj);
@@ -1136,19 +1136,19 @@ static void univ_vg_add_article(ArticleNum a)
 
 static void univ_vg_add_group()
 {
-    /* later: allow was-read articles, etc... */
+    // later: allow was-read articles, etc...
     for (ArticleNum a = article_first(g_first_art); a <= g_last_art; a = article_next(a))
     {
         if (!article_unread(a))
         {
             continue;
         }
-        /* minimum score check */
+        // minimum score check
         univ_vg_add_article(a);
     }
 }
 
-/* returns do_newsgroup() value */
+// returns do_newsgroup() value
 int univ_visit_group_main(const char *gname)
 {
     if (!gname || !*gname)
@@ -1162,7 +1162,7 @@ int univ_visit_group_main(const char *gname)
         std::printf("Univ/Virt: newsgroup %s not found!", gname);
         return NG_ERROR;
     }
-    /* unsubscribed, bogus, etc. groups are not visited */
+    // unsubscribed, bogus, etc. groups are not visited
     if (np->to_read <= TR_UNSUB)
     {
       return NG_ERROR;
@@ -1171,7 +1171,7 @@ int univ_visit_group_main(const char *gname)
     set_newsgroup(np);
     if (np != g_current_newsgroup)
     {
-        /* probably unnecessary... */
+        // probably unnecessary...
         g_recent_newsgroup = g_current_newsgroup;
         g_current_newsgroup = np;
     }
@@ -1183,7 +1183,7 @@ int univ_visit_group_main(const char *gname)
     return ret;
 }
 
-/* LATER: allow the loop to be interrupted */
+// LATER: allow the loop to be interrupted
 void univ_virt_pass()
 {
     g_univ_ng_virt_flag = true;
@@ -1193,7 +1193,7 @@ void univ_virt_pass()
     {
         if (input_pending())
         {
-            /* later consider cleaning up the remains */
+            // later consider cleaning up the remains
             break;
         }
         switch (ui->type)
@@ -1201,7 +1201,7 @@ void univ_virt_pass()
         case UN_VGROUP:
             if (!ui->data.vgroup.ng)
             {
-                break;                  /* XXX whine */
+                break;                  // XXX whine
             }
             s_current_vg_ui = ui;
             if (ui->data.vgroup.flags & UF_VG_MIN_SCORE)
@@ -1211,15 +1211,15 @@ void univ_virt_pass()
             }
             (void)univ_visit_group(ui->data.vgroup.ng);
             s_univ_use_min_score = false;
-            /* later do something with return value */
+            // later do something with return value
             univ_free_data(ui);
             safe_free(ui->desc);
             ui->type = UN_DELETED;
             break;
 
         case UN_ARTICLE:
-            /* if article number is not set, visit newsgroup with callback */
-            /* later also check for descriptions */
+            // if article number is not set, visit newsgroup with callback
+            // later also check for descriptions
             if ((ui->data.virt.num) && (ui->desc))
             {
               break;
@@ -1230,7 +1230,7 @@ void univ_virt_pass()
             }
             s_current_vg_ui = ui;
             (void)univ_visit_group(ui->data.virt.ng);
-            /* later do something with return value */
+            // later do something with return value
             break;
 
         default:
@@ -1303,8 +1303,8 @@ void sort_univ()
     std::free((char*)univ_sort_list);
 }
 
-/* return a description of the article */
-/* do this better later, like the code in sadesc.c */
+// return a description of the article
+// do this better later, like the code in sadesc.c
 const char *univ_article_desc(const UniversalItem *ui)
 {
     static char dbuf[200];
@@ -1354,36 +1354,36 @@ const char *univ_article_desc(const UniversalItem *ui)
     return dbuf;
 }
 
-/* Help start */
+// Help start
 
 /* later: add online help as a new item type, add appropriate item
  *        to the new level
  */
-//int where;    /* what context were we in--use later for key help? */
+//int where;    // what context were we in--use later for key help?
 void univ_help_main(HelpLocation where)
 {
     univ_open();
     g_univ_title = "Extended Help";
 
-    /* first add help on current mode */
+    // first add help on current mode
     UniversalItem *ui = univ_add(UN_HELP_KEY, nullptr);
     ui->data.i = where;
 
-    /* later, do other mode sensitive stuff */
+    // later, do other mode sensitive stuff
 
-    /* site-specific help */
+    // site-specific help
     univ_include_file("%X/sitehelp/top");
 
-    /* read in main help file */
+    // read in main help file
     g_univ_fname = save_str("%X/HelpFiles/top");
     bool flag = univ_use_file(g_univ_fname, g_univ_label.c_str());
 
-    /* later: if flag is not true, then add message? */
+    // later: if flag is not true, then add message?
 }
 
 void univ_help(HelpLocation where)
 {
-    univ_visit_help(where);     /* push old selector info to stack */
+    univ_visit_help(where);     // push old selector info to stack
 }
 
 const char *univ_key_help_mode_str(const UniversalItem *ui)
