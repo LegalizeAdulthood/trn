@@ -1,6 +1,6 @@
 /* decode.c
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include <config/string_case_compare.h>
 
@@ -56,7 +56,7 @@ char *decode_fix_filename(const char *s)
     safe_free(g_decode_filename);
     g_decode_filename = safe_malloc(std::strlen(s) + 2);
 
-    /*TODO: we need to eliminate any "../"s from the string */
+    // TODO: we need to eliminate any "../"s from the string
     while (*s == '/' || *s == '~')
     {
         s++;
@@ -64,7 +64,7 @@ char *decode_fix_filename(const char *s)
     for (t = g_decode_filename; *s; s++)
     {
 #ifdef MSDOS
-        /* TODO: we should also handle backslashes here */
+        // TODO: we should also handle backslashes here
         if (*s == '.' && (t == g_decode_filename || dotcount++))
         {
             continue;
@@ -90,7 +90,7 @@ char *decode_fix_filename(const char *s)
     return g_decode_filename;
 }
 
-/* Returns nonzero if "filename" is a bad choice */
+// Returns nonzero if "filename" is a bad choice
 static bool bad_filename(const char *filename)
 {
     int len = std::strlen(filename);
@@ -125,7 +125,7 @@ static bool bad_filename(const char *filename)
     return false;
 }
 
-/* Parse the subject looking for filename and part number information. */
+// Parse the subject looking for filename and part number information.
 char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
 {
     static char* subject = nullptr;
@@ -144,7 +144,7 @@ char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
         return nullptr;
     }
 
-    /* Skip leading whitespace and other garbage */
+    // Skip leading whitespace and other garbage
     char *s = subject;
     while (is_hor_space(*s) || *s == '-')
     {
@@ -162,7 +162,7 @@ char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
         s = skip_space(s + 3);
     }
 
-    /* Get filename */
+    // Get filename
 
     /* Grab the first filename-like string.  Explicitly ignore strings with
      * prefix "v<digit>" ending in ":", since that is a popular volume/issue
@@ -226,16 +226,16 @@ char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
         return nullptr;
     }
 
-    /* Get part number */
+    // Get part number
     while (*s && *s != '\n')
     {
-        /* skip over versioning */
+        // skip over versioning
         if (*s == 'v' && std::isdigit(s[1]))
         {
             s++;
             s = skip_digits(s);
         }
-        /* look for "1/6" or "1 / 6" or "1 of 6" or "1-of-6" or "1o6" */
+        // look for "1/6" or "1 / 6" or "1 of 6" or "1-of-6" or "1o6"
         if (std::isdigit(*s)                                   //
             && (s[1] == '/'                                    //
                 || (s[1] == ' ' && s[2] == '/')                //
@@ -252,10 +252,10 @@ char *decode_subject(ArticleNum art_num, int *partp, int *totalp)
             }
             total = std::isdigit(*s)? std::atoi(s) : 0;
             s = skip_digits(s);
-            /* We don't break here because we want the last item on the line */
+            // We don't break here because we want the last item on the line
         }
 
-        /* look for "6 parts" or "part 1" */
+        // look for "6 parts" or "part 1"
         if (string_case_equal("part", s, 4))
         {
             if (s[4] == 's')
@@ -319,7 +319,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
     char *filename = decode_fix_filename(g_mime_section->filename);
     if (mcp || total != 1 || part != 1)
     {
-        /* Create directory to store parts and copy this part there. */
+        // Create directory to store parts and copy this part there.
         dir = decode_mkdir(filename);
         if (!dir)
         {
@@ -377,7 +377,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
             if (total == 0 && *g_art_line == 'e' && g_art_line[1] == 'n' //
                 && g_art_line[2] == 'd' && std::isspace(g_art_line[3]))
             {
-                /* This is the last part. Remember the fact */
+                // This is the last part. Remember the fact
                 total = part;
                 std::sprintf(g_buf, "%sCT", dir);
                 if (std::FILE *total_fp = std::fopen(g_buf, "w"))
@@ -389,7 +389,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
         }
         std::fclose(fp);
 
-        /* Retrieve any previously saved number of the last part */
+        // Retrieve any previously saved number of the last part
         if (total == 0)
         {
             std::sprintf(g_buf, "%sCT", dir);
@@ -454,7 +454,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
         return false;
     }
 
-    /* Handle each part in order */
+    // Handle each part in order
     DecodeState state;
     for (state = DECODE_START, part = 1; part <= total; part++)
     {
@@ -492,7 +492,7 @@ bool decode_piece(MimeCapEntry *mcp, char *first_line)
 
     if (fp)
     {
-        /* Cleanup all the pieces */
+        // Cleanup all the pieces
         for (part = 0; part <= total; part++)
         {
             std::sprintf(g_buf, "%s%d", dir, part);
@@ -538,7 +538,7 @@ DecodeFunc decode_function(MimeEncoding encoding)
     }
 }
 
-/* return a directory to use for unpacking the pieces of a given filename */
+// return a directory to use for unpacking the pieces of a given filename
 char *decode_mkdir(const char *filename)
 {
     static char dir[LINE_BUF_LEN];
@@ -565,10 +565,10 @@ char *decode_mkdir(const char *filename)
 
 void decode_rmdir(char *dir)
 {
-    /* Remove trailing slash */
+    // Remove trailing slash
     char *s = dir + std::strlen(dir) - 1;
     *s = '\0';
 
-    /* TODO: conditionalize this */
+    // TODO: conditionalize this
     std::filesystem::remove(dir);
 }
