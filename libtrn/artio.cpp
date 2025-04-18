@@ -76,9 +76,9 @@ std::FILE *art_open(ArticleNum art_num, ArticleNum pos)
         }
         else
         {
-            char artname[MAXFILENAME]; /* filename of current article */
-            std::sprintf(artname, "%ld", (long) art_num);
-            g_art_fp = std::fopen(artname, "r");
+            char art_name[MAXFILENAME]; /* filename of current article */
+            std::sprintf(art_name, "%ld", (long) art_num);
+            g_art_fp = std::fopen(art_name, "r");
         }
         if (!g_art_fp)
         {

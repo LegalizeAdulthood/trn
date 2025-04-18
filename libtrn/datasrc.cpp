@@ -104,7 +104,7 @@ static IniWords s_datasrc_ini[] =
 
 static char       *dir_or_none(DataSource *dp, const char *dir, DataSourceFlags flag);
 static char       *file_or_none(char *fn);
-static int         source_file_cmp(const char *key, int keylen, HashDatum data);
+static int         source_file_cmp(const char *key, int key_len, HashDatum data);
 static int         check_distance(int len, HashDatum *data, int newsrc_ptr);
 static int         get_near_miss();
 static DataSource *new_data_source(const char *name, char **vals);
@@ -1149,10 +1149,10 @@ void source_file_close(SourceFile *sfp)
     }
 }
 
-static int source_file_cmp(const char *key, int keylen, HashDatum data)
+static int source_file_cmp(const char *key, int key_len, HashDatum data)
 {
     /* We already know that the lengths are equal, just compare the strings */
-    return std::memcmp(key, ((ListNode*)data.dat_ptr)->data + data.dat_len, keylen);
+    return std::memcmp(key, ((ListNode*)data.dat_ptr)->data + data.dat_len, key_len);
 }
 
 /* Edit Distance extension to trn
