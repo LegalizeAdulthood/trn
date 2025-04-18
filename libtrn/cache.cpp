@@ -1,7 +1,7 @@
 /* cache.c
  * vi: set sw=4 ts=8 ai sm noet :
  */
-/* This software is copyrighted as detailed in the LICENSE file. */
+// This software is copyrighted as detailed in the LICENSE file.
 
 #include "config/common.h"
 #include "trn/cache.h"
@@ -38,11 +38,11 @@
 #include <cstring>
 #include <ctime>
 
-List      *g_article_list{};         /* a list of ARTICLEs */
-Article  **g_art_ptr_list{};         /* the article-selector creates this */
-Article  **g_art_ptr{};              /* ditto -- used for article order */
+List      *g_article_list{};         // a list of ARTICLEs
+Article  **g_art_ptr_list{};         // the article-selector creates this
+Article  **g_art_ptr{};              // ditto -- used for article order
 ArticleNum g_art_ptr_list_size{};    //
-ArticleNum g_search_ahead{};         /* are we in subject scan mode? (if so, contains art # found or -1) */
+ArticleNum g_search_ahead{};         // are we in subject scan mode? (if so, contains art # found or -1)
 ArticleNum g_first_cached{};         //
 ArticleNum g_last_cached{};          //
 bool       g_cached_all_in_range{};  //
@@ -50,14 +50,14 @@ Article   *g_sentinel_art_ptr{};     //
 Subject   *g_first_subject{};        //
 Subject   *g_last_subject{};         //
 bool       g_untrim_cache{};         //
-int        g_join_subject_len{};     /* -J */
-int        g_olden_days{};           /* -o */
-char       g_auto_select_postings{}; /* -p */
+int        g_join_subject_len{};     // -J
+int        g_olden_days{};           // -o
+char       g_auto_select_postings{}; // -p
 
 #ifdef PENDING
 static ArticleNum    s_subj_to_get{};
 static ArticleNum    s_xref_to_get{};
-static CompiledRegex s_search_compex; /* compiled regex for searchahead */
+static CompiledRegex s_search_compex; // compiled regex for searchahead
 #endif
 static HashTable *s_subj_hash{};
 static HashTable *s_short_subj_hash{};
@@ -104,7 +104,7 @@ void build_cache()
     s_cached_time = std::time(nullptr);
     g_article_list = new_list(g_abs_first, g_last_art, sizeof (Article), 371,
                               LF_SPARSE, init_article_node);
-    s_subj_hash = hash_create(991, subject_cmp); /*TODO: pick a better size */
+    s_subj_hash = hash_create(991, subject_cmp); // TODO: pick a better size
 
     set_first_art(g_newsgroup_ptr->rc_line + g_newsgroup_ptr->num_offset);
     g_first_cached = g_thread_always? g_abs_first : g_first_art;
@@ -124,7 +124,7 @@ void close_cache()
 {
     Subject* next;
 
-    nntp_art_name(0, false);             /* clear the tmpfile cache */
+    nntp_art_name(0, false);             // clear the tmpfile cache
 
     if (s_subj_hash)
     {
@@ -136,7 +136,7 @@ void close_cache()
         hash_destroy(s_short_subj_hash);
         s_short_subj_hash = nullptr;
     }
-    /* Free all the subjects. */
+    // Free all the subjects.
     for (Subject *sp = g_first_subject; sp; sp = next)
     {
         next = sp->next;
@@ -145,7 +145,7 @@ void close_cache()
     }
     g_first_subject = nullptr;
     g_last_subject = nullptr;
-    g_subject_count = 0;                /* just to be sure */
+    g_subject_count = 0;                // just to be sure
     g_parsed_art = 0;
 
     if (g_art_ptr_list)
@@ -165,7 +165,7 @@ void close_cache()
     s_cached_ng = nullptr;
 }
 
-/* Initialize the memory for an entire node's worth of article's */
+// Initialize the memory for an entire node's worth of article's
 static void init_article_node(List *list, ListNode *node)
 {
     std::memset(node->data, 0, list->items_per_node * list->item_size);
@@ -240,7 +240,7 @@ void check_for_near_subj(Article *ap)
     Subject* sp;
     if (!s_short_subj_hash)
     {
-        s_short_subj_hash = hash_create(401, subject_cmp);    /*TODO: pick a better size */
+        s_short_subj_hash = hash_create(401, subject_cmp);    // TODO: pick a better size
         sp = g_first_subject;
     }
     else
@@ -297,7 +297,7 @@ void check_poster(Article *ap)
             char* u;
             char* h;
             std::strcpy(s,ap->from);
-            if ((h=std::strchr(s,'<')) != nullptr)   /* grab the good part */
+            if ((h=std::strchr(s,'<')) != nullptr)   // grab the good part
             {
                 s = h+1;
                 if ((h=std::strchr(s,'>')) != nullptr)
@@ -310,7 +310,7 @@ void check_poster(Article *ap)
                 while (h-- != s && *h == ' ')
                 {
                 }
-                h[1] = '\0';            /* or strip the comment */
+                h[1] = '\0';            // or strip the comment
             }
             if ((h = std::strchr(s, '%')) != nullptr || (h = std::strchr(s, '@')))
             {
@@ -427,7 +427,7 @@ void uncache_article(Article *ap, bool remove_empties)
     one_missing(ap);
 }
 
-/* get the header line from an article's cache or parse the article trying */
+// get the header line from an article's cache or parse the article trying
 
 char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache)
 {
@@ -435,7 +435,7 @@ char *fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache
     Article* ap;
     bool cached = (g_header_type[which_line].flags & HT_CACHED);
 
-    /* article_find() returns a nullptr if the artnum value is invalid */
+    // article_find() returns a nullptr if the artnum value is invalid
     if (!(ap = article_find(art_num)) || !(ap->flags & AF_EXISTS))
     {
         return "";
@@ -514,7 +514,7 @@ char *get_cached_line(Article *ap, HeaderLineType which_line, bool no_truncs)
     return s;
 }
 
-/* subj not yet allocated, so we can tweak it first */
+// subj not yet allocated, so we can tweak it first
 void set_subj_line(Article *ap, char *subj, int size)
 {
     HashDatum data;
@@ -534,7 +534,7 @@ void set_subj_line(Article *ap, char *subj, int size)
     std::strcpy(new_subj, "Re: ");
     size = decode_header(new_subj + 4, subj_start, size);
 
-    /* Do the Re:-stripping over again, just in case it was encoded. */
+    // Do the Re:-stripping over again, just in case it was encoded.
     if (subject_has_re(new_subj + 4, &subj_start))
     {
         ap->flags |= AF_HAS_RE;
@@ -555,7 +555,7 @@ void set_subj_line(Article *ap, char *subj, int size)
 
     if (ap->subj)
     {
-        /* This only happens when we freshen truncated subjects */
+        // This only happens when we freshen truncated subjects
         hash_delete(s_subj_hash, ap->subj->str+4, std::strlen(ap->subj->str+4));
         std::free(ap->subj->str);
         ap->subj->str = new_subj;
@@ -597,10 +597,10 @@ void set_subj_line(Article *ap, char *subj, int size)
 
 int decode_header(char *to, char *from, int size)
 {
-    char *s = to; /* save for pass 2 */
+    char *s = to; // save for pass 2
     bool pass2_needed = false;
 
-    /* Pass 1 to decode coded bytes (which might be character fragments - so 1 pass is wrong) */
+    // Pass 1 to decode coded bytes (which might be character fragments - so 1 pass is wrong)
     for (int i = size; *from && i--;)
     {
         if (*from == '=' && from[1] == '?')
@@ -615,7 +615,7 @@ int decode_header(char *to, char *from, int size)
                 const char* old_ocs = output_charset_name();
 #ifdef USE_UTF_HACK
                 *q = '\0';
-                utf_init(from+2, CHARSET_NAME_UTF8); /*FIXME*/
+                utf_init(from+2, CHARSET_NAME_UTF8); // FIXME
                 *q = '?';
 #endif
                 e = q+2;
@@ -657,7 +657,7 @@ int decode_header(char *to, char *from, int size)
                     *e = '?';
                     to += len;
                     size += len;
-                    /* If the next character is whitespace we should eat it now */
+                    // If the next character is whitespace we should eat it now
                     from = skip_hor_space(from);
                 }
                 else
@@ -691,7 +691,7 @@ int decode_header(char *to, char *from, int size)
     }
     *to = '\0';
 
-    /* Pass 2 to clear out "control" characters */
+    // Pass 2 to clear out "control" characters
     if (pass2_needed)
     {
         dectrl(s);
@@ -720,11 +720,11 @@ void dectrl(char *str)
     }
 }
 
-/* s already allocated, ready to save */
+// s already allocated, ready to save
 void set_cached_line(Article *ap, int which_line, char *s)
 {
     char* cp;
-    /* SUBJ_LINE is handled specially above */
+    // SUBJ_LINE is handled specially above
     switch (which_line)
     {
     case FROM_LINE:
@@ -741,7 +741,7 @@ void set_cached_line(Article *ap, int which_line, char *s)
         {
             std::free(ap->xrefs);
         }
-        /* Exclude an xref for just this group or "(none)". */
+        // Exclude an xref for just this group or "(none)".
         cp = std::strchr(s, ':');
         if (!cp || !std::strchr(cp + 1, ':'))
         {
@@ -771,11 +771,11 @@ void set_cached_line(Article *ap, int which_line, char *s)
 
 int subject_cmp(const char *key, int key_len, HashDatum data)
 {
-    /* We already know that the lengths are equal, just compare the strings */
+    // We already know that the lengths are equal, just compare the strings
     return std::memcmp(key, ((Subject*)data.dat_ptr)->str+4, key_len);
 }
 
-/* see what we can do while they are reading */
+// see what we can do while they are reading
 
 #ifdef PENDING
 void look_ahead()
@@ -804,7 +804,7 @@ void look_ahead()
     }
     else
 #ifdef ARTSEARCH
-    if (g_srchahead && g_srchahead < g_art)     /* in ^N mode? */
+    if (g_srchahead && g_srchahead < g_art)     // in ^N mode?
     {
         char* pattern;
 
@@ -812,7 +812,7 @@ void look_ahead()
         std::strcpy(pattern,": *");
         h = pattern + std::strlen(pattern);
         interp(h,(sizeof g_buf) - (h-g_buf),"%\\s");
-        {                       /* compensate for notesfiles */
+        {                       // compensate for notesfiles
             for (int i = 24; *h && i--; h++)
             {
                 if (*h == '\\')
@@ -835,7 +835,7 @@ void look_ahead()
         s = compile(&s_srchcompex, pattern, true, true);
         if (s != nullptr)
         {
-                                    /* compile regular expression */
+                                    // compile regular expression
             std::printf("\n%s\n",s);
             term_down(2);
             g_srchahead = 0;
@@ -845,8 +845,8 @@ void look_ahead()
             g_srchahead = g_art;
             while (true)
             {
-                g_srchahead++;  /* go forward one article */
-                if (g_srchahead > g_lastart)   /* out of articles? */
+                g_srchahead++;  // go forward one article
+                if (g_srchahead > g_lastart)   // out of articles?
                 {
 #ifdef DEBUG
                     if (debug)
@@ -859,7 +859,7 @@ void look_ahead()
                 if (!was_read(g_srchahead) && //
                     wanted(&s_srchcompex, g_srchahead, 0))
                 {
-                                    /* does the shoe fit? */
+                                    // does the shoe fit?
 #ifdef DEBUG
                     if (debug)
                     {
@@ -878,17 +878,17 @@ void look_ahead()
         }
     }
     else
-#endif /* ARTSEARCH */
+#endif // ARTSEARCH
     {
-        if (article_next(g_art) <= g_last_art)   /* how about a pre-fetch? */
+        if (article_next(g_art) <= g_last_art)   // how about a pre-fetch?
         {
-            parse_header(article_next(g_art));   /* look for the next article */
+            parse_header(article_next(g_art));   // look for the next article
         }
     }
 }
-#endif /* PENDING */
+#endif // PENDING
 
-/* see what else we can do while they are reading */
+// see what else we can do while they are reading
 
 void cache_until_key()
 {
@@ -910,7 +910,7 @@ void cache_until_key()
     g_untrim_cache = true;
     g_sentinel_art_ptr = g_curr_artp;
 
-    /* Prioritize our caching based on what mode we're in */
+    // Prioritize our caching based on what mode we're in
     if (g_general_mode == GM_SELECTOR)
     {
         if (cache_subjects())
@@ -1021,7 +1021,7 @@ bool cache_all_arts()
         return true;
     }
 
-    /* turn it on as late as possible to avoid fseek()ing openart */
+    // turn it on as late as possible to avoid fseek()ing openart
     set_spin(SPIN_BACKGROUND);
     if (g_last_cached < g_last_art)
     {
@@ -1046,7 +1046,7 @@ bool cache_all_arts()
         {
             art_data(g_abs_first, g_first_cached - 1, true, true);
         }
-        /* If we got interrupted, make a quick exit */
+        // If we got interrupted, make a quick exit
         if (g_first_cached > g_abs_first)
         {
             g_last_cached = old_last_cached;
@@ -1059,7 +1059,7 @@ bool cache_all_arts()
     {
         push_char('\f' | 0200);
     }
-    /* A completely empty group needs a count & a sort */
+    // A completely empty group needs a count & a sort
     if (g_general_mode != GM_SELECTOR && !g_obj_count && !g_selected_only)
     {
         thread_grow();
@@ -1096,7 +1096,7 @@ bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_article
         int lots_to_do = ((g_data_source->flags & DF_REMOTE)? g_net_speed : 20) * 25;
         set_spin(g_spin_estimate > lots_to_do? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
     }
-    /*TRN_ASSERT(first >= g_absfirst && last <= g_lastart);*/
+    // TRN_ASSERT(first >= g_absfirst && last <= g_lastart);
     for (i = article_first(first); i <= last; i = article_next(i))
     {
         if ((article_ptr(i)->flags & cache_mask) ^ cache_mask2)
@@ -1107,7 +1107,7 @@ bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_article
         g_spin_todo -= i - expected_i;
         expected_i = i + 1;
 
-        /* This parses the header which will cache/thread the article */
+        // This parses the header which will cache/thread the article
         (void) parse_header(i);
 
         if (g_int_count)
@@ -1121,7 +1121,7 @@ bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_article
             {
                 break;
             }
-            /* If the current article is no longer a '?', let them know. */
+            // If the current article is no longer a '?', let them know.
             if (g_curr_artp != g_sentinel_art_ptr)
             {
                 push_char('\f' | 0200);
